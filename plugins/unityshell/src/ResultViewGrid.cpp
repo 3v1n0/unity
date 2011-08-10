@@ -134,6 +134,7 @@ void ResultViewGrid::SizeReallocate ()
     total_height = renderer_->height;
   }
   SetMinimumHeight (total_height + (padding * 2));
+  SetMaximumHeight (total_height + (padding * 2));
   PositionPreview();
 }
 

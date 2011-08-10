@@ -79,11 +79,11 @@ void DashView::SetupViews()
   search_bar_->live_search_reached.connect(sigc::mem_fun(this, &DashView::OnLiveSearchReached));
   content_layout_->AddView(search_bar_, 0, nux::MINOR_POSITION_LEFT);
 
-  lenses_layout_ = new nux::HLayout();
+  lenses_layout_ = new nux::VLayout();
   content_layout_->AddView(lenses_layout_, 1, nux::MINOR_POSITION_LEFT);
 
   lens_bar_ = new LensBar();
-  content_layout_->AddView(lens_bar_, 1, nux::MINOR_POSITION_CENTER);
+  content_layout_->AddView(lens_bar_, 0, nux::MINOR_POSITION_CENTER);
 }
 
 void DashView::SetupUBusConnections()
@@ -121,7 +121,7 @@ void DashView::Relayout()
   }
  
   // FIXME: Remove edges
-  content_layout_->SetGeometry(content_geo_);
+  content_layout_->SetMinMaxSize(content_geo_.width, content_geo_.height);
 }
 
 // Gives us the width and height of the contents that will give us the best "fit",
@@ -142,7 +142,7 @@ nux::Geometry DashView::GetBestFitGeometry(nux::Geometry const& for_geo)
   width = MAX(width, tile_width * 7);
 
   height = search_bar_->GetGeometry().height;
-  height += tile_height * 5.5;
+  height += tile_height * 5;
   height += lens_bar_->GetGeometry().height;
 
   return nux::Geometry(0, 0, width, height);

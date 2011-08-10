@@ -41,6 +41,7 @@ class LensView : public nux::View, public unity::Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE(LensView, nux::View);
   typedef std::vector<PlacesGroup*> CategoryGroups;
+  typedef std::map<PlacesGroup*, unsigned int> ResultCounts;
 
 public:
   LensView(Lens::Ptr lens);
@@ -52,6 +53,7 @@ private:
   void OnCategoryAdded(Category const& category);
   void OnResultAdded(Result const& result);
   void OnResultRemoved(Result const& result);
+  void UpdateCounts(PlacesGroup* group);
   void OnGroupExpanded(PlacesGroup* group);
 
   long ProcessEvent(nux::IEvent& ievent, long traverse_info, long event_info);
@@ -65,6 +67,7 @@ private:
 private:
   Lens::Ptr lens_;
   CategoryGroups categories_;
+  ResultCounts counts_;
 
   nux::HLayout* layout_;
   nux::ScrollView* scroll_view_;

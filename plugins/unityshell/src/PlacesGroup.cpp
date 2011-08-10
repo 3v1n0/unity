@@ -336,6 +336,9 @@ PlacesGroup::SetExpanded(bool is_expanded)
   if (_is_expanded == is_expanded)
     return;
 
+  if (is_expanded && _n_total_items <= _n_visible_items_in_unexpand_mode)
+    return;
+
   _is_expanded = is_expanded;
 
   Refresh();

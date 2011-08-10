@@ -22,6 +22,7 @@
 
 #include <NuxCore/Logger.h>
 
+#include "PlacesStyle.h"
 #include "ResultRendererTile.h"
 
 namespace unity
@@ -85,13 +86,14 @@ void LensView::OnCategoryAdded(Category const& category)
   group->SetExpanded(false);
   group->expanded.connect(sigc::mem_fun(this, &LensView::OnGroupExpanded));
   categories_.push_back(group);
+  counts_[group] = 0;
   
   ResultViewGrid* grid = new ResultViewGrid(NUX_TRACKER_LOCATION);
   grid->expanded = false;
   grid->SetModelRenderer(new ResultRendererTile(NUX_TRACKER_LOCATION));
   group->SetChildView(grid);
 
-  scroll_layout_->AddView(group, 1);
+  scroll_layout_->AddView(group, 0);
 }
 
 void LensView::OnResultAdded(Result const& result)
@@ -103,6 +105,8 @@ void LensView::OnResultAdded(Result const& result)
   LOG_DEBUG(logger) << "Result added: " << uri;
 
   grid->AddResult(const_cast<Result&>(result));
+  counts_[group]++;
+  UpdateCounts(group);
 }
 
 void LensView::OnResultRemoved(Result const& result)
@@ -114,6 +118,15 @@ void LensView::OnResultRemoved(Result const& result)
   LOG_DEBUG(logger) << "Result removed: " << uri;
 
   grid->RemoveResult(const_cast<Result&>(result));
+  counts_[group]--;
+  UpdateCounts(group);
+}
+
+void LensView::UpdateCounts(PlacesGroup* group)
+{
+  PlacesStyle* style = PlacesStyle::GetDefault();
+
+  group->SetCounts(style->GetDefaultNColumns(), counts_[group]);
 }
 
 void LensView::OnGroupExpanded(PlacesGroup* group)
