@@ -32,6 +32,7 @@ namespace { // FIXME - fill with actual renderer type strings
   const std::string renderer_type_ratings = "filter-ratings";
   const std::string renderer_type_multirange = "filter-multirange";
   const std::string renderer_type_check_options = "filter-checkoption";
+  const std::string renderer_type_radio_options = "filter-radiooption";
 }
 
 namespace unity {
@@ -60,6 +61,10 @@ namespace unity {
     else if (filter_type == renderer_type_multirange)
     {
       view = static_cast<nux::View *> (new FilterMultiRange (NUX_TRACKER_LOCATION));
+    }
+    else if (filter_type == renderer_type_radio_options)
+    {
+      view = static_cast<nux::View *> (new FilterGenre (NUX_TRACKER_LOCATION));
     }
 
     dynamic_cast<FilterWidget *>(view)->SetFilter (filter);

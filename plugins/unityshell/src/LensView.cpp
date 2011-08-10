@@ -53,6 +53,10 @@ LensView::LensView(Lens::Ptr lens)
   results->result_added.connect(sigc::mem_fun(this, &LensView::OnResultAdded));
   results->result_removed.connect(sigc::mem_fun(this, &LensView::OnResultRemoved));
 
+  Filters::Ptr filters = lens_->filters;
+  filters->filter_added.connect(sigc::mem_fun(this, &LensView::OnFilterAdded));
+  filters->filter_removed.connect(sigc::mem_fun(this, &LensView::OnFilterRemoved));
+
   PlacesStyle::GetDefault()->columns_changed.connect(sigc::mem_fun(this, &LensView::OnColumnsChanged));
 
   search_string.changed.connect([&](std::string const& search) { lens_->Search(search);  });
@@ -63,15 +67,27 @@ LensView::~LensView()
 
 void LensView::SetupViews()
 {
-  scroll_layout_ = new nux::VLayout();
+  layout_ = new nux::HLayout();
 
   scroll_view_ = new nux::ScrollView();
   scroll_view_->EnableVerticalScrollBar(true);
   scroll_view_->EnableHorizontalScrollBar(false);
+  layout_->AddView(scroll_view_);
+  
+  scroll_layout_ = new nux::VLayout();
   scroll_view_->SetLayout(scroll_layout_);
 
-  layout_ = new nux::HLayout();
-  layout_->AddView(scroll_view_);
+  fscroll_view_ = new nux::ScrollView();
+  fscroll_view_->EnableVerticalScrollBar(true);
+  fscroll_view_->EnableHorizontalScrollBar(false);
+  fscroll_view_->SetVisible(false);
+  layout_->AddView(fscroll_view_, 1);
+  
+  fscroll_layout_ = new nux::VLayout();
+  fscroll_view_->SetLayout(fscroll_layout_);
+  
+  filter_bar_ = new FilterBar();
+  fscroll_layout_->AddView(filter_bar_);
 
   SetLayout(layout_);
 }
@@ -156,9 +172,23 @@ void LensView::OnColumnsChanged()
   }
 }
 
+void LensView::OnFilterAdded(Filter::Ptr filter)
+{
+  std::string id = filter->id;
+  filter_bar_->AddFilter(filter);
+  fscroll_view_->SetMinimumWidth(150);
+  fscroll_view_->SetMaximumWidth(150);
+  fscroll_view_->SetVisible(true);
+}
+
+void LensView::OnFilterRemoved(Filter::Ptr filter)
+{
+  filter_bar_->RemoveFilter(filter);
+}
+
 long LensView::ProcessEvent(nux::IEvent& ievent, long traverse_info, long event_info)
 {
-  return traverse_info;
+  return layout_->ProcessEvent(ievent, traverse_info, event_info);
 }
 
 void LensView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
@@ -172,6 +202,7 @@ void LensView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
 
 void LensView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
 {
+  
   gfx_context.PushClippingRectangle(GetGeometry());
 
   layout_->ProcessDraw(gfx_context, force_draw);

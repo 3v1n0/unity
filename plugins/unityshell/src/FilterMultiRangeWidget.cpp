@@ -40,24 +40,6 @@ namespace unity {
     layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
     layout_->Reference();
 
-    FilterMultiRangeButton* button = new FilterMultiRangeButton("60's", NUX_TRACKER_LOCATION);
-    layout_->AddView(button, 0);
-
-    button = new FilterMultiRangeButton("70's", NUX_TRACKER_LOCATION);
-    layout_->AddView(button, 0);
-
-    button = new FilterMultiRangeButton("80's", NUX_TRACKER_LOCATION);
-    layout_->AddView(button, 0);
-
-    button = new FilterMultiRangeButton("90's", NUX_TRACKER_LOCATION);
-    layout_->AddView(button, 0);
-
-    button = new FilterMultiRangeButton("00's", NUX_TRACKER_LOCATION);
-    layout_->AddView(button, 0);
-
-    button = new FilterMultiRangeButton("10's", NUX_TRACKER_LOCATION);
-    layout_->AddView(button, 0);
-
     SetRightHandView(all_button_);
     SetContents(layout_);
   }

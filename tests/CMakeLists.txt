@@ -85,6 +85,16 @@ add_executable (standalone-dash
                 ${UNITY_SRC}/DashSearchBar.h
                 ${UNITY_SRC}/DashSearchBarSpinner.cpp
                 ${UNITY_SRC}/DashSearchBarSpinner.h
+                ${UNITY_SRC}/FilterExpanderLabel.cpp
+                ${UNITY_SRC}/FilterFactory.cpp
+                ${UNITY_SRC}/FilterBasicButton.cpp
+                ${UNITY_SRC}/FilterRatingsButton.cpp
+                ${UNITY_SRC}/FilterRatingsWidget.cpp
+                ${UNITY_SRC}/FilterMultiRangeWidget.cpp
+                ${UNITY_SRC}/FilterMultiRangeButton.cpp
+                ${UNITY_SRC}/FilterGenreButton.cpp
+                ${UNITY_SRC}/FilterGenreWidget.cpp
+                ${UNITY_SRC}/FilterBar.cpp
                 ${UNITY_SRC}/PlacesGroup.cpp
                 ${UNITY_SRC}/PlacesGroup.h
                 ${UNITY_SRC}/PlacesSettings.cpp

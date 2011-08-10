@@ -28,9 +28,10 @@
 #include <Nux/VLayout.h>
 #include <UnityCore/Lens.h>
 
+#include "FilterBar.h"
 #include "Introspectable.h"
-#include "ResultViewGrid.h"
 #include "PlacesGroup.h"
+#include "ResultViewGrid.h"
 #include "UBusWrapper.h"
 
 namespace unity
@@ -62,6 +63,8 @@ private:
   void UpdateCounts(PlacesGroup* group);
   void OnGroupExpanded(PlacesGroup* group);
   void OnColumnsChanged();
+  void OnFilterAdded(Filter::Ptr filter);
+  void OnFilterRemoved(Filter::Ptr filter);
 
   long ProcessEvent(nux::IEvent& ievent, long traverse_info, long event_info);
   void Draw(nux::GraphicsEngine& gfx_context, bool force_draw);
@@ -80,6 +83,9 @@ private:
   nux::HLayout* layout_;
   nux::ScrollView* scroll_view_;
   nux::VLayout* scroll_layout_;
+  nux::ScrollView* fscroll_view_;
+  nux::VLayout* fscroll_layout_;
+  FilterBar* filter_bar_;
 };
 
 

@@ -90,7 +90,11 @@ namespace unity
   }
 
   void FilterBar::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw) {
-    nux::View::DrawContent(GfxContext, force_draw);
+    GfxContext.PushClippingRectangle(GetGeometry());
+  
+    GetLayout()->ProcessDraw(GfxContext, force_draw);
+
+    GfxContext.PopClippingRectangle();
   }
 
   void FilterBar::PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw) {
