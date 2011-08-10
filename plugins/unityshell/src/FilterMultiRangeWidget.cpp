@@ -42,6 +42,39 @@ namespace unity {
 
     SetRightHandView(all_button_);
     SetContents(layout_);
+
+    FilterMultiRangeButton* button = new FilterMultiRangeButton ("10", NUX_TRACKER_LOCATION);
+    layout_->AddView (button, 1);
+
+    button = new FilterMultiRangeButton ("10", NUX_TRACKER_LOCATION);
+    layout_->AddView (button, 1);
+
+    button = new FilterMultiRangeButton ("10", NUX_TRACKER_LOCATION);
+    layout_->AddView (button, 1);
+
+    button = new FilterMultiRangeButton ("10", NUX_TRACKER_LOCATION);
+    layout_->AddView (button, 1);
+
+    button = new FilterMultiRangeButton ("10", NUX_TRACKER_LOCATION);
+    layout_->AddView (button, 1);
+
+      button = new FilterMultiRangeButton ("10", NUX_TRACKER_LOCATION);
+    layout_->AddView (button, 1);
+
+      button = new FilterMultiRangeButton ("10", NUX_TRACKER_LOCATION);
+    layout_->AddView (button, 1);
+
+      button = new FilterMultiRangeButton ("10", NUX_TRACKER_LOCATION);
+    layout_->AddView (button, 1);
+
+        button = new FilterMultiRangeButton ("10", NUX_TRACKER_LOCATION);
+    layout_->AddView (button, 1);
+
+        button = new FilterMultiRangeButton ("10", NUX_TRACKER_LOCATION);
+    layout_->AddView (button, 1);
+
+        button = new FilterMultiRangeButton ("10", NUX_TRACKER_LOCATION);
+    layout_->AddView (button, 1);
   }
 
   FilterMultiRange::~FilterMultiRange() {
@@ -116,12 +149,12 @@ namespace unity {
 
     GfxContext.PushClippingRectangle(geo);
     nux::GetPainter().PaintBackground(GfxContext, geo);
-    GfxContext.PopClippingRectangle(); 
+    GfxContext.PopClippingRectangle();
   }
 
   void FilterMultiRange::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw) {
     GfxContext.PushClippingRectangle(GetGeometry());
-  
+
     GetLayout()->ProcessDraw(GfxContext, force_draw);
 
     GfxContext.PopClippingRectangle();
