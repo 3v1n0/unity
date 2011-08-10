@@ -223,7 +223,7 @@
                     <_short>Dash Blur</_short>
                     <_long>Type of blur in the Dash</_long>
                     <min>0</min>
-                    <max>1</max>
+                    <max>2</max>
                     <default>0</default>
                     <desc>
                         <value>0</value>
@@ -232,6 +232,10 @@
                     <desc>
                         <value>1</value>
                         <_name>Static Blur</_name>
+                    </desc>
+                    <desc>
+                        <value>2</value>
+                        <_name>Active Blur</_name>
                     </desc>
                 </option>
 
