@@ -41,26 +41,49 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(Launcher* IconManager, Ba
 : BamfLauncherIcon(IconManager, app, screen)
 {
     char* object_path;
-    GVariant* finished_or_not;
+    GVariant* finished_or_not = NULL;
+    GError* error = NULL;
+    GError* errorr = NULL;
 
     _aptdaemon_trans_id = aptdaemon_trans_id; 
     g_strdup_printf(object_path, "/org/debian/apt/transaction/%s", _aptdaemon_trans_id);
     
+    g_debug("Aptdaemon transaction ID: %s", _aptdaemon_trans_id);
+
     _aptdaemon_trans = g_dbus_proxy_new_for_bus_sync(G_BUS_TYPE_SYSTEM,
                                                     G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START,
                                                     NULL,
                                                     "org.debian.apt",
                                                     object_path,
-                                                    "org.debian.apt.transaction",
+                                                    "org.freedesktop.DBus.Properties",
                                                     NULL,
-                                                    NULL);
+                                                    &error);
 
-    finished_or_not = g_dbus_proxy_get_cached_property(_aptdaemon_trans,
-                                    "Progress");
+    if (error != NULL) {
+        g_debug("Error: %s", error->message);
+        g_error_free(error);
+    }
 
-    g_debug("HERE IS THE SHIT: %s",g_variant_print(finished_or_not, TRUE));
+    finished_or_not = g_dbus_proxy_call_sync (_aptdaemon_trans,
+                                            "Get",
+                                            g_variant_new("(ss)",
+                                                        "",
+                                                        "Progress"),
+                                            G_DBUS_CALL_FLAGS_NO_AUTO_START,
+                                            2000,
+                                            NULL,
+                                            &errorr);
 
-    g_variant_unref(finished_or_not);
+    if (errorr != NULL) {
+        g_debug("Errorr: %s", errorr->message);
+        g_error_free(errorr);
+    }
+
+    if (finished_or_not != NULL)
+        g_debug("DBus get call succeeded");
+    else
+        g_debug("DBus get call failed");
+
 }
 
 SoftwareCenterLauncherIcon::~SoftwareCenterLauncherIcon() {
