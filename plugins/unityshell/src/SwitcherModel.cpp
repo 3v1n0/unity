@@ -119,11 +119,7 @@ SwitcherModel::DetailXids()
 
   // swap so we focus the last focused window first
   if (Selection()->GetQuirk (AbstractLauncherIcon::QUIRK_ACTIVE) && results.size () > 1)
-  {
-    Window tmp = results[0];
-    results[0] = results[1];
-    results[1] = tmp;
-  }
+    std::swap (results[0], results[1]);
 
   return results;
 }
