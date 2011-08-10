@@ -1570,4 +1570,80 @@ namespace unity
 
     return true;
   }
+
+  bool DashStyle::TrackViewNumber (cairo_t*    cr,
+                                   nux::State  state,
+                                   std::string trackNumber)
+  {
+	// sanity checks
+    if (cairo_status (cr) != CAIRO_STATUS_SUCCESS)
+      return false;
+
+    if (cairo_surface_get_type (cairo_get_target (cr)) != CAIRO_SURFACE_TYPE_IMAGE)
+      return false;
+
+    return true;
+  }
+
+  bool DashStyle::TrackViewPlay (cairo_t*   cr,
+                                 nux::State state)
+  {
+	// sanity checks
+    if (cairo_status (cr) != CAIRO_STATUS_SUCCESS)
+      return false;
+
+    if (cairo_surface_get_type (cairo_get_target (cr)) != CAIRO_SURFACE_TYPE_IMAGE)
+      return false;
+
+    return true;
+  }
+
+  bool DashStyle::TrackViewPause (cairo_t*   cr,
+                                  nux::State state)
+  {
+	// sanity checks
+    if (cairo_status (cr) != CAIRO_STATUS_SUCCESS)
+      return false;
+
+    if (cairo_surface_get_type (cairo_get_target (cr)) != CAIRO_SURFACE_TYPE_IMAGE)
+      return false;
+
+    return true;
+  }
+
+  bool DashStyle::TrackViewProgress (cairo_t* cr)
+  {
+	// sanity checks
+    if (cairo_status (cr) != CAIRO_STATUS_SUCCESS)
+      return false;
+
+    if (cairo_surface_get_type (cairo_get_target (cr)) != CAIRO_SURFACE_TYPE_IMAGE)
+      return false;
+
+    return true;
+  }
+
+  bool DashStyle::SeparatorVert (cairo_t* cr)
+  {
+	// sanity checks
+    if (cairo_status (cr) != CAIRO_STATUS_SUCCESS)
+      return false;
+
+    if (cairo_surface_get_type (cairo_get_target (cr)) != CAIRO_SURFACE_TYPE_IMAGE)
+      return false;
+
+    return true;
+  }
+
+  bool DashStyle::SeparatorHoriz (cairo_t* cr)
+  {
+	// sanity checks
+    if (cairo_status (cr) != CAIRO_STATUS_SUCCESS)
+      return false;
+
+    if (cairo_surface_get_type (cairo_get_target (cr)) != CAIRO_SURFACE_TYPE_IMAGE)
+      return false;
+
+    return true;
+  }
 }
