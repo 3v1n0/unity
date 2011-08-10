@@ -54,8 +54,6 @@ void on_settings_updated(GSettings* settings,
 
 std::string get_basename_or_path(std::string const& desktop_path);
 
-char* exhaustive_desktopfile_lookup(char* desktop_file);
-
 }
 
 FavoriteStoreGSettings::FavoriteStoreGSettings()
@@ -137,19 +135,8 @@ void FavoriteStoreGSettings::Refresh()
       }
       else
       {
-        LOG_INFO(logger) << "Unable to load GDesktopAppInfo for '"
+        LOG_WARNING(logger) << "Unable to load GDesktopAppInfo for '"
                          << favs[i] << "'";
-        glib::String exhaustive_path(exhaustive_desktopfile_lookup(favs[i]));
-        if (exhaustive_path.Value() == NULL)
-        {
-          LOG_WARNING(logger) << "Desktop file '"
-                              << favs[i]
-                              << "' does not exist anywhere we can find it";
-        }
-        else
-        {
-          favorites_.push_back(exhaustive_path.Str());
-        }
       }
     }
   }
@@ -297,118 +284,23 @@ std::string get_basename_or_path(std::string const& desktop_path)
   for (int i = 0; dirs[i]; ++i)
   {
     std::string dir(dirs[i]);
+    if (dir.at(dir.length()-1) == G_DIR_SEPARATOR)
+      dir.append("applications/");
+    else
+      dir.append("/applications/");
 
     if (desktop_path.find(dir) == 0)
     {
-      // Would prefer boost::filesystem here.
-      glib::String basename(g_path_get_basename(desktop_path.c_str()));
-      return basename.Str();
+      // if we are in a subdirectory of system patch, the store name should
+      // be subdir-filename.desktop
+      std::string desktop_suffix = desktop_path.substr(dir.size());
+      std::replace(desktop_suffix.begin(), desktop_suffix.end(), G_DIR_SEPARATOR, '-');
+      return desktop_suffix;
     }
   }
   return desktop_path;
 }
 
-/* If the desktop file exists, we *will* find it dang it
- * Returns null if we failed =(
- *
- * Most of this code copied from bamf - its nice to have this
- * agree with bamf at the very least
- */
-char* exhaustive_desktopfile_lookup(char* desktop_file)
-{
-  GFile* file;
-  GFileInfo* info;
-  GFileEnumerator* enumerator;
-  GList* dirs = NULL, *l;
-  const char* env;
-  char*  path;
-  char*  subpath;
-  char** data_dirs = NULL;
-  char** data;
-
-  env = g_getenv("XDG_DATA_DIRS");
-
-  if (env)
-  {
-    data_dirs = g_strsplit(env, ":", 0);
-
-    for (data = data_dirs; *data; data++)
-    {
-      path = g_build_filename(*data, "applications", NULL);
-      if (g_file_test(path, G_FILE_TEST_IS_DIR))
-        dirs = g_list_prepend(dirs, path);
-      else
-        g_free(path);
-    }
-  }
-
-  if (!g_list_find_custom(dirs, "/usr/share/applications", (GCompareFunc) g_strcmp0))
-    dirs = g_list_prepend(dirs, g_strdup("/usr/share/applications"));
-
-  if (!g_list_find_custom(dirs, "/usr/local/share/applications", (GCompareFunc) g_strcmp0))
-    dirs = g_list_prepend(dirs, g_strdup("/usr/local/share/applications"));
-
-  dirs = g_list_prepend(dirs, g_strdup(g_build_filename(g_get_home_dir(), ".share/applications", NULL)));
-
-  if (data_dirs)
-    g_strfreev(data_dirs);
-
-  /* include subdirs */
-  for (l = dirs; l; l = l->next)
-  {
-    path = (char*)l->data;
-
-    file = g_file_new_for_path(path);
-
-    if (!g_file_query_exists(file, NULL))
-    {
-      g_object_unref(file);
-      continue;
-    }
-
-    enumerator = g_file_enumerate_children(file,
-                                           "standard::*",
-                                           G_FILE_QUERY_INFO_NOFOLLOW_SYMLINKS,
-                                           NULL,
-                                           NULL);
-
-    if (!enumerator)
-      continue;
-
-    info = g_file_enumerator_next_file(enumerator, NULL, NULL);
-    for (; info; info = g_file_enumerator_next_file(enumerator, NULL, NULL))
-    {
-      if (g_file_info_get_file_type(info) != G_FILE_TYPE_DIRECTORY)
-        continue;
-
-      subpath = g_build_filename(path, g_file_info_get_name(info), NULL);
-      /* append for non-recursive recursion love */
-      dirs = g_list_append(dirs, subpath);
-
-      g_object_unref(info);
-    }
-
-    g_object_unref(enumerator);
-    g_object_unref(file);
-  }
-
-  /* dirs now contains a list if lookup directories */
-  /* go through the dir list and stat to check it exists */
-  path = NULL;
-  for (l = dirs; l; l = l->next)
-  {
-    path = g_build_filename((char*)l->data, desktop_file, NULL);
-    if (g_file_test(path, G_FILE_TEST_EXISTS))
-      break;
-
-    g_free(path);
-    path = NULL;
-  }
-
-  g_list_free(dirs);
-
-  return path;
-}
 
 } // anonymous namespace
 
