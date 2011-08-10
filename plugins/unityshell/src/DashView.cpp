@@ -151,7 +151,7 @@ nux::Geometry DashView::GetBestFitGeometry(nux::Geometry const& for_geo)
   width = MAX(width, tile_width * 7);
 
   height = search_bar_->GetGeometry().height;
-  height += tile_height * 5;
+  height += tile_height * 4.75;
   height += lens_bar_->GetGeometry().height;
 
   return nux::Geometry(0, 0, width, height);
@@ -212,6 +212,65 @@ void DashView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
                                   rop);
 
     gfx_context.PopClippingRectangle();
+  }
+
+  // Paint the edges
+  {
+    PlacesStyle*  style = PlacesStyle::GetDefault();
+    nux::BaseTexture* bottom = style->GetDashBottomTile();
+    nux::BaseTexture* right = style->GetDashRightTile();
+    nux::BaseTexture* corner = style->GetDashCorner();
+    nux::TexCoordXForm texxform;
+
+    geo = content_geo_;
+    geo.width += corner->GetWidth() - 6;
+    geo.height += corner->GetHeight() - 6;
+    {
+      // Corner
+      texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+      texxform.SetWrap(nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
+
+      gfx_context.QRP_1Tex(geo.x + (geo.width - corner->GetWidth()),
+                          geo.y + (geo.height - corner->GetHeight()),
+                          corner->GetWidth(),
+                          corner->GetHeight(),
+                          corner->GetDeviceTexture(),
+                          texxform,
+                          nux::color::White);
+    }
+   {
+      // Bottom repeated texture
+      int real_width = geo.width - corner->GetWidth();
+      int offset = real_width % bottom->GetWidth();
+
+      texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+      texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
+
+      gfx_context.QRP_1Tex(geo.x - offset,
+                          geo.y + (geo.height - bottom->GetHeight()),
+                          real_width + offset,
+                          bottom->GetHeight(),
+                          bottom->GetDeviceTexture(),
+                          texxform,
+                          nux::color::White);
+    }
+
+    {
+      // Right repeated texture
+      int real_height = geo.height - corner->GetHeight();
+      int offset = real_height % right->GetHeight();
+
+      texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+      texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
+
+      gfx_context.QRP_1Tex(geo.x + (geo.width - right->GetWidth()),
+                          geo.y - offset,
+                          right->GetWidth(),
+                          real_height + offset,
+                          right->GetDeviceTexture(),
+                          texxform,
+                          nux::color::White);
+    }
   }
 
   bg_layer_->SetGeometry(content_geo_);

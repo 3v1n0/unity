@@ -72,6 +72,10 @@ void LensBar::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
 
   gfx_context.PushClippingRectangle(geo);
   nux::GetPainter().PaintBackground(gfx_context, geo);
+
+  nux::Color col (0.0f, 0.0f, 0.0f, 0.4f);
+  gfx_context.QRP_Color (geo.x, geo.y, geo.width, geo.height, col);
+
   gfx_context.PopClippingRectangle();
 }
 
