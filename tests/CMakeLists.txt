@@ -291,6 +291,14 @@ add_executable (test-places-backend
                 )
 add_dependencies (test-places-backend unity-core-${UNITY_API_VERSION})
 
+add_executable (test-dash-style
+                TestDashStyle.cpp
+                ${UNITY_SRC}/DashStyle.cpp
+                ${UNITY_SRC}/DashStyle.h
+                ${PLACES_COMMON_SOURCE}
+                )
+add_dependencies (test-dash-style unity-core-${UNITY_API_VERSION})
+
 add_executable (test-bg-hash
                 TestBGHash.cpp
                 ${UNITY_SRC}/BGHash.cpp
@@ -299,6 +307,7 @@ add_executable (test-bg-hash
                 ${UNITY_SRC}/ubus-server.h
                )
 add_dependencies (test-bg-hash unity-core-${UNITY_API_VERSION})
+
 #
 # GTest tests
 #
