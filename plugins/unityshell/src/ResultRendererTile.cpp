@@ -246,19 +246,16 @@ void ResultRendererTile::Unload (Result& row)
   if ((iterator = icon_cache_.find(icon)) != icon_cache_.end())
   {
     iterator->second->UnReference ();
-    icon_cache_.erase(iterator);
   }
 
   if ((iterator = text_cache_.find(text)) != text_cache_.end())
   {
-    iterator->second->UnReference();
-    text_cache_.erase(iterator);
+    iterator->second->UnReference ();
   }
 
   if ((iterator = blurred_icon_cache_.find(icon)) != blurred_icon_cache_.end())
   {
-    iterator->second->UnReference();
-    blurred_icon_cache_.erase(iterator);
+    iterator->second->UnReference ();
   }
 }
 
@@ -360,12 +357,15 @@ ResultRendererTile::IconLoaded(const char* texid, guint size, GdkPixbuf* pixbuf,
     nux::BaseTexture *texture = cache->FindTexture(icon_name.c_str(), 48, 48,
                                                    sigc::bind(sigc::mem_fun(this, &ResultRendererTile::CreateTextureCallback), pixbuf));
     icon_cache_[icon_name] = texture;
+    texture->object_destroyed.connect([&icon_cache_, icon_name](Object* obj) {icon_cache_.erase(icon_cache_.find(icon_name)); });
 
     std::string blur_texid = icon_name + "_blurred";
 
     nux::BaseTexture *texture_blurred = cache->FindTexture(blur_texid.c_str(), 48, 48,
                                                            sigc::bind(sigc::mem_fun(this, &ResultRendererTile::CreateBlurredTextureCallback), pixbuf));
     blurred_icon_cache_[icon_name] = texture_blurred;
+
+    texture_blurred->object_destroyed.connect([&blurred_icon_cache_, icon_name](Object* obj) {blurred_icon_cache_.erase(blurred_icon_cache_.find(icon_name)); });
 
     for (uint i = 0; i < currently_loading_icons_[icon_name]; i++)
     {
@@ -440,6 +440,7 @@ void ResultRendererTile::LoadText (std::string& text)
     texture->SinkReference();
 
     text_cache_[text] = texture;
+    texture->object_destroyed.connect([&text_cache_, text](Object* obj) {text_cache_.erase(text_cache_.find(text)); });
 
     delete bitmap;
 

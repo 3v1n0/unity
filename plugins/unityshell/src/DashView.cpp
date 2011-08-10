@@ -81,6 +81,9 @@ void DashView::SetupViews()
 
   lenses_layout_ = new nux::HLayout();
   content_layout_->AddView(lenses_layout_, 1, nux::MINOR_POSITION_LEFT);
+
+  lens_bar_ = new LensBar();
+  content_layout_->AddView(lens_bar_, 1, nux::MINOR_POSITION_CENTER);
 }
 
 void DashView::SetupUBusConnections()
@@ -137,8 +140,10 @@ nux::Geometry DashView::GetBestFitGeometry(nux::Geometry const& for_geo)
     ;
 
   width = MAX(width, tile_width * 7);
-  // FIXME: Add lens bar, search bar etc etc
-  height = tile_height * 4;;
+
+  height = search_bar_->GetGeometry().height;
+  height += tile_height * 5.5;
+  height += lens_bar_->GetGeometry().height;
 
   return nux::Geometry(0, 0, width, height);
 }
@@ -231,6 +236,8 @@ void DashView::OnLiveSearchReached(std::string const& search_string)
 
 void DashView::OnLensAdded(Lens::Ptr& lens)
 {
+  lens_bar_->AddLens(lens);
+
   LensView* view = new LensView(lens);
   view->SetVisible(false);
   lenses_layout_->AddView(view, 1);

@@ -95,6 +95,8 @@ add_executable (standalone-dash
                 ${UNITY_SRC}/IconTexture.h
                 ${UNITY_SRC}/Introspectable.cpp
                 ${UNITY_SRC}/Introspectable.h
+                ${UNITY_SRC}/LensBar.cpp
+                ${UNITY_SRC}/LensBar.h
                 ${UNITY_SRC}/LensView.cpp
                 ${UNITY_SRC}/LensView.h
                 ${UNITY_SRC}/PreviewApplications.cpp

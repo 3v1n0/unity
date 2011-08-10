@@ -101,7 +101,6 @@ void ResultView::RemoveResult (Result& result)
     }
   }
   renderer_->Unload(result);
-  g_debug ("REMOVED SIZE: %u", (unsigned int)results_.size());
 }
 
 void ResultView::SetPreview (PreviewBase *preview, Result& related_result)

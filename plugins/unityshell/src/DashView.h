@@ -30,6 +30,7 @@
 
 #include "DashSearchBar.h"
 #include "Introspectable.h"
+#include "LensBar.h"
 #include "LensView.h"
 #include "UBusWrapper.h"
 
@@ -96,6 +97,7 @@ private:
   nux::VLayout* content_layout_;
   SearchBar* search_bar_;
   nux::HLayout* lenses_layout_;
+  LensBar* lens_bar_;
 
   // Drawing related
   nux::Geometry content_geo_;
