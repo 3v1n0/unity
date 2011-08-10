@@ -536,6 +536,11 @@ PanelMenuView::GetActiveViewName()
     }
   }
 
+  char *escaped = g_markup_escape_text(label, -1);
+  g_free(label);
+  label = g_strdup_printf("<b>%s</b>", escaped);
+  g_free(escaped);
+
   return label;
 }
 
@@ -585,7 +590,7 @@ PanelMenuView::Refresh()
 
     layout = pango_cairo_create_layout(cr);
     pango_layout_set_font_description(layout, desc);
-    pango_layout_set_text(layout, label, -1);
+    pango_layout_set_markup(layout, label, -1);
 
     cxt = pango_layout_get_context(layout);
     pango_cairo_context_set_font_options(cxt, gdk_screen_get_font_options(screen));

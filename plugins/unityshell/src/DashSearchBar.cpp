@@ -51,6 +51,8 @@ NUX_IMPLEMENT_OBJECT_TYPE(SearchBar);
 
 SearchBar::SearchBar(NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
+  , search_hint("")
+  , showing_filters(false)
   , live_search_timeout_(0)
 {
   PlacesStyle* style = PlacesStyle::GetDefault();
