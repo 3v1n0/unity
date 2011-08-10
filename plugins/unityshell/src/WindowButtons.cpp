@@ -61,7 +61,7 @@ public:
 
     GfxContext.PushClippingRectangle(geo);
 
-    if (HasMouseFocus())
+    if (HasMouseFocus() && IsMouseInside())
     {
       tex = _pressed_tex;
     }
