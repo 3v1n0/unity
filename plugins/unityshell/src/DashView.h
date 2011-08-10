@@ -72,6 +72,7 @@ private:
   void Draw(nux::GraphicsEngine& gfx_context, bool force_draw);
   void DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw);
 
+  void OnMouseButtonDown(int x, int y, unsigned long button, unsigned long key);
   void OnActivateRequest(GVariant* args);
   void OnBackgroundColorChanged(GVariant* args);
   void OnSearchChanged(std::string const& search_string);

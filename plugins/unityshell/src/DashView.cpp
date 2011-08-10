@@ -48,6 +48,7 @@ DashView::DashView()
   SetupUBusConnections();
 
   lenses_.lens_added.connect(sigc::mem_fun(this, &DashView::OnLensAdded));
+  mouse_down.connect(sigc::mem_fun(this, &DashView::OnMouseButtonDown));
 
   Relayout();
 }
@@ -165,15 +166,6 @@ long DashView::ProcessEvent(nux::IEvent& ievent, long traverse_info, long event_
     return ret;
   }
 
-  if (ievent.e_event == nux::NUX_MOUSE_PRESSED)
-  {
-    if (!content_geo_.IsPointInside(ievent.e_x, ievent.e_y))
-    {
-      ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
-      return ret |= nux::eMouseEventSolved;
-    }
-  }
-
   ret = layout_->ProcessEvent(ievent, traverse_info, event_info);
   return ret;
 }
@@ -200,6 +192,14 @@ void DashView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
 
   gfx_context.GetRenderStates().SetBlend(false);
   gfx_context.PopClippingRectangle();
+}
+
+void DashView::OnMouseButtonDown(int x, int y, unsigned long button, unsigned long key)
+{
+  if (!content_geo_.IsPointInside(x, y))
+  {
+    ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
+  }
 }
 
 void DashView::OnActivateRequest(GVariant* args)
