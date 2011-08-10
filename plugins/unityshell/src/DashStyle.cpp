@@ -24,8 +24,9 @@
 #include <json-glib/json-glib.h>
 
 #include "DashStyle.h"
+#include "config.h"
 
-#define DASH_WIDGETS_FILE "/usr/share/unity/themes/dash-widgets.json"
+#define DASH_WIDGETS_FILE DATADIR"/unity/themes/dash-widgets.json"
 
 namespace unity
 {
@@ -891,6 +892,54 @@ namespace unity
     _regularTextWeight     = FONT_WEIGHT_LIGHT;
   }
 
+  void DashStyle::ArrowPath (cairo_t* cr, Arrow arrow)
+  {
+    double x  = 0.0;
+    double y  = 0.0;
+    double w  = cairo_image_surface_get_width (cairo_get_target (cr));
+    double h  = cairo_image_surface_get_height (cairo_get_target (cr));
+    /*double xt = 0.0;
+    double yt = 0.0;*/
+
+	// the real shape from the SVG
+    // 3.5/1.5, 20.5/22.5, (17x21)
+	/*xt = 16.25;
+	yt = 9.028;
+    cairo_move_to (cr, xt, yt);
+    cairo_curve_to (cr, xt - 1.511, yt - 1.006, xt - 3.019, yt - 1.971, xt - 4.527, yt - 2.897);
+    xt -= 4.527;
+    yt -= 2.897
+    cairo_curve_to (cr, 10.213, 5.2, 8.743, 4.335, 7.313, 3.532);
+    cairo_curve_to (cr, 8.743, 4.335, 4.613, 2.051, 3.5, 1.5);
+    cairo_rel_line_to (cr, 0.0, 21.0);
+    cairo_rel_curve_to (cr, 1.164, -0.552, 2.461, -1.229, 3.892, -2.032);
+    cairo_rel_curve_to (cr, 1.431, -0.803, 2.9, -1.682, 4.409, -2.634);
+    cairo_rel_curve_to (cr, 1.51, -0.953, 3.004, -1.932, 4.488, -2.937);
+    cairo_rel_curve_to (cr, 1.481, -1.002, 2.887, -1.981, 4.211, -2.935);
+    cairo_curve_to (cr, 19.176, 11.009, 17.759, 10.03, 16.25, 9.028);
+    cairo_close_path (cr);*/
+
+    if (arrow == ARROW_LEFT || arrow == ARROW_BOTH)
+    {
+      x = 1.0;
+      y = h / 2.0 - 3.5;
+      cairo_move_to (cr, x, y);
+      cairo_line_to (cr, x + 5.0, y + 3.5);
+      cairo_line_to (cr, x, y + 7.0);
+      cairo_close_path (cr);
+	}
+
+    if (arrow == ARROW_RIGHT || arrow == ARROW_BOTH)
+    {
+      x = w - 1.0;
+      y = h / 2.0 - 3.5;
+      cairo_move_to (cr, x, y);
+      cairo_line_to (cr, x - 5.0, y + 3.5);
+      cairo_line_to (cr, x, y + 7.0);
+      cairo_close_path (cr);
+	}
+  }
+
   void DashStyle::ButtonOutlinePath (cairo_t* cr, bool align)
   {
     double x  = 2.0;
@@ -1473,6 +1522,14 @@ namespace unity
 	      _buttonLabelTextColor[state],
 	      _buttonLabelTextOpacity[state],
 	      label);
+
+	// drawing the arrows only makes sense for the middle segments being active
+    if (state == nux::NUX_STATE_ACTIVE && segment == SEGMENT_MIDDLE)
+	{
+      ArrowPath (cr, arrow);
+      cairo_set_source_rgba (cr, 1.0, 0.0, 0.0, 1.0);
+      cairo_fill (cr);
+	}
 
     return true;
   }

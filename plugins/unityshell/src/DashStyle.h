@@ -20,6 +20,7 @@
 #define DASH_STYLE_H
 
 #include "Nux/Nux.h"
+#include "Nux/View.h"
 
 #include <json-glib/json-glib.h>
 #include <cairo.h>
@@ -29,18 +30,6 @@
 #define R        0
 #define G        1
 #define B        2
-
-namespace nux
-{
-  enum State
-  {
-    NUX_STATE_NORMAL = 0,
-    NUX_STATE_ACTIVE,
-    NUX_STATE_PRELIGHT,
-    NUX_STATE_SELECTED,
-    NUX_STATE_INSENSITIVE
-  };
-}
 
 namespace unity
 {
@@ -179,6 +168,8 @@ namespace unity
       void ButtonOutlinePath (cairo_t* cr, bool align);
 
       void ButtonOutlinePathSegment (cairo_t* cr, Segment segment);
+
+      void ArrowPath (cairo_t* cr, Arrow arrow);
 
     private:
       cairo_font_options_t* _defaultFontOptions;
