@@ -249,6 +249,8 @@ void DashView::OnLensAdded(Lens::Ptr& lens)
   view->SetVisible(false);
   lenses_layout_->AddView(view, 1);
   lens_views_[lens->id] = view;
+
+  lens->search_finished.connect(sigc::mem_fun(this, &DashView::OnSearchFinished));
 }
 
 void DashView::OnLensBarActivated(std::string const& id)
@@ -259,6 +261,12 @@ void DashView::OnLensBarActivated(std::string const& id)
   LensView* view = active_lens_view_ = lens_views_[id];
   search_bar_->search_string = view->search_string;
   search_bar_->search_hint = view->lens()->search_hint;
+}
+
+void DashView::OnSearchFinished(std::string const& search_string)
+{
+  if (search_bar_->search_string == search_string)
+    search_bar_->SearchFinished();
 }
 
 // Keyboard navigation

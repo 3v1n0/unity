@@ -173,6 +173,7 @@ void Lens::Impl::OnSearchFinished(GVariant* parameters)
   glib::String search_string;
 
   g_variant_get(parameters, "(sa{sv})", &search_string, NULL);
+  g_debug ("HELLO");
   owner_->search_finished.emit(search_string.Str());
 }
 
