@@ -85,7 +85,9 @@ PanelTray::~PanelTray()
   if (_tray_expose_id)
     g_signal_handler_disconnect(_window, _tray_expose_id);
 
-  gtk_widget_destroy(_window);
+  // DISABLED to see if we can get compiz to cleanly exit.
+  // This currently blocks on X.
+  // gtk_widget_destroy(_window);
   g_strfreev(_whitelist);
   g_object_unref(_settings);
 }
