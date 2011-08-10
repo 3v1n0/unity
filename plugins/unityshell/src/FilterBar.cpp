@@ -42,6 +42,7 @@ namespace unity
 
   void FilterBar::Init () {
     nux::Layout *layout = new nux::VLayout (NUX_TRACKER_LOCATION);
+    layout->SetVerticalInternalMargin(12);
     SetLayout (layout);
   }
 
@@ -62,15 +63,16 @@ namespace unity
   }
 
   void FilterBar::RemoveFilter (dash::Filter::Ptr filter) {
-    if (filter_map_.count (filter) > 0) {
-      g_warning ("Attempting to remove filter not in the map");
-      return;
+    for (auto iter: filter_map_)
+    {
+      if (iter.first->id == filter->id)
+      {
+        nux::View *filter_view = iter.second;
+        filter_map_.erase (filter_map_.find(iter.first));
+        GetLayout()->RemoveChildObject (filter_view);
+        break;
+      }
     }
-
-    nux::View *filter_view = filter_map_[filter];
-    filter_map_.erase (filter);
-
-    GetLayout()->RemoveChildObject (filter_view);
   }
 
   void FilterBar::ClearFilters () {
