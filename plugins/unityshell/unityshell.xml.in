@@ -224,7 +224,7 @@
                     <_long>Type of blur in the Dash</_long>
                     <min>0</min>
                     <max>2</max>
-                    <default>0</default>
+                    <default>2</default>
                     <desc>
                         <value>0</value>
                         <_name>No Blur</_name>
