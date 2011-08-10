@@ -69,18 +69,21 @@ namespace unity {
 
 
   long int FilterRatingsWidget::ProcessEvent(nux::IEvent& ievent, long int TraverseInfo, long int ProcessEventInfo) {
-    return PostProcessEvent2 (ievent, TraverseInfo, ProcessEventInfo);
+    return GetLayout()->ProcessEvent(ievent, TraverseInfo, ProcessEventInfo);
   }
 
   void FilterRatingsWidget::Draw(nux::GraphicsEngine& GfxContext, bool force_draw) {
+    nux::Geometry geo = GetGeometry();
+
+    GfxContext.PushClippingRectangle(geo);
+    nux::GetPainter().PaintBackground(GfxContext, geo);
+    GfxContext.PopClippingRectangle();
   }
 
   void FilterRatingsWidget::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw) {
-    nux::Geometry base = GetGeometry ();
-    GfxContext.PushClippingRectangle (base);
-
-    if (GetCompositionLayout ())
-      GetCompositionLayout ()->ProcessDraw (GfxContext, force_draw);
+    GfxContext.PushClippingRectangle(GetGeometry());
+  
+    GetLayout()->ProcessDraw(GfxContext, force_draw);
 
     GfxContext.PopClippingRectangle();
   }

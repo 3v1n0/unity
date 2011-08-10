@@ -75,6 +75,8 @@ namespace unity {
       active_ = new nux::CairoWrapper(GetGeometry(), sigc::bind(sigc::mem_fun(this, &FilterBasicButton::RedrawTheme), nux::State::NUX_STATE_ACTIVE));
       normal_ = new nux::CairoWrapper(GetGeometry(), sigc::bind(sigc::mem_fun(this, &FilterBasicButton::RedrawTheme), nux::State::NUX_STATE_NORMAL));
     }
+
+    SetMinimumHeight(32);
   }
 
   void FilterBasicButton::RedrawTheme (nux::Geometry const& geom, cairo_t *cr, nux::State faked_state)
@@ -110,7 +112,6 @@ namespace unity {
 
     // clear what is behind us
     nux::t_u32 alpha = 0, src = 0, dest = 0;
-
     GfxContext.GetRenderStates().GetBlend(alpha, src, dest);
     GfxContext.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -142,8 +143,6 @@ namespace unity {
   }
 
   void FilterBasicButton::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw) {
-    //FIXME - i swear i didn't change anything, but suddenly nux stopped drawing the contents of the button
-    //nux::Button::DrawContent(GfxContext, force_draw);
   }
 
   void FilterBasicButton::PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw) {

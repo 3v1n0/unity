@@ -28,6 +28,7 @@
 #include <Nux/GridHLayout.h>
 #include <Nux/HLayout.h>
 #include <Nux/VLayout.h>
+#include "Nux/StaticText.h"
 
 namespace unity {
 
@@ -52,10 +53,12 @@ namespace unity {
     void BuildLayout ();
     void DoExpandChange (bool change);
 
+    nux::Layout* layout_;
     nux::Layout* top_bar_layout_;
     nux::Layout* contents_;
     nux::View* right_hand_contents_;
     nux::View* expander_graphic_;
+    nux::StaticText* cairo_label_;
     std::string label_;
   };
 
