@@ -34,6 +34,7 @@ SwitcherController::SwitcherController()
   ,  visible_(false)
   ,  show_timer_(0)
 {
+  timeout_length = 150;
 }
 
 SwitcherController::~SwitcherController()
@@ -51,7 +52,14 @@ void SwitcherController::Show(SwitcherController::ShowMode show, SwitcherControl
 
   visible_ = true;
 
-  show_timer_ = g_timeout_add(150, &SwitcherController::OnShowTimer, this);
+  if (timeout_length > 0)
+  {
+    show_timer_ = g_timeout_add(timeout_length, &SwitcherController::OnShowTimer, this);
+  }
+  else
+  {
+    ConstructView ();
+  }
 }
 
 gboolean SwitcherController::OnShowTimer(gpointer data)
@@ -151,6 +159,11 @@ void SwitcherController::MovePrev()
   if (!model_)
     return;
   model_->Prev();
+}
+
+SwitcherView * SwitcherController::GetView()
+{
+  return view_;
 }
 
 void SwitcherController::DetailCurrent()

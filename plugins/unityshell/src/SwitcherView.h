@@ -77,6 +77,9 @@ private:
   void OnDetailSelectionChanged (bool detail);
   void OnDetailSelectionIndexChanged (int index);
 
+  void OnIconSizeChanged (int size);
+  void OnTileSizeChanged (int size);
+
   nux::Geometry UpdateRenderTargets (RenderArg const& selection_arg, timespec const& current);
 
   static gboolean OnDrawTimeout(gpointer data);

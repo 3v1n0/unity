@@ -54,6 +54,8 @@ public:
   SwitcherController();
   virtual ~SwitcherController();
 
+  nux::Property<int> timeout_length;
+
   void Show(ShowMode show, SortMode sort, bool reverse, std::vector<AbstractLauncherIcon*> results);
   void Hide();
 
@@ -67,6 +69,8 @@ public:
   void SelectFirstItem();
 
   void SetWorkspace(nux::Geometry geo);
+
+  SwitcherView * GetView ();
 
   LayoutWindowList ExternalRenderTargets ();
 

@@ -64,6 +64,9 @@ SwitcherView::SwitcherView(NUX_FILE_LINE_DECL)
   text_view_->SetGeometry(nux::Geometry(0, 0, 200, text_size));
   text_view_->SetTextColor(nux::color::White);
   text_view_->SetFont("Ubuntu Bold 10");
+
+  icon_size.changed.connect (sigc::mem_fun (this, &SwitcherView::OnIconSizeChanged));
+  tile_size.changed.connect (sigc::mem_fun (this, &SwitcherView::OnTileSizeChanged));
 }
 
 SwitcherView::~SwitcherView()
@@ -94,6 +97,17 @@ void SwitcherView::SetModel(SwitcherModel::Ptr model)
 
   if (model->Selection())
     text_view_->SetText(model->Selection()->tooltip_text().c_str());
+}
+
+void SwitcherView::OnIconSizeChanged (int size)
+{
+  icon_renderer_->SetTargetSize(tile_size, icon_size, 10);
+}
+
+void SwitcherView::OnTileSizeChanged (int size)
+{
+  icon_renderer_->SetTargetSize(tile_size, icon_size, 10);
+  vertical_size = tile_size + 80;
 }
 
 void SwitcherView::SaveLast ()
