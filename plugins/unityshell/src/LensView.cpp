@@ -39,6 +39,8 @@ NUX_IMPLEMENT_OBJECT_TYPE(LensView);
 
 LensView::LensView(Lens::Ptr lens)
   : nux::View(NUX_TRACKER_LOCATION)
+  , search_string("")
+  , filters_expanded(false)
   , lens_(lens)
 {
   SetupViews();
@@ -51,6 +53,8 @@ LensView::LensView(Lens::Ptr lens)
   results->result_removed.connect(sigc::mem_fun(this, &LensView::OnResultRemoved));
 
   PlacesStyle::GetDefault()->columns_changed.connect(sigc::mem_fun(this, &LensView::OnColumnsChanged));
+
+  search_string.changed.connect([&](std::string const& search) { lens_->Search(search);  });
 }
 
 LensView::~LensView()
@@ -87,6 +91,7 @@ void LensView::OnCategoryAdded(Category const& category)
   group->SetName(name.c_str());
   group->SetIcon(icon_hint.c_str());
   group->SetExpanded(false);
+  group->SetVisible(false);
   group->expanded.connect(sigc::mem_fun(this, &LensView::OnGroupExpanded));
   categories_.push_back(group);
   counts_[group] = 0;
@@ -130,6 +135,7 @@ void LensView::UpdateCounts(PlacesGroup* group)
   PlacesStyle* style = PlacesStyle::GetDefault();
 
   group->SetCounts(style->GetDefaultNColumns(), counts_[group]);
+  group->SetVisible(counts_[group]);
 }
 
 void LensView::OnGroupExpanded(PlacesGroup* group)
@@ -169,6 +175,11 @@ void LensView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
   layout_->ProcessDraw(gfx_context, force_draw);
 
   gfx_context.PopClippingRectangle();
+}
+
+Lens::Ptr LensView::lens() const
+{
+  return lens_;
 }
 
 // Keyboard navigation

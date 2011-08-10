@@ -93,7 +93,7 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
        sigc::mem_fun(this, &SearchBar::OnFontChanged)));
   OnFontChanged(gtk_settings_get_default());
 
-  search_hint.changed.connect([&](std::string const& s) { hint_->SetText(s.c_str()); });
+  search_hint.changed.connect([&](std::string const& s) { OnSearchHintChanged(); });
   search_string.SetGetterFunction(sigc::mem_fun(this, &SearchBar::get_search_string));
   search_string.SetSetterFunction(sigc::mem_fun(this, &SearchBar::set_search_string));
 }
@@ -139,7 +139,7 @@ void SearchBar::OnSearchHintChanged()
   std::string hint = search_hint;
   gchar* tmp = g_markup_escape_text(hint.c_str(), -1);
 
-  gchar* markup  = g_strdup_printf("<span font_size='x-sma' font_style='itaic'> %s </span>", tmp);
+  gchar* markup  = g_strdup_printf("<span font_size='small' font_style='italic'> %s </span>", tmp);
   hint_->SetText(markup);
 
   g_free(markup);

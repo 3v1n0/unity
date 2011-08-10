@@ -100,6 +100,8 @@ private:
   nux::VLayout* lenses_layout_;
   LensBar* lens_bar_;
 
+  LensView* active_lens_view_;
+
   // Drawing related
   nux::Geometry content_geo_;
 };

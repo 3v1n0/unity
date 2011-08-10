@@ -40,6 +40,8 @@ NUX_IMPLEMENT_OBJECT_TYPE(DashView);
 DashView::DashView()
   : nux::View(NUX_TRACKER_LOCATION)
   , size_mode_(SIZE_MODE_NORMAL)
+  , active_lens_view_(0)
+
 {
   SetupBackground();
   SetupViews();
@@ -233,6 +235,10 @@ void DashView::OnSearchChanged(std::string const& search_string)
 void DashView::OnLiveSearchReached(std::string const& search_string)
 {
   LOG_DEBUG(logger) << "Live search reached: " << search_string;
+  if (active_lens_view_)
+  {
+    active_lens_view_->search_string = search_string;
+  }
 }
 
 void DashView::OnLensAdded(Lens::Ptr& lens)
@@ -248,9 +254,11 @@ void DashView::OnLensAdded(Lens::Ptr& lens)
 void DashView::OnLensBarActivated(std::string const& id)
 {
   for (auto it: lens_views_)
-  {
     it.second->SetVisible(it.first == id);
-  }
+
+  LensView* view = active_lens_view_ = lens_views_[id];
+  search_bar_->search_string = view->search_string;
+  search_bar_->search_hint = view->lens()->search_hint;
 }
 
 // Keyboard navigation

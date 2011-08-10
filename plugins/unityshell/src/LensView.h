@@ -47,6 +47,11 @@ public:
   LensView(Lens::Ptr lens);
   ~LensView();
 
+  Lens::Ptr lens() const;
+
+  nux::Property<std::string> search_string;
+  nux::Property<bool> filters_expanded;
+
 private:
   void SetupViews();
 
