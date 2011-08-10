@@ -1439,7 +1439,7 @@ namespace unity
     return true;
   }
 
-  bool DashStyle::Rating (cairo_t* cr, double rating)
+  bool DashStyle::StarEmpty (cairo_t* cr, nux::State state)
   {
 	// sanity checks
     if (cairo_status (cr) != CAIRO_STATUS_SUCCESS)
@@ -1448,42 +1448,77 @@ namespace unity
     if (cairo_surface_get_type (cairo_get_target (cr)) != CAIRO_SURFACE_TYPE_IMAGE)
       return false;
 
-	if (rating < 0.0 || rating > 1.0)
+    double w = cairo_image_surface_get_width (cairo_get_target (cr));
+    double h = cairo_image_surface_get_height (cairo_get_target (cr));
+    double radius = .85 * h / 2.0;
+
+	cairo_save (cr);
+    cairo_translate (cr, w / 2.0, h / 2.0);
+    Star (cr, radius);
+	cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 0.2);
+    cairo_fill_preserve (cr);
+	cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 1.0);
+    cairo_stroke (cr);
+	cairo_restore (cr);
+
+	return true;
+  }
+
+  bool DashStyle::StarHalf (cairo_t* cr, nux::State state)
+  {
+	// sanity checks
+    if (cairo_status (cr) != CAIRO_STATUS_SUCCESS)
+      return false;
+
+    if (cairo_surface_get_type (cairo_get_target (cr)) != CAIRO_SURFACE_TYPE_IMAGE)
       return false;
 
     double w = cairo_image_surface_get_width (cairo_get_target (cr));
     double h = cairo_image_surface_get_height (cairo_get_target (cr));
-    double size = w / 5;
-    double radius = .85 * size / 2.0;
-
-	cairo_save (cr);
+    double radius = .85 * h / 2.0;
 
 	cairo_pattern_t* pattern = NULL;
     pattern = cairo_pattern_create_linear (0.0, 0.0, w, 0.0);
-	cairo_pattern_add_color_stop_rgba (pattern, 0.0, 1.0, 1.0, 1.0, 1.0);
-    cairo_pattern_add_color_stop_rgba (pattern, rating, 1.0, 1.0, 1.0, 1.0);
-    cairo_pattern_add_color_stop_rgba (pattern, rating + 0.01, 1.0, 1.0, 1.0, 0.2);
-    cairo_pattern_add_color_stop_rgba (pattern, 1.0, 1.0, 1.0, 1.0, 0.2);
+	cairo_pattern_add_color_stop_rgba (pattern, 0.0,        1.0, 1.0, 1.0, 1.0);
+    cairo_pattern_add_color_stop_rgba (pattern,  .5,        1.0, 1.0, 1.0, 1.0);
+    cairo_pattern_add_color_stop_rgba (pattern,  .5 + 0.01, 1.0, 1.0, 1.0, 0.2);
+    cairo_pattern_add_color_stop_rgba (pattern, 1.0,        1.0, 1.0, 1.0, 0.2);
 	cairo_set_source (cr, pattern);
 
-    cairo_translate (cr, size / 2.0, h / 2.0);
+	cairo_save (cr);
+    cairo_translate (cr, w / 2.0, h / 2.0);
     Star (cr, radius);
-    cairo_translate (cr, size, 0.0);
-    Star (cr, radius);
-    cairo_translate (cr, size, 0.0);
-    Star (cr, radius);
-    cairo_translate (cr, size, 0.0);
-    Star (cr, radius);
-    cairo_translate (cr, size, 0.0);
-    Star (cr, radius);
-
 	cairo_fill_preserve (cr);
     cairo_pattern_destroy (pattern);
 	cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 1.0);
     cairo_stroke (cr);
-    cairo_restore (cr);
+	cairo_restore (cr);
 
-    return true;
+	return true;
+  }
+
+  bool DashStyle::StarFull (cairo_t* cr, nux::State state)
+  {
+	// sanity checks
+    if (cairo_status (cr) != CAIRO_STATUS_SUCCESS)
+      return false;
+
+    if (cairo_surface_get_type (cairo_get_target (cr)) != CAIRO_SURFACE_TYPE_IMAGE)
+      return false;
+
+    double w = cairo_image_surface_get_width (cairo_get_target (cr));
+    double h = cairo_image_surface_get_height (cairo_get_target (cr));
+    double radius = .85 * h / 2.0;
+
+	cairo_save (cr);
+    cairo_translate (cr, w / 2.0, h / 2.0);
+    Star (cr, radius);
+	cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 1.0);
+    cairo_fill_preserve (cr);
+	cairo_stroke (cr); // to make sure it's as "large" as the empty and half ones
+	cairo_restore (cr);
+
+	return true;
   }
 
   bool DashStyle::MultiRangeSegment (cairo_t*    cr,
