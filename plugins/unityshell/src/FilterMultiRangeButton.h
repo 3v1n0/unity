@@ -40,6 +40,7 @@ namespace unity {
     dash::FilterOption::Ptr GetFilter();
 
   protected:
+    virtual long ComputeLayout2();
     virtual long int ProcessEvent(nux::IEvent& ievent, long int TraverseInfo, long int ProcessEventInfo);
     virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
     virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
@@ -47,6 +48,23 @@ namespace unity {
 
   private:
     dash::FilterOption::Ptr filter_;
+
+    void InitTheme ();
+    void RedrawTheme (nux::Geometry const& geom, cairo_t *cr, nux::State faked_state);
+
+    nux::CairoWrapper *prelight_left_;
+    nux::CairoWrapper *active_left_;
+    nux::CairoWrapper *normal_left_;
+
+    nux::CairoWrapper *prelight_;
+    nux::CairoWrapper *active_;
+    nux::CairoWrapper *normal_;
+
+    nux::CairoWrapper *prelight_right_;
+    nux::CairoWrapper *active_right_;
+    nux::CairoWrapper *normal_right_;
+    nux::Geometry cached_geometry_;
+
   };
 
 }
