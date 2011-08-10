@@ -24,6 +24,7 @@
 
 #include "PlacesStyle.h"
 #include "ResultRendererTile.h"
+#include "UBusMessages.h"
 
 namespace unity
 {
@@ -142,6 +143,7 @@ void LensView::OnGroupExpanded(PlacesGroup* group)
 {
   ResultViewGrid* grid = static_cast<ResultViewGrid*>(group->GetChildView());
   grid->expanded = group->GetExpanded();
+  ubus_manager_.SendMessage(UBUS_PLACE_VIEW_QUEUE_DRAW);
 }
 
 void LensView::OnColumnsChanged()

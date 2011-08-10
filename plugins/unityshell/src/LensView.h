@@ -31,6 +31,7 @@
 #include "Introspectable.h"
 #include "ResultViewGrid.h"
 #include "PlacesGroup.h"
+#include "UBusWrapper.h"
 
 namespace unity
 {
@@ -71,6 +72,7 @@ private:
   void AddProperties(GVariantBuilder* builder);
 
 private:
+  UBusManager ubus_manager_;
   Lens::Ptr lens_;
   CategoryGroups categories_;
   ResultCounts counts_;
