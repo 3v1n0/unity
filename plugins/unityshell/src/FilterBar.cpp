@@ -83,10 +83,15 @@ namespace unity
 
 
   long int FilterBar::ProcessEvent(nux::IEvent& ievent, long int TraverseInfo, long int ProcessEventInfo) {
-    return TraverseInfo;
+    return GetLayout()->ProcessEvent(ievent, TraverseInfo, ProcessEventInfo);
   }
 
   void FilterBar::Draw(nux::GraphicsEngine& GfxContext, bool force_draw) {
+    nux::Geometry geo = GetGeometry();
+
+    GfxContext.PushClippingRectangle(geo);
+    nux::GetPainter().PaintBackground(GfxContext, geo);
+    GfxContext.PopClippingRectangle();
   }
 
   void FilterBar::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw) {

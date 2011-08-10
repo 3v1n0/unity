@@ -21,7 +21,6 @@
 
 #include "config.h"
 #include "Nux/Nux.h"
-#include "Nux/StaticText.h"
 
 #include "FilterBasicButton.h"
 #include "FilterExpanderLabel.h"
@@ -43,76 +42,49 @@ namespace unity {
 
   FilterExpanderLabel::~FilterExpanderLabel() {
 
-    if (right_hand_contents_)
-      right_hand_contents_->UnReference();
-
-    if (contents_)
-      contents_->UnReference();
   }
 
   void FilterExpanderLabel::SetLabel (std::string label)
   {
     label_ = label;
-
-    BuildLayout ();
+    cairo_label_->SetText(label.c_str());
   }
 
   void FilterExpanderLabel::SetRightHandView (nux::View *view)
   {
-    view->Reference ();
-
-    if (right_hand_contents_)
-      right_hand_contents_->UnReference();
     right_hand_contents_ = view;
-
-    BuildLayout ();
+    top_bar_layout_->AddView(right_hand_contents_, 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_MATCHCONTENT);
   }
 
-  void FilterExpanderLabel::SetContents (nux::Layout *layout)
+  void FilterExpanderLabel::SetContents (nux::Layout *contents)
   {
-    layout->Reference();
+    contents_ = contents;
+    contents_->SetVisible(expanded);
+    layout_->AddLayout (contents_, 1);
 
-    if (contents_)
-      contents_->UnReference();
-    contents_ = layout;
-
-    //BuildLayout ();
+    QueueDraw();
   }
 
   void FilterExpanderLabel::BuildLayout ()
   {
-    RemoveLayout();
-    nux::VLayout *layout = new nux::VLayout(NUX_TRACKER_LOCATION);
+    layout_ = new nux::VLayout(NUX_TRACKER_LOCATION);
     top_bar_layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
 
-    nux::StaticText *cairo_label_ = new nux::StaticText(label_.c_str(), NUX_TRACKER_LOCATION);
+    cairo_label_ = new nux::StaticText(label_.c_str(), NUX_TRACKER_LOCATION);
     cairo_label_->SetTextColor(nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
     cairo_label_->OnMouseDown.connect(
       [&](int x, int y, unsigned long button_flags, unsigned long key_flag)
       {
         expanded = !expanded;
+        if (contents_)
+          contents_->SetVisible(expanded);
       });
 
     top_bar_layout_->AddView (cairo_label_, 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_MATCHCONTENT);
     top_bar_layout_->AddSpace(1, 1);
 
-    if (right_hand_contents_)
-    {
-      g_debug ("adding right hand contents");
-      top_bar_layout_->AddView(right_hand_contents_, 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_MATCHCONTENT);
-    }
-    else
-    {
-      g_debug ("Not adding right hand contents");
-    }
-
-    layout->AddLayout (top_bar_layout_, 1);
-
-    if (expanded && contents_)
-      layout->AddLayout (contents_, 1);
-
-
-    SetLayout(layout);
+    layout_->AddLayout (top_bar_layout_, 1);
+    SetLayout(layout_);
 
     QueueRelayout();
     NeedRedraw();
@@ -120,24 +92,28 @@ namespace unity {
 
   void FilterExpanderLabel::DoExpandChange (bool change)
   {
-    BuildLayout();
+    if (contents_)
+      contents_->SetVisible(change);
+
     QueueRelayout();
   }
 
   long int FilterExpanderLabel::ProcessEvent(nux::IEvent& ievent, long int TraverseInfo, long int ProcessEventInfo) {
-    return PostProcessEvent2 (ievent, TraverseInfo, ProcessEventInfo);
+    return GetLayout()->ProcessEvent(ievent, TraverseInfo, ProcessEventInfo);
   }
 
   void FilterExpanderLabel::Draw(nux::GraphicsEngine& GfxContext, bool force_draw) {
-    gPainter.PaintBackground(GfxContext, GetGeometry());
+    nux::Geometry geo = GetGeometry();
+
+    GfxContext.PushClippingRectangle(geo);
+    nux::GetPainter().PaintBackground(GfxContext, geo);
+    GfxContext.PopClippingRectangle();
   }
 
   void FilterExpanderLabel::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw) {
-    nux::Geometry base = GetGeometry ();
-    GfxContext.PushClippingRectangle (base);
-
-    if (GetCompositionLayout ())
-      GetCompositionLayout ()->ProcessDraw (GfxContext, force_draw);
+    GfxContext.PushClippingRectangle(GetGeometry());
+  
+    GetLayout()->ProcessDraw(GfxContext, force_draw);
 
     GfxContext.PopClippingRectangle();
   }

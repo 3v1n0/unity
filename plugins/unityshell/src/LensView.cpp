@@ -202,7 +202,6 @@ void LensView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
 
 void LensView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
 {
-  
   gfx_context.PushClippingRectangle(GetGeometry());
 
   layout_->ProcessDraw(gfx_context, force_draw);
