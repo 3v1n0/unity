@@ -458,7 +458,7 @@ private:
   bool              _drag_edge_touching;
   LauncherIcon*     _dnd_hovered_icon;
   unity::DNDCollectionWindow* _collection_window;
-
+  sigc::connection _on_data_collected_connection;
 
   Atom              _selection_atom;
 

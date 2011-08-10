@@ -1745,8 +1745,7 @@ Launcher::OnUpdateDragManagerTimeout(gpointer data)
     {
       self->_collection_window = new unity::DNDCollectionWindow(root_x_r, root_y_r);
       self->_collection_window->SinkReference();
-      // FIXME: disconnect
-      self->_collection_window->collected.connect(sigc::mem_fun(self, &Launcher::OnDNDDataCollected));
+      self->_on_data_collected_connection = self->_collection_window->collected.connect(sigc::mem_fun(self, &Launcher::OnDNDDataCollected));
     }
     
     return true;
@@ -1754,6 +1753,9 @@ Launcher::OnUpdateDragManagerTimeout(gpointer data)
   
   if (self->_collection_window != NULL)
   {
+    if (self->_on_data_collected_connection.connected())
+      self->_on_data_collected_connection.disconnect();
+      
     self->_collection_window->UnReference();
     self->_collection_window = NULL;
   }
