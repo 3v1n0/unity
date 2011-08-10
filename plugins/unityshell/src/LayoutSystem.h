@@ -1,0 +1,71 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
+/*
+ * Copyright (C) 2011 Canonical Ltd
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Authored by: Jason Smith <jason.smith@canonical.com>
+ */
+
+#ifndef UNITYSHELL_LAYOUTSYSTEM_H
+#define UNITYSHELL_LAYOUTSYSTEM_H
+
+#include <boost/shared_ptr.hpp>
+#include <sigc++/sigc++.h>
+
+#include <X11/Xlib.h>
+
+#include <Nux/Nux.h>
+
+namespace unity {
+namespace ui {
+
+class LayoutWindow
+{
+public:
+  typedef boost::shared_ptr<LayoutWindow> Ptr;
+
+  LayoutWindow (Window xid);
+  
+  Window xid;
+
+  nux::Geometry geo;
+  nux::Geometry result;
+
+  float aspect_ratio;
+  float alpha;
+};
+
+typedef std::vector<LayoutWindow::Ptr> LayoutWindowList;
+
+class LayoutSystem
+{
+public:
+  typedef boost::shared_ptr<LayoutSystem> Ptr;
+
+  LayoutSystem ();
+  ~LayoutSystem ();
+
+  void LayoutWindows (LayoutWindowList windows, nux::Geometry const& max_bounds, nux::Geometry& final_bounds);
+
+protected:
+  void LayoutTwoWindows (LayoutWindowList windows, nux::Geometry const& max_bounds, nux::Geometry& final_bounds);
+  void LayoutGridWindows (LayoutWindowList windows, nux::Geometry const& max_bounds, nux::Geometry& final_bounds);
+
+  nux::Geometry ScaleBoxIntoBox (nux::Geometry const& bounds, nux::Geometry const& box);
+};
+
+}
+}
+
+#endif // UNITYSHELL_LAYOUTSYSTEM_H
