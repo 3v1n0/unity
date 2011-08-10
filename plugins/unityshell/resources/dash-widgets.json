@@ -19,14 +19,14 @@
     "text-weight"    : "regular"},
 
   "comments": {
-    "states"         : ["NORMAL", "ACTIVE", "PRELIGHT", "SELECTED", "INSENSITIVE"]},
+    "states"         : ["ACTIVE",   "NORMAL","PRELIGHT","SELECTED","INSENSITIVE"]},
 
   "button-icon": {
-    "color"          : ["#7f7f7f", "#ffffff", "#7f7f7f", "#7f7f7f", "#7f7f7f"],
+    "color"          : ["#ffffff", "#7f7f7f", "#7f7f7f", "#7f7f7f", "#7f7f7f"],
     "opacity"        : [      1.0,       1.0,       0.8,       0.8,       0.8],
-    "overlay-opacity": [     0.48,      0.30,      0.45,      0.45,      0.45],
-    "overlay-mode"   : ["multiply",  "normal", "normal",  "normal",  "normal"],
-    "blur-size"      : [        0,         5,         0,         0,         0]},
+    "overlay-opacity": [     0.30,      0.48,      0.45,      0.45,      0.45],
+    "overlay-mode"   : [ "normal","multiply",  "normal",  "normal",  "normal"],
+    "blur-size"      : [        5,         0,         0,         0,         0]},
 
   "icon-only"        : {
     "color"          : "#123456",
@@ -40,17 +40,17 @@
     "icon-gap"       : 40},
 
   "button-label": {
-    "border-opacity" : [      0.5,       0.8,       0.5,       0.5,       0.5],
-    "border-color"   : ["#7f7f7f", "#ffffff", "#7f7f7f", "#7f7f7f", "#7f7f7f"],
+    "border-opacity" : [      0.8,       0.5,       0.5,       0.5,       0.5],
+    "border-color"   : ["#ffffff", "#7f7f7f", "#7f7f7f", "#7f7f7f", "#7f7f7f"],
     "border-size"    : 1.0,
     "text-size"      : 1.0,
-    "text-color"     : ["#ffffff", "#000000", "#ffffff", "#ffffff", "#ffffff"],
+    "text-color"     : ["#000000", "#ffffff", "#ffffff", "#ffffff", "#ffffff"],
     "text-opacity"   : [      1.0,       1.0,       1.0,       1.0,       1.0], 
-    "fill-color"     : ["#000000", "#7f7f7f", "#000000", "#000000", "#000000"],
-    "fill-opacity"   : [      0.0,       1.0,       0.0,       0.0,       0.0],
-    "overlay-opacity": [      0.0,       0.3,       0.0,       0.0,       0.0],
+    "fill-color"     : ["#7f7f7f", "#000000", "#000000", "#000000", "#000000"],
+    "fill-opacity"   : [      1.0,       0.0,       0.0,       0.0,       0.0],
+    "overlay-opacity": [      0.3,       0.0,       0.0,       0.0,       0.0],
     "overlay-mode"   : [ "normal",  "normal",  "normal",  "normal",  "normal"],
-    "blur-size"      : [        0,         5,         0,         0,         0]},
+    "blur-size"      : [        5,         0,         0,         0,         0]},
 
   "track-view"       : {
     "line-gap"         : 26.0,
