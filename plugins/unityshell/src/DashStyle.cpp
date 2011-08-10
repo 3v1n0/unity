@@ -923,9 +923,9 @@ namespace unity
     {
       x = 1.0;
       y = h / 2.0 - 3.5;
-      cairo_move_to (cr, x, y);
-      cairo_line_to (cr, x + 5.0, y + 3.5);
-      cairo_line_to (cr, x, y + 7.0);
+      cairo_move_to (cr, _align (x), _align (y));
+      cairo_line_to (cr, _align (x + 5.0), _align (y + 3.5));
+      cairo_line_to (cr, _align (x), _align (y + 7.0));
       cairo_close_path (cr);
 	}
 
@@ -933,9 +933,9 @@ namespace unity
     {
       x = w - 1.0;
       y = h / 2.0 - 3.5;
-      cairo_move_to (cr, x, y);
-      cairo_line_to (cr, x - 5.0, y + 3.5);
-      cairo_line_to (cr, x, y + 7.0);
+      cairo_move_to (cr, _align (x), _align (y));
+      cairo_line_to (cr, _align (x - 5.0), _align (y + 3.5));
+      cairo_line_to (cr, _align (x), _align (y + 7.0));
       cairo_close_path (cr);
 	}
   }
@@ -1562,8 +1562,10 @@ namespace unity
     if (state == nux::NUX_STATE_ACTIVE && segment == SEGMENT_MIDDLE)
 	{
       ArrowPath (cr, arrow);
-      cairo_set_source_rgba (cr, 1.0, 0.0, 0.0, 1.0);
+      //cairo_set_source_rgba (cr, 1.0, 0.0, 0.0, 1.0);
+      cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
       cairo_fill (cr);
+	  cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
 	}
 
     return true;
