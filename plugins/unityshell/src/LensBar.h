@@ -45,6 +45,8 @@ public:
 
   void AddLens(Lens::Ptr& lens);
 
+  sigc::signal<void, std::string const&> lens_activated;
+
 private:
   long ProcessEvent(nux::IEvent& ievent, long traverse_info, long event_info);
   void Draw(nux::GraphicsEngine& gfx_context, bool force_draw);

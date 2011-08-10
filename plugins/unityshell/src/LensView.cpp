@@ -49,6 +49,8 @@ LensView::LensView(Lens::Ptr lens)
   Results::Ptr results = lens_->results;
   results->result_added.connect(sigc::mem_fun(this, &LensView::OnResultAdded));
   results->result_removed.connect(sigc::mem_fun(this, &LensView::OnResultRemoved));
+
+  PlacesStyle::GetDefault()->columns_changed.connect(sigc::mem_fun(this, &LensView::OnColumnsChanged));
 }
 
 LensView::~LensView()
@@ -60,6 +62,7 @@ void LensView::SetupViews()
 
   scroll_view_ = new nux::ScrollView();
   scroll_view_->EnableVerticalScrollBar(true);
+  scroll_view_->EnableHorizontalScrollBar(false);
   scroll_view_->SetLayout(scroll_layout_);
 
   layout_ = new nux::HLayout();
@@ -102,7 +105,7 @@ void LensView::OnResultAdded(Result const& result)
   ResultViewGrid* grid = static_cast<ResultViewGrid*>(group->GetChildView());
 
   std::string uri = result.uri;
-  LOG_DEBUG(logger) << "Result added: " << uri;
+  LOG_TRACE(logger) << "Result added: " << uri;
 
   grid->AddResult(const_cast<Result&>(result));
   counts_[group]++;
@@ -115,7 +118,7 @@ void LensView::OnResultRemoved(Result const& result)
   ResultViewGrid* grid = static_cast<ResultViewGrid*>(group->GetChildView());
 
   std::string uri = result.uri;
-  LOG_DEBUG(logger) << "Result removed: " << uri;
+  LOG_TRACE(logger) << "Result removed: " << uri;
 
   grid->RemoveResult(const_cast<Result&>(result));
   counts_[group]--;
@@ -133,6 +136,16 @@ void LensView::OnGroupExpanded(PlacesGroup* group)
 {
   ResultViewGrid* grid = static_cast<ResultViewGrid*>(group->GetChildView());
   grid->expanded = group->GetExpanded();
+}
+
+void LensView::OnColumnsChanged()
+{
+  unsigned int columns = PlacesStyle::GetDefault()->GetDefaultNColumns();
+
+  for (auto group: categories_)
+  {
+    group->SetCounts(columns, counts_[group]);
+  }
 }
 
 long LensView::ProcessEvent(nux::IEvent& ievent, long traverse_info, long event_info)

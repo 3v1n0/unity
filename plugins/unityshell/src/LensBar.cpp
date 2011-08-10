@@ -49,12 +49,16 @@ LensBar::~LensBar()
 
 void LensBar::AddLens(Lens::Ptr& lens)
 {
+  std::string id = lens->id;
   std::string icon_hint = lens->icon_hint;
+
   IconTexture* icon = new IconTexture(icon_hint.c_str(), 32);
   icon->SetMinMaxSize(32, 32);
   icon->SetVisible(lens->visible);
   lens->visible.changed.connect([icon](bool visible) { icon->SetVisible(visible); } );
   layout_->AddView(icon, 0, nux::eCenter, nux::eFix);
+
+  icon->mouse_click.connect([&, id] (int x, int y, unsigned long button, unsigned long keyboard) { lens_activated.emit(id); });
 }
 
 long LensBar::ProcessEvent(nux::IEvent& ievent, long traverse_info, long event_info)

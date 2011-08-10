@@ -77,6 +77,7 @@ private:
   void OnSearchChanged(std::string const& search_string);
   void OnLiveSearchReached(std::string const& search_string);
   void OnLensAdded(Lens::Ptr& lens);
+  void OnLensBarActivated(std::string const& id);
   
   bool AcceptKeyNavFocus();
   bool InspectKeyEvent(unsigned int eventType, unsigned int key_sym, const char* character);

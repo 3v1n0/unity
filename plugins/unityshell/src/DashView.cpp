@@ -83,6 +83,7 @@ void DashView::SetupViews()
   content_layout_->AddView(lenses_layout_, 1, nux::MINOR_POSITION_LEFT);
 
   lens_bar_ = new LensBar();
+  lens_bar_->lens_activated.connect(sigc::mem_fun(this, &DashView::OnLensBarActivated));
   content_layout_->AddView(lens_bar_, 0, nux::MINOR_POSITION_CENTER);
 }
 
@@ -242,9 +243,14 @@ void DashView::OnLensAdded(Lens::Ptr& lens)
   view->SetVisible(false);
   lenses_layout_->AddView(view, 1);
   lens_views_[lens->id] = view;
+}
 
-  if (lens_views_["files.lens"])
-    lens_views_["files.lens"]->SetVisible(true);
+void DashView::OnLensBarActivated(std::string const& id)
+{
+  for (auto it: lens_views_)
+  {
+    it.second->SetVisible(it.first == id);
+  }
 }
 
 // Keyboard navigation
