@@ -124,7 +124,9 @@ namespace unity {
                          col);
 
     nux::BaseTexture *texture = normal_->GetTexture();
-    if (state == nux::State::NUX_STATE_PRELIGHT)
+    if (active)
+      texture = active_->GetTexture();
+    else if (state == nux::State::NUX_STATE_PRELIGHT)
       texture = prelight_->GetTexture();
     else if (state == nux::State::NUX_STATE_ACTIVE)
     {

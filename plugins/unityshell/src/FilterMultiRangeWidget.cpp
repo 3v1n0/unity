@@ -151,12 +151,14 @@ namespace unity {
 
   void FilterMultiRange::OnOptionAdded(dash::FilterOption::Ptr new_filter)
   {
+    /* FIXME: This crashes Unity
     FilterMultiRangeButton* button = new FilterMultiRangeButton (NUX_TRACKER_LOCATION);
     button->SetFilter (new_filter);
     layout_->AddView (button, 1);
     buttons_.push_back (button);
     new_filter->active.changed.connect(sigc::mem_fun (this, &FilterMultiRange::OnActiveChanged));
     OnActiveChanged(false);
+    */
   }
 
   void FilterMultiRange::OnOptionRemoved(dash::FilterOption::Ptr removed_filter)

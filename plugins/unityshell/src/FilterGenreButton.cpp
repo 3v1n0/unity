@@ -55,6 +55,9 @@ namespace unity {
 
     bool tmp_active = filter_->active;
     active = tmp_active;
+    filter_->active.changed.connect ([&] (bool is_active) {
+        active = is_active;
+    });
   }
 
   dash::FilterOption::Ptr FilterGenreButton::GetFilter()
