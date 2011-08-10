@@ -73,7 +73,8 @@ namespace unity
       typedef enum {
         ARROW_LEFT = 0,
 		ARROW_RIGHT,
-		ARROW_BOTH
+		ARROW_BOTH,
+		ARROW_NONE
 	  } Arrow;
 
       DashStyle ();

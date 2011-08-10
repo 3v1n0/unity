@@ -1559,7 +1559,9 @@ namespace unity
 	      label);
 
 	// drawing the arrows only makes sense for the middle segments being active
-    if (state == nux::NUX_STATE_ACTIVE && segment == SEGMENT_MIDDLE)
+    if (state == nux::NUX_STATE_ACTIVE &&
+        segment == SEGMENT_MIDDLE &&
+        array != ARROW_NONE)
 	{
       ArrowPath (cr, arrow);
       //cairo_set_source_rgba (cr, 1.0, 0.0, 0.0, 1.0);
