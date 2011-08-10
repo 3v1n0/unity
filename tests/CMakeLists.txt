@@ -138,6 +138,8 @@ set (PLACES_COMMON_SOURCE ${UNITY_SRC}/ubus-server.cpp
 add_executable (test-places
                 TestPlaces.cpp
                 ${PLACES_COMMON_SOURCE}
+                ${UNITY_SRC}/BackgroundEffectHelper.cpp
+                ${UNITY_SRC}/BackgroundEffectHelper.h
                 ${UNITY_SRC}/PlacesEmptyView.cpp
                 ${UNITY_SRC}/PlacesEmptyView.h
                 ${UNITY_SRC}/PlacesHomeView.cpp
