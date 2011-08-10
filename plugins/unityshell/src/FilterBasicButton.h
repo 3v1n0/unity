@@ -25,8 +25,10 @@
 #define FILTERBASICBUTTON_H
 
 #include <Nux/Nux.h>
+#include <Nux/CairoWrapper.h>
 #include "Nux/ToggleButton.h"
 #include "FilterWidget.h"
+#include "DashStyle.h"
 
 namespace unity {
 
@@ -39,13 +41,19 @@ namespace unity {
     virtual ~FilterBasicButton();
 
   protected:
+    virtual long ComputeLayout2();
     virtual long int ProcessEvent(nux::IEvent& ievent, long int TraverseInfo, long int ProcessEventInfo);
     virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
     virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
     virtual void PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw);
 
     void InitTheme ();
+    void RedrawTheme (nux::Geometry const& geom, cairo_t *cr, nux::State faked_state);
 
+    nux::CairoWrapper *prelight_;
+    nux::CairoWrapper *active_;
+    nux::CairoWrapper *normal_;
+    nux::Geometry cached_geometry_;
   };
 
 }

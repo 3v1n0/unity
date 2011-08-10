@@ -61,7 +61,9 @@ namespace unity {
   }
 
   PreviewBasicButton::~PreviewBasicButton() {
-
+    delete prelight_;
+    delete active_;
+    delete normal_;
   }
 
   void PreviewBasicButton::InitTheme()
@@ -125,7 +127,6 @@ namespace unity {
       texture = prelight_->GetTexture();
     else if (state == nux::State::NUX_STATE_ACTIVE)
     {
-      g_debug ("drawing active");
       texture = active_->GetTexture();
     }
 
