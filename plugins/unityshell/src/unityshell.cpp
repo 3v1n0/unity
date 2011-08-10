@@ -523,7 +523,8 @@ void UnityScreen::preparePaint(int ms)
   if (type == PlacesSettings::ACTIVE_BLUR)
   {
     dashController->window()->QueueDraw();
-    panelController->QueueRedraw();
+    if (dash_is_open_)
+      panelController->QueueRedraw();
   }
 
   cScreen->preparePaint(ms);
