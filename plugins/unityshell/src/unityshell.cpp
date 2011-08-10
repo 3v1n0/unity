@@ -220,6 +220,9 @@ UnityScreen::UnityScreen(CompScreen* screen)
   CompString pname("unityshell");
   CompSize size(1, 20);
   _shadow_texture = GLTexture::readImageToTexture(name, pname, size);
+  
+  ubus_manager_.RegisterInterest(UBUS_PLACE_VIEW_SHOWN, [&](GVariant* args) { dash_is_open_ = true; });
+  ubus_manager_.RegisterInterest(UBUS_PLACE_VIEW_HIDDEN, [&](GVariant* args) { dash_is_open_ = false; });
 
   EnsureKeybindings ();
 
@@ -360,34 +363,37 @@ void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
   vc[2] = y1;
   vc[3] = y2;
 
-  foreach(GLTexture * tex, _shadow_texture)
+  if (!dash_is_open_)
   {
-    glEnable(GL_BLEND);
-    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-
-    GL::activeTexture(GL_TEXTURE0_ARB);
-    tex->enable(GLTexture::Fast);
-
-    glTexParameteri(tex->target(), GL_TEXTURE_WRAP_S, GL_REPEAT);
-
-    glBegin(GL_QUADS);
+    foreach(GLTexture * tex, _shadow_texture)
     {
-      glTexCoord2f(COMP_TEX_COORD_X(tex->matrix(), 0), COMP_TEX_COORD_Y(tex->matrix(), 0));
-      glVertex2f(vc[0], vc[2]);
+      glEnable(GL_BLEND);
+      glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 
-      glTexCoord2f(COMP_TEX_COORD_X(tex->matrix(), 0), COMP_TEX_COORD_Y(tex->matrix(), h));
-      glVertex2f(vc[0], vc[3]);
+      GL::activeTexture(GL_TEXTURE0_ARB);
+      tex->enable(GLTexture::Fast);
 
-      glTexCoord2f(COMP_TEX_COORD_X(tex->matrix(), w), COMP_TEX_COORD_Y(tex->matrix(), h));
-      glVertex2f(vc[1], vc[3]);
+      glTexParameteri(tex->target(), GL_TEXTURE_WRAP_S, GL_REPEAT);
 
-      glTexCoord2f(COMP_TEX_COORD_X(tex->matrix(), w), COMP_TEX_COORD_Y(tex->matrix(), 0));
-      glVertex2f(vc[1], vc[2]);
+      glBegin(GL_QUADS);
+      {
+        glTexCoord2f(COMP_TEX_COORD_X(tex->matrix(), 0), COMP_TEX_COORD_Y(tex->matrix(), 0));
+        glVertex2f(vc[0], vc[2]);
+
+        glTexCoord2f(COMP_TEX_COORD_X(tex->matrix(), 0), COMP_TEX_COORD_Y(tex->matrix(), h));
+        glVertex2f(vc[0], vc[3]);
+
+        glTexCoord2f(COMP_TEX_COORD_X(tex->matrix(), w), COMP_TEX_COORD_Y(tex->matrix(), h));
+        glVertex2f(vc[1], vc[3]);
+
+        glTexCoord2f(COMP_TEX_COORD_X(tex->matrix(), w), COMP_TEX_COORD_Y(tex->matrix(), 0));
+        glVertex2f(vc[1], vc[2]);
+      }
+      glEnd();
+
+      tex->disable();
+      glDisable(GL_BLEND);
     }
-    glEnd();
-
-    tex->disable();
-    glDisable(GL_BLEND);
   }
   nuxEpilogue();
 }

@@ -38,6 +38,7 @@
 #include "GestureEngine.h"
 #include "DebugDBusInterface.h"
 #include "SwitcherController.h"
+#include "UBusWrapper.h"
 #include <Nux/WindowThread.h>
 #include <sigc++/sigc++.h>
 #include <boost/shared_ptr.hpp>
@@ -78,6 +79,7 @@ private:
 
 using namespace unity::switcher;
 using namespace unity::dash;
+using unity::UBusManager;
 
 /* base screen class */
 class UnityScreen :
@@ -277,6 +279,9 @@ private:
   GLuint                                 mActiveFbo;
 
   bool   queryForShader ();
+
+  UBusManager ubus_manager_;
+  bool dash_is_open_;
 
 	friend class UnityWindow;
 };
