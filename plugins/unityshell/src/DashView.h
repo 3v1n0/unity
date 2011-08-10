@@ -28,6 +28,7 @@
 #include <Nux/VLayout.h>
 #include <UnityCore/FilesystemLenses.h>
 
+#include "BackgroundEffectHelper.h"
 #include "DashSearchBar.h"
 #include "Introspectable.h"
 #include "LensBar.h"
@@ -90,6 +91,7 @@ private:
   UBusManager ubus_manager_;
   FilesystemLenses lenses_;
   SizeMode size_mode_;
+  BackgroundEffectHelper bg_effect_helper_;
   LensViews lens_views_;
 
   // Background related
@@ -106,6 +108,7 @@ private:
 
   // Drawing related
   nux::Geometry content_geo_;
+  nux::ObjectPtr <nux::IOpenGLBaseTexture> bg_blur_texture_;
 };
 
 

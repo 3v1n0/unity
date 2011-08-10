@@ -77,6 +77,8 @@ add_dependencies (test-unit unity-core-${UNITY_API_VERSION})
 #
 add_executable (standalone-dash
                 standalone_dash.cpp
+                ${UNITY_SRC}/BackgroundEffectHelper.cpp
+                ${UNITY_SRC}/BackgroundEffectHelper.h
                 ${UNITY_SRC}/BGHash.cpp
                 ${UNITY_SRC}/BGHash.h
                 ${UNITY_SRC}/DashSearchBar.cpp
@@ -85,6 +87,8 @@ add_executable (standalone-dash
                 ${UNITY_SRC}/DashSearchBarSpinner.h
                 ${UNITY_SRC}/PlacesGroup.cpp
                 ${UNITY_SRC}/PlacesGroup.h
+                ${UNITY_SRC}/PlacesSettings.cpp
+                ${UNITY_SRC}/PlacesSettings.h
                 ${UNITY_SRC}/PlacesStyle.cpp
                 ${UNITY_SRC}/PlacesStyle.h
                 ${UNITY_SRC}/DashView.cpp

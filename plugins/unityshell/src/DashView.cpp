@@ -172,13 +172,54 @@ long DashView::ProcessEvent(nux::IEvent& ievent, long traverse_info, long event_
 
 void DashView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
 {
+  PlacesSettings::DashBlurType type = PlacesSettings::GetDefault()->GetDashBlurType();
+  bool paint_blur = type != PlacesSettings::NO_BLUR;
+  nux::Geometry geo = content_geo_;
+  nux::Geometry geo_absolute = GetAbsoluteGeometry();
+
+  if (!bg_blur_texture_.IsValid() && paint_blur)
+  {
+    nux::Geometry blur_geo(geo_absolute.x, geo_absolute.y, content_geo_.width, content_geo_.height);
+    bg_blur_texture_ = bg_effect_helper_.GetBlurRegion(blur_geo, true);
+    //FIXME: g_timeout_add(0, (GSourceFunc)OnQueueDrawDrawDraw, this);
+  }
+
+  if (bg_blur_texture_.IsValid()  && paint_blur)
+  {
+    nux::TexCoordXForm texxform_blur_bg;
+    texxform_blur_bg.flip_v_coord = true;
+    texxform_blur_bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+    texxform_blur_bg.uoffset = ((float) content_geo_.x) / geo_absolute.width;
+    texxform_blur_bg.voffset = ((float) content_geo_.y) / geo_absolute.height;
+
+    nux::ROPConfig rop;
+    rop.Blend = false;
+    rop.SrcBlend = GL_ONE;
+    rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+
+    nux::Geometry bg_clip = geo;
+    gfx_context.PushClippingRectangle(bg_clip);
+
+    gPainter.PushDrawTextureLayer(gfx_context, content_geo_,
+                                  bg_blur_texture_,
+                                  texxform_blur_bg,
+                                  nux::color::White,
+                                  true,
+                                  rop);
+
+    gfx_context.PopClippingRectangle();
+  }
+
   bg_layer_->SetGeometry(content_geo_);
   nux::GetPainter().RenderSinglePaintLayer(gfx_context, content_geo_, bg_layer_);
 }
 
 void DashView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
 {
+  PlacesSettings::DashBlurType type = PlacesSettings::GetDefault()->GetDashBlurType();
+  bool paint_blur = type != PlacesSettings::NO_BLUR;
   nux::Geometry clip_geo = GetGeometry();
+  int bgs = 1;
 
   clip_geo.height = bg_layer_->GetGeometry().height - 1;
   gfx_context.PushClippingRectangle(clip_geo);
@@ -186,12 +227,38 @@ void DashView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
   gfx_context.GetRenderStates().SetBlend(true);
   gfx_context.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
 
+  if (bg_blur_texture_.IsValid() && paint_blur)
+  {
+    nux::Geometry geo_absolute = GetAbsoluteGeometry ();
+    nux::TexCoordXForm texxform_blur_bg;
+    texxform_blur_bg.flip_v_coord = true;
+    texxform_blur_bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+    texxform_blur_bg.uoffset = ((float) content_geo_.x) / geo_absolute.width;
+    texxform_blur_bg.voffset = ((float) content_geo_.y) / geo_absolute.height;
+
+    nux::ROPConfig rop;
+    rop.Blend = false;
+    rop.SrcBlend = GL_ONE;
+    rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+
+    gPainter.PushTextureLayer(gfx_context, content_geo_,
+                              bg_blur_texture_,
+                              texxform_blur_bg,
+                              nux::color::White,
+                              true,
+                              rop);
+    bgs++;
+  }
+
   nux::GetPainter().PushLayer(gfx_context, bg_layer_->GetGeometry(), bg_layer_);
   layout_->ProcessDraw(gfx_context, force_draw);
-  nux::GetPainter().PopBackground();
+  nux::GetPainter().PopBackground(bgs);
 
   gfx_context.GetRenderStates().SetBlend(false);
   gfx_context.PopClippingRectangle();
+
+  if (type == PlacesSettings::ACTIVE_BLUR)
+    bg_blur_texture_.Release();
 }
 
 void DashView::OnMouseButtonDown(int x, int y, unsigned long button, unsigned long key)
