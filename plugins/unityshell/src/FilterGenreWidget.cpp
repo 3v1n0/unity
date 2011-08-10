@@ -43,7 +43,7 @@ namespace unity {
     genre_layout_->SetVerticalInternalMargin (6);
     genre_layout_->SetHorizontalInternalMargin (6);
     genre_layout_->EnablePartialVisibility (false);
-    genre_layout_->SetChildrenSize (120, 30);
+    genre_layout_->SetChildrenSize (120, 40);
     genre_layout_->Reference();
 
     SetRightHandView(all_button_);

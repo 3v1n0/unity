@@ -34,7 +34,7 @@ namespace unity {
       , contents_ (NULL)
       , right_hand_contents_ (NULL)
       , expander_graphic_ (NULL)
-      , label_(label)
+      , label_("<span font_size='x-large'>" + label + "</span>")
   {
     expanded.changed.connect (sigc::mem_fun(this, &FilterExpanderLabel::DoExpandChange));
     BuildLayout ();
@@ -46,7 +46,7 @@ namespace unity {
 
   void FilterExpanderLabel::SetLabel (std::string label)
   {
-    label_ = label;
+    label_ = "<style size='x-large'>" + label + "</style>";
     cairo_label_->SetText(label.c_str());
   }
 

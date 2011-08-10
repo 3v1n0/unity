@@ -76,7 +76,7 @@ namespace unity {
       normal_ = new nux::CairoWrapper(GetGeometry(), sigc::bind(sigc::mem_fun(this, &FilterBasicButton::RedrawTheme), nux::State::NUX_STATE_NORMAL));
     }
 
-    SetMinimumHeight(32);
+   // SetMinimumHeight(32);
   }
 
   void FilterBasicButton::RedrawTheme (nux::Geometry const& geom, cairo_t *cr, nux::State faked_state)
@@ -90,9 +90,10 @@ namespace unity {
     long ret = nux::Button::ComputeLayout2();
     if (cached_geometry_ != GetGeometry())
     {
-      prelight_->Invalidate(GetGeometry());
-      active_->Invalidate(GetGeometry());
-      normal_->Invalidate(GetGeometry());
+      nux::Geometry geo = GetGeometry();
+      prelight_->Invalidate(geo);
+      active_->Invalidate(geo);
+      normal_->Invalidate(geo);
     }
 
     cached_geometry_ = GetGeometry();
