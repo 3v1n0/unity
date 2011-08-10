@@ -78,8 +78,6 @@ namespace unity {
         expanded = !expanded;
         if (contents_)
           contents_->SetVisible(expanded);
-        
-        QueueRelayout();
         QueueDraw();
       });
 
