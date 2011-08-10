@@ -30,7 +30,7 @@ namespace unity {
 
   FilterExpanderLabel::FilterExpanderLabel (std::string label, NUX_FILE_LINE_DECL)
       : nux::View (NUX_FILE_LINE_PARAM)
-      , expanded (false)
+      , expanded (true)
       , top_bar_layout_ (NULL)
       , contents_ (NULL)
       , right_hand_contents_ (NULL)
@@ -55,12 +55,10 @@ namespace unity {
     label_ = label;
 
     BuildLayout ();
-    g_debug ("adding label");
   }
 
   void FilterExpanderLabel::SetRightHandView (nux::View *view)
   {
-    g_debug ("adding right hand view");
     view->Reference ();
 
     if (right_hand_contents_)
@@ -72,18 +70,18 @@ namespace unity {
 
   void FilterExpanderLabel::SetContents (nux::Layout *layout)
   {
-    g_debug ("adding contents");
     layout->Reference();
 
     if (contents_)
       contents_->UnReference();
     contents_ = layout;
 
-    BuildLayout ();
+    //BuildLayout ();
   }
 
   void FilterExpanderLabel::BuildLayout ()
   {
+    RemoveLayout();
     nux::VLayout *layout = new nux::VLayout(NUX_TRACKER_LOCATION);
     top_bar_layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
 
@@ -98,11 +96,15 @@ namespace unity {
     top_bar_layout_->AddView (cairo_label_, 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_MATCHCONTENT);
     top_bar_layout_->AddSpace(1, 1);
 
-    //FIXME - fake any button because nux is being crap
-    //top_bar_layout_->AddView(new FilterBasicButton("Any", NUX_TRACKER_LOCATION), 0, nux::MINOR_POSITION_RIGHT, nux::MINOR_SIZE_MATCHCONTENT);
-
     if (right_hand_contents_)
+    {
+      g_debug ("adding right hand contents");
       top_bar_layout_->AddView(right_hand_contents_, 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_MATCHCONTENT);
+    }
+    else
+    {
+      g_debug ("Not adding right hand contents");
+    }
 
     layout->AddLayout (top_bar_layout_, 1);
 

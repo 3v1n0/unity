@@ -21,40 +21,36 @@
 
 
 
-#ifndef PREVIEWBASICBUTTON_H
-#define PREVIEWBASICBUTTON_H
+#ifndef PREVIEWMUSICTRACK_H
+#define PREVIEWMUSICTRACK_H
 
 #include <Nux/Nux.h>
-#include <Nux/Button.h>
-#include <Nux/CairoWrapper.h>
-#include "FilterWidget.h"
+#include <Nux/View.h>
+#include <UnityCore/MusicPreviews.h>
+
+#include "PreviewBase.h"
 
 namespace unity {
 
-  class PreviewBasicButton : public nux::Button {
+  class PreviewMusicTrack : public PreviewBase
+  {
   public:
-    PreviewBasicButton (nux::TextureArea *image, NUX_FILE_LINE_PROTO);
-    PreviewBasicButton (const std::string label, NUX_FILE_LINE_PROTO);
-    PreviewBasicButton (const std::string label, nux::TextureArea *image, NUX_FILE_LINE_PROTO);
-    PreviewBasicButton (NUX_FILE_LINE_PROTO);
-    virtual ~PreviewBasicButton();
+    PreviewMusicTrack (dash::Preview::Ptr preview, NUX_FILE_LINE_PROTO);
+    virtual ~PreviewMusicTrack ();
+
+    virtual void SetPreview(dash::Preview::Ptr preview);
 
   protected:
-    virtual long ComputeLayout2 ();
     virtual long int ProcessEvent(nux::IEvent& ievent, long int TraverseInfo, long int ProcessEventInfo);
     virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
     virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
     virtual void PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw);
 
   private:
-    void InitTheme ();
-    void RedrawTheme (nux::Geometry const& geom, cairo_t *cr, nux::State faked_state);
+    void BuildLayout();
+    dash::TrackPreview::Ptr preview_;
 
-    nux::CairoWrapper *prelight_;
-    nux::CairoWrapper *active_;
-    nux::CairoWrapper *normal_;
-    nux::Geometry cached_geometry_;
   };
 
 }
-#endif // PREVIEWBASICBUTTON_H
+#endif // PREVIEWMUSICTRACK_H

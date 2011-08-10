@@ -25,7 +25,9 @@
 #define FILTERRATINGSBUTTONWIDGET_H
 
 #include <Nux/Nux.h>
+#include <Nux/CairoWrapper.h>
 #include <UnityCore/RatingsFilter.h>
+
 
 #include "Nux/Button.h"
 #include "FilterWidget.h"
@@ -42,6 +44,7 @@ namespace unity {
     std::string GetFilterType ();
 
   protected:
+    virtual long ComputeLayout2 ();
     virtual long int ProcessEvent(nux::IEvent& ievent, long int TraverseInfo, long int ProcessEventInfo);
     virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
     virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
@@ -52,14 +55,18 @@ namespace unity {
     void RecvMouseDown (int x, int y, unsigned long button_flags, unsigned long key_flags);
     void OnRatingsChanged (int rating);
 
-    nux::AbstractPaintLayer *_full_prelight;
-    nux::AbstractPaintLayer *_full_normal;
+    nux::CairoWrapper *prelight_empty_;
+    nux::CairoWrapper *active_empty_;
+    nux::CairoWrapper *normal_empty_;
+    nux::CairoWrapper *prelight_half_;
+    nux::CairoWrapper *active_half_;
+    nux::CairoWrapper *normal_half_;
+    nux::CairoWrapper *prelight_full_;
+    nux::CairoWrapper *active_full_;
+    nux::CairoWrapper *normal_full_;
+    nux::Geometry cached_geometry_;
 
-    nux::AbstractPaintLayer *_empty_prelight;
-    nux::AbstractPaintLayer *_empty_normal;
-
-    nux::AbstractPaintLayer *_half_prelight;
-    nux::AbstractPaintLayer *_half_normal;
+    void RedrawTheme (nux::Geometry const& geom, cairo_t *cr, int type, nux::State faked_state);
 
     dash::RatingsFilter::Ptr filter_;
 

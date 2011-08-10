@@ -103,6 +103,7 @@ add_executable (standalone-dash
                 ${UNITY_SRC}/PlacesStyle.h
                 ${UNITY_SRC}/DashView.cpp
                 ${UNITY_SRC}/DashView.h
+                ${UNITY_SRC}/DashStyle.cpp
                 ${UNITY_SRC}/IconLoader.cpp
                 ${UNITY_SRC}/IconLoader.h
                 ${UNITY_SRC}/IconTexture.cpp
@@ -137,7 +138,7 @@ add_dependencies (standalone-dash unity-core-${UNITY_API_VERSION})
 
 #
 # Please use "standalone-$foo" naming convention for standalone tests
-# 
+#
 add_executable (test-panel
                 TestPanel.cpp
                 ${UNITY_SRC}/BackgroundEffectHelper.cpp
@@ -253,6 +254,7 @@ add_executable (test-filters
                 ${UNITY_SRC}/FilterGenreWidget.cpp
                 ${UNITY_SRC}/FilterMultiRangeButton.cpp
                 ${UNITY_SRC}/FilterMultiRangeWidget.cpp
+                ${UNITY_SRC}/DashStyle.cpp
                 )
 add_dependencies(test-filters unity-core-${UNITY_API_VERSION})
 
@@ -268,6 +270,7 @@ add_executable (test-filter-bar
                 ${UNITY_SRC}/FilterGenreButton.cpp
                 ${UNITY_SRC}/FilterGenreWidget.cpp
                 ${UNITY_SRC}/FilterBar.cpp
+                ${UNITY_SRC}/DashStyle.cpp
                 )
 add_dependencies(test-filter-bar unity-core-${UNITY_API_VERSION})
 
@@ -281,6 +284,7 @@ add_executable (test-preview-applicaiton
                 ${UNITY_SRC}/Introspectable.cpp
                 ${UNITY_SRC}/StaticCairoText.cpp
                 ${UNITY_SRC}/TextureCache.cpp
+                ${UNITY_SRC}/DashStyle.cpp
                 )
 add_dependencies(test-preview-applicaiton unity-core-${UNITY_API_VERSION})
 
@@ -294,6 +298,7 @@ add_executable (test-preview-generic
                 ${UNITY_SRC}/Introspectable.cpp
                 ${UNITY_SRC}/StaticCairoText.cpp
                 ${UNITY_SRC}/TextureCache.cpp
+                ${UNITY_SRC}/DashStyle.cpp
                 )
 add_dependencies(test-preview-generic unity-core-${UNITY_API_VERSION})
 
@@ -302,11 +307,14 @@ add_executable (test-preview-music
                 ${UNITY_SRC}/PreviewBase.cpp
                 ${UNITY_SRC}/PreviewBasicButton.cpp
                 ${UNITY_SRC}/PreviewMusic.cpp
+                ${UNITY_SRC}/PreviewMusicTrack.cpp
+                ${UNITY_SRC}/PreviewMusicTrackWidget.cpp
                 ${UNITY_SRC}/IconTexture.cpp
                 ${UNITY_SRC}/IconLoader.cpp
                 ${UNITY_SRC}/Introspectable.cpp
                 ${UNITY_SRC}/StaticCairoText.cpp
                 ${UNITY_SRC}/TextureCache.cpp
+                ${UNITY_SRC}/DashStyle.cpp
                 )
 add_dependencies(test-preview-music unity-core-${UNITY_API_VERSION})
 
@@ -326,8 +334,17 @@ add_executable (test-result-view
                 ${UNITY_SRC}/Introspectable.cpp
                 ${UNITY_SRC}/StaticCairoText.cpp
                 ${UNITY_SRC}/TextureCache.cpp
+                ${UNITY_SRC}/DashStyle.cpp
                 )
 add_dependencies(test-result-view unity-core-${UNITY_API_VERSION})
+
+add_executable (test-dash-style
+                TestDashStyle.cpp
+                ${UNITY_SRC}/DashStyle.cpp
+                ${UNITY_SRC}/DashStyle.h
+                ${PLACES_COMMON_SOURCE}
+                )
+add_dependencies (test-dash-style unity-core-${UNITY_API_VERSION})
 
 add_executable (test-bg-hash
                 TestBGHash.cpp

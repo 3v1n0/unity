@@ -38,6 +38,11 @@ namespace unity {
   {
   }
 
+  long PreviewBase::ComputeLayout2()
+  {
+    return nux::View::ComputeLayout2();
+  }
+
   void PreviewBase::Draw (nux::GraphicsEngine &GfxContext, bool force_draw)
   {
     gPainter.PaintBackground(GfxContext, GetGeometry());
