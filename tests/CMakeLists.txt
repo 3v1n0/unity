@@ -287,6 +287,8 @@ add_executable (test-preview-music
                 ${UNITY_SRC}/PreviewBase.cpp
                 ${UNITY_SRC}/PreviewBasicButton.cpp
                 ${UNITY_SRC}/PreviewMusic.cpp
+                ${UNITY_SRC}/PreviewMusicTrack.cpp
+                ${UNITY_SRC}/PreviewMusicTrackWidget.cpp
                 ${UNITY_SRC}/IconTexture.cpp
                 ${UNITY_SRC}/IconLoader.cpp
                 ${UNITY_SRC}/Introspectable.cpp

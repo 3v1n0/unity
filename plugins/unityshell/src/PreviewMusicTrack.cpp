@@ -32,43 +32,40 @@
 #include "IconTexture.h"
 #include "StaticCairoText.h"
 
-#include "PreviewMusicTrackWidget.h"
-
-#include "PreviewMusic.h"
+#include "PreviewMusicTrack.h"
 
 namespace unity {
 
-    PreviewMusicAlbum::PreviewMusicAlbum (dash::Preview::Ptr preview, NUX_FILE_LINE_DECL)
+    PreviewMusicTrack::PreviewMusicTrack (dash::Preview::Ptr preview, NUX_FILE_LINE_DECL)
       : PreviewBase(NUX_FILE_LINE_PARAM)
     {
       SetPreview (preview);
     }
 
-    PreviewMusicAlbum::~PreviewMusicAlbum ()
+    PreviewMusicTrack::~PreviewMusicTrack ()
     {
       //ROOOARRRR
     }
 
-    void PreviewMusicAlbum::SetPreview(dash::Preview::Ptr preview)
+    void PreviewMusicTrack::SetPreview(dash::Preview::Ptr preview)
     {
-      preview_ = std::static_pointer_cast<dash::AlbumPreview>(preview);
+      preview_ = std::static_pointer_cast<dash::TrackPreview>(preview);
       BuildLayout ();
     }
 
-    void PreviewMusicAlbum::BuildLayout()
+    void PreviewMusicTrack::BuildLayout()
     {
       IconTexture *cover = new IconTexture (preview_->album_cover.c_str(), 400);
-      nux::StaticCairoText *title = new nux::StaticCairoText(preview_->name.c_str(), NUX_TRACKER_LOCATION);
+      nux::StaticCairoText *title = new nux::StaticCairoText(preview_->title.c_str(), NUX_TRACKER_LOCATION);
       title->SetFont("Ubuntu 25");
 
-      std::string artist_year = preview_->artist + ", " + preview_->year;
+      std::string artist_year = preview_->artist; // no year in model + ", " + preview_->year;
       nux::StaticCairoText *artist = new nux::StaticCairoText(artist_year.c_str(), NUX_TRACKER_LOCATION);
       artist->SetFont("Ubuntu 15");
 
       std::ostringstream album_length_string;
 
-      album_length_string << preview_->tracks.size() << " " << _("Tracks") << ", "
-                          << preview_->length / 60 << ":" << preview_->length % 60
+      album_length_string << preview_->length / 60 << ":" << preview_->length % 60
                           << " " << _("min");
 
       nux::StaticCairoText *album_length = new nux::StaticCairoText(album_length_string.str().c_str(), NUX_TRACKER_LOCATION);
@@ -90,27 +87,29 @@ namespace unity {
 
       nux::VLayout* tracks = new nux::VLayout(NUX_TRACKER_LOCATION);
 
-      dash::AlbumPreview::Tracks::iterator track_it;
-      for (track_it = preview_->tracks.begin(); track_it != preview_->tracks.end(); track_it++)
-      {
-        //FIXME - use a button subclass for absolute renderering
-        std::stringstream number;
-        number << (*track_it).number;
+      //FIXME use a special widget for this,
+      nux::HLayout *track_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
+      //FIXME - use a button subclass for absolute renderering
+      std::stringstream number;
+      number << preview_->number;
+      nux::Button *track_play_button = new nux::Button(number.str());
+      //FIXME - hook up pressing button to activation URI
 
-        std::stringstream track_length_string;
-        track_length_string << (*track_it).length / 60 << ":" << (*track_it).length % 60;
+      nux::StaticCairoText *track_title = new nux::StaticCairoText(preview_->title.c_str(), NUX_TRACKER_LOCATION);
 
-        PreviewMusicTrackWidget *track_widget = new PreviewMusicTrackWidget(number.str(),
-                                                                            (*track_it).title,
-                                                                            track_length_string.str(),
-                                                                            (*track_it).play_action_uri,
-                                                                            (*track_it).pause_action_uri,
-                                                                            NUX_TRACKER_LOCATION);
+      std::stringstream track_length_string;
+      track_length_string << preview_->length / 60 << ":" << preview_->length % 60;
 
-        track_widget->UriActivated.connect ([&] (std::string uri) { UriActivated.emit(uri); });
+      nux::StaticCairoText *track_length = new nux::StaticCairoText(track_length_string.str().c_str(), NUX_TRACKER_LOCATION);
 
-        tracks->AddView(track_widget, 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
-      }
+      track_layout->AddView(track_play_button, 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
+      track_layout->AddLayout (new nux::SpaceLayout(6,6,6,6), 1);
+      track_layout->AddView(track_title, 1, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
+      track_layout->AddLayout (new nux::SpaceLayout(6,6,6,6), 1);
+      track_layout->AddSpace (0, 1);
+      track_layout->AddView(track_length, 1, nux::MINOR_POSITION_RIGHT, nux::MINOR_SIZE_FULL);
+
+      tracks->AddLayout(track_layout, 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
 
       PreviewBasicButton* primary_button = new PreviewBasicButton(preview_->primary_action_name.c_str(), NUX_TRACKER_LOCATION);
       //FIXME - add secondary action when we have the backend for it
@@ -135,11 +134,6 @@ namespace unity {
 
       button_container->AddLayout(track_genre_layout, 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
 
-
-      //THIS IS SO CRAP JAY - FIXME - so if you add a spacelayout to nux, it won't grow larger than the size you allocate
-      //no matter what
-      //if you AddSpace it will grow but you can't control the size at all because that does not get set
-      //so basically, you have to do both.
       button_container->AddLayout (new nux::SpaceLayout(6,6,6,6), 1);
       button_container->AddSpace (0, 1);
       button_container->AddView (primary_button, 0, nux::MINOR_POSITION_RIGHT, nux::MINOR_SIZE_FULL);
@@ -163,11 +157,11 @@ namespace unity {
       SetLayout(large_container);
     }
 
-  void PreviewMusicAlbum::Draw (nux::GraphicsEngine &GfxContext, bool force_draw) {
+  void PreviewMusicTrack::Draw (nux::GraphicsEngine &GfxContext, bool force_draw) {
     PreviewBase::Draw(GfxContext, force_draw);
   }
 
-  void PreviewMusicAlbum::DrawContent (nux::GraphicsEngine &GfxContent, bool force_draw) {
+  void PreviewMusicTrack::DrawContent (nux::GraphicsEngine &GfxContent, bool force_draw) {
     nux::Geometry base = GetGeometry ();
     GfxContent.PushClippingRectangle (base);
 
@@ -177,11 +171,11 @@ namespace unity {
     GfxContent.PopClippingRectangle();
   }
 
-  long int PreviewMusicAlbum::ProcessEvent(nux::IEvent& ievent, long int TraverseInfo, long int ProcessEventInfo) {
+  long int PreviewMusicTrack::ProcessEvent(nux::IEvent& ievent, long int TraverseInfo, long int ProcessEventInfo) {
     return PreviewBase::ProcessEvent(ievent, TraverseInfo, ProcessEventInfo);
   }
 
-  void PreviewMusicAlbum::PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw) {
+  void PreviewMusicTrack::PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw) {
     PreviewBase::PostDraw(GfxContext, force_draw);
   }
 }

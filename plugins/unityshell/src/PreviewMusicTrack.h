@@ -21,27 +21,24 @@
 
 
 
-#ifndef FILTERRATINGSBUTTONWIDGET_H
-#define FILTERRATINGSBUTTONWIDGET_H
+#ifndef PREVIEWMUSICTRACK_H
+#define PREVIEWMUSICTRACK_H
 
 #include <Nux/Nux.h>
-#include <Nux/CairoWrapper.h>
-#include <UnityCore/RatingsFilter.h>
+#include <Nux/View.h>
+#include <UnityCore/MusicPreviews.h>
 
-
-#include "Nux/Button.h"
-#include "FilterWidget.h"
+#include "PreviewBase.h"
 
 namespace unity {
 
-  class FilterRatingsButton : public nux::Button, public unity::FilterWidget {
+  class PreviewMusicTrack : public PreviewBase
+  {
   public:
-    FilterRatingsButton (NUX_FILE_LINE_PROTO);
-    virtual ~FilterRatingsButton();
+    PreviewMusicTrack (dash::Preview::Ptr preview, NUX_FILE_LINE_PROTO);
+    virtual ~PreviewMusicTrack ();
 
-    void SetFilter (dash::Filter::Ptr filter);
-    dash::RatingsFilter::Ptr GetFilter ();
-    std::string GetFilterType ();
+    virtual void SetPreview(dash::Preview::Ptr preview);
 
   protected:
     virtual long int ProcessEvent(nux::IEvent& ievent, long int TraverseInfo, long int ProcessEventInfo);
@@ -49,22 +46,11 @@ namespace unity {
     virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
     virtual void PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw);
 
-    void InitTheme ();
-
-    void RecvMouseDown (int x, int y, unsigned long button_flags, unsigned long key_flags);
-    void OnRatingsChanged (int rating);
-
-    nux::CairoWrapper *prelight_;
-    nux::CairoWrapper *active_;
-    nux::CairoWrapper *normal_;
-    nux::Geometry cached_geometry_;
-
-    void RedrawTheme (nux::Geometry const& geom, cairo_t *cr, nux::State faked_state);
-
-    dash::RatingsFilter::Ptr filter_;
+  private:
+    void BuildLayout();
+    dash::TrackPreview::Ptr preview_;
 
   };
 
 }
-
-#endif // FILTERRATINGSBUTTONWIDGET_H
+#endif // PREVIEWMUSICTRACK_H

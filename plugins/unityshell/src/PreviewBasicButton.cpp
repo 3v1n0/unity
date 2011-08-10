@@ -78,7 +78,6 @@ namespace unity {
   {
     DashStyle *dash_style = DashStyle::GetDefault();
     dash_style->Button (cr, faked_state, label);
-    cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/button.png");
   }
 
   long PreviewBasicButton::ComputeLayout2 ()
@@ -86,7 +85,6 @@ namespace unity {
     long ret = nux::Button::ComputeLayout2();
     if (cached_geometry_ != GetGeometry())
     {
-      g_debug ("invalidating to %i, %i", GetGeometry().width, GetGeometry().height);
       prelight_->Invalidate(GetGeometry());
       active_->Invalidate(GetGeometry());
       normal_->Invalidate(GetGeometry());
@@ -102,7 +100,6 @@ namespace unity {
 
   void PreviewBasicButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   {
-    g_debug ("Drawing the geometry at %i, %i", GetGeometry().width, GetGeometry().height);
     gPainter.PaintBackground(GfxContext, GetGeometry());
     // set up our texture mode
     nux::TexCoordXForm texxform;
@@ -127,7 +124,10 @@ namespace unity {
     if (state == nux::State::NUX_STATE_PRELIGHT)
       texture = prelight_->GetTexture();
     else if (state == nux::State::NUX_STATE_ACTIVE)
+    {
+      g_debug ("drawing active");
       texture = active_->GetTexture();
+    }
 
     GfxContext.QRP_1Tex(GetGeometry().x,
                         GetGeometry().y,

@@ -67,9 +67,9 @@ namespace unity {
 
       nux::StaticCairoText *licence = new nux::StaticCairoText (preview_->license.c_str(), NUX_TRACKER_LOCATION);
       nux::StaticCairoText *last_updated = new nux::StaticCairoText (preview_->last_updated.c_str(), NUX_TRACKER_LOCATION);
-      nux::StaticCairoText *description = new nux::StaticCairoText ("", NUX_TRACKER_LOCATION);
+      description = new nux::StaticCairoText ("", NUX_TRACKER_LOCATION);
 
-      description->SetBaseWidth(350);
+      //description->SetBaseWidth(350);
       description->SetMaximumWidth(350);
       description->SetLines(99999999);
       description->SetText(preview_->description.c_str());
@@ -117,29 +117,44 @@ namespace unity {
       title_container->AddView (last_updated, 0, nux::MINOR_POSITION_LEFT);
 
       // create the icon container
+      icon_container->AddLayout (new nux::SpaceLayout(6,6,6,6), 0);
       icon_container->AddView (icon, 1, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FULL);
       icon_container->AddLayout (new nux::SpaceLayout(12,12,12,12), 0);
       //FIXME - add rating widget
       icon_container->AddView (review_total, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_MATCHCONTENT);
 
       // build the content container
+      title_icon_container->AddLayout (new nux::SpaceLayout(6,6,6,6), 0);
       title_icon_container->AddLayout (icon_container, 0, nux::MINOR_POSITION_BOTTOM, nux::MINOR_SIZE_FULL);
-      title_icon_container->AddLayout (new nux::SpaceLayout(12,12,12,12), 0);
+      title_icon_container->AddLayout (new nux::SpaceLayout(24,24,24,24), 0);
       title_icon_container->AddLayout (title_container, 0, nux::MINOR_POSITION_BOTTOM, nux::MINOR_SIZE_FULL);
+      title_icon_container->AddLayout (new nux::SpaceLayout(6,6,6,6), 0);
 
-      content_container->AddLayout (title_icon_container, 0);
+      content_container->AddLayout (title_icon_container, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FULL);
+      content_container->AddLayout (new nux::SpaceLayout(24,24,24,24), 0);
       content_container->AddView (description_scroller, 1);
+      content_container->AddLayout (new nux::SpaceLayout(24,24,24,24), 0);
       content_container->AddView (button_container, 0);
+      content_container->AddLayout (new nux::SpaceLayout(6,6,6,6), 0);
 
       // build the overall container
       screenshot_container->AddView (screenshot, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
       large_container->AddLayout(screenshot_container, 1);
-      large_container->AddLayout (new nux::SpaceLayout(12,12,12,12), 0);
+      large_container->AddLayout (new nux::SpaceLayout(32,32,32,32), 0);
       large_container->AddLayout(content_container, 1);
       large_container->AddLayout (new nux::SpaceLayout(6,6,6,6), 0);
 
       SetLayout(large_container);
     }
+
+  long PreviewApplications::ComputeLayout2 ()
+  {
+    return PreviewBase::ComputeLayout2();
+    g_debug ("layout recomputing");
+    description->SetBaseWidth((GetGeometry().width / 2) - 16 - 12 );
+    description->SetMaximumWidth((GetGeometry().width / 2) - 16 - 12 );
+    description->SetText(preview_->description.c_str());
+  }
 
   void PreviewApplications::Draw (nux::GraphicsEngine &GfxContext, bool force_draw) {
   }

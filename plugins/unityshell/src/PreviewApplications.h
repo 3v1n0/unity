@@ -27,6 +27,7 @@
 #include <Nux/Nux.h>
 #include <Nux/View.h>
 #include <UnityCore/ApplicationPreview.h>
+#include "StaticCairoText.h"
 
 #include "PreviewBase.h"
 
@@ -41,6 +42,7 @@ namespace unity {
     virtual void SetPreview(dash::Preview::Ptr preview);
 
   protected:
+    virtual long ComputeLayout2();
     virtual long int ProcessEvent(nux::IEvent& ievent, long int TraverseInfo, long int ProcessEventInfo);
     virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
     virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
@@ -49,6 +51,7 @@ namespace unity {
   private:
     void BuildLayout();
     dash::ApplicationPreview::Ptr preview_;
+    nux::StaticCairoText *description;
 
   };
 
