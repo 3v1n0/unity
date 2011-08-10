@@ -18,6 +18,9 @@
 
 #include "DashView.h"
 
+#include <gtk/gtk.h>
+#include <gio/gdesktopappinfo.h>
+
 #include <NuxCore/Logger.h>
 #include <UnityCore/GLibWrapper.h>
 
@@ -41,6 +44,7 @@ DashView::DashView()
   : nux::View(NUX_TRACKER_LOCATION)
   , size_mode_(SIZE_MODE_NORMAL)
   , active_lens_view_(0)
+  , last_activated_uri_("")
 
 {
   SetupBackground();
@@ -314,9 +318,11 @@ void DashView::OnLensAdded(Lens::Ptr& lens)
 
   LensView* view = new LensView(lens);
   view->SetVisible(false);
+  view->uri_activated.connect(sigc::mem_fun(this, &DashView::OnUriActivated));
   lenses_layout_->AddView(view, 1);
   lens_views_[lens->id] = view;
 
+  lens->activated.connect(sigc::mem_fun(this, &DashView::OnUriActivatedReply));
   lens->search_finished.connect(sigc::mem_fun(this, &DashView::OnSearchFinished));
 }
 
@@ -336,6 +342,102 @@ void DashView::OnSearchFinished(std::string const& search_string)
 {
   if (search_bar_->search_string == search_string)
     search_bar_->SearchFinished();
+}
+
+void DashView::OnUriActivated(std::string const& uri)
+{
+  last_activated_uri_ = uri;
+}
+
+void DashView::OnUriActivatedReply(std::string const& uri, HandledType type, Lens::Hints const&)
+{
+  // We don't want to close the dash if there was another activation pending
+
+  if (type == NOT_HANDLED)
+  {
+    if (!DoFallbackActivation(uri))
+      return;
+  }
+  else if (type == SHOW_DASH)
+  {
+    return;
+  }
+
+  if (uri == last_activated_uri_)
+    ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
+}
+
+bool DashView::DoFallbackActivation(std::string const& fake_uri)
+{
+  size_t pos = fake_uri.find(":");
+  std::string uri = fake_uri.substr(++pos);
+
+  g_debug("Fallback launching: %s", uri.c_str());
+
+  if ((pos = uri.find("application://")))
+  {
+    std::string appname = uri.substr(14);
+    return LaunchApp(appname);
+  }
+  else if ((pos = uri.find("unity-runner://")))
+  {
+    std::string appname = uri.substr(14);
+    return LaunchApp(appname);
+  }
+  else
+    return gtk_show_uri(NULL, uri.c_str(), time(NULL), NULL);
+
+  return false;
+}
+
+bool DashView::LaunchApp(std::string const& appname)
+{
+  GDesktopAppInfo* info;
+  bool ret = false;
+  char *id = g_strdup(appname.c_str());
+  int i = 0;
+
+  g_debug("Launching: %s", appname.c_str());
+
+  while (id != NULL)
+  {
+    info = g_desktop_app_info_new(id);
+    if (info != NULL)
+    {
+      GError* error = NULL;
+
+      g_app_info_launch(G_APP_INFO(info), NULL, NULL, &error);
+      if (error)
+      {
+        g_warning("Unable to launch %s: %s", id,  error->message);
+        g_error_free(error);
+      }
+      else
+        ret = true;
+      g_object_unref(info);
+      break;
+    }
+
+    /* Try to replace the next - with a / and do the lookup again.
+     * If we set id=NULL we'll exit the outer loop */
+    for (i = 0; ; i++)
+    {
+      if (id[i] == '-')
+      {
+        id[i] = '/';
+        break;
+      }
+      else if (id[i] == '\0')
+      {
+        g_free(id);
+        id = NULL;
+        break;
+      }
+    }
+  }
+
+  g_free(id);
+  return ret;
 }
 
 // Keyboard navigation

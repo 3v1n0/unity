@@ -118,6 +118,7 @@ void LensView::OnCategoryAdded(Category const& category)
   ResultViewGrid* grid = new ResultViewGrid(NUX_TRACKER_LOCATION);
   grid->expanded = false;
   grid->SetModelRenderer(new ResultRendererTile(NUX_TRACKER_LOCATION));
+  grid->UriActivated.connect([&] (std::string const& uri) { uri_activated.emit(uri); lens_->Activate(uri); });
   group->SetChildView(grid);
 
   scroll_layout_->AddView(group, 0);

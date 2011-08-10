@@ -54,6 +54,8 @@ public:
   nux::Property<std::string> search_string;
   nux::Property<bool> filters_expanded;
 
+  sigc::signal<void, std::string const&> uri_activated;
+
 private:
   void SetupViews();
 

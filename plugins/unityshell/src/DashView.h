@@ -81,6 +81,10 @@ private:
   void OnLensAdded(Lens::Ptr& lens);
   void OnLensBarActivated(std::string const& id);
   void OnSearchFinished(std::string const& search_string);
+  void OnUriActivated(std::string const& uri);
+  void OnUriActivatedReply(std::string const& uri, HandledType type, Lens::Hints const&);
+  bool DoFallbackActivation(std::string const& uri);
+  bool LaunchApp(std::string const& appname);
   
   bool AcceptKeyNavFocus();
   bool InspectKeyEvent(unsigned int eventType, unsigned int key_sym, const char* character);
@@ -109,6 +113,8 @@ private:
   // Drawing related
   nux::Geometry content_geo_;
   nux::ObjectPtr <nux::IOpenGLBaseTexture> bg_blur_texture_;
+
+  std::string last_activated_uri_;
 };
 
 
