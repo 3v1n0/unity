@@ -66,8 +66,6 @@ void DashController::SetupWindow()
   window_->SinkReference();
   window_->SetBackgroundColor(nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
   window_->SetConfigureNotifyCallback(&DashController::OnWindowConfigure, this);
-  window_->EnableInputWindow(true, "Dash", false, false);
-  window_->EnableInputWindow(false);
   window_->ShowWindow(false);
   window_->SetOpacity(0.0f);
   window_->SetFocused(true);
@@ -184,7 +182,8 @@ void DashController::ShowDash()
 
   window_->ShowWindow(true, true);
   window_->PushToFront();
-  window_->EnableInputWindow(true);
+  window_->EnableInputWindow(true, "Dash", true, false);
+  window_->SetInputFocus();
   window_->CaptureMouseDownAnyWhereElse(true);
   window_->QueueDraw();
  
@@ -205,7 +204,7 @@ void DashController::HideDash()
 
   window_->CaptureMouseDownAnyWhereElse(false);
   window_->ForceStopFocus(1, 1);
-  window_->EnableInputWindow(false);
+  window_->EnableInputWindow(false, "Dash", true, false);
   visible_ = false;
 
   StartShowHideTimeline();
