@@ -69,8 +69,8 @@ namespace unity {
       nux::StaticCairoText *last_updated = new nux::StaticCairoText (preview_->last_updated.c_str(), NUX_TRACKER_LOCATION);
       nux::StaticCairoText *description = new nux::StaticCairoText ("", NUX_TRACKER_LOCATION);
 
-      description->SetBaseWidth(400);
-      description->SetMaximumWidth(400);
+      description->SetBaseWidth(350);
+      description->SetMaximumWidth(350);
       description->SetLines(99999999);
       description->SetText(preview_->description.c_str());
 
@@ -98,6 +98,7 @@ namespace unity {
       nux::VLayout *description_container = new nux::VLayout (NUX_TRACKER_LOCATION);
       description_container->AddView (description, 1, nux::MINOR_POSITION_LEFT);
       nux::ScrollView* description_scroller = new nux::ScrollView (NUX_TRACKER_LOCATION);
+      description_scroller->EnableHorizontalScrollBar (false);
       description_scroller->SetLayout(description_container);
 
       // create the title containers

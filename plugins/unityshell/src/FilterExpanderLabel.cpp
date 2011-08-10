@@ -30,7 +30,7 @@ namespace unity {
 
   FilterExpanderLabel::FilterExpanderLabel (std::string label, NUX_FILE_LINE_DECL)
       : nux::View (NUX_FILE_LINE_PARAM)
-      , expanded (false)
+      , expanded (true)
       , top_bar_layout_ (NULL)
       , contents_ (NULL)
       , right_hand_contents_ (NULL)
@@ -55,12 +55,10 @@ namespace unity {
     label_ = label;
 
     BuildLayout ();
-    g_debug ("adding label");
   }
 
   void FilterExpanderLabel::SetRightHandView (nux::View *view)
   {
-    g_debug ("adding right hand view");
     view->Reference ();
 
     if (right_hand_contents_)
@@ -72,7 +70,6 @@ namespace unity {
 
   void FilterExpanderLabel::SetContents (nux::Layout *layout)
   {
-    g_debug ("adding contents");
     layout->Reference();
 
     if (contents_)

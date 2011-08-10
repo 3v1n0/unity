@@ -52,14 +52,12 @@ namespace unity {
     void RecvMouseDown (int x, int y, unsigned long button_flags, unsigned long key_flags);
     void OnRatingsChanged (int rating);
 
-    nux::AbstractPaintLayer *_full_prelight;
-    nux::AbstractPaintLayer *_full_normal;
+    nux::CairoWrapper *prelight_;
+    nux::CairoWrapper *active_;
+    nux::CairoWrapper *normal_;
+    nux::Geometry cached_geometry_;
 
-    nux::AbstractPaintLayer *_empty_prelight;
-    nux::AbstractPaintLayer *_empty_normal;
-
-    nux::AbstractPaintLayer *_half_prelight;
-    nux::AbstractPaintLayer *_half_normal;
+    void RedrawTheme (nux::Geometry const& geom, cairo_t *cr, nux::State faked_state);
 
     dash::RatingsFilter::Ptr filter_;
 
