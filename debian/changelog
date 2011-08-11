@@ -14,6 +14,8 @@ unity (4.8.0-0ubuntu3) UNRELEASED; urgency=low
     - bump libunity-core-4.0-4 shlib for ABI break
   * remove 01_revert_removed_function_for_unity2d_to_build.patch:
     - incoming unity-2d upload has the needed bits
+  * debian/unity-common.install:
+    - install new assets and json scripts
 
  -- Didier Roche <didrocks@ubuntu.com>  Thu, 11 Aug 2011 12:09:12 +0200
 
