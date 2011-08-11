@@ -41,7 +41,7 @@ public:
   PlacesHomeView();
   ~PlacesHomeView();
 
-  void Refresh();
+  void Refresh(PlacesGroup* foo =NULL);
 
 protected:
   // Introspectable methods

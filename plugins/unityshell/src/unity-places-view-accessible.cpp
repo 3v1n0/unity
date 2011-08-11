@@ -33,7 +33,9 @@
 #include "unity-places-view-accessible.h"
 
 #include "unitya11y.h"
-#include "PlacesView.h"
+#include "DashView.h"
+
+using namespace unity::dash;
 
 /* GObject */
 static void unity_places_view_accessible_class_init(UnityPlacesViewAccessibleClass* klass);
@@ -90,7 +92,7 @@ unity_places_view_accessible_new(nux::Object* object)
 {
   AtkObject* accessible = NULL;
 
-  g_return_val_if_fail(dynamic_cast<PlacesView*>(object), NULL);
+  g_return_val_if_fail(dynamic_cast<DashView*>(object), NULL);
 
   accessible = ATK_OBJECT(g_object_new(UNITY_TYPE_PLACES_VIEW_ACCESSIBLE, NULL));
 

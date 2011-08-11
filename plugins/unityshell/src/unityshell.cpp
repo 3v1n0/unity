@@ -92,7 +92,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , controller(nullptr)
   , panelController(nullptr)
   , switcherController(nullptr)
-  , placesController(nullptr)
   , gestureEngine(nullptr)
   , wt(nullptr)
   , launcherWindow(nullptr)
@@ -221,6 +220,9 @@ UnityScreen::UnityScreen(CompScreen* screen)
   CompString pname("unityshell");
   CompSize size(1, 20);
   _shadow_texture = GLTexture::readImageToTexture(name, pname, size);
+  
+  ubus_manager_.RegisterInterest(UBUS_PLACE_VIEW_SHOWN, [&](GVariant* args) { dash_is_open_ = true; });
+  ubus_manager_.RegisterInterest(UBUS_PLACE_VIEW_HIDDEN, [&](GVariant* args) { dash_is_open_ = false; });
 
   EnsureKeybindings ();
 
@@ -229,7 +231,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
 
 UnityScreen::~UnityScreen()
 {
-  delete placesController;
   panelController->UnReference();
   delete controller;
   launcher->UnReference();
@@ -362,34 +363,37 @@ void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
   vc[2] = y1;
   vc[3] = y2;
 
-  foreach(GLTexture * tex, _shadow_texture)
+  if (!dash_is_open_)
   {
-    glEnable(GL_BLEND);
-    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-
-    GL::activeTexture(GL_TEXTURE0_ARB);
-    tex->enable(GLTexture::Fast);
-
-    glTexParameteri(tex->target(), GL_TEXTURE_WRAP_S, GL_REPEAT);
-
-    glBegin(GL_QUADS);
+    foreach(GLTexture * tex, _shadow_texture)
     {
-      glTexCoord2f(COMP_TEX_COORD_X(tex->matrix(), 0), COMP_TEX_COORD_Y(tex->matrix(), 0));
-      glVertex2f(vc[0], vc[2]);
+      glEnable(GL_BLEND);
+      glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 
-      glTexCoord2f(COMP_TEX_COORD_X(tex->matrix(), 0), COMP_TEX_COORD_Y(tex->matrix(), h));
-      glVertex2f(vc[0], vc[3]);
+      GL::activeTexture(GL_TEXTURE0_ARB);
+      tex->enable(GLTexture::Fast);
 
-      glTexCoord2f(COMP_TEX_COORD_X(tex->matrix(), w), COMP_TEX_COORD_Y(tex->matrix(), h));
-      glVertex2f(vc[1], vc[3]);
+      glTexParameteri(tex->target(), GL_TEXTURE_WRAP_S, GL_REPEAT);
 
-      glTexCoord2f(COMP_TEX_COORD_X(tex->matrix(), w), COMP_TEX_COORD_Y(tex->matrix(), 0));
-      glVertex2f(vc[1], vc[2]);
+      glBegin(GL_QUADS);
+      {
+        glTexCoord2f(COMP_TEX_COORD_X(tex->matrix(), 0), COMP_TEX_COORD_Y(tex->matrix(), 0));
+        glVertex2f(vc[0], vc[2]);
+
+        glTexCoord2f(COMP_TEX_COORD_X(tex->matrix(), 0), COMP_TEX_COORD_Y(tex->matrix(), h));
+        glVertex2f(vc[0], vc[3]);
+
+        glTexCoord2f(COMP_TEX_COORD_X(tex->matrix(), w), COMP_TEX_COORD_Y(tex->matrix(), h));
+        glVertex2f(vc[1], vc[3]);
+
+        glTexCoord2f(COMP_TEX_COORD_X(tex->matrix(), w), COMP_TEX_COORD_Y(tex->matrix(), 0));
+        glVertex2f(vc[1], vc[2]);
+      }
+      glEnd();
+
+      tex->disable();
+      glDisable(GL_BLEND);
     }
-    glEnd();
-
-    tex->disable();
-    glDisable(GL_BLEND);
   }
   nuxEpilogue();
 }
@@ -517,7 +521,11 @@ void UnityScreen::preparePaint(int ms)
 {
   PlacesSettings::DashBlurType type = PlacesSettings::GetDefault()->GetDashBlurType();
   if (type == PlacesSettings::ACTIVE_BLUR)
-    placesController->GetWindow()->QueueDraw();
+  {
+    dashController->window()->QueueDraw();
+    if (dash_is_open_)
+      panelController->QueueRedraw();
+  }
 
   cScreen->preparePaint(ms);
 
@@ -720,7 +728,7 @@ void UnityScreen::SendExecuteCommand()
   ubus_server_send_message(ubus_server_get_default(),
                            UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
                            g_variant_new("(sus)",
-                                         "/com/canonical/unity/applicationsplace/runner",
+                                         "commands.lens",
                                          0,
                                          ""));
 }
@@ -1161,13 +1169,14 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
     case UnityshellOptions::IconSize:
       panelController->SetBFBSize(optionGetIconSize() + 18);
       launcher->SetIconSize(optionGetIconSize() + 6, optionGetIconSize());
-      PlacesController::SetLauncherSize(optionGetIconSize() + 18);
+      dashController->launcher_width = optionGetIconSize() + 18;
       break;
     case UnityshellOptions::AutohideAnimation:
       launcher->SetAutoHideAnimation((Launcher::AutoHideAnimation) optionGetAutohideAnimation());
       break;
     case UnityshellOptions::DashBlurExperimental:
       PlacesSettings::GetDefault()->SetDashBlurType((PlacesSettings::DashBlurType)optionGetDashBlurExperimental());
+      panelController->SetBlurType((unity::BlurType)optionGetDashBlurExperimental());
       break;
     case UnityshellOptions::AutomaximizeValue:
       PluginAdapter::Default()->SetCoverageAreaBeforeAutomaximize(optionGetAutomaximizeValue() / 100.0f);
@@ -1510,10 +1519,10 @@ void UnityScreen::initLauncher(nux::NThread* thread, void* InitData)
   LOG_INFO(logger) << "initLauncher-Panel " << timer.ElapsedSeconds() << "s";
 
   /* Setup Places */
-  self->placesController = new PlacesController();
+  self->dashController = DashController::Ptr(new DashController());
 
   /* FIXME: this should not be manual, should be managed with a
-     show/hide callback like in GAIL*/
+     show/hide callback like in GAIL
   if (unity_a11y_initialized() == TRUE)
   {
     AtkObject* atk_obj = NULL;
@@ -1522,6 +1531,7 @@ void UnityScreen::initLauncher(nux::NThread* thread, void* InitData)
 
     atk_object_set_name(atk_obj, _("Places"));
   }
+  */
 
   self->launcher->SetHideMode(Launcher::LAUNCHER_HIDE_DODGE_WINDOWS);
   self->launcher->SetLaunchAnimation(Launcher::LAUNCH_ANIMATION_PULSE);

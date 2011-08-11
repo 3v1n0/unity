@@ -30,14 +30,15 @@
 #include "unityshell_options.h"
 
 #include "Introspectable.h"
+#include "DashController.h"
 #include "Launcher.h"
 #include "LauncherController.h"
 #include "PanelController.h"
 #include "UScreen.h"
-#include "PlacesController.h"
 #include "GestureEngine.h"
 #include "DebugDBusInterface.h"
 #include "SwitcherController.h"
+#include "UBusWrapper.h"
 #include <Nux/WindowThread.h>
 #include <sigc++/sigc++.h>
 #include <boost/shared_ptr.hpp>
@@ -77,6 +78,8 @@ private:
 #include <compiztoolbox/compiztoolbox.h>
 
 using namespace unity::switcher;
+using namespace unity::dash;
+using unity::UBusManager;
 
 /* base screen class */
 class UnityScreen :
@@ -232,9 +235,9 @@ private:
 
   Launcher*               launcher;
   LauncherController*     controller;
+  DashController::Ptr     dashController;
   PanelController*        panelController;
   SwitcherController*     switcherController;
-  PlacesController*       placesController;
   GestureEngine*          gestureEngine;
   nux::WindowThread*      wt;
   nux::BaseWindow*        launcherWindow;
@@ -276,6 +279,9 @@ private:
   GLuint                                 mActiveFbo;
 
   bool   queryForShader ();
+
+  UBusManager ubus_manager_;
+  bool dash_is_open_;
 
 	friend class UnityWindow;
 };

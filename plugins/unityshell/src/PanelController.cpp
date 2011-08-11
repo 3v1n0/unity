@@ -109,6 +109,25 @@ PanelController::SetOpacity(float opacity)
   }
 }
 
+void PanelController::SetBlurType(BlurType type)
+{
+  std::vector<nux::BaseWindow*>::iterator it, eit = _windows.end();
+  for (it = _windows.begin(); it != eit; ++it)
+  {
+    PanelView* view = ViewForWindow(*it);
+    view->SetBlurType(type);
+  }
+}
+
+void PanelController::QueueRedraw()
+{
+  std::vector<nux::BaseWindow*>::iterator it, eit = _windows.end();
+  for (it = _windows.begin(); it != eit; ++it)
+  {
+    (*it)->QueueDraw();
+  }
+}
+
 PanelView*
 PanelController::ViewForWindow(nux::BaseWindow* window)
 {

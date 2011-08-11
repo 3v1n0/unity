@@ -56,13 +56,13 @@ namespace unity
         BLEND_MODE_NORMAL = 0,
         BLEND_MODE_MULTIPLY,
         BLEND_MODE_SCREEN
-	  } BlendMode;
+    } BlendMode;
 
       typedef enum {
         FONT_WEIGHT_LIGHT = 0,
         FONT_WEIGHT_REGULAR,
         FONT_WEIGHT_BOLD
-	  } FontWeight;
+    } FontWeight;
 
       typedef enum {
         SEGMENT_LEFT = 0,
@@ -79,6 +79,8 @@ namespace unity
 
       DashStyle ();
       ~DashStyle ();
+
+      static DashStyle* GetDefault();
 
     virtual bool Button (cairo_t* cr, nux::State state, std::string label);
 
