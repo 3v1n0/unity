@@ -49,7 +49,7 @@ HomeView::HomeView()
 
     for (auto group: categories_)
     {
-      group->SetVisible(search != "");
+      group->SetVisible(search != "" && counts_[group]);
     }
     home_view_->SetVisible(search == "");
   });

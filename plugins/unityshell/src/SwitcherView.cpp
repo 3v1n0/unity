@@ -52,6 +52,10 @@ SwitcherView::SwitcherView(NUX_FILE_LINE_DECL)
   animation_length = 250;
   spread_size = 3.5f;
 
+  animation_draw_ = false;
+
+  blur = BLUR_NONE;
+
   save_time_.tv_sec = 0;
   save_time_.tv_nsec = 0;
 
@@ -412,6 +416,7 @@ gboolean SwitcherView::OnDrawTimeout(gpointer data)
   SwitcherView* self = static_cast<SwitcherView*>(data);
 
   self->QueueDraw();
+  self->animation_draw_ = true;
   self->redraw_handle_ = 0;
   return FALSE;
 }
@@ -430,11 +435,6 @@ void SwitcherView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   nux::Geometry base = GetGeometry();
   GfxContext.PushClippingRectangle(base);
 
-  nux::ROPConfig ROP;
-  ROP.Blend = false;
-  ROP.SrcBlend = GL_ONE;
-  ROP.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
-
   // clear region
   gPainter.PaintBackground(GfxContext, base);
 
@@ -446,9 +446,48 @@ void SwitcherView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   gPainter.PaintTextureShape(GfxContext, background_geo, background_texture_, 30, 30, 30, 30, false);
 
-  int internal_offset = 21;
-  nux::Geometry internal_clip(background_geo.x + internal_offset, background_geo.y, background_geo.width - internal_offset * 2, background_geo.height);
+  // magic constant comes from texture contents (distance to cleared area)
+  const int internal_offset = 21;
+  nux::Geometry internal_clip(background_geo.x + internal_offset, 
+                              background_geo.y + internal_offset, 
+                              background_geo.width - internal_offset * 2, 
+                              background_geo.height - internal_offset * 2);
   GfxContext.PushClippingRectangle(internal_clip);
+
+
+  nux::Geometry geo_absolute = GetAbsoluteGeometry ();
+  if (!bg_blur_texture_.IsValid() && blur != BLUR_NONE)
+  {
+    nux::Geometry blur_geo(geo_absolute.x, geo_absolute.y, base.width, base.height);
+    bg_blur_texture_ = bg_effect_helper_.GetBlurRegion(blur_geo, true);
+  }
+
+  if (bg_blur_texture_.IsValid() && blur != BLUR_NONE)
+  {
+    nux::TexCoordXForm texxform_blur_bg;
+    texxform_blur_bg.flip_v_coord = true;
+    texxform_blur_bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+    texxform_blur_bg.uoffset = ((float) base.x) / geo_absolute.width;
+    texxform_blur_bg.voffset = ((float) base.y) / geo_absolute.height;
+
+    nux::ROPConfig rop;
+    rop.Blend = false;
+    rop.SrcBlend = GL_ONE;
+    rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+
+    gPainter.PushDrawTextureLayer(GfxContext, base,
+                                  bg_blur_texture_,
+                                  texxform_blur_bg,
+                                  nux::color::White,
+                                  true,
+                                  rop);
+  }
+
+  nux::ROPConfig rop;
+  rop.Blend = true;
+  rop.SrcBlend = GL_ONE;
+  rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+  gPainter.PushDrawColorLayer (GfxContext, internal_clip, background_color, false, rop);
 
   icon_renderer_->PreprocessIcons(last_args_, base);
 
@@ -472,9 +511,6 @@ void SwitcherView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   GfxContext.PopClippingRectangle();
   GfxContext.PopClippingRectangle();
 
-  // probably evil
-  gPainter.PopBackground();
-
   text_view_->SetBaseY(background_geo.y + background_geo.height - 45);
   text_view_->Draw(GfxContext, force_draw);
 
@@ -482,6 +518,11 @@ void SwitcherView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   if (ms_since_change < animation_length)
     redraw_handle_ = g_timeout_add(0, &SwitcherView::OnDrawTimeout, this);
+
+  if (blur == BLUR_ACTIVE && !animation_draw_)
+    bg_blur_texture_.Release();
+
+  animation_draw_ = false;
 }
 
 

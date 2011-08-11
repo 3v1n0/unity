@@ -437,6 +437,7 @@ void DashView::OnUriActivatedReply(std::string const& uri, HandledType type, Len
 
   if (type == NOT_HANDLED)
   {
+    g_debug ("NOT HANDLED: %s", uri.c_str());
     if (!DoFallbackActivation(uri))
       return;
   }

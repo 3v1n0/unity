@@ -40,14 +40,6 @@
 namespace unity
 {
 
-
-enum BlurType
-{
-  BLUR_NONE,
-  BLUR_STATIC,
-  BLUR_ACTIVE
-};
-
 class PanelView : public unity::Introspectable, public nux::View
 {
   NUX_DECLARE_OBJECT_TYPE(PanelView, nux::View);
