@@ -437,7 +437,6 @@ void DashView::OnUriActivatedReply(std::string const& uri, HandledType type, Len
 
   if (type == NOT_HANDLED)
   {
-    g_debug ("NOT HANDLED: %s", uri.c_str());
     if (!DoFallbackActivation(uri))
       return;
   }
@@ -446,8 +445,7 @@ void DashView::OnUriActivatedReply(std::string const& uri, HandledType type, Len
     return;
   }
 
-  if (uri == last_activated_uri_)
-    ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
+  ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
 }
 
 bool DashView::DoFallbackActivation(std::string const& fake_uri)
