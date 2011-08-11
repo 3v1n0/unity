@@ -387,6 +387,7 @@ if (${GTEST_FOUND} STREQUAL TRUE)
                  test_service_main.c
                  test_service_model.c
                  test_service_model.h)
+  add_dependencies (test-gtest-service unity-core-${UNITY_API_VERSION})
 
 # The actual test executable
   add_executable(test-gtest
