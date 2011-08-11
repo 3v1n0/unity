@@ -91,9 +91,13 @@ PanelTray::~PanelTray()
 }
 
 void
-PanelTray::Draw(nux::GraphicsEngine& gfx_content, bool force_draw)
+PanelTray::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
 {
-  nux::Geometry geo = GetAbsoluteGeometry();
+  nux::Geometry geo = GetGeometry();
+
+  gfx_context.PushClippingRectangle(geo);
+  nux::GetPainter().PaintBackground(gfx_context, geo);
+  gfx_context.PopClippingRectangle();
 
   if (geo.x != _last_x || geo.y != _last_y)
   {

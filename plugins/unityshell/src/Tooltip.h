@@ -84,6 +84,8 @@ public:
   const gchar* GetName();
   void AddProperties(GVariantBuilder* builder);
 
+  virtual Area* FindAreaUnderMouse(const Point& mouse_position, NuxEventType event_type);
+
 private:
   void RecvCairoTextChanged(StaticCairoText* cairo_text);
 
@@ -103,11 +105,7 @@ private:
   int                   _anchorX;
   int                   _anchorY;
   nux::NString          _labelText;
-  int                   _dpiX;
-  int                   _dpiY;
   int                   _top_size; // size of the segment from point 13 to 14. See figure in _compute_full_mask_path.
-
-  cairo_font_options_t* _fontOpts;
 
   nux::StaticCairoText* _tooltip_text;
   nux::BaseTexture*     _texture_bg;

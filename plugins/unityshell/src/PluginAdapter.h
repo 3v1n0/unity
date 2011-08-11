@@ -120,6 +120,8 @@ public:
 
   bool IsScreenGrabbed();
 
+  unsigned int GetWindowActiveNumber (guint32 xid);
+
   void MaximizeIfBigEnough(CompWindow* window);
 
   nux::Geometry GetWindowGeometry(guint32 xid);

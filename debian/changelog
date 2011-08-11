@@ -1,3 +1,13 @@
+unity (4.8.0-0ubuntu1) UNRELEASED; urgency=low
+
+  * New upstream release.
+  * debian/control:
+    - add libjson-glib-dev
+  * remove patched plugins/unityshell/src/BGHash.cpp for replacing dark with
+    real dash color
+
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 11 Aug 2011 11:13:49 +0200
+
 unity (4.6.0-0ubuntu4) oneiric; urgency=low
 
   * debian/control:

@@ -33,6 +33,7 @@
             </relation>
             <requirement>
                 <plugin>opengl</plugin>
+                <plugin>compiztoolbox</plugin>
                 <feature>largedesktop</feature>
             </requirement>
         </deps>
@@ -89,12 +90,17 @@
                   <option name="alt_tab_forward" type="key">
             		    <_short>Key to start the switcher</_short>
             		    <_long>fixme</_long>
-            		    <default>&lt;Control&gt;Tab</default>
+            		    <default>&lt;Alt&gt;Tab</default>
+                  </option>
+                  <option name="alt_tab_detail" type="key">
+                        <_short>Key to start the switcher</_short>
+                        <_long>fixme</_long>
+                        <default>&lt;Alt&gt;Down</default>
                   </option>
                   <option name="alt_tab_prev" type="key">
                         <_short>Key to start the switcher in reverse</_short>
                         <_long>fixme</_long>
-                        <default>&lt;Control&gt;&lt;Shift&gt;Tab</default>
+                        <default>&lt;Alt&gt;&lt;Shift&gt;Tab</default>
                   </option>
                   <option name="execute_command" type="key">
             		    <_short>Key to execute a command</_short>
@@ -217,8 +223,8 @@
                     <_short>Dash Blur</_short>
                     <_long>Type of blur in the Dash</_long>
                     <min>0</min>
-                    <max>1</max>
-                    <default>0</default>
+                    <max>2</max>
+                    <default>2</default>
                     <desc>
                         <value>0</value>
                         <_name>No Blur</_name>
@@ -226,6 +232,10 @@
                     <desc>
                         <value>1</value>
                         <_name>Static Blur</_name>
+                    </desc>
+                    <desc>
+                        <value>2</value>
+                        <_name>Active Blur</_name>
                     </desc>
                 </option>
 

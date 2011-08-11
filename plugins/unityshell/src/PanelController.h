@@ -26,6 +26,8 @@
 #include "Introspectable.h"
 #include "PanelView.h"
 
+using unity::BlurType;
+
 class PanelController : public nux::Object, public unity::Introspectable
 {
 public:
@@ -36,6 +38,8 @@ public:
   void StartFirstMenuShow();
   void EndFirstMenuShow();
   void SetOpacity(float opacity);
+  void SetBlurType(BlurType type);
+  void QueueRedraw();
 
 protected:
   const gchar* GetName();
