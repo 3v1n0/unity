@@ -11,7 +11,7 @@ subdirs (doc services tests tools UnityCore guides)
 #
 set (PROJECT_NAME "unity")
 set (UNITY_MAJOR 4)
-set (UNITY_MINOR 6)
+set (UNITY_MINOR 8)
 set (UNITY_MICRO 0)
 set (UNITY_VERSION "${UNITY_MAJOR}.${UNITY_MINOR}.${UNITY_MICRO}")
 set (UNITY_API_VERSION "4.0")
