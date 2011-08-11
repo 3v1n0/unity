@@ -26,6 +26,17 @@
 #ifndef BACKGROUND_EFFECT_HELPER_H
 #define BACKGROUND_EFFECT_HELPER_H
 
+namespace unity
+{
+
+enum BlurType
+{
+  BLUR_NONE,
+  BLUR_STATIC,
+  BLUR_ACTIVE
+};
+
+}
 
 class BackgroundEffectHelper
 {

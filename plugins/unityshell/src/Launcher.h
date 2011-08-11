@@ -334,8 +334,6 @@ private:
   static void OnPlaceViewHidden(GVariant* data, void* val);
   static void OnPlaceViewShown(GVariant* data, void* val);
 
-  static void OnBFBUpdate(GVariant* data, gpointer user_data);
-  static void OnBFBDndEnter(GVariant* data, gpointer user_data);
   static void OnBGColorChanged (GVariant *data, void *val);
 
   static void OnActionDone(GVariant* data, void* val);
@@ -484,7 +482,7 @@ private:
   GSettings* _settings;
   guint32 _settings_changed_id;
 
-  guint _ubus_handles[6];
+  guint _ubus_handles[4];
 
   nux::Color _background_color;
   bool _dash_is_open;
