@@ -1,4 +1,4 @@
-unity (4.8.0-0ubuntu1) UNRELEASED; urgency=low
+unity (4.8.0-0ubuntu1) oneiric; urgency=low
 
   * New upstream release.
     - store kde4 applications in a gio-friendly way (LP: #741129)
@@ -19,7 +19,7 @@ unity (4.8.0-0ubuntu1) UNRELEASED; urgency=low
   * debian/unity-common.install:
     - install new assets and json scripts
 
- -- Didier Roche <didrocks@ubuntu.com>  Thu, 11 Aug 2011 12:09:12 +0200
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 11 Aug 2011 19:47:19 +0200
 
 unity (4.6.0-0ubuntu4) oneiric; urgency=low
 
