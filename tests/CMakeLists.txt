@@ -201,8 +201,13 @@ add_executable (test-switcher
                 ${UNITY_SRC}/IconRenderer.cpp
                 ${UNITY_SRC}/IconRenderer.h
                 ${UNITY_SRC}/MockLauncherIcon.h
+                ${UNITY_SRC}/BackgroundEffectHelper.h
+                ${UNITY_SRC}/BackgroundEffectHelper.cpp
                 ${UNITY_SRC}/StaticCairoText.cpp
                 ${UNITY_SRC}/StaticCairoText.h
+                ${UNITY_SRC}/UBusMessages.h
+                ${UNITY_SRC}/ubus-server.cpp
+                ${UNITY_SRC}/ubus-server.h
                 )
 add_dependencies (test-switcher unity-core-${UNITY_API_VERSION})
 

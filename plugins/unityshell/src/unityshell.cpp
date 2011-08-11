@@ -525,6 +525,8 @@ void UnityScreen::preparePaint(int ms)
     dashController->window()->QueueDraw();
     if (dash_is_open_)
       panelController->QueueRedraw();
+    if (switcherController->GetView ())
+      switcherController->GetView ()->QueueDraw();
   }
 
   cScreen->preparePaint(ms);
@@ -1177,6 +1179,7 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
     case UnityshellOptions::DashBlurExperimental:
       PlacesSettings::GetDefault()->SetDashBlurType((PlacesSettings::DashBlurType)optionGetDashBlurExperimental());
       panelController->SetBlurType((unity::BlurType)optionGetDashBlurExperimental());
+      switcherController->blur = (unity::BlurType)optionGetDashBlurExperimental();
       break;
     case UnityshellOptions::AutomaximizeValue:
       PluginAdapter::Default()->SetCoverageAreaBeforeAutomaximize(optionGetAutomaximizeValue() / 100.0f);

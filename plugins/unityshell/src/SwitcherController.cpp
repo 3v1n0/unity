@@ -21,6 +21,9 @@
 #include <Nux/Nux.h>
 #include <Nux/HLayout.h>
 
+#include "UBusMessages.h"
+#include "ubus-server.h"
+
 #include "SwitcherController.h"
 
 namespace unity
@@ -35,10 +38,27 @@ SwitcherController::SwitcherController()
   ,  show_timer_(0)
 {
   timeout_length = 150;
+
+  blur = BLUR_ACTIVE;
+
+  UBusServer *ubus = ubus_server_get_default();
+  ubus_server_register_interest(ubus, UBUS_BACKGROUND_COLOR_CHANGED,
+                                (UBusCallback)&SwitcherController::OnBackgroundUpdate,
+                                this);
 }
 
 SwitcherController::~SwitcherController()
 {
+}
+
+void SwitcherController::OnBackgroundUpdate (GVariant *data, SwitcherController *self)
+{
+  gdouble red, green, blue, alpha;
+  g_variant_get(data, "(dddd)", &red, &green, &blue, &alpha);
+  self->bg_color_ = nux::Color (red, green, blue, alpha);
+
+  if (self->view_)
+    self->view_->background_color = self->bg_color_;
 }
 
 void SwitcherController::Show(SwitcherController::ShowMode show, SwitcherController::SortMode sort, bool reverse, std::vector<AbstractLauncherIcon*> results)
@@ -81,6 +101,8 @@ void SwitcherController::ConstructView()
 
   view_ = new SwitcherView();
   view_->SetModel(model_);
+  view_->background_color = bg_color_;
+  view_->blur = blur();
 
   layout->AddView(view_, 1);
   layout->SetVerticalExternalMargin(0);
