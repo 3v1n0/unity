@@ -1,4 +1,4 @@
-unity (4.8.0-0ubuntu2) UNRELEASED; urgency=low
+unity (4.8.0-0ubuntu3) UNRELEASED; urgency=low
 
   * New upstream release.
   * debian/control:
@@ -12,8 +12,10 @@ unity (4.8.0-0ubuntu2) UNRELEASED; urgency=low
     real dash color
   * debian/rules:
     - bump libunity-core-4.0-4 shlib for ABI break
+  * remove 01_revert_removed_function_for_unity2d_to_build.patch:
+    - incoming unity-2d upload has the needed bits
 
- -- Didier Roche <didrocks@ubuntu.com>  Thu, 11 Aug 2011 11:23:24 +0200
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 11 Aug 2011 12:09:12 +0200
 
 unity (4.6.0-0ubuntu4) oneiric; urgency=low
 
