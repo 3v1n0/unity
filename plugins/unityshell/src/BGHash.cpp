@@ -278,7 +278,6 @@ namespace unity {
     _current_color = InterpolateColor(_old_color,
                                       _new_color,
                                       timediff);
-
     DoUbusColorEmit ();
 
     if (current_time > _hires_time_start + _hires_time_end)
@@ -297,9 +296,9 @@ namespace unity {
     ubus_server_send_message(ubus_server_get_default(),
                              UBUS_BACKGROUND_COLOR_CHANGED,
                              g_variant_new ("(dddd)",
-                                            _current_color.red,
-                                            _current_color.green,
-                                            _current_color.blue,
+                                            _current_color.red * 0.7f,
+                                            _current_color.green * 0.7f,
+                                            _current_color.blue * 0.7f,
                                             _current_color.alpha)
                             );
   }

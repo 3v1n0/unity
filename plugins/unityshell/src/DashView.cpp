@@ -84,11 +84,16 @@ void DashView::SetupViews()
   search_bar_ = new SearchBar();
   search_bar_->search_changed.connect(sigc::mem_fun(this, &DashView::OnSearchChanged));
   search_bar_->live_search_reached.connect(sigc::mem_fun(this, &DashView::OnLiveSearchReached));
-  search_bar_->showing_filters.changed.connect([&] (bool showing) { if (active_lens_view_) active_lens_view_->filters_expanded = showing;  });
+  search_bar_->showing_filters.changed.connect([&] (bool showing) { if (active_lens_view_) active_lens_view_->filters_expanded = showing; QueueDraw(); });
   content_layout_->AddView(search_bar_, 0, nux::MINOR_POSITION_LEFT);
 
   lenses_layout_ = new nux::VLayout();
   content_layout_->AddView(lenses_layout_, 1, nux::MINOR_POSITION_LEFT);
+
+  home_view_ = new HomeView();
+  active_lens_view_ = home_view_;
+  lens_views_["home"] = home_view_;
+  lenses_layout_->AddView(home_view_);
 
   lens_bar_ = new LensBar();
   lens_bar_->lens_activated.connect(sigc::mem_fun(this, &DashView::OnLensBarActivated));
@@ -275,6 +280,7 @@ void DashView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
 
   bg_layer_->SetGeometry(content_geo_);
   nux::GetPainter().RenderSinglePaintLayer(gfx_context, content_geo_, bg_layer_);
+
 }
 
 void DashView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
@@ -374,6 +380,7 @@ void DashView::OnLiveSearchReached(std::string const& search_string)
 void DashView::OnLensAdded(Lens::Ptr& lens)
 {
   lens_bar_->AddLens(lens);
+  home_view_->AddLens(lens);
 
   LensView* view = new LensView(lens);
   view->SetVisible(false);
@@ -383,6 +390,8 @@ void DashView::OnLensAdded(Lens::Ptr& lens)
 
   lens->activated.connect(sigc::mem_fun(this, &DashView::OnUriActivatedReply));
   lens->search_finished.connect(sigc::mem_fun(this, &DashView::OnSearchFinished));
+
+  lens->Search("");
 }
 
 void DashView::OnLensBarActivated(std::string const& id)
@@ -392,7 +401,10 @@ void DashView::OnLensBarActivated(std::string const& id)
 
   LensView* view = active_lens_view_ = lens_views_[id];
   search_bar_->search_string = view->search_string;
-  search_bar_->search_hint = view->lens()->search_hint;
+  if (view != home_view_)
+    search_bar_->search_hint = view->lens()->search_hint;
+  else
+    search_bar_->search_hint = "Search";
   bool expanded =view->filters_expanded;
   search_bar_->showing_filters = expanded;
 }

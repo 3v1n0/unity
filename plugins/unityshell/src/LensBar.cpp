@@ -20,6 +20,8 @@
 
 #include <NuxCore/Logger.h>
 
+#include "config.h"
+
 namespace unity
 {
 namespace dash
@@ -37,11 +39,21 @@ LensBar::LensBar()
 {
   layout_ = new nux::HLayout();
   layout_->SetContentDistribution(nux::MAJOR_POSITION_CENTER);
-  layout_->SetHorizontalInternalMargin(12);
+  layout_->SetHorizontalInternalMargin(24);
   SetLayout(layout_);
 
   SetMinimumHeight(40);
   SetMaximumHeight(40);
+
+  {
+    std::string id = "home";
+    IconTexture* icon = new IconTexture(PKGDATADIR"/lens-nav-home.svg", 26);
+    icon->SetMinMaxSize(26, 26);
+    icon->SetVisible(true);
+    layout_->AddView(icon, 0, nux::eCenter, nux::eFix);
+
+    icon->mouse_click.connect([&, id] (int x, int y, unsigned long button, unsigned long keyboard) { lens_activated.emit(id); });
+  }
 }
 
 LensBar::~LensBar()
@@ -52,8 +64,8 @@ void LensBar::AddLens(Lens::Ptr& lens)
   std::string id = lens->id;
   std::string icon_hint = lens->icon_hint;
 
-  IconTexture* icon = new IconTexture(icon_hint.c_str(), 32);
-  icon->SetMinMaxSize(32, 32);
+  IconTexture* icon = new IconTexture(icon_hint.c_str(), 26);
+  icon->SetMinMaxSize(26, 26);
   icon->SetVisible(lens->visible);
   lens->visible.changed.connect([icon](bool visible) { icon->SetVisible(visible); } );
   layout_->AddView(icon, 0, nux::eCenter, nux::eFix);
@@ -73,7 +85,7 @@ void LensBar::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
   gfx_context.PushClippingRectangle(geo);
   nux::GetPainter().PaintBackground(gfx_context, geo);
 
-  nux::Color col (0.0f, 0.0f, 0.0f, 0.4f);
+  nux::Color col (0.0f, 0.0f, 0.0f, 0.2f);
   gfx_context.QRP_Color (geo.x, geo.y, geo.width, geo.height, col);
 
   gfx_context.PopClippingRectangle();

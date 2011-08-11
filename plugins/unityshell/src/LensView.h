@@ -46,8 +46,9 @@ class LensView : public nux::View, public unity::Introspectable
   typedef std::map<PlacesGroup*, unsigned int> ResultCounts;
 
 public:
+  LensView();
   LensView(Lens::Ptr lens);
-  ~LensView();
+  virtual ~LensView();
 
   Lens::Ptr lens() const;
 
@@ -68,13 +69,13 @@ private:
   void OnFilterAdded(Filter::Ptr filter);
   void OnFilterRemoved(Filter::Ptr filter);
 
-  long ProcessEvent(nux::IEvent& ievent, long traverse_info, long event_info);
-  void Draw(nux::GraphicsEngine& gfx_context, bool force_draw);
-  void DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw);
+  virtual long ProcessEvent(nux::IEvent& ievent, long traverse_info, long event_info);
+  virtual void Draw(nux::GraphicsEngine& gfx_context, bool force_draw);
+  virtual void DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw);
   
-  bool AcceptKeyNavFocus();
-  const gchar* GetName();
-  void AddProperties(GVariantBuilder* builder);
+  virtual bool AcceptKeyNavFocus();
+  virtual const gchar* GetName();
+  virtual void AddProperties(GVariantBuilder* builder);
 
 private:
   UBusManager ubus_manager_;

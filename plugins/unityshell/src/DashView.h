@@ -30,6 +30,7 @@
 
 #include "BackgroundEffectHelper.h"
 #include "DashSearchBar.h"
+#include "HomeView.h"
 #include "Introspectable.h"
 #include "LensBar.h"
 #include "LensView.h"
@@ -108,6 +109,7 @@ private:
   nux::VLayout* lenses_layout_;
   LensBar* lens_bar_;
 
+  HomeView* home_view_;
   LensView* active_lens_view_;
 
   // Drawing related

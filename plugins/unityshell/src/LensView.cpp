@@ -38,6 +38,12 @@ nux::logging::Logger logger("unity.dash.lensview");
 
 NUX_IMPLEMENT_OBJECT_TYPE(LensView);
 
+LensView::LensView()
+  : nux::View(NUX_TRACKER_LOCATION)
+  , search_string("")
+  , filters_expanded(false)
+{}
+
 LensView::LensView(Lens::Ptr lens)
   : nux::View(NUX_TRACKER_LOCATION)
   , search_string("")
