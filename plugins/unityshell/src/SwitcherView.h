@@ -110,6 +110,8 @@ private:
 
   timespec save_time_;
 
+  bool animation_draw_;
+
   BackgroundEffectHelper bg_effect_helper_;
   nux::ObjectPtr <nux::IOpenGLBaseTexture> bg_blur_texture_;
 };

@@ -52,6 +52,8 @@ SwitcherView::SwitcherView(NUX_FILE_LINE_DECL)
   animation_length = 250;
   spread_size = 3.5f;
 
+  animation_draw_ = false;
+
   blur = BLUR_NONE;
 
   save_time_.tv_sec = 0;
@@ -414,6 +416,7 @@ gboolean SwitcherView::OnDrawTimeout(gpointer data)
   SwitcherView* self = static_cast<SwitcherView*>(data);
 
   self->QueueDraw();
+  self->animation_draw_ = true;
   self->redraw_handle_ = 0;
   return FALSE;
 }
@@ -516,8 +519,10 @@ void SwitcherView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   if (ms_since_change < animation_length)
     redraw_handle_ = g_timeout_add(0, &SwitcherView::OnDrawTimeout, this);
 
-  if (blur == BLUR_ACTIVE)
+  if (blur == BLUR_ACTIVE && !animation_draw_)
     bg_blur_texture_.Release();
+
+  animation_draw_ = false;
 }
 
 
