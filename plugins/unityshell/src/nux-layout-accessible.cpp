@@ -187,11 +187,6 @@ on_view_changed_cb(nux::Layout* layout,
     index = search_for_child(accessible, layout, area);
   }
 
-  g_debug("[a11y][layout] view change. parent=(%p:%s), child=(%p:%s) at (%i) added=(%i)",
-          accessible, atk_object_get_name(accessible),
-          atk_child, atk_object_get_name(atk_child),
-          index, is_add);
-
   g_signal_emit_by_name(accessible, signal_name, index, atk_child, NULL);
 }
 

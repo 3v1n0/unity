@@ -1063,7 +1063,6 @@ void Launcher::SetupRenderArg(LauncherIcon* icon, struct timespec const& current
   arg.alpha               = 1.0f;
   arg.saturation          = IconDesatValue(icon, current);
   arg.running_arrow       = icon->GetQuirk(LauncherIcon::QUIRK_RUNNING);
-  arg.active_arrow        = icon->GetQuirk(LauncherIcon::QUIRK_ACTIVE);
   arg.running_colored     = icon->GetQuirk(LauncherIcon::QUIRK_URGENT);
   arg.running_on_viewport = icon->HasWindowOnViewport();
   arg.active_colored      = false;
@@ -1076,9 +1075,14 @@ void Launcher::SetupRenderArg(LauncherIcon* icon, struct timespec const& current
   arg.progress_bias       = IconProgressBias(icon, current);
   arg.progress            = CLAMP(icon->GetProgress(), 0.0f, 1.0f);
   arg.draw_shortcut       = _shortcuts_shown && !_hide_machine->GetQuirk(LauncherHideMachine::PLACES_VISIBLE);
+  
+  if (_dash_is_open)
+    arg.active_arrow = icon->Type() == LauncherIcon::TYPE_HOME;
+  else
+    arg.active_arrow = icon->GetQuirk(LauncherIcon::QUIRK_ACTIVE);
 
   guint64 shortcut = icon->GetShortcut();
-  if (shortcut > 32 && !g_ascii_isdigit((gchar)shortcut))
+  if (shortcut > 32)
     arg.shortcut_label = (char) shortcut;
   else
     arg.shortcut_label = 0;
@@ -1362,10 +1366,6 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
     FillRenderArg(icon, arg, center, folding_threshold, folded_size, folded_spacing,
                   autohide_offset, folded_z_distance, animation_neg_rads, current);
 
-
-    if (!arg.shortcut_label && index <= 10)
-      arg.shortcut_label = '0' + (index % 10);
-
     launcher_args.push_back(arg);
     index++;
   }
@@ -1510,10 +1510,11 @@ void Launcher::OnPlaceViewShown(GVariant* data, void* val)
   self->_hover_machine->SetQuirk(LauncherHoverMachine::PLACES_VISIBLE, true);
 
   // TODO: add in a timeout for seeing the animation (and make it smoother)
-  for (it = self->_model->begin(); it != self->_model->end(); it++)
+  for (auto icon : *(self->_model))
   {
-    (*it)->SetQuirk(LauncherIcon::QUIRK_DESAT, true);
-    (*it)->HideTooltip();
+    if (icon->Type () != LauncherIcon::TYPE_HOME)
+      icon->SetQuirk(LauncherIcon::QUIRK_DESAT, true);
+    icon->HideTooltip();
   }
 
   // hack around issue in nux where leave events dont always come after a grab
@@ -1537,9 +1538,9 @@ void Launcher::OnPlaceViewHidden(GVariant* data, void* val)
   self->SetStateMouseOverBFB(false);
 
   // TODO: add in a timeout for seeing the animation (and make it smoother)
-  for (it = self->_model->begin(); it != self->_model->end(); it++)
+  for (auto icon : *(self->_model))
   {
-    (*it)->SetQuirk(LauncherIcon::QUIRK_DESAT, false);
+    icon->SetQuirk(LauncherIcon::QUIRK_DESAT, false);
   }
 }
 

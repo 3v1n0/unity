@@ -58,49 +58,45 @@ GtkIconTheme* LauncherIcon::_unity_theme = NULL;
 gboolean LauncherIcon::_skip_tooltip_delay = false;
 
 LauncherIcon::LauncherIcon(Launcher* launcher)
+  : _launcher(launcher)
+  , _menuclient_dynamic_quicklist(nullptr)
+  , _has_visible_window(false)
+  , _quicklist_is_initialized(false)
+  , _remote_urgent(false)
+  , _present_urgency(0)
+  , _progress(0)
+  , _center_stabilize_handle(0)
+  , _present_time_handle(0)
+  , _time_delay_handle(0)
+  , _tooltip_delay_handle(0)
+  , _related_windows(0)
+  , _sort_priority(0)
+  , _background_color(nux::color::White)
+  , _glow_color(nux::color::White)
+  , _shortcut(0)
+  , _icon_type(TYPE_NONE)
+  , _emblem(nullptr)
+  , _superkey_label(nullptr)
 {
-  _launcher = launcher;
-
   for (int i = 0; i < QUIRK_LAST; i++)
   {
-    _quirks[i] = 0;
+    _quirks[i] = false;
     _quirk_times[i].tv_sec = 0;
     _quirk_times[i].tv_nsec = 0;
   }
 
-  _related_windows = 0;
-
-  _background_color = nux::color::White;
-  _glow_color = nux::color::White;
-
-  _remote_urgent = false;
-  _has_visible_window = false;
   _tooltip = new nux::Tooltip();
   _tooltip->SinkReference();
-  _icon_type = TYPE_NONE;
-  _sort_priority = 0;
-  _shortcut = 0;
-
-  _emblem = 0;
-  _superkey_label = 0;
 
   tooltip_text.SetSetterFunction(sigc::mem_fun(this, &LauncherIcon::SetTooltipText));
   tooltip_text = "blank";
 
   _quicklist = new QuicklistView();
   _quicklist->SinkReference();
-  _quicklist_is_initialized = false;
-
-  _present_time_handle = 0;
-  _center_stabilize_handle = 0;
-  _time_delay_handle = 0;
-  _tooltip_delay_handle = 0;
-
 
   // FIXME: the abstraction is already broken, should be fixed for O
   // right now, hooking the dynamic quicklist the less ugly possible way
   QuicklistManager::Default()->RegisterQuicklist(_quicklist);
-  _menuclient_dynamic_quicklist = NULL;
 
   // Add to introspection
   AddChild(_quicklist);

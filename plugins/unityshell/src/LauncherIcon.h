@@ -94,6 +94,8 @@ public:
 
   int RelatedWindows();
 
+  virtual std::vector<Window> RelatedXids () { return std::vector<Window> (); }
+
   bool HasWindowOnViewport();
 
   virtual bool IsSpacer()
@@ -260,8 +262,6 @@ protected:
 
   void OnRemoteProgressVisibleChanged(LauncherEntryRemote* remote);
 
-  //! the window this icon belong too.
-  nux::BaseWindow* m_Window;
   Launcher* _launcher;
 
   nux::Tooltip* _tooltip;

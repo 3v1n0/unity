@@ -30,7 +30,7 @@ PlacesSettings::PlacesSettings()
   : _settings(NULL),
     _raw_from_factor(0),
     _form_factor(DESKTOP),
-    _dash_blur_type(NO_BLUR)
+    _dash_blur_type(ACTIVE_BLUR)
 {
   _settings = g_settings_new("com.canonical.Unity");
   g_signal_connect(_settings, "changed",
