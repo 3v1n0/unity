@@ -44,6 +44,8 @@ public:
   void       SetChildView(nux::View* view);
   nux::View* GetChildView();
 
+  void SetChildLayout(nux::Layout* layout);
+
   void Relayout();
 
   void SetCounts(guint n_visible_items_in_unexpand_mode, guint n_total_items);

@@ -1,4 +1,3 @@
-#if 0
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
@@ -42,7 +41,7 @@ public:
   PlacesHomeView();
   ~PlacesHomeView();
 
-  void Refresh();
+  void Refresh(bool foo=false);
 
 protected:
   // Introspectable methods
@@ -78,7 +77,5 @@ private:
   guint _media_gconf_notify;
 };
 
-
-#endif
 
 #endif

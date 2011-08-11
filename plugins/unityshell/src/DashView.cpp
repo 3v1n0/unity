@@ -55,6 +55,7 @@ DashView::DashView()
   mouse_down.connect(sigc::mem_fun(this, &DashView::OnMouseButtonDown));
 
   Relayout();
+  OnLensBarActivated("home");
 }
 
 DashView::~DashView()

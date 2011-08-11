@@ -185,6 +185,12 @@ PlacesGroup::GetChildView()
   return _child_view;
 }
 
+void PlacesGroup::SetChildLayout(nux::Layout* layout)
+{
+  _group_layout->AddLayout(layout, 1);
+  QueueDraw();
+}
+
 void
 PlacesGroup::RefreshLabel()
 {

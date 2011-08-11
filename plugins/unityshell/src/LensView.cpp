@@ -66,7 +66,7 @@ LensView::LensView(Lens::Ptr lens)
   PlacesStyle::GetDefault()->columns_changed.connect(sigc::mem_fun(this, &LensView::OnColumnsChanged));
 
   search_string.changed.connect([&](std::string const& search) { lens_->Search(search);  });
-  filters_expanded.changed.connect([&](bool expanded) { fscroll_view_->SetVisible(expanded); ubus_manager_.SendMessage(UBUS_PLACE_VIEW_QUEUE_DRAW); }); 
+  filters_expanded.changed.connect([&](bool expanded) { fscroll_view_->SetVisible(expanded); ubus_manager_.SendMessage(UBUS_PLACE_VIEW_QUEUE_DRAW); });
 }
 
 LensView::~LensView()

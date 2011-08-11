@@ -95,12 +95,18 @@ add_executable (standalone-dash
                 ${UNITY_SRC}/FilterGenreButton.cpp
                 ${UNITY_SRC}/FilterGenreWidget.cpp
                 ${UNITY_SRC}/FilterBar.cpp
+                ${UNITY_SRC}/PlacesHomeView.cpp
+                ${UNITY_SRC}/PlacesHomeView.h
                 ${UNITY_SRC}/PlacesGroup.cpp
                 ${UNITY_SRC}/PlacesGroup.h
                 ${UNITY_SRC}/PlacesSettings.cpp
                 ${UNITY_SRC}/PlacesSettings.h
                 ${UNITY_SRC}/PlacesStyle.cpp
                 ${UNITY_SRC}/PlacesStyle.h
+                ${UNITY_SRC}/PlacesTile.cpp
+                ${UNITY_SRC}/PlacesTile.h
+                ${UNITY_SRC}/PlacesSimpleTile.cpp
+                ${UNITY_SRC}/PlacesSimpleTile.h
                 ${UNITY_SRC}/DashView.cpp
                 ${UNITY_SRC}/DashView.h
                 ${UNITY_SRC}/HomeView.cpp

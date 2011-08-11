@@ -1,4 +1,3 @@
-#if 0
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
@@ -223,7 +222,7 @@ PlacesHomeView::OnKeyChanged(GConfClient*    client,
 }
 
 void
-PlacesHomeView::Refresh()
+PlacesHomeView::Refresh(bool foo)
 {
   PlacesStyle* style = PlacesStyle::GetDefault();
   Shortcut*   shortcut = NULL;
@@ -447,5 +446,3 @@ struct timespec PlacesHomeView::time_diff(struct timespec start, struct timespec
   }
   return temp;
 }
-
-#endif
