@@ -45,7 +45,7 @@ namespace unity {
   {
     background_monitor = gnome_bg_new ();
     client = g_settings_new ("org.gnome.desktop.background");
-    gnome_bg_load_from_preferences (background_monitor, client);
+
 
     GdkPixbuf *pixbuf;
     pixbuf = GetPixbufFromBG ();
@@ -60,9 +60,13 @@ namespace unity {
     signal_manager_.Add(
       new glib::Signal<void, GSettings*, gchar*>(client,
                                                  "changed",
-                                                 sigc::mem_fun(this, &BGHash::OnGSettingsChanged))); 
+                                                 sigc::mem_fun(this, &BGHash::OnGSettingsChanged)));
 
     UBusServer *ubus = ubus_server_get_default ();
+
+    gnome_bg_load_from_preferences (background_monitor, client);
+
+    g_timeout_add (0, (GSourceFunc)ForceUpdate, (gpointer)this);
 
     // avoids making a new object method when all we are doing is
     // calling a method with no logic
@@ -72,6 +76,9 @@ namespace unity {
     _ubus_handle_request_colour = ubus_server_register_interest (ubus, UBUS_BACKGROUND_REQUEST_COLOUR_EMIT,
                                                                  (UBusCallback)request_lambda,
                                                                   this);
+
+
+
   }
 
   BGHash::~BGHash ()
@@ -80,6 +87,12 @@ namespace unity {
     g_object_unref (background_monitor);
     UBusServer *ubus = ubus_server_get_default ();
     ubus_server_unregister_interest (ubus, _ubus_handle_request_colour);
+  }
+
+  gboolean BGHash::ForceUpdate (BGHash *self)
+  {
+    self->OnBackgroundChanged(self->background_monitor);
+    return FALSE;  
   }
 
   void BGHash::OnGSettingsChanged (GSettings *settings, gchar *key)
