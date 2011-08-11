@@ -38,6 +38,7 @@ Build-Depends: cmake,
                libjson-glib-dev,
                libutouch-geis-dev (>= 2.0.10),
                libgnome-desktop-3-dev,
+               libunity-dev (>= 4.0.0~),
 Standards-Version: 3.9.2
 Homepage: https://launchpad.net/unity
 Vcs-Bzr: https://code.launchpad.net/~ubuntu-desktop/unity/ubuntu
@@ -134,6 +135,7 @@ Depends: ${misc:Depends},
          libglib2.0-dev,
          libsigc++-2.0-dev,
          libnux-1.0-dev (>= 1.0.2),
+         libunity-dev (>= 4.0.0~),
 Description: Core library for the Unity interface - development files
  Unity is a desktop experience that sings. Designed by Canonical and the Ayatana
  community, Unity is all about the combination of familiarity and the future. We

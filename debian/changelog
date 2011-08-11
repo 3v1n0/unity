@@ -3,6 +3,9 @@ unity (4.8.0-0ubuntu2) UNRELEASED; urgency=low
   * New upstream release.
   * debian/control:
     - add libjson-glib-dev
+    - now build depend on libunity-dev
+    - make libunity-core-4.0-dev dep on libunity-dev even if not in .pc file
+      (seems to leak the API)
   * remove patched plugins/unityshell/src/BGHash.cpp for replacing dark with
     real dash color
   * debian/rules:
