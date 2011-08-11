@@ -60,8 +60,9 @@ Provides: indicator-renderer,
 Conflicts: netbook-launcher (<< 1:2.1.18-0ubuntu2)
 Replaces: netbook-launcher (<< 1:2.1.18-0ubuntu2),
           unity-common (<< 4.0.1-0ubuntu2~)
-Recommends: unity-place-applications,
-            unity-place-files,
+Recommends: unity-lens-applications,
+            unity-lens-files,
+            unity-lens-music,
             indicator-appmenu,
             indicator-application,
             indicator-sound,
