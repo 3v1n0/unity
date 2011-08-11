@@ -455,14 +455,14 @@ bool DashView::DoFallbackActivation(std::string const& fake_uri)
   size_t pos = fake_uri.find(":");
   std::string uri = fake_uri.substr(++pos);
 
-  g_debug("Fallback launching: %s", uri.c_str());
+  LOG_DEBUG(logger) << "Fallback activating " << uri;
 
-  if ((pos = uri.find("application://")))
+  if (g_str_has_prefix(uri.c_str(), "application://"))
   {
     std::string appname = uri.substr(14);
     return LaunchApp(appname);
   }
-  else if ((pos = uri.find("unity-runner://")))
+  else if (g_str_has_prefix(uri.c_str(), "unity-runner://"))
   {
     std::string appname = uri.substr(15);
     return LaunchApp(appname);
@@ -480,7 +480,7 @@ bool DashView::LaunchApp(std::string const& appname)
   char *id = g_strdup(appname.c_str());
   int i = 0;
 
-  g_debug("Launching: %s", appname.c_str());
+  LOG_DEBUG(logger) << "Launching " << appname;
 
   while (id != NULL)
   {
