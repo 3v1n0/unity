@@ -95,6 +95,8 @@ int main(int argc, char **argv)
   g_thread_init (NULL);
   gtk_init (&argc, &argv);
 
+  unity::BGHash bghash;
+
   nux::NuxInitialize(0);
   nux::logging::configure_logging(::getenv("UNITY_LOG_SEVERITY"));
 
