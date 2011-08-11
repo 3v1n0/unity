@@ -53,6 +53,8 @@ LensBar::LensBar()
     layout_->AddView(icon, 0, nux::eCenter, nux::eFix);
 
     icon->mouse_click.connect([&, id] (int x, int y, unsigned long button, unsigned long keyboard) { lens_activated.emit(id); });
+
+    g_idle_add([](gpointer data) -> gboolean { lens_activated.emit("home"); return FALSE; });
   }
 }
 
