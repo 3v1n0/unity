@@ -51,9 +51,9 @@ private:
 
 private:
   std::string icon_name_;
-  nux::BaseTexture* icon_;
   guint32 theme_changed_id_;
 
+  std::map<int, nux::BaseTexture*> texture_map;
   int last_size_;
 };
 

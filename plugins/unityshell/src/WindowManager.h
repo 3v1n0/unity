@@ -71,6 +71,8 @@ public:
 
   virtual nux::Geometry GetWindowGeometry(guint32 xid) = 0;
 
+  virtual unsigned int GetWindowActiveNumber (guint32 xid) = 0;
+
   // Signals
   sigc::signal<void, guint32> window_mapped;
   sigc::signal<void, guint32> window_unmapped;

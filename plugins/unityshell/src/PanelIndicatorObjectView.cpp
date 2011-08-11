@@ -80,6 +80,11 @@ PanelIndicatorObjectView::ProcessEvent(nux::IEvent& ievent, long TraverseInfo, l
 void
 PanelIndicatorObjectView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
+  nux::Geometry geo = GetGeometry();
+
+  GfxContext.PushClippingRectangle(geo);
+  nux::GetPainter().PaintBackground(GfxContext, geo);
+  GfxContext.PopClippingRectangle();
 }
 
 void PanelIndicatorObjectView::QueueDraw()

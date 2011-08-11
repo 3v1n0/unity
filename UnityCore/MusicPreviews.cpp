@@ -63,7 +63,10 @@ void AlbumPreview::LoadTracks(Properties& properties)
   unsigned int track_length = 0;
   char* track_play_uri;
   char* track_pause_uri;
- 
+
+  if (properties.find("tracks") == properties.end())
+    return;
+
   g_variant_get(properties["tracks"], "(ususs)", &iter);
 
   while (g_variant_iter_loop(iter, "ususs",
@@ -75,7 +78,7 @@ void AlbumPreview::LoadTracks(Properties& properties)
   {
     Track track(track_number, track_title, track_length, track_play_uri, track_pause_uri);
     tracks.push_back(track);
-    
+
     length += track_length;
   }
 

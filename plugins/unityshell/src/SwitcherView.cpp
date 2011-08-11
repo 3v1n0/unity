@@ -20,6 +20,7 @@
 
 #include "SwitcherView.h"
 #include "IconRenderer.h"
+#include "LayoutSystem.h"
 
 #include <NuxCore/Object.h>
 #include <Nux/Nux.h>
@@ -40,6 +41,7 @@ SwitcherView::SwitcherView(NUX_FILE_LINE_DECL)
   , redraw_handle_(0)
 {
   icon_renderer_ = AbstractIconRenderer::Ptr(new IconRenderer());
+  layout_system_ = LayoutSystem::Ptr (new LayoutSystem ());
   border_size = 50;
   flat_spacing = 10;
   icon_size = 128;
@@ -62,6 +64,9 @@ SwitcherView::SwitcherView(NUX_FILE_LINE_DECL)
   text_view_->SetGeometry(nux::Geometry(0, 0, 200, text_size));
   text_view_->SetTextColor(nux::color::White);
   text_view_->SetFont("Ubuntu Bold 10");
+
+  icon_size.changed.connect (sigc::mem_fun (this, &SwitcherView::OnIconSizeChanged));
+  tile_size.changed.connect (sigc::mem_fun (this, &SwitcherView::OnTileSizeChanged));
 }
 
 SwitcherView::~SwitcherView()
@@ -71,9 +76,9 @@ SwitcherView::~SwitcherView()
     g_source_remove(redraw_handle_);
 }
 
-WindowRenderTargetList SwitcherView::ExternalTargets ()
+LayoutWindowList SwitcherView::ExternalTargets ()
 {
-  WindowRenderTargetList result = render_targets_;
+  LayoutWindowList result = render_targets_;
   return result;
 }
 
@@ -92,6 +97,17 @@ void SwitcherView::SetModel(SwitcherModel::Ptr model)
 
   if (model->Selection())
     text_view_->SetText(model->Selection()->tooltip_text().c_str());
+}
+
+void SwitcherView::OnIconSizeChanged (int size)
+{
+  icon_renderer_->SetTargetSize(tile_size, icon_size, 10);
+}
+
+void SwitcherView::OnTileSizeChanged (int size)
+{
+  icon_renderer_->SetTargetSize(tile_size, icon_size, 10);
+  vertical_size = tile_size + 80;
 }
 
 void SwitcherView::SaveLast ()
@@ -188,57 +204,37 @@ nux::Geometry SwitcherView::InterpolateBackground (nux::Geometry const& start, n
   return result;
 }
 
-void SwitcherView::UpdateRenderTargets (RenderArg const& selection_arg, timespec const& current)
+nux::Geometry SwitcherView::UpdateRenderTargets (RenderArg const& selection_arg, timespec const& current)
 {
   std::vector<Window> xids = model_->DetailXids ();
-
-  int width = 1;
-  int height = 1;
-
-  while (width * height < (int) xids.size ())
-  {
-    if (height < width)
-      height++;
-    else
-      width++;
-  }
-
-  int block_width = (tile_size * spread_size) / width;
-  int block_height = (tile_size * spread_size) / height;
-
-  int x = 0;
-  int y = 0;
-
-  nux::Geometry absolute = GetAbsoluteGeometry ();
-  int start_x = absolute.x + selection_arg.render_center.x - (tile_size * spread_size) / 2;
-  int start_y = absolute.y + selection_arg.render_center.y - (tile_size * spread_size) / 2;
 
   int ms_since_change = DeltaTTime(&current, &save_time_);
   float progress = MIN (1.0f, (float) ms_since_change / (float) animation_length());
 
-  int i = 0;
   for (Window window : xids)
   {
-    RenderTargetData element;
-    element.window = window;
-    element.bounding = nux::Geometry (start_x + x * block_width, start_y + y * block_height, block_width, block_height);
+    LayoutWindow::Ptr layout_window (new LayoutWindow (window));
 
-    element.alpha = 0.75f * progress;
-    if (i == model_->detail_selection_index)
-      element.alpha = 1.0f * progress;
-
-    render_targets_.push_back (element);
-
-    ++x;
-
-    if (x >= width)
-    {
-      x = 0;
-      ++y;
-    }
-
-    ++i;
+    if (window == model_->DetailSelectionWindow ())
+      layout_window->alpha = 1.0f * progress;
+    else
+      layout_window->alpha = 0.75f * progress;
+    
+    render_targets_.push_back (layout_window);
   }
+
+  nux::Geometry max_bounds;
+
+  nux::Geometry absolute = GetAbsoluteGeometry ();
+  max_bounds.x = absolute.x + selection_arg.render_center.x - (tile_size * spread_size) / 2;
+  max_bounds.y = absolute.y + selection_arg.render_center.y - (tile_size * spread_size) / 2;
+  max_bounds.width = tile_size * spread_size;
+  max_bounds.height = tile_size * spread_size;
+
+  nux::Geometry final_bounds;
+  layout_system_->LayoutWindows (render_targets_, max_bounds, final_bounds);
+
+  return final_bounds;
 }
 
 std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo, int selection, timespec const& current)
@@ -250,16 +246,8 @@ std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo,
 
   bool detail_selection = model_->detail_selection;
 
-  if (detail_selection)
-  {
-    background_geo.y = base.y + base.height / 2 - (vertical_size / 2) * (spread_size * 0.75f);
-    background_geo.height = vertical_size * (spread_size * 0.75f) + text_size;
-  }
-  else
-  {
-    background_geo.y = base.y + base.height / 2 - (vertical_size / 2);
-    background_geo.height = vertical_size + text_size;  
-  }
+  background_geo.y = base.y + base.height / 2 - (vertical_size / 2);
+  background_geo.height = vertical_size + text_size;  
 
   if (model_)
   {
@@ -386,7 +374,12 @@ std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo,
       if (i == selection && detail_selection)
       {
         arg.skip = true;
-        UpdateRenderTargets (arg, current);
+        nux::Geometry final_bounds = UpdateRenderTargets (arg, current);
+
+        int expansion = MAX (0, final_bounds.height - icon_size);
+
+        background_geo.y -= expansion / 2;
+        background_geo.height += expansion;
       }
 
       results.push_back(arg);

@@ -30,16 +30,47 @@
 #include "unityshell_options.h"
 
 #include "Introspectable.h"
+#include "DashController.h"
 #include "Launcher.h"
 #include "LauncherController.h"
 #include "PanelController.h"
 #include "UScreen.h"
-#include "PlacesController.h"
 #include "GestureEngine.h"
 #include "DebugDBusInterface.h"
 #include "SwitcherController.h"
+#include "UBusWrapper.h"
 #include <Nux/WindowThread.h>
 #include <sigc++/sigc++.h>
+#include <boost/shared_ptr.hpp>
+
+class UnityFBO
+{
+public:
+
+  typedef boost::shared_ptr <UnityFBO> Ptr;
+
+  UnityFBO (CompOutput *o);
+  ~UnityFBO ();
+
+public:
+
+  void bind ();
+  void unbind ();
+
+  bool status ();
+  void paint ();
+  
+  GLuint texture () { return mFBTexture; }
+
+private:
+
+  /* compiz fbo handle that goes through to nux */
+  GLuint   mFboHandle; // actual handle to the framebuffer_ext
+  bool    mFboStatus; // did the framebuffer texture bind succeed
+  GLuint   mFBTexture;
+  CompOutput *output;
+};
+
 
 #include "BGHash.h"
 #include "DesktopLauncherIcon.h"
@@ -47,6 +78,8 @@
 #include <compiztoolbox/compiztoolbox.h>
 
 using namespace unity::switcher;
+using namespace unity::dash;
+using unity::UBusManager;
 
 /* base screen class */
 class UnityScreen :
@@ -77,7 +110,8 @@ public:
   void paintDisplay(const CompRegion& region, const GLMatrix& transform, unsigned int mask);
   void paintPanelShadow(const GLMatrix& matrix);
 
-  void preparePaint(int ms);
+  void preparePaint (int ms);
+  void paintFboForOutput (CompOutput *output);
 
   /* paint on top of all windows if we could not find a window
    * to paint underneath */
@@ -166,6 +200,8 @@ public:
   void NeedsRelayout();
   void ScheduleRelayout(guint timeout);
 
+  void setActiveFbo (GLuint fbo) { mActiveFbo = fbo; }
+
 protected:
   const gchar* GetName();
   void AddProperties(GVariantBuilder* builder);
@@ -199,9 +235,9 @@ private:
 
   Launcher*               launcher;
   LauncherController*     controller;
+  DashController::Ptr     dashController;
   PanelController*        panelController;
   SwitcherController*     switcherController;
-  PlacesController*       placesController;
   GestureEngine*          gestureEngine;
   nux::WindowThread*      wt;
   nux::BaseWindow*        launcherWindow;
@@ -239,7 +275,15 @@ private:
 
   unity::BGHash _bghash;
 
-  friend class UnityWindow;
+  std::map <CompOutput *, UnityFBO::Ptr> mFbos;
+  GLuint                                 mActiveFbo;
+
+  bool   queryForShader ();
+
+  UBusManager ubus_manager_;
+  bool dash_is_open_;
+
+	friend class UnityWindow;
 };
 
 class UnityWindow :

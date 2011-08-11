@@ -44,6 +44,7 @@ public:
   typedef Base::reverse_iterator reverse_iterator;
 
   nux::Property<bool> detail_selection;
+  nux::Property<bool> detail_inline;
   nux::Property<int> detail_selection_index;
 
   // Icons are owned externally and assumed valid for life of switcher.
@@ -57,6 +58,8 @@ public:
 
   reverse_iterator rbegin();
   reverse_iterator rend();
+
+  AbstractLauncherIcon* at(unsigned int index);
 
   int Size();
 
@@ -72,12 +75,18 @@ public:
   void Next();
   void Prev();
 
+  void NextDetail();
+  void PrevDetail();
+
   void Select(AbstractLauncherIcon* selection);
   void Select(int index);
 
   sigc::signal<void, AbstractLauncherIcon*> selection_changed;
 
 private:
+
+  static bool CompareWindowsByActive (guint32 first, guint32 second);
+
   Base             _inner;
   unsigned int     _index;
   unsigned int     _last_index;

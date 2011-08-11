@@ -15,6 +15,7 @@ add_dependencies(unityshell unity-core-${UNITY_API_VERSION})
 # Data
 #
 install (FILES plugin-unityshell.png DESTINATION ${DATADIR}/ccsm/icons/hicolor/64x64/apps)
-
+install (FILES resources/dash-widgets.json DESTINATION ${CMAKE_INSTALL_PREFIX}/share/unity/themes)
+ 
 file (GLOB _datafiles "${CMAKE_CURRENT_SOURCE_DIR}/resources/*")
 install (FILES ${_datafiles} DESTINATION ${PKGDATADIR})

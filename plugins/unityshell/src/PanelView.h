@@ -30,6 +30,7 @@
 
 #include <UnityCore/DBusIndicators.h>
 
+#include "BackgroundEffectHelper.h"
 #include "Introspectable.h"
 #include "PanelHomeButton.h"
 #include "PanelMenuView.h"
@@ -38,6 +39,14 @@
 
 namespace unity
 {
+
+
+enum BlurType
+{
+  BLUR_NONE,
+  BLUR_STATIC,
+  BLUR_ACTIVE
+};
 
 class PanelView : public unity::Introspectable, public nux::View
 {
@@ -71,6 +80,7 @@ public:
   void EndFirstMenuShow();
 
   void SetOpacity(float opacity);
+  void SetBlurType(BlurType type);
 
 protected:
   // Introspectable methods
@@ -117,6 +127,10 @@ private:
   guint       _handle_dash_shown;
   guint       _handle_bg_color_update;
   guint       _track_menu_pointer_id;
+
+  BackgroundEffectHelper bg_effect_helper_;
+  BlurType blur_type_;
+  nux::ObjectPtr <nux::IOpenGLBaseTexture> bg_blur_texture_;
 };
 
 }
