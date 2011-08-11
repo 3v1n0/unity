@@ -78,6 +78,9 @@ void HomeView::SetupViews()
 
 void HomeView::AddLens(Lens::Ptr lens)
 {
+  if (!lens->search_in_global)
+    return;
+
   lenses_.push_back(lens);
 
   std::string name = lens->name;
@@ -120,7 +123,6 @@ void HomeView::AddLens(Lens::Ptr lens)
 void HomeView::UpdateCounts(PlacesGroup* group)
 {
   PlacesStyle* style = PlacesStyle::GetDefault();
-
   group->SetCounts(style->GetDefaultNColumns(), counts_[group]);
   group->SetVisible(counts_[group]);
 }

@@ -728,7 +728,7 @@ void UnityScreen::SendExecuteCommand()
   ubus_server_send_message(ubus_server_get_default(),
                            UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
                            g_variant_new("(sus)",
-                                         "/com/canonical/unity/lens/commands",
+                                         "commands.lens",
                                          0,
                                          ""));
 }

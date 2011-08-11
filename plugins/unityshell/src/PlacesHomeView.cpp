@@ -92,6 +92,7 @@ PlacesHomeView::PlacesHomeView()
 
   SetName(_("Shortcuts"));
   SetIcon(PKGDATADIR"/shortcuts_group_icon.png");
+  SetDrawSeparator(false);
 
   _layout = new nux::GridHLayout(NUX_TRACKER_LOCATION);
   _layout->SetReconfigureParentLayoutOnGeometryChange(true);
@@ -222,7 +223,7 @@ PlacesHomeView::OnKeyChanged(GConfClient*    client,
 }
 
 void
-PlacesHomeView::Refresh(bool foo)
+PlacesHomeView::Refresh(PlacesGroup*foo)
 {
   PlacesStyle* style = PlacesStyle::GetDefault();
   Shortcut*   shortcut = NULL;
@@ -233,9 +234,6 @@ PlacesHomeView::Refresh(bool foo)
   _layout->Clear();
 
   PlacesSettings::GetDefault()->SetHomeExpanded(GetExpanded());
-
-  if (!GetExpanded())
-    return;
 
   // Media Apps
   markup = g_strdup_printf(temp, _("Media Apps"));

@@ -346,12 +346,13 @@ void DashView::OnActivateRequest(GVariant* args)
 
   g_variant_get(args, "(sus)", &id, NULL, &search_string);
 
-  LOG_WARN(logger) << "ActivateRequest not supported yet: "
-                   << id << "::" << search_string;
+  OnLensBarActivated(id.Str());
 
   // Reset focus
   SetFocused(false);
   SetFocused(true);
+
+  ubus_manager_.SendMessage(UBUS_DASH_EXTERNAL_ACTIVATION);
 }
 
 void DashView::OnBackgroundColorChanged(GVariant* args)
@@ -380,6 +381,7 @@ void DashView::OnLiveSearchReached(std::string const& search_string)
 
 void DashView::OnLensAdded(Lens::Ptr& lens)
 {
+  std::string id = lens->id;
   lens_bar_->AddLens(lens);
   home_view_->AddLens(lens);
 
@@ -397,6 +399,12 @@ void DashView::OnLensAdded(Lens::Ptr& lens)
 
 void DashView::OnLensBarActivated(std::string const& id)
 {
+  if (lens_views_.find(id) == lens_views_.end())
+  {
+    LOG_WARN(logger) << "Unable to find Lens " << id;
+    return;
+  }
+
   for (auto it: lens_views_)
     it.second->SetVisible(it.first == id);
 
@@ -453,7 +461,7 @@ bool DashView::DoFallbackActivation(std::string const& fake_uri)
   }
   else if ((pos = uri.find("unity-runner://")))
   {
-    std::string appname = uri.substr(14);
+    std::string appname = uri.substr(15);
     return LaunchApp(appname);
   }
   else
