@@ -289,21 +289,11 @@ Launcher::Launcher(nux::BaseWindow* parent,
                                                    this);
 
   _ubus_handles[2] = ubus_server_register_interest(ubus,
-                                                   UBUS_HOME_BUTTON_BFB_UPDATE,
-                                                   (UBusCallback) &Launcher::OnBFBUpdate,
-                                                   this);
-
-  _ubus_handles[3] = ubus_server_register_interest(ubus,
                                                    UBUS_LAUNCHER_ACTION_DONE,
                                                    (UBusCallback) &Launcher::OnActionDone,
                                                    this);
 
-  _ubus_handles[4] = ubus_server_register_interest(ubus,
-                                                   UBUS_HOME_BUTTON_BFB_DND_ENTER,
-                                                   (UBusCallback) &Launcher::OnBFBDndEnter,
-                                                   this);
-
-  _ubus_handles[5] = ubus_server_register_interest (ubus,
+  _ubus_handles[3] = ubus_server_register_interest (ubus,
                                                     UBUS_BACKGROUND_COLOR_CHANGED,
                                                     (UBusCallback) &Launcher::OnBGColorChanged,
                                                     this);
@@ -1542,63 +1532,6 @@ void Launcher::OnPlaceViewHidden(GVariant* data, void* val)
   {
     icon->SetQuirk(LauncherIcon::QUIRK_DESAT, false);
   }
-}
-
-void Launcher::OnBFBDndEnter(GVariant* data, gpointer user_data)
-{
-  Launcher* self = static_cast<Launcher*>(user_data);
-  self->_hide_machine->SetQuirk(LauncherHideMachine::DND_PUSHED_OFF, false);
-}
-
-void Launcher::OnBFBUpdate(GVariant* data, gpointer user_data)
-{
-  gchar*        prop_key;
-  GVariant*     prop_value;
-  GVariantIter* prop_iter;
-  int x, y, bfb_width, bfb_height;
-
-  Launcher* self = (Launcher*)user_data;
-
-  g_variant_get(data, "(iiiia{sv})", &x, &y, &bfb_width, &bfb_height, &prop_iter);
-  self->_bfb_mouse_position = nux::Point2(x, y);
-
-  bool inside_trigger_area = (pow(x, 2) + pow(y, 2) < TRIGGER_SQR_RADIUS) && x >= 0 && y >= 0;
-  /*
-   * if we are currently hidden and we are over the trigger, prepare the change
-   * from a position-based move to a time-based one
-   * Fake that we were currently hiding with a corresponding position of GetAutohidePositionMin ()
-   * translated time-based so that we pick from the current position
-   */
-  if (inside_trigger_area && self->_hidden)
-  {
-    self->_hide_machine->SetQuirk(LauncherHideMachine::LAST_ACTION_ACTIVATE, false);
-
-    struct timespec current;
-    clock_gettime(CLOCK_MONOTONIC, &current);
-    self->_times[TIME_AUTOHIDE] = current;
-    SetTimeBack(&(self->_times[TIME_AUTOHIDE]), ANIM_DURATION_SHORT * (1.0f - self->GetAutohidePositionMin()));
-    SetTimeStruct(&(self->_times[TIME_AUTOHIDE]), &(self->_times[TIME_AUTOHIDE]), ANIM_DURATION_SHORT);
-    self->_hide_machine->SetQuirk(LauncherHideMachine::MOUSE_MOVE_POST_REVEAL, true);
-  }
-  self->_hide_machine->SetQuirk(LauncherHideMachine::MOUSE_OVER_TRIGGER, inside_trigger_area);
-
-  self->_bfb_width = bfb_width;
-  self->_bfb_height = bfb_height;
-
-  g_return_if_fail(prop_iter != NULL);
-
-  while (g_variant_iter_loop(prop_iter, "{sv}", &prop_key, &prop_value))
-  {
-    if (g_str_equal("hovered", prop_key))
-    {
-      self->SetStateMouseOverBFB(g_variant_get_boolean(prop_value));
-      self->EnsureScrollTimer();
-    }
-  }
-
-  self->EnsureAnimation();
-
-  g_variant_iter_free(prop_iter);
 }
 
 void Launcher::OnActionDone(GVariant* data, void* val)

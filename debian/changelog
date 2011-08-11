@@ -1,6 +1,8 @@
-unity (4.8.0-0ubuntu3) UNRELEASED; urgency=low
+unity (4.8.0-0ubuntu1) UNRELEASED; urgency=low
 
   * New upstream release.
+    - store kde4 applications in a gio-friendly way (LP: #741129)
+  * Take and make some additional post-release adjustement
   * debian/control:
     - add libjson-glib-dev
     - now build depend on libunity-dev

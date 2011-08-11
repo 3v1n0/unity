@@ -120,6 +120,7 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
   nux::VLayout* layout = new nux::VLayout(TEXT(""), NUX_TRACKER_LOCATION);
   
   view = new SwitcherController();
+  view->blur = unity::BLUR_NONE;
   view->timeout_length = 0;
   view->SetWorkspace(nux::Geometry(0, 0, 900, 500));
 

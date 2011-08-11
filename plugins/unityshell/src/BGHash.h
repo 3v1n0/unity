@@ -33,6 +33,7 @@ namespace unity
     BGHash ();
     ~BGHash ();
 
+    static gboolean ForceUpdate(BGHash *self);
     void LoadFileToHash (const std::string path);
     void LoadPixbufToHash (GdkPixbuf *pixbuf);
     GdkPixbuf *GetPixbufFromBG ();
