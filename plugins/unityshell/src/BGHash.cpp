@@ -23,6 +23,7 @@
 #include <unity-misc/gnome-bg-slideshow.h>
 #include "ubus-server.h"
 #include "UBusMessages.h"
+#include "UnityCore/GLibWrapper.h"
 
 namespace {
   int level_of_recursion;
@@ -46,11 +47,8 @@ namespace unity {
     background_monitor = gnome_bg_new ();
     client = g_settings_new ("org.gnome.desktop.background");
 
-
-    GdkPixbuf *pixbuf;
-    pixbuf = GetPixbufFromBG ();
-    LoadPixbufToHash (pixbuf);
-    g_object_unref (pixbuf);
+    glib::Object<GdkPixbuf> pixbuf(GetPixbufFromBG());
+    LoadPixbufToHash(pixbuf);
 
     signal_manager_.Add(
       new glib::Signal<void, GnomeBG*>(background_monitor,
@@ -194,7 +192,7 @@ namespace unity {
       }
     }
 
-    LoadFileToHash (filename);
+    LoadFileToHash(filename);
   }
 
   gboolean BGHash::OnSlideshowTransition (BGHash *self)
@@ -336,7 +334,7 @@ namespace unity {
     return pixbuf;
   }
 
-  void BGHash::LoadPixbufToHash (GdkPixbuf *pixbuf)
+  void BGHash::LoadPixbufToHash(GdkPixbuf *pixbuf)
   {
     if (pixbuf == NULL)
       return;
@@ -347,19 +345,16 @@ namespace unity {
 
   void BGHash::LoadFileToHash(const std::string path)
   {
-    GError *error = NULL;
-    GdkPixbuf *pixbuf = gdk_pixbuf_new_from_file (path.c_str (), &error);
+    glib::Error error;
+    glib::Object<GdkPixbuf> pixbuf(gdk_pixbuf_new_from_file (path.c_str (), &error));
 
-    if (error != NULL)
+    if (error)
     {
       _current_color = nux::Color(0.2, 0.2, 0.2, 0.9);
-      g_error_free (error);
       return;
     }
 
-
     LoadPixbufToHash (pixbuf);
-
   }
 
   inline nux::Color GetPixbufSample (GdkPixbuf *pixbuf, int x, int y)
