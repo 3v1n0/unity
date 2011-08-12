@@ -27,6 +27,10 @@
 #include <Nux/View.h>
 #include <Nux/BaseWindow.h>
 
+#include "AbstractIconRenderer.h"
+#include "DNDCollectionWindow.h"
+#include "DndData.h"
+#include "GeisAdapter.h"
 #include "Introspectable.h"
 #include "LauncherIcon.h"
 #include "LauncherDragWindow.h"
@@ -35,9 +39,6 @@
 #include "NuxGraphics/IOpenGLAsmShader.h"
 #include "Nux/TimerProc.h"
 #include "PluginAdapter.h"
-#include "GeisAdapter.h"
-
-#include "AbstractIconRenderer.h"
 
 #define ANIM_DURATION_SHORT 125
 #define ANIM_DURATION       200
@@ -204,6 +205,7 @@ protected:
   const gchar* GetName();
   void AddProperties(GVariantBuilder* builder);
 
+  void DndLeave();
   void ProcessDndEnter();
   void ProcessDndLeave();
   void ProcessDndMove(int x, int y, std::list<char*> mimes);
@@ -362,9 +364,9 @@ private:
 
   gboolean TapOnSuper();
 
-  std::list<char*> StringToUriList(char* input);
-
   static void SettingsChanged(GSettings* settings, gchar* key, Launcher* self);
+  
+  void OnDNDDataCollected(const std::list<char*>& mimes);
 
   nux::HLayout* m_Layout;
   int m_ContentOffsetY;
@@ -447,12 +449,14 @@ private:
   LauncherHoverMachine* _hover_machine;
   CompScreen* _screen;
 
-  std::list<char*> _drag_data;
+  unity::DndData _dnd_data;
   nux::DndAction    _drag_action;
   bool              _data_checked;
   bool              _steal_drag;
   bool              _drag_edge_touching;
   LauncherIcon*     _dnd_hovered_icon;
+  unity::DNDCollectionWindow* _collection_window;
+  sigc::connection _on_data_collected_connection;
 
   Atom              _selection_atom;
 
@@ -490,5 +494,3 @@ private:
 };
 
 #endif // LAUNCHER_H
-
-
