@@ -189,6 +189,7 @@ void main()                                                             \n\
 
 IconRenderer::~IconRenderer()
 {
+  DestroyTextures();
 }
 
 void IconRenderer::SetTargetSize(int tile_size, int image_size_, int spacing_)
