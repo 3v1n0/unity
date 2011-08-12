@@ -250,7 +250,8 @@ UnityScreen::~UnityScreen()
   if (relayoutSourceId != 0)
     g_source_remove(relayoutSourceId);
 
-  delete wt;
+  // Deleting the windows thread calls XCloseDisplay, which calls XSync, which sits waiting for a reply.
+  // delete wt;
 }
 
 void UnityScreen::EnsureKeybindings ()
