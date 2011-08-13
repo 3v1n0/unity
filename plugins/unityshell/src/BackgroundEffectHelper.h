@@ -17,14 +17,14 @@
  * Authored by: Jay Taoko <jay.taoko@canonical.com>
  */
 
+#ifndef BACKGROUND_EFFECT_HELPER_H
+#define BACKGROUND_EFFECT_HELPER_H
+
 #include "config.h"
 
 #include "Nux/Nux.h"
 #include "Nux/ColorArea.h"
 #include "NuxGraphics/GLThread.h"
-
-#ifndef BACKGROUND_EFFECT_HELPER_H
-#define BACKGROUND_EFFECT_HELPER_H
 
 namespace unity
 {
@@ -40,15 +40,25 @@ enum BlurType
 
 class BackgroundEffectHelper
 {
-  public:
+public:
   BackgroundEffectHelper();
   ~BackgroundEffectHelper();
 
-  nux::ObjectPtr<nux::IOpenGLBaseTexture> GetBlurRegion(nux::Geometry geo, bool update);
+  nux::Property<nux::View*> owner;
+
+  nux::ObjectPtr<nux::IOpenGLBaseTexture> GetBlurRegion(nux::Geometry geo);
   // We could add more functions here to get different types of effects based on the background texture
   nux::ObjectPtr<nux::IOpenGLBaseTexture> GetPixelatedRegion(nux::Rect rect, int pixel_size, bool update);
 
-  protected:
+  static void QueueDrawOnOwners ();
+
+  static nux::Property<unity::BlurType> blur_type;
+
+protected:
+  static void Register   (BackgroundEffectHelper *self);
+  static void Unregister (BackgroundEffectHelper *self);
+
+private:
   nux::BaseTexture*                       noise_texture_;
   nux::ObjectPtr<nux::IOpenGLBaseTexture> temp_device_texture0_;
   nux::ObjectPtr<nux::IOpenGLBaseTexture> temp_device_texture1_;
@@ -58,7 +68,8 @@ class BackgroundEffectHelper
 
   nux::ObjectPtr<nux::IOpenGLBaseTexture> blur_texture_;
   nux::Geometry blur_geometry_;
-  
+
+  static std::list<BackgroundEffectHelper*> registered_list_;
 };
 
 #endif

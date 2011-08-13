@@ -19,31 +19,57 @@
 
 #include "BackgroundEffectHelper.h"
 
+using namespace unity;
+
+std::list<BackgroundEffectHelper*> BackgroundEffectHelper::registered_list_;
+
+nux::Property<BlurType> BackgroundEffectHelper::blur_type (BLUR_ACTIVE);
 
 
 BackgroundEffectHelper::BackgroundEffectHelper()
 {
-
   noise_texture_ = nux::CreateTextureFromFile(PKGDATADIR"/dash_noise.png");
+  Register(this);
 }
 
 BackgroundEffectHelper::~BackgroundEffectHelper()
 {
-
+  Unregister(this);
 }
 
-nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nux::Geometry geo, bool update)
+void BackgroundEffectHelper::QueueDrawOnOwners ()
+{
+  for (BackgroundEffectHelper* helper : registered_list_)
+  {
+    nux::View *owner = helper->owner();
+    if (owner)
+      owner->QueueDraw();
+  }
+}
+
+void BackgroundEffectHelper::Register   (BackgroundEffectHelper *self)
+{
+  registered_list_.push_back(self);
+}
+
+void BackgroundEffectHelper::Unregister (BackgroundEffectHelper *self)
+{
+  registered_list_.remove(self);
+}
+
+
+nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nux::Geometry geo)
 {
   nux::GraphicsEngine* graphics_engine = nux::GetGraphicsDisplay()->GetGraphicsEngine();
 
-  if ((update == false) && blur_texture_.IsValid() && (geo == blur_geometry_))
+  if (blur_type != BLUR_ACTIVE && blur_texture_.IsValid() && (geo == blur_geometry_))
   {
     return blur_texture_;
   }
 
   blur_geometry_ =  nux::Geometry(0, 0, graphics_engine->GetWindowWidth(), graphics_engine->GetWindowHeight()).Intersect(geo);
 
-  if (blur_geometry_.IsNull())
+  if (blur_geometry_.IsNull() || blur_type == BLUR_NONE || !nux::GetGraphicsDisplay()->GetGpuDevice()->backup_texture0_.IsValid())
   {
     return nux::ObjectPtr<nux::IOpenGLBaseTexture>(NULL);
   }

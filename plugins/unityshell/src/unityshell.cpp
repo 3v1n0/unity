@@ -35,6 +35,7 @@
 #include "StartupNotifyService.h"
 #include "Timer.h"
 #include "unityshell.h"
+#include "BackgroundEffectHelper.h"
 
 #include <dbus/dbus.h>
 #include <dbus/dbus-glib.h>
@@ -519,15 +520,8 @@ void UnityScreen::glPaintTransformedOutput(const GLScreenPaintAttrib& attrib,
 
 void UnityScreen::preparePaint(int ms)
 {
-  PlacesSettings::DashBlurType type = PlacesSettings::GetDefault()->GetDashBlurType();
-  if (type == PlacesSettings::ACTIVE_BLUR)
-  {
-    dashController->window()->QueueDraw();
-    if (dash_is_open_)
-      panelController->QueueRedraw();
-    if (switcherController->GetView ())
-      switcherController->GetView ()->QueueDraw();
-  }
+  if (BackgroundEffectHelper::blur_type == unity::BLUR_ACTIVE)
+    BackgroundEffectHelper::QueueDrawOnOwners();
 
   cScreen->preparePaint(ms);
 
@@ -1177,9 +1171,7 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       launcher->SetAutoHideAnimation((Launcher::AutoHideAnimation) optionGetAutohideAnimation());
       break;
     case UnityshellOptions::DashBlurExperimental:
-      PlacesSettings::GetDefault()->SetDashBlurType((PlacesSettings::DashBlurType)optionGetDashBlurExperimental());
-      panelController->SetBlurType((unity::BlurType)optionGetDashBlurExperimental());
-      switcherController->blur = (unity::BlurType)optionGetDashBlurExperimental();
+      BackgroundEffectHelper::blur_type = (unity::BlurType)optionGetDashBlurExperimental();
       break;
     case UnityshellOptions::AutomaximizeValue:
       PluginAdapter::Default()->SetCoverageAreaBeforeAutomaximize(optionGetAutomaximizeValue() / 100.0f);
