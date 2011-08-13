@@ -25,6 +25,7 @@ std::list<BackgroundEffectHelper*> BackgroundEffectHelper::registered_list_;
 
 nux::Property<BlurType> BackgroundEffectHelper::blur_type (BLUR_ACTIVE);
 nux::Property<float> BackgroundEffectHelper::sigma (5.0f);
+nux::Property<bool> BackgroundEffectHelper::updates_enabled (true);
 
 
 BackgroundEffectHelper::BackgroundEffectHelper()
@@ -63,7 +64,9 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nu
 {
   nux::GraphicsEngine* graphics_engine = nux::GetGraphicsDisplay()->GetGraphicsEngine();
 
-  if (blur_type != BLUR_ACTIVE && blur_texture_.IsValid() && (geo == blur_geometry_))
+  if ((blur_type != BLUR_ACTIVE || !updates_enabled()) 
+      && blur_texture_.IsValid() 
+      && (geo == blur_geometry_))
   {
     return blur_texture_;
   }

@@ -447,6 +447,7 @@ if (switcherController->Visible ())
 
   doShellRepaint = false;
   damaged = false;
+  BackgroundEffectHelper::updates_enabled = true;
 }
 
 void UnityWindow::paintThumbnail (nux::Geometry const& bounding, float alpha)
@@ -521,7 +522,13 @@ void UnityScreen::glPaintTransformedOutput(const GLScreenPaintAttrib& attrib,
 void UnityScreen::preparePaint(int ms)
 {
   if (BackgroundEffectHelper::blur_type == unity::BLUR_ACTIVE)
+  {
+    // this causes queue draws to be called, we obviously dont want to disable updates
+    // because we are updating the blur, so ignore them.
+    bool tmp = BackgroundEffectHelper::updates_enabled;
     BackgroundEffectHelper::QueueDrawOnOwners();
+    BackgroundEffectHelper::updates_enabled = tmp;
+  }
 
   cScreen->preparePaint(ms);
 
@@ -1136,6 +1143,9 @@ void UnityScreen::initUnity(nux::NThread* thread, void* InitData)
 
 void UnityScreen::onRedrawRequested()
 {
+  // disable blur updates so we dont waste perf. This can stall the blur during animations
+  // but ensures a smooth animation.
+  BackgroundEffectHelper::updates_enabled = false;
   damageNuxRegions();
 }
 

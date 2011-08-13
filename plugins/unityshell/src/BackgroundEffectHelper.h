@@ -54,6 +54,7 @@ public:
 
   static nux::Property<unity::BlurType> blur_type;
   static nux::Property<float> sigma;
+  static nux::Property<bool> updates_enabled;
 
 protected:
   static void Register   (BackgroundEffectHelper *self);
