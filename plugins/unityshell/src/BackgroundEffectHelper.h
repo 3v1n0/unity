@@ -53,6 +53,7 @@ public:
   static void QueueDrawOnOwners ();
 
   static nux::Property<unity::BlurType> blur_type;
+  static nux::Property<float> sigma;
 
 protected:
   static void Register   (BackgroundEffectHelper *self);

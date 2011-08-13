@@ -24,6 +24,7 @@ using namespace unity;
 std::list<BackgroundEffectHelper*> BackgroundEffectHelper::registered_list_;
 
 nux::Property<BlurType> BackgroundEffectHelper::blur_type (BLUR_ACTIVE);
+nux::Property<float> BackgroundEffectHelper::sigma (5.0f);
 
 
 BackgroundEffectHelper::BackgroundEffectHelper()
@@ -98,7 +99,7 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nu
     float noise_factor = 1.2f;
     float horizontal_noise_factor = 1.0f;
     float vertical_noise_factor = 1.0f;
-    float gaussian_sigma = 9.0f;
+    float gaussian_sigma = sigma;
     int blur_passes = 1;
 
     nux::ObjectPtr<nux::IOpenGLBaseTexture> device_texture = nux::GetGraphicsDisplay()->GetGpuDevice()->backup_texture0_;
@@ -155,7 +156,7 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nu
     float noise_factor = 1.2f;
     float horizontal_noise_factor = 1.0f;
     float vertical_noise_factor = 1.0f;
-    float gaussian_sigma = 4.0f;
+    float gaussian_sigma = sigma;
     int blur_passes = 1;
 
     nux::ObjectPtr<nux::IOpenGLBaseTexture> device_texture = nux::GetGraphicsDisplay()->GetGpuDevice()->backup_texture0_;
