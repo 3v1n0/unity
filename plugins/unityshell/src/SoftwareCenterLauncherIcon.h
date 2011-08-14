@@ -25,6 +25,8 @@
 #include <NuxCore/Math/MathInc.h>
 #include <core/core.h>
 #include <gio/gio.h>
+#include <glib.h>
+#include <glib/gvariant.h>
 
 class SoftwareCenterLauncherIcon : public BamfLauncherIcon
 {
@@ -35,6 +37,12 @@ public:
 private:
     char* _aptdaemon_trans_id;
     GDBusProxy* _aptdaemon_trans;
+
+    static void OnTransFinished(GDBusProxy* proxy, 
+                                gchar* sender,
+                                gchar* signal_name,
+                                GVariant* params,
+                                gpointer user_data);
 };
 
 #endif

@@ -29,6 +29,7 @@
 #include "UBusMessages.h"
 
 #include <glib.h>
+#include <glib/gvariant.h>
 #include <glib/gi18n-lib.h>
 #include <gio/gio.h>
 #include <libindicator/indicator-desktop-shortcuts.h>
@@ -67,7 +68,7 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(Launcher* IconManager, Ba
     finished_or_not = g_dbus_proxy_call_sync (_aptdaemon_trans,
                                             "Get",
                                             g_variant_new("(ss)",
-                                                        "",
+                                                        "org.debian.apt.transaction",
                                                         "Progress"),
                                             G_DBUS_CALL_FLAGS_NO_AUTO_START,
                                             2000,
@@ -79,13 +80,31 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(Launcher* IconManager, Ba
         g_error_free(errorr);
     }
 
-    if (finished_or_not != NULL)
+    if (finished_or_not != NULL) {
         g_debug("DBus get call succeeded");
+        g_debug("Output of finished: %s", g_variant_print(finished_or_not, TRUE));
+    }
     else
         g_debug("DBus get call failed");
+
+    g_signal_connect (_aptdaemon_trans,
+                    "g-signal",
+                    (GCallback) &SoftwareCenterLauncherIcon::OnTransFinished,
+                    this);
 
 }
 
 SoftwareCenterLauncherIcon::~SoftwareCenterLauncherIcon() {
+
+}
+
+void
+SoftwareCenterLauncherIcon::OnTransFinished(GDBusProxy* proxy,
+                                            gchar* sender,
+                                            gchar* signal_name,
+                                            GVariant* params,
+                                            gpointer user_data)
+{
+    g_debug ("g-signal FIRED. Signal name: %s", signal_name);
 
 }
