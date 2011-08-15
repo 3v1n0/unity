@@ -24,7 +24,9 @@ using namespace unity;
 std::list<BackgroundEffectHelper*> BackgroundEffectHelper::registered_list_;
 
 nux::Property<BlurType> BackgroundEffectHelper::blur_type (BLUR_ACTIVE);
-nux::Property<float> BackgroundEffectHelper::sigma (5.0f);
+nux::Property<float> BackgroundEffectHelper::sigma_high (5.0f);
+nux::Property<float> BackgroundEffectHelper::sigma_med  (4.0f);
+nux::Property<float> BackgroundEffectHelper::sigma_low  (1.0f);
 nux::Property<bool> BackgroundEffectHelper::updates_enabled (true);
 
 
@@ -95,14 +97,16 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nu
   texxform__bg.uoffset = ((float) blur_geometry_.x) / graphics_engine->GetWindowWidth ();
   texxform__bg.voffset = ((float) graphics_engine->GetWindowHeight () - blur_geometry_.y - blur_geometry_.height) / graphics_engine->GetWindowHeight ();
 
-  if (nux::GetGraphicsDisplay()->GetGpuDevice()->GetGpuInfo().Support_ARB_Vertex_Shader() &&
-      nux::GetGraphicsDisplay()->GetGpuDevice()->GetGpuInfo().Support_ARB_Fragment_Shader() &&
-      (nux::GetGraphicsDisplay()->GetGpuDevice()->GetOpenGLMajorVersion() >= 3))
+  int opengl_version = nux::GetGraphicsDisplay()->GetGpuDevice()->GetOpenGLMajorVersion();
+  bool support_frag = nux::GetGraphicsDisplay()->GetGpuDevice()->GetGpuInfo().Support_ARB_Fragment_Shader();
+  bool support_vert = nux::GetGraphicsDisplay()->GetGpuDevice()->GetGpuInfo().Support_ARB_Vertex_Shader();
+
+  if (support_vert && support_frag && opengl_version >= 2)
   {
     float noise_factor = 1.2f;
     float horizontal_noise_factor = 1.0f;
     float vertical_noise_factor = 1.0f;
-    float gaussian_sigma = sigma;
+    float gaussian_sigma = opengl_version >= 3 ? sigma_high : sigma_med;
     int blur_passes = 1;
 
     nux::ObjectPtr<nux::IOpenGLBaseTexture> device_texture = nux::GetGraphicsDisplay()->GetGpuDevice()->backup_texture0_;
@@ -124,66 +128,10 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nu
 
     nux::TexCoordXForm texxform;
     nux::TexCoordXForm noise_texxform;
+
+    if (opengl_version < 3)
+      texxform.SetFilter(nux::TEXFILTER_LINEAR, nux::TEXFILTER_LINEAR);
     
-    noise_texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-    noise_texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
-    noise_texxform.SetFilter(nux::TEXFILTER_NEAREST, nux::TEXFILTER_NEAREST);
-
-    // Down size
-    graphics_engine->QRP_GetCopyTexture(down_size_width, down_size_height, temp_device_texture0_,
-     device_texture, texxform__bg, nux::color::White);
-
-    // Blur at a lower resolution (less pixels to process)
-    temp_device_texture1_ = graphics_engine->QRP_GetHQBlur(x, y, down_size_width, down_size_height,
-     temp_device_texture0_, texxform, nux::color::White,
-     gaussian_sigma, blur_passes);
-
-    // Up size
-    graphics_engine->QRP_GetCopyTexture(buffer_width, buffer_height, temp_device_texture0_,
-     temp_device_texture1_, texxform, nux::color::White);
-
-    // Add Noise
-    blur_texture_ = graphics_engine->QRP_GLSL_GetDisturbedTexture(
-      0, 0, buffer_width, buffer_height,
-      noise_device_texture->m_Texture, noise_texxform, nux::Color (
-      noise_factor * horizontal_noise_factor * 1.0f/buffer_width,
-      noise_factor * vertical_noise_factor * 1.0f/buffer_height, 1.0f, 1.0f),
-      temp_device_texture0_, texxform, nux::color::White);
-  }
-  else if (nux::GetGraphicsDisplay()->GetGpuDevice()->GetGpuInfo().Support_ARB_Vertex_Shader() &&
-          nux::GetGraphicsDisplay()->GetGpuDevice()->GetGpuInfo().Support_ARB_Fragment_Shader() &&
-          (nux::GetGraphicsDisplay()->GetGpuDevice()->GetOpenGLMajorVersion() >= 2))
-  {
-    // Most open source drivers are treated here
-
-    float noise_factor = 1.2f;
-    float horizontal_noise_factor = 1.0f;
-    float vertical_noise_factor = 1.0f;
-    float gaussian_sigma = sigma;
-    int blur_passes = 1;
-
-    nux::ObjectPtr<nux::IOpenGLBaseTexture> device_texture = nux::GetGraphicsDisplay()->GetGpuDevice()->backup_texture0_;
-    nux::ObjectPtr<nux::CachedBaseTexture> noise_device_texture = graphics_engine->CacheResource(noise_texture_);
-
-    unsigned int offset = 0;
-    int quad_width = blur_geometry_.width;
-    int quad_height = blur_geometry_.height;
-
-    int down_size_factor = 1;
-    unsigned int buffer_width = quad_width + 2 * offset;
-    unsigned int buffer_height = quad_height + 2 * offset;
-
-    int x = (buffer_width - quad_width) / 2;
-    int y = (buffer_height - quad_height) / 2;
-
-    unsigned int down_size_width = buffer_width / down_size_factor;
-    unsigned int down_size_height = buffer_height / down_size_factor;
-
-    nux::TexCoordXForm texxform;
-    nux::TexCoordXForm noise_texxform;
-    
-    texxform.SetFilter(nux::TEXFILTER_LINEAR, nux::TEXFILTER_LINEAR);
-
     noise_texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
     noise_texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
     noise_texxform.SetFilter(nux::TEXFILTER_NEAREST, nux::TEXFILTER_NEAREST);
@@ -213,7 +161,7 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nu
   {
     // GPUs with only ARB support are treated here
 
-    float gaussian_sigma = 1.0f;
+    float gaussian_sigma = sigma_low;
     int blur_passes = 1;
 
     nux::ObjectPtr<nux::IOpenGLBaseTexture> device_texture = nux::GetGraphicsDisplay()->GetGpuDevice()->backup_texture0_;

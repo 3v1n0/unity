@@ -53,7 +53,9 @@ public:
   static void QueueDrawOnOwners ();
 
   static nux::Property<unity::BlurType> blur_type;
-  static nux::Property<float> sigma;
+  static nux::Property<float> sigma_high;
+  static nux::Property<float> sigma_med;
+  static nux::Property<float> sigma_low;
   static nux::Property<bool> updates_enabled;
 
 protected:
