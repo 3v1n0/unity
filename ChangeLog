@@ -1,3 +1,1998 @@
+2011-08-11  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	fix build
+
+2011-08-11  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Place -> Lens
+
+2011-08-11  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	fix colouring issues
+
+2011-08-11  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Make altf2 work
+
+2011-08-11  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Add missing files
+
+2011-08-11  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Implement home view
+
+2011-08-11  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Make global search work again
+
+2011-08-11  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Make global search work again
+
+2011-08-11  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Fix some background stuff
+
+2011-08-11  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Correctly delete filters
+
+2011-08-11  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Fix filter stuff
+
+2011-08-10  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] trunk
+
+2011-08-10  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Do some nice drawing and stop crash
+
+2011-08-10  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] gords work
+
+2011-08-10  Gord Allott  <gord.allott@canonical.com>
+
+	multi-range drawing code
+
+2011-08-10  Gord Allott  <gord.allott@canonical.com>
+
+	save point
+
+2011-08-10  Gord Allott  <gord.allott@canonical.com>
+
+	latest neil stuff
+
+2011-08-10  Gord Allott  <gord.allott@canonical.com>
+
+	eh
+
+2011-08-10  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Make activation work
+
+2011-08-10  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Expand/contract filters
+
+2011-08-10  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	make panel text bold
+
+2011-08-10  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Disable PanelHomeButton
+
+2011-08-10  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Fix issue with panel
+
+2011-08-10  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	fix text parsing
+
+2011-08-10  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Fix issues in filters
+
+2011-08-10  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Fixes for filters
+
+2011-08-10  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] gords work so far
+
+2011-08-10  Gord Allott  <gord.allott@canonical.com>
+
+	latest
+
+2011-08-10  Gord Allott  <gord.allott@canonical.com>
+
+	filter buttons style
+
+2011-08-10  Gord Allott  <gord.allott@canonical.com>
+
+	latest dash style
+
+2011-08-10  Gord Allott  <gord.allott@canonical.com>
+
+	made track previews use the track widget
+
+2011-08-10  Gord Allott  <gord.allott@canonical.com>
+
+	added missing track preview stuff
+
+2011-08-10  Gord Allott  <gord.allott@canonical.com>
+
+	drawing preview button correct
+
+2011-08-10  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Some filter work
+
+2011-08-10  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Fix blur support
+
+2011-08-10  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Add blur support to panel
+
+2011-08-10  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	actually make it default
+
+2011-08-10  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Make active blur default. Yeah, I know, ballsy
+
+2011-08-10  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Add blur support
+
+2011-08-10  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Merge with trunk
+
+2011-08-10  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Close on click-outside
+
+2011-08-10  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	boo
+
+2011-08-10  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	make normal input work, thanks to jason
+
+2011-08-10  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	hook up broken search_finished signal
+
+2011-08-10  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	More fixes for searching etc
+
+2011-08-10  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Fixes to lensbar
+
+2011-08-10  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Fix more results view and group stuff, starting to look like dash again now
+
+2011-08-10  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Fix another crash when results are removed
+
+2011-08-09  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Make the renderer use the style calculations as much as possible
+
+2011-08-09  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Fix crasher
+
+2011-08-09  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[parent]
+
+2011-08-09  Gord Allott  <gord.allott@canonical.com>
+
+	copies results in resultview instead of using references
+
+2011-08-09  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Some more fixes
+
+2011-08-09  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	IT PAINTS
+
+2011-08-09  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	IT PAINTS
+
+2011-08-09  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] upstream
+
+2011-08-09  Gord Allott  <gord.allott@canonical.com>
+
+	fixed issue with result renderer offset
+
+2011-08-09  Gord Allott  <gord.allott@canonical.com>
+
+	fixed the renderer names in the filter factory
+
+2011-08-09  Gord Allott  <gord.allott@canonical.com>
+
+	remove debugs
+
+2011-08-09  Gord Allott  <gord.allott@canonical.com>
+
+	adds in expanded behaviour
+
+2011-08-09  Gord Allott  <gord.allott@canonical.com>
+
+	hooked up the left/right preview buttons
+
+2011-08-09  Gord Allott  <gord.allott@canonical.com>
+
+	nux hating complete, but i win.
+
+2011-08-09  Gord Allott  <gord.allott@canonical.com>
+
+	adds multi-range widget
+
+2011-08-09  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Some forward movement
+
+2011-08-09  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Somewhat working groups, no results get rendererd
+
+2011-08-09  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	unfuck everything
+
+2011-08-09  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	merge with fixes
+
+2011-08-09  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Some more lens view bits
+
+2011-08-09  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	some more progress
+
+2011-08-09  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Lots of fixes
+
+2011-08-09  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Some renaming of Places=>Dash and cleanup
+
+2011-08-08  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	more fixes
+
+2011-08-08  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	more dash view stuff, nothing visible yet
+
+2011-08-08  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Remove a lot of unneeded code
+
+2011-08-08  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Clean up standalone tests, start dash view, more fixes
+
+2011-08-08  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	It actually runs\!
+
+2011-08-08  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Add missing files
+
+2011-08-08  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	First cut of DashController
+
+2011-08-09  Gord Allott  <gord.allott@canonical.com>
+
+	fixed HTTP textures in the results view, also ^_^
+
+2011-08-09  Gord Allott  <gord.allott@canonical.com>
+
+	the i hate nux commit
+
+2011-08-09  Gord Allott  <gord.allott@canonical.com>
+
+	Handle preview flow and input redirection
+
+2011-08-09  Gord Allott  <gord.allott@canonical.com>
+
+	fixed up the generic preview
+
+2011-08-09  Gord Allott  <gord.allott@canonical.com>
+
+	added album preview
+
+2011-08-09  Gord Allott  <gord.allott@canonical.com>
+
+	offset grid view blurs relative to the centre
+
+2011-08-08  Gord Allott  <gord.allott@canonical.com>
+
+	adds tile blur
+
+2011-08-08  Gord Allott  <gord.allott@canonical.com>
+
+	nicer highlight renderering - a few fixes
+
+2011-08-08  Gord Allott  <gord.allott@canonical.com>
+
+	Merged in latest trunk
+
+2011-08-08  Gord Allott  <gord.allott@canonical.com>
+
+	disable preview in test
+
+2011-08-07  Gord Allott  <gord.allott@canonical.com>
+
+	added previews
+
+2011-08-07  Gord Allott  <gord.allott@canonical.com>
+
+	pre-previews merge
+
+2011-08-05  Gord Allott  <gord.allott@canonical.com>
+
+	failing preview commit
+
+2011-08-05  Gord Allott  <gord.allott@canonical.com>
+
+	latest previews
+
+2011-08-05  Gord Allott  <gord.allott@canonical.com>
+
+	latest previews
+
+2011-08-05  Gord Allott  <gord.allott@canonical.com>
+
+	applications preview working
+
+2011-08-05  Gord Allott  <gord.allott@canonical.com>
+
+	save point
+
+2011-08-05  Gord Allott  <gord.allott@canonical.com>
+
+	Merge latest filterbar
+
+2011-08-05  Gord Allott  <gord.allott@canonical.com>
+
+	um yeah, make it compile
+
+2011-08-05  Gord Allott  <gord.allott@canonical.com>
+
+	Merged in filterbar
+
+2011-08-04  Gord Allott  <gord.allott@canonical.com>
+
+	save point
+
+2011-08-04  Gord Allott  <gord.allott@canonical.com>
+
+	merge in neil lens api
+
+2011-08-04  Gord Allott  <gord.allott@canonical.com>
+
+	restore the actual files
+
+2011-08-04  Gord Allott  <gord.allott@canonical.com>
+
+	restore code lost in a rm -r, i am smrat
+
+2011-08-03  Gord Allott  <gord.allott@canonical.com>
+
+	pre multi-range
+
+2011-08-02  Gord Allott  <gord.allott@canonical.com>
+
+	re-added rating changing code
+
+2011-06-20  Gord Allott  <gord.allott@canonical.com>
+
+	save point
+
+2011-06-20  Gord Allott  <gord.allott@canonical.com>
+
+	some c++x0 testing fun
+
+2011-06-20  Gord Allott  <gord.allott@canonical.com>
+
+	a perfectly legitimate change
+
+2011-06-20  Gord Allott  <gord.allott@canonical.com>
+
+	remove cats
+
+2011-06-20  Gord Allott  <gord.allott@canonical.com>
+
+	merged in latest trunk
+
+2011-06-20  Gord Allott  <gord.allott@canonical.com>
+
+	save point
+
+2011-06-15  Gord Allott  <gord.allott@canonical.com>
+
+	save point\!
+
+2011-08-10  David Gomes  <davidrafagomes@gmail.com>
+
+	Bug #823353: Unity windows buttons icons and clicking them not matching
+
+2011-08-09  David Gomes  <davidrafagomes@gmail.com>
+
+	Proposal to fix bug lp:823353
+
+2011-08-10  Didier Roche  <didier.roche@canonical.com>
+
+	[merge] Fix and store in the right way the kde apps
+
+2011-08-08  Didier Roche  <didier.roche@canonical.com>
+
+	store in the right way the kde apps, and don't look at subdirectories for them. gio is opening them in subdir-desktopname.desktop (LP: #741129)
+
+2011-08-10  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	[merge] theming fixes
+
+2011-08-05  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Latest couple of fixes
+
+2011-08-04  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Use C++ functions where possible
+
+2011-08-03  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Theme home button icon using gtk
+
+2011-08-03  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Render the indicator icons with gtk
+
+2011-08-03  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	whitespaces
+
+2011-08-03  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Use unity directory for each theme, reading home directory, then theme directory, if not, use fallback (drawing)
+
+2011-08-03  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Add 1px of horizontal padding, maybe not the right fix but works for the moment. Added a FIXME to remember
+
+2011-08-10  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	[merge] DashStyle
+
+2011-08-10  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	crap
+
+2011-08-10  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	turns out we need ARROW_NONE after all
+
+2011-08-10  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	Added API-stubs for TrackView and Separators
+
+2011-08-10  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	make arrows of the MultiRange-widget align to pixel-grid, corrected their fill-color
+
+2011-08-10  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	swapped the order of ACTIVE and NORMAL
+
+2011-08-10  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	Changed API for the rating-stars
+
+2011-08-10  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	Added arrow-rendering for MultiRange widget, use the normal state from Nux/View.h, use correct install-path for .json file
+
+2011-08-09  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	make sure left and right edges of the multi-range widget touch each other
+
+2011-08-09  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	Shapes of the multi-range widget-parts are correct now
+
+2011-08-09  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	Made button-outline use absolute cairo-API, thus were able to add pixel-grid alignment for line-drawing... started MultiRange-widget after agreement on API with Gordon
+
+2011-08-08  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	make .json file install correctly, make sure the ratings-bar scales correctly
+
+2011-08-08  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	fix order of entries in font-weight enum, implemented ReadWeightArray() and ReadModeArray(), tweaked .json file
+
+2011-08-08  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	make the test-case closer to real-world usage, hook up drawing of some text-attributes
+
+2011-08-05  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	remove obsolete style-definitions due to design updates, focus on button (with label) drawing
+
+2011-08-05  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	rebase on trunk, adapting to latest designs, beginning of porting custom button outline shape from SVG to real code
+
+2011-07-01  mirco.mueller@canonical.com
+
+	add the comment-entry for the widget-states again, move the more simple looking entries at the top of the file, so it looks less "scary" when first opening it
+
+2011-06-30  mirco.mueller@canonical.com
+
+	added new icons for the dash
+
+2011-06-30  mirco.mueller@canonical.com
+
+	started adding reading-functions for the JSON-file
+
+2011-06-29  mirco.mueller@canonical.com
+
+	test change to show Rosie how to pull changes from bzr
+
+2011-06-29  mirco.mueller@canonical.com
+
+	updated dash-resources json-file
+
+2011-06-29  mirco.mueller@canonical.com
+
+	quick snapshot of style- and asset-handover-process
+
+2011-06-26  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	added:
+	src/DashStyle.cpp
+	src/DashStyle.h
+	tests/TestDashStyle.cpp
+	modified:
+	tests/CMakeLists.txt
+	
+	Quick test-snapshot
+
+2011-08-10  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Doesn't show an empty menu when coursor reaches the title in the panel.
+	It refers just to maximized windows, since the case is already fixed for
+	non-maximized ones. Fixes LP: #734900
+
+2011-08-02  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Doesn't show an empty menu when coursor reaches the title in the panel. It refers just to maximized windows, since the case is already fixed for non-maximized ones. (bug #734900)
+
+2011-08-10  Jason Smith  <jason.smith@canonical.com>
+
+	change alt-tab to default to alt-tab
+
+2011-08-09  Jay Taoko  <jay.taoko@canonical.com>
+
+	Added active blur option to CCSM
+
+2011-08-09  Jay Taoko  <jay.taoko@canonical.com>
+
+	Added active blur option to CCSM
+
+2011-08-08  Jason Smith  <jason.smith@canonical.com>
+
+	merge trunk
+
+2011-08-04  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Added BackgroundEffectHelper class for things like blur effects: optimizations for different GPU classes
+	
+	* Real-time blur is activated by default. Look for 
+	- // Marker 0 for real-time blur
+	- // Marker 1 for real-time blur
+	and comment the line just below to deactivate real-time blur
+	
+	* Compiz support for rendering into an FBO (Sam Spilsbury)
+
+2011-08-04  Jay Taoko  <jay.taoko@canonical.com>
+
+	Added markers for real-time blur
+
+2011-08-04  Jay Taoko  <jay.taoko@canonical.com>
+
+	Fixes
+
+2011-08-02  Jay Taoko  <jay.taoko@canonical.com>
+
+	Added class BackgroundEffectHelper
+
+2011-08-01  Jay Taoko  <jay.taoko@canonical.com>
+
+	enable real-time blur
+
+2011-08-01  Jay Taoko  <jay.taoko@canonical.com>
+
+	Blur Fixes
+
+2011-07-28  Jay Taoko  <jay.taoko@canonical.com>
+
+	Dash blur fallback per GPU
+
+2011-07-27  Jay Taoko  <jay.taoko@canonical.com>
+
+	Fixes
+
+2011-07-27  Jay Taoko  <jay.taoko@canonical.com>
+
+	Fixes
+
+2011-07-26  Jay Taoko  <jay.taoko@canonical.com>
+
+	Fixes
+
+2011-07-20  Jay Taoko  <jay.taoko@canonical.com>
+
+	Compose Compiz desktop into a texture
+
+2011-07-12  Jay Taoko  <jay.taoko@canonical.com>
+
+	- FBO fix
+
+2011-07-01  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Add a getter for the texture
+
+2011-07-01  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	We need to use glPaintOutput for now, even though that's a hack
+
+2011-07-01  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Use one fbo per monitor ... this introduces some slight flickering in the multimontor case
+	and should probably be debugged
+
+2011-06-30  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Redirect compiz drawing into an FBO
+
+2011-08-10  Jason Smith  <jason.smith@canonical.com>
+
+	merge layout system branch
+
+2011-08-10  Jason Smith  <jason.smith@canonical.com>
+
+	merge trunk
+
+2011-08-10  Jason Smith  <jason.smith@canonical.com>
+
+	use swap over manual swapping
+
+2011-08-09  Jason Smith  <jason.smith@canonical.com>
+
+	Make TestSwitcher program much more useful
+
+2011-08-06  Jason Smith  <jason.smith@canonical.com>
+
+	fix build
+
+2011-08-06  Jason Smith  <jason.smith@canonical.com>
+
+	make sure to clean up on destruction
+
+2011-08-06  Jason Smith  <jason.smith@canonical.com>
+
+	make simple launcher icon handle multiple sizings gracefully
+
+2011-08-06  Jason Smith  <jason.smith@canonical.com>
+
+	more work on alt-tab user interactions
+
+2011-08-06  Jason Smith  <jason.smith@canonical.com>
+
+	new interaction for tabbing
+
+2011-08-06  Jason Smith  <jason.smith@canonical.com>
+
+	Use extra space at top of grid instead of bottom
+
+2011-08-06  Jason Smith  <jason.smith@canonical.com>
+
+	improve grid layout
+
+2011-08-05  Jason Smith  <jason.smith@canonical.com>
+
+	improve layouts of windows in alt-tab switcher
+
+2011-08-10  Tim Penhey  <tim.penhey@canonical.com>
+
+	Fix many uninitialized variables, and get debuggin info back.
+	
+	The flags in the CMakeLists.txt were updated so debugging info
+	is added again using -g3.
+	LauncherIcon now has all members initialized, and the unused m_Window
+	is removed.
+	PlacesSearchBar now also initializes all members.
+	As does PlacesView.
+	QuickListMenuItem now doesn't leak the name.
+	QuicklistView updated to use initialiser lists, and some boolean
+	expressions are simplified.  Also stops the leak in GetName.
+	Removed unused members from Tooltip.
+	unityshell also now initialises all the members.
+
+2011-08-08  Tim Penhey  <tim.penhey@canonical.com>
+
+	Make unity have debug builds again.
+
+2011-08-08  Tim Penhey  <tim.penhey@canonical.com>
+
+	Merge trunk.
+
+2011-08-05  Tim Penhey  <tim.penhey@canonical.com>
+
+	Initialize all the values.
+
+2011-08-05  Tim Penhey  <tim.penhey@canonical.com>
+
+	Simplify some logic
+
+2011-08-05  Tim Penhey  <tim.penhey@canonical.com>
+
+	Using initializer lists, and fix GetName not to make a copy of the name.
+
+2011-08-05  Tim Penhey  <tim.penhey@canonical.com>
+
+	Remove the _dpiX, _dpiY, and _fontOpts from the headers.  Code was removed 2010-11-25 in favour of GtkSettings.
+
+2011-08-04  Tim Penhey  <tim.penhey@canonical.com>
+
+	_progress and _present_urgency were not initialized.
+
+2011-08-04  Tim Penhey  <tim.penhey@canonical.com>
+
+	m_Window is never used.
+
+2011-08-04  Tim Penhey  <tim.penhey@canonical.com>
+
+	PlacesSearchBar was not initialising _last_width or _last_height.
+
+2011-08-04  Tim Penhey  <tim.penhey@canonical.com>
+
+	PlacesView was not initializing all the members.
+
+2011-08-08  Alex Launi  <alex.launi@canonical.com>
+
+	Fix WindowButtons.cpp/h for work done in the nux abstract button branch
+
+2011-08-07  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] lenses-extras
+
+2011-08-07  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] parent
+
+2011-08-05  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Don't leak iters
+
+2011-08-05  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Test ratings
+
+2011-08-05  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Multirange tests
+
+2011-08-05  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	CheckOption tests and some cleanup
+
+2011-08-05  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Lots of fixes and tests for RadioOptions
+
+2011-08-05  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Fix Filters to emit correct signals and Filter to return correct filter
+
+2011-08-03  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	s/Button/Option for filters
+
+2011-08-03  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Fix naming
+
+2011-08-03  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	fix marshalling
+
+2011-08-03  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	import in filters that do marshalling/unmarshalling and logic of the views
+
+2011-08-02  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Add generic renderer
+
+2011-08-02  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Add ApplicationPreview
+
+2011-08-02  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	More track preview testing
+
+2011-08-02  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Add TrackPreview and update tests for testing it better
+
+2011-08-02  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Add missing files and update to support new lens <-> scope functionality for activation
+
+2011-08-02  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	add uri schema support
+
+2011-08-01  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Add support for activation
+
+2011-08-07  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] more-lenses
+
+2011-08-07  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] parent
+
+2011-08-07  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] trunk
+
+2011-08-07  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Update to make work with libunity.pc lensesdir
+
+2011-08-01  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] parent
+
+2011-08-01  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	install ModelRowAdaptor-inl.h
+
+2011-08-01  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	use default copy constructor
+
+2011-07-31  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] parent and fix issues related to that
+
+2011-07-28  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] parent
+
+2011-07-28  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] parent
+
+2011-07-28  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Fix issues raised by Tim
+
+2011-07-28  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] parent and fix issue with variant builder
+
+2011-07-27  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] parent
+
+2011-07-27  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] parent
+
+2011-07-27  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] parent
+
+2011-07-27  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] parent
+
+2011-07-26  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	unref lens on exit
+
+2011-07-26  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	clean up tests a bit
+
+2011-07-26  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	tests for global results
+
+2011-07-25  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Lens search tests
+
+2011-07-25  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Add tests for category
+
+2011-07-25  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	fix some naming
+
+2011-07-25  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Beginning of lens tests
+
+2011-07-25  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Beginning of lens tests
+
+2011-08-07  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] connect-to-lenses
+
+2011-08-01  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] trunk
+
+2011-07-29  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Put the accessing of DeeModelIters inside the RowAdaptorBase class and use sigc::bind to manipulate those functions for getters - excellent idea by Tim
+
+2011-07-29  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Use the new glib wrapper niceties
+
+2011-07-29  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] trunk
+
+2011-07-29  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Some more fixes
+
+2011-07-29  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Make copy constructors work
+
+2011-07-29  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] parent
+
+2011-07-28  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] parent
+
+2011-07-28  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] trunk
+
+2011-07-28  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Some more fixes
+
+2011-07-28  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Remove overzealous gboolean checking
+
+2011-07-28  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Clean up the initialisation of filters as well as protect them from invalid models
+
+2011-07-28  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	s/unsigned int/std::size_t
+
+2011-07-28  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	s/boost::shared_ptr/std::shared_ptr
+
+2011-07-28  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	s/boost::shared_ptr/std::shared_ptr
+
+2011-07-28  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	some more fixes
+
+2011-07-28  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	some fixes
+
+2011-07-28  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	clean up RowAdaptorBase
+
+2011-07-27  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] parent
+
+2011-07-27  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] parent
+
+2011-07-27  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] with trunk
+
+2011-07-27  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] with parent
+
+2011-07-27  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	style fixes
+
+2011-07-25  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] trunk
+
+2011-07-25  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Add ratings filter
+
+2011-07-25  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	update to coding style
+
+2011-07-25  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Filter tests
+
+2011-07-25  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Starting filter tests
+
+2011-07-22  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	fix test naming
+
+2011-07-22  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	- Add support for testing Results and Categories
+	- Make the tests more robust by using some tricks to ensure we carry them out when
+	the service is ready
+	- Clean up after ourselves
+
+2011-07-22  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Make the Results and Categories wrapper a bit nicer, make the test service exit easily as it now exports a controller object. All is fine with the world right now
+
+2011-07-21  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Make the naming even nicer
+
+2011-07-21  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Clean up Model implementation and add tests, incliding support for testing dbus-based services
+
+2011-07-21  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] trunk
+
+2011-07-20  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	It works\!
+
+2011-07-20  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Update and add models that use the new Category interface
+
+2011-07-20  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	a mid-point commit
+
+2011-07-20  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Make ResultsModel and ResultsModelIter independant
+
+2011-07-20  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Add some methods and hook up some signals
+
+2011-07-20  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Hook up a whole bunch of stuff
+
+2011-07-20  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Some more niceness
+
+2011-07-20  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Make things connect and add a Call method
+
+2011-07-20  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Start connection to the lens daemons
+
+2011-07-19  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] trunk
+
+2011-08-05  Jason Smith  <jason.smith@canonical.com>
+
+	merge alt-tab windows branch
+
+2011-08-05  Jason Smith  <jason.smith@canonical.com>
+
+	prevent stray renders of icons that are marked skip
+
+2011-08-05  Jason Smith  <jason.smith@canonical.com>
+
+	fade windows in
+
+2011-08-05  Jason Smith  <jason.smith@canonical.com>
+
+	enable selection of specific windows with alt-tab
+
+2011-08-04  Jason Smith  <jason.smith@canonical.com>
+
+	better layout (far from nice)
+
+2011-08-04  Jason Smith  <jason.smith@canonical.com>
+
+	minor fixes
+
+2011-08-05  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Overload updateIconPos to get the correct position.
+
+2011-08-04  Jason Smith  <jason.smith@canonical.com>
+
+	actually increment x and y
+
+2011-08-04  Jason Smith  <jason.smith@canonical.com>
+
+	use correct matrix
+
+2011-08-04  Jason Smith  <jason.smith@canonical.com>
+
+	fix bounding box calculations
+
+2011-08-04  Jason Smith  <jason.smith@canonical.com>
+
+	more work on painting thumbnails
+
+2011-08-04  Jason Smith  <jason.smith@canonical.com>
+
+	start work on painting thumbnails
+
+2011-08-04  Jason Smith  <jason.smith@canonical.com>
+
+	make the test a little nicer to work with
+
+2011-08-04  Jason Smith  <jason.smith@canonical.com>
+
+	start work on detailing the current selected item
+
+2011-08-03  Jason Smith  <jason.smith@canonical.com>
+
+	merge clickthrough tooltips branch
+
+2011-08-03  Jason Smith  <jason.smith@canonical.com>
+
+	add explanitory comment
+
+2011-08-03  Jason Smith  <jason.smith@canonical.com>
+
+	make tooltips click through
+
+2011-08-03  Jason Smith  <jason.smith@canonical.com>
+
+	merge bfb reshuffle branch
+
+2011-08-03  Jason Smith  <jason.smith@canonical.com>
+
+	fix merge issues
+
+2011-08-02  Jason Smith  <jason.smith@canonical.com>
+
+	comment magic number
+
+2011-08-02  Jason Smith  <jason.smith@canonical.com>
+
+	cleanup duplicate function
+
+2011-08-02  Jason Smith  <jason.smith@canonical.com>
+
+	fix date
+
+2011-08-02  Jason Smith  <jason.smith@canonical.com>
+
+	implement launcher based BFB
+
+2011-08-03  Tim Penhey  <tim.penhey@canonical.com>
+
+	Catch a SIGSEGV that happens if the image doesn't load.
+	Use the glib::Error and glib::Object wrappers.
+
+2011-08-02  Tim Penhey  <tim.penhey@canonical.com>
+
+	add namespace
+
+2011-08-02  Tim Penhey  <tim.penhey@canonical.com>
+
+	Merge trunk.
+
+2011-08-01  Tim Penhey  <tim.penhey@canonical.com>
+
+	Put return types on the same line as the function.
+
+2011-08-01  Tim Penhey  <tim.penhey@canonical.com>
+
+	Add in the assignment function returns.
+
+2011-08-01  Tim Penhey  <tim.penhey@canonical.com>
+
+	Merge glib-tweaks.
+
+2011-08-01  Tim Penhey  <tim.penhey@canonical.com>
+
+	Use glib wrappers, and more the Reference into the location where texture is guaranteed to be not null.
+
+2011-08-03  Tim Penhey  <tim.penhey@canonical.com>
+
+	Whitespace fixes, and remove the unused iterator.
+
+2011-08-03  Tim Penhey  <tim.penhey@canonical.com>
+
+	Whitespace fixes, and remove the unused iterator.
+
+2011-08-02  Jason Smith  <jason.smith@canonical.com>
+
+	merge shortcuts fix
+
+2011-08-02  Jason Smith  <jason.smith@canonical.com>
+
+	fix final merge requirements
+
+2011-08-02  Jason Smith  <jason.smith@canonical.com>
+
+	fix issues found in merge review
+
+2011-08-02  Jason Smith  <jason.smith@canonical.com>
+
+	restore shortcuts
+
+2011-08-02  Jason Smith  <jason.smith@canonical.com>
+
+	merge fix middle click branch
+
+2011-08-02  Jason Smith  <jason.smith@canonical.com>
+
+	fix middle click
+
+2011-08-02  Jay Taoko  <jay.taoko@canonical.com>
+
+	Changed logger enum
+
+2011-08-01  Jay Taoko  <jay.taoko@canonical.com>
+
+	Fix bug #810971
+
+2011-08-01  Alejandro Piñeiro  <apinheiro@igalia.com>
+
+	[a11y] Code style review using tools/apply_unity_formatting.sh
+
+2011-08-01  Alejandro Piñeiro  <apinheiro@igalia.com>
+
+	[a11y] Cleaning g_debug calls
+
+2011-08-01  Alejandro Piñeiro  <apinheiro@igalia.com>
+
+	[a11y] Improve the shared focus management on the Launcher/Dash
+	
+	Right now the Launcher and the Dash manages the keyboard navigation in
+	a different way (Launcher based on InputArea signals, Dash based on
+	Focusable interface).
+	
+	This commit tries does:
+	* Implement the atk focus notification in a homogeneus way
+	
+	* Improve the management of the active window
+	* Before this change, the Launcher BaseWindow didn't emit his activate signal
+	
+	* Improve how AtkObject::focus-event and BaseWindow::activate are
+	sorted, prior this commit those signals were emitted but in a wrong
+	order
+	* In order to do that it implements a pending notification proces
+	
+	* Document all this stuff on BaseWindowAccessible developer documentation
+
+2011-07-21  Alejandro Piñeiro  <apinheiro@igalia.com>
+
+	[a11y] Improve the shared focus management on the Launcher/Dash
+	
+	Right now the Launcher and the Dash manages the keyboard navigation in
+	a different way (Launcher based on InputArea signals, Dash based on
+	Focusable interface).
+	
+	This commit tries does:
+	* Implement the atk focus notification in a homogeneus way
+	
+	* Improve the management of the active window
+	* Before this change, the Launcher BaseWindow didn't emit his activate signal
+	
+	* Improve how AtkObject::focus-event and BaseWindow::activate are
+	sorted, prior this commit those signals were emitted but in a wrong
+	order
+	* In order to do that it implements a pending notification proces
+	
+	* Document all this stuff on BaseWindowAccessible developer documentation
+
+2011-07-19  Alejandro Piñeiro  <apinheiro@igalia.com>
+
+	[a11y] Improve the shared focus management on the Launcher/Dash
+	
+	Right now the Launcher and the Dash manages the keyboard navigation in
+	a different way (Launcher based on InputArea signals, Dash based on
+	Focusable interface).
+	
+	This commit tries does:
+	* Implement the atk focus notification in a homogeneus way
+	
+	* Improve the management of the active window
+	* Before this change, the Launcher BaseWindow didn't emit his activate signal
+	
+	* Improve how AtkObject::focus-event and BaseWindow::activate are
+	sorted, prior this commit those signals were emitted but in a wrong
+	order
+	* In order to do that it implements a pending notification proces
+	
+	* Document all this stuff on BaseWindowAccessible developer documentation
+
+2011-07-12  Alejandro Piñeiro  <apinheiro@igalia.com>
+
+	[a11y] Improve the shared focus management on the Launcher/Dash
+	
+	Right now the Launcher and the Dash manages the keyboard navigation in
+	a different way (Launcher based on InputArea signals, Dash based on
+	Focusable interface).
+	
+	This commit tries does:
+	* Implement the atk focus notification in a homogeneus way
+	* Improve the management of the active window
+	* Before this change, the Launcher BaseWindow didn't emit his activate signal
+	
+	* Improve how AtkObject::focus-event and BaseWindow::activate are
+	sorted, prior this commit those signals were emitted but in a wrong
+	order
+	* In order to do that it implements a pending notification proces
+	* Document all this stuff on BaseWindowAccessible developer documentation
+
+2011-05-03  Alejandro Piñeiro  <apinheiro@igalia.com>
+
+	[a11y] Fixing BaseWindowAccessible developer documentation
+
+2011-05-02  Alejandro Piñeiro  <apinheiro@igalia.com>
+
+	[a11y] Improve the shared focus management on the Launcher/Dash
+	
+	Right now the Launcher and the Dash manages the keyboard navigation
+	in a different way (Launcher based on InputArea signals, Dash based
+	on Focusable interface).
+	
+	This commit tries to:
+	* Implement the atk focus notification in a homogeneus way
+	* Improve the management of the active window
+	* Before this change, the Launcher BaseWindow didn't emit his activate signal
+	* Improve how AtkObject::focus-event and BaseWindow::activate are sorted,
+	prior this commit those signals were emitted but in a wrong order
+	* In order to do that it implements a pending notification process
+
+2011-05-02  Alejandro Piñeiro  <apinheiro@igalia.com>
+
+	Changing the virtual method to just a pending notification
+	Children now told the parent that it is active
+
+2011-05-01  Alejandro Piñeiro  <apinheiro@igalia.com>
+
+	Added a virtual nuxarea virtual methods
+
+2011-04-25  Alejandro Piñeiro  <apinheiro@igalia.com>
+
+	Work in progress
+
+2011-04-12  Alejandro Piñeiro  <apinheiro@igalia.com>
+
+	Work in progress
+
+2011-04-06  Alejandro Piñeiro  <apinheiro@igalia.com>
+
+	Work in progress ....
+
+2011-04-06  Alejandro Piñeiro  <apinheiro@igalia.com>
+
+	Work in progress
+
+2011-08-01  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Release\ 4.6.0
+
+2011-08-01  Gord Allott  <gord.allott@canonical.com>
+
+	revert using a colour for the background until we have a blur
+
+2011-08-01  Gord Allott  <gord.allott@canonical.com>
+
+	paints it black
+
+2011-08-01  Gord Allott  <gord.allott@canonical.com>
+
+	added extra compiler flag to our build, fixed array bounds issue in launcher.h
+
+2011-08-01  Gord Allott  <gord.allott@canonical.com>
+
+	fixed array bounds in launcher.h - added array-bounds flag to compiler warnings
+
+2011-08-01  Andrea Azzarone  <azzaronea@gmail.com>
+
+	merging in andrea's branch to fix lp:810315
+
+2011-08-01  Gord Allott  <gord.allott@canonical.com>
+
+	small change to make conflict go away
+
+2011-07-14  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Resolve ident mistake.
+
+2011-07-14  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Wastes no time if hide mode is never.
+
+2011-07-14  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fixes bug #810315.
+
+2011-08-01  Jason Smith  <jason.smith@canonical.com>
+
+	merge branch to prevent mapping of minimized window when not needed
+
+2011-07-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: Don't map minimized windows if a mapped one is available
+	
+	This fixes bug #783434
+	
+	Plus, moved some for iterations to C++0x foreach-like, to improve readability
+
+2011-08-01  Jason Smith  <jason.smith@canonical.com>
+
+	merge pulse once branch
+
+2011-07-30  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Pulse once when something is dropped into the launcher trash icon.
+
+2011-08-01  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix memory leaks
+
+2011-07-30  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix memory leak in PluginAdapter.cpp (bug #818477)
+
+2011-07-30  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix memory leak in PlacesHomeView::Refresh (fix #818450)
+
+2011-08-01  Jason Smith  <jason.smith@canonical.com>
+
+	merge launcher edge reveal branch
+
+2011-07-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Added configurable option to define the launcher edge-show timeout
+	
+	A compiz option has been added to define the timeout to wait before
+	showing the launcher when the left edge has been touched.
+	
+	Default value set to 150 ms.
+
+2011-07-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Edge launcher reveal: reduce the timeout and reduce unwanted revelations
+	
+	Reduce the timeout before revealing the launcher, but doesn't reveal it
+	if after the timeout the mouse pointer is too far from the first hit point.
+	If the launcher isn't shown due to a moviment in the Y axis, we'll try to
+	show it until the mouse is touching the left edge.
+
+2011-08-01  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add a ccsm option to change launcher opacity. the default value is 0.6667, about 0xAA (current default value).
+
+2011-07-29  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add a ccsm option to change launcher background opacity. Default value is 0.6667 (about 0xAA, current value).
+
+2011-08-01  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Counts the number of volumes for each drive to fix the bug.
+
+2011-07-29  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Tries to fix bug #799890.
+
+2011-08-01  Daniel van Vugt  <vanvugt@gmail.com>
+
+	Make panel menus more responsive, less laggy, when scrubbing. Removed logic that used to send pointer motion events over dbus. (LP: #742664)
+
+2011-07-29  Daniel van Vugt  <vanvugt@gmail.com>
+
+	Add missing destructor code, got lost when porting the change from
+	unity-3 to unity-4.
+
+2011-07-29  Daniel van Vugt  <vanvugt@gmail.com>
+
+	Minor style and spacing cleanup.
+
+2011-07-29  Daniel van Vugt  <vanvugt@gmail.com>
+
+	Merged the fix for bug 742664 with recent changes to lp:unity.
+
+2011-07-29  Daniel van Vugt  <vanvugt@gmail.com>
+
+	Make panel menus more responsive, less laggy, when scrubbing. Removed logic
+	that used to send pointer motion events over dbus. (LP: #742664)
+
+2011-08-01  Andrea Azzarone  <azzaronea@gmail.com>
+
+	[merge] Porting TestFavoriteStoreGSetting from glib test to Google test.
+
+2011-07-28  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Porting of TestFavoriteStoreGSettings to Google Test.
+
+2011-07-29  Tim Penhey  <tim.penhey@canonical.com>
+
+	[merge] glib wrapper tweaks
+
+2011-07-29  Tim Penhey  <tim.penhey@canonical.com>
+
+	Change a std::cout for LOG_WARN.
+
+2011-07-29  Tim Penhey  <tim.penhey@canonical.com>
+
+	More tweaks.
+
+2011-07-29  Tim Penhey  <tim.penhey@canonical.com>
+
+	Use the new address of operators and streaming.
+
+2011-07-29  Tim Penhey  <tim.penhey@canonical.com>
+
+	Make operator& overloads for AsOutParam, and some streaming operators.
+
+2011-07-29  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] load lens files
+
+2011-07-29  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	remaining fixes
+
+2011-07-28  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] trunk
+
+2011-07-27  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	forgot to remove stray variable
+
+2011-07-27  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	more more more fixes
+
+2011-07-27  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Some more more fixes
+
+2011-07-27  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	some more fixes
+
+2011-07-27  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	some fixes mentioned in merge request
+
+2011-07-27  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] trunk
+
+2011-07-27  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Formatting fix
+
+2011-07-26  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Woops, forgot to remove the lambda test
+
+2011-07-25  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Update coding style
+
+2011-07-25  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] trunk
+
+2011-07-21  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] trunk
+
+2011-07-20  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] trunk
+
+2011-07-15  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] latest nicer-glib-signals branch, which brings in trunk too
+
+2011-07-15  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	- Add support for reading the keyfiles
+	- Initialise the Lens object
+	- Implement the property system using getters as a proxy to the actual value in the
+	Impl
+	- Add tests
+	- Clean up tests
+
+2011-07-15  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Some more movement on the Tests
+
+2011-07-14  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Do some lens creation plus test the pipes
+
+2011-07-14  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Add some more data to test with
+
+2011-07-14  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Support for clean destruction as well as making the tests pass for reading the directories
+
+2011-07-14  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Simplify directory scanning, add support for reading the file async and then reading the keyfile
+
+2011-07-14  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Some refactoring to make testing easier
+
+2011-07-13  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Merge in signal stuff as we need it
+
+2011-07-13  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Some renaming and fixes
+
+2011-07-12  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Start moving in beginnings of the new dash infrastructure
+
+2011-07-28  Jay Taoko  <jay.taoko@canonical.com>
+
+	Changed to signal OnKeyEvent declaration (Remerged after merging the corresponding branch in Nux)
+
+2011-07-28  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Revert out jays branch, was committed before it was time to merge
+
+2011-07-28  Gord Allott  <gord.allott@canonical.com>
+
+	merging in the new background-colour branch, unity now uses the average (weighted to the left) value of your background colour to tint its UI
+
+2011-07-28  Gord Allott  <gord.allott@canonical.com>
+
+	merge in a previous spelling change that i missed, oops, change to using the signal manager stuff and disconnect the ubus signals
+
+2011-07-28  Gord Allott  <gord.allott@canonical.com>
+
+	applied bg colour branch
+
+2011-07-28  Jay Taoko  <jay.taoko@canonical.com>
+
+	Changed to signal OnKeyEvent declaration
+
+2011-07-25  Jay Taoko  <jay.taoko@canonical.com>
+
+	Changed to signal OnKeyEvent declaration
+
+2011-07-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Scrolling in the indicators: sync with latest Nux changes
+	
+	A nux area needs SetAcceptMouseWheelEvent(true) to get the
+	mouse wheel events.
+	
+	Plus, the nux delta value now is less than 0 when down, and greater
+	when it's up. Updating the panel service.
+
+2011-07-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	panel-service: nux scroll delta has been inverted.
+	
+	Syncing with the new value when sending signal.
+
+2011-07-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorObjectEntry: accept mouse wheel events.
+	
+	A Nux Area now needs to explicitly accept the mouse wheel events
+	otherwise they will be ignored.
+
+2011-07-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Added support to "secondary-activate" event on middle-click, which is
+	needed to fix LP: #609860 and LP: #812933
+
+2011-07-21  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging branches (upstream and local)
+
+2011-07-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	panel-service: Support for the "secondary-activate" indicator signal
+	
+	When the panel-service get the SecondaryActivateEntry dbus
+	method call, it redirects it to libindicator signal using the
+	"secondary-activate" glib signal defined in libindicator
+
+2011-07-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	unityshell: Send SecondaryActivate signal on indicator middle click
+	
+	When an indicator item is middle-clicked the SecondaryActivate
+	method is called. The real click position is exported as requested
+	by the StatusNotifierItem specifications, and the event is
+	emitted only if the user middle-click and release over an indicator.
+	(so the mouse click can be canceled releasing the mouse click
+	outside the indicator entry space).
+
+2011-07-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityCore: support for SecondaryActivate on indicators
+	
+	Secondary activation can be done by middle click and is needed
+	to implement the StatusNotifierItem specification.
+
+2011-07-21  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Indicator: Don't use anymore the x,y position on secondary-activation
+	
+	All the tree is updated to use the new signal.
+
+2011-07-21  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with Upstream
+
+2011-07-21  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with Upstream
+
+2011-07-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Support for seconday activate
+
+2011-07-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Get back fading
+
+2011-07-27  Tim Penhey  <tim.penhey@canonical.com>
+
+	Update now that nux::GdkGraphics takes ownership of the pixbuf.
+
+2011-07-26  Tim Penhey  <tim.penhey@canonical.com>
+
+	Updates now that nux::GdkGraphics takes ownership of the pixbuf.
+
+2011-07-26  Gord Allott  <gord.allott@canonical.com>
+
+	fix for lp:814619 - checks for a NULL pointer before assigning it to a string
+
+2011-07-26  Gord Allott  <gord.allott@canonical.com>
+
+	Check for a null pointer before assigning it to a std::string, hopefully fixes lp:814619
+
+2011-07-26  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Launcher device management improvments
+
+2011-07-26  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk.
+
+2011-07-07  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Use g_drive_is_media_removable instead of g_volume_should_automount!
+
+2011-07-05  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Use launcher instead of launcher.
+
+2011-07-05  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Resolve conflicts.
+
+2011-06-25  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix crashes and identation issues. 
+
+2011-06-24  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Use keep_in_launcher_ instead of checked_. Change a little its behavior to make it more readable.
+
+2011-06-24  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Porting to Oneiric trunk.
+
+2011-06-23  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Remove other uneeded 'RAWPTRs'.
+
+2011-06-23  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Don't use glib::Object::RawPtr() when it isn't needed.
+
+2011-06-23  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Removes extra brackets and inline.
+
+2011-06-23  Andrea Azzarone  <azzaronea@gmail.com>
+
+	We don't use DEFAULT_ICON...
+
+2011-06-23  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Keeps the pointer with the type not the variable name.
+	Should be 
+	const char* DEFAULT_ICON = "drive-removable-media"; 
+	and not
+	const char* DEFAULT_ICON = "drive-removable-media";
+
+2011-06-23  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Uses spaces instad tabs.
+
+2011-06-22  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Try to organize better the includes.
+
+2011-06-22  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Move all signal handlers from DeviceLauncherIcon to DeviceLauncherSection.
+
+2011-06-22  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Remove uneeded spaces.
+
+2011-06-20  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Stuff
+
+2011-06-20  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Porting of DeviceLauncherIcon.{cpp,h} DeviceLauncherSection.{cpp,h}
+	and DeviceSettings.{cpp,h} to GLibWrapper and new coding style.
+	Remove some memory leaks and weird gobject warning.
+
+2011-06-15  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Initial commit:
+	* ccsm option to show/hide external devices on launcher
+	* "Keep in launcher" quicklist item also for external devices launcher icon.
+	
+	TODO: use GlibWrapper!
+
+2011-06-10  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Adding the quicklist item "Keep in Launcher" also for the device icons.
+
+2011-03-23  Andrea Azzarone  <aazzarone@hotmail.it>
+
+	I have added the quicklist item "Keep in Launcher" also for the device icons!
+	
+	In addition i have added a ccsm option "Show Devices" by the which we can choose to display all devices, only mounted devices and no one.
+	
+	The "keep in launcher" works only if the option "Show Devices" is set to "Only Mountes" and if the device is not an automounted one!
+
+2011-03-19  Andrea Azzarone  <aazzarone@hotmail.it>
+
+	I have added the quicklist item "Keep in Launcher" also for the device icons!
+	
+	In addition i have added a ccsm option "Show Devices" by the which we can choose to display all devices, only mounted devices and no one.
+	
+	The "keep in launcher" works only if the option "Show Devices" is set to "Only Mountes" and if the device is not an automounted one!
+
+2011-07-25  Tim Penhey  <tim.penhey@canonical.com>
+
+	Fix the leaking of some CairoStaticText objects.
+
+2011-07-22  Tim Penhey  <tim.penhey@canonical.com>
+
+	The class level member variable is not needed.
+
+2011-07-22  Tim Penhey  <tim.penhey@canonical.com>
+
+	Remove a SinkReference on the StaticCairoText.  This call adds an extra ref count to the static text that is never removed.
+
+2011-07-22  Tim Penhey  <tim.penhey@canonical.com>
+
+	Add the coding guidelines into the tree.
+
+2011-07-20  Tim Penhey  <tim.penhey@canonical.com>
+
+	No longer need to mess with .bzrignore.
+
+2011-07-20  Tim Penhey  <tim.penhey@canonical.com>
+
+	Make the html file be built out of the tree, copy the style sheet in, and add a nice tool to open it in a browser.
+
+2011-07-19  Tim Penhey  <tim.penhey@canonical.com>
+
+	Update the style guide to refer to unity, canonical and us.
+
+2011-07-19  Tim Penhey  <tim.penhey@canonical.com>
+
+	Ignore the generated file.
+
+2011-07-19  Tim Penhey  <tim.penhey@canonical.com>
+
+	Add the style guide into the tree.
+
+2011-07-21  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Update AUTHORS
+
+2011-07-21  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Release\ 4.4.0
+
 2011-07-21  Neil Jagdish Patel  <neil.patel@canonical.com>
 
 	Fix make release deps

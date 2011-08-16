@@ -84,8 +84,6 @@ LauncherHideMachine::SetShouldHide(bool value, bool skip_delay)
 /* == Quick Quirk Reference : please keep up to date ==
     LAUNCHER_HIDDEN        = 1 << 0, 1
     MOUSE_OVER_LAUNCHER    = 1 << 1, 2
-    MOUSE_OVER_BFB         = 1 << 2, 4
-    MOUSE_OVER_TRIGGER     = 1 << 3, 8
     QUICKLIST_OPEN         = 1 << 4, 16  #VISIBLE_REQUIRED
     EXTERNAL_DND_ACTIVE    = 1 << 5, 32  #VISIBLE_REQUIRED
     INTERNAL_DND_ACTIVE    = 1 << 6, 64  #VISIBLE_REQUIRED
@@ -101,13 +99,14 @@ LauncherHideMachine::SetShouldHide(bool value, bool skip_delay)
     SCALE_ACTIVE           = 1 << 16, 64k  #VISIBLE_REQUIRED
     EXPO_ACTIVE            = 1 << 17, 128k #VISIBLE_REQUIRED
     MT_DRAG_OUT            = 1 << 18, 256k #VISIBLE_REQUIRED
-    MOUSE_OVER_ACTIVE_EDGE   = 1 << 19, 512k
+    MOUSE_OVER_ACTIVE_EDGE = 1 << 19, 512k
+    LAUNCHER_PULSE         = 1 << 20, 1M   #VISIBLE_REQUIRED
 */
 
 #define VISIBLE_REQUIRED (QUICKLIST_OPEN | EXTERNAL_DND_ACTIVE | \
 INTERNAL_DND_ACTIVE | TRIGGER_BUTTON_SHOW | VERTICAL_SLIDE_ACTIVE |\
 KEY_NAV_ACTIVE | PLACES_VISIBLE | SCALE_ACTIVE | EXPO_ACTIVE |\
-MT_DRAG_OUT)
+MT_DRAG_OUT | LAUNCHER_PULSE)
 
 void
 LauncherHideMachine::EnsureHideState(bool skip_delay)
@@ -139,7 +138,7 @@ LauncherHideMachine::EnsureHideState(bool skip_delay)
       hide_for_window = GetQuirk(ACTIVE_WINDOW_UNDER);
 
     // if we activated AND we would hide because of a window, go ahead and do it
-    if (GetQuirk(LAST_ACTION_ACTIVATE) && hide_for_window)
+    if (!_should_hide && GetQuirk(LAST_ACTION_ACTIVATE) && hide_for_window)
     {
       should_hide = true;
       break;
@@ -149,7 +148,7 @@ LauncherHideMachine::EnsureHideState(bool skip_delay)
     HideQuirk _should_show_quirk;
     if (GetQuirk(LAUNCHER_HIDDEN))
     {
-      _should_show_quirk = (HideQuirk)(VISIBLE_REQUIRED | MOUSE_OVER_TRIGGER);
+      _should_show_quirk = (HideQuirk)(VISIBLE_REQUIRED);
 
       if (_show_on_edge)
         _should_show_quirk = (HideQuirk)(_should_show_quirk | MOUSE_OVER_ACTIVE_EDGE);
@@ -157,7 +156,7 @@ LauncherHideMachine::EnsureHideState(bool skip_delay)
     }
     else
     {
-      _should_show_quirk = (HideQuirk)(VISIBLE_REQUIRED | MOUSE_OVER_BFB);
+      _should_show_quirk = (HideQuirk)(VISIBLE_REQUIRED);
       // mouse position over launcher is only taken into account if we move it after the revealing state
       if (GetQuirk(MOUSE_MOVE_POST_REVEAL))
         _should_show_quirk = (HideQuirk)(_should_show_quirk | MOUSE_OVER_LAUNCHER);
@@ -215,7 +214,7 @@ LauncherHideMachine::SetQuirk(LauncherHideMachine::HideQuirk quirk, bool active)
   bool skip = quirk & SKIP_DELAY_QUIRK && !GetQuirk(LAST_ACTION_ACTIVATE);
 
   // but skip on last action if we were out of the launcher/bfb
-  if (GetQuirk(LAST_ACTION_ACTIVATE) && !active && (quirk & (MOUSE_OVER_LAUNCHER | MOUSE_OVER_BFB)))
+  if (GetQuirk(LAST_ACTION_ACTIVATE) && !active && (quirk & (MOUSE_OVER_LAUNCHER)))
     skip = true;
 
   EnsureHideState(skip);

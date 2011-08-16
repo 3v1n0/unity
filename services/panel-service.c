@@ -62,9 +62,6 @@ struct _PanelServicePrivate
   gint     last_right;
   gint     last_bottom;
   guint32  last_menu_button;
-
-  gint     last_menu_x;
-  gint     last_menu_y;
 };
 
 /* Globals */
@@ -74,7 +71,6 @@ enum
 {
   ENTRY_ACTIVATED = 0,
   RE_SYNC,
-  ACTIVE_MENU_POINTER_MOTION,
   ENTRY_ACTIVATE_REQUEST,
   ENTRY_SHOW_NOW_CHANGED,
   GEOMETRIES_CHANGED,
@@ -173,15 +169,6 @@ panel_service_class_init (PanelServiceClass *klass)
                   g_cclosure_marshal_VOID__STRING,
                   G_TYPE_NONE, 1, G_TYPE_STRING);
 
- _service_signals[ACTIVE_MENU_POINTER_MOTION] =
-    g_signal_new ("active-menu-pointer-motion",
-                  G_OBJECT_CLASS_TYPE (obj_class),
-                  G_SIGNAL_RUN_LAST,
-                  0,
-                  NULL, NULL,
-                  g_cclosure_marshal_VOID__VOID,
-                  G_TYPE_NONE, 0);
-
  _service_signals[ENTRY_ACTIVATE_REQUEST] =
     g_signal_new ("entry-activate-request",
                   G_OBJECT_CLASS_TYPE (obj_class),
@@ -236,7 +223,7 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
     {
       XIDeviceEvent *event = cookie->data;
             
-      if (event->evtype == XI_ButtonRelease &&
+      if (event && event->evtype == XI_ButtonRelease &&
           priv->last_menu_button != 0) //FocusChange
         {
           if (event->root_x < priv->last_left ||
@@ -248,16 +235,6 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
           }
 
           priv->last_menu_button = 0;
-        }
-      else if (event->evtype == XI_Motion)
-        {
-          priv->last_menu_x = event->root_x;
-          priv->last_menu_y = event->root_y;
-
-          if (priv->last_menu_y <= priv->last_y)
-            {
-              g_signal_emit (self, _service_signals[ACTIVE_MENU_POINTER_MOTION], 0);
-            }
         }
     }
 
@@ -1159,6 +1136,19 @@ panel_service_show_entry (PanelService *self,
 }
 
 void
+panel_service_secondary_activate_entry (PanelService *self,
+                                        const gchar  *entry_id,
+                                        guint32       timestamp)
+{
+  PanelServicePrivate  *priv = self->priv;
+  IndicatorObjectEntry *entry = g_hash_table_lookup (priv->id2entry_hash, entry_id);
+  IndicatorObject *object = g_hash_table_lookup (priv->entry2indicator_hash, entry);
+
+  g_signal_emit_by_name(object, INDICATOR_OBJECT_SIGNAL_SECONDARY_ACTIVATE, entry,
+                        timestamp);
+}
+
+void
 panel_service_scroll_entry (PanelService   *self,
                             const gchar    *entry_id,
                             gint32         delta)
@@ -1166,17 +1156,9 @@ panel_service_scroll_entry (PanelService   *self,
   PanelServicePrivate  *priv = self->priv;
   IndicatorObjectEntry *entry = g_hash_table_lookup (priv->id2entry_hash, entry_id);
   IndicatorObject *object = g_hash_table_lookup (priv->entry2indicator_hash, entry);
-  GdkScrollDirection direction = delta > 0 ? GDK_SCROLL_DOWN : GDK_SCROLL_UP;
+  GdkScrollDirection direction = delta < 0 ? GDK_SCROLL_DOWN : GDK_SCROLL_UP;
 
   g_signal_emit_by_name(object, INDICATOR_OBJECT_SIGNAL_ENTRY_SCROLLED, entry,
                         abs(delta/120), direction);
 }
 
-void
-panel_service_get_last_xy   (PanelService  *self,
-                             gint          *x,
-                             gint          *y)
-{
-  *x = self->priv->last_menu_x;
-  *y = self->priv->last_menu_y;
-}

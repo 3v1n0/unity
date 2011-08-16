@@ -17,6 +17,7 @@
  * Authored by: Jason Smith <jason.smith@canonical.com>
  */
 
+#include <NuxCore/Logger.h>
 #include "Nux/Nux.h"
 #include "Nux/BaseWindow.h"
 
@@ -24,9 +25,13 @@
 #include "Launcher.h"
 #include "PluginAdapter.h"
 
+namespace
+{
+  nux::logging::Logger logger("unity.dash.CategoryViewGrid");
+}
+
 SimpleLauncherIcon::SimpleLauncherIcon(Launcher* IconManager)
   : LauncherIcon(IconManager)
-  , icon_(0)
   , theme_changed_id_(0)
 {
   LauncherIcon::mouse_down.connect(sigc::mem_fun(this, &SimpleLauncherIcon::OnMouseDown));
@@ -41,8 +46,11 @@ SimpleLauncherIcon::SimpleLauncherIcon(Launcher* IconManager)
 
 SimpleLauncherIcon::~SimpleLauncherIcon()
 {
-  if (icon_)
-    icon_->UnReference();
+  for (auto element : texture_map)
+    if (element.second)
+      element.second->UnReference();
+
+  texture_map.clear ();
 
   if (theme_changed_id_)
     g_signal_handler_disconnect(gtk_icon_theme_get_default(), theme_changed_id_);
@@ -75,38 +83,42 @@ void SimpleLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 
 nux::BaseTexture* SimpleLauncherIcon::GetTextureForSize(int size)
 {
-  if (icon_ && size == last_size_)
-    return icon_;
-
-  last_size_ = size;
-
-  if (icon_)
-    icon_->UnReference();
-  icon_ = 0;
+  if (texture_map[size] != 0)
+    return texture_map[size];
 
   if (icon_name_.empty())
     return 0;
 
   if (icon_name_[0] == '/')
-    icon_ = TextureFromPath(icon_name_.c_str(), size);
+    texture_map[size] = TextureFromPath(icon_name_.c_str(), size);
   else
-    icon_ = TextureFromGtkTheme(icon_name_.c_str(), size);
-  return icon_;
+    texture_map[size] = TextureFromGtkTheme(icon_name_.c_str(), size);
+  return texture_map[size];
 }
 
 void SimpleLauncherIcon::SetIconName(const char* name)
 {
-  icon_name_ = name;
+  if (name == NULL)
+  {
+    LOG_WARNING(logger) << "attempted to set NULL as IconName";
+    icon_name_.clear();
+  }
+  else
+  {
+    icon_name_ = name;
+  }
+
   ReloadIcon();
 }
 
 void SimpleLauncherIcon::ReloadIcon()
 {
-  if (icon_)
+  for (auto element : texture_map)
   {
-    icon_->UnReference();
-    icon_ = 0;
+    element.second->UnReference();
   }
+
+  texture_map.clear ();
   needs_redraw.emit(this);
 }
 

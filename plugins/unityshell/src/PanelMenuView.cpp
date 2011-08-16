@@ -107,6 +107,7 @@ PanelMenuView::PanelMenuView(int padding)
   _window_buttons->minimize_clicked.connect(sigc::mem_fun(this, &PanelMenuView::OnMinimizeClicked));
   _window_buttons->restore_clicked.connect(sigc::mem_fun(this, &PanelMenuView::OnRestoreClicked));
   _window_buttons->redraw_signal.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowButtonsRedraw));
+  _window_buttons->mouse_moved.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseMove));
 
   _panel_titlebar_grab_area = new PanelTitlebarGrabArea();
   _panel_titlebar_grab_area->SetParentObject(this);
@@ -131,6 +132,7 @@ PanelMenuView::PanelMenuView(int padding)
 
   OnMouseEnter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
   OnMouseLeave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
+  OnMouseMove.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseMove));
 
   _panel_titlebar_grab_area->OnMouseEnter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
   _panel_titlebar_grab_area->OnMouseLeave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
@@ -342,11 +344,6 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   {
 
   }
-  else if (_is_maximized)
-  {
-    if (!_is_inside && !_last_active_view && !_show_now_activated)
-      gPainter.PushDrawLayer(GfxContext, GetGeometry(), _title_layer);
-  }
   else
   {
     bool have_valid_entries = false;
@@ -534,6 +531,11 @@ PanelMenuView::GetActiveViewName()
     }
   }
 
+  char *escaped = g_markup_escape_text(label, -1);
+  g_free(label);
+  label = g_strdup_printf("<b>%s</b>", escaped);
+  g_free(escaped);
+
   return label;
 }
 
@@ -583,7 +585,7 @@ PanelMenuView::Refresh()
 
     layout = pango_cairo_create_layout(cr);
     pango_layout_set_font_description(layout, desc);
-    pango_layout_set_text(layout, label, -1);
+    pango_layout_set_markup(layout, label, -1);
 
     cxt = pango_layout_get_context(layout);
     pango_cairo_context_set_font_options(cxt, gdk_screen_get_font_options(screen));
@@ -1136,6 +1138,23 @@ PanelMenuView::OnPanelViewMouseEnter(int x, int y, unsigned long mouse_button_st
       _is_inside = true;
     FullRedraw();
   }
+  /* FIXME: Disabled pending design
+  GVariantBuilder builder;
+
+  g_variant_builder_init(&builder, G_VARIANT_TYPE("(iiiia{sv})"));
+  g_variant_builder_add(&builder, "i", x);
+  g_variant_builder_add(&builder, "i", y);
+  g_variant_builder_add(&builder, "i", 66);
+  g_variant_builder_add(&builder, "i", 24);
+
+  g_variant_builder_open(&builder, G_VARIANT_TYPE("a{sv}"));
+  g_variant_builder_add(&builder, "{sv}", "hovered", g_variant_new_boolean(true));
+  g_variant_builder_close(&builder);
+
+
+  UBusServer* ubus = ubus_server_get_default();
+  ubus_server_send_message(ubus, UBUS_HOME_BUTTON_BFB_UPDATE, g_variant_builder_end(&builder));
+  */
 }
 
 void
@@ -1146,6 +1165,47 @@ PanelMenuView::OnPanelViewMouseLeave(int x, int y, unsigned long mouse_button_st
     _is_inside = false;
     FullRedraw();
   }
+  /* FIXME: Disabled pending design
+  if (IsMouseInside())
+    return;
+
+  GVariantBuilder builder;
+  g_variant_builder_init(&builder, G_VARIANT_TYPE("(iiiia{sv})"));
+  g_variant_builder_add(&builder, "i", x);
+  g_variant_builder_add(&builder, "i", y);
+  g_variant_builder_add(&builder, "i", 66);
+  g_variant_builder_add(&builder, "i", 24);
+
+  g_variant_builder_open(&builder, G_VARIANT_TYPE("a{sv}"));
+  g_variant_builder_add(&builder, "{sv}", "hovered", g_variant_new_boolean(false));
+  g_variant_builder_close(&builder);
+
+
+  UBusServer* ubus = ubus_server_get_default();
+  ubus_server_send_message(ubus, UBUS_HOME_BUTTON_BFB_UPDATE, g_variant_builder_end(&builder));
+  */
 }
+
+void PanelMenuView::OnPanelViewMouseMove(int x, int y, int dx, int dy, unsigned long mouse_button_state, unsigned long special_keys_state)
+{
+  /* FIXME: Disabled pending design
+  GVariantBuilder builder;
+
+  g_variant_builder_init(&builder, G_VARIANT_TYPE("(iiiia{sv})"));
+  g_variant_builder_add(&builder, "i", x);
+  g_variant_builder_add(&builder, "i", y);
+  g_variant_builder_add(&builder, "i", 66);
+  g_variant_builder_add(&builder, "i", 24);
+
+  g_variant_builder_open(&builder, G_VARIANT_TYPE("a{sv}"));
+  g_variant_builder_add(&builder, "{sv}", "hovered", g_variant_new_boolean(true));
+  g_variant_builder_close(&builder);
+
+
+  UBusServer* ubus = ubus_server_get_default();
+  ubus_server_send_message(ubus, UBUS_HOME_BUTTON_BFB_UPDATE, g_variant_builder_end(&builder));
+  */
+}
+
 
 } // namespace unity

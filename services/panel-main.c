@@ -67,6 +67,11 @@ static const gchar introspection_xml[] =
   "      <arg type='i' name='button' direction='in'/>"
   "    </method>"
   ""
+  "    <method name='SecondaryActivateEntry'>"
+  "      <arg type='s' name='entry_id' direction='in'/>"
+  "      <arg type='u' name='timestamp' direction='in'/>"
+  "    </method>"
+  ""
   "    <method name='ScrollEntry'>"
   "      <arg type='s' name='entry_id' direction='in'/>"
   "      <arg type='i' name='delta' direction='in'/>"
@@ -78,11 +83,6 @@ static const gchar introspection_xml[] =
   ""
   "    <signal name='ReSync'>"
   "     <arg type='s' name='indicator_id' />"
-  "    </signal>"
-  ""
-  "    <signal name='ActiveMenuPointerMotion'>"
-  "     <arg type='i' name='x' />"
-  "     <arg type='i' name='y' />"
   "    </signal>"
   ""
   "    <signal name='EntryActivateRequest'>"
@@ -186,6 +186,17 @@ handle_method_call (GDBusConnection       *connection,
       g_dbus_method_invocation_return_value (invocation, NULL);
       g_free (entry_id);
     }
+  else if (g_strcmp0 (method_name, "SecondaryActivateEntry") == 0)
+    {
+      gchar  *entry_id;
+      guint32 timestamp;
+      g_variant_get (parameters, "(su)", &entry_id, &timestamp, NULL);
+
+      panel_service_secondary_activate_entry (service, entry_id, timestamp);
+
+      g_dbus_method_invocation_return_value (invocation, NULL);
+      g_free (entry_id);
+    }
   else if (g_strcmp0 (method_name, "ScrollEntry") == 0)
     {
       gchar *entry_id;
@@ -233,30 +244,6 @@ on_service_entry_activated (PanelService    *service,
   if (error)
     {
       g_warning ("Unable to emit EntryActivated signal: %s", error->message);
-      g_error_free (error);
-    }
-}
-
-static void
-on_service_active_menu_pointer_motion (PanelService    *service,
-                                       GDBusConnection *connection)
-{
-  GError *error = NULL;
-  gint    x=0, y=0;
-
-  panel_service_get_last_xy (service, &x, &y);
-
-  g_dbus_connection_emit_signal (connection,
-                                 S_NAME,
-                                 S_PATH,
-                                 S_IFACE,
-                                 "ActiveMenuPointerMotion",
-                                 g_variant_new ("(ii)", x, y),
-                                 &error);
-
-  if (error)
-    {
-      g_warning ("Unable to emit ActiveMenuPointerMotionsignal: %s", error->message);
       g_error_free (error);
     }
 }
@@ -323,8 +310,6 @@ on_bus_acquired (GDBusConnection *connection,
                     G_CALLBACK (on_service_resync), connection);
   g_signal_connect (service, "entry-activated",
                     G_CALLBACK (on_service_entry_activated), connection);
-  g_signal_connect (service, "active-menu-pointer-motion",
-                    G_CALLBACK (on_service_active_menu_pointer_motion), connection);
   g_signal_connect (service, "entry-activate-request",
                     G_CALLBACK (on_service_entry_activate_request), connection);
   g_signal_connect (service, "entry-show-now-changed",
@@ -354,7 +339,6 @@ on_name_lost (GDBusConnection *connection,
   {
     g_signal_handlers_disconnect_by_func (service, on_service_resync, connection);
     g_signal_handlers_disconnect_by_func (service, on_service_entry_activated, connection);
-    g_signal_handlers_disconnect_by_func (service, on_service_active_menu_pointer_motion, connection);
     g_signal_handlers_disconnect_by_func (service, on_service_entry_activate_request, connection);
     g_signal_handlers_disconnect_by_func (service, on_service_entry_show_now_changed, connection);
   }

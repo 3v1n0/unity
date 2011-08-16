@@ -1,69 +1,143 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
-* Copyright (C) 2010 Canonical Ltd
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU General Public License version 3 as
-* published by the Free Software Foundation.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU General Public License
-* along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*
-* Authored by: Andrea Azzarone <aazzarone@hotmail.it>
-*/
+ * Copyright (C) 2010 Canonical Ltd
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Authored by: Andrea Azzarone <aazzarone@hotmail.it>
+ */
 
 #include "DevicesSettings.h"
 
-static DevicesSettings* _devices_settings = NULL;
+#include <algorithm>
+
+namespace unity {
+
+namespace {
+
+const char* SETTINGS_NAME = "com.canonical.Unity.Devices";
+
+void on_settings_updated(GSettings* settings,
+                         const gchar* key,
+                         DevicesSettings* self);
+
+} // anonymous namespace
+
+DevicesSettings& DevicesSettings::GetDefault()
+{
+  static DevicesSettings instance;
+  return instance;
+}
 
 DevicesSettings::DevicesSettings()
-  : _settings(NULL),
-    _raw_devices_option(1),
-    _devices_option(ONLY_MOUNTED)
+  : settings_(g_settings_new(SETTINGS_NAME))
+  , ignore_signals_(false)
+  , devices_option_(ONLY_MOUNTED)
 {
-  _settings = g_settings_new("com.canonical.Unity.Devices");
-  g_signal_connect(_settings, "changed",
-                   (GCallback)(DevicesSettings::Changed), this);
+
+  g_signal_connect(settings_, "changed", G_CALLBACK(on_settings_updated), this);
+
   Refresh();
 }
 
-DevicesSettings::~DevicesSettings()
+void DevicesSettings::Refresh()
 {
-  g_object_unref(_settings);
+  gchar** favs = g_settings_get_strv(settings_, "favorites");
+
+  favorites_.clear();
+
+  for (int i = 0; favs[i] != NULL; i++)
+    favorites_.push_back(favs[i]);
+
+  g_strfreev(favs);
 }
 
-void
-DevicesSettings::Refresh()
+void DevicesSettings::AddFavorite(std::string const& uuid)
 {
-  _raw_devices_option = g_settings_get_enum(_settings, "devices-option");
+  if (uuid.empty())
+    return;
+  
+  favorites_.push_back(uuid);
 
-  _devices_option = (DevicesOption)_raw_devices_option;
-
-  changed.emit(this);
+  SaveFavorites(favorites_);
+  Refresh();
 }
 
-void
-DevicesSettings::Changed(GSettings* settings, char* key, DevicesSettings* self)
+void DevicesSettings::RemoveFavorite(std::string const& uuid)
 {
-  self->Refresh();
+  if (uuid.empty())
+    return;
+
+  DeviceList::iterator pos = std::find(favorites_.begin(), favorites_.end(), uuid);
+  if (pos == favorites_.end())
+    return;
+
+  favorites_.erase(pos);
+  SaveFavorites(favorites_);
+  Refresh();
 }
 
-DevicesSettings*
-DevicesSettings::GetDefault()
+void DevicesSettings::SaveFavorites(DeviceList const& favorites)
 {
-  if (G_UNLIKELY(!_devices_settings))
-    _devices_settings = new DevicesSettings();
+  const int size = favorites.size();
+  const char* favs[size + 1];
+  favs[size] = NULL;
 
-  return _devices_settings;
+  int index = 0;
+  for (DeviceList::const_iterator i = favorites.begin(), end = favorites.end();
+       i != end; ++i, ++index)
+  {
+    favs[index] = i->c_str();
+  }
+
+  ignore_signals_ = true;
+  if (!g_settings_set_strv(settings_, "favorites", favs))
+    g_warning("Saving favorites failed.");
+  ignore_signals_ = false;
 }
 
-DevicesSettings::DevicesOption
-DevicesSettings::GetDevicesOption()
+
+void DevicesSettings::Changed(std::string const& key)
 {
-  return _devices_option;
+  if (ignore_signals_)
+    return;
+  
+  Refresh();
+  
+  changed.emit();
 }
+
+void DevicesSettings::SetDevicesOption(DevicesOption devices_option)
+{
+  if (devices_option == devices_option_)
+    return;
+
+  devices_option_ = devices_option;
+
+  changed.emit();
+}
+
+namespace {
+
+void on_settings_updated(GSettings* settings,
+                         const gchar* key,
+                         DevicesSettings* self)
+{
+  if (settings and key) {
+    self->Changed(key);
+  }
+}
+
+} // anonymous namespace
+
+} // namespace unity

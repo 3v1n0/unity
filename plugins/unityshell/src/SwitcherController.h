@@ -54,6 +54,9 @@ public:
   SwitcherController();
   virtual ~SwitcherController();
 
+  nux::Property<int> timeout_length;
+  nux::Property<BlurType> blur;
+
   void Show(ShowMode show, SortMode sort, bool reverse, std::vector<AbstractLauncherIcon*> results);
   void Hide();
 
@@ -68,8 +71,14 @@ public:
 
   void SetWorkspace(nux::Geometry geo);
 
+  SwitcherView * GetView ();
+
+  LayoutWindowList ExternalRenderTargets ();
+
 private:
   void ConstructView();
+
+  static void OnBackgroundUpdate (GVariant *data, SwitcherController *self);
 
   SwitcherModel::Ptr model_;
   SwitcherView* view_;
@@ -80,6 +89,7 @@ private:
 
   bool visible_;
   guint show_timer_;
+  nux::Color bg_color_;
 
   static gboolean OnShowTimer(gpointer data);
 

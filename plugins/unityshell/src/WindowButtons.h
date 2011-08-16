@@ -37,6 +37,7 @@ public:
   sigc::signal<void> minimize_clicked;
   sigc::signal<void> restore_clicked;
   sigc::signal<void> redraw_signal;
+  sigc::signal<void, int, int, int, int, unsigned long, unsigned long> mouse_moved;
 
 protected:
   const gchar* GetName();
@@ -44,18 +45,10 @@ protected:
   void          AddProperties(GVariantBuilder* builder);
 
 
-  // For testing the buttons
-  void RecvMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags);
-  void RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long key_flags);
-  void RecvMouseEnter(int x, int y, unsigned long button_flags, unsigned long key_flags);
-  void RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned long key_flags);
-  void RecvMouseClick(int x, int y, unsigned long button_flags, unsigned long key_flags);
-  void RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
-
 private:
-  void OnCloseClicked();
-  void OnMinimizeClicked();
-  void OnRestoreClicked();
+  void OnCloseClicked(nux::View *view);
+  void OnMinimizeClicked(nux::View *view);
+  void OnRestoreClicked(nux::View *view);
 
 private:
   nux::HLayout* _layout;

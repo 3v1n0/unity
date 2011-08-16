@@ -262,6 +262,22 @@ MultiActionList::TerminateAll(CompOption::Vector& extraArgs)
   }
 }
 
+unsigned int 
+PluginAdapter::GetWindowActiveNumber (guint32 xid)
+{
+  Window win = (Window)xid;
+  CompWindow* window;
+
+  window = m_Screen->findWindow(win);
+
+  if (window)
+  {
+    return window->activeNum ();
+  }
+
+  return 0;
+}
+
 void
 PluginAdapter::SetExpoAction(MultiActionList& expo)
 {
@@ -612,6 +628,9 @@ void PluginAdapter::MaximizeIfBigEnough(CompWindow* window)
   {
     win_wmclass = classHint.res_class;
     XFree(classHint.res_class);
+    
+    if (classHint.res_name)
+      XFree(classHint.res_name);
   }
   else
     return;

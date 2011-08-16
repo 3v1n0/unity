@@ -66,6 +66,8 @@ PanelIndicatorObjectEntryView::PanelIndicatorObjectEntryView(
 
   InputArea::OnMouseDown.connect(sigc::mem_fun(this, &PanelIndicatorObjectEntryView::OnMouseDown));
   InputArea::OnMouseUp.connect(sigc::mem_fun(this, &PanelIndicatorObjectEntryView::OnMouseUp));
+
+  InputArea::SetAcceptMouseWheelEvent(true);
   InputArea::OnMouseWheel.connect(sigc::mem_fun(this, &PanelIndicatorObjectEntryView::OnMouseWheel));
 
   on_panelstyle_changed_connection_ = PanelStyle::GetDefault()->changed.connect(sigc::mem_fun(this, &PanelIndicatorObjectEntryView::Refresh));
@@ -91,22 +93,41 @@ void PanelIndicatorObjectEntryView::OnMouseDown(int x, int y,
   if (proxy_->active())
     return;
 
-  if ((proxy_->label_visible() && proxy_->label_sensitive()) ||
-      (proxy_->image_visible() && proxy_->image_sensitive()))
+  if (((proxy_->label_visible() && proxy_->label_sensitive()) ||
+       (proxy_->image_visible() && proxy_->image_sensitive())) &&
+      nux::GetEventButton(button_flags) != 2)
   {
-    proxy_->ShowMenu(GetAbsoluteGeometry().x + 1, //cairo translation
-                     GetAbsoluteGeometry().y + PANEL_HEIGHT,
+    proxy_->ShowMenu(GetAbsoluteX() + 1, //cairo translation
+                     GetAbsoluteY() + PANEL_HEIGHT,
                      time(NULL),
                      nux::GetEventButton(button_flags));
+    proxy_->set_active(true);
+    //
+    // ^ Set active even before the menu appears. This allows the below
+    //   Refresh call to know it should draw_menu_bg() immediately
+    //   rather than waiting for slow inter-process communication with
+    //   unity-panel-service, which causes visible lag in many cases.
+    //
   }
-  else
-  {
-    Refresh();
-  }
+  Refresh();
 }
 
 void PanelIndicatorObjectEntryView::OnMouseUp(int x, int y, long button_flags, long key_flags)
 {
+  if (proxy_->active())
+    return;
+
+  nux::Geometry geo = GetAbsoluteGeometry();
+  int px = geo.x + x;
+  int py = geo.y + y;
+
+  if (((proxy_->label_visible() && proxy_->label_sensitive()) ||
+       (proxy_->image_visible() && proxy_->image_sensitive())) &&
+      geo.IsPointInside(px, py) && nux::GetEventButton(button_flags) == 2)
+  {
+    proxy_->SecondaryActivate(time(NULL));
+  }
+
   Refresh();
 }
 
@@ -237,8 +258,31 @@ void PanelIndicatorObjectEntryView::Refresh()
 
   if (pixbuf && proxy_->image_visible())
   {
-    gdk_cairo_set_source_pixbuf(cr, pixbuf, x, (int)((height - gdk_pixbuf_get_height(pixbuf)) / 2));
+    PanelStyle* style = PanelStyle::GetDefault();
+    GtkStyleContext* style_context = style->GetStyleContext();
+
+    gtk_style_context_save(style_context);
+
+    GtkWidgetPath* widget_path = gtk_widget_path_new();
+    gtk_widget_path_iter_set_name(widget_path, -1 , "UnityPanelWidget");
+    gtk_widget_path_append_type(widget_path, GTK_TYPE_MENU_BAR);
+    gtk_widget_path_append_type(widget_path, GTK_TYPE_MENU_ITEM);
+
+    gtk_style_context_set_path(style_context, widget_path);
+    gtk_style_context_add_class(style_context, GTK_STYLE_CLASS_MENUBAR);
+    gtk_style_context_add_class(style_context, GTK_STYLE_CLASS_MENUITEM);
+
+    if (proxy_->active())
+      gtk_style_context_set_state(style_context, GTK_STATE_FLAG_PRELIGHT);
+
+    cairo_push_group(cr);
+    gtk_render_icon(style_context, cr, pixbuf, x, (int)((height - gdk_pixbuf_get_height(pixbuf)) / 2));
+    cairo_pop_group_to_source(cr);
     cairo_paint_with_alpha(cr, proxy_->image_sensitive() ? 1.0 : 0.5);
+
+    gtk_widget_path_free(widget_path);
+
+    gtk_style_context_restore(style_context);
 
     x += icon_width + SPACING;
   }
@@ -384,9 +428,10 @@ void draw_menu_bg(cairo_t* cr, int width, int height)
   gtk_style_context_add_class(style_context, GTK_STYLE_CLASS_MENUITEM);
   gtk_style_context_set_state(style_context, GTK_STATE_FLAG_PRELIGHT);
 
-  // FIXME(Cimi) probably some padding is needed here.
-  gtk_render_background(style_context, cr, 0, 0, width, height);
-  gtk_render_frame(style_context, cr, 0, 0, width, height);
+  // FIXME(Cimi) 1px of padding because the dropdown menu was not aligned,
+  // maybe a better fix somewhere else?
+  gtk_render_background(style_context, cr, 1, 0, width - 2, height);
+  gtk_render_frame(style_context, cr, 1, 0, width - 2, height);
 
   gtk_widget_path_free(widget_path);
 

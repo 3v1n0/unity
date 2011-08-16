@@ -27,6 +27,8 @@
 
 #include <sigc++/sigc++.h>
 
+#include <X11/Xlib.h>
+
 #include <libdbusmenu-glib/menuitem.h>
 
 class ActionArg
@@ -42,17 +44,20 @@ public:
   ActionArg()
     : source(OTHER)
     , button(0)
+    , target(0)
   {
   }
 
-  ActionArg(Source source, int button)
+  ActionArg(Source source, int button, Window target = 0)
     : source(source)
     , button(button)
+    , target(target)
   {
   }
 
   Source source;
   int button;
+  Window target;
 };
 
 class AbstractLauncherIcon
@@ -65,6 +70,7 @@ public:
   {
     TYPE_NONE,
     TYPE_BEGIN,
+    TYPE_HOME,
     TYPE_FAVORITE,
     TYPE_APPLICATION,
     TYPE_EXPO,
@@ -88,6 +94,7 @@ public:
     QUIRK_DROP_PRELIGHT,
     QUIRK_DROP_DIM,
     QUIRK_DESAT,
+    QUIRK_PULSE_ONCE,
 
     QUIRK_LAST,
   } Quirk;
@@ -119,6 +126,8 @@ public:
   virtual int SortPriority() = 0;
 
   virtual int RelatedWindows() = 0;
+
+  virtual std::vector<Window> RelatedXids () = 0;
 
   virtual bool HasWindowOnViewport() = 0;
 

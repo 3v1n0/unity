@@ -325,9 +325,6 @@ check_selected(UnityLauncherIconAccessible* self)
 
     g_signal_emit_by_name(self, "focus-event", self->priv->selected, &return_val);
     atk_focus_tracker_notify(ATK_OBJECT(self));
-
-    g_debug("[a11y][launcher-icon] selected state changed (%p:%i:%s)",
-            self, self->priv->selected, atk_object_get_name(ATK_OBJECT(self)));
   }
 }
 
@@ -425,9 +422,6 @@ unity_launcher_icon_accessible_focus_handler(AtkObject* accessible,
                                              gboolean focus_in)
 {
   g_return_if_fail(UNITY_IS_LAUNCHER_ICON_ACCESSIBLE(accessible));
-
-  g_debug("[a11y][launcher-icon] focus_handler (%p:%s:%i)",
-          accessible, atk_object_get_name(accessible), focus_in);
 
   atk_object_notify_state_change(accessible, ATK_STATE_FOCUSED, focus_in);
 }

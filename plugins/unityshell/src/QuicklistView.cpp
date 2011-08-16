@@ -51,23 +51,23 @@
 NUX_IMPLEMENT_OBJECT_TYPE(QuicklistView);
 
 QuicklistView::QuicklistView()
+  : _anchorX(0)
+  , _anchorY(0)
+  , _labelText(TEXT("QuicklistView 1234567890"))
+  , _top_size(4)
+  , _mouse_down(false)
+  , _enable_quicklist_for_testing(false)
+  , _texture_bg(nullptr)
+  , _texture_mask(nullptr)
+  , _texture_outline(nullptr)
+  , _anchor_width(10)
+  , _anchor_height(18)
+  , _corner_radius(4)
+  , _padding(13)
+  , _cairo_text_has_changed(true)
+  , _compute_blur_bkg(true)
+  , _current_item_index(0)
 {
-  _name = g_strdup("Quicklist");
-  _texture_bg = 0;
-  _texture_mask = 0;
-  _texture_outline = 0;
-  _cairo_text_has_changed = true;
-
-  _anchorX   = 0;
-  _anchorY   = 0;
-  _labelText = TEXT("QuicklistView 1234567890");
-
-  _anchor_width   = 10;
-  _anchor_height  = 18;
-  _corner_radius  = 4;
-  _padding        = 13;
-  _top_size       = 4;
-
   SetGeometry(nux::Geometry(0, 0, 1, 1));
   _hlayout         = new nux::HLayout(TEXT(""), NUX_TRACKER_LOCATION);
   _vlayout         = new nux::VLayout(TEXT(""), NUX_TRACKER_LOCATION);
@@ -104,12 +104,6 @@ QuicklistView::QuicklistView()
   OnKeyEvent.connect(sigc::mem_fun(this, &QuicklistView::RecvKeyPressed));
   OnStartKeyboardReceiver.connect(sigc::mem_fun(this, &QuicklistView::RecvStartFocus));
   OnStopKeyboardReceiver.connect(sigc::mem_fun(this, &QuicklistView::RecvEndFocus));
-
-  _mouse_down = false;
-  _enable_quicklist_for_testing = false;
-  _compute_blur_bkg = true;
-
-  _current_item_index = 0;
 
   SetAcceptKeyNavFocus(true);
 }
@@ -154,8 +148,7 @@ QuicklistView::IsMenuItemSeperator(int index)
 }
 
 void
-QuicklistView::RecvKeyPressed(nux::GraphicsEngine& GfxContext,
-                              unsigned long    eventType,
+QuicklistView::RecvKeyPressed(unsigned long    eventType,
                               unsigned long    key_sym,
                               unsigned long    key_state,
                               const char*      character,
@@ -251,9 +244,6 @@ QuicklistView::RecvKeyPressed(nux::GraphicsEngine& GfxContext,
 
 QuicklistView::~QuicklistView()
 {
-  if (_name)
-    g_free(_name);
-
   if (_texture_bg)
     _texture_bg->UnReference();
 
@@ -1356,14 +1346,14 @@ void ql_compute_full_mask(
 
 void QuicklistView::UpdateTexture()
 {
-  if (_cairo_text_has_changed == false)
+  if (!_cairo_text_has_changed)
     return;
 
   int size_above_anchor = -1; // equal to size below
 
   if (!_enable_quicklist_for_testing)
   {
-    if ((_item_list.size() != 0) || (_default_item_list.size() != 0))
+    if (!_item_list.empty() || !_default_item_list.empty())
     {
       int offscreen_size = GetBaseY() +
                            GetBaseHeight() -
@@ -1550,7 +1540,7 @@ void QuicklistView::TestMenuItems(DbusmenuMenuitem* root)
 
 const gchar* QuicklistView::GetName()
 {
-  return g_strdup(_name);
+  return "Quicklist";
 }
 
 void QuicklistView::AddProperties(GVariantBuilder* builder)
