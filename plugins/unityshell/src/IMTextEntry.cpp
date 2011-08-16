@@ -63,33 +63,34 @@ IMTextEntry::~IMTextEntry()
     g_object_unref(client_window_);
 }
 
-long IMTextEntry::ProcessEvent(nux::IEvent& ievent,
-                               long traverse_info,
-                               long pevent_info)
-{
-  if (!client_window_)
-  {
-    client_window_ = gdk_x11_window_foreign_new_for_display(gdk_display_get_default(), ievent.e_x11_window);
-    gtk_im_context_set_client_window(im_context_, client_window_);
-    gtk_im_context_set_client_window(im_context_simple_, client_window_);
-  }
-/*
-  if (TryHandleEvent(ievent, traverse_info, pevent_info))
-    return traverse_info | nux::eKeyEventSolved;
-  else
-    return TextEntry::ProcessEvent(ievent, traverse_info, pevent_info);
-    */
-  return traverse_info;
-}
-
 bool IMTextEntry::InspectKeyEvent(unsigned int eventType,
                                   unsigned int keysym,
                                   const char* character)
 {
+  if (keysym == NUX_VK_ENTER ||
+      keysym == NUX_KP_ENTER ||
+      keysym == NUX_VK_UP ||
+      keysym == NUX_VK_DOWN ||
+      keysym == NUX_VK_LEFT ||
+      keysym == NUX_VK_RIGHT ||
+      keysym == NUX_VK_LEFT_TAB ||
+      keysym == NUX_VK_TAB ||
+      keysym == NUX_VK_ESCAPE ||
+      keysym == NUX_VK_DELETE ||
+      keysym == NUX_VK_BACKSPACE)
+    {
+      return true;
+    }
+
+
   if (TryHandleEvent(eventType, keysym, character))
-    return true;
+  {
+    return false;
+  }
   else
+  {
     return TextEntry::InspectKeyEvent(eventType, keysym, character);
+  }
 }
 
 bool IMTextEntry::TryHandleEvent(unsigned int eventType,
@@ -115,11 +116,12 @@ bool IMTextEntry::TryHandleEvent(unsigned int eventType,
     ev.state |= GDK_CONTROL_MASK;
   if (event.e_key_modifiers & NUX_STATE_SHIFT)
     ev.state |= GDK_SHIFT_MASK;
-  ev.keyval = keysym;
+  ev.keyval = event.e_keysym;
   ev.length = 0;
   ev.string = NULL;
-  ev.hardware_keycode = XKeysymToKeycode(GDK_WINDOW_XDISPLAY(client_window_),
-                                         (KeySym)keysym);
+  /*ev.hardware_keycode = XKeysymToKeycode(GDK_WINDOW_XDISPLAY(client_window_),
+                                         (KeySym)keysym);*/
+  ev.hardware_keycode = event.e_x11_keycode;
   ev.group = 0;
   ev.is_modifier = 0;
 
@@ -145,7 +147,14 @@ void IMTextEntry::OnFocusChanged(nux::Area* area)
 
 void IMTextEntry::OnIMCommit(GtkIMContext* context, char* str)
 {
-  g_debug("Commit: %s", str);
+  if (str)
+  {
+    std::string new_text = GetText() + str;
+    g_debug("Commit: %s", str);
+    int cursor = cursor_;
+    SetText(new_text.c_str());
+    SetCursor(cursor + strlen(str));
+  }
 }
 
 void IMTextEntry::OnIMPreeditChanged(GtkIMContext* context)

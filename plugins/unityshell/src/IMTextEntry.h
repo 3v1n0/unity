@@ -42,7 +42,6 @@ public:
   ~IMTextEntry();
 
 private:
-  long ProcessEvent(nux::IEvent& ievent, long traverse_info, long pevent_info);
   void OnFocusChanged(nux::Area* area);
   void OnIMCommit(GtkIMContext* context, char* str);
   void OnIMPreeditChanged(GtkIMContext* context);
