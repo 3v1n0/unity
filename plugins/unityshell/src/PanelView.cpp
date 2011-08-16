@@ -186,7 +186,7 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   if (BackgroundEffectHelper::blur_type != BLUR_NONE && (_dash_is_open || _opacity != 1.0f))
   {
     nux::Geometry blur_geo(geo_absolute.x, geo_absolute.y, geo.width, geo.height);
-    auto bg_blur_texture_ = bg_effect_helper_.GetBlurRegion(blur_geo);
+    bg_blur_texture_ = bg_effect_helper_.GetBlurRegion(blur_geo);
 
     if (bg_blur_texture_.IsValid() && BackgroundEffectHelper::blur_type != BLUR_NONE && (_dash_is_open || _opacity != 1.0f))
     {

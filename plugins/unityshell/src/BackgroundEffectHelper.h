@@ -50,6 +50,8 @@ public:
   // We could add more functions here to get different types of effects based on the background texture
   nux::ObjectPtr<nux::IOpenGLBaseTexture> GetPixelatedRegion(nux::Rect rect, int pixel_size, bool update);
 
+  void DirtyCache ();
+
   static void QueueDrawOnOwners ();
 
   static nux::Property<unity::BlurType> blur_type;

@@ -61,12 +61,17 @@ void BackgroundEffectHelper::Unregister (BackgroundEffectHelper *self)
   registered_list_.remove(self);
 }
 
+void BackgroundEffectHelper::DirtyCache ()
+{
+  if (blur_texture_.IsValid ())
+    blur_texture_.Release ();
+}
 
 nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nux::Geometry geo, bool force_update)
 {
   nux::GraphicsEngine* graphics_engine = nux::GetGraphicsDisplay()->GetGraphicsEngine();
 
-  bool should_update = !updates_enabled() && !force_update;
+  bool should_update = updates_enabled() || force_update;
 
   if ((blur_type != BLUR_ACTIVE || !should_update) 
       && blur_texture_.IsValid() 
