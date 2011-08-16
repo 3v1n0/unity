@@ -106,27 +106,33 @@ bool IMTextEntry::TryHandleEvent(unsigned int eventType,
     gtk_im_context_reset(im_context_);
     gtk_im_context_reset(im_context_simple_);
   }
+
   GdkEventKey ev;
-  ev.type = eventType == nux::NUX_KEYDOWN ? GDK_KEY_PRESS : GDK_KEY_RELEASE;
-  ev.window = client_window_;
-  ev.send_event = TRUE;
-  ev.time = GDK_CURRENT_TIME;
-  ev.state = 0;
-  if (event.e_key_modifiers & NUX_STATE_CTRL)
-    ev.state |= GDK_CONTROL_MASK;
-  if (event.e_key_modifiers & NUX_STATE_SHIFT)
-    ev.state |= GDK_SHIFT_MASK;
-  ev.keyval = event.e_keysym;
-  ev.length = 0;
-  ev.string = NULL;
-  /*ev.hardware_keycode = XKeysymToKeycode(GDK_WINDOW_XDISPLAY(client_window_),
-                                         (KeySym)keysym);*/
-  ev.hardware_keycode = event.e_x11_keycode;
-  ev.group = 0;
-  ev.is_modifier = 0;
+  KeyEventToGdkEventKey(event, ev);
 
   return gtk_im_context_filter_keypress(im_context_simple_, &ev) ||
          gtk_im_context_filter_keypress(im_context_, &ev);
+}
+
+void IMTextEntry::KeyEventToGdkEventKey(Event& event, GdkEventKey& gdk_event)
+{
+  gdk_event.type = event.e_event == nux::NUX_KEYDOWN ? GDK_KEY_PRESS : GDK_KEY_RELEASE;
+  gdk_event.window = client_window_;
+  gdk_event.send_event = TRUE;
+  gdk_event.time = GDK_CURRENT_TIME;
+  
+  gdk_event.state = 0;
+  if (event.e_key_modifiers & NUX_STATE_CTRL)
+    gdk_event.state |= GDK_CONTROL_MASK;
+  if (event.e_key_modifiers & NUX_STATE_SHIFT)
+    gdk_event.state |= GDK_SHIFT_MASK;
+
+  gdk_event.keyval = event.e_keysym;
+  gdk_event.length = 0;
+  gdk_event.string = NULL;
+  gdk_event.hardware_keycode = event.e_x11_keycode;
+  gdk_event.group = 0;
+  gdk_event.is_modifier = 0;
 }
 
 void IMTextEntry::OnFocusChanged(nux::Area* area)

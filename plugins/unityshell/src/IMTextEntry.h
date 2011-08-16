@@ -42,14 +42,16 @@ public:
   ~IMTextEntry();
 
 private:
+  bool InspectKeyEvent(unsigned int eventType, unsigned int keysym, const char* character);
+  bool TryHandleEvent(unsigned int eventType, unsigned int keysym, const char* character);
+  void KeyEventToGdkEventKey(Event& event, GdkEventKey& gdk_event);
+
   void OnFocusChanged(nux::Area* area);
   void OnIMCommit(GtkIMContext* context, char* str);
   void OnIMPreeditChanged(GtkIMContext* context);
   void OnIMPreeditStart(GtkIMContext* context);
   void OnIMPreeditEnd(GtkIMContext* context);
-  bool TryHandleEvent(unsigned int eventType, unsigned int keysym, const char* character);
-  bool InspectKeyEvent(unsigned int eventType, unsigned int keysym, const char* character);
-private:
+ private:
   glib::SignalManager sig_manager_;
   GtkIMContext* im_context_;
   GtkIMContext* im_context_simple_;
