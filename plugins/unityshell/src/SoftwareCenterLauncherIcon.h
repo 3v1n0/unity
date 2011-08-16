@@ -37,6 +37,7 @@ public:
 private:
     char* _aptdaemon_trans_id;
     GDBusProxy* _aptdaemon_trans;
+    GDBusProxy* _aptdaemon_trans_prop;
 
     static void OnTransFinished(GDBusProxy* proxy, 
                                 gchar* sender,

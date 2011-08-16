@@ -44,7 +44,6 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(Launcher* IconManager, Ba
     char* object_path;
     GVariant* finished_or_not = NULL;
     GError* error = NULL;
-    GError* errorr = NULL;
 
     _aptdaemon_trans_id = aptdaemon_trans_id; 
     g_strdup_printf(object_path, "/org/debian/apt/transaction/%s", _aptdaemon_trans_id);
@@ -56,16 +55,25 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(Launcher* IconManager, Ba
                                                     NULL,
                                                     "org.debian.apt",
                                                     object_path,
+                                                    "org.debian.apt.transaction",
+                                                    NULL,
+                                                    &error);
+
+    _aptdaemon_trans_prop = g_dbus_proxy_new_for_bus_sync(G_BUS_TYPE_SYSTEM,
+                                                    G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START,
+                                                    NULL,
+                                                    "org.debian.apt",
+                                                    object_path,
                                                     "org.freedesktop.DBus.Properties",
                                                     NULL,
                                                     &error);
 
     if (error != NULL) {
-        g_debug("Error: %s", error->message);
+        g_debug("DBus Error: %s", error->message);
         g_error_free(error);
     }
 
-    finished_or_not = g_dbus_proxy_call_sync (_aptdaemon_trans,
+    finished_or_not = g_dbus_proxy_call_sync (_aptdaemon_trans_prop,
                                             "Get",
                                             g_variant_new("(ss)",
                                                         "org.debian.apt.transaction",
@@ -73,25 +81,26 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(Launcher* IconManager, Ba
                                             G_DBUS_CALL_FLAGS_NO_AUTO_START,
                                             2000,
                                             NULL,
-                                            &errorr);
+                                            &error);
 
-    if (errorr != NULL) {
-        g_debug("Errorr: %s", errorr->message);
-        g_error_free(errorr);
+    if (error != NULL) {
+        g_debug("DBus Error: %s", error->message);
+        g_error_free(error);
     }
 
     if (finished_or_not != NULL) {
         g_debug("DBus get call succeeded");
-        g_debug("Output of finished: %s", g_variant_print(finished_or_not, TRUE));
+        g_debug("Progress: %s", g_variant_print(finished_or_not, TRUE));
     }
     else
         g_debug("DBus get call failed");
 
     g_signal_connect (_aptdaemon_trans,
                     "g-signal",
-                    (GCallback) &SoftwareCenterLauncherIcon::OnTransFinished,
+                    G_CALLBACK(SoftwareCenterLauncherIcon::OnTransFinished),
                     this);
 
+    tooltip_text = "Waiting to install..";
 }
 
 SoftwareCenterLauncherIcon::~SoftwareCenterLauncherIcon() {
@@ -105,6 +114,23 @@ SoftwareCenterLauncherIcon::OnTransFinished(GDBusProxy* proxy,
                                             GVariant* params,
                                             gpointer user_data)
 {
-    g_debug ("g-signal FIRED. Signal name: %s", signal_name);
+    gint32 progress;
+    gchar* property_name;    
+    
+    SoftwareCenterLauncherIcon* launcher_icon = (SoftwareCenterLauncherIcon*) user_data;
 
+    g_debug ("Signal %s FIRED by aptdaemon", signal_name);
+
+    if (!g_strcmp0(signal_name, "Finished")) {
+        g_debug ("Transaction finished"); // TODO: Hide progress bar
+        launcher_icon->tooltip_text = "FIXME";   
+    }
+    else if (!g_strcmp0(signal_name, "PropertyChanged")) {
+        g_variant_get (params, "(si)", &property_name, &progress);
+        g_debug ("Property name: %s", property_name);
+        if (!g_strcmp0(property_name, "Progress")) {
+            g_debug ("Progress: %i", progress);
+        }
+        g_variant_unref(params);
+    }
 }
