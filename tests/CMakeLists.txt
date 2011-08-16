@@ -95,6 +95,8 @@ add_executable (standalone-dash
                 ${UNITY_SRC}/FilterGenreButton.cpp
                 ${UNITY_SRC}/FilterGenreWidget.cpp
                 ${UNITY_SRC}/FilterBar.cpp
+                ${UNITY_SRC}/IMTextEntry.cpp
+                ${UNITY_SRC}/IMTextEntry.h
                 ${UNITY_SRC}/PlacesHomeView.cpp
                 ${UNITY_SRC}/PlacesHomeView.h
                 ${UNITY_SRC}/PlacesGroup.cpp
