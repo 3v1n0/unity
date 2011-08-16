@@ -123,10 +123,8 @@ bool IMTextEntry::TryHandleEvent(unsigned int eventType,
   ev.group = 0;
   ev.is_modifier = 0;
 
-  g_debug ("Filter: %d %u %u", gtk_im_context_filter_keypress(im_context_, &ev), ev.keyval, ev.hardware_keycode);
-  gtk_im_context_filter_keypress(im_context_simple_, &ev);
-
-  return false;
+  return gtk_im_context_filter_keypress(im_context_simple_, &ev) ||
+         gtk_im_context_filter_keypress(im_context_, &ev);
 }
 
 void IMTextEntry::OnFocusChanged(nux::Area* area)
@@ -152,17 +150,34 @@ void IMTextEntry::OnIMCommit(GtkIMContext* context, char* str)
 
 void IMTextEntry::OnIMPreeditChanged(GtkIMContext* context)
 {
-  g_debug("Preedit changed");
+  char* preedit_string = NULL;
+  int cursor_pos = -1;
+
+  gtk_im_context_get_preedit_string(context, &preedit_string, NULL, &cursor_pos);
+  g_debug("Preedit changed: %s %d", preedit_string, cursor_pos);
+
+  g_free(preedit_string);
 }
 
 void IMTextEntry::OnIMPreeditStart(GtkIMContext* context)
 {
-  g_debug("Preedit start");
-}
+  char* preedit_string = NULL;
+  int cursor_pos = -1;
+
+  gtk_im_context_get_preedit_string(context, &preedit_string, NULL, &cursor_pos);
+  g_debug("Preedit start: %s %d", preedit_string, cursor_pos);
+
+  g_free(preedit_string);}
 
 void IMTextEntry::OnIMPreeditEnd(GtkIMContext* context)
 {
-  g_debug("Preedit end");
+  char* preedit_string = NULL;
+  int cursor_pos = -1;
+
+  gtk_im_context_get_preedit_string(context, &preedit_string, NULL, &cursor_pos);
+  g_debug("Preedit end: %s %d", preedit_string, cursor_pos);
+
+  g_free(preedit_string);
 }
 
 }
