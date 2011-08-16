@@ -1018,7 +1018,7 @@ inline nux::BaseTexture* load_texture(const char* filename)
   return nux::CreateTexture2DFromFile(filename, -1, true);
 }
 
-void generate_textures(std::vector<nux::BaseTexture*> icons, const char* big_file, const char* small_file)
+void generate_textures(std::vector<nux::BaseTexture*>& icons, const char* big_file, const char* small_file)
 {
   icons.resize(IconSize::LAST);
   icons[IconSize::BIG] = load_texture(big_file);
