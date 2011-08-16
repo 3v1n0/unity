@@ -298,7 +298,24 @@ nux::Area* ResultViewGrid::KeyNavIteration(nux::KeyNavDirection direction)
     else if (direction == nux::KEY_NAV_UP && selected_index_ < items_per_row)
     {
       // up called on top row
-      // do nothing
+      // fake the bubble up
+      InputArea* key_nav_focus = NULL;
+      Area* parent = GetParentObject();
+
+      if (parent)
+        key_nav_focus = NUX_STATIC_CAST(InputArea*, parent->KeyNavIteration(direction));
+
+      while (key_nav_focus == NULL && parent != NULL)
+      {
+        parent = parent->GetParentObject();
+        if (parent)
+          key_nav_focus = NUX_STATIC_CAST(InputArea*, parent->KeyNavIteration(direction));
+      }
+
+      if (key_nav_focus)
+      {
+        nux::GetWindowCompositor().SetKeyFocusArea(key_nav_focus);
+      }
     }
     else if (direction == nux::KEY_NAV_RIGHT && (*current_focused_result).uri == results_.back().uri)
     {
@@ -308,7 +325,24 @@ nux::Area* ResultViewGrid::KeyNavIteration(nux::KeyNavDirection direction)
     else if (direction == nux::KEY_NAV_DOWN && selected_index_ >= (total_rows-1) * items_per_row)
     {
       // down called on last row
-      //do nothing
+      // fake the bubble up
+      InputArea* key_nav_focus = NULL;
+      Area* parent = GetParentObject();
+
+      if (parent)
+        key_nav_focus = NUX_STATIC_CAST(InputArea*, parent->KeyNavIteration(direction));
+
+      while (key_nav_focus == NULL && parent != NULL)
+      {
+        parent = parent->GetParentObject();
+        if (parent)
+          key_nav_focus = NUX_STATIC_CAST(InputArea*, parent->KeyNavIteration(direction));
+      }
+
+      if (key_nav_focus)
+      {
+        nux::GetWindowCompositor().SetKeyFocusArea(key_nav_focus);
+      }
     }
     else
     {
