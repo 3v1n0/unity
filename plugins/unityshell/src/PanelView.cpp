@@ -52,8 +52,7 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
       _opacity(1.0f),
       _is_primary(false),
       _monitor(0),
-      _dash_is_open(false),
-      blur_type_(BLUR_ACTIVE)
+      _dash_is_open(false)
 {
   _needs_geo_sync = false;
   _style = new PanelStyle();
@@ -102,6 +101,7 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
    ubus_server_send_message (ubus, UBUS_BACKGROUND_REQUEST_COLOUR_EMIT, NULL);
 
   _track_menu_pointer_id = 0;
+  bg_effect_helper_.owner = this;
 }
 
 PanelView::~PanelView()
@@ -183,36 +183,36 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   GfxContext.PushClippingRectangle(GetGeometry());
 
-  if (!bg_blur_texture_.IsValid() && blur_type_ != BLUR_NONE && (_dash_is_open || _opacity != 1.0f))
+  if (BackgroundEffectHelper::blur_type != BLUR_NONE && (_dash_is_open || _opacity != 1.0f))
   {
     nux::Geometry blur_geo(geo_absolute.x, geo_absolute.y, geo.width, geo.height);
-    bg_blur_texture_ = bg_effect_helper_.GetBlurRegion(blur_geo, true);
-  }
+    bg_blur_texture_ = bg_effect_helper_.GetBlurRegion(blur_geo);
 
-  if (bg_blur_texture_.IsValid() && blur_type_ != BLUR_NONE && (_dash_is_open || _opacity != 1.0f))
-  {
-    nux::TexCoordXForm texxform_blur_bg;
-    texxform_blur_bg.flip_v_coord = true;
-    texxform_blur_bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-    texxform_blur_bg.uoffset = ((float) geo.x) / geo_absolute.width;
-    texxform_blur_bg.voffset = ((float) geo.y) / geo_absolute.height;
+    if (bg_blur_texture_.IsValid() && BackgroundEffectHelper::blur_type != BLUR_NONE && (_dash_is_open || _opacity != 1.0f))
+    {
+      nux::TexCoordXForm texxform_blur_bg;
+      texxform_blur_bg.flip_v_coord = true;
+      texxform_blur_bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+      texxform_blur_bg.uoffset = ((float) geo.x) / geo_absolute.width;
+      texxform_blur_bg.voffset = ((float) geo.y) / geo_absolute.height;
 
-    nux::ROPConfig rop;
-    rop.Blend = false;
-    rop.SrcBlend = GL_ONE;
-    rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+      nux::ROPConfig rop;
+      rop.Blend = false;
+      rop.SrcBlend = GL_ONE;
+      rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
-    nux::Geometry bg_clip = geo;
-    GfxContext.PushClippingRectangle(bg_clip);
+      nux::Geometry bg_clip = geo;
+      GfxContext.PushClippingRectangle(bg_clip);
 
-    gPainter.PushDrawTextureLayer(GfxContext, geo,
-                                  bg_blur_texture_,
-                                  texxform_blur_bg,
-                                  nux::color::White,
-                                  true,
-                                  rop);
+      gPainter.PushDrawTextureLayer(GfxContext, geo,
+                                    bg_blur_texture_,
+                                    texxform_blur_bg,
+                                    nux::color::White,
+                                    true,
+                                    rop);
 
-    GfxContext.PopClippingRectangle();
+      GfxContext.PopClippingRectangle();
+    }
   }
 
   nux::GetPainter().RenderSinglePaintLayer(GfxContext, GetGeometry(), _bg_layer);
@@ -237,7 +237,7 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   GfxContext.GetRenderStates().SetBlend(true);
   GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
 
-  if (bg_blur_texture_.IsValid() && blur_type_ != BLUR_NONE && (_dash_is_open || _opacity != 1.0f))
+  if (bg_blur_texture_.IsValid() && BackgroundEffectHelper::blur_type != BLUR_NONE && (_dash_is_open || _opacity != 1.0f))
   {
     nux::Geometry geo_absolute = GetAbsoluteGeometry ();
     nux::TexCoordXForm texxform_blur_bg;
@@ -268,9 +268,6 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   GfxContext.GetRenderStates().SetBlend(false);
   GfxContext.PopClippingRectangle();
-
-  if (blur_type_ == BLUR_ACTIVE)
-    bg_blur_texture_.Release();
 }
 
 void
@@ -557,12 +554,6 @@ PanelView::SetMonitor(int monitor)
 {
   _monitor = monitor;
   _menu_view->SetMonitor(monitor);
-}
-
-void PanelView::SetBlurType(BlurType type)
-{
-  blur_type_ = type;
-  QueueDraw();
 }
 
 } // namespace unity
