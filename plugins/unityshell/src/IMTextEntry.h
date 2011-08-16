@@ -42,10 +42,19 @@ public:
   ~IMTextEntry();
 
 private:
-  long ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo);
-
+  long ProcessEvent(nux::IEvent& ievent, long traverse_info, long pevent_info);
+  void OnFocusChanged(nux::Area* area);
+  void OnIMCommit(GtkIMContext* context, char* str);
+  void OnIMPreeditChanged(GtkIMContext* context);
+  void OnIMPreeditStart(GtkIMContext* context);
+  void OnIMPreeditEnd(GtkIMContext* context);
+  bool TryHandleEvent(unsigned int eventType, unsigned int keysym, const char* character);
+  bool InspectKeyEvent(unsigned int eventType, unsigned int keysym, const char* character);
 private:
   glib::SignalManager sig_manager_;
+  GtkIMContext* im_context_;
+  GtkIMContext* im_context_simple_;
+  GdkWindow* client_window_;
 };
 
 }
