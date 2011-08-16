@@ -44,6 +44,8 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(Launcher* IconManager, Ba
     char* object_path;
     GVariant* finished_or_not = NULL;
     GError* error = NULL;
+    GError* error2 = NULL;
+    GError* error3 = NULL;
 
     _aptdaemon_trans_id = aptdaemon_trans_id; 
     g_strdup_printf(object_path, "/org/debian/apt/transaction/%s", _aptdaemon_trans_id);
@@ -59,6 +61,11 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(Launcher* IconManager, Ba
                                                     NULL,
                                                     &error);
 
+    if (error != NULL) {
+        g_debug("DBus Error: %s", error->message);
+        g_error_free(error);
+    }
+
     _aptdaemon_trans_prop = g_dbus_proxy_new_for_bus_sync(G_BUS_TYPE_SYSTEM,
                                                     G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START,
                                                     NULL,
@@ -66,11 +73,11 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(Launcher* IconManager, Ba
                                                     object_path,
                                                     "org.freedesktop.DBus.Properties",
                                                     NULL,
-                                                    &error);
+                                                    &error2);
 
-    if (error != NULL) {
-        g_debug("DBus Error: %s", error->message);
-        g_error_free(error);
+    if (error2 != NULL) {
+        g_debug("DBus Error: %s", error2->message);
+        g_error_free(error2);
     }
 
     finished_or_not = g_dbus_proxy_call_sync (_aptdaemon_trans_prop,
@@ -81,11 +88,11 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(Launcher* IconManager, Ba
                                             G_DBUS_CALL_FLAGS_NO_AUTO_START,
                                             2000,
                                             NULL,
-                                            &error);
+                                            &error3);
 
-    if (error != NULL) {
-        g_debug("DBus Error: %s", error->message);
-        g_error_free(error);
+    if (error3 != NULL) {
+        g_debug("DBus Error: %s", error3->message);
+        g_error_free(error3);
     }
 
     if (finished_or_not != NULL) {
@@ -100,7 +107,7 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(Launcher* IconManager, Ba
                     G_CALLBACK(SoftwareCenterLauncherIcon::OnTransFinished),
                     this);
 
-    tooltip_text = "Waiting to install..";
+   // tooltip_text = "Waiting to install..";
 }
 
 SoftwareCenterLauncherIcon::~SoftwareCenterLauncherIcon() {
@@ -127,7 +134,7 @@ SoftwareCenterLauncherIcon::OnTransFinished(GDBusProxy* proxy,
     }
     else if (!g_strcmp0(signal_name, "PropertyChanged")) {
         g_variant_get (params, "(si)", &property_name, &progress);
-        g_debug ("Property name: %s", property_name);
+        g_debug ("Property name: %s", g_variant_print(params, TRUE));
         if (!g_strcmp0(property_name, "Progress")) {
             g_debug ("Progress: %i", progress);
         }
