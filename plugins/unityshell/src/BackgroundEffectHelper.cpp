@@ -62,11 +62,13 @@ void BackgroundEffectHelper::Unregister (BackgroundEffectHelper *self)
 }
 
 
-nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nux::Geometry geo)
+nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nux::Geometry geo, bool force_update)
 {
   nux::GraphicsEngine* graphics_engine = nux::GetGraphicsDisplay()->GetGraphicsEngine();
 
-  if ((blur_type != BLUR_ACTIVE || !updates_enabled()) 
+  bool should_update = !updates_enabled() && !force_update;
+
+  if ((blur_type != BLUR_ACTIVE || !should_update) 
       && blur_texture_.IsValid() 
       && (geo == blur_geometry_))
   {
@@ -104,24 +106,18 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nu
   if (support_vert && support_frag && opengl_version >= 2)
   {
     float noise_factor = 1.2f;
-    float horizontal_noise_factor = 1.0f;
-    float vertical_noise_factor = 1.0f;
     float gaussian_sigma = opengl_version >= 3 ? sigma_high : sigma_med;
     int blur_passes = 1;
 
     nux::ObjectPtr<nux::IOpenGLBaseTexture> device_texture = nux::GetGraphicsDisplay()->GetGpuDevice()->backup_texture0_;
     nux::ObjectPtr<nux::CachedBaseTexture> noise_device_texture = graphics_engine->CacheResource(noise_texture_);
 
-    unsigned int offset = 0;
-    int quad_width = blur_geometry_.width;
-    int quad_height = blur_geometry_.height;
-
     int down_size_factor = 1;
-    unsigned int buffer_width = quad_width + 2 * offset;
-    unsigned int buffer_height = quad_height + 2 * offset;
+    unsigned int buffer_width = blur_geometry_.width;
+    unsigned int buffer_height = blur_geometry_.height;
 
-    int x =  (buffer_width - quad_width)/2;
-    int y =  (buffer_height - quad_height)/2;
+    int x =  0;
+    int y =  0;
 
     unsigned int down_size_width = buffer_width / down_size_factor;
     unsigned int down_size_height = buffer_height / down_size_factor;
@@ -153,8 +149,8 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nu
     blur_texture_ = graphics_engine->QRP_GLSL_GetDisturbedTexture(
       0, 0, buffer_width, buffer_height,
       noise_device_texture->m_Texture, noise_texxform, nux::Color (
-      noise_factor * horizontal_noise_factor * 1.0f/buffer_width,
-      noise_factor * vertical_noise_factor * 1.0f/buffer_height, 1.0f, 1.0f),
+      noise_factor * 1.0f/buffer_width,
+      noise_factor * 1.0f/buffer_height, 1.0f, 1.0f),
       temp_device_texture0_, texxform, nux::color::White);
   }
   else
