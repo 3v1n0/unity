@@ -34,16 +34,20 @@ public:
     SoftwareCenterLauncherIcon(Launcher* IconManager, BamfApplication* app, CompScreen* screen, char* aptdaemon_trans_id);
     virtual ~SoftwareCenterLauncherIcon();
 
+    gchar* original_tooltip_text;
+
 private:
     char* _aptdaemon_trans_id;
     GDBusProxy* _aptdaemon_trans;
     GDBusProxy* _aptdaemon_trans_prop;
 
-    static void OnTransFinished(GDBusProxy* proxy, 
+    static void OnDBusSignal(GDBusProxy* proxy, 
                                 gchar* sender,
                                 gchar* signal_name,
                                 GVariant* params,
                                 gpointer user_data);
+
+    void initialize_tooltip_text();
 };
 
 #endif

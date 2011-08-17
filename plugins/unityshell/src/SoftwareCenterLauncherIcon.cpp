@@ -47,6 +47,8 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(Launcher* IconManager, Ba
     GError* error2 = NULL;
     GError* error3 = NULL;
 
+    initialize_tooltip_text();
+
     _aptdaemon_trans_id = aptdaemon_trans_id; 
     g_strdup_printf(object_path, "/org/debian/apt/transaction/%s", _aptdaemon_trans_id);
     
@@ -99,13 +101,15 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(Launcher* IconManager, Ba
         g_debug("DBus get call succeeded");
         g_debug("Progress: %s", g_variant_print(finished_or_not, TRUE));
         g_variant_unref(finished_or_not);
+
+        SetQuirk(QUIRK_PROGRESS, TRUE);
     }
     else
         g_debug("DBus get call failed");
 
     g_signal_connect (_aptdaemon_trans,
                     "g-signal",
-                    G_CALLBACK(SoftwareCenterLauncherIcon::OnTransFinished),
+                    G_CALLBACK(SoftwareCenterLauncherIcon::OnDBusSignal),
                     this);
 
 //    tooltip_text = "Waiting to install";
@@ -116,7 +120,7 @@ SoftwareCenterLauncherIcon::~SoftwareCenterLauncherIcon() {
 }
 
 void
-SoftwareCenterLauncherIcon::OnTransFinished(GDBusProxy* proxy,
+SoftwareCenterLauncherIcon::OnDBusSignal(GDBusProxy* proxy,
                                             gchar* sender,
                                             gchar* signal_name,
                                             GVariant* params,
@@ -126,20 +130,30 @@ SoftwareCenterLauncherIcon::OnTransFinished(GDBusProxy* proxy,
     gchar* property_name;
     GVariant* property_value;
     
-    //SoftwareCenterLauncherIcon* launcher_icon = (SoftwareCenterLauncherIcon*) user_data;
+    SoftwareCenterLauncherIcon* launcher_icon = (SoftwareCenterLauncherIcon*) user_data;
 
     if (!g_strcmp0(signal_name, "Finished")) {
-        g_debug ("Transaction finished"); // TODO: Hide progress bar
-        //launcher_icon->tooltip_text = "FIXME";
+        g_debug ("Transaction finished");
+        //launcher_icon->tooltip_text = launcher_icon->original_tooltip_text;
+
+        launcher_icon->SetQuirk(LauncherIcon::QUIRK_PROGRESS, FALSE); 
     }
     else if (!g_strcmp0(signal_name, "PropertyChanged")) {
         g_variant_get_child (params, 0, "s", &property_name);
         if (!g_strcmp0 (property_name, "Progress")) {
             g_variant_get_child (params,1,"v",&property_value);
             g_variant_get (property_value, "i", &progress);
-            g_debug ("Progress is %i", progress);
+
+            launcher_icon->SetProgress(((float)progress) / ((float)100));
         }
         g_variant_unref(params);
         g_free(property_name);
     }
+}
+
+void SoftwareCenterLauncherIcon::initialize_tooltip_text() {
+
+    //original_tooltip_text = tooltip_text;
+
+    tooltip_text = "Waiting to install..";
 }
