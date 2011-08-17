@@ -1011,7 +1011,9 @@ const CompWindowList& UnityScreen::getWindowPaintList()
       if (xwns[i] == id)
       {
 	erased = true;
-	pl.erase((it++).base());
+	/* FIXME: Is there a way to do this that isn't a compound
+	 * statement? It makes my head hurt ... */
+	pl.erase(--((it++).base()));
         break;
       }
     }
