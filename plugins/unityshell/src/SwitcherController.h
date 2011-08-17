@@ -55,7 +55,6 @@ public:
   virtual ~SwitcherController();
 
   nux::Property<int> timeout_length;
-  nux::Property<BlurType> blur;
 
   void Show(ShowMode show, SortMode sort, bool reverse, std::vector<AbstractLauncherIcon*> results);
   void Hide();
