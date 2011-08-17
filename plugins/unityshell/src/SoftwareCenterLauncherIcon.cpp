@@ -98,6 +98,7 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(Launcher* IconManager, Ba
     if (finished_or_not != NULL) {
         g_debug("DBus get call succeeded");
         g_debug("Progress: %s", g_variant_print(finished_or_not, TRUE));
+        g_variant_unref(finished_or_not);
     }
     else
         g_debug("DBus get call failed");
@@ -107,7 +108,7 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(Launcher* IconManager, Ba
                     G_CALLBACK(SoftwareCenterLauncherIcon::OnTransFinished),
                     this);
 
-   // tooltip_text = "Waiting to install..";
+//    tooltip_text = "Waiting to install";
 }
 
 SoftwareCenterLauncherIcon::~SoftwareCenterLauncherIcon() {
@@ -122,22 +123,23 @@ SoftwareCenterLauncherIcon::OnTransFinished(GDBusProxy* proxy,
                                             gpointer user_data)
 {
     gint32 progress;
-    gchar* property_name;    
+    gchar* property_name;
+    GVariant* property_value;
     
-    SoftwareCenterLauncherIcon* launcher_icon = (SoftwareCenterLauncherIcon*) user_data;
-
-    g_debug ("Signal %s FIRED by aptdaemon", signal_name);
+    //SoftwareCenterLauncherIcon* launcher_icon = (SoftwareCenterLauncherIcon*) user_data;
 
     if (!g_strcmp0(signal_name, "Finished")) {
         g_debug ("Transaction finished"); // TODO: Hide progress bar
-        launcher_icon->tooltip_text = "FIXME";   
+        //launcher_icon->tooltip_text = "FIXME";
     }
     else if (!g_strcmp0(signal_name, "PropertyChanged")) {
-        g_variant_get (params, "(si)", &property_name, &progress);
-        g_debug ("Property name: %s", g_variant_print(params, TRUE));
-        if (!g_strcmp0(property_name, "Progress")) {
-            g_debug ("Progress: %i", progress);
+        g_variant_get_child (params, 0, "s", &property_name);
+        if (!g_strcmp0 (property_name, "Progress")) {
+            g_variant_get_child (params,1,"v",&property_value);
+            g_variant_get (property_value, "i", &progress);
+            g_debug ("Progress is %i", progress);
         }
         g_variant_unref(params);
+        g_free(property_name);
     }
 }
