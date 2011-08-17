@@ -92,10 +92,25 @@
             		    <_long>fixme</_long>
             		    <default>&lt;Alt&gt;Tab</default>
                   </option>
-                  <option name="alt_tab_detail" type="key">
-                        <_short>Key to start the switcher</_short>
+                  <option name="alt_tab_detail_start" type="key">
+                        <_short>Key to expose the windows in the switcher</_short>
                         <_long>fixme</_long>
                         <default>&lt;Alt&gt;Down</default>
+                  </option>
+                  <option name="alt_tab_detail_stop" type="key">
+                        <_short>Key to collapse windows in the switcher</_short>
+                        <_long>fixme</_long>
+                        <default>&lt;Alt&gt;Up</default>
+                  </option>
+                  <option name="alt_tab_next_window" type="key">
+                        <_short>Key to flip through windows in the switcher</_short>
+                        <_long>fixme</_long>
+                        <default>&lt;Alt&gt;grave</default>
+                  </option>
+                  <option name="alt_tab_exit" type="key">
+                        <_short>Key to exit the switcher</_short>
+                        <_long>Causes the switcher window to go away without any changes to stacking state</_long>
+                        <default>&lt;Alt&gt;Escape</default>
                   </option>
                   <option name="alt_tab_prev" type="key">
                         <_short>Key to start the switcher in reverse</_short>

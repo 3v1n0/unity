@@ -48,7 +48,7 @@ static gboolean on_timeout(gpointer data)
     return TRUE;
 
   SwitcherController* self = (SwitcherController*) data;
-  self->MoveNext();
+  self->Next();
 
   return TRUE;
 }
@@ -107,12 +107,12 @@ void OnNumIconsChanged (nux::SpinBox *self)
 
 void OnNextClicked (nux::View *sender)
 {
-  view->MoveNext ();
+  view->Next ();
 }
 
 void OnPreviousClicked (nux::View *sender)
 {
-  view->MovePrev();
+  view->Prev();
 }
 
 void ThreadWidgetInit(nux::NThread* thread, void* InitData)

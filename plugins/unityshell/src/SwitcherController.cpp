@@ -119,28 +119,31 @@ void SwitcherController::SetWorkspace(nux::Geometry geo)
   workarea_ = geo;
 }
 
-void SwitcherController::Hide()
+void SwitcherController::Hide(bool accept_state)
 {
   if (!visible_)
     return;
 
-  AbstractLauncherIcon* selection = model_->Selection();
-  if (selection)
+  if (accept_state)
   {
-    if (model_->detail_selection)
+    AbstractLauncherIcon* selection = model_->Selection();
+    if (selection)
     {
-      selection->Activate(ActionArg(ActionArg::SWITCHER, 0, model_->DetailSelectionWindow ()));
-    }
-    else
-    {
-      if (selection->GetQuirk (AbstractLauncherIcon::QUIRK_ACTIVE))
+      if (model_->detail_selection)
       {
-        selection->Activate(ActionArg (ActionArg::SWITCHER, 0, model_->DetailXids()[0]));
-      } 
+        selection->Activate(ActionArg(ActionArg::SWITCHER, 0, model_->DetailSelectionWindow ()));
+      }
       else
       {
-        selection->Activate(ActionArg(ActionArg::SWITCHER, 0));
-      }     
+        if (selection->GetQuirk (AbstractLauncherIcon::QUIRK_ACTIVE))
+        {
+          selection->Activate(ActionArg (ActionArg::SWITCHER, 0, model_->DetailXids()[0]));
+        } 
+        else
+        {
+          selection->Activate(ActionArg(ActionArg::SWITCHER, 0));
+        }     
+      }
     }
   }
 
@@ -166,14 +169,22 @@ bool SwitcherController::Visible()
   return visible_;
 }
 
-void SwitcherController::MoveNext()
+void SwitcherController::Next()
 {
   if (!model_)
     return;
-  model_->Next();
+
+  if (model_->detail_selection && detail_mode_ == TAB_WINDOW)
+  {
+    model_->NextDetail();
+  }
+  else
+  {
+    model_->Next();
+  }
 }
 
-void SwitcherController::MovePrev()
+void SwitcherController::Prev()
 {
   if (!model_)
     return;
@@ -185,16 +196,41 @@ SwitcherView * SwitcherController::GetView()
   return view_;
 }
 
-void SwitcherController::DetailCurrent()
+void SwitcherController::SetDetail(bool value)
 {
-  if (model_->detail_selection)
+  if (model_->Selection())
   {
-    model_->NextDetail ();
+    if (value)
+    {
+      if (model_->Selection()->RelatedWindows() > 0)   
+      {
+        model_->detail_selection = value;
+        detail_mode_ = TAB_WINDOW;
+      } 
+    }
+    else
+    {
+      model_->detail_selection = value;
+    }
   }
-  else if (model_->Selection ()->RelatedWindows () > 0)
+}
+
+void SwitcherController::NextDetail()
+{
+  if (!model_->detail_selection)
   {
-    model_->detail_selection = true;
+    SetDetail(true);
+    detail_mode_ = TAB_TILE;
   }
+  else
+  {
+    model_->NextDetail();
+  }
+}
+
+void SwitcherController::PrevDetail()
+{
+  model_->PrevDetail();
 }
 
 LayoutWindowList SwitcherController::ExternalRenderTargets ()

@@ -179,6 +179,9 @@ SwitcherModel::Prev()
 void
 SwitcherModel::NextDetail ()
 {
+  if (!detail_selection())
+    return;
+
   if (detail_selection_index < Selection()->RelatedWindows () - 1)
     detail_selection_index = detail_selection_index + 1;
   else
@@ -187,6 +190,9 @@ SwitcherModel::NextDetail ()
 
 void SwitcherModel::PrevDetail ()
 {
+  if (!detail_selection())
+    return;
+    
   if (detail_selection_index > 0)
     detail_selection_index = detail_selection_index - 1;
   else

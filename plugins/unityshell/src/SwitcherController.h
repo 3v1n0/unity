@@ -57,14 +57,17 @@ public:
   nux::Property<int> timeout_length;
 
   void Show(ShowMode show, SortMode sort, bool reverse, std::vector<AbstractLauncherIcon*> results);
-  void Hide();
+  void Hide(bool accept_state=true);
 
   bool Visible();
 
-  void MoveNext();
-  void MovePrev();
+  void Next();
+  void Prev();
 
-  void DetailCurrent();
+  void NextDetail();
+  void PrevDetail();
+
+  void SetDetail(bool detail);
 
   void SelectFirstItem();
 
@@ -75,6 +78,12 @@ public:
   LayoutWindowList ExternalRenderTargets ();
 
 private:
+  enum DetailMode
+  {
+    TAB_WINDOW,
+    TAB_TILE,
+  };
+
   void ConstructView();
 
   static void OnBackgroundUpdate (GVariant *data, SwitcherController *self);
@@ -89,6 +98,7 @@ private:
   bool visible_;
   guint show_timer_;
   nux::Color bg_color_;
+  DetailMode detail_mode_;
 
   static gboolean OnShowTimer(gpointer data);
 
