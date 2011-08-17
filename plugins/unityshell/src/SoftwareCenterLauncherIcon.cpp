@@ -134,7 +134,7 @@ SoftwareCenterLauncherIcon::OnDBusSignal(GDBusProxy* proxy,
 
     if (!g_strcmp0(signal_name, "Finished")) {
         g_debug ("Transaction finished");
-        //launcher_icon->tooltip_text = launcher_icon->original_tooltip_text;
+        launcher_icon->tooltip_text = launcher_icon->BamfName();
 
         launcher_icon->SetQuirk(LauncherIcon::QUIRK_PROGRESS, FALSE); 
     }
@@ -153,7 +153,7 @@ SoftwareCenterLauncherIcon::OnDBusSignal(GDBusProxy* proxy,
 
 void SoftwareCenterLauncherIcon::initialize_tooltip_text() {
 
-    //original_tooltip_text = tooltip_text;
+    original_tooltip_text =  const_cast<char*> (tooltip_text().c_str());
 
-    tooltip_text = "Waiting to install..";
+    tooltip_text = _("Waiting to install..");
 }
