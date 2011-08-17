@@ -1010,18 +1010,18 @@ const CompWindowList& UnityScreen::getWindowPaintList()
     {
       if (xwns[i] == id)
       {
-	/* Increment the reverse_iterator to ensure
-	 * it is valid, then it++ returns the old
-	 * position */
-	CompWindowList::reverse_iterator oit = it++;
-	/* Get the base and offset by -1 since
-	 * &*(reverse_iterator(i)) == &*(i - 1)) */
-	CompWindowList::iterator eit = --(oit.base ());
+        /* Increment the reverse_iterator to ensure
+	       * it is valid, then it++ returns the old
+         * position */
+        CompWindowList::reverse_iterator oit = it++;
+        /* Get the base and offset by -1 since
+         * &*(reverse_iterator(i)) == &*(i - 1)) */
+        CompWindowList::iterator eit = --(oit.base ());
 
-	erased = true;
+        erased = true;
 
-	/* Remove that from the list */
-	pl.erase(eit);
+        /* Remove that from the list */
+        pl.erase(eit);
         break;
       }
     }
