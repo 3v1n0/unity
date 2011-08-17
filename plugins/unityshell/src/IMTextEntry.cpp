@@ -21,10 +21,19 @@
 
 #include "IMTextEntry.h"
 
+#include <boost/lexical_cast.hpp>
+#include <NuxCore/Logger.h>
+#include <UnityCore/GLibWrapper.h>
+
 namespace unity
 {
 namespace dash
 {
+
+namespace
+{
+nux::logging::Logger logger("unity.dash.imtextentry");
+}
 
 NUX_IMPLEMENT_OBJECT_TYPE(IMTextEntry);
 
@@ -39,7 +48,7 @@ IMTextEntry::IMTextEntry()
 
   FocusChanged.connect(sigc::mem_fun(this, &IMTextEntry::OnFocusChanged));
   OnKeyNavFocusChange.connect(sigc::mem_fun(this, &IMTextEntry::OnFocusChanged));
-  mouse_down.connect(sigc::mem_fun(this, &IMTextEntry::OnMouseButtonDown));
+  mouse_up.connect(sigc::mem_fun(this, &IMTextEntry::OnMouseButtonUp));
 }
 
 IMTextEntry::~IMTextEntry()
@@ -146,7 +155,7 @@ void IMTextEntry::KeyEventToGdkEventKey(Event& event, GdkEventKey& gdk_event)
 
 void IMTextEntry::OnFocusChanged(nux::Area* area)
 {
-  g_debug("Focus: %d", GetFocused());
+  LOG_DEBUG(logger) << "Focus changed " << boost::lexical_cast<bool>(GetFocused());
 
   if (GetFocused())
   {
@@ -164,7 +173,6 @@ void IMTextEntry::OnCommit(GtkIMContext* context, char* str)
 {
   if (str)
   {
-    g_debug("Commit: %s", str);
     std::string new_text = GetText() + str;
     int cursor = cursor_;
     SetText(new_text.c_str());
@@ -174,49 +182,34 @@ void IMTextEntry::OnCommit(GtkIMContext* context, char* str)
 
 void IMTextEntry::OnPreeditChanged(GtkIMContext* context)
 {
-  char* preedit = NULL;
+  glib::String preedit;
   int cursor_pos = -1;
 
   gtk_im_context_get_preedit_string(context, &preedit, NULL, &cursor_pos);
-  g_debug("Preedit changed: %s %d", preedit, cursor_pos);
 
-  preedit_string = preedit;
+  LOG_DEBUG(logger) << "Preedit changed: " << preedit;
 
-  g_free(preedit);
+  preedit_string = preedit.Str();
 }
 
 void IMTextEntry::OnPreeditStart(GtkIMContext* context)
 {
-  char* preedit = NULL;
-  int cursor_pos = -1;
-
-  gtk_im_context_get_preedit_string(context, &preedit, NULL, &cursor_pos);
-  g_debug("Preedit start: %s %d", preedit, cursor_pos);
   preedit_string = "";
-
-  g_free(preedit);
 }
 
 void IMTextEntry::OnPreeditEnd(GtkIMContext* context)
 {
-  char* preedit = NULL;
-  int cursor_pos = -1;
-
-  gtk_im_context_get_preedit_string(context, &preedit, NULL, &cursor_pos);
-  g_debug("Preedit end: %s %d", preedit, cursor_pos);
   preedit_string = "";
-
-  g_free(preedit);
 }
 
-void IMTextEntry::OnMouseButtonDown(int x, int y, unsigned long bflags, unsigned long kflags)
+void IMTextEntry::OnMouseButtonUp(int x, int y, unsigned long bflags, unsigned long kflags)
 {
-  if (bflags & NUX_EVENT_BUTTON3_DOWN || 1)
+  if (nux::GetEventButton(bflags) == 3)
   {
     GtkWidget* menu = gtk_menu_new();
     gtk_im_multicontext_append_menuitems(GTK_IM_MULTICONTEXT(im_context_),
                                           GTK_MENU_SHELL(menu));
-    gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL, 3, GDK_CURRENT_TIME);
+    gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL, 3, time(NULL));
   }
 }
 

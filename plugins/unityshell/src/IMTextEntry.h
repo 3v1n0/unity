@@ -58,7 +58,7 @@ private:
   void OnPreeditStart(GtkIMContext* context);
   void OnPreeditEnd(GtkIMContext* context);
 
-  void OnMouseButtonDown(int x, int y, unsigned long bflags, unsigned long kflags);
+  void OnMouseButtonUp(int x, int y, unsigned long bflags, unsigned long kflags);
 
  private:
   glib::SignalManager sig_manager_;
