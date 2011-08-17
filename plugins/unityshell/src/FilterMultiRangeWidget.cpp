@@ -34,7 +34,7 @@ namespace unity {
     InitTheme();
 
     all_button_ = new FilterBasicButton("Any", NUX_TRACKER_LOCATION);
-    all_button_->click.connect(sigc::mem_fun(this, &FilterMultiRange::OnAllActivated));
+    all_button_->activated.connect(sigc::mem_fun(this, &FilterMultiRange::OnAllActivated));
     all_button_->Reference();
 
     layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
