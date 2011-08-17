@@ -130,8 +130,7 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nu
     nux::TexCoordXForm texxform;
     nux::TexCoordXForm noise_texxform;
 
-    if (opengl_version < 3)
-      texxform.SetFilter(nux::TEXFILTER_LINEAR, nux::TEXFILTER_LINEAR);
+    texxform.SetFilter(nux::TEXFILTER_LINEAR, nux::TEXFILTER_LINEAR);
     
     noise_texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
     noise_texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
