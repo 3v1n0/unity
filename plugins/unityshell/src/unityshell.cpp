@@ -186,6 +186,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   optionSetLauncherRevealEdgeInitiate(boost::bind(&UnityScreen::launcherRevealEdgeInitiate, this, _1, _2, _3));
   optionSetLauncherRevealEdgeTimeoutNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
   optionSetAutomaximizeValueNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+  optionSetAltTabTimeoutNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
   
   optionSetAltTabForwardInitiate(boost::bind(&UnityScreen::altTabForwardInitiate, this, _1, _2, _3));
   optionSetAltTabForwardTerminate(boost::bind(&UnityScreen::altTabForwardTerminate, this, _1, _2, _3));
@@ -1239,6 +1240,9 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       break;
     case UnityshellOptions::LauncherRevealEdgeTimeout:
       _edge_timeout = optionGetLauncherRevealEdgeTimeout();
+      break;
+    case UnityshellOptions::AltTabTimeout:
+      switcherController->detail_on_timeout = optionGetAltTabTimeout();
       break;
     default:
       break;
