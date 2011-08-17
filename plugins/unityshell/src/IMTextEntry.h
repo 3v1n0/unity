@@ -45,7 +45,9 @@ public:
   nux::Property<std::string> preedit_string;
 
 private:
-  void SetupIMContexts();
+  void CheckIMEnabled();
+  void SetupSimpleIM();
+  void SetupMultiIM();
 
   bool InspectKeyEvent(unsigned int eventType, unsigned int keysym, const char* character);
   bool TryHandleEvent(unsigned int eventType, unsigned int keysym, const char* character);
@@ -65,6 +67,8 @@ private:
   GtkIMContext* im_context_;
   GtkIMContext* im_context_simple_;
   GdkWindow* client_window_;
+  bool im_enabled_;
+  bool im_active_;
 };
 
 }

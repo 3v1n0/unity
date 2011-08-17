@@ -43,8 +43,12 @@ IMTextEntry::IMTextEntry()
   , im_context_(0)
   , im_context_simple_(0)
   , client_window_(0)
+  , im_enabled_(false)
+  , im_active_(false)
 {
-  SetupIMContexts();
+  CheckIMEnabled();
+  SetupSimpleIM();
+  SetupMultiIM();
 
   FocusChanged.connect(sigc::mem_fun(this, &IMTextEntry::OnFocusChanged));
   OnKeyNavFocusChange.connect(sigc::mem_fun(this, &IMTextEntry::OnFocusChanged));
@@ -61,29 +65,46 @@ IMTextEntry::~IMTextEntry()
     g_object_unref(client_window_);
 }
 
-void IMTextEntry::SetupIMContexts()
+void IMTextEntry::CheckIMEnabled()
 {
-  im_context_ = gtk_im_multicontext_new();
-  sig_manager_.Add(new Signal<void, GtkIMContext*, char*>(im_context_, "commit", sigc::mem_fun(this, &IMTextEntry::OnCommit)));
-  sig_manager_.Add(new Signal<void, GtkIMContext*>(im_context_, "preedit-changed", sigc::mem_fun(this, &IMTextEntry::OnPreeditChanged)));
-  sig_manager_.Add(new Signal<void, GtkIMContext*>(im_context_, "preedit-start", sigc::mem_fun(this, &IMTextEntry::OnPreeditStart)));
-  sig_manager_.Add(new Signal<void, GtkIMContext*>(im_context_, "preedit-end", sigc::mem_fun(this, &IMTextEntry::OnPreeditEnd)));
+  const char* module = g_getenv("GTK_IM_MODULE");
+  if (module && g_strcmp0(module, "") && g_strcmp0(module, "gtk-im-context-simple"))
+    im_enabled_ = true;
+}
 
+void IMTextEntry::SetupSimpleIM()
+{
   im_context_simple_ = gtk_im_context_simple_new();
+  
   sig_manager_.Add(new Signal<void, GtkIMContext*, char*>(im_context_simple_, "commit", sigc::mem_fun(this, &IMTextEntry::OnCommit)));
   sig_manager_.Add(new Signal<void, GtkIMContext*>(im_context_simple_, "preedit-changed", sigc::mem_fun(this, &IMTextEntry::OnPreeditChanged)));
   sig_manager_.Add(new Signal<void, GtkIMContext*>(im_context_simple_, "preedit-start", sigc::mem_fun(this, &IMTextEntry::OnPreeditStart)));
   sig_manager_.Add(new Signal<void, GtkIMContext*>(im_context_simple_, "preedit-end", sigc::mem_fun(this, &IMTextEntry::OnPreeditEnd)));
 }
 
+void IMTextEntry::SetupMultiIM()
+{
+  im_context_ = gtk_im_multicontext_new();
+
+  sig_manager_.Add(new Signal<void, GtkIMContext*, char*>(im_context_, "commit", sigc::mem_fun(this, &IMTextEntry::OnCommit)));
+  sig_manager_.Add(new Signal<void, GtkIMContext*>(im_context_, "preedit-changed", sigc::mem_fun(this, &IMTextEntry::OnPreeditChanged)));
+  sig_manager_.Add(new Signal<void, GtkIMContext*>(im_context_, "preedit-start", sigc::mem_fun(this, &IMTextEntry::OnPreeditStart)));
+  sig_manager_.Add(new Signal<void, GtkIMContext*>(im_context_, "preedit-end", sigc::mem_fun(this, &IMTextEntry::OnPreeditEnd)));
+}
+
 bool IMTextEntry::InspectKeyEvent(unsigned int event_type,
                                   unsigned int keysym,
                                   const char* character)
 {
-  bool propagate_event = !TryHandleEvent(event_type, keysym, character);
+  bool propagate_event = !(TryHandleEvent(event_type, keysym, character));
+  
+  LOG_DEBUG(logger) << "Input method ("
+                    << (im_enabled_ ? gtk_im_multicontext_get_context_id(GTK_IM_MULTICONTEXT(im_context_)) : "simple")
+                    << ") "
+                    << (propagate_event ? "did not handle " : "handled ") 
+                    << "event";
 
-  std::string preedit = preedit_string;
-  if (!preedit.size() &&
+  if (preedit_string == "" &&
       (keysym == NUX_VK_ENTER ||
        keysym == NUX_KP_ENTER ||
        keysym == NUX_VK_UP ||
@@ -116,8 +137,8 @@ bool IMTextEntry::TryHandleEvent(unsigned int eventType,
   GdkEventKey ev;
   KeyEventToGdkEventKey(event, ev);
 
-  return gtk_im_context_filter_keypress(im_context_, &ev) ||
-         gtk_im_context_filter_keypress(im_context_simple_, &ev);
+  return im_enabled_ ? gtk_im_context_filter_keypress(im_context_, &ev)
+                     : gtk_im_context_filter_keypress(im_context_simple_, &ev);
 }
 
 inline void IMTextEntry::CheckValidClientWindow(Window window)
@@ -125,10 +146,16 @@ inline void IMTextEntry::CheckValidClientWindow(Window window)
   if (!client_window_)
   {
     client_window_ = gdk_x11_window_foreign_new_for_display(gdk_display_get_default(), window);
-    gtk_im_context_set_client_window(im_context_, client_window_);
-    gtk_im_context_set_client_window(im_context_simple_, client_window_);
-    gtk_im_context_reset(im_context_);
-    gtk_im_context_reset(im_context_simple_);
+    if (im_enabled_)
+    {
+      gtk_im_context_set_client_window(im_context_, client_window_);
+      gtk_im_context_reset(im_context_);
+    }
+    else
+    {
+      gtk_im_context_set_client_window(im_context_simple_, client_window_);
+      gtk_im_context_reset(im_context_simple_);
+    }
   }
 }
 
@@ -159,13 +186,19 @@ void IMTextEntry::OnFocusChanged(nux::Area* area)
 
   if (GetFocused())
   {
-    gtk_im_context_focus_in(im_context_);
+    if (im_enabled_)
+      gtk_im_context_focus_in(im_context_);
     gtk_im_context_focus_in(im_context_simple_);
   }
   else
   {
-    gtk_im_context_focus_out(im_context_);
+    if (im_enabled_)
+    {
+      gtk_im_context_focus_out(im_context_);
+      gtk_im_context_reset(im_context_);
+    }
     gtk_im_context_focus_out(im_context_simple_);
+    gtk_im_context_reset(im_context_simple_);
   }
 }
 
@@ -195,21 +228,23 @@ void IMTextEntry::OnPreeditChanged(GtkIMContext* context)
 void IMTextEntry::OnPreeditStart(GtkIMContext* context)
 {
   preedit_string = "";
+  im_active_ = true;
 }
 
 void IMTextEntry::OnPreeditEnd(GtkIMContext* context)
 {
   preedit_string = "";
+  im_active_ = false;
 }
 
 void IMTextEntry::OnMouseButtonUp(int x, int y, unsigned long bflags, unsigned long kflags)
 {
-  if (nux::GetEventButton(bflags) == 3)
+  if (nux::GetEventButton(bflags) == 3 && im_enabled_)
   {
     GtkWidget* menu = gtk_menu_new();
     gtk_im_multicontext_append_menuitems(GTK_IM_MULTICONTEXT(im_context_),
                                           GTK_MENU_SHELL(menu));
-    gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL, 3, time(NULL));
+    gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL, 3, GDK_CURRENT_TIME);
   }
 }
 
