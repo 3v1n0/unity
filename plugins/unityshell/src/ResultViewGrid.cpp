@@ -53,6 +53,7 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
   mouse_move.connect (sigc::mem_fun (this, &ResultViewGrid::MouseMove));
   mouse_click.connect (sigc::mem_fun (this, &ResultViewGrid::MouseClick));
   OnKeyNavFocusChange.connect (sigc::mem_fun (this, &ResultViewGrid::OnOnKeyNavFocusChange));
+  OnKeyNavFocusActivate.connect ([&] (nux::Area *area) { UriActivated.emit (focused_uri_); });
   key_down.connect (sigc::mem_fun (this, &ResultViewGrid::OnKeyDown));
 
   NeedRedraw();
@@ -191,20 +192,6 @@ long int ResultViewGrid::ProcessEvent(nux::IEvent& ievent, long int TraverseInfo
 
 bool ResultViewGrid::InspectKeyEvent(unsigned int eventType, unsigned int keysym, const char* character)
 {
-  //return false;
-  // giant horrible if statement i know i know
-  //~ if (keysym == NUX_VK_UP
-      //~ || keysym == NUX_VK_DOWN
-      //~ || keysym == NUX_VK_LEFT
-      //~ || keysym == NUX_VK_RIGHT
-      //~ || keysym == NUX_VK_LEFT_TAB
-      //~ || keysym == NUX_VK_TAB
-      //~ || keysym == NUX_VK_ENTER
-      //~ || keysym == NUX_KP_ENTER)
-  //~ {
-    //~
-  //~ }
-
   nux::KeyNavDirection direction = nux::KEY_NAV_NONE;
   switch (keysym)
   {
@@ -261,7 +248,6 @@ bool ResultViewGrid::InspectKeyEvent(unsigned int eventType, unsigned int keysym
 
 bool ResultViewGrid::AcceptKeyNavFocus()
 {
-  g_debug ("requested accept key nav focus");
   return true;
 }
 
@@ -269,7 +255,6 @@ void ResultViewGrid::OnKeyDown (unsigned long event_type, unsigned long event_ke
                                 unsigned long event_state, const TCHAR* character,
                                 unsigned short key_repeat_count)
 {
-  g_debug ("got key down");
   nux::KeyNavDirection direction = nux::KEY_NAV_NONE;
   switch (event_keysym)
   {
@@ -366,181 +351,7 @@ void ResultViewGrid::OnKeyDown (unsigned long event_type, unsigned long event_ke
 
 nux::Area* ResultViewGrid::KeyNavIteration(nux::KeyNavDirection direction)
 {
-  g_debug ("key nav iteration called");
   return this;
-
-  ResultList::iterator current_focused_result = results_.end();
-  if (focused_uri_.empty())
-    focused_uri_ = results_.front().uri;
-
-  std::string next_focused_uri;
-  ResultList::iterator it;
-  int items_per_row = GetItemsPerRow();
-  int total_rows = std::ceil(results_.size() / static_cast<float>(items_per_row)); // items per row is always at least 1
-  total_rows = (expanded) ? total_rows : 1; // restrict to one row if not expanded
-  nux::Area *return_area = NULL;
-
-  for (it = results_.begin(); it != results_.end(); it++)
-  {
-    std::string result_uri = (*it).uri;
-    if (result_uri == focused_uri_)
-    {
-      current_focused_result = it;
-      break;
-    }
-  }
-
-  // first check for activation
-  if (direction == nux::KEY_NAV_ENTER)
-  {
-    UriActivated.emit(focused_uri_);
-  }
-  else if (current_focused_result == results_.end())
-  {
-    // did not find a focused result, throw a warning
-    LOG_WARNING (logger) << "could not find a focused result with the uri: " << focused_uri_;
-  }
-  else
-  {
-    // found a focused result, we need to deal with it
-    // first deal with edge cases (quite litterally)
-    if (direction == nux::KEY_NAV_LEFT && (*current_focused_result).uri == results_.front().uri)
-    {
-      // left called on first element
-      // do nothing
-      return_area = this;
-    }
-    else if (direction == nux::KEY_NAV_UP && selected_index_ < items_per_row)
-    {
-      g_debug ("got key nav up i guess");
-      //~ // up called on top row
-      //~ // fake the bubble up
-      //~ InputArea* key_nav_focus = NULL;
-      //~ Area* parent = GetParentObject();
-//~
-      //~ if (parent)
-      //~ {
-        //~ g_debug ("parent is %p, this is %p", parent, this);
-        //~ key_nav_focus = NUX_STATIC_CAST(InputArea*, parent->KeyNavIteration(direction));
-//~
-        //~ while (key_nav_focus == NULL && parent != NULL)
-        //~ {
-          //~ g_debug ("looking for parent");
-          //~ parent = parent->GetParentObject();
-          //~ if (parent)
-            //~ key_nav_focus = NUX_STATIC_CAST(InputArea*, parent->KeyNavIteration(direction));
-        //~ }
-      //~ }
-      //~ else
-      //~ {
-        //~ g_debug ("we have no parent");
-      //~ }
-//~
-      //~ if (key_nav_focus)
-      //~ {
-        //~ nux::GetWindowCompositor().SetKeyFocusArea(key_nav_focus);
-        //~ return_area = key_nav_focus;
-        //~ g_debug ("got return area");
-      //~ }
-
-    }
-    else if (direction == nux::KEY_NAV_RIGHT && (*current_focused_result).uri == results_.back().uri)
-    {
-      // right called on last element
-      // do nothing
-      return_area = this;
-    }
-    else if (direction == nux::KEY_NAV_RIGHT && !expanded && selected_index_ == items_per_row - 1)
-    {
-      // right called on last element in non expanded mode
-      // do nothing
-      return_area = this;
-    }
-    else if (direction == nux::KEY_NAV_DOWN && selected_index_ >= (total_rows-1) * items_per_row)
-    {
-      g_debug ("got keynav down");
-      //~ // down called on last row
-      //~ // fake the bubble up
-      //~ InputArea* key_nav_focus = NULL;
-      //~ Area* parent = GetParentObject();
-      //~ if (parent)
-        //~ key_nav_focus = NUX_STATIC_CAST(InputArea*, parent->KeyNavIteration(direction));
-//~
-       //~ g_debug ("parent is %p, this is %p", parent, this);
-//~
-      //~ while (key_nav_focus == NULL && parent != NULL)
-      //~ {
-        //~ parent = parent->GetParentObject();
-        //~ if (parent)
-          //~ key_nav_focus = NUX_STATIC_CAST(InputArea*, parent->KeyNavIteration(direction));
-      //~ }
-      //~ if (key_nav_focus)
-      //~ {
-        //~ nux::GetWindowCompositor().SetKeyFocusArea(key_nav_focus);
-      //~ }
-      //~ return_area = key_nav_focus;
-    }
-    else
-    {
-      // we aren't on any "edge" cases, so do full parsing of the key nav direction
-
-      switch (direction)
-      {
-        //case (nux::KEY_NAV_TAB_PREVIOUS):
-        case (nux::KEY_NAV_LEFT):
-        {
-          --current_focused_result;
-          break;
-        }
-        //case (nux::KEY_NAV_TAB_NEXT):
-        case (nux::KEY_NAV_RIGHT):
-        {
-          ++current_focused_result;
-          break;
-        }
-        case (nux::KEY_NAV_UP):
-        {
-          current_focused_result -= items_per_row;
-          break;
-        }
-        case (nux::KEY_NAV_DOWN):
-        {
-          current_focused_result += items_per_row;
-          break;
-        }
-        default:
-          break;
-      }
-
-      if (current_focused_result == results_.end())
-      {
-        // went past the end, set to the last element
-        next_focused_uri = results_.back().uri;
-      }
-      else
-      {
-        next_focused_uri = (*current_focused_result).uri;
-      }
-      // to make draws quicker, not doing string comparisons in the draw, look up the index of the focused item
-      int index = 0;
-      for (it = results_.begin(); it != results_.end(); it++)
-      {
-        if ((*it).uri == next_focused_uri)
-        {
-          selected_index_ = index;
-          break;
-        }
-
-        index++;
-      }
-      focused_uri_ = next_focused_uri;
-
-      return_area = this;
-    }
-    NeedRedraw();
-  }
-
-  return return_area;
 }
 
 // crappy name.
