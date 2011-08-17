@@ -1,3 +1,9 @@
+unity (4.8.0-0ubuntu2) UNRELEASED; urgency=low
+
+  * Backport r1371 to fix launcher autohidding issues
+
+ -- Sebastien Bacher <seb128@ubuntu.com>  Tue, 16 Aug 2011 11:24:31 +0200
+
 unity (4.8.0-0ubuntu1) oneiric; urgency=low
 
   * New upstream release.
