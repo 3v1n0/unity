@@ -21,6 +21,7 @@
 #define IM_TEXT_ENTRY_H
 
 #include <gtk/gtk.h>
+#include <gdk/gdkx.h>
 
 #include <Nux/Nux.h>
 #include <Nux/TextEntry.h>
@@ -41,16 +42,24 @@ public:
   IMTextEntry();
   ~IMTextEntry();
 
+  nux::Property<std::string> preedit_string;
+
 private:
+  void SetupIMContexts();
+
   bool InspectKeyEvent(unsigned int eventType, unsigned int keysym, const char* character);
   bool TryHandleEvent(unsigned int eventType, unsigned int keysym, const char* character);
   void KeyEventToGdkEventKey(Event& event, GdkEventKey& gdk_event);
+  inline void CheckValidClientWindow(Window window);
 
   void OnFocusChanged(nux::Area* area);
-  void OnIMCommit(GtkIMContext* context, char* str);
-  void OnIMPreeditChanged(GtkIMContext* context);
-  void OnIMPreeditStart(GtkIMContext* context);
-  void OnIMPreeditEnd(GtkIMContext* context);
+  void OnCommit(GtkIMContext* context, char* str);
+  void OnPreeditChanged(GtkIMContext* context);
+  void OnPreeditStart(GtkIMContext* context);
+  void OnPreeditEnd(GtkIMContext* context);
+
+  void OnMouseButtonDown(int x, int y, unsigned long bflags, unsigned long kflags);
+
  private:
   glib::SignalManager sig_manager_;
   GtkIMContext* im_context_;
