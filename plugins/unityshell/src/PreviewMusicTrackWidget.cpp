@@ -81,7 +81,7 @@ namespace unity {
     //FIXME - use a button subclass for absolute renderering
     play_button_ = new nux::Button(number_.c_str());
 
-    play_button_->Activated.connect ([&] (nux::View *view) {
+    play_button_->click.connect ([&] (nux::View *view) {
       if (track_is_active)
       {
         is_paused = !is_paused;

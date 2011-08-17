@@ -35,7 +35,7 @@ namespace unity {
       : FilterExpanderLabel ("Rating", NUX_FILE_LINE_PARAM)
   {
     any_button_ = new FilterBasicButton("Any", NUX_TRACKER_LOCATION);
-    any_button_->Activated.connect(sigc::mem_fun(this, &FilterRatingsWidget::OnAnyButtonActivated));
+    any_button_->click.connect(sigc::mem_fun(this, &FilterRatingsWidget::OnAnyButtonActivated));
 
     SetRightHandView(any_button_);
 

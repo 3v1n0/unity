@@ -34,7 +34,7 @@ namespace unity {
     InitTheme();
 
     all_button_ = new FilterBasicButton("Any", NUX_TRACKER_LOCATION);
-    all_button_->Activated.connect(sigc::mem_fun(this, &FilterGenre::OnAllActivated));
+    all_button_->click.connect(sigc::mem_fun(this, &FilterGenre::OnAllActivated));
     all_button_->Reference();
 
     genre_layout_ = new nux::GridHLayout(NUX_TRACKER_LOCATION);

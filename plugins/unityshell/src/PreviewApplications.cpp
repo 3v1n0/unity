@@ -89,7 +89,7 @@ namespace unity {
       // create the action buttons
       PreviewBasicButton* primary_button = new PreviewBasicButton(preview_->primary_action_name.c_str(), NUX_TRACKER_LOCATION);
       //FIXME - add secondary action when we have the backend for it
-      primary_button->Activated.connect ([&] (nux::View *view) { UriActivated.emit (preview_->primary_action_uri); });
+      primary_button->click.connect ([&] (nux::View *view) { UriActivated.emit (preview_->primary_action_uri); });
       button_container->AddLayout (new nux::SpaceLayout(6,6,6,6), 0);
       button_container->AddView (primary_button, 1);
       button_container->AddLayout (new nux::SpaceLayout(6,6,6,6), 0);
