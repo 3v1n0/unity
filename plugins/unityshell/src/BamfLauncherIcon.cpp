@@ -449,7 +449,7 @@ void BamfLauncherIcon::Focus()
 
   /* sort the list */
   CompWindowList tmp;
-  for (CompWindow* &win : m_Screen->windows())
+  for (auto win : m_Screen->clientList())
   {
     if (std::find(windows.begin(), windows.end(), win) != windows.end())
       tmp.push_back(win);
@@ -504,14 +504,25 @@ void BamfLauncherIcon::Focus()
   }
   else if (any_on_current)
   {
+    CompWindow* last = 0;
+    windows.reverse();
     for (CompWindow* &win : windows)
     {
       if (win->defaultViewport() == m_Screen->vp() &&
           ((any_mapped && !win->minimized()) || !any_mapped))
       {
-        win->activate();
+        if (last)
+        {
+          win->raise();
+        }
+        else
+        {
+          win->activate();
+        }
+        last = win;
       }
     }
+
   }
   else
   {
