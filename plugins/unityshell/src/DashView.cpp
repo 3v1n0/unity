@@ -165,6 +165,11 @@ nux::Geometry DashView::GetBestFitGeometry(nux::Geometry const& for_geo)
   height += tile_height * 4.75;
   height += lens_bar_->GetGeometry().height;
 
+  if (for_geo.width > 800 && for_geo.height > 550)
+  {
+    width = MIN(width, for_geo.width-66);
+    height = MIN(height, for_geo.height-24);
+  }
   return nux::Geometry(0, 0, width, height);
 }
 
