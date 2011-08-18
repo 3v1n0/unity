@@ -53,9 +53,6 @@ namespace unity {
     background_monitor = gnome_bg_new ();
     client = g_settings_new ("org.gnome.desktop.background");
 
-    glib::Object<GdkPixbuf> pixbuf(GetPixbufFromBG());
-    LoadPixbufToHash(pixbuf);
-
     signal_manager_.Add(
       new glib::Signal<void, GnomeBG*>(background_monitor,
                                        "changed",
@@ -69,6 +66,9 @@ namespace unity {
     UBusServer *ubus = ubus_server_get_default ();
 
     gnome_bg_load_from_preferences (background_monitor, client);
+
+    glib::Object<GdkPixbuf> pixbuf(GetPixbufFromBG());
+    LoadPixbufToHash(pixbuf);
 
     g_timeout_add (0, (GSourceFunc)ForceUpdate, (gpointer)this);
 
@@ -353,7 +353,7 @@ namespace unity {
                                             _current_color.red * 0.7f,
                                             _current_color.green * 0.7f,
                                             _current_color.blue * 0.7f,
-                                            _current_color.alpha)
+                                            0.5)
                             );
   }
 
