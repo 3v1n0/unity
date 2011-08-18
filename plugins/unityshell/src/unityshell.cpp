@@ -1048,25 +1048,38 @@ const gchar* UnityScreen::GetName()
 const CompWindowList& UnityScreen::getWindowPaintList()
 {
   CompWindowList& pl = _withRemovedNuxWindows = cScreen->getWindowPaintList();
-  CompWindowList::iterator it = pl.end();
-  CompWindowList::iterator begin = pl.begin();
+  CompWindowList::reverse_iterator it = pl.rbegin();
+  CompWindowList::reverse_iterator end = pl.rend();
   std::vector<Window> const& xwns = nux::XInputWindow::NativeHandleList();
 
   unsigned int size = xwns.size();
 
-  while (it != begin)
+  while (it != end)
   {
-    --it;
-
+    bool erased = false;
     auto id = (*it)->id();
     for (unsigned int i = 0; i < size; ++i)
     {
       if (xwns[i] == id)
       {
-        it = pl.erase(it);
+        /* Increment the reverse_iterator to ensure
+	       * it is valid, then it++ returns the old
+         * position */
+        CompWindowList::reverse_iterator oit = it++;
+        /* Get the base and offset by -1 since
+         * &*(reverse_iterator(i)) == &*(i - 1)) */
+        CompWindowList::iterator eit = --(oit.base ());
+
+        erased = true;
+
+        /* Remove that from the list */
+        pl.erase(eit);
         break;
       }
     }
+
+    if (!erased)
+      it++;
   }
 
   return pl;
