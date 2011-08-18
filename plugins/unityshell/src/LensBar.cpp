@@ -37,6 +37,8 @@ NUX_IMPLEMENT_OBJECT_TYPE(LensBar);
 LensBar::LensBar()
   : nux::View(NUX_TRACKER_LOCATION)
 {
+  SetupBackground();
+
   layout_ = new nux::HLayout();
   layout_->SetContentDistribution(nux::MAJOR_POSITION_CENTER);
   layout_->SetHorizontalInternalMargin(24);
@@ -58,6 +60,15 @@ LensBar::LensBar()
 
 LensBar::~LensBar()
 {}
+
+void LensBar::SetupBackground()
+{
+  nux::ROPConfig rop;
+  rop.Blend = true;
+  rop.SrcBlend = GL_ONE;
+  rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+  bg_layer_ = new nux::ColorLayer(nux::Color(0.0f, 0.0f, 0.0f, 0.2f), true, rop);
+}
 
 void LensBar::AddLens(Lens::Ptr& lens)
 {
@@ -85,8 +96,8 @@ void LensBar::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
   gfx_context.PushClippingRectangle(geo);
   nux::GetPainter().PaintBackground(gfx_context, geo);
 
-  nux::Color col (0.0f, 0.0f, 0.0f, 0.2f);
-  gfx_context.QRP_Color (geo.x, geo.y, geo.width, geo.height, col);
+  bg_layer_->SetGeometry(geo);
+  nux::GetPainter().RenderSinglePaintLayer(gfx_context, geo, bg_layer_);
 
   gfx_context.PopClippingRectangle();
 }
@@ -94,7 +105,13 @@ void LensBar::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
 void LensBar::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
 {
   gfx_context.PushClippingRectangle(GetGeometry());
+  
+  nux::GetPainter().PushLayer(gfx_context, bg_layer_->GetGeometry(), bg_layer_);
+  
   layout_->ProcessDraw(gfx_context, force_draw);
+  
+  nux::GetPainter().PopBackground();
+  
   gfx_context.PopClippingRectangle();
 }
 

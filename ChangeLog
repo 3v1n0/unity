@@ -1,3 +1,397 @@
+2011-08-18  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Fix redrawing, fix blending in lensbar
+
+2011-08-18  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] dead key support
+
+2011-08-18  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	replace l's
+
+2011-08-18  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Disable multi-context until we make sense of whats wrong
+
+2011-08-18  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] trunk
+
+2011-08-18  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] trunk
+
+2011-08-18  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	as much as I have right now
+
+2011-08-17  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	some fixes
+
+2011-08-17  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Actually show menu
+
+2011-08-17  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Add some fixes
+
+2011-08-16  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Clean up code a bit
+
+2011-08-16  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Correct keycode handling
+
+2011-08-16  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Some fixes
+
+2011-08-16  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Some form of workingness
+
+2011-08-16  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	beginnings of IM support integration
+
+2011-08-18  Gord Allott  <gord.allott@canonical.com>
+
+	merged in branch to fix a few bugs and crashers in the bg hash codebase
+
+2011-08-18  Gord Allott  <gord.allott@canonical.com>
+
+	try and fix the race
+
+2011-08-18  Gord Allott  <gord.allott@canonical.com>
+
+	hopefully fixed the issue with the default colour
+
+2011-08-18  Gord Allott  <gord.allott@canonical.com>
+
+	fixed crasher with gradients
+
+2011-08-18  David Gomes  <davidrafagomes@gmail.com>
+
+	Merged in DavidGomes branch to fix neils lack of l's
+
+2011-08-12  David Gomes  <davidrafagomes@gmail.com>
+
+	Fixed NJPatels email
+
+2011-08-12  David Gomes  <davidrafagomes@gmail.com>
+
+	Fixed NJPatels name on DashSearchBar.cpp
+
+2011-08-18  Gord Allott  <gord.allott@canonical.com>
+
+	merging in a branch to do some slight visual changes to the results view
+
+2011-08-18  Gord Allott  <gord.allott@canonical.com>
+
+	ran the formatter on the results code
+
+2011-08-18  Gord Allott  <gord.allott@canonical.com>
+
+	remove mouse focus in results grid on mouse leave
+
+2011-08-18  Gord Allott  <gord.allott@canonical.com>
+
+	fixed the position of the blurred icons in the results grid
+
+2011-08-18  Gord Allott  <gord.allott@canonical.com>
+
+	increased size of tile highlight
+
+2011-08-18  Gord Allott  <gord.allott@canonical.com>
+
+	merge in keynav support for the results view
+
+2011-08-17  Gord Allott  <gord.allott@canonical.com>
+
+	removed debugs, hooked up to activation
+
+2011-08-17  Gord Allott  <gord.allott@canonical.com>
+
+	woo fully working keynav
+
+2011-08-17  Gord Allott  <gord.allott@canonical.com>
+
+	whatever i did
+
+2011-08-16  Gord Allott  <gord.allott@canonical.com>
+
+	should now bubble up
+
+2011-08-16  Gord Allott  <gord.allott@canonical.com>
+
+	inital keynav working
+
+2011-08-18  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Merge in crash fix
+
+2011-08-18  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Fix indentation
+
+2011-08-17  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Make it more obvious what we're doing here
+
+2011-08-17  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Decrement the return value of ::base () due to the offset
+
+2011-08-17  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Correctly erase elements when traversing the paint list
+
+2011-08-18  Jason Smith  <jason.smith@canonical.com>
+
+	properly fix crash in SwitcherView::OnDrawTimeout
+
+2011-08-18  Jason Smith  <jason.smith@canonical.com>
+
+	avoid leaking background texture
+
+2011-08-17  Jason Smith  <jason.smith@canonical.com>
+
+	merge switcher-polish branch
+
+2011-08-17  Jason Smith  <jason.smith@canonical.com>
+
+	delay destruction of switcher view to avoid race condition with g_source_remove
+
+2011-08-17  Jason Smith  <jason.smith@canonical.com>
+
+	simplify and add comment
+
+2011-08-17  Jason Smith  <jason.smith@canonical.com>
+
+	ensure that stacking order is preserved when raising groups of windows
+
+2011-08-17  Jason Smith  <jason.smith@canonical.com>
+
+	make switcher timeout configurable
+
+2011-08-17  Jason Smith  <jason.smith@canonical.com>
+
+	initial work for timeout for reveal of windows
+
+2011-08-17  Jason Smith  <jason.smith@canonical.com>
+
+	implement down/up area to detail
+	alt-grave to flip between windows
+	alt-esc to cancel and alt-tab operation
+
+2011-08-17  Jason Smith  <jason.smith@canonical.com>
+
+	merge tims memory leak branch
+
+2011-08-18  Tim Penhey  <tim.penhey@canonical.com>
+
+	Merge trunk.
+
+2011-08-16  Tim Penhey  <tim.penhey@canonical.com>
+
+	Oops, pass by reference, not copy.
+
+2011-08-16  Tim Penhey  <tim.penhey@canonical.com>
+
+	Merge trunk.
+
+2011-07-25  Tim Penhey  <tim.penhey@canonical.com>
+
+	Make sure we call the destroy textures in the unityshell cleanup.
+
+2011-07-25  Tim Penhey  <tim.penhey@canonical.com>
+
+	More clean up in icon renderer.
+
+2011-07-25  Tim Penhey  <tim.penhey@canonical.com>
+
+	More local:: namespacing.
+
+2011-07-25  Tim Penhey  <tim.penhey@canonical.com>
+
+	Make the GenerateTextures and DestroyTextures class methods, and move the implementation of the shared resources into the .cpp file.
+
+2011-08-17  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Changes to AbstractButton class
+	* Replaced "Activated" signal with "activated"
+
+2011-08-17  Jay Taoko  <jay.taoko@canonical.com>
+
+	Merge
+
+2011-08-17  Jay Taoko  <jay.taoko@canonical.com>
+
+	Changed click signal to activated in AbstractButton class
+
+2011-08-16  Jay Taoko  <jay.taoko@canonical.com>
+
+	Changes to AbstractButton class
+
+2011-08-17  Jason Smith  <jason.smith@canonical.com>
+
+	fix spacing issues in IconRenderer
+	fix unneeded branch in BEH
+
+2011-08-16  Jason Smith  <jason.smith@canonical.com>
+
+	merge blur abstraction branch
+
+2011-08-16  Jason Smith  <jason.smith@canonical.com>
+
+	merge trunk
+
+2011-08-16  Jason Smith  <jason.smith@canonical.com>
+
+	more performance improvements
+
+2011-08-16  Jason Smith  <jason.smith@canonical.com>
+
+	simplify effect helper further
+
+2011-08-15  Jason Smith  <jason.smith@canonical.com>
+
+	enable configurable sigma levels for different power GPU's
+
+2011-08-13  Jason Smith  <jason.smith@canonical.com>
+
+	avoid blurring the screen durring animations/redraws
+	this improves performance dramatically, basically dynamically switching
+	between a static blur and an active blur
+
+2011-08-13  Jason Smith  <jason.smith@canonical.com>
+
+	make sigma size configurable
+
+2011-08-13  Jason Smith  <jason.smith@canonical.com>
+
+	centralize control over blur behavior into BackgroundEffectHelper class
+	this improves the abstraction greatly and avoids the need to track many different item types
+
+2011-08-16  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Fix issue with accessing member variables from a static method
+
+2011-08-16  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Don't access member variables in a static function
+
+2011-08-16  Tim Penhey  <tim.penhey@canonical.com>
+
+	Some memory leaks fixes and clean up shutdown.
+	
+	A few object deletions commented out to allow shutdown.
+	Fix leaks in tooltips, PanelStyle, and BGHash.
+
+2011-08-15  Tim Penhey  <tim.penhey@canonical.com>
+
+	Remove the destroy textures from the destructor.  I have another branch that fixes that one.
+
+2011-08-12  Tim Penhey  <tim.penhey@canonical.com>
+
+	Actually destroy the textures.
+
+2011-08-12  Tim Penhey  <tim.penhey@canonical.com>
+
+	Don't leak the background every time it is changed.
+
+2011-08-12  Tim Penhey  <tim.penhey@canonical.com>
+
+	Use the internal context so as not to leak the created one.
+
+2011-08-12  Tim Penhey  <tim.penhey@canonical.com>
+
+	Remember to fre the texture mask and outline as well.
+
+2011-08-12  Tim Penhey  <tim.penhey@canonical.com>
+
+	Don't delete the window thread (leak it for now) to allow compiz to actually shutdown.
+
+2011-08-12  Tim Penhey  <tim.penhey@canonical.com>
+
+	Merge trunk (again).
+
+2011-08-11  Tim Penhey  <tim.penhey@canonical.com>
+
+	Merge trunk
+
+2011-08-10  Tim Penhey  <tim.penhey@canonical.com>
+
+	Merge trunk.
+
+2011-08-10  Tim Penhey  <tim.penhey@canonical.com>
+
+	Temporarily disable the gtk_widget_destroy window for the systray as it is blocking on X during compiz shutdown.
+
+2011-08-10  Tim Penhey  <tim.penhey@canonical.com>
+
+	More debugging info in PlacesView.
+
+2011-08-13  Jason Smith  <jason.smith@canonical.com>
+
+	fix bug where using alt-tab would cause launcher to fail to reveal
+
+2011-08-12  Didier Roche  <didier.roche@canonical.com>
+
+	adding dee pkgconfig as the lib is leaking it's API
+
+2011-08-12  Jason Smith  <jason.smith@canonical.com>
+
+	fix minor crash
+
+2011-08-12  Jason Smith  <jason.smith@canonical.com>
+
+	fix null deref
+
+2011-08-11  Gord Allott  <gord.allott@canonical.com>
+
+	fix for the background blur codebase in a race
+
+2011-08-11  Gord Allott  <gord.allott@canonical.com>
+
+	forces background colour update
+
+2011-08-11  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Some fixes for global search
+
+2011-08-11  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Fix fallback launching....DUH
+
+2011-08-11  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] jason's branc
+
+2011-08-11  Jason Smith  <jason.smith@canonical.com>
+
+	disable blur updates in switcher whenever it is animating
+
+2011-08-11  Jason Smith  <jason.smith@canonical.com>
+
+	disable blur in test app
+
+2011-08-11  Jason Smith  <jason.smith@canonical.com>
+
+	implement alt-tab blur
+
+2011-08-11  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Disable corner activation pending design input as it's really funky right now
+
+2011-08-11  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Release 
+
 2011-08-11  Neil Jagdish Patel  <neil.patel@canonical.com>
 
 	fix build

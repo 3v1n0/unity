@@ -146,18 +146,18 @@ public:
   bool setKeyboardFocusKeyInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool launcherRevealEdgeInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
 
+  bool altTabInitiateCommon(CompAction* action,
+                            CompAction::State state,
+                            CompOption::Vector& options);
+  bool altTabTerminateCommon(CompAction* action,
+                             CompAction::State state,
+                             CompOption::Vector& options);
+
   bool altTabForwardInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
-  bool altTabForwardTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool altTabPrevInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
-  bool altTabPrevTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool altTabDetailStartInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
-  bool altTabDetailStartTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool altTabDetailStopInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
-  bool altTabDetailStopTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool altTabNextWindowInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
-  bool altTabNextWindowTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options);
-  bool altTabExitInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
-  bool altTabExitTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options);
 
   /* handle option changes and change settings inside of the
    * panel and dock views */
@@ -257,6 +257,7 @@ private:
 
   UBusManager ubus_manager_;
   bool dash_is_open_;
+  CompScreen::GrabHandle grab_index_;
 
 	friend class UnityWindow;
 };

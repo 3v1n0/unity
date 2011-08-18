@@ -113,6 +113,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , _last_output(nullptr)
   , switcher_desktop_icon(nullptr)
   , mActiveFbo (0)
+  , grab_index_ (0)
 {
   Timer timer;
   configure_logging();
@@ -191,23 +192,20 @@ UnityScreen::UnityScreen(CompScreen* screen)
   optionSetAltTabTimeoutNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
   
   optionSetAltTabForwardInitiate(boost::bind(&UnityScreen::altTabForwardInitiate, this, _1, _2, _3));
-  optionSetAltTabForwardTerminate(boost::bind(&UnityScreen::altTabForwardTerminate, this, _1, _2, _3));
+  optionSetAltTabForwardTerminate(boost::bind(&UnityScreen::altTabTerminateCommon, this, _1, _2, _3));
   
   optionSetAltTabPrevInitiate(boost::bind(&UnityScreen::altTabPrevInitiate, this, _1, _2, _3));
-  optionSetAltTabPrevTerminate(boost::bind(&UnityScreen::altTabPrevTerminate, this, _1, _2, _3));
+  optionSetAltTabPrevTerminate(boost::bind(&UnityScreen::altTabTerminateCommon, this, _1, _2, _3));
   
   optionSetAltTabDetailStartInitiate(boost::bind(&UnityScreen::altTabDetailStartInitiate, this, _1, _2, _3));
-  optionSetAltTabDetailStartTerminate(boost::bind(&UnityScreen::altTabDetailStartTerminate, this, _1, _2, _3));
-
   optionSetAltTabDetailStopInitiate(boost::bind(&UnityScreen::altTabDetailStopInitiate, this, _1, _2, _3));
-  optionSetAltTabDetailStopTerminate(boost::bind(&UnityScreen::altTabDetailStopTerminate, this, _1, _2, _3));
-
   optionSetAltTabNextWindowInitiate(boost::bind(&UnityScreen::altTabNextWindowInitiate, this, _1, _2, _3));
-  optionSetAltTabNextWindowTerminate(boost::bind(&UnityScreen::altTabNextWindowTerminate, this, _1, _2, _3));
-
+/*
   optionSetAltTabExitInitiate(boost::bind(&UnityScreen::altTabExitInitiate, this, _1, _2, _3));
   optionSetAltTabExitTerminate(boost::bind(&UnityScreen::altTabExitTerminate, this, _1, _2, _3));
-  
+*/
+  optionSetAltTabLeftInitiate (boost::bind (&UnityScreen::altTabPrevInitiate, this, _1, _2, _3));
+  optionSetAltTabRightInitiate (boost::bind (&UnityScreen::altTabForwardInitiate, this, _1, _2, _3));
 
   for (unsigned int i = 0; i < G_N_ELEMENTS(_ubus_handles); i++)
     _ubus_handles[i] = 0;
@@ -806,62 +804,89 @@ bool UnityScreen::setKeyboardFocusKeyInitiate(CompAction* action,
   return false;
 }
 
+bool UnityScreen::altTabInitiateCommon(CompAction *action,
+				       CompAction::State state,
+				       CompOption::Vector& options)
+{
+  std::vector<AbstractLauncherIcon*> results;
+
+  if (!switcher_desktop_icon)
+  {
+    switcher_desktop_icon = new DesktopLauncherIcon(launcher);
+    switcher_desktop_icon->SinkReference();
+  }
+
+  results.push_back(switcher_desktop_icon);
+
+  LauncherModel::iterator it;
+  for (it = launcher->GetModel()->begin(); it != launcher->GetModel()->end(); it++)
+    if ((*it)->ShowInSwitcher())
+      results.push_back(*it);
+
+  screen->addAction (&optionGetAltTabRight ());
+  screen->addAction (&optionGetAltTabDetailStart ());
+  screen->addAction (&optionGetAltTabDetailStop ());
+  screen->addAction (&optionGetAltTabLeft ());
+  screen->addAction (&optionGetAltTabNextWindow ());
+
+  if (!grab_index_)
+    grab_index_ = screen->pushGrab (screen->invisibleCursor(), "unity-switcher");
+
+  // maybe check launcher position/hide state?
+  switcherController->SetWorkspace(nux::Geometry(_primary_monitor.x + 100,
+						 _primary_monitor.y + 100,
+						 _primary_monitor.width - 200,
+						 _primary_monitor.height - 200));
+  switcherController->Show(SwitcherController::ALL, SwitcherController::FOCUS_ORDER, false, results);
+  return true;
+}
+
+bool UnityScreen::altTabTerminateCommon(CompAction* action,
+					CompAction::State state,
+					CompOption::Vector& options)
+{
+  if (grab_index_)
+  {
+    // remove grab before calling hide so workspace switcher doesn't fail
+    screen->removeGrab(grab_index_, NULL);
+    grab_index_ = 0;
+
+    screen->removeAction (&optionGetAltTabRight ());
+    screen->removeAction (&optionGetAltTabDetailStart ());
+    screen->removeAction (&optionGetAltTabDetailStop ());
+    screen->removeAction (&optionGetAltTabLeft ());
+    screen->removeAction (&optionGetAltTabNextWindow ());
+    
+    bool accept_state = (state & CompAction::StateCancel) == 0;
+    switcherController->Hide(accept_state);
+    action->setState (action->state() & (unsigned)~(CompAction::StateTermKey));
+  }
+
+  return true;
+}
+
 bool UnityScreen::altTabForwardInitiate(CompAction* action,
                                         CompAction::State state,
                                         CompOption::Vector& options)
 {
   if (switcherController->Visible())
-  {
     switcherController->Next();
-  }
   else
-  {
-    std::vector<AbstractLauncherIcon*> results;
-
-    if (!switcher_desktop_icon)
-    {
-      switcher_desktop_icon = new DesktopLauncherIcon(launcher);
-      switcher_desktop_icon->SinkReference();
-    }
-
-    results.push_back(switcher_desktop_icon);
-
-    for (auto icon : *(launcher->GetModel()))
-      if (icon->ShowInSwitcher())
-        results.push_back(icon);
-
-    // maybe check launcher position/hide state?
-    switcherController->SetWorkspace(nux::Geometry(_primary_monitor.x + 100,
-                                                   _primary_monitor.y + 100,
-                                                   _primary_monitor.width - 200,
-                                                   _primary_monitor.height - 200));
-    switcherController->Show(SwitcherController::ALL, SwitcherController::FOCUS_ORDER, false, results);
-  }
+    altTabInitiateCommon(action, state, options);
 
   action->setState(action->state() | CompAction::StateTermKey);
   return false;
 }
 
-bool UnityScreen::altTabForwardTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options)
-{
-  action->setState(action->state() & (unsigned)~(CompAction::StateTermKey));
-  bool accept_state = (state & CompAction::StateCancel) == 0;
-  switcherController->Hide(accept_state);
-  return false;
-}
 
 bool UnityScreen::altTabPrevInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
 {
   if (switcherController->Visible())
     switcherController->Prev();
-
+  else
+    altTabInitiateCommon(action, state, options);
   action->setState(action->state() | CompAction::StateTermKey);
-  return false;
-}
 
-bool UnityScreen::altTabPrevTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options)
-{
-  action->setState(action->state() & (unsigned)~(CompAction::StateTermKey));
   return false;
 }
 
@@ -870,13 +895,6 @@ bool UnityScreen::altTabDetailStartInitiate(CompAction* action, CompAction::Stat
   if (switcherController->Visible())
     switcherController->SetDetail(true);
 
-  action->setState(action->state() | CompAction::StateTermKey);
-  return false;
-}
-
-bool UnityScreen::altTabDetailStartTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options)
-{
-  action->setState(action->state() & (unsigned)~(CompAction::StateTermKey));
   return false;
 }
 
@@ -885,13 +903,6 @@ bool UnityScreen::altTabDetailStopInitiate(CompAction* action, CompAction::State
   if (switcherController->Visible())
     switcherController->SetDetail(false);
 
-  action->setState(action->state() | CompAction::StateTermKey);
-  return false;
-}
-
-bool UnityScreen::altTabDetailStopTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options)
-{
-  action->setState(action->state() & (unsigned)~(CompAction::StateTermKey));
   return false;
 }
 
@@ -900,26 +911,6 @@ bool UnityScreen::altTabNextWindowInitiate(CompAction* action, CompAction::State
   if (switcherController->Visible())
     switcherController->NextDetail();
 
-  action->setState(action->state() | CompAction::StateTermKey);
-  return false;
-}
-
-bool UnityScreen::altTabNextWindowTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options)
-{
-  action->setState(action->state() & (unsigned)~(CompAction::StateTermKey));
-  return false;
-}
-
-bool UnityScreen::altTabExitInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
-{
-  switcherController->Hide(false);
-  action->setState(action->state() | CompAction::StateTermKey);
-  return false;
-}
-
-bool UnityScreen::altTabExitTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options)
-{
-  action->setState(action->state() & (unsigned)~(CompAction::StateTermKey));
   return false;
 }
 
@@ -1051,25 +1042,38 @@ const gchar* UnityScreen::GetName()
 const CompWindowList& UnityScreen::getWindowPaintList()
 {
   CompWindowList& pl = _withRemovedNuxWindows = cScreen->getWindowPaintList();
-  CompWindowList::iterator it = pl.end();
-  CompWindowList::iterator begin = pl.begin();
+  CompWindowList::reverse_iterator it = pl.rbegin();
+  CompWindowList::reverse_iterator end = pl.rend();
   std::vector<Window> const& xwns = nux::XInputWindow::NativeHandleList();
 
   unsigned int size = xwns.size();
 
-  while (it != begin)
+  while (it != end)
   {
-    --it;
-
+    bool erased = false;
     auto id = (*it)->id();
     for (unsigned int i = 0; i < size; ++i)
     {
       if (xwns[i] == id)
       {
-        it = pl.erase(it);
+        /* Increment the reverse_iterator to ensure
+	       * it is valid, then it++ returns the old
+         * position */
+        CompWindowList::reverse_iterator oit = it++;
+        /* Get the base and offset by -1 since
+         * &*(reverse_iterator(i)) == &*(i - 1)) */
+        CompWindowList::iterator eit = --(oit.base ());
+
+        erased = true;
+
+        /* Remove that from the list */
+        pl.erase(eit);
         break;
       }
     }
+
+    if (!erased)
+      it++;
   }
 
   return pl;
