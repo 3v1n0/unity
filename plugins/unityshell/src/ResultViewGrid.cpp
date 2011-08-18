@@ -28,7 +28,7 @@
 
 namespace
 {
-  nux::logging::Logger logger("unity.dash.ResultViewGrid");
+nux::logging::Logger logger("unity.dash.ResultViewGrid");
 }
 
 namespace unity
@@ -36,25 +36,33 @@ namespace unity
 namespace dash
 {
 ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
-    : ResultView (NUX_FILE_LINE_PARAM)
-    , horizontal_spacing(6)
-    , vertical_spacing(6)
-    , padding (6)
-    , mouse_over_index_ (-1)
-    , active_index_ (-1)
-    , selected_index_ (-1)
-    , preview_row_ (0)
+  : ResultView(NUX_FILE_LINE_PARAM)
+  , horizontal_spacing(6)
+  , vertical_spacing(6)
+  , padding(6)
+  , mouse_over_index_(-1)
+  , active_index_(-1)
+  , selected_index_(-1)
+  , preview_row_(0)
 {
-  auto needredraw_lambda = [&] (int value) { NeedRedraw(); };
-  horizontal_spacing.changed.connect (needredraw_lambda);
-  vertical_spacing.changed.connect (needredraw_lambda);
-  padding.changed.connect (needredraw_lambda);
+  auto needredraw_lambda = [&](int value)
+  {
+    NeedRedraw();
+  };
+  horizontal_spacing.changed.connect(needredraw_lambda);
+  vertical_spacing.changed.connect(needredraw_lambda);
+  padding.changed.connect(needredraw_lambda);
 
-  mouse_move.connect (sigc::mem_fun (this, &ResultViewGrid::MouseMove));
-  mouse_click.connect (sigc::mem_fun (this, &ResultViewGrid::MouseClick));
   OnKeyNavFocusChange.connect (sigc::mem_fun (this, &ResultViewGrid::OnOnKeyNavFocusChange));
   OnKeyNavFocusActivate.connect ([&] (nux::Area *area) { UriActivated.emit (focused_uri_); });
   key_down.connect (sigc::mem_fun (this, &ResultViewGrid::OnKeyDown));
+  mouse_move.connect(sigc::mem_fun(this, &ResultViewGrid::MouseMove));
+  mouse_click.connect(sigc::mem_fun(this, &ResultViewGrid::MouseClick));
+  mouse_leave.connect([&](int x, int y, unsigned long mouse_state, unsigned long button_state)
+  {
+    mouse_over_index_ = -1;
+    NeedRedraw();
+  });
 
   NeedRedraw();
 }
@@ -69,7 +77,7 @@ int ResultViewGrid::GetItemsPerRow()
   return (items_per_row) ? items_per_row : 1; // always at least one item per row
 }
 
-void ResultViewGrid::SetPreview (PreviewBase *preview, Result& related_result)
+void ResultViewGrid::SetPreview(PreviewBase* preview, Result& related_result)
 {
   ResultView::SetPreview(preview, related_result);
 
@@ -91,7 +99,7 @@ void ResultViewGrid::SetPreview (PreviewBase *preview, Result& related_result)
   int y_position = row_number * row_size;
 
   preview_layout_->SetMinimumHeight(600);
-  preview_layout_->SetGeometry (GetGeometry().x, y_position,
+  preview_layout_->SetGeometry(GetGeometry().x, y_position,
                                GetGeometry().width, 600);
 
   preview_layout_->SetBaseY(160);
@@ -104,22 +112,22 @@ void ResultViewGrid::SetPreview (PreviewBase *preview, Result& related_result)
 void ResultViewGrid::SetModelRenderer(ResultRenderer* renderer)
 {
   ResultView::SetModelRenderer(renderer);
-  SizeReallocate ();
+  SizeReallocate();
 }
 
-void ResultViewGrid::AddResult (Result & result)
+void ResultViewGrid::AddResult(Result& result)
 {
-  ResultView::AddResult (result);
-  SizeReallocate ();
+  ResultView::AddResult(result);
+  SizeReallocate();
 }
 
-void ResultViewGrid::RemoveResult (Result & result)
+void ResultViewGrid::RemoveResult(Result& result)
 {
-  ResultView::RemoveResult (result);
-  SizeReallocate ();
+  ResultView::RemoveResult(result);
+  SizeReallocate();
 }
 
-void ResultViewGrid::SizeReallocate ()
+void ResultViewGrid::SizeReallocate()
 {
   //FIXME - needs to use the geometry assigned to it, but only after a layout
   int items_per_row = GetItemsPerRow();
@@ -140,12 +148,12 @@ void ResultViewGrid::SizeReallocate ()
   {
     total_height = renderer_->height;
   }
-  SetMinimumHeight (total_height + (padding * 2));
-  SetMaximumHeight (total_height + (padding * 2));
+  SetMinimumHeight(total_height + (padding * 2));
+  SetMaximumHeight(total_height + (padding * 2));
   PositionPreview();
 }
 
-void ResultViewGrid::PositionPreview ()
+void ResultViewGrid::PositionPreview()
 {
   if (preview_layout_ == NULL)
     return;
@@ -186,7 +194,8 @@ void ResultViewGrid::PositionPreview ()
   }
 }
 
-long int ResultViewGrid::ProcessEvent(nux::IEvent& ievent, long int TraverseInfo, long int ProcessEventInfo) {
+long int ResultViewGrid::ProcessEvent(nux::IEvent& ievent, long int TraverseInfo, long int ProcessEventInfo)
+{
   return TraverseInfo;
 }
 
@@ -396,14 +405,15 @@ void ResultViewGrid::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   uint row_size = renderer_->height + vertical_spacing;
 
   int y_position = padding + GetGeometry().y;
+  nux::Area* top_level_parent = GetToplevel();
 
   for (uint row_index = 0; row_index <= total_rows; row_index++)
   {
     // check if the row is displayed on the screen,
     // FIXME - optimisation - replace 2048 with the height of the displayed viewport
     // or at the very least, with the largest monitor resolution
-    //if ((y_position + renderer_->height) + absolute_y >= 0
-      //  && (y_position - renderer_->height) + absolute_y <= 2048)
+    //~ if ((y_position + renderer_->height) + absolute_y >= 0
+    //~ && (y_position - renderer_->height) + absolute_y <= top_level_parent->GetGeometry().height)
     if (1)
     {
       int x_position = padding + GetGeometry().x;
@@ -427,13 +437,13 @@ void ResultViewGrid::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
           state = ResultRenderer::RESULT_RENDERER_ACTIVE;
         }
 
-        int half_width = GetGeometry().width / 2;
+        int half_width = top_level_parent->GetGeometry().width / 2;
         // FIXME - we assume the height of the viewport is 600
-        int half_height = 600 / 2;
+        int half_height = top_level_parent->GetGeometry().height;
 
         int offset_x = (x_position - half_width) / (half_width / 10);
         int offset_y = ((y_position + absolute_y) - half_height) / (half_height / 10);
-        nux::Geometry render_geo (x_position, y_position, renderer_->width, renderer_->height);
+        nux::Geometry render_geo(x_position, y_position, renderer_->width, renderer_->height);
         renderer_->Render(GfxContext, results_[index], state, render_geo, offset_x, offset_y);
 
         x_position += renderer_->width + horizontal_spacing;
@@ -452,14 +462,15 @@ void ResultViewGrid::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   GfxContext.PopClippingRectangle();
 }
 
-void ResultViewGrid::DrawContent (nux::GraphicsEngine &GfxContent, bool force_draw) {
-  nux::Geometry base = GetGeometry ();
-  GfxContent.PushClippingRectangle (base);
+void ResultViewGrid::DrawContent(nux::GraphicsEngine& GfxContent, bool force_draw)
+{
+  nux::Geometry base = GetGeometry();
+  GfxContent.PushClippingRectangle(base);
 
-  if (GetCompositionLayout ())
+  if (GetCompositionLayout())
   {
     nux::Geometry geo = GetCompositionLayout()->GetGeometry();
-    GetCompositionLayout ()->ProcessDraw (GfxContent, force_draw);
+    GetCompositionLayout()->ProcessDraw(GfxContent, force_draw);
   }
 
   GfxContent.PopClippingRectangle();
@@ -468,23 +479,23 @@ void ResultViewGrid::DrawContent (nux::GraphicsEngine &GfxContent, bool force_dr
 
 void ResultViewGrid::MouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
 {
-  uint index = GetIndexAtPosition (x, y);
+  uint index = GetIndexAtPosition(x, y);
   mouse_over_index_ = index;
   NeedRedraw();
 }
 
 void ResultViewGrid::MouseClick(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  uint index = GetIndexAtPosition (x, y);
+  uint index = GetIndexAtPosition(x, y);
   if (index >= 0 && index < results_.size())
   {
     // we got a click on a button so activate it
     Result result = results_[index];
-    UriActivated.emit (result.uri);
+    UriActivated.emit(result.uri);
   }
 }
 
-uint ResultViewGrid::GetIndexAtPosition (int x, int y)
+uint ResultViewGrid::GetIndexAtPosition(int x, int y)
 {
   uint items_per_row = GetItemsPerRow();
 
