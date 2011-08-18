@@ -165,6 +165,7 @@ inline void IMTextEntry::CheckValidClientWindow(Window window)
 void IMTextEntry::KeyEventToGdkEventKey(Event& event, GdkEventKey& gdk_event)
 {
   gdk_event.type = event.e_event == nux::NUX_KEYDOWN ? GDK_KEY_PRESS : GDK_KEY_RELEASE;
+  /*
   gdk_event.window = 0; //client_window_;
   gdk_event.send_event = FALSE;
   gdk_event.time = event.e_x11_timestamp;
@@ -176,6 +177,18 @@ void IMTextEntry::KeyEventToGdkEventKey(Event& event, GdkEventKey& gdk_event)
   gdk_event.string = txt;
   gdk_event.hardware_keycode = event.e_x11_keycode;
   gdk_event.group = 0;
+  gdk_event.is_modifier = 0;
+  */
+
+  gdk_event.window = 0;
+  gdk_event.send_event = TRUE;
+  gdk_event.time = event.e_x11_timestamp;
+  gdk_event.state = 33570816;
+  gdk_event.keyval = 101;
+  gdk_event.length = 1;
+  gdk_event.string = const_cast<gchar*>("e");
+  gdk_event.hardware_keycode = 26;
+  gdk_event.group = 2;
   gdk_event.is_modifier = 0;
 }
 
