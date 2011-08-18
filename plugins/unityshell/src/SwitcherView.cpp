@@ -75,6 +75,7 @@ SwitcherView::SwitcherView(NUX_FILE_LINE_DECL)
 
 SwitcherView::~SwitcherView()
 {
+  background_texture_->UnReference();
   text_view_->UnReference();
   if (redraw_handle_ > 0)
     g_source_remove(redraw_handle_);
