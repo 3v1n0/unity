@@ -40,7 +40,6 @@ BackgroundEffectHelper::~BackgroundEffectHelper()
 {
   noise_texture_->UnReference();
   Unregister(this);
-  noise_texture_->UnReference();
 }
 
 void BackgroundEffectHelper::QueueDrawOnOwners ()
