@@ -87,12 +87,6 @@ int main(int argc, char **argv)
   nux::SystemThread* st = NULL;
   nux::WindowThread* wt = NULL;
 
-  // no real tests right now, just make sure we don't get any criticals and such
-  // waiting on nice perceptual diff support before we can build real tests
-  // for views
-
-  g_type_init ();
-  g_thread_init (NULL);
   gtk_init (&argc, &argv);
 
   unity::BGHash bghash;
