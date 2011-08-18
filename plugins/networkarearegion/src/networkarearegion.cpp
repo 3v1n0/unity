@@ -75,8 +75,8 @@ UnityNETWorkareaRegionScreen::handleEvent(XEvent* event)
   {
     case PropertyNotify:
 
-      if (event->xproperty.atom == (int) Atoms::wmStrut ||
-          event->xproperty.atom == (int) Atoms::wmStrutPartial)
+      if (event->xproperty.atom == (Atom) Atoms::wmStrut ||
+	  event->xproperty.atom == (Atom) Atoms::wmStrutPartial)
       {
         CompWindow* w = screen->findWindow(event->xproperty.window);
 
