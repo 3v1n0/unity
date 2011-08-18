@@ -504,22 +504,26 @@ void BamfLauncherIcon::Focus()
   }
   else if (any_on_current)
   {
-    CompWindow* last = 0;
+    // to ensure proper stacking we process windows in reverse order (high to low)
+    // then we active the first window and raise each following window. Due to the
+    // way stack requests work (async), each subsequent raise call will stack below
+    // the previous one.
+    bool first = false;
     windows.reverse();
     for (CompWindow* &win : windows)
     {
       if (win->defaultViewport() == m_Screen->vp() &&
           ((any_mapped && !win->minimized()) || !any_mapped))
       {
-        if (last)
+        if (!first)
         {
-          win->raise();
+          win->activate();
+          first = true;
         }
         else
         {
-          win->activate();
+          win->raise();
         }
-        last = win;
       }
     }
 
