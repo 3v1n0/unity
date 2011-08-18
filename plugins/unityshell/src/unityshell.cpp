@@ -33,6 +33,7 @@
 #include "GeisAdapter.h"
 #include "DevicesSettings.h"
 #include "PluginAdapter.h"
+#include "QuicklistManager.h"
 #include "StartupNotifyService.h"
 #include "Timer.h"
 #include "unityshell.h"
@@ -232,6 +233,8 @@ UnityScreen::UnityScreen(CompScreen* screen)
 
 UnityScreen::~UnityScreen()
 {
+  if (switcher_desktop_icon)
+    switcher_desktop_icon->UnReference();
   panelController->UnReference();
   delete controller;
   launcher->UnReference();
@@ -256,6 +259,7 @@ UnityScreen::~UnityScreen()
   // delete wt;
 
   ::unity::ui::IconRenderer::DestroyTextures();
+  QuicklistManager::Destroy();
 }
 
 void UnityScreen::EnsureKeybindings()
@@ -807,10 +811,9 @@ bool UnityScreen::altTabForwardInitiate(CompAction* action,
 
     results.push_back(switcher_desktop_icon);
 
-    LauncherModel::iterator it;
-    for (it = launcher->GetModel()->begin(); it != launcher->GetModel()->end(); it++)
-      if ((*it)->ShowInSwitcher())
-        results.push_back(*it);
+    for (auto icon : *(launcher->GetModel()))
+      if (icon->ShowInSwitcher())
+        results.push_back(icon);
 
     // maybe check launcher position/hide state?
     switcherController->SetWorkspace(nux::Geometry(_primary_monitor.x + 100,
