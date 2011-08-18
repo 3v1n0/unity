@@ -52,6 +52,9 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
 
   mouse_move.connect (sigc::mem_fun (this, &ResultViewGrid::MouseMove));
   mouse_click.connect (sigc::mem_fun (this, &ResultViewGrid::MouseClick));
+  OnKeyNavFocusChange.connect (sigc::mem_fun (this, &ResultViewGrid::OnOnKeyNavFocusChange));
+  OnKeyNavFocusActivate.connect ([&] (nux::Area *area) { UriActivated.emit (focused_uri_); });
+  key_down.connect (sigc::mem_fun (this, &ResultViewGrid::OnKeyDown));
 
   NeedRedraw();
 }
@@ -60,12 +63,17 @@ ResultViewGrid::~ResultViewGrid()
 {
 }
 
+int ResultViewGrid::GetItemsPerRow()
+{
+  int items_per_row = (GetGeometry().width - (padding * 2)) / (renderer_->width + horizontal_spacing);
+  return (items_per_row) ? items_per_row : 1; // always at least one item per row
+}
+
 void ResultViewGrid::SetPreview (PreviewBase *preview, Result& related_result)
 {
   ResultView::SetPreview(preview, related_result);
 
-  uint items_per_row = (GetGeometry().width - (padding * 2)) / (renderer_->width + horizontal_spacing);
-
+  int items_per_row = GetItemsPerRow();
   uint row_size = renderer_->height + vertical_spacing;
 
   uint index = 0;
@@ -114,8 +122,7 @@ void ResultViewGrid::RemoveResult (Result & result)
 void ResultViewGrid::SizeReallocate ()
 {
   //FIXME - needs to use the geometry assigned to it, but only after a layout
-  int items_per_row = (GetGeometry().width - (padding * 2)) / (renderer_->width + horizontal_spacing);
-  items_per_row = (items_per_row) ? items_per_row : 1;
+  int items_per_row = GetItemsPerRow();
 
   int total_rows = (results_.size() / items_per_row);
   int total_height = 0;
@@ -146,8 +153,7 @@ void ResultViewGrid::PositionPreview ()
   if (expanded == false)
     return;
 
-  int items_per_row = (GetGeometry().width - (padding * 2)) / (renderer_->width + horizontal_spacing);
-  items_per_row = (items_per_row) ? items_per_row : 1;
+  int items_per_row = GetItemsPerRow();
   int total_rows = (results_.size() / items_per_row) + 1;
 
   int row_size = renderer_->height + vertical_spacing;
@@ -184,6 +190,187 @@ long int ResultViewGrid::ProcessEvent(nux::IEvent& ievent, long int TraverseInfo
   return TraverseInfo;
 }
 
+bool ResultViewGrid::InspectKeyEvent(unsigned int eventType, unsigned int keysym, const char* character)
+{
+  nux::KeyNavDirection direction = nux::KEY_NAV_NONE;
+  switch (keysym)
+  {
+    case NUX_VK_UP:
+      direction = nux::KeyNavDirection::KEY_NAV_UP;
+      break;
+    case NUX_VK_DOWN:
+      direction = nux::KeyNavDirection::KEY_NAV_DOWN;
+      break;
+    case NUX_VK_LEFT:
+      direction = nux::KeyNavDirection::KEY_NAV_LEFT;
+      break;
+    case NUX_VK_RIGHT:
+      direction = nux::KeyNavDirection::KEY_NAV_RIGHT;
+      break;
+    case NUX_VK_LEFT_TAB:
+      direction = nux::KeyNavDirection::KEY_NAV_TAB_PREVIOUS;
+      break;
+    case NUX_VK_TAB:
+      direction = nux::KeyNavDirection::KEY_NAV_TAB_NEXT;
+      break;
+    case NUX_VK_ENTER:
+    case NUX_KP_ENTER:
+      direction = nux::KeyNavDirection::KEY_NAV_ENTER;
+      break;
+    default:
+      direction = nux::KeyNavDirection::KEY_NAV_NONE;
+      break;
+  }
+
+  if (direction == nux::KeyNavDirection::KEY_NAV_NONE
+      || direction == nux::KeyNavDirection::KEY_NAV_TAB_NEXT
+      || direction == nux::KeyNavDirection::KEY_NAV_TAB_PREVIOUS
+      || direction == nux::KeyNavDirection::KEY_NAV_ENTER)
+  {
+    // we don't handle these cases
+    return false;
+  }
+
+  int items_per_row = GetItemsPerRow();
+  int total_rows = std::ceil(results_.size() / static_cast<float>(items_per_row)); // items per row is always at least 1
+  total_rows = (expanded) ? total_rows : 1; // restrict to one row if not expanded
+
+  // check for edge cases where we want the keynav to bubble up
+  if (direction == nux::KEY_NAV_UP && selected_index_ < items_per_row)
+    return false; // key nav up when already on top row
+  else if (direction == nux::KEY_NAV_DOWN && selected_index_ >= (total_rows-1) * items_per_row)
+    return false; // key nav down when on bottom row
+  else
+    return true;
+
+  return false;
+}
+
+bool ResultViewGrid::AcceptKeyNavFocus()
+{
+  return true;
+}
+
+void ResultViewGrid::OnKeyDown (unsigned long event_type, unsigned long event_keysym,
+                                unsigned long event_state, const TCHAR* character,
+                                unsigned short key_repeat_count)
+{
+  nux::KeyNavDirection direction = nux::KEY_NAV_NONE;
+  switch (event_keysym)
+  {
+    case NUX_VK_UP:
+      direction = nux::KeyNavDirection::KEY_NAV_UP;
+      break;
+    case NUX_VK_DOWN:
+      direction = nux::KeyNavDirection::KEY_NAV_DOWN;
+      break;
+    case NUX_VK_LEFT:
+      direction = nux::KeyNavDirection::KEY_NAV_LEFT;
+      break;
+    case NUX_VK_RIGHT:
+      direction = nux::KeyNavDirection::KEY_NAV_RIGHT;
+      break;
+    case NUX_VK_LEFT_TAB:
+      direction = nux::KeyNavDirection::KEY_NAV_TAB_PREVIOUS;
+      break;
+    case NUX_VK_TAB:
+      direction = nux::KeyNavDirection::KEY_NAV_TAB_NEXT;
+      break;
+    case NUX_VK_ENTER:
+    case NUX_KP_ENTER:
+      direction = nux::KeyNavDirection::KEY_NAV_ENTER;
+      break;
+    default:
+      direction = nux::KeyNavDirection::KEY_NAV_NONE;
+      break;
+  }
+
+  // if we got this far, we definately got a keynav signal
+
+  ResultList::iterator current_focused_result = results_.end();
+  if (focused_uri_.empty())
+    focused_uri_ = results_.front().uri;
+
+  std::string next_focused_uri;
+  ResultList::iterator it;
+  int items_per_row = GetItemsPerRow();
+  int total_rows = std::ceil(results_.size() / static_cast<float>(items_per_row)); // items per row is always at least 1
+  total_rows = (expanded) ? total_rows : 1; // restrict to one row if not expanded
+
+  // find the currently focused item
+  for (it = results_.begin(); it != results_.end(); it++)
+  {
+    std::string result_uri = (*it).uri;
+    if (result_uri == focused_uri_)
+    {
+      current_focused_result = it;
+      break;
+    }
+  }
+
+  if (direction == nux::KEY_NAV_LEFT && (selected_index_ == 0))
+    return; // pressed left on the first item, no diiice
+
+  if (direction == nux::KEY_NAV_RIGHT && (selected_index_ == static_cast<int>(results_.size() - 1)))
+    return; // pressed right on the last item, nope. nothing for you
+
+  if (direction == nux::KEY_NAV_RIGHT && !expanded && selected_index_ == items_per_row - 1)
+    return; // pressed right on the last item in the first row in non expanded mode. nothing doing.
+
+  switch (direction)
+  {
+    case (nux::KEY_NAV_LEFT):
+    {
+      --selected_index_;
+      break;
+    }
+    case (nux::KEY_NAV_RIGHT):
+    {
+      ++selected_index_;
+      break;
+    }
+    case (nux::KEY_NAV_UP):
+    {
+      selected_index_ -= items_per_row;
+      break;
+    }
+    case (nux::KEY_NAV_DOWN):
+    {
+      selected_index_ += items_per_row;
+      break;
+    }
+    default:
+      break;
+  }
+
+  selected_index_ = std::max(0, selected_index_);
+  selected_index_ = std::min(static_cast<int>(results_.size() - 1), selected_index_);
+  focused_uri_ = results_[selected_index_].uri;
+  NeedRedraw();
+}
+
+nux::Area* ResultViewGrid::KeyNavIteration(nux::KeyNavDirection direction)
+{
+  return this;
+}
+
+// crappy name.
+void ResultViewGrid::OnOnKeyNavFocusChange(nux::Area *area)
+{
+
+  if (HasKeyFocus())
+  {
+    focused_uri_ = results_.front().uri;
+    selected_index_ = 0;
+    NeedRedraw();
+  }
+  else
+  {
+    selected_index_ = -1;
+    focused_uri_.clear();
+  }
+}
+
 long ResultViewGrid::ComputeLayout2()
 {
   SizeReallocate();
@@ -198,8 +385,7 @@ void ResultViewGrid::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   gPainter.PaintBackground(GfxContext, GetGeometry());
 
-  uint items_per_row = (GetGeometry().width - (padding * 2)) / (renderer_->width + horizontal_spacing);
-  items_per_row = (items_per_row) ? items_per_row : 1;
+  int items_per_row = GetItemsPerRow();
 
   uint total_rows = (!expanded) ? 0 : (results_.size() / items_per_row) + 1;
 
@@ -221,7 +407,7 @@ void ResultViewGrid::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
     if (1)
     {
       int x_position = padding + GetGeometry().x;
-      for (uint column_index = 0; column_index < items_per_row; column_index++)
+      for (int column_index = 0; column_index < items_per_row; column_index++)
       {
         uint index = (row_index * items_per_row) + column_index;
         if (index >= results_.size())
@@ -232,13 +418,13 @@ void ResultViewGrid::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
         {
           state = ResultRenderer::RESULT_RENDERER_PRELIGHT;
         }
-        else if ((int)(index) == active_index_)
-        {
-          state = ResultRenderer::RESULT_RENDERER_ACTIVE;
-        }
         else if ((int)(index) == selected_index_)
         {
           state = ResultRenderer::RESULT_RENDERER_SELECTED;
+        }
+        else if ((int)(index) == active_index_)
+        {
+          state = ResultRenderer::RESULT_RENDERER_ACTIVE;
         }
 
         int half_width = GetGeometry().width / 2;
@@ -300,7 +486,7 @@ void ResultViewGrid::MouseClick(int x, int y, unsigned long button_flags, unsign
 
 uint ResultViewGrid::GetIndexAtPosition (int x, int y)
 {
-  uint items_per_row = (GetGeometry().width - (padding * 2)) / (renderer_->width + horizontal_spacing);
+  uint items_per_row = GetItemsPerRow();
 
   uint column_size = renderer_->width + horizontal_spacing;
   uint row_size = renderer_->height + vertical_spacing;

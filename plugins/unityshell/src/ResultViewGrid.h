@@ -50,6 +50,8 @@ public:
     nux::Property<int> vertical_spacing;
     nux::Property<int> padding;
 
+
+
 protected:
     void MouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
     void MouseClick(int x, int y, unsigned long button_flags, unsigned long key_flags);
@@ -58,16 +60,24 @@ protected:
     virtual long int ProcessEvent(nux::IEvent& ievent, long int TraverseInfo, long int ProcessEventInfo);
     virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
     virtual long ComputeLayout2();
+    virtual bool InspectKeyEvent(unsigned int eventType, unsigned int keysym, const char* character);
+    virtual bool AcceptKeyNavFocus();
+    virtual nux::Area* KeyNavIteration(nux::KeyNavDirection direction);
+    virtual void OnOnKeyNavFocusChange (nux::Area *);
+    void OnKeyDown (unsigned long event_type, unsigned long event_keysym, unsigned long event_state, const TCHAR* character, unsigned short key_repeat_count);
+
 
 private:
   void SizeReallocate ();
   void PositionPreview ();
+  int GetItemsPerRow();
   uint GetIndexAtPosition (int x, int y);
 
   int mouse_over_index_;
   int active_index_;
   int selected_index_;
   uint preview_row_;
+  std::string focused_uri_;
 };
 
 }
