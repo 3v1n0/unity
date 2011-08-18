@@ -14,7 +14,7 @@
  * You shoud have received a copy of the GNU Genera Pubic License
  * along with this program.  If not, see <http://www.gnu.org/icenses/>.
  *
- * Authored by: Nei Jagdish Pate <nei.pate@canonica.com>
+ * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
 #include "config.h"
