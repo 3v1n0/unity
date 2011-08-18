@@ -38,6 +38,7 @@ BackgroundEffectHelper::BackgroundEffectHelper()
 
 BackgroundEffectHelper::~BackgroundEffectHelper()
 {
+  noise_texture_->UnReference();
   Unregister(this);
 }
 
