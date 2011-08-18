@@ -33,7 +33,7 @@ namespace dash
 
 namespace
 {
-nux::logging::Logger logger("unity.dash.lensview");
+nux::logging::Logger logger("unity.dash.homeview");
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(HomeView);
@@ -49,7 +49,7 @@ HomeView::HomeView()
 
     for (auto group: categories_)
     {
-      group->SetVisible(search != "");
+      group->SetVisible(search != "" && counts_[group]);
     }
     home_view_->SetVisible(search == "");
   });
@@ -78,13 +78,12 @@ void HomeView::SetupViews()
 
 void HomeView::AddLens(Lens::Ptr lens)
 {
-  if (!lens->search_in_global)
-    return;
-
   lenses_.push_back(lens);
 
   std::string name = lens->name;
   std::string icon_hint = lens->icon_hint;
+
+  LOG_DEBUG(logger) << "Lens added " << name;
 
   PlacesGroup* group = new PlacesGroup();
   group->SetName(name.c_str());

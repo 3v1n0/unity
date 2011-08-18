@@ -40,8 +40,6 @@ public:
     DEFAULT                = 0,
     LAUNCHER_HIDDEN        = 1 << 0,
     MOUSE_OVER_LAUNCHER    = 1 << 1,
-    MOUSE_OVER_BFB         = 1 << 2,
-    MOUSE_OVER_TRIGGER     = 1 << 3,
     QUICKLIST_OPEN         = 1 << 4,
     EXTERNAL_DND_ACTIVE    = 1 << 5,
     INTERNAL_DND_ACTIVE    = 1 << 6,

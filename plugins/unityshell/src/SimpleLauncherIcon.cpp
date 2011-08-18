@@ -47,7 +47,8 @@ SimpleLauncherIcon::SimpleLauncherIcon(Launcher* IconManager)
 SimpleLauncherIcon::~SimpleLauncherIcon()
 {
   for (auto element : texture_map)
-    element.second->UnReference();
+    if (element.second)
+      element.second->UnReference();
 
   texture_map.clear ();
 
@@ -123,14 +124,9 @@ void SimpleLauncherIcon::ReloadIcon()
 
 void SimpleLauncherIcon::OnIconThemeChanged(GtkIconTheme* icon_theme, gpointer data)
 {
-  SimpleLauncherIcon* self;
-
-  if (!data)
-    return;
+  SimpleLauncherIcon* self = static_cast<SimpleLauncherIcon*>(data);
 
   // invalidate the current cache
-  _current_theme_is_mono = -1;
-
-  self = (SimpleLauncherIcon*) data;
+  self->_current_theme_is_mono = -1;
   self->ReloadIcon();
 }

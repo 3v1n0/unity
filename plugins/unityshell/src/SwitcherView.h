@@ -24,6 +24,7 @@
 #include "AbstractIconRenderer.h"
 #include "StaticCairoText.h"
 #include "LayoutSystem.h"
+#include "BackgroundEffectHelper.h"
 
 #include <boost/shared_ptr.hpp>
 #include <sigc++/sigc++.h>
@@ -60,6 +61,7 @@ public:
   nux::Property<int> text_size;
   nux::Property<int> animation_length;
   nux::Property<double> spread_size;
+  nux::Property<nux::Color> background_color;
 
 protected:
   long ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo);
@@ -106,6 +108,10 @@ private:
   LayoutWindowList render_targets_;
 
   timespec save_time_;
+
+  bool animation_draw_;
+
+  BackgroundEffectHelper bg_effect_helper_;
 };
 
 }

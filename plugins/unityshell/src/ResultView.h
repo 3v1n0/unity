@@ -47,10 +47,10 @@ public:
 
   void SetModelRenderer(ResultRenderer* renderer);
 
-  void AddResult(Result & result);
-  void RemoveResult(Result & result);
+  void AddResult(Result& result);
+  void RemoveResult(Result& result);
 
-  void SetPreview (PreviewBase *preview, Result& related_result);
+  void SetPreview(PreviewBase* preview, Result& related_result);
 
   nux::Property<bool> expanded;
   sigc::signal<void, std::string const&> UriActivated;
@@ -63,10 +63,10 @@ protected:
   virtual long ComputeLayout2();
 
   // properties
-  nux::Layout *preview_layout_;
+  nux::Layout* preview_layout_;
   nux::Layout* preview_spacer_;
   std::string preview_result_uri_;
-  ResultRenderer *renderer_;
+  ResultRenderer* renderer_;
   ResultList results_;
 };
 

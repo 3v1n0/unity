@@ -89,7 +89,7 @@ namespace unity {
       if (preview_->tertiary_action_name.empty() == false)
       {
         PreviewBasicButton* tertiary_button = new PreviewBasicButton(preview_->tertiary_action_name.c_str(), NUX_TRACKER_LOCATION);
-        tertiary_button->Activated.connect ([&] (nux::View *view) { UriActivated.emit (preview_->tertiary_action_uri); });
+        tertiary_button->activated.connect ([&] (nux::View *view) { UriActivated.emit (preview_->tertiary_action_uri); });
         button_container->AddLayout (new nux::SpaceLayout(6,6,6,6), 0);
         button_container->AddView (tertiary_button, 1);
       }
@@ -97,7 +97,7 @@ namespace unity {
       if (preview_->secondary_action_name.empty() == false)
       {
         PreviewBasicButton* secondary_button = new PreviewBasicButton(preview_->secondary_action_name.c_str(), NUX_TRACKER_LOCATION);
-        secondary_button->Activated.connect ([&] (nux::View *view) { UriActivated.emit (preview_->secondary_action_uri); });
+        secondary_button->activated.connect ([&] (nux::View *view) { UriActivated.emit (preview_->secondary_action_uri); });
         button_container->AddLayout (new nux::SpaceLayout(6,6,6,6), 0);
         button_container->AddView (secondary_button, 1);
       }
@@ -105,7 +105,7 @@ namespace unity {
       if (preview_->primary_action_name.empty() == false)
       {
         PreviewBasicButton* primary_button = new PreviewBasicButton(preview_->primary_action_name.c_str(), NUX_TRACKER_LOCATION);
-        primary_button->Activated.connect ([&] (nux::View *view) { UriActivated.emit (preview_->primary_action_uri); });
+        primary_button->activated.connect ([&] (nux::View *view) { UriActivated.emit (preview_->primary_action_uri); });
         button_container->AddLayout (new nux::SpaceLayout(6,6,6,6), 0);
         button_container->AddView (primary_button, 1);
       }
