@@ -90,7 +90,7 @@ namespace unity {
   gboolean BGHash::ForceUpdate (BGHash *self)
   {
     self->OnBackgroundChanged(self->background_monitor);
-    return FALSE;  
+    return FALSE;
   }
 
   void BGHash::OnGSettingsChanged (GSettings *settings, gchar *key)
@@ -101,98 +101,135 @@ namespace unity {
   void BGHash::OnBackgroundChanged (GnomeBG *bg)
   {
     const gchar *filename = gnome_bg_get_filename (bg);
-    if (_bg_slideshow != NULL)
+    if (filename == NULL)
     {
-      slideshow_unref (_bg_slideshow);
-      _bg_slideshow = NULL;
-      _current_slide = NULL;
+      // we might have a gradient instead
+      GdkColor color_primary, color_secondary;
+      GDesktopBackgroundShading shading_type;
+      nux::Color parsed_color;
+
+      gnome_bg_get_color (bg, &shading_type, &color_primary, &color_secondary);
+      if (shading_type == G_DESKTOP_BACKGROUND_SHADING_HORIZONTAL ||
+          shading_type == G_DESKTOP_BACKGROUND_SHADING_SOLID)
+      {
+        parsed_color = nux::Color(static_cast<float>(color_primary.red) / 65535,
+                                  static_cast<float>(color_primary.green) / 65535,
+                                  static_cast<float>(color_primary.blue) / 65535,
+                                  1.0f);
+      }
+      else
+      {
+        nux::Color primary = nux::Color(static_cast<float>(color_primary.red) / 65535,
+                                        static_cast<float>(color_primary.green) / 65535,
+                                        static_cast<float>(color_primary.blue) / 65535,
+                                        1.0f);
+
+        nux::Color secondary = nux::Color(static_cast<float>(color_secondary.red) / 65535,
+                                          static_cast<float>(color_secondary.green) / 65535,
+                                          static_cast<float>(color_secondary.blue) / 65535,
+                                          1.0f);
+
+        parsed_color = (primary + secondary) * 0.5f;
+      }
+
+      nux::Color new_color = MatchColor (parsed_color);
+      TransitionToNewColor (new_color);
     }
-
-    if (_slideshow_handler)
+    else
     {
-      g_source_remove (_slideshow_handler);
-      _slideshow_handler = 0;
-    }
-
-    if (g_str_has_suffix (filename, "xml"))
-    {
-      GError *error = NULL;
-
       if (_bg_slideshow != NULL)
       {
         slideshow_unref (_bg_slideshow);
         _bg_slideshow = NULL;
+        _current_slide = NULL;
       }
 
-      _bg_slideshow = read_slideshow_file (filename, &error);
-
-      if (error != NULL)
+      if (_slideshow_handler)
       {
-        g_warning ("BGHash.cpp: could not load filename %s: %s", filename, error->message);
-        g_error_free (error);
+        g_source_remove (_slideshow_handler);
+        _slideshow_handler = 0;
       }
-      else if (_bg_slideshow == NULL)
+
+      if (g_str_has_suffix (filename, "xml"))
       {
-        g_warning ("BGHash.cpp: could not load filename %s", filename);
-      }
-      else
-      {
-        // we loaded fine, hook up to the slideshow
-        time_t current_time = time(0);
-        double now = (double) current_time;
+        GError *error = NULL;
 
-        double time_diff = now - _bg_slideshow->start_time;
-        double progress = fmod (time_diff, _bg_slideshow->total_duration);
-
-        // progress now holds how many seconds we are in to this slideshow.
-        // iterate over the slideshows until we get in to the current slideshow
-        Slide *slide_iteration;
-        Slide *slide_current = NULL;
-        double elapsed = 0;
-        double time_to_next_change = 0;
-        GList *list;
-
-        for (list = _bg_slideshow->slides->head; list != NULL; list = list->next)
+        if (_bg_slideshow != NULL)
         {
-          slide_iteration = reinterpret_cast<Slide *>(list->data);
-          if (elapsed + slide_iteration->duration > progress)
-          {
-            slide_current = slide_iteration;
-            time_to_next_change = slide_current->duration- (progress - elapsed);
-            break;
-          }
-
-          elapsed += slide_iteration->duration;
+          slideshow_unref (_bg_slideshow);
+          _bg_slideshow = NULL;
         }
 
-        if (slide_current == NULL)
+        _bg_slideshow = read_slideshow_file (filename, &error);
+
+        if (error != NULL)
         {
-          slide_current = reinterpret_cast<Slide *>(g_queue_peek_head(_bg_slideshow->slides));
-          time_to_next_change = slide_current->duration;
+          g_warning ("BGHash.cpp: could not load filename %s: %s", filename, error->message);
+          g_error_free (error);
         }
-
-        // time_to_next_change now holds the seconds until the next slide change
-        // the next slide change may or may not be a fixed slide.
-        _slideshow_handler = g_timeout_add ((guint)(time_to_next_change * 1000),
-                                                  (GSourceFunc)OnSlideshowTransition,
-                                                  (gpointer)this);
-
-        // find our current slide now
-        if (slide_current->file1 == NULL)
+        else if (_bg_slideshow == NULL)
         {
-          g_warning ("BGHash.cpp: could not load filename %s - slide has no filename", filename);
+          g_warning ("BGHash.cpp: could not load filename %s", filename);
         }
         else
         {
-          FileSize *fs = reinterpret_cast<FileSize *>(slide_current->file1->data);
-          filename = reinterpret_cast<gchar *>(fs->file);
+          // we loaded fine, hook up to the slideshow
+          time_t current_time = time(0);
+          double now = (double) current_time;
+
+          double time_diff = now - _bg_slideshow->start_time;
+          double progress = fmod (time_diff, _bg_slideshow->total_duration);
+
+          // progress now holds how many seconds we are in to this slideshow.
+          // iterate over the slideshows until we get in to the current slideshow
+          Slide *slide_iteration;
+          Slide *slide_current = NULL;
+          double elapsed = 0;
+          double time_to_next_change = 0;
+          GList *list;
+
+          for (list = _bg_slideshow->slides->head; list != NULL; list = list->next)
+          {
+            slide_iteration = reinterpret_cast<Slide *>(list->data);
+            if (elapsed + slide_iteration->duration > progress)
+            {
+              slide_current = slide_iteration;
+              time_to_next_change = slide_current->duration- (progress - elapsed);
+              break;
+            }
+
+            elapsed += slide_iteration->duration;
+          }
+
+          if (slide_current == NULL)
+          {
+            slide_current = reinterpret_cast<Slide *>(g_queue_peek_head(_bg_slideshow->slides));
+            time_to_next_change = slide_current->duration;
+          }
+
+          // time_to_next_change now holds the seconds until the next slide change
+          // the next slide change may or may not be a fixed slide.
+          _slideshow_handler = g_timeout_add ((guint)(time_to_next_change * 1000),
+                                                    (GSourceFunc)OnSlideshowTransition,
+                                                    (gpointer)this);
+
+          // find our current slide now
+          if (slide_current->file1 == NULL)
+          {
+            g_warning ("BGHash.cpp: could not load filename %s - slide has no filename", filename);
+          }
+          else
+          {
+            FileSize *fs = reinterpret_cast<FileSize *>(slide_current->file1->data);
+            filename = reinterpret_cast<gchar *>(fs->file);
+          }
+
+          _current_slide = slide_current;
         }
-
-        _current_slide = slide_current;
       }
-    }
 
-    LoadFileToHash(filename);
+      LoadFileToHash(filename);
+    }
   }
 
   gboolean BGHash::OnSlideshowTransition (BGHash *self)
@@ -506,8 +543,6 @@ namespace unity {
 
     // apply design to the colour
     chosen_color.alpha = 0.5f;
-
-
 
     return chosen_color;
   }
