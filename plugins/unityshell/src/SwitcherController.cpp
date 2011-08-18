@@ -39,8 +39,6 @@ SwitcherController::SwitcherController()
 {
   timeout_length = 150;
 
-  blur = BLUR_ACTIVE;
-
   UBusServer *ubus = ubus_server_get_default();
   ubus_server_register_interest(ubus, UBUS_BACKGROUND_COLOR_CHANGED,
                                 (UBusCallback)&SwitcherController::OnBackgroundUpdate,
@@ -102,7 +100,6 @@ void SwitcherController::ConstructView()
   view_ = new SwitcherView();
   view_->SetModel(model_);
   view_->background_color = bg_color_;
-  view_->blur = blur();
 
   layout->AddView(view_, 1);
   layout->SetVerticalExternalMargin(0);

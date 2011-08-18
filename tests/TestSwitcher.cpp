@@ -120,7 +120,6 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
   nux::VLayout* layout = new nux::VLayout(TEXT(""), NUX_TRACKER_LOCATION);
   
   view = new SwitcherController();
-  view->blur = unity::BLUR_NONE;
   view->timeout_length = 0;
   view->SetWorkspace(nux::Geometry(0, 0, 900, 500));
 
@@ -254,11 +253,11 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
   control_buttons_layout->SetHorizontalInternalMargin (10);
 
   nux::Button* prev_button = new nux::Button ("Previous", NUX_TRACKER_LOCATION);
-  prev_button->Activated.connect (sigc::ptr_fun (OnPreviousClicked));
+  prev_button->activated.connect (sigc::ptr_fun (OnPreviousClicked));
   control_buttons_layout->AddView(prev_button, 1, nux::eLeft, nux::eFull);
 
   nux::Button* next_button = new nux::Button ("Next", NUX_TRACKER_LOCATION);
-  next_button->Activated.connect (sigc::ptr_fun (OnNextClicked));
+  next_button->activated.connect (sigc::ptr_fun (OnNextClicked));
   control_buttons_layout->AddView(next_button, 1, nux::eRight, nux::eFull);
 
   layout->AddView(control_buttons_layout, 1, nux::eRight, nux::eFull);
