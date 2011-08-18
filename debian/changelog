@@ -3,6 +3,11 @@ unity (4.8.2-0ubuntu1) UNRELEASED; urgency=low
   * New upstream release.
   * debian/control.in: updated nux requirement
 
+  [ Didier Roche ]
+  * debian/control:
+    - add libdee-dev to the unitycore dev package as fixed in trunk
+      (put in the .pc file)
+
  -- Sebastien Bacher <seb128@ubuntu.com>  Thu, 18 Aug 2011 18:26:31 +0200
 
 unity (4.8.0-0ubuntu3) oneiric; urgency=low
