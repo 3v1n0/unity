@@ -65,7 +65,6 @@ private:
  private:
   glib::SignalManager sig_manager_;
   GtkIMContext* im_context_;
-  GtkIMContext* im_context_simple_;
   GdkWindow* client_window_;
   bool im_enabled_;
   bool im_active_;

@@ -41,14 +41,12 @@ IMTextEntry::IMTextEntry()
   : TextEntry("", "", 80085)
   , preedit_string("")
   , im_context_(0)
-  , im_context_simple_(0)
   , client_window_(0)
   , im_enabled_(false)
   , im_active_(false)
 {
   CheckIMEnabled();
-  SetupSimpleIM();
-  SetupMultiIM();
+  im_enabled_ ? SetupMultiIM() : SetupSimpleIM();
 
   FocusChanged.connect(sigc::mem_fun(this, &IMTextEntry::OnFocusChanged));
   OnKeyNavFocusChange.connect(sigc::mem_fun(this, &IMTextEntry::OnFocusChanged));
@@ -59,8 +57,6 @@ IMTextEntry::~IMTextEntry()
 {
   if (im_context_)
     g_object_unref(im_context_);
-  if (im_context_simple_)
-    g_object_unref(im_context_simple_);
   if (client_window_)
     g_object_unref(client_window_);
 }
@@ -68,24 +64,29 @@ IMTextEntry::~IMTextEntry()
 void IMTextEntry::CheckIMEnabled()
 {
   const char* module = g_getenv("GTK_IM_MODULE");
-  if (module && g_strcmp0(module, "") && g_strcmp0(module, "gtk-im-context-simple"))
+  if (module &&
+      g_strcmp0(module, "") &&
+      g_strcmp0(module, "gtk-im-context-simple"))
     im_enabled_ = true;
+
+  LOG_DEBUG(logger) << "Input method support is "
+                    << (im_enabled_ ? "enabled" : "disabled");
 }
 
 void IMTextEntry::SetupSimpleIM()
 {
-  im_context_simple_ = gtk_im_context_simple_new();
+  im_context_ = gtk_im_context_simple_new();
   
-  sig_manager_.Add(new Signal<void, GtkIMContext*, char*>(im_context_simple_, "commit", sigc::mem_fun(this, &IMTextEntry::OnCommit)));
-  sig_manager_.Add(new Signal<void, GtkIMContext*>(im_context_simple_, "preedit-changed", sigc::mem_fun(this, &IMTextEntry::OnPreeditChanged)));
-  sig_manager_.Add(new Signal<void, GtkIMContext*>(im_context_simple_, "preedit-start", sigc::mem_fun(this, &IMTextEntry::OnPreeditStart)));
-  sig_manager_.Add(new Signal<void, GtkIMContext*>(im_context_simple_, "preedit-end", sigc::mem_fun(this, &IMTextEntry::OnPreeditEnd)));
+  sig_manager_.Add(new Signal<void, GtkIMContext*, char*>(im_context_, "commit", sigc::mem_fun(this, &IMTextEntry::OnCommit)));
+  sig_manager_.Add(new Signal<void, GtkIMContext*>(im_context_, "preedit-changed", sigc::mem_fun(this, &IMTextEntry::OnPreeditChanged)));
+  sig_manager_.Add(new Signal<void, GtkIMContext*>(im_context_, "preedit-start", sigc::mem_fun(this, &IMTextEntry::OnPreeditStart)));
+  sig_manager_.Add(new Signal<void, GtkIMContext*>(im_context_, "preedit-end", sigc::mem_fun(this, &IMTextEntry::OnPreeditEnd)));
 }
 
 void IMTextEntry::SetupMultiIM()
 {
   im_context_ = gtk_im_multicontext_new();
-
+  
   sig_manager_.Add(new Signal<void, GtkIMContext*, char*>(im_context_, "commit", sigc::mem_fun(this, &IMTextEntry::OnCommit)));
   sig_manager_.Add(new Signal<void, GtkIMContext*>(im_context_, "preedit-changed", sigc::mem_fun(this, &IMTextEntry::OnPreeditChanged)));
   sig_manager_.Add(new Signal<void, GtkIMContext*>(im_context_, "preedit-start", sigc::mem_fun(this, &IMTextEntry::OnPreeditStart)));
@@ -97,14 +98,17 @@ bool IMTextEntry::InspectKeyEvent(unsigned int event_type,
                                   const char* character)
 {
   bool propagate_event = !(TryHandleEvent(event_type, keysym, character));
-  
-  LOG_DEBUG(logger) << "Input method ("
+
+    LOG_DEBUG(logger) << "Input method ("
                     << (im_enabled_ ? gtk_im_multicontext_get_context_id(GTK_IM_MULTICONTEXT(im_context_)) : "simple")
                     << ") "
                     << (propagate_event ? "did not handle " : "handled ") 
-                    << "event";
+                    << "event ("
+                    << (event_type == NUX_KEYDOWN ? "press" : "release")
+                    << ") ";
 
-  if (preedit_string == "" &&
+  std::string preedit = preedit_string;
+  if (preedit.length() < 1 && 
       (keysym == NUX_VK_ENTER ||
        keysym == NUX_KP_ENTER ||
        keysym == NUX_VK_UP ||
@@ -137,8 +141,11 @@ bool IMTextEntry::TryHandleEvent(unsigned int eventType,
   GdkEventKey ev;
   KeyEventToGdkEventKey(event, ev);
 
-  return im_enabled_ ? gtk_im_context_filter_keypress(im_context_, &ev)
-                     : gtk_im_context_filter_keypress(im_context_simple_, &ev);
+  g_debug("%d %p %d %u (%u) (%u) %d %s %u %u %u",
+          ev.type, ev.window, ev.send_event, ev.time, ev.state, ev.keyval,
+          ev.length, ev.string, ev.hardware_keycode, ev.group, ev.is_modifier);
+
+  return gtk_im_context_filter_keypress(im_context_, &ev);
 }
 
 inline void IMTextEntry::CheckValidClientWindow(Window window)
@@ -146,15 +153,11 @@ inline void IMTextEntry::CheckValidClientWindow(Window window)
   if (!client_window_)
   {
     client_window_ = gdk_x11_window_foreign_new_for_display(gdk_display_get_default(), window);
-    if (im_enabled_)
+    //gtk_im_context_set_client_window(im_context_, client_window_);
+
+    if (GetFocused())
     {
-      gtk_im_context_set_client_window(im_context_, client_window_);
-      gtk_im_context_reset(im_context_);
-    }
-    else
-    {
-      gtk_im_context_set_client_window(im_context_simple_, client_window_);
-      gtk_im_context_reset(im_context_simple_);
+      gtk_im_context_focus_in(im_context_);
     }
   }
 }
@@ -162,19 +165,15 @@ inline void IMTextEntry::CheckValidClientWindow(Window window)
 void IMTextEntry::KeyEventToGdkEventKey(Event& event, GdkEventKey& gdk_event)
 {
   gdk_event.type = event.e_event == nux::NUX_KEYDOWN ? GDK_KEY_PRESS : GDK_KEY_RELEASE;
-  gdk_event.window = client_window_;
-  gdk_event.send_event = TRUE;
-  gdk_event.time = GDK_CURRENT_TIME;
-  
-  gdk_event.state = 0;
-  if (event.e_key_modifiers & NUX_STATE_CTRL)
-    gdk_event.state |= GDK_CONTROL_MASK;
-  if (event.e_key_modifiers & NUX_STATE_SHIFT)
-    gdk_event.state |= GDK_SHIFT_MASK;
-
+  gdk_event.window = 0; //client_window_;
+  gdk_event.send_event = FALSE;
+  gdk_event.time = event.e_x11_timestamp;
+  gdk_event.state = event.e_x11_state;
   gdk_event.keyval = event.e_keysym;
-  gdk_event.length = 0;
-  gdk_event.string = NULL;
+
+  gchar* txt = const_cast<gchar*>(event.GetText());
+  gdk_event.length = strlen(txt);
+  gdk_event.string = txt;
   gdk_event.hardware_keycode = event.e_x11_keycode;
   gdk_event.group = 0;
   gdk_event.is_modifier = 0;
@@ -186,24 +185,18 @@ void IMTextEntry::OnFocusChanged(nux::Area* area)
 
   if (GetFocused())
   {
-    if (im_enabled_)
-      gtk_im_context_focus_in(im_context_);
-    gtk_im_context_focus_in(im_context_simple_);
+    gtk_im_context_focus_in(im_context_);
   }
   else
   {
-    if (im_enabled_)
-    {
-      gtk_im_context_focus_out(im_context_);
-      gtk_im_context_reset(im_context_);
-    }
-    gtk_im_context_focus_out(im_context_simple_);
-    gtk_im_context_reset(im_context_simple_);
+    gtk_im_context_focus_out(im_context_);
+    gtk_im_context_reset(im_context_);
   }
 }
 
 void IMTextEntry::OnCommit(GtkIMContext* context, char* str)
 {
+  LOG_DEBUG(logger) << "Commit: " << str;
   if (str)
   {
     std::string new_text = GetText() + str;
@@ -229,12 +222,17 @@ void IMTextEntry::OnPreeditStart(GtkIMContext* context)
 {
   preedit_string = "";
   im_active_ = true;
+
+  LOG_DEBUG(logger) << "Preedit start";
 }
 
 void IMTextEntry::OnPreeditEnd(GtkIMContext* context)
 {
   preedit_string = "";
   im_active_ = false;
+  //gtk_im_context_reset(im_context_);
+
+  LOG_DEBUG(logger) << "Preedit ended";
 }
 
 void IMTextEntry::OnMouseButtonUp(int x, int y, unsigned long bflags, unsigned long kflags)
