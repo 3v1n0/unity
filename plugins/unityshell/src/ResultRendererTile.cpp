@@ -53,7 +53,7 @@ ResultRendererTile::ResultRendererTile(NUX_FILE_LINE_DECL)
   // try and get a texture from the texture cache
   TextureCache* cache = TextureCache::GetDefault();
   prelight_cache_ = cache->FindTexture("ResultRendererTile.PreLightTexture",
-                                       56, 56,
+                                       62, 62,
                                        sigc::mem_fun(this, &ResultRendererTile::DrawHighlight));
 }
 
@@ -109,10 +109,10 @@ void ResultRendererTile::Render (nux::GraphicsEngine& GfxContext,
   // render highlight if its needed
   if (state != ResultRendererState::RESULT_RENDERER_NORMAL)
   {
-    GfxContext.QRP_1Tex(geometry.x + ((geometry.width - 56) / 2),
+    GfxContext.QRP_1Tex(geometry.x + ((geometry.width - 62) / 2),
                         geometry.y + 2,
-                        56,
-                        56,
+                        62,
+                        62,
                         prelight_cache_->GetDeviceTexture(),
                         texxform,
                         nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
@@ -125,7 +125,7 @@ void ResultRendererTile::Render (nux::GraphicsEngine& GfxContext,
     nux::BaseTexture* text_texture = it->second;
 
     GfxContext.QRP_1Tex(geometry.x + 6,
-                        geometry.y + style->GetTileIconSize() + 12,
+                        geometry.y + style->GetTileIconSize() + 14,
                         style->GetTileWidth() - 12,
                         style->GetTileHeight() - style->GetTileIconSize() - 12,
                         text_texture->GetDeviceTexture(),
@@ -142,7 +142,7 @@ void ResultRendererTile::Render (nux::GraphicsEngine& GfxContext,
     nux::BaseTexture* icon_texture = it->second;
 
     GfxContext.QRP_1Tex(geometry.x + ((geometry.width - 48) / 2),
-                        geometry.y + 6,
+                        geometry.y + 9,
                         48,
                         48,
                         icon_texture->GetDeviceTexture(),
