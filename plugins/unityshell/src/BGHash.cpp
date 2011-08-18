@@ -18,12 +18,18 @@
 
 #include "BGHash.h"
 #include <Nux/Nux.h>
+#include <NuxCore/Logger.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <libgnome-desktop/gnome-bg.h>
 #include <unity-misc/gnome-bg-slideshow.h>
 #include "ubus-server.h"
 #include "UBusMessages.h"
 #include "UnityCore/GLibWrapper.h"
+
+namespace
+{
+  nux::logging::Logger logger("unity.BGHash");
+}
 
 namespace {
   int level_of_recursion;
@@ -37,9 +43,9 @@ namespace unity {
       _bg_slideshow (NULL),
       _current_slide (NULL),
       _slideshow_handler(0),
-      _current_color (nux::color::DimGray),
-      _new_color (nux::color::DimGray),
-      _old_color (nux::color::DimGray),
+      _current_color (unity::colors::Aubergine),
+      _new_color (unity::colors::Aubergine),
+      _old_color (unity::colors::Aubergine),
       _hires_time_start(10),
       _hires_time_end(20),
       _ubus_handle_request_colour(0)
@@ -164,12 +170,12 @@ namespace unity {
 
         if (error != NULL)
         {
-          g_warning ("BGHash.cpp: could not load filename %s: %s", filename, error->message);
+          LOG_WARNING(logger) << "Could not load filename \"" << filename << "\": " << error->message;
           g_error_free (error);
         }
         else if (_bg_slideshow == NULL)
         {
-          g_warning ("BGHash.cpp: could not load filename %s", filename);
+          LOG_WARNING(logger) << "Could not load filename \"" << filename << "\"";
         }
         else
         {
@@ -216,7 +222,7 @@ namespace unity {
           // find our current slide now
           if (slide_current->file1 == NULL)
           {
-            g_warning ("BGHash.cpp: could not load filename %s - slide has no filename", filename);
+            LOG_WARNING(logger) << "Could not load filename \"" << filename << "\"";
           }
           else
           {
@@ -272,7 +278,7 @@ namespace unity {
       const gchar *filename = NULL;
       if (proposed_slide->file1 == NULL)
       {
-        g_warning ("BGHash.cpp: could not load filename %s - slide has no filename", filename);
+        LOG_WARNING(logger) << "Could not load filename \"" << filename << "\"";
       }
       else
       {
@@ -373,10 +379,17 @@ namespace unity {
 
   void BGHash::LoadPixbufToHash(GdkPixbuf *pixbuf)
   {
+    nux::Color new_color;
     if (pixbuf == NULL)
-      return;
+    {
+      LOG_WARNING(logger) << "Passed in a bad pixbuf, defaulting colour";
+      new_color = unity::colors::Aubergine;
+    }
+    else
+    {
+      new_color = HashColor (pixbuf);
+    }
 
-    nux::Color new_color = HashColor (pixbuf);
     TransitionToNewColor (new_color);
   }
 
@@ -387,8 +400,12 @@ namespace unity {
 
     if (error)
     {
+      LOG_WARNING(logger) << "Could not load filename \"" << path << "\": " << error.Message();
       _current_color = nux::Color(0.2, 0.2, 0.2, 0.9);
-      return;
+
+      // try and get a colour from gnome-bg, for various reasons, gnome bg might not
+      // return a correct image which sucks =\ but this is a fallback
+      pixbuf = GetPixbufFromBG();
     }
 
     LoadPixbufToHash (pixbuf);
