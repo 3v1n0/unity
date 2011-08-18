@@ -35,13 +35,6 @@ public:
 
   };
 
-  enum DashBlurType
-  {
-    NO_BLUR = 0,
-    STATIC_BLUR,
-    ACTIVE_BLUR
-  };
-
   PlacesSettings();
   ~PlacesSettings();
 
@@ -49,9 +42,6 @@ public:
 
   FormFactor GetFormFactor();
   int        GetDefaultTileWidth();
-
-  DashBlurType GetDashBlurType();
-  void         SetDashBlurType(DashBlurType type);
 
   bool GetHomeExpanded();
   void SetHomeExpanded(bool expanded);
@@ -66,7 +56,6 @@ private:
   GSettings*   _settings;
   int          _raw_from_factor;
   FormFactor   _form_factor;
-  DashBlurType _dash_blur_type;
 };
 
 #endif // PLACES_SETTINGS_H

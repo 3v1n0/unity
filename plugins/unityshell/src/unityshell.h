@@ -137,52 +137,27 @@ public:
                          const char* event,
                          CompOption::Vector& option);
 
-  bool showLauncherKeyInitiate(CompAction* action,
-                               CompAction::State state,
-                               CompOption::Vector& options);
-  bool showLauncherKeyTerminate(CompAction* action,
-                                CompAction::State state,
-                                CompOption::Vector& options);
-  bool showPanelFirstMenuKeyInitiate(CompAction* action,
-                                     CompAction::State state,
-                                     CompOption::Vector& options);
-  bool showPanelFirstMenuKeyTerminate(CompAction* action,
-                                      CompAction::State state,
-                                      CompOption::Vector& options);
+  bool showLauncherKeyInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool showLauncherKeyTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool showPanelFirstMenuKeyInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool showPanelFirstMenuKeyTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options);
 
-  bool executeCommand(CompAction* action,
-                      CompAction::State state,
-                      CompOption::Vector& options);
-  bool setKeyboardFocusKeyInitiate(CompAction* action,
-                                   CompAction::State state,
-                                   CompOption::Vector& options);
-  bool launcherRevealEdgeInitiate(CompAction* action,
-                                  CompAction::State state,
-                                  CompOption::Vector& options);
+  bool executeCommand(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool setKeyboardFocusKeyInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool launcherRevealEdgeInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
 
-  bool altTabForwardInitiate(CompAction* action,
-                             CompAction::State state,
-                             CompOption::Vector& options);
-
-  bool altTabForwardTerminate(CompAction* action,
-                              CompAction::State state,
-                              CompOption::Vector& options);
-  
-  bool altTabDetailInitiate(CompAction* action,
-                            CompAction::State state,
-                            CompOption::Vector& options);
-
-  bool altTabDetailTerminate(CompAction* action,
-                             CompAction::State state,
-                             CompOption::Vector& options);
-
-  bool altTabPrevInitiate(CompAction* action,
-                          CompAction::State state,
-                          CompOption::Vector& options);
-
-  bool altTabPrevTerminate(CompAction* action,
-                           CompAction::State state,
-                           CompOption::Vector& options);
+  bool altTabForwardInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool altTabForwardTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool altTabPrevInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool altTabPrevTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool altTabDetailStartInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool altTabDetailStartTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool altTabDetailStopInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool altTabDetailStopTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool altTabNextWindowInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool altTabNextWindowTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool altTabExitInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool altTabExitTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options);
 
   /* handle option changes and change settings inside of the
    * panel and dock views */

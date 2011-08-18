@@ -47,7 +47,8 @@ SimpleLauncherIcon::SimpleLauncherIcon(Launcher* IconManager)
 SimpleLauncherIcon::~SimpleLauncherIcon()
 {
   for (auto element : texture_map)
-    element.second->UnReference();
+    if (element.second)
+      element.second->UnReference();
 
   texture_map.clear ();
 

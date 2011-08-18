@@ -1,3 +1,10 @@
+unity (4.8.2-0ubuntu1) UNRELEASED; urgency=low
+
+  * New upstream release.
+  * debian/control.in: updated nux requirement
+
+ -- Sebastien Bacher <seb128@ubuntu.com>  Thu, 18 Aug 2011 18:26:31 +0200
+
 unity (4.8.0-0ubuntu3) oneiric; urgency=low
 
   * Backport r1373 to fix a segfault happening on theme updates (lp: #825587)
