@@ -51,10 +51,6 @@ QuicklistManager::QuicklistManager()
 
 QuicklistManager::~QuicklistManager()
 {
-  // for (auto quicklist : _quicklist_list)
-  // {
-  //   quicklist->UnReference();
-  // }
 }
 
 QuicklistView* QuicklistManager::Current()
