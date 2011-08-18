@@ -46,7 +46,9 @@ IMTextEntry::IMTextEntry()
   , im_active_(false)
 {
   CheckIMEnabled();
-  im_enabled_ ? SetupMultiIM() : SetupSimpleIM();
+  //FIXME: Make event forwarding work before enabling
+  // im_enabled_ ? SetupMultiIM() : SetupSimpleIM();
+  SetupSimpleIM();
 
   FocusChanged.connect(sigc::mem_fun(this, &IMTextEntry::OnFocusChanged));
   OnKeyNavFocusChange.connect(sigc::mem_fun(this, &IMTextEntry::OnFocusChanged));
@@ -141,10 +143,6 @@ bool IMTextEntry::TryHandleEvent(unsigned int eventType,
   GdkEventKey ev;
   KeyEventToGdkEventKey(event, ev);
 
-  g_debug("%d %p %d %u (%u) (%u) %d %s %u %u %u",
-          ev.type, ev.window, ev.send_event, ev.time, ev.state, ev.keyval,
-          ev.length, ev.string, ev.hardware_keycode, ev.group, ev.is_modifier);
-
   return gtk_im_context_filter_keypress(im_context_, &ev);
 }
 
@@ -153,7 +151,7 @@ inline void IMTextEntry::CheckValidClientWindow(Window window)
   if (!client_window_)
   {
     client_window_ = gdk_x11_window_foreign_new_for_display(gdk_display_get_default(), window);
-    //gtk_im_context_set_client_window(im_context_, client_window_);
+    gtk_im_context_set_client_window(im_context_, client_window_);
 
     if (GetFocused())
     {
@@ -165,8 +163,9 @@ inline void IMTextEntry::CheckValidClientWindow(Window window)
 void IMTextEntry::KeyEventToGdkEventKey(Event& event, GdkEventKey& gdk_event)
 {
   gdk_event.type = event.e_event == nux::NUX_KEYDOWN ? GDK_KEY_PRESS : GDK_KEY_RELEASE;
-  /*
-  gdk_event.window = 0; //client_window_;
+
+  gdk_event.window = client_window_;
+  gdk_event.window = 0;
   gdk_event.send_event = FALSE;
   gdk_event.time = event.e_x11_timestamp;
   gdk_event.state = event.e_x11_state;
@@ -175,25 +174,15 @@ void IMTextEntry::KeyEventToGdkEventKey(Event& event, GdkEventKey& gdk_event)
   gchar* txt = const_cast<gchar*>(event.GetText());
   gdk_event.length = strlen(txt);
   gdk_event.string = txt;
+
   gdk_event.hardware_keycode = event.e_x11_keycode;
   gdk_event.group = 0;
-  gdk_event.is_modifier = 0;
-  */
-
-  gdk_event.window = 0;
-  gdk_event.send_event = TRUE;
-  gdk_event.time = event.e_x11_timestamp;
-  gdk_event.state = 33570816;
-  gdk_event.keyval = 101;
-  gdk_event.length = 1;
-  gdk_event.string = const_cast<gchar*>("e");
-  gdk_event.hardware_keycode = 26;
-  gdk_event.group = 2;
   gdk_event.is_modifier = 0;
 }
 
 void IMTextEntry::OnFocusChanged(nux::Area* area)
 {
+
   LOG_DEBUG(logger) << "Focus changed " << boost::lexical_cast<bool>(GetFocused());
 
   if (GetFocused())
@@ -243,7 +232,7 @@ void IMTextEntry::OnPreeditEnd(GtkIMContext* context)
 {
   preedit_string = "";
   im_active_ = false;
-  //gtk_im_context_reset(im_context_);
+  gtk_im_context_reset(im_context_);
 
   LOG_DEBUG(logger) << "Preedit ended";
 }
