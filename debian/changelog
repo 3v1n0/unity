@@ -2,6 +2,7 @@ unity (4.8.2-0ubuntu1) UNRELEASED; urgency=low
 
   * New upstream release.
   * debian/control.in: updated nux requirement
+  * Backported a leak fix from trunk
 
   [ Didier Roche ]
   * debian/control:
