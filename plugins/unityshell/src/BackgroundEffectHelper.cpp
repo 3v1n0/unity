@@ -23,13 +23,12 @@
 
 BackgroundEffectHelper::BackgroundEffectHelper()
 {
-
   noise_texture_ = nux::CreateTextureFromFile(PKGDATADIR"/dash_noise.png");
 }
 
 BackgroundEffectHelper::~BackgroundEffectHelper()
 {
-
+  noise_texture_->UnReference();
 }
 
 nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nux::Geometry geo, bool update)
