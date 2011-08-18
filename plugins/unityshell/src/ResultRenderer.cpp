@@ -39,20 +39,20 @@ ResultRenderer::~ResultRenderer()
 {
 }
 
-void ResultRenderer::Render (nux::GraphicsEngine& GfxContext,
-                             Result& row,
-                             ResultRendererState state,
-                             nux::Geometry& geometry, int x_offset, int y_offset)
+void ResultRenderer::Render(nux::GraphicsEngine& GfxContext,
+                            Result& row,
+                            ResultRendererState state,
+                            nux::Geometry& geometry, int x_offset, int y_offset)
 {
-  nux::GetPainter().PushDrawSliceScaledTextureLayer (GfxContext, geometry, nux::eBUTTON_NORMAL, nux::color::White, nux::eAllCorners);
+  nux::GetPainter().PushDrawSliceScaledTextureLayer(GfxContext, geometry, nux::eBUTTON_NORMAL, nux::color::White, nux::eAllCorners);
 }
 
-void ResultRenderer::Preload (Result& row)
+void ResultRenderer::Preload(Result& row)
 {
   // pre-load the given row
 }
 
-void ResultRenderer::Unload (Result& row)
+void ResultRenderer::Unload(Result& row)
 {
   // unload any resources
 }
