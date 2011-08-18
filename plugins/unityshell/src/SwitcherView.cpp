@@ -517,7 +517,7 @@ void SwitcherView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   int ms_since_change = DeltaTTime(&current, &save_time_);
 
-  if (ms_since_change < animation_length)
+  if (ms_since_change < animation_length && redraw_handle_ == 0)
     redraw_handle_ = g_timeout_add(0, &SwitcherView::OnDrawTimeout, this);
 
   animation_draw_ = false;

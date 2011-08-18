@@ -138,9 +138,6 @@ void SwitcherController::ConstructView()
   layout->SetVerticalExternalMargin(0);
   layout->SetHorizontalExternalMargin(0);
 
-  if (view_window_)
-    view_window_->UnReference();
-
   view_window_ = new nux::BaseWindow("Switcher");
   view_window_->SinkReference();
   view_window_->SetLayout(layout);
@@ -187,7 +184,11 @@ void SwitcherController::Hide(bool accept_state)
   visible_ = false;
 
   if (view_window_)
+  {
     view_window_->ShowWindow(false);
+    view_window_->UnReference();
+    view_window_ = 0;
+  }
 
   if (show_timer_)
     g_source_remove(show_timer_);
