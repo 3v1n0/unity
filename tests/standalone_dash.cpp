@@ -94,8 +94,6 @@ int main(int argc, char **argv)
   nux::NuxInitialize(0);
   nux::logging::configure_logging(::getenv("UNITY_LOG_SEVERITY"));
 
-  PlacesSettings::GetDefault()->SetDashBlurType(PlacesSettings::DashBlurType::NO_BLUR);
-
   TestRunner *test_runner = new TestRunner ();
   wt = nux::CreateGUIThread(TEXT("Unity Dash"),
                             1024, 600,

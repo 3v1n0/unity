@@ -72,7 +72,6 @@ public:
   void EndFirstMenuShow();
 
   void SetOpacity(float opacity);
-  void SetBlurType(BlurType type);
 
 protected:
   // Introspectable methods
@@ -121,7 +120,6 @@ private:
   guint       _track_menu_pointer_id;
 
   BackgroundEffectHelper bg_effect_helper_;
-  BlurType blur_type_;
   nux::ObjectPtr <nux::IOpenGLBaseTexture> bg_blur_texture_;
 };
 
