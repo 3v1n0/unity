@@ -52,6 +52,11 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
 
   mouse_move.connect (sigc::mem_fun (this, &ResultViewGrid::MouseMove));
   mouse_click.connect (sigc::mem_fun (this, &ResultViewGrid::MouseClick));
+  mouse_leave.connect([&] (int x, int y, unsigned long mouse_state, unsigned long button_state)
+  {
+    mouse_over_index_ = -1;
+    NeedRedraw();
+  });
 
   NeedRedraw();
 }
