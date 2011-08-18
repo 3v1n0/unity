@@ -25,6 +25,7 @@
 #include <Nux/BaseWindow.h>
 #include <Nux/WindowCompositor.h>
 
+#include "IconRenderer.h"
 #include "Launcher.h"
 #include "LauncherIcon.h"
 #include "LauncherController.h"
@@ -221,11 +222,11 @@ UnityScreen::UnityScreen(CompScreen* screen)
   CompString pname("unityshell");
   CompSize size(1, 20);
   _shadow_texture = GLTexture::readImageToTexture(name, pname, size);
-  
+
   ubus_manager_.RegisterInterest(UBUS_PLACE_VIEW_SHOWN, [&](GVariant* args) { dash_is_open_ = true; });
   ubus_manager_.RegisterInterest(UBUS_PLACE_VIEW_HIDDEN, [&](GVariant* args) { dash_is_open_ = false; });
 
-  EnsureKeybindings ();
+  EnsureKeybindings();
 
   LOG_INFO(logger) << "UnityScreen constructed: " << timer.ElapsedSeconds() << "s";
 }
@@ -251,11 +252,14 @@ UnityScreen::~UnityScreen()
   if (relayoutSourceId != 0)
     g_source_remove(relayoutSourceId);
 
-  // Deleting the windows thread calls XCloseDisplay, which calls XSync, which sits waiting for a reply.
+  // Deleting the windows thread calls XCloseDisplay, which calls XSync, which
+  // sits waiting for a reply.
   // delete wt;
+
+  ::unity::ui::IconRenderer::DestroyTextures();
 }
 
-void UnityScreen::EnsureKeybindings ()
+void UnityScreen::EnsureKeybindings()
 {
   for (auto action : _shortcut_actions)
     screen->removeAction(action.get());
