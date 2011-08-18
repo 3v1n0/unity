@@ -59,98 +59,102 @@ namespace ui
 #define LUMIN_GREEN "0.295"
 #define LUMIN_BLUE "0.055"
 
-nux::NString gPerspectiveCorrectShader = TEXT("[Vertex Shader]          \n\
-#version 120                                                            \n\
-uniform mat4 ViewProjectionMatrix;                                      \n\
-                                                                        \n\
-attribute vec4 iTexCoord0;                                              \n\
-attribute vec4 iVertex;                                                 \n\
-                                                                        \n\
-varying vec4 varyTexCoord0;                                             \n\
-                                                                        \n\
-void main()                                                             \n\
-{                                                                       \n\
-    varyTexCoord0 = iTexCoord0;                                         \n\
-    gl_Position =  ViewProjectionMatrix * iVertex;                      \n\
-}                                                                       \n\
-                                                                        \n\
-[Fragment Shader]                                                       \n\
-#version 110                                                            \n\
-                                                                        \n\
-varying vec4 varyTexCoord0;                                             \n\
-                                                                        \n\
-uniform sampler2D TextureObject0;                                       \n\
-uniform vec4 color0;                                                    \n\
-uniform vec4 desat_factor;                                              \n\
-vec4 SampleTexture(sampler2D TexObject, vec4 TexCoord)                  \n\
-{                                                                       \n\
-  return texture2D(TexObject, TexCoord.st);                             \n\
-}                                                                       \n\
-                                                                        \n\
-void main()                                                             \n\
-{                                                                       \n\
-  vec4 tex = varyTexCoord0;                                             \n\
-  tex.s = tex.s/varyTexCoord0.w;                                        \n\
-  tex.t = tex.t/varyTexCoord0.w;                                        \n\
-                                                                        \n\
-  vec4 texel = color0 * SampleTexture(TextureObject0, tex);             \n\
-  vec4 desat = vec4 ("LUMIN_RED"*texel.r + "LUMIN_GREEN"*texel.g + "LUMIN_BLUE"*texel.b);       \n\
-  vec4 final_color = (vec4 (1.0, 1.0, 1.0, 1.0) - desat_factor) * desat + desat_factor * texel;   \n\
-  final_color.a = texel.a;                                              \n\
-  gl_FragColor = final_color;                                           \n\
-}                                                                       \n\
+nux::NString gPerspectiveCorrectShader = TEXT(
+"[Vertex Shader]                                    \n\
+#version 120                                        \n\
+uniform mat4 ViewProjectionMatrix;                  \n\
+                                                    \n\
+attribute vec4 iTexCoord0;                          \n\
+attribute vec4 iVertex;                             \n\
+                                                    \n\
+varying vec4 varyTexCoord0;                         \n\
+                                                    \n\
+void main()                                         \n\
+{                                                   \n\
+    varyTexCoord0 = iTexCoord0;                     \n\
+    gl_Position =  ViewProjectionMatrix * iVertex;  \n\
+}                                                   \n\
+                                                    \n\
+[Fragment Shader]                                   \n\
+#version 110                                        \n\
+                                                    \n\
+varying vec4 varyTexCoord0;                         \n\
+                                                    \n\
+uniform sampler2D TextureObject0;                   \n\
+uniform vec4 color0;                                \n\
+uniform vec4 desat_factor;                          \n\
+vec4 SampleTexture(sampler2D TexObject, vec4 TexCoord) \n\
+{                                                   \n\
+  return texture2D(TexObject, TexCoord.st);         \n\
+}                                                   \n\
+                                                    \n\
+void main()                                         \n\
+{                                                   \n\
+  vec4 tex = varyTexCoord0;                         \n\
+  tex.s = tex.s/varyTexCoord0.w;                    \n\
+  tex.t = tex.t/varyTexCoord0.w;                    \n\
+                                                    \n\
+  vec4 texel = color0 * SampleTexture(TextureObject0, tex);  \n\
+  vec4 desat = vec4 ("LUMIN_RED"*texel.r + "LUMIN_GREEN"*texel.g + "LUMIN_BLUE"*texel.b);  \n\
+  vec4 final_color = (vec4 (1.0, 1.0, 1.0, 1.0) - desat_factor) * desat + desat_factor * texel; \n\
+  final_color.a = texel.a;                          \n\
+  gl_FragColor = final_color;                       \n\
+}                                                   \n\
 ");
 
-nux::NString PerspectiveCorrectVtx = TEXT("!!ARBvp1.0                                 \n\
-ATTRIB iPos         = vertex.position;      \n                          \
-ATTRIB iColor       = vertex.attrib[3];     \n                          \
-PARAM  mvp[4]       = {state.matrix.mvp};   \n                          \
-OUTPUT oPos         = result.position;      \n                          \
-OUTPUT oColor       = result.color;         \n                          \
-OUTPUT oTexCoord0   = result.texcoord[0];   \n                          \
-# Transform the vertex to clip coordinates. \n                          \
-DP4   oPos.x, mvp[0], iPos;                 \n                          \
-DP4   oPos.y, mvp[1], iPos;                 \n                          \
-DP4   oPos.z, mvp[2], iPos;                 \n                          \
-DP4   oPos.w, mvp[3], iPos;                 \n                          \
-MOV   oColor, iColor;                       \n                          \
-MOV   oTexCoord0, vertex.attrib[8];         \n                          \
+nux::NString PerspectiveCorrectVtx = TEXT(
+"!!ARBvp1.0                                 \n\
+ATTRIB iPos         = vertex.position;      \n\
+ATTRIB iColor       = vertex.attrib[3];     \n\
+PARAM  mvp[4]       = {state.matrix.mvp};   \n\
+OUTPUT oPos         = result.position;      \n\
+OUTPUT oColor       = result.color;         \n\
+OUTPUT oTexCoord0   = result.texcoord[0];   \n\
+# Transform the vertex to clip coordinates. \n\
+DP4   oPos.x, mvp[0], iPos;                 \n\
+DP4   oPos.y, mvp[1], iPos;                 \n\
+DP4   oPos.z, mvp[2], iPos;                 \n\
+DP4   oPos.w, mvp[3], iPos;                 \n\
+MOV   oColor, iColor;                       \n\
+MOV   oTexCoord0, vertex.attrib[8];         \n\
 END");
 
-nux::NString PerspectiveCorrectTexFrg = TEXT("!!ARBfp1.0                                 \n\
-PARAM color0 = program.local[0];            \n                          \
-PARAM factor = program.local[1];            \n                          \
-PARAM luma = {"LUMIN_RED", "LUMIN_GREEN", "LUMIN_BLUE", 0.0};       \n  \
-TEMP temp;                                  \n                          \
-TEMP pcoord;                                \n                          \
-TEMP tex0;                                  \n                          \
-TEMP desat;                                 \n                          \
-TEMP color;                                 \n                          \
-MOV pcoord, fragment.texcoord[0].w;         \n                          \
-RCP temp, fragment.texcoord[0].w;           \n                          \
-MUL pcoord.xy, fragment.texcoord[0], temp;  \n                          \
-TEX tex0, pcoord, texture[0], 2D;           \n                          \
-MUL color, color0, tex0;                    \n                          \
-DP4 desat, luma, color;                     \n                          \
-LRP result.color.rgb, factor.x, color, desat;    \n                     \
-MOV result.color.a, color;    \n                                        \
+nux::NString PerspectiveCorrectTexFrg = TEXT(
+"!!ARBfp1.0                                                   \n\
+PARAM color0 = program.local[0];                              \n\
+PARAM factor = program.local[1];                              \n\
+PARAM luma = {"LUMIN_RED", "LUMIN_GREEN", "LUMIN_BLUE", 0.0}; \n\
+TEMP temp;                                                    \n\
+TEMP pcoord;                                                  \n\
+TEMP tex0;                                                    \n\
+TEMP desat;                                                   \n\
+TEMP color;                                                   \n\
+MOV pcoord, fragment.texcoord[0].w;                           \n\
+RCP temp, fragment.texcoord[0].w;                             \n\
+MUL pcoord.xy, fragment.texcoord[0], temp;                    \n\
+TEX tex0, pcoord, texture[0], 2D;                             \n\
+MUL color, color0, tex0;                                      \n\
+DP4 desat, luma, color;                                       \n\
+LRP result.color.rgb, factor.x, color, desat;                 \n\
+MOV result.color.a, color;                                    \n\
 END");
 
-nux::NString PerspectiveCorrectTexRectFrg = TEXT("!!ARBfp1.0                                 \n\
-PARAM color0 = program.local[0];            \n                          \
-PARAM factor = program.local[1];            \n                          \
-PARAM luma = {"LUMIN_RED", "LUMIN_GREEN", "LUMIN_BLUE", 0.0};       \n  \
-TEMP temp;                                  \n                          \
-TEMP pcoord;                                \n                          \
-TEMP tex0;                                  \n                          \
-MOV pcoord, fragment.texcoord[0].w;         \n                          \
-RCP temp, fragment.texcoord[0].w;           \n                          \
-MUL pcoord.xy, fragment.texcoord[0], temp;  \n                          \
-TEX tex0, pcoord, texture[0], RECT;         \n                          \
-MUL color, color0, tex0;                    \n                          \
-DP4 desat, luma, color;                     \n                          \
-LRP result.color.rgb, factor.x, color, desat;    \n                     \
-MOV result.color.a, color;    \n                                        \
+nux::NString PerspectiveCorrectTexRectFrg = TEXT(
+"!!ARBfp1.0                                                   \n\
+PARAM color0 = program.local[0];                              \n\
+PARAM factor = program.local[1];                              \n\
+PARAM luma = {"LUMIN_RED", "LUMIN_GREEN", "LUMIN_BLUE", 0.0}; \n\
+TEMP temp;                                                    \n\
+TEMP pcoord;                                                  \n\
+TEMP tex0;                                                    \n\
+MOV pcoord, fragment.texcoord[0].w;                           \n\
+RCP temp, fragment.texcoord[0].w;                             \n\
+MUL pcoord.xy, fragment.texcoord[0], temp;                    \n\
+TEX tex0, pcoord, texture[0], RECT;                           \n\
+MUL color, color0, tex0;                                      \n\
+DP4 desat, luma, color;                                       \n\
+LRP result.color.rgb, factor.x, color, desat;                 \n\
+MOV result.color.a, color;                                    \n\
 END");
 
 // The local namespace is purely for namespacing the file local variables below.

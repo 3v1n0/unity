@@ -60,7 +60,6 @@ public:
   nux::Property<int> vertical_size;
   nux::Property<int> text_size;
   nux::Property<int> animation_length;
-  nux::Property<BlurType> blur;
   nux::Property<double> spread_size;
   nux::Property<nux::Color> background_color;
 
@@ -113,7 +112,6 @@ private:
   bool animation_draw_;
 
   BackgroundEffectHelper bg_effect_helper_;
-  nux::ObjectPtr <nux::IOpenGLBaseTexture> bg_blur_texture_;
 };
 
 }

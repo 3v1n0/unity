@@ -37,6 +37,7 @@
 #include "StartupNotifyService.h"
 #include "Timer.h"
 #include "unityshell.h"
+#include "BackgroundEffectHelper.h"
 
 #include <dbus/dbus.h>
 #include <dbus/dbus-glib.h>
@@ -182,17 +183,31 @@ UnityScreen::UnityScreen(CompScreen* screen)
   optionSetKeyboardFocusInitiate(boost::bind(&UnityScreen::setKeyboardFocusKeyInitiate, this, _1, _2, _3));
   //optionSetKeyboardFocusTerminate (boost::bind (&UnityScreen::setKeyboardFocusKeyTerminate, this, _1, _2, _3));
   optionSetExecuteCommandInitiate(boost::bind(&UnityScreen::executeCommand, this, _1, _2, _3));
-  optionSetAltTabForwardInitiate(boost::bind(&UnityScreen::altTabForwardInitiate, this, _1, _2, _3));
-  optionSetAltTabForwardTerminate(boost::bind(&UnityScreen::altTabForwardTerminate, this, _1, _2, _3));
-  optionSetAltTabDetailInitiate(boost::bind(&UnityScreen::altTabDetailInitiate, this, _1, _2, _3));
-  optionSetAltTabDetailTerminate(boost::bind(&UnityScreen::altTabDetailTerminate, this, _1, _2, _3));
-  optionSetAltTabPrevInitiate(boost::bind(&UnityScreen::altTabPrevInitiate, this, _1, _2, _3));
-  optionSetAltTabPrevTerminate(boost::bind(&UnityScreen::altTabPrevTerminate, this, _1, _2, _3));
   optionSetPanelFirstMenuInitiate(boost::bind(&UnityScreen::showPanelFirstMenuKeyInitiate, this, _1, _2, _3));
   optionSetPanelFirstMenuTerminate(boost::bind(&UnityScreen::showPanelFirstMenuKeyTerminate, this, _1, _2, _3));
   optionSetLauncherRevealEdgeInitiate(boost::bind(&UnityScreen::launcherRevealEdgeInitiate, this, _1, _2, _3));
   optionSetLauncherRevealEdgeTimeoutNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
   optionSetAutomaximizeValueNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+  optionSetAltTabTimeoutNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+  
+  optionSetAltTabForwardInitiate(boost::bind(&UnityScreen::altTabForwardInitiate, this, _1, _2, _3));
+  optionSetAltTabForwardTerminate(boost::bind(&UnityScreen::altTabForwardTerminate, this, _1, _2, _3));
+  
+  optionSetAltTabPrevInitiate(boost::bind(&UnityScreen::altTabPrevInitiate, this, _1, _2, _3));
+  optionSetAltTabPrevTerminate(boost::bind(&UnityScreen::altTabPrevTerminate, this, _1, _2, _3));
+  
+  optionSetAltTabDetailStartInitiate(boost::bind(&UnityScreen::altTabDetailStartInitiate, this, _1, _2, _3));
+  optionSetAltTabDetailStartTerminate(boost::bind(&UnityScreen::altTabDetailStartTerminate, this, _1, _2, _3));
+
+  optionSetAltTabDetailStopInitiate(boost::bind(&UnityScreen::altTabDetailStopInitiate, this, _1, _2, _3));
+  optionSetAltTabDetailStopTerminate(boost::bind(&UnityScreen::altTabDetailStopTerminate, this, _1, _2, _3));
+
+  optionSetAltTabNextWindowInitiate(boost::bind(&UnityScreen::altTabNextWindowInitiate, this, _1, _2, _3));
+  optionSetAltTabNextWindowTerminate(boost::bind(&UnityScreen::altTabNextWindowTerminate, this, _1, _2, _3));
+
+  optionSetAltTabExitInitiate(boost::bind(&UnityScreen::altTabExitInitiate, this, _1, _2, _3));
+  optionSetAltTabExitTerminate(boost::bind(&UnityScreen::altTabExitTerminate, this, _1, _2, _3));
+  
 
   for (unsigned int i = 0; i < G_N_ELEMENTS(_ubus_handles); i++)
     _ubus_handles[i] = 0;
@@ -455,6 +470,7 @@ if (switcherController->Visible ())
 
   doShellRepaint = false;
   damaged = false;
+  BackgroundEffectHelper::updates_enabled = true;
 }
 
 void UnityWindow::paintThumbnail (nux::Geometry const& bounding, float alpha)
@@ -528,14 +544,13 @@ void UnityScreen::glPaintTransformedOutput(const GLScreenPaintAttrib& attrib,
 
 void UnityScreen::preparePaint(int ms)
 {
-  PlacesSettings::DashBlurType type = PlacesSettings::GetDefault()->GetDashBlurType();
-  if (type == PlacesSettings::ACTIVE_BLUR)
+  if (BackgroundEffectHelper::blur_type == unity::BLUR_ACTIVE)
   {
-    dashController->window()->QueueDraw();
-    if (dash_is_open_)
-      panelController->QueueRedraw();
-    if (switcherController->GetView ())
-      switcherController->GetView ()->QueueDraw();
+    // this causes queue draws to be called, we obviously dont want to disable updates
+    // because we are updating the blur, so ignore them.
+    bool tmp = BackgroundEffectHelper::updates_enabled;
+    BackgroundEffectHelper::QueueDrawOnOwners();
+    BackgroundEffectHelper::updates_enabled = tmp;
   }
 
   cScreen->preparePaint(ms);
@@ -797,7 +812,7 @@ bool UnityScreen::altTabForwardInitiate(CompAction* action,
 {
   if (switcherController->Visible())
   {
-    switcherController->MoveNext();
+    switcherController->Next();
   }
   else
   {
@@ -827,48 +842,82 @@ bool UnityScreen::altTabForwardInitiate(CompAction* action,
   return false;
 }
 
-bool UnityScreen::altTabForwardTerminate(CompAction* action,
-                                         CompAction::State state,
-                                         CompOption::Vector& options)
+bool UnityScreen::altTabForwardTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options)
 {
   action->setState(action->state() & (unsigned)~(CompAction::StateTermKey));
-  switcherController->Hide();
+  bool accept_state = (state & CompAction::StateCancel) == 0;
+  switcherController->Hide(accept_state);
   return false;
 }
 
-bool UnityScreen::altTabPrevInitiate(CompAction* action,
-                                     CompAction::State state,
-                                     CompOption::Vector& options)
+bool UnityScreen::altTabPrevInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
 {
   if (switcherController->Visible())
-    switcherController->MovePrev();
+    switcherController->Prev();
 
   action->setState(action->state() | CompAction::StateTermKey);
   return false;
 }
 
-bool UnityScreen::altTabPrevTerminate(CompAction* action,
-                                      CompAction::State state,
-                                      CompOption::Vector& options)
+bool UnityScreen::altTabPrevTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options)
 {
   action->setState(action->state() & (unsigned)~(CompAction::StateTermKey));
   return false;
 }
 
-bool UnityScreen::altTabDetailInitiate(CompAction* action,
-                                     CompAction::State state,
-                                     CompOption::Vector& options)
+bool UnityScreen::altTabDetailStartInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
 {
   if (switcherController->Visible())
-    switcherController->DetailCurrent();
+    switcherController->SetDetail(true);
 
   action->setState(action->state() | CompAction::StateTermKey);
   return false;
 }
 
-bool UnityScreen::altTabDetailTerminate(CompAction* action,
-                                      CompAction::State state,
-                                      CompOption::Vector& options)
+bool UnityScreen::altTabDetailStartTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options)
+{
+  action->setState(action->state() & (unsigned)~(CompAction::StateTermKey));
+  return false;
+}
+
+bool UnityScreen::altTabDetailStopInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
+{
+  if (switcherController->Visible())
+    switcherController->SetDetail(false);
+
+  action->setState(action->state() | CompAction::StateTermKey);
+  return false;
+}
+
+bool UnityScreen::altTabDetailStopTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options)
+{
+  action->setState(action->state() & (unsigned)~(CompAction::StateTermKey));
+  return false;
+}
+
+bool UnityScreen::altTabNextWindowInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
+{
+  if (switcherController->Visible())
+    switcherController->NextDetail();
+
+  action->setState(action->state() | CompAction::StateTermKey);
+  return false;
+}
+
+bool UnityScreen::altTabNextWindowTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options)
+{
+  action->setState(action->state() & (unsigned)~(CompAction::StateTermKey));
+  return false;
+}
+
+bool UnityScreen::altTabExitInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
+{
+  switcherController->Hide(false);
+  action->setState(action->state() | CompAction::StateTermKey);
+  return false;
+}
+
+bool UnityScreen::altTabExitTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options)
 {
   action->setState(action->state() & (unsigned)~(CompAction::StateTermKey));
   return false;
@@ -1150,6 +1199,9 @@ void UnityScreen::initUnity(nux::NThread* thread, void* InitData)
 
 void UnityScreen::onRedrawRequested()
 {
+  // disable blur updates so we dont waste perf. This can stall the blur during animations
+  // but ensures a smooth animation.
+  BackgroundEffectHelper::updates_enabled = false;
   damageNuxRegions();
 }
 
@@ -1185,9 +1237,7 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       launcher->SetAutoHideAnimation((Launcher::AutoHideAnimation) optionGetAutohideAnimation());
       break;
     case UnityshellOptions::DashBlurExperimental:
-      PlacesSettings::GetDefault()->SetDashBlurType((PlacesSettings::DashBlurType)optionGetDashBlurExperimental());
-      panelController->SetBlurType((unity::BlurType)optionGetDashBlurExperimental());
-      switcherController->blur = (unity::BlurType)optionGetDashBlurExperimental();
+      BackgroundEffectHelper::blur_type = (unity::BlurType)optionGetDashBlurExperimental();
       break;
     case UnityshellOptions::AutomaximizeValue:
       PluginAdapter::Default()->SetCoverageAreaBeforeAutomaximize(optionGetAutomaximizeValue() / 100.0f);
@@ -1197,6 +1247,9 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       break;
     case UnityshellOptions::LauncherRevealEdgeTimeout:
       _edge_timeout = optionGetLauncherRevealEdgeTimeout();
+      break;
+    case UnityshellOptions::AltTabTimeout:
+      switcherController->detail_on_timeout = optionGetAltTabTimeout();
       break;
     default:
       break;

@@ -54,8 +54,6 @@ SwitcherView::SwitcherView(NUX_FILE_LINE_DECL)
 
   animation_draw_ = false;
 
-  blur = BLUR_NONE;
-
   save_time_.tv_sec = 0;
   save_time_.tv_nsec = 0;
 
@@ -71,10 +69,13 @@ SwitcherView::SwitcherView(NUX_FILE_LINE_DECL)
 
   icon_size.changed.connect (sigc::mem_fun (this, &SwitcherView::OnIconSizeChanged));
   tile_size.changed.connect (sigc::mem_fun (this, &SwitcherView::OnTileSizeChanged));
+
+  bg_effect_helper_.owner = this;
 }
 
 SwitcherView::~SwitcherView()
 {
+  background_texture_->UnReference();
   text_view_->UnReference();
   if (redraw_handle_ > 0)
     g_source_remove(redraw_handle_);
@@ -456,31 +457,31 @@ void SwitcherView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
 
   nux::Geometry geo_absolute = GetAbsoluteGeometry ();
-  if (!bg_blur_texture_.IsValid() && blur != BLUR_NONE)
+  if (BackgroundEffectHelper::blur_type != BLUR_NONE)
   {
     nux::Geometry blur_geo(geo_absolute.x, geo_absolute.y, base.width, base.height);
-    bg_blur_texture_ = bg_effect_helper_.GetBlurRegion(blur_geo, true);
-  }
+    auto blur_texture = bg_effect_helper_.GetBlurRegion(blur_geo);
 
-  if (bg_blur_texture_.IsValid() && blur != BLUR_NONE)
-  {
-    nux::TexCoordXForm texxform_blur_bg;
-    texxform_blur_bg.flip_v_coord = true;
-    texxform_blur_bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-    texxform_blur_bg.uoffset = ((float) base.x) / geo_absolute.width;
-    texxform_blur_bg.voffset = ((float) base.y) / geo_absolute.height;
+    if (blur_texture.IsValid() && BackgroundEffectHelper::blur_type != BLUR_NONE)
+    {
+      nux::TexCoordXForm texxform_blur_bg;
+      texxform_blur_bg.flip_v_coord = true;
+      texxform_blur_bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+      texxform_blur_bg.uoffset = ((float) base.x) / geo_absolute.width;
+      texxform_blur_bg.voffset = ((float) base.y) / geo_absolute.height;
 
-    nux::ROPConfig rop;
-    rop.Blend = false;
-    rop.SrcBlend = GL_ONE;
-    rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+      nux::ROPConfig rop;
+      rop.Blend = false;
+      rop.SrcBlend = GL_ONE;
+      rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
-    gPainter.PushDrawTextureLayer(GfxContext, base,
-                                  bg_blur_texture_,
-                                  texxform_blur_bg,
-                                  nux::color::White,
-                                  true,
-                                  rop);
+      gPainter.PushDrawTextureLayer(GfxContext, base,
+                                    blur_texture,
+                                    texxform_blur_bg,
+                                    nux::color::White,
+                                    true,
+                                    rop);
+    }
   }
 
   nux::ROPConfig rop;
@@ -516,11 +517,8 @@ void SwitcherView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   int ms_since_change = DeltaTTime(&current, &save_time_);
 
-  if (ms_since_change < animation_length)
+  if (ms_since_change < animation_length && redraw_handle_ == 0)
     redraw_handle_ = g_timeout_add(0, &SwitcherView::OnDrawTimeout, this);
-
-  if (blur == BLUR_ACTIVE && !animation_draw_)
-    bg_blur_texture_.Release();
 
   animation_draw_ = false;
 }
