@@ -416,6 +416,9 @@ void DashView::OnLensBarActivated(std::string const& id)
     search_bar_->search_hint = "Search";
   bool expanded =view->filters_expanded;
   search_bar_->showing_filters = expanded;
+
+  view->QueueDraw();
+  QueueDraw();
 }
 
 void DashView::OnSearchFinished(std::string const& search_string)
