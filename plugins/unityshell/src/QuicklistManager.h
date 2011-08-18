@@ -24,6 +24,7 @@ class QuicklistManager : public sigc::trackable
 {
 public:
   static QuicklistManager* Default();
+  static void Destroy();
 
   QuicklistManager();
 

@@ -37,6 +37,13 @@ QuicklistManager* QuicklistManager::Default()
   return _default;
 }
 
+void QuicklistManager::Destroy()
+{
+  if (_default)
+    delete _default;
+  _default = 0;
+}
+
 QuicklistManager::QuicklistManager()
 {
   _current_quicklist = 0;
@@ -44,6 +51,10 @@ QuicklistManager::QuicklistManager()
 
 QuicklistManager::~QuicklistManager()
 {
+  // for (auto quicklist : _quicklist_list)
+  // {
+  //   quicklist->UnReference();
+  // }
 }
 
 QuicklistView* QuicklistManager::Current()
