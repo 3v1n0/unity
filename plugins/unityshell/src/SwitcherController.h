@@ -56,15 +56,21 @@ public:
 
   nux::Property<int> timeout_length;
 
+  nux::Property<bool> detail_on_timeout;
+  nux::Property<int>  detail_timeout_length;
+
   void Show(ShowMode show, SortMode sort, bool reverse, std::vector<AbstractLauncherIcon*> results);
-  void Hide();
+  void Hide(bool accept_state=true);
 
   bool Visible();
 
-  void MoveNext();
-  void MovePrev();
+  void Next();
+  void Prev();
 
-  void DetailCurrent();
+  void NextDetail();
+  void PrevDetail();
+
+  void SetDetail(bool detail);
 
   void SelectFirstItem();
 
@@ -75,7 +81,18 @@ public:
   LayoutWindowList ExternalRenderTargets ();
 
 private:
+  enum DetailMode
+  {
+    TAB_NEXT_WINDOW,
+    TAB_NEXT_WINDOW_LOOP,
+    TAB_NEXT_TILE,
+  };
+
   void ConstructView();
+
+  void OnModelSelectionChanged(AbstractLauncherIcon *icon);
+
+  int WindowsRelatedToSelection();
 
   static void OnBackgroundUpdate (GVariant *data, SwitcherController *self);
 
@@ -88,9 +105,12 @@ private:
 
   bool visible_;
   guint show_timer_;
+  guint detail_timer_;
   nux::Color bg_color_;
+  DetailMode detail_mode_;
 
   static gboolean OnShowTimer(gpointer data);
+  static gboolean OnDetailTimer(gpointer data);
 
   static bool CompareSwitcherItemsPriority(AbstractLauncherIcon* first, AbstractLauncherIcon* second);
 
