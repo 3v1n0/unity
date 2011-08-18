@@ -69,25 +69,31 @@ QuicklistView::QuicklistView()
   , _current_item_index(0)
 {
   SetGeometry(nux::Geometry(0, 0, 1, 1));
-  _hlayout         = new nux::HLayout(TEXT(""), NUX_TRACKER_LOCATION);
-  _vlayout         = new nux::VLayout(TEXT(""), NUX_TRACKER_LOCATION);
-  _item_layout     = new nux::VLayout(TEXT(""), NUX_TRACKER_LOCATION);
-  _default_item_layout = new nux::VLayout(TEXT(""), NUX_TRACKER_LOCATION);
 
-  _left_space = new nux::SpaceLayout(_padding + _anchor_width + _corner_radius, _padding + _anchor_width + _corner_radius, 1, 1000);
-  _right_space = new nux::SpaceLayout(_padding + _corner_radius, _padding + _corner_radius, 1, 1000);
+  _left_space = new nux::SpaceLayout(_padding + _anchor_width + _corner_radius,
+                                     _padding + _anchor_width + _corner_radius,
+                                     1, 1000);
+  _right_space = new nux::SpaceLayout(_padding + _corner_radius,
+                                      _padding + _corner_radius,
+                                      1, 1000);
+  _top_space = new nux::SpaceLayout(1, 1000,
+                                    _padding + _corner_radius,
+                                    _padding + _corner_radius);
+  _bottom_space = new nux::SpaceLayout(1, 1000,
+                                       _padding + _corner_radius,
+                                       _padding + _corner_radius);
 
-  _top_space = new nux::SpaceLayout(1, 1000, _padding + _corner_radius, _padding + _corner_radius);
-  _bottom_space = new nux::SpaceLayout(1, 1000, _padding + _corner_radius, _padding + _corner_radius);
-
+  _vlayout = new nux::VLayout(TEXT(""), NUX_TRACKER_LOCATION);
   _vlayout->AddLayout(_top_space, 0);
 
+  _item_layout     = new nux::VLayout(TEXT(""), NUX_TRACKER_LOCATION);
   _vlayout->AddLayout(_item_layout, 0);
 
+  _default_item_layout = new nux::VLayout(TEXT(""), NUX_TRACKER_LOCATION);
   _vlayout->AddLayout(_default_item_layout, 0);
-
   _vlayout->AddLayout(_bottom_space, 0);
 
+  _hlayout = new nux::HLayout(TEXT(""), NUX_TRACKER_LOCATION);
   _hlayout->AddLayout(_left_space, 0);
   _hlayout->AddLayout(_vlayout, 0, nux::eCenter, nux::eFull);
   _hlayout->AddLayout(_right_space, 0);
