@@ -210,14 +210,15 @@ void ResultViewGrid::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   uint row_size = renderer_->height + vertical_spacing;
 
   int y_position = padding + GetGeometry().y;
+  nux::Area* top_level_parent = GetToplevel();
 
   for (uint row_index = 0; row_index <= total_rows; row_index++)
   {
     // check if the row is displayed on the screen,
     // FIXME - optimisation - replace 2048 with the height of the displayed viewport
     // or at the very least, with the largest monitor resolution
-    //if ((y_position + renderer_->height) + absolute_y >= 0
-      //  && (y_position - renderer_->height) + absolute_y <= 2048)
+    //~ if ((y_position + renderer_->height) + absolute_y >= 0
+        //~ && (y_position - renderer_->height) + absolute_y <= top_level_parent->GetGeometry().height)
     if (1)
     {
       int x_position = padding + GetGeometry().x;
@@ -241,9 +242,9 @@ void ResultViewGrid::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
           state = ResultRenderer::RESULT_RENDERER_SELECTED;
         }
 
-        int half_width = GetGeometry().width / 2;
+        int half_width = top_level_parent->GetGeometry().width / 2;
         // FIXME - we assume the height of the viewport is 600
-        int half_height = 600 / 2;
+        int half_height = top_level_parent->GetGeometry().height;
 
         int offset_x = (x_position - half_width) / (half_width / 10);
         int offset_y = ((y_position + absolute_y) - half_height) / (half_height / 10);
