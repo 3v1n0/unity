@@ -1,3 +1,10 @@
+unity (4.8.0-0ubuntu3) UNRELEASED; urgency=low
+
+  * Backport r1373 to fix a segfault happening on theme updates (lp: #825587)
+    (lp: #741652)
+
+ -- Sebastien Bacher <seb128@ubuntu.com>  Wed, 17 Aug 2011 18:19:46 +0200
+
 unity (4.8.0-0ubuntu2) oneiric; urgency=low
 
   * Backport r1371 to fix launcher autohidding issues
