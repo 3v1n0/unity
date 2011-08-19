@@ -188,7 +188,8 @@ void SwitcherController::Hide(bool accept_state)
   if (view_)
     main_layout_->RemoveChildObject(view_);
 
-  view_window_->ShowWindow(false);
+  if (view_window_)
+    view_window_->ShowWindow(false);
 
   if (show_timer_)
     g_source_remove(show_timer_);

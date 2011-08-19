@@ -1,3 +1,9 @@
+unity (4.8.2-0ubuntu4) UNRELEASED; urgency=low
+
+  * Backport another trunk commit to fix an alt-tab segfault
+
+ -- Sebastien Bacher <seb128@ubuntu.com>  Fri, 19 Aug 2011 18:50:26 +0200
+
 unity (4.8.2-0ubuntu3) oneiric; urgency=low
 
   * Update to current trunk to get closer from an usable version, including
