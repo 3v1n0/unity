@@ -1,3 +1,16 @@
+unity (4.8.2-0ubuntu3) UNRELEASED; urgency=low
+
+  * Update to current trunk to get closer from an usable version, including
+    - improvements to the alt-tab switcher, fixing the performances issues
+      on intel cards, thanks Jason Smith
+    - reworked dnd code fixing launcher showing when dragging text(lp: #773028) 
+      or widgets (lp: #724986), the expose slowness (lp: #821538) and other
+      bugs as well, thanks Andrea Azzarone
+    - the dash text is selected by default allow to type directly a new command
+      (lp: #826904)
+
+ -- Sebastien Bacher <seb128@ubuntu.com>  Fri, 19 Aug 2011 17:49:28 +0200
+
 unity (4.8.2-0ubuntu2) oneiric; urgency=low
 
   * debian/control: really update the nux requirement

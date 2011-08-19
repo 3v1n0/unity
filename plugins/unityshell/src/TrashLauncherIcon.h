@@ -20,6 +20,7 @@
 #ifndef TRASHLAUNCHERICON_H
 #define TRASHLAUNCHERICON_H
 
+#include "DndData.h"
 #include "SimpleLauncherIcon.h"
 
 class TrashLauncherIcon : public SimpleLauncherIcon
@@ -35,8 +36,8 @@ public:
 protected:
   void UpdateTrashIcon();
 
-  nux::DndAction OnQueryAcceptDrop(std::list<char*> uris);
-  void OnAcceptDrop(std::list<char*> uris);
+  nux::DndAction OnQueryAcceptDrop(unity::DndData& dnd_data);
+  void OnAcceptDrop(unity::DndData& dnd_data);
 
 private:
   gulong _on_trash_changed_handler_id;

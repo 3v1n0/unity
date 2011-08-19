@@ -199,6 +199,7 @@ void IMTextEntry::OnFocusChanged(nux::Area* area)
 void IMTextEntry::OnCommit(GtkIMContext* context, char* str)
 {
   LOG_DEBUG(logger) << "Commit: " << str;
+  DeleteSelection();
   if (str)
   {
     std::string new_text = GetText() + str;
