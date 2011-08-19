@@ -185,11 +185,10 @@ void SwitcherController::Hide(bool accept_state)
   model_.reset();
   visible_ = false;
 
-  if (view_window_)
-  {
+  if (view_)
     main_layout_->RemoveChildObject(view_);
-    view_window_->ShowWindow(false);
-  }
+
+  view_window_->ShowWindow(false);
 
   if (show_timer_)
     g_source_remove(show_timer_);
