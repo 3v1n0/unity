@@ -87,20 +87,12 @@ int main(int argc, char **argv)
   nux::SystemThread* st = NULL;
   nux::WindowThread* wt = NULL;
 
-  // no real tests right now, just make sure we don't get any criticals and such
-  // waiting on nice perceptual diff support before we can build real tests
-  // for views
-
-  g_type_init ();
-  g_thread_init (NULL);
   gtk_init (&argc, &argv);
 
   unity::BGHash bghash;
 
   nux::NuxInitialize(0);
   nux::logging::configure_logging(::getenv("UNITY_LOG_SEVERITY"));
-
-  PlacesSettings::GetDefault()->SetDashBlurType(PlacesSettings::DashBlurType::NO_BLUR);
 
   TestRunner *test_runner = new TestRunner ();
   wt = nux::CreateGUIThread(TEXT("Unity Dash"),

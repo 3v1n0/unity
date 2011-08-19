@@ -29,8 +29,7 @@ static PlacesSettings* _places_settings = NULL;
 PlacesSettings::PlacesSettings()
   : _settings(NULL),
     _raw_from_factor(0),
-    _form_factor(DESKTOP),
-    _dash_blur_type(ACTIVE_BLUR)
+    _form_factor(DESKTOP)
 {
   _settings = g_settings_new("com.canonical.Unity");
   g_signal_connect(_settings, "changed",
@@ -93,18 +92,6 @@ int
 PlacesSettings::GetDefaultTileWidth()
 {
   return PlacesStyle::GetDefault()->GetTileWidth();
-}
-
-PlacesSettings::DashBlurType
-PlacesSettings::GetDashBlurType()
-{
-  return _dash_blur_type;
-}
-
-void
-PlacesSettings::SetDashBlurType(PlacesSettings::DashBlurType type)
-{
-  _dash_blur_type = type;
 }
 
 bool

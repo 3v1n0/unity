@@ -25,6 +25,7 @@
 #include <Nux/BaseWindow.h>
 #include <Nux/WindowCompositor.h>
 
+#include "IconRenderer.h"
 #include "Launcher.h"
 #include "LauncherIcon.h"
 #include "LauncherController.h"
@@ -35,6 +36,7 @@
 #include "StartupNotifyService.h"
 #include "Timer.h"
 #include "unityshell.h"
+#include "BackgroundEffectHelper.h"
 
 #include <dbus/dbus.h>
 #include <dbus/dbus-glib.h>
@@ -110,6 +112,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , _last_output(nullptr)
   , switcher_desktop_icon(nullptr)
   , mActiveFbo (0)
+  , grab_index_ (0)
 {
   Timer timer;
   configure_logging();
@@ -180,17 +183,26 @@ UnityScreen::UnityScreen(CompScreen* screen)
   optionSetKeyboardFocusInitiate(boost::bind(&UnityScreen::setKeyboardFocusKeyInitiate, this, _1, _2, _3));
   //optionSetKeyboardFocusTerminate (boost::bind (&UnityScreen::setKeyboardFocusKeyTerminate, this, _1, _2, _3));
   optionSetExecuteCommandInitiate(boost::bind(&UnityScreen::executeCommand, this, _1, _2, _3));
-  optionSetAltTabForwardInitiate(boost::bind(&UnityScreen::altTabForwardInitiate, this, _1, _2, _3));
-  optionSetAltTabForwardTerminate(boost::bind(&UnityScreen::altTabForwardTerminate, this, _1, _2, _3));
-  optionSetAltTabDetailInitiate(boost::bind(&UnityScreen::altTabDetailInitiate, this, _1, _2, _3));
-  optionSetAltTabDetailTerminate(boost::bind(&UnityScreen::altTabDetailTerminate, this, _1, _2, _3));
-  optionSetAltTabPrevInitiate(boost::bind(&UnityScreen::altTabPrevInitiate, this, _1, _2, _3));
-  optionSetAltTabPrevTerminate(boost::bind(&UnityScreen::altTabPrevTerminate, this, _1, _2, _3));
   optionSetPanelFirstMenuInitiate(boost::bind(&UnityScreen::showPanelFirstMenuKeyInitiate, this, _1, _2, _3));
   optionSetPanelFirstMenuTerminate(boost::bind(&UnityScreen::showPanelFirstMenuKeyTerminate, this, _1, _2, _3));
   optionSetLauncherRevealEdgeInitiate(boost::bind(&UnityScreen::launcherRevealEdgeInitiate, this, _1, _2, _3));
   optionSetLauncherRevealEdgeTimeoutNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
   optionSetAutomaximizeValueNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+  optionSetAltTabTimeoutNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+  
+  optionSetAltTabForwardInitiate(boost::bind(&UnityScreen::altTabForwardInitiate, this, _1, _2, _3));
+  optionSetAltTabForwardTerminate(boost::bind(&UnityScreen::altTabTerminateCommon, this, _1, _2, _3));
+  optionSetAltTabPrevInitiate(boost::bind(&UnityScreen::altTabPrevInitiate, this, _1, _2, _3));
+  
+  optionSetAltTabDetailStartInitiate(boost::bind(&UnityScreen::altTabDetailStartInitiate, this, _1, _2, _3));
+  optionSetAltTabDetailStopInitiate(boost::bind(&UnityScreen::altTabDetailStopInitiate, this, _1, _2, _3));
+  optionSetAltTabNextWindowInitiate(boost::bind(&UnityScreen::altTabNextWindowInitiate, this, _1, _2, _3));
+/*
+  optionSetAltTabExitInitiate(boost::bind(&UnityScreen::altTabExitInitiate, this, _1, _2, _3));
+  optionSetAltTabExitTerminate(boost::bind(&UnityScreen::altTabExitTerminate, this, _1, _2, _3));
+*/
+  optionSetAltTabLeftInitiate (boost::bind (&UnityScreen::altTabPrevInitiate, this, _1, _2, _3));
+  optionSetAltTabRightInitiate (boost::bind (&UnityScreen::altTabForwardInitiate, this, _1, _2, _3));
 
   for (unsigned int i = 0; i < G_N_ELEMENTS(_ubus_handles); i++)
     _ubus_handles[i] = 0;
@@ -220,11 +232,11 @@ UnityScreen::UnityScreen(CompScreen* screen)
   CompString pname("unityshell");
   CompSize size(1, 20);
   _shadow_texture = GLTexture::readImageToTexture(name, pname, size);
-  
+
   ubus_manager_.RegisterInterest(UBUS_PLACE_VIEW_SHOWN, [&](GVariant* args) { dash_is_open_ = true; });
   ubus_manager_.RegisterInterest(UBUS_PLACE_VIEW_HIDDEN, [&](GVariant* args) { dash_is_open_ = false; });
 
-  EnsureKeybindings ();
+  EnsureKeybindings();
 
   LOG_INFO(logger) << "UnityScreen constructed: " << timer.ElapsedSeconds() << "s";
 }
@@ -250,10 +262,14 @@ UnityScreen::~UnityScreen()
   if (relayoutSourceId != 0)
     g_source_remove(relayoutSourceId);
 
-  delete wt;
+  // Deleting the windows thread calls XCloseDisplay, which calls XSync, which
+  // sits waiting for a reply.
+  // delete wt;
+
+  ::unity::ui::IconRenderer::DestroyTextures();
 }
 
-void UnityScreen::EnsureKeybindings ()
+void UnityScreen::EnsureKeybindings()
 {
   for (auto action : _shortcut_actions)
     screen->removeAction(action.get());
@@ -446,6 +462,7 @@ if (switcherController->Visible ())
 
   doShellRepaint = false;
   damaged = false;
+  BackgroundEffectHelper::updates_enabled = true;
 }
 
 void UnityWindow::paintThumbnail (nux::Geometry const& bounding, float alpha)
@@ -519,14 +536,13 @@ void UnityScreen::glPaintTransformedOutput(const GLScreenPaintAttrib& attrib,
 
 void UnityScreen::preparePaint(int ms)
 {
-  PlacesSettings::DashBlurType type = PlacesSettings::GetDefault()->GetDashBlurType();
-  if (type == PlacesSettings::ACTIVE_BLUR)
+  if (BackgroundEffectHelper::blur_type == unity::BLUR_ACTIVE)
   {
-    dashController->window()->QueueDraw();
-    if (dash_is_open_)
-      panelController->QueueRedraw();
-    if (switcherController->GetView ())
-      switcherController->GetView ()->QueueDraw();
+    // this causes queue draws to be called, we obviously dont want to disable updates
+    // because we are updating the blur, so ignore them.
+    bool tmp = BackgroundEffectHelper::updates_enabled;
+    BackgroundEffectHelper::QueueDrawOnOwners();
+    BackgroundEffectHelper::updates_enabled = tmp;
   }
 
   cScreen->preparePaint(ms);
@@ -599,7 +615,9 @@ void UnityScreen::handleEvent(XEvent* event)
   if (!skip_other_plugins)
     screen->handleEvent(event);
 
-  if (!skip_other_plugins && screen->otherGrabExist("deco", "move", "switcher", "resize", NULL))
+  if (!skip_other_plugins && 
+       screen->otherGrabExist("deco", "move", "switcher", "resize", NULL) && 
+      !switcherController->Visible())
   {
     wt->ProcessForeignEvent(event, NULL);
   }
@@ -782,87 +800,111 @@ bool UnityScreen::setKeyboardFocusKeyInitiate(CompAction* action,
   return false;
 }
 
+bool UnityScreen::altTabInitiateCommon(CompAction *action,
+				       CompAction::State state,
+				       CompOption::Vector& options)
+{
+  std::vector<AbstractLauncherIcon*> results;
+
+  if (!switcher_desktop_icon)
+  {
+    switcher_desktop_icon = new DesktopLauncherIcon(launcher);
+    switcher_desktop_icon->SinkReference();
+  }
+
+  results.push_back(switcher_desktop_icon);
+
+  LauncherModel::iterator it;
+  for (it = launcher->GetModel()->begin(); it != launcher->GetModel()->end(); it++)
+    if ((*it)->ShowInSwitcher())
+      results.push_back(*it);
+
+  screen->addAction (&optionGetAltTabRight ());
+  screen->addAction (&optionGetAltTabDetailStart ());
+  screen->addAction (&optionGetAltTabDetailStop ());
+  screen->addAction (&optionGetAltTabLeft ());
+  screen->addAction (&optionGetAltTabNextWindow ());
+
+  if (!grab_index_)
+    grab_index_ = screen->pushGrab (screen->invisibleCursor(), "unity-switcher");
+
+  // maybe check launcher position/hide state?
+  switcherController->SetWorkspace(nux::Geometry(_primary_monitor.x + 100,
+						 _primary_monitor.y + 100,
+						 _primary_monitor.width - 200,
+						 _primary_monitor.height - 200));
+  switcherController->Show(SwitcherController::ALL, SwitcherController::FOCUS_ORDER, false, results);
+  return true;
+}
+
+bool UnityScreen::altTabTerminateCommon(CompAction* action,
+					CompAction::State state,
+					CompOption::Vector& options)
+{
+  if (grab_index_)
+  {
+    // remove grab before calling hide so workspace switcher doesn't fail
+    screen->removeGrab(grab_index_, NULL);
+    grab_index_ = 0;
+
+    screen->removeAction (&optionGetAltTabRight ());
+    screen->removeAction (&optionGetAltTabDetailStart ());
+    screen->removeAction (&optionGetAltTabDetailStop ());
+    screen->removeAction (&optionGetAltTabLeft ());
+    screen->removeAction (&optionGetAltTabNextWindow ());
+    
+    bool accept_state = (state & CompAction::StateCancel) == 0;
+    switcherController->Hide(accept_state);
+  }
+
+  action->setState (action->state() & (unsigned)~(CompAction::StateTermKey));
+  return true;
+}
+
 bool UnityScreen::altTabForwardInitiate(CompAction* action,
                                         CompAction::State state,
                                         CompOption::Vector& options)
 {
   if (switcherController->Visible())
-  {
-    switcherController->MoveNext();
-  }
+
+    switcherController->Next();
   else
-  {
-    std::vector<AbstractLauncherIcon*> results;
-
-    if (!switcher_desktop_icon)
-    {
-      switcher_desktop_icon = new DesktopLauncherIcon(launcher);
-      switcher_desktop_icon->SinkReference();
-    }
-
-    results.push_back(switcher_desktop_icon);
-
-    LauncherModel::iterator it;
-    for (it = launcher->GetModel()->begin(); it != launcher->GetModel()->end(); it++)
-      if ((*it)->ShowInSwitcher())
-        results.push_back(*it);
-
-    // maybe check launcher position/hide state?
-    switcherController->SetWorkspace(nux::Geometry(_primary_monitor.x + 100,
-                                                   _primary_monitor.y + 100,
-                                                   _primary_monitor.width - 200,
-                                                   _primary_monitor.height - 200));
-    switcherController->Show(SwitcherController::ALL, SwitcherController::FOCUS_ORDER, false, results);
-  }
+    altTabInitiateCommon(action, state, options);
 
   action->setState(action->state() | CompAction::StateTermKey);
   return false;
 }
 
-bool UnityScreen::altTabForwardTerminate(CompAction* action,
-                                         CompAction::State state,
-                                         CompOption::Vector& options)
-{
-  action->setState(action->state() & (unsigned)~(CompAction::StateTermKey));
-  switcherController->Hide();
-  return false;
-}
 
-bool UnityScreen::altTabPrevInitiate(CompAction* action,
-                                     CompAction::State state,
-                                     CompOption::Vector& options)
+bool UnityScreen::altTabPrevInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
 {
   if (switcherController->Visible())
-    switcherController->MovePrev();
+    switcherController->Prev();
 
-  action->setState(action->state() | CompAction::StateTermKey);
   return false;
 }
 
-bool UnityScreen::altTabPrevTerminate(CompAction* action,
-                                      CompAction::State state,
-                                      CompOption::Vector& options)
-{
-  action->setState(action->state() & (unsigned)~(CompAction::StateTermKey));
-  return false;
-}
-
-bool UnityScreen::altTabDetailInitiate(CompAction* action,
-                                     CompAction::State state,
-                                     CompOption::Vector& options)
+bool UnityScreen::altTabDetailStartInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
 {
   if (switcherController->Visible())
-    switcherController->DetailCurrent();
+    switcherController->SetDetail(true);
 
-  action->setState(action->state() | CompAction::StateTermKey);
   return false;
 }
 
-bool UnityScreen::altTabDetailTerminate(CompAction* action,
-                                      CompAction::State state,
-                                      CompOption::Vector& options)
+bool UnityScreen::altTabDetailStopInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
 {
-  action->setState(action->state() & (unsigned)~(CompAction::StateTermKey));
+  if (switcherController->Visible())
+    switcherController->SetDetail(false);
+
+  return false;
+}
+
+bool UnityScreen::altTabNextWindowInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
+{
+  if (switcherController->Visible())
+    switcherController->NextDetail();
+
   return false;
 }
 
@@ -994,25 +1036,38 @@ const gchar* UnityScreen::GetName()
 const CompWindowList& UnityScreen::getWindowPaintList()
 {
   CompWindowList& pl = _withRemovedNuxWindows = cScreen->getWindowPaintList();
-  CompWindowList::iterator it = pl.end();
-  CompWindowList::iterator begin = pl.begin();
+  CompWindowList::reverse_iterator it = pl.rbegin();
+  CompWindowList::reverse_iterator end = pl.rend();
   std::vector<Window> const& xwns = nux::XInputWindow::NativeHandleList();
 
   unsigned int size = xwns.size();
 
-  while (it != begin)
+  while (it != end)
   {
-    --it;
-
+    bool erased = false;
     auto id = (*it)->id();
     for (unsigned int i = 0; i < size; ++i)
     {
       if (xwns[i] == id)
       {
-        it = pl.erase(it);
+        /* Increment the reverse_iterator to ensure
+	       * it is valid, then it++ returns the old
+         * position */
+        CompWindowList::reverse_iterator oit = it++;
+        /* Get the base and offset by -1 since
+         * &*(reverse_iterator(i)) == &*(i - 1)) */
+        CompWindowList::iterator eit = --(oit.base ());
+
+        erased = true;
+
+        /* Remove that from the list */
+        pl.erase(eit);
         break;
       }
     }
+
+    if (!erased)
+      it++;
   }
 
   return pl;
@@ -1142,6 +1197,9 @@ void UnityScreen::initUnity(nux::NThread* thread, void* InitData)
 
 void UnityScreen::onRedrawRequested()
 {
+  // disable blur updates so we dont waste perf. This can stall the blur during animations
+  // but ensures a smooth animation.
+  BackgroundEffectHelper::updates_enabled = false;
   damageNuxRegions();
 }
 
@@ -1177,9 +1235,7 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       launcher->SetAutoHideAnimation((Launcher::AutoHideAnimation) optionGetAutohideAnimation());
       break;
     case UnityshellOptions::DashBlurExperimental:
-      PlacesSettings::GetDefault()->SetDashBlurType((PlacesSettings::DashBlurType)optionGetDashBlurExperimental());
-      panelController->SetBlurType((unity::BlurType)optionGetDashBlurExperimental());
-      switcherController->blur = (unity::BlurType)optionGetDashBlurExperimental();
+      BackgroundEffectHelper::blur_type = (unity::BlurType)optionGetDashBlurExperimental();
       break;
     case UnityshellOptions::AutomaximizeValue:
       PluginAdapter::Default()->SetCoverageAreaBeforeAutomaximize(optionGetAutomaximizeValue() / 100.0f);
@@ -1189,6 +1245,9 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       break;
     case UnityshellOptions::LauncherRevealEdgeTimeout:
       _edge_timeout = optionGetLauncherRevealEdgeTimeout();
+      break;
+    case UnityshellOptions::AltTabTimeout:
+      switcherController->detail_on_timeout = optionGetAltTabTimeout();
       break;
     default:
       break;

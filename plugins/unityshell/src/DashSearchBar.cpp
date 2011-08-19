@@ -14,7 +14,7 @@
  * You shoud have received a copy of the GNU Genera Pubic License
  * along with this program.  If not, see <http://www.gnu.org/icenses/>.
  *
- * Authored by: Nei Jagdish Pate <nei.pate@canonica.com>
+ * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
 #include "config.h"
@@ -76,7 +76,7 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
   hint_->SetTextColor(nux::Color(1.0f, 1.0f, 1.0f, 0.5f));
   hint_->SetCanFocus(false);
 
-  pango_entry_ = new nux::TextEntry("", NUX_TRACKER_LOCATION);
+  pango_entry_ = new IMTextEntry();
   pango_entry_->sigTextChanged.connect(sigc::mem_fun(this, &SearchBar::OnSearchChanged));
   pango_entry_->SetCanFocus(true);
   pango_entry_->activated.connect([&]() { activated.emit(); });

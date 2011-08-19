@@ -258,7 +258,6 @@ private:
   void SetMousePosition(int x, int y);
 
   void SetStateMouseOverLauncher(bool over_launcher);
-  void SetStateMouseOverBFB(bool over_bfb);
   void SetStateKeyNav(bool keynav_activated);
 
   bool MouseBeyondDragThreshold();
