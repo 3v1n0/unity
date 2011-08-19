@@ -819,11 +819,11 @@ bool UnityScreen::altTabInitiateCommon(CompAction *action,
     if ((*it)->ShowInSwitcher())
       results.push_back(*it);
 
-  screen->addAction (&optionGetAltTabRight ());
+  /*screen->addAction (&optionGetAltTabRight ());
   screen->addAction (&optionGetAltTabDetailStart ());
   screen->addAction (&optionGetAltTabDetailStop ());
   screen->addAction (&optionGetAltTabLeft ());
-  screen->addAction (&optionGetAltTabNextWindow ());
+  screen->addAction (&optionGetAltTabNextWindow ());*/
 
   if (!grab_index_)
     grab_index_ = screen->pushGrab (screen->invisibleCursor(), "unity-switcher");
@@ -847,11 +847,11 @@ bool UnityScreen::altTabTerminateCommon(CompAction* action,
     screen->removeGrab(grab_index_, NULL);
     grab_index_ = 0;
 
-    screen->removeAction (&optionGetAltTabRight ());
+    /*screen->removeAction (&optionGetAltTabRight ());
     screen->removeAction (&optionGetAltTabDetailStart ());
     screen->removeAction (&optionGetAltTabDetailStop ());
     screen->removeAction (&optionGetAltTabLeft ());
-    screen->removeAction (&optionGetAltTabNextWindow ());
+    screen->removeAction (&optionGetAltTabNextWindow ());*/
     
     bool accept_state = (state & CompAction::StateCancel) == 0;
     switcherController->Hide(accept_state);
