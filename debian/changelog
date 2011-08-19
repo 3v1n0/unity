@@ -1,4 +1,4 @@
-unity (4.8.2-0ubuntu3) UNRELEASED; urgency=low
+unity (4.8.2-0ubuntu3) oneiric; urgency=low
 
   * Update to current trunk to get closer from an usable version, including
     - improvements to the alt-tab switcher, fixing the performances issues
@@ -9,7 +9,7 @@ unity (4.8.2-0ubuntu3) UNRELEASED; urgency=low
     - the dash text is selected by default allow to type directly a new command
       (lp: #826904)
 
- -- Sebastien Bacher <seb128@ubuntu.com>  Fri, 19 Aug 2011 17:49:28 +0200
+ -- Sebastien Bacher <seb128@ubuntu.com>  Fri, 19 Aug 2011 18:04:19 +0200
 
 unity (4.8.2-0ubuntu2) oneiric; urgency=low
 
