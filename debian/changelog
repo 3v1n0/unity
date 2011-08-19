@@ -1,6 +1,12 @@
-unity (4.8.2-0ubuntu1) UNRELEASED; urgency=low
+unity (4.8.2-0ubuntu1) oneiric; urgency=low
 
   * New upstream release.
+    - Dash shows random solid color on first launch of 'active blur' 
+      enabled Unity (lp: #824886)
+    - Unity crashes if you select a gradient as wallpaper (lp: #825091)
+    - If the wallpaper file is deleted, Unity/Compiz crash on Oneiric 
+      (lp: #827579)
+    - Unity 4.8 Dash is no longer keyboard accessible (lp: #824966)
   * debian/control.in: updated nux requirement
   * Backported a leak fix and a fix for small screens from trunk
 
@@ -9,7 +15,7 @@ unity (4.8.2-0ubuntu1) UNRELEASED; urgency=low
     - add libdee-dev to the unitycore dev package as fixed in trunk
       (put in the .pc file)
 
- -- Sebastien Bacher <seb128@ubuntu.com>  Thu, 18 Aug 2011 18:26:31 +0200
+ -- Sebastien Bacher <seb128@ubuntu.com>  Thu, 18 Aug 2011 18:43:12 +0200
 
 unity (4.8.0-0ubuntu3) oneiric; urgency=low
 
