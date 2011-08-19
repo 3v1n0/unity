@@ -114,9 +114,8 @@ void SimpleLauncherIcon::SetIconName(const char* name)
 void SimpleLauncherIcon::ReloadIcon()
 {
   for (auto element : texture_map)
-  {
-    element.second->UnReference();
-  }
+    if (element.second)
+      element.second->UnReference();
 
   texture_map.clear ();
   needs_redraw.emit(this);
