@@ -18,15 +18,17 @@
  */
 
 #include "TrashLauncherIcon.h"
-#include "Launcher.h"
-#include "Nux/WindowCompositor.h"
 
-#include "QuicklistManager.h"
-#include "QuicklistMenuItemLabel.h"
+#include <Nux/WindowCompositor.h>
 
 #include <gio/gio.h>
 #include <glib/gi18n-lib.h>
 #include <gconf/gconf-client.h>
+
+#include "Launcher.h"
+#include "QuicklistManager.h"
+#include "QuicklistMenuItemLabel.h"
+
 
 #define ASK_CONFIRMATION_KEY "/apps/nautilus/preferences/confirm_trash"
 
@@ -277,19 +279,17 @@ TrashLauncherIcon::OnTrashChanged(GFileMonitor*        monitor,
 }
 
 nux::DndAction
-TrashLauncherIcon::OnQueryAcceptDrop(std::list<char*> uris)
+TrashLauncherIcon::OnQueryAcceptDrop(unity::DndData& dnd_data)
 {
   return nux::DNDACTION_MOVE;
 }
 
 void
-TrashLauncherIcon::OnAcceptDrop(std::list<char*> uris)
+TrashLauncherIcon::OnAcceptDrop(unity::DndData& dnd_data)
 {
-  std::list<char*>::iterator it;
-
-  for (it = uris.begin(); it != uris.end(); it++)
+  for (auto it : dnd_data.Uris())
   {
-    GFile* file = g_file_new_for_uri(*it);
+    GFile* file = g_file_new_for_uri(it.c_str());
     g_file_trash(file, NULL, NULL);
     g_object_unref(file);
   }
