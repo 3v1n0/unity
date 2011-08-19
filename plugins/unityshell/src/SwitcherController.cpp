@@ -126,24 +126,26 @@ void SwitcherController::OnModelSelectionChanged(AbstractLauncherIcon *icon)
 
 void SwitcherController::ConstructView()
 {
-  nux::HLayout* layout;
-
-  layout = new nux::HLayout();
-
   view_ = new SwitcherView();
   view_->SetModel(model_);
   view_->background_color = bg_color_;
 
-  layout->AddView(view_, 1);
-  layout->SetVerticalExternalMargin(0);
-  layout->SetHorizontalExternalMargin(0);
+  if (!view_window_)
+  {
+    main_layout_ = new nux::HLayout();
+    
+    main_layout_->SetVerticalExternalMargin(0);
+    main_layout_->SetHorizontalExternalMargin(0);
 
-  view_window_ = new nux::BaseWindow("Switcher");
-  view_window_->SinkReference();
-  view_window_->SetLayout(layout);
-  view_window_->SetBackgroundColor(nux::Color(0x00000000));
+    view_window_ = new nux::BaseWindow("Switcher");
+    view_window_->SinkReference();
+    view_window_->SetLayout(main_layout_);
+    view_window_->SetBackgroundColor(nux::Color(0x00000000));
+  }
+  
+  main_layout_->AddView(view_, 1);
+
   view_window_->SetGeometry(workarea_);
-
   view_window_->ShowWindow(true);
 }
 
@@ -185,9 +187,8 @@ void SwitcherController::Hide(bool accept_state)
 
   if (view_window_)
   {
+    main_layout_->RemoveChildObject(view_);
     view_window_->ShowWindow(false);
-    view_window_->UnReference();
-    view_window_ = 0;
   }
 
   if (show_timer_)
