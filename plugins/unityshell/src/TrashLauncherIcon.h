@@ -20,7 +20,13 @@
 #ifndef TRASHLAUNCHERICON_H
 #define TRASHLAUNCHERICON_H
 
+#include <gio/gio.h>
+#include <UnityCore/GLibDBusProxy.h>
+#include <UnityCore/GLibWrapper.h>
+
 #include "SimpleLauncherIcon.h"
+
+namespace unity {
 
 class TrashLauncherIcon : public SimpleLauncherIcon
 {
@@ -39,11 +45,10 @@ protected:
   void OnAcceptDrop(std::list<char*> uris);
 
 private:
-  gulong _on_trash_changed_handler_id;
-  gulong _on_confirm_dialog_close_id;
-  GFileMonitor* m_TrashMonitor;
-  gboolean _empty;
-  GtkWidget*   _confirm_dialog;
+  gulong on_trash_changed_handler_id_;
+  glib::Object<GFileMonitor> trash_monitor_;
+  gboolean empty_;
+  glib::DBusProxy proxy_;
 
   void ActivateLauncherIcon(ActionArg arg);
   std::list<DbusmenuMenuitem*> GetMenus();
@@ -52,10 +57,8 @@ private:
   static void OnTrashChanged(GFileMonitor* monitor, GFile* file, GFile* other_file,
                              GFileMonitorEvent event_type, gpointer data);
   static void OnEmptyTrash(DbusmenuMenuitem* item, int time, TrashLauncherIcon* self);
-  static void OnConfirmDialogClose(GtkDialog* dialog, gint response, gpointer user_data);
-  static void EmptyTrashAction();
-  static void RecursiveDelete(GFile* location);
-
 };
+
+} // namespace unity
 
 #endif // TRASHLAUNCHERICON_H
