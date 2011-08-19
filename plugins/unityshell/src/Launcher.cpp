@@ -156,15 +156,15 @@ Launcher::Launcher(nux::BaseWindow* parent,
 
   m_Layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
-  OnMouseDown.connect(sigc::mem_fun(this, &Launcher::RecvMouseDown));
-  OnMouseUp.connect(sigc::mem_fun(this, &Launcher::RecvMouseUp));
-  OnMouseDrag.connect(sigc::mem_fun(this, &Launcher::RecvMouseDrag));
-  OnMouseEnter.connect(sigc::mem_fun(this, &Launcher::RecvMouseEnter));
-  OnMouseLeave.connect(sigc::mem_fun(this, &Launcher::RecvMouseLeave));
-  OnMouseMove.connect(sigc::mem_fun(this, &Launcher::RecvMouseMove));
-  OnMouseWheel.connect(sigc::mem_fun(this, &Launcher::RecvMouseWheel));
-  OnKeyEvent.connect(sigc::mem_fun(this, &Launcher::RecvKeyPressed));
-  OnMouseDownOutsideArea.connect(sigc::mem_fun(this, &Launcher::RecvMouseDownOutsideArea));
+  mouse_down.connect(sigc::mem_fun(this, &Launcher::RecvMouseDown));
+  mouse_up.connect(sigc::mem_fun(this, &Launcher::RecvMouseUp));
+  mouse_drag.connect(sigc::mem_fun(this, &Launcher::RecvMouseDrag));
+  mouse_enter.connect(sigc::mem_fun(this, &Launcher::RecvMouseEnter));
+  mouse_leave.connect(sigc::mem_fun(this, &Launcher::RecvMouseLeave));
+  mouse_move.connect(sigc::mem_fun(this, &Launcher::RecvMouseMove));
+  mouse_wheel.connect(sigc::mem_fun(this, &Launcher::RecvMouseWheel));
+  key_down.connect(sigc::mem_fun(this, &Launcher::RecvKeyPressed));
+  mouse_down_outside_pointer_grab_area.connect(sigc::mem_fun(this, &Launcher::RecvMouseDownOutsideArea));
   //OnEndFocus.connect   (sigc::mem_fun (this, &Launcher::exitKeyNavMode));
 
   CaptureMouseDownAnyWhereElse(true);
@@ -2578,7 +2578,7 @@ Launcher::RecvKeyPressed(unsigned long    eventType,
 
       // right/shift-f10 (open quicklist of currently selected icon)
     case XK_F10:
-      if (!(key_state & NUX_STATE_SHIFT))
+      if (!(key_state & nux::NUX_STATE_SHIFT))
         break;
     case NUX_VK_RIGHT:
     case NUX_KP_RIGHT:

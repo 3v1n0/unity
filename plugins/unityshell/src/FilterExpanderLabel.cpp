@@ -72,7 +72,7 @@ namespace unity {
 
     cairo_label_ = new nux::StaticText(label_.c_str(), NUX_TRACKER_LOCATION);
     cairo_label_->SetTextColor(nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
-    cairo_label_->OnMouseDown.connect(
+    cairo_label_->mouse_down.connect(
       [&](int x, int y, unsigned long button_flags, unsigned long key_flag)
       {
         expanded = !expanded;

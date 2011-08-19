@@ -95,15 +95,15 @@ QuicklistView::QuicklistView()
   SetWindowSizeMatchLayout(true);
   SetLayout(_hlayout);
 
-  OnMouseDownOutsideArea.connect(sigc::mem_fun(this, &QuicklistView::RecvMouseDownOutsideOfQuicklist));
-  OnMouseDown.connect(sigc::mem_fun(this, &QuicklistView::RecvMouseDown));
-  OnMouseUp.connect(sigc::mem_fun(this, &QuicklistView::RecvMouseUp));
-  OnMouseClick.connect(sigc::mem_fun(this, &QuicklistView::RecvMouseClick));
-  OnMouseMove.connect(sigc::mem_fun(this, &QuicklistView::RecvMouseMove));
-  OnMouseDrag.connect(sigc::mem_fun(this, &QuicklistView::RecvMouseDrag));
-  OnKeyEvent.connect(sigc::mem_fun(this, &QuicklistView::RecvKeyPressed));
-  OnStartKeyboardReceiver.connect(sigc::mem_fun(this, &QuicklistView::RecvStartFocus));
-  OnStopKeyboardReceiver.connect(sigc::mem_fun(this, &QuicklistView::RecvEndFocus));
+  mouse_down_outside_pointer_grab_area.connect(sigc::mem_fun(this, &QuicklistView::RecvMouseDownOutsideOfQuicklist));
+  mouse_down.connect(sigc::mem_fun(this, &QuicklistView::RecvMouseDown));
+  mouse_up.connect(sigc::mem_fun(this, &QuicklistView::RecvMouseUp));
+  mouse_click.connect(sigc::mem_fun(this, &QuicklistView::RecvMouseClick));
+  mouse_move.connect(sigc::mem_fun(this, &QuicklistView::RecvMouseMove));
+  mouse_drag.connect(sigc::mem_fun(this, &QuicklistView::RecvMouseDrag));
+  key_down.connect(sigc::mem_fun(this, &QuicklistView::RecvKeyPressed));
+  begin_key_focus.connect(sigc::mem_fun(this, &QuicklistView::RecvStartFocus));
+  end_key_focus.connect(sigc::mem_fun(this, &QuicklistView::RecvEndFocus));
 
   SetAcceptKeyNavFocus(true);
 }

@@ -40,7 +40,7 @@ namespace unity {
   {
     InitTheme();
 
-    OnMouseDown.connect (sigc::mem_fun (this, &FilterRatingsButton::RecvMouseDown) );
+    mouse_down.connect (sigc::mem_fun (this, &FilterRatingsButton::RecvMouseDown) );
   }
 
   FilterRatingsButton::~FilterRatingsButton() {
