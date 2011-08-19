@@ -67,6 +67,7 @@ void DashView::AboutToShow()
 {
   ubus_manager_.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
   bg_effect_helper_.DirtyCache ();
+  search_bar_->text_entry()->SelectAll();
 }
 
 void DashView::SetupBackground()
