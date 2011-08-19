@@ -284,16 +284,15 @@ const char* BamfLauncherIcon::DesktopFile()
 
 const char* BamfLauncherIcon::BamfName()
 {
-  const char* name = NULL;
-  name = bamf_view_get_name(BAMF_VIEW(m_App));
+  const char* name = bamf_view_get_name(BAMF_VIEW(m_App));
 
   if (name == NULL)
-    name = "";
+    name = g_strdup("");
 
   if (_cached_name != NULL)
     g_free(_cached_name);
 
-  _cached_name = g_strdup(name);
+  _cached_name = name;
 
   return _cached_name;
 }
