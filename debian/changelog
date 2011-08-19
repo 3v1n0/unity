@@ -1,3 +1,9 @@
+unity (4.8.2-0ubuntu2) UNRELEASED; urgency=low
+
+  * debian/control: really update the nux requirement
+
+ -- Sebastien Bacher <seb128@ubuntu.com>  Fri, 19 Aug 2011 10:57:26 +0200
+
 unity (4.8.2-0ubuntu1) oneiric; urgency=low
 
   * New upstream release.
