@@ -615,7 +615,9 @@ void UnityScreen::handleEvent(XEvent* event)
   if (!skip_other_plugins)
     screen->handleEvent(event);
 
-  if (!skip_other_plugins && screen->otherGrabExist("deco", "move", "switcher", "resize", NULL))
+  if (!skip_other_plugins && 
+       screen->otherGrabExist("deco", "move", "switcher", "resize", NULL) && 
+      !switcherController->Visible())
   {
     wt->ProcessForeignEvent(event, NULL);
   }
