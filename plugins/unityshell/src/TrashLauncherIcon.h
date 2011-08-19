@@ -24,6 +24,7 @@
 #include <UnityCore/GLibDBusProxy.h>
 #include <UnityCore/GLibWrapper.h>
 
+#include "DndData.h"
 #include "SimpleLauncherIcon.h"
 
 namespace unity {
@@ -41,8 +42,8 @@ public:
 protected:
   void UpdateTrashIcon();
 
-  nux::DndAction OnQueryAcceptDrop(std::list<char*> uris);
-  void OnAcceptDrop(std::list<char*> uris);
+  nux::DndAction OnQueryAcceptDrop(unity::DndData& dnd_data);
+  void OnAcceptDrop(unity::DndData& dnd_data);
 
 private:
   gulong on_trash_changed_handler_id_;

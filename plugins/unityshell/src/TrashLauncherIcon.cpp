@@ -21,9 +21,9 @@
 #include "TrashLauncherIcon.h"
 
 #include <glib/gi18n-lib.h>
+#include <Nux/WindowCompositor.h>
 
 #include "Launcher.h"
-#include "Nux/WindowCompositor.h"
 #include "QuicklistManager.h"
 #include "QuicklistMenuItemLabel.h"
 
@@ -149,16 +149,17 @@ void TrashLauncherIcon::OnTrashChanged(GFileMonitor* monitor,
   self->UpdateTrashIcon();
 }
 
-nux::DndAction TrashLauncherIcon::OnQueryAcceptDrop(std::list<char*> uris)
+
+nux::DndAction TrashLauncherIcon::OnQueryAcceptDrop(unity::DndData& dnd_data)
 {
   return nux::DNDACTION_MOVE;
 }
 
-void TrashLauncherIcon::OnAcceptDrop(std::list<char*> uris)
+void TrashLauncherIcon::OnAcceptDrop(unity::DndData& dnd_data)
 {
-  for (auto it : uris)
+  for (auto it : dnd_data.Uris())
   {
-    glib::Object<GFile> file(g_file_new_for_uri(it));
+    glib::Object<GFile> file(g_file_new_for_uri(it.c_str()));
     g_file_trash(file, NULL, NULL);
   }
   
