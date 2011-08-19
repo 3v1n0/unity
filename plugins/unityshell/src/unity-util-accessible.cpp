@@ -237,13 +237,13 @@ translate_nux_modifiers_to_gdk_state(unsigned long nux_modifier)
 {
   guint result = 0;
 
-  if (nux_modifier & NUX_STATE_SHIFT)
+  if (nux_modifier & nux::NUX_STATE_SHIFT)
     result |= GDK_SHIFT_MASK;
 
-  if (nux_modifier & NUX_STATE_CAPS_LOCK)
+  if (nux_modifier & nux::NUX_STATE_CAPS_LOCK)
     result |= GDK_LOCK_MASK;
 
-  if (nux_modifier & NUX_STATE_CTRL)
+  if (nux_modifier & nux::NUX_STATE_CTRL)
     result |= GDK_CONTROL_MASK;
 
   /* From gdk documentation
@@ -253,10 +253,10 @@ translate_nux_modifiers_to_gdk_state(unsigned long nux_modifier)
      modifier, but normally it is the Alt key).
    */
 
-  if (nux_modifier & NUX_STATE_ALT)
+  if (nux_modifier & nux::NUX_STATE_ALT)
     result |= GDK_MOD1_MASK;
 
-  if (nux_modifier & NUX_STATE_META)
+  if (nux_modifier & nux::NUX_STATE_META)
     result |= GDK_META_MASK;
 
   /* FIXME: not sure how to translate this ones */

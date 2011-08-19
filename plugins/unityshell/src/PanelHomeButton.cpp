@@ -49,12 +49,12 @@ PanelHomeButton::PanelHomeButton()
   _pressed = false;
   SetMinMaxSize(_button_width, PANEL_HEIGHT);
 
-  OnMouseClick.connect(sigc::mem_fun(this, &PanelHomeButton::RecvMouseClick));
+  mouse_click.connect(sigc::mem_fun(this, &PanelHomeButton::RecvMouseClick));
 
   // send this information over ubus
-  OnMouseEnter.connect(sigc::mem_fun(this, &PanelHomeButton::RecvMouseEnter));
-  OnMouseLeave.connect(sigc::mem_fun(this, &PanelHomeButton::RecvMouseLeave));
-  OnMouseMove.connect(sigc::mem_fun(this, &PanelHomeButton::RecvMouseMove));
+  mouse_enter.connect(sigc::mem_fun(this, &PanelHomeButton::RecvMouseEnter));
+  mouse_leave.connect(sigc::mem_fun(this, &PanelHomeButton::RecvMouseLeave));
+  mouse_move.connect(sigc::mem_fun(this, &PanelHomeButton::RecvMouseMove));
 
   _theme_changed_id = g_signal_connect(gtk_icon_theme_get_default(), "changed",
                                        G_CALLBACK(PanelHomeButton::OnIconThemeChanged), this);

@@ -130,12 +130,12 @@ PanelMenuView::PanelMenuView(int padding)
 
   PanelStyle::GetDefault()->changed.connect(sigc::mem_fun(this, &PanelMenuView::Refresh));
 
-  OnMouseEnter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
-  OnMouseLeave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
-  OnMouseMove.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseMove));
+  mouse_enter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
+  mouse_leave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
+  mouse_move.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseMove));
 
-  _panel_titlebar_grab_area->OnMouseEnter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
-  _panel_titlebar_grab_area->OnMouseLeave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
+  _panel_titlebar_grab_area->mouse_enter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
+  _panel_titlebar_grab_area->mouse_leave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
 
   // Register for all the interesting events
   UBusServer* ubus = ubus_server_get_default();
@@ -738,8 +738,8 @@ void PanelMenuView::OnEntryAdded(unity::indicator::Entry::Ptr const& proxy)
 
   AddChild(view);
 
-  view->OnMouseEnter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
-  view->OnMouseLeave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
+  view->mouse_enter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
+  view->mouse_leave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
 
   QueueRelayout();
   QueueDraw();
