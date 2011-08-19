@@ -31,6 +31,7 @@ DNDCollectionWindow::DNDCollectionWindow(CompScreen* screen)
   SetBaseXY(0, 0);
   
   ShowWindow(true);
+  PushToBack();
   // Hack
   EnableInputWindow(true, "DNDCollectionWindow");
   EnableInputWindow(false, "DNDCollectionWindow");

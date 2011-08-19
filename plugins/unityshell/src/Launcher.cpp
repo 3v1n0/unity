@@ -53,8 +53,6 @@
 
 using namespace unity::ui;
 
-using namespace unity::ui;
-
 namespace
 {
 
