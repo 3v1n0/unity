@@ -30,6 +30,7 @@
 
 #include <UnityCore/DBusIndicators.h>
 
+#include "BackgroundEffectHelper.h"
 #include "Introspectable.h"
 #include "PanelHomeButton.h"
 #include "PanelMenuView.h"
@@ -117,6 +118,9 @@ private:
   guint       _handle_dash_shown;
   guint       _handle_bg_color_update;
   guint       _track_menu_pointer_id;
+
+  BackgroundEffectHelper bg_effect_helper_;
+  nux::ObjectPtr <nux::IOpenGLBaseTexture> bg_blur_texture_;
 };
 
 }

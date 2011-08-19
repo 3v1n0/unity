@@ -408,7 +408,7 @@ QuicklistMenuItem::DrawText(cairo_t*   cr,
 
 const gchar* QuicklistMenuItem::GetName()
 {
-  return g_strdup(_name);
+  return _name;
 }
 
 void QuicklistMenuItem::AddProperties(GVariantBuilder* builder)

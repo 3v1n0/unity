@@ -289,21 +289,11 @@ Launcher::Launcher(nux::BaseWindow* parent,
                                                    this);
 
   _ubus_handles[2] = ubus_server_register_interest(ubus,
-                                                   UBUS_HOME_BUTTON_BFB_UPDATE,
-                                                   (UBusCallback) &Launcher::OnBFBUpdate,
-                                                   this);
-
-  _ubus_handles[3] = ubus_server_register_interest(ubus,
                                                    UBUS_LAUNCHER_ACTION_DONE,
                                                    (UBusCallback) &Launcher::OnActionDone,
                                                    this);
 
-  _ubus_handles[4] = ubus_server_register_interest(ubus,
-                                                   UBUS_HOME_BUTTON_BFB_DND_ENTER,
-                                                   (UBusCallback) &Launcher::OnBFBDndEnter,
-                                                   this);
-
-  _ubus_handles[5] = ubus_server_register_interest (ubus,
+  _ubus_handles[3] = ubus_server_register_interest (ubus,
                                                     UBUS_BACKGROUND_COLOR_CHANGED,
                                                     (UBusCallback) &Launcher::OnBGColorChanged,
                                                     this);
@@ -543,30 +533,11 @@ void Launcher::SetStateMouseOverLauncher(bool over_launcher)
   _hide_machine->SetQuirk(LauncherHideMachine::MOUSE_OVER_LAUNCHER, over_launcher);
   _hover_machine->SetQuirk(LauncherHoverMachine::MOUSE_OVER_LAUNCHER, over_launcher);
 
-  if (over_launcher)
-  {
-    // avoid a race when the BFB doesn't see we are not over the trigger anymore
-    _hide_machine->SetQuirk(LauncherHideMachine::MOUSE_OVER_TRIGGER, false);
-  }
-  else
+  if (!over_launcher)
   {
     // reset state for some corner case like x=0, show dash (leave event not received)
     _hide_machine->SetQuirk(LauncherHideMachine::MOUSE_OVER_ACTIVE_EDGE, false);
   }
-}
-
-void Launcher::SetStateMouseOverBFB(bool over_bfb)
-{
-  _hide_machine->SetQuirk(LauncherHideMachine::MOUSE_OVER_BFB, over_bfb);
-  _hover_machine->SetQuirk(LauncherHoverMachine::MOUSE_OVER_BFB, over_bfb);
-
-  // the case where it's x=0 isn't important here as OnBFBUpdate() isn't triggered
-  if (over_bfb)
-    _hide_machine->SetQuirk(LauncherHideMachine::MOUSE_OVER_ACTIVE_EDGE, false);
-  // event not received like: mouse over trigger, press super -> dash here, put mouse away from trigger,
-  // click to close
-  else
-    _hide_machine->SetQuirk(LauncherHideMachine::MOUSE_OVER_TRIGGER, false);
 }
 
 void Launcher::SetStateKeyNav(bool keynav_activated)
@@ -610,45 +581,13 @@ float Launcher::DragOutProgress(struct timespec const& current)
 
 float Launcher::AutohideProgress(struct timespec const& current)
 {
-
-  // bfb position progress. Go from GetAutohidePositionMin() -> GetAutohidePositionMax() linearly
-  if (_hide_machine->GetQuirk(LauncherHideMachine::MOUSE_OVER_BFB) && _hidden)
-  {
-
-    // Be evil, but safe: position based == removing all existing time-based autohide
-    _times[TIME_AUTOHIDE].tv_sec = 0;
-    _times[TIME_AUTOHIDE].tv_nsec = 0;
-
-    /*
-     * most of the mouse movement should be done by the inferior part
-     * of the launcher, so prioritize this one
-     */
-
-    float _max_size_on_position;
-    float position_on_border = _bfb_mouse_position.x * _bfb_height / _bfb_mouse_position.y;
-
-    if (position_on_border < _bfb_width)
-      _max_size_on_position = pow(pow(position_on_border, 2) + pow(_bfb_height, 2), 0.5);
-    else
-    {
-      position_on_border = _bfb_mouse_position.y * _bfb_width / _bfb_mouse_position.x;
-      _max_size_on_position = pow(pow(position_on_border, 2) + pow(_bfb_width, 2), 0.5);
-    }
-
-    float _position_min = GetAutohidePositionMin();
-    return pow(pow(_bfb_mouse_position.x, 2) + pow(_bfb_mouse_position.y, 2), 0.5) / _max_size_on_position * (GetAutohidePositionMax() - _position_min) + _position_min;
-  }
+  // time-based progress (full scale or finish the TRIGGER_AUTOHIDE_MIN -> 0.00f on bfb)
+  float animation_progress;
+  animation_progress = CLAMP((float)(TimeDelta(&current, &_times[TIME_AUTOHIDE])) / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
+  if (_hidden)
+    return animation_progress;
   else
-  {
-    // time-based progress (full scale or finish the TRIGGER_AUTOHIDE_MIN -> 0.00f on bfb)
-    float animation_progress;
-    animation_progress = CLAMP((float)(TimeDelta(&current, &_times[TIME_AUTOHIDE])) / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
-    if (_hidden)
-      return animation_progress;
-    else
-      return 1.0f - animation_progress;
-  }
-
+    return 1.0f - animation_progress;
 }
 
 float Launcher::DragHideProgress(struct timespec const& current)
@@ -1271,8 +1210,7 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
   {
 
     float autohide_progress = AutohideProgress(current) * (1.0f - DragOutProgress(current));
-    if (_autohide_animation == FADE_ONLY
-        || (_autohide_animation == FADE_OR_SLIDE && _hide_machine->GetQuirk(LauncherHideMachine::MOUSE_OVER_BFB)))
+    if (_autohide_animation == FADE_ONLY)
       *launcher_alpha = 1.0f - autohide_progress;
     else
     {
@@ -1516,9 +1454,6 @@ void Launcher::OnPlaceViewShown(GVariant* data, void* val)
       icon->SetQuirk(LauncherIcon::QUIRK_DESAT, true);
     icon->HideTooltip();
   }
-
-  // hack around issue in nux where leave events dont always come after a grab
-  self->SetStateMouseOverBFB(false);
 }
 
 void Launcher::OnPlaceViewHidden(GVariant* data, void* val)
@@ -1535,70 +1470,12 @@ void Launcher::OnPlaceViewHidden(GVariant* data, void* val)
   nux::Point pt = nux::GetWindowCompositor().GetMousePosition();
 
   self->SetStateMouseOverLauncher(self->GetAbsoluteGeometry().IsInside(pt));
-  self->SetStateMouseOverBFB(false);
 
   // TODO: add in a timeout for seeing the animation (and make it smoother)
   for (auto icon : *(self->_model))
   {
     icon->SetQuirk(LauncherIcon::QUIRK_DESAT, false);
   }
-}
-
-void Launcher::OnBFBDndEnter(GVariant* data, gpointer user_data)
-{
-  Launcher* self = static_cast<Launcher*>(user_data);
-  self->_hide_machine->SetQuirk(LauncherHideMachine::DND_PUSHED_OFF, false);
-}
-
-void Launcher::OnBFBUpdate(GVariant* data, gpointer user_data)
-{
-  gchar*        prop_key;
-  GVariant*     prop_value;
-  GVariantIter* prop_iter;
-  int x, y, bfb_width, bfb_height;
-
-  Launcher* self = (Launcher*)user_data;
-
-  g_variant_get(data, "(iiiia{sv})", &x, &y, &bfb_width, &bfb_height, &prop_iter);
-  self->_bfb_mouse_position = nux::Point2(x, y);
-
-  bool inside_trigger_area = (pow(x, 2) + pow(y, 2) < TRIGGER_SQR_RADIUS) && x >= 0 && y >= 0;
-  /*
-   * if we are currently hidden and we are over the trigger, prepare the change
-   * from a position-based move to a time-based one
-   * Fake that we were currently hiding with a corresponding position of GetAutohidePositionMin ()
-   * translated time-based so that we pick from the current position
-   */
-  if (inside_trigger_area && self->_hidden)
-  {
-    self->_hide_machine->SetQuirk(LauncherHideMachine::LAST_ACTION_ACTIVATE, false);
-
-    struct timespec current;
-    clock_gettime(CLOCK_MONOTONIC, &current);
-    self->_times[TIME_AUTOHIDE] = current;
-    SetTimeBack(&(self->_times[TIME_AUTOHIDE]), ANIM_DURATION_SHORT * (1.0f - self->GetAutohidePositionMin()));
-    SetTimeStruct(&(self->_times[TIME_AUTOHIDE]), &(self->_times[TIME_AUTOHIDE]), ANIM_DURATION_SHORT);
-    self->_hide_machine->SetQuirk(LauncherHideMachine::MOUSE_MOVE_POST_REVEAL, true);
-  }
-  self->_hide_machine->SetQuirk(LauncherHideMachine::MOUSE_OVER_TRIGGER, inside_trigger_area);
-
-  self->_bfb_width = bfb_width;
-  self->_bfb_height = bfb_height;
-
-  g_return_if_fail(prop_iter != NULL);
-
-  while (g_variant_iter_loop(prop_iter, "{sv}", &prop_key, &prop_value))
-  {
-    if (g_str_equal("hovered", prop_key))
-    {
-      self->SetStateMouseOverBFB(g_variant_get_boolean(prop_value));
-      self->EnsureScrollTimer();
-    }
-  }
-
-  self->EnsureAnimation();
-
-  g_variant_iter_free(prop_iter);
 }
 
 void Launcher::OnActionDone(GVariant* data, void* val)
@@ -1960,9 +1837,6 @@ void Launcher::SetHover(bool hovered)
 
 bool Launcher::MouseOverTopScrollArea()
 {
-  if (GetActionState() == ACTION_NONE)
-    return _hide_machine->GetQuirk(LauncherHideMachine::MOUSE_OVER_BFB);
-
   return _mouse_position.y < 0;
 }
 

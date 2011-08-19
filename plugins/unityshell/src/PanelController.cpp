@@ -109,6 +109,15 @@ PanelController::SetOpacity(float opacity)
   }
 }
 
+void PanelController::QueueRedraw()
+{
+  std::vector<nux::BaseWindow*>::iterator it, eit = _windows.end();
+  for (it = _windows.begin(); it != eit; ++it)
+  {
+    (*it)->QueueDraw();
+  }
+}
+
 PanelView*
 PanelController::ViewForWindow(nux::BaseWindow* window)
 {

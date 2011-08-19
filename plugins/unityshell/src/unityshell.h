@@ -30,21 +30,56 @@
 #include "unityshell_options.h"
 
 #include "Introspectable.h"
+#include "DashController.h"
 #include "Launcher.h"
 #include "LauncherController.h"
 #include "PanelController.h"
 #include "UScreen.h"
-#include "PlacesController.h"
 #include "GestureEngine.h"
 #include "DebugDBusInterface.h"
 #include "SwitcherController.h"
+#include "UBusWrapper.h"
 #include <Nux/WindowThread.h>
 #include <sigc++/sigc++.h>
+#include <boost/shared_ptr.hpp>
+
+class UnityFBO
+{
+public:
+
+  typedef boost::shared_ptr <UnityFBO> Ptr;
+
+  UnityFBO (CompOutput *o);
+  ~UnityFBO ();
+
+public:
+
+  void bind ();
+  void unbind ();
+
+  bool status ();
+  void paint ();
+  
+  GLuint texture () { return mFBTexture; }
+
+private:
+
+  /* compiz fbo handle that goes through to nux */
+  GLuint   mFboHandle; // actual handle to the framebuffer_ext
+  bool    mFboStatus; // did the framebuffer texture bind succeed
+  GLuint   mFBTexture;
+  CompOutput *output;
+};
+
 
 #include "BGHash.h"
 #include "DesktopLauncherIcon.h"
 
+#include <compiztoolbox/compiztoolbox.h>
+
 using namespace unity::switcher;
+using namespace unity::dash;
+using unity::UBusManager;
 
 /* base screen class */
 class UnityScreen :
@@ -53,6 +88,7 @@ class UnityScreen :
   public ScreenInterface,
   public CompositeScreenInterface,
   public GLScreenInterface,
+  public BaseSwitchScreen,
   public PluginClassHandler <UnityScreen, CompScreen>,
   public UnityshellOptions
 {
@@ -71,10 +107,11 @@ public:
   void nuxEpilogue();
 
   /* nux draw wrapper */
-  void paintDisplay(const CompRegion& region);
+  void paintDisplay(const CompRegion& region, const GLMatrix& transform, unsigned int mask);
   void paintPanelShadow(const GLMatrix& matrix);
 
-  void preparePaint(int ms);
+  void preparePaint (int ms);
+  void paintFboForOutput (CompOutput *output);
 
   /* paint on top of all windows if we could not find a window
    * to paint underneath */
@@ -100,44 +137,27 @@ public:
                          const char* event,
                          CompOption::Vector& option);
 
-  bool showLauncherKeyInitiate(CompAction* action,
-                               CompAction::State state,
-                               CompOption::Vector& options);
-  bool showLauncherKeyTerminate(CompAction* action,
-                                CompAction::State state,
-                                CompOption::Vector& options);
-  bool showPanelFirstMenuKeyInitiate(CompAction* action,
-                                     CompAction::State state,
-                                     CompOption::Vector& options);
-  bool showPanelFirstMenuKeyTerminate(CompAction* action,
-                                      CompAction::State state,
-                                      CompOption::Vector& options);
+  bool showLauncherKeyInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool showLauncherKeyTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool showPanelFirstMenuKeyInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool showPanelFirstMenuKeyTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options);
 
-  bool executeCommand(CompAction* action,
-                      CompAction::State state,
-                      CompOption::Vector& options);
-  bool setKeyboardFocusKeyInitiate(CompAction* action,
-                                   CompAction::State state,
-                                   CompOption::Vector& options);
-  bool launcherRevealEdgeInitiate(CompAction* action,
-                                  CompAction::State state,
-                                  CompOption::Vector& options);
+  bool executeCommand(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool setKeyboardFocusKeyInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool launcherRevealEdgeInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
 
-  bool altTabForwardInitiate(CompAction* action,
+  bool altTabInitiateCommon(CompAction* action,
+                            CompAction::State state,
+                            CompOption::Vector& options);
+  bool altTabTerminateCommon(CompAction* action,
                              CompAction::State state,
                              CompOption::Vector& options);
 
-  bool altTabForwardTerminate(CompAction* action,
-                              CompAction::State state,
-                              CompOption::Vector& options);
-
-  bool altTabPrevInitiate(CompAction* action,
-                          CompAction::State state,
-                          CompOption::Vector& options);
-
-  bool altTabPrevTerminate(CompAction* action,
-                           CompAction::State state,
-                           CompOption::Vector& options);
+  bool altTabForwardInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool altTabPrevInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool altTabDetailStartInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool altTabDetailStopInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool altTabNextWindowInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
 
   /* handle option changes and change settings inside of the
    * panel and dock views */
@@ -154,6 +174,8 @@ public:
   void outputChangeNotify();
   void NeedsRelayout();
   void ScheduleRelayout(guint timeout);
+
+  void setActiveFbo (GLuint fbo) { mActiveFbo = fbo; }
 
 protected:
   const gchar* GetName();
@@ -188,9 +210,9 @@ private:
 
   Launcher*               launcher;
   LauncherController*     controller;
+  DashController::Ptr     dashController;
   PanelController*        panelController;
   SwitcherController*     switcherController;
-  PlacesController*       placesController;
   GestureEngine*          gestureEngine;
   nux::WindowThread*      wt;
   nux::BaseWindow*        launcherWindow;
@@ -228,12 +250,22 @@ private:
 
   unity::BGHash _bghash;
 
-  friend class UnityWindow;
+  std::map <CompOutput *, UnityFBO::Ptr> mFbos;
+  GLuint                                 mActiveFbo;
+
+  bool   queryForShader ();
+
+  UBusManager ubus_manager_;
+  bool dash_is_open_;
+  CompScreen::GrabHandle grab_index_;
+
+	friend class UnityWindow;
 };
 
 class UnityWindow :
   public WindowInterface,
   public GLWindowInterface,
+  public BaseSwitchWindow,
   public PluginClassHandler <UnityWindow, CompWindow>
 {
 public:
@@ -243,11 +275,20 @@ public:
   CompWindow* window;
   GLWindow* gWindow;
 
+  nux::Geometry last_bound;
+
   /* basic window draw function */
   bool glDraw(const GLMatrix& matrix,
               GLFragment::Attrib& attrib,
               const CompRegion& region,
               unsigned intmask);
+
+  void updateIconPos (int   &wx,
+                      int   &wy,
+                      int   x,
+                      int   y,
+                      float width,
+                      float height);
 
   void windowNotify(CompWindowNotify n);
   void moveNotify(int x, int y, bool immediate);
@@ -256,6 +297,8 @@ public:
 
   bool place(CompPoint& pos);
   CompPoint tryNotIntersectLauncher(CompPoint& pos);
+
+  void paintThumbnail (nux::Geometry const& bounding, float alpha);
 };
 
 

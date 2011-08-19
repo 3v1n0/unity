@@ -25,14 +25,23 @@
 #include <unity-misc/gnome-bg-slideshow.h>
 #include <UnityCore/GLibSignal.h>
 
+namespace unity {
+namespace colors {
+  const nux::Color Aubergine(0x3E, 0x20, 0x60);
+};
+};
+
 namespace unity
 {
   class BGHash
   {
   public:
+
+
     BGHash ();
     ~BGHash ();
 
+    static gboolean ForceUpdate(BGHash *self);
     void LoadFileToHash (const std::string path);
     void LoadPixbufToHash (GdkPixbuf *pixbuf);
     GdkPixbuf *GetPixbufFromBG ();
@@ -66,7 +75,7 @@ namespace unity
 
     guint64 _hires_time_start;
     guint64 _hires_time_end;
-    glib::SignalManager signal_manager_; 
+    glib::SignalManager signal_manager_;
     uint _ubus_handle_request_colour;
   };
 };

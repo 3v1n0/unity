@@ -154,10 +154,14 @@ PanelHomeButton::Refresh()
     {
       offset_x = offset_y = 1;
     }
-    gdk_cairo_set_source_pixbuf(cr, pixbuf,
-                                (_button_width - gdk_pixbuf_get_width(pixbuf)) / 2 + offset_x,
-                                (PANEL_HEIGHT - gdk_pixbuf_get_height(pixbuf)) / 2 + offset_y);
-    cairo_paint(cr);
+
+    PanelStyle* style = PanelStyle::GetDefault();
+    GtkStyleContext* style_context = style->GetStyleContext();
+
+    gtk_render_icon(style_context, cr, pixbuf, 
+                    (_button_width - gdk_pixbuf_get_width(pixbuf)) / 2 + offset_x,
+                    (PANEL_HEIGHT - gdk_pixbuf_get_height(pixbuf)) / 2 + offset_y);
+
     g_object_unref(pixbuf);
   }
 

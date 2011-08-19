@@ -51,6 +51,12 @@ public:
     return 0;
   }
 
+  std::vector<Window> RelatedXids ()
+  {
+    std::vector<Window> result;
+    return result;
+  }
+
   void SetSortPriority(int priority) {}
 
   bool OpenQuicklist(bool default_to_first_item = false)

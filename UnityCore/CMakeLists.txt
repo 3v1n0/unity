@@ -1,12 +1,22 @@
 find_package (PkgConfig)
-pkg_check_modules (CORE_DEPS REQUIRED glib-2.0 gio-2.0 sigc++-2.0 nux-core-1.0 gdk-pixbuf-2.0)
+pkg_check_modules (CORE_DEPS REQUIRED glib-2.0 gio-2.0 dee-1.0 sigc++-2.0 nux-core-1.0 gdk-pixbuf-2.0 unity)
+
+execute_process (COMMAND ${PKG_CONFIG_EXECUTABLE} unity --variable lensesdir OUTPUT_VARIABLE _lensesdir OUTPUT_STRIP_TRAILING_WHITESPACE)
 
 #
 # Headers & Sources
 #
 set (CORE_HEADERS
+     ApplicationPreview.h
+     Categories.h
+     Category.h
+     CheckOptionFilter.h
      DBusIndicators.h
      FilesystemLenses.h
+     Filter.h
+     Filters.h
+     GenericPreview.h
+     GLibDBusProxy.h
      GLibSignal.h
      GLibSignal-inl.h
      GLibWrapper.h
@@ -16,18 +26,46 @@ set (CORE_HEADERS
      Indicators.h
      Lens.h
      Lenses.h
+     MultiRangeFilter.h
+     MusicPreviews.h
+     Model.h
+     Model-inl.h
+     ModelRowAdaptor.h
+     ModelRowAdaptor-inl.h
+     Preview.h
+     Utils.h
+     RadioOptionFilter.h
+     RatingsFilter.h
+     Result.h
+     Results.h
      Variant.h
     )
 
 set (CORE_SOURCES
+     ApplicationPreview.cpp
+     Categories.cpp
+     Category.cpp
+     CheckOptionFilter.cpp
      DBusIndicators.cpp
      FilesystemLenses.cpp
+     Filter.cpp
+     Filters.cpp
+     GenericPreview.cpp
+     GLibDBusProxy.cpp
      GLibSignal.cpp
      GLibWrapper.cpp
      Indicator.cpp
      IndicatorEntry.cpp
      Indicators.cpp
      Lens.cpp
+     MultiRangeFilter.cpp
+     MusicPreviews.cpp
+     ModelRowAdaptor.cpp
+     Preview.cpp
+     RatingsFilter.cpp
+     RadioOptionFilter.cpp
+     Result.cpp
+     Results.cpp
      Variant.cpp
     )
 
@@ -40,7 +78,7 @@ set (CFLAGS
      ${MAINTAINER_CFLAGS}
      "-I${CMAKE_BINARY_DIR}"
      "-DGETTEXT_PACKAGE=\"unity\""
-     "-Werror -Wall"
+     "-DLENSES_DIR=\"${_lensesdir}\""
      )
 add_definitions (${CFLAGS})
 

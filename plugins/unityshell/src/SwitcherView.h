@@ -23,6 +23,8 @@
 #include "SwitcherModel.h"
 #include "AbstractIconRenderer.h"
 #include "StaticCairoText.h"
+#include "LayoutSystem.h"
+#include "BackgroundEffectHelper.h"
 
 #include <boost/shared_ptr.hpp>
 #include <sigc++/sigc++.h>
@@ -41,8 +43,11 @@ class SwitcherView : public nux::View
 {
   NUX_DECLARE_OBJECT_TYPE(SwitcherView, nux::View);
 public:
+
   SwitcherView(NUX_FILE_LINE_PROTO);
   virtual ~SwitcherView();
+
+  LayoutWindowList ExternalTargets ();
 
   void SetModel(SwitcherModel::Ptr model);
   SwitcherModel::Ptr GetModel();
@@ -55,6 +60,8 @@ public:
   nux::Property<int> vertical_size;
   nux::Property<int> text_size;
   nux::Property<int> animation_length;
+  nux::Property<double> spread_size;
+  nux::Property<nux::Color> background_color;
 
 protected:
   long ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo);
@@ -62,17 +69,26 @@ protected:
   void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
 
   RenderArg InterpolateRenderArgs(RenderArg const& start, RenderArg const& end, float progress);
-
-  std::list<RenderArg> RenderArgsMechanical(nux::Geometry& background_geo, AbstractLauncherIcon* selection, timespec const& current);
+  nux::Geometry InterpolateBackground (nux::Geometry const& start, nux::Geometry const& end, float progress);
 
   std::list<RenderArg> RenderArgsFlat(nux::Geometry& background_geo, int selection, timespec const& current);
 
   RenderArg CreateBaseArgForIcon(AbstractLauncherIcon* icon);
 private:
   void OnSelectionChanged(AbstractLauncherIcon* selection);
+  void OnDetailSelectionChanged (bool detail);
+  void OnDetailSelectionIndexChanged (int index);
+
+  void OnIconSizeChanged (int size);
+  void OnTileSizeChanged (int size);
+
+  nux::Geometry UpdateRenderTargets (RenderArg const& selection_arg, timespec const& current);
 
   static gboolean OnDrawTimeout(gpointer data);
 
+  void SaveLast ();
+
+  LayoutSystem::Ptr layout_system_;
   AbstractIconRenderer::Ptr icon_renderer_;
   SwitcherModel::Ptr model_;
   bool target_sizes_set_;
@@ -82,6 +98,20 @@ private:
   nux::BaseTexture* background_texture_;
 
   nux::StaticCairoText* text_view_;
+
+  std::list<RenderArg> last_args_;
+  std::list<RenderArg> saved_args_;
+
+  nux::Geometry last_background_;
+  nux::Geometry saved_background_;
+
+  LayoutWindowList render_targets_;
+
+  timespec save_time_;
+
+  bool animation_draw_;
+
+  BackgroundEffectHelper bg_effect_helper_;
 };
 
 }

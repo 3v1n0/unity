@@ -36,6 +36,7 @@ public:
   void StartFirstMenuShow();
   void EndFirstMenuShow();
   void SetOpacity(float opacity);
+  void QueueRedraw();
 
 protected:
   const gchar* GetName();
