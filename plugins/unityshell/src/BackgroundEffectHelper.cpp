@@ -109,12 +109,20 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nu
 
   bool should_update = updates_enabled() || force_update;
 
+  /* Static blur: only update when the size changed */
   if ((blur_type != BLUR_ACTIVE || !should_update) 
       && blur_texture_.IsValid() 
       && (geo == blur_geometry_))
   {
     return blur_texture_;
   }
+
+  // Active blur, only update if we're forcing one or if
+  // the underlying region on the backup texture has changed
+  printf ("damage bounds are %i %i %i %i\n", damage_bounds_.x, damage_bounds_.y, damage_bounds_.width, damage_bounds_.height);
+
+  if (geo.Intersect(damage_bounds_).IsNull() && !force_update)
+    return blur_texture_;
 
   blur_geometry_ =  nux::Geometry(0, 0, graphics_engine->GetWindowWidth(), graphics_engine->GetWindowHeight()).Intersect(geo);
 
@@ -123,11 +131,16 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nu
     return nux::ObjectPtr<nux::IOpenGLBaseTexture>(NULL);
   }
 
+  printf ("painting blur for owner %p", &owner);
+
   // save the current fbo
   nux::ObjectPtr<nux::IOpenGLFrameBufferObject> current_fbo = nux::GetGraphicsDisplay()->GetGpuDevice()->GetCurrentFrameBufferObject();
   nux::GetGraphicsDisplay ()->GetGpuDevice ()->DeactivateFrameBuffer ();
   
   // Set a viewport to the requested size
+  // FIXME: We need to do multiple passes for the dirty region
+  // on the underlying backup texture so that we're only updating
+  // the bits that we need
   graphics_engine->SetViewport (0, 0, blur_geometry_.width, blur_geometry_.height);
   graphics_engine->SetScissor (0, 0, blur_geometry_.width, blur_geometry_.height);
   // Disable nux scissoring

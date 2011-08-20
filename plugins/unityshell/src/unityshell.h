@@ -110,6 +110,7 @@ public:
   void paintDisplay(const CompRegion& region, const GLMatrix& transform, unsigned int mask);
   void paintPanelShadow(const GLMatrix& matrix);
 
+  void donePaint ();
   void preparePaint (int ms);
   void paintFboForOutput (CompOutput *output);
 
@@ -259,7 +260,7 @@ private:
   bool dash_is_open_;
   CompScreen::GrabHandle grab_index_;
 
-	friend class UnityWindow;
+   friend class UnityWindow;
 };
 
 class UnityWindow :

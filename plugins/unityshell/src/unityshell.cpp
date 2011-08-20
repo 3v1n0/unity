@@ -558,6 +558,11 @@ void UnityScreen::preparePaint(int ms)
 
 }
 
+void UnityScreen::donePaint ()
+{
+  cScreen->donePaint ();
+}
+
 /* Grab changed nux regions and add damage rects for them */
 void UnityScreen::damageNuxRegions()
 {
