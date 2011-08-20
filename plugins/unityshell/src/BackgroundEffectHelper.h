@@ -55,7 +55,7 @@ public:
 
   static void QueueDrawOnOwners ();
 
-  static void SetDamageBounds(nux::Geometry const& damage);
+  static void SetDamageBounds(Region damage);
   static void ResetDamageBounds();
 
   static nux::Property<unity::BlurType> blur_type;
@@ -82,7 +82,8 @@ private:
   nux::Geometry blur_geometry_;
 
   static std::list<BackgroundEffectHelper*> registered_list_;
-  static nux::Geometry damage_bounds_;
+  static Region damage_region_; // FIXME: I couldn't find anything in nux that works
+				// like X Regions do
 };
 
 #endif

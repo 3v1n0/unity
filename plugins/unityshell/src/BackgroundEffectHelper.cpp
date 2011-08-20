@@ -20,11 +20,12 @@
 #include "BackgroundEffectHelper.h"
 
 #include <time.h>
+#include <X11/Xregion.h>
 
 using namespace unity;
 
 std::list<BackgroundEffectHelper*> BackgroundEffectHelper::registered_list_;
-nux::Geometry BackgroundEffectHelper::damage_bounds_;
+Region BackgroundEffectHelper::damage_region_ = NULL;
 
 nux::Property<BlurType> BackgroundEffectHelper::blur_type (BLUR_ACTIVE);
 nux::Property<float> BackgroundEffectHelper::sigma_high (5.0f);
@@ -53,14 +54,21 @@ void BackgroundEffectHelper::OnEnabledChanged(bool value)
     DirtyCache();
 }
 
-void BackgroundEffectHelper::SetDamageBounds(nux::Geometry const& damage)
+void BackgroundEffectHelper::SetDamageBounds(const Region damage)
 {
-  damage_bounds_ = damage;
+  if (damage_region_)
+    XDestroyRegion (damage_region_);
+
+  damage_region_ = XCreateRegion ();
+  XUnionRegion (damage_region_, damage, damage_region_);
 }
 
 void BackgroundEffectHelper::ResetDamageBounds()
 {
-  damage_bounds_ = nux::Geometry();
+  if (damage_region_)
+    XDestroyRegion (damage_region_);
+
+  damage_region_ = XCreateRegion ();
 }
 
 void BackgroundEffectHelper::QueueDrawOnOwners ()
@@ -73,15 +81,30 @@ void BackgroundEffectHelper::QueueDrawOnOwners ()
     nux::View *owner = helper->owner();
     if (owner)
     {
-      if (damage_bounds_.IsNull())
+      if (!damage_region_)
       {
         owner->QueueDraw();
       }
       else
       {
-        nux::Geometry abs_geo = owner->GetAbsoluteGeometry();
-        if (!abs_geo.Intersect(damage_bounds_).IsNull())
+        Region        xregion = XCreateRegion ();
+        Region        tmp     = XCreateRegion ();
+        nux::Geometry abs_geo  = owner->GetAbsoluteGeometry();
+        XRectangle xgeometry;
+
+        xgeometry.x = abs_geo.x;
+        xgeometry.y = abs_geo.y;
+        xgeometry.width = abs_geo.width;
+        xgeometry.height = abs_geo.height;
+
+        XUnionRectWithRegion (&xgeometry, xregion, xregion);
+        XIntersectRegion (xregion, damage_region_, tmp);
+
+        if (!XEmptyRegion (tmp))
           owner->QueueDraw();
+
+        XDestroyRegion (xregion);
+        XDestroyRegion (tmp);
       }
     }
   }
@@ -95,6 +118,10 @@ void BackgroundEffectHelper::Register   (BackgroundEffectHelper *self)
 void BackgroundEffectHelper::Unregister (BackgroundEffectHelper *self)
 {
   registered_list_.remove(self);
+
+  if (!registered_list_.size ())
+    if (damage_region_)
+      XDestroyRegion (damage_region_);
 }
 
 void BackgroundEffectHelper::DirtyCache ()
@@ -106,6 +133,16 @@ void BackgroundEffectHelper::DirtyCache ()
 nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nux::Geometry geo, bool force_update)
 {
   nux::GraphicsEngine* graphics_engine = nux::GetGraphicsDisplay()->GetGraphicsEngine();
+  Region        xregion = XCreateRegion ();
+  Region        tmp     = XCreateRegion ();
+  XRectangle    xgeometry;
+
+  xgeometry.x = geo.x;
+  xgeometry.y = geo.y;
+  xgeometry.width = geo.width;
+  xgeometry.height = geo.height;
+
+  XUnionRectWithRegion (&xgeometry, xregion, xregion);
 
   bool should_update = updates_enabled() || force_update;
 
@@ -119,10 +156,13 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nu
 
   // Active blur, only update if we're forcing one or if
   // the underlying region on the backup texture has changed
-  printf ("damage bounds are %i %i %i %i\n", damage_bounds_.x, damage_bounds_.y, damage_bounds_.width, damage_bounds_.height);
+  XIntersectRegion (xregion, damage_region_, tmp);
 
-  if (geo.Intersect(damage_bounds_).IsNull() && !force_update)
+  if (XEmptyRegion (tmp) && !force_update)
     return blur_texture_;
+
+  XDestroyRegion (xregion);
+  XDestroyRegion (tmp);
 
   blur_geometry_ =  nux::Geometry(0, 0, graphics_engine->GetWindowWidth(), graphics_engine->GetWindowHeight()).Intersect(geo);
 
@@ -130,8 +170,6 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nu
   {
     return nux::ObjectPtr<nux::IOpenGLBaseTexture>(NULL);
   }
-
-  printf ("painting blur for owner %p", &owner);
 
   // save the current fbo
   nux::ObjectPtr<nux::IOpenGLFrameBufferObject> current_fbo = nux::GetGraphicsDisplay()->GetGpuDevice()->GetCurrentFrameBufferObject();
