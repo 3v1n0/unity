@@ -28,6 +28,7 @@
 #include <Nux/BaseWindow.h>
 
 #include "AbstractIconRenderer.h"
+#include "BackgroundEffectHelper.h"
 #include "DNDCollectionWindow.h"
 #include "DndData.h"
 #include "GeisAdapter.h"
@@ -489,7 +490,9 @@ private:
 
   nux::Color _background_color;
   bool _dash_is_open;
+  
   AbstractIconRenderer::Ptr icon_renderer;
+  BackgroundEffectHelper bg_effect_helper_;
 };
 
 #endif // LAUNCHER_H

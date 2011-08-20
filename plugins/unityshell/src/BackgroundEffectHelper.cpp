@@ -19,9 +19,12 @@
 
 #include "BackgroundEffectHelper.h"
 
+#include <time.h>
+
 using namespace unity;
 
 std::list<BackgroundEffectHelper*> BackgroundEffectHelper::registered_list_;
+nux::Geometry BackgroundEffectHelper::damage_bounds_;
 
 nux::Property<BlurType> BackgroundEffectHelper::blur_type (BLUR_ACTIVE);
 nux::Property<float> BackgroundEffectHelper::sigma_high (5.0f);
@@ -32,6 +35,8 @@ nux::Property<bool> BackgroundEffectHelper::updates_enabled (true);
 
 BackgroundEffectHelper::BackgroundEffectHelper()
 {
+  enabled = true;
+  enabled.changed.connect (sigc::mem_fun (this, &BackgroundEffectHelper::OnEnabledChanged));
   noise_texture_ = nux::CreateTextureFromFile(PKGDATADIR"/dash_noise.png");
   Register(this);
 }
@@ -42,13 +47,43 @@ BackgroundEffectHelper::~BackgroundEffectHelper()
   Unregister(this);
 }
 
+void BackgroundEffectHelper::OnEnabledChanged(bool value)
+{
+  if (value)
+    DirtyCache();
+}
+
+void BackgroundEffectHelper::SetDamageBounds(nux::Geometry const& damage)
+{
+  damage_bounds_ = damage;
+}
+
+void BackgroundEffectHelper::ResetDamageBounds()
+{
+  damage_bounds_ = nux::Geometry();
+}
+
 void BackgroundEffectHelper::QueueDrawOnOwners ()
 {
   for (BackgroundEffectHelper* helper : registered_list_)
   {
+    if (!helper->enabled)
+      continue;
+    
     nux::View *owner = helper->owner();
     if (owner)
-      owner->QueueDraw();
+    {
+      if (damage_bounds_.IsNull())
+      {
+        owner->QueueDraw();
+      }
+      else
+      {
+        nux::Geometry abs_geo = owner->GetAbsoluteGeometry();
+        if (!abs_geo.Intersect(damage_bounds_).IsNull())
+          owner->QueueDraw();
+      }
+    }
   }
 }
 

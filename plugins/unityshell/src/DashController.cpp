@@ -201,6 +201,8 @@ void DashController::HideDash()
 {
   if (!visible_)
    return;
+  
+  view_->AboutToHide();
 
   window_->CaptureMouseDownAnyWhereElse(false);
   window_->ForceStopFocus(1, 1);

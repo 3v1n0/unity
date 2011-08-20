@@ -538,6 +538,9 @@ void UnityScreen::preparePaint(int ms)
 {
   if (BackgroundEffectHelper::blur_type == unity::BLUR_ACTIVE)
   {
+    CompRect damage = cScreen->currentDamage ().boundingRect();
+    BackgroundEffectHelper::SetDamageBounds(nux::Geometry(damage.x(), damage.y(), damage.width(), damage.height()));
+
     // this causes queue draws to be called, we obviously dont want to disable updates
     // because we are updating the blur, so ignore them.
     bool tmp = BackgroundEffectHelper::updates_enabled;

@@ -45,6 +45,7 @@ public:
   ~BackgroundEffectHelper();
 
   nux::Property<nux::View*> owner;
+  nux::Property<bool> enabled;
 
   nux::ObjectPtr<nux::IOpenGLBaseTexture> GetBlurRegion(nux::Geometry geo, bool force_update = false);
   // We could add more functions here to get different types of effects based on the background texture
@@ -53,6 +54,9 @@ public:
   void DirtyCache ();
 
   static void QueueDrawOnOwners ();
+
+  static void SetDamageBounds(nux::Geometry const& damage);
+  static void ResetDamageBounds();
 
   static nux::Property<unity::BlurType> blur_type;
   static nux::Property<float> sigma_high;
@@ -65,6 +69,8 @@ protected:
   static void Unregister (BackgroundEffectHelper *self);
 
 private:
+  void OnEnabledChanged (bool value);
+
   nux::BaseTexture*                       noise_texture_;
   nux::ObjectPtr<nux::IOpenGLBaseTexture> temp_device_texture0_;
   nux::ObjectPtr<nux::IOpenGLBaseTexture> temp_device_texture1_;
@@ -76,6 +82,7 @@ private:
   nux::Geometry blur_geometry_;
 
   static std::list<BackgroundEffectHelper*> registered_list_;
+  static nux::Geometry damage_bounds_;
 };
 
 #endif
