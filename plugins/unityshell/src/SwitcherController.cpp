@@ -146,6 +146,7 @@ void SwitcherController::ConstructView()
   main_layout_->AddView(view_, 1);
 
   view_window_->SetGeometry(workarea_);
+  view_->SetupBackground ();
   view_window_->ShowWindow(true);
 }
 

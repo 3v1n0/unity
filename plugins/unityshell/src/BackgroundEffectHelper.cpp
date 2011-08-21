@@ -27,6 +27,7 @@ using namespace unity;
 std::list<BackgroundEffectHelper*> BackgroundEffectHelper::registered_list_;
 Region BackgroundEffectHelper::damage_region_ = NULL;
 Region BackgroundEffectHelper::occluded_region_ = NULL;
+Region BackgroundEffectHelper::popup_region_ = NULL;
 
 nux::Property<BlurType> BackgroundEffectHelper::blur_type (BLUR_ACTIVE);
 nux::Property<float> BackgroundEffectHelper::sigma_high (5.0f);
@@ -58,7 +59,7 @@ namespace unity
 
 BackgroundEffectHelper::BackgroundEffectHelper()
 {
-  enabled = true;
+  enabled = false;
   enabled.changed.connect (sigc::mem_fun(this, &BackgroundEffectHelper::OnEnabledChanged));
   noise_texture_ = nux::CreateTextureFromFile(PKGDATADIR"/dash_noise.png");
   Register(this);
@@ -72,8 +73,27 @@ BackgroundEffectHelper::~BackgroundEffectHelper()
 
 void BackgroundEffectHelper::OnEnabledChanged(bool value)
 {
+  XRectangle max_rect;
+
   if (value)
+  {
     DirtyCache();
+
+    max_rect.x = owner ()->GetAbsoluteGeometry().x;
+    max_rect.y = owner ()->GetAbsoluteGeometry().y;
+    max_rect.width = owner ()->GetAbsoluteGeometry().width;
+    max_rect.height = owner ()->GetAbsoluteGeometry().height;
+
+    /* Mark this region as damaged so it gets updated */
+    if (popup_region_)
+    {
+      XDestroyRegion (popup_region_);
+      popup_region_ = NULL;
+    }
+
+    popup_region_ = XCreateRegion ();
+    XUnionRectWithRegion (&max_rect, popup_region_, popup_region_);
+  }
 }
 
 void BackgroundEffectHelper::SetDamageBounds(const Region damage)
@@ -202,8 +222,8 @@ void BackgroundEffectHelper::Unregister(BackgroundEffectHelper* self)
 
 void BackgroundEffectHelper::DirtyCache ()
 {
-  if (blur_texture_.IsValid())
-    blur_texture_.Release();
+  if (blur_texture_.IsValid ())
+    blur_texture_.Release ();
 }
 
 nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nux::Geometry geo, bool force_update)
@@ -220,6 +240,14 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nu
       && (geo == blur_geometry_))
   {
     return blur_texture_;
+  }
+
+  // Handle newly created windows
+  if (popup_region_)
+  {
+    XUnionRegion (damage_region_, popup_region_, damage_region_);
+    XDestroyRegion (popup_region_);
+    popup_region_ = NULL;
   }
 
   // Active blur, only update if we're forcing one or if
@@ -346,7 +374,7 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nu
 
     // Copy source texture
     graphics_engine->QRP_GetCopyTexture(buffer_width, buffer_height, temp_device_texture0_,
-                                        device_texture, texxform__bg, nux::color::White);
+     device_texture, texxform__bg, nux::color::White);
 
     // Down size
     graphics_engine->QRP_GetCopyTexture(down_size_width, down_size_height, ds_temp_device_texture1_,

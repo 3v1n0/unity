@@ -165,7 +165,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
     foreach (CompOutput & o, screen->outputDevs())
       uScreen->mFbos[&o] = UnityFBO::Ptr (new UnityFBO(&o));
 
-    uScreen->mFbos[&(screen->fullscreenOutput())] = UnityFBO::Ptr (new UnityFBO(&(screen->fullscreenOutput())));
+    uScreen->mFbos[&(screen->fullscreenOutput ())] = UnityFBO::Ptr (new UnityFBO(&(screen->fullscreenOutput ())));
   }
 
   optionSetLauncherHideModeNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
@@ -447,7 +447,7 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
   wt->RenderInterfaceFromForeignCmd (&geo);
   nuxEpilogue();
 
-   if (switcherController->Visible ())
+ if (switcherController->Visible ())
   {
     LayoutWindowList targets = switcherController->ExternalRenderTargets ();
 
@@ -480,7 +480,7 @@ void UnityWindow::paintThumbnail (nux::Geometry const& bounding, float alpha)
   last_bound = geo;
 
   GLWindowPaintAttrib attrib = gWindow->lastPaintAttrib ();
-  attrib.opacity = (GLushort)(alpha * G_MAXUSHORT);
+  attrib.opacity = (GLushort) (alpha * G_MAXUSHORT);
 
   paintThumb (attrib,
               matrix,
@@ -1398,10 +1398,10 @@ void UnityScreen::Relayout()
 
   if (GL::fbo)
   {
-    foreach(CompOutput &o, screen->outputDevs ())
+    foreach (CompOutput &o, screen->outputDevs ())
       uScreen->mFbos[&o] = UnityFBO::Ptr (new UnityFBO (&o));
 
-    uScreen->mFbos[&(screen->fullscreenOutput())] = UnityFBO::Ptr (new UnityFBO (&(screen->fullscreenOutput ())));
+    uScreen->mFbos[&(screen->fullscreenOutput ())] = UnityFBO::Ptr (new UnityFBO (&(screen->fullscreenOutput ())));
   }
 
   scr = gdk_screen_get_default ();
@@ -1480,7 +1480,7 @@ void UnityFBO::paint ()
 
   transform.toScreenSpace (output, -DEFAULT_Z_CAMERA);
   glPushMatrix ();
-  glLoadMatrixf (transform.getMatrix());
+  glLoadMatrixf (transform.getMatrix ());
 
   /* Note that texcoords here are normalized, so it's just (0,0)-(1,1) */
   texx = 0.0;
@@ -1507,7 +1507,7 @@ void UnityFBO::paint ()
     glTexCoord2f (texx, texy + texheight);
     glVertex2i   (output->x1 (), output->y1 ());
     glTexCoord2f (texx, texy);
-    glVertex2i   (output->x1 (),  output->y2 ());
+    glVertex2i   (output->x1 (), output->y2 ());
     glTexCoord2f (texx + texwidth, texy);
     glVertex2i   (output->x2 (), output->y2 ());
     glTexCoord2f (texx + texwidth, texy + texheight);
@@ -1639,7 +1639,7 @@ void UnityFBO::bind ()
   }
 }
 
-UnityFBO::UnityFBO (CompOutput* o)
+UnityFBO::UnityFBO (CompOutput *o)
  : mFboStatus (false)
  , mFBTexture (0)
  , output (o)

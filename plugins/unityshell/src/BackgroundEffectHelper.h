@@ -92,6 +92,7 @@ private:
   // like X Regions do
   static Region occluded_region_;
   static Region damage_region_;
+  static Region popup_region_;
 };
 
 #endif

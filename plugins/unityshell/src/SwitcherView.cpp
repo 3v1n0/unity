@@ -81,6 +81,12 @@ SwitcherView::~SwitcherView()
     g_source_remove(redraw_handle_);
 }
 
+void
+SwitcherView::SetupBackground()
+{
+  bg_effect_helper_.enabled = true;
+}
+
 LayoutWindowList SwitcherView::ExternalTargets ()
 {
   LayoutWindowList result = render_targets_;
