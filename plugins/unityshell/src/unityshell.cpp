@@ -1133,6 +1133,11 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
                           const CompRegion& region,
                           unsigned int mask)
 {
+  /* Don't bother detecting occlusions if we're not doing updates
+   * or we don't want to repaint the shell this pass. We also
+   * have a global flag detecting_occlusions which is set to false
+   * once we need to *stop* detecting occlusions
+   */
   if (BackgroundEffectHelper::blur_type != unity::BLUR_ACTIVE ||
       !BackgroundEffectHelper::updates_enabled() ||
       !BackgroundEffectHelper::HasEnabledHelpers() ||
@@ -1154,6 +1159,7 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
     {
       for (const Window & xw : nux::XInputWindow::NativeHandleList())
       {
+        /* We hit one of our windows, stop detecting occlusions */
         if (xw == w->id())
         {
           BackgroundEffectHelper::detecting_occlusions = false;
@@ -1167,9 +1173,9 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
 
     if (BackgroundEffectHelper::detecting_occlusions())
     {
-      /* checks if window was painted
-       * and does occlude other regions
-       * of the screen */
+      /* glPaint will return true if the window will be
+       * drawon on screen, in that case we need to add
+       * its output rect to the occlusion buffer */
       if (gWindow->glPaint(attrib, matrix, region, mask))
       {
         CompRegion outReg(window->outputRect());
