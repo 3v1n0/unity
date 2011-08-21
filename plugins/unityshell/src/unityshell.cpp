@@ -1081,42 +1081,24 @@ const gchar* UnityScreen::GetName()
   return "Unity";
 }
 
+bool isNuxWindow (CompWindow* value) 
+{ 
+  std::vector<Window> const& xwns = nux::XInputWindow::NativeHandleList();
+  auto id = value->id();
+
+  unsigned int size = xwns.size();
+  for (unsigned int i = 0; i < size; ++i)
+  {
+    if (xwns[i] == id)
+      return true;
+  }
+  return false;
+}
+
 const CompWindowList& UnityScreen::getWindowPaintList()
 {
   CompWindowList& pl = _withRemovedNuxWindows = cScreen->getWindowPaintList();
-  CompWindowList::reverse_iterator it = pl.rbegin();
-  CompWindowList::reverse_iterator end = pl.rend();
-  std::vector<Window> const& xwns = nux::XInputWindow::NativeHandleList();
-
-  unsigned int size = xwns.size();
-
-  while (it != end)
-  {
-    bool erased = false;
-    auto id = (*it)->id();
-    for (unsigned int i = 0; i < size; ++i)
-    {
-      if (xwns[i] == id)
-      {
-        /* Increment the reverse_iterator to ensure
-         * it is valid, then it++ returns the old
-         * position */
-        CompWindowList::reverse_iterator oit = it++;
-        /* Get the base and offset by -1 since
-         * &*(reverse_iterator(i)) == &*(i - 1)) */
-        CompWindowList::iterator eit = --(oit.base ());
-
-        erased = true;
-
-        /* Remove that from the list */
-        pl.erase(eit);
-        break;
-      }
-    }
-
-    if (!erased)
-      it++;
-  }
+  pl.remove_if(isNuxWindow);
 
   return pl;
 }
