@@ -129,19 +129,30 @@ void BackgroundEffectHelper::QueueDrawOnOwners()
         Region        damage_intersection     = XCreateRegion();
         Region        occlusion_intersection   = XCreateRegion();
 
+        /* Determine if the damage region on screen actually intersected
+         * a blurred region */
         XIntersectRegion(xregion, damage_region_, damage_intersection);
 
+        /* If we're detecting occlusions, we need to subtract the occluded
+         * region from this region. If they completely overlap, then this
+         * region should not be painted since it is occluded */
         if (occluded_region_)
         {
           XSubtractRegion(xregion, occluded_region_, occlusion_intersection);
         }
         else
         {
+          /* No occlusion detection - fill occlusion intersectiong with the
+           * contents of the geometry region */
           XUnionRegion(xregion, occlusion_intersection, occlusion_intersection);
         }
 
+        /* Don't queue draw on owner if the occlusion intersection
+         * is empty (eg, the window is occluded) */
         if (!XEmptyRegion(occlusion_intersection))
         {
+          /* Don't queue draw on owner if the underlying region
+           * behind the geometry was not damaged (damage_intersection) */
           if (!XEmptyRegion(damage_intersection))
           {
             owner->QueueDraw();
@@ -290,7 +301,7 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nu
 
     // Up size
     graphics_engine->QRP_GetCopyTexture(buffer_width, buffer_height, temp_device_texture0_,
-                                        temp_device_texture1_, texxform, nux::color::White);
+     temp_device_texture1_, texxform, nux::color::White);
 
     // Add Noise
     blur_texture_ = graphics_engine->QRP_GLSL_GetDisturbedTexture(

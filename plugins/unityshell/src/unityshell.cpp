@@ -163,9 +163,9 @@ UnityScreen::UnityScreen(CompScreen* screen)
   if (GL::fbo)
   {
     foreach (CompOutput & o, screen->outputDevs())
-      uScreen->mFbos[&o] = UnityFBO::Ptr(new UnityFBO(&o));
+      uScreen->mFbos[&o] = UnityFBO::Ptr (new UnityFBO(&o));
 
-    uScreen->mFbos[&(screen->fullscreenOutput())] = UnityFBO::Ptr(new UnityFBO(&(screen->fullscreenOutput())));
+    uScreen->mFbos[&(screen->fullscreenOutput())] = UnityFBO::Ptr (new UnityFBO(&(screen->fullscreenOutput())));
   }
 
   optionSetLauncherHideModeNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
@@ -274,9 +274,9 @@ void UnityScreen::EnsureKeybindings()
   for (auto action : _shortcut_actions)
     screen->removeAction(action.get());
 
-  _shortcut_actions.clear();
+  _shortcut_actions.clear ();
 
-  for (auto icon : * (launcher->GetModel()))
+  for (auto icon : *(launcher->GetModel()))
   {
     guint64 shortcut = icon->GetShortcut();
     if (shortcut == 0)
@@ -442,19 +442,19 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
 
   nux::GetGraphicsDisplay()->GetGpuDevice()->backup_texture0_ = device_texture;
 
-  nux::Geometry geo = nux::Geometry (output->x(), output->y(), output->width(), output->height());
+  nux::Geometry geo = nux::Geometry (output->x (), output->y (), output->width (), output->height ());
 
   wt->RenderInterfaceFromForeignCmd (&geo);
   nuxEpilogue();
 
-  if (switcherController->Visible ())
+   if (switcherController->Visible ())
   {
     LayoutWindowList targets = switcherController->ExternalRenderTargets ();
 
     for (LayoutWindow::Ptr target : targets)
     {
       CompWindow* window = screen->findWindow(target->xid);
-      UnityWindow* unity_window = UnityWindow::get (window);
+      UnityWindow *unity_window = UnityWindow::get (window);
 
       unity_window->paintThumbnail (target->result, target->alpha);
     }
@@ -468,7 +468,7 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
 void UnityWindow::paintThumbnail (nux::Geometry const& bounding, float alpha)
 {
   GLMatrix matrix;
-  matrix.toScreenSpace (UnityScreen::get(screen)->_last_output, -DEFAULT_Z_CAMERA);
+  matrix.toScreenSpace (UnityScreen::get (screen)->_last_output, -DEFAULT_Z_CAMERA);
 
   nux::Geometry geo = bounding;
   geo.x += 3;
@@ -479,7 +479,7 @@ void UnityWindow::paintThumbnail (nux::Geometry const& bounding, float alpha)
 
   last_bound = geo;
 
-  GLWindowPaintAttrib attrib = gWindow->lastPaintAttrib();
+  GLWindowPaintAttrib attrib = gWindow->lastPaintAttrib ();
   attrib.opacity = (GLushort)(alpha * G_MAXUSHORT);
 
   paintThumb (attrib,
@@ -528,7 +528,7 @@ void UnityScreen::glPaintTransformedOutput(const GLScreenPaintAttrib& attrib,
                                            unsigned int mask)
 {
   /* bind the framebuffer here */
-  mFbos[output]->bind();
+  mFbos[output]->bind ();
   allowWindowPaint = false;
   /* urgh */
   gScreen->glPaintOutput(attrib, transform, region, output, mask);
@@ -664,7 +664,7 @@ void UnityScreen::handleEvent(XEvent* event)
     screen->handleEvent(event);
 
   if (!skip_other_plugins &&
-       screen->otherGrabExist("deco", "move", "switcher", "resize", NULL) &&
+      screen->otherGrabExist("deco", "move", "switcher", "resize", NULL) &&
       !switcherController->Visible())
   {
     wt->ProcessForeignEvent(event, NULL);
@@ -747,7 +747,7 @@ gboolean UnityScreen::OnEdgeTriggerTimeout(gpointer data)
     {
       /* We are still in the edge, but moving in Y, maybe we need another chance */
 
-      if (abs(pointerY - self->_edge_pointerY) > 20)
+      if (abs(pointerY-self->_edge_pointerY) > 20)
       {
         /* We're quite far from the first hit spot, let's wait again */
         self->_edge_pointerY = pointerY;
@@ -848,7 +848,7 @@ bool UnityScreen::setKeyboardFocusKeyInitiate(CompAction* action,
   return false;
 }
 
-bool UnityScreen::altTabInitiateCommon(CompAction* action,
+bool UnityScreen::altTabInitiateCommon(CompAction *action,
                                       CompAction::State state,
                                       CompOption::Vector& options)
 {
@@ -867,11 +867,11 @@ bool UnityScreen::altTabInitiateCommon(CompAction* action,
     if ((*it)->ShowInSwitcher())
       results.push_back(*it);
 
-  screen->addAction (&optionGetAltTabRight());
-  screen->addAction (&optionGetAltTabDetailStart());
-  screen->addAction (&optionGetAltTabDetailStop());
-  screen->addAction (&optionGetAltTabLeft());
-  screen->addAction (&optionGetAltTabNextWindow());
+  screen->addAction (&optionGetAltTabRight ());
+  screen->addAction (&optionGetAltTabDetailStart ());
+  screen->addAction (&optionGetAltTabDetailStop ());
+  screen->addAction (&optionGetAltTabLeft ());
+  screen->addAction (&optionGetAltTabNextWindow ());
 
   if (!grab_index_)
     grab_index_ = screen->pushGrab (screen->invisibleCursor(), "unity-switcher");
@@ -895,10 +895,10 @@ bool UnityScreen::altTabTerminateCommon(CompAction* action,
     screen->removeGrab(grab_index_, NULL);
     grab_index_ = 0;
 
-    screen->removeAction (&optionGetAltTabRight());
-    screen->removeAction (&optionGetAltTabDetailStart());
-    screen->removeAction (&optionGetAltTabDetailStop());
-    screen->removeAction (&optionGetAltTabLeft());
+    screen->removeAction (&optionGetAltTabRight ());
+    screen->removeAction (&optionGetAltTabDetailStart ());
+    screen->removeAction (&optionGetAltTabDetailStop ());
+    screen->removeAction (&optionGetAltTabLeft ());
     screen->removeAction (&optionGetAltTabNextWindow());
 
     bool accept_state = (state & CompAction::StateCancel) == 0;
@@ -1398,10 +1398,10 @@ void UnityScreen::Relayout()
 
   if (GL::fbo)
   {
-    foreach(CompOutput &o, screen->outputDevs())
-      uScreen->mFbos[&o] = UnityFBO::Ptr (new UnityFBO(&o));
+    foreach(CompOutput &o, screen->outputDevs ())
+      uScreen->mFbos[&o] = UnityFBO::Ptr (new UnityFBO (&o));
 
-    uScreen->mFbos[&(screen->fullscreenOutput())] = UnityFBO::Ptr (new UnityFBO(&(screen->fullscreenOutput())));
+    uScreen->mFbos[&(screen->fullscreenOutput())] = UnityFBO::Ptr (new UnityFBO (&(screen->fullscreenOutput ())));
   }
 
   scr = gdk_screen_get_default ();
@@ -1476,7 +1476,7 @@ void UnityFBO::paint ()
   /* Draw the bit of the relevant framebuffer for each output */
   GLMatrix transform;
 
-  glViewport (output->x(), screen->height() - output->y2(), output->width(), output->height());
+  glViewport (output->x (), screen->height () - output->y2 (), output->width (), output->height ());
 
   transform.toScreenSpace (output, -DEFAULT_Z_CAMERA);
   glPushMatrix ();
@@ -1499,20 +1499,20 @@ void UnityFBO::paint ()
     glPushAttrib (GL_SCISSOR_BIT);
     glEnable (GL_SCISSOR_TEST);
 
-    glScissor (output->x1(), screen->height() - output->y2(),
-               output->width(), output->height());
+    glScissor (output->x1 (), screen->height () - output->y2 (),
+               output->width (), output->height ());
 
     /* FIXME: This needs to be GL_TRIANGLE_STRIP */
     glBegin (GL_QUADS);
     glTexCoord2f (texx, texy + texheight);
-    glVertex2i (output->x1 (), output->y1 ());
+    glVertex2i   (output->x1 (), output->y1 ());
     glTexCoord2f (texx, texy);
-    glVertex2i (output->x1 (),  output->y2 ());
+    glVertex2i   (output->x1 (),  output->y2 ());
     glTexCoord2f (texx + texwidth, texy);
-    glVertex2i (output->x2 (), output->y2 ());
+    glVertex2i   (output->x2 (), output->y2 ());
     glTexCoord2f (texx + texwidth, texy + texheight);
-    glVertex2i (output->x2 (),  output->y1 ());
-    glEnd();
+    glVertex2i   (output->x2 (),  output->y1 ());
+    glEnd ();
 
     GL::activeTexture (GL_TEXTURE0_ARB);
     glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -1524,7 +1524,7 @@ void UnityFBO::paint ()
     glPopAttrib ();
   }
 
-  glPopMatrix ();
+  glPopMatrix();
 }
 
 void UnityFBO::unbind ()
@@ -1542,7 +1542,7 @@ bool UnityFBO::status ()
   return mFboStatus;
 }
 
-void UnityFBO::bind()
+void UnityFBO::bind ()
 {
   if (!mFBTexture)
   {
@@ -1609,16 +1609,16 @@ void UnityFBO::bind()
           break;
       }
 
-      GL::bindFramebuffer(GL_FRAMEBUFFER_EXT, 0);
-      GL::deleteFramebuffers(1, &mFboHandle);
+      GL::bindFramebuffer (GL_FRAMEBUFFER_EXT, 0);
+      GL::deleteFramebuffers (1, &mFboHandle);
 
-      glDrawBuffer(GL_BACK);
-      glReadBuffer(GL_BACK);
+      glDrawBuffer (GL_BACK);
+      glReadBuffer (GL_BACK);
 
       mFboHandle = 0;
 
       mFboStatus = false;
-      uScreen->setActiveFbo(0);
+      uScreen->setActiveFbo (0);
     }
     else
       mFboStatus = true;
@@ -1632,17 +1632,17 @@ void UnityFBO::bind()
     glReadBuffer (GL_COLOR_ATTACHMENT0_EXT);
 
     glViewport (0,
-                0,
-                output->width(),
-                output->height());
+               0,
+               output->width(),
+               output->height());
 
   }
 }
 
 UnityFBO::UnityFBO (CompOutput* o)
- : mFboStatus(false)
- , mFBTexture(0)
- , output(o)
+ : mFboStatus (false)
+ , mFBTexture (0)
+ , output (o)
 {
   (*GL::genFramebuffers) (1, &mFboHandle);
 }
@@ -1734,7 +1734,7 @@ void UnityScreen::initLauncher(nux::NThread* thread, void* InitData)
 
 /* Window init */
 UnityWindow::UnityWindow(CompWindow* window)
-  : BaseSwitchWindow (dynamic_cast<BaseSwitchScreen*> (UnityScreen::get (screen)), window)
+  : BaseSwitchWindow (dynamic_cast<BaseSwitchScreen *> (UnityScreen::get (screen)), window)
   , PluginClassHandler<UnityWindow, CompWindow>(window)
   , window(window)
   , gWindow(GLWindow::get(window))

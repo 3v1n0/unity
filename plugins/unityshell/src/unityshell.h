@@ -49,7 +49,7 @@ public:
 
   typedef boost::shared_ptr <UnityFBO> Ptr;
 
-  UnityFBO (CompOutput* o);
+  UnityFBO (CompOutput *o);
   ~UnityFBO ();
 
 public:
@@ -111,7 +111,7 @@ public:
   void paintPanelShadow(const GLMatrix& matrix);
 
   void preparePaint (int ms);
-  void paintFboForOutput (CompOutput* output);
+  void paintFboForOutput (CompOutput *output);
 
   /* paint on top of all windows if we could not find a window
    * to paint underneath */
@@ -175,7 +175,7 @@ public:
   void NeedsRelayout();
   void ScheduleRelayout(guint timeout);
 
-  void setActiveFbo(GLuint fbo) { mActiveFbo = fbo; }
+  void setActiveFbo (GLuint fbo) { mActiveFbo = fbo; }
 
 protected:
   const gchar* GetName();
@@ -251,10 +251,10 @@ private:
 
   unity::BGHash _bghash;
 
-  std::map <CompOutput*, UnityFBO::Ptr>  mFbos;
+  std::map <CompOutput *, UnityFBO::Ptr> mFbos;
   GLuint                                 mActiveFbo;
 
-  bool   queryForShader();
+  bool   queryForShader ();
 
   UBusManager ubus_manager_;
   bool dash_is_open_;
@@ -290,12 +290,12 @@ public:
               const CompRegion& region,
               unsigned intmask);
 
-  void updateIconPos(int   &wx,
-                     int   &wy,
-                     int   x,
-                     int   y,
-                     float width,
-                     float height);
+  void updateIconPos (int   &wx,
+                      int   &wy,
+                      int   x,
+                      int   y,
+                      float width,
+                      float height);
 
   void windowNotify(CompWindowNotify n);
   void moveNotify(int x, int y, bool immediate);
