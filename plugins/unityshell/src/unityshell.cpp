@@ -162,10 +162,10 @@ UnityScreen::UnityScreen(CompScreen* screen)
 
   if (GL::fbo)
   {
-    foreach (CompOutput &o, screen->outputDevs ())
-      uScreen->mFbos[&o] = UnityFBO::Ptr (new UnityFBO (&o));
-    
-    uScreen->mFbos[&(screen->fullscreenOutput ())] = UnityFBO::Ptr (new UnityFBO (&(screen->fullscreenOutput ())));
+    foreach (CompOutput & o, screen->outputDevs())
+      uScreen->mFbos[&o] = UnityFBO::Ptr (new UnityFBO(&o));
+
+    uScreen->mFbos[&(screen->fullscreenOutput ())] = UnityFBO::Ptr (new UnityFBO(&(screen->fullscreenOutput ())));
   }
 
   optionSetLauncherHideModeNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
@@ -189,18 +189,18 @@ UnityScreen::UnityScreen(CompScreen* screen)
   optionSetLauncherRevealEdgeTimeoutNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
   optionSetAutomaximizeValueNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
   optionSetAltTabTimeoutNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
-  
+
   optionSetAltTabForwardInitiate(boost::bind(&UnityScreen::altTabForwardInitiate, this, _1, _2, _3));
   optionSetAltTabForwardTerminate(boost::bind(&UnityScreen::altTabTerminateCommon, this, _1, _2, _3));
   optionSetAltTabPrevInitiate(boost::bind(&UnityScreen::altTabPrevInitiate, this, _1, _2, _3));
-  
+
   optionSetAltTabDetailStartInitiate(boost::bind(&UnityScreen::altTabDetailStartInitiate, this, _1, _2, _3));
   optionSetAltTabDetailStopInitiate(boost::bind(&UnityScreen::altTabDetailStopInitiate, this, _1, _2, _3));
   optionSetAltTabNextWindowInitiate(boost::bind(&UnityScreen::altTabNextWindowInitiate, this, _1, _2, _3));
-/*
-  optionSetAltTabExitInitiate(boost::bind(&UnityScreen::altTabExitInitiate, this, _1, _2, _3));
-  optionSetAltTabExitTerminate(boost::bind(&UnityScreen::altTabExitTerminate, this, _1, _2, _3));
-*/
+  /*
+    optionSetAltTabExitInitiate(boost::bind(&UnityScreen::altTabExitInitiate, this, _1, _2, _3));
+    optionSetAltTabExitTerminate(boost::bind(&UnityScreen::altTabExitTerminate, this, _1, _2, _3));
+   */
   optionSetAltTabLeftInitiate (boost::bind (&UnityScreen::altTabPrevInitiate, this, _1, _2, _3));
   optionSetAltTabRightInitiate (boost::bind (&UnityScreen::altTabForwardInitiate, this, _1, _2, _3));
 
@@ -233,8 +233,8 @@ UnityScreen::UnityScreen(CompScreen* screen)
   CompSize size(1, 20);
   _shadow_texture = GLTexture::readImageToTexture(name, pname, size);
 
-  ubus_manager_.RegisterInterest(UBUS_PLACE_VIEW_SHOWN, [&](GVariant* args) { dash_is_open_ = true; });
-  ubus_manager_.RegisterInterest(UBUS_PLACE_VIEW_HIDDEN, [&](GVariant* args) { dash_is_open_ = false; });
+  ubus_manager_.RegisterInterest(UBUS_PLACE_VIEW_SHOWN, [&](GVariant * args) { dash_is_open_ = true; });
+  ubus_manager_.RegisterInterest(UBUS_PLACE_VIEW_HIDDEN, [&](GVariant * args) { dash_is_open_ = false; });
 
   EnsureKeybindings();
 
@@ -436,8 +436,8 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
   mFbos[output]->paint ();
 
   nuxPrologue();
-  nux::ObjectPtr<nux::IOpenGLTexture2D> device_texture = 
-  nux::GetGraphicsDisplay()->GetGpuDevice()->CreateTexture2DFromID(mFbos[output]->texture(), 
+  nux::ObjectPtr<nux::IOpenGLTexture2D> device_texture =
+  nux::GetGraphicsDisplay()->GetGpuDevice()->CreateTexture2DFromID(mFbos[output]->texture(),
   output->width(), output->height(), 1, nux::BITFMT_R8G8B8A8);
 
   nux::GetGraphicsDisplay()->GetGpuDevice()->backup_texture0_ = device_texture;
@@ -447,7 +447,7 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
   wt->RenderInterfaceFromForeignCmd (&geo);
   nuxEpilogue();
 
-if (switcherController->Visible ())
+ if (switcherController->Visible ())
   {
     LayoutWindowList targets = switcherController->ExternalRenderTargets ();
 
@@ -538,14 +538,38 @@ void UnityScreen::preparePaint(int ms)
 {
   if (BackgroundEffectHelper::blur_type == unity::BLUR_ACTIVE)
   {
-    CompRect damage = cScreen->currentDamage ().boundingRect();
-    BackgroundEffectHelper::SetDamageBounds(nux::Geometry(damage.x(), damage.y(), damage.width(), damage.height()));
+    CompRegion current_damage = cScreen->currentDamage();
+
+    /* Remove wholesale the nux regions to prevent cycling */
+    std::vector<nux::Geometry> dirty = wt->GetDrawList();
+
+    for (std::vector<nux::Geometry>::iterator it = dirty.begin(), end = dirty.end();
+         it != end; ++it)
+    {
+      nux::Geometry const& geo = *it;
+      CompRegion           reg(geo.x, geo.y, geo.width, geo.height);
+
+      current_damage -= reg;
+    }
+
+    nux::Geometry geo = wt->GetWindowCompositor().GetTooltipMainWindowGeometry();
+    CompRegion tooltipRegion(geo.x, geo.y, geo.width, geo.height);
+
+    current_damage -= tooltipRegion;
+
+    /* Now re-merge the previous intersecting region */
+    current_damage = current_damage.united(intersecting_pre_nux_damage_);
+
+    BackgroundEffectHelper::SetDamageBounds(current_damage.handle());
 
     // this causes queue draws to be called, we obviously dont want to disable updates
     // because we are updating the blur, so ignore them.
-    bool tmp = BackgroundEffectHelper::updates_enabled;
+    bool do_updates = BackgroundEffectHelper::updates_enabled;
     BackgroundEffectHelper::QueueDrawOnOwners();
-    BackgroundEffectHelper::updates_enabled = tmp;
+    BackgroundEffectHelper::updates_enabled = do_updates;
+
+    BackgroundEffectHelper::ResetOcclusionBuffer();
+    BackgroundEffectHelper::detecting_occlusions = true;
   }
 
   cScreen->preparePaint(ms);
@@ -561,27 +585,48 @@ void UnityScreen::preparePaint(int ms)
 /* Grab changed nux regions and add damage rects for them */
 void UnityScreen::damageNuxRegions()
 {
+  CompRegion nux_damage;
+  CompRegion intersecting_nux_damage;
+
   if (damaged)
     return;
 
   std::vector<nux::Geometry> dirty = wt->GetDrawList();
   damaged = true;
 
+  intersecting_pre_nux_damage_ = CompRegion();
+
   for (std::vector<nux::Geometry>::iterator it = dirty.begin(), end = dirty.end();
        it != end; ++it)
   {
     nux::Geometry const& geo = *it;
-    cScreen->damageRegion(CompRegion(geo.x, geo.y, geo.width, geo.height));
+    nux_damage = CompRegion(geo.x, geo.y, geo.width, geo.height);
+    intersecting_nux_damage = nux_damage.intersected(cScreen->currentDamage());
+
+    intersecting_pre_nux_damage_ += intersecting_nux_damage;
+    cScreen->damageRegion(nux_damage);
   }
 
   nux::Geometry geo = wt->GetWindowCompositor().GetTooltipMainWindowGeometry();
-  cScreen->damageRegion(CompRegion(geo.x, geo.y, geo.width, geo.height));
-  cScreen->damageRegion(CompRegion(lastTooltipArea.x, lastTooltipArea.y,
-                                   lastTooltipArea.width, lastTooltipArea.height));
 
-  lastTooltipArea = geo;
+  nux_damage = CompRegion(geo.x, geo.y, geo.width, geo.height);
+  intersecting_nux_damage = cScreen->currentDamage().intersected(nux_damage);
+  intersecting_pre_nux_damage_ += intersecting_nux_damage;
+
+  cScreen->damageRegion(nux_damage);
+
+  geo = lastTooltipArea;
+
+  nux_damage = CompRegion(lastTooltipArea.x, lastTooltipArea.y,
+                          lastTooltipArea.width, lastTooltipArea.height);
+  intersecting_nux_damage = cScreen->currentDamage().intersected(nux_damage);
+  intersecting_pre_nux_damage_ += intersecting_nux_damage;
+
+  cScreen->damageRegion(nux_damage);
 
   wt->ClearDrawList();
+
+  lastTooltipArea = geo;
 }
 
 /* handle X Events */
@@ -618,8 +663,8 @@ void UnityScreen::handleEvent(XEvent* event)
   if (!skip_other_plugins)
     screen->handleEvent(event);
 
-  if (!skip_other_plugins && 
-       screen->otherGrabExist("deco", "move", "switcher", "resize", NULL) && 
+  if (!skip_other_plugins &&
+      screen->otherGrabExist("deco", "move", "switcher", "resize", NULL) &&
       !switcherController->Visible())
   {
     wt->ProcessForeignEvent(event, NULL);
@@ -804,8 +849,8 @@ bool UnityScreen::setKeyboardFocusKeyInitiate(CompAction* action,
 }
 
 bool UnityScreen::altTabInitiateCommon(CompAction *action,
-				       CompAction::State state,
-				       CompOption::Vector& options)
+                                      CompAction::State state,
+                                      CompOption::Vector& options)
 {
   std::vector<AbstractLauncherIcon*> results;
 
@@ -833,16 +878,16 @@ bool UnityScreen::altTabInitiateCommon(CompAction *action,
 
   // maybe check launcher position/hide state?
   switcherController->SetWorkspace(nux::Geometry(_primary_monitor.x + 100,
-						 _primary_monitor.y + 100,
-						 _primary_monitor.width - 200,
-						 _primary_monitor.height - 200));
+                                                _primary_monitor.y + 100,
+                                                _primary_monitor.width - 200,
+                                                _primary_monitor.height - 200));
   switcherController->Show(SwitcherController::ALL, SwitcherController::FOCUS_ORDER, false, results);
   return true;
 }
 
 bool UnityScreen::altTabTerminateCommon(CompAction* action,
-					CompAction::State state,
-					CompOption::Vector& options)
+                                       CompAction::State state,
+                                       CompOption::Vector& options)
 {
   if (grab_index_)
   {
@@ -854,8 +899,8 @@ bool UnityScreen::altTabTerminateCommon(CompAction* action,
     screen->removeAction (&optionGetAltTabDetailStart ());
     screen->removeAction (&optionGetAltTabDetailStop ());
     screen->removeAction (&optionGetAltTabLeft ());
-    screen->removeAction (&optionGetAltTabNextWindow ());
-    
+    screen->removeAction (&optionGetAltTabNextWindow());
+
     bool accept_state = (state & CompAction::StateCancel) == 0;
     switcherController->Hide(accept_state);
   }
@@ -1054,7 +1099,7 @@ const CompWindowList& UnityScreen::getWindowPaintList()
       if (xwns[i] == id)
       {
         /* Increment the reverse_iterator to ensure
-	       * it is valid, then it++ returns the old
+         * it is valid, then it++ returns the old
          * position */
         CompWindowList::reverse_iterator oit = it++;
         /* Get the base and offset by -1 since
@@ -1074,6 +1119,78 @@ const CompWindowList& UnityScreen::getWindowPaintList()
   }
 
   return pl;
+}
+
+/* detect occlusions
+ *
+ * core passes down the PAINT_WINDOW_OCCLUSION_DETECTION
+ * mask when it is doing occlusion detection, so use that
+ * order to fill our occlusion buffer which we'll flip
+ * to nux later
+ */
+bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
+                          const GLMatrix& matrix,
+                          const CompRegion& region,
+                          unsigned int mask)
+{
+  /* Don't bother detecting occlusions if we're not doing updates
+   * or we don't want to repaint the shell this pass. We also
+   * have a global flag detecting_occlusions which is set to false
+   * once we need to *stop* detecting occlusions
+   */
+  if (BackgroundEffectHelper::blur_type != unity::BLUR_ACTIVE ||
+      !BackgroundEffectHelper::updates_enabled() ||
+      !BackgroundEffectHelper::HasEnabledHelpers() ||
+      !BackgroundEffectHelper::detecting_occlusions() ||
+      !uScreen->doShellRepaint ||
+      !uScreen->allowWindowPaint)
+  {
+    return gWindow->glPaint(attrib, matrix, region, mask);
+  }
+
+  /* Compiz paints windows top to bottom during
+   * the occlusion pass, so add windows to occlusion
+   * buffer first and then stop adding windows once we
+   * hit a window below a nux window (since the nux
+   * windows are removed from the paint list) */
+  if (mask & PAINT_WINDOW_OCCLUSION_DETECTION_MASK)
+  {
+    for (CompWindow* w = window; w; w = w->next)
+    {
+      for (const Window & xw : nux::XInputWindow::NativeHandleList())
+      {
+        /* We hit one of our windows, stop detecting occlusions */
+        if (xw == w->id())
+        {
+          BackgroundEffectHelper::detecting_occlusions = false;
+          break;
+        }
+      }
+
+      if (!BackgroundEffectHelper::detecting_occlusions())
+        break;
+    }
+
+    if (BackgroundEffectHelper::detecting_occlusions())
+    {
+      /* glPaint will return true if the window will be
+       * drawon on screen, in that case we need to add
+       * its output rect to the occlusion buffer */
+      if (gWindow->glPaint(attrib, matrix, region, mask))
+      {
+        CompRegion outReg(window->outputRect());
+        BackgroundEffectHelper::AddOccludedRegion(outReg.handle());
+        return true;
+      }
+      else
+        return false;
+    }
+    else
+      return gWindow->glPaint(attrib, matrix, region, mask);
+  }
+
+  /* Should never be reached */
+  return gWindow->glPaint(attrib, matrix, region, mask);
 }
 
 /* handle window painting in an opengl context
@@ -1283,7 +1400,7 @@ void UnityScreen::Relayout()
   {
     foreach (CompOutput &o, screen->outputDevs ())
       uScreen->mFbos[&o] = UnityFBO::Ptr (new UnityFBO (&o));
-    
+
     uScreen->mFbos[&(screen->fullscreenOutput ())] = UnityFBO::Ptr (new UnityFBO (&(screen->fullscreenOutput ())));
   }
 
@@ -1378,31 +1495,31 @@ void UnityFBO::paint ()
     glBindTexture (GL_TEXTURE_2D, mFBTexture);
     glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    
+
     glPushAttrib (GL_SCISSOR_BIT);
     glEnable (GL_SCISSOR_TEST);
 
     glScissor (output->x1 (), screen->height () - output->y2 (),
-		output->width (), output->height ());
-    
+               output->width (), output->height ());
+
     /* FIXME: This needs to be GL_TRIANGLE_STRIP */
     glBegin (GL_QUADS);
     glTexCoord2f (texx, texy + texheight);
     glVertex2i   (output->x1 (), output->y1 ());
     glTexCoord2f (texx, texy);
-    glVertex2i   (output->x1 (),	output->y2 ());
+    glVertex2i   (output->x1 (), output->y2 ());
     glTexCoord2f (texx + texwidth, texy);
     glVertex2i   (output->x2 (), output->y2 ());
     glTexCoord2f (texx + texwidth, texy + texheight);
-    glVertex2i   (output->x2 (), 	output->y1 ());
+    glVertex2i   (output->x2 (),  output->y1 ());
     glEnd ();
-    
+
     GL::activeTexture (GL_TEXTURE0_ARB);
     glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glBindTexture (GL_TEXTURE_2D, 0);
     glEnable (GL_TEXTURE_2D);
-    
+
     glDisable (GL_SCISSOR_TEST);
     glPopAttrib ();
   }
@@ -1436,13 +1553,13 @@ void UnityFBO::bind ()
     glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, output->width (), output->height (), 0, GL_BGRA,
+    glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, output->width(), output->height(), 0, GL_BGRA,
 #if IMAGE_BYTE_ORDER == MSBFirst
-		  GL_UNSIGNED_INT_8_8_8_8_REV,
+                 GL_UNSIGNED_INT_8_8_8_8_REV,
 #else
-		  GL_UNSIGNED_BYTE,
+                 GL_UNSIGNED_BYTE,
 #endif
-		  NULL);
+                 NULL);
 
     glBindTexture (GL_TEXTURE_2D, 0);
   }
@@ -1461,42 +1578,51 @@ void UnityFBO::bind ()
 
     if (status != GL_FRAMEBUFFER_COMPLETE)
     {
-       switch (status)
-       {
-          case GL_FRAMEBUFFER_UNDEFINED:
-            compLogMessage ("unity", CompLogLevelWarn, "no window"); break;
-          case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
-            compLogMessage ("unity", CompLogLevelWarn, "attachment incomplete"); break;
-          case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
-            compLogMessage ("unity", CompLogLevelWarn, "no buffers attached to fbo"); break;
-          case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
-            compLogMessage ("unity", CompLogLevelWarn, "some attachment in glDrawBuffers doesn't exist in FBO"); break;
-          case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
-            compLogMessage ("unity", CompLogLevelWarn, "some attachment in glReadBuffers doesn't exist in FBO"); break;
-          case GL_FRAMEBUFFER_UNSUPPORTED:
-            compLogMessage ("unity", CompLogLevelWarn, "unsupported internal format"); break;
-          case GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE:
-            compLogMessage ("unity", CompLogLevelWarn, "different levels of sampling for each attachment"); break;
-          case GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS:
-            compLogMessage ("unity", CompLogLevelWarn, "number of layers is different"); break;
-          default:
-            compLogMessage ("unity", CompLogLevelWarn, "unable to bind the framebuffer for an unknown reason"); break;
-       }
+      switch (status)
+      {
+        case GL_FRAMEBUFFER_UNDEFINED:
+          compLogMessage ("unity", CompLogLevelWarn, "no window");
+          break;
+        case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+          compLogMessage ("unity", CompLogLevelWarn, "attachment incomplete");
+          break;
+        case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+          compLogMessage ("unity", CompLogLevelWarn, "no buffers attached to fbo");
+          break;
+        case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
+          compLogMessage ("unity", CompLogLevelWarn, "some attachment in glDrawBuffers doesn't exist in FBO");
+          break;
+        case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
+          compLogMessage ("unity", CompLogLevelWarn, "some attachment in glReadBuffers doesn't exist in FBO");
+          break;
+        case GL_FRAMEBUFFER_UNSUPPORTED:
+          compLogMessage ("unity", CompLogLevelWarn, "unsupported internal format");
+          break;
+        case GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE:
+          compLogMessage ("unity", CompLogLevelWarn, "different levels of sampling for each attachment");
+          break;
+        case GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS:
+          compLogMessage ("unity", CompLogLevelWarn, "number of layers is different");
+          break;
+        default:
+          compLogMessage ("unity", CompLogLevelWarn, "unable to bind the framebuffer for an unknown reason");
+          break;
+      }
 
-       GL::bindFramebuffer (GL_FRAMEBUFFER_EXT, 0);
-       GL::deleteFramebuffers (1, &mFboHandle);
+      GL::bindFramebuffer (GL_FRAMEBUFFER_EXT, 0);
+      GL::deleteFramebuffers (1, &mFboHandle);
 
-       glDrawBuffer (GL_BACK);
-       glReadBuffer (GL_BACK);
+      glDrawBuffer (GL_BACK);
+      glReadBuffer (GL_BACK);
 
-       mFboHandle = 0;
+      mFboHandle = 0;
 
-       mFboStatus = false;
-       uScreen->setActiveFbo (0);
-     }
-     else
-       mFboStatus = true;
-   }
+      mFboStatus = false;
+      uScreen->setActiveFbo (0);
+    }
+    else
+      mFboStatus = true;
+  }
 
   if (mFboStatus)
   {
@@ -1506,9 +1632,9 @@ void UnityFBO::bind ()
     glReadBuffer (GL_COLOR_ATTACHMENT0_EXT);
 
     glViewport (0,
-		0,
-		output->width (),
-		output->height ());
+               0,
+               output->width(),
+               output->height());
 
   }
 }

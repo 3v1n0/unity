@@ -330,6 +330,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
   SetAcceptMouseWheelEvent(true);
 
   bg_effect_helper_.owner = this;
+  bg_effect_helper_.enabled = true;
 }
 
 Launcher::~Launcher()
@@ -1514,8 +1515,7 @@ void Launcher::SetHidden(bool hidden)
   else
     _hide_machine->SetQuirk(LauncherHideMachine::MOUSE_MOVE_POST_REVEAL, false);
 
-  if (hidden)
-  {
+  if (hidden)  {
     bg_effect_helper_.enabled = false;
     _hide_machine->SetQuirk(LauncherHideMachine::MT_DRAG_OUT, false);
     SetStateMouseOverLauncher(false);
