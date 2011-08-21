@@ -28,12 +28,12 @@ std::list<BackgroundEffectHelper*> BackgroundEffectHelper::registered_list_;
 Region BackgroundEffectHelper::damage_region_ = NULL;
 Region BackgroundEffectHelper::occluded_region_ = NULL;
 
-nux::Property<BlurType> BackgroundEffectHelper::blur_type(BLUR_ACTIVE);
-nux::Property<float> BackgroundEffectHelper::sigma_high(5.0f);
-nux::Property<float> BackgroundEffectHelper::sigma_med(4.0f);
-nux::Property<float> BackgroundEffectHelper::sigma_low(1.0f);
-nux::Property<bool> BackgroundEffectHelper::updates_enabled(true);
-nux::Property<bool> BackgroundEffectHelper::detecting_occlusions(false);
+nux::Property<BlurType> BackgroundEffectHelper::blur_type (BLUR_ACTIVE);
+nux::Property<float> BackgroundEffectHelper::sigma_high (5.0f);
+nux::Property<float> BackgroundEffectHelper::sigma_med (4.0f);
+nux::Property<float> BackgroundEffectHelper::sigma_low (1.0f);
+nux::Property<bool> BackgroundEffectHelper::updates_enabled (true);
+nux::Property<bool> BackgroundEffectHelper::detecting_occlusions (false);
 
 namespace unity
 {
@@ -59,7 +59,7 @@ namespace unity
 BackgroundEffectHelper::BackgroundEffectHelper()
 {
   enabled = true;
-  enabled.changed.connect(sigc::mem_fun(this, &BackgroundEffectHelper::OnEnabledChanged));
+  enabled.changed.connect (sigc::mem_fun(this, &BackgroundEffectHelper::OnEnabledChanged));
   noise_texture_ = nux::CreateTextureFromFile(PKGDATADIR"/dash_noise.png");
   Register(this);
 }
@@ -111,7 +111,7 @@ void BackgroundEffectHelper::ResetOcclusionBuffer()
 
 void BackgroundEffectHelper::QueueDrawOnOwners()
 {
-for (BackgroundEffectHelper * helper : registered_list_)
+  for (BackgroundEffectHelper * helper : registered_list_)
   {
     if (!helper->enabled)
       continue;
@@ -189,7 +189,7 @@ void BackgroundEffectHelper::Unregister(BackgroundEffectHelper* self)
   }
 }
 
-void BackgroundEffectHelper::DirtyCache()
+void BackgroundEffectHelper::DirtyCache ()
 {
   if (blur_texture_.IsValid())
     blur_texture_.Release();
@@ -198,8 +198,8 @@ void BackgroundEffectHelper::DirtyCache()
 nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nux::Geometry geo, bool force_update)
 {
   nux::GraphicsEngine* graphics_engine = nux::GetGraphicsDisplay()->GetGraphicsEngine();
-  Region        xregion = unity::geometryToRegion (geo);
-  Region        damage_intersection     = XCreateRegion();
+  Region               xregion = unity::geometryToRegion (geo);
+  Region               damage_intersection     = XCreateRegion();
 
   bool should_update = updates_enabled() || force_update;
 
@@ -230,24 +230,23 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nu
 
   // save the current fbo
   nux::ObjectPtr<nux::IOpenGLFrameBufferObject> current_fbo = nux::GetGraphicsDisplay()->GetGpuDevice()->GetCurrentFrameBufferObject();
-  nux::GetGraphicsDisplay()->GetGpuDevice()->DeactivateFrameBuffer();
+  nux::GetGraphicsDisplay ()->GetGpuDevice ()->DeactivateFrameBuffer ();
 
   // Set a viewport to the requested size
   // FIXME: We need to do multiple passes for the dirty region
   // on the underlying backup texture so that we're only updating
   // the bits that we need
-  graphics_engine->SetViewport(0, 0, blur_geometry_.width, blur_geometry_.height);
-  graphics_engine->SetScissor(0, 0, blur_geometry_.width, blur_geometry_.height);
+  graphics_engine->SetViewport (0, 0, blur_geometry_.width, blur_geometry_.height);
+  graphics_engine->SetScissor (0, 0, blur_geometry_.width, blur_geometry_.height);
   // Disable nux scissoring
-  graphics_engine->GetRenderStates().EnableScissor(false);
+  graphics_engine->GetRenderStates ().EnableScissor (false);
 
   // The background texture is the same size as the monitor where we are rendering.
   nux::TexCoordXForm texxform__bg;
   texxform__bg.flip_v_coord = false;
   texxform__bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-  texxform__bg.uoffset = ((float) blur_geometry_.x) / graphics_engine->GetWindowWidth();
-  texxform__bg.voffset = ((float) graphics_engine->GetWindowHeight() - blur_geometry_.y - blur_geometry_.height) / graphics_engine->GetWindowHeight();
-
+  texxform__bg.uoffset = ((float) blur_geometry_.x) / graphics_engine->GetWindowWidth ();
+  texxform__bg.voffset = ((float) graphics_engine->GetWindowHeight () - blur_geometry_.y - blur_geometry_.height) / graphics_engine->GetWindowHeight ();
   int opengl_version = nux::GetGraphicsDisplay()->GetGpuDevice()->GetOpenGLMajorVersion();
   bool support_frag = nux::GetGraphicsDisplay()->GetGpuDevice()->GetGpuInfo().Support_ARB_Fragment_Shader();
   bool support_vert = nux::GetGraphicsDisplay()->GetGpuDevice()->GetGpuInfo().Support_ARB_Vertex_Shader();
@@ -282,12 +281,12 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nu
 
     // Down size
     graphics_engine->QRP_GetCopyTexture(down_size_width, down_size_height, temp_device_texture0_,
-                                        device_texture, texxform__bg, nux::color::White);
+     device_texture, texxform__bg, nux::color::White);
 
     // Blur at a lower resolution (less pixels to process)
     temp_device_texture1_ = graphics_engine->QRP_GetHQBlur(x, y, down_size_width, down_size_height,
-                                                           temp_device_texture0_, texxform, nux::color::White,
-                                                           gaussian_sigma, blur_passes);
+     temp_device_texture0_, texxform, nux::color::White,
+     gaussian_sigma, blur_passes);
 
     // Up size
     graphics_engine->QRP_GetCopyTexture(buffer_width, buffer_height, temp_device_texture0_,
@@ -295,11 +294,11 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nu
 
     // Add Noise
     blur_texture_ = graphics_engine->QRP_GLSL_GetDisturbedTexture(
-                      0, 0, buffer_width, buffer_height,
-                      noise_device_texture->m_Texture, noise_texxform, nux::Color(
-                        noise_factor * 1.0f / buffer_width,
-                        noise_factor * 1.0f / buffer_height, 1.0f, 1.0f),
-                      temp_device_texture0_, texxform, nux::color::White);
+      0, 0, buffer_width, buffer_height,
+      noise_device_texture->m_Texture, noise_texxform, nux::Color (
+      noise_factor * 1.0f/buffer_width,
+      noise_factor * 1.0f/buffer_height, 1.0f, 1.0f),
+      temp_device_texture0_, texxform, nux::color::White);
   }
   else
   {
@@ -340,19 +339,19 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nu
 
     // Down size
     graphics_engine->QRP_GetCopyTexture(down_size_width, down_size_height, ds_temp_device_texture1_,
-                                        temp_device_texture0_, texxform, nux::color::White);
+     temp_device_texture0_, texxform, nux::color::White);
 
     // Blur at a lower resolution (less pixels to process)
     ds_temp_device_texture0_ = graphics_engine->QRP_GetBlurTexture(x, y, down_size_width, down_size_height,
-                                                                   ds_temp_device_texture1_, texxform, nux::color::White,
-                                                                   gaussian_sigma, blur_passes);
+     ds_temp_device_texture1_, texxform, nux::color::White,
+     gaussian_sigma, blur_passes);
 
     // // Copy to new texture
     // graphics_engine->QRP_GetCopyTexture(down_size_width, down_size_height, temp_device_texture1_, temp_device_texture0_, texxform, nux::color::White);
 
     // Up size
     graphics_engine->QRP_GetCopyTexture(buffer_width, buffer_height, temp_device_texture1_,
-                                        ds_temp_device_texture0_, texxform, nux::color::White);
+     ds_temp_device_texture0_, texxform, nux::color::White);
 
     blur_texture_ = temp_device_texture1_;
   }
@@ -361,7 +360,7 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nu
   {
     current_fbo->Activate(true);
     graphics_engine->Push2DWindow(current_fbo->GetWidth(), current_fbo->GetHeight());
-    graphics_engine->GetRenderStates().EnableScissor(true);
+    graphics_engine->GetRenderStates ().EnableScissor (true);
   }
   else
   {

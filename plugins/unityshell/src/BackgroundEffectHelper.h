@@ -70,11 +70,11 @@ public:
   static nux::Property<bool> detecting_occlusions;
 
 protected:
-  static void Register(BackgroundEffectHelper* self);
-  static void Unregister(BackgroundEffectHelper* self);
+  static void Register   (BackgroundEffectHelper* self);
+  static void Unregister (BackgroundEffectHelper* self);
 
 private:
-  void OnEnabledChanged(bool value);
+  void OnEnabledChanged (bool value);
 
   nux::BaseTexture*                       noise_texture_;
   nux::ObjectPtr<nux::IOpenGLBaseTexture> temp_device_texture0_;

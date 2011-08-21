@@ -49,21 +49,18 @@ public:
 
   typedef boost::shared_ptr <UnityFBO> Ptr;
 
-  UnityFBO(CompOutput* o);
-  ~UnityFBO();
+  UnityFBO (CompOutput* o);
+  ~UnityFBO ();
 
 public:
 
-  void bind();
-  void unbind();
+  void bind ();
+  void unbind ();
 
-  bool status();
-  void paint();
+  bool status ();
+  void paint ();
 
-  GLuint texture()
-  {
-    return mFBTexture;
-  }
+  GLuint texture () { return mFBTexture; }
 
 private:
 
@@ -71,7 +68,7 @@ private:
   GLuint   mFboHandle; // actual handle to the framebuffer_ext
   bool    mFboStatus; // did the framebuffer texture bind succeed
   GLuint   mFBTexture;
-  CompOutput* output;
+  CompOutput *output;
 };
 
 
@@ -113,9 +110,8 @@ public:
   void paintDisplay(const CompRegion& region, const GLMatrix& transform, unsigned int mask);
   void paintPanelShadow(const GLMatrix& matrix);
 
-  void donePaint();
-  void preparePaint(int ms);
-  void paintFboForOutput(CompOutput* output);
+  void preparePaint (int ms);
+  void paintFboForOutput (CompOutput* output);
 
   /* paint on top of all windows if we could not find a window
    * to paint underneath */
@@ -179,10 +175,7 @@ public:
   void NeedsRelayout();
   void ScheduleRelayout(guint timeout);
 
-  void setActiveFbo(GLuint fbo)
-  {
-    mActiveFbo = fbo;
-  }
+  void setActiveFbo(GLuint fbo) { mActiveFbo = fbo; }
 
 protected:
   const gchar* GetName();
@@ -191,7 +184,7 @@ protected:
 private:
   void SendExecuteCommand();
 
-  void EnsureKeybindings();
+  void EnsureKeybindings ();
 
   static gboolean initPluginActions(gpointer data);
   static void initLauncher(nux::NThread* thread, void* InitData);
@@ -258,7 +251,7 @@ private:
 
   unity::BGHash _bghash;
 
-  std::map <CompOutput*, UnityFBO::Ptr> mFbos;
+  std::map <CompOutput*, UnityFBO::Ptr>  mFbos;
   GLuint                                 mActiveFbo;
 
   bool   queryForShader();
@@ -297,8 +290,8 @@ public:
               const CompRegion& region,
               unsigned intmask);
 
-  void updateIconPos(int&   wx,
-                     int&   wy,
+  void updateIconPos(int   &wx,
+                     int   &wy,
                      int   x,
                      int   y,
                      float width,
@@ -312,7 +305,7 @@ public:
   bool place(CompPoint& pos);
   CompPoint tryNotIntersectLauncher(CompPoint& pos);
 
-  void paintThumbnail(nux::Geometry const& bounding, float alpha);
+  void paintThumbnail (nux::Geometry const& bounding, float alpha);
 };
 
 
