@@ -35,6 +35,26 @@ nux::Property<float> BackgroundEffectHelper::sigma_low(1.0f);
 nux::Property<bool> BackgroundEffectHelper::updates_enabled(true);
 nux::Property<bool> BackgroundEffectHelper::detecting_occlusions(false);
 
+namespace unity
+{
+  /* region must be destroyed after it is used */
+  Region geometryToRegion (nux::Geometry geo)
+  {
+    XRectangle rect;
+    Region     reg;
+
+    rect.x = geo.x;
+    rect.y = geo.y;
+    rect.width = geo.width;
+    rect.height = geo.height;
+
+    reg = XCreateRegion ();
+    XUnionRectWithRegion (&rect, reg, reg);
+
+    return reg;
+  }
+}
+
 
 BackgroundEffectHelper::BackgroundEffectHelper()
 {
@@ -105,38 +125,32 @@ for (BackgroundEffectHelper * helper : registered_list_)
       }
       else
       {
-        Region        xregion = XCreateRegion();
-        Region        tmp     = XCreateRegion();
-        Region        tmp2    = XCreateRegion();
-        nux::Geometry abs_geo  = owner->GetAbsoluteGeometry();
-        XRectangle xgeometry;
+        Region        xregion = unity::geometryToRegion (owner->GetAbsoluteGeometry());
+        Region        damage_intersection     = XCreateRegion();
+        Region        occlusion_intersection   = XCreateRegion();
 
-        xgeometry.x = abs_geo.x;
-        xgeometry.y = abs_geo.y;
-        xgeometry.width = abs_geo.width;
-        xgeometry.height = abs_geo.height;
+        XIntersectRegion(xregion, damage_region_, damage_intersection);
 
-        XUnionRectWithRegion(&xgeometry, xregion, xregion);
-        XIntersectRegion(xregion, damage_region_, tmp);
         if (occluded_region_)
         {
-          XSubtractRegion(xregion, occluded_region_, tmp2);
+          XSubtractRegion(xregion, occluded_region_, occlusion_intersection);
         }
         else
         {
-          XUnionRegion(xregion, tmp2, tmp2);
+          XUnionRegion(xregion, occlusion_intersection, occlusion_intersection);
         }
 
-        if (!XEmptyRegion(tmp2))
+        if (!XEmptyRegion(occlusion_intersection))
         {
-          if (!XEmptyRegion(tmp))
+          if (!XEmptyRegion(damage_intersection))
           {
             owner->QueueDraw();
           }
         }
 
         XDestroyRegion(xregion);
-        XDestroyRegion(tmp);
+        XDestroyRegion(damage_intersection);
+        XDestroyRegion(occlusion_intersection);
       }
     }
   }
@@ -144,7 +158,7 @@ for (BackgroundEffectHelper * helper : registered_list_)
 
 bool BackgroundEffectHelper::HasEnabledHelpers()
 {
-for (BackgroundEffectHelper * bg_effect_helper : registered_list_)
+  for (BackgroundEffectHelper * bg_effect_helper : registered_list_)
     if (bg_effect_helper->enabled)
       return true;
 
@@ -184,16 +198,8 @@ void BackgroundEffectHelper::DirtyCache()
 nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nux::Geometry geo, bool force_update)
 {
   nux::GraphicsEngine* graphics_engine = nux::GetGraphicsDisplay()->GetGraphicsEngine();
-  Region        xregion = XCreateRegion();
-  Region        tmp     = XCreateRegion();
-  XRectangle    xgeometry;
-
-  xgeometry.x = geo.x;
-  xgeometry.y = geo.y;
-  xgeometry.width = geo.width;
-  xgeometry.height = geo.height;
-
-  XUnionRectWithRegion(&xgeometry, xregion, xregion);
+  Region        xregion = unity::geometryToRegion (geo);
+  Region        damage_intersection     = XCreateRegion();
 
   bool should_update = updates_enabled() || force_update;
 
@@ -207,13 +213,13 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nu
 
   // Active blur, only update if we're forcing one or if
   // the underlying region on the backup texture has changed
-  XIntersectRegion(xregion, damage_region_, tmp);
+  XIntersectRegion(xregion, damage_region_, damage_intersection);
 
-  if (XEmptyRegion(tmp) && !force_update)
+  if (XEmptyRegion(damage_intersection) && !force_update)
     return blur_texture_;
 
   XDestroyRegion(xregion);
-  XDestroyRegion(tmp);
+  XDestroyRegion(damage_intersection);
 
   blur_geometry_ =  nux::Geometry(0, 0, graphics_engine->GetWindowWidth(), graphics_engine->GetWindowHeight()).Intersect(geo);
 

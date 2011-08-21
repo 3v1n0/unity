@@ -544,7 +544,7 @@ void UnityScreen::preparePaint(int ms)
 {
   if (BackgroundEffectHelper::blur_type == unity::BLUR_ACTIVE)
   {
-    CompRegion tmp = cScreen->currentDamage();
+    CompRegion current_damage = cScreen->currentDamage();
 
     /* Remove wholesale the nux regions to prevent cycling */
     std::vector<nux::Geometry> dirty = wt->GetDrawList();
@@ -555,18 +555,18 @@ void UnityScreen::preparePaint(int ms)
       nux::Geometry const& geo = *it;
       CompRegion           reg(geo.x, geo.y, geo.width, geo.height);
 
-      tmp -= reg;
+      current_damage -= reg;
     }
 
     nux::Geometry geo = wt->GetWindowCompositor().GetTooltipMainWindowGeometry();
     CompRegion tooltipRegion(geo.x, geo.y, geo.width, geo.height);
 
-    tmp -= tooltipRegion;
+    current_damage -= tooltipRegion;
 
     /* Now re-merge the previous intersecting region */
-    tmp = tmp.united(intersecting_pre_nux_damage_);
+    current_damage = current_damage.united(intersecting_pre_nux_damage_);
 
-    BackgroundEffectHelper::SetDamageBounds(tmp.handle());
+    BackgroundEffectHelper::SetDamageBounds(current_damage.handle());
 
     // this causes queue draws to be called, we obviously dont want to disable updates
     // because we are updating the blur, so ignore them.
@@ -585,14 +585,6 @@ void UnityScreen::preparePaint(int ms)
     damaged = false;
     damageNuxRegions();
   }
-
-}
-
-void UnityScreen::donePaint()
-{
-
-  cScreen->donePaint();
-
 
 }
 
