@@ -1402,7 +1402,9 @@ void Launcher::EndKeyShowLauncher()
 
   // it's a tap on super and we didn't use any shortcuts
   if (TapOnSuper() && !_latest_shortcut)
-    ubus_server_send_message(ubus_server_get_default(), UBUS_DASH_EXTERNAL_ACTIVATION, NULL);
+    ubus_server_send_message(ubus_server_get_default(),
+                             UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
+                             g_variant_new("(sus)", "home.lens", 0, ""));
 
   remaining_time_before_hide = BEFORE_HIDE_LAUNCHER_ON_SUPER_DURATION - CLAMP((int)(TimeDelta(&current, &_times[TIME_SUPER_PRESSED])), 0, BEFORE_HIDE_LAUNCHER_ON_SUPER_DURATION);
 

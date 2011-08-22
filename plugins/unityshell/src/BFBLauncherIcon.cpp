@@ -50,6 +50,7 @@ void BFBLauncherIcon::ActivateLauncherIcon(ActionArg arg)
   if (arg.button == 1)
   {
     UBusServer* ubus = ubus_server_get_default();
-    ubus_server_send_message(ubus, UBUS_DASH_EXTERNAL_ACTIVATION, NULL);
+    ubus_server_send_message(ubus, UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
+                             g_variant_new("(sus)", "home.lens", 0, ""));
   }
 }
