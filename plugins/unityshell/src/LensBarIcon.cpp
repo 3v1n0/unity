@@ -40,7 +40,8 @@ LensBarIcon::LensBarIcon(std::string id_, std::string icon_hint)
   SetOpacity(inactive_opacity_);
 
   active.changed.connect(sigc::mem_fun(this, &LensBarIcon::OnActiveChanged));
-  mouse_enter.connect([&](int, int, unsigned long, unsigned long) { QueueDraw(); });
+  mouse_enter.connect([&]
+(int, int, unsigned long, unsigned long) { QueueDraw(); });
   mouse_leave.connect([&](int, int, unsigned long, unsigned long) { QueueDraw(); });
 }
 
@@ -58,7 +59,7 @@ void LensBarIcon::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
   if (!texture())
     return;
 
-  float opacity = active || IsMouseInside() || HasKeyFocus() ? 1.0f : inactive_opacity_;
+  float opacity = active || IsMouseInside() ? 1.0f : inactive_opacity_;
   int width = 0, height = 0;
   GetTextureSize(&width, &height);
 

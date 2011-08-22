@@ -47,6 +47,7 @@ public:
   ~LensBar();
 
   void AddLens(Lens::Ptr& lens);
+  void Activate(std::string id);
 
   sigc::signal<void, std::string const&> lens_activated;
 

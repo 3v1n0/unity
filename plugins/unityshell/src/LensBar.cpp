@@ -87,6 +87,18 @@ void LensBar::AddLens(Lens::Ptr& lens)
   icon->mouse_click.connect([&, icon] (int x, int y, unsigned long button, unsigned long keyboard) { SetActive(icon); });
 }
 
+void LensBar::Activate(std::string id)
+{
+  for (auto icon: icons_)
+  {
+    if (icon->id == id)
+    {
+      SetActive(icon);
+      break;
+    }
+  }
+}
+
 long LensBar::ProcessEvent(nux::IEvent& ievent, long traverse_info, long event_info)
 {
   return layout_->ProcessEvent(ievent, traverse_info, event_info);

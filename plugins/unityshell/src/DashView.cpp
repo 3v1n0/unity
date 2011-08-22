@@ -55,7 +55,7 @@ DashView::DashView()
   mouse_down.connect(sigc::mem_fun(this, &DashView::OnMouseButtonDown));
 
   Relayout();
-  OnLensBarActivated("home.lens");
+  lens_bar_->Activate("home.lens");
 
   bg_effect_helper_.owner = this;
   bg_effect_helper_.enabled = false;
@@ -357,7 +357,7 @@ void DashView::OnActivateRequest(GVariant* args)
 
   g_variant_get(args, "(sus)", &id, NULL, &search_string);
 
-  OnLensBarActivated(id.Str());
+  lens_bar_->Activate(id.Str());
 
   // Reset focus
   SetFocused(false);
