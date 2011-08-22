@@ -59,6 +59,7 @@ public:
   ~DashView();
 
   void AboutToShow();
+  void AboutToHide();
   void Relayout();
 
   nux::View* default_focus() const;

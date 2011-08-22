@@ -59,7 +59,7 @@ public:
 
   bool status ();
   void paint ();
-  
+
   GLuint texture () { return mFBTexture; }
 
 private:
@@ -259,7 +259,7 @@ private:
   bool dash_is_open_;
   CompScreen::GrabHandle grab_index_;
 
-	friend class UnityWindow;
+  friend class UnityWindow;
 };
 
 class UnityWindow :
@@ -276,6 +276,12 @@ public:
   GLWindow* gWindow;
 
   nux::Geometry last_bound;
+
+  /* occlusion detection only */
+  bool glPaint(const GLWindowPaintAttrib& attrib,
+               const GLMatrix&            matrix,
+               const CompRegion&          region,
+               unsigned int              mask);
 
   /* basic window draw function */
   bool glDraw(const GLMatrix& matrix,

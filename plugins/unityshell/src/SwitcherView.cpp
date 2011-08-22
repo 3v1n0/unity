@@ -81,6 +81,12 @@ SwitcherView::~SwitcherView()
     g_source_remove(redraw_handle_);
 }
 
+void
+SwitcherView::SetupBackground()
+{
+  bg_effect_helper_.enabled = true;
+}
+
 LayoutWindowList SwitcherView::ExternalTargets ()
 {
   LayoutWindowList result = render_targets_;
@@ -462,7 +468,7 @@ void SwitcherView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     nux::Geometry blur_geo(geo_absolute.x, geo_absolute.y, base.width, base.height);
     auto blur_texture = bg_effect_helper_.GetBlurRegion(blur_geo);
 
-    if (blur_texture.IsValid() && BackgroundEffectHelper::blur_type != BLUR_NONE)
+    if (blur_texture.IsValid())
     {
       nux::TexCoordXForm texxform_blur_bg;
       texxform_blur_bg.flip_v_coord = true;
