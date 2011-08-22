@@ -180,7 +180,7 @@ PanelStyle::GetWindowButton(WindowButtonType type, WindowState state)
     if (!var)
       var = "/usr";
 
-    glib::String filename(g_build_filename(var, _theme_name, subpath.str().c_str(), NULL));
+    glib::String filename(g_build_filename(var, "share", "themes", _theme_name, subpath.str().c_str(), NULL));
 
     if (g_file_test(filename.Value(), G_FILE_TEST_EXISTS))
     {

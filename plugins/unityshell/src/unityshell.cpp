@@ -193,9 +193,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   
   optionSetAltTabForwardInitiate(boost::bind(&UnityScreen::altTabForwardInitiate, this, _1, _2, _3));
   optionSetAltTabForwardTerminate(boost::bind(&UnityScreen::altTabTerminateCommon, this, _1, _2, _3));
-  
   optionSetAltTabPrevInitiate(boost::bind(&UnityScreen::altTabPrevInitiate, this, _1, _2, _3));
-  optionSetAltTabPrevTerminate(boost::bind(&UnityScreen::altTabTerminateCommon, this, _1, _2, _3));
   
   optionSetAltTabDetailStartInitiate(boost::bind(&UnityScreen::altTabDetailStartInitiate, this, _1, _2, _3));
   optionSetAltTabDetailStopInitiate(boost::bind(&UnityScreen::altTabDetailStopInitiate, this, _1, _2, _3));
@@ -621,7 +619,9 @@ void UnityScreen::handleEvent(XEvent* event)
   if (!skip_other_plugins)
     screen->handleEvent(event);
 
-  if (!skip_other_plugins && screen->otherGrabExist("deco", "move", "switcher", "resize", NULL))
+  if (!skip_other_plugins && 
+       screen->otherGrabExist("deco", "move", "switcher", "resize", NULL) && 
+      !switcherController->Visible())
   {
     wt->ProcessForeignEvent(event, NULL);
   }
@@ -859,9 +859,9 @@ bool UnityScreen::altTabTerminateCommon(CompAction* action,
     
     bool accept_state = (state & CompAction::StateCancel) == 0;
     switcherController->Hide(accept_state);
-    action->setState (action->state() & (unsigned)~(CompAction::StateTermKey));
   }
 
+  action->setState (action->state() & (unsigned)~(CompAction::StateTermKey));
   return true;
 }
 
@@ -870,6 +870,7 @@ bool UnityScreen::altTabForwardInitiate(CompAction* action,
                                         CompOption::Vector& options)
 {
   if (switcherController->Visible())
+
     switcherController->Next();
   else
     altTabInitiateCommon(action, state, options);
@@ -883,9 +884,6 @@ bool UnityScreen::altTabPrevInitiate(CompAction* action, CompAction::State state
 {
   if (switcherController->Visible())
     switcherController->Prev();
-  else
-    altTabInitiateCommon(action, state, options);
-  action->setState(action->state() | CompAction::StateTermKey);
 
   return false;
 }
@@ -1039,42 +1037,24 @@ const gchar* UnityScreen::GetName()
   return "Unity";
 }
 
+bool isNuxWindow (CompWindow* value) 
+{ 
+  std::vector<Window> const& xwns = nux::XInputWindow::NativeHandleList();
+  auto id = value->id();
+
+  unsigned int size = xwns.size();
+  for (unsigned int i = 0; i < size; ++i)
+  {
+    if (xwns[i] == id)
+      return true;
+  }
+  return false;
+}
+
 const CompWindowList& UnityScreen::getWindowPaintList()
 {
   CompWindowList& pl = _withRemovedNuxWindows = cScreen->getWindowPaintList();
-  CompWindowList::reverse_iterator it = pl.rbegin();
-  CompWindowList::reverse_iterator end = pl.rend();
-  std::vector<Window> const& xwns = nux::XInputWindow::NativeHandleList();
-
-  unsigned int size = xwns.size();
-
-  while (it != end)
-  {
-    bool erased = false;
-    auto id = (*it)->id();
-    for (unsigned int i = 0; i < size; ++i)
-    {
-      if (xwns[i] == id)
-      {
-        /* Increment the reverse_iterator to ensure
-	       * it is valid, then it++ returns the old
-         * position */
-        CompWindowList::reverse_iterator oit = it++;
-        /* Get the base and offset by -1 since
-         * &*(reverse_iterator(i)) == &*(i - 1)) */
-        CompWindowList::iterator eit = --(oit.base ());
-
-        erased = true;
-
-        /* Remove that from the list */
-        pl.erase(eit);
-        break;
-      }
-    }
-
-    if (!erased)
-      it++;
-  }
+  pl.remove_if(isNuxWindow);
 
   return pl;
 }

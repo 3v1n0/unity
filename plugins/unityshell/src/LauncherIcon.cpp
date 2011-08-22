@@ -799,10 +799,10 @@ LauncherIcon::SetQuirk(LauncherIcon::Quirk quirk, bool value)
 {
   if (_quirks[quirk] == value)
     return;
-    
+      
   if (quirk == QUIRK_PULSE_ONCE)
     _launcher->HideMachine()->SetQuirk(LauncherHideMachine::LAUNCHER_PULSE, value);
-
+  
   _quirks[quirk] = value;
   if (quirk == QUIRK_VISIBLE)
     Launcher::SetTimeStruct(&(_quirk_times[quirk]), &(_quirk_times[quirk]), ANIM_DURATION_SHORT);

@@ -96,18 +96,18 @@ PlacesGroup::PlacesGroup()
   SetLayout(_group_layout);
 
   /* don't need to disconnect these signals as they are disconnected when this object destroys the contents */
-  _icon->OnMouseClick.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseClick));
-  _icon->OnMouseEnter.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseEnter));
-  _icon->OnMouseLeave.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseLeave));
-  _name->OnMouseClick.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseClick));
-  _name->OnMouseEnter.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseEnter));
-  _name->OnMouseLeave.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseLeave));
-  _expand_label->OnMouseClick.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseClick));
-  _expand_label->OnMouseEnter.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseEnter));
-  _expand_label->OnMouseLeave.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseLeave));
-  _expand_icon->OnMouseClick.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseClick));
-  _expand_icon->OnMouseEnter.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseEnter));
-  _expand_icon->OnMouseLeave.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseLeave));
+  _icon->mouse_click.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseClick));
+  _icon->mouse_enter.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseEnter));
+  _icon->mouse_leave.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseLeave));
+  _name->mouse_click.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseClick));
+  _name->mouse_enter.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseEnter));
+  _name->mouse_leave.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseLeave));
+  _expand_label->mouse_click.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseClick));
+  _expand_label->mouse_enter.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseEnter));
+  _expand_label->mouse_leave.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseLeave));
+  _expand_icon->mouse_click.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseClick));
+  _expand_icon->mouse_enter.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseEnter));
+  _expand_icon->mouse_leave.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseLeave));
 }
 
 PlacesGroup::~PlacesGroup()

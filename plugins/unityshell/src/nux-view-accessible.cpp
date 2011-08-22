@@ -142,9 +142,9 @@ nux_view_accessible_initialize(AtkObject* accessible,
 
   /* Some extra focus things as Focusable is not used on Launcher and
      some BaseWindow */
-  view->OnStartKeyboardReceiver.connect(sigc::bind(sigc::ptr_fun(on_change_keyboard_receiver_cb),
+  view->begin_key_focus.connect(sigc::bind(sigc::ptr_fun(on_change_keyboard_receiver_cb),
                                                    accessible, TRUE));
-  view->OnStopKeyboardReceiver.connect(sigc::bind(sigc::ptr_fun(on_change_keyboard_receiver_cb),
+  view->end_key_focus.connect(sigc::bind(sigc::ptr_fun(on_change_keyboard_receiver_cb),
                                                   accessible, FALSE));
 }
 

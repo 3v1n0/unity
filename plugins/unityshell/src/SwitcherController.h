@@ -102,6 +102,7 @@ private:
   nux::Geometry workarea_;
 
   nux::BaseWindow* view_window_;
+  nux::HLayout* main_layout_;
 
   bool visible_;
   guint show_timer_;
