@@ -538,29 +538,15 @@ void UnityScreen::preparePaint(int ms)
 {
   if (BackgroundEffectHelper::blur_type == unity::BLUR_ACTIVE)
   {
-    CompRegion current_damage = cScreen->currentDamage();
-
-    /* Remove wholesale the nux regions to prevent cycling */
-    std::vector<nux::Geometry> dirty = wt->GetDrawList();
-
-    for (std::vector<nux::Geometry>::iterator it = dirty.begin(), end = dirty.end();
-         it != end; ++it)
+    if (cScreen->damageMask() & COMPOSITE_SCREEN_DAMAGE_ALL_MASK)
     {
-      nux::Geometry const& geo = *it;
-      CompRegion           reg(geo.x, geo.y, geo.width, geo.height);
-
-      current_damage -= reg;
+      BackgroundEffectHelper::SetDamageBounds(CompRegion(screen->currentOutputDev().workArea()).handle());
     }
-
-    nux::Geometry geo = wt->GetWindowCompositor().GetTooltipMainWindowGeometry();
-    CompRegion tooltipRegion(geo.x, geo.y, geo.width, geo.height);
-
-    current_damage -= tooltipRegion;
-
-    /* Now re-merge the previous intersecting region */
-    current_damage = current_damage.united(intersecting_pre_nux_damage_);
-
-    BackgroundEffectHelper::SetDamageBounds(current_damage.handle());
+    else
+    {
+      CompRegion current_damage = cScreen->currentDamage();
+      BackgroundEffectHelper::SetDamageBounds(current_damage.handle());
+    }
 
     // this causes queue draws to be called, we obviously dont want to disable updates
     // because we are updating the blur, so ignore them.
@@ -586,7 +572,6 @@ void UnityScreen::preparePaint(int ms)
 void UnityScreen::damageNuxRegions()
 {
   CompRegion nux_damage;
-  CompRegion intersecting_nux_damage;
 
   if (damaged)
     return;
@@ -594,34 +579,21 @@ void UnityScreen::damageNuxRegions()
   std::vector<nux::Geometry> dirty = wt->GetDrawList();
   damaged = true;
 
-  intersecting_pre_nux_damage_ = CompRegion();
-
   for (std::vector<nux::Geometry>::iterator it = dirty.begin(), end = dirty.end();
        it != end; ++it)
   {
     nux::Geometry const& geo = *it;
     nux_damage = CompRegion(geo.x, geo.y, geo.width, geo.height);
-    intersecting_nux_damage = nux_damage.intersected(cScreen->currentDamage());
-
-    intersecting_pre_nux_damage_ += intersecting_nux_damage;
     cScreen->damageRegion(nux_damage);
   }
 
   nux::Geometry geo = wt->GetWindowCompositor().GetTooltipMainWindowGeometry();
-
   nux_damage = CompRegion(geo.x, geo.y, geo.width, geo.height);
-  intersecting_nux_damage = cScreen->currentDamage().intersected(nux_damage);
-  intersecting_pre_nux_damage_ += intersecting_nux_damage;
-
   cScreen->damageRegion(nux_damage);
 
   geo = lastTooltipArea;
-
   nux_damage = CompRegion(lastTooltipArea.x, lastTooltipArea.y,
                           lastTooltipArea.width, lastTooltipArea.height);
-  intersecting_nux_damage = cScreen->currentDamage().intersected(nux_damage);
-  intersecting_pre_nux_damage_ += intersecting_nux_damage;
-
   cScreen->damageRegion(nux_damage);
 
   wt->ClearDrawList();

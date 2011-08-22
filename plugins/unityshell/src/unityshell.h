@@ -243,7 +243,6 @@ private:
   bool    _key_nav_mode_requested;
   CompOutput* _last_output;
   CompWindowList _withRemovedNuxWindows;
-  CompRegion     intersecting_pre_nux_damage_;
 
   DesktopLauncherIcon* switcher_desktop_icon;
 

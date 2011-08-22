@@ -139,7 +139,7 @@ void BackgroundEffectHelper::QueueDrawOnOwners()
     nux::View* owner = helper->owner();
     if (owner)
     {
-      if (!damage_region_)
+      if (!damage_region_ || XEmptyRegion(damage_region_))
       {
         owner->QueueDraw();
       }
