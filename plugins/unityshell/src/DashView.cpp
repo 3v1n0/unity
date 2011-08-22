@@ -534,6 +534,11 @@ bool DashView::LaunchApp(std::string const& appname)
   return ret;
 }
 
+void DashView::DisableBlur()
+{
+  bg_effect_helper_.blur_type = BLUR_NONE;
+}
+
 // Keyboard navigation
 bool DashView::AcceptKeyNavFocus()
 {

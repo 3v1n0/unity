@@ -61,6 +61,7 @@ public:
   void AboutToShow();
   void AboutToHide();
   void Relayout();
+  void DisableBlur();
 
   nux::View* default_focus() const;
 

@@ -59,6 +59,7 @@ void TestRunner::Init ()
   layout = new nux::VLayout(NUX_TRACKER_LOCATION);
 
   DashView* view = new DashView();
+  view->DisableBlur();
   view->SetMinMaxSize(1024, 600);
 
   layout->AddView (view, 1, nux::MINOR_POSITION_CENTER);
