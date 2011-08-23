@@ -360,7 +360,7 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
     if ((_is_inside || _last_active_view || _show_now_activated) && have_valid_entries)
     {
-      if (_gradient_texture == NULL)
+      if (_gradient_texture.IsNull())
       {
         nux::NTextureData texture_data(nux::BITFMT_R8G8B8A8, geo.width, 1, 1);
         nux::ImageSurface surface = texture_data.GetSurface(0);
