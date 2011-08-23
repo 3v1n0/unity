@@ -27,10 +27,9 @@
 
 class LauncherEntryRemoteModel : public sigc::trackable
 {
-
 public:
-
-  static LauncherEntryRemoteModel* GetDefault();
+  LauncherEntryRemoteModel();
+  ~LauncherEntryRemoteModel();
 
   guint                Size();
   LauncherEntryRemote* LookupByUri(const gchar* app_uri);
@@ -47,9 +46,6 @@ public:
   sigc::signal<void, LauncherEntryRemote*> entry_removed;
 
 private:
-  LauncherEntryRemoteModel();
-  ~LauncherEntryRemoteModel();
-
   static void on_launcher_entry_signal_received(GDBusConnection* connection,
                                                 const gchar*     sender_name,
                                                 const gchar*     object_path,
