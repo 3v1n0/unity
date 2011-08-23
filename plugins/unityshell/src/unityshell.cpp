@@ -1370,6 +1370,7 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       break;
     case UnityshellOptions::ShowMinimizedWindows:
       compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>::setFunctions (optionGetShowMinimizedWindows ());
+      break;
     default:
       break;
   }
