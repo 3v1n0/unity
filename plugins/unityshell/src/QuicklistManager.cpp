@@ -39,8 +39,7 @@ QuicklistManager* QuicklistManager::Default()
 
 void QuicklistManager::Destroy()
 {
-  if (_default)
-    delete _default;
+  delete _default;
   _default = 0;
 }
 

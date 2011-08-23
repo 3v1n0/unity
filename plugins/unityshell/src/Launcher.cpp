@@ -314,11 +314,6 @@ Launcher::Launcher(nux::BaseWindow* parent,
                                this,
                                NULL);
 
-  _settings = g_settings_new("com.canonical.Unity.Launcher");
-  _settings_changed_id = g_signal_connect(
-                           _settings, "changed", (GCallback)(Launcher::SettingsChanged), this);
-  SettingsChanged(_settings, (gchar*)"shows-on-edge", this);
-
   SetDndEnabled(false, true);
 
   icon_renderer = AbstractIconRenderer::Ptr(new IconRenderer());
@@ -328,6 +323,9 @@ Launcher::Launcher(nux::BaseWindow* parent,
   ubus_server_send_message (ubus, UBUS_BACKGROUND_REQUEST_COLOUR_EMIT, NULL);
 
   SetAcceptMouseWheelEvent(true);
+
+  bg_effect_helper_.owner = this;
+  bg_effect_helper_.enabled = true;
 }
 
 Launcher::~Launcher()
@@ -350,11 +348,6 @@ Launcher::~Launcher()
     g_source_remove(_ignore_repeat_shortcut_handle);
   if (_super_hide_launcher_handle)
     g_source_remove(_super_hide_launcher_handle);
-
-  if (_settings_changed_id != 0)
-    g_signal_handler_disconnect((gpointer) _settings, _settings_changed_id);
-  g_object_unref(_settings);
-
   if (_launcher_animation_timeout > 0)
     g_source_remove(_launcher_animation_timeout);
     
@@ -382,13 +375,6 @@ const gchar*
 Launcher::GetName()
 {
   return "Launcher";
-}
-
-void
-Launcher::SettingsChanged(GSettings* settings, char* key, Launcher* self)
-{
-  bool show_on_edge = g_settings_get_boolean(settings, "shows-on-edge") ? true : false;
-  self->_hide_machine->SetShowOnEdge(show_on_edge);
 }
 
 void
@@ -1512,10 +1498,14 @@ void Launcher::SetHidden(bool hidden)
   else
     _hide_machine->SetQuirk(LauncherHideMachine::MOUSE_MOVE_POST_REVEAL, false);
 
-  if (hidden)
-  {
+  if (hidden)  {
+    bg_effect_helper_.enabled = false;
     _hide_machine->SetQuirk(LauncherHideMachine::MT_DRAG_OUT, false);
     SetStateMouseOverLauncher(false);
+  }
+  else
+  {
+    bg_effect_helper_.enabled = true;
   }
 
   _postreveal_mousemove_delta_x = 0;
@@ -2047,9 +2037,43 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   GfxContext.PushClippingRectangle(base);
   gPainter.PushDrawColorLayer(GfxContext, base, nux::Color(0x00000000), true, ROP);
 
+  GfxContext.GetRenderStates().SetBlend(true);
+  GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
+  GfxContext.GetRenderStates().SetColorMask(true, true, true, true);
+
+  int push_count = 1;
+
   // clip vertically but not horizontally
   GfxContext.PushClippingRectangle(nux::Geometry(base.x, bkg_box.y, base.width, bkg_box.height));
   
+  if (BackgroundEffectHelper::blur_type != unity::BLUR_NONE && (bkg_box.x + bkg_box.width > 0))
+  {
+    nux::Geometry geo_absolute = GetAbsoluteGeometry();
+    
+    nux::Geometry blur_geo(geo_absolute.x, geo_absolute.y, base.width, base.height);
+    auto blur_texture = bg_effect_helper_.GetBlurRegion(blur_geo);
+
+    if (blur_texture.IsValid())
+    {
+      nux::TexCoordXForm texxform_blur_bg;
+      texxform_blur_bg.flip_v_coord = true;
+      texxform_blur_bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+      texxform_blur_bg.uoffset = ((float) base.x) / geo_absolute.width;
+      texxform_blur_bg.voffset = ((float) base.y) / geo_absolute.height;
+
+      GfxContext.PushClippingRectangle(bkg_box);
+      gPainter.PushDrawTextureLayer(GfxContext, base,
+                                    blur_texture,
+                                    texxform_blur_bg,
+                                    nux::color::White,
+                                    true,
+                                    ROP);
+      GfxContext.PopClippingRectangle();
+      
+      push_count++;
+    }
+  }
+
   if (_dash_is_open)
   {
     gPainter.Paint2DQuadColor(GfxContext, bkg_box, _background_color);
@@ -2102,7 +2126,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   GfxContext.GetRenderStates().SetColorMask(true, true, true, true);
   GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
 
-  gPainter.PopBackground();
+  gPainter.PopBackground(push_count);
   GfxContext.PopClippingRectangle();
 }
 

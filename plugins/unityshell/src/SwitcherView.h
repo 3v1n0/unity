@@ -54,6 +54,8 @@ public:
   void SetModel(SwitcherModel::Ptr model);
   SwitcherModel::Ptr GetModel();
 
+  void SetupBackground ();
+
   nux::Property<int> border_size;
   nux::Property<int> flat_spacing;
   nux::Property<int> icon_size;

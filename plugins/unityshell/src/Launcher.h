@@ -28,6 +28,7 @@
 #include <Nux/BaseWindow.h>
 
 #include "AbstractIconRenderer.h"
+#include "BackgroundEffectHelper.h"
 #include "DNDCollectionWindow.h"
 #include "DndData.h"
 #include "GeisAdapter.h"
@@ -363,8 +364,6 @@ private:
 
   gboolean TapOnSuper();
 
-  static void SettingsChanged(GSettings* settings, gchar* key, Launcher* self);
-  
   void OnDNDDataCollected(const std::list<char*>& mimes);
 
   nux::HLayout* m_Layout;
@@ -482,14 +481,13 @@ private:
 
   bool _initial_drag_animation;
 
-  GSettings* _settings;
-  guint32 _settings_changed_id;
-
   guint _ubus_handles[4];
 
   nux::Color _background_color;
   bool _dash_is_open;
+  
   AbstractIconRenderer::Ptr icon_renderer;
+  BackgroundEffectHelper bg_effect_helper_;
 };
 
 #endif // LAUNCHER_H

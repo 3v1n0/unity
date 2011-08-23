@@ -145,6 +145,7 @@ void SwitcherController::ConstructView()
   main_layout_->AddView(view_.GetPointer(), 1);
 
   view_window_->SetGeometry(workarea_);
+  view_->SetupBackground ();
   view_window_->ShowWindow(true);
 }
 
@@ -172,11 +173,11 @@ void SwitcherController::Hide(bool accept_state)
         if (selection->GetQuirk (AbstractLauncherIcon::QUIRK_ACTIVE))
         {
           selection->Activate(ActionArg (ActionArg::SWITCHER, 0, model_->DetailXids()[0]));
-        } 
+        }
         else
         {
           selection->Activate(ActionArg(ActionArg::SWITCHER, 0));
-        }     
+        }
       }
     }
   }

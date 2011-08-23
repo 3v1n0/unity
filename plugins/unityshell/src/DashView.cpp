@@ -58,6 +58,7 @@ DashView::DashView()
   OnLensBarActivated("home");
 
   bg_effect_helper_.owner = this;
+  bg_effect_helper_.enabled = false;
 }
 
 DashView::~DashView()
@@ -66,8 +67,13 @@ DashView::~DashView()
 void DashView::AboutToShow()
 {
   ubus_manager_.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
-  bg_effect_helper_.DirtyCache ();
+  bg_effect_helper_.enabled = true;
   search_bar_->text_entry()->SelectAll();
+}
+
+void DashView::AboutToHide()
+{
+  bg_effect_helper_.enabled = false;
 }
 
 void DashView::SetupBackground()
@@ -526,6 +532,11 @@ bool DashView::LaunchApp(std::string const& appname)
 
   g_free(id);
   return ret;
+}
+
+void DashView::DisableBlur()
+{
+  bg_effect_helper_.blur_type = BLUR_NONE;
 }
 
 // Keyboard navigation
