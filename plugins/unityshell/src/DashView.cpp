@@ -404,8 +404,6 @@ void DashView::OnLensAdded(Lens::Ptr& lens)
 
   lens->activated.connect(sigc::mem_fun(this, &DashView::OnUriActivatedReply));
   lens->search_finished.connect(sigc::mem_fun(this, &DashView::OnSearchFinished));
-
-  lens->Search("");
 }
 
 void DashView::OnLensBarActivated(std::string const& id)
