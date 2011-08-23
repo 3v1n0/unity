@@ -115,7 +115,7 @@ namespace unity {
       normal_ = new nux::CairoWrapper(GetGeometry(), sigc::bind(sigc::mem_fun(this, &FilterMultiRangeButton::RedrawTheme), nux::State::NUX_STATE_NORMAL));
     }
 
-    SetMinimumHeight(32);
+    //SetMinimumHeight(32);
   }
 
   void FilterMultiRangeButton::RedrawTheme (nux::Geometry const& geom, cairo_t *cr, nux::State faked_state)
