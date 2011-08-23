@@ -81,7 +81,6 @@ compiz::CompizMinimizedWindowHandler<Screen, Window>::CompizMinimizedWindowHandl
   priv = new PrivateCompizMinimizedWindowHandler ();
 
   priv->mWindow = w;
-  priv->mWindow->incrementUnmapReference ();
 }
 
 template <typename Screen, typename Window>
