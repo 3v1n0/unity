@@ -665,6 +665,9 @@ void UnityScreen::handleCompizEvent(const char* plugin,
     launcher->EnableCheckWindowOverLauncher(true);
     launcher->CheckWindowOverLauncher();
   }
+
+  compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>::handleCompizEvent (plugin, event, option);
+
   screen->handleCompizEvent(plugin, event, option);
 }
 
@@ -1091,6 +1094,15 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
                           const CompRegion& region,
                           unsigned int mask)
 {
+  if (mMinimizeHandler)
+  {
+    typedef compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow> minimized_window_handler_unity;
+
+    compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>::Ptr compizMinimizeHandler =
+        boost::dynamic_pointer_cast <minimized_window_handler_unity> (mMinimizeHandler);
+    mask |= compizMinimizeHandler->getPaintMask ();
+  }
+
   /* Don't bother detecting occlusions if we're not doing updates
    * or we don't want to repaint the shell this pass. We also
    * have a global flag detecting_occlusions which is set to false
@@ -1190,6 +1202,35 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
   }
 
   return ret;
+}
+
+void
+UnityWindow::minimize ()
+{
+  if (!window->managed ())
+    return;
+
+  if (!mMinimizeHandler)
+  {
+    mMinimizeHandler = compiz::MinimizedWindowHandler::Ptr (new compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow> (window));
+    mMinimizeHandler->minimize ();
+  }
+}
+
+void
+UnityWindow::unminimize ()
+{
+  if (mMinimizeHandler)
+  {
+    mMinimizeHandler->unminimize ();
+    mMinimizeHandler.reset ();
+  }
+}
+
+bool
+UnityWindow::minimized ()
+{
+  return mMinimizeHandler.get () != NULL;
 }
 
 /* Called whenever a window is mapped, unmapped, minimized etc */
@@ -1327,6 +1368,8 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
     case UnityshellOptions::AltTabTimeout:
       switcherController->detail_on_timeout = optionGetAltTabTimeout();
       break;
+    case UnityshellOptions::ShowMinimizedWindows:
+      compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>::setFunctions (optionGetShowMinimizedWindows ());
     default:
       break;
   }
@@ -1699,6 +1742,25 @@ UnityWindow::UnityWindow(CompWindow* window)
 {
   WindowInterface::setHandler(window);
   GLWindowInterface::setHandler(gWindow);
+
+  if (UnityScreen::get (screen)->optionGetShowMinimizedWindows ())
+  {
+    bool wasMinimized = window->minimized ();
+    if (wasMinimized)
+      window->unminimize ();
+    window->minimizeSetEnabled (this, true);
+    window->unminimizeSetEnabled (this, true);
+    window->minimizedSetEnabled (this, true);
+
+    if (wasMinimized)
+      window->minimize ();
+  }
+  else
+  {
+    window->minimizeSetEnabled (this, false);
+    window->unminimizeSetEnabled (this, false);
+    window->minimizedSetEnabled (this, false);
+  }
 }
 
 UnityWindow::~UnityWindow()
@@ -1708,6 +1770,17 @@ UnityWindow::~UnityWindow()
     us->newFocusedWindow = NULL;
   if (us->lastFocusedWindow && (UnityWindow::get(us->lastFocusedWindow) == this))
     us->lastFocusedWindow = NULL;
+
+  if (mMinimizeHandler)
+  {
+    unminimize ();
+    window->minimizeSetEnabled (this, false);
+    window->unminimizeSetEnabled (this, false);
+    window->minimizedSetEnabled (this, false);
+    window->minimize ();
+
+    mMinimizeHandler.reset ();
+  }
 }
 
 /* vtable init */

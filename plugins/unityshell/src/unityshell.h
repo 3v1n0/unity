@@ -43,6 +43,8 @@
 #include <sigc++/sigc++.h>
 #include <boost/shared_ptr.hpp>
 
+#include "compizminimizedwindowhandler.h"
+
 class UnityFBO
 {
 public:
@@ -113,6 +115,12 @@ public:
   void preparePaint (int ms);
   void paintFboForOutput (CompOutput *output);
 
+  void
+  handleCompizEvent (const char         *pluginName,
+                     const char         *eventName,
+                     CompOption::Vector &o);
+
+
   /* paint on top of all windows if we could not find a window
    * to paint underneath */
   bool glPaintOutput(const GLScreenPaintAttrib&,
@@ -133,9 +141,6 @@ public:
 
   /* handle X11 events */
   void handleEvent(XEvent*);
-  void handleCompizEvent(const char* plugin,
-                         const char* event,
-                         CompOption::Vector& option);
 
   bool showLauncherKeyInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool showLauncherKeyTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options);
@@ -277,7 +282,12 @@ public:
 
   nux::Geometry last_bound;
 
-  /* occlusion detection only */
+  void minimize ();
+  void unminimize ();
+  bool minimized ();
+
+  /* occlusion detection
+   * and window hiding */
   bool glPaint(const GLWindowPaintAttrib& attrib,
                const GLMatrix&            matrix,
                const CompRegion&          region,
@@ -305,6 +315,8 @@ public:
   CompPoint tryNotIntersectLauncher(CompPoint& pos);
 
   void paintThumbnail (nux::Geometry const& bounding, float alpha);
+
+  compiz::MinimizedWindowHandler::Ptr mMinimizeHandler;
 };
 
 
