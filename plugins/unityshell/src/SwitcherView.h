@@ -30,6 +30,7 @@
 #include <sigc++/sigc++.h>
 
 #include <Nux/View.h>
+#include <NuxCore/ObjectPtr.h>
 #include <NuxCore/Property.h>
 
 using namespace unity::ui;
@@ -43,6 +44,7 @@ class SwitcherView : public nux::View
 {
   NUX_DECLARE_OBJECT_TYPE(SwitcherView, nux::View);
 public:
+  typedef nux::ObjectPtr<SwitcherView> Ptr;
 
   SwitcherView(NUX_FILE_LINE_PROTO);
   virtual ~SwitcherView();

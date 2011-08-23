@@ -32,8 +32,7 @@ namespace switcher
 {
 
 SwitcherController::SwitcherController()
-  :  view_(0)
-  ,  view_window_(0)
+  :  view_window_(0)
   ,  visible_(false)
   ,  show_timer_(0)
   ,  detail_timer_(0)
@@ -50,6 +49,7 @@ SwitcherController::SwitcherController()
 
 SwitcherController::~SwitcherController()
 {
+  view_window_->UnReference();
 }
 
 void SwitcherController::OnBackgroundUpdate (GVariant *data, SwitcherController *self)
@@ -119,21 +119,20 @@ void SwitcherController::OnModelSelectionChanged(AbstractLauncherIcon *icon)
   {
     if (detail_timer_)
       g_source_remove(detail_timer_);
-    
+
     detail_timer_ = g_timeout_add(detail_timeout_length, &SwitcherController::OnDetailTimer, this);
   }
 }
 
 void SwitcherController::ConstructView()
 {
-  view_ = new SwitcherView();
+  view_ = SwitcherView::Ptr(new SwitcherView());
   view_->SetModel(model_);
   view_->background_color = bg_color_;
 
   if (!view_window_)
   {
     main_layout_ = new nux::HLayout();
-    
     main_layout_->SetVerticalExternalMargin(0);
     main_layout_->SetHorizontalExternalMargin(0);
 
@@ -142,8 +141,8 @@ void SwitcherController::ConstructView()
     view_window_->SetLayout(main_layout_);
     view_window_->SetBackgroundColor(nux::Color(0x00000000));
   }
-  
-  main_layout_->AddView(view_, 1);
+
+  main_layout_->AddView(view_.GetPointer(), 1);
 
   view_window_->SetGeometry(workarea_);
   view_window_->ShowWindow(true);
@@ -186,7 +185,7 @@ void SwitcherController::Hide(bool accept_state)
   visible_ = false;
 
   if (view_)
-    main_layout_->RemoveChildObject(view_);
+    main_layout_->RemoveChildObject(view_.GetPointer());
 
   if (view_window_)
     view_window_->ShowWindow(false);
@@ -195,7 +194,7 @@ void SwitcherController::Hide(bool accept_state)
     g_source_remove(show_timer_);
   show_timer_ = 0;
 
-  view_ = 0;
+  view_.Release();
 }
 
 bool SwitcherController::Visible()
@@ -268,9 +267,9 @@ void SwitcherController::Prev()
   }
 }
 
-SwitcherView * SwitcherController::GetView()
+SwitcherView* SwitcherController::GetView()
 {
-  return view_;
+  return view_.GetPointer();
 }
 
 void SwitcherController::SetDetail(bool value)
