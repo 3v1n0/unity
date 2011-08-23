@@ -59,6 +59,9 @@ public:
 
 private:
   void SetupViews();
+  void SetupCategories();
+  void SetupResults();
+  void SetupFilters();
 
   void OnCategoryAdded(Category const& category);
   void OnResultAdded(Result const& result);

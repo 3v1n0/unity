@@ -51,19 +51,11 @@ LensView::LensView(Lens::Ptr lens)
   , lens_(lens)
 {
   SetupViews();
+  SetupCategories();
+  SetupResults();
+  SetupFilters();
 
-  Categories::Ptr categories = lens_->categories;
-  categories->category_added.connect(sigc::mem_fun(this, &LensView::OnCategoryAdded));
-
-  Results::Ptr results = lens_->results;
-  results->result_added.connect(sigc::mem_fun(this, &LensView::OnResultAdded));
-  results->result_removed.connect(sigc::mem_fun(this, &LensView::OnResultRemoved));
-
-  Filters::Ptr filters = lens_->filters;
-  filters->filter_added.connect(sigc::mem_fun(this, &LensView::OnFilterAdded));
-  filters->filter_removed.connect(sigc::mem_fun(this, &LensView::OnFilterRemoved));
-
-  PlacesStyle::GetDefault()->columns_changed.connect(sigc::mem_fun(this, &LensView::OnColumnsChanged));
+ PlacesStyle::GetDefault()->columns_changed.connect(sigc::mem_fun(this, &LensView::OnColumnsChanged));
 
   search_string.changed.connect([&](std::string const& search) { lens_->Search(search);  });
   filters_expanded.changed.connect([&](bool expanded) { fscroll_view_->SetVisible(expanded); ubus_manager_.SendMessage(UBUS_PLACE_VIEW_QUEUE_DRAW); });
@@ -98,6 +90,35 @@ void LensView::SetupViews()
   fscroll_layout_->AddView(filter_bar_);
 
   SetLayout(layout_);
+}
+
+void LensView::SetupCategories()
+{
+  Categories::Ptr categories = lens_->categories;
+  categories->category_added.connect(sigc::mem_fun(this, &LensView::OnCategoryAdded));
+
+  for (unsigned int i = 0; i < categories->count(); ++i)
+    OnCategoryAdded(categories->RowAtIndex(i));
+}
+
+void LensView::SetupResults()
+{
+  Results::Ptr results = lens_->results;
+  results->result_added.connect(sigc::mem_fun(this, &LensView::OnResultAdded));
+  results->result_removed.connect(sigc::mem_fun(this, &LensView::OnResultRemoved));
+
+  for (unsigned int i = 0; i < results->count(); ++i)
+    OnResultAdded(results->RowAtIndex(i));
+}
+
+void LensView::SetupFilters()
+{
+  Filters::Ptr filters = lens_->filters;
+  filters->filter_added.connect(sigc::mem_fun(this, &LensView::OnFilterAdded));
+  filters->filter_removed.connect(sigc::mem_fun(this, &LensView::OnFilterRemoved));
+
+  for (unsigned int i = 0; i < filters->count(); ++i)
+    OnFilterAdded(filters->FilterAtIndex(i));
 }
 
 void LensView::OnCategoryAdded(Category const& category)
