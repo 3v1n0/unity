@@ -107,7 +107,7 @@ compiz::X11TransientForReader::isGroupTransientFor (unsigned int clientLeader)
 	    strings.push_back ("_NET_WM_WINDOW_TYPE_MENU");
 	    strings.push_back ("_NET_WM_WINDOW_TYPE_DIALOG");
 
-	    foreach (std::string &s, strings)
+      for (std::string &s : strings)
 	    {
         atoms.push_back (XInternAtom (priv->mDpy, s.c_str (), 0));
 	    }

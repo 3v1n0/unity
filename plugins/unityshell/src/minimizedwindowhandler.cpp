@@ -103,7 +103,7 @@ compiz::MinimizedWindowHandler::getTransients ()
      * windows, but it doesn't matter anyways in this
      * [external] case) */
 
-  foreach (Window &w, clientList)
+  for (Window &w : clientList)
   {
     X11TransientForReader *reader = new X11TransientForReader (priv->mDpy, w);
 
@@ -125,7 +125,7 @@ compiz::MinimizedWindowHandler::minimize ()
 
   std::vector<unsigned int> transients = getTransients ();
 
-  foreach (unsigned int &w, transients)
+  for (unsigned int &w : transients)
   {
     compiz::MinimizedWindowHandler *mw  = new compiz::MinimizedWindowHandler (priv->mDpy, w);
 
@@ -149,7 +149,7 @@ compiz::MinimizedWindowHandler::unminimize ()
 
   std::vector<unsigned int> transients = getTransients ();
 
-  foreach (unsigned int &w, transients)
+  for (unsigned int &w : transients)
   {
     compiz::MinimizedWindowHandler *mw  = new compiz::MinimizedWindowHandler (priv->mDpy, w);
 

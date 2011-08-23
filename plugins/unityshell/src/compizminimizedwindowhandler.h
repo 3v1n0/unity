@@ -101,7 +101,7 @@ compiz::CompizMinimizedWindowHandler<Screen, Window>::getTransients ()
 {
   std::vector <unsigned int> transients;
 
-  foreach (CompWindow *w, screen->windows ())
+  for (CompWindow *w : screen->windows ())
   {
     compiz::CompTransientForReader *reader = new compiz::CompTransientForReader (w);
 
@@ -138,7 +138,7 @@ compiz::CompizMinimizedWindowHandler<Screen, Window>::minimize ()
   priv->mWindow->windowNotify (CompWindowNotifyMinimize);
   priv->mWindow->changeState (priv->mWindow->state () | CompWindowStateHiddenMask);
 
-  foreach (unsigned int &w, transients)
+  for (unsigned int &w : transients)
   {
     CompWindow *win = screen->findWindow (w);
 
@@ -172,7 +172,7 @@ compiz::CompizMinimizedWindowHandler<Screen, Window>::unminimize ()
   priv->mWindow->changeState (priv->mWindow->state () & ~CompWindowStateHiddenMask);
   priv->mWindow->windowNotify (CompWindowNotifyShow);
 
-  foreach (unsigned int &w, transients)
+  for (unsigned int &w : transients)
   {
     CompWindow *win = screen->findWindow (w);
 
@@ -199,7 +199,7 @@ compiz::CompizMinimizedWindowHandler<Screen, Window>::getPaintMask ()
 {
   bool doMask = true;
 
-  foreach (CompWindow *w, minimizingWindows)
+  for (CompWindow *w : minimizingWindows)
   {
     if (w->id () == priv->mWindow->id ())
 	    doMask = false;
@@ -244,7 +244,7 @@ template <typename Screen, typename Window>
 void
 compiz::CompizMinimizedWindowHandler<Screen, Window>::setFunctions (bool keepMinimized)
 {
-  foreach (CompWindow *w, screen->windows ())
+  for (CompWindow *w : screen->windows ())
   {
     bool m = w->minimized ();
 

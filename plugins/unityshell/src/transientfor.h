@@ -27,11 +27,6 @@
 #include <vector>
 #include <list>
 #include <string>
-#include <boost/foreach.hpp>
-
-#ifndef foreach
-#define foreach BOOST_FOREACH
-#endif
 
 namespace compiz
 {
