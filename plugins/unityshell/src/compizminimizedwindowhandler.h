@@ -107,7 +107,7 @@ compiz::CompizMinimizedWindowHandler<Screen, Window>::getTransients ()
 
     if (reader->isTransientFor (priv->mWindow->id ()) ||
         reader->isGroupTransientFor (priv->mWindow->id ()))
-	    transients.push_back (w->id ());
+      transients.push_back (w->id ());
 
     delete reader;
   }
@@ -177,7 +177,7 @@ compiz::CompizMinimizedWindowHandler<Screen, Window>::unminimize ()
     CompWindow *win = screen->findWindow (w);
 
     if (Window::get (win)->mMinimizeHandler)
-	    Window::get (win)->mMinimizeHandler->unminimize ();
+      Window::get (win)->mMinimizeHandler->unminimize ();
 
     Window::get (win)->mMinimizeHandler.reset ();
   }
@@ -202,7 +202,7 @@ compiz::CompizMinimizedWindowHandler<Screen, Window>::getPaintMask ()
   for (CompWindow *w : minimizingWindows)
   {
     if (w->id () == priv->mWindow->id ())
-	    doMask = false;
+      doMask = false;
     break;
   }
 
@@ -223,10 +223,10 @@ compiz::CompizMinimizedWindowHandler<Screen, Window>::handleCompizEvent (const c
   {
     if (CompOption::getStringOptionNamed (o, "type", "") == "minimize")
     {
-	    CompWindow *w = screen->findWindow (CompOption::getIntOptionNamed (
+      CompWindow *w = screen->findWindow (CompOption::getIntOptionNamed (
                                             o, "window", 0));
-	    if (w)
-	    {
+      if (w)
+      {
         if (CompOption::getBoolOptionNamed (o, "active", false))
           minimizingWindows.push_back (w);
         else
@@ -254,7 +254,7 @@ compiz::CompizMinimizedWindowHandler<Screen, Window>::setFunctions (bool keepMin
     w->unminimizeSetEnabled (Window::get (w), keepMinimized);
     w->minimizedSetEnabled (Window::get (w), keepMinimized);
     if (m)
-	    Window::get (w)->window->minimize ();
+      Window::get (w)->window->minimize ();
   }
 }
 
