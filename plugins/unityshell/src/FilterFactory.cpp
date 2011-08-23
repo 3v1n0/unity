@@ -19,8 +19,9 @@
  *
  */
 #include "config.h"
-#include "Nux/Nux.h"
-#include "Nux/View.h"
+#include <Nux/Nux.h>
+#include <Nux/View.h>
+#include <NuxCore/Logger.h>
 
 #include "FilterBasicButton.h"
 #include "FilterRatingsWidget.h"
@@ -28,7 +29,11 @@
 #include "FilterMultiRangeWidget.h"
 
 #include "FilterFactory.h"
-namespace { // FIXME - fill with actual renderer type strings
+namespace {
+  nux::logging::Logger logger("unity.dash.filterfactory");
+}
+
+namespace {
   const std::string renderer_type_ratings = "filter-ratings";
   const std::string renderer_type_multirange = "filter-multirange";
   const std::string renderer_type_check_options = "filter-checkoption";
@@ -47,8 +52,9 @@ namespace unity {
 
   nux::View *FilterFactory::WidgetForFilter (dash::Filter::Ptr filter)
   {
-    //TODO - needs to be hooked up to filters
     std::string filter_type = filter->renderer_name;
+    LOG_DEBUG(logger) << "building filter of type, " << filter_type;
+
     nux::View *view = NULL;
     if (filter_type == renderer_type_check_options)
     {
@@ -65,6 +71,12 @@ namespace unity {
     else if (filter_type == renderer_type_radio_options)
     {
       view = static_cast<nux::View *> (new FilterGenre (NUX_TRACKER_LOCATION));
+    }
+    else
+    {
+      LOG_WARNING(logger) << "Do not understand filter of type \""
+                          << filter_type
+                          << "\"";
     }
 
     dynamic_cast<FilterWidget *>(view)->SetFilter (filter);
