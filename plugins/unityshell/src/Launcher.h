@@ -364,8 +364,6 @@ private:
 
   gboolean TapOnSuper();
 
-  static void SettingsChanged(GSettings* settings, gchar* key, Launcher* self);
-  
   void OnDNDDataCollected(const std::list<char*>& mimes);
 
   nux::HLayout* m_Layout;
@@ -482,9 +480,6 @@ private:
   struct timespec  _times[TIME_LAST];
 
   bool _initial_drag_animation;
-
-  GSettings* _settings;
-  guint32 _settings_changed_id;
 
   guint _ubus_handles[4];
 

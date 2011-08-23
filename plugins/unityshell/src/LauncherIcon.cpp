@@ -29,7 +29,6 @@
 #include "Nux/MenuPage.h"
 #include "NuxCore/Color.h"
 
-#include "LauncherEntryRemoteModel.h"
 #include "LauncherIcon.h"
 #include "Launcher.h"
 

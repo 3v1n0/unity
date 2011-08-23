@@ -42,44 +42,7 @@ namespace unity {
 
     SetRightHandView(all_button_);
     SetContents(layout_);
-
-    // for testing only
-    //~ FilterMultiRangeButton* button = new FilterMultiRangeButton ("10", NUX_TRACKER_LOCATION);
-    //~ layout_->AddView (button, 1);
-     //~ buttons_.push_back (button);
-//~
-    //~ button = new FilterMultiRangeButton ("10", NUX_TRACKER_LOCATION);
-    //~ buttons_.push_back (button);
-    //~ layout_->AddView (button, 1);
-//~
-    //~ button = new FilterMultiRangeButton ("10", NUX_TRACKER_LOCATION);
-    //~ layout_->AddView (button, 1);buttons_.push_back (button);
-//~
-    //~ button = new FilterMultiRangeButton ("10", NUX_TRACKER_LOCATION);
-    //~ layout_->AddView (button, 1);buttons_.push_back (button);
-//~
-    //~ button = new FilterMultiRangeButton ("10", NUX_TRACKER_LOCATION);
-    //~ layout_->AddView (button, 1);buttons_.push_back (button);
-//~
-      //~ button = new FilterMultiRangeButton ("10", NUX_TRACKER_LOCATION);
-    //~ layout_->AddView (button, 1);buttons_.push_back (button);
-//~
-      //~ button = new FilterMultiRangeButton ("10", NUX_TRACKER_LOCATION);
-    //~ layout_->AddView (button, 1);buttons_.push_back (button);
-//~
-      //~ button = new FilterMultiRangeButton ("10", NUX_TRACKER_LOCATION);
-    //~ layout_->AddView (button, 1);buttons_.push_back (button);
-//~
-        //~ button = new FilterMultiRangeButton ("10", NUX_TRACKER_LOCATION);
-    //~ layout_->AddView (button, 1);buttons_.push_back (button);
-//~
-        //~ button = new FilterMultiRangeButton ("10", NUX_TRACKER_LOCATION);
-    //~ layout_->AddView (button, 1);buttons_.push_back (button);
-//~
-        //~ button = new FilterMultiRangeButton ("10", NUX_TRACKER_LOCATION);
-    //~ layout_->AddView (button, 1);buttons_.push_back (button);
-//~
-    //~ OnActiveChanged(false);
+    OnActiveChanged(false);
   }
 
   FilterMultiRange::~FilterMultiRange() {
@@ -113,13 +76,17 @@ namespace unity {
     {
       FilterMultiRangeButton* button = (*it);
       dash::FilterOption::Ptr filter = button->GetFilter();
+      bool tmp_active = filter->active;
+      button->active = tmp_active;
       if (filter != NULL)
       {
         if (filter->active)
+        {
           if (index < start)
             start = index;
           if (index > end)
             end = index;
+        }
       }
       index++;
     }
@@ -130,20 +97,20 @@ namespace unity {
       FilterMultiRangeButton* button = (*it);
 
       if (index == start && index == end)
-        button->SetHasArrow(1);
+        button->SetHasArrow(MultiRangeArrow::MULTI_RANGE_ARROW_BOTH);
       else if (index == start)
-        button->SetHasArrow(0);
+        button->SetHasArrow(MultiRangeArrow::MULTI_RANGE_ARROW_LEFT);
       else if (index == end)
-        button->SetHasArrow(2);
+        button->SetHasArrow(MultiRangeArrow::MULTI_RANGE_ARROW_RIGHT);
       else
-        button->SetHasArrow(-1);
+        button->SetHasArrow(MultiRangeArrow::MULTI_RANGE_ARROW_NONE);
 
       if (index == 0)
-        button->SetVisualSide(0);
+        button->SetVisualSide(MULTI_RANGE_SIDE_LEFT);
       else if (index == (int)buttons_.size() - 1)
-        button->SetVisualSide(2);
+        button->SetVisualSide(MULTI_RANGE_SIDE_RIGHT);
       else
-        button->SetVisualSide(1);
+        button->SetVisualSide(MULTI_RANGE_CENTER);
 
       index++;
     }
@@ -151,14 +118,13 @@ namespace unity {
 
   void FilterMultiRange::OnOptionAdded(dash::FilterOption::Ptr new_filter)
   {
-    /* FIXME: This crashes Unity
     FilterMultiRangeButton* button = new FilterMultiRangeButton (NUX_TRACKER_LOCATION);
     button->SetFilter (new_filter);
     layout_->AddView (button, 1);
     buttons_.push_back (button);
     new_filter->active.changed.connect(sigc::mem_fun (this, &FilterMultiRange::OnActiveChanged));
     OnActiveChanged(false);
-    */
+
   }
 
   void FilterMultiRange::OnOptionRemoved(dash::FilterOption::Ptr removed_filter)

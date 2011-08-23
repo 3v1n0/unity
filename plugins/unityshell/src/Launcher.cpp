@@ -314,11 +314,6 @@ Launcher::Launcher(nux::BaseWindow* parent,
                                this,
                                NULL);
 
-  _settings = g_settings_new("com.canonical.Unity.Launcher");
-  _settings_changed_id = g_signal_connect(
-                           _settings, "changed", (GCallback)(Launcher::SettingsChanged), this);
-  SettingsChanged(_settings, (gchar*)"shows-on-edge", this);
-
   SetDndEnabled(false, true);
 
   icon_renderer = AbstractIconRenderer::Ptr(new IconRenderer());
@@ -353,11 +348,6 @@ Launcher::~Launcher()
     g_source_remove(_ignore_repeat_shortcut_handle);
   if (_super_hide_launcher_handle)
     g_source_remove(_super_hide_launcher_handle);
-
-  if (_settings_changed_id != 0)
-    g_signal_handler_disconnect((gpointer) _settings, _settings_changed_id);
-  g_object_unref(_settings);
-
   if (_launcher_animation_timeout > 0)
     g_source_remove(_launcher_animation_timeout);
     
@@ -385,13 +375,6 @@ const gchar*
 Launcher::GetName()
 {
   return "Launcher";
-}
-
-void
-Launcher::SettingsChanged(GSettings* settings, char* key, Launcher* self)
-{
-  bool show_on_edge = g_settings_get_boolean(settings, "shows-on-edge") ? true : false;
-  self->_hide_machine->SetShowOnEdge(show_on_edge);
 }
 
 void

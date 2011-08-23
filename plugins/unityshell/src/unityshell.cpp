@@ -33,6 +33,7 @@
 #include "GeisAdapter.h"
 #include "DevicesSettings.h"
 #include "PluginAdapter.h"
+#include "QuicklistManager.h"
 #include "StartupNotifyService.h"
 #include "Timer.h"
 #include "unityshell.h"
@@ -243,6 +244,8 @@ UnityScreen::UnityScreen(CompScreen* screen)
 
 UnityScreen::~UnityScreen()
 {
+  if (switcher_desktop_icon)
+    switcher_desktop_icon->UnReference();
   panelController->UnReference();
   delete controller;
   launcher->UnReference();
@@ -267,6 +270,7 @@ UnityScreen::~UnityScreen()
   // delete wt;
 
   ::unity::ui::IconRenderer::DestroyTextures();
+  QuicklistManager::Destroy();
 }
 
 void UnityScreen::EnsureKeybindings()

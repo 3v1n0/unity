@@ -65,7 +65,7 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
   // Home button - not an indicator view
   _home_button = new PanelHomeButton();
   //_layout->AddView(_home_button, 0, nux::eCenter, nux::eFull);
-  //AddChild(_home_button);
+  AddChild(_home_button);
 
   _menu_view = new PanelMenuView();
   AddPanelView(_menu_view, 1);

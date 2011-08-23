@@ -576,7 +576,7 @@ void IconRenderer::RenderElement(nux::GraphicsEngine& GfxContext,
                                  float alpha,
                                  std::vector<nux::Vector4>& xform_coords)
 {
-  if (icon == NULL)
+  if (icon.IsNull())
     return;
 
   nux::Matrix4 ObjectMatrix;

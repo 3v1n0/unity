@@ -130,7 +130,8 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
     }
   }
 
-  ubus_server_send_message(ubus_server_get_default(), UBUS_LAUNCHER_ACTION_DONE, NULL);
+  if (arg.source != ActionArg::SWITCHER)
+    ubus_server_send_message(ubus_server_get_default(), UBUS_LAUNCHER_ACTION_DONE, NULL);
 }
 
 BamfLauncherIcon::BamfLauncherIcon(Launcher* IconManager, BamfApplication* app, CompScreen* screen)
