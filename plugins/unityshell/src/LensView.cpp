@@ -49,6 +49,7 @@ LensView::LensView(Lens::Ptr lens)
   , search_string("")
   , filters_expanded(false)
   , lens_(lens)
+  , initial_activation_(true)
 {
   SetupViews();
   SetupCategories();
@@ -57,8 +58,10 @@ LensView::LensView(Lens::Ptr lens)
 
  PlacesStyle::GetDefault()->columns_changed.connect(sigc::mem_fun(this, &LensView::OnColumnsChanged));
 
+  lens_->connected.changed.connect([&](bool is_connected) { if (is_connected) initial_activation_ = true; });
   search_string.changed.connect([&](std::string const& search) { lens_->Search(search);  });
   filters_expanded.changed.connect([&](bool expanded) { fscroll_view_->SetVisible(expanded); ubus_manager_.SendMessage(UBUS_PLACE_VIEW_QUEUE_DRAW); });
+  active.changed.connect(sigc::mem_fun(this, &LensView::OnActiveChanged));
 }
 
 LensView::~LensView()
@@ -222,6 +225,19 @@ void LensView::OnFilterAdded(Filter::Ptr filter)
 void LensView::OnFilterRemoved(Filter::Ptr filter)
 {
   filter_bar_->RemoveFilter(filter);
+}
+
+void LensView::OnActiveChanged(bool is_active)
+{
+  if (is_active && initial_activation_)
+  {
+    /* We reset the lens for ourselves, in case this is a restart or something */
+    lens_->Search("-");
+    lens_->Search("");
+    initial_activation_ = false;
+  }
+
+  lens_->active = is_active;
 }
 
 long LensView::ProcessEvent(nux::IEvent& ievent, long traverse_info, long event_info)

@@ -415,7 +415,10 @@ void DashView::OnLensBarActivated(std::string const& id)
   }
 
   for (auto it: lens_views_)
+  {
     it.second->SetVisible(it.first == id);
+    it.second->active = it.first == id;
+  }
 
   LensView* view = active_lens_view_ = lens_views_[id];
   search_bar_->search_string = view->search_string;
