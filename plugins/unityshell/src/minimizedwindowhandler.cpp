@@ -32,8 +32,22 @@ public:
   Display      *mDpy;
   unsigned int mXid;
 
+  std::list <MinimizedWindowHandler::Ptr> mTransients;
+
   WindowInputRemover *mRemover;
 };
+}
+
+bool
+compiz::MinimizedWindowHandler::contains (boost::shared_ptr <MinimizedWindowHandler> mw)
+{
+  for (MinimizedWindowHandler::Ptr h : priv->mTransients)
+  {
+    if (h->priv->mXid == mw->priv->mXid)
+      return true;
+  }
+
+  return false;
 }
 
 void
@@ -125,17 +139,26 @@ compiz::MinimizedWindowHandler::minimize ()
   Window        root = DefaultRootWindow (priv->mDpy), parent = priv->mXid, lastParent = priv->mXid;
   Window        *children;
   unsigned int  nchildren;
+  compiz::MinimizedWindowHandler::Ptr holder = compiz::MinimizedWindowHandler::Ptr (new compiz::MinimizedWindowHandler (priv->mDpy, 0));
+  auto          predicate_this = boost::bind (&compiz::MinimizedWindowHandler::contains, this, _1);
+  auto          predicate_holder = !boost::bind (&compiz::MinimizedWindowHandler::contains, holder.get (), _1);
 
   std::vector<unsigned int> transients = getTransients ();
 
   for (unsigned int &w : transients)
   {
-    compiz::MinimizedWindowHandler *mw  = new compiz::MinimizedWindowHandler (priv->mDpy, w);
-
-    mw->minimize ();
-
-    delete mw;
+    compiz::MinimizedWindowHandler::Ptr p = compiz::MinimizedWindowHandler::Ptr (new compiz::MinimizedWindowHandler (priv->mDpy, w));
+    holder->priv->mTransients.push_back (p);
   }
+
+  holder->priv->mTransients.remove_if (predicate_this);
+  priv->mTransients.remove_if (predicate_holder);
+
+  for (MinimizedWindowHandler::Ptr &mw : holder->priv->mTransients)
+    priv->mTransients.push_back (mw);
+
+  for (MinimizedWindowHandler::Ptr &mw : priv->mTransients)
+    mw->minimize ();
 
   do
   {
@@ -166,17 +189,26 @@ compiz::MinimizedWindowHandler::unminimize ()
   Window        root = DefaultRootWindow (priv->mDpy), parent = priv->mXid, lastParent = priv->mXid;
   Window        *children;
   unsigned int  nchildren;
+  compiz::MinimizedWindowHandler::Ptr holder = compiz::MinimizedWindowHandler::Ptr (new compiz::MinimizedWindowHandler (priv->mDpy, 0));
+  auto          predicate_this = boost::bind (&compiz::MinimizedWindowHandler::contains, this, _1);
+  auto          predicate_holder = !boost::bind (&compiz::MinimizedWindowHandler::contains, holder.get (), _1);
 
   std::vector<unsigned int> transients = getTransients ();
 
   for (unsigned int &w : transients)
   {
-    compiz::MinimizedWindowHandler *mw  = new compiz::MinimizedWindowHandler (priv->mDpy, w);
-
-    mw->unminimize ();
-
-    delete mw;
+    compiz::MinimizedWindowHandler::Ptr p = compiz::MinimizedWindowHandler::Ptr (new compiz::MinimizedWindowHandler (priv->mDpy, w));
+    holder->priv->mTransients.push_back (p);
   }
+
+  holder->priv->mTransients.remove_if (predicate_this);
+  priv->mTransients.remove_if (predicate_holder);
+
+  for (MinimizedWindowHandler::Ptr &mw : holder->priv->mTransients)
+    priv->mTransients.push_back (mw);
+
+  for (MinimizedWindowHandler::Ptr &mw : priv->mTransients)
+    mw->unminimize ();
 
   do
   {

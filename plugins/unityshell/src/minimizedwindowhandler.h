@@ -27,6 +27,7 @@
 #include "transientfor.h"
 #include "inputremover.h"
 #include <boost/shared_ptr.hpp>
+#include <boost/bind.hpp>
 
 // Will be merged back into compiz
 namespace compiz
@@ -48,6 +49,8 @@ public:
   void setVisibility (bool visible, Window shapeWin);
 
   typedef boost::shared_ptr<MinimizedWindowHandler> Ptr;
+
+  bool contains (boost::shared_ptr <MinimizedWindowHandler> mw);
 
 protected:
 
