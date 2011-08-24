@@ -30,7 +30,7 @@
 #include <sstream>
 #include <cstring>
 
-#include <x11-window.h>
+#include <x11-window-read-transients.h>
 
 void usage ()
 {
@@ -41,9 +41,9 @@ int main (int argc, char **argv)
 {
   Display                    *dpy;
   Window                     xid = 0;
-  X11Window                  *window = NULL;
-  X11Window                  *transient = NULL;
-  X11Window                  *hasClientLeader = NULL;
+  X11WindowReadTransients    *window = NULL;
+  X11WindowReadTransients    *transient = NULL;
+  X11WindowReadTransients    *hasClientLeader = NULL;
   std::vector<unsigned int>  expectedTransients;
 
   if ((argc == 2 && std::string (argv[1]) == "--help") || argc > 3)
@@ -63,12 +63,12 @@ int main (int argc, char **argv)
   if (argc > 1)
     std::stringstream (argv[1]) >> std::hex >> xid;
 
-  window = new X11Window (dpy, xid);
+  window = new X11WindowReadTransients (dpy, xid);
 
   if (!xid)
   {
-    transient = new X11Window (dpy, 0);
-    hasClientLeader = new X11Window (dpy, 0);
+    transient = new X11WindowReadTransients (dpy, 0);
+    hasClientLeader = new X11WindowReadTransients (dpy, 0);
 
     transient->makeTransientFor (window);
     window->setClientLeader (window);

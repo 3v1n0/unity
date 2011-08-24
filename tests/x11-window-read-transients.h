@@ -19,31 +19,33 @@
  * Sam Spilsbury <sam.spilsbury@canonical.com>
  */
 
+#include <transientfor.h>
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 #include <vector>
 #include <list>
 #include <string>
 
-#ifndef _COMPIZ_X11_WINDOW_H
-#define _COMPIZ_X11_WINDOW_H
+#include <x11-window.h>
 
-class X11Window
+#ifndef _COMPIZ_X11_WINDOW_READ_TRANSIENTS_H
+#define _COMPIZ_X11_WINDOW_READ_TRANSIENTS_H
+
+class X11WindowReadTransients :
+    public X11Window
 {
   public:
 
-    X11Window (Display *, Window id = 0);
-    virtual ~X11Window ();
+    X11WindowReadTransients (Display *, Window id = 0);
+    ~X11WindowReadTransients ();
+
+    void makeTransientFor (X11WindowReadTransients *w);
+    void setClientLeader (X11WindowReadTransients *w);
+    void printTransients ();
 
     std::vector<unsigned int> transients ();
 
     unsigned int id () { return mXid; }
-
-  protected:
-
-    Window mXid;
-    Display *mDpy;
-    bool mCreated;
 };
 
 #endif

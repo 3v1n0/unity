@@ -15,7 +15,8 @@ if (COMPIZ_TEST_GET_TRANSIENTS_FOUND)
 			test-get-transients.cpp
 			../../plugins/unityshell/src/transientfor.cpp
 			../../plugins/unityshell/src/inputremover.cpp
-			../x11-window.cpp)
+			../x11-window.cpp
+			../x11-window-read-transients.cpp)
 
 	target_link_libraries (test-get-transients
 			       ${COMPIZ_TEST_GET_TRANSIENTS_LIBRARIES})
