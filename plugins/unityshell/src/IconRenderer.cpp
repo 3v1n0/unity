@@ -195,6 +195,8 @@ void destroy_textures();
 
 IconRenderer::IconRenderer()
 {
+  pip_style = OUTSIDE_TILE;
+  
   if (!local::textures_created)
     local::generate_textures();
 }
@@ -730,9 +732,25 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
   int markerCenter = (int) arg.render_center.y;
   markerCenter -= (int)(arg.x_rotation / (2 * M_PI) * icon_size);
 
+
   if (running > 0)
   {
+    int scale = 1;
+
+    int markerX;
+    if (pip_style == OUTSIDE_TILE)
+    {
+      markerX = geo.x;
+    }
+    else
+    {
+      auto bounds = arg.icon->GetTransform("Tile");
+      markerX = bounds[0].x + 2;
+      scale = 2;
+    }
+
     nux::TexCoordXForm texxform;
+    texxform.SetFilter(nux::TEXFILTER_LINEAR, nux::TEXFILTER_LINEAR);
 
     nux::Color color = nux::color::LightGrey;
 
@@ -758,26 +776,27 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
     }
     else if (running == 2)
     {
-      markers.push_back(markerCenter - 2);
-      markers.push_back(markerCenter + 2);
+      markers.push_back(markerCenter - 2 * scale);
+      markers.push_back(markerCenter + 2 * scale);
       texture = local::pip_ltr;
     }
     else
     {
-      markers.push_back(markerCenter - 4);
+      markers.push_back(markerCenter - 4 * scale);
       markers.push_back(markerCenter);
-      markers.push_back(markerCenter + 4);
+      markers.push_back(markerCenter + 4 * scale);
       texture = local::pip_ltr;
     }
+
 
     std::vector<int>::iterator it;
     for (it = markers.begin(); it != markers.end(); it++)
     {
       int center = *it;
-      GfxContext.QRP_1Tex(geo.x,
-                          center - (texture->GetHeight() / 2),
-                          (float) texture->GetWidth(),
-                          (float) texture->GetHeight(),
+      GfxContext.QRP_1Tex(markerX,
+                          center - ((texture->GetHeight() * scale) / 2),
+                          (float) texture->GetWidth() * scale,
+                          (float) texture->GetHeight() * scale,
                           texture->GetDeviceTexture(),
                           texxform,
                           color);
