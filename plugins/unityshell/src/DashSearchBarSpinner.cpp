@@ -52,6 +52,9 @@ SearchBarSpinner::~SearchBarSpinner()
 {
   if (_spinner_timeout)
     g_source_remove(_spinner_timeout);
+
+  if (_frame_timeout)
+    g_source_remove(_frame_timeout);
 }
 
 long
@@ -157,8 +160,10 @@ SearchBarSpinner::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
                         texxform,
                         nux::color::White);
   }
-
   GfxContext.PopClippingRectangle();
+
+  if (_state == STATE_SEARCHING && !_frame_timeout)
+    _frame_timeout = g_timeout_add(22, (GSourceFunc)SearchBarSpinner::OnFrame, this);
 }
 
 void
@@ -167,18 +172,24 @@ SearchBarSpinner::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 }
 
 gboolean
+SearchBarSpinner::OnTimeout(SearchBarSpinner* self)
+{
+  self->_state = STATE_READY;
+  return FALSE;
+}
+
+gboolean
 SearchBarSpinner::OnFrame(SearchBarSpinner* self)
 {
   self->_rotation += 0.1f;
-
   if (self->_rotation >= 360.0f)
     self->_rotation = 0.0f;
 
   self->_2d_rotate.Rotate_z(self->_rotation);
+  self->_frame_timeout = 0;
 
   self->QueueDraw();
-
-  return TRUE;
+  return FALSE;
 }
 
 void
@@ -192,12 +203,13 @@ SearchBarSpinner::SetState(SpinnerState state)
   if (_spinner_timeout)
     g_source_remove(_spinner_timeout);
   _spinner_timeout = 0;
+  
   _2d_rotate.Rotate_z(0.0f);
   _rotation = 0.0f;
 
   if (_state == STATE_SEARCHING)
   {
-    _spinner_timeout = g_timeout_add(15, (GSourceFunc)SearchBarSpinner::OnFrame, this);
+    _spinner_timeout = g_timeout_add_seconds(5, (GSourceFunc)SearchBarSpinner::OnTimeout, this);
   }
 
   QueueDraw();

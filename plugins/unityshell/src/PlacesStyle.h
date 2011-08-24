@@ -45,6 +45,8 @@ public:
   int GetHomeTileWidth();
   int GetHomeTileHeight();
 
+  int GetTextLineHeight();
+
   nux::BaseTexture* GetDashBottomTile();
   nux::BaseTexture* GetDashRightTile();
   nux::BaseTexture* GetDashCorner();

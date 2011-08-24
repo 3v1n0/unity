@@ -25,6 +25,7 @@
 #include "FilterGenreWidget.h"
 #include "FilterGenreButton.h"
 #include "FilterBasicButton.h"
+#include "PlacesStyle.h"
 
 namespace unity {
 
@@ -37,13 +38,15 @@ namespace unity {
     all_button_->activated.connect(sigc::mem_fun(this, &FilterGenre::OnAllActivated));
     all_button_->Reference();
 
+    PlacesStyle* style = PlacesStyle::GetDefault();
+
     genre_layout_ = new nux::GridHLayout(NUX_TRACKER_LOCATION);
     genre_layout_->ForceChildrenSize(true);
     genre_layout_->SetHeightMatchContent(true);
     genre_layout_->SetVerticalInternalMargin (6);
     genre_layout_->SetHorizontalInternalMargin (6);
     genre_layout_->EnablePartialVisibility (false);
-    genre_layout_->SetChildrenSize (120, 40);
+    genre_layout_->SetChildrenSize (style->GetTileWidth() - 12, style->GetTextLineHeight() * 2);
     genre_layout_->Reference();
 
     SetRightHandView(all_button_);

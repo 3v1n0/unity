@@ -60,6 +60,9 @@ private:
   void UpdateCounts(PlacesGroup* group);
   void OnGroupExpanded(PlacesGroup* group);
   void OnColumnsChanged();
+  void QueueFixRenderering();
+
+  static gboolean FixRenderering(HomeView* self);
 
   long ProcessEvent(nux::IEvent& ievent, long traverse_info, long event_info);
   void Draw(nux::GraphicsEngine& gfx_context, bool force_draw);
@@ -80,6 +83,8 @@ private:
   nux::VLayout* scroll_layout_;
 
   PlacesHomeView* home_view_;
+
+  guint fix_renderering_id_;
 };
 
 
