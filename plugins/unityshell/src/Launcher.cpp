@@ -1652,7 +1652,7 @@ Launcher::OnWindowMapped(guint32 xid)
   if (window && window->type() | CompWindowTypeDndMask)
   {
     if (!_dnd_check_handle)
-      _dnd_check_handle = g_timeout_add(20, &Launcher::OnUpdateDragManagerTimeout, this);
+      _dnd_check_handle = g_timeout_add(50, &Launcher::OnUpdateDragManagerTimeout, this);
   }
 }
 
@@ -1663,7 +1663,7 @@ Launcher::OnWindowUnmapped(guint32 xid)
   if (window && window->type() | CompWindowTypeDndMask)
   {
     if (!_dnd_check_handle)
-      _dnd_check_handle = g_timeout_add(20, &Launcher::OnUpdateDragManagerTimeout, this);
+      _dnd_check_handle = g_timeout_add(50, &Launcher::OnUpdateDragManagerTimeout, this);
   }
 }
 
