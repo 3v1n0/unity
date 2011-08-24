@@ -50,6 +50,10 @@ namespace unity {
       _hires_time_end(20),
       _ubus_handle_request_colour(0)
   {
+    g_warning ("BGHash: _current %f, %f, %f", _current_color.red, _current_color.green, _current_color.blue);
+    g_warning ("BGHash: _new %f, %f, %f", _new_color.red, _new_color.green, _new_color.blue);
+    g_warning ("BGHash: _old %f, %f, %f", _old_color.red, _old_color.green, _old_color.blue);
+
     background_monitor = gnome_bg_new ();
     client = g_settings_new ("org.gnome.desktop.background");
 
