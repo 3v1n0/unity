@@ -48,9 +48,8 @@
 #include "ubus-server.h"
 #include "UBusMessages.h"
 
+#include <UnityCore/GLibWrapper.h>
 #include <UnityCore/Variant.h>
-
-using namespace unity::ui;
 
 using namespace unity::ui;
 
@@ -136,13 +135,15 @@ GDBusInterfaceVTable Launcher::interface_vtable =
 Launcher::Launcher(nux::BaseWindow* parent,
                    CompScreen*      screen,
                    NUX_FILE_LINE_DECL)
-  :   View(NUX_FILE_LINE_PARAM)
-  ,   m_ContentOffsetY(0)
-  ,   m_BackgroundLayer(0)
-  ,   _model(0)
-  ,   _background_color (nux::color::DimGray)
-  ,   _dash_is_open (false)
+  : View(NUX_FILE_LINE_PARAM)
+  , m_ContentOffsetY(0)
+  , m_BackgroundLayer(0)
+  , _model(0)
+  , _collection_window(NULL)
+  , _background_color(nux::color::DimGray)
+  , _dash_is_open(false)
 {
+  
   _parent = parent;
   _screen = screen;
   _active_quicklist = 0;
@@ -156,15 +157,15 @@ Launcher::Launcher(nux::BaseWindow* parent,
 
   m_Layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
-  OnMouseDown.connect(sigc::mem_fun(this, &Launcher::RecvMouseDown));
-  OnMouseUp.connect(sigc::mem_fun(this, &Launcher::RecvMouseUp));
-  OnMouseDrag.connect(sigc::mem_fun(this, &Launcher::RecvMouseDrag));
-  OnMouseEnter.connect(sigc::mem_fun(this, &Launcher::RecvMouseEnter));
-  OnMouseLeave.connect(sigc::mem_fun(this, &Launcher::RecvMouseLeave));
-  OnMouseMove.connect(sigc::mem_fun(this, &Launcher::RecvMouseMove));
-  OnMouseWheel.connect(sigc::mem_fun(this, &Launcher::RecvMouseWheel));
-  OnKeyEvent.connect(sigc::mem_fun(this, &Launcher::RecvKeyPressed));
-  OnMouseDownOutsideArea.connect(sigc::mem_fun(this, &Launcher::RecvMouseDownOutsideArea));
+  mouse_down.connect(sigc::mem_fun(this, &Launcher::RecvMouseDown));
+  mouse_up.connect(sigc::mem_fun(this, &Launcher::RecvMouseUp));
+  mouse_drag.connect(sigc::mem_fun(this, &Launcher::RecvMouseDrag));
+  mouse_enter.connect(sigc::mem_fun(this, &Launcher::RecvMouseEnter));
+  mouse_leave.connect(sigc::mem_fun(this, &Launcher::RecvMouseLeave));
+  mouse_move.connect(sigc::mem_fun(this, &Launcher::RecvMouseMove));
+  mouse_wheel.connect(sigc::mem_fun(this, &Launcher::RecvMouseWheel));
+  key_down.connect(sigc::mem_fun(this, &Launcher::RecvKeyPressed));
+  mouse_down_outside_pointer_grab_area.connect(sigc::mem_fun(this, &Launcher::RecvMouseDownOutsideArea));
   //OnEndFocus.connect   (sigc::mem_fun (this, &Launcher::exitKeyNavMode));
 
   CaptureMouseDownAnyWhereElse(true);
@@ -263,6 +264,11 @@ Launcher::Launcher(nux::BaseWindow* parent,
   _bfb_width = 1;
   _bfb_height = 1;
 
+  _data_checked = false;
+  _collection_window = new unity::DNDCollectionWindow(_screen);
+  _collection_window->SinkReference();
+  _on_data_collected_connection = _collection_window->collected.connect(sigc::mem_fun(this, &Launcher::OnDNDDataCollected));
+
   // 0 out timers to avoid wonky startups
   int i;
   for (i = 0; i < TIME_LAST; ++i)
@@ -271,6 +277,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
     _times[i].tv_nsec = 0;
   }
 
+  _dnd_hovered_icon = NULL;
   _drag_window = NULL;
   _offscreen_drag_texture = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableDeviceTexture(2, 2, 1, nux::BITFMT_R8G8B8A8);
 
@@ -307,11 +314,6 @@ Launcher::Launcher(nux::BaseWindow* parent,
                                this,
                                NULL);
 
-  _settings = g_settings_new("com.canonical.Unity.Launcher");
-  _settings_changed_id = g_signal_connect(
-                           _settings, "changed", (GCallback)(Launcher::SettingsChanged), this);
-  SettingsChanged(_settings, (gchar*)"shows-on-edge", this);
-
   SetDndEnabled(false, true);
 
   icon_renderer = AbstractIconRenderer::Ptr(new IconRenderer());
@@ -321,6 +323,9 @@ Launcher::Launcher(nux::BaseWindow* parent,
   ubus_server_send_message (ubus, UBUS_BACKGROUND_REQUEST_COLOUR_EMIT, NULL);
 
   SetAcceptMouseWheelEvent(true);
+
+  bg_effect_helper_.owner = this;
+  bg_effect_helper_.enabled = true;
 }
 
 Launcher::~Launcher()
@@ -343,13 +348,11 @@ Launcher::~Launcher()
     g_source_remove(_ignore_repeat_shortcut_handle);
   if (_super_hide_launcher_handle)
     g_source_remove(_super_hide_launcher_handle);
-
-  if (_settings_changed_id != 0)
-    g_signal_handler_disconnect((gpointer) _settings, _settings_changed_id);
-  g_object_unref(_settings);
-
   if (_launcher_animation_timeout > 0)
     g_source_remove(_launcher_animation_timeout);
+    
+  if (_on_data_collected_connection.connected())
+      _on_data_collected_connection.disconnect();
 
   UBusServer* ubus = ubus_server_get_default();
   for (unsigned int i = 0; i < G_N_ELEMENTS(_ubus_handles); ++i)
@@ -359,6 +362,9 @@ Launcher::~Launcher()
   }
 
   g_idle_remove_by_data(this);
+  
+  if (_collection_window)
+    _collection_window->UnReference();
 
   delete _hover_machine;
   delete _hide_machine;
@@ -369,13 +375,6 @@ const gchar*
 Launcher::GetName()
 {
   return "Launcher";
-}
-
-void
-Launcher::SettingsChanged(GSettings* settings, char* key, Launcher* self)
-{
-  bool show_on_edge = g_settings_get_boolean(settings, "shows-on-edge") ? true : false;
-  self->_hide_machine->SetShowOnEdge(show_on_edge);
 }
 
 void
@@ -656,7 +655,7 @@ bool Launcher::IconNeedsAnimation(LauncherIcon* icon, struct timespec const& cur
   time = icon->GetQuirkTime(LauncherIcon::QUIRK_PROGRESS);
   if (TimeDelta(&current, &time) < ANIM_DURATION)
     return true;
-
+    
   time = icon->GetQuirkTime(LauncherIcon::QUIRK_DROP_DIM);
   if (TimeDelta(&current, &time) < ANIM_DURATION)
     return true;
@@ -1091,7 +1090,7 @@ void Launcher::FillRenderArg(LauncherIcon* icon,
     arg.alpha *= size_modifier;
     center.z = 300.0f * (1.0f - size_modifier);
   }
-
+  
   float drop_dim_value = 0.2f + 0.8f * IconDropDimValue(icon, current);
 
   if (drop_dim_value < 1.0f)
@@ -1386,7 +1385,9 @@ void Launcher::EndKeyShowLauncher()
 
   // it's a tap on super and we didn't use any shortcuts
   if (TapOnSuper() && !_latest_shortcut)
-    ubus_server_send_message(ubus_server_get_default(), UBUS_DASH_EXTERNAL_ACTIVATION, NULL);
+    ubus_server_send_message(ubus_server_get_default(),
+                             UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
+                             g_variant_new("(sus)", "home.lens", 0, ""));
 
   remaining_time_before_hide = BEFORE_HIDE_LAUNCHER_ON_SUPER_DURATION - CLAMP((int)(TimeDelta(&current, &_times[TIME_SUPER_PRESSED])), 0, BEFORE_HIDE_LAUNCHER_ON_SUPER_DURATION);
 
@@ -1499,10 +1500,14 @@ void Launcher::SetHidden(bool hidden)
   else
     _hide_machine->SetQuirk(LauncherHideMachine::MOUSE_MOVE_POST_REVEAL, false);
 
-  if (hidden)
-  {
+  if (hidden)  {
+    bg_effect_helper_.enabled = false;
     _hide_machine->SetQuirk(LauncherHideMachine::MT_DRAG_OUT, false);
     SetStateMouseOverLauncher(false);
+  }
+  else
+  {
+    bg_effect_helper_.enabled = true;
   }
 
   _postreveal_mousemove_delta_x = 0;
@@ -1513,7 +1518,7 @@ void Launcher::SetHidden(bool hidden)
   _parent->EnableInputWindow(!hidden, "launcher", false, false);
 
   if (!hidden && GetActionState() == ACTION_DRAG_EXTERNAL)
-    ProcessDndLeave();
+    DndLeave();
 
   EnsureAnimation();
 
@@ -1614,10 +1619,19 @@ Launcher::OnUpdateDragManagerTimeout(gpointer data)
 
   if (drag_owner && (mask & (Button1Mask | Button2Mask | Button3Mask)))
   {
-    self->_hide_machine->SetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE, true);
+    if (self->_data_checked == false)
+    {
+      self->_data_checked = true;
+      self->_collection_window->EnableInputWindow(true, "DNDCollectionWindow");
+    } 
+    
     return true;
   }
+  
+  self->_data_checked = false;
+  self->_collection_window->EnableInputWindow(false, "DNDCollectionWindow");
 
+  self->DndLeave();
   self->_hide_machine->SetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE, false);
   self->_hide_machine->SetQuirk(LauncherHideMachine::DND_PUSHED_OFF, false);
 
@@ -1681,11 +1695,6 @@ Launcher::OnPluginStateChanged()
   
   if (_hidemode == LAUNCHER_HIDE_NEVER)
     return;
-    
-  if (PluginAdapter::Default ()->IsScaleActive ())                   
-    _parent->InputWindowEnableStruts (true);
-  else
-    _parent->InputWindowEnableStruts (false);
 }
 
 Launcher::LauncherHideMode Launcher::GetHideMode()
@@ -2030,9 +2039,43 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   GfxContext.PushClippingRectangle(base);
   gPainter.PushDrawColorLayer(GfxContext, base, nux::Color(0x00000000), true, ROP);
 
+  GfxContext.GetRenderStates().SetBlend(true);
+  GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
+  GfxContext.GetRenderStates().SetColorMask(true, true, true, true);
+
+  int push_count = 1;
+
   // clip vertically but not horizontally
   GfxContext.PushClippingRectangle(nux::Geometry(base.x, bkg_box.y, base.width, bkg_box.height));
   
+  if (BackgroundEffectHelper::blur_type != unity::BLUR_NONE && (bkg_box.x + bkg_box.width > 0))
+  {
+    nux::Geometry geo_absolute = GetAbsoluteGeometry();
+    
+    nux::Geometry blur_geo(geo_absolute.x, geo_absolute.y, base.width, base.height);
+    auto blur_texture = bg_effect_helper_.GetBlurRegion(blur_geo);
+
+    if (blur_texture.IsValid())
+    {
+      nux::TexCoordXForm texxform_blur_bg;
+      texxform_blur_bg.flip_v_coord = true;
+      texxform_blur_bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+      texxform_blur_bg.uoffset = ((float) base.x) / geo_absolute.width;
+      texxform_blur_bg.voffset = ((float) base.y) / geo_absolute.height;
+
+      GfxContext.PushClippingRectangle(bkg_box);
+      gPainter.PushDrawTextureLayer(GfxContext, base,
+                                    blur_texture,
+                                    texxform_blur_bg,
+                                    nux::color::White,
+                                    true,
+                                    ROP);
+      GfxContext.PopClippingRectangle();
+      
+      push_count++;
+    }
+  }
+
   if (_dash_is_open)
   {
     gPainter.Paint2DQuadColor(GfxContext, bkg_box, _background_color);
@@ -2085,7 +2128,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   GfxContext.GetRenderStates().SetColorMask(true, true, true, true);
   GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
 
-  gPainter.PopBackground();
+  gPainter.PopBackground(push_count);
   GfxContext.PopClippingRectangle();
 }
 
@@ -2578,7 +2621,7 @@ Launcher::RecvKeyPressed(unsigned long    eventType,
 
       // right/shift-f10 (open quicklist of currently selected icon)
     case XK_F10:
-      if (!(key_state & NUX_STATE_SHIFT))
+      if (!(key_state & nux::NUX_STATE_SHIFT))
         break;
     case NUX_VK_RIGHT:
     case NUX_KP_RIGHT:
@@ -2756,7 +2799,7 @@ LauncherIcon* Launcher::MouseIconIntersection(int x, int y)
 }
 
 void
-Launcher::RenderIconToTexture(nux::GraphicsEngine& GfxContext, LauncherIcon* icon, nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture)
+Launcher::RenderIconToTexture(nux::GraphicsEngine& GfxContext, LauncherIcon* icon, nux::ObjectPtr<nux::IOpenGLBaseTexture> texture)
 {
   RenderArg arg;
   struct timespec current;
@@ -2782,7 +2825,7 @@ Launcher::RenderIconToTexture(nux::GraphicsEngine& GfxContext, LauncherIcon* ico
 }
 
 void
-Launcher::SetOffscreenRenderTarget(nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture)
+Launcher::SetOffscreenRenderTarget(nux::ObjectPtr<nux::IOpenGLBaseTexture> texture)
 {
   int width = texture->GetWidth();
   int height = texture->GetHeight();
@@ -2803,15 +2846,71 @@ Launcher::RestoreSystemRenderTarget()
   nux::GetWindowCompositor().RestoreRenderingSurface();
 }
 
+void Launcher::OnDNDDataCollected(const std::list<char*>& mimes)
+{
+  _dnd_data.Reset();
+
+  unity::glib::String uri_list_const(g_strdup("text/uri-list"));
+
+  for (auto it : mimes)
+  {    
+    if (!g_str_equal(it, uri_list_const.Value()))
+      continue;
+
+    _dnd_data.Fill(nux::GetWindow().GetDndData(uri_list_const.Value()));
+    break;
+  }
+  
+  if (!_dnd_data.Uris().size())
+    return;
+    
+  _hide_machine->SetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE, true);
+  
+  for (auto it : _dnd_data.Uris())
+  {
+    if (g_str_has_suffix(it.c_str(), ".desktop"))
+    {
+      _steal_drag = true;
+      break;
+    }
+  }
+  
+  if (!_steal_drag)
+  {
+    for (auto it : *_model)
+    {
+      if (it->QueryAcceptDrop(_dnd_data) != nux::DNDACTION_NONE)
+        it->SetQuirk(LauncherIcon::QUIRK_DROP_PRELIGHT, true);
+      else
+        it->SetQuirk(LauncherIcon::QUIRK_DROP_DIM, true);
+    }
+  }  
+}
+
 void
 Launcher::ProcessDndEnter()
 {
-  _drag_data.clear();
+  _dnd_data.Reset();
   _drag_action = nux::DNDACTION_NONE;
   _steal_drag = false;
   _data_checked = false;
   _drag_edge_touching = false;
   _dnd_hovered_icon = 0;
+}
+
+void
+Launcher::DndLeave()
+{
+  
+  _dnd_data.Reset();
+
+  for (auto it : *_model)
+  {
+    it->SetQuirk(LauncherIcon::QUIRK_DROP_PRELIGHT, false);
+    it->SetQuirk(LauncherIcon::QUIRK_DROP_DIM, false);
+  }
+  
+  ProcessDndLeave();
 }
 
 void
@@ -2821,29 +2920,11 @@ Launcher::ProcessDndLeave()
   _drag_edge_touching = false;
 
   SetActionState(ACTION_NONE);
-
-  if (!_drag_data.empty())
-  {
-    std::list<char*>::iterator it;
-    for (it = _drag_data.begin(); it != _drag_data.end(); it++)
-    {
-      g_free(*it);
-    }
-  }
-  _drag_data.clear();
-
-  LauncherModel::iterator it;
-  for (it = _model->begin(); it != _model->end(); it++)
-  {
-    (*it)->SetQuirk(LauncherIcon::QUIRK_DROP_PRELIGHT, false);
-    (*it)->SetQuirk(LauncherIcon::QUIRK_DROP_DIM, false);
-  }
-
+  
   if (_steal_drag && _dnd_hovered_icon)
   {
     _dnd_hovered_icon->SetQuirk(LauncherIcon::QUIRK_VISIBLE, false);
     _dnd_hovered_icon->remove.emit(_dnd_hovered_icon);
-
   }
 
   if (!_steal_drag && _dnd_hovered_icon)
@@ -2854,58 +2935,33 @@ Launcher::ProcessDndLeave()
 
   _steal_drag = false;
   _dnd_hovered_icon = 0;
-
-}
-
-std::list<char*>
-Launcher::StringToUriList(char* input)
-{
-  std::list<char*> result;
-
-  if (!input)
-    return result;
-
-  char** imtrappedinastringfactory = g_strsplit(input, "\r\n", -1);
-  int i = 0;
-  while (imtrappedinastringfactory[i]) // get kinda bored
-  {
-    // empty string check
-    if (imtrappedinastringfactory[i][0])
-      result.push_back(g_strdup(imtrappedinastringfactory[i]));
-    ++i;
-  }
-
-  g_strfreev(imtrappedinastringfactory);
-
-  return result;
 }
 
 void
 Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
 {
-  std::list<char*>::iterator it;
   nux::Area* parent = GetToplevel();
-  char* uri_list_const = g_strdup("text/uri-list");
+  unity::glib::String uri_list_const(g_strdup("text/uri-list"));
 
   if (!_data_checked)
   {
     _data_checked = true;
-    _drag_data.clear();
+    _dnd_data.Reset();
 
     // get the data
-    for (it = mimes.begin(); it != mimes.end(); it++)
-    {
-      if (!g_str_equal(*it, uri_list_const))
+    for (auto it : mimes)
+    {    
+      if (!g_str_equal(it, uri_list_const.Value()))
         continue;
 
-      _drag_data = StringToUriList(nux::GetWindow().GetDndData(uri_list_const));
+      _dnd_data.Fill(nux::GetWindow().GetDndData(uri_list_const.Value()));
       break;
     }
-
+  
     // see if the launcher wants this one
-    for (it = _drag_data.begin(); it != _drag_data.end(); it++)
+    for (auto it : _dnd_data.Uris())
     {
-      if (g_str_has_suffix(*it, ".desktop"))
+      if (g_str_has_suffix(it.c_str(), ".desktop"))
       {
         _steal_drag = true;
         break;
@@ -2916,18 +2972,17 @@ Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
     SetActionState(ACTION_DRAG_EXTERNAL);
     SetStateMouseOverLauncher(true);
 
-    LauncherModel::iterator it;
-    for (it = _model->begin(); it != _model->end() && !_steal_drag; it++)
+    if (!_steal_drag)
     {
-      if ((*it)->QueryAcceptDrop(_drag_data) != nux::DNDACTION_NONE && !_steal_drag)
-        (*it)->SetQuirk(LauncherIcon::QUIRK_DROP_PRELIGHT, true);
-      else
-        (*it)->SetQuirk(LauncherIcon::QUIRK_DROP_DIM, true);
+      for (auto it : *_model)
+      {
+        if (it->QueryAcceptDrop(_dnd_data) != nux::DNDACTION_NONE)
+          it->SetQuirk(LauncherIcon::QUIRK_DROP_PRELIGHT, true);
+        else
+          it->SetQuirk(LauncherIcon::QUIRK_DROP_DIM, true);
+      }
     }
-
   }
-
-  g_free(uri_list_const);
 
   SetMousePosition(x - parent->GetGeometry().x, y - parent->GetGeometry().y);
 
@@ -2991,7 +3046,7 @@ Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
       if (hovered_icon)
       {
         hovered_icon->SendDndEnter();
-        _drag_action = hovered_icon->QueryAcceptDrop(_drag_data);
+        _drag_action = hovered_icon->QueryAcceptDrop(_dnd_data);
       }
       else
       {
@@ -3020,23 +3075,21 @@ Launcher::ProcessDndDrop(int x, int y)
   if (_steal_drag)
   {
     char* path = 0;
-    std::list<char*>::iterator it;
 
-    for (it = _drag_data.begin(); it != _drag_data.end(); it++)
+    for (auto it : _dnd_data.Uris())
     {
-      if (g_str_has_suffix(*it, ".desktop"))
+      if (g_str_has_suffix(it.c_str(), ".desktop"))
       {
-        if (g_str_has_prefix(*it, "application://"))
+        if (g_str_has_prefix(it.c_str(), "application://"))
         {
-          const char* tmp = *it + strlen("application://");
-          char* tmp2 = g_strdup_printf("file:///usr/share/applications/%s", tmp);
-          path = g_filename_from_uri(tmp2, NULL, NULL);
-          g_free(tmp2);
+          const char* tmp = it.c_str() + strlen("application://");
+          unity::glib::String tmp2(g_strdup_printf("file:///usr/share/applications/%s", tmp));
+          path = g_filename_from_uri(tmp2.Value(), NULL, NULL);
           break;
         }
-        else if (g_str_has_prefix(*it, "file://"))
+        else if (g_str_has_prefix(it.c_str(), "file://"))
         {
-          path = g_filename_from_uri(*it, NULL, NULL);
+          path = g_filename_from_uri(it.c_str(), NULL, NULL);
           break;
         }
       }
@@ -3050,7 +3103,7 @@ Launcher::ProcessDndDrop(int x, int y)
   }
   else if (_dnd_hovered_icon && _drag_action != nux::DNDACTION_NONE)
   {
-    _dnd_hovered_icon->AcceptDrop(_drag_data);
+    _dnd_hovered_icon->AcceptDrop(_dnd_data);
   }
 
   if (_drag_action != nux::DNDACTION_NONE)
@@ -3059,9 +3112,8 @@ Launcher::ProcessDndDrop(int x, int y)
     SendDndFinished(false, _drag_action);
 
   // reset our shiz
-  ProcessDndLeave();
+  DndLeave();
 }
-
 
 /*
  * Returns the current selected icon if it is in keynavmode

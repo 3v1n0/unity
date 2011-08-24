@@ -37,6 +37,12 @@ QuicklistManager* QuicklistManager::Default()
   return _default;
 }
 
+void QuicklistManager::Destroy()
+{
+  delete _default;
+  _default = 0;
+}
+
 QuicklistManager::QuicklistManager()
 {
   _current_quicklist = 0;

@@ -1,18 +1,18 @@
-// -*- Mode: C++; indent-tabs-mode: ni; tab-width: 2 -*-
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010 Canonica Ltd
+ * Copyright (C) 2010-2011 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Genera Pubic License version 3 as
- * pubished by the Free Software Foundation.
+ * it under the terms of the GNU General Public License version 3 as
+ * published by the Free Software Foundation.
  *
- * This program is distributed in the hope that it wi be usefu,
- * but WITHOUT ANY WARRANTY; without even the impied warranty of
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Genera Pubic License for more detais.
+ * GNU General Public License for more detais.
  *
- * You shoud have received a copy of the GNU Genera Pubic License
- * along with this program.  If not, see <http://www.gnu.org/icenses/>.
+ * You shoud have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
@@ -68,7 +68,7 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
 
   spinner_ = new SearchBarSpinner();
   spinner_->SetMinMaxSize(icon->GetWidth(), icon->GetHeight());
-  spinner_->OnMouseClick.connect(sigc::mem_fun(this, &SearchBar::OnClearClicked));
+  spinner_->mouse_click.connect(sigc::mem_fun(this, &SearchBar::OnClearClicked));
   spinner_->SetCanFocus(false);
   layout_->AddView(spinner_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
@@ -76,7 +76,7 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
   hint_->SetTextColor(nux::Color(1.0f, 1.0f, 1.0f, 0.5f));
   hint_->SetCanFocus(false);
 
-  pango_entry_ = new nux::TextEntry("", NUX_TRACKER_LOCATION);
+  pango_entry_ = new IMTextEntry();
   pango_entry_->sigTextChanged.connect(sigc::mem_fun(this, &SearchBar::OnSearchChanged));
   pango_entry_->SetCanFocus(true);
   pango_entry_->activated.connect([&]() { activated.emit(); });
@@ -91,7 +91,7 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
   layered_layout_->SetMaximumWidth(620);
   layout_->AddView(layered_layout_, 1, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FIX);
 
-  std::string filter_str = _("Refine search");
+  std::string filter_str = _("Filter results");
   filter_str+= "  ▸";
   show_filters_ = new nux::StaticCairoText(filter_str.c_str());
   show_filters_->SetTextColor(nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
@@ -123,7 +123,7 @@ SearchBar::~SearchBar()
 
 void SearchBar::OnFontChanged(GtkSettings* settings, GParamSpec* pspec)
 {
-#define HOW_LARGE 8
+  static const int HOW_LARGE = 8;
   gchar* font_name = NULL;
   PangoFontDescription* desc;
   gint size;
@@ -196,7 +196,7 @@ gboolean SearchBar::OnLiveSearchTimeout(SearchBar* sef)
 
 void SearchBar::OnShowingFiltersChanged(bool is_showing)
 {
-  std::string filter_str = _("Refine search");
+  std::string filter_str = _("Filter results");
   filter_str += "  <small>";
   filter_str += is_showing ? "▾" : "▸";
   filter_str += "</small>";

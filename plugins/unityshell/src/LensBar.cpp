@@ -37,40 +37,66 @@ NUX_IMPLEMENT_OBJECT_TYPE(LensBar);
 LensBar::LensBar()
   : nux::View(NUX_TRACKER_LOCATION)
 {
-  layout_ = new nux::HLayout();
-  layout_->SetContentDistribution(nux::MAJOR_POSITION_CENTER);
-  layout_->SetHorizontalInternalMargin(24);
-  SetLayout(layout_);
-
-  SetMinimumHeight(40);
-  SetMaximumHeight(40);
-
-  {
-    std::string id = "home";
-    IconTexture* icon = new IconTexture(PKGDATADIR"/lens-nav-home.svg", 26);
-    icon->SetMinMaxSize(26, 26);
-    icon->SetVisible(true);
-    layout_->AddView(icon, 0, nux::eCenter, nux::eFix);
-
-    icon->mouse_click.connect([&, id] (int x, int y, unsigned long button, unsigned long keyboard) { lens_activated.emit(id); });
-  }
+  SetupBackground();
+  SetupLayout();
+  SetupHomeLens();
 }
 
 LensBar::~LensBar()
 {}
 
+void LensBar::SetupBackground()
+{
+  nux::ROPConfig rop;
+  rop.Blend = true;
+  rop.SrcBlend = GL_ONE;
+  rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+  bg_layer_ = new nux::ColorLayer(nux::Color(0.0f, 0.0f, 0.0f, 0.2f), true, rop);
+}
+
+void LensBar::SetupLayout()
+{
+  layout_ = new nux::HLayout();
+  layout_->SetContentDistribution(nux::MAJOR_POSITION_CENTER);
+  layout_->SetHorizontalInternalMargin(32);
+  SetLayout(layout_);
+
+  SetMinimumHeight(40);
+  SetMaximumHeight(40);
+}
+
+void LensBar::SetupHomeLens()
+{
+  LensBarIcon* icon = new LensBarIcon("home.lens", PKGDATADIR"/lens-nav-home.svg");
+  icon->SetVisible(true);
+  icon->active = true;
+  icons_.push_back(icon);
+  layout_->AddView(icon, 0, nux::eCenter, nux::MINOR_SIZE_FULL);
+
+  icon->mouse_click.connect([&, icon] (int x, int y, unsigned long button, unsigned long keyboard) { SetActive(icon); });
+}
+
 void LensBar::AddLens(Lens::Ptr& lens)
 {
-  std::string id = lens->id;
-  std::string icon_hint = lens->icon_hint;
-
-  IconTexture* icon = new IconTexture(icon_hint.c_str(), 26);
-  icon->SetMinMaxSize(26, 26);
+  LensBarIcon* icon = new LensBarIcon(lens->id, lens->icon_hint);
   icon->SetVisible(lens->visible);
   lens->visible.changed.connect([icon](bool visible) { icon->SetVisible(visible); } );
+  icons_.push_back(icon);
   layout_->AddView(icon, 0, nux::eCenter, nux::eFix);
 
-  icon->mouse_click.connect([&, id] (int x, int y, unsigned long button, unsigned long keyboard) { lens_activated.emit(id); });
+  icon->mouse_click.connect([&, icon] (int x, int y, unsigned long button, unsigned long keyboard) { SetActive(icon); });
+}
+
+void LensBar::Activate(std::string id)
+{
+  for (auto icon: icons_)
+  {
+    if (icon->id == id)
+    {
+      SetActive(icon);
+      break;
+    }
+  }
 }
 
 long LensBar::ProcessEvent(nux::IEvent& ievent, long traverse_info, long event_info)
@@ -85,8 +111,8 @@ void LensBar::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
   gfx_context.PushClippingRectangle(geo);
   nux::GetPainter().PaintBackground(gfx_context, geo);
 
-  nux::Color col (0.0f, 0.0f, 0.0f, 0.2f);
-  gfx_context.QRP_Color (geo.x, geo.y, geo.width, geo.height, col);
+  bg_layer_->SetGeometry(geo);
+  nux::GetPainter().RenderSinglePaintLayer(gfx_context, geo, bg_layer_);
 
   gfx_context.PopClippingRectangle();
 }
@@ -94,8 +120,22 @@ void LensBar::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
 void LensBar::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
 {
   gfx_context.PushClippingRectangle(GetGeometry());
+  
+  nux::GetPainter().PushLayer(gfx_context, bg_layer_->GetGeometry(), bg_layer_);
+  
   layout_->ProcessDraw(gfx_context, force_draw);
+
+  nux::GetPainter().PopBackground();
+  
   gfx_context.PopClippingRectangle();
+}
+
+void LensBar::SetActive(LensBarIcon* activated)
+{
+  for (auto icon: icons_)
+    icon->active = icon == activated;
+
+  lens_activated.emit(activated->id);
 }
 
 // Keyboard navigation

@@ -31,6 +31,7 @@
 
 #include "Introspectable.h"
 #include "DashController.h"
+#include "FontSettings.h"
 #include "Launcher.h"
 #include "LauncherController.h"
 #include "PanelController.h"
@@ -59,7 +60,7 @@ public:
 
   bool status ();
   void paint ();
-  
+
   GLuint texture () { return mFBTexture; }
 
 private:
@@ -77,6 +78,7 @@ private:
 
 #include <compiztoolbox/compiztoolbox.h>
 
+using unity::FontSettings;
 using namespace unity::switcher;
 using namespace unity::dash;
 using unity::UBusManager;
@@ -146,18 +148,18 @@ public:
   bool setKeyboardFocusKeyInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool launcherRevealEdgeInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
 
+  bool altTabInitiateCommon(CompAction* action,
+                            CompAction::State state,
+                            CompOption::Vector& options);
+  bool altTabTerminateCommon(CompAction* action,
+                             CompAction::State state,
+                             CompOption::Vector& options);
+
   bool altTabForwardInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
-  bool altTabForwardTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool altTabPrevInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
-  bool altTabPrevTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool altTabDetailStartInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
-  bool altTabDetailStartTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool altTabDetailStopInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
-  bool altTabDetailStopTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool altTabNextWindowInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
-  bool altTabNextWindowTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options);
-  bool altTabExitInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
-  bool altTabExitTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options);
 
   /* handle option changes and change settings inside of the
    * panel and dock views */
@@ -208,6 +210,7 @@ private:
   static void OnLauncherStartKeyNav(GVariant* data, void* value);
   static void OnLauncherEndKeyNav(GVariant* data, void* value);
 
+  FontSettings            font_settings_;
   Launcher*               launcher;
   LauncherController*     controller;
   DashController::Ptr     dashController;
@@ -257,8 +260,9 @@ private:
 
   UBusManager ubus_manager_;
   bool dash_is_open_;
+  CompScreen::GrabHandle grab_index_;
 
-	friend class UnityWindow;
+  friend class UnityWindow;
 };
 
 class UnityWindow :
@@ -275,6 +279,12 @@ public:
   GLWindow* gWindow;
 
   nux::Geometry last_bound;
+
+  /* occlusion detection only */
+  bool glPaint(const GLWindowPaintAttrib& attrib,
+               const GLMatrix&            matrix,
+               const CompRegion&          region,
+               unsigned int              mask);
 
   /* basic window draw function */
   bool glDraw(const GLMatrix& matrix,

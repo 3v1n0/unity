@@ -33,6 +33,7 @@
 #include <UnityCore/GLibSignal.h>
 
 #include "DashSearchBarSpinner.h"
+#include "IMTextEntry.h"
 #include "Introspectable.h"
 #include "StaticCairoText.h"
 
@@ -95,7 +96,7 @@ private:
   nux::HLayout* layout_;
   nux::LayeredLayout* layered_layout_;
   nux::StaticCairoText* hint_;
-  nux::TextEntry* pango_entry_;
+  IMTextEntry* pango_entry_;
   nux::StaticCairoText* show_filters_;
   
   int last_width_;

@@ -65,7 +65,7 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
   // Home button - not an indicator view
   _home_button = new PanelHomeButton();
   //_layout->AddView(_home_button, 0, nux::eCenter, nux::eFull);
-  //AddChild(_home_button);
+  AddChild(_home_button);
 
   _menu_view = new PanelMenuView();
   AddPanelView(_menu_view, 1);
@@ -127,12 +127,15 @@ void PanelView::OnBackgroundUpdate (GVariant *data, PanelView *self)
 
 void PanelView::OnDashHidden(GVariant* data, PanelView* self)
 {
+  if (self->_opacity >= 1.0f)
+    self->bg_effect_helper_.enabled = false;
   self->_dash_is_open = false;
   self->ForceUpdateBackground();
 }
 
 void PanelView::OnDashShown(GVariant* data, PanelView* self)
 {
+  self->bg_effect_helper_.enabled = true;
   self->_dash_is_open = true;
   self->ForceUpdateBackground();
 }
@@ -520,6 +523,9 @@ PanelView::SetOpacity(float opacity)
     return;
 
   _opacity = opacity;
+
+  if (_opacity < 1.0f && !_dash_is_open)
+    bg_effect_helper_.enabled = false;
 
   _home_button->SetOpacity(opacity);
   ForceUpdateBackground();

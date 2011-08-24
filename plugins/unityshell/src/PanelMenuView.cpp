@@ -130,12 +130,12 @@ PanelMenuView::PanelMenuView(int padding)
 
   PanelStyle::GetDefault()->changed.connect(sigc::mem_fun(this, &PanelMenuView::Refresh));
 
-  OnMouseEnter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
-  OnMouseLeave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
-  OnMouseMove.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseMove));
+  mouse_enter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
+  mouse_leave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
+  mouse_move.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseMove));
 
-  _panel_titlebar_grab_area->OnMouseEnter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
-  _panel_titlebar_grab_area->OnMouseLeave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
+  _panel_titlebar_grab_area->mouse_enter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
+  _panel_titlebar_grab_area->mouse_leave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
 
   // Register for all the interesting events
   UBusServer* ubus = ubus_server_get_default();
@@ -360,7 +360,7 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
     if ((_is_inside || _last_active_view || _show_now_activated) && have_valid_entries)
     {
-      if (_gradient_texture == NULL)
+      if (_gradient_texture.IsNull())
       {
         nux::NTextureData texture_data(nux::BITFMT_R8G8B8A8, geo.width, 1, 1);
         nux::ImageSurface surface = texture_data.GetSurface(0);
@@ -484,7 +484,7 @@ PanelMenuView::GetActiveViewName()
     BamfWindow* window = bamf_matcher_get_active_window(_matcher);
 
     if (BAMF_IS_WINDOW(window))
-      label = g_strdup(bamf_view_get_name(BAMF_VIEW(window)));
+      label = bamf_view_get_name(BAMF_VIEW(window));
   }
 
   if (!label)
@@ -520,7 +520,7 @@ PanelMenuView::GetActiveViewName()
 
         active_view = (BamfView*)bamf_matcher_get_active_window(_matcher);
         if (BAMF_IS_VIEW(active_view))
-          label = g_strdup(bamf_view_get_name(active_view));
+          label = bamf_view_get_name(active_view);
         else
           label = g_strdup("");
       }
@@ -738,8 +738,8 @@ void PanelMenuView::OnEntryAdded(unity::indicator::Entry::Ptr const& proxy)
 
   AddChild(view);
 
-  view->OnMouseEnter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
-  view->OnMouseLeave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
+  view->mouse_enter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
+  view->mouse_leave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
 
   QueueRelayout();
   QueueDraw();

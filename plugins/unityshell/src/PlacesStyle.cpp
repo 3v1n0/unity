@@ -143,6 +143,10 @@ int PlacesStyle::GetHomeTileHeight()
   return GetHomeTileIconSize() + (_text_height * 4);
 }
 
+int PlacesStyle::GetTextLineHeight()
+{
+  return _text_height;
+}
 
 nux::BaseTexture* PlacesStyle::GetDashBottomTile()
 {

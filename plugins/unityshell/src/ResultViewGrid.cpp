@@ -22,7 +22,12 @@
 #include <Nux/Nux.h>
 #include <NuxCore/Logger.h>
 #include <Nux/VLayout.h>
+#include <NuxImage/GdkGraphics.h>
+#include <gtk/gtk.h>
+#include <gdk/gdk.h>
 
+#include "ubus-server.h"
+#include "UBusMessages.h"
 #include "ResultViewGrid.h"
 #include "math.h"
 
@@ -44,6 +49,8 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
   , active_index_(-1)
   , selected_index_(-1)
   , preview_row_(0)
+  , last_mouse_down_x_(-1)
+  , last_mouse_down_y_(-1)
 {
   auto needredraw_lambda = [&](int value)
   {
@@ -58,12 +65,20 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
   key_down.connect (sigc::mem_fun (this, &ResultViewGrid::OnKeyDown));
   mouse_move.connect(sigc::mem_fun(this, &ResultViewGrid::MouseMove));
   mouse_click.connect(sigc::mem_fun(this, &ResultViewGrid::MouseClick));
+
+  mouse_down.connect([&](int x, int y, unsigned long mouse_state, unsigned long button_state)
+  {
+    last_mouse_down_x_ = x;
+    last_mouse_down_y_ = y;
+  });
+
   mouse_leave.connect([&](int x, int y, unsigned long mouse_state, unsigned long button_state)
   {
     mouse_over_index_ = -1;
     NeedRedraw();
   });
 
+  SetDndEnabled(true, false);
   NeedRedraw();
 }
 
@@ -520,6 +535,133 @@ uint ResultViewGrid::GetIndexAtPosition(int x, int y)
   uint column_number = std::max((x - padding), 0) / column_size;
 
   return (row_number * items_per_row) + column_number;
+}
+
+/* --------
+   DND code
+   --------
+*/
+void
+ResultViewGrid::DndSourceDragBegin()
+{
+  Reference();
+  ubus_server_send_message(ubus_server_get_default(),
+                           UBUS_PLACE_VIEW_CLOSE_REQUEST,
+                           NULL);
+
+  uint drag_index = GetIndexAtPosition(last_mouse_down_x_, last_mouse_down_y_);
+  Result drag_result = results_[drag_index];
+  current_drag_uri_ = drag_result.dnd_uri;
+  current_drag_icon_name_ = drag_result.icon_hint;
+
+  LOG_DEBUG (logger) << "Dnd begin at " <<
+                     last_mouse_down_x_ << ", " << last_mouse_down_y_ << " - using; "
+                     << current_drag_uri_ << " - "
+                     << current_drag_icon_name_;
+}
+
+nux::NBitmapData*
+ResultViewGrid::DndSourceGetDragImage()
+{
+  nux::NBitmapData* result = 0;
+  GdkPixbuf* pbuf;
+  GtkIconTheme* theme;
+  GtkIconInfo* info;
+  GError* error = NULL;
+  GIcon* icon;
+
+  std::string icon_name = current_drag_icon_name_.c_str();
+  int size = 64;
+
+  if (icon_name.empty())
+    icon_name = "application-default-icon";
+
+  theme = gtk_icon_theme_get_default();
+  icon = g_icon_new_for_string(icon_name.c_str(), NULL);
+
+  if (G_IS_ICON(icon))
+  {
+    info = gtk_icon_theme_lookup_by_gicon(theme, icon, size, (GtkIconLookupFlags)0);
+    g_object_unref(icon);
+  }
+  else
+  {
+    info = gtk_icon_theme_lookup_icon(theme,
+                                      icon_name.c_str(),
+                                      size,
+                                      (GtkIconLookupFlags) 0);
+  }
+
+  if (!info)
+  {
+    info = gtk_icon_theme_lookup_icon(theme,
+                                      "application-default-icon",
+                                      size,
+                                      (GtkIconLookupFlags) 0);
+  }
+
+  if (gtk_icon_info_get_filename(info) == NULL)
+  {
+    gtk_icon_info_free(info);
+    info = gtk_icon_theme_lookup_icon(theme,
+                                      "application-default-icon",
+                                      size,
+                                      (GtkIconLookupFlags) 0);
+  }
+
+  pbuf = gtk_icon_info_load_icon(info, &error);
+  if (error != NULL)
+  {
+    LOG_WARN (logger) << "could not find a pixbuf for " << icon_name;
+    g_error_free (error);
+    result = NULL;
+  }
+
+  gtk_icon_info_free(info);
+
+  if (GDK_IS_PIXBUF(pbuf))
+  {
+    // we don't free the pbuf as GdkGraphics will do it for us will do it for us
+    nux::GdkGraphics graphics(pbuf);
+    result = graphics.GetBitmap();
+  }
+
+  return result;
+}
+
+std::list<const char*>
+ResultViewGrid::DndSourceGetDragTypes()
+{
+  std::list<const char*> result;
+  result.push_back("text/uri-list");
+  return result;
+}
+
+const char*
+ResultViewGrid::DndSourceGetDataForType(const char* type, int* size, int* format)
+{
+  *format = 8;
+
+  if (!current_drag_uri_.empty())
+  {
+    *size = strlen(current_drag_uri_.c_str());
+    return current_drag_uri_.c_str();
+  }
+  else
+  {
+    *size = 0;
+    return 0;
+  }
+}
+
+void
+ResultViewGrid::DndSourceDragFinished(nux::DndAction result)
+{
+  UnReference();
+  last_mouse_down_x_ = -1;
+  last_mouse_down_y_ = -1;
+  current_drag_uri_.clear();
+  current_drag_icon_name_.clear();
 }
 
 }

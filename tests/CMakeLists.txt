@@ -95,6 +95,10 @@ add_executable (standalone-dash
                 ${UNITY_SRC}/FilterGenreButton.cpp
                 ${UNITY_SRC}/FilterGenreWidget.cpp
                 ${UNITY_SRC}/FilterBar.cpp
+                ${UNITY_SRC}/FontSettings.cpp
+                ${UNITY_SRC}/FontSettings.h
+                ${UNITY_SRC}/IMTextEntry.cpp
+                ${UNITY_SRC}/IMTextEntry.h
                 ${UNITY_SRC}/PlacesHomeView.cpp
                 ${UNITY_SRC}/PlacesHomeView.h
                 ${UNITY_SRC}/PlacesGroup.cpp
@@ -120,6 +124,8 @@ add_executable (standalone-dash
                 ${UNITY_SRC}/Introspectable.h
                 ${UNITY_SRC}/LensBar.cpp
                 ${UNITY_SRC}/LensBar.h
+                ${UNITY_SRC}/LensBarIcon.cpp
+                ${UNITY_SRC}/LensBarIcon.h
                 ${UNITY_SRC}/LensView.cpp
                 ${UNITY_SRC}/LensView.h
                 ${UNITY_SRC}/PreviewApplications.cpp
@@ -268,6 +274,8 @@ add_executable (test-filters
                 ${UNITY_SRC}/FilterMultiRangeButton.cpp
                 ${UNITY_SRC}/FilterMultiRangeWidget.cpp
                 ${UNITY_SRC}/DashStyle.cpp
+                ${UNITY_SRC}/PlacesStyle.cpp
+                ${UNITY_SRC}/PlacesStyle.h
                 )
 add_dependencies(test-filters unity-core-${UNITY_API_VERSION})
 
@@ -284,6 +292,8 @@ add_executable (test-filter-bar
                 ${UNITY_SRC}/FilterGenreWidget.cpp
                 ${UNITY_SRC}/FilterBar.cpp
                 ${UNITY_SRC}/DashStyle.cpp
+                ${UNITY_SRC}/PlacesStyle.cpp
+                ${UNITY_SRC}/PlacesStyle.h
                 )
 add_dependencies(test-filter-bar unity-core-${UNITY_API_VERSION})
 
@@ -348,6 +358,8 @@ add_executable (test-result-view
                 ${UNITY_SRC}/StaticCairoText.cpp
                 ${UNITY_SRC}/TextureCache.cpp
                 ${UNITY_SRC}/DashStyle.cpp
+                ${UNITY_SRC}/ubus-server.cpp
+                ${UNITY_SRC}/ubus-server.h
                 )
 add_dependencies(test-result-view unity-core-${UNITY_API_VERSION})
 

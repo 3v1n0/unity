@@ -179,12 +179,12 @@ public:
     return std::list<DbusmenuMenuitem*> ();
   }
 
-  nux::DndAction QueryAcceptDrop(std::list<char*> paths)
+  nux::DndAction QueryAcceptDrop(unity::DndData& dnd_data)
   {
     return nux::DNDACTION_NONE;
   }
 
-  void AcceptDrop(std::list<char*> paths) {}
+  void AcceptDrop(unity::DndData& dnd_data) {}
 
   void SendDndEnter() {}
 

@@ -34,7 +34,7 @@ namespace unity {
       , contents_ (NULL)
       , right_hand_contents_ (NULL)
       , expander_graphic_ (NULL)
-      , label_("<span font_size='x-large'>" + label + "</span>")
+      , label_("<span font_size='larger'>" + label + "</span>")
   {
     expanded.changed.connect (sigc::mem_fun(this, &FilterExpanderLabel::DoExpandChange));
     BuildLayout ();
@@ -46,8 +46,8 @@ namespace unity {
 
   void FilterExpanderLabel::SetLabel (std::string label)
   {
-    label_ = "<style size='x-large'>" + label + "</style>";
-    cairo_label_->SetText(label.c_str());
+    label_ = "<span font_size='larger'>" + label + "</span>";
+    cairo_label_->SetText(label_.c_str());
   }
 
   void FilterExpanderLabel::SetRightHandView (nux::View *view)
@@ -72,7 +72,7 @@ namespace unity {
 
     cairo_label_ = new nux::StaticText(label_.c_str(), NUX_TRACKER_LOCATION);
     cairo_label_->SetTextColor(nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
-    cairo_label_->OnMouseDown.connect(
+    cairo_label_->mouse_down.connect(
       [&](int x, int y, unsigned long button_flags, unsigned long key_flag)
       {
         expanded = !expanded;
@@ -113,7 +113,7 @@ namespace unity {
 
   void FilterExpanderLabel::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw) {
     GfxContext.PushClippingRectangle(GetGeometry());
-  
+
     GetLayout()->ProcessDraw(GfxContext, force_draw);
 
     GfxContext.PopClippingRectangle();

@@ -97,11 +97,12 @@ private:
   static void OnBackgroundUpdate (GVariant *data, SwitcherController *self);
 
   SwitcherModel::Ptr model_;
-  SwitcherView* view_;
+  SwitcherView::Ptr view_;
 
   nux::Geometry workarea_;
 
   nux::BaseWindow* view_window_;
+  nux::HLayout* main_layout_;
 
   bool visible_;
   guint show_timer_;
