@@ -70,7 +70,7 @@ public:
   void NextDetail();
   void PrevDetail();
 
-  void SetDetail(bool detail);
+  void SetDetail(bool detail, int min_windows = 1);
 
   void SelectFirstItem();
 

@@ -107,7 +107,7 @@ gboolean SwitcherController::OnDetailTimer(gpointer data)
   if (!self->visible_ || self->model_->detail_selection)
     return FALSE;
   
-  self->SetDetail(true);
+  self->SetDetail(true, 2);
   self->detail_mode_ = TAB_NEXT_WINDOW;
   self->detail_timer_ = 0;
   return FALSE;
@@ -273,9 +273,9 @@ SwitcherView* SwitcherController::GetView()
   return view_.GetPointer();
 }
 
-void SwitcherController::SetDetail(bool value)
+void SwitcherController::SetDetail(bool value, int min_windows)
 {
-  if (value && model_->Selection()->RelatedWindows() > 0)
+  if (value && model_->Selection()->RelatedWindows() >= min_windows)
   {
     model_->detail_selection = true;
     detail_mode_ = TAB_NEXT_WINDOW_LOOP;

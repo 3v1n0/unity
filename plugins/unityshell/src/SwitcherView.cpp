@@ -462,7 +462,7 @@ void SwitcherView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   gPainter.PaintTextureShape(GfxContext, background_geo, background_texture_, 30, 30, 30, 30, false);
 
   // magic constant comes from texture contents (distance to cleared area)
-  const int internal_offset = 21;
+  const int internal_offset = 20;
   nux::Geometry internal_clip(background_geo.x + internal_offset, 
                               background_geo.y + internal_offset, 
                               background_geo.width - internal_offset * 2, 

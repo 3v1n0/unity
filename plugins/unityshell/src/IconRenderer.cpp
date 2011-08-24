@@ -769,8 +769,6 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
     }
 
     nux::TexCoordXForm texxform;
-    texxform.SetFilter(nux::TEXFILTER_LINEAR, nux::TEXFILTER_LINEAR);
-
     nux::Color color = nux::color::LightGrey;
 
     if (arg.running_colored)
