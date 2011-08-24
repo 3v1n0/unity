@@ -242,29 +242,32 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nu
     return blur_texture_;
   }
 
-  // Handle newly created windows
-  if (popup_region_)
+  if (damage_region_)
   {
-    XUnionRegion (damage_region_, popup_region_, damage_region_);
-    XDestroyRegion (popup_region_);
-    popup_region_ = NULL;
-  }
+    // Handle newly created windows
+    if (popup_region_)
+    {
+      XUnionRegion (damage_region_, popup_region_, damage_region_);
+      XDestroyRegion (popup_region_);
+      popup_region_ = NULL;
+    }
 
-  // Active blur, only update if we're forcing one or if
-  // the underlying region on the backup texture has changed
-  XIntersectRegion(xregion, damage_region_, damage_intersection);
+    // Active blur, only update if we're forcing one or if
+    // the underlying region on the backup texture has changed
+    XIntersectRegion(xregion, damage_region_, damage_intersection);
 
-  if (XEmptyRegion(damage_intersection) && !force_update)
-    return blur_texture_;
+    if (XEmptyRegion(damage_intersection) && !force_update)
+      return blur_texture_;
 
-  XDestroyRegion(xregion);
-  XDestroyRegion(damage_intersection);
+    XDestroyRegion(xregion);
+    XDestroyRegion(damage_intersection);
 
-  blur_geometry_ =  nux::Geometry(0, 0, graphics_engine->GetWindowWidth(), graphics_engine->GetWindowHeight()).Intersect(geo);
+    blur_geometry_ =  nux::Geometry(0, 0, graphics_engine->GetWindowWidth(), graphics_engine->GetWindowHeight()).Intersect(geo);
 
-  if (blur_geometry_.IsNull() || blur_type == BLUR_NONE || !nux::GetGraphicsDisplay()->GetGpuDevice()->backup_texture0_.IsValid())
-  {
-    return nux::ObjectPtr<nux::IOpenGLBaseTexture>(NULL);
+    if (blur_geometry_.IsNull() || blur_type == BLUR_NONE || !nux::GetGraphicsDisplay()->GetGpuDevice()->backup_texture0_.IsValid())
+    {
+      return nux::ObjectPtr<nux::IOpenGLBaseTexture>(NULL);
+    }
   }
 
   // save the current fbo
