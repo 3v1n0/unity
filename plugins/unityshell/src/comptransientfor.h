@@ -27,6 +27,7 @@
 #include <core/core.h>
 #include "transientfor.h"
 
+// Will be merged back into compiz
 namespace compiz
 {
 class PrivateCompTransientForReader;

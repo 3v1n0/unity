@@ -28,6 +28,7 @@
 #include "inputremover.h"
 #include <boost/shared_ptr.hpp>
 
+// Will be merged back into compiz
 namespace compiz
 {
 class PrivateMinimizedWindowHandler;

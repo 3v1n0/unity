@@ -26,6 +26,7 @@
 #include <X11/Xatom.h>
 #include <X11/extensions/shape.h>
 
+// Will be merged back into compiz
 namespace compiz {
 
 class WindowInputRemover

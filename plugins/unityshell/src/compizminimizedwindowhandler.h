@@ -26,6 +26,7 @@
 #include "minimizedwindowhandler.h"
 #include "comptransientfor.h"
 
+// Will be merged back into compiz
 namespace compiz {
 
 class PrivateCompizMinimizedWindowHandler

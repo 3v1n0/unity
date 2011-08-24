@@ -28,6 +28,7 @@
 #include <list>
 #include <string>
 
+// Will be merged back into compiz
 namespace compiz
 {
 class PrivateX11TransientForReader;
