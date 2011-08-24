@@ -22,131 +22,15 @@
 #define _GNU_SOURCE
 #endif
 
-#include <transientfor.h>
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
 #include <iomanip>
 #include <unistd.h> 
 #include <sstream>
-#include <poll.h>
 #include <cstring>
 
-class X11Window
-{
-  public:
-
-    X11Window (Display *, Window id = 0);
-    ~X11Window ();
-
-    void makeTransientFor (X11Window *w);
-    void setClientLeader (X11Window *w);
-    void printTransients ();
-
-    std::vector<unsigned int> transients ();
-
-    unsigned int id () { return mXid; }
-
-  private:
-
-    Window mXid;
-    Display *mDpy;
-    bool mCreated;
-};
-
-X11Window::X11Window (Display *dpy, Window id)
-{
-  if (id == 0)
-  {
-    XSetWindowAttributes attrib;
-    XEvent		     e;
-
-    attrib.background_pixel = 0x0;
-    attrib.backing_pixel = 0x0;
-
-    id = XCreateWindow (dpy, DefaultRootWindow (dpy), 0, 0, 100, 100, 0,
-                        DefaultDepth (dpy, DefaultScreen (dpy)), InputOutput,
-                        DefaultVisual (dpy, DefaultScreen (dpy)), CWBackingPixel | CWBackPixel, &attrib);
-
-    XSelectInput (dpy, id, ExposureMask | StructureNotifyMask);
-    XMapRaised (dpy, id);
-
-    while (1)
-    {
-      XNextEvent (dpy, &e);
-      bool exposed = false;
-
-      switch (e.type)
-      {
-      case Expose:
-        if (e.xexpose.window == id)
-          exposed = true;
-        break;
-      default:
-        break;
-      }
-
-      if (exposed)
-        break;
-    }
-
-    XClearWindow (dpy, id);
-
-    mCreated = true;
-  }
-  else
-    mCreated = false;
-
-  mXid = id;
-  mDpy = dpy;
-}
-
-X11Window::~X11Window ()
-{
-  if (mCreated)
-    XDestroyWindow (mDpy, mXid);
-}
-
-void
-X11Window::makeTransientFor (X11Window *w)
-{
-  XSetTransientForHint (mDpy, mXid, w->id ());
-  XSync (mDpy, false);
-}
-
-void
-X11Window::setClientLeader (X11Window *w)
-{
-  Atom wmClientLeader = XInternAtom (mDpy, "WM_CLIENT_LEADER", 0);
-  Atom netWmWindowType = XInternAtom (mDpy, "_NET_WM_WINDOW_TYPE", 0);
-  Atom netWmWindowTypeDialog = XInternAtom (mDpy, "_NET_WM_WINDOW_TYPE_DIALOG", 0);
-
-  Window cl = w->id ();
-
-  XChangeProperty (mDpy, mXid, wmClientLeader, XA_WINDOW, 32,
-                   PropModeReplace, (unsigned char *) &cl, 1);
-  XChangeProperty (mDpy, mXid, netWmWindowType, XA_ATOM, 32,
-                   PropModeAppend, (const unsigned char *) &netWmWindowTypeDialog, 1);
-
-  XSync (mDpy, false);
-}
-
-std::vector<unsigned int>
-X11Window::transients ()
-{
-  compiz::X11TransientForReader *reader = new compiz::X11TransientForReader (mDpy, mXid);
-  std::vector<unsigned int> transients = reader->getTransients ();
-
-  delete reader;
-  return transients;
-}
-
-void
-X11Window::printTransients ()
-{
-  for (unsigned int &w : transients ())
-    printf ("window id 0x%x\n", w);
-}
+#include <x11-window.h>
 
 void usage ()
 {
