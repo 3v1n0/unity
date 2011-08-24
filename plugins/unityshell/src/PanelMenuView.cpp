@@ -340,7 +340,9 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   nux::ColorLayer layer(nux::Color(0x00000000), true, rop);
   gPainter.PushDrawLayer(GfxContext, GetGeometry(), &layer);
 
-  if (_is_own_window || _places_showing || !_we_control_active)
+  nux::Point point = nux::GetWindowCompositor().GetMousePosition();
+  
+  if (_is_own_window || _places_showing || !_we_control_active || (_is_maximized && geo.IsPointInside(point.x, point.y)) || (_is_maximized && _is_inside))
   {
 
   }
@@ -410,19 +412,21 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
       nux::TexCoordXForm texxform1;
 
       // Modulate the checkboard and the gradient texture
-      GfxContext.QRP_2TexMod(geo.x, geo.y,
-                             geo.width, geo.height,
-                             _gradient_texture, texxform0,
-                             nux::color::White,
-                             _title_tex->GetDeviceTexture(),
-                             texxform1,
-                             nux::color::White);
+      if (_title_tex)
+        GfxContext.QRP_2TexMod(geo.x, geo.y,
+                               geo.width, geo.height,
+                               _gradient_texture, texxform0,
+                               nux::color::White,
+                               _title_tex->GetDeviceTexture(),
+                               texxform1,
+                               nux::color::White);
 
       GfxContext.GetRenderStates().SetBlend(alpha, src, dest);
       // The previous blend is too aggressive on the texture and therefore there
       // is a slight loss of clarity. This fixes that
       geo.width = button_width * (factor - 1);
-      gPainter.PushDrawLayer(GfxContext, geo, _title_layer);
+      if (_title_layer)
+        gPainter.PushDrawLayer(GfxContext, geo, _title_layer);
       geo = GetGeometry();
     }
     else
@@ -446,14 +450,16 @@ PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   GfxContext.PushClippingRectangle(geo);
 
+  nux::Point point = nux::GetWindowCompositor().GetMousePosition();
+  
   if (!_is_own_window && !_places_showing && _we_control_active)
   {
-    if (_is_inside || _last_active_view || _show_now_activated)
+    if (geo.IsPointInside(point.x, point.y) || _last_active_view || _show_now_activated)
     {
       layout_->ProcessDraw(GfxContext, force_draw);
     }
 
-    if (_is_maximized)
+    if (_is_maximized && (geo.IsPointInside(point.x, point.y) || _is_inside))
     {
       _window_buttons->ProcessDraw(GfxContext, true);
     }
@@ -613,9 +619,6 @@ PanelMenuView::Refresh()
 
   x = _padding;
   y = 0;
-
-  if (_is_maximized)
-    x += _window_buttons->GetContentWidth() + _padding + _padding;
 
   if (label)
   {
