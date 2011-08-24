@@ -42,6 +42,7 @@ LensView::LensView()
   : nux::View(NUX_TRACKER_LOCATION)
   , search_string("")
   , filters_expanded(false)
+  , fix_renderering_id_(0)
 {}
 
 LensView::LensView(Lens::Ptr lens)
@@ -50,6 +51,7 @@ LensView::LensView(Lens::Ptr lens)
   , filters_expanded(false)
   , lens_(lens)
   , initial_activation_(true)
+  , fix_renderering_id_(0)
 {
   SetupViews();
   SetupCategories();
@@ -65,7 +67,10 @@ LensView::LensView(Lens::Ptr lens)
 }
 
 LensView::~LensView()
-{}
+{
+  if (fix_renderering_id_)
+    g_source_remove(fix_renderering_id_);
+}
 
 void LensView::SetupViews()
 {
@@ -193,6 +198,36 @@ void LensView::UpdateCounts(PlacesGroup* group)
 
   group->SetCounts(style->GetDefaultNColumns(), counts_[group]);
   group->SetVisible(counts_[group]);
+
+  QueueFixRenderering();
+}
+
+void LensView::QueueFixRenderering()
+{
+  if (fix_renderering_id_)
+    return;
+
+  fix_renderering_id_ = g_timeout_add(0, (GSourceFunc)FixRenderering, this);
+}
+
+gboolean LensView::FixRenderering(LensView* self)
+{
+  std::list<Area*> children = self->scroll_layout_->GetChildren();
+  std::list<Area*>::reverse_iterator rit;
+  bool found_one = false;
+
+  for (rit = children.rbegin(); rit != children.rend(); ++rit)
+  {
+    PlacesGroup* group = static_cast<PlacesGroup*>(*rit);
+
+    if (group->IsVisible())
+      group->SetDrawSeparator(found_one);
+
+    found_one = group->IsVisible();
+  }
+
+  self->fix_renderering_id_ = 0;
+  return FALSE;
 }
 
 void LensView::OnGroupExpanded(PlacesGroup* group)
