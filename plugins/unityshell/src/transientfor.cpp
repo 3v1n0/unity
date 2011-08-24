@@ -47,7 +47,7 @@ compiz::X11TransientForReader::getAncestor ()
   unsigned char *prop;
 
   if (XGetWindowProperty (priv->mDpy, priv->mXid, wmTransientFor, 0L, 2L, false,
-                          XA_WINDOW, &actualType, &actualFormat, &nItems, &nLeft, &prop))
+                          XA_WINDOW, &actualType, &actualFormat, &nItems, &nLeft, &prop) == Success)
   {
     if (actualType == XA_WINDOW && actualFormat == 32 && nLeft == 0 && nItems == 1)
     {
@@ -81,7 +81,7 @@ compiz::X11TransientForReader::isGroupTransientFor (unsigned int clientLeader)
   std::list<Atom>   atoms;
 
   if (XGetWindowProperty (priv->mDpy, priv->mXid, wmClientLeader, 0L, 2L, false,
-                          XA_WINDOW, &actualType, &actualFormat, &nItems, &nLeft, &prop))
+                          XA_WINDOW, &actualType, &actualFormat, &nItems, &nLeft, &prop) == Success)
   {
     if (actualType == XA_WINDOW && actualFormat == 32 && nLeft == 0 && nItems == 1)
     {
@@ -95,7 +95,8 @@ compiz::X11TransientForReader::isGroupTransientFor (unsigned int clientLeader)
 
   /* Check if the returned client leader matches
      * the requested one */
-  if (serverClientLeader == clientLeader)
+  if (serverClientLeader == clientLeader &&
+      clientLeader != priv->mXid)
   {
     if (ancestor == None || ancestor == DefaultRootWindow (priv->mDpy))
     {
@@ -118,14 +119,16 @@ compiz::X11TransientForReader::isGroupTransientFor (unsigned int clientLeader)
       * should consider to be part of a window group by this client leader */
 
 	    if (XGetWindowProperty (priv->mDpy, priv->mXid, wmWindowType, 0L, 15L, false,
-                              XA_ATOM, &actualType, &actualFormat, &nItems, &nLeft, &prop))
-	    {
-        if (actualType == XA_ATOM && actualFormat == 32 && nLeft == 32 && nItems)
+                              XA_ATOM, &actualType, &actualFormat, &nItems, &nLeft, &prop) == Success)
+      {
+        if (actualType == XA_ATOM && actualFormat == 32 && nLeft == 0 && nItems)
         {
           Atom *data = (Atom *) prop;
 
           while (nItems--)
+          {
             atoms.remove (*data++);
+          }
         }
 	    }
 

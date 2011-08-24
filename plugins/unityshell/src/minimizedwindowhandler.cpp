@@ -95,16 +95,18 @@ compiz::MinimizedWindowHandler::getTransients ()
 
   wmClientList = XInternAtom (priv->mDpy, "_NET_CLIENT_LIST", 0);
 
-  if (XGetWindowProperty (priv->mDpy, priv->mXid, wmClientList, 0L, 512L, false,
+  if (XGetWindowProperty (priv->mDpy, DefaultRootWindow (priv->mDpy), wmClientList, 0L, 512L, false,
                           XA_WINDOW, &actualType, &actualFormat, &nItems, &nLeft,
-                          &prop))
+                          &prop) == Success)
   {
     if (actualType == XA_WINDOW && actualFormat == 32 && nItems && !nLeft)
     {
 	    Window *data = (Window *) prop;
 
 	    while (nItems--)
+      {
         clientList.push_back (*data++);
+      }
     }
 
     XFree (prop);
@@ -123,7 +125,7 @@ compiz::MinimizedWindowHandler::getTransients ()
 
     if (reader->isTransientFor (priv->mXid) ||
         reader->isGroupTransientFor (priv->mXid))
-	    transients.push_back (w);
+      transients.push_back (w);
 
     delete reader;
   }
@@ -151,8 +153,8 @@ compiz::MinimizedWindowHandler::minimize ()
     holder->priv->mTransients.push_back (p);
   }
 
-  holder->priv->mTransients.remove_if (predicate_this);
   priv->mTransients.remove_if (predicate_holder);
+  holder->priv->mTransients.remove_if (predicate_this);
 
   for (MinimizedWindowHandler::Ptr &mw : holder->priv->mTransients)
     priv->mTransients.push_back (mw);
@@ -201,8 +203,8 @@ compiz::MinimizedWindowHandler::unminimize ()
     holder->priv->mTransients.push_back (p);
   }
 
-  holder->priv->mTransients.remove_if (predicate_this);
   priv->mTransients.remove_if (predicate_holder);
+  holder->priv->mTransients.remove_if (predicate_this);
 
   for (MinimizedWindowHandler::Ptr &mw : holder->priv->mTransients)
     priv->mTransients.push_back (mw);
