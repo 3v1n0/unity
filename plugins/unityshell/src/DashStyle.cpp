@@ -1302,9 +1302,9 @@ namespace unity
     PangoLayout*          layout   = NULL;
     PangoFontDescription* desc     = NULL;
     PangoContext*         pangoCtx = NULL;
-    PangoRectangle        logRect  = {0, 0, 0, 0};
+    PangoRectangle        inkRect  = {0, 0, 0, 0};
     int                   dpi      = 0;
-  char*                 fontName = NULL;
+    char*                 fontName = NULL;
     GdkScreen*            screen   = gdk_screen_get_default();  // is not ref'ed
     GtkSettings*          settings = gtk_settings_get_default();// is not ref'ed
 
@@ -1354,10 +1354,10 @@ namespace unity
                                          (float) dpi / (float) PANGO_SCALE);
     }
     pango_layout_context_changed(layout);
-    pango_layout_get_extents(layout, NULL, &logRect);
+    pango_layout_get_extents(layout, &inkRect, NULL);
 
-    width  = (logRect.x + logRect.width) / PANGO_SCALE;
-    height = (logRect.y + logRect.height) / PANGO_SCALE;
+    width  = inkRect.width / PANGO_SCALE;
+    height = inkRect.height / PANGO_SCALE;
 
     // clean up
     pango_font_description_free(desc);
@@ -1388,9 +1388,6 @@ namespace unity
 
     w = cairo_image_surface_get_width (cairo_get_target (cr));
     h = cairo_image_surface_get_height (cairo_get_target (cr));
-    GetTextExtents (textWidth, textHeight, w, h, label);
-    x = (w - textWidth) / 2.0;
-    y = (h - textHeight) / 2.0;
 
     if (!screen)
       cairo_set_font_options(cr, _defaultFontOptions);
@@ -1424,7 +1421,6 @@ namespace unity
     pango_layout_set_font_description(layout, desc);
     pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
     pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_END);
-    pango_layout_set_alignment(layout, PANGO_ALIGN_LEFT);
 
     pango_layout_set_markup(layout, label.c_str(), -1);
     pango_layout_set_width(layout, w * PANGO_SCALE);
@@ -1453,6 +1449,11 @@ namespace unity
     cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
     cairo_set_source_rgba (cr, color[R], color[G], color[B], opacity);
     pango_layout_context_changed(layout);
+	PangoRectangle ink = {0, 0, 0, 0};
+    PangoRectangle log = {0, 0, 0, 0};
+    pango_layout_get_extents (layout, &ink, &log);
+	x = ((double) w - pango_units_to_double (ink.width)) / 2.0;
+    y = ((double) h - pango_units_to_double (log.height)) / 2.0;
     cairo_move_to (cr, x, y);
     pango_cairo_show_layout(cr, layout);
 
