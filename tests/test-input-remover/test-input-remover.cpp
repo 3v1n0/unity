@@ -29,156 +29,155 @@
 
 void usage ()
 {
-    std::cout << "test-input-remover [WINDOW] [TIME]" << std::endl;
+  std::cout << "test-input-remover [WINDOW] [TIME]" << std::endl;
 }
 
 bool
 print_rects (Display *dpy, Window xid)
 {
-    XRectangle		       *rects;
-    int			       count = 0, ordering;
-    int			       x, y;
-    unsigned int	       width, height, border, depth;
-    Window		       root;
+  XRectangle		       *rects;
+  int			       count = 0, ordering;
+  int			       x, y;
+  unsigned int	       width, height, border, depth;
+  Window		       root;
 
-    XGetGeometry (dpy, xid, &root, &x, &y, &width, &height, &border, &depth);
+  XGetGeometry (dpy, xid, &root, &x, &y, &width, &height, &border, &depth);
 
-    rects = XShapeGetRectangles (dpy, xid, ShapeInput,
-				 &count, &ordering);
+  rects = XShapeGetRectangles (dpy, xid, ShapeInput,
+                               &count, &ordering);
 
-    if (count == 0)
-	std::cout << "No Input Shape Set" << std::endl;
+  if (count == 0)
+    std::cout << "No Input Shape Set" << std::endl;
 
-    /* check if the returned shape exactly matches the window shape -
+  /* check if the returned shape exactly matches the window shape -
      *      if that is true, the window currently has no set input shape */
-    if ((count == 1) &&
-	(rects[0].x == -((int) border)) &&
-	(rects[0].y == -((int) border)) &&
-	(rects[0].width == (width + border)) &&
-	(rects[0].height == (height + border)))
-    {
-	std::cout << "No Input Shape Defined" << std::endl;
-    }
+  if ((count == 1) &&
+      (rects[0].x == -((int) border)) &&
+      (rects[0].y == -((int) border)) &&
+      (rects[0].width == (width + border)) &&
+      (rects[0].height == (height + border)))
+  {
+    std::cout << "No Input Shape Defined" << std::endl;
+  }
 
-    for (int i = 0; i < count; i++)
-    {
-	std::cout << "Rect - " << rects[i].x << ", " << rects[i].y << ", " << rects[i].width << ", " << rects[i].height << std::endl;
-    }
+  for (int i = 0; i < count; i++)
+  {
+    std::cout << "Rect - " << rects[i].x << ", " << rects[i].y << ", " << rects[i].width << ", " << rects[i].height << std::endl;
+  }
 
-    if (rects)
-	XFree (rects);
+  if (rects)
+    XFree (rects);
 
-    return count > 0;
+  return count > 0;
 }
 
 int main (int argc, char **argv)
 {
-    Display                    *dpy;
-    Window                     xid;
-    int                        time = 0;
-    compiz::WindowInputRemover *remover;
-    bool		       shapeExt;
-    int			       shapeEvent;
-    int			       shapeError;
+  Display                    *dpy;
+  Window                     xid;
+  int                        time = 0;
+  compiz::WindowInputRemover *remover;
+  bool		       shapeExt;
+  int			       shapeEvent;
+  int			       shapeError;
 
-    if ((argc == 2 && std::string (argv[1]) == "--help") || argc > 3)
+  if ((argc == 2 && std::string (argv[1]) == "--help") || argc > 3)
+  {
+    usage ();
+    return 1;
+  }
+
+  dpy = XOpenDisplay (NULL);
+
+  if (!dpy)
+  {
+    std::cerr << "Failed to open display ... setting test to passed" << std::endl;
+    return 0;
+  }
+
+  shapeExt = XShapeQueryExtension (dpy, &shapeEvent, &shapeError);
+
+  if (!shapeExt)
+  {
+    std::cerr << "No shape extension .. setting test to passed" << std::endl;
+    XCloseDisplay (dpy);
+    return 0;
+  }
+
+  if (argc > 1)
+    std::stringstream (argv[1]) >> std::hex >> xid;
+  else
+  {
+    XSetWindowAttributes attrib;
+    XEvent		     e;
+
+    xid = XCreateWindow (dpy, DefaultRootWindow (dpy), 0, 0, 100, 100, 0,
+                         DefaultDepth (dpy, DefaultScreen (dpy)), InputOutput,
+                         DefaultVisual (dpy, DefaultScreen (dpy)), 0, &attrib);
+
+    XSelectInput (dpy, xid, ExposureMask | StructureNotifyMask);
+    XMapRaised (dpy, xid);
+    while (1)
     {
-	usage ();
-	return 1;
-    }
-
-    dpy = XOpenDisplay (NULL);
-
-    if (!dpy)
-    {
-	std::cerr << "Failed to open display ... setting test to passed" << std::endl;
-	return 0;
-    }
-
-    shapeExt = XShapeQueryExtension (dpy, &shapeEvent, &shapeError);
-
-    if (!shapeExt)
-    {
-	std::cerr << "No shape extension .. setting test to passed" << std::endl;
-	XCloseDisplay (dpy);
-	return 0;
-    }
-
-    if (argc > 1)
-	std::stringstream (argv[1]) >> std::hex >> xid;
-    else
-    {
-	XSetWindowAttributes attrib;
-	XEvent		     e;
-
-	xid = XCreateWindow (dpy, DefaultRootWindow (dpy), 0, 0, 100, 100, 0,
-			     DefaultDepth (dpy, DefaultScreen (dpy)), InputOutput,
-			     DefaultVisual (dpy, DefaultScreen (dpy)), 0, &attrib);
-
-	XSelectInput (dpy, xid, ExposureMask | StructureNotifyMask);
-	XMapRaised (dpy, xid);
-	while (1)
-	{
 	    XNextEvent (dpy, &e);
 	    bool exposed = false;
 
 	    switch (e.type)
 	    {
-		case Expose:
-		    std::cout << "Exposure event" << std::endl;
+      case Expose:
 		    if (e.xexpose.window == xid)
-			exposed = true;
+          exposed = true;
 		    break;
-		default:
+      default:
 		    break;
 	    }
 
 	    if (exposed)
-		break;
-	}
+        break;
     }
+  }
 
-    if (argc == 3)
-	std::stringstream (argv[2]) >> std::dec >> time;
+  if (argc == 3)
+    std::stringstream (argv[2]) >> std::dec >> time;
 
-    remover = new compiz::WindowInputRemover (dpy, xid);
-    if (!remover)
-	return 1;
+  remover = new compiz::WindowInputRemover (dpy, xid);
+  if (!remover)
+    return 1;
 
-    print_rects (dpy, xid);
+  print_rects (dpy, xid);
 
-    std::cout << "Saving input shape of 0x" << std::hex << xid << std::dec << std::endl;
-    remover->save ();
-    std::cout << "Removing input shape of 0x" << std::hex << xid << std::dec << std::endl;
-    remover->remove ();
-    XSync (dpy, false);
+  std::cout << "Saving input shape of 0x" << std::hex << xid << std::dec << std::endl;
+  remover->save ();
+  std::cout << "Removing input shape of 0x" << std::hex << xid << std::dec << std::endl;
+  remover->remove ();
+  XSync (dpy, false);
 
-    std::cout << "Getting input rects for 0x" << std::hex << xid << std::dec << std::endl;
-    if (print_rects (dpy, xid))
-    {
-	std::cout << "Error! Window still has rects after shape was removed!" << std::endl;
-	delete remover;
-	XCloseDisplay (dpy);
-	return 1;
-    }
-
-    std::cout << "Waiting " << std::dec << time << " seconds" << std::endl;
-    sleep (time);
-    std::cout << "Restoring input shape of 0x" << std::hex << xid << std::dec << std::endl;
-    remover->restore ();
-    XSync (dpy, false);
-
-    if (!print_rects (dpy, xid))
-    {
-	std::cout << "Error! Failed to restore input shape for 0x" << std::hex << xid << std::dec << std::endl;
-	delete remover;
-	XCloseDisplay (dpy);
-	return 1;
-    }
-
+  std::cout << "Getting input rects for 0x" << std::hex << xid << std::dec << std::endl;
+  if (print_rects (dpy, xid))
+  {
+    std::cout << "Error! Window still has rects after shape was removed!" << std::endl;
     delete remover;
-
     XCloseDisplay (dpy);
+    return 1;
+  }
 
-    return 0;
+  std::cout << "Waiting " << std::dec << time << " seconds" << std::endl;
+  sleep (time);
+  std::cout << "Restoring input shape of 0x" << std::hex << xid << std::dec << std::endl;
+  remover->restore ();
+  XSync (dpy, false);
+
+  if (!print_rects (dpy, xid))
+  {
+    std::cout << "Error! Failed to restore input shape for 0x" << std::hex << xid << std::dec << std::endl;
+    delete remover;
+    XCloseDisplay (dpy);
+    return 1;
+  }
+
+  delete remover;
+
+  XCloseDisplay (dpy);
+
+  return 0;
 }

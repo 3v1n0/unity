@@ -59,12 +59,11 @@ compiz::WindowInputRemover::save ()
 
   rects = XShapeGetRectangles (mDpy, mShapeWindow, ShapeInput,
                                &count, &ordering);
-
   if (count == 0)
     return false;
 
   /* check if the returned shape exactly matches the window shape -
-     *      if that is true, the window currently has no set input shape */
+   *      if that is true, the window currently has no set input shape */
   if ((count == 1) &&
       (rects[0].x == -((int) border)) &&
       (rects[0].y == -((int) border)) &&

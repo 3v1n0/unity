@@ -122,6 +122,9 @@ compiz::MinimizedWindowHandler::minimize ()
 {
   Atom          wmState = XInternAtom (priv->mDpy, "WM_STATE", 0);
   unsigned long data[2];
+  Window        root = DefaultRootWindow (priv->mDpy), parent = priv->mXid, lastParent = priv->mXid;
+  Window        *children;
+  unsigned int  nchildren;
 
   std::vector<unsigned int> transients = getTransients ();
 
@@ -133,6 +136,20 @@ compiz::MinimizedWindowHandler::minimize ()
 
     delete mw;
   }
+
+  do
+  {
+    if (XQueryTree (priv->mDpy, parent, &root, &parent, &children, &nchildren))
+    {
+      if (root != parent)
+        lastParent = parent;
+      XFree (children);
+    }
+    else
+      root = parent;
+  } while (root != parent);
+
+  setVisibility (false, lastParent);
 
   data[0] = IconicState;
   data[1] = None;
@@ -146,6 +163,9 @@ compiz::MinimizedWindowHandler::unminimize ()
 {
   Atom          wmState = XInternAtom (priv->mDpy, "WM_STATE", 0);
   unsigned long data[2];
+  Window        root = DefaultRootWindow (priv->mDpy), parent = priv->mXid, lastParent = priv->mXid;
+  Window        *children;
+  unsigned int  nchildren;
 
   std::vector<unsigned int> transients = getTransients ();
 
@@ -157,6 +177,20 @@ compiz::MinimizedWindowHandler::unminimize ()
 
     delete mw;
   }
+
+  do
+  {
+    if (XQueryTree (priv->mDpy, parent, &root, &parent, &children, &nchildren))
+    {
+      if (root != parent)
+        lastParent = parent;
+      XFree (children);
+    }
+    else
+      root = parent;
+  } while (root != parent);
+
+  setVisibility (true, lastParent);
 
   data[0] = NormalState;
   data[1] = None;

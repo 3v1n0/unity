@@ -371,6 +371,7 @@ add_executable (test-bg-hash
 add_dependencies (test-bg-hash unity-core-${UNITY_API_VERSION})
 
 add_subdirectory (test-input-remover)
+add_subdirectory (test-minimize-window-handler)
 
 #
 # GTest tests
