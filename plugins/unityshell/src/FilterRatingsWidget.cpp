@@ -38,6 +38,7 @@ namespace unity {
   {
     any_button_ = new FilterBasicButton(_("Any"), NUX_TRACKER_LOCATION);
     any_button_->activated.connect(sigc::mem_fun(this, &FilterRatingsWidget::OnAnyButtonActivated));
+    any_button_->label = _("Any");
 
     SetRightHandView(any_button_);
 
