@@ -750,6 +750,7 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
     }
 
     nux::TexCoordXForm texxform;
+    texxform.SetFilter(nux::TEXFILTER_LINEAR, nux::TEXFILTER_LINEAR);
 
     nux::Color color = nux::color::LightGrey;
 
@@ -786,6 +787,7 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
       markers.push_back(markerCenter + 4 * scale);
       texture = local::pip_ltr;
     }
+
 
     std::vector<int>::iterator it;
     for (it = markers.begin(); it != markers.end(); it++)
