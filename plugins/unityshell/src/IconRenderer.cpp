@@ -178,6 +178,10 @@ nux::BaseTexture* arrow_ltr = 0;
 nux::BaseTexture* arrow_rtl = 0;
 nux::BaseTexture* arrow_empty_ltr = 0;
 nux::BaseTexture* arrow_empty_rtl = 0;
+
+nux::BaseTexture* squircle_base = 0;
+nux::BaseTexture* squircle_shine = 0;
+
 std::vector<nux::BaseTexture*> icon_background;
 std::vector<nux::BaseTexture*> icon_selected_background;
 std::vector<nux::BaseTexture*> icon_edge;
@@ -376,7 +380,9 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
   nux::Color edge_color(0x55555555);
   float backlight_intensity = arg.backlight_intensity;
   float glow_intensity = arg.glow_intensity;
+
   nux::BaseTexture* background = local::icon_background[size];
+  nux::BaseTexture* shine = local::icon_shine[size];
 
   if (arg.keyboard_nav_hl)
   {
@@ -387,6 +393,16 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
     glow_intensity = 1.0f;
 
     background = local::icon_selected_background[size];
+  }
+
+  if (arg.system_item)
+  {
+    background_color = nux::color::White;
+    backlight_intensity = 1.0f;
+    glow_intensity = 0.0f;
+
+    background = local::squircle_base;
+    shine = local::squircle_shine;
   }
 
   // draw tile
@@ -402,12 +418,15 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
 
   edge_color = edge_color + ((background_color - edge_color) * arg.backlight_intensity);
 
-  RenderElement(GfxContext,
-                arg,
-                local::icon_edge[size]->GetDeviceTexture(),
-                edge_color,
-                arg.alpha,
-                arg.icon->GetTransform("Tile"));
+  if (!arg.system_item)
+  {
+    RenderElement(GfxContext,
+                  arg,
+                  local::icon_edge[size]->GetDeviceTexture(),
+                  edge_color,
+                  arg.alpha,
+                  arg.icon->GetTransform("Tile"));
+  }
   // end tile draw
 
   // draw icon
@@ -421,7 +440,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
   // draw overlay shine
   RenderElement(GfxContext,
                 arg,
-                local::icon_shine[size]->GetDeviceTexture(),
+                shine->GetDeviceTexture(),
                 nux::color::White,
                 arg.alpha,
                 arg.icon->GetTransform("Tile"));
@@ -1068,6 +1087,9 @@ void generate_textures()
   generate_textures(icon_shine,
                     PKGDATADIR"/launcher_icon_shine_150.png",
                     PKGDATADIR"/launcher_icon_shine_54.png");
+
+  squircle_base = load_texture(PKGDATADIR"/squircle_base_54.png");
+  squircle_shine = load_texture(PKGDATADIR"/squircle_shine_54.png");
 
   pip_ltr = load_texture(PKGDATADIR"/launcher_pip_ltr.png");
   arrow_ltr = load_texture(PKGDATADIR"/launcher_arrow_ltr.png");

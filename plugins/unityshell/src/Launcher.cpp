@@ -1013,6 +1013,7 @@ void Launcher::SetupRenderArg(LauncherIcon* icon, struct timespec const& current
   arg.progress_bias       = IconProgressBias(icon, current);
   arg.progress            = CLAMP(icon->GetProgress(), 0.0f, 1.0f);
   arg.draw_shortcut       = _shortcuts_shown && !_hide_machine->GetQuirk(LauncherHideMachine::PLACES_VISIBLE);
+  arg.system_item         = icon->Type() == LauncherIcon::TYPE_HOME;
   
   if (_dash_is_open)
     arg.active_arrow = icon->Type() == LauncherIcon::TYPE_HOME;
