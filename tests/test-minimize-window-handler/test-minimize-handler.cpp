@@ -32,12 +32,15 @@
 #include <poll.h>
 #include <cstring>
 
-class X11Window
+#include <x11-window-read-transients.h>
+
+class X11WindowFakeMinimizable :
+  public X11WindowReadTransients
 {
   public:
 
-    X11Window (Display *, Window id = 0);
-    ~X11Window ();
+    X11WindowFakeMinimizable (Display *, Window id = 0);
+    ~X11WindowFakeMinimizable ();
 
     unsigned int id () { return mXid; }
     bool         minimized ();
@@ -45,84 +48,28 @@ class X11Window
     void minimize ();
     void unminimize ();
 
-    void makeTransientFor (X11Window *w);
-    void setClientLeader (X11Window *w);
-    void printTransients ();
-
-    std::vector<unsigned int> transients ();
-
   private:
 
-    Window mXid;
-    Display *mDpy;
     compiz::MinimizedWindowHandler::Ptr mMinimizedHandler;
-    bool mCreated;
 };
 
-X11Window::X11Window (Display *dpy, Window id)
+X11WindowFakeMinimizable::X11WindowFakeMinimizable (Display *d, Window id) :
+  X11WindowReadTransients (d, id)
 {
-  if (id == 0)
-  {
-    XSetWindowAttributes attrib;
-    XEvent		     e;
-
-    attrib.background_pixel = 0x0;
-    attrib.backing_pixel = 0x0;
-
-    id = XCreateWindow (dpy, DefaultRootWindow (dpy), 0, 0, 100, 100, 0,
-                        DefaultDepth (dpy, DefaultScreen (dpy)), InputOutput,
-                        DefaultVisual (dpy, DefaultScreen (dpy)), CWBackingPixel | CWBackPixel, &attrib);
-
-    XSelectInput (dpy, id, ExposureMask | StructureNotifyMask);
-    XMapRaised (dpy, id);
-
-    while (1)
-    {
-      XNextEvent (dpy, &e);
-      bool exposed = false;
-
-      switch (e.type)
-      {
-      case Expose:
-        if (e.xexpose.window == id)
-          exposed = true;
-        break;
-      default:
-        break;
-      }
-
-      if (exposed)
-        break;
-    }
-
-    XClearWindow (dpy, id);
-
-    mCreated = true;
-  }
-  else
-    mCreated = false;
-
-  mXid = id;
-  mDpy = dpy;
 }
 
-X11Window::~X11Window ()
+X11WindowFakeMinimizable::~X11WindowFakeMinimizable ()
 {
-  if (mMinimizedHandler)
-    mMinimizedHandler->unminimize ();
-
-  if (mCreated)
-    XDestroyWindow (mDpy, mXid);
 }
 
 bool
-X11Window::minimized ()
+X11WindowFakeMinimizable::minimized ()
 {
   return mMinimizedHandler.get () != NULL;
 }
 
 void
-X11Window::minimize ()
+X11WindowFakeMinimizable::minimize ()
 {
   if (!mMinimizedHandler)
   {
@@ -133,7 +80,7 @@ X11Window::minimize ()
 }
 
 void
-X11Window::unminimize ()
+X11WindowFakeMinimizable::unminimize ()
 {
   if (mMinimizedHandler)
   {
@@ -141,46 +88,6 @@ X11Window::unminimize ()
     mMinimizedHandler->unminimize ();
     mMinimizedHandler.reset ();
   }
-}
-
-void
-X11Window::makeTransientFor (X11Window *w)
-{
-  XSetTransientForHint (mDpy, mXid, w->id ());
-  XSync (mDpy, false);
-}
-
-void
-X11Window::setClientLeader (X11Window *w)
-{
-  Atom wmClientLeader = XInternAtom (mDpy, "WM_CLIENT_LEADER", 0);
-  Atom netWmWindowType = XInternAtom (mDpy, "_NET_WM_WINDOW_TYPE", 0);
-  Atom netWmWindowTypeDialog = XInternAtom (mDpy, "_NET_WM_WINDOW_TYPE_DIALOG", 0);
-
-  Window cl = w->id ();
-
-  XChangeProperty (mDpy, mXid, wmClientLeader, XA_WINDOW, 32,
-                   PropModeReplace, (unsigned char *) &cl, 1);
-  XChangeProperty (mDpy, mXid, netWmWindowType, XA_ATOM, 32,
-                   PropModeAppend, (const unsigned char *) &netWmWindowTypeDialog, 1);
-
-  XSync (mDpy, false);
-}
-
-std::vector<unsigned int>
-X11Window::transients ()
-{
-  if (!mMinimizedHandler)
-    mMinimizedHandler = compiz::MinimizedWindowHandler::Ptr (new compiz::MinimizedWindowHandler (mDpy, mXid));
-
-  return mMinimizedHandler->getTransients ();
-}
-
-void
-X11Window::printTransients ()
-{
-  for (unsigned int &w : transients ())
-    printf ("window id 0x%x\n", w);
 }
 
 void usage ()
@@ -194,9 +101,9 @@ int main (int argc, char **argv)
 {
   Display                    *dpy;
   Window                     xid = 0;
-  X11Window                  *window;
-  X11Window                  *transient = NULL;
-  X11Window                  *hasClientLeader = NULL;
+  X11WindowFakeMinimizable                  *window;
+  X11WindowFakeMinimizable                  *transient = NULL;
+  X11WindowFakeMinimizable                  *hasClientLeader = NULL;
   std::string                option = "";
   bool                       shapeExt;
   int                        shapeEvent;
@@ -229,12 +136,12 @@ int main (int argc, char **argv)
   if (argc > 1)
     std::stringstream (argv[1]) >> std::hex >> xid;
 
-  window = new X11Window (dpy, xid);
+  window = new X11WindowFakeMinimizable (dpy, xid);
 
   if (!xid)
   {
-    transient = new X11Window (dpy, 0);
-    hasClientLeader = new X11Window (dpy, 0);
+    transient = new X11WindowFakeMinimizable (dpy, 0);
+    hasClientLeader = new X11WindowFakeMinimizable (dpy, 0);
 
     transient->makeTransientFor (window);
     window->setClientLeader (window);

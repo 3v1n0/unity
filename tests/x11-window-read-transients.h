@@ -37,7 +37,7 @@ class X11WindowReadTransients :
   public:
 
     X11WindowReadTransients (Display *, Window id = 0);
-    ~X11WindowReadTransients ();
+    virtual ~X11WindowReadTransients ();
 
     void makeTransientFor (X11WindowReadTransients *w);
     void setClientLeader (X11WindowReadTransients *w);
