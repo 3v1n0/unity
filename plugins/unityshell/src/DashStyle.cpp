@@ -1376,8 +1376,6 @@ namespace unity
     double                y          = 0.0;
     int                   w          = 0;
     int                   h          = 0;
-    int                   textWidth  = 0;
-    int                   textHeight = 0;
     PangoLayout*          layout     = NULL;
     PangoFontDescription* desc       = NULL;
     PangoContext*         pangoCtx   = NULL;
