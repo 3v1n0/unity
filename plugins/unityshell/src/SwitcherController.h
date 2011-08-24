@@ -97,7 +97,7 @@ private:
   static void OnBackgroundUpdate (GVariant *data, SwitcherController *self);
 
   SwitcherModel::Ptr model_;
-  SwitcherView* view_;
+  SwitcherView::Ptr view_;
 
   nux::Geometry workarea_;
 

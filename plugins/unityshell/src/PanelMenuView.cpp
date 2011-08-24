@@ -484,7 +484,7 @@ PanelMenuView::GetActiveViewName()
     BamfWindow* window = bamf_matcher_get_active_window(_matcher);
 
     if (BAMF_IS_WINDOW(window))
-      label = g_strdup(bamf_view_get_name(BAMF_VIEW(window)));
+      label = bamf_view_get_name(BAMF_VIEW(window));
   }
 
   if (!label)
@@ -520,7 +520,7 @@ PanelMenuView::GetActiveViewName()
 
         active_view = (BamfView*)bamf_matcher_get_active_window(_matcher);
         if (BAMF_IS_VIEW(active_view))
-          label = g_strdup(bamf_view_get_name(active_view));
+          label = bamf_view_get_name(active_view);
         else
           label = g_strdup("");
       }

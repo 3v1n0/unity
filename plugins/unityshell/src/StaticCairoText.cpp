@@ -308,7 +308,7 @@ void StaticCairoText::GetTextExtents(const TCHAR* font,
   if (!font)
     return;
 
-  if (_need_new_extent_cache == false)
+  if (!_need_new_extent_cache)
   {
     width = _cached_extent_width;
     height = _cached_extent_height;
