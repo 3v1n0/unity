@@ -20,6 +20,7 @@
  */
 
 #include "minimizedwindowhandler.h"
+#include <cstring>
 
 namespace compiz
 {
@@ -88,6 +89,12 @@ void
 compiz::MinimizedWindowHandler::minimize ()
 {
   Atom          wmState = XInternAtom (priv->mDpy, "WM_STATE", 0);
+  Atom          netWmState = XInternAtom (priv->mDpy, "_NET_WM_STATE", 0);
+  Atom          netWmStateHidden = XInternAtom (priv->mDpy, "_NET_WM_STATE_HIDDEN", 0);
+  Atom          actualType;
+  int           actualFormat;
+  unsigned long nItems, nLeft;
+  char          *prop;
   unsigned long data[2];
   Window        root = DefaultRootWindow (priv->mDpy), parent = priv->mXid, lastParent = priv->mXid;
   Window        *children;
@@ -127,17 +134,48 @@ compiz::MinimizedWindowHandler::minimize ()
 
   setVisibility (false, lastParent);
 
+  /* Change the WM_STATE to IconicState */
   data[0] = IconicState;
   data[1] = None;
 
   XChangeProperty (priv->mDpy, priv->mXid, wmState, wmState,
                    32, PropModeReplace, (unsigned char *) data, 2);
+
+  if (XGetWindowProperty (priv->mDpy, priv->mXid, netWmState, 0L, 512L, false, XA_ATOM, &actualType, &actualFormat,
+                          &nItems, &nLeft, (unsigned char **) &prop) == Success)
+  {
+    if (actualType == XA_ATOM && actualFormat == 32 && nItems && !nLeft)
+    {
+      Atom *data = (Atom *) prop;
+
+      /* Don't append _NET_WM_STATE_HIDDEN */
+      while (nItems--)
+        if (*data++ == netWmStateHidden)
+          netWmStateHidden = 0;
+    }
+
+    if (prop)
+      XFree (prop);
+  }
+
+  /* Add _NET_WM_STATE_HIDDEN */
+  if (netWmStateHidden)
+    XChangeProperty (priv->mDpy, priv->mXid, netWmState, XA_ATOM,
+                     32, PropModeAppend, (const unsigned char *) &netWmStateHidden, 1);
 }
 
 void
 compiz::MinimizedWindowHandler::unminimize ()
 {
   Atom          wmState = XInternAtom (priv->mDpy, "WM_STATE", 0);
+  Atom          netWmState = XInternAtom (priv->mDpy, "_NET_WM_STATE", 0);
+  Atom          netWmStateHidden = XInternAtom (priv->mDpy, "_NET_WM_STATE_HIDDEN", 0);
+  Atom          *nextState = NULL;
+  unsigned int  nextStateSize = 0;
+  Atom          actualType;
+  int           actualFormat;
+  unsigned long nItems, nLeft;
+  char          *prop;
   unsigned long data[2];
   Window        root = DefaultRootWindow (priv->mDpy), parent = priv->mXid, lastParent = priv->mXid;
   Window        *children;
@@ -182,6 +220,48 @@ compiz::MinimizedWindowHandler::unminimize ()
 
   XChangeProperty (priv->mDpy, priv->mXid, wmState, wmState,
                    32, PropModeReplace, (unsigned char *) data, 2);
+
+  if (XGetWindowProperty (priv->mDpy, priv->mXid, netWmState, 0L, 512L, false, XA_ATOM, &actualType, &actualFormat,
+                          &nItems, &nLeft, (unsigned char **) &prop) == Success)
+  {
+    if (actualType == XA_ATOM && actualFormat == 32 && nItems && !nLeft)
+    {
+      Atom *data = (Atom *) prop;
+      Atom *pbegin = NULL;
+      int  count = 0;
+
+      nextStateSize = nItems;
+
+      pbegin = nextState = (Atom *) malloc (sizeof (Atom) * nextStateSize);
+      pbegin = nextState = (Atom *) memcpy (nextState, data, sizeof (Atom) * nextStateSize);
+
+      /* Remove _NET_WM_STATE_HIDDEN */
+      while (nItems--)
+      {
+        if (*nextState++ == netWmStateHidden)
+        {
+          nextState = (Atom *) memmove (nextState - 1, nextState, nItems);
+          pbegin = nextState - count;
+
+          nextStateSize--;
+          pbegin = (Atom *) realloc (pbegin, sizeof (Atom) * nextStateSize);
+        }
+
+        count++;
+      }
+
+      nextState = pbegin;
+    }
+
+    XFree (prop);
+  }
+
+  /* Write new _NET_WM_STATE */
+  if (nextState)
+    XChangeProperty (priv->mDpy, priv->mXid, netWmState, XA_ATOM,
+                     32, PropModeReplace, (const unsigned char *) nextState, nextStateSize);
+  else
+    XDeleteProperty (priv->mDpy, priv->mXid, netWmState);
 }
 
 compiz::MinimizedWindowHandler::MinimizedWindowHandler (Display *dpy, unsigned int xid)
