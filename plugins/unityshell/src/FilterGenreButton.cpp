@@ -47,11 +47,6 @@ namespace unity {
   void FilterGenreButton::SetFilter (dash::FilterOption::Ptr filter)
   {
     filter_ = filter;
-    std::string tmp_label = filter->name;
-
-    char* escape = g_markup_escape_text(tmp_label.c_str(), -1);
-    label = escape;
-    g_free(escape);
 
     bool tmp_active = filter_->active;
     active = tmp_active;
