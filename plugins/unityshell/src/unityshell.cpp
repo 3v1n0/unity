@@ -544,7 +544,8 @@ void UnityScreen::preparePaint(int ms)
   {
     if (cScreen->damageMask() & COMPOSITE_SCREEN_DAMAGE_ALL_MASK)
     {
-      BackgroundEffectHelper::SetDamageBounds(CompRegion(screen->currentOutputDev().workArea()).handle());
+      CompRegion damage (screen->currentOutputDev().workArea());
+      BackgroundEffectHelper::SetDamageBounds(damage.handle());
     }
     else
     {
@@ -1062,6 +1063,9 @@ bool isNuxWindow (CompWindow* value)
   std::vector<Window> const& xwns = nux::XInputWindow::NativeHandleList();
   auto id = value->id();
 
+  // iterate loop by hand rather than use std::find as this is considerably faster
+  // we care about performance here becuase of the high frequency in which this function is
+  // called (nearly every frame)
   unsigned int size = xwns.size();
   for (unsigned int i = 0; i < size; ++i)
   {

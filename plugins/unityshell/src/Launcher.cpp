@@ -2797,7 +2797,7 @@ LauncherIcon* Launcher::MouseIconIntersection(int x, int y)
 }
 
 void
-Launcher::RenderIconToTexture(nux::GraphicsEngine& GfxContext, LauncherIcon* icon, nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture)
+Launcher::RenderIconToTexture(nux::GraphicsEngine& GfxContext, LauncherIcon* icon, nux::ObjectPtr<nux::IOpenGLBaseTexture> texture)
 {
   RenderArg arg;
   struct timespec current;
@@ -2823,7 +2823,7 @@ Launcher::RenderIconToTexture(nux::GraphicsEngine& GfxContext, LauncherIcon* ico
 }
 
 void
-Launcher::SetOffscreenRenderTarget(nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture)
+Launcher::SetOffscreenRenderTarget(nux::ObjectPtr<nux::IOpenGLBaseTexture> texture)
 {
   int width = texture->GetWidth();
   int height = texture->GetHeight();
