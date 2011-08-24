@@ -92,10 +92,7 @@ int main(int argc, char **argv)
   gtk_init (&argc, &argv);
 
   unity::BGHash bghash;
-
-  g_debug("\n\n\n\n");
   unity::FontSettings font_settings;
-  g_debug("\n\n\n\n");
 
   nux::NuxInitialize(0);
   nux::logging::configure_logging(::getenv("UNITY_LOG_SEVERITY"));
