@@ -244,8 +244,8 @@ void DashView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
     nux::TexCoordXForm texxform;
 
     geo = content_geo_;
-    geo.width += corner->GetWidth() - 6;
-    geo.height += corner->GetHeight() - 6;
+    geo.width += corner->GetWidth() - 12;
+    geo.height += corner->GetHeight() - 12;
     {
       // Corner
       texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);

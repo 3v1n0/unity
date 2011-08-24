@@ -99,7 +99,7 @@ int main(int argc, char **argv)
 
   TestRunner *test_runner = new TestRunner ();
   wt = nux::CreateGUIThread(TEXT("Unity Dash"),
-                            1024, 600,
+                            1084, 650,
                             0,
                             &TestRunner::InitWindowThread,
                             test_runner);
