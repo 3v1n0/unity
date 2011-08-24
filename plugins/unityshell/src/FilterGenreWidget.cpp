@@ -73,7 +73,13 @@ namespace unity {
 
   void FilterGenre::OnOptionAdded(dash::FilterOption::Ptr new_filter)
   {
-    FilterGenreButton* button = new FilterGenreButton (NUX_TRACKER_LOCATION);
+    std::string tmp_label = new_filter->name;
+
+    char* escape = g_markup_escape_text(tmp_label.c_str(), -1);
+    std::string label = escape;
+    g_free(escape);
+
+    FilterGenreButton* button = new FilterGenreButton (label, NUX_TRACKER_LOCATION);
     button->SetFilter (new_filter);
     genre_layout_->AddView (button, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
     buttons_.push_back (button);
@@ -136,7 +142,7 @@ namespace unity {
 
   void FilterGenre::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw) {
     GfxContext.PushClippingRectangle(GetGeometry());
-  
+
     GetLayout()->ProcessDraw(GfxContext, force_draw);
 
     GfxContext.PopClippingRectangle();
