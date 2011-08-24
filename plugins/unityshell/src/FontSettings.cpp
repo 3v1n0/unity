@@ -40,9 +40,6 @@ void FontSettings::Refresh(GtkSettings* unused0, GParamSpec* unused1)
   GtkSettings* settings = gtk_settings_get_default();
   cairo_font_options_t* font_options = cairo_font_options_create();
 
-  // FIXME: Gtk is reporting something wrong here so we just set it to default
-  cairo_font_options_set_antialias(font_options, CAIRO_ANTIALIAS_DEFAULT);
-
   {
     cairo_subpixel_order_t order = CAIRO_SUBPIXEL_ORDER_DEFAULT;
     glib::String value;
@@ -58,6 +55,10 @@ void FontSettings::Refresh(GtkSettings* unused0, GParamSpec* unused1)
       order = CAIRO_SUBPIXEL_ORDER_VBGR;
 
     cairo_font_options_set_subpixel_order(font_options, order);
+    cairo_font_options_set_antialias(font_options,
+                                     value.Str() == "none" ? CAIRO_ANTIALIAS_NONE 
+                                                           : CAIRO_ANTIALIAS_SUBPIXEL);
+
   }
 
   {
