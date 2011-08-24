@@ -232,7 +232,6 @@ void LensView::OnActiveChanged(bool is_active)
   if (is_active && initial_activation_)
   {
     /* We reset the lens for ourselves, in case this is a restart or something */
-    lens_->Search("-");
     lens_->Search("");
     initial_activation_ = false;
   }
