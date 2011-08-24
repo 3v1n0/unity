@@ -50,9 +50,6 @@ namespace unity {
       _hires_time_end(20),
       _ubus_handle_request_colour(0)
   {
-    g_warning ("BGHash: _current %f, %f, %f", _current_color.red, _current_color.green, _current_color.blue);
-    g_warning ("BGHash: _new %f, %f, %f", _new_color.red, _new_color.green, _new_color.blue);
-    g_warning ("BGHash: _old %f, %f, %f", _old_color.red, _old_color.green, _old_color.blue);
 
     background_monitor = gnome_bg_new ();
     client = g_settings_new ("org.gnome.desktop.background");
@@ -113,7 +110,6 @@ namespace unity {
     const gchar *filename = gnome_bg_get_filename (bg);
     if (filename == NULL)
     {
-      g_warning ("BGHash did not get a filename");
       // we might have a gradient instead
       GdkColor color_primary, color_secondary;
       GDesktopBackgroundShading shading_type;
@@ -142,13 +138,11 @@ namespace unity {
 
         parsed_color = (primary + secondary) * 0.5f;
       }
-      g_warning ("got parsed colour %f, %f, %f", parsed_color.red, parsed_color.green, parsed_color.blue);
       nux::Color new_color = MatchColor (parsed_color);
       TransitionToNewColor (new_color);
     }
     else
     {
-      g_warning ("BGHash got a filename: %s", filename);
       if (_bg_slideshow != NULL)
       {
         slideshow_unref (_bg_slideshow);
@@ -360,7 +354,6 @@ namespace unity {
 
   void BGHash::DoUbusColorEmit()
   {
-    g_warning ("BGHash emitting colour %f, %f, %f", _current_color.red, _current_color.green, _current_color.blue);
     ubus_server_send_message(ubus_server_get_default(),
                              UBUS_BACKGROUND_COLOR_CHANGED,
                              g_variant_new ("(dddd)",
@@ -506,15 +499,12 @@ namespace unity {
                                          gdk_pixbuf_get_width (pixbuf) - 1,
                                          gdk_pixbuf_get_height (pixbuf) - 1,
                                          pixbuf);
-
-    g_warning ("got average colour %f, %f, %f", average.red, average.green, average.blue);
     nux::Color matched_color = MatchColor (average);
     return matched_color;
   }
 
   nux::Color BGHash::MatchColor (const nux::Color base_color)
   {
-    g_warning ("trying to match colour %f, %f, %f", base_color.red, base_color.green, base_color.blue);
     nux::Color colors[12];
 
     colors[ 0] = nux::Color (0x540e44);
@@ -578,7 +568,6 @@ namespace unity {
     // apply design to the colour
     chosen_color.alpha = 0.5f;
 
-    g_warning ("resulting in colour %f, %f, %f", chosen_color.red, chosen_color.green, chosen_color.blue);
 
     return chosen_color;
   }
