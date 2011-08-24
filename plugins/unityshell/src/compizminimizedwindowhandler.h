@@ -46,8 +46,6 @@ public:
 
   CompizMinimizedWindowHandler (CompWindow *w);
 
-  std::vector<unsigned int> removeState ();
-
   void setVisibility (bool visible);
   unsigned int getPaintMask ();
 
@@ -82,18 +80,6 @@ compiz::CompizMinimizedWindowHandler<Screen, Window>::CompizMinimizedWindowHandl
   priv = new PrivateCompizMinimizedWindowHandler ();
 
   priv->mWindow = w;
-}
-
-template <typename Screen, typename Window>
-std::vector<unsigned int>
-compiz::CompizMinimizedWindowHandler<Screen, Window>::removeState ()
-{
-  std::vector<unsigned int> states;
-
-  states.push_back (CompWindowStateSkipPagerMask);
-  states.push_back (CompWindowStateSkipTaskbarMask);
-
-  return states;
 }
 
 template <typename Screen, typename Window>

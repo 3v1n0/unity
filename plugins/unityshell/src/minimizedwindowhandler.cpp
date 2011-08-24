@@ -72,17 +72,6 @@ compiz::MinimizedWindowHandler::setVisibility (bool visible, Window shapeWin)
 }
 
 std::vector<unsigned int>
-compiz::MinimizedWindowHandler::removeState ()
-{
-  std::vector <unsigned int> atoms;
-
-  atoms.push_back (XInternAtom (priv->mDpy, "_NET_WM_STATE_SKIP_TASKBAR", 0));
-  atoms.push_back (XInternAtom (priv->mDpy, "_NET_WM_STATE_SKIP_PAGER", 0));
-
-  return atoms;
-}
-
-std::vector<unsigned int>
 compiz::MinimizedWindowHandler::getTransients ()
 {
   std::vector<unsigned int> transients;

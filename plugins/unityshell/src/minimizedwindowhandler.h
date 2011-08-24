@@ -41,8 +41,6 @@ public:
   MinimizedWindowHandler (Display *dpy, unsigned int xid);
   ~MinimizedWindowHandler ();
 
-  virtual std::vector<unsigned int> removeState ();
-
   virtual void minimize   ();
   virtual void unminimize ();
 
