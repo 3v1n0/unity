@@ -1134,6 +1134,133 @@ namespace unity
     cairo_close_path (cr);
   }
 
+  void DashStyle::RoundedRectSegment (cairo_t*   cr,
+                                      double     aspect,
+                                      double     x,
+                                      double     y,
+                                      double     cornerRadius,
+                                      double     width,
+                                      double     height,
+                                      Segment    segment,
+                                      Arrow      arrow, 
+                                      nux::State state)
+  {
+    double radius = cornerRadius / aspect;
+    double arrow_w = radius / 1.5;
+    double arrow_h = radius / 2.0;
+
+    switch (segment)
+    {
+      case SEGMENT_LEFT:
+        // top-left, right of the corner
+        cairo_move_to (cr, x + radius, y);
+
+        // top-right
+        cairo_line_to (cr, x + width, y);
+
+        if (arrow == ARROW_RIGHT && state == nux::NUX_STATE_ACTIVE)
+		{
+          cairo_line_to (cr, x + width,           y + height / 2.0 - arrow_h);
+          cairo_line_to (cr, x + width - arrow_w, y + height / 2.0);
+          cairo_line_to (cr, x + width,           y + height / 2.0 + arrow_h);
+		}
+
+        // bottom-right
+        cairo_line_to (cr, x + width, y + height);
+
+        // bottom-left, right of the corner
+        cairo_line_to (cr, x + radius, y + height);
+
+        // bottom-left, above the corner
+        cairo_arc (cr,
+                   x + radius,
+                   y + height - radius,
+                   radius,
+                   90.0f * G_PI / 180.0f,
+                   180.0f * G_PI / 180.0f);
+
+        // top-left, right of the corner
+        cairo_arc (cr,
+                   x + radius,
+                   y + radius,
+                   radius,
+                   180.0f * G_PI / 180.0f,
+                   270.0f * G_PI / 180.0f);
+      break;
+
+      case SEGMENT_MIDDLE:
+        // top-left
+        cairo_move_to (cr, x, y);
+
+        // top-right
+        cairo_line_to (cr, x + width, y);
+
+        if ((arrow == ARROW_RIGHT || arrow == ARROW_BOTH) && state == nux::NUX_STATE_ACTIVE)
+		{
+          cairo_line_to (cr, x + width,           y + height / 2.0 - arrow_h);
+          cairo_line_to (cr, x + width - arrow_w, y + height / 2.0);
+          cairo_line_to (cr, x + width,           y + height / 2.0 + arrow_h);
+		}
+
+        // bottom-right
+        cairo_line_to (cr, x + width, y + height);
+
+        // bottom-left
+        cairo_line_to (cr, x, y + height);
+
+        if ((arrow == ARROW_LEFT || arrow == ARROW_BOTH) && state == nux::NUX_STATE_ACTIVE)
+		{
+          cairo_line_to (cr, x,           y + height / 2.0 + arrow_h);
+          cairo_line_to (cr, x + arrow_w, y + height / 2.0);
+          cairo_line_to (cr, x,           y + height / 2.0 - arrow_h);
+		}
+
+        // back to top-left
+        cairo_close_path (cr);
+      break;
+
+      case SEGMENT_RIGHT:
+        // top-left, right of the corner
+        cairo_move_to (cr, x, y);
+
+        // top-right, left of the corner
+        cairo_line_to (cr, x + width - radius, y);
+
+        // top-right, below the corner
+        cairo_arc (cr,
+                   x + width - radius,
+                   y + radius,
+                   radius,
+                   -90.0f * G_PI / 180.0f,
+                   0.0f * G_PI / 180.0f);
+
+        // bottom-right, above the corner
+        cairo_line_to (cr, x + width, y + height - radius);
+
+        // bottom-right, left of the corner
+        cairo_arc (cr,
+                   x + width - radius,
+                   y + height - radius,
+                   radius,
+                   0.0f * G_PI / 180.0f,
+                   90.0f * G_PI / 180.0f);
+
+        // bottom-left
+        cairo_line_to (cr, x, y + height);
+
+        if (arrow == ARROW_LEFT && state == nux::NUX_STATE_ACTIVE)
+		{
+          cairo_line_to (cr, x,           y + height / 2.0 + arrow_h);
+          cairo_line_to (cr, x + arrow_w, y + height / 2.0);
+          cairo_line_to (cr, x,           y + height / 2.0 - arrow_h);
+		}
+
+        // back to top-left
+        cairo_close_path (cr);
+      break;
+    }
+  }
+
   void DashStyle::ButtonOutlinePathSegment (cairo_t* cr, Segment segment)
   {
     double   x  = 0.0;
@@ -1143,14 +1270,14 @@ namespace unity
     double   xt = 0.0;
     double   yt = 0.0;
 
-  // - these absolute values are the "cost" of getting only a SVG from design
-  // and not a generic formular how to approximate the curve-shape, thus
-  // the smallest possible button-size is 22.18x24.0
-  double width  = w - 22.18;
-  double height = h - 24.0;
+    // - these absolute values are the "cost" of getting only a SVG from design
+    // and not a generic formular how to approximate the curve-shape, thus
+    // the smallest possible button-size is 22.18x24.0
+    double width  = w - 22.18;
+    double height = h - 24.0;
 
     xt = x + width + 22.18;
-  yt = y + 12.0;
+    yt = y + 12.0;
 
     switch (segment)
     {
@@ -1159,11 +1286,11 @@ namespace unity
         cairo_move_to (cr, _align (xt), _align (yt));
         xt -= (2.811 + 8.28);
 
-      // top
+        // top
         cairo_line_to (cr, _align (xt - width), _align (yt));
         xt -= width;
 
-      // top left
+        // top left
         cairo_curve_to (cr, _align (xt - 3.748),
                             _align (yt),
                             _align (xt - 6.507),
@@ -1181,11 +1308,11 @@ namespace unity
         xt -= 2.811;
         yt += 9.267;
 
-      // left
+        // left
         cairo_line_to (cr, _align (xt), _align (yt + height));
         yt += height;
 
-      // bottom left
+        // bottom left
         cairo_curve_to (cr, _align (xt + 0.103),
                             _align (yt + 4.355),
                             _align (xt + 1.037),
@@ -1203,7 +1330,7 @@ namespace unity
         xt += 8.28 + width + 8.279 + 2.811;
         yt += 2.735;
 
-      // bottom
+        // bottom
         cairo_line_to (cr, _align (xt), _align (yt));
 
         cairo_close_path (cr);
@@ -1214,23 +1341,23 @@ namespace unity
         cairo_move_to (cr, _align (xt), _align (yt));
         xt -= (2.811 + 8.28);
 
-      // top
+        // top
         cairo_line_to (cr, _align (xt - width - 8.279 - 2.811), _align (yt));
 
-      // top left
+        // top left
         xt -= width;
         xt -= 8.279;
         yt += 2.735;
         xt -= 2.811;
         yt += 9.267 + height + 2.735 + 9.267;
 
-    // left
+        // left
         cairo_line_to (cr, _align (xt), _align (yt));
 
-      // bottom left
+        // bottom left
         xt += 2.811;
         xt += 8.28 + width + 8.279 + 2.811;
-       // bottom
+        // bottom
         cairo_line_to (cr, _align (xt), _align (yt));
 
         cairo_close_path (cr);
@@ -1288,7 +1415,7 @@ namespace unity
 
         cairo_close_path (cr);
       break;
-  }
+    }
   }
 
   void DashStyle::GetTextExtents (int& width,
@@ -1565,7 +1692,18 @@ namespace unity
     if (cairo_surface_get_type (cairo_get_target (cr)) != CAIRO_SURFACE_TYPE_IMAGE)
       return false;
 
-    ButtonOutlinePath (cr, true);
+    //ButtonOutlinePath (cr, true);
+    double w = cairo_image_surface_get_width (cairo_get_target (cr));
+    double h = cairo_image_surface_get_height (cairo_get_target (cr));
+    RoundedRect (cr,
+                 1.0,
+                 2.0,
+                 2.0,
+                 h / 4.0,
+                 w - 4.0,
+                 h - 4.0,
+                 true);
+
     if (_buttonLabelFillOpacity[state] != 0.0)
     {
       cairo_set_source_rgba (cr,
@@ -1686,7 +1824,33 @@ namespace unity
     if (cairo_surface_get_type (cairo_get_target (cr)) != CAIRO_SURFACE_TYPE_IMAGE)
       return false;
 
-    ButtonOutlinePathSegment (cr, segment);
+    //ButtonOutlinePathSegment (cr, segment);
+    double   x  = 0.0;
+    double   y  = 2.0;
+    double   w  = cairo_image_surface_get_width (cairo_get_target (cr));
+    double   h  = cairo_image_surface_get_height (cairo_get_target (cr)) - 4.0;
+
+	if (segment == SEGMENT_LEFT)
+	{
+      x = 2.0;
+      w -= 2.0;
+	}
+
+	if (segment == SEGMENT_RIGHT)
+	{
+      w -= 2.0;
+	}
+
+    RoundedRectSegment (cr,
+                        1.0,
+                        x,
+                        y,
+                        h / 4.0,
+                        w,
+                        h,
+                        segment,
+                        arrow,
+                        state);
 
     if (_buttonLabelFillOpacity[state] != 0.0)
     {
@@ -1709,18 +1873,6 @@ namespace unity
         _buttonLabelTextColor[state],
         _buttonLabelTextOpacity[state],
         label);
-
-    // drawing the arrows only makes sense for the middle segments being active
-    if (state == nux::NUX_STATE_ACTIVE &&
-        segment == SEGMENT_MIDDLE &&
-        arrow != ARROW_NONE)
-  {
-      ArrowPath (cr, arrow);
-      //cairo_set_source_rgba (cr, 1.0, 0.0, 0.0, 1.0);
-      cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
-      cairo_fill (cr);
-    cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
-  }
 
     return true;
   }

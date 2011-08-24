@@ -204,6 +204,17 @@ namespace unity
                         BlendMode mode,
                         int       blurSize);
 
+      void RoundedRectSegment (cairo_t*   cr,
+                               double     aspect,
+                               double     x,
+                               double     y,
+                               double     cornerRadius,
+                               double     width,
+                               double     height,
+                               Segment    segment,
+                               Arrow      arrow,
+                               nux::State state);
+
     private:
       cairo_font_options_t* _defaultFontOptions;
 
