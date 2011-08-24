@@ -1567,7 +1567,7 @@ namespace unity
     if (cairo_surface_get_type (cairo_get_target (cr)) != CAIRO_SURFACE_TYPE_IMAGE)
       return false;
 
-    ButtonOutlinePath (cr, false);
+    ButtonOutlinePath (cr, true);
     if (_buttonLabelFillOpacity[state] != 0.0)
     {
       cairo_set_source_rgba (cr,
