@@ -62,7 +62,7 @@ LensView::LensView(Lens::Ptr lens)
 
   lens_->connected.changed.connect([&](bool is_connected) { if (is_connected) initial_activation_ = true; });
   search_string.changed.connect([&](std::string const& search) { lens_->Search(search);  });
-  filters_expanded.changed.connect([&](bool expanded) { fscroll_view_->SetVisible(expanded); QueueRelayout(); });
+  filters_expanded.changed.connect([&](bool expanded) { fscroll_view_->SetVisible(expanded); QueueRelayout(); OnColumnsChanged(); });
   active.changed.connect(sigc::mem_fun(this, &LensView::OnActiveChanged));
 }
 
@@ -85,7 +85,6 @@ void LensView::SetupViews()
   scroll_view_->SetLayout(scroll_layout_);
 
   fscroll_view_ = new nux::ScrollView();
-  // fscroll_view_->SetMaximumWidth(1);
   fscroll_view_->EnableVerticalScrollBar(true);
   fscroll_view_->EnableHorizontalScrollBar(false);
   fscroll_view_->SetVisible(false);
@@ -196,7 +195,7 @@ void LensView::UpdateCounts(PlacesGroup* group)
 {
   PlacesStyle* style = PlacesStyle::GetDefault();
 
-  group->SetCounts(style->GetDefaultNColumns(), counts_[group]);
+  group->SetCounts(style->GetDefaultNColumns() - filters_expanded ? 2 : 0, counts_[group]);
   group->SetVisible(counts_[group]);
 
   QueueFixRenderering();
@@ -240,6 +239,10 @@ void LensView::OnGroupExpanded(PlacesGroup* group)
 void LensView::OnColumnsChanged()
 {
   unsigned int columns = PlacesStyle::GetDefault()->GetDefaultNColumns();
+
+  columns -= filters_expanded ? 2 : 0;
+
+  g_debug("\n\n\nCOLUMNS: %d", columns);
 
   for (auto group: categories_)
   {

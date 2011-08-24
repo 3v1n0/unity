@@ -29,7 +29,6 @@
 #include "Launcher.h"
 #include "LauncherIcon.h"
 #include "LauncherController.h"
-#include "PlacesSettings.h"
 #include "GeisAdapter.h"
 #include "DevicesSettings.h"
 #include "PluginAdapter.h"

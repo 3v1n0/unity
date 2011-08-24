@@ -39,7 +39,6 @@
 
 #include "PlacesHomeView.h"
 
-#include "PlacesSettings.h"
 #include "PlacesSimpleTile.h"
 #include "PlacesStyle.h"
 #include <UnityCore/Variant.h>
@@ -171,9 +170,7 @@ PlacesHomeView::PlacesHomeView()
 
   expanded.connect(sigc::mem_fun(this, &PlacesHomeView::Refresh));
 
-  SetExpanded(PlacesSettings::GetDefault()->GetHomeExpanded());
-  if (GetExpanded())
-    Refresh();
+  Refresh();
 }
 
 PlacesHomeView::~PlacesHomeView()
@@ -232,8 +229,6 @@ PlacesHomeView::Refresh(PlacesGroup*foo)
   int         icon_size = style->GetHomeTileIconSize();
 
   _layout->Clear();
-
-  PlacesSettings::GetDefault()->SetHomeExpanded(GetExpanded());
 
   // Media Apps
   markup = g_strdup_printf(temp, _("Media Apps"));

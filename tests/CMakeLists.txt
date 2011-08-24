@@ -103,8 +103,8 @@ add_executable (standalone-dash
                 ${UNITY_SRC}/PlacesHomeView.h
                 ${UNITY_SRC}/PlacesGroup.cpp
                 ${UNITY_SRC}/PlacesGroup.h
-                ${UNITY_SRC}/PlacesSettings.cpp
-                ${UNITY_SRC}/PlacesSettings.h
+                ${UNITY_SRC}/DashSettings.cpp
+                ${UNITY_SRC}/DashSettings.h
                 ${UNITY_SRC}/PlacesStyle.cpp
                 ${UNITY_SRC}/PlacesStyle.h
                 ${UNITY_SRC}/PlacesTile.cpp

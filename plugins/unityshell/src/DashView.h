@@ -41,14 +41,6 @@ namespace unity
 namespace dash
 {
 
-enum SizeMode
-{
-  SIZE_MODE_MAXIMISED,
-  SIZE_MODE_NORMAL,
-  SIZE_MODE_VERTICAL_MAXIMISED,
-  SIZE_MODE_HORIZONATAL_MAXIMISED
-};
-
 class DashView : public nux::View, public unity::Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE(DashView, nux::View);
@@ -97,7 +89,6 @@ private:
 private:
   UBusManager ubus_manager_;
   FilesystemLenses lenses_;
-  SizeMode size_mode_;
   BackgroundEffectHelper bg_effect_helper_;
   LensViews lens_views_;
 
