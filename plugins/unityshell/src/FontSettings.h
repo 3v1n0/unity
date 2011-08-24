@@ -19,6 +19,10 @@
 #ifndef UNITY_FONT_SETTINGS_H_
 #define UNITY_FONT_SETTINGS_H_
 
+#include <gtk/gtk.h>
+
+#include <UnityCore/GLibSignal.h>
+
 namespace unity
 {
 
@@ -26,6 +30,12 @@ class FontSettings
 {
 public:
   FontSettings();
+
+private:
+  void Refresh(GtkSettings* unused0=nullptr, GParamSpec* unused1=nullptr);
+
+private:
+  glib::SignalManager sig_man_;
 };
 
 }
