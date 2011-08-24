@@ -305,11 +305,16 @@ namespace unity {
     // takes two colours, transitions between them, we can do it linearly or whatever
     // i don't think it will matter that much
     // it doesn't happen too often
+    g_warning ("asked to interpolate between %f, %f, %f and %f, %f, %f at value %f",
+              colora.red, colora.green, colora.blue, colorb.red, colorb.green, colorb.blue, value);
     return colora + ((colorb - colora) * value);
   }
 
   void BGHash::TransitionToNewColor(nux::color::Color new_color)
   {
+    if (new_color == _current_color)
+      return;
+
     if (_transition_handler)
     {
       // we are currently in a transition
