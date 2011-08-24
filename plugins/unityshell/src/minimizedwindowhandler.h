@@ -52,7 +52,7 @@ public:
 
   bool contains (boost::shared_ptr <MinimizedWindowHandler> mw);
 
-  /* fixme */
+protected:
   virtual std::vector<unsigned int> getTransients ();
 
 private:
