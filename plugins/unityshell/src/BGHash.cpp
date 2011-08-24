@@ -340,6 +340,8 @@ namespace unity {
     guint64 current_time = g_get_monotonic_time();
     float timediff = ((float)current_time - _hires_time_start) / _hires_time_end;
 
+    timediff = std::max(std::min(timediff, 1.0), 0.0);
+
     _current_color = InterpolateColor(_old_color,
                                       _new_color,
                                       timediff);
