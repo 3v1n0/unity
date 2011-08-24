@@ -142,7 +142,7 @@ namespace unity {
 
         parsed_color = (primary + secondary) * 0.5f;
       }
-
+      g_warning ("got parsed colour %f, %f, %f", parsed_color.red, parsed_color.green, parsed_color.blue);
       nux::Color new_color = MatchColor (parsed_color);
       TransitionToNewColor (new_color);
     }
@@ -340,7 +340,7 @@ namespace unity {
     guint64 current_time = g_get_monotonic_time();
     float timediff = ((float)current_time - _hires_time_start) / _hires_time_end;
 
-    timediff = std::max(std::min(timediff, 1.0), 0.0);
+    timediff = std::max(std::min(timediff, 1.0f), 0.0f);
 
     _current_color = InterpolateColor(_old_color,
                                       _new_color,
@@ -507,7 +507,7 @@ namespace unity {
                                          gdk_pixbuf_get_height (pixbuf) - 1,
                                          pixbuf);
 
-
+    g_warning ("got average colour %f, %f, %f", average.red, average.green, average.blue);
     nux::Color matched_color = MatchColor (average);
     return matched_color;
   }
