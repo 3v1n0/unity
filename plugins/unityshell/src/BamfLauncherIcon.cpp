@@ -130,7 +130,8 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
     }
   }
 
-  ubus_server_send_message(ubus_server_get_default(), UBUS_LAUNCHER_ACTION_DONE, NULL);
+  if (arg.source != ActionArg::SWITCHER)
+    ubus_server_send_message(ubus_server_get_default(), UBUS_LAUNCHER_ACTION_DONE, NULL);
 }
 
 BamfLauncherIcon::BamfLauncherIcon(Launcher* IconManager, BamfApplication* app, CompScreen* screen)
@@ -293,16 +294,15 @@ const char* BamfLauncherIcon::DesktopFile()
 
 const char* BamfLauncherIcon::BamfName()
 {
-  const char* name = NULL;
-  name = bamf_view_get_name(BAMF_VIEW(m_App));
+  gchar* name = bamf_view_get_name(BAMF_VIEW(m_App));
 
   if (name == NULL)
-    name = "";
+    name = g_strdup("");
 
   if (_cached_name != NULL)
     g_free(_cached_name);
 
-  _cached_name = g_strdup(name);
+  _cached_name = name;
 
   return _cached_name;
 }
@@ -754,6 +754,7 @@ void BamfLauncherIcon::UpdateMenus()
         }
       }
 
+      // TODO: check unref prior to assign, and add unref to destructor.
       _menu_desktop_shortcuts = root;
       g_key_file_free(keyfile);
 

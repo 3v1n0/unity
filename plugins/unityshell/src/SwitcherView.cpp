@@ -41,6 +41,8 @@ SwitcherView::SwitcherView(NUX_FILE_LINE_DECL)
   , redraw_handle_(0)
 {
   icon_renderer_ = AbstractIconRenderer::Ptr(new IconRenderer());
+  icon_renderer_->pip_style = OVER_TILE;
+
   layout_system_ = LayoutSystem::Ptr (new LayoutSystem ());
   border_size = 50;
   flat_spacing = 10;
@@ -79,6 +81,12 @@ SwitcherView::~SwitcherView()
   text_view_->UnReference();
   if (redraw_handle_ > 0)
     g_source_remove(redraw_handle_);
+}
+
+void
+SwitcherView::SetupBackground()
+{
+  bg_effect_helper_.enabled = true;
 }
 
 LayoutWindowList SwitcherView::ExternalTargets ()
@@ -161,6 +169,12 @@ RenderArg SwitcherView::CreateBaseArgForIcon(AbstractLauncherIcon* icon)
   RenderArg arg;
   arg.icon = icon;
   arg.alpha = 0.95f;
+
+  arg.window_indicators = icon->RelatedWindows();
+  if (arg.window_indicators > 1)
+    arg.running_arrow = true;
+  else
+    arg.window_indicators = 0;
 
   if (icon == model_->Selection())
   {
@@ -462,7 +476,7 @@ void SwitcherView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     nux::Geometry blur_geo(geo_absolute.x, geo_absolute.y, base.width, base.height);
     auto blur_texture = bg_effect_helper_.GetBlurRegion(blur_geo);
 
-    if (blur_texture.IsValid() && BackgroundEffectHelper::blur_type != BLUR_NONE)
+    if (blur_texture.IsValid())
     {
       nux::TexCoordXForm texxform_blur_bg;
       texxform_blur_bg.flip_v_coord = true;

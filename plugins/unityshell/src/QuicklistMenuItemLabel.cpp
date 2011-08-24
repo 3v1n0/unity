@@ -134,7 +134,7 @@ QuicklistMenuItemLabel::Draw(nux::GraphicsEngine& gfxContext,
   if (_normalTexture[0] == NULL)
     return;
 
-  nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture;
+  nux::ObjectPtr<nux::IOpenGLBaseTexture> texture;
 
   nux::Geometry base = GetGeometry();
 

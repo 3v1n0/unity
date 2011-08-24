@@ -34,7 +34,7 @@ namespace unity {
       , contents_ (NULL)
       , right_hand_contents_ (NULL)
       , expander_graphic_ (NULL)
-      , label_("<span font_size='x-large'>" + label + "</span>")
+      , label_("<span font_size='larger'>" + label + "</span>")
   {
     expanded.changed.connect (sigc::mem_fun(this, &FilterExpanderLabel::DoExpandChange));
     BuildLayout ();
@@ -46,7 +46,7 @@ namespace unity {
 
   void FilterExpanderLabel::SetLabel (std::string label)
   {
-    label_ = "<style size='x-large'>" + label + "</style>";
+    label_ = "<style size='larger'>" + label + "</style>";
     cairo_label_->SetText(label.c_str());
   }
 
@@ -113,7 +113,7 @@ namespace unity {
 
   void FilterExpanderLabel::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw) {
     GfxContext.PushClippingRectangle(GetGeometry());
-  
+
     GetLayout()->ProcessDraw(GfxContext, force_draw);
 
     GfxContext.PopClippingRectangle();

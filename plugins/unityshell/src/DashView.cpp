@@ -55,9 +55,10 @@ DashView::DashView()
   mouse_down.connect(sigc::mem_fun(this, &DashView::OnMouseButtonDown));
 
   Relayout();
-  OnLensBarActivated("home");
+  lens_bar_->Activate("home.lens");
 
   bg_effect_helper_.owner = this;
+  bg_effect_helper_.enabled = false;
 }
 
 DashView::~DashView()
@@ -66,8 +67,13 @@ DashView::~DashView()
 void DashView::AboutToShow()
 {
   ubus_manager_.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
-  bg_effect_helper_.DirtyCache ();
+  bg_effect_helper_.enabled = true;
   search_bar_->text_entry()->SelectAll();
+}
+
+void DashView::AboutToHide()
+{
+  bg_effect_helper_.enabled = false;
 }
 
 void DashView::SetupBackground()
@@ -99,7 +105,7 @@ void DashView::SetupViews()
 
   home_view_ = new HomeView();
   active_lens_view_ = home_view_;
-  lens_views_["home"] = home_view_;
+  lens_views_["home.lens"] = home_view_;
   lenses_layout_->AddView(home_view_);
 
   lens_bar_ = new LensBar();
@@ -111,8 +117,6 @@ void DashView::SetupUBusConnections()
 {
   ubus_manager_.RegisterInterest(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
       sigc::mem_fun(this, &DashView::OnActivateRequest));
-  ubus_manager_.RegisterInterest(UBUS_PLACE_VIEW_QUEUE_DRAW,
-      [&] (GVariant* args) { QueueDraw(); });
   ubus_manager_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED,
       sigc::mem_fun(this, &DashView::OnBackgroundColorChanged));
 }
@@ -254,7 +258,7 @@ void DashView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
                           texxform,
                           nux::color::White);
     }
-   {
+    {
       // Bottom repeated texture
       int real_width = geo.width - corner->GetWidth();
       int offset = real_width % bottom->GetWidth();
@@ -270,7 +274,6 @@ void DashView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
                           texxform,
                           nux::color::White);
     }
-
     {
       // Right repeated texture
       int real_height = geo.height - corner->GetHeight();
@@ -352,7 +355,7 @@ void DashView::OnActivateRequest(GVariant* args)
 
   g_variant_get(args, "(sus)", &id, NULL, &search_string);
 
-  OnLensBarActivated(id.Str());
+  lens_bar_->Activate(id.Str());
 
   // Reset focus
   SetFocused(false);
@@ -399,8 +402,6 @@ void DashView::OnLensAdded(Lens::Ptr& lens)
 
   lens->activated.connect(sigc::mem_fun(this, &DashView::OnUriActivatedReply));
   lens->search_finished.connect(sigc::mem_fun(this, &DashView::OnSearchFinished));
-
-  lens->Search("");
 }
 
 void DashView::OnLensBarActivated(std::string const& id)
@@ -412,7 +413,10 @@ void DashView::OnLensBarActivated(std::string const& id)
   }
 
   for (auto it: lens_views_)
+  {
     it.second->SetVisible(it.first == id);
+    it.second->active = it.first == id;
+  }
 
   LensView* view = active_lens_view_ = lens_views_[id];
   search_bar_->search_string = view->search_string;
@@ -441,7 +445,6 @@ void DashView::OnUriActivated(std::string const& uri)
 void DashView::OnUriActivatedReply(std::string const& uri, HandledType type, Lens::Hints const&)
 {
   // We don't want to close the dash if there was another activation pending
-
   if (type == NOT_HANDLED)
   {
     if (!DoFallbackActivation(uri))
@@ -526,6 +529,11 @@ bool DashView::LaunchApp(std::string const& appname)
 
   g_free(id);
   return ret;
+}
+
+void DashView::DisableBlur()
+{
+  bg_effect_helper_.blur_type = BLUR_NONE;
 }
 
 // Keyboard navigation

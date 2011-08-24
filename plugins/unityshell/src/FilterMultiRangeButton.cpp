@@ -28,28 +28,25 @@ namespace unity {
       , prelight_ (NULL)
       , active_ (NULL)
       , normal_ (NULL)
-      , has_arrow_ (0)
-      , side_ (0)
+      , has_arrow_ (MULTI_RANGE_ARROW_NONE)
+      , side_ (MULTI_RANGE_CENTER)
   {
     InitTheme();
-    active.changed.connect ([&] (bool is_active) {
-      bool tmp_active = active;
-      if (filter_ != NULL)
-        filter_->active = tmp_active;
-    });
+    activated.connect (sigc::mem_fun(this, &FilterMultiRangeButton::OnActivated));
+    active.changed.connect (sigc::mem_fun(this, &FilterMultiRangeButton::OnActiveChanged));
   }
 
   FilterMultiRangeButton::FilterMultiRangeButton (NUX_FILE_LINE_DECL)
       : nux::ToggleButton(NUX_FILE_LINE_PARAM)
-      , has_arrow_ (0)
-      , side_ (0)
+      , prelight_ (NULL)
+      , active_ (NULL)
+      , normal_ (NULL)
+      , has_arrow_ (MULTI_RANGE_ARROW_NONE)
+      , side_ (MULTI_RANGE_CENTER)
   {
     InitTheme();
-    active.changed.connect ([&] (bool is_active) {
-      bool tmp_active = active;
-      if (filter_ != NULL)
-        filter_->active = tmp_active;
-    });
+    activated.connect (sigc::mem_fun(this, &FilterMultiRangeButton::OnActivated));
+    active.changed.connect (sigc::mem_fun(this, &FilterMultiRangeButton::OnActiveChanged));
   }
 
   FilterMultiRangeButton::~FilterMultiRangeButton()
@@ -59,13 +56,22 @@ namespace unity {
     delete active_;
   }
 
+  void FilterMultiRangeButton::OnActivated (nux::Area *area)
+  {
+    bool tmp_active = active;
+    if (filter_ != NULL)
+      filter_->active = tmp_active;
+  }
+
+  void FilterMultiRangeButton::OnActiveChanged(bool value)
+  {
+    NeedRedraw();
+  }
 
   void FilterMultiRangeButton::SetFilter (dash::FilterOption::Ptr filter)
   {
     filter_ = filter;
-    //std::string tmp_label = filter->name;
     bool tmp_active = filter_->active;
-    //label = tmp_label;
     active = tmp_active;
   }
 
@@ -74,7 +80,7 @@ namespace unity {
     return filter_;
   }
 
-  void FilterMultiRangeButton::SetVisualSide (int side)
+  void FilterMultiRangeButton::SetVisualSide (MultiRangeSide side)
   {
     side_ = side;
     prelight_->Invalidate(GetGeometry());
@@ -82,10 +88,11 @@ namespace unity {
     normal_->Invalidate(GetGeometry());
   }
 
-  void FilterMultiRangeButton::SetHasArrow (int value)
+  void FilterMultiRangeButton::SetHasArrow (MultiRangeArrow value)
   {
     has_arrow_ = value;
     active_->Invalidate(GetGeometry());
+    NeedRedraw();
   }
 
   long FilterMultiRangeButton::ComputeLayout2()
@@ -115,7 +122,7 @@ namespace unity {
       normal_ = new nux::CairoWrapper(GetGeometry(), sigc::bind(sigc::mem_fun(this, &FilterMultiRangeButton::RedrawTheme), nux::State::NUX_STATE_NORMAL));
     }
 
-    SetMinimumHeight(32);
+    //SetMinimumHeight(32);
   }
 
   void FilterMultiRangeButton::RedrawTheme (nux::Geometry const& geom, cairo_t *cr, nux::State faked_state)
@@ -126,24 +133,26 @@ namespace unity {
      name = filter_->name;
 
     DashStyle::Arrow arrow;
-    if (has_arrow_ == -1)
+    if (has_arrow_ == MULTI_RANGE_ARROW_NONE)
       arrow = DashStyle::Arrow::ARROW_NONE;
-    else if (has_arrow_ == 0)
+    else if (has_arrow_ == MULTI_RANGE_ARROW_LEFT)
       arrow = DashStyle::Arrow::ARROW_LEFT;
-    else if (has_arrow_ == 1)
+    else if (has_arrow_ == MULTI_RANGE_ARROW_BOTH)
       arrow = DashStyle::Arrow::ARROW_BOTH;
     else
       arrow = DashStyle::Arrow::ARROW_RIGHT;
 
     DashStyle::Segment segment;
-    if (side_ == 0)
+    if (side_ == MULTI_RANGE_SIDE_LEFT)
       segment = DashStyle::SEGMENT_LEFT;
-    else if (side_ == 1)
+    else if (side_ == MULTI_RANGE_CENTER)
       segment = DashStyle::SEGMENT_MIDDLE;
     else
       segment = DashStyle::SEGMENT_RIGHT;
 
+
     DashStyle::GetDefault()->MultiRangeSegment (cr, faked_state, name, arrow, segment);
+    NeedRedraw();
   }
 
 
@@ -172,9 +181,12 @@ namespace unity {
                          col);
 
     nux::BaseTexture *texture = normal_->GetTexture();
-    if (state == nux::State::NUX_STATE_PRELIGHT)
-      texture = prelight_->GetTexture();
-    else if (state == nux::State::NUX_STATE_ACTIVE)
+    //FIXME - dashstyle does not give us a focused state yet, so ignore
+    //~ if (state == nux::State::NUX_STATE_PRELIGHT)
+    //~ {
+      //~ texture = prelight_->GetTexture();
+    //~ }
+    if (active)
     {
       texture = active_->GetTexture();
     }

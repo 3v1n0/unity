@@ -47,9 +47,6 @@
 #define FONT_FACE            "Ubuntu 13"
 
 
-class VLayout;
-class HLayout;
-class SpaceLayout;
 class QuicklistMenuItem;
 class QuicklistMenuItemLabel;
 

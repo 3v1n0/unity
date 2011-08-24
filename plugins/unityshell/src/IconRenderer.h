@@ -51,7 +51,7 @@ protected:
 
   void RenderElement(nux::GraphicsEngine& GfxContext,
                      RenderArg const& arg,
-                     nux::IntrusiveSP<nux::IOpenGLBaseTexture> icon,
+                     nux::ObjectPtr<nux::IOpenGLBaseTexture> icon,
                      nux::Color bkg_color,
                      float alpha,
                      std::vector<nux::Vector4>& xform_coords);
@@ -64,7 +64,7 @@ protected:
                         nux::Geometry const& geo);
 
   void RenderProgressToTexture(nux::GraphicsEngine& GfxContext,
-                               nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture,
+                               nux::ObjectPtr<nux::IOpenGLBaseTexture> texture,
                                float progress_fill,
                                float bias);
 
@@ -81,7 +81,7 @@ protected:
                                          float FarClipPlane,
                                          float Fovy);
 
-  void SetOffscreenRenderTarget(nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture);
+  void SetOffscreenRenderTarget(nux::ObjectPtr<nux::IOpenGLBaseTexture> texture);
 
   void RestoreSystemRenderTarget();
 

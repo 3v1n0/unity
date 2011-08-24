@@ -118,7 +118,7 @@ private:
   nux::AbstractPaintLayer* _title_layer;
   nux::HLayout*            _menu_layout;
   nux::CairoGraphics       _util_cg;
-  nux::IntrusiveSP<nux::IOpenGLBaseTexture> _gradient_texture;
+  nux::ObjectPtr<nux::IOpenGLBaseTexture> _gradient_texture;
   nux::BaseTexture*        _title_tex;
 
   bool _is_inside;

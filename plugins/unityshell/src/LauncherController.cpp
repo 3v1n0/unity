@@ -59,9 +59,8 @@ LauncherController::LauncherController(Launcher* launcher, CompScreen* screen)
 
   _bamf_timer_handler_id = g_timeout_add(500, (GSourceFunc) &LauncherController::BamfTimerCallback, this);
 
-  _remote_model = LauncherEntryRemoteModel::GetDefault();
-  _remote_model->entry_added.connect(sigc::mem_fun(this, &LauncherController::OnLauncherEntryRemoteAdded));
-  _remote_model->entry_removed.connect(sigc::mem_fun(this, &LauncherController::OnLauncherEntryRemoteRemoved));
+  _remote_model.entry_added.connect(sigc::mem_fun(this, &LauncherController::OnLauncherEntryRemoteAdded));
+  _remote_model.entry_removed.connect(sigc::mem_fun(this, &LauncherController::OnLauncherEntryRemoteRemoved));
 
   RegisterIcon (new BFBLauncherIcon (launcher));
 }
@@ -275,7 +274,7 @@ LauncherController::RegisterIcon(LauncherIcon* icon)
     const char* path;
     path = bamf_icon->DesktopFile();
     if (path)
-      entry = _remote_model->LookupByDesktopFile(path);
+      entry = _remote_model.LookupByDesktopFile(path);
     if (entry)
       icon->InsertEntryRemote(entry);
   }

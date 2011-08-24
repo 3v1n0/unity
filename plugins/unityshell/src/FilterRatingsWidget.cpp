@@ -82,7 +82,7 @@ namespace unity {
 
   void FilterRatingsWidget::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw) {
     GfxContext.PushClippingRectangle(GetGeometry());
-  
+
     GetLayout()->ProcessDraw(GfxContext, force_draw);
 
     GfxContext.PopClippingRectangle();

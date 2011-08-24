@@ -27,6 +27,7 @@
 #include <NuxCore/Logger.h>
 
 #include "BGHash.h"
+#include "FontSettings.h"
 #include "DashView.h"
 #include "PlacesSettings.h"
 
@@ -59,6 +60,7 @@ void TestRunner::Init ()
   layout = new nux::VLayout(NUX_TRACKER_LOCATION);
 
   DashView* view = new DashView();
+  view->DisableBlur();
   view->SetMinMaxSize(1024, 600);
 
   layout->AddView (view, 1, nux::MINOR_POSITION_CENTER);
@@ -90,6 +92,7 @@ int main(int argc, char **argv)
   gtk_init (&argc, &argv);
 
   unity::BGHash bghash;
+  unity::FontSettings font_settings;
 
   nux::NuxInitialize(0);
   nux::logging::configure_logging(::getenv("UNITY_LOG_SEVERITY"));
