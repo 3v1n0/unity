@@ -350,6 +350,8 @@ add_executable (test-result-view
                 ${UNITY_SRC}/StaticCairoText.cpp
                 ${UNITY_SRC}/TextureCache.cpp
                 ${UNITY_SRC}/DashStyle.cpp
+                ${UNITY_SRC}/ubus-server.cpp
+                ${UNITY_SRC}/ubus-server.h
                 )
 add_dependencies(test-result-view unity-core-${UNITY_API_VERSION})
 
