@@ -409,14 +409,12 @@ namespace unity {
 
   void BGHash::LoadFileToHash(const std::string path)
   {
-    g_warning ("BGHash - loading file %s to hash", path.c_str());
     glib::Error error;
     glib::Object<GdkPixbuf> pixbuf(gdk_pixbuf_new_from_file (path.c_str (), &error));
 
     if (error)
     {
       LOG_WARNING(logger) << "Could not load filename \"" << path << "\": " << error.Message();
-      g_warning ("got an error :(");
       _current_color = unity::colors::Aubergine;
 
       // try and get a colour from gnome-bg, for various reasons, gnome bg might not
