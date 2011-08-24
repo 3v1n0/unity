@@ -12,7 +12,6 @@ if (COMPIZ_TEST_GET_TRANSIENTS_FOUND)
 
 	add_executable (test-get-transients
 			test-get-transients.cpp
-			../../plugins/unityshell/src/minimizedwindowhandler.cpp
 			../../plugins/unityshell/src/transientfor.cpp
 			../../plugins/unityshell/src/inputremover.cpp)
 

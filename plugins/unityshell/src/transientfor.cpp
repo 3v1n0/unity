@@ -141,6 +141,57 @@ compiz::X11TransientForReader::isGroupTransientFor (unsigned int clientLeader)
   return false;
 }
 
+std::vector<unsigned int>
+compiz::X11TransientForReader::getTransients ()
+{
+  unsigned long nItems, nLeft;
+  int           actualFormat;
+  Atom          actualType;
+  Atom          wmClientList;
+  unsigned char *prop;
+  std::vector<unsigned int>   transients;
+  std::vector<Window>   clientList;
+
+  wmClientList = XInternAtom (priv->mDpy, "_NET_CLIENT_LIST", 0);
+
+  if (XGetWindowProperty (priv->mDpy, DefaultRootWindow (priv->mDpy), wmClientList, 0L, 512L, false,
+                          XA_WINDOW, &actualType, &actualFormat, &nItems, &nLeft,
+                          &prop) == Success)
+  {
+    if (actualType == XA_WINDOW && actualFormat == 32 && nItems && !nLeft)
+    {
+      Window *data = (Window *) prop;
+
+      while (nItems--)
+      {
+        clientList.push_back (*data++);
+      }
+    }
+
+    XFree (prop);
+  }
+
+  /* Now check all the windows in this client list
+     * for the transient state (note that this won't
+     * work for override redirect windows since there's
+     * no concept of a client list for override redirect
+     * windows, but it doesn't matter anyways in this
+     * [external] case) */
+
+  for (Window &w : clientList)
+  {
+    X11TransientForReader *reader = new X11TransientForReader (priv->mDpy, w);
+
+    if (reader->isTransientFor (priv->mXid) ||
+        reader->isGroupTransientFor (priv->mXid))
+      transients.push_back (w);
+
+    delete reader;
+  }
+
+  return transients;
+}
+
 compiz::X11TransientForReader::X11TransientForReader (Display *dpy, Window xid)
 {
   priv = new PrivateX11TransientForReader ();

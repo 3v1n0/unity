@@ -43,6 +43,8 @@ public:
   bool isTransientFor (unsigned int ancestor);
   bool isGroupTransientFor (unsigned int clientLeader);
 
+  std::vector<unsigned int> getTransients ();
+
   static Atom wmTransientFor;
   static Atom wmClientLeader;
 

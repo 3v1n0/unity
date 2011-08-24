@@ -22,7 +22,7 @@
 #define _GNU_SOURCE
 #endif
 
-#include <minimizedwindowhandler.h>
+#include <transientfor.h>
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
@@ -51,7 +51,6 @@ class X11Window
 
     Window mXid;
     Display *mDpy;
-    compiz::MinimizedWindowHandler::Ptr mMinimizedHandler;
     bool mCreated;
 };
 
@@ -135,10 +134,11 @@ X11Window::setClientLeader (X11Window *w)
 std::vector<unsigned int>
 X11Window::transients ()
 {
-  if (!mMinimizedHandler)
-    mMinimizedHandler = compiz::MinimizedWindowHandler::Ptr (new compiz::MinimizedWindowHandler (mDpy, mXid));
+  compiz::X11TransientForReader *reader = new compiz::X11TransientForReader (mDpy, mXid);
+  std::vector<unsigned int> transients = reader->getTransients ();
 
-  return mMinimizedHandler->getTransients ();
+  delete reader;
+  return transients;
 }
 
 void
