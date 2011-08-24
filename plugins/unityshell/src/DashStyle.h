@@ -197,13 +197,19 @@ namespace unity
 
       void ArrowPath (cairo_t* cr, Arrow arrow);
 
+      cairo_operator_t SetBlendMode (cairo_t* cr, BlendMode mode);
+
+      void DrawOverlay (cairo_t*  cr,
+                        double    opacity,
+                        BlendMode mode,
+                        int       blurSize);
 
     private:
       cairo_font_options_t* _defaultFontOptions;
 
       double                _buttonLabelBorderColor[STATES][CHANNELS];
       double                _buttonLabelBorderOpacity[STATES];
-      double                _buttonLabelBorderSize;
+      double                _buttonLabelBorderSize[STATES];
       double                _buttonLabelTextSize;
       double                _buttonLabelTextColor[STATES][CHANNELS];
       double                _buttonLabelTextOpacity[STATES];
@@ -218,6 +224,13 @@ namespace unity
       double                _regularTextSize;
       BlendMode             _regularTextMode;
       FontWeight            _regularTextWeight;
+
+      double                _separatorSize;
+      double                _separatorColor[CHANNELS];
+      double                _separatorOpacity;
+      double                _separatorOverlayOpacity;
+      BlendMode             _separatorOverlayMode;
+      int                   _separatorBlurSize;
   };
 }
 
