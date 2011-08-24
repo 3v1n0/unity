@@ -46,8 +46,8 @@ namespace unity {
 
   void FilterExpanderLabel::SetLabel (std::string label)
   {
-    label_ = "<style size='larger'>" + label + "</style>";
-    cairo_label_->SetText(label.c_str());
+    label_ = "<span font_size='larger'>" + label + "</span>";
+    cairo_label_->SetText(label_.c_str());
   }
 
   void FilterExpanderLabel::SetRightHandView (nux::View *view)

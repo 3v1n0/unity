@@ -171,8 +171,6 @@ add_executable (test-panel
                 ${UNITY_SRC}/PanelTray.h
                 ${UNITY_SRC}/Introspectable.cpp
                 ${UNITY_SRC}/Introspectable.h
-                ${UNITY_SRC}/PanelHomeButton.cpp
-                ${UNITY_SRC}/PanelHomeButton.h
                 ${UNITY_SRC}/PanelMenuView.cpp
                 ${UNITY_SRC}/PanelMenuView.h
                 ${UNITY_SRC}/Timer.cpp
@@ -358,6 +356,8 @@ add_executable (test-result-view
                 ${UNITY_SRC}/StaticCairoText.cpp
                 ${UNITY_SRC}/TextureCache.cpp
                 ${UNITY_SRC}/DashStyle.cpp
+                ${UNITY_SRC}/ubus-server.cpp
+                ${UNITY_SRC}/ubus-server.h
                 )
 add_dependencies(test-result-view unity-core-${UNITY_API_VERSION})
 

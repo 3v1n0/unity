@@ -261,13 +261,13 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nu
 
     XDestroyRegion(xregion);
     XDestroyRegion(damage_intersection);
+  }
 
-    blur_geometry_ =  nux::Geometry(0, 0, graphics_engine->GetWindowWidth(), graphics_engine->GetWindowHeight()).Intersect(geo);
+  blur_geometry_ =  nux::Geometry(0, 0, graphics_engine->GetWindowWidth(), graphics_engine->GetWindowHeight()).Intersect(geo);
 
-    if (blur_geometry_.IsNull() || blur_type == BLUR_NONE || !nux::GetGraphicsDisplay()->GetGpuDevice()->backup_texture0_.IsValid())
-    {
-      return nux::ObjectPtr<nux::IOpenGLBaseTexture>(NULL);
-    }
+  if (blur_geometry_.IsNull() || blur_type == BLUR_NONE || !nux::GetGraphicsDisplay()->GetGpuDevice()->backup_texture0_.IsValid())
+  {
+    return nux::ObjectPtr<nux::IOpenGLBaseTexture>(NULL);
   }
 
   // save the current fbo

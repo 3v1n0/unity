@@ -523,9 +523,9 @@ void on_proxy_ready_cb(GObject* source, GAsyncResult* res, gpointer data)
   GDBusProxy* proxy = g_dbus_proxy_new_for_bus_finish(res, &error);
 
   static bool force_tried = false;
-  char* name_owner = g_dbus_proxy_get_name_owner(proxy);
 
-  if (G_IS_DBUS_PROXY(proxy) && name_owner)
+  char* name_owner;
+  if (G_IS_DBUS_PROXY(proxy) && (name_owner = g_dbus_proxy_get_name_owner(proxy)))
   {
     remote->OnRemoteProxyReady(G_DBUS_PROXY(proxy));
     g_free(name_owner);
