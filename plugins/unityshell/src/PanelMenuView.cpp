@@ -38,6 +38,7 @@
 #include <gio/gdesktopappinfo.h>
 #include <gconf/gconf-client.h>
 
+#include "DashSettings.h"
 #include "ubus-server.h"
 #include "UBusMessages.h"
 
@@ -221,7 +222,7 @@ PanelMenuView::ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long Process
     }
   }
 
-  if (_is_maximized)
+  if (_is_maximized || _places_showing)
   {
     if (_window_buttons)
       ret = _window_buttons->ProcessEvent(ievent, ret, ProcessEventInfo);
@@ -251,7 +252,7 @@ PanelMenuView::FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEven
     NUX_RETURN_VALUE_IF_NOTNULL(found_area, found_area);
   }
 
-  if (_is_maximized)
+  if (_is_maximized || _places_showing)
   {
     if (_window_buttons)
     {
@@ -342,7 +343,7 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   nux::Point point = nux::GetWindowCompositor().GetMousePosition();
   
-  if (_is_own_window || _places_showing || !_we_control_active || (_is_maximized && geo.IsPointInside(point.x, point.y)) || (_is_maximized && _is_inside))
+  if (_is_own_window || !_we_control_active || (_is_maximized && geo.IsPointInside(point.x, point.y)) || (_is_maximized && _is_inside))
   {
 
   }
@@ -455,15 +456,14 @@ PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   if (!_is_own_window && !_places_showing && _we_control_active)
   {
     if (geo.IsPointInside(point.x, point.y) || _last_active_view || _show_now_activated)
-    {
       layout_->ProcessDraw(GfxContext, force_draw);
-    }
+  }
 
-    if (_is_maximized && (geo.IsPointInside(point.x, point.y) || _is_inside))
+    if ((!_is_own_window && _we_control_active && _is_maximized && (geo.IsPointInside(point.x, point.y) || _is_inside)) ||
+        _places_showing)
     {
       _window_buttons->ProcessDraw(GfxContext, true);
     }
-  }
 
   GfxContext.PopClippingRectangle();
 }
@@ -945,31 +945,52 @@ PanelMenuView::OnWindowMoved(guint xid)
 void
 PanelMenuView::OnCloseClicked()
 {
-  BamfWindow* window;
+  if (_places_showing)
+  {
+    ubus_server_send_message(ubus_server_get_default(), UBUS_PLACE_VIEW_CLOSE_REQUEST, NULL);
+  }
+  else
+  {
+    BamfWindow* window;
 
-  window = bamf_matcher_get_active_window(_matcher);
-  if (BAMF_IS_WINDOW(window))
-    WindowManager::Default()->Close(bamf_window_get_xid(window));
+    window = bamf_matcher_get_active_window(_matcher);
+    if (BAMF_IS_WINDOW(window))
+      WindowManager::Default()->Close(bamf_window_get_xid(window));
+  }
 }
 
 void
 PanelMenuView::OnMinimizeClicked()
 {
-  BamfWindow* window;
+  if (_places_showing)
+  {
+    DashSettings::GetDefault()->SetFormFactor(DashSettings::DESKTOP);
+  }
+  else
+  {
+    BamfWindow* window;
 
-  window = bamf_matcher_get_active_window(_matcher);
-  if (BAMF_IS_WINDOW(window))
-    WindowManager::Default()->Minimize(bamf_window_get_xid(window));
+    window = bamf_matcher_get_active_window(_matcher);
+    if (BAMF_IS_WINDOW(window))
+      WindowManager::Default()->Minimize(bamf_window_get_xid(window));
+  }
 }
 
 void
 PanelMenuView::OnRestoreClicked()
 {
-  BamfWindow* window;
+  if (_places_showing)
+  {
+    DashSettings::GetDefault()->SetFormFactor(DashSettings::NETBOOK);
+  }
+  else
+  {
+    BamfWindow* window;
 
-  window = bamf_matcher_get_active_window(_matcher);
-  if (BAMF_IS_WINDOW(window))
-    WindowManager::Default()->Restore(bamf_window_get_xid(window));
+    window = bamf_matcher_get_active_window(_matcher);
+    if (BAMF_IS_WINDOW(window))
+      WindowManager::Default()->Restore(bamf_window_get_xid(window));
+  }
 }
 
 void

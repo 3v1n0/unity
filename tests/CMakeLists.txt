@@ -39,23 +39,12 @@ include_directories (. .. ../services ../UnityCore ${UNITY_SRC} ${CMAKE_BINARY_D
 # Please keep actual test files alphabetically at top and then files
 # from ../${UNITY_SRC} or ../../services in alphabetically after that
 add_executable (test-unit
-                unit/TestPlaceFactoryFile.cpp
                 unit/TestQuicklistMenuitems.cpp
                 unit/TestMain.cpp
                 unit/TestUBus.cpp
                 ${UNITY_SRC}/ubus-server.cpp
                 ${UNITY_SRC}/ubus-server.h
                 ${UNITY_SRC}/Introspectable.cpp
-                ${UNITY_SRC}/PlaceEntryRemote.cpp
-                ${UNITY_SRC}/PlaceEntryRemote.h
-                ${UNITY_SRC}/PlaceEntry.h
-                ${UNITY_SRC}/PlaceFactoryFile.cpp
-                ${UNITY_SRC}/PlaceFactoryFile.h
-                ${UNITY_SRC}/PlaceFactory.cpp
-                ${UNITY_SRC}/PlaceFactory.h
-                ${UNITY_SRC}/PlaceRemote.cpp
-                ${UNITY_SRC}/PlaceRemote.h
-                ${UNITY_SRC}/Place.h
                 ${UNITY_SRC}/QuicklistMenuItem.cpp
                 ${UNITY_SRC}/QuicklistMenuItem.h
                 ${UNITY_SRC}/QuicklistMenuItemCheckmark.cpp
@@ -157,6 +146,8 @@ add_executable (test-panel
                 TestPanel.cpp
                 ${UNITY_SRC}/BackgroundEffectHelper.cpp
                 ${UNITY_SRC}/BackgroundEffectHelper.h
+                ${UNITY_SRC}/DashSettings.cpp
+                ${UNITY_SRC}/DashSettings.h
                 ${UNITY_SRC}/PanelStyle.cpp
                 ${UNITY_SRC}/PanelStyle.h
                 ${UNITY_SRC}/PanelView.cpp

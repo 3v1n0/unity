@@ -30,8 +30,8 @@
 #include "FontSettings.h"
 #include "DashView.h"
 
-#define WIDTH 1600
-#define HEIGHT 600
+#define WIDTH 1054
+#define HEIGHT 640
 
 using namespace unity::dash;
 

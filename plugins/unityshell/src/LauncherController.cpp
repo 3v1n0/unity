@@ -44,9 +44,6 @@ LauncherController::LauncherController(Launcher* launcher, CompScreen* screen)
   _launcher->launcher_addrequest.connect(sigc::mem_fun(this, &LauncherController::OnLauncherAddRequest));
   _launcher->launcher_removerequest.connect(sigc::mem_fun(this, &LauncherController::OnLauncherRemoveRequest));
 
-  _place_section = new PlaceLauncherSection(_launcher);
-  _place_section->IconAdded.connect(sigc::mem_fun(this, &LauncherController::OnIconAdded));
-
   _device_section = new DeviceLauncherSection(_launcher);
   _device_section->IconAdded.connect(sigc::mem_fun(this, &LauncherController::OnIconAdded));
 
@@ -73,7 +70,6 @@ LauncherController::~LauncherController()
   if (_matcher != NULL && _on_view_opened_id != 0)
     g_signal_handler_disconnect((gpointer) _matcher, _on_view_opened_id);
 
-  delete _place_section;
   delete _device_section;
   delete _model;
 }

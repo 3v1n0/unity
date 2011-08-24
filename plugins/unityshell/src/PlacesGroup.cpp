@@ -325,8 +325,6 @@ PlacesGroup::SetCounts(guint n_visible_items_in_unexpand_mode, guint n_total_ite
   _n_visible_items_in_unexpand_mode = n_visible_items_in_unexpand_mode;
   _n_total_items = n_total_items;
 
-  g_debug("%d %d", n_visible_items_in_unexpand_mode, n_total_items);
-
   Relayout();
 }
 
