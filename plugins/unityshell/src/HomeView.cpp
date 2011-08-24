@@ -79,7 +79,7 @@ void HomeView::SetupViews()
   scroll_view_->SetLayout(scroll_layout_);
 
   home_view_ = new PlacesHomeView();
-  layout_->AddView(home_view_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
+  layout_->AddView(home_view_);
 
   SetLayout(layout_);
 }
