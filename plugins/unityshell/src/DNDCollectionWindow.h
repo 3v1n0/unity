@@ -39,7 +39,7 @@ public:
   ~DNDCollectionWindow();
   
 private:
-  void ProcessDndMove(int x, int y, std::list<char*> mimes);
+  void ProcessDndEnter();
 
 // Members
 public:

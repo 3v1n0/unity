@@ -1652,7 +1652,7 @@ Launcher::OnWindowMapped(guint32 xid)
   if (window && window->type() | CompWindowTypeDndMask)
   {
     if (!_dnd_check_handle)
-      _dnd_check_handle = g_timeout_add(200, &Launcher::OnUpdateDragManagerTimeout, this);
+      _dnd_check_handle = g_timeout_add(20, &Launcher::OnUpdateDragManagerTimeout, this);
   }
 }
 
@@ -1663,7 +1663,7 @@ Launcher::OnWindowUnmapped(guint32 xid)
   if (window && window->type() | CompWindowTypeDndMask)
   {
     if (!_dnd_check_handle)
-      _dnd_check_handle = g_timeout_add(200, &Launcher::OnUpdateDragManagerTimeout, this);
+      _dnd_check_handle = g_timeout_add(20, &Launcher::OnUpdateDragManagerTimeout, this);
   }
 }
 
@@ -3026,12 +3026,12 @@ Launcher::ProcessDndDrop(int x, int y)
 {
   if (_steal_drag)
   {
+    char* path = 0;
+
     for (auto it : _dnd_data.Uris())
     {
       if (g_str_has_suffix(it.c_str(), ".desktop"))
       {
-        char* path = 0;
-        
         if (g_str_has_prefix(it.c_str(), "application://"))
         {
           const char* tmp = it.c_str() + strlen("application://");
@@ -3044,13 +3044,13 @@ Launcher::ProcessDndDrop(int x, int y)
           path = g_filename_from_uri(it.c_str(), NULL, NULL);
           break;
         }
-        
-        if (path)
-        {
-          launcher_addrequest.emit(path, _dnd_hovered_icon);
-          g_free(path);
-        }
       }
+    }
+
+    if (path)
+    {
+      launcher_addrequest.emit(path, _dnd_hovered_icon);
+      g_free(path);
     }
   }
   else if (_dnd_hovered_icon && _drag_action != nux::DNDACTION_NONE)

@@ -19,6 +19,8 @@
 
 #include "DNDCollectionWindow.h"
 
+#include "Nux/WindowCompositor.h"
+
 namespace unity {
   
 NUX_IMPLEMENT_OBJECT_TYPE(DNDCollectionWindow);
@@ -44,18 +46,16 @@ DNDCollectionWindow::~DNDCollectionWindow()
     g_free(it);
 }
 
-void DNDCollectionWindow::ProcessDndMove(int x, int y, std::list<char*> mimes)
+void DNDCollectionWindow::ProcessDndEnter()
 {  
   // Hide the window as soon as possible
   EnableInputWindow(false, "DNDCollectionWindow");
-
+  
   for (auto it : mimes_)
     g_free(it);
   mimes_.clear();
-  
-  // Duplicate the list
-  for (auto it : mimes)
-    mimes_.push_back(g_strdup(it));
+
+  mimes_ = nux::GetWindow().GetDndMimeTypes();
   
   collected.emit(mimes_);
 }
