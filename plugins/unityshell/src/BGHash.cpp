@@ -109,6 +109,7 @@ namespace unity {
     const gchar *filename = gnome_bg_get_filename (bg);
     if (filename == NULL)
     {
+      g_warning ("BGHash did not get a filename");
       // we might have a gradient instead
       GdkColor color_primary, color_secondary;
       GDesktopBackgroundShading shading_type;
@@ -143,6 +144,7 @@ namespace unity {
     }
     else
     {
+      g_warning ("BGHash got a filename: %s", filename);
       if (_bg_slideshow != NULL)
       {
         slideshow_unref (_bg_slideshow);
@@ -347,6 +349,7 @@ namespace unity {
 
   void BGHash::DoUbusColorEmit()
   {
+    g_warning ("BGHash emitting colour %f, %f, %f", _current_color.red, _current_color.green, _current_color.blue);
     ubus_server_send_message(ubus_server_get_default(),
                              UBUS_BACKGROUND_COLOR_CHANGED,
                              g_variant_new ("(dddd)",
@@ -395,13 +398,15 @@ namespace unity {
 
   void BGHash::LoadFileToHash(const std::string path)
   {
+    g_warning ("BGHash - loading file %s to hash", path.c_str());
     glib::Error error;
     glib::Object<GdkPixbuf> pixbuf(gdk_pixbuf_new_from_file (path.c_str (), &error));
 
     if (error)
     {
       LOG_WARNING(logger) << "Could not load filename \"" << path << "\": " << error.Message();
-      _current_color = nux::Color(0.2, 0.2, 0.2, 0.9);
+      g_warning ("got an error :(");
+      _current_color = unity::colors::Aubergine;
 
       // try and get a colour from gnome-bg, for various reasons, gnome bg might not
       // return a correct image which sucks =\ but this is a fallback
@@ -498,6 +503,7 @@ namespace unity {
 
   nux::Color BGHash::MatchColor (const nux::Color base_color)
   {
+    g_warning ("trying to match colour %f, %f, %f", base_color.red, base_color.green, base_color.blue);
     nux::Color colors[12];
 
     colors[ 0] = nux::Color (0x540e44);
@@ -560,6 +566,8 @@ namespace unity {
 
     // apply design to the colour
     chosen_color.alpha = 0.5f;
+
+    g_warning ("resulting in colour %f, %f, %f", chosen_color.red, chosen_color.green, chosen_color.blue);
 
     return chosen_color;
   }
