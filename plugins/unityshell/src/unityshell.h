@@ -179,6 +179,8 @@ public:
 
   void setActiveFbo (GLuint fbo) { mActiveFbo = fbo; }
 
+  bool forcePaintOnTop ();
+
 protected:
   const gchar* GetName();
   void AddProperties(GVariantBuilder* builder);
@@ -261,6 +263,7 @@ private:
   UBusManager ubus_manager_;
   bool dash_is_open_;
   CompScreen::GrabHandle grab_index_;
+  CompWindowList         fullscreen_windows_;
 
   friend class UnityWindow;
 };

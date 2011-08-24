@@ -469,6 +469,13 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
   BackgroundEffectHelper::updates_enabled = true;
 }
 
+bool UnityScreen::forcePaintOnTop ()
+{
+    return !allowWindowPaint ||
+	    ((switcherController->Visible() ||
+	      dash_is_open_) && !fullscreen_windows_.empty ());
+}
+
 void UnityWindow::paintThumbnail (nux::Geometry const& bounding, float alpha)
 {
   GLMatrix matrix;
@@ -1105,7 +1112,7 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
       !BackgroundEffectHelper::HasEnabledHelpers() ||
       !BackgroundEffectHelper::detecting_occlusions() ||
       !uScreen->doShellRepaint ||
-      !uScreen->allowWindowPaint)
+      uScreen->forcePaintOnTop ())
   {
     return gWindow->glPaint(attrib, matrix, region, mask);
   }
@@ -1167,7 +1174,7 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
                          const CompRegion& region,
                          unsigned int mask)
 {
-  if (uScreen->doShellRepaint && uScreen->allowWindowPaint)
+  if (uScreen->doShellRepaint && !uScreen->forcePaintOnTop ())
   {
     std::vector<Window> const& xwns = nux::XInputWindow::NativeHandleList();
     unsigned int size = xwns.size();
@@ -1205,6 +1212,13 @@ void UnityWindow::windowNotify(CompWindowNotify n)
 
 void UnityWindow::stateChangeNotify(unsigned int lastState)
 {
+  if (window->state () & CompWindowStateFullscreenMask &&
+      !(lastState & CompWindowStateFullscreenMask))
+    UnityScreen::get (screen)->fullscreen_windows_.push_back(window);
+  else if (lastState & CompWindowStateFullscreenMask &&
+	   !(window->state () & CompWindowStateFullscreenMask))
+    UnityScreen::get (screen)->fullscreen_windows_.remove(window);
+
   PluginAdapter::Default()->NotifyStateChange(window, window->state(), lastState);
   window->stateChangeNotify(lastState);
 }
@@ -1703,6 +1717,9 @@ UnityWindow::UnityWindow(CompWindow* window)
 {
   WindowInterface::setHandler(window);
   GLWindowInterface::setHandler(gWindow);
+
+  if (window->state () & CompWindowStateFullscreenMask)
+    UnityScreen::get (screen)->fullscreen_windows_.push_back(window);
 }
 
 UnityWindow::~UnityWindow()
@@ -1712,6 +1729,9 @@ UnityWindow::~UnityWindow()
     us->newFocusedWindow = NULL;
   if (us->lastFocusedWindow && (UnityWindow::get(us->lastFocusedWindow) == this))
     us->lastFocusedWindow = NULL;
+
+  if (window->state () & CompWindowStateFullscreenMask)
+    UnityScreen::get (screen)->fullscreen_windows_.remove(window);
 }
 
 /* vtable init */
