@@ -340,7 +340,9 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   nux::ColorLayer layer(nux::Color(0x00000000), true, rop);
   gPainter.PushDrawLayer(GfxContext, GetGeometry(), &layer);
 
-  if (_is_own_window || _places_showing || !_we_control_active)
+  nux::Point point = nux::GetWindowCompositor().GetMousePosition();
+  
+  if (_is_own_window || _places_showing || !_we_control_active || (_is_maximized && geo.IsPointInside(point.x, point.y)) || (_is_maximized && _is_inside))
   {
 
   }
@@ -448,14 +450,16 @@ PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   GfxContext.PushClippingRectangle(geo);
 
+  nux::Point point = nux::GetWindowCompositor().GetMousePosition();
+  
   if (!_is_own_window && !_places_showing && _we_control_active)
   {
-    if (_is_inside || _last_active_view || _show_now_activated)
+    if (geo.IsPointInside(point.x, point.y) || _last_active_view || _show_now_activated)
     {
       layout_->ProcessDraw(GfxContext, force_draw);
     }
 
-    if (_is_maximized)
+    if (_is_maximized && (geo.IsPointInside(point.x, point.y) || _is_inside))
     {
       _window_buttons->ProcessDraw(GfxContext, true);
     }
@@ -615,9 +619,6 @@ PanelMenuView::Refresh()
 
   x = _padding;
   y = 0;
-
-  if (_is_maximized)
-    x += _window_buttons->GetContentWidth() + _padding + _padding;
 
   if (label)
   {
