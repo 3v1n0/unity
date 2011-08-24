@@ -195,7 +195,7 @@ void LensView::UpdateCounts(PlacesGroup* group)
 {
   PlacesStyle* style = PlacesStyle::GetDefault();
 
-  group->SetCounts(style->GetDefaultNColumns() - filters_expanded ? 2 : 0, counts_[group]);
+  group->SetCounts(style->GetDefaultNColumns() - (filters_expanded ? 2 : 0), counts_[group]);
   group->SetVisible(counts_[group]);
 
   QueueFixRenderering();
@@ -241,8 +241,6 @@ void LensView::OnColumnsChanged()
   unsigned int columns = PlacesStyle::GetDefault()->GetDefaultNColumns();
 
   columns -= filters_expanded ? 2 : 0;
-
-  g_debug("\n\n\nCOLUMNS: %d", columns);
 
   for (auto group: categories_)
   {
