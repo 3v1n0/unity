@@ -117,8 +117,6 @@ void DashView::SetupUBusConnections()
 {
   ubus_manager_.RegisterInterest(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
       sigc::mem_fun(this, &DashView::OnActivateRequest));
-  ubus_manager_.RegisterInterest(UBUS_PLACE_VIEW_QUEUE_DRAW,
-      [&] (GVariant* args) { QueueDraw(); });
   ubus_manager_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED,
       sigc::mem_fun(this, &DashView::OnBackgroundColorChanged));
 }

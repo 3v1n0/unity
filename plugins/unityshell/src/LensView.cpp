@@ -62,7 +62,7 @@ LensView::LensView(Lens::Ptr lens)
 
   lens_->connected.changed.connect([&](bool is_connected) { if (is_connected) initial_activation_ = true; });
   search_string.changed.connect([&](std::string const& search) { lens_->Search(search);  });
-  filters_expanded.changed.connect([&](bool expanded) { fscroll_view_->SetVisible(expanded); ubus_manager_.SendMessage(UBUS_PLACE_VIEW_QUEUE_DRAW); });
+  filters_expanded.changed.connect([&](bool expanded) { fscroll_view_->SetVisible(expanded); QueueRelayout(); });
   active.changed.connect(sigc::mem_fun(this, &LensView::OnActiveChanged));
 }
 
