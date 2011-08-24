@@ -18,8 +18,9 @@
 
 #include "DashView.h"
 
-#include <gtk/gtk.h>
 #include <gio/gdesktopappinfo.h>
+#include <glib/gi18n-lib.h>
+#include <gtk/gtk.h>
 
 #include <NuxCore/Logger.h>
 #include <UnityCore/GLibWrapper.h>
@@ -423,7 +424,7 @@ void DashView::OnLensBarActivated(std::string const& id)
   if (view != home_view_)
     search_bar_->search_hint = view->lens()->search_hint;
   else
-    search_bar_->search_hint = "Search";
+    search_bar_->search_hint = _("Search");
   bool expanded =view->filters_expanded;
   search_bar_->showing_filters = expanded;
 
