@@ -431,7 +431,9 @@ namespace unity {
   {
     guchar *img = gdk_pixbuf_get_pixels (pixbuf);
     guchar *pixel = img + ((y * gdk_pixbuf_get_rowstride(pixbuf)) + (x * gdk_pixbuf_get_n_channels (pixbuf)));
-    return nux::Color ((float)(*(pixel + 0)), (float)(*(pixel + 1)), (float)(*(pixel + 2)));
+    return nux::Color (static_cast<int>(*(pixel + 0)),
+                       static_cast<int>(*(pixel + 1)),
+                       static_cast<int>(*(pixel + 2)));
   }
 
   inline bool is_color_different (const nux::Color color_a, const nux::Color color_b)
