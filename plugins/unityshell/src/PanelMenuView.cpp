@@ -410,19 +410,21 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
       nux::TexCoordXForm texxform1;
 
       // Modulate the checkboard and the gradient texture
-      GfxContext.QRP_2TexMod(geo.x, geo.y,
-                             geo.width, geo.height,
-                             _gradient_texture, texxform0,
-                             nux::color::White,
-                             _title_tex->GetDeviceTexture(),
-                             texxform1,
-                             nux::color::White);
+      if (_title_tex)
+        GfxContext.QRP_2TexMod(geo.x, geo.y,
+                               geo.width, geo.height,
+                               _gradient_texture, texxform0,
+                               nux::color::White,
+                               _title_tex->GetDeviceTexture(),
+                               texxform1,
+                               nux::color::White);
 
       GfxContext.GetRenderStates().SetBlend(alpha, src, dest);
       // The previous blend is too aggressive on the texture and therefore there
       // is a slight loss of clarity. This fixes that
       geo.width = button_width * (factor - 1);
-      gPainter.PushDrawLayer(GfxContext, geo, _title_layer);
+      if (_title_layer)
+        gPainter.PushDrawLayer(GfxContext, geo, _title_layer);
       geo = GetGeometry();
     }
     else

@@ -1309,7 +1309,6 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       launcher->SetBackgroundAlpha(optionGetLauncherOpacity());
       break;
     case UnityshellOptions::IconSize:
-      panelController->SetBFBSize(optionGetIconSize() + 18);
       launcher->SetIconSize(optionGetIconSize() + 6, optionGetIconSize());
       dashController->launcher_width = optionGetIconSize() + 18;
       break;

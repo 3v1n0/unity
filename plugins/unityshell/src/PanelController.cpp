@@ -53,19 +53,6 @@ PanelController::~PanelController()
 }
 
 void
-PanelController::SetBFBSize(int size)
-{
-  std::vector<nux::BaseWindow*>::iterator it, eit = _windows.end();
-
-  _bfb_size = size;
-
-  for (it = _windows.begin(); it != eit; ++it)
-  {
-    ViewForWindow(*it)->GetHomeButton()->SetButtonWidth(_bfb_size);
-  }
-}
-
-void
 PanelController::StartFirstMenuShow()
 {
   std::vector<nux::BaseWindow*>::iterator it, eit = _windows.end();
@@ -178,7 +165,6 @@ PanelController::OnScreenChanged(int primary_monitor, std::vector<nux::Geometry>
 
       view = new PanelView();
       view->SetMaximumHeight(24);
-      view->GetHomeButton()->SetButtonWidth(_bfb_size);
       view->SetOpacity(_opacity);
       view->SetPrimary(i == primary_monitor);
       view->SetMonitor(i);

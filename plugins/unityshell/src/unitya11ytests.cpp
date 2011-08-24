@@ -39,7 +39,6 @@
 #include "unity-launcher-accessible.h"
 #include "unity-launcher-icon-accessible.h"
 #include "unity-panel-view-accessible.h"
-#include "unity-panel-home-button-accessible.h"
 
 /*
  * This unit test checks if the destroy management is working:
