@@ -340,7 +340,7 @@ private:
 
   static void OnActionDone(GVariant* data, void* val);
 
-  void RenderIconToTexture(nux::GraphicsEngine& GfxContext, LauncherIcon* icon, nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture);
+  void RenderIconToTexture(nux::GraphicsEngine& GfxContext, LauncherIcon* icon, nux::ObjectPtr<nux::IOpenGLBaseTexture> texture);
 
   LauncherIcon* MouseIconIntersection(int x, int y);
   void EventLogic();
@@ -359,7 +359,7 @@ private:
   virtual long PostLayoutManagement(long LayoutResult);
   virtual void PositionChildLayout(float offsetX, float offsetY);
 
-  void SetOffscreenRenderTarget(nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture);
+  void SetOffscreenRenderTarget(nux::ObjectPtr<nux::IOpenGLBaseTexture> texture);
   void RestoreSystemRenderTarget();
 
   gboolean TapOnSuper();
@@ -407,7 +407,7 @@ private:
   UrgentAnimation _urgent_animation;
   AutoHideAnimation _autohide_animation;
 
-  nux::IntrusiveSP<nux::IOpenGLBaseTexture> _offscreen_drag_texture;
+  nux::ObjectPtr<nux::IOpenGLBaseTexture> _offscreen_drag_texture;
 
   int _space_between_icons;
   int _icon_size;

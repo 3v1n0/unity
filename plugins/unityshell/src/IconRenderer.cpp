@@ -183,9 +183,9 @@ std::vector<nux::BaseTexture*> icon_selected_background;
 std::vector<nux::BaseTexture*> icon_edge;
 std::vector<nux::BaseTexture*> icon_glow;
 std::vector<nux::BaseTexture*> icon_shine;
-nux::IntrusiveSP<nux::IOpenGLBaseTexture> offscreen_progress_texture;
-nux::IntrusiveSP<nux::IOpenGLShaderProgram> shader_program_uv_persp_correction;
-nux::IntrusiveSP<nux::IOpenGLAsmShaderProgram> asm_shader;
+nux::ObjectPtr<nux::IOpenGLBaseTexture> offscreen_progress_texture;
+nux::ObjectPtr<nux::IOpenGLShaderProgram> shader_program_uv_persp_correction;
+nux::ObjectPtr<nux::IOpenGLAsmShaderProgram> asm_shader;
 std::map<char, nux::BaseTexture*> label_map;
 
 void generate_textures();
@@ -195,6 +195,8 @@ void destroy_textures();
 
 IconRenderer::IconRenderer()
 {
+  pip_style = OUTSIDE_TILE;
+  
   if (!local::textures_created)
     local::generate_textures();
 }
@@ -571,7 +573,7 @@ nux::BaseTexture* IconRenderer::RenderCharToTexture(const char label, int width,
 
 void IconRenderer::RenderElement(nux::GraphicsEngine& GfxContext,
                                  RenderArg const& arg,
-                                 nux::IntrusiveSP<nux::IOpenGLBaseTexture> icon,
+                                 nux::ObjectPtr<nux::IOpenGLBaseTexture> icon,
                                  nux::Color bkg_color,
                                  float alpha,
                                  std::vector<nux::Vector4>& xform_coords)
@@ -730,9 +732,25 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
   int markerCenter = (int) arg.render_center.y;
   markerCenter -= (int)(arg.x_rotation / (2 * M_PI) * icon_size);
 
+
   if (running > 0)
   {
+    int scale = 1;
+
+    int markerX;
+    if (pip_style == OUTSIDE_TILE)
+    {
+      markerX = geo.x;
+    }
+    else
+    {
+      auto bounds = arg.icon->GetTransform("Tile");
+      markerX = bounds[0].x + 2;
+      scale = 2;
+    }
+
     nux::TexCoordXForm texxform;
+    texxform.SetFilter(nux::TEXFILTER_LINEAR, nux::TEXFILTER_LINEAR);
 
     nux::Color color = nux::color::LightGrey;
 
@@ -758,26 +776,27 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
     }
     else if (running == 2)
     {
-      markers.push_back(markerCenter - 2);
-      markers.push_back(markerCenter + 2);
+      markers.push_back(markerCenter - 2 * scale);
+      markers.push_back(markerCenter + 2 * scale);
       texture = local::pip_ltr;
     }
     else
     {
-      markers.push_back(markerCenter - 4);
+      markers.push_back(markerCenter - 4 * scale);
       markers.push_back(markerCenter);
-      markers.push_back(markerCenter + 4);
+      markers.push_back(markerCenter + 4 * scale);
       texture = local::pip_ltr;
     }
+
 
     std::vector<int>::iterator it;
     for (it = markers.begin(); it != markers.end(); it++)
     {
       int center = *it;
-      GfxContext.QRP_1Tex(geo.x,
-                          center - (texture->GetHeight() / 2),
-                          (float) texture->GetWidth(),
-                          (float) texture->GetHeight(),
+      GfxContext.QRP_1Tex(markerX,
+                          center - ((texture->GetHeight() * scale) / 2),
+                          (float) texture->GetWidth() * scale,
+                          (float) texture->GetHeight() * scale,
                           texture->GetDeviceTexture(),
                           texxform,
                           color);
@@ -800,7 +819,7 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
 }
 
 void IconRenderer::RenderProgressToTexture(nux::GraphicsEngine& GfxContext,
-                                           nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture,
+                                           nux::ObjectPtr<nux::IOpenGLBaseTexture> texture,
                                            float progress_fill,
                                            float bias)
 {
@@ -960,7 +979,7 @@ void IconRenderer::GetInverseScreenPerspectiveMatrix(nux::Matrix4& ViewMatrix, n
 }
 
 void
-IconRenderer::SetOffscreenRenderTarget(nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture)
+IconRenderer::SetOffscreenRenderTarget(nux::ObjectPtr<nux::IOpenGLBaseTexture> texture)
 {
   int width = texture->GetWidth();
   int height = texture->GetHeight();

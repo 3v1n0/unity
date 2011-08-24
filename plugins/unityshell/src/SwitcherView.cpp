@@ -41,6 +41,8 @@ SwitcherView::SwitcherView(NUX_FILE_LINE_DECL)
   , redraw_handle_(0)
 {
   icon_renderer_ = AbstractIconRenderer::Ptr(new IconRenderer());
+  icon_renderer_->pip_style = OVER_TILE;
+
   layout_system_ = LayoutSystem::Ptr (new LayoutSystem ());
   border_size = 50;
   flat_spacing = 10;
@@ -167,6 +169,12 @@ RenderArg SwitcherView::CreateBaseArgForIcon(AbstractLauncherIcon* icon)
   RenderArg arg;
   arg.icon = icon;
   arg.alpha = 0.95f;
+
+  arg.window_indicators = icon->RelatedWindows();
+  if (arg.window_indicators > 1)
+    arg.running_arrow = true;
+  else
+    arg.window_indicators = 0;
 
   if (icon == model_->Selection())
   {
