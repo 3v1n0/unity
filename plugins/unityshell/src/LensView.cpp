@@ -85,7 +85,7 @@ void LensView::SetupViews()
   scroll_view_->SetLayout(scroll_layout_);
 
   fscroll_view_ = new nux::ScrollView();
-  fscroll_view_->SetMaximumWidth(1);
+  // fscroll_view_->SetMaximumWidth(1);
   fscroll_view_->EnableVerticalScrollBar(true);
   fscroll_view_->EnableHorizontalScrollBar(false);
   fscroll_view_->SetVisible(false);
