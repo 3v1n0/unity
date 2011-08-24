@@ -610,10 +610,18 @@ ResultViewGrid::DndSourceGetDragImage()
   }
 
   pbuf = gtk_icon_info_load_icon(info, &error);
+  if (error != NULL)
+  {
+    LOG_WARN (logger) << "could not find a pixbuf for " << icon_name;
+    g_error_free (error);
+    result = NULL;
+  }
+
   gtk_icon_info_free(info);
 
   if (GDK_IS_PIXBUF(pbuf))
   {
+    // we don't free the pbuf as GdkGraphics will do it for us will do it for us
     nux::GdkGraphics graphics(pbuf);
     result = graphics.GetBitmap();
   }
