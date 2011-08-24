@@ -21,6 +21,8 @@
 
 #include "config.h"
 #include "Nux/Nux.h"
+#include <glib.h>
+#include <glib/gi18n-lib.h>
 
 #include "FilterGenreWidget.h"
 #include "FilterGenreButton.h"
@@ -30,11 +32,11 @@
 namespace unity {
 
   FilterGenre::FilterGenre (NUX_FILE_LINE_DECL)
-      : FilterExpanderLabel ("Categories", NUX_FILE_LINE_PARAM)
+      : FilterExpanderLabel (_("Categories"), NUX_FILE_LINE_PARAM)
       , all_selected (false) {
     InitTheme();
 
-    all_button_ = new FilterBasicButton("Any", NUX_TRACKER_LOCATION);
+    all_button_ = new FilterBasicButton(_("Any"), NUX_TRACKER_LOCATION);
     all_button_->activated.connect(sigc::mem_fun(this, &FilterGenre::OnAllActivated));
     all_button_->Reference();
 
@@ -69,6 +71,8 @@ namespace unity {
     dash::CheckOptionFilter::CheckOptions options = filter_->options;
     for (it = options.begin(); it < options.end(); it++)
       OnOptionAdded(*it);
+
+    SetLabel(filter_->name);
   }
 
   void FilterGenre::OnOptionAdded(dash::FilterOption::Ptr new_filter)
