@@ -25,9 +25,11 @@ NUX_IMPLEMENT_OBJECT_TYPE(DNDCollectionWindow);
 
 DNDCollectionWindow::DNDCollectionWindow(CompScreen* screen)
   : nux::BaseWindow("")
+  , screen_(screen)
+  , force_mouse_move_handle_(0)
 {
   SetBackgroundColor(nux::Color(0x00000000));
-  SetBaseSize(screen->width(), screen->height());
+  SetBaseSize(screen_->width(), screen->height());
   SetBaseXY(0, 0);
   
   ShowWindow(true);
@@ -44,8 +46,34 @@ DNDCollectionWindow::~DNDCollectionWindow()
     g_free(it);
 }
 
+gboolean DNDCollectionWindow::ForceMouseMoveTimeout(gpointer data)
+{
+  DNDCollectionWindow* self = (DNDCollectionWindow*) data;
+  
+  self->force_mouse_move_handle_ = 0;
+    
+  XWarpPointer (self->screen_->dpy(), None, None, 0, 0, 0, 0, 0, 0);
+  XFlush(self->screen_->dpy());
+  
+  return FALSE;
+}
+
+void DNDCollectionWindow::Collect()
+{
+  EnableInputWindow(true, "DndCollectionWindow");
+  
+  if (!force_mouse_move_handle_)
+    g_timeout_add(50, &ForceMouseMoveTimeout, this);
+}
+
 void DNDCollectionWindow::ProcessDndMove(int x, int y, std::list<char*> mimes)
-{  
+{ 
+  if (force_mouse_move_handle_)
+  {
+    g_source_remove(force_mouse_move_handle_);
+    force_mouse_move_handle_ = 0;
+  }
+    
   // Hide the window as soon as possible
   EnableInputWindow(false, "DNDCollectionWindow");
 

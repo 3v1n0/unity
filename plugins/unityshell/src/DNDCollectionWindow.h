@@ -38,15 +38,20 @@ public:
   DNDCollectionWindow(CompScreen* screen);
   ~DNDCollectionWindow();
   
+  void Collect();
+  
 private:
   void ProcessDndMove(int x, int y, std::list<char*> mimes);
+  static gboolean ForceMouseMoveTimeout(gpointer data);
 
 // Members
 public:
   sigc::signal<void, const std::list<char*>&> collected;
   
 private:
+  CompScreen* screen_;
   std::list<char*> mimes_;
+  guint force_mouse_move_handle_;
   
 };
   

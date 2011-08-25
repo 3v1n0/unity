@@ -1621,7 +1621,7 @@ Launcher::OnUpdateDragManagerTimeout(gpointer data)
     if (self->_data_checked == false)
     {
       self->_data_checked = true;
-      self->_collection_window->EnableInputWindow(true, "DNDCollectionWindow");
+      self->_collection_window->Collect();
     } 
     
     return true;
