@@ -474,9 +474,6 @@ void SwitcherView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   last_args_ = RenderArgsFlat(background_geo, model_->SelectionIndex(), current);
   last_background_ = background_geo;
 
-
-  gPainter.PaintTextureShape(GfxContext, background_geo, background_texture_, 30, 30, 30, 30, false);
-
   // magic constant comes from texture contents (distance to cleared area)
   const int internal_offset = 20;
   nux::Geometry internal_clip(background_geo.x + internal_offset, 
@@ -541,6 +538,8 @@ void SwitcherView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   GfxContext.PopClippingRectangle();
   GfxContext.PopClippingRectangle();
+
+  gPainter.PaintTextureShape(GfxContext, background_geo, background_texture_, 30, 30, 30, 30, false);
 
   text_view_->SetBaseY(background_geo.y + background_geo.height - 45);
   text_view_->Draw(GfxContext, force_draw);

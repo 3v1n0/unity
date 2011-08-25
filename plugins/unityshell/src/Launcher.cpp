@@ -2788,8 +2788,9 @@ LauncherIcon* Launcher::MouseIconIntersection(int x, int y)
     nux::Point2 screen_coord [4];
     for (int i = 0; i < 4; ++i)
     {
-      screen_coord [i].x = (*it)->GetTransform("HitArea") [i].x;
-      screen_coord [i].y = (*it)->GetTransform("HitArea") [i].y;
+      auto hit_transform = (*it)->GetTransform(AbstractLauncherIcon::TRANSFORM_HIT_AREA);
+      screen_coord [i].x = hit_transform [i].x;
+      screen_coord [i].y = hit_transform [i].y;
     }
     inside = PointInside2DPolygon(screen_coord, 4, mouse_position, 1);
     if (inside)
