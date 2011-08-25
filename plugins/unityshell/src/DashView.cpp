@@ -70,6 +70,7 @@ void DashView::AboutToShow()
   ubus_manager_.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
   bg_effect_helper_.enabled = true;
   search_bar_->text_entry()->SelectAll();
+  search_bar_->text_entry()->SetFocused(true);
 }
 
 void DashView::AboutToHide()
