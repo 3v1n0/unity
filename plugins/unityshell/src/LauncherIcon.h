@@ -21,6 +21,9 @@
 #ifndef LAUNCHERICON_H
 #define LAUNCHERICON_H
 
+#include <set>
+#include <string>
+
 #include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
 #include <NuxCore/Math/MathInc.h>
@@ -34,6 +37,8 @@
 #include <libdbusmenu-glib/client.h>
 #include <libdbusmenu-glib/menuitem.h>
 
+#include <boost/unordered_map.hpp>
+
 #include "AbstractLauncherIcon.h"
 #include "Tooltip.h"
 #include "QuicklistView.h"
@@ -42,7 +47,6 @@
 #include "LauncherEntryRemote.h"
 
 class Launcher;
-
 
 class LauncherIcon : public AbstractLauncherIcon, public unity::Introspectable, public nux::InitiallyUnownedObject
 {
@@ -95,6 +99,8 @@ public:
   int RelatedWindows();
 
   virtual std::vector<Window> RelatedXids () { return std::vector<Window> (); }
+
+  virtual std::string NameForWindow (Window window) { return std::string(); }
 
   bool HasWindowOnViewport();
 
@@ -150,14 +156,14 @@ public:
 
   void RemoveEntryRemote(LauncherEntryRemote* remote);
 
-  nux::DndAction QueryAcceptDrop(std::list<char*> paths)
+  nux::DndAction QueryAcceptDrop(unity::DndData& dnd_data)
   {
-    return OnQueryAcceptDrop(paths);
+    return OnQueryAcceptDrop(dnd_data);
   }
 
-  void AcceptDrop(std::list<char*> paths)
+  void AcceptDrop(unity::DndData& dnd_data)
   {
-    return OnAcceptDrop(paths);
+    return OnAcceptDrop(dnd_data);
   }
 
   void SendDndEnter()
@@ -172,7 +178,7 @@ public:
 
   void SetIconType(IconType type);
 
-  std::vector<nux::Vector4> & GetTransform(std::string const& name);
+  std::vector<nux::Vector4> & GetTransform(TransformIndex index);
 
   static void SetSkipTooltipDelay(gboolean skip_tooltip_delay);
 
@@ -221,12 +227,12 @@ protected:
     return 0;
   }
 
-  virtual nux::DndAction OnQueryAcceptDrop(std::list<char*> files)
+  virtual nux::DndAction OnQueryAcceptDrop(unity::DndData& dnd_data)
   {
     return nux::DNDACTION_NONE;
   }
 
-  virtual void OnAcceptDrop(std::list<char*> files) {}
+  virtual void OnAcceptDrop(unity::DndData& dnd_data) {}
 
   virtual void OnDndEnter() {}
 
@@ -326,8 +332,8 @@ private:
   struct timespec  _quirk_times[QUIRK_LAST];
 
   std::list<LauncherEntryRemote*> _entry_list;
-  std::map<std::string, std::vector<nux::Vector4> > transform_map;
-
+  std::map<TransformIndex, std::vector<nux::Vector4> > transform_map;
+  
 };
 
 #endif // LAUNCHERICON_H

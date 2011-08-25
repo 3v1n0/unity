@@ -56,8 +56,8 @@ PanelStyle::PanelStyle()
   _style_context = gtk_style_context_new();
 
   GtkWidgetPath* widget_path = gtk_widget_path_new();
-  gtk_widget_path_iter_set_name(widget_path, -1 , "UnityPanelWidget");
-  gtk_widget_path_append_type(widget_path, GTK_TYPE_WINDOW);
+  guint pos = gtk_widget_path_append_type(widget_path, GTK_TYPE_WINDOW);
+  gtk_widget_path_iter_set_name(widget_path, pos, "UnityPanelWidget");
 
   gtk_style_context_set_path(_style_context, widget_path);
   gtk_style_context_add_class(_style_context, "gnome-panel-menu-bar");
@@ -180,7 +180,7 @@ PanelStyle::GetWindowButton(WindowButtonType type, WindowState state)
     if (!var)
       var = "/usr";
 
-    glib::String filename(g_build_filename(var, _theme_name, subpath.str().c_str(), NULL));
+    glib::String filename(g_build_filename(var, "share", "themes", _theme_name, subpath.str().c_str(), NULL));
 
     if (g_file_test(filename.Value(), G_FILE_TEST_EXISTS))
     {

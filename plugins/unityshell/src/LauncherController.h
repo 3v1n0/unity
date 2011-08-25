@@ -29,7 +29,6 @@
 #include "LauncherModel.h"
 
 #include "DeviceLauncherSection.h"
-#include "PlaceLauncherSection.h"
 
 #include "LauncherEntryRemote.h"
 #include "LauncherEntryRemoteModel.h"
@@ -55,9 +54,8 @@ private:
   Launcher*              _launcher;
   LauncherModel*         _model;
   int                    _sort_priority;
-  PlaceLauncherSection*  _place_section;
   unity::DeviceLauncherSection* _device_section;
-  LauncherEntryRemoteModel* _remote_model;
+  LauncherEntryRemoteModel _remote_model;
   SimpleLauncherIcon*    _expoIcon;
   int                    _num_workspaces;
 
@@ -65,6 +63,7 @@ private:
 
   guint32 _on_view_opened_id;
 
+  void Save();
   void SortAndUpdate();
 
   void OnIconAdded(LauncherIcon* icon);

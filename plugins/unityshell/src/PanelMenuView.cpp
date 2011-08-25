@@ -38,6 +38,7 @@
 #include <gio/gdesktopappinfo.h>
 #include <gconf/gconf-client.h>
 
+#include "DashSettings.h"
 #include "ubus-server.h"
 #include "UBusMessages.h"
 
@@ -130,12 +131,12 @@ PanelMenuView::PanelMenuView(int padding)
 
   PanelStyle::GetDefault()->changed.connect(sigc::mem_fun(this, &PanelMenuView::Refresh));
 
-  OnMouseEnter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
-  OnMouseLeave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
-  OnMouseMove.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseMove));
+  mouse_enter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
+  mouse_leave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
+  mouse_move.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseMove));
 
-  _panel_titlebar_grab_area->OnMouseEnter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
-  _panel_titlebar_grab_area->OnMouseLeave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
+  _panel_titlebar_grab_area->mouse_enter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
+  _panel_titlebar_grab_area->mouse_leave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
 
   // Register for all the interesting events
   UBusServer* ubus = ubus_server_get_default();
@@ -221,7 +222,7 @@ PanelMenuView::ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long Process
     }
   }
 
-  if (_is_maximized)
+  if (_is_maximized || _places_showing)
   {
     if (_window_buttons)
       ret = _window_buttons->ProcessEvent(ievent, ret, ProcessEventInfo);
@@ -251,12 +252,17 @@ PanelMenuView::FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEven
     NUX_RETURN_VALUE_IF_NOTNULL(found_area, found_area);
   }
 
-  if (_is_maximized)
+  if (_is_maximized || _places_showing)
   {
     if (_window_buttons)
     {
       found_area = _window_buttons->FindAreaUnderMouse(mouse_position, event_type);
       NUX_RETURN_VALUE_IF_NOTNULL(found_area, found_area);
+      
+      // #820293
+      if (mouse_position.x <= _window_buttons->GetAbsoluteX() + _window_buttons->GetAbsoluteWidth())
+        return NULL;
+      
     }
 
     if (_panel_titlebar_grab_area)
@@ -340,7 +346,9 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   nux::ColorLayer layer(nux::Color(0x00000000), true, rop);
   gPainter.PushDrawLayer(GfxContext, GetGeometry(), &layer);
 
-  if (_is_own_window || _places_showing || !_we_control_active)
+  nux::Point point = nux::GetWindowCompositor().GetMousePosition();
+  
+  if (_is_own_window || !_we_control_active || (_is_maximized && geo.IsPointInside(point.x, point.y)) || (_is_maximized && _is_inside))
   {
 
   }
@@ -360,7 +368,7 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
     if ((_is_inside || _last_active_view || _show_now_activated) && have_valid_entries)
     {
-      if (_gradient_texture == NULL)
+      if (_gradient_texture.IsNull())
       {
         nux::NTextureData texture_data(nux::BITFMT_R8G8B8A8, geo.width, 1, 1);
         nux::ImageSurface surface = texture_data.GetSurface(0);
@@ -410,19 +418,21 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
       nux::TexCoordXForm texxform1;
 
       // Modulate the checkboard and the gradient texture
-      GfxContext.QRP_2TexMod(geo.x, geo.y,
-                             geo.width, geo.height,
-                             _gradient_texture, texxform0,
-                             nux::color::White,
-                             _title_tex->GetDeviceTexture(),
-                             texxform1,
-                             nux::color::White);
+      if (_title_tex)
+        GfxContext.QRP_2TexMod(geo.x, geo.y,
+                               geo.width, geo.height,
+                               _gradient_texture, texxform0,
+                               nux::color::White,
+                               _title_tex->GetDeviceTexture(),
+                               texxform1,
+                               nux::color::White);
 
       GfxContext.GetRenderStates().SetBlend(alpha, src, dest);
       // The previous blend is too aggressive on the texture and therefore there
       // is a slight loss of clarity. This fixes that
       geo.width = button_width * (factor - 1);
-      gPainter.PushDrawLayer(GfxContext, geo, _title_layer);
+      if (_title_layer)
+        gPainter.PushDrawLayer(GfxContext, geo, _title_layer);
       geo = GetGeometry();
     }
     else
@@ -446,18 +456,19 @@ PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   GfxContext.PushClippingRectangle(geo);
 
+  nux::Point point = nux::GetWindowCompositor().GetMousePosition();
+  
   if (!_is_own_window && !_places_showing && _we_control_active)
   {
-    if (_is_inside || _last_active_view || _show_now_activated)
-    {
+    if (geo.IsPointInside(point.x, point.y) || _last_active_view || _show_now_activated)
       layout_->ProcessDraw(GfxContext, force_draw);
-    }
+  }
 
-    if (_is_maximized)
+    if ((!_is_own_window && _we_control_active && _is_maximized && (geo.IsPointInside(point.x, point.y) || _is_inside)) ||
+        _places_showing)
     {
       _window_buttons->ProcessDraw(GfxContext, true);
     }
-  }
 
   GfxContext.PopClippingRectangle();
 }
@@ -484,7 +495,7 @@ PanelMenuView::GetActiveViewName()
     BamfWindow* window = bamf_matcher_get_active_window(_matcher);
 
     if (BAMF_IS_WINDOW(window))
-      label = g_strdup(bamf_view_get_name(BAMF_VIEW(window)));
+      label = bamf_view_get_name(BAMF_VIEW(window));
   }
 
   if (!label)
@@ -520,7 +531,7 @@ PanelMenuView::GetActiveViewName()
 
         active_view = (BamfView*)bamf_matcher_get_active_window(_matcher);
         if (BAMF_IS_VIEW(active_view))
-          label = g_strdup(bamf_view_get_name(active_view));
+          label = bamf_view_get_name(active_view);
         else
           label = g_strdup("");
       }
@@ -613,9 +624,6 @@ PanelMenuView::Refresh()
 
   x = _padding;
   y = 0;
-
-  if (_is_maximized)
-    x += _window_buttons->GetContentWidth() + _padding + _padding;
 
   if (label)
   {
@@ -738,8 +746,8 @@ void PanelMenuView::OnEntryAdded(unity::indicator::Entry::Ptr const& proxy)
 
   AddChild(view);
 
-  view->OnMouseEnter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
-  view->OnMouseLeave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
+  view->mouse_enter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
+  view->mouse_leave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
 
   QueueRelayout();
   QueueDraw();
@@ -942,31 +950,52 @@ PanelMenuView::OnWindowMoved(guint xid)
 void
 PanelMenuView::OnCloseClicked()
 {
-  BamfWindow* window;
+  if (_places_showing)
+  {
+    ubus_server_send_message(ubus_server_get_default(), UBUS_PLACE_VIEW_CLOSE_REQUEST, NULL);
+  }
+  else
+  {
+    BamfWindow* window;
 
-  window = bamf_matcher_get_active_window(_matcher);
-  if (BAMF_IS_WINDOW(window))
-    WindowManager::Default()->Close(bamf_window_get_xid(window));
+    window = bamf_matcher_get_active_window(_matcher);
+    if (BAMF_IS_WINDOW(window))
+      WindowManager::Default()->Close(bamf_window_get_xid(window));
+  }
 }
 
 void
 PanelMenuView::OnMinimizeClicked()
 {
-  BamfWindow* window;
+  if (_places_showing)
+  {
+    DashSettings::GetDefault()->SetFormFactor(DashSettings::DESKTOP);
+  }
+  else
+  {
+    BamfWindow* window;
 
-  window = bamf_matcher_get_active_window(_matcher);
-  if (BAMF_IS_WINDOW(window))
-    WindowManager::Default()->Minimize(bamf_window_get_xid(window));
+    window = bamf_matcher_get_active_window(_matcher);
+    if (BAMF_IS_WINDOW(window))
+      WindowManager::Default()->Minimize(bamf_window_get_xid(window));
+  }
 }
 
 void
 PanelMenuView::OnRestoreClicked()
 {
-  BamfWindow* window;
+  if (_places_showing)
+  {
+    DashSettings::GetDefault()->SetFormFactor(DashSettings::NETBOOK);
+  }
+  else
+  {
+    BamfWindow* window;
 
-  window = bamf_matcher_get_active_window(_matcher);
-  if (BAMF_IS_WINDOW(window))
-    WindowManager::Default()->Restore(bamf_window_get_xid(window));
+    window = bamf_matcher_get_active_window(_matcher);
+    if (BAMF_IS_WINDOW(window))
+      WindowManager::Default()->Restore(bamf_window_get_xid(window));
+  }
 }
 
 void
@@ -1129,7 +1158,7 @@ PanelMenuView::HasOurWindowFocused()
 
 void
 PanelMenuView::OnPanelViewMouseEnter(int x, int y, unsigned long mouse_button_state, unsigned long special_keys_state)
-{
+{ 
   if (_is_inside != true)
   {
     if (_is_grabbed)

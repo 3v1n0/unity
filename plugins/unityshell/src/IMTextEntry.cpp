@@ -101,7 +101,7 @@ bool IMTextEntry::InspectKeyEvent(unsigned int event_type,
 {
   bool propagate_event = !(TryHandleEvent(event_type, keysym, character));
 
-    LOG_DEBUG(logger) << "Input method ("
+  LOG_DEBUG(logger) << "Input method ("
                     << (im_enabled_ ? gtk_im_multicontext_get_context_id(GTK_IM_MULTICONTEXT(im_context_)) : "simple")
                     << ") "
                     << (propagate_event ? "did not handle " : "handled ") 
@@ -109,27 +109,13 @@ bool IMTextEntry::InspectKeyEvent(unsigned int event_type,
                     << (event_type == NUX_KEYDOWN ? "press" : "release")
                     << ") ";
 
-  std::string preedit = preedit_string;
-  if (preedit.length() < 1 && 
-      (keysym == NUX_VK_ENTER ||
-       keysym == NUX_KP_ENTER ||
-       keysym == NUX_VK_UP ||
-       keysym == NUX_VK_DOWN ||
-       keysym == NUX_VK_LEFT ||
-       keysym == NUX_VK_RIGHT ||
-       keysym == NUX_VK_LEFT_TAB ||
-       keysym == NUX_VK_TAB ||
-       keysym == NUX_VK_ESCAPE ||
-       keysym == NUX_VK_DELETE ||
-       keysym == NUX_VK_BACKSPACE ||
-       keysym == NUX_VK_HOME ||
-       keysym == NUX_VK_END))
+  if (propagate_event)
   {
-    propagate_event = true;
+    text_input_mode_ = event_type == NUX_KEYDOWN;
+    propagate_event = TextEntry::InspectKeyEvent(event_type, keysym, character);
+    text_input_mode_ = false;
   }
-
-  return propagate_event ? TextEntry::InspectKeyEvent(event_type, keysym, character)
-                         : propagate_event;
+  return propagate_event;
 }
 
 bool IMTextEntry::TryHandleEvent(unsigned int eventType,
@@ -165,7 +151,6 @@ void IMTextEntry::KeyEventToGdkEventKey(Event& event, GdkEventKey& gdk_event)
   gdk_event.type = event.e_event == nux::NUX_KEYDOWN ? GDK_KEY_PRESS : GDK_KEY_RELEASE;
 
   gdk_event.window = client_window_;
-  gdk_event.window = 0;
   gdk_event.send_event = FALSE;
   gdk_event.time = event.e_x11_timestamp;
   gdk_event.state = event.e_x11_state;
@@ -199,6 +184,7 @@ void IMTextEntry::OnFocusChanged(nux::Area* area)
 void IMTextEntry::OnCommit(GtkIMContext* context, char* str)
 {
   LOG_DEBUG(logger) << "Commit: " << str;
+  DeleteSelection();
   if (str)
   {
     std::string new_text = GetText() + str;

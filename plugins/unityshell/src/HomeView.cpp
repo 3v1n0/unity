@@ -39,6 +39,7 @@ nux::logging::Logger logger("unity.dash.homeview");
 NUX_IMPLEMENT_OBJECT_TYPE(HomeView);
 
 HomeView::HomeView()
+  : fix_renderering_id_(0)
 {
   SetupViews();
 
@@ -52,11 +53,17 @@ HomeView::HomeView()
       group->SetVisible(search != "" && counts_[group]);
     }
     home_view_->SetVisible(search == "");
+    scroll_view_->SetVisible(search != "");
+
+    QueueDraw();
   });
 }
 
 HomeView::~HomeView()
-{}
+{
+  if (fix_renderering_id_)
+    g_source_remove(fix_renderering_id_);
+}
 
 void HomeView::SetupViews()
 {
@@ -65,13 +72,14 @@ void HomeView::SetupViews()
   scroll_view_ = new nux::ScrollView();
   scroll_view_->EnableVerticalScrollBar(true);
   scroll_view_->EnableHorizontalScrollBar(false);
+  scroll_view_->SetVisible(false);
   layout_->AddView(scroll_view_);
   
   scroll_layout_ = new nux::VLayout();
   scroll_view_->SetLayout(scroll_layout_);
 
   home_view_ = new PlacesHomeView();
-  scroll_layout_->AddView(home_view_);
+  layout_->AddView(home_view_);
 
   SetLayout(layout_);
 }
@@ -124,6 +132,8 @@ void HomeView::UpdateCounts(PlacesGroup* group)
   PlacesStyle* style = PlacesStyle::GetDefault();
   group->SetCounts(style->GetDefaultNColumns(), counts_[group]);
   group->SetVisible(counts_[group]);
+
+  QueueFixRenderering();
 }
 
 void HomeView::OnGroupExpanded(PlacesGroup* group)
@@ -141,6 +151,34 @@ void HomeView::OnColumnsChanged()
   {
     group->SetCounts(columns, counts_[group]);
   }
+}
+
+void HomeView::QueueFixRenderering()
+{
+  if (fix_renderering_id_)
+    return;
+
+  fix_renderering_id_ = g_timeout_add(0, (GSourceFunc)FixRenderering, this);
+}
+
+gboolean HomeView::FixRenderering(HomeView* self)
+{
+  std::list<Area*> children = self->scroll_layout_->GetChildren();
+  std::list<Area*>::reverse_iterator rit;
+  bool found_one = false;
+
+  for (rit = children.rbegin(); rit != children.rend(); ++rit)
+  {
+    PlacesGroup* group = static_cast<PlacesGroup*>(*rit);
+
+    if (group->IsVisible())
+      group->SetDrawSeparator(found_one);
+
+    found_one = group->IsVisible();
+  }
+
+  self->fix_renderering_id_ = 0;
+  return FALSE;
 }
 
 long HomeView::ProcessEvent(nux::IEvent& ievent, long traverse_info, long event_info)
@@ -165,6 +203,25 @@ void HomeView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
 
   gfx_context.PopClippingRectangle();
 }
+
+void HomeView::ActivateFirst()
+{
+  for (auto lens: lenses_)
+  {
+    Results::Ptr results = lens->global_results;
+    if (results->count())
+    {
+      Result result = results->RowAtIndex(0);
+      if (result.uri != "")
+      {
+        uri_activated(result.uri);
+        lens->Activate(result.uri);
+        return;
+      }
+    }
+  }
+}
+
 
 // Keyboard navigation
 bool HomeView::AcceptKeyNavFocus()

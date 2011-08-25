@@ -31,6 +31,7 @@
 
 #include "Introspectable.h"
 #include "DashController.h"
+#include "FontSettings.h"
 #include "Launcher.h"
 #include "LauncherController.h"
 #include "PanelController.h"
@@ -42,6 +43,8 @@
 #include <Nux/WindowThread.h>
 #include <sigc++/sigc++.h>
 #include <boost/shared_ptr.hpp>
+
+#include "compizminimizedwindowhandler.h"
 
 class UnityFBO
 {
@@ -59,7 +62,7 @@ public:
 
   bool status ();
   void paint ();
-  
+
   GLuint texture () { return mFBTexture; }
 
 private:
@@ -71,12 +74,49 @@ private:
   CompOutput *output;
 };
 
+class UnityShowdesktopHandler
+{
+public:
+
+  UnityShowdesktopHandler (CompWindow *w);
+  ~UnityShowdesktopHandler ();
+
+  typedef enum {
+    Visible = 0,
+    FadeOut = 1,
+    FadeIn = 2,
+    Invisible = 3
+  } State;
+
+public:
+
+  void fadeOut ();
+  void fadeIn ();
+  bool animate (unsigned int ms);
+  void paintAttrib (GLWindowPaintAttrib &attrib);
+
+  UnityShowdesktopHandler::State state ();
+
+  static const unsigned int fade_time;
+  static CompWindowList     animating_windows;
+  static bool shouldHide (CompWindow *);
+
+private:
+
+  CompWindow                     *mWindow;
+  compiz::WindowInputRemover     *mRemover;
+  UnityShowdesktopHandler::State mState;
+  float                          mProgress;
+};
+  
+
 
 #include "BGHash.h"
 #include "DesktopLauncherIcon.h"
 
 #include <compiztoolbox/compiztoolbox.h>
 
+using unity::FontSettings;
 using namespace unity::switcher;
 using namespace unity::dash;
 using unity::UBusManager;
@@ -113,6 +153,12 @@ public:
   void preparePaint (int ms);
   void paintFboForOutput (CompOutput *output);
 
+  void
+  handleCompizEvent (const char         *pluginName,
+                     const char         *eventName,
+                     CompOption::Vector &o);
+
+
   /* paint on top of all windows if we could not find a window
    * to paint underneath */
   bool glPaintOutput(const GLScreenPaintAttrib&,
@@ -133,9 +179,10 @@ public:
 
   /* handle X11 events */
   void handleEvent(XEvent*);
-  void handleCompizEvent(const char* plugin,
-                         const char* event,
-                         CompOption::Vector& option);
+
+  /* handle showdesktop */
+  void enterShowDesktopMode ();
+  void leaveShowDesktopMode (CompWindow *w);
 
   bool showLauncherKeyInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool showLauncherKeyTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options);
@@ -146,18 +193,18 @@ public:
   bool setKeyboardFocusKeyInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool launcherRevealEdgeInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
 
+  bool altTabInitiateCommon(CompAction* action,
+                            CompAction::State state,
+                            CompOption::Vector& options);
+  bool altTabTerminateCommon(CompAction* action,
+                             CompAction::State state,
+                             CompOption::Vector& options);
+
   bool altTabForwardInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
-  bool altTabForwardTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool altTabPrevInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
-  bool altTabPrevTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool altTabDetailStartInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
-  bool altTabDetailStartTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool altTabDetailStopInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
-  bool altTabDetailStopTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool altTabNextWindowInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
-  bool altTabNextWindowTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options);
-  bool altTabExitInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
-  bool altTabExitTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options);
 
   /* handle option changes and change settings inside of the
    * panel and dock views */
@@ -176,6 +223,8 @@ public:
   void ScheduleRelayout(guint timeout);
 
   void setActiveFbo (GLuint fbo) { mActiveFbo = fbo; }
+
+  bool forcePaintOnTop ();
 
 protected:
   const gchar* GetName();
@@ -208,6 +257,7 @@ private:
   static void OnLauncherStartKeyNav(GVariant* data, void* value);
   static void OnLauncherEndKeyNav(GVariant* data, void* value);
 
+  FontSettings            font_settings_;
   Launcher*               launcher;
   LauncherController*     controller;
   DashController::Ptr     dashController;
@@ -257,8 +307,10 @@ private:
 
   UBusManager ubus_manager_;
   bool dash_is_open_;
+  CompScreen::GrabHandle grab_index_;
+  CompWindowList         fullscreen_windows_;
 
-	friend class UnityWindow;
+  friend class UnityWindow;
 };
 
 class UnityWindow :
@@ -275,6 +327,17 @@ public:
   GLWindow* gWindow;
 
   nux::Geometry last_bound;
+
+  void minimize ();
+  void unminimize ();
+  bool minimized ();
+
+  /* occlusion detection
+   * and window hiding */
+  bool glPaint(const GLWindowPaintAttrib& attrib,
+               const GLMatrix&            matrix,
+               const CompRegion&          region,
+               unsigned int              mask);
 
   /* basic window draw function */
   bool glDraw(const GLMatrix& matrix,
@@ -298,6 +361,13 @@ public:
   CompPoint tryNotIntersectLauncher(CompPoint& pos);
 
   void paintThumbnail (nux::Geometry const& bounding, float alpha);
+
+  void enterShowDesktop ();
+  void leaveShowDesktop ();
+  bool handleAnimations (unsigned int ms);
+
+  compiz::MinimizedWindowHandler::Ptr mMinimizeHandler;
+  UnityShowdesktopHandler             *mShowdesktopHandler;
 };
 
 

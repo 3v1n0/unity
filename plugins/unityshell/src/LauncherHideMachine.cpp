@@ -35,7 +35,7 @@ LauncherHideMachine::LauncherHideMachine()
   _mode  = HIDE_NEVER;
   _quirks = DEFAULT;
   _should_hide = false;
-  _show_on_edge = false;
+  _show_on_edge = true;
 
   _latest_emit_should_hide = false;
   _hide_changed_emit_handle = 0;

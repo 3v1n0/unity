@@ -33,8 +33,22 @@
 
 namespace unity {
 
+    typedef enum {
+      MULTI_RANGE_SIDE_LEFT,
+      MULTI_RANGE_SIDE_RIGHT,
+      MULTI_RANGE_CENTER
+    } MultiRangeSide;
+
+    typedef enum {
+      MULTI_RANGE_ARROW_LEFT,
+      MULTI_RANGE_ARROW_RIGHT,
+      MULTI_RANGE_ARROW_BOTH,
+      MULTI_RANGE_ARROW_NONE
+    } MultiRangeArrow;
+
   class FilterMultiRangeButton : public nux::ToggleButton {
   public:
+
     FilterMultiRangeButton (const std::string label, NUX_FILE_LINE_PROTO);
     FilterMultiRangeButton (NUX_FILE_LINE_PROTO);
     virtual ~FilterMultiRangeButton();
@@ -42,8 +56,8 @@ namespace unity {
     void SetFilter (dash::FilterOption::Ptr filter);
     dash::FilterOption::Ptr GetFilter();
 
-    void SetVisualSide(int side); //0 = left, 1 = center, 2 = right - sucky api i know :(
-    void SetHasArrow (int arrow); //0 = left, 1 = both, 2 = right, -1 = none
+    void SetVisualSide(MultiRangeSide side); //0 = left, 1 = center, 2 = right - sucky api i know :(
+    void SetHasArrow (MultiRangeArrow arrow); //0 = left, 1 = both, 2 = right, -1 = none
 
   protected:
     virtual long ComputeLayout2();
@@ -57,13 +71,15 @@ namespace unity {
 
     void InitTheme ();
     void RedrawTheme (nux::Geometry const& geom, cairo_t *cr, nux::State faked_state);
+    void OnActivated (nux::Area *area);
+    void OnActiveChanged(bool value);
 
     nux::CairoWrapper *prelight_;
     nux::CairoWrapper *active_;
     nux::CairoWrapper *normal_;
     nux::Geometry cached_geometry_;
-    int has_arrow_;
-    int side_;
+    MultiRangeArrow has_arrow_;
+    MultiRangeSide side_;
 
 
   };

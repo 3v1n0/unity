@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 Canonical Ltd
+ * Copyright (C) 2011 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -16,34 +16,41 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#ifndef _PLACE_LAUNCHER_SECTION_H_
-#define _PLACE_LAUNCHER_SECTION_H_
+#ifndef UNITY_LENS_BAR_ICON_H_
+#define UNITY_LENS_BAR_ICON_H_
 
-#include <sigc++/sigc++.h>
-#include <sigc++/signal.h>
+#include <string>
 
-#include "PlaceFactory.h"
+#include <NuxGraphics/GraphicsEngine.h>
+#include <Nux/Nux.h>
+#include <Nux/HLayout.h>
+#include <Nux/View.h>
 
-#include "Launcher.h"
-#include "LauncherIcon.h"
+#include "IconTexture.h"
 
-
-class PlaceLauncherSection : public sigc::trackable
+namespace unity
 {
-public:
-  PlaceLauncherSection(Launcher* launcher);
-  ~PlaceLauncherSection();
+namespace dash
+{
 
-  sigc::signal<void, LauncherIcon*> IconAdded;
+class LensBarIcon : public IconTexture
+{
+  NUX_DECLARE_OBJECT_TYPE(LensBarIcon, IconTexture);
+public:
+  LensBarIcon(std::string id, std::string icon_hint);
+  ~LensBarIcon();
+
+  nux::Property<std::string> id;
+  nux::Property<bool> active;
 
 private:
-  void PopulateEntries();
-  void OnPlaceAdded(Place* place);
+  void Draw(nux::GraphicsEngine& gfx_context, bool force_draw);
+  void OnActiveChanged(bool is_active);
 
-  Launcher*     _launcher;
-  PlaceFactory* _factory;
-
-  guint32 _priority;
+private:
+  const float inactive_opacity_;
 };
 
-#endif // _PLACE_LAUNCHER_SECTION_H_
+}
+}
+#endif

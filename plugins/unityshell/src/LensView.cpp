@@ -24,6 +24,7 @@
 
 #include "PlacesStyle.h"
 #include "ResultRendererTile.h"
+#include "ResultRendererHorizontalTile.h"
 #include "UBusMessages.h"
 
 namespace unity
@@ -42,6 +43,7 @@ LensView::LensView()
   : nux::View(NUX_TRACKER_LOCATION)
   , search_string("")
   , filters_expanded(false)
+  , fix_renderering_id_(0)
 {}
 
 LensView::LensView(Lens::Ptr lens)
@@ -49,28 +51,27 @@ LensView::LensView(Lens::Ptr lens)
   , search_string("")
   , filters_expanded(false)
   , lens_(lens)
+  , initial_activation_(true)
+  , fix_renderering_id_(0)
 {
   SetupViews();
+  SetupCategories();
+  SetupResults();
+  SetupFilters();
 
-  Categories::Ptr categories = lens_->categories;
-  categories->category_added.connect(sigc::mem_fun(this, &LensView::OnCategoryAdded));
+ PlacesStyle::GetDefault()->columns_changed.connect(sigc::mem_fun(this, &LensView::OnColumnsChanged));
 
-  Results::Ptr results = lens_->results;
-  results->result_added.connect(sigc::mem_fun(this, &LensView::OnResultAdded));
-  results->result_removed.connect(sigc::mem_fun(this, &LensView::OnResultRemoved));
-
-  Filters::Ptr filters = lens_->filters;
-  filters->filter_added.connect(sigc::mem_fun(this, &LensView::OnFilterAdded));
-  filters->filter_removed.connect(sigc::mem_fun(this, &LensView::OnFilterRemoved));
-
-  PlacesStyle::GetDefault()->columns_changed.connect(sigc::mem_fun(this, &LensView::OnColumnsChanged));
-
+  lens_->connected.changed.connect([&](bool is_connected) { if (is_connected) initial_activation_ = true; });
   search_string.changed.connect([&](std::string const& search) { lens_->Search(search);  });
-  filters_expanded.changed.connect([&](bool expanded) { fscroll_view_->SetVisible(expanded); ubus_manager_.SendMessage(UBUS_PLACE_VIEW_QUEUE_DRAW); });
+  filters_expanded.changed.connect([&](bool expanded) { fscroll_view_->SetVisible(expanded); QueueRelayout(); OnColumnsChanged(); });
+  active.changed.connect(sigc::mem_fun(this, &LensView::OnActiveChanged));
 }
 
 LensView::~LensView()
-{}
+{
+  if (fix_renderering_id_)
+    g_source_remove(fix_renderering_id_);
+}
 
 void LensView::SetupViews()
 {
@@ -80,24 +81,52 @@ void LensView::SetupViews()
   scroll_view_->EnableVerticalScrollBar(true);
   scroll_view_->EnableHorizontalScrollBar(false);
   layout_->AddView(scroll_view_);
-  
+
   scroll_layout_ = new nux::VLayout();
   scroll_view_->SetLayout(scroll_layout_);
 
   fscroll_view_ = new nux::ScrollView();
-  fscroll_view_->SetMaximumWidth(1);
   fscroll_view_->EnableVerticalScrollBar(true);
   fscroll_view_->EnableHorizontalScrollBar(false);
   fscroll_view_->SetVisible(false);
   layout_->AddView(fscroll_view_, 1);
-  
+
   fscroll_layout_ = new nux::VLayout();
   fscroll_view_->SetLayout(fscroll_layout_);
-  
+
   filter_bar_ = new FilterBar();
   fscroll_layout_->AddView(filter_bar_);
 
   SetLayout(layout_);
+}
+
+void LensView::SetupCategories()
+{
+  Categories::Ptr categories = lens_->categories;
+  categories->category_added.connect(sigc::mem_fun(this, &LensView::OnCategoryAdded));
+
+  for (unsigned int i = 0; i < categories->count(); ++i)
+    OnCategoryAdded(categories->RowAtIndex(i));
+}
+
+void LensView::SetupResults()
+{
+  Results::Ptr results = lens_->results;
+  results->result_added.connect(sigc::mem_fun(this, &LensView::OnResultAdded));
+  results->result_removed.connect(sigc::mem_fun(this, &LensView::OnResultRemoved));
+
+  for (unsigned int i = 0; i < results->count(); ++i)
+    OnResultAdded(results->RowAtIndex(i));
+}
+
+void LensView::SetupFilters()
+{
+  Filters::Ptr filters = lens_->filters;
+  filters->filter_added.connect(sigc::mem_fun(this, &LensView::OnFilterAdded));
+  filters->filter_removed.connect(sigc::mem_fun(this, &LensView::OnFilterRemoved));
+
+  for (unsigned int i = 0; i < filters->count(); ++i)
+    OnFilterAdded(filters->FilterAtIndex(i));
 }
 
 void LensView::OnCategoryAdded(Category const& category)
@@ -120,14 +149,25 @@ void LensView::OnCategoryAdded(Category const& category)
   group->expanded.connect(sigc::mem_fun(this, &LensView::OnGroupExpanded));
   categories_.push_back(group);
   counts_[group] = 0;
-  
+
   ResultViewGrid* grid = new ResultViewGrid(NUX_TRACKER_LOCATION);
   grid->expanded = false;
-  grid->SetModelRenderer(new ResultRendererTile(NUX_TRACKER_LOCATION));
+  if (renderer_name == "tile-horizontal")
+    grid->SetModelRenderer(new ResultRendererHorizontalTile(NUX_TRACKER_LOCATION));
+  else
+    grid->SetModelRenderer(new ResultRendererTile(NUX_TRACKER_LOCATION));
+
   grid->UriActivated.connect([&] (std::string const& uri) { uri_activated.emit(uri); lens_->Activate(uri); });
   group->SetChildView(grid);
 
   scroll_layout_->AddView(group, 0);
+
+  Categories::Ptr categories = lens_->categories;
+  if (category.index + 1 == categories->count())
+  {
+    lens_->Search("---");
+    lens_->Search("");
+  }
 }
 
 void LensView::OnResultAdded(Result const& result)
@@ -160,8 +200,38 @@ void LensView::UpdateCounts(PlacesGroup* group)
 {
   PlacesStyle* style = PlacesStyle::GetDefault();
 
-  group->SetCounts(style->GetDefaultNColumns(), counts_[group]);
+  group->SetCounts(style->GetDefaultNColumns() - (filters_expanded ? 2 : 0), counts_[group]);
   group->SetVisible(counts_[group]);
+
+  QueueFixRenderering();
+}
+
+void LensView::QueueFixRenderering()
+{
+  if (fix_renderering_id_)
+    return;
+
+  fix_renderering_id_ = g_timeout_add(0, (GSourceFunc)FixRenderering, this);
+}
+
+gboolean LensView::FixRenderering(LensView* self)
+{
+  std::list<Area*> children = self->scroll_layout_->GetChildren();
+  std::list<Area*>::reverse_iterator rit;
+  bool found_one = false;
+
+  for (rit = children.rbegin(); rit != children.rend(); ++rit)
+  {
+    PlacesGroup* group = static_cast<PlacesGroup*>(*rit);
+
+    if (group->IsVisible())
+      group->SetDrawSeparator(found_one);
+
+    found_one = group->IsVisible();
+  }
+
+  self->fix_renderering_id_ = 0;
+  return FALSE;
 }
 
 void LensView::OnGroupExpanded(PlacesGroup* group)
@@ -174,6 +244,8 @@ void LensView::OnGroupExpanded(PlacesGroup* group)
 void LensView::OnColumnsChanged()
 {
   unsigned int columns = PlacesStyle::GetDefault()->GetDefaultNColumns();
+
+  columns -= filters_expanded ? 2 : 0;
 
   for (auto group: categories_)
   {
@@ -194,6 +266,18 @@ void LensView::OnFilterAdded(Filter::Ptr filter)
 void LensView::OnFilterRemoved(Filter::Ptr filter)
 {
   filter_bar_->RemoveFilter(filter);
+}
+
+void LensView::OnActiveChanged(bool is_active)
+{
+  if (is_active && initial_activation_)
+  {
+    /* We reset the lens for ourselves, in case this is a restart or something */
+    lens_->Search("");
+    initial_activation_ = false;
+  }
+
+  lens_->active = is_active;
 }
 
 long LensView::ProcessEvent(nux::IEvent& ievent, long traverse_info, long event_info)
@@ -222,6 +306,34 @@ void LensView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
 Lens::Ptr LensView::lens() const
 {
   return lens_;
+}
+
+void LensView::ActivateFirst()
+{
+  Results::Ptr results = lens_->results;
+  if (results->count())
+  {
+    for (unsigned int c = 0; c < scroll_layout_->GetChildren().size(); ++c)
+    {
+      for (unsigned int i = 0; i < results->count(); ++i)
+      {
+        Result result = results->RowAtIndex(i); 
+        if (result.category_index == c && result.uri != "")
+        {
+          uri_activated(result.uri);
+          lens_->Activate(result.uri);
+          return;
+        }
+      }
+    }
+    // Fallback
+    Result result = results->RowAtIndex(0); 
+    if (result.uri != "")
+    {
+      uri_activated(result.uri);
+      lens_->Activate(result.uri);
+    }
+  }
 }
 
 // Keyboard navigation

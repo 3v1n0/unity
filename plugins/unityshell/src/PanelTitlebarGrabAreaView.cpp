@@ -49,12 +49,12 @@ PanelTitlebarGrabArea::PanelTitlebarGrabArea()
   // right now and we need jay to focus on other things
   /*InputArea::EnableDoubleClick (true);
   InputArea::OnMouseDoubleClick.connect (sigc::mem_fun (this, &PanelTitlebarGrabArea::RecvMouseDoubleClick));*/
-  InputArea::OnMouseUp.connect(sigc::mem_fun(this, &PanelTitlebarGrabArea::RecvMouseUp));
+  InputArea::mouse_up.connect(sigc::mem_fun(this, &PanelTitlebarGrabArea::RecvMouseUp));
   _last_click_time.tv_sec = 0;
   _last_click_time.tv_nsec = 0;
 
   // connect the *Click events before the *Down ones otherwise, weird race happens
-  InputArea::OnMouseDown.connect(sigc::mem_fun(this, &PanelTitlebarGrabArea::RecvMouseDown));
+  InputArea::mouse_down.connect(sigc::mem_fun(this, &PanelTitlebarGrabArea::RecvMouseDown));
 }
 
 

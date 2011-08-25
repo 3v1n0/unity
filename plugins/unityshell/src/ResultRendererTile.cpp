@@ -27,6 +27,8 @@
 #include <gdk/gdk.h>
 #include <gtk/gtk.h>
 
+#include <UnityCore/GLibWrapper.h>
+
 #include "IconLoader.h"
 #include "IconTexture.h"
 #include "PlacesStyle.h"
@@ -410,34 +412,40 @@ void ResultRendererTile::LoadText(std::string& text)
 
     PangoLayout*          layout     = NULL;
     PangoFontDescription* desc       = NULL;
-    PangoContext*         pangoCtx   = NULL;
+    PangoContext*         pango_context   = NULL;
     GdkScreen*            screen     = gdk_screen_get_default();    // not ref'ed
-
+    glib::String          font;
+    int                   dpi = -1;
+    
+    g_object_get(gtk_settings_get_default(), "gtk-font-name", &font, NULL);
+    g_object_get(gtk_settings_get_default(), "gtk-xft-dpi", &dpi, NULL);
 
     cairo_set_font_options(cr, gdk_screen_get_font_options(screen));
     layout = pango_cairo_create_layout(cr);
-    desc = pango_font_description_from_string("Ubuntu 10");
+    desc = pango_font_description_from_string(font.Value());
 
     pango_layout_set_font_description(layout, desc);
-
     pango_layout_set_alignment(layout, PANGO_ALIGN_CENTER);
-    pango_layout_set_markup(layout, text.c_str(), -1);
-    pango_layout_set_width(layout, (style->GetTileWidth() - 12)* PANGO_SCALE);
 
-    pango_layout_set_height(layout, 2);
-    pangoCtx = pango_layout_get_context(layout);  // is not ref'ed
-    pango_cairo_context_set_font_options(pangoCtx,
+    pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
+    pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_START);
+    pango_layout_set_width(layout, (style->GetTileWidth() - 12)* PANGO_SCALE);
+    pango_layout_set_height(layout, -2);
+
+    pango_layout_set_markup(layout, text.c_str(), -1);
+    
+    pango_context = pango_layout_get_context(layout);  // is not ref'ed
+    pango_cairo_context_set_font_options(pango_context,
                                          gdk_screen_get_font_options(screen));
-    // use some default DPI-value
-    pango_cairo_context_set_resolution(pangoCtx, 96.0f);
+    pango_cairo_context_set_resolution(pango_context,
+                                       dpi == -1 ? 96.0f : dpi/(float) PANGO_SCALE);
+    pango_layout_context_changed(layout);
 
     cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
     cairo_paint(cr);
 
     cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
     cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 1.0f);
-
-    pango_layout_context_changed(layout);
 
     cairo_move_to(cr, 0.0f, 0.0f);
     pango_cairo_show_layout(cr, layout);

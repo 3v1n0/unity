@@ -30,7 +30,7 @@ class LauncherDragWindow : public nux::BaseWindow
 {
   NUX_DECLARE_OBJECT_TYPE(LauncherDragWindow, nux::BaseWindow);
 public:
-  LauncherDragWindow(nux::IntrusiveSP<nux::IOpenGLBaseTexture> icon);
+  LauncherDragWindow(nux::ObjectPtr<nux::IOpenGLBaseTexture> icon);
 
   ~LauncherDragWindow();
 
@@ -48,7 +48,7 @@ private:
 
   static gboolean OnAnimationTimeout(gpointer data);
 
-  nux::IntrusiveSP<nux::IOpenGLBaseTexture> _icon;
+  nux::ObjectPtr<nux::IOpenGLBaseTexture> _icon;
   nux::Point2 _animation_target;
   guint32 _anim_handle;
 
