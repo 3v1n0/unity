@@ -135,6 +135,7 @@ add_executable (standalone-dash
                 ${UNITY_SRC}/ResultViewGrid.cpp
                 ${UNITY_SRC}/ResultRenderer.cpp
                 ${UNITY_SRC}/ResultRendererTile.cpp
+                ${UNITY_SRC}/ResultRendererHorizontalTile.cpp
                 ${UNITY_SRC}/TextureCache.h
                 ${UNITY_SRC}/TextureCache.cpp
                 ${UNITY_SRC}/Timer.cpp
@@ -350,6 +351,7 @@ add_executable (test-result-view
                 ${UNITY_SRC}/ResultViewGrid.cpp
                 ${UNITY_SRC}/ResultRenderer.cpp
                 ${UNITY_SRC}/ResultRendererTile.cpp
+                ${UNITY_SRC}/ResultRendererHorizontalTile.cpp
                 ${UNITY_SRC}/IconTexture.cpp
                 ${UNITY_SRC}/IconLoader.cpp
                 ${UNITY_SRC}/Introspectable.cpp

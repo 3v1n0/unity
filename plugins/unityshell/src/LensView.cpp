@@ -24,6 +24,7 @@
 
 #include "PlacesStyle.h"
 #include "ResultRendererTile.h"
+#include "ResultRendererHorizontalTile.h"
 #include "UBusMessages.h"
 
 namespace unity
@@ -80,7 +81,7 @@ void LensView::SetupViews()
   scroll_view_->EnableVerticalScrollBar(true);
   scroll_view_->EnableHorizontalScrollBar(false);
   layout_->AddView(scroll_view_);
-  
+
   scroll_layout_ = new nux::VLayout();
   scroll_view_->SetLayout(scroll_layout_);
 
@@ -90,10 +91,10 @@ void LensView::SetupViews()
   fscroll_view_->EnableHorizontalScrollBar(false);
   fscroll_view_->SetVisible(false);
   layout_->AddView(fscroll_view_, 1);
-  
+
   fscroll_layout_ = new nux::VLayout();
   fscroll_view_->SetLayout(fscroll_layout_);
-  
+
   filter_bar_ = new FilterBar();
   fscroll_layout_->AddView(filter_bar_);
 
@@ -149,10 +150,14 @@ void LensView::OnCategoryAdded(Category const& category)
   group->expanded.connect(sigc::mem_fun(this, &LensView::OnGroupExpanded));
   categories_.push_back(group);
   counts_[group] = 0;
-  
+
   ResultViewGrid* grid = new ResultViewGrid(NUX_TRACKER_LOCATION);
   grid->expanded = false;
-  grid->SetModelRenderer(new ResultRendererTile(NUX_TRACKER_LOCATION));
+  if (renderer_name == "tile-horizontal")
+    grid->SetModelRenderer(new ResultRendererHorizontalTile(NUX_TRACKER_LOCATION));
+  else
+    grid->SetModelRenderer(new ResultRendererTile(NUX_TRACKER_LOCATION));
+
   grid->UriActivated.connect([&] (std::string const& uri) { uri_activated.emit(uri); lens_->Activate(uri); });
   group->SetChildView(grid);
 
