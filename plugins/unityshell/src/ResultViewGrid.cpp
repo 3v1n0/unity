@@ -541,7 +541,7 @@ uint ResultViewGrid::GetIndexAtPosition(int x, int y)
    DND code
    --------
 */
-void
+bool
 ResultViewGrid::DndSourceDragBegin()
 {
   Reference();
@@ -549,6 +549,10 @@ ResultViewGrid::DndSourceDragBegin()
                            UBUS_PLACE_VIEW_CLOSE_REQUEST,
                            NULL);
   uint drag_index = GetIndexAtPosition(last_mouse_down_x_, last_mouse_down_y_);
+
+  if (drag_index >= results_.size())
+    return false;
+
   Result drag_result = results_[drag_index];
   
   std::string current_drag_uri_ = drag_result.dnd_uri;
@@ -561,6 +565,8 @@ ResultViewGrid::DndSourceDragBegin()
                      last_mouse_down_x_ << ", " << last_mouse_down_y_ << " - using; "
                      << current_drag_uri_ << " - "
                      << current_drag_icon_name_;
+  
+  return true;
 }
 
 nux::NBitmapData*

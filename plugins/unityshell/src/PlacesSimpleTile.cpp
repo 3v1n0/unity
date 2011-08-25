@@ -79,13 +79,14 @@ PlacesSimpleTile::~PlacesSimpleTile()
   g_free(_uri);
 }
 
-void
+bool
 PlacesSimpleTile::DndSourceDragBegin()
 {
   Reference();
   ubus_server_send_message(ubus_server_get_default(),
                            UBUS_PLACE_VIEW_CLOSE_REQUEST,
                            NULL);
+  return true;
 }
 
 nux::NBitmapData*
