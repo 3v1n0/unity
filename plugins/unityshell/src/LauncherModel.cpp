@@ -163,6 +163,9 @@ LauncherModel::IconHasSister(LauncherIcon* icon)
   iterator(LauncherModel::*begin_it)(void);
   iterator(LauncherModel::*end_it)(void);
   iterator it;
+  
+  if (icon && icon->Type() == AbstractLauncherIcon::TYPE_DEVICE)
+    return true;
 
   if (IconShouldShelf(icon))
   {
