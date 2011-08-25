@@ -105,7 +105,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , _edge_trigger_handle(0)
   , _edge_pointerY(0)
   , newFocusedWindow(nullptr)
-  , lastFocusedWindow(nullptr)
   , doShellRepaint(false)
   , allowWindowPaint(false)
   , damaged(false)
@@ -113,6 +112,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , _last_output(nullptr)
   , switcher_desktop_icon(nullptr)
   , mActiveFbo (0)
+  , dash_is_open_ (false)
   , grab_index_ (0)
 {
   Timer timer;
@@ -470,6 +470,13 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
   doShellRepaint = false;
   damaged = false;
   BackgroundEffectHelper::updates_enabled = true;
+}
+
+bool UnityScreen::forcePaintOnTop ()
+{
+    return !allowWindowPaint ||
+	    ((switcherController->Visible() ||
+	      dash_is_open_) && !fullscreen_windows_.empty () && (!(screen->grabbed () && !screen->otherGrabExist (NULL))));
 }
 
 void UnityWindow::paintThumbnail (nux::Geometry const& bounding, float alpha)
@@ -970,7 +977,7 @@ void UnityScreen::startLauncherKeyNav()
 
   // check if currently focused window isn't the launcher-window
   if (newFocusedWindow != screen->findWindow(screen->activeWindow()))
-    lastFocusedWindow = screen->findWindow(screen->activeWindow());
+    PluginAdapter::Default ()->saveInputFocus ();
 
   // set input-focus on launcher-window and start key-nav mode
   if (newFocusedWindow != NULL)
@@ -1111,7 +1118,6 @@ void UnityScreen::OnLauncherStartKeyNav(GVariant* data, void* value)
 
 void UnityScreen::OnLauncherEndKeyNav(GVariant* data, void* value)
 {
-  UnityScreen* self = reinterpret_cast<UnityScreen*>(value);
   bool preserve_focus = false;
 
   if (data)
@@ -1121,10 +1127,8 @@ void UnityScreen::OnLauncherEndKeyNav(GVariant* data, void* value)
 
   // Return input-focus to previously focused window (before key-nav-mode was
   // entered)
-  if (preserve_focus && (self->lastFocusedWindow != NULL))
-  {
-    self->lastFocusedWindow->moveInputFocusTo();
-  }
+  if (preserve_focus)
+    PluginAdapter::Default ()->restoreInputFocus ();
 }
 
 void UnityScreen::OnQuicklistEndKeyNav(GVariant* data, void* value)
@@ -1289,7 +1293,7 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
       !BackgroundEffectHelper::HasEnabledHelpers() ||
       !BackgroundEffectHelper::detecting_occlusions() ||
       !uScreen->doShellRepaint ||
-      !uScreen->allowWindowPaint)
+      uScreen->forcePaintOnTop ())
   {
     return gWindow->glPaint(wAttrib, matrix, region, mask);
   }
@@ -1351,7 +1355,7 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
                          const CompRegion& region,
                          unsigned int mask)
 {
-  if (uScreen->doShellRepaint && uScreen->allowWindowPaint)
+  if (uScreen->doShellRepaint && !uScreen->forcePaintOnTop ())
   {
     std::vector<Window> const& xwns = nux::XInputWindow::NativeHandleList();
     unsigned int size = xwns.size();
@@ -1418,6 +1422,13 @@ void UnityWindow::windowNotify(CompWindowNotify n)
 
 void UnityWindow::stateChangeNotify(unsigned int lastState)
 {
+  if (window->state () & CompWindowStateFullscreenMask &&
+      !(lastState & CompWindowStateFullscreenMask))
+    UnityScreen::get (screen)->fullscreen_windows_.push_back(window);
+  else if (lastState & CompWindowStateFullscreenMask &&
+	   !(window->state () & CompWindowStateFullscreenMask))
+    UnityScreen::get (screen)->fullscreen_windows_.remove(window);
+
   PluginAdapter::Default()->NotifyStateChange(window, window->state(), lastState);
   window->stateChangeNotify(lastState);
 }
@@ -1939,6 +1950,9 @@ UnityWindow::UnityWindow(CompWindow* window)
     window->unminimizeSetEnabled (this, false);
     window->minimizedSetEnabled (this, false);
   }
+
+  if (window->state () & CompWindowStateFullscreenMask)
+    UnityScreen::get (screen)->fullscreen_windows_.push_back(window);
 }
 
 UnityWindow::~UnityWindow()
@@ -1946,8 +1960,6 @@ UnityWindow::~UnityWindow()
   UnityScreen* us = UnityScreen::get(screen);
   if (us->newFocusedWindow && (UnityWindow::get(us->newFocusedWindow) == this))
     us->newFocusedWindow = NULL;
-  if (us->lastFocusedWindow && (UnityWindow::get(us->lastFocusedWindow) == this))
-    us->lastFocusedWindow = NULL;
 
   UnityShowdesktopHandler::animating_windows.remove (window);
 
@@ -1963,6 +1975,11 @@ UnityWindow::~UnityWindow()
   }
   if (mShowdesktopHandler)
     delete mShowdesktopHandler;
+
+  if (window->state () & CompWindowStateFullscreenMask)
+    UnityScreen::get (screen)->fullscreen_windows_.remove(window);
+
+  PluginAdapter::Default ()->OnWindowClosed (window);
 }
 
 /* vtable init */
