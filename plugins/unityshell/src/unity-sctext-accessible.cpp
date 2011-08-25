@@ -53,6 +53,7 @@ G_DEFINE_TYPE(UnitySctextAccessible, unity_sctext_accessible,  NUX_TYPE_VIEW_ACC
 
 struct _UnitySctextAccessiblePrivate
 {
+  gchar *stripped_name;
 };
 
 
@@ -76,6 +77,7 @@ unity_sctext_accessible_init(UnitySctextAccessible* self)
     UNITY_SCTEXT_ACCESSIBLE_GET_PRIVATE(self);
 
   self->priv = priv;
+  priv->stripped_name = NULL;
 }
 
 AtkObject*
@@ -108,21 +110,31 @@ static const gchar*
 unity_sctext_accessible_get_name(AtkObject* obj)
 {
   const gchar* name;
+  UnitySctextAccessible *self = NULL;
 
   g_return_val_if_fail(UNITY_IS_SCTEXT_ACCESSIBLE(obj), NULL);
+  self = UNITY_SCTEXT_ACCESSIBLE (obj);
 
   name = ATK_OBJECT_CLASS(unity_sctext_accessible_parent_class)->get_name(obj);
   if (name == NULL)
   {
     nux::StaticCairoText *text = NULL;
 
-    text = dynamic_cast<nux::StaticCairoText*>(nux_object_accessible_get_object(NUX_OBJECT_ACCESSIBLE(obj)));
+    if (self->priv->stripped_name != NULL)
+      {
+        g_free (self->priv->stripped_name);
+        self->priv->stripped_name = NULL;
+      }
 
-    if (text == NULL) /* State is defunct */
-      name = NULL;
-    else
-      name = text->GetText().GetTCharPtr();
+    text = dynamic_cast<nux::StaticCairoText*>(nux_object_accessible_get_object(NUX_OBJECT_ACCESSIBLE(obj)));
+    if (text != NULL)
+      {
+        name = text->GetText().GetTCharPtr();
+        pango_parse_markup (name, -1, 0, NULL,
+                            &self->priv->stripped_name,
+                            NULL, NULL);
+      }
   }
 
-  return name;
+  return self->priv->stripped_name;
 }

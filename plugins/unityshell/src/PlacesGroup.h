@@ -33,6 +33,7 @@
 
 class PlacesGroup : public nux::View
 {
+  NUX_DECLARE_OBJECT_TYPE(PlacesGroup, nux::View);
 public:
 
   PlacesGroup();
@@ -40,6 +41,8 @@ public:
 
   void SetIcon(const char* icon);
   void SetName(const char* name);
+
+  const char* GetName();
 
   void       SetChildView(nux::View* view);
   nux::View* GetChildView();

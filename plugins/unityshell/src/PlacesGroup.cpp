@@ -49,6 +49,7 @@ static const nux::Color kExpandHoverTextColor(1.0f, 1.0f, 1.0f, 1.0f);
 static const float kExpandDefaultIconOpacity = 0.6f;
 static const float kExpandHoverIconOpacity = 1.0f;
 
+NUX_IMPLEMENT_OBJECT_TYPE(PlacesGroup);
 
 PlacesGroup::PlacesGroup()
   : View(NUX_TRACKER_LOCATION),
@@ -167,6 +168,12 @@ PlacesGroup::SetName(const char* name)
 
   g_free(tmp);
   g_free(final);
+}
+
+const char*
+PlacesGroup::GetName()
+{
+  return _name->GetText().GetTCharPtr();
 }
 
 void

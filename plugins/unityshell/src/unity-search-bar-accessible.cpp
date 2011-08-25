@@ -124,10 +124,6 @@ unity_search_bar_accessible_initialize(AtkObject* accessible,
   {
     AtkObject* atk_object = unity_a11y_get_accessible(text_entry);
 
-    /* FIXME: this is the general search bar, but right now it is
-       only supported the Run Command dialog. When a full Dash
-       support is finished, this would change */
-
-    atk_object_set_name(atk_object, _("Run Command Search Entry"));
+    atk_object_set_name(atk_object, _("Search Entry"));
   }
 }
