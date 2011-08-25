@@ -196,7 +196,10 @@ UnityScreen::UnityScreen(CompScreen* screen)
 
   optionSetAltTabDetailStartInitiate(boost::bind(&UnityScreen::altTabDetailStartInitiate, this, _1, _2, _3));
   optionSetAltTabDetailStopInitiate(boost::bind(&UnityScreen::altTabDetailStopInitiate, this, _1, _2, _3));
+
   optionSetAltTabNextWindowInitiate(boost::bind(&UnityScreen::altTabNextWindowInitiate, this, _1, _2, _3));
+  optionSetAltTabNextWindowTerminate(boost::bind(&UnityScreen::altTabTerminateCommon, this, _1, _2, _3));
+
   /*
     optionSetAltTabExitInitiate(boost::bind(&UnityScreen::altTabExitInitiate, this, _1, _2, _3));
     optionSetAltTabExitTerminate(boost::bind(&UnityScreen::altTabExitTerminate, this, _1, _2, _3));
@@ -847,7 +850,6 @@ bool UnityScreen::altTabInitiateCommon(CompAction *action,
   screen->addAction (&optionGetAltTabDetailStart ());
   screen->addAction (&optionGetAltTabDetailStop ());
   screen->addAction (&optionGetAltTabLeft ());
-  screen->addAction (&optionGetAltTabNextWindow ());
 
   if (!grab_index_)
     grab_index_ = screen->pushGrab (screen->invisibleCursor(), "unity-switcher");
@@ -875,7 +877,6 @@ bool UnityScreen::altTabTerminateCommon(CompAction* action,
     screen->removeAction (&optionGetAltTabDetailStart ());
     screen->removeAction (&optionGetAltTabDetailStop ());
     screen->removeAction (&optionGetAltTabLeft ());
-    screen->removeAction (&optionGetAltTabNextWindow());
 
     bool accept_state = (state & CompAction::StateCancel) == 0;
     switcherController->Hide(accept_state);
@@ -890,7 +891,6 @@ bool UnityScreen::altTabForwardInitiate(CompAction* action,
                                         CompOption::Vector& options)
 {
   if (switcherController->Visible())
-
     switcherController->Next();
   else
     altTabInitiateCommon(action, state, options);
@@ -926,9 +926,15 @@ bool UnityScreen::altTabDetailStopInitiate(CompAction* action, CompAction::State
 
 bool UnityScreen::altTabNextWindowInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
 {
-  if (switcherController->Visible())
-    switcherController->NextDetail();
+  if (!switcherController->Visible())
+  {
+    altTabInitiateCommon(action, state, options);
+    switcherController->Select(1); // always select the current application
+  }
+  
+  switcherController->NextDetail();
 
+  action->setState(action->state() | CompAction::StateTermKey);
   return false;
 }
 

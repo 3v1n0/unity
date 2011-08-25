@@ -60,6 +60,7 @@ public:
     , stick_thingy(false)
     , keyboard_nav_hl(false)
     , draw_shortcut(false)
+    , system_item(false)
     , window_indicators(0)
     , shortcut_label(0)
   {
@@ -87,6 +88,7 @@ public:
   bool          stick_thingy;
   bool          keyboard_nav_hl;
   bool          draw_shortcut;
+  bool          system_item;
   int           window_indicators;
   char          shortcut_label;
 };

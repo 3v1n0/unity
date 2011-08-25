@@ -29,7 +29,7 @@ BFBLauncherIcon::BFBLauncherIcon(Launcher* IconManager)
  : SimpleLauncherIcon(IconManager)
 {
   tooltip_text = _("Ubuntu Start");
-  SetIconName("distributor-logo");
+  SetIconName(PKGDATADIR"/launcher_bfb.png");
   SetQuirk(QUIRK_VISIBLE, true);
   SetQuirk(QUIRK_RUNNING, false);
   SetIconType(TYPE_HOME);

@@ -1013,6 +1013,7 @@ void Launcher::SetupRenderArg(LauncherIcon* icon, struct timespec const& current
   arg.progress_bias       = IconProgressBias(icon, current);
   arg.progress            = CLAMP(icon->GetProgress(), 0.0f, 1.0f);
   arg.draw_shortcut       = _shortcuts_shown && !_hide_machine->GetQuirk(LauncherHideMachine::PLACES_VISIBLE);
+  arg.system_item         = icon->Type() == LauncherIcon::TYPE_HOME;
   
   if (_dash_is_open)
     arg.active_arrow = icon->Type() == LauncherIcon::TYPE_HOME;
@@ -2790,8 +2791,9 @@ LauncherIcon* Launcher::MouseIconIntersection(int x, int y)
     nux::Point2 screen_coord [4];
     for (int i = 0; i < 4; ++i)
     {
-      screen_coord [i].x = (*it)->GetTransform("HitArea") [i].x;
-      screen_coord [i].y = (*it)->GetTransform("HitArea") [i].y;
+      auto hit_transform = (*it)->GetTransform(AbstractLauncherIcon::TRANSFORM_HIT_AREA);
+      screen_coord [i].x = hit_transform [i].x;
+      screen_coord [i].y = hit_transform [i].y;
     }
     inside = PointInside2DPolygon(screen_coord, 4, mouse_position, 1);
     if (inside)

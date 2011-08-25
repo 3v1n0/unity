@@ -69,10 +69,10 @@ protected:
                                float bias);
 
   void UpdateIconTransform(AbstractLauncherIcon* icon, nux::Matrix4 ViewProjectionMatrix, nux::Geometry const& geo,
-                           float x, float y, float w, float h, float z, std::string name);
+                           float x, float y, float w, float h, float z, AbstractLauncherIcon::TransformIndex index);
 
   void UpdateIconSectionTransform(AbstractLauncherIcon* icon, nux::Matrix4 ViewProjectionMatrix, nux::Geometry const& geo,
-                                  float x, float y, float w, float h, float z, float xx, float yy, float ww, float hh, std::string name);
+                                  float x, float y, float w, float h, float z, float xx, float yy, float ww, float hh, AbstractLauncherIcon::TransformIndex index);
 
   void GetInverseScreenPerspectiveMatrix(nux::Matrix4& ViewMatrix, nux::Matrix4& PerspectiveMatrix,
                                          int ViewportWidth,
