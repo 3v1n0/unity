@@ -234,7 +234,12 @@ void DashView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
       nux::BaseTexture* bottom = style->GetDashBottomTile();
       nux::BaseTexture* right = style->GetDashRightTile();
       nux::BaseTexture* corner = style->GetDashCorner();
+      //nux::BaseTexture* left_edge = style->GetDashLeftEdge();
+      nux::BaseTexture* left_corner = style->GetDashLeftCorner();
+      nux::BaseTexture* left_tile = style->GetDashLeftTile();
       nux::TexCoordXForm texxform;
+
+      int left_corner_offset = 10;
 
       geo = content_geo_;
       geo.width += corner->GetWidth() - 12;
@@ -254,17 +259,47 @@ void DashView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
       }
       {
         // Bottom repeated texture
-        int real_width = geo.width - corner->GetWidth();
+        int real_width = geo.width - (left_corner->GetWidth() - left_corner_offset) - corner->GetWidth();
         int offset = real_width % bottom->GetWidth();
 
         texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
         texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
 
-        gfx_context.QRP_1Tex(geo.x - offset,
+        gfx_context.QRP_1Tex(left_corner->GetWidth() - left_corner_offset - offset,
                             geo.y + (geo.height - bottom->GetHeight()),
                             real_width + offset,
                             bottom->GetHeight(),
                             bottom->GetDeviceTexture(),
+                            texxform,
+                            nux::color::White);
+      }
+      {
+        // Bottom left corner
+        texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+        texxform.SetWrap(nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
+
+        gfx_context.QRP_1Tex(geo.x - left_corner_offset, 
+                            geo.y + (geo.height - left_corner->GetHeight()),
+                            left_corner->GetWidth(),
+                            left_corner->GetHeight(),
+                            left_corner->GetDeviceTexture(),
+                            texxform,
+                            nux::color::White);
+      }
+      {
+        // Left repeated texture
+        nux::Geometry real_geo = GetGeometry();
+        int real_height = real_geo.height - geo.height;
+        int offset = real_height % left_tile->GetHeight();
+
+        texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+        texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
+
+        gfx_context.QRP_1Tex(geo.x - 10,
+                            geo.y + geo.height - offset,
+                            left_tile->GetWidth(),
+                            real_height + offset,
+                            left_tile->GetDeviceTexture(),
                             texxform,
                             nux::color::White);
       }
@@ -328,6 +363,18 @@ void DashView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
 
   nux::GetPainter().PushLayer(gfx_context, bg_layer_->GetGeometry(), bg_layer_);
   layout_->ProcessDraw(gfx_context, force_draw);
+
+  auto geo = GetGeometry();
+  nux::GetPainter().Paint2DQuadColor(gfx_context,
+                                     nux::Geometry(geo.x,
+                                                   geo.y,
+                                                   1,
+                                                   content_geo_.height),
+                                     nux::Color(0.0f, 0.0f, 0.0f, 0.0f),
+                                     nux::Color(0.2f, 0.2f, 0.2f, 0.2f),
+                                     nux::Color(0.2f, 0.2f, 0.2f, 0.2f),
+                                     nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
+
   nux::GetPainter().PopBackground(bgs);
 
   gfx_context.GetRenderStates().SetBlend(false);

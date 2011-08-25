@@ -47,6 +47,9 @@ PlacesStyle::PlacesStyle()
     _dash_right_texture(NULL),
     _dash_corner_texture(NULL),
     _dash_fullscreen_icon(NULL),
+    _dash_left_edge(NULL),
+    _dash_left_corner(NULL),
+    _dash_left_tile(NULL),
     _search_magnify_texture(NULL),
     _search_close_texture(NULL),
     _search_close_glow_texture(NULL),
@@ -73,6 +76,12 @@ PlacesStyle::~PlacesStyle()
     _dash_corner_texture->UnReference();
   if (_dash_fullscreen_icon)
     _dash_fullscreen_icon->UnReference();
+  if (_dash_left_edge)
+    _dash_left_edge->UnReference();
+  if (_dash_left_corner)
+    _dash_left_corner->UnReference();
+  if (_dash_left_tile)
+    _dash_left_tile->UnReference();
   if (_search_magnify_texture)
     _search_magnify_texture->UnReference();
   if (_search_close_texture)
@@ -167,6 +176,28 @@ nux::BaseTexture* PlacesStyle::GetDashCorner()
   if (!_dash_corner_texture)
     _dash_corner_texture =  TextureFromFilename(PKGDATADIR"/dash_bottom_right_corner.png");
   return _dash_corner_texture;
+}
+
+
+nux::BaseTexture* PlacesStyle::GetDashLeftEdge()
+{
+  if (!_dash_left_edge)
+    _dash_left_edge = TextureFromFilename(PKGDATADIR"/dash_left_edge.png");
+  return _dash_left_edge;
+}
+
+nux::BaseTexture* PlacesStyle::GetDashLeftCorner()
+{
+  if (!_dash_left_corner)
+    _dash_left_corner = TextureFromFilename(PKGDATADIR"/dash_bottom_left_corner.png");
+  return _dash_left_corner;
+}
+
+nux::BaseTexture* PlacesStyle::GetDashLeftTile()
+{
+  if (!_dash_left_tile)
+  _dash_left_tile = TextureFromFilename(PKGDATADIR"/dash_left_tile.png");
+  return _dash_left_tile;
 }
 
 nux::BaseTexture* PlacesStyle::GetDashFullscreenIcon()
