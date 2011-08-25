@@ -122,12 +122,16 @@ PlacesGroup::~PlacesGroup()
 void
 PlacesGroup::OnLabelActivated(nux::Area* label)
 {
+  g_debug ("[PlacesGroup] OnLabelActivated");
+
   SetExpanded(!_is_expanded);
 }
 
 void
 PlacesGroup::OnLabelFocusChanged(nux::Area* label)
 {
+  g_debug ("[PlacesGroup] OnLabelFocusChanged");
+
   if (_expand_label->HasKeyFocus() || _expand_icon->HasKeyFocus())
   {
     _expand_label->SetTextColor(kExpandHoverTextColor);

@@ -382,10 +382,15 @@ nux::Area* ResultViewGrid::KeyNavIteration(nux::KeyNavDirection direction)
 void ResultViewGrid::OnOnKeyNavFocusChange(nux::Area *area)
 {
 
+  g_debug ("[ResultViewGrid %p] OnKeyNavFocusChange", this);
+
   if (HasKeyFocus())
   {
     focused_uri_ = results_.front().uri;
     selected_index_ = 0;
+
+    g_debug ("\t new focused_uri: %s", focused_uri_.c_str());
+
     NeedRedraw();
   }
   else

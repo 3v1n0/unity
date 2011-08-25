@@ -42,6 +42,7 @@
 #include "unity-panel-home-button-accessible.h"
 #include "unity-places-view-accessible.h"
 #include "unity-search-bar-accessible.h"
+#include "unity-sctext-accessible.h"
 
 using namespace unity;
 using namespace unity::dash;
@@ -189,6 +190,8 @@ unity_a11y_init(nux::WindowThread* wt)
 {
   gchar* bridge_path = NULL;
 
+  g_debug ("[unity_a11y_init]");
+
   unity_a11y_restore_environment();
 
   if (!should_enable_a11y())
@@ -268,9 +271,12 @@ unity_a11y_create_accessible(nux::Object* object)
   if (object->Type().IsDerivedFromType(DashView::StaticObjectType))
     return unity_places_view_accessible_new(object);
 
-  
-  //FIXME:if (object->Type().IsDerivedFromType(PlacesSearchBar::StaticObjectType))
-    //return unity_search_bar_accessible_new(object);
+  if (object->Type().IsDerivedFromType(nux::StaticCairoText::StaticObjectType))
+    return unity_sctext_accessible_new(object);
+
+  // Required to be moved to DashSearchBar 
+  //if (object->Type().IsDerivedFromType(PlacesSearchBar::StaticObjectType))
+  //   return unity_search_bar_accessible_new(object);
 
   /* NUX classes  */
   if (object->Type().IsDerivedFromType(nux::BaseWindow::StaticObjectType))
