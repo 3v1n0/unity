@@ -86,6 +86,8 @@ private:
   nux::ObjectPtr<nux::IOpenGLBaseTexture> blur_texture_;
   nux::Geometry blur_geometry_;
 
+  bool cache_dirty;
+
   static std::list<BackgroundEffectHelper*> registered_list_;
 
   // FIXME: I couldn't find anything in nux that works

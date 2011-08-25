@@ -60,6 +60,7 @@ namespace unity
 BackgroundEffectHelper::BackgroundEffectHelper()
 {
   enabled = false;
+  cache_dirty = true;
   enabled.changed.connect (sigc::mem_fun(this, &BackgroundEffectHelper::OnEnabledChanged));
   noise_texture_ = nux::CreateTextureFromFile(PKGDATADIR"/dash_noise.png");
   Register(this);
@@ -222,8 +223,7 @@ void BackgroundEffectHelper::Unregister(BackgroundEffectHelper* self)
 
 void BackgroundEffectHelper::DirtyCache ()
 {
-  if (blur_texture_.IsValid ())
-    blur_texture_.Release ();
+  cache_dirty = true;
 }
 
 nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nux::Geometry geo, bool force_update)
@@ -232,7 +232,7 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nu
   Region               xregion = unity::geometryToRegion (geo);
   Region               damage_intersection     = XCreateRegion();
 
-  bool should_update = updates_enabled() || force_update;
+  bool should_update = updates_enabled() || force_update || cache_dirty;
 
   /* Static blur: only update when the size changed */
   if ((blur_type != BLUR_ACTIVE || !should_update)
@@ -444,5 +444,6 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nu
     graphics_engine->ApplyClippingRectangle();
   }
 
+  cache_dirty = false;
   return blur_texture_;
 }
