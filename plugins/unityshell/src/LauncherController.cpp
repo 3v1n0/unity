@@ -98,30 +98,49 @@ LauncherController::OnLauncherAddRequest(char* path, LauncherIcon* before)
     if (before)
       _model->ReorderBefore(result, before, false);
   }
+  
+  Save();
+}
+
+void LauncherController::Save()
+{
+  unity::FavoriteList desktop_paths;
+
+  // Updates gsettings favorites.
+  std::list<BamfLauncherIcon*> launchers = _model->GetSublist<BamfLauncherIcon> ();
+  for (auto icon : launchers)
+  {
+    if (!icon->IsSticky())
+      continue;
+
+    const char* desktop_file = icon->DesktopFile();
+
+    if (desktop_file && strlen(desktop_file) > 0)
+      desktop_paths.push_back(desktop_file);
+  }
+
+  unity::FavoriteStore::GetDefault().SetFavorites(desktop_paths);
 }
 
 void LauncherController::SortAndUpdate()
 {
-  std::list<BamfLauncherIcon*> launchers;
-  std::list<BamfLauncherIcon*>::iterator it;
-  FavoriteList desktop_paths;
   gint   shortcut = 1;
   gchar* buff;
 
-  launchers = _model->GetSublist<BamfLauncherIcon> ();
-  for (it = launchers.begin(); it != launchers.end(); it++)
+  std::list<BamfLauncherIcon*> launchers = _model->GetSublist<BamfLauncherIcon> ();
+  for (auto it : launchers)
   {
-    if (shortcut < 11 && (*it)->GetQuirk(LauncherIcon::QUIRK_VISIBLE))
+    if (shortcut < 11 && it->GetQuirk(LauncherIcon::QUIRK_VISIBLE))
     {
       buff = g_strdup_printf("%d", shortcut % 10);
-      (*it)->SetShortcut(buff[0]);
+      it->SetShortcut(buff[0]);
       g_free(buff);
       shortcut++;
     }
     // reset shortcut
     else
     {
-      (*it)->SetShortcut(0);
+      it->SetShortcut(0);
     }
   }
 }
@@ -366,5 +385,6 @@ void LauncherController::SetupBamf()
   }
 
   _model->order_changed.connect(sigc::mem_fun(this, &LauncherController::SortAndUpdate));
+  _model->saved.connect(sigc::mem_fun(this, &LauncherController::Save));
 }
 

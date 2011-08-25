@@ -65,6 +65,7 @@ private:
 
   guint32 _on_view_opened_id;
 
+  void Save();
   void SortAndUpdate();
 
   void OnIconAdded(LauncherIcon* icon);
