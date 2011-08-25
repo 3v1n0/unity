@@ -1013,6 +1013,7 @@ void Launcher::SetupRenderArg(LauncherIcon* icon, struct timespec const& current
   arg.progress_bias       = IconProgressBias(icon, current);
   arg.progress            = CLAMP(icon->GetProgress(), 0.0f, 1.0f);
   arg.draw_shortcut       = _shortcuts_shown && !_hide_machine->GetQuirk(LauncherHideMachine::PLACES_VISIBLE);
+  arg.system_item         = icon->Type() == LauncherIcon::TYPE_HOME;
   
   if (_dash_is_open)
     arg.active_arrow = icon->Type() == LauncherIcon::TYPE_HOME;
@@ -1385,7 +1386,9 @@ void Launcher::EndKeyShowLauncher()
 
   // it's a tap on super and we didn't use any shortcuts
   if (TapOnSuper() && !_latest_shortcut)
-    ubus_server_send_message(ubus_server_get_default(), UBUS_DASH_EXTERNAL_ACTIVATION, NULL);
+    ubus_server_send_message(ubus_server_get_default(),
+                             UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
+                             g_variant_new("(sus)", "home.lens", 0, ""));
 
   remaining_time_before_hide = BEFORE_HIDE_LAUNCHER_ON_SUPER_DURATION - CLAMP((int)(TimeDelta(&current, &_times[TIME_SUPER_PRESSED])), 0, BEFORE_HIDE_LAUNCHER_ON_SUPER_DURATION);
 
@@ -2785,8 +2788,9 @@ LauncherIcon* Launcher::MouseIconIntersection(int x, int y)
     nux::Point2 screen_coord [4];
     for (int i = 0; i < 4; ++i)
     {
-      screen_coord [i].x = (*it)->GetTransform("HitArea") [i].x;
-      screen_coord [i].y = (*it)->GetTransform("HitArea") [i].y;
+      auto hit_transform = (*it)->GetTransform(AbstractLauncherIcon::TRANSFORM_HIT_AREA);
+      screen_coord [i].x = hit_transform [i].x;
+      screen_coord [i].y = hit_transform [i].y;
     }
     inside = PointInside2DPolygon(screen_coord, 4, mouse_position, 1);
     if (inside)
@@ -2797,7 +2801,7 @@ LauncherIcon* Launcher::MouseIconIntersection(int x, int y)
 }
 
 void
-Launcher::RenderIconToTexture(nux::GraphicsEngine& GfxContext, LauncherIcon* icon, nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture)
+Launcher::RenderIconToTexture(nux::GraphicsEngine& GfxContext, LauncherIcon* icon, nux::ObjectPtr<nux::IOpenGLBaseTexture> texture)
 {
   RenderArg arg;
   struct timespec current;
@@ -2823,7 +2827,7 @@ Launcher::RenderIconToTexture(nux::GraphicsEngine& GfxContext, LauncherIcon* ico
 }
 
 void
-Launcher::SetOffscreenRenderTarget(nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture)
+Launcher::SetOffscreenRenderTarget(nux::ObjectPtr<nux::IOpenGLBaseTexture> texture)
 {
   int width = texture->GetWidth();
   int height = texture->GetHeight();

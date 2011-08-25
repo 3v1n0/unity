@@ -27,6 +27,7 @@
 #include <NuxCore/Logger.h>
 
 #include "BGHash.h"
+#include "FontSettings.h"
 #include "DashView.h"
 #include "PlacesSettings.h"
 
@@ -91,6 +92,7 @@ int main(int argc, char **argv)
   gtk_init (&argc, &argv);
 
   unity::BGHash bghash;
+  unity::FontSettings font_settings;
 
   nux::NuxInitialize(0);
   nux::logging::configure_logging(::getenv("UNITY_LOG_SEVERITY"));

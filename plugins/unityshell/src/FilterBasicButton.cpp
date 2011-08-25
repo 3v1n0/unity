@@ -19,8 +19,14 @@
  *
  */
 #include "config.h"
-#include "Nux/Nux.h"
+#include <Nux/Nux.h>
+#include <NuxCore/Logger.h>
 #include "FilterBasicButton.h"
+
+namespace
+{
+nux::logging::Logger logger("unity.dash.FilterBasicButton");
+}
 
 namespace unity {
 
@@ -34,19 +40,21 @@ namespace unity {
   }
 
   FilterBasicButton::FilterBasicButton (const std::string label, NUX_FILE_LINE_DECL)
-      : nux::ToggleButton (label, NUX_FILE_LINE_PARAM)
+      : nux::ToggleButton (NUX_FILE_LINE_PARAM)
       , prelight_ (NULL)
       , active_ (NULL)
       , normal_ (NULL)
+      , label_ (label)
   {
     InitTheme();
   }
 
   FilterBasicButton::FilterBasicButton (const std::string label, nux::TextureArea *image, NUX_FILE_LINE_DECL)
-      : nux::ToggleButton (label,  image, NUX_FILE_LINE_PARAM)
+      : nux::ToggleButton (image, NUX_FILE_LINE_PARAM)
       , prelight_ (NULL)
       , active_ (NULL)
       , normal_ (NULL)
+      , label_ (label)
   {
     InitTheme();
   }
@@ -82,7 +90,7 @@ namespace unity {
   void FilterBasicButton::RedrawTheme (nux::Geometry const& geom, cairo_t *cr, nux::State faked_state)
   {
     DashStyle *dash_style = DashStyle::GetDefault();
-    dash_style->Button (cr, faked_state, label);
+    dash_style->Button (cr, faked_state, label_);
   }
 
   long FilterBasicButton::ComputeLayout2 ()

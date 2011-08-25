@@ -31,6 +31,7 @@
 
 #include "Introspectable.h"
 #include "DashController.h"
+#include "FontSettings.h"
 #include "Launcher.h"
 #include "LauncherController.h"
 #include "PanelController.h"
@@ -73,12 +74,48 @@ private:
   CompOutput *output;
 };
 
+class UnityShowdesktopHandler
+{
+public:
+
+  UnityShowdesktopHandler (CompWindow *w);
+  ~UnityShowdesktopHandler ();
+
+  typedef enum {
+    Visible = 0,
+    FadeOut = 1,
+    FadeIn = 2,
+    Invisible = 3
+  } State;
+
+public:
+
+  void fadeOut ();
+  void fadeIn ();
+  bool animate (unsigned int ms);
+  void paintAttrib (GLWindowPaintAttrib &attrib);
+
+  UnityShowdesktopHandler::State state ();
+
+  static const unsigned int fade_time;
+  static bool shouldHide (CompWindow *);
+
+private:
+
+  CompWindow                     *mWindow;
+  compiz::WindowInputRemover     *mRemover;
+  UnityShowdesktopHandler::State mState;
+  float                          mProgress;
+};
+  
+
 
 #include "BGHash.h"
 #include "DesktopLauncherIcon.h"
 
 #include <compiztoolbox/compiztoolbox.h>
 
+using unity::FontSettings;
 using namespace unity::switcher;
 using namespace unity::dash;
 using unity::UBusManager;
@@ -141,6 +178,10 @@ public:
 
   /* handle X11 events */
   void handleEvent(XEvent*);
+
+  /* handle showdesktop */
+  void enterShowDesktopMode ();
+  void leaveShowDesktopMode (CompWindow *w);
 
   bool showLauncherKeyInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool showLauncherKeyTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options);
@@ -213,6 +254,7 @@ private:
   static void OnLauncherStartKeyNav(GVariant* data, void* value);
   static void OnLauncherEndKeyNav(GVariant* data, void* value);
 
+  FontSettings            font_settings_;
   Launcher*               launcher;
   LauncherController*     controller;
   DashController::Ptr     dashController;
@@ -316,7 +358,12 @@ public:
 
   void paintThumbnail (nux::Geometry const& bounding, float alpha);
 
+  void enterShowDesktop ();
+  void leaveShowDesktop ();
+  void handleAnimations (unsigned int ms);
+
   compiz::MinimizedWindowHandler::Ptr mMinimizeHandler;
+  UnityShowdesktopHandler             *mShowdesktopHandler;
 };
 
 

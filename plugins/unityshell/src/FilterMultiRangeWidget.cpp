@@ -26,15 +26,19 @@
 #include "FilterMultiRangeButton.h"
 #include "FilterBasicButton.h"
 
+#include <glib.h>
+#include <glib/gi18n-lib.h>
+
 namespace unity {
 
   FilterMultiRange::FilterMultiRange (NUX_FILE_LINE_DECL)
-      : FilterExpanderLabel ("Multi-range", NUX_FILE_LINE_PARAM)
+      : FilterExpanderLabel (_("Multi-range"), NUX_FILE_LINE_PARAM)
       , all_selected (false) {
     InitTheme();
 
-    all_button_ = new FilterBasicButton("Any", NUX_TRACKER_LOCATION);
+    all_button_ = new FilterBasicButton(_("Any"), NUX_TRACKER_LOCATION);
     all_button_->activated.connect(sigc::mem_fun(this, &FilterMultiRange::OnAllActivated));
+    all_button_->label = _("Any");
     all_button_->Reference();
 
     layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
@@ -62,6 +66,8 @@ namespace unity {
     dash::MultiRangeFilter::Options options = filter_->options;
     for (it = options.begin(); it < options.end(); it++)
       OnOptionAdded(*it);
+
+    SetLabel(filter_->name);
   }
 
   void FilterMultiRange::OnActiveChanged(bool value)

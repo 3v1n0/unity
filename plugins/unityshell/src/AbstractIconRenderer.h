@@ -30,6 +30,12 @@ namespace unity
 namespace ui
 {
 
+enum PipRenderStyle 
+{
+  OUTSIDE_TILE,
+  OVER_TILE,
+};
+
 class RenderArg
 {
 public:
@@ -54,6 +60,7 @@ public:
     , stick_thingy(false)
     , keyboard_nav_hl(false)
     , draw_shortcut(false)
+    , system_item(false)
     , window_indicators(0)
     , shortcut_label(0)
   {
@@ -81,6 +88,7 @@ public:
   bool          stick_thingy;
   bool          keyboard_nav_hl;
   bool          draw_shortcut;
+  bool          system_item;
   int           window_indicators;
   char          shortcut_label;
 };
@@ -91,6 +99,8 @@ public:
   typedef boost::shared_ptr<AbstractIconRenderer> Ptr;
 
   virtual ~AbstractIconRenderer() {}
+
+  nux::Property<PipRenderStyle> pip_style;
 
   // RenderArgs not const in case processor needs to modify positions to do a perspective correct.
   virtual void PreprocessIcons(std::list<RenderArg>& args, nux::Geometry const& target_window) = 0;

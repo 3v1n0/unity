@@ -70,7 +70,9 @@ public:
   void NextDetail();
   void PrevDetail();
 
-  void SetDetail(bool detail);
+  void Select (int index);
+
+  void SetDetail(bool detail, int min_windows = 1);
 
   void SelectFirstItem();
 
@@ -97,7 +99,7 @@ private:
   static void OnBackgroundUpdate (GVariant *data, SwitcherController *self);
 
   SwitcherModel::Ptr model_;
-  SwitcherView* view_;
+  SwitcherView::Ptr view_;
 
   nux::Geometry workarea_;
 

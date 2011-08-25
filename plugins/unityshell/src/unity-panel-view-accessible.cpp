@@ -90,8 +90,6 @@ static gint
 unity_panel_view_accessible_get_n_children(AtkObject* accessible)
 {
   nux::Object* nux_object = NULL;
-  PanelView* panel;
-  PanelHomeButton* home_button;
   gint rc = 0;
 
   g_return_val_if_fail(UNITY_IS_PANEL_VIEW_ACCESSIBLE(accessible), 0);
@@ -100,10 +98,6 @@ unity_panel_view_accessible_get_n_children(AtkObject* accessible)
   if (!nux_object) /* state is defunct */
     return 0;
 
-  panel = dynamic_cast<PanelView*>(nux_object);
-  if ((home_button = panel->GetHomeButton()) != NULL)
-    rc = 1;
-
   return rc;
 }
 
@@ -111,8 +105,6 @@ static AtkObject*
 unity_panel_view_accessible_ref_child(AtkObject* accessible, gint i)
 {
   nux::Object* nux_object = NULL;
-  PanelView* panel;
-  PanelHomeButton* home_button;
   AtkObject* child_accessible = NULL;
 
   g_return_val_if_fail(UNITY_IS_PANEL_VIEW_ACCESSIBLE(accessible), NULL);
@@ -120,17 +112,6 @@ unity_panel_view_accessible_ref_child(AtkObject* accessible, gint i)
   nux_object = nux_object_accessible_get_object(NUX_OBJECT_ACCESSIBLE(accessible));
   if (!nux_object) /* state is defunct */
     return NULL;
-
-  panel = dynamic_cast<PanelView*>(nux_object);
-  if ((home_button = panel->GetHomeButton()) != NULL)
-  {
-    nux::Object* child = NULL;
-
-    child = dynamic_cast<nux::Object*>(home_button);
-    child_accessible = unity_a11y_get_accessible(child);
-    if (child_accessible != NULL)
-      g_object_ref(child_accessible);
-  }
 
   return child_accessible;
 }

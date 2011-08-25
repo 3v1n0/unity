@@ -45,6 +45,8 @@ public:
 
   void SetAcceptKeyNavFocus(bool accept);
 
+  nux::BaseTexture* texture() const;
+
 protected:
   // Key navigation
   virtual bool AcceptKeyNavFocus();
@@ -54,9 +56,9 @@ protected:
   void AddProperties(GVariantBuilder* builder);
   virtual bool DoCanFocus();
 
-private:
+protected:
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
-
+private:
   void CreateTextureCallback(const char* texid, int width, int height, nux::BaseTexture** texture);
   void Refresh(GdkPixbuf* pixbuf);
   void IconLoaded(const char* icon_name, guint size, GdkPixbuf* pixbuf);

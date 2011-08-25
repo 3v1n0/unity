@@ -57,7 +57,8 @@ PluginAdapter::Initialize(CompScreen* screen)
 PluginAdapter::PluginAdapter(CompScreen* screen) :
   m_Screen(screen),
   m_ExpoActionList(0),
-  m_ScaleActionList(0)
+  m_ScaleActionList(0),
+  _in_show_desktop (false)
 {
   _spread_state = false;
   _expo_state = false;
@@ -507,7 +508,22 @@ PluginAdapter::Lower(guint32 xid)
 void
 PluginAdapter::ShowDesktop()
 {
-  m_Screen->enterShowDesktopMode();
+  if (_in_show_desktop)
+    m_Screen->leaveShowDesktopMode(NULL);
+  else
+    m_Screen->enterShowDesktopMode();
+}
+
+void
+PluginAdapter::OnShowDesktop()
+{
+  _in_show_desktop = true;
+}
+
+void
+PluginAdapter::OnLeaveDesktop()
+{
+  _in_show_desktop = false;
 }
 
 nux::Geometry

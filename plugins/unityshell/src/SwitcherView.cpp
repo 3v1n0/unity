@@ -41,6 +41,8 @@ SwitcherView::SwitcherView(NUX_FILE_LINE_DECL)
   , redraw_handle_(0)
 {
   icon_renderer_ = AbstractIconRenderer::Ptr(new IconRenderer());
+  icon_renderer_->pip_style = OVER_TILE;
+
   layout_system_ = LayoutSystem::Ptr (new LayoutSystem ());
   border_size = 50;
   flat_spacing = 10;
@@ -63,7 +65,8 @@ SwitcherView::SwitcherView(NUX_FILE_LINE_DECL)
 
   text_view_ = new nux::StaticCairoText("Testing");
   text_view_->SinkReference();
-  text_view_->SetGeometry(nux::Geometry(0, 0, 200, text_size));
+  text_view_->SetMaximumWidth ((int) (tile_size * spread_size));
+  text_view_->SetLines(1);
   text_view_->SetTextColor(nux::color::White);
   text_view_->SetFont("Ubuntu Bold 10");
 
@@ -130,11 +133,26 @@ void SwitcherView::SaveLast ()
 
 void SwitcherView::OnDetailSelectionIndexChanged (int index)
 {
+  if (model_->detail_selection)
+  {
+    Window detail_window = model_->DetailSelectionWindow();
+    text_view_->SetText(model_->Selection()->NameForWindow (detail_window));
+  }
   QueueDraw ();
 }
 
 void SwitcherView::OnDetailSelectionChanged (bool detail)
 {
+
+  if (detail)
+  {
+    Window detail_window = model_->DetailSelectionWindow();
+    text_view_->SetText(model_->Selection()->NameForWindow (detail_window));
+  }
+  else
+  {
+    text_view_->SetText(model_->Selection()->tooltip_text().c_str());
+  }
   SaveLast ();
   QueueDraw ();
 }
@@ -167,6 +185,12 @@ RenderArg SwitcherView::CreateBaseArgForIcon(AbstractLauncherIcon* icon)
   RenderArg arg;
   arg.icon = icon;
   arg.alpha = 0.95f;
+
+  arg.window_indicators = icon->RelatedWindows();
+  if (arg.window_indicators > 1)
+    arg.running_arrow = true;
+  else
+    arg.window_indicators = 0;
 
   if (icon == model_->Selection())
   {
@@ -450,11 +474,8 @@ void SwitcherView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   last_args_ = RenderArgsFlat(background_geo, model_->SelectionIndex(), current);
   last_background_ = background_geo;
 
-
-  gPainter.PaintTextureShape(GfxContext, background_geo, background_texture_, 30, 30, 30, 30, false);
-
   // magic constant comes from texture contents (distance to cleared area)
-  const int internal_offset = 21;
+  const int internal_offset = 20;
   nux::Geometry internal_clip(background_geo.x + internal_offset, 
                               background_geo.y + internal_offset, 
                               background_geo.width - internal_offset * 2, 
@@ -517,6 +538,8 @@ void SwitcherView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   GfxContext.PopClippingRectangle();
   GfxContext.PopClippingRectangle();
+
+  gPainter.PaintTextureShape(GfxContext, background_geo, background_texture_, 30, 30, 30, 30, false);
 
   text_view_->SetBaseY(background_geo.y + background_geo.height - 45);
   text_view_->Draw(GfxContext, force_draw);

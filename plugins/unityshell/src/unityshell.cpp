@@ -197,7 +197,10 @@ UnityScreen::UnityScreen(CompScreen* screen)
 
   optionSetAltTabDetailStartInitiate(boost::bind(&UnityScreen::altTabDetailStartInitiate, this, _1, _2, _3));
   optionSetAltTabDetailStopInitiate(boost::bind(&UnityScreen::altTabDetailStopInitiate, this, _1, _2, _3));
+
   optionSetAltTabNextWindowInitiate(boost::bind(&UnityScreen::altTabNextWindowInitiate, this, _1, _2, _3));
+  optionSetAltTabNextWindowTerminate(boost::bind(&UnityScreen::altTabTerminateCommon, this, _1, _2, _3));
+
   /*
     optionSetAltTabExitInitiate(boost::bind(&UnityScreen::altTabExitInitiate, this, _1, _2, _3));
     optionSetAltTabExitTerminate(boost::bind(&UnityScreen::altTabExitTerminate, this, _1, _2, _3));
@@ -265,12 +268,12 @@ UnityScreen::~UnityScreen()
   if (relayoutSourceId != 0)
     g_source_remove(relayoutSourceId);
 
+  ::unity::ui::IconRenderer::DestroyTextures();
+  QuicklistManager::Destroy();
+
   // Deleting the windows thread calls XCloseDisplay, which calls XSync, which
   // sits waiting for a reply.
   // delete wt;
-
-  ::unity::ui::IconRenderer::DestroyTextures();
-  QuicklistManager::Destroy();
 }
 
 void UnityScreen::EnsureKeybindings()
@@ -497,6 +500,148 @@ void UnityWindow::paintThumbnail (nux::Geometry const& bounding, float alpha)
               geo.height);
 }
 
+void UnityScreen::enterShowDesktopMode ()
+{
+  for (CompWindow *w : screen->windows ())
+  {
+    if (UnityShowdesktopHandler::shouldHide (w))
+      UnityWindow::get (w)->enterShowDesktop ();
+  }
+
+  PluginAdapter::Default()->OnShowDesktop();
+
+  screen->enterShowDesktopMode ();
+}
+
+void UnityScreen::leaveShowDesktopMode (CompWindow *w)
+{
+  for (CompWindow *cw : screen->windows ())
+    UnityWindow::get (cw)->leaveShowDesktop ();
+
+  PluginAdapter::Default()->OnLeaveDesktop();
+
+  screen->leaveShowDesktopMode (w);
+}
+
+void UnityWindow::enterShowDesktop ()
+{
+  if (!mShowdesktopHandler)
+    mShowdesktopHandler = new UnityShowdesktopHandler (window);
+
+  window->setShowDesktopMode (true);
+  mShowdesktopHandler->fadeOut ();
+}
+
+void UnityWindow::leaveShowDesktop ()
+{
+  if (mShowdesktopHandler)
+  {
+    mShowdesktopHandler->fadeIn ();
+    window->setShowDesktopMode (false);
+  }
+}
+
+void UnityWindow::handleAnimations (unsigned int ms)
+{
+  if (mShowdesktopHandler)
+    if (mShowdesktopHandler->animate (ms))
+    { 
+      delete mShowdesktopHandler;
+      mShowdesktopHandler = NULL;
+    }
+}
+
+/* 300 ms */
+const unsigned int UnityShowdesktopHandler::fade_time = 300;
+
+bool UnityShowdesktopHandler::shouldHide (CompWindow *w)
+{
+  if (!w->managed ())
+    return false;
+
+  if (w->grabbed ())
+    return false;
+
+  if (w->wmType () & (CompWindowTypeDesktopMask |
+                      CompWindowTypeDockMask))
+  return false;
+
+  if (w->state () & CompWindowStateSkipPagerMask)
+    return false;
+
+  return true;
+}
+
+UnityShowdesktopHandler::UnityShowdesktopHandler (CompWindow *w) :
+  mWindow (w),
+  mRemover (new compiz::WindowInputRemover (screen->dpy (), ROOTPARENT (w))),
+  mState (Visible),
+  mProgress (0.0f)
+{
+}
+
+UnityShowdesktopHandler::~UnityShowdesktopHandler ()
+{
+  if (mRemover)
+    delete mRemover;
+}
+
+void UnityShowdesktopHandler::fadeOut ()
+{
+  mState = UnityShowdesktopHandler::FadeOut;
+  mProgress = 1.0f;
+
+  mRemover->save ();
+  mRemover->remove ();
+
+  CompositeWindow::get (mWindow)->addDamage ();
+}
+
+void UnityShowdesktopHandler::fadeIn ()
+{
+  mState = UnityShowdesktopHandler::FadeIn;
+
+  mRemover->restore ();
+
+  CompositeWindow::get (mWindow)->addDamage ();
+}
+
+bool UnityShowdesktopHandler::animate (unsigned int ms)
+{
+  float inc = fade_time / (float) ms;
+
+  if (mState == UnityShowdesktopHandler::FadeOut)
+  {
+    mProgress -= inc;
+    if (mProgress <= 0.0f)
+    {
+      mProgress = 0.0f;
+      mState = Invisible;
+    }
+    else
+      CompositeWindow::get (mWindow)->addDamage ();
+  }
+  else if (mState == FadeIn)
+  {
+    mProgress += inc;
+    if (mProgress >= 1.0f)
+    {
+      mProgress = 1.0f;
+      mState = Visible;
+      return true;
+    }
+    else
+      CompositeWindow::get (mWindow)->addDamage ();
+  }
+
+  return false;
+}
+
+void UnityShowdesktopHandler::paintAttrib (GLWindowPaintAttrib &attrib)
+{
+  attrib.opacity = attrib.opacity * mProgress;
+}
+
 /* called whenever we need to repaint parts of the screen */
 bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
                                 const GLMatrix& transform,
@@ -544,7 +689,8 @@ void UnityScreen::preparePaint(int ms)
   {
     if (cScreen->damageMask() & COMPOSITE_SCREEN_DAMAGE_ALL_MASK)
     {
-      BackgroundEffectHelper::SetDamageBounds(CompRegion(screen->currentOutputDev().workArea()).handle());
+      CompRegion damage (screen->currentOutputDev().workArea());
+      BackgroundEffectHelper::SetDamageBounds(damage.handle());
     }
     else
     {
@@ -563,6 +709,9 @@ void UnityScreen::preparePaint(int ms)
   }
 
   cScreen->preparePaint(ms);
+
+  for (CompWindow *w : screen->windows ())
+    UnityWindow::get (w)->handleAnimations (ms);
 
   if (damaged)
   {
@@ -850,7 +999,6 @@ bool UnityScreen::altTabInitiateCommon(CompAction *action,
   screen->addAction (&optionGetAltTabDetailStart ());
   screen->addAction (&optionGetAltTabDetailStop ());
   screen->addAction (&optionGetAltTabLeft ());
-  screen->addAction (&optionGetAltTabNextWindow ());
 
   if (!grab_index_)
     grab_index_ = screen->pushGrab (screen->invisibleCursor(), "unity-switcher");
@@ -878,7 +1026,6 @@ bool UnityScreen::altTabTerminateCommon(CompAction* action,
     screen->removeAction (&optionGetAltTabDetailStart ());
     screen->removeAction (&optionGetAltTabDetailStop ());
     screen->removeAction (&optionGetAltTabLeft ());
-    screen->removeAction (&optionGetAltTabNextWindow());
 
     bool accept_state = (state & CompAction::StateCancel) == 0;
     switcherController->Hide(accept_state);
@@ -893,7 +1040,6 @@ bool UnityScreen::altTabForwardInitiate(CompAction* action,
                                         CompOption::Vector& options)
 {
   if (switcherController->Visible())
-
     switcherController->Next();
   else
     altTabInitiateCommon(action, state, options);
@@ -929,9 +1075,15 @@ bool UnityScreen::altTabDetailStopInitiate(CompAction* action, CompAction::State
 
 bool UnityScreen::altTabNextWindowInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
 {
-  if (switcherController->Visible())
-    switcherController->NextDetail();
+  if (!switcherController->Visible())
+  {
+    altTabInitiateCommon(action, state, options);
+    switcherController->Select(1); // always select the current application
+  }
+  
+  switcherController->NextDetail();
 
+  action->setState(action->state() | CompAction::StateTermKey);
   return false;
 }
 
@@ -1065,6 +1217,9 @@ bool isNuxWindow (CompWindow* value)
   std::vector<Window> const& xwns = nux::XInputWindow::NativeHandleList();
   auto id = value->id();
 
+  // iterate loop by hand rather than use std::find as this is considerably faster
+  // we care about performance here becuase of the high frequency in which this function is
+  // called (nearly every frame)
   unsigned int size = xwns.size();
   for (unsigned int i = 0; i < size; ++i)
   {
@@ -1094,6 +1249,8 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
                           const CompRegion& region,
                           unsigned int mask)
 {
+  GLWindowPaintAttrib wAttrib = attrib;
+
   if (mMinimizeHandler)
   {
     typedef compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow> minimized_window_handler_unity;
@@ -1102,6 +1259,9 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
         boost::dynamic_pointer_cast <minimized_window_handler_unity> (mMinimizeHandler);
     mask |= compizMinimizeHandler->getPaintMask ();
   }
+  else if (mShowdesktopHandler)
+    mShowdesktopHandler->paintAttrib (wAttrib);
+  
 
   /* Don't bother detecting occlusions if we're not doing updates
    * or we don't want to repaint the shell this pass. We also
@@ -1115,7 +1275,7 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
       !uScreen->doShellRepaint ||
       !uScreen->allowWindowPaint)
   {
-    return gWindow->glPaint(attrib, matrix, region, mask);
+    return gWindow->glPaint(wAttrib, matrix, region, mask);
   }
 
   /* Compiz paints windows top to bottom during
@@ -1156,11 +1316,11 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
         return false;
     }
     else
-      return gWindow->glPaint(attrib, matrix, region, mask);
+      return gWindow->glPaint(wAttrib, matrix, region, mask);
   }
 
   /* Should never be reached */
-  return gWindow->glPaint(attrib, matrix, region, mask);
+  return gWindow->glPaint(wAttrib, matrix, region, mask);
 }
 
 /* handle window painting in an opengl context
@@ -1346,7 +1506,6 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       launcher->SetBackgroundAlpha(optionGetLauncherOpacity());
       break;
     case UnityshellOptions::IconSize:
-      panelController->SetBFBSize(optionGetIconSize() + 18);
       launcher->SetIconSize(optionGetIconSize() + 6, optionGetIconSize());
       dashController->launcher_width = optionGetIconSize() + 18;
       break;
@@ -1410,6 +1569,7 @@ void UnityScreen::Relayout()
   primary_monitor = gdk_screen_get_primary_monitor (scr);
   gdk_screen_get_monitor_geometry (scr, primary_monitor, &rect);
   _primary_monitor = rect;
+
 
   wt->SetWindowSize(rect.width, rect.height);
 
@@ -1740,6 +1900,7 @@ UnityWindow::UnityWindow(CompWindow* window)
   , PluginClassHandler<UnityWindow, CompWindow>(window)
   , window(window)
   , gWindow(GLWindow::get(window))
+  , mShowdesktopHandler(nullptr)
 {
   WindowInterface::setHandler(window);
   GLWindowInterface::setHandler(gWindow);
@@ -1782,6 +1943,8 @@ UnityWindow::~UnityWindow()
 
     mMinimizeHandler.reset ();
   }
+  if (mShowdesktopHandler)
+    delete mShowdesktopHandler;
 }
 
 /* vtable init */

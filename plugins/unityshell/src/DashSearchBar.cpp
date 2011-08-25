@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010 Canonical Ltd
+ * Copyright (C) 2010-2011 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -91,7 +91,7 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
   layered_layout_->SetMaximumWidth(620);
   layout_->AddView(layered_layout_, 1, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FIX);
 
-  std::string filter_str = _("Refine search");
+  std::string filter_str = _("Filter results");
   filter_str+= "  ▸";
   show_filters_ = new nux::StaticCairoText(filter_str.c_str());
   show_filters_->SetTextColor(nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
@@ -196,7 +196,7 @@ gboolean SearchBar::OnLiveSearchTimeout(SearchBar* sef)
 
 void SearchBar::OnShowingFiltersChanged(bool is_showing)
 {
-  std::string filter_str = _("Refine search");
+  std::string filter_str = _("Filter results");
   filter_str += "  <small>";
   filter_str += is_showing ? "▾" : "▸";
   filter_str += "</small>";

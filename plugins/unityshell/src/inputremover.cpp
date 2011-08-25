@@ -105,23 +105,28 @@ compiz::WindowInputRemover::remove ()
 bool
 compiz::WindowInputRemover::restore ()
 {
-  if (mNInputRects)
+  if (mRemoved)
   {
-    XShapeCombineRectangles (mDpy, mShapeWindow, ShapeInput, 0, 0,
-                             mInputRects, mNInputRects,
-                             ShapeSet, mInputRectOrdering);
-  }
-  else
-  {
-    XShapeCombineMask (mDpy, mShapeWindow, ShapeInput,
-                       0, 0, None, ShapeSet);
-  }
+    if (mNInputRects)
+    {
+      XShapeCombineRectangles (mDpy, mShapeWindow, ShapeInput, 0, 0,
+	                       mInputRects, mNInputRects,
+	                       ShapeSet, mInputRectOrdering);
+    }
+    else
+    {
+      XShapeCombineMask (mDpy, mShapeWindow, ShapeInput,
+  	               0, 0, None, ShapeSet);
+    }
 
-  if (mInputRects)
-    XFree (mInputRects);
+    if (mInputRects)
+      XFree (mInputRects);
+  }
 
   XShapeSelectInput (mDpy, mShapeWindow, mShapeMask);
 
   mRemoved = false;
+  mNInputRects  = 0;
+  mInputRects = NULL;
   return true;
 }

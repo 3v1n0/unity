@@ -57,6 +57,11 @@ public:
     return result;
   }
 
+  std::string NameForWindow (Window window)
+  {
+    return std::string();
+  }
+
   void SetSortPriority(int priority) {}
 
   bool OpenQuicklist(bool default_to_first_item = false)
@@ -71,12 +76,12 @@ public:
     return nux::Point3();
   }
 
-  std::vector<nux::Vector4> & GetTransform(std::string const& name)
+  std::vector<nux::Vector4> & GetTransform(TransformIndex index)
   {
-    if (transform_map.find(name) == transform_map.end())
-      transform_map[name] = std::vector<nux::Vector4> (4);
+    if (transform_map.find(index) == transform_map.end())
+      transform_map[index] = std::vector<nux::Vector4> (4);
 
-    return transform_map[name];
+    return transform_map[index];
   }
 
   void Activate(ActionArg arg) {}
@@ -239,7 +244,7 @@ private:
   }
 
 
-  std::map<std::string, std::vector<nux::Vector4> > transform_map;
+  std::map<TransformIndex, std::vector<nux::Vector4> > transform_map;
   nux::BaseTexture* icon_;
 
 };
