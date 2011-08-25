@@ -3,18 +3,23 @@ unity (4.10.0-0ubuntu1) UNRELEASED; urgency=low
   * New upstream release:
     - unity task switcher (alt-tab, alt-down) shows empty spaces for iconified 
       windows in window detail mode (lp: #828348)
-    - compiz crashed with SIGSEGV in
+    - compiz crashed with SIGSEGV in 
       unity::DeviceLauncherIcon::OnStopDriveReady() (lp: #824093)
     - Dash performance issues with 'Active Blur' enabled (lp: #824890)
     - compiz crashed with SIGABRT in raise() when setting background 
       to full color (lp: #829049)
-    - search spinner does not stop hence nothing can be launched with 
-      the Return key (lp: #824836)
     - Dragging from dash to launcher still doesn't work (lp: #824833)
+    - .desktops dragged on to unity launcher will not be added to 
+       com.canonical.Unity.Launcher favorites unless moved in the launcher
+       (lp: #830536)
+    - application's menu shown when the cursor is a little left 
+      to window controls (lp: #820293)
     - Ubuntu Start launcher item should always start the dash with 
       the Home screen (lp: #825034)
-  * debian/control: 
-    - updated nux requirement
+    - search spinner does not stop hence nothing can be launched with 
+      the Return key (lp: #824836)
+  * debian/control: updated nux requirement
+  * debian/rules: updated shlibs
 
  -- Sebastien Bacher <seb128@ubuntu.com>  Thu, 25 Aug 2011 15:06:21 +0200
 
