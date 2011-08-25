@@ -68,6 +68,8 @@ void TestRunner::Init ()
   layout->SetFocused (true);
   layout->SetMinMaxSize(WIDTH, HEIGHT);
 
+  view->AboutToShow();
+
   nux::GetGraphicsThread()->SetLayout (layout);
 }
 
