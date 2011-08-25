@@ -348,7 +348,7 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   nux::Point point = nux::GetWindowCompositor().GetMousePosition();
   
-  if (_is_own_window || !_we_control_active || (_is_maximized && geo.IsPointInside(point.x, point.y)) || (_is_maximized && _is_inside))
+  if (_is_own_window || !_we_control_active || (_is_maximized && GetAbsoluteGeometry().IsPointInside(point.x, point.y)) || (_is_maximized && _is_inside))
   {
 
   }
@@ -460,11 +460,11 @@ PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   
   if (!_is_own_window && !_places_showing && _we_control_active)
   {
-    if (geo.IsPointInside(point.x, point.y) || _last_active_view || _show_now_activated)
+    if (GetAbsoluteGeometry().IsPointInside(point.x, point.y) || _last_active_view || _show_now_activated)
       layout_->ProcessDraw(GfxContext, force_draw);
   }
 
-    if ((!_is_own_window && _we_control_active && _is_maximized && (geo.IsPointInside(point.x, point.y) || _is_inside)) ||
+    if ((!_is_own_window && _we_control_active && _is_maximized && (GetAbsoluteGeometry().IsPointInside(point.x, point.y) || _is_inside)) ||
         _places_showing)
     {
       _window_buttons->ProcessDraw(GfxContext, true);
