@@ -47,16 +47,22 @@ RowAdaptorBase& RowAdaptorBase::operator=(RowAdaptorBase const& other)
 
 std::string RowAdaptorBase::GetStringAt(int position)
 {
+  if (!model_ || !iter_)
+    return "";
   return dee_model_get_string(model_, iter_, position);
 }
 
 bool RowAdaptorBase::GetBoolAt(int position)
 {
+  if (!model_ || !iter_)
+    return 0;
   return dee_model_get_bool(model_, iter_, position);
 }
 
 unsigned int RowAdaptorBase::GetUIntAt(int position)
 {
+  if (!model_ || !iter_)
+    return 0;
   return dee_model_get_uint32(model_, iter_, position);
 }
 
