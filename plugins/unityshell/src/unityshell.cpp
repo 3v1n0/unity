@@ -541,18 +541,22 @@ void UnityWindow::leaveShowDesktop ()
   }
 }
 
-void UnityWindow::handleAnimations (unsigned int ms)
+bool UnityWindow::handleAnimations (unsigned int ms)
 {
   if (mShowdesktopHandler)
     if (mShowdesktopHandler->animate (ms))
     { 
       delete mShowdesktopHandler;
       mShowdesktopHandler = NULL;
+      return true;
     }
+
+  return false;
 }
 
 /* 300 ms */
 const unsigned int UnityShowdesktopHandler::fade_time = 300;
+CompWindowList UnityShowdesktopHandler::animating_windows (0);
 
 bool UnityShowdesktopHandler::shouldHide (CompWindow *w)
 {
@@ -595,6 +599,11 @@ void UnityShowdesktopHandler::fadeOut ()
   mRemover->remove ();
 
   CompositeWindow::get (mWindow)->addDamage ();
+
+  if (std::find (animating_windows.begin(),
+                 animating_windows.end(),
+                 mWindow) == animating_windows.end())
+    animating_windows.push_back(mWindow);
 }
 
 void UnityShowdesktopHandler::fadeIn ()
@@ -628,6 +637,7 @@ bool UnityShowdesktopHandler::animate (unsigned int ms)
     {
       mProgress = 1.0f;
       mState = Visible;
+
       return true;
     }
     else
@@ -685,6 +695,8 @@ void UnityScreen::glPaintTransformedOutput(const GLScreenPaintAttrib& attrib,
 
 void UnityScreen::preparePaint(int ms)
 {
+  CompWindowList remove_windows;
+
   if (BackgroundEffectHelper::blur_type == unity::BLUR_ACTIVE)
   {
     if (cScreen->damageMask() & COMPOSITE_SCREEN_DAMAGE_ALL_MASK)
@@ -710,8 +722,12 @@ void UnityScreen::preparePaint(int ms)
 
   cScreen->preparePaint(ms);
 
-  for (CompWindow *w : screen->windows ())
-    UnityWindow::get (w)->handleAnimations (ms);
+  for (CompWindow *w : UnityShowdesktopHandler::animating_windows)
+    if (UnityWindow::get (w)->handleAnimations (ms))
+      remove_windows.push_back(w);
+
+  for (CompWindow *w : remove_windows)
+    UnityShowdesktopHandler::animating_windows.remove (w);
 
   if (damaged)
   {
@@ -1932,6 +1948,8 @@ UnityWindow::~UnityWindow()
     us->newFocusedWindow = NULL;
   if (us->lastFocusedWindow && (UnityWindow::get(us->lastFocusedWindow) == this))
     us->lastFocusedWindow = NULL;
+
+  UnityShowdesktopHandler::animating_windows.remove (window);
 
   if (mMinimizeHandler)
   {

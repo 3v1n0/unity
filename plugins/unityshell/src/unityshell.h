@@ -98,6 +98,7 @@ public:
   UnityShowdesktopHandler::State state ();
 
   static const unsigned int fade_time;
+  static CompWindowList     animating_windows;
   static bool shouldHide (CompWindow *);
 
 private:
@@ -360,7 +361,7 @@ public:
 
   void enterShowDesktop ();
   void leaveShowDesktop ();
-  void handleAnimations (unsigned int ms);
+  bool handleAnimations (unsigned int ms);
 
   compiz::MinimizedWindowHandler::Ptr mMinimizeHandler;
   UnityShowdesktopHandler             *mShowdesktopHandler;
