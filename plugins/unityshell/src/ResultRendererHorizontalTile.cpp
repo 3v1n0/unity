@@ -438,7 +438,7 @@ void ResultRendererHorizontalTile::LoadText(std::string& text)
     pango_layout_set_alignment(layout, PANGO_ALIGN_LEFT);
 
     pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
-    pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_START);
+    pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_END);
     pango_layout_set_width(layout, (width() - style->GetTileIconSize())* PANGO_SCALE);
     pango_layout_set_height(layout, (height() - 4) * PANGO_SCALE);
 
