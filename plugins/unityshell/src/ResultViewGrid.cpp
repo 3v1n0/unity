@@ -40,6 +40,8 @@ namespace unity
 {
 namespace dash
 {
+NUX_IMPLEMENT_OBJECT_TYPE(ResultViewGrid);
+
 ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
   : ResultView(NUX_FILE_LINE_PARAM)
   , horizontal_spacing(6)
@@ -279,6 +281,8 @@ void ResultViewGrid::OnKeyDown (unsigned long event_type, unsigned long event_ke
                                 unsigned long event_state, const TCHAR* character,
                                 unsigned short key_repeat_count)
 {
+  g_debug ("[ResultViewGrid %p] OnKeyDown", this);
+
   nux::KeyNavDirection direction = nux::KEY_NAV_NONE;
   switch (event_keysym)
   {
@@ -370,6 +374,9 @@ void ResultViewGrid::OnKeyDown (unsigned long event_type, unsigned long event_ke
   selected_index_ = std::max(0, selected_index_);
   selected_index_ = std::min(static_cast<int>(results_.size() - 1), selected_index_);
   focused_uri_ = results_[selected_index_].uri;
+
+  g_debug ("\t new focused_uri: %s", focused_uri_.c_str());
+
   NeedRedraw();
 }
 
@@ -410,6 +417,8 @@ long ResultViewGrid::ComputeLayout2()
 
 void ResultViewGrid::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
+  ResultList my_list;
+
   GfxContext.PushClippingRectangle(GetGeometry());
 
   gPainter.PaintBackground(GfxContext, GetGeometry());

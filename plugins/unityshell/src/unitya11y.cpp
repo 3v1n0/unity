@@ -43,6 +43,7 @@
 #include "unity-places-view-accessible.h"
 #include "unity-search-bar-accessible.h"
 #include "unity-sctext-accessible.h"
+#include "unity-rvgrid-accessible.h"
 
 using namespace unity;
 using namespace unity::dash;
@@ -273,6 +274,9 @@ unity_a11y_create_accessible(nux::Object* object)
 
   if (object->Type().IsDerivedFromType(nux::StaticCairoText::StaticObjectType))
     return unity_sctext_accessible_new(object);
+
+  if (object->Type().IsDerivedFromType(unity::dash::ResultViewGrid::StaticObjectType))
+    return unity_rvgrid_accessible_new(object);
 
   if (object->Type().IsDerivedFromType(unity::dash::SearchBar::StaticObjectType))
     return unity_search_bar_accessible_new(object);
