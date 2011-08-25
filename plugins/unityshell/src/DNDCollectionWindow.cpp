@@ -44,6 +44,12 @@ DNDCollectionWindow::~DNDCollectionWindow()
 {
   for (auto it : mimes_)
     g_free(it);
+    
+  if (force_mouse_move_handle_)
+  {
+    g_source_remove(force_mouse_move_handle_);
+    force_mouse_move_handle_ = 0;
+  }
 }
 
 gboolean DNDCollectionWindow::ForceMouseMoveTimeout(gpointer data)
@@ -76,11 +82,11 @@ void DNDCollectionWindow::ProcessDndMove(int x, int y, std::list<char*> mimes)
     
   // Hide the window as soon as possible
   EnableInputWindow(false, "DNDCollectionWindow");
-
+  
   for (auto it : mimes_)
     g_free(it);
   mimes_.clear();
-  
+
   // Duplicate the list
   for (auto it : mimes)
     mimes_.push_back(g_strdup(it));
