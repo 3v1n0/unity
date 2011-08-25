@@ -36,9 +36,9 @@ namespace unity {
       , all_selected (false) {
     InitTheme();
 
-    all_button_ = new FilterBasicButton(_("Any"), NUX_TRACKER_LOCATION);
+    all_button_ = new FilterBasicButton(_("All"), NUX_TRACKER_LOCATION);
     all_button_->activated.connect(sigc::mem_fun(this, &FilterMultiRange::OnAllActivated));
-    all_button_->label = _("Any");
+    all_button_->label = _("All");
     all_button_->Reference();
 
     layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
