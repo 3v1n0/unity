@@ -1,4 +1,3 @@
-#if 0
 /*
  * Copyright (C) 2011 Canonical Ltd
  *
@@ -21,7 +20,7 @@
  * SECTION:unity-search_bar-accessible
  * @Title: UnitySearchBarAccessible
  * @short_description: Implementation of the ATK interfaces for #SearchBar
- * @see_also: SearchBar
+ * @see_also: SearchBar at DashSearchBar.h
  *
  * #UnitySearchBarAccessible implements the required ATK interfaces for
  * #SearchBar, ie: exposing the different SearchBarIcon on the model as
@@ -34,7 +33,9 @@
 #include "unity-search-bar-accessible.h"
 
 #include "unitya11y.h"
-#include "PlacesSearchBar.h"
+#include "DashSearchBar.h"
+
+using namespace unity::dash;
 
 /* GObject */
 static void unity_search_bar_accessible_class_init(UnitySearchBarAccessibleClass* klass);
@@ -91,7 +92,7 @@ unity_search_bar_accessible_new(nux::Object* object)
 {
   AtkObject* accessible = NULL;
 
-  g_return_val_if_fail(dynamic_cast<PlacesSearchBar*>(object), NULL);
+  g_return_val_if_fail(dynamic_cast<SearchBar*>(object), NULL);
 
   accessible = ATK_OBJECT(g_object_new(UNITY_TYPE_SEARCH_BAR_ACCESSIBLE, NULL));
 
@@ -107,7 +108,7 @@ unity_search_bar_accessible_initialize(AtkObject* accessible,
                                        gpointer data)
 {
   nux::Object* nux_object = NULL;
-  PlacesSearchBar* search_bar = NULL;
+  SearchBar* search_bar = NULL;
   nux::TextEntry* text_entry = NULL;
 
   ATK_OBJECT_CLASS(unity_search_bar_accessible_parent_class)->initialize(accessible, data);
@@ -115,20 +116,18 @@ unity_search_bar_accessible_initialize(AtkObject* accessible,
   accessible->role = ATK_ROLE_PANEL;
 
   nux_object = nux_object_accessible_get_object(NUX_OBJECT_ACCESSIBLE(accessible));
-  search_bar = dynamic_cast<PlacesSearchBar*>(nux_object);
+  search_bar = dynamic_cast<SearchBar*>(nux_object);
 
-  text_entry = search_bar->GetTextEntry();
+  text_entry = search_bar->text_entry();
 
   if (text_entry != NULL)
   {
     AtkObject* atk_object = unity_a11y_get_accessible(text_entry);
 
     /* FIXME: this is the general search bar, but right now it is
-       only supported the Run Command dialog. When a full Places
+       only supported the Run Command dialog. When a full Dash
        support is finished, this would change */
 
     atk_object_set_name(atk_object, _("Run Command Search Entry"));
   }
 }
-
-#endif

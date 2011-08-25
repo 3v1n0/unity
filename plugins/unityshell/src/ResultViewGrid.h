@@ -35,6 +35,7 @@ namespace dash
 // will order its elements in to a grid that expands horizontally before vertically
 class ResultViewGrid : public ResultView
 {
+  NUX_DECLARE_OBJECT_TYPE(ResultViewGrid, ResultView);
 public:
   ResultViewGrid(NUX_FILE_LINE_DECL);
   ~ResultViewGrid();

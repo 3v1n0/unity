@@ -71,6 +71,8 @@ PlacesTile::GetId()
 void
 PlacesTile::OnFocusChanged(nux::Area* label)
 {
+  g_debug ("[PlacesTile] OnFocusChanged");
+
   QueueDraw();
 }
 
@@ -319,5 +321,7 @@ PlacesTile::RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned lo
 void
 PlacesTile::OnFocusActivated(nux::Area* label)
 {
+  g_debug ("[PlacesTile] OnFocusActivated");
+
   sigClick.emit(this);
 }

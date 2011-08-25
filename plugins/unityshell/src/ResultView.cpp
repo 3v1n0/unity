@@ -30,6 +30,8 @@ namespace unity
 namespace dash
 {
 
+NUX_IMPLEMENT_OBJECT_TYPE(ResultView);
+
 ResultView::ResultView(NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
   , expanded(true)
@@ -108,6 +110,11 @@ void ResultView::RemoveResult(Result& result)
     }
   }
   renderer_->Unload(result);
+}
+
+ResultView::ResultList ResultView::GetResultList()
+{
+  return results_;
 }
 
 void ResultView::SetPreview(PreviewBase* preview, Result& related_result)
