@@ -19,33 +19,32 @@
 
 #include "gdk/gdk.h"
 
-#include "PlacesSettings.h"
-#include "PlacesStyle.h"
+#include "DashSettings.h"
 
-#define HOME_EXPANDED "home-expanded"
+#define FORM_FACTOR "form-factor"
 
-static PlacesSettings* _places_settings = NULL;
+static DashSettings* _places_settings = NULL;
 
-PlacesSettings::PlacesSettings()
+DashSettings::DashSettings()
   : _settings(NULL),
     _raw_from_factor(0),
     _form_factor(DESKTOP)
 {
   _settings = g_settings_new("com.canonical.Unity");
   g_signal_connect(_settings, "changed",
-                   (GCallback)(PlacesSettings::Changed), this);
+                   (GCallback)(DashSettings::Changed), this);
   Refresh();
 }
 
-PlacesSettings::~PlacesSettings()
+DashSettings::~DashSettings()
 {
   g_object_unref(_settings);
 }
 
 void
-PlacesSettings::Refresh()
+DashSettings::Refresh()
 {
-  _raw_from_factor = g_settings_get_enum(_settings, "form-factor");
+  _raw_from_factor = g_settings_get_enum(_settings, FORM_FACTOR);
 
   if (_raw_from_factor == 0) //Automatic
   {
@@ -64,44 +63,33 @@ PlacesSettings::Refresh()
     _form_factor = (FormFactor)_raw_from_factor;
   }
 
-  changed.emit(this);
+  changed.emit();
 }
 
 void
-PlacesSettings::Changed(GSettings* settings, char* key, PlacesSettings* self)
+DashSettings::Changed(GSettings* settings, char* key, DashSettings* self)
 {
   self->Refresh();
 }
 
-PlacesSettings*
-PlacesSettings::GetDefault()
+DashSettings*
+DashSettings::GetDefault()
 {
   if (G_UNLIKELY(!_places_settings))
-    _places_settings = new PlacesSettings();
+    _places_settings = new DashSettings();
 
   return _places_settings;
 }
 
-PlacesSettings::FormFactor
-PlacesSettings::GetFormFactor()
+DashSettings::FormFactor
+DashSettings::GetFormFactor()
 {
   return _form_factor;
 }
 
-int
-PlacesSettings::GetDefaultTileWidth()
-{
-  return PlacesStyle::GetDefault()->GetTileWidth();
-}
-
-bool
-PlacesSettings::GetHomeExpanded()
-{
-  return g_settings_get_enum(_settings, HOME_EXPANDED) == 1 ? true : false;
-}
-
 void
-PlacesSettings::SetHomeExpanded(bool expanded)
+DashSettings::SetFormFactor(FormFactor factor)
 {
-  g_settings_set_enum(_settings, HOME_EXPANDED, expanded ? 1 : 0);
+  _form_factor = factor;
+  g_settings_set_enum(_settings, FORM_FACTOR, factor);
 }

@@ -17,40 +17,36 @@
 * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
 */
 
-#ifndef PLACES_SETTINGS_H
-#define PLACES_SETTINGS_H
+#ifndef DASH_SETTINGS_H
+#define DASH_SETTINGS_H
 
 #include <gio/gio.h>
 #include <Nux/Nux.h>
 
-#include "PlacesSettings.h"
+#include "DashSettings.h"
 
-class PlacesSettings : public nux::Object
+class DashSettings : public nux::Object
 {
 public:
   enum FormFactor
   {
     DESKTOP = 1,
     NETBOOK
-
   };
 
-  PlacesSettings();
-  ~PlacesSettings();
+  DashSettings();
+  ~DashSettings();
 
-  static PlacesSettings* GetDefault();
+  static DashSettings* GetDefault();
 
   FormFactor GetFormFactor();
-  int        GetDefaultTileWidth();
+  void SetFormFactor(FormFactor factor);
 
-  bool GetHomeExpanded();
-  void SetHomeExpanded(bool expanded);
-
-  sigc::signal<void, PlacesSettings*> changed;
+  sigc::signal<void> changed;
 
 private:
   void Refresh();
-  static void Changed(GSettings* settings, gchar* key, PlacesSettings* self);
+  static void Changed(GSettings* settings, gchar* key, DashSettings* self);
 
 private:
   GSettings*   _settings;
@@ -58,4 +54,4 @@ private:
   FormFactor   _form_factor;
 };
 
-#endif // PLACES_SETTINGS_H
+#endif // DASH_SETTINGS_H

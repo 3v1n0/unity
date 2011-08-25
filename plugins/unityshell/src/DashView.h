@@ -41,14 +41,6 @@ namespace unity
 namespace dash
 {
 
-enum SizeMode
-{
-  SIZE_MODE_MAXIMISED,
-  SIZE_MODE_NORMAL,
-  SIZE_MODE_VERTICAL_MAXIMISED,
-  SIZE_MODE_HORIZONATAL_MAXIMISED
-};
-
 class DashView : public nux::View, public unity::Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE(DashView, nux::View);
@@ -88,6 +80,7 @@ private:
   void OnUriActivatedReply(std::string const& uri, HandledType type, Lens::Hints const&);
   bool DoFallbackActivation(std::string const& uri);
   bool LaunchApp(std::string const& appname);
+  void OnEntryActivated();
   
   bool AcceptKeyNavFocus();
   bool InspectKeyEvent(unsigned int eventType, unsigned int key_sym, const char* character);
@@ -97,12 +90,12 @@ private:
 private:
   UBusManager ubus_manager_;
   FilesystemLenses lenses_;
-  SizeMode size_mode_;
   BackgroundEffectHelper bg_effect_helper_;
   LensViews lens_views_;
 
   // Background related
   nux::ColorLayer* bg_layer_;
+  nux::Color bg_color_;
 
   // View related
   nux::VLayout* layout_;

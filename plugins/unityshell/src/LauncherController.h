@@ -29,7 +29,6 @@
 #include "LauncherModel.h"
 
 #include "DeviceLauncherSection.h"
-#include "PlaceLauncherSection.h"
 
 #include "LauncherEntryRemote.h"
 #include "LauncherEntryRemoteModel.h"
@@ -55,7 +54,6 @@ private:
   Launcher*              _launcher;
   LauncherModel*         _model;
   int                    _sort_priority;
-  PlaceLauncherSection*  _place_section;
   unity::DeviceLauncherSection* _device_section;
   LauncherEntryRemoteModel _remote_model;
   SimpleLauncherIcon*    _expoIcon;

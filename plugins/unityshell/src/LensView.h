@@ -51,6 +51,8 @@ public:
   virtual ~LensView();
 
   Lens::Ptr lens() const;
+  
+  virtual void ActivateFirst();
 
   nux::Property<std::string> search_string;
   nux::Property<bool> filters_expanded;

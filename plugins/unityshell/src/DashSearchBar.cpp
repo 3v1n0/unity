@@ -415,6 +415,7 @@ std::string SearchBar::get_search_string() const
 bool SearchBar::set_search_string(std::string const& string)
 {
   pango_entry_->SetText(string.c_str());
+  spinner_->SetState(string == "" ? STATE_READY : STATE_CLEAR);
   return true;
 }
 
