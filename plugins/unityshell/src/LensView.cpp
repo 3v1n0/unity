@@ -303,6 +303,34 @@ Lens::Ptr LensView::lens() const
   return lens_;
 }
 
+void LensView::ActivateFirst()
+{
+  Results::Ptr results = lens_->results;
+  if (results->count())
+  {
+    for (unsigned int c = 0; c < scroll_layout_->GetChildren().size(); ++c)
+    {
+      for (unsigned int i = 0; i < results->count(); ++i)
+      {
+        Result result = results->RowAtIndex(i); 
+        if (result.category_index == c && result.uri != "")
+        {
+          uri_activated(result.uri);
+          lens_->Activate(result.uri);
+          return;
+        }
+      }
+    }
+    // Fallback
+    Result result = results->RowAtIndex(0); 
+    if (result.uri != "")
+    {
+      uri_activated(result.uri);
+      lens_->Activate(result.uri);
+    }
+  }
+}
+
 // Keyboard navigation
 bool LensView::AcceptKeyNavFocus()
 {

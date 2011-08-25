@@ -204,6 +204,25 @@ void HomeView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
   gfx_context.PopClippingRectangle();
 }
 
+void HomeView::ActivateFirst()
+{
+  for (auto lens: lenses_)
+  {
+    Results::Ptr results = lens->global_results;
+    if (results->count())
+    {
+      Result result = results->RowAtIndex(0);
+      if (result.uri != "")
+      {
+        uri_activated(result.uri);
+        lens->Activate(result.uri);
+        return;
+      }
+    }
+  }
+}
+
+
 // Keyboard navigation
 bool HomeView::AcceptKeyNavFocus()
 {

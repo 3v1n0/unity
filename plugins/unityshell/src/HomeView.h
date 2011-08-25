@@ -51,6 +51,7 @@ public:
   ~HomeView();
 
   void AddLens(Lens::Ptr lens);
+  void ActivateFirst();
 
 private:
   void SetupViews();

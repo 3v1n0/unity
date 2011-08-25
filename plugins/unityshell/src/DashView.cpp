@@ -97,6 +97,7 @@ void DashView::SetupViews()
   content_layout_ = new nux::VLayout();
   layout_->AddLayout(content_layout_, 1, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FIX); 
   search_bar_ = new SearchBar();
+  search_bar_->activated.connect(sigc::mem_fun(this, &DashView::OnEntryActivated));
   search_bar_->search_changed.connect(sigc::mem_fun(this, &DashView::OnSearchChanged));
   search_bar_->live_search_reached.connect(sigc::mem_fun(this, &DashView::OnLiveSearchReached));
   search_bar_->showing_filters.changed.connect([&] (bool showing) { if (active_lens_view_) active_lens_view_->filters_expanded = showing; QueueDraw(); });
@@ -635,6 +636,10 @@ bool DashView::LaunchApp(std::string const& appname)
 void DashView::DisableBlur()
 {
   bg_effect_helper_.blur_type = BLUR_NONE;
+}
+void DashView::OnEntryActivated()
+{
+  active_lens_view_->ActivateFirst();
 }
 
 // Keyboard navigation
