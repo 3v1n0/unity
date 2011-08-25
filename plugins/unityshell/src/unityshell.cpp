@@ -473,7 +473,7 @@ bool UnityScreen::forcePaintOnTop ()
 {
     return !allowWindowPaint ||
 	    ((switcherController->Visible() ||
-	      dash_is_open_) && !fullscreen_windows_.empty ());
+	      dash_is_open_) && !fullscreen_windows_.empty () && (!(screen->grabbed () && !screen->otherGrabExist (NULL))));
 }
 
 void UnityWindow::paintThumbnail (nux::Geometry const& bounding, float alpha)
