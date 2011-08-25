@@ -89,6 +89,12 @@ void SwitcherController::Show(SwitcherController::ShowMode show, SwitcherControl
   }
 }
 
+void SwitcherController::Select(int index)
+{
+  if (visible_)
+    model_->Select(index);
+}
+
 gboolean SwitcherController::OnShowTimer(gpointer data)
 {
   SwitcherController* self = static_cast<SwitcherController*>(data);
