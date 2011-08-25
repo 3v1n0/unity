@@ -98,6 +98,8 @@ public:
 
   virtual std::vector<Window> RelatedXids () { return std::vector<Window> (); }
 
+  virtual std::string NameForWindow (Window window) { return std::string(); }
+
   bool HasWindowOnViewport();
 
   virtual bool IsSpacer()

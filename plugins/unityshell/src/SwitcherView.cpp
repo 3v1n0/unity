@@ -65,7 +65,8 @@ SwitcherView::SwitcherView(NUX_FILE_LINE_DECL)
 
   text_view_ = new nux::StaticCairoText("Testing");
   text_view_->SinkReference();
-  text_view_->SetGeometry(nux::Geometry(0, 0, 200, text_size));
+  text_view_->SetMaximumWidth ((int) (tile_size * spread_size));
+  text_view_->SetLines(1);
   text_view_->SetTextColor(nux::color::White);
   text_view_->SetFont("Ubuntu Bold 10");
 
@@ -132,11 +133,26 @@ void SwitcherView::SaveLast ()
 
 void SwitcherView::OnDetailSelectionIndexChanged (int index)
 {
+  if (model_->detail_selection)
+  {
+    Window detail_window = model_->DetailSelectionWindow();
+    text_view_->SetText(model_->Selection()->NameForWindow (detail_window));
+  }
   QueueDraw ();
 }
 
 void SwitcherView::OnDetailSelectionChanged (bool detail)
 {
+
+  if (detail)
+  {
+    Window detail_window = model_->DetailSelectionWindow();
+    text_view_->SetText(model_->Selection()->NameForWindow (detail_window));
+  }
+  else
+  {
+    text_view_->SetText(model_->Selection()->tooltip_text().c_str());
+  }
   SaveLast ();
   QueueDraw ();
 }

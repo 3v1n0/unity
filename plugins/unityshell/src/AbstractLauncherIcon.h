@@ -131,6 +131,8 @@ public:
 
   virtual std::vector<Window> RelatedXids () = 0;
 
+  virtual std::string NameForWindow (Window window) = 0;
+
   virtual bool HasWindowOnViewport() = 0;
 
   virtual bool IsSpacer() = 0;

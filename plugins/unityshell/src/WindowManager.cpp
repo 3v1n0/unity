@@ -26,7 +26,7 @@ class WindowManagerDummy : public WindowManager
   {
     return 0;
   }
-
+  
   bool IsScreenGrabbed()
   {
     return false;
