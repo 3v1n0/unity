@@ -684,14 +684,13 @@ void IconRenderer::RenderElement(nux::GraphicsEngine& GfxContext,
 
     nux::GetGraphicsEngine().SetTexture(GL_TEXTURE0, icon);
 
-    auto model_view_matrix = GfxContext.GetOpenGLModelViewMatrix().m;
     // Set the model-view matrix
     CHECKGL(glMatrixMode(GL_MODELVIEW));
-    CHECKGL(glLoadMatrixf((float*) model_view_matrix));
+    CHECKGL(glLoadMatrixf((float*) GfxContext.GetOpenGLModelViewMatrix().m));
 
     // Set the projection matrix
     CHECKGL(glMatrixMode(GL_PROJECTION));
-    CHECKGL(glLoadMatrixf((float*) model_view_matrix));
+    CHECKGL(glLoadMatrixf((float*) GfxContext.GetOpenGLProjectionMatrix().m));
   }
 
   CHECKGL(glEnableVertexAttribArrayARB(VertexLocation));
