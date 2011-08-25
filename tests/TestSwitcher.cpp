@@ -33,6 +33,7 @@
 
 #include "SwitcherController.h"
 #include "MockLauncherIcon.h"
+#include "BackgroundEffectHelper.h"
 #include <dbus/dbus-glib.h>
 
 using namespace unity::switcher;
@@ -278,6 +279,7 @@ int main(int argc, char** argv)
 
   nux::NuxInitialize(0);
 
+  BackgroundEffectHelper::blur_type = unity::BLUR_NONE;
   nux::WindowThread* wt = nux::CreateGUIThread(TEXT("Unity Switcher"), 1200, 500, 0, &ThreadWidgetInit, 0);
 
   wt->Run(NULL);

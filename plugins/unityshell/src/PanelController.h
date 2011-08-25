@@ -32,7 +32,6 @@ public:
   PanelController();
   ~PanelController();
 
-  void SetBFBSize(int size);
   void StartFirstMenuShow();
   void EndFirstMenuShow();
   void SetOpacity(float opacity);

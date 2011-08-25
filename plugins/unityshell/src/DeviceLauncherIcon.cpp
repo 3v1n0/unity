@@ -388,20 +388,8 @@ void DeviceLauncherIcon::StopDrive()
                (GMountUnmountFlags)0,
                mount_op,
                NULL,
-               (GAsyncReadyCallback)OnStopDriveReady,
-               this);
-}
-
-void DeviceLauncherIcon::OnStopDriveReady(GObject* object,
-                                          GAsyncResult* result,
-                                          DeviceLauncherIcon* self)
-{
-
-  if (!self || !G_IS_VOLUME(self->volume_))
-    return;
-
-  glib::Object<GDrive> drive(g_volume_get_drive(self->volume_));
-  g_drive_stop_finish(drive, result, NULL);
+               NULL,
+               NULL);
 }
 
 void DeviceLauncherIcon::UpdateVisibility(int visibility)

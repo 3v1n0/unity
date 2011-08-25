@@ -21,21 +21,27 @@
 
 #include "config.h"
 #include "Nux/Nux.h"
+#include <glib.h>
+#include <glib/gi18n-lib.h>
 
 #include "FilterGenreWidget.h"
 #include "FilterGenreButton.h"
 #include "FilterBasicButton.h"
+#include "PlacesStyle.h"
 
 namespace unity {
 
   FilterGenre::FilterGenre (NUX_FILE_LINE_DECL)
-      : FilterExpanderLabel ("Categories", NUX_FILE_LINE_PARAM)
+      : FilterExpanderLabel (_("Categories"), NUX_FILE_LINE_PARAM)
       , all_selected (false) {
     InitTheme();
 
-    all_button_ = new FilterBasicButton("Any", NUX_TRACKER_LOCATION);
+    all_button_ = new FilterBasicButton(_("All"), NUX_TRACKER_LOCATION);
     all_button_->activated.connect(sigc::mem_fun(this, &FilterGenre::OnAllActivated));
+    all_button_->label = _("All");
     all_button_->Reference();
+
+    PlacesStyle* style = PlacesStyle::GetDefault();
 
     genre_layout_ = new nux::GridHLayout(NUX_TRACKER_LOCATION);
     genre_layout_->ForceChildrenSize(true);
@@ -43,7 +49,7 @@ namespace unity {
     genre_layout_->SetVerticalInternalMargin (6);
     genre_layout_->SetHorizontalInternalMargin (6);
     genre_layout_->EnablePartialVisibility (false);
-    genre_layout_->SetChildrenSize (120, 40);
+    genre_layout_->SetChildrenSize (style->GetTileWidth() - 12, style->GetTextLineHeight() * 2);
     genre_layout_->Reference();
 
     SetRightHandView(all_button_);
@@ -66,11 +72,19 @@ namespace unity {
     dash::CheckOptionFilter::CheckOptions options = filter_->options;
     for (it = options.begin(); it < options.end(); it++)
       OnOptionAdded(*it);
+
+    SetLabel(filter_->name);
   }
 
   void FilterGenre::OnOptionAdded(dash::FilterOption::Ptr new_filter)
   {
-    FilterGenreButton* button = new FilterGenreButton (NUX_TRACKER_LOCATION);
+    std::string tmp_label = new_filter->name;
+
+    char* escape = g_markup_escape_text(tmp_label.c_str(), -1);
+    std::string label = escape;
+    g_free(escape);
+
+    FilterGenreButton* button = new FilterGenreButton (label, NUX_TRACKER_LOCATION);
     button->SetFilter (new_filter);
     genre_layout_->AddView (button, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
     buttons_.push_back (button);
@@ -133,7 +147,7 @@ namespace unity {
 
   void FilterGenre::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw) {
     GfxContext.PushClippingRectangle(GetGeometry());
-  
+
     GetLayout()->ProcessDraw(GfxContext, force_draw);
 
     GfxContext.PopClippingRectangle();

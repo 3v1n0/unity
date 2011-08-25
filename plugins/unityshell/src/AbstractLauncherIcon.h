@@ -66,7 +66,7 @@ class AbstractLauncherIcon
 {
 public:
 
-
+  typedef std::vector<nux::Vector4> TransformVector;
 
   typedef enum
   {
@@ -101,6 +101,15 @@ public:
     QUIRK_LAST,
   } Quirk;
 
+  enum TransformIndex
+  {
+    TRANSFORM_TILE,
+    TRANSFORM_IMAGE,
+    TRANSFORM_HIT_AREA,
+    TRANSFORM_GLOW,
+    TRANSFORM_EMBLEM,
+  };
+
   virtual ~AbstractLauncherIcon() {}
 
   nux::Property<std::string> tooltip_text;
@@ -119,7 +128,7 @@ public:
 
   virtual nux::Point3 GetCenter() = 0;
 
-  virtual std::vector<nux::Vector4> & GetTransform(std::string const& name) = 0;
+  virtual std::vector<nux::Vector4> & GetTransform(TransformIndex index) = 0;
 
   virtual void Activate(ActionArg arg) = 0;
 
@@ -130,6 +139,8 @@ public:
   virtual int RelatedWindows() = 0;
 
   virtual std::vector<Window> RelatedXids () = 0;
+
+  virtual std::string NameForWindow (Window window) = 0;
 
   virtual bool HasWindowOnViewport() = 0;
 

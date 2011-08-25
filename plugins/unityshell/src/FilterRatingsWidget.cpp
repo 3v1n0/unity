@@ -21,6 +21,8 @@
 
 #include "config.h"
 #include "Nux/Nux.h"
+#include <glib.h>
+#include <glib/gi18n-lib.h>
 
 #include "FilterGenreWidget.h"
 #include "FilterGenreButton.h"
@@ -32,10 +34,11 @@
 namespace unity {
 
   FilterRatingsWidget::FilterRatingsWidget (NUX_FILE_LINE_DECL)
-      : FilterExpanderLabel ("Rating", NUX_FILE_LINE_PARAM)
+      : FilterExpanderLabel (_("Rating"), NUX_FILE_LINE_PARAM)
   {
-    any_button_ = new FilterBasicButton("Any", NUX_TRACKER_LOCATION);
+    any_button_ = new FilterBasicButton(_("All"), NUX_TRACKER_LOCATION);
     any_button_->activated.connect(sigc::mem_fun(this, &FilterRatingsWidget::OnAnyButtonActivated));
+    any_button_->label = _("All");
 
     SetRightHandView(any_button_);
 
@@ -59,6 +62,7 @@ namespace unity {
   {
     filter_ = std::static_pointer_cast<dash::RatingsFilter>(filter);
     ratings_->SetFilter(filter);
+    SetLabel(filter_->name);
     NeedRedraw();
   }
 
@@ -82,7 +86,7 @@ namespace unity {
 
   void FilterRatingsWidget::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw) {
     GfxContext.PushClippingRectangle(GetGeometry());
-  
+
     GetLayout()->ProcessDraw(GfxContext, force_draw);
 
     GfxContext.PopClippingRectangle();

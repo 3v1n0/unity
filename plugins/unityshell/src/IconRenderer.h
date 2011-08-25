@@ -51,7 +51,7 @@ protected:
 
   void RenderElement(nux::GraphicsEngine& GfxContext,
                      RenderArg const& arg,
-                     nux::IntrusiveSP<nux::IOpenGLBaseTexture> icon,
+                     nux::ObjectPtr<nux::IOpenGLBaseTexture> icon,
                      nux::Color bkg_color,
                      float alpha,
                      std::vector<nux::Vector4>& xform_coords);
@@ -64,15 +64,15 @@ protected:
                         nux::Geometry const& geo);
 
   void RenderProgressToTexture(nux::GraphicsEngine& GfxContext,
-                               nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture,
+                               nux::ObjectPtr<nux::IOpenGLBaseTexture> texture,
                                float progress_fill,
                                float bias);
 
   void UpdateIconTransform(AbstractLauncherIcon* icon, nux::Matrix4 ViewProjectionMatrix, nux::Geometry const& geo,
-                           float x, float y, float w, float h, float z, std::string name);
+                           float x, float y, float w, float h, float z, AbstractLauncherIcon::TransformIndex index);
 
   void UpdateIconSectionTransform(AbstractLauncherIcon* icon, nux::Matrix4 ViewProjectionMatrix, nux::Geometry const& geo,
-                                  float x, float y, float w, float h, float z, float xx, float yy, float ww, float hh, std::string name);
+                                  float x, float y, float w, float h, float z, float xx, float yy, float ww, float hh, AbstractLauncherIcon::TransformIndex index);
 
   void GetInverseScreenPerspectiveMatrix(nux::Matrix4& ViewMatrix, nux::Matrix4& PerspectiveMatrix,
                                          int ViewportWidth,
@@ -81,7 +81,7 @@ protected:
                                          float FarClipPlane,
                                          float Fovy);
 
-  void SetOffscreenRenderTarget(nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture);
+  void SetOffscreenRenderTarget(nux::ObjectPtr<nux::IOpenGLBaseTexture> texture);
 
   void RestoreSystemRenderTarget();
 

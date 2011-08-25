@@ -39,23 +39,12 @@ include_directories (. .. ../services ../UnityCore ${UNITY_SRC} ${CMAKE_BINARY_D
 # Please keep actual test files alphabetically at top and then files
 # from ../${UNITY_SRC} or ../../services in alphabetically after that
 add_executable (test-unit
-                unit/TestPlaceFactoryFile.cpp
                 unit/TestQuicklistMenuitems.cpp
                 unit/TestMain.cpp
                 unit/TestUBus.cpp
                 ${UNITY_SRC}/ubus-server.cpp
                 ${UNITY_SRC}/ubus-server.h
                 ${UNITY_SRC}/Introspectable.cpp
-                ${UNITY_SRC}/PlaceEntryRemote.cpp
-                ${UNITY_SRC}/PlaceEntryRemote.h
-                ${UNITY_SRC}/PlaceEntry.h
-                ${UNITY_SRC}/PlaceFactoryFile.cpp
-                ${UNITY_SRC}/PlaceFactoryFile.h
-                ${UNITY_SRC}/PlaceFactory.cpp
-                ${UNITY_SRC}/PlaceFactory.h
-                ${UNITY_SRC}/PlaceRemote.cpp
-                ${UNITY_SRC}/PlaceRemote.h
-                ${UNITY_SRC}/Place.h
                 ${UNITY_SRC}/QuicklistMenuItem.cpp
                 ${UNITY_SRC}/QuicklistMenuItem.h
                 ${UNITY_SRC}/QuicklistMenuItemCheckmark.cpp
@@ -95,14 +84,16 @@ add_executable (standalone-dash
                 ${UNITY_SRC}/FilterGenreButton.cpp
                 ${UNITY_SRC}/FilterGenreWidget.cpp
                 ${UNITY_SRC}/FilterBar.cpp
+                ${UNITY_SRC}/FontSettings.cpp
+                ${UNITY_SRC}/FontSettings.h
                 ${UNITY_SRC}/IMTextEntry.cpp
                 ${UNITY_SRC}/IMTextEntry.h
                 ${UNITY_SRC}/PlacesHomeView.cpp
                 ${UNITY_SRC}/PlacesHomeView.h
                 ${UNITY_SRC}/PlacesGroup.cpp
                 ${UNITY_SRC}/PlacesGroup.h
-                ${UNITY_SRC}/PlacesSettings.cpp
-                ${UNITY_SRC}/PlacesSettings.h
+                ${UNITY_SRC}/DashSettings.cpp
+                ${UNITY_SRC}/DashSettings.h
                 ${UNITY_SRC}/PlacesStyle.cpp
                 ${UNITY_SRC}/PlacesStyle.h
                 ${UNITY_SRC}/PlacesTile.cpp
@@ -122,6 +113,8 @@ add_executable (standalone-dash
                 ${UNITY_SRC}/Introspectable.h
                 ${UNITY_SRC}/LensBar.cpp
                 ${UNITY_SRC}/LensBar.h
+                ${UNITY_SRC}/LensBarIcon.cpp
+                ${UNITY_SRC}/LensBarIcon.h
                 ${UNITY_SRC}/LensView.cpp
                 ${UNITY_SRC}/LensView.h
                 ${UNITY_SRC}/PreviewApplications.cpp
@@ -131,6 +124,7 @@ add_executable (standalone-dash
                 ${UNITY_SRC}/ResultViewGrid.cpp
                 ${UNITY_SRC}/ResultRenderer.cpp
                 ${UNITY_SRC}/ResultRendererTile.cpp
+                ${UNITY_SRC}/ResultRendererHorizontalTile.cpp
                 ${UNITY_SRC}/TextureCache.h
                 ${UNITY_SRC}/TextureCache.cpp
                 ${UNITY_SRC}/Timer.cpp
@@ -153,6 +147,8 @@ add_executable (test-panel
                 TestPanel.cpp
                 ${UNITY_SRC}/BackgroundEffectHelper.cpp
                 ${UNITY_SRC}/BackgroundEffectHelper.h
+                ${UNITY_SRC}/DashSettings.cpp
+                ${UNITY_SRC}/DashSettings.h
                 ${UNITY_SRC}/PanelStyle.cpp
                 ${UNITY_SRC}/PanelStyle.h
                 ${UNITY_SRC}/PanelView.cpp
@@ -167,8 +163,6 @@ add_executable (test-panel
                 ${UNITY_SRC}/PanelTray.h
                 ${UNITY_SRC}/Introspectable.cpp
                 ${UNITY_SRC}/Introspectable.h
-                ${UNITY_SRC}/PanelHomeButton.cpp
-                ${UNITY_SRC}/PanelHomeButton.h
                 ${UNITY_SRC}/PanelMenuView.cpp
                 ${UNITY_SRC}/PanelMenuView.h
                 ${UNITY_SRC}/Timer.cpp
@@ -270,6 +264,8 @@ add_executable (test-filters
                 ${UNITY_SRC}/FilterMultiRangeButton.cpp
                 ${UNITY_SRC}/FilterMultiRangeWidget.cpp
                 ${UNITY_SRC}/DashStyle.cpp
+                ${UNITY_SRC}/PlacesStyle.cpp
+                ${UNITY_SRC}/PlacesStyle.h
                 )
 add_dependencies(test-filters unity-core-${UNITY_API_VERSION})
 
@@ -286,6 +282,8 @@ add_executable (test-filter-bar
                 ${UNITY_SRC}/FilterGenreWidget.cpp
                 ${UNITY_SRC}/FilterBar.cpp
                 ${UNITY_SRC}/DashStyle.cpp
+                ${UNITY_SRC}/PlacesStyle.cpp
+                ${UNITY_SRC}/PlacesStyle.h
                 )
 add_dependencies(test-filter-bar unity-core-${UNITY_API_VERSION})
 
@@ -344,12 +342,15 @@ add_executable (test-result-view
                 ${UNITY_SRC}/ResultViewGrid.cpp
                 ${UNITY_SRC}/ResultRenderer.cpp
                 ${UNITY_SRC}/ResultRendererTile.cpp
+                ${UNITY_SRC}/ResultRendererHorizontalTile.cpp
                 ${UNITY_SRC}/IconTexture.cpp
                 ${UNITY_SRC}/IconLoader.cpp
                 ${UNITY_SRC}/Introspectable.cpp
                 ${UNITY_SRC}/StaticCairoText.cpp
                 ${UNITY_SRC}/TextureCache.cpp
                 ${UNITY_SRC}/DashStyle.cpp
+                ${UNITY_SRC}/ubus-server.cpp
+                ${UNITY_SRC}/ubus-server.h
                 )
 add_dependencies(test-result-view unity-core-${UNITY_API_VERSION})
 
@@ -369,6 +370,10 @@ add_executable (test-bg-hash
                 ${UNITY_SRC}/ubus-server.h
                )
 add_dependencies (test-bg-hash unity-core-${UNITY_API_VERSION})
+
+add_subdirectory (test-input-remover)
+add_subdirectory (test-minimize-window-handler)
+add_subdirectory (test-get-transients)
 
 #
 # GTest tests

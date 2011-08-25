@@ -69,7 +69,7 @@ void DashController::SetupWindow()
   window_->ShowWindow(false);
   window_->SetOpacity(0.0f);
   window_->SetFocused(true);
-  window_->OnMouseDownOutsideArea.connect(sigc::mem_fun(this, &DashController::OnMouseDownOutsideWindow));
+  window_->mouse_down_outside_pointer_grab_area.connect(sigc::mem_fun(this, &DashController::OnMouseDownOutsideWindow));
 }
 
 void DashController::SetupDashView()
@@ -178,6 +178,8 @@ void DashController::ShowDash()
     return;
   }
 
+  adaptor->saveInputFocus ();
+
   view_->AboutToShow();
 
   window_->ShowWindow(true, true);
@@ -201,11 +203,15 @@ void DashController::HideDash()
 {
   if (!visible_)
    return;
+  
+  view_->AboutToHide();
 
   window_->CaptureMouseDownAnyWhereElse(false);
   window_->ForceStopFocus(1, 1);
   window_->EnableInputWindow(false, "Dash", true, false);
   visible_ = false;
+
+  PluginAdapter::Default ()->restoreInputFocus ();
 
   StartShowHideTimeline();
 

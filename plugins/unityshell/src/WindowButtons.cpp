@@ -135,23 +135,23 @@ WindowButtons::WindowButtons()
   but = new WindowButton(PanelStyle::WINDOW_BUTTON_CLOSE);
   AddView(but, 0, nux::eCenter, nux::eFix);
   but->activated.connect(sigc::mem_fun(this, &WindowButtons::OnCloseClicked));
-  but->OnMouseEnter.connect(lambda_statechanged);
-  but->OnMouseLeave.connect(lambda_statechanged);
-  but->OnMouseMove.connect(lambda_moved);
+  but->mouse_enter.connect(lambda_statechanged);
+  but->mouse_leave.connect(lambda_statechanged);
+  but->mouse_move.connect(lambda_moved);
 
   but = new WindowButton(PanelStyle::WINDOW_BUTTON_MINIMIZE);
   AddView(but, 0, nux::eCenter, nux::eFix);
   but->activated.connect(sigc::mem_fun(this, &WindowButtons::OnMinimizeClicked));
-  but->OnMouseEnter.connect(lambda_statechanged);
-  but->OnMouseLeave.connect(lambda_statechanged);
-  but->OnMouseMove.connect(lambda_moved);
+  but->mouse_enter.connect(lambda_statechanged);
+  but->mouse_leave.connect(lambda_statechanged);
+  but->mouse_move.connect(lambda_moved);
 
   but = new WindowButton(PanelStyle::WINDOW_BUTTON_UNMAXIMIZE);
   AddView(but, 0, nux::eCenter, nux::eFix);
   but->activated.connect(sigc::mem_fun(this, &WindowButtons::OnRestoreClicked));
-  but->OnMouseEnter.connect(lambda_statechanged);
-  but->OnMouseLeave.connect(lambda_statechanged);
-  but->OnMouseMove.connect(lambda_moved);
+  but->mouse_enter.connect(lambda_statechanged);
+  but->mouse_leave.connect(lambda_statechanged);
+  but->mouse_move.connect(lambda_moved);
 
   SetContentDistribution(nux::eStackLeft);
 }

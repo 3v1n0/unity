@@ -250,6 +250,11 @@ IconTexture::SetTexture(nux::BaseTexture* texture)
   _texture_cached->Reference();
 }
 
+nux::BaseTexture* IconTexture::texture() const
+{
+  return _texture_cached;
+}
+
 bool
 IconTexture::DoCanFocus()
 {

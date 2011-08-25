@@ -27,8 +27,11 @@
 #include <NuxCore/Logger.h>
 
 #include "BGHash.h"
+#include "FontSettings.h"
 #include "DashView.h"
-#include "PlacesSettings.h"
+
+#define WIDTH 1054
+#define HEIGHT 640
 
 using namespace unity::dash;
 
@@ -56,13 +59,14 @@ TestRunner::~TestRunner ()
 
 void TestRunner::Init ()
 {
-  layout = new nux::VLayout(NUX_TRACKER_LOCATION);
+  layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
   DashView* view = new DashView();
-  view->SetMinMaxSize(1024, 600);
-
+  view->DisableBlur();
+  view->SetMinMaxSize(WIDTH, HEIGHT);
   layout->AddView (view, 1, nux::MINOR_POSITION_CENTER);
   layout->SetFocused (true);
+  layout->SetMinMaxSize(WIDTH, HEIGHT);
 
   nux::GetGraphicsThread()->SetLayout (layout);
 }
@@ -90,13 +94,14 @@ int main(int argc, char **argv)
   gtk_init (&argc, &argv);
 
   unity::BGHash bghash;
+  unity::FontSettings font_settings;
 
   nux::NuxInitialize(0);
   nux::logging::configure_logging(::getenv("UNITY_LOG_SEVERITY"));
 
   TestRunner *test_runner = new TestRunner ();
   wt = nux::CreateGUIThread(TEXT("Unity Dash"),
-                            1024, 600,
+                            WIDTH+12, HEIGHT+12,
                             0,
                             &TestRunner::InitWindowThread,
                             test_runner);
