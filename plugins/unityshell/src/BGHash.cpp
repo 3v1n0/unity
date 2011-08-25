@@ -50,6 +50,7 @@ namespace unity {
       _hires_time_end(20),
       _ubus_handle_request_colour(0)
   {
+
     background_monitor = gnome_bg_new ();
     client = g_settings_new ("org.gnome.desktop.background");
 
@@ -137,7 +138,6 @@ namespace unity {
 
         parsed_color = (primary + secondary) * 0.5f;
       }
-
       nux::Color new_color = MatchColor (parsed_color);
       TransitionToNewColor (new_color);
     }
@@ -299,11 +299,16 @@ namespace unity {
     // takes two colours, transitions between them, we can do it linearly or whatever
     // i don't think it will matter that much
     // it doesn't happen too often
+    g_warning ("asked to interpolate between %f, %f, %f and %f, %f, %f at value %f",
+              colora.red, colora.green, colora.blue, colorb.red, colorb.green, colorb.blue, value);
     return colora + ((colorb - colora) * value);
   }
 
   void BGHash::TransitionToNewColor(nux::color::Color new_color)
   {
+    if (new_color == _current_color)
+      return;
+
     if (_transition_handler)
     {
       // we are currently in a transition
@@ -328,6 +333,8 @@ namespace unity {
   {
     guint64 current_time = g_get_monotonic_time();
     float timediff = ((float)current_time - _hires_time_start) / _hires_time_end;
+
+    timediff = std::max(std::min(timediff, 1.0f), 0.0f);
 
     _current_color = InterpolateColor(_old_color,
                                       _new_color,
@@ -401,7 +408,7 @@ namespace unity {
     if (error)
     {
       LOG_WARNING(logger) << "Could not load filename \"" << path << "\": " << error.Message();
-      _current_color = nux::Color(0.2, 0.2, 0.2, 0.9);
+      _current_color = unity::colors::Aubergine;
 
       // try and get a colour from gnome-bg, for various reasons, gnome bg might not
       // return a correct image which sucks =\ but this is a fallback
@@ -415,7 +422,9 @@ namespace unity {
   {
     guchar *img = gdk_pixbuf_get_pixels (pixbuf);
     guchar *pixel = img + ((y * gdk_pixbuf_get_rowstride(pixbuf)) + (x * gdk_pixbuf_get_n_channels (pixbuf)));
-    return nux::Color ((float)(*(pixel + 0)), (float)(*(pixel + 1)), (float)(*(pixel + 2)));
+    return nux::Color (static_cast<int>(*(pixel + 0)),
+                       static_cast<int>(*(pixel + 1)),
+                       static_cast<int>(*(pixel + 2)));
   }
 
   inline bool is_color_different (const nux::Color color_a, const nux::Color color_b)
@@ -490,8 +499,6 @@ namespace unity {
                                          gdk_pixbuf_get_width (pixbuf) - 1,
                                          gdk_pixbuf_get_height (pixbuf) - 1,
                                          pixbuf);
-
-
     nux::Color matched_color = MatchColor (average);
     return matched_color;
   }
@@ -560,6 +567,7 @@ namespace unity {
 
     // apply design to the colour
     chosen_color.alpha = 0.5f;
+
 
     return chosen_color;
   }
