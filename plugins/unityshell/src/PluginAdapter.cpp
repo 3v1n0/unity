@@ -57,7 +57,8 @@ PluginAdapter::Initialize(CompScreen* screen)
 PluginAdapter::PluginAdapter(CompScreen* screen) :
   m_Screen(screen),
   m_ExpoActionList(0),
-  m_ScaleActionList(0)
+  m_ScaleActionList(0),
+  _last_focused_window(nullptr)
 {
   _spread_state = false;
   _expo_state = false;
@@ -724,3 +725,44 @@ PluginAdapter::SetCoverageAreaBeforeAutomaximize(float area)
 {
   _coverage_area_before_automaximize = area;
 }
+
+bool
+PluginAdapter::saveInputFocus()
+{
+  Window      active = m_Screen->activeWindow ();
+  CompWindow* cw = m_Screen->findWindow (active);
+
+  if (cw)
+  {
+    _last_focused_window = cw;
+    return true;
+  }
+
+  return false;
+}
+
+bool
+PluginAdapter::restoreInputFocus()
+{
+  if (_last_focused_window)
+  {
+    _last_focused_window->moveInputFocusTo ();
+    _last_focused_window = NULL;
+    return true;
+  }
+  else
+  {
+    m_Screen->focusDefaultWindow ();
+    return false;
+  }
+
+  return false;
+}
+
+void
+PluginAdapter::OnWindowClosed(CompWindow *w)
+{
+  if (_last_focused_window == w)
+    _last_focused_window = NULL;
+}
+

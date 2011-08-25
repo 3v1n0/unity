@@ -105,7 +105,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , _edge_trigger_handle(0)
   , _edge_pointerY(0)
   , newFocusedWindow(nullptr)
-  , lastFocusedWindow(nullptr)
   , doShellRepaint(false)
   , allowWindowPaint(false)
   , damaged(false)
@@ -113,6 +112,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , _last_output(nullptr)
   , switcher_desktop_icon(nullptr)
   , mActiveFbo (0)
+  , dash_is_open_ (false)
   , grab_index_ (0)
 {
   Timer timer;
@@ -810,7 +810,7 @@ void UnityScreen::startLauncherKeyNav()
 
   // check if currently focused window isn't the launcher-window
   if (newFocusedWindow != screen->findWindow(screen->activeWindow()))
-    lastFocusedWindow = screen->findWindow(screen->activeWindow());
+    PluginAdapter::Default ()->saveInputFocus ();
 
   // set input-focus on launcher-window and start key-nav mode
   if (newFocusedWindow != NULL)
@@ -948,7 +948,6 @@ void UnityScreen::OnLauncherStartKeyNav(GVariant* data, void* value)
 
 void UnityScreen::OnLauncherEndKeyNav(GVariant* data, void* value)
 {
-  UnityScreen* self = reinterpret_cast<UnityScreen*>(value);
   bool preserve_focus = false;
 
   if (data)
@@ -958,10 +957,8 @@ void UnityScreen::OnLauncherEndKeyNav(GVariant* data, void* value)
 
   // Return input-focus to previously focused window (before key-nav-mode was
   // entered)
-  if (preserve_focus && (self->lastFocusedWindow != NULL))
-  {
-    self->lastFocusedWindow->moveInputFocusTo();
-  }
+  if (preserve_focus)
+    PluginAdapter::Default ()->restoreInputFocus ();
 }
 
 void UnityScreen::OnQuicklistEndKeyNav(GVariant* data, void* value)
@@ -1727,11 +1724,11 @@ UnityWindow::~UnityWindow()
   UnityScreen* us = UnityScreen::get(screen);
   if (us->newFocusedWindow && (UnityWindow::get(us->newFocusedWindow) == this))
     us->newFocusedWindow = NULL;
-  if (us->lastFocusedWindow && (UnityWindow::get(us->lastFocusedWindow) == this))
-    us->lastFocusedWindow = NULL;
 
   if (window->state () & CompWindowStateFullscreenMask)
     UnityScreen::get (screen)->fullscreen_windows_.remove(window);
+
+  PluginAdapter::Default ()->OnWindowClosed (window);
 }
 
 /* vtable init */
