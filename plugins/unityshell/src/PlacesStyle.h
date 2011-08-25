@@ -54,6 +54,8 @@ public:
   nux::BaseTexture* GetDashLeftEdge();
   nux::BaseTexture* GetDashLeftCorner();
   nux::BaseTexture* GetDashLeftTile();
+  nux::BaseTexture* GetDashTopCorner();
+  nux::BaseTexture* GetDashTopTile();
 
   nux::BaseTexture* GetSearchMagnifyIcon();
   nux::BaseTexture* GetSearchCloseIcon();
@@ -88,6 +90,8 @@ private:
   nux::BaseTexture* _dash_left_edge;
   nux::BaseTexture* _dash_left_corner;
   nux::BaseTexture* _dash_left_tile;
+  nux::BaseTexture* _dash_top_corner;
+  nux::BaseTexture* _dash_top_tile;
 
   nux::BaseTexture* _search_magnify_texture;
   nux::BaseTexture* _search_close_texture;

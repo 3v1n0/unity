@@ -94,6 +94,7 @@ private:
 
   // Background related
   nux::ColorLayer* bg_layer_;
+  nux::Color bg_color_;
 
   // View related
   nux::VLayout* layout_;
