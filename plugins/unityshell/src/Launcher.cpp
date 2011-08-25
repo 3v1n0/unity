@@ -1543,7 +1543,7 @@ Launcher::CheckIntersectWindow(CompWindow* window)
   int intersect_types = CompWindowTypeNormalMask | CompWindowTypeDialogMask |
                         CompWindowTypeModalDialogMask | CompWindowTypeUtilMask;
 
-  if (!window || !(window->type() & intersect_types) || !window->isMapped() || !window->isViewable())
+  if (!window || !(window->type() & intersect_types) || !window->isMapped() || !window->isViewable() || window->minimized())
     return false;
 
   if (CompRegion(window->borderRect()).intersects(CompRect(geo.x, geo.y, geo.width, geo.height)))
