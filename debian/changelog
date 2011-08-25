@@ -1,11 +1,11 @@
-unity (4.10.2-0ubuntu1) UNRELEASED; urgency=low
+unity (4.10.2-0ubuntu1) oneiric; urgency=low
 
   * New upstream release:
     - fix the launcher don't dodging sometimes when it should
     - correctly set the focus when selecting a lens
     - fix launcher and switcher icons not showing on some video cards
 
- -- Sebastien Bacher <seb128@ubuntu.com>  Thu, 25 Aug 2011 23:22:48 +0200
+ -- Sebastien Bacher <seb128@ubuntu.com>  Thu, 25 Aug 2011 23:27:16 +0200
 
 unity (4.10.0-0ubuntu1) oneiric; urgency=low
 
