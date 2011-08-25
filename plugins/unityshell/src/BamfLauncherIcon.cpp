@@ -269,7 +269,9 @@ std::string BamfLauncherIcon::NameForWindow (Window window)
     view = (BamfView*) l->data;
     if (BAMF_IS_WINDOW(view) && (Window) bamf_window_get_xid(BAMF_WINDOW(view)) == window)
     {
-      result = bamf_view_get_name (view);
+      gchar *name = bamf_view_get_name (view);
+      result = name;
+      g_free (name);
       break;
     }
   }
