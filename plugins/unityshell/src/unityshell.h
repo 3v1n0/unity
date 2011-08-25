@@ -44,6 +44,8 @@
 #include <sigc++/sigc++.h>
 #include <boost/shared_ptr.hpp>
 
+#include "compizminimizedwindowhandler.h"
+
 class UnityFBO
 {
 public:
@@ -71,6 +73,42 @@ private:
   GLuint   mFBTexture;
   CompOutput *output;
 };
+
+class UnityShowdesktopHandler
+{
+public:
+
+  UnityShowdesktopHandler (CompWindow *w);
+  ~UnityShowdesktopHandler ();
+
+  typedef enum {
+    Visible = 0,
+    FadeOut = 1,
+    FadeIn = 2,
+    Invisible = 3
+  } State;
+
+public:
+
+  void fadeOut ();
+  void fadeIn ();
+  bool animate (unsigned int ms);
+  void paintAttrib (GLWindowPaintAttrib &attrib);
+
+  UnityShowdesktopHandler::State state ();
+
+  static const unsigned int fade_time;
+  static CompWindowList     animating_windows;
+  static bool shouldHide (CompWindow *);
+
+private:
+
+  CompWindow                     *mWindow;
+  compiz::WindowInputRemover     *mRemover;
+  UnityShowdesktopHandler::State mState;
+  float                          mProgress;
+};
+  
 
 
 #include "BGHash.h"
@@ -115,6 +153,12 @@ public:
   void preparePaint (int ms);
   void paintFboForOutput (CompOutput *output);
 
+  void
+  handleCompizEvent (const char         *pluginName,
+                     const char         *eventName,
+                     CompOption::Vector &o);
+
+
   /* paint on top of all windows if we could not find a window
    * to paint underneath */
   bool glPaintOutput(const GLScreenPaintAttrib&,
@@ -135,9 +179,10 @@ public:
 
   /* handle X11 events */
   void handleEvent(XEvent*);
-  void handleCompizEvent(const char* plugin,
-                         const char* event,
-                         CompOption::Vector& option);
+
+  /* handle showdesktop */
+  void enterShowDesktopMode ();
+  void leaveShowDesktopMode (CompWindow *w);
 
   bool showLauncherKeyInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool showLauncherKeyTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options);
@@ -280,7 +325,12 @@ public:
 
   nux::Geometry last_bound;
 
-  /* occlusion detection only */
+  void minimize ();
+  void unminimize ();
+  bool minimized ();
+
+  /* occlusion detection
+   * and window hiding */
   bool glPaint(const GLWindowPaintAttrib& attrib,
                const GLMatrix&            matrix,
                const CompRegion&          region,
@@ -308,6 +358,13 @@ public:
   CompPoint tryNotIntersectLauncher(CompPoint& pos);
 
   void paintThumbnail (nux::Geometry const& bounding, float alpha);
+
+  void enterShowDesktop ();
+  void leaveShowDesktop ();
+  bool handleAnimations (unsigned int ms);
+
+  compiz::MinimizedWindowHandler::Ptr mMinimizeHandler;
+  UnityShowdesktopHandler             *mShowdesktopHandler;
 };
 
 

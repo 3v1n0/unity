@@ -500,6 +500,158 @@ void UnityWindow::paintThumbnail (nux::Geometry const& bounding, float alpha)
               geo.height);
 }
 
+void UnityScreen::enterShowDesktopMode ()
+{
+  for (CompWindow *w : screen->windows ())
+  {
+    if (UnityShowdesktopHandler::shouldHide (w))
+      UnityWindow::get (w)->enterShowDesktop ();
+  }
+
+  PluginAdapter::Default()->OnShowDesktop();
+
+  screen->enterShowDesktopMode ();
+}
+
+void UnityScreen::leaveShowDesktopMode (CompWindow *w)
+{
+  for (CompWindow *cw : screen->windows ())
+    UnityWindow::get (cw)->leaveShowDesktop ();
+
+  PluginAdapter::Default()->OnLeaveDesktop();
+
+  screen->leaveShowDesktopMode (w);
+}
+
+void UnityWindow::enterShowDesktop ()
+{
+  if (!mShowdesktopHandler)
+    mShowdesktopHandler = new UnityShowdesktopHandler (window);
+
+  window->setShowDesktopMode (true);
+  mShowdesktopHandler->fadeOut ();
+}
+
+void UnityWindow::leaveShowDesktop ()
+{
+  if (mShowdesktopHandler)
+  {
+    mShowdesktopHandler->fadeIn ();
+    window->setShowDesktopMode (false);
+  }
+}
+
+bool UnityWindow::handleAnimations (unsigned int ms)
+{
+  if (mShowdesktopHandler)
+    if (mShowdesktopHandler->animate (ms))
+    { 
+      delete mShowdesktopHandler;
+      mShowdesktopHandler = NULL;
+      return true;
+    }
+
+  return false;
+}
+
+/* 300 ms */
+const unsigned int UnityShowdesktopHandler::fade_time = 300;
+CompWindowList UnityShowdesktopHandler::animating_windows (0);
+
+bool UnityShowdesktopHandler::shouldHide (CompWindow *w)
+{
+  if (!w->managed ())
+    return false;
+
+  if (w->grabbed ())
+    return false;
+
+  if (w->wmType () & (CompWindowTypeDesktopMask |
+                      CompWindowTypeDockMask))
+  return false;
+
+  if (w->state () & CompWindowStateSkipPagerMask)
+    return false;
+
+  return true;
+}
+
+UnityShowdesktopHandler::UnityShowdesktopHandler (CompWindow *w) :
+  mWindow (w),
+  mRemover (new compiz::WindowInputRemover (screen->dpy (), ROOTPARENT (w))),
+  mState (Visible),
+  mProgress (0.0f)
+{
+}
+
+UnityShowdesktopHandler::~UnityShowdesktopHandler ()
+{
+  if (mRemover)
+    delete mRemover;
+}
+
+void UnityShowdesktopHandler::fadeOut ()
+{
+  mState = UnityShowdesktopHandler::FadeOut;
+  mProgress = 1.0f;
+
+  mRemover->save ();
+  mRemover->remove ();
+
+  CompositeWindow::get (mWindow)->addDamage ();
+
+  if (std::find (animating_windows.begin(),
+                 animating_windows.end(),
+                 mWindow) == animating_windows.end())
+    animating_windows.push_back(mWindow);
+}
+
+void UnityShowdesktopHandler::fadeIn ()
+{
+  mState = UnityShowdesktopHandler::FadeIn;
+
+  mRemover->restore ();
+
+  CompositeWindow::get (mWindow)->addDamage ();
+}
+
+bool UnityShowdesktopHandler::animate (unsigned int ms)
+{
+  float inc = fade_time / (float) ms;
+
+  if (mState == UnityShowdesktopHandler::FadeOut)
+  {
+    mProgress -= inc;
+    if (mProgress <= 0.0f)
+    {
+      mProgress = 0.0f;
+      mState = Invisible;
+    }
+    else
+      CompositeWindow::get (mWindow)->addDamage ();
+  }
+  else if (mState == FadeIn)
+  {
+    mProgress += inc;
+    if (mProgress >= 1.0f)
+    {
+      mProgress = 1.0f;
+      mState = Visible;
+
+      return true;
+    }
+    else
+      CompositeWindow::get (mWindow)->addDamage ();
+  }
+
+  return false;
+}
+
+void UnityShowdesktopHandler::paintAttrib (GLWindowPaintAttrib &attrib)
+{
+  attrib.opacity = attrib.opacity * mProgress;
+}
+
 /* called whenever we need to repaint parts of the screen */
 bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
                                 const GLMatrix& transform,
@@ -543,6 +695,8 @@ void UnityScreen::glPaintTransformedOutput(const GLScreenPaintAttrib& attrib,
 
 void UnityScreen::preparePaint(int ms)
 {
+  CompWindowList remove_windows;
+
   if (BackgroundEffectHelper::blur_type == unity::BLUR_ACTIVE)
   {
     if (cScreen->damageMask() & COMPOSITE_SCREEN_DAMAGE_ALL_MASK)
@@ -567,6 +721,13 @@ void UnityScreen::preparePaint(int ms)
   }
 
   cScreen->preparePaint(ms);
+
+  for (CompWindow *w : UnityShowdesktopHandler::animating_windows)
+    if (UnityWindow::get (w)->handleAnimations (ms))
+      remove_windows.push_back(w);
+
+  for (CompWindow *w : remove_windows)
+    UnityShowdesktopHandler::animating_windows.remove (w);
 
   if (damaged)
   {
@@ -669,6 +830,9 @@ void UnityScreen::handleCompizEvent(const char* plugin,
     launcher->EnableCheckWindowOverLauncher(true);
     launcher->CheckWindowOverLauncher();
   }
+
+  compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>::handleCompizEvent (plugin, event, option);
+
   screen->handleCompizEvent(plugin, event, option);
 }
 
@@ -1101,6 +1265,20 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
                           const CompRegion& region,
                           unsigned int mask)
 {
+  GLWindowPaintAttrib wAttrib = attrib;
+
+  if (mMinimizeHandler)
+  {
+    typedef compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow> minimized_window_handler_unity;
+
+    compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>::Ptr compizMinimizeHandler =
+        boost::dynamic_pointer_cast <minimized_window_handler_unity> (mMinimizeHandler);
+    mask |= compizMinimizeHandler->getPaintMask ();
+  }
+  else if (mShowdesktopHandler)
+    mShowdesktopHandler->paintAttrib (wAttrib);
+  
+
   /* Don't bother detecting occlusions if we're not doing updates
    * or we don't want to repaint the shell this pass. We also
    * have a global flag detecting_occlusions which is set to false
@@ -1113,7 +1291,7 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
       !uScreen->doShellRepaint ||
       !uScreen->allowWindowPaint)
   {
-    return gWindow->glPaint(attrib, matrix, region, mask);
+    return gWindow->glPaint(wAttrib, matrix, region, mask);
   }
 
   /* Compiz paints windows top to bottom during
@@ -1154,11 +1332,11 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
         return false;
     }
     else
-      return gWindow->glPaint(attrib, matrix, region, mask);
+      return gWindow->glPaint(wAttrib, matrix, region, mask);
   }
 
   /* Should never be reached */
-  return gWindow->glPaint(attrib, matrix, region, mask);
+  return gWindow->glPaint(wAttrib, matrix, region, mask);
 }
 
 /* handle window painting in an opengl context
@@ -1200,6 +1378,35 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
   }
 
   return ret;
+}
+
+void
+UnityWindow::minimize ()
+{
+  if (!window->managed ())
+    return;
+
+  if (!mMinimizeHandler)
+  {
+    mMinimizeHandler = compiz::MinimizedWindowHandler::Ptr (new compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow> (window));
+    mMinimizeHandler->minimize ();
+  }
+}
+
+void
+UnityWindow::unminimize ()
+{
+  if (mMinimizeHandler)
+  {
+    mMinimizeHandler->unminimize ();
+    mMinimizeHandler.reset ();
+  }
+}
+
+bool
+UnityWindow::minimized ()
+{
+  return mMinimizeHandler.get () != NULL;
 }
 
 /* Called whenever a window is mapped, unmapped, minimized etc */
@@ -1335,6 +1542,9 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       break;
     case UnityshellOptions::AltTabTimeout:
       switcherController->detail_on_timeout = optionGetAltTabTimeout();
+      break;
+    case UnityshellOptions::ShowMinimizedWindows:
+      compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>::setFunctions (optionGetShowMinimizedWindows ());
       break;
     default:
       break;
@@ -1706,9 +1916,29 @@ UnityWindow::UnityWindow(CompWindow* window)
   , PluginClassHandler<UnityWindow, CompWindow>(window)
   , window(window)
   , gWindow(GLWindow::get(window))
+  , mShowdesktopHandler(nullptr)
 {
   WindowInterface::setHandler(window);
   GLWindowInterface::setHandler(gWindow);
+
+  if (UnityScreen::get (screen)->optionGetShowMinimizedWindows ())
+  {
+    bool wasMinimized = window->minimized ();
+    if (wasMinimized)
+      window->unminimize ();
+    window->minimizeSetEnabled (this, true);
+    window->unminimizeSetEnabled (this, true);
+    window->minimizedSetEnabled (this, true);
+
+    if (wasMinimized)
+      window->minimize ();
+  }
+  else
+  {
+    window->minimizeSetEnabled (this, false);
+    window->unminimizeSetEnabled (this, false);
+    window->minimizedSetEnabled (this, false);
+  }
 }
 
 UnityWindow::~UnityWindow()
@@ -1718,6 +1948,21 @@ UnityWindow::~UnityWindow()
     us->newFocusedWindow = NULL;
   if (us->lastFocusedWindow && (UnityWindow::get(us->lastFocusedWindow) == this))
     us->lastFocusedWindow = NULL;
+
+  UnityShowdesktopHandler::animating_windows.remove (window);
+
+  if (mMinimizeHandler)
+  {
+    unminimize ();
+    window->minimizeSetEnabled (this, false);
+    window->unminimizeSetEnabled (this, false);
+    window->minimizedSetEnabled (this, false);
+    window->minimize ();
+
+    mMinimizeHandler.reset ();
+  }
+  if (mShowdesktopHandler)
+    delete mShowdesktopHandler;
 }
 
 /* vtable init */

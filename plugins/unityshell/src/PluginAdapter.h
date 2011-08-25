@@ -86,6 +86,9 @@ public:
   void OnScreenGrabbed();
   void OnScreenUngrabbed();
 
+  void OnShowDesktop ();
+  void OnLeaveDesktop ();
+
   void InitiateScale(std::string const& match, int state = 0);
   void TerminateScale();
   bool IsScaleActive();
@@ -147,6 +150,8 @@ private:
   CompAction* _grab_toggle_action;
 
   float _coverage_area_before_automaximize;
+
+  bool _in_show_desktop;
 
   static PluginAdapter* _default;
 };
