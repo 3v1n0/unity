@@ -146,7 +146,7 @@
         <option name="alt_tab_next_window" type="key">
 		    <_short>Key to flip through windows in the switcher</_short>
 		    <_long>fixme</_long>
-            <default>&lt;Alt&gt;p</default>
+            <passive_grab>false</passive_grab>
         </option>
 		<option name="show_minimized_windows" type="bool">
 		    <_short>Show minimized windows in switcher</_short>
