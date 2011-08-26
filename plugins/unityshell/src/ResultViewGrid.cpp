@@ -281,8 +281,6 @@ void ResultViewGrid::OnKeyDown (unsigned long event_type, unsigned long event_ke
                                 unsigned long event_state, const TCHAR* character,
                                 unsigned short key_repeat_count)
 {
-  g_debug ("[ResultViewGrid %p] OnKeyDown", this);
-
   nux::KeyNavDirection direction = nux::KEY_NAV_NONE;
   switch (event_keysym)
   {
@@ -375,7 +373,7 @@ void ResultViewGrid::OnKeyDown (unsigned long event_type, unsigned long event_ke
   selected_index_ = std::min(static_cast<int>(results_.size() - 1), selected_index_);
   focused_uri_ = results_[selected_index_].uri;
 
-  g_debug ("\t new focused_uri: %s", focused_uri_.c_str());
+  selection_change.emit();
 
   NeedRedraw();
 }
@@ -388,15 +386,12 @@ nux::Area* ResultViewGrid::KeyNavIteration(nux::KeyNavDirection direction)
 // crappy name.
 void ResultViewGrid::OnOnKeyNavFocusChange(nux::Area *area)
 {
-
-  g_debug ("[ResultViewGrid %p] OnKeyNavFocusChange", this);
-
   if (HasKeyFocus())
   {
     focused_uri_ = results_.front().uri;
     selected_index_ = 0;
 
-    g_debug ("\t new focused_uri: %s", focused_uri_.c_str());
+    selection_change.emit();
 
     NeedRedraw();
   }
@@ -404,6 +399,8 @@ void ResultViewGrid::OnOnKeyNavFocusChange(nux::Area *area)
   {
     selected_index_ = -1;
     focused_uri_.clear();
+
+    selection_change.emit();
   }
 }
 
