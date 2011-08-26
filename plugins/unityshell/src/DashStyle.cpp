@@ -352,10 +352,10 @@ namespace unity
                     "border-color",
                     _buttonLabelBorderColor);
 
-    ReadDoubleSingle (root,
-                      "button-label",
-                      "border-size",
-                      &_buttonLabelBorderSize);
+    ReadDoubleArray (root,
+                     "button-label",
+                     "border-size",
+                     _buttonLabelBorderSize);
 
     ReadDoubleSingle (root,
                       "button-label",
@@ -423,6 +423,37 @@ namespace unity
                       "text-weight",
                       &_regularTextWeight);
 
+    // separator
+    ReadDoubleSingle (root,
+                      "separator",
+                      "size",
+                      &_separatorSize);
+
+    ReadColorSingle (root,
+                     "separator",
+                     "color",
+                     _separatorColor);
+
+    ReadDoubleSingle (root,
+                      "separator",
+                      "opacity",
+                      &_separatorOpacity);
+
+    ReadDoubleSingle (root,
+                      "separator",
+                      "overlay-opacity",
+                      &_separatorOverlayOpacity);
+
+    ReadModeSingle (root,
+                    "separator",
+                    "overlay-mode",
+                    &_separatorOverlayMode);
+
+    ReadIntSingle (root,
+                   "separator",
+                   "blur-size",
+                   &_separatorBlurSize);
+
     g_object_unref (parser);
 
     // create fallback font-options
@@ -431,7 +462,8 @@ namespace unity
     if (cairo_font_options_status (_defaultFontOptions) == CAIRO_STATUS_SUCCESS)
     {
       cairo_font_options_set_antialias (_defaultFontOptions,
-                                        CAIRO_ANTIALIAS_SUBPIXEL);
+                                        CAIRO_ANTIALIAS_GRAY);
+                                        //CAIRO_ANTIALIAS_SUBPIXEL);
       cairo_font_options_set_subpixel_order (_defaultFontOptions,
                                              CAIRO_SUBPIXEL_ORDER_RGB);
       cairo_font_options_set_hint_style (_defaultFontOptions,
@@ -827,7 +859,12 @@ namespace unity
     _buttonLabelBorderOpacity[nux::NUX_STATE_SELECTED]     = 0.5;
     _buttonLabelBorderOpacity[nux::NUX_STATE_INSENSITIVE]  = 0.5;
 
-    _buttonLabelBorderSize                                 = 1.0;
+    _buttonLabelBorderSize[nux::NUX_STATE_NORMAL]          = 0.5;
+    _buttonLabelBorderSize[nux::NUX_STATE_ACTIVE]          = 2.0;
+    _buttonLabelBorderSize[nux::NUX_STATE_PRELIGHT]        = 0.5;
+    _buttonLabelBorderSize[nux::NUX_STATE_SELECTED]        = 0.5;
+    _buttonLabelBorderSize[nux::NUX_STATE_INSENSITIVE]     = 0.5;
+
 
     _buttonLabelTextSize                                   = 1.0;
 
@@ -901,6 +938,16 @@ namespace unity
     _regularTextSize       = 13.0;
     _regularTextMode       = BLEND_MODE_NORMAL;
     _regularTextWeight     = FONT_WEIGHT_LIGHT;
+
+    // separator
+    _separatorSize           = 1.0;
+    _separatorColor[R]       = 1.0;
+    _separatorColor[G]       = 1.0;
+    _separatorColor[B]       = 1.0;
+    _separatorOpacity        = 0.15;
+    _separatorOverlayOpacity = 0.47;
+    _separatorOverlayMode    = BLEND_MODE_NORMAL;
+    _separatorBlurSize       = 6;
   }
 
   void DashStyle::ArrowPath (cairo_t* cr, Arrow arrow)
@@ -1087,6 +1134,133 @@ namespace unity
     cairo_close_path (cr);
   }
 
+  void DashStyle::RoundedRectSegment (cairo_t*   cr,
+                                      double     aspect,
+                                      double     x,
+                                      double     y,
+                                      double     cornerRadius,
+                                      double     width,
+                                      double     height,
+                                      Segment    segment,
+                                      Arrow      arrow, 
+                                      nux::State state)
+  {
+    double radius = cornerRadius / aspect;
+    double arrow_w = radius / 1.5;
+    double arrow_h = radius / 2.0;
+
+    switch (segment)
+    {
+      case SEGMENT_LEFT:
+        // top-left, right of the corner
+        cairo_move_to (cr, x + radius, y);
+
+        // top-right
+        cairo_line_to (cr, x + width, y);
+
+        if (arrow == ARROW_RIGHT && state == nux::NUX_STATE_ACTIVE)
+		{
+          cairo_line_to (cr, x + width,           y + height / 2.0 - arrow_h);
+          cairo_line_to (cr, x + width - arrow_w, y + height / 2.0);
+          cairo_line_to (cr, x + width,           y + height / 2.0 + arrow_h);
+		}
+
+        // bottom-right
+        cairo_line_to (cr, x + width, y + height);
+
+        // bottom-left, right of the corner
+        cairo_line_to (cr, x + radius, y + height);
+
+        // bottom-left, above the corner
+        cairo_arc (cr,
+                   x + radius,
+                   y + height - radius,
+                   radius,
+                   90.0f * G_PI / 180.0f,
+                   180.0f * G_PI / 180.0f);
+
+        // top-left, right of the corner
+        cairo_arc (cr,
+                   x + radius,
+                   y + radius,
+                   radius,
+                   180.0f * G_PI / 180.0f,
+                   270.0f * G_PI / 180.0f);
+      break;
+
+      case SEGMENT_MIDDLE:
+        // top-left
+        cairo_move_to (cr, x, y);
+
+        // top-right
+        cairo_line_to (cr, x + width, y);
+
+        if ((arrow == ARROW_RIGHT || arrow == ARROW_BOTH) && state == nux::NUX_STATE_ACTIVE)
+		{
+          cairo_line_to (cr, x + width,           y + height / 2.0 - arrow_h);
+          cairo_line_to (cr, x + width - arrow_w, y + height / 2.0);
+          cairo_line_to (cr, x + width,           y + height / 2.0 + arrow_h);
+		}
+
+        // bottom-right
+        cairo_line_to (cr, x + width, y + height);
+
+        // bottom-left
+        cairo_line_to (cr, x, y + height);
+
+        if ((arrow == ARROW_LEFT || arrow == ARROW_BOTH) && state == nux::NUX_STATE_ACTIVE)
+		{
+          cairo_line_to (cr, x,           y + height / 2.0 + arrow_h);
+          cairo_line_to (cr, x + arrow_w, y + height / 2.0);
+          cairo_line_to (cr, x,           y + height / 2.0 - arrow_h);
+		}
+
+        // back to top-left
+        cairo_close_path (cr);
+      break;
+
+      case SEGMENT_RIGHT:
+        // top-left, right of the corner
+        cairo_move_to (cr, x, y);
+
+        // top-right, left of the corner
+        cairo_line_to (cr, x + width - radius, y);
+
+        // top-right, below the corner
+        cairo_arc (cr,
+                   x + width - radius,
+                   y + radius,
+                   radius,
+                   -90.0f * G_PI / 180.0f,
+                   0.0f * G_PI / 180.0f);
+
+        // bottom-right, above the corner
+        cairo_line_to (cr, x + width, y + height - radius);
+
+        // bottom-right, left of the corner
+        cairo_arc (cr,
+                   x + width - radius,
+                   y + height - radius,
+                   radius,
+                   0.0f * G_PI / 180.0f,
+                   90.0f * G_PI / 180.0f);
+
+        // bottom-left
+        cairo_line_to (cr, x, y + height);
+
+        if (arrow == ARROW_LEFT && state == nux::NUX_STATE_ACTIVE)
+		{
+          cairo_line_to (cr, x,           y + height / 2.0 + arrow_h);
+          cairo_line_to (cr, x + arrow_w, y + height / 2.0);
+          cairo_line_to (cr, x,           y + height / 2.0 - arrow_h);
+		}
+
+        // back to top-left
+        cairo_close_path (cr);
+      break;
+    }
+  }
+
   void DashStyle::ButtonOutlinePathSegment (cairo_t* cr, Segment segment)
   {
     double   x  = 0.0;
@@ -1096,14 +1270,14 @@ namespace unity
     double   xt = 0.0;
     double   yt = 0.0;
 
-  // - these absolute values are the "cost" of getting only a SVG from design
-  // and not a generic formular how to approximate the curve-shape, thus
-  // the smallest possible button-size is 22.18x24.0
-  double width  = w - 22.18;
-  double height = h - 24.0;
+    // - these absolute values are the "cost" of getting only a SVG from design
+    // and not a generic formular how to approximate the curve-shape, thus
+    // the smallest possible button-size is 22.18x24.0
+    double width  = w - 22.18;
+    double height = h - 24.0;
 
     xt = x + width + 22.18;
-  yt = y + 12.0;
+    yt = y + 12.0;
 
     switch (segment)
     {
@@ -1112,11 +1286,11 @@ namespace unity
         cairo_move_to (cr, _align (xt), _align (yt));
         xt -= (2.811 + 8.28);
 
-      // top
+        // top
         cairo_line_to (cr, _align (xt - width), _align (yt));
         xt -= width;
 
-      // top left
+        // top left
         cairo_curve_to (cr, _align (xt - 3.748),
                             _align (yt),
                             _align (xt - 6.507),
@@ -1134,11 +1308,11 @@ namespace unity
         xt -= 2.811;
         yt += 9.267;
 
-      // left
+        // left
         cairo_line_to (cr, _align (xt), _align (yt + height));
         yt += height;
 
-      // bottom left
+        // bottom left
         cairo_curve_to (cr, _align (xt + 0.103),
                             _align (yt + 4.355),
                             _align (xt + 1.037),
@@ -1156,7 +1330,7 @@ namespace unity
         xt += 8.28 + width + 8.279 + 2.811;
         yt += 2.735;
 
-      // bottom
+        // bottom
         cairo_line_to (cr, _align (xt), _align (yt));
 
         cairo_close_path (cr);
@@ -1167,23 +1341,23 @@ namespace unity
         cairo_move_to (cr, _align (xt), _align (yt));
         xt -= (2.811 + 8.28);
 
-      // top
+        // top
         cairo_line_to (cr, _align (xt - width - 8.279 - 2.811), _align (yt));
 
-      // top left
+        // top left
         xt -= width;
         xt -= 8.279;
         yt += 2.735;
         xt -= 2.811;
         yt += 9.267 + height + 2.735 + 9.267;
 
-    // left
+        // left
         cairo_line_to (cr, _align (xt), _align (yt));
 
-      // bottom left
+        // bottom left
         xt += 2.811;
         xt += 8.28 + width + 8.279 + 2.811;
-       // bottom
+        // bottom
         cairo_line_to (cr, _align (xt), _align (yt));
 
         cairo_close_path (cr);
@@ -1241,7 +1415,7 @@ namespace unity
 
         cairo_close_path (cr);
       break;
-  }
+    }
   }
 
   void DashStyle::GetTextExtents (int& width,
@@ -1255,9 +1429,9 @@ namespace unity
     PangoLayout*          layout   = NULL;
     PangoFontDescription* desc     = NULL;
     PangoContext*         pangoCtx = NULL;
-    PangoRectangle        logRect  = {0, 0, 0, 0};
+    PangoRectangle        inkRect  = {0, 0, 0, 0};
     int                   dpi      = 0;
-  char*                 fontName = NULL;
+    char*                 fontName = NULL;
     GdkScreen*            screen   = gdk_screen_get_default();  // is not ref'ed
     GtkSettings*          settings = gtk_settings_get_default();// is not ref'ed
 
@@ -1307,10 +1481,10 @@ namespace unity
                                          (float) dpi / (float) PANGO_SCALE);
     }
     pango_layout_context_changed(layout);
-    pango_layout_get_extents(layout, NULL, &logRect);
+    pango_layout_get_extents(layout, &inkRect, NULL);
 
-    width  = (logRect.x + logRect.width) / PANGO_SCALE;
-    height = (logRect.y + logRect.height) / PANGO_SCALE;
+    width  = inkRect.width / PANGO_SCALE;
+    height = inkRect.height / PANGO_SCALE;
 
     // clean up
     pango_font_description_free(desc);
@@ -1325,12 +1499,10 @@ namespace unity
                         double      opacity,
                         std::string label)
   {
-  double                x          = 0.0;
+    double                x          = 0.0;
     double                y          = 0.0;
     int                   w          = 0;
     int                   h          = 0;
-    int                   textWidth  = 0;
-  int                   textHeight = 0;
     PangoLayout*          layout     = NULL;
     PangoFontDescription* desc       = NULL;
     PangoContext*         pangoCtx   = NULL;
@@ -1341,9 +1513,6 @@ namespace unity
 
     w = cairo_image_surface_get_width (cairo_get_target (cr));
     h = cairo_image_surface_get_height (cairo_get_target (cr));
-    GetTextExtents (textWidth, textHeight, w, h, label);
-  x = (w - textWidth) / 2.0;
-    y = (h - textHeight) / 2.0;
 
     if (!screen)
       cairo_set_font_options(cr, _defaultFontOptions);
@@ -1358,7 +1527,7 @@ namespace unity
       desc = pango_font_description_from_string(fontName);
 
     PangoWeight weight;
-  switch (_regularTextWeight)
+    switch (_regularTextWeight)
     {
       case FONT_WEIGHT_REGULAR:
         weight = PANGO_WEIGHT_NORMAL;
@@ -1371,13 +1540,12 @@ namespace unity
       case FONT_WEIGHT_BOLD:
         weight = PANGO_WEIGHT_BOLD;
       break;
-  }
+    }
     pango_font_description_set_weight(desc, weight);
 
     pango_layout_set_font_description(layout, desc);
     pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
     pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_END);
-    pango_layout_set_alignment(layout, PANGO_ALIGN_LEFT);
 
     pango_layout_set_markup(layout, label.c_str(), -1);
     pango_layout_set_width(layout, w * PANGO_SCALE);
@@ -1387,7 +1555,7 @@ namespace unity
 
     if (!screen)
       pango_cairo_context_set_font_options(pangoCtx, _defaultFontOptions);
-  else
+    else
       pango_cairo_context_set_font_options(pangoCtx,
                                            gdk_screen_get_font_options(screen));
 
@@ -1404,8 +1572,13 @@ namespace unity
     }
 
     cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
-  cairo_set_source_rgba (cr, color[R], color[G], color[B], opacity);
+    cairo_set_source_rgba (cr, color[R], color[G], color[B], opacity);
     pango_layout_context_changed(layout);
+	PangoRectangle ink = {0, 0, 0, 0};
+    PangoRectangle log = {0, 0, 0, 0};
+    pango_layout_get_extents (layout, &ink, &log);
+	x = ((double) w - pango_units_to_double (ink.width)) / 2.0;
+    y = ((double) h - pango_units_to_double (log.height)) / 2.0;
     cairo_move_to (cr, x, y);
     pango_cairo_show_layout(cr, layout);
 
@@ -1413,6 +1586,101 @@ namespace unity
     pango_font_description_free(desc);
     g_object_unref(layout);
     g_free(fontName);
+  }
+
+  cairo_operator_t DashStyle::SetBlendMode (cairo_t* cr, BlendMode mode)
+  {
+    // sanity checks
+    if (cairo_status (cr) != CAIRO_STATUS_SUCCESS)
+      return CAIRO_OPERATOR_OVER;
+
+    cairo_operator_t old;
+
+    old = cairo_get_operator (cr);
+
+    if (mode == BLEND_MODE_NORMAL)
+      cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+
+    if (mode == BLEND_MODE_MULTIPLY)
+      cairo_set_operator (cr, CAIRO_OPERATOR_MULTIPLY);
+
+    if (mode == BLEND_MODE_SCREEN)
+      cairo_set_operator (cr, CAIRO_OPERATOR_SCREEN);
+
+    return old;
+  }
+
+  void DashStyle::DrawOverlay (cairo_t*  cr,
+                               double    opacity,
+                               BlendMode mode,
+                               int       blurSize)
+  {
+    // sanity checks
+    if (cairo_status (cr) != CAIRO_STATUS_SUCCESS ||
+        opacity <= 0.0                            ||
+        blurSize <= 0)
+      return;
+
+    cairo_surface_t*     target     = NULL;
+    const unsigned char* data       = NULL;
+    int                  width      = 0;
+    int                  height     = 0;
+    int                  stride     = 0;
+    cairo_format_t       format     = CAIRO_FORMAT_INVALID;
+    unsigned char*       buffer     = NULL;
+    cairo_surface_t*     surface    = NULL;
+    cairo_t*             blurred_cr = NULL;
+    cairo_operator_t     old        = CAIRO_OPERATOR_CLEAR;
+
+    // aquire info about image-surface
+    target = cairo_get_target (cr);
+    data   = cairo_image_surface_get_data (target);
+    width  = cairo_image_surface_get_width (target);
+    height = cairo_image_surface_get_height (target);
+    stride = cairo_image_surface_get_stride (target);
+    format = cairo_image_surface_get_format (target);
+
+    // get buffer
+    buffer = (unsigned char*) calloc (1, height * stride);
+    if (!buffer)
+      return;
+
+    // copy initial image-surface
+    memcpy (buffer, data, height * stride);
+    surface = cairo_image_surface_create_for_data (buffer, 
+                                                   format,
+                                                   width,
+                                                   height,
+                                                   stride);
+    if (cairo_surface_status (surface) != CAIRO_STATUS_SUCCESS)
+    {
+      cairo_surface_destroy (surface);
+      free (buffer);
+      return;
+    }
+
+    // prepare context
+    blurred_cr = cairo_create (surface);
+    if (cairo_status (blurred_cr) != CAIRO_STATUS_SUCCESS)
+    {
+      cairo_destroy (blurred_cr);
+      cairo_surface_destroy (surface);
+      free (buffer);
+      return;
+    }
+
+    // blur and blend overlay onto initial image-surface
+    Blur (blurred_cr, blurSize);
+    //cairo_surface_write_to_png (surface, "/tmp/overlay-surface.png");
+    cairo_set_source_surface (cr, surface, 0.0, 0.0);
+    old = SetBlendMode (cr, mode);
+    cairo_paint_with_alpha (cr, opacity);
+
+    // clean up
+    cairo_destroy (blurred_cr);
+    cairo_surface_destroy (surface);
+    free (buffer);
+    cairo_set_operator (cr, old);
   }
 
   bool DashStyle::Button (cairo_t* cr, nux::State state, std::string label)
@@ -1424,7 +1692,18 @@ namespace unity
     if (cairo_surface_get_type (cairo_get_target (cr)) != CAIRO_SURFACE_TYPE_IMAGE)
       return false;
 
-    ButtonOutlinePath (cr, true);
+    //ButtonOutlinePath (cr, true);
+    double w = cairo_image_surface_get_width (cairo_get_target (cr));
+    double h = cairo_image_surface_get_height (cairo_get_target (cr));
+    RoundedRect (cr,
+                 1.0,
+                 2.0,
+                 2.0,
+                 h / 4.0,
+                 w - 4.0,
+                 h - 4.0,
+                 false);
+
     if (_buttonLabelFillOpacity[state] != 0.0)
     {
       cairo_set_source_rgba (cr,
@@ -1439,9 +1718,9 @@ namespace unity
                            _buttonLabelBorderColor[state][G],
                            _buttonLabelBorderColor[state][B],
                            _buttonLabelBorderOpacity[state]);
-    cairo_set_line_width (cr, _buttonLabelBorderSize);
+    cairo_set_line_width (cr, _buttonLabelBorderSize[state]);
     cairo_stroke (cr);
-  Text (cr,
+    Text (cr,
         _buttonLabelTextSize,
         _buttonLabelTextColor[state],
         _buttonLabelTextOpacity[state],
@@ -1545,7 +1824,33 @@ namespace unity
     if (cairo_surface_get_type (cairo_get_target (cr)) != CAIRO_SURFACE_TYPE_IMAGE)
       return false;
 
-    ButtonOutlinePathSegment (cr, segment);
+    //ButtonOutlinePathSegment (cr, segment);
+    double   x  = 0.0;
+    double   y  = 2.0;
+    double   w  = cairo_image_surface_get_width (cairo_get_target (cr));
+    double   h  = cairo_image_surface_get_height (cairo_get_target (cr)) - 4.0;
+
+	if (segment == SEGMENT_LEFT)
+	{
+      x = 2.0;
+      w -= 2.0;
+	}
+
+	if (segment == SEGMENT_RIGHT)
+	{
+      w -= 2.0;
+	}
+
+    RoundedRectSegment (cr,
+                        1.0,
+                        x,
+                        y,
+                        h / 4.0,
+                        w,
+                        h,
+                        segment,
+                        arrow,
+                        state);
 
     if (_buttonLabelFillOpacity[state] != 0.0)
     {
@@ -1561,25 +1866,13 @@ namespace unity
                            _buttonLabelBorderColor[state][G],
                            _buttonLabelBorderColor[state][B],
                            _buttonLabelBorderOpacity[state]);
-    cairo_set_line_width (cr, _buttonLabelBorderSize);
+    cairo_set_line_width (cr, _buttonLabelBorderSize[state]);
     cairo_stroke (cr);
-  Text (cr,
+    Text (cr,
         _buttonLabelTextSize,
         _buttonLabelTextColor[state],
         _buttonLabelTextOpacity[state],
         label);
-
-  // drawing the arrows only makes sense for the middle segments being active
-    if (state == nux::NUX_STATE_ACTIVE &&
-        segment == SEGMENT_MIDDLE &&
-        arrow != ARROW_NONE)
-  {
-      ArrowPath (cr, arrow);
-      //cairo_set_source_rgba (cr, 1.0, 0.0, 0.0, 1.0);
-      cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
-      cairo_fill (cr);
-    cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
-  }
 
     return true;
   }
@@ -1638,24 +1931,64 @@ namespace unity
 
   bool DashStyle::SeparatorVert (cairo_t* cr)
   {
-  // sanity checks
+    // sanity checks
     if (cairo_status (cr) != CAIRO_STATUS_SUCCESS)
       return false;
 
     if (cairo_surface_get_type (cairo_get_target (cr)) != CAIRO_SURFACE_TYPE_IMAGE)
       return false;
+
+    double w = cairo_image_surface_get_width (cairo_get_target (cr));
+    double h = cairo_image_surface_get_height (cairo_get_target (cr));
+    double x = w / 2.0;
+    double y = 2.0;
+
+    cairo_set_line_width (cr, _separatorSize);
+    cairo_set_source_rgba (cr,
+                           _separatorColor[R],
+                           _separatorColor[G],
+                           _separatorColor[B],
+                           _separatorOpacity);
+    cairo_move_to (cr, _align (x), _align (y));
+    cairo_line_to (cr, _align (x), _align (h - 4.0));
+    cairo_stroke (cr);
+
+    DrawOverlay (cr,
+                 _separatorOverlayOpacity,
+                 _separatorOverlayMode,
+                 _separatorBlurSize);
 
     return true;
   }
 
   bool DashStyle::SeparatorHoriz (cairo_t* cr)
   {
-  // sanity checks
+    // sanity checks
     if (cairo_status (cr) != CAIRO_STATUS_SUCCESS)
       return false;
 
     if (cairo_surface_get_type (cairo_get_target (cr)) != CAIRO_SURFACE_TYPE_IMAGE)
       return false;
+
+    double w = cairo_image_surface_get_width (cairo_get_target (cr));
+    double h = cairo_image_surface_get_height (cairo_get_target (cr));
+    double x = 2.0;
+    double y = h / 2.0;
+
+    cairo_set_line_width (cr, _separatorSize);
+    cairo_set_source_rgba (cr,
+                           _separatorColor[R],
+                           _separatorColor[G],
+                           _separatorColor[B],
+                           _separatorOpacity);
+    cairo_move_to (cr, _align (x), _align (y));
+    cairo_line_to (cr, _align (w - 4.0), _align (y));
+    cairo_stroke (cr);
+
+    DrawOverlay (cr,
+                 _separatorOverlayOpacity,
+                 _separatorOverlayMode,
+                 _separatorBlurSize);
 
     return true;
   }

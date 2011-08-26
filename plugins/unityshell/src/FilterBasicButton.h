@@ -54,6 +54,9 @@ namespace unity {
     nux::CairoWrapper *active_;
     nux::CairoWrapper *normal_;
     nux::Geometry cached_geometry_;
+
+  private:
+    std::string label_;
   };
 
 }

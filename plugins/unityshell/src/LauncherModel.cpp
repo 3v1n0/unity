@@ -142,6 +142,12 @@ LauncherModel::OnIconRemove(LauncherIcon* icon)
 }
 
 void
+LauncherModel::Save()
+{
+  saved.emit();
+}
+
+void
 LauncherModel::Sort()
 {
   _inner_shelf.sort(&LauncherModel::CompareIcons);

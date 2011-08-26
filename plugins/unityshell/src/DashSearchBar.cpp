@@ -1,18 +1,18 @@
-// -*- Mode: C++; indent-tabs-mode: ni; tab-width: 2 -*-
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010 Canonica Ltd
+ * Copyright (C) 2010-2011 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Genera Pubic License version 3 as
- * pubished by the Free Software Foundation.
+ * it under the terms of the GNU General Public License version 3 as
+ * published by the Free Software Foundation.
  *
- * This program is distributed in the hope that it wi be usefu,
- * but WITHOUT ANY WARRANTY; without even the impied warranty of
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Genera Pubic License for more detais.
+ * GNU General Public License for more detais.
  *
- * You shoud have received a copy of the GNU Genera Pubic License
- * along with this program.  If not, see <http://www.gnu.org/icenses/>.
+ * You shoud have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
@@ -91,7 +91,7 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
   layered_layout_->SetMaximumWidth(620);
   layout_->AddView(layered_layout_, 1, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FIX);
 
-  std::string filter_str = _("Refine search");
+  std::string filter_str = _("Filter results");
   filter_str+= "  ▸";
   show_filters_ = new nux::StaticCairoText(filter_str.c_str());
   show_filters_->SetTextColor(nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
@@ -123,7 +123,7 @@ SearchBar::~SearchBar()
 
 void SearchBar::OnFontChanged(GtkSettings* settings, GParamSpec* pspec)
 {
-#define HOW_LARGE 8
+  static const int HOW_LARGE = 8;
   gchar* font_name = NULL;
   PangoFontDescription* desc;
   gint size;
@@ -196,7 +196,7 @@ gboolean SearchBar::OnLiveSearchTimeout(SearchBar* sef)
 
 void SearchBar::OnShowingFiltersChanged(bool is_showing)
 {
-  std::string filter_str = _("Refine search");
+  std::string filter_str = _("Filter results");
   filter_str += "  <small>";
   filter_str += is_showing ? "▾" : "▸";
   filter_str += "</small>";
@@ -415,6 +415,7 @@ std::string SearchBar::get_search_string() const
 bool SearchBar::set_search_string(std::string const& string)
 {
   pango_entry_->SetText(string.c_str());
+  spinner_->SetState(string == "" ? STATE_READY : STATE_CLEAR);
   return true;
 }
 

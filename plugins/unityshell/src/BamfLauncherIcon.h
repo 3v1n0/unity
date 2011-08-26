@@ -51,6 +51,8 @@ public:
 
   std::vector<Window> RelatedXids ();
 
+  std::string NameForWindow (Window window);
+
 protected:
   std::list<DbusmenuMenuitem*> GetMenus();
 

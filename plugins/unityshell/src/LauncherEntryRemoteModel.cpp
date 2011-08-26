@@ -97,21 +97,6 @@ LauncherEntryRemoteModel::~LauncherEntryRemoteModel()
 }
 
 /**
- * Get a pointer to the default LauncherEntryRemoteModel singleton for this
- * process. The return value should not be freed.
- */
-LauncherEntryRemoteModel*
-LauncherEntryRemoteModel::GetDefault()
-{
-  static LauncherEntryRemoteModel* singleton = NULL;
-
-  if (singleton == NULL)
-    singleton = new LauncherEntryRemoteModel();
-
-  return singleton;
-}
-
-/**
  * Return the number of unique LauncherEntryRemote objects managed by the model.
  * The entries are identified by their LauncherEntryRemote::AppUri property.
  */

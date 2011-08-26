@@ -56,6 +56,7 @@ protected:
   // Introspectable methods
   const gchar* GetName();
   void AddProperties(GVariantBuilder* builder);
+  static gboolean OnTimeout(SearchBarSpinner* self);
   static gboolean OnFrame(SearchBarSpinner* self);
 
   // Key navigation
@@ -76,6 +77,7 @@ private:
   float        _rotation;
 
   guint32 _spinner_timeout;
+  guint32 _frame_timeout;
 };
 
 }

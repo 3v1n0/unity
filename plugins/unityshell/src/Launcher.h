@@ -28,6 +28,7 @@
 #include <Nux/BaseWindow.h>
 
 #include "AbstractIconRenderer.h"
+#include "BackgroundEffectHelper.h"
 #include "DNDCollectionWindow.h"
 #include "DndData.h"
 #include "GeisAdapter.h"
@@ -339,7 +340,7 @@ private:
 
   static void OnActionDone(GVariant* data, void* val);
 
-  void RenderIconToTexture(nux::GraphicsEngine& GfxContext, LauncherIcon* icon, nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture);
+  void RenderIconToTexture(nux::GraphicsEngine& GfxContext, LauncherIcon* icon, nux::ObjectPtr<nux::IOpenGLBaseTexture> texture);
 
   LauncherIcon* MouseIconIntersection(int x, int y);
   void EventLogic();
@@ -358,13 +359,11 @@ private:
   virtual long PostLayoutManagement(long LayoutResult);
   virtual void PositionChildLayout(float offsetX, float offsetY);
 
-  void SetOffscreenRenderTarget(nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture);
+  void SetOffscreenRenderTarget(nux::ObjectPtr<nux::IOpenGLBaseTexture> texture);
   void RestoreSystemRenderTarget();
 
   gboolean TapOnSuper();
 
-  static void SettingsChanged(GSettings* settings, gchar* key, Launcher* self);
-  
   void OnDNDDataCollected(const std::list<char*>& mimes);
 
   nux::HLayout* m_Layout;
@@ -408,7 +407,7 @@ private:
   UrgentAnimation _urgent_animation;
   AutoHideAnimation _autohide_animation;
 
-  nux::IntrusiveSP<nux::IOpenGLBaseTexture> _offscreen_drag_texture;
+  nux::ObjectPtr<nux::IOpenGLBaseTexture> _offscreen_drag_texture;
 
   int _space_between_icons;
   int _icon_size;
@@ -482,14 +481,13 @@ private:
 
   bool _initial_drag_animation;
 
-  GSettings* _settings;
-  guint32 _settings_changed_id;
-
   guint _ubus_handles[4];
 
   nux::Color _background_color;
   bool _dash_is_open;
+  
   AbstractIconRenderer::Ptr icon_renderer;
+  BackgroundEffectHelper bg_effect_helper_;
 };
 
 #endif // LAUNCHER_H

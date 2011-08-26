@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 Canonical Ltd
+ * Copyright (C) 2011 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -16,25 +16,28 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#include "PlaceFactory.h"
-#include "PlaceFactoryFile.h"
+#ifndef UNITY_FONT_SETTINGS_H_
+#define UNITY_FONT_SETTINGS_H_
 
-static PlaceFactory* default_factory = NULL;
+#include <gtk/gtk.h>
 
-PlaceFactory*
-PlaceFactory::GetDefault()
+#include <UnityCore/GLibSignal.h>
+
+namespace unity
 {
-  if (!default_factory)
-    default_factory = new PlaceFactoryFile();
 
-  return default_factory;
+class FontSettings
+{
+public:
+  FontSettings();
+
+private:
+  void Refresh(GtkSettings* unused0=nullptr, GParamSpec* unused1=nullptr);
+
+private:
+  glib::SignalManager sig_man_;
+};
+
 }
 
-void
-PlaceFactory::SetDefault(PlaceFactory* factory)
-{
-  if (default_factory)
-    delete default_factory;
-
-  default_factory = factory;
-}
+#endif

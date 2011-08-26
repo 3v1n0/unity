@@ -35,8 +35,6 @@
 #include "Nux/BaseWindow.h"
 #include "Nux/WindowCompositor.h"
 
-#include "BamfLauncherIcon.h"
-#include "FavoriteStore.h"
 #include "Launcher.h"
 #include "LauncherIcon.h"
 #include "SpacerLauncherIcon.h"
@@ -314,11 +312,6 @@ Launcher::Launcher(nux::BaseWindow* parent,
                                this,
                                NULL);
 
-  _settings = g_settings_new("com.canonical.Unity.Launcher");
-  _settings_changed_id = g_signal_connect(
-                           _settings, "changed", (GCallback)(Launcher::SettingsChanged), this);
-  SettingsChanged(_settings, (gchar*)"shows-on-edge", this);
-
   SetDndEnabled(false, true);
 
   icon_renderer = AbstractIconRenderer::Ptr(new IconRenderer());
@@ -328,6 +321,9 @@ Launcher::Launcher(nux::BaseWindow* parent,
   ubus_server_send_message (ubus, UBUS_BACKGROUND_REQUEST_COLOUR_EMIT, NULL);
 
   SetAcceptMouseWheelEvent(true);
+
+  bg_effect_helper_.owner = this;
+  bg_effect_helper_.enabled = true;
 }
 
 Launcher::~Launcher()
@@ -350,11 +346,6 @@ Launcher::~Launcher()
     g_source_remove(_ignore_repeat_shortcut_handle);
   if (_super_hide_launcher_handle)
     g_source_remove(_super_hide_launcher_handle);
-
-  if (_settings_changed_id != 0)
-    g_signal_handler_disconnect((gpointer) _settings, _settings_changed_id);
-  g_object_unref(_settings);
-
   if (_launcher_animation_timeout > 0)
     g_source_remove(_launcher_animation_timeout);
     
@@ -382,13 +373,6 @@ const gchar*
 Launcher::GetName()
 {
   return "Launcher";
-}
-
-void
-Launcher::SettingsChanged(GSettings* settings, char* key, Launcher* self)
-{
-  bool show_on_edge = g_settings_get_boolean(settings, "shows-on-edge") ? true : false;
-  self->_hide_machine->SetShowOnEdge(show_on_edge);
 }
 
 void
@@ -1027,6 +1011,7 @@ void Launcher::SetupRenderArg(LauncherIcon* icon, struct timespec const& current
   arg.progress_bias       = IconProgressBias(icon, current);
   arg.progress            = CLAMP(icon->GetProgress(), 0.0f, 1.0f);
   arg.draw_shortcut       = _shortcuts_shown && !_hide_machine->GetQuirk(LauncherHideMachine::PLACES_VISIBLE);
+  arg.system_item         = icon->Type() == LauncherIcon::TYPE_HOME;
   
   if (_dash_is_open)
     arg.active_arrow = icon->Type() == LauncherIcon::TYPE_HOME;
@@ -1399,7 +1384,9 @@ void Launcher::EndKeyShowLauncher()
 
   // it's a tap on super and we didn't use any shortcuts
   if (TapOnSuper() && !_latest_shortcut)
-    ubus_server_send_message(ubus_server_get_default(), UBUS_DASH_EXTERNAL_ACTIVATION, NULL);
+    ubus_server_send_message(ubus_server_get_default(),
+                             UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
+                             g_variant_new("(sus)", "home.lens", 0, ""));
 
   remaining_time_before_hide = BEFORE_HIDE_LAUNCHER_ON_SUPER_DURATION - CLAMP((int)(TimeDelta(&current, &_times[TIME_SUPER_PRESSED])), 0, BEFORE_HIDE_LAUNCHER_ON_SUPER_DURATION);
 
@@ -1512,10 +1499,14 @@ void Launcher::SetHidden(bool hidden)
   else
     _hide_machine->SetQuirk(LauncherHideMachine::MOUSE_MOVE_POST_REVEAL, false);
 
-  if (hidden)
-  {
+  if (hidden)  {
+    bg_effect_helper_.enabled = false;
     _hide_machine->SetQuirk(LauncherHideMachine::MT_DRAG_OUT, false);
     SetStateMouseOverLauncher(false);
+  }
+  else
+  {
+    bg_effect_helper_.enabled = true;
   }
 
   _postreveal_mousemove_delta_x = 0;
@@ -1552,7 +1543,7 @@ Launcher::CheckIntersectWindow(CompWindow* window)
   int intersect_types = CompWindowTypeNormalMask | CompWindowTypeDialogMask |
                         CompWindowTypeModalDialogMask | CompWindowTypeUtilMask;
 
-  if (!window || !(window->type() & intersect_types) || !window->isMapped() || !window->isViewable())
+  if (!window || !(window->type() & intersect_types) || !window->isMapped() || !window->isViewable() || window->minimized())
     return false;
 
   if (CompRegion(window->borderRect()).intersects(CompRect(geo.x, geo.y, geo.width, geo.height)))
@@ -2047,9 +2038,43 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   GfxContext.PushClippingRectangle(base);
   gPainter.PushDrawColorLayer(GfxContext, base, nux::Color(0x00000000), true, ROP);
 
+  GfxContext.GetRenderStates().SetBlend(true);
+  GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
+  GfxContext.GetRenderStates().SetColorMask(true, true, true, true);
+
+  int push_count = 1;
+
   // clip vertically but not horizontally
   GfxContext.PushClippingRectangle(nux::Geometry(base.x, bkg_box.y, base.width, bkg_box.height));
   
+  if (BackgroundEffectHelper::blur_type != unity::BLUR_NONE && (bkg_box.x + bkg_box.width > 0))
+  {
+    nux::Geometry geo_absolute = GetAbsoluteGeometry();
+    
+    nux::Geometry blur_geo(geo_absolute.x, geo_absolute.y, base.width, base.height);
+    auto blur_texture = bg_effect_helper_.GetBlurRegion(blur_geo);
+
+    if (blur_texture.IsValid())
+    {
+      nux::TexCoordXForm texxform_blur_bg;
+      texxform_blur_bg.flip_v_coord = true;
+      texxform_blur_bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+      texxform_blur_bg.uoffset = ((float) base.x) / geo_absolute.width;
+      texxform_blur_bg.voffset = ((float) base.y) / geo_absolute.height;
+
+      GfxContext.PushClippingRectangle(bkg_box);
+      gPainter.PushDrawTextureLayer(GfxContext, base,
+                                    blur_texture,
+                                    texxform_blur_bg,
+                                    nux::color::White,
+                                    true,
+                                    ROP);
+      GfxContext.PopClippingRectangle();
+      
+      push_count++;
+    }
+  }
+
   if (_dash_is_open)
   {
     gPainter.Paint2DQuadColor(GfxContext, bkg_box, _background_color);
@@ -2078,21 +2103,24 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     icon_renderer->RenderIcon(GfxContext, *rev_it, bkg_box, base);
   }
 
-  gPainter.Paint2DQuadColor(GfxContext,
-                            nux::Geometry(bkg_box.x + bkg_box.width - 1,
-                                          bkg_box.y,
-                                          1,
-                                          bkg_box.height),
-                            nux::Color(0x60606060));
-  gPainter.Paint2DQuadColor(GfxContext,
-                            nux::Geometry(bkg_box.x,
-                                          bkg_box.y,
-                                          bkg_box.width,
-                                          20),
-                            nux::Color(0x60000000),
-                            nux::Color(0x00000000),
-                            nux::Color(0x00000000),
-                            nux::Color(0x60000000));
+  if (!_dash_is_open)
+  {
+    gPainter.Paint2DQuadColor(GfxContext,
+                              nux::Geometry(bkg_box.x + bkg_box.width - 1,
+                                            bkg_box.y,
+                                            1,
+                                            bkg_box.height),
+                              nux::Color(0x60606060));
+    gPainter.Paint2DQuadColor(GfxContext,
+                              nux::Geometry(bkg_box.x,
+                                            bkg_box.y,
+                                            bkg_box.width,
+                                            20),
+                              nux::Color(0x60000000),
+                              nux::Color(0x00000000),
+                              nux::Color(0x00000000),
+                              nux::Color(0x60000000));
+  }
 
   // FIXME: can be removed for a bgk_box->SetAlpha once implemented
   GfxContext.GetRenderStates().SetPremultipliedBlend(nux::DST_IN);
@@ -2102,7 +2130,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   GfxContext.GetRenderStates().SetColorMask(true, true, true, true);
   GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
 
-  gPainter.PopBackground();
+  gPainter.PopBackground(push_count);
   GfxContext.PopClippingRectangle();
 }
 
@@ -2231,29 +2259,9 @@ void Launcher::EndIconDrag()
       EnsureAnimation();
     }
     else
-    {
-
-      std::list<BamfLauncherIcon*> launchers;
-      std::list<BamfLauncherIcon*>::iterator it;
-      unity::FavoriteList desktop_paths;
-
-      // Updates gsettings favorites.
-      launchers = _model->GetSublist<BamfLauncherIcon> ();
-      for (it = launchers.begin(); it != launchers.end(); it++)
-      {
-        BamfLauncherIcon* icon = *it;
-
-        if (!icon->IsSticky())
-          continue;
-
-        const char* desktop_file = icon->DesktopFile();
-
-        if (desktop_file && strlen(desktop_file) > 0)
-          desktop_paths.push_back(desktop_file);
-      }
-
-      unity::FavoriteStore::GetDefault().SetFavorites(desktop_paths);
-
+    { 
+      _model->Save();
+        
       _drag_window->SetAnimationTarget((int)(_drag_icon->GetCenter().x), (int)(_drag_icon->GetCenter().y));
       _drag_window->StartAnimation();
 
@@ -2761,8 +2769,9 @@ LauncherIcon* Launcher::MouseIconIntersection(int x, int y)
     nux::Point2 screen_coord [4];
     for (int i = 0; i < 4; ++i)
     {
-      screen_coord [i].x = (*it)->GetTransform("HitArea") [i].x;
-      screen_coord [i].y = (*it)->GetTransform("HitArea") [i].y;
+      auto hit_transform = (*it)->GetTransform(AbstractLauncherIcon::TRANSFORM_HIT_AREA);
+      screen_coord [i].x = hit_transform [i].x;
+      screen_coord [i].y = hit_transform [i].y;
     }
     inside = PointInside2DPolygon(screen_coord, 4, mouse_position, 1);
     if (inside)
@@ -2773,7 +2782,7 @@ LauncherIcon* Launcher::MouseIconIntersection(int x, int y)
 }
 
 void
-Launcher::RenderIconToTexture(nux::GraphicsEngine& GfxContext, LauncherIcon* icon, nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture)
+Launcher::RenderIconToTexture(nux::GraphicsEngine& GfxContext, LauncherIcon* icon, nux::ObjectPtr<nux::IOpenGLBaseTexture> texture)
 {
   RenderArg arg;
   struct timespec current;
@@ -2799,7 +2808,7 @@ Launcher::RenderIconToTexture(nux::GraphicsEngine& GfxContext, LauncherIcon* ico
 }
 
 void
-Launcher::SetOffscreenRenderTarget(nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture)
+Launcher::SetOffscreenRenderTarget(nux::ObjectPtr<nux::IOpenGLBaseTexture> texture)
 {
   int width = texture->GetWidth();
   int height = texture->GetHeight();

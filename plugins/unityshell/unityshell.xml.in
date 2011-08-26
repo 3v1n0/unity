@@ -148,6 +148,11 @@
 		    <_long>fixme</_long>
 		    <default>&lt;Alt&gt;grave</default>
                 </option>
+		<option name="show_minimized_windows" type="bool">
+		    <_short>Show minimized windows in switcher</_short>
+		    <_long>Hack to enable minimized windows in switcher. Disable and report bugs if problems are caused</_long>
+		    <default>true</default>
+		</option>
               </group>
               <group>
                 <_short>Experimental</_short>

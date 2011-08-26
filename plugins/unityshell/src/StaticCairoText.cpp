@@ -308,7 +308,7 @@ void StaticCairoText::GetTextExtents(const TCHAR* font,
   if (!font)
     return;
 
-  if (_need_new_extent_cache == false)
+  if (!_need_new_extent_cache)
   {
     width = _cached_extent_width;
     height = _cached_extent_height;
@@ -320,6 +320,7 @@ void StaticCairoText::GetTextExtents(const TCHAR* font,
   surface = cairo_image_surface_create(CAIRO_FORMAT_A1, 1, 1);
   cr = cairo_create(surface);
   cairo_set_font_options(cr, gdk_screen_get_font_options(screen));
+  
   layout = pango_cairo_create_layout(cr);
   desc = pango_font_description_from_string(font);
   pango_layout_set_font_description(layout, desc);

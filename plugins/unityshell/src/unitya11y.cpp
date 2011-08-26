@@ -39,7 +39,6 @@
 #include "unity-launcher-accessible.h"
 #include "unity-launcher-icon-accessible.h"
 #include "unity-panel-view-accessible.h"
-#include "unity-panel-home-button-accessible.h"
 #include "unity-places-view-accessible.h"
 #include "unity-search-bar-accessible.h"
 
@@ -261,9 +260,6 @@ unity_a11y_create_accessible(nux::Object* object)
 
   if (object->Type().IsDerivedFromType(PanelView::StaticObjectType))
     return unity_panel_view_accessible_new(object);
-
-  if (object->Type().IsDerivedFromType(PanelHomeButton::StaticObjectType))
-    return unity_panel_home_button_accessible_new(object);
 
   if (object->Type().IsDerivedFromType(DashView::StaticObjectType))
     return unity_places_view_accessible_new(object);

@@ -37,6 +37,8 @@
 #include <libdbusmenu-glib/client.h>
 #include <libdbusmenu-glib/menuitem.h>
 
+#include <boost/unordered_map.hpp>
+
 #include "AbstractLauncherIcon.h"
 #include "Tooltip.h"
 #include "QuicklistView.h"
@@ -97,6 +99,8 @@ public:
   int RelatedWindows();
 
   virtual std::vector<Window> RelatedXids () { return std::vector<Window> (); }
+
+  virtual std::string NameForWindow (Window window) { return std::string(); }
 
   bool HasWindowOnViewport();
 
@@ -174,7 +178,7 @@ public:
 
   void SetIconType(IconType type);
 
-  std::vector<nux::Vector4> & GetTransform(std::string const& name);
+  std::vector<nux::Vector4> & GetTransform(TransformIndex index);
 
   static void SetSkipTooltipDelay(gboolean skip_tooltip_delay);
 
@@ -328,7 +332,7 @@ private:
   struct timespec  _quirk_times[QUIRK_LAST];
 
   std::list<LauncherEntryRemote*> _entry_list;
-  std::map<std::string, std::vector<nux::Vector4> > transform_map;
+  std::map<TransformIndex, std::vector<nux::Vector4> > transform_map;
   
 };
 
