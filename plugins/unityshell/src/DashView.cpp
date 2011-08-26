@@ -127,16 +127,27 @@ void DashView::SetupUBusConnections()
 
 void DashView::Relayout()
 {
-  g_warning ("doing relayout cycle");
   DashSettings* settings = DashSettings::GetDefault();
   nux::Geometry geo = GetGeometry();
   content_geo_ = GetBestFitGeometry(geo);
+  GdkScreen*    screen = gdk_screen_get_default();
+  gint          primary_monitor;
+  GdkRectangle  monitor_geo;
+
 
   if (settings->GetFormFactor() == DashSettings::NETBOOK)
   {
     if (geo.width >= content_geo_.width && geo.height > content_geo_.height)
       content_geo_ = geo;
   }
+
+  primary_monitor = gdk_screen_get_primary_monitor(screen);
+  gdk_screen_get_monitor_geometry(screen, primary_monitor, &monitor_geo);
+
+  // kinda hacky, but it makes sure the content isn't so big that it throws
+  // the bottom of the dash off the screen
+  // not hugely happy with this, so FIXME
+  lenses_layout_->SetMaximumHeight (content_geo_.height - search_bar_->GetGeometry().height - lens_bar_->GetGeometry().height);
 
   content_layout_->SetMinMaxSize(content_geo_.width, content_geo_.height);
 
@@ -149,11 +160,7 @@ void DashView::Relayout()
 // look tight
 nux::Geometry DashView::GetBestFitGeometry(nux::Geometry const& for_geo)
 {
-  g_warning ("get best fit geometry");
   PlacesStyle* style = PlacesStyle::GetDefault();
-  GdkScreen*    screen = gdk_screen_get_default();
-  gint          primary_monitor;
-  GdkRectangle  monitor_geo;
 
   int width = 0, height = 0;
   int tile_width = style->GetTileWidth();
@@ -174,21 +181,6 @@ nux::Geometry DashView::GetBestFitGeometry(nux::Geometry const& for_geo)
     width = MIN(width, for_geo.width-66);
     height = MIN(height, for_geo.height-24);
   }
-
-  primary_monitor = gdk_screen_get_primary_monitor(screen);
-  gdk_screen_get_monitor_geometry(screen, primary_monitor, &monitor_geo);
-
-  if (width > monitor_geo.width)
-    width = monitor_geo.width;
-
-  if (height > monitor_geo.height)
-    height = monitor_geo.height;
-
-  LOG_DEBUG (logger) << "Returning the best fit geometry for "
-                      << for_geo.width << ", " << for_geo.height
-                      << "to: " << width << ", " << height;
-
-  g_warning ("returning best fit of %i, %i", width, height);
 
   return nux::Geometry(0, 0, width, height);
 }
