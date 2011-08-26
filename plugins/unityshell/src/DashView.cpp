@@ -21,6 +21,7 @@
 #include <gio/gdesktopappinfo.h>
 #include <glib/gi18n-lib.h>
 #include <gtk/gtk.h>
+#include <gdk/gdk.h>
 
 #include <NuxCore/Logger.h>
 #include <UnityCore/GLibWrapper.h>
@@ -95,7 +96,7 @@ void DashView::SetupViews()
   SetLayout(layout_);
 
   content_layout_ = new nux::VLayout();
-  layout_->AddLayout(content_layout_, 1, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FIX); 
+  layout_->AddLayout(content_layout_, 1, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FIX);
   search_bar_ = new SearchBar();
   search_bar_->activated.connect(sigc::mem_fun(this, &DashView::OnEntryActivated));
   search_bar_->search_changed.connect(sigc::mem_fun(this, &DashView::OnSearchChanged));
@@ -126,15 +127,27 @@ void DashView::SetupUBusConnections()
 
 void DashView::Relayout()
 {
+  GdkScreen*    screen = gdk_screen_get_default();
+  gint          primary_monitor;
+  GdkRectangle  monitor_geo;
   DashSettings* settings = DashSettings::GetDefault();
   nux::Geometry geo = GetGeometry();
   content_geo_ = GetBestFitGeometry(geo);
-    
+
   if (settings->GetFormFactor() == DashSettings::NETBOOK)
   {
     if (geo.width >= content_geo_.width && geo.height > content_geo_.height)
       content_geo_ = geo;
   }
+
+  primary_monitor = gdk_screen_get_primary_monitor(screen);
+  gdk_screen_get_monitor_geometry(screen, primary_monitor, &monitor_geo);
+
+  if (monitor_geo.width < content_geo_.width)
+    content_geo_.width = monitor_geo.width;
+
+  if (monitor_geo.height < content_geo_.height)
+    content_geo_.height = monitor_geo.height;
 
   content_layout_->SetMinMaxSize(content_geo_.width, content_geo_.height);
 
@@ -153,7 +166,7 @@ nux::Geometry DashView::GetBestFitGeometry(nux::Geometry const& for_geo)
   int tile_width = style->GetTileWidth();
   int tile_height = style->GetTileHeight();
   int half = for_geo.width / 2;
-  
+
   while ((width += tile_width) < half)
     ;
 
@@ -282,7 +295,7 @@ void DashView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
         texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
         texxform.SetWrap(nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
 
-        gfx_context.QRP_1Tex(geo.x - left_corner_offset, 
+        gfx_context.QRP_1Tex(geo.x - left_corner_offset,
                             geo.y + (geo.height - left_corner->GetHeight()),
                             left_corner->GetWidth(),
                             left_corner->GetHeight(),
@@ -312,7 +325,7 @@ void DashView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
         texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
         texxform.SetWrap(nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
 
-        gfx_context.QRP_1Tex(geo.x - left_corner_offset, 
+        gfx_context.QRP_1Tex(geo.x - left_corner_offset,
                             geo.y + (geo.height - left_corner->GetHeight()),
                             left_corner->GetWidth(),
                             left_corner->GetHeight(),
@@ -338,7 +351,7 @@ void DashView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
         texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
         texxform.SetWrap(nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
 
-        gfx_context.QRP_1Tex(geo.x + geo.width - right->GetWidth(), 
+        gfx_context.QRP_1Tex(geo.x + geo.width - right->GetWidth(),
                             geo.y - top_corner_offset,
                             top_corner->GetWidth(),
                             top_corner->GetHeight(),
@@ -532,7 +545,7 @@ void DashView::OnLensBarActivated(std::string const& id)
   search_bar_->text_entry()->SelectAll();
   search_bar_->text_entry()->SetFocused(true);
   nux::GetWindowCompositor().SetKeyFocusArea(search_bar_->text_entry());
-  
+
   view->QueueDraw();
   QueueDraw();
 }
