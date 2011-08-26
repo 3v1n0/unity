@@ -94,7 +94,7 @@ compiz::MinimizedWindowHandler::minimize ()
   Atom          actualType;
   int           actualFormat;
   unsigned long nItems, nLeft;
-  char          *prop;
+  void          *prop;
   unsigned long data[2];
   Window        root = DefaultRootWindow (priv->mDpy), parent = priv->mXid, lastParent = priv->mXid;
   Window        *children;
@@ -175,7 +175,7 @@ compiz::MinimizedWindowHandler::unminimize ()
   Atom          actualType;
   int           actualFormat;
   unsigned long nItems, nLeft;
-  char          *prop;
+  void          *prop;
   unsigned long data[2];
   Window        root = DefaultRootWindow (priv->mDpy), parent = priv->mXid, lastParent = priv->mXid;
   Window        *children;
