@@ -21,7 +21,6 @@
 #include <gio/gdesktopappinfo.h>
 #include <glib/gi18n-lib.h>
 #include <gtk/gtk.h>
-#include <gdk/gdk.h>
 
 #include <NuxCore/Logger.h>
 #include <UnityCore/GLibWrapper.h>
@@ -130,19 +129,12 @@ void DashView::Relayout()
   DashSettings* settings = DashSettings::GetDefault();
   nux::Geometry geo = GetGeometry();
   content_geo_ = GetBestFitGeometry(geo);
-  GdkScreen*    screen = gdk_screen_get_default();
-  gint          primary_monitor;
-  GdkRectangle  monitor_geo;
-
 
   if (settings->GetFormFactor() == DashSettings::NETBOOK)
   {
     if (geo.width >= content_geo_.width && geo.height > content_geo_.height)
       content_geo_ = geo;
   }
-
-  primary_monitor = gdk_screen_get_primary_monitor(screen);
-  gdk_screen_get_monitor_geometry(screen, primary_monitor, &monitor_geo);
 
   // kinda hacky, but it makes sure the content isn't so big that it throws
   // the bottom of the dash off the screen

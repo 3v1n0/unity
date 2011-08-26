@@ -31,7 +31,7 @@
 #include "DashView.h"
 
 #define WIDTH 1054
-#define HEIGHT 600
+#define HEIGHT 640
 
 using namespace unity::dash;
 
