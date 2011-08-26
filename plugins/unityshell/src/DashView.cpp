@@ -127,6 +127,7 @@ void DashView::SetupUBusConnections()
 
 void DashView::Relayout()
 {
+  g_warning ("doing relayout cycle");
   DashSettings* settings = DashSettings::GetDefault();
   nux::Geometry geo = GetGeometry();
   content_geo_ = GetBestFitGeometry(geo);
@@ -136,7 +137,6 @@ void DashView::Relayout()
     if (geo.width >= content_geo_.width && geo.height > content_geo_.height)
       content_geo_ = geo;
   }
-
 
   content_layout_->SetMinMaxSize(content_geo_.width, content_geo_.height);
 
@@ -149,6 +149,7 @@ void DashView::Relayout()
 // look tight
 nux::Geometry DashView::GetBestFitGeometry(nux::Geometry const& for_geo)
 {
+  g_warning ("get best fit geometry");
   PlacesStyle* style = PlacesStyle::GetDefault();
   GdkScreen*    screen = gdk_screen_get_default();
   gint          primary_monitor;
@@ -186,6 +187,8 @@ nux::Geometry DashView::GetBestFitGeometry(nux::Geometry const& for_geo)
   LOG_DEBUG (logger) << "Returning the best fit geometry for "
                       << for_geo.width << ", " << for_geo.height
                       << "to: " << width << ", " << height;
+
+  g_warning ("returning best fit of %i, %i", width, height);
 
   return nux::Geometry(0, 0, width, height);
 }
