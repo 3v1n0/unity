@@ -44,10 +44,10 @@ compiz::X11TransientForReader::getAncestor ()
   unsigned long nItems, nLeft;
   int           actualFormat;
   Atom          actualType;
-  unsigned char *prop;
+  void          *prop;
 
   if (XGetWindowProperty (priv->mDpy, priv->mXid, wmTransientFor, 0L, 2L, false,
-                          XA_WINDOW, &actualType, &actualFormat, &nItems, &nLeft, &prop) == Success)
+                          XA_WINDOW, &actualType, &actualFormat, &nItems, &nLeft, (unsigned char **)&prop) == Success)
   {
     if (actualType == XA_WINDOW && actualFormat == 32 && nLeft == 0 && nItems == 1)
     {
@@ -76,12 +76,12 @@ compiz::X11TransientForReader::isGroupTransientFor (unsigned int clientLeader)
   unsigned long nItems, nLeft;
   int           actualFormat;
   Atom          actualType;
-  unsigned char *prop;
+  void          *prop;
   std::vector<std::string> strings;
   std::list<Atom>   atoms;
 
   if (XGetWindowProperty (priv->mDpy, priv->mXid, wmClientLeader, 0L, 2L, false,
-                          XA_WINDOW, &actualType, &actualFormat, &nItems, &nLeft, &prop) == Success)
+                          XA_WINDOW, &actualType, &actualFormat, &nItems, &nLeft, (unsigned char **)&prop) == Success)
   {
     if (actualType == XA_WINDOW && actualFormat == 32 && nLeft == 0 && nItems == 1)
     {
@@ -119,7 +119,7 @@ compiz::X11TransientForReader::isGroupTransientFor (unsigned int clientLeader)
       * should consider to be part of a window group by this client leader */
 
 	    if (XGetWindowProperty (priv->mDpy, priv->mXid, wmWindowType, 0L, 15L, false,
-                              XA_ATOM, &actualType, &actualFormat, &nItems, &nLeft, &prop) == Success)
+                              XA_ATOM, &actualType, &actualFormat, &nItems, &nLeft, (unsigned char **)&prop) == Success)
       {
         if (actualType == XA_ATOM && actualFormat == 32 && nLeft == 0 && nItems)
         {
@@ -148,7 +148,7 @@ compiz::X11TransientForReader::getTransients ()
   int           actualFormat;
   Atom          actualType;
   Atom          wmClientList;
-  unsigned char *prop;
+  void          *prop;
   std::vector<unsigned int>   transients;
   std::vector<Window>   clientList;
 
@@ -156,7 +156,7 @@ compiz::X11TransientForReader::getTransients ()
 
   if (XGetWindowProperty (priv->mDpy, DefaultRootWindow (priv->mDpy), wmClientList, 0L, 512L, false,
                           XA_WINDOW, &actualType, &actualFormat, &nItems, &nLeft,
-                          &prop) == Success)
+                          (unsigned char **)&prop) == Success)
   {
     if (actualType == XA_WINDOW && actualFormat == 32 && nItems && !nLeft)
     {

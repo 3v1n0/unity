@@ -1702,7 +1702,7 @@ namespace unity
                  h / 4.0,
                  w - 4.0,
                  h - 4.0,
-                 true);
+                 false);
 
     if (_buttonLabelFillOpacity[state] != 0.0)
     {

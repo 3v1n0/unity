@@ -1,3 +1,12 @@
+unity (4.10.2-0ubuntu2) UNRELEASED; urgency=low
+
+  * Backported some fixes from trunk:
+    - build fix for armel (lp: #834576)
+    - dnd from the application lens to the launcher work
+    - small screen dash improvements
+
+ -- Sebastien Bacher <seb128@ubuntu.com>  Fri, 26 Aug 2011 18:16:32 +0200
+
 unity (4.10.2-0ubuntu1) oneiric; urgency=low
 
   * New upstream release:
