@@ -99,7 +99,6 @@ unity_rvgrid_accessible_new(nux::Object* object)
   accessible = ATK_OBJECT(g_object_new(UNITY_TYPE_RVGRID_ACCESSIBLE, NULL));
 
   atk_object_initialize(accessible, object);
-  atk_object_set_name(accessible, _("Rvgrid"));
 
   return accessible;
 }

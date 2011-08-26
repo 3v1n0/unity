@@ -112,7 +112,7 @@ unity_sctext_accessible_get_name(AtkObject* obj)
   const gchar* name;
   UnitySctextAccessible *self = NULL;
 
-  g_return_val_if_fail(UNITY_IS_SCTEXT_ACCESSIBLE(obj), NULL);
+   g_return_val_if_fail(UNITY_IS_SCTEXT_ACCESSIBLE(obj), NULL);
   self = UNITY_SCTEXT_ACCESSIBLE (obj);
 
   name = ATK_OBJECT_CLASS(unity_sctext_accessible_parent_class)->get_name(obj);

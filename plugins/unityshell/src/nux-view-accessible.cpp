@@ -255,6 +255,8 @@ on_change_keyboard_receiver_cb(AtkObject* accessible,
 {
   NuxViewAccessible* self = NULL;
 
+  g_debug ("[View %s] on_change_keyboard_receiver, focus_in = %i", atk_object_get_name (accessible), focus_in);
+
   g_return_if_fail(NUX_IS_VIEW_ACCESSIBLE(accessible));
   self = NUX_VIEW_ACCESSIBLE(accessible);
 
@@ -302,6 +304,8 @@ nux_view_accessible_check_pending_notification(NuxAreaAccessible* area_accessibl
   nux_object = nux_object_accessible_get_object(NUX_OBJECT_ACCESSIBLE(self));
   if (nux_object == NULL) /* defunct */
     return FALSE;
+
+  g_debug ("[View %s] focus_event=%i", atk_object_get_name (ATK_OBJECT (area_accessible)), self->priv->key_focused);
 
   g_signal_emit_by_name(self, "focus_event", self->priv->key_focused);
   atk_focus_tracker_notify(ATK_OBJECT(self));

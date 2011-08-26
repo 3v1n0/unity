@@ -87,8 +87,6 @@ unity_places_group_accessible_new(nux::Object* object)
 
   g_return_val_if_fail(dynamic_cast<PlacesGroup*>(object), NULL);
 
-  g_debug ("[PlacesGroupAccessible] new");
-
   accessible = ATK_OBJECT(g_object_new(UNITY_TYPE_PLACES_GROUP_ACCESSIBLE, NULL));
 
   atk_object_initialize(accessible, object);
@@ -135,11 +133,8 @@ unity_places_group_accessible_get_name(AtkObject* obj)
           pango_parse_markup (name, -1, 0, NULL,
                               &self->priv->stripped_name,
                               NULL, NULL);
-          g_debug ("Get name: %s", self->priv->stripped_name);
         }
     }
-
-  g_debug ("Get stripped_name: %s", self->priv->stripped_name);
 
   return self->priv->stripped_name;
 }

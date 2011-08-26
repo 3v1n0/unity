@@ -99,6 +99,7 @@ private:
   guint _n_total_items;
   char* _cached_name;
   bool  _draw_sep;
+
 };
 
 #endif
