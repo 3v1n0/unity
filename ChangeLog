@@ -1,3 +1,47 @@
+2011-08-25  Jason Smith  <jason.smith@canonical.com>
+
+	merge dnd opt out branch
+
+2011-08-25  Jason Smith  <jason.smith@canonical.com>
+
+	opt out of dnd when it makes no sense
+
+2011-08-25  Gord Allott  <gord.allott@canonical.com>
+
+	for ken, we now elipsize the horizontal renderer at the end not the start
+
+2011-08-25  Gord Allott  <gord.allott@canonical.com>
+
+	elipize at the end of the horizontal tile text not the start
+
+2011-08-25  Jason Smith  <jason.smith@canonical.com>
+
+	fix window dodge now that windows dont unmap on minimize
+
+2011-08-25  Jason Smith  <jason.smith@canonical.com>
+
+	make changes at request of design team
+
+2011-08-25  Jason Smith  <jason.smith@canonical.com>
+
+	fix ARB rendering of icons that were broken by mistake
+
+2011-08-25  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Fix for multimonitor, jay lies\!\!
+
+2011-08-25  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Don't hang on invalid results
+
+2011-08-25  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Always set focus on the entry after switching lenses
+
+2011-08-25  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[release] 4.10.0
+
 2011-08-25  Neil Jagdish Patel  <neil.patel@canonical.com>
 
 	[merge] dash fixes branch

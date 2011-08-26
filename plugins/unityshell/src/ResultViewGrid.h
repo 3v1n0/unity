@@ -55,7 +55,7 @@ protected:
   void MouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
   void MouseClick(int x, int y, unsigned long button_flags, unsigned long key_flags);
 
-  virtual void                    DndSourceDragBegin();
+  virtual bool                    DndSourceDragBegin();
   virtual nux::NBitmapData*       DndSourceGetDragImage();
   virtual std::list<const char*>  DndSourceGetDragTypes();
   virtual const char*             DndSourceGetDataForType(const char* type, int* size, int* format);
