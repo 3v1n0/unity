@@ -127,9 +127,6 @@ void DashView::SetupUBusConnections()
 
 void DashView::Relayout()
 {
-  GdkScreen*    screen = gdk_screen_get_default();
-  gint          primary_monitor;
-  GdkRectangle  monitor_geo;
   DashSettings* settings = DashSettings::GetDefault();
   nux::Geometry geo = GetGeometry();
   content_geo_ = GetBestFitGeometry(geo);
@@ -140,14 +137,6 @@ void DashView::Relayout()
       content_geo_ = geo;
   }
 
-  primary_monitor = gdk_screen_get_primary_monitor(screen);
-  gdk_screen_get_monitor_geometry(screen, primary_monitor, &monitor_geo);
-
-  if (monitor_geo.width < content_geo_.width)
-    content_geo_.width = monitor_geo.width;
-
-  if (monitor_geo.height < content_geo_.height)
-    content_geo_.height = monitor_geo.height;
 
   content_layout_->SetMinMaxSize(content_geo_.width, content_geo_.height);
 
@@ -161,6 +150,9 @@ void DashView::Relayout()
 nux::Geometry DashView::GetBestFitGeometry(nux::Geometry const& for_geo)
 {
   PlacesStyle* style = PlacesStyle::GetDefault();
+  GdkScreen*    screen = gdk_screen_get_default();
+  gint          primary_monitor;
+  GdkRectangle  monitor_geo;
 
   int width = 0, height = 0;
   int tile_width = style->GetTileWidth();
@@ -181,6 +173,20 @@ nux::Geometry DashView::GetBestFitGeometry(nux::Geometry const& for_geo)
     width = MIN(width, for_geo.width-66);
     height = MIN(height, for_geo.height-24);
   }
+
+  primary_monitor = gdk_screen_get_primary_monitor(screen);
+  gdk_screen_get_monitor_geometry(screen, primary_monitor, &monitor_geo);
+
+  if (width > monitor_geo.width)
+    width = monitor_geo.width;
+
+  if (height > monitor_geo.height)
+    height = monitor_geo.height;
+
+  LOG_DEBUG (logger) << "Returning the best fit geometry for "
+                      << for_geo.width << ", " << for_geo.height
+                      << "to: " << width << ", " << height;
+
   return nux::Geometry(0, 0, width, height);
 }
 
