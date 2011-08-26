@@ -207,6 +207,13 @@ add_executable (test-switcher
                 )
 add_dependencies (test-switcher unity-core-${UNITY_API_VERSION})
 
+add_executable (test-keyutil
+                TestKeyboardUtil.cpp
+                ${UNITY_SRC}/KeyboardUtil.h
+                ${UNITY_SRC}/KeyboardUtil.cpp
+                )
+add_dependencies (test-keyutil unity-core-${UNITY_API_VERSION})
+
 add_executable (test-quicklist
                 ui/TestQuicklist.cpp
                 ui/EventFaker.cpp

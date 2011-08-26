@@ -35,6 +35,7 @@
 #include "QuicklistManager.h"
 #include "StartupNotifyService.h"
 #include "Timer.h"
+#include "KeyboardUtil.h"
 #include "unityshell.h"
 #include "BackgroundEffectHelper.h"
 
@@ -199,6 +200,27 @@ UnityScreen::UnityScreen(CompScreen* screen)
 
   optionSetAltTabNextWindowInitiate(boost::bind(&UnityScreen::altTabNextWindowInitiate, this, _1, _2, _3));
   optionSetAltTabNextWindowTerminate(boost::bind(&UnityScreen::altTabTerminateCommon, this, _1, _2, _3));
+
+  KeyboardUtil key_util (screen->dpy());
+  guint above_tab_keycode = key_util.GetKeycodeAboveKeySymbol (XStringToKeysym("Tab"));
+  KeySym above_tab_keysym = XKeycodeToKeysym (screen->dpy(), above_tab_keycode, 0);
+
+  if (above_tab_keysym != NoSymbol)
+  {
+    std::ostringstream sout;
+    sout << "<Alt>" << XKeysymToString(above_tab_keysym);
+
+    auto next_window = optionGetAltTabNextWindow ();
+    next_window.key().fromString (sout.str());
+
+    screen->removeAction(&next_window);
+    screen->addAction(&next_window);
+  }
+  else
+  {
+    printf ("Could not find key above tab!\n");
+  }
+
 
   /*
     optionSetAltTabExitInitiate(boost::bind(&UnityScreen::altTabExitInitiate, this, _1, _2, _3));
