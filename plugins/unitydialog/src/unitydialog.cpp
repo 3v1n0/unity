@@ -746,10 +746,33 @@ UnityDialogWindow::setMaxConstrainingAreas()
    * case that somehow our requested max_width < min_width, so
    * detect this case too.
    *
+   * In the case where we're goign to make the dialog window smaller
+   * than it actually is, don't allow this, instead make parent window
+   * at least 1.25x bigger than the dialog window and set the maximum
+   * size of the dialog window to 0.8x the parent window
    */
 
   bool sizeHintsSet = false;
   bool needsWidth, needsHeight;
+  XWindowChanges xwc;
+  unsigned int   changeMask = 0;
+
+  if (mParent->serverBorderRect ().width () < window->serverBorderRect().width () * 1.25)
+  {
+     xwc.width = window->serverBorderRect ().width () * 1.25;
+     xwc.x = ((window->serverBorderRect().width() * 1.25) - (window->serverBorderRect().width ())) / 2.0;
+     changeMask |= CWX | CWWidth;
+  }
+
+  if (mParent->serverBorderRect ().height () < window->serverBorderRect().height () * 1.25)
+  {
+     xwc.height = window->serverBorderRect ().height () * 1.25;
+     xwc.y = ((window->serverBorderRect().height() * 1.25) - (window->serverBorderRect().height ())) / 2.0;
+     changeMask |= CWY | CWHeight;
+  }
+
+  if (changeMask)
+    mParent->configureXWindow(changeMask, &xwc);
 
   needsWidth = mOldHintsSize.width() != window->sizeHints().max_width;
 
@@ -766,9 +789,9 @@ UnityDialogWindow::setMaxConstrainingAreas()
   if (mParent && (window->sizeHints().flags & PMaxSize) && needsWidth && needsHeight)
   {
     sizeHintsSet |= ((window->sizeHints().max_width <
-                      mParent->width() * 0.8) ||
+		      mParent->serverGeometry ().width() * 0.8) ||
                      (window->sizeHints().max_height <
-                      mParent->height() * 0.8));
+		      mParent->serverGeometry ().height() * 0.8));
   }
 
   if (mParent && (!sizeHintsSet))
@@ -776,8 +799,8 @@ UnityDialogWindow::setMaxConstrainingAreas()
     XSizeHints sizeHints = window->sizeHints();
 
     sizeHints.flags |= PMaxSize;
-    sizeHints.max_width = mParent->width() * 0.8;
-    sizeHints.max_height = mParent->height() * 0.8;
+    sizeHints.max_width = mParent->serverGeometry ().width() * 0.8;
+    sizeHints.max_height = mParent->serverGeometry ().height() * 0.8;
 
     mOldHintsSize = CompSize(sizeHints.max_width, sizeHints.max_height);
     XSetWMNormalHints(screen->dpy(), window->id(), &sizeHints);
