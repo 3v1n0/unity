@@ -577,6 +577,9 @@ UnityDialogWindow::removeTransient(CompWindow* w)
 
   if (!mTransients.size())
   {
+    XWindowChanges xwc;
+    unsigned int   mask = 0;
+
     window->ungrabNotifySetEnabled(this, false);
     window->grabNotifySetEnabled(this, false);
     window->moveNotifySetEnabled(this, false);
@@ -587,14 +590,30 @@ UnityDialogWindow::removeTransient(CompWindow* w)
       mIpw = None;
     }
 
-    mTargetPos = CompPoint (window->serverBorderRect().x (), window->serverBorderRect().y ());
-    mCurrentPos = mTargetPos - mOffset;
+    if (mDiffXWC.width)
+    {
+	xwc.width = window->width () - mDiffXWC.width;
+	mask |= CWWidth;
+    }
+
+    if (mDiffXWC.height)
+    {
+	xwc.height = window->height () - mDiffXWC.height;
+	mask |= CWHeight;
+    }
+
+    if (mask)
+	window->configureXWindow (mask, &xwc);
 
     cWindow->addDamage();
-    window->move (-mOffset.x (), -mOffset.y (), true);
+    window->move (-mOffset.x () - mDiffXWC.x, -mOffset.y () - mDiffXWC.y, true);
     window->syncPosition();
     cWindow->addDamage();
 
+    memset (&mDiffXWC, 0, sizeof (XWindowChanges));
+
+    mTargetPos = CompPoint (window->serverBorderRect().x (), window->serverBorderRect().y ());
+    mCurrentPos = mTargetPos - mOffset;
     mOffset = CompPoint (0, 0);
 
     return true;
@@ -760,14 +779,40 @@ UnityDialogWindow::setMaxConstrainingAreas()
   if (mParent->serverBorderRect ().width () < window->serverBorderRect().width () * 1.25)
   {
      xwc.width = window->serverBorderRect ().width () * 1.25;
-     xwc.x = ((window->serverBorderRect().width() * 1.25) - (window->serverBorderRect().width ())) / 2.0;
+     xwc.x = mParent->x () - ((window->serverBorderRect().width() * 1.25) -
+			     (mParent->serverBorderRect().width ())) / 2.0;
+
+     /* Don't ever put the parent window offscreen */
+     if (xwc.x < screen->workArea().left() + mParent->border().left)
+	xwc.x = screen->workArea().left() + mParent->border().left;
+     else if (xwc.x + xwc.width > screen->workArea().right() - mParent->border().right)
+	xwc.x = screen->workArea().right() - xwc.width - mParent->border().right;
+
+     if (!UnityDialogWindow::get (mParent)->mDiffXWC.width)
+	UnityDialogWindow::get (mParent)->mDiffXWC.width = xwc.width - mParent->width ();
+     if (!UnityDialogWindow::get (mParent)->mDiffXWC.x)
+	 UnityDialogWindow::get (mParent)->mDiffXWC.x = xwc.x - mParent->x ();
+
      changeMask |= CWX | CWWidth;
   }
 
   if (mParent->serverBorderRect ().height () < window->serverBorderRect().height () * 1.25)
   {
      xwc.height = window->serverBorderRect ().height () * 1.25;
-     xwc.y = ((window->serverBorderRect().height() * 1.25) - (window->serverBorderRect().height ())) / 2.0;
+     xwc.y = mParent->y () - ((window->serverBorderRect().height() * 1.25) -
+			     (mParent->serverBorderRect().height ())) / 2.0;
+
+     /* Don't ever put the parent window offscreen */
+     if (xwc.y < screen->workArea().top() + mParent->border ().top)
+	 xwc.y = screen->workArea().top() + mParent->border ().top;
+     else if (xwc.y + xwc.height > screen->workArea().bottom() - mParent->border ().bottom)
+	 xwc.y = screen->workArea().bottom() - xwc.height - mParent->border ().bottom;
+
+     if (!UnityDialogWindow::get (mParent)->mDiffXWC.height)
+	 UnityDialogWindow::get (mParent)->mDiffXWC.height = xwc.height - mParent->height ();
+     if (!UnityDialogWindow::get (mParent)->mDiffXWC.y)
+	 UnityDialogWindow::get (mParent)->mDiffXWC.y = xwc.y - mParent->y ();
+
      changeMask |= CWY | CWHeight;
   }
 
@@ -1158,6 +1203,8 @@ UnityDialogWindow::UnityDialogWindow(CompWindow* w) :
 {
   WindowInterface::setHandler(window, true);
   GLWindowInterface::setHandler(gWindow, false);
+
+  memset(&mDiffXWC, 0, sizeof (XWindowChanges));
 
   window->windowNotifySetEnabled(this, true);
 }

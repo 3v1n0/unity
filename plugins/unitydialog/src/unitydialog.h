@@ -249,6 +249,7 @@ private:
   CompPoint      mTargetPos;
   CompPoint      mCurrentPos;
   CompPoint      mOffset;
+  XWindowChanges mDiffXWC;
 
   Window         mIpw;
 };
