@@ -897,7 +897,37 @@ UnityDialogWindow::transientParent()
       window->state() & CompWindowStateModalMask &&
       !UnityDialogScreen::get(screen)->optionGetAvoidMatch().evaluate(window))
   {
-    CompWindow* parent = screen->findWindow(window->transientFor());
+    Window xid = window->transientFor();
+
+    /* Some stupid applications set the WM_TRANSIENT_FOR to an unmapped window
+     * but one that is strangely still managed *cough*qt*cough*. Those applications
+     * deserve to be shot. In any case, we'll need to work around that by assuming
+     * that this is a modal dialog with *a* parent, so go for the largest window
+     * in this client group that's not a transient for anything */
+
+    CompWindow* parent = screen->findWindow(xid);
+
+    if (!parent->isViewable() || parent->overrideRedirect())
+    {
+	compLogMessage ("unitydialog", CompLogLevelWarn, "window 0x%x sets WM_TRANSIENT_FOR" \
+			" in a strange way. Workaround around.\n", window->id ());
+	if (parent->clientLeader())
+	{
+	    CompWindow *candidate = parent;
+
+	    for (CompWindow *w : screen->windows ())
+		if (w->clientLeader () == parent->clientLeader () &&
+		    w->isViewable () && !w->overrideRedirect () &&
+		    (w->geometry ().width () * w->geometry ().height ()) >
+		    (candidate->geometry().width() * candidate->geometry().height()))
+		    candidate = w;
+
+	    if (candidate != parent)
+		parent = candidate;
+	    else
+		parent = NULL;
+	}
+    }
 
     if (parent)
       return parent;
