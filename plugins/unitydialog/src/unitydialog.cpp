@@ -308,9 +308,9 @@ UnityDialogWindow::getDamageRegion()
   float progress = mShadeProgress / (float) OPAQUE;
 
   /* Current rect in animation expanded by output + 5 */
-  damageBounds.setX (window->serverOutputRect().x() +
+  damageBounds.setX (mCurrentPos.x () +
 		     ((mTargetPos.x() - mCurrentPos.x()) * progress));
-  damageBounds.setY (window->serverOutputRect().y() +
+  damageBounds.setY (mCurrentPos.y () +
 		     ((mTargetPos.y() - mCurrentPos.y()) * progress));
   damageBounds.setWidth(window->serverOutputRect().width () + 5);
   damageBounds.setHeight(window->serverOutputRect().height () + 5);
@@ -536,6 +536,8 @@ UnityDialogWindow::addTransient(CompWindow* w)
       adjustIPW();
     }
 
+    mCurrentPos = mTargetPos = window->serverBorderRect ().pos ();
+
     newParent = true;
   }
   else
@@ -612,8 +614,8 @@ UnityDialogWindow::removeTransient(CompWindow* w)
 
     memset (&mDiffXWC, 0, sizeof (XWindowChanges));
 
-    mTargetPos = CompPoint (window->serverBorderRect().x (), window->serverBorderRect().y ());
-    mCurrentPos = mTargetPos - mOffset;
+    mCurrentPos = CompPoint (window->serverBorderRect().x (), window->serverBorderRect().y ());
+    mTargetPos = mCurrentPos + mOffset;
     mOffset = CompPoint (0, 0);
 
     return true;
@@ -1097,7 +1099,6 @@ UnityDialogWindow::place(CompPoint& pos)
 				pos.y(),
 				window->serverBorderRect ().width(), window->serverBorderRect ().height());
       transientRect = transientPos.boundingRect();
-      setMaxConstrainingAreas();
 
       dest = CompPoint(transientRect.x(), transientRect.y());
       orig = CompPoint(mParent->serverBorderRect ().x(), mParent->serverBorderRect ().y());
