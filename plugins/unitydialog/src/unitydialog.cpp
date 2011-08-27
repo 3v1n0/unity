@@ -64,7 +64,7 @@ UnityDialogScreen::matchExpHandlerChanged()
 {
   screen->matchExpHandlerChanged();
 
-  foreach(CompWindow * w, screen->windows())
+  for(CompWindow * w : screen->windows())
   {
     if (UnityDialogWindow::get(w)->hasParent() ||
         UnityDialogWindow::get(w)->hasTransients())
@@ -78,8 +78,8 @@ UnityDialogWindow::moveToRect(CompRect currentRect, bool sync)
   CompPoint pos = getChildCenteredPositionForRect(currentRect);
 
   mSkipNotify = true;
-  window->move(pos.x() - window->x() + window->input().left,
-               pos.y() - window->y() + window->input().top, true);
+  window->move(pos.x() - window->x() + window->border().left,
+	       pos.y() - window->y() + window->border().top, true);
 
   if (sync)
     window->syncPosition();
@@ -306,8 +306,8 @@ UnityDialogScreen::preparePaint(int ms)
 {
   cScreen->preparePaint(ms);
 
-  foreach(CompWindow * w, mParentWindows)
-  UnityDialogWindow::get(w)->animate(ms, optionGetFadeTime());
+  for(CompWindow *w : mParentWindows)
+    UnityDialogWindow::get(w)->animate(ms, optionGetFadeTime());
 
 }
 
@@ -399,7 +399,7 @@ UnityDialogWindow::glDraw(const GLMatrix& transform,
 
   UNITY_DIALOG_SCREEN(screen);
 
-  foreach(GLTexture * tex, uds->tex())
+  for (GLTexture * tex : uds->tex())
   {
     GLTexture::MatrixList matl;
     GLTexture::Matrix     mat = tex->matrix();
@@ -520,7 +520,7 @@ UnityDialogWindow::addTransient(CompWindow* w)
   }
   else
   {
-    foreach(CompWindow * tw, mTransients)
+    for(CompWindow * tw : mTransients)
     if (tw->id() == w->id())
       alreadyAdded = true;
   }
@@ -699,20 +699,11 @@ UnityDialogWindow::moveNotify(int dx, int dy, bool immediate)
 
   if (!mSkipNotify)
   {
-    if ((mGrabMask & CompWindowGrabMoveMask ||
-         UnityDialogScreen::get(screen)->switchingVp()) &&
-        !(mGrabMask & CompWindowGrabMoveMask &&
-          UnityDialogScreen::get(screen)->switchingVp()))
-    {
-      moveTransientsToRect(NULL, window->serverBorderRect(), UnityDialogScreen::get(screen)->switchingVp());
-
-      if (UnityDialogScreen::get(screen)->switchingVp())
-        window->syncPosition();
-    }
-    /* Not a valid reason for the transient to be moved -
-     * force it back to the main window */
-    else if (mParent)
-      moveToRect(mParent->serverBorderRect(), true);
+    if (mParent && UnityDialogScreen::get(screen)->switchingVp() &&
+	!(mGrabMask && CompWindowGrabMoveMask))
+	moveParentToRect(window, window->serverBorderRect(), true);
+    else
+	moveTransientsToRect(window, window->serverBorderRect(), true);
   }
 }
 
@@ -782,10 +773,10 @@ UnityDialogWindow::getParentCenteredPositionForRect(CompRect currentRect)
 {
   int centeredX = currentRect.x() + (currentRect.width() / 2 -
                                      window->width() / 2) -
-                  window->input().left;
+		  window->border().left;
   int centeredY = currentRect.y() + (currentRect.height() -
                                      window->height()) * (0.5) -
-                  window->input().top;
+		  window->border().top;
 
   return CompPoint(centeredX, centeredY);
 }
@@ -798,7 +789,7 @@ UnityDialogWindow::grabTransients(CompWindow* skip, int x, int y,
   /* Center transients (leave a bit more space
    * below) */
 
-  foreach(CompWindow * cw, mTransients)
+  for(CompWindow * cw : mTransients)
   {
     UnityDialogWindow* udw = UnityDialogWindow::get(cw);
 
@@ -822,7 +813,7 @@ UnityDialogWindow::animateTransients(CompWindow* skip, CompPoint& orig, CompPoin
   /* Center transients (leave a bit more space
    * below) */
 
-  foreach(CompWindow * cw, mTransients)
+  for(CompWindow * cw : mTransients)
   {
     UnityDialogWindow* udw = UnityDialogWindow::get(cw);
     CompRect newRect(dest.x(), dest.y(), window->width(), window->height());
@@ -860,7 +851,7 @@ UnityDialogWindow::moveTransientsToRect(CompWindow* skip, CompRect currentRect, 
   /* Center transients (leave a bit more space
    * below) */
 
-  foreach(CompWindow * cw, mTransients)
+  for(CompWindow * cw : mTransients)
   {
     if (cw == skip)
       return;
@@ -937,17 +928,17 @@ UnityDialogWindow::place(CompPoint& pos)
     pos = getChildCenteredPositionForRect(mParent->serverBorderRect());
     int    hdirection, vdirection;
 
-    transientGeometry = CompWindow::Geometry(pos.x() - window->input().left,
-                                             pos.y() - window->input().top,
-                                             window->inputRect().width(),
-                                             window->inputRect().height(), 0);
+    transientGeometry = CompWindow::Geometry(pos.x() - window->border().left,
+					     pos.y() - window->border().top,
+					     window->borderRect().width(),
+					     window->borderRect().height(), 0);
 
     transientPos = CompRegion((CompRect) transientGeometry);
     outputRegion = screen->workArea();
     outsideRegion = outputRegion;
 
     /* Create a w->width () px region outside of the output region */
-    outsideRegion.shrink(-window->inputRect().width(), -window->inputRect().height());
+    outsideRegion.shrink(-window->borderRect().width(), -window->borderRect().height());
 
     outsideRegion -= outputRegion;
 
@@ -1000,17 +991,6 @@ UnityDialogScreen::handleCompizEvent(const char*    plugin,
   else if (strcmp(event, "end_viewport_switch") == 0)
   {
     mSwitchingVp = false;
-
-    foreach(CompWindow * w, mParentWindows)
-    {
-      UnityDialogWindow* udw = UnityDialogWindow::get(w);
-
-      /* Only move bottomlevels */
-      if (udw->hasParent())
-        continue;
-
-      udw->moveTransientsToRect(NULL, w->serverBorderRect(), true);
-    }
   }
 
   screen->handleCompizEvent(plugin, event, o);
@@ -1118,8 +1098,8 @@ UnityDialogWindow::~UnityDialogWindow()
   if (mTransients.size())
   {
     compLogMessage("unitydialog", CompLogLevelWarn, "Parent got closed before transients. This is an indication of a buggy app!");
-    foreach(CompWindow * w, mTransients)
-    UnityDialogWindow::get(mParent)->removeTransient(w);
+    for(CompWindow * w : mTransients)
+      UnityDialogWindow::get(mParent)->removeTransient(w);
   }
 }
 
