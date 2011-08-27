@@ -78,8 +78,8 @@ UnityDialogWindow::moveToRect(CompRect currentRect, bool sync)
   CompPoint pos = getChildCenteredPositionForRect(currentRect);
 
   mSkipNotify = true;
-  window->move(pos.x() - window->x() + window->border().left,
-	       pos.y() - window->y() + window->border().top, true);
+  window->move(pos.x() - window->serverBorderRect().x(),
+	       pos.y() - window->serverBorderRect().y(), true);
 
   if (sync)
     window->syncPosition();
@@ -369,8 +369,8 @@ UnityDialogWindow::glPaint(const GLWindowPaintAttrib& attrib,
     int dx = ((mTargetPos.x() - mCurrentPos.x()) * progress);
     int dy = ((mTargetPos.y() - mCurrentPos.y()) * progress);
 
-    dx += mCurrentPos.x() - window->x();
-    dy += mCurrentPos.y() - window->y();
+    dx += mCurrentPos.x() - window->serverBorderRect().x();
+    dy += mCurrentPos.y() - window->serverBorderRect().y();
 
     wTransform.translate(dx, dy, 0);
 
@@ -761,9 +761,9 @@ CompPoint
 UnityDialogWindow::getChildCenteredPositionForRect(CompRect currentRect)
 {
   int centeredX = currentRect.x() + (currentRect.width() / 2 -
-                                     window->serverBorderRect().width() / 2);
-  int centeredY = currentRect.y() + (currentRect.height() -
-                                     window->serverBorderRect().height()) / 2;
+				     window->serverBorderRect().width() / 2);
+  int centeredY = currentRect.y() + (currentRect.height() / 2 -
+				     window->serverBorderRect().height() / 2);
 
   return CompPoint(centeredX, centeredY);
 }
@@ -772,11 +772,9 @@ CompPoint
 UnityDialogWindow::getParentCenteredPositionForRect(CompRect currentRect)
 {
   int centeredX = currentRect.x() + (currentRect.width() / 2 -
-                                     window->width() / 2) -
-		  window->border().left;
-  int centeredY = currentRect.y() + (currentRect.height() -
-                                     window->height()) * (0.5) -
-		  window->border().top;
+				     window->serverBorderRect ().width() / 2);
+  int centeredY = currentRect.y() + (currentRect.height() / 2 -
+				     window->serverBorderRect().height() / 2);
 
   return CompPoint(centeredX, centeredY);
 }
@@ -816,13 +814,13 @@ UnityDialogWindow::animateTransients(CompWindow* skip, CompPoint& orig, CompPoin
   for(CompWindow * cw : mTransients)
   {
     UnityDialogWindow* udw = UnityDialogWindow::get(cw);
-    CompRect newRect(dest.x(), dest.y(), window->width(), window->height());
+    CompRect newRect(dest.x(), dest.y(), window->serverBorderRect().width (), window->serverBorderRect().height());
 
     if (cw == skip)
       return;
 
     udw->mTargetPos = udw->getChildCenteredPositionForRect(newRect);
-    udw->mCurrentPos = CompPoint(cw->x(), cw->y());
+    udw->mCurrentPos = CompPoint(cw->serverBorderRect().x(), cw->serverBorderRect().y());
 
     /* New transient position is centered to this window's target position */
     if (cont)
@@ -836,10 +834,10 @@ UnityDialogWindow::animateParent(CompWindow* requestor, CompPoint& orig, CompPoi
   if (mParent)
   {
     UnityDialogWindow* udw = UnityDialogWindow::get(mParent);
-    CompRect newRect(dest.x(), dest.y(), window->width(), window->height());
+    CompRect newRect(dest.x(), dest.y(), window->serverBorderRect ().width(), window->serverBorderRect().height());
 
     udw->mTargetPos = udw->getParentCenteredPositionForRect(newRect);
-    udw->mCurrentPos = CompPoint(mParent->x(), mParent->y());
+    udw->mCurrentPos = CompPoint(mParent->serverBorderRect().x (), mParent->serverBorderRect ().y());
 
     udw->animateTransients(NULL, udw->mTargetPos, udw->mCurrentPos, false);
   }
@@ -875,7 +873,6 @@ UnityDialogWindow::moveParentToRect(CompWindow*      requestor,
     UnityDialogWindow::get(mParent)->mSkipNotify = true;
 
     /* Move the parent window to the requested position */
-
     mParent->move(centeredPos.x() - mParent->serverBorderRect().x(),
                   centeredPos.y() - mParent->serverBorderRect().y(), true);
 
@@ -958,8 +955,8 @@ UnityDialogWindow::place(CompPoint& pos)
     pos = getChildCenteredPositionForRect(mParent->serverBorderRect());
     int    hdirection, vdirection;
 
-    transientGeometry = CompWindow::Geometry(pos.x() - window->border().left,
-					     pos.y() - window->border().top,
+    transientGeometry = CompWindow::Geometry(pos.x(),
+					     pos.y(),
 					     window->borderRect().width(),
 					     window->borderRect().height(), 0);
 
@@ -983,19 +980,21 @@ UnityDialogWindow::place(CompPoint& pos)
       vdirection = outsideArea.boundingRect().y() < 0 ? 1 : -1;
 
       width  = outsideArea.boundingRect().width() >=
-               window->width() ? 0 :
+	       window->serverBorderRect ().width() ? 0 :
                outsideArea.boundingRect().width() * hdirection;
       height = outsideArea.boundingRect().height() >=
-               window->height() ? 0 :
+	       window->serverBorderRect ().height() ? 0 :
                outsideArea.boundingRect().height() * vdirection;
 
       pos += CompPoint(width, height);
-      transientPos = CompRegion(pos.x(), pos.y(), window->width(), window->height());
+      transientPos = CompRegion(pos.x(),
+				pos.y(),
+				window->serverBorderRect ().width(), window->serverBorderRect ().height());
       transientRect = transientPos.boundingRect();
       setMaxConstrainingAreas();
 
       dest = CompPoint(transientRect.x(), transientRect.y());
-      orig = CompPoint(mParent->x(), mParent->y());
+      orig = CompPoint(mParent->serverBorderRect ().x(), mParent->serverBorderRect ().y());
 
       animateParent(window, orig, dest);
 
