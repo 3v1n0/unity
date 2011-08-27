@@ -930,14 +930,18 @@ UnityDialogWindow::animateParent(CompWindow* requestor, CompPoint& orig, CompPoi
 {
   if (mParent)
   {
-    UnityDialogWindow* udw = UnityDialogWindow::get(mParent);
-    CompRect newRect(dest.x(), dest.y(), window->serverBorderRect ().width(), window->serverBorderRect().height());
+    if (!(mParent->state () & MAXIMIZE_STATE ||
+	  mParent->state () & CompWindowStateFullscreenMask))
+    {
+	UnityDialogWindow* udw = UnityDialogWindow::get(mParent);
+	CompRect newRect(dest.x(), dest.y(), window->serverBorderRect ().width(), window->serverBorderRect().height());
 
-    udw->mTargetPos = udw->getParentCenteredPositionForRect(newRect);
-    udw->mCurrentPos = CompPoint(mParent->serverBorderRect().x (), mParent->serverBorderRect ().y());
-    udw->mOffset = udw->mTargetPos - udw->mCurrentPos;
+	udw->mTargetPos = udw->getParentCenteredPositionForRect(newRect);
+	udw->mCurrentPos = CompPoint(mParent->serverBorderRect().x (), mParent->serverBorderRect ().y());
+	udw->mOffset = udw->mTargetPos - udw->mCurrentPos;
 
-    udw->animateTransients(NULL, udw->mTargetPos, udw->mCurrentPos, false);
+	udw->animateTransients(NULL, udw->mTargetPos, udw->mCurrentPos, false);
+    }
   }
 }
 
@@ -967,20 +971,24 @@ UnityDialogWindow::moveParentToRect(CompWindow*      requestor,
 {
   if (mParent)
   {
-    CompPoint centeredPos = UnityDialogWindow::get(mParent)->getParentCenteredPositionForRect(rect);
-    UnityDialogWindow::get(mParent)->mSkipNotify = true;
+    if (!(mParent->state () & MAXIMIZE_STATE ||
+	  mParent->state () & CompWindowStateFullscreenMask))
+    {
+	CompPoint centeredPos = UnityDialogWindow::get(mParent)->getParentCenteredPositionForRect(rect);
+	UnityDialogWindow::get(mParent)->mSkipNotify = true;
 
-    /* Move the parent window to the requested position */
-    mParent->move(centeredPos.x() - mParent->serverBorderRect().x(),
-                  centeredPos.y() - mParent->serverBorderRect().y(), true);
+	/* Move the parent window to the requested position */
+	mParent->move(centeredPos.x() - mParent->serverBorderRect().x(),
+		      centeredPos.y() - mParent->serverBorderRect().y(), true);
 
-    if (sync)
-      mParent->syncPosition();
+	if (sync)
+	    mParent->syncPosition();
 
-    UnityDialogWindow::get(mParent)->mSkipNotify = false;
+	UnityDialogWindow::get(mParent)->mSkipNotify = false;
 
-    UnityDialogWindow::get(mParent)->moveTransientsToRect(requestor, window->serverBorderRect(), sync);
-    UnityDialogWindow::get(mParent)->moveParentToRect(window, window->serverBorderRect(), sync);
+	UnityDialogWindow::get(mParent)->moveTransientsToRect(requestor, window->serverBorderRect(), sync);
+	UnityDialogWindow::get(mParent)->moveParentToRect(window, window->serverBorderRect(), sync);
+    }
   }
 
 }
