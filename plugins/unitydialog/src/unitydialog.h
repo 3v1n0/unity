@@ -236,6 +236,7 @@ public:
   void adjustIPW();
 
   bool animate(int ms, float fadeTime);
+  CompRegion getDamageRegion();
 
 private:
 
@@ -247,6 +248,7 @@ private:
   int        mShadeProgress;
   CompPoint      mTargetPos;
   CompPoint      mCurrentPos;
+  CompPoint      mOffset;
 
   Window         mIpw;
 };

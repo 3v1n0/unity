@@ -301,6 +301,23 @@ UnityDialogWindow::animate(int   ms,
   return false;
 }
 
+CompRegion
+UnityDialogWindow::getDamageRegion()
+{
+  CompRect damageBounds;
+  float progress = mShadeProgress / (float) OPAQUE;
+
+  /* Current rect in animation expanded by output + 5 */
+  damageBounds.setX (window->serverOutputRect().x() +
+		     ((mTargetPos.x() - mCurrentPos.x()) * progress));
+  damageBounds.setY (window->serverOutputRect().y() +
+		     ((mTargetPos.y() - mCurrentPos.y()) * progress));
+  damageBounds.setWidth(window->serverOutputRect().width () + 5);
+  damageBounds.setHeight(window->serverOutputRect().height () + 5);
+
+  return CompRegion (damageBounds);
+}
+
 void
 UnityDialogScreen::preparePaint(int ms)
 {
@@ -336,7 +353,10 @@ UnityDialogScreen::donePaint()
     UnityDialogWindow* udw = UnityDialogWindow::get(w);
 
     if (udw->animate(0, optionGetFadeTime()))
-      udw->cWindow->addDamage();
+    {
+      CompRegion damage = udw->getDamageRegion ();
+      cScreen->damageRegion (damage);
+    }
     else if (!udw->hasTransients())
     {
       untrackParent(w);
@@ -567,7 +587,15 @@ UnityDialogWindow::removeTransient(CompWindow* w)
       mIpw = None;
     }
 
+    mTargetPos = CompPoint (window->serverBorderRect().x (), window->serverBorderRect().y ());
+    mCurrentPos = mTargetPos - mOffset;
+
     cWindow->addDamage();
+    window->move (-mOffset.x (), -mOffset.y (), true);
+    window->syncPosition();
+    cWindow->addDamage();
+
+    mOffset = CompPoint (0, 0);
 
     return true;
   }
@@ -821,6 +849,7 @@ UnityDialogWindow::animateTransients(CompWindow* skip, CompPoint& orig, CompPoin
 
     udw->mTargetPos = udw->getChildCenteredPositionForRect(newRect);
     udw->mCurrentPos = CompPoint(cw->serverBorderRect().x(), cw->serverBorderRect().y());
+    udw->mOffset = udw->mTargetPos - udw->mCurrentPos;
 
     /* New transient position is centered to this window's target position */
     if (cont)
@@ -838,6 +867,7 @@ UnityDialogWindow::animateParent(CompWindow* requestor, CompPoint& orig, CompPoi
 
     udw->mTargetPos = udw->getParentCenteredPositionForRect(newRect);
     udw->mCurrentPos = CompPoint(mParent->serverBorderRect().x (), mParent->serverBorderRect ().y());
+    udw->mOffset = udw->mTargetPos - udw->mCurrentPos;
 
     udw->animateTransients(NULL, udw->mTargetPos, udw->mCurrentPos, false);
   }
