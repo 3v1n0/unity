@@ -35,6 +35,7 @@
 #include "QuicklistManager.h"
 #include "StartupNotifyService.h"
 #include "Timer.h"
+#include "KeyboardUtil.h"
 #include "unityshell.h"
 #include "BackgroundEffectHelper.h"
 
@@ -200,10 +201,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
   optionSetAltTabNextWindowInitiate(boost::bind(&UnityScreen::altTabNextWindowInitiate, this, _1, _2, _3));
   optionSetAltTabNextWindowTerminate(boost::bind(&UnityScreen::altTabTerminateCommon, this, _1, _2, _3));
 
-  /*
-    optionSetAltTabExitInitiate(boost::bind(&UnityScreen::altTabExitInitiate, this, _1, _2, _3));
-    optionSetAltTabExitTerminate(boost::bind(&UnityScreen::altTabExitTerminate, this, _1, _2, _3));
-   */
   optionSetAltTabLeftInitiate (boost::bind (&UnityScreen::altTabPrevInitiate, this, _1, _2, _3));
   optionSetAltTabRightInitiate (boost::bind (&UnityScreen::altTabForwardInitiate, this, _1, _2, _3));
 
@@ -273,6 +270,35 @@ UnityScreen::~UnityScreen()
   // Deleting the windows thread calls XCloseDisplay, which calls XSync, which
   // sits waiting for a reply.
   // delete wt;
+}
+
+void UnityScreen::initAltTabNextWindow()
+{
+  KeyboardUtil key_util (screen->dpy());
+  guint above_tab_keycode = key_util.GetKeycodeAboveKeySymbol (XStringToKeysym("Tab"));
+  KeySym above_tab_keysym = XKeycodeToKeysym (screen->dpy(), above_tab_keycode, 0);
+
+  if (above_tab_keysym != NoSymbol)
+  {
+    std::ostringstream sout;
+    sout << "<Alt>" << XKeysymToString(above_tab_keysym);
+
+    screen->removeAction(&optionGetAltTabNextWindow());
+    
+    CompAction action = CompAction();
+    action.keyFromString(sout.str());
+    action.setState (CompAction::StateInitKey | CompAction::StateAutoGrab);
+    mOptions[UnityshellOptions::AltTabNextWindow].value().set (action);
+    screen->addAction (&mOptions[UnityshellOptions::AltTabNextWindow].value ().action ());
+
+    optionSetAltTabNextWindowInitiate(boost::bind(&UnityScreen::altTabNextWindowInitiate, this, _1, _2, _3));
+    optionSetAltTabNextWindowTerminate(boost::bind(&UnityScreen::altTabTerminateCommon, this, _1, _2, _3));
+  }
+  else
+  {
+    printf ("Could not find key above tab!\n");
+  }
+
 }
 
 void UnityScreen::EnsureKeybindings()
@@ -1219,7 +1245,11 @@ bool UnityScreen::initPluginForScreen(CompPlugin* p)
     initPluginActions(this);
   }
 
-  return screen->initPluginForScreen(p);
+  bool result = screen->initPluginForScreen(p);
+  if (p->vTable->name() == "unityshell")
+    initAltTabNextWindow();
+    
+  return result;
 }
 
 void UnityScreen::AddProperties(GVariantBuilder* builder)

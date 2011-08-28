@@ -95,7 +95,7 @@ void DashView::SetupViews()
   SetLayout(layout_);
 
   content_layout_ = new nux::VLayout();
-  layout_->AddLayout(content_layout_, 1, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FIX); 
+  layout_->AddLayout(content_layout_, 1, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FIX);
   search_bar_ = new SearchBar();
   search_bar_->activated.connect(sigc::mem_fun(this, &DashView::OnEntryActivated));
   search_bar_->search_changed.connect(sigc::mem_fun(this, &DashView::OnSearchChanged));
@@ -129,12 +129,17 @@ void DashView::Relayout()
   DashSettings* settings = DashSettings::GetDefault();
   nux::Geometry geo = GetGeometry();
   content_geo_ = GetBestFitGeometry(geo);
-    
+
   if (settings->GetFormFactor() == DashSettings::NETBOOK)
   {
     if (geo.width >= content_geo_.width && geo.height > content_geo_.height)
       content_geo_ = geo;
   }
+
+  // kinda hacky, but it makes sure the content isn't so big that it throws
+  // the bottom of the dash off the screen
+  // not hugely happy with this, so FIXME
+  lenses_layout_->SetMaximumHeight (content_geo_.height - search_bar_->GetGeometry().height - lens_bar_->GetGeometry().height);
 
   content_layout_->SetMinMaxSize(content_geo_.width, content_geo_.height);
 
@@ -153,7 +158,7 @@ nux::Geometry DashView::GetBestFitGeometry(nux::Geometry const& for_geo)
   int tile_width = style->GetTileWidth();
   int tile_height = style->GetTileHeight();
   int half = for_geo.width / 2;
-  
+
   while ((width += tile_width) < half)
     ;
 
@@ -168,6 +173,7 @@ nux::Geometry DashView::GetBestFitGeometry(nux::Geometry const& for_geo)
     width = MIN(width, for_geo.width-66);
     height = MIN(height, for_geo.height-24);
   }
+
   return nux::Geometry(0, 0, width, height);
 }
 
@@ -282,7 +288,7 @@ void DashView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
         texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
         texxform.SetWrap(nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
 
-        gfx_context.QRP_1Tex(geo.x - left_corner_offset, 
+        gfx_context.QRP_1Tex(geo.x - left_corner_offset,
                             geo.y + (geo.height - left_corner->GetHeight()),
                             left_corner->GetWidth(),
                             left_corner->GetHeight(),
@@ -312,7 +318,7 @@ void DashView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
         texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
         texxform.SetWrap(nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
 
-        gfx_context.QRP_1Tex(geo.x - left_corner_offset, 
+        gfx_context.QRP_1Tex(geo.x - left_corner_offset,
                             geo.y + (geo.height - left_corner->GetHeight()),
                             left_corner->GetWidth(),
                             left_corner->GetHeight(),
@@ -338,7 +344,7 @@ void DashView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
         texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
         texxform.SetWrap(nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
 
-        gfx_context.QRP_1Tex(geo.x + geo.width - right->GetWidth(), 
+        gfx_context.QRP_1Tex(geo.x + geo.width - right->GetWidth(),
                             geo.y - top_corner_offset,
                             top_corner->GetWidth(),
                             top_corner->GetHeight(),
@@ -532,7 +538,7 @@ void DashView::OnLensBarActivated(std::string const& id)
   search_bar_->text_entry()->SelectAll();
   search_bar_->text_entry()->SetFocused(true);
   nux::GetWindowCompositor().SetKeyFocusArea(search_bar_->text_entry());
-  
+
   view->QueueDraw();
   QueueDraw();
 }
