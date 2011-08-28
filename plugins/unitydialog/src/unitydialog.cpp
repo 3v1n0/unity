@@ -934,7 +934,11 @@ UnityDialogWindow::setMaxConstrainingAreas()
       if (!UnityDialogWindow::get (mParent)->mDiffXWC.width)
         UnityDialogWindow::get (mParent)->mDiffXWC.width = xwc.width - mParent->width ();
       if (!UnityDialogWindow::get (mParent)->mDiffXWC.x)
-        UnityDialogWindow::get (mParent)->mDiffXWC.x = xwc.x - mParent->x ();
+      {
+	UnityDialogWindow::get (mParent)->mDiffXWC.x = xwc.x - mParent->x ();
+	(UnityDialogWindow::get (mParent))->mCurrentPos += CompPoint (UnityDialogWindow::get (mParent)->mDiffXWC.x, 0);
+	(UnityDialogWindow::get (mParent))->mTargetPos += CompPoint (UnityDialogWindow::get (mParent)->mDiffXWC.x, 0);
+      }
 
       changeMask |= CWX | CWWidth;
     }
@@ -954,7 +958,11 @@ UnityDialogWindow::setMaxConstrainingAreas()
       if (!UnityDialogWindow::get (mParent)->mDiffXWC.height)
         UnityDialogWindow::get (mParent)->mDiffXWC.height = xwc.height - mParent->height ();
       if (!UnityDialogWindow::get (mParent)->mDiffXWC.y)
+      {
         UnityDialogWindow::get (mParent)->mDiffXWC.y = xwc.y - mParent->y ();
+	(UnityDialogWindow::get (mParent))->mCurrentPos += CompPoint (0, UnityDialogWindow::get (mParent)->mDiffXWC.y);
+	(UnityDialogWindow::get (mParent))->mTargetPos += CompPoint (0, UnityDialogWindow::get (mParent)->mDiffXWC.y);
+      }
 
       changeMask |= CWY | CWHeight;
     }
