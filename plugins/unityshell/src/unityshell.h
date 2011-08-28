@@ -231,8 +231,6 @@ protected:
   void AddProperties(GVariantBuilder* builder);
 
 private:
-  void initAltTabNextWindow ();
-
   void SendExecuteCommand();
 
   void EnsureKeybindings ();

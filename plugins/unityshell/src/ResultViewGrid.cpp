@@ -544,20 +544,18 @@ uint ResultViewGrid::GetIndexAtPosition(int x, int y)
 bool
 ResultViewGrid::DndSourceDragBegin()
 {
-
+  Reference();
+  ubus_server_send_message(ubus_server_get_default(),
+                           UBUS_PLACE_VIEW_CLOSE_REQUEST,
+                           NULL);
   uint drag_index = GetIndexAtPosition(last_mouse_down_x_, last_mouse_down_y_);
 
   if (drag_index >= results_.size())
     return false;
 
-  Reference();
-  ubus_server_send_message(ubus_server_get_default(),
-                           UBUS_PLACE_VIEW_CLOSE_REQUEST,
-                           NULL);
-
   Result drag_result = results_[drag_index];
-
-  current_drag_uri_ = drag_result.dnd_uri;
+  
+  std::string current_drag_uri_ = drag_result.dnd_uri;
   if (current_drag_uri_ == "")
     current_drag_uri_ = drag_result.uri().substr(drag_result.uri().find(":") + 1);
 
@@ -567,7 +565,7 @@ ResultViewGrid::DndSourceDragBegin()
                      last_mouse_down_x_ << ", " << last_mouse_down_y_ << " - using; "
                      << current_drag_uri_ << " - "
                      << current_drag_icon_name_;
-
+  
   return true;
 }
 

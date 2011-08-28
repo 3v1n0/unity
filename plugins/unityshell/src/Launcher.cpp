@@ -2047,38 +2047,36 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   // clip vertically but not horizontally
   GfxContext.PushClippingRectangle(nux::Geometry(base.x, bkg_box.y, base.width, bkg_box.height));
   
-  
+  if (BackgroundEffectHelper::blur_type != unity::BLUR_NONE && (bkg_box.x + bkg_box.width > 0))
+  {
+    nux::Geometry geo_absolute = GetAbsoluteGeometry();
+    
+    nux::Geometry blur_geo(geo_absolute.x, geo_absolute.y, base.width, base.height);
+    auto blur_texture = bg_effect_helper_.GetBlurRegion(blur_geo);
+
+    if (blur_texture.IsValid())
+    {
+      nux::TexCoordXForm texxform_blur_bg;
+      texxform_blur_bg.flip_v_coord = true;
+      texxform_blur_bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+      texxform_blur_bg.uoffset = ((float) base.x) / geo_absolute.width;
+      texxform_blur_bg.voffset = ((float) base.y) / geo_absolute.height;
+
+      GfxContext.PushClippingRectangle(bkg_box);
+      gPainter.PushDrawTextureLayer(GfxContext, base,
+                                    blur_texture,
+                                    texxform_blur_bg,
+                                    nux::color::White,
+                                    true,
+                                    ROP);
+      GfxContext.PopClippingRectangle();
+      
+      push_count++;
+    }
+  }
 
   if (_dash_is_open)
   {
-    if (BackgroundEffectHelper::blur_type != unity::BLUR_NONE && (bkg_box.x + bkg_box.width > 0))
-    {
-      nux::Geometry geo_absolute = GetAbsoluteGeometry();
-      
-      nux::Geometry blur_geo(geo_absolute.x, geo_absolute.y, base.width, base.height);
-      auto blur_texture = bg_effect_helper_.GetBlurRegion(blur_geo);
-
-      if (blur_texture.IsValid())
-      {
-        nux::TexCoordXForm texxform_blur_bg;
-        texxform_blur_bg.flip_v_coord = true;
-        texxform_blur_bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-        texxform_blur_bg.uoffset = ((float) base.x) / geo_absolute.width;
-        texxform_blur_bg.voffset = ((float) base.y) / geo_absolute.height;
-
-        GfxContext.PushClippingRectangle(bkg_box);
-        gPainter.PushDrawTextureLayer(GfxContext, base,
-                                      blur_texture,
-                                      texxform_blur_bg,
-                                      nux::color::White,
-                                      true,
-                                      ROP);
-        GfxContext.PopClippingRectangle();
-        
-        push_count++;
-      }
-    }
-    
     gPainter.Paint2DQuadColor(GfxContext, bkg_box, _background_color);
   }
   else
