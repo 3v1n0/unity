@@ -2832,7 +2832,7 @@ Launcher::RestoreSystemRenderTarget()
 }
 
 void Launcher::OnDNDDataCollected(const std::list<char*>& mimes)
-{
+{  
   _dnd_data.Reset();
 
   unity::glib::String uri_list_const(g_strdup("text/uri-list"));
