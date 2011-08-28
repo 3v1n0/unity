@@ -178,6 +178,19 @@ public:
   glPaint(const GLWindowPaintAttrib&, const GLMatrix&,
           const CompRegion&, unsigned int);
 
+  void
+  glAddGeometry(const GLTexture::MatrixList &matrices,
+                const CompRegion &region,
+                const CompRegion &clipRegion,
+                unsigned int min,
+                unsigned int max);
+
+  void
+  glDrawTexture(GLTexture *texture,
+                GLFragment::Attrib &attrib,
+                unsigned int mask);
+
+
   void windowNotify(CompWindowNotify n);
   void grabNotify(int x, int y,
                   unsigned int state,
@@ -238,6 +251,9 @@ public:
   bool animate(int ms, float fadeTime);
   CompRegion getDamageRegion();
 
+  void setIsAnimated (bool animated) { mIsAnimated = animated; }
+  bool isAnimated () { return mIsAnimated; }
+
 private:
 
   bool         mSkipNotify;
@@ -250,8 +266,21 @@ private:
   CompPoint      mCurrentPos;
   CompPoint      mOffset;
   XWindowChanges mDiffXWC;
-
   Window         mIpw;
+  bool           mIsAnimated;
+
+  typedef std::vector <GLTexture::MatrixList> MatrixListVector;
+  typedef std::vector <CompRegion> CompRegionVector;
+  typedef std::vector <int> IntVector;
+
+  /* Collected regions, textures */
+  std::vector <MatrixListVector> mCollectedMatrixLists;
+  std::vector <GLTexture *> mCollectedTextures;
+  std::vector <CompRegionVector> mCollectedRegions;
+  std::vector <IntVector> mCollectedMinVertices;
+  std::vector <IntVector> mCollectedMaxVertices;
+
+  void collectDrawInfo ();
 };
 
 #define VIG_WINDOW(w)                  \
