@@ -69,13 +69,13 @@ QuicklistMenuItem::QuicklistMenuItem(DbusmenuMenuitem* item,
                      this);
   }
 
-  OnMouseDown.connect(sigc::mem_fun(this, &QuicklistMenuItem::RecvMouseDown));
-  OnMouseUp.connect(sigc::mem_fun(this, &QuicklistMenuItem::RecvMouseUp));
-  OnMouseClick.connect(sigc::mem_fun(this, &QuicklistMenuItem::RecvMouseClick));
-  OnMouseMove.connect(sigc::mem_fun(this, &QuicklistMenuItem::RecvMouseMove));
-  OnMouseDrag.connect(sigc::mem_fun(this, &QuicklistMenuItem::RecvMouseDrag));
-  OnMouseEnter.connect(sigc::mem_fun(this, &QuicklistMenuItem::RecvMouseEnter));
-  OnMouseLeave.connect(sigc::mem_fun(this, &QuicklistMenuItem::RecvMouseLeave));
+  mouse_down.connect(sigc::mem_fun(this, &QuicklistMenuItem::RecvMouseDown));
+  mouse_up.connect(sigc::mem_fun(this, &QuicklistMenuItem::RecvMouseUp));
+  mouse_click.connect(sigc::mem_fun(this, &QuicklistMenuItem::RecvMouseClick));
+  mouse_move.connect(sigc::mem_fun(this, &QuicklistMenuItem::RecvMouseMove));
+  mouse_drag.connect(sigc::mem_fun(this, &QuicklistMenuItem::RecvMouseDrag));
+  mouse_enter.connect(sigc::mem_fun(this, &QuicklistMenuItem::RecvMouseEnter));
+  mouse_leave.connect(sigc::mem_fun(this, &QuicklistMenuItem::RecvMouseLeave));
 
   _prelight = false;
 }
@@ -108,13 +108,13 @@ QuicklistMenuItem::QuicklistMenuItem(DbusmenuMenuitem* item,
                      this);
   }
 
-  OnMouseDown.connect(sigc::mem_fun(this, &QuicklistMenuItem::RecvMouseDown));
-  OnMouseUp.connect(sigc::mem_fun(this, &QuicklistMenuItem::RecvMouseUp));
-  OnMouseClick.connect(sigc::mem_fun(this, &QuicklistMenuItem::RecvMouseClick));
-  OnMouseMove.connect(sigc::mem_fun(this, &QuicklistMenuItem::RecvMouseMove));
-  OnMouseDrag.connect(sigc::mem_fun(this, &QuicklistMenuItem::RecvMouseDrag));
-  OnMouseEnter.connect(sigc::mem_fun(this, &QuicklistMenuItem::RecvMouseEnter));
-  OnMouseLeave.connect(sigc::mem_fun(this, &QuicklistMenuItem::RecvMouseLeave));
+  mouse_down.connect(sigc::mem_fun(this, &QuicklistMenuItem::RecvMouseDown));
+  mouse_up.connect(sigc::mem_fun(this, &QuicklistMenuItem::RecvMouseUp));
+  mouse_click.connect(sigc::mem_fun(this, &QuicklistMenuItem::RecvMouseClick));
+  mouse_move.connect(sigc::mem_fun(this, &QuicklistMenuItem::RecvMouseMove));
+  mouse_drag.connect(sigc::mem_fun(this, &QuicklistMenuItem::RecvMouseDrag));
+  mouse_enter.connect(sigc::mem_fun(this, &QuicklistMenuItem::RecvMouseEnter));
+  mouse_leave.connect(sigc::mem_fun(this, &QuicklistMenuItem::RecvMouseLeave));
 
   _prelight = false;
 }
@@ -408,7 +408,7 @@ QuicklistMenuItem::DrawText(cairo_t*   cr,
 
 const gchar* QuicklistMenuItem::GetName()
 {
-  return g_strdup(_name);
+  return _name;
 }
 
 void QuicklistMenuItem::AddProperties(GVariantBuilder* builder)

@@ -44,9 +44,6 @@ LauncherController::LauncherController(Launcher* launcher, CompScreen* screen)
   _launcher->launcher_addrequest.connect(sigc::mem_fun(this, &LauncherController::OnLauncherAddRequest));
   _launcher->launcher_removerequest.connect(sigc::mem_fun(this, &LauncherController::OnLauncherRemoveRequest));
 
-  _place_section = new PlaceLauncherSection(_launcher);
-  _place_section->IconAdded.connect(sigc::mem_fun(this, &LauncherController::OnIconAdded));
-
   _device_section = new DeviceLauncherSection(_launcher);
   _device_section->IconAdded.connect(sigc::mem_fun(this, &LauncherController::OnIconAdded));
 
@@ -59,9 +56,8 @@ LauncherController::LauncherController(Launcher* launcher, CompScreen* screen)
 
   _bamf_timer_handler_id = g_timeout_add(500, (GSourceFunc) &LauncherController::BamfTimerCallback, this);
 
-  _remote_model = LauncherEntryRemoteModel::GetDefault();
-  _remote_model->entry_added.connect(sigc::mem_fun(this, &LauncherController::OnLauncherEntryRemoteAdded));
-  _remote_model->entry_removed.connect(sigc::mem_fun(this, &LauncherController::OnLauncherEntryRemoteRemoved));
+  _remote_model.entry_added.connect(sigc::mem_fun(this, &LauncherController::OnLauncherEntryRemoteAdded));
+  _remote_model.entry_removed.connect(sigc::mem_fun(this, &LauncherController::OnLauncherEntryRemoteRemoved));
 
   RegisterIcon (new BFBLauncherIcon (launcher));
 }
@@ -74,7 +70,6 @@ LauncherController::~LauncherController()
   if (_matcher != NULL && _on_view_opened_id != 0)
     g_signal_handler_disconnect((gpointer) _matcher, _on_view_opened_id);
 
-  delete _place_section;
   delete _device_section;
   delete _model;
 }
@@ -99,30 +94,49 @@ LauncherController::OnLauncherAddRequest(char* path, LauncherIcon* before)
     if (before)
       _model->ReorderBefore(result, before, false);
   }
+  
+  Save();
+}
+
+void LauncherController::Save()
+{
+  unity::FavoriteList desktop_paths;
+
+  // Updates gsettings favorites.
+  std::list<BamfLauncherIcon*> launchers = _model->GetSublist<BamfLauncherIcon> ();
+  for (auto icon : launchers)
+  {
+    if (!icon->IsSticky())
+      continue;
+
+    const char* desktop_file = icon->DesktopFile();
+
+    if (desktop_file && strlen(desktop_file) > 0)
+      desktop_paths.push_back(desktop_file);
+  }
+
+  unity::FavoriteStore::GetDefault().SetFavorites(desktop_paths);
 }
 
 void LauncherController::SortAndUpdate()
 {
-  std::list<BamfLauncherIcon*> launchers;
-  std::list<BamfLauncherIcon*>::iterator it;
-  FavoriteList desktop_paths;
   gint   shortcut = 1;
   gchar* buff;
 
-  launchers = _model->GetSublist<BamfLauncherIcon> ();
-  for (it = launchers.begin(); it != launchers.end(); it++)
+  std::list<BamfLauncherIcon*> launchers = _model->GetSublist<BamfLauncherIcon> ();
+  for (auto it : launchers)
   {
-    if (shortcut < 11 && (*it)->GetQuirk(LauncherIcon::QUIRK_VISIBLE))
+    if (shortcut < 11 && it->GetQuirk(LauncherIcon::QUIRK_VISIBLE))
     {
       buff = g_strdup_printf("%d", shortcut % 10);
-      (*it)->SetShortcut(buff[0]);
+      it->SetShortcut(buff[0]);
       g_free(buff);
       shortcut++;
     }
     // reset shortcut
     else
     {
-      (*it)->SetShortcut(0);
+      it->SetShortcut(0);
     }
   }
 }
@@ -256,7 +270,7 @@ LauncherController::RegisterIcon(LauncherIcon* icon)
     const char* path;
     path = bamf_icon->DesktopFile();
     if (path)
-      entry = _remote_model->LookupByDesktopFile(path);
+      entry = _remote_model.LookupByDesktopFile(path);
     if (entry)
       icon->InsertEntryRemote(entry);
   }
@@ -367,5 +381,6 @@ void LauncherController::SetupBamf()
   }
 
   _model->order_changed.connect(sigc::mem_fun(this, &LauncherController::SortAndUpdate));
+  _model->saved.connect(sigc::mem_fun(this, &LauncherController::Save));
 }
 

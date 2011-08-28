@@ -22,6 +22,11 @@ static WindowManager* window_manager = NULL;
 
 class WindowManagerDummy : public WindowManager
 {
+  unsigned int GetWindowActiveNumber (guint32 xid)
+  {
+    return 0;
+  }
+  
   bool IsScreenGrabbed()
   {
     return false;

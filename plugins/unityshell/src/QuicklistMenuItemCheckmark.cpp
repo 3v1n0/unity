@@ -141,7 +141,7 @@ void
 QuicklistMenuItemCheckmark::Draw(nux::GraphicsEngine& gfxContext,
                                  bool                 forceDraw)
 {
-  nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture;
+  nux::ObjectPtr<nux::IOpenGLBaseTexture> texture;
 
   // Check if the texture have been computed. If they haven't, exit the function.
   if (!_normalTexture[0])

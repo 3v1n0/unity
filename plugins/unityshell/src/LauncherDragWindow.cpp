@@ -26,7 +26,7 @@
 
 NUX_IMPLEMENT_OBJECT_TYPE(LauncherDragWindow);
 
-LauncherDragWindow::LauncherDragWindow(nux::IntrusiveSP<nux::IOpenGLBaseTexture> icon)
+LauncherDragWindow::LauncherDragWindow(nux::ObjectPtr<nux::IOpenGLBaseTexture> icon)
   : nux::BaseWindow("")
 {
   _icon = icon;

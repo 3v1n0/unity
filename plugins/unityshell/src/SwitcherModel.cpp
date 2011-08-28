@@ -19,6 +19,7 @@
 #include <math.h>
 
 #include "SwitcherModel.h"
+#include "WindowManager.h"
 
 namespace unity
 {
@@ -63,6 +64,14 @@ SwitcherModel::rend()
   return _inner.rend();
 }
 
+AbstractLauncherIcon*
+SwitcherModel::at(unsigned int index)
+{
+  if ((int) index >= Size ())
+    return 0;
+  return _inner[index];
+}
+
 int
 SwitcherModel::Size()
 {
@@ -93,12 +102,23 @@ SwitcherModel::LastSelectionIndex()
   return _last_index;
 }
 
+bool
+SwitcherModel::CompareWindowsByActive (guint32 first, guint32 second)
+{
+  return WindowManager::Default ()->GetWindowActiveNumber (first) > WindowManager::Default ()->GetWindowActiveNumber (second);
+}
+
 std::vector<Window>
 SwitcherModel::DetailXids()
 {
   std::vector<Window> results;
-  if (detail_selection)
-    results = Selection()->RelatedXids ();
+  results = Selection()->RelatedXids ();
+
+  std::sort (results.begin (), results.end (), &CompareWindowsByActive);
+
+  // swap so we focus the last focused window first
+  if (Selection()->GetQuirk (AbstractLauncherIcon::QUIRK_ACTIVE) && results.size () > 1)
+    std::swap (results[0], results[1]);
 
   return results;
 }
@@ -115,44 +135,53 @@ SwitcherModel::DetailSelectionWindow ()
 void
 SwitcherModel::Next()
 {
-  if (detail_selection && detail_selection_index < Selection()->RelatedWindows () - 1)
-  {
-    detail_selection_index = detail_selection_index + 1;
-  }
-  else
-  {
-    _last_index = _index;
+  _last_index = _index;
 
-    _index++;
-    if (_index >= _inner.size())
-      _index = 0;
+  _index++;
+  if (_index >= _inner.size())
+    _index = 0;
 
-    detail_selection = false;
-    detail_selection_index = 0;
-    selection_changed.emit(Selection());
-  }
+  detail_selection = false;
+  detail_selection_index = 0;
+  selection_changed.emit(Selection());
 }
 
 void
 SwitcherModel::Prev()
 {
-  if (detail_selection && detail_selection_index > 0)
-  {
-    detail_selection_index = detail_selection_index - 1;  
-  }
+  _last_index = _index;
+
+  if (_index > 0)
+    _index--;
   else
-  {
-    _last_index = _index;
+    _index = _inner.size() - 1;
 
-    if (_index > 0)
-      _index--;
-    else
-      _index = _inner.size() - 1;
+  detail_selection = false;
+  detail_selection_index = 0;
+  selection_changed.emit(Selection());
+}
 
-    detail_selection = false;
+void
+SwitcherModel::NextDetail ()
+{
+  if (!detail_selection())
+    return;
+
+  if (detail_selection_index < Selection()->RelatedWindows () - 1)
+    detail_selection_index = detail_selection_index + 1;
+  else
     detail_selection_index = 0;
-    selection_changed.emit(Selection());
-  }
+}
+
+void SwitcherModel::PrevDetail ()
+{
+  if (!detail_selection())
+    return;
+
+  if (detail_selection_index > 0)
+    detail_selection_index = detail_selection_index - 1;
+  else
+    detail_selection_index = Selection()->RelatedWindows () - 1;
 }
 
 void

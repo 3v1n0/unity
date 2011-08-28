@@ -60,131 +60,149 @@ namespace ui
 #define LUMIN_BLUE "0.055"
 
 nux::NString gPerspectiveCorrectShader = TEXT(
-                                           "[Vertex Shader]                                                        \n\
-#version 120                                                            \n\
-uniform mat4 ViewProjectionMatrix;                                      \n\
-                                                                        \n\
-attribute vec4 iTexCoord0;                                              \n\
-attribute vec4 iVertex;                                                 \n\
-                                                                        \n\
-varying vec4 varyTexCoord0;                                             \n\
-                                                                        \n\
-void main()                                                             \n\
-{                                                                       \n\
-    varyTexCoord0 = iTexCoord0;                                         \n\
-    gl_Position =  ViewProjectionMatrix * iVertex;                      \n\
-}                                                                       \n\
-                                                                        \n\
-[Fragment Shader]                                                       \n\
-#version 110                                                            \n\
-                                                                        \n\
-varying vec4 varyTexCoord0;                                             \n\
-                                                                        \n\
-uniform sampler2D TextureObject0;                                       \n\
-uniform vec4 color0;                                                    \n\
-uniform vec4 desat_factor;                                              \n\
-vec4 SampleTexture(sampler2D TexObject, vec4 TexCoord)                  \n\
-{                                                                       \n\
-  return texture2D(TexObject, TexCoord.st);                             \n\
-}                                                                       \n\
-                                                                        \n\
-void main()                                                             \n\
-{                                                                       \n\
-  vec4 tex = varyTexCoord0;                                             \n\
-  tex.s = tex.s/varyTexCoord0.w;                                        \n\
-  tex.t = tex.t/varyTexCoord0.w;                                        \n\
-                                                                        \n\
-  vec4 texel = color0 * SampleTexture(TextureObject0, tex);             \n\
-  vec4 desat = vec4 ("LUMIN_RED"*texel.r + "LUMIN_GREEN"*texel.g + "LUMIN_BLUE"*texel.b);       \n\
-  vec4 final_color = (vec4 (1.0, 1.0, 1.0, 1.0) - desat_factor) * desat + desat_factor * texel;   \n\
-  final_color.a = texel.a;                                              \n\
-  gl_FragColor = final_color;                                           \n\
-}                                                                       \n\
+"[Vertex Shader]                                    \n\
+#version 120                                        \n\
+uniform mat4 ViewProjectionMatrix;                  \n\
+                                                    \n\
+attribute vec4 iTexCoord0;                          \n\
+attribute vec4 iVertex;                             \n\
+                                                    \n\
+varying vec4 varyTexCoord0;                         \n\
+                                                    \n\
+void main()                                         \n\
+{                                                   \n\
+    varyTexCoord0 = iTexCoord0;                     \n\
+    gl_Position =  ViewProjectionMatrix * iVertex;  \n\
+}                                                   \n\
+                                                    \n\
+[Fragment Shader]                                   \n\
+#version 110                                        \n\
+                                                    \n\
+varying vec4 varyTexCoord0;                         \n\
+                                                    \n\
+uniform sampler2D TextureObject0;                   \n\
+uniform vec4 color0;                                \n\
+uniform vec4 desat_factor;                          \n\
+vec4 SampleTexture(sampler2D TexObject, vec4 TexCoord) \n\
+{                                                   \n\
+  return texture2D(TexObject, TexCoord.st);         \n\
+}                                                   \n\
+                                                    \n\
+void main()                                         \n\
+{                                                   \n\
+  vec4 tex = varyTexCoord0;                         \n\
+  tex.s = tex.s/varyTexCoord0.w;                    \n\
+  tex.t = tex.t/varyTexCoord0.w;                    \n\
+                                                    \n\
+  vec4 texel = color0 * SampleTexture(TextureObject0, tex);  \n\
+  vec4 desat = vec4 ("LUMIN_RED"*texel.r + "LUMIN_GREEN"*texel.g + "LUMIN_BLUE"*texel.b);  \n\
+  vec4 final_color = (vec4 (1.0, 1.0, 1.0, 1.0) - desat_factor) * desat + desat_factor * texel; \n\
+  final_color.a = texel.a;                          \n\
+  gl_FragColor = final_color;                       \n\
+}                                                   \n\
 ");
 
-                                           nux::NString PerspectiveCorrectVtx = TEXT(
-                                           "!!ARBvp1.0                                 \n\
-                                           ATTRIB iPos         = vertex.position;      \n\
-                                           ATTRIB iColor       = vertex.attrib[3];     \n\
-                                           PARAM  mvp[4]       = {state.matrix.mvp};   \n\
-                                           OUTPUT oPos         = result.position;      \n\
-                                           OUTPUT oColor       = result.color;         \n\
-                                           OUTPUT oTexCoord0   = result.texcoord[0];   \n\
-                            # Transform the vertex to clip coordinates. \n\
-                            DP4   oPos.x, mvp[0], iPos;                 \n\
-                            DP4   oPos.y, mvp[1], iPos;                 \n\
-                            DP4   oPos.z, mvp[2], iPos;                 \n\
-                            DP4   oPos.w, mvp[3], iPos;                 \n\
-                            MOV   oColor, iColor;                       \n\
-                            MOV   oTexCoord0, vertex.attrib[8];         \n\
-                            END");
+nux::NString PerspectiveCorrectVtx = TEXT(
+"!!ARBvp1.0                                 \n\
+ATTRIB iPos         = vertex.position;      \n\
+ATTRIB iColor       = vertex.attrib[3];     \n\
+PARAM  mvp[4]       = {state.matrix.mvp};   \n\
+OUTPUT oPos         = result.position;      \n\
+OUTPUT oColor       = result.color;         \n\
+OUTPUT oTexCoord0   = result.texcoord[0];   \n\
+# Transform the vertex to clip coordinates. \n\
+DP4   oPos.x, mvp[0], iPos;                 \n\
+DP4   oPos.y, mvp[1], iPos;                 \n\
+DP4   oPos.z, mvp[2], iPos;                 \n\
+DP4   oPos.w, mvp[3], iPos;                 \n\
+MOV   oColor, iColor;                       \n\
+MOV   oTexCoord0, vertex.attrib[8];         \n\
+END");
 
+nux::NString PerspectiveCorrectTexFrg = TEXT(
+"!!ARBfp1.0                                                   \n\
+PARAM color0 = program.local[0];                              \n\
+PARAM factor = program.local[1];                              \n\
+PARAM luma = {"LUMIN_RED", "LUMIN_GREEN", "LUMIN_BLUE", 0.0}; \n\
+TEMP temp;                                                    \n\
+TEMP pcoord;                                                  \n\
+TEMP tex0;                                                    \n\
+TEMP desat;                                                   \n\
+TEMP color;                                                   \n\
+MOV pcoord, fragment.texcoord[0].w;                           \n\
+RCP temp, fragment.texcoord[0].w;                             \n\
+MUL pcoord.xy, fragment.texcoord[0], temp;                    \n\
+TEX tex0, pcoord, texture[0], 2D;                             \n\
+MUL color, color0, tex0;                                      \n\
+DP4 desat, luma, color;                                       \n\
+LRP result.color.rgb, factor.x, color, desat;                 \n\
+MOV result.color.a, color;                                    \n\
+END");
 
+nux::NString PerspectiveCorrectTexRectFrg = TEXT(
+"!!ARBfp1.0                                                   \n\
+PARAM color0 = program.local[0];                              \n\
+PARAM factor = program.local[1];                              \n\
+PARAM luma = {"LUMIN_RED", "LUMIN_GREEN", "LUMIN_BLUE", 0.0}; \n\
+TEMP temp;                                                    \n\
+TEMP pcoord;                                                  \n\
+TEMP tex0;                                                    \n\
+MOV pcoord, fragment.texcoord[0].w;                           \n\
+RCP temp, fragment.texcoord[0].w;                             \n\
+MUL pcoord.xy, fragment.texcoord[0], temp;                    \n\
+TEX tex0, pcoord, texture[0], RECT;                           \n\
+MUL color, color0, tex0;                                      \n\
+DP4 desat, luma, color;                                       \n\
+LRP result.color.rgb, factor.x, color, desat;                 \n\
+MOV result.color.a, color;                                    \n\
+END");
 
-                                           nux::NString PerspectiveCorrectTexFrg = TEXT(
-                                                 "!!ARBfp1.0                                 \n\
-                            PARAM color0 = program.local[0];            \n\
-                            PARAM factor = program.local[1];            \n\
-                            PARAM luma = {"LUMIN_RED", "LUMIN_GREEN", "LUMIN_BLUE", 0.0};       \n\
-                            TEMP temp;                                  \n\
-                            TEMP pcoord;                                \n\
-                            TEMP tex0;                                  \n\
-                            TEMP desat;                                 \n\
-                            TEMP color;                                 \n\
-                            MOV pcoord, fragment.texcoord[0].w;         \n\
-                            RCP temp, fragment.texcoord[0].w;           \n\
-                            MUL pcoord.xy, fragment.texcoord[0], temp;  \n\
-                            TEX tex0, pcoord, texture[0], 2D;           \n\
-                            MUL color, color0, tex0;                    \n\
-                            DP4 desat, luma, color;                     \n\
-                            LRP result.color.rgb, factor.x, color, desat;    \n\
-                            MOV result.color.a, color;    \n\
-                            END");
-
-                                           nux::NString PerspectiveCorrectTexRectFrg = TEXT(
-                                                 "!!ARBfp1.0                                 \n\
-                            PARAM color0 = program.local[0];            \n\
-                            PARAM factor = program.local[1];            \n\
-                            PARAM luma = {"LUMIN_RED", "LUMIN_GREEN", "LUMIN_BLUE", 0.0};       \n\
-                            TEMP temp;                                  \n\
-                            TEMP pcoord;                                \n\
-                            TEMP tex0;                                  \n\
-                            MOV pcoord, fragment.texcoord[0].w;         \n\
-                            RCP temp, fragment.texcoord[0].w;           \n\
-                            MUL pcoord.xy, fragment.texcoord[0], temp;  \n\
-                            TEX tex0, pcoord, texture[0], RECT;         \n\
-                            MUL color, color0, tex0;                    \n\
-                            DP4 desat, luma, color;                     \n\
-                            LRP result.color.rgb, factor.x, color, desat;    \n\
-                            MOV result.color.a, color;    \n\
-                            END");
-
-                                           bool IconRenderer::textures_created = false;
-                                           nux::BaseTexture* IconRenderer::_progress_bar_trough = 0;
-                                           nux::BaseTexture* IconRenderer::_progress_bar_fill = 0;
-                                           nux::BaseTexture* IconRenderer::_pip_ltr = 0;
-                                           nux::BaseTexture* IconRenderer::_pip_rtl = 0;
-                                           nux::BaseTexture* IconRenderer::_arrow_ltr = 0;
-                                           nux::BaseTexture* IconRenderer::_arrow_rtl = 0;
-                                           nux::BaseTexture* IconRenderer::_arrow_empty_ltr = 0;
-                                           nux::BaseTexture* IconRenderer::_arrow_empty_rtl = 0;
-                                           std::vector<nux::BaseTexture*> IconRenderer::_icon_back;
-                                           std::vector<nux::BaseTexture*> IconRenderer::_icon_selected_back;
-                                           std::vector<nux::BaseTexture*> IconRenderer::_icon_edge;
-                                           std::vector<nux::BaseTexture*> IconRenderer::_icon_glow;
-                                           std::vector<nux::BaseTexture*> IconRenderer::_icon_shine;
-                                           nux::IntrusiveSP<nux::IOpenGLBaseTexture> IconRenderer::_offscreen_progress_texture;
-                                           nux::IntrusiveSP<nux::IOpenGLShaderProgram>    IconRenderer::_shader_program_uv_persp_correction;
-                                           nux::IntrusiveSP<nux::IOpenGLAsmShaderProgram> IconRenderer::_AsmShaderProg;
-                                           std::map<char, nux::BaseTexture*> IconRenderer::label_map;
-
-                                           IconRenderer::IconRenderer()
+// The local namespace is purely for namespacing the file local variables below.
+namespace local
 {
-  textures_created = false;
-  SetupShaders();
+namespace
+{
+enum IconSize
+{
+  SMALL = 0,
+  BIG,
+  LAST,
+};
 
-  if (!textures_created)
-    GenerateTextures();
+bool textures_created = false;
+nux::BaseTexture* progress_bar_trough = 0;
+nux::BaseTexture* progress_bar_fill = 0;
+nux::BaseTexture* pip_ltr = 0;
+nux::BaseTexture* pip_rtl = 0;
+nux::BaseTexture* arrow_ltr = 0;
+nux::BaseTexture* arrow_rtl = 0;
+nux::BaseTexture* arrow_empty_ltr = 0;
+nux::BaseTexture* arrow_empty_rtl = 0;
+
+nux::BaseTexture* squircle_base = 0;
+nux::BaseTexture* squircle_shine = 0;
+
+std::vector<nux::BaseTexture*> icon_background;
+std::vector<nux::BaseTexture*> icon_selected_background;
+std::vector<nux::BaseTexture*> icon_edge;
+std::vector<nux::BaseTexture*> icon_glow;
+std::vector<nux::BaseTexture*> icon_shine;
+nux::ObjectPtr<nux::IOpenGLBaseTexture> offscreen_progress_texture;
+nux::ObjectPtr<nux::IOpenGLShaderProgram> shader_program_uv_persp_correction;
+nux::ObjectPtr<nux::IOpenGLAsmShaderProgram> asm_shader;
+std::map<char, nux::BaseTexture*> label_map;
+
+void generate_textures();
+void destroy_textures();
+}
+}
+
+IconRenderer::IconRenderer()
+{
+  pip_style = OUTSIDE_TILE;
+  
+  if (!local::textures_created)
+    local::generate_textures();
 }
 
 IconRenderer::~IconRenderer()
@@ -236,7 +254,7 @@ void IconRenderer::PreprocessIcons(std::list<RenderArg>& args, nux::Geometry con
 
     ViewProjectionMatrix = ProjectionMatrix * ViewMatrix * ObjectMatrix;
 
-    UpdateIconTransform(launcher_icon, ViewProjectionMatrix, geo, x, y, w, h, z, "Tile");
+    UpdateIconTransform(launcher_icon, ViewProjectionMatrix, geo, x, y, w, h, z, AbstractLauncherIcon::TRANSFORM_TILE);
 
     w = image_size;
     h = image_size;
@@ -244,7 +262,7 @@ void IconRenderer::PreprocessIcons(std::list<RenderArg>& args, nux::Geometry con
     y = it->render_center.y - icon_size / 2.0f + (icon_size - image_size) / 2.0f;
     z = it->render_center.z;
 
-    UpdateIconTransform(launcher_icon, ViewProjectionMatrix, geo, x, y, w, h, z, "Image");
+    UpdateIconTransform(launcher_icon, ViewProjectionMatrix, geo, x, y, w, h, z, AbstractLauncherIcon::TRANSFORM_IMAGE);
 
     // hardcode values for now until SVG's are in place and we can remove this
     // 200 == size of large glow
@@ -262,7 +280,7 @@ void IconRenderer::PreprocessIcons(std::list<RenderArg>& args, nux::Geometry con
     y = it->render_center.y - icon_glow_size / 2.0f;
     z = it->render_center.z;
 
-    UpdateIconTransform(launcher_icon, ViewProjectionMatrix, geo, x, y, w, h, z, "Glow");
+    UpdateIconTransform(launcher_icon, ViewProjectionMatrix, geo, x, y, w, h, z, AbstractLauncherIcon::TRANSFORM_GLOW);
 
     w = geo.width + 2;
     h = icon_size + spacing;
@@ -272,7 +290,7 @@ void IconRenderer::PreprocessIcons(std::list<RenderArg>& args, nux::Geometry con
     y = it->logical_center.y - h / 2.0f;
     z = it->logical_center.z;
 
-    UpdateIconTransform(launcher_icon, ViewProjectionMatrix, geo, x, y, w, h, z, "HitArea");
+    UpdateIconTransform(launcher_icon, ViewProjectionMatrix, geo, x, y, w, h, z, AbstractLauncherIcon::TRANSFORM_HIT_AREA);
 
     if (launcher_icon->Emblem())
     {
@@ -297,19 +315,19 @@ void IconRenderer::PreprocessIcons(std::list<RenderArg>& args, nux::Geometry con
       ViewProjectionMatrix = ProjectionMatrix * ViewMatrix * ObjectMatrix;
 
       UpdateIconSectionTransform(launcher_icon, ViewProjectionMatrix, geo, x, y, emb_w, emb_h, z,
-                                 it->render_center.x - w / 2.0f, it->render_center.y - h / 2.0f, w, h, "Emblem");
+                                 it->render_center.x - w / 2.0f, it->render_center.y - h / 2.0f, w, h, AbstractLauncherIcon::TRANSFORM_EMBLEM);
     }
   }
 }
 
 void IconRenderer::UpdateIconTransform(AbstractLauncherIcon* icon, nux::Matrix4 ViewProjectionMatrix, nux::Geometry const& geo,
-                                       float x, float y, float w, float h, float z, std::string name)
+                                       float x, float y, float w, float h, float z, AbstractLauncherIcon::TransformIndex index)
 {
-  UpdateIconSectionTransform (icon, ViewProjectionMatrix, geo, x, y, w, h, z, x, y, w, h, name);
+  UpdateIconSectionTransform (icon, ViewProjectionMatrix, geo, x, y, w, h, z, x, y, w, h, index);
 }
 
 void IconRenderer::UpdateIconSectionTransform(AbstractLauncherIcon* icon, nux::Matrix4 ViewProjectionMatrix, nux::Geometry const& geo,
-                                              float x, float y, float w, float h, float z, float xx, float yy, float ww, float hh, std::string name)
+                                              float x, float y, float w, float h, float z, float xx, float yy, float ww, float hh, AbstractLauncherIcon::TransformIndex index)
 {
   nux::Vector4 v0 = nux::Vector4(x,     y,     z, 1.0f);
   nux::Vector4 v1 = nux::Vector4(x,     y + h, z, 1.0f);
@@ -337,7 +355,7 @@ void IconRenderer::UpdateIconSectionTransform(AbstractLauncherIcon* icon, nux::M
   v3.y = -geo.height * (v3.y - 1.0f) / 2.0f - geo.height / 2.0f + yy + hh / 2.0f;
 
 
-  std::vector<nux::Vector4>& vectors = icon->GetTransform(name);
+  std::vector<nux::Vector4>& vectors = icon->GetTransform(index);
 
   vectors[0] = v0;
   vectors[1] = v1;
@@ -351,7 +369,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
   if (arg.icon->TextureForSize(image_size) == 0 || arg.skip)
     return;
 
-  IconSize size = icon_size > 100 ? IconRenderer::BIG : IconRenderer::SMALL;
+  local::IconSize size = icon_size > 100 ? local::IconSize::BIG : local::IconSize::SMALL;
 
   GfxContext.GetRenderStates().SetBlend(true);
   GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
@@ -362,7 +380,9 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
   nux::Color edge_color(0x55555555);
   float backlight_intensity = arg.backlight_intensity;
   float glow_intensity = arg.glow_intensity;
-  nux::BaseTexture* background = _icon_back[size];
+
+  nux::BaseTexture* background = local::icon_background[size];
+  nux::BaseTexture* shine = local::icon_shine[size];
 
   if (arg.keyboard_nav_hl)
   {
@@ -372,8 +392,20 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
     backlight_intensity = 0.95;
     glow_intensity = 1.0f;
 
-    background = _icon_selected_back[size];
+    background = local::icon_selected_background[size];
   }
+
+  if (arg.system_item)
+  {
+    background_color = nux::color::White;
+    backlight_intensity = 1.0f;
+    glow_intensity = 0.0f;
+
+    background = local::squircle_base;
+    shine = local::squircle_shine;
+  }
+
+  auto tile_transform = arg.icon->GetTransform(AbstractLauncherIcon::TRANSFORM_TILE);
 
   // draw tile
   if (backlight_intensity > 0)
@@ -383,17 +415,20 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
                   background->GetDeviceTexture(),
                   background_color,
                   backlight_intensity * arg.alpha,
-                  arg.icon->GetTransform("Tile"));
+                  tile_transform);
   }
 
   edge_color = edge_color + ((background_color - edge_color) * arg.backlight_intensity);
 
-  RenderElement(GfxContext,
-                arg,
-                _icon_edge[size]->GetDeviceTexture(),
-                edge_color,
-                arg.alpha,
-                arg.icon->GetTransform("Tile"));
+  if (!arg.system_item)
+  {
+    RenderElement(GfxContext,
+                  arg,
+                  local::icon_edge[size]->GetDeviceTexture(),
+                  edge_color,
+                  arg.alpha,
+                  tile_transform);
+  }
   // end tile draw
 
   // draw icon
@@ -402,25 +437,25 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
                 arg.icon->TextureForSize(image_size)->GetDeviceTexture(),
                 nux::color::White,
                 arg.alpha,
-                arg.icon->GetTransform("Image"));
+                arg.icon->GetTransform(AbstractLauncherIcon::TRANSFORM_IMAGE));
 
   // draw overlay shine
   RenderElement(GfxContext,
                 arg,
-                _icon_shine[size]->GetDeviceTexture(),
+                shine->GetDeviceTexture(),
                 nux::color::White,
                 arg.alpha,
-                arg.icon->GetTransform("Tile"));
+                tile_transform);
 
   // draw glow
   if (glow_intensity > 0)
   {
     RenderElement(GfxContext,
                   arg,
-                  _icon_glow[size]->GetDeviceTexture(),
+                  local::icon_glow[size]->GetDeviceTexture(),
                   glow_color,
                   glow_intensity * arg.alpha,
-                  arg.icon->GetTransform("Glow"));
+                  arg.icon->GetTransform(AbstractLauncherIcon::TRANSFORM_GLOW));
   }
 
   // draw shimmer
@@ -437,10 +472,10 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
 
     RenderElement(GfxContext,
                   arg,
-                  _icon_glow[size]->GetDeviceTexture(),
+                  local::icon_glow[size]->GetDeviceTexture(),
                   arg.icon->GlowColor(),
                   fade_out * arg.alpha,
-                  arg.icon->GetTransform("Glow"));
+                  arg.icon->GetTransform(AbstractLauncherIcon::TRANSFORM_GLOW));
 
     GfxContext.PopClippingRectangle();
   }
@@ -448,16 +483,20 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
   // draw progress bar
   if (arg.progress_bias > -1.0f && arg.progress_bias < 1.0f)
   {
-    if (_offscreen_progress_texture->GetWidth() != icon_size || _offscreen_progress_texture->GetHeight() != icon_size)
-      _offscreen_progress_texture = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableDeviceTexture(icon_size, icon_size, 1, nux::BITFMT_R8G8B8A8);
-    RenderProgressToTexture(GfxContext, _offscreen_progress_texture, arg.progress, arg.progress_bias);
+    if (local::offscreen_progress_texture->GetWidth() != icon_size ||
+        local::offscreen_progress_texture->GetHeight() != icon_size)
+    {
+      local::offscreen_progress_texture = nux::GetGraphicsDisplay()->GetGpuDevice()
+        ->CreateSystemCapableDeviceTexture(icon_size, icon_size, 1, nux::BITFMT_R8G8B8A8);
+    }
+    RenderProgressToTexture(GfxContext, local::offscreen_progress_texture, arg.progress, arg.progress_bias);
 
     RenderElement(GfxContext,
                   arg,
-                  _offscreen_progress_texture,
+                  local::offscreen_progress_texture,
                   nux::color::White,
                   arg.alpha,
-                  arg.icon->GetTransform("Tile"));
+                  tile_transform);
   }
 
   if (arg.icon->Emblem())
@@ -467,7 +506,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
                   arg.icon->Emblem()->GetDeviceTexture(),
                   nux::color::White,
                   arg.alpha,
-                  arg.icon->GetTransform("Emblem"));
+                  arg.icon->GetTransform(AbstractLauncherIcon::TRANSFORM_EMBLEM));
   }
 
   // draw indicators
@@ -483,15 +522,15 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
   {
     char shortcut = (char) arg.shortcut_label;
 
-    if (label_map.find(shortcut) == label_map.end())
-      label_map[shortcut] = RenderCharToTexture(shortcut, icon_size, icon_size);
+    if (local::label_map.find(shortcut) == local::label_map.end())
+      local::label_map[shortcut] = RenderCharToTexture(shortcut, icon_size, icon_size);
 
     RenderElement(GfxContext,
                   arg,
-                  label_map[shortcut]->GetDeviceTexture(),
+                  local::label_map[shortcut]->GetDeviceTexture(),
                   nux::Color(0xFFFFFFFF),
                   arg.alpha,
-                  arg.icon->GetTransform("Tile"));
+                  tile_transform);
   }
 }
 
@@ -555,18 +594,13 @@ nux::BaseTexture* IconRenderer::RenderCharToTexture(const char label, int width,
 
 void IconRenderer::RenderElement(nux::GraphicsEngine& GfxContext,
                                  RenderArg const& arg,
-                                 nux::IntrusiveSP<nux::IOpenGLBaseTexture> icon,
+                                 nux::ObjectPtr<nux::IOpenGLBaseTexture> icon,
                                  nux::Color bkg_color,
                                  float alpha,
                                  std::vector<nux::Vector4>& xform_coords)
 {
-  if (icon == NULL)
+  if (icon.IsNull())
     return;
-
-  nux::Matrix4 ObjectMatrix;
-  nux::Matrix4 ViewMatrix;
-  nux::Matrix4 ProjectionMatrix;
-  nux::Matrix4 ViewProjectionMatrix;
 
   if (nux::Abs(arg.x_rotation) < 0.01f && nux::Abs(arg.y_rotation) < 0.01f && nux::Abs(arg.z_rotation) < 0.01f)
     icon->SetFiltering(GL_NEAREST, GL_NEAREST);
@@ -623,27 +657,27 @@ void IconRenderer::RenderElement(nux::GraphicsEngine& GfxContext,
 
   if (nux::GetGraphicsEngine().UsingGLSLCodePath())
   {
-    _shader_program_uv_persp_correction->Begin();
+    local::shader_program_uv_persp_correction->Begin();
 
-    TextureObjectLocation   = _shader_program_uv_persp_correction->GetUniformLocationARB("TextureObject0");
-    VertexLocation          = _shader_program_uv_persp_correction->GetAttributeLocation("iVertex");
-    TextureCoord0Location   = _shader_program_uv_persp_correction->GetAttributeLocation("iTexCoord0");
-    FragmentColor           = _shader_program_uv_persp_correction->GetUniformLocationARB("color0");
-    DesatFactor             = _shader_program_uv_persp_correction->GetUniformLocationARB("desat_factor");
+    TextureObjectLocation   = local::shader_program_uv_persp_correction->GetUniformLocationARB("TextureObject0");
+    VertexLocation          = local::shader_program_uv_persp_correction->GetAttributeLocation("iVertex");
+    TextureCoord0Location   = local::shader_program_uv_persp_correction->GetAttributeLocation("iTexCoord0");
+    FragmentColor           = local::shader_program_uv_persp_correction->GetUniformLocationARB("color0");
+    DesatFactor             = local::shader_program_uv_persp_correction->GetUniformLocationARB("desat_factor");
 
     if (TextureObjectLocation != -1)
       CHECKGL(glUniform1iARB(TextureObjectLocation, 0));
 
-    int VPMatrixLocation = _shader_program_uv_persp_correction->GetUniformLocationARB("ViewProjectionMatrix");
+    int VPMatrixLocation = local::shader_program_uv_persp_correction->GetUniformLocationARB("ViewProjectionMatrix");
     if (VPMatrixLocation != -1)
     {
       nux::Matrix4 mat = nux::GetGraphicsEngine().GetOpenGLModelViewProjectionMatrix();
-      _shader_program_uv_persp_correction->SetUniformLocMatrix4fv((GLint)VPMatrixLocation, 1, false, (GLfloat*) & (mat.m));
+      local::shader_program_uv_persp_correction->SetUniformLocMatrix4fv((GLint)VPMatrixLocation, 1, false, (GLfloat*) & (mat.m));
     }
   }
   else
   {
-    _AsmShaderProg->Begin();
+    local::asm_shader->Begin();
 
     VertexLocation        = nux::VTXATTRIB_POSITION;
     TextureCoord0Location = nux::VTXATTRIB_TEXCOORD0;
@@ -696,11 +730,11 @@ void IconRenderer::RenderElement(nux::GraphicsEngine& GfxContext,
 
   if (nux::GetGraphicsEngine().UsingGLSLCodePath())
   {
-    _shader_program_uv_persp_correction->End();
+    local::shader_program_uv_persp_correction->End();
   }
   else
   {
-    _AsmShaderProg->End();
+    local::asm_shader->End();
   }
 }
 
@@ -714,10 +748,24 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
   int markerCenter = (int) arg.render_center.y;
   markerCenter -= (int)(arg.x_rotation / (2 * M_PI) * icon_size);
 
+
   if (running > 0)
   {
-    nux::TexCoordXForm texxform;
+    int scale = 1;
 
+    int markerX;
+    if (pip_style == OUTSIDE_TILE)
+    {
+      markerX = geo.x;
+    }
+    else
+    {
+      auto bounds = arg.icon->GetTransform(AbstractLauncherIcon::TRANSFORM_TILE);
+      markerX = bounds[0].x + 2;
+      scale = 2;
+    }
+
+    nux::TexCoordXForm texxform;
     nux::Color color = nux::color::LightGrey;
 
     if (arg.running_colored)
@@ -727,7 +775,8 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
 
     nux::BaseTexture* texture;
 
-    std::vector<int> markers;
+    // markers are well outside screen bounds to start
+    int markers [3] = {-100, -100, -100};
 
     /*if (!arg.running_on_viewport)
     {
@@ -737,31 +786,34 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
     else*/
     if (running == 1)
     {
-      markers.push_back(markerCenter);
-      texture = _arrow_ltr;
+      markers[0] = markerCenter;
+      texture = local::arrow_ltr;
     }
     else if (running == 2)
     {
-      markers.push_back(markerCenter - 2);
-      markers.push_back(markerCenter + 2);
-      texture = _pip_ltr;
+      markers[0] = markerCenter - 2 * scale;
+      markers[1] = markerCenter + 2 * scale;
+      texture = local::pip_ltr;
     }
     else
     {
-      markers.push_back(markerCenter - 4);
-      markers.push_back(markerCenter);
-      markers.push_back(markerCenter + 4);
-      texture = _pip_ltr;
+      markers[0] = markerCenter - 4 * scale;
+      markers[1] = markerCenter;
+      markers[2] = markerCenter + 4 * scale;
+      texture = local::pip_ltr;
     }
 
-    std::vector<int>::iterator it;
-    for (it = markers.begin(); it != markers.end(); it++)
+
+    for (int i = 0; i < 3; i++)
     {
-      int center = *it;
-      GfxContext.QRP_1Tex(geo.x,
-                          center - (texture->GetHeight() / 2),
-                          (float) texture->GetWidth(),
-                          (float) texture->GetHeight(),
+      int center = markers[i];
+      if (center == -100)
+        break;
+      
+      GfxContext.QRP_1Tex(markerX,
+                          center - ((texture->GetHeight() * scale) / 2),
+                          (float) texture->GetWidth() * scale,
+                          (float) texture->GetHeight() * scale,
                           texture->GetDeviceTexture(),
                           texxform,
                           color);
@@ -773,18 +825,18 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
     nux::TexCoordXForm texxform;
 
     nux::Color color = nux::color::LightGrey * alpha;
-    GfxContext.QRP_1Tex((geo.x + geo.width) - _arrow_rtl->GetWidth(),
-                        markerCenter - (_arrow_rtl->GetHeight() / 2),
-                        (float) _arrow_rtl->GetWidth(),
-                        (float) _arrow_rtl->GetHeight(),
-                        _arrow_rtl->GetDeviceTexture(),
+    GfxContext.QRP_1Tex((geo.x + geo.width) - local::arrow_rtl->GetWidth(),
+                        markerCenter - (local::arrow_rtl->GetHeight() / 2),
+                        (float) local::arrow_rtl->GetWidth(),
+                        (float) local::arrow_rtl->GetHeight(),
+                        local::arrow_rtl->GetDeviceTexture(),
                         texxform,
                         color);
   }
 }
 
 void IconRenderer::RenderProgressToTexture(nux::GraphicsEngine& GfxContext,
-                                           nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture,
+                                           nux::ObjectPtr<nux::IOpenGLBaseTexture> texture,
                                            float progress_fill,
                                            float bias)
 {
@@ -792,10 +844,10 @@ void IconRenderer::RenderProgressToTexture(nux::GraphicsEngine& GfxContext,
   int height = texture->GetHeight();
 
   int progress_width =  icon_size;
-  int progress_height = _progress_bar_trough->GetHeight();
+  int progress_height = local::progress_bar_trough->GetHeight();
 
   int fill_width = image_size - (icon_size - image_size);
-  int fill_height = _progress_bar_fill->GetHeight();
+  int fill_height = local::progress_bar_fill->GetHeight();
 
   int fill_offset = (progress_width - fill_width) / 2;
 
@@ -830,10 +882,10 @@ void IconRenderer::RenderProgressToTexture(nux::GraphicsEngine& GfxContext,
   // left door
   GfxContext.PushClippingRectangle(nux::Geometry(left_edge, 0, half_size, height));
   GfxContext.QRP_1Tex(left_edge, progress_y, progress_width, progress_height,
-                      _progress_bar_trough->GetDeviceTexture(), texxform,
+                      local::progress_bar_trough->GetDeviceTexture(), texxform,
                       nux::color::White);
   GfxContext.QRP_1Tex(left_edge + fill_offset, fill_y, fill_width, fill_height,
-                      _progress_bar_fill->GetDeviceTexture(), texxform,
+                      local::progress_bar_fill->GetDeviceTexture(), texxform,
                       nux::color::White);
   GfxContext.PopClippingRectangle();
 
@@ -841,11 +893,11 @@ void IconRenderer::RenderProgressToTexture(nux::GraphicsEngine& GfxContext,
   GfxContext.PushClippingRectangle(nux::Geometry(left_edge + half_size, 0, half_size, height));
   GfxContext.QRP_1Tex(right_edge - progress_width, progress_y,
                       progress_width, progress_height,
-                      _progress_bar_trough->GetDeviceTexture(), texxform,
+                      local::progress_bar_trough->GetDeviceTexture(), texxform,
                       nux::color::White);
   GfxContext.QRP_1Tex(right_edge - progress_width + fill_offset, fill_y,
                       fill_width, fill_height,
-                      _progress_bar_fill->GetDeviceTexture(), texxform,
+                      local::progress_bar_fill->GetDeviceTexture(), texxform,
                       nux::color::White);
 
   GfxContext.PopClippingRectangle();
@@ -853,89 +905,9 @@ void IconRenderer::RenderProgressToTexture(nux::GraphicsEngine& GfxContext,
   RestoreSystemRenderTarget();
 }
 
-void IconRenderer::SetupShaders()
-{
-  if (nux::GetGraphicsEngine().UsingGLSLCodePath())
-  {
-    _shader_program_uv_persp_correction = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateShaderProgram();
-    _shader_program_uv_persp_correction->LoadIShader(gPerspectiveCorrectShader.GetTCharPtr());
-    _shader_program_uv_persp_correction->Link();
-  }
-  else
-  {
-    _AsmShaderProg = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateAsmShaderProgram();
-    _AsmShaderProg->LoadVertexShader(TCHAR_TO_ANSI(*PerspectiveCorrectVtx));
-
-    if ((nux::GetGraphicsDisplay()->GetGpuDevice()->SUPPORT_GL_ARB_TEXTURE_NON_POWER_OF_TWO() == false) &&
-        (nux::GetGraphicsDisplay()->GetGpuDevice()->SUPPORT_GL_EXT_TEXTURE_RECTANGLE() || nux::GetGraphicsDisplay()->GetGpuDevice()->SUPPORT_GL_ARB_TEXTURE_RECTANGLE()))
-    {
-      // No support for non power of two textures but support for rectangle textures
-      _AsmShaderProg->LoadPixelShader(TCHAR_TO_ANSI(*PerspectiveCorrectTexRectFrg));
-    }
-    else
-    {
-      _AsmShaderProg->LoadPixelShader(TCHAR_TO_ANSI(*PerspectiveCorrectTexFrg));
-    }
-
-    _AsmShaderProg->Link();
-  }
-}
-
 void IconRenderer::DestroyTextures()
 {
-  if (!textures_created)
-    return;
-
-  _progress_bar_trough->UnReference();
-  _progress_bar_fill->UnReference();
-
-  _pip_ltr->UnReference();
-  _arrow_ltr->UnReference();
-  _arrow_empty_ltr->UnReference();
-
-  _pip_rtl->UnReference();
-  _arrow_rtl->UnReference();
-  _arrow_empty_rtl->UnReference();
-
-  std::map<char, nux::BaseTexture*>::iterator it;
-  for (it = label_map.begin(); it != label_map.end(); it++)
-    it->second->UnReference();
-  label_map.clear();
-}
-
-void IconRenderer::GenerateTextures()
-{
-  _progress_bar_trough    = nux::CreateTexture2DFromFile(PKGDATADIR"/progress_bar_trough.png", -1, true);
-  _progress_bar_fill      = nux::CreateTexture2DFromFile(PKGDATADIR"/progress_bar_fill.png", -1, true);
-
-  _icon_back.resize(IconRenderer::LAST);
-  _icon_selected_back.resize(IconRenderer::LAST);
-  _icon_edge.resize(IconRenderer::LAST);
-  _icon_glow.resize(IconRenderer::LAST);
-  _icon_shine.resize(IconRenderer::LAST);
-
-  _icon_back[IconRenderer::BIG] = nux::CreateTexture2DFromFile(PKGDATADIR"/launcher_icon_back_150.png", -1, true);
-  _icon_selected_back[IconRenderer::BIG] = nux::CreateTexture2DFromFile(PKGDATADIR"/launcher_icon_selected_back_150.png", -1, true);
-  _icon_edge[IconRenderer::BIG] = nux::CreateTexture2DFromFile(PKGDATADIR"/launcher_icon_edge_150.png", -1, true);
-  _icon_glow[IconRenderer::BIG] = nux::CreateTexture2DFromFile(PKGDATADIR"/launcher_icon_glow_200.png", -1, true);
-  _icon_shine[IconRenderer::BIG] = nux::CreateTexture2DFromFile(PKGDATADIR"/launcher_icon_shine_150.png", -1, true);
-
-  _icon_back[IconRenderer::SMALL] = nux::CreateTexture2DFromFile(PKGDATADIR"/launcher_icon_back_54.png", -1, true);
-  _icon_selected_back[IconRenderer::SMALL] = nux::CreateTexture2DFromFile(PKGDATADIR"/launcher_icon_back_54.png", -1, true);
-  _icon_edge[IconRenderer::SMALL] = nux::CreateTexture2DFromFile(PKGDATADIR"/launcher_icon_edge_54.png", -1, true);
-  _icon_glow[IconRenderer::SMALL] = nux::CreateTexture2DFromFile(PKGDATADIR"/launcher_icon_glow_62.png", -1, true);
-  _icon_shine[IconRenderer::SMALL] = nux::CreateTexture2DFromFile(PKGDATADIR"/launcher_icon_shine_54.png", -1, true);
-
-  _pip_ltr                = nux::CreateTexture2DFromFile(PKGDATADIR"/launcher_pip_ltr.png", -1, true);
-  _arrow_ltr              = nux::CreateTexture2DFromFile(PKGDATADIR"/launcher_arrow_ltr.png", -1, true);
-  _arrow_empty_ltr        = nux::CreateTexture2DFromFile(PKGDATADIR"/launcher_arrow_outline_ltr.png", -1, true);
-
-  _pip_rtl                = nux::CreateTexture2DFromFile(PKGDATADIR"/launcher_pip_rtl.png", -1, true);
-  _arrow_rtl              = nux::CreateTexture2DFromFile(PKGDATADIR"/launcher_arrow_rtl.png", -1, true);
-  _arrow_empty_rtl        = nux::CreateTexture2DFromFile(PKGDATADIR"/launcher_arrow_outline_rtl.png", -1, true);
-
-  _offscreen_progress_texture = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableDeviceTexture(2, 2, 1, nux::BITFMT_R8G8B8A8);
-  textures_created = true;
+  local::destroy_textures();
 }
 
 void IconRenderer::GetInverseScreenPerspectiveMatrix(nux::Matrix4& ViewMatrix, nux::Matrix4& PerspectiveMatrix,
@@ -1024,7 +996,7 @@ void IconRenderer::GetInverseScreenPerspectiveMatrix(nux::Matrix4& ViewMatrix, n
 }
 
 void
-IconRenderer::SetOffscreenRenderTarget(nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture)
+IconRenderer::SetOffscreenRenderTarget(nux::ObjectPtr<nux::IOpenGLBaseTexture> texture)
 {
   int width = texture->GetWidth();
   int height = texture->GetHeight();
@@ -1045,5 +1017,129 @@ IconRenderer::RestoreSystemRenderTarget()
   nux::GetWindowCompositor().RestoreRenderingSurface();
 }
 
+
+// The local namespace is purely for namespacing the file local variables below.
+namespace local
+{
+namespace
+{
+void setup_shaders()
+{
+  if (nux::GetGraphicsEngine().UsingGLSLCodePath())
+  {
+    shader_program_uv_persp_correction = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateShaderProgram();
+    shader_program_uv_persp_correction->LoadIShader(gPerspectiveCorrectShader.GetTCharPtr());
+    shader_program_uv_persp_correction->Link();
+  }
+  else
+  {
+    asm_shader = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateAsmShaderProgram();
+    asm_shader->LoadVertexShader(TCHAR_TO_ANSI(*PerspectiveCorrectVtx));
+
+    if ((nux::GetGraphicsDisplay()->GetGpuDevice()->SUPPORT_GL_ARB_TEXTURE_NON_POWER_OF_TWO() == false) &&
+        (nux::GetGraphicsDisplay()->GetGpuDevice()->SUPPORT_GL_EXT_TEXTURE_RECTANGLE() ||
+         nux::GetGraphicsDisplay()->GetGpuDevice()->SUPPORT_GL_ARB_TEXTURE_RECTANGLE()))
+    {
+      // No support for non power of two textures but support for rectangle textures
+      asm_shader->LoadPixelShader(TCHAR_TO_ANSI(*PerspectiveCorrectTexRectFrg));
+    }
+    else
+    {
+      asm_shader->LoadPixelShader(TCHAR_TO_ANSI(*PerspectiveCorrectTexFrg));
+    }
+
+    asm_shader->Link();
+  }
 }
+
+
+inline nux::BaseTexture* load_texture(const char* filename)
+{
+  return nux::CreateTexture2DFromFile(filename, -1, true);
 }
+
+void generate_textures(std::vector<nux::BaseTexture*>& icons, const char* big_file, const char* small_file)
+{
+  icons.resize(IconSize::LAST);
+  icons[IconSize::BIG] = load_texture(big_file);
+  icons[IconSize::SMALL] = load_texture(small_file);
+}
+
+void generate_textures()
+{
+  progress_bar_trough = load_texture(PKGDATADIR"/progress_bar_trough.png");
+  progress_bar_fill = load_texture(PKGDATADIR"/progress_bar_fill.png");
+
+  generate_textures(icon_background,
+                    PKGDATADIR"/launcher_icon_back_150.png",
+                    PKGDATADIR"/launcher_icon_back_54.png");
+  generate_textures(icon_selected_background,
+                    PKGDATADIR"/launcher_icon_selected_back_150.png",
+                    PKGDATADIR"/launcher_icon_back_54.png");
+  generate_textures(icon_edge,
+                    PKGDATADIR"/launcher_icon_edge_150.png",
+                    PKGDATADIR"/launcher_icon_edge_54.png");
+  generate_textures(icon_glow,
+                    PKGDATADIR"/launcher_icon_glow_200.png",
+                    PKGDATADIR"/launcher_icon_glow_62.png");
+  generate_textures(icon_shine,
+                    PKGDATADIR"/launcher_icon_shine_150.png",
+                    PKGDATADIR"/launcher_icon_shine_54.png");
+
+  squircle_base = load_texture(PKGDATADIR"/squircle_base_54.png");
+  squircle_shine = load_texture(PKGDATADIR"/squircle_shine_54.png");
+
+  pip_ltr = load_texture(PKGDATADIR"/launcher_pip_ltr.png");
+  arrow_ltr = load_texture(PKGDATADIR"/launcher_arrow_ltr.png");
+  arrow_empty_ltr = load_texture(PKGDATADIR"/launcher_arrow_outline_ltr.png");
+
+  pip_rtl = load_texture(PKGDATADIR"/launcher_pip_rtl.png");
+  arrow_rtl = load_texture(PKGDATADIR"/launcher_arrow_rtl.png");
+  arrow_empty_rtl = load_texture(PKGDATADIR"/launcher_arrow_outline_rtl.png");
+
+  offscreen_progress_texture = nux::GetGraphicsDisplay()->GetGpuDevice()
+    ->CreateSystemCapableDeviceTexture(2, 2, 1, nux::BITFMT_R8G8B8A8);
+
+  setup_shaders();
+  textures_created = true;
+}
+
+void destroy_textures(std::vector<nux::BaseTexture*>& icons)
+{
+  icons[SMALL]->UnReference();
+  icons[BIG]->UnReference();
+  icons.clear();
+}
+
+void destroy_textures()
+{
+  if (!textures_created)
+    return;
+
+  progress_bar_trough->UnReference();
+  progress_bar_fill->UnReference();
+  pip_ltr->UnReference();
+  pip_rtl->UnReference();
+  arrow_ltr->UnReference();
+  arrow_rtl->UnReference();
+  arrow_empty_ltr->UnReference();
+  arrow_empty_rtl->UnReference();
+
+  destroy_textures(icon_background);
+  destroy_textures(icon_selected_background);
+  destroy_textures(icon_edge);
+  destroy_textures(icon_glow);
+  destroy_textures(icon_shine);
+
+  for (auto it = label_map.begin(), end = label_map.end(); it != end; ++it)
+    it->second->UnReference();
+  label_map.clear();
+
+  textures_created = false;
+}
+
+} // anon namespace
+} // namespace local
+
+} // namespace ui
+} // namespace unity

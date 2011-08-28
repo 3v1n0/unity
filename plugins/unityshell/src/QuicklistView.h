@@ -47,9 +47,6 @@
 #define FONT_FACE            "Ubuntu 13"
 
 
-class VLayout;
-class HLayout;
-class SpaceLayout;
 class QuicklistMenuItem;
 class QuicklistMenuItemLabel;
 
@@ -153,8 +150,6 @@ private:
   int                   _anchorX;
   int                   _anchorY;
   nux::NString          _labelText;
-  int                   _dpiX;
-  int                   _dpiY;
   int                   _top_size; // size of the segment from point 13 to 14. See figure in ql_compute_full_mask_path.
 
   bool                  _mouse_down;
@@ -162,8 +157,6 @@ private:
   //iIf true, suppress the Quicklist behaviour that is expected in Unity.
   // Keep the Quicklist on screen for testing and automation.
   bool                  _enable_quicklist_for_testing;
-
-  cairo_font_options_t* _fontOpts;
 
   nux::BaseTexture*     _texture_bg;
   nux::BaseTexture*     _texture_mask;
@@ -189,8 +182,6 @@ private:
 
   bool _compute_blur_bkg;          //!< If true, compute the blurred background
   nux::ObjectPtr <nux::IOpenGLBaseTexture> bkg_blur_texture;  // Texture holding a blurred copy of the background behind the QuicklistView
-  // Introspection
-  gchar* _name;
 
   // used by keyboard/a11y-navigation
   int _current_item_index;

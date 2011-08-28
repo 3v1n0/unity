@@ -91,10 +91,11 @@ Tooltip::~Tooltip()
   if (_name)
     g_free(_name);
 
-  if (_texture_bg)
-    _texture_bg->UnReference();
-
   _tooltip_text->UnReference();
+
+  if (_texture_bg) _texture_bg->UnReference();
+  if (_texture_mask) _texture_mask->UnReference();
+  if (_texture_outline) _texture_outline->UnReference();
 }
 
 Area* Tooltip::FindAreaUnderMouse(const Point& mouse_position, NuxEventType event_type)

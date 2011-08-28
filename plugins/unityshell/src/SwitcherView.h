@@ -23,11 +23,14 @@
 #include "SwitcherModel.h"
 #include "AbstractIconRenderer.h"
 #include "StaticCairoText.h"
+#include "LayoutSystem.h"
+#include "BackgroundEffectHelper.h"
 
 #include <boost/shared_ptr.hpp>
 #include <sigc++/sigc++.h>
 
 #include <Nux/View.h>
+#include <NuxCore/ObjectPtr.h>
 #include <NuxCore/Property.h>
 
 using namespace unity::ui;
@@ -37,28 +40,21 @@ namespace unity
 namespace switcher
 {
 
-class RenderTargetData
-{
-public:
-  nux::Geometry bounding;
-  Window window;
-  float alpha;
-};
-
-typedef std::vector<RenderTargetData> WindowRenderTargetList;
-
 class SwitcherView : public nux::View
 {
   NUX_DECLARE_OBJECT_TYPE(SwitcherView, nux::View);
 public:
+  typedef nux::ObjectPtr<SwitcherView> Ptr;
 
   SwitcherView(NUX_FILE_LINE_PROTO);
   virtual ~SwitcherView();
 
-  WindowRenderTargetList ExternalTargets ();
+  LayoutWindowList ExternalTargets ();
 
   void SetModel(SwitcherModel::Ptr model);
   SwitcherModel::Ptr GetModel();
+
+  void SetupBackground ();
 
   nux::Property<int> border_size;
   nux::Property<int> flat_spacing;
@@ -69,6 +65,7 @@ public:
   nux::Property<int> text_size;
   nux::Property<int> animation_length;
   nux::Property<double> spread_size;
+  nux::Property<nux::Color> background_color;
 
 protected:
   long ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo);
@@ -86,12 +83,16 @@ private:
   void OnDetailSelectionChanged (bool detail);
   void OnDetailSelectionIndexChanged (int index);
 
-  void UpdateRenderTargets (RenderArg const& selection_arg, timespec const& current);
+  void OnIconSizeChanged (int size);
+  void OnTileSizeChanged (int size);
+
+  nux::Geometry UpdateRenderTargets (RenderArg const& selection_arg, timespec const& current);
 
   static gboolean OnDrawTimeout(gpointer data);
 
   void SaveLast ();
 
+  LayoutSystem::Ptr layout_system_;
   AbstractIconRenderer::Ptr icon_renderer_;
   SwitcherModel::Ptr model_;
   bool target_sizes_set_;
@@ -108,9 +109,13 @@ private:
   nux::Geometry last_background_;
   nux::Geometry saved_background_;
 
-  WindowRenderTargetList render_targets_;
+  LayoutWindowList render_targets_;
 
   timespec save_time_;
+
+  bool animation_draw_;
+
+  BackgroundEffectHelper bg_effect_helper_;
 };
 
 }

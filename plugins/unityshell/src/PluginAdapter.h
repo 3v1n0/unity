@@ -83,8 +83,12 @@ public:
     _grab_toggle_action = action;
   }
 
+  void OnWindowClosed (CompWindow *);
   void OnScreenGrabbed();
   void OnScreenUngrabbed();
+
+  void OnShowDesktop ();
+  void OnLeaveDesktop ();
 
   void InitiateScale(std::string const& match, int state = 0);
   void TerminateScale();
@@ -120,11 +124,16 @@ public:
 
   bool IsScreenGrabbed();
 
+  unsigned int GetWindowActiveNumber (guint32 xid);
+
   void MaximizeIfBigEnough(CompWindow* window);
 
   nux::Geometry GetWindowGeometry(guint32 xid);
 
   void SetCoverageAreaBeforeAutomaximize(float area);
+
+  bool saveInputFocus ();
+  bool restoreInputFocus ();
 
 protected:
   PluginAdapter(CompScreen* screen);
@@ -145,6 +154,9 @@ private:
   CompAction* _grab_toggle_action;
 
   float _coverage_area_before_automaximize;
+
+  bool _in_show_desktop;
+  CompWindow* _last_focused_window;
 
   static PluginAdapter* _default;
 };

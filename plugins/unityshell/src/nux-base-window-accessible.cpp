@@ -177,9 +177,9 @@ nux_base_window_accessible_initialize(AtkObject* accessible,
   bwindow = dynamic_cast<nux::BaseWindow*>(nux_object);
 
   /* This gives us if the window has the underlying key input */
-  bwindow->OnStartKeyboardReceiver.connect(sigc::bind(sigc::ptr_fun(on_change_keyboard_receiver_cb),
+  bwindow->begin_key_focus.connect(sigc::bind(sigc::ptr_fun(on_change_keyboard_receiver_cb),
                                                       accessible, TRUE));
-  bwindow->OnStopKeyboardReceiver.connect(sigc::bind(sigc::ptr_fun(on_change_keyboard_receiver_cb),
+  bwindow->end_key_focus.connect(sigc::bind(sigc::ptr_fun(on_change_keyboard_receiver_cb),
                                                      accessible, FALSE));
 }
 

@@ -77,6 +77,11 @@ PanelIndicatorsView::ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long P
 void
 PanelIndicatorsView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
+  nux::Geometry geo = GetGeometry();
+
+  GfxContext.PushClippingRectangle(geo);
+  nux::GetPainter().PaintBackground(GfxContext, geo);
+  GfxContext.PopClippingRectangle();
 }
 
 void

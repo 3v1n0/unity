@@ -16,9 +16,10 @@
  *
  * Authored by: Gordon Allott <gord.allott@canonical.com>
  */
-#include "Nux/Nux.h"
-#include "Nux/WindowThread.h"
-#include "NuxGraphics/GraphicsEngine.h"
+#include <Nux/Nux.h>
+#include <NuxCore/Logger.h>
+#include <Nux/WindowThread.h>
+#include <NuxGraphics/GraphicsEngine.h>
 #include <gtk/gtk.h>
 
 #include "BGHash.h"
@@ -84,7 +85,7 @@ test_handler_color_change (GVariant *data, gpointer val)
 int main(int argc, char **argv)
 {
   UBusServer *ubus;
-  unity::BGHash bg_hash;
+
   nux::SystemThread* st = NULL;
   nux::WindowThread* wt = NULL;
 
@@ -97,6 +98,9 @@ int main(int argc, char **argv)
   gtk_init (&argc, &argv);
 
   nux::NuxInitialize(0);
+  nux::logging::configure_logging(::getenv("UNITY_LOG_SEVERITY"));
+
+  unity::BGHash bg_hash;
 
   ubus = ubus_server_get_default ();
   ubus_server_register_interest (ubus, UBUS_BACKGROUND_COLOR_CHANGED,

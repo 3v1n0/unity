@@ -20,6 +20,7 @@
 
 #include "SwitcherView.h"
 #include "IconRenderer.h"
+#include "LayoutSystem.h"
 
 #include <NuxCore/Object.h>
 #include <Nux/Nux.h>
@@ -40,6 +41,9 @@ SwitcherView::SwitcherView(NUX_FILE_LINE_DECL)
   , redraw_handle_(0)
 {
   icon_renderer_ = AbstractIconRenderer::Ptr(new IconRenderer());
+  icon_renderer_->pip_style = OVER_TILE;
+
+  layout_system_ = LayoutSystem::Ptr (new LayoutSystem ());
   border_size = 50;
   flat_spacing = 10;
   icon_size = 128;
@@ -50,6 +54,8 @@ SwitcherView::SwitcherView(NUX_FILE_LINE_DECL)
   animation_length = 250;
   spread_size = 3.5f;
 
+  animation_draw_ = false;
+
   save_time_.tv_sec = 0;
   save_time_.tv_nsec = 0;
 
@@ -59,21 +65,34 @@ SwitcherView::SwitcherView(NUX_FILE_LINE_DECL)
 
   text_view_ = new nux::StaticCairoText("Testing");
   text_view_->SinkReference();
-  text_view_->SetGeometry(nux::Geometry(0, 0, 200, text_size));
+  text_view_->SetMaximumWidth ((int) (tile_size * spread_size));
+  text_view_->SetLines(1);
   text_view_->SetTextColor(nux::color::White);
   text_view_->SetFont("Ubuntu Bold 10");
+
+  icon_size.changed.connect (sigc::mem_fun (this, &SwitcherView::OnIconSizeChanged));
+  tile_size.changed.connect (sigc::mem_fun (this, &SwitcherView::OnTileSizeChanged));
+
+  bg_effect_helper_.owner = this;
 }
 
 SwitcherView::~SwitcherView()
 {
+  background_texture_->UnReference();
   text_view_->UnReference();
   if (redraw_handle_ > 0)
     g_source_remove(redraw_handle_);
 }
 
-WindowRenderTargetList SwitcherView::ExternalTargets ()
+void
+SwitcherView::SetupBackground()
 {
-  WindowRenderTargetList result = render_targets_;
+  bg_effect_helper_.enabled = true;
+}
+
+LayoutWindowList SwitcherView::ExternalTargets ()
+{
+  LayoutWindowList result = render_targets_;
   return result;
 }
 
@@ -94,6 +113,17 @@ void SwitcherView::SetModel(SwitcherModel::Ptr model)
     text_view_->SetText(model->Selection()->tooltip_text().c_str());
 }
 
+void SwitcherView::OnIconSizeChanged (int size)
+{
+  icon_renderer_->SetTargetSize(tile_size, icon_size, 10);
+}
+
+void SwitcherView::OnTileSizeChanged (int size)
+{
+  icon_renderer_->SetTargetSize(tile_size, icon_size, 10);
+  vertical_size = tile_size + 80;
+}
+
 void SwitcherView::SaveLast ()
 {
   saved_args_ = last_args_;
@@ -103,11 +133,26 @@ void SwitcherView::SaveLast ()
 
 void SwitcherView::OnDetailSelectionIndexChanged (int index)
 {
+  if (model_->detail_selection)
+  {
+    Window detail_window = model_->DetailSelectionWindow();
+    text_view_->SetText(model_->Selection()->NameForWindow (detail_window));
+  }
   QueueDraw ();
 }
 
 void SwitcherView::OnDetailSelectionChanged (bool detail)
 {
+
+  if (detail)
+  {
+    Window detail_window = model_->DetailSelectionWindow();
+    text_view_->SetText(model_->Selection()->NameForWindow (detail_window));
+  }
+  else
+  {
+    text_view_->SetText(model_->Selection()->tooltip_text().c_str());
+  }
   SaveLast ();
   QueueDraw ();
 }
@@ -140,6 +185,12 @@ RenderArg SwitcherView::CreateBaseArgForIcon(AbstractLauncherIcon* icon)
   RenderArg arg;
   arg.icon = icon;
   arg.alpha = 0.95f;
+
+  arg.window_indicators = icon->RelatedWindows();
+  if (arg.window_indicators > 1)
+    arg.running_arrow = true;
+  else
+    arg.window_indicators = 0;
 
   if (icon == model_->Selection())
   {
@@ -188,57 +239,37 @@ nux::Geometry SwitcherView::InterpolateBackground (nux::Geometry const& start, n
   return result;
 }
 
-void SwitcherView::UpdateRenderTargets (RenderArg const& selection_arg, timespec const& current)
+nux::Geometry SwitcherView::UpdateRenderTargets (RenderArg const& selection_arg, timespec const& current)
 {
   std::vector<Window> xids = model_->DetailXids ();
-
-  int width = 1;
-  int height = 1;
-
-  while (width * height < (int) xids.size ())
-  {
-    if (height < width)
-      height++;
-    else
-      width++;
-  }
-
-  int block_width = (tile_size * spread_size) / width;
-  int block_height = (tile_size * spread_size) / height;
-
-  int x = 0;
-  int y = 0;
-
-  nux::Geometry absolute = GetAbsoluteGeometry ();
-  int start_x = absolute.x + selection_arg.render_center.x - (tile_size * spread_size) / 2;
-  int start_y = absolute.y + selection_arg.render_center.y - (tile_size * spread_size) / 2;
 
   int ms_since_change = DeltaTTime(&current, &save_time_);
   float progress = MIN (1.0f, (float) ms_since_change / (float) animation_length());
 
-  int i = 0;
   for (Window window : xids)
   {
-    RenderTargetData element;
-    element.window = window;
-    element.bounding = nux::Geometry (start_x + x * block_width, start_y + y * block_height, block_width, block_height);
+    LayoutWindow::Ptr layout_window (new LayoutWindow (window));
 
-    element.alpha = 0.75f * progress;
-    if (i == model_->detail_selection_index)
-      element.alpha = 1.0f * progress;
-
-    render_targets_.push_back (element);
-
-    ++x;
-
-    if (x >= width)
-    {
-      x = 0;
-      ++y;
-    }
-
-    ++i;
+    if (window == model_->DetailSelectionWindow ())
+      layout_window->alpha = 1.0f * progress;
+    else
+      layout_window->alpha = 0.75f * progress;
+    
+    render_targets_.push_back (layout_window);
   }
+
+  nux::Geometry max_bounds;
+
+  nux::Geometry absolute = GetAbsoluteGeometry ();
+  max_bounds.x = absolute.x + selection_arg.render_center.x - (tile_size * spread_size) / 2;
+  max_bounds.y = absolute.y + selection_arg.render_center.y - (tile_size * spread_size) / 2;
+  max_bounds.width = tile_size * spread_size;
+  max_bounds.height = tile_size * spread_size;
+
+  nux::Geometry final_bounds;
+  layout_system_->LayoutWindows (render_targets_, max_bounds, final_bounds);
+
+  return final_bounds;
 }
 
 std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo, int selection, timespec const& current)
@@ -250,16 +281,8 @@ std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo,
 
   bool detail_selection = model_->detail_selection;
 
-  if (detail_selection)
-  {
-    background_geo.y = base.y + base.height / 2 - (vertical_size / 2) * (spread_size * 0.75f);
-    background_geo.height = vertical_size * (spread_size * 0.75f) + text_size;
-  }
-  else
-  {
-    background_geo.y = base.y + base.height / 2 - (vertical_size / 2);
-    background_geo.height = vertical_size + text_size;  
-  }
+  background_geo.y = base.y + base.height / 2 - (vertical_size / 2);
+  background_geo.height = vertical_size + text_size;  
 
   if (model_)
   {
@@ -386,7 +409,12 @@ std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo,
       if (i == selection && detail_selection)
       {
         arg.skip = true;
-        UpdateRenderTargets (arg, current);
+        nux::Geometry final_bounds = UpdateRenderTargets (arg, current);
+
+        int expansion = MAX (0, final_bounds.height - icon_size);
+
+        background_geo.y -= expansion / 2;
+        background_geo.height += expansion;
       }
 
       results.push_back(arg);
@@ -419,6 +447,7 @@ gboolean SwitcherView::OnDrawTimeout(gpointer data)
   SwitcherView* self = static_cast<SwitcherView*>(data);
 
   self->QueueDraw();
+  self->animation_draw_ = true;
   self->redraw_handle_ = 0;
   return FALSE;
 }
@@ -437,11 +466,6 @@ void SwitcherView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   nux::Geometry base = GetGeometry();
   GfxContext.PushClippingRectangle(base);
 
-  nux::ROPConfig ROP;
-  ROP.Blend = false;
-  ROP.SrcBlend = GL_ONE;
-  ROP.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
-
   // clear region
   gPainter.PaintBackground(GfxContext, base);
 
@@ -450,12 +474,48 @@ void SwitcherView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   last_args_ = RenderArgsFlat(background_geo, model_->SelectionIndex(), current);
   last_background_ = background_geo;
 
-
-  gPainter.PaintTextureShape(GfxContext, background_geo, background_texture_, 30, 30, 30, 30, false);
-
-  int internal_offset = 21;
-  nux::Geometry internal_clip(background_geo.x + internal_offset, background_geo.y, background_geo.width - internal_offset * 2, background_geo.height);
+  // magic constant comes from texture contents (distance to cleared area)
+  const int internal_offset = 20;
+  nux::Geometry internal_clip(background_geo.x + internal_offset, 
+                              background_geo.y + internal_offset, 
+                              background_geo.width - internal_offset * 2, 
+                              background_geo.height - internal_offset * 2);
   GfxContext.PushClippingRectangle(internal_clip);
+
+
+  nux::Geometry geo_absolute = GetAbsoluteGeometry ();
+  if (BackgroundEffectHelper::blur_type != BLUR_NONE)
+  {
+    nux::Geometry blur_geo(geo_absolute.x, geo_absolute.y, base.width, base.height);
+    auto blur_texture = bg_effect_helper_.GetBlurRegion(blur_geo);
+
+    if (blur_texture.IsValid())
+    {
+      nux::TexCoordXForm texxform_blur_bg;
+      texxform_blur_bg.flip_v_coord = true;
+      texxform_blur_bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+      texxform_blur_bg.uoffset = ((float) base.x) / geo_absolute.width;
+      texxform_blur_bg.voffset = ((float) base.y) / geo_absolute.height;
+
+      nux::ROPConfig rop;
+      rop.Blend = false;
+      rop.SrcBlend = GL_ONE;
+      rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+
+      gPainter.PushDrawTextureLayer(GfxContext, base,
+                                    blur_texture,
+                                    texxform_blur_bg,
+                                    nux::color::White,
+                                    true,
+                                    rop);
+    }
+  }
+
+  nux::ROPConfig rop;
+  rop.Blend = true;
+  rop.SrcBlend = GL_ONE;
+  rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+  gPainter.PushDrawColorLayer (GfxContext, internal_clip, background_color, false, rop);
 
   icon_renderer_->PreprocessIcons(last_args_, base);
 
@@ -479,16 +539,17 @@ void SwitcherView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   GfxContext.PopClippingRectangle();
   GfxContext.PopClippingRectangle();
 
-  // probably evil
-  gPainter.PopBackground();
+  gPainter.PaintTextureShape(GfxContext, background_geo, background_texture_, 30, 30, 30, 30, false);
 
   text_view_->SetBaseY(background_geo.y + background_geo.height - 45);
   text_view_->Draw(GfxContext, force_draw);
 
   int ms_since_change = DeltaTTime(&current, &save_time_);
 
-  if (ms_since_change < animation_length)
+  if (ms_since_change < animation_length && redraw_handle_ == 0)
     redraw_handle_ = g_timeout_add(0, &SwitcherView::OnDrawTimeout, this);
+
+  animation_draw_ = false;
 }
 
 

@@ -28,8 +28,8 @@
 #include "Nux/BaseWindow.h"
 #include "Nux/MenuPage.h"
 #include "NuxCore/Color.h"
+#include "NuxCore/Logger.h"
 
-#include "LauncherEntryRemoteModel.h"
 #include "LauncherIcon.h"
 #include "Launcher.h"
 
@@ -42,11 +42,19 @@
 
 #include "ubus-server.h"
 #include "UBusMessages.h"
+#include <UnityCore/GLibWrapper.h>
 #include <UnityCore/Variant.h>
 
 #define DEFAULT_ICON "application-default-icon"
 #define MONO_TEST_ICON "gnome-home"
 #define UNITY_THEME_NAME "unity-icon-theme"
+
+using namespace unity;
+
+namespace
+{
+nux::logging::Logger logger("unity.launcher");
+}
 
 NUX_IMPLEMENT_OBJECT_TYPE(LauncherIcon);
 
@@ -58,49 +66,45 @@ GtkIconTheme* LauncherIcon::_unity_theme = NULL;
 gboolean LauncherIcon::_skip_tooltip_delay = false;
 
 LauncherIcon::LauncherIcon(Launcher* launcher)
+  : _launcher(launcher)
+  , _menuclient_dynamic_quicklist(nullptr)
+  , _has_visible_window(false)
+  , _quicklist_is_initialized(false)
+  , _remote_urgent(false)
+  , _present_urgency(0)
+  , _progress(0)
+  , _center_stabilize_handle(0)
+  , _present_time_handle(0)
+  , _time_delay_handle(0)
+  , _tooltip_delay_handle(0)
+  , _related_windows(0)
+  , _sort_priority(0)
+  , _background_color(nux::color::White)
+  , _glow_color(nux::color::White)
+  , _shortcut(0)
+  , _icon_type(TYPE_NONE)
+  , _emblem(nullptr)
+  , _superkey_label(nullptr)
 {
-  _launcher = launcher;
-
   for (int i = 0; i < QUIRK_LAST; i++)
   {
-    _quirks[i] = 0;
+    _quirks[i] = false;
     _quirk_times[i].tv_sec = 0;
     _quirk_times[i].tv_nsec = 0;
   }
 
-  _related_windows = 0;
-
-  _background_color = nux::color::White;
-  _glow_color = nux::color::White;
-
-  _remote_urgent = false;
-  _has_visible_window = false;
   _tooltip = new nux::Tooltip();
   _tooltip->SinkReference();
-  _icon_type = TYPE_NONE;
-  _sort_priority = 0;
-  _shortcut = 0;
-
-  _emblem = 0;
-  _superkey_label = 0;
 
   tooltip_text.SetSetterFunction(sigc::mem_fun(this, &LauncherIcon::SetTooltipText));
   tooltip_text = "blank";
 
   _quicklist = new QuicklistView();
   _quicklist->SinkReference();
-  _quicklist_is_initialized = false;
-
-  _present_time_handle = 0;
-  _center_stabilize_handle = 0;
-  _time_delay_handle = 0;
-  _tooltip_delay_handle = 0;
-
 
   // FIXME: the abstraction is already broken, should be fixed for O
   // right now, hooking the dynamic quicklist the less ugly possible way
   QuicklistManager::Default()->RegisterQuicklist(_quicklist);
-  _menuclient_dynamic_quicklist = NULL;
 
   // Add to introspection
   AddChild(_quicklist);
@@ -326,7 +330,11 @@ nux::BaseTexture* LauncherIcon::TextureFromGtkTheme(const char* icon_name, int s
   nux::BaseTexture* result = NULL;
 
   if (!icon_name)
+  {
+    // This leaks, so log if we do this.
+    LOG_WARN(logger) << "Leaking... no icon_name passed in.";
     icon_name = g_strdup(DEFAULT_ICON);
+  }
 
   default_theme = gtk_icon_theme_get_default();
 
@@ -350,28 +358,27 @@ nux::BaseTexture* LauncherIcon::TextureFromGtkTheme(const char* icon_name, int s
 
 }
 
-nux::BaseTexture* LauncherIcon::TextureFromSpecificGtkTheme(GtkIconTheme* theme, const char* icon_name, int size, bool update_glow_colors, bool is_default_theme)
+nux::BaseTexture* LauncherIcon::TextureFromSpecificGtkTheme(GtkIconTheme* theme,
+                                                            const char* icon_name,
+                                                            int size,
+                                                            bool update_glow_colors,
+                                                            bool is_default_theme)
 {
-
-  GdkPixbuf* pbuf;
   GtkIconInfo* info;
   nux::BaseTexture* result = NULL;
-  GError* error = NULL;
   GIcon* icon;
+  GtkIconLookupFlags flags = (GtkIconLookupFlags) 0;
 
   icon = g_icon_new_for_string(icon_name, NULL);
 
   if (G_IS_ICON(icon))
   {
-    info = gtk_icon_theme_lookup_by_gicon(theme, icon, size, (GtkIconLookupFlags)0);
+    info = gtk_icon_theme_lookup_by_gicon(theme, icon, size, flags);
     g_object_unref(icon);
   }
   else
   {
-    info = gtk_icon_theme_lookup_icon(theme,
-                                      icon_name,
-                                      size,
-                                      (GtkIconLookupFlags) 0);
+    info = gtk_icon_theme_lookup_icon(theme,icon_name, size, flags);
   }
 
   if (!info && !is_default_theme)
@@ -379,40 +386,30 @@ nux::BaseTexture* LauncherIcon::TextureFromSpecificGtkTheme(GtkIconTheme* theme,
 
   if (!info)
   {
-    info = gtk_icon_theme_lookup_icon(theme,
-                                      DEFAULT_ICON,
-                                      size,
-                                      (GtkIconLookupFlags) 0);
+    info = gtk_icon_theme_lookup_icon(theme, DEFAULT_ICON, size, flags);
   }
 
   if (gtk_icon_info_get_filename(info) == NULL)
   {
     gtk_icon_info_free(info);
-
-    info = gtk_icon_theme_lookup_icon(theme,
-                                      DEFAULT_ICON,
-                                      size,
-                                      (GtkIconLookupFlags) 0);
+    info = gtk_icon_theme_lookup_icon(theme, DEFAULT_ICON, size, flags);
   }
 
-  pbuf = gtk_icon_info_load_icon(info, &error);
+  glib::Error error;
+  glib::Object<GdkPixbuf> pbuf(gtk_icon_info_load_icon(info, &error));
   gtk_icon_info_free(info);
 
-  if (GDK_IS_PIXBUF(pbuf))
+  if (GDK_IS_PIXBUF(pbuf.RawPtr()))
   {
     result = nux::CreateTexture2DFromPixbuf(pbuf, true);
 
     if (update_glow_colors)
       ColorForIcon(pbuf, _background_color, _glow_color);
-
-    g_object_unref(pbuf);
   }
   else
   {
-    g_warning("Unable to load '%s' from icon theme: %s",
-              icon_name,
-              error ? error->message : "unknown");
-    g_error_free(error);
+    LOG_WARN(logger) << "Unable to load '" << icon_name
+                     <<  "' from icon theme: " << error;
   }
 
   return result;
@@ -420,33 +417,27 @@ nux::BaseTexture* LauncherIcon::TextureFromSpecificGtkTheme(GtkIconTheme* theme,
 
 nux::BaseTexture* LauncherIcon::TextureFromPath(const char* icon_name, int size, bool update_glow_colors)
 {
-
-  GdkPixbuf* pbuf;
   nux::BaseTexture* result;
-  GError* error = NULL;
 
   if (!icon_name)
     return TextureFromGtkTheme(DEFAULT_ICON, size, update_glow_colors);
 
-  pbuf = gdk_pixbuf_new_from_file_at_size(icon_name, size, size, &error);
+  glib::Error error;
+  glib::Object<GdkPixbuf> pbuf(gdk_pixbuf_new_from_file_at_size(icon_name, size, size, &error));
 
-  if (GDK_IS_PIXBUF(pbuf))
+  if (GDK_IS_PIXBUF(pbuf.RawPtr()))
   {
     result = nux::CreateTexture2DFromPixbuf(pbuf, true);
 
     if (update_glow_colors)
       ColorForIcon(pbuf, _background_color, _glow_color);
-
-    g_object_unref(pbuf);
   }
   else
   {
-    g_warning("Unable to load '%s' icon: %s",
-              icon_name,
-              error->message);
-    g_error_free(error);
+    LOG_WARN(logger) << "Unable to load '" << icon_name
+                     <<  "' icon: " << error;
 
-    return TextureFromGtkTheme(DEFAULT_ICON, size, update_glow_colors);
+    result = TextureFromGtkTheme(DEFAULT_ICON, size, update_glow_colors);
   }
 
   return result;
@@ -808,10 +799,10 @@ LauncherIcon::SetQuirk(LauncherIcon::Quirk quirk, bool value)
 {
   if (_quirks[quirk] == value)
     return;
-    
+      
   if (quirk == QUIRK_PULSE_ONCE)
     _launcher->HideMachine()->SetQuirk(LauncherHideMachine::LAUNCHER_PULSE, value);
-
+  
   _quirks[quirk] = value;
   if (quirk == QUIRK_VISIBLE)
     Launcher::SetTimeStruct(&(_quirk_times[quirk]), &(_quirk_times[quirk]), ANIM_DURATION_SHORT);
@@ -944,12 +935,12 @@ LauncherIcon::SetEmblemIconName(const char* name)
 }
 
 std::vector<nux::Vector4> &
-LauncherIcon::GetTransform(std::string const& name)
+LauncherIcon::GetTransform(TransformIndex index)
 {
-  auto iter = transform_map.find(name);
+  auto iter = transform_map.find(index);
   if (iter == transform_map.end())
   {
-    auto iter2 = transform_map.insert(std::map<std::string, std::vector<nux::Vector4> >::value_type(name, std::vector<nux::Vector4>(4)));
+    auto iter2 = transform_map.insert(std::map<TransformIndex, std::vector<nux::Vector4> >::value_type(index, std::vector<nux::Vector4>(4)));
     return iter2.first->second;
   }
 

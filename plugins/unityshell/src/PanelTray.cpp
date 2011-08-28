@@ -86,15 +86,21 @@ PanelTray::~PanelTray()
   if (_tray_expose_id)
     g_signal_handler_disconnect(_window, _tray_expose_id);
 
-  gtk_widget_destroy(_window);
+  // DISABLED to see if we can get compiz to cleanly exit.
+  // This currently blocks on X.
+  // gtk_widget_destroy(_window);
   g_strfreev(_whitelist);
   g_object_unref(_settings);
 }
 
 void
-PanelTray::Draw(nux::GraphicsEngine& gfx_content, bool force_draw)
+PanelTray::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
 {
-  nux::Geometry geo = GetAbsoluteGeometry();
+  nux::Geometry geo = GetGeometry();
+
+  gfx_context.PushClippingRectangle(geo);
+  nux::GetPainter().PaintBackground(gfx_context, geo);
+  gfx_context.PopClippingRectangle();
 
   if (geo.x != _last_x || geo.y != _last_y)
   {
