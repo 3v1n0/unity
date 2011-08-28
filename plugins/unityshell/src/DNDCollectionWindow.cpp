@@ -66,6 +66,7 @@ gboolean DNDCollectionWindow::ForceMouseMoveTimeout(gpointer data)
 
 void DNDCollectionWindow::Collect()
 {
+  PushToFront();
   EnableInputWindow(true, "DndCollectionWindow");
   
   if (!force_mouse_move_handle_)
@@ -73,7 +74,7 @@ void DNDCollectionWindow::Collect()
 }
 
 void DNDCollectionWindow::ProcessDndMove(int x, int y, std::list<char*> mimes)
-{ 
+{
   if (force_mouse_move_handle_)
   {
     g_source_remove(force_mouse_move_handle_);
@@ -81,6 +82,7 @@ void DNDCollectionWindow::ProcessDndMove(int x, int y, std::list<char*> mimes)
   }
     
   // Hide the window as soon as possible
+  PushToBack();
   EnableInputWindow(false, "DNDCollectionWindow");
   
   for (auto it : mimes_)
