@@ -1628,6 +1628,7 @@ Launcher::OnUpdateDragManagerTimeout(gpointer data)
   }
   
   self->_data_checked = false;
+  self->_collection_window->PutToBack();
   self->_collection_window->EnableInputWindow(false, "DNDCollectionWindow");
 
   self->DndLeave();
