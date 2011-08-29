@@ -41,6 +41,8 @@ typedef struct
   nux::TimerHandle expiration_handle;
 } TestArgs;
 
+namespace unity {
+
 class Autopilot
 {
 public:
@@ -52,5 +54,6 @@ public:
   UBusServer* GetUBusConnection();
   GDBusConnection* GetDBusConnection();
 };
+}
 
 #endif /* _AUTOPILOT_H */

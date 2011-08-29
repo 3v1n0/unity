@@ -108,8 +108,17 @@ static GDBusArgInfo ap_testfinished_arg_passed =
   NULL
 };
 
+static GDBusArgInfo ap_testfinished_arg_data =
+{
+  -1,
+  (gchar*) "data",
+  (gchar*) "a{sv}",
+  NULL
+};
+
 static const GDBusArgInfo* const ap_signal_testfinished_arg_pointers [] = { &ap_testfinished_arg_name,
                                                                             &ap_testfinished_arg_passed,
+                                                                            &ap_testfinished_arg_data,
                                                                             NULL
                                                                           };
 static GDBusSignalInfo ap_signal_info_testfinished =
@@ -143,7 +152,7 @@ static const GDBusInterfaceInfo ap_iface_info =
 };
 
 static unity::Introspectable* _introspectable;
-static Autopilot* _autopilot;
+static unity::Autopilot* _autopilot;
 
 DebugDBusInterface::DebugDBusInterface(unity::Introspectable* introspectable)
 {
@@ -174,7 +183,7 @@ DebugDBusInterface::OnBusAcquired(GDBusConnection* connection, const gchar* name
   UnityScreen* uscreen = dynamic_cast<UnityScreen*>(_introspectable);
   if (uscreen != NULL)
   {
-    _autopilot = new Autopilot(uscreen->screen, connection);
+    _autopilot = new unity::Autopilot(uscreen->screen, connection);
   }
 
   while (debug_object_interfaces[i] != NULL)

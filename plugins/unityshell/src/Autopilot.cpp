@@ -20,8 +20,10 @@
 #include <sigc++/sigc++.h>
 
 #include "Autopilot.h"
-#include "UBusMessages.h"
 #include "DebugDBusInterface.h"
+#include "UBusMessages.h"
+
+namespace unity {
 
 UBusServer* _ubus;
 GDBusConnection* _dbus;
@@ -32,8 +34,9 @@ TestFinished(void* arg)
 {
   GError* error = NULL;
   TestArgs* args = static_cast<TestArgs*>(arg);
-  GVariant* result = g_variant_new("(sb)", args->name, args->passed);
+  GVariant* result = g_variant_new("(sb@a{sv})", args->name, args->passed, NULL);
 
+  ubus_server_unregister_interest (_ubus, args->ubus_handle);
   g_dbus_connection_emit_signal(_dbus,
                                 NULL,
                                 UNITY_DBUS_DEBUG_OBJECT_PATH,
@@ -48,17 +51,12 @@ TestFinished(void* arg)
     g_warning("An error was encountered emitting TestFinished signal");
     g_error_free(error);
   }
-
-  ubus_server_send_message(_ubus,
-                           UBUS_AUTOPILOT_TEST_FINISHED,
-                           result);
 }
 
 void
 on_test_passed(GVariant* payload, TestArgs* args)
 {
   nux::GetTimer().RemoveTimerHandler(args->expiration_handle);
-  ubus_server_unregister_interest(_ubus, args->ubus_handle);
   args->passed = TRUE;
   TestFinished(args);
 }
@@ -133,4 +131,5 @@ Autopilot::StartTest(const gchar* name)
   {
     /* Some anonymous test. Will always get a failed result since we don't really know how to test it */
   }
+}
 }
