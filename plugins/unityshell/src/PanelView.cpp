@@ -388,21 +388,6 @@ void PanelView::OnMenuPointerMoved(int x, int y)
       ret = _menu_view->OnPointerMoved(x, y);
 
     if (!ret) _indicators->OnPointerMoved(x, y);
-
-/*
-    for (auto view : children_)
-    {
-      if (view == _menu_view && _menu_view->HasOurWindowFocused())
-        continue;
-
-      geo = view->GetAbsoluteGeometry();
-      if (geo.IsPointInside(x, y))
-      {
-        view->OnPointerMoved(x, y);
-        break;
-      }
-    }
-*/
   }
 }
 
