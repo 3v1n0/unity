@@ -45,6 +45,7 @@ static void unity_rvgrid_accessible_finalize(GObject* object);
 /* AtkObject.h */
 static void       unity_rvgrid_accessible_initialize(AtkObject* accessible,
                                                      gpointer   data);
+static AtkStateSet*  unity_rvgrid_accessible_ref_state_set(AtkObject* obj);
 static gint       unity_rvgrid_accessible_get_n_children(AtkObject* obj);
 static AtkObject* unity_rvgrid_accessible_ref_child(AtkObject* obj,
                                                     gint i);
@@ -80,6 +81,7 @@ unity_rvgrid_accessible_class_init(UnityRvgridAccessibleClass* klass)
   atk_class->get_n_children = unity_rvgrid_accessible_get_n_children;
   atk_class->ref_child = unity_rvgrid_accessible_ref_child;
   atk_class->initialize = unity_rvgrid_accessible_initialize;
+  atk_class->ref_state_set = unity_rvgrid_accessible_ref_state_set;
 
   g_type_class_add_private(gobject_class, sizeof(UnityRvgridAccessiblePrivate));
 }
@@ -120,7 +122,11 @@ unity_rvgrid_accessible_new(nux::Object* object)
 /* AtkObject.h */
 static void on_selection_change_cb(UnityRvgridAccessible* self)
 {
-  g_debug ("[RVGrid] selection change!!");
+  AtkObject *child = NULL;
+
+  g_debug ("[RVGrid] selection_change_cb");
+
+  g_signal_emit_by_name (self, "active-descendant-changed", child);
 }
 
 static void
@@ -188,6 +194,27 @@ unity_rvgrid_accessible_ref_child(AtkObject* obj,
   /* FIXME: implement me! */
   return NULL;
 }
+
+static AtkStateSet*
+unity_rvgrid_accessible_ref_state_set(AtkObject* obj)
+{
+  AtkStateSet* state_set = NULL;
+  nux::Object* nux_object = NULL;
+
+  g_return_val_if_fail(UNITY_IS_RVGRID_ACCESSIBLE(obj), NULL);
+
+  state_set = ATK_OBJECT_CLASS(unity_rvgrid_accessible_parent_class)->ref_state_set(obj);
+
+  nux_object = nux_object_accessible_get_object(NUX_OBJECT_ACCESSIBLE(obj));
+
+  if (nux_object == NULL) /* defunct */
+    return state_set;
+
+  atk_state_set_add_state(state_set, ATK_STATE_MANAGES_DESCENDANTS);
+
+  return state_set;
+}
+
 
 /* AtkSelection */
 static void

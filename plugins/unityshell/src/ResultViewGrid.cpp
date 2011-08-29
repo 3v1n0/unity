@@ -134,12 +134,21 @@ void ResultViewGrid::SetModelRenderer(ResultRenderer* renderer)
 
 void ResultViewGrid::AddResult(Result& result)
 {
+  std::string name = result.name;
+  std::string uri = result.uri;
+
+  g_debug ("[ResultViewGrid] AddResult (name, uri)=(%s,%s)", name.c_str(), uri.c_str());
   ResultView::AddResult(result);
   SizeReallocate();
 }
 
 void ResultViewGrid::RemoveResult(Result& result)
 {
+  std::string name = result.name;
+  std::string uri = result.uri;
+
+  g_debug ("[ResultViewGrid] RemoveResult (name, uri)=(%s,%s)", name.c_str(), uri.c_str());
+
   ResultView::RemoveResult(result);
   SizeReallocate();
 }
