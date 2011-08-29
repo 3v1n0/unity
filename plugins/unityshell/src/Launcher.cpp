@@ -323,7 +323,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
   SetAcceptMouseWheelEvent(true);
 
   bg_effect_helper_.owner = this;
-  bg_effect_helper_.enabled = true;
+  bg_effect_helper_.enabled = false;
 }
 
 Launcher::~Launcher()
@@ -1444,6 +1444,7 @@ void Launcher::OnPlaceViewShown(GVariant* data, void* val)
   LauncherModel::iterator it;
 
   self->_dash_is_open = true;
+  self->bg_effect_helper_.enabled = true;
   self->_hide_machine->SetQuirk(LauncherHideMachine::PLACES_VISIBLE, true);
   self->_hover_machine->SetQuirk(LauncherHoverMachine::PLACES_VISIBLE, true);
 
@@ -1462,6 +1463,7 @@ void Launcher::OnPlaceViewHidden(GVariant* data, void* val)
   LauncherModel::iterator it;
 
   self->_dash_is_open = false;
+  self->bg_effect_helper_.enabled = false;
   self->_hide_machine->SetQuirk(LauncherHideMachine::PLACES_VISIBLE, false);
   self->_hover_machine->SetQuirk(LauncherHoverMachine::PLACES_VISIBLE, false);
 
@@ -1500,13 +1502,8 @@ void Launcher::SetHidden(bool hidden)
     _hide_machine->SetQuirk(LauncherHideMachine::MOUSE_MOVE_POST_REVEAL, false);
 
   if (hidden)  {
-    bg_effect_helper_.enabled = false;
     _hide_machine->SetQuirk(LauncherHideMachine::MT_DRAG_OUT, false);
     SetStateMouseOverLauncher(false);
-  }
-  else
-  {
-    bg_effect_helper_.enabled = true;
   }
 
   _postreveal_mousemove_delta_x = 0;
