@@ -83,9 +83,9 @@ void DNDCollectionWindow::ProcessDndMove(int x, int y, std::list<char*> mimes)
   // Hide the window as soon as possible
   PushToBack();
   EnableInputWindow(false, "DNDCollectionWindow");
-  XSync(screen_->dpy(), False);
-
-  XWarpPointer(screen_->dpy(), None, None, 0, 0, 0, 0, 0, 0);
+  
+  if (!force_mouse_move_handle_)
+    g_timeout_add(10, &ForceMouseMoveTimeout, this);
     
   for (auto it : mimes_)
     g_free(it);
