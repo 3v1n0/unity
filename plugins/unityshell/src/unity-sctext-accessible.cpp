@@ -136,5 +136,7 @@ unity_sctext_accessible_get_name(AtkObject* obj)
       }
   }
 
+  g_debug ("[StaticCairoText %s] get_name", self->priv->stripped_name);
+
   return self->priv->stripped_name;
 }

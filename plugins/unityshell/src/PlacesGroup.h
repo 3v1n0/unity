@@ -42,7 +42,7 @@ public:
   void SetIcon(const char* icon);
   void SetName(const char* name);
 
-  const char* GetName();
+  nux::StaticCairoText* GetLabel();
 
   void       SetChildView(nux::View* view);
   nux::View* GetChildView();

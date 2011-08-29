@@ -459,8 +459,6 @@ static void
 on_focus_changed_cb(nux::Area* area,
                     AtkObject* accessible)
 {
-  g_debug ("[Area %s] on_focus_changed_cb", atk_object_get_name (accessible));
-
   check_focus(NUX_AREA_ACCESSIBLE(accessible));
 }
 
@@ -521,6 +519,7 @@ nux_area_accessible_real_check_pending_notification(NuxAreaAccessible* self)
     return FALSE;
 
   g_debug ("[Area %s] focus_event2=%i", atk_object_get_name (ATK_OBJECT (self)), self->priv->focused);
+
   g_signal_emit_by_name(self, "focus_event", self->priv->focused);
   atk_focus_tracker_notify(ATK_OBJECT(self));
   self->priv->pending_notification = FALSE;
@@ -546,9 +545,6 @@ check_focus(NuxAreaAccessible* self)
   if (area->HasKeyFocus())
     focus_in = TRUE;
 
-  g_debug ("[Area %s] area->GetFocused = %i", atk_object_get_name (ATK_OBJECT (self)), area->GetFocused());
-  g_debug ("[Area %s] area->HasKeyFocus = %i", atk_object_get_name (ATK_OBJECT (self)), area->HasKeyFocus());
-
   if (self->priv->focused != focus_in)
   {
     gboolean is_parent_window_active = FALSE;
@@ -556,14 +552,11 @@ check_focus(NuxAreaAccessible* self)
     self->priv->focused = focus_in;
     is_parent_window_active = nux_area_accessible_parent_window_active(self);
 
-    g_debug ("[Area %s] check_focus, change of focus, parent_active=%i", atk_object_get_name (ATK_OBJECT (self)), is_parent_window_active);
-
     /* we don't emit focus_in=TRUE events until the top level window
        is active */
     if ((focus_in) && (!is_parent_window_active))
     {
       self->priv->pending_notification = TRUE;
-      g_debug ("[Area %s] pending notification", atk_object_get_name (ATK_OBJECT (self)));
     }
     else
     {

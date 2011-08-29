@@ -101,7 +101,7 @@ unity_places_group_accessible_initialize(AtkObject* accessible,
 {
   ATK_OBJECT_CLASS(unity_places_group_accessible_parent_class)->initialize(accessible, data);
 
-  atk_object_set_role (accessible, ATK_ROLE_PUSH_BUTTON);
+  atk_object_set_role (accessible, ATK_ROLE_PANEL);
 }
 
 
@@ -118,7 +118,7 @@ unity_places_group_accessible_get_name(AtkObject* obj)
   name = ATK_OBJECT_CLASS(unity_places_group_accessible_parent_class)->get_name(obj);
   if (name == NULL)
     {
-      PlacesGroup *tile = NULL;
+      PlacesGroup *group = NULL;
 
       if (self->priv->stripped_name != NULL)
         {
@@ -126,15 +126,17 @@ unity_places_group_accessible_get_name(AtkObject* obj)
           self->priv->stripped_name = NULL;
         }
 
-      tile = dynamic_cast<PlacesGroup*>(nux_object_accessible_get_object(NUX_OBJECT_ACCESSIBLE(obj)));
-      if (tile != NULL)
+      group = dynamic_cast<PlacesGroup*>(nux_object_accessible_get_object(NUX_OBJECT_ACCESSIBLE(obj)));
+      if (group != NULL)
         {
-          name = tile->GetName();
+          name = group->GetLabel()->GetText().GetTCharPtr();
           pango_parse_markup (name, -1, 0, NULL,
                               &self->priv->stripped_name,
                               NULL, NULL);
         }
     }
+
+  g_debug ("[PlacesGroup %s] get_name", self->priv->stripped_name);
 
   return self->priv->stripped_name;
 }

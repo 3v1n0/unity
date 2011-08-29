@@ -255,8 +255,6 @@ on_change_keyboard_receiver_cb(AtkObject* accessible,
 {
   NuxViewAccessible* self = NULL;
 
-  g_debug ("[View %s] on_change_keyboard_receiver, focus_in = %i", atk_object_get_name (accessible), focus_in);
-
   g_return_if_fail(NUX_IS_VIEW_ACCESSIBLE(accessible));
   self = NUX_VIEW_ACCESSIBLE(accessible);
 

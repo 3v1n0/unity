@@ -21,8 +21,6 @@
 
 #include <atk/atk.h>
 
-#include <UnityCore/Result.h>
-
 G_BEGIN_DECLS
 
 #define UNITY_TYPE_RESULT_ACCESSIBLE            (unity_result_accessible_get_type ())
@@ -50,7 +48,7 @@ struct _UnityResultAccessibleClass
 };
 
 GType      unity_result_accessible_get_type(void);
-AtkObject* unity_result_accessible_new(unity::dash::Result result);
+AtkObject* unity_result_accessible_new();
 
 
 G_END_DECLS

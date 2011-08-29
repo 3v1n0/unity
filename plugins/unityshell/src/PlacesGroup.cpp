@@ -123,7 +123,7 @@ PlacesGroup::~PlacesGroup()
 void
 PlacesGroup::OnLabelActivated(nux::Area* label)
 {
-  g_debug ("[PlacesGroup] OnLabelActivated");
+  g_debug ("[PlacesGroup] OnLabelActivated label_text=%s expand_label_text=%s", _name->GetText().GetTCharPtr(), _expand_label->GetText().GetTCharPtr());
 
   SetExpanded(!_is_expanded);
 }
@@ -131,7 +131,7 @@ PlacesGroup::OnLabelActivated(nux::Area* label)
 void
 PlacesGroup::OnLabelFocusChanged(nux::Area* label)
 {
-  g_debug ("[PlacesGroup] OnLabelFocusChanged");
+  g_debug ("[PlacesGroup] OnLabelFocucChanged label_text=%s expand_label_text=%s", _name->GetText().GetTCharPtr(), _expand_label->GetText().GetTCharPtr());
 
   if (_expand_label->HasKeyFocus() || _expand_icon->HasKeyFocus())
   {
@@ -170,10 +170,10 @@ PlacesGroup::SetName(const char* name)
   g_free(final);
 }
 
-const char*
-PlacesGroup::GetName()
+nux::StaticCairoText*
+PlacesGroup::GetLabel()
 {
-  return _name->GetText().GetTCharPtr();
+  return _name;
 }
 
 void

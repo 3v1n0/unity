@@ -134,21 +134,12 @@ void ResultViewGrid::SetModelRenderer(ResultRenderer* renderer)
 
 void ResultViewGrid::AddResult(Result& result)
 {
-  std::string name = result.name;
-  std::string uri = result.uri;
-
-  g_debug ("[ResultViewGrid] AddResult (name, uri)=(%s,%s)", name.c_str(), uri.c_str());
   ResultView::AddResult(result);
   SizeReallocate();
 }
 
 void ResultViewGrid::RemoveResult(Result& result)
 {
-  std::string name = result.name;
-  std::string uri = result.uri;
-
-  g_debug ("[ResultViewGrid] RemoveResult (name, uri)=(%s,%s)", name.c_str(), uri.c_str());
-
   ResultView::RemoveResult(result);
   SizeReallocate();
 }
@@ -685,6 +676,12 @@ ResultViewGrid::DndSourceDragFinished(nux::DndAction result)
   last_mouse_down_y_ = -1;
   current_drag_uri_.clear();
   current_drag_icon_name_.clear();
+}
+
+int
+ResultViewGrid::GetSelectedIndex()
+{
+  return selected_index_;
 }
 
 }
