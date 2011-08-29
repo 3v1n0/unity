@@ -28,6 +28,8 @@
 #define PADDING 8
 #define BLUR_SIZE 6
 
+NUX_IMPLEMENT_OBJECT_TYPE(PlacesTile);
+
 PlacesTile::PlacesTile(NUX_FILE_LINE_DECL, const void* id) :
   View(NUX_FILE_LINE_PARAM),
   _id(id),
@@ -71,6 +73,8 @@ PlacesTile::GetId()
 void
 PlacesTile::OnFocusChanged(nux::Area* label)
 {
+  g_debug ("[PlacesTile] OnFocusChanged");
+
   QueueDraw();
 }
 
@@ -319,5 +323,7 @@ PlacesTile::RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned lo
 void
 PlacesTile::OnFocusActivated(nux::Area* label)
 {
+  g_debug ("[PlacesTile] OnFocusActivated");
+
   sigClick.emit(this);
 }

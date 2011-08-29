@@ -303,6 +303,8 @@ nux_view_accessible_check_pending_notification(NuxAreaAccessible* area_accessibl
   if (nux_object == NULL) /* defunct */
     return FALSE;
 
+  g_debug ("[View %s] focus_event=%i", atk_object_get_name (ATK_OBJECT (area_accessible)), self->priv->key_focused);
+
   g_signal_emit_by_name(self, "focus_event", self->priv->key_focused);
   atk_focus_tracker_notify(ATK_OBJECT(self));
   self->priv->pending_notification = FALSE;

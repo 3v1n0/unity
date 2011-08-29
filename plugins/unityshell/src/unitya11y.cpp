@@ -36,11 +36,17 @@
 #include "SimpleLauncherIcon.h"
 #include "PanelView.h"
 #include "DashView.h"
+#include "PlacesSimpleTile.h"
+#include "PlacesGroup.h"
 #include "unity-launcher-accessible.h"
 #include "unity-launcher-icon-accessible.h"
 #include "unity-panel-view-accessible.h"
-#include "unity-places-view-accessible.h"
+#include "unity-dash-view-accessible.h"
 #include "unity-search-bar-accessible.h"
+#include "unity-sctext-accessible.h"
+#include "unity-rvgrid-accessible.h"
+#include "unity-places-simple-tile-accessible.h"
+#include "unity-places-group-accessible.h"
 
 using namespace unity;
 using namespace unity::dash;
@@ -188,6 +194,8 @@ unity_a11y_init(nux::WindowThread* wt)
 {
   gchar* bridge_path = NULL;
 
+  g_debug ("[unity_a11y_init]");
+
   unity_a11y_restore_environment();
 
   if (!should_enable_a11y())
@@ -262,11 +270,22 @@ unity_a11y_create_accessible(nux::Object* object)
     return unity_panel_view_accessible_new(object);
 
   if (object->Type().IsDerivedFromType(DashView::StaticObjectType))
-    return unity_places_view_accessible_new(object);
+    return unity_dash_view_accessible_new(object);
 
-  
-  //FIXME:if (object->Type().IsDerivedFromType(PlacesSearchBar::StaticObjectType))
-    //return unity_search_bar_accessible_new(object);
+  if (object->Type().IsDerivedFromType(PlacesSimpleTile::StaticObjectType))
+    return unity_places_simple_tile_accessible_new(object);
+
+  if (object->Type().IsDerivedFromType(PlacesGroup::StaticObjectType))
+    return unity_places_group_accessible_new(object);
+
+  if (object->Type().IsDerivedFromType(nux::StaticCairoText::StaticObjectType))
+    return unity_sctext_accessible_new(object);
+
+  if (object->Type().IsDerivedFromType(unity::dash::ResultViewGrid::StaticObjectType))
+    return unity_rvgrid_accessible_new(object);
+
+  if (object->Type().IsDerivedFromType(unity::dash::SearchBar::StaticObjectType))
+    return unity_search_bar_accessible_new(object);
 
   /* NUX classes  */
   if (object->Type().IsDerivedFromType(nux::BaseWindow::StaticObjectType))

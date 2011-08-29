@@ -26,7 +26,11 @@
  */
 
 #include "unity-root-accessible.h"
+#include "nux-base-window-accessible.h"
 #include "unitya11y.h"
+
+#include "UBusWrapper.h"
+#include "UBusMessages.h"
 
 /* GObject */
 static void unity_root_accessible_class_init(UnityRootAccessibleClass* klass);
@@ -42,6 +46,10 @@ static AtkObject* unity_root_accessible_ref_child(AtkObject* obj,
 static AtkObject* unity_root_accessible_get_parent(AtkObject* obj);
 /* private */
 static void       explore_children(AtkObject* obj);
+static void       check_active_window(UnityRootAccessible* self);
+static void       change_visibility_cb(GVariant* variant,
+                                       UnityRootAccessible* self);
+static void       register_interesting_messages (UnityRootAccessible *self);
 
 
 #define UNITY_ROOT_ACCESSIBLE_GET_PRIVATE(obj)                          \
@@ -121,6 +129,8 @@ unity_root_accessible_initialize(AtkObject* accessible,
   // accessible->name = g_get_prgname();
   atk_object_set_name(accessible, "unity");
   atk_object_set_parent(accessible, NULL);
+
+  register_interesting_messages (UNITY_ROOT_ACCESSIBLE (accessible));
 
   ATK_OBJECT_CLASS(unity_root_accessible_parent_class)->initialize(accessible, data);
 }
@@ -239,4 +249,45 @@ explore_children(AtkObject* obj)
     explore_children(atk_child);
     g_object_unref(atk_child);
   }
+}
+
+/*
+ * Call all the children (NuxBaseWindowAccessible) to check if they
+ * are in the proper active or deactive status.
+ */
+static void
+check_active_window(UnityRootAccessible* self)
+{
+  GSList *iter = NULL;
+  NuxBaseWindowAccessible* window = NULL;
+
+  for (iter = self->priv->window_list; iter != NULL; iter = g_slist_next (iter))
+    {
+      window = NUX_BASE_WINDOW_ACCESSIBLE (iter->data);
+
+      nux_base_window_accessible_check_active (window);
+    }
+}
+
+static void
+change_visibility_cb (GVariant* variant,
+                      UnityRootAccessible* self)
+{
+  check_active_window (self);
+}
+
+static void
+register_interesting_messages (UnityRootAccessible *self)
+{
+  static unity::UBusManager ubus_manager;
+
+  ubus_manager.RegisterInterest(UBUS_PLACE_VIEW_SHOWN,
+                                sigc::bind(sigc::ptr_fun(change_visibility_cb), self));
+  ubus_manager.RegisterInterest(UBUS_PLACE_VIEW_HIDDEN,
+                                sigc::bind(sigc::ptr_fun(change_visibility_cb), self));
+
+  ubus_manager.RegisterInterest(UBUS_LAUNCHER_START_KEY_NAV,
+                                sigc::bind(sigc::ptr_fun(change_visibility_cb), self));
+  ubus_manager.RegisterInterest(UBUS_LAUNCHER_END_KEY_NAV,
+                                sigc::bind(sigc::ptr_fun(change_visibility_cb), self));
 }

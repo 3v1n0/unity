@@ -36,9 +36,9 @@ namespace unity
 {
 namespace dash
 {
-
 class ResultView : public nux::View
 {
+  NUX_DECLARE_OBJECT_TYPE(ResultView, View);
 public:
   typedef std::vector<Result> ResultList;
 
@@ -49,6 +49,8 @@ public:
 
   void AddResult(Result& result);
   void RemoveResult(Result& result);
+
+  ResultList GetResultList ();
 
   void SetPreview(PreviewBase* preview, Result& related_result);
 

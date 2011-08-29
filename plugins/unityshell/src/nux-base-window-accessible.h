@@ -58,6 +58,9 @@ AtkObject* nux_base_window_accessible_new(nux::Object* object);
 void       nux_base_window_set_child_key_focused(NuxBaseWindowAccessible* self,
                                                  gboolean value);
 
+void       nux_base_window_accessible_check_active(NuxBaseWindowAccessible* self);
+
+
 G_END_DECLS
 
 #endif /* __NUX_BASE_WINDOW_ACCESSIBLE_H__ */

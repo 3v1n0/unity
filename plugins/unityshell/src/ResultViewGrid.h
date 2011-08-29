@@ -35,6 +35,7 @@ namespace dash
 // will order its elements in to a grid that expands horizontally before vertically
 class ResultViewGrid : public ResultView
 {
+  NUX_DECLARE_OBJECT_TYPE(ResultViewGrid, ResultView);
 public:
   ResultViewGrid(NUX_FILE_LINE_DECL);
   ~ResultViewGrid();
@@ -49,7 +50,8 @@ public:
   nux::Property<int> vertical_spacing;
   nux::Property<int> padding;
 
-
+  sigc::signal<void> selection_change;
+  int GetSelectedIndex();
 
 protected:
   void MouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
