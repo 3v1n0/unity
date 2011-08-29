@@ -40,6 +40,8 @@
 #include "QuicklistMenuItemCheckmark.h"
 #include "QuicklistMenuItemRadio.h"
 
+#include "WindowManager.h"
+
 #include "ubus-server.h"
 #include "UBusMessages.h"
 #include <UnityCore/GLibWrapper.h>
@@ -200,8 +202,8 @@ LauncherIcon::AddProperties(GVariantBuilder* builder)
 void
 LauncherIcon::Activate(ActionArg arg)
 {
-  if (PluginAdapter::Default()->IsScaleActive())
-    PluginAdapter::Default()->TerminateScale();
+  if (WindowManager::Default()->IsScaleActive())
+    WindowManager::Default()->TerminateScale();
 
   ActivateLauncherIcon(arg);
 }
@@ -209,8 +211,8 @@ LauncherIcon::Activate(ActionArg arg)
 void
 LauncherIcon::OpenInstance(ActionArg arg)
 {
-  if (PluginAdapter::Default()->IsScaleActive())
-    PluginAdapter::Default()->TerminateScale();
+  if (WindowManager::Default()->IsScaleActive())
+    WindowManager::Default()->TerminateScale();
 
   OpenInstanceLauncherIcon(arg);
 }
@@ -544,8 +546,8 @@ bool LauncherIcon::OpenQuicklist(bool default_to_first_item)
   if (menus.empty())
     return false;
 
-  if (PluginAdapter::Default()->IsScaleActive())
-    PluginAdapter::Default()->TerminateScale();
+  if (WindowManager::Default()->IsScaleActive())
+    WindowManager::Default()->TerminateScale();
 
   std::list<DbusmenuMenuitem*>::iterator it;
   for (it = menus.begin(); it != menus.end(); it++)

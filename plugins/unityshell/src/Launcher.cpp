@@ -42,6 +42,7 @@
 #include "QuicklistManager.h"
 #include "QuicklistView.h"
 #include "IconRenderer.h"
+#include "WindowManager.h"
 
 #include "ubus-server.h"
 #include "UBusMessages.h"
@@ -131,7 +132,6 @@ GDBusInterfaceVTable Launcher::interface_vtable =
 };
 
 Launcher::Launcher(nux::BaseWindow* parent,
-                   CompScreen*      screen,
                    NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
   , m_ContentOffsetY(0)
@@ -143,7 +143,6 @@ Launcher::Launcher(nux::BaseWindow* parent,
 {
   
   _parent = parent;
-  _screen = screen;
   _active_quicklist = 0;
 
   _hide_machine = new LauncherHideMachine();
@@ -172,7 +171,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
   ql_manager.quicklist_opened.connect(sigc::mem_fun(this, &Launcher::RecvQuicklistOpened));
   ql_manager.quicklist_closed.connect(sigc::mem_fun(this, &Launcher::RecvQuicklistClosed));
 
-  PluginAdapter& plugin_adapter = *(PluginAdapter::Default());
+  WindowManager& plugin_adapter = *(WindowManager::Default());
   plugin_adapter.window_maximized.connect(sigc::mem_fun(this, &Launcher::OnWindowMaybeIntellihide));
   plugin_adapter.window_restored.connect(sigc::mem_fun(this, &Launcher::OnWindowMaybeIntellihide));
   plugin_adapter.window_unminimized.connect(sigc::mem_fun(this, &Launcher::OnWindowMaybeIntellihide));
@@ -191,7 +190,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
   plugin_adapter.terminate_spread.connect(sigc::mem_fun(this, &Launcher::OnPluginStateChanged));
   plugin_adapter.terminate_expo.connect(sigc::mem_fun(this, &Launcher::OnPluginStateChanged));
 
-  GeisAdapter& adapter = *(GeisAdapter::Default(screen));
+  GeisAdapter& adapter = *(GeisAdapter::Default());
   adapter.drag_start.connect(sigc::mem_fun(this, &Launcher::OnDragStart));
   adapter.drag_update.connect(sigc::mem_fun(this, &Launcher::OnDragUpdate));
   adapter.drag_finish.connect(sigc::mem_fun(this, &Launcher::OnDragFinish));
@@ -263,7 +262,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
   _bfb_height = 1;
 
   _data_checked = false;
-  _collection_window = new unity::DNDCollectionWindow(_screen);
+  _collection_window = new unity::DNDCollectionWindow();
   _collection_window->SinkReference();
   _on_data_collected_connection = _collection_window->collected.connect(sigc::mem_fun(this, &Launcher::OnDNDDataCollected));
 
@@ -1533,22 +1532,6 @@ Launcher::GetMouseY()
   return _mouse_position.y;
 }
 
-bool
-Launcher::CheckIntersectWindow(CompWindow* window)
-{
-  nux::Geometry geo = GetAbsoluteGeometry();
-  int intersect_types = CompWindowTypeNormalMask | CompWindowTypeDialogMask |
-                        CompWindowTypeModalDialogMask | CompWindowTypeUtilMask;
-
-  if (!window || !(window->type() & intersect_types) || !window->isMapped() || !window->isViewable() || window->minimized())
-    return false;
-
-  if (CompRegion(window->borderRect()).intersects(CompRect(geo.x, geo.y, geo.width, geo.height)))
-    return true;
-
-  return false;
-}
-
 void
 Launcher::EnableCheckWindowOverLauncher(gboolean enabled)
 {
@@ -1558,13 +1541,6 @@ Launcher::EnableCheckWindowOverLauncher(gboolean enabled)
 void
 Launcher::CheckWindowOverLauncher()
 {
-  CompWindowList window_list = _screen->windows();
-  CompWindowList::iterator it;
-  CompWindow* window = NULL;
-  CompWindow* parent = NULL;
-  int type_dialogs = CompWindowTypeDialogMask | CompWindowTypeModalDialogMask
-                     | CompWindowTypeUtilMask;
-
   bool any = false;
   bool active = false;
 
@@ -1572,27 +1548,8 @@ Launcher::CheckWindowOverLauncher()
   if (!_check_window_over_launcher)
     return;
 
-  window = _screen->findWindow(_screen->activeWindow());
+  WindowManager::Default()->CheckWindowIntersections(GetAbsoluteGeometry(), active, any);
 
-  if (window && (window->type() & type_dialogs))
-    parent = _screen->findWindow(window->transientFor());
-
-  if (CheckIntersectWindow(window) || CheckIntersectWindow(parent))
-  {
-    any = true;
-    active = true;
-  }
-  else
-  {
-    for (it = window_list.begin(); it != window_list.end(); it++)
-    {
-      if (CheckIntersectWindow(*it))
-      {
-        any = true;
-        break;
-      }
-    }
-  }
   _hide_machine->SetQuirk(LauncherHideMachine::ANY_WINDOW_UNDER, any);
   _hide_machine->SetQuirk(LauncherHideMachine::ACTIVE_WINDOW_UNDER, active);
 }
@@ -1602,16 +1559,19 @@ Launcher::OnUpdateDragManagerTimeout(gpointer data)
 {
   Launcher* self = (Launcher*) data;
 
-  if (!self->_selection_atom)
-    self->_selection_atom = XInternAtom(self->_screen->dpy(), "XdndSelection", false);
+  if (self->display() == 0)
+    return false;
 
-  Window drag_owner = XGetSelectionOwner(self->_screen->dpy(), self->_selection_atom);
+  if (!self->_selection_atom)
+    self->_selection_atom = XInternAtom(self->display(), "XdndSelection", false);
+
+  Window drag_owner = XGetSelectionOwner(self->display(), self->_selection_atom);
 
   // evil hack because Qt does not release the seelction owner on drag finished
   Window root_r, child_r;
   int root_x_r, root_y_r, win_x_r, win_y_r;
   unsigned int mask;
-  XQueryPointer(self->_screen->dpy(), self->_screen->root(), &root_r, &child_r, &root_x_r, &root_y_r, &win_x_r, &win_y_r, &mask);
+  XQueryPointer(self->display(), DefaultRootWindow(self->display()), &root_r, &child_r, &root_x_r, &root_y_r, &win_x_r, &win_y_r, &mask);
 
   if (drag_owner && (mask & (Button1Mask | Button2Mask | Button3Mask)))
   {
@@ -1638,23 +1598,23 @@ Launcher::OnUpdateDragManagerTimeout(gpointer data)
 void
 Launcher::OnWindowMapped(guint32 xid)
 {
-  CompWindow* window = _screen->findWindow(xid);
-  if (window && window->type() | CompWindowTypeDndMask)
-  {
+  //CompWindow* window = _screen->findWindow(xid);
+  //if (window && window->type() | CompWindowTypeDndMask)
+  //{
     if (!_dnd_check_handle)
       _dnd_check_handle = g_timeout_add(200, &Launcher::OnUpdateDragManagerTimeout, this);
-  }
+  //}
 }
 
 void
 Launcher::OnWindowUnmapped(guint32 xid)
 {
-  CompWindow* window = _screen->findWindow(xid);
-  if (window && window->type() | CompWindowTypeDndMask)
-  {
+  //CompWindow* window = _screen->findWindow(xid);
+  //if (window && window->type() | CompWindowTypeDndMask)
+  //{
     if (!_dnd_check_handle)
       _dnd_check_handle = g_timeout_add(200, &Launcher::OnUpdateDragManagerTimeout, this);
-  }
+  //}
 }
 
 // FIXME: remove those 2 for Oneiric
@@ -1686,8 +1646,8 @@ Launcher::CheckWindowOverLauncherSync(Launcher* self)
 void
 Launcher::OnPluginStateChanged()
 {
-  _hide_machine->SetQuirk (LauncherHideMachine::EXPO_ACTIVE, PluginAdapter::Default ()->IsExpoActive ());
-  _hide_machine->SetQuirk (LauncherHideMachine::SCALE_ACTIVE, PluginAdapter::Default ()->IsScaleActive ());
+  _hide_machine->SetQuirk (LauncherHideMachine::EXPO_ACTIVE, WindowManager::Default ()->IsExpoActive ());
+  _hide_machine->SetQuirk (LauncherHideMachine::SCALE_ACTIVE, WindowManager::Default ()->IsScaleActive ());
   
   if (_hidemode == LAUNCHER_HIDE_NEVER)
     return;
@@ -2470,7 +2430,8 @@ Launcher::ResetRepeatShorcutTimeout(gpointer data)
 }
 
 gboolean
-Launcher::CheckSuperShortcutPressed(unsigned int  key_sym,
+Launcher::CheckSuperShortcutPressed(Display *x_display,
+                                    unsigned int  key_sym,
                                     unsigned long key_code,
                                     unsigned long key_state,
                                     char*         key_string)
@@ -2483,7 +2444,7 @@ Launcher::CheckSuperShortcutPressed(unsigned int  key_sym,
   // Shortcut to start launcher icons. Only relies on Keycode, ignore modifier
   for (it = _model->begin(); it != _model->end(); it++)
   {
-    if ((XKeysymToKeycode(screen->dpy(), (*it)->GetShortcut()) == key_code) ||
+    if ((XKeysymToKeycode(x_display, (*it)->GetShortcut()) == key_code) ||
         ((gchar)((*it)->GetShortcut()) == key_string[0]))
     {
       /*
@@ -2517,9 +2478,9 @@ Launcher::CheckSuperShortcutPressed(unsigned int  key_sym,
 }
 
 void
-Launcher::EdgeRevealTriggered()
+Launcher::EdgeRevealTriggered(int mouse_x, int mouse_y)
 {
-  SetMousePosition(pointerX, pointerY - GetAbsoluteGeometry().y);
+  SetMousePosition(mouse_x, mouse_y - GetAbsoluteGeometry().y);
 
   _hide_machine->SetQuirk(LauncherHideMachine::MOUSE_OVER_ACTIVE_EDGE, true);
   _hide_machine->SetQuirk(LauncherHideMachine::MOUSE_MOVE_POST_REVEAL, true);
