@@ -179,15 +179,15 @@ public:
           const CompRegion&, unsigned int);
 
   void
-  glAddGeometry(const GLTexture::MatrixList &matrices,
-                const CompRegion &region,
-                const CompRegion &clipRegion,
+  glAddGeometry(const GLTexture::MatrixList& matrices,
+                const CompRegion& region,
+                const CompRegion& clipRegion,
                 unsigned int min,
                 unsigned int max);
 
   void
-  glDrawTexture(GLTexture *texture,
-                GLFragment::Attrib &attrib,
+  glDrawTexture(GLTexture* texture,
+                GLFragment::Attrib& attrib,
                 unsigned int mask);
 
 
@@ -251,8 +251,14 @@ public:
   bool animate(int ms, float fadeTime);
   CompRegion getDamageRegion();
 
-  void setIsAnimated (bool animated) { mIsAnimated = animated; }
-  bool isAnimated () { return mIsAnimated; }
+  void setIsAnimated(bool animated)
+  {
+    mIsAnimated = animated;
+  }
+  bool isAnimated()
+  {
+    return mIsAnimated;
+  }
 
 private:
 
@@ -275,12 +281,12 @@ private:
 
   /* Collected regions, textures */
   std::vector <MatrixListVector> mCollectedMatrixLists;
-  std::vector <GLTexture *> mCollectedTextures;
+  std::vector <GLTexture*> mCollectedTextures;
   std::vector <CompRegionVector> mCollectedRegions;
   std::vector <IntVector> mCollectedMinVertices;
   std::vector <IntVector> mCollectedMaxVertices;
 
-  void collectDrawInfo ();
+  void collectDrawInfo();
 };
 
 #define VIG_WINDOW(w)                  \
