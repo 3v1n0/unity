@@ -412,10 +412,7 @@ UnityDialogWindow::glAddGeometry(const GLTexture::MatrixList& matrices,
                                  unsigned int                min,
                                  unsigned int                max)
 {
-  mCollectedMatrixLists.back().push_back(matrices);
-  mCollectedRegions.back().push_back(region);
-  mCollectedMinVertices.back().push_back(min);
-  mCollectedMaxVertices.back().push_back(max);
+  unity::PaintInfoCollector::Active ()->processGeometry (matrices, region, min, max);
 
   gWindow->glAddGeometry(matrices, region, clipRegion, min, max);
 }
@@ -426,43 +423,176 @@ UnityDialogWindow::glDrawTexture(GLTexture*          texture,
                                  GLFragment::Attrib& fa,
                                  unsigned int       mask)
 {
-  mCollectedTextures.push_back(texture);
-  mCollectedMatrixLists.resize(mCollectedMatrixLists.size() + 1);
-  mCollectedRegions.resize(mCollectedRegions.size() + 1);
-  mCollectedMinVertices.resize(mCollectedMinVertices.size() + 1);
-  mCollectedMaxVertices.resize(mCollectedMaxVertices.size() + 1);
+  unity::PaintInfoCollector::Active ()->processTexture (texture);
+}
+
+unity::GeometryCollection::GeometryCollection() :
+  collectedMatrixLists (1),
+  collectedRegions (1),
+  collectedMinVertices (1),
+  collectedMaxVertices (1)
+{
+}
+
+bool
+unity::GeometryCollection::status ()
+{
+  return (collectedMatrixLists.size () == collectedRegions.size () &&
+	  collectedRegions.size () == collectedMaxVertices.size () &&
+	  collectedMaxVertices.size () == collectedMinVertices.size () &&
+	  collectedMinVertices.size () == collectedMatrixLists.size ());
 }
 
 void
-UnityDialogWindow::collectDrawInfo()
+unity::GeometryCollection::addGeometryForWindow (CompWindow *w, const CompRegion &paintRegion)
 {
+  /* We can reset the window geometry since it will be
+   * re-added later */
+  GLWindow::get (w)->geometry().reset();
+
+  for (unsigned int i = 0; i < collectedMatrixLists.size (); i++)
+  {
+    GLTexture::MatrixList matl = collectedMatrixLists[i];
+    CompRegion            reg  = collectedRegions[i];
+    int                   min = collectedMinVertices[i];
+    int                   max = collectedMaxVertices[i];
+
+    /* Now allow plugins to mess with the geometry of our
+     * dim (so we get a nice render for things like
+     * wobbly etc etc */
+    GLWindow::get (w)->glAddGeometry(matl, reg, paintRegion, min, max);
+  }
+}
+
+void
+unity::GeometryCollection::addGeometry(const GLTexture::MatrixList &ml,
+				       const CompRegion            &r,
+				       int                         min,
+				       int                         max)
+{
+  collectedMatrixLists.push_back (ml);
+  collectedRegions.push_back (r);
+  collectedMaxVertices.push_back (max);
+  collectedMinVertices.push_back (min);
+}
+
+unity::TexGeometryCollection::TexGeometryCollection() :
+  mTexture (NULL)
+{
+}
+
+void
+unity::TexGeometryCollection::addGeometry(const GLTexture::MatrixList &ml,
+					  const CompRegion            &r,
+					  int                         max,
+					  int                         min)
+{
+  mGeometries.addGeometry(ml, r, max, min);
+}
+
+void
+unity::TexGeometryCollection::setTexture (GLTexture *tex)
+{
+  mTexture = tex;
+}
+
+void
+unity::TexGeometryCollection::addGeometriesAndDrawTextureForWindow(CompWindow *w, unsigned int mask)
+{
+  if (mTexture && mGeometries.status ())
+  {
+    CompRegion paintRegion = w->region ();
+    GLWindow   *gWindow = GLWindow::get (w);
+
+    if (mask & PAINT_WINDOW_TRANSFORMED_MASK)
+      paintRegion = infiniteRegion;
+
+    mGeometries.addGeometryForWindow (w, paintRegion);
+
+    if (gWindow->geometry().vertices)
+    {
+	UnityDialogScreen *uds = UnityDialogScreen::get (screen);
+	GLFragment::Attrib fa (gWindow->lastPaintAttrib());
+	unsigned int glDrawTextureIndex = gWindow->glDrawTextureGetCurrentIndex();
+	/* Texture rendering set-up */
+	uds->gScreen->setTexEnvMode(GL_MODULATE);
+	glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+	/* Draw the dim texture with all of it's modified
+	   * geometry glory */
+	gWindow->glDrawTextureSetCurrentIndex(MAXSHORT);
+	gWindow->glDrawTexture(mTexture, fa, mask | PAINT_WINDOW_BLEND_MASK
+			       | PAINT_WINDOW_TRANSLUCENT_MASK |
+			       PAINT_WINDOW_TRANSFORMED_MASK);
+	gWindow->glDrawTextureSetCurrentIndex(glDrawTextureIndex);
+	/* Texture rendering tear-down */
+	glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+	uds->gScreen->setTexEnvMode(GL_REPLACE);
+    }
+  }
+}
+
+unity::PaintInfoCollector::PaintInfoCollector (CompWindow *w) :
+  mWindow (w)
+{
+}
+
+void
+unity::PaintInfoCollector::collect()
+{
+  GLWindow *gWindow = GLWindow::get (mWindow);
+  UnityDialogWindow *udw = UnityDialogWindow::get (mWindow);
   GLMatrix sTransform;
 
-  sTransform.toScreenSpace(&screen->outputDevs()[screen->outputDeviceForGeometry(window->geometry())], -DEFAULT_Z_CAMERA);
+  sTransform.toScreenSpace(&screen->outputDevs()[screen->outputDeviceForGeometry(mWindow->geometry())], -DEFAULT_Z_CAMERA);
 
-  mCollectedMatrixLists.clear();
-  mCollectedRegions.clear();
-  mCollectedMaxVertices.clear();
-  mCollectedMinVertices.clear();
-  mCollectedTextures.clear();
+  gWindow->glDrawTextureSetEnabled(udw, true);
+  gWindow->glAddGeometrySetEnabled(udw, true);
+  gWindow->glDrawSetEnabled(udw, false);
+  gWindow->glPaintSetEnabled(udw, false);
 
-  mCollectedMatrixLists.resize(1);
-  mCollectedRegions.resize(1);
-  mCollectedMaxVertices.resize(1);
-  mCollectedMinVertices.resize(1);
-  mCollectedTextures.clear();
+  mCollection.push_back (unity::TexGeometryCollection ());
 
-  gWindow->glDrawTextureSetEnabled(this, true);
-  gWindow->glAddGeometrySetEnabled(this, true);
-  gWindow->glDrawSetEnabled(this, false);
-  gWindow->glPaintSetEnabled(this, false);
+  unity::PaintInfoCollector::active_collector = this;
 
   gWindow->glPaint(gWindow->lastPaintAttrib(), sTransform, infiniteRegion, 0);
 
-  gWindow->glDrawTextureSetEnabled(this, false);
-  gWindow->glAddGeometrySetEnabled(this, false);
-  gWindow->glDrawSetEnabled(this, true);
-  gWindow->glPaintSetEnabled(this, true);
+  unity::PaintInfoCollector::active_collector = NULL;
+
+  gWindow->glDrawTextureSetEnabled(udw, false);
+  gWindow->glAddGeometrySetEnabled(udw, false);
+  gWindow->glDrawSetEnabled(udw, true);
+  gWindow->glPaintSetEnabled(udw, true);
+}
+
+void
+unity::PaintInfoCollector::processGeometry (const GLTexture::MatrixList &ml,
+				     const CompRegion            &r,
+				     int                         min,
+				     int                         max)
+{
+  mCollection.back ().addGeometry (ml, r, min, max);
+}
+
+void
+unity::PaintInfoCollector::processTexture (GLTexture *tex)
+{
+  mCollection.back().setTexture (tex);
+  mCollection.push_back (unity::TexGeometryCollection ());
+}
+
+void
+unity::PaintInfoCollector::drawGeometriesForWindow(CompWindow *w, unsigned int pm)
+{
+  for (unity::TexGeometryCollection &tcg : mCollection)
+    tcg.addGeometriesAndDrawTextureForWindow (w, pm);
+}
+
+unity::PaintInfoCollector * unity::PaintInfoCollector::active_collector = NULL;
+
+unity::PaintInfoCollector *
+unity::PaintInfoCollector::Active ()
+{
+  return active_collector;
 }
 
 /* Draw the window */
@@ -541,56 +671,10 @@ UnityDialogWindow::glDraw(const GLMatrix& transform,
 
     if (!UnityDialogWindow::get(w)->mIsAnimated)
     {
-      UnityDialogWindow::get(w)->collectDrawInfo();
+      unity::PaintInfoCollector pc (w);
 
-      for (unsigned int i = 0; i < UnityDialogWindow::get(w)->mCollectedTextures.size(); i++)
-      {
-        GLTexture* tex = UnityDialogWindow::get(w)->mCollectedTextures[i];
-        MatrixListVector matlv = UnityDialogWindow::get(w)->mCollectedMatrixLists[i];
-        CompRegionVector regv = UnityDialogWindow::get(w)->mCollectedRegions[i];
-        IntVector        minv = UnityDialogWindow::get(w)->mCollectedMinVertices[i];
-        IntVector        maxv = UnityDialogWindow::get(w)->mCollectedMaxVertices[i];
-
-        /* We can reset the window geometry since it will be
-         * re-added later */
-        gWindow->geometry().reset();
-
-        if (mask & PAINT_WINDOW_TRANSFORMED_MASK)
-          paintRegion = infiniteRegion;
-
-        for (unsigned int j = 0; j < matlv.size(); j++)
-        {
-          GLTexture::MatrixList matl = matlv[j];
-          CompRegion            reg  = regv[j];
-          int                   min = minv[j];
-          int                   max = maxv[j];
-
-          /* Now allow plugins to mess with the geometry of our
-           * dim (so we get a nice render for things like
-           * wobbly etc etc */
-          gWindow->glAddGeometry(matl, reg, paintRegion, min, max);
-        }
-
-        /* Did it succeed? */
-        if (gWindow->geometry().vertices)
-        {
-          unsigned int glDrawTextureIndex = gWindow->glDrawTextureGetCurrentIndex();
-          fragment.setOpacity(OPAQUE);
-          /* Texture rendering set-up */
-          uds->gScreen->setTexEnvMode(GL_MODULATE);
-          glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-          /* Draw the dim texture with all of it's modified
-           * geometry glory */
-          gWindow->glDrawTextureSetCurrentIndex(MAXSHORT);
-          gWindow->glDrawTexture(tex, fragment, mask | PAINT_WINDOW_BLEND_MASK
-                                 | PAINT_WINDOW_TRANSLUCENT_MASK |
-                                 PAINT_WINDOW_TRANSFORMED_MASK);
-          gWindow->glDrawTextureSetCurrentIndex(glDrawTextureIndex);
-          /* Texture rendering tear-down */
-          glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-          uds->gScreen->setTexEnvMode(GL_REPLACE);
-        }
-      }
+      pc.collect();
+      pc.drawGeometriesForWindow (window, mask);
     }
   }
 

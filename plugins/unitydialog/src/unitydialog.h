@@ -28,6 +28,77 @@
 
 #include "unitydialog_options.h"
 
+namespace unity
+{
+  typedef std::vector <GLTexture::MatrixList> MatrixListVector;
+  typedef std::vector <CompRegion> CompRegionVector;
+  typedef std::vector <int> IntVector;
+
+  class GeometryCollection
+  {
+    public:
+      GeometryCollection ();
+      bool status ();
+
+      void addGeometryForWindow (CompWindow *, const CompRegion &paintRegion);
+      void addGeometry (const GLTexture::MatrixList &ml,
+			const CompRegion            &r,
+			int                         min,
+			int                         max);
+
+    private:
+
+      MatrixListVector collectedMatrixLists;
+      CompRegionVector collectedRegions;
+      IntVector        collectedMinVertices;
+      IntVector        collectedMaxVertices;
+  };
+
+  class TexGeometryCollection
+  {
+    public:
+      TexGeometryCollection ();
+      void addGeometry (const GLTexture::MatrixList &ml,
+			const CompRegion            &r,
+			int                         min,
+			int                         max);
+      void setTexture (GLTexture *);
+
+      void addGeometriesAndDrawTextureForWindow (CompWindow *, unsigned int pm);
+
+    private:
+      GLTexture*         mTexture;
+      GeometryCollection mGeometries;
+  };
+
+  class PaintInfoCollector
+  {
+    public:
+
+      PaintInfoCollector (CompWindow *w);
+
+      void collect ();
+      void drawGeometriesForWindow (CompWindow *w, unsigned int pm);
+
+      void processGeometry (const GLTexture::MatrixList &ml,
+			    const CompRegion            &r,
+			    int                         min,
+			    int                         max);
+
+      void processTexture (GLTexture *tex);
+
+      static PaintInfoCollector * Active ();
+
+      static PaintInfoCollector *active_collector;
+
+    private:
+
+      /* Collected regions, textures */
+      std::vector <TexGeometryCollection> mCollection;
+      CompWindow                          *mWindow;
+  };
+}
+
 class UnityDialogShadeTexture
 {
 public:
@@ -275,19 +346,11 @@ private:
   Window         mIpw;
   bool           mIsAnimated;
 
-  typedef std::vector <GLTexture::MatrixList> MatrixListVector;
-  typedef std::vector <CompRegion> CompRegionVector;
-  typedef std::vector <int> IntVector;
-
-  /* Collected regions, textures */
-  std::vector <MatrixListVector> mCollectedMatrixLists;
-  std::vector <GLTexture*> mCollectedTextures;
-  std::vector <CompRegionVector> mCollectedRegions;
-  std::vector <IntVector> mCollectedMinVertices;
-  std::vector <IntVector> mCollectedMaxVertices;
-
   void collectDrawInfo();
 };
+
+#define VIG_WINDOW(w)                  \
+    UnityDialogWindow *vw = UnityDialogWindow::get (w);
 
 class UnityDialogPluginVTable :
   public CompPlugin::VTableForScreenAndWindow <UnityDialogScreen, UnityDialogWindow>
