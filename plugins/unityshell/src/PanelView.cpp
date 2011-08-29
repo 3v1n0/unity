@@ -362,9 +362,6 @@ void PanelView::OnObjectAdded(indicator::Indicator::Ptr const& proxy)
   }
   else
   {
-    //PanelIndicatorObjectView* view = new PanelIndicatorObjectView(proxy);
-    //AddPanelView(view, 0);
-    //
     _indicators->AddIndicator(proxy);
   }
 
@@ -377,7 +374,6 @@ void PanelView::OnObjectAdded(indicator::Indicator::Ptr const& proxy)
 void PanelView::OnIndicatorViewUpdated(PanelIndicatorEntryView* view)
 {
   ComputeChildLayout();
-  //NeedRedraw();
 }
 
 void PanelView::OnMenuPointerMoved(int x, int y)
