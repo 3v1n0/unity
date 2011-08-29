@@ -379,7 +379,6 @@ UnityDialogWindow::glPaint(const GLWindowPaintAttrib& attrib,
                            const CompRegion&        region,
                            unsigned int        mask)
 {
-  bool status;
   GLMatrix wTransform(transform);
 
   if (mParent)

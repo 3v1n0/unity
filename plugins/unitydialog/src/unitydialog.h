@@ -289,9 +289,6 @@ private:
   void collectDrawInfo();
 };
 
-#define VIG_WINDOW(w)                  \
-    UnityDialogWindow *vw = UnityDialogWindow::get (w);
-
 class UnityDialogPluginVTable :
   public CompPlugin::VTableForScreenAndWindow <UnityDialogScreen, UnityDialogWindow>
 {
