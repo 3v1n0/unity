@@ -1440,8 +1440,5 @@ UnityDialogPluginVTable::init()
       !CompPlugin::checkPluginABI("opengl", COMPIZ_OPENGL_ABI))
     return false;
 
-  if (!gtk_init_check  (&programArgc, &programArgv))
-    return false;
-
   return true;
 }
