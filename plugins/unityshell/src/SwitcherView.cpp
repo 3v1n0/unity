@@ -454,6 +454,7 @@ gboolean SwitcherView::OnDrawTimeout(gpointer data)
 
 void SwitcherView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
+  static int i = 0;
   timespec current;
   clock_gettime(CLOCK_MONOTONIC, &current);
 

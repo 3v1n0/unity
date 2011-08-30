@@ -42,6 +42,8 @@ SwitcherController::SwitcherController()
   detail_on_timeout = false;
   detail_timeout_length = 1500;
 
+  bg_color_ = nux::Color(0.0, 0.0, 0.0, 0.5);
+
   UBusServer *ubus = ubus_server_get_default();
   ubus_server_register_interest(ubus, UBUS_BACKGROUND_COLOR_CHANGED,
                                 (UBusCallback)&SwitcherController::OnBackgroundUpdate,
