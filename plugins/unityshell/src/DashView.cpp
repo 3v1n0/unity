@@ -114,7 +114,12 @@ void DashView::SetupViews()
   lens_bar_ = new LensBar();
   lens_bar_->lens_activated.connect(sigc::mem_fun(this, &DashView::OnLensBarActivated));
   content_layout_->AddView(lens_bar_, 0, nux::MINOR_POSITION_CENTER);
+
+  search_bar_->OnGeometryChanged.connect([&] (nux::Area*, nux::Geometry& geo) { Relayout(); });
+  lens_bar_->OnGeometryChanged.connect([&] (nux::Area*, nux::Geometry& geo) { Relayout(); });
 }
+
+
 
 void DashView::SetupUBusConnections()
 {
@@ -140,6 +145,7 @@ void DashView::Relayout()
   // the bottom of the dash off the screen
   // not hugely happy with this, so FIXME
   lenses_layout_->SetMaximumHeight (content_geo_.height - search_bar_->GetGeometry().height - lens_bar_->GetGeometry().height);
+  lenses_layout_->SetMinimumHeight (content_geo_.height - search_bar_->GetGeometry().height - lens_bar_->GetGeometry().height);
 
   content_layout_->SetMinMaxSize(content_geo_.width, content_geo_.height);
 
