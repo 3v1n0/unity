@@ -54,6 +54,7 @@ void PanelTray::RealInit()
   gtk_window_set_skip_taskbar_hint(GTK_WINDOW(_window), TRUE);
   gtk_window_resize(GTK_WINDOW(_window), 1, 24);
 
+  /*
   GtkStyleContext* style_context = gtk_widget_get_style_context(_window);
 
   GtkWidgetPath* widget_path = gtk_widget_path_new();
@@ -65,9 +66,9 @@ void PanelTray::RealInit()
   gtk_style_context_add_class(style_context, "unity-panel");
 
   gtk_widget_path_free(widget_path);
+  */
   
-  SetMinMaxSize(1, 24);
-  gtk_window_move(GTK_WINDOW(_window), 200, 12);
+  gtk_window_move(GTK_WINDOW(_window), -24,-24);
   gtk_widget_set_name(_window, "UnityPanelApplet");
 
   gtk_widget_set_visual(_window, gdk_screen_get_rgba_visual(gdk_screen_get_default()));
@@ -89,6 +90,9 @@ void PanelTray::RealInit()
     gtk_container_add(GTK_CONTAINER(_window), GTK_WIDGET(_tray));
     gtk_widget_show(GTK_WIDGET(_tray));
   }
+
+  SetMinMaxSize(1, 24);
+
 }
 
 PanelTray::~PanelTray()
@@ -242,9 +246,6 @@ PanelTray::OnTrayDraw(GtkWidget* widget, cairo_t* cr, PanelTray* tray)
   GtkAllocation alloc;
 
   gtk_widget_get_allocation(widget, &alloc);
-
-  //gdk_cairo_region (cr, ev->region);
-  cairo_clip(cr);
 
   cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
   cairo_paint(cr);
