@@ -58,7 +58,6 @@ public:
 
 private:
   Entries entries_;
-//  std::map<std::string, Entry::Ptr> entries_;
   std::string name_;
 
   friend std::ostream& operator<<(std::ostream& out, Indicator const& i);
