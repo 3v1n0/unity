@@ -97,12 +97,37 @@ unity_search_bar_accessible_new(nux::Object* object)
   accessible = ATK_OBJECT(g_object_new(UNITY_TYPE_SEARCH_BAR_ACCESSIBLE, NULL));
 
   atk_object_initialize(accessible, object);
-  atk_object_set_name(accessible, _("Search Bar"));
 
   return accessible;
 }
 
 /* AtkObject.h */
+static void
+on_search_hint_change_cb (std::string const& s, UnitySearchBarAccessible *self)
+{
+  SearchBar* search_bar = NULL;
+  nux::TextEntry* text_entry = NULL;
+  AtkObject* text_entry_accessible = NULL;
+  nux::Object* nux_object = NULL;
+
+  g_return_if_fail (UNITY_IS_SEARCH_BAR_ACCESSIBLE (self));
+
+  nux_object = nux_object_accessible_get_object(NUX_OBJECT_ACCESSIBLE(self));
+  search_bar = dynamic_cast<SearchBar*>(nux_object);
+
+  if (search_bar == NULL) /* state defunct */
+    return;
+
+  text_entry = search_bar->text_entry();
+
+  if (text_entry != NULL)
+  {
+    text_entry_accessible = unity_a11y_get_accessible(text_entry);
+    atk_object_set_name(text_entry_accessible, s.c_str());
+  }
+}
+
+
 static void
 unity_search_bar_accessible_initialize(AtkObject* accessible,
                                        gpointer data)
@@ -118,12 +143,24 @@ unity_search_bar_accessible_initialize(AtkObject* accessible,
   nux_object = nux_object_accessible_get_object(NUX_OBJECT_ACCESSIBLE(accessible));
   search_bar = dynamic_cast<SearchBar*>(nux_object);
 
+  if (search_bar == NULL)
+    return;
+
   text_entry = search_bar->text_entry();
 
   if (text_entry != NULL)
   {
-    AtkObject* atk_object = unity_a11y_get_accessible(text_entry);
+    std::string hint;
+    AtkObject* text_entry_accessible = NULL;
 
-    atk_object_set_name(atk_object, _("Search Entry"));
+    text_entry_accessible = unity_a11y_get_accessible(text_entry);
+
+    hint = search_bar->search_hint;
+
+    atk_object_set_name(text_entry_accessible, hint.c_str());
+    atk_object_set_role(text_entry_accessible, ATK_ROLE_ENTRY);
   }
+
+  search_bar->search_hint.changed.connect(sigc::bind(sigc::ptr_fun(on_search_hint_change_cb),
+                                                     UNITY_SEARCH_BAR_ACCESSIBLE (accessible)));
 }
