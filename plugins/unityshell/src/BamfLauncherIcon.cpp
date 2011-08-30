@@ -23,15 +23,13 @@
 #include "BamfLauncherIcon.h"
 #include "FavoriteStore.h"
 #include "Launcher.h"
-#include "PluginAdapter.h"
+#include "WindowManager.h"
 #include "UBusMessages.h"
 #include "ubus-server.h"
 
 #include <glib/gi18n-lib.h>
 #include <gio/gdesktopappinfo.h>
 #include <libindicator/indicator-desktop-shortcuts.h>
-#include <core/core.h>
-#include <core/atoms.h>
 
 #include <UnityCore/GLibWrapper.h>
 
@@ -65,7 +63,7 @@ void BamfLauncherIcon::Activate(ActionArg arg)
 
 void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 {
-  bool scaleWasActive = PluginAdapter::Default()->IsScaleActive();
+  bool scaleWasActive = WindowManager::Default()->IsScaleActive();
 
   bool active, running;
   active = bamf_view_is_active(BAMF_VIEW(m_App));
@@ -73,8 +71,7 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 
   if (arg.target && OwnsWindow (arg.target))
   {
-    CompWindow* window = m_Screen->findWindow(arg.target);
-    window->activate ();
+    WindowManager::Default()->Activate(arg.target);
     return;
   }
 
@@ -93,7 +90,7 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 
     if (scaleWasActive)
     {
-      PluginAdapter::Default()->TerminateScale();
+      WindowManager::Default()->TerminateScale();
     }
 
     SetQuirk(QUIRK_STARTING, true);
@@ -105,7 +102,7 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
     {
       if (scaleWasActive) // #5 above
       {
-        PluginAdapter::Default()->TerminateScale();
+        WindowManager::Default()->TerminateScale();
         Focus();
       }
       else // #2 above
@@ -118,7 +115,7 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
     {
       if (scaleWasActive) // #4 above
       {
-        PluginAdapter::Default()->TerminateScale();
+        WindowManager::Default()->TerminateScale();
         Focus();
         if (arg.source != ActionArg::SWITCHER)
           Spread(0, false);
@@ -134,7 +131,7 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
     ubus_server_send_message(ubus_server_get_default(), UBUS_LAUNCHER_ACTION_DONE, NULL);
 }
 
-BamfLauncherIcon::BamfLauncherIcon(Launcher* IconManager, BamfApplication* app, CompScreen* screen)
+BamfLauncherIcon::BamfLauncherIcon(Launcher* IconManager, BamfApplication* app)
   : SimpleLauncherIcon(IconManager)
   , _supported_types_filled(false)
   , _fill_supported_types_id(0)
@@ -142,7 +139,6 @@ BamfLauncherIcon::BamfLauncherIcon(Launcher* IconManager, BamfApplication* app, 
   _cached_desktop_file = NULL;
   _cached_name = NULL;
   m_App = app;
-  m_Screen = screen;
   _remote_uri = 0;
   _dnd_hover_timer = 0;
   _dnd_hovered = false;
@@ -189,7 +185,7 @@ BamfLauncherIcon::BamfLauncherIcon(Launcher* IconManager, BamfApplication* app, 
                                                          G_CALLBACK(&BamfLauncherIcon::OnDesktopFileChanged),
                                                          this);
 
-  PluginAdapter::Default()->window_minimized.connect(sigc::mem_fun(this, &BamfLauncherIcon::OnWindowMinimized));
+  WindowManager::Default()->window_minimized.connect(sigc::mem_fun(this, &BamfLauncherIcon::OnWindowMinimized));
   IconManager->hidden_changed.connect(sigc::mem_fun(this, &BamfLauncherIcon::OnLauncherHiddenChanged));
 
   // hack
@@ -445,12 +441,10 @@ void BamfLauncherIcon::Focus()
   GList* children, *l;
   BamfView* view;
   bool any_urgent = false;
-  bool any_on_current = false;
-  bool any_mapped = false;
 
   children = bamf_view_get_children(BAMF_VIEW(m_App));
 
-  CompWindowList windows;
+  std::vector<Window> windows;
 
   /* get the list of windows */
   for (l = children; l; l = l->next)
@@ -460,112 +454,28 @@ void BamfLauncherIcon::Focus()
     if (BAMF_IS_WINDOW(view))
     {
       guint32 xid = bamf_window_get_xid(BAMF_WINDOW(view));
+      bool urgent = bamf_view_is_urgent(view);
 
-      CompWindow* window = m_Screen->findWindow((Window) xid);
-
-      if (window)
+      if (any_urgent)
       {
-        if (bamf_view_is_urgent(view))
+        if (urgent)
+          windows.push_back((Window)xid);
+      }
+      else
+      {
+        if (urgent)
+        {
+          windows.clear();
           any_urgent = true;
-        windows.push_back(window);
-      }
-    }
-  }
-
-  // not a good sign
-  if (windows.empty())
-  {
-    g_list_free(children);
-    return;
-  }
-
-  /* sort the list */
-  CompWindowList tmp;
-  for (auto win : m_Screen->clientList())
-  {
-    if (std::find(windows.begin(), windows.end(), win) != windows.end())
-      tmp.push_back(win);
-  }
-  windows = tmp;
-
-  /* filter based on workspace */
-  for (CompWindow* &win : windows)
-  {
-    if (win->defaultViewport() == m_Screen->vp())
-    {
-      any_on_current = true;
-    }
-
-    if (!win->minimized())
-    {
-      any_mapped = true;
-    }
-
-    if (any_on_current && any_mapped)
-      break;
-  }
-
-  if (any_urgent)
-  {
-    // FIXME we cant use the compiz tracking since it is currently broken
-    /*for (it = windows.begin (); it != windows.end (); it++)
-    {
-      if ((*it)->state () & CompWindowStateDemandsAttentionMask)
-      {
-        (*it)->activate ();
-        break;
-      }
-    }*/
-    for (l = children; l; l = l->next)
-    {
-      view = (BamfView*) l->data;
-
-      if (BAMF_IS_WINDOW(view))
-      {
-        guint32 xid = bamf_window_get_xid(BAMF_WINDOW(view));
-
-        CompWindow* window = m_Screen->findWindow((Window) xid);
-
-        if (window && bamf_view_is_urgent(view))
-        {
-          window->activate();
-          break;
         }
+        windows.push_back((Window)xid);
       }
     }
-  }
-  else if (any_on_current)
-  {
-    // to ensure proper stacking we process windows in reverse order (high to low)
-    // then we active the first window and raise each following window. Due to the
-    // way stack requests work (async), each subsequent raise call will stack below
-    // the previous one.
-    bool first = false;
-    windows.reverse();
-    for (CompWindow* &win : windows)
-    {
-      if (win->defaultViewport() == m_Screen->vp() &&
-          ((any_mapped && !win->minimized()) || !any_mapped))
-      {
-        if (!first)
-        {
-          win->activate();
-          first = true;
-        }
-        else
-        {
-          win->raise();
-        }
-      }
-    }
-
-  }
-  else
-  {
-    (*(windows.rbegin()))->activate();
   }
 
   g_list_free(children);
+  WindowManager::Default()->FocusWindowGroup(windows);
+  return;
 }
 
 bool BamfLauncherIcon::Spread(int state, bool force)
@@ -574,7 +484,7 @@ bool BamfLauncherIcon::Spread(int state, bool force)
   GList* children, *l;
   children = bamf_view_get_children(BAMF_VIEW(m_App));
 
-  std::list<Window> windowList;
+  std::vector<Window> windowList;
   for (l = children; l; l = l->next)
   {
     view = (BamfView*) l->data;
@@ -582,27 +492,12 @@ bool BamfLauncherIcon::Spread(int state, bool force)
     if (BAMF_IS_WINDOW(view))
     {
       guint32 xid = bamf_window_get_xid(BAMF_WINDOW(view));
-      CompWindow* window = m_Screen->findWindow((Window) xid);
-
-      // filter by workspace
-      if (window && window->defaultViewport() == m_Screen->vp())
-      {
-        windowList.push_back((Window) xid);
-      }
+      windowList.push_back((Window) xid);
     }
   }
 
-  if (windowList.size() > 1 || (windowList.size() > 0 && force))
-  {
-    std::string match = PluginAdapter::Default()->MatchStringForXids(&windowList);
-    PluginAdapter::Default()->InitiateScale(match, state);
-    g_list_free(children);
-    return true;
-  }
-
   g_list_free(children);
-
-  return false;
+  return WindowManager::Default()->ScaleWindowGroup(windowList, state, force);
 }
 
 void BamfLauncherIcon::OnClosed(BamfView* view, gpointer data)
@@ -651,26 +546,16 @@ void BamfLauncherIcon::EnsureWindowState()
 {
   GList* children, *l;
   int count = 0;
-
-  bool has_visible = false;
-
   children = bamf_view_get_children(BAMF_VIEW(m_App));
   for (l = children; l; l = l->next)
   {
     if (!BAMF_IS_WINDOW(l->data))
       continue;
-
     count++;
-
-    guint32 xid = bamf_window_get_xid(BAMF_WINDOW(l->data));
-    CompWindow* window = m_Screen->findWindow((Window) xid);
-
-    if (window && window->defaultViewport() == m_Screen->vp())
-      has_visible = true;
   }
 
   SetRelatedWindows(count);
-  SetHasWindowOnViewport(has_visible);
+  SetHasWindowOnViewport(true); // FIXME
 
   g_list_free(children);
 }
@@ -800,10 +685,7 @@ void BamfLauncherIcon::OnQuit(DbusmenuMenuitem* item, int time, BamfLauncherIcon
     if (BAMF_IS_WINDOW(view))
     {
       guint32 xid = bamf_window_get_xid(BAMF_WINDOW(view));
-      CompWindow* window = self->m_Screen->findWindow((Window) xid);
-
-      if (window)
-        window->close(self->m_Screen->getCurrentTime());
+      WindowManager::Default()->Close(xid);
     }
   }
 
@@ -1017,20 +899,20 @@ void BamfLauncherIcon::UpdateIconGeometries(nux::Point3 center)
 {
   GList* children, *l;
   BamfView* view;
-  long data[4];
+  nux::Geometry geo;
 
   if (_launcher->Hidden() && !_launcher->ShowOnEdge())
   {
-    data[0] = 0;
-    data[1] = 0;
+    geo.x = 0;
+    geo.y = 0;
   }
   else
   {
-    data[0] = center.x - 24;
-    data[1] = center.y - 24;
+    geo.x = center.x - 24;
+    geo.y = center.y - 24;
   }
-  data[2] = 48;
-  data[3] = 48;
+  geo.width = 48;
+  geo.height = 48;
 
   children = bamf_view_get_children(BAMF_VIEW(m_App));
 
@@ -1041,10 +923,7 @@ void BamfLauncherIcon::UpdateIconGeometries(nux::Point3 center)
     if (BAMF_IS_WINDOW(view))
     {
       guint32 xid = bamf_window_get_xid(BAMF_WINDOW(view));
-
-      XChangeProperty(m_Screen->dpy(), xid, Atoms::wmIconGeometry,
-                      XA_CARDINAL, 32, PropModeReplace,
-                      (unsigned char*) data, 4);
+      WindowManager::Default()->SetWindowIconGeometry((Window)xid, geo);
     }
   }
 
@@ -1163,10 +1042,7 @@ BamfLauncherIcon::SwitcherPriority()
     if (BAMF_IS_WINDOW(view))
     {
       guint32 xid = bamf_window_get_xid(BAMF_WINDOW(view));
-      CompWindow* window = m_Screen->findWindow((Window) xid);
-
-      if (window)
-        result = std::max(result, window->activeNum());
+      result = std::max(result, WindowManager::Default()->GetWindowActiveNumber (xid));
     }
   }
 

@@ -35,7 +35,7 @@ NUX_DECLARE_OBJECT_TYPE(DNDCollectionWindow, nux::BaseWindow);
 
 // Methods
 public:
-  DNDCollectionWindow(CompScreen* screen);
+  DNDCollectionWindow();
   ~DNDCollectionWindow();
   
 private:

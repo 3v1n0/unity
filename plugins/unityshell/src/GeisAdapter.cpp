@@ -18,22 +18,22 @@
  */
 
 #include <glib.h>
+#include <gdk/gdkx.h>
 #include "GeisAdapter.h"
 
 GeisAdapter* GeisAdapter::_default = 0;
 
 /* static */
 GeisAdapter*
-GeisAdapter::Default(CompScreen* screen)
+GeisAdapter::Default()
 {
   if (!_default)
-    return _default = new GeisAdapter(screen);  // should be using a dictionary
+    return _default = new GeisAdapter();  // should be using a dictionary
   return _default;
 }
 
-GeisAdapter::GeisAdapter(CompScreen* screen)
+GeisAdapter::GeisAdapter()
 {
-  _screen = screen;
   RegisterRootInstance();
 }
 
@@ -459,7 +459,7 @@ GeisAdapter::RegisterRootInstance()
   GeisXcbWinInfo xcb_win_info;
   xcb_win_info.display_name  = NULL,
                xcb_win_info.screenp       = NULL,
-                            xcb_win_info.window_id     = _screen->root();
+                            xcb_win_info.window_id     = gdk_x11_get_default_root_xwindow();
 
   GeisWinInfo win_info =
   {
