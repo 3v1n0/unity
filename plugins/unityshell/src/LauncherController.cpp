@@ -22,7 +22,7 @@
 #include "LauncherController.h"
 #include "LauncherIcon.h"
 #include "Launcher.h"
-#include "PluginAdapter.h"
+#include "WindowManager.h"
 #include "TrashLauncherIcon.h"
 #include "BFBLauncherIcon.h"
 
@@ -33,10 +33,9 @@
 
 using namespace unity;
 
-LauncherController::LauncherController(Launcher* launcher, CompScreen* screen)
+LauncherController::LauncherController(Launcher* launcher)
 {
   _launcher = launcher;
-  _screen = screen;
   _model = new LauncherModel();
   _sort_priority = 0;
 
@@ -47,7 +46,7 @@ LauncherController::LauncherController(Launcher* launcher, CompScreen* screen)
   _device_section = new DeviceLauncherSection(_launcher);
   _device_section->IconAdded.connect(sigc::mem_fun(this, &LauncherController::OnIconAdded));
 
-  _num_workspaces = _screen->vpSize().width() * _screen->vpSize().height();
+  _num_workspaces = WindowManager::Default()->WorkspaceCount();
   if (_num_workspaces > 1)
   {
     InsertExpoAction();
@@ -207,7 +206,7 @@ LauncherController::OnLauncherEntryRemoteRemoved(LauncherEntryRemote* entry)
 void
 LauncherController::OnExpoActivated()
 {
-  PluginAdapter::Default()->InitiateExpo();
+  WindowManager::Default()->InitiateExpo();
 }
 
 void
@@ -303,7 +302,7 @@ LauncherController::OnViewOpened(BamfMatcher* matcher, BamfView* view, gpointer 
   if (g_object_get_qdata(G_OBJECT(app), g_quark_from_static_string("unity-seen")))
     return;
 
-  BamfLauncherIcon* icon = new BamfLauncherIcon(self->_launcher, app, self->_screen);
+  BamfLauncherIcon* icon = new BamfLauncherIcon(self->_launcher, app);
   icon->SetIconType(LauncherIcon::TYPE_APPLICATION);
   icon->SetSortPriority(self->_sort_priority++);
 
@@ -329,7 +328,7 @@ LauncherController::CreateFavorite(const char* file_path)
   g_object_set_qdata(G_OBJECT(app), g_quark_from_static_string("unity-seen"), GINT_TO_POINTER(1));
 
   bamf_view_set_sticky(BAMF_VIEW(app), true);
-  icon = new BamfLauncherIcon(_launcher, app, _screen);
+  icon = new BamfLauncherIcon(_launcher, app);
   icon->SetIconType(LauncherIcon::TYPE_APPLICATION);
   icon->SetSortPriority(_sort_priority++);
 
@@ -375,7 +374,7 @@ void LauncherController::SetupBamf()
       continue;
     g_object_set_qdata(G_OBJECT(app), g_quark_from_static_string("unity-seen"), GINT_TO_POINTER(1));
 
-    icon = new BamfLauncherIcon(_launcher, app, _screen);
+    icon = new BamfLauncherIcon(_launcher, app);
     icon->SetSortPriority(_sort_priority++);
     RegisterIcon(icon);
   }

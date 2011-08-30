@@ -22,7 +22,6 @@
 #define LAUNCHER_H
 
 #include <sys/time.h>
-#include <core/core.h>
 
 #include <Nux/View.h>
 #include <Nux/BaseWindow.h>
@@ -39,7 +38,6 @@
 #include "LauncherHoverMachine.h"
 #include "NuxGraphics/IOpenGLAsmShader.h"
 #include "Nux/TimerProc.h"
-#include "PluginAdapter.h"
 
 #define ANIM_DURATION_SHORT 125
 #define ANIM_DURATION       200
@@ -103,8 +101,10 @@ public:
     BACKLIGHT_ALWAYS_OFF,
   } BacklightMode;
 
-  Launcher(nux::BaseWindow* parent, CompScreen* screen, NUX_FILE_LINE_PROTO);
+  Launcher(nux::BaseWindow* parent, NUX_FILE_LINE_PROTO);
   ~Launcher();
+
+  nux::Property<Display*> display;
 
   virtual long ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo);
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
@@ -150,9 +150,9 @@ public:
   void SetAutoHideAnimation(AutoHideAnimation animation);
   AutoHideAnimation GetAutoHideAnimation();
 
-  void EdgeRevealTriggered();
+  void EdgeRevealTriggered(int x, int y);
 
-  gboolean CheckSuperShortcutPressed(unsigned int key_sym, unsigned long key_code, unsigned long key_state, char* key_string);
+  gboolean CheckSuperShortcutPressed(Display *x_display, unsigned int key_sym, unsigned long key_code, unsigned long key_state, char* key_string);
 
   nux::BaseWindow* GetParent()
   {
@@ -282,8 +282,6 @@ private:
 
   static gboolean OnScrollTimeout(gpointer data);
   static gboolean OnUpdateDragManagerTimeout(gpointer data);
-
-  bool CheckIntersectWindow(CompWindow* window);
 
   float DnDStartProgress(struct timespec const& current);
   float DnDExitProgress(struct timespec const& current);
@@ -445,7 +443,6 @@ private:
   LauncherDragWindow* _drag_window;
   LauncherHideMachine* _hide_machine;
   LauncherHoverMachine* _hover_machine;
-  CompScreen* _screen;
 
   unity::DndData _dnd_data;
   nux::DndAction    _drag_action;

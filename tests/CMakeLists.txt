@@ -207,6 +207,86 @@ add_executable (test-switcher
                 )
 add_dependencies (test-switcher unity-core-${UNITY_API_VERSION})
 
+add_executable (test-launcher
+                TestLauncher.cpp
+                ${UNITY_SRC}/AbstractLauncherIcon.h
+                ${UNITY_SRC}/AbstractIconRenderer.h
+                ${UNITY_SRC}/LauncherIcon.cpp
+                ${UNITY_SRC}/LauncherIcon.h
+                ${UNITY_SRC}/SimpleLauncherIcon.cpp
+                ${UNITY_SRC}/SimpleLauncherIcon.h
+                ${UNITY_SRC}/BamfLauncherIcon.cpp
+                ${UNITY_SRC}/BamfLauncherIcon.h
+                ${UNITY_SRC}/BFBLauncherIcon.cpp
+                ${UNITY_SRC}/BFBLauncherIcon.h
+                ${UNITY_SRC}/SpacerLauncherIcon.cpp
+                ${UNITY_SRC}/SpacerLauncherIcon.h
+                ${UNITY_SRC}/DndData.cpp
+                ${UNITY_SRC}/DndData.h
+                ${UNITY_SRC}/TrashLauncherIcon.cpp
+                ${UNITY_SRC}/TrashLauncherIcon.h
+                ${UNITY_SRC}/DNDCollectionWindow.cpp
+                ${UNITY_SRC}/DNDCollectionWindow.h
+                ${UNITY_SRC}/DeviceLauncherIcon.cpp
+                ${UNITY_SRC}/DeviceLauncherIcon.h
+                ${UNITY_SRC}/DeviceLauncherSection.cpp
+                ${UNITY_SRC}/DeviceLauncherSection.h
+                ${UNITY_SRC}/DevicesSettings.cpp
+                ${UNITY_SRC}/DevicesSettings.h
+                ${UNITY_SRC}/FavoriteStore.cpp
+                ${UNITY_SRC}/FavoriteStore.h
+                ${UNITY_SRC}/FavoriteStoreGSettings.cpp
+                ${UNITY_SRC}/FavoriteStoreGSettings.h
+                ${UNITY_SRC}/LauncherEntryRemoteModel.cpp
+                ${UNITY_SRC}/LauncherEntryRemoteModel.h
+                ${UNITY_SRC}/LauncherEntryRemote.cpp
+                ${UNITY_SRC}/LauncherEntryRemote.h
+                ${UNITY_SRC}/LauncherController.cpp
+                ${UNITY_SRC}/LauncherController.h
+                ${UNITY_SRC}/LauncherModel.cpp
+                ${UNITY_SRC}/LauncherModel.h
+                ${UNITY_SRC}/Launcher.cpp
+                ${UNITY_SRC}/Launcher.h
+                ${UNITY_SRC}/LauncherHideMachine.cpp
+                ${UNITY_SRC}/LauncherHideMachine.h
+                ${UNITY_SRC}/LauncherHoverMachine.cpp
+                ${UNITY_SRC}/LauncherHoverMachine.h
+                ${UNITY_SRC}/LauncherDragWindow.cpp
+                ${UNITY_SRC}/LauncherDragWindow.h
+                ${UNITY_SRC}/GeisAdapter.cpp
+                ${UNITY_SRC}/GeisAdapter.h
+                ${UNITY_SRC}/WindowManager.h
+                ${UNITY_SRC}/WindowManager.cpp
+                ${UNITY_SRC}/IconRenderer.cpp
+                ${UNITY_SRC}/IconRenderer.h
+                ${UNITY_SRC}/Tooltip.cpp
+                ${UNITY_SRC}/Tooltip.h
+                ${UNITY_SRC}/BackgroundEffectHelper.h
+                ${UNITY_SRC}/BackgroundEffectHelper.cpp
+                ${UNITY_SRC}/StaticCairoText.cpp
+                ${UNITY_SRC}/StaticCairoText.h
+                ${UNITY_SRC}/Introspectable.cpp
+                ${UNITY_SRC}/Introspectable.h
+                ${UNITY_SRC}/QuicklistMenuItem.cpp
+                ${UNITY_SRC}/QuicklistMenuItem.h
+                ${UNITY_SRC}/QuicklistMenuItemCheckmark.cpp
+                ${UNITY_SRC}/QuicklistMenuItemCheckmark.h
+                ${UNITY_SRC}/QuicklistMenuItemLabel.cpp
+                ${UNITY_SRC}/QuicklistMenuItemLabel.h
+                ${UNITY_SRC}/QuicklistMenuItemRadio.cpp
+                ${UNITY_SRC}/QuicklistMenuItemRadio.h
+                ${UNITY_SRC}/QuicklistMenuItemSeparator.cpp
+                ${UNITY_SRC}/QuicklistMenuItemSeparator.h
+                ${UNITY_SRC}/QuicklistView.cpp
+                ${UNITY_SRC}/QuicklistView.h
+                ${UNITY_SRC}/QuicklistManager.cpp
+                ${UNITY_SRC}/QuicklistManager.h
+                ${UNITY_SRC}/UBusMessages.h
+                ${UNITY_SRC}/ubus-server.cpp
+                ${UNITY_SRC}/ubus-server.h
+                )
+add_dependencies (test-switcher unity-core-${UNITY_API_VERSION})
+
 add_executable (test-keyutil
                 TestKeyboardUtil.cpp
                 ${UNITY_SRC}/KeyboardUtil.h

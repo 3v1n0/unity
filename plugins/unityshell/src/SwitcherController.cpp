@@ -23,6 +23,7 @@
 
 #include "UBusMessages.h"
 #include "ubus-server.h"
+#include "WindowManager.h"
 
 #include "SwitcherController.h"
 

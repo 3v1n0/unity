@@ -22,7 +22,6 @@
 
 #include <list>
 
-#include <core/screen.h>
 #include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
 #include <sigc++/sigc++.h>
@@ -35,7 +34,7 @@ NUX_DECLARE_OBJECT_TYPE(DNDCollectionWindow, nux::BaseWindow);
 
 // Methods
 public:
-  DNDCollectionWindow(CompScreen* screen);
+  DNDCollectionWindow();
   ~DNDCollectionWindow();
   
   void Collect();
@@ -49,9 +48,9 @@ public:
   sigc::signal<void, const std::list<char*>&> collected;
   
 private:
-  CompScreen* screen_;
   std::list<char*> mimes_;
-  guint force_mouse_move_handle_;
+  
+  void OnWindowMoved(guint32 xid);
   
 };
   

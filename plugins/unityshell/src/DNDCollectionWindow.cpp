@@ -18,19 +18,17 @@
 */
 
 #include "DNDCollectionWindow.h"
+#include "WindowManager.h"
 
 namespace unity {
   
 NUX_IMPLEMENT_OBJECT_TYPE(DNDCollectionWindow);
 
-DNDCollectionWindow::DNDCollectionWindow(CompScreen* screen)
+DNDCollectionWindow::DNDCollectionWindow()
   : nux::BaseWindow("")
-  , screen_(screen)
-  , force_mouse_move_handle_(0)
 {
   SetBackgroundColor(nux::Color(0x00000000));
-  SetBaseSize(screen_->width(), screen->height());
-  SetBaseXY(0, 0);
+  SetGeometry(WindowManager::Default()->GetScreenGeometry());
   
   ShowWindow(true);
   PushToBack();
@@ -38,54 +36,38 @@ DNDCollectionWindow::DNDCollectionWindow(CompScreen* screen)
   EnableInputWindow(true, "DNDCollectionWindow");
   EnableInputWindow(false, "DNDCollectionWindow");
   SetDndEnabled(false, true);
+  
+  // Enable input window doesn not show the window immediately. Catching the
+  // window_moved signal avoid using a timeout.
+  WindowManager::Default()->window_moved.connect(sigc::mem_fun(this, &DNDCollectionWindow::OnWindowMoved));
 }
 
 DNDCollectionWindow::~DNDCollectionWindow()
 {
   for (auto it : mimes_)
     g_free(it);
-    
-  if (force_mouse_move_handle_)
-  {
-    g_source_remove(force_mouse_move_handle_);
-    force_mouse_move_handle_ = 0;
-  }
 }
 
-gboolean DNDCollectionWindow::ForceMouseMoveTimeout(gpointer data)
+void DNDCollectionWindow::OnWindowMoved(guint32 xid)
 {
-  DNDCollectionWindow* self = (DNDCollectionWindow*) data;  
-  self->force_mouse_move_handle_ = 0;
-  
-  XWarpPointer (self->screen_->dpy(), None, None, 0, 0, 0, 0, 0, 0);
-  XFlush(self->screen_->dpy());
-  
-  return FALSE;
+  if (xid == GetInputWindowId())
+  {
+    XWarpPointer(WindowManager::Default()->Dpy(), None, None, 0, 0, 0, 0, 0, 0);
+    XFlush(WindowManager::Default()->Dpy());  
+  }    
 }
 
 void DNDCollectionWindow::Collect()
 {
   PushToFront();
   EnableInputWindow(true, "DndCollectionWindow");
-  
-  if (!force_mouse_move_handle_)
-    g_timeout_add(10, &ForceMouseMoveTimeout, this);
 }
 
 void DNDCollectionWindow::ProcessDndMove(int x, int y, std::list<char*> mimes)
-{
-  if (force_mouse_move_handle_)
-  {
-    g_source_remove(force_mouse_move_handle_);
-    force_mouse_move_handle_ = 0;
-  }
-    
+{    
   // Hide the window as soon as possible
   PushToBack();
   EnableInputWindow(false, "DNDCollectionWindow");
-  
-  if (!force_mouse_move_handle_)
-    g_timeout_add(10, &ForceMouseMoveTimeout, this);
     
   for (auto it : mimes_)
     g_free(it);
