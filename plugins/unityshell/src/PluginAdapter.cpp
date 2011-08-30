@@ -203,6 +203,8 @@ PluginAdapter::NotifyCompizEvent(const char* plugin, const char* event, CompOpti
     _vp_switch_started = false;
     compiz_screen_viewport_switch_ended.emit();
   }
+
+  compiz_event.emit(plugin, event, option);
 }
 
 void
