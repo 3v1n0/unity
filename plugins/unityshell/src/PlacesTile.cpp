@@ -28,6 +28,8 @@
 #define PADDING 8
 #define BLUR_SIZE 6
 
+NUX_IMPLEMENT_OBJECT_TYPE(PlacesTile);
+
 PlacesTile::PlacesTile(NUX_FILE_LINE_DECL, const void* id) :
   View(NUX_FILE_LINE_PARAM),
   _id(id),

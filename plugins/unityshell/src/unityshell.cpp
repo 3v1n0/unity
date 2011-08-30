@@ -1931,16 +1931,15 @@ void UnityScreen::initLauncher(nux::NThread* thread, void* InitData)
   self->dashController = DashController::Ptr(new DashController());
 
   /* FIXME: this should not be manual, should be managed with a
-     show/hide callback like in GAIL
+     show/hide callback like in GAIL */
   if (unity_a11y_initialized() == TRUE)
   {
     AtkObject* atk_obj = NULL;
 
-    atk_obj = unity_util_accessible_add_window(self->placesController->GetWindow());
+    atk_obj = unity_util_accessible_add_window(self->dashController->window());
 
-    atk_object_set_name(atk_obj, _("Places"));
+    atk_object_set_name(atk_obj, _("Dash"));
   }
-  */
 
   self->launcher->SetHideMode(Launcher::LAUNCHER_HIDE_DODGE_WINDOWS);
   self->launcher->SetLaunchAnimation(Launcher::LAUNCH_ANIMATION_PULSE);
