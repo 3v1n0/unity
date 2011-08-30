@@ -42,6 +42,7 @@
 #include "QuicklistManager.h"
 #include "QuicklistView.h"
 #include "IconRenderer.h"
+#include "TimeUtil.h"
 #include "WindowManager.h"
 
 #include "ubus-server.h"
@@ -87,12 +88,6 @@ const float BACKLIGHT_STRENGTH = 0.9f;
 #define NUX_KP_RIGHT 0xFF98
 
 NUX_IMPLEMENT_OBJECT_TYPE(Launcher);
-
-int
-TimeDelta(struct timespec const* x, struct timespec const* y)
-{
-  return ((x->tv_sec - y->tv_sec) * 1000) + ((x->tv_nsec - y->tv_nsec) / 1000000);
-}
 
 void SetTimeBack(struct timespec* timeref, int remove)
 {
@@ -555,19 +550,19 @@ bool Launcher::MouseBeyondDragThreshold()
 float Launcher::GetHoverProgress(struct timespec const& current)
 {
   if (_hovered)
-    return CLAMP((float)(TimeDelta(&current, &_times[TIME_ENTER])) / (float) ANIM_DURATION, 0.0f, 1.0f);
+    return CLAMP((float)(unity::TimeUtil::TimeDelta(&current, &_times[TIME_ENTER])) / (float) ANIM_DURATION, 0.0f, 1.0f);
   else
-    return 1.0f - CLAMP((float)(TimeDelta(&current, &_times[TIME_LEAVE])) / (float) ANIM_DURATION, 0.0f, 1.0f);
+    return 1.0f - CLAMP((float)(unity::TimeUtil::TimeDelta(&current, &_times[TIME_LEAVE])) / (float) ANIM_DURATION, 0.0f, 1.0f);
 }
 
 float Launcher::DnDExitProgress(struct timespec const& current)
 {
-  return pow(1.0f - CLAMP((float)(TimeDelta(&current, &_times[TIME_DRAG_END])) / (float) ANIM_DURATION_LONG, 0.0f, 1.0f), 2);
+  return pow(1.0f - CLAMP((float)(unity::TimeUtil::TimeDelta(&current, &_times[TIME_DRAG_END])) / (float) ANIM_DURATION_LONG, 0.0f, 1.0f), 2);
 }
 
 float Launcher::DragOutProgress(struct timespec const& current)
 {
-  float timeout = CLAMP((float)(TimeDelta(&current, &_times[TIME_DRAG_OUT])) / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
+  float timeout = CLAMP((float)(unity::TimeUtil::TimeDelta(&current, &_times[TIME_DRAG_OUT])) / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
   float progress = CLAMP(_drag_out_delta_x / DRAG_OUT_PIXELS, 0.0f, 1.0f);
 
   if (_drag_out_id || _hide_machine->GetQuirk(LauncherHideMachine::MT_DRAG_OUT))
@@ -579,7 +574,7 @@ float Launcher::AutohideProgress(struct timespec const& current)
 {
   // time-based progress (full scale or finish the TRIGGER_AUTOHIDE_MIN -> 0.00f on bfb)
   float animation_progress;
-  animation_progress = CLAMP((float)(TimeDelta(&current, &_times[TIME_AUTOHIDE])) / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
+  animation_progress = CLAMP((float)(unity::TimeUtil::TimeDelta(&current, &_times[TIME_AUTOHIDE])) / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
   if (_hidden)
     return animation_progress;
   else
@@ -589,17 +584,17 @@ float Launcher::AutohideProgress(struct timespec const& current)
 float Launcher::DragHideProgress(struct timespec const& current)
 {
   if (_drag_edge_touching)
-    return CLAMP((float)(TimeDelta(&current, &_times[TIME_DRAG_EDGE_TOUCH])) / (float)(ANIM_DURATION * 3), 0.0f, 1.0f);
+    return CLAMP((float)(unity::TimeUtil::TimeDelta(&current, &_times[TIME_DRAG_EDGE_TOUCH])) / (float)(ANIM_DURATION * 3), 0.0f, 1.0f);
   else
-    return 1.0f - CLAMP((float)(TimeDelta(&current, &_times[TIME_DRAG_EDGE_TOUCH])) / (float)(ANIM_DURATION * 3), 0.0f, 1.0f);
+    return 1.0f - CLAMP((float)(unity::TimeUtil::TimeDelta(&current, &_times[TIME_DRAG_EDGE_TOUCH])) / (float)(ANIM_DURATION * 3), 0.0f, 1.0f);
 }
 
 float Launcher::DragThresholdProgress(struct timespec const& current)
 {
   if (MouseBeyondDragThreshold())
-    return 1.0f - CLAMP((float)(TimeDelta(&current, &_times[TIME_DRAG_THRESHOLD])) / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
+    return 1.0f - CLAMP((float)(unity::TimeUtil::TimeDelta(&current, &_times[TIME_DRAG_THRESHOLD])) / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
   else
-    return CLAMP((float)(TimeDelta(&current, &_times[TIME_DRAG_THRESHOLD])) / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
+    return CLAMP((float)(unity::TimeUtil::TimeDelta(&current, &_times[TIME_DRAG_THRESHOLD])) / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
 }
 
 gboolean Launcher::AnimationTimeout(gpointer data)
@@ -618,51 +613,51 @@ void Launcher::EnsureAnimation()
 bool Launcher::IconNeedsAnimation(LauncherIcon* icon, struct timespec const& current)
 {
   struct timespec time = icon->GetQuirkTime(LauncherIcon::QUIRK_VISIBLE);
-  if (TimeDelta(&current, &time) < ANIM_DURATION_SHORT)
+  if (unity::TimeUtil::TimeDelta(&current, &time) < ANIM_DURATION_SHORT)
     return true;
 
   time = icon->GetQuirkTime(LauncherIcon::QUIRK_RUNNING);
-  if (TimeDelta(&current, &time) < ANIM_DURATION_SHORT)
+  if (unity::TimeUtil::TimeDelta(&current, &time) < ANIM_DURATION_SHORT)
     return true;
 
   time = icon->GetQuirkTime(LauncherIcon::QUIRK_STARTING);
-  if (TimeDelta(&current, &time) < (ANIM_DURATION_LONG * MAX_STARTING_BLINKS * STARTING_BLINK_LAMBDA * 2))
+  if (unity::TimeUtil::TimeDelta(&current, &time) < (ANIM_DURATION_LONG * MAX_STARTING_BLINKS * STARTING_BLINK_LAMBDA * 2))
     return true;
 
   time = icon->GetQuirkTime(LauncherIcon::QUIRK_URGENT);
-  if (TimeDelta(&current, &time) < (ANIM_DURATION_LONG * URGENT_BLINKS * 2))
+  if (unity::TimeUtil::TimeDelta(&current, &time) < (ANIM_DURATION_LONG * URGENT_BLINKS * 2))
     return true;
   
   time = icon->GetQuirkTime(LauncherIcon::QUIRK_PULSE_ONCE);
-  if (TimeDelta(&current, &time) < (ANIM_DURATION_LONG * PULSE_BLINK_LAMBDA * 2))
+  if (unity::TimeUtil::TimeDelta(&current, &time) < (ANIM_DURATION_LONG * PULSE_BLINK_LAMBDA * 2))
     return true;  
 
   time = icon->GetQuirkTime(LauncherIcon::QUIRK_PRESENTED);
-  if (TimeDelta(&current, &time) < ANIM_DURATION)
+  if (unity::TimeUtil::TimeDelta(&current, &time) < ANIM_DURATION)
     return true;
 
   time = icon->GetQuirkTime(LauncherIcon::QUIRK_SHIMMER);
-  if (TimeDelta(&current, &time) < ANIM_DURATION_LONG)
+  if (unity::TimeUtil::TimeDelta(&current, &time) < ANIM_DURATION_LONG)
     return true;
 
   time = icon->GetQuirkTime(LauncherIcon::QUIRK_CENTER_SAVED);
-  if (TimeDelta(&current, &time) < ANIM_DURATION)
+  if (unity::TimeUtil::TimeDelta(&current, &time) < ANIM_DURATION)
     return true;
 
   time = icon->GetQuirkTime(LauncherIcon::QUIRK_PROGRESS);
-  if (TimeDelta(&current, &time) < ANIM_DURATION)
+  if (unity::TimeUtil::TimeDelta(&current, &time) < ANIM_DURATION)
     return true;
     
   time = icon->GetQuirkTime(LauncherIcon::QUIRK_DROP_DIM);
-  if (TimeDelta(&current, &time) < ANIM_DURATION)
+  if (unity::TimeUtil::TimeDelta(&current, &time) < ANIM_DURATION)
     return true;
 
   time = icon->GetQuirkTime(LauncherIcon::QUIRK_DESAT);
-  if (TimeDelta(&current, &time) < ANIM_DURATION_LONG)
+  if (unity::TimeUtil::TimeDelta(&current, &time) < ANIM_DURATION_LONG)
     return true;
 
   time = icon->GetQuirkTime(LauncherIcon::QUIRK_DROP_PRELIGHT);
-  if (TimeDelta(&current, &time) < ANIM_DURATION)
+  if (unity::TimeUtil::TimeDelta(&current, &time) < ANIM_DURATION)
     return true;
 
   return false;
@@ -678,31 +673,31 @@ bool Launcher::AnimationInProgress()
   clock_gettime(CLOCK_MONOTONIC, &current);
 
   // hover in animation
-  if (TimeDelta(&current, &_times[TIME_ENTER]) < ANIM_DURATION)
+  if (unity::TimeUtil::TimeDelta(&current, &_times[TIME_ENTER]) < ANIM_DURATION)
     return true;
 
   // hover out animation
-  if (TimeDelta(&current, &_times[TIME_LEAVE]) < ANIM_DURATION)
+  if (unity::TimeUtil::TimeDelta(&current, &_times[TIME_LEAVE]) < ANIM_DURATION)
     return true;
 
   // drag end animation
-  if (TimeDelta(&current, &_times[TIME_DRAG_END]) < ANIM_DURATION_LONG)
+  if (unity::TimeUtil::TimeDelta(&current, &_times[TIME_DRAG_END]) < ANIM_DURATION_LONG)
     return true;
 
   // hide animation (time only), position is trigger manually on the bfb
-  if (TimeDelta(&current, &_times[TIME_AUTOHIDE]) < ANIM_DURATION_SHORT)
+  if (unity::TimeUtil::TimeDelta(&current, &_times[TIME_AUTOHIDE]) < ANIM_DURATION_SHORT)
     return true;
 
   // collapse animation on DND out of launcher space
-  if (TimeDelta(&current, &_times[TIME_DRAG_THRESHOLD]) < ANIM_DURATION_SHORT)
+  if (unity::TimeUtil::TimeDelta(&current, &_times[TIME_DRAG_THRESHOLD]) < ANIM_DURATION_SHORT)
     return true;
 
   // hide animation for dnd
-  if (TimeDelta(&current, &_times[TIME_DRAG_EDGE_TOUCH]) < ANIM_DURATION * 6)
+  if (unity::TimeUtil::TimeDelta(&current, &_times[TIME_DRAG_EDGE_TOUCH]) < ANIM_DURATION * 6)
     return true;
 
   // restore from drag_out animation
-  if (TimeDelta(&current, &_times[TIME_DRAG_OUT]) < ANIM_DURATION_SHORT)
+  if (unity::TimeUtil::TimeDelta(&current, &_times[TIME_DRAG_OUT]) < ANIM_DURATION_SHORT)
     return true;
 
   // animations happening on specific icons
@@ -721,7 +716,7 @@ void Launcher::SetTimeStruct(struct timespec* timer, struct timespec* sister, in
 
   if (sister)
   {
-    int diff = TimeDelta(&current, sister);
+    int diff = unity::TimeUtil::TimeDelta(&current, sister);
 
     if (diff < sister_relation)
     {
@@ -756,13 +751,13 @@ float IconVisibleProgress(LauncherIcon* icon, struct timespec const& current)
   if (icon->GetQuirk(LauncherIcon::QUIRK_VISIBLE))
   {
     struct timespec icon_visible_time = icon->GetQuirkTime(LauncherIcon::QUIRK_VISIBLE);
-    int enter_ms = TimeDelta(&current, &icon_visible_time);
+    int enter_ms = unity::TimeUtil::TimeDelta(&current, &icon_visible_time);
     return CLAMP((float) enter_ms / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
   }
   else
   {
     struct timespec icon_hide_time = icon->GetQuirkTime(LauncherIcon::QUIRK_VISIBLE);
-    int hide_ms = TimeDelta(&current, &icon_hide_time);
+    int hide_ms = unity::TimeUtil::TimeDelta(&current, &icon_hide_time);
     return 1.0f - CLAMP((float) hide_ms / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
   }
 }
@@ -796,7 +791,7 @@ void Launcher::SetDndDelta(float x, float y, nux::Geometry const& geo, timespec 
 float Launcher::IconPresentProgress(LauncherIcon* icon, struct timespec const& current)
 {
   struct timespec icon_present_time = icon->GetQuirkTime(LauncherIcon::QUIRK_PRESENTED);
-  int ms = TimeDelta(&current, &icon_present_time);
+  int ms = unity::TimeUtil::TimeDelta(&current, &icon_present_time);
   float result = CLAMP((float) ms / (float) ANIM_DURATION, 0.0f, 1.0f);
 
   if (icon->GetQuirk(LauncherIcon::QUIRK_PRESENTED))
@@ -808,7 +803,7 @@ float Launcher::IconPresentProgress(LauncherIcon* icon, struct timespec const& c
 float Launcher::IconUrgentProgress(LauncherIcon* icon, struct timespec const& current)
 {
   struct timespec urgent_time = icon->GetQuirkTime(LauncherIcon::QUIRK_URGENT);
-  int urgent_ms = TimeDelta(&current, &urgent_time);
+  int urgent_ms = unity::TimeUtil::TimeDelta(&current, &urgent_time);
   float result;
 
   if (_urgent_animation == URGENT_ANIMATION_WIGGLE)
@@ -825,7 +820,7 @@ float Launcher::IconUrgentProgress(LauncherIcon* icon, struct timespec const& cu
 float Launcher::IconDropDimValue(LauncherIcon* icon, struct timespec const& current)
 {
   struct timespec dim_time = icon->GetQuirkTime(LauncherIcon::QUIRK_DROP_DIM);
-  int dim_ms = TimeDelta(&current, &dim_time);
+  int dim_ms = unity::TimeUtil::TimeDelta(&current, &dim_time);
   float result = CLAMP((float) dim_ms / (float) ANIM_DURATION, 0.0f, 1.0f);
 
   if (icon->GetQuirk(LauncherIcon::QUIRK_DROP_DIM))
@@ -837,7 +832,7 @@ float Launcher::IconDropDimValue(LauncherIcon* icon, struct timespec const& curr
 float Launcher::IconDesatValue(LauncherIcon* icon, struct timespec const& current)
 {
   struct timespec dim_time = icon->GetQuirkTime(LauncherIcon::QUIRK_DESAT);
-  int ms = TimeDelta(&current, &dim_time);
+  int ms = unity::TimeUtil::TimeDelta(&current, &dim_time);
   float result = CLAMP((float) ms / (float) ANIM_DURATION_LONG, 0.0f, 1.0f);
 
   if (icon->GetQuirk(LauncherIcon::QUIRK_DESAT))
@@ -849,14 +844,14 @@ float Launcher::IconDesatValue(LauncherIcon* icon, struct timespec const& curren
 float Launcher::IconShimmerProgress(LauncherIcon* icon, struct timespec const& current)
 {
   struct timespec shimmer_time = icon->GetQuirkTime(LauncherIcon::QUIRK_SHIMMER);
-  int shimmer_ms = TimeDelta(&current, &shimmer_time);
+  int shimmer_ms = unity::TimeUtil::TimeDelta(&current, &shimmer_time);
   return CLAMP((float) shimmer_ms / (float) ANIM_DURATION_LONG, 0.0f, 1.0f);
 }
 
 float Launcher::IconCenterTransitionProgress(LauncherIcon* icon, struct timespec const& current)
 {
   struct timespec save_time = icon->GetQuirkTime(LauncherIcon::QUIRK_CENTER_SAVED);
-  int save_ms = TimeDelta(&current, &save_time);
+  int save_ms = unity::TimeUtil::TimeDelta(&current, &save_time);
   return CLAMP((float) save_ms / (float) ANIM_DURATION, 0.0f, 1.0f);
 }
 
@@ -872,7 +867,7 @@ float Launcher::IconUrgentPulseValue(LauncherIcon* icon, struct timespec const& 
 float Launcher::IconPulseOnceValue(LauncherIcon *icon, struct timespec const &current)
 {
   struct timespec pulse_time = icon->GetQuirkTime(LauncherIcon::QUIRK_PULSE_ONCE);
-  int pulse_ms = TimeDelta(&current, &pulse_time);
+  int pulse_ms = unity::TimeUtil::TimeDelta(&current, &pulse_time);
   double pulse_progress = (double) CLAMP((float) pulse_ms / (ANIM_DURATION_LONG * PULSE_BLINK_LAMBDA * 2), 0.0f, 1.0f);
 
   if (pulse_progress == 1.0f)
@@ -893,7 +888,7 @@ float Launcher::IconUrgentWiggleValue(LauncherIcon* icon, struct timespec const&
 float Launcher::IconStartingBlinkValue(LauncherIcon* icon, struct timespec const& current)
 {
   struct timespec starting_time = icon->GetQuirkTime(LauncherIcon::QUIRK_STARTING);
-  int starting_ms = TimeDelta(&current, &starting_time);
+  int starting_ms = unity::TimeUtil::TimeDelta(&current, &starting_time);
   double starting_progress = (double) CLAMP((float) starting_ms / (float)(ANIM_DURATION_LONG * STARTING_BLINK_LAMBDA), 0.0f, 1.0f);
   return 0.5f + (float)(std::cos(M_PI * (_backlight_mode != BACKLIGHT_NORMAL ? 4.0f : 3.0f) * starting_progress)) * 0.5f;
 }
@@ -901,7 +896,7 @@ float Launcher::IconStartingBlinkValue(LauncherIcon* icon, struct timespec const
 float Launcher::IconStartingPulseValue(LauncherIcon* icon, struct timespec const& current)
 {
   struct timespec starting_time = icon->GetQuirkTime(LauncherIcon::QUIRK_STARTING);
-  int starting_ms = TimeDelta(&current, &starting_time);
+  int starting_ms = unity::TimeUtil::TimeDelta(&current, &starting_time);
   double starting_progress = (double) CLAMP((float) starting_ms / (float)(ANIM_DURATION_LONG * MAX_STARTING_BLINKS * STARTING_BLINK_LAMBDA * 2), 0.0f, 1.0f);
 
   if (starting_progress == 1.0f && !icon->GetQuirk(LauncherIcon::QUIRK_RUNNING))
@@ -918,7 +913,7 @@ float Launcher::IconBackgroundIntensity(LauncherIcon* icon, struct timespec cons
   float result = 0.0f;
 
   struct timespec running_time = icon->GetQuirkTime(LauncherIcon::QUIRK_RUNNING);
-  int running_ms = TimeDelta(&current, &running_time);
+  int running_ms = unity::TimeUtil::TimeDelta(&current, &running_time);
   float running_progress = CLAMP((float) running_ms / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
 
   if (!icon->GetQuirk(LauncherIcon::QUIRK_RUNNING))
@@ -983,7 +978,7 @@ float Launcher::IconBackgroundIntensity(LauncherIcon* icon, struct timespec cons
 float Launcher::IconProgressBias(LauncherIcon* icon, struct timespec const& current)
 {
   struct timespec icon_progress_time = icon->GetQuirkTime(LauncherIcon::QUIRK_PROGRESS);
-  int ms = TimeDelta(&current, &icon_progress_time);
+  int ms = unity::TimeUtil::TimeDelta(&current, &icon_progress_time);
   float result = CLAMP((float) ms / (float) ANIM_DURATION, 0.0f, 1.0f);
 
   if (icon->GetQuirk(LauncherIcon::QUIRK_PROGRESS))
@@ -1340,7 +1335,7 @@ gboolean Launcher::TapOnSuper()
   struct timespec current;
   clock_gettime(CLOCK_MONOTONIC, &current);
 
-  return (TimeDelta(&current, &_times[TIME_TAP_SUPER]) < SUPER_TAP_DURATION);
+  return (unity::TimeUtil::TimeDelta(&current, &_times[TIME_TAP_SUPER]) < SUPER_TAP_DURATION);
 }
 
 /* Launcher Show/Hide logic */
@@ -1387,7 +1382,7 @@ void Launcher::EndKeyShowLauncher()
                              UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
                              g_variant_new("(sus)", "home.lens", 0, ""));
 
-  remaining_time_before_hide = BEFORE_HIDE_LAUNCHER_ON_SUPER_DURATION - CLAMP((int)(TimeDelta(&current, &_times[TIME_SUPER_PRESSED])), 0, BEFORE_HIDE_LAUNCHER_ON_SUPER_DURATION);
+  remaining_time_before_hide = BEFORE_HIDE_LAUNCHER_ON_SUPER_DURATION - CLAMP((int)(unity::TimeUtil::TimeDelta(&current, &_times[TIME_SUPER_PRESSED])), 0, BEFORE_HIDE_LAUNCHER_ON_SUPER_DURATION);
 
   if (_super_hide_launcher_handle > 0)
     g_source_remove(_super_hide_launcher_handle);
