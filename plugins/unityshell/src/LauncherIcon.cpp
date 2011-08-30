@@ -967,8 +967,8 @@ LauncherIcon::SetEmblemText(const char* text)
   int font_height = height - 5;
 
 
-  nux::CairoGraphics* cg = new nux::CairoGraphics(CAIRO_FORMAT_ARGB32, width, height);
-  cairo_t* cr = cg->GetContext();
+  nux::CairoGraphics cg(CAIRO_FORMAT_ARGB32, width, height);
+  cairo_t* cr = cg.GetInternalContext();
 
   cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
   cairo_paint(cr);
@@ -1020,7 +1020,7 @@ LauncherIcon::SetEmblemText(const char* text)
                 (int)((height - pango_units_to_double(logical_rect.height)) / 2.0f - pango_units_to_double(logical_rect.y)));
   pango_cairo_show_layout(cr, layout);
 
-  nux::NBitmapData* bitmap = cg->GetBitmap();
+  nux::NBitmapData* bitmap = cg.GetBitmap();
 
   emblem = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
   emblem->Update(bitmap);
@@ -1031,7 +1031,6 @@ LauncherIcon::SetEmblemText(const char* text)
   // clean up
   g_object_unref(layout);
   g_free(fontName);
-  delete cg;
 }
 
 void
