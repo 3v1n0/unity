@@ -43,6 +43,7 @@ public:
   void SetName(const char* name);
 
   nux::StaticCairoText* GetLabel();
+  nux::StaticCairoText* GetExpandLabel();
 
   void       SetChildView(nux::View* view);
   nux::View* GetChildView();

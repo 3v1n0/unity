@@ -122,7 +122,9 @@ unity_result_accessible_ref_state_set(AtkObject* obj)
   atk_state_set_add_state(state_set, ATK_STATE_VISIBLE);
   atk_state_set_add_state(state_set, ATK_STATE_SHOWING);
 
-  atk_state_set_add_state(state_set, ATK_STATE_FOCUSED);
+  /* This object is not focused, the focused is the parent
+     ResultViewGrid */
+  // atk_state_set_add_state(state_set, ATK_STATE_FOCUSED);
   atk_state_set_add_state(state_set, ATK_STATE_SELECTED);
   atk_state_set_add_state(state_set, ATK_STATE_ACTIVE);
 

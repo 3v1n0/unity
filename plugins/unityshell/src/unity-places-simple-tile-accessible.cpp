@@ -136,7 +136,5 @@ unity_places_simple_tile_accessible_get_name(AtkObject* obj)
         }
     }
 
-  g_debug ("[PlacesSimpleTile %s] get_name", self->priv->stripped_name);
-
   return self->priv->stripped_name;
 }

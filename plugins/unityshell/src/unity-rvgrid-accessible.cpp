@@ -180,9 +180,6 @@ check_selection(UnityRvgridAccessible* self)
       self->priv->has_selection = FALSE;
     }
 
-  g_debug ("[RVGrid %s] selection-changed to %s",
-           atk_object_get_name (ATK_OBJECT (self)), atk_object_get_name (child));
-
   g_signal_emit_by_name(self, "active-descendant-changed", child);
   g_signal_emit_by_name(self, "selection-changed");
 }

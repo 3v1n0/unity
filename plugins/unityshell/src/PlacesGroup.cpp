@@ -123,16 +123,12 @@ PlacesGroup::~PlacesGroup()
 void
 PlacesGroup::OnLabelActivated(nux::Area* label)
 {
-  g_debug ("[PlacesGroup] OnLabelActivated label_text=%s expand_label_text=%s", _name->GetText().GetTCharPtr(), _expand_label->GetText().GetTCharPtr());
-
   SetExpanded(!_is_expanded);
 }
 
 void
 PlacesGroup::OnLabelFocusChanged(nux::Area* label)
 {
-  g_debug ("[PlacesGroup] OnLabelFocucChanged label_text=%s expand_label_text=%s", _name->GetText().GetTCharPtr(), _expand_label->GetText().GetTCharPtr());
-
   if (_expand_label->HasKeyFocus() || _expand_icon->HasKeyFocus())
   {
     _expand_label->SetTextColor(kExpandHoverTextColor);
@@ -174,6 +170,12 @@ nux::StaticCairoText*
 PlacesGroup::GetLabel()
 {
   return _name;
+}
+
+nux::StaticCairoText*
+PlacesGroup::GetExpandLabel()
+{
+  return _expand_label;
 }
 
 void

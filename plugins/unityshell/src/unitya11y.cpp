@@ -29,6 +29,7 @@
 #include "nux-view-accessible.h"
 #include "nux-base-window-accessible.h"
 #include "nux-layout-accessible.h"
+#include "nux-text-entry-accessible.h"
 
 /* unity accessible objects */
 #include "Launcher.h"
@@ -194,8 +195,6 @@ unity_a11y_init(nux::WindowThread* wt)
 {
   gchar* bridge_path = NULL;
 
-  g_debug ("[unity_a11y_init]");
-
   unity_a11y_restore_environment();
 
   if (!should_enable_a11y())
@@ -288,6 +287,9 @@ unity_a11y_create_accessible(nux::Object* object)
     return unity_search_bar_accessible_new(object);
 
   /* NUX classes  */
+  if (object->Type().IsDerivedFromType(nux::TextEntry::StaticObjectType))
+    return nux_text_entry_accessible_new(object);
+
   if (object->Type().IsDerivedFromType(nux::BaseWindow::StaticObjectType))
     return nux_base_window_accessible_new(object);
 

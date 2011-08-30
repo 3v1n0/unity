@@ -41,8 +41,7 @@ static void unity_places_group_accessible_init(UnityPlacesGroupAccessible* self)
 
 /* AtkObject.h */
 static void         unity_places_group_accessible_initialize(AtkObject* accessible,
-                                                                   gpointer   data);
-static const gchar* unity_places_group_accessible_get_name(AtkObject* obj);
+                                                             gpointer   data);
 
 G_DEFINE_TYPE(UnityPlacesGroupAccessible, unity_places_group_accessible,  NUX_TYPE_VIEW_ACCESSIBLE);
 
@@ -64,7 +63,6 @@ unity_places_group_accessible_class_init(UnityPlacesGroupAccessibleClass* klass)
   AtkObjectClass* atk_class = ATK_OBJECT_CLASS(klass);
 
   /* AtkObject */
-  atk_class->get_name = unity_places_group_accessible_get_name;
   atk_class->initialize = unity_places_group_accessible_initialize;
 
   g_type_class_add_private(gobject_class, sizeof(UnityPlacesGroupAccessiblePrivate));
@@ -95,48 +93,76 @@ unity_places_group_accessible_new(nux::Object* object)
 }
 
 /* AtkObject.h */
+/* expand label are usually focused during the key nav, but it don't
+ * get a proper name always. In those cases we use the label.
+ *
+ * In the same way, it is possible that the PlacesGroup get focused
+ * so we also set the own name with this label
+ */
+static void
+ensure_proper_name(UnityPlacesGroupAccessible *self)
+{
+  PlacesGroup *group = NULL;
+  nux::Object* nux_object = NULL;
+  nux::StaticCairoText* label = NULL;
+  nux::StaticCairoText* expand_label = NULL;
+  AtkObject* label_accessible = NULL;
+  AtkObject* expand_label_accessible = NULL;
+
+  nux_object = nux_object_accessible_get_object(NUX_OBJECT_ACCESSIBLE(self));
+  group = dynamic_cast<PlacesGroup*>(nux_object);
+
+  if (group == NULL)
+    return;
+
+  label = group->GetLabel();
+  expand_label = group->GetExpandLabel();
+
+
+  label_accessible = unity_a11y_get_accessible(label);
+  expand_label_accessible = unity_a11y_get_accessible(expand_label);
+
+  if ((label_accessible == NULL) || (expand_label_accessible == NULL))
+    return;
+
+  atk_object_set_name(ATK_OBJECT(self), atk_object_get_name(label_accessible));
+
+  if (expand_label->GetText() == "")
+    atk_object_set_name(expand_label_accessible, atk_object_get_name(label_accessible));
+}
+
+
+static void
+on_label_text_change_cb (nux::StaticCairoText* label, UnityPlacesGroupAccessible *self)
+{
+  ensure_proper_name(self);
+}
+
 static void
 unity_places_group_accessible_initialize(AtkObject* accessible,
-                                               gpointer data)
+                                         gpointer data)
 {
+  PlacesGroup *group = NULL;
+  nux::Object* nux_object = NULL;
+  nux::StaticCairoText* label = NULL;
+
   ATK_OBJECT_CLASS(unity_places_group_accessible_parent_class)->initialize(accessible, data);
 
   atk_object_set_role (accessible, ATK_ROLE_PANEL);
+
+  nux_object = nux_object_accessible_get_object(NUX_OBJECT_ACCESSIBLE(accessible));
+  group = dynamic_cast<PlacesGroup*>(nux_object);
+
+  if (group == NULL)
+    return;
+
+  label = group->GetLabel();
+
+  if (label == NULL)
+    return;
+
+  ensure_proper_name (UNITY_PLACES_GROUP_ACCESSIBLE(accessible));
+  label->sigTextChanged.connect(sigc::bind(sigc::ptr_fun(on_label_text_change_cb),
+                                           UNITY_PLACES_GROUP_ACCESSIBLE (accessible)));
 }
 
-
-
-static const gchar*
-unity_places_group_accessible_get_name(AtkObject* obj)
-{
-  const gchar* name;
-  UnityPlacesGroupAccessible *self = NULL;
-
-  g_return_val_if_fail(UNITY_IS_PLACES_GROUP_ACCESSIBLE(obj), NULL);
-  self = UNITY_PLACES_GROUP_ACCESSIBLE (obj);
-
-  name = ATK_OBJECT_CLASS(unity_places_group_accessible_parent_class)->get_name(obj);
-  if (name == NULL)
-    {
-      PlacesGroup *group = NULL;
-
-      if (self->priv->stripped_name != NULL)
-        {
-          g_free (self->priv->stripped_name);
-          self->priv->stripped_name = NULL;
-        }
-
-      group = dynamic_cast<PlacesGroup*>(nux_object_accessible_get_object(NUX_OBJECT_ACCESSIBLE(obj)));
-      if (group != NULL)
-        {
-          name = group->GetLabel()->GetText().GetTCharPtr();
-          pango_parse_markup (name, -1, 0, NULL,
-                              &self->priv->stripped_name,
-                              NULL, NULL);
-        }
-    }
-
-  g_debug ("[PlacesGroup %s] get_name", self->priv->stripped_name);
-
-  return self->priv->stripped_name;
-}

@@ -518,8 +518,6 @@ nux_area_accessible_real_check_pending_notification(NuxAreaAccessible* self)
   if (nux_object == NULL) /* defunct */
     return FALSE;
 
-  g_debug ("[Area %s] focus_event2=%i", atk_object_get_name (ATK_OBJECT (self)), self->priv->focused);
-
   g_signal_emit_by_name(self, "focus_event", self->priv->focused);
   atk_focus_tracker_notify(ATK_OBJECT(self));
   self->priv->pending_notification = FALSE;
@@ -560,8 +558,6 @@ check_focus(NuxAreaAccessible* self)
     }
     else
     {
-      g_debug ("[Area %s] focus_event1=%i", atk_object_get_name (ATK_OBJECT (self)), focus_in);
-
       g_signal_emit_by_name(self, "focus_event", focus_in);
       atk_focus_tracker_notify(ATK_OBJECT(self));
       self->priv->pending_notification = FALSE;
