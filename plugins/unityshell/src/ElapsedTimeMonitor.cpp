@@ -18,6 +18,7 @@
 */
 
 #include "ElapsedTimeMonitor.h"
+#include "TimeUtil.h"
 
 namespace unity{
 namespace performance {
@@ -36,9 +37,9 @@ void ElapsedTimeMonitor::StopMonitor(GVariantBuilder* builder)
 {
   struct timespec current;
   clock_gettime(CLOCK_MONOTONIC, &current);
-  long diff = current.tv_nsec - _start.tv_nsec;
+  int diff = TimeUtil::TimeDelta(&current, &_start);
 
-  g_variant_builder_add(builder, "{sv}", "elapsed-time", g_variant_new_uint64(diff));
+  g_variant_builder_add(builder, "{sv}", "elapsed-time", g_variant_new_uint32(diff));
 }
 
 }
