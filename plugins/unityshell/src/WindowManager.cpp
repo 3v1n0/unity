@@ -32,6 +32,11 @@ class WindowManagerDummy : public WindowManager
     return false;
   }
 
+  bool IsViewPortSwitchStarted()
+  {
+    return false;
+  }
+
   void ShowDesktop()
   {
     g_debug("%s", G_STRFUNC);

@@ -186,6 +186,8 @@ BamfLauncherIcon::BamfLauncherIcon(Launcher* IconManager, BamfApplication* app)
                                                          this);
 
   WindowManager::Default()->window_minimized.connect(sigc::mem_fun(this, &BamfLauncherIcon::OnWindowMinimized));
+  WindowManager::Default()->compiz_screen_viewport_switch_ended.connect(sigc::mem_fun(this, &BamfLauncherIcon::OnViewPortSwitchEnded));
+  WindowManager::Default()->terminate_expo.connect(sigc::mem_fun(this, &BamfLauncherIcon::OnViewPortSwitchEnded));
   IconManager->hidden_changed.connect(sigc::mem_fun(this, &BamfLauncherIcon::OnLauncherHiddenChanged));
 
   // hack
@@ -290,6 +292,31 @@ void BamfLauncherIcon::OnWindowMinimized(guint32 xid)
   UpdateQuirkTimeDelayed(300, QUIRK_SHIMMER);
 }
 
+void BamfLauncherIcon::OnViewPortSwitchEnded()
+{
+  bool any_on_current = false;
+  GList *children = bamf_view_get_children(BAMF_VIEW(m_App));
+
+  for (GList *l = children; l; l = l->next)
+  {
+    BamfView *view = BAMF_VIEW(l->data);
+
+    if (BAMF_IS_WINDOW(view))
+    {
+      Window xid = bamf_window_get_xid(BAMF_WINDOW(view));
+      if (WindowManager::Default()->IsWindowOnCurrentDesktop(xid))
+      {
+        any_on_current = true;
+        break;
+      }
+    }
+  }
+
+  SetHasWindowOnViewport(any_on_current);
+
+  g_list_free(children);
+}
+
 bool BamfLauncherIcon::IsSticky()
 {
   return bamf_view_is_sticky(BAMF_VIEW(m_App));
@@ -357,6 +384,8 @@ bool BamfLauncherIcon::OwnsWindow(Window w)
   GList* children, *l;
   BamfView* view;
   bool owns = false;
+
+  if (!w) return owns;
 
   children = bamf_view_get_children(BAMF_VIEW(m_App));
 
@@ -546,16 +575,26 @@ void BamfLauncherIcon::EnsureWindowState()
 {
   GList* children, *l;
   int count = 0;
+  bool has_visible = false;
+
   children = bamf_view_get_children(BAMF_VIEW(m_App));
   for (l = children; l; l = l->next)
   {
     if (!BAMF_IS_WINDOW(l->data))
       continue;
+
+    if (!has_visible)
+    {
+      Window xid = bamf_window_get_xid(BAMF_WINDOW(l->data));
+      if (WindowManager::Default()->IsWindowOnCurrentDesktop(xid))
+        has_visible = true;
+    }
+
     count++;
   }
 
   SetRelatedWindows(count);
-  SetHasWindowOnViewport(true); // FIXME
+  SetHasWindowOnViewport(has_visible);
 
   g_list_free(children);
 }

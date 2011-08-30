@@ -25,6 +25,7 @@
 #include "Nux/WindowThread.h"
 #include "NuxGraphics/GLWindowManager.h"
 #include <gdk/gdkx.h>
+#include <core/core.h>
 
 class WindowManager
 {
@@ -75,6 +76,7 @@ public:
   virtual void Undecorate(guint32 xid) {};
 
   virtual bool IsScreenGrabbed() = 0;
+  virtual bool IsViewPortSwitchStarted() = 0;
 
   void StartMove(guint32 id, int, int);
 
@@ -113,6 +115,10 @@ public:
 
   sigc::signal<void> compiz_screen_grabbed;
   sigc::signal<void> compiz_screen_ungrabbed;
+  sigc::signal<void> compiz_screen_viewport_switch_started;
+  sigc::signal<void> compiz_screen_viewport_switch_ended;
+
+  sigc::signal<void, const char*, const char*, CompOption::Vector&> compiz_event;
 
 private:
   Atom m_MoveResizeAtom;
