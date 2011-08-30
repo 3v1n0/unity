@@ -32,8 +32,7 @@ namespace unity
 {
 
 PanelTray::PanelTray()
-  : _n_children(0),
-    _tray(NULL),
+  : _tray(NULL),
     _last_x(0),
     _last_y(0),
     _tray_icon_added_id(0)
@@ -63,6 +62,7 @@ PanelTray::PanelTray()
                                    GTK_ORIENTATION_HORIZONTAL,
                                    (NaTrayFilterCallback)FilterTrayCallback,
                                    this);
+    na_tray_set_icon_size(_tray, 24);
 
     _tray_icon_added_id = g_signal_connect(na_tray_get_manager(_tray), "tray_icon_removed",
                                            G_CALLBACK(PanelTray::OnTrayIconRemoved), this);
@@ -115,11 +115,11 @@ PanelTray::Sync()
 {
   if (_tray)
   {
-    SetMinMaxSize((_n_children * 24) + (PADDING * 2), 24);
+    SetMinMaxSize((_children.size() * 24) + (PADDING * 2), 24);
     QueueRelayout();
     QueueDraw();
 
-    if (_n_children)
+    if (_children.size())
       gtk_widget_show(_window);
     else
       gtk_widget_hide(_window);
@@ -167,7 +167,7 @@ PanelTray::FilterTrayCallback(NaTray* tray, NaTrayChild* icon, PanelTray* self)
     if (na_tray_child_has_alpha(icon))
       na_tray_child_set_composited(icon, TRUE);
 
-    self->_n_children++;
+    self->_children.push_back(icon);
     g_idle_add((GSourceFunc)IdleSync, self);
   }
 
@@ -186,15 +186,28 @@ PanelTray::FilterTrayCallback(NaTray* tray, NaTrayChild* icon, PanelTray* self)
 void
 PanelTray::OnTrayIconRemoved(NaTrayManager* manager, NaTrayChild* child, PanelTray* self)
 {
-  g_idle_add((GSourceFunc)IdleSync, self);
-  if (self->_n_children > 0)
-    self->_n_children--;
+  for (auto it = self->_children.begin(); it != self->_children.end(); ++it)
+  {
+    if (*it == child)
+    {
+      g_idle_add((GSourceFunc)IdleSync, self);
+      self->_children.erase(it);
+      break;
+    }
+  }
 }
 
 gboolean
 PanelTray::IdleSync(PanelTray* self)
 {
   self->Sync();
+
+  int width = 0;
+  for (auto child: self->_children)
+  {
+    width += gtk_widget_get_allocated_width(GTK_WIDGET(child));
+  }
+  gtk_window_resize(GTK_WINDOW(self->_window), width ? width : 1, 24);
   return FALSE;
 }
 
