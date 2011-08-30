@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2011 Canonical Ltd.
  *
@@ -216,15 +217,11 @@ compiz::CompizMinimizedWindowHandler<Screen, Window>::handleCompizEvent (const c
       {
         if (CompOption::getBoolOptionNamed (o, "active", false))
           minimizingWindows.push_back (w);
-        else
+        else if (!minimizingWindows.empty())
           minimizingWindows.remove (w);
-	    }
+      }
     }
   }
-
-  if (!CompOption::getBoolOptionNamed (o, "active", false) &&
-      minimizingWindows.empty ())
-    screen->handleCompizEventSetEnabled (Screen::get (screen), false);
 }
 
 template <typename Screen, typename Window>
