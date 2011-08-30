@@ -29,6 +29,7 @@
 #include "Nux/Nux.h"
 #include "Nux/TimerProc.h"
 
+#include "Monitor.h"
 #include "ubus-server.h"
 
 #define TEST_TIMEOUT 6000
@@ -39,6 +40,7 @@ typedef struct
   gboolean passed;
   guint ubus_handle;
   nux::TimerHandle expiration_handle;
+  unity::performance::Monitor* monitor;
 } TestArgs;
 
 namespace unity {

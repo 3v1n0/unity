@@ -17,28 +17,44 @@
 * Authored by: Alex Launi <alex.launi@canonical.com>
 */
 
+#include "AggregateMonitor.h"
 #include "ElapsedTimeMonitor.h"
 
-namespace unity{
+namespace unity {
 namespace performance {
 
-gchar* ElapsedTimeMonitor::GetName()
+AggregateMonitor::AggregateMonitor()
 {
-  return (gchar*) "ElapsedTimeMonitor";
+  _monitors.push_back(new ElapsedTimeMonitor());
 }
 
-void ElapsedTimeMonitor::StartMonitor()
+AggregateMonitor::~AggregateMonitor()
 {
-  clock_gettime(CLOCK_MONOTONIC, &_start);
 }
 
-void ElapsedTimeMonitor::StopMonitor(GVariantBuilder* builder)
+gchar* AggregateMonitor::GetName()
 {
-  struct timespec current;
-  clock_gettime(CLOCK_MONOTONIC, &current);
-  long diff = current.tv_nsec - _start.tv_nsec;
+  return (gchar*) "AggregateMonitor";
+}
 
-  g_variant_builder_add(builder, "{sv}", "elapsed-time", g_variant_new_uint64(diff));
+void AggregateMonitor::StartMonitor()
+{
+  for (std::list<Monitor*>::iterator iter = _monitors.begin(), end = _monitors.end();
+       iter != end; ++iter)
+  {
+    Monitor* monitor = *iter;
+    monitor->Start();
+  }
+}
+
+void AggregateMonitor::StopMonitor(GVariantBuilder* builder)
+{
+  for (std::list<Monitor*>::iterator iter = _monitors.begin(), end = _monitors.end();
+       iter != end; ++iter)
+  {
+    Monitor* monitor = *iter;
+    g_variant_builder_add(builder, "{sv}", monitor->GetName(), monitor->Stop());
+  }
 }
 
 }

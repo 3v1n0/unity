@@ -17,9 +17,11 @@
  * Authored by: Alex Launi <alex.launi@canonical.com>
  */
 
+#include "Autopilot.h"
+
 #include <sigc++/sigc++.h>
 
-#include "Autopilot.h"
+#include "AggregateMonitor.h"
 #include "DebugDBusInterface.h"
 #include "UBusMessages.h"
 
@@ -34,9 +36,10 @@ TestFinished(void* arg)
 {
   GError* error = NULL;
   TestArgs* args = static_cast<TestArgs*>(arg);
-  GVariant* result = g_variant_new("(sb@a{sv})", args->name, args->passed, NULL);
 
   ubus_server_unregister_interest (_ubus, args->ubus_handle);
+  GVariant* result = g_variant_new("(sb@a{sv})", args->name, args->passed, args->monitor->Stop());
+
   g_dbus_connection_emit_signal(_dbus,
                                 NULL,
                                 UNITY_DBUS_DEBUG_OBJECT_PATH,
@@ -102,6 +105,8 @@ Autopilot::StartTest(const gchar* name)
   args->name = g_strdup(name);
   args->passed = FALSE;
   args->expiration_handle = nux::GetTimer().AddTimerHandler(TEST_TIMEOUT, test_expiration_functor, args);
+  args->monitor = new unity::performance::AggregateMonitor();
+  args->monitor->Start();
 
   if (g_strcmp0(name, "show_tooltip") == 0)
   {

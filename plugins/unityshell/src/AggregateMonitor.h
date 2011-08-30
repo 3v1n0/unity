@@ -17,31 +17,33 @@
 * Authored by: Alex Launi <alex.launi@canonical.com>
 */
 
-#ifndef UNITY_PERFORMANCE_ELAPSED_TIME_MONITOR
-#define UNITY_PERFORMANCE_ELAPSED_TIME_MONITOR
+#ifndef UNITY_PERFORMANCE_AGGREGATE_MONITOR
+#define UNITY_PERFORMANCE_AGGREGATE_MONITOR
 
-#include <glib.h>
-#include <time.h>
+#include <list>
+#include <gio/gio.h>
 
 #include "Monitor.h"
 
 namespace unity {
 namespace performance {
 
-class ElapsedTimeMonitor : public Monitor
+class AggregateMonitor : public Monitor
 {
 public:
-  gchar* GetName();
+  AggregateMonitor();
+  ~AggregateMonitor();
+  gchar* GetName ();
 
 protected:
   void StartMonitor();
   void StopMonitor(GVariantBuilder* builder);
 
 private:
-  struct timespec _start;
+  std::list<Monitor*> _monitors;
 };
 
 }
 }
 
-#endif // UNITY_PERFORMANCE_ELAPSED_TIME_MONITOR
+#endif // UNITY_PERFORMANCE_AGGREGATE_MONITOR
