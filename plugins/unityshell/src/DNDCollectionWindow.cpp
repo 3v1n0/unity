@@ -50,11 +50,11 @@ DNDCollectionWindow::~DNDCollectionWindow()
 
 void DNDCollectionWindow::OnWindowMoved(guint32 xid)
 {
-  if (xid == GetInputWindowId())
+  if (xid == GetInputWindowId() && WindowManager::Default()->Dpy() != NULL)
   {
     XWarpPointer(WindowManager::Default()->Dpy(), None, None, 0, 0, 0, 0, 0, 0);
-    XFlush(WindowManager::Default()->Dpy());  
-  }    
+    XFlush(WindowManager::Default()->Dpy());
+  }
 }
 
 void DNDCollectionWindow::Collect()
@@ -68,7 +68,7 @@ void DNDCollectionWindow::ProcessDndMove(int x, int y, std::list<char*> mimes)
   // Hide the window as soon as possible
   PushToBack();
   EnableInputWindow(false, "DNDCollectionWindow");
-    
+                         
   for (auto it : mimes_)
     g_free(it);
   mimes_.clear();
