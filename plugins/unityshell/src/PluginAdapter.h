@@ -22,6 +22,7 @@
 
 /* Compiz */
 #include <core/core.h>
+#include <core/atoms.h>
 
 #include <sigc++/sigc++.h>
 
@@ -65,8 +66,6 @@ public:
 
   ~PluginAdapter();
 
-  std::string MatchStringForXids(std::list<Window> *windows);
-
   void SetScaleAction(MultiActionList& scale);
   void SetExpoAction(MultiActionList& expo);
 
@@ -83,10 +82,13 @@ public:
     _grab_toggle_action = action;
   }
 
+  void OnWindowClosed (CompWindow *);
   void OnScreenGrabbed();
   void OnScreenUngrabbed();
 
-  void InitiateScale(std::string const& match, int state = 0);
+  void OnShowDesktop ();
+  void OnLeaveDesktop ();
+
   void TerminateScale();
   bool IsScaleActive();
 
@@ -119,19 +121,38 @@ public:
   void Lower(guint32 xid);
   void ShowDesktop();
 
+  void SetWindowIconGeometry(Window window, nux::Geometry const& geo);
+
+  void FocusWindowGroup(std::vector<Window> windows);
+  bool ScaleWindowGroup(std::vector<Window> windows, int state, bool force);
+
   bool IsScreenGrabbed();
   bool IsViewPortSwitchStarted();
+
+  unsigned int GetWindowActiveNumber (guint32 xid);
 
   void MaximizeIfBigEnough(CompWindow* window);
 
   nux::Geometry GetWindowGeometry(guint32 xid);
+  nux::Geometry GetScreenGeometry();
+
+  void CheckWindowIntersections(nux::Geometry const& region, bool &active, bool &any);
+
+  int WorkspaceCount();
 
   void SetCoverageAreaBeforeAutomaximize(float area);
+
+  bool saveInputFocus ();
+  bool restoreInputFocus ();
 
 protected:
   PluginAdapter(CompScreen* screen);
 
 private:
+  std::string MatchStringForXids(std::vector<Window> *windows);
+  void InitiateScale(std::string const& match, int state = 0);
+
+  bool CheckWindowIntersection(nux::Geometry const& region, CompWindow* window);
   void SetMwmWindowHints(Window xid, MotifWmHints* new_hints);
 
   CompScreen* m_Screen;
@@ -148,6 +169,9 @@ private:
   CompAction* _grab_toggle_action;
 
   float _coverage_area_before_automaximize;
+
+  bool _in_show_desktop;
+  CompWindow* _last_focused_window;
 
   static PluginAdapter* _default;
 };

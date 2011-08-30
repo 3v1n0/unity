@@ -62,11 +62,6 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
 
   _layout = new nux::HLayout("", NUX_TRACKER_LOCATION);
 
-  // Home button - not an indicator view
-  _home_button = new PanelHomeButton();
-  _layout->AddView(_home_button, 0, nux::eCenter, nux::eFull);
-  AddChild(_home_button);
-
   _menu_view = new PanelMenuView();
   AddPanelView(_menu_view, 1);
 
@@ -101,6 +96,7 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
    ubus_server_send_message (ubus, UBUS_BACKGROUND_REQUEST_COLOUR_EMIT, NULL);
 
   _track_menu_pointer_id = 0;
+  bg_effect_helper_.owner = this;
 }
 
 PanelView::~PanelView()
@@ -126,12 +122,15 @@ void PanelView::OnBackgroundUpdate (GVariant *data, PanelView *self)
 
 void PanelView::OnDashHidden(GVariant* data, PanelView* self)
 {
+  if (self->_opacity >= 1.0f)
+    self->bg_effect_helper_.enabled = false;
   self->_dash_is_open = false;
   self->ForceUpdateBackground();
 }
 
 void PanelView::OnDashShown(GVariant* data, PanelView* self)
 {
+  self->bg_effect_helper_.enabled = true;
   self->_dash_is_open = true;
   self->ForceUpdateBackground();
 }
@@ -176,13 +175,45 @@ PanelView::ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEven
 void
 PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
+  nux::Geometry geo = GetGeometry();
+  nux::Geometry geo_absolute = GetAbsoluteGeometry();
   UpdateBackground();
 
   GfxContext.PushClippingRectangle(GetGeometry());
 
-  gPainter.PushDrawLayer(GfxContext, GetGeometry(), _bg_layer);
+  if (BackgroundEffectHelper::blur_type != BLUR_NONE && (_dash_is_open || _opacity != 1.0f))
+  {
+    nux::Geometry blur_geo(geo_absolute.x, geo_absolute.y, geo.width, geo.height);
+    bg_blur_texture_ = bg_effect_helper_.GetBlurRegion(blur_geo);
 
-  gPainter.PopBackground();
+    if (bg_blur_texture_.IsValid() && BackgroundEffectHelper::blur_type != BLUR_NONE && (_dash_is_open || _opacity != 1.0f))
+    {
+      nux::TexCoordXForm texxform_blur_bg;
+      texxform_blur_bg.flip_v_coord = true;
+      texxform_blur_bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+      texxform_blur_bg.uoffset = ((float) geo.x) / geo_absolute.width;
+      texxform_blur_bg.voffset = ((float) geo.y) / geo_absolute.height;
+
+      nux::ROPConfig rop;
+      rop.Blend = false;
+      rop.SrcBlend = GL_ONE;
+      rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+
+      nux::Geometry bg_clip = geo;
+      GfxContext.PushClippingRectangle(bg_clip);
+
+      gPainter.PushDrawTextureLayer(GfxContext, geo,
+                                    bg_blur_texture_,
+                                    texxform_blur_bg,
+                                    nux::color::White,
+                                    true,
+                                    rop);
+
+      GfxContext.PopClippingRectangle();
+    }
+  }
+
+  nux::GetPainter().RenderSinglePaintLayer(GfxContext, GetGeometry(), _bg_layer);
 
   GfxContext.PopClippingRectangle();
 
@@ -196,13 +227,44 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 void
 PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
+  nux::Geometry geo = GetGeometry();
+  int bgs = 1;
+
   GfxContext.PushClippingRectangle(GetGeometry());
+
+  GfxContext.GetRenderStates().SetBlend(true);
+  GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
+
+  if (bg_blur_texture_.IsValid() && BackgroundEffectHelper::blur_type != BLUR_NONE && (_dash_is_open || _opacity != 1.0f))
+  {
+    nux::Geometry geo_absolute = GetAbsoluteGeometry ();
+    nux::TexCoordXForm texxform_blur_bg;
+    texxform_blur_bg.flip_v_coord = true;
+    texxform_blur_bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+    texxform_blur_bg.uoffset = ((float) geo.x) / geo_absolute.width;
+    texxform_blur_bg.voffset = ((float) geo.y) / geo_absolute.height;
+
+    nux::ROPConfig rop;
+    rop.Blend = false;
+    rop.SrcBlend = GL_ONE;
+    rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+
+    gPainter.PushTextureLayer(GfxContext, geo,
+                              bg_blur_texture_,
+                              texxform_blur_bg,
+                              nux::color::White,
+                              true,
+                              rop);
+    bgs++;
+  }
 
   gPainter.PushLayer(GfxContext, GetGeometry(), _bg_layer);
 
   _layout->ProcessDraw(GfxContext, force_draw);
 
-  gPainter.PopBackground();
+  gPainter.PopBackground(bgs);
+
+  GfxContext.GetRenderStates().SetBlend(false);
   GfxContext.PopClippingRectangle();
 }
 
@@ -234,7 +296,11 @@ PanelView::UpdateBackground()
   {
     if (_bg_layer)
       delete _bg_layer;
-    _bg_layer = new nux::ColorLayer (_bg_color, true);
+    nux::ROPConfig rop;
+    rop.Blend = true;
+    rop.SrcBlend = GL_ONE;
+    rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+    _bg_layer = new nux::ColorLayer (_bg_color, true, rop);
   }
   else
   {
@@ -276,8 +342,6 @@ void PanelView::ForceUpdateBackground()
   {
     (*i)->QueueDraw();
   }
-  // The home button isn't an indicator view.
-  _home_button->QueueDraw();
   _tray->QueueDraw();
   QueueDraw();
 }
@@ -308,10 +372,6 @@ void PanelView::OnObjectAdded(indicator::Indicator::Ptr const& proxy)
 void PanelView::OnMenuPointerMoved(int x, int y)
 {
   nux::Geometry geo = GetAbsoluteGeometry();
-  nux::Geometry hgeo = _home_button->GetAbsoluteGeometry();
-
-  if (x <= (hgeo.x + hgeo.width))
-    return;
 
   if (geo.IsPointInside(x, y))
   {
@@ -422,11 +482,6 @@ void PanelView::OnEntryShowMenu(std::string const& entry_id,
 //
 // Useful Public Methods
 //
-PanelHomeButton* PanelView::GetHomeButton()
-{
-  return _home_button;
-}
-
 void PanelView::StartFirstMenuShow()
 {
 }
@@ -453,7 +508,9 @@ PanelView::SetOpacity(float opacity)
 
   _opacity = opacity;
 
-  _home_button->SetOpacity(opacity);
+  if (_opacity < 1.0f && !_dash_is_open)
+    bg_effect_helper_.enabled = false;
+
   ForceUpdateBackground();
 }
 
@@ -467,8 +524,6 @@ void
 PanelView::SetPrimary(bool primary)
 {
   _is_primary = primary;
-
-  _home_button->SetVisible(primary);
 }
 
 void PanelView::SyncGeometries()

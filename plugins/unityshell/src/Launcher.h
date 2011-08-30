@@ -22,11 +22,15 @@
 #define LAUNCHER_H
 
 #include <sys/time.h>
-#include <core/core.h>
 
 #include <Nux/View.h>
 #include <Nux/BaseWindow.h>
 
+#include "AbstractIconRenderer.h"
+#include "BackgroundEffectHelper.h"
+#include "DNDCollectionWindow.h"
+#include "DndData.h"
+#include "GeisAdapter.h"
 #include "Introspectable.h"
 #include "LauncherIcon.h"
 #include "LauncherDragWindow.h"
@@ -34,10 +38,6 @@
 #include "LauncherHoverMachine.h"
 #include "NuxGraphics/IOpenGLAsmShader.h"
 #include "Nux/TimerProc.h"
-#include "PluginAdapter.h"
-#include "GeisAdapter.h"
-
-#include "AbstractIconRenderer.h"
 
 #define ANIM_DURATION_SHORT 125
 #define ANIM_DURATION       200
@@ -103,8 +103,10 @@ public:
     BACKLIGHT_NORMAL_EDGE_TOGGLE
   } BacklightMode;
 
-  Launcher(nux::BaseWindow* parent, CompScreen* screen, NUX_FILE_LINE_PROTO);
+  Launcher(nux::BaseWindow* parent, NUX_FILE_LINE_PROTO);
   ~Launcher();
+
+  nux::Property<Display*> display;
 
   virtual long ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo);
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
@@ -151,9 +153,9 @@ public:
   void SetAutoHideAnimation(AutoHideAnimation animation);
   AutoHideAnimation GetAutoHideAnimation();
 
-  void EdgeRevealTriggered();
+  void EdgeRevealTriggered(int x, int y);
 
-  gboolean CheckSuperShortcutPressed(unsigned int key_sym, unsigned long key_code, unsigned long key_state, char* key_string);
+  gboolean CheckSuperShortcutPressed(Display *x_display, unsigned int key_sym, unsigned long key_code, unsigned long key_state, char* key_string);
 
   nux::BaseWindow* GetParent()
   {
@@ -207,6 +209,7 @@ protected:
   const gchar* GetName();
   void AddProperties(GVariantBuilder* builder);
 
+  void DndLeave();
   void ProcessDndEnter();
   void ProcessDndLeave();
   void ProcessDndMove(int x, int y, std::list<char*> mimes);
@@ -262,7 +265,6 @@ private:
   void SetMousePosition(int x, int y);
 
   void SetStateMouseOverLauncher(bool over_launcher);
-  void SetStateMouseOverBFB(bool over_bfb);
   void SetStateKeyNav(bool keynav_activated);
 
   bool MouseBeyondDragThreshold();
@@ -287,8 +289,6 @@ private:
 
   static gboolean OnScrollTimeout(gpointer data);
   static gboolean OnUpdateDragManagerTimeout(gpointer data);
-
-  bool CheckIntersectWindow(CompWindow* window);
 
   float DnDStartProgress(struct timespec const& current);
   float DnDExitProgress(struct timespec const& current);
@@ -341,13 +341,11 @@ private:
   static void OnPlaceViewHidden(GVariant* data, void* val);
   static void OnPlaceViewShown(GVariant* data, void* val);
 
-  static void OnBFBUpdate(GVariant* data, gpointer user_data);
-  static void OnBFBDndEnter(GVariant* data, gpointer user_data);
   static void OnBGColorChanged (GVariant *data, void *val);
 
   static void OnActionDone(GVariant* data, void* val);
 
-  void RenderIconToTexture(nux::GraphicsEngine& GfxContext, LauncherIcon* icon, nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture);
+  void RenderIconToTexture(nux::GraphicsEngine& GfxContext, LauncherIcon* icon, nux::ObjectPtr<nux::IOpenGLBaseTexture> texture);
 
   LauncherIcon* MouseIconIntersection(int x, int y);
   void EventLogic();
@@ -366,14 +364,12 @@ private:
   virtual long PostLayoutManagement(long LayoutResult);
   virtual void PositionChildLayout(float offsetX, float offsetY);
 
-  void SetOffscreenRenderTarget(nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture);
+  void SetOffscreenRenderTarget(nux::ObjectPtr<nux::IOpenGLBaseTexture> texture);
   void RestoreSystemRenderTarget();
 
   gboolean TapOnSuper();
 
-  std::list<char*> StringToUriList(char* input);
-
-  static void SettingsChanged(GSettings* settings, gchar* key, Launcher* self);
+  void OnDNDDataCollected(const std::list<char*>& mimes);
 
   nux::HLayout* m_Layout;
   int m_ContentOffsetY;
@@ -416,7 +412,7 @@ private:
   UrgentAnimation _urgent_animation;
   AutoHideAnimation _autohide_animation;
 
-  nux::IntrusiveSP<nux::IOpenGLBaseTexture> _offscreen_drag_texture;
+  nux::ObjectPtr<nux::IOpenGLBaseTexture> _offscreen_drag_texture;
 
   int _space_between_icons;
   int _icon_size;
@@ -454,14 +450,15 @@ private:
   LauncherDragWindow* _drag_window;
   LauncherHideMachine* _hide_machine;
   LauncherHoverMachine* _hover_machine;
-  CompScreen* _screen;
 
-  std::list<char*> _drag_data;
+  unity::DndData _dnd_data;
   nux::DndAction    _drag_action;
   bool              _data_checked;
   bool              _steal_drag;
   bool              _drag_edge_touching;
   LauncherIcon*     _dnd_hovered_icon;
+  unity::DNDCollectionWindow* _collection_window;
+  sigc::connection _on_data_collected_connection;
 
   Atom              _selection_atom;
 
@@ -488,16 +485,13 @@ private:
 
   bool _initial_drag_animation;
 
-  GSettings* _settings;
-  guint32 _settings_changed_id;
-
-  guint _ubus_handles[6];
+  guint _ubus_handles[4];
 
   nux::Color _background_color;
   bool _dash_is_open;
+  
   AbstractIconRenderer::Ptr icon_renderer;
+  BackgroundEffectHelper bg_effect_helper_;
 };
 
 #endif // LAUNCHER_H
-
-

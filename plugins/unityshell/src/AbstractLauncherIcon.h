@@ -27,7 +27,11 @@
 
 #include <sigc++/sigc++.h>
 
+#include <X11/Xlib.h>
+
 #include <libdbusmenu-glib/menuitem.h>
+
+#include "DndData.h"
 
 class ActionArg
 {
@@ -42,29 +46,33 @@ public:
   ActionArg()
     : source(OTHER)
     , button(0)
+    , target(0)
   {
   }
 
-  ActionArg(Source source, int button)
+  ActionArg(Source source, int button, Window target = 0)
     : source(source)
     , button(button)
+    , target(target)
   {
   }
 
   Source source;
   int button;
+  Window target;
 };
 
 class AbstractLauncherIcon
 {
 public:
 
-
+  typedef std::vector<nux::Vector4> TransformVector;
 
   typedef enum
   {
     TYPE_NONE,
     TYPE_BEGIN,
+    TYPE_HOME,
     TYPE_FAVORITE,
     TYPE_APPLICATION,
     TYPE_EXPO,
@@ -93,6 +101,15 @@ public:
     QUIRK_LAST,
   } Quirk;
 
+  enum TransformIndex
+  {
+    TRANSFORM_TILE,
+    TRANSFORM_IMAGE,
+    TRANSFORM_HIT_AREA,
+    TRANSFORM_GLOW,
+    TRANSFORM_EMBLEM,
+  };
+
   virtual ~AbstractLauncherIcon() {}
 
   nux::Property<std::string> tooltip_text;
@@ -111,7 +128,7 @@ public:
 
   virtual nux::Point3 GetCenter() = 0;
 
-  virtual std::vector<nux::Vector4> & GetTransform(std::string const& name) = 0;
+  virtual std::vector<nux::Vector4> & GetTransform(TransformIndex index) = 0;
 
   virtual void Activate(ActionArg arg) = 0;
 
@@ -120,6 +137,10 @@ public:
   virtual int SortPriority() = 0;
 
   virtual int RelatedWindows() = 0;
+
+  virtual std::vector<Window> RelatedXids () = 0;
+
+  virtual std::string NameForWindow (Window window) = 0;
 
   virtual bool HasWindowOnViewport() = 0;
 
@@ -153,9 +174,9 @@ public:
 
   virtual std::list<DbusmenuMenuitem*> Menus() = 0;
 
-  virtual nux::DndAction QueryAcceptDrop(std::list<char*> paths) = 0;
+  virtual nux::DndAction QueryAcceptDrop(unity::DndData& dnd_data) = 0;
 
-  virtual void AcceptDrop(std::list<char*> paths) = 0;
+  virtual void AcceptDrop(unity::DndData& dnd_data) = 0;
 
   virtual void SendDndEnter() = 0;
 

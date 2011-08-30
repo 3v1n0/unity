@@ -29,7 +29,6 @@
 #include "LauncherModel.h"
 
 #include "DeviceLauncherSection.h"
-#include "PlaceLauncherSection.h"
 
 #include "LauncherEntryRemote.h"
 #include "LauncherEntryRemoteModel.h"
@@ -44,20 +43,18 @@ class LauncherController : public sigc::trackable
 {
 
 public:
-  LauncherController(Launcher* launcher, CompScreen* screen);
+  LauncherController(Launcher* launcher);
   ~LauncherController();
 
   void UpdateNumWorkspaces(int workspaces);
 private:
   BamfMatcher*           _matcher;
   CompAction*            _expo_action;
-  CompScreen*            _screen;
   Launcher*              _launcher;
   LauncherModel*         _model;
   int                    _sort_priority;
-  PlaceLauncherSection*  _place_section;
   unity::DeviceLauncherSection* _device_section;
-  LauncherEntryRemoteModel* _remote_model;
+  LauncherEntryRemoteModel _remote_model;
   SimpleLauncherIcon*    _expoIcon;
   int                    _num_workspaces;
 
@@ -65,6 +62,7 @@ private:
 
   guint32 _on_view_opened_id;
 
+  void Save();
   void SortAndUpdate();
 
   void OnIconAdded(LauncherIcon* icon);

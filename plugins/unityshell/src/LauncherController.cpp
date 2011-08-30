@@ -22,8 +22,9 @@
 #include "LauncherController.h"
 #include "LauncherIcon.h"
 #include "Launcher.h"
-#include "PluginAdapter.h"
+#include "WindowManager.h"
 #include "TrashLauncherIcon.h"
+#include "BFBLauncherIcon.h"
 
 #include <glib/gi18n-lib.h>
 
@@ -32,10 +33,9 @@
 
 using namespace unity;
 
-LauncherController::LauncherController(Launcher* launcher, CompScreen* screen)
+LauncherController::LauncherController(Launcher* launcher)
 {
   _launcher = launcher;
-  _screen = screen;
   _model = new LauncherModel();
   _sort_priority = 0;
 
@@ -43,13 +43,10 @@ LauncherController::LauncherController(Launcher* launcher, CompScreen* screen)
   _launcher->launcher_addrequest.connect(sigc::mem_fun(this, &LauncherController::OnLauncherAddRequest));
   _launcher->launcher_removerequest.connect(sigc::mem_fun(this, &LauncherController::OnLauncherRemoveRequest));
 
-  _place_section = new PlaceLauncherSection(_launcher);
-  _place_section->IconAdded.connect(sigc::mem_fun(this, &LauncherController::OnIconAdded));
-
   _device_section = new DeviceLauncherSection(_launcher);
   _device_section->IconAdded.connect(sigc::mem_fun(this, &LauncherController::OnIconAdded));
 
-  _num_workspaces = _screen->vpSize().width() * _screen->vpSize().height();
+  _num_workspaces = WindowManager::Default()->WorkspaceCount();
   if (_num_workspaces > 1)
   {
     InsertExpoAction();
@@ -58,9 +55,10 @@ LauncherController::LauncherController(Launcher* launcher, CompScreen* screen)
 
   _bamf_timer_handler_id = g_timeout_add(500, (GSourceFunc) &LauncherController::BamfTimerCallback, this);
 
-  _remote_model = LauncherEntryRemoteModel::GetDefault();
-  _remote_model->entry_added.connect(sigc::mem_fun(this, &LauncherController::OnLauncherEntryRemoteAdded));
-  _remote_model->entry_removed.connect(sigc::mem_fun(this, &LauncherController::OnLauncherEntryRemoteRemoved));
+  _remote_model.entry_added.connect(sigc::mem_fun(this, &LauncherController::OnLauncherEntryRemoteAdded));
+  _remote_model.entry_removed.connect(sigc::mem_fun(this, &LauncherController::OnLauncherEntryRemoteRemoved));
+
+  RegisterIcon (new BFBLauncherIcon (launcher));
 }
 
 LauncherController::~LauncherController()
@@ -71,7 +69,6 @@ LauncherController::~LauncherController()
   if (_matcher != NULL && _on_view_opened_id != 0)
     g_signal_handler_disconnect((gpointer) _matcher, _on_view_opened_id);
 
-  delete _place_section;
   delete _device_section;
   delete _model;
 }
@@ -96,30 +93,49 @@ LauncherController::OnLauncherAddRequest(char* path, LauncherIcon* before)
     if (before)
       _model->ReorderBefore(result, before, false);
   }
+  
+  Save();
+}
+
+void LauncherController::Save()
+{
+  unity::FavoriteList desktop_paths;
+
+  // Updates gsettings favorites.
+  std::list<BamfLauncherIcon*> launchers = _model->GetSublist<BamfLauncherIcon> ();
+  for (auto icon : launchers)
+  {
+    if (!icon->IsSticky())
+      continue;
+
+    const char* desktop_file = icon->DesktopFile();
+
+    if (desktop_file && strlen(desktop_file) > 0)
+      desktop_paths.push_back(desktop_file);
+  }
+
+  unity::FavoriteStore::GetDefault().SetFavorites(desktop_paths);
 }
 
 void LauncherController::SortAndUpdate()
 {
-  std::list<BamfLauncherIcon*> launchers;
-  std::list<BamfLauncherIcon*>::iterator it;
-  FavoriteList desktop_paths;
   gint   shortcut = 1;
   gchar* buff;
 
-  launchers = _model->GetSublist<BamfLauncherIcon> ();
-  for (it = launchers.begin(); it != launchers.end(); it++)
+  std::list<BamfLauncherIcon*> launchers = _model->GetSublist<BamfLauncherIcon> ();
+  for (auto it : launchers)
   {
-    if (shortcut < 11 && (*it)->GetQuirk(LauncherIcon::QUIRK_VISIBLE))
+    if (shortcut < 11 && it->GetQuirk(LauncherIcon::QUIRK_VISIBLE))
     {
       buff = g_strdup_printf("%d", shortcut % 10);
-      (*it)->SetShortcut(buff[0]);
+      it->SetShortcut(buff[0]);
       g_free(buff);
       shortcut++;
     }
     // reset shortcut
     else
     {
-      (*it)->SetShortcut(0);
+      it->SetShortcut(0);
     }
   }
 }
@@ -190,7 +206,7 @@ LauncherController::OnLauncherEntryRemoteRemoved(LauncherEntryRemote* entry)
 void
 LauncherController::OnExpoActivated()
 {
-  PluginAdapter::Default()->InitiateExpo();
+  WindowManager::Default()->InitiateExpo();
 }
 
 void
@@ -253,7 +269,7 @@ LauncherController::RegisterIcon(LauncherIcon* icon)
     const char* path;
     path = bamf_icon->DesktopFile();
     if (path)
-      entry = _remote_model->LookupByDesktopFile(path);
+      entry = _remote_model.LookupByDesktopFile(path);
     if (entry)
       icon->InsertEntryRemote(entry);
   }
@@ -286,7 +302,7 @@ LauncherController::OnViewOpened(BamfMatcher* matcher, BamfView* view, gpointer 
   if (g_object_get_qdata(G_OBJECT(app), g_quark_from_static_string("unity-seen")))
     return;
 
-  BamfLauncherIcon* icon = new BamfLauncherIcon(self->_launcher, app, self->_screen);
+  BamfLauncherIcon* icon = new BamfLauncherIcon(self->_launcher, app);
   icon->SetIconType(LauncherIcon::TYPE_APPLICATION);
   icon->SetSortPriority(self->_sort_priority++);
 
@@ -312,7 +328,7 @@ LauncherController::CreateFavorite(const char* file_path)
   g_object_set_qdata(G_OBJECT(app), g_quark_from_static_string("unity-seen"), GINT_TO_POINTER(1));
 
   bamf_view_set_sticky(BAMF_VIEW(app), true);
-  icon = new BamfLauncherIcon(_launcher, app, _screen);
+  icon = new BamfLauncherIcon(_launcher, app);
   icon->SetIconType(LauncherIcon::TYPE_APPLICATION);
   icon->SetSortPriority(_sort_priority++);
 
@@ -325,7 +341,10 @@ void LauncherController::SetupBamf()
   GList* apps, *l;
   BamfApplication* app;
   BamfLauncherIcon* icon;
-  int priority = 0;
+
+  // Sufficiently large number such that we ensure proper sorting 
+  // (avoids case where first item gets tacked onto end rather than start)
+  int priority = 100;
 
   _matcher = bamf_matcher_get_default();
 
@@ -355,11 +374,12 @@ void LauncherController::SetupBamf()
       continue;
     g_object_set_qdata(G_OBJECT(app), g_quark_from_static_string("unity-seen"), GINT_TO_POINTER(1));
 
-    icon = new BamfLauncherIcon(_launcher, app, _screen);
+    icon = new BamfLauncherIcon(_launcher, app);
     icon->SetSortPriority(_sort_priority++);
     RegisterIcon(icon);
   }
 
   _model->order_changed.connect(sigc::mem_fun(this, &LauncherController::SortAndUpdate));
+  _model->saved.connect(sigc::mem_fun(this, &LauncherController::Save));
 }
 

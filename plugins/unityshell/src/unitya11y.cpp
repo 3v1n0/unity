@@ -35,15 +35,15 @@
 #include "LauncherIcon.h"
 #include "SimpleLauncherIcon.h"
 #include "PanelView.h"
-#include "PlacesView.h"
+#include "DashView.h"
 #include "unity-launcher-accessible.h"
 #include "unity-launcher-icon-accessible.h"
 #include "unity-panel-view-accessible.h"
-#include "unity-panel-home-button-accessible.h"
 #include "unity-places-view-accessible.h"
 #include "unity-search-bar-accessible.h"
 
 using namespace unity;
+using namespace unity::dash;
 
 static GHashTable* accessible_table = NULL;
 /* FIXME: remove accessible objects when not required anymore */
@@ -188,8 +188,6 @@ unity_a11y_init(nux::WindowThread* wt)
 {
   gchar* bridge_path = NULL;
 
-  g_debug("Unity accessibility initialization");
-
   unity_a11y_restore_environment();
 
   if (!should_enable_a11y())
@@ -263,14 +261,12 @@ unity_a11y_create_accessible(nux::Object* object)
   if (object->Type().IsDerivedFromType(PanelView::StaticObjectType))
     return unity_panel_view_accessible_new(object);
 
-  if (object->Type().IsDerivedFromType(PanelHomeButton::StaticObjectType))
-    return unity_panel_home_button_accessible_new(object);
-
-  if (object->Type().IsDerivedFromType(PlacesView::StaticObjectType))
+  if (object->Type().IsDerivedFromType(DashView::StaticObjectType))
     return unity_places_view_accessible_new(object);
 
-  if (object->Type().IsDerivedFromType(PlacesSearchBar::StaticObjectType))
-    return unity_search_bar_accessible_new(object);
+  
+  //FIXME:if (object->Type().IsDerivedFromType(PlacesSearchBar::StaticObjectType))
+    //return unity_search_bar_accessible_new(object);
 
   /* NUX classes  */
   if (object->Type().IsDerivedFromType(nux::BaseWindow::StaticObjectType))

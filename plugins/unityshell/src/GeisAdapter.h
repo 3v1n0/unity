@@ -21,8 +21,6 @@
 #define GEISADAPTER_H
 
 /* Compiz */
-#include <core/core.h>
-
 #include <sigc++/sigc++.h>
 #include <geis/geis.h>
 #include <Nux/Nux.h>
@@ -30,7 +28,7 @@
 class GeisAdapter : public sigc::trackable
 {
 public:
-  static GeisAdapter* Default(CompScreen* screen);
+  static GeisAdapter* Default();
 
   ~GeisAdapter();
 
@@ -144,7 +142,7 @@ public:
   sigc::signal<void, GeisTouchData*> touch_update;
   sigc::signal<void, GeisTouchData*> touch_finish;
 protected:
-  GeisAdapter(CompScreen* screen);
+  GeisAdapter();
 
   static gboolean OnWatchIn(GIOChannel* source, GIOCondition condition, gpointer data);
 
@@ -168,7 +166,6 @@ protected:
 private:
   void RegisterRootInstance();
 
-  CompScreen* _screen;
   GeisInstance _root_instance;
 
   guint _watch_id;

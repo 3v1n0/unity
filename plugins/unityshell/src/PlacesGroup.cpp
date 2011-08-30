@@ -50,9 +50,9 @@ static const float kExpandDefaultIconOpacity = 0.6f;
 static const float kExpandHoverIconOpacity = 1.0f;
 
 
-PlacesGroup::PlacesGroup(NUX_FILE_LINE_DECL)
-  : View(NUX_FILE_LINE_PARAM),
-    _content_layout(NULL),
+PlacesGroup::PlacesGroup()
+  : View(NUX_TRACKER_LOCATION),
+    _child_view(NULL),
     _idle_id(0),
     _is_expanded(true),
     _n_visible_items_in_unexpand_mode(0),
@@ -96,18 +96,18 @@ PlacesGroup::PlacesGroup(NUX_FILE_LINE_DECL)
   SetLayout(_group_layout);
 
   /* don't need to disconnect these signals as they are disconnected when this object destroys the contents */
-  _icon->OnMouseClick.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseClick));
-  _icon->OnMouseEnter.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseEnter));
-  _icon->OnMouseLeave.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseLeave));
-  _name->OnMouseClick.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseClick));
-  _name->OnMouseEnter.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseEnter));
-  _name->OnMouseLeave.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseLeave));
-  _expand_label->OnMouseClick.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseClick));
-  _expand_label->OnMouseEnter.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseEnter));
-  _expand_label->OnMouseLeave.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseLeave));
-  _expand_icon->OnMouseClick.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseClick));
-  _expand_icon->OnMouseEnter.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseEnter));
-  _expand_icon->OnMouseLeave.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseLeave));
+  _icon->mouse_click.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseClick));
+  _icon->mouse_enter.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseEnter));
+  _icon->mouse_leave.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseLeave));
+  _name->mouse_click.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseClick));
+  _name->mouse_enter.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseEnter));
+  _name->mouse_leave.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseLeave));
+  _expand_label->mouse_click.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseClick));
+  _expand_label->mouse_enter.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseEnter));
+  _expand_label->mouse_leave.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseLeave));
+  _expand_icon->mouse_click.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseClick));
+  _expand_icon->mouse_enter.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseEnter));
+  _expand_icon->mouse_leave.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseLeave));
 }
 
 PlacesGroup::~PlacesGroup()
@@ -144,7 +144,7 @@ PlacesGroup::SetName(const char* name)
 {
   // Spaces are on purpose, want padding to be proportional to the size of the text
   // Bear with me, I'm trying something different :)
-  const gchar* temp = "    <big>%s</big>    ";
+  const gchar* temp = "    <span font_size='larger'>%s</span>    ";
   gchar* tmp = NULL;
   gchar* final = NULL;
   if (_cached_name != NULL)
@@ -172,21 +172,23 @@ PlacesGroup::SetIcon(const char* path_to_emblem)
 }
 
 void
-PlacesGroup::SetChildLayout(nux::Layout* layout)
+PlacesGroup::SetChildView(nux::View* view)
 {
-  _content_layout = layout;
-
-  // By setting the stretch factor of the GridHLayout to 0, the height of the grid
-  // will be forced to the height that is necessary to include all its elements.
-  //_group_layout->AddLayout (_content_layout, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
-  _group_layout->AddLayout(_content_layout, 1);
+  _child_view = view;
+  _group_layout->AddView(_child_view, 1);
   QueueDraw();
 }
 
-nux::Layout*
-PlacesGroup::GetChildLayout()
+nux::View*
+PlacesGroup::GetChildView()
 {
-  return _content_layout;
+  return _child_view;
+}
+
+void PlacesGroup::SetChildLayout(nux::Layout* layout)
+{
+  _group_layout->AddLayout(layout, 1);
+  QueueDraw();
 }
 
 void
@@ -267,7 +269,7 @@ PlacesGroup::OnIdleRelayout(PlacesGroup* self)
   self->Refresh();
   self->QueueDraw();
   self->_group_layout->QueueDraw();
-  self->GetChildLayout()->QueueDraw();
+  self->GetChildView()->QueueDraw();
   self->ComputeChildLayout();
   self->_idle_id = 0;
 
@@ -340,13 +342,16 @@ PlacesGroup::SetExpanded(bool is_expanded)
   if (_is_expanded == is_expanded)
     return;
 
+  if (is_expanded && _n_total_items <= _n_visible_items_in_unexpand_mode)
+    return;
+
   _is_expanded = is_expanded;
 
   Refresh();
 
   _expand_icon->SetTexture(_is_expanded ? style->GetGroupUnexpandIcon()
                            : style->GetGroupExpandIcon());
-  expanded.emit();
+  expanded.emit(this);
 }
 
 void

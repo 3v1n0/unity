@@ -36,11 +36,11 @@ PlacesTile::PlacesTile(NUX_FILE_LINE_DECL, const void* id) :
   _last_width(0),
   _last_height(0)
 {
-  OnMouseDown.connect(sigc::mem_fun(this, &PlacesTile::RecvMouseDown));
-  OnMouseUp.connect(sigc::mem_fun(this, &PlacesTile::RecvMouseUp));
-  OnMouseClick.connect(sigc::mem_fun(this, &PlacesTile::RecvMouseClick));
-  OnMouseEnter.connect(sigc::mem_fun(this, &PlacesTile::RecvMouseEnter));
-  OnMouseLeave.connect(sigc::mem_fun(this, &PlacesTile::RecvMouseLeave));
+  mouse_down.connect(sigc::mem_fun(this, &PlacesTile::RecvMouseDown));
+  mouse_up.connect(sigc::mem_fun(this, &PlacesTile::RecvMouseUp));
+  mouse_click.connect(sigc::mem_fun(this, &PlacesTile::RecvMouseClick));
+  mouse_enter.connect(sigc::mem_fun(this, &PlacesTile::RecvMouseEnter));
+  mouse_leave.connect(sigc::mem_fun(this, &PlacesTile::RecvMouseLeave));
   OnKeyNavFocusChange.connect(sigc::mem_fun(this, &PlacesTile::OnFocusChanged));
   OnKeyNavFocusActivate.connect(sigc::mem_fun(this, &PlacesTile::OnFocusActivated));
   _can_pass_focus_to_composite_layout = false;

@@ -25,11 +25,18 @@
 #include <Nux/Nux.h>
 #include <NuxGraphics/GraphicsEngine.h>
 #include <NuxImage/CairoGraphics.h>
+#include <NuxCore/Logger.h>
 
 #include "PanelStyle.h"
 
+#include <UnityCore/GLibWrapper.h>
+
+using namespace unity;
+
 namespace
 {
+
+nux::logging::Logger logger("unity.panel");
 
 PanelStyle* _style = NULL;
 
@@ -49,8 +56,8 @@ PanelStyle::PanelStyle()
   _style_context = gtk_style_context_new();
 
   GtkWidgetPath* widget_path = gtk_widget_path_new();
-  gtk_widget_path_iter_set_name(widget_path, -1 , "UnityPanelWidget");
-  gtk_widget_path_append_type(widget_path, GTK_TYPE_WINDOW);
+  guint pos = gtk_widget_path_append_type(widget_path, GTK_TYPE_WINDOW);
+  gtk_widget_path_iter_set_name(widget_path, pos, "UnityPanelWidget");
 
   gtk_style_context_set_path(_style_context, widget_path);
   gtk_style_context_add_class(_style_context, "gnome-panel-menu-bar");
@@ -123,14 +130,12 @@ PanelStyle::OnStyleChanged(GObject*    gobject,
   self->Refresh();
 }
 
-nux::NBitmapData*
-PanelStyle::GetBackground(int width, int height)
+nux::NBitmapData* PanelStyle::GetBackground(int width, int height)
 {
+  // TODO: check to see if we can put this on the stack.
   nux::CairoGraphics* context = new nux::CairoGraphics(CAIRO_FORMAT_ARGB32, width, height);
-
-  cairo_t* cr = context->GetContext();
-
-  gtk_render_background(_style_context, cr, 0, 0, width, height);
+  // Use the internal context as we know it is good and shiny new.
+  gtk_render_background(_style_context, context->GetInternalContext(), 0, 0, width, height);
 
   nux::NBitmapData* bitmap = context->GetBitmap();
 
@@ -142,47 +147,58 @@ PanelStyle::GetBackground(int width, int height)
 nux::BaseTexture*
 PanelStyle::GetWindowButton(WindowButtonType type, WindowState state)
 {
-#define ICON_LOCATION "/usr/share/themes/%s/metacity-1/%s%s.png"
   nux::BaseTexture* texture = NULL;
   const char* names[] = { "close", "minimize", "unmaximize" };
   const char* states[] = { "", "_focused_prelight", "_focused_pressed" };
 
-  // I wish there was a magic bullet here, but not all themes actually set the panel to be
-  // the same style as the window titlebars (e.g. Clearlooks) so we can just grab the
-  // metacity window buttons as that would look horrible
-  if (IsAmbianceOrRadiance())
+  std::ostringstream subpath;
+  subpath << "unity/" << names[type] << states[state] << ".png";
+
+  // Look in home directory
+  const char* home_dir = g_get_home_dir();
+  if (home_dir)
   {
-    char*      filename;
-    GdkPixbuf* pixbuf;
-    GError*    error = NULL;
+    glib::String filename(g_build_filename(home_dir, ".themes", _theme_name, subpath.str().c_str(), NULL));
 
-    filename = g_strdup_printf(ICON_LOCATION, _theme_name, names[type], states[state]);
-
-    pixbuf = gdk_pixbuf_new_from_file(filename, &error);
-    if (error)
+    if (g_file_test(filename.Value(), G_FILE_TEST_EXISTS))
     {
-      g_warning("Unable to load window button %s: %s", filename, error->message);
-      g_error_free(error);
-      error = NULL;
-    }
-    else
-      texture = nux::CreateTexture2DFromPixbuf(pixbuf, true);
+      glib::Error error;
 
-    g_free(filename);
-    g_object_unref(pixbuf);
+      // Found a file, try loading the pixbuf
+      glib::Object<GdkPixbuf> pixbuf(gdk_pixbuf_new_from_file(filename.Value(), &error));
+      if (error)
+        LOG_WARNING(logger) << "Unable to load window button " << filename.Value() << ": " << error.Message();
+      else
+        texture = nux::CreateTexture2DFromPixbuf(pixbuf, true);
+    }
   }
-  else
+
+  // texture is NULL if the pixbuf is not loaded
+  if (!texture)
   {
-    texture = GetWindowButtonForTheme(type, state);
+    const char* var = g_getenv("GTK_DATA_PREFIX");
+    if (!var)
+      var = "/usr";
+
+    glib::String filename(g_build_filename(var, "share", "themes", _theme_name, subpath.str().c_str(), NULL));
+
+    if (g_file_test(filename.Value(), G_FILE_TEST_EXISTS))
+    {
+      glib::Error error;
+
+      // Found a file, try loading the pixbuf
+      glib::Object<GdkPixbuf> pixbuf(gdk_pixbuf_new_from_file(filename.Value(), &error));
+      if (error)
+        LOG_WARNING(logger) << "Unable to load window button " << filename.Value() << ": " << error.Message();
+      else
+        texture = nux::CreateTexture2DFromPixbuf(pixbuf, true);
+    }
   }
+
+  if (!texture)
+    texture = GetWindowButtonForTheme(type, state);
 
   return texture;
-}
-
-bool
-PanelStyle::IsAmbianceOrRadiance()
-{
-  return g_strcmp0(_theme_name, "Ambiance") == 0 || g_strcmp0(_theme_name, "Radiance") == 0;
 }
 
 nux::BaseTexture*

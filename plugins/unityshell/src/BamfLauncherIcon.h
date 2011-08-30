@@ -36,7 +36,7 @@ class Launcher;
 class BamfLauncherIcon : public SimpleLauncherIcon
 {
 public:
-  BamfLauncherIcon(Launcher* IconManager, BamfApplication* app, CompScreen* screen);
+  BamfLauncherIcon(Launcher* IconManager, BamfApplication* app);
   virtual ~BamfLauncherIcon();
 
   const char* DesktopFile();
@@ -48,6 +48,10 @@ public:
 
   virtual bool ShowInSwitcher();
   virtual unsigned int SwitcherPriority();
+
+  std::vector<Window> RelatedXids ();
+
+  std::string NameForWindow (Window window);
 
 protected:
   std::list<DbusmenuMenuitem*> GetMenus();
@@ -61,20 +65,19 @@ protected:
 
   const gchar* GetRemoteUri();
 
-  nux::DndAction OnQueryAcceptDrop(std::list<char*> uris);
-  void OnAcceptDrop(std::list<char*> uris);
+  nux::DndAction OnQueryAcceptDrop(unity::DndData& dnd_data);
+  void OnAcceptDrop(unity::DndData& dnd_data);
   void OnDndEnter();
   void OnDndLeave();
 
-  void OpenInstanceLauncherIcon();
+  void OpenInstanceLauncherIcon(ActionArg arg);
 
-  std::list<char*> ValidateUrisForLaunch(std::list<char*> uris);
+  std::set<std::string> ValidateUrisForLaunch(unity::DndData& dnd_data);
 
   const char* BamfName();
 
 private:
   BamfApplication* m_App;
-  CompScreen* m_Screen;
   Launcher* _launcher;
   std::map<std::string, DbusmenuClient*> _menu_clients;
   std::map<std::string, DbusmenuMenuitem*> _menu_items;
@@ -87,15 +90,18 @@ private:
   gchar* _cached_desktop_file;
   gchar* _cached_name;
 
-
   GFileMonitor* _desktop_file_monitor;
   gulong _on_desktop_file_changed_handler_id;
+  
+  std::set<std::string> _supported_types;
+  bool _supported_types_filled;
+  guint _fill_supported_types_id;
 
   void EnsureWindowState();
 
   void UpdateMenus();
 
-  void OpenInstanceWithUris(std::list<char*> uris);
+  void OpenInstanceWithUris(std::set<std::string> uris);
   void Focus();
   bool Spread(int state, bool force);
 
@@ -104,6 +110,8 @@ private:
   void OnWindowMinimized(guint32 xid);
   void OnViewPortSwitchEnded();
   bool OwnsWindow(Window w);
+  
+  const std::set<std::string>& GetSupportedTypes();
 
   static void OnClosed(BamfView* view, gpointer data);
   static void OnUserVisibleChanged(BamfView* view, gboolean visible, gpointer data);
@@ -124,6 +132,7 @@ private:
                                    gpointer             data);
 
   static gboolean OnDndHoveredTimeout(gpointer data);
+  static gboolean FillSupportedTypes(gpointer data);
 };
 
 #endif // BAMFLAUNCHERICON_H

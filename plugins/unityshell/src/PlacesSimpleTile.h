@@ -48,7 +48,7 @@ protected:
   const gchar* GetChildsName();
   void          AddProperties(GVariantBuilder* builder);
 
-  virtual void                    DndSourceDragBegin();
+  virtual bool                    DndSourceDragBegin();
   virtual nux::NBitmapData*       DndSourceGetDragImage();
   virtual std::list<const char*> DndSourceGetDragTypes();
   virtual const char*             DndSourceGetDataForType(const char* type, int* size, int* format);

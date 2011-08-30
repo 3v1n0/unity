@@ -30,8 +30,8 @@
 
 #include <UnityCore/DBusIndicators.h>
 
+#include "BackgroundEffectHelper.h"
 #include "Introspectable.h"
-#include "PanelHomeButton.h"
 #include "PanelMenuView.h"
 #include "PanelTray.h"
 #include "PanelStyle.h"
@@ -65,8 +65,6 @@ public:
   bool GetPrimary();
   void SetMonitor(int monitor);
 
-  PanelHomeButton* GetHomeButton();
-
   void StartFirstMenuShow();
   void EndFirstMenuShow();
 
@@ -95,7 +93,6 @@ private:
   typedef std::vector<PanelIndicatorObjectView*> Children;
   Children children_;
 
-  PanelHomeButton*         _home_button;
   PanelMenuView*           _menu_view;
   PanelTray*               _tray;
   nux::AbstractPaintLayer* _bg_layer;
@@ -117,6 +114,9 @@ private:
   guint       _handle_dash_shown;
   guint       _handle_bg_color_update;
   guint       _track_menu_pointer_id;
+
+  BackgroundEffectHelper bg_effect_helper_;
+  nux::ObjectPtr <nux::IOpenGLBaseTexture> bg_blur_texture_;
 };
 
 }

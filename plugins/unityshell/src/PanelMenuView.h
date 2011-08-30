@@ -103,6 +103,7 @@ protected:
   virtual nux::Area* FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type);
   void OnPanelViewMouseEnter(int x, int y, unsigned long mouse_button_state, unsigned long special_keys_state);
   void OnPanelViewMouseLeave(int x, int y, unsigned long mouse_button_state, unsigned long special_keys_state);
+  void OnPanelViewMouseMove(int x, int y, int dx, int dy, unsigned long mouse_button_state, unsigned long special_keys_state);
 
 private:
   gchar* GetActiveViewName();
@@ -117,7 +118,7 @@ private:
   nux::AbstractPaintLayer* _title_layer;
   nux::HLayout*            _menu_layout;
   nux::CairoGraphics       _util_cg;
-  nux::IntrusiveSP<nux::IOpenGLBaseTexture> _gradient_texture;
+  nux::ObjectPtr<nux::IOpenGLBaseTexture> _gradient_texture;
   nux::BaseTexture*        _title_tex;
 
   bool _is_inside;
