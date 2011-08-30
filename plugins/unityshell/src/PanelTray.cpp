@@ -32,7 +32,8 @@ namespace unity
 {
 
 PanelTray::PanelTray()
-  : _tray(NULL),
+  : _window(0),
+    _tray(NULL),
     _last_x(0),
     _last_y(0),
     _tray_icon_added_id(0)
@@ -40,6 +41,11 @@ PanelTray::PanelTray()
   _settings = g_settings_new(SETTINGS_NAME);
   _whitelist = g_settings_get_strv(_settings, "systray-whitelist");
 
+  RealInit();
+}
+
+void PanelTray::RealInit()
+{
   _window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   gtk_window_set_type_hint(GTK_WINDOW(_window), GDK_WINDOW_TYPE_HINT_DOCK);
   gtk_window_set_has_resize_grip(GTK_WINDOW(_window), FALSE);
@@ -47,6 +53,19 @@ PanelTray::PanelTray()
   gtk_window_set_skip_pager_hint(GTK_WINDOW(_window), TRUE);
   gtk_window_set_skip_taskbar_hint(GTK_WINDOW(_window), TRUE);
   gtk_window_resize(GTK_WINDOW(_window), 1, 24);
+
+  GtkStyleContext* style_context = gtk_widget_get_style_context(_window);
+
+  GtkWidgetPath* widget_path = gtk_widget_path_new();
+  guint pos = gtk_widget_path_append_type(widget_path, GTK_TYPE_WINDOW);
+  gtk_widget_path_iter_set_name(widget_path, pos, "UnityPanelWidget");
+
+  gtk_style_context_set_path(style_context, widget_path);
+  gtk_style_context_add_class(style_context, "gnome-panel-menu-bar");
+  gtk_style_context_add_class(style_context, "unity-panel");
+
+  gtk_widget_path_free(widget_path);
+  
   SetMinMaxSize(1, 24);
   gtk_window_move(GTK_WINDOW(_window), 200, 12);
   gtk_widget_set_name(_window, "UnityPanelApplet");
@@ -115,7 +134,7 @@ PanelTray::Sync()
 {
   if (_tray)
   {
-    SetMinMaxSize((_children.size() * 24) + (PADDING * 2), 24);
+    SetMinMaxSize(WidthOfTray() + (PADDING * 2), 24);
     QueueRelayout();
     QueueDraw();
 
@@ -200,15 +219,21 @@ PanelTray::OnTrayIconRemoved(NaTrayManager* manager, NaTrayChild* child, PanelTr
 gboolean
 PanelTray::IdleSync(PanelTray* self)
 {
+  int width = self->WidthOfTray();
+  gtk_window_resize(GTK_WINDOW(self->_window), width, 24);
   self->Sync();
-
-  int width = 0;
-  for (auto child: self->_children)
-  {
-    width += gtk_widget_get_allocated_width(GTK_WIDGET(child));
-  }
-  gtk_window_resize(GTK_WINDOW(self->_window), width ? width : 1, 24);
   return FALSE;
+}
+
+int PanelTray::WidthOfTray()
+{
+  int width = 0;
+  for (auto child: _children)
+  {
+    int w = gtk_widget_get_allocated_width(GTK_WIDGET(child));
+    width += w > 24 ? w : 24;
+  }
+  return width;
 }
 
 gboolean

@@ -61,6 +61,9 @@ private:
   static void     OnTrayIconRemoved(NaTrayManager* manager, NaTrayChild* child, PanelTray* self);
   static gboolean IdleSync(PanelTray* tray);
   static gboolean OnTrayDraw(GtkWidget* widget, cairo_t* cr, PanelTray* tray);
+  
+  void RealInit();
+  int WidthOfTray();
 
 private:
   GSettings* _settings;
