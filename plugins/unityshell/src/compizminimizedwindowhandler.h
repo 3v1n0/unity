@@ -54,9 +54,7 @@ public:
   void unminimize ();
 
   static void setFunctions (bool keepMinimized);
-  static void handleCompizEvent (const char *,
-                                 const char *,
-                                 CompOption::Vector &);
+  static void handleCompizEvent (const char *, const char *, CompOption::Vector &);
   static std::list<CompWindow *> minimizingWindows;
 
   typedef CompizMinimizedWindowHandler<Screen, Window> CompizMinimizedWindowHandler_complete;
@@ -68,11 +66,15 @@ protected:
 private:
 
   PrivateCompizMinimizedWindowHandler *priv;
+  static bool handleEvents;
 };
 }
 
 template <typename Screen, typename Window>
 CompWindowList compiz::CompizMinimizedWindowHandler<Screen, Window>::minimizingWindows;
+
+template <typename Screen, typename Window>
+bool compiz::CompizMinimizedWindowHandler<Screen, Window>::handleEvents = true;
 
 template <typename Screen, typename Window>
 compiz::CompizMinimizedWindowHandler<Screen, Window>::CompizMinimizedWindowHandler(CompWindow *w) :
@@ -122,7 +124,7 @@ compiz::CompizMinimizedWindowHandler<Screen, Window>::minimize ()
 
   std::vector<unsigned int> transients = getTransients ();
 
-  screen->handleCompizEventSetEnabled (Screen::get (screen), true);
+  handleEvents = true;
   priv->mWindow->windowNotify (CompWindowNotifyMinimize);
   priv->mWindow->changeState (priv->mWindow->state () | CompWindowStateHiddenMask);
 
@@ -206,6 +208,9 @@ compiz::CompizMinimizedWindowHandler<Screen, Window>::handleCompizEvent (const c
                                                                          const char *eventName,
                                                                          CompOption::Vector &o)
 {
+  if (!handleEvents)
+    return;
+
   if (strncmp (pluginName, "animation", 9) == 0 &&
       strncmp (eventName, "window_animation", 16) == 0)
   {
@@ -217,10 +222,16 @@ compiz::CompizMinimizedWindowHandler<Screen, Window>::handleCompizEvent (const c
       {
         if (CompOption::getBoolOptionNamed (o, "active", false))
           minimizingWindows.push_back (w);
-        else if (!minimizingWindows.empty())
+        else
           minimizingWindows.remove (w);
       }
     }
+  }
+
+  if (!CompOption::getBoolOptionNamed (o, "active", false) &&
+      minimizingWindows.empty ())
+  {
+    handleEvents = false;
   }
 }
 
