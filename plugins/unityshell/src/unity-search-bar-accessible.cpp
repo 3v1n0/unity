@@ -134,7 +134,7 @@ unity_search_bar_accessible_initialize(AtkObject* accessible,
 {
   nux::Object* nux_object = NULL;
   SearchBar* search_bar = NULL;
-  nux::TextEntry* text_entry = NULL;
+  // nux::TextEntry* text_entry = NULL;
 
   ATK_OBJECT_CLASS(unity_search_bar_accessible_parent_class)->initialize(accessible, data);
 
@@ -145,21 +145,6 @@ unity_search_bar_accessible_initialize(AtkObject* accessible,
 
   if (search_bar == NULL)
     return;
-
-  text_entry = search_bar->text_entry();
-
-  if (text_entry != NULL)
-  {
-    std::string hint;
-    AtkObject* text_entry_accessible = NULL;
-
-    text_entry_accessible = unity_a11y_get_accessible(text_entry);
-
-    hint = search_bar->search_hint;
-
-    atk_object_set_name(text_entry_accessible, hint.c_str());
-    atk_object_set_role(text_entry_accessible, ATK_ROLE_ENTRY);
-  }
 
   search_bar->search_hint.changed.connect(sigc::bind(sigc::ptr_fun(on_search_hint_change_cb),
                                                      UNITY_SEARCH_BAR_ACCESSIBLE (accessible)));
