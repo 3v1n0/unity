@@ -194,6 +194,8 @@ Launcher::Launcher(nux::BaseWindow* parent,
   adapter.drag_start.connect(sigc::mem_fun(this, &Launcher::OnDragStart));
   adapter.drag_update.connect(sigc::mem_fun(this, &Launcher::OnDragUpdate));
   adapter.drag_finish.connect(sigc::mem_fun(this, &Launcher::OnDragFinish));
+  
+  display.changed.connect(sigc::mem_fun(this, &Launcher::OnDisplayChanged));
 
   _current_icon       = NULL;
   _current_icon_index = -1;
@@ -372,6 +374,12 @@ const gchar*
 Launcher::GetName()
 {
   return "Launcher";
+}
+
+void
+Launcher::OnDisplayChanged(Display* display)
+{
+  _collection_window->display = display;
 }
 
 void

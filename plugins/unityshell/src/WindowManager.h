@@ -80,8 +80,6 @@ public:
 
   virtual nux::Geometry GetWindowGeometry(guint32 xid) = 0;
   virtual nux::Geometry GetScreenGeometry() = 0;
-  
-  virtual Display* Dpy() = 0;
 
   virtual unsigned int GetWindowActiveNumber (guint32 xid) = 0;
 

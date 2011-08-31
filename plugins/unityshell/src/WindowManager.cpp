@@ -107,11 +107,6 @@ class WindowManagerDummy : public WindowManager
   {
     return nux::Geometry(0, 0, 1, 1);
   }
-  
-  Display* Dpy()
-  {
-    return NULL;
-  }
 
   void SetWindowIconGeometry(Window window, nux::Geometry const& geo)
   {

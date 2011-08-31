@@ -41,17 +41,16 @@ public:
   
 private:
   void ProcessDndMove(int x, int y, std::list<char*> mimes);
-  static gboolean ForceMouseMoveTimeout(gpointer data);
+  void OnWindowMoved(guint32 xid);
 
 // Members
 public:
+  nux::Property<Display*> display;
+
   sigc::signal<void, const std::list<char*>&> collected;
   
 private:
   std::list<char*> mimes_;
-  
-  void OnWindowMoved(guint32 xid);
-  
 };
   
 } // namespace unity

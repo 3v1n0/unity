@@ -26,6 +26,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(DNDCollectionWindow);
 
 DNDCollectionWindow::DNDCollectionWindow()
   : nux::BaseWindow("")
+  , display(NULL)
 {
   SetBackgroundColor(nux::Color(0x00000000));
   SetGeometry(WindowManager::Default()->GetScreenGeometry());
@@ -50,10 +51,10 @@ DNDCollectionWindow::~DNDCollectionWindow()
 
 void DNDCollectionWindow::OnWindowMoved(guint32 xid)
 {
-  if (xid == GetInputWindowId() && WindowManager::Default()->Dpy() != NULL)
+  if (xid == GetInputWindowId() && display() != NULL)
   {
-    XWarpPointer(WindowManager::Default()->Dpy(), None, None, 0, 0, 0, 0, 0, 0);
-    XFlush(WindowManager::Default()->Dpy());
+    XWarpPointer(display(), None, None, 0, 0, 0, 0, 0, 0);
+    XFlush(display());
   }
 }
 
