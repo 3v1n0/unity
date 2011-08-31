@@ -108,6 +108,7 @@ private:
   void EnsureMenuItemsReady();
 
   void OnWindowMinimized(guint32 xid);
+  void OnViewPortSwitchEnded();
   bool OwnsWindow(Window w);
   
   const std::set<std::string>& GetSupportedTypes();

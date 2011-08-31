@@ -848,23 +848,8 @@ void UnityScreen::handleCompizEvent(const char* plugin,
                                     const char* event,
                                     CompOption::Vector& option)
 {
-  /*
-   *  don't take into account window over launcher state during
-   *  the ws switch as we can get false positives
-   *  (like switching to an empty viewport while grabbing a fullscreen window)
-   */
-  if (strcmp(event, "start_viewport_switch") == 0)
-    launcher->EnableCheckWindowOverLauncher(false);
-  else if (strcmp(event, "end_viewport_switch") == 0)
-  {
-    // compute again the list of all window on the new viewport
-    // to decide if we should or not hide the launcher
-    launcher->EnableCheckWindowOverLauncher(true);
-    launcher->CheckWindowOverLauncher();
-  }
-
+  PluginAdapter::Default()->NotifyCompizEvent(plugin, event, option);
   compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>::handleCompizEvent (plugin, event, option);
-
   screen->handleCompizEvent(plugin, event, option);
 }
 

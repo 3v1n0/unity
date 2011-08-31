@@ -22,6 +22,8 @@
 #include "IconRenderer.h"
 #include "LayoutSystem.h"
 
+#include "TimeUtil.h"
+
 #include <NuxCore/Object.h>
 #include <Nux/Nux.h>
 #include <Nux/WindowCompositor.h>
@@ -94,12 +96,6 @@ LayoutWindowList SwitcherView::ExternalTargets ()
 {
   LayoutWindowList result = render_targets_;
   return result;
-}
-
-static int
-DeltaTTime(struct timespec const* x, struct timespec const* y)
-{
-  return ((x->tv_sec - y->tv_sec) * 1000) + ((x->tv_nsec - y->tv_nsec) / 1000000);
 }
 
 void SwitcherView::SetModel(SwitcherModel::Ptr model)
@@ -186,6 +182,9 @@ RenderArg SwitcherView::CreateBaseArgForIcon(AbstractLauncherIcon* icon)
   arg.icon = icon;
   arg.alpha = 0.95f;
 
+  // tells the renderer to render arrows by number
+  arg.running_on_viewport = true;
+
   arg.window_indicators = icon->RelatedWindows();
   if (arg.window_indicators > 1)
     arg.running_arrow = true;
@@ -243,7 +242,7 @@ nux::Geometry SwitcherView::UpdateRenderTargets (RenderArg const& selection_arg,
 {
   std::vector<Window> xids = model_->DetailXids ();
 
-  int ms_since_change = DeltaTTime(&current, &save_time_);
+  int ms_since_change = TimeUtil::TimeDelta(&current, &save_time_);
   float progress = MIN (1.0f, (float) ms_since_change / (float) animation_length());
 
   for (Window window : xids)
@@ -421,7 +420,7 @@ std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo,
       ++i;
     }
 
-    int ms_since_change = DeltaTTime(&current, &save_time_);
+    int ms_since_change = TimeUtil::TimeDelta(&current, &save_time_);
     if (saved_args_.size () == results.size () && ms_since_change < animation_length)
     {
       float progress = (float) ms_since_change / (float) animation_length();
@@ -544,7 +543,7 @@ void SwitcherView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   text_view_->SetBaseY(background_geo.y + background_geo.height - 45);
   text_view_->Draw(GfxContext, force_draw);
 
-  int ms_since_change = DeltaTTime(&current, &save_time_);
+  int ms_since_change = TimeUtil::TimeDelta(&current, &save_time_);
 
   if (ms_since_change < animation_length && redraw_handle_ == 0)
     redraw_handle_ = g_timeout_add(0, &SwitcherView::OnDrawTimeout, this);

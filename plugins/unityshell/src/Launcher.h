@@ -99,6 +99,8 @@ public:
     BACKLIGHT_ALWAYS_ON,
     BACKLIGHT_NORMAL,
     BACKLIGHT_ALWAYS_OFF,
+    BACKLIGHT_EDGE_TOGGLE,
+    BACKLIGHT_NORMAL_EDGE_TOGGLE
   } BacklightMode;
 
   Launcher(nux::BaseWindow* parent, NUX_FILE_LINE_PROTO);
@@ -140,6 +142,7 @@ public:
 
   void SetBacklightMode(BacklightMode mode);
   BacklightMode GetBacklightMode();
+  bool IsBackLightModeToggles();
 
   void SetLaunchAnimation(LaunchAnimation animation);
   LaunchAnimation GetLaunchAnimation();
@@ -247,6 +250,9 @@ private:
 
   void OnPluginStateChanged();
 
+  void OnViewPortSwitchStarted();
+  void OnViewPortSwitchEnded();
+
   static gboolean AnimationTimeout(gpointer data);
   static gboolean SuperShowLauncherTimeout(gpointer data);
   static gboolean SuperHideLauncherTimeout(gpointer data);
@@ -266,6 +272,7 @@ private:
   void OnDragWindowAnimCompleted();
 
   bool IconNeedsAnimation(LauncherIcon* icon, struct timespec const& current);
+  bool IconDrawEdgeOnly(LauncherIcon* icon);
   bool AnimationInProgress();
 
   void SetActionState(LauncherActionState actionstate);
