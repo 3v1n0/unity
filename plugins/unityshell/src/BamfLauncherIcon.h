@@ -36,7 +36,7 @@ class Launcher;
 class BamfLauncherIcon : public SimpleLauncherIcon
 {
 public:
-  BamfLauncherIcon(Launcher* IconManager, BamfApplication* app, CompScreen* screen);
+  BamfLauncherIcon(Launcher* IconManager, BamfApplication* app);
   virtual ~BamfLauncherIcon();
 
   const char* DesktopFile();
@@ -78,7 +78,6 @@ protected:
 
 private:
   BamfApplication* m_App;
-  CompScreen* m_Screen;
   Launcher* _launcher;
   std::map<std::string, DbusmenuClient*> _menu_clients;
   std::map<std::string, DbusmenuMenuitem*> _menu_items;
@@ -109,6 +108,7 @@ private:
   void EnsureMenuItemsReady();
 
   void OnWindowMinimized(guint32 xid);
+  void OnViewPortSwitchEnded();
   bool OwnsWindow(Window w);
   
   const std::set<std::string>& GetSupportedTypes();

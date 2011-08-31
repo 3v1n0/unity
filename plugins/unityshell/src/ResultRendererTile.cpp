@@ -161,8 +161,8 @@ void ResultRendererTile::Render(nux::GraphicsEngine& GfxContext,
 
 void ResultRendererTile::DrawHighlight(const char* texid, int width, int height, nux::BaseTexture** texture)
 {
-  nux::CairoGraphics* cairo_graphics = new nux::CairoGraphics(CAIRO_FORMAT_ARGB32, width, height);
-  cairo_t* cr = cairo_graphics->GetContext();
+  nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, width, height);
+  cairo_t* cr = cairo_graphics.GetContext();
 
   cairo_scale(cr, 1.0f, 1.0f);
 
@@ -182,7 +182,7 @@ void ResultRendererTile::DrawHighlight(const char* texid, int width, int height,
   cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
   cairo_set_line_width(cr, 1.0f);
   cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 0.75f);
-  cairo_graphics->DrawRoundedRectangle(cr,
+  cairo_graphics.DrawRoundedRectangle(cr,
                                        1.0f,
                                        bg_x,
                                        bg_y,
@@ -192,10 +192,10 @@ void ResultRendererTile::DrawHighlight(const char* texid, int width, int height,
                                        true);
   cairo_fill(cr);
 
-  cairo_graphics->BlurSurface(BLUR_SIZE - 2);
+  cairo_graphics.BlurSurface(BLUR_SIZE - 2);
 
   cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
-  cairo_graphics->DrawRoundedRectangle(cr,
+  cairo_graphics.DrawRoundedRectangle(cr,
                                        1.0,
                                        bg_x,
                                        bg_y,
@@ -206,7 +206,7 @@ void ResultRendererTile::DrawHighlight(const char* texid, int width, int height,
   cairo_clip(cr);
   cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
 
-  cairo_graphics->DrawRoundedRectangle(cr,
+  cairo_graphics.DrawRoundedRectangle(cr,
                                        1.0,
                                        bg_x,
                                        bg_y,
@@ -222,13 +222,12 @@ void ResultRendererTile::DrawHighlight(const char* texid, int width, int height,
 
   cairo_destroy(cr);
 
-  nux::NBitmapData* bitmap =  cairo_graphics->GetBitmap();
+  nux::NBitmapData* bitmap =  cairo_graphics.GetBitmap();
   nux::BaseTexture* tex = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
   tex->Update(bitmap);
   *texture = tex;
 
   delete bitmap;
-  delete cairo_graphics;
 }
 
 void ResultRendererTile::Preload(Result& row)
@@ -342,8 +341,8 @@ void ResultRendererTile::CreateBlurredTextureCallback(const char* texid,
                                                       nux::BaseTexture** texture,
                                                       GdkPixbuf* pixbuf)
 {
-  nux::CairoGraphics* cairo_graphics = new nux::CairoGraphics(CAIRO_FORMAT_ARGB32, width + 10, height + 10);
-  cairo_t* cr = cairo_graphics->GetContext();
+  nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, width + 10, height + 10);
+  cairo_t* cr = cairo_graphics.GetInternalContext();
 
   cairo_scale(cr, 1.0f, 1.0f);
 
@@ -357,12 +356,14 @@ void ResultRendererTile::CreateBlurredTextureCallback(const char* texid,
   cairo_translate(cr, 5, 5);
   cairo_paint(cr);
 
-  cairo_graphics->BlurSurface(4);
+  cairo_graphics.BlurSurface(4);
 
-  nux::NBitmapData* bitmap =  cairo_graphics->GetBitmap();
+  nux::NBitmapData* bitmap =  cairo_graphics.GetBitmap();
   nux::BaseTexture* tex = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
   tex->Update(bitmap);
   *texture = tex;
+
+  delete bitmap;
 }
 
 
@@ -408,14 +409,15 @@ ResultRendererTile::IconLoaded(std::string const& texid,
 
 void ResultRendererTile::LoadText(std::string& text)
 {
-  if (text_cache_.find(text) == text_cache_.end())
+  auto cache_iter = text_cache_.find(text);
+  if (cache_iter == text_cache_.end())
   {
     PlacesStyle*          style      = PlacesStyle::GetDefault();
-    nux::CairoGraphics _cairoGraphics(CAIRO_FORMAT_ARGB32,
-                                      style->GetTileWidth(),
-                                      style->GetTileHeight() - style->GetTileIconSize() - 12);
+    nux::CairoGraphics cairoGraphics(CAIRO_FORMAT_ARGB32,
+                                     style->GetTileWidth(),
+                                     style->GetTileHeight() - style->GetTileIconSize() - 12);
 
-    cairo_t* cr = cairo_reference(_cairoGraphics.GetContext());
+    cairo_t* cr = cairoGraphics.GetInternalContext();
 
     PangoLayout*          layout     = NULL;
     PangoFontDescription* desc       = NULL;
@@ -423,7 +425,7 @@ void ResultRendererTile::LoadText(std::string& text)
     GdkScreen*            screen     = gdk_screen_get_default();    // not ref'ed
     glib::String          font;
     int                   dpi = -1;
-    
+
     g_object_get(gtk_settings_get_default(), "gtk-font-name", &font, NULL);
     g_object_get(gtk_settings_get_default(), "gtk-xft-dpi", &dpi, NULL);
 
@@ -440,7 +442,7 @@ void ResultRendererTile::LoadText(std::string& text)
     pango_layout_set_height(layout, -2);
 
     pango_layout_set_markup(layout, text.c_str(), -1);
-    
+
     pango_context = pango_layout_get_context(layout);  // is not ref'ed
     pango_cairo_context_set_font_options(pango_context,
                                          gdk_screen_get_font_options(screen));
@@ -461,9 +463,7 @@ void ResultRendererTile::LoadText(std::string& text)
     pango_font_description_free(desc);
     g_object_unref(layout);
 
-    cairo_destroy(cr);
-
-    nux::NBitmapData* bitmap = _cairoGraphics.GetBitmap();
+    nux::NBitmapData* bitmap = cairoGraphics.GetBitmap();
 
     nux::BaseTexture* texture;
 
@@ -475,16 +475,15 @@ void ResultRendererTile::LoadText(std::string& text)
     text_cache_[text] = texture;
     texture->object_destroyed.connect([&text_cache_, text](Object * obj)
     {
-      text_cache_.erase(text_cache_.find(text));
+      text_cache_.erase(text);
     });
 
     delete bitmap;
-
-    cairo_destroy(cr);
   }
   else
   {
-    nux::BaseTexture* texture = text_cache_.find(text)->second;
+    // WHY? Why reference it again?
+    nux::BaseTexture* texture = cache_iter->second;
     texture->Reference();
   }
 }

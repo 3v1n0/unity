@@ -43,14 +43,13 @@ class LauncherController : public sigc::trackable
 {
 
 public:
-  LauncherController(Launcher* launcher, CompScreen* screen);
+  LauncherController(Launcher* launcher);
   ~LauncherController();
 
   void UpdateNumWorkspaces(int workspaces);
 private:
   BamfMatcher*           _matcher;
   CompAction*            _expo_action;
-  CompScreen*            _screen;
   Launcher*              _launcher;
   LauncherModel*         _model;
   int                    _sort_priority;

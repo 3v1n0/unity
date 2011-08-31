@@ -23,6 +23,7 @@
 
 #include "UBusMessages.h"
 #include "ubus-server.h"
+#include "WindowManager.h"
 
 #include "SwitcherController.h"
 
@@ -40,6 +41,8 @@ SwitcherController::SwitcherController()
   timeout_length = 150;
   detail_on_timeout = false;
   detail_timeout_length = 1500;
+
+  bg_color_ = nux::Color(0.0, 0.0, 0.0, 0.5);
 
   UBusServer *ubus = ubus_server_get_default();
   ubus_server_register_interest(ubus, UBUS_BACKGROUND_COLOR_CHANGED,

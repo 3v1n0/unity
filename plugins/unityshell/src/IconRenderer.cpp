@@ -408,7 +408,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
   auto tile_transform = arg.icon->GetTransform(AbstractLauncherIcon::TRANSFORM_TILE);
 
   // draw tile
-  if (backlight_intensity > 0)
+  if (backlight_intensity > 0 && !arg.draw_edge_only)
   {
     RenderElement(GfxContext,
                   arg,
@@ -778,13 +778,12 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
     // markers are well outside screen bounds to start
     int markers [3] = {-100, -100, -100};
 
-    /*if (!arg.running_on_viewport)
+    if (!arg.running_on_viewport)
     {
-      markers.push_back (markerCenter);
-      texture = _arrow_empty_ltr;
+      markers[0] = markerCenter;
+      texture = local::arrow_empty_ltr;
     }
-    else*/
-    if (running == 1)
+    else if (running == 1)
     {
       markers[0] = markerCenter;
       texture = local::arrow_ltr;
