@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright 2011 Canonical Ltd.
  *
@@ -44,6 +45,7 @@ namespace unity
 {
 namespace dash
 {
+NUX_IMPLEMENT_OBJECT_TYPE(ResultRendererHorizontalTile);
 
 ResultRendererHorizontalTile::ResultRendererHorizontalTile(NUX_FILE_LINE_DECL)
   : ResultRendererTile(NUX_FILE_LINE_PARAM)
