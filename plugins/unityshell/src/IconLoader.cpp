@@ -23,7 +23,8 @@
 #define _TEMPLATE_ "%s:%d"
 
 IconLoader::IconLoader()
-  : _idle_id(0)
+  : id_sequencial_number_ (1)
+  , _idle_id(0)
 {
   // Option to disable loading, if your testing performance of other things
   _no_load = g_getenv("UNITY_ICON_LOADER_DISABLE") != NULL;
@@ -52,18 +53,18 @@ IconLoader::GetDefault()
   return default_loader;
 }
 
-void
+int
 IconLoader::LoadFromIconName(const char*        icon_name,
                              guint              size,
                              IconLoaderCallback slot)
 {
   char* key;
 
-  g_return_if_fail(icon_name);
-  g_return_if_fail(size > 1);
+  g_return_val_if_fail(icon_name, 0);
+  g_return_val_if_fail(size > 1, 0);
 
   if (_no_load)
-    return;
+    return 0;
 
   // We need to check this because of legacy desktop files
   if (icon_name[0] == '/')
@@ -74,41 +75,43 @@ IconLoader::LoadFromIconName(const char*        icon_name,
   if (CacheLookup(key, icon_name, size, slot))
   {
     g_free(key);
-    return;
+    return 0;
   }
 
-  QueueTask(key, icon_name, size, slot, REQUEST_TYPE_ICON_NAME);
+  int handle = QueueTask(key, icon_name, size, slot, REQUEST_TYPE_ICON_NAME);
 
   g_free(key);
+  return handle;
 }
 
-void
+int
 IconLoader::LoadFromGIconString(const char*        gicon_string,
                                 guint              size,
                                 IconLoaderCallback slot)
 {
   char* key;
 
-  g_return_if_fail(gicon_string);
-  g_return_if_fail(size > 1);
+  g_return_val_if_fail(gicon_string, 0);
+  g_return_val_if_fail(size > 1, 0);
 
   if (_no_load)
-    return;
+    return 0;
 
   key = Hash(gicon_string, size);
 
   if (CacheLookup(key, gicon_string, size, slot))
   {
     g_free(key);
-    return;
+    return 0;
   }
 
-  QueueTask(key, gicon_string, size, slot, REQUEST_TYPE_GICON_STRING);
+  int handle = QueueTask(key, gicon_string, size, slot, REQUEST_TYPE_GICON_STRING);
 
   g_free(key);
+  return handle;
 }
 
-void
+int
 IconLoader::LoadFromFilename(const char*        filename,
                              guint              size,
                              IconLoaderCallback slot)
@@ -116,52 +119,77 @@ IconLoader::LoadFromFilename(const char*        filename,
   GFile* file;
   gchar* uri;
 
-  g_return_if_fail(filename);
-  g_return_if_fail(size > 1);
+  g_return_val_if_fail(filename, 0);
+  g_return_val_if_fail(size > 1, 0);
 
   if (_no_load)
-    return;
+    return 0;
 
   file = g_file_new_for_path(filename);
   uri = g_file_get_uri(file);
 
-  LoadFromURI(uri, size, slot);
+  int handle = LoadFromURI(uri, size, slot);
 
   g_free(uri);
   g_object_unref(file);
+
+  return handle;
 }
 
-void
+int
 IconLoader::LoadFromURI(const char*        uri,
                         guint              size,
                         IconLoaderCallback slot)
 {
   char*      key;
 
-  g_return_if_fail(uri);
-  g_return_if_fail(size > 1);
+  g_return_val_if_fail(uri, 0);
+  g_return_val_if_fail(size > 1, 0);
 
   if (_no_load)
-    return;
+    return 0;
 
   key = Hash(uri, size);
 
   if (CacheLookup(key, uri, size, slot))
   {
     g_free(key);
-    return;
+    return 0;
   }
 
-  QueueTask(key, uri, size, slot, REQUEST_TYPE_URI);
+  int handle = QueueTask(key, uri, size, slot, REQUEST_TYPE_URI);
 
   g_free(key);
+
+  return handle;
+}
+
+int IconLoader::TaskCompareHandle (IconLoaderTask* task, int* b)
+{
+  //~ IconLoaderTask* task;
+  //~ task = dynamic_cast<IconLoaderTask*>(a);
+
+  //~ return task->handle - *(static_cast<int*>(b));
+  return task->handle - *b;
+}
+
+void IconLoader::DisconnectHandle (int handle)
+{
+  IconLoaderTask* task = NULL;
+  GList* item = g_queue_find_custom(_tasks, &handle, (GCompareFunc)(&IconLoader::TaskCompareHandle));
+
+  if (item == NULL)
+    return;
+
+  task = static_cast<IconLoaderTask*>(item->data);
+  task->slot.disconnect();
 }
 
 //
 // Private Methods
 //
 
-void
+int
 IconLoader::QueueTask(const char*           key,
                       const char*           data,
                       guint                 size,
@@ -173,7 +201,7 @@ IconLoader::QueueTask(const char*           key,
   if (g_strcmp0(data, "") == 0)
   {
     slot(data, size, NULL);
-    return;
+    return 0;
   }
 
   task = g_slice_new0(IconLoaderTask);
@@ -184,6 +212,10 @@ IconLoader::QueueTask(const char*           key,
   task->type = type;
   task->self = this;
 
+  if (id_sequencial_number_ < 1)
+    g_critical ("IconLoader is overflowing"); // FIXME - replace with nux logging
+  task->handle = id_sequencial_number_++;
+
   g_queue_push_tail(_tasks, task);
 
   if (_idle_id < 1)
@@ -191,6 +223,8 @@ IconLoader::QueueTask(const char*           key,
     _idle_id = g_idle_add_full(G_PRIORITY_LOW, (GSourceFunc)Loop, this, NULL);
     _idle_start_time = g_get_monotonic_time();
   }
+
+  return task->handle;
 }
 
 char*

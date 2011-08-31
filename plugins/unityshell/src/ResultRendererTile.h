@@ -29,6 +29,7 @@
 #include <NuxCore/Property.h>
 #include "Nux/TextureArea.h"
 #include "NuxImage/CairoGraphics.h"
+#include "IconLoader.h"
 
 #include "ResultRenderer.h"
 
@@ -49,23 +50,16 @@ public:
   virtual void Unload(Result& row);  // unload any previous grabbed images
 
 private:
-  void LoadText(std::string& text);
-  void LoadIcon(std::string& icon_hint);
+  void LoadText(std::string& text, Result& row);
+  void LoadIcon(std::string& icon_hint, Result& row);
 
   //icon loading callbacks
-  void IconLoaded(const char* texid, guint size, GdkPixbuf* pixbuf, std::string icon_name);
+  void IconLoaded(const char* texid, guint size, GdkPixbuf* pixbuf, std::string icon_name, Result& row, std::string uri);
   void CreateTextureCallback(const char* texid, int width, int height, nux::BaseTexture** texture, GdkPixbuf* pixbuf);
   void CreateBlurredTextureCallback(const char* texid, int width, int height, nux::BaseTexture** texture, GdkPixbuf* pixbuf);
   void DrawHighlight(const char* texid, int width, int height, nux::BaseTexture** texture);
 
-  typedef std::map<std::string, nux::BaseTexture*> LocalTextureCache;
-
-  LocalTextureCache icon_cache_;
-  LocalTextureCache blurred_icon_cache_;
-  LocalTextureCache text_cache_;
   nux::BaseTexture* prelight_cache_;
-  std::map<std::string, uint> currently_loading_icons_;
-
 };
 
 }

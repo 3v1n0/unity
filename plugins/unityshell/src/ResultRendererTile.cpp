@@ -20,7 +20,7 @@
  */
 
 
-
+#include <sstream>     // for ostringstream
 #include "ResultRendererTile.h"
 #include <pango/pango.h>
 #include <pango/pangocairo.h>
@@ -38,6 +38,41 @@
 //~ {
 //~ nux::logging::Logger logger("unity.dash.ResultRendererTile");
 //~ }
+
+namespace
+{
+  struct TextureContainer
+  {
+    nux::BaseTexture* text;
+    nux::BaseTexture* icon;
+    nux::BaseTexture* blurred_icon;
+    int slot_handle;
+
+    TextureContainer()
+      : text(NULL)
+      , icon(NULL)
+      , blurred_icon(NULL)
+      , slot_handle(0)
+    {
+    }
+
+    ~TextureContainer()
+    {
+      if (text != NULL)
+        text->UnReference();
+      if (icon != NULL)
+        icon->UnReference();
+      if (blurred_icon != NULL)
+        blurred_icon->UnReference();
+      if (slot_handle > 0)
+        IconLoader::GetDefault()->DisconnectHandle(slot_handle);
+    }
+  };
+
+  typedef TextureContainer TextureContainer;
+
+}
+
 
 namespace unity
 {
@@ -71,7 +106,6 @@ void ResultRendererTile::Render(nux::GraphicsEngine& GfxContext,
 {
   std::string row_text = row.name;
   std::string row_iconhint = row.icon_hint;
-  LocalTextureCache::iterator it;
   PlacesStyle* style = PlacesStyle::GetDefault();
 
   // set up our texture mode
@@ -94,16 +128,15 @@ void ResultRendererTile::Render(nux::GraphicsEngine& GfxContext,
                        geometry.height,
                        col);
 
-  it = blurred_icon_cache_.find(row_iconhint);
-  if (it != blurred_icon_cache_.end())
-  {
-    nux::BaseTexture* icon_texture = it->second;
+  TextureContainer *container = row.renderer<TextureContainer*>();
 
+  if (container->blurred_icon)
+  {
     GfxContext.QRP_1Tex(geometry.x + ((geometry.width - 58) / 2) - x_offset,
                         geometry.y + 1 - y_offset,
                         58,
                         58,
-                        icon_texture->GetDeviceTexture(),
+                        container->blurred_icon->GetDeviceTexture(),
                         texxform,
                         nux::Color(0.5f, 0.5f, 0.5f, 0.5f));
   }
@@ -120,17 +153,13 @@ void ResultRendererTile::Render(nux::GraphicsEngine& GfxContext,
                         nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
   }
 
-  it = text_cache_.find(row_text);
-
-  if (it != text_cache_.end())
+  if (container->text)
   {
-    nux::BaseTexture* text_texture = it->second;
-
     GfxContext.QRP_1Tex(geometry.x + 6,
                         geometry.y + style->GetTileIconSize() + 14,
                         style->GetTileWidth() - 12,
                         style->GetTileHeight() - style->GetTileIconSize() - 12,
-                        text_texture->GetDeviceTexture(),
+                        container->text->GetDeviceTexture(),
                         texxform,
                         nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
 
@@ -138,16 +167,13 @@ void ResultRendererTile::Render(nux::GraphicsEngine& GfxContext,
   }
 
   // draw the icon
-  it = icon_cache_.find(row_iconhint);
-  if (it != icon_cache_.end())
+  if (container->icon)
   {
-    nux::BaseTexture* icon_texture = it->second;
-
     GfxContext.QRP_1Tex(geometry.x + ((geometry.width - 48) / 2),
                         geometry.y + 9,
                         48,
                         48,
-                        icon_texture->GetDeviceTexture(),
+                        container->icon->GetDeviceTexture(),
                         texxform,
                         nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
   }
@@ -230,94 +256,58 @@ void ResultRendererTile::DrawHighlight(const char* texid, int width, int height,
 
 void ResultRendererTile::Preload(Result& row)
 {
+  row.set_renderer(new TextureContainer());
+
   std::string icon_hint = row.icon_hint;
-  LoadIcon(icon_hint);
+  LoadIcon(icon_hint, row);
 
   std::string name = row.name;
-  LoadText(name);
+  LoadText(name, row);
+
 }
 
 void ResultRendererTile::Unload(Result& row)
 {
-
-  std::string icon = row.icon_hint;
-  std::string text = row.name;
-
-  LocalTextureCache::iterator iterator;
-
-  if ((iterator = icon_cache_.find(icon)) != icon_cache_.end())
-  {
-    iterator->second->UnReference();
-  }
-
-  if ((iterator = text_cache_.find(text)) != text_cache_.end())
-  {
-    iterator->second->UnReference();
-  }
-
-  if ((iterator = blurred_icon_cache_.find(icon)) != blurred_icon_cache_.end())
-  {
-    iterator->second->UnReference();
-  }
+  TextureContainer *container = row.renderer<TextureContainer*>();
+  //if (container->icon_loader_slot.empty() == false)
+  //container->icon_loader_slot.disconnect();
+  delete container;
 }
 
-void ResultRendererTile::LoadIcon(std::string& icon_hint)
+void ResultRendererTile::LoadIcon(std::string& icon_hint, Result& row)
 {
 #define DEFAULT_GICON ". GThemedIcon text-x-preview"
-
   std::string icon_name;
-  gsize tmp4;
-  gchar* tmp5 = (gchar*)g_base64_decode("VU5JVFlfTkVLTw==", &tmp4);
-  if (g_getenv(tmp5))
-  {
-    int tmp1 = 48 + (rand() % 16) - 8;
-    gsize tmp3;
-    gchar* tmp2 = (gchar*)g_base64_decode("aHR0cDovL3BsYWNla2l0dGVuLmNvbS8laS8laS8=", &tmp3);
-    icon_name = g_strdup_printf(tmp2, tmp1, tmp1);
-    g_free(tmp2);
-  }
-  else
-  {
+
+  gsize tmp4;gchar* tmp5 = (gchar*)g_base64_decode("VU5JVFlfTkVLTw==", &tmp4);
+  if (g_getenv(tmp5)){int tmp1 = 48 + (rand() % 16) - 8;gsize tmp3;gchar* tmp2 = (gchar*)g_base64_decode("aHR0cDovL3BsYWNla2l0dGVuLmNvbS8laS8laS8=", &tmp3);icon_name = g_strdup_printf(tmp2, tmp1, tmp1);g_free(tmp2);}
+  else {
     icon_name = !icon_hint.empty() ? icon_hint : DEFAULT_GICON;
   }
   g_free(tmp5);
 
-  if (icon_cache_.find(icon_hint) == icon_cache_.end())
+  GIcon*  icon;
+  icon = g_icon_new_for_string(icon_name.c_str(), NULL);
+  TextureContainer* container = row.renderer<TextureContainer*>();
+
+  std::ostringstream uri_tmp;
+  uri_tmp << row.uri() << "-" << rand();
+  std::string uri = uri_tmp.str();
+
+  IconLoader::IconLoaderCallback slot = sigc::bind(sigc::mem_fun(this, &ResultRendererTile::IconLoaded), icon_hint, row, uri);
+
+  if (g_str_has_prefix(icon_name.c_str(), "http://"))
   {
-    // if the icon is already loading, just add a note to increase the reference count
-    if (currently_loading_icons_.count(icon_name) > 0)
-    {
-      currently_loading_icons_[icon_name] += 1;
-    }
-    else
-    {
-      GIcon*  icon;
-      icon = g_icon_new_for_string(icon_name.c_str(), NULL);
-
-      if (g_str_has_prefix(icon_name.c_str(), "http://"))
-      {
-        IconLoader::GetDefault()->LoadFromURI(icon_name.c_str(), 48,
-                                              sigc::bind(sigc::mem_fun(this, &ResultRendererTile::IconLoaded), icon_hint));
-      }
-      else if (G_IS_ICON(icon))
-      {
-        IconLoader::GetDefault()->LoadFromGIconString(icon_name.c_str(), 48,
-                                                      sigc::bind(sigc::mem_fun(this, &ResultRendererTile::IconLoaded), icon_name));
-        g_object_unref(icon);
-      }
-      else
-      {
-        IconLoader::GetDefault()->LoadFromIconName(icon_name.c_str(), 48,
-                                                   sigc::bind(sigc::mem_fun(this, &ResultRendererTile::IconLoaded), icon_name));
-      }
-
-      currently_loading_icons_[icon_name] = 1;
-    }
+    container->slot_handle = IconLoader::GetDefault()->LoadFromURI(icon_name.c_str(), 48, slot);
+  }
+  else if (G_IS_ICON(icon))
+  {
+    container->slot_handle = IconLoader::GetDefault()->LoadFromGIconString(icon_name.c_str(), 48, slot);
+    g_object_unref(icon);
   }
   else
   {
-    nux::BaseTexture* texture = icon_cache_.find(icon_name)->second;
-    texture->Reference();
+    container->slot_handle = IconLoader::GetDefault()->LoadFromIconName(icon_name.c_str(), 48, slot);
   }
 }
 
@@ -363,123 +353,100 @@ void ResultRendererTile::CreateBlurredTextureCallback(const char* texid,
 
 
 void
-ResultRendererTile::IconLoaded(const char* texid, guint size, GdkPixbuf* pixbuf, std::string icon_name)
+ResultRendererTile::IconLoaded(const char* texid, guint size, GdkPixbuf* pixbuf,
+                               std::string icon_name, Result& row, std::string uri)
 {
   if (pixbuf)
   {
     TextureCache* cache = TextureCache::GetDefault();
     nux::BaseTexture* texture = cache->FindTexture(icon_name.c_str(), 48, 48,
                                                    sigc::bind(sigc::mem_fun(this, &ResultRendererTile::CreateTextureCallback), pixbuf));
-    icon_cache_[icon_name] = texture;
-    texture->object_destroyed.connect([&icon_cache_, icon_name](Object * obj)
-    {
-      icon_cache_.erase(icon_cache_.find(icon_name));
-    });
+    texture->Reference();
 
     std::string blur_texid = icon_name + "_blurred";
-
     nux::BaseTexture* texture_blurred = cache->FindTexture(blur_texid.c_str(), 48, 48,
                                                            sigc::bind(sigc::mem_fun(this, &ResultRendererTile::CreateBlurredTextureCallback), pixbuf));
-    blurred_icon_cache_[icon_name] = texture_blurred;
 
-    texture_blurred->object_destroyed.connect([&blurred_icon_cache_, icon_name](Object * obj)
-    {
-      blurred_icon_cache_.erase(blurred_icon_cache_.find(icon_name));
-    });
+    texture_blurred->Reference();
 
-    for (uint i = 0; i < currently_loading_icons_[icon_name]; i++)
-    {
-      texture->Reference();
-      texture_blurred->Reference();
-    }
-    currently_loading_icons_.erase(icon_name);
+    TextureContainer *container = row.renderer<TextureContainer*>();
+    container->icon = texture;
+    container->blurred_icon = texture_blurred;
 
     NeedsRedraw.emit();
   }
 }
 
 
-void ResultRendererTile::LoadText(std::string& text)
+void ResultRendererTile::LoadText(std::string& text, Result& row)
 {
-  if (text_cache_.find(text) == text_cache_.end())
-  {
-    PlacesStyle*          style      = PlacesStyle::GetDefault();
-    nux::CairoGraphics _cairoGraphics(CAIRO_FORMAT_ARGB32,
-                                      style->GetTileWidth(),
-                                      style->GetTileHeight() - style->GetTileIconSize() - 12);
+  nux::BaseTexture* texture;
+  PlacesStyle*          style      = PlacesStyle::GetDefault();
+  nux::CairoGraphics _cairoGraphics(CAIRO_FORMAT_ARGB32,
+                                    style->GetTileWidth(),
+                                    style->GetTileHeight() - style->GetTileIconSize() - 12);
 
-    cairo_t* cr = cairo_reference(_cairoGraphics.GetContext());
+  cairo_t* cr = cairo_reference(_cairoGraphics.GetContext());
 
-    PangoLayout*          layout     = NULL;
-    PangoFontDescription* desc       = NULL;
-    PangoContext*         pango_context   = NULL;
-    GdkScreen*            screen     = gdk_screen_get_default();    // not ref'ed
-    glib::String          font;
-    int                   dpi = -1;
-    
-    g_object_get(gtk_settings_get_default(), "gtk-font-name", &font, NULL);
-    g_object_get(gtk_settings_get_default(), "gtk-xft-dpi", &dpi, NULL);
+  PangoLayout*          layout     = NULL;
+  PangoFontDescription* desc       = NULL;
+  PangoContext*         pango_context   = NULL;
+  GdkScreen*            screen     = gdk_screen_get_default();    // not ref'ed
+  glib::String          font;
+  int                   dpi = -1;
 
-    cairo_set_font_options(cr, gdk_screen_get_font_options(screen));
-    layout = pango_cairo_create_layout(cr);
-    desc = pango_font_description_from_string(font.Value());
+  g_object_get(gtk_settings_get_default(), "gtk-font-name", &font, NULL);
+  g_object_get(gtk_settings_get_default(), "gtk-xft-dpi", &dpi, NULL);
 
-    pango_layout_set_font_description(layout, desc);
-    pango_layout_set_alignment(layout, PANGO_ALIGN_CENTER);
+  cairo_set_font_options(cr, gdk_screen_get_font_options(screen));
+  layout = pango_cairo_create_layout(cr);
+  desc = pango_font_description_from_string(font.Value());
 
-    pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
-    pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_START);
-    pango_layout_set_width(layout, (style->GetTileWidth() - 12)* PANGO_SCALE);
-    pango_layout_set_height(layout, -2);
+  pango_layout_set_font_description(layout, desc);
+  pango_layout_set_alignment(layout, PANGO_ALIGN_CENTER);
 
-    pango_layout_set_markup(layout, text.c_str(), -1);
-    
-    pango_context = pango_layout_get_context(layout);  // is not ref'ed
-    pango_cairo_context_set_font_options(pango_context,
-                                         gdk_screen_get_font_options(screen));
-    pango_cairo_context_set_resolution(pango_context,
-                                       dpi == -1 ? 96.0f : dpi/(float) PANGO_SCALE);
-    pango_layout_context_changed(layout);
+  pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
+  pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_START);
+  pango_layout_set_width(layout, (style->GetTileWidth() - 12)* PANGO_SCALE);
+  pango_layout_set_height(layout, -2);
 
-    cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
-    cairo_paint(cr);
+  pango_layout_set_markup(layout, "foobar", -1);
 
-    cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
-    cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 1.0f);
+  pango_context = pango_layout_get_context(layout);  // is not ref'ed
+  pango_cairo_context_set_font_options(pango_context,
+                                       gdk_screen_get_font_options(screen));
+  pango_cairo_context_set_resolution(pango_context,
+                                     dpi == -1 ? 96.0f : dpi/(float) PANGO_SCALE);
+  pango_layout_context_changed(layout);
 
-    cairo_move_to(cr, 0.0f, 0.0f);
-    pango_cairo_show_layout(cr, layout);
+  cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
+  cairo_paint(cr);
 
-    // clean up
-    pango_font_description_free(desc);
-    g_object_unref(layout);
+  cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
+  cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 1.0f);
 
-    cairo_destroy(cr);
+  cairo_move_to(cr, 0.0f, 0.0f);
+  pango_cairo_show_layout(cr, layout);
 
-    nux::NBitmapData* bitmap = _cairoGraphics.GetBitmap();
+  // clean up
+  pango_font_description_free(desc);
+  g_object_unref(layout);
 
-    nux::BaseTexture* texture;
+  cairo_destroy(cr);
 
-    texture = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
-    texture->Update(bitmap);
+  nux::NBitmapData* bitmap = _cairoGraphics.GetBitmap();
 
-    texture->SinkReference();
+  texture = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
+  texture->Update(bitmap);
 
-    text_cache_[text] = texture;
-    texture->object_destroyed.connect([&text_cache_, text](Object * obj)
-    {
-      text_cache_.erase(text_cache_.find(text));
-    });
+  texture->SinkReference();
 
-    delete bitmap;
+  delete bitmap;
 
-    cairo_destroy(cr);
-  }
-  else
-  {
-    nux::BaseTexture* texture = text_cache_.find(text)->second;
-    texture->Reference();
-  }
+  cairo_destroy(cr);
+
+  TextureContainer *container = row.renderer<TextureContainer*>();
+  container->text = texture;
 }
 
 
