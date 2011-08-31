@@ -72,6 +72,7 @@ private:
   GdkWindow* client_window_;
   bool im_enabled_;
   bool im_active_;
+  bool focused_;
 };
 
 }

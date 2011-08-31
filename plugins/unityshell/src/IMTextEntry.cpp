@@ -44,15 +44,15 @@ IMTextEntry::IMTextEntry()
   , client_window_(0)
   , im_enabled_(false)
   , im_active_(false)
+  , focused_(false)
 {
+  g_setenv("IBUS_ENABLE_SYNC_MODE", "1", TRUE);
   CheckIMEnabled();
-  //FIXME: Make event forwarding work before enabling
-  // im_enabled_ ? SetupMultiIM() : SetupSimpleIM();
-  im_enabled_ = false;
-  SetupSimpleIM();
+  im_enabled_ ? SetupMultiIM() : SetupSimpleIM();
 
-  FocusChanged.connect(sigc::mem_fun(this, &IMTextEntry::OnFocusChanged));
-  OnKeyNavFocusChange.connect(sigc::mem_fun(this, &IMTextEntry::OnFocusChanged));
+  begin_key_focus.connect([&] () { focused_ = true; gtk_im_context_focus_in(im_context_);});
+  end_key_focus.connect([&] () { focused_ = false; gtk_im_context_focus_out(im_context_);});
+
   mouse_up.connect(sigc::mem_fun(this, &IMTextEntry::OnMouseButtonUp));
 }
 
@@ -143,7 +143,7 @@ inline void IMTextEntry::CheckValidClientWindow(Window window)
     client_window_ = gdk_x11_window_foreign_new_for_display(gdk_display_get_default(), window);
     gtk_im_context_set_client_window(im_context_, client_window_);
 
-    if (GetFocused())
+    if (focused_)
     {
       gtk_im_context_focus_in(im_context_);
     }
@@ -155,6 +155,7 @@ void IMTextEntry::KeyEventToGdkEventKey(Event& event, GdkEventKey& gdk_event)
   gdk_event.type = event.e_event == nux::NUX_KEYDOWN ? GDK_KEY_PRESS : GDK_KEY_RELEASE;
 
   gdk_event.window = client_window_;
+  gdk_event.window = 0;
   gdk_event.send_event = FALSE;
   gdk_event.time = event.e_x11_timestamp;
   gdk_event.state = event.e_x11_state;
@@ -233,9 +234,9 @@ void IMTextEntry::Paste()
 void IMTextEntry::OnFocusChanged(nux::Area* area)
 {
 
-  LOG_DEBUG(logger) << "Focus changed " << boost::lexical_cast<bool>(GetFocused());
+  LOG_DEBUG(logger) << "Focus changed " << boost::lexical_cast<bool>(focused_);
 
-  if (GetFocused())
+  if (focused_)
   {
     gtk_im_context_focus_in(im_context_);
   }
