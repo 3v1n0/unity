@@ -50,9 +50,8 @@ IMTextEntry::IMTextEntry()
   CheckIMEnabled();
   im_enabled_ ? SetupMultiIM() : SetupSimpleIM();
 
-  begin_key_focus.connect([&] () { focused_ = true; gtk_im_context_focus_in(im_context_);});
-  end_key_focus.connect([&] () { focused_ = false; gtk_im_context_focus_out(im_context_);});
-
+  begin_key_focus.connect(sigc::mem_fun(this, &IMTextEntry::OnFocusIn));
+  end_key_focus.connect(sigc::mem_fun(this, &IMTextEntry::OnFocusOut));
   mouse_up.connect(sigc::mem_fun(this, &IMTextEntry::OnMouseButtonUp));
 }
 
@@ -118,6 +117,8 @@ bool IMTextEntry::InspectKeyEvent(unsigned int event_type,
     text_input_mode_ = event_type == NUX_KEYDOWN;
     propagate_event = TextEntry::InspectKeyEvent(event_type, keysym, character);
     text_input_mode_ = false;
+
+    UpdateCursorLocation();
   }
   return propagate_event;
 }
@@ -222,28 +223,13 @@ void IMTextEntry::Paste()
 {
   GtkClipboard* clip = gtk_clipboard_get_for_display(gdk_display_get_default(),
                                                      GDK_SELECTION_CLIPBOARD);
-  gtk_clipboard_request_text(clip, [](GtkClipboard* clip, const char* text, gpointer user_data)
+  auto callback = [](GtkClipboard* clip, const char* text, gpointer user_data)
    {
      IMTextEntry* self = static_cast<IMTextEntry*>(user_data);
      self->OnCommit (self->im_context_, const_cast<char*>(text));
-   },
-   this);
-}
+   };
 
-void IMTextEntry::OnFocusChanged(nux::Area* area)
-{
-
-  LOG_DEBUG(logger) << "Focus changed " << boost::lexical_cast<bool>(focused_);
-
-  if (focused_)
-  {
-    gtk_im_context_focus_in(im_context_);
-  }
-  else
-  {
-    gtk_im_context_focus_out(im_context_);
-    gtk_im_context_reset(im_context_);
-  }
+  gtk_clipboard_request_text(clip, callback, this);
 }
 
 void IMTextEntry::OnCommit(GtkIMContext* context, char* str)
@@ -256,6 +242,7 @@ void IMTextEntry::OnCommit(GtkIMContext* context, char* str)
     int cursor = cursor_;
     SetText(new_text.c_str());
     SetCursor(cursor + strlen(str));
+    UpdateCursorLocation();
   }
 }
 
@@ -286,6 +273,30 @@ void IMTextEntry::OnPreeditEnd(GtkIMContext* context)
   gtk_im_context_reset(im_context_);
 
   LOG_DEBUG(logger) << "Preedit ended";
+}
+
+void IMTextEntry::OnFocusIn()
+{
+  focused_ = true;
+  gtk_im_context_focus_in(im_context_);
+  gtk_im_context_reset(im_context_);
+  UpdateCursorLocation();
+}
+
+void IMTextEntry::OnFocusOut()
+{
+  focused_ = false;
+  gtk_im_context_focus_out(im_context_);
+}
+
+void IMTextEntry::UpdateCursorLocation()
+{
+  nux::Rect strong, weak;
+  GetCursorRects(&strong, &weak);
+  nux::Geometry geo = GetGeometry();
+  
+  GdkRectangle area = { strong.x + geo.x, strong.y + geo.y, strong.width, strong.height };
+  gtk_im_context_set_cursor_location(im_context_, &area);
 }
 
 void IMTextEntry::OnMouseButtonUp(int x, int y, unsigned long bflags, unsigned long kflags)

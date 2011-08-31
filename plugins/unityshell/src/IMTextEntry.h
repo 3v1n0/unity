@@ -58,11 +58,14 @@ private:
   void Copy();
   void Paste();
 
-  void OnFocusChanged(nux::Area* area);
   void OnCommit(GtkIMContext* context, char* str);
   void OnPreeditChanged(GtkIMContext* context);
   void OnPreeditStart(GtkIMContext* context);
   void OnPreeditEnd(GtkIMContext* context);
+
+  void OnFocusIn();
+  void OnFocusOut();
+  void UpdateCursorLocation();
 
   void OnMouseButtonUp(int x, int y, unsigned long bflags, unsigned long kflags);
 
