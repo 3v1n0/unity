@@ -41,17 +41,15 @@
 
 #include "PlacesSimpleTile.h"
 #include "PlacesStyle.h"
+#include <UnityCore/GLibWrapper.h>
 #include <UnityCore/Variant.h>
 
 #include <string>
 #include <vector>
 
-#define DESKTOP_DIR  "/desktop/gnome/applications"
-#define BROWSER_DIR  DESKTOP_DIR"/browser"
-#define MAIL_DIR     "/desktop/gnome/url-handlers/mailto"
-#define MEDIA_DIR    DESKTOP_DIR"/media"
-
 #define DELTA_DOUBLE_REQUEST 500000000
+
+using namespace unity;
 
 enum
 {
@@ -101,47 +99,14 @@ PlacesHomeView::PlacesHomeView()
   _layout->SetChildrenSize(style->GetHomeTileWidth(), style->GetHomeTileHeight());
   _layout->EnablePartialVisibility(false);
   _layout->SetHeightMatchContent(true);
-  //_layout->SetVerticalExternalMargin(24);
   _layout->SetHorizontalExternalMargin(32);
   _layout->SetVerticalInternalMargin(32);
   _layout->SetHorizontalInternalMargin(32);
   _layout->SetMinMaxSize((style->GetHomeTileWidth() * 4) + (32 * 5),
                          (style->GetHomeTileHeight() * 2) + 32);
 
-  _client = gconf_client_get_default();
-  gconf_client_add_dir(_client,
-                       BROWSER_DIR,
-                       GCONF_CLIENT_PRELOAD_NONE,
-                       NULL);
-  gconf_client_add_dir(_client,
-                       MAIL_DIR,
-                       GCONF_CLIENT_PRELOAD_NONE,
-                       NULL);
-  gconf_client_add_dir(_client,
-                       MEDIA_DIR,
-                       GCONF_CLIENT_PRELOAD_NONE,
-                       NULL);
-  _browser_gconf_notify = gconf_client_notify_add(_client,
-                                                  BROWSER_DIR"/exec",
-                                                  (GConfClientNotifyFunc)OnKeyChanged,
-                                                  this,
-                                                  NULL, NULL);
-  _mail_gconf_notify =  gconf_client_notify_add(_client,
-                                                MAIL_DIR"/command",
-                                                (GConfClientNotifyFunc)OnKeyChanged,
-                                                this,
-                                                NULL, NULL);
-  _media_gconf_notify = gconf_client_notify_add(_client,
-                                                MEDIA_DIR"/exec",
-                                                (GConfClientNotifyFunc)OnKeyChanged,
-                                                this,
-                                                NULL, NULL);
-
-  _last_activate_time.tv_sec = 0;
-  _last_activate_time.tv_nsec = 0;
-
   _ubus_handle = ubus_server_register_interest(ubus_server_get_default(),
-                                               UBUS_DASH_EXTERNAL_ACTIVATION,
+                                               UBUS_PLACE_VIEW_SHOWN,
                                                (UBusCallback) &PlacesHomeView::DashVisible,
                                                this);
 
@@ -175,47 +140,14 @@ PlacesHomeView::PlacesHomeView()
 
 PlacesHomeView::~PlacesHomeView()
 {
-  g_object_unref(_client);
-
   if (_ubus_handle != 0)
     ubus_server_unregister_interest(ubus_server_get_default(), _ubus_handle);
-
-  if (_browser_gconf_notify)
-    gconf_client_notify_remove(_client, _browser_gconf_notify);
-  if (_mail_gconf_notify)
-    gconf_client_notify_remove(_client, _mail_gconf_notify);
-  if (_media_gconf_notify)
-    gconf_client_notify_remove(_client, _media_gconf_notify);
-  gconf_client_remove_dir(_client, BROWSER_DIR, NULL);
-  gconf_client_remove_dir(_client, MAIL_DIR, NULL);
-  gconf_client_remove_dir(_client, MEDIA_DIR, NULL);
 }
 
 void
 PlacesHomeView::DashVisible(GVariant* data, void* val)
 {
   PlacesHomeView* self = (PlacesHomeView*)val;
-
-  struct timespec event_time, delta;
-  clock_gettime(CLOCK_MONOTONIC, &event_time);
-  delta = self->time_diff(self->_last_activate_time, event_time);
-
-  self->_last_activate_time.tv_sec = event_time.tv_sec;
-  self->_last_activate_time.tv_nsec = event_time.tv_nsec;
-
-  // FIXME: this should be handled by ubus (not sending the request twice
-  // for some selected ones). Too intrusive for now.
-  if (!((delta.tv_sec == 0) && (delta.tv_nsec < DELTA_DOUBLE_REQUEST)))
-    self->Refresh();
-
-}
-
-void
-PlacesHomeView::OnKeyChanged(GConfClient*    client,
-                             guint           cnxn_id,
-                             GConfEntry*     entry,
-                             PlacesHomeView* self)
-{
   self->Refresh();
 }
 
@@ -279,26 +211,18 @@ PlacesHomeView::Refresh(PlacesGroup*foo)
   g_free(markup);
 
   // Browser
-  markup = gconf_client_get_string(_client, BROWSER_DIR"/exec", NULL);
-  CreateShortcutFromExec(markup, _("Browse the Web"), _browser_alternatives);
-  g_free(markup);
+  CreateShortcutFromMime("x-scheme-handler/http", _("Browse the Web"), _browser_alternatives);
 
   // Photos
   // FIXME: Need to figure out the default
   CreateShortcutFromExec("shotwell", _("View Photos"), _photo_alternatives);
 
-  // Email
-  markup = gconf_client_get_string(_client, MAIL_DIR"/command", NULL);
-  // get the first word on key (the executable name itself)
-  gchar** temp_array = g_strsplit(markup, " ", 0);
-  g_free(markup);
-  CreateShortcutFromExec(temp_array[0], _("Check Email"), _email_alternatives);
-  g_strfreev(temp_array);
+  CreateShortcutFromMime("x-scheme-handler/mailto", _("Check Email"), _email_alternatives);
 
-  // Music
-  markup = gconf_client_get_string(_client, MEDIA_DIR"/exec", NULL);
-  CreateShortcutFromExec(markup, _("Listen to Music"), _music_alternatives);
-  g_free(markup);
+  CreateShortcutFromMime("audio/x-vorbis+ogg", _("Listen to Music"), _music_alternatives);
+
+  SetExpanded(true);
+  SetCounts(8, 8);
 
   QueueDraw();
   _layout->QueueDraw();
@@ -373,6 +297,41 @@ PlacesHomeView::CreateShortcutFromExec(const char* exec,
   g_free(markup);
 }
 
+void PlacesHomeView::CreateShortcutFromMime(const char* mime,
+                                            const char* name,
+                                            std::vector<std::string>& alternatives)
+{
+  PlacesStyle* style = PlacesStyle::GetDefault();
+  GAppInfo* info = g_app_info_get_default_for_type(mime, FALSE);
+
+  // If it was invalid check alternatives for backup
+  if (!G_IS_DESKTOP_APP_INFO(info))
+  {
+    for (auto alt: alternatives)
+    {
+      std::string id = alt + ".desktop";
+      info = G_APP_INFO(g_desktop_app_info_new(id.c_str()));
+      
+      if (G_IS_DESKTOP_APP_INFO(info))
+        break;
+    }
+  }
+
+  if (G_IS_DESKTOP_APP_INFO(info))
+  {
+    glib::String icon(g_icon_to_string(g_app_info_get_icon(G_APP_INFO(info))));
+    glib::String markup(g_strdup_printf("<big>%s</big>", name));
+    
+    Shortcut*   shortcut = new Shortcut(icon.Value(), markup.Value(), style->GetHomeTileIconSize());
+    shortcut->_id = TYPE_EXEC;
+    shortcut->_exec = g_strdup (g_app_info_get_executable(G_APP_INFO(info)));;
+    shortcut->sigClick.connect(sigc::mem_fun(this, &PlacesHomeView::OnShortcutClicked));
+    _layout->AddView(shortcut, 1, nux::eLeft, nux::eFull);
+
+    g_object_unref(info);
+  }
+}
+
 void
 PlacesHomeView::OnShortcutClicked(PlacesTile* tile)
 {
@@ -423,19 +382,3 @@ void PlacesHomeView::AddProperties(GVariantBuilder* builder)
   unity::variant::BuilderWrapper(builder).add(GetGeometry());
 }
 
-// TODO: put that in some "util" toolbox
-struct timespec PlacesHomeView::time_diff(struct timespec start, struct timespec end)
-{
-  struct timespec temp;
-  if ((end.tv_nsec - start.tv_nsec) < 0)
-  {
-    temp.tv_sec = end.tv_sec - start.tv_sec - 1;
-    temp.tv_nsec = 1000000000 + end.tv_nsec - start.tv_nsec;
-  }
-  else
-  {
-    temp.tv_sec = end.tv_sec - start.tv_sec;
-    temp.tv_nsec = end.tv_nsec - start.tv_nsec;
-  }
-  return temp;
-}
