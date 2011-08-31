@@ -266,6 +266,10 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
 
   layout->SetContentDistribution(nux::eStackCenter);
 
+  nux::BaseTexture *background = nux::CreateTexture2DFromFile("/usr/share/backgrounds/Grey_day_by_Drew__.jpg", -1, true);
+  nux::GetGraphicsDisplay()->GetGpuDevice()->backup_texture0_ = background->GetDeviceTexture();
+
+
   g_timeout_add(1500, on_timeout, view);
 }
 
@@ -279,7 +283,7 @@ int main(int argc, char** argv)
 
   nux::NuxInitialize(0);
 
-  BackgroundEffectHelper::blur_type = unity::BLUR_NONE;
+  BackgroundEffectHelper::blur_type = unity::BLUR_ACTIVE;
   nux::WindowThread* wt = nux::CreateGUIThread(TEXT("Unity Switcher"), 1200, 500, 0, &ThreadWidgetInit, 0);
 
   wt->Run(NULL);
