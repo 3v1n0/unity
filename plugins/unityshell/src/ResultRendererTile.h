@@ -55,11 +55,24 @@ namespace dash
     ~TextureContainer()
     {
       if (text != NULL)
+      {
         text->UnReference();
+        if (text->GetReferenceCount() == 1) // because textures are made with an extra reference for bad reasons, we have to do this. its bad.
+          text->UnReference();
+      }
+
       if (icon != NULL)
+      {
         icon->UnReference();
+        if (icon->GetReferenceCount() == 1)
+          icon->UnReference();
+      }
       if (blurred_icon != NULL)
+      {
         blurred_icon->UnReference();
+        if (blurred_icon->GetReferenceCount() == 1)
+          blurred_icon->UnReference();
+      }
       if (slot_handle > 0)
         IconLoader::GetDefault()->DisconnectHandle(slot_handle);
     }
