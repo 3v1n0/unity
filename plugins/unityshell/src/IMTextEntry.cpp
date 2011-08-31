@@ -50,10 +50,6 @@ IMTextEntry::IMTextEntry()
   CheckIMEnabled();
   im_enabled_ ? SetupMultiIM() : SetupSimpleIM();
 
-  // We connect to both methods as they both give us varying results at diffrent
-  // times :-/
-  //begin_key_focus.connect(sigc::mem_fun(this, &IMTextEntry::OnFocusIn));
-  //end_key_focus.connect(sigc::mem_fun(this, &IMTextEntry::OnFocusOut));
   FocusChanged.connect([&] (nux::Area*) { GetFocused() ? OnFocusIn() : OnFocusOut(); });
   mouse_up.connect(sigc::mem_fun(this, &IMTextEntry::OnMouseButtonUp));
 }
@@ -157,7 +153,6 @@ inline void IMTextEntry::CheckValidClientWindow(Window window)
 void IMTextEntry::KeyEventToGdkEventKey(Event& event, GdkEventKey& gdk_event)
 {
   gdk_event.type = event.e_event == nux::NUX_KEYDOWN ? GDK_KEY_PRESS : GDK_KEY_RELEASE;
-
   gdk_event.window = client_window_;
   gdk_event.send_event = FALSE;
   gdk_event.time = event.e_x11_timestamp;
