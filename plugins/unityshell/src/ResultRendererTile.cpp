@@ -39,41 +39,6 @@
 //~ nux::logging::Logger logger("unity.dash.ResultRendererTile");
 //~ }
 
-namespace
-{
-  struct TextureContainer
-  {
-    nux::BaseTexture* text;
-    nux::BaseTexture* icon;
-    nux::BaseTexture* blurred_icon;
-    int slot_handle;
-
-    TextureContainer()
-      : text(NULL)
-      , icon(NULL)
-      , blurred_icon(NULL)
-      , slot_handle(0)
-    {
-    }
-
-    ~TextureContainer()
-    {
-      if (text != NULL)
-        text->UnReference();
-      if (icon != NULL)
-        icon->UnReference();
-      if (blurred_icon != NULL)
-        blurred_icon->UnReference();
-      if (slot_handle > 0)
-        IconLoader::GetDefault()->DisconnectHandle(slot_handle);
-    }
-  };
-
-  typedef TextureContainer TextureContainer;
-
-}
-
-
 namespace unity
 {
 namespace dash
@@ -110,7 +75,7 @@ void ResultRendererTile::Render(nux::GraphicsEngine& GfxContext,
 
   // set up our texture mode
   nux::TexCoordXForm texxform;
-  texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
+  //texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
   texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
 
 
@@ -262,15 +227,13 @@ void ResultRendererTile::Preload(Result& row)
   LoadIcon(icon_hint, row);
 
   std::string name = row.name;
-  LoadText(name, row);
+  LoadText(row);
 
 }
 
 void ResultRendererTile::Unload(Result& row)
 {
   TextureContainer *container = row.renderer<TextureContainer*>();
-  //if (container->icon_loader_slot.empty() == false)
-  //container->icon_loader_slot.disconnect();
   delete container;
 }
 
@@ -378,7 +341,7 @@ ResultRendererTile::IconLoaded(const char* texid, guint size, GdkPixbuf* pixbuf,
 }
 
 
-void ResultRendererTile::LoadText(std::string& text, Result& row)
+void ResultRendererTile::LoadText(Result& row)
 {
   nux::BaseTexture* texture;
   PlacesStyle*          style      = PlacesStyle::GetDefault();
@@ -410,7 +373,7 @@ void ResultRendererTile::LoadText(std::string& text, Result& row)
   pango_layout_set_width(layout, (style->GetTileWidth() - 12)* PANGO_SCALE);
   pango_layout_set_height(layout, -2);
 
-  pango_layout_set_markup(layout, "foobar", -1);
+  pango_layout_set_markup(layout, row.name().c_str(), -1);
 
   pango_context = pango_layout_get_context(layout);  // is not ref'ed
   pango_cairo_context_set_font_options(pango_context,
