@@ -75,7 +75,7 @@ void DNDCollectionWindow::Collect()
 }
 
 void DNDCollectionWindow::ProcessDndMove(int x, int y, std::list<char*> mimes)
-{    
+{
   // Hide the window as soon as possible.
   PushToBack();
   EnableInputWindow(false, "DNDCollectionWindow");

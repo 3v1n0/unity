@@ -27,6 +27,11 @@
 #include <sigc++/sigc++.h>
 
 namespace unity {
+
+/**
+ * DNDCollectionWindow makes it possible to collect drag and drop (dnd) data as
+ * soon as dnd starts and not when the mouse pointer enter the x window. 
+ **/
   
 class DNDCollectionWindow : public nux::BaseWindow
 {
