@@ -48,6 +48,7 @@ IMTextEntry::IMTextEntry()
   CheckIMEnabled();
   //FIXME: Make event forwarding work before enabling
   // im_enabled_ ? SetupMultiIM() : SetupSimpleIM();
+  im_enabled_ = false;
   SetupSimpleIM();
 
   FocusChanged.connect(sigc::mem_fun(this, &IMTextEntry::OnFocusChanged));
@@ -101,13 +102,16 @@ bool IMTextEntry::InspectKeyEvent(unsigned int event_type,
 {
   bool propagate_event = !(TryHandleEvent(event_type, keysym, character));
 
-  LOG_DEBUG(logger) << "Input method ("
+  LOG_DEBUG(logger) << "Input method "
                     << (im_enabled_ ? gtk_im_multicontext_get_context_id(GTK_IM_MULTICONTEXT(im_context_)) : "simple")
-                    << ") "
+                    << " "
                     << (propagate_event ? "did not handle " : "handled ") 
                     << "event ("
                     << (event_type == NUX_KEYDOWN ? "press" : "release")
                     << ") ";
+
+  if (propagate_event)
+    propagate_event = !TryHandleSpecial(event_type, keysym, character);
 
   if (propagate_event)
   {
@@ -163,6 +167,67 @@ void IMTextEntry::KeyEventToGdkEventKey(Event& event, GdkEventKey& gdk_event)
   gdk_event.hardware_keycode = event.e_x11_keycode;
   gdk_event.group = 0;
   gdk_event.is_modifier = 0;
+}
+
+bool IMTextEntry::TryHandleSpecial(unsigned int eventType, unsigned int keysym, const char* character)
+{
+  nux::Event event = nux::GetGraphicsThread()->GetWindow().GetCurrentEvent();
+  unsigned int keyval = keysym;
+  bool shift = (event.GetKeyState() & NUX_STATE_SHIFT);
+  bool ctrl = (event.GetKeyState() & NUX_STATE_CTRL);
+
+  if (eventType != NUX_KEYDOWN)
+    return false;
+
+  if (((keyval == NUX_VK_x) && ctrl && !shift) ||
+      ((keyval == NUX_VK_DELETE) && shift && !ctrl))
+  {
+    Cut();
+  }
+  else if (((keyval == NUX_VK_c) && ctrl && (!shift)) ||
+           ((keyval == NUX_VK_INSERT) && ctrl && (!shift)))
+  {
+    Copy();
+  }
+  else if (((keyval == NUX_VK_v) && ctrl && (!shift)) ||
+      ((keyval == NUX_VK_INSERT) && shift && (!ctrl)))
+  {
+    Paste();
+  }
+  else
+  {
+    return false;
+  }
+  return true;
+}
+
+void IMTextEntry::Cut()
+{
+  Copy();
+  DeleteSelection();
+}
+
+void IMTextEntry::Copy()
+{
+  int start=0, end=0;
+  if (GetSelectionBounds(&start, &end))
+  {
+    GtkClipboard* clip = gtk_clipboard_get_for_display(gdk_display_get_default(),
+                                                       GDK_SELECTION_CLIPBOARD);
+    gtk_clipboard_set_text(clip, _text.c_str() + start, end - start);
+  }
+}
+
+void IMTextEntry::Paste()
+{
+  GtkClipboard* clip = gtk_clipboard_get_for_display(gdk_display_get_default(),
+                                                     GDK_SELECTION_CLIPBOARD);
+  gtk_clipboard_request_text(clip, [](GtkClipboard* clip, const char* text, gpointer user_data)
+   {
+     IMTextEntry* self = static_cast<IMTextEntry*>(user_data);
+     self->OnCommit (self->im_context_, const_cast<char*>(text));
+   },
+   this);
 }
 
 void IMTextEntry::OnFocusChanged(nux::Area* area)
