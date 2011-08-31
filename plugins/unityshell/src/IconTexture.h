@@ -61,7 +61,7 @@ protected:
 private:
   void CreateTextureCallback(const char* texid, int width, int height, nux::BaseTexture** texture);
   void Refresh(GdkPixbuf* pixbuf);
-  void IconLoaded(const char* icon_name, guint size, GdkPixbuf* pixbuf);
+  void IconLoaded(std::string const& icon_name, unsigned size, GdkPixbuf* pixbuf);
 
   char* _icon_name;
   unsigned int _size;

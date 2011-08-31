@@ -22,6 +22,9 @@
 
 
 #include "ResultRendererTile.h"
+
+#include <boost/algorithm/string.hpp>
+
 #include <pango/pango.h>
 #include <pango/pangocairo.h>
 #include <gdk/gdk.h>
@@ -273,6 +276,7 @@ void ResultRendererTile::LoadIcon(std::string& icon_hint)
     int tmp1 = 48 + (rand() % 16) - 8;
     gsize tmp3;
     gchar* tmp2 = (gchar*)g_base64_decode("aHR0cDovL3BsYWNla2l0dGVuLmNvbS8laS8laS8=", &tmp3);
+    // FIXME: this leaks
     icon_name = g_strdup_printf(tmp2, tmp1, tmp1);
     g_free(tmp2);
   }
@@ -291,24 +295,23 @@ void ResultRendererTile::LoadIcon(std::string& icon_hint)
     }
     else
     {
-      GIcon*  icon;
-      icon = g_icon_new_for_string(icon_name.c_str(), NULL);
-
-      if (g_str_has_prefix(icon_name.c_str(), "http://"))
+      glib::Object<GIcon> icon(::g_icon_new_for_string(icon_name.c_str(), NULL));
+      auto slot = sigc::mem_fun(this, &ResultRendererTile::IconLoaded);
+      if (boost::starts_with(icon_name, "http://"))
       {
-        IconLoader::GetDefault()->LoadFromURI(icon_name.c_str(), 48,
-                                              sigc::bind(sigc::mem_fun(this, &ResultRendererTile::IconLoaded), icon_hint));
+        IconLoader::GetDefault().LoadFromURI(icon_name, 48,
+                                             sigc::bind(slot, icon_hint));
       }
-      else if (G_IS_ICON(icon))
+      else if (icon)
       {
-        IconLoader::GetDefault()->LoadFromGIconString(icon_name.c_str(), 48,
-                                                      sigc::bind(sigc::mem_fun(this, &ResultRendererTile::IconLoaded), icon_name));
+        IconLoader::GetDefault().LoadFromGIconString(icon_name, 48,
+                                                     sigc::bind(slot, icon_name));
         g_object_unref(icon);
       }
       else
       {
-        IconLoader::GetDefault()->LoadFromIconName(icon_name.c_str(), 48,
-                                                   sigc::bind(sigc::mem_fun(this, &ResultRendererTile::IconLoaded), icon_name));
+        IconLoader::GetDefault().LoadFromIconName(icon_name, 48,
+                                                  sigc::bind(slot, icon_name));
       }
 
       currently_loading_icons_[icon_name] = 1;
@@ -316,6 +319,7 @@ void ResultRendererTile::LoadIcon(std::string& icon_hint)
   }
   else
   {
+    // FIXME (maybe): I think this should be icon_hint.
     nux::BaseTexture* texture = icon_cache_.find(icon_name)->second;
     texture->Reference();
   }
@@ -363,7 +367,10 @@ void ResultRendererTile::CreateBlurredTextureCallback(const char* texid,
 
 
 void
-ResultRendererTile::IconLoaded(const char* texid, guint size, GdkPixbuf* pixbuf, std::string icon_name)
+ResultRendererTile::IconLoaded(std::string const& texid,
+                               unsigned size,
+                               GdkPixbuf* pixbuf,
+                               std::string const& icon_name)
 {
   if (pixbuf)
   {

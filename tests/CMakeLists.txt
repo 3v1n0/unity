@@ -305,6 +305,7 @@ add_executable (test-preview-applicaiton
                 ${UNITY_SRC}/StaticCairoText.cpp
                 ${UNITY_SRC}/TextureCache.cpp
                 ${UNITY_SRC}/DashStyle.cpp
+                ${UNITY_SRC}/Timer.cpp
                 )
 add_dependencies(test-preview-applicaiton unity-core-${UNITY_API_VERSION})
 
@@ -319,6 +320,7 @@ add_executable (test-preview-generic
                 ${UNITY_SRC}/StaticCairoText.cpp
                 ${UNITY_SRC}/TextureCache.cpp
                 ${UNITY_SRC}/DashStyle.cpp
+                ${UNITY_SRC}/Timer.cpp
                 )
 add_dependencies(test-preview-generic unity-core-${UNITY_API_VERSION})
 
@@ -335,6 +337,7 @@ add_executable (test-preview-music
                 ${UNITY_SRC}/StaticCairoText.cpp
                 ${UNITY_SRC}/TextureCache.cpp
                 ${UNITY_SRC}/DashStyle.cpp
+                ${UNITY_SRC}/Timer.cpp
                 )
 add_dependencies(test-preview-music unity-core-${UNITY_API_VERSION})
 
@@ -355,6 +358,7 @@ add_executable (test-result-view
                 ${UNITY_SRC}/Introspectable.cpp
                 ${UNITY_SRC}/StaticCairoText.cpp
                 ${UNITY_SRC}/TextureCache.cpp
+                ${UNITY_SRC}/Timer.cpp
                 ${UNITY_SRC}/DashStyle.cpp
                 ${UNITY_SRC}/ubus-server.cpp
                 ${UNITY_SRC}/ubus-server.h
@@ -425,7 +429,6 @@ if (${GTEST_FOUND} STREQUAL TRUE)
                  test_utils.h
                  test_ratings_filter.cpp
                  test_results.cpp
-                 test_timer.cpp
                  ${UNITY_SRC}/AbstractLauncherIcon.h
                  ${UNITY_SRC}/FavoriteStore.cpp
                  ${UNITY_SRC}/FavoriteStore.h

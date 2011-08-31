@@ -306,18 +306,18 @@ void ResultRendererHorizontalTile::LoadIcon(std::string& icon_hint)
 
       if (g_str_has_prefix(icon_name.c_str(), "http://"))
       {
-        IconLoader::GetDefault()->LoadFromURI(icon_name.c_str(), 48,
+        IconLoader::GetDefault().LoadFromURI(icon_name.c_str(), 48,
                                               sigc::bind(sigc::mem_fun(this, &ResultRendererHorizontalTile::IconLoaded), icon_hint));
       }
       else if (G_IS_ICON(icon))
       {
-        IconLoader::GetDefault()->LoadFromGIconString(icon_name.c_str(), 48,
+        IconLoader::GetDefault().LoadFromGIconString(icon_name.c_str(), 48,
                                                       sigc::bind(sigc::mem_fun(this, &ResultRendererHorizontalTile::IconLoaded), icon_name));
         g_object_unref(icon);
       }
       else
       {
-        IconLoader::GetDefault()->LoadFromIconName(icon_name.c_str(), 48,
+        IconLoader::GetDefault().LoadFromIconName(icon_name.c_str(), 48,
                                                    sigc::bind(sigc::mem_fun(this, &ResultRendererHorizontalTile::IconLoaded), icon_name));
       }
 
@@ -372,8 +372,10 @@ void ResultRendererHorizontalTile::CreateBlurredTextureCallback(const char* texi
 }
 
 
-void
-ResultRendererHorizontalTile::IconLoaded(const char* texid, guint size, GdkPixbuf* pixbuf, std::string icon_name)
+void ResultRendererHorizontalTile::IconLoaded(std::string const& texid,
+                                              unsigned size,
+                                              GdkPixbuf* pixbuf,
+                                              std::string const& icon_name)
 {
   if (pixbuf)
   {
@@ -383,7 +385,7 @@ ResultRendererHorizontalTile::IconLoaded(const char* texid, guint size, GdkPixbu
     icon_cache_[icon_name] = texture;
     texture->object_destroyed.connect([&icon_cache_, icon_name](Object * obj)
     {
-      icon_cache_.erase(icon_cache_.find(icon_name));
+      icon_cache_.erase(icon_name);
     });
 
     std::string blur_texid = icon_name + "_blurred";
@@ -394,7 +396,7 @@ ResultRendererHorizontalTile::IconLoaded(const char* texid, guint size, GdkPixbu
 
     texture_blurred->object_destroyed.connect([&blurred_icon_cache_, icon_name](Object * obj)
     {
-      blurred_icon_cache_.erase(blurred_icon_cache_.find(icon_name));
+      blurred_icon_cache_.erase(icon_name);
     });
 
     for (uint i = 0; i < currently_loading_icons_[icon_name]; i++)

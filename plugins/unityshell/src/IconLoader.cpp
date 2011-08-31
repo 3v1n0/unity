@@ -20,6 +20,7 @@
 #include "IconLoader.h"
 
 #include <queue>
+#include <sstream>
 
 #include <boost/algorithm/string.hpp>
 
@@ -273,14 +274,14 @@ bool IconLoader::Impl::ProcessTask(IconLoaderTask* task)
                       << " is not supported (" << task->data
                       << " " << task->size << ")";
   task->slot(task->data, task->size, nullptr);
-  retrun true;
+  return true;
 }
 
 bool IconLoader::Impl::ProcessIconNameTask(IconLoaderTask* task)
 {
   GdkPixbuf* pixbuf = nullptr;
   GtkIconInfo* info = gtk_icon_theme_lookup_icon(theme_,
-                                                 task->data,
+                                                 task->data.c_str(),
                                                  task->size,
                                                  (GtkIconLookupFlags)0);
   if (info)
@@ -314,12 +315,12 @@ bool IconLoader::Impl::ProcessGIconTask(IconLoaderTask* task)
   GdkPixbuf*   pixbuf = NULL;
 
   glib::Error error;
-  glib::Object<GIcon> icon(::g_icon_new_for_string(task->data, &error));
+  glib::Object<GIcon> icon(::g_icon_new_for_string(task->data.c_str(), &error));
 
   if (G_IS_FILE_ICON(icon.RawPtr()))
   {
     // [trasfer none]
-    GFile* file = ::g_file_icon_get_file(G_FILE_ICON(icon));
+    GFile* file = ::g_file_icon_get_file(G_FILE_ICON(icon.RawPtr()));
     glib::String uri(::g_file_get_uri(file));
 
     task->type = REQUEST_TYPE_URI;
@@ -381,7 +382,7 @@ bool IconLoader::Impl::ProcessGIconTask(IconLoaderTask* task)
 
 bool IconLoader::Impl::ProcessURITask(IconLoaderTask* task)
 {
-  glib::Object<GFile> file(g_file_new_for_uri(task->data));
+  glib::Object<GFile> file(g_file_new_for_uri(task->data.c_str()));
 
   g_file_load_contents_async(file,
                              NULL,
@@ -398,12 +399,12 @@ void IconLoader::Impl::ProcessURITaskReady(IconLoaderTask* task,
   GInputStream* stream = g_memory_input_stream_new_from_data(contents, length, NULL);
 
   glib::Error error;
-  glib::Object<GdkPixbuf> pixbuf = gdk_pixbuf_new_from_stream_at_scale(stream,
-                                                                       -1,
-                                                                       task->size,
-                                                                       true,
-                                                                       NULL,
-                                                                       &error);
+  glib::Object<GdkPixbuf> pixbuf(gdk_pixbuf_new_from_stream_at_scale(stream,
+                                                                     -1,
+                                                                     task->size,
+                                                                     true,
+                                                                     NULL,
+                                                                     &error));
   if (error)
   {
     LOG_WARNING(logger) << "Unable to create pixbuf from input stream for "
@@ -457,7 +458,7 @@ void IconLoader::Impl::LoadContentsReady(GObject* obj,
                                          GAsyncResult* res,
                                          IconLoaderTask* task)
 {
-  glib::Sring contents;
+  glib::String contents;
   glib::Error error;
   gsize length = 0;
 
