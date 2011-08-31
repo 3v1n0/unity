@@ -225,6 +225,9 @@ void IconLoader::Impl::QueueTask(std::string const& key,
 {
   tasks_.push(new IconLoaderTask(type, data, size, key, slot, this));
 
+  LOG_DEBUG(logger) << "Pushing task  " << data << " at size " << size
+                    << ", queue size now at " << tasks_.size();
+
   if (idle_id_ == 0)
   {
     idle_id_ = g_idle_add_full(G_PRIORITY_LOW, (GSourceFunc)Loop, this, NULL);
@@ -258,6 +261,8 @@ bool IconLoader::Impl::ProcessTask(IconLoaderTask* task)
   // Check the cache again, as previous tasks might have wanted the same
   if (CacheLookup(task->key, task->data, task->size, task->slot))
     return true;
+
+  LOG_DEBUG(logger) << "Processing  " << task->data << " at size " << task->size;
 
   // Rely on the compiler to tell us if we miss a new type
   switch (task->type)
@@ -439,6 +444,8 @@ bool IconLoader::Impl::Iteration()
     tasks_.pop();
     queue_empty = tasks_.empty();
   }
+
+  LOG_DEBUG(logger) << "Iteration done, queue size now at " << tasks_.size();
 
   if (queue_empty)
   {
