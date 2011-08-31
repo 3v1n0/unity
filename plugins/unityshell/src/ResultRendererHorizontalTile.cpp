@@ -230,7 +230,7 @@ void ResultRendererHorizontalTile::LoadText(Result& row)
                                     width() - style->GetTileIconSize(),
                                     height() - 4);
 
-  cairo_t* cr = cairo_reference(_cairoGraphics.GetContext());
+  cairo_t* cr = _cairoGraphics.GetContext();
 
   PangoLayout*          layout     = NULL;
   PangoFontDescription* desc       = NULL;
@@ -275,8 +275,6 @@ void ResultRendererHorizontalTile::LoadText(Result& row)
   // clean up
   pango_font_description_free(desc);
   g_object_unref(layout);
-
-  cairo_destroy(cr);
 
   nux::NBitmapData* bitmap = _cairoGraphics.GetBitmap();
 

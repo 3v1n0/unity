@@ -75,7 +75,7 @@ void ResultRendererTile::Render(nux::GraphicsEngine& GfxContext,
 
   // set up our texture mode
   nux::TexCoordXForm texxform;
-  //texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
+  texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
   texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
 
 
@@ -235,6 +235,7 @@ void ResultRendererTile::Unload(Result& row)
 {
   TextureContainer *container = row.renderer<TextureContainer*>();
   delete container;
+  row.set_renderer<TextureContainer*>(nullptr);
 }
 
 void ResultRendererTile::LoadIcon(std::string& icon_hint, Result& row)
@@ -349,7 +350,7 @@ void ResultRendererTile::LoadText(Result& row)
                                     style->GetTileWidth(),
                                     style->GetTileHeight() - style->GetTileIconSize() - 12);
 
-  cairo_t* cr = cairo_reference(_cairoGraphics.GetContext());
+  cairo_t* cr = _cairoGraphics.GetContext();
 
   PangoLayout*          layout     = NULL;
   PangoFontDescription* desc       = NULL;
@@ -394,8 +395,6 @@ void ResultRendererTile::LoadText(Result& row)
   // clean up
   pango_font_description_free(desc);
   g_object_unref(layout);
-
-  cairo_destroy(cr);
 
   nux::NBitmapData* bitmap = _cairoGraphics.GetBitmap();
 
