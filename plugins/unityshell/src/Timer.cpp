@@ -38,10 +38,14 @@ void Timer::Reset()
 
 float Timer::ElapsedSeconds()
 {
-  gint64 end = g_get_monotonic_time();
-  return (end - start_time_) / 1e6;
+  return ElapsedMicroSeconds() / 1e6;
 }
 
+gint64 Timer::ElapsedMicroSeconds()
+{
+  gint64 end = g_get_monotonic_time();
+  return end - start_time_;
+}
 
 BlockTimer::BlockTimer(std::string const& name, std::ostream& out)
   : name_(name)

@@ -26,7 +26,7 @@
 
 namespace unity
 {
-namespace logger
+namespace util
 {
 
 class Timer
@@ -36,6 +36,7 @@ public:
 
   void Reset();
   float ElapsedSeconds();
+  gint64 ElapsedMicroSeconds();
 
 private:
   gint64 start_time_;
