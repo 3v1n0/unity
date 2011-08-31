@@ -155,7 +155,6 @@ void IMTextEntry::KeyEventToGdkEventKey(Event& event, GdkEventKey& gdk_event)
   gdk_event.type = event.e_event == nux::NUX_KEYDOWN ? GDK_KEY_PRESS : GDK_KEY_RELEASE;
 
   gdk_event.window = client_window_;
-  gdk_event.window = 0;
   gdk_event.send_event = FALSE;
   gdk_event.time = event.e_x11_timestamp;
   gdk_event.state = event.e_x11_state;
