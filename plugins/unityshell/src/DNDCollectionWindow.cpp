@@ -28,18 +28,18 @@ DNDCollectionWindow::DNDCollectionWindow()
   : nux::BaseWindow("")
   , display(NULL)
 {
+  // Make it invisible...
   SetBackgroundColor(nux::Color(0x00000000));
+  // ... and as big as the whole screen.
   SetGeometry(WindowManager::Default()->GetScreenGeometry());
   
   ShowWindow(true);
   PushToBack();
-  // Hack
+  // Hack to create the X Window as soon as possible.
   EnableInputWindow(true, "DNDCollectionWindow");
   EnableInputWindow(false, "DNDCollectionWindow");
   SetDndEnabled(false, true);
   
-  // Enable input window doesn not show the window immediately. Catching the
-  // window_moved signal avoid using a timeout.
   WindowManager::Default()->window_moved.connect(sigc::mem_fun(this, &DNDCollectionWindow::OnWindowMoved));
 }
 
@@ -49,10 +49,17 @@ DNDCollectionWindow::~DNDCollectionWindow()
     g_free(it);
 }
 
+/**
+ * EnableInputWindow doesn't show the window immediately. 
+ * Since nux::EnableInputWindow uses XMoveResizeWindow the best way to know if
+ * the X Window is really on/off screen is receiving WindowManager::window_moved
+ * signal. Please don't hate me!
+ **/ 
 void DNDCollectionWindow::OnWindowMoved(guint32 xid)
 {
   if (xid == GetInputWindowId() && display() != NULL)
   {
+    // Create a fake mouse move because sometimes an extra one is required.
     XWarpPointer(display(), None, None, 0, 0, 0, 0, 0, 0);
     XFlush(display());
   }
@@ -60,24 +67,29 @@ void DNDCollectionWindow::OnWindowMoved(guint32 xid)
 
 void DNDCollectionWindow::Collect()
 {
+  // Using PushToFront we're sure that the window is shown over the panel window,
+  // the launcher window and the dash window. Don't forget to call PushToBack as
+  // soon as possible.
   PushToFront();
   EnableInputWindow(true, "DndCollectionWindow");
 }
 
 void DNDCollectionWindow::ProcessDndMove(int x, int y, std::list<char*> mimes)
 {    
-  // Hide the window as soon as possible
+  // Hide the window as soon as possible.
   PushToBack();
   EnableInputWindow(false, "DNDCollectionWindow");
-                         
+  
+  // Free mimes_ before fill it again.                       
   for (auto it : mimes_)
     g_free(it);
   mimes_.clear();
 
-  // Duplicate the list
+  // Duplicate the list.
   for (auto it : mimes)
     mimes_.push_back(g_strdup(it));
   
+  // Emit the collected signal.
   collected.emit(mimes_);
 }
   
