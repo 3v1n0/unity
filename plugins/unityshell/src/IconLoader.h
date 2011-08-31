@@ -41,21 +41,22 @@ public:
 
   static IconLoader& GetDefault();
 
-  void LoadFromIconName(const char*        icon_name,
-                        guint              size,
+  void LoadFromIconName(std::string const& icon_name,
+                        unsigned size,
                         IconLoaderCallback slot);
 
-  void LoadFromGIconString(const char*        gicon_string,
-                           guint              size,
+  void LoadFromGIconString(std::string const& gicon_string,
+                           unsigned size,
                            IconLoaderCallback slot);
 
-  void LoadFromFilename(const char*        filename,
-                        guint              size,
+  void LoadFromFilename(std::string const& filename,
+                        unsigned size,
                         IconLoaderCallback slot);
 
-  void LoadFromURI(const char*        uri,
-                   guint              size,
+  void LoadFromURI(std::string const& uri,
+                   unsigned size,
                    IconLoaderCallback slot);
+
 private:
   class Impl;
   Impl* pimpl;

@@ -490,29 +490,29 @@ IconLoader& IconLoader::GetDefault()
   return default_loader;
 }
 
-void IconLoader::LoadFromIconName(const char* icon_name,
-                                  guint size,
+void IconLoader::LoadFromIconName(std::string const& icon_name,
+                                  unsigned size,
                                   IconLoaderCallback slot)
 {
   pimpl->LoadFromIconName(icon_name, size, slot);
 }
 
-void IconLoader::LoadFromGIconString(const char* gicon_string,
-                                     guint size,
+void IconLoader::LoadFromGIconString(std::string const& gicon_string,
+                                     unsigned size,
                                      IconLoaderCallback slot)
 {
   pimpl->LoadFromGIconString(gicon_string, size, slot);
 }
 
-void IconLoader::LoadFromFilename(const char* filename,
-                                  guint size,
+void IconLoader::LoadFromFilename(std::string const& filename,
+                                  unsigned size,
                                   IconLoaderCallback slot)
 {
   pimpl->LoadFromFilename(filename, size, slot);
 }
 
-void IconLoader::LoadFromURI(const char* uri,
-                             guint size,
+void IconLoader::LoadFromURI(std::string const& uri,
+                             unsigned size,
                              IconLoaderCallback slot)
 {
   pimpl->LoadFromURI(uri, size, slot);
