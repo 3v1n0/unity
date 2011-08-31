@@ -29,6 +29,7 @@
 #include <NuxCore/Property.h>
 #include "Nux/TextureArea.h"
 #include "NuxImage/CairoGraphics.h"
+#include "IconLoader.h"
 
 #include "ResultRenderer.h"
 
@@ -36,6 +37,48 @@ namespace unity
 {
 namespace dash
 {
+  struct TextureContainer
+  {
+    nux::BaseTexture* text;
+    nux::BaseTexture* icon;
+    nux::BaseTexture* blurred_icon;
+    int slot_handle;
+
+    TextureContainer()
+      : text(NULL)
+      , icon(NULL)
+      , blurred_icon(NULL)
+      , slot_handle(0)
+    {
+    }
+
+    ~TextureContainer()
+    {
+      if (text != NULL)
+      {
+        text->UnReference();
+        if (text->GetReferenceCount() == 1) // because textures are made with an extra reference for bad reasons, we have to do this. its bad.
+          text->UnReference();
+      }
+
+      if (icon != NULL)
+      {
+        icon->UnReference();
+        if (icon->GetReferenceCount() == 1)
+          icon->UnReference();
+      }
+      if (blurred_icon != NULL)
+      {
+        blurred_icon->UnReference();
+        if (blurred_icon->GetReferenceCount() == 1)
+          blurred_icon->UnReference();
+      }
+      if (slot_handle > 0)
+        IconLoader::GetDefault()->DisconnectHandle(slot_handle);
+    }
+  };
+
+  typedef TextureContainer TextureContainer;
 
 // Initially unowned object
 class ResultRendererTile : public ResultRenderer
@@ -48,23 +91,18 @@ public:
   virtual void Preload(Result& row);  // this is just to start preloading images and text that the renderer might need - can be ignored
   virtual void Unload(Result& row);  // unload any previous grabbed images
 
-private:
-  void LoadText(std::string& text);
-  void LoadIcon(std::string& icon_hint);
+protected:
+  void LoadText(Result& row);
+  void LoadIcon(std::string& icon_hint, Result& row);
+  nux::BaseTexture* prelight_cache_;
 
+private:
   //icon loading callbacks
-  void IconLoaded(const char* texid, guint size, GdkPixbuf* pixbuf, std::string icon_name);
+  void IconLoaded(const char* texid, guint size, GdkPixbuf* pixbuf, std::string icon_name, Result& row, std::string uri);
   void CreateTextureCallback(const char* texid, int width, int height, nux::BaseTexture** texture, GdkPixbuf* pixbuf);
   void CreateBlurredTextureCallback(const char* texid, int width, int height, nux::BaseTexture** texture, GdkPixbuf* pixbuf);
   void DrawHighlight(const char* texid, int width, int height, nux::BaseTexture** texture);
 
-  typedef std::map<std::string, nux::BaseTexture*> LocalTextureCache;
-
-  LocalTextureCache icon_cache_;
-  LocalTextureCache blurred_icon_cache_;
-  LocalTextureCache text_cache_;
-  nux::BaseTexture* prelight_cache_;
-  std::map<std::string, uint> currently_loading_icons_;
 
 };
 

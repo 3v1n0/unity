@@ -92,8 +92,8 @@ void TestRunner::Init ()
   time_start = g_get_monotonic_time();
 
   unity::dash::ResultViewGrid* result_view = new unity::dash::ResultViewGrid (NUX_TRACKER_LOCATION);
-  unity::dash::ResultRendererHorizontalTile* result_renderer = new unity::dash::ResultRendererHorizontalTile (NUX_TRACKER_LOCATION);
-
+  //unity::dash::ResultRendererHorizontalTile* result_renderer = new unity::dash::ResultRendererHorizontalTile (NUX_TRACKER_LOCATION);
+  unity::dash::ResultRendererTile* result_renderer = new unity::dash::ResultRendererTile (NUX_TRACKER_LOCATION);
   result_view->SetModelRenderer (result_renderer);
 
 
