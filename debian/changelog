@@ -1,4 +1,4 @@
-unity (4.12.0-0ubuntu1) UNRELEASED; urgency=low
+unity (4.12.0-0ubuntu1) oneiric; urgency=low
 
   * New upstream release.
     - P3: [natty] Cannot click on indicators (LP: #819202)
@@ -25,7 +25,7 @@ unity (4.12.0-0ubuntu1) UNRELEASED; urgency=low
   * debian/rules:
     - bump shlibs
 
- -- Didier Roche <didrocks@ubuntu.com>  Thu, 01 Sep 2011 16:27:26 +0200
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 01 Sep 2011 17:33:06 +0200
 
 unity (4.10.2-0ubuntu2) oneiric; urgency=low
 
