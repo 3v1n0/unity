@@ -24,6 +24,7 @@
 
 #include <NuxCore/Logger.h>
 #include <UnityCore/GLibWrapper.h>
+#include <UnityCore/RadioOptionFilter.h>
 
 #include "PlacesStyle.h"
 #include "DashSettings.h"
@@ -45,6 +46,7 @@ DashView::DashView()
   : nux::View(NUX_TRACKER_LOCATION)
   , active_lens_view_(0)
   , last_activated_uri_("")
+  , visible_(false)
 
 {
   SetupBackground();
@@ -68,6 +70,7 @@ DashView::~DashView()
 void DashView::AboutToShow()
 {
   ubus_manager_.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
+  visible_ = true;
   bg_effect_helper_.enabled = true;
   search_bar_->text_entry()->SelectAll();
   search_bar_->text_entry()->SetFocused(true);
@@ -75,6 +78,7 @@ void DashView::AboutToShow()
 
 void DashView::AboutToHide()
 {
+  visible_ = false;
   bg_effect_helper_.enabled = false;
 }
 
@@ -463,19 +467,87 @@ void DashView::OnMouseButtonDown(int x, int y, unsigned long button, unsigned lo
 
 void DashView::OnActivateRequest(GVariant* args)
 {
-  glib::String id;
+  glib::String uri;
   glib::String search_string;
 
-  g_variant_get(args, "(sus)", &id, NULL, &search_string);
+  g_variant_get(args, "(sus)", &uri, NULL, &search_string);
+
+  std::string id = AnalyseLensURI(uri.Str());
 
   home_view_->search_string = "";
-  lens_bar_->Activate(id.Str());
+  lens_bar_->Activate(id);
 
   // Reset focus
   SetFocused(false);
   SetFocused(true);
 
-  ubus_manager_.SendMessage(UBUS_DASH_EXTERNAL_ACTIVATION);
+  if (id == "home.lens" || !visible_)
+    ubus_manager_.SendMessage(UBUS_DASH_EXTERNAL_ACTIVATION);
+}
+
+std::string DashView::AnalyseLensURI(std::string uri)
+{
+  std::string id = uri;
+  std::size_t pos = uri.find("?");
+  
+  // It is a real URI
+  if (pos)
+  {
+    id = uri.substr(0, pos);
+
+    std::string components = uri.substr(++pos);
+    gchar** tokens = g_strsplit(components.c_str(), "&", -1);
+    
+    for (int i = 0; tokens[i]; ++i)
+    {
+      gchar** subs = g_strsplit(tokens[i], "=", 2);
+
+      if (g_str_has_prefix(subs[0], "filter_"))
+      {
+        UpdateLensFilter(id, subs[0] + 7, subs[1]);
+        lens_views_[id]->filters_expanded = true;
+      }
+
+      g_strfreev(subs);
+    }
+
+    g_strfreev(tokens);
+  }
+
+  return id;
+}
+
+void DashView::UpdateLensFilter(std::string lens_id, std::string filter_name, std::string value)
+{
+  if (lenses_.GetLens(lens_id))
+  {
+    Lens::Ptr lens = lenses_.GetLens(lens_id);
+
+    Filters::Ptr filters = lens->filters;
+
+    for (unsigned int i = 0; i < filters->count(); ++i)
+    {
+      Filter::Ptr filter = filters->FilterAtIndex(i);
+
+      if (filter->id() == filter_name)
+      {
+        UpdateLensFilterValue(filter, value);
+      }
+    }
+  }
+}
+
+void DashView::UpdateLensFilterValue(Filter::Ptr filter, std::string value)
+{
+  if (filter->renderer_name == "filter-radiooption")
+  {
+    RadioOptionFilter::Ptr radio = std::static_pointer_cast<RadioOptionFilter>(filter);
+    for (auto option: radio->options())
+    {
+      if (option->id == value)
+        option->active = true;
+    }
+  }
 }
 
 void DashView::OnBackgroundColorChanged(GVariant* args)

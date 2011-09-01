@@ -81,6 +81,9 @@ private:
   bool DoFallbackActivation(std::string const& uri);
   bool LaunchApp(std::string const& appname);
   void OnEntryActivated();
+  std::string AnalyseLensURI(std::string uri);
+  void UpdateLensFilter(std::string lens, std::string filter, std::string value);
+  void UpdateLensFilterValue(Filter::Ptr filter, std::string value);
   
   bool AcceptKeyNavFocus();
   bool InspectKeyEvent(unsigned int eventType, unsigned int key_sym, const char* character);
@@ -112,6 +115,8 @@ private:
   nux::ObjectPtr <nux::IOpenGLBaseTexture> bg_blur_texture_;
 
   std::string last_activated_uri_;
+  
+  bool visible_;
 };
 
 

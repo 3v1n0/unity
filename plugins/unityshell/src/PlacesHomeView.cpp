@@ -168,7 +168,7 @@ PlacesHomeView::Refresh(PlacesGroup*foo)
                           markup,
                           icon_size);
   shortcut->_id = TYPE_PLACE;
-  shortcut->_place_id = g_strdup("/com/canonical/unity/applicationsplace/applications");
+  shortcut->_place_id = g_strdup("applications.lens?filter_type=media");
   shortcut->_place_section = 9;
   _layout->AddView(shortcut, 1, nux::eLeft, nux::eFull);
   shortcut->sigClick.connect(sigc::mem_fun(this, &PlacesHomeView::OnShortcutClicked));
@@ -180,7 +180,7 @@ PlacesHomeView::Refresh(PlacesGroup*foo)
                           markup,
                           icon_size);
   shortcut->_id = TYPE_PLACE;
-  shortcut->_place_id = g_strdup("/com/canonical/unity/applicationsplace/applications");
+  shortcut->_place_id = g_strdup("applications.lens?filter_type=internet");
   shortcut->_place_section = 8;
   _layout->AddView(shortcut, 1, nux::eLeft, nux::eFull);
   shortcut->sigClick.connect(sigc::mem_fun(this, &PlacesHomeView::OnShortcutClicked));
@@ -192,7 +192,7 @@ PlacesHomeView::Refresh(PlacesGroup*foo)
                           markup,
                           icon_size);
   shortcut->_id = TYPE_PLACE;
-  shortcut->_place_id = g_strdup("/com/canonical/unity/applicationsplace/applications");
+  shortcut->_place_id = g_strdup("applications.lens");
   shortcut->_place_section = 0;
   _layout->AddView(shortcut, 1, nux::eLeft, nux::eFull);
   shortcut->sigClick.connect(sigc::mem_fun(this, &PlacesHomeView::OnShortcutClicked));
@@ -204,7 +204,7 @@ PlacesHomeView::Refresh(PlacesGroup*foo)
                           markup,
                           icon_size);
   shortcut->_id = TYPE_PLACE;
-  shortcut->_place_id = g_strdup("/com/canonical/unity/filesplace/files");
+  shortcut->_place_id = g_strdup("files.lens");
   shortcut->_place_section = 0;
   _layout->AddView(shortcut, 1, nux::eLeft, nux::eFull);
   shortcut->sigClick.connect(sigc::mem_fun(this, &PlacesHomeView::OnShortcutClicked));
