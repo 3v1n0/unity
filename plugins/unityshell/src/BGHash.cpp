@@ -538,7 +538,6 @@ namespace unity {
         float color_diff = fabs(base_hsv.value - comparison_hsv.value);
         if (color_diff < closest_diff)
         {
-          LOG_DEBUG (logger) << "picking index " << i;
           chosen_color = bw_colors[i];
           closest_diff = color_diff;
         }
