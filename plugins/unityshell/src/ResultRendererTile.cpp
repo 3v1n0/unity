@@ -335,10 +335,13 @@ ResultRendererTile::IconLoaded(const char* texid, guint size, GdkPixbuf* pixbuf,
     texture_blurred->Reference();
 
     TextureContainer *container = row.renderer<TextureContainer*>();
-    container->icon = texture;
-    container->blurred_icon = texture_blurred;
+    if (container != nullptr)
+    {
+      container->icon = texture;
+      container->blurred_icon = texture_blurred;
 
-    NeedsRedraw.emit();
+      NeedsRedraw.emit();
+    }
   }
 }
 
