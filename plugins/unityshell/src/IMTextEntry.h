@@ -53,12 +53,19 @@ private:
   bool TryHandleEvent(unsigned int eventType, unsigned int keysym, const char* character);
   void KeyEventToGdkEventKey(Event& event, GdkEventKey& gdk_event);
   inline void CheckValidClientWindow(Window window);
+  bool TryHandleSpecial(unsigned int eventType, unsigned int keysym, const char* character);
+  void Cut();
+  void Copy();
+  void Paste();
 
-  void OnFocusChanged(nux::Area* area);
   void OnCommit(GtkIMContext* context, char* str);
   void OnPreeditChanged(GtkIMContext* context);
   void OnPreeditStart(GtkIMContext* context);
   void OnPreeditEnd(GtkIMContext* context);
+
+  void OnFocusIn();
+  void OnFocusOut();
+  void UpdateCursorLocation();
 
   void OnMouseButtonUp(int x, int y, unsigned long bflags, unsigned long kflags);
 
@@ -68,6 +75,7 @@ private:
   GdkWindow* client_window_;
   bool im_enabled_;
   bool im_active_;
+  bool focused_;
 };
 
 }

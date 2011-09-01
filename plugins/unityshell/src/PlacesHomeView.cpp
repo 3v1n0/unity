@@ -101,12 +101,12 @@ PlacesHomeView::PlacesHomeView()
   _layout->SetChildrenSize(style->GetHomeTileWidth(), style->GetHomeTileHeight());
   _layout->EnablePartialVisibility(false);
   _layout->SetHeightMatchContent(true);
-  _layout->SetVerticalExternalMargin(32);
+  //_layout->SetVerticalExternalMargin(24);
   _layout->SetHorizontalExternalMargin(32);
   _layout->SetVerticalInternalMargin(32);
   _layout->SetHorizontalInternalMargin(32);
   _layout->SetMinMaxSize((style->GetHomeTileWidth() * 4) + (32 * 5),
-                         (style->GetHomeTileHeight() * 2) + (32 * 3));
+                         (style->GetHomeTileHeight() * 2) + 32);
 
   _client = gconf_client_get_default();
   gconf_client_add_dir(_client,
