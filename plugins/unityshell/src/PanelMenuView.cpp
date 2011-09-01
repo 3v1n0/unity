@@ -342,8 +342,9 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   gPainter.PushDrawLayer(GfxContext, GetGeometry(), &layer);
 
   nux::Point point = nux::GetWindowCompositor().GetMousePosition();
-  
-  if (_is_own_window || !_we_control_active || (_is_maximized && GetAbsoluteGeometry().IsPointInside(point.x, point.y)) || (_is_maximized && _is_inside))
+  bool pointer_inside = GetAbsoluteGeometry().IsPointInside(point.x, point.y);
+
+  if (_is_own_window || !_we_control_active || (_is_maximized && pointer_inside) || (_is_maximized && _is_inside))
   {
 
   }
@@ -361,7 +362,7 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
       }
     }
 
-    if ((_is_inside || _last_active_view || _show_now_activated) && have_valid_entries)
+    if ((_is_inside || _last_active_view || _show_now_activated || pointer_inside) && have_valid_entries)
     {
       if (_gradient_texture.IsNull())
       {
