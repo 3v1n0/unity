@@ -266,17 +266,20 @@ PlacesGroup::Relayout()
 gboolean
 PlacesGroup::OnIdleRelayout(PlacesGroup* self)
 {
-  self->Refresh();
-  self->QueueDraw();
-  self->_group_layout->QueueDraw();
-  self->GetChildView()->QueueDraw();
-  self->ComputeChildLayout();
-  self->_idle_id = 0;
-
-  if (self->GetFocused())
+  if (self->GetChildView())
   {
-    self->SetFocused(false);  // unset focus on all children
-    self->SetFocused(true);  // set focus on first child
+    self->Refresh();
+    self->QueueDraw();
+    self->_group_layout->QueueDraw();
+    self->GetChildView()->QueueDraw();
+    self->ComputeChildLayout();
+    self->_idle_id = 0;
+
+    if (self->GetFocused())
+    {
+      self->SetFocused(false);  // unset focus on all children
+      self->SetFocused(true);  // set focus on first child
+    }
   }
 
   return FALSE;
