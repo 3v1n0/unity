@@ -161,13 +161,6 @@ void LensView::OnCategoryAdded(Category const& category)
   group->SetChildView(grid);
 
   scroll_layout_->AddView(group, 0);
-
-  Categories::Ptr categories = lens_->categories;
-  if (category.index + 1 == categories->count())
-  {
-    lens_->Search("---");
-    lens_->Search("");
-  }
 }
 
 void LensView::OnResultAdded(Result const& result)
@@ -317,7 +310,7 @@ void LensView::ActivateFirst()
     {
       for (unsigned int i = 0; i < results->count(); ++i)
       {
-        Result result = results->RowAtIndex(i); 
+        Result result = results->RowAtIndex(i);
         if (result.category_index == c && result.uri != "")
         {
           uri_activated(result.uri);
@@ -327,7 +320,7 @@ void LensView::ActivateFirst()
       }
     }
     // Fallback
-    Result result = results->RowAtIndex(0); 
+    Result result = results->RowAtIndex(0);
     if (result.uri != "")
     {
       uri_activated(result.uri);

@@ -18,17 +18,17 @@
 */
 
 #include "DNDCollectionWindow.h"
+#include "WindowManager.h"
 
 namespace unity {
   
 NUX_IMPLEMENT_OBJECT_TYPE(DNDCollectionWindow);
 
-DNDCollectionWindow::DNDCollectionWindow(CompScreen* screen)
+DNDCollectionWindow::DNDCollectionWindow()
   : nux::BaseWindow("")
 {
   SetBackgroundColor(nux::Color(0x00000000));
-  SetBaseSize(screen->width(), screen->height());
-  SetBaseXY(0, 0);
+  SetGeometry (WindowManager::Default()->GetScreenGeometry());
   
   ShowWindow(true);
   PushToBack();

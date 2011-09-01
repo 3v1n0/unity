@@ -37,6 +37,7 @@ namespace unity
 class PanelTray : public nux::View, public unity::Introspectable
 {
 public:
+  typedef std::vector<NaTrayChild*> TrayChildren;
   PanelTray();
   ~PanelTray();
 
@@ -45,7 +46,6 @@ public:
   void Sync();
 
 public:
-  guint8     _n_children;
   char**     _whitelist;
 protected:
   const gchar* GetName();
@@ -57,11 +57,15 @@ private:
   static void     OnTrayIconRemoved(NaTrayManager* manager, NaTrayChild* child, PanelTray* self);
   static gboolean IdleSync(PanelTray* tray);
   static gboolean OnTrayDraw(GtkWidget* widget, cairo_t* cr, PanelTray* tray);
+  
+  void RealInit();
+  int WidthOfTray();
 
 private:
   GSettings* _settings;
   GtkWidget* _window;
   NaTray*    _tray;
+  TrayChildren _children;
   int        _last_x;
   int        _last_y;
 

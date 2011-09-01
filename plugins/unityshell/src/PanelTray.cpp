@@ -33,7 +33,7 @@ namespace unity
 
 PanelTray::PanelTray()
   : View(NUX_TRACKER_LOCATION),
-    _n_children(0),
+    _window(0),
     _tray(NULL),
     _last_x(0),
     _last_y(0),
@@ -42,6 +42,11 @@ PanelTray::PanelTray()
   _settings = g_settings_new(SETTINGS_NAME);
   _whitelist = g_settings_get_strv(_settings, "systray-whitelist");
 
+  RealInit();
+}
+
+void PanelTray::RealInit()
+{
   _window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   gtk_window_set_type_hint(GTK_WINDOW(_window), GDK_WINDOW_TYPE_HINT_DOCK);
   gtk_window_set_has_resize_grip(GTK_WINDOW(_window), FALSE);
@@ -49,8 +54,7 @@ PanelTray::PanelTray()
   gtk_window_set_skip_pager_hint(GTK_WINDOW(_window), TRUE);
   gtk_window_set_skip_taskbar_hint(GTK_WINDOW(_window), TRUE);
   gtk_window_resize(GTK_WINDOW(_window), 1, 24);
-  SetMinMaxSize(1, 24);
-  gtk_window_move(GTK_WINDOW(_window), 200, 12);
+  gtk_window_move(GTK_WINDOW(_window), -24,-24);
   gtk_widget_set_name(_window, "UnityPanelApplet");
 
   gtk_widget_set_visual(_window, gdk_screen_get_rgba_visual(gdk_screen_get_default()));
@@ -64,6 +68,7 @@ PanelTray::PanelTray()
                                    GTK_ORIENTATION_HORIZONTAL,
                                    (NaTrayFilterCallback)FilterTrayCallback,
                                    this);
+    na_tray_set_icon_size(_tray, 24);
 
     _tray_icon_added_id = g_signal_connect(na_tray_get_manager(_tray), "tray_icon_removed",
                                            G_CALLBACK(PanelTray::OnTrayIconRemoved), this);
@@ -71,6 +76,9 @@ PanelTray::PanelTray()
     gtk_container_add(GTK_CONTAINER(_window), GTK_WIDGET(_tray));
     gtk_widget_show(GTK_WIDGET(_tray));
   }
+
+  SetMinMaxSize(1, 24);
+
 }
 
 PanelTray::~PanelTray()
@@ -116,11 +124,11 @@ PanelTray::Sync()
 {
   if (_tray)
   {
-    SetMinMaxSize((_n_children * 24) + (PADDING * 2), 24);
+    SetMinMaxSize(WidthOfTray() + (PADDING * 2), 24);
     QueueRelayout();
     QueueDraw();
 
-    if (_n_children)
+    if (_children.size())
       gtk_widget_show(_window);
     else
       gtk_widget_hide(_window);
@@ -168,7 +176,7 @@ PanelTray::FilterTrayCallback(NaTray* tray, NaTrayChild* icon, PanelTray* self)
     if (na_tray_child_has_alpha(icon))
       na_tray_child_set_composited(icon, TRUE);
 
-    self->_n_children++;
+    self->_children.push_back(icon);
     g_idle_add((GSourceFunc)IdleSync, self);
   }
 
@@ -187,16 +195,35 @@ PanelTray::FilterTrayCallback(NaTray* tray, NaTrayChild* icon, PanelTray* self)
 void
 PanelTray::OnTrayIconRemoved(NaTrayManager* manager, NaTrayChild* child, PanelTray* self)
 {
-  g_idle_add((GSourceFunc)IdleSync, self);
-  if (self->_n_children > 0)
-    self->_n_children--;
+  for (auto it = self->_children.begin(); it != self->_children.end(); ++it)
+  {
+    if (*it == child)
+    {
+      g_idle_add((GSourceFunc)IdleSync, self);
+      self->_children.erase(it);
+      break;
+    }
+  }
 }
 
 gboolean
 PanelTray::IdleSync(PanelTray* self)
 {
+  int width = self->WidthOfTray();
+  gtk_window_resize(GTK_WINDOW(self->_window), width, 24);
   self->Sync();
   return FALSE;
+}
+
+int PanelTray::WidthOfTray()
+{
+  int width = 0;
+  for (auto child: _children)
+  {
+    int w = gtk_widget_get_allocated_width(GTK_WIDGET(child));
+    width += w > 24 ? w : 24;
+  }
+  return width;
 }
 
 gboolean
@@ -205,9 +232,6 @@ PanelTray::OnTrayDraw(GtkWidget* widget, cairo_t* cr, PanelTray* tray)
   GtkAllocation alloc;
 
   gtk_widget_get_allocation(widget, &alloc);
-
-  //gdk_cairo_region (cr, ev->region);
-  cairo_clip(cr);
 
   cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
   cairo_paint(cr);

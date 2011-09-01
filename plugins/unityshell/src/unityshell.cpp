@@ -225,7 +225,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
 
   g_timeout_add(0, &UnityScreen::initPluginActions, this);
 
-  GeisAdapter::Default(screen)->Run();
+  GeisAdapter::Default()->Run();
   gestureEngine = new GestureEngine(screen);
 
   CompString name(PKGDATADIR"/panel-shadow.png");
@@ -827,7 +827,7 @@ void UnityScreen::handleEvent(XEvent* event)
       if ((result = XLookupString(&(event->xkey), key_string, 2, &key_sym, 0)) > 0)
       {
         key_string[result] = 0;
-        skip_other_plugins = launcher->CheckSuperShortcutPressed(key_sym, event->xkey.keycode, event->xkey.state, key_string);
+        skip_other_plugins = launcher->CheckSuperShortcutPressed(screen->dpy(), key_sym, event->xkey.keycode, event->xkey.state, key_string);
       }
       break;
   }
@@ -848,23 +848,8 @@ void UnityScreen::handleCompizEvent(const char* plugin,
                                     const char* event,
                                     CompOption::Vector& option)
 {
-  /*
-   *  don't take into account window over launcher state during
-   *  the ws switch as we can get false positives
-   *  (like switching to an empty viewport while grabbing a fullscreen window)
-   */
-  if (strcmp(event, "start_viewport_switch") == 0)
-    launcher->EnableCheckWindowOverLauncher(false);
-  else if (strcmp(event, "end_viewport_switch") == 0)
-  {
-    // compute again the list of all window on the new viewport
-    // to decide if we should or not hide the launcher
-    launcher->EnableCheckWindowOverLauncher(true);
-    launcher->CheckWindowOverLauncher();
-  }
-
+  PluginAdapter::Default()->NotifyCompizEvent(plugin, event, option);
   compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>::handleCompizEvent (plugin, event, option);
-
   screen->handleCompizEvent(plugin, event, option);
 }
 
@@ -917,7 +902,7 @@ gboolean UnityScreen::OnEdgeTriggerTimeout(gpointer data)
   {
     if (abs(pointerY-self->_edge_pointerY) <= 5)
     {
-      self->launcher->EdgeRevealTriggered();
+      self->launcher->EdgeRevealTriggered(pointerX, pointerY);
     }
     else
     {
@@ -1882,8 +1867,8 @@ void UnityScreen::initLauncher(nux::NThread* thread, void* InitData)
   self->launcherWindow = new nux::BaseWindow(TEXT("LauncherWindow"));
   self->launcherWindow->SinkReference();
 
-  self->launcher = new Launcher(self->launcherWindow, self->screen);
-  self->launcher->SinkReference();
+  self->launcher = new Launcher(self->launcherWindow);
+  self->launcher->display = self->screen->dpy();
   self->launcher->hidden_changed.connect(sigc::mem_fun(self, &UnityScreen::OnLauncherHiddenChanged));
 
   self->AddChild(self->launcher);
@@ -1894,7 +1879,7 @@ void UnityScreen::initLauncher(nux::NThread* thread, void* InitData)
   layout->SetVerticalExternalMargin(0);
   layout->SetHorizontalExternalMargin(0);
 
-  self->controller = new LauncherController(self->launcher, self->screen);
+  self->controller = new LauncherController(self->launcher);
 
   self->launcherWindow->SetConfigureNotifyCallback(&UnityScreen::launcherWindowConfigureCallback, self);
   self->launcherWindow->SetLayout(layout);
