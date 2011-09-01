@@ -37,6 +37,8 @@ public:
   void SetOpacity(float opacity);
   void QueueRedraw();
 
+  unsigned int GetTrayXid ();
+
 protected:
   const gchar* GetName();
   void          AddProperties(GVariantBuilder* builder);
