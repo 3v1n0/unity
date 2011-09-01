@@ -1,6 +1,25 @@
-unity (4.12.0-0ubuntu2) UNRELEASED; urgency=low
+unity (4.12.0-0ubuntu1) UNRELEASED; urgency=low
 
   * New upstream release.
+    - P3: [natty] Cannot click on indicators (LP: #819202)
+    - Icons not visible in the launcher or alt-tab switcher (LP: #833905)
+    - [dash] Search field in Unity can not support iBus (LP: #663776)
+    - [dash] preferred applications are not stored in GConf anylonger
+      (LP: #805063)
+    - SysTray icons have a white square background in Unity. (LP: #823407)
+    - new dash does not fit a normal netbook screen (LP: #825370)
+    - Dash picks random weird colors (yellow, green), fonts invisible (with
+      blur en- or disabled) (LP: #828363)
+    - Music Lens doesn't display items until you search (LP: #824892)
+    - Dash - Adjustments to stateful behaviour  (LP: #838667)
+    - Dragging from dash to launcher still doesn't work (LP: #824833)
+    - Click on 'More Apps' et al closes the dash (LP: #824842)
+    - cannot paste into dash (particularly relevant for alt+f2) (LP: #736222)
+    - Ctrl X doesn't cut selected text in Dash search field (LP: #737731)
+    - Ctrl+C doesn't copy selected text in Dash search field (LP: #737732)
+    - The indicators shows a big white square when systray whitelisted
+      (LP: #822672)
+    - ARM FTBFS fix (LP: #834576)
   * debian/control:
     - build on latest nux
   * debian/rules:
