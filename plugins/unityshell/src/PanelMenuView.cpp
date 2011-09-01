@@ -1007,8 +1007,6 @@ PanelMenuView::GetMaximizedWindow()
 void
 PanelMenuView::OnMaximizedGrabStart(int x, int y)
 {
-  nux::BaseWindow *bw = static_cast<nux::BaseWindow*>(GetTopLevelViewWindow());
-
   // When Start dragging the panelmenu of a maximized window, change cursor
   // to simulate the dragging, waiting to go out of the panel area.
   //
@@ -1017,6 +1015,7 @@ PanelMenuView::OnMaximizedGrabStart(int x, int y)
   if (GetMaximizedWindow() != 0)
   {
     Display* d = nux::GetGraphicsDisplay()->GetX11Display();
+    nux::BaseWindow *bw = static_cast<nux::BaseWindow*>(GetTopLevelViewWindow());
     Cursor c = XCreateFontCursor(d, XC_fleur);
     XDefineCursor(d, bw->GetInputWindowId(), c);
     XFreeCursor(d, c);
