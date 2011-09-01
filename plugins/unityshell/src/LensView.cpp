@@ -310,7 +310,7 @@ void LensView::ActivateFirst()
     {
       for (unsigned int i = 0; i < results->count(); ++i)
       {
-        Result result = results->RowAtIndex(i); 
+        Result result = results->RowAtIndex(i);
         if (result.category_index == c && result.uri != "")
         {
           uri_activated(result.uri);
@@ -320,7 +320,7 @@ void LensView::ActivateFirst()
       }
     }
     // Fallback
-    Result result = results->RowAtIndex(0); 
+    Result result = results->RowAtIndex(0);
     if (result.uri != "")
     {
       uri_activated(result.uri);
