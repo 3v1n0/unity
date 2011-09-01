@@ -747,18 +747,6 @@ void PanelMenuView::OnEntryAdded(unity::indicator::Entry::Ptr const& proxy)
 }
 
 void
-PanelMenuView::AllMenusClosed()
-{
-  // NOTE: this is causing the menus to dissapear when the menu heading is
-  // clicked a second time to hide the menu, causing all menus to dissapear
-  // and reappear as soon as the user moves the mouse slightly.
-  _is_inside = false;
-  _last_active_view = false;
-
-  FullRedraw();
-}
-
-void
 PanelMenuView::OnNameChanged(gchar* new_name, gchar* old_name)
 {
   Refresh();

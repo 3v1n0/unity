@@ -84,7 +84,6 @@ public:
   void OnMouseMiddleClicked();
 
   void Refresh();
-  void AllMenusClosed();
 
   void OnCloseClicked();
   void OnMinimizeClicked();
