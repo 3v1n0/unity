@@ -96,7 +96,7 @@ void ResultRendererTile::Render(nux::GraphicsEngine& GfxContext,
                        geometry.height,
                        col);
 
-  TextureContainer *container = row.renderer<TextureContainer*>();
+  TextureContainer* container = row.renderer<TextureContainer*>();
 
   if (container->blurred_icon)
   {
@@ -219,13 +219,8 @@ void ResultRendererTile::DrawHighlight(const char* texid, int width, int height,
 void ResultRendererTile::Preload(Result& row)
 {
   row.set_renderer(new TextureContainer());
-
-  std::string icon_hint = row.icon_hint;
-  LoadIcon(icon_hint, row);
-
-  std::string name = row.name;
+  LoadIcon(row);
   LoadText(row);
-
 }
 
 void ResultRendererTile::Unload(Result& row)
@@ -235,8 +230,9 @@ void ResultRendererTile::Unload(Result& row)
   row.set_renderer<TextureContainer*>(nullptr);
 }
 
-void ResultRendererTile::LoadIcon(std::string& icon_hint, Result& row)
+void ResultRendererTile::LoadIcon(Result& row)
 {
+  std::string const& icon_hint = row.icon_hint;
 #define DEFAULT_GICON ". GThemedIcon text-x-preview"
   std::string icon_name;
 
@@ -247,8 +243,7 @@ void ResultRendererTile::LoadIcon(std::string& icon_hint, Result& row)
   }
   g_free(tmp5);
 
-  GIcon*  icon;
-  icon = g_icon_new_for_string(icon_name.c_str(), NULL);
+  GIcon*  icon = g_icon_new_for_string(icon_name.c_str(), NULL);
   TextureContainer* container = row.renderer<TextureContainer*>();
 
   std::ostringstream uri_tmp;
@@ -314,25 +309,26 @@ void
 ResultRendererTile::IconLoaded(const char* texid, guint size, GdkPixbuf* pixbuf,
                                std::string icon_name, Result& row, std::string uri)
 {
+  TextureContainer *container = row.renderer<TextureContainer*>();
   if (pixbuf)
   {
     TextureCache* cache = TextureCache::GetDefault();
-    nux::BaseTexture* texture = cache->FindTexture(icon_name.c_str(), 48, 48,
-                                                   sigc::bind(sigc::mem_fun(this, &ResultRendererTile::CreateTextureCallback), pixbuf));
-    texture->Reference();
+    BaseTexturePtr texture(cache->FindTexture(icon_name.c_str(), 48, 48,
+                                              sigc::bind(sigc::mem_fun(this, &ResultRendererTile::CreateTextureCallback), pixbuf)));
+    texture->UnReference();
 
     std::string blur_texid = icon_name + "_blurred";
-    nux::BaseTexture* texture_blurred = cache->FindTexture(blur_texid.c_str(), 48, 48,
-                                                           sigc::bind(sigc::mem_fun(this, &ResultRendererTile::CreateBlurredTextureCallback), pixbuf));
+    BaseTexturePtr texture_blurred(cache->FindTexture(blur_texid.c_str(), 48, 48,
+                                                      sigc::bind(sigc::mem_fun(this, &ResultRendererTile::CreateBlurredTextureCallback), pixbuf)));
 
-    texture_blurred->Reference();
+    texture_blurred->UnReference();
 
-    TextureContainer *container = row.renderer<TextureContainer*>();
     container->icon = texture;
     container->blurred_icon = texture_blurred;
-
     NeedsRedraw.emit();
   }
+  // Whether there is a pixbuf or not, we need to clear the slot_handle.
+  container->slot_handle = 0;
 }
 
 
@@ -388,14 +384,10 @@ void ResultRendererTile::LoadText(Result& row)
   // clean up
   pango_font_description_free(desc);
   g_object_unref(layout);
-
-  nux::BaseTexture* texture = texture_from_cairo_graphics(_cairoGraphics);
   cairo_destroy(cr);
 
   TextureContainer *container = row.renderer<TextureContainer*>();
-  container->text = texture;
-  // The container smart pointer is now the only reference to the texture.
-  texture->UnReference();
+  container->text = texture_ptr_from_cairo_graphics(_cairoGraphics);
 }
 
 

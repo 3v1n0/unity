@@ -30,6 +30,11 @@
 namespace unity
 {
 
+typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
+
+// Create a texture from the CairoGraphics object.
+//
+// Returns a new BaseTexture that has a ref count of 1.
 inline nux::BaseTexture* texture_from_cairo_graphics(nux::CairoGraphics& cg)
 {
   nux::NBitmapData* bitmap = cg.GetBitmap();
@@ -37,6 +42,20 @@ inline nux::BaseTexture* texture_from_cairo_graphics(nux::CairoGraphics& cg)
   tex->Update(bitmap);
   delete bitmap;
   return tex;
+}
+
+// Create a texture from the CairoGraphics object.
+//
+// Returns a new smart pointer to a texture where that smart pointer is the
+// sole owner of the texture object.
+inline BaseTexturePtr texture_ptr_from_cairo_graphics(nux::CairoGraphics& cg)
+{
+  BaseTexturePtr result(texture_from_cairo_graphics(cg));
+  // Since the ObjectPtr takes a reference, and the texture is initially
+  // owned, the reference count now is two.
+  nuxAssert(result->GetReferenceCount() == 2);
+  result->UnReference();
+  return result;
 }
 
 }

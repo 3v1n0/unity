@@ -277,12 +277,8 @@ void ResultRendererHorizontalTile::LoadText(Result& row)
 
   cairo_destroy(cr);
 
-  nux::BaseTexture* texture = texture_from_cairo_graphics(_cairoGraphics);
-
   TextureContainer *container = row.renderer<TextureContainer*>();
-  container->text = texture;
-  // The container smart pointer is now the only reference to the texture.
-  texture->UnReference();
+  container->text = texture_ptr_from_cairo_graphics(_cairoGraphics);
 }
 
 

@@ -81,7 +81,7 @@ public:
 
 protected:
   void LoadText(Result& row);
-  void LoadIcon(std::string& icon_hint, Result& row);
+  void LoadIcon(Result& row);
   nux::BaseTexture* prelight_cache_;
 
 private:
