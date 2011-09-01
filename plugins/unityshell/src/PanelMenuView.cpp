@@ -1050,12 +1050,9 @@ void
 PanelMenuView::OnMaximizedGrabEnd(int x, int y, unsigned long, unsigned long)
 {
   // Restore the window cursor to default.
-  if (GetMaximizedWindow() != 0)
-  {
-    Display* d = nux::GetGraphicsDisplay()->GetX11Display();
-    nux::BaseWindow *bw = static_cast<nux::BaseWindow*>(GetTopLevelViewWindow());
-    XUndefineCursor(d, bw->GetInputWindowId());
-  }
+  Display* d = nux::GetGraphicsDisplay()->GetX11Display();
+  nux::BaseWindow *bw = static_cast<nux::BaseWindow*>(GetTopLevelViewWindow());
+  XUndefineCursor(d, bw->GetInputWindowId());
 }
 
 void
