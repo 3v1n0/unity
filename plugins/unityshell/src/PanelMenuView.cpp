@@ -19,6 +19,7 @@
 #include <glib.h>
 #include <pango/pangocairo.h>
 #include <gtk/gtk.h>
+#include <X11/cursorfont.h>
 
 #include "Nux/Nux.h"
 #include "Nux/HLayout.h"
@@ -28,13 +29,10 @@
 #include "NuxGraphics/GLThread.h"
 #include "NuxGraphics/XInputWindow.h"
 #include "Nux/BaseWindow.h"
-#include "Nux/WindowCompositor.h"
 
 #include "PanelMenuView.h"
 #include "PanelStyle.h"
 #include <UnityCore/Variant.h>
-
-#include "WindowManager.h"
 
 #include <gio/gdesktopappinfo.h>
 #include <gconf/gconf-client.h>
@@ -115,7 +113,9 @@ PanelMenuView::PanelMenuView(int padding)
   _panel_titlebar_grab_area = new PanelTitlebarGrabArea();
   _panel_titlebar_grab_area->SetParentObject(this);
   _panel_titlebar_grab_area->SinkReference();
-  _panel_titlebar_grab_area->mouse_down.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedGrab));
+  _panel_titlebar_grab_area->mouse_down.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedGrabStart));
+  _panel_titlebar_grab_area->mouse_drag.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedGrabMove));
+  _panel_titlebar_grab_area->mouse_up.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedGrabEnd));
   _panel_titlebar_grab_area->mouse_doubleleftclick.connect(sigc::mem_fun(this, &PanelMenuView::OnMouseDoubleClicked));
   _panel_titlebar_grab_area->mouse_middleclick.connect(sigc::mem_fun(this, &PanelMenuView::OnMouseMiddleClicked));
 
@@ -1005,18 +1005,57 @@ PanelMenuView::GetMaximizedWindow()
 }
 
 void
-PanelMenuView::OnMaximizedGrab(int x, int y)
+PanelMenuView::OnMaximizedGrabStart(int x, int y)
+{
+  nux::BaseWindow *bw = static_cast<nux::BaseWindow*>(GetTopLevelViewWindow());
+
+  // When Start dragging the panelmenu of a maximized window, change cursor
+  // to simulate the dragging, waiting to go out of the panel area.
+  //
+  // This is a workaround to avoid that the grid plugin would be fired
+  // showing the window shape preview effect. See bug #838923
+  if (GetMaximizedWindow() != 0)
+  {
+    Display* d = nux::GetGraphicsDisplay()->GetX11Display();
+    Cursor c = XCreateFontCursor(d, XC_fleur);
+    XDefineCursor(d, bw->GetInputWindowId(), c);
+    XFreeCursor(d, c);
+  }
+}
+
+void
+PanelMenuView::OnMaximizedGrabMove(int x, int y, int, int, unsigned long, unsigned long)
 {
   guint32 window_xid = GetMaximizedWindow();
 
-  if (window_xid != 0)
+  // When the drag goes out from the Panel, start the real movement.
+  //
+  // This is a workaround to avoid that the grid plugin would be fired
+  // showing the window shape preview effect. See bug #838923
+  if (window_xid != 0 && !GetAbsoluteGeometry().IsPointInside(x, y))
   {
+    Display* d = nux::GetGraphicsDisplay()->GetX11Display();
+    nux::BaseWindow *bw = static_cast<nux::BaseWindow*>(GetTopLevelViewWindow());
+    XUndefineCursor(d, bw->GetInputWindowId());
+
     WindowManager::Default()->Activate(window_xid);
     _is_inside = true;
     _is_grabbed = true;
     Refresh();
     FullRedraw();
     WindowManager::Default()->StartMove(window_xid, x, y);
+  }
+}
+
+void
+PanelMenuView::OnMaximizedGrabEnd(int x, int y, unsigned long, unsigned long)
+{
+  // Restore the window cursor to default.
+  if (GetMaximizedWindow() != 0)
+  {
+    Display* d = nux::GetGraphicsDisplay()->GetX11Display();
+    nux::BaseWindow *bw = static_cast<nux::BaseWindow*>(GetTopLevelViewWindow());
+    XUndefineCursor(d, bw->GetInputWindowId());
   }
 }
 

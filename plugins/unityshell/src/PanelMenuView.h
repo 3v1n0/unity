@@ -79,7 +79,9 @@ public:
 
   guint32 GetMaximizedWindow();
 
-  void OnMaximizedGrab(int x, int y);
+  void OnMaximizedGrabStart(int x, int y);
+  void OnMaximizedGrabMove(int, int, int, int, unsigned long, unsigned long);
+  void OnMaximizedGrabEnd(int x, int y, unsigned long, unsigned long);
   void OnMouseDoubleClicked();
   void OnMouseMiddleClicked();
 
