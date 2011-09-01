@@ -1,8 +1,12 @@
-unity (4.12.0-0ubuntu1) UNRELEASED; urgency=low
+unity (4.12.0-0ubuntu2) UNRELEASED; urgency=low
 
   * New upstream release.
+  * debian/control:
+    - build on latest nux
+  * debian/rules:
+    - bump shlibs
 
- -- Didier Roche <didrocks@ubuntu.com>  Thu, 01 Sep 2011 16:24:21 +0200
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 01 Sep 2011 16:27:26 +0200
 
 unity (4.10.2-0ubuntu2) oneiric; urgency=low
 
