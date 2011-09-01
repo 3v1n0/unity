@@ -530,12 +530,15 @@ namespace unity {
     if (base_hsv.saturation < 0.08)
     {
       // grayscale image
-      for (int i = 0; i < 3; i++)
+      LOG_DEBUG (logger) << "got a grayscale image";
+      for (int i = 0; i < 2; i++)
       {
+
         nux::color::HueSaturationValue comparison_hsv (bw_colors[i]);
         float color_diff = fabs(base_hsv.value - comparison_hsv.value);
         if (color_diff < closest_diff)
         {
+          LOG_DEBUG (logger) << "picking index " << i;
           chosen_color = bw_colors[i];
           closest_diff = color_diff;
         }
@@ -543,6 +546,7 @@ namespace unity {
     }
     else
     {
+      LOG_DEBUG (logger) << "got a colour image";
       // full colour image
       for (int i = 0; i < 11; i++)
       {
@@ -556,17 +560,20 @@ namespace unity {
         }
       }
 
-      nux::color::HueLightnessSaturation hsv_color (chosen_color);
+      nux::color::HueSaturationValue hsv_color (chosen_color);
 
-      hsv_color.saturation = base_hsv.saturation;
-      hsv_color.lightness = 0.2;
+      hsv_color.saturation = std::min(base_hsv.saturation, hsv_color.saturation);
+      hsv_color.value = std::min(base_hsv.value, hsv_color.value);
       chosen_color = nux::Color (nux::color::RedGreenBlue(hsv_color));
     }
 
     // apply design to the colour
     chosen_color.alpha = 0.5f;
 
-
+    LOG_DEBUG(logger) << "eventually chose "
+                      << chosen_color.red << ", "
+                      << chosen_color.green << ", "
+                      << chosen_color.blue;
     return chosen_color;
   }
 
