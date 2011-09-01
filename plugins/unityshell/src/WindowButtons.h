@@ -44,7 +44,6 @@ protected:
   const gchar* GetChildsName();
   void          AddProperties(GVariantBuilder* builder);
 
-
 private:
   void OnCloseClicked(nux::View *view);
   void OnMinimizeClicked(nux::View *view);
