@@ -116,6 +116,10 @@ Autopilot::StartTest(const gchar* name)
   {
     RegisterUBusInterest(UBUS_QUICKLIST_SHOWN, args);
   }
+  else if (g_strcmp0(name, "show_dash") == 0)
+  {
+    RegisterUBusInterest(UBUS_PLACE_VIEW_SHOWN, args);
+  }
   else if (g_strcmp0(name, "drag_launcher") == 0)
   {
     RegisterUBusInterest(UBUS_LAUNCHER_END_DND, args);
