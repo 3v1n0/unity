@@ -21,8 +21,10 @@
 
 #include "config.h"
 
+#include <Nux/Nux.h>
+
+#include "CairoTexture.h"
 #include "TextureCache.h"
-#include "Nux/Nux.h"
 #include "PlacesTile.h"
 
 #define PADDING 8
@@ -86,10 +88,11 @@ PlacesTile::DrawHighlight(const char* texid, int width, int height, nux::BaseTex
   nux::Geometry base = GetGeometry();
   nux::Geometry highlight_geo = GetHighlightGeometry();
 
-  nux::CairoGraphics* cairo_graphics = new nux::CairoGraphics(CAIRO_FORMAT_ARGB32,
-                                                              highlight_geo.width + PADDING + (BLUR_SIZE * 3),
-                                                              highlight_geo.height + PADDING + (BLUR_SIZE * 3));
-  cairo_t* cr = cairo_graphics->GetContext();
+  int padding = PADDING + (BLUR_SIZE * 3);
+  nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32,
+                                    highlight_geo.width + padding,
+                                    highlight_geo.height + padding);
+  cairo_t* cr = cairo_graphics.GetInternalContext();
 
   cairo_scale(cr, 1.0f, 1.0f);
 
@@ -106,7 +109,7 @@ PlacesTile::DrawHighlight(const char* texid, int width, int height, nux::BaseTex
   cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
   cairo_set_line_width(cr, 1.0f);
   cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 0.75f);
-  cairo_graphics->DrawRoundedRectangle(cr,
+  cairo_graphics.DrawRoundedRectangle(cr,
                                        1.0f,
                                        bg_x,
                                        bg_y,
@@ -115,10 +118,10 @@ PlacesTile::DrawHighlight(const char* texid, int width, int height, nux::BaseTex
                                        bg_height,
                                        true);
   cairo_fill(cr);
-  cairo_graphics->BlurSurface(BLUR_SIZE - 2);
+  cairo_graphics.BlurSurface(BLUR_SIZE - 2);
 
   cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
-  cairo_graphics->DrawRoundedRectangle(cr,
+  cairo_graphics.DrawRoundedRectangle(cr,
                                        1.0,
                                        bg_x,
                                        bg_y,
@@ -129,7 +132,7 @@ PlacesTile::DrawHighlight(const char* texid, int width, int height, nux::BaseTex
   cairo_clip(cr);
   cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
 
-  cairo_graphics->DrawRoundedRectangle(cr,
+  cairo_graphics.DrawRoundedRectangle(cr,
                                        1.0,
                                        bg_x,
                                        bg_y,
@@ -143,15 +146,7 @@ PlacesTile::DrawHighlight(const char* texid, int width, int height, nux::BaseTex
   cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 1.0);
   cairo_stroke(cr);
 
-  cairo_destroy(cr);
-
-  nux::NBitmapData* bitmap =  cairo_graphics->GetBitmap();
-  nux::BaseTexture* tex = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
-  tex->Update(bitmap);
-  *texture = tex;
-
-  delete bitmap;
-  delete cairo_graphics;
+  *texture = texture_from_cairo_graphics(cairo_graphics);
 }
 
 void

@@ -17,7 +17,9 @@
  * Authored by: Mirco Müller <mirco.mueller@canonical.com>
  */
 
-#include "Nux/Nux.h"
+#include <Nux/Nux.h>
+
+#include "CairoTexture.h"
 #include "PlacesVScrollBar.h"
 
 const int PLACES_VSCROLLBAR_WIDTH  = 10;
@@ -110,18 +112,14 @@ PlacesVScrollBar::Draw(nux::GraphicsEngine& gfxContext, bool force_draw)
   gfxContext.PopClippingRectangle();
 }
 
-void
-PlacesVScrollBar::UpdateTexture()
+void PlacesVScrollBar::UpdateTexture()
 {
-  int                 width         = 0;
-  int                 height        = 0;
   nux::CairoGraphics* cairoGraphics = NULL;
   cairo_t*            cr            = NULL;
-  nux::NBitmapData*   bitmap        = NULL;
 
   // update texture of slider
-  width  = _slider->GetBaseWidth();
-  height = _slider->GetBaseHeight();
+  int width  = _slider->GetBaseWidth();
+  int height = _slider->GetBaseHeight();
   cairoGraphics = new nux::CairoGraphics(CAIRO_FORMAT_ARGB32, width, height);
   width  -= 2 * BLUR_SIZE;
   height -= 2 * BLUR_SIZE;
@@ -144,29 +142,11 @@ PlacesVScrollBar::UpdateTexture()
   cairoGraphics->BlurSurface(BLUR_SIZE - 3);
   cairo_fill(cr);
 
-  /*cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
-  cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 1.0f);
-  cairo_move_to (cr, BLUR_SIZE + 2.5f, half_height - 2.0f);
-  cairo_line_to (cr, BLUR_SIZE + 2.5f + 5.0f, half_height - 2.0f);
-  cairo_move_to (cr, BLUR_SIZE + 2.5f, half_height);
-  cairo_line_to (cr, BLUR_SIZE + 2.5f + 5.0f, half_height);
-  cairo_move_to (cr, BLUR_SIZE + 2.5f, half_height + 2.0f);
-  cairo_line_to (cr, BLUR_SIZE + 2.5f + 5.0f, half_height + 2.0f);
-  cairo_stroke (cr);*/
-
-  //cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/slider.png");
-
-  bitmap = cairoGraphics->GetBitmap();
-
   if (_slider_texture)
     _slider_texture->UnReference();
-
-  _slider_texture = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
-  if (_slider_texture)
-    _slider_texture->Update(bitmap);
+  _slider_texture = texture_from_cairo_graphics(*cairoGraphics);
 
   cairo_destroy(cr);
-  delete bitmap;
   delete cairoGraphics;
 
   // update texture of track
@@ -199,18 +179,11 @@ PlacesVScrollBar::UpdateTexture()
   cairo_fill_preserve(cr);
   cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 0.35f);
   cairo_stroke(cr);
-  //cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/track.png");
-
-  bitmap = cairoGraphics->GetBitmap();
 
   if (_track_texture)
     _track_texture->UnReference();
-
-  _track_texture = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
-  if (_track_texture)
-    _track_texture->Update(bitmap);
+  _track_texture = texture_from_cairo_graphics(*cairoGraphics);
 
   cairo_destroy(cr);
-  delete bitmap;
   delete cairoGraphics;
 }

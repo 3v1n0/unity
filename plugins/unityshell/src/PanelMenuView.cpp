@@ -29,6 +29,7 @@
 #include "Nux/BaseWindow.h"
 #include "Nux/WindowCompositor.h"
 
+#include "CairoTexture.h"
 #include "PanelMenuView.h"
 #include "PanelStyle.h"
 #include <UnityCore/Variant.h>
@@ -676,12 +677,7 @@ PanelMenuView::Refresh()
   if (layout)
     g_object_unref(layout);
 
-  nux::NBitmapData* bitmap =  cairo_graphics.GetBitmap();
-
-  // The Texture is created with a reference count of 1.
-  nux::BaseTexture* texture2D = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
-  texture2D->Update(bitmap);
-  delete bitmap;
+  nux::BaseTexture* texture2D = texture_from_cairo_graphics(cairo_graphics);
 
   if (_title_layer)
     delete _title_layer;

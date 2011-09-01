@@ -30,6 +30,7 @@
 
 #include <UnityCore/GLibWrapper.h>
 
+#include "CairoTexture.h"
 #include "IconLoader.h"
 #include "IconTexture.h"
 #include "PlacesStyle.h"
@@ -212,12 +213,7 @@ void ResultRendererTile::DrawHighlight(const char* texid, int width, int height,
 
   cairo_destroy(cr);
 
-  nux::NBitmapData* bitmap =  cairo_graphics.GetBitmap();
-  nux::BaseTexture* tex = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
-  tex->Update(bitmap);
-  *texture = tex;
-
-  delete bitmap;
+  *texture = texture_from_cairo_graphics(cairo_graphics);
 }
 
 void ResultRendererTile::Preload(Result& row)
