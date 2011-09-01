@@ -247,7 +247,8 @@ UnityScreen::~UnityScreen()
     switcher_desktop_icon->UnReference();
   panelController->UnReference();
   delete controller;
-  launcher->UnReference();
+  // launcher is a child of launcherWindow.
+  // launcher->UnReference();
   launcherWindow->UnReference();
 
   notify_uninit();
@@ -1873,7 +1874,7 @@ void UnityScreen::initLauncher(nux::NThread* thread, void* InitData)
 
   self->AddChild(self->launcher);
 
-  nux::HLayout* layout = new nux::HLayout();
+  nux::HLayout* layout = new nux::HLayout(NUX_TRACKER_LOCATION);
   layout->AddView(self->launcher, 1);
   layout->SetContentDistribution(nux::eStackLeft);
   layout->SetVerticalExternalMargin(0);
