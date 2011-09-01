@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -177,6 +178,12 @@ void
 WindowButtons::OnRestoreClicked(nux::View* view)
 {
   restore_clicked.emit();
+}
+
+nux::Area*
+WindowButtons::FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type)
+{
+  return nux::HLayout::FindAreaUnderMouse(mouse_position, event_type);
 }
 
 const gchar*

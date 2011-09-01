@@ -258,11 +258,6 @@ PanelMenuView::FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEven
     {
       found_area = _window_buttons->FindAreaUnderMouse(mouse_position, event_type);
       NUX_RETURN_VALUE_IF_NOTNULL(found_area, found_area);
-      
-      // #820293
-      if (mouse_position.x <= _window_buttons->GetAbsoluteX() + _window_buttons->GetAbsoluteWidth())
-        return NULL;
-      
     }
 
     if (_panel_titlebar_grab_area)

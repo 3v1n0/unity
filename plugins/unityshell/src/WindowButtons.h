@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -39,11 +40,12 @@ public:
   sigc::signal<void> redraw_signal;
   sigc::signal<void, int, int, int, int, unsigned long, unsigned long> mouse_moved;
 
+  virtual nux::Area* FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type);
+
 protected:
   const gchar* GetName();
   const gchar* GetChildsName();
   void          AddProperties(GVariantBuilder* builder);
-
 
 private:
   void OnCloseClicked(nux::View *view);
