@@ -37,8 +37,9 @@ public:
   sigc::signal<void> close_clicked;
   sigc::signal<void> minimize_clicked;
   sigc::signal<void> restore_clicked;
-  sigc::signal<void> redraw_signal;
-  sigc::signal<void, int, int, int, int, unsigned long, unsigned long> mouse_moved;
+  sigc::signal<void, int, int, int, int, unsigned long, unsigned long> mouse_move;
+  sigc::signal<void, int, int, unsigned long, unsigned long> mouse_enter;
+  sigc::signal<void, int, int, unsigned long, unsigned long> mouse_leave;
 
   virtual nux::Area* FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type);
 
@@ -51,9 +52,6 @@ private:
   void OnCloseClicked(nux::View *view);
   void OnMinimizeClicked(nux::View *view);
   void OnRestoreClicked(nux::View *view);
-
-private:
-  nux::HLayout* _layout;
 };
 
 #endif

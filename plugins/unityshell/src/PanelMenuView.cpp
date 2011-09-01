@@ -108,8 +108,9 @@ PanelMenuView::PanelMenuView(int padding)
   _window_buttons->close_clicked.connect(sigc::mem_fun(this, &PanelMenuView::OnCloseClicked));
   _window_buttons->minimize_clicked.connect(sigc::mem_fun(this, &PanelMenuView::OnMinimizeClicked));
   _window_buttons->restore_clicked.connect(sigc::mem_fun(this, &PanelMenuView::OnRestoreClicked));
-  _window_buttons->redraw_signal.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowButtonsRedraw));
-  _window_buttons->mouse_moved.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseMove));
+  _window_buttons->mouse_enter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
+  _window_buttons->mouse_leave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
+  _window_buttons->mouse_move.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseMove));
 
   _panel_titlebar_grab_area = new PanelTitlebarGrabArea();
   _panel_titlebar_grab_area->SetParentObject(this);
@@ -342,10 +343,7 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   nux::ColorLayer layer(nux::Color(0x00000000), true, rop);
   gPainter.PushDrawLayer(GfxContext, GetGeometry(), &layer);
 
-  nux::Point point = nux::GetWindowCompositor().GetMousePosition();
-  bool pointer_inside = GetAbsoluteGeometry().IsPointInside(point.x, point.y);
-
-  if (_is_own_window || !_we_control_active || (_is_maximized && pointer_inside) || (_is_maximized && _is_inside))
+  if (_is_own_window || !_we_control_active || (_is_maximized && _is_inside))
   {
 
   }
@@ -363,7 +361,7 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
       }
     }
 
-    if ((_is_inside || _last_active_view || _show_now_activated || pointer_inside) && have_valid_entries)
+    if ((_is_inside || _last_active_view || _show_now_activated) && have_valid_entries)
     {
       if (_gradient_texture.IsNull())
       {
@@ -453,15 +451,13 @@ PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   GfxContext.PushClippingRectangle(geo);
 
-  nux::Point point = nux::GetWindowCompositor().GetMousePosition();
-  
   if (!_is_own_window && !_places_showing && _we_control_active)
   {
-    if (GetAbsoluteGeometry().IsPointInside(point.x, point.y) || _last_active_view || _show_now_activated)
+    if (_is_inside || _last_active_view || _show_now_activated)
       layout_->ProcessDraw(GfxContext, force_draw);
   }
 
-    if ((!_is_own_window && _we_control_active && _is_maximized && (GetAbsoluteGeometry().IsPointInside(point.x, point.y) || _is_inside)) ||
+    if ((!_is_own_window && _we_control_active && _is_maximized && _is_inside) ||
         _places_showing)
     {
       _window_buttons->ProcessDraw(GfxContext, true);
@@ -994,12 +990,6 @@ PanelMenuView::OnRestoreClicked()
     if (BAMF_IS_WINDOW(window))
       WindowManager::Default()->Restore(bamf_window_get_xid(window));
   }
-}
-
-void
-PanelMenuView::OnWindowButtonsRedraw()
-{
-  FullRedraw();
 }
 
 guint32

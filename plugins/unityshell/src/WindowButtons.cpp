@@ -124,34 +124,40 @@ WindowButtons::WindowButtons()
 {
   WindowButton* but;
 
-  auto lambda_statechanged = [&](int x, int y, unsigned long button_flags, unsigned long key_flags)
+  auto lambda_enter = [&](int x, int y, unsigned long button_flags, unsigned long key_flags)
   {
-    redraw_signal.emit();
+    mouse_enter.emit(x, y, button_flags, key_flags);
+  };
+
+  auto lambda_leave = [&](int x, int y, unsigned long button_flags, unsigned long key_flags)
+  {
+    mouse_leave.emit(x, y, button_flags, key_flags);
   };
 
   auto lambda_moved = [&](int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
   {
-    mouse_moved.emit(x, y, dx, dy, button_flags, key_flags);
+    mouse_move.emit(x, y, dx, dy, button_flags, key_flags);
   };
+
   but = new WindowButton(PanelStyle::WINDOW_BUTTON_CLOSE);
   AddView(but, 0, nux::eCenter, nux::eFix);
   but->activated.connect(sigc::mem_fun(this, &WindowButtons::OnCloseClicked));
-  but->mouse_enter.connect(lambda_statechanged);
-  but->mouse_leave.connect(lambda_statechanged);
+  but->mouse_enter.connect(lambda_enter);
+  but->mouse_leave.connect(lambda_leave);
   but->mouse_move.connect(lambda_moved);
 
   but = new WindowButton(PanelStyle::WINDOW_BUTTON_MINIMIZE);
   AddView(but, 0, nux::eCenter, nux::eFix);
   but->activated.connect(sigc::mem_fun(this, &WindowButtons::OnMinimizeClicked));
-  but->mouse_enter.connect(lambda_statechanged);
-  but->mouse_leave.connect(lambda_statechanged);
+  but->mouse_enter.connect(lambda_enter);
+  but->mouse_leave.connect(lambda_leave);
   but->mouse_move.connect(lambda_moved);
 
   but = new WindowButton(PanelStyle::WINDOW_BUTTON_UNMAXIMIZE);
   AddView(but, 0, nux::eCenter, nux::eFix);
   but->activated.connect(sigc::mem_fun(this, &WindowButtons::OnRestoreClicked));
-  but->mouse_enter.connect(lambda_statechanged);
-  but->mouse_leave.connect(lambda_statechanged);
+  but->mouse_enter.connect(lambda_enter);
+  but->mouse_leave.connect(lambda_leave);
   but->mouse_move.connect(lambda_moved);
 
   SetContentDistribution(nux::eStackLeft);

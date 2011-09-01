@@ -89,7 +89,6 @@ public:
   void OnCloseClicked();
   void OnMinimizeClicked();
   void OnRestoreClicked();
-  void OnWindowButtonsRedraw();
   void SetMonitor(int monitor);
   bool GetControlsActive();
 
