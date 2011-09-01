@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -904,6 +905,7 @@ PanelMenuView::OnWindowRestored(guint xid)
   if (BAMF_IS_WINDOW(window) && bamf_window_get_xid(window) == xid)
   {
     _is_maximized = false;
+    _is_grabbed = false;
   }
 
   if (_decor_map[xid])
@@ -1048,6 +1050,7 @@ PanelMenuView::OnMouseDoubleClicked()
   if (window_xid != 0)
   {
     WindowManager::Default()->Restore(window_xid);
+    _is_inside = true;
   }
 }
 
@@ -1154,7 +1157,7 @@ PanelMenuView::HasOurWindowFocused()
 
 void
 PanelMenuView::OnPanelViewMouseEnter(int x, int y, unsigned long mouse_button_state, unsigned long special_keys_state)
-{ 
+{
   if (_is_inside != true)
   {
     if (_is_grabbed)
