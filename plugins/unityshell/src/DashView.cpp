@@ -24,6 +24,7 @@
 
 #include <NuxCore/Logger.h>
 #include <UnityCore/GLibWrapper.h>
+#include <UnityCore/RadioOptionFilter.h>
 
 #include "PlacesStyle.h"
 #include "DashSettings.h"
@@ -45,6 +46,7 @@ DashView::DashView()
   : nux::View(NUX_TRACKER_LOCATION)
   , active_lens_view_(0)
   , last_activated_uri_("")
+  , visible_(false)
 
 {
   SetupBackground();
@@ -68,6 +70,7 @@ DashView::~DashView()
 void DashView::AboutToShow()
 {
   ubus_manager_.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
+  visible_ = true;
   bg_effect_helper_.enabled = true;
   search_bar_->text_entry()->SelectAll();
   search_bar_->text_entry()->SetFocused(true);
@@ -75,6 +78,7 @@ void DashView::AboutToShow()
 
 void DashView::AboutToHide()
 {
+  visible_ = false;
   bg_effect_helper_.enabled = false;
 }
 
@@ -95,7 +99,7 @@ void DashView::SetupViews()
   SetLayout(layout_);
 
   content_layout_ = new nux::VLayout();
-  layout_->AddLayout(content_layout_, 1, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FIX); 
+  layout_->AddLayout(content_layout_, 1, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FIX);
   search_bar_ = new SearchBar();
   search_bar_->activated.connect(sigc::mem_fun(this, &DashView::OnEntryActivated));
   search_bar_->search_changed.connect(sigc::mem_fun(this, &DashView::OnSearchChanged));
@@ -114,7 +118,12 @@ void DashView::SetupViews()
   lens_bar_ = new LensBar();
   lens_bar_->lens_activated.connect(sigc::mem_fun(this, &DashView::OnLensBarActivated));
   content_layout_->AddView(lens_bar_, 0, nux::MINOR_POSITION_CENTER);
+
+  search_bar_->OnGeometryChanged.connect([&] (nux::Area*, nux::Geometry& geo) { Relayout(); });
+  lens_bar_->OnGeometryChanged.connect([&] (nux::Area*, nux::Geometry& geo) { Relayout(); });
 }
+
+
 
 void DashView::SetupUBusConnections()
 {
@@ -129,12 +138,18 @@ void DashView::Relayout()
   DashSettings* settings = DashSettings::GetDefault();
   nux::Geometry geo = GetGeometry();
   content_geo_ = GetBestFitGeometry(geo);
-    
+
   if (settings->GetFormFactor() == DashSettings::NETBOOK)
   {
     if (geo.width >= content_geo_.width && geo.height > content_geo_.height)
       content_geo_ = geo;
   }
+
+  // kinda hacky, but it makes sure the content isn't so big that it throws
+  // the bottom of the dash off the screen
+  // not hugely happy with this, so FIXME
+  lenses_layout_->SetMaximumHeight (content_geo_.height - search_bar_->GetGeometry().height - lens_bar_->GetGeometry().height);
+  lenses_layout_->SetMinimumHeight (content_geo_.height - search_bar_->GetGeometry().height - lens_bar_->GetGeometry().height);
 
   content_layout_->SetMinMaxSize(content_geo_.width, content_geo_.height);
 
@@ -153,7 +168,7 @@ nux::Geometry DashView::GetBestFitGeometry(nux::Geometry const& for_geo)
   int tile_width = style->GetTileWidth();
   int tile_height = style->GetTileHeight();
   int half = for_geo.width / 2;
-  
+
   while ((width += tile_width) < half)
     ;
 
@@ -168,6 +183,7 @@ nux::Geometry DashView::GetBestFitGeometry(nux::Geometry const& for_geo)
     width = MIN(width, for_geo.width-66);
     height = MIN(height, for_geo.height-24);
   }
+
   return nux::Geometry(0, 0, width, height);
 }
 
@@ -282,7 +298,7 @@ void DashView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
         texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
         texxform.SetWrap(nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
 
-        gfx_context.QRP_1Tex(geo.x - left_corner_offset, 
+        gfx_context.QRP_1Tex(geo.x - left_corner_offset,
                             geo.y + (geo.height - left_corner->GetHeight()),
                             left_corner->GetWidth(),
                             left_corner->GetHeight(),
@@ -312,7 +328,7 @@ void DashView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
         texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
         texxform.SetWrap(nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
 
-        gfx_context.QRP_1Tex(geo.x - left_corner_offset, 
+        gfx_context.QRP_1Tex(geo.x - left_corner_offset,
                             geo.y + (geo.height - left_corner->GetHeight()),
                             left_corner->GetWidth(),
                             left_corner->GetHeight(),
@@ -338,7 +354,7 @@ void DashView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
         texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
         texxform.SetWrap(nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
 
-        gfx_context.QRP_1Tex(geo.x + geo.width - right->GetWidth(), 
+        gfx_context.QRP_1Tex(geo.x + geo.width - right->GetWidth(),
                             geo.y - top_corner_offset,
                             top_corner->GetWidth(),
                             top_corner->GetHeight(),
@@ -451,18 +467,87 @@ void DashView::OnMouseButtonDown(int x, int y, unsigned long button, unsigned lo
 
 void DashView::OnActivateRequest(GVariant* args)
 {
-  glib::String id;
+  glib::String uri;
   glib::String search_string;
 
-  g_variant_get(args, "(sus)", &id, NULL, &search_string);
+  g_variant_get(args, "(sus)", &uri, NULL, &search_string);
 
-  lens_bar_->Activate(id.Str());
+  std::string id = AnalyseLensURI(uri.Str());
+
+  home_view_->search_string = "";
+  lens_bar_->Activate(id);
 
   // Reset focus
   SetFocused(false);
   SetFocused(true);
 
-  ubus_manager_.SendMessage(UBUS_DASH_EXTERNAL_ACTIVATION);
+  if (id == "home.lens" || !visible_)
+    ubus_manager_.SendMessage(UBUS_DASH_EXTERNAL_ACTIVATION);
+}
+
+std::string DashView::AnalyseLensURI(std::string uri)
+{
+  std::string id = uri;
+  std::size_t pos = uri.find("?");
+  
+  // It is a real URI
+  if (pos)
+  {
+    id = uri.substr(0, pos);
+
+    std::string components = uri.substr(++pos);
+    gchar** tokens = g_strsplit(components.c_str(), "&", -1);
+    
+    for (int i = 0; tokens[i]; ++i)
+    {
+      gchar** subs = g_strsplit(tokens[i], "=", 2);
+
+      if (g_str_has_prefix(subs[0], "filter_"))
+      {
+        UpdateLensFilter(id, subs[0] + 7, subs[1]);
+        lens_views_[id]->filters_expanded = true;
+      }
+
+      g_strfreev(subs);
+    }
+
+    g_strfreev(tokens);
+  }
+
+  return id;
+}
+
+void DashView::UpdateLensFilter(std::string lens_id, std::string filter_name, std::string value)
+{
+  if (lenses_.GetLens(lens_id))
+  {
+    Lens::Ptr lens = lenses_.GetLens(lens_id);
+
+    Filters::Ptr filters = lens->filters;
+
+    for (unsigned int i = 0; i < filters->count(); ++i)
+    {
+      Filter::Ptr filter = filters->FilterAtIndex(i);
+
+      if (filter->id() == filter_name)
+      {
+        UpdateLensFilterValue(filter, value);
+      }
+    }
+  }
+}
+
+void DashView::UpdateLensFilterValue(Filter::Ptr filter, std::string value)
+{
+  if (filter->renderer_name == "filter-radiooption")
+  {
+    RadioOptionFilter::Ptr radio = std::static_pointer_cast<RadioOptionFilter>(filter);
+    for (auto option: radio->options())
+    {
+      if (option->id == value)
+        option->active = true;
+    }
+  }
 }
 
 void DashView::OnBackgroundColorChanged(GVariant* args)
@@ -532,7 +617,7 @@ void DashView::OnLensBarActivated(std::string const& id)
   search_bar_->text_entry()->SelectAll();
   search_bar_->text_entry()->SetFocused(true);
   nux::GetWindowCompositor().SetKeyFocusArea(search_bar_->text_entry());
-  
+
   view->QueueDraw();
   QueueDraw();
 }

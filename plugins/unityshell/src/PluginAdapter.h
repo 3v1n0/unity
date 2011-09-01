@@ -22,6 +22,7 @@
 
 /* Compiz */
 #include <core/core.h>
+#include <core/atoms.h>
 
 #include <sigc++/sigc++.h>
 
@@ -65,8 +66,6 @@ public:
 
   ~PluginAdapter();
 
-  std::string MatchStringForXids(std::list<Window> *windows);
-
   void SetScaleAction(MultiActionList& scale);
   void SetExpoAction(MultiActionList& expo);
 
@@ -90,7 +89,6 @@ public:
   void OnShowDesktop ();
   void OnLeaveDesktop ();
 
-  void InitiateScale(std::string const& match, int state = 0);
   void TerminateScale();
   bool IsScaleActive();
 
@@ -105,6 +103,7 @@ public:
   void NotifyMoved(CompWindow* window, int x, int y);
   void NotifyResized(CompWindow* window, int x, int y, int w, int h);
   void NotifyStateChange(CompWindow* window, unsigned int state, unsigned int last_state);
+  void NotifyCompizEvent(const char* plugin, const char* event, CompOption::Vector& option);
 
   void Decorate(guint32 xid);
   void Undecorate(guint32 xid);
@@ -122,13 +121,24 @@ public:
   void Lower(guint32 xid);
   void ShowDesktop();
 
+  void SetWindowIconGeometry(Window window, nux::Geometry const& geo);
+
+  void FocusWindowGroup(std::vector<Window> windows);
+  bool ScaleWindowGroup(std::vector<Window> windows, int state, bool force);
+
   bool IsScreenGrabbed();
+  bool IsViewPortSwitchStarted();
 
   unsigned int GetWindowActiveNumber (guint32 xid);
 
   void MaximizeIfBigEnough(CompWindow* window);
 
   nux::Geometry GetWindowGeometry(guint32 xid);
+  nux::Geometry GetScreenGeometry();
+
+  void CheckWindowIntersections(nux::Geometry const& region, bool &active, bool &any);
+
+  int WorkspaceCount();
 
   void SetCoverageAreaBeforeAutomaximize(float area);
 
@@ -139,6 +149,10 @@ protected:
   PluginAdapter(CompScreen* screen);
 
 private:
+  std::string MatchStringForXids(std::vector<Window> *windows);
+  void InitiateScale(std::string const& match, int state = 0);
+
+  bool CheckWindowIntersection(nux::Geometry const& region, CompWindow* window);
   void SetMwmWindowHints(Window xid, MotifWmHints* new_hints);
 
   CompScreen* m_Screen;
@@ -148,6 +162,7 @@ private:
 
   bool _spread_state;
   bool _expo_state;
+  bool _vp_switch_started;
 
   CompAction* _grab_show_action;
   CompAction* _grab_hide_action;

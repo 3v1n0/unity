@@ -35,6 +35,7 @@
 #include "QuicklistManager.h"
 #include "StartupNotifyService.h"
 #include "Timer.h"
+#include "KeyboardUtil.h"
 #include "unityshell.h"
 #include "BackgroundEffectHelper.h"
 
@@ -200,10 +201,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
   optionSetAltTabNextWindowInitiate(boost::bind(&UnityScreen::altTabNextWindowInitiate, this, _1, _2, _3));
   optionSetAltTabNextWindowTerminate(boost::bind(&UnityScreen::altTabTerminateCommon, this, _1, _2, _3));
 
-  /*
-    optionSetAltTabExitInitiate(boost::bind(&UnityScreen::altTabExitInitiate, this, _1, _2, _3));
-    optionSetAltTabExitTerminate(boost::bind(&UnityScreen::altTabExitTerminate, this, _1, _2, _3));
-   */
   optionSetAltTabLeftInitiate (boost::bind (&UnityScreen::altTabPrevInitiate, this, _1, _2, _3));
   optionSetAltTabRightInitiate (boost::bind (&UnityScreen::altTabForwardInitiate, this, _1, _2, _3));
 
@@ -228,7 +225,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
 
   g_timeout_add(0, &UnityScreen::initPluginActions, this);
 
-  GeisAdapter::Default(screen)->Run();
+  GeisAdapter::Default()->Run();
   gestureEngine = new GestureEngine(screen);
 
   CompString name(PKGDATADIR"/panel-shadow.png");
@@ -250,7 +247,6 @@ UnityScreen::~UnityScreen()
     switcher_desktop_icon->UnReference();
   panelController->UnReference();
   delete controller;
-  launcher->UnReference();
   launcherWindow->UnReference();
 
   notify_uninit();
@@ -273,6 +269,35 @@ UnityScreen::~UnityScreen()
   // Deleting the windows thread calls XCloseDisplay, which calls XSync, which
   // sits waiting for a reply.
   // delete wt;
+}
+
+void UnityScreen::initAltTabNextWindow()
+{
+  KeyboardUtil key_util (screen->dpy());
+  guint above_tab_keycode = key_util.GetKeycodeAboveKeySymbol (XStringToKeysym("Tab"));
+  KeySym above_tab_keysym = XKeycodeToKeysym (screen->dpy(), above_tab_keycode, 0);
+
+  if (above_tab_keysym != NoSymbol)
+  {
+    std::ostringstream sout;
+    sout << "<Alt>" << XKeysymToString(above_tab_keysym);
+
+    screen->removeAction(&optionGetAltTabNextWindow());
+    
+    CompAction action = CompAction();
+    action.keyFromString(sout.str());
+    action.setState (CompAction::StateInitKey | CompAction::StateAutoGrab);
+    mOptions[UnityshellOptions::AltTabNextWindow].value().set (action);
+    screen->addAction (&mOptions[UnityshellOptions::AltTabNextWindow].value ().action ());
+
+    optionSetAltTabNextWindowInitiate(boost::bind(&UnityScreen::altTabNextWindowInitiate, this, _1, _2, _3));
+    optionSetAltTabNextWindowTerminate(boost::bind(&UnityScreen::altTabTerminateCommon, this, _1, _2, _3));
+  }
+  else
+  {
+    printf ("Could not find key above tab!\n");
+  }
+
 }
 
 void UnityScreen::EnsureKeybindings()
@@ -801,7 +826,7 @@ void UnityScreen::handleEvent(XEvent* event)
       if ((result = XLookupString(&(event->xkey), key_string, 2, &key_sym, 0)) > 0)
       {
         key_string[result] = 0;
-        skip_other_plugins = launcher->CheckSuperShortcutPressed(key_sym, event->xkey.keycode, event->xkey.state, key_string);
+        skip_other_plugins = launcher->CheckSuperShortcutPressed(screen->dpy(), key_sym, event->xkey.keycode, event->xkey.state, key_string);
       }
       break;
   }
@@ -822,23 +847,8 @@ void UnityScreen::handleCompizEvent(const char* plugin,
                                     const char* event,
                                     CompOption::Vector& option)
 {
-  /*
-   *  don't take into account window over launcher state during
-   *  the ws switch as we can get false positives
-   *  (like switching to an empty viewport while grabbing a fullscreen window)
-   */
-  if (strcmp(event, "start_viewport_switch") == 0)
-    launcher->EnableCheckWindowOverLauncher(false);
-  else if (strcmp(event, "end_viewport_switch") == 0)
-  {
-    // compute again the list of all window on the new viewport
-    // to decide if we should or not hide the launcher
-    launcher->EnableCheckWindowOverLauncher(true);
-    launcher->CheckWindowOverLauncher();
-  }
-
+  PluginAdapter::Default()->NotifyCompizEvent(plugin, event, option);
   compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>::handleCompizEvent (plugin, event, option);
-
   screen->handleCompizEvent(plugin, event, option);
 }
 
@@ -891,7 +901,7 @@ gboolean UnityScreen::OnEdgeTriggerTimeout(gpointer data)
   {
     if (abs(pointerY-self->_edge_pointerY) <= 5)
     {
-      self->launcher->EdgeRevealTriggered();
+      self->launcher->EdgeRevealTriggered(pointerX, pointerY);
     }
     else
     {
@@ -1219,7 +1229,11 @@ bool UnityScreen::initPluginForScreen(CompPlugin* p)
     initPluginActions(this);
   }
 
-  return screen->initPluginForScreen(p);
+  bool result = screen->initPluginForScreen(p);
+  if (p->vTable->name() == "unityshell")
+    initAltTabNextWindow();
+    
+  return result;
 }
 
 void UnityScreen::AddProperties(GVariantBuilder* builder)
@@ -1852,8 +1866,8 @@ void UnityScreen::initLauncher(nux::NThread* thread, void* InitData)
   self->launcherWindow = new nux::BaseWindow(TEXT("LauncherWindow"));
   self->launcherWindow->SinkReference();
 
-  self->launcher = new Launcher(self->launcherWindow, self->screen);
-  self->launcher->SinkReference();
+  self->launcher = new Launcher(self->launcherWindow);
+  self->launcher->display = self->screen->dpy();
   self->launcher->hidden_changed.connect(sigc::mem_fun(self, &UnityScreen::OnLauncherHiddenChanged));
 
   self->AddChild(self->launcher);
@@ -1864,7 +1878,7 @@ void UnityScreen::initLauncher(nux::NThread* thread, void* InitData)
   layout->SetVerticalExternalMargin(0);
   layout->SetHorizontalExternalMargin(0);
 
-  self->controller = new LauncherController(self->launcher, self->screen);
+  self->controller = new LauncherController(self->launcher);
 
   self->launcherWindow->SetConfigureNotifyCallback(&UnityScreen::launcherWindowConfigureCallback, self);
   self->launcherWindow->SetLayout(layout);
