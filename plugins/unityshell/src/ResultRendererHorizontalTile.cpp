@@ -20,10 +20,10 @@
  *
  */
 
-
-
 #include "ResultRendererHorizontalTile.h"
+
 #include <sstream>
+
 #include <pango/pango.h>
 #include <pango/pangocairo.h>
 #include <gdk/gdk.h>
@@ -31,6 +31,7 @@
 
 #include <UnityCore/GLibWrapper.h>
 
+#include "CairoTexture.h"
 #include "IconLoader.h"
 #include "IconTexture.h"
 #include "PlacesStyle.h"
@@ -213,19 +214,15 @@ void ResultRendererHorizontalTile::DrawHighlight(const char* texid, int width, i
 
   cairo_destroy(cr);
 
-  nux::NBitmapData* bitmap =  cairo_graphics->GetBitmap();
-  nux::BaseTexture* tex = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
-  tex->Update(bitmap);
-  *texture = tex;
-
-  delete bitmap;
+  *texture = texture_from_cairo_graphics(*cairo_graphics);
   delete cairo_graphics;
 }
 
 void ResultRendererHorizontalTile::LoadText(Result& row)
 {
   std::stringstream final_text;
-  final_text << row.name() << "\n<span size=\"small\">" << row.comment() << "</span>";
+  final_text << row.name() << "\n<span size=\"small\">"
+             << row.comment() << "</span>";
 
   PlacesStyle*          style      = PlacesStyle::GetDefault();
   nux::CairoGraphics _cairoGraphics(CAIRO_FORMAT_ARGB32,
@@ -278,21 +275,15 @@ void ResultRendererHorizontalTile::LoadText(Result& row)
   pango_font_description_free(desc);
   g_object_unref(layout);
 
-  nux::NBitmapData* bitmap = _cairoGraphics.GetBitmap();
-
-  nux::BaseTexture* texture;
-
-  texture = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
-  texture->Update(bitmap);
-
   texture->SinkReference();
-
-  delete bitmap;
-
   cairo_destroy(cr);
+
+  nux::BaseTexture* texture = texture_from_cairo_graphics(_cairoGraphics);
 
   TextureContainer *container = row.renderer<TextureContainer*>();
   container->text = texture;
+  // The container smart pointer is now the only reference to the texture.
+  texture->UnReference();
 }
 
 
