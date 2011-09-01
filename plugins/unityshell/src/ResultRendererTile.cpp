@@ -320,15 +320,19 @@ ResultRendererTile::IconLoaded(const char* texid, guint size, GdkPixbuf* pixbuf,
     std::string blur_texid = icon_name + "_blurred";
     BaseTexturePtr texture_blurred(cache->FindTexture(blur_texid.c_str(), 48, 48,
                                                       sigc::bind(sigc::mem_fun(this, &ResultRendererTile::CreateBlurredTextureCallback), pixbuf)));
-
     texture_blurred->UnReference();
 
-    container->icon = texture;
-    container->blurred_icon = texture_blurred;
-    NeedsRedraw.emit();
+    if (container)
+    {
+      container->icon = texture;
+      container->blurred_icon = texture_blurred;
+
+      NeedsRedraw.emit();
+    }
   }
   // Whether there is a pixbuf or not, we need to clear the slot_handle.
-  container->slot_handle = 0;
+  if (container)
+    container->slot_handle = 0;
 }
 
 
