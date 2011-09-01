@@ -518,11 +518,6 @@ namespace unity {
     colors[10] = nux::Color (0x1b134c);
     colors[11] = nux::Color (0x2c0d46);
 
-    nux::Color bw_colors[2];
-    //bw_colors[0] = nux::Color (211, 215, 207); //Aluminium 2
-    bw_colors[0] = nux::Color (136, 138, 133); //Aluminium 4
-    bw_colors[1] = nux::Color (46 , 52 , 54 ); //Aluminium 6
-
     float closest_diff = 200.0f;
     nux::Color chosen_color;
     nux::color::HueSaturationValue base_hsv (base_color);
@@ -531,17 +526,7 @@ namespace unity {
     {
       // grayscale image
       LOG_DEBUG (logger) << "got a grayscale image";
-      for (int i = 0; i < 2; i++)
-      {
-
-        nux::color::HueSaturationValue comparison_hsv (bw_colors[i]);
-        float color_diff = fabs(base_hsv.value - comparison_hsv.value);
-        if (color_diff < closest_diff)
-        {
-          chosen_color = bw_colors[i];
-          closest_diff = color_diff;
-        }
-      }
+      chosen_color = nux::Color (46 , 52 , 54 );
     }
     else
     {
