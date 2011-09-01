@@ -50,6 +50,8 @@
 #define NUX_KP_LEFT  0xFF96
 #define NUX_KP_RIGHT 0xFF98
 
+using unity::texture_from_cairo_graphics;
+
 NUX_IMPLEMENT_OBJECT_TYPE(QuicklistView);
 
 QuicklistView::QuicklistView()

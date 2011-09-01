@@ -25,6 +25,8 @@
 #include "CairoTexture.h"
 #include "QuicklistMenuItemRadio.h"
 
+using unity::texture_from_cairo_graphics;
+
 static double
 _align(double val)
 {

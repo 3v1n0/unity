@@ -22,6 +22,8 @@
 #include "CairoTexture.h"
 #include "PlacesVScrollBar.h"
 
+using unity::texture_from_cairo_graphics;
+
 const int PLACES_VSCROLLBAR_WIDTH  = 10;
 const int PLACES_VSCROLLBAR_HEIGHT = 10;
 const int BLUR_SIZE                =  7;

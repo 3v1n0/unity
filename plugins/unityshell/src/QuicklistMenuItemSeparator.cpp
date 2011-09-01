@@ -22,6 +22,8 @@
 #include "CairoTexture.h"
 #include "QuicklistMenuItemSeparator.h"
 
+using unity::texture_from_cairo_graphics;
+
 QuicklistMenuItemSeparator::QuicklistMenuItemSeparator(DbusmenuMenuitem* item,
                                                        NUX_FILE_LINE_DECL) :
   QuicklistMenuItem(item,

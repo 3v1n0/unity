@@ -275,7 +275,6 @@ void ResultRendererHorizontalTile::LoadText(Result& row)
   pango_font_description_free(desc);
   g_object_unref(layout);
 
-  texture->SinkReference();
   cairo_destroy(cr);
 
   nux::BaseTexture* texture = texture_from_cairo_graphics(_cairoGraphics);

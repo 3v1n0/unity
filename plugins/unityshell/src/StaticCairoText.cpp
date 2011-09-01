@@ -30,6 +30,8 @@
 #include "CairoTexture.h"
 #include "StaticCairoText.h"
 
+using unity::texture_from_cairo_graphics;
+
 // TODO: Tim Penhey 2011-05-16
 // We shouldn't be pushing stuff into the nux namespace from the unity
 // codebase, that is just rude.
@@ -476,8 +478,6 @@ void StaticCairoText::UpdateTexture()
   DrawText(cr, GetBaseWidth(), GetBaseHeight(), _textColor);
 
   cairo_destroy(cr);
-
-  NBitmapData* bitmap = _cairoGraphics->GetBitmap();
 
   // NTexture2D is the high level representation of an image that is backed by
   // an actual opengl texture.

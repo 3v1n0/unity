@@ -36,6 +36,8 @@
 
 #include "Tooltip.h"
 
+using unity::texture_from_cairo_graphics;
+
 namespace nux
 {
 NUX_IMPLEMENT_OBJECT_TYPE(Tooltip);
@@ -629,7 +631,7 @@ void Tooltip::UpdateTexture()
 
   if (_texture_outline)
     _texture_outline->UnReference();
-  _texture_outline = texture_from_cairo_graphics(cairo_outline);
+  _texture_outline = texture_from_cairo_graphics(*cairo_outline);
 
   delete cairo_bg;
   delete cairo_mask;

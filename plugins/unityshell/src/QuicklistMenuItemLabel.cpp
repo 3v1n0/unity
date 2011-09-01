@@ -26,6 +26,8 @@
 #include "CairoTexture.h"
 #include "QuicklistMenuItemLabel.h"
 
+using unity::texture_from_cairo_graphics;
+
 QuicklistMenuItemLabel::QuicklistMenuItemLabel(DbusmenuMenuitem* item,
                                                NUX_FILE_LINE_DECL) :
   QuicklistMenuItem(item,

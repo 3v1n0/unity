@@ -205,7 +205,6 @@ PanelStyle::GetWindowButton(WindowButtonType type, WindowState state)
 nux::BaseTexture*
 PanelStyle::GetWindowButtonForTheme(WindowButtonType type, WindowState state)
 {
-  nux::BaseTexture* texture = NULL;
   int width = 18, height = 18;
   float w = width / 3.0f;
   float h = height / 3.0f;
