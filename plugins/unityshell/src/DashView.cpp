@@ -468,6 +468,7 @@ void DashView::OnActivateRequest(GVariant* args)
 
   g_variant_get(args, "(sus)", &id, NULL, &search_string);
 
+  home_view_->search_string = "";
   lens_bar_->Activate(id.Str());
 
   // Reset focus
