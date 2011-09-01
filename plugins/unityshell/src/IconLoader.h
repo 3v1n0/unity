@@ -36,21 +36,23 @@ public:
 // DO NOT `delete` this...ever.
   static IconLoader* GetDefault();
 
-  void LoadFromIconName(const char*        icon_name,
-                        guint              size,
-                        IconLoaderCallback slot);
+  int LoadFromIconName(const char*        icon_name,
+                       guint              size,
+                       IconLoaderCallback slot);
 
-  void LoadFromGIconString(const char*        gicon_string,
-                           guint              size,
-                           IconLoaderCallback slot);
+  int LoadFromGIconString(const char*        gicon_string,
+                          guint              size,
+                          IconLoaderCallback slot);
 
-  void LoadFromFilename(const char*        filename,
-                        guint              size,
-                        IconLoaderCallback slot);
+  int LoadFromFilename(const char*        filename,
+                       guint              size,
+                      IconLoaderCallback slot);
 
-  void LoadFromURI(const char*        uri,
-                   guint              size,
-                   IconLoaderCallback slot);
+  int LoadFromURI(const char*        uri,
+                  guint              size,
+                  IconLoaderCallback slot);
+
+  void DisconnectHandle (int handle);
 private:
 
   enum IconLoaderRequestType
@@ -68,10 +70,12 @@ private:
     char*                 key;
     IconLoaderCallback    slot;
     IconLoader*           self;
+    int                   handle;
   };
 
+  static int TaskCompareHandle (IconLoaderTask* task, int* b);
 
-  void   QueueTask(const char*           key,
+  int    QueueTask(const char*           key,
                    const char*           data,
                    guint                 size,
                    IconLoaderCallback    slot,
@@ -91,6 +95,8 @@ private:
 
   static bool Loop(IconLoader* self);
   static void LoadContentsReady(GObject* object, GAsyncResult* res, IconLoaderTask* task);
+
+  int id_sequencial_number_;
 
 private:
   bool _no_load;

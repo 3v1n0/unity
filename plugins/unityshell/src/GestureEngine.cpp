@@ -37,7 +37,7 @@ GestureEngine::GestureEngine(CompScreen* screen)
   _drag_grab = 0;
   _pinch_grab = 0;
 
-  GeisAdapter* adapter = GeisAdapter::Default(screen);
+  GeisAdapter* adapter = GeisAdapter::Default();
 
   adapter->tap.connect(sigc::mem_fun(this, &GestureEngine::OnTap));
 

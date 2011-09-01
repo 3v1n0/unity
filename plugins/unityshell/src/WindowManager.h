@@ -25,6 +25,7 @@
 #include "Nux/WindowThread.h"
 #include "NuxGraphics/GLWindowManager.h"
 #include <gdk/gdkx.h>
+#include <core/core.h>
 
 class WindowManager
 {
@@ -62,16 +63,34 @@ public:
   virtual void Raise(guint32 xid) = 0;
   virtual void Lower(guint32 xid) = 0;
 
+  virtual void TerminateScale() = 0;
+  virtual bool IsScaleActive() = 0;
+
+  virtual void InitiateExpo() = 0;
+  virtual bool IsExpoActive() = 0;
+
+  virtual void FocusWindowGroup(std::vector<Window> windows) = 0;
+  virtual bool ScaleWindowGroup(std::vector<Window> windows, int state, bool force) = 0;
+
   virtual void Decorate(guint32 xid) {};
   virtual void Undecorate(guint32 xid) {};
 
   virtual bool IsScreenGrabbed() = 0;
+  virtual bool IsViewPortSwitchStarted() = 0;
 
   void StartMove(guint32 id, int, int);
 
   virtual nux::Geometry GetWindowGeometry(guint32 xid) = 0;
+  virtual nux::Geometry GetScreenGeometry() = 0;
 
   virtual unsigned int GetWindowActiveNumber (guint32 xid) = 0;
+
+  virtual void SetWindowIconGeometry(Window window, nux::Geometry const& geo) = 0;
+
+  virtual void CheckWindowIntersections (nux::Geometry const& region, bool &active, bool &any) = 0;
+
+  virtual int WorkspaceCount() = 0;
+
 
   // Signals
   sigc::signal<void, guint32> window_mapped;
@@ -96,6 +115,10 @@ public:
 
   sigc::signal<void> compiz_screen_grabbed;
   sigc::signal<void> compiz_screen_ungrabbed;
+  sigc::signal<void> compiz_screen_viewport_switch_started;
+  sigc::signal<void> compiz_screen_viewport_switch_ended;
+
+  sigc::signal<void, const char*, const char*, CompOption::Vector&> compiz_event;
 
 private:
   Atom m_MoveResizeAtom;

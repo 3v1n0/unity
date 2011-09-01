@@ -63,6 +63,7 @@ PluginAdapter::PluginAdapter(CompScreen* screen) :
 {
   _spread_state = false;
   _expo_state = false;
+  _vp_switch_started = false;
 
   _grab_show_action = 0;
   _grab_hide_action = 0;
@@ -190,6 +191,23 @@ PluginAdapter::Notify(CompWindow* window, CompWindowNotify notify)
 }
 
 void
+PluginAdapter::NotifyCompizEvent(const char* plugin, const char* event, CompOption::Vector& option)
+{
+  if (g_strcmp0(event, "start_viewport_switch") == 0)
+  {
+    _vp_switch_started = true;
+    compiz_screen_viewport_switch_started.emit();
+  }
+  else if (g_strcmp0(event, "end_viewport_switch") == 0)
+  {
+    _vp_switch_started = false;
+    compiz_screen_viewport_switch_ended.emit();
+  }
+
+  compiz_event.emit(plugin, event, option);
+}
+
+void
 MultiActionList::AddNewAction(CompAction* a, bool primary)
 {
   if (std::find(m_ActionList.begin(), m_ActionList.end(), a)  == m_ActionList.end())
@@ -293,13 +311,13 @@ PluginAdapter::SetScaleAction(MultiActionList& scale)
 }
 
 std::string
-PluginAdapter::MatchStringForXids(std::list<Window> *windows)
+PluginAdapter::MatchStringForXids(std::vector<Window> *windows)
 {
   std::ostringstream sout;
 
   sout << "any & (";
 
-  std::list<Window>::iterator it;
+  std::vector<Window>::iterator it;
   for (it = windows->begin(); it != windows->end(); ++it)
   {
     sout << "| xid=" << static_cast<int>(*it) << " ";
@@ -506,6 +524,97 @@ PluginAdapter::Lower(guint32 xid)
     window->lower();
 }
 
+void 
+PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids)
+{
+  bool any_on_current = false;
+  bool any_mapped = false;
+
+  /* sort the list */
+  CompWindowList windows;
+  for (auto win : m_Screen->clientList())
+  {
+    Window id = win->id();
+    if (std::find(window_ids.begin(), window_ids.end(), id) != window_ids.end())
+      windows.push_back(win);
+  }
+
+  /* filter based on workspace */
+  for (CompWindow* &win : windows)
+  {
+    if (win->defaultViewport() == m_Screen->vp())
+    {
+      any_on_current = true;
+    }
+
+    if (!win->minimized())
+    {
+      any_mapped = true;
+    }
+
+    if (any_on_current && any_mapped)
+      break;
+  }
+
+  if (any_on_current)
+  {
+    // to ensure proper stacking we process windows in reverse order (high to low)
+    // then we active the first window and raise each following window. Due to the
+    // way stack requests work (async), each subsequent raise call will stack below
+    // the previous one.
+    bool first = false;
+    windows.reverse();
+    for (CompWindow* &win : windows)
+    {
+      if (win->defaultViewport() == m_Screen->vp() &&
+          ((any_mapped && !win->minimized()) || !any_mapped))
+      {
+        if (!first)
+        {
+          win->activate();
+          first = true;
+        }
+        else
+        {
+          win->raise();
+        }
+      }
+    }
+
+  }
+  else
+  {
+    (*(windows.rbegin()))->activate();
+  }
+}
+
+bool 
+PluginAdapter::ScaleWindowGroup(std::vector<Window> windows, int state, bool force)
+{
+  if (windows.size() > 1 || (force && windows.size() > 0))
+  {
+    std::string match = MatchStringForXids(&windows);
+    InitiateScale(match, state);
+    return true;
+  }
+  return false;
+}
+
+void 
+PluginAdapter::SetWindowIconGeometry(Window window, nux::Geometry const& geo)
+{
+  long data[4];
+
+  data[0] = geo.x;
+  data[1] = geo.y;
+  data[2] = geo.width;
+  data[3] = geo.height;
+
+  XChangeProperty(m_Screen->dpy(), window, Atoms::wmIconGeometry,
+                  XA_CARDINAL, 32, PropModeReplace,
+                  (unsigned char*) data, 4);
+}
+
 void
 PluginAdapter::ShowDesktop()
 {
@@ -543,6 +652,78 @@ PluginAdapter::GetWindowGeometry(guint32 xid)
     geo.height = window->height();
   }
   return geo;
+}
+
+nux::Geometry 
+PluginAdapter::GetScreenGeometry()
+{
+  nux::Geometry geo;
+  
+  geo.x = 0;
+  geo.y = 0;
+  geo.width = m_Screen->width();
+  geo.height = m_Screen->height();
+  
+  return geo;  
+}
+
+bool
+PluginAdapter::CheckWindowIntersection(nux::Geometry const& region, CompWindow* window)
+{
+  int intersect_types = CompWindowTypeNormalMask | CompWindowTypeDialogMask |
+                        CompWindowTypeModalDialogMask | CompWindowTypeUtilMask;
+
+  if (!window || !(window->type() & intersect_types) || !window->isMapped() || !window->isViewable() || window->minimized())
+    return false;
+
+  if (CompRegion(window->borderRect()).intersects(CompRect(region.x, region.y, region.width, region.height)))
+    return true;
+
+  return false;
+}
+
+void 
+PluginAdapter::CheckWindowIntersections (nux::Geometry const& region, bool &active, bool &any)
+{
+  // prime to false so we can assume values later one
+  active = false;
+  any = false;
+
+  CompWindowList window_list = m_Screen->windows();
+  CompWindowList::iterator it;
+  CompWindow* window = NULL;
+  CompWindow* parent = NULL;
+  int type_dialogs = CompWindowTypeDialogMask | CompWindowTypeModalDialogMask
+                     | CompWindowTypeUtilMask;
+
+
+  window = m_Screen->findWindow(m_Screen->activeWindow());
+
+  if (window && (window->type() & type_dialogs))
+    parent = m_Screen->findWindow(window->transientFor());
+
+  if (CheckWindowIntersection(region, window) || CheckWindowIntersection(region, parent))
+  {
+    any = true;
+    active = true;
+  }
+  else
+  {
+    for (it = window_list.begin(); it != window_list.end(); it++)
+    {
+      if (CheckWindowIntersection(region, *it))
+      {
+        any = true;
+        break;
+      }
+    }
+  }
+}
+
+int
+PluginAdapter::WorkspaceCount()
+{
+  return m_Screen->vpSize().width() * m_Screen->vpSize().height();
 }
 
 void
@@ -620,6 +801,12 @@ bool
 PluginAdapter::IsScreenGrabbed()
 {
   return m_Screen->grabbed();
+}
+
+bool
+PluginAdapter::IsViewPortSwitchStarted()
+{
+  return _vp_switch_started;
 }
 
 void PluginAdapter::MaximizeIfBigEnough(CompWindow* window)
