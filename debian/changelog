@@ -1,3 +1,9 @@
+unity (4.12.0-0ubuntu2) oneiric; urgency=low
+
+  * Build-depend on libxcb-icccm4-dev instead of libxcb-icccm1-dev.
+
+ -- Matthias Klose <doko@ubuntu.com>  Fri, 02 Sep 2011 13:50:57 +0200
+
 unity (4.12.0-0ubuntu1) oneiric; urgency=low
 
   * New upstream release.
