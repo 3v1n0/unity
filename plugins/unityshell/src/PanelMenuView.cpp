@@ -951,7 +951,8 @@ PanelMenuView::OnMinimizeClicked()
 {
   if (_places_showing)
   {
-    DashSettings::GetDefault()->SetFormFactor(DashSettings::DESKTOP);
+    // no action when dash is opened, LP bug #838875
+    return;
   }
   else
   {
@@ -968,7 +969,10 @@ PanelMenuView::OnRestoreClicked()
 {
   if (_places_showing)
   {
-    DashSettings::GetDefault()->SetFormFactor(DashSettings::NETBOOK);
+    if (DashSettings::GetDefault()->GetFormFactor() == DashSettings::DESKTOP)
+      DashSettings::GetDefault()->SetFormFactor(DashSettings::NETBOOK);
+    else
+      DashSettings::GetDefault()->SetFormFactor(DashSettings::DESKTOP);
   }
   else
   {
