@@ -113,6 +113,12 @@ namespace unity
 
     virtual bool SeparatorHoriz (cairo_t* cr);
 
+    virtual int GetButtonGarnishSize ();
+
+    virtual int GetSeparatorGarnishSize ();
+
+    virtual int GetScrollbarGarnishSize ();
+
     void Blur (cairo_t* cr, int size);
 
     void RoundedRect (cairo_t* cr,
@@ -242,6 +248,14 @@ namespace unity
       double                _separatorOverlayOpacity;
       BlendMode             _separatorOverlayMode;
       int                   _separatorBlurSize;
+
+      double                _scrollbarColor[CHANNELS];
+      double                _scrollbarOpacity;
+      double                _scrollbarOverlayOpacity;
+      BlendMode             _scrollbarOverlayMode;
+      int                   _scrollbarBlurSize;
+      int                   _scrollbarSize;
+      double                _scrollbarCornerRadius;
   };
 }
 

@@ -247,8 +247,6 @@ UnityScreen::~UnityScreen()
     switcher_desktop_icon->UnReference();
   panelController->UnReference();
   delete controller;
-  // launcher is a child of launcherWindow.
-  // launcher->UnReference();
   launcherWindow->UnReference();
 
   notify_uninit();

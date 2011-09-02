@@ -90,8 +90,7 @@ private:
                   guint size,
                   GdkPixbuf* pixbuf,
                   std::string icon_name,
-                  Result& row,
-                  std::string uri);
+                  Result& row);
   nux::BaseTexture* CreateTextureCallback(std::string const& texid,
                                           int width, int height,
                                           GdkPixbuf* pixbuf);

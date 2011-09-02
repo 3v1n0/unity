@@ -246,11 +246,7 @@ void ResultRendererTile::LoadIcon(Result& row)
   GIcon*  icon = g_icon_new_for_string(icon_name.c_str(), NULL);
   TextureContainer* container = row.renderer<TextureContainer*>();
 
-  std::ostringstream uri_tmp;
-  uri_tmp << row.uri() << "-" << rand();
-  std::string uri = uri_tmp.str();
-
-  IconLoader::IconLoaderCallback slot = sigc::bind(sigc::mem_fun(this, &ResultRendererTile::IconLoaded), icon_hint, row, uri);
+  IconLoader::IconLoaderCallback slot = sigc::bind(sigc::mem_fun(this, &ResultRendererTile::IconLoaded), icon_hint, row);
 
   if (g_str_has_prefix(icon_name.c_str(), "http://"))
   {
@@ -303,10 +299,10 @@ nux::BaseTexture* ResultRendererTile::CreateBlurredTextureCallback(std::string c
 
 void
 ResultRendererTile::IconLoaded(const char* texid, guint size, GdkPixbuf* pixbuf,
-                               std::string icon_name, Result& row, std::string uri)
+                               std::string icon_name, Result& row)
 {
   TextureContainer *container = row.renderer<TextureContainer*>();
-  if (pixbuf)
+  if (pixbuf && container)
   {
     TextureCache& cache = TextureCache::GetDefault();
     BaseTexturePtr texture(cache.FindTexture(icon_name, 48, 48, sigc::bind(sigc::mem_fun(this, &ResultRendererTile::CreateTextureCallback), pixbuf)));
@@ -314,13 +310,10 @@ ResultRendererTile::IconLoaded(const char* texid, guint size, GdkPixbuf* pixbuf,
     std::string blur_texid = icon_name + "_blurred";
     BaseTexturePtr texture_blurred(cache.FindTexture(blur_texid, 48, 48, sigc::bind(sigc::mem_fun(this, &ResultRendererTile::CreateBlurredTextureCallback), pixbuf)));
 
-    if (container)
-    {
-      container->icon = texture;
-      container->blurred_icon = texture_blurred;
+    container->icon = texture;
+    container->blurred_icon = texture_blurred;
 
-      NeedsRedraw.emit();
-    }
+    NeedsRedraw.emit();
   }
   // Whether there is a pixbuf or not, we need to clear the slot_handle.
   if (container)
@@ -383,7 +376,8 @@ void ResultRendererTile::LoadText(Result& row)
   cairo_destroy(cr);
 
   TextureContainer *container = row.renderer<TextureContainer*>();
-  container->text = texture_ptr_from_cairo_graphics(_cairoGraphics);
+  if (container)
+    container->text = texture_ptr_from_cairo_graphics(_cairoGraphics);
 }
 
 

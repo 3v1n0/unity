@@ -30,8 +30,8 @@
 #include "FontSettings.h"
 #include "DashView.h"
 
-#define WIDTH 1054
-#define HEIGHT 640
+#define WIDTH 958
+#define HEIGHT 574
 
 using namespace unity::dash;
 
@@ -103,7 +103,7 @@ int main(int argc, char **argv)
 
   TestRunner *test_runner = new TestRunner ();
   wt = nux::CreateGUIThread(TEXT("Unity Dash"),
-                            WIDTH+12, HEIGHT+12,
+                            WIDTH, HEIGHT,
                             0,
                             &TestRunner::InitWindowThread,
                             test_runner);

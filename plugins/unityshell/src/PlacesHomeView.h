@@ -32,9 +32,6 @@
 #include "PlacesTile.h"
 #include "PlacesGroup.h"
 
-#include <gconf/gconf-client.h>
-#include <time.h>
-
 namespace unity
 {
 
@@ -55,29 +52,21 @@ protected:
 private:
   static void DashVisible(GVariant* data, void* val);
   void OnShortcutClicked(PlacesTile* _tile);
-  static void OnKeyChanged(GConfClient*    client,
-                           guint           cnxn_id,
-                           GConfEntry*     entry,
-                           PlacesHomeView* self);
   void CreateShortcutFromExec(const char* exec,
+                              const char* name,
+                              std::vector<std::string>& alternatives);
+  void CreateShortcutFromMime(const char* mime,
                               const char* name,
                               std::vector<std::string>& alternatives);
 
 private:
   nux::GridHLayout*        _layout;
-  GConfClient* _client;
   std::vector<std::string> _browser_alternatives;
   std::vector<std::string> _photo_alternatives;
   std::vector<std::string> _email_alternatives;
   std::vector<std::string> _music_alternatives;
 
-  struct timespec time_diff(struct timespec start, struct timespec end);
-  struct timespec _last_activate_time;
-
   guint _ubus_handle;
-  guint _browser_gconf_notify;
-  guint _mail_gconf_notify;
-  guint _media_gconf_notify;
 };
 
 }
