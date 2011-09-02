@@ -114,6 +114,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , mActiveFbo (0)
   , dash_is_open_ (false)
   , grab_index_ (0)
+  , painting_tray_ (false)
 {
   Timer timer;
   configure_logging();
@@ -460,6 +461,7 @@ UnityWindow::updateIconPos (int   &wx,
 void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transform, unsigned int mask)
 {
   CompOutput *output = _last_output;
+  Window     tray_xid = panelController->GetTrayXid ();
 
   mFbos[output]->unbind ();
 
@@ -477,6 +479,47 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
 
   wt->RenderInterfaceFromForeignCmd (&geo);
   nuxEpilogue();
+
+  if (tray_xid && !allowWindowPaint)
+  {
+    CompWindow *tray = screen->findWindow (tray_xid);
+
+    if (tray)
+    {
+      GLMatrix oTransform;
+      UnityWindow  *uTrayWindow = UnityWindow::get (tray);
+      GLFragment::Attrib attrib (uTrayWindow->gWindow->lastPaintAttrib());
+      unsigned int oldGlAddGeometryIndex = uTrayWindow->gWindow->glAddGeometryGetCurrentIndex ();
+      unsigned int oldGlDrawIndex = uTrayWindow->gWindow->glDrawGetCurrentIndex ();
+      unsigned int oldGlDrawGeometryIndex = uTrayWindow->gWindow->glDrawGeometryGetCurrentIndex ();
+
+      attrib.setOpacity (OPAQUE);
+      attrib.setBrightness (BRIGHT);
+      attrib.setSaturation (COLOR);
+
+      oTransform.toScreenSpace (output, -DEFAULT_Z_CAMERA);
+
+      glPushMatrix ();
+      glLoadMatrixf (oTransform.getMatrix ());
+
+      painting_tray_ = true;
+
+      /* force the use of the core functions */
+      uTrayWindow->gWindow->glDrawSetCurrentIndex (MAXSHORT);
+      uTrayWindow->gWindow->glAddGeometrySetCurrentIndex ( MAXSHORT);
+      uTrayWindow->gWindow->glDrawGeometrySetCurrentIndex (MAXSHORT);
+      uTrayWindow->gWindow->glDraw (oTransform, attrib, infiniteRegion,
+				     PAINT_WINDOW_TRANSFORMED_MASK |
+				     PAINT_WINDOW_BLEND_MASK |
+				     PAINT_WINDOW_ON_TRANSFORMED_SCREEN_MASK);
+      uTrayWindow->gWindow->glDrawGeometrySetCurrentIndex (oldGlDrawGeometryIndex);
+      uTrayWindow->gWindow->glAddGeometrySetCurrentIndex (oldGlAddGeometryIndex);
+      uTrayWindow->gWindow->glDrawSetCurrentIndex (oldGlDrawIndex);
+      painting_tray_ = false;
+
+      glPopMatrix ();
+    }
+  }
 
  if (switcherController->Visible ())
   {
@@ -1296,7 +1339,15 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
   }
   else if (mShowdesktopHandler)
     mShowdesktopHandler->paintAttrib (wAttrib);
-  
+
+  if (uScreen->panelController->GetTrayXid () == window->id () && !allowWindowPaint)
+  {
+    if (!uScreen->painting_tray_)
+    {
+      uScreen->tray_paint_mask_ = mask;
+      mask |= PAINT_WINDOW_NO_CORE_INSTANCE_MASK;
+    }
+  }
 
   /* Don't bother detecting occlusions if we're not doing updates
    * or we don't want to repaint the shell this pass. We also

@@ -52,6 +52,14 @@ PanelController::~PanelController()
   }
 }
 
+unsigned int PanelController::GetTrayXid ()
+{
+  if (!_windows.empty ())
+    return ViewForWindow (_windows.front ())->GetTrayXid ();
+  else
+    return 0;
+}
+
 void
 PanelController::StartFirstMenuShow()
 {

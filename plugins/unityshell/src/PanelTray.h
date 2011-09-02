@@ -44,8 +44,9 @@ public:
   ~PanelTray();
 
   void Draw(nux::GraphicsEngine& gfx_content, bool force_draw);
-
   void Sync();
+
+  unsigned int xid ();
 
   virtual void OnEntryAdded(unity::indicator::Entry::Ptr const& proxy);
 
