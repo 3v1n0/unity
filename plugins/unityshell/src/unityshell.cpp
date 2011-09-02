@@ -1340,7 +1340,7 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
   else if (mShowdesktopHandler)
     mShowdesktopHandler->paintAttrib (wAttrib);
 
-  if (uScreen->panelController->GetTrayXid () == window->id () && !allowWindowPaint)
+  if (uScreen->panelController->GetTrayXid () == window->id () && !uScreen->allowWindowPaint)
   {
     if (!uScreen->painting_tray_)
     {
