@@ -439,7 +439,6 @@ void PanelView::OnEntryActivated(std::string const& entry_id)
       g_source_remove(_track_menu_pointer_id);
       _track_menu_pointer_id = 0;
     }
-    _menu_view->AllMenusClosed();
   }
 }
 

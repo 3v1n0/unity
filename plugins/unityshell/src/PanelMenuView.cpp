@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -18,6 +19,7 @@
 #include <glib.h>
 #include <pango/pangocairo.h>
 #include <gtk/gtk.h>
+#include <X11/cursorfont.h>
 
 #include "Nux/Nux.h"
 #include "Nux/HLayout.h"
@@ -27,13 +29,10 @@
 #include "NuxGraphics/GLThread.h"
 #include "NuxGraphics/XInputWindow.h"
 #include "Nux/BaseWindow.h"
-#include "Nux/WindowCompositor.h"
 
 #include "PanelMenuView.h"
 #include "PanelStyle.h"
 #include <UnityCore/Variant.h>
-
-#include "WindowManager.h"
 
 #include <gio/gdesktopappinfo.h>
 #include <gconf/gconf-client.h>
@@ -107,13 +106,16 @@ PanelMenuView::PanelMenuView(int padding)
   _window_buttons->close_clicked.connect(sigc::mem_fun(this, &PanelMenuView::OnCloseClicked));
   _window_buttons->minimize_clicked.connect(sigc::mem_fun(this, &PanelMenuView::OnMinimizeClicked));
   _window_buttons->restore_clicked.connect(sigc::mem_fun(this, &PanelMenuView::OnRestoreClicked));
-  _window_buttons->redraw_signal.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowButtonsRedraw));
-  _window_buttons->mouse_moved.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseMove));
+  _window_buttons->mouse_enter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
+  _window_buttons->mouse_leave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
+  _window_buttons->mouse_move.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseMove));
 
   _panel_titlebar_grab_area = new PanelTitlebarGrabArea();
   _panel_titlebar_grab_area->SetParentObject(this);
   _panel_titlebar_grab_area->SinkReference();
-  _panel_titlebar_grab_area->mouse_down.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedGrab));
+  _panel_titlebar_grab_area->mouse_down.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedGrabStart));
+  _panel_titlebar_grab_area->mouse_drag.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedGrabMove));
+  _panel_titlebar_grab_area->mouse_up.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedGrabEnd));
   _panel_titlebar_grab_area->mouse_doubleleftclick.connect(sigc::mem_fun(this, &PanelMenuView::OnMouseDoubleClicked));
   _panel_titlebar_grab_area->mouse_middleclick.connect(sigc::mem_fun(this, &PanelMenuView::OnMouseMiddleClicked));
 
@@ -258,11 +260,6 @@ PanelMenuView::FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEven
     {
       found_area = _window_buttons->FindAreaUnderMouse(mouse_position, event_type);
       NUX_RETURN_VALUE_IF_NOTNULL(found_area, found_area);
-      
-      // #820293
-      if (mouse_position.x <= _window_buttons->GetAbsoluteX() + _window_buttons->GetAbsoluteWidth())
-        return NULL;
-      
     }
 
     if (_panel_titlebar_grab_area)
@@ -346,9 +343,7 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   nux::ColorLayer layer(nux::Color(0x00000000), true, rop);
   gPainter.PushDrawLayer(GfxContext, GetGeometry(), &layer);
 
-  nux::Point point = nux::GetWindowCompositor().GetMousePosition();
-  
-  if (_is_own_window || !_we_control_active || (_is_maximized && GetAbsoluteGeometry().IsPointInside(point.x, point.y)) || (_is_maximized && _is_inside))
+  if (_is_own_window || !_we_control_active || (_is_maximized && _is_inside))
   {
 
   }
@@ -456,15 +451,13 @@ PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   GfxContext.PushClippingRectangle(geo);
 
-  nux::Point point = nux::GetWindowCompositor().GetMousePosition();
-  
   if (!_is_own_window && !_places_showing && _we_control_active)
   {
-    if (GetAbsoluteGeometry().IsPointInside(point.x, point.y) || _last_active_view || _show_now_activated)
+    if (_is_inside || _last_active_view || _show_now_activated)
       layout_->ProcessDraw(GfxContext, force_draw);
   }
 
-    if ((!_is_own_window && _we_control_active && _is_maximized && (GetAbsoluteGeometry().IsPointInside(point.x, point.y) || _is_inside)) ||
+    if ((!_is_own_window && _we_control_active && _is_maximized && _is_inside) ||
         _places_showing)
     {
       _window_buttons->ProcessDraw(GfxContext, true);
@@ -754,18 +747,6 @@ void PanelMenuView::OnEntryAdded(unity::indicator::Entry::Ptr const& proxy)
 }
 
 void
-PanelMenuView::AllMenusClosed()
-{
-  // NOTE: this is causing the menus to dissapear when the menu heading is
-  // clicked a second time to hide the menu, causing all menus to dissapear
-  // and reappear as soon as the user moves the mouse slightly.
-  _is_inside = false;
-  _last_active_view = false;
-
-  FullRedraw();
-}
-
-void
 PanelMenuView::OnNameChanged(gchar* new_name, gchar* old_name)
 {
   Refresh();
@@ -908,6 +889,7 @@ PanelMenuView::OnWindowRestored(guint xid)
   if (BAMF_IS_WINDOW(window) && bamf_window_get_xid(window) == xid)
   {
     _is_maximized = false;
+    _is_grabbed = false;
   }
 
   if (_decor_map[xid])
@@ -998,12 +980,6 @@ PanelMenuView::OnRestoreClicked()
   }
 }
 
-void
-PanelMenuView::OnWindowButtonsRedraw()
-{
-  FullRedraw();
-}
-
 guint32
 PanelMenuView::GetMaximizedWindow()
 {
@@ -1029,12 +1005,38 @@ PanelMenuView::GetMaximizedWindow()
 }
 
 void
-PanelMenuView::OnMaximizedGrab(int x, int y)
+PanelMenuView::OnMaximizedGrabStart(int x, int y)
+{
+  // When Start dragging the panelmenu of a maximized window, change cursor
+  // to simulate the dragging, waiting to go out of the panel area.
+  //
+  // This is a workaround to avoid that the grid plugin would be fired
+  // showing the window shape preview effect. See bug #838923
+  if (GetMaximizedWindow() != 0)
+  {
+    Display* d = nux::GetGraphicsDisplay()->GetX11Display();
+    nux::BaseWindow *bw = static_cast<nux::BaseWindow*>(GetTopLevelViewWindow());
+    Cursor c = XCreateFontCursor(d, XC_fleur);
+    XDefineCursor(d, bw->GetInputWindowId(), c);
+    XFreeCursor(d, c);
+  }
+}
+
+void
+PanelMenuView::OnMaximizedGrabMove(int x, int y, int, int, unsigned long, unsigned long)
 {
   guint32 window_xid = GetMaximizedWindow();
 
-  if (window_xid != 0)
+  // When the drag goes out from the Panel, start the real movement.
+  //
+  // This is a workaround to avoid that the grid plugin would be fired
+  // showing the window shape preview effect. See bug #838923
+  if (window_xid != 0 && !GetAbsoluteGeometry().IsPointInside(x, y))
   {
+    Display* d = nux::GetGraphicsDisplay()->GetX11Display();
+    nux::BaseWindow *bw = static_cast<nux::BaseWindow*>(GetTopLevelViewWindow());
+    XUndefineCursor(d, bw->GetInputWindowId());
+
     WindowManager::Default()->Activate(window_xid);
     _is_inside = true;
     _is_grabbed = true;
@@ -1045,6 +1047,15 @@ PanelMenuView::OnMaximizedGrab(int x, int y)
 }
 
 void
+PanelMenuView::OnMaximizedGrabEnd(int x, int y, unsigned long, unsigned long)
+{
+  // Restore the window cursor to default.
+  Display* d = nux::GetGraphicsDisplay()->GetX11Display();
+  nux::BaseWindow *bw = static_cast<nux::BaseWindow*>(GetTopLevelViewWindow());
+  XUndefineCursor(d, bw->GetInputWindowId());
+}
+
+void
 PanelMenuView::OnMouseDoubleClicked()
 {
   guint32 window_xid = GetMaximizedWindow();
@@ -1052,6 +1063,7 @@ PanelMenuView::OnMouseDoubleClicked()
   if (window_xid != 0)
   {
     WindowManager::Default()->Restore(window_xid);
+    _is_inside = true;
   }
 }
 
@@ -1158,7 +1170,7 @@ PanelMenuView::HasOurWindowFocused()
 
 void
 PanelMenuView::OnPanelViewMouseEnter(int x, int y, unsigned long mouse_button_state, unsigned long special_keys_state)
-{ 
+{
   if (_is_inside != true)
   {
     if (_is_grabbed)
