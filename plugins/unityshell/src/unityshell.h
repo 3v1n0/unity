@@ -334,6 +334,8 @@ public:
   void unminimize ();
   bool minimized ();
 
+  void updateFrameRegion (CompRegion &region);
+
   /* occlusion detection
    * and window hiding */
   bool glPaint(const GLWindowPaintAttrib& attrib,

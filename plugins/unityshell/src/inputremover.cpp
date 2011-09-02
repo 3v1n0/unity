@@ -30,6 +30,9 @@ compiz::WindowInputRemover::WindowInputRemover (Display *dpy,
   mInputRects (NULL),
   mNInputRects (0),
   mInputRectOrdering (0),
+  mBoundingRects (NULL),
+  mNBoundingRects (0),
+  mBoundingRectOrdering (0),
   mRemoved (false)
 {
 }
@@ -59,11 +62,9 @@ compiz::WindowInputRemover::save ()
 
   rects = XShapeGetRectangles (mDpy, mShapeWindow, ShapeInput,
                                &count, &ordering);
-  if (count == 0)
-    return false;
 
   /* check if the returned shape exactly matches the window shape -
-   *      if that is true, the window currently has no set input shape */
+   * if that is true, the window currently has no set input shape */
   if ((count == 1) &&
       (rects[0].x == -((int) border)) &&
       (rects[0].y == -((int) border)) &&
@@ -76,11 +77,21 @@ compiz::WindowInputRemover::save ()
   if (mInputRects)
     XFree (mInputRects);
 
-  mShapeMask = XShapeInputSelected (mDpy, mShapeWindow);
-
   mInputRects = rects;
   mNInputRects = count;
   mInputRectOrdering = ordering;
+
+  rects = XShapeGetRectangles (mDpy, mShapeWindow, ShapeBounding,
+                               &count, &ordering);
+
+  if (mBoundingRects)
+    XFree (mBoundingRects);
+
+  mBoundingRects = rects;
+  mNBoundingRects = count;
+  mBoundingRectOrdering = ordering;
+
+  mShapeMask = XShapeInputSelected (mDpy, mShapeWindow);
 
   return true;
 }
@@ -94,6 +105,8 @@ compiz::WindowInputRemover::remove ()
   XShapeSelectInput (mDpy, mShapeWindow, NoEventMask);
 
   XShapeCombineRectangles (mDpy, mShapeWindow, ShapeInput, 0, 0,
+                           NULL, 0, ShapeSet, 0);
+  XShapeCombineRectangles (mDpy, mShapeWindow, ShapeBounding, 0, 0,
                            NULL, 0, ShapeSet, 0);
 
   XShapeSelectInput (mDpy, mShapeWindow, ShapeNotify);
@@ -121,6 +134,21 @@ compiz::WindowInputRemover::restore ()
 
     if (mInputRects)
       XFree (mInputRects);
+
+    if (mNBoundingRects)
+    {
+      XShapeCombineRectangles (mDpy, mShapeWindow, ShapeBounding, 0, 0,
+                         mInputRects, mNBoundingRects,
+                         ShapeSet, mBoundingRectOrdering);
+    }
+    else
+    {
+      XShapeCombineMask (mDpy, mShapeWindow, ShapeBounding,
+                   0, 0, None, ShapeSet);
+    }
+
+    if (mBoundingRects)
+      XFree (mBoundingRects);
   }
 
   XShapeSelectInput (mDpy, mShapeWindow, mShapeMask);
@@ -128,5 +156,7 @@ compiz::WindowInputRemover::restore ()
   mRemoved = false;
   mNInputRects  = 0;
   mInputRects = NULL;
+  mNBoundingRects = 0;
+  mBoundingRects = NULL;
   return true;
 }

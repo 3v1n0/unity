@@ -831,6 +831,8 @@ void UnityScreen::handleEvent(XEvent* event)
       break;
   }
 
+  compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>::handleEvent (event);
+
   // avoid further propagation (key conflict for instance)
   if (!skip_other_plugins)
     screen->handleEvent(event);
@@ -1444,6 +1446,22 @@ void UnityWindow::stateChangeNotify(unsigned int lastState)
 
   PluginAdapter::Default()->NotifyStateChange(window, window->state(), lastState);
   window->stateChangeNotify(lastState);
+}
+
+void UnityWindow::updateFrameRegion(CompRegion &region)
+{
+  /* The minimize handler will short circuit the frame
+   * region update func and ensure that the frame
+   * does not have a region */
+  typedef compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow> minimized_window_handler_unity;
+
+  compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>::Ptr compizMinimizeHandler =
+      boost::dynamic_pointer_cast <minimized_window_handler_unity> (mMinimizeHandler);
+
+  if (compizMinimizeHandler)
+    compizMinimizeHandler->updateFrameRegion (region);
+  else
+    window->updateFrameRegion (region);
 }
 
 void UnityWindow::moveNotify(int x, int y, bool immediate)
