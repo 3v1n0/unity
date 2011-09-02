@@ -138,7 +138,7 @@ compiz::WindowInputRemover::restore ()
     if (mNBoundingRects)
     {
       XShapeCombineRectangles (mDpy, mShapeWindow, ShapeBounding, 0, 0,
-                         mInputRects, mNBoundingRects,
+                         mBoundingRects, mNBoundingRects,
                          ShapeSet, mBoundingRectOrdering);
     }
     else
