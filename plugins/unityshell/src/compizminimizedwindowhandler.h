@@ -135,9 +135,6 @@ compiz::CompizMinimizedWindowHandler<Screen, Window>::setVisibility (bool visibl
     priv->clientInputRemover = NULL;
   }
 
-  CompositeWindow::get (priv->mWindow)->addDamage ();
-  GLWindow::get (priv->mWindow)->glPaintSetEnabled (Window::get (priv->mWindow), !visible);
-
   /* This is a little hack to ensure that the window region gets updated,
    * because there's no API in core to do that */
 
@@ -145,6 +142,9 @@ compiz::CompizMinimizedWindowHandler<Screen, Window>::setVisibility (bool visibl
   priv->mWindow->resize (gm);
   gm.setBorder (gm.border () - 1);
   priv->mWindow->resize (gm);
+
+  CompositeWindow::get (priv->mWindow)->addDamage ();
+  GLWindow::get (priv->mWindow)->glPaintSetEnabled (Window::get (priv->mWindow), !visible);
 }
 
 template <typename Screen, typename Window>
