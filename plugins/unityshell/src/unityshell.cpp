@@ -1684,6 +1684,8 @@ bool UnityScreen::setOptionForPlugin(const char* plugin, const char* name,
 
 void UnityScreen::outputChangeNotify()
 {
+  screen->outputChangeNotify ();
+
   ScheduleRelayout(500);
 }
 
