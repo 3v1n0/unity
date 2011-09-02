@@ -53,6 +53,9 @@
 
 #define DELTA_DOUBLE_REQUEST 500000000
 
+namespace unity
+{
+
 enum
 {
   TYPE_PLACE = 0,
@@ -439,3 +442,5 @@ struct timespec PlacesHomeView::time_diff(struct timespec start, struct timespec
   }
   return temp;
 }
+
+} // namespace unity

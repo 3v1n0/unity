@@ -57,10 +57,10 @@ ResultRendererHorizontalTile::ResultRendererHorizontalTile(NUX_FILE_LINE_DECL)
 
   // pre-load the highlight texture
   // try and get a texture from the texture cache
-  TextureCache* cache = TextureCache::GetDefault();
-  prelight_cache_ = cache->FindTexture("ResultRendererHorizontalTile.PreLightTexture",
-                                       style->GetTileIconSize() + 8, style->GetTileIconSize() + 8,
-                                       sigc::mem_fun(this, &ResultRendererHorizontalTile::DrawHighlight));
+  TextureCache& cache = TextureCache::GetDefault();
+  prelight_cache_ = cache.FindTexture("ResultRendererHorizontalTile.PreLightTexture",
+                                      style->GetTileIconSize() + 8, style->GetTileIconSize() + 8,
+                                      sigc::mem_fun(this, &ResultRendererHorizontalTile::DrawHighlight));
 }
 
 ResultRendererHorizontalTile::~ResultRendererHorizontalTile()
@@ -151,10 +151,11 @@ void ResultRendererHorizontalTile::Render(nux::GraphicsEngine& GfxContext,
 
 }
 
-void ResultRendererHorizontalTile::DrawHighlight(const char* texid, int width, int height, nux::BaseTexture** texture)
+nux::BaseTexture* ResultRendererHorizontalTile::DrawHighlight(std::string const& texid,
+                                                              int width, int height)
 {
-  nux::CairoGraphics* cairo_graphics = new nux::CairoGraphics(CAIRO_FORMAT_ARGB32, width, height);
-  cairo_t* cr = cairo_graphics->GetContext();
+  nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, width, height);
+  cairo_t* cr = cairo_graphics.GetInternalContext();
 
   cairo_scale(cr, 1.0f, 1.0f);
 
@@ -174,7 +175,7 @@ void ResultRendererHorizontalTile::DrawHighlight(const char* texid, int width, i
   cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
   cairo_set_line_width(cr, 1.0f);
   cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 0.75f);
-  cairo_graphics->DrawRoundedRectangle(cr,
+  cairo_graphics.DrawRoundedRectangle(cr,
                                        1.0f,
                                        bg_x,
                                        bg_y,
@@ -184,10 +185,10 @@ void ResultRendererHorizontalTile::DrawHighlight(const char* texid, int width, i
                                        true);
   cairo_fill(cr);
 
-  cairo_graphics->BlurSurface(BLUR_SIZE - 2);
+  cairo_graphics.BlurSurface(BLUR_SIZE - 2);
 
   cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
-  cairo_graphics->DrawRoundedRectangle(cr,
+  cairo_graphics.DrawRoundedRectangle(cr,
                                        1.0,
                                        bg_x,
                                        bg_y,
@@ -198,7 +199,7 @@ void ResultRendererHorizontalTile::DrawHighlight(const char* texid, int width, i
   cairo_clip(cr);
   cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
 
-  cairo_graphics->DrawRoundedRectangle(cr,
+  cairo_graphics.DrawRoundedRectangle(cr,
                                        1.0,
                                        bg_x,
                                        bg_y,
@@ -212,10 +213,7 @@ void ResultRendererHorizontalTile::DrawHighlight(const char* texid, int width, i
   cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 1.0);
   cairo_stroke(cr);
 
-  cairo_destroy(cr);
-
-  *texture = texture_from_cairo_graphics(*cairo_graphics);
-  delete cairo_graphics;
+  return texture_from_cairo_graphics(cairo_graphics);
 }
 
 void ResultRendererHorizontalTile::LoadText(Result& row)

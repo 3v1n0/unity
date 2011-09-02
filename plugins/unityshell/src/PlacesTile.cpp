@@ -30,12 +30,12 @@
 #define PADDING 8
 #define BLUR_SIZE 6
 
-using unity::texture_from_cairo_graphics;
+namespace unity
+{
 
 PlacesTile::PlacesTile(NUX_FILE_LINE_DECL, const void* id) :
   View(NUX_FILE_LINE_PARAM),
   _id(id),
-  _hilight_background(NULL),
   _hilight_layer(NULL),
   _last_width(0),
   _last_height(0)
@@ -52,13 +52,6 @@ PlacesTile::PlacesTile(NUX_FILE_LINE_DECL, const void* id) :
 
 PlacesTile::~PlacesTile()
 {
-  if (_hilight_background)
-  {
-    _hilight_background->UnReference();
-    _hilight_background = NULL;
-    con_obj.disconnect();
-  }
-
   if (_hilight_layer)
   {
     delete _hilight_layer;
@@ -84,8 +77,8 @@ PlacesTile::GetHighlightGeometry()
   return GetGeometry();
 }
 
-void
-PlacesTile::DrawHighlight(const char* texid, int width, int height, nux::BaseTexture** texture)
+nux::BaseTexture*
+PlacesTile::DrawHighlight(std::string const& texid, int width, int height)
 {
   nux::Geometry base = GetGeometry();
   nux::Geometry highlight_geo = GetHighlightGeometry();
@@ -148,17 +141,8 @@ PlacesTile::DrawHighlight(const char* texid, int width, int height, nux::BaseTex
   cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 1.0);
   cairo_stroke(cr);
 
-  *texture = texture_from_cairo_graphics(cairo_graphics);
+  return texture_from_cairo_graphics(cairo_graphics);
 }
-
-void
-PlacesTile::OnDestroyNotify(nux::Trackable* Object)
-{
-  g_warning("Texture destroyed before we were ready");
-  _hilight_background = NULL;
-  UpdateBackground();
-}
-
 
 void
 PlacesTile::UpdateBackground()
@@ -173,22 +157,11 @@ PlacesTile::UpdateBackground()
   _last_height = base.height;
 
   // try and get a texture from the texture cache
-  TextureCache* cache = TextureCache::GetDefault();
-  nux::BaseTexture* hilight_tex = cache->FindTexture("PlacesTile.HilightTexture",
-                                                     highlight_geo.width, highlight_geo.height,
-                                                     sigc::mem_fun(this, &PlacesTile::DrawHighlight));
+  TextureCache& cache = TextureCache::GetDefault();
 
-  if (_hilight_background)
-  {
-    _hilight_background->UnReference();
-    _hilight_background = NULL;
-    con_obj.disconnect();
-  }
-
-  con_obj = hilight_tex->OnDestroyed.connect(sigc::mem_fun(this, &PlacesTile::OnDestroyNotify));
-
-  _hilight_background = hilight_tex;
-  _hilight_background->Reference();
+  _hilight_background = cache.FindTexture("PlacesTile.HilightTexture",
+                                          highlight_geo.width, highlight_geo.height,
+                                          sigc::mem_fun(this, &PlacesTile::DrawHighlight));
 
   nux::ROPConfig rop;
   rop.Blend = true;
@@ -318,3 +291,5 @@ PlacesTile::OnFocusActivated(nux::Area* label)
 {
   sigClick.emit(this);
 }
+
+} // namespace unity

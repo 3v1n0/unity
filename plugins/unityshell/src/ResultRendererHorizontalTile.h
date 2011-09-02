@@ -57,8 +57,7 @@ protected:
   void LoadText(Result& row);
 
 private:
-  void DrawHighlight(const char* texid, int width, int height,
-                     nux::BaseTexture** texture);
+  nux::BaseTexture* DrawHighlight(std::string const& texid, int width, int height);
 };
 
 }

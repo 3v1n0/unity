@@ -56,10 +56,10 @@ ResultRendererTile::ResultRendererTile(NUX_FILE_LINE_DECL)
 
   // pre-load the highlight texture
   // try and get a texture from the texture cache
-  TextureCache* cache = TextureCache::GetDefault();
-  prelight_cache_ = cache->FindTexture("ResultRendererTile.PreLightTexture",
-                                       62, 62,
-                                       sigc::mem_fun(this, &ResultRendererTile::DrawHighlight));
+  TextureCache& cache = TextureCache::GetDefault();
+  prelight_cache_ = cache.FindTexture("ResultRendererTile.PreLightTexture",
+                                      62, 62,
+                                      sigc::mem_fun(this, &ResultRendererTile::DrawHighlight));
 }
 
 ResultRendererTile::~ResultRendererTile()
@@ -150,7 +150,7 @@ void ResultRendererTile::Render(nux::GraphicsEngine& GfxContext,
 
 }
 
-void ResultRendererTile::DrawHighlight(const char* texid, int width, int height, nux::BaseTexture** texture)
+nux::BaseTexture* ResultRendererTile::DrawHighlight(std::string const& texid, int width, int height)
 {
   nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, width, height);
   cairo_t* cr = cairo_graphics.GetContext();
@@ -213,7 +213,7 @@ void ResultRendererTile::DrawHighlight(const char* texid, int width, int height,
 
   cairo_destroy(cr);
 
-  *texture = texture_from_cairo_graphics(cairo_graphics);
+  return texture_from_cairo_graphics(cairo_graphics);
 }
 
 void ResultRendererTile::Preload(Result& row)
@@ -267,22 +267,18 @@ void ResultRendererTile::LoadIcon(Result& row)
   }
 }
 
-void
-ResultRendererTile::CreateTextureCallback(const char* texid,
-                                          int width,
-                                          int height,
-                                          nux::BaseTexture** texture,
-                                          GdkPixbuf* pixbuf)
+nux::BaseTexture* ResultRendererTile::CreateTextureCallback(std::string const& texid,
+                                                            int width,
+                                                            int height,
+                                                            GdkPixbuf* pixbuf)
 {
-  nux::BaseTexture* texture2D = nux::CreateTexture2DFromPixbuf(pixbuf, true);
-  *texture = texture2D;
+  return nux::CreateTexture2DFromPixbuf(pixbuf, true);
 }
 
-void ResultRendererTile::CreateBlurredTextureCallback(const char* texid,
-                                                      int width,
-                                                      int height,
-                                                      nux::BaseTexture** texture,
-                                                      GdkPixbuf* pixbuf)
+nux::BaseTexture* ResultRendererTile::CreateBlurredTextureCallback(std::string const& texid,
+                                                                   int width,
+                                                                   int height,
+                                                                   GdkPixbuf* pixbuf)
 {
   nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, width + 10, height + 10);
   cairo_t* cr = cairo_graphics.GetInternalContext();
@@ -301,7 +297,7 @@ void ResultRendererTile::CreateBlurredTextureCallback(const char* texid,
 
   cairo_graphics.BlurSurface(4);
 
-  *texture = texture_from_cairo_graphics(cairo_graphics);
+  return texture_from_cairo_graphics(cairo_graphics);
 }
 
 
@@ -312,15 +308,11 @@ ResultRendererTile::IconLoaded(const char* texid, guint size, GdkPixbuf* pixbuf,
   TextureContainer *container = row.renderer<TextureContainer*>();
   if (pixbuf)
   {
-    TextureCache* cache = TextureCache::GetDefault();
-    BaseTexturePtr texture(cache->FindTexture(icon_name.c_str(), 48, 48,
-                                              sigc::bind(sigc::mem_fun(this, &ResultRendererTile::CreateTextureCallback), pixbuf)));
-    texture->UnReference();
+    TextureCache& cache = TextureCache::GetDefault();
+    BaseTexturePtr texture(cache.FindTexture(icon_name, 48, 48, sigc::bind(sigc::mem_fun(this, &ResultRendererTile::CreateTextureCallback), pixbuf)));
 
     std::string blur_texid = icon_name + "_blurred";
-    BaseTexturePtr texture_blurred(cache->FindTexture(blur_texid.c_str(), 48, 48,
-                                                      sigc::bind(sigc::mem_fun(this, &ResultRendererTile::CreateBlurredTextureCallback), pixbuf)));
-    texture_blurred->UnReference();
+    BaseTexturePtr texture_blurred(cache.FindTexture(blur_texid, 48, 48, sigc::bind(sigc::mem_fun(this, &ResultRendererTile::CreateBlurredTextureCallback), pixbuf)));
 
     if (container)
     {

@@ -82,7 +82,7 @@ public:
 protected:
   void LoadText(Result& row);
   void LoadIcon(Result& row);
-  nux::BaseTexture* prelight_cache_;
+  nux::ObjectPtr<nux::BaseTexture> prelight_cache_;
 
 private:
   //icon loading callbacks
@@ -92,17 +92,14 @@ private:
                   std::string icon_name,
                   Result& row,
                   std::string uri);
-  void CreateTextureCallback(const char* texid,
-                             int width, int height,
-                             nux::BaseTexture** texture,
-                             GdkPixbuf* pixbuf);
-  void CreateBlurredTextureCallback(const char* texid,
-                                    int width, int height,
-                                    nux::BaseTexture** texture,
-                                    GdkPixbuf* pixbuf);
-  void DrawHighlight(const char* texid,
-                     int width, int height,
-                     nux::BaseTexture** texture);
+  nux::BaseTexture* CreateTextureCallback(std::string const& texid,
+                                          int width, int height,
+                                          GdkPixbuf* pixbuf);
+  nux::BaseTexture* CreateBlurredTextureCallback(std::string const& texid,
+                                                 int width, int height,
+                                                 GdkPixbuf* pixbuf);
+  nux::BaseTexture* DrawHighlight(std::string const& texid,
+                                  int width, int height);
 };
 
 }

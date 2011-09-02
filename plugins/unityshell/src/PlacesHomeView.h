@@ -35,6 +35,9 @@
 #include <gconf/gconf-client.h>
 #include <time.h>
 
+namespace unity
+{
+
 class PlacesHomeView : public unity::Introspectable, public PlacesGroup
 {
 public:
@@ -77,5 +80,5 @@ private:
   guint _media_gconf_notify;
 };
 
-
+}
 #endif

@@ -27,6 +27,9 @@
 #include "PlacesTile.h"
 #include "StaticCairoText.h"
 
+namespace unity
+{
+
 class PlacesSimpleTile : public unity::Introspectable, public PlacesTile
 {
 public:
@@ -64,5 +67,6 @@ private:
   nux::StaticCairoText* _cairotext;
 };
 
+}
 
 #endif /* PLACES_SIMPLE_TILE_H */
