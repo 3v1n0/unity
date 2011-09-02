@@ -481,7 +481,7 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
   wt->RenderInterfaceFromForeignCmd (&geo);
   nuxEpilogue();
 
-  if (tray_xid)
+  if (tray_xid && !allowWindowPaint)
   {
     CompWindow *tray = screen->findWindow (tray_xid);
 
@@ -1339,7 +1339,7 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
   else if (mShowdesktopHandler)
     mShowdesktopHandler->paintAttrib (wAttrib);
 
-  if (uScreen->panelController->GetTrayXid () == window->id ())
+  if (uScreen->panelController->GetTrayXid () == window->id () && !allowWindowPaint)
   {
     if (!uScreen->painting_tray_)
     {
