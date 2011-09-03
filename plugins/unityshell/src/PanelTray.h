@@ -45,6 +45,10 @@ public:
   long ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo);
   void Sync();
 
+  unsigned int xid ();
+
+  virtual void OnEntryAdded(unity::indicator::Entry::Ptr const& proxy);
+
 public:
   char**     _whitelist;
 protected:

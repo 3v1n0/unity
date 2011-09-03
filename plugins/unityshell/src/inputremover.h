@@ -48,6 +48,10 @@ private:
   XRectangle    *mInputRects;
   int           mNInputRects;
   int           mInputRectOrdering;
+
+  XRectangle    *mBoundingRects;
+  int           mNBoundingRects;
+  int           mBoundingRectOrdering;
   bool	  mRemoved;
 
 };

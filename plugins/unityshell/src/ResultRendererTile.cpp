@@ -253,11 +253,7 @@ void ResultRendererTile::LoadIcon(std::string& icon_hint, Result& row)
   icon = g_icon_new_for_string(icon_name.c_str(), NULL);
   TextureContainer* container = row.renderer<TextureContainer*>();
 
-  std::ostringstream uri_tmp;
-  uri_tmp << row.uri() << "-" << rand();
-  std::string uri = uri_tmp.str();
-
-  IconLoader::IconLoaderCallback slot = sigc::bind(sigc::mem_fun(this, &ResultRendererTile::IconLoaded), icon_hint, row, uri);
+  IconLoader::IconLoaderCallback slot = sigc::bind(sigc::mem_fun(this, &ResultRendererTile::IconLoaded), icon_hint, row);
 
   if (g_str_has_prefix(icon_name.c_str(), "http://"))
   {
@@ -319,7 +315,7 @@ void ResultRendererTile::CreateBlurredTextureCallback(const char* texid,
 
 void
 ResultRendererTile::IconLoaded(const char* texid, guint size, GdkPixbuf* pixbuf,
-                               std::string icon_name, Result& row, std::string uri)
+                               std::string icon_name, Result& row)
 {
   if (pixbuf)
   {
@@ -335,10 +331,13 @@ ResultRendererTile::IconLoaded(const char* texid, guint size, GdkPixbuf* pixbuf,
     texture_blurred->Reference();
 
     TextureContainer *container = row.renderer<TextureContainer*>();
-    container->icon = texture;
-    container->blurred_icon = texture_blurred;
+    if (container != nullptr)
+    {
+      container->icon = texture;
+      container->blurred_icon = texture_blurred;
 
-    NeedsRedraw.emit();
+      NeedsRedraw.emit();
+    }
   }
 }
 

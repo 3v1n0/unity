@@ -72,6 +72,8 @@ public:
 
   void SetOpacity(float opacity);
 
+  unsigned int GetTrayXid ();
+
 protected:
   // Introspectable methods
   const gchar* GetName();

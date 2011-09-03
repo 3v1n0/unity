@@ -45,6 +45,15 @@ PanelTray::PanelTray()
   RealInit();
 }
 
+unsigned int
+PanelTray::xid ()
+{
+  if (!_window)
+    return 0;
+
+  return gdk_x11_window_get_xid (gtk_widget_get_window (_window));
+}
+
 void PanelTray::RealInit()
 {
   _window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
