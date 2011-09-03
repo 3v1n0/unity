@@ -310,11 +310,29 @@ panel_service_get_n_indicators (PanelService *self)
 }
 
 IndicatorObject *
-panel_service_get_indicator (PanelService *self, guint position)
+panel_service_get_indicator_nth (PanelService *self, guint position)
 {
   g_return_val_if_fail (PANEL_IS_SERVICE (self), NULL);
 
   return (IndicatorObject *) g_slist_nth_data (self->priv->indicators, position);
+}
+
+IndicatorObject *
+panel_service_get_indicator (PanelService *self, const gchar *indicator_id)
+{
+  g_return_val_if_fail (PANEL_IS_SERVICE (self), NULL);
+  GSList *l;
+
+  for (l = self->priv->indicators; l; l = l->next)
+    {
+      if (g_strcmp0 (indicator_id,
+                     g_object_get_data (G_OBJECT (l->data), "id")) == 0)
+        {
+          return (IndicatorObject *) l->data;
+        }
+    }
+
+  return NULL;
 }
 
 /*

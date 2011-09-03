@@ -115,7 +115,7 @@ panel_root_accessible_initialize (AtkObject *accessible, gpointer data)
     {
       IndicatorObject *indicator;
 
-      indicator = panel_service_get_indicator (root->priv->service, i);
+      indicator = panel_service_get_indicator_nth (root->priv->service, i);
       if (indicator != NULL)
         {
 	  AtkObject *child;
