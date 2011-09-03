@@ -227,7 +227,7 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
   if (cookie->type == GenericEvent)
     {
       XIDeviceEvent *event = cookie->data;
-            
+
       if (event && event->evtype == XI_ButtonRelease &&
           priv->last_menu_button != 0) //FocusChange
         {
@@ -945,91 +945,94 @@ should_skip_menu (IndicatorObjectEntry *entry)
   return !label_ok && !image_ok;
 }
 
+static int
+indicator_entry_compare_func (gpointer* v1, gpointer* v2)
+{
+  return (GPOINTER_TO_INT (v1[1]) > GPOINTER_TO_INT (v2[1])) ? 1 : -1;
+}
+
 static void
 activate_next_prev_menu (PanelService         *self,
                          IndicatorObject      *object,
                          IndicatorObjectEntry *entry,
                          GtkMenuDirectionType  direction)
 {
+  IndicatorObjectEntry *new_entry;
   PanelServicePrivate *priv = self->priv;
   GSList *indicators = priv->indicators;
+  GList  *ordered_entries = NULL;
   GList  *entries;
-  gint    n_entries;
-  IndicatorObjectEntry *new_entry;
   gchar  *id;
+  GSList *l;
+  GList *ll;
 
-  entries = indicator_object_get_entries (object);
-  n_entries = g_list_length (entries);
-  // all of these are for switching between independant indicators (for example, sound to messaging. 
-  // As opposed to batter to appmenu)
-  if (n_entries == 1
-      || (g_list_index (entries, entry) == 0 && direction == GTK_MENU_DIR_PARENT)
-      || (g_list_index (entries, entry) == n_entries - 1 && direction == GTK_MENU_DIR_CHILD))
+  for (l = indicators; l; l = l->next)
     {
-      int              n_indicators;
-      IndicatorObject *new_object;
-      GList           *new_entries;
-      
-      n_indicators = g_slist_length (priv->indicators);
-
-      // changing from first indicator to last indicator
-      if (g_slist_index (indicators, object) == 0 && direction == GTK_MENU_DIR_PARENT)
+      const gchar *indicator_id = g_object_get_data (G_OBJECT (l->data), "id");
+      gint parent_priority = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (l->data), "priority"));
+      entries = indicator_object_get_entries (l->data);
+      if (entries)
         {
-          new_object = g_slist_nth_data (indicators, n_indicators - 1);
-        }
-      // changing from last indicator to first indicator
-      else if (g_slist_index (indicators, object) == n_indicators -1 && direction == GTK_MENU_DIR_CHILD)
-        {
-          new_object = g_slist_nth_data (indicators, 0);
-        }
-      else
-        {
-          gint cur_object_index = g_slist_index (indicators, object);
-          gint new_object_index = cur_object_index + (direction == GTK_MENU_DIR_CHILD ? 1 : -1);
-          new_object = g_slist_nth_data (indicators, new_object_index);
-        }
+          int index = 0;
 
-      if (!INDICATOR_IS_OBJECT (new_object))
-        return;
-      new_entries = indicator_object_get_entries (new_object);
-      // if the indicator has no entries, move to the next/prev one until we find one with entries
-      while (new_entries == NULL)
-        {
-          gint cur_object_index = g_slist_index (indicators, new_object);
-          gint new_object_index = cur_object_index + (direction == GTK_MENU_DIR_CHILD ? 1 : -1);
-          new_object = g_slist_nth_data (indicators, new_object_index);
-          if (!INDICATOR_IS_OBJECT (new_object))
-            return;
-          new_entries = indicator_object_get_entries (new_object);
-        }
+          for (ll = entries; ll; ll = ll->next)
+            {
+              gint prio = -1;
+              new_entry = ll->data;
 
-      new_entry = g_list_nth_data (new_entries, direction == GTK_MENU_DIR_PARENT ? g_list_length (new_entries) - 1 : 0);
+              if (should_skip_menu (new_entry))
+                continue;
 
-      g_list_free (entries);
-      g_list_free (new_entries);
+              if (new_entry->name_hint)
+                {
+                  prio = name2priority(indicator_id, new_entry->name_hint);
+                }
 
-      if (should_skip_menu (new_entry))
-        {	  
-          activate_next_prev_menu (self, new_object, new_entry, direction);
-      	  return;
-        }
-    }
-  // changing within a group of indicators (for example, entries within appmenu)
-  else
-    {
-      new_entry = g_list_nth_data (entries, g_list_index (entries, entry) + (direction == GTK_MENU_DIR_CHILD ? 1 : -1));
-      g_list_free (entries);
+              if (prio == -1)
+                {
+                  prio = parent_priority + index;
+                  index++;
+                }
 
-      if (should_skip_menu (new_entry))
-        { 
-          activate_next_prev_menu (self, object, new_entry, direction);
-          return;
+              gpointer *values = g_new (gpointer, 2);
+              values[0] = new_entry;
+              values[1] = GINT_TO_POINTER (prio);
+              ordered_entries = g_list_insert_sorted (ordered_entries, values,
+                                                      (GCompareFunc) indicator_entry_compare_func);
+            }
+
+          g_list_free (entries);
         }
     }
 
-  id = g_strdup_printf ("%p", new_entry);
-  g_signal_emit (self, _service_signals[ENTRY_ACTIVATE_REQUEST], 0, id);
-  g_free (id);
+  new_entry = NULL;
+  for (ll = ordered_entries; ll; ll = ll->next)
+    {
+      gpointer *values = ll->data;
+      if (entry == values[0])
+        {
+          if (direction == GTK_MENU_DIR_CHILD)
+            {
+              values = ll->next ? ll->next->data : ordered_entries->data;
+            }
+          else
+            {
+              values = ll->prev ? ll->prev->data : g_list_last (ordered_entries)->data;
+            }
+
+          new_entry = values[0];
+          break;
+        }
+    }
+
+  if (new_entry)
+    {
+      id = g_strdup_printf ("%p", new_entry);
+      g_signal_emit (self, _service_signals[ENTRY_ACTIVATE_REQUEST], 0, id);
+      g_free (id);
+    }
+
+  g_list_free_full (ordered_entries, g_free);
 }
 
 static void
