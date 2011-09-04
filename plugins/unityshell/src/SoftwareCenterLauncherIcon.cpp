@@ -146,7 +146,7 @@ SoftwareCenterLauncherIcon::OnDBusSignal(GDBusProxy* proxy,
 
             launcher_icon->SetProgress(((float)progress) / ((float)100));
         }
-        g_variant_unref(params);
+        g_variant_unref(property_value);
         g_free(property_name);
     }
 }

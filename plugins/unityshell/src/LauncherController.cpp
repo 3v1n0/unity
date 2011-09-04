@@ -353,7 +353,7 @@ LauncherController::CreateSCLauncherIcon(const char* file_path, const char* aptd
   SoftwareCenterLauncherIcon* icon;
 
   app = bamf_matcher_get_application_for_desktop_file(_matcher, file_path, true);
-  if (!app)
+  if (!BAMF_IS_APPLICATION(app))
     return NULL;
 
   if (g_object_get_qdata(G_OBJECT(app), g_quark_from_static_string("unity-seen")))
