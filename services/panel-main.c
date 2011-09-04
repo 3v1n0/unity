@@ -332,7 +332,7 @@ on_name_lost (GDBusConnection *connection,
               gpointer         user_data)
 {
   PanelService *service = PANEL_SERVICE (user_data);
-  
+		
   g_debug ("%s", G_STRFUNC);
   if (service != NULL)
   {
@@ -342,6 +342,21 @@ on_name_lost (GDBusConnection *connection,
     g_signal_handlers_disconnect_by_func (service, on_service_entry_show_now_changed, connection);
   }
   gtk_main_quit ();
+}
+
+static void
+on_indicators_cleared (PanelService *service)
+{
+  gtk_main_quit ();
+}
+
+static void
+on_signal (int sig)
+{
+  PanelService *service = panel_service_get_default ();
+  panel_service_clear_indicators (service);
+  g_signal_connect (service, "indicators-cleared",
+                    G_CALLBACK (on_indicators_cleared), NULL);
 }
 
 gint
@@ -373,6 +388,9 @@ main (gint argc, gchar **argv)
                              NULL);
 
   panel_a11y_init ();
+
+  signal (SIGINT, on_signal);
+  signal (SIGTERM, on_signal);
 
   gtk_main ();
 
