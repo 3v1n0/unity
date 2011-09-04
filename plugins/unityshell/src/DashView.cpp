@@ -155,6 +155,8 @@ void DashView::Relayout()
 
   PlacesStyle* style = PlacesStyle::GetDefault();
   style->SetDefaultNColumns(content_geo_.width / style->GetTileWidth());
+
+  QueueDraw();
 }
 
 // Gives us the width and height of the contents that will give us the best "fit",
