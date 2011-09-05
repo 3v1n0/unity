@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright 2011 Canonical Ltd.
  *
@@ -29,6 +30,7 @@ namespace unity
 {
 namespace dash
 {
+NUX_IMPLEMENT_OBJECT_TYPE(ResultView);
 
 ResultView::ResultView(NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)

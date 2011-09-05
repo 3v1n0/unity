@@ -49,12 +49,12 @@ PanelTitlebarGrabArea::PanelTitlebarGrabArea()
   // right now and we need jay to focus on other things
   /*InputArea::EnableDoubleClick (true);
   InputArea::OnMouseDoubleClick.connect (sigc::mem_fun (this, &PanelTitlebarGrabArea::RecvMouseDoubleClick));*/
-  InputArea::OnMouseUp.connect(sigc::mem_fun(this, &PanelTitlebarGrabArea::RecvMouseUp));
+  InputArea::mouse_up.connect(sigc::mem_fun(this, &PanelTitlebarGrabArea::RecvMouseUp));
   _last_click_time.tv_sec = 0;
   _last_click_time.tv_nsec = 0;
 
   // connect the *Click events before the *Down ones otherwise, weird race happens
-  InputArea::OnMouseDown.connect(sigc::mem_fun(this, &PanelTitlebarGrabArea::RecvMouseDown));
+  InputArea::mouse_down.connect(sigc::mem_fun(this, &PanelTitlebarGrabArea::RecvMouseDown));
 }
 
 
@@ -65,12 +65,14 @@ PanelTitlebarGrabArea::~PanelTitlebarGrabArea()
 void PanelTitlebarGrabArea::RecvMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
   int button = nux::GetEventButton(button_flags);
-  if (button == 2)
+  if (button == 1)
+  {
+    mouse_down.emit(x, y);
+  }
+  else if (button == 2)
   {
     mouse_middleclick.emit();
-    return;
   }
-  mouse_down.emit(x, y);
 }
 
 void PanelTitlebarGrabArea::RecvMouseDoubleClick(int x, int y, unsigned long button_flags, unsigned long key_flags)

@@ -31,6 +31,7 @@
 #include "PreviewBasicButton.h"
 #include "PreviewApplications.h"
 #include "ResultRendererTile.h"
+#include "ResultRendererHorizontalTile.h"
 #include "ResultViewGrid.h"
 #include <UnityCore/Result.h>
 
@@ -81,7 +82,7 @@ void TestRunner::Init ()
                                           0,
                                           "foo/bar",
                                           "Firefox",
-                                          "A comment!",
+                                          "a comment",
                                           "application://firefox.desktop");
 
     iters_.push_back(iter);
@@ -91,8 +92,8 @@ void TestRunner::Init ()
   time_start = g_get_monotonic_time();
 
   unity::dash::ResultViewGrid* result_view = new unity::dash::ResultViewGrid (NUX_TRACKER_LOCATION);
+  //unity::dash::ResultRendererHorizontalTile* result_renderer = new unity::dash::ResultRendererHorizontalTile (NUX_TRACKER_LOCATION);
   unity::dash::ResultRendererTile* result_renderer = new unity::dash::ResultRendererTile (NUX_TRACKER_LOCATION);
-
   result_view->SetModelRenderer (result_renderer);
 
 
@@ -195,7 +196,7 @@ int main(int argc, char **argv)
 
   TestRunner *test_runner = new TestRunner ();
   wt = nux::CreateGUIThread(TEXT("Unity Places Tile Test"),
-                            800 , 600,
+                            1024 , 600,
                             0,
                             &TestRunner::InitWindowThread,
                             test_runner);

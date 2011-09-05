@@ -1,3 +1,1336 @@
+2011-09-01  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Fixes a bunch of dash issues
+
+2011-09-01  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Add back hack around empty dash
+
+2011-09-01  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	make the shortcut icons work
+
+2011-09-01  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] trunk
+
+2011-09-01  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Dash - Adjustments to stateful behaviour 
+
+2011-08-31  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] parent
+
+2011-08-31  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[dash] preferred applications are not stored in GConf anylonger
+
+2011-09-01  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Fixes a few of the issues that came up with this during this cycle:
+	* Fixed infinite loop issue with windows syncing to each other when the server was lagging behind (requires core patch)
+	* Expand / Contract parent window when requested dialog size is larger than the window
+	* Fixed offscreen to onscreen movement, move back
+	* Changed the way the paint system works - now we collect all of the geometry and textures from a single paint pass of the window and add that geometry to it's parent and paint the textures with the parent window's vertex data, which means that the dialog will actually appear to be "pinned" to the window in every single case (eg scale, switcher)
+	* Fixed various placement issues
+	* Fixed offscreen dialogs with Qt applications
+	
+	Bugs:
+	
+	LP #805795
+	LP #815778
+	LP #815890
+
+2011-08-29  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Refactor paint info collection into its own class
+
+2011-08-29  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Remove dead code
+
+2011-08-29  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Run the formatter
+
+2011-08-29  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Remove gtk_init_check
+
+2011-08-29  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Fix damage issue
+
+2011-08-29  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Use the geometry phase to ensure that the dialog is always painted on
+	top of the window, no matter what kind of transformation the parent has
+	
+	Fix indentation
+
+2011-08-27  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Fix movement animation issues
+
+2011-08-27  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Don't shift windows around if they're maximized or fullscreen
+
+2011-08-27  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Expand and contract the parent window if the dialog requests a size that's larger than it.
+	Keep the parent window on-screen
+
+2011-08-27  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Change the window size if the dialog is too small
+
+2011-08-27  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Also move the window back
+
+2011-08-27  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Fix a number of placement issues in the animation
+
+2011-08-27  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Add workaround for stupid applications that set WM_TRANSIENT_FOR to complete
+	nonsense
+
+2011-08-27  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Formatting, fix a cycling issue
+
+2011-09-01  Gord Allott  <gord.allott@canonical.com>
+
+	removes the uri paramater from ResultRendererTile::LoadIcon
+
+2011-09-01  Gord Allott  <gord.allott@canonical.com>
+
+	removes the useless uri from iconloading
+
+2011-09-01  Gord Allott  <gord.allott@canonical.com>
+
+	fix up the background colour selection, now darker, should fit more wallpapers better
+
+2011-09-01  Gord Allott  <gord.allott@canonical.com>
+
+	only pick one colour for grayscale images
+
+2011-09-01  Gord Allott  <gord.allott@canonical.com>
+
+	better greens
+
+2011-09-01  Gord Allott  <gord.allott@canonical.com>
+
+	removed a debug
+
+2011-09-01  Gord Allott  <gord.allott@canonical.com>
+
+	much nicer colour handling
+
+2011-09-01  Tim Penhey  <tim.penhey@canonical.com>
+
+	Launcher is a child of LauncherWindow, we don't need to unreference it
+
+2011-09-01  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Add support for IBus and some other input methods, fix dash sizing, add support for copy and paste
+
+2011-08-31  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Simplfy focus bits
+
+2011-08-31  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Set the cursor position correctly
+
+2011-08-31  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Send the window through
+
+2011-08-31  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Making ibus sync solves issues related to events coming in
+
+2011-08-31  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Add support for copypasta
+
+2011-08-31  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] trunk
+
+2011-08-30  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Fix sizing of the dash content
+
+2011-09-01  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	Make sure overlay-effects (glow) on buttons are not cut off (since they currently can't bleed into space-allocations of adjacent widgets). Added API to query DashStyle for additional space-requirements. This is used for the genre-buttons in FilterGenreWidget.
+
+2011-09-01  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	Made sure the glowing overlay of buttons are not cut off, added API for querying additional space-requirements
+
+2011-08-31  Jason Smith  <jason.smith@canonical.com>
+
+	protect against crash when icon loading happens after renderer is already deleted
+
+2011-08-31  Jason Smith  <jason.smith@canonical.com>
+
+	Make switcher show tabs again
+
+2011-08-31  Gord Allott  <gord.allott@canonical.com>
+
+	merged in set renderer branch for the dash, much quicker rendering for the results view, changes api slightly for IconLoader
+
+2011-08-31  Gord Allott  <gord.allott@canonical.com>
+
+	Merged with trunk
+
+2011-08-31  Gord Allott  <gord.allott@canonical.com>
+
+	few changes, null out set_renderer and such
+
+2011-08-31  Gord Allott  <gord.allott@canonical.com>
+
+	unreference textures the dumb way
+
+2011-08-31  Gord Allott  <gord.allott@canonical.com>
+
+	fixed up horizontal tile to subclass from renderer tile and also use the new mapless renderering
+
+2011-08-31  Gord Allott  <gord.allott@canonical.com>
+
+	lots of changes, updated ResultRendererTile to not use a map anywhere, causing IconLoader to support handles in order to disconnect the signals, also removed a warning here and there
+
+2011-08-31  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Remove some useless code
+
+2011-08-31  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Fix PanelTray: RGBA support, positioning and resizing fixes
+
+2011-08-30  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Fix alpha in panel
+
+2011-08-30  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	fix positioning when a new tray icon opens
+
+2011-08-30  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Fix sizing of panel tray
+
+2011-08-31  Tim Penhey  <tim.penhey@canonical.com>
+
+	Fix the leak of the cairo context in the LauncherIcon.
+
+2011-08-30  Tim Penhey  <tim.penhey@canonical.com>
+
+	Fix the leak of the cairo context.
+
+2011-08-31  Tim Penhey  <tim.penhey@canonical.com>
+
+	Fix the numerous leaks in CreateBlurredTextureCallback
+
+2011-08-30  Tim Penhey  <tim.penhey@canonical.com>
+
+	Fix the numerous leaks in CreateBlurredTextureCallback
+
+2011-08-30  Marco Trevisan
+
+	Merge filled/unfilled arrow branch
+
+2011-08-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	WindowManager / PluginAdapter add compiz_event signal
+	
+	This is emitted when a compiz_event is notified by the plugin.
+	It's a generic signal, emitter that can be parsed checking the passed options.
+	
+	It's actually not used anywhere but it could be useful for future usage.
+
+2011-08-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	MinimizedHandler: Add static variable to check if we have to handle compiz events or not
+	
+	This allow to get the same result of the original version, without affecting
+	all the UnityShell plugin at all when setting to handle or not compiz
+	events.
+
+2011-08-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	CompizMinimizedWindowHandler: don't disable compiz event dispatching.
+	
+	This would cause issues with some WindowManager signals, as they
+	wouldn't be emitted any more.
+	
+	As side effect the launcher would hide/show on viewport switch
+	and it would be impossible to detect a viewport switch event.
+
+2011-08-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with upstream changes.
+
+2011-08-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncher: check for win
+
+2011-08-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merge with upstream
+
+2011-07-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Add two more options to Icon BackLight Illumination
+	
+	They allow to set other two different kind of illuminations:
+	- Edge Illumination Toggles: illuminate only the edge of the icons linked to
+	running applications.
+	- Backlight and Edge Illumination Toggles: illuminate the background of the
+	icons linked to running
+	applications; if the windows
+	of this application are all in
+	a non viewable workspace, then
+	only the edge of the icon is
+	illuminated.
+	
+	The second of this option has been designed with JohnLea
+
+2011-07-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Change indicator when an app instance is not running on the current view-port
+	
+	In the case that an application is not running on the current viewport
+	we need to draw just an empty arrow. This finally fixes bug #690143
+
+2011-07-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: check windows's viewport on viewport change
+	
+	When a viewport switch event has terminated or when the expo plugin
+	has been terminated, we need check if the launcher icons are still
+	visible on the current viewport. In that case we must update the UI
+	accordingly.
+
+2011-07-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Launcher: when a viewport switch event occurs do the needed things.
+	
+	Code moved from unityshell.cpp for more clarity. When such events
+	are emitted the launcher should disable and re/enable the launcher
+	showing.
+
+2011-07-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PluginAdapter: suport compiz_screen_viewport_switch_{started,ended} signals
+	
+	PluginAdapter now is listening at the unityshell NotifyCompizEvent
+	signals and it fires the two signals when a viewport switch occurs.
+
+2011-08-30  Jason Smith  <jason.smith@canonical.com>
+
+	Make switcher view use timeutil class
+
+2011-08-30  Alex Launi  <alex.launi@canonical.com>
+
+	Merge timeutil branch
+
+2011-08-30  Alex Launi  <alex.launi@canonical.com>
+
+	Add TimeUtil class and member function for finding delta between timespecs
+
+2011-08-30  Jason Smith  <jason.smith@canonical.com>
+
+	fix switcher test
+
+2011-08-30  Jason Smith  <jason.smith@canonical.com>
+
+	enable blur in switcher test app
+
+2011-08-29  Jason Smith  <jason.smith@canonical.com>
+
+	merge stand alone launcher branch
+
+2011-08-29  Jason Smith  <jason.smith@canonical.com>
+
+	Implement test launcher stand alone application
+
+2011-08-29  Jason Smith  <jason.smith@canonical.com>
+
+	be smarter about enabling/disabling blur in the launcher
+
+2011-08-27  Jason Smith  <jason.smith@canonical.com>
+
+	disable live launcher blur behind as the performance hit on certain drivers is too great
+
+2011-08-27  Jason Smith  <jason.smith@canonical.com>
+
+	merge keyboard utils branch
+
+2011-08-26  Jason Smith  <jason.smith@canonical.com>
+
+	remove useless option and remove useless initial grab
+
+2011-08-26  Jason Smith  <jason.smith@canonical.com>
+
+	properly binds alt-key above tab
+
+2011-08-26  Jason Smith  <jason.smith@canonical.com>
+
+	implement keyboard utility and test program
+
+2011-08-26  Jason Smith  <jason.smith@canonical.com>
+
+	merge trunk
+
+2011-08-26  Gord Allott  <gord.allott@canonical.com>
+
+	small hack to get the lens icons always displayed on small screens in netbook mode
+
+2011-08-26  Gord Allott  <gord.allott@canonical.com>
+
+	remove leftovers
+
+2011-08-26  Gord Allott  <gord.allott@canonical.com>
+
+	okay fo-reals this time
+
+2011-08-26  Gord Allott  <gord.allott@canonical.com>
+
+	add logging
+
+2011-08-26  Gord Allott  <gord.allott@canonical.com>
+
+	attempt #2
+
+2011-08-26  Gord Allott  <gord.allott@canonical.com>
+
+	attempt #1
+
+2011-08-26  Gord Allott  <gord.allott@canonical.com>
+
+	Fixes the dnd in the dash to launcher
+
+2011-08-26  Gord Allott  <gord.allott@canonical.com>
+
+	fixes referencing too much in the dash with dnd and a scope error
+
+2011-08-26  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	should fix the glitch of the button-outline
+
+2011-08-26  Sebastien Bacher  <seb128@ubuntu.com>
+
+	updated translatable files
+
+2011-08-26  Jani Monoses  <jani@ubuntu.com>
+
+	Merged in a fix for a ftb on arm from Jani Monoses
+
+2011-08-25  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[release] 4.10.2
+
+2011-08-25  Jason Smith  <jason.smith@canonical.com>
+
+	merge dnd opt out branch
+
+2011-08-25  Jason Smith  <jason.smith@canonical.com>
+
+	opt out of dnd when it makes no sense
+
+2011-08-25  Gord Allott  <gord.allott@canonical.com>
+
+	for ken, we now elipsize the horizontal renderer at the end not the start
+
+2011-08-25  Gord Allott  <gord.allott@canonical.com>
+
+	elipize at the end of the horizontal tile text not the start
+
+2011-08-25  Jason Smith  <jason.smith@canonical.com>
+
+	fix window dodge now that windows dont unmap on minimize
+
+2011-08-25  Jason Smith  <jason.smith@canonical.com>
+
+	make changes at request of design team
+
+2011-08-25  Jason Smith  <jason.smith@canonical.com>
+
+	fix ARB rendering of icons that were broken by mistake
+
+2011-08-25  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Fix for multimonitor, jay lies\!\!
+
+2011-08-25  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Don't hang on invalid results
+
+2011-08-25  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Always set focus on the entry after switching lenses
+
+2011-08-25  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[release] 4.10.0
+
+2011-08-25  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] dash fixes branch
+
+2011-08-25  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	No need for a stop drive callback, we don't do anything with it anyway
+
+2011-08-25  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Add some fallback dnd_uri support for lenses that don't send in valid DND uris
+
+2011-08-25  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	make activation work
+
+2011-08-25  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	make text entry grab focus on about to show
+
+2011-08-25  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	bezel fixes
+
+2011-08-25  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] trunk
+
+2011-08-25  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Half of new dash renderering
+
+2011-08-24  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Delete the world, make panel window buttons control the dash
+
+2011-08-24  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Fix counts
+
+2011-08-24  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Fullscreen support
+
+2011-08-24  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Half the new assets
+
+2011-08-24  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] trunk
+
+2011-08-24  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Fix moving of cursor not working initially
+
+2011-08-24  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Don't spin the spinner when the dash view is setting the search string
+
+2011-08-25  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Do not show the application menu, when the launcher is a little to the left/bottom/top in relation to the window-buttons. Fixes LP: #820293
+
+2011-08-22  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Doesn't show the menu if the mouse pointer is a little left to window controls.
+
+2011-08-25  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Solves regression of .desktop file being dragged to the launcher and not saving it to the launcher' favourites. Fixes LP: #830536
+
+2011-08-21  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Tries to solve an old regression: ".desktop dragged onto unity launcher will not be added to com.canonical.unity.launcher favorite unless moved into the launcher"
+
+2011-08-25  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Merge lp:~unity-team/unity/unity.fullscreen_windows_paint_on_top
+
+2011-08-25  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Simplify the input focus restore stuff and move that into
+	PluginAdaptor and fix input focus not being restored when
+	the dash is closed
+	
+	See: http://mail.gnome.org/archives/wm-spec-list/2011-August/msg00011.html
+	as to why we have to use compiz to do this
+
+2011-08-25  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Handle corner cases where something grabs the screen
+
+2011-08-25  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Handle cases where we need unityshell to paint on top
+
+2011-08-25  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Merge lp:~unity-team/unity/unity.minimized_windows_switcher
+
+2011-08-25  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Small optimization
+
+2011-08-25  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Merge trunk and add a rudimentary showdesktop functionality so that
+	we don't lose windows while they're showdesktop'd
+
+2011-08-25  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Also handle _NET_WM_STATE_HIDDEN on _NET_WM_STATE
+
+2011-08-25  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Remove useless API
+
+2011-08-25  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Make public method protected
+
+2011-08-25  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Base the minimize handler test off of the read transients test
+
+2011-08-25  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Added an x11-window-read-transients, which reads transient information
+
+2011-08-25  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Added minimize window handler test and split out X11Window into its own file
+
+2011-08-25  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Break the dependency of getTransients from MinimizedWindowHandler
+
+2011-08-25  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Added test-get-transients
+
+2011-08-24  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	More minimize window handler tests
+
+2011-08-24  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Did some work on the tests, fix formatting, etc
+
+2011-08-24  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Add comments stating that we will merge that back into compiz
+
+2011-08-23  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Added input remover test
+
+2011-08-23  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Added break
+
+2011-08-23  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Remove stray tab usage
+
+2011-08-23  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Use C++11 for
+
+2011-08-23  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Remove unnecessary unmap reference increment
+
+2011-08-23  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Added support for minimized windows, with some classes to be used for external testing of the window hiding code for buggy applications (note: not yet complete)
+
+2011-08-25  Gord Allott  <gord.allott@canonical.com>
+
+	adds a horizontal tile renderer for lenses that require it
+
+2011-08-25  Gord Allott  <gord.allott@canonical.com>
+
+	added horizontal renderer
+
+2011-08-25  Gord Allott  <gord.allott@canonical.com>
+
+	changed Any string to All
+
+2011-08-25  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	Added correct separator-rendering, fixed text-positioning on buttons,
+	updated active- and prelight-state button-rendering, updated multi-range
+	rendering to reflect a new design-change
+
+2011-08-25  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	Defined a subtle look for hover/prelight
+
+2011-08-24  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	Switched outline for buttons and multi-range to regular rounded-rect, updated multi-range to new design, fixed some formatting
+
+2011-08-24  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	got rid of unused variables
+
+2011-08-24  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	Enable the pixel-grid alignment for the button-outline again
+
+2011-08-24  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	Fix text-position in buttons
+
+2011-08-24  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	Added rendering of separators, changed look of button-states
+
+2011-08-25  Jason Smith  <jason.smith@canonical.com>
+
+	fix big memory leak on some systems
+
+2011-08-25  Gordon Allott  <gord.allott@canonical.com>
+
+	fixes the colour issue with the bghash code where it doesn't give the right value on startup sometimes
+
+2011-08-24  Gord Allott  <gord.allott@canonical.com>
+
+	remove warnings
+
+2011-08-24  Gord Allott  <gord.allott@canonical.com>
+
+	actually fixed issue, yay
+
+2011-08-24  Gord Allott  <gord.allott@canonical.com>
+
+	Maybe fix?
+
+2011-08-24  Gord Allott  <gord.allott@canonical.com>
+
+	Maybe fix?
+
+2011-08-24  Gord Allott  <gord.allott@canonical.com>
+
+	Maybe fix?
+
+2011-08-24  Gord Allott  <gord.allott@canonical.com>
+
+	more logging 
+
+2011-08-24  Gord Allott  <gord.allott@canonical.com>
+
+	more logging 
+
+2011-08-24  Gord Allott  <gord.allott@canonical.com>
+
+	added logging
+
+2011-08-25  Jason Smith  <jason.smith@canonical.com>
+
+	Improve launcher draw performance by removing key bottlenecks
+
+2011-08-25  Jason Smith  <jason.smith@canonical.com>
+
+	merge alt-tab window titles branch
+
+2011-08-24  Jason Smith  <jason.smith@canonical.com>
+
+	make alt-grave work without alt-tab
+
+2011-08-24  Jason Smith  <jason.smith@canonical.com>
+
+	dont leak memory
+
+2011-08-24  Jason Smith  <jason.smith@canonical.com>
+
+	render window titles in alt-tab
+
+2011-08-24  Jason Smith  <jason.smith@canonical.com>
+
+	Minor rendering fix
+	Make sure alt-tab doesn't expand on timeout unless there are 2+ windows to show
+
+2011-08-25  Jay Taoko  <jay.taoko@canonical.com>
+
+	Seamless blur transition between the dash, panel and launcher.
+
+2011-08-24  Jay Taoko  <jay.taoko@canonical.com>
+
+	Seamless blur transition between the dash, panel and launcher
+
+2011-08-24  Jason Smith  <jason.smith@canonical.com>
+
+	add bfb squircle rendering
+
+2011-08-24  Omer Akram  <om26er@ubuntu.com>
+
+	Change the string 'Refine search' to 'Filter results' to fix bug 832060
+
+2011-08-24  Omer Akram  <om26er@ubuntu.com>
+
+	s/Refine search/Filter results
+
+2011-08-24  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Update panel to match the spec
+
+2011-08-24  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Add support for new maximised state in panel
+
+2011-08-24  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Remove PanelHomeButton and update everything that depended on it. Fix the test so it no longer spits out any warnings and runs without crashing
+
+2011-08-24  Gord Allott  <gord.allott@canonical.com>
+
+	fixes the all button size
+
+2011-08-24  Gord Allott  <gord.allott@canonical.com>
+
+	fixes the size of the any buttons
+
+2011-08-24  Gord Allott  <gord.allott@canonical.com>
+
+	merged in the fix strings branch
+
+2011-08-24  Gord Allott  <gord.allott@canonical.com>
+
+	Fixes untranslatable strings in unity filters, also makes sure to set the filter names correctly
+
+2011-08-24  Gord Allott  <gord.allott@canonical.com>
+
+	fixed string handling so everything is translatable and using the corrent names for filters
+
+2011-08-24  Gord Allott  <gord.allott@canonical.com>
+
+	adds dnd to the dash
+
+2011-08-24  Gord Allott  <gord.allott@canonical.com>
+
+	add warning on error
+
+2011-08-24  Gord Allott  <gord.allott@canonical.com>
+
+	adds dnd to the results view
+
+2011-08-24  Jason Smith  <jason.smith@canonical.com>
+
+	fix blur not working when damage is null
+
+2011-08-24  Gord Allott  <gord.allott@canonical.com>
+
+	Fixes the sizes of the filter buttons
+
+2011-08-24  Gord Allott  <gord.allott@canonical.com>
+
+	fixes the wrong hight in filter basic button
+
+2011-08-24  Jason Smith  <jason.smith@canonical.com>
+
+	dont crash if damage_region_ is null
+
+2011-08-24  Andrea Azzarone  <azzaronea@gmail.com>
+
+	merged in Andrea's branch that fixes bug #808162 - makes nautilus give us an empty trash dialog
+
+2011-08-19  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk.
+
+2011-08-19  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Uses the nautilus3 dbus interface to fix bug #808162.
+
+2011-08-24  Tim Penhey  <tim.penhey@canonical.com>
+
+	A bunch of fixes to memory issues.
+	
+	Some cleanup for wrappers around gdk pixbuf.
+
+2011-08-24  Tim Penhey  <tim.penhey@canonical.com>
+
+	Merge trunk.
+
+2011-08-24  Tim Penhey  <tim.penhey@canonical.com>
+
+	Stop the crash in scrollview.
+
+2011-08-24  Tim Penhey  <tim.penhey@canonical.com>
+
+	Merge trunk.
+
+2011-08-24  Tim Penhey  <tim.penhey@canonical.com>
+
+	TODO added
+
+2011-08-24  Tim Penhey  <tim.penhey@canonical.com>
+
+	UnReference the view window, and the switcher view is now controlled using an object ptr.
+
+2011-08-24  Tim Penhey  <tim.penhey@canonical.com>
+
+	Move the window thread deletion to the end.
+
+2011-08-22  Tim Penhey  <tim.penhey@canonical.com>
+
+	Merge trunk.
+
+2011-08-22  Tim Penhey  <tim.penhey@canonical.com>
+
+	Fix the temporary.
+
+2011-08-19  Tim Penhey  <tim.penhey@canonical.com>
+
+	bamf_view_get_name returns a dup'ed string.
+
+2011-08-19  Tim Penhey  <tim.penhey@canonical.com>
+
+	Use the glib wrappers.
+
+2011-08-19  Tim Penhey  <tim.penhey@canonical.com>
+
+	Simpler boolean
+
+2011-08-24  Gordon Allott  <gord.allott@canonical.com>
+
+	Filter ratings fixes
+
+2011-08-23  Gord Allott  <gord.allott@canonical.com>
+
+	fixed the problem with the rendering of the ratings widget in the dash
+
+2011-08-24  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Misc. Dash fixes and a bunch of style improvements
+
+2011-08-24  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Set the AA depending on what we get from gtk
+
+2011-08-24  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Use gtk font settings
+
+2011-08-24  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	simply some code
+
+2011-08-24  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	More renderering fixes
+
+2011-08-24  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Fixes to renderering the lens views
+
+2011-08-24  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Stop flashing the user
+
+2011-08-24  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] trunk
+
+2011-08-24  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Remove debugs from standalone_dash
+
+2011-08-23  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] trunk
+
+2011-08-23  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Some more fixes
+
+2011-08-23  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Some style fixes, and actually set the default blooming font options
+
+2011-08-23  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Add a protection timeout to the Spinner to stop it spinning indefinitely, also change it to use an animation that is nicer to Compiz and blur
+
+2011-08-23  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Reset lenses on connection
+
+2011-08-23  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Load results at startup, reset views on startup
+
+2011-08-23  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Load existing results on startup
+
+2011-08-22  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Some fixes
+
+2011-08-22  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Make the LensBar useful by providing some state information
+
+2011-08-22  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	restore home lens as the default view when you click on or summon the Dash
+
+2011-08-23  Jason Smith  <jason.smith@canonical.com>
+
+	merge switcher pips branch
+
+2011-08-23  Jason Smith  <jason.smith@canonical.com>
+
+	use linear filtering for pips
+
+2011-08-23  Jason Smith  <jason.smith@canonical.com>
+
+	render pips in switcher at double size
+
+2011-08-24  Tim Penhey  <tim.penhey@canonical.com>
+
+	Rename nux::IntrusiveSP to nux::ObjectPtr to avoid using the #define for the deprecated name.
+
+2011-08-24  Tim Penhey  <tim.penhey@canonical.com>
+
+	Rename IntrusiveSP to ObjectPtr.
+
+2011-08-23  Tim Penhey  <tim.penhey@canonical.com>
+
+	Fix some memory releasing issues.
+	Make the LauncherEntryRemoteModel not a singleton again.
+	Add a Destroy method for the QuicklistManager.
+
+2011-08-19  Tim Penhey  <tim.penhey@canonical.com>
+
+	Remove the comment out code.
+
+2011-08-19  Tim Penhey  <tim.penhey@canonical.com>
+
+	Remove the extra unreference from the merge.
+
+2011-08-19  Tim Penhey  <tim.penhey@canonical.com>
+
+	Merge trunk.
+
+2011-08-18  Tim Penhey  <tim.penhey@canonical.com>
+
+	Merge trunk.
+
+2011-08-18  Tim Penhey  <tim.penhey@canonical.com>
+
+	Unreference the noise texture.
+
+2011-08-18  Tim Penhey  <tim.penhey@canonical.com>
+
+	Add back in some lower case Ls, and remove #define.
+
+2011-08-18  Tim Penhey  <tim.penhey@canonical.com>
+
+	Make the LauncherController actually have an instance of the model object instead of a pointer to a singleton.
+
+2011-08-18  Tim Penhey  <tim.penhey@canonical.com>
+
+	Make the LauncherEntryRemoteModel a normal object and not a singleton.
+
+2011-08-18  Tim Penhey  <tim.penhey@canonical.com>
+
+	Primarily just reordering the layouts to see what is going on.
+
+2011-08-18  Tim Penhey  <tim.penhey@canonical.com>
+
+	Add the home button as a child so it is destroyed properly.
+
+2011-08-18  Tim Penhey  <tim.penhey@canonical.com>
+
+	The header is not needed.
+
+2011-08-18  Tim Penhey  <tim.penhey@canonical.com>
+
+	Add the destroy method for the quicklist manager.
+
+2011-08-18  Tim Penhey  <tim.penhey@canonical.com>
+
+	The forward declarations are incorrect as they aren't in the nux namespace.  What's more, the full declarations are there anyway from the nux headers.
+
+2011-08-18  Tim Penhey  <tim.penhey@canonical.com>
+
+	Delete the switcher_desktop_icon if it has been created.
+	Destroy the quicklist manager in the unity screen destructor.
+	Clean up the iteration adding in the launcher icons.
+
+2011-08-23  Tim Penhey  <tim.penhey@canonical.com>
+
+	Changes necessary due to nux updates.
+
+2011-08-22  Jason Smith  <jason.smith@canonical.com>
+
+	change default
+
+2011-08-22  Jason Smith  <jason.smith@canonical.com>
+
+	remove dead code
+
+2011-08-22  Gord Allott  <gord.allott@canonical.com>
+
+	merges in the fixes for the multi-range filter branch
+
+2011-08-22  Gord Allott  <gord.allott@canonical.com>
+
+	fixes multi-range widget
+
+2011-08-22  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Make standalone work again after blur rework
+
+2011-08-22  Jason Smith  <jason.smith@canonical.com>
+
+	merge faster blur branch
+
+2011-08-21  Jason Smith  <jason.smith@canonical.com>
+
+	remove dead code
+	make sure we still work properly with full screen repaints
+
+2011-08-21  Jason Smith  <jason.smith@canonical.com>
+
+	merge trunk
+
+2011-08-21  Jason Smith  <jason.smith@canonical.com>
+
+	merge sams blur occlusion branch
+
+2011-08-21  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Formatting and fix an issue where blur wouldn't appear on the switcher
+	until about 2~frames later
+
+2011-08-21  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	More deformatterization
+
+2011-08-21  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Add some comments to explain what's going on
+
+2011-08-21  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Deformattize
+
+2011-08-21  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Fix leak, clean up code a bit
+
+2011-08-21  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Detect occlusions and apply this to the region update logic
+
+2011-08-20  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Use and XRegion instead of nux::Geometry to determine the dirty regions
+	that need refreshing.
+	
+	The problem with using nux::Geometry on a flat bounds is something like this:
+	
+	-------------------------
+	|d|                     |
+	|d|   |bbbbbbbbbb|      |
+	|     |bbbbbbbbbb|      |
+	|                     |d|
+	-------------------------
+	
+	Will result in 
+	
+	-------------------------
+	|d|rrrrrrrrrrrrrrrrrrrrr|
+	|d|rrr|bbbbbbbbbb|rrrrrr|
+	|rrrrr|bbbbbbbbbb|rrrrrr|
+	|rrrrrrrrrrrrrrrrrrrrr|d|
+	-------------------------
+	
+	Rather than
+	
+	-------------------------
+	|r|                     |
+	|r|   |bbbbbbbbbb|      |
+	|     |bbbbbbbbbb|      |
+	|                     |r|
+	-------------------------
+	
+	Causing the blur to be updated when the regions in d are changed. We don't
+	need to do that.
+	
+	NOTE: I couldn't find anything in nux that works similarly to X11's regions
+	so I just used it directly. That can be removed if something else from
+	nux is suitable.
+	
+	NOTE2: It seems like the damage regions nux is giving us for our BaseWindows
+	are HUGE, this needs to be fixed in nux.
+
+2011-08-20  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Only update the blur texture when the damage bounds actually intersect
+
+2011-08-19  Jason Smith  <jason.smith@canonical.com>
+
+	dramatically improve blur performance
+
+2011-08-21  Jason Smith  <jason.smith@canonical.com>
+
+	remove crazy pointer math for standard library call to remove_if in getWindowPainList function
+
+2011-08-19  Jason Smith  <jason.smith@canonical.com>
+
+	fix crash when view window is null
+
+2011-08-19  Jay Taoko  <jay.taoko@canonical.com>
+
+	Essential Nux event signals have been renamed. To ease the transition, the former name have been preserved via macros:
+	
+	#define OnMouseMove             mouse_move
+	#define OnMouseDown             mouse_down
+	#define OnMouseUp                 mouse_up
+	#define OnMouseEnter            mouse_enter
+	#define OnMouseLeave            mouse_leave
+	#define OnMouseClick            mouse_click
+	#define OnMouseDoubleClick      mouse_double_click
+	#define OnMouseDrag             mouse_drag
+	#define OnMouseWheel            mouse_wheel
+	#define OnMouseDownOutsideArea  mouse_down_outside_pointer_grab_area
+	#define OnKeyEvent              key_down
+	#define OnKeyReleased           key_up
+	#define OnStartKeyboardReceiver begin_key_focus
+	#define OnStopKeyboardReceiver  end_key_focus
+	
+	This branch is using the new signals names. Subsequently, the old signals will be removed in Nux.
+
+2011-08-19  Jay Taoko  <jay.taoko@canonical.com>
+
+	Signals renaming
+
+2011-08-19  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Select the current search string when opening the dash to allow for typing straight away
+
+2011-08-19  Andrea Azzarone
+
+	Merge awesome work of Anrea Azzarone to make launcher detect contents of DND before DND even enters launcher
+
+2011-08-19  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fixes window stack problem.
+
+2011-08-19  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk.
+
+2011-08-12  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Create a DNDCollectionWindow to get dnd data as soon as drag and drop starts.
+
+2011-08-10  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Uses screen size to create the fake window.
+
+2011-08-10  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add a sign::connection for OnDNDDataCollected.
+
+2011-08-09  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Ops.. solve a stupid bug.
+
+2011-08-09  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Uses DNDCollectionWindow to read drag information before mouse enters launcher x window. 
+	Now we can highlight valid targets as soon as dnd starts (bug #727901).
+	Fixes also bug #724986 (Launcher reveals when dragging a window widget),
+	bug #727902 (Launcher icon highlighting should not switch off as soon the cursor moves after the app spread appears)
+	and bug #773028 	.(Any text drag causes bar to show up).
+
+2011-08-19  Jason Smith  <jason.smith@canonical.com>
+
+	fix typo
+
+2011-08-19  Andrea Azzarone  <azzaronea@gmail.com>
+
+	[merge] Bug #824831: Fallback window controls shown for maximized windows
+
+2011-08-19  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fixes "Window buttons don't respect Ambiance e Radiance themes".
+
+2011-08-19  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Protect against a null iter.second
+
+2011-08-19  Jason Smith  <jason.smith@canonical.com>
+
+	dont ask nux to process events when the switcher is open, those events are not meant for it.
+
+2011-08-19  Jason Smith  <jason.smith@canonical.com>
+
+	merge faster switcher branch
+
+2011-08-19  Jason Smith  <jason.smith@canonical.com>
+
+	Fix crash when switcher is not displayed after displaying the first time
+
+2011-08-19  Jason Smith  <jason.smith@canonical.com>
+
+	preserve base window to store switcher view in so that we dont pay the texture creation overhead constantly
+
+2011-08-18  Jason Smith  <jason.smith@canonical.com>
+
+	better fix for alt-tab causing workspace switcher to get stuck
+
+2011-08-18  Jason Smith  <jason.smith@canonical.com>
+
+	disable adding and removing of actions in trunk as it screws up the Wall plugin
+
+2011-08-18  Jason Smith  <jason.smith@canonical.com>
+
+	merge sams alt-tab polish branch
+
+2011-08-18  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Fix warning
+
+2011-08-18  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Fix keybindings, grab the screen when active, left/right, remove redundant
+	code, etc
+
+2011-08-18  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Add some size protection until we get fullscreening back
+
+2011-08-18  Jason Smith  <jason.smith@canonical.com>
+
+	fix memory leak in BEH
+
+2011-08-18  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[release] 4.8.2
+
 2011-08-18  Neil Jagdish Patel  <neil.patel@canonical.com>
 
 	Fix redrawing, fix blending in lensbar

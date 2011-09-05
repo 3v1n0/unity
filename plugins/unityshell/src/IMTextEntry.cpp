@@ -44,14 +44,13 @@ IMTextEntry::IMTextEntry()
   , client_window_(0)
   , im_enabled_(false)
   , im_active_(false)
+  , focused_(false)
 {
+  g_setenv("IBUS_ENABLE_SYNC_MODE", "1", TRUE);
   CheckIMEnabled();
-  //FIXME: Make event forwarding work before enabling
-  // im_enabled_ ? SetupMultiIM() : SetupSimpleIM();
-  SetupSimpleIM();
+  im_enabled_ ? SetupMultiIM() : SetupSimpleIM();
 
-  FocusChanged.connect(sigc::mem_fun(this, &IMTextEntry::OnFocusChanged));
-  OnKeyNavFocusChange.connect(sigc::mem_fun(this, &IMTextEntry::OnFocusChanged));
+  FocusChanged.connect([&] (nux::Area*) { GetFocused() ? OnFocusIn() : OnFocusOut(); });
   mouse_up.connect(sigc::mem_fun(this, &IMTextEntry::OnMouseButtonUp));
 }
 
@@ -101,35 +100,26 @@ bool IMTextEntry::InspectKeyEvent(unsigned int event_type,
 {
   bool propagate_event = !(TryHandleEvent(event_type, keysym, character));
 
-    LOG_DEBUG(logger) << "Input method ("
+  LOG_DEBUG(logger) << "Input method "
                     << (im_enabled_ ? gtk_im_multicontext_get_context_id(GTK_IM_MULTICONTEXT(im_context_)) : "simple")
-                    << ") "
+                    << " "
                     << (propagate_event ? "did not handle " : "handled ") 
                     << "event ("
                     << (event_type == NUX_KEYDOWN ? "press" : "release")
                     << ") ";
 
-  std::string preedit = preedit_string;
-  if (preedit.length() < 1 && 
-      (keysym == NUX_VK_ENTER ||
-       keysym == NUX_KP_ENTER ||
-       keysym == NUX_VK_UP ||
-       keysym == NUX_VK_DOWN ||
-       keysym == NUX_VK_LEFT ||
-       keysym == NUX_VK_RIGHT ||
-       keysym == NUX_VK_LEFT_TAB ||
-       keysym == NUX_VK_TAB ||
-       keysym == NUX_VK_ESCAPE ||
-       keysym == NUX_VK_DELETE ||
-       keysym == NUX_VK_BACKSPACE ||
-       keysym == NUX_VK_HOME ||
-       keysym == NUX_VK_END))
-  {
-    propagate_event = true;
-  }
+  if (propagate_event)
+    propagate_event = !TryHandleSpecial(event_type, keysym, character);
 
-  return propagate_event ? TextEntry::InspectKeyEvent(event_type, keysym, character)
-                         : propagate_event;
+  if (propagate_event)
+  {
+    text_input_mode_ = event_type == NUX_KEYDOWN;
+    propagate_event = TextEntry::InspectKeyEvent(event_type, keysym, character);
+    text_input_mode_ = false;
+
+    UpdateCursorLocation();
+  }
+  return propagate_event;
 }
 
 bool IMTextEntry::TryHandleEvent(unsigned int eventType,
@@ -153,7 +143,7 @@ inline void IMTextEntry::CheckValidClientWindow(Window window)
     client_window_ = gdk_x11_window_foreign_new_for_display(gdk_display_get_default(), window);
     gtk_im_context_set_client_window(im_context_, client_window_);
 
-    if (GetFocused())
+    if (focused_)
     {
       gtk_im_context_focus_in(im_context_);
     }
@@ -163,9 +153,7 @@ inline void IMTextEntry::CheckValidClientWindow(Window window)
 void IMTextEntry::KeyEventToGdkEventKey(Event& event, GdkEventKey& gdk_event)
 {
   gdk_event.type = event.e_event == nux::NUX_KEYDOWN ? GDK_KEY_PRESS : GDK_KEY_RELEASE;
-
   gdk_event.window = client_window_;
-  gdk_event.window = 0;
   gdk_event.send_event = FALSE;
   gdk_event.time = event.e_x11_timestamp;
   gdk_event.state = event.e_x11_state;
@@ -180,31 +168,79 @@ void IMTextEntry::KeyEventToGdkEventKey(Event& event, GdkEventKey& gdk_event)
   gdk_event.is_modifier = 0;
 }
 
-void IMTextEntry::OnFocusChanged(nux::Area* area)
+bool IMTextEntry::TryHandleSpecial(unsigned int eventType, unsigned int keysym, const char* character)
 {
+  nux::Event event = nux::GetGraphicsThread()->GetWindow().GetCurrentEvent();
+  unsigned int keyval = keysym;
+  bool shift = (event.GetKeyState() & NUX_STATE_SHIFT);
+  bool ctrl = (event.GetKeyState() & NUX_STATE_CTRL);
 
-  LOG_DEBUG(logger) << "Focus changed " << boost::lexical_cast<bool>(GetFocused());
+  if (eventType != NUX_KEYDOWN)
+    return false;
 
-  if (GetFocused())
+  if (((keyval == NUX_VK_x) && ctrl && !shift) ||
+      ((keyval == NUX_VK_DELETE) && shift && !ctrl))
   {
-    gtk_im_context_focus_in(im_context_);
+    Cut();
+  }
+  else if (((keyval == NUX_VK_c) && ctrl && (!shift)) ||
+           ((keyval == NUX_VK_INSERT) && ctrl && (!shift)))
+  {
+    Copy();
+  }
+  else if (((keyval == NUX_VK_v) && ctrl && (!shift)) ||
+      ((keyval == NUX_VK_INSERT) && shift && (!ctrl)))
+  {
+    Paste();
   }
   else
   {
-    gtk_im_context_focus_out(im_context_);
-    gtk_im_context_reset(im_context_);
+    return false;
   }
+  return true;
+}
+
+void IMTextEntry::Cut()
+{
+  Copy();
+  DeleteSelection();
+}
+
+void IMTextEntry::Copy()
+{
+  int start=0, end=0;
+  if (GetSelectionBounds(&start, &end))
+  {
+    GtkClipboard* clip = gtk_clipboard_get_for_display(gdk_display_get_default(),
+                                                       GDK_SELECTION_CLIPBOARD);
+    gtk_clipboard_set_text(clip, _text.c_str() + start, end - start);
+  }
+}
+
+void IMTextEntry::Paste()
+{
+  GtkClipboard* clip = gtk_clipboard_get_for_display(gdk_display_get_default(),
+                                                     GDK_SELECTION_CLIPBOARD);
+  auto callback = [](GtkClipboard* clip, const char* text, gpointer user_data)
+   {
+     IMTextEntry* self = static_cast<IMTextEntry*>(user_data);
+     self->OnCommit (self->im_context_, const_cast<char*>(text));
+   };
+
+  gtk_clipboard_request_text(clip, callback, this);
 }
 
 void IMTextEntry::OnCommit(GtkIMContext* context, char* str)
 {
   LOG_DEBUG(logger) << "Commit: " << str;
+  DeleteSelection();
   if (str)
   {
     std::string new_text = GetText() + str;
     int cursor = cursor_;
     SetText(new_text.c_str());
     SetCursor(cursor + strlen(str));
+    UpdateCursorLocation();
   }
 }
 
@@ -235,6 +271,30 @@ void IMTextEntry::OnPreeditEnd(GtkIMContext* context)
   gtk_im_context_reset(im_context_);
 
   LOG_DEBUG(logger) << "Preedit ended";
+}
+
+void IMTextEntry::OnFocusIn()
+{
+  focused_ = true;
+  gtk_im_context_focus_in(im_context_);
+  gtk_im_context_reset(im_context_);
+  UpdateCursorLocation();
+}
+
+void IMTextEntry::OnFocusOut()
+{
+  focused_ = false;
+  gtk_im_context_focus_out(im_context_);
+}
+
+void IMTextEntry::UpdateCursorLocation()
+{
+  nux::Rect strong, weak;
+  GetCursorRects(&strong, &weak);
+  nux::Geometry geo = GetGeometry();
+  
+  GdkRectangle area = { strong.x + geo.x, strong.y + geo.y, strong.width, strong.height };
+  gtk_im_context_set_cursor_location(im_context_, &area);
 }
 
 void IMTextEntry::OnMouseButtonUp(int x, int y, unsigned long bflags, unsigned long kflags)

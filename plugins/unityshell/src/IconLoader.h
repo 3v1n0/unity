@@ -1,5 +1,6 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
-* Copyright (C) 2010 Canonical Ltd
+* Copyright (C) 2010, 2011 Canonical Ltd
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License version 3 as
@@ -16,8 +17,10 @@
 * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
 */
 
-#ifndef ICON_LOADER_H
-#define ICON_LOADER_H
+#ifndef UNITY_ICON_LOADER_H
+#define UNITY_ICON_LOADER_H
+
+#include <boost/utility.hpp>
 
 #include <string>
 #include <map>
@@ -25,81 +28,48 @@
 #include <sigc++/sigc++.h>
 #include <gtk/gtk.h>
 
-class IconLoader
+namespace unity
+{
+
+class IconLoader : public boost::noncopyable
 {
 public:
-  typedef sigc::slot<void, const char*, guint, GdkPixbuf*> IconLoaderCallback;
+  typedef sigc::slot<void, std::string const&, unsigned, GdkPixbuf*> IconLoaderCallback;
 
   IconLoader();
   ~IconLoader();
 
-// DO NOT `delete` this...ever.
-  static IconLoader* GetDefault();
+  static IconLoader& GetDefault();
 
-  void LoadFromIconName(const char*        icon_name,
-                        guint              size,
-                        IconLoaderCallback slot);
+  /**
+   * Each of the Load functions return an opaque handle.  The sole use for
+   * this is to disconnect the callback slot.
+   */
 
-  void LoadFromGIconString(const char*        gicon_string,
-                           guint              size,
-                           IconLoaderCallback slot);
+  int LoadFromIconName(std::string const& icon_name,
+                       unsigned size,
+                       IconLoaderCallback slot);
 
-  void LoadFromFilename(const char*        filename,
-                        guint              size,
-                        IconLoaderCallback slot);
+  int LoadFromGIconString(std::string const& gicon_string,
+                          unsigned size,
+                          IconLoaderCallback slot);
 
-  void LoadFromURI(const char*        uri,
-                   guint              size,
-                   IconLoaderCallback slot);
-private:
+  int LoadFromFilename(std::string const& filename,
+                       unsigned size,
+                       IconLoaderCallback slot);
 
-  enum IconLoaderRequestType
-  {
-    REQUEST_TYPE_ICON_NAME = 0,
-    REQUEST_TYPE_GICON_STRING,
-    REQUEST_TYPE_URI,
-  };
+  int LoadFromURI(std::string const& uri,
+                  unsigned size,
+                  IconLoaderCallback slot);
 
-  struct IconLoaderTask
-  {
-    IconLoaderRequestType type;
-    char*                 data;
-    guint                 size;
-    char*                 key;
-    IconLoaderCallback    slot;
-    IconLoader*           self;
-  };
-
-
-  void   QueueTask(const char*           key,
-                   const char*           data,
-                   guint                 size,
-                   IconLoaderCallback    slot,
-                   IconLoaderRequestType type);
-  char* Hash(const char* data, guint size);
-  bool   CacheLookup(const char* key,
-                     const char* data,
-                     guint       size,
-                     IconLoaderCallback slot);
-  bool   ProcessTask(IconLoaderTask* task);
-  bool   ProcessIconNameTask(IconLoaderTask* task);
-  bool   ProcessGIconTask(IconLoaderTask* task);
-  bool   ProcessURITask(IconLoaderTask* task);
-  void   ProcessURITaskReady(IconLoaderTask* task, char* contents, gsize length);
-  bool   Iteration();
-  void   FreeTask(IconLoaderTask* task);
-
-  static bool Loop(IconLoader* self);
-  static void LoadContentsReady(GObject* object, GAsyncResult* res, IconLoaderTask* task);
+  void DisconnectHandle(int handle);
 
 private:
-  bool _no_load;
+  class Impl;
+  Impl* pimpl;
 
-  std::map<std::string, GdkPixbuf*> _cache;
-  GQueue*       _tasks;
-  guint         _idle_id;
-  GtkIconTheme* _theme;
-  gint64        _idle_start_time;
 };
 
-#endif // ICON_LOADER_H
+}
+
+#endif // UNITY_ICON_LOADER_H

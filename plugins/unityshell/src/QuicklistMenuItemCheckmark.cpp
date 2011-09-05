@@ -21,8 +21,12 @@
 #include <gdk/gdk.h>
 #include <gtk/gtk.h>
 
-#include "Nux/Nux.h"
+#include <Nux/Nux.h>
+
+#include "CairoTexture.h"
 #include "QuicklistMenuItemCheckmark.h"
+
+using unity::texture_from_cairo_graphics;
 
 static double
 _align(double val)
@@ -141,7 +145,7 @@ void
 QuicklistMenuItemCheckmark::Draw(nux::GraphicsEngine& gfxContext,
                                  bool                 forceDraw)
 {
-  nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture;
+  nux::ObjectPtr<nux::IOpenGLBaseTexture> texture;
 
   // Check if the texture have been computed. If they haven't, exit the function.
   if (!_normalTexture[0])
@@ -238,14 +242,9 @@ QuicklistMenuItemCheckmark::UpdateTexture()
 
   DrawText(cr, width, height, nux::color::White);
 
-  nux::NBitmapData* bitmap = _cairoGraphics->GetBitmap();
-
   if (_normalTexture[0])
     _normalTexture[0]->UnReference();
-
-  _normalTexture[0] = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
-  _normalTexture[0]->Update(bitmap);
-  delete bitmap;
+  _normalTexture[0] = texture_from_cairo_graphics(*_cairoGraphics);
 
   // draw normal, checked version
   cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
@@ -280,14 +279,10 @@ QuicklistMenuItemCheckmark::UpdateTexture()
 
   DrawText(cr, width, height, nux::color::White);
 
-  bitmap = _cairoGraphics->GetBitmap();
-
   if (_normalTexture[1])
     _normalTexture[1]->UnReference();
 
-  _normalTexture[1] = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
-  _normalTexture[1]->Update(bitmap);
-  delete bitmap;
+  _normalTexture[1] = texture_from_cairo_graphics(*_cairoGraphics);
 
   // draw active/prelight, unchecked version
   cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
@@ -311,14 +306,10 @@ QuicklistMenuItemCheckmark::UpdateTexture()
 
   DrawText(cr, width, height, transparent);
 
-  bitmap = _cairoGraphics->GetBitmap();
-
   if (_prelightTexture[0])
     _prelightTexture[0]->UnReference();
 
-  _prelightTexture[0] = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
-  _prelightTexture[0]->Update(bitmap);
-  delete bitmap;
+  _prelightTexture[0] = texture_from_cairo_graphics(*_cairoGraphics);
 
   // draw active/prelight, checked version
   cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
@@ -362,14 +353,10 @@ QuicklistMenuItemCheckmark::UpdateTexture()
 
   DrawText(cr, width, height, transparent);
 
-  bitmap = _cairoGraphics->GetBitmap();
-
   if (_prelightTexture[1])
     _prelightTexture[1]->UnReference();
 
-  _prelightTexture[1] = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
-  _prelightTexture[1]->Update(bitmap);
-  delete bitmap;
+  _prelightTexture[1] = texture_from_cairo_graphics(*_cairoGraphics);
 
   // finally clean up
   delete _cairoGraphics;

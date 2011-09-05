@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright 2011 Canonical Ltd.
  *
@@ -25,7 +26,6 @@
 #define RESULTVIEWGRID_H
 
 #include <UnityCore/Categories.h>
-
 #include "ResultView.h"
 
 namespace unity
@@ -37,6 +37,8 @@ namespace dash
 class ResultViewGrid : public ResultView
 {
 public:
+  NUX_DECLARE_OBJECT_TYPE(ResultViewGrid, ResultView);
+
   ResultViewGrid(NUX_FILE_LINE_DECL);
   ~ResultViewGrid();
 
@@ -55,6 +57,12 @@ public:
 protected:
   void MouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
   void MouseClick(int x, int y, unsigned long button_flags, unsigned long key_flags);
+
+  virtual bool                    DndSourceDragBegin();
+  virtual nux::NBitmapData*       DndSourceGetDragImage();
+  virtual std::list<const char*>  DndSourceGetDragTypes();
+  virtual const char*             DndSourceGetDataForType(const char* type, int* size, int* format);
+  virtual void                    DndSourceDragFinished(nux::DndAction result);
 
   virtual bool InspectKeyEvent(unsigned int eventType, unsigned int keysym, const char* character);
   virtual bool AcceptKeyNavFocus();
@@ -78,6 +86,12 @@ private:
   int selected_index_;
   uint preview_row_;
   std::string focused_uri_;
+
+  int last_mouse_down_x_;
+  int last_mouse_down_y_;
+  std::string current_drag_uri_;
+  std::string current_drag_icon_name_;
+
 };
 
 }

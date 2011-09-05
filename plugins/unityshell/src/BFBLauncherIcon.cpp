@@ -28,11 +28,14 @@
 BFBLauncherIcon::BFBLauncherIcon(Launcher* IconManager)
  : SimpleLauncherIcon(IconManager)
 {
-  tooltip_text = _("Ubuntu Start");
-  SetIconName("distributor-logo");
+  tooltip_text = _("Dash home");
+  SetIconName(PKGDATADIR"/launcher_bfb.png");
   SetQuirk(QUIRK_VISIBLE, true);
   SetQuirk(QUIRK_RUNNING, false);
   SetIconType(TYPE_HOME);
+
+  mouse_enter.connect([&] () { ubus_server_send_message(ubus_server_get_default(),
+                               UBUS_DASH_ABOUT_TO_SHOW, NULL); });
 }
 
 nux::Color BFBLauncherIcon::BackgroundColor()
@@ -50,6 +53,7 @@ void BFBLauncherIcon::ActivateLauncherIcon(ActionArg arg)
   if (arg.button == 1)
   {
     UBusServer* ubus = ubus_server_get_default();
-    ubus_server_send_message(ubus, UBUS_DASH_EXTERNAL_ACTIVATION, NULL);
+    ubus_server_send_message(ubus, UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
+                             g_variant_new("(sus)", "home.lens", 0, ""));
   }
 }

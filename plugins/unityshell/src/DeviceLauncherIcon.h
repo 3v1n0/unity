@@ -58,7 +58,6 @@ private:
   static void OnEjectReady(GObject* object, GAsyncResult* result, DeviceLauncherIcon* self);
   static void OnUnmountReady(GObject* object, GAsyncResult* result, DeviceLauncherIcon* self);
   static void OnDriveStop(DbusmenuMenuitem* item, int time, DeviceLauncherIcon* self);
-  static void OnStopDriveReady(GObject* object, GAsyncResult* result, DeviceLauncherIcon* self);
   void OnSettingsChanged();
 
 private:

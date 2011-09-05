@@ -50,6 +50,7 @@ namespace unity {
       _hires_time_end(20),
       _ubus_handle_request_colour(0)
   {
+
     background_monitor = gnome_bg_new ();
     client = g_settings_new ("org.gnome.desktop.background");
 
@@ -137,7 +138,6 @@ namespace unity {
 
         parsed_color = (primary + secondary) * 0.5f;
       }
-
       nux::Color new_color = MatchColor (parsed_color);
       TransitionToNewColor (new_color);
     }
@@ -304,6 +304,9 @@ namespace unity {
 
   void BGHash::TransitionToNewColor(nux::color::Color new_color)
   {
+    if (new_color == _current_color)
+      return;
+
     if (_transition_handler)
     {
       // we are currently in a transition
@@ -328,6 +331,8 @@ namespace unity {
   {
     guint64 current_time = g_get_monotonic_time();
     float timediff = ((float)current_time - _hires_time_start) / _hires_time_end;
+
+    timediff = std::max(std::min(timediff, 1.0f), 0.0f);
 
     _current_color = InterpolateColor(_old_color,
                                       _new_color,
@@ -401,7 +406,7 @@ namespace unity {
     if (error)
     {
       LOG_WARNING(logger) << "Could not load filename \"" << path << "\": " << error.Message();
-      _current_color = nux::Color(0.2, 0.2, 0.2, 0.9);
+      _current_color = unity::colors::Aubergine;
 
       // try and get a colour from gnome-bg, for various reasons, gnome bg might not
       // return a correct image which sucks =\ but this is a fallback
@@ -415,7 +420,9 @@ namespace unity {
   {
     guchar *img = gdk_pixbuf_get_pixels (pixbuf);
     guchar *pixel = img + ((y * gdk_pixbuf_get_rowstride(pixbuf)) + (x * gdk_pixbuf_get_n_channels (pixbuf)));
-    return nux::Color ((float)(*(pixel + 0)), (float)(*(pixel + 1)), (float)(*(pixel + 2)));
+    return nux::Color (static_cast<int>(*(pixel + 0)),
+                       static_cast<int>(*(pixel + 1)),
+                       static_cast<int>(*(pixel + 2)));
   }
 
   inline bool is_color_different (const nux::Color color_a, const nux::Color color_b)
@@ -490,8 +497,6 @@ namespace unity {
                                          gdk_pixbuf_get_width (pixbuf) - 1,
                                          gdk_pixbuf_get_height (pixbuf) - 1,
                                          pixbuf);
-
-
     nux::Color matched_color = MatchColor (average);
     return matched_color;
   }
@@ -513,11 +518,6 @@ namespace unity {
     colors[10] = nux::Color (0x1b134c);
     colors[11] = nux::Color (0x2c0d46);
 
-    nux::Color bw_colors[2];
-    //bw_colors[0] = nux::Color (211, 215, 207); //Aluminium 2
-    bw_colors[0] = nux::Color (136, 138, 133); //Aluminium 4
-    bw_colors[1] = nux::Color (46 , 52 , 54 ); //Aluminium 6
-
     float closest_diff = 200.0f;
     nux::Color chosen_color;
     nux::color::HueSaturationValue base_hsv (base_color);
@@ -525,19 +525,12 @@ namespace unity {
     if (base_hsv.saturation < 0.08)
     {
       // grayscale image
-      for (int i = 0; i < 3; i++)
-      {
-        nux::color::HueSaturationValue comparison_hsv (bw_colors[i]);
-        float color_diff = fabs(base_hsv.value - comparison_hsv.value);
-        if (color_diff < closest_diff)
-        {
-          chosen_color = bw_colors[i];
-          closest_diff = color_diff;
-        }
-      }
+      LOG_DEBUG (logger) << "got a grayscale image";
+      chosen_color = nux::Color (46 , 52 , 54 );
     }
     else
     {
+      LOG_DEBUG (logger) << "got a colour image";
       // full colour image
       for (int i = 0; i < 11; i++)
       {
@@ -551,16 +544,20 @@ namespace unity {
         }
       }
 
-      nux::color::HueLightnessSaturation hsv_color (chosen_color);
+      nux::color::HueSaturationValue hsv_color (chosen_color);
 
-      hsv_color.saturation = base_hsv.saturation;
-      hsv_color.lightness = 0.2;
+      hsv_color.saturation = std::min(base_hsv.saturation, hsv_color.saturation);
+      hsv_color.value = std::min(std::min(base_hsv.value, hsv_color.value), 0.2f);
       chosen_color = nux::Color (nux::color::RedGreenBlue(hsv_color));
     }
 
     // apply design to the colour
     chosen_color.alpha = 0.5f;
 
+    LOG_DEBUG(logger) << "eventually chose "
+                      << chosen_color.red << ", "
+                      << chosen_color.green << ", "
+                      << chosen_color.blue;
     return chosen_color;
   }
 

@@ -37,6 +37,7 @@ public:
 
   void AddIcon(LauncherIcon* icon);
   void RemoveIcon(LauncherIcon* icon);
+  void Save();
   void Sort();
   int  Size();
 
@@ -67,6 +68,7 @@ public:
   sigc::signal<void, LauncherIcon*> icon_added;
   sigc::signal<void, LauncherIcon*> icon_removed;
   sigc::signal<void> order_changed;
+  sigc::signal<void> saved;
 
   // connected to from class Launcher
   sigc::connection on_icon_added_connection;

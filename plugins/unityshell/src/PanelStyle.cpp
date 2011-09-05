@@ -27,6 +27,7 @@
 #include <NuxImage/CairoGraphics.h>
 #include <NuxCore/Logger.h>
 
+#include "CairoTexture.h"
 #include "PanelStyle.h"
 
 #include <UnityCore/GLibWrapper.h>
@@ -56,8 +57,8 @@ PanelStyle::PanelStyle()
   _style_context = gtk_style_context_new();
 
   GtkWidgetPath* widget_path = gtk_widget_path_new();
-  gtk_widget_path_iter_set_name(widget_path, -1 , "UnityPanelWidget");
-  gtk_widget_path_append_type(widget_path, GTK_TYPE_WINDOW);
+  guint pos = gtk_widget_path_append_type(widget_path, GTK_TYPE_WINDOW);
+  gtk_widget_path_iter_set_name(widget_path, pos, "UnityPanelWidget");
 
   gtk_style_context_set_path(_style_context, widget_path);
   gtk_style_context_add_class(_style_context, "gnome-panel-menu-bar");
@@ -180,7 +181,7 @@ PanelStyle::GetWindowButton(WindowButtonType type, WindowState state)
     if (!var)
       var = "/usr";
 
-    glib::String filename(g_build_filename(var, _theme_name, subpath.str().c_str(), NULL));
+    glib::String filename(g_build_filename(var, "share", "themes", _theme_name, subpath.str().c_str(), NULL));
 
     if (g_file_test(filename.Value(), G_FILE_TEST_EXISTS))
     {
@@ -204,7 +205,6 @@ PanelStyle::GetWindowButton(WindowButtonType type, WindowState state)
 nux::BaseTexture*
 PanelStyle::GetWindowButtonForTheme(WindowButtonType type, WindowState state)
 {
-  nux::BaseTexture* texture = NULL;
   int width = 18, height = 18;
   float w = width / 3.0f;
   float h = height / 3.0f;
@@ -261,12 +261,7 @@ PanelStyle::GetWindowButtonForTheme(WindowButtonType type, WindowState state)
 
   cairo_destroy(cr);
 
-  nux::NBitmapData* bitmap =  cairo_graphics.GetBitmap();
-  texture = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
-  texture->Update(bitmap);
-  delete bitmap;
-
-  return texture;
+  return texture_from_cairo_graphics(cairo_graphics);
 }
 
 GdkPixbuf*

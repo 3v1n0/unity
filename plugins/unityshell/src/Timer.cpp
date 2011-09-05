@@ -19,11 +19,9 @@
 
 #include "Timer.h"
 
-#include <ostream>
-
 namespace unity
 {
-namespace logger
+namespace util
 {
 
 Timer::Timer()
@@ -38,29 +36,15 @@ void Timer::Reset()
 
 float Timer::ElapsedSeconds()
 {
+  return ElapsedMicroSeconds() / 1e6;
+}
+
+gint64 Timer::ElapsedMicroSeconds()
+{
   gint64 end = g_get_monotonic_time();
-  return (end - start_time_) / 1e6;
+  return end - start_time_;
 }
 
-
-BlockTimer::BlockTimer(std::string const& name, std::ostream& out)
-  : name_(name)
-  , out_(out)
-{
-  out_ << "STARTED (" << name_ << ")" << "\n";
-}
-
-BlockTimer::~BlockTimer()
-{
-  out_ << timer_.ElapsedSeconds() << "s: FINISHED ("
-       << name_ << ")" << "\n";
-}
-
-void BlockTimer::log(std::string const& message)
-{
-  out_ << timer_.ElapsedSeconds() << "s: " << message
-       << " (" << name_ << ")" << "\n";
-}
 
 }
 }

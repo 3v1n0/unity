@@ -41,14 +41,6 @@ namespace unity
 namespace dash
 {
 
-enum SizeMode
-{
-  SIZE_MODE_MAXIMISED,
-  SIZE_MODE_NORMAL,
-  SIZE_MODE_VERTICAL_MAXIMISED,
-  SIZE_MODE_HORIZONATAL_MAXIMISED
-};
-
 class DashView : public nux::View, public unity::Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE(DashView, nux::View);
@@ -59,7 +51,10 @@ public:
   ~DashView();
 
   void AboutToShow();
+  void AboutToHide();
   void Relayout();
+  void DisableBlur();
+  void OnActivateRequest(GVariant* args);
 
   nux::View* default_focus() const;
 
@@ -75,7 +70,6 @@ private:
   void DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw);
 
   void OnMouseButtonDown(int x, int y, unsigned long button, unsigned long key);
-  void OnActivateRequest(GVariant* args);
   void OnBackgroundColorChanged(GVariant* args);
   void OnSearchChanged(std::string const& search_string);
   void OnLiveSearchReached(std::string const& search_string);
@@ -86,6 +80,10 @@ private:
   void OnUriActivatedReply(std::string const& uri, HandledType type, Lens::Hints const&);
   bool DoFallbackActivation(std::string const& uri);
   bool LaunchApp(std::string const& appname);
+  void OnEntryActivated();
+  std::string AnalyseLensURI(std::string uri);
+  void UpdateLensFilter(std::string lens, std::string filter, std::string value);
+  void UpdateLensFilterValue(Filter::Ptr filter, std::string value);
   
   bool AcceptKeyNavFocus();
   bool InspectKeyEvent(unsigned int eventType, unsigned int key_sym, const char* character);
@@ -95,12 +93,12 @@ private:
 private:
   UBusManager ubus_manager_;
   FilesystemLenses lenses_;
-  SizeMode size_mode_;
   BackgroundEffectHelper bg_effect_helper_;
   LensViews lens_views_;
 
   // Background related
   nux::ColorLayer* bg_layer_;
+  nux::Color bg_color_;
 
   // View related
   nux::VLayout* layout_;
@@ -117,6 +115,8 @@ private:
   nux::ObjectPtr <nux::IOpenGLBaseTexture> bg_blur_texture_;
 
   std::string last_activated_uri_;
+  
+  bool visible_;
 };
 
 

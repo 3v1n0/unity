@@ -51,14 +51,20 @@ public:
   virtual ~LensView();
 
   Lens::Ptr lens() const;
+  
+  virtual void ActivateFirst();
 
   nux::Property<std::string> search_string;
   nux::Property<bool> filters_expanded;
+  nux::Property<bool> active;
 
   sigc::signal<void, std::string const&> uri_activated;
 
 private:
   void SetupViews();
+  void SetupCategories();
+  void SetupResults();
+  void SetupFilters();
 
   void OnCategoryAdded(Category const& category);
   void OnResultAdded(Result const& result);
@@ -68,6 +74,10 @@ private:
   void OnColumnsChanged();
   void OnFilterAdded(Filter::Ptr filter);
   void OnFilterRemoved(Filter::Ptr filter);
+  void OnActiveChanged(bool is_active);
+  void QueueFixRenderering();
+
+  static gboolean FixRenderering(LensView* self);
 
   virtual long ProcessEvent(nux::IEvent& ievent, long traverse_info, long event_info);
   virtual void Draw(nux::GraphicsEngine& gfx_context, bool force_draw);
@@ -82,6 +92,7 @@ private:
   Lens::Ptr lens_;
   CategoryGroups categories_;
   ResultCounts counts_;
+  bool initial_activation_;
 
   nux::HLayout* layout_;
   nux::ScrollView* scroll_view_;
@@ -89,6 +100,8 @@ private:
   nux::ScrollView* fscroll_view_;
   nux::VLayout* fscroll_layout_;
   FilterBar* filter_bar_;
+
+  guint fix_renderering_id_;
 };
 
 

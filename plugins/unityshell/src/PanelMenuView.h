@@ -79,17 +79,17 @@ public:
 
   guint32 GetMaximizedWindow();
 
-  void OnMaximizedGrab(int x, int y);
+  void OnMaximizedGrabStart(int x, int y);
+  void OnMaximizedGrabMove(int, int, int, int, unsigned long, unsigned long);
+  void OnMaximizedGrabEnd(int x, int y, unsigned long, unsigned long);
   void OnMouseDoubleClicked();
   void OnMouseMiddleClicked();
 
   void Refresh();
-  void AllMenusClosed();
 
   void OnCloseClicked();
   void OnMinimizeClicked();
   void OnRestoreClicked();
-  void OnWindowButtonsRedraw();
   void SetMonitor(int monitor);
   bool GetControlsActive();
 
@@ -118,7 +118,7 @@ private:
   nux::AbstractPaintLayer* _title_layer;
   nux::HLayout*            _menu_layout;
   nux::CairoGraphics       _util_cg;
-  nux::IntrusiveSP<nux::IOpenGLBaseTexture> _gradient_texture;
+  nux::ObjectPtr<nux::IOpenGLBaseTexture> _gradient_texture;
   nux::BaseTexture*        _title_tex;
 
   bool _is_inside;

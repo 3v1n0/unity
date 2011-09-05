@@ -26,8 +26,13 @@ class WindowManagerDummy : public WindowManager
   {
     return 0;
   }
-
+  
   bool IsScreenGrabbed()
+  {
+    return false;
+  }
+
+  bool IsViewPortSwitchStarted()
   {
     return false;
   }
@@ -87,10 +92,65 @@ class WindowManagerDummy : public WindowManager
     g_debug("%s", G_STRFUNC);
   }
 
+  void FocusWindowGroup(std::vector<Window> windows)
+  {
+    g_debug("%s", G_STRFUNC);
+  }
+
+  bool ScaleWindowGroup(std::vector<Window> windows, int state, bool force)
+  {
+    g_debug("%s", G_STRFUNC);
+    return false;
+  }
+
   nux::Geometry GetWindowGeometry(guint xid)
   {
     return nux::Geometry(0, 0, 1, 1);
   }
+
+  nux::Geometry GetScreenGeometry()
+  {
+    return nux::Geometry(0, 0, 1, 1);
+  }
+
+  void SetWindowIconGeometry(Window window, nux::Geometry const& geo)
+  {
+    g_debug("%s", G_STRFUNC);
+  }
+
+  void CheckWindowIntersections (nux::Geometry const& region, bool &active, bool &any)
+  {
+    active = false;
+    any = false;
+  }
+
+  int WorkspaceCount ()
+  {
+    return 1;
+  }
+
+  void TerminateScale()
+  {
+    g_debug("%s", G_STRFUNC);
+  }
+
+  bool IsScaleActive()
+  {
+    g_debug("%s", G_STRFUNC);
+    return false;
+  }
+
+  void InitiateExpo()
+  {
+    g_debug("%s", G_STRFUNC);
+  }
+
+  bool IsExpoActive()
+  {
+    g_debug("%s", G_STRFUNC);
+    return false;
+  }
+
 };
 
 WindowManager*

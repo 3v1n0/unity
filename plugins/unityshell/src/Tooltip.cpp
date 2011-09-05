@@ -29,11 +29,14 @@
 #include "Nux/TextureArea.h"
 #include "NuxImage/CairoGraphics.h"
 
+#include "CairoTexture.h"
 #include "QuicklistMenuItem.h"
 #include "ubus-server.h"
 #include "UBusMessages.h"
 
 #include "Tooltip.h"
+
+using unity::texture_from_cairo_graphics;
 
 namespace nux
 {
@@ -618,27 +621,17 @@ void Tooltip::UpdateTexture()
   cairo_destroy(cr_outline);
   cairo_destroy(cr_mask);
 
-  NBitmapData* bitmap = cairo_bg->GetBitmap();
-
   if (_texture_bg)
     _texture_bg->UnReference();
-  _texture_bg = GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
-  _texture_bg->Update(bitmap);
-  delete bitmap;
+  _texture_bg = texture_from_cairo_graphics(*cairo_bg);
 
-  bitmap = cairo_mask->GetBitmap();
   if (_texture_mask)
     _texture_mask->UnReference();
-  _texture_mask = GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
-  _texture_mask->Update(bitmap);
-  delete bitmap;
+  _texture_mask = texture_from_cairo_graphics(*cairo_mask);
 
-  bitmap = cairo_outline->GetBitmap();
   if (_texture_outline)
     _texture_outline->UnReference();
-  _texture_outline = GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
-  _texture_outline->Update(bitmap);
-  delete bitmap;
+  _texture_outline = texture_from_cairo_graphics(*cairo_outline);
 
   delete cairo_bg;
   delete cairo_mask;

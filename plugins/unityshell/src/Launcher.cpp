@@ -35,8 +35,6 @@
 #include "Nux/BaseWindow.h"
 #include "Nux/WindowCompositor.h"
 
-#include "BamfLauncherIcon.h"
-#include "FavoriteStore.h"
 #include "Launcher.h"
 #include "LauncherIcon.h"
 #include "SpacerLauncherIcon.h"
@@ -44,13 +42,14 @@
 #include "QuicklistManager.h"
 #include "QuicklistView.h"
 #include "IconRenderer.h"
+#include "TimeUtil.h"
+#include "WindowManager.h"
 
 #include "ubus-server.h"
 #include "UBusMessages.h"
 
+#include <UnityCore/GLibWrapper.h>
 #include <UnityCore/Variant.h>
-
-using namespace unity::ui;
 
 using namespace unity::ui;
 
@@ -90,12 +89,6 @@ const float BACKLIGHT_STRENGTH = 0.9f;
 
 NUX_IMPLEMENT_OBJECT_TYPE(Launcher);
 
-int
-TimeDelta(struct timespec const* x, struct timespec const* y)
-{
-  return ((x->tv_sec - y->tv_sec) * 1000) + ((x->tv_nsec - y->tv_nsec) / 1000000);
-}
-
 void SetTimeBack(struct timespec* timeref, int remove)
 {
   timeref->tv_sec -= remove / 1000;
@@ -134,17 +127,17 @@ GDBusInterfaceVTable Launcher::interface_vtable =
 };
 
 Launcher::Launcher(nux::BaseWindow* parent,
-                   CompScreen*      screen,
                    NUX_FILE_LINE_DECL)
-  :   View(NUX_FILE_LINE_PARAM)
-  ,   m_ContentOffsetY(0)
-  ,   m_BackgroundLayer(0)
-  ,   _model(0)
-  ,   _background_color (nux::color::DimGray)
-  ,   _dash_is_open (false)
+  : View(NUX_FILE_LINE_PARAM)
+  , m_ContentOffsetY(0)
+  , m_BackgroundLayer(0)
+  , _model(0)
+  , _collection_window(NULL)
+  , _background_color(nux::color::DimGray)
+  , _dash_is_open(false)
 {
+  
   _parent = parent;
-  _screen = screen;
   _active_quicklist = 0;
 
   _hide_machine = new LauncherHideMachine();
@@ -156,15 +149,15 @@ Launcher::Launcher(nux::BaseWindow* parent,
 
   m_Layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
-  OnMouseDown.connect(sigc::mem_fun(this, &Launcher::RecvMouseDown));
-  OnMouseUp.connect(sigc::mem_fun(this, &Launcher::RecvMouseUp));
-  OnMouseDrag.connect(sigc::mem_fun(this, &Launcher::RecvMouseDrag));
-  OnMouseEnter.connect(sigc::mem_fun(this, &Launcher::RecvMouseEnter));
-  OnMouseLeave.connect(sigc::mem_fun(this, &Launcher::RecvMouseLeave));
-  OnMouseMove.connect(sigc::mem_fun(this, &Launcher::RecvMouseMove));
-  OnMouseWheel.connect(sigc::mem_fun(this, &Launcher::RecvMouseWheel));
-  OnKeyEvent.connect(sigc::mem_fun(this, &Launcher::RecvKeyPressed));
-  OnMouseDownOutsideArea.connect(sigc::mem_fun(this, &Launcher::RecvMouseDownOutsideArea));
+  mouse_down.connect(sigc::mem_fun(this, &Launcher::RecvMouseDown));
+  mouse_up.connect(sigc::mem_fun(this, &Launcher::RecvMouseUp));
+  mouse_drag.connect(sigc::mem_fun(this, &Launcher::RecvMouseDrag));
+  mouse_enter.connect(sigc::mem_fun(this, &Launcher::RecvMouseEnter));
+  mouse_leave.connect(sigc::mem_fun(this, &Launcher::RecvMouseLeave));
+  mouse_move.connect(sigc::mem_fun(this, &Launcher::RecvMouseMove));
+  mouse_wheel.connect(sigc::mem_fun(this, &Launcher::RecvMouseWheel));
+  key_down.connect(sigc::mem_fun(this, &Launcher::RecvKeyPressed));
+  mouse_down_outside_pointer_grab_area.connect(sigc::mem_fun(this, &Launcher::RecvMouseDownOutsideArea));
   //OnEndFocus.connect   (sigc::mem_fun (this, &Launcher::exitKeyNavMode));
 
   CaptureMouseDownAnyWhereElse(true);
@@ -173,7 +166,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
   ql_manager.quicklist_opened.connect(sigc::mem_fun(this, &Launcher::RecvQuicklistOpened));
   ql_manager.quicklist_closed.connect(sigc::mem_fun(this, &Launcher::RecvQuicklistClosed));
 
-  PluginAdapter& plugin_adapter = *(PluginAdapter::Default());
+  WindowManager& plugin_adapter = *(WindowManager::Default());
   plugin_adapter.window_maximized.connect(sigc::mem_fun(this, &Launcher::OnWindowMaybeIntellihide));
   plugin_adapter.window_restored.connect(sigc::mem_fun(this, &Launcher::OnWindowMaybeIntellihide));
   plugin_adapter.window_unminimized.connect(sigc::mem_fun(this, &Launcher::OnWindowMaybeIntellihide));
@@ -191,8 +184,10 @@ Launcher::Launcher(nux::BaseWindow* parent,
   plugin_adapter.initiate_expo.connect(sigc::mem_fun(this, &Launcher::OnPluginStateChanged));
   plugin_adapter.terminate_spread.connect(sigc::mem_fun(this, &Launcher::OnPluginStateChanged));
   plugin_adapter.terminate_expo.connect(sigc::mem_fun(this, &Launcher::OnPluginStateChanged));
+  plugin_adapter.compiz_screen_viewport_switch_started.connect(sigc::mem_fun(this, &Launcher::OnViewPortSwitchStarted));
+  plugin_adapter.compiz_screen_viewport_switch_ended.connect(sigc::mem_fun(this, &Launcher::OnViewPortSwitchEnded));
 
-  GeisAdapter& adapter = *(GeisAdapter::Default(screen));
+  GeisAdapter& adapter = *(GeisAdapter::Default());
   adapter.drag_start.connect(sigc::mem_fun(this, &Launcher::OnDragStart));
   adapter.drag_update.connect(sigc::mem_fun(this, &Launcher::OnDragUpdate));
   adapter.drag_finish.connect(sigc::mem_fun(this, &Launcher::OnDragFinish));
@@ -263,6 +258,11 @@ Launcher::Launcher(nux::BaseWindow* parent,
   _bfb_width = 1;
   _bfb_height = 1;
 
+  _data_checked = false;
+  _collection_window = new unity::DNDCollectionWindow();
+  _collection_window->SinkReference();
+  _on_data_collected_connection = _collection_window->collected.connect(sigc::mem_fun(this, &Launcher::OnDNDDataCollected));
+
   // 0 out timers to avoid wonky startups
   int i;
   for (i = 0; i < TIME_LAST; ++i)
@@ -271,6 +271,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
     _times[i].tv_nsec = 0;
   }
 
+  _dnd_hovered_icon = NULL;
   _drag_window = NULL;
   _offscreen_drag_texture = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableDeviceTexture(2, 2, 1, nux::BITFMT_R8G8B8A8);
 
@@ -307,11 +308,6 @@ Launcher::Launcher(nux::BaseWindow* parent,
                                this,
                                NULL);
 
-  _settings = g_settings_new("com.canonical.Unity.Launcher");
-  _settings_changed_id = g_signal_connect(
-                           _settings, "changed", (GCallback)(Launcher::SettingsChanged), this);
-  SettingsChanged(_settings, (gchar*)"shows-on-edge", this);
-
   SetDndEnabled(false, true);
 
   icon_renderer = AbstractIconRenderer::Ptr(new IconRenderer());
@@ -321,6 +317,9 @@ Launcher::Launcher(nux::BaseWindow* parent,
   ubus_server_send_message (ubus, UBUS_BACKGROUND_REQUEST_COLOUR_EMIT, NULL);
 
   SetAcceptMouseWheelEvent(true);
+
+  bg_effect_helper_.owner = this;
+  bg_effect_helper_.enabled = false;
 }
 
 Launcher::~Launcher()
@@ -343,13 +342,11 @@ Launcher::~Launcher()
     g_source_remove(_ignore_repeat_shortcut_handle);
   if (_super_hide_launcher_handle)
     g_source_remove(_super_hide_launcher_handle);
-
-  if (_settings_changed_id != 0)
-    g_signal_handler_disconnect((gpointer) _settings, _settings_changed_id);
-  g_object_unref(_settings);
-
   if (_launcher_animation_timeout > 0)
     g_source_remove(_launcher_animation_timeout);
+    
+  if (_on_data_collected_connection.connected())
+      _on_data_collected_connection.disconnect();
 
   UBusServer* ubus = ubus_server_get_default();
   for (unsigned int i = 0; i < G_N_ELEMENTS(_ubus_handles); ++i)
@@ -359,6 +356,9 @@ Launcher::~Launcher()
   }
 
   g_idle_remove_by_data(this);
+  
+  if (_collection_window)
+    _collection_window->UnReference();
 
   delete _hover_machine;
   delete _hide_machine;
@@ -369,13 +369,6 @@ const gchar*
 Launcher::GetName()
 {
   return "Launcher";
-}
-
-void
-Launcher::SettingsChanged(GSettings* settings, char* key, Launcher* self)
-{
-  bool show_on_edge = g_settings_get_boolean(settings, "shows-on-edge") ? true : false;
-  self->_hide_machine->SetShowOnEdge(show_on_edge);
 }
 
 void
@@ -559,19 +552,19 @@ bool Launcher::MouseBeyondDragThreshold()
 float Launcher::GetHoverProgress(struct timespec const& current)
 {
   if (_hovered)
-    return CLAMP((float)(TimeDelta(&current, &_times[TIME_ENTER])) / (float) ANIM_DURATION, 0.0f, 1.0f);
+    return CLAMP((float)(unity::TimeUtil::TimeDelta(&current, &_times[TIME_ENTER])) / (float) ANIM_DURATION, 0.0f, 1.0f);
   else
-    return 1.0f - CLAMP((float)(TimeDelta(&current, &_times[TIME_LEAVE])) / (float) ANIM_DURATION, 0.0f, 1.0f);
+    return 1.0f - CLAMP((float)(unity::TimeUtil::TimeDelta(&current, &_times[TIME_LEAVE])) / (float) ANIM_DURATION, 0.0f, 1.0f);
 }
 
 float Launcher::DnDExitProgress(struct timespec const& current)
 {
-  return pow(1.0f - CLAMP((float)(TimeDelta(&current, &_times[TIME_DRAG_END])) / (float) ANIM_DURATION_LONG, 0.0f, 1.0f), 2);
+  return pow(1.0f - CLAMP((float)(unity::TimeUtil::TimeDelta(&current, &_times[TIME_DRAG_END])) / (float) ANIM_DURATION_LONG, 0.0f, 1.0f), 2);
 }
 
 float Launcher::DragOutProgress(struct timespec const& current)
 {
-  float timeout = CLAMP((float)(TimeDelta(&current, &_times[TIME_DRAG_OUT])) / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
+  float timeout = CLAMP((float)(unity::TimeUtil::TimeDelta(&current, &_times[TIME_DRAG_OUT])) / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
   float progress = CLAMP(_drag_out_delta_x / DRAG_OUT_PIXELS, 0.0f, 1.0f);
 
   if (_drag_out_id || _hide_machine->GetQuirk(LauncherHideMachine::MT_DRAG_OUT))
@@ -583,7 +576,7 @@ float Launcher::AutohideProgress(struct timespec const& current)
 {
   // time-based progress (full scale or finish the TRIGGER_AUTOHIDE_MIN -> 0.00f on bfb)
   float animation_progress;
-  animation_progress = CLAMP((float)(TimeDelta(&current, &_times[TIME_AUTOHIDE])) / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
+  animation_progress = CLAMP((float)(unity::TimeUtil::TimeDelta(&current, &_times[TIME_AUTOHIDE])) / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
   if (_hidden)
     return animation_progress;
   else
@@ -593,17 +586,17 @@ float Launcher::AutohideProgress(struct timespec const& current)
 float Launcher::DragHideProgress(struct timespec const& current)
 {
   if (_drag_edge_touching)
-    return CLAMP((float)(TimeDelta(&current, &_times[TIME_DRAG_EDGE_TOUCH])) / (float)(ANIM_DURATION * 3), 0.0f, 1.0f);
+    return CLAMP((float)(unity::TimeUtil::TimeDelta(&current, &_times[TIME_DRAG_EDGE_TOUCH])) / (float)(ANIM_DURATION * 3), 0.0f, 1.0f);
   else
-    return 1.0f - CLAMP((float)(TimeDelta(&current, &_times[TIME_DRAG_EDGE_TOUCH])) / (float)(ANIM_DURATION * 3), 0.0f, 1.0f);
+    return 1.0f - CLAMP((float)(unity::TimeUtil::TimeDelta(&current, &_times[TIME_DRAG_EDGE_TOUCH])) / (float)(ANIM_DURATION * 3), 0.0f, 1.0f);
 }
 
 float Launcher::DragThresholdProgress(struct timespec const& current)
 {
   if (MouseBeyondDragThreshold())
-    return 1.0f - CLAMP((float)(TimeDelta(&current, &_times[TIME_DRAG_THRESHOLD])) / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
+    return 1.0f - CLAMP((float)(unity::TimeUtil::TimeDelta(&current, &_times[TIME_DRAG_THRESHOLD])) / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
   else
-    return CLAMP((float)(TimeDelta(&current, &_times[TIME_DRAG_THRESHOLD])) / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
+    return CLAMP((float)(unity::TimeUtil::TimeDelta(&current, &_times[TIME_DRAG_THRESHOLD])) / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
 }
 
 gboolean Launcher::AnimationTimeout(gpointer data)
@@ -622,51 +615,51 @@ void Launcher::EnsureAnimation()
 bool Launcher::IconNeedsAnimation(LauncherIcon* icon, struct timespec const& current)
 {
   struct timespec time = icon->GetQuirkTime(LauncherIcon::QUIRK_VISIBLE);
-  if (TimeDelta(&current, &time) < ANIM_DURATION_SHORT)
+  if (unity::TimeUtil::TimeDelta(&current, &time) < ANIM_DURATION_SHORT)
     return true;
 
   time = icon->GetQuirkTime(LauncherIcon::QUIRK_RUNNING);
-  if (TimeDelta(&current, &time) < ANIM_DURATION_SHORT)
+  if (unity::TimeUtil::TimeDelta(&current, &time) < ANIM_DURATION_SHORT)
     return true;
 
   time = icon->GetQuirkTime(LauncherIcon::QUIRK_STARTING);
-  if (TimeDelta(&current, &time) < (ANIM_DURATION_LONG * MAX_STARTING_BLINKS * STARTING_BLINK_LAMBDA * 2))
+  if (unity::TimeUtil::TimeDelta(&current, &time) < (ANIM_DURATION_LONG * MAX_STARTING_BLINKS * STARTING_BLINK_LAMBDA * 2))
     return true;
 
   time = icon->GetQuirkTime(LauncherIcon::QUIRK_URGENT);
-  if (TimeDelta(&current, &time) < (ANIM_DURATION_LONG * URGENT_BLINKS * 2))
+  if (unity::TimeUtil::TimeDelta(&current, &time) < (ANIM_DURATION_LONG * URGENT_BLINKS * 2))
     return true;
   
   time = icon->GetQuirkTime(LauncherIcon::QUIRK_PULSE_ONCE);
-  if (TimeDelta(&current, &time) < (ANIM_DURATION_LONG * PULSE_BLINK_LAMBDA * 2))
+  if (unity::TimeUtil::TimeDelta(&current, &time) < (ANIM_DURATION_LONG * PULSE_BLINK_LAMBDA * 2))
     return true;  
 
   time = icon->GetQuirkTime(LauncherIcon::QUIRK_PRESENTED);
-  if (TimeDelta(&current, &time) < ANIM_DURATION)
+  if (unity::TimeUtil::TimeDelta(&current, &time) < ANIM_DURATION)
     return true;
 
   time = icon->GetQuirkTime(LauncherIcon::QUIRK_SHIMMER);
-  if (TimeDelta(&current, &time) < ANIM_DURATION_LONG)
+  if (unity::TimeUtil::TimeDelta(&current, &time) < ANIM_DURATION_LONG)
     return true;
 
   time = icon->GetQuirkTime(LauncherIcon::QUIRK_CENTER_SAVED);
-  if (TimeDelta(&current, &time) < ANIM_DURATION)
+  if (unity::TimeUtil::TimeDelta(&current, &time) < ANIM_DURATION)
     return true;
 
   time = icon->GetQuirkTime(LauncherIcon::QUIRK_PROGRESS);
-  if (TimeDelta(&current, &time) < ANIM_DURATION)
+  if (unity::TimeUtil::TimeDelta(&current, &time) < ANIM_DURATION)
     return true;
-
+    
   time = icon->GetQuirkTime(LauncherIcon::QUIRK_DROP_DIM);
-  if (TimeDelta(&current, &time) < ANIM_DURATION)
+  if (unity::TimeUtil::TimeDelta(&current, &time) < ANIM_DURATION)
     return true;
 
   time = icon->GetQuirkTime(LauncherIcon::QUIRK_DESAT);
-  if (TimeDelta(&current, &time) < ANIM_DURATION_LONG)
+  if (unity::TimeUtil::TimeDelta(&current, &time) < ANIM_DURATION_LONG)
     return true;
 
   time = icon->GetQuirkTime(LauncherIcon::QUIRK_DROP_PRELIGHT);
-  if (TimeDelta(&current, &time) < ANIM_DURATION)
+  if (unity::TimeUtil::TimeDelta(&current, &time) < ANIM_DURATION)
     return true;
 
   return false;
@@ -682,31 +675,31 @@ bool Launcher::AnimationInProgress()
   clock_gettime(CLOCK_MONOTONIC, &current);
 
   // hover in animation
-  if (TimeDelta(&current, &_times[TIME_ENTER]) < ANIM_DURATION)
+  if (unity::TimeUtil::TimeDelta(&current, &_times[TIME_ENTER]) < ANIM_DURATION)
     return true;
 
   // hover out animation
-  if (TimeDelta(&current, &_times[TIME_LEAVE]) < ANIM_DURATION)
+  if (unity::TimeUtil::TimeDelta(&current, &_times[TIME_LEAVE]) < ANIM_DURATION)
     return true;
 
   // drag end animation
-  if (TimeDelta(&current, &_times[TIME_DRAG_END]) < ANIM_DURATION_LONG)
+  if (unity::TimeUtil::TimeDelta(&current, &_times[TIME_DRAG_END]) < ANIM_DURATION_LONG)
     return true;
 
   // hide animation (time only), position is trigger manually on the bfb
-  if (TimeDelta(&current, &_times[TIME_AUTOHIDE]) < ANIM_DURATION_SHORT)
+  if (unity::TimeUtil::TimeDelta(&current, &_times[TIME_AUTOHIDE]) < ANIM_DURATION_SHORT)
     return true;
 
   // collapse animation on DND out of launcher space
-  if (TimeDelta(&current, &_times[TIME_DRAG_THRESHOLD]) < ANIM_DURATION_SHORT)
+  if (unity::TimeUtil::TimeDelta(&current, &_times[TIME_DRAG_THRESHOLD]) < ANIM_DURATION_SHORT)
     return true;
 
   // hide animation for dnd
-  if (TimeDelta(&current, &_times[TIME_DRAG_EDGE_TOUCH]) < ANIM_DURATION * 6)
+  if (unity::TimeUtil::TimeDelta(&current, &_times[TIME_DRAG_EDGE_TOUCH]) < ANIM_DURATION * 6)
     return true;
 
   // restore from drag_out animation
-  if (TimeDelta(&current, &_times[TIME_DRAG_OUT]) < ANIM_DURATION_SHORT)
+  if (unity::TimeUtil::TimeDelta(&current, &_times[TIME_DRAG_OUT]) < ANIM_DURATION_SHORT)
     return true;
 
   // animations happening on specific icons
@@ -725,7 +718,7 @@ void Launcher::SetTimeStruct(struct timespec* timer, struct timespec* sister, in
 
   if (sister)
   {
-    int diff = TimeDelta(&current, sister);
+    int diff = unity::TimeUtil::TimeDelta(&current, sister);
 
     if (diff < sister_relation)
     {
@@ -760,13 +753,13 @@ float IconVisibleProgress(LauncherIcon* icon, struct timespec const& current)
   if (icon->GetQuirk(LauncherIcon::QUIRK_VISIBLE))
   {
     struct timespec icon_visible_time = icon->GetQuirkTime(LauncherIcon::QUIRK_VISIBLE);
-    int enter_ms = TimeDelta(&current, &icon_visible_time);
+    int enter_ms = unity::TimeUtil::TimeDelta(&current, &icon_visible_time);
     return CLAMP((float) enter_ms / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
   }
   else
   {
     struct timespec icon_hide_time = icon->GetQuirkTime(LauncherIcon::QUIRK_VISIBLE);
-    int hide_ms = TimeDelta(&current, &icon_hide_time);
+    int hide_ms = unity::TimeUtil::TimeDelta(&current, &icon_hide_time);
     return 1.0f - CLAMP((float) hide_ms / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
   }
 }
@@ -800,7 +793,7 @@ void Launcher::SetDndDelta(float x, float y, nux::Geometry const& geo, timespec 
 float Launcher::IconPresentProgress(LauncherIcon* icon, struct timespec const& current)
 {
   struct timespec icon_present_time = icon->GetQuirkTime(LauncherIcon::QUIRK_PRESENTED);
-  int ms = TimeDelta(&current, &icon_present_time);
+  int ms = unity::TimeUtil::TimeDelta(&current, &icon_present_time);
   float result = CLAMP((float) ms / (float) ANIM_DURATION, 0.0f, 1.0f);
 
   if (icon->GetQuirk(LauncherIcon::QUIRK_PRESENTED))
@@ -812,7 +805,7 @@ float Launcher::IconPresentProgress(LauncherIcon* icon, struct timespec const& c
 float Launcher::IconUrgentProgress(LauncherIcon* icon, struct timespec const& current)
 {
   struct timespec urgent_time = icon->GetQuirkTime(LauncherIcon::QUIRK_URGENT);
-  int urgent_ms = TimeDelta(&current, &urgent_time);
+  int urgent_ms = unity::TimeUtil::TimeDelta(&current, &urgent_time);
   float result;
 
   if (_urgent_animation == URGENT_ANIMATION_WIGGLE)
@@ -829,7 +822,7 @@ float Launcher::IconUrgentProgress(LauncherIcon* icon, struct timespec const& cu
 float Launcher::IconDropDimValue(LauncherIcon* icon, struct timespec const& current)
 {
   struct timespec dim_time = icon->GetQuirkTime(LauncherIcon::QUIRK_DROP_DIM);
-  int dim_ms = TimeDelta(&current, &dim_time);
+  int dim_ms = unity::TimeUtil::TimeDelta(&current, &dim_time);
   float result = CLAMP((float) dim_ms / (float) ANIM_DURATION, 0.0f, 1.0f);
 
   if (icon->GetQuirk(LauncherIcon::QUIRK_DROP_DIM))
@@ -841,7 +834,7 @@ float Launcher::IconDropDimValue(LauncherIcon* icon, struct timespec const& curr
 float Launcher::IconDesatValue(LauncherIcon* icon, struct timespec const& current)
 {
   struct timespec dim_time = icon->GetQuirkTime(LauncherIcon::QUIRK_DESAT);
-  int ms = TimeDelta(&current, &dim_time);
+  int ms = unity::TimeUtil::TimeDelta(&current, &dim_time);
   float result = CLAMP((float) ms / (float) ANIM_DURATION_LONG, 0.0f, 1.0f);
 
   if (icon->GetQuirk(LauncherIcon::QUIRK_DESAT))
@@ -853,14 +846,14 @@ float Launcher::IconDesatValue(LauncherIcon* icon, struct timespec const& curren
 float Launcher::IconShimmerProgress(LauncherIcon* icon, struct timespec const& current)
 {
   struct timespec shimmer_time = icon->GetQuirkTime(LauncherIcon::QUIRK_SHIMMER);
-  int shimmer_ms = TimeDelta(&current, &shimmer_time);
+  int shimmer_ms = unity::TimeUtil::TimeDelta(&current, &shimmer_time);
   return CLAMP((float) shimmer_ms / (float) ANIM_DURATION_LONG, 0.0f, 1.0f);
 }
 
 float Launcher::IconCenterTransitionProgress(LauncherIcon* icon, struct timespec const& current)
 {
   struct timespec save_time = icon->GetQuirkTime(LauncherIcon::QUIRK_CENTER_SAVED);
-  int save_ms = TimeDelta(&current, &save_time);
+  int save_ms = unity::TimeUtil::TimeDelta(&current, &save_time);
   return CLAMP((float) save_ms / (float) ANIM_DURATION, 0.0f, 1.0f);
 }
 
@@ -876,7 +869,7 @@ float Launcher::IconUrgentPulseValue(LauncherIcon* icon, struct timespec const& 
 float Launcher::IconPulseOnceValue(LauncherIcon *icon, struct timespec const &current)
 {
   struct timespec pulse_time = icon->GetQuirkTime(LauncherIcon::QUIRK_PULSE_ONCE);
-  int pulse_ms = TimeDelta(&current, &pulse_time);
+  int pulse_ms = unity::TimeUtil::TimeDelta(&current, &pulse_time);
   double pulse_progress = (double) CLAMP((float) pulse_ms / (ANIM_DURATION_LONG * PULSE_BLINK_LAMBDA * 2), 0.0f, 1.0f);
 
   if (pulse_progress == 1.0f)
@@ -897,15 +890,16 @@ float Launcher::IconUrgentWiggleValue(LauncherIcon* icon, struct timespec const&
 float Launcher::IconStartingBlinkValue(LauncherIcon* icon, struct timespec const& current)
 {
   struct timespec starting_time = icon->GetQuirkTime(LauncherIcon::QUIRK_STARTING);
-  int starting_ms = TimeDelta(&current, &starting_time);
+  int starting_ms = unity::TimeUtil::TimeDelta(&current, &starting_time);
   double starting_progress = (double) CLAMP((float) starting_ms / (float)(ANIM_DURATION_LONG * STARTING_BLINK_LAMBDA), 0.0f, 1.0f);
-  return 0.5f + (float)(std::cos(M_PI * (_backlight_mode != BACKLIGHT_NORMAL ? 4.0f : 3.0f) * starting_progress)) * 0.5f;
+  double val = IsBackLightModeToggles() ? 3.0f : 4.0f;
+  return 0.5f + (float)(std::cos(M_PI * val * starting_progress)) * 0.5f;
 }
 
 float Launcher::IconStartingPulseValue(LauncherIcon* icon, struct timespec const& current)
 {
   struct timespec starting_time = icon->GetQuirkTime(LauncherIcon::QUIRK_STARTING);
-  int starting_ms = TimeDelta(&current, &starting_time);
+  int starting_ms = unity::TimeUtil::TimeDelta(&current, &starting_time);
   double starting_progress = (double) CLAMP((float) starting_ms / (float)(ANIM_DURATION_LONG * MAX_STARTING_BLINKS * STARTING_BLINK_LAMBDA * 2), 0.0f, 1.0f);
 
   if (starting_progress == 1.0f && !icon->GetQuirk(LauncherIcon::QUIRK_RUNNING))
@@ -922,7 +916,7 @@ float Launcher::IconBackgroundIntensity(LauncherIcon* icon, struct timespec cons
   float result = 0.0f;
 
   struct timespec running_time = icon->GetQuirkTime(LauncherIcon::QUIRK_RUNNING);
-  int running_ms = TimeDelta(&current, &running_time);
+  int running_ms = unity::TimeUtil::TimeDelta(&current, &running_time);
   float running_progress = CLAMP((float) running_ms / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
 
   if (!icon->GetQuirk(LauncherIcon::QUIRK_RUNNING))
@@ -935,7 +929,7 @@ float Launcher::IconBackgroundIntensity(LauncherIcon* icon, struct timespec cons
   float backlight_strength;
   if (_backlight_mode == BACKLIGHT_ALWAYS_ON)
     backlight_strength = BACKLIGHT_STRENGTH;
-  else if (_backlight_mode == BACKLIGHT_NORMAL)
+  else if (IsBackLightModeToggles())
     backlight_strength = BACKLIGHT_STRENGTH * running_progress;
   else
     backlight_strength = 0.0f;
@@ -960,7 +954,7 @@ float Launcher::IconBackgroundIntensity(LauncherIcon* icon, struct timespec cons
       result = backlight_strength;
       if (_backlight_mode == BACKLIGHT_ALWAYS_ON)
         result *= CLAMP(running_progress + IconStartingPulseValue(icon, current), 0.0f, 1.0f);
-      else if (_backlight_mode == BACKLIGHT_NORMAL)
+      else if (IsBackLightModeToggles())
         result += (BACKLIGHT_STRENGTH - result) * (1.0f - IconStartingPulseValue(icon, current));
       else
         result = 1.0f - CLAMP(running_progress + IconStartingPulseValue(icon, current), 0.0f, 1.0f);
@@ -987,7 +981,7 @@ float Launcher::IconBackgroundIntensity(LauncherIcon* icon, struct timespec cons
 float Launcher::IconProgressBias(LauncherIcon* icon, struct timespec const& current)
 {
   struct timespec icon_progress_time = icon->GetQuirkTime(LauncherIcon::QUIRK_PROGRESS);
-  int ms = TimeDelta(&current, &icon_progress_time);
+  int ms = unity::TimeUtil::TimeDelta(&current, &icon_progress_time);
   float result = CLAMP((float) ms / (float) ANIM_DURATION, 0.0f, 1.0f);
 
   if (icon->GetQuirk(LauncherIcon::QUIRK_PROGRESS))
@@ -996,14 +990,27 @@ float Launcher::IconProgressBias(LauncherIcon* icon, struct timespec const& curr
     return result;
 }
 
+bool Launcher::IconDrawEdgeOnly(LauncherIcon* icon)
+{
+  if (_backlight_mode == BACKLIGHT_EDGE_TOGGLE)
+    return true;
+
+  if (_backlight_mode == BACKLIGHT_NORMAL_EDGE_TOGGLE && !icon->HasWindowOnViewport())
+    return true;
+
+  return false;
+}
+
 void Launcher::SetupRenderArg(LauncherIcon* icon, struct timespec const& current, RenderArg& arg)
 {
+  float desat_value = IconDesatValue(icon, current);
   arg.icon                = icon;
-  arg.alpha               = 1.0f;
-  arg.saturation          = IconDesatValue(icon, current);
+  arg.alpha               = 0.5f + 0.5f * desat_value;
+  arg.saturation          = desat_value;
   arg.running_arrow       = icon->GetQuirk(LauncherIcon::QUIRK_RUNNING);
   arg.running_colored     = icon->GetQuirk(LauncherIcon::QUIRK_URGENT);
   arg.running_on_viewport = icon->HasWindowOnViewport();
+  arg.draw_edge_only      = IconDrawEdgeOnly(icon);
   arg.active_colored      = false;
   arg.x_rotation          = 0.0f;
   arg.y_rotation          = 0.0f;
@@ -1014,6 +1021,7 @@ void Launcher::SetupRenderArg(LauncherIcon* icon, struct timespec const& current
   arg.progress_bias       = IconProgressBias(icon, current);
   arg.progress            = CLAMP(icon->GetProgress(), 0.0f, 1.0f);
   arg.draw_shortcut       = _shortcuts_shown && !_hide_machine->GetQuirk(LauncherHideMachine::PLACES_VISIBLE);
+  arg.system_item         = icon->Type() == LauncherIcon::TYPE_HOME;
   
   if (_dash_is_open)
     arg.active_arrow = icon->Type() == LauncherIcon::TYPE_HOME;
@@ -1091,7 +1099,7 @@ void Launcher::FillRenderArg(LauncherIcon* icon,
     arg.alpha *= size_modifier;
     center.z = 300.0f * (1.0f - size_modifier);
   }
-
+  
   float drop_dim_value = 0.2f + 0.8f * IconDropDimValue(icon, current);
 
   if (drop_dim_value < 1.0f)
@@ -1343,7 +1351,7 @@ gboolean Launcher::TapOnSuper()
   struct timespec current;
   clock_gettime(CLOCK_MONOTONIC, &current);
 
-  return (TimeDelta(&current, &_times[TIME_TAP_SUPER]) < SUPER_TAP_DURATION);
+  return (unity::TimeUtil::TimeDelta(&current, &_times[TIME_TAP_SUPER]) < SUPER_TAP_DURATION);
 }
 
 /* Launcher Show/Hide logic */
@@ -1363,6 +1371,9 @@ void Launcher::StartKeyShowLauncher()
   if (_super_show_shortcuts_handle > 0)
     g_source_remove(_super_show_shortcuts_handle);
   _super_show_shortcuts_handle = g_timeout_add(SHORTCUTS_SHOWN_DELAY, &Launcher::SuperShowShortcutsTimeout, this);
+
+  ubus_server_send_message(ubus_server_get_default(), UBUS_DASH_ABOUT_TO_SHOW, NULL);
+  ubus_server_force_message_pump(ubus_server_get_default());
 }
 
 void Launcher::EndKeyShowLauncher()
@@ -1386,9 +1397,11 @@ void Launcher::EndKeyShowLauncher()
 
   // it's a tap on super and we didn't use any shortcuts
   if (TapOnSuper() && !_latest_shortcut)
-    ubus_server_send_message(ubus_server_get_default(), UBUS_DASH_EXTERNAL_ACTIVATION, NULL);
+    ubus_server_send_message(ubus_server_get_default(),
+                             UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
+                             g_variant_new("(sus)", "home.lens", 0, ""));
 
-  remaining_time_before_hide = BEFORE_HIDE_LAUNCHER_ON_SUPER_DURATION - CLAMP((int)(TimeDelta(&current, &_times[TIME_SUPER_PRESSED])), 0, BEFORE_HIDE_LAUNCHER_ON_SUPER_DURATION);
+  remaining_time_before_hide = BEFORE_HIDE_LAUNCHER_ON_SUPER_DURATION - CLAMP((int)(unity::TimeUtil::TimeDelta(&current, &_times[TIME_SUPER_PRESSED])), 0, BEFORE_HIDE_LAUNCHER_ON_SUPER_DURATION);
 
   if (_super_hide_launcher_handle > 0)
     g_source_remove(_super_hide_launcher_handle);
@@ -1444,6 +1457,7 @@ void Launcher::OnPlaceViewShown(GVariant* data, void* val)
   LauncherModel::iterator it;
 
   self->_dash_is_open = true;
+  self->bg_effect_helper_.enabled = true;
   self->_hide_machine->SetQuirk(LauncherHideMachine::PLACES_VISIBLE, true);
   self->_hover_machine->SetQuirk(LauncherHoverMachine::PLACES_VISIBLE, true);
 
@@ -1462,6 +1476,7 @@ void Launcher::OnPlaceViewHidden(GVariant* data, void* val)
   LauncherModel::iterator it;
 
   self->_dash_is_open = false;
+  self->bg_effect_helper_.enabled = false;
   self->_hide_machine->SetQuirk(LauncherHideMachine::PLACES_VISIBLE, false);
   self->_hover_machine->SetQuirk(LauncherHoverMachine::PLACES_VISIBLE, false);
 
@@ -1499,8 +1514,7 @@ void Launcher::SetHidden(bool hidden)
   else
     _hide_machine->SetQuirk(LauncherHideMachine::MOUSE_MOVE_POST_REVEAL, false);
 
-  if (hidden)
-  {
+  if (hidden)  {
     _hide_machine->SetQuirk(LauncherHideMachine::MT_DRAG_OUT, false);
     SetStateMouseOverLauncher(false);
   }
@@ -1513,7 +1527,7 @@ void Launcher::SetHidden(bool hidden)
   _parent->EnableInputWindow(!hidden, "launcher", false, false);
 
   if (!hidden && GetActionState() == ACTION_DRAG_EXTERNAL)
-    ProcessDndLeave();
+    DndLeave();
 
   EnsureAnimation();
 
@@ -1532,22 +1546,6 @@ Launcher::GetMouseY()
   return _mouse_position.y;
 }
 
-bool
-Launcher::CheckIntersectWindow(CompWindow* window)
-{
-  nux::Geometry geo = GetAbsoluteGeometry();
-  int intersect_types = CompWindowTypeNormalMask | CompWindowTypeDialogMask |
-                        CompWindowTypeModalDialogMask | CompWindowTypeUtilMask;
-
-  if (!window || !(window->type() & intersect_types) || !window->isMapped() || !window->isViewable())
-    return false;
-
-  if (CompRegion(window->borderRect()).intersects(CompRect(geo.x, geo.y, geo.width, geo.height)))
-    return true;
-
-  return false;
-}
-
 void
 Launcher::EnableCheckWindowOverLauncher(gboolean enabled)
 {
@@ -1557,13 +1555,6 @@ Launcher::EnableCheckWindowOverLauncher(gboolean enabled)
 void
 Launcher::CheckWindowOverLauncher()
 {
-  CompWindowList window_list = _screen->windows();
-  CompWindowList::iterator it;
-  CompWindow* window = NULL;
-  CompWindow* parent = NULL;
-  int type_dialogs = CompWindowTypeDialogMask | CompWindowTypeModalDialogMask
-                     | CompWindowTypeUtilMask;
-
   bool any = false;
   bool active = false;
 
@@ -1571,27 +1562,8 @@ Launcher::CheckWindowOverLauncher()
   if (!_check_window_over_launcher)
     return;
 
-  window = _screen->findWindow(_screen->activeWindow());
+  WindowManager::Default()->CheckWindowIntersections(GetAbsoluteGeometry(), active, any);
 
-  if (window && (window->type() & type_dialogs))
-    parent = _screen->findWindow(window->transientFor());
-
-  if (CheckIntersectWindow(window) || CheckIntersectWindow(parent))
-  {
-    any = true;
-    active = true;
-  }
-  else
-  {
-    for (it = window_list.begin(); it != window_list.end(); it++)
-    {
-      if (CheckIntersectWindow(*it))
-      {
-        any = true;
-        break;
-      }
-    }
-  }
   _hide_machine->SetQuirk(LauncherHideMachine::ANY_WINDOW_UNDER, any);
   _hide_machine->SetQuirk(LauncherHideMachine::ACTIVE_WINDOW_UNDER, active);
 }
@@ -1601,23 +1573,35 @@ Launcher::OnUpdateDragManagerTimeout(gpointer data)
 {
   Launcher* self = (Launcher*) data;
 
-  if (!self->_selection_atom)
-    self->_selection_atom = XInternAtom(self->_screen->dpy(), "XdndSelection", false);
+  if (self->display() == 0)
+    return false;
 
-  Window drag_owner = XGetSelectionOwner(self->_screen->dpy(), self->_selection_atom);
+  if (!self->_selection_atom)
+    self->_selection_atom = XInternAtom(self->display(), "XdndSelection", false);
+
+  Window drag_owner = XGetSelectionOwner(self->display(), self->_selection_atom);
 
   // evil hack because Qt does not release the seelction owner on drag finished
   Window root_r, child_r;
   int root_x_r, root_y_r, win_x_r, win_y_r;
   unsigned int mask;
-  XQueryPointer(self->_screen->dpy(), self->_screen->root(), &root_r, &child_r, &root_x_r, &root_y_r, &win_x_r, &win_y_r, &mask);
+  XQueryPointer(self->display(), DefaultRootWindow(self->display()), &root_r, &child_r, &root_x_r, &root_y_r, &win_x_r, &win_y_r, &mask);
 
   if (drag_owner && (mask & (Button1Mask | Button2Mask | Button3Mask)))
   {
-    self->_hide_machine->SetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE, true);
+    if (self->_data_checked == false)
+    {
+      self->_data_checked = true;
+      self->_collection_window->EnableInputWindow(true, "DNDCollectionWindow");
+    } 
+    
     return true;
   }
+  
+  self->_data_checked = false;
+  self->_collection_window->EnableInputWindow(false, "DNDCollectionWindow");
 
+  self->DndLeave();
   self->_hide_machine->SetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE, false);
   self->_hide_machine->SetQuirk(LauncherHideMachine::DND_PUSHED_OFF, false);
 
@@ -1628,23 +1612,23 @@ Launcher::OnUpdateDragManagerTimeout(gpointer data)
 void
 Launcher::OnWindowMapped(guint32 xid)
 {
-  CompWindow* window = _screen->findWindow(xid);
-  if (window && window->type() | CompWindowTypeDndMask)
-  {
+  //CompWindow* window = _screen->findWindow(xid);
+  //if (window && window->type() | CompWindowTypeDndMask)
+  //{
     if (!_dnd_check_handle)
       _dnd_check_handle = g_timeout_add(200, &Launcher::OnUpdateDragManagerTimeout, this);
-  }
+  //}
 }
 
 void
 Launcher::OnWindowUnmapped(guint32 xid)
 {
-  CompWindow* window = _screen->findWindow(xid);
-  if (window && window->type() | CompWindowTypeDndMask)
-  {
+  //CompWindow* window = _screen->findWindow(xid);
+  //if (window && window->type() | CompWindowTypeDndMask)
+  //{
     if (!_dnd_check_handle)
       _dnd_check_handle = g_timeout_add(200, &Launcher::OnUpdateDragManagerTimeout, this);
-  }
+  //}
 }
 
 // FIXME: remove those 2 for Oneiric
@@ -1676,16 +1660,33 @@ Launcher::CheckWindowOverLauncherSync(Launcher* self)
 void
 Launcher::OnPluginStateChanged()
 {
-  _hide_machine->SetQuirk (LauncherHideMachine::EXPO_ACTIVE, PluginAdapter::Default ()->IsExpoActive ());
-  _hide_machine->SetQuirk (LauncherHideMachine::SCALE_ACTIVE, PluginAdapter::Default ()->IsScaleActive ());
+  _hide_machine->SetQuirk (LauncherHideMachine::EXPO_ACTIVE, WindowManager::Default ()->IsExpoActive ());
+  _hide_machine->SetQuirk (LauncherHideMachine::SCALE_ACTIVE, WindowManager::Default ()->IsScaleActive ());
   
   if (_hidemode == LAUNCHER_HIDE_NEVER)
     return;
-    
-  if (PluginAdapter::Default ()->IsScaleActive ())                   
-    _parent->InputWindowEnableStruts (true);
-  else
-    _parent->InputWindowEnableStruts (false);
+}
+
+void
+Launcher::OnViewPortSwitchStarted()
+{
+  /*
+   *  don't take into account window over launcher state during
+   *  the viewport switch as we can get false positives
+   *  (like switching to an empty viewport while grabbing a fullscreen window)
+   */
+  _check_window_over_launcher = false;
+}
+
+void
+Launcher::OnViewPortSwitchEnded()
+{
+  /*
+   * compute again the list of all window on the new viewport
+   * to decide if we should or not hide the launcher
+   */
+  _check_window_over_launcher = true;
+  CheckWindowOverLauncher();
 }
 
 Launcher::LauncherHideMode Launcher::GetHideMode()
@@ -1762,6 +1763,18 @@ void Launcher::SetBacklightMode(BacklightMode mode)
 Launcher::BacklightMode Launcher::GetBacklightMode()
 {
   return _backlight_mode;
+}
+
+bool Launcher::IsBackLightModeToggles()
+{
+  switch (_backlight_mode) {
+    case BACKLIGHT_NORMAL:
+    case BACKLIGHT_EDGE_TOGGLE:
+    case BACKLIGHT_NORMAL_EDGE_TOGGLE:
+      return true;
+    default:
+      return false;
+  }
 }
 
 void
@@ -2030,11 +2043,47 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   GfxContext.PushClippingRectangle(base);
   gPainter.PushDrawColorLayer(GfxContext, base, nux::Color(0x00000000), true, ROP);
 
+  GfxContext.GetRenderStates().SetBlend(true);
+  GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
+  GfxContext.GetRenderStates().SetColorMask(true, true, true, true);
+
+  int push_count = 1;
+
   // clip vertically but not horizontally
   GfxContext.PushClippingRectangle(nux::Geometry(base.x, bkg_box.y, base.width, bkg_box.height));
   
+  
+
   if (_dash_is_open)
   {
+    if (BackgroundEffectHelper::blur_type != unity::BLUR_NONE && (bkg_box.x + bkg_box.width > 0))
+    {
+      nux::Geometry geo_absolute = GetAbsoluteGeometry();
+      
+      nux::Geometry blur_geo(geo_absolute.x, geo_absolute.y, base.width, base.height);
+      auto blur_texture = bg_effect_helper_.GetBlurRegion(blur_geo);
+
+      if (blur_texture.IsValid())
+      {
+        nux::TexCoordXForm texxform_blur_bg;
+        texxform_blur_bg.flip_v_coord = true;
+        texxform_blur_bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+        texxform_blur_bg.uoffset = ((float) base.x) / geo_absolute.width;
+        texxform_blur_bg.voffset = ((float) base.y) / geo_absolute.height;
+
+        GfxContext.PushClippingRectangle(bkg_box);
+        gPainter.PushDrawTextureLayer(GfxContext, base,
+                                      blur_texture,
+                                      texxform_blur_bg,
+                                      nux::color::White,
+                                      true,
+                                      ROP);
+        GfxContext.PopClippingRectangle();
+        
+        push_count++;
+      }
+    }
+    
     gPainter.Paint2DQuadColor(GfxContext, bkg_box, _background_color);
   }
   else
@@ -2061,21 +2110,24 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     icon_renderer->RenderIcon(GfxContext, *rev_it, bkg_box, base);
   }
 
-  gPainter.Paint2DQuadColor(GfxContext,
-                            nux::Geometry(bkg_box.x + bkg_box.width - 1,
-                                          bkg_box.y,
-                                          1,
-                                          bkg_box.height),
-                            nux::Color(0x60606060));
-  gPainter.Paint2DQuadColor(GfxContext,
-                            nux::Geometry(bkg_box.x,
-                                          bkg_box.y,
-                                          bkg_box.width,
-                                          20),
-                            nux::Color(0x60000000),
-                            nux::Color(0x00000000),
-                            nux::Color(0x00000000),
-                            nux::Color(0x60000000));
+  if (!_dash_is_open)
+  {
+    gPainter.Paint2DQuadColor(GfxContext,
+                              nux::Geometry(bkg_box.x + bkg_box.width - 1,
+                                            bkg_box.y,
+                                            1,
+                                            bkg_box.height),
+                              nux::Color(0x60606060));
+    gPainter.Paint2DQuadColor(GfxContext,
+                              nux::Geometry(bkg_box.x,
+                                            bkg_box.y,
+                                            bkg_box.width,
+                                            20),
+                              nux::Color(0x60000000),
+                              nux::Color(0x00000000),
+                              nux::Color(0x00000000),
+                              nux::Color(0x60000000));
+  }
 
   // FIXME: can be removed for a bgk_box->SetAlpha once implemented
   GfxContext.GetRenderStates().SetPremultipliedBlend(nux::DST_IN);
@@ -2085,7 +2137,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   GfxContext.GetRenderStates().SetColorMask(true, true, true, true);
   GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
 
-  gPainter.PopBackground();
+  gPainter.PopBackground(push_count);
   GfxContext.PopClippingRectangle();
 }
 
@@ -2214,29 +2266,9 @@ void Launcher::EndIconDrag()
       EnsureAnimation();
     }
     else
-    {
-
-      std::list<BamfLauncherIcon*> launchers;
-      std::list<BamfLauncherIcon*>::iterator it;
-      unity::FavoriteList desktop_paths;
-
-      // Updates gsettings favorites.
-      launchers = _model->GetSublist<BamfLauncherIcon> ();
-      for (it = launchers.begin(); it != launchers.end(); it++)
-      {
-        BamfLauncherIcon* icon = *it;
-
-        if (!icon->IsSticky())
-          continue;
-
-        const char* desktop_file = icon->DesktopFile();
-
-        if (desktop_file && strlen(desktop_file) > 0)
-          desktop_paths.push_back(desktop_file);
-      }
-
-      unity::FavoriteStore::GetDefault().SetFavorites(desktop_paths);
-
+    { 
+      _model->Save();
+        
       _drag_window->SetAnimationTarget((int)(_drag_icon->GetCenter().x), (int)(_drag_icon->GetCenter().y));
       _drag_window->StartAnimation();
 
@@ -2446,7 +2478,8 @@ Launcher::ResetRepeatShorcutTimeout(gpointer data)
 }
 
 gboolean
-Launcher::CheckSuperShortcutPressed(unsigned int  key_sym,
+Launcher::CheckSuperShortcutPressed(Display *x_display,
+                                    unsigned int  key_sym,
                                     unsigned long key_code,
                                     unsigned long key_state,
                                     char*         key_string)
@@ -2459,7 +2492,7 @@ Launcher::CheckSuperShortcutPressed(unsigned int  key_sym,
   // Shortcut to start launcher icons. Only relies on Keycode, ignore modifier
   for (it = _model->begin(); it != _model->end(); it++)
   {
-    if ((XKeysymToKeycode(screen->dpy(), (*it)->GetShortcut()) == key_code) ||
+    if ((XKeysymToKeycode(x_display, (*it)->GetShortcut()) == key_code) ||
         ((gchar)((*it)->GetShortcut()) == key_string[0]))
     {
       /*
@@ -2493,9 +2526,9 @@ Launcher::CheckSuperShortcutPressed(unsigned int  key_sym,
 }
 
 void
-Launcher::EdgeRevealTriggered()
+Launcher::EdgeRevealTriggered(int mouse_x, int mouse_y)
 {
-  SetMousePosition(pointerX, pointerY - GetAbsoluteGeometry().y);
+  SetMousePosition(mouse_x, mouse_y - GetAbsoluteGeometry().y);
 
   _hide_machine->SetQuirk(LauncherHideMachine::MOUSE_OVER_ACTIVE_EDGE, true);
   _hide_machine->SetQuirk(LauncherHideMachine::MOUSE_MOVE_POST_REVEAL, true);
@@ -2578,7 +2611,7 @@ Launcher::RecvKeyPressed(unsigned long    eventType,
 
       // right/shift-f10 (open quicklist of currently selected icon)
     case XK_F10:
-      if (!(key_state & NUX_STATE_SHIFT))
+      if (!(key_state & nux::NUX_STATE_SHIFT))
         break;
     case NUX_VK_RIGHT:
     case NUX_KP_RIGHT:
@@ -2744,8 +2777,9 @@ LauncherIcon* Launcher::MouseIconIntersection(int x, int y)
     nux::Point2 screen_coord [4];
     for (int i = 0; i < 4; ++i)
     {
-      screen_coord [i].x = (*it)->GetTransform("HitArea") [i].x;
-      screen_coord [i].y = (*it)->GetTransform("HitArea") [i].y;
+      auto hit_transform = (*it)->GetTransform(AbstractLauncherIcon::TRANSFORM_HIT_AREA);
+      screen_coord [i].x = hit_transform [i].x;
+      screen_coord [i].y = hit_transform [i].y;
     }
     inside = PointInside2DPolygon(screen_coord, 4, mouse_position, 1);
     if (inside)
@@ -2756,7 +2790,7 @@ LauncherIcon* Launcher::MouseIconIntersection(int x, int y)
 }
 
 void
-Launcher::RenderIconToTexture(nux::GraphicsEngine& GfxContext, LauncherIcon* icon, nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture)
+Launcher::RenderIconToTexture(nux::GraphicsEngine& GfxContext, LauncherIcon* icon, nux::ObjectPtr<nux::IOpenGLBaseTexture> texture)
 {
   RenderArg arg;
   struct timespec current;
@@ -2782,7 +2816,7 @@ Launcher::RenderIconToTexture(nux::GraphicsEngine& GfxContext, LauncherIcon* ico
 }
 
 void
-Launcher::SetOffscreenRenderTarget(nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture)
+Launcher::SetOffscreenRenderTarget(nux::ObjectPtr<nux::IOpenGLBaseTexture> texture)
 {
   int width = texture->GetWidth();
   int height = texture->GetHeight();
@@ -2803,15 +2837,71 @@ Launcher::RestoreSystemRenderTarget()
   nux::GetWindowCompositor().RestoreRenderingSurface();
 }
 
+void Launcher::OnDNDDataCollected(const std::list<char*>& mimes)
+{
+  _dnd_data.Reset();
+
+  unity::glib::String uri_list_const(g_strdup("text/uri-list"));
+
+  for (auto it : mimes)
+  {    
+    if (!g_str_equal(it, uri_list_const.Value()))
+      continue;
+
+    _dnd_data.Fill(nux::GetWindow().GetDndData(uri_list_const.Value()));
+    break;
+  }
+  
+  if (!_dnd_data.Uris().size())
+    return;
+    
+  _hide_machine->SetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE, true);
+  
+  for (auto it : _dnd_data.Uris())
+  {
+    if (g_str_has_suffix(it.c_str(), ".desktop"))
+    {
+      _steal_drag = true;
+      break;
+    }
+  }
+  
+  if (!_steal_drag)
+  {
+    for (auto it : *_model)
+    {
+      if (it->QueryAcceptDrop(_dnd_data) != nux::DNDACTION_NONE)
+        it->SetQuirk(LauncherIcon::QUIRK_DROP_PRELIGHT, true);
+      else
+        it->SetQuirk(LauncherIcon::QUIRK_DROP_DIM, true);
+    }
+  }  
+}
+
 void
 Launcher::ProcessDndEnter()
 {
-  _drag_data.clear();
+  _dnd_data.Reset();
   _drag_action = nux::DNDACTION_NONE;
   _steal_drag = false;
   _data_checked = false;
   _drag_edge_touching = false;
   _dnd_hovered_icon = 0;
+}
+
+void
+Launcher::DndLeave()
+{
+  
+  _dnd_data.Reset();
+
+  for (auto it : *_model)
+  {
+    it->SetQuirk(LauncherIcon::QUIRK_DROP_PRELIGHT, false);
+    it->SetQuirk(LauncherIcon::QUIRK_DROP_DIM, false);
+  }
+  
+  ProcessDndLeave();
 }
 
 void
@@ -2821,29 +2911,11 @@ Launcher::ProcessDndLeave()
   _drag_edge_touching = false;
 
   SetActionState(ACTION_NONE);
-
-  if (!_drag_data.empty())
-  {
-    std::list<char*>::iterator it;
-    for (it = _drag_data.begin(); it != _drag_data.end(); it++)
-    {
-      g_free(*it);
-    }
-  }
-  _drag_data.clear();
-
-  LauncherModel::iterator it;
-  for (it = _model->begin(); it != _model->end(); it++)
-  {
-    (*it)->SetQuirk(LauncherIcon::QUIRK_DROP_PRELIGHT, false);
-    (*it)->SetQuirk(LauncherIcon::QUIRK_DROP_DIM, false);
-  }
-
+  
   if (_steal_drag && _dnd_hovered_icon)
   {
     _dnd_hovered_icon->SetQuirk(LauncherIcon::QUIRK_VISIBLE, false);
     _dnd_hovered_icon->remove.emit(_dnd_hovered_icon);
-
   }
 
   if (!_steal_drag && _dnd_hovered_icon)
@@ -2854,58 +2926,33 @@ Launcher::ProcessDndLeave()
 
   _steal_drag = false;
   _dnd_hovered_icon = 0;
-
-}
-
-std::list<char*>
-Launcher::StringToUriList(char* input)
-{
-  std::list<char*> result;
-
-  if (!input)
-    return result;
-
-  char** imtrappedinastringfactory = g_strsplit(input, "\r\n", -1);
-  int i = 0;
-  while (imtrappedinastringfactory[i]) // get kinda bored
-  {
-    // empty string check
-    if (imtrappedinastringfactory[i][0])
-      result.push_back(g_strdup(imtrappedinastringfactory[i]));
-    ++i;
-  }
-
-  g_strfreev(imtrappedinastringfactory);
-
-  return result;
 }
 
 void
 Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
 {
-  std::list<char*>::iterator it;
   nux::Area* parent = GetToplevel();
-  char* uri_list_const = g_strdup("text/uri-list");
+  unity::glib::String uri_list_const(g_strdup("text/uri-list"));
 
   if (!_data_checked)
   {
     _data_checked = true;
-    _drag_data.clear();
+    _dnd_data.Reset();
 
     // get the data
-    for (it = mimes.begin(); it != mimes.end(); it++)
-    {
-      if (!g_str_equal(*it, uri_list_const))
+    for (auto it : mimes)
+    {    
+      if (!g_str_equal(it, uri_list_const.Value()))
         continue;
 
-      _drag_data = StringToUriList(nux::GetWindow().GetDndData(uri_list_const));
+      _dnd_data.Fill(nux::GetWindow().GetDndData(uri_list_const.Value()));
       break;
     }
-
+  
     // see if the launcher wants this one
-    for (it = _drag_data.begin(); it != _drag_data.end(); it++)
+    for (auto it : _dnd_data.Uris())
     {
-      if (g_str_has_suffix(*it, ".desktop"))
+      if (g_str_has_suffix(it.c_str(), ".desktop"))
       {
         _steal_drag = true;
         break;
@@ -2916,18 +2963,17 @@ Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
     SetActionState(ACTION_DRAG_EXTERNAL);
     SetStateMouseOverLauncher(true);
 
-    LauncherModel::iterator it;
-    for (it = _model->begin(); it != _model->end() && !_steal_drag; it++)
+    if (!_steal_drag)
     {
-      if ((*it)->QueryAcceptDrop(_drag_data) != nux::DNDACTION_NONE && !_steal_drag)
-        (*it)->SetQuirk(LauncherIcon::QUIRK_DROP_PRELIGHT, true);
-      else
-        (*it)->SetQuirk(LauncherIcon::QUIRK_DROP_DIM, true);
+      for (auto it : *_model)
+      {
+        if (it->QueryAcceptDrop(_dnd_data) != nux::DNDACTION_NONE)
+          it->SetQuirk(LauncherIcon::QUIRK_DROP_PRELIGHT, true);
+        else
+          it->SetQuirk(LauncherIcon::QUIRK_DROP_DIM, true);
+      }
     }
-
   }
-
-  g_free(uri_list_const);
 
   SetMousePosition(x - parent->GetGeometry().x, y - parent->GetGeometry().y);
 
@@ -2991,7 +3037,7 @@ Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
       if (hovered_icon)
       {
         hovered_icon->SendDndEnter();
-        _drag_action = hovered_icon->QueryAcceptDrop(_drag_data);
+        _drag_action = hovered_icon->QueryAcceptDrop(_dnd_data);
       }
       else
       {
@@ -3020,23 +3066,21 @@ Launcher::ProcessDndDrop(int x, int y)
   if (_steal_drag)
   {
     char* path = 0;
-    std::list<char*>::iterator it;
 
-    for (it = _drag_data.begin(); it != _drag_data.end(); it++)
+    for (auto it : _dnd_data.Uris())
     {
-      if (g_str_has_suffix(*it, ".desktop"))
+      if (g_str_has_suffix(it.c_str(), ".desktop"))
       {
-        if (g_str_has_prefix(*it, "application://"))
+        if (g_str_has_prefix(it.c_str(), "application://"))
         {
-          const char* tmp = *it + strlen("application://");
-          char* tmp2 = g_strdup_printf("file:///usr/share/applications/%s", tmp);
-          path = g_filename_from_uri(tmp2, NULL, NULL);
-          g_free(tmp2);
+          const char* tmp = it.c_str() + strlen("application://");
+          unity::glib::String tmp2(g_strdup_printf("file:///usr/share/applications/%s", tmp));
+          path = g_filename_from_uri(tmp2.Value(), NULL, NULL);
           break;
         }
-        else if (g_str_has_prefix(*it, "file://"))
+        else if (g_str_has_prefix(it.c_str(), "file://"))
         {
-          path = g_filename_from_uri(*it, NULL, NULL);
+          path = g_filename_from_uri(it.c_str(), NULL, NULL);
           break;
         }
       }
@@ -3050,7 +3094,7 @@ Launcher::ProcessDndDrop(int x, int y)
   }
   else if (_dnd_hovered_icon && _drag_action != nux::DNDACTION_NONE)
   {
-    _dnd_hovered_icon->AcceptDrop(_drag_data);
+    _dnd_hovered_icon->AcceptDrop(_dnd_data);
   }
 
   if (_drag_action != nux::DNDACTION_NONE)
@@ -3059,9 +3103,8 @@ Launcher::ProcessDndDrop(int x, int y)
     SendDndFinished(false, _drag_action);
 
   // reset our shiz
-  ProcessDndLeave();
+  DndLeave();
 }
-
 
 /*
  * Returns the current selected icon if it is in keynavmode

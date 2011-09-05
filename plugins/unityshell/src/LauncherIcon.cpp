@@ -28,8 +28,9 @@
 #include "Nux/BaseWindow.h"
 #include "Nux/MenuPage.h"
 #include "NuxCore/Color.h"
+#include "NuxCore/Logger.h"
 
-#include "LauncherEntryRemoteModel.h"
+#include "CairoTexture.h"
 #include "LauncherIcon.h"
 #include "Launcher.h"
 
@@ -40,13 +41,23 @@
 #include "QuicklistMenuItemCheckmark.h"
 #include "QuicklistMenuItemRadio.h"
 
+#include "WindowManager.h"
+
 #include "ubus-server.h"
 #include "UBusMessages.h"
+#include <UnityCore/GLibWrapper.h>
 #include <UnityCore/Variant.h>
 
 #define DEFAULT_ICON "application-default-icon"
 #define MONO_TEST_ICON "gnome-home"
 #define UNITY_THEME_NAME "unity-icon-theme"
+
+using namespace unity;
+
+namespace
+{
+nux::logging::Logger logger("unity.launcher");
+}
 
 NUX_IMPLEMENT_OBJECT_TYPE(LauncherIcon);
 
@@ -192,8 +203,8 @@ LauncherIcon::AddProperties(GVariantBuilder* builder)
 void
 LauncherIcon::Activate(ActionArg arg)
 {
-  if (PluginAdapter::Default()->IsScaleActive())
-    PluginAdapter::Default()->TerminateScale();
+  if (WindowManager::Default()->IsScaleActive())
+    WindowManager::Default()->TerminateScale();
 
   ActivateLauncherIcon(arg);
 }
@@ -201,8 +212,8 @@ LauncherIcon::Activate(ActionArg arg)
 void
 LauncherIcon::OpenInstance(ActionArg arg)
 {
-  if (PluginAdapter::Default()->IsScaleActive())
-    PluginAdapter::Default()->TerminateScale();
+  if (WindowManager::Default()->IsScaleActive())
+    WindowManager::Default()->TerminateScale();
 
   OpenInstanceLauncherIcon(arg);
 }
@@ -322,7 +333,11 @@ nux::BaseTexture* LauncherIcon::TextureFromGtkTheme(const char* icon_name, int s
   nux::BaseTexture* result = NULL;
 
   if (!icon_name)
+  {
+    // This leaks, so log if we do this.
+    LOG_WARN(logger) << "Leaking... no icon_name passed in.";
     icon_name = g_strdup(DEFAULT_ICON);
+  }
 
   default_theme = gtk_icon_theme_get_default();
 
@@ -346,28 +361,27 @@ nux::BaseTexture* LauncherIcon::TextureFromGtkTheme(const char* icon_name, int s
 
 }
 
-nux::BaseTexture* LauncherIcon::TextureFromSpecificGtkTheme(GtkIconTheme* theme, const char* icon_name, int size, bool update_glow_colors, bool is_default_theme)
+nux::BaseTexture* LauncherIcon::TextureFromSpecificGtkTheme(GtkIconTheme* theme,
+                                                            const char* icon_name,
+                                                            int size,
+                                                            bool update_glow_colors,
+                                                            bool is_default_theme)
 {
-
-  GdkPixbuf* pbuf;
   GtkIconInfo* info;
   nux::BaseTexture* result = NULL;
-  GError* error = NULL;
   GIcon* icon;
+  GtkIconLookupFlags flags = (GtkIconLookupFlags) 0;
 
   icon = g_icon_new_for_string(icon_name, NULL);
 
   if (G_IS_ICON(icon))
   {
-    info = gtk_icon_theme_lookup_by_gicon(theme, icon, size, (GtkIconLookupFlags)0);
+    info = gtk_icon_theme_lookup_by_gicon(theme, icon, size, flags);
     g_object_unref(icon);
   }
   else
   {
-    info = gtk_icon_theme_lookup_icon(theme,
-                                      icon_name,
-                                      size,
-                                      (GtkIconLookupFlags) 0);
+    info = gtk_icon_theme_lookup_icon(theme,icon_name, size, flags);
   }
 
   if (!info && !is_default_theme)
@@ -375,40 +389,30 @@ nux::BaseTexture* LauncherIcon::TextureFromSpecificGtkTheme(GtkIconTheme* theme,
 
   if (!info)
   {
-    info = gtk_icon_theme_lookup_icon(theme,
-                                      DEFAULT_ICON,
-                                      size,
-                                      (GtkIconLookupFlags) 0);
+    info = gtk_icon_theme_lookup_icon(theme, DEFAULT_ICON, size, flags);
   }
 
   if (gtk_icon_info_get_filename(info) == NULL)
   {
     gtk_icon_info_free(info);
-
-    info = gtk_icon_theme_lookup_icon(theme,
-                                      DEFAULT_ICON,
-                                      size,
-                                      (GtkIconLookupFlags) 0);
+    info = gtk_icon_theme_lookup_icon(theme, DEFAULT_ICON, size, flags);
   }
 
-  pbuf = gtk_icon_info_load_icon(info, &error);
+  glib::Error error;
+  glib::Object<GdkPixbuf> pbuf(gtk_icon_info_load_icon(info, &error));
   gtk_icon_info_free(info);
 
-  if (GDK_IS_PIXBUF(pbuf))
+  if (GDK_IS_PIXBUF(pbuf.RawPtr()))
   {
     result = nux::CreateTexture2DFromPixbuf(pbuf, true);
 
     if (update_glow_colors)
       ColorForIcon(pbuf, _background_color, _glow_color);
-
-    g_object_unref(pbuf);
   }
   else
   {
-    g_warning("Unable to load '%s' from icon theme: %s",
-              icon_name,
-              error ? error->message : "unknown");
-    g_error_free(error);
+    LOG_WARN(logger) << "Unable to load '" << icon_name
+                     <<  "' from icon theme: " << error;
   }
 
   return result;
@@ -416,33 +420,27 @@ nux::BaseTexture* LauncherIcon::TextureFromSpecificGtkTheme(GtkIconTheme* theme,
 
 nux::BaseTexture* LauncherIcon::TextureFromPath(const char* icon_name, int size, bool update_glow_colors)
 {
-
-  GdkPixbuf* pbuf;
   nux::BaseTexture* result;
-  GError* error = NULL;
 
   if (!icon_name)
     return TextureFromGtkTheme(DEFAULT_ICON, size, update_glow_colors);
 
-  pbuf = gdk_pixbuf_new_from_file_at_size(icon_name, size, size, &error);
+  glib::Error error;
+  glib::Object<GdkPixbuf> pbuf(gdk_pixbuf_new_from_file_at_size(icon_name, size, size, &error));
 
-  if (GDK_IS_PIXBUF(pbuf))
+  if (GDK_IS_PIXBUF(pbuf.RawPtr()))
   {
     result = nux::CreateTexture2DFromPixbuf(pbuf, true);
 
     if (update_glow_colors)
       ColorForIcon(pbuf, _background_color, _glow_color);
-
-    g_object_unref(pbuf);
   }
   else
   {
-    g_warning("Unable to load '%s' icon: %s",
-              icon_name,
-              error->message);
-    g_error_free(error);
+    LOG_WARN(logger) << "Unable to load '" << icon_name
+                     <<  "' icon: " << error;
 
-    return TextureFromGtkTheme(DEFAULT_ICON, size, update_glow_colors);
+    result = TextureFromGtkTheme(DEFAULT_ICON, size, update_glow_colors);
   }
 
   return result;
@@ -549,8 +547,8 @@ bool LauncherIcon::OpenQuicklist(bool default_to_first_item)
   if (menus.empty())
     return false;
 
-  if (PluginAdapter::Default()->IsScaleActive())
-    PluginAdapter::Default()->TerminateScale();
+  if (WindowManager::Default()->IsScaleActive())
+    WindowManager::Default()->TerminateScale();
 
   std::list<DbusmenuMenuitem*>::iterator it;
   for (it = menus.begin(); it != menus.end(); it++)
@@ -804,10 +802,10 @@ LauncherIcon::SetQuirk(LauncherIcon::Quirk quirk, bool value)
 {
   if (_quirks[quirk] == value)
     return;
-    
+      
   if (quirk == QUIRK_PULSE_ONCE)
     _launcher->HideMachine()->SetQuirk(LauncherHideMachine::LAUNCHER_PULSE, value);
-
+  
   _quirks[quirk] = value;
   if (quirk == QUIRK_VISIBLE)
     Launcher::SetTimeStruct(&(_quirk_times[quirk]), &(_quirk_times[quirk]), ANIM_DURATION_SHORT);
@@ -940,12 +938,12 @@ LauncherIcon::SetEmblemIconName(const char* name)
 }
 
 std::vector<nux::Vector4> &
-LauncherIcon::GetTransform(std::string const& name)
+LauncherIcon::GetTransform(TransformIndex index)
 {
-  auto iter = transform_map.find(name);
+  auto iter = transform_map.find(index);
   if (iter == transform_map.end())
   {
-    auto iter2 = transform_map.insert(std::map<std::string, std::vector<nux::Vector4> >::value_type(name, std::vector<nux::Vector4>(4)));
+    auto iter2 = transform_map.insert(std::map<TransformIndex, std::vector<nux::Vector4> >::value_type(index, std::vector<nux::Vector4>(4)));
     return iter2.first->second;
   }
 
@@ -958,7 +956,6 @@ LauncherIcon::SetEmblemText(const char* text)
   if (text == NULL)
     return;
 
-  nux::BaseTexture*     emblem;
   PangoLayout*          layout     = NULL;
 
   PangoContext*         pangoCtx   = NULL;
@@ -972,8 +969,8 @@ LauncherIcon::SetEmblemText(const char* text)
   int font_height = height - 5;
 
 
-  nux::CairoGraphics* cg = new nux::CairoGraphics(CAIRO_FORMAT_ARGB32, width, height);
-  cairo_t* cr = cg->GetContext();
+  nux::CairoGraphics cg(CAIRO_FORMAT_ARGB32, width, height);
+  cairo_t* cr = cg.GetInternalContext();
 
   cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
   cairo_paint(cr);
@@ -1025,18 +1022,11 @@ LauncherIcon::SetEmblemText(const char* text)
                 (int)((height - pango_units_to_double(logical_rect.height)) / 2.0f - pango_units_to_double(logical_rect.y)));
   pango_cairo_show_layout(cr, layout);
 
-  nux::NBitmapData* bitmap = cg->GetBitmap();
-
-  emblem = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
-  emblem->Update(bitmap);
-  delete bitmap;
-
-  SetEmblem(emblem);
+  SetEmblem(texture_from_cairo_graphics(cg));
 
   // clean up
   g_object_unref(layout);
   g_free(fontName);
-  delete cg;
 }
 
 void

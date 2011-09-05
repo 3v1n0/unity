@@ -20,6 +20,7 @@
 #define UNITY_LENS_BAR_H_
 
 #include <string>
+#include <vector>
 
 #include <NuxGraphics/GraphicsEngine.h>
 #include <Nux/Nux.h>
@@ -29,36 +30,45 @@
 
 #include "IconTexture.h"
 #include "Introspectable.h"
+#include "LensBarIcon.h"
 
 namespace unity
 {
 namespace dash
 {
 
-class LensBar : public nux::View, public unity::Introspectable
+  class LensBar : public nux::View, public unity::Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE(LensBar, nux::View);
+  typedef std::vector<LensBarIcon*> LensIcons;
 
 public:
   LensBar();
   ~LensBar();
 
   void AddLens(Lens::Ptr& lens);
+  void Activate(std::string id);
 
   sigc::signal<void, std::string const&> lens_activated;
 
 private:
   void SetupBackground();
+  void SetupLayout();
+  void SetupHomeLens();
 
   long ProcessEvent(nux::IEvent& ievent, long traverse_info, long event_info);
   void Draw(nux::GraphicsEngine& gfx_context, bool force_draw);
   void DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw);
+
+  void SetActive(LensBarIcon* icon);
 
   bool AcceptKeyNavFocus();
   const gchar* GetName();
   void AddProperties(GVariantBuilder* builder);
 
 private:
+  LensIcons icons_;
+
   nux::ColorLayer* bg_layer_;
   nux::HLayout* layout_;
 };

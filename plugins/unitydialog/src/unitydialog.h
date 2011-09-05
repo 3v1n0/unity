@@ -28,6 +28,77 @@
 
 #include "unitydialog_options.h"
 
+namespace unity
+{
+  typedef std::vector <GLTexture::MatrixList> MatrixListVector;
+  typedef std::vector <CompRegion> CompRegionVector;
+  typedef std::vector <int> IntVector;
+
+  class GeometryCollection
+  {
+    public:
+      GeometryCollection ();
+      bool status ();
+
+      void addGeometryForWindow (CompWindow *, const CompRegion &paintRegion);
+      void addGeometry (const GLTexture::MatrixList &ml,
+			const CompRegion            &r,
+			int                         min,
+			int                         max);
+
+    private:
+
+      MatrixListVector collectedMatrixLists;
+      CompRegionVector collectedRegions;
+      IntVector        collectedMinVertices;
+      IntVector        collectedMaxVertices;
+  };
+
+  class TexGeometryCollection
+  {
+    public:
+      TexGeometryCollection ();
+      void addGeometry (const GLTexture::MatrixList &ml,
+			const CompRegion            &r,
+			int                         min,
+			int                         max);
+      void setTexture (GLTexture *);
+
+      void addGeometriesAndDrawTextureForWindow (CompWindow *, unsigned int pm);
+
+    private:
+      GLTexture*         mTexture;
+      GeometryCollection mGeometries;
+  };
+
+  class PaintInfoCollector
+  {
+    public:
+
+      PaintInfoCollector (CompWindow *w);
+
+      void collect ();
+      void drawGeometriesForWindow (CompWindow *w, unsigned int pm);
+
+      void processGeometry (const GLTexture::MatrixList &ml,
+			    const CompRegion            &r,
+			    int                         min,
+			    int                         max);
+
+      void processTexture (GLTexture *tex);
+
+      static PaintInfoCollector * Active ();
+
+      static PaintInfoCollector *active_collector;
+
+    private:
+
+      /* Collected regions, textures */
+      std::vector <TexGeometryCollection> mCollection;
+      CompWindow                          *mWindow;
+  };
+}
+
 class UnityDialogShadeTexture
 {
 public:
@@ -178,6 +249,19 @@ public:
   glPaint(const GLWindowPaintAttrib&, const GLMatrix&,
           const CompRegion&, unsigned int);
 
+  void
+  glAddGeometry(const GLTexture::MatrixList& matrices,
+                const CompRegion& region,
+                const CompRegion& clipRegion,
+                unsigned int min,
+                unsigned int max);
+
+  void
+  glDrawTexture(GLTexture* texture,
+                GLFragment::Attrib& attrib,
+                unsigned int mask);
+
+
   void windowNotify(CompWindowNotify n);
   void grabNotify(int x, int y,
                   unsigned int state,
@@ -236,6 +320,16 @@ public:
   void adjustIPW();
 
   bool animate(int ms, float fadeTime);
+  CompRegion getDamageRegion();
+
+  void setIsAnimated(bool animated)
+  {
+    mIsAnimated = animated;
+  }
+  bool isAnimated()
+  {
+    return mIsAnimated;
+  }
 
 private:
 
@@ -247,8 +341,12 @@ private:
   int        mShadeProgress;
   CompPoint      mTargetPos;
   CompPoint      mCurrentPos;
-
+  CompPoint      mOffset;
+  XWindowChanges mDiffXWC;
   Window         mIpw;
+  bool           mIsAnimated;
+
+  void collectDrawInfo();
 };
 
 #define VIG_WINDOW(w)                  \

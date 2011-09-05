@@ -32,6 +32,9 @@
 
 #include <UnityCore/Variant.h>
 
+namespace unity
+{
+
 PlacesSimpleTile::PlacesSimpleTile(const char* icon_name,
                                    const char* label,
                                    int         icon_size,
@@ -79,13 +82,14 @@ PlacesSimpleTile::~PlacesSimpleTile()
   g_free(_uri);
 }
 
-void
+bool
 PlacesSimpleTile::DndSourceDragBegin()
 {
   Reference();
   ubus_server_send_message(ubus_server_get_default(),
                            UBUS_PLACE_VIEW_CLOSE_REQUEST,
                            NULL);
+  return true;
 }
 
 nux::NBitmapData*
@@ -251,3 +255,5 @@ PlacesSimpleTile::LoadIcon()
 
   QueueDraw();
 }
+
+} // namespace unity

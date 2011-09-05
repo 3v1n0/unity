@@ -40,17 +40,17 @@
     "icon-gap"       : 40},
 
   "button-label": {
-    "border-opacity" : [      0.8,       0.5,       0.5,       0.5,       0.5],
+    "border-opacity" : [      1.0,       0.5,       0.5,       0.5,       0.5],
     "border-color"   : ["#ffffff", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF"],
-    "border-size"    : 1.0,
+    "border-size"    : [      2.0,       0.5,       1.0,       0.5,       0.5],
     "text-size"      : 1.0,
-    "text-color"     : ["#000000", "#ffffff", "#ffffff", "#ffffff", "#ffffff"],
+    "text-color"     : ["#ffffff", "#ffffff", "#ffffff", "#ffffff", "#ffffff"],
     "text-opacity"   : [      1.0,       1.0,       1.0,       1.0,       1.0], 
-    "fill-color"     : ["#FFFFFF", "#000000", "#000000", "#000000", "#000000"],
-    "fill-opacity"   : [      1.0,       0.0,       0.0,       0.0,       0.0],
-    "overlay-opacity": [      0.3,       0.0,       0.0,       0.0,       0.0],
+    "fill-color"     : ["#FFFFFF", "#000000", "#ffffff", "#000000", "#000000"],
+    "fill-opacity"   : [      0.5,       0.0,      0.25,       0.0,       0.0],
+    "overlay-opacity": [      0.7,      0.35,       0.7,       0.0,       0.0],
     "overlay-mode"   : [ "normal",  "normal",  "normal",  "normal",  "normal"],
-    "blur-size"      : [        5,         0,         0,         0,         0]},
+    "blur-size"      : [        4,         2,         4,         0,         0]},
 
   "track-view"       : {
     "line-gap"         : 26.0,
@@ -119,7 +119,7 @@
     "border-size"     : 1},
 
   "separator"       : {
-    "size"           : 1,
+    "size"           : 1.0,
     "color"          : "#ffffff",
     "opacity"        : 0.15, 
     "overlay-opacity": 0.47,

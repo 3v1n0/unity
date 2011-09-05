@@ -31,6 +31,9 @@
 #include "Introspectable.h"
 #include "StaticCairoText.h"
 
+namespace unity
+{
+
 class PlacesGroup : public nux::View
 {
 public:
@@ -97,5 +100,7 @@ private:
   char* _cached_name;
   bool  _draw_sep;
 };
+
+}
 
 #endif

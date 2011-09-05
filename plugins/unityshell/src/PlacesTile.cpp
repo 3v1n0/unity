@@ -21,26 +21,30 @@
 
 #include "config.h"
 
+#include <Nux/Nux.h>
+
+#include "CairoTexture.h"
 #include "TextureCache.h"
-#include "Nux/Nux.h"
 #include "PlacesTile.h"
 
 #define PADDING 8
 #define BLUR_SIZE 6
 
+namespace unity
+{
+
 PlacesTile::PlacesTile(NUX_FILE_LINE_DECL, const void* id) :
   View(NUX_FILE_LINE_PARAM),
   _id(id),
-  _hilight_background(NULL),
   _hilight_layer(NULL),
   _last_width(0),
   _last_height(0)
 {
-  OnMouseDown.connect(sigc::mem_fun(this, &PlacesTile::RecvMouseDown));
-  OnMouseUp.connect(sigc::mem_fun(this, &PlacesTile::RecvMouseUp));
-  OnMouseClick.connect(sigc::mem_fun(this, &PlacesTile::RecvMouseClick));
-  OnMouseEnter.connect(sigc::mem_fun(this, &PlacesTile::RecvMouseEnter));
-  OnMouseLeave.connect(sigc::mem_fun(this, &PlacesTile::RecvMouseLeave));
+  mouse_down.connect(sigc::mem_fun(this, &PlacesTile::RecvMouseDown));
+  mouse_up.connect(sigc::mem_fun(this, &PlacesTile::RecvMouseUp));
+  mouse_click.connect(sigc::mem_fun(this, &PlacesTile::RecvMouseClick));
+  mouse_enter.connect(sigc::mem_fun(this, &PlacesTile::RecvMouseEnter));
+  mouse_leave.connect(sigc::mem_fun(this, &PlacesTile::RecvMouseLeave));
   OnKeyNavFocusChange.connect(sigc::mem_fun(this, &PlacesTile::OnFocusChanged));
   OnKeyNavFocusActivate.connect(sigc::mem_fun(this, &PlacesTile::OnFocusActivated));
   _can_pass_focus_to_composite_layout = false;
@@ -48,13 +52,6 @@ PlacesTile::PlacesTile(NUX_FILE_LINE_DECL, const void* id) :
 
 PlacesTile::~PlacesTile()
 {
-  if (_hilight_background)
-  {
-    _hilight_background->UnReference();
-    _hilight_background = NULL;
-    con_obj.disconnect();
-  }
-
   if (_hilight_layer)
   {
     delete _hilight_layer;
@@ -80,16 +77,17 @@ PlacesTile::GetHighlightGeometry()
   return GetGeometry();
 }
 
-void
-PlacesTile::DrawHighlight(const char* texid, int width, int height, nux::BaseTexture** texture)
+nux::BaseTexture*
+PlacesTile::DrawHighlight(std::string const& texid, int width, int height)
 {
   nux::Geometry base = GetGeometry();
   nux::Geometry highlight_geo = GetHighlightGeometry();
 
-  nux::CairoGraphics* cairo_graphics = new nux::CairoGraphics(CAIRO_FORMAT_ARGB32,
-                                                              highlight_geo.width + PADDING + (BLUR_SIZE * 3),
-                                                              highlight_geo.height + PADDING + (BLUR_SIZE * 3));
-  cairo_t* cr = cairo_graphics->GetContext();
+  int padding = PADDING + (BLUR_SIZE * 3);
+  nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32,
+                                    highlight_geo.width + padding,
+                                    highlight_geo.height + padding);
+  cairo_t* cr = cairo_graphics.GetInternalContext();
 
   cairo_scale(cr, 1.0f, 1.0f);
 
@@ -106,7 +104,7 @@ PlacesTile::DrawHighlight(const char* texid, int width, int height, nux::BaseTex
   cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
   cairo_set_line_width(cr, 1.0f);
   cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 0.75f);
-  cairo_graphics->DrawRoundedRectangle(cr,
+  cairo_graphics.DrawRoundedRectangle(cr,
                                        1.0f,
                                        bg_x,
                                        bg_y,
@@ -115,10 +113,10 @@ PlacesTile::DrawHighlight(const char* texid, int width, int height, nux::BaseTex
                                        bg_height,
                                        true);
   cairo_fill(cr);
-  cairo_graphics->BlurSurface(BLUR_SIZE - 2);
+  cairo_graphics.BlurSurface(BLUR_SIZE - 2);
 
   cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
-  cairo_graphics->DrawRoundedRectangle(cr,
+  cairo_graphics.DrawRoundedRectangle(cr,
                                        1.0,
                                        bg_x,
                                        bg_y,
@@ -129,7 +127,7 @@ PlacesTile::DrawHighlight(const char* texid, int width, int height, nux::BaseTex
   cairo_clip(cr);
   cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
 
-  cairo_graphics->DrawRoundedRectangle(cr,
+  cairo_graphics.DrawRoundedRectangle(cr,
                                        1.0,
                                        bg_x,
                                        bg_y,
@@ -143,25 +141,8 @@ PlacesTile::DrawHighlight(const char* texid, int width, int height, nux::BaseTex
   cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 1.0);
   cairo_stroke(cr);
 
-  cairo_destroy(cr);
-
-  nux::NBitmapData* bitmap =  cairo_graphics->GetBitmap();
-  nux::BaseTexture* tex = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
-  tex->Update(bitmap);
-  *texture = tex;
-
-  delete bitmap;
-  delete cairo_graphics;
+  return texture_from_cairo_graphics(cairo_graphics);
 }
-
-void
-PlacesTile::OnDestroyNotify(nux::Trackable* Object)
-{
-  g_warning("Texture destroyed before we were ready");
-  _hilight_background = NULL;
-  UpdateBackground();
-}
-
 
 void
 PlacesTile::UpdateBackground()
@@ -176,22 +157,11 @@ PlacesTile::UpdateBackground()
   _last_height = base.height;
 
   // try and get a texture from the texture cache
-  TextureCache* cache = TextureCache::GetDefault();
-  nux::BaseTexture* hilight_tex = cache->FindTexture("PlacesTile.HilightTexture",
-                                                     highlight_geo.width, highlight_geo.height,
-                                                     sigc::mem_fun(this, &PlacesTile::DrawHighlight));
+  TextureCache& cache = TextureCache::GetDefault();
 
-  if (_hilight_background)
-  {
-    _hilight_background->UnReference();
-    _hilight_background = NULL;
-    con_obj.disconnect();
-  }
-
-  con_obj = hilight_tex->OnDestroyed.connect(sigc::mem_fun(this, &PlacesTile::OnDestroyNotify));
-
-  _hilight_background = hilight_tex;
-  _hilight_background->Reference();
+  _hilight_background = cache.FindTexture("PlacesTile.HilightTexture",
+                                          highlight_geo.width, highlight_geo.height,
+                                          sigc::mem_fun(this, &PlacesTile::DrawHighlight));
 
   nux::ROPConfig rop;
   rop.Blend = true;
@@ -321,3 +291,5 @@ PlacesTile::OnFocusActivated(nux::Area* label)
 {
   sigClick.emit(this);
 }
+
+} // namespace unity

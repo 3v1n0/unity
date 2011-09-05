@@ -23,6 +23,7 @@
 
 #include "UBusMessages.h"
 #include "ubus-server.h"
+#include "WindowManager.h"
 
 #include "SwitcherController.h"
 
@@ -32,8 +33,7 @@ namespace switcher
 {
 
 SwitcherController::SwitcherController()
-  :  view_(0)
-  ,  view_window_(0)
+  :  view_window_(0)
   ,  visible_(false)
   ,  show_timer_(0)
   ,  detail_timer_(0)
@@ -41,6 +41,8 @@ SwitcherController::SwitcherController()
   timeout_length = 150;
   detail_on_timeout = false;
   detail_timeout_length = 1500;
+
+  bg_color_ = nux::Color(0.0, 0.0, 0.0, 0.5);
 
   UBusServer *ubus = ubus_server_get_default();
   ubus_server_register_interest(ubus, UBUS_BACKGROUND_COLOR_CHANGED,
@@ -50,6 +52,7 @@ SwitcherController::SwitcherController()
 
 SwitcherController::~SwitcherController()
 {
+  view_window_->UnReference();
 }
 
 void SwitcherController::OnBackgroundUpdate (GVariant *data, SwitcherController *self)
@@ -89,6 +92,12 @@ void SwitcherController::Show(SwitcherController::ShowMode show, SwitcherControl
   }
 }
 
+void SwitcherController::Select(int index)
+{
+  if (visible_)
+    model_->Select(index);
+}
+
 gboolean SwitcherController::OnShowTimer(gpointer data)
 {
   SwitcherController* self = static_cast<SwitcherController*>(data);
@@ -107,7 +116,7 @@ gboolean SwitcherController::OnDetailTimer(gpointer data)
   if (!self->visible_ || self->model_->detail_selection)
     return FALSE;
   
-  self->SetDetail(true);
+  self->SetDetail(true, 2);
   self->detail_mode_ = TAB_NEXT_WINDOW;
   self->detail_timer_ = 0;
   return FALSE;
@@ -119,21 +128,20 @@ void SwitcherController::OnModelSelectionChanged(AbstractLauncherIcon *icon)
   {
     if (detail_timer_)
       g_source_remove(detail_timer_);
-    
+
     detail_timer_ = g_timeout_add(detail_timeout_length, &SwitcherController::OnDetailTimer, this);
   }
 }
 
 void SwitcherController::ConstructView()
 {
-  view_ = new SwitcherView();
+  view_ = SwitcherView::Ptr(new SwitcherView());
   view_->SetModel(model_);
   view_->background_color = bg_color_;
 
   if (!view_window_)
   {
-    main_layout_ = new nux::HLayout();
-    
+    main_layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
     main_layout_->SetVerticalExternalMargin(0);
     main_layout_->SetHorizontalExternalMargin(0);
 
@@ -142,10 +150,11 @@ void SwitcherController::ConstructView()
     view_window_->SetLayout(main_layout_);
     view_window_->SetBackgroundColor(nux::Color(0x00000000));
   }
-  
-  main_layout_->AddView(view_, 1);
+
+  main_layout_->AddView(view_.GetPointer(), 1);
 
   view_window_->SetGeometry(workarea_);
+  view_->SetupBackground ();
   view_window_->ShowWindow(true);
 }
 
@@ -173,11 +182,11 @@ void SwitcherController::Hide(bool accept_state)
         if (selection->GetQuirk (AbstractLauncherIcon::QUIRK_ACTIVE))
         {
           selection->Activate(ActionArg (ActionArg::SWITCHER, 0, model_->DetailXids()[0]));
-        } 
+        }
         else
         {
           selection->Activate(ActionArg(ActionArg::SWITCHER, 0));
-        }     
+        }
       }
     }
   }
@@ -186,15 +195,16 @@ void SwitcherController::Hide(bool accept_state)
   visible_ = false;
 
   if (view_)
-    main_layout_->RemoveChildObject(view_);
+    main_layout_->RemoveChildObject(view_.GetPointer());
 
-  view_window_->ShowWindow(false);
+  if (view_window_)
+    view_window_->ShowWindow(false);
 
   if (show_timer_)
     g_source_remove(show_timer_);
   show_timer_ = 0;
 
-  view_ = 0;
+  view_.Release();
 }
 
 bool SwitcherController::Visible()
@@ -267,14 +277,14 @@ void SwitcherController::Prev()
   }
 }
 
-SwitcherView * SwitcherController::GetView()
+SwitcherView* SwitcherController::GetView()
 {
-  return view_;
+  return view_.GetPointer();
 }
 
-void SwitcherController::SetDetail(bool value)
+void SwitcherController::SetDetail(bool value, int min_windows)
 {
-  if (value && model_->Selection()->RelatedWindows() > 0)
+  if (value && model_->Selection()->RelatedWindows() >= min_windows)
   {
     model_->detail_selection = true;
     detail_mode_ = TAB_NEXT_WINDOW_LOOP;

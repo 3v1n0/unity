@@ -18,11 +18,16 @@
  * Authored by: Gordon Allott <gord.allott@canonical.com>
  *
  */
+#include <NuxCore/Logger.h>
 
 #include "FilterRatingsButton.h"
 #include "config.h"
 #include "DashStyle.h"
 #include "Nux/Nux.h"
+
+namespace {
+  nux::logging::Logger logger("unity.dash.FilterRatingsButton");
+}
 
 namespace unity {
 
@@ -40,7 +45,7 @@ namespace unity {
   {
     InitTheme();
 
-    OnMouseDown.connect (sigc::mem_fun (this, &FilterRatingsButton::RecvMouseDown) );
+    mouse_down.connect (sigc::mem_fun (this, &FilterRatingsButton::RecvMouseDown) );
   }
 
   FilterRatingsButton::~FilterRatingsButton() {
@@ -73,17 +78,17 @@ namespace unity {
     {
       nux::Geometry geometry = GetGeometry();
       geometry.width /= 5;
-      prelight_empty_ = new nux::CairoWrapper(GetGeometry(), sigc::bind(sigc::mem_fun(this, &FilterRatingsButton::RedrawTheme), 0, nux::State::NUX_STATE_PRELIGHT));
-      active_empty_ = new nux::CairoWrapper(GetGeometry(), sigc::bind(sigc::mem_fun(this, &FilterRatingsButton::RedrawTheme), 0, nux::State::NUX_STATE_ACTIVE));
-      normal_empty_ = new nux::CairoWrapper(GetGeometry(), sigc::bind(sigc::mem_fun(this, &FilterRatingsButton::RedrawTheme), 0, nux::State::NUX_STATE_NORMAL));
+      prelight_empty_ = new nux::CairoWrapper(geometry, sigc::bind(sigc::mem_fun(this, &FilterRatingsButton::RedrawTheme), 0, nux::State::NUX_STATE_PRELIGHT));
+      active_empty_ = new nux::CairoWrapper(geometry, sigc::bind(sigc::mem_fun(this, &FilterRatingsButton::RedrawTheme), 0, nux::State::NUX_STATE_ACTIVE));
+      normal_empty_ = new nux::CairoWrapper(geometry, sigc::bind(sigc::mem_fun(this, &FilterRatingsButton::RedrawTheme), 0, nux::State::NUX_STATE_NORMAL));
 
-      prelight_half_ = new nux::CairoWrapper(GetGeometry(), sigc::bind(sigc::mem_fun(this, &FilterRatingsButton::RedrawTheme), 1, nux::State::NUX_STATE_PRELIGHT));
-      active_half_ = new nux::CairoWrapper(GetGeometry(), sigc::bind(sigc::mem_fun(this, &FilterRatingsButton::RedrawTheme), 1, nux::State::NUX_STATE_ACTIVE));
-      normal_half_ = new nux::CairoWrapper(GetGeometry(), sigc::bind(sigc::mem_fun(this, &FilterRatingsButton::RedrawTheme), 1, nux::State::NUX_STATE_NORMAL));
+      prelight_half_ = new nux::CairoWrapper(geometry, sigc::bind(sigc::mem_fun(this, &FilterRatingsButton::RedrawTheme), 1, nux::State::NUX_STATE_PRELIGHT));
+      active_half_ = new nux::CairoWrapper(geometry, sigc::bind(sigc::mem_fun(this, &FilterRatingsButton::RedrawTheme), 1, nux::State::NUX_STATE_ACTIVE));
+      normal_half_ = new nux::CairoWrapper(geometry, sigc::bind(sigc::mem_fun(this, &FilterRatingsButton::RedrawTheme), 1, nux::State::NUX_STATE_NORMAL));
 
-      prelight_full_ = new nux::CairoWrapper(GetGeometry(), sigc::bind(sigc::mem_fun(this, &FilterRatingsButton::RedrawTheme), 2, nux::State::NUX_STATE_PRELIGHT));
-      active_full_ = new nux::CairoWrapper(GetGeometry(), sigc::bind(sigc::mem_fun(this, &FilterRatingsButton::RedrawTheme), 2, nux::State::NUX_STATE_ACTIVE));
-      normal_full_ = new nux::CairoWrapper(GetGeometry(), sigc::bind(sigc::mem_fun(this, &FilterRatingsButton::RedrawTheme), 2, nux::State::NUX_STATE_NORMAL));
+      prelight_full_ = new nux::CairoWrapper(geometry, sigc::bind(sigc::mem_fun(this, &FilterRatingsButton::RedrawTheme), 2, nux::State::NUX_STATE_PRELIGHT));
+      active_full_ = new nux::CairoWrapper(geometry, sigc::bind(sigc::mem_fun(this, &FilterRatingsButton::RedrawTheme), 2, nux::State::NUX_STATE_ACTIVE));
+      normal_full_ = new nux::CairoWrapper(geometry, sigc::bind(sigc::mem_fun(this, &FilterRatingsButton::RedrawTheme), 2, nux::State::NUX_STATE_NORMAL));
     }
   }
 
@@ -168,8 +173,6 @@ namespace unity {
 
     for (int index = 0; index < 5; index++)
     {
-      geometry.x = index * geometry.width;
-
       nux::BaseTexture *texture = normal_empty_->GetTexture();
 
       if (index < total_full_stars) {
@@ -205,6 +208,8 @@ namespace unity {
                           texxform,
                           nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
 
+      geometry.x += geometry.width;
+
     }
 
     GfxContext.GetRenderStates().SetBlend(alpha, src, dest);
@@ -221,8 +226,9 @@ namespace unity {
 
   void FilterRatingsButton::RecvMouseDown (int x, int y, unsigned long button_flags, unsigned long key_flags) {
     int width = GetGeometry().width;
+    float new_rating = (static_cast<float>(x) / width) + 0.10f;
     if (filter_ != NULL)
-      filter_->rating = ceil(x / width);
+      filter_->rating = new_rating;
   }
 
   void FilterRatingsButton::OnRatingsChanged (int rating) {

@@ -52,17 +52,12 @@ PanelController::~PanelController()
   }
 }
 
-void
-PanelController::SetBFBSize(int size)
+unsigned int PanelController::GetTrayXid ()
 {
-  std::vector<nux::BaseWindow*>::iterator it, eit = _windows.end();
-
-  _bfb_size = size;
-
-  for (it = _windows.begin(); it != eit; ++it)
-  {
-    ViewForWindow(*it)->GetHomeButton()->SetButtonWidth(_bfb_size);
-  }
+  if (!_windows.empty ())
+    return ViewForWindow (_windows.front ())->GetTrayXid ();
+  else
+    return 0;
 }
 
 void
@@ -174,11 +169,10 @@ PanelController::OnScreenChanged(int primary_monitor, std::vector<nux::Geometry>
 
       // FIXME(loicm): Several objects created here are leaked.
 
-      layout = new nux::HLayout();
+      layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
       view = new PanelView();
       view->SetMaximumHeight(24);
-      view->GetHomeButton()->SetButtonWidth(_bfb_size);
       view->SetOpacity(_opacity);
       view->SetPrimary(i == primary_monitor);
       view->SetMonitor(i);

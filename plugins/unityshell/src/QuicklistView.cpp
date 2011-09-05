@@ -29,6 +29,8 @@
 #include "Nux/TextureArea.h"
 #include "NuxImage/CairoGraphics.h"
 
+#include "CairoTexture.h"
+
 #include "QuicklistView.h"
 #include "QuicklistMenuItem.h"
 #include "QuicklistMenuItemLabel.h"
@@ -47,6 +49,8 @@
 #define NUX_KP_UP    0xFF97
 #define NUX_KP_LEFT  0xFF96
 #define NUX_KP_RIGHT 0xFF98
+
+using unity::texture_from_cairo_graphics;
 
 NUX_IMPLEMENT_OBJECT_TYPE(QuicklistView);
 
@@ -69,25 +73,31 @@ QuicklistView::QuicklistView()
   , _current_item_index(0)
 {
   SetGeometry(nux::Geometry(0, 0, 1, 1));
-  _hlayout         = new nux::HLayout(TEXT(""), NUX_TRACKER_LOCATION);
-  _vlayout         = new nux::VLayout(TEXT(""), NUX_TRACKER_LOCATION);
-  _item_layout     = new nux::VLayout(TEXT(""), NUX_TRACKER_LOCATION);
-  _default_item_layout = new nux::VLayout(TEXT(""), NUX_TRACKER_LOCATION);
 
-  _left_space = new nux::SpaceLayout(_padding + _anchor_width + _corner_radius, _padding + _anchor_width + _corner_radius, 1, 1000);
-  _right_space = new nux::SpaceLayout(_padding + _corner_radius, _padding + _corner_radius, 1, 1000);
+  _left_space = new nux::SpaceLayout(_padding + _anchor_width + _corner_radius,
+                                     _padding + _anchor_width + _corner_radius,
+                                     1, 1000);
+  _right_space = new nux::SpaceLayout(_padding + _corner_radius,
+                                      _padding + _corner_radius,
+                                      1, 1000);
+  _top_space = new nux::SpaceLayout(1, 1000,
+                                    _padding + _corner_radius,
+                                    _padding + _corner_radius);
+  _bottom_space = new nux::SpaceLayout(1, 1000,
+                                       _padding + _corner_radius,
+                                       _padding + _corner_radius);
 
-  _top_space = new nux::SpaceLayout(1, 1000, _padding + _corner_radius, _padding + _corner_radius);
-  _bottom_space = new nux::SpaceLayout(1, 1000, _padding + _corner_radius, _padding + _corner_radius);
-
+  _vlayout = new nux::VLayout(TEXT(""), NUX_TRACKER_LOCATION);
   _vlayout->AddLayout(_top_space, 0);
 
+  _item_layout     = new nux::VLayout(TEXT(""), NUX_TRACKER_LOCATION);
   _vlayout->AddLayout(_item_layout, 0);
 
+  _default_item_layout = new nux::VLayout(TEXT(""), NUX_TRACKER_LOCATION);
   _vlayout->AddLayout(_default_item_layout, 0);
-
   _vlayout->AddLayout(_bottom_space, 0);
 
+  _hlayout = new nux::HLayout(TEXT(""), NUX_TRACKER_LOCATION);
   _hlayout->AddLayout(_left_space, 0);
   _hlayout->AddLayout(_vlayout, 0, nux::eCenter, nux::eFull);
   _hlayout->AddLayout(_right_space, 0);
@@ -95,15 +105,15 @@ QuicklistView::QuicklistView()
   SetWindowSizeMatchLayout(true);
   SetLayout(_hlayout);
 
-  OnMouseDownOutsideArea.connect(sigc::mem_fun(this, &QuicklistView::RecvMouseDownOutsideOfQuicklist));
-  OnMouseDown.connect(sigc::mem_fun(this, &QuicklistView::RecvMouseDown));
-  OnMouseUp.connect(sigc::mem_fun(this, &QuicklistView::RecvMouseUp));
-  OnMouseClick.connect(sigc::mem_fun(this, &QuicklistView::RecvMouseClick));
-  OnMouseMove.connect(sigc::mem_fun(this, &QuicklistView::RecvMouseMove));
-  OnMouseDrag.connect(sigc::mem_fun(this, &QuicklistView::RecvMouseDrag));
-  OnKeyEvent.connect(sigc::mem_fun(this, &QuicklistView::RecvKeyPressed));
-  OnStartKeyboardReceiver.connect(sigc::mem_fun(this, &QuicklistView::RecvStartFocus));
-  OnStopKeyboardReceiver.connect(sigc::mem_fun(this, &QuicklistView::RecvEndFocus));
+  mouse_down_outside_pointer_grab_area.connect(sigc::mem_fun(this, &QuicklistView::RecvMouseDownOutsideOfQuicklist));
+  mouse_down.connect(sigc::mem_fun(this, &QuicklistView::RecvMouseDown));
+  mouse_up.connect(sigc::mem_fun(this, &QuicklistView::RecvMouseUp));
+  mouse_click.connect(sigc::mem_fun(this, &QuicklistView::RecvMouseClick));
+  mouse_move.connect(sigc::mem_fun(this, &QuicklistView::RecvMouseMove));
+  mouse_drag.connect(sigc::mem_fun(this, &QuicklistView::RecvMouseDrag));
+  key_down.connect(sigc::mem_fun(this, &QuicklistView::RecvKeyPressed));
+  begin_key_focus.connect(sigc::mem_fun(this, &QuicklistView::RecvStartFocus));
+  end_key_focus.connect(sigc::mem_fun(this, &QuicklistView::RecvEndFocus));
 
   SetAcceptKeyNavFocus(true);
 }
@@ -1448,27 +1458,17 @@ void QuicklistView::UpdateTexture()
   cairo_destroy(cr_outline);
   cairo_destroy(cr_mask);
 
-  nux::NBitmapData* bitmap = cairo_bg->GetBitmap();
-
   if (_texture_bg)
     _texture_bg->UnReference();
-  _texture_bg = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
-  _texture_bg->Update(bitmap);
-  delete bitmap;
+  _texture_bg = texture_from_cairo_graphics(*cairo_bg);
 
-  bitmap = cairo_mask->GetBitmap();
   if (_texture_mask)
     _texture_mask->UnReference();
-  _texture_mask = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
-  _texture_mask->Update(bitmap);
-  delete bitmap;
+  _texture_mask = texture_from_cairo_graphics(*cairo_mask);
 
-  bitmap = cairo_outline->GetBitmap();
   if (_texture_outline)
     _texture_outline->UnReference();
-  _texture_outline = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
-  _texture_outline->Update(bitmap);
-  delete bitmap;
+  _texture_outline = texture_from_cairo_graphics(*cairo_outline);
 
   delete cairo_bg;
   delete cairo_mask;

@@ -62,11 +62,6 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
 
   _layout = new nux::HLayout("", NUX_TRACKER_LOCATION);
 
-  // Home button - not an indicator view
-  _home_button = new PanelHomeButton();
-  //_layout->AddView(_home_button, 0, nux::eCenter, nux::eFull);
-  //AddChild(_home_button);
-
   _menu_view = new PanelMenuView();
   AddPanelView(_menu_view, 1);
 
@@ -117,6 +112,14 @@ PanelView::~PanelView()
   delete _bg_layer;
 }
 
+unsigned int PanelView::GetTrayXid ()
+{
+  if (!_tray)
+    return 0;
+
+  return _tray->xid ();
+}
+
 void PanelView::OnBackgroundUpdate (GVariant *data, PanelView *self)
 {
   gdouble red, green, blue, alpha;
@@ -127,12 +130,15 @@ void PanelView::OnBackgroundUpdate (GVariant *data, PanelView *self)
 
 void PanelView::OnDashHidden(GVariant* data, PanelView* self)
 {
+  if (self->_opacity >= 1.0f)
+    self->bg_effect_helper_.enabled = false;
   self->_dash_is_open = false;
   self->ForceUpdateBackground();
 }
 
 void PanelView::OnDashShown(GVariant* data, PanelView* self)
 {
+  self->bg_effect_helper_.enabled = true;
   self->_dash_is_open = true;
   self->ForceUpdateBackground();
 }
@@ -344,8 +350,6 @@ void PanelView::ForceUpdateBackground()
   {
     (*i)->QueueDraw();
   }
-  // The home button isn't an indicator view.
-  _home_button->QueueDraw();
   _tray->QueueDraw();
   QueueDraw();
 }
@@ -376,10 +380,6 @@ void PanelView::OnObjectAdded(indicator::Indicator::Ptr const& proxy)
 void PanelView::OnMenuPointerMoved(int x, int y)
 {
   nux::Geometry geo = GetAbsoluteGeometry();
-  nux::Geometry hgeo = _home_button->GetAbsoluteGeometry();
-
-  if (x <= (hgeo.x + hgeo.width))
-    return;
 
   if (geo.IsPointInside(x, y))
   {
@@ -447,7 +447,6 @@ void PanelView::OnEntryActivated(std::string const& entry_id)
       g_source_remove(_track_menu_pointer_id);
       _track_menu_pointer_id = 0;
     }
-    _menu_view->AllMenusClosed();
   }
 }
 
@@ -490,11 +489,6 @@ void PanelView::OnEntryShowMenu(std::string const& entry_id,
 //
 // Useful Public Methods
 //
-PanelHomeButton* PanelView::GetHomeButton()
-{
-  return _home_button;
-}
-
 void PanelView::StartFirstMenuShow()
 {
 }
@@ -521,7 +515,9 @@ PanelView::SetOpacity(float opacity)
 
   _opacity = opacity;
 
-  _home_button->SetOpacity(opacity);
+  if (_opacity < 1.0f && !_dash_is_open)
+    bg_effect_helper_.enabled = false;
+
   ForceUpdateBackground();
 }
 
@@ -535,8 +531,6 @@ void
 PanelView::SetPrimary(bool primary)
 {
   _is_primary = primary;
-
-  _home_button->SetVisible(primary);
 }
 
 void PanelView::SyncGeometries()

@@ -113,6 +113,12 @@ namespace unity
 
     virtual bool SeparatorHoriz (cairo_t* cr);
 
+    virtual int GetButtonGarnishSize ();
+
+    virtual int GetSeparatorGarnishSize ();
+
+    virtual int GetScrollbarGarnishSize ();
+
     void Blur (cairo_t* cr, int size);
 
     void RoundedRect (cairo_t* cr,
@@ -197,13 +203,30 @@ namespace unity
 
       void ArrowPath (cairo_t* cr, Arrow arrow);
 
+      cairo_operator_t SetBlendMode (cairo_t* cr, BlendMode mode);
+
+      void DrawOverlay (cairo_t*  cr,
+                        double    opacity,
+                        BlendMode mode,
+                        int       blurSize);
+
+      void RoundedRectSegment (cairo_t*   cr,
+                               double     aspect,
+                               double     x,
+                               double     y,
+                               double     cornerRadius,
+                               double     width,
+                               double     height,
+                               Segment    segment,
+                               Arrow      arrow,
+                               nux::State state);
 
     private:
       cairo_font_options_t* _defaultFontOptions;
 
       double                _buttonLabelBorderColor[STATES][CHANNELS];
       double                _buttonLabelBorderOpacity[STATES];
-      double                _buttonLabelBorderSize;
+      double                _buttonLabelBorderSize[STATES];
       double                _buttonLabelTextSize;
       double                _buttonLabelTextColor[STATES][CHANNELS];
       double                _buttonLabelTextOpacity[STATES];
@@ -218,6 +241,21 @@ namespace unity
       double                _regularTextSize;
       BlendMode             _regularTextMode;
       FontWeight            _regularTextWeight;
+
+      double                _separatorSize;
+      double                _separatorColor[CHANNELS];
+      double                _separatorOpacity;
+      double                _separatorOverlayOpacity;
+      BlendMode             _separatorOverlayMode;
+      int                   _separatorBlurSize;
+
+      double                _scrollbarColor[CHANNELS];
+      double                _scrollbarOpacity;
+      double                _scrollbarOverlayOpacity;
+      BlendMode             _scrollbarOverlayMode;
+      int                   _scrollbarBlurSize;
+      int                   _scrollbarSize;
+      double                _scrollbarCornerRadius;
   };
 }
 

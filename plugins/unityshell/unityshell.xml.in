@@ -116,14 +116,14 @@
                       <default>&lt;Alt&gt;&lt;Shift&gt;Tab</default>
                 </option>
 		<option name="alt_tab_right" type="key">
-		    <_short>Go right in the swithcer</_short>
+		    <_short>Go right in the switcher</_short>
 		    <_long>fixme</_long>
 		    <default>&lt;Alt&gt;Right</default>
 		    <passive_grab>false</passive_grab>
 		    <internal/>
 		</option>
 		<option name="alt_tab_left" type="key">
-		    <_short>Go left in the swithcer</_short>
+		    <_short>Go left in the switcher</_short>
 		    <_long>fixme</_long>
 		    <default>&lt;Alt&gt;Left</default>
 		    <passive_grab>false</passive_grab>
@@ -143,11 +143,16 @@
 		    <passive_grab>false</passive_grab>
 		    <internal/>
 		</option>
-                <option name="alt_tab_next_window" type="key">
+        <option name="alt_tab_next_window" type="key">
 		    <_short>Key to flip through windows in the switcher</_short>
 		    <_long>fixme</_long>
-		    <default>&lt;Alt&gt;grave</default>
-                </option>
+            <passive_grab>false</passive_grab>
+        </option>
+		<option name="show_minimized_windows" type="bool">
+		    <_short>Show minimized windows in switcher</_short>
+		    <_long>Hack to enable minimized windows in switcher. Disable and report bugs if problems are caused</_long>
+		    <default>true</default>
+		</option>
               </group>
               <group>
                 <_short>Experimental</_short>
@@ -155,7 +160,7 @@
                     <_short>Backlight Mode</_short>
                     <_long>Change how the icons are backlit</_long>
                     <min>0</min>
-                    <max>2</max>
+                    <max>4</max>
                     <default>0</default>
                     <desc>
                         <value>0</value>
@@ -168,6 +173,14 @@
                     <desc>
                         <value>2</value>
                         <_name>Backlight Always Off</_name>
+                    </desc>
+                    <desc>
+                        <value>3</value>
+                        <_name>Edge Illumination Toggles</_name>
+                    </desc>
+                    <desc>
+                        <value>4</value>
+                        <_name>Backlight and Edge Illumination Toggles</_name>
                     </desc>
                 </option>
                 <option name="launch_animation" type="int">
