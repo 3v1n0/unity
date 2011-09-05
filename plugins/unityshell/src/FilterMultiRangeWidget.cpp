@@ -149,7 +149,8 @@ namespace unity {
     if (found_filter)
     {
       layout_->RemoveChildObject(*it);
-      buttons_.erase (it);
+      buttons_.erase(it);
+      found_filter->UnReference();
     }
 
     OnActiveChanged(false);
