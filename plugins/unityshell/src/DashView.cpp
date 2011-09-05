@@ -123,8 +123,6 @@ void DashView::SetupViews()
   lens_bar_->OnGeometryChanged.connect([&] (nux::Area*, nux::Geometry& geo) { Relayout(); });
 }
 
-
-
 void DashView::SetupUBusConnections()
 {
   ubus_manager_.RegisterInterest(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
