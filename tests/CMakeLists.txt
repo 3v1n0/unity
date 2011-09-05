@@ -285,7 +285,7 @@ add_executable (test-launcher
                 ${UNITY_SRC}/ubus-server.cpp
                 ${UNITY_SRC}/ubus-server.h
                 )
-add_dependencies (test-switcher unity-core-${UNITY_API_VERSION})
+add_dependencies (test-launcher unity-core-${UNITY_API_VERSION})
 
 add_executable (test-keyutil
                 TestKeyboardUtil.cpp

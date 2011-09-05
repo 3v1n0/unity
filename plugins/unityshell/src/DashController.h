@@ -56,6 +56,7 @@ protected:
   void AddProperties(GVariantBuilder* builder);
 
 private:
+  void EnsureDash();
   void SetupWindow();
   void SetupDashView();
   void SetupRelayoutCallbacks();
@@ -68,6 +69,7 @@ private:
   void OnScreenUngrabbed();
   void OnExternalShowDash(GVariant* variant);
   void OnExternalHideDash(GVariant* variant);
+  void OnActivateRequest(GVariant* variant);
 
   void ShowDash();
   void HideDash();
@@ -90,6 +92,7 @@ private:
   gint64 start_time_;
 
   DashView* view_;
+  guint ensure_id_;
 };
 
 

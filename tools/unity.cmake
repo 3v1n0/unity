@@ -76,18 +76,23 @@ def reset_unity_compiz_profile ():
         return
     
     # default value to not force reset if current_profile is unset
-    current_profile_gconfvalue = ""
-    if current_profile_schema:
-		current_profile_gconfvalue = current_profile_schema.get_default_value()
+    if not current_profile_schema:
+        print "WARNING: no current gconf profile set, assuming unity"
+        current_profile_str = 'unity'
+        current_profile_gconfvalue = None
+    else:
+        current_profile_gconfvalue = current_profile_schema.get_default_value()
+        current_profile_str = current_profile_gconfvalue.get_string()
 
-    if current_profile_gconfvalue.get_string() == 'unity':
+    if current_profile_str == 'unity':
         print "WARNING: Unity currently default profile, so switching to metacity while resetting the values"
         subprocess.Popen(["metacity", "--replace"]) #TODO: check if compiz is indeed running
         # wait for compiz to stop
         time.sleep(2)
-        current_profile_gconfvalue.set_string('fooo')
-        current_profile_schema.set_default_value(current_profile_gconfvalue)
-        client.set_schema("/apps/compizconfig-1/current_profile", current_profile_schema)
+        if current_profile_gconfvalue:
+            current_profile_gconfvalue.set_string('fooo')
+            current_profile_schema.set_default_value(current_profile_gconfvalue)
+            client.set_schema("/apps/compizconfig-1/current_profile", current_profile_schema)
         # the python binding doesn't recursive-unset right
         subprocess.Popen(["gconftool-2", "--recursive-unset", "/apps/compiz-1"]).communicate()
     subprocess.Popen(["gconftool-2", "--recursive-unset", "/apps/compizconfig-1/profiles/unity"]).communicate()

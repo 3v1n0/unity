@@ -1003,9 +1003,10 @@ bool Launcher::IconDrawEdgeOnly(LauncherIcon* icon)
 
 void Launcher::SetupRenderArg(LauncherIcon* icon, struct timespec const& current, RenderArg& arg)
 {
+  float desat_value = IconDesatValue(icon, current);
   arg.icon                = icon;
-  arg.alpha               = 1.0f;
-  arg.saturation          = IconDesatValue(icon, current);
+  arg.alpha               = 0.5f + 0.5f * desat_value;
+  arg.saturation          = desat_value;
   arg.running_arrow       = icon->GetQuirk(LauncherIcon::QUIRK_RUNNING);
   arg.running_colored     = icon->GetQuirk(LauncherIcon::QUIRK_URGENT);
   arg.running_on_viewport = icon->HasWindowOnViewport();
@@ -1370,6 +1371,9 @@ void Launcher::StartKeyShowLauncher()
   if (_super_show_shortcuts_handle > 0)
     g_source_remove(_super_show_shortcuts_handle);
   _super_show_shortcuts_handle = g_timeout_add(SHORTCUTS_SHOWN_DELAY, &Launcher::SuperShowShortcutsTimeout, this);
+
+  ubus_server_send_message(ubus_server_get_default(), UBUS_DASH_ABOUT_TO_SHOW, NULL);
+  ubus_server_force_message_pump(ubus_server_get_default());
 }
 
 void Launcher::EndKeyShowLauncher()
