@@ -65,7 +65,7 @@ protected:
 private:
   nux::BaseTexture* CreateTextureCallback(std::string const& texid, int width, int height);
   void Refresh(GdkPixbuf* pixbuf);
-  void IconLoaded(const char* icon_name, guint size, GdkPixbuf* pixbuf);
+  void IconLoaded(std::string const& icon_name, unsigned size, GdkPixbuf* pixbuf);
 
   // FIXME: make _icon_name a std::string.
   char* _icon_name;

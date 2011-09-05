@@ -23,6 +23,9 @@
 
 #include <sstream>     // for ostringstream
 #include "ResultRendererTile.h"
+
+#include <boost/algorithm/string.hpp>
+
 #include <pango/pango.h>
 #include <pango/pangocairo.h>
 #include <gdk/gdk.h>
@@ -235,10 +238,19 @@ void ResultRendererTile::LoadIcon(Result& row)
   std::string const& icon_hint = row.icon_hint;
 #define DEFAULT_GICON ". GThemedIcon text-x-preview"
   std::string icon_name;
-
-  gsize tmp4;gchar* tmp5 = (gchar*)g_base64_decode("VU5JVFlfTkVLTw==", &tmp4);
-  if (g_getenv(tmp5)){int tmp1 = 48 + (rand() % 16) - 8;gsize tmp3;gchar* tmp2 = (gchar*)g_base64_decode("aHR0cDovL3BsYWNla2l0dGVuLmNvbS8laS8laS8=", &tmp3);icon_name = g_strdup_printf(tmp2, tmp1, tmp1);g_free(tmp2);}
-  else {
+  gsize tmp4;
+  gchar* tmp5 = (gchar*)g_base64_decode("VU5JVFlfTkVLTw==", &tmp4);
+  if (g_getenv(tmp5))
+  {
+    int tmp1 = 48 + (rand() % 16) - 8;
+    gsize tmp3;
+    gchar* tmp2 = (gchar*)g_base64_decode("aHR0cDovL3BsYWNla2l0dGVuLmNvbS8laS8laS8=", &tmp3);
+    // FIXME: this leaks
+    icon_name = g_strdup_printf(tmp2, tmp1, tmp1);
+    g_free(tmp2);
+  }
+  else
+  {
     icon_name = !icon_hint.empty() ? icon_hint : DEFAULT_GICON;
   }
   g_free(tmp5);
@@ -250,16 +262,16 @@ void ResultRendererTile::LoadIcon(Result& row)
 
   if (g_str_has_prefix(icon_name.c_str(), "http://"))
   {
-    container->slot_handle = IconLoader::GetDefault()->LoadFromURI(icon_name.c_str(), 48, slot);
+    container->slot_handle = IconLoader::GetDefault().LoadFromURI(icon_name.c_str(), 48, slot);
   }
   else if (G_IS_ICON(icon))
   {
-    container->slot_handle = IconLoader::GetDefault()->LoadFromGIconString(icon_name.c_str(), 48, slot);
+    container->slot_handle = IconLoader::GetDefault().LoadFromGIconString(icon_name.c_str(), 48, slot);
     g_object_unref(icon);
   }
   else
   {
-    container->slot_handle = IconLoader::GetDefault()->LoadFromIconName(icon_name.c_str(), 48, slot);
+    container->slot_handle = IconLoader::GetDefault().LoadFromIconName(icon_name.c_str(), 48, slot);
   }
 }
 
@@ -297,9 +309,11 @@ nux::BaseTexture* ResultRendererTile::CreateBlurredTextureCallback(std::string c
 }
 
 
-void
-ResultRendererTile::IconLoaded(const char* texid, guint size, GdkPixbuf* pixbuf,
-                               std::string icon_name, Result& row)
+void ResultRendererTile::IconLoaded(std::string const& texid,
+                                    unsigned size,
+                                    GdkPixbuf* pixbuf,
+                                    std::string icon_name,
+                                    Result& row)
 {
   TextureContainer *container = row.renderer<TextureContainer*>();
   if (pixbuf && container)

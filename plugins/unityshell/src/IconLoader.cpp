@@ -1,5 +1,6 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
-* Copyright (C) 2010 Canonical Ltd
+* Copyright (C) 2010, 2011 Canonical Ltd
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License version 3 as
@@ -18,368 +19,365 @@
 
 #include "IconLoader.h"
 
+#include <map>
+#include <queue>
+#include <sstream>
+
+#include <boost/algorithm/string.hpp>
+
+#include <NuxCore/Logger.h>
+#include <UnityCore/GLibWrapper.h>
 #include <string.h>
 
-#define _TEMPLATE_ "%s:%d"
+#include "Timer.h"
 
-IconLoader::IconLoader()
-  : id_sequencial_number_ (1)
-  , _idle_id(0)
+namespace unity
 {
+namespace
+{
+nux::logging::Logger logger("unity.iconloader");
+const unsigned MIN_ICON_SIZE = 2;
+}
+
+class IconLoader::Impl
+{
+public:
+  // The Handle typedef is used to explicitly indicate which integers are
+  // infact our opaque handles.
+  typedef int Handle;
+
+  Impl();
+  ~Impl();
+
+  Handle LoadFromIconName(std::string const& icon_name,
+                          unsigned size,
+                          IconLoaderCallback slot);
+
+  Handle LoadFromGIconString(std::string const& gicon_string,
+                             unsigned size,
+                             IconLoaderCallback slot);
+
+  Handle LoadFromFilename(std::string const& filename,
+                          unsigned size,
+                          IconLoaderCallback slot);
+
+  Handle LoadFromURI(std::string const& uri,
+                     unsigned size,
+                     IconLoaderCallback slot);
+
+  void DisconnectHandle(Handle handle);
+
+private:
+
+  enum IconLoaderRequestType
+  {
+    REQUEST_TYPE_ICON_NAME = 0,
+    REQUEST_TYPE_GICON_STRING,
+    REQUEST_TYPE_URI,
+  };
+
+  struct IconLoaderTask
+  {
+    IconLoaderRequestType type;
+    std::string           data;
+    unsigned              size;
+    std::string           key;
+    IconLoaderCallback    slot;
+    Handle                handle;
+    Impl*                 self;
+
+    IconLoaderTask(IconLoaderRequestType type_,
+                   std::string const& data_,
+                   unsigned size_,
+                   std::string const& key_,
+                   IconLoaderCallback slot_,
+                   Handle handle_,
+                   Impl* self_)
+      : type(type_), data(data_), size(size_), key(key_)
+      , slot(slot_), handle(handle_), self(self_)
+      {}
+  };
+
+  Handle ReturnCachedOrQueue(std::string const& data,
+                             unsigned size,
+                             IconLoaderCallback slot,
+                             IconLoaderRequestType type);
+
+  Handle QueueTask(std::string const& key,
+                   std::string const& data,
+                   unsigned size,
+                   IconLoaderCallback slot,
+                   IconLoaderRequestType type);
+
+  std::string Hash(std::string const& data, unsigned size);
+
+  bool CacheLookup(std::string const& key,
+                   std::string const& data,
+                   unsigned size,
+                   IconLoaderCallback slot);
+
+  bool ProcessTask(IconLoaderTask* task);
+  bool ProcessIconNameTask(IconLoaderTask* task);
+  bool ProcessGIconTask(IconLoaderTask* task);
+
+  // URI processing is async.
+  bool ProcessURITask(IconLoaderTask* task);
+  void ProcessURITaskReady(IconLoaderTask* task, char* contents, gsize length);
+  static void LoadContentsReady(GObject* object, GAsyncResult* res, IconLoaderTask* task);
+
+  // Loop calls the iteration function.
+  static bool Loop(Impl* self);
+  bool Iteration();
+
+private:
+  typedef std::map<std::string, glib::Object<GdkPixbuf>> ImageCache;
+  ImageCache cache_;
+  typedef std::queue<IconLoaderTask*> TaskQueue;
+  TaskQueue tasks_;
+  typedef std::map<Handle, IconLoaderTask*> TaskMap;
+  TaskMap task_map_;
+
+  guint idle_id_;
+  bool no_load_;
+  GtkIconTheme* theme_; // Not owned.
+  Handle handle_counter_;
+};
+
+
+IconLoader::Impl::Impl()
+  : idle_id_(0)
   // Option to disable loading, if your testing performance of other things
-  _no_load = g_getenv("UNITY_ICON_LOADER_DISABLE") != NULL;
-
-  _tasks = g_queue_new();
-  _theme = gtk_icon_theme_get_default();
+  , no_load_(::getenv("UNITY_ICON_LOADER_DISABLE"))
+  , theme_(::gtk_icon_theme_get_default())
+  , handle_counter_(0)
+{
 }
 
-IconLoader::~IconLoader()
+IconLoader::Impl::~Impl()
 {
-  std::map<std::string, GdkPixbuf*>::iterator it;
-
-  g_queue_free(_tasks);
-  for (it = _cache.begin() ; it != _cache.end(); it++)
-    g_object_unref(GDK_PIXBUF((*it).second));
+  while (!tasks_.empty())
+  {
+    delete tasks_.front();
+    tasks_.pop();
+  }
 }
 
-IconLoader*
-IconLoader::GetDefault()
+
+int IconLoader::Impl::LoadFromIconName(std::string const& icon_name,
+                                       unsigned size,
+                                       IconLoaderCallback slot)
 {
-  static IconLoader* default_loader = NULL;
-
-  if (G_UNLIKELY(!default_loader))
-    default_loader = new IconLoader();
-
-  return default_loader;
-}
-
-int
-IconLoader::LoadFromIconName(const char*        icon_name,
-                             guint              size,
-                             IconLoaderCallback slot)
-{
-  char* key;
-
-  g_return_val_if_fail(icon_name, 0);
-  g_return_val_if_fail(size > 1, 0);
-
-  if (_no_load)
+  if (no_load_ || icon_name.empty() || size < MIN_ICON_SIZE)
     return 0;
 
   // We need to check this because of legacy desktop files
   if (icon_name[0] == '/')
-    LoadFromFilename(icon_name, size, slot);
-
-  key = Hash(icon_name, size);
-
-  if (CacheLookup(key, icon_name, size, slot))
   {
-    g_free(key);
-    return 0;
+    return LoadFromFilename(icon_name, size, slot);
   }
 
-  int handle = QueueTask(key, icon_name, size, slot, REQUEST_TYPE_ICON_NAME);
-
-  g_free(key);
-  return handle;
+  return ReturnCachedOrQueue(icon_name, size, slot, REQUEST_TYPE_ICON_NAME);
 }
 
-int
-IconLoader::LoadFromGIconString(const char*        gicon_string,
-                                guint              size,
-                                IconLoaderCallback slot)
+int IconLoader::Impl::LoadFromGIconString(std::string const& gicon_string,
+                                          unsigned size,
+                                          IconLoaderCallback slot)
 {
-  char* key;
-
-  g_return_val_if_fail(gicon_string, 0);
-  g_return_val_if_fail(size > 1, 0);
-
-  if (_no_load)
+  if (no_load_ || gicon_string.empty() || size < MIN_ICON_SIZE)
     return 0;
 
-  key = Hash(gicon_string, size);
+  return ReturnCachedOrQueue(gicon_string, size, slot, REQUEST_TYPE_GICON_STRING);
+}
 
-  if (CacheLookup(key, gicon_string, size, slot))
+int IconLoader::Impl::LoadFromFilename(std::string const& filename,
+                                       unsigned size,
+                                       IconLoaderCallback slot)
+{
+  if (no_load_ || filename.empty() || size < MIN_ICON_SIZE)
+    return 0;
+
+  glib::Object<GFile> file(g_file_new_for_path(filename.c_str()));
+  glib::String uri(g_file_get_uri(file));
+
+  return LoadFromURI(uri.Str(), size, slot);
+}
+
+int IconLoader::Impl::LoadFromURI(std::string const& uri,
+                                  unsigned size,
+                                  IconLoaderCallback slot)
+{
+  if (no_load_ || uri.empty() || size < MIN_ICON_SIZE)
+    return 0;
+
+  return ReturnCachedOrQueue(uri, size, slot, REQUEST_TYPE_URI);
+}
+
+void IconLoader::Impl::DisconnectHandle(Handle handle)
+{
+  TaskMap::iterator iter = task_map_.find(handle);
+  if (iter != task_map_.end())
   {
-    g_free(key);
-    return 0;
+    iter->second->slot.disconnect();
   }
-
-  int handle = QueueTask(key, gicon_string, size, slot, REQUEST_TYPE_GICON_STRING);
-
-  g_free(key);
-  return handle;
-}
-
-int
-IconLoader::LoadFromFilename(const char*        filename,
-                             guint              size,
-                             IconLoaderCallback slot)
-{
-  GFile* file;
-  gchar* uri;
-
-  g_return_val_if_fail(filename, 0);
-  g_return_val_if_fail(size > 1, 0);
-
-  if (_no_load)
-    return 0;
-
-  file = g_file_new_for_path(filename);
-  uri = g_file_get_uri(file);
-
-  int handle = LoadFromURI(uri, size, slot);
-
-  g_free(uri);
-  g_object_unref(file);
-
-  return handle;
-}
-
-int
-IconLoader::LoadFromURI(const char*        uri,
-                        guint              size,
-                        IconLoaderCallback slot)
-{
-  char*      key;
-
-  g_return_val_if_fail(uri, 0);
-  g_return_val_if_fail(size > 1, 0);
-
-  if (_no_load)
-    return 0;
-
-  key = Hash(uri, size);
-
-  if (CacheLookup(key, uri, size, slot))
-  {
-    g_free(key);
-    return 0;
-  }
-
-  int handle = QueueTask(key, uri, size, slot, REQUEST_TYPE_URI);
-
-  g_free(key);
-
-  return handle;
-}
-
-int IconLoader::TaskCompareHandle (IconLoaderTask* task, int* b)
-{
-  //~ IconLoaderTask* task;
-  //~ task = dynamic_cast<IconLoaderTask*>(a);
-
-  //~ return task->handle - *(static_cast<int*>(b));
-  return task->handle - *b;
-}
-
-void IconLoader::DisconnectHandle (int handle)
-{
-  IconLoaderTask* task = NULL;
-  GList* item = g_queue_find_custom(_tasks, &handle, (GCompareFunc)(&IconLoader::TaskCompareHandle));
-
-  if (item == NULL)
-    return;
-
-  task = static_cast<IconLoaderTask*>(item->data);
-  task->slot.disconnect();
 }
 
 //
 // Private Methods
 //
 
-int
-IconLoader::QueueTask(const char*           key,
-                      const char*           data,
-                      guint                 size,
-                      IconLoaderCallback    slot,
-                      IconLoaderRequestType type)
+int IconLoader::Impl::ReturnCachedOrQueue(std::string const& data,
+                                          unsigned size,
+                                          IconLoaderCallback slot,
+                                          IconLoaderRequestType type)
 {
-  IconLoaderTask* task;
+  Handle result = 0;
+  std::string key(Hash(data, size));
 
-  if (g_strcmp0(data, "") == 0)
+  if (!CacheLookup(key, data, size, slot))
   {
-    slot(data, size, NULL);
-    return 0;
+    result = QueueTask(key, data, size, slot, type);
   }
+  return result;
+}
 
-  task = g_slice_new0(IconLoaderTask);
-  task->key = g_strdup(key);
-  task->data = g_strdup(data);
-  task->size = size;
-  task->slot = slot;
-  task->type = type;
-  task->self = this;
 
-  if (id_sequencial_number_ < 1)
-    g_critical ("IconLoader is overflowing"); // FIXME - replace with nux logging
-  task->handle = id_sequencial_number_++;
+int IconLoader::Impl::QueueTask(std::string const& key,
+                                std::string const& data,
+                                unsigned size,
+                                IconLoaderCallback slot,
+                                IconLoaderRequestType type)
+{
+  IconLoaderTask* task = new IconLoaderTask(type, data, size, key,
+                                            slot, ++handle_counter_, this);
+  tasks_.push(task);
+  task_map_[task->handle] = task;
 
-  g_queue_push_tail(_tasks, task);
+  LOG_DEBUG(logger) << "Pushing task  " << data << " at size " << size
+                    << ", queue size now at " << tasks_.size();
 
-  if (_idle_id < 1)
+  if (idle_id_ == 0)
   {
-    _idle_id = g_idle_add_full(G_PRIORITY_LOW, (GSourceFunc)Loop, this, NULL);
-    _idle_start_time = g_get_monotonic_time();
+    idle_id_ = g_idle_add_full(G_PRIORITY_LOW, (GSourceFunc)Loop, this, NULL);
   }
-
   return task->handle;
 }
 
-char*
-IconLoader::Hash(const gchar* data, guint size)
+std::string IconLoader::Impl::Hash(std::string const& data, unsigned size)
 {
-  return g_strdup_printf(_TEMPLATE_, data, size);
+  std::ostringstream sout;
+  sout << data << ":" << size;
+  return sout.str();
 }
 
-bool
-IconLoader::CacheLookup(const char* key,
-                        const char* data,
-                        guint       size,
-                        IconLoaderCallback slot)
+bool IconLoader::Impl::CacheLookup(std::string const& key,
+                                   std::string const& data,
+                                   unsigned size,
+                                   IconLoaderCallback slot)
 {
-  GdkPixbuf* pixbuf;
-
-  pixbuf = _cache[key];
-  if (GDK_IS_PIXBUF(pixbuf))
+  auto iter = cache_.find(key);
+  bool found = iter != cache_.end();
+  if (found)
   {
+    GdkPixbuf* pixbuf = iter->second;
     slot(data, size, pixbuf);
-    return true;
   }
-  return false;
+  return found;
 }
 
-bool
-IconLoader::ProcessTask(IconLoaderTask* task)
+bool IconLoader::Impl::ProcessTask(IconLoaderTask* task)
 {
-  GdkPixbuf* pixbuf = NULL;
-  bool       task_complete = false;
-
   // Check the cache again, as previous tasks might have wanted the same
   if (CacheLookup(task->key, task->data, task->size, task->slot))
     return true;
 
-  if (task->type == REQUEST_TYPE_ICON_NAME)
+  LOG_DEBUG(logger) << "Processing  " << task->data << " at size " << task->size;
+
+  // Rely on the compiler to tell us if we miss a new type
+  switch (task->type)
   {
-    task_complete = ProcessIconNameTask(task);
-  }
-  else if (task->type == REQUEST_TYPE_GICON_STRING)
-  {
-    task_complete = ProcessGIconTask(task);
-  }
-  else if (task->type == REQUEST_TYPE_URI)
-  {
-    task_complete = ProcessURITask(task);
-  }
-  else
-  {
-    g_warning("%s: Request type %d is not supported (%s %d)",
-              G_STRFUNC,
-              task->type,
-              task->data,
-              task->size);
-    task->slot(task->data, task->size, pixbuf);
-    task_complete = true;
+  case REQUEST_TYPE_ICON_NAME:
+    return ProcessIconNameTask(task);
+  case REQUEST_TYPE_GICON_STRING:
+    return ProcessGIconTask(task);
+  case REQUEST_TYPE_URI:
+    return ProcessURITask(task);
   }
 
-  return task_complete;
+  LOG_WARNING(logger) << "Request type " << task->type
+                      << " is not supported (" << task->data
+                      << " " << task->size << ")";
+  task->slot(task->data, task->size, nullptr);
+  return true;
 }
 
-bool
-IconLoader::ProcessIconNameTask(IconLoaderTask* task)
+bool IconLoader::Impl::ProcessIconNameTask(IconLoaderTask* task)
 {
-  GdkPixbuf*   pixbuf = NULL;
-  GtkIconInfo* info = NULL;
-
-  info = gtk_icon_theme_lookup_icon(_theme,
-                                    task->data,
-                                    task->size,
-                                    (GtkIconLookupFlags)0);
-  if (info != NULL)
+  GdkPixbuf* pixbuf = nullptr;
+  GtkIconInfo* info = gtk_icon_theme_lookup_icon(theme_,
+                                                 task->data.c_str(),
+                                                 task->size,
+                                                 (GtkIconLookupFlags)0);
+  if (info)
   {
-    GError* error = NULL;
+    glib::Error error;
 
     pixbuf = gtk_icon_info_load_icon(info, &error);
     if (GDK_IS_PIXBUF(pixbuf))
     {
-      _cache[task->key] = pixbuf;
+      cache_[task->key] = pixbuf;
     }
     else
     {
-      g_warning("%s: Unable to load icon %s at size %d: %s",
-                G_STRFUNC,
-                task->data,
-                task->size,
-                error->message);
-      g_error_free(error);
+      LOG_WARNING(logger) << "Unable to load icon " << task->data
+                          << " at size " << task->size << ": " << error;
     }
     gtk_icon_info_free(info);
   }
   else
   {
-    g_warning("%s: Unable to load icon %s at size %d",
-              G_STRFUNC,
-              task->data,
-              task->size);
+    LOG_WARNING(logger) << "Unable to load icon " << task->data
+                        << " at size " << task->size;
   }
 
   task->slot(task->data, task->size, pixbuf);
   return true;
 }
 
-bool
-IconLoader::ProcessGIconTask(IconLoaderTask* task)
+bool IconLoader::Impl::ProcessGIconTask(IconLoaderTask* task)
 {
   GdkPixbuf*   pixbuf = NULL;
-  GIcon*       icon   = NULL;
-  GError*      error  = NULL;
 
-  if (!task)
-    return false;
+  glib::Error error;
+  glib::Object<GIcon> icon(::g_icon_new_for_string(task->data.c_str(), &error));
 
-  icon = g_icon_new_for_string(task->data, &error);
-
-  if (G_IS_FILE_ICON(icon))
+  if (G_IS_FILE_ICON(icon.RawPtr()))
   {
-    GFile* file;
-    bool   ret;
-
     // [trasfer none]
-    file = g_file_icon_get_file(G_FILE_ICON(icon));
+    GFile* file = ::g_file_icon_get_file(G_FILE_ICON(icon.RawPtr()));
+    glib::String uri(::g_file_get_uri(file));
 
-    g_free(task->data);
     task->type = REQUEST_TYPE_URI;
-    task->data = g_file_get_uri(file);
-    ret = ProcessURITask(task);
-
-    g_object_unref(icon);
-
-    return ret;
+    task->data = uri.Str();
+    return ProcessURITask(task);
   }
-  else if (G_IS_ICON(icon))
+  else if (G_IS_ICON(icon.RawPtr()))
   {
-    GtkIconInfo* info = NULL;
-    info = gtk_icon_theme_lookup_by_gicon(_theme,
-                                          icon,
-                                          task->size,
-                                          (GtkIconLookupFlags)0);
-    if (info != NULL)
+    GtkIconInfo* info = ::gtk_icon_theme_lookup_by_gicon(theme_,
+                                                         icon,
+                                                         task->size,
+                                                         (GtkIconLookupFlags)0);
+    if (info)
     {
       pixbuf = gtk_icon_info_load_icon(info, &error);
 
       if (GDK_IS_PIXBUF(pixbuf))
       {
-        _cache[task->key] = pixbuf;
+        cache_[task->key] = pixbuf;
       }
       else
       {
-        g_warning("%s: Unable to load icon %s at size %d: %s",
-                  G_STRFUNC,
-                  task->data,
-                  task->size,
-                  error->message);
-        g_error_free(error);
+        LOG_WARNING(logger) << "Unable to load icon " << task->data
+                            << " at size " << task->size << ": " << error;
       }
       gtk_icon_info_free(info);
     }
@@ -389,157 +387,180 @@ IconLoader::ProcessGIconTask(IconLoaderTask* task)
       // their icon to /usr/share/icons/hicolor/apps/, but they
       // name the Icon= key as `foo.$extension` which breaks loading
       // So we can try and work around that here.
-      if (g_str_has_suffix(task->data, ".png")
-          || g_str_has_suffix(task->data, ".xpm")
-          || g_str_has_suffix(task->data, ".gif")
-          || g_str_has_suffix(task->data, ".jpg"))
+      std::string& data = task->data;
+      if (boost::iends_with(data, ".png") ||
+          boost::iends_with(data, ".xpm") ||
+          boost::iends_with(data, ".gif") ||
+          boost::iends_with(data, ".jpg"))
       {
-        char* new_data;
-
-        new_data = g_strndup(task->data, strlen(task->data) - 4);
-        g_free(task->data);
-        task->data = new_data;
+        data = data.substr(0, data.size() - 4);
         return ProcessIconNameTask(task);
       }
       else
       {
-        g_warning("%s: Unable to load icon %s at size %d",
-                  G_STRFUNC,
-                  task->data,
-                  task->size);
+        LOG_WARNING(logger) << "Unable to load icon " << task->data
+                            << " at size " << task->size;
       }
     }
-    g_object_unref(icon);
   }
   else
   {
-    g_warning("%s: Unable to load GIcon %s at size %d: %s",
-              G_STRFUNC,
-              task->data,
-              task->size,
-              error->message);
-    g_error_free(error);
+    LOG_WARNING(logger) << "Unable to load icon " << task->data
+                        << " at size " << task->size << ": " << error;
   }
 
   task->slot(task->data, task->size, pixbuf);
   return true;
 }
 
-bool
-IconLoader::ProcessURITask(IconLoaderTask* task)
+bool IconLoader::Impl::ProcessURITask(IconLoaderTask* task)
 {
-  GFile* file;
-
-  file = g_file_new_for_uri(task->data);
+  glib::Object<GFile> file(g_file_new_for_uri(task->data.c_str()));
 
   g_file_load_contents_async(file,
                              NULL,
                              (GAsyncReadyCallback)LoadContentsReady,
                              task);
-  g_object_unref(file);
 
   return false;
 }
 
-void
-IconLoader::ProcessURITaskReady(IconLoaderTask* task, char* contents, gsize length)
+void IconLoader::Impl::ProcessURITaskReady(IconLoaderTask* task,
+                                           char* contents,
+                                           gsize length)
 {
-  GdkPixbuf*    pixbuf = NULL;
-  GInputStream* stream;
-  GError*       error = NULL;
+  GInputStream* stream = g_memory_input_stream_new_from_data(contents, length, NULL);
 
-  stream = g_memory_input_stream_new_from_data(contents, length, NULL);
-  pixbuf = gdk_pixbuf_new_from_stream_at_scale(stream,
-                                               -1,
-                                               task->size,
-                                               true,
-                                               NULL,
-                                               &error);
-  if (GDK_IS_PIXBUF(pixbuf))
+  glib::Error error;
+  glib::Object<GdkPixbuf> pixbuf(gdk_pixbuf_new_from_stream_at_scale(stream,
+                                                                     -1,
+                                                                     task->size,
+                                                                     true,
+                                                                     NULL,
+                                                                     &error));
+  if (error)
   {
-    _cache[task->key] = pixbuf;
+    LOG_WARNING(logger) << "Unable to create pixbuf from input stream for "
+                        << task->data << " at size " << task->size << ": " << error;
   }
   else
   {
-    g_warning("%s: Unable to create pixbuf from input stream for %s: %s",
-              G_STRFUNC,
-              task->data,
-              error->message);
-    g_error_free(error);
+    cache_[task->key] = pixbuf;
   }
 
   task->slot(task->data, task->size, pixbuf);
-
-  FreeTask(task);
   g_input_stream_close(stream, NULL, NULL);
 }
 
-bool
-IconLoader::Iteration()
+bool IconLoader::Impl::Iteration()
 {
-#define MAX_MICRO_SECS 10000
-  bool is_empty;
-  gint64 time;
+  static const int MAX_MICRO_SECS = 10000;
+  util::Timer timer;
 
-  time = g_get_monotonic_time();
+  bool queue_empty = tasks_.empty();
 
-  while (true)
+  while (!queue_empty &&
+         (timer.ElapsedMicroSeconds() < MAX_MICRO_SECS))
   {
-    IconLoaderTask* task;
-
-    task = static_cast<IconLoaderTask*>(g_queue_pop_head(_tasks));
-    if (!task)
-      break;
+    IconLoaderTask* task = tasks_.front();
 
     if (ProcessTask(task))
-      FreeTask(task);
+    {
+      task_map_.erase(task->handle);
+      delete task;
+    }
 
-    if (g_get_monotonic_time() - time > MAX_MICRO_SECS)
-      break;
+    tasks_.pop();
+    queue_empty = tasks_.empty();
   }
 
-  is_empty = g_queue_is_empty(_tasks);
-  if (is_empty)
+  LOG_DEBUG(logger) << "Iteration done, queue size now at " << tasks_.size();
+
+  if (queue_empty)
   {
-    _idle_id = 0;
+    idle_id_ = 0;
+    handle_counter_ = 0;
   }
 
-  return !is_empty;
+  return !queue_empty;
 }
 
-void
-IconLoader::FreeTask(IconLoaderTask* task)
+
+bool IconLoader::Impl::Loop(IconLoader::Impl* self)
 {
-  g_free(task->key);
-  g_free(task->data);
-  g_slice_free(IconLoaderTask, task);
+  return self->Iteration();
 }
 
-bool
-IconLoader::Loop(IconLoader* self)
+void IconLoader::Impl::LoadContentsReady(GObject* obj,
+                                         GAsyncResult* res,
+                                         IconLoaderTask* task)
 {
-  return static_cast<IconLoader*>(self)->Iteration();
-}
-
-void
-IconLoader::LoadContentsReady(GObject* obj, GAsyncResult* res, IconLoaderTask* task)
-{
-  char*   contents = NULL;
-  gsize   length = 0;
-  GError* error = NULL;
+  glib::String contents;
+  glib::Error error;
+  gsize length = 0;
 
   if (g_file_load_contents_finish(G_FILE(obj), res, &contents, &length, NULL, &error))
   {
-    task->self->ProcessURITaskReady(task, contents, length);
-
-    g_free(contents);
+    task->self->ProcessURITaskReady(task, contents.Value(), length);
   }
   else
   {
-    g_warning("%s: Unable to load contents of %s: %s",
-              G_STRFUNC,
-              task->data,
-              error->message);
-    g_error_free(error);
+    LOG_WARNING(logger) << "Unable to load contents of "
+                        << task->data << ": " << error;
   }
+  task->self->task_map_.erase(task->handle);
+  delete task;
+}
+
+
+IconLoader::IconLoader()
+  : pimpl(new Impl())
+{
+}
+
+IconLoader::~IconLoader()
+{
+  delete pimpl;
+}
+
+IconLoader& IconLoader::GetDefault()
+{
+  static IconLoader default_loader;
+  return default_loader;
+}
+
+int IconLoader::LoadFromIconName(std::string const& icon_name,
+                                 unsigned size,
+                                 IconLoaderCallback slot)
+{
+  return pimpl->LoadFromIconName(icon_name, size, slot);
+}
+
+int IconLoader::LoadFromGIconString(std::string const& gicon_string,
+                                    unsigned size,
+                                    IconLoaderCallback slot)
+{
+  return pimpl->LoadFromGIconString(gicon_string, size, slot);
+}
+
+int IconLoader::LoadFromFilename(std::string const& filename,
+                                 unsigned size,
+                                 IconLoaderCallback slot)
+{
+  return pimpl->LoadFromFilename(filename, size, slot);
+}
+
+int IconLoader::LoadFromURI(std::string const& uri,
+                            unsigned size,
+                            IconLoaderCallback slot)
+{
+  return pimpl->LoadFromURI(uri, size, slot);
+}
+
+void IconLoader::DisconnectHandle(int handle)
+{
+  pimpl->DisconnectHandle(handle);
+}
+
+
 }
