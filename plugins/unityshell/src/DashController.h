@@ -92,6 +92,7 @@ private:
   gint64 start_time_;
 
   DashView* view_;
+  guint ensure_id_;
 };
 
 

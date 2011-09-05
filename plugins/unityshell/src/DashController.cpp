@@ -44,14 +44,12 @@ DashController::DashController()
   , last_opacity_(0.0f)
   , start_time_(0)
 {
-  //SetupWindow();
-  //SetupDashView();
   SetupRelayoutCallbacks();
   RegisterUBusInterests();
 
   PluginAdapter::Default()->compiz_screen_ungrabbed.connect(sigc::mem_fun(this, &DashController::OnScreenUngrabbed));
 
-  //Relayout();
+  ensure_id_ = g_timeout_add_seconds(60, [] (gpointer data) -> gboolean { static_cast<DashController*>(data)->EnsureDash(); return FALSE; }, this);
 }
 
 DashController::~DashController()
@@ -59,6 +57,7 @@ DashController::~DashController()
   if (window_)
     window_->UnReference();
   g_source_remove(timeline_id_);
+  g_source_remove(ensure_id_);
 }
 
 void DashController::SetupWindow()
@@ -118,6 +117,7 @@ void DashController::EnsureDash()
   SetupWindow();
   SetupDashView();
   Relayout();
+  ensure_id_ = 0;
 }
 
 nux::BaseWindow* DashController::window() const
