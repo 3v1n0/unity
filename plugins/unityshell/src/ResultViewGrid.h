@@ -73,6 +73,9 @@ protected:
   virtual long ComputeLayout2();
 
 private:
+  typedef std::tuple <int, int> ResultListBounds;
+  ResultListBounds GetVisableResults();
+
   int GetItemsPerRow();
   void SizeReallocate();
   void PositionPreview();
@@ -84,6 +87,7 @@ private:
   uint preview_row_;
   std::string focused_uri_;
 
+  bool lazy_load_queued;
   int last_mouse_down_x_;
   int last_mouse_down_y_;
   std::string current_drag_uri_;

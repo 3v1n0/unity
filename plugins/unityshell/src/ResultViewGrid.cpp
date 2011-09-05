@@ -49,6 +49,7 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
   , active_index_(-1)
   , selected_index_(-1)
   , preview_row_(0)
+  //, lazy_load_queued_(false)
   , last_mouse_down_x_(-1)
   , last_mouse_down_y_(-1)
 {
@@ -80,11 +81,40 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
 
   SetDndEnabled(true, false);
   NeedRedraw();
+
+
 }
 
 ResultViewGrid::~ResultViewGrid()
 {
 }
+
+//~ void ResultViewGrid::QueueLazyLoad()
+//~ {
+  //~ if (lazy_load_queued_ == false)
+  //~ {
+    //~ g_timeout_add(0, sigc::mem_fun(this, ResultViewGrid::DoLazyLoad));
+    //~ lazy_load_queued_ = true;
+  //~ }
+//~ }
+//~
+//~ gboolean ResultViewGrid::DoLazyLoad()
+//~ {
+  //~ lazy_load_queued_ = false;
+//~
+  //~ int items_per_row = GetItemsPerRow();
+  //~ uint index = 0;
+  //~ ResultList::iterator it;
+  //~ for (it = results_.begin(); index < items_per_row; it++)
+  //~ {
+    //~ renderer_->PreLoad((*it));
+//~
+    //~ index++;
+  //~ }
+//~
+  //~ return FALSE;
+//~ }
+
 
 int ResultViewGrid::GetItemsPerRow()
 {
@@ -403,6 +433,65 @@ long ResultViewGrid::ComputeLayout2()
 
 }
 
+
+typedef std::tuple <int, int> ResultListBounds;
+ResultListBounds ResultViewGrid::GetVisableResults()
+{
+  int items_per_row = GetItemsPerRow();
+  int start, end;
+
+  if (!expanded)
+  {
+    // we are not expanded, so the bounds are known
+    start = 0;
+    end = items_per_row - 1;
+  }
+  else
+  {
+    //find the row we start at
+    int absolute_y = GetAbsoluteY();
+    uint row_size = renderer_->height + vertical_spacing;
+
+    if (absolute_y < 0)
+    {
+      // we are scrolled up a little,
+      int row_index = abs(absolute_y) / row_size;
+      start = row_index * items_per_row;
+    }
+    else
+    {
+      start = 0;
+    }
+
+    if (absolute_y + GetAbsoluteHeight() > GetToplevel()->GetAbsoluteHeight())
+    {
+      // our elements overflow the visable viewport
+      int visible_height = (GetToplevel()->GetAbsoluteHeight() - std::max(absolute_y, 0));
+      visible_height = std::min(visible_height, absolute_y + GetAbsoluteHeight());
+
+      int visible_rows = std::ceil(visible_height / static_cast<float>(row_size));
+
+      if ((visible_rows + (absolute_y / row_size)) * items_per_row > results_.size() - items_per_row)
+      {
+        end = results_.size() - 1;
+      }
+      else
+      {
+        end = (visible_rows + (absolute_y / row_size)) * items_per_row;
+      }
+    }
+    else
+    {
+      end = results_.size() - 1;
+    }
+  }
+
+  start = std::max(start, 0);
+  end = std::min(end, static_cast<int>(results_.size()) - 1);
+
+  return ResultListBounds(start, end);
+}
+
 void ResultViewGrid::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
   GfxContext.PushClippingRectangle(GetGeometry());
@@ -422,6 +511,8 @@ void ResultViewGrid::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   int y_position = padding + GetGeometry().y;
   nux::Area* top_level_parent = GetToplevel();
 
+  ResultListBounds visible_bounds = GetVisableResults();
+
   for (uint row_index = 0; row_index <= total_rows; row_index++)
   {
     // check if the row is displayed on the screen,
@@ -429,7 +520,10 @@ void ResultViewGrid::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
     // or at the very least, with the largest monitor resolution
     //~ if ((y_position + renderer_->height) + absolute_y >= 0
     //~ && (y_position - renderer_->height) + absolute_y <= top_level_parent->GetGeometry().height)
-    if (1)
+
+    int row_lower_bound = row_index * items_per_row;
+    if (row_lower_bound > std::get<0>(visible_bounds) &&
+        row_lower_bound < std::get<1>(visible_bounds))
     {
       int x_position = padding + GetGeometry().x;
       for (int column_index = 0; column_index < items_per_row; column_index++)
