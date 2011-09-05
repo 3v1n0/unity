@@ -21,8 +21,12 @@
 #include <gdk/gdk.h>
 #include <gtk/gtk.h>
 
-#include "Nux/Nux.h"
+#include <Nux/Nux.h>
+
+#include "CairoTexture.h"
 #include "QuicklistMenuItemLabel.h"
+
+using unity::texture_from_cairo_graphics;
 
 QuicklistMenuItemLabel::QuicklistMenuItemLabel(DbusmenuMenuitem* item,
                                                NUX_FILE_LINE_DECL) :
@@ -211,14 +215,10 @@ QuicklistMenuItemLabel::UpdateTexture()
 
   DrawText(cr, width, height, nux::color::White);
 
-  nux::NBitmapData* bitmap = _cairoGraphics->GetBitmap();
-
   if (_normalTexture[0])
     _normalTexture[0]->UnReference();
 
-  _normalTexture[0] = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
-  _normalTexture[0]->Update(bitmap);
-  delete bitmap;
+  _normalTexture[0] = texture_from_cairo_graphics(*_cairoGraphics);
 
   // draw active/prelight, unchecked version
   cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
@@ -242,14 +242,10 @@ QuicklistMenuItemLabel::UpdateTexture()
 
   DrawText(cr, width, height, transparent);
 
-  bitmap = _cairoGraphics->GetBitmap();
-
   if (_prelightTexture[0])
     _prelightTexture[0]->UnReference();
 
-  _prelightTexture[0] = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
-  _prelightTexture[0]->Update(bitmap);
-  delete bitmap;
+  _prelightTexture[0] = texture_from_cairo_graphics(*_cairoGraphics);
 
   // finally clean up
   delete _cairoGraphics;

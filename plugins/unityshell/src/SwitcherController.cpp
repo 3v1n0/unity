@@ -141,7 +141,7 @@ void SwitcherController::ConstructView()
 
   if (!view_window_)
   {
-    main_layout_ = new nux::HLayout();
+    main_layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
     main_layout_->SetVerticalExternalMargin(0);
     main_layout_->SetHorizontalExternalMargin(0);
 

@@ -25,13 +25,19 @@
 
 #include <Nux/Nux.h>
 #include <NuxGraphics/GLThread.h>
+#include <UnityCore/GLibWrapper.h>
 #include <UnityCore/Variant.h>
 
 #include "IconLoader.h"
 #include "IconTexture.h"
 #include "TextureCache.h"
 
-#define DEFAULT_ICON "text-x-preview"
+namespace unity
+{
+namespace
+{
+const char* const DEFAULT_ICON = "text-x-preview";
+}
 
 IconTexture::IconTexture(nux::BaseTexture* texture, guint width, guint height)
   : TextureArea(NUX_TRACKER_LOCATION),
@@ -43,8 +49,6 @@ IconTexture::IconTexture(nux::BaseTexture* texture, guint width, guint height)
     _loading(false),
     _opacity(1.0f)
 {
-  _texture_cached->Reference();
-
   SetMinMaxSize(width, height);
   SetCanFocus(false);
   _can_pass_focus_to_composite_layout = false;
@@ -56,7 +60,6 @@ IconTexture::IconTexture(const char* icon_name, unsigned int size, bool defer_ic
   : TextureArea(NUX_TRACKER_LOCATION),
     _icon_name(NULL),
     _size(size),
-    _texture_cached(NULL),
     _texture_width(0),
     _texture_height(0),
     _loading(false),
@@ -74,18 +77,9 @@ IconTexture::IconTexture(const char* icon_name, unsigned int size, bool defer_ic
 IconTexture::~IconTexture()
 {
   g_free(_icon_name);
-  if (_texture_cached)
-  {
-    _texture_cached->UnReference();
-    if (_texture_cached->GetReferenceCount() == 1)
-    {
-      _texture_cached->UnReference();
-    }
-  }
 }
 
-void
-IconTexture::SetByIconName(const char* icon_name, unsigned int size)
+void IconTexture::SetByIconName(const char* icon_name, unsigned int size)
 {
   g_free(_icon_name);
   _icon_name = g_strdup(icon_name);
@@ -93,8 +87,7 @@ IconTexture::SetByIconName(const char* icon_name, unsigned int size)
   LoadIcon();
 }
 
-void
-IconTexture::SetByFilePath(const char* file_path, unsigned int size)
+void IconTexture::SetByFilePath(const char* file_path, unsigned int size)
 {
   g_free(_icon_name);
   _icon_name = g_strdup(file_path);
@@ -103,24 +96,21 @@ IconTexture::SetByFilePath(const char* file_path, unsigned int size)
   LoadIcon();
 }
 
-void
-IconTexture::LoadIcon()
+void IconTexture::LoadIcon()
 {
-#define DEFAULT_GICON ". GThemedIcon text-x-preview"
-  GIcon*  icon;
+  static const char* const DEFAULT_GICON = ". GThemedIcon text-x-preview";
 
   if (_loading)
     return;
   _loading = true;
 
-  icon = g_icon_new_for_string(_icon_name ? _icon_name : DEFAULT_GICON, NULL);
+  glib::Object<GIcon> icon(::g_icon_new_for_string(_icon_name ? _icon_name : DEFAULT_GICON, NULL));
 
-  if (G_IS_ICON(icon))
+  if (icon)
   {
     IconLoader::GetDefault()->LoadFromGIconString(_icon_name ? _icon_name : DEFAULT_GICON,
                                                   _size,
                                                   sigc::mem_fun(this, &IconTexture::IconLoaded));
-    g_object_unref(icon);
   }
   else if (g_str_has_prefix(_icon_name, "http://"))
   {
@@ -135,18 +125,14 @@ IconTexture::LoadIcon()
   }
 }
 
-void
-IconTexture::CreateTextureCallback(const char* texid, int width, int height, nux::BaseTexture** texture)
+nux::BaseTexture* IconTexture::CreateTextureCallback(std::string const& texid, int width, int height)
 {
-  nux::BaseTexture* texture2D = nux::CreateTexture2DFromPixbuf(_pixbuf_cached, true);
-  *texture = texture2D;
+  return nux::CreateTexture2DFromPixbuf(_pixbuf_cached, true);
 }
 
-void
-IconTexture::Refresh(GdkPixbuf* pixbuf)
+void IconTexture::Refresh(GdkPixbuf* pixbuf)
 {
-  TextureCache* cache = TextureCache::GetDefault();
-  char* id = NULL;
+  TextureCache& cache = TextureCache::GetDefault();
   _pixbuf_cached = pixbuf;
 
   // Cache the pixbuf dimensions so we scale correctly
@@ -154,27 +140,16 @@ IconTexture::Refresh(GdkPixbuf* pixbuf)
   _texture_height = gdk_pixbuf_get_height(pixbuf);
 
   // Try and get a texture from the texture cache
-  id = g_strdup_printf("IconTexture.%s", _icon_name);
-  if (_texture_cached)
-  {
-    _texture_cached->UnReference();
-    if (_texture_cached->GetReferenceCount() == 1)
-      _texture_cached->UnReference();
-  }
-
-  _texture_cached = cache->FindTexture(id,
-                                       _texture_width,
-                                       _texture_height,
-                                       sigc::mem_fun(this, &IconTexture::CreateTextureCallback));
-  _texture_cached->Reference();
-
+  std::string id("IconTexture.");
+  id += _icon_name ? _icon_name : DEFAULT_ICON;
+  _texture_cached = cache.FindTexture(id,
+                                      _texture_width,
+                                      _texture_height,
+                                      sigc::mem_fun(this, &IconTexture::CreateTextureCallback));
   QueueDraw();
-
-  g_free(id);
 }
 
-void
-IconTexture::IconLoaded(const char* icon_name, guint size, GdkPixbuf* pixbuf)
+void IconTexture::IconLoaded(const char* icon_name, guint size, GdkPixbuf* pixbuf)
 {
   if (GDK_IS_PIXBUF(pixbuf))
   {
@@ -191,8 +166,7 @@ IconTexture::IconLoaded(const char* icon_name, guint size, GdkPixbuf* pixbuf)
   }
 }
 
-void
-IconTexture::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
+void IconTexture::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
   nux::Geometry geo = GetGeometry();
 
@@ -219,8 +193,7 @@ IconTexture::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   GfxContext.PopClippingRectangle();
 }
 
-void
-IconTexture::GetTextureSize(int* width, int* height)
+void IconTexture::GetTextureSize(int* width, int* height)
 {
   if (width)
     *width = _texture_width;
@@ -228,48 +201,35 @@ IconTexture::GetTextureSize(int* width, int* height)
     *height = _texture_height;
 }
 
-void
-IconTexture::SetOpacity(float opacity)
+void IconTexture::SetOpacity(float opacity)
 {
   _opacity = opacity;
 
   QueueDraw();
 }
 
-void
-IconTexture::SetTexture(nux::BaseTexture* texture)
+void IconTexture::SetTexture(nux::BaseTexture* texture)
 {
-  if (_texture_cached)
-  {
-    _texture_cached->UnReference();
-    if (_texture_cached->GetReferenceCount() == 1)
-      _texture_cached->UnReference();
-  }
-
   _texture_cached = texture;
-  _texture_cached->Reference();
 }
 
-nux::BaseTexture* IconTexture::texture() const
+nux::BaseTexture* IconTexture::texture()
 {
-  return _texture_cached;
+  return _texture_cached.GetPointer();
 }
 
-bool
-IconTexture::DoCanFocus()
+bool IconTexture::DoCanFocus()
 {
   return false;
 }
 
-const gchar*
-IconTexture::GetName()
+const gchar* IconTexture::GetName()
 {
   return "IconTexture";
 }
 
 
-void
-IconTexture::AddProperties(GVariantBuilder* builder)
+void IconTexture::AddProperties(GVariantBuilder* builder)
 {
   unity::variant::BuilderWrapper(builder)
   .add(GetGeometry())
@@ -280,14 +240,14 @@ IconTexture::AddProperties(GVariantBuilder* builder)
 // Key navigation
 //
 
-void
-IconTexture::SetAcceptKeyNavFocus(bool accept)
+void IconTexture::SetAcceptKeyNavFocus(bool accept)
 {
   _accept_key_nav_focus = accept;
 }
 
-bool
-IconTexture::AcceptKeyNavFocus()
+bool IconTexture::AcceptKeyNavFocus()
 {
   return _accept_key_nav_focus;
+}
+
 }

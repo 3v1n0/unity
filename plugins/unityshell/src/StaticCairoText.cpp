@@ -26,7 +26,11 @@
 #include "Nux/HLayout.h"
 #include "Nux/VLayout.h"
 #include "Nux/Validator.h"
+
+#include "CairoTexture.h"
 #include "StaticCairoText.h"
+
+using unity::texture_from_cairo_graphics;
 
 // TODO: Tim Penhey 2011-05-16
 // We shouldn't be pushing stuff into the nux namespace from the unity
@@ -475,21 +479,15 @@ void StaticCairoText::UpdateTexture()
 
   cairo_destroy(cr);
 
-  NBitmapData* bitmap = _cairoGraphics->GetBitmap();
-
   // NTexture2D is the high level representation of an image that is backed by
   // an actual opengl texture.
 
   if (_texture2D)
   {
     _texture2D->UnReference();
-    _texture2D = NULL;
   }
 
-  _texture2D = GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
-  _texture2D->Update(bitmap);
-
-  delete bitmap;
+  _texture2D = texture_from_cairo_graphics(*_cairoGraphics);
 
   cairo_destroy(cr);
 

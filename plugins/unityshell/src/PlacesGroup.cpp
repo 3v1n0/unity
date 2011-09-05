@@ -49,6 +49,8 @@ static const nux::Color kExpandHoverTextColor(1.0f, 1.0f, 1.0f, 1.0f);
 static const float kExpandDefaultIconOpacity = 0.6f;
 static const float kExpandHoverIconOpacity = 1.0f;
 
+namespace unity
+{
 
 PlacesGroup::PlacesGroup()
   : View(NUX_TRACKER_LOCATION),
@@ -402,3 +404,5 @@ PlacesGroup::AcceptKeyNavFocus()
 {
   return false;
 }
+
+} // namespace unity

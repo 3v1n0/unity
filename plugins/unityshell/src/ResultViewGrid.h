@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright 2011 Canonical Ltd.
  *
@@ -36,6 +37,8 @@ namespace dash
 class ResultViewGrid : public ResultView
 {
 public:
+  NUX_DECLARE_OBJECT_TYPE(ResultViewGrid, ResultView);
+
   ResultViewGrid(NUX_FILE_LINE_DECL);
   ~ResultViewGrid();
 
