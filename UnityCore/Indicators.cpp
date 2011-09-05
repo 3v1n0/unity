@@ -38,6 +38,8 @@ public:
   void ActivateEntry(std::string const& entry_id);
   void SetEntryShowNow(std::string const& entry_id, bool show_now);
 
+  IndicatorsList GetIndicators() const;
+
   Indicator::Ptr GetIndicator(std::string const& name);
   Indicator::Ptr AddIndicator(std::string const& name);
   void RemoveIndicator(std::string const& name);
@@ -72,6 +74,11 @@ void Indicators::ActivateEntry(std::string const& entry_id)
 void Indicators::SetEntryShowNow(std::string const& entry_id, bool show_now)
 {
   pimpl->SetEntryShowNow(entry_id, show_now);
+}
+
+Indicators::IndicatorsList Indicators::GetIndicators() const
+{
+  return pimpl->GetIndicators();
 }
 
 Indicator::Ptr Indicators::AddIndicator(std::string const& name)
@@ -110,6 +117,18 @@ void Indicators::Impl::SetEntryShowNow(std::string const& entry_id,
   }
 }
 
+Indicators::IndicatorsList Indicators::Impl::GetIndicators() const
+{
+  Indicators::IndicatorsList list;
+
+  for (auto it = indicators_.begin(); it != indicators_.end(); it++)
+  {
+    list.push_back(it->second);
+  }
+
+  return list;
+}
+
 Indicator::Ptr Indicators::Impl::AddIndicator(std::string const& name)
 {
   Indicator::Ptr indicator(new Indicator(name));
@@ -135,7 +154,13 @@ Indicator::Ptr Indicators::Impl::GetIndicator(std::string const& name)
 
 void Indicators::Impl::RemoveIndicator(std::string const& name)
 {
-  indicators_.erase(name);
+  auto indicator = GetIndicator(name);
+
+  if (indicator)
+  {
+    owner_->on_object_removed.emit(indicator);
+    indicators_.erase(name);
+  }
 }
 
 Entry::Ptr Indicators::Impl::GetEntry(std::string const& entry_id)

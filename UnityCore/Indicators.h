@@ -33,8 +33,12 @@ namespace indicator
 class Indicators : public sigc::trackable, boost::noncopyable
 {
 public:
+  typedef std::list<Indicator::Ptr> IndicatorsList;
+
   Indicators();
   virtual ~Indicators();
+
+  IndicatorsList GetIndicators() const;
 
   /**
    * internal

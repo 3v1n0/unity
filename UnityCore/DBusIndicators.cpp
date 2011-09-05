@@ -402,6 +402,11 @@ void DBusIndicators::Impl::OnProxyNameOwnerChanged(GDBusProxy* proxy,
 
   if (name_owner == NULL)
   {
+    for (auto indicator : owner_->GetIndicators())
+    {
+      owner_->RemoveIndicator(indicator->name());
+    }
+
     // The panel service has stopped for some reason.  Restart it if not in
     // dev mode
     if (!g_getenv("UNITY_DEV_MODE"))
