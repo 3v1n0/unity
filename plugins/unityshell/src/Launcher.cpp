@@ -1370,6 +1370,9 @@ void Launcher::StartKeyShowLauncher()
   if (_super_show_shortcuts_handle > 0)
     g_source_remove(_super_show_shortcuts_handle);
   _super_show_shortcuts_handle = g_timeout_add(SHORTCUTS_SHOWN_DELAY, &Launcher::SuperShowShortcutsTimeout, this);
+
+  ubus_server_send_message(ubus_server_get_default(), UBUS_DASH_ABOUT_TO_SHOW, NULL);
+  ubus_server_force_message_pump(ubus_server_get_default());
 }
 
 void Launcher::EndKeyShowLauncher()

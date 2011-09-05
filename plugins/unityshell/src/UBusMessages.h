@@ -25,23 +25,14 @@
 // Signal fired when an autopilot test is finished
 #define UBUS_AUTOPILOT_TEST_FINISHED "AUTOPILOT_TEST_FINISHED"
 
-#define UBUS_HOME_BUTTON_ACTIVATED "PANEL_HOME_ACTIVATED"
-
-#define UBUS_DASH_EXTERNAL_ACTIVATION   "DASH_EXTERNAL_ACTIVATION"
-#define UBUS_HOME_BUTTON_BFB_UPDATE "PANEL_HOME_BUTTON_BFB_UPDATE"
-#define UBUS_HOME_BUTTON_BFB_DND_ENTER "PANEL_HOME_BUTTON_BFB_DND_ENTER"
-
-// When other parts of Unity want to close the place view
+#define UBUS_DASH_EXTERNAL_ACTIVATION "DASH_EXTERNAL_ACTIVATION"
 #define UBUS_PLACE_VIEW_CLOSE_REQUEST "PLACE_VIEW_CLOSE_REQUEST"
 
 // Request a PlaceEntry to be shown.
 // Payload should be: (sus) = (id, section, search_string).
 // id = entry->GetId(), search_string can be ""
 #define UBUS_PLACE_ENTRY_ACTIVATE_REQUEST "PLACE_ENTRY_ACTIVATE_REQUEST"
-
-// When a result wants to activate in a place
-// Payload should be: (s) = (uri)
-#define UBUS_PLACE_TILE_ACTIVATE_REQUEST "PLACE_TILE_ACTIVATE_REQUEST"
+#define UBUS_DASH_ABOUT_TO_SHOW "DASH_ABOUT_TO_SHOW"
 
 // Signal send when places are shown or hidden
 #define UBUS_PLACE_VIEW_HIDDEN "PLACE_VIEW_HIDDEN"
