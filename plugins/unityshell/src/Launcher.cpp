@@ -1003,9 +1003,10 @@ bool Launcher::IconDrawEdgeOnly(LauncherIcon* icon)
 
 void Launcher::SetupRenderArg(LauncherIcon* icon, struct timespec const& current, RenderArg& arg)
 {
+  float desat_value = IconDesatValue(icon, current);
   arg.icon                = icon;
-  arg.alpha               = 1.0f;
-  arg.saturation          = IconDesatValue(icon, current);
+  arg.alpha               = 0.5f + 0.5f * desat_value;
+  arg.saturation          = desat_value;
   arg.running_arrow       = icon->GetQuirk(LauncherIcon::QUIRK_RUNNING);
   arg.running_colored     = icon->GetQuirk(LauncherIcon::QUIRK_URGENT);
   arg.running_on_viewport = icon->HasWindowOnViewport();
