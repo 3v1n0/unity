@@ -39,6 +39,8 @@ namespace
 const char* const DEFAULT_ICON = "text-x-preview";
 }
 
+using namespace unity;
+
 IconTexture::IconTexture(nux::BaseTexture* texture, guint width, guint height)
   : TextureArea(NUX_TRACKER_LOCATION),
     _icon_name(NULL),
@@ -108,18 +110,18 @@ void IconTexture::LoadIcon()
 
   if (icon)
   {
-    IconLoader::GetDefault()->LoadFromGIconString(_icon_name ? _icon_name : DEFAULT_GICON,
+    IconLoader::GetDefault().LoadFromGIconString(_icon_name ? _icon_name : DEFAULT_GICON,
                                                   _size,
                                                   sigc::mem_fun(this, &IconTexture::IconLoaded));
   }
   else if (g_str_has_prefix(_icon_name, "http://"))
   {
-    IconLoader::GetDefault()->LoadFromURI(_icon_name,
+    IconLoader::GetDefault().LoadFromURI(_icon_name,
                                           _size, sigc::mem_fun(this, &IconTexture::IconLoaded));
   }
   else
   {
-    IconLoader::GetDefault()->LoadFromIconName(_icon_name,
+    IconLoader::GetDefault().LoadFromIconName(_icon_name,
                                                _size,
                                                sigc::mem_fun(this, &IconTexture::IconLoaded));
   }
@@ -149,7 +151,8 @@ void IconTexture::Refresh(GdkPixbuf* pixbuf)
   QueueDraw();
 }
 
-void IconTexture::IconLoaded(const char* icon_name, guint size, GdkPixbuf* pixbuf)
+void IconTexture::IconLoaded(std::string const& icon_name, unsigned size,
+                             GdkPixbuf* pixbuf)
 {
   if (GDK_IS_PIXBUF(pixbuf))
   {
@@ -161,7 +164,7 @@ void IconTexture::IconLoaded(const char* icon_name, guint size, GdkPixbuf* pixbu
 
     // Protects against a missing default icon, we only request it if icon_name
     // doesn't match.
-    if (g_strcmp0(icon_name, DEFAULT_ICON))
+    if (icon_name != DEFAULT_ICON)
       SetByIconName(DEFAULT_ICON, _size);
   }
 }

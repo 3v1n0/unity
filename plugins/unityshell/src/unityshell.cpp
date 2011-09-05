@@ -66,7 +66,7 @@ using namespace unity::switcher;
 /* Set up vtable symbols */
 COMPIZ_PLUGIN_20090315(unityshell, UnityPluginVTable);
 
-using ::unity::logger::Timer;
+using ::unity::util::Timer;
 
 namespace
 {

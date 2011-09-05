@@ -55,7 +55,7 @@ namespace dash
     ~TextureContainer()
     {
       if (slot_handle > 0)
-        IconLoader::GetDefault()->DisconnectHandle(slot_handle);
+        IconLoader::GetDefault().DisconnectHandle(slot_handle);
     }
   };
 
@@ -86,8 +86,8 @@ protected:
 
 private:
   //icon loading callbacks
-  void IconLoaded(const char* texid,
-                  guint size,
+  void IconLoaded(std::string const& texid,
+                  unsigned size,
                   GdkPixbuf* pixbuf,
                   std::string icon_name,
                   Result& row);

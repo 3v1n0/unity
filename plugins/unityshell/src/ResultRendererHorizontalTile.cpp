@@ -276,7 +276,8 @@ void ResultRendererHorizontalTile::LoadText(Result& row)
   cairo_destroy(cr);
 
   TextureContainer *container = row.renderer<TextureContainer*>();
-  container->text = texture_ptr_from_cairo_graphics(_cairoGraphics);
+  if (container)
+    container->text = texture_ptr_from_cairo_graphics(_cairoGraphics);
 }
 
 
