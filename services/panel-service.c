@@ -301,6 +301,42 @@ panel_service_check_cleared (PanelService *self)
   return TRUE;
 }
 
+static void
+panel_service_actually_remove_indicator (PanelService *self, IndicatorObject *indicator)
+{
+  g_return_if_fail (PANEL_IS_SERVICE (self));
+  g_return_if_fail (INDICATOR_IS_OBJECT (indicator));
+
+  GList *entries, *l;
+
+  entries = indicator_object_get_entries (indicator);
+
+  if (entries)
+    {
+      for (l = entries; l; l = l->next)
+        {
+          gchar *id = g_strdup_printf ("%p", l->data);
+          g_hash_table_remove (self->priv->id2entry_hash, id);
+          g_hash_table_remove (self->priv->entry2indicator_hash, l->data);
+          g_free (id);
+        }
+
+      g_list_free (entries);
+    }
+
+  self->priv->indicators = g_slist_remove (self->priv->indicators, indicator);
+  g_object_unref (G_OBJECT (indicator));
+}
+
+static gboolean
+panel_service_indicator_remove_timeout (IndicatorObject *indicator)
+{
+  PanelService *self = panel_service_get_default ();
+  panel_service_actually_remove_indicator (self, indicator);
+
+  return FALSE;
+}
+
 PanelService *
 panel_service_get_default ()
 {
@@ -365,8 +401,18 @@ panel_service_remove_indicator (PanelService *self, IndicatorObject *indicator)
   g_return_if_fail (PANEL_IS_SERVICE (self));
   g_return_if_fail (INDICATOR_IS_OBJECT (indicator));
 
+  gpointer timeout = g_object_get_data (G_OBJECT (indicator), "remove-timeout");
+
+  if (timeout)
+      g_source_remove (GPOINTER_TO_UINT (timeout));
+
   g_object_set_data (G_OBJECT (indicator), "remove", GINT_TO_POINTER (TRUE));
   notify_object (indicator);
+
+  guint id = g_timeout_add_seconds (3,
+                                    (GSourceFunc) panel_service_indicator_remove_timeout,
+                                    indicator);
+  g_object_set_data (G_OBJECT (indicator), "remove-timeout", GUINT_TO_POINTER (id));
 }
 
 void
@@ -971,22 +1017,8 @@ panel_service_sync_one (PanelService *self, const gchar *indicator_id)
             }
           else
             {
-              GList *entries, *l;
-              entries = indicator_object_get_entries (INDICATOR_OBJECT (i->data));
-
-              for (l = entries; l; l = l->next)
-                {
-                  gchar *id = g_strdup_printf ("%p", l->data);
-                  g_hash_table_remove (self->priv->id2entry_hash, id);
-                  g_hash_table_remove (self->priv->entry2indicator_hash, l->data);
-                  g_free (id);
-                }
-
               indicator_entry_null_to_variant (indicator_id, &b);
-
-              g_list_free (entries);
-              self->priv->indicators = g_slist_remove (self->priv->indicators, i->data);
-              g_object_unref (G_OBJECT (i->data));
+              panel_service_actually_remove_indicator (self, i->data);
             }
 
           break;
