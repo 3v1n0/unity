@@ -311,6 +311,8 @@ private:
   bool dash_is_open_;
   CompScreen::GrabHandle grab_index_;
   CompWindowList         fullscreen_windows_;
+  bool                   painting_tray_;
+  unsigned int           tray_paint_mask_;
 
   friend class UnityWindow;
 };
