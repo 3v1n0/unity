@@ -93,7 +93,9 @@ public:
   sigc::signal<void, std::string const&, int, int, int, int> on_entry_show_menu;
 
 protected:
-  Indicator& GetIndicator(std::string const& name);
+  Indicator::Ptr GetIndicator(std::string const& name);
+  Indicator::Ptr AddIndicator(std::string const& name);
+  void RemoveIndicator(std::string const& name);
 
 private:
   class Impl;

@@ -263,7 +263,7 @@ void DBusIndicators::Impl::Sync(GVariant* args, SyncData* data)
   if (!args)
     return;
 
-  std::map<std::string, Indicator::Entries> indicators;
+  std::map<Indicator::Ptr, Indicator::Entries> indicators;
 
   g_variant_get(args, "(a(ssssbbusbbi))", &iter);
   while (g_variant_iter_loop(iter, "(ssssbbusbbi)",
@@ -279,14 +279,21 @@ void DBusIndicators::Impl::Sync(GVariant* args, SyncData* data)
                              &image_visible,
                              &priority))
   {
-    // NULL entries (entry_id == "") are empty indicators.
     std::string entry(entry_id);
-    Indicator& indicator = owner_->GetIndicator(std::string(indicator_id));
-    Indicator::Entries& entries = indicators[indicator_id];
+    std::string indicator_name(indicator_id);
 
+    Indicator::Ptr indicator = owner_->GetIndicator(indicator_name);
+    if (!indicator)
+    {
+      indicator = owner_->AddIndicator(indicator_name);
+    }
+
+    Indicator::Entries& entries = indicators[indicator];
+
+    // NULL entries (entry_id == "") are empty indicators.
     if (entry != "")
     {
-      Entry::Ptr e = indicator.GetEntry(entry_id);
+      Entry::Ptr e = indicator->GetEntry(entry_id);
 
       if (!e)
       {
@@ -315,7 +322,7 @@ void DBusIndicators::Impl::Sync(GVariant* args, SyncData* data)
 
   for (auto i = indicators.begin(), end = indicators.end(); i != end; ++i)
   {
-    owner_->GetIndicator(i->first).Sync(indicators[i->first]);
+    i->first->Sync(indicators[i->first]);
   }
 
   // Clean up the SyncData.  NOTE: don't use find when passing in a raw
