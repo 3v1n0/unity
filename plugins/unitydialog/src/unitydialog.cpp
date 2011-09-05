@@ -64,7 +64,7 @@ UnityDialogScreen::matchExpHandlerChanged()
 {
   screen->matchExpHandlerChanged();
 
-  foreach(CompWindow * w, screen->windows())
+  for (CompWindow* w : screen->windows())
   {
     if (UnityDialogWindow::get(w)->hasParent() ||
         UnityDialogWindow::get(w)->hasTransients())
@@ -78,8 +78,8 @@ UnityDialogWindow::moveToRect(CompRect currentRect, bool sync)
   CompPoint pos = getChildCenteredPositionForRect(currentRect);
 
   mSkipNotify = true;
-  window->move(pos.x() - window->x() + window->input().left,
-               pos.y() - window->y() + window->input().top, true);
+  window->move(pos.x() - window->borderRect().x(),
+               pos.y() - window->borderRect().y(), true);
 
   if (sync)
     window->syncPosition();
@@ -301,13 +301,30 @@ UnityDialogWindow::animate(int   ms,
   return false;
 }
 
+CompRegion
+UnityDialogWindow::getDamageRegion()
+{
+  CompRect damageBounds;
+  float progress = mShadeProgress / (float) OPAQUE;
+
+  /* Current rect in animation expanded by output + 5 */
+  damageBounds.setX(mCurrentPos.x() +
+                    ((mTargetPos.x() - mCurrentPos.x()) * progress));
+  damageBounds.setY(mCurrentPos.y() +
+                    ((mTargetPos.y() - mCurrentPos.y()) * progress));
+  damageBounds.setWidth(window->serverOutputRect().width() + 5);
+  damageBounds.setHeight(window->serverOutputRect().height() + 5);
+
+  return CompRegion(damageBounds);
+}
+
 void
 UnityDialogScreen::preparePaint(int ms)
 {
   cScreen->preparePaint(ms);
 
-  foreach(CompWindow * w, mParentWindows)
-  UnityDialogWindow::get(w)->animate(ms, optionGetFadeTime());
+  for (CompWindow* w : mParentWindows)
+    UnityDialogWindow::get(w)->animate(ms, optionGetFadeTime());
 
 }
 
@@ -336,7 +353,10 @@ UnityDialogScreen::donePaint()
     UnityDialogWindow* udw = UnityDialogWindow::get(w);
 
     if (udw->animate(0, optionGetFadeTime()))
-      udw->cWindow->addDamage();
+    {
+      CompRegion damage = udw->getDamageRegion();
+      cScreen->damageRegion(damage);
+    }
     else if (!udw->hasTransients())
     {
       untrackParent(w);
@@ -361,6 +381,9 @@ UnityDialogWindow::glPaint(const GLWindowPaintAttrib& attrib,
 {
   GLMatrix wTransform(transform);
 
+  if (mParent)
+    mask |= PAINT_WINDOW_NO_CORE_INSTANCE_MASK;
+
   if (mTargetPos != mCurrentPos)
   {
     float progress = mShadeProgress / (float) OPAQUE;
@@ -369,8 +392,8 @@ UnityDialogWindow::glPaint(const GLWindowPaintAttrib& attrib,
     int dx = ((mTargetPos.x() - mCurrentPos.x()) * progress);
     int dy = ((mTargetPos.y() - mCurrentPos.y()) * progress);
 
-    dx += mCurrentPos.x() - window->x();
-    dy += mCurrentPos.y() - window->y();
+    dx += mCurrentPos.x() - window->serverBorderRect().x();
+    dy += mCurrentPos.y() - window->serverBorderRect().y();
 
     wTransform.translate(dx, dy, 0);
 
@@ -379,6 +402,197 @@ UnityDialogWindow::glPaint(const GLWindowPaintAttrib& attrib,
   }
 
   return gWindow->glPaint(attrib, wTransform, region, mask);
+}
+
+/* Collect regions and matrices */
+void
+UnityDialogWindow::glAddGeometry(const GLTexture::MatrixList& matrices,
+                                 const CompRegion&            region,
+                                 const CompRegion&            clipRegion,
+                                 unsigned int                min,
+                                 unsigned int                max)
+{
+  unity::PaintInfoCollector::Active ()->processGeometry (matrices, region, min, max);
+
+  gWindow->glAddGeometry(matrices, region, clipRegion, min, max);
+}
+
+/* Collect textures */
+void
+UnityDialogWindow::glDrawTexture(GLTexture*          texture,
+                                 GLFragment::Attrib& fa,
+                                 unsigned int       mask)
+{
+  unity::PaintInfoCollector::Active ()->processTexture (texture);
+}
+
+unity::GeometryCollection::GeometryCollection() :
+  collectedMatrixLists (1),
+  collectedRegions (1),
+  collectedMinVertices (1),
+  collectedMaxVertices (1)
+{
+}
+
+bool
+unity::GeometryCollection::status ()
+{
+  return (collectedMatrixLists.size () == collectedRegions.size () &&
+	  collectedRegions.size () == collectedMaxVertices.size () &&
+	  collectedMaxVertices.size () == collectedMinVertices.size () &&
+	  collectedMinVertices.size () == collectedMatrixLists.size ());
+}
+
+void
+unity::GeometryCollection::addGeometryForWindow (CompWindow *w, const CompRegion &paintRegion)
+{
+  /* We can reset the window geometry since it will be
+   * re-added later */
+  GLWindow::get (w)->geometry().reset();
+
+  for (unsigned int i = 0; i < collectedMatrixLists.size (); i++)
+  {
+    GLTexture::MatrixList matl = collectedMatrixLists[i];
+    CompRegion            reg  = collectedRegions[i];
+    int                   min = collectedMinVertices[i];
+    int                   max = collectedMaxVertices[i];
+
+    /* Now allow plugins to mess with the geometry of our
+     * dim (so we get a nice render for things like
+     * wobbly etc etc */
+    GLWindow::get (w)->glAddGeometry(matl, reg, paintRegion, min, max);
+  }
+}
+
+void
+unity::GeometryCollection::addGeometry(const GLTexture::MatrixList &ml,
+				       const CompRegion            &r,
+				       int                         min,
+				       int                         max)
+{
+  collectedMatrixLists.push_back (ml);
+  collectedRegions.push_back (r);
+  collectedMaxVertices.push_back (max);
+  collectedMinVertices.push_back (min);
+}
+
+unity::TexGeometryCollection::TexGeometryCollection() :
+  mTexture (NULL)
+{
+}
+
+void
+unity::TexGeometryCollection::addGeometry(const GLTexture::MatrixList &ml,
+					  const CompRegion            &r,
+					  int                         max,
+					  int                         min)
+{
+  mGeometries.addGeometry(ml, r, max, min);
+}
+
+void
+unity::TexGeometryCollection::setTexture (GLTexture *tex)
+{
+  mTexture = tex;
+}
+
+void
+unity::TexGeometryCollection::addGeometriesAndDrawTextureForWindow(CompWindow *w, unsigned int mask)
+{
+  if (mTexture && mGeometries.status ())
+  {
+    CompRegion paintRegion = w->region ();
+    GLWindow   *gWindow = GLWindow::get (w);
+
+    if (mask & PAINT_WINDOW_TRANSFORMED_MASK)
+      paintRegion = infiniteRegion;
+
+    mGeometries.addGeometryForWindow (w, paintRegion);
+
+    if (gWindow->geometry().vertices)
+    {
+	UnityDialogScreen *uds = UnityDialogScreen::get (screen);
+	GLFragment::Attrib fa (gWindow->lastPaintAttrib());
+	unsigned int glDrawTextureIndex = gWindow->glDrawTextureGetCurrentIndex();
+	/* Texture rendering set-up */
+	uds->gScreen->setTexEnvMode(GL_MODULATE);
+	glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+	/* Draw the dim texture with all of it's modified
+	   * geometry glory */
+	gWindow->glDrawTextureSetCurrentIndex(MAXSHORT);
+	gWindow->glDrawTexture(mTexture, fa, mask | PAINT_WINDOW_BLEND_MASK
+			       | PAINT_WINDOW_TRANSLUCENT_MASK |
+			       PAINT_WINDOW_TRANSFORMED_MASK);
+	gWindow->glDrawTextureSetCurrentIndex(glDrawTextureIndex);
+	/* Texture rendering tear-down */
+	glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+	uds->gScreen->setTexEnvMode(GL_REPLACE);
+    }
+  }
+}
+
+unity::PaintInfoCollector::PaintInfoCollector (CompWindow *w) :
+  mWindow (w)
+{
+}
+
+void
+unity::PaintInfoCollector::collect()
+{
+  GLWindow *gWindow = GLWindow::get (mWindow);
+  UnityDialogWindow *udw = UnityDialogWindow::get (mWindow);
+  GLMatrix sTransform;
+
+  sTransform.toScreenSpace(&screen->outputDevs()[screen->outputDeviceForGeometry(mWindow->geometry())], -DEFAULT_Z_CAMERA);
+
+  gWindow->glDrawTextureSetEnabled(udw, true);
+  gWindow->glAddGeometrySetEnabled(udw, true);
+  gWindow->glDrawSetEnabled(udw, false);
+  gWindow->glPaintSetEnabled(udw, false);
+
+  mCollection.push_back (unity::TexGeometryCollection ());
+
+  unity::PaintInfoCollector::active_collector = this;
+
+  gWindow->glPaint(gWindow->lastPaintAttrib(), sTransform, infiniteRegion, 0);
+
+  unity::PaintInfoCollector::active_collector = NULL;
+
+  gWindow->glDrawTextureSetEnabled(udw, false);
+  gWindow->glAddGeometrySetEnabled(udw, false);
+  gWindow->glDrawSetEnabled(udw, true);
+  gWindow->glPaintSetEnabled(udw, true);
+}
+
+void
+unity::PaintInfoCollector::processGeometry (const GLTexture::MatrixList &ml,
+				     const CompRegion            &r,
+				     int                         min,
+				     int                         max)
+{
+  mCollection.back ().addGeometry (ml, r, min, max);
+}
+
+void
+unity::PaintInfoCollector::processTexture (GLTexture *tex)
+{
+  mCollection.back().setTexture (tex);
+  mCollection.push_back (unity::TexGeometryCollection ());
+}
+
+void
+unity::PaintInfoCollector::drawGeometriesForWindow(CompWindow *w, unsigned int pm)
+{
+  for (unity::TexGeometryCollection &tcg : mCollection)
+    tcg.addGeometriesAndDrawTextureForWindow (w, pm);
+}
+
+unity::PaintInfoCollector * unity::PaintInfoCollector::active_collector = NULL;
+
+unity::PaintInfoCollector *
+unity::PaintInfoCollector::Active ()
+{
+  return active_collector;
 }
 
 /* Draw the window */
@@ -392,6 +606,7 @@ UnityDialogWindow::glDraw(const GLMatrix& transform,
   /* We want to set the geometry of the dim to the window
    * region */
   CompRegion reg = CompRegion(window->x(), window->y(), window->width(), window->height());
+  CompRegion        paintRegion(region);
 
   /* Draw the window on the bottom, we will be drawing the
    * dim render on top */
@@ -399,11 +614,10 @@ UnityDialogWindow::glDraw(const GLMatrix& transform,
 
   UNITY_DIALOG_SCREEN(screen);
 
-  foreach(GLTexture * tex, uds->tex())
+  for (GLTexture* tex : uds->tex())
   {
     GLTexture::MatrixList matl;
     GLTexture::Matrix     mat = tex->matrix();
-    CompRegion        paintRegion(region);
 
     /* We can reset the window geometry since it will be
      * re-added later */
@@ -447,6 +661,20 @@ UnityDialogWindow::glDraw(const GLMatrix& transform,
       /* Texture rendering tear-down */
       glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
       uds->gScreen->setTexEnvMode(GL_REPLACE);
+    }
+  }
+
+  for (CompWindow* w : mTransients)
+  {
+    if (GLWindow::get(w)->textures().empty())
+      GLWindow::get(w)->bind();
+
+    if (!UnityDialogWindow::get(w)->mIsAnimated)
+    {
+      unity::PaintInfoCollector pc (w);
+
+      pc.collect();
+      pc.drawGeometriesForWindow (window, mask);
     }
   }
 
@@ -516,13 +744,15 @@ UnityDialogWindow::addTransient(CompWindow* w)
       adjustIPW();
     }
 
+    mCurrentPos = mTargetPos = window->serverBorderRect().pos();
+
     newParent = true;
   }
   else
   {
-    foreach(CompWindow * tw, mTransients)
-    if (tw->id() == w->id())
-      alreadyAdded = true;
+    for (CompWindow * tw : mTransients)
+      if (tw->id() == w->id())
+        alreadyAdded = true;
   }
 
   if (!alreadyAdded)
@@ -531,6 +761,7 @@ UnityDialogWindow::addTransient(CompWindow* w)
     w->ungrabNotifySetEnabled(this, true);
     w->moveNotifySetEnabled(this, true);
     w->getAllowedActionsSetEnabled(this, true);
+    UnityDialogWindow::get(w)->gWindow->glPaintSetEnabled(UnityDialogWindow::get(w), !mIsAnimated);
     UnityDialogWindow::get(w)->mParent = window;
     UnityDialogWindow::get(w)->setMaxConstrainingAreas();
 
@@ -557,6 +788,9 @@ UnityDialogWindow::removeTransient(CompWindow* w)
 
   if (!mTransients.size())
   {
+    XWindowChanges xwc;
+    unsigned int   mask = 0;
+
     window->ungrabNotifySetEnabled(this, false);
     window->grabNotifySetEnabled(this, false);
     window->moveNotifySetEnabled(this, false);
@@ -567,7 +801,31 @@ UnityDialogWindow::removeTransient(CompWindow* w)
       mIpw = None;
     }
 
+    if (mDiffXWC.width)
+    {
+      xwc.width = window->width() - mDiffXWC.width;
+      mask |= CWWidth;
+    }
+
+    if (mDiffXWC.height)
+    {
+      xwc.height = window->height() - mDiffXWC.height;
+      mask |= CWHeight;
+    }
+
+    if (mask)
+      window->configureXWindow(mask, &xwc);
+
     cWindow->addDamage();
+    window->move(-mOffset.x() - mDiffXWC.x, -mOffset.y() - mDiffXWC.y, true);
+    window->syncPosition();
+    cWindow->addDamage();
+
+    memset(&mDiffXWC, 0, sizeof(XWindowChanges));
+
+    mCurrentPos = CompPoint(window->serverBorderRect().x(), window->serverBorderRect().y());
+    mTargetPos = mCurrentPos + mOffset;
+    mOffset = CompPoint(0, 0);
 
     return true;
   }
@@ -627,12 +885,17 @@ UnityDialogWindow::windowNotify(CompWindowNotify n)
     case CompWindowNotifyClose:
 
       /* If this window was a transient for some other window
-       * then decrement the transient count */
+         * then decrement the transient count */
 
       if (mParent)
         UnityDialogWindow::get(mParent)->removeTransient(window);
 
       break;
+
+    case CompWindowNotifyFrameUpdate:
+
+      if (mParent)
+        moveToRect(mParent->serverBorderRect(), true);
 
     default:
       break;
@@ -699,20 +962,17 @@ UnityDialogWindow::moveNotify(int dx, int dy, bool immediate)
 
   if (!mSkipNotify)
   {
-    if ((mGrabMask & CompWindowGrabMoveMask ||
-         UnityDialogScreen::get(screen)->switchingVp()) &&
-        !(mGrabMask & CompWindowGrabMoveMask &&
-          UnityDialogScreen::get(screen)->switchingVp()))
+    if (mParent && UnityDialogScreen::get(screen)->switchingVp() &&
+        !(mGrabMask && CompWindowGrabMoveMask))
     {
-      moveTransientsToRect(NULL, window->serverBorderRect(), UnityDialogScreen::get(screen)->switchingVp());
-
-      if (UnityDialogScreen::get(screen)->switchingVp())
-        window->syncPosition();
+      moveParentToRect(window, window->serverBorderRect(), true);
     }
-    /* Not a valid reason for the transient to be moved -
-     * force it back to the main window */
     else if (mParent)
+    {
       moveToRect(mParent->serverBorderRect(), true);
+    }
+    else
+      moveTransientsToRect(window, window->serverBorderRect(), true);
   }
 }
 
@@ -727,10 +987,73 @@ UnityDialogWindow::setMaxConstrainingAreas()
    * case that somehow our requested max_width < min_width, so
    * detect this case too.
    *
+   * In the case where we're goign to make the dialog window smaller
+   * than it actually is, don't allow this, instead make parent window
+   * at least 1.25x bigger than the dialog window and set the maximum
+   * size of the dialog window to 0.8x the parent window
    */
 
   bool sizeHintsSet = false;
   bool needsWidth, needsHeight;
+  XWindowChanges xwc;
+  unsigned int   changeMask = 0;
+
+  if (!(mParent->state() & MAXIMIZE_STATE ||
+        mParent->state() & CompWindowStateFullscreenMask))
+  {
+
+    if (mParent->serverBorderRect().width() < window->serverBorderRect().width() * 1.25)
+    {
+      xwc.width = window->serverBorderRect().width() * 1.25;
+      xwc.x = mParent->x() - ((window->serverBorderRect().width() * 1.25) -
+                              (mParent->serverBorderRect().width())) / 2.0;
+
+      /* Don't ever put the parent window offscreen */
+      if (xwc.x < screen->workArea().left() + mParent->border().left)
+        xwc.x = screen->workArea().left() + mParent->border().left;
+      else if (xwc.x + xwc.width > screen->workArea().right() - mParent->border().right)
+        xwc.x = screen->workArea().right() - xwc.width - mParent->border().right;
+
+      if (!UnityDialogWindow::get(mParent)->mDiffXWC.width)
+        UnityDialogWindow::get(mParent)->mDiffXWC.width = xwc.width - mParent->width();
+      if (!UnityDialogWindow::get(mParent)->mDiffXWC.x)
+      {
+        UnityDialogWindow::get(mParent)->mDiffXWC.x = xwc.x - mParent->x();
+        (UnityDialogWindow::get(mParent))->mCurrentPos += CompPoint(UnityDialogWindow::get(mParent)->mDiffXWC.x, 0);
+        (UnityDialogWindow::get(mParent))->mTargetPos += CompPoint(UnityDialogWindow::get(mParent)->mDiffXWC.x, 0);
+      }
+
+      changeMask |= CWX | CWWidth;
+    }
+
+    if (mParent->serverBorderRect().height() < window->serverBorderRect().height() * 1.25)
+    {
+      xwc.height = window->serverBorderRect().height() * 1.25;
+      xwc.y = mParent->y() - ((window->serverBorderRect().height() * 1.25) -
+                              (mParent->serverBorderRect().height())) / 2.0;
+
+      /* Don't ever put the parent window offscreen */
+      if (xwc.y < screen->workArea().top() + mParent->border().top)
+        xwc.y = screen->workArea().top() + mParent->border().top;
+      else if (xwc.y + xwc.height > screen->workArea().bottom() - mParent->border().bottom)
+        xwc.y = screen->workArea().bottom() - xwc.height - mParent->border().bottom;
+
+      if (!UnityDialogWindow::get(mParent)->mDiffXWC.height)
+        UnityDialogWindow::get(mParent)->mDiffXWC.height = xwc.height - mParent->height();
+      if (!UnityDialogWindow::get(mParent)->mDiffXWC.y)
+      {
+        UnityDialogWindow::get(mParent)->mDiffXWC.y = xwc.y - mParent->y();
+        (UnityDialogWindow::get(mParent))->mCurrentPos += CompPoint(0, UnityDialogWindow::get(mParent)->mDiffXWC.y);
+        (UnityDialogWindow::get(mParent))->mTargetPos += CompPoint(0, UnityDialogWindow::get(mParent)->mDiffXWC.y);
+      }
+
+      changeMask |= CWY | CWHeight;
+    }
+
+  }
+
+  if (changeMask)
+    mParent->configureXWindow(changeMask, &xwc);
 
   needsWidth = mOldHintsSize.width() != window->sizeHints().max_width;
 
@@ -747,9 +1070,9 @@ UnityDialogWindow::setMaxConstrainingAreas()
   if (mParent && (window->sizeHints().flags & PMaxSize) && needsWidth && needsHeight)
   {
     sizeHintsSet |= ((window->sizeHints().max_width <
-                      mParent->width() * 0.8) ||
+                      mParent->serverGeometry().width() * 0.8) ||
                      (window->sizeHints().max_height <
-                      mParent->height() * 0.8));
+                      mParent->serverGeometry().height() * 0.8));
   }
 
   if (mParent && (!sizeHintsSet))
@@ -757,8 +1080,8 @@ UnityDialogWindow::setMaxConstrainingAreas()
     XSizeHints sizeHints = window->sizeHints();
 
     sizeHints.flags |= PMaxSize;
-    sizeHints.max_width = mParent->width() * 0.8;
-    sizeHints.max_height = mParent->height() * 0.8;
+    sizeHints.max_width = mParent->serverGeometry().width() * 0.8;
+    sizeHints.max_height = mParent->serverGeometry().height() * 0.8;
 
     mOldHintsSize = CompSize(sizeHints.max_width, sizeHints.max_height);
     XSetWMNormalHints(screen->dpy(), window->id(), &sizeHints);
@@ -771,8 +1094,8 @@ UnityDialogWindow::getChildCenteredPositionForRect(CompRect currentRect)
 {
   int centeredX = currentRect.x() + (currentRect.width() / 2 -
                                      window->serverBorderRect().width() / 2);
-  int centeredY = currentRect.y() + (currentRect.height() -
-                                     window->serverBorderRect().height()) / 2;
+  int centeredY = currentRect.y() + (currentRect.height() / 2 -
+                                     window->serverBorderRect().height() / 2);
 
   return CompPoint(centeredX, centeredY);
 }
@@ -781,11 +1104,9 @@ CompPoint
 UnityDialogWindow::getParentCenteredPositionForRect(CompRect currentRect)
 {
   int centeredX = currentRect.x() + (currentRect.width() / 2 -
-                                     window->width() / 2) -
-                  window->input().left;
-  int centeredY = currentRect.y() + (currentRect.height() -
-                                     window->height()) * (0.5) -
-                  window->input().top;
+                                     window->serverBorderRect().width() / 2);
+  int centeredY = currentRect.y() + (currentRect.height() / 2 -
+                                     window->serverBorderRect().height() / 2);
 
   return CompPoint(centeredX, centeredY);
 }
@@ -798,7 +1119,7 @@ UnityDialogWindow::grabTransients(CompWindow* skip, int x, int y,
   /* Center transients (leave a bit more space
    * below) */
 
-  foreach(CompWindow * cw, mTransients)
+  for (CompWindow* cw : mTransients)
   {
     UnityDialogWindow* udw = UnityDialogWindow::get(cw);
 
@@ -822,16 +1143,17 @@ UnityDialogWindow::animateTransients(CompWindow* skip, CompPoint& orig, CompPoin
   /* Center transients (leave a bit more space
    * below) */
 
-  foreach(CompWindow * cw, mTransients)
+  for (CompWindow* cw : mTransients)
   {
     UnityDialogWindow* udw = UnityDialogWindow::get(cw);
-    CompRect newRect(dest.x(), dest.y(), window->width(), window->height());
+    CompRect newRect(dest.x(), dest.y(), window->serverBorderRect().width(), window->serverBorderRect().height());
 
     if (cw == skip)
       return;
 
     udw->mTargetPos = udw->getChildCenteredPositionForRect(newRect);
-    udw->mCurrentPos = CompPoint(cw->x(), cw->y());
+    udw->mCurrentPos = CompPoint(cw->serverBorderRect().x(), cw->serverBorderRect().y());
+    udw->mOffset = udw->mTargetPos - udw->mCurrentPos;
 
     /* New transient position is centered to this window's target position */
     if (cont)
@@ -844,13 +1166,18 @@ UnityDialogWindow::animateParent(CompWindow* requestor, CompPoint& orig, CompPoi
 {
   if (mParent)
   {
-    UnityDialogWindow* udw = UnityDialogWindow::get(mParent);
-    CompRect newRect(dest.x(), dest.y(), window->width(), window->height());
+    if (!(mParent->state() & MAXIMIZE_STATE ||
+          mParent->state() & CompWindowStateFullscreenMask))
+    {
+      UnityDialogWindow* udw = UnityDialogWindow::get(mParent);
+      CompRect newRect(dest.x(), dest.y(), window->serverBorderRect().width(), window->serverBorderRect().height());
 
-    udw->mTargetPos = udw->getParentCenteredPositionForRect(newRect);
-    udw->mCurrentPos = CompPoint(mParent->x(), mParent->y());
+      udw->mTargetPos = udw->getParentCenteredPositionForRect(newRect);
+      udw->mCurrentPos = CompPoint(mParent->serverBorderRect().x(), mParent->serverBorderRect().y());
+      udw->mOffset = udw->mTargetPos - udw->mCurrentPos;
 
-    udw->animateTransients(NULL, udw->mTargetPos, udw->mCurrentPos, false);
+      udw->animateTransients(NULL, udw->mTargetPos, udw->mCurrentPos, false);
+    }
   }
 }
 
@@ -860,7 +1187,7 @@ UnityDialogWindow::moveTransientsToRect(CompWindow* skip, CompRect currentRect, 
   /* Center transients (leave a bit more space
    * below) */
 
-  foreach(CompWindow * cw, mTransients)
+  for (CompWindow* cw : mTransients)
   {
     if (cw == skip)
       return;
@@ -880,21 +1207,24 @@ UnityDialogWindow::moveParentToRect(CompWindow*      requestor,
 {
   if (mParent)
   {
-    CompPoint centeredPos = UnityDialogWindow::get(mParent)->getParentCenteredPositionForRect(rect);
-    UnityDialogWindow::get(mParent)->mSkipNotify = true;
+    if (!(mParent->state() & MAXIMIZE_STATE ||
+          mParent->state() & CompWindowStateFullscreenMask))
+    {
+      CompPoint centeredPos = UnityDialogWindow::get(mParent)->getParentCenteredPositionForRect(rect);
+      UnityDialogWindow::get(mParent)->mSkipNotify = true;
 
-    /* Move the parent window to the requested position */
+      /* Move the parent window to the requested position */
+      mParent->move(centeredPos.x() - mParent->borderRect().x(),
+                    centeredPos.y() - mParent->borderRect().y(), true);
 
-    mParent->move(centeredPos.x() - mParent->serverBorderRect().x(),
-                  centeredPos.y() - mParent->serverBorderRect().y(), true);
+      if (sync)
+        mParent->syncPosition();
 
-    if (sync)
-      mParent->syncPosition();
+      UnityDialogWindow::get(mParent)->mSkipNotify = false;
 
-    UnityDialogWindow::get(mParent)->mSkipNotify = false;
-
-    UnityDialogWindow::get(mParent)->moveTransientsToRect(requestor, window->serverBorderRect(), sync);
-    UnityDialogWindow::get(mParent)->moveParentToRect(window, window->serverBorderRect(), sync);
+      UnityDialogWindow::get(mParent)->moveTransientsToRect(requestor, window->serverBorderRect(), sync);
+      UnityDialogWindow::get(mParent)->moveParentToRect(window, window->serverBorderRect(), sync);
+    }
   }
 
 }
@@ -906,7 +1236,37 @@ UnityDialogWindow::transientParent()
       window->state() & CompWindowStateModalMask &&
       !UnityDialogScreen::get(screen)->optionGetAvoidMatch().evaluate(window))
   {
-    CompWindow* parent = screen->findWindow(window->transientFor());
+    Window xid = window->transientFor();
+
+    /* Some stupid applications set the WM_TRANSIENT_FOR to an unmapped window
+     * but one that is strangely still managed *cough*qt*cough*. Those applications
+     * deserve to be shot. In any case, we'll need to work around that by assuming
+     * that this is a modal dialog with *a* parent, so go for the largest window
+     * in this client group that's not a transient for anything */
+
+    CompWindow* parent = screen->findWindow(xid);
+
+    if (!parent->isViewable() || parent->overrideRedirect())
+    {
+      compLogMessage("unitydialog", CompLogLevelWarn, "window 0x%x sets WM_TRANSIENT_FOR" \
+                     " in a strange way. Workaround around.\n", window->id());
+      if (parent->clientLeader())
+      {
+        CompWindow* candidate = parent;
+
+	for (CompWindow* w : screen->windows())
+          if (w->clientLeader() == parent->clientLeader() &&
+              w->isViewable() && !w->overrideRedirect() &&
+              (w->geometry().width() * w->geometry().height()) >
+              (candidate->geometry().width() * candidate->geometry().height()))
+            candidate = w;
+
+        if (candidate != parent)
+          parent = candidate;
+        else
+          parent = NULL;
+      }
+    }
 
     if (parent)
       return parent;
@@ -937,17 +1297,17 @@ UnityDialogWindow::place(CompPoint& pos)
     pos = getChildCenteredPositionForRect(mParent->serverBorderRect());
     int    hdirection, vdirection;
 
-    transientGeometry = CompWindow::Geometry(pos.x() - window->input().left,
-                                             pos.y() - window->input().top,
-                                             window->inputRect().width(),
-                                             window->inputRect().height(), 0);
+    transientGeometry = CompWindow::Geometry(pos.x(),
+                                             pos.y(),
+                                             window->borderRect().width(),
+                                             window->borderRect().height(), 0);
 
     transientPos = CompRegion((CompRect) transientGeometry);
     outputRegion = screen->workArea();
     outsideRegion = outputRegion;
 
     /* Create a w->width () px region outside of the output region */
-    outsideRegion.shrink(-window->inputRect().width(), -window->inputRect().height());
+    outsideRegion.shrink(-window->borderRect().width(), -window->borderRect().height());
 
     outsideRegion -= outputRegion;
 
@@ -962,25 +1322,28 @@ UnityDialogWindow::place(CompPoint& pos)
       vdirection = outsideArea.boundingRect().y() < 0 ? 1 : -1;
 
       width  = outsideArea.boundingRect().width() >=
-               window->width() ? 0 :
+               window->serverBorderRect().width() ? 0 :
                outsideArea.boundingRect().width() * hdirection;
       height = outsideArea.boundingRect().height() >=
-               window->height() ? 0 :
+               window->serverBorderRect().height() ? 0 :
                outsideArea.boundingRect().height() * vdirection;
 
       pos += CompPoint(width, height);
-      transientPos = CompRegion(pos.x(), pos.y(), window->width(), window->height());
+      transientPos = CompRegion(pos.x(),
+                                pos.y(),
+                                window->serverBorderRect().width(), window->serverBorderRect().height());
       transientRect = transientPos.boundingRect();
-      setMaxConstrainingAreas();
 
       dest = CompPoint(transientRect.x(), transientRect.y());
-      orig = CompPoint(mParent->x(), mParent->y());
+      orig = CompPoint(mParent->serverBorderRect().x(), mParent->serverBorderRect().y());
 
       animateParent(window, orig, dest);
 
       moveParentToRect(window, transientRect, true);
 
     }
+
+    pos -= CompPoint(window->border().left, window->border().top);
 
     return true;
   }
@@ -1000,16 +1363,17 @@ UnityDialogScreen::handleCompizEvent(const char*    plugin,
   else if (strcmp(event, "end_viewport_switch") == 0)
   {
     mSwitchingVp = false;
-
-    foreach(CompWindow * w, mParentWindows)
+  }
+  else if (strcmp(event, "window_animation") == 0)
+  {
+    CompWindow* w = screen->findWindow(CompOption::getIntOptionNamed(o, "window", 0));
+    if (w)
     {
-      UnityDialogWindow* udw = UnityDialogWindow::get(w);
-
-      /* Only move bottomlevels */
-      if (udw->hasParent())
-        continue;
-
-      udw->moveTransientsToRect(NULL, w->serverBorderRect(), true);
+      if (UnityDialogWindow::get(w)->hasParent())
+      {
+        UnityDialogWindow::get(w)->setIsAnimated(CompOption::getBoolOptionNamed(o, "active", false));
+        GLWindow::get(w)->glPaintSetEnabled(UnityDialogWindow::get(w), !UnityDialogWindow::get(w)->isAnimated());
+      }
     }
   }
 
@@ -1092,10 +1456,13 @@ UnityDialogWindow::UnityDialogWindow(CompWindow* w) :
   mOldHintsSize(CompSize(0, 0)),
   mGrabMask(0),
   mShadeProgress(0),
-  mIpw(None)
+  mIpw(None),
+  mIsAnimated(false)
 {
   WindowInterface::setHandler(window, true);
   GLWindowInterface::setHandler(gWindow, false);
+
+  memset(&mDiffXWC, 0, sizeof(XWindowChanges));
 
   window->windowNotifySetEnabled(this, true);
 }
@@ -1118,8 +1485,8 @@ UnityDialogWindow::~UnityDialogWindow()
   if (mTransients.size())
   {
     compLogMessage("unitydialog", CompLogLevelWarn, "Parent got closed before transients. This is an indication of a buggy app!");
-    foreach(CompWindow * w, mTransients)
-    UnityDialogWindow::get(mParent)->removeTransient(w);
+    for(CompWindow* w : mTransients)
+      UnityDialogWindow::get(mParent)->removeTransient(w);
   }
 }
 

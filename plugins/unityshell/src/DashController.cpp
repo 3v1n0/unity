@@ -76,7 +76,7 @@ void DashController::SetupDashView()
 {
   view_ = new DashView();
 
-  nux::HLayout* layout = new nux::HLayout();
+  nux::HLayout* layout = new nux::HLayout(NUX_TRACKER_LOCATION);
   layout->AddView(view_, 1);
   layout->SetContentDistribution(nux::eStackLeft);
   layout->SetVerticalExternalMargin(0);

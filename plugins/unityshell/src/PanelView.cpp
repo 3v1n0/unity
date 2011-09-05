@@ -112,6 +112,14 @@ PanelView::~PanelView()
   delete _bg_layer;
 }
 
+unsigned int PanelView::GetTrayXid ()
+{
+  if (!_tray)
+    return 0;
+
+  return _tray->xid ();
+}
+
 void PanelView::OnBackgroundUpdate (GVariant *data, PanelView *self)
 {
   gdouble red, green, blue, alpha;
@@ -439,7 +447,6 @@ void PanelView::OnEntryActivated(std::string const& entry_id)
       g_source_remove(_track_menu_pointer_id);
       _track_menu_pointer_id = 0;
     }
-    _menu_view->AllMenusClosed();
   }
 }
 

@@ -37,6 +37,7 @@ public:
   PrivateCompizMinimizedWindowHandler () {};
 
   CompWindow         *mWindow;
+  WindowInputRemover *clientInputRemover;
 };
 
 template <typename Screen, typename Window>
@@ -53,8 +54,11 @@ public:
   void minimize ();
   void unminimize ();
 
+  void updateFrameRegion (CompRegion &r);
+
   static void setFunctions (bool keepMinimized);
   static void handleCompizEvent (const char *, const char *, CompOption::Vector &);
+  static void handleEvent (XEvent *event);
   static std::list<CompWindow *> minimizingWindows;
 
   typedef CompizMinimizedWindowHandler<Screen, Window> CompizMinimizedWindowHandler_complete;
@@ -83,6 +87,8 @@ compiz::CompizMinimizedWindowHandler<Screen, Window>::CompizMinimizedWindowHandl
   priv = new PrivateCompizMinimizedWindowHandler ();
 
   priv->mWindow = w;
+  priv->clientInputRemover = NULL;
+
 }
 
 template <typename Screen, typename Window>
@@ -109,7 +115,33 @@ template <typename Screen, typename Window>
 void
 compiz::CompizMinimizedWindowHandler<Screen, Window>::setVisibility (bool visible)
 {
+  CompWindow::Geometry gm = priv->mWindow->geometry ();
   MinimizedWindowHandler::setVisibility (visible, ROOTPARENT (priv->mWindow));
+
+  if (!visible && !priv->clientInputRemover)
+  {
+    priv->clientInputRemover = new compiz::WindowInputRemover (screen->dpy (), priv->mWindow->id ());
+    if (!priv->clientInputRemover)
+      return;
+
+    if (priv->clientInputRemover->save ())
+      priv->clientInputRemover->remove ();
+  }
+  else if (visible && priv->clientInputRemover)
+  {
+    priv->clientInputRemover->restore ();
+
+    delete priv->clientInputRemover;
+    priv->clientInputRemover = NULL;
+  }
+
+  /* This is a little hack to ensure that the window region gets updated,
+   * because there's no API in core to do that */
+
+  gm.setBorder (gm.border () + 1);
+  priv->mWindow->resize (gm);
+  gm.setBorder (gm.border () - 1);
+  priv->mWindow->resize (gm);
 
   CompositeWindow::get (priv->mWindow)->addDamage ();
   GLWindow::get (priv->mWindow)->glPaintSetEnabled (Window::get (priv->mWindow), !visible);
@@ -147,6 +179,20 @@ compiz::CompizMinimizedWindowHandler<Screen, Window>::minimize ()
 
   priv->mWindow->changeState (priv->mWindow->state () | CompWindowStateHiddenMask);
   priv->mWindow->moveInputFocusToOtherWindow ();
+}
+
+template <typename Screen, typename Window>
+void
+compiz::CompizMinimizedWindowHandler<Screen, Window>::updateFrameRegion (CompRegion &r)
+{
+  unsigned int oldUpdateFrameRegionIndex;
+  r -= infiniteRegion;
+
+  /* Ensure no other plugins can touch this frame region */
+  oldUpdateFrameRegionIndex = priv->mWindow->updateFrameRegionGetCurrentIndex ();
+  priv->mWindow->updateFrameRegionSetCurrentIndex (MAXSHORT);
+  priv->mWindow->updateFrameRegion (r);
+  priv->mWindow->updateFrameRegionSetCurrentIndex (oldUpdateFrameRegionIndex);
 }
 
 template <typename Screen, typename Window>
@@ -232,6 +278,31 @@ compiz::CompizMinimizedWindowHandler<Screen, Window>::handleCompizEvent (const c
       minimizingWindows.empty ())
   {
     handleEvents = false;
+  }
+}
+
+template <typename Screen, typename Window>
+void
+compiz::CompizMinimizedWindowHandler<Screen, Window>::handleEvent (XEvent *event)
+{
+  if (screen->XShape () && event->type ==
+      screen->shapeEvent () + ShapeNotify)
+  {
+    CompWindow *w = screen->findWindow (((XShapeEvent *) event)->window);
+
+    if (w)
+    {
+      typedef compiz::CompizMinimizedWindowHandler<Screen, Window> plugin_handler;
+      Window *pw = Window::get (w);
+      plugin_handler::Ptr compizMinimizeHandler =
+        boost::dynamic_pointer_cast <plugin_handler> (pw->mMinimizeHandler);
+      /* Restore and re-save input shape and remove */
+      if (compizMinimizeHandler)
+      {
+        compizMinimizeHandler->setVisibility (true);
+        compizMinimizeHandler->setVisibility (false);
+      }
+    }
   }
 }
 

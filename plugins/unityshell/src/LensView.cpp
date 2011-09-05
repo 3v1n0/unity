@@ -75,17 +75,17 @@ LensView::~LensView()
 
 void LensView::SetupViews()
 {
-  layout_ = new nux::HLayout();
+  layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
 
-  scroll_view_ = new nux::ScrollView();
+  scroll_view_ = new nux::ScrollView(NUX_TRACKER_LOCATION);
   scroll_view_->EnableVerticalScrollBar(true);
   scroll_view_->EnableHorizontalScrollBar(false);
   layout_->AddView(scroll_view_);
 
-  scroll_layout_ = new nux::VLayout();
+  scroll_layout_ = new nux::VLayout(NUX_TRACKER_LOCATION);
   scroll_view_->SetLayout(scroll_layout_);
 
-  fscroll_view_ = new nux::ScrollView();
+  fscroll_view_ = new nux::ScrollView(NUX_TRACKER_LOCATION);
   fscroll_view_->EnableVerticalScrollBar(true);
   fscroll_view_->EnableHorizontalScrollBar(false);
   fscroll_view_->SetVisible(false);
@@ -317,7 +317,7 @@ void LensView::ActivateFirst()
     {
       for (unsigned int i = 0; i < results->count(); ++i)
       {
-        Result result = results->RowAtIndex(i); 
+        Result result = results->RowAtIndex(i);
         if (result.category_index == c && result.uri != "")
         {
           uri_activated(result.uri);
@@ -327,7 +327,7 @@ void LensView::ActivateFirst()
       }
     }
     // Fallback
-    Result result = results->RowAtIndex(0); 
+    Result result = results->RowAtIndex(0);
     if (result.uri != "")
     {
       uri_activated(result.uri);

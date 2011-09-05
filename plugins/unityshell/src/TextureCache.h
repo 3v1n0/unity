@@ -1,5 +1,6 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010 Canonical Ltd
+ * Copyright (C) 2010, 2011 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -14,42 +15,55 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by Gordon Allott <gord.allott@canonical.com>
+ *             Tim Penhey <tim.penhey@canonical.com>
  */
 
-#ifndef TEXTURECACHE_H
-#define TEXTURECACHE_H
-#include <Nux/Nux.h>
+#ifndef UNITY_TEXTURECACHE_H
+#define UNITY_TEXTURECACHE_H
+
 #include <string>
 #include <map>
-#include <vector>
+
+#include <Nux/Nux.h>
+
 #include <sigc++/sigc++.h>
+#include <sigc++/trackable.h>
 
-/* Basically a nice simple texture cache system, you ask the cache for a texture by id
- * if the texture does not exist it calls the callback function you provide it with to create the
- * texture, then returns it.
- * you should remember to ref/unref the textures yourself however
+/* A simple texture cache system, you ask the cache for a texture by id if the
+ * texture does not exist it calls the callback function you provide it with
+ * to create the texture, then returns it.  you should remember to ref/unref
+ * the textures yourself however
  */
-
-class TextureCache
+namespace unity
 {
 
+class TextureCache : public sigc::trackable
+{
 public:
-  // id, width, height, texture
-  typedef sigc::slot<void, const char*, int, int, nux::BaseTexture**> CreateTextureCallback;
+  typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
 
-  /* don't new this class, use getdefault */
+  // id, width, height -> texture
+  typedef sigc::slot<nux::BaseTexture*, std::string const&, int, int> CreateTextureCallback;
 
-  static TextureCache* GetDefault();
-  nux::BaseTexture* FindTexture(const char* texture_id, int width, int height, CreateTextureCallback callback);
+  static TextureCache& GetDefault();
 
-protected:
+  BaseTexturePtr FindTexture(std::string const& texture_id, int width, int height, CreateTextureCallback callback);
+
+  // Return the current size of the cache.
+  std::size_t Size() const;
+
+private:
   TextureCache();
   ~TextureCache();
-  char* Hash(const char* id, int width, int height);
-  std::map<std::string, nux::BaseTexture*> _cache;
-  std::map<nux::BaseTexture*, std::string> _cache_inverse;  // just for faster lookups
-  std::map<nux::BaseTexture*, sigc::connection> _cache_con;  // track our connections
-  void OnDestroyNotify(nux::Trackable* Object);
+
+  std::string Hash(std::string const& , int width, int height);
+  // Have the key passed by value not referece, as the key will be a bound
+  // parameter in the slot passed to the texture on_destroy signal.
+  void OnDestroyNotify(nux::Trackable* Object, std::string key);
+
+  std::map<std::string, nux::BaseTexture*> cache_;
 };
+
+}
 
 #endif // TEXTURECACHE_H

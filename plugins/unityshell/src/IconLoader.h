@@ -41,25 +41,33 @@ public:
 
   static IconLoader& GetDefault();
 
-  void LoadFromIconName(std::string const& icon_name,
-                        unsigned size,
-                        IconLoaderCallback slot);
+  /**
+   * Each of the Load functions return an opaque handle.  The sole use for
+   * this is to disconnect the callback slot.
+   */
 
-  void LoadFromGIconString(std::string const& gicon_string,
-                           unsigned size,
-                           IconLoaderCallback slot);
+  int LoadFromIconName(std::string const& icon_name,
+                       unsigned size,
+                       IconLoaderCallback slot);
 
-  void LoadFromFilename(std::string const& filename,
-                        unsigned size,
-                        IconLoaderCallback slot);
+  int LoadFromGIconString(std::string const& gicon_string,
+                          unsigned size,
+                          IconLoaderCallback slot);
 
-  void LoadFromURI(std::string const& uri,
-                   unsigned size,
-                   IconLoaderCallback slot);
+  int LoadFromFilename(std::string const& filename,
+                       unsigned size,
+                       IconLoaderCallback slot);
+
+  int LoadFromURI(std::string const& uri,
+                  unsigned size,
+                  IconLoaderCallback slot);
+
+  void DisconnectHandle(int handle);
 
 private:
   class Impl;
   Impl* pimpl;
+
 };
 
 }

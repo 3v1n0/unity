@@ -299,8 +299,6 @@ namespace unity {
     // takes two colours, transitions between them, we can do it linearly or whatever
     // i don't think it will matter that much
     // it doesn't happen too often
-    g_warning ("asked to interpolate between %f, %f, %f and %f, %f, %f at value %f",
-              colora.red, colora.green, colora.blue, colorb.red, colorb.green, colorb.blue, value);
     return colora + ((colorb - colora) * value);
   }
 
@@ -520,11 +518,6 @@ namespace unity {
     colors[10] = nux::Color (0x1b134c);
     colors[11] = nux::Color (0x2c0d46);
 
-    nux::Color bw_colors[2];
-    //bw_colors[0] = nux::Color (211, 215, 207); //Aluminium 2
-    bw_colors[0] = nux::Color (136, 138, 133); //Aluminium 4
-    bw_colors[1] = nux::Color (46 , 52 , 54 ); //Aluminium 6
-
     float closest_diff = 200.0f;
     nux::Color chosen_color;
     nux::color::HueSaturationValue base_hsv (base_color);
@@ -532,19 +525,12 @@ namespace unity {
     if (base_hsv.saturation < 0.08)
     {
       // grayscale image
-      for (int i = 0; i < 3; i++)
-      {
-        nux::color::HueSaturationValue comparison_hsv (bw_colors[i]);
-        float color_diff = fabs(base_hsv.value - comparison_hsv.value);
-        if (color_diff < closest_diff)
-        {
-          chosen_color = bw_colors[i];
-          closest_diff = color_diff;
-        }
-      }
+      LOG_DEBUG (logger) << "got a grayscale image";
+      chosen_color = nux::Color (46 , 52 , 54 );
     }
     else
     {
+      LOG_DEBUG (logger) << "got a colour image";
       // full colour image
       for (int i = 0; i < 11; i++)
       {
@@ -558,17 +544,20 @@ namespace unity {
         }
       }
 
-      nux::color::HueLightnessSaturation hsv_color (chosen_color);
+      nux::color::HueSaturationValue hsv_color (chosen_color);
 
-      hsv_color.saturation = base_hsv.saturation;
-      hsv_color.lightness = 0.2;
+      hsv_color.saturation = std::min(base_hsv.saturation, hsv_color.saturation);
+      hsv_color.value = std::min(std::min(base_hsv.value, hsv_color.value), 0.2f);
       chosen_color = nux::Color (nux::color::RedGreenBlue(hsv_color));
     }
 
     // apply design to the colour
     chosen_color.alpha = 0.5f;
 
-
+    LOG_DEBUG(logger) << "eventually chose "
+                      << chosen_color.red << ", "
+                      << chosen_color.green << ", "
+                      << chosen_color.blue;
     return chosen_color;
   }
 

@@ -316,7 +316,7 @@ namespace unity
     gboolean     result = FALSE;
     JsonNode*    root   = NULL;
 
-  g_type_init ();
+    g_type_init ();
 
     parser = json_parser_new ();
     result = json_parser_load_from_file (parser, DASH_WIDGETS_FILE, &error);
@@ -454,10 +454,46 @@ namespace unity
                    "blur-size",
                    &_separatorBlurSize);
 
+    // scrollbar
+    ReadColorSingle (root,
+                     "scrollbar",
+                     "color",
+                     _scrollbarColor);
+
+    ReadDoubleSingle (root,
+                      "scrollbar",
+                      "opacity",
+                      &_scrollbarOpacity);
+
+    ReadDoubleSingle (root,
+                      "scrollbar",
+                      "overlay-opacity",
+                      &_scrollbarOverlayOpacity);
+
+    ReadModeSingle (root,
+                    "scrollbar",
+                    "overlay-mode",
+                    &_scrollbarOverlayMode);
+
+    ReadIntSingle (root,
+                   "scrollbar",
+                   "blur-size",
+                   &_scrollbarBlurSize);
+
+    ReadIntSingle (root,
+                   "scrollbar",
+                   "size",
+                   &_scrollbarSize);
+
+    ReadDoubleSingle (root,
+                      "scrollbar",
+                      "corner-radius",
+                      &_scrollbarCornerRadius);
+
     g_object_unref (parser);
 
     // create fallback font-options
-  _defaultFontOptions = NULL;
+    _defaultFontOptions = NULL;
     _defaultFontOptions = cairo_font_options_create ();
     if (cairo_font_options_status (_defaultFontOptions) == CAIRO_STATUS_SUCCESS)
     {
@@ -948,6 +984,17 @@ namespace unity
     _separatorOverlayOpacity = 0.47;
     _separatorOverlayMode    = BLEND_MODE_NORMAL;
     _separatorBlurSize       = 6;
+
+    // scrollbar
+    _scrollbarColor[R]       = 1.0;
+    _scrollbarColor[G]       = 1.0;
+    _scrollbarColor[B]       = 1.0;
+    _scrollbarOpacity        = 1.0;
+    _scrollbarOverlayOpacity = 0.3;
+    _scrollbarOverlayMode    = BLEND_MODE_NORMAL;
+    _scrollbarBlurSize       = 5;
+    _scrollbarSize           = 3;
+    _scrollbarCornerRadius   = 1.5;
   }
 
   void DashStyle::ArrowPath (cairo_t* cr, Arrow arrow)
@@ -1685,23 +1732,25 @@ namespace unity
 
   bool DashStyle::Button (cairo_t* cr, nux::State state, std::string label)
   {
-  // sanity checks
+    // sanity checks
     if (cairo_status (cr) != CAIRO_STATUS_SUCCESS)
       return false;
 
     if (cairo_surface_get_type (cairo_get_target (cr)) != CAIRO_SURFACE_TYPE_IMAGE)
       return false;
 
+    unsigned int garnish = GetButtonGarnishSize ();
+
     //ButtonOutlinePath (cr, true);
     double w = cairo_image_surface_get_width (cairo_get_target (cr));
     double h = cairo_image_surface_get_height (cairo_get_target (cr));
     RoundedRect (cr,
                  1.0,
-                 2.0,
-                 2.0,
+                 (double) (garnish),
+                 (double) (garnish),
                  h / 4.0,
-                 w - 4.0,
-                 h - 4.0,
+                 w - (double) (2 * garnish),
+                 h - (double) (2 * garnish),
                  false);
 
     if (_buttonLabelFillOpacity[state] != 0.0)
@@ -1720,11 +1769,17 @@ namespace unity
                            _buttonLabelBorderOpacity[state]);
     cairo_set_line_width (cr, _buttonLabelBorderSize[state]);
     cairo_stroke (cr);
+
+    DrawOverlay (cr,
+                 _buttonLabelOverlayOpacity[state],
+                 _buttonLabelOverlayMode[state],
+                 _buttonLabelBlurSize[state] * 0.75);
+
     Text (cr,
-        _buttonLabelTextSize,
-        _buttonLabelTextColor[state],
-        _buttonLabelTextOpacity[state],
-        label);
+          _buttonLabelTextSize,
+          _buttonLabelTextColor[state],
+          _buttonLabelTextOpacity[state],
+          label);
 
     return true;
   }
@@ -1991,5 +2046,28 @@ namespace unity
                  _separatorBlurSize);
 
     return true;
+  }
+
+  int DashStyle::GetButtonGarnishSize ()
+  {
+    int maxBlurSize = 0;
+
+    for (int i = 0; i < STATES; i++)
+    {
+      if (maxBlurSize < _buttonLabelBlurSize[i])
+        maxBlurSize = _buttonLabelBlurSize[i];
+    }
+
+    return 2 * maxBlurSize;
+  }
+
+  int DashStyle::GetSeparatorGarnishSize ()
+  {
+    return _separatorBlurSize;
+  }
+
+  int DashStyle::GetScrollbarGarnishSize ()
+  {
+    return _scrollbarBlurSize;
   }
 }

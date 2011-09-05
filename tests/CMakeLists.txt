@@ -506,6 +506,7 @@ if (${GTEST_FOUND} STREQUAL TRUE)
                  test_lens.cpp
                  test_main.cpp
                  test_model.cpp
+                 test_texture_cache.cpp
                  test_utils.h
                  test_ratings_filter.cpp
                  test_results.cpp
@@ -517,10 +518,12 @@ if (${GTEST_FOUND} STREQUAL TRUE)
                  ${UNITY_SRC}/MockLauncherIcon.h
                  ${UNITY_SRC}/SwitcherModel.cpp
                  ${UNITY_SRC}/SwitcherModel.h
-                 ${UNITY_SRC}/WindowManager.cpp
-                 ${UNITY_SRC}/WindowManager.h
+                 ${UNITY_SRC}/TextureCache.cpp
+                 ${UNITY_SRC}/TextureCache.h
                  ${UNITY_SRC}/Timer.cpp
                  ${UNITY_SRC}/Timer.h
+                 ${UNITY_SRC}/WindowManager.cpp
+                 ${UNITY_SRC}/WindowManager.h
                  )
   target_link_libraries(test-gtest ${GTEST_BOTH_LIBRARIES})
   add_test(UnityGTests test-gtest)

@@ -27,6 +27,7 @@
 #include <NuxImage/CairoGraphics.h>
 #include <NuxCore/Logger.h>
 
+#include "CairoTexture.h"
 #include "PanelStyle.h"
 
 #include <UnityCore/GLibWrapper.h>
@@ -204,7 +205,6 @@ PanelStyle::GetWindowButton(WindowButtonType type, WindowState state)
 nux::BaseTexture*
 PanelStyle::GetWindowButtonForTheme(WindowButtonType type, WindowState state)
 {
-  nux::BaseTexture* texture = NULL;
   int width = 18, height = 18;
   float w = width / 3.0f;
   float h = height / 3.0f;
@@ -261,12 +261,7 @@ PanelStyle::GetWindowButtonForTheme(WindowButtonType type, WindowState state)
 
   cairo_destroy(cr);
 
-  nux::NBitmapData* bitmap =  cairo_graphics.GetBitmap();
-  texture = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
-  texture->Update(bitmap);
-  delete bitmap;
-
-  return texture;
+  return texture_from_cairo_graphics(cairo_graphics);
 }
 
 GdkPixbuf*

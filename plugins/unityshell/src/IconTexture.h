@@ -27,6 +27,9 @@
 
 #include "Introspectable.h"
 
+namespace unity
+{
+
 class IconTexture : public nux::TextureArea, public unity::Introspectable
 {
 public:
@@ -45,7 +48,7 @@ public:
 
   void SetAcceptKeyNavFocus(bool accept);
 
-  nux::BaseTexture* texture() const;
+  nux::BaseTexture* texture();
 
 protected:
   // Key navigation
@@ -58,16 +61,19 @@ protected:
 
 protected:
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
+
 private:
-  void CreateTextureCallback(const char* texid, int width, int height, nux::BaseTexture** texture);
+  nux::BaseTexture* CreateTextureCallback(std::string const& texid, int width, int height);
   void Refresh(GdkPixbuf* pixbuf);
   void IconLoaded(std::string const& icon_name, unsigned size, GdkPixbuf* pixbuf);
 
+  // FIXME: make _icon_name a std::string.
   char* _icon_name;
   unsigned int _size;
 
   GdkPixbuf*        _pixbuf_cached;
-  nux::BaseTexture* _texture_cached;
+  nux::ObjectPtr<nux::BaseTexture> _texture_cached;
+  // FIXME: make these two a nux::Size.
   int               _texture_width;
   int               _texture_height;
 
@@ -75,5 +81,7 @@ private:
 
   float _opacity;
 };
+
+}
 
 #endif // ICON_TEXTURE_H

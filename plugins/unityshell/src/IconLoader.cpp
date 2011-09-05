@@ -19,6 +19,7 @@
 
 #include "IconLoader.h"
 
+#include <map>
 #include <queue>
 #include <sstream>
 
@@ -41,24 +42,30 @@ const unsigned MIN_ICON_SIZE = 2;
 class IconLoader::Impl
 {
 public:
+  // The Handle typedef is used to explicitly indicate which integers are
+  // infact our opaque handles.
+  typedef int Handle;
+
   Impl();
   ~Impl();
 
-  void LoadFromIconName(std::string const& icon_name,
-                        unsigned size,
-                        IconLoaderCallback slot);
+  Handle LoadFromIconName(std::string const& icon_name,
+                          unsigned size,
+                          IconLoaderCallback slot);
 
-  void LoadFromGIconString(std::string const& gicon_string,
-                           unsigned size,
-                           IconLoaderCallback slot);
+  Handle LoadFromGIconString(std::string const& gicon_string,
+                             unsigned size,
+                             IconLoaderCallback slot);
 
-  void LoadFromFilename(std::string const& filename,
-                        unsigned size,
-                        IconLoaderCallback slot);
+  Handle LoadFromFilename(std::string const& filename,
+                          unsigned size,
+                          IconLoaderCallback slot);
 
-  void LoadFromURI(std::string const& uri,
-                   unsigned size,
-                   IconLoaderCallback slot);
+  Handle LoadFromURI(std::string const& uri,
+                     unsigned size,
+                     IconLoaderCallback slot);
+
+  void DisconnectHandle(Handle handle);
 
 private:
 
@@ -76,6 +83,7 @@ private:
     unsigned              size;
     std::string           key;
     IconLoaderCallback    slot;
+    Handle                handle;
     Impl*                 self;
 
     IconLoaderTask(IconLoaderRequestType type_,
@@ -83,21 +91,23 @@ private:
                    unsigned size_,
                    std::string const& key_,
                    IconLoaderCallback slot_,
+                   Handle handle_,
                    Impl* self_)
-      : type(type_), data(data_), size(size_), key(key_), slot(slot_), self(self_)
+      : type(type_), data(data_), size(size_), key(key_)
+      , slot(slot_), handle(handle_), self(self_)
       {}
   };
 
-  void ReturnCachedOrQueue(std::string const& data,
-                           unsigned size,
-                           IconLoaderCallback slot,
-                           IconLoaderRequestType type);
+  Handle ReturnCachedOrQueue(std::string const& data,
+                             unsigned size,
+                             IconLoaderCallback slot,
+                             IconLoaderRequestType type);
 
-  void QueueTask(std::string const& key,
-                 std::string const& data,
-                 unsigned size,
-                 IconLoaderCallback slot,
-                 IconLoaderRequestType type);
+  Handle QueueTask(std::string const& key,
+                   std::string const& data,
+                   unsigned size,
+                   IconLoaderCallback slot,
+                   IconLoaderRequestType type);
 
   std::string Hash(std::string const& data, unsigned size);
 
@@ -124,10 +134,13 @@ private:
   ImageCache cache_;
   typedef std::queue<IconLoaderTask*> TaskQueue;
   TaskQueue tasks_;
+  typedef std::map<Handle, IconLoaderTask*> TaskMap;
+  TaskMap task_map_;
 
   guint idle_id_;
   bool no_load_;
   GtkIconTheme* theme_; // Not owned.
+  Handle handle_counter_;
 };
 
 
@@ -136,6 +149,7 @@ IconLoader::Impl::Impl()
   // Option to disable loading, if your testing performance of other things
   , no_load_(::getenv("UNITY_ICON_LOADER_DISABLE"))
   , theme_(::gtk_icon_theme_get_default())
+  , handle_counter_(0)
 {
 }
 
@@ -149,81 +163,94 @@ IconLoader::Impl::~Impl()
 }
 
 
-void IconLoader::Impl::LoadFromIconName(std::string const& icon_name,
-                                        unsigned size,
-                                        IconLoaderCallback slot)
+int IconLoader::Impl::LoadFromIconName(std::string const& icon_name,
+                                       unsigned size,
+                                       IconLoaderCallback slot)
 {
   if (no_load_ || icon_name.empty() || size < MIN_ICON_SIZE)
-    return;
+    return 0;
 
   // We need to check this because of legacy desktop files
   if (icon_name[0] == '/')
   {
-    LoadFromFilename(icon_name, size, slot);
-    return;
+    return LoadFromFilename(icon_name, size, slot);
   }
 
-  ReturnCachedOrQueue(icon_name, size, slot, REQUEST_TYPE_ICON_NAME);
+  return ReturnCachedOrQueue(icon_name, size, slot, REQUEST_TYPE_ICON_NAME);
 }
 
-void IconLoader::Impl::LoadFromGIconString(std::string const& gicon_string,
-                                           unsigned size,
-                                           IconLoaderCallback slot)
+int IconLoader::Impl::LoadFromGIconString(std::string const& gicon_string,
+                                          unsigned size,
+                                          IconLoaderCallback slot)
 {
   if (no_load_ || gicon_string.empty() || size < MIN_ICON_SIZE)
-    return;
+    return 0;
 
-  ReturnCachedOrQueue(gicon_string, size, slot, REQUEST_TYPE_GICON_STRING);
+  return ReturnCachedOrQueue(gicon_string, size, slot, REQUEST_TYPE_GICON_STRING);
 }
 
-void IconLoader::Impl::LoadFromFilename(std::string const& filename,
-                                        unsigned size,
-                                        IconLoaderCallback slot)
+int IconLoader::Impl::LoadFromFilename(std::string const& filename,
+                                       unsigned size,
+                                       IconLoaderCallback slot)
 {
   if (no_load_ || filename.empty() || size < MIN_ICON_SIZE)
-    return;
+    return 0;
 
   glib::Object<GFile> file(g_file_new_for_path(filename.c_str()));
   glib::String uri(g_file_get_uri(file));
 
-  LoadFromURI(uri.Str(), size, slot);
+  return LoadFromURI(uri.Str(), size, slot);
 }
 
-void IconLoader::Impl::LoadFromURI(std::string const& uri,
-                                   unsigned size,
-                                   IconLoaderCallback slot)
+int IconLoader::Impl::LoadFromURI(std::string const& uri,
+                                  unsigned size,
+                                  IconLoaderCallback slot)
 {
   if (no_load_ || uri.empty() || size < MIN_ICON_SIZE)
-    return;
+    return 0;
 
-  ReturnCachedOrQueue(uri, size, slot, REQUEST_TYPE_URI);
+  return ReturnCachedOrQueue(uri, size, slot, REQUEST_TYPE_URI);
+}
+
+void IconLoader::Impl::DisconnectHandle(Handle handle)
+{
+  TaskMap::iterator iter = task_map_.find(handle);
+  if (iter != task_map_.end())
+  {
+    iter->second->slot.disconnect();
+  }
 }
 
 //
 // Private Methods
 //
 
-void IconLoader::Impl::ReturnCachedOrQueue(std::string const& data,
-                                           unsigned size,
-                                           IconLoaderCallback slot,
-                                           IconLoaderRequestType type)
+int IconLoader::Impl::ReturnCachedOrQueue(std::string const& data,
+                                          unsigned size,
+                                          IconLoaderCallback slot,
+                                          IconLoaderRequestType type)
 {
+  Handle result = 0;
   std::string key(Hash(data, size));
 
   if (!CacheLookup(key, data, size, slot))
   {
-    QueueTask(key, data, size, slot, type);
+    result = QueueTask(key, data, size, slot, type);
   }
+  return result;
 }
 
 
-void IconLoader::Impl::QueueTask(std::string const& key,
-                                 std::string const& data,
-                                 unsigned size,
-                                 IconLoaderCallback slot,
-                                 IconLoaderRequestType type)
+int IconLoader::Impl::QueueTask(std::string const& key,
+                                std::string const& data,
+                                unsigned size,
+                                IconLoaderCallback slot,
+                                IconLoaderRequestType type)
 {
-  tasks_.push(new IconLoaderTask(type, data, size, key, slot, this));
+  IconLoaderTask* task = new IconLoaderTask(type, data, size, key,
+                                            slot, ++handle_counter_, this);
+  tasks_.push(task);
+  task_map_[task->handle] = task;
 
   LOG_DEBUG(logger) << "Pushing task  " << data << " at size " << size
                     << ", queue size now at " << tasks_.size();
@@ -232,6 +259,7 @@ void IconLoader::Impl::QueueTask(std::string const& key,
   {
     idle_id_ = g_idle_add_full(G_PRIORITY_LOW, (GSourceFunc)Loop, this, NULL);
   }
+  return task->handle;
 }
 
 std::string IconLoader::Impl::Hash(std::string const& data, unsigned size)
@@ -438,6 +466,7 @@ bool IconLoader::Impl::Iteration()
 
     if (ProcessTask(task))
     {
+      task_map_.erase(task->handle);
       delete task;
     }
 
@@ -450,6 +479,7 @@ bool IconLoader::Impl::Iteration()
   if (queue_empty)
   {
     idle_id_ = 0;
+    handle_counter_ = 0;
   }
 
   return !queue_empty;
@@ -478,6 +508,7 @@ void IconLoader::Impl::LoadContentsReady(GObject* obj,
     LOG_WARNING(logger) << "Unable to load contents of "
                         << task->data << ": " << error;
   }
+  task->self->task_map_.erase(task->handle);
   delete task;
 }
 
@@ -498,32 +529,37 @@ IconLoader& IconLoader::GetDefault()
   return default_loader;
 }
 
-void IconLoader::LoadFromIconName(std::string const& icon_name,
-                                  unsigned size,
-                                  IconLoaderCallback slot)
+int IconLoader::LoadFromIconName(std::string const& icon_name,
+                                 unsigned size,
+                                 IconLoaderCallback slot)
 {
-  pimpl->LoadFromIconName(icon_name, size, slot);
+  return pimpl->LoadFromIconName(icon_name, size, slot);
 }
 
-void IconLoader::LoadFromGIconString(std::string const& gicon_string,
-                                     unsigned size,
-                                     IconLoaderCallback slot)
+int IconLoader::LoadFromGIconString(std::string const& gicon_string,
+                                    unsigned size,
+                                    IconLoaderCallback slot)
 {
-  pimpl->LoadFromGIconString(gicon_string, size, slot);
+  return pimpl->LoadFromGIconString(gicon_string, size, slot);
 }
 
-void IconLoader::LoadFromFilename(std::string const& filename,
-                                  unsigned size,
-                                  IconLoaderCallback slot)
+int IconLoader::LoadFromFilename(std::string const& filename,
+                                 unsigned size,
+                                 IconLoaderCallback slot)
 {
-  pimpl->LoadFromFilename(filename, size, slot);
+  return pimpl->LoadFromFilename(filename, size, slot);
 }
 
-void IconLoader::LoadFromURI(std::string const& uri,
-                             unsigned size,
-                             IconLoaderCallback slot)
+int IconLoader::LoadFromURI(std::string const& uri,
+                            unsigned size,
+                            IconLoaderCallback slot)
 {
-  pimpl->LoadFromURI(uri, size, slot);
+  return pimpl->LoadFromURI(uri, size, slot);
+}
+
+void IconLoader::DisconnectHandle(int handle)
+{
+  pimpl->DisconnectHandle(handle);
 }
 
 
