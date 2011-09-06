@@ -22,6 +22,7 @@
 
 #include "BamfLauncherIcon.h"
 #include "Launcher.h"
+#include "LauncherController.h"
 #include "PluginAdapter.h"
 #include "FavoriteStore.h"
 
@@ -38,14 +39,10 @@
 
 #include "SoftwareCenterLauncherIcon.h"
 
-SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(Launcher* IconManager, BamfApplication* app, CompScreen* screen, char* aptdaemon_trans_id)
-: BamfLauncherIcon(IconManager, app, screen)
+SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(Launcher* IconManager, BamfApplication* app, char* aptdaemon_trans_id)
+: BamfLauncherIcon(IconManager, app)
 {
     char* object_path;
-    GVariant* finished_or_not = NULL;
-    GError* error = NULL;
-    GError* error2 = NULL;
-    GError* error3 = NULL;
 
     initialize_tooltip_text();
 
@@ -54,68 +51,106 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(Launcher* IconManager, Ba
     
     g_debug("Aptdaemon transaction ID: %s", _aptdaemon_trans_id);
 
-    _aptdaemon_trans = g_dbus_proxy_new_for_bus_sync(G_BUS_TYPE_SYSTEM,
-                                                    G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START,
-                                                    NULL,
-                                                    "org.debian.apt",
-                                                    object_path,
-                                                    "org.debian.apt.transaction",
-                                                    NULL,
-                                                    &error);
+    //_aptdaemon_trans = g_dbus_proxy_new_for_bus_sync(G_BUS_TYPE_SYSTEM,
+//                                                    G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START,
+  //                                                  NULL,
+    //                                                "org.debian.apt",
+      //                                              object_path,
+        //                                            "org.debian.apt.transaction",
+          //                                          NULL,
+            //                                        &error);
+    _aptdaemon_trans = new unity::glib::DBusProxy("org.debian.apt",
+                                    object_path,
+                                    "org.debian.apt.transaction",
+                                    G_BUS_TYPE_SYSTEM,
+                                    G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START);
 
-    if (error != NULL) {
-        g_debug("DBus Error: %s", error->message);
-        g_error_free(error);
-    }
+//    _aptdaemon_trans_prop = g_dbus_proxy_new_for_bus_sync(G_BUS_TYPE_SYSTEM,
+  //                                                  G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START,
+    //                                                NULL,
+      //                                              "org.debian.apt",
+        //                                            object_path,
+          //                                          "org.freedesktop.DBus.Properties",
+            //                                        NULL,
+              //                                      &error2);
 
-    _aptdaemon_trans_prop = g_dbus_proxy_new_for_bus_sync(G_BUS_TYPE_SYSTEM,
-                                                    G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START,
-                                                    NULL,
-                                                    "org.debian.apt",
-                                                    object_path,
-                                                    "org.freedesktop.DBus.Properties",
-                                                    NULL,
-                                                    &error2);
+    _aptdaemon_trans_prop = new unity::glib::DBusProxy("org.debian.apt",
+                                        object_path,
+                                        "org.freedesktop.DBus.Properties",
+                                        G_BUS_TYPE_SYSTEM,
+                                        G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START);
 
-    if (error2 != NULL) {
-        g_debug("DBus Error: %s", error2->message);
-        g_error_free(error2);
-    }
+//    finished_or_not = g_dbus_proxy_call_sync (_aptdaemon_trans_prop,
+  //                                          "Get",
+    //                                        g_variant_new("(ss)",
+      //                                                  "org.debian.apt.transaction",
+        //                                                "Progress"),
+          //                                  G_DBUS_CALL_FLAGS_NO_AUTO_START,
+            //                                2000,
+              //                              NULL,
+                //                            &error3);
 
-    finished_or_not = g_dbus_proxy_call_sync (_aptdaemon_trans_prop,
-                                            "Get",
-                                            g_variant_new("(ss)",
-                                                        "org.debian.apt.transaction",
-                                                        "Progress"),
-                                            G_DBUS_CALL_FLAGS_NO_AUTO_START,
-                                            2000,
-                                            NULL,
-                                            &error3);
+    _aptdaemon_trans_prop->Call("Get",
+                                g_variant_new("(ss)",
+                                          "org.debian.apt.transaction",
+                                          "Progress"),
+                                sigc::mem_fun(*this, &SoftwareCenterLauncherIcon::OnGetProgressCallback),
+                                G_DBUS_CALL_FLAGS_NO_AUTO_START,
+                                200);
 
-    if (error3 != NULL) {
-        g_debug("DBus Error: %s", error3->message);
-        g_error_free(error3);
-    }
+ //   g_signal_connect (_aptdaemon_trans,
+   //                 "g-signal",
+     //               G_CALLBACK(SoftwareCenterLauncherIcon::OnDBusSignal),
+       //             this);
 
-    if (finished_or_not != NULL) {
-        g_debug("DBus get call succeeded");
-        g_debug("Progress: %s", g_variant_print(finished_or_not, TRUE));
-        g_variant_unref(finished_or_not);
-
-        SetQuirk(QUIRK_PROGRESS, TRUE);
-    }
-    else
-        g_debug("DBus get call failed");
-
-    g_signal_connect (_aptdaemon_trans,
-                    "g-signal",
-                    G_CALLBACK(SoftwareCenterLauncherIcon::OnDBusSignal),
-                    this);
-
-//    tooltip_text = "Waiting to install";
+    _aptdaemon_trans->Connect("Finished", sigc::mem_fun(*this, &SoftwareCenterLauncherIcon::OnFinished));
+    _aptdaemon_trans->Connect("PropertyChanged", sigc::mem_fun(*this, &SoftwareCenterLauncherIcon::OnPropertyChanged));
 }
 
 SoftwareCenterLauncherIcon::~SoftwareCenterLauncherIcon() {
+
+}
+
+void
+SoftwareCenterLauncherIcon::OnGetProgressCallback(GVariant* progress_value) {
+    if (progress_value != NULL) {
+        g_debug("DBus get call succeeded");
+        g_debug("Progress: %s", g_variant_print(progress_value, TRUE));
+
+        SetQuirk(QUIRK_PROGRESS, TRUE);
+
+        tooltip_text = _("Waiting to install..");
+    }
+    else
+        g_debug ("DBus get call failed");
+}
+
+void
+SoftwareCenterLauncherIcon::OnFinished(GVariant* params) {
+
+        g_debug ("Transaction finished");
+        tooltip_text = BamfName();
+
+        SetQuirk(LauncherIcon::QUIRK_PROGRESS, FALSE); 
+
+}
+
+void
+SoftwareCenterLauncherIcon::OnPropertyChanged(GVariant* params) {
+
+    gint32 progress;
+    gchar* property_name;
+    GVariant* property_value;
+
+    g_variant_get_child (params, 0, "s", &property_name);
+    if (!g_strcmp0 (property_name, "Progress")) {
+        g_variant_get_child (params,1,"v",&property_value);
+        g_variant_get (property_value, "i", &progress);
+
+        SetProgress(((float)progress) / ((float)100));
+    }
+    g_variant_unref(property_value);
+    g_free(property_name);
 
 }
 
@@ -155,5 +190,4 @@ void SoftwareCenterLauncherIcon::initialize_tooltip_text() {
 
     original_tooltip_text =  const_cast<char*> (tooltip_text().c_str());
 
-    tooltip_text = _("Waiting to install..");
 }

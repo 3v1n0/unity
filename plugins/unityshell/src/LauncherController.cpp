@@ -378,7 +378,7 @@ LauncherController::CreateSCLauncherIcon(const char* file_path, const char* aptd
   g_object_set_qdata(G_OBJECT(app), g_quark_from_static_string("unity-seen"), GINT_TO_POINTER(1));
 
   bamf_view_set_sticky(BAMF_VIEW(app), true);
-  icon = new SoftwareCenterLauncherIcon(_launcher, app, _screen, (char*)aptdaemon_trans_id);
+  icon = new SoftwareCenterLauncherIcon(_launcher, app, (char*)aptdaemon_trans_id);
   icon->SetIconType(LauncherIcon::TYPE_APPLICATION);
   icon->SetSortPriority(_sort_priority++);
 

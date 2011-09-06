@@ -27,19 +27,27 @@
 #include <gio/gio.h>
 #include <glib.h>
 #include <glib/gvariant.h>
+#include <UnityCore/GLibDBusProxy.h>
 
 class SoftwareCenterLauncherIcon : public BamfLauncherIcon
 {
 public:
-    SoftwareCenterLauncherIcon(Launcher* IconManager, BamfApplication* app, CompScreen* screen, char* aptdaemon_trans_id);
+
+    SoftwareCenterLauncherIcon(Launcher* IconManager, BamfApplication* app, char* aptdaemon_trans_id);
     virtual ~SoftwareCenterLauncherIcon();
 
     gchar* original_tooltip_text;
 
 private:
     char* _aptdaemon_trans_id;
-    GDBusProxy* _aptdaemon_trans;
-    GDBusProxy* _aptdaemon_trans_prop;
+    unity::glib::DBusProxy* _aptdaemon_trans;
+    unity::glib::DBusProxy* _aptdaemon_trans_prop;
+
+    void OnGetProgressCallback(GVariant* progress_value);
+
+    void OnFinished(GVariant* params);
+
+    void OnPropertyChanged(GVariant* params);
 
     static void OnDBusSignal(GDBusProxy* proxy, 
                                 gchar* sender,

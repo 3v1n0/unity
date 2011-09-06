@@ -265,6 +265,8 @@ add_executable (test-launcher
                 ${UNITY_SRC}/BackgroundEffectHelper.cpp
                 ${UNITY_SRC}/StaticCairoText.cpp
                 ${UNITY_SRC}/StaticCairoText.h
+                ${UNITY_SRC}/SoftwareCenterLauncherIcon.cpp
+                ${UNITY_SRC}/SoftwareCenterLauncherIcon.h
                 ${UNITY_SRC}/Introspectable.cpp
                 ${UNITY_SRC}/Introspectable.h
                 ${UNITY_SRC}/QuicklistMenuItem.cpp
