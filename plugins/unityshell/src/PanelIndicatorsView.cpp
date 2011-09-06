@@ -47,8 +47,11 @@ PanelIndicatorsView::PanelIndicatorsView()
 
 PanelIndicatorsView::~PanelIndicatorsView()
 {
-  for (auto conn : indicators_connections_)
-    conn.disconnect();
+  for (auto it = indicators_connections_.begin(); it != indicators_connections_.end(); it++)
+  {
+    for (auto conn : it->second)
+      conn.disconnect();
+  }
 }
 
 void
@@ -57,11 +60,42 @@ PanelIndicatorsView::AddIndicator(indicator::Indicator::Ptr const& indicator)
   LOG_DEBUG(logger) << "IndicatorAdded: " << indicator->name();
   indicators_.push_back(indicator);
 
+  std::vector<sigc::connection> connections;
+
   auto entry_added_conn = indicator->on_entry_added.connect(sigc::mem_fun(this, &PanelIndicatorsView::OnEntryAdded));
-  indicators_connections_.push_back(entry_added_conn);
+  connections.push_back(entry_added_conn);
 
   auto entry_removed_conn = indicator->on_entry_removed.connect(sigc::mem_fun(this, &PanelIndicatorsView::OnEntryRemoved));
-  indicators_connections_.push_back(entry_removed_conn);
+  connections.push_back(entry_removed_conn);
+
+  indicators_connections_[indicator] = connections;
+}
+
+void
+PanelIndicatorsView::RemoveIndicator(indicator::Indicator::Ptr const& indicator)
+{
+  auto connections = indicators_connections_.find(indicator);
+
+  if (connections != indicators_connections_.end()) {
+    for (auto conn : connections->second)
+      conn.disconnect();
+
+    indicators_connections_.erase(indicator);
+  }
+
+  for (auto entry : indicator->GetEntries())
+    OnEntryRemoved (entry->id());
+
+  for (auto i = indicators_.begin(); i != indicators_.end(); i++)
+  {
+    if (*i == indicator)
+    {
+      indicators_.erase(i);
+      break;
+    }
+  }
+
+  LOG_DEBUG(logger) << "IndicatorRemoved: " << indicator->name();
 }
 
 long
@@ -90,7 +124,8 @@ PanelIndicatorsView::QueueDraw()
   nux::View::QueueDraw();
   for (auto i = entries_.begin(), end = entries_.end(); i != end; ++i)
   {
-    i->second->QueueDraw();
+    if (i->second)
+      i->second->QueueDraw();
   }
 }
 
@@ -129,7 +164,8 @@ PanelIndicatorsView::GetGeometryForSync(indicator::EntryLocationMap& locations)
 {
   for (auto i = entries_.begin(), end = entries_.end(); i != end; ++i)
   {
-    i->second->GetGeometryForSync(locations);
+    if (i->second)
+      i->second->GetGeometryForSync(locations);
   }
 }
 
@@ -209,12 +245,16 @@ void
 PanelIndicatorsView::OnEntryRemoved(std::string const& entry_id)
 {
   PanelIndicatorEntryView* view = entries_[entry_id];
-  on_indicator_updated.emit(view);
-  layout_->RemoveChildObject(view);
-  entries_.erase(entry_id);
 
-  QueueRelayout();
-  QueueDraw();
+  if (view)
+  {
+    on_indicator_updated.emit(view);
+    layout_->RemoveChildObject(view);
+    entries_.erase(entry_id);
+
+    QueueRelayout();
+    QueueDraw();
+  }
 }
 
 const gchar* PanelIndicatorsView::GetName()

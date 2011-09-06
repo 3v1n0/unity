@@ -38,6 +38,7 @@ public:
   ~PanelIndicatorsView();
 
   void AddIndicator(indicator::Indicator::Ptr const& indicator);
+  void RemoveIndicator(indicator::Indicator::Ptr const& indicator);
 
   bool OnPointerMoved(int x, int y);
   bool ActivateEntry(std::string const& entry_id);
@@ -68,7 +69,7 @@ private:
   typedef std::vector<indicator::Indicator::Ptr> Indicators;
   Indicators indicators_;
 
-  std::vector<sigc::connection> indicators_connections_;
+  std::map<indicator::Indicator::Ptr, std::vector<sigc::connection>> indicators_connections_;
 };
 
 }
