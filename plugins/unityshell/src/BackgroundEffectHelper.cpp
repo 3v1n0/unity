@@ -286,14 +286,17 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nu
   }
 
   nux::GraphicsEngine* graphics_engine = nux::GetGraphicsDisplay()->GetGraphicsEngine();
-  blur_geometry_ =  nux::Geometry(0, 0, graphics_engine->GetWindowWidth(), graphics_engine->GetWindowHeight()).Intersect(geo);
+  int window_width = graphics_engine->GetWindowWidth();
+  int window_height = graphics_engine->GetWindowHeight();
+  blur_geometry_ = nux::Geometry(0, 0, window_width, window_height).Intersect(geo);
 
-  if (blur_geometry_.IsNull() || blur_type == BLUR_NONE || !nux::GetGraphicsDisplay()->GetGpuDevice()->backup_texture0_.IsValid())
+  nux::GpuDevice* gpu_device = nux::GetGraphicsDisplay()->GetGpuDevice();
+  if (blur_geometry_.IsNull() || blur_type == BLUR_NONE || !gpu_device->backup_texture0_.IsValid())
   {
-    return nux::ObjectPtr<nux::IOpenGLBaseTexture>(NULL);
+    return nux::ObjectPtr<nux::IOpenGLBaseTexture>();
   }
 
-  int opengl_version = nux::GetGraphicsDisplay()->GetGpuDevice()->GetOpenGLMajorVersion();
+  int opengl_version = gpu_device->GetOpenGLMajorVersion();
   int sigma = opengl_version >= 3 ? sigma_high : sigma_med;
   int radius = 3 * sigma;
 
@@ -302,21 +305,19 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nu
   larger_blur_geometry.x = std::max(blur_geometry_.x - radius, 0);
   larger_blur_geometry.y = std::max(blur_geometry_.y - radius, 0);
   
-  int xx = std::min(blur_geometry_.x + blur_geometry_.width + radius, graphics_engine->GetWindowWidth());
+  int xx = std::min(blur_geometry_.x + blur_geometry_.width + radius, window_width);
   larger_blur_geometry.width = xx - larger_blur_geometry.x;
 
-  int yy = std::min(blur_geometry_.y + blur_geometry_.height + radius, graphics_engine->GetWindowHeight());
+  int yy = std::min(blur_geometry_.y + blur_geometry_.height + radius, window_height);
   larger_blur_geometry.height = yy - larger_blur_geometry.y;
 
   int dleft     = blur_geometry_.x - larger_blur_geometry.x;
-  //int dtop      = blur_geometry_.y - larger_blur_geometry.y;
-  //int dright    = (larger_blur_geometry.x + larger_blur_geometry.width) - (blur_geometry_.x + blur_geometry_.width);
   int dbottom   = (larger_blur_geometry.y + larger_blur_geometry.height) - (blur_geometry_.y + blur_geometry_.height);
 
 
   // save the current fbo
-  nux::ObjectPtr<nux::IOpenGLFrameBufferObject> current_fbo = nux::GetGraphicsDisplay()->GetGpuDevice()->GetCurrentFrameBufferObject();
-  nux::GetGraphicsDisplay()->GetGpuDevice()->DeactivateFrameBuffer();
+  nux::ObjectPtr<nux::IOpenGLFrameBufferObject> current_fbo = gpu_device->GetCurrentFrameBufferObject();
+  gpu_device->DeactivateFrameBuffer();
 
   // Set a viewport to the requested size
   // FIXME: We need to do multiple passes for the dirty region
@@ -334,8 +335,8 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nu
   texxform__bg.uoffset = ((float) larger_blur_geometry.x) / graphics_engine->GetWindowWidth ();
   texxform__bg.voffset = ((float) graphics_engine->GetWindowHeight () - larger_blur_geometry.y - larger_blur_geometry.height) / graphics_engine->GetWindowHeight ();
 
-  bool support_frag = nux::GetGraphicsDisplay()->GetGpuDevice()->GetGpuInfo().Support_ARB_Fragment_Shader();
-  bool support_vert = nux::GetGraphicsDisplay()->GetGpuDevice()->GetGpuInfo().Support_ARB_Vertex_Shader();
+  bool support_frag = gpu_device->GetGpuInfo().Support_ARB_Fragment_Shader();
+  bool support_vert = gpu_device->GetGpuInfo().Support_ARB_Vertex_Shader();
 
   if (support_vert && support_frag && opengl_version >= 2)
   {
@@ -343,7 +344,7 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nu
     float gaussian_sigma = opengl_version >= 3 ? sigma_high : sigma_med;
     int blur_passes = 1;
 
-    nux::ObjectPtr<nux::IOpenGLBaseTexture> device_texture = nux::GetGraphicsDisplay()->GetGpuDevice()->backup_texture0_;
+    nux::ObjectPtr<nux::IOpenGLBaseTexture> device_texture = gpu_device->backup_texture0_;
     nux::ObjectPtr<nux::CachedBaseTexture> noise_device_texture = graphics_engine->CacheResource(noise_texture_);
 
     int down_size_factor = 1;
@@ -365,34 +366,41 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nu
     noise_texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
     noise_texxform.SetFilter(nux::TEXFILTER_NEAREST, nux::TEXFILTER_NEAREST);
 
+    nux::ObjectPtr<nux::IOpenGLBaseTexture> resized_texture;
     // Down size
-    graphics_engine->QRP_GetCopyTexture(down_size_width, down_size_height, temp_device_texture0_,
-     device_texture, texxform__bg, nux::color::White);
+    graphics_engine->QRP_GetCopyTexture(down_size_width, down_size_height,
+                                        resized_texture, device_texture,
+                                        texxform__bg, nux::color::White);
 
     // Blur at a lower resolution (less pixels to process)
-    temp_device_texture1_ = graphics_engine->QRP_GetHQBlur(x, y, down_size_width, down_size_height,
-     temp_device_texture0_, texxform, nux::color::White,
-     gaussian_sigma, blur_passes);
+    nux::ObjectPtr<nux::IOpenGLBaseTexture> low_res_blur;
+    low_res_blur = graphics_engine->QRP_GetHQBlur(x, y, down_size_width, down_size_height,
+                                                  resized_texture, texxform, nux::color::White,
+                                                  gaussian_sigma, blur_passes);
 
     // Up size
-    graphics_engine->QRP_GetCopyTexture(buffer_width, buffer_height, temp_device_texture0_,
-     temp_device_texture1_, texxform, nux::color::White);
+    graphics_engine->QRP_GetCopyTexture(buffer_width, buffer_height,
+                                        resized_texture, low_res_blur,
+                                        texxform, nux::color::White);
 
     // Add Noise
-    ds_temp_device_texture1_ = graphics_engine->QRP_GLSL_GetDisturbedTexture(
+    nux::ObjectPtr<nux::IOpenGLBaseTexture> noisy_blur;
+    nux::Color noise_color(noise_factor * 1.0f/buffer_width,
+                           noise_factor * 1.0f/buffer_height,
+                           1.0f, 1.0f);
+    noisy_blur = graphics_engine->QRP_GLSL_GetDisturbedTexture(
       0, 0, buffer_width, buffer_height,
-      noise_device_texture->m_Texture, noise_texxform, nux::Color(
-      noise_factor * 1.0f/buffer_width,
-      noise_factor * 1.0f/buffer_height, 1.0f, 1.0f),
-      temp_device_texture0_, texxform, nux::color::White);
+      noise_device_texture->m_Texture, noise_texxform, noise_color,
+      resized_texture, texxform, nux::color::White);
 
     // Returns a smaller blur region (minus blur radius).
     texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
     texxform.flip_v_coord = true;
     texxform.uoffset = dleft / (float) buffer_width;
     texxform.voffset = dbottom / (float) buffer_height;
-    graphics_engine->QRP_GetCopyTexture(blur_geometry_.width, blur_geometry_.height, blur_texture_,
-     ds_temp_device_texture1_, texxform, nux::color::White);
+    graphics_engine->QRP_GetCopyTexture(blur_geometry_.width, blur_geometry_.height,
+                                        blur_texture_, noisy_blur,
+                                        texxform, nux::color::White);
   }
   else
   {
@@ -401,7 +409,7 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nu
     float gaussian_sigma = sigma_low;
     int blur_passes = 1;
 
-    nux::ObjectPtr<nux::IOpenGLBaseTexture> device_texture = nux::GetGraphicsDisplay()->GetGpuDevice()->backup_texture0_;
+    nux::ObjectPtr<nux::IOpenGLBaseTexture> device_texture = gpu_device->backup_texture0_;
     nux::ObjectPtr<nux::CachedBaseTexture> noise_device_texture = graphics_engine->CacheResource(noise_texture_);
 
     unsigned int offset = 0;
@@ -428,30 +436,37 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nu
     noise_texxform.SetFilter(nux::TEXFILTER_NEAREST, nux::TEXFILTER_NEAREST);
 
     // Copy source texture
-    graphics_engine->QRP_GetCopyTexture(buffer_width, buffer_height, temp_device_texture0_,
-     device_texture, texxform__bg, nux::color::White);
+    nux::ObjectPtr<nux::IOpenGLBaseTexture> texture_copy;
+    graphics_engine->QRP_GetCopyTexture(buffer_width, buffer_height,
+                                        texture_copy, device_texture,
+                                        texxform__bg, nux::color::White);
 
     // Down size
-    graphics_engine->QRP_GetCopyTexture(down_size_width, down_size_height, ds_temp_device_texture1_,
-     temp_device_texture0_, texxform, nux::color::White);
+    nux::ObjectPtr<nux::IOpenGLBaseTexture> resized_texture;
+    graphics_engine->QRP_GetCopyTexture(down_size_width, down_size_height,
+                                        resized_texture, texture_copy,
+                                        texxform, nux::color::White);
 
     // Blur at a lower resolution (less pixels to process)
-    ds_temp_device_texture0_ = graphics_engine->QRP_GetBlurTexture(x, y, down_size_width, down_size_height,
-     ds_temp_device_texture1_, texxform, nux::color::White,
-     gaussian_sigma, blur_passes);
+    nux::ObjectPtr<nux::IOpenGLBaseTexture> low_res_blur;
+    low_res_blur = graphics_engine->QRP_GetBlurTexture(x, y, down_size_width, down_size_height,
+                                                       resized_texture, texxform,
+                                                       nux::color::White,
+                                                       gaussian_sigma, blur_passes);
 
     // Up size
     texxform.SetFilter(nux::TEXFILTER_LINEAR, nux::TEXFILTER_LINEAR);
-    graphics_engine->QRP_GetCopyTexture(buffer_width, buffer_height, temp_device_texture1_,
-      ds_temp_device_texture0_, texxform, nux::color::White);
-    
+    graphics_engine->QRP_GetCopyTexture(buffer_width, buffer_height, resized_texture,
+                                        low_res_blur, texxform, nux::color::White);
+
     // Returns a smaller blur region (minus blur radius).
     texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
     texxform.flip_v_coord = true;
     texxform.uoffset = dleft / (float) buffer_width;
     texxform.voffset = dbottom / (float) buffer_height;
-    graphics_engine->QRP_GetCopyTexture(blur_geometry_.width, blur_geometry_.height, blur_texture_,
-     temp_device_texture1_, texxform, nux::color::White);
+    graphics_engine->QRP_GetCopyTexture(blur_geometry_.width, blur_geometry_.height,
+                                        blur_texture_, resized_texture,
+                                        texxform, nux::color::White);
   }
 
   if (current_fbo.IsValid())
@@ -462,8 +477,8 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nu
   }
   else
   {
-    graphics_engine->SetViewport(0, 0, graphics_engine->GetWindowWidth(), graphics_engine->GetWindowHeight());
-    graphics_engine->Push2DWindow(graphics_engine->GetWindowWidth(), graphics_engine->GetWindowHeight());
+    graphics_engine->SetViewport(0, 0, window_width, window_height);
+    graphics_engine->Push2DWindow(window_width, window_height);
     graphics_engine->ApplyClippingRectangle();
   }
 
