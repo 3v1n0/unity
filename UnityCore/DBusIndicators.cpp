@@ -156,7 +156,7 @@ DBusIndicators::Impl::~Impl()
 
 void DBusIndicators::Impl::Reconnect()
 {
-  g_spawn_command_line_sync("killall unity-panel-service",
+  g_spawn_command_line_sync("killall -9 unity-panel-service",
                             NULL, NULL, NULL, NULL);
 
   if (g_getenv("PANEL_USE_LOCAL_SERVICE"))
