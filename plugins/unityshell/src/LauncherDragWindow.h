@@ -20,9 +20,9 @@
 #ifndef LAUNCHERDRAGWINDOW_H
 #define LAUNCHERDRAGWINDOW_H
 
-#include "Nux/Nux.h"
-#include "Nux/BaseWindow.h"
-#include "NuxGraphics/GraphicsEngine.h"
+#include <Nux/Nux.h>
+#include <Nux/BaseWindow.h>
+#include <NuxGraphics/GraphicsEngine.h>
 
 #include "LauncherIcon.h"
 

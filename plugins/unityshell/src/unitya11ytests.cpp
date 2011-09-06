@@ -29,7 +29,7 @@
 #include "nux-layout-accessible.h"
 
 /* unity accessible objects */
-#include "Nux/Button.h"
+#include <Nux/Button.h>
 
 #include "Launcher.h"
 #include "LauncherIcon.h"

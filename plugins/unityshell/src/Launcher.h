@@ -25,6 +25,8 @@
 
 #include <Nux/View.h>
 #include <Nux/BaseWindow.h>
+#include <Nux/TimerProc.h>
+#include <NuxGraphics/IOpenGLAsmShader.h>
 
 #include "AbstractIconRenderer.h"
 #include "BackgroundEffectHelper.h"
@@ -36,8 +38,6 @@
 #include "LauncherDragWindow.h"
 #include "LauncherHideMachine.h"
 #include "LauncherHoverMachine.h"
-#include "NuxGraphics/IOpenGLAsmShader.h"
-#include "Nux/TimerProc.h"
 
 #define ANIM_DURATION_SHORT 125
 #define ANIM_DURATION       200

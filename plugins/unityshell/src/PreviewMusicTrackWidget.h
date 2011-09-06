@@ -25,8 +25,9 @@
 #define PREVIEWMUSICTRACKWIDGET_H
 
 #include <string>
+
 #include <Nux/Nux.h>
-#include "Nux/Button.h"
+#include <Nux/Button.h>
 
 namespace unity {
 

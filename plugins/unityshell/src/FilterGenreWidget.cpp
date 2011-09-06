@@ -20,7 +20,9 @@
  */
 
 #include "config.h"
-#include "Nux/Nux.h"
+
+#include <Nux/Nux.h>
+
 #include <glib.h>
 #include <glib/gi18n-lib.h>
 

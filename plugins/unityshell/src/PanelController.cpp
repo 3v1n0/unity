@@ -18,7 +18,7 @@
 
 #include "PanelController.h"
 
-#include "NuxCore/Logger.h"
+#include <NuxCore/Logger.h>
 
 #include "UScreen.h"
 

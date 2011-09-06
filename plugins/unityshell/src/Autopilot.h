@@ -26,8 +26,8 @@
 #include <gio/gio.h>
 
 #include <core/core.h>
-#include "Nux/Nux.h"
-#include "Nux/TimerProc.h"
+#include <Nux/Nux.h>
+#include <Nux/TimerProc.h>
 
 #include "ubus-server.h"
 

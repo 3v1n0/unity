@@ -19,7 +19,9 @@
  *
  */
 #include "config.h"
-#include "Nux/Nux.h"
+
+#include <Nux/Nux.h>
+
 #include "FilterGenreButton.h"
 
 namespace unity {

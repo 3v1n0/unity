@@ -18,8 +18,8 @@
 
 #include "DashController.h"
 
-#include "NuxCore/Logger.h"
-#include "Nux/HLayout.h"
+#include <NuxCore/Logger.h>
+#include <Nux/HLayout.h>
 
 #include "PluginAdapter.h"
 #include "UBusMessages.h"

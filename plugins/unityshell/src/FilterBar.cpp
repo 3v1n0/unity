@@ -19,8 +19,9 @@
  *
  */
 
-#include "Nux/Nux.h"
-#include "Nux/VLayout.h"
+#include <Nux/Nux.h>
+#include <Nux/VLayout.h>
+
 #include "FilterBar.h"
 #include "FilterFactory.h"
 

@@ -24,7 +24,7 @@
 
 #include <gio/gdesktopappinfo.h>
 
-#include "NuxCore/Logger.h"
+#include <NuxCore/Logger.h>
 
 #include "config.h"
 

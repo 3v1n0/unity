@@ -19,14 +19,14 @@
 
 #include "config.h"
 
-#include "Nux/Nux.h"
-#include "Nux/HLayout.h"
-#include "Nux/VLayout.h"
-#include "Nux/Button.h"
+#include <Nux/Nux.h>
+#include <Nux/HLayout.h>
+#include <Nux/VLayout.h>
+#include <Nux/Button.h>
 
-#include "NuxGraphics/GLThread.h"
-#include "Nux/BaseWindow.h"
-#include "Nux/WindowCompositor.h"
+#include <NuxGraphics/GLThread.h>
+#include <Nux/BaseWindow.h>
+#include <Nux/WindowCompositor.h>
 
 #include <UnityCore/Variant.h>
 #include "WindowButtons.h"
