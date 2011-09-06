@@ -55,6 +55,7 @@ public:
   long PostLayoutManagement(long LayoutResult);
 
   void OnObjectAdded(indicator::Indicator::Ptr const& proxy);
+  void OnObjectRemoved(indicator::Indicator::Ptr const& proxy);
   void OnIndicatorViewUpdated(PanelIndicatorEntryView* view);
   void OnMenuPointerMoved(int x, int y);
   void OnEntryActivateRequest(std::string const& entry_id);

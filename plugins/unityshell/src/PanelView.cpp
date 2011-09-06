@@ -77,11 +77,12 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
 
   _remote = indicator::DBusIndicators::Ptr(new indicator::DBusIndicators());
   _remote->on_object_added.connect(sigc::mem_fun(this, &PanelView::OnObjectAdded));
+  _remote->on_object_removed.connect(sigc::mem_fun(this, &PanelView::OnObjectRemoved));
   _remote->on_entry_activate_request.connect(sigc::mem_fun(this, &PanelView::OnEntryActivateRequest));
   _remote->on_entry_activated.connect(sigc::mem_fun(this, &PanelView::OnEntryActivated));
   _remote->on_synced.connect(sigc::mem_fun(this, &PanelView::OnSynced));
   _remote->on_entry_show_menu.connect(sigc::mem_fun(this, &PanelView::OnEntryShowMenu));
-  
+
    UBusServer *ubus = ubus_server_get_default();
 
    _handle_bg_color_update = ubus_server_register_interest(ubus, UBUS_BACKGROUND_COLOR_CHANGED,
@@ -371,6 +372,23 @@ void PanelView::OnObjectAdded(indicator::Indicator::Ptr const& proxy)
   else
   {
     _indicators->AddIndicator(proxy);
+  }
+
+  _layout->SetContentDistribution(nux::eStackLeft);
+
+  ComputeChildLayout();
+  NeedRedraw();
+}
+
+void PanelView::OnObjectRemoved(indicator::Indicator::Ptr const& proxy)
+{
+  if (proxy->name().find("appmenu") != std::string::npos)
+  {
+    _menu_view->RemoveIndicator(proxy);
+  }
+  else
+  {
+    _indicators->RemoveIndicator(proxy);
   }
 
   _layout->SetContentDistribution(nux::eStackLeft);
