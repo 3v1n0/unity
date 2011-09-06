@@ -33,9 +33,23 @@ Indicator::Indicator(std::string const& name)
 {
 }
 
+Indicator::~Indicator()
+{
+  for (auto entry : entries_) {
+    on_entry_removed(entry->id());
+  }
+
+  entries_.clear();
+}
+
 std::string const& Indicator::name() const
 {
   return name_;
+}
+
+Indicator::Entries Indicator::GetEntries() const
+{
+  return entries_;
 }
 
 void Indicator::Sync(Indicator::Entries const& new_entries)

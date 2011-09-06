@@ -39,11 +39,13 @@ public:
   typedef std::list<Entry::Ptr> Entries;
 
   Indicator(std::string const& name);
+  ~Indicator();
 
   std::string const& name() const;
 
   void Sync(Entries const& new_entries);
   Entry::Ptr GetEntry(std::string const& entry_id) const;
+  Entries GetEntries() const;
 
   void OnEntryShowMenu(std::string const& entry_id, int x, int y, int timestamp, int button);
   void OnEntrySecondaryActivate(std::string const& entry_id, unsigned int timestamp);
