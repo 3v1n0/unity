@@ -32,6 +32,9 @@
 #include "PlacesTile.h"
 #include "PlacesGroup.h"
 
+namespace unity
+{
+
 class PlacesHomeView : public unity::Introspectable, public PlacesGroup
 {
 public:
@@ -66,5 +69,5 @@ private:
   guint _ubus_handle;
 };
 
-
+}
 #endif

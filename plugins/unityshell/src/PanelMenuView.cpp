@@ -30,6 +30,7 @@
 #include "NuxGraphics/XInputWindow.h"
 #include "Nux/BaseWindow.h"
 
+#include "CairoTexture.h"
 #include "PanelMenuView.h"
 #include "PanelStyle.h"
 #include <UnityCore/Variant.h>
@@ -663,12 +664,7 @@ PanelMenuView::Refresh()
   if (layout)
     g_object_unref(layout);
 
-  nux::NBitmapData* bitmap =  cairo_graphics.GetBitmap();
-
-  // The Texture is created with a reference count of 1.
-  nux::BaseTexture* texture2D = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
-  texture2D->Update(bitmap);
-  delete bitmap;
+  nux::BaseTexture* texture2D = texture_from_cairo_graphics(cairo_graphics);
 
   if (_title_layer)
     delete _title_layer;
@@ -1173,23 +1169,6 @@ PanelMenuView::OnPanelViewMouseEnter(int x, int y, unsigned long mouse_button_st
       _is_inside = true;
     FullRedraw();
   }
-  /* FIXME: Disabled pending design
-  GVariantBuilder builder;
-
-  g_variant_builder_init(&builder, G_VARIANT_TYPE("(iiiia{sv})"));
-  g_variant_builder_add(&builder, "i", x);
-  g_variant_builder_add(&builder, "i", y);
-  g_variant_builder_add(&builder, "i", 66);
-  g_variant_builder_add(&builder, "i", 24);
-
-  g_variant_builder_open(&builder, G_VARIANT_TYPE("a{sv}"));
-  g_variant_builder_add(&builder, "{sv}", "hovered", g_variant_new_boolean(true));
-  g_variant_builder_close(&builder);
-
-
-  UBusServer* ubus = ubus_server_get_default();
-  ubus_server_send_message(ubus, UBUS_HOME_BUTTON_BFB_UPDATE, g_variant_builder_end(&builder));
-  */
 }
 
 void
@@ -1200,47 +1179,10 @@ PanelMenuView::OnPanelViewMouseLeave(int x, int y, unsigned long mouse_button_st
     _is_inside = false;
     FullRedraw();
   }
-  /* FIXME: Disabled pending design
-  if (IsMouseInside())
-    return;
-
-  GVariantBuilder builder;
-  g_variant_builder_init(&builder, G_VARIANT_TYPE("(iiiia{sv})"));
-  g_variant_builder_add(&builder, "i", x);
-  g_variant_builder_add(&builder, "i", y);
-  g_variant_builder_add(&builder, "i", 66);
-  g_variant_builder_add(&builder, "i", 24);
-
-  g_variant_builder_open(&builder, G_VARIANT_TYPE("a{sv}"));
-  g_variant_builder_add(&builder, "{sv}", "hovered", g_variant_new_boolean(false));
-  g_variant_builder_close(&builder);
-
-
-  UBusServer* ubus = ubus_server_get_default();
-  ubus_server_send_message(ubus, UBUS_HOME_BUTTON_BFB_UPDATE, g_variant_builder_end(&builder));
-  */
 }
 
 void PanelMenuView::OnPanelViewMouseMove(int x, int y, int dx, int dy, unsigned long mouse_button_state, unsigned long special_keys_state)
-{
-  /* FIXME: Disabled pending design
-  GVariantBuilder builder;
-
-  g_variant_builder_init(&builder, G_VARIANT_TYPE("(iiiia{sv})"));
-  g_variant_builder_add(&builder, "i", x);
-  g_variant_builder_add(&builder, "i", y);
-  g_variant_builder_add(&builder, "i", 66);
-  g_variant_builder_add(&builder, "i", 24);
-
-  g_variant_builder_open(&builder, G_VARIANT_TYPE("a{sv}"));
-  g_variant_builder_add(&builder, "{sv}", "hovered", g_variant_new_boolean(true));
-  g_variant_builder_close(&builder);
-
-
-  UBusServer* ubus = ubus_server_get_default();
-  ubus_server_send_message(ubus, UBUS_HOME_BUTTON_BFB_UPDATE, g_variant_builder_end(&builder));
-  */
-}
+{}
 
 
 } // namespace unity

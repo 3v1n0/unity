@@ -169,7 +169,7 @@ PanelController::OnScreenChanged(int primary_monitor, std::vector<nux::Geometry>
 
       // FIXME(loicm): Several objects created here are leaked.
 
-      layout = new nux::HLayout();
+      layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
       view = new PanelView();
       view->SetMaximumHeight(24);

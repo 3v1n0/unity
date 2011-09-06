@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright 2011 Canonical Ltd.
  *
@@ -27,11 +28,12 @@ namespace unity
 {
 namespace dash
 {
+NUX_IMPLEMENT_OBJECT_TYPE(ResultRenderer);
 
 ResultRenderer::ResultRenderer(NUX_FILE_LINE_DECL)
-  : Object(false, NUX_FILE_LINE_PARAM),
-    width(50),
-    height(50)
+  : InitiallyUnownedObject(NUX_FILE_LINE_PARAM)
+  , width(50)
+  , height(50)
 {
 }
 

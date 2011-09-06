@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright 2011 Canonical Ltd.
  *
@@ -25,7 +26,7 @@
 #define RESULTRENDERER_H
 
 #include <Nux/Nux.h>
-#include <NuxCore/Object.h>
+#include <NuxCore/InitiallyUnownedObject.h>
 #include <NuxCore/Property.h>
 #include <dee.h>
 
@@ -36,24 +37,34 @@ namespace unity
 namespace dash
 {
 
-// Initially unowned object
-class ResultRenderer : public nux::Object
+class ResultRenderer : public nux::InitiallyUnownedObject
 {
 public:
+  NUX_DECLARE_OBJECT_TYPE(ResultRenderer, nux::InitiallyUnownedObject);
+
   enum ResultRendererState
   {
     RESULT_RENDERER_NORMAL,
     RESULT_RENDERER_ACTIVE,
     RESULT_RENDERER_PRELIGHT,
     RESULT_RENDERER_SELECTED,
-    RESULT_RENDERER_INSENSITIVE
+    RESULT_RENDERER_INSENSITIVE,
   };
 
   ResultRenderer(NUX_FILE_LINE_PROTO);
   virtual ~ResultRenderer();
-  virtual void Render(nux::GraphicsEngine& GfxContext, Result& row, ResultRendererState state, nux::Geometry& geometry, int x_offset, int y_offset);
-  virtual void Preload(Result& row);  // this is just to start preloading images and text that the renderer might need - can be ignored
-  virtual void Unload(Result& row);  // unload any previous grabbed images
+  virtual void Render(nux::GraphicsEngine& GfxContext,
+                      Result& row,
+                      ResultRendererState state,
+                      nux::Geometry& geometry,
+                      int x_offset, int y_offset);
+
+  // this is just to start preloading images and text that the renderer might
+  // need - can be ignored
+  virtual void Preload(Result& row);
+
+  // unload any previous grabbed images
+  virtual void Unload(Result& row);
 
   nux::Property<int> width;  // the width of the element,
   nux::Property<int> height; // the height of the element
