@@ -112,6 +112,11 @@ void ResultView::RemoveResult(Result& result)
   renderer_->Unload(result);
 }
 
+ResultView::ResultList ResultView::GetResultList()
+{
+  return results_;
+}
+
 void ResultView::SetPreview(PreviewBase* preview, Result& related_result)
 {
   if (preview == NULL)

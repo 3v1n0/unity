@@ -1,4 +1,3 @@
-#if 0
 /*
  * Copyright (C) 2011 Canonical Ltd
  *
@@ -21,7 +20,7 @@
  * SECTION:unity-search_bar-accessible
  * @Title: UnitySearchBarAccessible
  * @short_description: Implementation of the ATK interfaces for #SearchBar
- * @see_also: SearchBar
+ * @see_also: SearchBar at DashSearchBar.h
  *
  * #UnitySearchBarAccessible implements the required ATK interfaces for
  * #SearchBar, ie: exposing the different SearchBarIcon on the model as
@@ -34,7 +33,9 @@
 #include "unity-search-bar-accessible.h"
 
 #include "unitya11y.h"
-#include "PlacesSearchBar.h"
+#include "DashSearchBar.h"
+
+using namespace unity::dash;
 
 /* GObject */
 static void unity_search_bar_accessible_class_init(UnitySearchBarAccessibleClass* klass);
@@ -91,44 +92,60 @@ unity_search_bar_accessible_new(nux::Object* object)
 {
   AtkObject* accessible = NULL;
 
-  g_return_val_if_fail(dynamic_cast<PlacesSearchBar*>(object), NULL);
+  g_return_val_if_fail(dynamic_cast<SearchBar*>(object), NULL);
 
   accessible = ATK_OBJECT(g_object_new(UNITY_TYPE_SEARCH_BAR_ACCESSIBLE, NULL));
 
   atk_object_initialize(accessible, object);
-  atk_object_set_name(accessible, _("Search Bar"));
 
   return accessible;
 }
 
 /* AtkObject.h */
 static void
+on_search_hint_change_cb (std::string const& s, UnitySearchBarAccessible *self)
+{
+  SearchBar* search_bar = NULL;
+  nux::TextEntry* text_entry = NULL;
+  AtkObject* text_entry_accessible = NULL;
+  nux::Object* nux_object = NULL;
+
+  g_return_if_fail (UNITY_IS_SEARCH_BAR_ACCESSIBLE (self));
+
+  nux_object = nux_object_accessible_get_object(NUX_OBJECT_ACCESSIBLE(self));
+  search_bar = dynamic_cast<SearchBar*>(nux_object);
+
+  if (search_bar == NULL) /* state defunct */
+    return;
+
+  text_entry = search_bar->text_entry();
+
+  if (text_entry != NULL)
+  {
+    text_entry_accessible = unity_a11y_get_accessible(text_entry);
+    atk_object_set_name(text_entry_accessible, s.c_str());
+  }
+}
+
+
+static void
 unity_search_bar_accessible_initialize(AtkObject* accessible,
                                        gpointer data)
 {
   nux::Object* nux_object = NULL;
-  PlacesSearchBar* search_bar = NULL;
-  nux::TextEntry* text_entry = NULL;
+  SearchBar* search_bar = NULL;
+  // nux::TextEntry* text_entry = NULL;
 
   ATK_OBJECT_CLASS(unity_search_bar_accessible_parent_class)->initialize(accessible, data);
 
   accessible->role = ATK_ROLE_PANEL;
 
   nux_object = nux_object_accessible_get_object(NUX_OBJECT_ACCESSIBLE(accessible));
-  search_bar = dynamic_cast<PlacesSearchBar*>(nux_object);
+  search_bar = dynamic_cast<SearchBar*>(nux_object);
 
-  text_entry = search_bar->GetTextEntry();
+  if (search_bar == NULL)
+    return;
 
-  if (text_entry != NULL)
-  {
-    AtkObject* atk_object = unity_a11y_get_accessible(text_entry);
-
-    /* FIXME: this is the general search bar, but right now it is
-       only supported the Run Command dialog. When a full Places
-       support is finished, this would change */
-
-    atk_object_set_name(atk_object, _("Run Command Search Entry"));
-  }
+  search_bar->search_hint.changed.connect(sigc::bind(sigc::ptr_fun(on_search_hint_change_cb),
+                                                     UNITY_SEARCH_BAR_ACCESSIBLE (accessible)));
 }
-
-#endif
