@@ -409,7 +409,7 @@ panel_service_remove_indicator (PanelService *self, IndicatorObject *indicator)
   g_object_set_data (G_OBJECT (indicator), "remove", GINT_TO_POINTER (TRUE));
   notify_object (indicator);
 
-  guint id = g_timeout_add_seconds (3,
+  guint id = g_timeout_add_seconds (1,
                                     (GSourceFunc) panel_service_indicator_remove_timeout,
                                     indicator);
   g_object_set_data (G_OBJECT (indicator), "remove-timeout", GUINT_TO_POINTER (id));
