@@ -516,6 +516,19 @@ void SwitcherView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
   gPainter.PushDrawColorLayer (GfxContext, internal_clip, background_color, false, rop);
 
+  // Make round corners
+  rop.Blend = true;
+  rop.SrcBlend = GL_ZERO;
+  rop.DstBlend = GL_SRC_ALPHA;
+  gPainter.PaintShapeCornerROP(GfxContext,
+                               internal_clip,
+                               nux::color::White,
+                               nux::eSHAPE_CORNER_ROUND4,
+                               nux::eCornerTopLeft | nux::eCornerTopRight |
+                               nux::eCornerBottomLeft | nux::eCornerBottomRight,
+                               true,
+                               rop);
+  
   icon_renderer_->PreprocessIcons(last_args_, base);
 
   GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
