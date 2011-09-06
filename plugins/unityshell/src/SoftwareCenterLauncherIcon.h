@@ -48,14 +48,6 @@ private:
     void OnFinished(GVariant* params);
 
     void OnPropertyChanged(GVariant* params);
-
-    static void OnDBusSignal(GDBusProxy* proxy, 
-                                gchar* sender,
-                                gchar* signal_name,
-                                GVariant* params,
-                                gpointer user_data);
-
-    void initialize_tooltip_text();
 };
 
 #endif

@@ -44,35 +44,16 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(Launcher* IconManager, Ba
 {
     char* object_path;
 
-    initialize_tooltip_text();
-
     _aptdaemon_trans_id = aptdaemon_trans_id; 
     g_strdup_printf(object_path, "/org/debian/apt/transaction/%s", _aptdaemon_trans_id);
     
     g_debug("Aptdaemon transaction ID: %s", _aptdaemon_trans_id);
 
-    //_aptdaemon_trans = g_dbus_proxy_new_for_bus_sync(G_BUS_TYPE_SYSTEM,
-//                                                    G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START,
-  //                                                  NULL,
-    //                                                "org.debian.apt",
-      //                                              object_path,
-        //                                            "org.debian.apt.transaction",
-          //                                          NULL,
-            //                                        &error);
     _aptdaemon_trans = new unity::glib::DBusProxy("org.debian.apt",
                                     object_path,
                                     "org.debian.apt.transaction",
                                     G_BUS_TYPE_SYSTEM,
                                     G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START);
-
-//    _aptdaemon_trans_prop = g_dbus_proxy_new_for_bus_sync(G_BUS_TYPE_SYSTEM,
-  //                                                  G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START,
-    //                                                NULL,
-      //                                              "org.debian.apt",
-        //                                            object_path,
-          //                                          "org.freedesktop.DBus.Properties",
-            //                                        NULL,
-              //                                      &error2);
 
     _aptdaemon_trans_prop = new unity::glib::DBusProxy("org.debian.apt",
                                         object_path,
@@ -80,28 +61,14 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(Launcher* IconManager, Ba
                                         G_BUS_TYPE_SYSTEM,
                                         G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START);
 
-//    finished_or_not = g_dbus_proxy_call_sync (_aptdaemon_trans_prop,
-  //                                          "Get",
-    //                                        g_variant_new("(ss)",
-      //                                                  "org.debian.apt.transaction",
-        //                                                "Progress"),
-          //                                  G_DBUS_CALL_FLAGS_NO_AUTO_START,
-            //                                2000,
-              //                              NULL,
-                //                            &error3);
-
     _aptdaemon_trans_prop->Call("Get",
                                 g_variant_new("(ss)",
                                           "org.debian.apt.transaction",
                                           "Progress"),
                                 sigc::mem_fun(*this, &SoftwareCenterLauncherIcon::OnGetProgressCallback),
                                 G_DBUS_CALL_FLAGS_NO_AUTO_START,
-                                200);
+                                2000);
 
- //   g_signal_connect (_aptdaemon_trans,
-   //                 "g-signal",
-     //               G_CALLBACK(SoftwareCenterLauncherIcon::OnDBusSignal),
-       //             this);
 
     _aptdaemon_trans->Connect("Finished", sigc::mem_fun(*this, &SoftwareCenterLauncherIcon::OnFinished));
     _aptdaemon_trans->Connect("PropertyChanged", sigc::mem_fun(*this, &SoftwareCenterLauncherIcon::OnPropertyChanged));
@@ -154,40 +121,3 @@ SoftwareCenterLauncherIcon::OnPropertyChanged(GVariant* params) {
 
 }
 
-void
-SoftwareCenterLauncherIcon::OnDBusSignal(GDBusProxy* proxy,
-                                            gchar* sender,
-                                            gchar* signal_name,
-                                            GVariant* params,
-                                            gpointer user_data)
-{
-    gint32 progress;
-    gchar* property_name;
-    GVariant* property_value;
-    
-    SoftwareCenterLauncherIcon* launcher_icon = (SoftwareCenterLauncherIcon*) user_data;
-
-    if (!g_strcmp0(signal_name, "Finished")) {
-        g_debug ("Transaction finished");
-        launcher_icon->tooltip_text = launcher_icon->BamfName();
-
-        launcher_icon->SetQuirk(LauncherIcon::QUIRK_PROGRESS, FALSE); 
-    }
-    else if (!g_strcmp0(signal_name, "PropertyChanged")) {
-        g_variant_get_child (params, 0, "s", &property_name);
-        if (!g_strcmp0 (property_name, "Progress")) {
-            g_variant_get_child (params,1,"v",&property_value);
-            g_variant_get (property_value, "i", &progress);
-
-            launcher_icon->SetProgress(((float)progress) / ((float)100));
-        }
-        g_variant_unref(property_value);
-        g_free(property_name);
-    }
-}
-
-void SoftwareCenterLauncherIcon::initialize_tooltip_text() {
-
-    original_tooltip_text =  const_cast<char*> (tooltip_text().c_str());
-
-}
