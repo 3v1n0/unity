@@ -21,6 +21,8 @@
 
 #include <time.h>
 #include <X11/Xregion.h>
+#include <boost/utility.hpp>
+
 
 using namespace unity;
 
@@ -38,22 +40,50 @@ nux::Property<bool> BackgroundEffectHelper::detecting_occlusions (false);
 
 namespace unity
 {
-  /* region must be destroyed after it is used */
-  Region geometryToRegion (nux::Geometry geo)
-  {
-    XRectangle rect;
-    Region     reg;
+namespace x
+{
+// ::Region from XCreateRegion is ... a pointer to a struct.
+class Region : boost::noncopyable
+{
+public:
+  Region()
+    : region_(::XCreateRegion())
+    {}
 
-    rect.x = geo.x;
-    rect.y = geo.y;
-    rect.width = geo.width;
-    rect.height = geo.height;
+  Region(::Region r)
+    : region_(r)
+    {}
 
-    reg = XCreateRegion ();
-    XUnionRectWithRegion (&rect, reg, reg);
+  ~Region()
+    {
+      ::XDestroyRegion(region_);
+    }
 
-    return reg;
-  }
+  operator ::Region()
+    {
+      return region_;
+    }
+private:
+  ::Region region_;
+};
+}
+
+/* region must be destroyed after it is used */
+Region geometryToRegion(nux::Geometry const& geo)
+{
+  XRectangle rect;
+  Region     reg;
+
+  rect.x = geo.x;
+  rect.y = geo.y;
+  rect.width = geo.width;
+  rect.height = geo.height;
+
+  reg = XCreateRegion();
+  XUnionRectWithRegion(&rect, reg, reg);
+
+  return reg;
+}
 }
 
 
@@ -146,9 +176,9 @@ void BackgroundEffectHelper::QueueDrawOnOwners()
       }
       else
       {
-        Region        xregion = unity::geometryToRegion (owner->GetAbsoluteGeometry());
-        Region        damage_intersection     = XCreateRegion();
-        Region        occlusion_intersection   = XCreateRegion();
+        x::Region xregion(unity::geometryToRegion(owner->GetAbsoluteGeometry()));
+        x::Region damage_intersection;
+        x::Region occlusion_intersection;
 
         /* Determine if the damage region on screen actually intersected
          * a blurred region */
@@ -179,10 +209,6 @@ void BackgroundEffectHelper::QueueDrawOnOwners()
             owner->QueueDraw();
           }
         }
-
-        XDestroyRegion(xregion);
-        XDestroyRegion(damage_intersection);
-        XDestroyRegion(occlusion_intersection);
       }
     }
   }
@@ -228,10 +254,6 @@ void BackgroundEffectHelper::DirtyCache ()
 
 nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nux::Geometry geo, bool force_update)
 {
-  nux::GraphicsEngine* graphics_engine = nux::GetGraphicsDisplay()->GetGraphicsEngine();
-  Region               xregion = unity::geometryToRegion (geo);
-  Region               damage_intersection     = XCreateRegion();
-
   bool should_update = updates_enabled() || force_update || cache_dirty;
 
   /* Static blur: only update when the size changed */
@@ -244,6 +266,9 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nu
 
   if (damage_region_)
   {
+    x::Region xregion(unity::geometryToRegion(geo));
+    x::Region damage_intersection;
+
     // Handle newly created windows
     if (popup_region_)
     {
@@ -258,11 +283,9 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nu
 
     if (XEmptyRegion(damage_intersection) && !force_update)
       return blur_texture_;
-
-    XDestroyRegion(xregion);
-    XDestroyRegion(damage_intersection);
   }
 
+  nux::GraphicsEngine* graphics_engine = nux::GetGraphicsDisplay()->GetGraphicsEngine();
   blur_geometry_ =  nux::Geometry(0, 0, graphics_engine->GetWindowWidth(), graphics_engine->GetWindowHeight()).Intersect(geo);
 
   if (blur_geometry_.IsNull() || blur_type == BLUR_NONE || !nux::GetGraphicsDisplay()->GetGpuDevice()->backup_texture0_.IsValid())
