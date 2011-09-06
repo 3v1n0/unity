@@ -325,6 +325,12 @@ panel_service_actually_remove_indicator (PanelService *self, IndicatorObject *in
     }
 
   self->priv->indicators = g_slist_remove (self->priv->indicators, indicator);
+
+  if (g_object_is_floating (G_OBJECT (indicator)))
+    {
+      g_object_ref_sink (G_OBJECT (indicator));
+    }
+
   g_object_unref (G_OBJECT (indicator));
 }
 
