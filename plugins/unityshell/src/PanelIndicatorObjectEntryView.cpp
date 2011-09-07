@@ -98,7 +98,7 @@ void PanelIndicatorObjectEntryView::OnMouseDown(int x, int y,
        (proxy_->image_visible() && proxy_->image_sensitive())) &&
       nux::GetEventButton(button_flags) != 2)
   {
-    proxy_->ShowMenu(GetAbsoluteX() + 1, //cairo translation
+    proxy_->ShowMenu(GetAbsoluteX(),
                      GetAbsoluteY() + PANEL_HEIGHT,
                      time(NULL),
                      nux::GetEventButton(button_flags));
@@ -141,7 +141,7 @@ void PanelIndicatorObjectEntryView::OnMouseWheel(int x, int y, int delta,
 
 void PanelIndicatorObjectEntryView::Activate()
 {
-  proxy_->ShowMenu(GetAbsoluteGeometry().x + 1, //cairo translation FIXME: Make this into one function
+  proxy_->ShowMenu(GetAbsoluteGeometry().x,
                    GetAbsoluteGeometry().y + PANEL_HEIGHT,
                    time(NULL),
                    1);
@@ -424,10 +424,8 @@ void draw_menu_bg(cairo_t* cr, int width, int height)
   gtk_style_context_add_class(style_context, GTK_STYLE_CLASS_MENUITEM);
   gtk_style_context_set_state(style_context, GTK_STATE_FLAG_PRELIGHT);
 
-  // FIXME(Cimi) 1px of padding because the dropdown menu was not aligned,
-  // maybe a better fix somewhere else?
-  gtk_render_background(style_context, cr, 1, 0, width - 2, height);
-  gtk_render_frame(style_context, cr, 1, 0, width - 2, height);
+  gtk_render_background(style_context, cr, 0, 0, width, height);
+  gtk_render_frame(style_context, cr, 0, 0, width, height);
 
   gtk_widget_path_free(widget_path);
 
