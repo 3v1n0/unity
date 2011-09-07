@@ -62,9 +62,9 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
   bg_layer_ = new nux::ColorLayer(nux::Color(0xff595853), true);
 
   layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
-  layout_->SetHorizontalInternalMargin(12);
+  layout_->SetHorizontalInternalMargin(0);
   layout_->SetVerticalExternalMargin(12);
-  layout_->SetHorizontalExternalMargin(18);
+  layout_->SetHorizontalExternalMargin(10);
   SetLayout(layout_);
 
   spinner_ = new SearchBarSpinner();
