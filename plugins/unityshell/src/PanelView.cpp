@@ -414,12 +414,10 @@ void PanelView::OnEntryActivateRequest(std::string const& entry_id)
   }
 }
 
-static gboolean track_menu_pointer(gpointer data)
+static gboolean track_menu_pointer(PanelView *self)
 {
-  PanelView *self = (PanelView*)data;
-  gint x, y;
-  gdk_display_get_pointer(gdk_display_get_default(), NULL, &x, &y, NULL);
-  self->OnMenuPointerMoved(x, y);
+  auto mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
+  self->OnMenuPointerMoved(mouse.x, mouse.y);
   return TRUE;
 }
 
@@ -438,7 +436,7 @@ void PanelView::OnEntryActivated(std::string const& entry_id)
     // process. All the motion events will go to unity-panel-service while
     // scrubbing because the active panel menu has (needs) the pointer grab.
     //
-    _track_menu_pointer_id = g_timeout_add(16, track_menu_pointer, this);
+    _track_menu_pointer_id = g_timeout_add(16, (GSourceFunc) track_menu_pointer, this);
   }
   else if (!active)
   {
@@ -447,6 +445,7 @@ void PanelView::OnEntryActivated(std::string const& entry_id)
       g_source_remove(_track_menu_pointer_id);
       _track_menu_pointer_id = 0;
     }
+    _menu_view->AllMenusClosed();
   }
 }
 

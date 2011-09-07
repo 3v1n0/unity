@@ -743,6 +743,17 @@ void PanelMenuView::OnEntryAdded(unity::indicator::Entry::Ptr const& proxy)
 }
 
 void
+PanelMenuView::AllMenusClosed()
+{
+  auto mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
+
+  _is_inside = GetAbsoluteGeometry().IsPointInside(mouse.x, mouse.y);
+  _last_active_view = NULL;
+
+  FullRedraw();
+}
+
+void
 PanelMenuView::OnNameChanged(gchar* new_name, gchar* old_name)
 {
   Refresh();
