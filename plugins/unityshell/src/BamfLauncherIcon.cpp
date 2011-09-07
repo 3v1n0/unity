@@ -194,27 +194,42 @@ BamfLauncherIcon::~BamfLauncherIcon()
   g_object_set_qdata(G_OBJECT(m_App), g_quark_from_static_string("unity-seen"), GINT_TO_POINTER(0));
 
   // We might not have created the menu items yet
+  for (auto it = _menu_clients.begin(); it != _menu_clients.end(); it++)
+  {
+    g_object_unref(G_OBJECT(it->second));
+  }
+
   if (_menu_items.find("Pin") != _menu_items.end())
   {
-    g_signal_handler_disconnect((gpointer) _menu_items["Pin"],
+    g_signal_handler_disconnect(G_OBJECT(_menu_items["Pin"]),
                                 _menu_callbacks["Pin"]);
   }
 
   if (_menu_items.find("Quit") != _menu_items.end())
   {
-    g_signal_handler_disconnect((gpointer) _menu_items["Quit"],
+    g_signal_handler_disconnect(G_OBJECT(_menu_items["Quit"]),
                                 _menu_callbacks["Quit"]);
   }
 
+  for (auto it = _menu_items.begin(); it != _menu_items.end(); it++)
+  {
+    g_object_unref(G_OBJECT(it->second));
+  }
+
+  for (auto it = _menu_items_extra.begin(); it != _menu_items_extra.end(); it++)
+  {
+    g_object_unref(G_OBJECT(it->second));
+  }
+
+  if (G_IS_OBJECT(_menu_desktop_shortcuts))
+    g_object_unref(G_OBJECT(_menu_desktop_shortcuts));
+
   if (_on_desktop_file_changed_handler_id != 0)
-    g_signal_handler_disconnect((gpointer) _desktop_file_monitor,
+    g_signal_handler_disconnect(G_OBJECT(_desktop_file_monitor),
                                 _on_desktop_file_changed_handler_id);
 
   if (_fill_supported_types_id != 0)
     g_source_remove(_fill_supported_types_id);
-
-  if (G_IS_OBJECT(_menu_desktop_shortcuts))
-      g_object_unref(G_OBJECT(_menu_desktop_shortcuts));
 
   g_signal_handlers_disconnect_by_func(m_App, (void*) &BamfLauncherIcon::OnChildRemoved,       this);
   g_signal_handlers_disconnect_by_func(m_App, (void*) &BamfLauncherIcon::OnChildAdded,         this);
@@ -328,23 +343,22 @@ void BamfLauncherIcon::UpdateDesktopFile()
 
     _cached_desktop_file = g_strdup(filename);
 
-  // add a file watch to the desktop file so that if/when the app is removed
-  // we can remove ourself from the launcher and when it's changed
-  // we can update the quicklist.
+    // add a file watch to the desktop file so that if/when the app is removed
+    // we can remove ourself from the launcher and when it's changed
+    // we can update the quicklist.
 
     if (_on_desktop_file_changed_handler_id != 0)
-      g_signal_handler_disconnect((gpointer) _desktop_file_monitor,
+      g_signal_handler_disconnect(G_OBJECT(_desktop_file_monitor),
                                   _on_desktop_file_changed_handler_id);
 
-
-  GFile* desktop_file = g_file_new_for_path(DesktopFile());
-  _desktop_file_monitor = g_file_monitor_file(desktop_file, G_FILE_MONITOR_NONE,
-                                              NULL, NULL);
-  g_file_monitor_set_rate_limit (_desktop_file_monitor, 1000);
-  _on_desktop_file_changed_handler_id = g_signal_connect(_desktop_file_monitor,
-                                                         "changed",
-                                                         G_CALLBACK(&BamfLauncherIcon::OnDesktopFileChanged),
-                                                         this);
+    GFile* desktop_file = g_file_new_for_path(DesktopFile());
+    _desktop_file_monitor = g_file_monitor_file(desktop_file, G_FILE_MONITOR_NONE,
+                                                NULL, NULL);
+    g_file_monitor_set_rate_limit (_desktop_file_monitor, 1000);
+    _on_desktop_file_changed_handler_id = g_signal_connect(_desktop_file_monitor,
+                                                           "changed",
+                                                           G_CALLBACK(&BamfLauncherIcon::OnDesktopFileChanged),
+                                                           this);
   }
 }
 
@@ -650,7 +664,8 @@ void BamfLauncherIcon::UpdateDesktopQuickList()
 
   if (error != NULL)
   {
-    g_warning("Could not load desktop file for: %s" , desktop_file);
+    g_warning("Could not load desktop file for: %s", desktop_file);
+    g_key_file_free(keyfile);
     g_error_free(error);
     return;
   }
@@ -697,8 +712,9 @@ void BamfLauncherIcon::UpdateDesktopQuickList()
       g_object_unref(G_OBJECT(_menu_desktop_shortcuts));
 
     _menu_desktop_shortcuts = root;
-    g_key_file_free(keyfile);
   }
+
+  g_key_file_free(keyfile);
 }
 
 void BamfLauncherIcon::UpdateMenus()
@@ -726,7 +742,10 @@ void BamfLauncherIcon::UpdateMenus()
 
   // add dynamic quicklist
   if (_menuclient_dynamic_quicklist != NULL)
-    _menu_clients["dynamicquicklist"] = _menuclient_dynamic_quicklist;
+  {
+    auto menu_client = DBUSMENU_CLIENT(g_object_ref(_menuclient_dynamic_quicklist));
+    _menu_clients["dynamicquicklist"] = menu_client;
+  }
 
   // make a client for desktop file actions
   if (!DBUSMENU_IS_MENUITEM(_menu_desktop_shortcuts))
@@ -902,31 +921,59 @@ std::list<DbusmenuMenuitem*> BamfLauncherIcon::GetMenus()
 
   if (first_separator_needed)
   {
+    auto first_sep = _menu_items_extra.find("FirstSeparator");
+    if (first_sep != _menu_items_extra.end())
+    {
+      item = first_sep->second;
+    }
+    else
+    {
+      item = dbusmenu_menuitem_new();
+      dbusmenu_menuitem_property_set(item,
+                                     DBUSMENU_MENUITEM_PROP_TYPE,
+                                     DBUSMENU_CLIENT_TYPES_SEPARATOR);
+      _menu_items_extra["FirstSeparator"] = item;
+    }
+    result.push_back(item);
+  }
+
+  auto app_name_item = _menu_items_extra.find("AppName");
+  if (app_name_item != _menu_items_extra.end())
+  {
+    item = app_name_item->second;
+  }
+  else
+  {
+    gchar* app_name;
+    app_name = g_markup_escape_text(BamfName(), -1);
+
+    item = dbusmenu_menuitem_new();
+    dbusmenu_menuitem_property_set(item,
+                                   DBUSMENU_MENUITEM_PROP_LABEL,
+                                   app_name);
+    dbusmenu_menuitem_property_set_bool(item,
+                                        DBUSMENU_MENUITEM_PROP_ENABLED,
+                                        true);
+    g_signal_connect(item, "item-activated", (GCallback) OnAppLabelActivated, this);
+    g_free(app_name);
+
+    _menu_items_extra["AppName"] = item;
+  }
+  result.push_back(item);
+
+  auto second_sep = _menu_items_extra.find("SecondSeparator");
+  if (second_sep != _menu_items_extra.end())
+  {
+    item = second_sep->second;
+  }
+  else
+  {
     item = dbusmenu_menuitem_new();
     dbusmenu_menuitem_property_set(item,
                                    DBUSMENU_MENUITEM_PROP_TYPE,
                                    DBUSMENU_CLIENT_TYPES_SEPARATOR);
-    result.push_back(item);
+    _menu_items_extra["SecondSeparator"] = item;
   }
-
-  gchar* app_name;
-  app_name = g_markup_escape_text(BamfName(), -1);
-
-  item = dbusmenu_menuitem_new();
-  dbusmenu_menuitem_property_set(item,
-                                 DBUSMENU_MENUITEM_PROP_LABEL,
-                                 app_name);
-  dbusmenu_menuitem_property_set_bool(item,
-                                      DBUSMENU_MENUITEM_PROP_ENABLED,
-                                      true);
-  g_signal_connect(item, "item-activated", (GCallback) OnAppLabelActivated, this);
-  result.push_back(item);
-  g_free(app_name);
-
-  item = dbusmenu_menuitem_new();
-  dbusmenu_menuitem_property_set(item,
-                                 DBUSMENU_MENUITEM_PROP_TYPE,
-                                 DBUSMENU_CLIENT_TYPES_SEPARATOR);
   result.push_back(item);
 
   EnsureMenuItemsReady();

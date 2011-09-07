@@ -81,6 +81,7 @@ private:
   Launcher* _launcher;
   std::map<std::string, DbusmenuClient*> _menu_clients;
   std::map<std::string, DbusmenuMenuitem*> _menu_items;
+  std::map<std::string, DbusmenuMenuitem*> _menu_items_extra;
   std::map<std::string, gulong> _menu_callbacks;
   DbusmenuMenuitem* _menu_desktop_shortcuts;
   gchar* _remote_uri;
