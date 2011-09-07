@@ -57,7 +57,6 @@ namespace unity {
 
     genre_layout_->SetChildrenSize (style->GetTileWidth() - 12,
                                     garnish + style->GetTextLineHeight() * 2);
-    genre_layout_->Reference();
 
     SetRightHandView(all_button_);
     SetContents(genre_layout_);
@@ -113,7 +112,8 @@ namespace unity {
     if (found_filter)
     {
       genre_layout_->RemoveChildObject(*it);
-      buttons_.erase (it);
+      buttons_.erase(it);
+      found_filter->UnReference();
     }
   }
 

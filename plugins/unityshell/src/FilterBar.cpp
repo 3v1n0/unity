@@ -71,6 +71,7 @@ namespace unity
         nux::View *filter_view = iter.second;
         filter_map_.erase (filter_map_.find(iter.first));
         GetLayout()->RemoveChildObject (filter_view);
+        filter_view->UnReference();
         break;
       }
     }

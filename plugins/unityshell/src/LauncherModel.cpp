@@ -32,15 +32,11 @@ LauncherModel::LauncherModel()
 
 LauncherModel::~LauncherModel()
 {
-  for (iterator it = _inner_shelf.begin(); it != _inner_shelf.end(); ++it)
-    reinterpret_cast<LauncherIcon*>(*it)->UnReference();
-  _inner_shelf.clear();
+  for (auto icon : _inner_shelf)
+    icon->UnReference();
 
-  for (iterator it = _inner_main.begin(); it != _inner_main.end(); ++it)
-    reinterpret_cast<LauncherIcon*>(*it)->UnReference();
-  _inner_main.clear();
-
-  _inner.clear();
+  for (auto icon : _inner_main)
+    icon->UnReference();
 }
 
 bool LauncherModel::IconShouldShelf(LauncherIcon* icon)

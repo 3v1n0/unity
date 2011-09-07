@@ -86,8 +86,6 @@ LauncherIcon::LauncherIcon(Launcher* launcher)
   , _glow_color(nux::color::White)
   , _shortcut(0)
   , _icon_type(TYPE_NONE)
-  , _emblem(nullptr)
-  , _superkey_label(nullptr)
 {
   for (int i = 0; i < QUIRK_LAST; i++)
   {
@@ -143,10 +141,6 @@ LauncherIcon::~LauncherIcon()
   if (_tooltip_delay_handle)
     g_source_remove(_tooltip_delay_handle);
   _tooltip_delay_handle = 0;
-
-  if (_superkey_label)
-    _superkey_label->UnReference();
-
   // clean up the whole signal-callback mess
   if (needs_redraw_connection.connected())
     needs_redraw_connection.disconnect();
@@ -908,18 +902,12 @@ std::list<DbusmenuMenuitem*> LauncherIcon::GetMenus()
 nux::BaseTexture*
 LauncherIcon::Emblem()
 {
-  return _emblem;
+  return _emblem.GetPointer();
 }
 
 void
-LauncherIcon::SetEmblem(nux::BaseTexture* emblem)
+LauncherIcon::SetEmblem(LauncherIcon::BaseTexturePtr const& emblem)
 {
-  if (_emblem == emblem)
-    return;
-
-  if (_emblem)
-    _emblem->UnReference();
-
   _emblem = emblem;
   needs_redraw.emit(this);
 }
@@ -927,7 +915,7 @@ LauncherIcon::SetEmblem(nux::BaseTexture* emblem)
 void
 LauncherIcon::SetEmblemIconName(const char* name)
 {
-  nux::BaseTexture* emblem;
+  BaseTexturePtr emblem;
 
   if (g_str_has_prefix(name, "/"))
     emblem = TextureFromPath(name, 22, false);
@@ -935,6 +923,8 @@ LauncherIcon::SetEmblemIconName(const char* name)
     emblem = TextureFromGtkTheme(name, 22, false);
 
   SetEmblem(emblem);
+  // Ownership isn't taken, but shared, so we need to unref here.
+  emblem->UnReference();
 }
 
 std::vector<nux::Vector4> &
@@ -1022,7 +1012,7 @@ LauncherIcon::SetEmblemText(const char* text)
                 (int)((height - pango_units_to_double(logical_rect.height)) / 2.0f - pango_units_to_double(logical_rect.y)));
   pango_cairo_show_layout(cr, layout);
 
-  SetEmblem(texture_from_cairo_graphics(cg));
+  SetEmblem(texture_ptr_from_cairo_graphics(cg));
 
   // clean up
   g_object_unref(layout);
@@ -1032,7 +1022,7 @@ LauncherIcon::SetEmblemText(const char* text)
 void
 LauncherIcon::DeleteEmblem()
 {
-  SetEmblem(0);
+  SetEmblem(BaseTexturePtr());
 }
 
 void
