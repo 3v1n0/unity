@@ -189,7 +189,7 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   GfxContext.PushClippingRectangle(GetGeometry());
 
-  if (BackgroundEffectHelper::blur_type != BLUR_NONE && (_dash_is_open || _opacity != 1.0f))
+  if (BackgroundEffectHelper::blur_type != BLUR_NONE && (_dash_is_open || (_opacity != 1.0f && _opacity != 0.0f)))
   {
     nux::Geometry blur_geo(geo_absolute.x, geo_absolute.y, geo.width, geo.height);
     bg_blur_texture_ = bg_effect_helper_.GetBlurRegion(blur_geo);
@@ -243,7 +243,7 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   GfxContext.GetRenderStates().SetBlend(true);
   GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
 
-  if (bg_blur_texture_.IsValid() && BackgroundEffectHelper::blur_type != BLUR_NONE && (_dash_is_open || _opacity != 1.0f))
+  if (bg_blur_texture_.IsValid() && BackgroundEffectHelper::blur_type != BLUR_NONE && (_dash_is_open || (_opacity != 1.0f && _opacity != 0.0f)))
   {
     nux::Geometry geo_absolute = GetAbsoluteGeometry ();
     nux::TexCoordXForm texxform_blur_bg;
@@ -312,7 +312,7 @@ PanelView::UpdateBackground()
   }
   else
   {
-    nux::NBitmapData* bitmap = _style->GetBackground(geo.width, geo.height);
+    nux::NBitmapData* bitmap = _style->GetBackground(geo.width, geo.height, _opacity);
     nux::BaseTexture* texture2D = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
     texture2D->Update(bitmap);
     delete bitmap;
@@ -328,7 +328,6 @@ PanelView::UpdateBackground()
     rop.SrcBlend = GL_ONE;
     rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
     nux::Color col = nux::color::White;
-    col.alpha = _opacity;
 
     _bg_layer = new nux::TextureLayer(texture2D->GetDeviceTexture(),
                                       texxform,

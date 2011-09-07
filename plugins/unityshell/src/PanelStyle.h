@@ -50,7 +50,7 @@ public:
 
   GtkStyleContext* GetStyleContext();
 
-  nux::NBitmapData* GetBackground(int width, int height);
+  nux::NBitmapData* GetBackground(int width, int height, float opacity);
 
   nux::BaseTexture* GetWindowButton(WindowButtonType type, WindowState state);
 
