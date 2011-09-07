@@ -745,9 +745,23 @@ void PanelMenuView::OnEntryAdded(unity::indicator::Entry::Ptr const& proxy)
 void
 PanelMenuView::AllMenusClosed()
 {
-  auto mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
+  int x, y;
+  auto display = nux::GetGraphicsDisplay();
 
-  _is_inside = GetAbsoluteGeometry().IsPointInside(mouse.x, mouse.y);
+  // FIXME sometimes nux seems to return a null display and this would lead
+  //       to a crash, so in that case we fallback to the gdk display.
+  if (display)
+  {
+    auto mouse = display->GetMouseScreenCoord();
+    x = mouse.x;
+    y = mouse.y;
+  }
+  else
+  {
+    gdk_display_get_pointer(gdk_display_get_default(), NULL, &x, &y, NULL);
+  }
+
+  _is_inside = GetAbsoluteGeometry().IsPointInside(x, y);
   _last_active_view = NULL;
 
   FullRedraw();
