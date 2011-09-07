@@ -112,6 +112,14 @@ PanelView::~PanelView()
   delete _bg_layer;
 }
 
+unsigned int PanelView::GetTrayXid ()
+{
+  if (!_tray)
+    return 0;
+
+  return _tray->xid ();
+}
+
 void PanelView::OnBackgroundUpdate (GVariant *data, PanelView *self)
 {
   gdouble red, green, blue, alpha;

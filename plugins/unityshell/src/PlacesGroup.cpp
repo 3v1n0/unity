@@ -49,6 +49,8 @@ static const nux::Color kExpandHoverTextColor(1.0f, 1.0f, 1.0f, 1.0f);
 static const float kExpandDefaultIconOpacity = 0.6f;
 static const float kExpandHoverIconOpacity = 1.0f;
 
+namespace unity
+{
 
 PlacesGroup::PlacesGroup()
   : View(NUX_TRACKER_LOCATION),
@@ -266,17 +268,20 @@ PlacesGroup::Relayout()
 gboolean
 PlacesGroup::OnIdleRelayout(PlacesGroup* self)
 {
-  self->Refresh();
-  self->QueueDraw();
-  self->_group_layout->QueueDraw();
-  self->GetChildView()->QueueDraw();
-  self->ComputeChildLayout();
-  self->_idle_id = 0;
-
-  if (self->GetFocused())
+  if (self->GetChildView())
   {
-    self->SetFocused(false);  // unset focus on all children
-    self->SetFocused(true);  // set focus on first child
+    self->Refresh();
+    self->QueueDraw();
+    self->_group_layout->QueueDraw();
+    self->GetChildView()->QueueDraw();
+    self->ComputeChildLayout();
+    self->_idle_id = 0;
+
+    if (self->GetFocused())
+    {
+      self->SetFocused(false);  // unset focus on all children
+      self->SetFocused(true);  // set focus on first child
+    }
   }
 
   return FALSE;
@@ -399,3 +404,5 @@ PlacesGroup::AcceptKeyNavFocus()
 {
   return false;
 }
+
+} // namespace unity

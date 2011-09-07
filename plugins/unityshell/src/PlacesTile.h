@@ -28,6 +28,9 @@
 
 #include "Introspectable.h"
 
+namespace unity
+{
+
 class PlacesTile : public nux::View
 {
 public:
@@ -52,14 +55,13 @@ private:
   void RecvMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags);
   void RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long key_flags);
   void RecvMouseClick(int x, int y, unsigned long button_flags, unsigned long key_flags);
-  void OnDestroyNotify(nux::Trackable* Object);
 
   void UpdateBackground();
-  void DrawHighlight(const char* texid, int width, int height, nux::BaseTexture** texture);
+  nux::BaseTexture* DrawHighlight(std::string const& texid, int width, int height);
 
 private:
   const void* _id;
-  nux::BaseTexture*  _hilight_background;
+  nux::ObjectPtr<nux::BaseTexture> _hilight_background;
   nux::TextureLayer* _hilight_layer;
 
   void OnFocusChanged(nux::Area* label);
@@ -69,5 +71,7 @@ private:
 
   sigc::connection con_obj;
 };
+
+}
 
 #endif // PLACE_TILE_H

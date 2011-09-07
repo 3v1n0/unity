@@ -32,6 +32,9 @@
 
 #include <UnityCore/Variant.h>
 
+namespace unity
+{
+
 PlacesSimpleTile::PlacesSimpleTile(const char* icon_name,
                                    const char* label,
                                    int         icon_size,
@@ -252,3 +255,5 @@ PlacesSimpleTile::LoadIcon()
 
   QueueDraw();
 }
+
+} // namespace unity

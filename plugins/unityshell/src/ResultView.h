@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright 2011 Canonical Ltd.
  *
@@ -40,6 +41,8 @@ namespace dash
 class ResultView : public nux::View
 {
 public:
+  NUX_DECLARE_OBJECT_TYPE(ResultView, nux::View);
+
   typedef std::vector<Result> ResultList;
 
   ResultView(NUX_FILE_LINE_DECL);

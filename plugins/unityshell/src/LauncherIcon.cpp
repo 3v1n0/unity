@@ -30,6 +30,7 @@
 #include "NuxCore/Color.h"
 #include "NuxCore/Logger.h"
 
+#include "CairoTexture.h"
 #include "LauncherIcon.h"
 #include "Launcher.h"
 
@@ -955,7 +956,6 @@ LauncherIcon::SetEmblemText(const char* text)
   if (text == NULL)
     return;
 
-  nux::BaseTexture*     emblem;
   PangoLayout*          layout     = NULL;
 
   PangoContext*         pangoCtx   = NULL;
@@ -1022,13 +1022,7 @@ LauncherIcon::SetEmblemText(const char* text)
                 (int)((height - pango_units_to_double(logical_rect.height)) / 2.0f - pango_units_to_double(logical_rect.y)));
   pango_cairo_show_layout(cr, layout);
 
-  nux::NBitmapData* bitmap = cg.GetBitmap();
-
-  emblem = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
-  emblem->Update(bitmap);
-  delete bitmap;
-
-  SetEmblem(emblem);
+  SetEmblem(texture_from_cairo_graphics(cg));
 
   // clean up
   g_object_unref(layout);

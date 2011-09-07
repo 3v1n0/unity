@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include <gio/gio.h>
 #include <NuxCore/Logger.h>
+#include <Nux/Nux.h>
 
 static bool wait_until_test_service_appears();
 static void tell_service_to_exit();
@@ -10,6 +11,7 @@ int main(int argc, char** argv)
   ::testing::InitGoogleTest(&argc, argv);
   g_type_init();
   g_thread_init(NULL);
+  nux::NuxInitialize (0);
 
   // We need the service to be ready before we are
   if (!wait_until_test_service_appears())

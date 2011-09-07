@@ -79,7 +79,7 @@ test_handler_color_change (GVariant *data, gpointer val)
   gdouble red, green, blue, alpha;
   g_variant_get (data, "(dddd)", &red, &green, &blue, &alpha);
 
-  g_debug ("new color: %f, %f, %f", red, green, blue);
+  //g_debug ("new color: %f, %f, %f", red, green, blue);
 }
 
 int main(int argc, char **argv)

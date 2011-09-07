@@ -75,17 +75,17 @@ LensView::~LensView()
 
 void LensView::SetupViews()
 {
-  layout_ = new nux::HLayout();
+  layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
 
-  scroll_view_ = new nux::ScrollView();
+  scroll_view_ = new nux::ScrollView(NUX_TRACKER_LOCATION);
   scroll_view_->EnableVerticalScrollBar(true);
   scroll_view_->EnableHorizontalScrollBar(false);
   layout_->AddView(scroll_view_);
 
-  scroll_layout_ = new nux::VLayout();
+  scroll_layout_ = new nux::VLayout(NUX_TRACKER_LOCATION);
   scroll_view_->SetLayout(scroll_layout_);
 
-  fscroll_view_ = new nux::ScrollView();
+  fscroll_view_ = new nux::ScrollView(NUX_TRACKER_LOCATION);
   fscroll_view_->EnableVerticalScrollBar(true);
   fscroll_view_->EnableHorizontalScrollBar(false);
   fscroll_view_->SetVisible(false);
@@ -161,6 +161,13 @@ void LensView::OnCategoryAdded(Category const& category)
   group->SetChildView(grid);
 
   scroll_layout_->AddView(group, 0);
+
+  Categories::Ptr categories = lens_->categories;
+  if (category.index + 1 == categories->count())
+  {
+    lens_->Search("---");
+    lens_->Search("");
+  }
 }
 
 void LensView::OnResultAdded(Result const& result)

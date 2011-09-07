@@ -54,6 +54,7 @@ public:
   void AboutToHide();
   void Relayout();
   void DisableBlur();
+  void OnActivateRequest(GVariant* args);
 
   nux::View* default_focus() const;
 
@@ -69,7 +70,6 @@ private:
   void DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw);
 
   void OnMouseButtonDown(int x, int y, unsigned long button, unsigned long key);
-  void OnActivateRequest(GVariant* args);
   void OnBackgroundColorChanged(GVariant* args);
   void OnSearchChanged(std::string const& search_string);
   void OnLiveSearchReached(std::string const& search_string);
@@ -81,6 +81,9 @@ private:
   bool DoFallbackActivation(std::string const& uri);
   bool LaunchApp(std::string const& appname);
   void OnEntryActivated();
+  std::string AnalyseLensURI(std::string uri);
+  void UpdateLensFilter(std::string lens, std::string filter, std::string value);
+  void UpdateLensFilterValue(Filter::Ptr filter, std::string value);
   
   bool AcceptKeyNavFocus();
   bool InspectKeyEvent(unsigned int eventType, unsigned int key_sym, const char* character);
@@ -112,6 +115,8 @@ private:
   nux::ObjectPtr <nux::IOpenGLBaseTexture> bg_blur_texture_;
 
   std::string last_activated_uri_;
+  
+  bool visible_;
 };
 
 

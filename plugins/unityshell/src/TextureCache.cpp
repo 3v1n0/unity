@@ -1,5 +1,6 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010 Canonical Ltd
+ * Copyright (C) 2010, 2011 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -14,87 +15,92 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by Gordon Allott <gord.allott@canonical.com>
+ *             Tim Penhey <tim.penhey@canonical.com>
  */
 
 #include "TextureCache.h"
 
+#include <sstream>
+#include <NuxCore/Logger.h>
+
+namespace unity
+{
+namespace
+{
+nux::logging::Logger logger("unity.internal.texturecache");
+}
+
 TextureCache::TextureCache()
 {
-
 }
 
 TextureCache::~TextureCache()
 {
-  std::map<nux::BaseTexture*, sigc::connection>::iterator it;
-  // disconnect all our signals
-  for (it = _cache_con.begin() ; it != _cache_con.end(); it++)
-    (*it).second.disconnect();
-
-  _cache.clear();
-  _cache_inverse.clear();
-  _cache_con.clear();
 }
 
-TextureCache*
-TextureCache::GetDefault()
+TextureCache& TextureCache::GetDefault()
 {
-  static TextureCache* default_loader = NULL;
-
-  if (G_UNLIKELY(!default_loader))
-    default_loader = new TextureCache();
-
-  return default_loader;
+  static TextureCache instance;
+  return instance;
 }
 
-char*
-TextureCache::Hash(const char* id, int width, int height)
+std::string TextureCache::Hash(std::string const& id, int width, int height)
 {
-  return g_strdup_printf("%s-%ix%i", id, width, height);
+  std::ostringstream sout;
+  sout << id << "-" << width << "x" << height;
+  return sout.str();
 }
 
-nux::BaseTexture*
-TextureCache::FindTexture(const char* texture_id, int width, int height, CreateTextureCallback slot)
+TextureCache::BaseTexturePtr TextureCache::FindTexture(std::string const& texture_id,
+                                                       int width, int height,
+                                                       CreateTextureCallback slot)
 {
-  nux::BaseTexture* texture = NULL;
-  if (texture_id == NULL)
+  std::string key = Hash(texture_id, width, height);
+  BaseTexturePtr texture(cache_[key]);
+
+  if (!texture)
   {
-    g_error("Did not supply a texture id to TextureCache::FindTexture");
-    return NULL;
+    texture = slot(texture_id, width, height);
+
+    // Now here is the magic.
+    //
+    // The slot function is required to return a new texture.  This has an
+    // internal reference count of one.  The TextureCache wants to hold the
+    // texture inside the internal map for as long as the object itself
+    // exists, but it doesn't want any ownership of the texture.  How we
+    // handle this is to always return a smart pointer for the texture.  These
+    // smart pointers have the ownership of the texture.
+    //
+    // We also hook into the objects OnDestroyed signal to remove it from the
+    // map.  To avoid a reverse lookup map, we bind the key to the method
+    // call.  By using a mem_fun rather than a lambda function, and through
+    // the magic of sigc::trackable, we don't need to remember the connection
+    // itself.  We get notified when the object is being destroyed, and if we
+    // are destroyed first, then the sigc::trackable disconnects all methods
+    // created using mem_fun.
+
+    // Reduce the internal reference count of the texture, so the smart
+    // pointer is the sole owner of the object.
+    texture->UnReference();
+
+    cache_[key] = texture.GetPointer();
+
+    auto on_destroy = sigc::mem_fun(this, &TextureCache::OnDestroyNotify);
+    texture->OnDestroyed.connect(sigc::bind(on_destroy, key));
   }
-
-  char* key = Hash(texture_id, width, height);
-  texture = _cache[key];
-
-  if (texture == NULL)
-  {
-    // no texture yet, lets make one
-    slot(texture_id, width, height, &texture);
-
-    _cache[key] = texture;
-    _cache_inverse[texture] = key;
-    _cache_con[texture] = texture->OnDestroyed.connect(sigc::mem_fun(this, &TextureCache::OnDestroyNotify));
-  }
-
-  g_free(key);
 
   return texture;
 }
 
-void
-TextureCache::OnDestroyNotify(nux::Trackable* Object)
+void TextureCache::OnDestroyNotify(nux::Trackable* Object, std::string key)
 {
-  nux::BaseTexture* texture = (nux::BaseTexture*)Object;
-  std::string      key = _cache_inverse[texture];
-
-  if (key.empty())
-  {
-    // object doesn't exist in the map, could happen if the cache is
-    return;
-  }
-
-  _cache.erase(_cache.find(key));
-  _cache_inverse.erase(_cache_inverse.find(texture));
-  _cache_con.erase(_cache_con.find(texture));
-
-  return;
+  cache_.erase(key);
 }
+
+// Return the current size of the cache.
+std::size_t TextureCache::Size() const
+{
+  return cache_.size();
+}
+
+} // namespace unity
