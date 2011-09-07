@@ -490,6 +490,7 @@ on_indicator_menu_show (IndicatorObject      *object,
     }
 
   entry_id = g_strdup_printf ("%p", entry);
+  g_debug("MENU_SHOW: %s", entry_id);
 
   g_signal_emit (self, _service_signals[ENTRY_ACTIVATE_REQUEST], 0, entry_id);
 
@@ -503,7 +504,7 @@ on_indicator_menu_show_now_changed (IndicatorObject      *object,
                                     PanelService         *self)
 {
   gchar *entry_id;
-  
+
   g_return_if_fail (PANEL_IS_SERVICE (self));
   if (entry == NULL)
     {
@@ -512,7 +513,7 @@ on_indicator_menu_show_now_changed (IndicatorObject      *object,
     }
 
   entry_id = g_strdup_printf ("%p", entry);
-
+  
   g_signal_emit (self, _service_signals[ENTRY_SHOW_NOW_CHANGED], 0, entry_id, show_now_changed);
 
   g_free (entry_id);

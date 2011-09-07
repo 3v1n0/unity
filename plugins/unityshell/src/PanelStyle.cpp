@@ -131,12 +131,16 @@ PanelStyle::OnStyleChanged(GObject*    gobject,
   self->Refresh();
 }
 
-nux::NBitmapData* PanelStyle::GetBackground(int width, int height)
+nux::NBitmapData* PanelStyle::GetBackground(int width, int height, float opacity)
 {
   // TODO: check to see if we can put this on the stack.
   nux::CairoGraphics* context = new nux::CairoGraphics(CAIRO_FORMAT_ARGB32, width, height);
   // Use the internal context as we know it is good and shiny new.
-  gtk_render_background(_style_context, context->GetInternalContext(), 0, 0, width, height);
+  cairo_t* cr = context->GetInternalContext();
+  cairo_push_group(cr);
+  gtk_render_background(_style_context, cr, 0, 0, width, height);
+  cairo_pop_group_to_source(cr);
+  cairo_paint_with_alpha(cr, opacity);
 
   nux::NBitmapData* bitmap = context->GetBitmap();
 
