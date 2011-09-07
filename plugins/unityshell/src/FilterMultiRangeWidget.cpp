@@ -20,7 +20,8 @@
  */
 
 #include "config.h"
-#include "Nux/Nux.h"
+
+#include <Nux/Nux.h>
 
 #include "FilterMultiRangeWidget.h"
 #include "FilterMultiRangeButton.h"

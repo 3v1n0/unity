@@ -28,8 +28,8 @@
 #include <Nux/Nux.h>
 #include <NuxCore/Object.h>
 #include <NuxCore/Property.h>
-#include "Nux/TextureArea.h"
-#include "NuxImage/CairoGraphics.h"
+#include <Nux/TextureArea.h>
+#include <NuxImage/CairoGraphics.h>
 
 #include "ResultRendererTile.h"
 

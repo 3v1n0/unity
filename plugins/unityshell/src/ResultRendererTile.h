@@ -29,8 +29,8 @@
 #include <NuxCore/Object.h>
 #include <NuxCore/ObjectPtr.h>
 #include <NuxCore/Property.h>
-#include "Nux/TextureArea.h"
-#include "NuxImage/CairoGraphics.h"
+#include <Nux/TextureArea.h>
+#include <NuxImage/CairoGraphics.h>
 #include "IconLoader.h"
 
 #include "ResultRenderer.h"

@@ -21,11 +21,11 @@
 #ifndef QUICKLISTVIEW_H
 #define QUICKLISTVIEW_H
 
-#include "Nux/Nux.h"
-#include "Nux/BaseWindow.h"
-#include "NuxGraphics/GraphicsEngine.h"
-#include "Nux/TextureArea.h"
-#include "NuxImage/CairoGraphics.h"
+#include <Nux/Nux.h>
+#include <Nux/BaseWindow.h>
+#include <NuxGraphics/GraphicsEngine.h>
+#include <Nux/TextureArea.h>
+#include <NuxImage/CairoGraphics.h>
 
 #include <pango/pango.h>
 #include <pango/pangocairo.h>

@@ -20,9 +20,11 @@
  */
 
 #include "config.h"
-#include "Nux/Nux.h"
-#include "Nux/HLayout.h"
-#include "Nux/Button.h"
+
+#include <Nux/Nux.h>
+#include <Nux/HLayout.h>
+#include <Nux/Button.h>
+
 #include "PreviewMusicTrackWidget.h"
 #include "StaticCairoText.h"
 

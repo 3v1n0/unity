@@ -18,8 +18,8 @@
  */
 
 #include <NuxCore/Logger.h>
-#include "Nux/Nux.h"
-#include "Nux/BaseWindow.h"
+#include <Nux/Nux.h>
+#include <Nux/BaseWindow.h>
 
 #include "SimpleLauncherIcon.h"
 #include "Launcher.h"

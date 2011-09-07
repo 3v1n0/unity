@@ -21,9 +21,9 @@
 
 #include <atk/atk.h>
 
-#include "Nux/Nux.h"
-#include "Nux/WindowThread.h"
-#include "NuxCore/Object.h"
+#include <Nux/Nux.h>
+#include <Nux/WindowThread.h>
+#include <NuxCore/Object.h>
 
 void unity_a11y_preset_environment(void);
 void unity_a11y_init(nux::WindowThread* wt);

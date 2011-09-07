@@ -21,9 +21,9 @@
 
 #include <glib.h>
 #include <sigc++/sigc++.h>
-#include "Nux/Nux.h"
-#include "Nux/WindowThread.h"
-#include "NuxGraphics/GLWindowManager.h"
+#include <Nux/Nux.h>
+#include <Nux/WindowThread.h>
+#include <NuxGraphics/GLWindowManager.h>
 #include <gdk/gdkx.h>
 #include <core/core.h>
 

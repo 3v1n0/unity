@@ -18,16 +18,16 @@
  * Authored by: Mirco Müller <mirco.mueller@canonical.com
  */
 
-#include "Nux/Nux.h"
-#include "Nux/VLayout.h"
-#include "Nux/HLayout.h"
-#include "Nux/WindowThread.h"
-#include "Nux/WindowCompositor.h"
-#include "Nux/BaseWindow.h"
-#include "Nux/Button.h"
-#include "NuxGraphics/GraphicsEngine.h"
-#include "Nux/TextureArea.h"
-#include "NuxImage/CairoGraphics.h"
+#include <Nux/Nux.h>
+#include <Nux/VLayout.h>
+#include <Nux/HLayout.h>
+#include <Nux/WindowThread.h>
+#include <Nux/WindowCompositor.h>
+#include <Nux/BaseWindow.h>
+#include <Nux/Button.h>
+#include <NuxGraphics/GraphicsEngine.h>
+#include <Nux/TextureArea.h>
+#include <NuxImage/CairoGraphics.h>
 
 #include "CairoTexture.h"
 #include "QuicklistMenuItem.h"

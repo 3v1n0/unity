@@ -21,7 +21,7 @@
 
 #include <boost/lexical_cast.hpp>
 
-#include "NuxCore/Logger.h"
+#include <NuxCore/Logger.h>
 
 namespace
 {

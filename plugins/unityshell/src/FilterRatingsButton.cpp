@@ -18,12 +18,14 @@
  * Authored by: Gordon Allott <gord.allott@canonical.com>
  *
  */
+
+#include "config.h"
+
+#include <Nux/Nux.h>
 #include <NuxCore/Logger.h>
 
 #include "FilterRatingsButton.h"
-#include "config.h"
 #include "DashStyle.h"
-#include "Nux/Nux.h"
 
 namespace {
   nux::logging::Logger logger("unity.dash.FilterRatingsButton");

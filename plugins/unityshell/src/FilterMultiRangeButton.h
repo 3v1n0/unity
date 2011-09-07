@@ -25,10 +25,11 @@
 #define FILTERMULTIRANGEBUTTON_H
 
 #include <Nux/Nux.h>
-#include <Nux/View.h>
-#include "Nux/ToggleButton.h"
-#include "FilterWidget.h"
 #include <Nux/CairoWrapper.h>
+#include <Nux/ToggleButton.h>
+#include <Nux/View.h>
+
+#include "FilterWidget.h"
 #include "DashStyle.h"
 
 namespace unity {

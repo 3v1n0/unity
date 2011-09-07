@@ -21,19 +21,19 @@
 #include "config.h"
 #include <math.h>
 
-#include "Nux/Nux.h"
-#include "Nux/VScrollBar.h"
-#include "Nux/HLayout.h"
-#include "Nux/VLayout.h"
-#include "Nux/MenuPage.h"
-#include "NuxCore/Logger.h"
+#include <Nux/Nux.h>
+#include <Nux/VScrollBar.h>
+#include <Nux/HLayout.h>
+#include <Nux/VLayout.h>
+#include <Nux/MenuPage.h>
+#include <NuxCore/Logger.h>
 
-#include "NuxGraphics/NuxGraphics.h"
-#include "NuxGraphics/GpuDevice.h"
-#include "NuxGraphics/GLTextureResourceManager.h"
+#include <NuxGraphics/NuxGraphics.h>
+#include <NuxGraphics/GpuDevice.h>
+#include <NuxGraphics/GLTextureResourceManager.h>
 
-#include "Nux/BaseWindow.h"
-#include "Nux/WindowCompositor.h"
+#include <Nux/BaseWindow.h>
+#include <Nux/WindowCompositor.h>
 
 #include "Launcher.h"
 #include "LauncherIcon.h"

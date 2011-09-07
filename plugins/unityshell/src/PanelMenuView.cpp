@@ -21,14 +21,14 @@
 #include <gtk/gtk.h>
 #include <X11/cursorfont.h>
 
-#include "Nux/Nux.h"
-#include "Nux/HLayout.h"
-#include "Nux/VLayout.h"
+#include <Nux/Nux.h>
+#include <Nux/HLayout.h>
+#include <Nux/VLayout.h>
 #include <Nux/TextureArea.h>
 
-#include "NuxGraphics/GLThread.h"
-#include "NuxGraphics/XInputWindow.h"
-#include "Nux/BaseWindow.h"
+#include <NuxGraphics/GLThread.h>
+#include <NuxGraphics/XInputWindow.h>
+#include <Nux/BaseWindow.h>
 
 #include "CairoTexture.h"
 #include "PanelMenuView.h"
