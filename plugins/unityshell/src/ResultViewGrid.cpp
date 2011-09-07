@@ -511,7 +511,7 @@ void ResultViewGrid::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   int y_position = padding + GetGeometry().y;
   nux::Area* top_level_parent = GetToplevel();
 
-  ResultListBounds visible_bounds = GetVisableResults();
+  //ResultListBounds visible_bounds = GetVisableResults();
 
   for (uint row_index = 0; row_index <= total_rows; row_index++)
   {
@@ -521,9 +521,11 @@ void ResultViewGrid::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
     //~ if ((y_position + renderer_->height) + absolute_y >= 0
     //~ && (y_position - renderer_->height) + absolute_y <= top_level_parent->GetGeometry().height)
 
-    int row_lower_bound = row_index * items_per_row;
-    if (row_lower_bound > std::get<0>(visible_bounds) &&
-        row_lower_bound < std::get<1>(visible_bounds))
+    //int row_lower_bound = row_index * items_per_row;
+    //if (row_lower_bound > std::get<0>(visible_bounds) &&
+    //    row_lower_bound < std::get<1>(visible_bounds))
+    //{
+    if (1)
     {
       int x_position = padding + GetGeometry().x;
       for (int column_index = 0; column_index < items_per_row; column_index++)
