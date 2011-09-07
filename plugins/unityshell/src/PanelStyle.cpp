@@ -57,7 +57,7 @@ PanelStyle::PanelStyle()
   _style_context = gtk_style_context_new();
 
   GtkWidgetPath* widget_path = gtk_widget_path_new();
-  guint pos = gtk_widget_path_append_type(widget_path, GTK_TYPE_WINDOW);
+  gint pos = gtk_widget_path_append_type(widget_path, GTK_TYPE_WINDOW);
   gtk_widget_path_iter_set_name(widget_path, pos, "UnityPanelWidget");
 
   gtk_style_context_set_path(_style_context, widget_path);
