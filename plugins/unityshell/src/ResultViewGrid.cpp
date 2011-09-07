@@ -180,7 +180,7 @@ void ResultViewGrid::SizeReallocate()
   //FIXME - needs to use the geometry assigned to it, but only after a layout
   int items_per_row = GetItemsPerRow();
 
-  int total_rows = (results_.size() / items_per_row);
+  int total_rows = (results_.size() / items_per_row) + 1;
   int total_height = 0;
 
   if (expanded)
