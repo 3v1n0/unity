@@ -473,15 +473,7 @@ ResultListBounds ResultViewGrid::GetVisableResults()
       visible_height = std::min(visible_height, absolute_y + GetAbsoluteHeight());
 
       int visible_rows = std::ceil(visible_height / static_cast<float>(row_size));
-
-      if ((visible_rows + (absolute_y / row_size)) * items_per_row > results_.size() - items_per_row)
-      {
-        end = results_.size() - 1;
-      }
-      else
-      {
-        end = (visible_rows + (absolute_y / row_size)) * items_per_row;
-      }
+      end = start + (visible_rows * items_per_row) + 1;
     }
     else
     {
@@ -514,7 +506,7 @@ void ResultViewGrid::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   int y_position = padding + GetGeometry().y;
   nux::Area* top_level_parent = GetToplevel();
 
-  //ResultListBounds visible_bounds = GetVisableResults();
+  ResultListBounds visible_bounds = GetVisableResults();
 
   for (uint row_index = 0; row_index <= total_rows; row_index++)
   {
@@ -524,11 +516,9 @@ void ResultViewGrid::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
     //~ if ((y_position + renderer_->height) + absolute_y >= 0
     //~ && (y_position - renderer_->height) + absolute_y <= top_level_parent->GetGeometry().height)
 
-    //int row_lower_bound = row_index * items_per_row;
-    //if (row_lower_bound > std::get<0>(visible_bounds) &&
-    //    row_lower_bound < std::get<1>(visible_bounds))
-    //{
-    if (1)
+    int row_lower_bound = row_index * items_per_row;
+    if (row_lower_bound >= std::get<0>(visible_bounds) &&
+        row_lower_bound < std::get<1>(visible_bounds))
     {
       int x_position = padding + GetGeometry().x;
       for (int column_index = 0; column_index < items_per_row; column_index++)
