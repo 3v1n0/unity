@@ -416,21 +416,11 @@ void PanelView::OnEntryActivateRequest(std::string const& entry_id)
 
 static gboolean track_menu_pointer(PanelView *self)
 {
-  int x, y;
-  auto display = nux::GetGraphicsDisplay();
+  //FIXME here we could also use nux::GetGraphicsDisplay()->GetMouseScreenCoord();
+  //      however it seems too unstable and it leads to crashes.
 
-  // FIXME sometimes nux seems to return a null display and this would lead
-  //       to a crash, so in that case we fallback to the gdk display.
-  if (display)
-  {
-    auto coords = display->GetMouseScreenCoord();
-    x = coords.x;
-    y = coords.y;
-  }
-  else
-  {
-    gdk_display_get_pointer(gdk_display_get_default(), NULL, &x, &y, NULL);
-  }
+  gint x, y;
+  gdk_display_get_pointer(gdk_display_get_default(), NULL, &x, &y, NULL);
 
   self->OnMenuPointerMoved(x, y);
   return TRUE;
