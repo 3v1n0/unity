@@ -92,14 +92,16 @@ private:
 
   GFileMonitor* _desktop_file_monitor;
   gulong _on_desktop_file_changed_handler_id;
-  
+
   std::set<std::string> _supported_types;
   bool _supported_types_filled;
   guint _fill_supported_types_id;
 
   void EnsureWindowState();
 
+  void UpdateDesktopFile();
   void UpdateMenus();
+  void UpdateDesktopQuickList();
 
   void OpenInstanceWithUris(std::set<std::string> uris);
   void Focus();
