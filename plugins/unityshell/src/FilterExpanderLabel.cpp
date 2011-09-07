@@ -85,6 +85,8 @@ namespace unity {
     top_bar_layout_->AddSpace(1, 1);
 
     layout_->AddLayout (top_bar_layout_, 0);
+    layout_->SetVerticalInternalMargin(12);
+
     SetLayout(layout_);
 
     QueueRelayout();
