@@ -65,7 +65,9 @@ DashView::DashView()
 }
 
 DashView::~DashView()
-{}
+{
+  delete bg_layer_;
+}
 
 void DashView::AboutToShow()
 {

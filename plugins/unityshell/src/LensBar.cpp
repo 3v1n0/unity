@@ -43,7 +43,9 @@ LensBar::LensBar()
 }
 
 LensBar::~LensBar()
-{}
+{
+  delete bg_layer_;
+}
 
 void LensBar::SetupBackground()
 {
