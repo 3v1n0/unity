@@ -42,7 +42,6 @@ namespace unity {
     all_button_->Reference();
 
     layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
-    layout_->Reference();
 
     SetRightHandView(all_button_);
     SetContents(layout_);
@@ -51,7 +50,6 @@ namespace unity {
 
   FilterMultiRange::~FilterMultiRange() {
     all_button_->UnReference();
-    layout_->UnReference();
   }
 
   void FilterMultiRange::SetFilter(dash::Filter::Ptr filter)

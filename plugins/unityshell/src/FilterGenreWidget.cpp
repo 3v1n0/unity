@@ -55,7 +55,6 @@ namespace unity {
 
     genre_layout_->SetChildrenSize (style->GetTileWidth() - 12,
                                     garnish + style->GetTextLineHeight() * 2);
-    genre_layout_->Reference();
 
     SetRightHandView(all_button_);
     SetContents(genre_layout_);
