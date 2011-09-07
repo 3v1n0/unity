@@ -236,7 +236,9 @@ void IMTextEntry::OnCommit(GtkIMContext* context, char* str)
   DeleteSelection();
   if (str)
   {
-    std::string new_text = GetText() + str;
+    std::string new_text = GetText();
+    new_text.insert(cursor_, str);
+		
     int cursor = cursor_;
     SetText(new_text.c_str());
     SetCursor(cursor + strlen(str));
