@@ -763,6 +763,9 @@ LauncherIcon::SetRelatedWindows(int windows)
 void
 LauncherIcon::Remove()
 {
+  if (_quicklist->IsVisible())
+      _quicklist->Hide();
+
   SetQuirk(QUIRK_VISIBLE, false);
   remove.emit(this);
 }
