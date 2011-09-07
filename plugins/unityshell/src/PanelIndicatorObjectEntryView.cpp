@@ -265,7 +265,7 @@ void PanelIndicatorObjectEntryView::Refresh()
     gtk_style_context_save(style_context);
 
     GtkWidgetPath* widget_path = gtk_widget_path_new();
-    guint pos = gtk_widget_path_append_type(widget_path, GTK_TYPE_MENU_BAR);
+    gint pos = gtk_widget_path_append_type(widget_path, GTK_TYPE_MENU_BAR);
     pos = gtk_widget_path_append_type(widget_path, GTK_TYPE_MENU_ITEM);
     gtk_widget_path_iter_set_name(widget_path, pos, "UnityPanelWidget");
 
@@ -298,7 +298,7 @@ void PanelIndicatorObjectEntryView::Refresh()
     gtk_style_context_save(style_context);
 
     GtkWidgetPath* widget_path = gtk_widget_path_new();
-    guint pos = gtk_widget_path_append_type(widget_path, GTK_TYPE_MENU_BAR);
+    gint pos = gtk_widget_path_append_type(widget_path, GTK_TYPE_MENU_BAR);
     pos = gtk_widget_path_append_type(widget_path, GTK_TYPE_MENU_ITEM);
     gtk_widget_path_iter_set_name(widget_path, pos, "UnityPanelWidget");
 
