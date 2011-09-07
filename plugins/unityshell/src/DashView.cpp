@@ -99,7 +99,7 @@ void DashView::SetupViews()
   SetLayout(layout_);
 
   content_layout_ = new nux::VLayout();
-  layout_->AddLayout(content_layout_, 1, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FIX);
+  layout_->AddLayout(content_layout_, 1, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
   search_bar_ = new SearchBar();
   search_bar_->activated.connect(sigc::mem_fun(this, &DashView::OnEntryActivated));
   search_bar_->search_changed.connect(sigc::mem_fun(this, &DashView::OnSearchChanged));
@@ -118,9 +118,6 @@ void DashView::SetupViews()
   lens_bar_ = new LensBar();
   lens_bar_->lens_activated.connect(sigc::mem_fun(this, &DashView::OnLensBarActivated));
   content_layout_->AddView(lens_bar_, 0, nux::MINOR_POSITION_CENTER);
-
-  search_bar_->OnGeometryChanged.connect([&] (nux::Area*, nux::Geometry& geo) { Relayout(); });
-  lens_bar_->OnGeometryChanged.connect([&] (nux::Area*, nux::Geometry& geo) { Relayout(); });
 }
 
 void DashView::SetupUBusConnections()
@@ -129,6 +126,12 @@ void DashView::SetupUBusConnections()
       sigc::mem_fun(this, &DashView::OnActivateRequest));
   ubus_manager_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED,
       sigc::mem_fun(this, &DashView::OnBackgroundColorChanged));
+}
+
+long DashView::PostLayoutManagement (long LayoutResult)
+{
+  Relayout();
+  return LayoutResult;
 }
 
 void DashView::Relayout()
@@ -149,7 +152,7 @@ void DashView::Relayout()
   lenses_layout_->SetMaximumHeight (content_geo_.height - search_bar_->GetGeometry().height - lens_bar_->GetGeometry().height);
   lenses_layout_->SetMinimumHeight (content_geo_.height - search_bar_->GetGeometry().height - lens_bar_->GetGeometry().height);
 
-  content_layout_->SetMinMaxSize(content_geo_.width, content_geo_.height);
+  layout_->SetMinMaxSize(content_geo_.width, content_geo_.height);
 
   PlacesStyle* style = PlacesStyle::GetDefault();
   style->SetDefaultNColumns(content_geo_.width / style->GetTileWidth());
@@ -392,7 +395,7 @@ void DashView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
                                nux::eSHAPE_CORNER_ROUND4,
                                nux::eCornerBottomRight,
                                true,
-                               rop);  
+                               rop);
 }
 
 void DashView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
@@ -515,7 +518,7 @@ std::string DashView::AnalyseLensURI(std::string uri)
 {
   std::string id = uri;
   std::size_t pos = uri.find("?");
-  
+
   // It is a real URI
   if (pos)
   {
@@ -523,7 +526,7 @@ std::string DashView::AnalyseLensURI(std::string uri)
 
     std::string components = uri.substr(++pos);
     gchar** tokens = g_strsplit(components.c_str(), "&", -1);
-    
+
     for (int i = 0; tokens[i]; ++i)
     {
       gchar** subs = g_strsplit(tokens[i], "=", 2);
