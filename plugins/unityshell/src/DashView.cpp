@@ -123,8 +123,6 @@ void DashView::SetupViews()
   lens_bar_->OnGeometryChanged.connect([&] (nux::Area*, nux::Geometry& geo) { Relayout(); });
 }
 
-
-
 void DashView::SetupUBusConnections()
 {
   ubus_manager_.RegisterInterest(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
@@ -382,6 +380,19 @@ void DashView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
 
   bg_layer_->SetGeometry(content_geo_);
   nux::GetPainter().RenderSinglePaintLayer(gfx_context, content_geo_, bg_layer_);
+
+  // Make round corners
+  nux::ROPConfig rop;
+  rop.Blend = true;
+  rop.SrcBlend = GL_ZERO;
+  rop.DstBlend = GL_SRC_ALPHA;
+  nux::GetPainter().PaintShapeCornerROP(gfx_context,
+                               content_geo_,
+                               nux::color::White,
+                               nux::eSHAPE_CORNER_ROUND4,
+                               nux::eCornerBottomRight,
+                               true,
+                               rop);  
 }
 
 void DashView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
@@ -457,6 +468,19 @@ void DashView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
 
   gfx_context.GetRenderStates().SetBlend(false);
   gfx_context.PopClippingRectangle();
+
+  // Make round corners
+  nux::ROPConfig rop;
+  rop.Blend = true;
+  rop.SrcBlend = GL_ZERO;
+  rop.DstBlend = GL_SRC_ALPHA;
+  nux::GetPainter().PaintShapeCornerROP(gfx_context,
+                               content_geo_,
+                               nux::color::White,
+                               nux::eSHAPE_CORNER_ROUND4,
+                               nux::eCornerBottomRight,
+                               true,
+                               rop);
 }
 
 void DashView::OnMouseButtonDown(int x, int y, unsigned long button, unsigned long key)

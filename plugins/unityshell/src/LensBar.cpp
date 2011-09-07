@@ -56,7 +56,7 @@ void LensBar::SetupBackground()
 
 void LensBar::SetupLayout()
 {
-  layout_ = new nux::HLayout();
+  layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
   layout_->SetContentDistribution(nux::MAJOR_POSITION_CENTER);
   layout_->SetHorizontalInternalMargin(32);
   SetLayout(layout_);

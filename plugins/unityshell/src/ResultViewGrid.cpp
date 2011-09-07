@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright 2011 Canonical Ltd.
  *
@@ -40,6 +41,8 @@ namespace unity
 {
 namespace dash
 {
+NUX_IMPLEMENT_OBJECT_TYPE(ResultViewGrid);
+
 ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
   : ResultView(NUX_FILE_LINE_PARAM)
   , horizontal_spacing(6)

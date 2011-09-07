@@ -66,7 +66,7 @@ using namespace unity::switcher;
 /* Set up vtable symbols */
 COMPIZ_PLUGIN_20090315(unityshell, UnityPluginVTable);
 
-using ::unity::logger::Timer;
+using ::unity::util::Timer;
 
 namespace
 {
@@ -580,6 +580,8 @@ void UnityScreen::enterShowDesktopMode ()
   {
     if (UnityShowdesktopHandler::shouldHide (w))
       UnityWindow::get (w)->enterShowDesktop ();
+    if (w->type() & CompWindowTypeDesktopMask)
+      w->moveInputFocusTo();
   }
 
   PluginAdapter::Default()->OnShowDesktop();
@@ -1943,7 +1945,7 @@ void UnityScreen::initLauncher(nux::NThread* thread, void* InitData)
 
   self->AddChild(self->launcher);
 
-  nux::HLayout* layout = new nux::HLayout();
+  nux::HLayout* layout = new nux::HLayout(NUX_TRACKER_LOCATION);
   layout->AddView(self->launcher, 1);
   layout->SetContentDistribution(nux::eStackLeft);
   layout->SetVerticalExternalMargin(0);

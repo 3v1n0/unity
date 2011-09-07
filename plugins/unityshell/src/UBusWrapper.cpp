@@ -38,12 +38,26 @@ void UBusManager::RegisterInterest(std::string const& interest_name,
 {
   UBusConnection::Ptr connection (new UBusConnection());
   connection->manager = this;
+  connection->name = interest_name;
   connection->slot = slot;
   connection->id = ubus_server_register_interest(server_,
                                                  interest_name.c_str(),
                                                  UBusManager::OnCallback,
                                                  connection.get());
   connections_.push_back(connection);
+}
+
+void UBusManager::UnregisterInterest(std::string const& interest_name)
+{
+  for (auto it = connections_.begin(); it != connections_.end(); ++it)
+  {
+    if ((*it)->name == interest_name)
+    {
+      ubus_server_unregister_interest(server_, (*it)->id);
+      connections_.erase(it);
+      break;
+    }
+  }
 }
 
 void UBusManager::OnCallback(GVariant* args, gpointer user_data)

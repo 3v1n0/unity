@@ -67,7 +67,7 @@ HomeView::~HomeView()
 
 void HomeView::SetupViews()
 {
-  layout_ = new nux::HLayout();
+  layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
 
   scroll_view_ = new nux::ScrollView();
   scroll_view_->EnableVerticalScrollBar(true);
