@@ -156,25 +156,25 @@ LauncherModel::Sort()
 bool
 LauncherModel::IconHasSister(LauncherIcon* icon)
 {
-  iterator(LauncherModel::*begin_it)(void);
-  iterator(LauncherModel::*end_it)(void);
   iterator it;
+  iterator end;
 
   if (IconShouldShelf(icon))
   {
-    begin_it = &LauncherModel::shelf_begin;
-    end_it = &LauncherModel::shelf_end;
+    it = shelf_begin();
+    end = shelf_end();
   }
   else
   {
-    begin_it = &LauncherModel::main_begin;
-    end_it = &LauncherModel::main_end;
+    it = main_begin();
+    end = main_end();
   }
 
-  for (it = (this->*begin_it)(); it != (this->*end_it)(); it++)
+  for (; it != end; ++it)
   {
-    if ((*it  != icon)
-        && (*it)->Type() == icon->Type())
+    LauncherIcon* iter_icon = *it;
+    if ((iter_icon  != icon)
+        && iter_icon->Type() == icon->Type())
       return true;
   }
 
