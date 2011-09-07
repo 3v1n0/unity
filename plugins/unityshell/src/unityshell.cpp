@@ -225,6 +225,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
                                                    this);
 
   g_timeout_add(0, &UnityScreen::initPluginActions, this);
+  super_keypressed_ = false;
 
   GeisAdapter::Default()->Run();
   gestureEngine = new GestureEngine(screen);
@@ -236,8 +237,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
 
   ubus_manager_.RegisterInterest(UBUS_PLACE_VIEW_SHOWN, [&](GVariant * args) { dash_is_open_ = true; });
   ubus_manager_.RegisterInterest(UBUS_PLACE_VIEW_HIDDEN, [&](GVariant * args) { dash_is_open_ = false; });
-
-  EnsureKeybindings();
 
   LOG_INFO(logger) << "UnityScreen constructed: " << timer.ElapsedSeconds() << "s";
 }
@@ -301,7 +300,7 @@ void UnityScreen::initAltTabNextWindow()
 
 }
 
-void UnityScreen::EnsureKeybindings()
+void UnityScreen::EnsureSuperKeybindings()
 {
   for (auto action : _shortcut_actions)
     screen->removeAction(action.get());
@@ -313,19 +312,26 @@ void UnityScreen::EnsureKeybindings()
     guint64 shortcut = icon->GetShortcut();
     if (shortcut == 0)
       continue;
+    CreateSuperNewAction(static_cast<char>(shortcut));
+  }
 
+  for (auto shortcut : dashController->GetAllShortcuts())
+    CreateSuperNewAction(shortcut);
+}
+
+void UnityScreen::CreateSuperNewAction(char shortcut)
+{
     CompActionPtr action(new CompAction());
 
     CompAction::KeyBinding binding;
     std::ostringstream sout;
-    sout << "<Super>" << static_cast<char>(shortcut);
+    sout << "<Super>" << shortcut;
     binding.fromString(sout.str());
 
     action->setKey(binding);
 
     screen->addAction(action.get());
     _shortcut_actions.push_back(action);
-  }
 }
 
 void UnityScreen::nuxPrologue()
@@ -871,7 +877,12 @@ void UnityScreen::handleEvent(XEvent* event)
       if ((result = XLookupString(&(event->xkey), key_string, 2, &key_sym, 0)) > 0)
       {
         key_string[result] = 0;
-        skip_other_plugins = launcher->CheckSuperShortcutPressed(screen->dpy(), key_sym, event->xkey.keycode, event->xkey.state, key_string);
+        if (super_keypressed_) {
+          skip_other_plugins = launcher->CheckSuperShortcutPressed(screen->dpy(), key_sym, event->xkey.keycode, event->xkey.state, key_string);
+          if (!skip_other_plugins) {
+            skip_other_plugins = dashController->CheckShortcutActivation(key_string);
+          }
+        }
       }
       break;
   }
@@ -907,8 +918,9 @@ bool UnityScreen::showLauncherKeyInitiate(CompAction* action,
   if (state & CompAction::StateInitKey)
     action->setState(action->state() | CompAction::StateTermKey);
 
+  super_keypressed_ = true;
   launcher->StartKeyShowLauncher();
-  EnsureKeybindings ();
+  EnsureSuperKeybindings ();
   return false;
 }
 
@@ -916,6 +928,7 @@ bool UnityScreen::showLauncherKeyTerminate(CompAction* action,
                                            CompAction::State state,
                                            CompOption::Vector& options)
 {
+  super_keypressed_ = false;
   launcher->EndKeyShowLauncher();
   return false;
 }

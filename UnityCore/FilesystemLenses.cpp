@@ -114,6 +114,7 @@ public:
   LensList GetLenses() const;
   Lens::Ptr GetLens(std::string const& lens_id) const;
   Lens::Ptr GetLensAtIndex(std::size_t index) const;
+  Lens::Ptr GetLensForShortcut(std::string const& lens_shortcut) const;
   std::size_t count() const;
 
   void Init();
@@ -361,6 +362,22 @@ Lens::Ptr FilesystemLenses::Impl::GetLensAtIndex(std::size_t index) const
   return Lens::Ptr();
 }
 
+Lens::Ptr FilesystemLenses::Impl::GetLensForShortcut(std::string const& lens_shortcut) const
+{
+  Lens::Ptr p;
+
+  for (Lens::Ptr lens: lenses_)
+  {
+    if (lens->shortcut == lens_shortcut)
+    {
+      p = lens;
+      break;
+    }
+  }
+
+  return p;
+}
+
 std::size_t FilesystemLenses::Impl::count() const
 {
   return lenses_.size();
@@ -402,6 +419,11 @@ Lens::Ptr FilesystemLenses::GetLens(std::string const& lens_id) const
 Lens::Ptr FilesystemLenses::GetLensAtIndex(std::size_t index) const
 {
   return pimpl->GetLensAtIndex(index);
+}
+
+Lens::Ptr FilesystemLenses::GetLensForShortcut(std::string const& lens_shortcut) const
+{
+  return pimpl->GetLensForShortcut(lens_shortcut);
 }
 
 }

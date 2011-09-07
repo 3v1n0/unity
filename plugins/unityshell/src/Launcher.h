@@ -393,7 +393,6 @@ private:
   bool  _check_window_over_launcher;
 
   bool          _shortcuts_shown;
-  bool          _super_pressed;
   bool          _keynav_activated;
   guint64       _latest_shortcut;
 
