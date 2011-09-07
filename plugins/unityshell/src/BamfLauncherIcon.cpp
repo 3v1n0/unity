@@ -838,16 +838,22 @@ std::list<DbusmenuMenuitem*> BamfLauncherIcon::GetMenus()
     DbusmenuClient* client = (*it).second;
     DbusmenuMenuitem* root = dbusmenu_client_get_root(client);
 
+    if (!root || !dbusmenu_menuitem_property_get_bool(root, DBUSMENU_MENUITEM_PROP_VISIBLE))
+      continue;
+
     for (child = dbusmenu_menuitem_get_children(root); child != NULL; child = g_list_next(child))
     {
       DbusmenuMenuitem* item = (DbusmenuMenuitem*) child->data;
 
-      if (!item)
+      if (!item || !DBUSMENU_IS_MENUITEM(item))
         continue;
 
-      first_separator_needed = true;
+      if (dbusmenu_menuitem_property_get_bool(item, DBUSMENU_MENUITEM_PROP_VISIBLE))
+      {
+        first_separator_needed = true;
 
-      result.push_back(item);
+        result.push_back(item);
+      }
     }
   }
 
