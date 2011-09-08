@@ -1,6 +1,47 @@
 unity (4.14.2-0ubuntu1) UNRELEASED; urgency=low
 
   * New upstream release.
+    - unity crashed with AttributeError in reset_unity_compiz_profile(): 'str'
+      object has no attribute 'get_string' (LP: #809378)
+    - Trying to minimize Unity Dash to make it fit on a 1024x768 screen makes
+      Unity freeze and then, after I log out by killing X, never start again
+      (LP: #839200)
+    - unity-panel-service crashed with SIGSEGV in main_arena() (LP: #817477)
+    - UIFe: Panel - Indicators should be orderable regardless of their parent
+      IndicatorObject (LP: #823061)
+    - 'Show Desktop' fails to hand focus to desktop (LP: #836315)
+    - Dash - Functionality of top left close, minimise and maximise/restore
+      window decorations is confused (LP: #838875)
+    - unity-panel-service Leaks Memory (LP: #779185)
+    - Missing lens shortcuts (Super-A, Super-F) (LP: #834078)
+    - Unity window switcher takes over <alt> key (LP: #835699)
+    - update assets for window buttons (topleft) with dash opened
+      (LP: #836655)
+    - Where the average background colour is either very light or dark, adjust
+      this value to darken/lighten in order to preserve readability
+      (LP: #837993)
+    - Applications don't have priority over other results (LP: #839518)
+    - task tray icons are misaligned and badly sized (LP: #839354)
+    - UIFe: Dash - Shape and positioning of most of the elements in the Dash
+      need adjustment (LP: #841945)
+    - Cannot drag applications from dash to desktop (LP: #756614)
+    - systray icons still visible on each desktop in expo mode (LP: #759129)
+    - transparency on unity panel broken (LP: #827012)
+    - Window buttons and application menu don't autohide if left edge is
+      touched (LP: #835637)
+    - 'Filter results' should be right indented as in the mockups(and unity-
+      2d) (LP: #838118)
+    - window title should not appear until cursor leaves the menubar
+      (LP: #838759)
+    - Window title is not redrawn on leaving global-menu from buttons
+      (LP: #839488)
+    - In the dash, main text field can not be edited, except at the end
+      (LP: #840862)
+    - Quicklist can't be correctly hidden (LP: #843425)
+    - After double clicking on the panel to restore a window, the menus won't
+      be hidden on mouse-out (LP: #838021)
+    - After restoring a window the application title doesn't fade-out and it
+      goes below the menus (LP: #838479)
   * debian/control:
     - build-dep on latest libunity-dev, nux
   * debian/rules:
