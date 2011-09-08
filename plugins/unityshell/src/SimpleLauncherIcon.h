@@ -43,9 +43,9 @@ protected:
   virtual void OnMouseClick(int button);
   virtual void OnMouseEnter();
   virtual void OnMouseLeave();
+  virtual void ActivateLauncherIcon(ActionArg arg);
 
 private:
-  void ActivateLauncherIcon(ActionArg arg);
   void ReloadIcon();
   static void OnIconThemeChanged(GtkIconTheme* icon_theme, gpointer data);
 

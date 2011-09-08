@@ -847,7 +847,7 @@ namespace unity
                            {0.0, 0.0}};
     double angle[5]     = {-90.0, -18.0, 54.0, 126.0, 198.0};
     double outterRadius = size;
-    double innerRadius  = size/2.0;
+    double innerRadius  = size/1.75;
 
     for (int i = 0; i < 5; i++)
     {
@@ -1545,21 +1545,24 @@ namespace unity
                         double*     color,
                         double      opacity,
                         std::string label)
-  {
-    double                x          = 0.0;
-    double                y          = 0.0;
-    int                   w          = 0;
-    int                   h          = 0;
-    PangoLayout*          layout     = NULL;
-    PangoFontDescription* desc       = NULL;
-    PangoContext*         pangoCtx   = NULL;
-    int                   dpi        = 0;
-    GdkScreen*            screen     = gdk_screen_get_default();   // not ref'ed
-    GtkSettings*          settings   = gtk_settings_get_default(); // not ref'ed
-    gchar*                fontName   = NULL;
+   {
+    double                x           = 0.0;
+    double                y           = 0.0;
+    int                   w           = 0;
+    int                   h           = 0;
+    PangoLayout*          layout      = NULL;
+    PangoFontDescription* desc        = NULL;
+    PangoContext*         pangoCtx    = NULL;
+    int                   dpi         = 0;
+    GdkScreen*            screen      = gdk_screen_get_default();   // not ref'ed
+    GtkSettings*          settings    = gtk_settings_get_default(); // not ref'ed
+    gchar*                fontName    = NULL;
+    double                horizMargin = 10.0;
 
     w = cairo_image_surface_get_width (cairo_get_target (cr));
     h = cairo_image_surface_get_height (cairo_get_target (cr));
+
+    w -= 2 * horizMargin;
 
     if (!screen)
       cairo_set_font_options(cr, _defaultFontOptions);
@@ -1624,7 +1627,7 @@ namespace unity
 	PangoRectangle ink = {0, 0, 0, 0};
     PangoRectangle log = {0, 0, 0, 0};
     pango_layout_get_extents (layout, &ink, &log);
-	x = ((double) w - pango_units_to_double (ink.width)) / 2.0;
+	x = ((double) w - pango_units_to_double (ink.width)) / 2.0 + horizMargin;
     y = ((double) h - pango_units_to_double (log.height)) / 2.0;
     cairo_move_to (cr, x, y);
     pango_cairo_show_layout(cr, layout);
@@ -1748,7 +1751,7 @@ namespace unity
                  1.0,
                  (double) (garnish),
                  (double) (garnish),
-                 h / 4.0,
+                 7.0,
                  w - (double) (2 * garnish),
                  h - (double) (2 * garnish),
                  false);
@@ -1797,16 +1800,17 @@ namespace unity
     double h = cairo_image_surface_get_height (cairo_get_target (cr));
     double radius = .85 * h / 2.0;
 
-  cairo_save (cr);
+    cairo_save (cr);
     cairo_translate (cr, w / 2.0, h / 2.0);
     Star (cr, radius);
-  cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 0.2);
+    cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 0.2);
     cairo_fill_preserve (cr);
-  cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 1.0);
+    cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 0.5);
+	cairo_set_line_width (cr, 0.75);
     cairo_stroke (cr);
-  cairo_restore (cr);
+    cairo_restore (cr);
 
-  return true;
+    return true;
   }
 
   bool DashStyle::StarHalf (cairo_t* cr, nux::State state)
@@ -1822,24 +1826,25 @@ namespace unity
     double h = cairo_image_surface_get_height (cairo_get_target (cr));
     double radius = .85 * h / 2.0;
 
-  cairo_pattern_t* pattern = NULL;
+    cairo_pattern_t* pattern = NULL;
     pattern = cairo_pattern_create_linear (0.0, 0.0, w, 0.0);
-  cairo_pattern_add_color_stop_rgba (pattern, 0.0,        1.0, 1.0, 1.0, 1.0);
+    cairo_pattern_add_color_stop_rgba (pattern, 0.0,        1.0, 1.0, 1.0, 1.0);
     cairo_pattern_add_color_stop_rgba (pattern,  .5,        1.0, 1.0, 1.0, 1.0);
     cairo_pattern_add_color_stop_rgba (pattern,  .5 + 0.01, 1.0, 1.0, 1.0, 0.2);
     cairo_pattern_add_color_stop_rgba (pattern, 1.0,        1.0, 1.0, 1.0, 0.2);
-  cairo_set_source (cr, pattern);
+    cairo_set_source (cr, pattern);
 
-  cairo_save (cr);
+    cairo_save (cr);
     cairo_translate (cr, w / 2.0, h / 2.0);
     Star (cr, radius);
-  cairo_fill_preserve (cr);
+    cairo_fill_preserve (cr);
     cairo_pattern_destroy (pattern);
-  cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 1.0);
+    cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 0.5);
+	cairo_set_line_width (cr, 0.75);
     cairo_stroke (cr);
-  cairo_restore (cr);
+    cairo_restore (cr);
 
-  return true;
+    return true;
   }
 
   bool DashStyle::StarFull (cairo_t* cr, nux::State state)

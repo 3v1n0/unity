@@ -17,11 +17,15 @@
  * Authored by: Alex Launi <alex.launi@canonical.com>
  */
 
+#include "Autopilot.h"
+
 #include <sigc++/sigc++.h>
 
-#include "Autopilot.h"
-#include "UBusMessages.h"
+#include "AggregateMonitor.h"
 #include "DebugDBusInterface.h"
+#include "UBusMessages.h"
+
+namespace unity {
 
 UBusServer* _ubus;
 GDBusConnection* _dbus;
@@ -32,7 +36,9 @@ TestFinished(void* arg)
 {
   GError* error = NULL;
   TestArgs* args = static_cast<TestArgs*>(arg);
-  GVariant* result = g_variant_new("(sb)", args->name, args->passed);
+
+  ubus_server_unregister_interest (_ubus, args->ubus_handle);
+  GVariant* result = g_variant_new("(sb@a{sv})", args->name, args->passed, args->monitor->Stop());
 
   g_dbus_connection_emit_signal(_dbus,
                                 NULL,
@@ -48,17 +54,12 @@ TestFinished(void* arg)
     g_warning("An error was encountered emitting TestFinished signal");
     g_error_free(error);
   }
-
-  ubus_server_send_message(_ubus,
-                           UBUS_AUTOPILOT_TEST_FINISHED,
-                           result);
 }
 
 void
 on_test_passed(GVariant* payload, TestArgs* args)
 {
   nux::GetTimer().RemoveTimerHandler(args->expiration_handle);
-  ubus_server_unregister_interest(_ubus, args->ubus_handle);
   args->passed = TRUE;
   TestFinished(args);
 }
@@ -104,6 +105,8 @@ Autopilot::StartTest(const gchar* name)
   args->name = g_strdup(name);
   args->passed = FALSE;
   args->expiration_handle = nux::GetTimer().AddTimerHandler(TEST_TIMEOUT, test_expiration_functor, args);
+  args->monitor = new unity::performance::AggregateMonitor();
+  args->monitor->Start();
 
   if (g_strcmp0(name, "show_tooltip") == 0)
   {
@@ -112,6 +115,10 @@ Autopilot::StartTest(const gchar* name)
   else if (g_strcmp0(name, "show_quicklist") == 0)
   {
     RegisterUBusInterest(UBUS_QUICKLIST_SHOWN, args);
+  }
+  else if (g_strcmp0(name, "show_dash") == 0)
+  {
+    RegisterUBusInterest(UBUS_PLACE_VIEW_SHOWN, args);
   }
   else if (g_strcmp0(name, "drag_launcher") == 0)
   {
@@ -133,4 +140,5 @@ Autopilot::StartTest(const gchar* name)
   {
     /* Some anonymous test. Will always get a failed result since we don't really know how to test it */
   }
+}
 }

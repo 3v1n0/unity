@@ -23,8 +23,8 @@
 
 #include "nux-area-accessible.h"
 
-#include "Nux/Nux.h"
-#include "Nux/View.h"
+#include <Nux/Nux.h>
+#include <Nux/View.h>
 
 G_BEGIN_DECLS
 

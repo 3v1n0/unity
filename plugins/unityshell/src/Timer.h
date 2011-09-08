@@ -26,7 +26,7 @@
 
 namespace unity
 {
-namespace logger
+namespace util
 {
 
 class Timer
@@ -36,25 +36,12 @@ public:
 
   void Reset();
   float ElapsedSeconds();
+  gint64 ElapsedMicroSeconds();
 
 private:
   gint64 start_time_;
 };
 
-
-class BlockTimer
-{
-public:
-  BlockTimer(std::string const& name, std::ostream& out);
-  ~BlockTimer();
-
-  void log(std::string const& message);
-
-private:
-  Timer timer_;
-  std::string name_;
-  std::ostream& out_;
-};
 
 }
 }

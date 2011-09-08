@@ -22,12 +22,16 @@
 
 #include <list>
 
-#include <core/screen.h>
 #include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
 #include <sigc++/sigc++.h>
 
 namespace unity {
+
+/**
+ * DNDCollectionWindow makes it possible to collect drag and drop (dnd) data as
+ * soon as dnd starts and not when the mouse pointer enter the x window. 
+ **/
   
 class DNDCollectionWindow : public nux::BaseWindow
 {
@@ -38,16 +42,20 @@ public:
   DNDCollectionWindow();
   ~DNDCollectionWindow();
   
+  void Collect();
+  
 private:
   void ProcessDndMove(int x, int y, std::list<char*> mimes);
+  void OnWindowMoved(guint32 xid);
 
 // Members
 public:
+  nux::Property<Display*> display;
+
   sigc::signal<void, const std::list<char*>&> collected;
   
 private:
   std::list<char*> mimes_;
-  
 };
   
 } // namespace unity

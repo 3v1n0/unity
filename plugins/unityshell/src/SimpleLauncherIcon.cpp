@@ -18,12 +18,15 @@
  */
 
 #include <NuxCore/Logger.h>
-#include "Nux/Nux.h"
-#include "Nux/BaseWindow.h"
+#include <Nux/Nux.h>
+#include <Nux/BaseWindow.h>
 
 #include "SimpleLauncherIcon.h"
 #include "Launcher.h"
 #include "PluginAdapter.h"
+
+#include "ubus-server.h"
+#include "UBusMessages.h"
 
 namespace
 {
@@ -79,6 +82,9 @@ void SimpleLauncherIcon::OnMouseLeave()
 void SimpleLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 {
   activate.emit();
+  ubus_server_send_message(ubus_server_get_default(),
+                           UBUS_PLACE_VIEW_CLOSE_REQUEST,
+                           g_variant_new_boolean(FALSE));
 }
 
 nux::BaseTexture* SimpleLauncherIcon::GetTextureForSize(int size)

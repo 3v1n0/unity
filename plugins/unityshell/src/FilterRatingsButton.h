@@ -25,11 +25,10 @@
 #define FILTERRATINGSBUTTONWIDGET_H
 
 #include <Nux/Nux.h>
+#include <Nux/Button.h>
 #include <Nux/CairoWrapper.h>
 #include <UnityCore/RatingsFilter.h>
 
-
-#include "Nux/Button.h"
 #include "FilterWidget.h"
 
 namespace unity {

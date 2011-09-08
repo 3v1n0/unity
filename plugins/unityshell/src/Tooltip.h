@@ -22,11 +22,11 @@
 #define TOOLTIP_H
 
 
-#include "Nux/Nux.h"
-#include "Nux/BaseWindow.h"
-#include "NuxGraphics/GraphicsEngine.h"
-#include "Nux/TextureArea.h"
-#include "NuxImage/CairoGraphics.h"
+#include <Nux/Nux.h>
+#include <Nux/BaseWindow.h>
+#include <NuxGraphics/GraphicsEngine.h>
+#include <Nux/TextureArea.h>
+#include <NuxImage/CairoGraphics.h>
 #include "StaticCairoText.h"
 
 #include <pango/pango.h>

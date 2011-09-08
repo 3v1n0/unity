@@ -74,7 +74,12 @@ PanelService    * panel_service_get_default_with_indicators (GList *indicators);
 
 guint             panel_service_get_n_indicators (PanelService *self);
 
-IndicatorObject * panel_service_get_indicator (PanelService *self, guint position);
+IndicatorObject * panel_service_get_indicator_nth (PanelService *self, guint position);
+IndicatorObject * panel_service_get_indicator (PanelService *self, const gchar *indicator_id);
+
+void              panel_service_remove_indicator (PanelService *self, IndicatorObject *indicator);
+
+void              panel_service_clear_indicators (PanelService *self);
 
 GVariant        * panel_service_sync          (PanelService *self);
 

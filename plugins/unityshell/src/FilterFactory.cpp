@@ -19,16 +19,17 @@
  *
  */
 #include "config.h"
+
 #include <Nux/Nux.h>
-#include <Nux/View.h>
 #include <NuxCore/Logger.h>
+#include <Nux/View.h>
 
 #include "FilterBasicButton.h"
-#include "FilterRatingsWidget.h"
+#include "FilterFactory.h"
 #include "FilterGenreWidget.h"
 #include "FilterMultiRangeWidget.h"
+#include "FilterRatingsWidget.h"
 
-#include "FilterFactory.h"
 namespace {
   nux::logging::Logger logger("unity.dash.filterfactory");
 }

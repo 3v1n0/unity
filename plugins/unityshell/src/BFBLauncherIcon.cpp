@@ -33,6 +33,9 @@ BFBLauncherIcon::BFBLauncherIcon(Launcher* IconManager)
   SetQuirk(QUIRK_VISIBLE, true);
   SetQuirk(QUIRK_RUNNING, false);
   SetIconType(TYPE_HOME);
+
+  mouse_enter.connect([&] () { ubus_server_send_message(ubus_server_get_default(),
+                               UBUS_DASH_ABOUT_TO_SHOW, NULL); });
 }
 
 nux::Color BFBLauncherIcon::BackgroundColor()
@@ -53,4 +56,6 @@ void BFBLauncherIcon::ActivateLauncherIcon(ActionArg arg)
     ubus_server_send_message(ubus, UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
                              g_variant_new("(sus)", "home.lens", 0, ""));
   }
+
+  // dont chain down to avoid random dash close events
 }

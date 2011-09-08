@@ -18,16 +18,18 @@
 * Authored by: Mirco Müller <mirco.mueller@canonical.com
 */
 
-#include "Nux/Nux.h"
-#include "Nux/VLayout.h"
-#include "Nux/HLayout.h"
-#include "Nux/WindowThread.h"
-#include "Nux/WindowCompositor.h"
-#include "Nux/BaseWindow.h"
-#include "Nux/Button.h"
-#include "NuxGraphics/GraphicsEngine.h"
-#include "Nux/TextureArea.h"
-#include "NuxImage/CairoGraphics.h"
+#include <Nux/Nux.h>
+#include <Nux/VLayout.h>
+#include <Nux/HLayout.h>
+#include <Nux/WindowThread.h>
+#include <Nux/WindowCompositor.h>
+#include <Nux/BaseWindow.h>
+#include <Nux/Button.h>
+#include <NuxGraphics/GraphicsEngine.h>
+#include <Nux/TextureArea.h>
+#include <NuxImage/CairoGraphics.h>
+
+#include "CairoTexture.h"
 
 #include "QuicklistView.h"
 #include "QuicklistMenuItem.h"
@@ -47,6 +49,8 @@
 #define NUX_KP_UP    0xFF97
 #define NUX_KP_LEFT  0xFF96
 #define NUX_KP_RIGHT 0xFF98
+
+using unity::texture_from_cairo_graphics;
 
 NUX_IMPLEMENT_OBJECT_TYPE(QuicklistView);
 
@@ -1454,27 +1458,17 @@ void QuicklistView::UpdateTexture()
   cairo_destroy(cr_outline);
   cairo_destroy(cr_mask);
 
-  nux::NBitmapData* bitmap = cairo_bg->GetBitmap();
-
   if (_texture_bg)
     _texture_bg->UnReference();
-  _texture_bg = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
-  _texture_bg->Update(bitmap);
-  delete bitmap;
+  _texture_bg = texture_from_cairo_graphics(*cairo_bg);
 
-  bitmap = cairo_mask->GetBitmap();
   if (_texture_mask)
     _texture_mask->UnReference();
-  _texture_mask = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
-  _texture_mask->Update(bitmap);
-  delete bitmap;
+  _texture_mask = texture_from_cairo_graphics(*cairo_mask);
 
-  bitmap = cairo_outline->GetBitmap();
   if (_texture_outline)
     _texture_outline->UnReference();
-  _texture_outline = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
-  _texture_outline->Update(bitmap);
-  delete bitmap;
+  _texture_outline = texture_from_cairo_graphics(*cairo_outline);
 
   delete cairo_bg;
   delete cairo_mask;

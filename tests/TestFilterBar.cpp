@@ -27,6 +27,7 @@
 #include <gtk/gtk.h>
 
 #include "FilterBar.h"
+#include "PlacesStyle.h"
 
 class TestRunner
 {
@@ -97,6 +98,8 @@ int main(int argc, char **argv)
   gtk_init (&argc, &argv);
 
   nux::NuxInitialize(0);
+  // The instance for the PlacesStyle.
+  unity::PlacesStyle places_style;
 
 
   TestRunner *test_runner = new TestRunner ();

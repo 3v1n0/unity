@@ -86,7 +86,11 @@ LauncherEntryRemoteModel::~LauncherEntryRemoteModel()
   {
     g_dbus_connection_signal_unsubscribe(_conn,
                                          _launcher_entry_dbus_signal_id);
-    _launcher_entry_dbus_signal_id = 0;
+  }
+  if (_dbus_name_owner_changed_signal_id && _conn)
+  {
+    g_dbus_connection_signal_unsubscribe(_conn,
+                                         _dbus_name_owner_changed_signal_id);
   }
 
   if (_conn)

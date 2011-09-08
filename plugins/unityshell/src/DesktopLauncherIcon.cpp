@@ -51,5 +51,6 @@ DesktopLauncherIcon::GlowColor()
 void
 DesktopLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 {
+  SimpleLauncherIcon::ActivateLauncherIcon(arg);
   WindowManager::Default()->ShowDesktop();
 }

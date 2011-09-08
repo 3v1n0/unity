@@ -17,10 +17,11 @@
  * Authored by: Jamal Fanaian <j@jamalfanaian.com>
  */
 
-#include "Nux/Nux.h"
-#include "Nux/BaseWindow.h"
-#include "Nux/VLayout.h"
-#include "Nux/WindowCompositor.h"
+#include <Nux/Nux.h>
+#include <Nux/BaseWindow.h>
+#include <Nux/VLayout.h>
+#include <Nux/WindowCompositor.h>
+
 #include "QuicklistView.h"
 #include "QuicklistManager.h"
 

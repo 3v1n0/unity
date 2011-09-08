@@ -55,7 +55,7 @@ LauncherHoverMachine::EnsureHoverState()
 {
   bool should_hover;
 
-  if (GetQuirk(LAUNCHER_HIDDEN) || GetQuirk(PLACES_VISIBLE))
+  if (GetQuirk(LAUNCHER_HIDDEN))
   {
     SetShouldHover(false);
     return;

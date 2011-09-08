@@ -1,3 +1,9 @@
+unity (4.14.2-0ubuntu1) UNRELEASED; urgency=low
+
+  * New upstream release.
+
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 08 Sep 2011 17:47:43 +0200
+
 unity (4.12.0-0ubuntu2) oneiric; urgency=low
 
   * Build-depend on libxcb-icccm4-dev instead of libxcb-icccm1-dev.

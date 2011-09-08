@@ -49,7 +49,8 @@
 
 #define DELTA_DOUBLE_REQUEST 500000000
 
-using namespace unity;
+namespace unity
+{
 
 enum
 {
@@ -382,3 +383,4 @@ void PlacesHomeView::AddProperties(GVariantBuilder* builder)
   unity::variant::BuilderWrapper(builder).add(GetGeometry());
 }
 
+} // namespace unity

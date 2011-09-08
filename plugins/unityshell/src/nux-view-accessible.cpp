@@ -31,8 +31,8 @@
 #include "unitya11y.h"
 #include "nux-base-window-accessible.h"
 
-#include "Nux/Layout.h"
-#include "Nux/Area.h"
+#include <Nux/Layout.h>
+#include <Nux/Area.h>
 
 /* GObject */
 static void nux_view_accessible_class_init(NuxViewAccessibleClass* klass);

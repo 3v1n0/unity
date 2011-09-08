@@ -22,7 +22,8 @@
 #include "PreviewBasicButton.h"
 
 #include "config.h"
-#include "Nux/Nux.h"
+#include <Nux/Nux.h>
+
 #include "cairo.h"
 #include "DashStyle.h"
 
