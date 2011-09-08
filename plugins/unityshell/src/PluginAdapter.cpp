@@ -450,6 +450,8 @@ PluginAdapter::IsWindowObscured(guint32 xid)
     {
       if (sibling->defaultViewport() == window_vp
           && !sibling->minimized()
+          && sibling->isMapped()
+          && sibling->isViewable()
           && (sibling->state() & MAXIMIZE_STATE) == MAXIMIZE_STATE)
         return true;
     }
