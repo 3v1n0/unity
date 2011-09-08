@@ -2770,7 +2770,6 @@ void Launcher::MouseUpLogic(int x, int y, unsigned long button_flags, unsigned l
 
     if (GetActionState() == ACTION_NONE)
     {
-      SendCloseDashSignal();
       _icon_mouse_down->mouse_click.emit(nux::GetEventButton(button_flags));
     }
   }
@@ -2813,13 +2812,6 @@ LauncherIcon* Launcher::MouseIconIntersection(int x, int y)
   }
 
   return 0;
-}
-
-void Launcher::SendCloseDashSignal()
-{
-  ubus_server_send_message(ubus_server_get_default(),
-                           UBUS_PLACE_VIEW_CLOSE_REQUEST,
-                           NULL);
 }
 
 void

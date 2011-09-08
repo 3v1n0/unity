@@ -72,7 +72,7 @@ private:
   void OnActivateRequest(GVariant* variant);
 
   void ShowDash();
-  void HideDash();
+  void HideDash(bool restore_focus = true);
 
   void StartShowHideTimeline();
   static gboolean OnViewShowHideFrame(DashController* self);

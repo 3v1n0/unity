@@ -182,7 +182,15 @@ void DashController::OnExternalShowDash(GVariant* variant)
 void DashController::OnExternalHideDash(GVariant* variant)
 {
   EnsureDash();
-  HideDash();
+  
+  if (variant)
+  {
+    HideDash(g_variant_get_boolean(variant));
+  }
+  else
+  {
+    HideDash();
+  }
 }
 
 void DashController::ShowDash()
@@ -224,7 +232,7 @@ void DashController::ShowDash()
   ubus_manager_.SendMessage(UBUS_PLACE_VIEW_SHOWN);
 }
 
-void DashController::HideDash()
+void DashController::HideDash(bool restore)
 {
   if (!visible_)
    return;
@@ -238,7 +246,8 @@ void DashController::HideDash()
   window_->EnableInputWindow(false, "Dash", true, false);
   visible_ = false;
 
-  PluginAdapter::Default ()->restoreInputFocus ();
+  if (restore)
+    PluginAdapter::Default ()->restoreInputFocus ();
 
   StartShowHideTimeline();
 
