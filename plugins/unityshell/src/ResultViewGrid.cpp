@@ -546,12 +546,6 @@ void ResultViewGrid::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   for (uint row_index = 0; row_index <= total_rows; row_index++)
   {
-    // check if the row is displayed on the screen,
-    // FIXME - optimisation - replace 2048 with the height of the displayed viewport
-    // or at the very least, with the largest monitor resolution
-    //~ if ((y_position + renderer_->height) + absolute_y >= 0
-    //~ && (y_position - renderer_->height) + absolute_y <= top_level_parent->GetGeometry().height)
-
     int row_lower_bound = row_index * items_per_row;
     if (row_lower_bound >= std::get<0>(visible_bounds) &&
         row_lower_bound <= std::get<1>(visible_bounds))
