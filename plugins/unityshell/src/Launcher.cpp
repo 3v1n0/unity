@@ -1451,6 +1451,24 @@ void Launcher::OnBGColorChanged(GVariant *data, void *val)
   self->NeedRedraw();
 }
 
+void Launcher::DesaturateIcons()
+{
+  for (auto icon : *_model)
+  {
+    if (icon->Type () != LauncherIcon::TYPE_HOME)
+      icon->SetQuirk(LauncherIcon::QUIRK_DESAT, true);
+    icon->HideTooltip();
+  }
+}
+
+void Launcher::SaturateIcons()
+{
+  for (auto icon : *_model)
+  {
+    icon->SetQuirk(LauncherIcon::QUIRK_DESAT, false);
+  }
+}
+
 void Launcher::OnPlaceViewShown(GVariant* data, void* val)
 {
   Launcher* self = (Launcher*)val;
@@ -1461,13 +1479,7 @@ void Launcher::OnPlaceViewShown(GVariant* data, void* val)
   self->_hide_machine->SetQuirk(LauncherHideMachine::PLACES_VISIBLE, true);
   self->_hover_machine->SetQuirk(LauncherHoverMachine::PLACES_VISIBLE, true);
 
-  // TODO: add in a timeout for seeing the animation (and make it smoother)
-  for (auto icon : *(self->_model))
-  {
-    if (icon->Type () != LauncherIcon::TYPE_HOME)
-      icon->SetQuirk(LauncherIcon::QUIRK_DESAT, true);
-    icon->HideTooltip();
-  }
+  self->DesaturateIcons();
 }
 
 void Launcher::OnPlaceViewHidden(GVariant* data, void* val)
@@ -1486,11 +1498,7 @@ void Launcher::OnPlaceViewHidden(GVariant* data, void* val)
 
   self->SetStateMouseOverLauncher(self->GetAbsoluteGeometry().IsInside(pt));
 
-  // TODO: add in a timeout for seeing the animation (and make it smoother)
-  for (auto icon : *(self->_model))
-  {
-    icon->SetQuirk(LauncherIcon::QUIRK_DESAT, false);
-  }
+  self->SaturateIcons();
 }
 
 void Launcher::OnActionDone(GVariant* data, void* val)
@@ -1528,7 +1536,7 @@ void Launcher::SetHidden(bool hidden)
 
   if (!hidden && GetActionState() == ACTION_DRAG_EXTERNAL)
     DndLeave();
-
+  
   EnsureAnimation();
 
   hidden_changed.emit();
@@ -1843,6 +1851,14 @@ void Launcher::SetHover(bool hovered)
   else
   {
     SetTimeStruct(&_times[TIME_LEAVE], &_times[TIME_ENTER], ANIM_DURATION);
+  }
+
+  if (_dash_is_open)
+  {
+    if (hovered)
+      SaturateIcons();
+    else
+      DesaturateIcons();
   }
 
   EnsureAnimation();
@@ -2745,6 +2761,7 @@ void Launcher::MouseUpLogic(int x, int y, unsigned long button_flags, unsigned l
 
     if (GetActionState() == ACTION_NONE)
     {
+      SendCloseDashSignal();
       _icon_mouse_down->mouse_click.emit(nux::GetEventButton(button_flags));
     }
   }
@@ -2787,6 +2804,13 @@ LauncherIcon* Launcher::MouseIconIntersection(int x, int y)
   }
 
   return 0;
+}
+
+void Launcher::SendCloseDashSignal()
+{
+  ubus_server_send_message(ubus_server_get_default(),
+                           UBUS_PLACE_VIEW_CLOSE_REQUEST,
+                           NULL);
 }
 
 void

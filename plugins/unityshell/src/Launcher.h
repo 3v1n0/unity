@@ -341,6 +341,11 @@ private:
   static void OnPlaceViewHidden(GVariant* data, void* val);
   static void OnPlaceViewShown(GVariant* data, void* val);
 
+  void DesaturateIcons();
+  void SaturateIcons();
+
+  void SendCloseDashSignal();
+
   static void OnBGColorChanged (GVariant *data, void *val);
 
   static void OnActionDone(GVariant* data, void* val);
