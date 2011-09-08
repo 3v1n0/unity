@@ -875,6 +875,13 @@ PanelMenuView::OnWindowMaximized(guint xid)
   if (BAMF_IS_WINDOW(window) && bamf_window_get_xid(window) == xid)
   {
     _is_maximized = true;
+
+    // We need to update the _is_inside state in the case of maximization by grab
+    gint x, y;
+    gdk_display_get_pointer(gdk_display_get_default(), NULL, &x, &y, NULL);
+    _is_inside = GetAbsoluteGeometry().IsPointInside(x, y);
+
+    updated = true;
   }
 
   // update the state of the window in the _decor_map
@@ -887,8 +894,11 @@ PanelMenuView::OnWindowMaximized(guint xid)
 
   _maximized_set.insert(xid);
 
-  Refresh();
-  FullRedraw();
+  if (updated)
+  {
+    Refresh();
+    FullRedraw();
+  }
 }
 
 void
