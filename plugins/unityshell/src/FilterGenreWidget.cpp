@@ -47,6 +47,7 @@ namespace unity {
     genre_layout_->ForceChildrenSize(true);
     genre_layout_->SetHeightMatchContent(true);
     genre_layout_->SetVerticalInternalMargin (12);
+    genre_layout_->SetVerticalExternalMargin (12);
     genre_layout_->SetHorizontalInternalMargin (10);
     genre_layout_->EnablePartialVisibility (false);
 
@@ -144,9 +145,17 @@ namespace unity {
 
   void FilterGenre::Draw(nux::GraphicsEngine& GfxContext, bool force_draw) {
     nux::Geometry geo = GetGeometry();
+    nux::Color col(0.2f, 0.2f, 0.2f, 0.2f);
 
     GfxContext.PushClippingRectangle(geo);
     nux::GetPainter().PaintBackground(GfxContext, geo);
+
+    nux::GetPainter().Draw2DLine(GfxContext,
+                                 geo.x, geo.y + geo.height - 1,
+                                 geo.x + geo.width, geo.y + geo.height - 1,
+                                 col,
+                                 col);
+
     GfxContext.PopClippingRectangle();
   }
 
