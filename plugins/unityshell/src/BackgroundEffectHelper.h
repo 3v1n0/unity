@@ -69,6 +69,8 @@ public:
   static nux::Property<bool> updates_enabled;
   static nux::Property<bool> detecting_occlusions;
 
+  static nux::Geometry monitor_rect_;
+  
 protected:
   static void Register   (BackgroundEffectHelper* self);
   static void Unregister (BackgroundEffectHelper* self);
