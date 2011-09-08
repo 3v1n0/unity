@@ -104,7 +104,7 @@ add_categories(ServiceLens* self)
 static void
 add_filters(ServiceLens *self)
 {
-  GList       *filters;
+  GList       *filters = NULL;
   UnityFilter *filter;
   GIcon       *icon;
 
@@ -128,10 +128,10 @@ add_filters(ServiceLens *self)
   unity_options_filter_add_option(UNITY_OPTIONS_FILTER (filter),
                                   "files", "Files", icon);
   g_object_unref (icon);
-  //icon = g_themed_icon_new ("gtk-files");
+  icon = g_themed_icon_new ("gtk-music");
   unity_options_filter_add_option(UNITY_OPTIONS_FILTER (filter),
-                                  "music", "Music", NULL);
-  //g_object_unref (icon);
+                                  "music", "Music", icon);
+  g_object_unref (icon);
   filters = g_list_append (filters, filter);
 
   filters = g_list_append (filters, unity_ratings_filter_new("ratings",
