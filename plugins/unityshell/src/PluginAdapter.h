@@ -135,7 +135,7 @@ public:
 
   nux::Geometry GetWindowGeometry(guint32 xid);
   nux::Geometry GetScreenGeometry();
-
+  
   void CheckWindowIntersections(nux::Geometry const& region, bool &active, bool &any);
 
   int WorkspaceCount();

@@ -191,6 +191,8 @@ Launcher::Launcher(nux::BaseWindow* parent,
   adapter.drag_start.connect(sigc::mem_fun(this, &Launcher::OnDragStart));
   adapter.drag_update.connect(sigc::mem_fun(this, &Launcher::OnDragUpdate));
   adapter.drag_finish.connect(sigc::mem_fun(this, &Launcher::OnDragFinish));
+  
+  display.changed.connect(sigc::mem_fun(this, &Launcher::OnDisplayChanged));
 
   _current_icon       = NULL;
   _current_icon_index = -1;
@@ -369,6 +371,12 @@ const gchar*
 Launcher::GetName()
 {
   return "Launcher";
+}
+
+void
+Launcher::OnDisplayChanged(Display* display)
+{
+  _collection_window->display = display;
 }
 
 void
@@ -1600,13 +1608,14 @@ Launcher::OnUpdateDragManagerTimeout(gpointer data)
     if (self->_data_checked == false)
     {
       self->_data_checked = true;
-      self->_collection_window->EnableInputWindow(true, "DNDCollectionWindow");
+      self->_collection_window->Collect();
     } 
     
     return true;
   }
   
   self->_data_checked = false;
+  self->_collection_window->PushToBack();
   self->_collection_window->EnableInputWindow(false, "DNDCollectionWindow");
 
   self->DndLeave();
@@ -2862,7 +2871,7 @@ Launcher::RestoreSystemRenderTarget()
 }
 
 void Launcher::OnDNDDataCollected(const std::list<char*>& mimes)
-{
+{  
   _dnd_data.Reset();
 
   unity::glib::String uri_list_const(g_strdup("text/uri-list"));
@@ -3089,31 +3098,29 @@ Launcher::ProcessDndDrop(int x, int y)
 {
   if (_steal_drag)
   {
-    char* path = 0;
-
     for (auto it : _dnd_data.Uris())
     {
       if (g_str_has_suffix(it.c_str(), ".desktop"))
       {
+        char* path = 0;
+        
         if (g_str_has_prefix(it.c_str(), "application://"))
         {
           const char* tmp = it.c_str() + strlen("application://");
           unity::glib::String tmp2(g_strdup_printf("file:///usr/share/applications/%s", tmp));
           path = g_filename_from_uri(tmp2.Value(), NULL, NULL);
-          break;
         }
         else if (g_str_has_prefix(it.c_str(), "file://"))
         {
           path = g_filename_from_uri(it.c_str(), NULL, NULL);
-          break;
+        }
+        
+        if (path)
+        {
+          launcher_addrequest.emit(path, _dnd_hovered_icon);
+          g_free(path);
         }
       }
-    }
-
-    if (path)
-    {
-      launcher_addrequest.emit(path, _dnd_hovered_icon);
-      g_free(path);
     }
   }
   else if (_dnd_hovered_icon && _drag_action != nux::DNDACTION_NONE)

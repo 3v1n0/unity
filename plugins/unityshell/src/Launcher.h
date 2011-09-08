@@ -374,6 +374,7 @@ private:
 
   gboolean TapOnSuper();
 
+  void OnDisplayChanged(Display* display);
   void OnDNDDataCollected(const std::list<char*>& mimes);
 
   nux::HLayout* m_Layout;
