@@ -2,7 +2,7 @@ unity (4.14.2-0ubuntu1) UNRELEASED; urgency=low
 
   * New upstream release.
   * debian/control:
-    - build-dep on latest libunity-dev
+    - build-dep on latest libunity-dev, nux
 
  -- Didier Roche <didrocks@ubuntu.com>  Thu, 08 Sep 2011 17:47:43 +0200
 
