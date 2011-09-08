@@ -54,6 +54,7 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
   , search_hint("")
   , showing_filters(false)
+  , can_refine_search(false)
   , live_search_timeout_(0)
 {
   PlacesStyle* style = PlacesStyle::GetDefault();
@@ -95,6 +96,7 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
   std::string filter_str = _("Filter results");
   filter_str+= "  ▸";
   show_filters_ = new nux::StaticCairoText(filter_str.c_str());
+  show_filters_->SetVisible(false);
   show_filters_->SetTextColor(nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
   show_filters_->SetCanFocus(true);
   show_filters_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_LEFT);
@@ -111,6 +113,7 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
   search_string.SetGetterFunction(sigc::mem_fun(this, &SearchBar::get_search_string));
   search_string.SetSetterFunction(sigc::mem_fun(this, &SearchBar::set_search_string));
   showing_filters.changed.connect(sigc::mem_fun(this, &SearchBar::OnShowingFiltersChanged));
+  can_refine_search.changed.connect([&] (bool can_refine) { show_filters_->SetVisible(can_refine); });
 }
 
 SearchBar::~SearchBar()
