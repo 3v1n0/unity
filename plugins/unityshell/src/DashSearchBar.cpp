@@ -116,8 +116,7 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
 
 SearchBar::~SearchBar()
 {
-  if (bg_layer_)
-    delete bg_layer_;
+  delete bg_layer_;
 
   if (live_search_timeout_)
     g_source_remove(live_search_timeout_);
