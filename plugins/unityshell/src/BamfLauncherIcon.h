@@ -80,6 +80,7 @@ private:
   Launcher* _launcher;
   std::map<std::string, DbusmenuClient*> _menu_clients;
   std::map<std::string, DbusmenuMenuitem*> _menu_items;
+  std::map<std::string, DbusmenuMenuitem*> _menu_items_extra;
   std::map<std::string, gulong> _menu_callbacks;
   DbusmenuMenuitem* _menu_desktop_shortcuts;
   gchar* _remote_uri;
@@ -91,14 +92,16 @@ private:
 
   GFileMonitor* _desktop_file_monitor;
   gulong _on_desktop_file_changed_handler_id;
-  
+
   std::set<std::string> _supported_types;
   bool _supported_types_filled;
   guint _fill_supported_types_id;
 
   void EnsureWindowState();
 
+  void UpdateDesktopFile();
   void UpdateMenus();
+  void UpdateDesktopQuickList();
 
   void OpenInstanceWithUris(std::set<std::string> uris);
   void Focus();
