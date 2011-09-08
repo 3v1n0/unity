@@ -768,6 +768,27 @@ bool DashView::AcceptKeyNavFocus()
   return false;
 }
 
+std::string const DashView::GetIdForShortcutActivation(std::string const& shortcut) const
+{
+  Lens::Ptr lens = lenses_.GetLensForShortcut(shortcut);
+  if (lens)
+    return lens->id;
+  return "";
+}
+
+std::vector<char> DashView::GetAllShortcuts()
+{
+  std::vector<char> result;
+
+  for (Lens::Ptr lens: lenses_.GetLenses())
+  {
+    std::string shortcut = lens->shortcut;
+    if(shortcut.size() > 0)
+      result.push_back(shortcut.at(0));
+  }
+  return result;
+}
+
 bool DashView::InspectKeyEvent(unsigned int eventType,
                                unsigned int key_sym,
                                const char* character)

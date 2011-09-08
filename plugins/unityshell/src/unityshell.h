@@ -237,7 +237,8 @@ private:
 
   void SendExecuteCommand();
 
-  void EnsureKeybindings ();
+  void EnsureSuperKeybindings ();
+  void CreateSuperNewAction(char shortcut);
 
   static gboolean initPluginActions(gpointer data);
   static void initLauncher(nux::NThread* thread, void* InitData);
@@ -284,6 +285,7 @@ private:
   typedef std::shared_ptr<CompAction> CompActionPtr;
   typedef std::vector<CompActionPtr> ShortcutActions;
   ShortcutActions _shortcut_actions;
+  bool            super_keypressed_;
 
   /* keyboard-nav mode */
   CompWindow* newFocusedWindow;

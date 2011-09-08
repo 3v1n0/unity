@@ -235,7 +235,6 @@ Launcher::Launcher(nux::BaseWindow* parent,
   _ignore_repeat_shortcut_handle = 0;
 
   _latest_shortcut        = 0;
-  _super_pressed          = false;
   _shortcuts_shown        = false;
   _floating               = false;
   _hovered                = false;
@@ -1366,7 +1365,6 @@ gboolean Launcher::TapOnSuper()
 
 void Launcher::StartKeyShowLauncher()
 {
-  _super_pressed = true;
   _hide_machine->SetQuirk(LauncherHideMachine::LAST_ACTION_ACTIVATE, false);
 
   SetTimeStruct(&_times[TIME_TAP_SUPER]);
@@ -1391,7 +1389,6 @@ void Launcher::EndKeyShowLauncher()
   clock_gettime(CLOCK_MONOTONIC, &current);
 
   _hover_machine->SetQuirk(LauncherHoverMachine::SHORTCUT_KEYS_VISIBLE, false);
-  _super_pressed = false;
   _shortcuts_shown = false;
   QueueDraw();
 
@@ -2509,9 +2506,6 @@ Launcher::CheckSuperShortcutPressed(Display *x_display,
                                     unsigned long key_state,
                                     char*         key_string)
 {
-  if (!_super_pressed)
-    return false;
-
   LauncherModel::iterator it;
 
   // Shortcut to start launcher icons. Only relies on Keycode, ignore modifier
@@ -2520,16 +2514,6 @@ Launcher::CheckSuperShortcutPressed(Display *x_display,
     if ((XKeysymToKeycode(x_display, (*it)->GetShortcut()) == key_code) ||
         ((gchar)((*it)->GetShortcut()) == key_string[0]))
     {
-      /*
-       * start a timeout while repressing the same shortcut will be ignored.
-       * This is because the keypress repeat is handled by Xorg and we have no
-       * way to know if a press is an actual press or just an automated repetition
-       * because the button is hold down. (key release events are sent in both cases)
-      */
-      if (_ignore_repeat_shortcut_handle > 0)
-        g_source_remove(_ignore_repeat_shortcut_handle);
-      _ignore_repeat_shortcut_handle = g_timeout_add(IGNORE_REPEAT_SHORTCUT_DURATION, &Launcher::ResetRepeatShorcutTimeout, this);
-
       if (_latest_shortcut == (*it)->GetShortcut())
         return true;
 
@@ -2538,7 +2522,7 @@ Launcher::CheckSuperShortcutPressed(Display *x_display,
       else
         (*it)->Activate(ActionArg(ActionArg::LAUNCHER, 0));
 
-      _latest_shortcut = (*it)->GetShortcut();
+      SetLatestShortcut((*it)->GetShortcut());
 
       // disable the "tap on super" check
       _times[TIME_TAP_SUPER].tv_sec = 0;
@@ -2548,6 +2532,20 @@ Launcher::CheckSuperShortcutPressed(Display *x_display,
   }
 
   return false;
+}
+
+void Launcher::SetLatestShortcut(guint64 shortcut)
+{
+  _latest_shortcut = shortcut;
+  /*
+   * start a timeout while repressing the same shortcut will be ignored.
+   * This is because the keypress repeat is handled by Xorg and we have no
+   * way to know if a press is an actual press or just an automated repetition
+   * because the button is hold down. (key release events are sent in both cases)
+   */
+  if (_ignore_repeat_shortcut_handle > 0)
+    g_source_remove(_ignore_repeat_shortcut_handle);
+  _ignore_repeat_shortcut_handle = g_timeout_add(IGNORE_REPEAT_SHORTCUT_DURATION, &Launcher::ResetRepeatShorcutTimeout, this);
 }
 
 void
