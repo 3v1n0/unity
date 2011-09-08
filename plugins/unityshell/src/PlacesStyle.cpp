@@ -28,92 +28,58 @@
 #include <UnityCore/GLibWrapper.h>
 #include "PlacesStyle.h"
 
-using namespace unity;
-
+namespace unity
+{
 namespace
 {
 nux::logging::Logger logger("unity.places");
+PlacesStyle* style_instance = nullptr;
 }
-
-static PlacesStyle* _style = NULL;
 
 PlacesStyle::PlacesStyle()
   : _util_cg(CAIRO_FORMAT_ARGB32, 1, 1),
-    _text_color(1.0f, 1.0f, 1.0f, 1.0f),
+    _text_color(nux::color::White),
     _text_width(0),
     _text_height(0),
-    _n_cols(6),
-    _dash_bottom_texture(NULL),
-    _dash_right_texture(NULL),
-    _dash_corner_texture(NULL),
-    _dash_fullscreen_icon(NULL),
-    _dash_left_edge(NULL),
-    _dash_left_corner(NULL),
-    _dash_left_tile(NULL),
-    _dash_top_corner(NULL),
-    _dash_top_tile(NULL),
-    _search_magnify_texture(NULL),
-    _search_close_texture(NULL),
-    _search_close_glow_texture(NULL),
-    _search_spin_texture(NULL),
-    _search_spin_glow_texture(NULL),
-    _group_unexpand_texture(NULL),
-    _group_expand_texture(NULL)
+    _n_cols(6)
 {
-  g_signal_connect(gtk_settings_get_default(), "notify::gtk-font-name",
-                   G_CALLBACK(PlacesStyle::OnFontChanged), this);
-  g_signal_connect(gtk_settings_get_default(), "notify::gtk-xft-dpi",
-                   G_CALLBACK(PlacesStyle::OnFontChanged), this);
-
+  signal_manager_.Add(new glib::Signal<void, GtkSettings*, GParamSpec*>
+                      (gtk_settings_get_default(),
+                       "notify::gtk-font-name",
+                       sigc::mem_fun(this, &PlacesStyle::OnFontChanged)));
+  signal_manager_.Add(new glib::Signal<void, GtkSettings*, GParamSpec*>
+                      (gtk_settings_get_default(),
+                       "notify::gtk-xft-dpi",
+                       sigc::mem_fun(this, &PlacesStyle::OnFontChanged)));
   Refresh();
+
+  if (style_instance)
+  {
+    LOG_ERROR(logger) << "More than one PlacesStyle created.";
+  }
+  else
+  {
+    style_instance = this;
+  }
 }
 
 PlacesStyle::~PlacesStyle()
 {
-  if (_dash_bottom_texture)
-    _dash_bottom_texture->UnReference();
-  if (_dash_right_texture)
-    _dash_right_texture->UnReference();
-  if (_dash_corner_texture)
-    _dash_corner_texture->UnReference();
-  if (_dash_fullscreen_icon)
-    _dash_fullscreen_icon->UnReference();
-  if (_dash_left_edge)
-    _dash_left_edge->UnReference();
-  if (_dash_left_corner)
-    _dash_left_corner->UnReference();
-  if (_dash_left_tile)
-    _dash_left_tile->UnReference();
-  if (_dash_top_corner)
-    _dash_top_corner->UnReference();
-  if (_dash_top_tile)
-    _dash_top_tile->UnReference();
-  if (_search_magnify_texture)
-    _search_magnify_texture->UnReference();
-  if (_search_close_texture)
-    _search_close_texture->UnReference();
-  if (_search_close_glow_texture)
-    _search_close_glow_texture->UnReference();
-  if (_search_spin_texture)
-    _search_spin_texture->UnReference();
-  if (_group_unexpand_texture)
-    _group_unexpand_texture->UnReference();
-  if (_group_expand_texture)
-    _group_expand_texture->UnReference();
-
-  if (_style == this)
-    _style = NULL;
+  if (style_instance == this)
+    style_instance = nullptr;
 }
 
 PlacesStyle* PlacesStyle::GetDefault()
 {
-  if (G_UNLIKELY(!_style))
-    _style = new PlacesStyle();
+  if (!style_instance)
+  {
+    LOG_ERROR(logger) << "No PlacesStyle created yet.";
+  }
 
-  return _style;
+  return style_instance;
 }
 
-int PlacesStyle::GetDefaultNColumns()
+int PlacesStyle::GetDefaultNColumns() const
 {
   return _n_cols;
 }
@@ -128,37 +94,37 @@ void PlacesStyle::SetDefaultNColumns(int n_cols)
   columns_changed.emit();
 }
 
-int PlacesStyle::GetTileIconSize()
+int PlacesStyle::GetTileIconSize() const
 {
   return 48;
 }
 
-int PlacesStyle::GetTileWidth()
+int PlacesStyle::GetTileWidth() const
 {
   return _text_width;
 }
 
-int PlacesStyle::GetTileHeight()
+int PlacesStyle::GetTileHeight() const
 {
   return GetTileIconSize() + (_text_height * 4);
 }
 
-int PlacesStyle::GetHomeTileIconSize()
+int PlacesStyle::GetHomeTileIconSize() const
 {
   return 104;
 }
 
-int PlacesStyle::GetHomeTileWidth()
+int PlacesStyle::GetHomeTileWidth() const
 {
   return _text_width * 1.2;
 }
 
-int PlacesStyle::GetHomeTileHeight()
+int PlacesStyle::GetHomeTileHeight() const
 {
   return GetHomeTileIconSize() + (_text_height * 4);
 }
 
-int PlacesStyle::GetTextLineHeight()
+int PlacesStyle::GetTextLineHeight() const
 {
   return _text_height;
 }
@@ -167,21 +133,21 @@ nux::BaseTexture* PlacesStyle::GetDashBottomTile()
 {
   if (!_dash_bottom_texture)
     _dash_bottom_texture = TextureFromFilename(PKGDATADIR"/dash_bottom_border_tile.png");
-  return _dash_bottom_texture;
+  return _dash_bottom_texture.GetPointer();
 }
 
 nux::BaseTexture* PlacesStyle::GetDashRightTile()
 {
   if (!_dash_right_texture)
     _dash_right_texture =  TextureFromFilename(PKGDATADIR"/dash_right_border_tile.png");
-  return _dash_right_texture;
+  return _dash_right_texture.GetPointer();
 }
 
 nux::BaseTexture* PlacesStyle::GetDashCorner()
 {
   if (!_dash_corner_texture)
     _dash_corner_texture =  TextureFromFilename(PKGDATADIR"/dash_bottom_right_corner.png");
-  return _dash_corner_texture;
+  return _dash_corner_texture.GetPointer();
 }
 
 
@@ -189,98 +155,98 @@ nux::BaseTexture* PlacesStyle::GetDashLeftEdge()
 {
   if (!_dash_left_edge)
     _dash_left_edge = TextureFromFilename(PKGDATADIR"/dash_left_edge.png");
-  return _dash_left_edge;
+  return _dash_left_edge.GetPointer();
 }
 
 nux::BaseTexture* PlacesStyle::GetDashLeftCorner()
 {
   if (!_dash_left_corner)
     _dash_left_corner = TextureFromFilename(PKGDATADIR"/dash_bottom_left_corner.png");
-  return _dash_left_corner;
+  return _dash_left_corner.GetPointer();
 }
 
 nux::BaseTexture* PlacesStyle::GetDashLeftTile()
 {
   if (!_dash_left_tile)
-  _dash_left_tile = TextureFromFilename(PKGDATADIR"/dash_left_tile.png");
-  return _dash_left_tile;
+    _dash_left_tile = TextureFromFilename(PKGDATADIR"/dash_left_tile.png");
+  return _dash_left_tile.GetPointer();
 }
 
 nux::BaseTexture* PlacesStyle::GetDashTopCorner()
 {
   if (!_dash_top_corner)
     _dash_top_corner = TextureFromFilename(PKGDATADIR"/dash_top_right_corner.png");
-  return _dash_top_corner;
+  return _dash_top_corner.GetPointer();
 }
 
 nux::BaseTexture* PlacesStyle::GetDashTopTile()
 {
   if (!_dash_top_tile)
     _dash_top_tile = TextureFromFilename(PKGDATADIR"/dash_top_tile.png");
-  return _dash_top_tile;
+  return _dash_top_tile.GetPointer();
 }
 
 nux::BaseTexture* PlacesStyle::GetDashFullscreenIcon()
 {
   if (!_dash_fullscreen_icon)
     _dash_fullscreen_icon = TextureFromFilename(PKGDATADIR"/dash_fullscreen_icon.png");
-  return _dash_fullscreen_icon;
+  return _dash_fullscreen_icon.GetPointer();
 }
 
 nux::BaseTexture* PlacesStyle::GetSearchMagnifyIcon()
 {
   if (!_search_magnify_texture)
     _search_magnify_texture = TextureFromFilename(PKGDATADIR"/search_magnify.png");
-  return _search_magnify_texture;
+  return _search_magnify_texture.GetPointer();
 }
 
 nux::BaseTexture* PlacesStyle::GetSearchCloseIcon()
 {
   if (!_search_close_texture)
     _search_close_texture = TextureFromFilename(PKGDATADIR"/search_close.png");
-  return _search_close_texture;
+  return _search_close_texture.GetPointer();
 }
 
 nux::BaseTexture* PlacesStyle::GetSearchCloseGlowIcon()
 {
   if (!_search_close_glow_texture)
     _search_close_glow_texture = TextureFromFilename(PKGDATADIR"/search_close_glow.png");
-  return _search_close_glow_texture;
+  return _search_close_glow_texture.GetPointer();
 }
 
 nux::BaseTexture* PlacesStyle::GetSearchSpinIcon()
 {
   if (!_search_spin_texture)
     _search_spin_texture = TextureFromFilename(PKGDATADIR"/search_spin.png");
-  return _search_spin_texture;
+  return _search_spin_texture.GetPointer();
 }
 
 nux::BaseTexture* PlacesStyle::GetSearchSpinGlowIcon()
 {
   if (!_search_spin_glow_texture)
     _search_spin_glow_texture = TextureFromFilename(PKGDATADIR"/search_spin_glow.png");
-  return _search_spin_glow_texture;
+  return _search_spin_glow_texture.GetPointer();
 }
 
 nux::BaseTexture* PlacesStyle::GetGroupUnexpandIcon()
 {
   if (!_group_unexpand_texture)
     _group_unexpand_texture = TextureFromFilename(PKGDATADIR"/dash_group_unexpand.png");
-  return _group_unexpand_texture;
+  return _group_unexpand_texture.GetPointer();
 }
 
 nux::BaseTexture* PlacesStyle::GetGroupExpandIcon()
 {
   if (!_group_expand_texture)
     _group_expand_texture = TextureFromFilename(PKGDATADIR"/dash_group_expand.png");
-  return _group_expand_texture;
+  return _group_expand_texture.GetPointer();
 }
 
-nux::BaseTexture* PlacesStyle::TextureFromFilename(const char* filename)
+PlacesStyle::BaseTexturePtr PlacesStyle::TextureFromFilename(const char* filename)
 {
   glib::Object<GdkPixbuf> pixbuf;
   glib::Error error;
-  nux::BaseTexture* texture = NULL;
+  BaseTexturePtr texture;
 
   pixbuf = gdk_pixbuf_new_from_file(filename, &error);
   if (error)
@@ -290,7 +256,10 @@ nux::BaseTexture* PlacesStyle::TextureFromFilename(const char* filename)
   else
   {
     texture = nux::CreateTexture2DFromPixbuf(pixbuf, true);
-    texture->Reference();  // stop it getting unreffed by IconTexture
+    // TODO: when nux has the ability to create a smart pointer that takes
+    // ownership without adding a reference, we can remove the unref here.  By
+    // unreferencing, the object is solely owned by the smart pointer.
+    texture->UnReference();
   }
 
   return texture;
@@ -338,12 +307,14 @@ void PlacesStyle::Refresh()
   cairo_destroy(cr);
 }
 
-nux::Color& PlacesStyle::GetTextColor()
+nux::Color const& PlacesStyle::GetTextColor() const
 {
   return _text_color;
 }
 
-void PlacesStyle::OnFontChanged(GObject* object, GParamSpec* pspec, PlacesStyle* self)
+void PlacesStyle::OnFontChanged(GtkSettings* object, GParamSpec* pspec)
 {
-  self->Refresh();
+  Refresh();
 }
+
+} // namespace unity

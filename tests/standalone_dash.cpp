@@ -29,6 +29,7 @@
 #include "BGHash.h"
 #include "FontSettings.h"
 #include "DashView.h"
+#include "PlacesStyle.h"
 
 #define WIDTH 958
 #define HEIGHT 574
@@ -44,9 +45,6 @@ public:
   static void InitWindowThread (nux::NThread* thread, void* InitData);
   void Init ();
   nux::Layout *layout;
-
-private:
-
 };
 
 TestRunner::TestRunner ()
@@ -100,6 +98,8 @@ int main(int argc, char **argv)
 
   nux::NuxInitialize(0);
   nux::logging::configure_logging(::getenv("UNITY_LOG_SEVERITY"));
+  // The instance for the PlacesStyle.
+  unity::PlacesStyle places_style;
 
   TestRunner *test_runner = new TestRunner ();
   wt = nux::CreateGUIThread(TEXT("Unity Dash"),
