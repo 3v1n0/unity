@@ -38,7 +38,7 @@ Build-Depends: cmake,
                libjson-glib-dev,
                libutouch-geis-dev (>= 2.0.10),
                libgnome-desktop-3-dev,
-               libunity-dev (>= 4.0.0~),
+               libunity-dev (>= 4.0.2~),
 Standards-Version: 3.9.2
 Homepage: https://launchpad.net/unity
 Vcs-Bzr: https://code.launchpad.net/~ubuntu-desktop/unity/ubuntu
