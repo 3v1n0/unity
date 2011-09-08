@@ -1,4 +1,4 @@
-unity (4.14.2-0ubuntu1) UNRELEASED; urgency=low
+unity (4.14.2-0ubuntu1) oneiric; urgency=low
 
   * New upstream release.
     - unity crashed with AttributeError in reset_unity_compiz_profile(): 'str'
@@ -48,7 +48,7 @@ unity (4.14.2-0ubuntu1) UNRELEASED; urgency=low
     - bump shlibs, remove tweak for garantuing the version as the ABI
       is considered stable until finale now.
 
- -- Didier Roche <didrocks@ubuntu.com>  Thu, 08 Sep 2011 17:47:43 +0200
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 08 Sep 2011 20:07:50 +0200
 
 unity (4.12.0-0ubuntu2) oneiric; urgency=low
 
