@@ -52,7 +52,7 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
   , active_index_(-1)
   , selected_index_(-1)
   , preview_row_(0)
-  //, lazy_load_queued_(false)
+  , lazy_load_queued_(false)
   , last_mouse_down_x_(-1)
   , last_mouse_down_y_(-1)
 {
@@ -84,39 +84,70 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
 
   SetDndEnabled(true, false);
   NeedRedraw();
-
-
 }
 
 ResultViewGrid::~ResultViewGrid()
 {
 }
 
-//~ void ResultViewGrid::QueueLazyLoad()
-//~ {
-  //~ if (lazy_load_queued_ == false)
-  //~ {
-    //~ g_timeout_add(0, sigc::mem_fun(this, ResultViewGrid::DoLazyLoad));
-    //~ lazy_load_queued_ = true;
-  //~ }
-//~ }
+gboolean ResultViewGrid::OnLazyLoad (gpointer data)
+{
+  ResultViewGrid *self = (ResultViewGrid*)data;
+  self->DoLazyLoad();
+  return FALSE;
+}
+
+void ResultViewGrid::QueueLazyLoad()
+{
+  if (lazy_load_queued_ == false)
+  {
+    g_timeout_add(0, (GSourceFunc)(&ResultViewGrid::OnLazyLoad), this);
+    lazy_load_queued_ = true;
+  }
+}
+
+void ResultViewGrid::DoLazyLoad()
+{
+  lazy_load_queued_ = false;
+  // FIXME - so this code was nice, it would only load the visible entries on the screen
+  // however nux does not give us a good enough indicator right now that we are scrolling,
+  // thus if you scroll more than a screen in one frame, you will end up with at least one frame where
+  // no icons are displayed (they have not been preloaded yet) - it sucked. we should fix this next cycle when we can break api
+  //~ int index = 0;
 //~
-//~ gboolean ResultViewGrid::DoLazyLoad()
-//~ {
-  //~ lazy_load_queued_ = false;
+  //~ ResultListBounds visible_bounds = GetVisableResults();
+  //~ int lower_bound = std::get<0>(visible_bounds);
+  //~ int upper_bound = std::get<1>(visible_bounds);
 //~
-  //~ int items_per_row = GetItemsPerRow();
-  //~ uint index = 0;
   //~ ResultList::iterator it;
-  //~ for (it = results_.begin(); index < items_per_row; it++)
+  //~ for (it = results_.begin(); it != results_.end(); it++)
   //~ {
-    //~ renderer_->PreLoad((*it));
-//~
+    //~ if (index >= lower_bound && index <= upper_bound)
+    //~ {
+      //~ renderer_->Preload((*it));
+    //~ }
     //~ index++;
   //~ }
-//~
-  //~ return FALSE;
-//~ }
+
+  // instead we will just pre-load all the items if expanded or just one row if not
+  int index = 0;
+  int items_per_row = GetItemsPerRow();
+  ResultList::iterator it;
+  for (it = results_.begin(); it != results_.end(); it++)
+  {
+    if ((!expanded && index < items_per_row) || expanded)
+    {
+      renderer_->Preload((*it));
+    }
+
+    if (!expanded && index >= items_per_row)
+      break; //early exit
+
+    index++;
+  }
+
+  QueueDraw();
+}
 
 
 int ResultViewGrid::GetItemsPerRow()
@@ -165,14 +196,18 @@ void ResultViewGrid::SetModelRenderer(ResultRenderer* renderer)
 
 void ResultViewGrid::AddResult(Result& result)
 {
-  ResultView::AddResult(result);
+  results_.push_back(result);
+
   SizeReallocate();
+  QueueLazyLoad();
+  NeedRedraw();
 }
 
 void ResultViewGrid::RemoveResult(Result& result)
 {
   ResultView::RemoveResult(result);
   SizeReallocate();
+  QueueLazyLoad();
 }
 
 void ResultViewGrid::SizeReallocate()
@@ -431,6 +466,7 @@ void ResultViewGrid::OnOnKeyNavFocusChange(nux::Area *area)
 long ResultViewGrid::ComputeLayout2()
 {
   SizeReallocate();
+  QueueLazyLoad();
   long ret = ResultView::ComputeLayout2();
   return ret;
 
@@ -473,7 +509,7 @@ ResultListBounds ResultViewGrid::GetVisableResults()
       visible_height = std::min(visible_height, absolute_y + GetAbsoluteHeight());
 
       int visible_rows = std::ceil(visible_height / static_cast<float>(row_size));
-      end = start + (visible_rows * items_per_row) + 1;
+      end = start + (visible_rows * items_per_row) + items_per_row;
     }
     else
     {
@@ -518,7 +554,7 @@ void ResultViewGrid::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
     int row_lower_bound = row_index * items_per_row;
     if (row_lower_bound >= std::get<0>(visible_bounds) &&
-        row_lower_bound < std::get<1>(visible_bounds))
+        row_lower_bound <= std::get<1>(visible_bounds))
     {
       int x_position = padding + GetGeometry().x;
       for (int column_index = 0; column_index < items_per_row; column_index++)

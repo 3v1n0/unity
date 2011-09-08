@@ -53,7 +53,6 @@ public:
   nux::Property<int> padding;
 
 
-
 protected:
   void MouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
   void MouseClick(int x, int y, unsigned long button_flags, unsigned long key_flags);
@@ -79,6 +78,10 @@ private:
   typedef std::tuple <int, int> ResultListBounds;
   ResultListBounds GetVisableResults();
 
+  static gboolean OnLazyLoad (gpointer data);
+  void QueueLazyLoad();
+  void DoLazyLoad();
+
   int GetItemsPerRow();
   void SizeReallocate();
   void PositionPreview();
@@ -90,7 +93,7 @@ private:
   uint preview_row_;
   std::string focused_uri_;
 
-  bool lazy_load_queued;
+  bool lazy_load_queued_;
   int last_mouse_down_x_;
   int last_mouse_down_y_;
   std::string current_drag_uri_;
