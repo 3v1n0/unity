@@ -55,14 +55,9 @@ static void shortcut_activated(DbusmenuMenuitem* _sender, guint timestamp, gpoin
   indicator_desktop_shortcuts_nick_exec(data->shortcuts, data->nick);
 }
 
-void BamfLauncherIcon::Activate(ActionArg arg)
-{
-  ActivateLauncherIcon(arg);
-}
-
-
 void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 {
+  SimpleLauncherIcon::ActivateLauncherIcon(arg);
   bool scaleWasActive = WindowManager::Default()->IsScaleActive();
 
   bool active, running;

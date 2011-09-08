@@ -229,6 +229,7 @@ void DeviceLauncherIcon::ShowMount(GMount* mount)
 
 void DeviceLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 {
+  SimpleLauncherIcon::ActivateLauncherIcon(arg);
   SetQuirk(QUIRK_STARTING, true);
   
   glib::Object<GMount> mount(g_volume_get_mount(volume_));
