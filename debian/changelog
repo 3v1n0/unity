@@ -43,7 +43,7 @@ unity (4.14.2-0ubuntu1) UNRELEASED; urgency=low
     - After restoring a window the application title doesn't fade-out and it
       goes below the menus (LP: #838479)
   * debian/control:
-    - build-dep on latest libunity-dev, nux
+    - build-dep on latest libunity-dev for ABI/API break, nux
   * debian/rules:
     - bump shlibs, remove tweak for garantuing the version as the ABI
       is considered stable until finale now.
