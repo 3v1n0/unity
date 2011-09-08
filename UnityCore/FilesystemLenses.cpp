@@ -335,18 +335,15 @@ Lenses::LensList FilesystemLenses::Impl::GetLenses() const
 
 Lens::Ptr FilesystemLenses::Impl::GetLens(std::string const& lens_id) const
 {
-  Lens::Ptr p;
-
-  for (Lens::Ptr lens: lenses_)
+  for (auto lens: lenses_)
   {
     if (lens->id == lens_id)
     {
-      p = lens;
-      break;
+      return lens;
     }
   }
 
-  return p;
+  return Lens::Ptr();
 }
 
 Lens::Ptr FilesystemLenses::Impl::GetLensAtIndex(std::size_t index) const
@@ -364,18 +361,15 @@ Lens::Ptr FilesystemLenses::Impl::GetLensAtIndex(std::size_t index) const
 
 Lens::Ptr FilesystemLenses::Impl::GetLensForShortcut(std::string const& lens_shortcut) const
 {
-  Lens::Ptr p;
-
-  for (Lens::Ptr lens: lenses_)
+  for (auto lens: lenses_)
   {
     if (lens->shortcut == lens_shortcut)
     {
-      p = lens;
-      break;
+      return lens;
     }
   }
 
-  return p;
+  return Lens::Ptr();
 }
 
 std::size_t FilesystemLenses::Impl::count() const
