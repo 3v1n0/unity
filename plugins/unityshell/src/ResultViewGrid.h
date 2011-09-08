@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright 2011 Canonical Ltd.
  *
@@ -36,6 +37,8 @@ namespace dash
 class ResultViewGrid : public ResultView
 {
 public:
+  NUX_DECLARE_OBJECT_TYPE(ResultViewGrid, ResultView);
+
   ResultViewGrid(NUX_FILE_LINE_DECL);
   ~ResultViewGrid();
 
@@ -48,7 +51,6 @@ public:
   nux::Property<int> horizontal_spacing;
   nux::Property<int> vertical_spacing;
   nux::Property<int> padding;
-
 
 
 protected:
@@ -73,6 +75,13 @@ protected:
   virtual long ComputeLayout2();
 
 private:
+  typedef std::tuple <int, int> ResultListBounds;
+  ResultListBounds GetVisableResults();
+
+  static gboolean OnLazyLoad (gpointer data);
+  void QueueLazyLoad();
+  void DoLazyLoad();
+
   int GetItemsPerRow();
   void SizeReallocate();
   void PositionPreview();
@@ -84,6 +93,7 @@ private:
   uint preview_row_;
   std::string focused_uri_;
 
+  bool lazy_load_queued_;
   int last_mouse_down_x_;
   int last_mouse_down_y_;
   std::string current_drag_uri_;

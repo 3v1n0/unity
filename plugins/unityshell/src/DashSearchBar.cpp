@@ -38,6 +38,7 @@
 #include "DashSearchBar.h"
 #include <UnityCore/Variant.h>
 
+#include "CairoTexture.h"
 #include "PlacesStyle.h"
 
 #define LIVE_SEARCH_TIMEOUT 250
@@ -53,6 +54,7 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
   , search_hint("")
   , showing_filters(false)
+  , can_refine_search(false)
   , live_search_timeout_(0)
 {
   PlacesStyle* style = PlacesStyle::GetDefault();
@@ -61,9 +63,9 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
   bg_layer_ = new nux::ColorLayer(nux::Color(0xff595853), true);
 
   layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
-  layout_->SetHorizontalInternalMargin(12);
+  layout_->SetHorizontalInternalMargin(0);
   layout_->SetVerticalExternalMargin(12);
-  layout_->SetHorizontalExternalMargin(18);
+  layout_->SetHorizontalExternalMargin(10);
   SetLayout(layout_);
 
   spinner_ = new SearchBarSpinner();
@@ -94,11 +96,12 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
   std::string filter_str = _("Filter results");
   filter_str+= "  ▸";
   show_filters_ = new nux::StaticCairoText(filter_str.c_str());
+  show_filters_->SetVisible(false);
   show_filters_->SetTextColor(nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
   show_filters_->SetCanFocus(true);
   show_filters_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_LEFT);
   show_filters_->mouse_click.connect([&] (int x, int y, unsigned long b, unsigned long k) { showing_filters = !showing_filters; });
-  layout_->AddView(show_filters_, 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FIX);
+  layout_->AddView(show_filters_, 0, nux::MINOR_POSITION_RIGHT, nux::MINOR_SIZE_FIX);
 
   sig_manager_.Add(new Signal<void, GtkSettings*, GParamSpec*>
       (gtk_settings_get_default(),
@@ -110,12 +113,12 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
   search_string.SetGetterFunction(sigc::mem_fun(this, &SearchBar::get_search_string));
   search_string.SetSetterFunction(sigc::mem_fun(this, &SearchBar::set_search_string));
   showing_filters.changed.connect(sigc::mem_fun(this, &SearchBar::OnShowingFiltersChanged));
+  can_refine_search.changed.connect([&] (bool can_refine) { show_filters_->SetVisible(can_refine); });
 }
 
 SearchBar::~SearchBar()
 {
-  if (bg_layer_)
-    delete bg_layer_;
+  delete bg_layer_;
 
   if (live_search_timeout_)
     g_source_remove(live_search_timeout_);
@@ -365,12 +368,7 @@ void SearchBar::UpdateBackground()
   cairo_stroke(cr);
 
   cairo_destroy(cr);
-
-  nux::NBitmapData* bitmap =  cairo_graphics.GetBitmap();
-
-  nux::BaseTexture* texture2D = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
-  texture2D->Update(bitmap);
-  delete bitmap;
+  nux::BaseTexture* texture2D = texture_from_cairo_graphics(cairo_graphics);
 
   nux::TexCoordXForm texxform;
   texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);

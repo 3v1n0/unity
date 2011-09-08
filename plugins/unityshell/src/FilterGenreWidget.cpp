@@ -20,7 +20,9 @@
  */
 
 #include "config.h"
-#include "Nux/Nux.h"
+
+#include <Nux/Nux.h>
+
 #include <glib.h>
 #include <glib/gi18n-lib.h>
 
@@ -46,15 +48,11 @@ namespace unity {
     genre_layout_ = new nux::GridHLayout(NUX_TRACKER_LOCATION);
     genre_layout_->ForceChildrenSize(true);
     genre_layout_->SetHeightMatchContent(true);
-    genre_layout_->SetVerticalInternalMargin (0);
-    genre_layout_->SetHorizontalInternalMargin (0);
+    genre_layout_->SetVerticalInternalMargin (12);
+    genre_layout_->SetVerticalExternalMargin (12);
+    genre_layout_->SetHorizontalInternalMargin (10);
     genre_layout_->EnablePartialVisibility (false);
-
-    DashStyle *dash_style = DashStyle::GetDefault();
-    int garnish = 2 * dash_style->GetButtonGarnishSize();
-
-    genre_layout_->SetChildrenSize (style->GetTileWidth() - 12,
-                                    garnish + style->GetTextLineHeight() * 2);
+    genre_layout_->SetChildrenSize (style->GetTileWidth() - 12, 35);
     genre_layout_->Reference();
 
     SetRightHandView(all_button_);
@@ -111,7 +109,8 @@ namespace unity {
     if (found_filter)
     {
       genre_layout_->RemoveChildObject(*it);
-      buttons_.erase (it);
+      buttons_.erase(it);
+      found_filter->UnReference();
     }
   }
 
@@ -144,9 +143,17 @@ namespace unity {
 
   void FilterGenre::Draw(nux::GraphicsEngine& GfxContext, bool force_draw) {
     nux::Geometry geo = GetGeometry();
+    nux::Color col(0.2f, 0.2f, 0.2f, 0.2f);
 
     GfxContext.PushClippingRectangle(geo);
     nux::GetPainter().PaintBackground(GfxContext, geo);
+
+    nux::GetPainter().Draw2DLine(GfxContext,
+                                 geo.x, geo.y + geo.height - 1,
+                                 geo.x + geo.width, geo.y + geo.height - 1,
+                                 col,
+                                 col);
+
     GfxContext.PopClippingRectangle();
   }
 

@@ -18,8 +18,8 @@
 
 #include "DashController.h"
 
-#include "NuxCore/Logger.h"
-#include "Nux/HLayout.h"
+#include <NuxCore/Logger.h>
+#include <Nux/HLayout.h>
 
 #include "PluginAdapter.h"
 #include "UBusMessages.h"
@@ -44,20 +44,20 @@ DashController::DashController()
   , last_opacity_(0.0f)
   , start_time_(0)
 {
-  SetupWindow();
-  SetupDashView();
   SetupRelayoutCallbacks();
   RegisterUBusInterests();
 
   PluginAdapter::Default()->compiz_screen_ungrabbed.connect(sigc::mem_fun(this, &DashController::OnScreenUngrabbed));
 
-  Relayout();
+  ensure_id_ = g_timeout_add_seconds(60, [] (gpointer data) -> gboolean { static_cast<DashController*>(data)->EnsureDash(); return FALSE; }, this);
 }
 
 DashController::~DashController()
 {
-  window_->UnReference();
+  if (window_)
+    window_->UnReference();
   g_source_remove(timeline_id_);
+  g_source_remove(ensure_id_);
 }
 
 void DashController::SetupWindow()
@@ -76,7 +76,7 @@ void DashController::SetupDashView()
 {
   view_ = new DashView();
 
-  nux::HLayout* layout = new nux::HLayout();
+  nux::HLayout* layout = new nux::HLayout(NUX_TRACKER_LOCATION);
   layout->AddView(view_, 1);
   layout->SetContentDistribution(nux::eStackLeft);
   layout->SetVerticalExternalMargin(0);
@@ -101,6 +101,23 @@ void DashController::RegisterUBusInterests()
                                  sigc::mem_fun(this, &DashController::OnExternalShowDash));
   ubus_manager_.RegisterInterest(UBUS_PLACE_VIEW_CLOSE_REQUEST,
                                  sigc::mem_fun(this, &DashController::OnExternalHideDash));
+  ubus_manager_.RegisterInterest(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
+                                 sigc::mem_fun(this, &DashController::OnActivateRequest));
+  ubus_manager_.RegisterInterest(UBUS_DASH_ABOUT_TO_SHOW,
+                                 [&] (GVariant*) { EnsureDash(); });
+}
+
+void DashController::EnsureDash()
+{
+  if (window_)
+    return;
+
+  LOG_DEBUG(logger) << "Initializing Dash";
+
+  SetupWindow();
+  SetupDashView();
+  Relayout();
+  ensure_id_ = 0;
 }
 
 nux::BaseWindow* DashController::window() const
@@ -134,6 +151,8 @@ nux::Geometry DashController::GetIdealWindowGeometry()
 
 void DashController::Relayout(GdkScreen*screen)
 {
+  EnsureDash();
+
   nux::Geometry geo = GetIdealWindowGeometry();
   window_->SetGeometry(geo);
   view_->Relayout();
@@ -148,23 +167,37 @@ void DashController::OnMouseDownOutsideWindow(int x, int y,
 void DashController::OnScreenUngrabbed()
 {
   if (need_show_)
+  {
+    EnsureDash();
     ShowDash();
+  }
 }
 
 void DashController::OnExternalShowDash(GVariant* variant)
 {
+  EnsureDash();
   visible_ ? HideDash() : ShowDash();
 }
 
 void DashController::OnExternalHideDash(GVariant* variant)
 {
-  HideDash();
+  EnsureDash();
+  
+  if (variant)
+  {
+    HideDash(g_variant_get_boolean(variant));
+  }
+  else
+  {
+    HideDash();
+  }
 }
 
 void DashController::ShowDash()
 {
-  PluginAdapter* adaptor = PluginAdapter::Default();
+  EnsureDash();
 
+  PluginAdapter* adaptor = PluginAdapter::Default();
   // Don't want to show at the wrong time
   if (visible_ || adaptor->IsExpoActive() || adaptor->IsScaleActive())
     return;
@@ -182,7 +215,7 @@ void DashController::ShowDash()
 
   view_->AboutToShow();
 
-  window_->ShowWindow(true, true);
+  window_->ShowWindow(true);
   window_->PushToFront();
   window_->EnableInputWindow(true, "Dash", true, false);
   window_->SetInputFocus();
@@ -199,11 +232,13 @@ void DashController::ShowDash()
   ubus_manager_.SendMessage(UBUS_PLACE_VIEW_SHOWN);
 }
 
-void DashController::HideDash()
+void DashController::HideDash(bool restore)
 {
   if (!visible_)
    return;
-  
+ 
+  EnsureDash();
+
   view_->AboutToHide();
 
   window_->CaptureMouseDownAnyWhereElse(false);
@@ -211,7 +246,8 @@ void DashController::HideDash()
   window_->EnableInputWindow(false, "Dash", true, false);
   visible_ = false;
 
-  PluginAdapter::Default ()->restoreInputFocus ();
+  if (restore)
+    PluginAdapter::Default ()->restoreInputFocus ();
 
   StartShowHideTimeline();
 
@@ -220,6 +256,8 @@ void DashController::HideDash()
 
 void DashController::StartShowHideTimeline()
 {
+  EnsureDash();
+
   if (timeline_id_)
     g_source_remove(timeline_id_);
 
@@ -253,14 +291,39 @@ gboolean DashController::OnViewShowHideFrame(DashController* self)
     self->window_->SetOpacity(self->visible_ ? 1.0f : 0.0f);
     if (!self->visible_)
     {
-      self->window_->ShowWindow(false, false);
+      self->window_->ShowWindow(false);
     }
 
     return FALSE;
   }
+
   return TRUE;
+}
 
+void DashController::OnActivateRequest(GVariant* variant)
+{
+  EnsureDash();
+  ubus_manager_.UnregisterInterest(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST);
+  view_->OnActivateRequest(variant);
+  ShowDash();
+}
 
+gboolean DashController::CheckShortcutActivation(const char* key_string)
+{
+  EnsureDash();
+  std::string lens_id = view_->GetIdForShortcutActivation(std::string(key_string));
+  if (lens_id != "")
+  {
+    OnActivateRequest(g_variant_new("(sus)", lens_id.c_str(), 0, ""));
+    return true;
+  }
+  return false;
+}
+
+std::vector<char> DashController::GetAllShortcuts()
+{
+  EnsureDash();
+  return view_->GetAllShortcuts();
 }
 
 // Introspectable

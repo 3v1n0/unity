@@ -17,8 +17,12 @@
  * Authored by: Mirco Müller <mirco.mueller@canonical.com>
  */
 
-#include "Nux/Nux.h"
+#include <Nux/Nux.h>
+
+#include "CairoTexture.h"
 #include "QuicklistMenuItemSeparator.h"
+
+using unity::texture_from_cairo_graphics;
 
 QuicklistMenuItemSeparator::QuicklistMenuItemSeparator(DbusmenuMenuitem* item,
                                                        NUX_FILE_LINE_DECL) :
@@ -168,14 +172,10 @@ QuicklistMenuItemSeparator::UpdateTexture()
   cairo_line_to(cr, width - 0.5f, 2.5f);
   cairo_stroke(cr);
 
-  nux::NBitmapData* bitmap = _cairoGraphics->GetBitmap();
-
   if (_normalTexture[0])
     _normalTexture[0]->UnReference();
 
-  _normalTexture[0] = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
-  _normalTexture[0]->Update(bitmap);
-  delete bitmap;
+  _normalTexture[0] = texture_from_cairo_graphics(*_cairoGraphics);
 
   delete _cairoGraphics;
 }

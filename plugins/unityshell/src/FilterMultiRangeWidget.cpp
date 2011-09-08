@@ -20,7 +20,8 @@
  */
 
 #include "config.h"
-#include "Nux/Nux.h"
+
+#include <Nux/Nux.h>
 
 #include "FilterMultiRangeWidget.h"
 #include "FilterMultiRangeButton.h"
@@ -43,6 +44,7 @@ namespace unity {
 
     layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
     layout_->Reference();
+    layout_->SetVerticalExternalMargin (12);
 
     SetRightHandView(all_button_);
     SetContents(layout_);
@@ -51,7 +53,6 @@ namespace unity {
 
   FilterMultiRange::~FilterMultiRange() {
     all_button_->UnReference();
-    layout_->UnReference();
   }
 
   void FilterMultiRange::SetFilter(dash::Filter::Ptr filter)
@@ -149,7 +150,8 @@ namespace unity {
     if (found_filter)
     {
       layout_->RemoveChildObject(*it);
-      buttons_.erase (it);
+      buttons_.erase(it);
+      found_filter->UnReference();
     }
 
     OnActiveChanged(false);
@@ -177,9 +179,17 @@ namespace unity {
 
   void FilterMultiRange::Draw(nux::GraphicsEngine& GfxContext, bool force_draw) {
     nux::Geometry geo = GetGeometry();
+    nux::Color col(0.2f, 0.2f, 0.2f, 0.2f);
 
     GfxContext.PushClippingRectangle(geo);
     nux::GetPainter().PaintBackground(GfxContext, geo);
+
+    nux::GetPainter().Draw2DLine(GfxContext,
+                                 geo.x, geo.y + geo.height - 1,
+                                 geo.x + geo.width, geo.y + geo.height - 1,
+                                 col,
+                                 col);
+
     GfxContext.PopClippingRectangle();
   }
 

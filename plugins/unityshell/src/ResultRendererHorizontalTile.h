@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright 2011 Canonical Ltd.
  *
@@ -27,8 +28,8 @@
 #include <Nux/Nux.h>
 #include <NuxCore/Object.h>
 #include <NuxCore/Property.h>
-#include "Nux/TextureArea.h"
-#include "NuxImage/CairoGraphics.h"
+#include <Nux/TextureArea.h>
+#include <NuxImage/CairoGraphics.h>
 
 #include "ResultRendererTile.h"
 
@@ -41,16 +42,23 @@ namespace dash
 class ResultRendererHorizontalTile : public ResultRendererTile
 {
 public:
-  ResultRendererHorizontalTile(NUX_FILE_LINE_PROTO);
-  virtual ~ResultRendererHorizontalTile();
+  NUX_DECLARE_OBJECT_TYPE(ResultRendererHorizontalTile, ResultRendererTile);
 
-  inline virtual void Render(nux::GraphicsEngine& GfxContext, Result& row, ResultRendererState state, nux::Geometry& geometry, int x_offset, int y_offset);
+  ResultRendererHorizontalTile(NUX_FILE_LINE_PROTO);
+  ~ResultRendererHorizontalTile();
+
+  virtual void Render(nux::GraphicsEngine& GfxContext,
+                      Result& row,
+                      ResultRendererState state,
+                      nux::Geometry& geometry,
+                      int x_offset, int y_offset);
 
 protected:
   void LoadText(Result& row);
 
 private:
-  void DrawHighlight(const char* texid, int width, int height, nux::BaseTexture** texture);
+  nux::BaseTexture* DrawHighlight(std::string const& texid,
+                                  int width, int height);
 };
 
 }

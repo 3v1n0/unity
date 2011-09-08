@@ -31,6 +31,8 @@
 #include "FilterGenreWidget.h"
 #include "FilterGenreButton.h"
 #include "FilterMultiRangeWidget.h"
+#include "PlacesStyle.h"
+
 class TestRunner
 {
 public:
@@ -107,6 +109,8 @@ int main(int argc, char **argv)
 
   nux::NuxInitialize(0);
 
+  // The instance for the PlacesStyle.
+  unity::PlacesStyle places_style;
 
   TestRunner *test_runner = new TestRunner ();
   wt = nux::CreateGUIThread(TEXT("Unity Places Tile Test"),

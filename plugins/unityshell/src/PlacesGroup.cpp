@@ -49,6 +49,8 @@ static const nux::Color kExpandHoverTextColor(1.0f, 1.0f, 1.0f, 1.0f);
 static const float kExpandDefaultIconOpacity = 0.6f;
 static const float kExpandHoverIconOpacity = 1.0f;
 
+namespace unity
+{
 
 PlacesGroup::PlacesGroup()
   : View(NUX_TRACKER_LOCATION),
@@ -64,7 +66,8 @@ PlacesGroup::PlacesGroup()
 
   _cached_name = NULL;
   _group_layout = new nux::VLayout("", NUX_TRACKER_LOCATION);
-  _group_layout->SetVerticalExternalMargin(12);
+  _group_layout->SetVerticalExternalMargin(15);
+  _group_layout->SetHorizontalExternalMargin(19);
 
   _header_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
   _group_layout->AddLayout(_header_layout, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FULL);
@@ -303,8 +306,8 @@ void PlacesGroup::Draw(nux::GraphicsEngine& GfxContext,
 
   if (_draw_sep)
     nux::GetPainter().Draw2DLine(GfxContext,
-                                 geo.x, geo.y + geo.height - 1,
-                                 geo.x + geo.width, geo.y + geo.height - 1,
+                                 geo.x + 10, geo.y + geo.height - 1,
+                                 geo.x + geo.width - 10, geo.y + geo.height - 1,
                                  col,
                                  col);
 
@@ -402,3 +405,5 @@ PlacesGroup::AcceptKeyNavFocus()
 {
   return false;
 }
+
+} // namespace unity

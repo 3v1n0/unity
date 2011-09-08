@@ -22,9 +22,9 @@
 
 #include "config.h"
 
-#include "Nux/Nux.h"
-#include "Nux/ColorArea.h"
-#include "NuxGraphics/GLThread.h"
+#include <Nux/Nux.h>
+#include <Nux/ColorArea.h>
+#include <NuxGraphics/GLThread.h>
 
 namespace unity
 {
@@ -69,6 +69,8 @@ public:
   static nux::Property<bool> updates_enabled;
   static nux::Property<bool> detecting_occlusions;
 
+  static nux::Geometry monitor_rect_;
+  
 protected:
   static void Register   (BackgroundEffectHelper* self);
   static void Unregister (BackgroundEffectHelper* self);
@@ -77,12 +79,6 @@ private:
   void OnEnabledChanged (bool value);
 
   nux::BaseTexture*                       noise_texture_;
-  nux::ObjectPtr<nux::IOpenGLBaseTexture> temp_device_texture0_;
-  nux::ObjectPtr<nux::IOpenGLBaseTexture> temp_device_texture1_;
-
-  nux::ObjectPtr<nux::IOpenGLBaseTexture> ds_temp_device_texture0_;
-  nux::ObjectPtr<nux::IOpenGLBaseTexture> ds_temp_device_texture1_;
-
   nux::ObjectPtr<nux::IOpenGLBaseTexture> blur_texture_;
   nux::Geometry blur_geometry_;
 

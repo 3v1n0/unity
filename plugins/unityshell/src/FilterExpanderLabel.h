@@ -28,7 +28,7 @@
 #include <Nux/GridHLayout.h>
 #include <Nux/HLayout.h>
 #include <Nux/VLayout.h>
-#include "Nux/StaticText.h"
+#include <Nux/StaticText.h>
 
 namespace unity {
 

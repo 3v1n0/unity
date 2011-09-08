@@ -153,10 +153,10 @@ add_executable (test-panel
                 ${UNITY_SRC}/PanelStyle.h
                 ${UNITY_SRC}/PanelView.cpp
                 ${UNITY_SRC}/PanelView.h
-                ${UNITY_SRC}/PanelIndicatorObjectView.cpp
-                ${UNITY_SRC}/PanelIndicatorObjectView.h
-                ${UNITY_SRC}/PanelIndicatorObjectEntryView.cpp
-                ${UNITY_SRC}/PanelIndicatorObjectEntryView.h
+                ${UNITY_SRC}/PanelIndicatorsView.cpp
+                ${UNITY_SRC}/PanelIndicatorsView.h
+                ${UNITY_SRC}/PanelIndicatorEntryView.cpp
+                ${UNITY_SRC}/PanelIndicatorEntryView.h
                 ${UNITY_SRC}/PanelTitlebarGrabAreaView.h
                 ${UNITY_SRC}/PanelTitlebarGrabAreaView.cpp
                 ${UNITY_SRC}/PanelTray.cpp
@@ -285,7 +285,7 @@ add_executable (test-launcher
                 ${UNITY_SRC}/ubus-server.cpp
                 ${UNITY_SRC}/ubus-server.h
                 )
-add_dependencies (test-switcher unity-core-${UNITY_API_VERSION})
+add_dependencies (test-launcher unity-core-${UNITY_API_VERSION})
 
 add_executable (test-keyutil
                 TestKeyboardUtil.cpp
@@ -385,6 +385,7 @@ add_executable (test-preview-applicaiton
                 ${UNITY_SRC}/StaticCairoText.cpp
                 ${UNITY_SRC}/TextureCache.cpp
                 ${UNITY_SRC}/DashStyle.cpp
+                ${UNITY_SRC}/Timer.cpp
                 )
 add_dependencies(test-preview-applicaiton unity-core-${UNITY_API_VERSION})
 
@@ -399,6 +400,7 @@ add_executable (test-preview-generic
                 ${UNITY_SRC}/StaticCairoText.cpp
                 ${UNITY_SRC}/TextureCache.cpp
                 ${UNITY_SRC}/DashStyle.cpp
+                ${UNITY_SRC}/Timer.cpp
                 )
 add_dependencies(test-preview-generic unity-core-${UNITY_API_VERSION})
 
@@ -415,6 +417,7 @@ add_executable (test-preview-music
                 ${UNITY_SRC}/StaticCairoText.cpp
                 ${UNITY_SRC}/TextureCache.cpp
                 ${UNITY_SRC}/DashStyle.cpp
+                ${UNITY_SRC}/Timer.cpp
                 )
 add_dependencies(test-preview-music unity-core-${UNITY_API_VERSION})
 
@@ -435,6 +438,7 @@ add_executable (test-result-view
                 ${UNITY_SRC}/Introspectable.cpp
                 ${UNITY_SRC}/StaticCairoText.cpp
                 ${UNITY_SRC}/TextureCache.cpp
+                ${UNITY_SRC}/Timer.cpp
                 ${UNITY_SRC}/DashStyle.cpp
                 ${UNITY_SRC}/ubus-server.cpp
                 ${UNITY_SRC}/ubus-server.h
@@ -502,10 +506,10 @@ if (${GTEST_FOUND} STREQUAL TRUE)
                  test_lens.cpp
                  test_main.cpp
                  test_model.cpp
+                 test_texture_cache.cpp
                  test_utils.h
                  test_ratings_filter.cpp
                  test_results.cpp
-                 test_timer.cpp
                  ${UNITY_SRC}/AbstractLauncherIcon.h
                  ${UNITY_SRC}/FavoriteStore.cpp
                  ${UNITY_SRC}/FavoriteStore.h
@@ -514,10 +518,12 @@ if (${GTEST_FOUND} STREQUAL TRUE)
                  ${UNITY_SRC}/MockLauncherIcon.h
                  ${UNITY_SRC}/SwitcherModel.cpp
                  ${UNITY_SRC}/SwitcherModel.h
-                 ${UNITY_SRC}/WindowManager.cpp
-                 ${UNITY_SRC}/WindowManager.h
+                 ${UNITY_SRC}/TextureCache.cpp
+                 ${UNITY_SRC}/TextureCache.h
                  ${UNITY_SRC}/Timer.cpp
                  ${UNITY_SRC}/Timer.h
+                 ${UNITY_SRC}/WindowManager.cpp
+                 ${UNITY_SRC}/WindowManager.h
                  )
   target_link_libraries(test-gtest ${GTEST_BOTH_LIBRARIES})
   add_test(UnityGTests test-gtest)

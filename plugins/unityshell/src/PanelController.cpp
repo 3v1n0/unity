@@ -18,7 +18,7 @@
 
 #include "PanelController.h"
 
-#include "NuxCore/Logger.h"
+#include <NuxCore/Logger.h>
 
 #include "UScreen.h"
 
@@ -50,6 +50,14 @@ PanelController::~PanelController()
   {
     (*it)->UnReference();
   }
+}
+
+unsigned int PanelController::GetTrayXid ()
+{
+  if (!_windows.empty ())
+    return ViewForWindow (_windows.front ())->GetTrayXid ();
+  else
+    return 0;
 }
 
 void
@@ -161,7 +169,7 @@ PanelController::OnScreenChanged(int primary_monitor, std::vector<nux::Geometry>
 
       // FIXME(loicm): Several objects created here are leaked.
 
-      layout = new nux::HLayout();
+      layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
       view = new PanelView();
       view->SetMaximumHeight(24);
@@ -179,7 +187,7 @@ PanelController::OnScreenChanged(int primary_monitor, std::vector<nux::Geometry>
       window->SinkReference();
       window->SetConfigureNotifyCallback(&PanelController::WindowConfigureCallback, window);
       window->SetLayout(layout);
-      window->SetBackgroundColor(nux::Color(0x00000000));
+      window->SetBackgroundColor(nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
       window->ShowWindow(true);
       window->EnableInputWindow(true, "panel", false, false);
       window->InputWindowEnableStruts(true);
@@ -220,6 +228,11 @@ PanelController::WindowConfigureCallback(int            window_width,
 {
   nux::BaseWindow* window = static_cast<nux::BaseWindow*>(user_data);
   geo = window->GetGeometry();
+}
+
+float PanelController::opacity() const
+{
+  return _opacity;
 }
 
 const gchar*

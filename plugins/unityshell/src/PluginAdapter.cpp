@@ -21,7 +21,7 @@
 #include <sstream>
 #include "PluginAdapter.h"
 
-#include "NuxCore/Logger.h"
+#include <NuxCore/Logger.h>
 
 namespace
 {

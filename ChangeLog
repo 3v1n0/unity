@@ -1,3 +1,1037 @@
+2011-09-08  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Fix test
+
+2011-09-08  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Don't show Filter Search for home lens
+
+2011-09-08  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Revert Robert's spacer from the DashSearchBar as it's causing the filters to be pushed off the edge of the Dash on some resolutions
+
+2011-09-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	To implement the Desktop DX Indicators Review blueprint [1] and to implement the system indicators ordering requested by design team [2], I've redesigned the way the indicators work in unity.
+
+2011-09-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Correctly unref floating indicator objects.
+
+2011-09-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Removing old PanelTray code
+
+2011-09-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with upstream
+
+2011-09-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelView: notify indicators and menu views on indicator object removed
+	
+	When the signal is fired the indicators will be removed from unity.
+
+2011-09-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorsView: support indicator removal
+
+2011-09-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityCore: added Indicator::GetEntries() and notify on removal
+
+2011-09-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	panel-service: reduce close-timeout to 1 second.
+
+2011-09-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DbusIndicators: kill panel service if needed
+
+2011-09-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityCore: adding Indicators::RemoveIndicator and Indicators::GetIndicators()
+	
+	They both allow to remove indicators when they have been lost.
+
+2011-09-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Better Indicator and Indicators APIs
+	
+	Using Indicator:Ptr everywhere and reduced loops when syncing.
+
+2011-09-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Add a timeout to the Indicator Remove API
+	
+	So we are sure that in the case that no client is actually running
+	the panel will close, without waiting a reply from the client.
+	
+	Currently set to 3 seconds, maybe it could be set to a lower value.
+
+2011-09-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Make unity to remove the indicators when the panel service has been closed
+	
+	Not killed, that needs to update the unity side.
+
+2011-09-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelService small api change...
+
+2011-09-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with upstream.
+
+2011-09-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelService: fix keynavigation on priority based indicators.
+	
+	With the new priority based positioning system, when using the keynavigation
+	to open menus on the panel we need to follow the priority order.
+	The old implementation otherwise, causes the indicators menus to be shown
+	following the order of the ohe indicator the objects.
+	
+	Bug fixed by reoreding the indicator entries considering their priority and
+	using the temporary generated list to select which menu should be opened.
+
+2011-09-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with upstream, fixing the small conflict with TrayIcon
+
+2011-08-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Cleaning up another missed comment.
+
+2011-08-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	More cleanups...
+
+2011-08-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Removing unneeded and commented code
+
+2011-08-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with Upstream.
+
+2011-08-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Some optimizations for clearing empty indicators.
+
+2011-08-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Indicator entries should always be resynced, also if they're empty.
+	
+	Then the indicator could remove them.
+	
+	This fixes the issue that I introduced which caused the menus not to
+	be removed when a window had no menus at all.
+
+2011-08-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Menus already arrive in the correct order, no need to check for priority.
+	
+	Also if that could be a nice extra check, I prefer not to waste time here.
+
+2011-08-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Including name_hint parameter in the IndicatorEntry.
+	
+	Also if actually this is not used by the shell, but only by the panel
+	service, this value could be useful in future development.
+	
+	Updated also the entry tests.
+
+2011-08-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Added PanelIndicatorsView to move to the priority-based system for ordering entries
+	
+	Removed PanelIndicatorObject and replaced with PanelIndicatorsView that
+	basically is a container of indicators which shows them following the priority
+	of the given entries.
+	
+	So, now PanelView just contains two indicator children: menu_view and indicators
+	They get updated when a new entry is added and uses the entries priority
+	to order them. Thanks to this now the indicators can be also in a mixed order
+	and the entries aren't anymore ordered just per-IndicatorObject.
+
+2011-08-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityCore: Support for prioritized indicator entries
+	
+	When an IndicatorEntry is allocated now, we also consider its priority
+	flag, as the PanelService sends us that value too.
+	
+	Also, now we avoid to allocate a new entry at every Sync, but we
+	try to use the already allocated instance if it exists.
+	Added also the support for removing an indicator entry when
+	it's not more synced by the PanelSerive, with signal support.
+	
+	This avoids that unity will create blank indicator entries, but
+	actually it only generates real entries to be added to the panel.
+	
+	Finally, now we use have an indicator entry priority flag, we don't
+	need to order all the entries per-indicator.
+
+2011-08-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Panel service: Add priority flag to indicators
+	
+	When panel service loads the indicators, it also compute the priority
+	of the indicator entry itself. That value then can be used by
+	the panel to correctly order the indicators.
+	
+	Now panel service orders the indicators following the specifications
+	defined by the design team, and basically from the end of the screen:
+	* indicator-session
+	* indicator-datetime
+	* indicator-sound
+	* network manager (nm-applet)
+	* bluetooth manager
+	* indicator-messages
+	* keyboard layout
+	* All the others appindicators
+	* The application menus
+
+2011-08-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Enable debugging symbols in Debug mode.
+
+2011-09-08  Didier Roche  <didier.roche@canonical.com>
+
+	Fix missing lens shortcuts (Super-A, Super-F) (LP: #834078)
+
+2011-09-08  Didier Roche  <didier.roche@canonical.com>
+
+	fix show/hide dash when shortcuts are pressed quickly
+
+2011-09-08  Didier Roche  <didier.roche@canonical.com>
+
+	Fix uneeded object construction
+
+2011-09-07  Didier Roche  <didier.roche@canonical.com>
+
+	bring back lenses shortcut activation. Seems there is still an issue on registering keybinding on first super invocation, but good enough for main cases (LP: #834078)
+
+2011-09-08  Tim Penhey  <tim.penhey@canonical.com>
+
+	Merging in tims branch to replace PlacesStyle with a non-singleton
+	
+	This branch changes one of our singletons that never gets destroyed
+	into a pseudo-singleton.
+	
+	The PlacesStyle object now uses smart pointers to own the textures,
+	and the signal manger to dicsonnect the signals.
+	
+	Other small tweaks include putting it in the unity namespace, and
+	returning the text color by const&, and making some of the methods
+	const.
+
+2011-09-08  Tim Penhey  <tim.penhey@canonical.com>
+
+	Makes PlacesStyle a non-singleton, but warns you if you try
+	to create more than one instance.
+	
+	This means that the unity screen can own the style, so it get
+	nicely destroyed when the screen is destroyed.
+
+2011-09-08  Gord Allott  <gord.allott@canonical.com>
+
+	Merging in my branch that speeds up the dash even further, we now only render the results that are on the screen and only load the icons that are visible, reducing the memory footprint 
+
+2011-09-08  Gord Allott  <gord.allott@canonical.com>
+
+	removed comment
+
+2011-09-08  Gord Allott  <gord.allott@canonical.com>
+
+	only pre-load the tiles that are currently visible
+
+2011-09-07  Gord Allott  <gord.allott@canonical.com>
+
+	fixed bug with the last row in a results view being dropped
+
+2011-09-07  Gord Allott  <gord.allott@canonical.com>
+
+	Only draw the icons in a result view that are visible on the screen
+
+2011-09-07  Gord Allott  <gord.allott@canonical.com>
+
+	fix relayout branch
+
+2011-09-07  Gord Allott  <gord.allott@canonical.com>
+
+	latest trunk
+
+2011-09-07  Gord Allott  <gord.allott@canonical.com>
+
+	snapshot
+
+2011-09-05  Gord Allott  <gord.allott@canonical.com>
+
+	merge latest trunk
+
+2011-09-05  Gord Allott  <gord.allott@canonical.com>
+
+	first attempt at only displaying the results that are visible
+
+2011-09-08  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	merging in Cimi's branch to modify the theming of the panel
+
+2011-09-07  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Also render frame on the panel
+
+2011-09-07  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Remove stray g_debug
+
+2011-09-07  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Fix panel opacity settings
+
+2011-09-08  Neil Jagdish Patel  <njpatel@Pulse>
+
+	Merging neils branch to order the lenses in the dash
+
+2011-09-07  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Add some ordering, make sure Applications lens is always first
+
+2011-09-08  Neil Jagdish Patel  <njpatel@Pulse>
+
+	Merging neils branch to remove some hacks revolving around the inital results
+
+2011-09-07  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Remove hacks that work around lenses not giving initial results
+
+2011-09-08  Marco Biscaro  <marcobiscaro2112@gmail.com>
+
+	Merges in Marcos branch that fixes lp:#801413 and lp:843425 and some more fixes/improvements
+	
+	This branch includes various fixes for the QuickList handling such as:
+	- Correct hiding of quicklist items and quicklist roots (including not showing unneeded separators, see more at bug #843425).
+	- Support for monitoring .desktop file changes to dynamically update the "static" quicklist generated using the launcher .desktop file
+	- Some memory optimizations and fix of memory leaks
+	- Fixed a bug causing unity to crash if removing launcher with an open quicklist (bug #801413)
+
+2011-09-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherIcon: Hide a visible quicklist when removing the Icon
+	
+	If a LauncherIcon has been removed while its quicklist is still showing,
+	unity crashes since it's still listening for events waiting a click
+	outside the quicklist. Hiding it before removing the icon fixes it.
+	
+	This fixes bug #801413
+
+2011-09-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: Fixed some MenuItems memory leaks
+	
+	Keeping pointers of all other menu-items we use in the quicklist
+	to avoid to re-create them on every icon right-click (each time
+	the quicklist is shown).
+	
+	All the used menu_items are now also unreferenced when the Launcher Icon
+	is destructed.
+
+2011-09-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Update .desktop file quicklist on file modification
+	
+	Monitor for desktop file changes and reload the launcher quicklist
+	on file edit. Also the monitor is updated when the linked desktop file
+	changes (that's BAMF responsability).
+	
+	Plus, don't update the cached desktop file if not needed and always use
+	DesktopFile() to get it.
+
+2011-09-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: Don't show quicklist items if they aren't visible.
+	
+	A quicklist menu or a quicklist menuitem shouldn't be considered if not visible
+	at all. This would cause to show just a separator leading to bug #843425
+
+2011-09-08  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	This fixes a lot of the issues stated in the mega-bug LP: #841945. But since
+	it is so much not everything is done yet. Still already done fixes should
+	move into trunk as soon as possible. Here's a list of done fixes:
+	
+	from the list of positioning issues:
+	- The Category Headers are positioned wrong (too far left, too low)
+	- The magnifying glass inside the search box is positioned wrong (should be
+	further to the left)
+	- There is too much space below each category header
+	- "Filter results" header is positioned wrong (should be right and slightly up)
+	- The "All" button is aligned incorrectly relative to the other filter buttons
+	(right sides should fall on the same vertical axis)
+	
+	from the list of shape issues:
+	- "Filter results" is the wrong font size and weight
+	- The corner radius of the search filter toggle boxes is wrong
+	- The 'rating' stars are the wrong size
+	- the un-selected 'rating' star has the wrong border
+	- the 1px dividers in-between the categories should be narrower with 15px
+	margin on each side
+	- the dividers in between the filter results categories are missing
+	- the 'All' button's shape is very wrong
+	- the filter results category headers are with wrong font size and weight
+
+2011-09-08  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	Merge with trunk again
+
+2011-09-08  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	Made font-weight of filter-caption text bold, added drawing of separators to the genre- and multi-range-widgets
+
+2011-09-07  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	Fixed spacing between filter-header and actual filter-widget
+
+2011-09-07  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	fixed the horizontal position and alignment of SeachBar and result-captions... gave up on the icon-sizes of the result-views for now
+
+2011-09-06  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	first bunch of fixes on the filter-page for the mega-bug LP: #841945
+
+2011-09-08  Jay Taoko  <jay.taoko@canonical.com>
+
+	Fix blur in multimonitor config
+
+2011-09-08  Jay Taoko  <jay.taoko@canonical.com>
+
+	Merged trunk
+
+2011-09-07  Jay Taoko  <jay.taoko@canonical.com>
+
+	minor fix
+
+2011-09-07  Jay Taoko  <jay.taoko@canonical.com>
+
+	Fix blur in multimonitor config
+
+2011-09-08  Jason Smith  <jason.smith@canonical.com>
+
+	merge bfb hide dash branch
+
+2011-09-08  Jason Smith  <jason.smith@canonical.com>
+
+	Fix bug where dash wouldn't go away when BFB was clicked on
+
+2011-09-07  Andrea Azzarone
+
+	Merge dnd fixes branch
+
+2011-08-31  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add global comment.
+
+2011-08-31  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk.
+
+2011-08-31  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add comments.
+
+2011-08-31  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Some changes.
+
+2011-08-30  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add null check.
+
+2011-08-30  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk. 
+	Use WindowManager in DNDCollectionWindow.
+	Use signal window_moved instead of using timeout.
+
+2011-08-29  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Ops...
+
+2011-08-29  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Restack the window properly.
+
+2011-08-29  Andrea Azzarone  <azzaronea@gmail.com>
+
+	10ms should be enough.
+
+2011-08-28  Andrea Azzarone  <azzaronea@gmail.com>
+
+	This should fix bug #835362
+
+2011-08-28  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Ops...
+
+2011-08-28  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Makes the DNDCollectionWindow work properly with dash (and panel) with just one mouse movement.
+
+2011-08-28  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Revert changes.
+
+2011-08-28  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk and make the dndcollectionwindow works properly with unity panel and unity dash with just one movement of the mouse.
+
+2011-08-26  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk.
+
+2011-08-26  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Use 200ms as timeout again.
+
+2011-08-25  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Makes a device icons always movable.
+
+2011-08-25  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Make it possible to add more than one .desktop file at once.
+
+2011-08-24  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk.
+
+2011-08-24  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Use 50 as timeout.
+
+2011-08-24  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Make itpossible to add more .desktop files at once using dnd.
+
+2011-08-24  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Some fixes...
+
+2011-08-24  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Makes it possible adding more .desktop files to the launcher at once.
+
+2011-08-25  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Finally fixes "short/fast dragging" problem
+
+2011-09-07  Jason Smith  <jason.smith@canonical.com>
+
+	merge lancher with dash branch
+
+2011-09-07  Jason Smith  <jason.smith@canonical.com>
+
+	make launcher react properly when dash is open
+
+2011-09-08  Tim Penhey  <tim.penhey@canonical.com>
+
+	Making sure the ColorLayers are deleted.
+
+2011-09-08  Tim Penhey  <tim.penhey@canonical.com>
+
+	Clean up the iteration code.
+
+2011-09-08  Tim Penhey  <tim.penhey@canonical.com>
+
+	Clean up the deletion of nux::ColorLayer.
+
+2011-09-08  Tim Penhey  <tim.penhey@canonical.com>
+
+	Numerous memory leaks fixed, valgrind is now much happier.
+
+2011-09-07  Tim Penhey  <tim.penhey@canonical.com>
+
+	Don't ref the layouts.
+
+2011-09-07  Tim Penhey  <tim.penhey@canonical.com>
+
+	Unref the filter views we remove.
+
+2011-09-07  Tim Penhey  <tim.penhey@canonical.com>
+
+	Fix the emblem leak.
+
+2011-09-07  Tim Penhey  <tim.penhey@canonical.com>
+
+	Unsubscribe from the dbus owner changed id too.
+
+2011-09-07  Tim Penhey  <tim.penhey@canonical.com>
+
+	Removing member variables where temporaries are fine.
+
+2011-09-06  Tim Penhey  <tim.penhey@canonical.com>
+
+	Fix the leaking Regions on early exit.
+
+2011-09-06  Tim Penhey  <tim.penhey@canonical.com>
+
+	Merge trunk.
+
+2011-09-05  Tim Penhey  <tim.penhey@canonical.com>
+
+	Unreference the buttons when removed from the layout.
+
+2011-09-05  Tim Penhey  <tim.penhey@canonical.com>
+
+	Clean up the destructor.
+
+2011-09-07  Robert Carr  <racarr@canonical.com>
+
+	Merge lp:~robertcarr/unity/imtextentry-cursor
+
+2011-09-07  Robert Carr  <racarr@canonical.com>
+
+	IMTextEntry: When committing IM changes we need to insert the text at the cursor position rather than arbitrarily at the end. Closes LP:840862
+
+2011-09-07  Robert Carr  <racarr@canonical.com>
+
+	Reapply 1496 (aligning filter results) in light of 1499 (fix cyclical layout)
+
+2011-09-07  Alex Launi  <alex.launi@canonical.com>
+
+	merge changes to the autopilot wire protocol
+
+2011-09-01  Alex Launi  <alex.launi@canonical.com>
+
+	Add show_dash autopilot test
+
+2011-08-30  Alex Launi  <alex.launi@canonical.com>
+
+	Update ElapsedTimeMonitor to use TimeDelta
+
+2011-08-30  Alex Launi  <alex.launi@canonical.com>
+
+	merge trunk
+
+2011-08-30  Alex Launi  <alex.launi@canonical.com>
+
+	Add Elapsed time monitor and aggregator monitor
+
+2011-08-29  Alex Launi  <alex.launi@canonical.com>
+
+	Add Monitor class, and monitor for elapsed test time.
+
+2011-08-29  Alex Launi  <alex.launi@canonical.com>
+
+	add data arg to testfinished signal and some minor fixes
+
+2011-09-07  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Merged branch lp:~cimi/unity/use_gint_for_widget_path
+
+2011-09-07  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Use gint and not guint when getting the widget path position
+
+2011-09-07  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Use gint and not guint when getting the widget path position
+
+2011-09-07  Andrea Azzarone  <azzaronea@gmail.com>
+
+	I noticed that in many files we use something like this:
+	
+	#include "Nux/..."
+	
+	Maybe it's better this:
+	
+	#include <Nux/...>
+	
+	I don't know if there is a good reason to use the former form, if so please apologise me for the merge proposal.
+
+2011-09-06  Andrea Azzarone  <azzaronea@gmail.com>
+
+	C++ files should end with an extra line.
+
+2011-09-06  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Uses <Nux/...> instead of "Nux/...". 
+
+2011-09-06  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge Trunk.
+
+2011-09-06  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge Trunk.
+
+2011-09-05  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk.
+
+2011-09-07  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Removes the plus one padding (cimi's work not of mine).
+
+2011-09-06  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Removes the 1px of padding.
+
+2011-09-07  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	Added sheen-asset for dash provided by Design
+
+2011-09-07  Gord Allott  <gord.allott@canonical.com>
+
+	fixes a relayout loop in the dash view
+
+2011-09-07  Gord Allott  <gord.allott@canonical.com>
+
+	fix the bug with the relayout cycle going crazy
+
+2011-09-06  Jason Smith  <jason.smith@canonical.com>
+
+	Revert commit 1496, can cause cycling in layouts
+
+2011-09-06  Jay Taoko  <jay.taoko@canonical.com>
+
+	Round corners in Dash and Alt+Tab
+
+2011-09-06  Jay Taoko  <jay.taoko@canonical.com>
+
+	Round corners in Dash and Alt+Tab
+
+2011-09-06  Robert Carr  <racarr@canonical.com>
+
+	Merge: lp:~robertcarr/unity/rightalign-filter
+
+2011-09-06  Robert Carr  <racarr@canonical.com>
+
+	Filter results label should be right aligned
+
+2011-09-06  Robert Carr  <robert.carr@canonical.com>
+
+	Merge lp:~robertcarr/unity/showdesktop-desktop-focus
+
+2011-09-06  Robert Carr  <racarr@canonical.com>
+
+	When entering show desktop mode hand input focus to the desktop window
+
+2011-09-06  Didier Roche  <didier.roche@canonical.com>
+
+	replace ubuntuonecontrol-panel-gtk with ubuntuone-installer as requested per ubuntuone team
+
+2011-09-06  Alejandro Piñeiro  <apinheiro@igalia.com>
+
+	a11y: Adding a missing g_object_ref and some extra NULL checks
+	
+	Fixes launchpad bug 817477
+
+2011-09-02  Alejandro Piñeiro  <apinheiro@igalia.com>
+
+	a11y: Adding a missing g_object_ref and some extra NULL checks
+	
+	Fixes launchpad bug 817477
+
+2011-09-05  Didier Roche  <didier.roche@canonical.com>
+
+	prevent weird configuration when gconf profiles don't answer (LP: #809378)
+
+2011-09-05  Didier Roche  <didier.roche@canonical.com>
+
+	prevent weird configuration when gconf profiles don't answer (LP: #809378)
+
+2011-09-05  Jason Smith  <jason.smith@canonical.com>
+
+	s/fade/de-sat/ launcher icons when dash opens
+
+2011-09-02  Jason Smith  <jason.smith@canonical.com>
+
+	make launcher fade out desaturated icons
+
+2011-09-05  Tim Penhey  <tim.penhey@canonical.com>
+
+	This branch fixes a leak in the IconLoader.
+	
+	The fundamental here is that the IconLoader was using the glib queue.
+	However the problem is that the way the items on the queue are freed
+	doesn't take into account any of the object destructors, like sigc::slot.
+
+2011-09-05  Tim Penhey  <tim.penhey@canonical.com>
+
+	Merge trunk (and design).
+
+2011-08-31  Tim Penhey  <tim.penhey@canonical.com>
+
+	Merge trunk.
+
+2011-08-31  Tim Penhey  <tim.penhey@canonical.com>
+
+	Add some logging.
+
+2011-08-31  Tim Penhey  <tim.penhey@canonical.com>
+
+	Update call-sites and remove the block timer.
+
+2011-08-31  Tim Penhey  <tim.penhey@canonical.com>
+
+	The call sites are using std::strings so change the params.
+
+2011-08-31  Tim Penhey  <tim.penhey@canonical.com>
+
+	Refactoring with extreme prejudice on the IconLoader.
+
+2011-08-31  Tim Penhey  <tim.penhey@canonical.com>
+
+	Add an ElapsedMicroSeconds to Timer.
+
+2011-09-05  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Add support for loading the Dash lazily
+
+2011-09-05  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Add a timeout to load Dash long after login, to keep it snappy when the user calls it
+
+2011-09-05  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Change DashController to load lazily, clean up some bits and pieces
+
+2011-09-05  Tim Penhey  <tim.penhey@canonical.com>
+
+	I noticed that quite a few of the memory leaks were do to
+	making a texture from a CairoGraphics object. Instead of having
+	to remember at all the call sites, I've created a couple of helper
+	methods.
+	
+	I had to control myself a lot during this change to not change too
+	many other things at once. Sometimes I couldn't help myself though.
+	
+	In particular I changed the TextureContainer to use smart pointers.
+
+2011-09-05  Tim Penhey  <tim.penhey@canonical.com>
+
+	Merge trunk.
+
+2011-09-02  Tim Penhey  <tim.penhey@canonical.com>
+
+	Merge trunk.
+
+2011-09-02  Tim Penhey  <tim.penhey@canonical.com>
+
+	Fix the TextureCache callsites.
+	
+	Added namespace unity around some.
+
+2011-09-02  Tim Penhey  <tim.penhey@canonical.com>
+
+	A large(ish) refactoring of the TextureCache.
+	
+	Simplifies the internal map and uses std::strings and nux object pointers.
+
+2011-09-02  Tim Penhey  <tim.penhey@canonical.com>
+
+	Add the texture_cache tests.
+
+2011-09-02  Tim Penhey  <tim.penhey@canonical.com>
+
+	There are some disabled tests here as I can't figure out right
+	now how to get nux to allow me to create some BaseTexture* type
+	objects without an X11 window, or how to fake an X11 window.
+	
+	These tests have been left in though, in the hope that we will soon
+	be able to test this.
+
+2011-09-02  Tim Penhey  <tim.penhey@canonical.com>
+
+	Initialize nux for the test suite.
+
+2011-09-01  Tim Penhey  <tim.penhey@canonical.com>
+
+	Added tracker locations and found line crashing unity.
+
+2011-09-01  Tim Penhey  <tim.penhey@canonical.com>
+
+	Merge trunk.
+
+2011-09-01  Tim Penhey  <tim.penhey@canonical.com>
+
+	Making sure that all the TextureContainer textures get assigned with the correct reference count.
+
+2011-09-01  Tim Penhey  <tim.penhey@canonical.com>
+
+	Damn namespaces.
+
+2011-09-01  Tim Penhey  <tim.penhey@canonical.com>
+
+	And done. Now to see if it compiles.
+
+2011-09-01  Tim Penhey  <tim.penhey@canonical.com>
+
+	Lunch time.
+
+2011-09-01  Tim Penhey  <tim.penhey@canonical.com>
+
+	Add the nux object type macros, and changed the textures in the TextureContainer to be smart pointers.
+
+2011-09-05  Gord Allott  <gord.allott@canonical.com>
+
+	fixed a bug with test launcher not building due to its depends being copy-pasted
+
+2011-09-03  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Fix another typo (oof)
+
+2011-09-03  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Merge  lp:~smspillaz/unity/unity.fix_output_bug
+
+2011-09-02  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Pass the call chain so that the opengl plugin is aware of screen
+	size changes
+
+2011-09-03  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Merge lp:~smspillaz/unity/unity.fix_click_through_windows
+
+2011-09-02  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Fix typo that caused windows with no custom bounding shape to have
+	a zero shape upon unminimization.
+	
+	Also ensure that window region is updated upon unminimize as well
+
+2011-09-02  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Fix typo that caused windows with no custom bounding shape to have
+	a zero shape upon unminimization.
+	
+	Also ensure that window region is updated upon unminimize as well
+
+2011-09-03  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Merge lp:~smspillaz/unity/unity.fix_na_tray_expo
+
+2011-09-02  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Only paint tray on top when screen is transformed
+
+2011-09-01  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Ensure that natray is always painted on top of everything during expo mode
+
+2011-09-02  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Update assets and new behavior for Panel dash buttons
+
+2011-09-01  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Different window button styles with opened dash
+
+2011-09-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	This branch includes some fixes for PanelMenuView which in current trunk has often some visual issues (menus are not hidden, title is not faded out).
+
+2011-09-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Always restore the mouse cursor on grab end.
+
+2011-09-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelTitlebarGrabArea: send mouse_down only on left-click.
+
+2011-09-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Add a workaround to avoid the compiz grid plugin to show the full-screen effect
+	
+	It happens when you try to restore a maximized window by dragging its
+	title down. If the mouse drags the window when it's in the panel
+	compiz draw a fullscreen shape of the window, but that's incorrect
+	as discussed in bug #838923
+	
+	A workaround to avoid this is to track the dragging in the panel
+	and to activate that drag only when we're out from the panel.
+	
+	So here we simulate a drag, changing the mouse pointer, then when
+	the mouse drag goes outside the panel, the real window drag is activated.
+	
+	This doesn't fix completely the bug #838923, since that is mostly caused
+	by an X race in updating the Window X properties.
+
+2011-09-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Don't hide menus and windowcontrols (if shown) when closing the menus.
+	
+	Fixes bug #838759
+
+2011-09-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Track the mouse enter/leave for WindowButtons too
+	
+	There's no need to double the checks for mouse position, if we always track
+	where it is. Thanks to this we can always use the _is_inside variable
+	to check where the mouse is instead of checking it twice with
+	nux::GetWindowCompositor().GetMousePosition()
+
+2011-09-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Fixing bug #838021 causing the menus not to hide after a double-click in the panel
+	
+	When the panelmenu get a double-click apparently it also gets a MouseLeave
+	event and then another MouseEnter event, so we need to force the _is_inside
+	value to true, and _is_grabbed to false to make _is_inside to be reverted
+	to true when the MouseEnter event happens.
+
+2011-09-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	When drawing the PanelMenuView always check for current pointer position.
+	
+	This caused bug #838479 (when restoring a window using the restore button
+	or the double-click over the panel, the application title text wasn't
+	faded out correctly).
+
+2011-09-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Fixing again bug #820293 (using a cleaner way) and #835637
+	
+	So, now the panel view is hidden also when leaving the panel from the
+	left edge of the panel.
+	
+	Bug #835731 can't fixed in PanelMenuView directly, since the it doesn't
+	get events when the pointer is positioned on the first screen column of pixels
+	(also if it uses that area, actually).
+
+2011-09-02  Brandon Schaefer  <schbra02@evergreen.edu>
+
+	Forgot to add Brandon's name to the IBus commits
+
+2011-09-02  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Merge lp:~smspillaz/unity/unity.fix_838062
+
+2011-09-02  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Cover all the cases where the input shape of the window could be restored
+	while it is fake minimized.
+	
+	Also remove the input shape of the client window too, since of core tries to
+	update the frame region again it will read that and we won't get a notification
+	about it since it removes the ShapeNotifyMask on the XShape input field while it's
+	doing that.
+
+2011-09-01  Didier Roche  <didier.roche@canonical.com>
+
+	remove dash-widgets.ods
+
+2011-09-01  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Release 4.12.0
+
 2011-09-01  Neil Jagdish Patel  <neil.patel@canonical.com>
 
 	Fixes a bunch of dash issues

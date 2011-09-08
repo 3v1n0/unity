@@ -23,29 +23,33 @@
 #include <NuxImage/CairoGraphics.h>
 #include <gtk/gtk.h>
 
-class PlacesStyle : public nux::Object
+#include <UnityCore/GLibSignal.h>
+
+namespace unity
+{
+
+class PlacesStyle
 {
 public:
-
   static PlacesStyle* GetDefault();
 
   PlacesStyle();
   ~PlacesStyle();
 
-  nux::Color& GetTextColor();
+  nux::Color const& GetTextColor() const;
 
-  int  GetDefaultNColumns();
+  int  GetDefaultNColumns() const;
   void SetDefaultNColumns(int n_cols);
 
-  int GetTileIconSize();
-  int GetTileWidth();
-  int GetTileHeight();
+  int GetTileIconSize() const;
+  int GetTileWidth() const;
+  int GetTileHeight() const;
 
-  int GetHomeTileIconSize();
-  int GetHomeTileWidth();
-  int GetHomeTileHeight();
+  int GetHomeTileIconSize() const;
+  int GetHomeTileWidth() const;
+  int GetHomeTileHeight() const;
 
-  int GetTextLineHeight();
+  int GetTextLineHeight() const;
 
   nux::BaseTexture* GetDashBottomTile();
   nux::BaseTexture* GetDashRightTile();
@@ -70,12 +74,15 @@ public:
   sigc::signal<void> columns_changed;
 
 private:
-  void               Refresh();
-  nux::BaseTexture* TextureFromFilename(const char* filename);
+  void Refresh();
+  void OnFontChanged(GtkSettings* object, GParamSpec* pspec);
 
-  static void OnFontChanged(GObject* object, GParamSpec* pspec, PlacesStyle* self);
+  typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
+  BaseTexturePtr TextureFromFilename(const char* filename);
 
 private:
+  glib::SignalManager signal_manager_;
+
   nux::CairoGraphics _util_cg;
   nux::Color _text_color;
 
@@ -83,24 +90,26 @@ private:
   int _text_height;
   int _n_cols;
 
-  nux::BaseTexture* _dash_bottom_texture;
-  nux::BaseTexture* _dash_right_texture;
-  nux::BaseTexture* _dash_corner_texture;
-  nux::BaseTexture* _dash_fullscreen_icon;
-  nux::BaseTexture* _dash_left_edge;
-  nux::BaseTexture* _dash_left_corner;
-  nux::BaseTexture* _dash_left_tile;
-  nux::BaseTexture* _dash_top_corner;
-  nux::BaseTexture* _dash_top_tile;
+  BaseTexturePtr _dash_bottom_texture;
+  BaseTexturePtr _dash_right_texture;
+  BaseTexturePtr _dash_corner_texture;
+  BaseTexturePtr _dash_fullscreen_icon;
+  BaseTexturePtr _dash_left_edge;
+  BaseTexturePtr _dash_left_corner;
+  BaseTexturePtr _dash_left_tile;
+  BaseTexturePtr _dash_top_corner;
+  BaseTexturePtr _dash_top_tile;
 
-  nux::BaseTexture* _search_magnify_texture;
-  nux::BaseTexture* _search_close_texture;
-  nux::BaseTexture* _search_close_glow_texture;
-  nux::BaseTexture* _search_spin_texture;
-  nux::BaseTexture* _search_spin_glow_texture;
+  BaseTexturePtr _search_magnify_texture;
+  BaseTexturePtr _search_close_texture;
+  BaseTexturePtr _search_close_glow_texture;
+  BaseTexturePtr _search_spin_texture;
+  BaseTexturePtr _search_spin_glow_texture;
 
-  nux::BaseTexture* _group_unexpand_texture;
-  nux::BaseTexture* _group_expand_texture;
+  BaseTexturePtr _group_unexpand_texture;
+  BaseTexturePtr _group_expand_texture;
 };
+
+}
 
 #endif // PLACES_STYLE_H
