@@ -65,7 +65,7 @@ TEST(TestIndicatorEntry, TestAssignment)
   entry = other_entry;
 
   EXPECT_EQ(entry.id(), "other_id");
-  EXPECT_EQ(entry.name_hint(), "name_hint");
+  EXPECT_EQ(entry.name_hint(), "other_name_hint");
   EXPECT_EQ(entry.label(), "other_label");
   EXPECT_FALSE(entry.label_sensitive());
   EXPECT_FALSE(entry.label_visible());
