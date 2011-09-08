@@ -35,6 +35,7 @@
 #include "Launcher.h"
 #include "LauncherController.h"
 #include "PanelController.h"
+#include "PlacesStyle.h"
 #include "UScreen.h"
 #include "GestureEngine.h"
 #include "DebugDBusInterface.h"
@@ -117,6 +118,7 @@ private:
 #include <compiztoolbox/compiztoolbox.h>
 
 using unity::FontSettings;
+using unity::PlacesStyle;
 using namespace unity::switcher;
 using namespace unity::dash;
 using unity::UBusManager;
@@ -259,6 +261,7 @@ private:
   static void OnLauncherStartKeyNav(GVariant* data, void* value);
   static void OnLauncherEndKeyNav(GVariant* data, void* value);
 
+  PlacesStyle      places_style_;
   FontSettings            font_settings_;
   Launcher*               launcher;
   LauncherController*     controller;
