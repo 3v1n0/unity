@@ -207,7 +207,7 @@ void DashController::ShowDash()
 
   view_->AboutToShow();
 
-  window_->ShowWindow(true, true);
+  window_->ShowWindow(true);
   window_->PushToFront();
   window_->EnableInputWindow(true, "Dash", true, false);
   window_->SetInputFocus();
@@ -282,7 +282,7 @@ gboolean DashController::OnViewShowHideFrame(DashController* self)
     self->window_->SetOpacity(self->visible_ ? 1.0f : 0.0f);
     if (!self->visible_)
     {
-      self->window_->ShowWindow(false, false);
+      self->window_->ShowWindow(false);
     }
 
     return FALSE;
