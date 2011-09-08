@@ -308,6 +308,24 @@ void DashController::OnActivateRequest(GVariant* variant)
   ShowDash();
 }
 
+gboolean DashController::CheckShortcutActivation(const char* key_string)
+{
+  EnsureDash();
+  std::string lens_id = view_->GetIdForShortcutActivation(std::string(key_string));
+  if (lens_id != "")
+  {
+    OnActivateRequest(g_variant_new("(sus)", lens_id.c_str(), 0, ""));
+    return true;
+  }
+  return false;
+}
+
+std::vector<char> DashController::GetAllShortcuts()
+{
+  EnsureDash();
+  return view_->GetAllShortcuts();
+}
+
 // Introspectable
 const gchar* DashController::GetName()
 {

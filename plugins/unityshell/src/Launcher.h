@@ -156,6 +156,7 @@ public:
   void EdgeRevealTriggered(int x, int y);
 
   gboolean CheckSuperShortcutPressed(Display *x_display, unsigned int key_sym, unsigned long key_code, unsigned long key_state, char* key_string);
+  void SetLatestShortcut(guint64 shortcut);
 
   nux::BaseWindow* GetParent()
   {
@@ -397,7 +398,6 @@ private:
   bool  _check_window_over_launcher;
 
   bool          _shortcuts_shown;
-  bool          _super_pressed;
   bool          _keynav_activated;
   guint64       _latest_shortcut;
 

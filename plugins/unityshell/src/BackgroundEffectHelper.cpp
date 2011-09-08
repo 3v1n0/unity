@@ -31,6 +31,8 @@ Region BackgroundEffectHelper::damage_region_ = NULL;
 Region BackgroundEffectHelper::occluded_region_ = NULL;
 Region BackgroundEffectHelper::popup_region_ = NULL;
 
+nux::Geometry BackgroundEffectHelper::monitor_rect_;
+
 nux::Property<BlurType> BackgroundEffectHelper::blur_type (BLUR_ACTIVE);
 nux::Property<float> BackgroundEffectHelper::sigma_high (5.0f);
 nux::Property<float> BackgroundEffectHelper::sigma_med (4.0f);
@@ -286,9 +288,13 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nu
   }
 
   nux::GraphicsEngine* graphics_engine = nux::GetGraphicsDisplay()->GetGraphicsEngine();
-  int window_width = graphics_engine->GetWindowWidth();
-  int window_height = graphics_engine->GetWindowHeight();
-  blur_geometry_ = nux::Geometry(0, 0, window_width, window_height).Intersect(geo);
+  
+  int monitor_width = BackgroundEffectHelper::monitor_rect_.width;
+  int monitor_height = BackgroundEffectHelper::monitor_rect_.height;
+
+  nux::Geometry temp = geo;
+  temp.OffsetPosition(-monitor_rect_.x, -monitor_rect_.y);
+  blur_geometry_ =  nux::Geometry(0, 0, monitor_width, monitor_height).Intersect(temp);
 
   nux::GpuDevice* gpu_device = nux::GetGraphicsDisplay()->GetGpuDevice();
   if (blur_geometry_.IsNull() || blur_type == BLUR_NONE || !gpu_device->backup_texture0_.IsValid())
@@ -305,10 +311,12 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nu
   larger_blur_geometry.x = std::max(blur_geometry_.x - radius, 0);
   larger_blur_geometry.y = std::max(blur_geometry_.y - radius, 0);
   
-  int xx = std::min(blur_geometry_.x + blur_geometry_.width + radius, window_width);
+  int xx = std::min(blur_geometry_.x + blur_geometry_.width + radius, monitor_width);
+
   larger_blur_geometry.width = xx - larger_blur_geometry.x;
 
-  int yy = std::min(blur_geometry_.y + blur_geometry_.height + radius, window_height);
+  int yy = std::min(blur_geometry_.y + blur_geometry_.height + radius, monitor_height);
+
   larger_blur_geometry.height = yy - larger_blur_geometry.y;
 
   int dleft     = blur_geometry_.x - larger_blur_geometry.x;
@@ -332,8 +340,8 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nu
   nux::TexCoordXForm texxform__bg;
   texxform__bg.flip_v_coord = false;
   texxform__bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-  texxform__bg.uoffset = ((float) larger_blur_geometry.x) / graphics_engine->GetWindowWidth ();
-  texxform__bg.voffset = ((float) graphics_engine->GetWindowHeight () - larger_blur_geometry.y - larger_blur_geometry.height) / graphics_engine->GetWindowHeight ();
+  texxform__bg.uoffset = ((float) larger_blur_geometry.x) / monitor_width;
+  texxform__bg.voffset = ((float) monitor_height - larger_blur_geometry.y - larger_blur_geometry.height) / monitor_height;
 
   bool support_frag = gpu_device->GetGpuInfo().Support_ARB_Fragment_Shader();
   bool support_vert = gpu_device->GetGpuInfo().Support_ARB_Vertex_Shader();
@@ -477,8 +485,9 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nu
   }
   else
   {
-    graphics_engine->SetViewport(0, 0, window_width, window_height);
-    graphics_engine->Push2DWindow(window_width, window_height);
+    graphics_engine->SetViewport(0, 0, monitor_width, monitor_height);
+    graphics_engine->Push2DWindow(monitor_width, monitor_height);
+
     graphics_engine->ApplyClippingRectangle();
   }
 

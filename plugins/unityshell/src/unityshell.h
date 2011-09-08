@@ -35,6 +35,7 @@
 #include "Launcher.h"
 #include "LauncherController.h"
 #include "PanelController.h"
+#include "PlacesStyle.h"
 #include "UScreen.h"
 #include "GestureEngine.h"
 #include "DebugDBusInterface.h"
@@ -117,6 +118,7 @@ private:
 #include <compiztoolbox/compiztoolbox.h>
 
 using unity::FontSettings;
+using unity::PlacesStyle;
 using namespace unity::switcher;
 using namespace unity::dash;
 using unity::UBusManager;
@@ -235,7 +237,8 @@ private:
 
   void SendExecuteCommand();
 
-  void EnsureKeybindings ();
+  void EnsureSuperKeybindings ();
+  void CreateSuperNewAction(char shortcut);
 
   static gboolean initPluginActions(gpointer data);
   static void initLauncher(nux::NThread* thread, void* InitData);
@@ -259,6 +262,7 @@ private:
   static void OnLauncherStartKeyNav(GVariant* data, void* value);
   static void OnLauncherEndKeyNav(GVariant* data, void* value);
 
+  PlacesStyle      places_style_;
   FontSettings            font_settings_;
   Launcher*               launcher;
   LauncherController*     controller;
@@ -281,6 +285,7 @@ private:
   typedef std::shared_ptr<CompAction> CompActionPtr;
   typedef std::vector<CompActionPtr> ShortcutActions;
   ShortcutActions _shortcut_actions;
+  bool            super_keypressed_;
 
   /* keyboard-nav mode */
   CompWindow* newFocusedWindow;

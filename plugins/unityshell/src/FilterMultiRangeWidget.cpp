@@ -43,6 +43,8 @@ namespace unity {
     all_button_->Reference();
 
     layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
+    layout_->Reference();
+    layout_->SetVerticalExternalMargin (12);
 
     SetRightHandView(all_button_);
     SetContents(layout_);
@@ -177,9 +179,17 @@ namespace unity {
 
   void FilterMultiRange::Draw(nux::GraphicsEngine& GfxContext, bool force_draw) {
     nux::Geometry geo = GetGeometry();
+    nux::Color col(0.2f, 0.2f, 0.2f, 0.2f);
 
     GfxContext.PushClippingRectangle(geo);
     nux::GetPainter().PaintBackground(GfxContext, geo);
+
+    nux::GetPainter().Draw2DLine(GfxContext,
+                                 geo.x, geo.y + geo.height - 1,
+                                 geo.x + geo.width, geo.y + geo.height - 1,
+                                 col,
+                                 col);
+
     GfxContext.PopClippingRectangle();
   }
 

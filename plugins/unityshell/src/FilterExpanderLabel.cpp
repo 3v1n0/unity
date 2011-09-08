@@ -35,7 +35,7 @@ namespace unity {
       , contents_ (NULL)
       , right_hand_contents_ (NULL)
       , expander_graphic_ (NULL)
-      , label_("<span font_size='larger'>" + label + "</span>")
+      , label_("<span size='larger' weight='bold'>" + label + "</span>")
   {
     expanded.changed.connect (sigc::mem_fun(this, &FilterExpanderLabel::DoExpandChange));
     BuildLayout ();
@@ -47,7 +47,7 @@ namespace unity {
 
   void FilterExpanderLabel::SetLabel (std::string label)
   {
-    label_ = "<span font_size='larger'>" + label + "</span>";
+    label_ = "<span size='larger' weight='bold'>" + label + "</span>";
     cairo_label_->SetText(label_.c_str());
   }
 
@@ -86,6 +86,8 @@ namespace unity {
     top_bar_layout_->AddSpace(1, 1);
 
     layout_->AddLayout (top_bar_layout_, 0);
+    layout_->SetVerticalInternalMargin(12);
+
     SetLayout(layout_);
 
     QueueRelayout();

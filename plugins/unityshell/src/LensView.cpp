@@ -161,13 +161,6 @@ void LensView::OnCategoryAdded(Category const& category)
   group->SetChildView(grid);
 
   scroll_layout_->AddView(group, 0);
-
-  Categories::Ptr categories = lens_->categories;
-  if (category.index + 1 == categories->count())
-  {
-    lens_->Search("---");
-    lens_->Search("");
-  }
 }
 
 void LensView::OnResultAdded(Result const& result)

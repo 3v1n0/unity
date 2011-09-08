@@ -75,6 +75,10 @@ void ResultRendererTile::Render(nux::GraphicsEngine& GfxContext,
                                 nux::Geometry& geometry,
                                 int x_offset, int y_offset)
 {
+  TextureContainer* container = row.renderer<TextureContainer*>();
+  if (container == nullptr)
+    return;
+
   std::string row_text = row.name;
   std::string row_iconhint = row.icon_hint;
   PlacesStyle* style = PlacesStyle::GetDefault();
@@ -98,8 +102,6 @@ void ResultRendererTile::Render(nux::GraphicsEngine& GfxContext,
                        geometry.width,
                        geometry.height,
                        col);
-
-  TextureContainer* container = row.renderer<TextureContainer*>();
 
   if (container->blurred_icon)
   {
@@ -221,9 +223,12 @@ nux::BaseTexture* ResultRendererTile::DrawHighlight(std::string const& texid, in
 
 void ResultRendererTile::Preload(Result& row)
 {
-  row.set_renderer(new TextureContainer());
-  LoadIcon(row);
-  LoadText(row);
+  if (row.renderer<TextureContainer*>() == nullptr)
+  {
+    row.set_renderer(new TextureContainer());
+    LoadIcon(row);
+    LoadText(row);
+  }
 }
 
 void ResultRendererTile::Unload(Result& row)

@@ -56,6 +56,9 @@ public:
   void DisableBlur();
   void OnActivateRequest(GVariant* args);
 
+  std::string const GetIdForShortcutActivation(std::string const& shortcut) const;
+  std::vector<char> GetAllShortcuts();
+
   nux::View* default_focus() const;
 
 private:
