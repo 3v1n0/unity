@@ -580,6 +580,8 @@ void UnityScreen::enterShowDesktopMode ()
   {
     if (UnityShowdesktopHandler::shouldHide (w))
       UnityWindow::get (w)->enterShowDesktop ();
+    if (w->type() & CompWindowTypeDesktopMask)
+      w->moveInputFocusTo();
   }
 
   PluginAdapter::Default()->OnShowDesktop();

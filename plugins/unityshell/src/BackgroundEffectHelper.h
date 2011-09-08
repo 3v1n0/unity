@@ -22,9 +22,9 @@
 
 #include "config.h"
 
-#include "Nux/Nux.h"
-#include "Nux/ColorArea.h"
-#include "NuxGraphics/GLThread.h"
+#include <Nux/Nux.h>
+#include <Nux/ColorArea.h>
+#include <NuxGraphics/GLThread.h>
 
 namespace unity
 {
@@ -77,12 +77,6 @@ private:
   void OnEnabledChanged (bool value);
 
   nux::BaseTexture*                       noise_texture_;
-  nux::ObjectPtr<nux::IOpenGLBaseTexture> temp_device_texture0_;
-  nux::ObjectPtr<nux::IOpenGLBaseTexture> temp_device_texture1_;
-
-  nux::ObjectPtr<nux::IOpenGLBaseTexture> ds_temp_device_texture0_;
-  nux::ObjectPtr<nux::IOpenGLBaseTexture> ds_temp_device_texture1_;
-
   nux::ObjectPtr<nux::IOpenGLBaseTexture> blur_texture_;
   nux::Geometry blur_geometry_;
 

@@ -95,8 +95,9 @@ std::list<DbusmenuMenuitem*> TrashLauncherIcon::GetMenus()
 
 void TrashLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 {
-  glib::Error error;
+  SimpleLauncherIcon::ActivateLauncherIcon(arg);
 
+  glib::Error error;
   g_spawn_command_line_async("xdg-open trash://", &error);
 }
 

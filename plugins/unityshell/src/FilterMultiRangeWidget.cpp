@@ -20,7 +20,8 @@
  */
 
 #include "config.h"
-#include "Nux/Nux.h"
+
+#include <Nux/Nux.h>
 
 #include "FilterMultiRangeWidget.h"
 #include "FilterMultiRangeButton.h"
@@ -52,7 +53,6 @@ namespace unity {
 
   FilterMultiRange::~FilterMultiRange() {
     all_button_->UnReference();
-    layout_->UnReference();
   }
 
   void FilterMultiRange::SetFilter(dash::Filter::Ptr filter)
@@ -150,7 +150,8 @@ namespace unity {
     if (found_filter)
     {
       layout_->RemoveChildObject(*it);
-      buttons_.erase (it);
+      buttons_.erase(it);
+      found_filter->UnReference();
     }
 
     OnActiveChanged(false);

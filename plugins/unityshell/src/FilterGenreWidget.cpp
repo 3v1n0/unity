@@ -20,7 +20,9 @@
  */
 
 #include "config.h"
-#include "Nux/Nux.h"
+
+#include <Nux/Nux.h>
+
 #include <glib.h>
 #include <glib/gi18n-lib.h>
 
@@ -50,12 +52,7 @@ namespace unity {
     genre_layout_->SetVerticalExternalMargin (12);
     genre_layout_->SetHorizontalInternalMargin (10);
     genre_layout_->EnablePartialVisibility (false);
-
-    //DashStyle *dash_style = DashStyle::GetDefault();
-    //int garnish = 2 * dash_style->GetButtonGarnishSize();
-
     genre_layout_->SetChildrenSize (style->GetTileWidth() - 12, 35);
-                                    // garnish + style->GetTextLineHeight() * 2);
     genre_layout_->Reference();
 
     SetRightHandView(all_button_);
@@ -112,7 +109,8 @@ namespace unity {
     if (found_filter)
     {
       genre_layout_->RemoveChildObject(*it);
-      buttons_.erase (it);
+      buttons_.erase(it);
+      found_filter->UnReference();
     }
   }
 

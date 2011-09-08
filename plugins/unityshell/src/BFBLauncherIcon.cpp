@@ -56,4 +56,6 @@ void BFBLauncherIcon::ActivateLauncherIcon(ActionArg arg)
     ubus_server_send_message(ubus, UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
                              g_variant_new("(sus)", "home.lens", 0, ""));
   }
+
+  // dont chain down to avoid random dash close events
 }

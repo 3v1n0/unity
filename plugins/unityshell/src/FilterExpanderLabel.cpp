@@ -20,7 +20,8 @@
  */
 
 #include "config.h"
-#include "Nux/Nux.h"
+
+#include <Nux/Nux.h>
 
 #include "FilterBasicButton.h"
 #include "FilterExpanderLabel.h"

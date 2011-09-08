@@ -26,9 +26,10 @@
 #include <gio/gio.h>
 
 #include <core/core.h>
-#include "Nux/Nux.h"
-#include "Nux/TimerProc.h"
+#include <Nux/Nux.h>
+#include <Nux/TimerProc.h>
 
+#include "Monitor.h"
 #include "ubus-server.h"
 
 #define TEST_TIMEOUT 6000
@@ -39,7 +40,10 @@ typedef struct
   gboolean passed;
   guint ubus_handle;
   nux::TimerHandle expiration_handle;
+  unity::performance::Monitor* monitor;
 } TestArgs;
+
+namespace unity {
 
 class Autopilot
 {
@@ -52,5 +56,6 @@ public:
   UBusServer* GetUBusConnection();
   GDBusConnection* GetDBusConnection();
 };
+}
 
 #endif /* _AUTOPILOT_H */

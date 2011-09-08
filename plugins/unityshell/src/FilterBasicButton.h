@@ -26,7 +26,8 @@
 
 #include <Nux/Nux.h>
 #include <Nux/CairoWrapper.h>
-#include "Nux/ToggleButton.h"
+#include <Nux/ToggleButton.h>
+
 #include "FilterWidget.h"
 #include "DashStyle.h"
 

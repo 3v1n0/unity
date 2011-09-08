@@ -18,7 +18,7 @@
 
 #include "PanelTray.h"
 
-#include "NuxCore/Logger.h"
+#include <NuxCore/Logger.h>
 
 #define SETTINGS_NAME "com.canonical.Unity.Panel"
 #define PADDING 3

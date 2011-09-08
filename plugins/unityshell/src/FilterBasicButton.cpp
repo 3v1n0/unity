@@ -19,8 +19,10 @@
  *
  */
 #include "config.h"
+
 #include <Nux/Nux.h>
 #include <NuxCore/Logger.h>
+
 #include "FilterBasicButton.h"
 
 namespace

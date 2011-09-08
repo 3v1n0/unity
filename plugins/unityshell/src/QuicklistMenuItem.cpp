@@ -21,7 +21,8 @@
 #include <gdk/gdk.h>
 #include <gtk/gtk.h>
 
-#include "Nux/Nux.h"
+#include <Nux/Nux.h>
+
 #include "QuicklistMenuItem.h"
 #include <UnityCore/Variant.h>
 

@@ -28,6 +28,7 @@
 #include <Nux/HLayout.h>
 #include <Nux/VLayout.h>
 #include <UnityCore/MultiRangeFilter.h>
+
 #include "FilterWidget.h"
 #include "FilterBasicButton.h"
 #include "FilterExpanderLabel.h"

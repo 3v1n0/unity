@@ -43,8 +43,8 @@
 
 #include "nux-base-window-accessible.h"
 
-#include "Nux/Area.h"
-#include "Nux/Layout.h"
+#include <Nux/Area.h>
+#include <Nux/Layout.h>
 
 enum
 {

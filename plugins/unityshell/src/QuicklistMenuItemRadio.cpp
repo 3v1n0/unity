@@ -342,3 +342,4 @@ int QuicklistMenuItemRadio::CairoSurfaceWidth()
 
   return 0;
 }
+

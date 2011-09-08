@@ -17,16 +17,16 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#include "Nux/Nux.h"
-#include "Nux/Area.h"
-#include "Nux/HLayout.h"
-#include "Nux/VLayout.h"
+#include <Nux/Nux.h>
+#include <Nux/Area.h>
+#include <Nux/HLayout.h>
+#include <Nux/VLayout.h>
 
-#include "NuxCore/Logger.h"
+#include <NuxCore/Logger.h>
 
-#include "NuxGraphics/GLThread.h"
-#include "Nux/BaseWindow.h"
-#include "Nux/WindowCompositor.h"
+#include <NuxGraphics/GLThread.h>
+#include <Nux/BaseWindow.h>
+#include <Nux/WindowCompositor.h>
 
 #include "PanelIndicatorObjectView.h"
 

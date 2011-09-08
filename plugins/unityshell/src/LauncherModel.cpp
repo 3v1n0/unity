@@ -32,15 +32,11 @@ LauncherModel::LauncherModel()
 
 LauncherModel::~LauncherModel()
 {
-  for (iterator it = _inner_shelf.begin(); it != _inner_shelf.end(); ++it)
-    reinterpret_cast<LauncherIcon*>(*it)->UnReference();
-  _inner_shelf.clear();
+  for (auto icon : _inner_shelf)
+    icon->UnReference();
 
-  for (iterator it = _inner_main.begin(); it != _inner_main.end(); ++it)
-    reinterpret_cast<LauncherIcon*>(*it)->UnReference();
-  _inner_main.clear();
-
-  _inner.clear();
+  for (auto icon : _inner_main)
+    icon->UnReference();
 }
 
 bool LauncherModel::IconShouldShelf(LauncherIcon* icon)
@@ -160,25 +156,28 @@ LauncherModel::Sort()
 bool
 LauncherModel::IconHasSister(LauncherIcon* icon)
 {
-  iterator(LauncherModel::*begin_it)(void);
-  iterator(LauncherModel::*end_it)(void);
   iterator it;
+  iterator end;
+  
+  if (icon && icon->Type() == AbstractLauncherIcon::TYPE_DEVICE)
+    return true;
 
   if (IconShouldShelf(icon))
   {
-    begin_it = &LauncherModel::shelf_begin;
-    end_it = &LauncherModel::shelf_end;
+    it = shelf_begin();
+    end = shelf_end();
   }
   else
   {
-    begin_it = &LauncherModel::main_begin;
-    end_it = &LauncherModel::main_end;
+    it = main_begin();
+    end = main_end();
   }
 
-  for (it = (this->*begin_it)(); it != (this->*end_it)(); it++)
+  for (; it != end; ++it)
   {
-    if ((*it  != icon)
-        && (*it)->Type() == icon->Type())
+    LauncherIcon* iter_icon = *it;
+    if ((iter_icon  != icon)
+        && iter_icon->Type() == icon->Type())
       return true;
   }
 
