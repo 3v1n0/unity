@@ -1,3 +1,10 @@
+unity (4.14.2-0ubuntu2) UNRELEASED; urgency=low
+
+  * debian/control:
+    - bump build-dep for latest compiz-dev ABI break
+
+ -- Didier Roche <didrocks@ubuntu.com>  Fri, 09 Sep 2011 17:18:52 +0200
+
 unity (4.14.2-0ubuntu1) oneiric; urgency=low
 
   * New upstream release.
