@@ -20,6 +20,7 @@
  */
 
 #include "inputremover.h"
+#include <X11/Xregion.h>
 #include <cstdio>
 
 compiz::WindowInputRemover::WindowInputRemover (Display *dpy,
@@ -41,6 +42,132 @@ compiz::WindowInputRemover::~WindowInputRemover ()
 {
   if (mRemoved)
     restore ();
+}
+
+void
+compiz::WindowInputRemover::sendShapeNotify ()
+{
+  /* Send a synthetic ShapeNotify event to the root window
+   * since we ignored shape events when setting visibility
+   * in order to avoid cycling in the shape handling code -
+   * ignore the sent shape notify event since that will
+   * be send_event = true */
+
+  XShapeEvent  xsev;
+  XEvent       *xev = (XEvent *) &xsev;
+  Window       rootReturn, parentReturn;
+  Window       childReturn;
+  Window       *children;
+  int          x, y, xOffset, yOffset;
+  unsigned int width, height, depth, border, nchildren;
+  int          shapeEvent, shapeError, shapeMask;
+
+  /* FIXME: roundtrip */
+  XShapeQueryExtension (mDpy, &shapeEvent, &shapeError);
+  shapeMask = XShapeInputSelected (mDpy, mShapeWindow);
+
+  xev->type   = shapeEvent + ShapeNotify;
+  xsev.window = mShapeWindow;
+
+  if (!mRemoved)
+  {
+    /* FIXME: these roundtrips suck */
+    XGetGeometry (mDpy, mShapeWindow, &rootReturn, &x, &y, &width, &height, &depth, &border);
+    XQueryTree (mDpy, mShapeWindow, &rootReturn, &parentReturn, &children, &nchildren);
+
+    /* We need to translate the co-ordinates of the origin to the
+     * client window to its parent to find out the offset of its
+     * position so that we can subtract that from the final bounding
+     * rect of the window shape according to the Shape extension
+     * specification */
+
+    XTranslateCoordinates (mDpy, mShapeWindow, parentReturn, 0, 0, &xOffset, &yOffset, &childReturn);
+
+    xev->type = ShapeBounding;
+
+    /* Calculate extents of the bounding shape */
+    if (!mNBoundingRects)
+    {
+      /* No set input shape, we must use the client geometry */
+      xsev.x = x - xOffset;
+      xsev.y = y - yOffset;
+      xsev.width = width; 
+      xsev.height = height;
+      xsev.shaped = false;
+    }
+    else
+    {
+      Region      boundingRegion = XCreateRegion ();
+
+      for (int i = 0; i < mNBoundingRects; i++)
+	XUnionRectWithRegion (&(mBoundingRects[i]), boundingRegion, boundingRegion);
+
+      xsev.x = boundingRegion->extents.x1 - xOffset;
+      xsev.y = boundingRegion->extents.y1 - yOffset;
+      xsev.width = boundingRegion->extents.x2 - boundingRegion->extents.x1;
+      xsev.height = boundingRegion->extents.y2 - boundingRegion->extents.y1;
+      xsev.shaped = true;
+
+      XDestroyRegion (boundingRegion);
+    }
+
+    xsev.time = CurrentTime;
+    XSendEvent (mDpy, DefaultRootWindow (mDpy), false, shapeMask, xev);
+
+    xev->type = ShapeInput;
+
+    /* Calculate extents of the bounding shape */
+    if (!mNInputRects)
+    {
+      /* No set input shape, we must use the client geometry */
+      xsev.x = x - xOffset;
+      xsev.y = y - yOffset;
+      xsev.width = width; 
+      xsev.height = height;
+      xsev.shaped = false;
+    }
+    else
+    {
+      Region      inputRegion = XCreateRegion ();
+
+      for (int i = 0; i < mNInputRects; i++)
+	XUnionRectWithRegion (&(mInputRects[i]), inputRegion, inputRegion);
+
+      xsev.x = inputRegion->extents.x1 - xOffset;
+      xsev.y = inputRegion->extents.y1 - yOffset;
+      xsev.width = inputRegion->extents.x2 - inputRegion->extents.x1;
+      xsev.height = inputRegion->extents.y2 - inputRegion->extents.y1;
+      xsev.shaped = true;
+
+      XDestroyRegion (inputRegion);
+    }
+
+    xsev.time = CurrentTime;
+    XSendEvent (mDpy, DefaultRootWindow (mDpy), false, shapeMask, xev);
+
+    if (children)
+      XFree (children);
+  }
+  else
+  {
+    xev->type = ShapeBounding;
+
+    xsev.x = 0;
+    xsev.y = 0;
+    xsev.width = 0;
+    xsev.height = 0;
+    xsev.shaped = true;
+
+    xsev.time = CurrentTime;
+    XSendEvent (mDpy, DefaultRootWindow (mDpy), false, shapeMask, xev);
+
+    xev->type = ShapeInput;
+
+    /* Both ShapeBounding and ShapeInput are null */
+
+    xsev.time = CurrentTime;
+    XSendEvent (mDpy, DefaultRootWindow (mDpy), false, shapeMask, xev);
+  }
 }
 
 bool
@@ -111,6 +238,8 @@ compiz::WindowInputRemover::remove ()
 
   XShapeSelectInput (mDpy, mShapeWindow, ShapeNotify);
 
+  sendShapeNotify ();
+
   mRemoved = true;
   return true;
 }
@@ -125,6 +254,7 @@ compiz::WindowInputRemover::restore ()
       XShapeCombineRectangles (mDpy, mShapeWindow, ShapeInput, 0, 0,
 	                       mInputRects, mNInputRects,
 	                       ShapeSet, mInputRectOrdering);
+
     }
     else
     {
@@ -152,6 +282,8 @@ compiz::WindowInputRemover::restore ()
   }
 
   XShapeSelectInput (mDpy, mShapeWindow, mShapeMask);
+
+  sendShapeNotify ();
 
   mRemoved = false;
   mNInputRects  = 0;
