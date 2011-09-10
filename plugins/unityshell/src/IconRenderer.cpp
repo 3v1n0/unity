@@ -810,7 +810,7 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
         break;
       
       GfxContext.QRP_1Tex(markerX,
-                          center - ((texture->GetHeight() * scale) / 2),
+                          center - ((texture->GetHeight() * scale) / 2) - 1,
                           (float) texture->GetWidth() * scale,
                           (float) texture->GetHeight() * scale,
                           texture->GetDeviceTexture(),
@@ -825,7 +825,7 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
 
     nux::Color color = nux::color::LightGrey * alpha;
     GfxContext.QRP_1Tex((geo.x + geo.width) - local::arrow_rtl->GetWidth(),
-                        markerCenter - (local::arrow_rtl->GetHeight() / 2),
+                        markerCenter - (local::arrow_rtl->GetHeight() / 2) - 1,
                         (float) local::arrow_rtl->GetWidth(),
                         (float) local::arrow_rtl->GetHeight(),
                         local::arrow_rtl->GetDeviceTexture(),
