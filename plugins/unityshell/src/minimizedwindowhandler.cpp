@@ -58,10 +58,10 @@ compiz::MinimizedWindowHandler::setVisibility (bool visible, Window shapeWin)
   {
     priv->mRemover = new compiz::WindowInputRemover (priv->mDpy, shapeWin);
     if (!priv->mRemover)
-	    return;
+      return;
 
     if (priv->mRemover->save ())
-	    priv->mRemover->remove ();
+      priv->mRemover->remove ();
   }
   else if (visible && priv->mRemover)
   {
