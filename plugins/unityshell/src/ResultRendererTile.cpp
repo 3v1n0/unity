@@ -31,6 +31,7 @@
 #include <gdk/gdk.h>
 #include <gtk/gtk.h>
 
+#include <NuxCore/Logger.h>
 #include <UnityCore/GLibWrapper.h>
 
 #include "CairoTexture.h"
@@ -39,13 +40,14 @@
 #include "PlacesStyle.h"
 #include "TextureCache.h"
 
-//~ namespace
-//~ {
-//~ nux::logging::Logger logger("unity.dash.ResultRendererTile");
-//~ }
-
 namespace unity
 {
+namespace
+{
+nux::logging::Logger logger("unity.dash");
+int renderer_count = 0;
+}
+
 namespace dash
 {
 NUX_IMPLEMENT_OBJECT_TYPE(ResultRendererTile);
@@ -228,6 +230,8 @@ void ResultRendererTile::Preload(Result& row)
     row.set_renderer(new TextureContainer());
     LoadIcon(row);
     LoadText(row);
+    ++renderer_count;
+    LOG_INFO(logger) << "new TextureContiner: " << renderer_count;
   }
 }
 
@@ -236,6 +240,9 @@ void ResultRendererTile::Unload(Result& row)
   TextureContainer *container = row.renderer<TextureContainer*>();
   delete container;
   row.set_renderer<TextureContainer*>(nullptr);
+
+  --renderer_count;
+  LOG_INFO(logger) << "TextureContiner deleted: " << renderer_count;
 }
 
 void ResultRendererTile::LoadIcon(Result& row)
