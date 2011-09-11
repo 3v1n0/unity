@@ -140,6 +140,49 @@ void LensBar::SetActive(LensBarIcon* activated)
   lens_activated.emit(activated->id);
 }
 
+void LensBar::ActivateNext()
+{
+  bool activate_next = false; 
+  for (auto it = icons_.begin();
+       it < icons_.end();
+       it++)
+  {
+    LensBarIcon *icon = *it;
+    
+    if (activate_next && icon->IsVisible())
+    {
+      SetActive(icon);
+      return;
+    }
+    if (icon->active)
+      activate_next = true;
+  }
+  SetActive(icons_[0]);
+
+}
+
+void LensBar::ActivatePrevious()
+{
+  bool activate_previous = false;
+  
+  for (auto it = icons_.rbegin();
+       it < icons_.rend();
+       ++it)
+  {
+    LensBarIcon *icon = *it;
+    
+    if (activate_previous && icon->IsVisible())
+    {
+	SetActive(icon);
+	return;
+    }
+    if (icon->active)
+      activate_previous = true;
+  }
+  SetActive(icons_.back());
+  
+}
+
 // Keyboard navigation
 bool LensBar::AcceptKeyNavFocus()
 {
