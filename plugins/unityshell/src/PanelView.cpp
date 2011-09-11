@@ -32,7 +32,7 @@
 #include <glib.h>
 
 #include "PanelStyle.h"
-#include "PanelIndicatorObjectView.h"
+#include "PanelIndicatorsView.h"
 #include <UnityCore/Variant.h>
 
 #include "ubus-server.h"
@@ -72,13 +72,17 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
   _layout->AddView(_tray, 0, nux::eCenter, nux::eFull);
   AddChild(_tray);
 
+  _indicators = new PanelIndicatorsView();
+  AddPanelView(_indicators, 0);
+
   _remote = indicator::DBusIndicators::Ptr(new indicator::DBusIndicators());
   _remote->on_object_added.connect(sigc::mem_fun(this, &PanelView::OnObjectAdded));
+  _remote->on_object_removed.connect(sigc::mem_fun(this, &PanelView::OnObjectRemoved));
   _remote->on_entry_activate_request.connect(sigc::mem_fun(this, &PanelView::OnEntryActivateRequest));
   _remote->on_entry_activated.connect(sigc::mem_fun(this, &PanelView::OnEntryActivated));
   _remote->on_synced.connect(sigc::mem_fun(this, &PanelView::OnSynced));
   _remote->on_entry_show_menu.connect(sigc::mem_fun(this, &PanelView::OnEntryShowMenu));
-  
+
    UBusServer *ubus = ubus_server_get_default();
 
    _handle_bg_color_update = ubus_server_register_interest(ubus, UBUS_BACKGROUND_COLOR_CHANGED,
@@ -108,6 +112,7 @@ PanelView::~PanelView()
   ubus_server_unregister_interest(ubus, _handle_bg_color_update);
   ubus_server_unregister_interest(ubus, _handle_dash_hidden);
   ubus_server_unregister_interest(ubus, _handle_dash_shown);
+  _on_indicator_updated_connections.clear();
   
   delete _bg_layer;
 }
@@ -143,12 +148,13 @@ void PanelView::OnDashShown(GVariant* data, PanelView* self)
   self->ForceUpdateBackground();
 }
 
-void PanelView::AddPanelView(PanelIndicatorObjectView* child,
+void PanelView::AddPanelView(PanelIndicatorsView* child,
                              unsigned int stretchFactor)
 {
   _layout->AddView(child, stretchFactor, nux::eCenter, nux::eFull);
+  auto conn = child->on_indicator_updated.connect(sigc::mem_fun(this, &PanelView::OnIndicatorViewUpdated));
+  _on_indicator_updated_connections.push_back(conn);
   AddChild(child);
-  children_.push_back(child);
 }
 
 const gchar* PanelView::GetName()
@@ -189,7 +195,7 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   GfxContext.PushClippingRectangle(GetGeometry());
 
-  if (BackgroundEffectHelper::blur_type != BLUR_NONE && (_dash_is_open || _opacity != 1.0f))
+  if (BackgroundEffectHelper::blur_type != BLUR_NONE && (_dash_is_open || (_opacity != 1.0f && _opacity != 0.0f)))
   {
     nux::Geometry blur_geo(geo_absolute.x, geo_absolute.y, geo.width, geo.height);
     bg_blur_texture_ = bg_effect_helper_.GetBlurRegion(blur_geo);
@@ -243,7 +249,7 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   GfxContext.GetRenderStates().SetBlend(true);
   GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
 
-  if (bg_blur_texture_.IsValid() && BackgroundEffectHelper::blur_type != BLUR_NONE && (_dash_is_open || _opacity != 1.0f))
+  if (bg_blur_texture_.IsValid() && BackgroundEffectHelper::blur_type != BLUR_NONE && (_dash_is_open || (_opacity != 1.0f && _opacity != 0.0f)))
   {
     nux::Geometry geo_absolute = GetAbsoluteGeometry ();
     nux::TexCoordXForm texxform_blur_bg;
@@ -312,7 +318,7 @@ PanelView::UpdateBackground()
   }
   else
   {
-    nux::NBitmapData* bitmap = _style->GetBackground(geo.width, geo.height);
+    nux::NBitmapData* bitmap = _style->GetBackground(geo.width, geo.height, _opacity);
     nux::BaseTexture* texture2D = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
     texture2D->Update(bitmap);
     delete bitmap;
@@ -328,7 +334,6 @@ PanelView::UpdateBackground()
     rop.SrcBlend = GL_ONE;
     rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
     nux::Color col = nux::color::White;
-    col.alpha = _opacity;
 
     _bg_layer = new nux::TextureLayer(texture2D->GetDeviceTexture(),
                                       texxform,
@@ -346,10 +351,8 @@ void PanelView::ForceUpdateBackground()
   _is_dirty = true;
   UpdateBackground();
 
-  for (Children::iterator i = children_.begin(), end = children_.end(); i != end; ++i)
-  {
-    (*i)->QueueDraw();
-  }
+  _indicators->QueueDraw();
+  _menu_view->QueueDraw();
   _tray->QueueDraw();
   QueueDraw();
 }
@@ -363,12 +366,11 @@ void PanelView::OnObjectAdded(indicator::Indicator::Ptr const& proxy)
   // We could do this in a more special way, but who has the time for special?
   if (proxy->name().find("appmenu") != std::string::npos)
   {
-    _menu_view->SetProxy(proxy);
+    _menu_view->AddIndicator(proxy);
   }
   else
   {
-    PanelIndicatorObjectView* view = new PanelIndicatorObjectView(proxy);
-    AddPanelView(view, 0);
+    _indicators->AddIndicator(proxy);
   }
 
   _layout->SetContentDistribution(nux::eStackLeft);
@@ -377,26 +379,40 @@ void PanelView::OnObjectAdded(indicator::Indicator::Ptr const& proxy)
   NeedRedraw();
 }
 
+void PanelView::OnObjectRemoved(indicator::Indicator::Ptr const& proxy)
+{
+  if (proxy->name().find("appmenu") != std::string::npos)
+  {
+    _menu_view->RemoveIndicator(proxy);
+  }
+  else
+  {
+    _indicators->RemoveIndicator(proxy);
+  }
+
+  _layout->SetContentDistribution(nux::eStackLeft);
+
+  ComputeChildLayout();
+  NeedRedraw();
+}
+
+void PanelView::OnIndicatorViewUpdated(PanelIndicatorEntryView* view)
+{
+  ComputeChildLayout();
+}
+
 void PanelView::OnMenuPointerMoved(int x, int y)
 {
   nux::Geometry geo = GetAbsoluteGeometry();
 
   if (geo.IsPointInside(x, y))
   {
-    for (Children::iterator i = children_.begin(), end = children_.end(); i != end; ++i)
-    {
-      PanelIndicatorObjectView* view = *i;
+    bool ret = false;
 
-      if (view == _menu_view && _menu_view->HasOurWindowFocused())
-        continue;
+    if (!_menu_view->HasOurWindowFocused())
+      ret = _menu_view->OnPointerMoved(x, y);
 
-      geo = view->GetAbsoluteGeometry();
-      if (geo.IsPointInside(x, y))
-      {
-        view->OnPointerMoved(x, y);
-        break;
-      }
-    }
+    if (!ret) _indicators->OnPointerMoved(x, y);
   }
 }
 
@@ -405,13 +421,10 @@ void PanelView::OnEntryActivateRequest(std::string const& entry_id)
   if (!_menu_view->GetControlsActive())
     return;
 
-  bool activated = false;
-  for (Children::iterator i = children_.begin(), end = children_.end();
-       i != end && !activated; ++i)
-  {
-    PanelIndicatorObjectView* view = *i;
-    activated = view->ActivateEntry(entry_id);
-  }
+  bool ret;
+
+  ret = _menu_view->ActivateEntry(entry_id);
+  if (!ret) _indicators->ActivateEntry(entry_id);
 }
 
 static gboolean track_menu_pointer(PanelView *self)
@@ -502,13 +515,9 @@ void PanelView::EndFirstMenuShow()
   if (!_menu_view->GetControlsActive())
     return;
 
-  bool activated = false;
-  for (Children::iterator i = children_.begin(), end = children_.end();
-       i != end && !activated; ++i)
-  {
-    PanelIndicatorObjectView* view = *i;
-    activated = view->ActivateIfSensitive();
-  }
+  bool ret;
+  ret = _menu_view->ActivateIfSensitive();
+  if (!ret) _indicators->ActivateIfSensitive();
 }
 
 void
@@ -540,11 +549,8 @@ PanelView::SetPrimary(bool primary)
 void PanelView::SyncGeometries()
 {
   indicator::EntryLocationMap locations;
-  for (Children::iterator i = children_.begin(), end = children_.end(); i != end; ++i)
-  {
-    (*i)->GetGeometryForSync(locations);
-  }
-  _remote->SyncGeometries(GetName(), locations);
+  _menu_view->GetGeometryForSync(locations);
+  _indicators->GetGeometryForSync(locations);
 }
 
 void

@@ -18,8 +18,8 @@
 
 #include "DashController.h"
 
-#include "NuxCore/Logger.h"
-#include "Nux/HLayout.h"
+#include <NuxCore/Logger.h>
+#include <Nux/HLayout.h>
 
 #include "PluginAdapter.h"
 #include "UBusMessages.h"
@@ -182,7 +182,15 @@ void DashController::OnExternalShowDash(GVariant* variant)
 void DashController::OnExternalHideDash(GVariant* variant)
 {
   EnsureDash();
-  HideDash();
+  
+  if (variant)
+  {
+    HideDash(g_variant_get_boolean(variant));
+  }
+  else
+  {
+    HideDash();
+  }
 }
 
 void DashController::ShowDash()
@@ -207,7 +215,7 @@ void DashController::ShowDash()
 
   view_->AboutToShow();
 
-  window_->ShowWindow(true, true);
+  window_->ShowWindow(true);
   window_->PushToFront();
   window_->EnableInputWindow(true, "Dash", true, false);
   window_->SetInputFocus();
@@ -224,7 +232,7 @@ void DashController::ShowDash()
   ubus_manager_.SendMessage(UBUS_PLACE_VIEW_SHOWN);
 }
 
-void DashController::HideDash()
+void DashController::HideDash(bool restore)
 {
   if (!visible_)
    return;
@@ -238,7 +246,8 @@ void DashController::HideDash()
   window_->EnableInputWindow(false, "Dash", true, false);
   visible_ = false;
 
-  PluginAdapter::Default ()->restoreInputFocus ();
+  if (restore)
+    PluginAdapter::Default ()->restoreInputFocus ();
 
   StartShowHideTimeline();
 
@@ -282,7 +291,7 @@ gboolean DashController::OnViewShowHideFrame(DashController* self)
     self->window_->SetOpacity(self->visible_ ? 1.0f : 0.0f);
     if (!self->visible_)
     {
-      self->window_->ShowWindow(false, false);
+      self->window_->ShowWindow(false);
     }
 
     return FALSE;
@@ -297,6 +306,24 @@ void DashController::OnActivateRequest(GVariant* variant)
   ubus_manager_.UnregisterInterest(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST);
   view_->OnActivateRequest(variant);
   ShowDash();
+}
+
+gboolean DashController::CheckShortcutActivation(const char* key_string)
+{
+  EnsureDash();
+  std::string lens_id = view_->GetIdForShortcutActivation(std::string(key_string));
+  if (lens_id != "")
+  {
+    OnActivateRequest(g_variant_new("(sus)", lens_id.c_str(), 0, ""));
+    return true;
+  }
+  return false;
+}
+
+std::vector<char> DashController::GetAllShortcuts()
+{
+  EnsureDash();
+  return view_->GetAllShortcuts();
 }
 
 // Introspectable

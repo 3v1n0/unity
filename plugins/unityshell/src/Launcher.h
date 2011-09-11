@@ -25,6 +25,8 @@
 
 #include <Nux/View.h>
 #include <Nux/BaseWindow.h>
+#include <Nux/TimerProc.h>
+#include <NuxGraphics/IOpenGLAsmShader.h>
 
 #include "AbstractIconRenderer.h"
 #include "BackgroundEffectHelper.h"
@@ -36,8 +38,6 @@
 #include "LauncherDragWindow.h"
 #include "LauncherHideMachine.h"
 #include "LauncherHoverMachine.h"
-#include "NuxGraphics/IOpenGLAsmShader.h"
-#include "Nux/TimerProc.h"
 
 #define ANIM_DURATION_SHORT 125
 #define ANIM_DURATION       200
@@ -156,6 +156,7 @@ public:
   void EdgeRevealTriggered(int x, int y);
 
   gboolean CheckSuperShortcutPressed(Display *x_display, unsigned int key_sym, unsigned long key_code, unsigned long key_state, char* key_string);
+  void SetLatestShortcut(guint64 shortcut);
 
   nux::BaseWindow* GetParent()
   {
@@ -341,6 +342,9 @@ private:
   static void OnPlaceViewHidden(GVariant* data, void* val);
   static void OnPlaceViewShown(GVariant* data, void* val);
 
+  void DesaturateIcons();
+  void SaturateIcons();
+
   static void OnBGColorChanged (GVariant *data, void *val);
 
   static void OnActionDone(GVariant* data, void* val);
@@ -369,6 +373,7 @@ private:
 
   gboolean TapOnSuper();
 
+  void OnDisplayChanged(Display* display);
   void OnDNDDataCollected(const std::list<char*>& mimes);
 
   nux::HLayout* m_Layout;
@@ -393,7 +398,6 @@ private:
   bool  _check_window_over_launcher;
 
   bool          _shortcuts_shown;
-  bool          _super_pressed;
   bool          _keynav_activated;
   guint64       _latest_shortcut;
 

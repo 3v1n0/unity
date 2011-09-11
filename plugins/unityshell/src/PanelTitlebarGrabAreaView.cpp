@@ -18,14 +18,14 @@
  * Authored by: Didier Roche <didier.roche@canonical.com>
  */
 
-#include "Nux/Nux.h"
-#include "Nux/HLayout.h"
-#include "Nux/VLayout.h"
-#include "Nux/Button.h"
+#include <Nux/Nux.h>
+#include <Nux/HLayout.h>
+#include <Nux/VLayout.h>
+#include <Nux/Button.h>
 
-#include "NuxGraphics/GLThread.h"
-#include "Nux/BaseWindow.h"
-#include "Nux/WindowCompositor.h"
+#include <NuxGraphics/GLThread.h>
+#include <Nux/BaseWindow.h>
+#include <Nux/WindowCompositor.h>
 
 #include "PanelTitlebarGrabAreaView.h"
 #include <UnityCore/Variant.h>

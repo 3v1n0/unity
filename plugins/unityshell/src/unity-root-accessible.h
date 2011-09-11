@@ -21,8 +21,8 @@
 
 #include <atk/atk.h>
 
-#include "Nux/Nux.h"
-#include "Nux/BaseWindow.h"
+#include <Nux/Nux.h>
+#include <Nux/BaseWindow.h>
 
 G_BEGIN_DECLS
 

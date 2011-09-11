@@ -52,6 +52,7 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
   , active_index_(-1)
   , selected_index_(-1)
   , preview_row_(0)
+  , lazy_load_queued_(false)
   , last_mouse_down_x_(-1)
   , last_mouse_down_y_(-1)
 {
@@ -88,6 +89,66 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
 ResultViewGrid::~ResultViewGrid()
 {
 }
+
+gboolean ResultViewGrid::OnLazyLoad (gpointer data)
+{
+  ResultViewGrid *self = (ResultViewGrid*)data;
+  self->DoLazyLoad();
+  return FALSE;
+}
+
+void ResultViewGrid::QueueLazyLoad()
+{
+  if (lazy_load_queued_ == false)
+  {
+    g_timeout_add(0, (GSourceFunc)(&ResultViewGrid::OnLazyLoad), this);
+    lazy_load_queued_ = true;
+  }
+}
+
+void ResultViewGrid::DoLazyLoad()
+{
+  lazy_load_queued_ = false;
+  // FIXME - so this code was nice, it would only load the visible entries on the screen
+  // however nux does not give us a good enough indicator right now that we are scrolling,
+  // thus if you scroll more than a screen in one frame, you will end up with at least one frame where
+  // no icons are displayed (they have not been preloaded yet) - it sucked. we should fix this next cycle when we can break api
+  //~ int index = 0;
+//~
+  //~ ResultListBounds visible_bounds = GetVisableResults();
+  //~ int lower_bound = std::get<0>(visible_bounds);
+  //~ int upper_bound = std::get<1>(visible_bounds);
+//~
+  //~ ResultList::iterator it;
+  //~ for (it = results_.begin(); it != results_.end(); it++)
+  //~ {
+    //~ if (index >= lower_bound && index <= upper_bound)
+    //~ {
+      //~ renderer_->Preload((*it));
+    //~ }
+    //~ index++;
+  //~ }
+
+  // instead we will just pre-load all the items if expanded or just one row if not
+  int index = 0;
+  int items_per_row = GetItemsPerRow();
+  ResultList::iterator it;
+  for (it = results_.begin(); it != results_.end(); it++)
+  {
+    if ((!expanded && index < items_per_row) || expanded)
+    {
+      renderer_->Preload((*it));
+    }
+
+    if (!expanded && index >= items_per_row)
+      break; //early exit
+
+    index++;
+  }
+
+  QueueDraw();
+}
+
 
 int ResultViewGrid::GetItemsPerRow()
 {
@@ -135,14 +196,18 @@ void ResultViewGrid::SetModelRenderer(ResultRenderer* renderer)
 
 void ResultViewGrid::AddResult(Result& result)
 {
-  ResultView::AddResult(result);
+  results_.push_back(result);
+
   SizeReallocate();
+  QueueLazyLoad();
+  NeedRedraw();
 }
 
 void ResultViewGrid::RemoveResult(Result& result)
 {
   ResultView::RemoveResult(result);
   SizeReallocate();
+  QueueLazyLoad();
 }
 
 void ResultViewGrid::SizeReallocate()
@@ -150,7 +215,7 @@ void ResultViewGrid::SizeReallocate()
   //FIXME - needs to use the geometry assigned to it, but only after a layout
   int items_per_row = GetItemsPerRow();
 
-  int total_rows = (results_.size() / items_per_row);
+  int total_rows = (results_.size() / items_per_row) + 1;
   int total_height = 0;
 
   if (expanded)
@@ -401,9 +466,61 @@ void ResultViewGrid::OnOnKeyNavFocusChange(nux::Area *area)
 long ResultViewGrid::ComputeLayout2()
 {
   SizeReallocate();
+  QueueLazyLoad();
   long ret = ResultView::ComputeLayout2();
   return ret;
 
+}
+
+
+typedef std::tuple <int, int> ResultListBounds;
+ResultListBounds ResultViewGrid::GetVisableResults()
+{
+  int items_per_row = GetItemsPerRow();
+  int start, end;
+
+  if (!expanded)
+  {
+    // we are not expanded, so the bounds are known
+    start = 0;
+    end = items_per_row - 1;
+  }
+  else
+  {
+    //find the row we start at
+    int absolute_y = GetAbsoluteY();
+    uint row_size = renderer_->height + vertical_spacing;
+
+    if (absolute_y < 0)
+    {
+      // we are scrolled up a little,
+      int row_index = abs(absolute_y) / row_size;
+      start = row_index * items_per_row;
+    }
+    else
+    {
+      start = 0;
+    }
+
+    if (absolute_y + GetAbsoluteHeight() > GetToplevel()->GetAbsoluteHeight())
+    {
+      // our elements overflow the visable viewport
+      int visible_height = (GetToplevel()->GetAbsoluteHeight() - std::max(absolute_y, 0));
+      visible_height = std::min(visible_height, absolute_y + GetAbsoluteHeight());
+
+      int visible_rows = std::ceil(visible_height / static_cast<float>(row_size));
+      end = start + (visible_rows * items_per_row) + items_per_row;
+    }
+    else
+    {
+      end = results_.size() - 1;
+    }
+  }
+
+  start = std::max(start, 0);
+  end = std::min(end, static_cast<int>(results_.size()) - 1);
+
+  return ResultListBounds(start, end);
 }
 
 void ResultViewGrid::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
@@ -425,14 +542,13 @@ void ResultViewGrid::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   int y_position = padding + GetGeometry().y;
   nux::Area* top_level_parent = GetToplevel();
 
+  ResultListBounds visible_bounds = GetVisableResults();
+
   for (uint row_index = 0; row_index <= total_rows; row_index++)
   {
-    // check if the row is displayed on the screen,
-    // FIXME - optimisation - replace 2048 with the height of the displayed viewport
-    // or at the very least, with the largest monitor resolution
-    //~ if ((y_position + renderer_->height) + absolute_y >= 0
-    //~ && (y_position - renderer_->height) + absolute_y <= top_level_parent->GetGeometry().height)
-    if (1)
+    int row_lower_bound = row_index * items_per_row;
+    if (row_lower_bound >= std::get<0>(visible_bounds) &&
+        row_lower_bound <= std::get<1>(visible_bounds))
     {
       int x_position = padding + GetGeometry().x;
       for (int column_index = 0; column_index < items_per_row; column_index++)
@@ -574,66 +690,92 @@ ResultViewGrid::DndSourceDragBegin()
   return true;
 }
 
+GdkPixbuf *
+_icon_hint_get_drag_pixbuf (std::string icon_hint) 
+{
+  GdkPixbuf *pbuf;
+  GtkIconTheme *theme;
+  GtkIconInfo *info;
+  GError *error = NULL;
+  GIcon *icon;
+  int size = 64;
+  
+  if (icon_hint.empty())
+    icon_hint = "application-default-icon";
+  
+  if (g_str_has_prefix(icon_hint.c_str(), "/"))
+  {
+
+    pbuf = gdk_pixbuf_new_from_file_at_scale (icon_hint.c_str(), 
+                                              size, -1, TRUE, &error);
+    
+    if (error != NULL || !pbuf || !GDK_IS_PIXBUF (pbuf))
+    {
+      icon_hint = "application-default-icon";
+      g_error_free (error);
+      error = NULL;
+    }
+    else
+      return pbuf;
+  }
+  theme = gtk_icon_theme_get_default();
+  icon = g_icon_new_for_string(icon_hint.c_str(), NULL);
+  
+  if (G_IS_ICON(icon))
+  {
+     info = gtk_icon_theme_lookup_by_gicon(theme, icon, size, (GtkIconLookupFlags)0);
+      g_object_unref(icon);
+  }
+  else
+  {
+     info = gtk_icon_theme_lookup_icon(theme,
+                                        icon_hint.c_str(),
+                                        size,
+                                        (GtkIconLookupFlags) 0);
+  }
+  
+  if (!info)
+  {
+      info = gtk_icon_theme_lookup_icon(theme,
+                                        "application-default-icon",
+                                        size,
+                                        (GtkIconLookupFlags) 0);
+  }
+  
+  if (gtk_icon_info_get_filename(info) == NULL)
+  {
+      gtk_icon_info_free(info);
+      info = gtk_icon_theme_lookup_icon(theme,
+                                        "application-default-icon",
+                                        size,
+                                        (GtkIconLookupFlags) 0);
+  }
+  
+  pbuf = gtk_icon_info_load_icon(info, &error);
+  
+  
+  if (error != NULL)
+  {
+    LOG_WARN (logger) << "could not find a pixbuf for " << icon_hint;
+    g_error_free (error);
+    pbuf = NULL;
+  }
+  
+  gtk_icon_info_free(info);
+  
+  return pbuf;
+  
+}
+
 nux::NBitmapData*
 ResultViewGrid::DndSourceGetDragImage()
 {
   nux::NBitmapData* result = 0;
   GdkPixbuf* pbuf;
-  GtkIconTheme* theme;
-  GtkIconInfo* info;
-  GError* error = NULL;
-  GIcon* icon;
+  
+  pbuf = _icon_hint_get_drag_pixbuf (current_drag_icon_name_);
 
-  std::string icon_name = current_drag_icon_name_.c_str();
-  int size = 64;
-
-  if (icon_name.empty())
-    icon_name = "application-default-icon";
-
-  theme = gtk_icon_theme_get_default();
-  icon = g_icon_new_for_string(icon_name.c_str(), NULL);
-
-  if (G_IS_ICON(icon))
-  {
-    info = gtk_icon_theme_lookup_by_gicon(theme, icon, size, (GtkIconLookupFlags)0);
-    g_object_unref(icon);
-  }
-  else
-  {
-    info = gtk_icon_theme_lookup_icon(theme,
-                                      icon_name.c_str(),
-                                      size,
-                                      (GtkIconLookupFlags) 0);
-  }
-
-  if (!info)
-  {
-    info = gtk_icon_theme_lookup_icon(theme,
-                                      "application-default-icon",
-                                      size,
-                                      (GtkIconLookupFlags) 0);
-  }
-
-  if (gtk_icon_info_get_filename(info) == NULL)
-  {
-    gtk_icon_info_free(info);
-    info = gtk_icon_theme_lookup_icon(theme,
-                                      "application-default-icon",
-                                      size,
-                                      (GtkIconLookupFlags) 0);
-  }
-
-  pbuf = gtk_icon_info_load_icon(info, &error);
-  if (error != NULL)
-  {
-    LOG_WARN (logger) << "could not find a pixbuf for " << icon_name;
-    g_error_free (error);
-    result = NULL;
-  }
-
-  gtk_icon_info_free(info);
-
-  if (GDK_IS_PIXBUF(pbuf))
+  if (pbuf && GDK_IS_PIXBUF(pbuf))
   {
     // we don't free the pbuf as GdkGraphics will do it for us will do it for us
     nux::GdkGraphics graphics(pbuf);

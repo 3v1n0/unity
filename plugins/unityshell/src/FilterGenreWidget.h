@@ -28,7 +28,9 @@
 #include <Nux/GridHLayout.h>
 #include <Nux/HLayout.h>
 #include <Nux/VLayout.h>
+
 #include <UnityCore/CheckOptionFilter.h>
+
 #include "FilterWidget.h"
 #include "FilterExpanderLabel.h"
 

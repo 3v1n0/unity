@@ -17,13 +17,13 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#include "Nux/Nux.h"
-#include "Nux/HLayout.h"
-#include "Nux/VLayout.h"
+#include <Nux/Nux.h>
+#include <Nux/HLayout.h>
+#include <Nux/VLayout.h>
 
-#include "NuxGraphics/GLThread.h"
-#include "Nux/BaseWindow.h"
-#include "Nux/WindowCompositor.h"
+#include <NuxGraphics/GLThread.h>
+#include <Nux/BaseWindow.h>
+#include <Nux/WindowCompositor.h>
 
 #include <boost/algorithm/string.hpp>
 
@@ -35,7 +35,7 @@
 
 #include "CairoTexture.h"
 // TODO: this include should be at the top, but it fails :(
-#include "PanelIndicatorObjectEntryView.h"
+#include "PanelIndicatorEntryView.h"
 
 #include "PanelStyle.h"
 #include <UnityCore/GLibWrapper.h>
@@ -52,7 +52,7 @@ GdkPixbuf* make_pixbuf(int image_type, std::string const& image_data);
 }
 
 
-PanelIndicatorObjectEntryView::PanelIndicatorObjectEntryView(
+PanelIndicatorEntryView::PanelIndicatorEntryView(
   indicator::Entry::Ptr const& proxy,
   int padding)
   : TextureArea(NUX_TRACKER_LOCATION)
@@ -60,22 +60,22 @@ PanelIndicatorObjectEntryView::PanelIndicatorObjectEntryView(
   , util_cg_(CAIRO_FORMAT_ARGB32, 1, 1)
   , padding_(padding)
 {
-  on_indicator_activate_changed_connection_ = proxy_->active_changed.connect(sigc::mem_fun(this, &PanelIndicatorObjectEntryView::OnActiveChanged));
-  on_indicator_updated_connection_ = proxy_->updated.connect(sigc::mem_fun(this, &PanelIndicatorObjectEntryView::Refresh));
+  on_indicator_activate_changed_connection_ = proxy_->active_changed.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::OnActiveChanged));
+  on_indicator_updated_connection_ = proxy_->updated.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::Refresh));
 
-  on_font_changed_connection_ = g_signal_connect(gtk_settings_get_default(), "notify::gtk-font-name", (GCallback) &PanelIndicatorObjectEntryView::OnFontChanged, this);
+  on_font_changed_connection_ = g_signal_connect(gtk_settings_get_default(), "notify::gtk-font-name", (GCallback) &PanelIndicatorEntryView::OnFontChanged, this);
 
-  InputArea::mouse_down.connect(sigc::mem_fun(this, &PanelIndicatorObjectEntryView::OnMouseDown));
-  InputArea::mouse_up.connect(sigc::mem_fun(this, &PanelIndicatorObjectEntryView::OnMouseUp));
+  InputArea::mouse_down.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::OnMouseDown));
+  InputArea::mouse_up.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::OnMouseUp));
 
   InputArea::SetAcceptMouseWheelEvent(true);
-  InputArea::mouse_wheel.connect(sigc::mem_fun(this, &PanelIndicatorObjectEntryView::OnMouseWheel));
+  InputArea::mouse_wheel.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::OnMouseWheel));
 
-  on_panelstyle_changed_connection_ = PanelStyle::GetDefault()->changed.connect(sigc::mem_fun(this, &PanelIndicatorObjectEntryView::Refresh));
+  on_panelstyle_changed_connection_ = PanelStyle::GetDefault()->changed.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::Refresh));
   Refresh();
 }
 
-PanelIndicatorObjectEntryView::~PanelIndicatorObjectEntryView()
+PanelIndicatorEntryView::~PanelIndicatorEntryView()
 {
   on_indicator_activate_changed_connection_.disconnect();
   on_indicator_updated_connection_.disconnect();
@@ -83,13 +83,13 @@ PanelIndicatorObjectEntryView::~PanelIndicatorObjectEntryView()
   g_signal_handler_disconnect(gtk_settings_get_default(), on_font_changed_connection_);
 }
 
-void PanelIndicatorObjectEntryView::OnActiveChanged(bool is_active)
+void PanelIndicatorEntryView::OnActiveChanged(bool is_active)
 {
   active_changed.emit(this, is_active);
 }
 
-void PanelIndicatorObjectEntryView::OnMouseDown(int x, int y,
-                                                long button_flags, long key_flags)
+void PanelIndicatorEntryView::OnMouseDown(int x, int y, long button_flags,
+                                          long key_flags)
 {
   if (proxy_->active())
     return;
@@ -98,7 +98,7 @@ void PanelIndicatorObjectEntryView::OnMouseDown(int x, int y,
        (proxy_->image_visible() && proxy_->image_sensitive())) &&
       nux::GetEventButton(button_flags) != 2)
   {
-    proxy_->ShowMenu(GetAbsoluteX() + 1, //cairo translation
+    proxy_->ShowMenu(GetAbsoluteX(),
                      GetAbsoluteY() + PANEL_HEIGHT,
                      time(NULL),
                      nux::GetEventButton(button_flags));
@@ -113,7 +113,7 @@ void PanelIndicatorObjectEntryView::OnMouseDown(int x, int y,
   Refresh();
 }
 
-void PanelIndicatorObjectEntryView::OnMouseUp(int x, int y, long button_flags, long key_flags)
+void PanelIndicatorEntryView::OnMouseUp(int x, int y, long button_flags, long key_flags)
 {
   if (proxy_->active())
     return;
@@ -132,16 +132,16 @@ void PanelIndicatorObjectEntryView::OnMouseUp(int x, int y, long button_flags, l
   Refresh();
 }
 
-void PanelIndicatorObjectEntryView::OnMouseWheel(int x, int y, int delta,
-                                                 unsigned long mouse_state,
-                                                 unsigned long key_state)
+void PanelIndicatorEntryView::OnMouseWheel(int x, int y, int delta,
+                                           unsigned long mouse_state,
+                                           unsigned long key_state)
 {
   proxy_->Scroll(delta);
 }
 
-void PanelIndicatorObjectEntryView::Activate()
+void PanelIndicatorEntryView::Activate()
 {
-  proxy_->ShowMenu(GetAbsoluteGeometry().x + 1, //cairo translation FIXME: Make this into one function
+  proxy_->ShowMenu(GetAbsoluteGeometry().x,
                    GetAbsoluteGeometry().y + PANEL_HEIGHT,
                    time(NULL),
                    1);
@@ -151,7 +151,7 @@ void PanelIndicatorObjectEntryView::Activate()
 // 1. Figure out our width
 // 2. Figure out if we're active
 // 3. Paint something
-void PanelIndicatorObjectEntryView::Refresh()
+void PanelIndicatorEntryView::Refresh()
 {
   PangoLayout*          layout = NULL;
   PangoFontDescription* desc = NULL;
@@ -265,7 +265,7 @@ void PanelIndicatorObjectEntryView::Refresh()
     gtk_style_context_save(style_context);
 
     GtkWidgetPath* widget_path = gtk_widget_path_new();
-    guint pos = gtk_widget_path_append_type(widget_path, GTK_TYPE_MENU_BAR);
+    gint pos = gtk_widget_path_append_type(widget_path, GTK_TYPE_MENU_BAR);
     pos = gtk_widget_path_append_type(widget_path, GTK_TYPE_MENU_ITEM);
     gtk_widget_path_iter_set_name(widget_path, pos, "UnityPanelWidget");
 
@@ -298,7 +298,7 @@ void PanelIndicatorObjectEntryView::Refresh()
     gtk_style_context_save(style_context);
 
     GtkWidgetPath* widget_path = gtk_widget_path_new();
-    guint pos = gtk_widget_path_append_type(widget_path, GTK_TYPE_MENU_BAR);
+    gint pos = gtk_widget_path_append_type(widget_path, GTK_TYPE_MENU_BAR);
     pos = gtk_widget_path_append_type(widget_path, GTK_TYPE_MENU_ITEM);
     gtk_widget_path_iter_set_name(widget_path, pos, "UnityPanelWidget");
 
@@ -345,7 +345,7 @@ void PanelIndicatorObjectEntryView::Refresh()
   refreshed.emit(this);
 }
 
-const gchar* PanelIndicatorObjectEntryView::GetName()
+const gchar* PanelIndicatorEntryView::GetName()
 {
   if (proxy_->IsUnused())
     return NULL;
@@ -353,7 +353,7 @@ const gchar* PanelIndicatorObjectEntryView::GetName()
     return proxy_->id().c_str();
 }
 
-void PanelIndicatorObjectEntryView::AddProperties(GVariantBuilder* builder)
+void PanelIndicatorEntryView::AddProperties(GVariantBuilder* builder)
 {
   variant::BuilderWrapper(builder)
   .add(GetGeometry())
@@ -362,15 +362,16 @@ void PanelIndicatorObjectEntryView::AddProperties(GVariantBuilder* builder)
   .add("label_visible", proxy_->label_visible())
   .add("icon_sensitive", proxy_->image_sensitive())
   .add("icon_visible", proxy_->image_visible())
-  .add("active", proxy_->active());
+  .add("active", proxy_->active())
+  .add("priority", proxy_->priority());
 }
 
-bool PanelIndicatorObjectEntryView::GetShowNow()
+bool PanelIndicatorEntryView::GetShowNow()
 {
   return proxy_.get() ? proxy_->show_now() : false;
 }
 
-void PanelIndicatorObjectEntryView::GetGeometryForSync(indicator::EntryLocationMap& locations)
+void PanelIndicatorEntryView::GetGeometryForSync(indicator::EntryLocationMap& locations)
 {
   if (proxy_->IsUnused())
     return;
@@ -378,7 +379,7 @@ void PanelIndicatorObjectEntryView::GetGeometryForSync(indicator::EntryLocationM
   locations[proxy_->id()] = GetAbsoluteGeometry();
 }
 
-bool PanelIndicatorObjectEntryView::IsEntryValid() const
+bool PanelIndicatorEntryView::IsEntryValid() const
 {
   if (proxy_.get())
   {
@@ -387,7 +388,7 @@ bool PanelIndicatorObjectEntryView::IsEntryValid() const
   return false;
 }
 
-bool PanelIndicatorObjectEntryView::IsSensitive() const
+bool PanelIndicatorEntryView::IsSensitive() const
 {
   if (proxy_.get())
   {
@@ -396,11 +397,19 @@ bool PanelIndicatorObjectEntryView::IsSensitive() const
   return false;
 }
 
-void PanelIndicatorObjectEntryView::OnFontChanged(GObject* gobject,
-                                                  GParamSpec* pspec,
-                                                  gpointer data)
+int PanelIndicatorEntryView::GetEntryPriority() const
 {
-  PanelIndicatorObjectEntryView* self = reinterpret_cast<PanelIndicatorObjectEntryView*>(data);
+  if (proxy_.get())
+  {
+    return proxy_->priority();
+  }
+  return -1;
+}
+
+void PanelIndicatorEntryView::OnFontChanged(GObject* gobject, GParamSpec* pspec,
+                                            gpointer data)
+{
+  PanelIndicatorEntryView* self = reinterpret_cast<PanelIndicatorEntryView*>(data);
   self->Refresh();
 }
 
@@ -424,10 +433,8 @@ void draw_menu_bg(cairo_t* cr, int width, int height)
   gtk_style_context_add_class(style_context, GTK_STYLE_CLASS_MENUITEM);
   gtk_style_context_set_state(style_context, GTK_STATE_FLAG_PRELIGHT);
 
-  // FIXME(Cimi) 1px of padding because the dropdown menu was not aligned,
-  // maybe a better fix somewhere else?
-  gtk_render_background(style_context, cr, 1, 0, width - 2, height);
-  gtk_render_frame(style_context, cr, 1, 0, width - 2, height);
+  gtk_render_background(style_context, cr, 0, 0, width, height);
+  gtk_render_frame(style_context, cr, 0, 0, width, height);
 
   gtk_widget_path_free(widget_path);
 

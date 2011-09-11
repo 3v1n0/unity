@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
-* Copyright (C) 2010 Canonical Ltd
+* Copyright (C) 2010-2011 Canonical Ltd
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License version 3 as
@@ -15,6 +15,7 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *
 * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
+*              Marco Trevisan (Treviño) <mail@3v1n0.net>
 */
 
 #ifndef UNITY_INDICATOR_ENTRY_H
@@ -45,18 +46,21 @@ public:
   static std::string const UNUSED_ID;
 
   Entry(std::string const& id,
+        std::string const& name_hint,
         std::string const& label,
         bool label_sensitive,
         bool label_visible,
         int  image_type,
         std::string const& image_data,
         bool image_sensitive,
-        bool image_visible);
+        bool image_visible,
+        int  priority);
 
   // Assignment emits updated event.
   Entry& operator=(Entry const& rhs);
 
   std::string const& id() const;
+  std::string const& name_hint() const;
   std::string const& label() const;
   int image_type() const;
   std::string const& image_data() const;
@@ -67,6 +71,8 @@ public:
 
   void set_active(bool active);
   bool active() const;
+
+  int priority() const;
 
   /**
    * Whether this entry should be shown to the user.
@@ -83,6 +89,10 @@ public:
   void SecondaryActivate(unsigned int timestamp);
   void Scroll(int delta);
 
+  void setLabel(std::string const& label, bool sensitive, bool visible);
+  void setImage(int type, std::string const& data, bool sensitive, bool visible);
+  void setPriority(int priority);
+
   // Signals
   sigc::signal<void> updated;
   sigc::signal<void, bool> active_changed;
@@ -94,6 +104,7 @@ public:
 
 private:
   std::string id_;
+  std::string name_hint_;
 
   std::string label_;
   bool label_visible_;
@@ -103,6 +114,7 @@ private:
   std::string image_data_;
   bool image_visible_;
   bool image_sensitive_;
+  int priority_;
 
   bool show_now_;
   bool active_;

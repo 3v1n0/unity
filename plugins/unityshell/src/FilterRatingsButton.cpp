@@ -18,12 +18,14 @@
  * Authored by: Gordon Allott <gord.allott@canonical.com>
  *
  */
+
+#include "config.h"
+
+#include <Nux/Nux.h>
 #include <NuxCore/Logger.h>
 
 #include "FilterRatingsButton.h"
-#include "config.h"
 #include "DashStyle.h"
-#include "Nux/Nux.h"
 
 namespace {
   nux::logging::Logger logger("unity.dash.FilterRatingsButton");
@@ -118,7 +120,8 @@ namespace unity {
     if (cached_geometry_ != GetGeometry())
     {
       nux::Geometry geometry = GetGeometry();
-      geometry.width /= 5;
+      //geometry.width /= 5;
+      geometry.width = 27;
       prelight_empty_->Invalidate(geometry);
       active_empty_->Invalidate(geometry);
       normal_empty_->Invalidate(geometry);
@@ -149,7 +152,8 @@ namespace unity {
     int total_half_stars = rating % 2;
 
     nux::Geometry geometry = GetGeometry ();
-    geometry.width = geometry.width / 5;
+    //geometry.width = geometry.width / 5;
+    geometry.width = 27;
 
     gPainter.PaintBackground(GfxContext, GetGeometry());
     // set up our texture mode
@@ -208,7 +212,7 @@ namespace unity {
                           texxform,
                           nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
 
-      geometry.x += geometry.width;
+      geometry.x += geometry.width + 10;
 
     }
 
@@ -225,7 +229,8 @@ namespace unity {
   }
 
   void FilterRatingsButton::RecvMouseDown (int x, int y, unsigned long button_flags, unsigned long key_flags) {
-    int width = GetGeometry().width;
+    //int width = GetGeometry().width;
+    int width = 180;
     float new_rating = (static_cast<float>(x) / width) + 0.10f;
     if (filter_ != NULL)
       filter_->rating = new_rating;

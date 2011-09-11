@@ -21,9 +21,9 @@
 #ifndef QUICKLISTMENUITEMLABEL_H
 #define QUICKLISTMENUITEMLABEL_H
 
-#include "Nux/Nux.h"
-#include "Nux/View.h"
-#include "NuxImage/CairoGraphics.h"
+#include <Nux/Nux.h>
+#include <Nux/View.h>
+#include <NuxImage/CairoGraphics.h>
 
 #include "QuicklistMenuItem.h"
 

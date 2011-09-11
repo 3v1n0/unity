@@ -48,6 +48,9 @@ public:
 
   nux::BaseWindow* window() const;
 
+  gboolean CheckShortcutActivation(const char* key_string);
+  std::vector<char> GetAllShortcuts();
+
   nux::Property<int> launcher_width;
   nux::Property<int> panel_height;
 
@@ -72,7 +75,7 @@ private:
   void OnActivateRequest(GVariant* variant);
 
   void ShowDash();
-  void HideDash();
+  void HideDash(bool restore_focus = true);
 
   void StartShowHideTimeline();
   static gboolean OnViewShowHideFrame(DashController* self);

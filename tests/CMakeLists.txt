@@ -153,10 +153,10 @@ add_executable (test-panel
                 ${UNITY_SRC}/PanelStyle.h
                 ${UNITY_SRC}/PanelView.cpp
                 ${UNITY_SRC}/PanelView.h
-                ${UNITY_SRC}/PanelIndicatorObjectView.cpp
-                ${UNITY_SRC}/PanelIndicatorObjectView.h
-                ${UNITY_SRC}/PanelIndicatorObjectEntryView.cpp
-                ${UNITY_SRC}/PanelIndicatorObjectEntryView.h
+                ${UNITY_SRC}/PanelIndicatorsView.cpp
+                ${UNITY_SRC}/PanelIndicatorsView.h
+                ${UNITY_SRC}/PanelIndicatorEntryView.cpp
+                ${UNITY_SRC}/PanelIndicatorEntryView.h
                 ${UNITY_SRC}/PanelTitlebarGrabAreaView.h
                 ${UNITY_SRC}/PanelTitlebarGrabAreaView.cpp
                 ${UNITY_SRC}/PanelTray.cpp

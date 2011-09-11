@@ -37,7 +37,6 @@ public:
   PrivateCompizMinimizedWindowHandler () {};
 
   CompWindow         *mWindow;
-  WindowInputRemover *clientInputRemover;
 };
 
 template <typename Screen, typename Window>
@@ -87,7 +86,6 @@ compiz::CompizMinimizedWindowHandler<Screen, Window>::CompizMinimizedWindowHandl
   priv = new PrivateCompizMinimizedWindowHandler ();
 
   priv->mWindow = w;
-  priv->clientInputRemover = NULL;
 
 }
 
@@ -115,33 +113,7 @@ template <typename Screen, typename Window>
 void
 compiz::CompizMinimizedWindowHandler<Screen, Window>::setVisibility (bool visible)
 {
-  CompWindow::Geometry gm = priv->mWindow->geometry ();
-  MinimizedWindowHandler::setVisibility (visible, ROOTPARENT (priv->mWindow));
-
-  if (!visible && !priv->clientInputRemover)
-  {
-    priv->clientInputRemover = new compiz::WindowInputRemover (screen->dpy (), priv->mWindow->id ());
-    if (!priv->clientInputRemover)
-      return;
-
-    if (priv->clientInputRemover->save ())
-      priv->clientInputRemover->remove ();
-  }
-  else if (visible && priv->clientInputRemover)
-  {
-    priv->clientInputRemover->restore ();
-
-    delete priv->clientInputRemover;
-    priv->clientInputRemover = NULL;
-  }
-
-  /* This is a little hack to ensure that the window region gets updated,
-   * because there's no API in core to do that */
-
-  gm.setBorder (gm.border () + 1);
-  priv->mWindow->resize (gm);
-  gm.setBorder (gm.border () - 1);
-  priv->mWindow->resize (gm);
+  MinimizedWindowHandler::setVisibility (visible, priv->mWindow->id ());
 
   CompositeWindow::get (priv->mWindow)->addDamage ();
   GLWindow::get (priv->mWindow)->glPaintSetEnabled (Window::get (priv->mWindow), !visible);
@@ -285,8 +257,10 @@ template <typename Screen, typename Window>
 void
 compiz::CompizMinimizedWindowHandler<Screen, Window>::handleEvent (XEvent *event)
 {
+  /* Ignore sent events from the InputRemover */
   if (screen->XShape () && event->type ==
-      screen->shapeEvent () + ShapeNotify)
+      screen->shapeEvent () + ShapeNotify &&
+      !event->xany.send_event)
   {
     CompWindow *w = screen->findWindow (((XShapeEvent *) event)->window);
 

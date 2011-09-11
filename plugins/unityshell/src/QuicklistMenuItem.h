@@ -24,9 +24,9 @@
 #include <libdbusmenu-glib/menuitem.h>
 #include <libdbusmenu-glib/client.h>
 
-#include "Nux/Nux.h"
-#include "Nux/View.h"
-#include "NuxImage/CairoGraphics.h"
+#include <Nux/Nux.h>
+#include <Nux/View.h>
+#include <NuxImage/CairoGraphics.h>
 
 #include <pango/pango.h>
 #include <pango/pangocairo.h>

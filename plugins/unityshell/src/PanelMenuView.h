@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -24,7 +25,7 @@
 #include <set>
 
 #include "Introspectable.h"
-#include "PanelIndicatorObjectView.h"
+#include "PanelIndicatorsView.h"
 #include "StaticCairoText.h"
 #include "WindowButtons.h"
 #include "PanelTitlebarGrabAreaView.h"
@@ -35,7 +36,7 @@
 namespace unity
 {
 
-class PanelMenuView : public PanelIndicatorObjectView
+class PanelMenuView : public PanelIndicatorsView
 {
 public:
   // This contains all the menubar logic for the Panel. Mainly it contains
@@ -60,11 +61,7 @@ public:
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual long PostLayoutManagement(long LayoutResult);
 
-  void SetProxy(indicator::Indicator::Ptr const& proxy);
-
-  virtual void OnEntryAdded(unity::indicator::Entry::Ptr const& proxy);
-  void OnEntryRefreshed(PanelIndicatorObjectEntryView* view);
-  void OnActiveChanged(PanelIndicatorObjectEntryView* view, bool is_active);
+  void OnActiveChanged(PanelIndicatorEntryView* view, bool is_active);
   void OnActiveWindowChanged(BamfView* old_view, BamfView* new_view);
   void OnNameChanged(gchar* new_name, gchar* old_name);
 
@@ -105,6 +102,7 @@ protected:
   void OnPanelViewMouseEnter(int x, int y, unsigned long mouse_button_state, unsigned long special_keys_state);
   void OnPanelViewMouseLeave(int x, int y, unsigned long mouse_button_state, unsigned long special_keys_state);
   void OnPanelViewMouseMove(int x, int y, int dx, int dy, unsigned long mouse_button_state, unsigned long special_keys_state);
+  virtual void OnEntryAdded(unity::indicator::Entry::Ptr const& proxy);
 
 private:
   gchar* GetActiveViewName();
@@ -126,7 +124,7 @@ private:
   bool _is_grabbed;
   bool _is_maximized;
   bool _is_own_window;
-  PanelIndicatorObjectEntryView* _last_active_view;
+  PanelIndicatorEntryView* _last_active_view;
 
   WindowButtons* _window_buttons;
   PanelTitlebarGrabArea* _panel_titlebar_grab_area;

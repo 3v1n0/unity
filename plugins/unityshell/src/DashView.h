@@ -56,6 +56,9 @@ public:
   void DisableBlur();
   void OnActivateRequest(GVariant* args);
 
+  std::string const GetIdForShortcutActivation(std::string const& shortcut) const;
+  std::vector<char> GetAllShortcuts();
+
   nux::View* default_focus() const;
 
 private:
@@ -68,6 +71,7 @@ private:
   long ProcessEvent(nux::IEvent& ievent, long traverse_info, long event_info);
   void Draw(nux::GraphicsEngine& gfx_context, bool force_draw);
   void DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw);
+  virtual long PostLayoutManagement (long LayoutResult);
 
   void OnMouseButtonDown(int x, int y, unsigned long button, unsigned long key);
   void OnBackgroundColorChanged(GVariant* args);
@@ -84,7 +88,7 @@ private:
   std::string AnalyseLensURI(std::string uri);
   void UpdateLensFilter(std::string lens, std::string filter, std::string value);
   void UpdateLensFilterValue(Filter::Ptr filter, std::string value);
-  
+
   bool AcceptKeyNavFocus();
   bool InspectKeyEvent(unsigned int eventType, unsigned int key_sym, const char* character);
   const gchar* GetName();
@@ -115,7 +119,7 @@ private:
   nux::ObjectPtr <nux::IOpenGLBaseTexture> bg_blur_texture_;
 
   std::string last_activated_uri_;
-  
+
   bool visible_;
 };
 

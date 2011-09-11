@@ -47,12 +47,12 @@ static const gchar introspection_xml[] =
   "  <interface name='com.canonical.Unity.Panel.Service'>"
   ""
   "    <method name='Sync'>"
-  "      <arg type='a(sssbbusbb)' name='state' direction='out'/>"
+  "      <arg type='a(ssssbbusbbi)' name='state' direction='out'/>"
   "    </method>"
   ""
   "    <method name='SyncOne'>"
   "      <arg type='s' name='indicator_id' direction='in'/>"
-  "      <arg type='a(sssbbusbb)' name='state' direction='out'/>"
+  "      <arg type='a(ssssbbusbbi)' name='state' direction='out'/>"
   "    </method>"
   ""
   "    <method name='SyncGeometries'>"
@@ -156,7 +156,7 @@ handle_method_call (GDBusConnection       *connection,
       gint x, y, width, height;
 
       g_variant_get (parameters, "(a(ssiiii))", &iter);
-      while (g_variant_iter_loop (iter, "(ssiiii)",
+      while (iter && g_variant_iter_loop (iter, "(ssiiii)",
                                   &indicator_id,
                                   &entry_id,
                                   &x,
@@ -168,7 +168,7 @@ handle_method_call (GDBusConnection       *connection,
                                        entry_id, x, y, width, height);
         }
 
-      g_variant_iter_free (iter);
+      if (iter) g_variant_iter_free (iter);
 
       g_dbus_method_invocation_return_value (invocation, NULL);
     }
@@ -219,7 +219,6 @@ on_service_resync (PanelService *service, const gchar *indicator_id, GDBusConnec
                                  "ReSync",
                                  g_variant_new ("(s)", indicator_id),
                                  &error);
-
   if (error)
     {
       g_warning ("Unable to emit ReSync signal: %s", error->message);
@@ -333,7 +332,7 @@ on_name_lost (GDBusConnection *connection,
               gpointer         user_data)
 {
   PanelService *service = PANEL_SERVICE (user_data);
-  
+		
   g_debug ("%s", G_STRFUNC);
   if (service != NULL)
   {
@@ -343,6 +342,21 @@ on_name_lost (GDBusConnection *connection,
     g_signal_handlers_disconnect_by_func (service, on_service_entry_show_now_changed, connection);
   }
   gtk_main_quit ();
+}
+
+static void
+on_indicators_cleared (PanelService *service)
+{
+  gtk_main_quit ();
+}
+
+static void
+on_signal (int sig)
+{
+  PanelService *service = panel_service_get_default ();
+  panel_service_clear_indicators (service);
+  g_signal_connect (service, "indicators-cleared",
+                    G_CALLBACK (on_indicators_cleared), NULL);
 }
 
 gint
@@ -374,6 +388,9 @@ main (gint argc, gchar **argv)
                              NULL);
 
   panel_a11y_init ();
+
+  signal (SIGINT, on_signal);
+  signal (SIGTERM, on_signal);
 
   gtk_main ();
 

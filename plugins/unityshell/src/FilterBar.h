@@ -19,12 +19,13 @@
  *
  */
 
-#include <Nux/View.h>
-
 #ifndef FILTERBAR_H
 #define FILTERBAR_H
 
+#include <Nux/View.h>
+
 #include <UnityCore/Filters.h>
+
 #include "FilterFactory.h"
 
 namespace unity {

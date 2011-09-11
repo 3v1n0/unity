@@ -21,11 +21,11 @@
 #include <gdk/gdk.h>
 #include <gtk/gtk.h>
 
-#include "Nux/Nux.h"
-#include "Nux/Layout.h"
-#include "Nux/HLayout.h"
-#include "Nux/VLayout.h"
-#include "Nux/Validator.h"
+#include <Nux/Nux.h>
+#include <Nux/Layout.h>
+#include <Nux/HLayout.h>
+#include <Nux/VLayout.h>
+#include <Nux/Validator.h>
 
 #include "CairoTexture.h"
 #include "StaticCairoText.h"

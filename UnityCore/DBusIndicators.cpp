@@ -156,7 +156,7 @@ DBusIndicators::Impl::~Impl()
 
 void DBusIndicators::Impl::Reconnect()
 {
-  g_spawn_command_line_sync("killall unity-panel-service",
+  g_spawn_command_line_sync("killall -9 unity-panel-service",
                             NULL, NULL, NULL, NULL);
 
   if (g_getenv("PANEL_USE_LOCAL_SERVICE"))
@@ -247,6 +247,7 @@ void DBusIndicators::Impl::OnEntryScroll(std::string const& entry_id, int delta)
 void DBusIndicators::Impl::Sync(GVariant* args, SyncData* data)
 {
   GVariantIter* iter            = NULL;
+  gchar*        name_hint       = NULL;
   gchar*        indicator_id    = NULL;
   gchar*        entry_id        = NULL;
   gchar*        label           = NULL;
@@ -256,60 +257,72 @@ void DBusIndicators::Impl::Sync(GVariant* args, SyncData* data)
   gchar*        image_data      = NULL;
   gboolean      image_sensitive = false;
   gboolean      image_visible   = false;
+  gint32        priority        = -1;
 
   // sanity check
   if (!args)
     return;
 
-  std::map<std::string, Indicator::Entries> indicators;
-  // We need to make sure they are added in the order they arrive.
-  std::vector<std::string> indicator_order;
+  std::map<Indicator::Ptr, Indicator::Entries> indicators;
 
-  g_variant_get(args, "(a(sssbbusbb))", &iter);
-  while (g_variant_iter_loop(iter, "(sssbbusbb)",
+  g_variant_get(args, "(a(ssssbbusbbi))", &iter);
+  while (g_variant_iter_loop(iter, "(ssssbbusbbi)",
                              &indicator_id,
                              &entry_id,
+                             &name_hint,
                              &label,
                              &label_sensitive,
                              &label_visible,
                              &image_type,
                              &image_data,
                              &image_sensitive,
-                             &image_visible))
+                             &image_visible,
+                             &priority))
   {
-    // NULL entries (entry_id == "") are just padding.
     std::string entry(entry_id);
-    // The reason for the padding is to provide the ordering for the
-    // indicators... so we must record the order of the indicators provided
-    // even if they only have padding entries.
-    indicator_order.push_back(indicator_id);
+    std::string indicator_name(indicator_id);
+
+    Indicator::Ptr indicator = owner_->GetIndicator(indicator_name);
+    if (!indicator)
+    {
+      indicator = owner_->AddIndicator(indicator_name);
+    }
+
+    Indicator::Entries& entries = indicators[indicator];
+
+    // NULL entries (entry_id == "") are empty indicators.
     if (entry != "")
     {
-      Indicator::Entries& entries = indicators[indicator_id];
-      Entry::Ptr e(new Entry(entry,
-                             label,
-                             label_sensitive,
-                             label_visible,
-                             image_type,
-                             image_data,
-                             image_sensitive,
-                             image_visible));
+      Entry::Ptr e = indicator->GetEntry(entry_id);
+
+      if (!e)
+      {
+        e = Entry::Ptr(new Entry(entry,
+                                 name_hint,
+                                 label,
+                                 label_sensitive,
+                                 label_visible,
+                                 image_type,
+                                 image_data,
+                                 image_sensitive,
+                                 image_visible,
+                                 priority));
+      }
+      else
+      {
+        e->setLabel(label, label_sensitive, label_visible);
+        e->setImage(image_type, image_data, image_sensitive, image_visible);
+        e->setPriority(priority);
+      }
+
       entries.push_back(e);
     }
   }
   g_variant_iter_free(iter);
 
-  // Now update each of the entries.
-  std::string curr_indicator;
-  for (std::vector<std::string>::iterator i = indicator_order.begin(), end = indicator_order.end();
-       i != end; ++i)
+  for (auto i = indicators.begin(), end = indicators.end(); i != end; ++i)
   {
-    std::string const& indicator_name = *i;
-    if (curr_indicator != indicator_name)
-    {
-      curr_indicator = indicator_name;
-      owner_->GetIndicator(curr_indicator).Sync(indicators[curr_indicator]);
-    }
+    i->first->Sync(indicators[i->first]);
   }
 
   // Clean up the SyncData.  NOTE: don't use find when passing in a raw
@@ -389,6 +402,11 @@ void DBusIndicators::Impl::OnProxyNameOwnerChanged(GDBusProxy* proxy,
 
   if (name_owner == NULL)
   {
+    for (auto indicator : owner_->GetIndicators())
+    {
+      owner_->RemoveIndicator(indicator->name());
+    }
+
     // The panel service has stopped for some reason.  Restart it if not in
     // dev mode
     if (!g_getenv("UNITY_DEV_MODE"))
@@ -584,7 +602,6 @@ void on_sync_ready_cb(GObject* source, GAsyncResult* res, gpointer data)
 {
   SyncData* sync_data = reinterpret_cast<SyncData*>(data);
   GError* error = NULL;
-
   GVariant* args = g_dbus_proxy_call_finish((GDBusProxy*)source, res, &error);
 
   if (args == NULL)

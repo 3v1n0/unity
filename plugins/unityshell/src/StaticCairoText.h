@@ -21,11 +21,11 @@
 #ifndef STATICCAIROTEXT_H
 #define STATICCAIROTEXT_H
 
-#include "Nux/Nux.h"
-#include "Nux/View.h"
-//#include "NuxGraphics/OpenGLEngine.h"
-#include "Nux/TextureArea.h"
-#include "NuxImage/CairoGraphics.h"
+#include <Nux/Nux.h>
+#include <Nux/View.h>
+//#include <NuxGraphics/OpenGLEngine.h"
+#include <Nux/TextureArea.h>
+#include <NuxImage/CairoGraphics.h>
 
 #include <pango/pango.h>
 #include <pango/pangocairo.h>

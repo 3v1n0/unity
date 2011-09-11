@@ -114,6 +114,7 @@ public:
   LensList GetLenses() const;
   Lens::Ptr GetLens(std::string const& lens_id) const;
   Lens::Ptr GetLensAtIndex(std::size_t index) const;
+  Lens::Ptr GetLensForShortcut(std::string const& lens_shortcut) const;
   std::size_t count() const;
 
   void Init();
@@ -279,7 +280,28 @@ void FilesystemLenses::Impl::DecrementAndCheckChildrenWaiting()
   // done reading the directory
   children_waiting_to_load_--;
   if (!children_waiting_to_load_)
+  {
+    //FIXME: This should be it's own function, but we're trying not to break ABI
+    // right now.
+    //FIXME: We don't have a strict order, but alphabetical serves us wonderfully for
+    // Oneiric. When we have an order/policy, please replace this.
+    auto sort_cb = [] (Lens::Ptr a, Lens::Ptr b) -> bool
+      {
+        if (a->id == "applications.lens")
+          return true;
+        else if (b->id == "applications.lens")
+          return false;
+        else
+          return g_strcmp0(a->id().c_str(), b->id().c_str()) < 0; 
+      };
+    std::sort(lenses_.begin(),
+              lenses_.end(),
+              sort_cb);
+    for (Lens::Ptr& lens: lenses_)
+      owner_->lens_added.emit(lens);
+
     owner_->lenses_loaded.emit();
+  }
 }
 
 void FilesystemLenses::Impl::CreateLensFromKeyFileData(GFile* file,
@@ -307,7 +329,6 @@ void FilesystemLenses::Impl::CreateLensFromKeyFileData(GFile* file,
                               data.visible,
                               data.shortcut.Str()));
       lenses_.push_back(lens);
-      owner_->lens_added.emit(lens);
 
       LOG_DEBUG(logger) << "Sucessfully loaded lens file " << path;
     }
@@ -334,18 +355,15 @@ Lenses::LensList FilesystemLenses::Impl::GetLenses() const
 
 Lens::Ptr FilesystemLenses::Impl::GetLens(std::string const& lens_id) const
 {
-  Lens::Ptr p;
-
-  for (Lens::Ptr lens: lenses_)
+  for (auto lens: lenses_)
   {
     if (lens->id == lens_id)
     {
-      p = lens;
-      break;
+      return lens;
     }
   }
 
-  return p;
+  return Lens::Ptr();
 }
 
 Lens::Ptr FilesystemLenses::Impl::GetLensAtIndex(std::size_t index) const
@@ -358,6 +376,19 @@ Lens::Ptr FilesystemLenses::Impl::GetLensAtIndex(std::size_t index) const
   {
     LOG_WARN(logger) << error.what();
   }
+  return Lens::Ptr();
+}
+
+Lens::Ptr FilesystemLenses::Impl::GetLensForShortcut(std::string const& lens_shortcut) const
+{
+  for (auto lens: lenses_)
+  {
+    if (lens->shortcut == lens_shortcut)
+    {
+      return lens;
+    }
+  }
+
   return Lens::Ptr();
 }
 
@@ -402,6 +433,11 @@ Lens::Ptr FilesystemLenses::GetLens(std::string const& lens_id) const
 Lens::Ptr FilesystemLenses::GetLensAtIndex(std::size_t index) const
 {
   return pimpl->GetLensAtIndex(index);
+}
+
+Lens::Ptr FilesystemLenses::GetLensForShortcut(std::string const& lens_shortcut) const
+{
+  return pimpl->GetLensForShortcut(lens_shortcut);
 }
 
 }

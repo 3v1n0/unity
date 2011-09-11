@@ -33,6 +33,7 @@
 #include "ResultRendererTile.h"
 #include "ResultRendererHorizontalTile.h"
 #include "ResultViewGrid.h"
+#include "PlacesStyle.h"
 #include <UnityCore/Result.h>
 
 namespace
@@ -88,6 +89,8 @@ void TestRunner::Init ()
     iters_.push_back(iter);
   }
 
+  DeeModelTag* tag = dee_model_register_tag(model_, NULL);
+
   LOG_DEBUG(logger) << "took " << (g_get_monotonic_time () - time_start) / 1000000.0f << " seconds to init dee";
   time_start = g_get_monotonic_time();
 
@@ -103,7 +106,7 @@ void TestRunner::Init ()
   std::vector<DeeModelIter*>::iterator it;
   for (it = iters_.begin(); it != iters_.end(); it++)
   {
-    unity::dash::Result* result = new unity::dash::Result(model_, (*it), NULL);
+    unity::dash::Result* result = new unity::dash::Result(model_, (*it), tag);
     result_view->AddResult (*result);
   }
 
@@ -192,7 +195,8 @@ int main(int argc, char **argv)
 
   nux::NuxInitialize(0);
   nux::logging::configure_logging(::getenv("UNITY_LOG_SEVERITY"));
-
+  // The instance for the PlacesStyle.
+  unity::PlacesStyle places_style;
 
   TestRunner *test_runner = new TestRunner ();
   wt = nux::CreateGUIThread(TEXT("Unity Places Tile Test"),
