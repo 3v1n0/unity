@@ -243,10 +243,9 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
       if (event && event->evtype == XI_ButtonRelease &&
           priv->last_menu_button != 0) //FocusChange
         {
-          if (event->root_x < priv->last_left ||
-              event->root_x > priv->last_right ||
-              event->root_y < priv->last_top ||
-              event->root_y > priv->last_bottom)
+          if (event->root_x > priv->last_left &&
+              event->root_x < priv->last_right &&
+              event->root_y < priv->last_top)
           {
             ret = GDK_FILTER_REMOVE;
           }
