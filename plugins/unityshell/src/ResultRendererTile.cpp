@@ -272,12 +272,22 @@ void ResultRendererTile::LoadIcon(Result& row)
     icon_name = !icon_hint.empty() ? icon_hint : DEFAULT_GICON;
   }
 
+  if (g_str_has_prefix(icon_name.c_str(), "/"))
+  {
+    // absolute filename, check to see if it exists first
+    glib::Object<GFile> file(g_file_new_for_path(icon_name.c_str()));
+    if (g_file_query_exists(file, NULL) == false)
+    {
+      icon_name = DEFAULT_GICON;
+    }
+  }
+
   GIcon*  icon = g_icon_new_for_string(icon_name.c_str(), NULL);
   TextureContainer* container = row.renderer<TextureContainer*>();
 
   IconLoader::IconLoaderCallback slot = sigc::bind(sigc::mem_fun(this, &ResultRendererTile::IconLoaded), icon_hint, row);
 
-  if (g_str_has_prefix(icon_name.c_str(), "http://"))
+  if (g_strrstr(icon_name.c_str(), "://"))
   {
     container->slot_handle = IconLoader::GetDefault().LoadFromURI(icon_name.c_str(), style->GetTileIconSize(), slot);
   }
