@@ -1948,7 +1948,7 @@ void UnityScreen::initLauncher(nux::NThread* thread, void* InitData)
   Timer timer;
   UnityScreen* self = reinterpret_cast<UnityScreen*>(InitData);
 
-  self->launcherWindow = new nux::BaseWindow(TEXT("LauncherWindow"));
+  self->launcherWindow = new nux::BaseWindow(TEXT("Launcher"));
   self->launcherWindow->SinkReference();
 
   self->launcher = new Launcher(self->launcherWindow);
@@ -1974,16 +1974,6 @@ void UnityScreen::initLauncher(nux::NThread* thread, void* InitData)
   self->launcherWindow->SetEnterFocusInputArea(self->launcher);
 
   self->switcherController = new SwitcherController();
-  /* FIXME: this should not be manual, should be managed with a
-     show/hide callback like in GAIL*/
-  if (unity_a11y_initialized () == TRUE)
-    {
-      AtkObject *atk_obj = NULL;
-
-      atk_obj = unity_util_accessible_add_window (self->launcherWindow);
-
-      atk_object_set_name (atk_obj, _("Launcher"));
-    }
 
   self->launcher->SetIconSize(54, 48);
   self->launcher->SetBacklightMode(Launcher::BACKLIGHT_ALWAYS_ON);
@@ -1998,17 +1988,6 @@ void UnityScreen::initLauncher(nux::NThread* thread, void* InitData)
 
   /* Setup Places */
   self->dashController = DashController::Ptr(new DashController());
-
-  /* FIXME: this should not be manual, should be managed with a
-     show/hide callback like in GAIL */
-  if (unity_a11y_initialized() == TRUE)
-  {
-    AtkObject* atk_obj = NULL;
-
-    atk_obj = unity_util_accessible_add_window(self->dashController->window());
-
-    atk_object_set_name(atk_obj, _("Dash"));
-  }
 
   self->launcher->SetHideMode(Launcher::LAUNCHER_HIDE_DODGE_WINDOWS);
   self->launcher->SetLaunchAnimation(Launcher::LAUNCH_ANIMATION_PULSE);

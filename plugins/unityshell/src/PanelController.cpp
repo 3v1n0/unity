@@ -22,9 +22,6 @@
 
 #include "UScreen.h"
 
-#include "unitya11y.h"
-#include "unity-util-accessible.h"
-
 using namespace unity;
 
 namespace
@@ -195,11 +192,6 @@ PanelController::OnScreenChanged(int primary_monitor, std::vector<nux::Geometry>
       nux::Geometry geo = monitors[i];
       geo.height = 24;
       window->SetGeometry(geo);
-
-      /* FIXME: this should not be manual, should be managed with a
-         show/hide callback like in GAIL*/
-      if (unity_a11y_initialized() == TRUE)
-        unity_util_accessible_add_window(window);
 
       _windows.push_back(window);
 

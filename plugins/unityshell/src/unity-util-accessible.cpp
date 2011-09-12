@@ -446,17 +446,6 @@ unity_util_accessible_remove_key_event_listener(guint remove_listener)
 }
 
 /* Public */
-AtkObject*
-unity_util_accessible_add_window(nux::BaseWindow* window)
-{
-  AtkObject* atk_obj = NULL;
-
-  atk_obj = unity_root_accessible_add_window
-            (UNITY_ROOT_ACCESSIBLE(unity_util_accessible_get_root()), window);
-
-  return atk_obj;
-}
-
 void
 unity_util_accessible_set_window_thread(nux::WindowThread* wt)
 {
