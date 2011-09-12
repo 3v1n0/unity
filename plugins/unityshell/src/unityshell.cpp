@@ -1073,6 +1073,11 @@ bool UnityScreen::altTabInitiateCommon(CompAction *action,
 {
   std::vector<AbstractLauncherIcon*> results;
 
+  if (!grab_index_)
+    grab_index_ = screen->pushGrab (screen->invisibleCursor(), "unity-switcher");
+  if (!grab_index_)
+    return false;
+
   if (!switcher_desktop_icon)
   {
     switcher_desktop_icon = new DesktopLauncherIcon(launcher);
@@ -1090,9 +1095,6 @@ bool UnityScreen::altTabInitiateCommon(CompAction *action,
   screen->addAction (&optionGetAltTabDetailStart ());
   screen->addAction (&optionGetAltTabDetailStop ());
   screen->addAction (&optionGetAltTabLeft ());
-
-  if (!grab_index_)
-    grab_index_ = screen->pushGrab (screen->invisibleCursor(), "unity-switcher");
 
   // maybe check launcher position/hide state?
   switcherController->SetWorkspace(nux::Geometry(_primary_monitor.x + 100,
