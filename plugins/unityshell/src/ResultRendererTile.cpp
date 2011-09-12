@@ -59,6 +59,7 @@ ResultRendererTile::ResultRendererTile(NUX_FILE_LINE_DECL)
   : ResultRenderer(NUX_FILE_LINE_PARAM)
   , highlight_padding(6)
   , spacing(12)
+  , padding(6)
 {
   PlacesStyle* style = PlacesStyle::GetDefault();
   width = style->GetTileWidth();
@@ -116,12 +117,16 @@ void ResultRendererTile::Render(nux::GraphicsEngine& GfxContext,
                        geometry.height,
                        col);
 
+  int icon_left_hand_side = geometry.x + (geometry.width - style->GetTileIconSize()) / 2;
+  int icon_top_side = geometry.y + padding;
+
+
   if (container->blurred_icon)
   {
-    GfxContext.QRP_1Tex(geometry.x + ((geometry.width - 58) / 2) - x_offset,
-                        geometry.y + 1 - y_offset,
-                        58,
-                        58,
+    GfxContext.QRP_1Tex(icon_left_hand_side - 5 - x_offset,
+                        icon_top_side - 5 - y_offset,
+                        style->GetTileIconSize() + 10,
+                        style->GetTileIconSize() + 10,
                         container->blurred_icon->GetDeviceTexture(),
                         texxform,
                         nux::Color(0.5f, 0.5f, 0.5f, 0.5f));
@@ -130,38 +135,38 @@ void ResultRendererTile::Render(nux::GraphicsEngine& GfxContext,
   // render highlight if its needed
   if (state != ResultRendererState::RESULT_RENDERER_NORMAL)
   {
-    GfxContext.QRP_1Tex(geometry.x + ((geometry.width - 62) / 2),
-                        geometry.y + 2,
-                        62,
-                        62,
+    GfxContext.QRP_1Tex(icon_left_hand_side - highlight_padding,
+                        icon_top_side - highlight_padding,
+                        style->GetTileIconSize() + (highlight_padding * 2),
+                        style->GetTileIconSize() + (highlight_padding * 2),
                         prelight_cache_->GetDeviceTexture(),
+                        texxform,
+                        nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
+  }
+
+  // draw the icon
+  if (container->icon)
+  {
+    GfxContext.QRP_1Tex(icon_left_hand_side,
+                        icon_top_side,
+                        style->GetTileIconSize(),
+                        style->GetTileIconSize(),
+                        container->icon->GetDeviceTexture(),
                         texxform,
                         nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
   }
 
   if (container->text)
   {
-    GfxContext.QRP_1Tex(geometry.x + 6,
-                        geometry.y + style->GetTileIconSize() + 14,
-                        style->GetTileWidth() - 12,
-                        style->GetTileHeight() - style->GetTileIconSize() - 12,
+    GfxContext.QRP_1Tex(geometry.x + padding,
+                        geometry.y + style->GetTileIconSize() + spacing,
+                        style->GetTileWidth() - (padding * 2),
+                        style->GetTileHeight() - style->GetTileIconSize() - spacing,
                         container->text->GetDeviceTexture(),
                         texxform,
                         nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
 
 
-  }
-
-  // draw the icon
-  if (container->icon)
-  {
-    GfxContext.QRP_1Tex(geometry.x + ((geometry.width - 48) / 2),
-                        geometry.y + 9,
-                        48,
-                        48,
-                        container->icon->GetDeviceTexture(),
-                        texxform,
-                        nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
   }
 
   GfxContext.GetRenderStates().SetBlend(alpha, src, dest);
@@ -259,7 +264,7 @@ void ResultRendererTile::LoadIcon(Result& row)
   std::string icon_name;
   if (neko)
   {
-    int tmp1 = 42 + (rand() % 16) - 8;
+    int tmp1 = style->GetTileIconSize() + (rand() % 16) - 8;
     gsize tmp3;
     gchar* tmp2 = (gchar*)g_base64_decode("aHR0cDovL3BsYWNla2l0dGVuLmNvbS8laS8laS8=", &tmp3);
     gchar* tmp4 = g_strdup_printf(tmp2, tmp1, tmp1);
@@ -343,13 +348,17 @@ void ResultRendererTile::IconLoaded(std::string const& texid,
                                     Result& row)
 {
   TextureContainer *container = row.renderer<TextureContainer*>();
+  PlacesStyle* style = PlacesStyle::GetDefault();
+
   if (pixbuf && container)
   {
     TextureCache& cache = TextureCache::GetDefault();
-    BaseTexturePtr texture(cache.FindTexture(icon_name, 48, 48, sigc::bind(sigc::mem_fun(this, &ResultRendererTile::CreateTextureCallback), pixbuf)));
+    BaseTexturePtr texture(cache.FindTexture(icon_name, style->GetTileIconSize(), style->GetTileIconSize(),
+                           sigc::bind(sigc::mem_fun(this, &ResultRendererTile::CreateTextureCallback), pixbuf)));
 
     std::string blur_texid = icon_name + "_blurred";
-    BaseTexturePtr texture_blurred(cache.FindTexture(blur_texid, 48, 48, sigc::bind(sigc::mem_fun(this, &ResultRendererTile::CreateBlurredTextureCallback), pixbuf)));
+    BaseTexturePtr texture_blurred(cache.FindTexture(blur_texid, style->GetTileIconSize(), style->GetTileIconSize(),
+                                   sigc::bind(sigc::mem_fun(this, &ResultRendererTile::CreateBlurredTextureCallback), pixbuf)));
 
     container->icon = texture;
     container->blurred_icon = texture_blurred;
@@ -366,8 +375,8 @@ void ResultRendererTile::LoadText(Result& row)
 {
   PlacesStyle*          style      = PlacesStyle::GetDefault();
   nux::CairoGraphics _cairoGraphics(CAIRO_FORMAT_ARGB32,
-                                    style->GetTileWidth(),
-                                    style->GetTileHeight() - style->GetTileIconSize() - 12);
+                                    style->GetTileWidth() - (padding * 2),
+                                    style->GetTileHeight() - style->GetTileIconSize() - spacing);
 
   cairo_t* cr = _cairoGraphics.GetContext();
 
@@ -390,7 +399,7 @@ void ResultRendererTile::LoadText(Result& row)
 
   pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
   pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_START);
-  pango_layout_set_width(layout, (style->GetTileWidth() - 12)* PANGO_SCALE);
+  pango_layout_set_width(layout, (style->GetTileWidth() - (padding * 2))* PANGO_SCALE);
   pango_layout_set_height(layout, -2);
 
   pango_layout_set_markup(layout, row.name().c_str(), -1);
