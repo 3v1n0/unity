@@ -1069,7 +1069,7 @@ std::set<std::string> BamfLauncherIcon::ValidateUrisForLaunch(unity::DndData& ur
   for (auto i : uris.Types())
     for (auto j : GetSupportedTypes())
       if (g_content_type_is_a(i.c_str(), j.c_str()) || 
-          IsHomeLauncher)
+          is_home_launcher)
       {
         for (auto k : uris.UrisByType(i))
           result.insert(k);
