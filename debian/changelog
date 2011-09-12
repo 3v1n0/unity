@@ -1,5 +1,6 @@
 unity (4.14.2-0ubuntu2) UNRELEASED; urgency=low
 
+  * Cherry-pick a fix for remapping minimized window correctly (LP: #840285)
   * debian/control:
     - bump build-dep for latest compiz-dev ABI break
 

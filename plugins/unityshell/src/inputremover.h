@@ -41,6 +41,9 @@ public:
   bool restore ();
 
 private:
+
+  void sendShapeNotify ();
+
   Display       *mDpy;
   Window        mShapeWindow;
   unsigned long mShapeMask;
@@ -52,7 +55,7 @@ private:
   XRectangle    *mBoundingRects;
   int           mNBoundingRects;
   int           mBoundingRectOrdering;
-  bool	  mRemoved;
+  bool          mRemoved;
 
 };
 }
