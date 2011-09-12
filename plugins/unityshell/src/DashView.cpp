@@ -820,6 +820,14 @@ const gchar* DashView::GetName()
 void DashView::AddProperties(GVariantBuilder* builder)
 {}
 
+nux::Area * DashView::KeyNavIteration(nux::KeyNavDirection direction)
+{
+  if (direction == KEY_NAV_TAB_NEXT)
+    lens_bar_->ActivateNext();
+  else if (direction == KEY_NAV_TAB_PREVIOUS)
+    lens_bar_->ActivatePrevious();
+  return this;
+}
 
 }
 }

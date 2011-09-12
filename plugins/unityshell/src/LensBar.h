@@ -48,6 +48,9 @@ public:
 
   void AddLens(Lens::Ptr& lens);
   void Activate(std::string id);
+  void ActivateNext();
+  void ActivatePrevious();
+
 
   sigc::signal<void, std::string const&> lens_activated;
 
