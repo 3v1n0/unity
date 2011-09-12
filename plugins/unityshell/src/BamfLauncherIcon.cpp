@@ -1064,7 +1064,7 @@ const gchar* BamfLauncherIcon::GetRemoteUri()
 std::set<std::string> BamfLauncherIcon::ValidateUrisForLaunch(unity::DndData& uris)
 {
   std::set<std::string> result;
-  gboolean IsHomeLauncher = g_str_has_suffix(DesktopFile(), "nautilus-home.desktop");
+  gboolean is_home_launcher = g_str_has_suffix(DesktopFile(), "nautilus-home.desktop");
 
   for (auto i : uris.Types())
     for (auto j : GetSupportedTypes())
