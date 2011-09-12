@@ -1,9 +1,0 @@
-[Desktop Entry]
-Name=Launcher & Menus
-Comment=Change the Launcher and Menu preferences
-Icon=ccsm
-Exec=unity-preferences
-Terminal=false
-Type=Application
-Categories=GTK;GNOME;Settings;DesktopSettings;
-OnlyShowIn=Unity;

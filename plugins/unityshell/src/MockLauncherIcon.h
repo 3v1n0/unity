@@ -54,6 +54,10 @@ public:
   std::vector<Window> RelatedXids ()
   {
     std::vector<Window> result;
+
+    result.push_back ((4000 << 16) + 4000);
+    result.push_back ((4000 << 16) + 4000);
+
     return result;
   }
 
@@ -95,7 +99,7 @@ public:
 
   int RelatedWindows()
   {
-    return 0;
+    return 2;
   }
 
   bool HasWindowOnViewport()

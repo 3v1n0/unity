@@ -25,6 +25,7 @@ namespace ui {
 	
 LayoutSystem::LayoutSystem()
 {
+  spacing = 8;
 }
 
 LayoutSystem::~LayoutSystem()
@@ -44,67 +45,69 @@ void LayoutSystem::LayoutWindows (LayoutWindowList windows, nux::Geometry const&
     window->aspect_ratio = (float)window->geo.width / (float)window->geo.height;
   }
   
-  // we special case 2 and 3 since they are the most common 
-  // cases (other than 1) and can be made beautiful with relative ease
-  switch (size)  
-  {
-    case 2:
-      LayoutTwoWindows (windows, max_bounds, final_bounds);
-      break;
-    default:
-      LayoutGridWindows (windows, max_bounds, final_bounds);
-      break;
-  }
+  LayoutGridWindows (windows, max_bounds, final_bounds);
 }
 
-void LayoutSystem::LayoutTwoWindows (LayoutWindowList windows, nux::Geometry const& max_bounds, nux::Geometry& final_bounds)
+void LayoutSystem::CompressAndPadRow (LayoutWindowList const& windows, nux::Geometry const& max_bounds)
 {
-  LayoutWindow::Ptr first = windows[0];
-  LayoutWindow::Ptr second = windows[1];
-
-  float combined_aspect = first->aspect_ratio + second->aspect_ratio;
-
-  final_bounds = max_bounds;
-
-  if (combined_aspect >= 1.0f)
+  int total_width = 0;
+  for (auto rit = windows.rbegin(), end = windows.rend(); rit != end; ++rit)
   {
-    // aspect is too wide
-    final_bounds.y += (final_bounds.height - (final_bounds.height / combined_aspect)) / 2;
-    final_bounds.height = final_bounds.height / combined_aspect;
-
-    first->result.x = final_bounds.x;
-    first->result.y = final_bounds.y;
-    first->result.height = final_bounds.height;
-    first->result.width = first->result.height * first->aspect_ratio;
-
-    second->result.x = final_bounds.x + first->result.width;
-    second->result.y = final_bounds.y;
-    second->result.height = final_bounds.height;
-    second->result.width = second->result.height * second->aspect_ratio;
+    (*rit)->result.x = total_width;
+    total_width += spacing + (*rit)->result.width;
   }
-  else if (combined_aspect < 1.0f)
-  {
-    // aspect is too tall
-    final_bounds.x += (final_bounds.width - (final_bounds.width / combined_aspect)) / 2;
-    final_bounds.width = final_bounds.width / combined_aspect;
 
-    // same as above?
-    first->result.x = final_bounds.x;
-    first->result.y = final_bounds.y;
-    first->result.height = final_bounds.height;
-    first->result.width = first->result.height * first->aspect_ratio;
+  total_width -= spacing;
 
-    second->result.x = final_bounds.x + first->result.width;
-    second->result.y = final_bounds.y;
-    second->result.height = final_bounds.height;
-    second->result.width = second->result.height * second->aspect_ratio;
-  }
+  int offset = std::max (0, (max_bounds.width - total_width) / 2);
+  for (LayoutWindow::Ptr window : windows)
+    window->result.x += max_bounds.x + offset;
 }
 
-void LayoutSystem::LayoutGridWindows (LayoutWindowList windows, nux::Geometry const& max_bounds, nux::Geometry& final_bounds)
+nux::Size LayoutSystem::GridSizeForWindows (LayoutWindowList windows, nux::Geometry const& max_bounds)
+{
+  int count = (int)windows.size();
+
+  int width = 1;
+  int height = 1;
+
+  if (count == 2)
+  {
+    float stacked_aspect = std::max (windows[0]->geo.width, windows[1]->geo.width) / (float)(windows[0]->geo.height + windows[1]->geo.height);  
+    float row_aspect = (float)(windows[0]->geo.width + windows[1]->geo.width) / std::max(windows[0]->geo.height, windows[1]->geo.height);
+    float box_aspect = (float)max_bounds.width / max_bounds.height;
+    if (abs(row_aspect - box_aspect) > abs(stacked_aspect - box_aspect))
+    {
+      height = 2;
+    }
+    else
+    {
+      width = 2;
+    }
+  }
+  else
+  {
+    while (width * height < count)
+    {
+      if (height < width)
+        height++;
+      else
+        width++;
+    }
+  }
+
+  return nux::Size (width, height);
+}
+
+void LayoutSystem::LayoutGridWindows (LayoutWindowList const& windows, nux::Geometry const& max_bounds, nux::Geometry& final_bounds)
 {
   int width = 1;
   int height = 1;
+
+  nux::Size grid_size = GridSizeForWindows (windows, max_bounds);
+
+  width = grid_size.width;
+  height = grid_size.height;
 
   while (width * height < (int) windows.size ())
   {
@@ -115,6 +118,8 @@ void LayoutSystem::LayoutGridWindows (LayoutWindowList windows, nux::Geometry co
   }
 
   final_bounds = max_bounds;
+  final_bounds.width -= spacing * (width - 1);
+  final_bounds.height -= spacing * (height - 1);
 
   int block_width = final_bounds.width / width;
   int block_height = final_bounds.height / height;
@@ -136,17 +141,16 @@ void LayoutSystem::LayoutGridWindows (LayoutWindowList windows, nux::Geometry co
 
   LayoutWindowList row_accum;
 
-  LayoutWindowList::reverse_iterator it;
-  for (it = windows.rbegin (); it != windows.rend (); it++)
+  for (auto it = windows.rbegin (); it != windows.rend (); it++)
   {
   	auto window = *it;
     window->result = ScaleBoxIntoBox (nux::Geometry (block_x - block_width, block_y - block_height, block_width, block_height), window->geo);
     row_accum.push_back (window);
 
-    x1 = MIN (window->result.x, x1);
-    y1 = MIN (window->result.y, y1);
-    x2 = MAX (window->result.x + window->result.width, x2);
-    y2 = MAX (window->result.y + window->result.height, y2);
+    x1 = std::min (window->result.x, x1);
+    y1 = std::min (window->result.y, y1);
+    x2 = std::max (window->result.x + window->result.width, x2);
+    y2 = std::max (window->result.y + window->result.height, y2);
 
     ++x;
     block_x -= block_width;
@@ -156,26 +160,22 @@ void LayoutSystem::LayoutGridWindows (LayoutWindowList windows, nux::Geometry co
 	    block_x = start_x;
       ++y;
 
-      if (y == height - 1)
-      {
-      	block_width += (width * height - windows.size ()) * block_width / (windows.size () - width * (height - 1)); 
-      }	
-	    	
-
       if (y2 >= block_y + block_height)
       {
-        block_y -= block_height;
+        block_y -= block_height + spacing;
       }
       else
       {
         int this_savings = (y1 - (block_y - block_height)) * 2;
-        block_y = block_y - (block_height - this_savings);
+        block_y = block_y - (block_height - this_savings) - spacing;
 
         for (auto w : row_accum)
         	w->result.y += this_savings / 2;
         
         vertical_offset += this_savings / 2;
       }
+
+      CompressAndPadRow (row_accum, max_bounds);
 
       row_accum.clear ();
     }
@@ -190,10 +190,10 @@ void LayoutSystem::LayoutGridWindows (LayoutWindowList windows, nux::Geometry co
   {
   	window->result.y -= vertical_offset;
 
-  	x1 = MIN (window->result.x, x1);
-    y1 = MIN (window->result.y, y1);
-    x2 = MAX (window->result.x + window->result.width, x2);
-    y2 = MAX (window->result.y + window->result.height, y2);
+  	x1 = std::min (window->result.x, x1);
+    y1 = std::min (window->result.y, y1);
+    x2 = std::max (window->result.x + window->result.width, x2);
+    y2 = std::max (window->result.y + window->result.height, y2);
   }
 
   final_bounds = nux::Geometry (x1, y1, x2 - x1, y2 - y1);
@@ -225,6 +225,14 @@ nux::Geometry LayoutSystem::ScaleBoxIntoBox (nux::Geometry const& bounds, nux::G
 
 		result.x = bounds.x + (bounds.width - result.width) / 2;
 	}
+
+  if (result.width > box.width)
+  {
+    result.x += (result.width - box.width) / 2;
+    result.width = box.width;
+    result.y += (result.height - box.height) / 2;
+    result.height = box.height;
+  }
 
 	return result;
 }

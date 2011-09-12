@@ -93,6 +93,8 @@ private:
   bool InspectKeyEvent(unsigned int eventType, unsigned int key_sym, const char* character);
   const gchar* GetName();
   void AddProperties(GVariantBuilder* builder);
+  
+  nux::Area* KeyNavIteration(nux::KeyNavDirection direction);
 
 private:
   UBusManager ubus_manager_;
