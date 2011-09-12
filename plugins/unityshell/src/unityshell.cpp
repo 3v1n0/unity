@@ -561,12 +561,6 @@ void UnityWindow::paintThumbnail (nux::Geometry const& bounding, float alpha)
   matrix.toScreenSpace (UnityScreen::get (screen)->_last_output, -DEFAULT_Z_CAMERA);
 
   nux::Geometry geo = bounding;
-  geo.x += 3;
-  geo.width -= 6;
-
-  geo.y += 3;
-  geo.height -= 6;
-
   last_bound = geo;
 
   GLWindowPaintAttrib attrib = gWindow->lastPaintAttrib ();
