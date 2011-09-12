@@ -39,8 +39,8 @@ NUX_IMPLEMENT_OBJECT_TYPE(FilterBar);
     Init ();
   }
 
-  FilterBar::~FilterBar() {
-
+  FilterBar::~FilterBar()
+  {
   }
 
   void FilterBar::Init () {
@@ -80,9 +80,12 @@ NUX_IMPLEMENT_OBJECT_TYPE(FilterBar);
   }
 
   void FilterBar::ClearFilters () {
-    std::map<dash::Filter::Ptr, nux::View *>::iterator it;
-    for (it=filter_map_.begin() ; it != filter_map_.end(); it++)
-      GetLayout()->RemoveChildObject ((*it).second);
+    for (auto iter: filter_map_)
+    {
+      nux::View* view = iter.second;
+      GetLayout()->RemoveChildObject(view);
+      view->UnReference();
+    }
 
     filter_map_.clear();
   }

@@ -43,10 +43,8 @@ NUX_IMPLEMENT_OBJECT_TYPE(FilterMultiRange);
     all_button_ = new FilterBasicButton(_("All"), NUX_TRACKER_LOCATION);
     all_button_->activated.connect(sigc::mem_fun(this, &FilterMultiRange::OnAllActivated));
     all_button_->label = _("All");
-    all_button_->Reference();
 
     layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
-    layout_->Reference();
     layout_->SetVerticalExternalMargin (12);
 
     SetRightHandView(all_button_);
@@ -54,8 +52,8 @@ NUX_IMPLEMENT_OBJECT_TYPE(FilterMultiRange);
     OnActiveChanged(false);
   }
 
-  FilterMultiRange::~FilterMultiRange() {
-    all_button_->UnReference();
+  FilterMultiRange::~FilterMultiRange()
+  {
   }
 
   void FilterMultiRange::SetFilter(dash::Filter::Ptr filter)

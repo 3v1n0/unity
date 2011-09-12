@@ -50,11 +50,11 @@ NUX_IMPLEMENT_OBJECT_TYPE(FilterRatingsWidget);
     ratings_ = new FilterRatingsButton (NUX_TRACKER_LOCATION);
 
     layout->AddView(ratings_);
-
     SetContents(layout);
   }
 
-  FilterRatingsWidget::~FilterRatingsWidget() {
+  FilterRatingsWidget::~FilterRatingsWidget()
+  {
   }
 
   void FilterRatingsWidget::OnAnyButtonActivated(nux::View *view)
