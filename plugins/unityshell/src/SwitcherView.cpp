@@ -253,7 +253,7 @@ nux::Geometry SwitcherView::UpdateRenderTargets (nux::Point center, timespec con
     if (window == model_->DetailSelectionWindow ())
       layout_window->alpha = 1.0f * progress;
     else
-      layout_window->alpha = 0.75f * progress;
+      layout_window->alpha = 0.9f * progress;
     
     render_targets_.push_back (layout_window);
   }
