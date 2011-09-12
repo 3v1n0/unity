@@ -79,6 +79,9 @@ public:
   // unload any previous grabbed images
   virtual void Unload(Result& row);
 
+  int tile_highlight_padding;
+  int spacing;
+
 protected:
   void LoadText(Result& row);
   void LoadIcon(Result& row);
