@@ -87,7 +87,7 @@ private:
   void OnIconSizeChanged (int size);
   void OnTileSizeChanged (int size);
 
-  nux::Geometry UpdateRenderTargets (nux::Point center, timespec const& current);
+  nux::Geometry UpdateRenderTargets (nux::Point const& center, timespec const& current);
   void OffsetRenderTargets (int x, int y);
 
   nux::Size SpreadSize ();

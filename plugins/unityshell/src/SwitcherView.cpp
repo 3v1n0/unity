@@ -239,7 +239,7 @@ nux::Geometry SwitcherView::InterpolateBackground (nux::Geometry const& start, n
   return result;
 }
 
-nux::Geometry SwitcherView::UpdateRenderTargets (nux::Point center, timespec const& current)
+nux::Geometry SwitcherView::UpdateRenderTargets (nux::Point const& center, timespec const& current)
 {
   std::vector<Window> xids = model_->DetailXids ();
 
@@ -614,7 +614,7 @@ void SwitcherView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     if (window->alpha >= 1.0f)
     {
       nux::Geometry orange_box = window->result;
-      orange_box.Expand(2, 3);
+      orange_box.Expand(3, 3);
       orange_box.x -= geo_absolute.x;
       orange_box.y -= geo_absolute.y;
 

@@ -48,11 +48,10 @@ void LayoutSystem::LayoutWindows (LayoutWindowList windows, nux::Geometry const&
   LayoutGridWindows (windows, max_bounds, final_bounds);
 }
 
-void LayoutSystem::CompressAndPadRow (LayoutWindowList windows, nux::Geometry const& max_bounds)
+void LayoutSystem::CompressAndPadRow (LayoutWindowList const& windows, nux::Geometry const& max_bounds)
 {
   int total_width = 0;
-  LayoutWindowList::reverse_iterator rit;
-  for (rit = windows.rbegin(); rit != windows.rend(); rit++)
+  for (auto rit = windows.rbegin(), end = windows.rend(); rit != end; ++rit)
   {
     (*rit)->result.x = total_width;
     total_width += spacing + (*rit)->result.width;
@@ -100,7 +99,7 @@ nux::Size LayoutSystem::GridSizeForWindows (LayoutWindowList windows, nux::Geome
   return nux::Size (width, height);
 }
 
-void LayoutSystem::LayoutGridWindows (LayoutWindowList windows, nux::Geometry const& max_bounds, nux::Geometry& final_bounds)
+void LayoutSystem::LayoutGridWindows (LayoutWindowList const& windows, nux::Geometry const& max_bounds, nux::Geometry& final_bounds)
 {
   int width = 1;
   int height = 1;
@@ -142,17 +141,16 @@ void LayoutSystem::LayoutGridWindows (LayoutWindowList windows, nux::Geometry co
 
   LayoutWindowList row_accum;
 
-  LayoutWindowList::reverse_iterator it;
-  for (it = windows.rbegin (); it != windows.rend (); it++)
+  for (auto it = windows.rbegin (); it != windows.rend (); it++)
   {
   	auto window = *it;
     window->result = ScaleBoxIntoBox (nux::Geometry (block_x - block_width, block_y - block_height, block_width, block_height), window->geo);
     row_accum.push_back (window);
 
-    x1 = MIN (window->result.x, x1);
-    y1 = MIN (window->result.y, y1);
-    x2 = MAX (window->result.x + window->result.width, x2);
-    y2 = MAX (window->result.y + window->result.height, y2);
+    x1 = std::min (window->result.x, x1);
+    y1 = std::min (window->result.y, y1);
+    x2 = std::max (window->result.x + window->result.width, x2);
+    y2 = std::max (window->result.y + window->result.height, y2);
 
     ++x;
     block_x -= block_width;
@@ -192,10 +190,10 @@ void LayoutSystem::LayoutGridWindows (LayoutWindowList windows, nux::Geometry co
   {
   	window->result.y -= vertical_offset;
 
-  	x1 = MIN (window->result.x, x1);
-    y1 = MIN (window->result.y, y1);
-    x2 = MAX (window->result.x + window->result.width, x2);
-    y2 = MAX (window->result.y + window->result.height, y2);
+  	x1 = std::min (window->result.x, x1);
+    y1 = std::min (window->result.y, y1);
+    x2 = std::max (window->result.x + window->result.width, x2);
+    y2 = std::max (window->result.y + window->result.height, y2);
   }
 
   final_bounds = nux::Geometry (x1, y1, x2 - x1, y2 - y1);

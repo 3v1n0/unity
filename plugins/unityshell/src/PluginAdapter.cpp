@@ -558,11 +558,6 @@ PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids)
 
   if (any_on_current)
   {
-    // to ensure proper stacking we process windows in reverse order (high to low)
-    // then we active the first window and raise each following window. Due to the
-    // way stack requests work (async), each subsequent raise call will stack below
-    // the previous one.
-    //windows.reverse();
     CompWindow* last = 0;
     for (CompWindow* &win : windows)
     {
@@ -642,10 +637,10 @@ PluginAdapter::GetWindowGeometry(guint32 xid)
   window = m_Screen->findWindow(win);
   if (window)
   {
-    geo.x = window->inputRect ().x();
-    geo.y = window->inputRect ().y();
-    geo.width = window->inputRect ().width();
-    geo.height = window->inputRect ().height();
+    geo.x = window->borderRect().x();
+    geo.y = window->borderRect().y();
+    geo.width = window->borderRect().width();
+    geo.height = window->borderRect().height();
   }
   return geo;
 }
