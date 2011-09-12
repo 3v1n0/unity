@@ -45,8 +45,8 @@ NUX_IMPLEMENT_OBJECT_TYPE(ResultViewGrid);
 
 ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
   : ResultView(NUX_FILE_LINE_PARAM)
-  , horizontal_spacing(6)
-  , vertical_spacing(6)
+  , horizontal_spacing(0)
+  , vertical_spacing(0)
   , padding(6)
   , mouse_over_index_(-1)
   , active_index_(-1)
@@ -691,7 +691,7 @@ ResultViewGrid::DndSourceDragBegin()
 }
 
 GdkPixbuf *
-_icon_hint_get_drag_pixbuf (std::string icon_hint) 
+_icon_hint_get_drag_pixbuf (std::string icon_hint)
 {
   GdkPixbuf *pbuf;
   GtkIconTheme *theme;
@@ -699,16 +699,16 @@ _icon_hint_get_drag_pixbuf (std::string icon_hint)
   GError *error = NULL;
   GIcon *icon;
   int size = 64;
-  
+
   if (icon_hint.empty())
     icon_hint = "application-default-icon";
-  
+
   if (g_str_has_prefix(icon_hint.c_str(), "/"))
   {
 
-    pbuf = gdk_pixbuf_new_from_file_at_scale (icon_hint.c_str(), 
+    pbuf = gdk_pixbuf_new_from_file_at_scale (icon_hint.c_str(),
                                               size, -1, TRUE, &error);
-    
+
     if (error != NULL || !pbuf || !GDK_IS_PIXBUF (pbuf))
     {
       icon_hint = "application-default-icon";
@@ -720,7 +720,7 @@ _icon_hint_get_drag_pixbuf (std::string icon_hint)
   }
   theme = gtk_icon_theme_get_default();
   icon = g_icon_new_for_string(icon_hint.c_str(), NULL);
-  
+
   if (G_IS_ICON(icon))
   {
      info = gtk_icon_theme_lookup_by_gicon(theme, icon, size, (GtkIconLookupFlags)0);
@@ -733,7 +733,7 @@ _icon_hint_get_drag_pixbuf (std::string icon_hint)
                                         size,
                                         (GtkIconLookupFlags) 0);
   }
-  
+
   if (!info)
   {
       info = gtk_icon_theme_lookup_icon(theme,
@@ -741,7 +741,7 @@ _icon_hint_get_drag_pixbuf (std::string icon_hint)
                                         size,
                                         (GtkIconLookupFlags) 0);
   }
-  
+
   if (gtk_icon_info_get_filename(info) == NULL)
   {
       gtk_icon_info_free(info);
@@ -750,21 +750,21 @@ _icon_hint_get_drag_pixbuf (std::string icon_hint)
                                         size,
                                         (GtkIconLookupFlags) 0);
   }
-  
+
   pbuf = gtk_icon_info_load_icon(info, &error);
-  
-  
+
+
   if (error != NULL)
   {
     LOG_WARN (logger) << "could not find a pixbuf for " << icon_hint;
     g_error_free (error);
     pbuf = NULL;
   }
-  
+
   gtk_icon_info_free(info);
-  
+
   return pbuf;
-  
+
 }
 
 nux::NBitmapData*
@@ -772,7 +772,7 @@ ResultViewGrid::DndSourceGetDragImage()
 {
   nux::NBitmapData* result = 0;
   GdkPixbuf* pbuf;
-  
+
   pbuf = _icon_hint_get_drag_pixbuf (current_drag_icon_name_);
 
   if (pbuf && GDK_IS_PIXBUF(pbuf))
