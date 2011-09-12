@@ -136,7 +136,7 @@ public:
   PendingSyncs pending_syncs_;
 
   glib::SignalManager signal_manager_;
-  EntryLocationMap cached_locations_;
+  std::map<std::string, EntryLocationMap> cached_locations_;
 };
 
 
@@ -352,16 +352,17 @@ void DBusIndicators::Impl::SyncGeometries(std::string const& name,
     return;
 
   GVariantBuilder b;
-  found_changed_locations = false;
+  bool found_changed_locations = false;
   g_variant_builder_init(&b, G_VARIANT_TYPE("(a(ssiiii))"));
   g_variant_builder_open(&b, G_VARIANT_TYPE("a(ssiiii)"));
+  EntryLocationMap& cached_loc = cached_locations_[name];
 
   // Only send to panel service the geometries of items that have changed
   for (auto i = locations.begin(), end = locations.end(); i != end; ++i)
   {
     auto rect = i->second;
 
-    if (cached_locations_[i->first] != i->second)
+    if (cached_loc[i->first] != i->second)
     {
       g_variant_builder_add(&b, "(ssiiii)",
                             name.c_str(),
@@ -375,7 +376,7 @@ void DBusIndicators::Impl::SyncGeometries(std::string const& name,
   }
 
   // Inform panel service of the entries that have been removed sending invalid values
-  for (auto i = cached_locations_.begin(), end = cached_locations_.end(); i != end; ++i)
+  for (auto i = cached_loc.begin(), end = cached_loc.end(); i != end; ++i)
   {
     if (locations.find(i->first) == locations.end())
     {
@@ -402,7 +403,7 @@ void DBusIndicators::Impl::SyncGeometries(std::string const& name,
                     NULL,
                     NULL);
 
-  cached_locations_ = locations;
+  cached_loc = locations;
 }
 
 std::string DBusIndicators::Impl::name() const
