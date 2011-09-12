@@ -56,6 +56,7 @@ public:
 
   void SetupBackground ();
 
+  nux::Property<bool> render_boxes;
   nux::Property<int> border_size;
   nux::Property<int> flat_spacing;
   nux::Property<int> icon_size;
@@ -86,7 +87,10 @@ private:
   void OnIconSizeChanged (int size);
   void OnTileSizeChanged (int size);
 
-  nux::Geometry UpdateRenderTargets (RenderArg const& selection_arg, timespec const& current);
+  nux::Geometry UpdateRenderTargets (nux::Point center, timespec const& current);
+  void OffsetRenderTargets (int x, int y);
+
+  nux::Size SpreadSize ();
 
   static gboolean OnDrawTimeout(gpointer data);
 
