@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright 2011 Canonical Ltd.
  *
@@ -31,6 +32,8 @@
 #include <glib/gi18n-lib.h>
 
 namespace unity {
+
+NUX_IMPLEMENT_OBJECT_TYPE(FilterMultiRange);
 
   FilterMultiRange::FilterMultiRange (NUX_FILE_LINE_DECL)
       : FilterExpanderLabel (_("Multi-range"), NUX_FILE_LINE_PARAM)

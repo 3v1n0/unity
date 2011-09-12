@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright 2011 Canonical Ltd.
  *
@@ -32,6 +33,8 @@
 #include "PlacesStyle.h"
 
 namespace unity {
+
+NUX_IMPLEMENT_OBJECT_TYPE(FilterGenre);
 
   FilterGenre::FilterGenre (NUX_FILE_LINE_DECL)
       : FilterExpanderLabel (_("Categories"), NUX_FILE_LINE_PARAM)

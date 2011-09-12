@@ -41,6 +41,7 @@ nux::logging::Logger logger("unity.indicators");
 
 namespace unity
 {
+NUX_IMPLEMENT_OBJECT_TYPE(PanelIndicatorsView);
 
 PanelIndicatorsView::PanelIndicatorsView()
 : View(NUX_TRACKER_LOCATION)

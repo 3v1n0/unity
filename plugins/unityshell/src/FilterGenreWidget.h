@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright 2011 Canonical Ltd.
  *
@@ -38,7 +39,9 @@ namespace unity {
   class FilterBasicButton;
   class FilterGenreButton;
 
-  class FilterGenre : public FilterExpanderLabel, public unity::FilterWidget {
+  class FilterGenre : public FilterExpanderLabel, public FilterWidget
+  {
+    NUX_DECLARE_OBJECT_TYPE(FilterGenre, FilterExpanderLabel);
   public:
     FilterGenre (NUX_FILE_LINE_PROTO);
     virtual ~FilterGenre();

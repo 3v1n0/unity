@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright 2011 Canonical Ltd.
  *
@@ -32,6 +33,7 @@ namespace unity {
 
   class FilterBar : public nux::View
   {
+    NUX_DECLARE_OBJECT_TYPE(FilterBar, nux::View);
   public:
     FilterBar(NUX_FILE_LINE_PROTO);
     ~FilterBar();

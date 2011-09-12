@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright 2011 Canonical Ltd.
  *
@@ -18,21 +19,24 @@
  * Authored by: Gordon Allott <gord.allott@canonical.com>
  *
  */
+#ifndef UNITY_FILTERWIDGET_H
+#define UNITY_FILTERWIDGET_H
 
 #include <Nux/View.h>
 #include <UnityCore/Filter.h>
 
-#ifndef FILTERWIDGET_H
-#define FILTERWIDGET_H
 
-namespace unity {
-  class FilterWidget
-  {
-  public:
-    virtual ~FilterWidget () {}
-    virtual void SetFilter (dash::Filter::Ptr filter) = 0;
-    virtual std::string GetFilterType () = 0;
-  };
+namespace unity
+{
+
+class FilterWidget
+{
+public:
+  virtual ~FilterWidget () {}
+  virtual void SetFilter (dash::Filter::Ptr filter) = 0;
+  virtual std::string GetFilterType () = 0;
+};
+
 }
 
-#endif // FILTERWIDGET_H
+#endif
