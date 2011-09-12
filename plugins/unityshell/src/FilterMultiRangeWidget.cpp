@@ -152,7 +152,6 @@ NUX_IMPLEMENT_OBJECT_TYPE(FilterMultiRange);
     {
       layout_->RemoveChildObject(*it);
       buttons_.erase(it);
-      found_filter->UnReference();
     }
 
     OnActiveChanged(false);

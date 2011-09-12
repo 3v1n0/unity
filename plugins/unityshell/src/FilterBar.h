@@ -42,7 +42,6 @@ namespace unity {
 
     void AddFilter (dash::Filter::Ptr filter);
     void RemoveFilter (dash::Filter::Ptr filter);
-    void ClearFilters ();
 
   protected:
     virtual long int ProcessEvent(nux::IEvent& ievent, long int TraverseInfo, long int ProcessEventInfo);

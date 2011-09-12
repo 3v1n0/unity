@@ -72,22 +72,10 @@ NUX_IMPLEMENT_OBJECT_TYPE(FilterBar);
       {
         nux::View *filter_view = iter.second;
         filter_map_.erase (filter_map_.find(iter.first));
-        GetLayout()->RemoveChildObject (filter_view);
-        filter_view->UnReference();
+        GetLayout()->RemoveChildObject(filter_view);
         break;
       }
     }
-  }
-
-  void FilterBar::ClearFilters () {
-    for (auto iter: filter_map_)
-    {
-      nux::View* view = iter.second;
-      GetLayout()->RemoveChildObject(view);
-      view->UnReference();
-    }
-
-    filter_map_.clear();
   }
 
 

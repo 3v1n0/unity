@@ -118,7 +118,6 @@ NUX_IMPLEMENT_OBJECT_TYPE(FilterGenre);
     {
       genre_layout_->RemoveChildObject(*it);
       buttons_.erase(it);
-      found_filter->UnReference();
     }
   }
 
