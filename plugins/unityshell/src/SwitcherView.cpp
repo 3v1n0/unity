@@ -323,7 +323,7 @@ std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo,
       spread_bounds = UpdateRenderTargets (nux::Point (0, 0), current);
       // remove extra space consumed by spread
       spread_padded_width = spread_bounds.width + 100;
-      max_width -= spread_padded_width - padded_tile_size;
+      max_width -= spread_padded_width - tile_size;
 
       int expansion = MAX (0, spread_bounds.height - icon_size);
       background_geo.y -= expansion / 2;
@@ -350,8 +350,8 @@ std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo,
       background_geo.width = base.width;
     }
 
-
-    float partial_overflow = (float) overflow / MAX(1.0f, (float)(size - n_flat_icons - 1));
+    int non_flat_icons = std::max (1.0f, (float)size - n_flat_icons - 1);
+    float partial_overflow = (float) overflow / (float)non_flat_icons;
     float partial_overflow_scalar = (float)(padded_tile_size - partial_overflow) / (float)(padded_tile_size);
 
     int first_flat, last_flat;
@@ -419,7 +419,10 @@ std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo,
 
       int half_size = tile_size / 2;
       if (i == selection && detail_selection)
-        half_size = spread_padded_width / (2.0f * scalar);
+      {
+        half_size = spread_padded_width / 2;
+        scalar = 1.0f;
+      }
 
       x += (half_size + flat_spacing) * scalar;
 
