@@ -78,7 +78,11 @@ compiz::WindowInputRemover::sendShapeNotify ()
 
   memset (&xsev, 0, sizeof (XShapeEvent));
 
+  /* XXX: libXShape is weird and range checks the event
+   * type on event_to_wire so ensure that we are setting
+   * the event type on the right range */
   xsev.type = (mShapeEvent - ShapeNotify) & 0x7f;
+  /* We must explicitly fill in these values to avoid padding errors */
   xsev.serial = 0L;
   xsev.send_event = TRUE;
   xsev.display = mDpy;
