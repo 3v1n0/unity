@@ -1820,6 +1820,7 @@ void UnityFBO::unbind ()
 {
   uScreen->setActiveFbo (0);
   (*GL::bindFramebuffer) (GL_FRAMEBUFFER_EXT, 0);
+  (*GL::bindFramebuffer) (GL_RENDERBUFFER_EXT, 0);
 
   glDrawBuffer (GL_BACK);
   glReadBuffer (GL_BACK);
@@ -1859,6 +1860,9 @@ void UnityFBO::bind ()
 
   (*GL::framebufferTexture2D) (GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT,
                                GL_TEXTURE_2D, mFBTexture, 0);
+
+  (*GL::framebufferTexture2D) (GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT,
+                               GL_TEXTURE_2D, 0, 0);
 
   /* Ensure that a framebuffer is actually available */
   if (!mFboStatus)
