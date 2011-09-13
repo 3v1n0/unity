@@ -59,8 +59,6 @@ namespace
 nux::logging::Logger logger("unity.launcher");
 }
 
-NUX_IMPLEMENT_OBJECT_TYPE(LauncherIcon);
-
 nux::Tooltip* LauncherIcon::_current_tooltip = 0;
 QuicklistView* LauncherIcon::_current_quicklist = 0;
 

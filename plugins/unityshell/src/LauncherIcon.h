@@ -48,9 +48,9 @@
 
 class Launcher;
 
-class LauncherIcon : public AbstractLauncherIcon, public unity::Introspectable, public nux::InitiallyUnownedObject
+class LauncherIcon : public AbstractLauncherIcon, public unity::Introspectable
 {
-  NUX_DECLARE_OBJECT_TYPE(LauncherIcon, nux::InitiallyUnownedObject);
+  
 public:
   typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
 
