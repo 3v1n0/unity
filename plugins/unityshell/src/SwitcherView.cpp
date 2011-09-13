@@ -65,6 +65,7 @@ SwitcherView::SwitcherView(NUX_FILE_LINE_DECL)
   render_targets_.clear ();
 
   background_texture_ = nux::CreateTexture2DFromFile(PKGDATADIR"/switcher_background.png", -1, true);
+  rounding_texture_ = nux::CreateTexture2DFromFile(PKGDATADIR"/switcher_round_rect.png", -1, true);
 
   text_view_ = new nux::StaticCairoText("Testing");
   text_view_->SinkReference();
@@ -82,6 +83,7 @@ SwitcherView::SwitcherView(NUX_FILE_LINE_DECL)
 SwitcherView::~SwitcherView()
 {
   background_texture_->UnReference();
+  rounding_texture_->UnReference();
   text_view_->UnReference();
   if (redraw_handle_ > 0)
     g_source_remove(redraw_handle_);
@@ -618,7 +620,7 @@ void SwitcherView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
       orange_box.x -= geo_absolute.x;
       orange_box.y -= geo_absolute.y;
 
-      gPainter.Paint2DQuadColor(GfxContext, orange_box, nux::color::Orange);
+      gPainter.PaintTextureShape(GfxContext, orange_box, rounding_texture_, 4, 4, 4, 4, false);
     }
   }
 

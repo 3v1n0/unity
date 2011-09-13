@@ -104,6 +104,7 @@ private:
   guint redraw_handle_;
 
   nux::BaseTexture* background_texture_;
+  nux::BaseTexture* rounding_texture_;
 
   nux::StaticCairoText* text_view_;
 
