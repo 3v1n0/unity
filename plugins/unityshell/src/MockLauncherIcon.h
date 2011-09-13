@@ -55,8 +55,8 @@ public:
   {
     std::vector<Window> result;
 
-    result.push_back ((4000 << 16) + 4000);
-    result.push_back ((4000 << 16) + 4000);
+    result.push_back ((4000 << 16) + 3000);
+    result.push_back ((1000 << 16) + 4000);
 
     return result;
   }
