@@ -34,7 +34,7 @@ namespace dash
 {
 namespace
 {
-nux::logging::Logger logger("unity.dash");
+nux::logging::Logger logger("unity.dash.results");
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(ResultView);
@@ -67,6 +67,10 @@ ResultView::ResultView(NUX_FILE_LINE_DECL)
 
 ResultView::~ResultView()
 {
+  for (auto result : results_)
+  {
+    renderer_->Unload(result);
+  }
   renderer_->UnReference();
 }
 
