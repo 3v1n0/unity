@@ -261,15 +261,16 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
               priv->use_event = FALSE;
             }
           else
-          {
-            IndicatorObjectEntry *e = get_entry_at (self, event->root_x, event->root_y);
-
-            if (e && e != priv->pressed_entry)
             {
-                ret = GDK_FILTER_REMOVE;
-                priv->use_event = TRUE;
+              IndicatorObjectEntry *entry;
+              entry = get_entry_at (self, event->root_x, event->root_y);
+
+              if (entry && entry != priv->pressed_entry)
+                {
+                  ret = GDK_FILTER_REMOVE;
+                  priv->use_event = TRUE;
+                }
             }
-          }
         }
     }
 
