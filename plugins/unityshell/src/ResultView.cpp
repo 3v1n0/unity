@@ -101,7 +101,6 @@ void ResultView::SetModelRenderer(ResultRenderer* renderer)
 
 void ResultView::AddResult(Result& result)
 {
-  LOG_DEBUG_BLOCK(logger);
   results_.push_back(result);
   renderer_->Preload(result);
 
@@ -110,7 +109,6 @@ void ResultView::AddResult(Result& result)
 
 void ResultView::RemoveResult(Result& result)
 {
-  LOG_DEBUG_BLOCK(logger);
   ResultList::iterator it;
   std::string uri = result.uri;
 

@@ -196,7 +196,6 @@ void ResultViewGrid::SetModelRenderer(ResultRenderer* renderer)
 
 void ResultViewGrid::AddResult(Result& result)
 {
-  LOG_DEBUG(logger) << "AddResult: " << result.uri();
   results_.push_back(result);
 
   SizeReallocate();
@@ -206,7 +205,6 @@ void ResultViewGrid::AddResult(Result& result)
 
 void ResultViewGrid::RemoveResult(Result& result)
 {
-  LOG_DEBUG(logger) << "RemoveResult: " << result.uri();
   ResultView::RemoveResult(result);
   SizeReallocate();
   QueueLazyLoad();
