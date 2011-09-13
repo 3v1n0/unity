@@ -146,7 +146,7 @@ void ResultRendererHorizontalTile::Render(nux::GraphicsEngine& GfxContext,
     GfxContext.QRP_1Tex(icon_left_hand_side + style->GetTileIconSize() + spacing,
                         icon_top_side,
                         width() - style->GetTileIconSize(),
-                        style->GetTileIconSize() - (padding * 2),
+                        height() - (padding * 2),
                         container->text->GetDeviceTexture(),
                         texxform,
                         nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
