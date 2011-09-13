@@ -128,7 +128,7 @@ nux::Geometry LayoutSystem::LayoutRow (LayoutWindowList const& row, nux::Geometr
     combined_width += window->geo.width * scalar;
   }
 
-  float global_scalar = unpadded_bounds.width / (float)combined_width;
+  float global_scalar = std::min (1.0f, unpadded_bounds.width / (float)combined_width);
 
   int x = unpadded_bounds.x;
   int y = unpadded_bounds.y;
