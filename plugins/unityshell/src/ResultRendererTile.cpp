@@ -45,7 +45,6 @@ namespace unity
 namespace
 {
 nux::logging::Logger logger("unity.dash.results");
-int renderer_count = 0;
 int container_count = 0;
 }
 
@@ -87,6 +86,7 @@ ResultRendererTile::ResultRendererTile(NUX_FILE_LINE_DECL)
 
 ResultRendererTile::~ResultRendererTile()
 {
+  LOG_DEBUG_BLOCK(logger);
 }
 
 void ResultRendererTile::Render(nux::GraphicsEngine& GfxContext,
@@ -248,27 +248,14 @@ void ResultRendererTile::Preload(Result& row)
     row.set_renderer(new TextureContainer());
     LoadIcon(row);
     LoadText(row);
-    ++renderer_count;
-    LOG_INFO(logger) << "new TextureContiner: " << renderer_count;
   }
 }
 
 void ResultRendererTile::Unload(Result& row)
 {
   TextureContainer *container = row.renderer<TextureContainer*>();
-
-  if (container)
-  {
-    --renderer_count;
-    LOG_INFO(logger) << "TextureContiner deleted: " << renderer_count;
-  }
-  else
-  {
-    LOG_INFO(logger) << "Unload called, no contianer." << renderer_count;
-  }
   delete container;
   row.set_renderer<TextureContainer*>(nullptr);
-
 }
 
 void ResultRendererTile::LoadIcon(Result& row)
