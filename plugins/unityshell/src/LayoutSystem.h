@@ -62,7 +62,9 @@ public:
 
 protected:
   void LayoutGridWindows (LayoutWindowList const& windows, nux::Geometry const& max_bounds, nux::Geometry& final_bounds);
-  void CompressAndPadRow (LayoutWindowList const& windows, nux::Geometry const& max_bounds);
+
+  nux::Geometry LayoutRow (LayoutWindowList const& row, nux::Geometry const& row_bounds);
+  nux::Geometry CompressAndPadRow (LayoutWindowList const& windows, nux::Geometry const& max_bounds);
 
   nux::Size GridSizeForWindows (LayoutWindowList windows, nux::Geometry const& max_bounds);
 
