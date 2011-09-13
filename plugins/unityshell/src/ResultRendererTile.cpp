@@ -238,11 +238,19 @@ void ResultRendererTile::Preload(Result& row)
 void ResultRendererTile::Unload(Result& row)
 {
   TextureContainer *container = row.renderer<TextureContainer*>();
+
+  if (container)
+  {
+    --renderer_count;
+    LOG_INFO(logger) << "TextureContiner deleted: " << renderer_count;
+  }
+  else
+  {
+    LOG_INFO(logger) << "Unload called, no contianer." << renderer_count;
+  }
   delete container;
   row.set_renderer<TextureContainer*>(nullptr);
 
-  --renderer_count;
-  LOG_INFO(logger) << "TextureContiner deleted: " << renderer_count;
 }
 
 void ResultRendererTile::LoadIcon(Result& row)

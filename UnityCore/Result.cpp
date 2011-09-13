@@ -19,11 +19,17 @@
 
 #include "Result.h"
 #include <sigc++/bind.h>
+#include <NuxCore/Logger.h>
 
 namespace unity
 {
 namespace dash
 {
+namespace
+{
+nux::logging::Logger logger("unity.dash");
+int result_count = 0;
+}
 
 Result::Result(DeeModel* model,
                DeeModelIter* iter,
@@ -37,6 +43,12 @@ Result::Result(Result const& other)
   : RowAdaptorBase(other)
 {
   SetupGetters();
+}
+
+Result::~Result()
+{
+  --result_count;
+  LOG_INFO(logger) << "~Result: " << result_count;
 }
 
 Result& Result::operator=(Result const& other)
@@ -55,6 +67,9 @@ void Result::SetupGetters()
   name.SetGetterFunction(sigc::bind(sigc::mem_fun(this, &RowAdaptorBase::GetStringAt), 4));
   comment.SetGetterFunction(sigc::bind(sigc::mem_fun(this, &RowAdaptorBase::GetStringAt), 5));
   dnd_uri.SetGetterFunction(sigc::bind(sigc::mem_fun(this, &RowAdaptorBase::GetStringAt), 6));
+
+  ++result_count;
+  LOG_INFO(logger) << "Result: " << result_count;
 }
 
 }

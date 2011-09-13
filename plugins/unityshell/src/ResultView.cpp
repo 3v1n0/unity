@@ -26,10 +26,17 @@
 #include <Nux/HLayout.h>
 #include <Nux/VLayout.h>
 #include <Nux/Button.h>
+#include <NuxCore/Logger.h>
+
 namespace unity
 {
 namespace dash
 {
+namespace
+{
+nux::logging::Logger logger("unity.dash");
+}
+
 NUX_IMPLEMENT_OBJECT_TYPE(ResultView);
 
 ResultView::ResultView(NUX_FILE_LINE_DECL)
@@ -90,6 +97,7 @@ void ResultView::SetModelRenderer(ResultRenderer* renderer)
 
 void ResultView::AddResult(Result& result)
 {
+  LOG_DEBUG_BLOCK(logger);
   results_.push_back(result);
   renderer_->Preload(result);
 
@@ -98,6 +106,7 @@ void ResultView::AddResult(Result& result)
 
 void ResultView::RemoveResult(Result& result)
 {
+  LOG_DEBUG_BLOCK(logger);
   ResultList::iterator it;
   std::string uri = result.uri;
 
