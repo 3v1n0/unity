@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright 2011 Canonical Ltd.
  *
@@ -27,6 +28,8 @@
 #include "FilterExpanderLabel.h"
 
 namespace unity {
+
+NUX_IMPLEMENT_OBJECT_TYPE(FilterExpanderLabel);
 
   FilterExpanderLabel::FilterExpanderLabel (std::string label, NUX_FILE_LINE_DECL)
       : nux::View (NUX_FILE_LINE_PARAM)

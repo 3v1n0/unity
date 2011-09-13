@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright 2011 Canonical Ltd.
  *
@@ -32,6 +33,8 @@
 
 namespace unity {
 
+NUX_IMPLEMENT_OBJECT_TYPE(FilterMultiRange);
+
   FilterMultiRange::FilterMultiRange (NUX_FILE_LINE_DECL)
       : FilterExpanderLabel (_("Multi-range"), NUX_FILE_LINE_PARAM)
       , all_selected (false) {
@@ -40,10 +43,8 @@ namespace unity {
     all_button_ = new FilterBasicButton(_("All"), NUX_TRACKER_LOCATION);
     all_button_->activated.connect(sigc::mem_fun(this, &FilterMultiRange::OnAllActivated));
     all_button_->label = _("All");
-    all_button_->Reference();
 
     layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
-    layout_->Reference();
     layout_->SetVerticalExternalMargin (12);
 
     SetRightHandView(all_button_);
@@ -51,8 +52,8 @@ namespace unity {
     OnActiveChanged(false);
   }
 
-  FilterMultiRange::~FilterMultiRange() {
-    all_button_->UnReference();
+  FilterMultiRange::~FilterMultiRange()
+  {
   }
 
   void FilterMultiRange::SetFilter(dash::Filter::Ptr filter)
@@ -151,7 +152,6 @@ namespace unity {
     {
       layout_->RemoveChildObject(*it);
       buttons_.erase(it);
-      found_filter->UnReference();
     }
 
     OnActiveChanged(false);
