@@ -80,7 +80,7 @@ public:
   virtual void Unload(Result& row);
 
 protected:
-  void LoadText(Result& row);
+  virtual void LoadText(Result& row);
   void LoadIcon(Result& row);
   nux::ObjectPtr<nux::BaseTexture> prelight_cache_;
 
