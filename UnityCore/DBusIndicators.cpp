@@ -362,7 +362,7 @@ void DBusIndicators::Impl::SyncGeometries(std::string const& name,
   {
     auto rect = i->second;
 
-    if (cached_loc[i->first] != i->second)
+    if (cached_loc[i->first] != rect)
     {
       g_variant_builder_add(&b, "(ssiiii)",
                             name.c_str(),
