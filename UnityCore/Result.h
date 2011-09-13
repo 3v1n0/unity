@@ -41,8 +41,6 @@ public:
   Result(DeeModel* model, DeeModelIter* iter, DeeModelTag* tag);
 
   Result(Result const& other);
-  ~Result();
-
   Result& operator=(Result const& other);
 
   nux::ROProperty<std::string> uri;

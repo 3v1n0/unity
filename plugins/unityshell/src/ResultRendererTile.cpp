@@ -45,27 +45,10 @@ namespace unity
 namespace
 {
 nux::logging::Logger logger("unity.dash.results");
-int container_count = 0;
 }
 
 namespace dash
 {
-
-TextureContainer::TextureContainer()
-  : slot_handle(0)
-{
-  ++container_count;
-  LOG_INFO(logger) << "TextureContainer count: " << container_count;
-}
-
-TextureContainer::~TextureContainer()
-{
-  if (slot_handle > 0)
-    IconLoader::GetDefault().DisconnectHandle(slot_handle);
-  --container_count;
-  LOG_INFO(logger) << "TextureContainer count: " << container_count;
-}
-
 
 NUX_IMPLEMENT_OBJECT_TYPE(ResultRendererTile);
 
@@ -86,7 +69,6 @@ ResultRendererTile::ResultRendererTile(NUX_FILE_LINE_DECL)
 
 ResultRendererTile::~ResultRendererTile()
 {
-  LOG_DEBUG_BLOCK(logger);
 }
 
 void ResultRendererTile::Render(nux::GraphicsEngine& GfxContext,

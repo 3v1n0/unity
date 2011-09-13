@@ -19,16 +19,11 @@
 
 #include "Result.h"
 #include <sigc++/bind.h>
-#include <NuxCore/Logger.h>
 
 namespace unity
 {
 namespace dash
 {
-namespace
-{
-nux::logging::Logger logger("unity.dash");
-}
 
 Result::Result(DeeModel* model,
                DeeModelIter* iter,
@@ -42,10 +37,6 @@ Result::Result(Result const& other)
   : RowAdaptorBase(other)
 {
   SetupGetters();
-}
-
-Result::~Result()
-{
 }
 
 Result& Result::operator=(Result const& other)
