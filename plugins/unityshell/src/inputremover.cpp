@@ -237,6 +237,17 @@ compiz::WindowInputRemover::save ()
   rects = XShapeGetRectangles (mDpy, mShapeWindow, ShapeBounding,
                                &count, &ordering);
 
+  /* check if the returned shape exactly matches the window shape -
+   * if that is true, the window currently has no set bounding shape */
+  if ((count == 1) &&
+      (rects[0].x == -((int) border)) &&
+      (rects[0].y == -((int) border)) &&
+      (rects[0].width == (width + border)) &&
+      (rects[0].height == (height + border)))
+  {
+    count = 0;
+  }
+
   if (mBoundingRects)
     XFree (mBoundingRects);
 
