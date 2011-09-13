@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright 2011 Canonical Ltd.
  *
@@ -22,6 +23,7 @@
 #include "config.h"
 
 #include <Nux/Nux.h>
+#include <NuxCore/Logger.h>
 
 #include <glib.h>
 #include <glib/gi18n-lib.h>
@@ -31,17 +33,24 @@
 #include "FilterBasicButton.h"
 #include "PlacesStyle.h"
 
-namespace unity {
+namespace unity
+{
+namespace
+{
+nux::logging::Logger logger("unity.dash.filter");
+}
+
+NUX_IMPLEMENT_OBJECT_TYPE(FilterGenre);
 
   FilterGenre::FilterGenre (NUX_FILE_LINE_DECL)
       : FilterExpanderLabel (_("Categories"), NUX_FILE_LINE_PARAM)
-      , all_selected (false) {
+      , all_selected (false)
+  {
     InitTheme();
 
     all_button_ = new FilterBasicButton(_("All"), NUX_TRACKER_LOCATION);
     all_button_->activated.connect(sigc::mem_fun(this, &FilterGenre::OnAllActivated));
     all_button_->label = _("All");
-    all_button_->Reference();
 
     PlacesStyle* style = PlacesStyle::GetDefault();
 
@@ -53,14 +62,13 @@ namespace unity {
     genre_layout_->SetHorizontalInternalMargin (10);
     genre_layout_->EnablePartialVisibility (false);
     genre_layout_->SetChildrenSize (style->GetTileWidth() - 12, 35);
-    genre_layout_->Reference();
 
     SetRightHandView(all_button_);
     SetContents(genre_layout_);
   }
 
-  FilterGenre::~FilterGenre() {
-    all_button_->UnReference();
+  FilterGenre::~FilterGenre()
+  {
   }
 
   void FilterGenre::SetFilter(dash::Filter::Ptr filter)
@@ -110,7 +118,6 @@ namespace unity {
     {
       genre_layout_->RemoveChildObject(*it);
       buttons_.erase(it);
-      found_filter->UnReference();
     }
   }
 
