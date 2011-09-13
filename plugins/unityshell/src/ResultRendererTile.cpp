@@ -31,6 +31,7 @@
 #include <gdk/gdk.h>
 #include <gtk/gtk.h>
 
+#include <NuxCore/Logger.h>
 #include <UnityCore/GLibWrapper.h>
 
 #include "CairoTexture.h"
@@ -39,15 +40,16 @@
 #include "PlacesStyle.h"
 #include "TextureCache.h"
 
-//~ namespace
-//~ {
-//~ nux::logging::Logger logger("unity.dash.ResultRendererTile");
-//~ }
-
 namespace unity
 {
+namespace
+{
+nux::logging::Logger logger("unity.dash.results");
+}
+
 namespace dash
 {
+
 NUX_IMPLEMENT_OBJECT_TYPE(ResultRendererTile);
 
 ResultRendererTile::ResultRendererTile(NUX_FILE_LINE_DECL)

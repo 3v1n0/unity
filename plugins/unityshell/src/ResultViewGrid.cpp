@@ -34,7 +34,7 @@
 
 namespace
 {
-nux::logging::Logger logger("unity.dash.ResultViewGrid");
+nux::logging::Logger logger("unity.dash.results");
 }
 
 namespace unity
