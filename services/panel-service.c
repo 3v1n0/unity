@@ -254,7 +254,7 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
           priv->use_event = (priv->pressed_entry == NULL);
         }
 
-      if (event && event->evtype == XI_ButtonRelease)
+      if (event->evtype == XI_ButtonRelease)
         {
           if (priv->use_event)
             {
