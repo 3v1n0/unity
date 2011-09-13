@@ -47,16 +47,8 @@ namespace dash
     BaseTexturePtr blurred_icon;
     int slot_handle;
 
-    TextureContainer()
-      : slot_handle(0)
-    {
-    }
-
-    ~TextureContainer()
-    {
-      if (slot_handle > 0)
-        IconLoader::GetDefault().DisconnectHandle(slot_handle);
-    }
+    TextureContainer();
+    ~TextureContainer();
   };
 
 
