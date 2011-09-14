@@ -93,7 +93,7 @@ private:
   bool InspectKeyEvent(unsigned int eventType, unsigned int key_sym, const char* character);
   const gchar* GetName();
   void AddProperties(GVariantBuilder* builder);
-  
+
   nux::Area* KeyNavIteration(nux::KeyNavDirection direction);
 
 private:
@@ -104,6 +104,7 @@ private:
 
   // Background related
   nux::ColorLayer* bg_layer_;
+  nux::ColorLayer* bg_darken_layer_;
   nux::Color bg_color_;
 
   // View related

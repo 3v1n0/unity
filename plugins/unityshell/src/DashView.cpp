@@ -92,6 +92,11 @@ void DashView::SetupBackground()
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
   bg_layer_ = new nux::ColorLayer(nux::Color(0.0f, 0.0f, 0.0f, 0.9), true, rop);
 
+  rop.Blend = true;
+  rop.SrcBlend = GL_SRC_COLOR;
+  rop.DstBlend = GL_DST_COLOR;
+  bg_darken_layer_ = new nux::ColorLayer(nux::Color(0.2f, 0.2f, 0.2f, 1.0f), false, rop);
+
   ubus_manager_.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
 }
 
@@ -242,7 +247,7 @@ void DashView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
                                     bg_blur_texture_,
                                     texxform_blur_bg,
                                     nux::color::White,
-                                    true,
+                                    true, // write alpha?
                                     rop);
 
       gfx_context.PopClippingRectangle();
@@ -383,6 +388,12 @@ void DashView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
     }
   }
 
+  // draw the darkening behind our paint
+
+  bg_darken_layer_->SetGeometry(content_geo_);
+  //nux::GetPainter().RenderSinglePaintLayer(gfx_context, content_geo_, bg_darken_layer_);
+
+
   bg_layer_->SetGeometry(content_geo_);
   nux::GetPainter().RenderSinglePaintLayer(gfx_context, content_geo_, bg_layer_);
 
@@ -429,10 +440,13 @@ void DashView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
                               bg_blur_texture_,
                               texxform_blur_bg,
                               nux::color::White,
-                              true,
+                              true, // write alpha?
                               rop);
     bgs++;
   }
+
+  // draw the darkening behind our paint
+  nux::GetPainter().PushLayer(gfx_context, bg_darken_layer_->GetGeometry(), bg_darken_layer_);
 
   nux::GetPainter().PushLayer(gfx_context, bg_layer_->GetGeometry(), bg_layer_);
   layout_->ProcessDraw(gfx_context, force_draw);

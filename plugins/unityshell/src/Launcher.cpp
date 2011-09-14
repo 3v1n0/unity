@@ -136,7 +136,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
   , _background_color(nux::color::DimGray)
   , _dash_is_open(false)
 {
-  
+
   _parent = parent;
   _active_quicklist = 0;
 
@@ -191,7 +191,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
   adapter.drag_start.connect(sigc::mem_fun(this, &Launcher::OnDragStart));
   adapter.drag_update.connect(sigc::mem_fun(this, &Launcher::OnDragUpdate));
   adapter.drag_finish.connect(sigc::mem_fun(this, &Launcher::OnDragFinish));
-  
+
   display.changed.connect(sigc::mem_fun(this, &Launcher::OnDisplayChanged));
 
   _current_icon       = NULL;
@@ -313,7 +313,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
 
   icon_renderer = AbstractIconRenderer::Ptr(new IconRenderer());
   icon_renderer->SetTargetSize(_icon_size, _icon_image_size, _space_between_icons);
-  
+
   // request the latest colour from bghash
   ubus_server_send_message (ubus, UBUS_BACKGROUND_REQUEST_COLOUR_EMIT, NULL);
 
@@ -321,6 +321,12 @@ Launcher::Launcher(nux::BaseWindow* parent,
 
   bg_effect_helper_.owner = this;
   bg_effect_helper_.enabled = false;
+
+  nux::ROPConfig rop;
+  rop.Blend = true;
+  rop.SrcBlend = GL_SRC_COLOR;
+  rop.DstBlend = GL_DST_COLOR;
+  bg_darken_layer_ = new nux::ColorLayer(nux::Color(0.2f, 0.2f, 0.2f, 1.0f), false, rop);
 }
 
 Launcher::~Launcher()
@@ -345,7 +351,7 @@ Launcher::~Launcher()
     g_source_remove(_super_hide_launcher_handle);
   if (_launcher_animation_timeout > 0)
     g_source_remove(_launcher_animation_timeout);
-    
+
   if (_on_data_collected_connection.connected())
       _on_data_collected_connection.disconnect();
 
@@ -357,7 +363,7 @@ Launcher::~Launcher()
   }
 
   g_idle_remove_by_data(this);
-  
+
   if (_collection_window)
     _collection_window->UnReference();
 
@@ -636,10 +642,10 @@ bool Launcher::IconNeedsAnimation(LauncherIcon* icon, struct timespec const& cur
   time = icon->GetQuirkTime(LauncherIcon::QUIRK_URGENT);
   if (unity::TimeUtil::TimeDelta(&current, &time) < (ANIM_DURATION_LONG * URGENT_BLINKS * 2))
     return true;
-  
+
   time = icon->GetQuirkTime(LauncherIcon::QUIRK_PULSE_ONCE);
   if (unity::TimeUtil::TimeDelta(&current, &time) < (ANIM_DURATION_LONG * PULSE_BLINK_LAMBDA * 2))
-    return true;  
+    return true;
 
   time = icon->GetQuirkTime(LauncherIcon::QUIRK_PRESENTED);
   if (unity::TimeUtil::TimeDelta(&current, &time) < ANIM_DURATION)
@@ -656,7 +662,7 @@ bool Launcher::IconNeedsAnimation(LauncherIcon* icon, struct timespec const& cur
   time = icon->GetQuirkTime(LauncherIcon::QUIRK_PROGRESS);
   if (unity::TimeUtil::TimeDelta(&current, &time) < ANIM_DURATION)
     return true;
-    
+
   time = icon->GetQuirkTime(LauncherIcon::QUIRK_DROP_DIM);
   if (unity::TimeUtil::TimeDelta(&current, &time) < ANIM_DURATION)
     return true;
@@ -881,7 +887,7 @@ float Launcher::IconPulseOnceValue(LauncherIcon *icon, struct timespec const &cu
 
   if (pulse_progress == 1.0f)
     icon->SetQuirk(LauncherIcon::QUIRK_PULSE_ONCE, false);
-  
+
   return 0.5f + (float) (std::cos(M_PI * 2.0 * pulse_progress)) * 0.5f;
 }
 
@@ -967,7 +973,7 @@ float Launcher::IconBackgroundIntensity(LauncherIcon* icon, struct timespec cons
         result = 1.0f - CLAMP(running_progress + IconStartingPulseValue(icon, current), 0.0f, 1.0f);
       break;
   }
-  
+
   if (icon->GetQuirk(LauncherIcon::QUIRK_PULSE_ONCE))
   {
     if (_backlight_mode == BACKLIGHT_ALWAYS_ON)
@@ -1029,7 +1035,7 @@ void Launcher::SetupRenderArg(LauncherIcon* icon, struct timespec const& current
   arg.progress            = CLAMP(icon->GetProgress(), 0.0f, 1.0f);
   arg.draw_shortcut       = _shortcuts_shown && !_hide_machine->GetQuirk(LauncherHideMachine::PLACES_VISIBLE);
   arg.system_item         = icon->Type() == LauncherIcon::TYPE_HOME;
-  
+
   if (_dash_is_open)
     arg.active_arrow = icon->Type() == LauncherIcon::TYPE_HOME;
   else
@@ -1106,7 +1112,7 @@ void Launcher::FillRenderArg(LauncherIcon* icon,
     arg.alpha *= size_modifier;
     center.z = 300.0f * (1.0f - size_modifier);
   }
-  
+
   float drop_dim_value = 0.2f + 0.8f * IconDropDimValue(icon, current);
 
   if (drop_dim_value < 1.0f)
@@ -1541,7 +1547,7 @@ void Launcher::SetHidden(bool hidden)
 
   if (!hidden && GetActionState() == ACTION_DRAG_EXTERNAL)
     DndLeave();
-  
+
   EnsureAnimation();
 
   hidden_changed.emit();
@@ -1606,11 +1612,11 @@ Launcher::OnUpdateDragManagerTimeout(gpointer data)
     {
       self->_data_checked = true;
       self->_collection_window->Collect();
-    } 
-    
+    }
+
     return true;
   }
-  
+
   self->_data_checked = false;
   self->_collection_window->PushToBack();
   self->_collection_window->EnableInputWindow(false, "DNDCollectionWindow");
@@ -1676,7 +1682,7 @@ Launcher::OnPluginStateChanged()
 {
   _hide_machine->SetQuirk (LauncherHideMachine::EXPO_ACTIVE, WindowManager::Default ()->IsExpoActive ());
   _hide_machine->SetQuirk (LauncherHideMachine::SCALE_ACTIVE, WindowManager::Default ()->IsScaleActive ());
-  
+
   if (_hidemode == LAUNCHER_HIDE_NEVER)
     return;
 }
@@ -1951,10 +1957,10 @@ void Launcher::SetIconSize(int tile_size, int icon_size)
 }
 
 void Launcher::SetBackgroundAlpha(float background_alpha)
-{  
+{
   if (_background_alpha == background_alpha)
     return;
-    
+
   _background_alpha = background_alpha;
   NeedRedraw();
 }
@@ -2073,15 +2079,15 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   // clip vertically but not horizontally
   GfxContext.PushClippingRectangle(nux::Geometry(base.x, bkg_box.y, base.width, bkg_box.height));
-  
-  
+
+
 
   if (_dash_is_open)
   {
     if (BackgroundEffectHelper::blur_type != unity::BLUR_NONE && (bkg_box.x + bkg_box.width > 0))
     {
       nux::Geometry geo_absolute = GetAbsoluteGeometry();
-      
+
       nux::Geometry blur_geo(geo_absolute.x, geo_absolute.y, base.width, base.height);
       auto blur_texture = bg_effect_helper_.GetBlurRegion(blur_geo);
 
@@ -2101,18 +2107,19 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
                                       true,
                                       ROP);
         GfxContext.PopClippingRectangle();
-        
+
         push_count++;
       }
     }
-    
+
+    nux::GetPainter().PushDrawLayer(GfxContext, GetGeometry(), bg_darken_layer_);
     gPainter.Paint2DQuadColor(GfxContext, bkg_box, _background_color);
   }
   else
   {
     gPainter.Paint2DQuadColor(GfxContext, bkg_box, nux::Color(0.0, 0.0, 0.0, _background_alpha));
   }
-  
+
   GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
 
   icon_renderer->PreprocessIcons(args, base);
@@ -2282,15 +2289,15 @@ void Launcher::EndIconDrag()
     if (hovered_icon && hovered_icon->Type() == LauncherIcon::TYPE_TRASH)
     {
       hovered_icon->SetQuirk(LauncherIcon::QUIRK_PULSE_ONCE, true);
-      
+
       launcher_removerequest.emit(_drag_icon);
       _drag_window->ShowWindow(false);
       EnsureAnimation();
     }
     else
-    { 
+    {
       _model->Save();
-        
+
       _drag_window->SetAnimationTarget((int)(_drag_icon->GetCenter().x), (int)(_drag_icon->GetCenter().y));
       _drag_window->StartAnimation();
 
@@ -2861,25 +2868,25 @@ Launcher::RestoreSystemRenderTarget()
 }
 
 void Launcher::OnDNDDataCollected(const std::list<char*>& mimes)
-{  
+{
   _dnd_data.Reset();
 
   unity::glib::String uri_list_const(g_strdup("text/uri-list"));
 
   for (auto it : mimes)
-  {    
+  {
     if (!g_str_equal(it, uri_list_const.Value()))
       continue;
 
     _dnd_data.Fill(nux::GetWindow().GetDndData(uri_list_const.Value()));
     break;
   }
-  
+
   if (!_dnd_data.Uris().size())
     return;
-    
+
   _hide_machine->SetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE, true);
-  
+
   for (auto it : _dnd_data.Uris())
   {
     if (g_str_has_suffix(it.c_str(), ".desktop"))
@@ -2888,7 +2895,7 @@ void Launcher::OnDNDDataCollected(const std::list<char*>& mimes)
       break;
     }
   }
-  
+
   if (!_steal_drag)
   {
     for (auto it : *_model)
@@ -2898,7 +2905,7 @@ void Launcher::OnDNDDataCollected(const std::list<char*>& mimes)
       else
         it->SetQuirk(LauncherIcon::QUIRK_DROP_DIM, true);
     }
-  }  
+  }
 }
 
 void
@@ -2915,7 +2922,7 @@ Launcher::ProcessDndEnter()
 void
 Launcher::DndLeave()
 {
-  
+
   _dnd_data.Reset();
 
   for (auto it : *_model)
@@ -2923,7 +2930,7 @@ Launcher::DndLeave()
     it->SetQuirk(LauncherIcon::QUIRK_DROP_PRELIGHT, false);
     it->SetQuirk(LauncherIcon::QUIRK_DROP_DIM, false);
   }
-  
+
   ProcessDndLeave();
 }
 
@@ -2934,7 +2941,7 @@ Launcher::ProcessDndLeave()
   _drag_edge_touching = false;
 
   SetActionState(ACTION_NONE);
-  
+
   if (_steal_drag && _dnd_hovered_icon)
   {
     _dnd_hovered_icon->SetQuirk(LauncherIcon::QUIRK_VISIBLE, false);
@@ -2964,14 +2971,14 @@ Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
 
     // get the data
     for (auto it : mimes)
-    {    
+    {
       if (!g_str_equal(it, uri_list_const.Value()))
         continue;
 
       _dnd_data.Fill(nux::GetWindow().GetDndData(uri_list_const.Value()));
       break;
     }
-  
+
     // see if the launcher wants this one
     for (auto it : _dnd_data.Uris())
     {
@@ -3093,7 +3100,7 @@ Launcher::ProcessDndDrop(int x, int y)
       if (g_str_has_suffix(it.c_str(), ".desktop"))
       {
         char* path = 0;
-        
+
         if (g_str_has_prefix(it.c_str(), "application://"))
         {
           const char* tmp = it.c_str() + strlen("application://");
@@ -3104,7 +3111,7 @@ Launcher::ProcessDndDrop(int x, int y)
         {
           path = g_filename_from_uri(it.c_str(), NULL, NULL);
         }
-        
+
         if (path)
         {
           launcher_addrequest.emit(path, _dnd_hovered_icon);

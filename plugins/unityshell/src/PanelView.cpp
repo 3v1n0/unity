@@ -60,6 +60,12 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
 
   _bg_layer = new nux::ColorLayer(nux::Color(0xff595853), true);
 
+  nux::ROPConfig rop;
+  rop.Blend = true;
+  rop.SrcBlend = GL_SRC_COLOR;
+  rop.DstBlend = GL_DST_COLOR;
+  _bg_darken_layer_ = new nux::ColorLayer(nux::Color(0.2f, 0.2f, 0.2f, 1.0f), false, rop);
+
   _layout = new nux::HLayout("", NUX_TRACKER_LOCATION);
 
   _menu_view = new PanelMenuView();
@@ -113,7 +119,7 @@ PanelView::~PanelView()
   ubus_server_unregister_interest(ubus, _handle_dash_hidden);
   ubus_server_unregister_interest(ubus, _handle_dash_shown);
   _on_indicator_updated_connections.clear();
-  
+
   delete _bg_layer;
 }
 
@@ -225,7 +231,14 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
       GfxContext.PopClippingRectangle();
     }
+
+    if (_dash_is_open)
+    {
+      nux::GetPainter().RenderSinglePaintLayer(GfxContext, GetGeometry(), _bg_darken_layer_);
+    }
   }
+
+
 
   nux::GetPainter().RenderSinglePaintLayer(GfxContext, GetGeometry(), _bg_layer);
 
@@ -270,7 +283,15 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
                               true,
                               rop);
     bgs++;
+
+    if (_dash_is_open)
+    {
+      nux::GetPainter().PushLayer(GfxContext, GetGeometry(), _bg_darken_layer_);
+    }
   }
+
+
+
 
   gPainter.PushLayer(GfxContext, GetGeometry(), _bg_layer);
 
@@ -305,7 +326,7 @@ PanelView::UpdateBackground()
   _last_width = geo.width;
   _last_height = geo.height;
   _is_dirty = false;
-  
+
   if (_dash_is_open)
   {
     if (_bg_layer)

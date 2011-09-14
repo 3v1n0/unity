@@ -99,6 +99,7 @@ private:
   PanelTray*               _tray;
   PanelIndicatorsView*     _indicators;
   nux::AbstractPaintLayer* _bg_layer;
+  nux::ColorLayer*         _bg_darken_layer_;
   nux::HLayout*            _layout;
 
   int _last_width;
