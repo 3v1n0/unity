@@ -77,6 +77,19 @@ JsonArray* GetArray(JsonNode* root,
   return nullptr;
 }
 
+void ReadDoubleSingle(JsonNode* root,
+                      std::string const& node_name,
+                      std::string const& member_name,
+                      double& value)
+{
+  JsonObject* object = GetNodeObject(root, node_name);
+
+  if (!object)
+    return;
+
+  value = json_object_get_double_member(object, member_name.c_str());
+}
+
 void ReadDoubleArray(JsonNode* root,
                      std::string const& node_name,
                      std::string const& member_name,
@@ -93,39 +106,72 @@ void ReadDoubleArray(JsonNode* root,
     values[i] = json_array_get_double_element(array, i);
 }
 
+nux::Color ColorFromPango(const gchar* color_string)
+{
+  static const float PANGO_MAX = 0xffff;
+  PangoColor color = {0, 0, 0};
+  ::pango_color_parse(&color, color_string);
+  return nux::Color(color.red / PANGO_MAX,
+                    color.green / PANGO_MAX,
+                    color.blue  / PANGO_MAX);
+}
+
 void ReadColorArray(JsonNode* root,
                     std::string const& node_name,
                     std::string const& member_name,
                     std::string const& opacity_name,
                     std::vector<nux::Color>& colors)
 {
-  if (!root)
+  JsonArray* array = GetArray(root, node_name, member_name);
+  if (!array)
     return;
 
-  JsonObject* object = json_node_get_object(root);
-  JsonNode* node = json_object_get_member(object, node_name.c_str());
-  object = json_node_get_object(node);
-  JsonArray* array = json_object_get_array_member(object, member_name.c_str());
-
-  const float PANGO_MAX = 0xffff;
   std::size_t size = std::min<size_t>(json_array_get_length(array),
                                       colors.size());
   for (std::size_t i = 0; i < size; ++i)
   {
-    PangoColor color = {0, 0, 0};
-    const gchar* color_string = json_array_get_string_element(array, i);
-    pango_color_parse(&color, color_string);
-    colors[i] = nux::Color(color.red / PANGO_MAX,
-                           color.green / PANGO_MAX,
-                           color.blue  / PANGO_MAX);
+    colors[i] = ColorFromPango(json_array_get_string_element(array, i));
   }
 
-  array = json_object_get_array_member(object, opacity_name.c_str());
+  array = GetArray(root, node_name, opacity_name);
+  if (!array)
+    return;
   size = std::min<size_t>(json_array_get_length(array),
                           colors.size());
   for (std::size_t i = 0; i < size; ++i)
     colors[i].alpha = json_array_get_double_element(array, i);
 }
+
+void ReadColorSingle(JsonNode* root,
+                     std::string const& node_name,
+                     std::string const& member_name,
+                     std::string const& opacity_name,
+                     nux::Color& color)
+{
+  JsonObject* object = GetNodeObject(root, node_name);
+
+  if (!object)
+    return;
+
+  color = ColorFromPango(json_object_get_string_member(object, member_name.c_str()));
+  color.alpha = json_object_get_double_member(object, opacity_name.c_str());
+}
+
+void ReadIntSingle(JsonNode* root,
+                   std::string const& node_name,
+                   std::string const& member_name,
+                   int& value)
+{
+  JsonObject* object = GetNodeObject(root, node_name);
+
+  if (!object)
+    return;
+
+  value = json_object_get_int_member(object, member_name.c_str());
+}
+
+
+
 }
 
 
@@ -138,31 +184,6 @@ public:
   void Blur(cairo_t* cr, int size);
 
   void UseDefaultValues();
-
-  bool ReadColorSingle(JsonNode*    root,
-                       const gchar* nodeName,
-                       const gchar* memberName,
-                       double*      color);
-
-  bool ReadColorArray(JsonNode*    root,
-                      const gchar* nodeName,
-                      const gchar* memberName,
-                      double       colors[][CHANNELS]);
-
-  bool ReadDoubleSingle(JsonNode*    root,
-                        const gchar* nodeName,
-                        const gchar* memberName,
-                        double*      value);
-
-  bool ReadDoubleArray(JsonNode*    root,
-                       const gchar* nodeName,
-                       const gchar* memberName,
-                       double*      values);
-
-  bool ReadIntSingle(JsonNode*    root,
-                     const gchar* nodeName,
-                     const gchar* memberName,
-                     int*         value);
 
   bool ReadIntArray(JsonNode*    root,
                     const gchar* nodeName,
@@ -197,11 +218,9 @@ public:
                       int  maxHeight,
                       const std::string text);
 
-  void Text(cairo_t*    cr,
-            double      size,
-            double*     color,
-            double      opacity,
-            std::string label);
+  void Text(cairo_t* cr,
+            nux::Color const& color,
+            std::string const& label);
 
   void ButtonOutlinePath(cairo_t* cr, bool align);
 
@@ -233,29 +252,27 @@ public:
   std::vector<nux::Color> _buttonLabelBorderColor;
   std::vector<double> _buttonLabelBorderSize;
   double                _buttonLabelTextSize;
-  double                _buttonLabelTextColor[STATES][CHANNELS];
-  double                _buttonLabelTextOpacity[STATES];
-  double                _buttonLabelFillColor[STATES][CHANNELS];
-  double                _buttonLabelFillOpacity[STATES];
-  double                _buttonLabelOverlayOpacity[STATES];
+
+  std::vector<nux::Color> _buttonLabelTextColor;
+  std::vector<nux::Color> _buttonLabelFillColor;
+
+  std::vector<double> _buttonLabelOverlayOpacity;
   BlendMode             _buttonLabelOverlayMode[STATES];
   int                   _buttonLabelBlurSize[STATES];
 
-  double                _regularTextColor[CHANNELS];
-  double                _regularTextOpacity;
+  nux::Color _regularTextColor;
   double                _regularTextSize;
   BlendMode             _regularTextMode;
   FontWeight            _regularTextWeight;
 
   double                _separatorSize;
-  double                _separatorColor[CHANNELS];
+  nux::Color _separatorColor;
   double                _separatorOpacity;
   double                _separatorOverlayOpacity;
   BlendMode             _separatorOverlayMode;
   int                   _separatorBlurSize;
 
-  double                _scrollbarColor[CHANNELS];
-  double                _scrollbarOpacity;
+  nux::Color _scrollbarColor;
   double                _scrollbarOverlayOpacity;
   BlendMode             _scrollbarOverlayMode;
   int                   _scrollbarBlurSize;
@@ -266,6 +283,9 @@ public:
 DashStyle::Impl::Impl()
   : _buttonLabelBorderColor(STATES)
   , _buttonLabelBorderSize(STATES)
+  , _buttonLabelTextColor(STATES)
+  , _buttonLabelFillColor(STATES)
+  , _buttonLabelOverlayOpacity(STATES)
 {
     JsonParser*  parser = NULL;
     GError*      error  = NULL;
@@ -309,35 +329,27 @@ DashStyle::Impl::Impl()
                           "border-size",
                           _buttonLabelBorderSize);
 
-    ReadDoubleSingle (root,
-                      "button-label",
-                      "text-size",
-                      &_buttonLabelTextSize);
+    json::ReadDoubleSingle(root,
+                           "button-label",
+                           "text-size",
+                           _buttonLabelTextSize);
 
-    ReadColorArray (root,
-                    "button-label",
-                    "text-color",
-                    _buttonLabelTextColor);
+    json::ReadColorArray(root,
+                         "button-label",
+                         "text-color",
+                         "text-opacity",
+                         _buttonLabelTextColor);
 
-    ReadDoubleArray (root,
-                     "button-label",
-                     "text-opacity",
-                     _buttonLabelTextOpacity);
+    json::ReadColorArray(root,
+                         "button-label",
+                         "fill-color",
+                         "fill-opacity",
+                         _buttonLabelFillColor);
 
-    ReadColorArray (root,
-                    "button-label",
-                    "fill-color",
-                    _buttonLabelFillColor);
-
-    ReadDoubleArray (root,
-                     "button-label",
-                     "fill-opacity",
-                     _buttonLabelFillOpacity);
-
-    ReadDoubleArray (root,
-                     "button-label",
-                     "overlay-opacity",
-                     _buttonLabelOverlayOpacity);
+    json::ReadDoubleArray(root,
+                          "button-label",
+                          "overlay-opacity",
+                          _buttonLabelOverlayOpacity);
 
     ReadModeArray (root,
                    "button-label",
@@ -350,20 +362,16 @@ DashStyle::Impl::Impl()
                   _buttonLabelBlurSize);
 
     // regular-text
-    ReadColorSingle (root,
-                     "regular-text",
-                     "text-color",
-                     _regularTextColor);
+    json::ReadColorSingle(root,
+                          "regular-text",
+                          "text-color",
+                           "text-opacity",
+                          _regularTextColor);
 
-    ReadDoubleSingle (root,
-                      "regular-text",
-                      "text-opacity",
-                      &_regularTextOpacity);
-
-    ReadDoubleSingle (root,
-                      "regular-text",
-                      "text-size",
-                      &_regularTextSize);
+    json::ReadDoubleSingle(root,
+                           "regular-text",
+                           "text-size",
+                           _regularTextSize);
 
     ReadModeSingle (root,
                     "regular-text",
@@ -376,71 +384,63 @@ DashStyle::Impl::Impl()
                       &_regularTextWeight);
 
     // separator
-    ReadDoubleSingle (root,
-                      "separator",
-                      "size",
-                      &_separatorSize);
+    json::ReadDoubleSingle(root,
+                           "separator",
+                           "size",
+                           _separatorSize);
 
-    ReadColorSingle (root,
-                     "separator",
-                     "color",
-                     _separatorColor);
+    json::ReadColorSingle(root,
+                          "separator",
+                          "color",
+                          "opacity",
+                          _separatorColor);
 
-    ReadDoubleSingle (root,
-                      "separator",
-                      "opacity",
-                      &_separatorOpacity);
-
-    ReadDoubleSingle (root,
-                      "separator",
-                      "overlay-opacity",
-                      &_separatorOverlayOpacity);
+    json::ReadDoubleSingle(root,
+                           "separator",
+                           "overlay-opacity",
+                           _separatorOverlayOpacity);
 
     ReadModeSingle (root,
                     "separator",
                     "overlay-mode",
                     &_separatorOverlayMode);
 
-    ReadIntSingle (root,
-                   "separator",
-                   "blur-size",
-                   &_separatorBlurSize);
+    json::ReadIntSingle(root,
+                        "separator",
+                        "blur-size",
+                        _separatorBlurSize);
 
     // scrollbar
-    ReadColorSingle (root,
-                     "scrollbar",
-                     "color",
-                     _scrollbarColor);
+    json::ReadColorSingle(root,
+                          "scrollbar",
+                          "color",
+                           "opacity",
+                          _scrollbarColor);
 
-    ReadDoubleSingle (root,
-                      "scrollbar",
-                      "opacity",
-                      &_scrollbarOpacity);
-
-    ReadDoubleSingle (root,
-                      "scrollbar",
-                      "overlay-opacity",
-                      &_scrollbarOverlayOpacity);
+    json::ReadDoubleSingle(root,
+                           "scrollbar",
+                           "overlay-opacity",
+                           _scrollbarOverlayOpacity);
 
     ReadModeSingle (root,
                     "scrollbar",
                     "overlay-mode",
                     &_scrollbarOverlayMode);
 
-    ReadIntSingle (root,
-                   "scrollbar",
-                   "blur-size",
-                   &_scrollbarBlurSize);
+    json::ReadIntSingle(root,
+                        "scrollbar",
+                        "blur-size",
+                        _scrollbarBlurSize);
 
-    ReadIntSingle (root,
-                   "scrollbar",
-                   "size",
-                   &_scrollbarSize);
+    json::ReadIntSingle(root,
+                        "scrollbar",
+                        "size",
+                        _scrollbarSize);
 
-    ReadDoubleSingle (root,
-                      "scrollbar",
-                      "corner-radius",
-                      &_scrollbarCornerRadius);
+    json::ReadDoubleSingle(root,
+                           "scrollbar",
+                           "corner-radius",
+                           _scrollbarCornerRadius);
 
     g_object_unref (parser);
 
@@ -465,131 +465,6 @@ DashStyle::Impl::~Impl()
     cairo_font_options_destroy(_defaultFontOptions);
 }
 
-
-bool DashStyle::Impl::ReadColorSingle (JsonNode*    root,
-                                   const gchar* nodeName,
-                                   const gchar* memberName,
-                                   double*      color)
-  {
-  JsonObject* object = NULL;
-  JsonNode*   node   = NULL;
-
-    if (!root || !nodeName || !memberName || !color)
-      return false;
-
-    object = json_node_get_object (root);
-    node   = json_object_get_member (object, nodeName);
-    object = json_node_get_object (node);
-
-    const gchar* string = NULL;
-    PangoColor   col    = {0, 0, 0};
-
-    string = json_object_get_string_member (object, memberName);
-    pango_color_parse (&col, string);
-    color[R] = (double) col.red   / (double) 0xffff;
-    color[G] = (double) col.green / (double) 0xffff;
-    color[B] = (double) col.blue  / (double) 0xffff;
-
-    return true;
-  }
-
-
-
-  bool DashStyle::Impl::ReadColorArray (JsonNode*    root,
-                                  const gchar* nodeName,
-                                  const gchar* memberName,
-                                  double colors[][CHANNELS])
-  {
-  JsonObject*  object = NULL;
-  JsonNode*    node   = NULL;
-    JsonArray*   array  = NULL;
-    unsigned int i      = 0;
-
-    if (!root || !nodeName || !memberName || !colors)
-      return false;
-
-    object = json_node_get_object (root);
-    node   = json_object_get_member (object, nodeName);
-    object = json_node_get_object (node);
-    array  = json_object_get_array_member (object, memberName);
-
-    for (i = 0; i < json_array_get_length (array); i++)
-    {
-      const gchar* string = NULL;
-      PangoColor   color  = {0, 0, 0};
-      string = json_array_get_string_element (array, i);
-      pango_color_parse (&color, string);
-      colors[i][R] = (double) color.red   / (double) 0xffff;
-      colors[i][G] = (double) color.green / (double) 0xffff;
-      colors[i][B] = (double) color.blue  / (double) 0xffff;
-    }
-
-    return true;
-  }
-
-  bool DashStyle::Impl::ReadDoubleSingle (JsonNode*    root,
-                                    const gchar* nodeName,
-                                    const gchar* memberName,
-                                    double*      value)
-  {
-  JsonObject* object = NULL;
-  JsonNode*   node   = NULL;
-
-    if (!root || !nodeName || !memberName || !value)
-      return false;
-
-    object = json_node_get_object (root);
-    node   = json_object_get_member (object, nodeName);
-    object = json_node_get_object (node);
-
-    *value = json_object_get_double_member (object, memberName);
-
-    return true;
-  }
-
-  bool DashStyle::Impl::ReadDoubleArray (JsonNode*    root,
-                                   const gchar* nodeName,
-                                   const gchar* memberName,
-                                   double*      values)
-  {
-  JsonObject*  object = NULL;
-  JsonNode*    node   = NULL;
-    JsonArray*   array  = NULL;
-    unsigned int i      = 0;
-
-    if (!root || !nodeName || !memberName || !values)
-      return false;
-
-    object = json_node_get_object (root);
-    node   = json_object_get_member (object, nodeName);
-    object = json_node_get_object (node);
-    array  = json_object_get_array_member (object, memberName);
-
-    for (i = 0; i < json_array_get_length (array); i++)
-      values[i] = json_array_get_double_element (array, i);
-
-    return true;
-  }
-
-  bool DashStyle::Impl::ReadIntSingle (JsonNode*    root,
-                                 const gchar* nodeName,
-                                 const gchar* memberName,
-                                 int*         value)
-  {
-  JsonObject* object = NULL;
-  JsonNode*   node   = NULL;
-
-    if (!root || !nodeName || !memberName || !value)
-      return false;
-
-    object = json_node_get_object (root);
-    node   = json_object_get_member (object, nodeName);
-    object = json_node_get_object (node);
-
-    *value = json_object_get_int_member (object, memberName);
-
-    return true;
-  }
 
   bool DashStyle::Impl::ReadIntArray (JsonNode*    root,
                                 const gchar* nodeName,
@@ -1132,52 +1007,19 @@ void DashStyle::Impl::UseDefaultValues ()
     _buttonLabelBorderSize[nux::NUX_STATE_SELECTED]        = 0.5;
     _buttonLabelBorderSize[nux::NUX_STATE_INSENSITIVE]     = 0.5;
 
-
     _buttonLabelTextSize                                   = 1.0;
 
-    _buttonLabelTextColor[nux::NUX_STATE_NORMAL][R]        = 1.0;
-    _buttonLabelTextColor[nux::NUX_STATE_NORMAL][G]        = 1.0;
-    _buttonLabelTextColor[nux::NUX_STATE_NORMAL][B]        = 1.0;
-    _buttonLabelTextColor[nux::NUX_STATE_ACTIVE][R]        = 0.0;
-    _buttonLabelTextColor[nux::NUX_STATE_ACTIVE][G]        = 0.0;
-    _buttonLabelTextColor[nux::NUX_STATE_ACTIVE][B]        = 0.0;
-    _buttonLabelTextColor[nux::NUX_STATE_PRELIGHT][R]      = 1.0;
-    _buttonLabelTextColor[nux::NUX_STATE_PRELIGHT][G]      = 1.0;
-    _buttonLabelTextColor[nux::NUX_STATE_PRELIGHT][B]      = 1.0;
-    _buttonLabelTextColor[nux::NUX_STATE_SELECTED][R]      = 1.0;
-    _buttonLabelTextColor[nux::NUX_STATE_SELECTED][G]      = 1.0;
-    _buttonLabelTextColor[nux::NUX_STATE_SELECTED][B]      = 1.0;
-    _buttonLabelTextColor[nux::NUX_STATE_INSENSITIVE][R]   = 1.0;
-    _buttonLabelTextColor[nux::NUX_STATE_INSENSITIVE][G]   = 1.0;
-    _buttonLabelTextColor[nux::NUX_STATE_INSENSITIVE][B]   = 1.0;
+    _buttonLabelTextColor[nux::NUX_STATE_NORMAL] = nux::color::White;
+    _buttonLabelTextColor[nux::NUX_STATE_ACTIVE] = nux::color::Black;
+    _buttonLabelTextColor[nux::NUX_STATE_PRELIGHT] = nux::color::White;
+    _buttonLabelTextColor[nux::NUX_STATE_SELECTED] = nux::color::White;
+    _buttonLabelTextColor[nux::NUX_STATE_INSENSITIVE] = nux::color::White;
 
-    _buttonLabelTextOpacity[nux::NUX_STATE_NORMAL]         = 1.0;
-    _buttonLabelTextOpacity[nux::NUX_STATE_ACTIVE]         = 1.0;
-    _buttonLabelTextOpacity[nux::NUX_STATE_PRELIGHT]       = 1.0;
-    _buttonLabelTextOpacity[nux::NUX_STATE_SELECTED]       = 1.0;
-    _buttonLabelTextOpacity[nux::NUX_STATE_INSENSITIVE]    = 1.0;
-
-    _buttonLabelFillColor[nux::NUX_STATE_NORMAL][R]        = 0.0;
-    _buttonLabelFillColor[nux::NUX_STATE_NORMAL][G]        = 0.0;
-    _buttonLabelFillColor[nux::NUX_STATE_NORMAL][B]        = 0.0;
-    _buttonLabelFillColor[nux::NUX_STATE_ACTIVE][R]        = 0.0;
-    _buttonLabelFillColor[nux::NUX_STATE_ACTIVE][G]        = 0.0;
-    _buttonLabelFillColor[nux::NUX_STATE_ACTIVE][B]        = 0.0;
-    _buttonLabelFillColor[nux::NUX_STATE_PRELIGHT][R]      = 0.0;
-    _buttonLabelFillColor[nux::NUX_STATE_PRELIGHT][G]      = 0.0;
-    _buttonLabelFillColor[nux::NUX_STATE_PRELIGHT][B]      = 0.0;
-    _buttonLabelFillColor[nux::NUX_STATE_SELECTED][R]      = 0.0;
-    _buttonLabelFillColor[nux::NUX_STATE_SELECTED][G]      = 0.0;
-    _buttonLabelFillColor[nux::NUX_STATE_SELECTED][B]      = 0.0;
-    _buttonLabelFillColor[nux::NUX_STATE_INSENSITIVE][R]   = 0.0;
-    _buttonLabelFillColor[nux::NUX_STATE_INSENSITIVE][G]   = 0.0;
-    _buttonLabelFillColor[nux::NUX_STATE_INSENSITIVE][B]   = 0.0;
-
-    _buttonLabelFillOpacity[nux::NUX_STATE_NORMAL]         = 0.0;
-    _buttonLabelFillOpacity[nux::NUX_STATE_ACTIVE]         = 0.0;
-    _buttonLabelFillOpacity[nux::NUX_STATE_PRELIGHT]       = 0.0;
-    _buttonLabelFillOpacity[nux::NUX_STATE_SELECTED]       = 0.0;
-    _buttonLabelFillOpacity[nux::NUX_STATE_INSENSITIVE]    = 0.0;
+    _buttonLabelFillColor[nux::NUX_STATE_NORMAL] = nux::color::Transparent;
+    _buttonLabelFillColor[nux::NUX_STATE_ACTIVE] = nux::color::Transparent;
+    _buttonLabelFillColor[nux::NUX_STATE_PRELIGHT] = nux::color::Transparent;
+    _buttonLabelFillColor[nux::NUX_STATE_SELECTED] = nux::color::Transparent;
+    _buttonLabelFillColor[nux::NUX_STATE_INSENSITIVE] = nux::color::Transparent;
 
     _buttonLabelOverlayOpacity[nux::NUX_STATE_NORMAL]      = 0.0;
     _buttonLabelOverlayOpacity[nux::NUX_STATE_ACTIVE]      = 0.3;
@@ -1198,29 +1040,20 @@ void DashStyle::Impl::UseDefaultValues ()
     _buttonLabelBlurSize[nux::NUX_STATE_INSENSITIVE]       = 0;
 
     // regular-text
-    _regularTextColor[R]   = 1.0;
-    _regularTextColor[G]   = 1.0;
-    _regularTextColor[B]   = 1.0;
-    _regularTextOpacity    = 1.0;
+    _regularTextColor = nux::color::White;
     _regularTextSize       = 13.0;
     _regularTextMode       = BLEND_MODE_NORMAL;
     _regularTextWeight     = FONT_WEIGHT_LIGHT;
 
     // separator
     _separatorSize           = 1.0;
-    _separatorColor[R]       = 1.0;
-    _separatorColor[G]       = 1.0;
-    _separatorColor[B]       = 1.0;
-    _separatorOpacity        = 0.15;
+    _separatorColor = nux::Color(1.0, 1.0, 1.0, 0.15);
     _separatorOverlayOpacity = 0.47;
     _separatorOverlayMode    = BLEND_MODE_NORMAL;
     _separatorBlurSize       = 6;
 
     // scrollbar
-    _scrollbarColor[R]       = 1.0;
-    _scrollbarColor[G]       = 1.0;
-    _scrollbarColor[B]       = 1.0;
-    _scrollbarOpacity        = 1.0;
+    _scrollbarColor = nux::color::White;
     _scrollbarOverlayOpacity = 0.3;
     _scrollbarOverlayMode    = BLEND_MODE_NORMAL;
     _scrollbarBlurSize       = 5;
@@ -1771,12 +1604,10 @@ void DashStyle::Impl::UseDefaultValues ()
     cairo_surface_destroy(surface);
   }
 
-  void DashStyle::Impl::Text (cairo_t*    cr,
-                        double      size,
-                        double*     color,
-                        double      opacity,
-                        std::string label)
-   {
+  void DashStyle::Impl::Text(cairo_t*    cr,
+                             nux::Color const&  color,
+                             std::string const& label)
+  {
     double                x           = 0.0;
     double                y           = 0.0;
     int                   w           = 0;
@@ -1853,12 +1684,12 @@ void DashStyle::Impl::UseDefaultValues ()
     }
 
     cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
-    cairo_set_source_rgba (cr, color[R], color[G], color[B], opacity);
+    cairo_set_source_rgba(cr, color);
     pango_layout_context_changed(layout);
-	PangoRectangle ink = {0, 0, 0, 0};
+    PangoRectangle ink = {0, 0, 0, 0};
     PangoRectangle log = {0, 0, 0, 0};
     pango_layout_get_extents (layout, &ink, &log);
-	x = ((double) w - pango_units_to_double (ink.width)) / 2.0 + horizMargin;
+    x = ((double) w - pango_units_to_double (ink.width)) / 2.0 + horizMargin;
     y = ((double) h - pango_units_to_double (log.height)) / 2.0;
     cairo_move_to (cr, x, y);
     pango_cairo_show_layout(cr, layout);
@@ -1987,29 +1818,23 @@ void DashStyle::Impl::UseDefaultValues ()
                  h - (double) (2 * garnish),
                  false);
 
-    if (pimpl->_buttonLabelFillOpacity[state] != 0.0)
+    if (pimpl->_buttonLabelFillColor[state].alpha != 0.0)
     {
-      cairo_set_source_rgba (cr,
-                             pimpl->_buttonLabelFillColor[state][R],
-                             pimpl->_buttonLabelFillColor[state][G],
-                             pimpl->_buttonLabelFillColor[state][B],
-                             pimpl->_buttonLabelFillOpacity[state]);
+      cairo_set_source_rgba(cr, pimpl->_buttonLabelFillColor[state]);
       cairo_fill_preserve (cr);
     }
     cairo_set_source_rgba(cr, pimpl->_buttonLabelBorderColor[state]);
-    cairo_set_line_width (cr, pimpl->_buttonLabelBorderSize[state]);
+    cairo_set_line_width(cr, pimpl->_buttonLabelBorderSize[state]);
     cairo_stroke (cr);
 
-    pimpl->DrawOverlay (cr,
-                 pimpl->_buttonLabelOverlayOpacity[state],
-                 pimpl->_buttonLabelOverlayMode[state],
-                 pimpl->_buttonLabelBlurSize[state] * 0.75);
+    pimpl->DrawOverlay(cr,
+                       pimpl->_buttonLabelOverlayOpacity[state],
+                       pimpl->_buttonLabelOverlayMode[state],
+                       pimpl->_buttonLabelBlurSize[state] * 0.75);
 
-    pimpl->Text (cr,
-          pimpl->_buttonLabelTextSize,
-          pimpl->_buttonLabelTextColor[state],
-          pimpl->_buttonLabelTextOpacity[state],
-          label);
+    pimpl->Text(cr,
+                pimpl->_buttonLabelTextColor[state],
+                label);
 
     return true;
   }
@@ -2139,23 +1964,17 @@ void DashStyle::Impl::UseDefaultValues ()
                         arrow,
                         state);
 
-    if (pimpl->_buttonLabelFillOpacity[state] != 0.0)
+    if (pimpl->_buttonLabelFillColor[state].alpha != 0.0)
     {
-      cairo_set_source_rgba (cr,
-                             pimpl->_buttonLabelFillColor[state][R],
-                             pimpl->_buttonLabelFillColor[state][G],
-                             pimpl->_buttonLabelFillColor[state][B],
-                             pimpl->_buttonLabelFillOpacity[state]);
+      cairo_set_source_rgba(cr, pimpl->_buttonLabelFillColor[state]);
       cairo_fill_preserve (cr);
     }
     cairo_set_source_rgba(cr, pimpl->_buttonLabelBorderColor[state]);
-    cairo_set_line_width (cr, pimpl->_buttonLabelBorderSize[state]);
+    cairo_set_line_width(cr, pimpl->_buttonLabelBorderSize[state]);
     cairo_stroke (cr);
-    pimpl->Text (cr,
-        pimpl->_buttonLabelTextSize,
-        pimpl->_buttonLabelTextColor[state],
-        pimpl->_buttonLabelTextOpacity[state],
-        label);
+    pimpl->Text(cr,
+                pimpl->_buttonLabelTextColor[state],
+                label);
 
     return true;
   }
@@ -2227,11 +2046,7 @@ void DashStyle::Impl::UseDefaultValues ()
     double y = 2.0;
 
     cairo_set_line_width (cr, pimpl->_separatorSize);
-    cairo_set_source_rgba (cr,
-                           pimpl->_separatorColor[R],
-                           pimpl->_separatorColor[G],
-                           pimpl->_separatorColor[B],
-                           pimpl->_separatorOpacity);
+    cairo_set_source_rgba(cr, pimpl->_separatorColor);
     cairo_move_to (cr, _align (x), _align (y));
     cairo_line_to (cr, _align (x), _align (h - 4.0));
     cairo_stroke (cr);
@@ -2259,11 +2074,7 @@ void DashStyle::Impl::UseDefaultValues ()
     double y = h / 2.0;
 
     cairo_set_line_width (cr, pimpl->_separatorSize);
-    cairo_set_source_rgba (cr,
-                           pimpl->_separatorColor[R],
-                           pimpl->_separatorColor[G],
-                           pimpl->_separatorColor[B],
-                           pimpl->_separatorOpacity);
+    cairo_set_source_rgba(cr, pimpl->_separatorColor);
     cairo_move_to (cr, _align (x), _align (y));
     cairo_line_to (cr, _align (w - 4.0), _align (y));
     cairo_stroke (cr);
