@@ -40,12 +40,7 @@ namespace unity
 {
 namespace
 {
-// TODO: KILL THESE AT THE FIRST OPPORTUNITY
 const int STATES = 5;
-const int CHANNELS = 3;
-const int R = 0;
-const int G = 1;
-const int B = 2;
 
 // These cairo overrides may also be reused somewhere...
 void cairo_set_source_rgba(cairo_t* cr, nux::Color const& color)
