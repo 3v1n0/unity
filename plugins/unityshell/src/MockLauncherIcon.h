@@ -55,8 +55,7 @@ public:
   {
     std::vector<Window> result;
 
-    result.push_back ((4000 << 16) + 2000);
-    result.push_back ((4000 << 16) + 2000);
+    result.push_back ((300 << 16) + 200);
 
     return result;
   }
@@ -99,7 +98,7 @@ public:
 
   int RelatedWindows()
   {
-    return 2;
+    return 1;
   }
 
   bool HasWindowOnViewport()
