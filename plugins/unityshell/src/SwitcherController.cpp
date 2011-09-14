@@ -314,7 +314,16 @@ void SwitcherController::NextDetail()
 
 void SwitcherController::PrevDetail()
 {
-  model_->PrevDetail();
+  if (!model_->detail_selection)
+  {
+    SetDetail(true);
+    detail_mode_ = TAB_NEXT_TILE;
+    model_->PrevDetail();
+  }
+  else
+  {
+    model_->PrevDetail();
+  }
 }
 
 LayoutWindowList SwitcherController::ExternalRenderTargets ()
