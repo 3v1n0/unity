@@ -298,6 +298,80 @@ nux::Size SwitcherView::SpreadSize()
   return result;
 }
 
+void SwitcherView::GetFlatIconPositions (int n_flat_icons, 
+                                         int size, 
+                                         int selection, 
+                                         int &first_flat, 
+                                         int &last_flat, 
+                                         int &half_fold_left, 
+                                         int &half_fold_right)
+{
+  half_fold_left = -1;
+  half_fold_right = -1;
+
+  if (n_flat_icons == 0)
+  {
+    first_flat = selection + 1;
+    last_flat = selection;
+  }
+  else if (n_flat_icons == 1)
+  {
+    if (selection == 0)
+    {
+      // selection is first item
+      first_flat = 0;
+      last_flat = n_flat_icons;
+    }
+    else if (selection >= size - 2)
+    {
+      // selection is in ending area where all icons at end should flatten
+      first_flat = size - n_flat_icons - 1;
+      last_flat = size - 1;
+    }
+    else
+    {
+      first_flat = selection;
+      last_flat = selection;
+
+      half_fold_left = first_flat - 1;
+      half_fold_right = last_flat + 1;
+    }
+  }
+  else
+  {
+    if (selection == 0)
+    {
+      // selection is first item
+      first_flat = 0;
+      last_flat = n_flat_icons;
+    }
+    else if (selection >= 1 && selection <= n_flat_icons - 1)
+    {
+      // selection is in "beginning" area before flat section starts moving
+      // first item should half fold still
+      first_flat = 1;
+      last_flat = n_flat_icons;
+
+      half_fold_left = 0;
+      half_fold_right = last_flat + 1;
+    }
+    else if (selection >= size - 2)
+    {
+      // selection is in ending area where all icons at end should flatten
+      first_flat = size - n_flat_icons - 1;
+      last_flat = size - 1;
+    }
+    else
+    {
+      first_flat = selection - n_flat_icons + 2;
+      last_flat = selection + 1;
+
+      half_fold_left = first_flat - 1;
+      half_fold_right = last_flat + 1;
+    }
+  }
+}
+
 std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo, int selection, timespec const& current)
 {
   std::list<RenderArg> results;
@@ -357,45 +431,10 @@ std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo,
     float partial_overflow_scalar = (float)(padded_tile_size - partial_overflow) / (float)(padded_tile_size);
 
     int first_flat, last_flat;
-    int half_fold_left = -1;
-    int half_fold_right = -1;
+    int half_fold_left;
+    int half_fold_right;
 
-    if (n_flat_icons == 0)
-    {
-      first_flat = selection + 1;
-      last_flat = selection;
-    }
-    else if (n_flat_icons == 1)
-    {
-      first_flat = selection;
-      last_flat = selection;
-    }
-    else if (selection == 0)
-    {
-      first_flat = 0;
-      last_flat = n_flat_icons;
-    }
-    else if (selection >= 1 && selection <= n_flat_icons - 1)
-    {
-      first_flat = 1;
-      last_flat = n_flat_icons;
-
-      half_fold_left = 0;
-      half_fold_right = last_flat + 1;
-    }
-    else if (selection >= size - 2)
-    {
-      first_flat = size - n_flat_icons - 1;
-      last_flat = size - 1;
-    }
-    else
-    {
-      first_flat = selection - n_flat_icons + 2;
-      last_flat = selection + 1;
-
-      half_fold_left = first_flat - 1;
-      half_fold_right = last_flat + 1;
-    }
+    GetFlatIconPositions (n_flat_icons, size, selection, first_flat, last_flat, half_fold_left, half_fold_right); 
 
     SwitcherModel::iterator it;
     int i = 0;

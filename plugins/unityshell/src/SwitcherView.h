@@ -92,6 +92,14 @@ private:
 
   nux::Size SpreadSize ();
 
+  void GetFlatIconPositions (int n_flat_icons, 
+                             int size, 
+                             int selection, 
+                             int &first_flat, 
+                             int &last_flat, 
+                             int &half_fold_left, 
+                             int &half_fold_right);
+
   static gboolean OnDrawTimeout(gpointer data);
 
   void SaveLast ();
