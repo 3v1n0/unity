@@ -22,6 +22,8 @@
 
 #include "SimpleLauncherIcon.h"
 
+#include "UBusWrapper.h"
+
 class BFBLauncherIcon : public SimpleLauncherIcon
 {
 
@@ -32,6 +34,9 @@ public:
   virtual nux::Color GlowColor();
 
   void ActivateLauncherIcon(ActionArg arg);
+private:
+  unity::UBusManager _ubus_manager;
+  nux::Color _background_color;
 };
 
 #endif // UNITYSHELL_BFBLAUNCHERICON_H
