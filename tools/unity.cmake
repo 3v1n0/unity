@@ -31,15 +31,25 @@ import time
 home_dir = os.path.expanduser("~%s" % os.getenv("SUDO_USER"))
 supported_prefix = "/usr/local"
 
-well_known_local_path = ("%s/share/unity" % supported_prefix,
-                         "%s/share/ccsm/icons/*/*/*/*unity*" % supported_prefix,
-                         "%s/share/locale/*/LC_MESSAGES/*unity*" % supported_prefix,
+well_known_local_path = ("%s/share/locale/*/LC_MESSAGES/*unity*" % supported_prefix,
+                         "%s/share/man/man1/*unity*" % supported_prefix,
+                         "%s/lib/*unity*" % supported_prefix,
+                         "%s/share/dbus-1/services/*Unity*" % supported_prefix,
+                         "%s/bin/*unity*" % supported_prefix,
+                         "%s/include/Unity*"  % supported_prefix;
+                         "%s/lib/pkgconfig/unity*"  % supported_prefix,
+                         "%s/.compiz-1/*/*gtkloader*" % home_dir,
+                         "%s/.config/compiz-1/gsettings/schemas/*gtkloader*" % home_dir,
+                         "%s/.gconf/schemas/*gtkloader*" % home_dir,
+                         "%s/.compiz-1/*/*networkarearegion*" % home_dir,
+                         "%s/.config/compiz-1/gsettings/schemas/*networkarearegion*" % home_dir,
+                         "%s/.gconf/schemas/*networkarearegion*" % home_dir,
                          "%s/.compiz-1/*/*unity*" % home_dir,
+                         "%s/.config/compiz-1/gsettings/schemas/*unity*" % home_dir,
                          "%s/.gconf/schemas/*unity*" % home_dir,
-                         "%s/lib/*unity*"  % supported_prefix,
-                         "%s/share/dbus-1/services/*Unity*"  % supported_prefix,
-                         "%s/bin/*unity*"  % supported_prefix,
-                         "%s/share/man/man1/*unity*"  % supported_prefix,
+                         "%s/share/ccsm/icons/*/*/*/*unity*" % supported_prefix,
+                         "%s/share/unity" % supported_prefix,
+                         "%s/.compiz-1/unity*" % home_dir,
                          "%s/lib/*nux*"  % supported_prefix,
                          "%s/lib/pkgconfig/nux*"  % supported_prefix,
                          "%s/include/Nux*"  % supported_prefix
