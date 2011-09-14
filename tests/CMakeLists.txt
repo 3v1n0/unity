@@ -282,6 +282,8 @@ add_executable (test-launcher
                 ${UNITY_SRC}/QuicklistManager.cpp
                 ${UNITY_SRC}/QuicklistManager.h
                 ${UNITY_SRC}/UBusMessages.h
+                ${UNITY_SRC}/UBusWrapper.cpp
+                ${UNITY_SRC}/UBusWrapper.h
                 ${UNITY_SRC}/ubus-server.cpp
                 ${UNITY_SRC}/ubus-server.h
                 )

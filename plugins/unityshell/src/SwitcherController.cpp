@@ -90,6 +90,10 @@ void SwitcherController::Show(SwitcherController::ShowMode show, SwitcherControl
   {
     detail_timer_ = g_timeout_add(detail_timeout_length, &SwitcherController::OnDetailTimer, this);
   }
+
+  ubus_server_send_message(ubus_server_get_default(),
+                           UBUS_PLACE_VIEW_CLOSE_REQUEST,
+                           NULL);
 }
 
 void SwitcherController::Select(int index)

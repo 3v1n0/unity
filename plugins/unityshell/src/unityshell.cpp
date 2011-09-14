@@ -961,7 +961,7 @@ gboolean UnityScreen::OnEdgeTriggerTimeout(gpointer data)
 {
   UnityScreen* self = reinterpret_cast<UnityScreen*>(data);
 
-  if (pointerX == 0)
+  if (pointerX <= 1)
   {
     if (abs(pointerY-self->_edge_pointerY) <= 5)
     {
@@ -1004,7 +1004,7 @@ bool UnityScreen::launcherRevealEdgeInitiate(CompAction* action,
   if (_edge_trigger_handle)
     g_source_remove(_edge_trigger_handle);
 
-  if (pointerX == 0)
+  if (pointerX <= 1)
   {
     _edge_pointerY = pointerY;
     _edge_trigger_handle = g_timeout_add(_edge_timeout,
