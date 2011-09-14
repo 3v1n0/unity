@@ -178,6 +178,10 @@ bool IMTextEntry::TryHandleSpecial(unsigned int eventType, unsigned int keysym, 
   if (eventType != NUX_KEYDOWN)
     return false;
 
+  /* If IM is active, de-activate Copy & Paste */
+  if (im_active_)
+    return true;
+
   if (((keyval == NUX_VK_x) && ctrl && !shift) ||
       ((keyval == NUX_VK_DELETE) && shift && !ctrl))
   {
@@ -238,6 +242,17 @@ void IMTextEntry::OnCommit(GtkIMContext* context, char* str)
 {
   LOG_DEBUG(logger) << "Commit: " << str;
   DeleteSelection();
+
+  /* remove preedit text and set cursor to previous position */
+  if (preedit_cursor_) {
+    std::string new_text = GetText();
+    new_text.replace(cursor_, preedit_cursor_, "");
+    int cursor = cursor_;
+    SetText(new_text.c_str());
+    SetCursor(cursor);
+    preedit_cursor_ = 0;
+  }
+
   if (str)
   {
     std::string new_text = GetText();
@@ -260,12 +275,24 @@ void IMTextEntry::OnPreeditChanged(GtkIMContext* context)
   LOG_DEBUG(logger) << "Preedit changed: " << preedit;
 
   preedit_string = preedit.Str();
+
+  if (strlen(preedit.Str().c_str())) {
+    DeleteSelection();
+    std::string new_text = GetText();
+    new_text.replace(cursor_, preedit_cursor_, preedit.Str());
+    int cursor = cursor_;
+    SetText(new_text.c_str());
+    SetCursor(cursor);
+    preedit_cursor_ = preedit.Str().length();
+    UpdateCursorLocation();
+  }
 }
 
 void IMTextEntry::OnPreeditStart(GtkIMContext* context)
 {
   preedit_string = "";
   im_active_ = true;
+  preedit_cursor_ = 0;
 
   LOG_DEBUG(logger) << "Preedit start";
 }
@@ -275,6 +302,16 @@ void IMTextEntry::OnPreeditEnd(GtkIMContext* context)
   preedit_string = "";
   im_active_ = false;
   gtk_im_context_reset(im_context_);
+
+  /* remove preedit text and set cursor to previous position */
+  if (preedit_cursor_) {
+    std::string new_text = GetText();
+    new_text.replace(cursor_, preedit_cursor_, "");
+    int cursor = cursor_;
+    SetText(new_text.c_str());
+    SetCursor(cursor);
+    preedit_cursor_ = 0;
+  }
 
   LOG_DEBUG(logger) << "Preedit ended";
 }
