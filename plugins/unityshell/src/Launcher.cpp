@@ -2110,7 +2110,9 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   }
   else
   {
-    gPainter.Paint2DQuadColor(GfxContext, bkg_box, nux::Color(0.0, 0.0, 0.0, _background_alpha));
+    nux::Color color = _background_color;
+    color.alpha = _background_alpha;
+    gPainter.Paint2DQuadColor(GfxContext, bkg_box, color);
   }
   
   GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
