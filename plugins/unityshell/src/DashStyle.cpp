@@ -188,31 +188,26 @@ void ReadIntArray(JsonNode*    root,
     values[i] = json_array_get_int_element(array, i);
 }
 
-void ReadModeArray(JsonNode*    root,
-                   std::string const& node_name,
-                   std::string const& member_name,
-                   std::vector<DashStyle::BlendMode>& modes)
+template <typename T>
+void ReadMappedStringArray(JsonNode* root,
+                           std::string const& node_name,
+                           std::string const& member_name,
+                           std::map<std::string, T> const& mapping,
+                           std::vector<T>& values)
 {
   JsonArray* array = GetArray(root, node_name, member_name);
   if (!array)
     return;
 
   std::size_t size = std::min<size_t>(json_array_get_length(array),
-                                      modes.size());
+                                      values.size());
   for (std::size_t i = 0; i < size; ++i)
   {
-    const gchar* string = NULL;
-
-    string = json_array_get_string_element (array, i);
-    
-    if (!g_strcmp0 (string, "normal"))
-      modes[i] = DashStyle::BlendMode::BLEND_MODE_NORMAL;
-    
-    if (!g_strcmp0 (string, "multiply"))
-      modes[i] = DashStyle::BlendMode::BLEND_MODE_MULTIPLY;
-    
-    if (!g_strcmp0 (string, "screen"))
-      modes[i] = DashStyle::BlendMode::BLEND_MODE_SCREEN;
+    std::string key(json_array_get_string_element(array, i));
+    boost::to_lower(key);
+    auto it = mapping.find(key);
+    if (it != mapping.end())
+      values[i] = it->second;
   }
 }
 
@@ -247,21 +242,6 @@ public:
   void Blur(cairo_t* cr, int size);
 
   void UseDefaultValues();
-
-  bool ReadModeSingle(JsonNode*    root,
-                      const gchar* nodeName,
-                      const gchar* memberName,
-                      BlendMode*   mode);
-
-  bool ReadWeightSingle(JsonNode*    root,
-                        const gchar* nodeName,
-                        const gchar* memberName,
-                        FontWeight*  weight);
-
-  bool ReadWeightArray(JsonNode*    root,
-                       const gchar* nodeName,
-                       const gchar* memberName,
-                       FontWeight*  weights);
 
   void Star(cairo_t* cr, double size);
 
@@ -303,29 +283,29 @@ public:
   cairo_font_options_t* _defaultFontOptions;
 
   std::vector<nux::Color> _buttonLabelBorderColor;
-  std::vector<double> _buttonLabelBorderSize;
-  double                _buttonLabelTextSize;
+  std::vector<double>     _buttonLabelBorderSize;
+  double                  _buttonLabelTextSize;
 
   std::vector<nux::Color> _buttonLabelTextColor;
   std::vector<nux::Color> _buttonLabelFillColor;
 
-  std::vector<double> _buttonLabelOverlayOpacity;
+  std::vector<double>    _buttonLabelOverlayOpacity;
   std::vector<BlendMode> _buttonLabelOverlayMode;
-  std::vector<int> _buttonLabelBlurSize;
+  std::vector<int>       _buttonLabelBlurSize;
 
-  nux::Color _regularTextColor;
+  nux::Color            _regularTextColor;
   double                _regularTextSize;
   BlendMode             _regularTextMode;
   FontWeight            _regularTextWeight;
 
   double                _separatorSize;
-  nux::Color _separatorColor;
+  nux::Color            _separatorColor;
   double                _separatorOpacity;
   double                _separatorOverlayOpacity;
   BlendMode             _separatorOverlayMode;
   int                   _separatorBlurSize;
 
-  nux::Color _scrollbarColor;
+  nux::Color            _scrollbarColor;
   double                _scrollbarOverlayOpacity;
   BlendMode             _scrollbarOverlayMode;
   int                   _scrollbarBlurSize;
@@ -406,10 +386,16 @@ DashStyle::Impl::Impl()
                           "overlay-opacity",
                           _buttonLabelOverlayOpacity);
 
-    json::ReadModeArray(root,
-                        "button-label",
-                        "overlay-mode",
-                        _buttonLabelOverlayMode);
+    std::map<std::string, BlendMode> blend_mode_map;
+    blend_mode_map["normal"] = BlendMode::BLEND_MODE_NORMAL;
+    blend_mode_map["multiply"] = BlendMode::BLEND_MODE_MULTIPLY;
+    blend_mode_map["screen"] = BlendMode::BLEND_MODE_SCREEN;
+
+    json::ReadMappedStringArray(root,
+                                "button-label",
+                                "overlay-mode",
+                                blend_mode_map,
+                                _buttonLabelOverlayMode);
 
     json::ReadIntArray(root,
                        "button-label",
@@ -428,21 +414,22 @@ DashStyle::Impl::Impl()
                            "text-size",
                            _regularTextSize);
 
-    std::map<std::string, BlendMode> blend_mode_map;
-    blend_mode_map["normal"] = BlendMode::BLEND_MODE_NORMAL;
-    blend_mode_map["multiply"] = BlendMode::BLEND_MODE_MULTIPLY;
-    blend_mode_map["screen"] = BlendMode::BLEND_MODE_SCREEN;
-
     json::ReadMappedString(root,
                            "regular-text",
                            "text-mode",
                            blend_mode_map,
                            _regularTextMode);
 
-    ReadWeightSingle (root,
-                      "regular-text",
-                      "text-weight",
-                      &_regularTextWeight);
+    std::map<std::string, FontWeight> font_weight_map;
+    font_weight_map["light"] = FontWeight::FONT_WEIGHT_LIGHT;
+    font_weight_map["regular"] = FontWeight::FONT_WEIGHT_REGULAR;
+    font_weight_map["bold"] = FontWeight::FONT_WEIGHT_BOLD;
+
+    json::ReadMappedString(root,
+                           "regular-text",
+                           "text-weight",
+                           font_weight_map,
+                           _regularTextWeight);
 
     // separator
     json::ReadDoubleSingle(root,
@@ -529,71 +516,6 @@ DashStyle::Impl::~Impl()
 }
 
 
-  bool DashStyle::Impl::ReadWeightSingle (JsonNode*    root,
-                                    const gchar* nodeName,
-                                    const gchar* memberName,
-                                    FontWeight*  weight)
-  {
-  JsonObject*  object = NULL;
-  JsonNode*    node   = NULL;
-    const gchar* string = NULL;
-
-    if (!root || !nodeName || !memberName || !weight)
-      return false;
-
-    object = json_node_get_object (root);
-    node   = json_object_get_member (object, nodeName);
-    object = json_node_get_object (node);
-
-    string = json_object_get_string_member (object, memberName);
-    if (!g_strcmp0 (string, "light"))
-      *weight = FONT_WEIGHT_LIGHT;
-
-    if (!g_strcmp0 (string, "regular"))
-      *weight = FONT_WEIGHT_REGULAR;
-
-    if (!g_strcmp0 (string, "bold"))
-      *weight = FONT_WEIGHT_BOLD;
-
-    return true;
-  }
-
-  bool DashStyle::Impl::ReadWeightArray (JsonNode*    root,
-                                   const gchar* nodeName,
-                                   const gchar* memberName,
-                                   FontWeight*  weights)
-  {
-  JsonObject*  object = NULL;
-  JsonNode*    node   = NULL;
-    JsonArray*   array  = NULL;
-  unsigned int i      = 0;
-
-    if (!root || !nodeName || !memberName || !weights)
-      return false;
-
-    object = json_node_get_object (root);
-    node   = json_object_get_member (object, nodeName);
-    object = json_node_get_object (node);
-    array  = json_object_get_array_member (object, memberName);
-
-    for (i = 0; i < json_array_get_length (array); i++)
-    {
-      const gchar* string = NULL;
-
-      string = json_array_get_string_element (array, i);
-
-      if (!g_strcmp0 (string, "light"))
-        weights[i] = FONT_WEIGHT_LIGHT;
-
-      if (!g_strcmp0 (string, "regular"))
-        weights[i] = FONT_WEIGHT_REGULAR;
-
-      if (!g_strcmp0 (string, "bold"))
-        weights[i] = FONT_WEIGHT_BOLD;
-  }
-
-    return true;
-  }
 
   DashStyle::DashStyle()
     : pimpl(new Impl())
