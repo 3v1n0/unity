@@ -19,6 +19,8 @@
 
 #include <string>
 #include <vector>
+#include <map>
+#include <boost/algorithm/string.hpp>
 
 #include <math.h>
 #include <glib.h>
@@ -214,8 +216,26 @@ void ReadModeArray(JsonNode*    root,
   }
 }
 
+template <typename T>
+void ReadMappedString(JsonNode* root,
+                      std::string const& node_name,
+                      std::string const& member_name,
+                      std::map<std::string, T> const& mapping,
+                      T& value)
+{
+  JsonObject* object = GetNodeObject(root, node_name);
+  if (!object)
+    return;
 
+  std::string key(json_object_get_string_member(object, member_name.c_str()));
+  boost::to_lower(key);
+  auto it = mapping.find(key);
+  if (it != mapping.end())
+    value = it->second;
 }
+
+
+} // json namespace
 
 
 class DashStyle::Impl
@@ -408,10 +428,16 @@ DashStyle::Impl::Impl()
                            "text-size",
                            _regularTextSize);
 
-    ReadModeSingle (root,
-                    "regular-text",
-                    "text-mode",
-                    &_regularTextMode);
+    std::map<std::string, BlendMode> blend_mode_map;
+    blend_mode_map["normal"] = BlendMode::BLEND_MODE_NORMAL;
+    blend_mode_map["multiply"] = BlendMode::BLEND_MODE_MULTIPLY;
+    blend_mode_map["screen"] = BlendMode::BLEND_MODE_SCREEN;
+
+    json::ReadMappedString(root,
+                           "regular-text",
+                           "text-mode",
+                           blend_mode_map,
+                           _regularTextMode);
 
     ReadWeightSingle (root,
                       "regular-text",
@@ -435,10 +461,11 @@ DashStyle::Impl::Impl()
                            "overlay-opacity",
                            _separatorOverlayOpacity);
 
-    ReadModeSingle (root,
-                    "separator",
-                    "overlay-mode",
-                    &_separatorOverlayMode);
+    json::ReadMappedString(root,
+                           "separator",
+                           "overlay-mode",
+                           blend_mode_map,
+                           _separatorOverlayMode);
 
     json::ReadIntSingle(root,
                         "separator",
@@ -457,10 +484,11 @@ DashStyle::Impl::Impl()
                            "overlay-opacity",
                            _scrollbarOverlayOpacity);
 
-    ReadModeSingle (root,
-                    "scrollbar",
-                    "overlay-mode",
-                    &_scrollbarOverlayMode);
+    json::ReadMappedString(root,
+                           "scrollbar",
+                           "overlay-mode",
+                           blend_mode_map,
+                           _scrollbarOverlayMode);
 
     json::ReadIntSingle(root,
                         "scrollbar",
@@ -499,35 +527,6 @@ DashStyle::Impl::~Impl()
   if (cairo_font_options_status(_defaultFontOptions) == CAIRO_STATUS_SUCCESS)
     cairo_font_options_destroy(_defaultFontOptions);
 }
-
-  bool DashStyle::Impl::ReadModeSingle (JsonNode*    root,
-                                  const gchar* nodeName,
-                                  const gchar* memberName,
-                                  BlendMode*   mode)
-  {
-  JsonObject*  object = NULL;
-  JsonNode*    node   = NULL;
-    const gchar* string = NULL;
-
-    if (!root || !nodeName || !memberName || !mode)
-      return false;
-
-    object = json_node_get_object (root);
-    node   = json_object_get_member (object, nodeName);
-    object = json_node_get_object (node);
-
-    string = json_object_get_string_member (object, memberName);
-    if (!g_strcmp0 (string, "normal"))
-      *mode = BLEND_MODE_NORMAL ;
-
-    if (!g_strcmp0 (string, "multiply"))
-      *mode = BLEND_MODE_MULTIPLY ;
-
-    if (!g_strcmp0 (string, "screen"))
-      *mode = BLEND_MODE_SCREEN ;
-
-    return true;
-  }
 
 
   bool DashStyle::Impl::ReadWeightSingle (JsonNode*    root,
