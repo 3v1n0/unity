@@ -17,12 +17,17 @@
  * Authored by: Mirco Müller <mirco.mueller@canonical.com
  */
 
+#include <string>
+#include <vector>
+
 #include <math.h>
 #include <glib.h>
 #include <gdk/gdk.h>
 #include <gtk/gtk.h>
 #include <pango/pango.h>
 #include <json-glib/json-glib.h>
+
+#include <NuxCore/Color.h>
 
 #include "DashStyle.h"
 #include "config.h"
@@ -39,7 +44,90 @@ const int CHANNELS = 3;
 const int R = 0;
 const int G = 1;
 const int B = 2;
+
+// These cairo overrides may also be reused somewhere...
+void cairo_set_source_rgba(cairo_t* cr, nux::Color const& color)
+{
+  ::cairo_set_source_rgba(cr, color.red, color.green, color.blue, color.alpha);
 }
+
+} // anon namespace
+
+// I have a feeling that these methods may end up being reused.
+namespace json
+{
+
+JsonObject* GetNodeObject(JsonNode* root, std::string const& node_name)
+{
+  if (!root)
+    return nullptr;
+
+  JsonObject* object = json_node_get_object(root);
+  JsonNode* node = json_object_get_member(object, node_name.c_str());
+  return json_node_get_object(node);
+}
+
+JsonArray* GetArray(JsonNode* root,
+                    std::string const& node_name,
+                    std::string const& member_name)
+{
+  JsonObject* object = GetNodeObject(root, node_name);
+  if (object)
+    return json_object_get_array_member(object, member_name.c_str());
+  return nullptr;
+}
+
+void ReadDoubleArray(JsonNode* root,
+                     std::string const& node_name,
+                     std::string const& member_name,
+                     std::vector<double>& values)
+{
+  JsonArray* array = GetArray(root, node_name, member_name);
+
+  if (!array)
+    return;
+
+  std::size_t size = std::min<size_t>(json_array_get_length(array),
+                                      values.size());
+  for (std::size_t i = 0; i < size; ++i)
+    values[i] = json_array_get_double_element(array, i);
+}
+
+void ReadColorArray(JsonNode* root,
+                    std::string const& node_name,
+                    std::string const& member_name,
+                    std::string const& opacity_name,
+                    std::vector<nux::Color>& colors)
+{
+  if (!root)
+    return;
+
+  JsonObject* object = json_node_get_object(root);
+  JsonNode* node = json_object_get_member(object, node_name.c_str());
+  object = json_node_get_object(node);
+  JsonArray* array = json_object_get_array_member(object, member_name.c_str());
+
+  const float PANGO_MAX = 0xffff;
+  std::size_t size = std::min<size_t>(json_array_get_length(array),
+                                      colors.size());
+  for (std::size_t i = 0; i < size; ++i)
+  {
+    PangoColor color = {0, 0, 0};
+    const gchar* color_string = json_array_get_string_element(array, i);
+    pango_color_parse(&color, color_string);
+    colors[i] = nux::Color(color.red / PANGO_MAX,
+                           color.green / PANGO_MAX,
+                           color.blue  / PANGO_MAX);
+  }
+
+  array = json_object_get_array_member(object, opacity_name.c_str());
+  size = std::min<size_t>(json_array_get_length(array),
+                          colors.size());
+  for (std::size_t i = 0; i < size; ++i)
+    colors[i].alpha = json_array_get_double_element(array, i);
+}
+}
+
 
 class DashStyle::Impl
 {
@@ -142,9 +230,8 @@ public:
   // Members
   cairo_font_options_t* _defaultFontOptions;
 
-  double                _buttonLabelBorderColor[STATES][CHANNELS];
-  double                _buttonLabelBorderOpacity[STATES];
-  double                _buttonLabelBorderSize[STATES];
+  std::vector<nux::Color> _buttonLabelBorderColor;
+  std::vector<double> _buttonLabelBorderSize;
   double                _buttonLabelTextSize;
   double                _buttonLabelTextColor[STATES][CHANNELS];
   double                _buttonLabelTextOpacity[STATES];
@@ -177,6 +264,8 @@ public:
 };
 
 DashStyle::Impl::Impl()
+  : _buttonLabelBorderColor(STATES)
+  , _buttonLabelBorderSize(STATES)
 {
     JsonParser*  parser = NULL;
     GError*      error  = NULL;
@@ -209,20 +298,16 @@ DashStyle::Impl::Impl()
     }
 
     // button-label
-    ReadDoubleArray (root,
-                     "button-label",
-                     "border-opacity",
-                     _buttonLabelBorderOpacity);
+    json::ReadColorArray(root,
+                         "button-label",
+                         "border-color",
+                         "border-opacity",
+                         _buttonLabelBorderColor);
 
-    ReadColorArray (root,
-                    "button-label",
-                    "border-color",
-                    _buttonLabelBorderColor);
-
-    ReadDoubleArray (root,
-                     "button-label",
-                     "border-size",
-                     _buttonLabelBorderSize);
+    json::ReadDoubleArray(root,
+                          "button-label",
+                          "border-size",
+                          _buttonLabelBorderSize);
 
     ReadDoubleSingle (root,
                       "button-label",
@@ -407,6 +492,8 @@ bool DashStyle::Impl::ReadColorSingle (JsonNode*    root,
 
     return true;
   }
+
+
 
   bool DashStyle::Impl::ReadColorArray (JsonNode*    root,
                                   const gchar* nodeName,
@@ -1033,27 +1120,11 @@ bool DashStyle::Impl::ReadColorSingle (JsonNode*    root,
 void DashStyle::Impl::UseDefaultValues ()
   {
     // button-label
-    _buttonLabelBorderColor[nux::NUX_STATE_NORMAL][R]      = 0.53;
-    _buttonLabelBorderColor[nux::NUX_STATE_NORMAL][G]      = 1.0;
-    _buttonLabelBorderColor[nux::NUX_STATE_NORMAL][B]      = 0.66;
-    _buttonLabelBorderColor[nux::NUX_STATE_ACTIVE][R]      = 1.0;
-    _buttonLabelBorderColor[nux::NUX_STATE_ACTIVE][G]      = 1.0;
-    _buttonLabelBorderColor[nux::NUX_STATE_ACTIVE][B]      = 1.0;
-    _buttonLabelBorderColor[nux::NUX_STATE_PRELIGHT][R]    = 0.06;
-    _buttonLabelBorderColor[nux::NUX_STATE_PRELIGHT][G]    = 0.13;
-    _buttonLabelBorderColor[nux::NUX_STATE_PRELIGHT][B]    = 1.0;
-    _buttonLabelBorderColor[nux::NUX_STATE_SELECTED][R]    = 0.07;
-    _buttonLabelBorderColor[nux::NUX_STATE_SELECTED][G]    = 0.2;
-    _buttonLabelBorderColor[nux::NUX_STATE_SELECTED][B]    = 0.33;
-    _buttonLabelBorderColor[nux::NUX_STATE_INSENSITIVE][R] = 0.39;
-    _buttonLabelBorderColor[nux::NUX_STATE_INSENSITIVE][G] = 0.26;
-    _buttonLabelBorderColor[nux::NUX_STATE_INSENSITIVE][B] = 0.12;
-
-    _buttonLabelBorderOpacity[nux::NUX_STATE_NORMAL]       = 0.5;
-    _buttonLabelBorderOpacity[nux::NUX_STATE_ACTIVE]       = 0.8;
-    _buttonLabelBorderOpacity[nux::NUX_STATE_PRELIGHT]     = 0.5;
-    _buttonLabelBorderOpacity[nux::NUX_STATE_SELECTED]     = 0.5;
-    _buttonLabelBorderOpacity[nux::NUX_STATE_INSENSITIVE]  = 0.5;
+    _buttonLabelBorderColor[nux::NUX_STATE_NORMAL] = nux::Color(0.53, 1.0, 0.66, 0.5);
+    _buttonLabelBorderColor[nux::NUX_STATE_ACTIVE] = nux::Color(1.0, 1.0, 1.0, 0.8);
+    _buttonLabelBorderColor[nux::NUX_STATE_PRELIGHT] = nux::Color(0.06, 0.13, 1.0, 0.5);
+    _buttonLabelBorderColor[nux::NUX_STATE_SELECTED] = nux::Color(0.07, 0.2, 0.33, 0.5);
+    _buttonLabelBorderColor[nux::NUX_STATE_INSENSITIVE] = nux::Color(0.39, 0.26, 0.12, 0.5);
 
     _buttonLabelBorderSize[nux::NUX_STATE_NORMAL]          = 0.5;
     _buttonLabelBorderSize[nux::NUX_STATE_ACTIVE]          = 2.0;
@@ -1925,11 +1996,7 @@ void DashStyle::Impl::UseDefaultValues ()
                              pimpl->_buttonLabelFillOpacity[state]);
       cairo_fill_preserve (cr);
     }
-    cairo_set_source_rgba (cr,
-                           pimpl->_buttonLabelBorderColor[state][R],
-                           pimpl->_buttonLabelBorderColor[state][G],
-                           pimpl->_buttonLabelBorderColor[state][B],
-                           pimpl->_buttonLabelBorderOpacity[state]);
+    cairo_set_source_rgba(cr, pimpl->_buttonLabelBorderColor[state]);
     cairo_set_line_width (cr, pimpl->_buttonLabelBorderSize[state]);
     cairo_stroke (cr);
 
@@ -2081,11 +2148,7 @@ void DashStyle::Impl::UseDefaultValues ()
                              pimpl->_buttonLabelFillOpacity[state]);
       cairo_fill_preserve (cr);
     }
-    cairo_set_source_rgba (cr,
-                           pimpl->_buttonLabelBorderColor[state][R],
-                           pimpl->_buttonLabelBorderColor[state][G],
-                           pimpl->_buttonLabelBorderColor[state][B],
-                           pimpl->_buttonLabelBorderOpacity[state]);
+    cairo_set_source_rgba(cr, pimpl->_buttonLabelBorderColor[state]);
     cairo_set_line_width (cr, pimpl->_buttonLabelBorderSize[state]);
     cairo_stroke (cr);
     pimpl->Text (cr,
