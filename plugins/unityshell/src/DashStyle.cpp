@@ -170,6 +170,49 @@ void ReadIntSingle(JsonNode* root,
   value = json_object_get_int_member(object, member_name.c_str());
 }
 
+void ReadIntArray(JsonNode*    root,
+                  std::string const& node_name,
+                  std::string const& member_name,
+                  std::vector<int>& values)
+{
+  JsonArray* array = GetArray(root, node_name, member_name);
+
+  if (!array)
+    return;
+
+  std::size_t size = std::min<size_t>(json_array_get_length(array),
+                                      values.size());
+  for (std::size_t i = 0; i < size; ++i)
+    values[i] = json_array_get_int_element(array, i);
+}
+
+void ReadModeArray(JsonNode*    root,
+                   std::string const& node_name,
+                   std::string const& member_name,
+                   std::vector<DashStyle::BlendMode>& modes)
+{
+  JsonArray* array = GetArray(root, node_name, member_name);
+  if (!array)
+    return;
+
+  std::size_t size = std::min<size_t>(json_array_get_length(array),
+                                      modes.size());
+  for (std::size_t i = 0; i < size; ++i)
+  {
+    const gchar* string = NULL;
+
+    string = json_array_get_string_element (array, i);
+    
+    if (!g_strcmp0 (string, "normal"))
+      modes[i] = DashStyle::BlendMode::BLEND_MODE_NORMAL;
+    
+    if (!g_strcmp0 (string, "multiply"))
+      modes[i] = DashStyle::BlendMode::BLEND_MODE_MULTIPLY;
+    
+    if (!g_strcmp0 (string, "screen"))
+      modes[i] = DashStyle::BlendMode::BLEND_MODE_SCREEN;
+  }
+}
 
 
 }
@@ -185,20 +228,10 @@ public:
 
   void UseDefaultValues();
 
-  bool ReadIntArray(JsonNode*    root,
-                    const gchar* nodeName,
-                    const gchar* memberName,
-                    int*         values);
-
   bool ReadModeSingle(JsonNode*    root,
                       const gchar* nodeName,
                       const gchar* memberName,
                       BlendMode*   mode);
-
-  bool ReadModeArray(JsonNode*    root,
-                     const gchar* nodeName,
-                     const gchar* memberName,
-                     BlendMode*   modes);
 
   bool ReadWeightSingle(JsonNode*    root,
                         const gchar* nodeName,
@@ -257,8 +290,8 @@ public:
   std::vector<nux::Color> _buttonLabelFillColor;
 
   std::vector<double> _buttonLabelOverlayOpacity;
-  BlendMode             _buttonLabelOverlayMode[STATES];
-  int                   _buttonLabelBlurSize[STATES];
+  std::vector<BlendMode> _buttonLabelOverlayMode;
+  std::vector<int> _buttonLabelBlurSize;
 
   nux::Color _regularTextColor;
   double                _regularTextSize;
@@ -286,6 +319,8 @@ DashStyle::Impl::Impl()
   , _buttonLabelTextColor(STATES)
   , _buttonLabelFillColor(STATES)
   , _buttonLabelOverlayOpacity(STATES)
+  , _buttonLabelOverlayMode(STATES)
+  , _buttonLabelBlurSize(STATES)
 {
     JsonParser*  parser = NULL;
     GError*      error  = NULL;
@@ -351,15 +386,15 @@ DashStyle::Impl::Impl()
                           "overlay-opacity",
                           _buttonLabelOverlayOpacity);
 
-    ReadModeArray (root,
-                   "button-label",
-                   "overlay-mode",
-                   _buttonLabelOverlayMode);
+    json::ReadModeArray(root,
+                        "button-label",
+                        "overlay-mode",
+                        _buttonLabelOverlayMode);
 
-    ReadIntArray (root,
-                  "button-label",
-                  "blur-size",
-                  _buttonLabelBlurSize);
+    json::ReadIntArray(root,
+                       "button-label",
+                       "blur-size",
+                       _buttonLabelBlurSize);
 
     // regular-text
     json::ReadColorSingle(root,
@@ -465,31 +500,6 @@ DashStyle::Impl::~Impl()
     cairo_font_options_destroy(_defaultFontOptions);
 }
 
-
-  bool DashStyle::Impl::ReadIntArray (JsonNode*    root,
-                                const gchar* nodeName,
-                                const gchar* memberName,
-                                int*         values)
-  {
-  JsonObject*  object = NULL;
-  JsonNode*    node   = NULL;
-    JsonArray*   array  = NULL;
-    unsigned int i      = 0;
-
-    if (!root || !nodeName || !memberName || !values)
-      return false;
-
-    object = json_node_get_object (root);
-    node   = json_object_get_member (object, nodeName);
-    object = json_node_get_object (node);
-    array  = json_object_get_array_member (object, memberName);
-
-    for (i = 0; i < json_array_get_length (array); i++)
-      values[i] = json_array_get_int_element (array, i);
-
-    return true;
-  }
-
   bool DashStyle::Impl::ReadModeSingle (JsonNode*    root,
                                   const gchar* nodeName,
                                   const gchar* memberName,
@@ -519,42 +529,6 @@ DashStyle::Impl::~Impl()
     return true;
   }
 
-  bool DashStyle::Impl::ReadModeArray (JsonNode*    root,
-                                 const gchar* nodeName,
-                                 const gchar* memberName,
-                                 BlendMode*   modes)
-  {
-  JsonObject*  object = NULL;
-  JsonNode*    node   = NULL;
-    JsonArray*   array  = NULL;
-  unsigned int i      = 0;
-
-    if (!root || !nodeName || !memberName || !modes)
-      return false;
-
-    object = json_node_get_object (root);
-    node   = json_object_get_member (object, nodeName);
-    object = json_node_get_object (node);
-    array  = json_object_get_array_member (object, memberName);
-
-    for (i = 0; i < json_array_get_length (array); i++)
-    {
-      const gchar* string = NULL;
-
-      string = json_array_get_string_element (array, i);
-
-      if (!g_strcmp0 (string, "normal"))
-        modes[i] = BLEND_MODE_NORMAL;
-
-      if (!g_strcmp0 (string, "multiply"))
-        modes[i] = BLEND_MODE_MULTIPLY;
-
-      if (!g_strcmp0 (string, "screen"))
-        modes[i] = BLEND_MODE_SCREEN;
-  }
-
-    return true;
-  }
 
   bool DashStyle::Impl::ReadWeightSingle (JsonNode*    root,
                                     const gchar* nodeName,
