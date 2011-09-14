@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2011 Canonical Ltd
  *
@@ -30,287 +31,153 @@
 
 namespace unity
 {
-  bool DashStyle::ReadColorSingle (JsonNode*    root,
-                                   const gchar* nodeName,
-                                   const gchar* memberName,
-                                   double*      color)
-  {
-  JsonObject* object = NULL;
-  JsonNode*   node   = NULL;
+namespace
+{
+// TODO: KILL THESE AT THE FIRST OPPORTUNITY
+const int STATES = 5;
+const int CHANNELS = 3;
+const int R = 0;
+const int G = 1;
+const int B = 2;
+}
 
-    if (!root || !nodeName || !memberName || !color)
-      return false;
+class DashStyle::Impl
+{
+public:
+  Impl();
+  ~Impl();
 
-    object = json_node_get_object (root);
-    node   = json_object_get_member (object, nodeName);
-    object = json_node_get_object (node);
+  void Blur(cairo_t* cr, int size);
 
-    const gchar* string = NULL;
-    PangoColor   col    = {0, 0, 0};
+  void UseDefaultValues();
 
-    string = json_object_get_string_member (object, memberName);
-    pango_color_parse (&col, string);
-    color[R] = (double) col.red   / (double) 0xffff;
-    color[G] = (double) col.green / (double) 0xffff;
-    color[B] = (double) col.blue  / (double) 0xffff;
+  bool ReadColorSingle(JsonNode*    root,
+                       const gchar* nodeName,
+                       const gchar* memberName,
+                       double*      color);
 
-    return true;
-  }
+  bool ReadColorArray(JsonNode*    root,
+                      const gchar* nodeName,
+                      const gchar* memberName,
+                      double       colors[][CHANNELS]);
 
-  bool DashStyle::ReadColorArray (JsonNode*    root,
-                                  const gchar* nodeName,
-                                  const gchar* memberName,
-                                  double colors[][CHANNELS])
-  {
-  JsonObject*  object = NULL;
-  JsonNode*    node   = NULL;
-    JsonArray*   array  = NULL;
-    unsigned int i      = 0;
+  bool ReadDoubleSingle(JsonNode*    root,
+                        const gchar* nodeName,
+                        const gchar* memberName,
+                        double*      value);
 
-    if (!root || !nodeName || !memberName || !colors)
-      return false;
+  bool ReadDoubleArray(JsonNode*    root,
+                       const gchar* nodeName,
+                       const gchar* memberName,
+                       double*      values);
 
-    object = json_node_get_object (root);
-    node   = json_object_get_member (object, nodeName);
-    object = json_node_get_object (node);
-    array  = json_object_get_array_member (object, memberName);
+  bool ReadIntSingle(JsonNode*    root,
+                     const gchar* nodeName,
+                     const gchar* memberName,
+                     int*         value);
 
-    for (i = 0; i < json_array_get_length (array); i++)
-    {
-      const gchar* string = NULL;
-      PangoColor   color  = {0, 0, 0};
-      string = json_array_get_string_element (array, i);
-      pango_color_parse (&color, string);
-      colors[i][R] = (double) color.red   / (double) 0xffff;
-      colors[i][G] = (double) color.green / (double) 0xffff;
-      colors[i][B] = (double) color.blue  / (double) 0xffff;
-    }
+  bool ReadIntArray(JsonNode*    root,
+                    const gchar* nodeName,
+                    const gchar* memberName,
+                    int*         values);
 
-    return true;
-  }
+  bool ReadModeSingle(JsonNode*    root,
+                      const gchar* nodeName,
+                      const gchar* memberName,
+                      BlendMode*   mode);
 
-  bool DashStyle::ReadDoubleSingle (JsonNode*    root,
-                                    const gchar* nodeName,
-                                    const gchar* memberName,
-                                    double*      value)
-  {
-  JsonObject* object = NULL;
-  JsonNode*   node   = NULL;
+  bool ReadModeArray(JsonNode*    root,
+                     const gchar* nodeName,
+                     const gchar* memberName,
+                     BlendMode*   modes);
 
-    if (!root || !nodeName || !memberName || !value)
-      return false;
+  bool ReadWeightSingle(JsonNode*    root,
+                        const gchar* nodeName,
+                        const gchar* memberName,
+                        FontWeight*  weight);
 
-    object = json_node_get_object (root);
-    node   = json_object_get_member (object, nodeName);
-    object = json_node_get_object (node);
+  bool ReadWeightArray(JsonNode*    root,
+                       const gchar* nodeName,
+                       const gchar* memberName,
+                       FontWeight*  weights);
 
-    *value = json_object_get_double_member (object, memberName);
+  void Star(cairo_t* cr, double size);
 
-    return true;
-  }
+  void GetTextExtents(int& width,
+                      int& height,
+                      int  maxWidth,
+                      int  maxHeight,
+                      const std::string text);
 
-  bool DashStyle::ReadDoubleArray (JsonNode*    root,
-                                   const gchar* nodeName,
-                                   const gchar* memberName,
-                                   double*      values)
-  {
-  JsonObject*  object = NULL;
-  JsonNode*    node   = NULL;
-    JsonArray*   array  = NULL;
-    unsigned int i      = 0;
+  void Text(cairo_t*    cr,
+            double      size,
+            double*     color,
+            double      opacity,
+            std::string label);
 
-    if (!root || !nodeName || !memberName || !values)
-      return false;
+  void ButtonOutlinePath(cairo_t* cr, bool align);
 
-    object = json_node_get_object (root);
-    node   = json_object_get_member (object, nodeName);
-    object = json_node_get_object (node);
-    array  = json_object_get_array_member (object, memberName);
+  void ButtonOutlinePathSegment(cairo_t* cr, Segment segment);
 
-    for (i = 0; i < json_array_get_length (array); i++)
-      values[i] = json_array_get_double_element (array, i);
+  void ArrowPath(cairo_t* cr, Arrow arrow);
 
-    return true;
-  }
+  cairo_operator_t SetBlendMode(cairo_t* cr, BlendMode mode);
 
-  bool DashStyle::ReadIntSingle (JsonNode*    root,
-                                 const gchar* nodeName,
-                                 const gchar* memberName,
-                                 int*         value)
-  {
-  JsonObject* object = NULL;
-  JsonNode*   node   = NULL;
+  void DrawOverlay(cairo_t*  cr,
+                   double    opacity,
+                   BlendMode mode,
+                   int       blurSize);
 
-    if (!root || !nodeName || !memberName || !value)
-      return false;
+  void RoundedRectSegment(cairo_t*   cr,
+                          double     aspect,
+                          double     x,
+                          double     y,
+                          double     cornerRadius,
+                          double     width,
+                          double     height,
+                          Segment    segment,
+                          Arrow      arrow,
+                          nux::State state);
 
-    object = json_node_get_object (root);
-    node   = json_object_get_member (object, nodeName);
-    object = json_node_get_object (node);
+  // Members
+  cairo_font_options_t* _defaultFontOptions;
 
-    *value = json_object_get_int_member (object, memberName);
+  double                _buttonLabelBorderColor[STATES][CHANNELS];
+  double                _buttonLabelBorderOpacity[STATES];
+  double                _buttonLabelBorderSize[STATES];
+  double                _buttonLabelTextSize;
+  double                _buttonLabelTextColor[STATES][CHANNELS];
+  double                _buttonLabelTextOpacity[STATES];
+  double                _buttonLabelFillColor[STATES][CHANNELS];
+  double                _buttonLabelFillOpacity[STATES];
+  double                _buttonLabelOverlayOpacity[STATES];
+  BlendMode             _buttonLabelOverlayMode[STATES];
+  int                   _buttonLabelBlurSize[STATES];
 
-    return true;
-  }
+  double                _regularTextColor[CHANNELS];
+  double                _regularTextOpacity;
+  double                _regularTextSize;
+  BlendMode             _regularTextMode;
+  FontWeight            _regularTextWeight;
 
-  bool DashStyle::ReadIntArray (JsonNode*    root,
-                                const gchar* nodeName,
-                                const gchar* memberName,
-                                int*         values)
-  {
-  JsonObject*  object = NULL;
-  JsonNode*    node   = NULL;
-    JsonArray*   array  = NULL;
-    unsigned int i      = 0;
+  double                _separatorSize;
+  double                _separatorColor[CHANNELS];
+  double                _separatorOpacity;
+  double                _separatorOverlayOpacity;
+  BlendMode             _separatorOverlayMode;
+  int                   _separatorBlurSize;
 
-    if (!root || !nodeName || !memberName || !values)
-      return false;
+  double                _scrollbarColor[CHANNELS];
+  double                _scrollbarOpacity;
+  double                _scrollbarOverlayOpacity;
+  BlendMode             _scrollbarOverlayMode;
+  int                   _scrollbarBlurSize;
+  int                   _scrollbarSize;
+  double                _scrollbarCornerRadius;
+};
 
-    object = json_node_get_object (root);
-    node   = json_object_get_member (object, nodeName);
-    object = json_node_get_object (node);
-    array  = json_object_get_array_member (object, memberName);
-
-    for (i = 0; i < json_array_get_length (array); i++)
-      values[i] = json_array_get_int_element (array, i);
-
-    return true;
-  }
-
-  bool DashStyle::ReadModeSingle (JsonNode*    root,
-                                  const gchar* nodeName,
-                                  const gchar* memberName,
-                                  BlendMode*   mode)
-  {
-  JsonObject*  object = NULL;
-  JsonNode*    node   = NULL;
-    const gchar* string = NULL;
-
-    if (!root || !nodeName || !memberName || !mode)
-      return false;
-
-    object = json_node_get_object (root);
-    node   = json_object_get_member (object, nodeName);
-    object = json_node_get_object (node);
-
-    string = json_object_get_string_member (object, memberName);
-    if (!g_strcmp0 (string, "normal"))
-      *mode = BLEND_MODE_NORMAL ;
-
-    if (!g_strcmp0 (string, "multiply"))
-      *mode = BLEND_MODE_MULTIPLY ;
-
-    if (!g_strcmp0 (string, "screen"))
-      *mode = BLEND_MODE_SCREEN ;
-
-    return true;
-  }
-
-  bool DashStyle::ReadModeArray (JsonNode*    root,
-                                 const gchar* nodeName,
-                                 const gchar* memberName,
-                                 BlendMode*   modes)
-  {
-  JsonObject*  object = NULL;
-  JsonNode*    node   = NULL;
-    JsonArray*   array  = NULL;
-  unsigned int i      = 0;
-
-    if (!root || !nodeName || !memberName || !modes)
-      return false;
-
-    object = json_node_get_object (root);
-    node   = json_object_get_member (object, nodeName);
-    object = json_node_get_object (node);
-    array  = json_object_get_array_member (object, memberName);
-
-    for (i = 0; i < json_array_get_length (array); i++)
-    {
-      const gchar* string = NULL;
-
-      string = json_array_get_string_element (array, i);
-
-      if (!g_strcmp0 (string, "normal"))
-        modes[i] = BLEND_MODE_NORMAL;
-
-      if (!g_strcmp0 (string, "multiply"))
-        modes[i] = BLEND_MODE_MULTIPLY;
-
-      if (!g_strcmp0 (string, "screen"))
-        modes[i] = BLEND_MODE_SCREEN;
-  }
-
-    return true;
-  }
-
-  bool DashStyle::ReadWeightSingle (JsonNode*    root,
-                                    const gchar* nodeName,
-                                    const gchar* memberName,
-                                    FontWeight*  weight)
-  {
-  JsonObject*  object = NULL;
-  JsonNode*    node   = NULL;
-    const gchar* string = NULL;
-
-    if (!root || !nodeName || !memberName || !weight)
-      return false;
-
-    object = json_node_get_object (root);
-    node   = json_object_get_member (object, nodeName);
-    object = json_node_get_object (node);
-
-    string = json_object_get_string_member (object, memberName);
-    if (!g_strcmp0 (string, "light"))
-      *weight = FONT_WEIGHT_LIGHT;
-
-    if (!g_strcmp0 (string, "regular"))
-      *weight = FONT_WEIGHT_REGULAR;
-
-    if (!g_strcmp0 (string, "bold"))
-      *weight = FONT_WEIGHT_BOLD;
-
-    return true;
-  }
-
-  bool DashStyle::ReadWeightArray (JsonNode*    root,
-                                   const gchar* nodeName,
-                                   const gchar* memberName,
-                                   FontWeight*  weights)
-  {
-  JsonObject*  object = NULL;
-  JsonNode*    node   = NULL;
-    JsonArray*   array  = NULL;
-  unsigned int i      = 0;
-
-    if (!root || !nodeName || !memberName || !weights)
-      return false;
-
-    object = json_node_get_object (root);
-    node   = json_object_get_member (object, nodeName);
-    object = json_node_get_object (node);
-    array  = json_object_get_array_member (object, memberName);
-
-    for (i = 0; i < json_array_get_length (array); i++)
-    {
-      const gchar* string = NULL;
-
-      string = json_array_get_string_element (array, i);
-
-      if (!g_strcmp0 (string, "light"))
-        weights[i] = FONT_WEIGHT_LIGHT;
-
-      if (!g_strcmp0 (string, "regular"))
-        weights[i] = FONT_WEIGHT_REGULAR;
-
-      if (!g_strcmp0 (string, "bold"))
-        weights[i] = FONT_WEIGHT_BOLD;
-  }
-
-    return true;
-  }
-
-  DashStyle::DashStyle ()
-  {
+DashStyle::Impl::Impl()
+{
     JsonParser*  parser = NULL;
     GError*      error  = NULL;
     gboolean     result = FALSE;
@@ -493,26 +360,314 @@ namespace unity
     g_object_unref (parser);
 
     // create fallback font-options
-    _defaultFontOptions = NULL;
     _defaultFontOptions = cairo_font_options_create ();
     if (cairo_font_options_status (_defaultFontOptions) == CAIRO_STATUS_SUCCESS)
     {
       cairo_font_options_set_antialias (_defaultFontOptions,
                                         CAIRO_ANTIALIAS_GRAY);
-                                        //CAIRO_ANTIALIAS_SUBPIXEL);
       cairo_font_options_set_subpixel_order (_defaultFontOptions,
                                              CAIRO_SUBPIXEL_ORDER_RGB);
       cairo_font_options_set_hint_style (_defaultFontOptions,
                                          CAIRO_HINT_STYLE_SLIGHT);
       cairo_font_options_set_hint_metrics (_defaultFontOptions,
                                            CAIRO_HINT_METRICS_ON);
+    }
+}
+
+DashStyle::Impl::~Impl()
+{
+  if (cairo_font_options_status(_defaultFontOptions) == CAIRO_STATUS_SUCCESS)
+    cairo_font_options_destroy(_defaultFontOptions);
+}
+
+
+bool DashStyle::Impl::ReadColorSingle (JsonNode*    root,
+                                   const gchar* nodeName,
+                                   const gchar* memberName,
+                                   double*      color)
+  {
+  JsonObject* object = NULL;
+  JsonNode*   node   = NULL;
+
+    if (!root || !nodeName || !memberName || !color)
+      return false;
+
+    object = json_node_get_object (root);
+    node   = json_object_get_member (object, nodeName);
+    object = json_node_get_object (node);
+
+    const gchar* string = NULL;
+    PangoColor   col    = {0, 0, 0};
+
+    string = json_object_get_string_member (object, memberName);
+    pango_color_parse (&col, string);
+    color[R] = (double) col.red   / (double) 0xffff;
+    color[G] = (double) col.green / (double) 0xffff;
+    color[B] = (double) col.blue  / (double) 0xffff;
+
+    return true;
   }
+
+  bool DashStyle::Impl::ReadColorArray (JsonNode*    root,
+                                  const gchar* nodeName,
+                                  const gchar* memberName,
+                                  double colors[][CHANNELS])
+  {
+  JsonObject*  object = NULL;
+  JsonNode*    node   = NULL;
+    JsonArray*   array  = NULL;
+    unsigned int i      = 0;
+
+    if (!root || !nodeName || !memberName || !colors)
+      return false;
+
+    object = json_node_get_object (root);
+    node   = json_object_get_member (object, nodeName);
+    object = json_node_get_object (node);
+    array  = json_object_get_array_member (object, memberName);
+
+    for (i = 0; i < json_array_get_length (array); i++)
+    {
+      const gchar* string = NULL;
+      PangoColor   color  = {0, 0, 0};
+      string = json_array_get_string_element (array, i);
+      pango_color_parse (&color, string);
+      colors[i][R] = (double) color.red   / (double) 0xffff;
+      colors[i][G] = (double) color.green / (double) 0xffff;
+      colors[i][B] = (double) color.blue  / (double) 0xffff;
+    }
+
+    return true;
+  }
+
+  bool DashStyle::Impl::ReadDoubleSingle (JsonNode*    root,
+                                    const gchar* nodeName,
+                                    const gchar* memberName,
+                                    double*      value)
+  {
+  JsonObject* object = NULL;
+  JsonNode*   node   = NULL;
+
+    if (!root || !nodeName || !memberName || !value)
+      return false;
+
+    object = json_node_get_object (root);
+    node   = json_object_get_member (object, nodeName);
+    object = json_node_get_object (node);
+
+    *value = json_object_get_double_member (object, memberName);
+
+    return true;
+  }
+
+  bool DashStyle::Impl::ReadDoubleArray (JsonNode*    root,
+                                   const gchar* nodeName,
+                                   const gchar* memberName,
+                                   double*      values)
+  {
+  JsonObject*  object = NULL;
+  JsonNode*    node   = NULL;
+    JsonArray*   array  = NULL;
+    unsigned int i      = 0;
+
+    if (!root || !nodeName || !memberName || !values)
+      return false;
+
+    object = json_node_get_object (root);
+    node   = json_object_get_member (object, nodeName);
+    object = json_node_get_object (node);
+    array  = json_object_get_array_member (object, memberName);
+
+    for (i = 0; i < json_array_get_length (array); i++)
+      values[i] = json_array_get_double_element (array, i);
+
+    return true;
+  }
+
+  bool DashStyle::Impl::ReadIntSingle (JsonNode*    root,
+                                 const gchar* nodeName,
+                                 const gchar* memberName,
+                                 int*         value)
+  {
+  JsonObject* object = NULL;
+  JsonNode*   node   = NULL;
+
+    if (!root || !nodeName || !memberName || !value)
+      return false;
+
+    object = json_node_get_object (root);
+    node   = json_object_get_member (object, nodeName);
+    object = json_node_get_object (node);
+
+    *value = json_object_get_int_member (object, memberName);
+
+    return true;
+  }
+
+  bool DashStyle::Impl::ReadIntArray (JsonNode*    root,
+                                const gchar* nodeName,
+                                const gchar* memberName,
+                                int*         values)
+  {
+  JsonObject*  object = NULL;
+  JsonNode*    node   = NULL;
+    JsonArray*   array  = NULL;
+    unsigned int i      = 0;
+
+    if (!root || !nodeName || !memberName || !values)
+      return false;
+
+    object = json_node_get_object (root);
+    node   = json_object_get_member (object, nodeName);
+    object = json_node_get_object (node);
+    array  = json_object_get_array_member (object, memberName);
+
+    for (i = 0; i < json_array_get_length (array); i++)
+      values[i] = json_array_get_int_element (array, i);
+
+    return true;
+  }
+
+  bool DashStyle::Impl::ReadModeSingle (JsonNode*    root,
+                                  const gchar* nodeName,
+                                  const gchar* memberName,
+                                  BlendMode*   mode)
+  {
+  JsonObject*  object = NULL;
+  JsonNode*    node   = NULL;
+    const gchar* string = NULL;
+
+    if (!root || !nodeName || !memberName || !mode)
+      return false;
+
+    object = json_node_get_object (root);
+    node   = json_object_get_member (object, nodeName);
+    object = json_node_get_object (node);
+
+    string = json_object_get_string_member (object, memberName);
+    if (!g_strcmp0 (string, "normal"))
+      *mode = BLEND_MODE_NORMAL ;
+
+    if (!g_strcmp0 (string, "multiply"))
+      *mode = BLEND_MODE_MULTIPLY ;
+
+    if (!g_strcmp0 (string, "screen"))
+      *mode = BLEND_MODE_SCREEN ;
+
+    return true;
+  }
+
+  bool DashStyle::Impl::ReadModeArray (JsonNode*    root,
+                                 const gchar* nodeName,
+                                 const gchar* memberName,
+                                 BlendMode*   modes)
+  {
+  JsonObject*  object = NULL;
+  JsonNode*    node   = NULL;
+    JsonArray*   array  = NULL;
+  unsigned int i      = 0;
+
+    if (!root || !nodeName || !memberName || !modes)
+      return false;
+
+    object = json_node_get_object (root);
+    node   = json_object_get_member (object, nodeName);
+    object = json_node_get_object (node);
+    array  = json_object_get_array_member (object, memberName);
+
+    for (i = 0; i < json_array_get_length (array); i++)
+    {
+      const gchar* string = NULL;
+
+      string = json_array_get_string_element (array, i);
+
+      if (!g_strcmp0 (string, "normal"))
+        modes[i] = BLEND_MODE_NORMAL;
+
+      if (!g_strcmp0 (string, "multiply"))
+        modes[i] = BLEND_MODE_MULTIPLY;
+
+      if (!g_strcmp0 (string, "screen"))
+        modes[i] = BLEND_MODE_SCREEN;
+  }
+
+    return true;
+  }
+
+  bool DashStyle::Impl::ReadWeightSingle (JsonNode*    root,
+                                    const gchar* nodeName,
+                                    const gchar* memberName,
+                                    FontWeight*  weight)
+  {
+  JsonObject*  object = NULL;
+  JsonNode*    node   = NULL;
+    const gchar* string = NULL;
+
+    if (!root || !nodeName || !memberName || !weight)
+      return false;
+
+    object = json_node_get_object (root);
+    node   = json_object_get_member (object, nodeName);
+    object = json_node_get_object (node);
+
+    string = json_object_get_string_member (object, memberName);
+    if (!g_strcmp0 (string, "light"))
+      *weight = FONT_WEIGHT_LIGHT;
+
+    if (!g_strcmp0 (string, "regular"))
+      *weight = FONT_WEIGHT_REGULAR;
+
+    if (!g_strcmp0 (string, "bold"))
+      *weight = FONT_WEIGHT_BOLD;
+
+    return true;
+  }
+
+  bool DashStyle::Impl::ReadWeightArray (JsonNode*    root,
+                                   const gchar* nodeName,
+                                   const gchar* memberName,
+                                   FontWeight*  weights)
+  {
+  JsonObject*  object = NULL;
+  JsonNode*    node   = NULL;
+    JsonArray*   array  = NULL;
+  unsigned int i      = 0;
+
+    if (!root || !nodeName || !memberName || !weights)
+      return false;
+
+    object = json_node_get_object (root);
+    node   = json_object_get_member (object, nodeName);
+    object = json_node_get_object (node);
+    array  = json_object_get_array_member (object, memberName);
+
+    for (i = 0; i < json_array_get_length (array); i++)
+    {
+      const gchar* string = NULL;
+
+      string = json_array_get_string_element (array, i);
+
+      if (!g_strcmp0 (string, "light"))
+        weights[i] = FONT_WEIGHT_LIGHT;
+
+      if (!g_strcmp0 (string, "regular"))
+        weights[i] = FONT_WEIGHT_REGULAR;
+
+      if (!g_strcmp0 (string, "bold"))
+        weights[i] = FONT_WEIGHT_BOLD;
+  }
+
+    return true;
+  }
+
+  DashStyle::DashStyle()
+    : pimpl(new Impl())
+  {
   }
 
   DashStyle::~DashStyle ()
   {
-  if (cairo_font_options_status (_defaultFontOptions) == CAIRO_STATUS_SUCCESS)
-      cairo_font_options_destroy (_defaultFontOptions);
+    delete pimpl;
   }
 
   DashStyle* DashStyle::GetDefault()
@@ -789,6 +944,11 @@ namespace unity
 
   void DashStyle::Blur (cairo_t* cr, int size)
   {
+    pimpl->Blur(cr, size);
+  }
+
+  void DashStyle::Impl::Blur(cairo_t* cr, int size)
+  {
     // sanity check
     if (cairo_status (cr) != CAIRO_STATUS_SUCCESS &&
         cairo_surface_get_type (cairo_get_target (cr)) != CAIRO_SURFACE_TYPE_IMAGE)
@@ -833,7 +993,7 @@ namespace unity
     cairo_surface_mark_dirty (surface);
   }
 
-  void DashStyle::Star (cairo_t* cr, double size)
+  void DashStyle::Impl::Star (cairo_t* cr, double size)
   {
     double outter[5][2] = {{0.0, 0.0},
                            {0.0, 0.0},
@@ -870,7 +1030,7 @@ namespace unity
   cairo_close_path (cr);
   }
 
-  void DashStyle::UseDefaultValues ()
+void DashStyle::Impl::UseDefaultValues ()
   {
     // button-label
     _buttonLabelBorderColor[nux::NUX_STATE_NORMAL][R]      = 0.53;
@@ -997,7 +1157,7 @@ namespace unity
     _scrollbarCornerRadius   = 1.5;
   }
 
-  void DashStyle::ArrowPath (cairo_t* cr, Arrow arrow)
+  void DashStyle::Impl::ArrowPath (cairo_t* cr, Arrow arrow)
   {
     double x  = 0.0;
     double y  = 0.0;
@@ -1045,7 +1205,7 @@ namespace unity
   }
   }
 
-  void DashStyle::ButtonOutlinePath (cairo_t* cr, bool align)
+  void DashStyle::Impl::ButtonOutlinePath (cairo_t* cr, bool align)
   {
     double x  = 2.0;
     double y  = 2.0;
@@ -1181,7 +1341,7 @@ namespace unity
     cairo_close_path (cr);
   }
 
-  void DashStyle::RoundedRectSegment (cairo_t*   cr,
+  void DashStyle::Impl::RoundedRectSegment (cairo_t*   cr,
                                       double     aspect,
                                       double     x,
                                       double     y,
@@ -1308,7 +1468,7 @@ namespace unity
     }
   }
 
-  void DashStyle::ButtonOutlinePathSegment (cairo_t* cr, Segment segment)
+  void DashStyle::Impl::ButtonOutlinePathSegment (cairo_t* cr, Segment segment)
   {
     double   x  = 0.0;
     double   y  = 2.0;
@@ -1465,7 +1625,7 @@ namespace unity
     }
   }
 
-  void DashStyle::GetTextExtents (int& width,
+  void DashStyle::Impl::GetTextExtents (int& width,
                                   int& height,
                                   int  maxWidth,
                                   int  maxHeight,
@@ -1540,7 +1700,7 @@ namespace unity
     cairo_surface_destroy(surface);
   }
 
-  void DashStyle::Text (cairo_t*    cr,
+  void DashStyle::Impl::Text (cairo_t*    cr,
                         double      size,
                         double*     color,
                         double      opacity,
@@ -1638,7 +1798,7 @@ namespace unity
     g_free(fontName);
   }
 
-  cairo_operator_t DashStyle::SetBlendMode (cairo_t* cr, BlendMode mode)
+  cairo_operator_t DashStyle::Impl::SetBlendMode (cairo_t* cr, BlendMode mode)
   {
     // sanity checks
     if (cairo_status (cr) != CAIRO_STATUS_SUCCESS)
@@ -1660,7 +1820,7 @@ namespace unity
     return old;
   }
 
-  void DashStyle::DrawOverlay (cairo_t*  cr,
+  void DashStyle::Impl::DrawOverlay (cairo_t*  cr,
                                double    opacity,
                                BlendMode mode,
                                int       blurSize)
@@ -1756,32 +1916,32 @@ namespace unity
                  h - (double) (2 * garnish),
                  false);
 
-    if (_buttonLabelFillOpacity[state] != 0.0)
+    if (pimpl->_buttonLabelFillOpacity[state] != 0.0)
     {
       cairo_set_source_rgba (cr,
-                             _buttonLabelFillColor[state][R],
-                             _buttonLabelFillColor[state][G],
-                             _buttonLabelFillColor[state][B],
-                             _buttonLabelFillOpacity[state]);
+                             pimpl->_buttonLabelFillColor[state][R],
+                             pimpl->_buttonLabelFillColor[state][G],
+                             pimpl->_buttonLabelFillColor[state][B],
+                             pimpl->_buttonLabelFillOpacity[state]);
       cairo_fill_preserve (cr);
     }
     cairo_set_source_rgba (cr,
-                           _buttonLabelBorderColor[state][R],
-                           _buttonLabelBorderColor[state][G],
-                           _buttonLabelBorderColor[state][B],
-                           _buttonLabelBorderOpacity[state]);
-    cairo_set_line_width (cr, _buttonLabelBorderSize[state]);
+                           pimpl->_buttonLabelBorderColor[state][R],
+                           pimpl->_buttonLabelBorderColor[state][G],
+                           pimpl->_buttonLabelBorderColor[state][B],
+                           pimpl->_buttonLabelBorderOpacity[state]);
+    cairo_set_line_width (cr, pimpl->_buttonLabelBorderSize[state]);
     cairo_stroke (cr);
 
-    DrawOverlay (cr,
-                 _buttonLabelOverlayOpacity[state],
-                 _buttonLabelOverlayMode[state],
-                 _buttonLabelBlurSize[state] * 0.75);
+    pimpl->DrawOverlay (cr,
+                 pimpl->_buttonLabelOverlayOpacity[state],
+                 pimpl->_buttonLabelOverlayMode[state],
+                 pimpl->_buttonLabelBlurSize[state] * 0.75);
 
-    Text (cr,
-          _buttonLabelTextSize,
-          _buttonLabelTextColor[state],
-          _buttonLabelTextOpacity[state],
+    pimpl->Text (cr,
+          pimpl->_buttonLabelTextSize,
+          pimpl->_buttonLabelTextColor[state],
+          pimpl->_buttonLabelTextOpacity[state],
           label);
 
     return true;
@@ -1802,7 +1962,7 @@ namespace unity
 
     cairo_save (cr);
     cairo_translate (cr, w / 2.0, h / 2.0);
-    Star (cr, radius);
+    pimpl->Star (cr, radius);
     cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 0.2);
     cairo_fill_preserve (cr);
     cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 0.5);
@@ -1836,7 +1996,7 @@ namespace unity
 
     cairo_save (cr);
     cairo_translate (cr, w / 2.0, h / 2.0);
-    Star (cr, radius);
+    pimpl->Star (cr, radius);
     cairo_fill_preserve (cr);
     cairo_pattern_destroy (pattern);
     cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 0.5);
@@ -1862,7 +2022,7 @@ namespace unity
 
   cairo_save (cr);
     cairo_translate (cr, w / 2.0, h / 2.0);
-    Star (cr, radius);
+    pimpl->Star (cr, radius);
   cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 1.0);
     cairo_fill_preserve (cr);
   cairo_stroke (cr); // to make sure it's as "large" as the empty and half ones
@@ -1901,7 +2061,7 @@ namespace unity
       w -= 2.0;
 	}
 
-    RoundedRectSegment (cr,
+    pimpl->RoundedRectSegment (cr,
                         1.0,
                         x,
                         y,
@@ -1912,26 +2072,26 @@ namespace unity
                         arrow,
                         state);
 
-    if (_buttonLabelFillOpacity[state] != 0.0)
+    if (pimpl->_buttonLabelFillOpacity[state] != 0.0)
     {
       cairo_set_source_rgba (cr,
-                             _buttonLabelFillColor[state][R],
-                             _buttonLabelFillColor[state][G],
-                             _buttonLabelFillColor[state][B],
-                             _buttonLabelFillOpacity[state]);
+                             pimpl->_buttonLabelFillColor[state][R],
+                             pimpl->_buttonLabelFillColor[state][G],
+                             pimpl->_buttonLabelFillColor[state][B],
+                             pimpl->_buttonLabelFillOpacity[state]);
       cairo_fill_preserve (cr);
     }
     cairo_set_source_rgba (cr,
-                           _buttonLabelBorderColor[state][R],
-                           _buttonLabelBorderColor[state][G],
-                           _buttonLabelBorderColor[state][B],
-                           _buttonLabelBorderOpacity[state]);
-    cairo_set_line_width (cr, _buttonLabelBorderSize[state]);
+                           pimpl->_buttonLabelBorderColor[state][R],
+                           pimpl->_buttonLabelBorderColor[state][G],
+                           pimpl->_buttonLabelBorderColor[state][B],
+                           pimpl->_buttonLabelBorderOpacity[state]);
+    cairo_set_line_width (cr, pimpl->_buttonLabelBorderSize[state]);
     cairo_stroke (cr);
-    Text (cr,
-        _buttonLabelTextSize,
-        _buttonLabelTextColor[state],
-        _buttonLabelTextOpacity[state],
+    pimpl->Text (cr,
+        pimpl->_buttonLabelTextSize,
+        pimpl->_buttonLabelTextColor[state],
+        pimpl->_buttonLabelTextOpacity[state],
         label);
 
     return true;
@@ -2003,20 +2163,20 @@ namespace unity
     double x = w / 2.0;
     double y = 2.0;
 
-    cairo_set_line_width (cr, _separatorSize);
+    cairo_set_line_width (cr, pimpl->_separatorSize);
     cairo_set_source_rgba (cr,
-                           _separatorColor[R],
-                           _separatorColor[G],
-                           _separatorColor[B],
-                           _separatorOpacity);
+                           pimpl->_separatorColor[R],
+                           pimpl->_separatorColor[G],
+                           pimpl->_separatorColor[B],
+                           pimpl->_separatorOpacity);
     cairo_move_to (cr, _align (x), _align (y));
     cairo_line_to (cr, _align (x), _align (h - 4.0));
     cairo_stroke (cr);
 
-    DrawOverlay (cr,
-                 _separatorOverlayOpacity,
-                 _separatorOverlayMode,
-                 _separatorBlurSize);
+    pimpl->DrawOverlay (cr,
+                 pimpl->_separatorOverlayOpacity,
+                 pimpl->_separatorOverlayMode,
+                 pimpl->_separatorBlurSize);
 
     return true;
   }
@@ -2035,20 +2195,20 @@ namespace unity
     double x = 2.0;
     double y = h / 2.0;
 
-    cairo_set_line_width (cr, _separatorSize);
+    cairo_set_line_width (cr, pimpl->_separatorSize);
     cairo_set_source_rgba (cr,
-                           _separatorColor[R],
-                           _separatorColor[G],
-                           _separatorColor[B],
-                           _separatorOpacity);
+                           pimpl->_separatorColor[R],
+                           pimpl->_separatorColor[G],
+                           pimpl->_separatorColor[B],
+                           pimpl->_separatorOpacity);
     cairo_move_to (cr, _align (x), _align (y));
     cairo_line_to (cr, _align (w - 4.0), _align (y));
     cairo_stroke (cr);
 
-    DrawOverlay (cr,
-                 _separatorOverlayOpacity,
-                 _separatorOverlayMode,
-                 _separatorBlurSize);
+    pimpl->DrawOverlay (cr,
+                 pimpl->_separatorOverlayOpacity,
+                 pimpl->_separatorOverlayMode,
+                 pimpl->_separatorBlurSize);
 
     return true;
   }
@@ -2059,8 +2219,8 @@ namespace unity
 
     for (int i = 0; i < STATES; i++)
     {
-      if (maxBlurSize < _buttonLabelBlurSize[i])
-        maxBlurSize = _buttonLabelBlurSize[i];
+      if (maxBlurSize < pimpl->_buttonLabelBlurSize[i])
+        maxBlurSize = pimpl->_buttonLabelBlurSize[i];
     }
 
     return 2 * maxBlurSize;
@@ -2068,11 +2228,11 @@ namespace unity
 
   int DashStyle::GetSeparatorGarnishSize ()
   {
-    return _separatorBlurSize;
+    return pimpl->_separatorBlurSize;
   }
 
   int DashStyle::GetScrollbarGarnishSize ()
   {
-    return _scrollbarBlurSize;
+    return pimpl->_scrollbarBlurSize;
   }
 }
