@@ -1826,7 +1826,6 @@ void UnityFBO::unbind ()
 {
   uScreen->setActiveFbo (0);
   (*GL::bindFramebuffer) (GL_FRAMEBUFFER_EXT, 0);
-  (*GL::bindFramebuffer) (GL_RENDERBUFFER_EXT, 0);
 
   glDrawBuffer (GL_BACK);
   glReadBuffer (GL_BACK);
