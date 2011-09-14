@@ -120,6 +120,7 @@ private:
   // Drawing related
   nux::Geometry content_geo_;
   nux::ObjectPtr <nux::IOpenGLBaseTexture> bg_blur_texture_;
+  nux::ObjectPtr <nux::IOpenGLBaseTexture> bg_shine_texture_;
 
   std::string last_activated_uri_;
 

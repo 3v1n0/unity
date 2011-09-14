@@ -61,6 +61,8 @@ public:
   nux::BaseTexture* GetDashTopCorner();
   nux::BaseTexture* GetDashTopTile();
 
+  nux::BaseTexture* GetDashShine();
+
   nux::BaseTexture* GetSearchMagnifyIcon();
   nux::BaseTexture* GetSearchCloseIcon();
   nux::BaseTexture* GetSearchCloseGlowIcon();
@@ -99,6 +101,8 @@ private:
   BaseTexturePtr _dash_left_tile;
   BaseTexturePtr _dash_top_corner;
   BaseTexturePtr _dash_top_tile;
+
+  BaseTexturePtr _dash_shine;
 
   BaseTexturePtr _search_magnify_texture;
   BaseTexturePtr _search_close_texture;

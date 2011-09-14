@@ -242,6 +242,13 @@ nux::BaseTexture* PlacesStyle::GetGroupExpandIcon()
   return _group_expand_texture.GetPointer();
 }
 
+nux::BaseTexture* PlacesStyle::GetDashShine()
+{
+  if (!_dash_shine)
+    _dash_shine = TextureFromFilename(PKGDATADIR"/dash_sheen.png");
+  return _dash_shine.GetPointer();
+}
+
 PlacesStyle::BaseTexturePtr PlacesStyle::TextureFromFilename(const char* filename)
 {
   glib::Object<GdkPixbuf> pixbuf;
