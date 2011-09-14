@@ -36,7 +36,7 @@ well_known_local_path = ("%s/share/locale/*/LC_MESSAGES/*unity*" % supported_pre
                          "%s/lib/*unity*" % supported_prefix,
                          "%s/share/dbus-1/services/*Unity*" % supported_prefix,
                          "%s/bin/*unity*" % supported_prefix,
-                         "%s/include/Unity*"  % supported_prefix;
+                         "%s/include/Unity*"  % supported_prefix,
                          "%s/lib/pkgconfig/unity*"  % supported_prefix,
                          "%s/.compiz-1/*/*gtkloader*" % home_dir,
                          "%s/.config/compiz-1/gsettings/schemas/*gtkloader*" % home_dir,
