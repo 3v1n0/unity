@@ -378,6 +378,7 @@ void LauncherController::SetupBamf()
     icon->SetSortPriority(_sort_priority++);
     RegisterIcon(icon);
   }
+  SortAndUpdate();
 
   _model->order_changed.connect(sigc::mem_fun(this, &LauncherController::SortAndUpdate));
   _model->saved.connect(sigc::mem_fun(this, &LauncherController::Save));

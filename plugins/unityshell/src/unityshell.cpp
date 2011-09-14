@@ -313,19 +313,24 @@ void UnityScreen::EnsureSuperKeybindings()
     if (shortcut == 0)
       continue;
     CreateSuperNewAction(static_cast<char>(shortcut));
+    CreateSuperNewAction(static_cast<char>(shortcut), true);
   }
 
   for (auto shortcut : dashController->GetAllShortcuts())
     CreateSuperNewAction(shortcut);
 }
 
-void UnityScreen::CreateSuperNewAction(char shortcut)
+void UnityScreen::CreateSuperNewAction(char shortcut, bool use_shift)
 {
     CompActionPtr action(new CompAction());
 
     CompAction::KeyBinding binding;
     std::ostringstream sout;
-    sout << "<Super>" << shortcut;
+    if (use_shift)
+      sout << "<Shift><Super>" << shortcut;
+    else
+      sout << "<Super>" << shortcut;
+
     binding.fromString(sout.str());
 
     action->setKey(binding);

@@ -238,7 +238,7 @@ private:
   void SendExecuteCommand();
 
   void EnsureSuperKeybindings ();
-  void CreateSuperNewAction(char shortcut);
+  void CreateSuperNewAction(char shortcut, bool use_shift=false);
 
   static gboolean initPluginActions(gpointer data);
   static void initLauncher(nux::NThread* thread, void* InitData);
