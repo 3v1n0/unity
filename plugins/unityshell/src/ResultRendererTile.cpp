@@ -260,15 +260,6 @@ void ResultRendererTile::LoadIcon(Result& row)
   }
   g_free(tmp5);
 
-  if (g_str_has_prefix(icon_name.c_str(), "/"))
-  {
-    // absolute filename, check to see if it exists first
-    glib::Object<GFile> file(g_file_new_for_path(icon_name.c_str()));
-    if (g_file_query_exists(file, NULL) == false)
-    {
-      icon_name = DEFAULT_GICON;
-    }
-  }
 
   GIcon*  icon = g_icon_new_for_string(icon_name.c_str(), NULL);
   TextureContainer* container = row.renderer<TextureContainer*>();
@@ -343,10 +334,17 @@ void ResultRendererTile::IconLoaded(std::string const& texid,
     container->blurred_icon = texture_blurred;
 
     NeedsRedraw.emit();
+
+    if (container)
+      container->slot_handle = 0;
   }
-  // Whether there is a pixbuf or not, we need to clear the slot_handle.
-  if (container)
-    container->slot_handle = 0;
+  else
+  {
+    // we need to load a missing icon
+    IconLoader::IconLoaderCallback slot = sigc::bind(sigc::mem_fun(this, &ResultRendererTile::IconLoaded), icon_name, row);
+    container->slot_handle = IconLoader::GetDefault().LoadFromGIconString(". GThemedIcon text-x-preview", 48, slot);
+  }
+
 }
 
 
