@@ -941,10 +941,9 @@ bool UnityScreen::showPanelFirstMenuKeyInitiate(CompAction* action,
                                                 CompAction::State state,
                                                 CompOption::Vector& options)
 {
+  grab_index_ = screen->pushGrab (None, "unityshell");
   // to receive the Terminate event
-  if (state & CompAction::StateInitKey)
-    action->setState(action->state() | CompAction::StateTermKey);
-
+  action->setState(action->state() | CompAction::StateTermKey);
   panelController->StartFirstMenuShow();
   return false;
 }
@@ -953,6 +952,8 @@ bool UnityScreen::showPanelFirstMenuKeyTerminate(CompAction* action,
                                                  CompAction::State state,
                                                  CompOption::Vector& options)
 {
+  screen->removeGrab(grab_index_, NULL);
+  action->setState (action->state() & (unsigned)~(CompAction::StateTermKey));
   panelController->EndFirstMenuShow();
   return false;
 }
