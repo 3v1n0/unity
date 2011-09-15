@@ -768,6 +768,9 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
     nux::TexCoordXForm texxform;
     nux::Color color = nux::color::LightGrey;
 
+    if (arg.keyboard_nav_hl)
+      color = nux::color::Gray;
+
     if (arg.running_colored)
       color = nux::color::SkyBlue;
 
