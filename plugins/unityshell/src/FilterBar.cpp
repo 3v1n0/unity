@@ -28,6 +28,8 @@
 namespace unity
 {
 
+NUX_IMPLEMENT_OBJECT_TYPE(FilterBar);
+
   FilterBar::FilterBar(NUX_FILE_LINE_DECL)
       : View (NUX_FILE_LINE_PARAM) {
     // TODO - does the filterbar associate itself with a model of some sort?
@@ -37,8 +39,8 @@ namespace unity
     Init ();
   }
 
-  FilterBar::~FilterBar() {
-
+  FilterBar::~FilterBar()
+  {
   }
 
   void FilterBar::Init () {
@@ -70,19 +72,10 @@ namespace unity
       {
         nux::View *filter_view = iter.second;
         filter_map_.erase (filter_map_.find(iter.first));
-        GetLayout()->RemoveChildObject (filter_view);
-        filter_view->UnReference();
+        GetLayout()->RemoveChildObject(filter_view);
         break;
       }
     }
-  }
-
-  void FilterBar::ClearFilters () {
-    std::map<dash::Filter::Ptr, nux::View *>::iterator it;
-    for (it=filter_map_.begin() ; it != filter_map_.end(); it++)
-      GetLayout()->RemoveChildObject ((*it).second);
-
-    filter_map_.clear();
   }
 
 

@@ -96,7 +96,7 @@ void PlacesStyle::SetDefaultNColumns(int n_cols)
 
 int PlacesStyle::GetTileIconSize() const
 {
-  return 48;
+  return 64;
 }
 
 int PlacesStyle::GetTileWidth() const
@@ -106,7 +106,7 @@ int PlacesStyle::GetTileWidth() const
 
 int PlacesStyle::GetTileHeight() const
 {
-  return GetTileIconSize() + (_text_height * 4);
+  return GetTileIconSize() + (_text_height * 3) + 12;
 }
 
 int PlacesStyle::GetHomeTileIconSize() const
@@ -240,6 +240,13 @@ nux::BaseTexture* PlacesStyle::GetGroupExpandIcon()
   if (!_group_expand_texture)
     _group_expand_texture = TextureFromFilename(PKGDATADIR"/dash_group_expand.png");
   return _group_expand_texture.GetPointer();
+}
+
+nux::BaseTexture* PlacesStyle::GetDashShine()
+{
+  if (!_dash_shine)
+    _dash_shine = TextureFromFilename(PKGDATADIR"/dash_sheen.png");
+  return _dash_shine.GetPointer();
 }
 
 PlacesStyle::BaseTexturePtr PlacesStyle::TextureFromFilename(const char* filename)

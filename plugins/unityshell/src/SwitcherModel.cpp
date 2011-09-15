@@ -33,11 +33,15 @@ SwitcherModel::SwitcherModel(std::vector<AbstractLauncherIcon*> icons)
 {
   detail_selection = false;
   detail_selection_index = 0;
+
+  for (auto icon : _inner)
+    icon->Reference();
 }
 
 SwitcherModel::~SwitcherModel()
 {
-
+  for (auto icon : _inner)
+    icon->UnReference();
 }
 
 SwitcherModel::iterator

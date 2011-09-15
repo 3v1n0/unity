@@ -207,6 +207,7 @@ public:
   bool altTabDetailStartInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool altTabDetailStopInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool altTabNextWindowInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool altTabPrevWindowInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
 
   /* handle option changes and change settings inside of the
    * panel and dock views */
@@ -238,7 +239,7 @@ private:
   void SendExecuteCommand();
 
   void EnsureSuperKeybindings ();
-  void CreateSuperNewAction(char shortcut);
+  void CreateSuperNewAction(char shortcut, bool use_shift=false);
 
   static gboolean initPluginActions(gpointer data);
   static void initLauncher(nux::NThread* thread, void* InitData);

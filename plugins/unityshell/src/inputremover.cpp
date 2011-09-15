@@ -20,7 +20,9 @@
  */
 
 #include "inputremover.h"
+#include <X11/Xregion.h>
 #include <cstdio>
+#include <cstring>
 
 compiz::WindowInputRemover::WindowInputRemover (Display *dpy,
                                                 Window xid) :
@@ -35,12 +37,167 @@ compiz::WindowInputRemover::WindowInputRemover (Display *dpy,
   mBoundingRectOrdering (0),
   mRemoved (false)
 {
+  /* FIXME: roundtrip */
+  XShapeQueryExtension (mDpy, &mShapeEvent, &mShapeError);
 }
 
 compiz::WindowInputRemover::~WindowInputRemover ()
 {
   if (mRemoved)
     restore ();
+}
+
+void
+compiz::WindowInputRemover::sendShapeNotify ()
+{
+  /* Send a synthetic ShapeNotify event to the client and parent window
+   * since we ignored shape events when setting visibility
+   * in order to avoid cycling in the shape handling code -
+   * ignore the sent shape notify event since that will
+   * be send_event = true
+   *
+   * NB: We must send ShapeNotify events to both the client
+   * window and to the root window with SubstructureRedirectMask
+   * since NoEventMask will only deliver the event to the client
+   * (see xserver/dix/events.c on the handling of CantBeFiltered
+   *  messages)
+   *
+   * NB: This code will break if you don't have this patch on the
+   * X Server since XSendEvent for non-core events are broken.
+   *
+   * http://lists.x.org/archives/xorg-devel/2011-September/024996.html
+   */
+
+  XShapeEvent  xsev;
+  XEvent       *xev = (XEvent *) &xsev;
+  Window       rootReturn, parentReturn;
+  Window       childReturn;
+  Window       *children;
+  int          x, y, xOffset, yOffset;
+  unsigned int width, height, depth, border, nchildren;
+
+  memset (&xsev, 0, sizeof (XShapeEvent));
+
+  /* XXX: libXShape is weird and range checks the event
+   * type on event_to_wire so ensure that we are setting
+   * the event type on the right range */
+  xsev.type = (mShapeEvent - ShapeNotify) & 0x7f;
+  /* We must explicitly fill in these values to avoid padding errors */
+  xsev.serial = 0L;
+  xsev.send_event = TRUE;
+  xsev.display = mDpy;
+  xsev.window = mShapeWindow;
+
+  if (!mRemoved)
+  {
+    /* FIXME: these roundtrips suck */
+    XGetGeometry (mDpy, mShapeWindow, &rootReturn, &x, &y, &width, &height, &depth, &border);
+    XQueryTree (mDpy, mShapeWindow, &rootReturn, &parentReturn, &children, &nchildren);
+
+    /* We need to translate the co-ordinates of the origin to the
+     * client window to its parent to find out the offset of its
+     * position so that we can subtract that from the final bounding
+     * rect of the window shape according to the Shape extension
+     * specification */
+
+    XTranslateCoordinates (mDpy, mShapeWindow, parentReturn, 0, 0,
+			   &xOffset, &yOffset, &childReturn);
+
+    xsev.kind = ShapeBounding;
+
+    /* Calculate extents of the bounding shape */
+    if (!mNBoundingRects)
+    {
+      /* No set input shape, we must use the client geometry */
+      xsev.x = x - xOffset;
+      xsev.y = y - yOffset;
+      xsev.width = width; 
+      xsev.height = height;
+      xsev.shaped = false;
+    }
+    else
+    {
+      Region      boundingRegion = XCreateRegion ();
+
+      for (int i = 0; i < mNBoundingRects; i++)
+	XUnionRectWithRegion (&(mBoundingRects[i]), boundingRegion, boundingRegion);
+
+      xsev.x = boundingRegion->extents.x1 - xOffset;
+      xsev.y = boundingRegion->extents.y1 - yOffset;
+      xsev.width = boundingRegion->extents.x2 - boundingRegion->extents.x1;
+      xsev.height = boundingRegion->extents.y2 - boundingRegion->extents.y1;
+      xsev.shaped = true;
+
+      XDestroyRegion (boundingRegion);
+    }
+
+    xsev.time = CurrentTime;
+
+    XSendEvent (mDpy, mShapeWindow, FALSE, NoEventMask, xev);
+    XSendEvent (mDpy, parentReturn, FALSE, NoEventMask, xev);
+    xsev.kind = ShapeInput;
+
+    /* Calculate extents of the bounding shape */
+    if (!mNInputRects)
+    {
+      /* No set input shape, we must use the client geometry */
+      xsev.x = x - xOffset;
+      xsev.y = y - yOffset;
+      xsev.width = width; 
+      xsev.height = height;
+      xsev.shaped = false;
+    }
+    else
+    {
+      Region      inputRegion = XCreateRegion ();
+
+      for (int i = 0; i < mNInputRects; i++)
+	XUnionRectWithRegion (&(mInputRects[i]), inputRegion, inputRegion);
+
+      xsev.x = inputRegion->extents.x1 - xOffset;
+      xsev.y = inputRegion->extents.y1 - yOffset;
+      xsev.width = inputRegion->extents.x2 - inputRegion->extents.x1;
+      xsev.height = inputRegion->extents.y2 - inputRegion->extents.y1;
+      xsev.shaped = true;
+
+      XDestroyRegion (inputRegion);
+    }
+
+    xsev.time = CurrentTime;
+
+    XSendEvent (mDpy, mShapeWindow, FALSE, NoEventMask, xev);
+    XSendEvent (mDpy, parentReturn, FALSE, NoEventMask, xev);
+
+    if (children)
+      XFree (children);
+  }
+  else
+  {
+    XQueryTree (mDpy, mShapeWindow, &rootReturn, &parentReturn, &children, &nchildren);
+
+    xsev.kind = ShapeBounding;
+
+    xsev.x = 0;
+    xsev.y = 0;
+    xsev.width = 0;
+    xsev.height = 0;
+    xsev.shaped = true;
+
+    xsev.time = CurrentTime;
+    XSendEvent (mDpy, mShapeWindow, FALSE, NoEventMask, xev);
+    XSendEvent (mDpy, parentReturn, FALSE, NoEventMask, xev);
+
+    xsev.kind = ShapeInput;
+
+    /* Both ShapeBounding and ShapeInput are null */
+
+    xsev.time = CurrentTime;
+
+    XSendEvent (mDpy, mShapeWindow, FALSE, NoEventMask, xev);
+    XSendEvent (mDpy, parentReturn, FALSE, NoEventMask, xev);
+
+  }
+
 }
 
 bool
@@ -84,6 +241,17 @@ compiz::WindowInputRemover::save ()
   rects = XShapeGetRectangles (mDpy, mShapeWindow, ShapeBounding,
                                &count, &ordering);
 
+  /* check if the returned shape exactly matches the window shape -
+   * if that is true, the window currently has no set bounding shape */
+  if ((count == 1) &&
+      (rects[0].x == -((int) border)) &&
+      (rects[0].y == -((int) border)) &&
+      (rects[0].width == (width + border)) &&
+      (rects[0].height == (height + border)))
+  {
+    count = 0;
+  }
+
   if (mBoundingRects)
     XFree (mBoundingRects);
 
@@ -109,15 +277,21 @@ compiz::WindowInputRemover::remove ()
   XShapeCombineRectangles (mDpy, mShapeWindow, ShapeBounding, 0, 0,
                            NULL, 0, ShapeSet, 0);
 
-  XShapeSelectInput (mDpy, mShapeWindow, ShapeNotify);
+  XShapeSelectInput (mDpy, mShapeWindow, mShapeMask);
 
   mRemoved = true;
+
+  sendShapeNotify ();
+
   return true;
 }
 
 bool
 compiz::WindowInputRemover::restore ()
 {
+
+  XShapeSelectInput (mDpy, mShapeWindow, NoEventMask);
+
   if (mRemoved)
   {
     if (mNInputRects)
@@ -125,6 +299,7 @@ compiz::WindowInputRemover::restore ()
       XShapeCombineRectangles (mDpy, mShapeWindow, ShapeInput, 0, 0,
 	                       mInputRects, mNInputRects,
 	                       ShapeSet, mInputRectOrdering);
+
     }
     else
     {
@@ -154,6 +329,9 @@ compiz::WindowInputRemover::restore ()
   XShapeSelectInput (mDpy, mShapeWindow, mShapeMask);
 
   mRemoved = false;
+
+  sendShapeNotify ();
+
   mNInputRects  = 0;
   mInputRects = NULL;
   mNBoundingRects = 0;

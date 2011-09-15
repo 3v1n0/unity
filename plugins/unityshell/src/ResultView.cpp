@@ -26,10 +26,17 @@
 #include <Nux/HLayout.h>
 #include <Nux/VLayout.h>
 #include <Nux/Button.h>
+#include <NuxCore/Logger.h>
+
 namespace unity
 {
 namespace dash
 {
+namespace
+{
+nux::logging::Logger logger("unity.dash.results");
+}
+
 NUX_IMPLEMENT_OBJECT_TYPE(ResultView);
 
 ResultView::ResultView(NUX_FILE_LINE_DECL)
@@ -60,6 +67,10 @@ ResultView::ResultView(NUX_FILE_LINE_DECL)
 
 ResultView::~ResultView()
 {
+  for (auto result : results_)
+  {
+    renderer_->Unload(result);
+  }
   renderer_->UnReference();
 }
 

@@ -48,6 +48,7 @@ typedef enum
 
 class QuicklistMenuItem : public nux::View, public unity::Introspectable
 {
+  NUX_DECLARE_OBJECT_TYPE(QuicklistMenuItem, nux::View);
 public:
   QuicklistMenuItem(DbusmenuMenuitem* item,
                     NUX_FILE_LINE_PROTO);
