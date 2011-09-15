@@ -28,106 +28,108 @@
 
 namespace unity
 {
-  class DashStyle
-  {
-    public:
 
-      typedef enum {
-        STOCK_ICON_CHECKMARK = 0,
-        STOCK_ICON_CROSS,
-        STOCK_ICON_GRID_VIEW,
-        STOCK_ICON_FLOW_VIEW,
-        STOCK_ICON_STAR
-      } StockIcon;
+class DashStyle
+{
+public:
 
-      typedef enum {
-        ORIENTATION_UP = 0,
-        ORIENTATION_DOWN,
-        ORIENTATION_LEFT,
-        ORIENTATION_RIGHT
-      } Orientation;
+  typedef enum {
+    STOCK_ICON_CHECKMARK = 0,
+    STOCK_ICON_CROSS,
+    STOCK_ICON_GRID_VIEW,
+    STOCK_ICON_FLOW_VIEW,
+    STOCK_ICON_STAR
+  } StockIcon;
 
-      typedef enum {
-        BLEND_MODE_NORMAL = 0,
-        BLEND_MODE_MULTIPLY,
-        BLEND_MODE_SCREEN
-    } BlendMode;
+  typedef enum {
+    ORIENTATION_UP = 0,
+    ORIENTATION_DOWN,
+    ORIENTATION_LEFT,
+    ORIENTATION_RIGHT
+  } Orientation;
 
-      typedef enum {
-        FONT_WEIGHT_LIGHT = 0,
-        FONT_WEIGHT_REGULAR,
-        FONT_WEIGHT_BOLD
-    } FontWeight;
+  typedef enum {
+    BLEND_MODE_NORMAL = 0,
+    BLEND_MODE_MULTIPLY,
+    BLEND_MODE_SCREEN
+  } BlendMode;
 
-      typedef enum {
-        SEGMENT_LEFT = 0,
+  typedef enum {
+    FONT_WEIGHT_LIGHT = 0,
+    FONT_WEIGHT_REGULAR,
+    FONT_WEIGHT_BOLD
+  } FontWeight;
+
+  typedef enum {
+    SEGMENT_LEFT = 0,
 		SEGMENT_MIDDLE,
 		SEGMENT_RIGHT
-	  } Segment;
+  } Segment;
 
-      typedef enum {
-        ARROW_LEFT = 0,
+  typedef enum {
+    ARROW_LEFT = 0,
 		ARROW_RIGHT,
 		ARROW_BOTH,
 		ARROW_NONE
-	  } Arrow;
+  } Arrow;
 
-      DashStyle ();
-      ~DashStyle ();
+  DashStyle ();
+  ~DashStyle ();
 
-      static DashStyle* GetDefault();
+  static DashStyle* GetDefault();
 
-    virtual bool Button (cairo_t* cr, nux::State state, std::string label);
+  virtual bool Button(cairo_t* cr, nux::State state, std::string label);
 
-    virtual bool StarEmpty (cairo_t* cr, nux::State state);
+  virtual bool StarEmpty(cairo_t* cr, nux::State state);
 
-    virtual bool StarHalf (cairo_t* cr, nux::State state);
+  virtual bool StarHalf(cairo_t* cr, nux::State state);
 
-    virtual bool StarFull (cairo_t* cr, nux::State state);
+  virtual bool StarFull(cairo_t* cr, nux::State state);
 
-    virtual bool MultiRangeSegment (cairo_t*    cr,
-                                    nux::State  state,
-                                    std::string label,
-                                    Arrow       arrow,
-                                    Segment     segment);
+  virtual bool MultiRangeSegment(cairo_t*    cr,
+                                 nux::State  state,
+                                 std::string label,
+                                 Arrow       arrow,
+                                 Segment     segment);
 
-    virtual bool TrackViewNumber (cairo_t*    cr,
-                                  nux::State  state,
-                                  std::string trackNumber);
+  virtual bool TrackViewNumber(cairo_t*    cr,
+                               nux::State  state,
+                               std::string trackNumber);
 
-    virtual bool TrackViewPlay (cairo_t*   cr,
-                                nux::State state);
+  virtual bool TrackViewPlay(cairo_t*   cr,
+                             nux::State state);
 
-    virtual bool TrackViewPause (cairo_t*   cr,
-                                 nux::State state);
+  virtual bool TrackViewPause(cairo_t*   cr,
+                              nux::State state);
 
-    virtual bool TrackViewProgress (cairo_t* cr);
+  virtual bool TrackViewProgress(cairo_t* cr);
 
-    virtual bool SeparatorVert (cairo_t* cr);
+  virtual bool SeparatorVert(cairo_t* cr);
 
-    virtual bool SeparatorHoriz (cairo_t* cr);
+  virtual bool SeparatorHoriz(cairo_t* cr);
 
-    virtual int GetButtonGarnishSize ();
+  virtual int GetButtonGarnishSize();
 
-    virtual int GetSeparatorGarnishSize ();
+  virtual int GetSeparatorGarnishSize();
 
-    virtual int GetScrollbarGarnishSize ();
+  virtual int GetScrollbarGarnishSize();
 
-    void Blur (cairo_t* cr, int size);
+  void Blur(cairo_t* cr, int size);
 
-    void RoundedRect (cairo_t* cr,
-                      double   aspect,
-                      double   x,
-                      double   y,
-                      double   cornerRadius,
-                      double   width,
-                      double   height,
-                      bool     align);
+  void RoundedRect(cairo_t* cr,
+                   double   aspect,
+                   double   x,
+                   double   y,
+                   double   cornerRadius,
+                   double   width,
+                   double   height,
+                   bool     align);
 
-  private:
-    class Impl;
-    Impl* pimpl;
-  };
+private:
+  class Impl;
+  Impl* pimpl;
+};
+
 }
 
 #endif // DASH_STYLE_H
