@@ -1,6 +1,69 @@
 unity (4.16.0-0ubuntu1) UNRELEASED; urgency=low
 
   * New upstream release.
+    - compiz crashed with SIGSEGV in nux::GpuDevice::GetGpuInfo()
+      (LP: #765375)
+    - F10 doesn't start keyboard navigation to the panel (LP: #839628)
+    - Change on the at-spi accessibility-toolkit can affect also Unity
+      (LP: #844927)
+    - compiz crashed with SIGSEGV when a lens is shutting down (LP: #848675)
+    - [UIFe] Radiance panel icons are unreadable and ugly when panel goes
+      transparent with Dash (LP: #828862)
+    - window switcher stuck (not only, but can be triggered with Onboard)
+      (LP: #832033)
+    - Window titlebar is click through after raising a minimized window
+      (LP: #840285)
+    - Alt+Shift+` does not work in symmetry with Alt+` (LP: #843250)
+    - UIFe: Alt-Tab: Update layout behavior to make previews larger and
+      outline active preview (LP: #847944)
+    - windows clipped on resize (LP: #848962)
+    - Alt-tab - Add orange border to selected window in alt-tab window spread
+      (LP: #838114)
+    - Launcher - the direction the Launcher is scrolled with the mouse wheel
+      is inverted (LP: #839703)
+    - Launcher - the rendering of the BFB and Lens squircle does not match the
+      design (LP: #838708)
+    - Alt-Tab - In the app window spread, all windows should have the same
+      height, only the width should vary (LP: #838110)
+    - Launcher - the background of the Launcher should be tinted using the
+      average colour of the wallpaper (LP: #850068)
+    - Alt-tab - It is currently very difficult to see pips in the left of the
+      app icon for the currently selected app (LP: #838134)
+    - Launcher - Auto scroll missing from the top of the Launcher
+      (LP: #838744)
+    - Scope searches blocks the lens (LP: #850816)
+    - Shortcuts SUPER+1...9 doesn’t work until opening a window (LP: #768076)
+    - Dash closes prematurely when dragging apps into the launcher
+      (LP: #773892)
+    - Dash - As soon as a user starts dragging a .png file from the Dash, the
+      file icon turns into a grey question mark (LP: #764447)
+    - Dash shows an empty icon for some applications. (LP: #830887)
+    - Windows are click through after restore from minimize (LP: #834034)
+    - Dash - No keyboard shortcuts for switching lenses (LP: #842086)
+    - Dash search for files states "two more results" but doesn't display them
+      (LP: #840005)
+    - <meta>+<shift>+<launcher #> to start a new instance of a program doesn't
+      work anymore (LP: #842977)
+    - Alt-tab - Cross interactions between Alt-tab and Dash are broken 
+      (LP: #844021)
+    - UIFe: Dash - Shape and positioning of most of the elements in the Dash
+      need adjustment (Part 2) (LP: #844889)
+    - Alt-Tab - make pause to spread default alt-tab behaviour. Upgrade
+      existing installs as well. (LP: #838075)
+    - Do not install unity-preference (LP: #847599)
+    - Update unity --distro to latest plugins installed (LP: #847799)
+    - off by one error in count of additional results in a category
+      (LP: #848218)
+    - UIFe - Launcher - The background of the BFB, Workspace Switcher, Lens,
+      and Trash launcher icons tiles needs to use the average background
+      colour of the wallpaper (LP: #838688)
+    - dragging a window to the top while maximized gives it double borders
+      (LP: #850985)
+    - Launcher does not show if the cursor is placed 1px away from the left
+      edge and then moved to the edge (LP: #801320)
+    - [alt-tab] [wishlist] Use Alt-` as a keyboard shortcut to switch between
+      multiple windows of the same app (LP: #825467)
+    - compiz crashed with SIGSEGV in nux::Size::SetWidth() (LP: #815864)
   * debian/unity.install:
     - remove /usr/share/applications as unity-preferences no longer exist
 
