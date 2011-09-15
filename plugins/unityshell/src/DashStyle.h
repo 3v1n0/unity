@@ -62,15 +62,15 @@ public:
 
   enum class Segment {
     LEFT,
-		MIDDLE,
-		RIGHT
-  } ;
+    MIDDLE,
+    RIGHT
+  };
 
   enum class Arrow {
     LEFT,
-		RIGHT,
-		BOTH,
-		NONE
+    RIGHT,
+    BOTH,
+    NONE
   };
 
   DashStyle ();
