@@ -84,9 +84,6 @@ void ResultRendererHorizontalTile::Render(nux::GraphicsEngine& GfxContext,
 
   // set up our texture mode
   nux::TexCoordXForm texxform;
-  texxform.SetWrap(nux::TEXWRAP_CLAMP, nux::TEXWRAP_CLAMP);
-  texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-
 
   // clear what is behind us
   nux::t_u32 alpha = 0, src = 0, dest = 0;
