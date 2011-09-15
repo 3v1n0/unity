@@ -1,6 +1,8 @@
 unity (4.16.0-0ubuntu1) UNRELEASED; urgency=low
 
   * New upstream release.
+  * debian/unity.install:
+    - remove /usr/share/applications as unity-preferences no longer exist
 
  -- Didier Roche <didrocks@ubuntu.com>  Thu, 15 Sep 2011 18:17:19 +0200
 
