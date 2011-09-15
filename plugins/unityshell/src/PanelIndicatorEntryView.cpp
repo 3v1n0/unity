@@ -59,6 +59,7 @@ PanelIndicatorEntryView::PanelIndicatorEntryView(
   , proxy_(proxy)
   , util_cg_(CAIRO_FORMAT_ARGB32, 1, 1)
   , padding_(padding)
+  , dash_showing_(false)
 {
   on_indicator_activate_changed_connection_ = proxy_->active_changed.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::OnActiveChanged));
   on_indicator_updated_connection_ = proxy_->updated.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::Refresh));
@@ -309,7 +310,17 @@ void PanelIndicatorEntryView::Refresh()
     if (proxy_->active())
       gtk_style_context_set_state(style_context, GTK_STATE_FLAG_PRELIGHT);
 
-    gtk_render_layout(style_context, cr, x, (int)((height - text_height) / 2), layout);
+    int y = (int)((height - text_height) / 2);
+    if (dash_showing_)
+    {
+      cairo_move_to(cr, x, y);
+      cairo_set_source_rgb(cr, 1.0f, 1.0f, 1.0f);
+      pango_cairo_show_layout(cr, layout);
+    }
+    else
+    {
+      gtk_render_layout(style_context, cr, x, y, layout);
+    }
 
     gtk_widget_path_free(widget_path);
 
@@ -343,6 +354,18 @@ void PanelIndicatorEntryView::Refresh()
   NeedRedraw();
 
   refreshed.emit(this);
+}
+
+void PanelIndicatorEntryView::DashShown()
+{
+  dash_showing_ = true;
+  Refresh();
+}
+
+void PanelIndicatorEntryView::DashHidden()
+{
+  dash_showing_ = false;
+  Refresh();
 }
 
 const gchar* PanelIndicatorEntryView::GetName()

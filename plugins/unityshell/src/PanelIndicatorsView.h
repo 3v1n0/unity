@@ -55,6 +55,9 @@ public:
   virtual void OnEntryRefreshed(PanelIndicatorEntryView* view);
   virtual void OnEntryRemoved(std::string const& entry_id);
 
+  void DashShown();
+  void DashHidden();
+
   sigc::signal<void, PanelIndicatorEntryView*> on_indicator_updated;
 
 protected:
