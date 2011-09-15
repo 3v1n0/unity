@@ -20,6 +20,14 @@
 #include "BackgroundEffectHelper.h"
 
 #include <time.h>
+#ifdef TRUE
+#undef TRUE
+#endif
+
+#ifdef FALSE
+#undef FALSE
+#endif
+
 #include <X11/Xregion.h>
 #include <boost/utility.hpp>
 
