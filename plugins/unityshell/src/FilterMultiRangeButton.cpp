@@ -153,7 +153,7 @@ namespace unity {
       segment = DashStyle::Segment::RIGHT;
 
 
-    DashStyle::GetDefault()->MultiRangeSegment (cr, faked_state, name, arrow, segment);
+    DashStyle::Instance().MultiRangeSegment(cr, faked_state, name, arrow, segment);
     NeedRedraw();
   }
 

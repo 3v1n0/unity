@@ -28,6 +28,7 @@
 #include <pango/pango.h>
 
 #include <NuxCore/Color.h>
+#include <NuxCore/Logger.h>
 
 #include "DashStyle.h"
 #include "JSONParser.h"
@@ -39,6 +40,9 @@ namespace unity
 {
 namespace
 {
+nux::logging::Logger logger("unity.dash");
+
+DashStyle* style_instance = nullptr;
 const int STATES = 5;
 
 // These cairo overrides may also be reused somewhere...
@@ -221,22 +225,31 @@ DashStyle::Impl::~Impl()
 DashStyle::DashStyle()
   : pimpl(new Impl())
 {
+  if (style_instance)
+  {
+    LOG_ERROR(logger) << "More than one DashStyle created.";
+  }
+  else
+  {
+    style_instance = this;
+  }
 }
 
 DashStyle::~DashStyle ()
 {
   delete pimpl;
+  if (style_instance == this)
+    style_instance = nullptr;
 }
 
-DashStyle* DashStyle::GetDefault()
+DashStyle& DashStyle::Instance()
 {
-  //FIXME - replace with a nice C++ singleton method
-  static DashStyle* default_loader = NULL;
+  if (!style_instance)
+  {
+    LOG_ERROR(logger) << "No DashStyle created yet.";
+  }
 
-  if (G_UNLIKELY(!default_loader))
-    default_loader = new DashStyle();
-
-  return default_loader;
+  return *style_instance;
 }
 
 static inline double

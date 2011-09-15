@@ -76,7 +76,7 @@ public:
   DashStyle ();
   ~DashStyle ();
 
-  static DashStyle* GetDefault();
+  static DashStyle& Instance();
 
   virtual bool Button(cairo_t* cr, nux::State state, std::string label);
 
