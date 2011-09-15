@@ -171,9 +171,9 @@ DashStyle::Impl::Impl()
   parser.ReadDoubles("button-label", "overlay-opacity", button_label_overlay_opacity_);
 
   std::map<std::string, BlendMode> blend_mode_map;
-  blend_mode_map["normal"] = BlendMode::BLEND_MODE_NORMAL;
-  blend_mode_map["multiply"] = BlendMode::BLEND_MODE_MULTIPLY;
-  blend_mode_map["screen"] = BlendMode::BLEND_MODE_SCREEN;
+  blend_mode_map["normal"] = BlendMode::NORMAL;
+  blend_mode_map["multiply"] = BlendMode::MULTIPLY;
+  blend_mode_map["screen"] = BlendMode::SCREEN;
 
   parser.ReadMappedStrings("button-label", "overlay-mode", blend_mode_map,
                            button_label_overlay_mode_);
@@ -187,9 +187,9 @@ DashStyle::Impl::Impl()
                           regular_text_mode_);
 
   std::map<std::string, FontWeight> font_weight_map;
-  font_weight_map["light"] = FontWeight::FONT_WEIGHT_LIGHT;
-  font_weight_map["regular"] = FontWeight::FONT_WEIGHT_REGULAR;
-  font_weight_map["bold"] = FontWeight::FONT_WEIGHT_BOLD;
+  font_weight_map["light"] = FontWeight::LIGHT;
+  font_weight_map["regular"] = FontWeight::REGULAR;
+  font_weight_map["bold"] = FontWeight::BOLD;
 
   parser.ReadMappedString("regular-text", "text-weight", font_weight_map,
                           regular_text_weight_);
@@ -622,11 +622,11 @@ void DashStyle::Impl::SetDefaultValues()
   button_label_overlay_opacity_[nux::NUX_STATE_SELECTED]    = 0.0;
   button_label_overlay_opacity_[nux::NUX_STATE_INSENSITIVE] = 0.0;
 
-  button_label_overlay_mode_[nux::NUX_STATE_NORMAL]         = BLEND_MODE_NORMAL;
-  button_label_overlay_mode_[nux::NUX_STATE_ACTIVE]         = BLEND_MODE_NORMAL;
-  button_label_overlay_mode_[nux::NUX_STATE_PRELIGHT]       = BLEND_MODE_NORMAL;
-  button_label_overlay_mode_[nux::NUX_STATE_SELECTED]       = BLEND_MODE_NORMAL;
-  button_label_overlay_mode_[nux::NUX_STATE_INSENSITIVE]    = BLEND_MODE_NORMAL;
+  button_label_overlay_mode_[nux::NUX_STATE_NORMAL]         = BlendMode::NORMAL;
+  button_label_overlay_mode_[nux::NUX_STATE_ACTIVE]         = BlendMode::NORMAL;
+  button_label_overlay_mode_[nux::NUX_STATE_PRELIGHT]       = BlendMode::NORMAL;
+  button_label_overlay_mode_[nux::NUX_STATE_SELECTED]       = BlendMode::NORMAL;
+  button_label_overlay_mode_[nux::NUX_STATE_INSENSITIVE]    = BlendMode::NORMAL;
 
   button_label_blur_size_[nux::NUX_STATE_NORMAL]            = 0;
   button_label_blur_size_[nux::NUX_STATE_ACTIVE]            = 5;
@@ -637,20 +637,20 @@ void DashStyle::Impl::SetDefaultValues()
   // regular-text
   regular_text_color_ = nux::color::White;
   regular_text_size_       = 13.0;
-  regular_text_mode_       = BLEND_MODE_NORMAL;
-  regular_text_weight_     = FONT_WEIGHT_LIGHT;
+  regular_text_mode_       = BlendMode::NORMAL;
+  regular_text_weight_     = FontWeight::LIGHT;
 
   // separator
   separator_size_           = 1.0;
   separator_color_ = nux::Color(1.0, 1.0, 1.0, 0.15);
   separator_overlay_opacity_ = 0.47;
-  separator_overlay_mode_    = BLEND_MODE_NORMAL;
+  separator_overlay_mode_    = BlendMode::NORMAL;
   separator_blur_size_       = 6;
 
   // scrollbar
   scrollbar_color_ = nux::color::White;
   scrollbar_overlay_opacity_ = 0.3;
-  scrollbar_overlay_mode_    = BLEND_MODE_NORMAL;
+  scrollbar_overlay_mode_    = BlendMode::NORMAL;
   scrollbar_blur_size_       = 5;
   scrollbar_size_           = 3;
   scrollbar_corner_radius_   = 1.5;
@@ -683,7 +683,7 @@ void DashStyle::Impl::ArrowPath(cairo_t* cr, Arrow arrow)
     cairo_curve_to (cr, 19.176, 11.009, 17.759, 10.03, 16.25, 9.028);
     cairo_close_path (cr);*/
 
-  if (arrow == ARROW_LEFT || arrow == ARROW_BOTH)
+  if (arrow == Arrow::LEFT || arrow == Arrow::BOTH)
   {
     x = 1.0;
     y = h / 2.0 - 3.5;
@@ -693,7 +693,7 @@ void DashStyle::Impl::ArrowPath(cairo_t* cr, Arrow arrow)
     cairo_close_path(cr);
   }
 
-  if (arrow == ARROW_RIGHT || arrow == ARROW_BOTH)
+  if (arrow == Arrow::RIGHT || arrow == Arrow::BOTH)
   {
     x = w - 1.0;
     y = h / 2.0 - 3.5;
@@ -857,14 +857,14 @@ void DashStyle::Impl::RoundedRectSegment(cairo_t*   cr,
 
   switch (segment)
   {
-  case SEGMENT_LEFT:
+  case Segment::LEFT:
     // top-left, right of the corner
     cairo_move_to(cr, x + radius, y);
 
     // top-right
     cairo_line_to(cr, x + width, y);
 
-    if (arrow == ARROW_RIGHT && state == nux::NUX_STATE_ACTIVE)
+    if (arrow == Arrow::RIGHT && state == nux::NUX_STATE_ACTIVE)
 		{
       cairo_line_to(cr, x + width,           y + height / 2.0 - arrow_h);
       cairo_line_to(cr, x + width - arrow_w, y + height / 2.0);
@@ -894,14 +894,14 @@ void DashStyle::Impl::RoundedRectSegment(cairo_t*   cr,
               270.0f * G_PI / 180.0f);
     break;
 
-  case SEGMENT_MIDDLE:
+  case Segment::MIDDLE:
     // top-left
     cairo_move_to(cr, x, y);
 
     // top-right
     cairo_line_to(cr, x + width, y);
 
-    if ((arrow == ARROW_RIGHT || arrow == ARROW_BOTH) && state == nux::NUX_STATE_ACTIVE)
+    if ((arrow == Arrow::RIGHT || arrow == Arrow::BOTH) && state == nux::NUX_STATE_ACTIVE)
 		{
       cairo_line_to(cr, x + width,           y + height / 2.0 - arrow_h);
       cairo_line_to(cr, x + width - arrow_w, y + height / 2.0);
@@ -914,7 +914,7 @@ void DashStyle::Impl::RoundedRectSegment(cairo_t*   cr,
     // bottom-left
     cairo_line_to(cr, x, y + height);
 
-    if ((arrow == ARROW_LEFT || arrow == ARROW_BOTH) && state == nux::NUX_STATE_ACTIVE)
+    if ((arrow == Arrow::LEFT || arrow == Arrow::BOTH) && state == nux::NUX_STATE_ACTIVE)
 		{
       cairo_line_to(cr, x,           y + height / 2.0 + arrow_h);
       cairo_line_to(cr, x + arrow_w, y + height / 2.0);
@@ -925,7 +925,7 @@ void DashStyle::Impl::RoundedRectSegment(cairo_t*   cr,
     cairo_close_path(cr);
     break;
 
-  case SEGMENT_RIGHT:
+  case Segment::RIGHT:
     // top-left, right of the corner
     cairo_move_to(cr, x, y);
 
@@ -954,7 +954,7 @@ void DashStyle::Impl::RoundedRectSegment(cairo_t*   cr,
     // bottom-left
     cairo_line_to(cr, x, y + height);
 
-    if (arrow == ARROW_LEFT && state == nux::NUX_STATE_ACTIVE)
+    if (arrow == Arrow::LEFT && state == nux::NUX_STATE_ACTIVE)
 		{
       cairo_line_to(cr, x,           y + height / 2.0 + arrow_h);
       cairo_line_to(cr, x + arrow_w, y + height / 2.0);
@@ -987,7 +987,7 @@ void DashStyle::Impl::ButtonOutlinePathSegment(cairo_t* cr, Segment segment)
 
   switch (segment)
   {
-  case SEGMENT_LEFT:
+  case Segment::LEFT:
     yt -= (9.267 + 2.735);
     cairo_move_to(cr, _align(xt), _align(yt));
     xt -= (2.811 + 8.28);
@@ -1042,7 +1042,7 @@ void DashStyle::Impl::ButtonOutlinePathSegment(cairo_t* cr, Segment segment)
     cairo_close_path(cr);
     break;
 
-  case SEGMENT_MIDDLE:
+  case Segment::MIDDLE:
     yt -= (9.267 + 2.735);
     cairo_move_to(cr, _align(xt), _align(yt));
     xt -= (2.811 + 8.28);
@@ -1069,7 +1069,7 @@ void DashStyle::Impl::ButtonOutlinePathSegment(cairo_t* cr, Segment segment)
     cairo_close_path(cr);
     break;
 
-  case SEGMENT_RIGHT:
+  case Segment::RIGHT:
     // top right
     cairo_move_to(cr, _align(xt), _align(yt));
     cairo_curve_to(cr, _align(xt - 0.103),
@@ -1236,15 +1236,15 @@ void DashStyle::Impl::Text(cairo_t*    cr,
   PangoWeight weight;
   switch (regular_text_weight_)
   {
-  case FONT_WEIGHT_REGULAR:
+  case FontWeight::REGULAR:
     weight = PANGO_WEIGHT_NORMAL;
     break;
 
-  case FONT_WEIGHT_LIGHT:
+  case FontWeight::LIGHT:
     weight = PANGO_WEIGHT_LIGHT;
     break;
 
-  case FONT_WEIGHT_BOLD:
+  case FontWeight::BOLD:
     weight = PANGO_WEIGHT_BOLD;
     break;
   }
@@ -1305,13 +1305,11 @@ cairo_operator_t DashStyle::Impl::SetBlendMode(cairo_t* cr, BlendMode mode)
 
   old = cairo_get_operator(cr);
 
-  if (mode == BLEND_MODE_NORMAL)
+  if (mode == BlendMode::NORMAL)
     cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
-
-  if (mode == BLEND_MODE_MULTIPLY)
+  else if (mode == BlendMode::MULTIPLY)
     cairo_set_operator(cr, CAIRO_OPERATOR_MULTIPLY);
-
-  if (mode == BLEND_MODE_SCREEN)
+  else if (mode == BlendMode::SCREEN)
     cairo_set_operator(cr, CAIRO_OPERATOR_SCREEN);
 
   return old;
@@ -1537,13 +1535,13 @@ bool DashStyle::MultiRangeSegment(cairo_t*    cr,
   double   w  = cairo_image_surface_get_width(cairo_get_target(cr));
   double   h  = cairo_image_surface_get_height(cairo_get_target(cr)) - 4.0;
 
-	if (segment == SEGMENT_LEFT)
+	if (segment == Segment::LEFT)
 	{
     x = 2.0;
     w -= 2.0;
 	}
 
-	if (segment == SEGMENT_RIGHT)
+	if (segment == Segment::RIGHT)
 	{
     w -= 2.0;
 	}

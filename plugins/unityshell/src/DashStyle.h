@@ -33,45 +33,45 @@ class DashStyle
 {
 public:
 
-  typedef enum {
-    STOCK_ICON_CHECKMARK = 0,
-    STOCK_ICON_CROSS,
-    STOCK_ICON_GRID_VIEW,
-    STOCK_ICON_FLOW_VIEW,
-    STOCK_ICON_STAR
-  } StockIcon;
+  enum class StockIcon {
+    CHECKMARK,
+    CROSS,
+    GRID_VIEW,
+    FLOW_VIEW,
+    STAR
+  };
 
-  typedef enum {
-    ORIENTATION_UP = 0,
-    ORIENTATION_DOWN,
-    ORIENTATION_LEFT,
-    ORIENTATION_RIGHT
-  } Orientation;
+  enum class Orientation {
+    UP,
+    DOWN,
+    LEFT,
+    RIGHT
+  };
 
-  typedef enum {
-    BLEND_MODE_NORMAL = 0,
-    BLEND_MODE_MULTIPLY,
-    BLEND_MODE_SCREEN
-  } BlendMode;
+  enum class BlendMode {
+    NORMAL,
+    MULTIPLY,
+    SCREEN
+  };
 
-  typedef enum {
-    FONT_WEIGHT_LIGHT = 0,
-    FONT_WEIGHT_REGULAR,
-    FONT_WEIGHT_BOLD
-  } FontWeight;
+  enum class FontWeight {
+    LIGHT,
+    REGULAR,
+    BOLD
+  };
 
-  typedef enum {
-    SEGMENT_LEFT = 0,
-		SEGMENT_MIDDLE,
-		SEGMENT_RIGHT
-  } Segment;
+  enum class Segment {
+    LEFT,
+		MIDDLE,
+		RIGHT
+  } ;
 
-  typedef enum {
-    ARROW_LEFT = 0,
-		ARROW_RIGHT,
-		ARROW_BOTH,
-		ARROW_NONE
-  } Arrow;
+  enum class Arrow {
+    LEFT,
+		RIGHT,
+		BOTH,
+		NONE
+  };
 
   DashStyle ();
   ~DashStyle ();

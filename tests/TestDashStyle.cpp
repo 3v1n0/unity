@@ -149,40 +149,40 @@ int main (int    argc,
   pDashStyle->MultiRangeSegment (cr,
                                  nux::NUX_STATE_NORMAL,
                                  "100KB",
-                                 unity::DashStyle::ARROW_LEFT,
-                                 unity::DashStyle::SEGMENT_LEFT);
+                                 unity::DashStyle::Arrow::LEFT,
+                                 unity::DashStyle::Segment::LEFT);
   cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/multirange-left.png");
   wipe (cr);
 
   pDashStyle->MultiRangeSegment (cr,
                                  nux::NUX_STATE_ACTIVE,
                                  "10GB",
-                                 unity::DashStyle::ARROW_LEFT,
-                                 unity::DashStyle::SEGMENT_MIDDLE);
+                                 unity::DashStyle::Arrow::LEFT,
+                                 unity::DashStyle::Segment::MIDDLE);
   cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/multirange-middle-left.png");
   wipe (cr);
 
   pDashStyle->MultiRangeSegment (cr,
                                  nux::NUX_STATE_ACTIVE,
                                  "1MB",
-                                 unity::DashStyle::ARROW_BOTH,
-                                 unity::DashStyle::SEGMENT_MIDDLE);
+                                 unity::DashStyle::Arrow::BOTH,
+                                 unity::DashStyle::Segment::MIDDLE);
   cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/multirange-middle-both.png");
   wipe (cr);
 
   pDashStyle->MultiRangeSegment (cr,
                                  nux::NUX_STATE_ACTIVE,
                                  "1TB",
-                                 unity::DashStyle::ARROW_RIGHT,
-                                 unity::DashStyle::SEGMENT_MIDDLE);
+                                 unity::DashStyle::Arrow::RIGHT,
+                                 unity::DashStyle::Segment::MIDDLE);
   cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/multirange-middle-right.png");
   wipe (cr);
 
   pDashStyle->MultiRangeSegment (cr,
                                  nux::NUX_STATE_ACTIVE,
                                  "100KB",
-                                 unity::DashStyle::ARROW_LEFT,
-                                 unity::DashStyle::SEGMENT_RIGHT);
+                                 unity::DashStyle::Arrow::LEFT,
+                                 unity::DashStyle::Segment::RIGHT);
   cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/multirange-right.png");
   wipe (cr);
 

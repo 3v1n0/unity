@@ -136,21 +136,21 @@ namespace unity {
 
     DashStyle::Arrow arrow;
     if (has_arrow_ == MULTI_RANGE_ARROW_NONE)
-      arrow = DashStyle::Arrow::ARROW_NONE;
+      arrow = DashStyle::Arrow::NONE;
     else if (has_arrow_ == MULTI_RANGE_ARROW_LEFT)
-      arrow = DashStyle::Arrow::ARROW_LEFT;
+      arrow = DashStyle::Arrow::LEFT;
     else if (has_arrow_ == MULTI_RANGE_ARROW_BOTH)
-      arrow = DashStyle::Arrow::ARROW_BOTH;
+      arrow = DashStyle::Arrow::BOTH;
     else
-      arrow = DashStyle::Arrow::ARROW_RIGHT;
+      arrow = DashStyle::Arrow::RIGHT;
 
     DashStyle::Segment segment;
     if (side_ == MULTI_RANGE_SIDE_LEFT)
-      segment = DashStyle::SEGMENT_LEFT;
+      segment = DashStyle::Segment::LEFT;
     else if (side_ == MULTI_RANGE_CENTER)
-      segment = DashStyle::SEGMENT_MIDDLE;
+      segment = DashStyle::Segment::MIDDLE;
     else
-      segment = DashStyle::SEGMENT_RIGHT;
+      segment = DashStyle::Segment::RIGHT;
 
 
     DashStyle::GetDefault()->MultiRangeSegment (cr, faked_state, name, arrow, segment);
