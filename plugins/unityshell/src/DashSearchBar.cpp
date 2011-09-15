@@ -90,7 +90,7 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
   layered_layout_->SetPaintAll(true);
   layered_layout_->SetActiveLayerN(1);
   layered_layout_->SetMinimumWidth(420);
-  layered_layout_->SetMaximumWidth(620);
+  layered_layout_->SetMaximumWidth(645);
   layout_->AddView(layered_layout_, 1, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FIX);
 
   std::string filter_str = _("Filter results");

@@ -18,6 +18,8 @@
 
 #include "DashView.h"
 
+#include <math.h>
+
 #include <gio/gdesktopappinfo.h>
 #include <glib/gi18n-lib.h>
 #include <gtk/gtk.h>
@@ -92,6 +94,13 @@ void DashView::SetupBackground()
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
   bg_layer_ = new nux::ColorLayer(nux::Color(0.0f, 0.0f, 0.0f, 0.9), true, rop);
 
+  rop.Blend = true;
+  rop.SrcBlend = GL_SRC_COLOR;
+  rop.DstBlend = GL_DST_COLOR;
+  bg_darken_layer_ = new nux::ColorLayer(nux::Color(0.2f, 0.2f, 0.2f, 1.0f), false, rop);
+
+  bg_shine_texture_ = PlacesStyle::GetDefault()->GetDashShine()->GetDeviceTexture();
+
   ubus_manager_.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
 }
 
@@ -157,7 +166,9 @@ void DashView::Relayout()
   layout_->SetMinMaxSize(content_geo_.width, content_geo_.height);
 
   PlacesStyle* style = PlacesStyle::GetDefault();
-  style->SetDefaultNColumns(content_geo_.width / style->GetTileWidth());
+
+  // Minus the padding that gets added to the left
+  style->SetDefaultNColumns(floorf((content_geo_.width - 32)/ (float)style->GetTileWidth()));
 
   QueueDraw();
 }
@@ -242,7 +253,7 @@ void DashView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
                                     bg_blur_texture_,
                                     texxform_blur_bg,
                                     nux::color::White,
-                                    true,
+                                    true, // write alpha?
                                     rop);
 
       gfx_context.PopClippingRectangle();
@@ -383,6 +394,7 @@ void DashView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
     }
   }
 
+  bg_darken_layer_->SetGeometry(content_geo_);
   bg_layer_->SetGeometry(content_geo_);
   nux::GetPainter().RenderSinglePaintLayer(gfx_context, content_geo_, bg_layer_);
 
@@ -411,30 +423,51 @@ void DashView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
   gfx_context.GetRenderStates().SetBlend(true);
   gfx_context.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
 
+  nux::Geometry geo_absolute = GetAbsoluteGeometry ();
+  nux::TexCoordXForm texxform_absolute_bg;
+  texxform_absolute_bg.flip_v_coord = true;
+  texxform_absolute_bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+  texxform_absolute_bg.uoffset = ((float) content_geo_.x) / geo_absolute.width;
+  texxform_absolute_bg.voffset = ((float) content_geo_.y) / geo_absolute.height;
+  texxform_absolute_bg.SetWrap(TEXWRAP_CLAMP, TEXWRAP_CLAMP);
+
+  nux::ROPConfig rop;
+  rop.Blend = false;
+  rop.SrcBlend = GL_ONE;
+  rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+
   if (bg_blur_texture_.IsValid() && paint_blur)
   {
-    nux::Geometry geo_absolute = GetAbsoluteGeometry ();
-    nux::TexCoordXForm texxform_blur_bg;
-    texxform_blur_bg.flip_v_coord = true;
-    texxform_blur_bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-    texxform_blur_bg.uoffset = ((float) content_geo_.x) / geo_absolute.width;
-    texxform_blur_bg.voffset = ((float) content_geo_.y) / geo_absolute.height;
-
-    nux::ROPConfig rop;
-    rop.Blend = false;
-    rop.SrcBlend = GL_ONE;
-    rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
-
     gPainter.PushTextureLayer(gfx_context, content_geo_,
                               bg_blur_texture_,
-                              texxform_blur_bg,
+                              texxform_absolute_bg,
                               nux::color::White,
-                              true,
+                              true, // write alpha?
                               rop);
     bgs++;
   }
 
+  // draw the darkening behind our paint
+  nux::GetPainter().PushLayer(gfx_context, bg_darken_layer_->GetGeometry(), bg_darken_layer_);
+
   nux::GetPainter().PushLayer(gfx_context, bg_layer_->GetGeometry(), bg_layer_);
+
+  // apply the shine
+  rop.Blend = true;
+  rop.SrcBlend = GL_DST_COLOR;
+  rop.DstBlend = GL_ONE;
+  texxform_absolute_bg.flip_v_coord = false;
+  texxform_absolute_bg.uoffset = (1.0f / 707) * (GetAbsoluteGeometry().x); // TODO (gord) don't use absolute values here
+  texxform_absolute_bg.voffset = (1.0f / 737) * (GetAbsoluteGeometry().y);
+
+  nux::GetPainter().PushTextureLayer(gfx_context, bg_layer_->GetGeometry(),
+                                     bg_shine_texture_,
+                                     texxform_absolute_bg,
+                                     nux::color::White,
+                                     false,
+                                     rop);
+
+
   layout_->ProcessDraw(gfx_context, force_draw);
 
   geo = content_geo_;
@@ -475,7 +508,6 @@ void DashView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
   gfx_context.PopClippingRectangle();
 
   // Make round corners
-  nux::ROPConfig rop;
   rop.Blend = true;
   rop.SrcBlend = GL_ZERO;
   rop.DstBlend = GL_SRC_ALPHA;
@@ -820,6 +852,14 @@ const gchar* DashView::GetName()
 void DashView::AddProperties(GVariantBuilder* builder)
 {}
 
+nux::Area * DashView::KeyNavIteration(nux::KeyNavDirection direction)
+{
+  if (direction == KEY_NAV_TAB_NEXT)
+    lens_bar_->ActivateNext();
+  else if (direction == KEY_NAV_TAB_PREVIOUS)
+    lens_bar_->ActivatePrevious();
+  return this;
+}
 
 }
 }

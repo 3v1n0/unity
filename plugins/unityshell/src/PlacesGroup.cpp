@@ -147,7 +147,7 @@ PlacesGroup::SetName(const char* name)
 {
   // Spaces are on purpose, want padding to be proportional to the size of the text
   // Bear with me, I'm trying something different :)
-  const gchar* temp = "    <span font_size='larger'>%s</span>    ";
+  const gchar* temp = "    %s    ";
   gchar* tmp = NULL;
   gchar* final = NULL;
   if (_cached_name != NULL)

@@ -507,6 +507,7 @@ void IconLoader::Impl::LoadContentsReady(GObject* obj,
   {
     LOG_WARNING(logger) << "Unable to load contents of "
                         << task->data << ": " << error;
+    task->slot(task->data, task->size, nullptr);
   }
   task->self->task_map_.erase(task->handle);
   delete task;

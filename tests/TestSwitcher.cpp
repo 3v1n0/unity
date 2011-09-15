@@ -111,6 +111,11 @@ void OnNextClicked (nux::View *sender)
   view->Next ();
 }
 
+void OnDetailClicked (nux::View *sender)
+{
+  view->NextDetail ();
+}
+
 void OnPreviousClicked (nux::View *sender)
 {
   view->Prev();
@@ -122,7 +127,7 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
   
   view = new SwitcherController();
   view->timeout_length = 0;
-  view->SetWorkspace(nux::Geometry(0, 0, 900, 500));
+  view->SetWorkspace(nux::Geometry(0, 0, 900, 600));
 
   layout->SetContentDistribution(nux::eStackCenter);
   layout->SetHorizontalExternalMargin (10);
@@ -133,6 +138,8 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
     icons.push_back(new MockLauncherIcon());
 
   view->Show(SwitcherController::ALL, SwitcherController::FOCUS_ORDER, false, icons);
+
+  view->GetView ()->render_boxes = true;
 
   nux::CheckBox* flipping_check = new nux::CheckBox(TEXT("Enable Automatic Flipping"), NUX_TRACKER_LOCATION);
   flipping_check->SetMaximumWidth(250);
@@ -261,6 +268,10 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
   next_button->activated.connect (sigc::ptr_fun (OnNextClicked));
   control_buttons_layout->AddView(next_button, 1, nux::eRight, nux::eFull);
 
+  nux::Button* detail_button = new nux::Button ("Detail", NUX_TRACKER_LOCATION);
+  detail_button->activated.connect (sigc::ptr_fun (OnDetailClicked));
+  control_buttons_layout->AddView(detail_button, 1, nux::eRight, nux::eFull);
+
   layout->AddView(control_buttons_layout, 1, nux::eRight, nux::eFull);
 
 
@@ -284,7 +295,7 @@ int main(int argc, char** argv)
   nux::NuxInitialize(0);
 
   BackgroundEffectHelper::blur_type = unity::BLUR_ACTIVE;
-  nux::WindowThread* wt = nux::CreateGUIThread(TEXT("Unity Switcher"), 1200, 500, 0, &ThreadWidgetInit, 0);
+  nux::WindowThread* wt = nux::CreateGUIThread(TEXT("Unity Switcher"), 1200, 600, 0, &ThreadWidgetInit, 0);
 
   wt->Run(NULL);
   delete wt;

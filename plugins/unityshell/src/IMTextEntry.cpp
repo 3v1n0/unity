@@ -193,6 +193,10 @@ bool IMTextEntry::TryHandleSpecial(unsigned int eventType, unsigned int keysym, 
   {
     Paste();
   }
+  else if (keyval == NUX_VK_TAB || keyval == NUX_VK_LEFT_TAB)
+  {
+    return true;
+  }
   else
   {
     return false;
