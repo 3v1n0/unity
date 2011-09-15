@@ -216,6 +216,8 @@ protected:
   void ProcessDndMove(int x, int y, std::list<char*> mimes);
   void ProcessDndDrop(int x, int y);
 private:
+  typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
+
   typedef enum
   {
     ACTION_NONE,
@@ -493,6 +495,7 @@ private:
 
   nux::Color _background_color;
   nux::ColorLayer* bg_darken_layer_;
+  BaseTexturePtr   launcher_sheen_;
   bool _dash_is_open;
 
   AbstractIconRenderer::Ptr icon_renderer;

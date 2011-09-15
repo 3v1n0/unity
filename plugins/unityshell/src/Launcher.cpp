@@ -327,6 +327,24 @@ Launcher::Launcher(nux::BaseWindow* parent,
   rop.SrcBlend = GL_SRC_COLOR;
   rop.DstBlend = GL_DST_COLOR;
   bg_darken_layer_ = new nux::ColorLayer(nux::Color(0.2f, 0.2f, 0.2f, 1.0f), false, rop);
+
+  //FIXME (gord)- replace with async loading
+  unity::glib::Object<GdkPixbuf> pixbuf;
+  unity::glib::Error error;
+  pixbuf = gdk_pixbuf_new_from_file(PKGDATADIR"/dash_sheen.png", &error);
+  if (error)
+  {
+    LOG_WARN(logger) << "Unable to texture " << PKGDATADIR << "/dash_sheen.png" << ": " << error;
+  }
+  else
+  {
+    launcher_sheen_ = nux::CreateTexture2DFromPixbuf(pixbuf, true);
+    // TODO: when nux has the ability to create a smart pointer that takes
+    // ownership without adding a reference, we can remove the unref here.  By
+    // unreferencing, the object is solely owned by the smart pointer.
+    launcher_sheen_->UnReference();
+  }
+
 }
 
 Launcher::~Launcher()
@@ -2114,6 +2132,25 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
     nux::GetPainter().PushDrawLayer(GfxContext, GetGeometry(), bg_darken_layer_);
     gPainter.Paint2DQuadColor(GfxContext, bkg_box, _background_color);
+
+    // apply the shine
+    nux::TexCoordXForm texxform;
+    texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+    texxform.SetWrap(nux::TEXWRAP_CLAMP, nux::TEXWRAP_CLAMP);
+    texxform.uoffset = (1.0f / 707) * (GetAbsoluteGeometry().x); // TODO (gord) don't use absolute values here
+    texxform.voffset = (1.0f / 737) * (GetAbsoluteGeometry().y);
+
+
+    nux::ROPConfig rop;
+    rop.Blend = true;
+    rop.SrcBlend = GL_DST_COLOR;
+    rop.DstBlend = GL_ONE;
+    nux::GetPainter().PushDrawTextureLayer(GfxContext, base,
+                                           launcher_sheen_->GetDeviceTexture(),
+                                           texxform,
+                                           nux::color::White,
+                                           false,
+                                           rop);
   }
   else
   {

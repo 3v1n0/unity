@@ -25,6 +25,8 @@
 
 #include <NuxImage/CairoGraphics.h>
 #include <NuxImage/ImageSurface.h>
+#include <NuxCore/Logger.h>
+#include <UnityCore/GLibWrapper.h>
 
 #include <NuxGraphics/GLThread.h>
 #include <NuxGraphics/RenderingPipe.h>
@@ -40,6 +42,10 @@
 
 #include "PanelView.h"
 
+namespace
+{
+nux::logging::Logger logger("unity.PanelView");
+}
 
 namespace unity
 {
@@ -107,6 +113,23 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
 
   _track_menu_pointer_id = 0;
   bg_effect_helper_.owner = this;
+
+  //FIXME (gord)- replace with async loading
+  glib::Object<GdkPixbuf> pixbuf;
+  glib::Error error;
+  pixbuf = gdk_pixbuf_new_from_file(PKGDATADIR"/dash_sheen.png", &error);
+  if (error)
+  {
+    LOG_WARN(logger) << "Unable to texture " << PKGDATADIR << "/dash_sheen.png" << ": " << error;
+  }
+  else
+  {
+    _panel_sheen = nux::CreateTexture2DFromPixbuf(pixbuf, true);
+    // TODO: when nux has the ability to create a smart pointer that takes
+    // ownership without adding a reference, we can remove the unref here.  By
+    // unreferencing, the object is solely owned by the smart pointer.
+    _panel_sheen->UnReference();
+  }
 }
 
 PanelView::~PanelView()
@@ -290,11 +313,26 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     }
   }
 
-
-
-
   gPainter.PushLayer(GfxContext, GetGeometry(), _bg_layer);
 
+  if (_dash_is_open)
+  {
+    // apply the shine
+    nux::TexCoordXForm texxform;
+    texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+    texxform.SetWrap(nux::TEXWRAP_CLAMP, nux::TEXWRAP_CLAMP);
+
+    nux::ROPConfig rop;
+    rop.Blend = true;
+    rop.SrcBlend = GL_DST_COLOR;
+    rop.DstBlend = GL_ONE;
+    nux::GetPainter().PushTextureLayer(GfxContext, GetGeometry(),
+                                       _panel_sheen->GetDeviceTexture(),
+                                       texxform,
+                                       nux::color::White,
+                                       false,
+                                       rop);
+  }
   _layout->ProcessDraw(GfxContext, force_draw);
 
   gPainter.PopBackground(bgs);

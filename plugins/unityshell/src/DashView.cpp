@@ -455,10 +455,13 @@ void DashView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
 
   // apply the shine
   rop.Blend = true;
-  rop.SrcBlend = GL_DST_COLOR;// GL_ONE;
-  rop.DstBlend = GL_ONE;//GL_ONE_MINUS_SRC_ALPHA;
+  rop.SrcBlend = GL_DST_COLOR;
+  rop.DstBlend = GL_ONE;
   texxform_absolute_bg.flip_v_coord = false;
-  nux::GetPainter().PushTextureLayer(gfx_context, content_geo_,
+  texxform_absolute_bg.uoffset = (1.0f / 707) * (GetAbsoluteGeometry().x); // TODO (gord) don't use absolute values here
+  texxform_absolute_bg.voffset = (1.0f / 737) * (GetAbsoluteGeometry().y);
+
+  nux::GetPainter().PushTextureLayer(gfx_context, bg_layer_->GetGeometry(),
                                      bg_shine_texture_,
                                      texxform_absolute_bg,
                                      nux::color::White,
