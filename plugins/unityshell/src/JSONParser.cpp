@@ -20,6 +20,8 @@
 
 #include "JSONParser.h"
 
+#include <pango/pango.h>
+
 #include <NuxCore/Logger.h>
 
 namespace unity
@@ -50,22 +52,23 @@ Parser::Parser()
 bool Parser::Open(std::string const& filename)
 {
   glib::Error error;
-  parser = json_parser_new();
-  gboolean result = json_parser_load_from_file(parser, filename.c_str(), &error);
+  parser_ = json_parser_new();
+  gboolean result = json_parser_load_from_file(parser_, filename.c_str(), &error);
   if (!result)
   {
     LOG_WARN(logger) << "Failure: " << error;
     return false;
   }
 
-  root = json_parser_get_root(parser); // not ref'ed
+  root_ = json_parser_get_root(parser_); // not ref'ed
 
-  if (JSON_NODE_TYPE(root) != JSON_NODE_OBJECT)
+  if (JSON_NODE_TYPE(root_) != JSON_NODE_OBJECT)
   {
     LOG_WARN(logger) << "Root node is not an object, fail.  It's an: "
-                     << json_node_type_name(root);
+                     << json_node_type_name(root_);
     return false;
   }
+  return true;
 }
 
 JsonObject* Parser::GetNodeObject(std::string const& node_name)

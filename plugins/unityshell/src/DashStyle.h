@@ -24,7 +24,6 @@
 #include <Nux/View.h>
 #include <Nux/AbstractButton.h>
 
-#include <json-glib/json-glib.h>
 #include <cairo.h>
 
 namespace unity

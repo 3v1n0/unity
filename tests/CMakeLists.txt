@@ -111,6 +111,7 @@ add_executable (standalone-dash
                 ${UNITY_SRC}/IconTexture.h
                 ${UNITY_SRC}/Introspectable.cpp
                 ${UNITY_SRC}/Introspectable.h
+                ${UNITY_SRC}/JSONParser.cpp
                 ${UNITY_SRC}/LensBar.cpp
                 ${UNITY_SRC}/LensBar.h
                 ${UNITY_SRC}/LensBarIcon.cpp
@@ -351,6 +352,7 @@ add_executable (test-filters
                 ${UNITY_SRC}/FilterMultiRangeButton.cpp
                 ${UNITY_SRC}/FilterMultiRangeWidget.cpp
                 ${UNITY_SRC}/DashStyle.cpp
+                ${UNITY_SRC}/JSONParser.cpp
                 ${UNITY_SRC}/PlacesStyle.cpp
                 ${UNITY_SRC}/PlacesStyle.h
                 )
@@ -369,6 +371,7 @@ add_executable (test-filter-bar
                 ${UNITY_SRC}/FilterGenreWidget.cpp
                 ${UNITY_SRC}/FilterBar.cpp
                 ${UNITY_SRC}/DashStyle.cpp
+                ${UNITY_SRC}/JSONParser.cpp
                 ${UNITY_SRC}/PlacesStyle.cpp
                 ${UNITY_SRC}/PlacesStyle.h
                 )
@@ -385,6 +388,7 @@ add_executable (test-preview-applicaiton
                 ${UNITY_SRC}/StaticCairoText.cpp
                 ${UNITY_SRC}/TextureCache.cpp
                 ${UNITY_SRC}/DashStyle.cpp
+                ${UNITY_SRC}/JSONParser.cpp
                 ${UNITY_SRC}/Timer.cpp
                 )
 add_dependencies(test-preview-applicaiton unity-core-${UNITY_API_VERSION})
@@ -400,6 +404,7 @@ add_executable (test-preview-generic
                 ${UNITY_SRC}/StaticCairoText.cpp
                 ${UNITY_SRC}/TextureCache.cpp
                 ${UNITY_SRC}/DashStyle.cpp
+                ${UNITY_SRC}/JSONParser.cpp
                 ${UNITY_SRC}/Timer.cpp
                 )
 add_dependencies(test-preview-generic unity-core-${UNITY_API_VERSION})
@@ -417,6 +422,7 @@ add_executable (test-preview-music
                 ${UNITY_SRC}/StaticCairoText.cpp
                 ${UNITY_SRC}/TextureCache.cpp
                 ${UNITY_SRC}/DashStyle.cpp
+                ${UNITY_SRC}/JSONParser.cpp
                 ${UNITY_SRC}/Timer.cpp
                 )
 add_dependencies(test-preview-music unity-core-${UNITY_API_VERSION})
@@ -440,6 +446,7 @@ add_executable (test-result-view
                 ${UNITY_SRC}/TextureCache.cpp
                 ${UNITY_SRC}/Timer.cpp
                 ${UNITY_SRC}/DashStyle.cpp
+                ${UNITY_SRC}/JSONParser.cpp
                 ${UNITY_SRC}/ubus-server.cpp
                 ${UNITY_SRC}/ubus-server.h
                 )
@@ -449,6 +456,7 @@ add_executable (test-dash-style
                 TestDashStyle.cpp
                 ${UNITY_SRC}/DashStyle.cpp
                 ${UNITY_SRC}/DashStyle.h
+                ${UNITY_SRC}/JSONParser.cpp
                 ${PLACES_COMMON_SOURCE}
                 )
 add_dependencies (test-dash-style unity-core-${UNITY_API_VERSION})
