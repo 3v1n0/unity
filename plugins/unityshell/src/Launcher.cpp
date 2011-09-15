@@ -1872,16 +1872,12 @@ void Launcher::SetHover(bool hovered)
 
 bool Launcher::MouseOverTopScrollArea()
 {
-  return _mouse_position.y < 0;
+  return _mouse_position.y < 24;
 }
 
 bool Launcher::MouseOverTopScrollExtrema()
 {
-  // since we are not dragging the bfb will pick up events
-  if (GetActionState() == ACTION_NONE)
-    return _bfb_mouse_position.y == 0;
-
-  return _mouse_position.y == 0 - _parent->GetGeometry().y;
+  return _mouse_position.y == 0;
 }
 
 bool Launcher::MouseOverBottomScrollArea()
