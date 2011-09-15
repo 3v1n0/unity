@@ -117,7 +117,7 @@ public:
 
   void SetIconSize(int tile_size, int icon_size);
   void SetBackgroundAlpha(float background_alpha);
-  
+
   LauncherHideMachine* HideMachine() { return _hide_machine; }
 
   bool Hidden()
@@ -216,6 +216,8 @@ protected:
   void ProcessDndMove(int x, int y, std::list<char*> mimes);
   void ProcessDndDrop(int x, int y);
 private:
+  typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
+
   typedef enum
   {
     ACTION_NONE,
@@ -492,8 +494,9 @@ private:
   guint _ubus_handles[4];
 
   nux::Color _background_color;
+  BaseTexturePtr   launcher_sheen_;
   bool _dash_is_open;
-  
+
   AbstractIconRenderer::Ptr icon_renderer;
   BackgroundEffectHelper bg_effect_helper_;
 };

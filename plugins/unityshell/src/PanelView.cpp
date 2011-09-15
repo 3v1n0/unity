@@ -25,6 +25,8 @@
 
 #include <NuxImage/CairoGraphics.h>
 #include <NuxImage/ImageSurface.h>
+#include <NuxCore/Logger.h>
+#include <UnityCore/GLibWrapper.h>
 
 #include <NuxGraphics/GLThread.h>
 #include <NuxGraphics/RenderingPipe.h>
@@ -40,6 +42,10 @@
 
 #include "PanelView.h"
 
+namespace
+{
+nux::logging::Logger logger("unity.PanelView");
+}
 
 namespace unity
 {
@@ -59,6 +65,12 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
   _style->changed.connect(sigc::mem_fun(this, &PanelView::ForceUpdateBackground));
 
   _bg_layer = new nux::ColorLayer(nux::Color(0xff595853), true);
+
+  nux::ROPConfig rop;
+  rop.Blend = true;
+  rop.SrcBlend = GL_SRC_COLOR;
+  rop.DstBlend = GL_DST_COLOR;
+  _bg_darken_layer_ = new nux::ColorLayer(nux::Color(0.2f, 0.2f, 0.2f, 1.0f), false, rop);
 
   _layout = new nux::HLayout("", NUX_TRACKER_LOCATION);
 
@@ -101,6 +113,23 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
 
   _track_menu_pointer_id = 0;
   bg_effect_helper_.owner = this;
+
+  //FIXME (gord)- replace with async loading
+  glib::Object<GdkPixbuf> pixbuf;
+  glib::Error error;
+  pixbuf = gdk_pixbuf_new_from_file(PKGDATADIR"/dash_sheen.png", &error);
+  if (error)
+  {
+    LOG_WARN(logger) << "Unable to texture " << PKGDATADIR << "/dash_sheen.png" << ": " << error;
+  }
+  else
+  {
+    _panel_sheen = nux::CreateTexture2DFromPixbuf(pixbuf, true);
+    // TODO: when nux has the ability to create a smart pointer that takes
+    // ownership without adding a reference, we can remove the unref here.  By
+    // unreferencing, the object is solely owned by the smart pointer.
+    _panel_sheen->UnReference();
+  }
 }
 
 PanelView::~PanelView()
@@ -113,7 +142,7 @@ PanelView::~PanelView()
   ubus_server_unregister_interest(ubus, _handle_dash_hidden);
   ubus_server_unregister_interest(ubus, _handle_dash_shown);
   _on_indicator_updated_connections.clear();
-  
+
   delete _bg_layer;
 }
 
@@ -227,7 +256,14 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
       GfxContext.PopClippingRectangle();
     }
+
+    if (_dash_is_open)
+    {
+      nux::GetPainter().RenderSinglePaintLayer(GfxContext, GetGeometry(), _bg_darken_layer_);
+    }
   }
+
+
 
   nux::GetPainter().RenderSinglePaintLayer(GfxContext, GetGeometry(), _bg_layer);
 
@@ -272,10 +308,33 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
                               true,
                               rop);
     bgs++;
+
+    if (_dash_is_open)
+    {
+      nux::GetPainter().PushLayer(GfxContext, GetGeometry(), _bg_darken_layer_);
+    }
   }
 
   gPainter.PushLayer(GfxContext, GetGeometry(), _bg_layer);
 
+  if (_dash_is_open)
+  {
+    // apply the shine
+    nux::TexCoordXForm texxform;
+    texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+    texxform.SetWrap(nux::TEXWRAP_CLAMP, nux::TEXWRAP_CLAMP);
+
+    nux::ROPConfig rop;
+    rop.Blend = true;
+    rop.SrcBlend = GL_DST_COLOR;
+    rop.DstBlend = GL_ONE;
+    nux::GetPainter().PushTextureLayer(GfxContext, GetGeometry(),
+                                       _panel_sheen->GetDeviceTexture(),
+                                       texxform,
+                                       nux::color::White,
+                                       false,
+                                       rop);
+  }
   _layout->ProcessDraw(GfxContext, force_draw);
 
   gPainter.PopBackground(bgs);
@@ -307,7 +366,7 @@ PanelView::UpdateBackground()
   _last_width = geo.width;
   _last_height = geo.height;
   _is_dirty = false;
-  
+
   if (_dash_is_open)
   {
     if (_bg_layer)
