@@ -101,6 +101,10 @@ public:
                                unsigned int keysym,
                                const char* character);
 
+  //Required for a11y
+  QuicklistMenuItem* GetSelectedMenuItem();
+  sigc::signal<void> selection_change;
+
 private:
   void RecvCairoTextChanged(QuicklistMenuItem* item);
   void RecvCairoTextColorChanged(QuicklistMenuItem* item);

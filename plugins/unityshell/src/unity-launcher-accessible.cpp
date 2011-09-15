@@ -36,6 +36,7 @@
 #include "unitya11y.h"
 #include "Launcher.h"
 #include "LauncherModel.h"
+#include "QuicklistView.h"
 
 /* GObject */
 static void unity_launcher_accessible_class_init(UnityLauncherAccessibleClass* klass);
