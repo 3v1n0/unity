@@ -78,7 +78,8 @@ public:
 
   static DashStyle& Instance();
 
-  virtual bool Button(cairo_t* cr, nux::State state, std::string label);
+  virtual bool Button(cairo_t* cr, nux::State state,
+                      std::string const& label);
 
   virtual bool StarEmpty(cairo_t* cr, nux::State state);
 
@@ -88,13 +89,13 @@ public:
 
   virtual bool MultiRangeSegment(cairo_t*    cr,
                                  nux::State  state,
-                                 std::string label,
+                                 std::string const& label,
                                  Arrow       arrow,
                                  Segment     segment);
 
   virtual bool TrackViewNumber(cairo_t*    cr,
                                nux::State  state,
-                               std::string trackNumber);
+                               std::string const& trackNumber);
 
   virtual bool TrackViewPlay(cairo_t*   cr,
                              nux::State state);

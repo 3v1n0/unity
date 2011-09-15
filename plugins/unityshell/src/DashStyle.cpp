@@ -70,7 +70,7 @@ public:
                       int& height,
                       int  maxWidth,
                       int  maxHeight,
-                      const std::string text);
+                      std::string const& text);
 
   void Text(cairo_t* cr,
             nux::Color const& color,
@@ -1141,7 +1141,7 @@ void DashStyle::Impl::GetTextExtents(int& width,
                                      int& height,
                                      int  maxWidth,
                                      int  maxHeight,
-                                     const std::string text)
+                                     std::string const& text)
 {
   cairo_surface_t*      surface  = NULL;
   cairo_t*              cr       = NULL;
@@ -1401,7 +1401,7 @@ void DashStyle::Impl::DrawOverlay(cairo_t*  cr,
   cairo_set_operator(cr, old);
 }
 
-bool DashStyle::Button(cairo_t* cr, nux::State state, std::string label)
+bool DashStyle::Button(cairo_t* cr, nux::State state, std::string const& label)
 {
   // sanity checks
   if (cairo_status(cr) != CAIRO_STATUS_SUCCESS)
@@ -1531,7 +1531,7 @@ bool DashStyle::StarFull(cairo_t* cr, nux::State state)
 
 bool DashStyle::MultiRangeSegment(cairo_t*    cr,
                                   nux::State  state,
-                                  std::string label,
+                                  std::string const& label,
                                   Arrow       arrow,
                                   Segment     segment)
 {
@@ -1587,7 +1587,7 @@ bool DashStyle::MultiRangeSegment(cairo_t*    cr,
 
 bool DashStyle::TrackViewNumber(cairo_t*    cr,
                                 nux::State  state,
-                                std::string trackNumber)
+                                std::string const& trackNumber)
 {
   // sanity checks
   if (cairo_status(cr) != CAIRO_STATUS_SUCCESS)
