@@ -39,7 +39,7 @@ SwitcherController::SwitcherController()
   ,  detail_timer_(0)
 {
   timeout_length = 150;
-  detail_on_timeout = false;
+  detail_on_timeout = true;
   detail_timeout_length = 1500;
 
   bg_color_ = nux::Color(0.0, 0.0, 0.0, 0.5);
@@ -314,7 +314,16 @@ void SwitcherController::NextDetail()
 
 void SwitcherController::PrevDetail()
 {
-  model_->PrevDetail();
+  if (!model_->detail_selection)
+  {
+    SetDetail(true);
+    detail_mode_ = TAB_NEXT_TILE;
+    model_->PrevDetail();
+  }
+  else
+  {
+    model_->PrevDetail();
+  }
 }
 
 LayoutWindowList SwitcherController::ExternalRenderTargets ()

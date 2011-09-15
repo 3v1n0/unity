@@ -202,6 +202,8 @@ UnityScreen::UnityScreen(CompScreen* screen)
   optionSetAltTabNextWindowInitiate(boost::bind(&UnityScreen::altTabNextWindowInitiate, this, _1, _2, _3));
   optionSetAltTabNextWindowTerminate(boost::bind(&UnityScreen::altTabTerminateCommon, this, _1, _2, _3));
 
+  optionSetAltTabPrevWindowInitiate(boost::bind(&UnityScreen::altTabPrevWindowInitiate, this, _1, _2, _3));
+
   optionSetAltTabLeftInitiate (boost::bind (&UnityScreen::altTabPrevInitiate, this, _1, _2, _3));
   optionSetAltTabRightInitiate (boost::bind (&UnityScreen::altTabForwardInitiate, this, _1, _2, _3));
 
@@ -279,19 +281,35 @@ void UnityScreen::initAltTabNextWindow()
 
   if (above_tab_keysym != NoSymbol)
   {
-    std::ostringstream sout;
-    sout << "<Alt>" << XKeysymToString(above_tab_keysym);
+    {
+      std::ostringstream sout;
+      sout << "<Alt>" << XKeysymToString(above_tab_keysym);
 
-    screen->removeAction(&optionGetAltTabNextWindow());
-    
-    CompAction action = CompAction();
-    action.keyFromString(sout.str());
-    action.setState (CompAction::StateInitKey | CompAction::StateAutoGrab);
-    mOptions[UnityshellOptions::AltTabNextWindow].value().set (action);
-    screen->addAction (&mOptions[UnityshellOptions::AltTabNextWindow].value ().action ());
+      screen->removeAction(&optionGetAltTabNextWindow());
+      
+      CompAction action = CompAction();
+      action.keyFromString(sout.str());
+      action.setState (CompAction::StateInitKey | CompAction::StateAutoGrab);
+      mOptions[UnityshellOptions::AltTabNextWindow].value().set (action);
+      screen->addAction (&mOptions[UnityshellOptions::AltTabNextWindow].value ().action ());
 
-    optionSetAltTabNextWindowInitiate(boost::bind(&UnityScreen::altTabNextWindowInitiate, this, _1, _2, _3));
-    optionSetAltTabNextWindowTerminate(boost::bind(&UnityScreen::altTabTerminateCommon, this, _1, _2, _3));
+      optionSetAltTabNextWindowInitiate(boost::bind(&UnityScreen::altTabNextWindowInitiate, this, _1, _2, _3));
+      optionSetAltTabNextWindowTerminate(boost::bind(&UnityScreen::altTabTerminateCommon, this, _1, _2, _3));
+    }
+    {
+      std::ostringstream sout;
+      sout << "<Alt><Shift>" << XKeysymToString(above_tab_keysym);
+
+      screen->removeAction(&optionGetAltTabPrevWindow());
+      
+      CompAction action = CompAction();
+      action.keyFromString(sout.str());
+      action.setState (CompAction::StateInitKey | CompAction::StateAutoGrab);
+      mOptions[UnityshellOptions::AltTabPrevWindow].value().set (action);
+      screen->addAction (&mOptions[UnityshellOptions::AltTabPrevWindow].value ().action ());
+
+      optionSetAltTabPrevWindowInitiate(boost::bind(&UnityScreen::altTabPrevWindowInitiate, this, _1, _2, _3));
+    }
   }
   else
   {
@@ -1183,6 +1201,14 @@ bool UnityScreen::altTabNextWindowInitiate(CompAction* action, CompAction::State
   switcherController->NextDetail();
 
   action->setState(action->state() | CompAction::StateTermKey);
+  return false;
+}
+
+bool UnityScreen::altTabPrevWindowInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
+{
+  if (switcherController->Visible())
+    switcherController->PrevDetail();
+  
   return false;
 }
 

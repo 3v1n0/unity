@@ -148,6 +148,11 @@
 		    <_long>fixme</_long>
             <passive_grab>false</passive_grab>
         </option>
+        <option name="alt_tab_prev_window" type="key">
+            <_short>Key to flip through windows in the switcher backwards</_short>
+            <_long>fixme</_long>
+            <passive_grab>false</passive_grab>
+        </option>
 		<option name="show_minimized_windows" type="bool">
 		    <_short>Show minimized windows in switcher</_short>
 		    <_long>Hack to enable minimized windows in switcher. Disable and report bugs if problems are caused</_long>
