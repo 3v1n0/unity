@@ -96,7 +96,7 @@ void PlacesStyle::SetDefaultNColumns(int n_cols)
 
 int PlacesStyle::GetTileIconSize() const
 {
-  return 48;
+  return 64;
 }
 
 int PlacesStyle::GetTileWidth() const
@@ -106,7 +106,7 @@ int PlacesStyle::GetTileWidth() const
 
 int PlacesStyle::GetTileHeight() const
 {
-  return GetTileIconSize() + (_text_height * 4);
+  return GetTileIconSize() + (_text_height * 4) + 12;
 }
 
 int PlacesStyle::GetHomeTileIconSize() const

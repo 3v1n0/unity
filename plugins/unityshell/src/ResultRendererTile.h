@@ -79,6 +79,10 @@ public:
   // unload any previous grabbed images
   virtual void Unload(Result& row);
 
+  int highlight_padding;
+  int spacing;
+  int padding;
+
 protected:
   void LoadText(Result& row);
   void LoadIcon(Result& row);

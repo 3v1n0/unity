@@ -40,6 +40,12 @@
 #include "PlacesStyle.h"
 #include "TextureCache.h"
 
+
+namespace
+{
+  bool neko;
+}
+
 namespace unity
 {
 namespace
@@ -54,16 +60,25 @@ NUX_IMPLEMENT_OBJECT_TYPE(ResultRendererTile);
 
 ResultRendererTile::ResultRendererTile(NUX_FILE_LINE_DECL)
   : ResultRenderer(NUX_FILE_LINE_PARAM)
+  , highlight_padding(6)
+  , spacing(12)
+  , padding(6)
 {
   PlacesStyle* style = PlacesStyle::GetDefault();
   width = style->GetTileWidth();
-  height = style->GetTileHeight();;
+  height = style->GetTileHeight();
+
+  gsize tmp;
+  gchar* tmp1 = (gchar*)g_base64_decode("VU5JVFlfTkVLTw==", &tmp);
+  neko = (g_getenv(tmp1));
+  g_free (tmp1);
 
   // pre-load the highlight texture
   // try and get a texture from the texture cache
   TextureCache& cache = TextureCache::GetDefault();
   prelight_cache_ = cache.FindTexture("ResultRendererTile.PreLightTexture",
-                                      62, 62,
+                                      style->GetTileIconSize() + (highlight_padding * 2),
+                                      style->GetTileIconSize() + (highlight_padding * 2),
                                       sigc::mem_fun(this, &ResultRendererTile::DrawHighlight));
 }
 
@@ -105,12 +120,16 @@ void ResultRendererTile::Render(nux::GraphicsEngine& GfxContext,
                        geometry.height,
                        col);
 
+  int icon_left_hand_side = geometry.x + (geometry.width - style->GetTileIconSize()) / 2;
+  int icon_top_side = geometry.y + padding;
+
+
   if (container->blurred_icon)
   {
-    GfxContext.QRP_1Tex(geometry.x + ((geometry.width - 58) / 2) - x_offset,
-                        geometry.y + 1 - y_offset,
-                        58,
-                        58,
+    GfxContext.QRP_1Tex(icon_left_hand_side - 5 - x_offset,
+                        icon_top_side - 5 - y_offset,
+                        style->GetTileIconSize() + 10,
+                        style->GetTileIconSize() + 10,
                         container->blurred_icon->GetDeviceTexture(),
                         texxform,
                         nux::Color(0.5f, 0.5f, 0.5f, 0.5f));
@@ -119,38 +138,38 @@ void ResultRendererTile::Render(nux::GraphicsEngine& GfxContext,
   // render highlight if its needed
   if (state != ResultRendererState::RESULT_RENDERER_NORMAL)
   {
-    GfxContext.QRP_1Tex(geometry.x + ((geometry.width - 62) / 2),
-                        geometry.y + 2,
-                        62,
-                        62,
+    GfxContext.QRP_1Tex(icon_left_hand_side - highlight_padding,
+                        icon_top_side - highlight_padding,
+                        style->GetTileIconSize() + (highlight_padding * 2),
+                        style->GetTileIconSize() + (highlight_padding * 2),
                         prelight_cache_->GetDeviceTexture(),
+                        texxform,
+                        nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
+  }
+
+  // draw the icon
+  if (container->icon)
+  {
+    GfxContext.QRP_1Tex(icon_left_hand_side,
+                        icon_top_side,
+                        style->GetTileIconSize(),
+                        style->GetTileIconSize(),
+                        container->icon->GetDeviceTexture(),
                         texxform,
                         nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
   }
 
   if (container->text)
   {
-    GfxContext.QRP_1Tex(geometry.x + 6,
-                        geometry.y + style->GetTileIconSize() + 14,
-                        style->GetTileWidth() - 12,
-                        style->GetTileHeight() - style->GetTileIconSize() - 12,
+    GfxContext.QRP_1Tex(geometry.x + padding,
+                        geometry.y + style->GetTileIconSize() + spacing,
+                        style->GetTileWidth() - (padding * 2),
+                        style->GetTileHeight() - style->GetTileIconSize() - spacing,
                         container->text->GetDeviceTexture(),
                         texxform,
                         nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
 
 
-  }
-
-  // draw the icon
-  if (container->icon)
-  {
-    GfxContext.QRP_1Tex(geometry.x + ((geometry.width - 48) / 2),
-                        geometry.y + 9,
-                        48,
-                        48,
-                        container->icon->GetDeviceTexture(),
-                        texxform,
-                        nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
   }
 
   GfxContext.GetRenderStates().SetBlend(alpha, src, dest);
@@ -242,25 +261,25 @@ void ResultRendererTile::Unload(Result& row)
 
 void ResultRendererTile::LoadIcon(Result& row)
 {
+  PlacesStyle* style = PlacesStyle::GetDefault();
   std::string const& icon_hint = row.icon_hint;
 #define DEFAULT_GICON ". GThemedIcon text-x-preview"
   std::string icon_name;
-  gsize tmp4;
-  gchar* tmp5 = (gchar*)g_base64_decode("VU5JVFlfTkVLTw==", &tmp4);
-  if (g_getenv(tmp5))
+  if (neko)
   {
-    int tmp1 = 48 + (rand() % 16) - 8;
+    int tmp1 = style->GetTileIconSize() + (rand() % 16) - 8;
     gsize tmp3;
     gchar* tmp2 = (gchar*)g_base64_decode("aHR0cDovL3BsYWNla2l0dGVuLmNvbS8laS8laS8=", &tmp3);
-    // FIXME: this leaks
-    icon_name = g_strdup_printf(tmp2, tmp1, tmp1);
+    gchar* tmp4 = g_strdup_printf(tmp2, tmp1, tmp1);
+    icon_name = tmp4;
+    g_free(tmp4);
     g_free(tmp2);
   }
   else
   {
     icon_name = !icon_hint.empty() ? icon_hint : DEFAULT_GICON;
   }
-  g_free(tmp5);
+
 
 
   GIcon*  icon = g_icon_new_for_string(icon_name.c_str(), NULL);
@@ -270,16 +289,16 @@ void ResultRendererTile::LoadIcon(Result& row)
 
   if (g_strrstr(icon_name.c_str(), "://"))
   {
-    container->slot_handle = IconLoader::GetDefault().LoadFromURI(icon_name.c_str(), 48, slot);
+    container->slot_handle = IconLoader::GetDefault().LoadFromURI(icon_name.c_str(), style->GetTileIconSize(), slot);
   }
   else if (G_IS_ICON(icon))
   {
-    container->slot_handle = IconLoader::GetDefault().LoadFromGIconString(icon_name.c_str(), 48, slot);
+    container->slot_handle = IconLoader::GetDefault().LoadFromGIconString(icon_name.c_str(), style->GetTileIconSize(), slot);
     g_object_unref(icon);
   }
   else
   {
-    container->slot_handle = IconLoader::GetDefault().LoadFromIconName(icon_name.c_str(), 48, slot);
+    container->slot_handle = IconLoader::GetDefault().LoadFromIconName(icon_name.c_str(), style->GetTileIconSize(), slot);
   }
 }
 
@@ -324,13 +343,17 @@ void ResultRendererTile::IconLoaded(std::string const& texid,
                                     Result& row)
 {
   TextureContainer *container = row.renderer<TextureContainer*>();
+  PlacesStyle* style = PlacesStyle::GetDefault();
+
   if (pixbuf && container)
   {
     TextureCache& cache = TextureCache::GetDefault();
-    BaseTexturePtr texture(cache.FindTexture(icon_name, 48, 48, sigc::bind(sigc::mem_fun(this, &ResultRendererTile::CreateTextureCallback), pixbuf)));
+    BaseTexturePtr texture(cache.FindTexture(icon_name, style->GetTileIconSize(), style->GetTileIconSize(),
+                           sigc::bind(sigc::mem_fun(this, &ResultRendererTile::CreateTextureCallback), pixbuf)));
 
     std::string blur_texid = icon_name + "_blurred";
-    BaseTexturePtr texture_blurred(cache.FindTexture(blur_texid, 48, 48, sigc::bind(sigc::mem_fun(this, &ResultRendererTile::CreateBlurredTextureCallback), pixbuf)));
+    BaseTexturePtr texture_blurred(cache.FindTexture(blur_texid, style->GetTileIconSize(), style->GetTileIconSize(),
+                                   sigc::bind(sigc::mem_fun(this, &ResultRendererTile::CreateBlurredTextureCallback), pixbuf)));
 
     container->icon = texture;
     container->blurred_icon = texture_blurred;
@@ -344,7 +367,7 @@ void ResultRendererTile::IconLoaded(std::string const& texid,
   {
     // we need to load a missing icon
     IconLoader::IconLoaderCallback slot = sigc::bind(sigc::mem_fun(this, &ResultRendererTile::IconLoaded), icon_name, row);
-    container->slot_handle = IconLoader::GetDefault().LoadFromGIconString(". GThemedIcon text-x-preview", 48, slot);
+    container->slot_handle = IconLoader::GetDefault().LoadFromGIconString(". GThemedIcon text-x-preview", style->GetTileIconSize(), slot);
   }
 
 }
@@ -354,8 +377,8 @@ void ResultRendererTile::LoadText(Result& row)
 {
   PlacesStyle*          style      = PlacesStyle::GetDefault();
   nux::CairoGraphics _cairoGraphics(CAIRO_FORMAT_ARGB32,
-                                    style->GetTileWidth(),
-                                    style->GetTileHeight() - style->GetTileIconSize() - 12);
+                                    style->GetTileWidth() - (padding * 2),
+                                    style->GetTileHeight() - style->GetTileIconSize() - spacing);
 
   cairo_t* cr = _cairoGraphics.GetContext();
 
@@ -378,7 +401,7 @@ void ResultRendererTile::LoadText(Result& row)
 
   pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
   pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_START);
-  pango_layout_set_width(layout, (style->GetTileWidth() - 12)* PANGO_SCALE);
+  pango_layout_set_width(layout, (style->GetTileWidth() - (padding * 2))* PANGO_SCALE);
   pango_layout_set_height(layout, -2);
 
   pango_layout_set_markup(layout, row.name().c_str(), -1);
