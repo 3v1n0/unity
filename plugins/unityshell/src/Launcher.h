@@ -494,7 +494,6 @@ private:
   guint _ubus_handles[4];
 
   nux::Color _background_color;
-  nux::ColorLayer* bg_darken_layer_;
   BaseTexturePtr   launcher_sheen_;
   bool _dash_is_open;
 

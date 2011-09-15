@@ -322,12 +322,6 @@ Launcher::Launcher(nux::BaseWindow* parent,
   bg_effect_helper_.owner = this;
   bg_effect_helper_.enabled = false;
 
-  nux::ROPConfig rop;
-  rop.Blend = true;
-  rop.SrcBlend = GL_SRC_COLOR;
-  rop.DstBlend = GL_DST_COLOR;
-  bg_darken_layer_ = new nux::ColorLayer(nux::Color(0.2f, 0.2f, 0.2f, 1.0f), false, rop);
-
   //FIXME (gord)- replace with async loading
   unity::glib::Object<GdkPixbuf> pixbuf;
   unity::glib::Error error;
@@ -2098,8 +2092,6 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   // clip vertically but not horizontally
   GfxContext.PushClippingRectangle(nux::Geometry(base.x, bkg_box.y, base.width, bkg_box.height));
 
-
-
   if (_dash_is_open)
   {
     if (BackgroundEffectHelper::blur_type != unity::BLUR_NONE && (bkg_box.x + bkg_box.width > 0))
@@ -2130,27 +2122,31 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
       }
     }
 
-    nux::GetPainter().PushDrawLayer(GfxContext, GetGeometry(), bg_darken_layer_);
+    nux::t_u32 alpha = 0, src = 0, dest = 0;
+    GfxContext.GetRenderStates().GetBlend(alpha, src, dest);
+
+    // apply the darkening
+    GfxContext.GetRenderStates().SetBlend(true, GL_SRC_COLOR, GL_DST_COLOR);
+    gPainter.Paint2DQuadColor(GfxContext, bkg_box, nux::Color(0.2f, 0.2f, 0.2f, 1.0f));
+    GfxContext.GetRenderStates().SetBlend (alpha, src, dest);
+
+    // apply the bg colour
     gPainter.Paint2DQuadColor(GfxContext, bkg_box, _background_color);
 
     // apply the shine
+    GfxContext.GetRenderStates().SetBlend(true, GL_DST_COLOR, GL_ONE);
     nux::TexCoordXForm texxform;
     texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
     texxform.SetWrap(nux::TEXWRAP_CLAMP, nux::TEXWRAP_CLAMP);
-    texxform.uoffset = (1.0f / 707) * (GetAbsoluteGeometry().x); // TODO (gord) don't use absolute values here
-    texxform.voffset = (1.0f / 737) * (GetAbsoluteGeometry().y);
+    texxform.uoffset = (1.0f / launcher_sheen_->GetWidth()) * (GetAbsoluteGeometry().x); // TODO (gord) don't use absolute values here
+    texxform.voffset = (1.0f / launcher_sheen_->GetWidth()) * (GetAbsoluteGeometry().y);
+    GfxContext.QRP_1Tex(base.x, base.y, base.width, base.height,
+                        launcher_sheen_->GetDeviceTexture(),
+                        texxform,
+                        nux::color::White);
 
-
-    nux::ROPConfig rop;
-    rop.Blend = true;
-    rop.SrcBlend = GL_DST_COLOR;
-    rop.DstBlend = GL_ONE;
-    nux::GetPainter().PushDrawTextureLayer(GfxContext, base,
-                                           launcher_sheen_->GetDeviceTexture(),
-                                           texxform,
-                                           nux::color::White,
-                                           false,
-                                           rop);
+    //reset the blend state
+    GfxContext.GetRenderStates().SetBlend (alpha, src, dest);
   }
   else
   {
