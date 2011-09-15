@@ -20,8 +20,8 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <cmath>
 
-#include <math.h>
 #include <glib.h>
 #include <gdk/gdk.h>
 #include <gtk/gtk.h>
@@ -49,6 +49,16 @@ const int STATES = 5;
 void cairo_set_source_rgba(cairo_t* cr, nux::Color const& color)
 {
   ::cairo_set_source_rgba(cr, color.red, color.green, color.blue, color.alpha);
+}
+
+inline double _align(double val)
+{
+  double fract = val - static_cast<int>(val);
+
+  if (fract != 0.5f)
+    return std::trunc(val + 0.5f);
+  else
+    return val;
 }
 
 } // anon namespace
@@ -250,17 +260,6 @@ DashStyle& DashStyle::Instance()
   }
 
   return *style_instance;
-}
-
-static inline double
-_align (double val)
-{
-  double fract = val - (int) val;
-
-  if (fract != 0.5f)
-    return (double) ((int) val + 0.5f);
-  else
-    return val;
 }
 
 void DashStyle::RoundedRect(cairo_t* cr,
