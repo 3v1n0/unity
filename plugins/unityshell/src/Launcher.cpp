@@ -1558,7 +1558,7 @@ void Launcher::SetHidden(bool hidden)
   _parent->EnableInputWindow(!hidden, "launcher", false, false);
 
   if (!hidden && GetActionState() == ACTION_DRAG_EXTERNAL)
-    DndLeave();
+    DndReset();
 
   EnsureAnimation();
 
@@ -1633,7 +1633,10 @@ Launcher::OnUpdateDragManagerTimeout(gpointer data)
   self->_collection_window->PushToBack();
   self->_collection_window->EnableInputWindow(false, "DNDCollectionWindow");
 
-  self->DndLeave();
+  if (self->_dash_is_open && !self->_hovered)
+    self->DesaturateIcons();
+
+  self->DndReset();
   self->_hide_machine->SetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE, false);
   self->_hide_machine->SetQuirk(LauncherHideMachine::DND_PUSHED_OFF, false);
 
@@ -1877,7 +1880,7 @@ void Launcher::SetHover(bool hovered)
     SetTimeStruct(&_times[TIME_LEAVE], &_times[TIME_ENTER], ANIM_DURATION);
   }
 
-  if (_dash_is_open)
+  if (_dash_is_open && !_hide_machine->GetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE))
   {
     if (hovered)
       SaturateIcons();
@@ -2917,6 +2920,9 @@ void Launcher::OnDNDDataCollected(const std::list<char*>& mimes)
     return;
 
   _hide_machine->SetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE, true);
+  
+  if (_dash_is_open)
+    SaturateIcons();
 
   for (auto it : _dnd_data.Uris())
   {
@@ -2942,6 +2948,8 @@ void Launcher::OnDNDDataCollected(const std::list<char*>& mimes)
 void
 Launcher::ProcessDndEnter()
 {
+  SetStateMouseOverLauncher(true);
+  
   _dnd_data.Reset();
   _drag_action = nux::DNDACTION_NONE;
   _steal_drag = false;
@@ -2951,9 +2959,8 @@ Launcher::ProcessDndEnter()
 }
 
 void
-Launcher::DndLeave()
+Launcher::DndReset()
 {
-
   _dnd_data.Reset();
 
   for (auto it : *_model)
@@ -2961,18 +2968,15 @@ Launcher::DndLeave()
     it->SetQuirk(LauncherIcon::QUIRK_DROP_PRELIGHT, false);
     it->SetQuirk(LauncherIcon::QUIRK_DROP_DIM, false);
   }
-
-  ProcessDndLeave();
+  
+  DndHoveredIconReset();
 }
 
-void
-Launcher::ProcessDndLeave()
+void Launcher::DndHoveredIconReset()
 {
-  SetStateMouseOverLauncher(false);
   _drag_edge_touching = false;
-
   SetActionState(ACTION_NONE);
-
+  
   if (_steal_drag && _dnd_hovered_icon)
   {
     _dnd_hovered_icon->SetQuirk(LauncherIcon::QUIRK_VISIBLE, false);
@@ -2987,6 +2991,14 @@ Launcher::ProcessDndLeave()
 
   _steal_drag = false;
   _dnd_hovered_icon = 0;
+}
+
+void
+Launcher::ProcessDndLeave()
+{
+  SetStateMouseOverLauncher(false);
+  
+  DndHoveredIconReset();
 }
 
 void
@@ -3162,7 +3174,7 @@ Launcher::ProcessDndDrop(int x, int y)
     SendDndFinished(false, _drag_action);
 
   // reset our shiz
-  DndLeave();
+  DndReset();
 }
 
 /*
