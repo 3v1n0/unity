@@ -42,7 +42,7 @@ static void unity_result_accessible_init(UnityResultAccessible* result_accessibl
 
 /* AtkObject.h */
 static void          unity_result_accessible_initialize(AtkObject* accessible,
-                                                               gpointer   data);
+                                                        gpointer   data);
 static AtkStateSet*  unity_result_accessible_ref_state_set(AtkObject* obj);
 
 G_DEFINE_TYPE(UnityResultAccessible,

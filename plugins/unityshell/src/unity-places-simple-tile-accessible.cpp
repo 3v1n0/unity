@@ -53,7 +53,7 @@ G_DEFINE_TYPE(UnityPlacesSimpleTileAccessible, unity_places_simple_tile_accessib
 
 struct _UnityPlacesSimpleTileAccessiblePrivate
 {
-  gchar *stripped_name;
+  gchar* stripped_name;
 };
 
 
@@ -101,7 +101,7 @@ unity_places_simple_tile_accessible_initialize(AtkObject* accessible,
 {
   ATK_OBJECT_CLASS(unity_places_simple_tile_accessible_parent_class)->initialize(accessible, data);
 
-  atk_object_set_role (accessible, ATK_ROLE_PUSH_BUTTON);
+  atk_object_set_role(accessible, ATK_ROLE_PUSH_BUTTON);
 }
 
 
@@ -110,31 +110,31 @@ static const gchar*
 unity_places_simple_tile_accessible_get_name(AtkObject* obj)
 {
   const gchar* name;
-  UnityPlacesSimpleTileAccessible *self = NULL;
+  UnityPlacesSimpleTileAccessible* self = NULL;
 
   g_return_val_if_fail(UNITY_IS_PLACES_SIMPLE_TILE_ACCESSIBLE(obj), NULL);
-  self = UNITY_PLACES_SIMPLE_TILE_ACCESSIBLE (obj);
+  self = UNITY_PLACES_SIMPLE_TILE_ACCESSIBLE(obj);
 
   name = ATK_OBJECT_CLASS(unity_places_simple_tile_accessible_parent_class)->get_name(obj);
   if (name == NULL)
+  {
+    unity::PlacesSimpleTile* tile = NULL;
+
+    if (self->priv->stripped_name != NULL)
     {
-      unity::PlacesSimpleTile *tile = NULL;
-
-      if (self->priv->stripped_name != NULL)
-        {
-          g_free (self->priv->stripped_name);
-          self->priv->stripped_name = NULL;
-        }
-
-      tile = dynamic_cast<unity::PlacesSimpleTile*>(nux_object_accessible_get_object(NUX_OBJECT_ACCESSIBLE(obj)));
-      if (tile != NULL)
-        {
-          name = tile->GetLabel();
-          pango_parse_markup (name, -1, 0, NULL,
-                              &self->priv->stripped_name,
-                              NULL, NULL);
-        }
+      g_free(self->priv->stripped_name);
+      self->priv->stripped_name = NULL;
     }
+
+    tile = dynamic_cast<unity::PlacesSimpleTile*>(nux_object_accessible_get_object(NUX_OBJECT_ACCESSIBLE(obj)));
+    if (tile != NULL)
+    {
+      name = tile->GetLabel();
+      pango_parse_markup(name, -1, 0, NULL,
+                         &self->priv->stripped_name,
+                         NULL, NULL);
+    }
+  }
 
   return self->priv->stripped_name;
 }

@@ -111,15 +111,15 @@ unity_rvgrid_accessible_init(UnityRvgridAccessible* self)
 static void
 unity_rvgrid_accessible_finalize(GObject* object)
 {
-  UnityRvgridAccessible* self = UNITY_RVGRID_ACCESSIBLE (object);
+  UnityRvgridAccessible* self = UNITY_RVGRID_ACCESSIBLE(object);
 
   self->priv->on_selection_change_connection.disconnect();
 
   if (self->priv->result != NULL)
-    {
-      g_object_unref (self->priv->result);
-      self->priv->result = NULL;
-    }
+  {
+    g_object_unref(self->priv->result);
+    self->priv->result = NULL;
+  }
 
   self->priv->on_selection_change_connection.disconnect();
 
@@ -144,7 +144,7 @@ unity_rvgrid_accessible_new(nux::Object* object)
 static void
 check_selection(UnityRvgridAccessible* self)
 {
-  AtkObject *child = NULL;
+  AtkObject* child = NULL;
   gint index = 0;
   ResultView::ResultList result_list;
   Result* result;
@@ -165,27 +165,27 @@ check_selection(UnityRvgridAccessible* self)
   result_list = rvgrid->GetResultList();
   index = rvgrid->GetSelectedIndex();
 
-  if (index>=0)
-    {
-      result = &result_list[index];
-      name = result->name;
+  if (index >= 0)
+  {
+    result = &result_list[index];
+    name = result->name;
 
-      child = ATK_OBJECT (self->priv->result);
-      self->priv->has_selection = TRUE;
-      atk_object_set_name(child, name.c_str());
-    }
+    child = ATK_OBJECT(self->priv->result);
+    self->priv->has_selection = TRUE;
+    atk_object_set_name(child, name.c_str());
+  }
   else
-    {
-      child = NULL;
-      self->priv->has_selection = FALSE;
-    }
+  {
+    child = NULL;
+    self->priv->has_selection = FALSE;
+  }
 
   g_signal_emit_by_name(self, "active-descendant-changed", child);
   g_signal_emit_by_name(self, "selection-changed");
 }
 
 static void
-on_selection_change_cb(UnityRvgridAccessible *self)
+on_selection_change_cb(UnityRvgridAccessible* self)
 {
   check_selection(self);
 }
@@ -200,12 +200,12 @@ search_for_label(UnityRvgridAccessible* self)
   nux::StaticCairoText* label = NULL;
 
   /* Search for the places group */
-  for (iter = atk_object_get_parent (ATK_OBJECT(self)); iter != NULL;
-       iter = atk_object_get_parent (iter))
-    {
-      if (UNITY_IS_PLACES_GROUP_ACCESSIBLE (iter))
-        break;
-    }
+  for (iter = atk_object_get_parent(ATK_OBJECT(self)); iter != NULL;
+       iter = atk_object_get_parent(iter))
+  {
+    if (UNITY_IS_PLACES_GROUP_ACCESSIBLE(iter))
+      break;
+  }
   if (iter == NULL)
     return;
 
@@ -217,7 +217,7 @@ search_for_label(UnityRvgridAccessible* self)
 
   label = group->GetLabel();
 
-  label_accessible = unity_a11y_get_accessible (label);
+  label_accessible = unity_a11y_get_accessible(label);
 
   if (label_accessible == NULL)
     return;
@@ -225,11 +225,11 @@ search_for_label(UnityRvgridAccessible* self)
   /* FIXME: I had a froze using relations, require further
      investigation, meanwhile setting directly the name can do the
      work*/
-  atk_object_set_name (ATK_OBJECT (self), atk_object_get_name (label_accessible));
+  atk_object_set_name(ATK_OBJECT(self), atk_object_get_name(label_accessible));
 }
 
 static gboolean
-check_selection_on_idle (gpointer data)
+check_selection_on_idle(gpointer data)
 {
   check_selection(UNITY_RVGRID_ACCESSIBLE(data));
 
@@ -263,7 +263,7 @@ unity_rvgrid_accessible_initialize(AtkObject* accessible,
 
   ATK_OBJECT_CLASS(unity_rvgrid_accessible_parent_class)->initialize(accessible, data);
 
-  atk_object_set_role (accessible, ATK_ROLE_TOOL_BAR);
+  atk_object_set_role(accessible, ATK_ROLE_TOOL_BAR);
 
   self = UNITY_RVGRID_ACCESSIBLE(accessible);
   nux_object = nux_object_accessible_get_object(NUX_OBJECT_ACCESSIBLE(accessible));
@@ -282,7 +282,7 @@ unity_rvgrid_accessible_initialize(AtkObject* accessible,
   self->priv->result = UNITY_RESULT_ACCESSIBLE(unity_result_accessible_new());
   atk_object_set_parent(ATK_OBJECT(self->priv->result), ATK_OBJECT(self));
 
-  search_for_label (self);
+  search_for_label(self);
 }
 
 static gint
@@ -354,14 +354,14 @@ static AtkObject*
 unity_rvgrid_accessible_ref_selection(AtkSelection* selection,
                                       gint i)
 {
-  UnityRvgridAccessible *self = NULL;
+  UnityRvgridAccessible* self = NULL;
 
-  g_return_val_if_fail (UNITY_IS_RVGRID_ACCESSIBLE (selection), NULL);
+  g_return_val_if_fail(UNITY_IS_RVGRID_ACCESSIBLE(selection), NULL);
 
-  self = UNITY_RVGRID_ACCESSIBLE (selection);
+  self = UNITY_RVGRID_ACCESSIBLE(selection);
 
   if (self->priv->has_selection)
-    return ATK_OBJECT (g_object_ref (self->priv->result));
+    return ATK_OBJECT(g_object_ref(self->priv->result));
   else
     return NULL;
 }
@@ -369,11 +369,11 @@ unity_rvgrid_accessible_ref_selection(AtkSelection* selection,
 static gint
 unity_rvgrid_accessible_get_selection_count(AtkSelection* selection)
 {
-  UnityRvgridAccessible *self = NULL;
+  UnityRvgridAccessible* self = NULL;
 
-  g_return_val_if_fail (UNITY_IS_RVGRID_ACCESSIBLE (selection), 0);
+  g_return_val_if_fail(UNITY_IS_RVGRID_ACCESSIBLE(selection), 0);
 
-  self = UNITY_RVGRID_ACCESSIBLE (selection);
+  self = UNITY_RVGRID_ACCESSIBLE(selection);
 
   if (self->priv->has_selection)
     return 0;
@@ -385,11 +385,11 @@ static gboolean
 unity_rvgrid_accessible_is_child_selected(AtkSelection* selection,
                                           gint i)
 {
-  UnityRvgridAccessible *self = NULL;
+  UnityRvgridAccessible* self = NULL;
 
-  g_return_val_if_fail (UNITY_IS_RVGRID_ACCESSIBLE (selection), FALSE);
+  g_return_val_if_fail(UNITY_IS_RVGRID_ACCESSIBLE(selection), FALSE);
 
-  self = UNITY_RVGRID_ACCESSIBLE (selection);
+  self = UNITY_RVGRID_ACCESSIBLE(selection);
 
   if (self->priv->has_selection && i == 0)
     return TRUE;

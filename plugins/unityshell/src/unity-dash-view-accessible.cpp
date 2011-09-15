@@ -44,7 +44,7 @@ static void unity_dash_view_accessible_finalize(GObject* object);
 
 /* AtkObject.h */
 static void       unity_dash_view_accessible_initialize(AtkObject* accessible,
-                                                          gpointer   data);
+                                                        gpointer   data);
 
 G_DEFINE_TYPE(UnityDashViewAccessible, unity_dash_view_accessible,  NUX_TYPE_VIEW_ACCESSIBLE)
 
@@ -105,7 +105,7 @@ unity_dash_view_accessible_new(nux::Object* object)
 /* AtkObject.h */
 static void
 unity_dash_view_accessible_initialize(AtkObject* accessible,
-                                        gpointer data)
+                                      gpointer data)
 {
   ATK_OBJECT_CLASS(unity_dash_view_accessible_parent_class)->initialize(accessible, data);
 

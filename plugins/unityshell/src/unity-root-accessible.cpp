@@ -47,7 +47,7 @@ static AtkObject* unity_root_accessible_get_parent(AtkObject* obj);
 /* private */
 static void       explore_children(AtkObject* obj);
 static void       check_active_window(UnityRootAccessible* self);
-static void       register_interesting_messages (UnityRootAccessible *self);
+static void       register_interesting_messages(UnityRootAccessible* self);
 static void       add_window(UnityRootAccessible* self,
                              nux::BaseWindow* window);
 static void       remove_window(UnityRootAccessible* self,
@@ -131,7 +131,7 @@ unity_root_accessible_initialize(AtkObject* accessible,
   atk_object_set_name(accessible, "unity");
   atk_object_set_parent(accessible, NULL);
 
-  register_interesting_messages (UNITY_ROOT_ACCESSIBLE (accessible));
+  register_interesting_messages(UNITY_ROOT_ACCESSIBLE(accessible));
 
   ATK_OBJECT_CLASS(unity_root_accessible_parent_class)->initialize(accessible, data);
 }
@@ -225,15 +225,15 @@ explore_children(AtkObject* obj)
 static void
 check_active_window(UnityRootAccessible* self)
 {
-  GSList *iter = NULL;
+  GSList* iter = NULL;
   NuxBaseWindowAccessible* window = NULL;
 
-  for (iter = self->priv->window_list; iter != NULL; iter = g_slist_next (iter))
-    {
-      window = NUX_BASE_WINDOW_ACCESSIBLE (iter->data);
+  for (iter = self->priv->window_list; iter != NULL; iter = g_slist_next(iter))
+  {
+    window = NUX_BASE_WINDOW_ACCESSIBLE(iter->data);
 
-      nux_base_window_accessible_check_active (window);
-    }
+    nux_base_window_accessible_check_active(window);
+  }
 }
 
 /*
@@ -303,10 +303,10 @@ remove_window(UnityRootAccessible* self,
 }
 
 static void
-ubus_change_visibility_cb (GVariant* variant,
-                           UnityRootAccessible* self)
+ubus_change_visibility_cb(GVariant* variant,
+                          UnityRootAccessible* self)
 {
-  check_active_window (self);
+  check_active_window(self);
 }
 
 static void
@@ -319,7 +319,7 @@ wc_change_visibility_window_cb(nux::BaseWindow* window, UnityRootAccessible* sel
 }
 
 static void
-register_interesting_messages (UnityRootAccessible *self)
+register_interesting_messages(UnityRootAccessible* self)
 {
   static unity::UBusManager ubus_manager;
 
@@ -334,8 +334,8 @@ register_interesting_messages (UnityRootAccessible *self)
                                 sigc::bind(sigc::ptr_fun(ubus_change_visibility_cb), self));
 
   nux::GetWindowCompositor().sigVisibleViewWindow.
-    connect(sigc::bind(sigc::ptr_fun(wc_change_visibility_window_cb), self, TRUE));
+  connect(sigc::bind(sigc::ptr_fun(wc_change_visibility_window_cb), self, TRUE));
 
   nux::GetWindowCompositor().sigHiddenViewWindow.
-    connect(sigc::bind(sigc::ptr_fun(wc_change_visibility_window_cb), self, FALSE));
+  connect(sigc::bind(sigc::ptr_fun(wc_change_visibility_window_cb), self, FALSE));
 }

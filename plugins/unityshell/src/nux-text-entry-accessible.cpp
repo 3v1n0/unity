@@ -96,11 +96,11 @@ nux_text_entry_accessible_new(nux::Object* object)
 /* AtkObject.h */
 static void
 nux_text_entry_accessible_initialize(AtkObject* accessible,
-                                   gpointer data)
+                                     gpointer data)
 {
   ATK_OBJECT_CLASS(nux_text_entry_accessible_parent_class)->initialize(accessible, data);
 
-  atk_object_set_role (accessible, ATK_ROLE_ENTRY);
+  atk_object_set_role(accessible, ATK_ROLE_ENTRY);
 }
 
 static AtkStateSet*

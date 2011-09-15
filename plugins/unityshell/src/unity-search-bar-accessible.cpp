@@ -103,14 +103,14 @@ unity_search_bar_accessible_new(nux::Object* object)
 
 /* AtkObject.h */
 static void
-on_search_hint_change_cb (std::string const& s, UnitySearchBarAccessible *self)
+on_search_hint_change_cb(std::string const& s, UnitySearchBarAccessible* self)
 {
   SearchBar* search_bar = NULL;
   nux::TextEntry* text_entry = NULL;
   AtkObject* text_entry_accessible = NULL;
   nux::Object* nux_object = NULL;
 
-  g_return_if_fail (UNITY_IS_SEARCH_BAR_ACCESSIBLE (self));
+  g_return_if_fail(UNITY_IS_SEARCH_BAR_ACCESSIBLE(self));
 
   nux_object = nux_object_accessible_get_object(NUX_OBJECT_ACCESSIBLE(self));
   search_bar = dynamic_cast<SearchBar*>(nux_object);
@@ -147,5 +147,5 @@ unity_search_bar_accessible_initialize(AtkObject* accessible,
     return;
 
   search_bar->search_hint.changed.connect(sigc::bind(sigc::ptr_fun(on_search_hint_change_cb),
-                                                     UNITY_SEARCH_BAR_ACCESSIBLE (accessible)));
+                                                     UNITY_SEARCH_BAR_ACCESSIBLE(accessible)));
 }

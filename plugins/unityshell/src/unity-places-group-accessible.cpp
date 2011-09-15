@@ -52,7 +52,7 @@ G_DEFINE_TYPE(UnityPlacesGroupAccessible, unity_places_group_accessible,  NUX_TY
 
 struct _UnityPlacesGroupAccessiblePrivate
 {
-  gchar *stripped_name;
+  gchar* stripped_name;
 };
 
 
@@ -100,9 +100,9 @@ unity_places_group_accessible_new(nux::Object* object)
  * so we also set the own name with this label
  */
 static void
-ensure_proper_name(UnityPlacesGroupAccessible *self)
+ensure_proper_name(UnityPlacesGroupAccessible* self)
 {
-  unity::PlacesGroup *group = NULL;
+  unity::PlacesGroup* group = NULL;
   nux::Object* nux_object = NULL;
   nux::StaticCairoText* label = NULL;
   nux::StaticCairoText* expand_label = NULL;
@@ -133,7 +133,7 @@ ensure_proper_name(UnityPlacesGroupAccessible *self)
 
 
 static void
-on_label_text_change_cb (nux::StaticCairoText* label, UnityPlacesGroupAccessible *self)
+on_label_text_change_cb(nux::StaticCairoText* label, UnityPlacesGroupAccessible* self)
 {
   ensure_proper_name(self);
 }
@@ -142,13 +142,13 @@ static void
 unity_places_group_accessible_initialize(AtkObject* accessible,
                                          gpointer data)
 {
-  unity::PlacesGroup *group = NULL;
+  unity::PlacesGroup* group = NULL;
   nux::Object* nux_object = NULL;
   nux::StaticCairoText* label = NULL;
 
   ATK_OBJECT_CLASS(unity_places_group_accessible_parent_class)->initialize(accessible, data);
 
-  atk_object_set_role (accessible, ATK_ROLE_PANEL);
+  atk_object_set_role(accessible, ATK_ROLE_PANEL);
 
   nux_object = nux_object_accessible_get_object(NUX_OBJECT_ACCESSIBLE(accessible));
   group = dynamic_cast<unity::PlacesGroup*>(nux_object);
@@ -161,8 +161,8 @@ unity_places_group_accessible_initialize(AtkObject* accessible,
   if (label == NULL)
     return;
 
-  ensure_proper_name (UNITY_PLACES_GROUP_ACCESSIBLE(accessible));
+  ensure_proper_name(UNITY_PLACES_GROUP_ACCESSIBLE(accessible));
   label->sigTextChanged.connect(sigc::bind(sigc::ptr_fun(on_label_text_change_cb),
-                                           UNITY_PLACES_GROUP_ACCESSIBLE (accessible)));
+                                           UNITY_PLACES_GROUP_ACCESSIBLE(accessible)));
 }
 
