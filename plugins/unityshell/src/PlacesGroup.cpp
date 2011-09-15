@@ -51,6 +51,7 @@ static const float kExpandHoverIconOpacity = 1.0f;
 
 namespace unity
 {
+NUX_IMPLEMENT_OBJECT_TYPE(PlacesGroup);
 
 PlacesGroup::PlacesGroup()
   : View(NUX_TRACKER_LOCATION),
@@ -166,6 +167,18 @@ PlacesGroup::SetName(const char* name)
 
   g_free(tmp);
   g_free(final);
+}
+
+nux::StaticCairoText*
+PlacesGroup::GetLabel()
+{
+  return _name;
+}
+
+nux::StaticCairoText*
+PlacesGroup::GetExpandLabel()
+{
+  return _expand_label;
 }
 
 void

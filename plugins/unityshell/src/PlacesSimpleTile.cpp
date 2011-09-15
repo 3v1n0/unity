@@ -34,6 +34,7 @@
 
 namespace unity
 {
+NUX_IMPLEMENT_OBJECT_TYPE(PlacesSimpleTile);
 
 PlacesSimpleTile::PlacesSimpleTile(const char* icon_name,
                                    const char* label,
