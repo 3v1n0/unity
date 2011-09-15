@@ -402,7 +402,7 @@ void ResultRendererTile::LoadText(Result& row)
   pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
   pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_START);
   pango_layout_set_width(layout, (style->GetTileWidth() - (padding * 2))* PANGO_SCALE);
-  pango_layout_set_height(layout, -2);
+  pango_layout_set_height(layout, -3);
 
   pango_layout_set_markup(layout, row.name().c_str(), -1);
 
