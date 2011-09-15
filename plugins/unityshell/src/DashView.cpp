@@ -120,6 +120,11 @@ void DashView::SetupViews()
   lens_bar_ = new LensBar();
   lens_bar_->lens_activated.connect(sigc::mem_fun(this, &DashView::OnLensBarActivated));
   content_layout_->AddView(lens_bar_, 0, nux::MINOR_POSITION_CENTER);
+
+  layout_->SetMinimumWidth(650);
+  layout_->SetMaximumWidth(960);
+  layout_->SetMinimumHeight(420);
+  layout_->SetMaximumHeight(580);
 }
 
 void DashView::SetupUBusConnections()
