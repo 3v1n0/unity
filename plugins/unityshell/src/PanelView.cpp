@@ -138,6 +138,7 @@ void PanelView::OnDashHidden(GVariant* data, PanelView* self)
   if (self->_opacity >= 1.0f)
     self->bg_effect_helper_.enabled = false;
   self->_dash_is_open = false;
+  self->_indicators->DashHidden();
   self->ForceUpdateBackground();
 }
 
@@ -145,6 +146,7 @@ void PanelView::OnDashShown(GVariant* data, PanelView* self)
 {
   self->bg_effect_helper_.enabled = true;
   self->_dash_is_open = true;
+  self->_indicators->DashShown();
   self->ForceUpdateBackground();
 }
 

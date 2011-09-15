@@ -265,6 +265,18 @@ PanelIndicatorsView::OnEntryRemoved(std::string const& entry_id)
   }
 }
 
+void PanelIndicatorsView::DashShown()
+{
+  for (auto entry: entries_)
+    entry.second->DashShown();
+}
+
+void PanelIndicatorsView::DashHidden()
+{
+  for (auto entry: entries_)
+    entry.second->DashHidden();
+}
+
 const gchar* PanelIndicatorsView::GetName()
 {
   return "IndicatorsView";
