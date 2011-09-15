@@ -18,6 +18,8 @@
 
 #include "DashView.h"
 
+#include <math.h>
+
 #include <gio/gdesktopappinfo.h>
 #include <glib/gi18n-lib.h>
 #include <gtk/gtk.h>
@@ -164,7 +166,9 @@ void DashView::Relayout()
   layout_->SetMinMaxSize(content_geo_.width, content_geo_.height);
 
   PlacesStyle* style = PlacesStyle::GetDefault();
-  style->SetDefaultNColumns(content_geo_.width / style->GetTileWidth());
+
+  // Minus the padding that gets added to the left
+  style->SetDefaultNColumns(floorf((content_geo_.width - 32)/ (float)style->GetTileWidth()));
 
   QueueDraw();
 }
