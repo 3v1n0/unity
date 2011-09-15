@@ -1754,7 +1754,7 @@ namespace unity
                  7.0,
                  w - (double) (2 * garnish),
                  h - (double) (2 * garnish),
-                 false);
+                 true);
 
     if (_buttonLabelFillOpacity[state] != 0.0)
     {

@@ -60,11 +60,11 @@ void LensBar::SetupLayout()
 {
   layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
   layout_->SetContentDistribution(nux::MAJOR_POSITION_CENTER);
-  layout_->SetHorizontalInternalMargin(32);
+  layout_->SetHorizontalInternalMargin(40);
   SetLayout(layout_);
 
-  SetMinimumHeight(40);
-  SetMaximumHeight(40);
+  SetMinimumHeight(46);
+  SetMaximumHeight(46);
 }
 
 void LensBar::SetupHomeLens()
@@ -116,6 +116,7 @@ void LensBar::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
   bg_layer_->SetGeometry(geo);
   nux::GetPainter().RenderSinglePaintLayer(gfx_context, geo, bg_layer_);
 
+	
   gfx_context.PopClippingRectangle();
 }
 
@@ -128,7 +129,23 @@ void LensBar::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
   layout_->ProcessDraw(gfx_context, force_draw);
 
   nux::GetPainter().PopBackground();
-  
+
+  for (auto icon: icons_)
+    if (icon->active)
+	{
+      nux::Geometry geo = icon->GetGeometry();
+      int middle = geo.x + geo.width/2;
+      int size = 5;
+      int y = geo.y - 11;
+
+      nux::GetPainter().Draw2DTriangleColor(gfx_context,
+                                            middle - size, y,
+                                            middle, y + size,
+                                            middle + size, y,
+                                            nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
+
+	}
+
   gfx_context.PopClippingRectangle();
 }
 
