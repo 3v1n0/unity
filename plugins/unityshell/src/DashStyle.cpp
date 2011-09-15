@@ -58,7 +58,7 @@ public:
 
   void Blur(cairo_t* cr, int size);
 
-  void UseDefaultValues();
+  void SetDefaultValues();
 
   void Star(cairo_t* cr, double size);
 
@@ -97,66 +97,78 @@ public:
                           nux::State state);
 
   // Members
-  cairo_font_options_t* _defaultFontOptions;
+  cairo_font_options_t* default_font_options_;
 
-  std::vector<nux::Color> _buttonLabelBorderColor;
-  std::vector<double>     _buttonLabelBorderSize;
-  double                  _buttonLabelTextSize;
+  std::vector<nux::Color> button_label_border_color_;
+  std::vector<double>     button_label_border_size_;
+  double                  button_label_text_size_;
 
-  std::vector<nux::Color> _buttonLabelTextColor;
-  std::vector<nux::Color> _buttonLabelFillColor;
+  std::vector<nux::Color> button_label_text_color_;
+  std::vector<nux::Color> button_label_fill_color_;
 
-  std::vector<double>    _buttonLabelOverlayOpacity;
-  std::vector<BlendMode> _buttonLabelOverlayMode;
-  std::vector<int>       _buttonLabelBlurSize;
+  std::vector<double>    button_label_overlay_opacity_;
+  std::vector<BlendMode> button_label_overlay_mode_;
+  std::vector<int>       button_label_blur_size_;
 
-  nux::Color            _regularTextColor;
-  double                _regularTextSize;
-  BlendMode             _regularTextMode;
-  FontWeight            _regularTextWeight;
+  nux::Color            regular_text_color_;
+  double                regular_text_size_;
+  BlendMode             regular_text_mode_;
+  FontWeight            regular_text_weight_;
 
-  double                _separatorSize;
-  nux::Color            _separatorColor;
-  double                _separatorOpacity;
-  double                _separatorOverlayOpacity;
-  BlendMode             _separatorOverlayMode;
-  int                   _separatorBlurSize;
+  double                separator_size_;
+  nux::Color            separator_color_;
+  double                separator_overlay_opacity_;
+  BlendMode             separator_overlay_mode_;
+  int                   separator_blur_size_;
 
-  nux::Color            _scrollbarColor;
-  double                _scrollbarOverlayOpacity;
-  BlendMode             _scrollbarOverlayMode;
-  int                   _scrollbarBlurSize;
-  int                   _scrollbarSize;
-  double                _scrollbarCornerRadius;
+  nux::Color            scrollbar_color_;
+  double                scrollbar_overlay_opacity_;
+  BlendMode             scrollbar_overlay_mode_;
+  int                   scrollbar_blur_size_;
+  int                   scrollbar_size_;
+  double                scrollbar_corner_radius_;
 };
 
 DashStyle::Impl::Impl()
-  : _buttonLabelBorderColor(STATES)
-  , _buttonLabelBorderSize(STATES)
-  , _buttonLabelTextColor(STATES)
-  , _buttonLabelFillColor(STATES)
-  , _buttonLabelOverlayOpacity(STATES)
-  , _buttonLabelOverlayMode(STATES)
-  , _buttonLabelBlurSize(STATES)
+  : button_label_border_color_(STATES)
+  , button_label_border_size_(STATES)
+  , button_label_text_color_(STATES)
+  , button_label_fill_color_(STATES)
+  , button_label_overlay_opacity_(STATES)
+  , button_label_overlay_mode_(STATES)
+  , button_label_blur_size_(STATES)
 {
-  json::Parser parser;
-
-  if (!parser.Open(DASH_WIDGETS_FILE))
+  // create fallback font-options
+  default_font_options_ = cairo_font_options_create();
+  if (cairo_font_options_status(default_font_options_) == CAIRO_STATUS_SUCCESS)
   {
-    UseDefaultValues ();
-    return;
+    cairo_font_options_set_antialias(default_font_options_,
+                                     CAIRO_ANTIALIAS_GRAY);
+    cairo_font_options_set_subpixel_order(default_font_options_,
+                                          CAIRO_SUBPIXEL_ORDER_RGB);
+    cairo_font_options_set_hint_style(default_font_options_,
+                                      CAIRO_HINT_STYLE_SLIGHT);
+    cairo_font_options_set_hint_metrics(default_font_options_,
+                                        CAIRO_HINT_METRICS_ON);
   }
+
+  json::Parser parser;
+  // Since the parser skips values if they are not found, make sure everything
+  // is initialised.
+  SetDefaultValues();
+  if (!parser.Open(DASH_WIDGETS_FILE))
+    return;
 
   // button-label
   parser.ReadColors("button-label", "border-color", "border-opacity",
-                    _buttonLabelBorderColor);
-  parser.ReadDoubles("button-label", "border-size", _buttonLabelBorderSize);
-  parser.ReadDouble("button-label", "text-size", _buttonLabelTextSize);
+                    button_label_border_color_);
+  parser.ReadDoubles("button-label", "border-size", button_label_border_size_);
+  parser.ReadDouble("button-label", "text-size", button_label_text_size_);
   parser.ReadColors("button-label", "text-color", "text-opacity",
-                    _buttonLabelTextColor);
+                    button_label_text_color_);
   parser.ReadColors("button-label", "fill-color", "fill-opacity",
-                    _buttonLabelFillColor);
-  parser.ReadDoubles("button-label", "overlay-opacity", _buttonLabelOverlayOpacity);
+                    button_label_fill_color_);
+  parser.ReadDoubles("button-label", "overlay-opacity", button_label_overlay_opacity_);
 
   std::map<std::string, BlendMode> blend_mode_map;
   blend_mode_map["normal"] = BlendMode::BLEND_MODE_NORMAL;
@@ -164,15 +176,15 @@ DashStyle::Impl::Impl()
   blend_mode_map["screen"] = BlendMode::BLEND_MODE_SCREEN;
 
   parser.ReadMappedStrings("button-label", "overlay-mode", blend_mode_map,
-                           _buttonLabelOverlayMode);
-  parser.ReadInts("button-label", "blur-size", _buttonLabelBlurSize);
+                           button_label_overlay_mode_);
+  parser.ReadInts("button-label", "blur-size", button_label_blur_size_);
 
   // regular-text
   parser.ReadColor("regular-text", "text-color", "text-opacity",
-                   _regularTextColor);
-  parser.ReadDouble("regular-text", "text-size", _regularTextSize);
+                   regular_text_color_);
+  parser.ReadDouble("regular-text", "text-size", regular_text_size_);
   parser.ReadMappedString("regular-text", "text-mode", blend_mode_map,
-                          _regularTextMode);
+                          regular_text_mode_);
 
   std::map<std::string, FontWeight> font_weight_map;
   font_weight_map["light"] = FontWeight::FONT_WEIGHT_LIGHT;
@@ -180,44 +192,30 @@ DashStyle::Impl::Impl()
   font_weight_map["bold"] = FontWeight::FONT_WEIGHT_BOLD;
 
   parser.ReadMappedString("regular-text", "text-weight", font_weight_map,
-                          _regularTextWeight);
+                          regular_text_weight_);
 
   // separator
-  parser.ReadDouble("separator", "size", _separatorSize);
-  parser.ReadColor("separator", "color", "opacity", _separatorColor);
-  parser.ReadDouble("separator", "overlay-opacity", _separatorOverlayOpacity);
+  parser.ReadDouble("separator", "size", separator_size_);
+  parser.ReadColor("separator", "color", "opacity", separator_color_);
+  parser.ReadDouble("separator", "overlay-opacity", separator_overlay_opacity_);
   parser.ReadMappedString("separator", "overlay-mode", blend_mode_map,
-                          _separatorOverlayMode);
-  parser.ReadInt("separator", "blur-size", _separatorBlurSize);
+                          separator_overlay_mode_);
+  parser.ReadInt("separator", "blur-size", separator_blur_size_);
 
   // scrollbar
-  parser.ReadColor("scrollbar", "color", "opacity", _scrollbarColor);
-  parser.ReadDouble("scrollbar", "overlay-opacity", _scrollbarOverlayOpacity);
+  parser.ReadColor("scrollbar", "color", "opacity", scrollbar_color_);
+  parser.ReadDouble("scrollbar", "overlay-opacity", scrollbar_overlay_opacity_);
   parser.ReadMappedString("scrollbar", "overlay-mode", blend_mode_map,
-                          _scrollbarOverlayMode);
-  parser.ReadInt("scrollbar", "blur-size", _scrollbarBlurSize);
-  parser.ReadInt("scrollbar", "size", _scrollbarSize);
-  parser.ReadDouble("scrollbar", "corner-radius", _scrollbarCornerRadius);
-
-  // create fallback font-options
-  _defaultFontOptions = cairo_font_options_create();
-  if (cairo_font_options_status(_defaultFontOptions) == CAIRO_STATUS_SUCCESS)
-  {
-    cairo_font_options_set_antialias(_defaultFontOptions,
-                                     CAIRO_ANTIALIAS_GRAY);
-    cairo_font_options_set_subpixel_order(_defaultFontOptions,
-                                          CAIRO_SUBPIXEL_ORDER_RGB);
-    cairo_font_options_set_hint_style(_defaultFontOptions,
-                                      CAIRO_HINT_STYLE_SLIGHT);
-    cairo_font_options_set_hint_metrics(_defaultFontOptions,
-                                        CAIRO_HINT_METRICS_ON);
-  }
+                          scrollbar_overlay_mode_);
+  parser.ReadInt("scrollbar", "blur-size", scrollbar_blur_size_);
+  parser.ReadInt("scrollbar", "size", scrollbar_size_);
+  parser.ReadDouble("scrollbar", "corner-radius", scrollbar_corner_radius_);
 }
 
 DashStyle::Impl::~Impl()
 {
-  if (cairo_font_options_status(_defaultFontOptions) == CAIRO_STATUS_SUCCESS)
-    cairo_font_options_destroy(_defaultFontOptions);
+  if (cairo_font_options_status(default_font_options_) == CAIRO_STATUS_SUCCESS)
+    cairo_font_options_destroy(default_font_options_);
 }
 
 
@@ -592,73 +590,73 @@ DashStyle::Impl::~Impl()
   cairo_close_path (cr);
   }
 
-void DashStyle::Impl::UseDefaultValues ()
+void DashStyle::Impl::SetDefaultValues ()
   {
     // button-label
-    _buttonLabelBorderColor[nux::NUX_STATE_NORMAL] = nux::Color(0.53, 1.0, 0.66, 0.5);
-    _buttonLabelBorderColor[nux::NUX_STATE_ACTIVE] = nux::Color(1.0, 1.0, 1.0, 0.8);
-    _buttonLabelBorderColor[nux::NUX_STATE_PRELIGHT] = nux::Color(0.06, 0.13, 1.0, 0.5);
-    _buttonLabelBorderColor[nux::NUX_STATE_SELECTED] = nux::Color(0.07, 0.2, 0.33, 0.5);
-    _buttonLabelBorderColor[nux::NUX_STATE_INSENSITIVE] = nux::Color(0.39, 0.26, 0.12, 0.5);
+    button_label_border_color_[nux::NUX_STATE_NORMAL] = nux::Color(0.53, 1.0, 0.66, 0.5);
+    button_label_border_color_[nux::NUX_STATE_ACTIVE] = nux::Color(1.0, 1.0, 1.0, 0.8);
+    button_label_border_color_[nux::NUX_STATE_PRELIGHT] = nux::Color(0.06, 0.13, 1.0, 0.5);
+    button_label_border_color_[nux::NUX_STATE_SELECTED] = nux::Color(0.07, 0.2, 0.33, 0.5);
+    button_label_border_color_[nux::NUX_STATE_INSENSITIVE] = nux::Color(0.39, 0.26, 0.12, 0.5);
 
-    _buttonLabelBorderSize[nux::NUX_STATE_NORMAL]          = 0.5;
-    _buttonLabelBorderSize[nux::NUX_STATE_ACTIVE]          = 2.0;
-    _buttonLabelBorderSize[nux::NUX_STATE_PRELIGHT]        = 0.5;
-    _buttonLabelBorderSize[nux::NUX_STATE_SELECTED]        = 0.5;
-    _buttonLabelBorderSize[nux::NUX_STATE_INSENSITIVE]     = 0.5;
+    button_label_border_size_[nux::NUX_STATE_NORMAL]          = 0.5;
+    button_label_border_size_[nux::NUX_STATE_ACTIVE]          = 2.0;
+    button_label_border_size_[nux::NUX_STATE_PRELIGHT]        = 0.5;
+    button_label_border_size_[nux::NUX_STATE_SELECTED]        = 0.5;
+    button_label_border_size_[nux::NUX_STATE_INSENSITIVE]     = 0.5;
 
-    _buttonLabelTextSize                                   = 1.0;
+    button_label_text_size_                                   = 1.0;
 
-    _buttonLabelTextColor[nux::NUX_STATE_NORMAL] = nux::color::White;
-    _buttonLabelTextColor[nux::NUX_STATE_ACTIVE] = nux::color::Black;
-    _buttonLabelTextColor[nux::NUX_STATE_PRELIGHT] = nux::color::White;
-    _buttonLabelTextColor[nux::NUX_STATE_SELECTED] = nux::color::White;
-    _buttonLabelTextColor[nux::NUX_STATE_INSENSITIVE] = nux::color::White;
+    button_label_text_color_[nux::NUX_STATE_NORMAL] = nux::color::White;
+    button_label_text_color_[nux::NUX_STATE_ACTIVE] = nux::color::Black;
+    button_label_text_color_[nux::NUX_STATE_PRELIGHT] = nux::color::White;
+    button_label_text_color_[nux::NUX_STATE_SELECTED] = nux::color::White;
+    button_label_text_color_[nux::NUX_STATE_INSENSITIVE] = nux::color::White;
 
-    _buttonLabelFillColor[nux::NUX_STATE_NORMAL] = nux::color::Transparent;
-    _buttonLabelFillColor[nux::NUX_STATE_ACTIVE] = nux::color::Transparent;
-    _buttonLabelFillColor[nux::NUX_STATE_PRELIGHT] = nux::color::Transparent;
-    _buttonLabelFillColor[nux::NUX_STATE_SELECTED] = nux::color::Transparent;
-    _buttonLabelFillColor[nux::NUX_STATE_INSENSITIVE] = nux::color::Transparent;
+    button_label_fill_color_[nux::NUX_STATE_NORMAL] = nux::color::Transparent;
+    button_label_fill_color_[nux::NUX_STATE_ACTIVE] = nux::color::Transparent;
+    button_label_fill_color_[nux::NUX_STATE_PRELIGHT] = nux::color::Transparent;
+    button_label_fill_color_[nux::NUX_STATE_SELECTED] = nux::color::Transparent;
+    button_label_fill_color_[nux::NUX_STATE_INSENSITIVE] = nux::color::Transparent;
 
-    _buttonLabelOverlayOpacity[nux::NUX_STATE_NORMAL]      = 0.0;
-    _buttonLabelOverlayOpacity[nux::NUX_STATE_ACTIVE]      = 0.3;
-    _buttonLabelOverlayOpacity[nux::NUX_STATE_PRELIGHT]    = 0.0;
-    _buttonLabelOverlayOpacity[nux::NUX_STATE_SELECTED]    = 0.0;
-    _buttonLabelOverlayOpacity[nux::NUX_STATE_INSENSITIVE] = 0.0;
+    button_label_overlay_opacity_[nux::NUX_STATE_NORMAL]      = 0.0;
+    button_label_overlay_opacity_[nux::NUX_STATE_ACTIVE]      = 0.3;
+    button_label_overlay_opacity_[nux::NUX_STATE_PRELIGHT]    = 0.0;
+    button_label_overlay_opacity_[nux::NUX_STATE_SELECTED]    = 0.0;
+    button_label_overlay_opacity_[nux::NUX_STATE_INSENSITIVE] = 0.0;
 
-    _buttonLabelOverlayMode[nux::NUX_STATE_NORMAL]         = BLEND_MODE_NORMAL;
-    _buttonLabelOverlayMode[nux::NUX_STATE_ACTIVE]         = BLEND_MODE_NORMAL;
-    _buttonLabelOverlayMode[nux::NUX_STATE_PRELIGHT]       = BLEND_MODE_NORMAL;
-    _buttonLabelOverlayMode[nux::NUX_STATE_SELECTED]       = BLEND_MODE_NORMAL;
-    _buttonLabelOverlayMode[nux::NUX_STATE_INSENSITIVE]    = BLEND_MODE_NORMAL;
+    button_label_overlay_mode_[nux::NUX_STATE_NORMAL]         = BLEND_MODE_NORMAL;
+    button_label_overlay_mode_[nux::NUX_STATE_ACTIVE]         = BLEND_MODE_NORMAL;
+    button_label_overlay_mode_[nux::NUX_STATE_PRELIGHT]       = BLEND_MODE_NORMAL;
+    button_label_overlay_mode_[nux::NUX_STATE_SELECTED]       = BLEND_MODE_NORMAL;
+    button_label_overlay_mode_[nux::NUX_STATE_INSENSITIVE]    = BLEND_MODE_NORMAL;
 
-    _buttonLabelBlurSize[nux::NUX_STATE_NORMAL]            = 0;
-    _buttonLabelBlurSize[nux::NUX_STATE_ACTIVE]            = 5;
-    _buttonLabelBlurSize[nux::NUX_STATE_PRELIGHT]          = 0;
-    _buttonLabelBlurSize[nux::NUX_STATE_SELECTED]          = 0;
-    _buttonLabelBlurSize[nux::NUX_STATE_INSENSITIVE]       = 0;
+    button_label_blur_size_[nux::NUX_STATE_NORMAL]            = 0;
+    button_label_blur_size_[nux::NUX_STATE_ACTIVE]            = 5;
+    button_label_blur_size_[nux::NUX_STATE_PRELIGHT]          = 0;
+    button_label_blur_size_[nux::NUX_STATE_SELECTED]          = 0;
+    button_label_blur_size_[nux::NUX_STATE_INSENSITIVE]       = 0;
 
     // regular-text
-    _regularTextColor = nux::color::White;
-    _regularTextSize       = 13.0;
-    _regularTextMode       = BLEND_MODE_NORMAL;
-    _regularTextWeight     = FONT_WEIGHT_LIGHT;
+    regular_text_color_ = nux::color::White;
+    regular_text_size_       = 13.0;
+    regular_text_mode_       = BLEND_MODE_NORMAL;
+    regular_text_weight_     = FONT_WEIGHT_LIGHT;
 
     // separator
-    _separatorSize           = 1.0;
-    _separatorColor = nux::Color(1.0, 1.0, 1.0, 0.15);
-    _separatorOverlayOpacity = 0.47;
-    _separatorOverlayMode    = BLEND_MODE_NORMAL;
-    _separatorBlurSize       = 6;
+    separator_size_           = 1.0;
+    separator_color_ = nux::Color(1.0, 1.0, 1.0, 0.15);
+    separator_overlay_opacity_ = 0.47;
+    separator_overlay_mode_    = BLEND_MODE_NORMAL;
+    separator_blur_size_       = 6;
 
     // scrollbar
-    _scrollbarColor = nux::color::White;
-    _scrollbarOverlayOpacity = 0.3;
-    _scrollbarOverlayMode    = BLEND_MODE_NORMAL;
-    _scrollbarBlurSize       = 5;
-    _scrollbarSize           = 3;
-    _scrollbarCornerRadius   = 1.5;
+    scrollbar_color_ = nux::color::White;
+    scrollbar_overlay_opacity_ = 0.3;
+    scrollbar_overlay_mode_    = BLEND_MODE_NORMAL;
+    scrollbar_blur_size_       = 5;
+    scrollbar_size_           = 3;
+    scrollbar_corner_radius_   = 1.5;
   }
 
   void DashStyle::Impl::ArrowPath (cairo_t* cr, Arrow arrow)
@@ -1149,7 +1147,7 @@ void DashStyle::Impl::UseDefaultValues ()
     surface = cairo_image_surface_create(CAIRO_FORMAT_A1, 1, 1);
     cr = cairo_create(surface);
     if (!screen)
-      cairo_set_font_options(cr, _defaultFontOptions);
+      cairo_set_font_options(cr, default_font_options_);
     else
       cairo_set_font_options(cr, gdk_screen_get_font_options(screen));
     layout = pango_cairo_create_layout(cr);
@@ -1175,7 +1173,7 @@ void DashStyle::Impl::UseDefaultValues ()
     pangoCtx = pango_layout_get_context(layout);  // is not ref'ed
 
     if (!screen)
-      pango_cairo_context_set_font_options(pangoCtx, _defaultFontOptions);
+      pango_cairo_context_set_font_options(pangoCtx, default_font_options_);
   else
       pango_cairo_context_set_font_options(pangoCtx,
                                            gdk_screen_get_font_options(screen));
@@ -1227,7 +1225,7 @@ void DashStyle::Impl::UseDefaultValues ()
     w -= 2 * horizMargin;
 
     if (!screen)
-      cairo_set_font_options(cr, _defaultFontOptions);
+      cairo_set_font_options(cr, default_font_options_);
     else
       cairo_set_font_options(cr, gdk_screen_get_font_options(screen));
     layout = pango_cairo_create_layout(cr);
@@ -1239,7 +1237,7 @@ void DashStyle::Impl::UseDefaultValues ()
       desc = pango_font_description_from_string(fontName);
 
     PangoWeight weight;
-    switch (_regularTextWeight)
+    switch (regular_text_weight_)
     {
       case FONT_WEIGHT_REGULAR:
         weight = PANGO_WEIGHT_NORMAL;
@@ -1266,7 +1264,7 @@ void DashStyle::Impl::UseDefaultValues ()
     pangoCtx = pango_layout_get_context(layout);  // is not ref'ed
 
     if (!screen)
-      pango_cairo_context_set_font_options(pangoCtx, _defaultFontOptions);
+      pango_cairo_context_set_font_options(pangoCtx, default_font_options_);
     else
       pango_cairo_context_set_font_options(pangoCtx,
                                            gdk_screen_get_font_options(screen));
@@ -1418,22 +1416,22 @@ void DashStyle::Impl::UseDefaultValues ()
                  h - (double) (2 * garnish),
                  false);
 
-    if (pimpl->_buttonLabelFillColor[state].alpha != 0.0)
+    if (pimpl->button_label_fill_color_[state].alpha != 0.0)
     {
-      cairo_set_source_rgba(cr, pimpl->_buttonLabelFillColor[state]);
+      cairo_set_source_rgba(cr, pimpl->button_label_fill_color_[state]);
       cairo_fill_preserve (cr);
     }
-    cairo_set_source_rgba(cr, pimpl->_buttonLabelBorderColor[state]);
-    cairo_set_line_width(cr, pimpl->_buttonLabelBorderSize[state]);
+    cairo_set_source_rgba(cr, pimpl->button_label_border_color_[state]);
+    cairo_set_line_width(cr, pimpl->button_label_border_size_[state]);
     cairo_stroke (cr);
 
     pimpl->DrawOverlay(cr,
-                       pimpl->_buttonLabelOverlayOpacity[state],
-                       pimpl->_buttonLabelOverlayMode[state],
-                       pimpl->_buttonLabelBlurSize[state] * 0.75);
+                       pimpl->button_label_overlay_opacity_[state],
+                       pimpl->button_label_overlay_mode_[state],
+                       pimpl->button_label_blur_size_[state] * 0.75);
 
     pimpl->Text(cr,
-                pimpl->_buttonLabelTextColor[state],
+                pimpl->button_label_text_color_[state],
                 label);
 
     return true;
@@ -1564,16 +1562,16 @@ void DashStyle::Impl::UseDefaultValues ()
                         arrow,
                         state);
 
-    if (pimpl->_buttonLabelFillColor[state].alpha != 0.0)
+    if (pimpl->button_label_fill_color_[state].alpha != 0.0)
     {
-      cairo_set_source_rgba(cr, pimpl->_buttonLabelFillColor[state]);
+      cairo_set_source_rgba(cr, pimpl->button_label_fill_color_[state]);
       cairo_fill_preserve (cr);
     }
-    cairo_set_source_rgba(cr, pimpl->_buttonLabelBorderColor[state]);
-    cairo_set_line_width(cr, pimpl->_buttonLabelBorderSize[state]);
+    cairo_set_source_rgba(cr, pimpl->button_label_border_color_[state]);
+    cairo_set_line_width(cr, pimpl->button_label_border_size_[state]);
     cairo_stroke (cr);
     pimpl->Text(cr,
-                pimpl->_buttonLabelTextColor[state],
+                pimpl->button_label_text_color_[state],
                 label);
 
     return true;
@@ -1645,16 +1643,16 @@ void DashStyle::Impl::UseDefaultValues ()
     double x = w / 2.0;
     double y = 2.0;
 
-    cairo_set_line_width (cr, pimpl->_separatorSize);
-    cairo_set_source_rgba(cr, pimpl->_separatorColor);
+    cairo_set_line_width (cr, pimpl->separator_size_);
+    cairo_set_source_rgba(cr, pimpl->separator_color_);
     cairo_move_to (cr, _align (x), _align (y));
     cairo_line_to (cr, _align (x), _align (h - 4.0));
     cairo_stroke (cr);
 
     pimpl->DrawOverlay (cr,
-                 pimpl->_separatorOverlayOpacity,
-                 pimpl->_separatorOverlayMode,
-                 pimpl->_separatorBlurSize);
+                 pimpl->separator_overlay_opacity_,
+                 pimpl->separator_overlay_mode_,
+                 pimpl->separator_blur_size_);
 
     return true;
   }
@@ -1673,16 +1671,16 @@ void DashStyle::Impl::UseDefaultValues ()
     double x = 2.0;
     double y = h / 2.0;
 
-    cairo_set_line_width (cr, pimpl->_separatorSize);
-    cairo_set_source_rgba(cr, pimpl->_separatorColor);
+    cairo_set_line_width (cr, pimpl->separator_size_);
+    cairo_set_source_rgba(cr, pimpl->separator_color_);
     cairo_move_to (cr, _align (x), _align (y));
     cairo_line_to (cr, _align (w - 4.0), _align (y));
     cairo_stroke (cr);
 
     pimpl->DrawOverlay (cr,
-                 pimpl->_separatorOverlayOpacity,
-                 pimpl->_separatorOverlayMode,
-                 pimpl->_separatorBlurSize);
+                 pimpl->separator_overlay_opacity_,
+                 pimpl->separator_overlay_mode_,
+                 pimpl->separator_blur_size_);
 
     return true;
   }
@@ -1693,8 +1691,8 @@ void DashStyle::Impl::UseDefaultValues ()
 
     for (int i = 0; i < STATES; i++)
     {
-      if (maxBlurSize < pimpl->_buttonLabelBlurSize[i])
-        maxBlurSize = pimpl->_buttonLabelBlurSize[i];
+      if (maxBlurSize < pimpl->button_label_blur_size_[i])
+        maxBlurSize = pimpl->button_label_blur_size_[i];
     }
 
     return 2 * maxBlurSize;
@@ -1702,11 +1700,11 @@ void DashStyle::Impl::UseDefaultValues ()
 
   int DashStyle::GetSeparatorGarnishSize ()
   {
-    return pimpl->_separatorBlurSize;
+    return pimpl->separator_blur_size_;
   }
 
   int DashStyle::GetScrollbarGarnishSize ()
   {
-    return pimpl->_scrollbarBlurSize;
+    return pimpl->scrollbar_blur_size_;
   }
 }
