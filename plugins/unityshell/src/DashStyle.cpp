@@ -20,18 +20,17 @@
 #include <string>
 #include <vector>
 #include <map>
-#include <boost/algorithm/string.hpp>
 
 #include <math.h>
 #include <glib.h>
 #include <gdk/gdk.h>
 #include <gtk/gtk.h>
 #include <pango/pango.h>
-#include <json-glib/json-glib.h>
 
 #include <NuxCore/Color.h>
 
 #include "DashStyle.h"
+#include "JSONParser.h"
 #include "config.h"
 
 #define DASH_WIDGETS_FILE DATADIR"/unity/themes/dash-widgets.json"
@@ -49,183 +48,6 @@ void cairo_set_source_rgba(cairo_t* cr, nux::Color const& color)
 }
 
 } // anon namespace
-
-// I have a feeling that these methods may end up being reused.
-namespace json
-{
-
-JsonObject* GetNodeObject(JsonNode* root, std::string const& node_name)
-{
-  if (!root)
-    return nullptr;
-
-  JsonObject* object = json_node_get_object(root);
-  JsonNode* node = json_object_get_member(object, node_name.c_str());
-  return json_node_get_object(node);
-}
-
-JsonArray* GetArray(JsonNode* root,
-                    std::string const& node_name,
-                    std::string const& member_name)
-{
-  JsonObject* object = GetNodeObject(root, node_name);
-  if (object)
-    return json_object_get_array_member(object, member_name.c_str());
-  return nullptr;
-}
-
-void ReadDoubleSingle(JsonNode* root,
-                      std::string const& node_name,
-                      std::string const& member_name,
-                      double& value)
-{
-  JsonObject* object = GetNodeObject(root, node_name);
-
-  if (!object)
-    return;
-
-  value = json_object_get_double_member(object, member_name.c_str());
-}
-
-void ReadDoubleArray(JsonNode* root,
-                     std::string const& node_name,
-                     std::string const& member_name,
-                     std::vector<double>& values)
-{
-  JsonArray* array = GetArray(root, node_name, member_name);
-
-  if (!array)
-    return;
-
-  std::size_t size = std::min<size_t>(json_array_get_length(array),
-                                      values.size());
-  for (std::size_t i = 0; i < size; ++i)
-    values[i] = json_array_get_double_element(array, i);
-}
-
-nux::Color ColorFromPango(const gchar* color_string)
-{
-  static const float PANGO_MAX = 0xffff;
-  PangoColor color = {0, 0, 0};
-  ::pango_color_parse(&color, color_string);
-  return nux::Color(color.red / PANGO_MAX,
-                    color.green / PANGO_MAX,
-                    color.blue  / PANGO_MAX);
-}
-
-void ReadColorArray(JsonNode* root,
-                    std::string const& node_name,
-                    std::string const& member_name,
-                    std::string const& opacity_name,
-                    std::vector<nux::Color>& colors)
-{
-  JsonArray* array = GetArray(root, node_name, member_name);
-  if (!array)
-    return;
-
-  std::size_t size = std::min<size_t>(json_array_get_length(array),
-                                      colors.size());
-  for (std::size_t i = 0; i < size; ++i)
-  {
-    colors[i] = ColorFromPango(json_array_get_string_element(array, i));
-  }
-
-  array = GetArray(root, node_name, opacity_name);
-  if (!array)
-    return;
-  size = std::min<size_t>(json_array_get_length(array),
-                          colors.size());
-  for (std::size_t i = 0; i < size; ++i)
-    colors[i].alpha = json_array_get_double_element(array, i);
-}
-
-void ReadColorSingle(JsonNode* root,
-                     std::string const& node_name,
-                     std::string const& member_name,
-                     std::string const& opacity_name,
-                     nux::Color& color)
-{
-  JsonObject* object = GetNodeObject(root, node_name);
-
-  if (!object)
-    return;
-
-  color = ColorFromPango(json_object_get_string_member(object, member_name.c_str()));
-  color.alpha = json_object_get_double_member(object, opacity_name.c_str());
-}
-
-void ReadIntSingle(JsonNode* root,
-                   std::string const& node_name,
-                   std::string const& member_name,
-                   int& value)
-{
-  JsonObject* object = GetNodeObject(root, node_name);
-
-  if (!object)
-    return;
-
-  value = json_object_get_int_member(object, member_name.c_str());
-}
-
-void ReadIntArray(JsonNode*    root,
-                  std::string const& node_name,
-                  std::string const& member_name,
-                  std::vector<int>& values)
-{
-  JsonArray* array = GetArray(root, node_name, member_name);
-
-  if (!array)
-    return;
-
-  std::size_t size = std::min<size_t>(json_array_get_length(array),
-                                      values.size());
-  for (std::size_t i = 0; i < size; ++i)
-    values[i] = json_array_get_int_element(array, i);
-}
-
-template <typename T>
-void ReadMappedStringArray(JsonNode* root,
-                           std::string const& node_name,
-                           std::string const& member_name,
-                           std::map<std::string, T> const& mapping,
-                           std::vector<T>& values)
-{
-  JsonArray* array = GetArray(root, node_name, member_name);
-  if (!array)
-    return;
-
-  std::size_t size = std::min<size_t>(json_array_get_length(array),
-                                      values.size());
-  for (std::size_t i = 0; i < size; ++i)
-  {
-    std::string key(json_array_get_string_element(array, i));
-    boost::to_lower(key);
-    auto it = mapping.find(key);
-    if (it != mapping.end())
-      values[i] = it->second;
-  }
-}
-
-template <typename T>
-void ReadMappedString(JsonNode* root,
-                      std::string const& node_name,
-                      std::string const& member_name,
-                      std::map<std::string, T> const& mapping,
-                      T& value)
-{
-  JsonObject* object = GetNodeObject(root, node_name);
-  if (!object)
-    return;
-
-  std::string key(json_object_get_string_member(object, member_name.c_str()));
-  boost::to_lower(key);
-  auto it = mapping.find(key);
-  if (it != mapping.end())
-    value = it->second;
-}
-
-
-} // json namespace
 
 
 class DashStyle::Impl
@@ -317,191 +139,79 @@ DashStyle::Impl::Impl()
   , _buttonLabelOverlayMode(STATES)
   , _buttonLabelBlurSize(STATES)
 {
-    JsonParser*  parser = NULL;
-    GError*      error  = NULL;
-    gboolean     result = FALSE;
-    JsonNode*    root   = NULL;
+  json::Parser parser;
 
-    g_type_init ();
-
-    parser = json_parser_new ();
-    result = json_parser_load_from_file (parser, DASH_WIDGETS_FILE, &error);
-    if (!result)
-    {
-      g_object_unref (parser);
-      g_warning ("Failure: %s", error->message);
-      g_error_free (error);
-      UseDefaultValues ();
-
+  if (!parser.Open(DASH_WIDGETS_FILE))
+  {
+    UseDefaultValues ();
     return;
-    }
+  }
 
-    root = json_parser_get_root (parser); // not ref'ed
+  // button-label
+  parser.ReadColors("button-label", "border-color", "border-opacity",
+                    _buttonLabelBorderColor);
+  parser.ReadDoubles("button-label", "border-size", _buttonLabelBorderSize);
+  parser.ReadDouble("button-label", "text-size", _buttonLabelTextSize);
+  parser.ReadColors("button-label", "text-color", "text-opacity",
+                    _buttonLabelTextColor);
+  parser.ReadColors("button-label", "fill-color", "fill-opacity",
+                    _buttonLabelFillColor);
+  parser.ReadDoubles("button-label", "overlay-opacity", _buttonLabelOverlayOpacity);
 
-    if (JSON_NODE_TYPE (root) != JSON_NODE_OBJECT)
-    {
-      g_warning ("Root node is not an object, fail.  It's an: %s",
-                 json_node_type_name (root));
-      g_object_unref (parser);
-      UseDefaultValues ();
-      return;
-    }
+  std::map<std::string, BlendMode> blend_mode_map;
+  blend_mode_map["normal"] = BlendMode::BLEND_MODE_NORMAL;
+  blend_mode_map["multiply"] = BlendMode::BLEND_MODE_MULTIPLY;
+  blend_mode_map["screen"] = BlendMode::BLEND_MODE_SCREEN;
 
-    // button-label
-    json::ReadColorArray(root,
-                         "button-label",
-                         "border-color",
-                         "border-opacity",
-                         _buttonLabelBorderColor);
+  parser.ReadMappedStrings("button-label", "overlay-mode", blend_mode_map,
+                           _buttonLabelOverlayMode);
+  parser.ReadInts("button-label", "blur-size", _buttonLabelBlurSize);
 
-    json::ReadDoubleArray(root,
-                          "button-label",
-                          "border-size",
-                          _buttonLabelBorderSize);
+  // regular-text
+  parser.ReadColor("regular-text", "text-color", "text-opacity",
+                   _regularTextColor);
+  parser.ReadDouble("regular-text", "text-size", _regularTextSize);
+  parser.ReadMappedString("regular-text", "text-mode", blend_mode_map,
+                          _regularTextMode);
 
-    json::ReadDoubleSingle(root,
-                           "button-label",
-                           "text-size",
-                           _buttonLabelTextSize);
+  std::map<std::string, FontWeight> font_weight_map;
+  font_weight_map["light"] = FontWeight::FONT_WEIGHT_LIGHT;
+  font_weight_map["regular"] = FontWeight::FONT_WEIGHT_REGULAR;
+  font_weight_map["bold"] = FontWeight::FONT_WEIGHT_BOLD;
 
-    json::ReadColorArray(root,
-                         "button-label",
-                         "text-color",
-                         "text-opacity",
-                         _buttonLabelTextColor);
+  parser.ReadMappedString("regular-text", "text-weight", font_weight_map,
+                          _regularTextWeight);
 
-    json::ReadColorArray(root,
-                         "button-label",
-                         "fill-color",
-                         "fill-opacity",
-                         _buttonLabelFillColor);
+  // separator
+  parser.ReadDouble("separator", "size", _separatorSize);
+  parser.ReadColor("separator", "color", "opacity", _separatorColor);
+  parser.ReadDouble("separator", "overlay-opacity", _separatorOverlayOpacity);
+  parser.ReadMappedString("separator", "overlay-mode", blend_mode_map,
+                          _separatorOverlayMode);
+  parser.ReadInt("separator", "blur-size", _separatorBlurSize);
 
-    json::ReadDoubleArray(root,
-                          "button-label",
-                          "overlay-opacity",
-                          _buttonLabelOverlayOpacity);
+  // scrollbar
+  parser.ReadColor("scrollbar", "color", "opacity", _scrollbarColor);
+  parser.ReadDouble("scrollbar", "overlay-opacity", _scrollbarOverlayOpacity);
+  parser.ReadMappedString("scrollbar", "overlay-mode", blend_mode_map,
+                          _scrollbarOverlayMode);
+  parser.ReadInt("scrollbar", "blur-size", _scrollbarBlurSize);
+  parser.ReadInt("scrollbar", "size", _scrollbarSize);
+  parser.ReadDouble("scrollbar", "corner-radius", _scrollbarCornerRadius);
 
-    std::map<std::string, BlendMode> blend_mode_map;
-    blend_mode_map["normal"] = BlendMode::BLEND_MODE_NORMAL;
-    blend_mode_map["multiply"] = BlendMode::BLEND_MODE_MULTIPLY;
-    blend_mode_map["screen"] = BlendMode::BLEND_MODE_SCREEN;
-
-    json::ReadMappedStringArray(root,
-                                "button-label",
-                                "overlay-mode",
-                                blend_mode_map,
-                                _buttonLabelOverlayMode);
-
-    json::ReadIntArray(root,
-                       "button-label",
-                       "blur-size",
-                       _buttonLabelBlurSize);
-
-    // regular-text
-    json::ReadColorSingle(root,
-                          "regular-text",
-                          "text-color",
-                           "text-opacity",
-                          _regularTextColor);
-
-    json::ReadDoubleSingle(root,
-                           "regular-text",
-                           "text-size",
-                           _regularTextSize);
-
-    json::ReadMappedString(root,
-                           "regular-text",
-                           "text-mode",
-                           blend_mode_map,
-                           _regularTextMode);
-
-    std::map<std::string, FontWeight> font_weight_map;
-    font_weight_map["light"] = FontWeight::FONT_WEIGHT_LIGHT;
-    font_weight_map["regular"] = FontWeight::FONT_WEIGHT_REGULAR;
-    font_weight_map["bold"] = FontWeight::FONT_WEIGHT_BOLD;
-
-    json::ReadMappedString(root,
-                           "regular-text",
-                           "text-weight",
-                           font_weight_map,
-                           _regularTextWeight);
-
-    // separator
-    json::ReadDoubleSingle(root,
-                           "separator",
-                           "size",
-                           _separatorSize);
-
-    json::ReadColorSingle(root,
-                          "separator",
-                          "color",
-                          "opacity",
-                          _separatorColor);
-
-    json::ReadDoubleSingle(root,
-                           "separator",
-                           "overlay-opacity",
-                           _separatorOverlayOpacity);
-
-    json::ReadMappedString(root,
-                           "separator",
-                           "overlay-mode",
-                           blend_mode_map,
-                           _separatorOverlayMode);
-
-    json::ReadIntSingle(root,
-                        "separator",
-                        "blur-size",
-                        _separatorBlurSize);
-
-    // scrollbar
-    json::ReadColorSingle(root,
-                          "scrollbar",
-                          "color",
-                           "opacity",
-                          _scrollbarColor);
-
-    json::ReadDoubleSingle(root,
-                           "scrollbar",
-                           "overlay-opacity",
-                           _scrollbarOverlayOpacity);
-
-    json::ReadMappedString(root,
-                           "scrollbar",
-                           "overlay-mode",
-                           blend_mode_map,
-                           _scrollbarOverlayMode);
-
-    json::ReadIntSingle(root,
-                        "scrollbar",
-                        "blur-size",
-                        _scrollbarBlurSize);
-
-    json::ReadIntSingle(root,
-                        "scrollbar",
-                        "size",
-                        _scrollbarSize);
-
-    json::ReadDoubleSingle(root,
-                           "scrollbar",
-                           "corner-radius",
-                           _scrollbarCornerRadius);
-
-    g_object_unref (parser);
-
-    // create fallback font-options
-    _defaultFontOptions = cairo_font_options_create ();
-    if (cairo_font_options_status (_defaultFontOptions) == CAIRO_STATUS_SUCCESS)
-    {
-      cairo_font_options_set_antialias (_defaultFontOptions,
-                                        CAIRO_ANTIALIAS_GRAY);
-      cairo_font_options_set_subpixel_order (_defaultFontOptions,
-                                             CAIRO_SUBPIXEL_ORDER_RGB);
-      cairo_font_options_set_hint_style (_defaultFontOptions,
-                                         CAIRO_HINT_STYLE_SLIGHT);
-      cairo_font_options_set_hint_metrics (_defaultFontOptions,
-                                           CAIRO_HINT_METRICS_ON);
-    }
+  // create fallback font-options
+  _defaultFontOptions = cairo_font_options_create();
+  if (cairo_font_options_status(_defaultFontOptions) == CAIRO_STATUS_SUCCESS)
+  {
+    cairo_font_options_set_antialias(_defaultFontOptions,
+                                     CAIRO_ANTIALIAS_GRAY);
+    cairo_font_options_set_subpixel_order(_defaultFontOptions,
+                                          CAIRO_SUBPIXEL_ORDER_RGB);
+    cairo_font_options_set_hint_style(_defaultFontOptions,
+                                      CAIRO_HINT_STYLE_SLIGHT);
+    cairo_font_options_set_hint_metrics(_defaultFontOptions,
+                                        CAIRO_HINT_METRICS_ON);
+  }
 }
 
 DashStyle::Impl::~Impl()
