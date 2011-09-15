@@ -2123,7 +2123,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
     // apply the darkening
     GfxContext.GetRenderStates().SetBlend(true, GL_SRC_COLOR, GL_DST_COLOR);
-    gPainter.Paint2DQuadColor(GfxContext, bkg_box, nux::Color(0.2f, 0.2f, 0.2f, 1.0f));
+    gPainter.Paint2DQuadColor(GfxContext, bkg_box, nux::Color(0.0f, 0.0f, 0.0f, 1.0f));
     GfxContext.GetRenderStates().SetBlend (alpha, src, dest);
 
     // apply the bg colour

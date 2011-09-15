@@ -97,7 +97,7 @@ void DashView::SetupBackground()
   rop.Blend = true;
   rop.SrcBlend = GL_SRC_COLOR;
   rop.DstBlend = GL_DST_COLOR;
-  bg_darken_layer_ = new nux::ColorLayer(nux::Color(0.2f, 0.2f, 0.2f, 1.0f), false, rop);
+  bg_darken_layer_ = new nux::ColorLayer(nux::Color(0.0f, 0.0f, 0.0f, 1.0f), false, rop);
 
   bg_shine_texture_ = PlacesStyle::GetDefault()->GetDashShine()->GetDeviceTexture();
 
