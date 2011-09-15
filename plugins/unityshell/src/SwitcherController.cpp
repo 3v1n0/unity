@@ -117,11 +117,12 @@ gboolean SwitcherController::OnDetailTimer(gpointer data)
 {
   SwitcherController* self = static_cast<SwitcherController*>(data);
 
-  if (!self->visible_ || self->model_->detail_selection)
-    return FALSE;
+  if (self->visible_ && !self->model_->detail_selection)
+  {
+    self->SetDetail(true, 2);
+    self->detail_mode_ = TAB_NEXT_WINDOW;
+  }
   
-  self->SetDetail(true, 2);
-  self->detail_mode_ = TAB_NEXT_WINDOW;
   self->detail_timer_ = 0;
   return FALSE;
 }
