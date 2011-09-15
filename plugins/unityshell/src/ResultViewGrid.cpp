@@ -215,7 +215,7 @@ void ResultViewGrid::SizeReallocate()
   //FIXME - needs to use the geometry assigned to it, but only after a layout
   int items_per_row = GetItemsPerRow();
 
-  int total_rows = (results_.size() / items_per_row) + 1;
+  int total_rows = std::ceil(results_.size() / (double)items_per_row) ;
   int total_height = 0;
 
   if (expanded)
@@ -688,7 +688,7 @@ ResultViewGrid::DndSourceDragBegin()
 }
 
 GdkPixbuf *
-_icon_hint_get_drag_pixbuf (std::string icon_hint) 
+_icon_hint_get_drag_pixbuf (std::string icon_hint)
 {
   GdkPixbuf *pbuf;
   GtkIconTheme *theme;
@@ -726,7 +726,7 @@ _icon_hint_get_drag_pixbuf (std::string icon_hint)
                                         size,
                                         (GtkIconLookupFlags) 0);
   }
-  
+
   if (!info)
   {
       info = gtk_icon_theme_lookup_icon(theme,
@@ -734,7 +734,7 @@ _icon_hint_get_drag_pixbuf (std::string icon_hint)
                                         size,
                                         (GtkIconLookupFlags) 0);
   }
-  
+
   if (gtk_icon_info_get_filename(info) == NULL)
   {
       gtk_icon_info_free(info);
@@ -743,7 +743,7 @@ _icon_hint_get_drag_pixbuf (std::string icon_hint)
                                         size,
                                         (GtkIconLookupFlags) 0);
   }
-  
+
   pbuf = gtk_icon_info_load_icon(info, &error);
 
   if (error != NULL)
@@ -752,7 +752,7 @@ _icon_hint_get_drag_pixbuf (std::string icon_hint)
     g_error_free (error);
     pbuf = NULL;
   }
-  
+
   gtk_icon_info_free(info);
   return pbuf;
 }
