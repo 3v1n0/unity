@@ -39,6 +39,8 @@
 #include "DashView.h"
 #include "PlacesSimpleTile.h"
 #include "PlacesGroup.h"
+#include "QuicklistView.h"
+#include "QuicklistMenuItem.h"
 #include "unity-launcher-accessible.h"
 #include "unity-launcher-icon-accessible.h"
 #include "unity-panel-view-accessible.h"
@@ -48,6 +50,8 @@
 #include "unity-rvgrid-accessible.h"
 #include "unity-places-simple-tile-accessible.h"
 #include "unity-places-group-accessible.h"
+#include "unity-quicklist-accessible.h"
+#include "unity-quicklist-menu-item-accessible.h"
 
 using namespace unity;
 using namespace unity::dash;
@@ -279,6 +283,12 @@ unity_a11y_create_accessible(nux::Object* object)
 
   if (object->Type().IsDerivedFromType(PlacesGroup::StaticObjectType))
     return unity_places_group_accessible_new(object);
+
+  if (object->Type().IsDerivedFromType(QuicklistView::StaticObjectType))
+    return unity_quicklist_accessible_new(object);
+
+  if (object->Type().IsDerivedFromType(QuicklistMenuItem::StaticObjectType))
+    return unity_quicklist_menu_item_accessible_new(object);
 
   if (object->Type().IsDerivedFromType(nux::StaticCairoText::StaticObjectType))
     return unity_sctext_accessible_new(object);
