@@ -79,6 +79,8 @@ void SwitcherController::Show(SwitcherController::ShowMode show, SwitcherControl
 
   if (timeout_length > 0)
   {
+    if (show_timer_)
+      g_source_remove (show_timer_);
     show_timer_ = g_timeout_add(timeout_length, &SwitcherController::OnShowTimer, this);
   }
   else
@@ -88,6 +90,8 @@ void SwitcherController::Show(SwitcherController::ShowMode show, SwitcherControl
 
   if (detail_on_timeout)
   {
+    if (detail_timer_)
+      g_source_remove (detail_timer_);
     detail_timer_ = g_timeout_add(detail_timeout_length, &SwitcherController::OnDetailTimer, this);
   }
 
@@ -208,6 +212,10 @@ void SwitcherController::Hide(bool accept_state)
   if (show_timer_)
     g_source_remove(show_timer_);
   show_timer_ = 0;
+
+  if (detail_timer_)
+    g_source_remove(detail_timer_);
+  detail_timer_ = 0;
 
   view_.Release();
 }
