@@ -106,7 +106,7 @@ int PlacesStyle::GetTileWidth() const
 
 int PlacesStyle::GetTileHeight() const
 {
-  return GetTileIconSize() + (_text_height * 4) + 12;
+  return GetTileIconSize() + (_text_height * 3) + 12;
 }
 
 int PlacesStyle::GetHomeTileIconSize() const
