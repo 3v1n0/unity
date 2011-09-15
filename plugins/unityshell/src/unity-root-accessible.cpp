@@ -26,7 +26,11 @@
  */
 
 #include "unity-root-accessible.h"
+#include "nux-base-window-accessible.h"
 #include "unitya11y.h"
+
+#include "UBusWrapper.h"
+#include "UBusMessages.h"
 
 /* GObject */
 static void unity_root_accessible_class_init(UnityRootAccessibleClass* klass);
@@ -42,7 +46,12 @@ static AtkObject* unity_root_accessible_ref_child(AtkObject* obj,
 static AtkObject* unity_root_accessible_get_parent(AtkObject* obj);
 /* private */
 static void       explore_children(AtkObject* obj);
-
+static void       check_active_window(UnityRootAccessible* self);
+static void       register_interesting_messages(UnityRootAccessible* self);
+static void       add_window(UnityRootAccessible* self,
+                             nux::BaseWindow* window);
+static void       remove_window(UnityRootAccessible* self,
+                                nux::BaseWindow* window);
 
 #define UNITY_ROOT_ACCESSIBLE_GET_PRIVATE(obj)                          \
   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), UNITY_TYPE_ROOT_ACCESSIBLE, UnityRootAccessiblePrivate))
@@ -102,7 +111,7 @@ unity_root_accessible_finalize(GObject* object)
 
   if (root->priv->window_list)
   {
-    g_slist_free(root->priv->window_list);
+    g_slist_free_full(root->priv->window_list, g_object_unref);
     root->priv->window_list = NULL;
   }
 
@@ -121,6 +130,8 @@ unity_root_accessible_initialize(AtkObject* accessible,
   // accessible->name = g_get_prgname();
   atk_object_set_name(accessible, "unity");
   atk_object_set_parent(accessible, NULL);
+
+  register_interesting_messages(UNITY_ROOT_ACCESSIBLE(accessible));
 
   ATK_OBJECT_CLASS(unity_root_accessible_parent_class)->initialize(accessible, data);
 }
@@ -161,40 +172,6 @@ unity_root_accessible_get_parent(AtkObject* obj)
   return NULL;
 }
 
-
-
-/*
- * It adds a window to the internal window_list managed by the
- *
- *
- * FIXME: third parties manually using this method should be
- * temporal. This method should be a internal root method, as part of
- * a basewindow::show callback, as in the case of gail
- */
-AtkObject*
-unity_root_accessible_add_window(UnityRootAccessible* self,
-                                 nux::BaseWindow* window)
-{
-  AtkObject* window_accessible = NULL;
-  gint index = 0;
-
-  g_return_val_if_fail(UNITY_IS_ROOT_ACCESSIBLE(self), NULL);
-
-  window_accessible =
-    unity_a11y_get_accessible(window);
-
-  self->priv->window_list =
-    g_slist_append(self->priv->window_list, window_accessible);
-
-  index = g_slist_index(self->priv->window_list, window_accessible);
-
-  explore_children(window_accessible);
-
-  g_signal_emit_by_name(self, "children-changed::add",
-                        index, window_accessible, NULL);
-
-  return window_accessible;
-}
 
 /* private */
 /*
@@ -239,4 +216,126 @@ explore_children(AtkObject* obj)
     explore_children(atk_child);
     g_object_unref(atk_child);
   }
+}
+
+/*
+ * Call all the children (NuxBaseWindowAccessible) to check if they
+ * are in the proper active or deactive status.
+ */
+static void
+check_active_window(UnityRootAccessible* self)
+{
+  GSList* iter = NULL;
+  NuxBaseWindowAccessible* window = NULL;
+
+  for (iter = self->priv->window_list; iter != NULL; iter = g_slist_next(iter))
+  {
+    window = NUX_BASE_WINDOW_ACCESSIBLE(iter->data);
+
+    nux_base_window_accessible_check_active(window);
+  }
+}
+
+/*
+ * It adds a window to the internal window_list managed by the Root object
+ *
+ * Checks if the object is already present. Adds a reference to the
+ * accessible object of the window.
+ */
+static void
+add_window(UnityRootAccessible* self,
+           nux::BaseWindow* window)
+{
+  AtkObject* window_accessible = NULL;
+  gint index = 0;
+
+  g_return_if_fail(UNITY_IS_ROOT_ACCESSIBLE(self));
+
+  window_accessible =
+    unity_a11y_get_accessible(window);
+
+  if (g_slist_find(self->priv->window_list, window_accessible))
+    return;
+
+  self->priv->window_list =
+    g_slist_append(self->priv->window_list, window_accessible);
+  g_object_ref(window_accessible);
+
+  index = g_slist_index(self->priv->window_list, window_accessible);
+
+  explore_children(window_accessible);
+
+  g_signal_emit_by_name(self, "children-changed::add",
+                        index, window_accessible, NULL);
+}
+
+
+/*
+ * It removes the window to the internal window_list managed by the
+ * Root object
+ *
+ * Checks if the object is already present. Removes a reference to the
+ * accessible object of the window.
+ */
+static void
+remove_window(UnityRootAccessible* self,
+              nux::BaseWindow* window)
+{
+  AtkObject* window_accessible = NULL;
+  gint index = 0;
+
+  g_return_if_fail(UNITY_IS_ROOT_ACCESSIBLE(self));
+
+  window_accessible =
+    unity_a11y_get_accessible(window);
+
+  if (!g_slist_find(self->priv->window_list, window_accessible))
+    return;
+
+  index = g_slist_index(self->priv->window_list, window_accessible);
+
+  self->priv->window_list =
+    g_slist_remove(self->priv->window_list, window_accessible);
+  g_object_unref(window_accessible);
+
+  g_signal_emit_by_name(self, "children-changed::remove",
+                        index, window_accessible, NULL);
+}
+
+static void
+ubus_change_visibility_cb(GVariant* variant,
+                          UnityRootAccessible* self)
+{
+  check_active_window(self);
+}
+
+static void
+wc_change_visibility_window_cb(nux::BaseWindow* window, UnityRootAccessible* self, gboolean visible)
+{
+  if (visible)
+    add_window(self, window);
+  else
+    remove_window(self, window);
+}
+
+static void
+register_interesting_messages(UnityRootAccessible* self)
+{
+  static unity::UBusManager ubus_manager;
+
+  ubus_manager.RegisterInterest(UBUS_PLACE_VIEW_SHOWN,
+                                sigc::bind(sigc::ptr_fun(ubus_change_visibility_cb), self));
+  ubus_manager.RegisterInterest(UBUS_PLACE_VIEW_HIDDEN,
+                                sigc::bind(sigc::ptr_fun(ubus_change_visibility_cb), self));
+
+  ubus_manager.RegisterInterest(UBUS_LAUNCHER_START_KEY_NAV,
+                                sigc::bind(sigc::ptr_fun(ubus_change_visibility_cb), self));
+  ubus_manager.RegisterInterest(UBUS_LAUNCHER_END_KEY_NAV,
+                                sigc::bind(sigc::ptr_fun(ubus_change_visibility_cb), self));
+
+  nux::GetWindowCompositor().sigVisibleViewWindow.
+  connect(sigc::bind(sigc::ptr_fun(wc_change_visibility_window_cb), self, TRUE));
+
+  nux::GetWindowCompositor().sigHiddenViewWindow.
+  connect(sigc::bind(sigc::ptr_fun(wc_change_visibility_window_cb), self, FALSE));
 }

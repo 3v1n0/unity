@@ -32,6 +32,7 @@ namespace unity
 
 class PlacesSimpleTile : public unity::Introspectable, public PlacesTile
 {
+  NUX_DECLARE_OBJECT_TYPE(PlacesSimpleTile, PlacesTile);
 public:
 
   PlacesSimpleTile(const char* icon, const char* label, int icon_size = 64, bool defer_icon_loading = false, const void* id = NULL);
