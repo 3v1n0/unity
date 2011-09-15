@@ -71,7 +71,7 @@ bool Parser::Open(std::string const& filename)
   return true;
 }
 
-JsonObject* Parser::GetNodeObject(std::string const& node_name)
+JsonObject* Parser::GetNodeObject(std::string const& node_name) const
 {
   if (!root_)
     return nullptr;
@@ -82,7 +82,7 @@ JsonObject* Parser::GetNodeObject(std::string const& node_name)
 }
 
 JsonArray* Parser::GetArray(std::string const& node_name,
-                            std::string const& member_name)
+                            std::string const& member_name) const
 {
   JsonObject* object = GetNodeObject(node_name);
   if (object)
@@ -93,7 +93,7 @@ JsonArray* Parser::GetArray(std::string const& node_name,
 
 void Parser::ReadInt(std::string const& node_name,
                      std::string const& member_name,
-                     int& value)
+                     int& value) const
 {
   JsonObject* object = GetNodeObject(node_name);
 
@@ -105,7 +105,7 @@ void Parser::ReadInt(std::string const& node_name,
 
 void Parser::ReadInts(std::string const& node_name,
                       std::string const& member_name,
-                      std::vector<int>& values)
+                      std::vector<int>& values) const
 {
   JsonArray* array = GetArray(node_name, member_name);
 
@@ -120,7 +120,7 @@ void Parser::ReadInts(std::string const& node_name,
 
 void Parser::ReadDouble(std::string const& node_name,
                         std::string const& member_name,
-                        double& value)
+                        double& value) const
 {
   JsonObject* object = GetNodeObject(node_name);
 
@@ -132,7 +132,7 @@ void Parser::ReadDouble(std::string const& node_name,
 
 void Parser::ReadDoubles(std::string const& node_name,
                          std::string const& member_name,
-                         std::vector<double>& values)
+                         std::vector<double>& values) const
 {
   JsonArray* array = GetArray(node_name, member_name);
 
@@ -148,7 +148,7 @@ void Parser::ReadDoubles(std::string const& node_name,
 void Parser::ReadColor(std::string const& node_name,
                        std::string const& member_name,
                        std::string const& opacity_name,
-                       nux::Color& color)
+                       nux::Color& color) const
 {
   JsonObject* object = GetNodeObject(node_name);
 
@@ -162,7 +162,7 @@ void Parser::ReadColor(std::string const& node_name,
 void Parser::ReadColors(std::string const& node_name,
                         std::string const& member_name,
                         std::string const& opacity_name,
-                        std::vector<nux::Color>& colors)
+                        std::vector<nux::Color>& colors) const
 {
   JsonArray* array = GetArray(node_name, member_name);
   if (!array)
