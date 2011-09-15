@@ -406,7 +406,36 @@ PluginAdapter::IsWindowMaximized(guint xid)
 bool
 PluginAdapter::IsWindowDecorated(guint32 xid)
 {
-  Window win = (Window)xid;
+  Display* display = m_Screen->dpy();
+  Window win = xid;
+  Atom hints_atom = None;
+  MotifWmHints* hints = NULL;
+  Atom type = None;
+  gint format;
+  gulong nitems;
+  gulong bytes_after;
+  bool ret = true;
+
+  hints_atom = XInternAtom(display, _XA_MOTIF_WM_HINTS, false);
+
+  XGetWindowProperty(display, win, hints_atom, 0,
+                     sizeof(MotifWmHints) / sizeof(long), False,
+                     hints_atom, &type, &format, &nitems, &bytes_after,
+                     (guchar**)&hints);
+
+  if (!hints)
+    return ret;
+
+  if (type == hints_atom && format != 0 && hints->flags & MWM_HINTS_DECORATIONS)
+  {
+    ret = hints->decorations & (MwmDecorAll | MwmDecorTitle);
+  }
+
+  XFree(hints);
+  return ret;
+
+/* FIXME compiz is too slow to update this value, and this could lead to
+ * issues like the bug #838923, since the read value isn't valid anymore
   CompWindow* window;
 
   window = m_Screen->findWindow(win);
@@ -417,6 +446,7 @@ PluginAdapter::IsWindowDecorated(guint32 xid)
     return decor & (MwmDecorAll | MwmDecorTitle);
   }
   return true;
+*/
 }
 
 bool
