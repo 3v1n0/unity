@@ -46,42 +46,42 @@ public:
 
   void ReadInt(std::string const& node_name,
                std::string const& member_name,
-               int& value);
+               int& value) const;
   void ReadInts(std::string const& node_name,
                 std::string const& member_name,
-                std::vector<int>& values);
+                std::vector<int>& values) const;
 
   void ReadDouble(std::string const& node_name,
                   std::string const& member_name,
-                  double& value);
+                  double& value) const;
   void ReadDoubles(std::string const& node_name,
                    std::string const& member_name,
-                   std::vector<double>& values);
+                   std::vector<double>& values) const;
 
   void ReadColor(std::string const& node_name,
                  std::string const& member_name,
                  std::string const& opacity_name,
-                 nux::Color& color);
+                 nux::Color& color) const;
   void ReadColors(std::string const& node_name,
                   std::string const& member_name,
                   std::string const& opacity_name,
-                  std::vector<nux::Color>& colors);
+                  std::vector<nux::Color>& colors) const;
 
   template <typename T>
   void ReadMappedString(std::string const& node_name,
                         std::string const& member_name,
                         std::map<std::string, T> const& mapping,
-                        T& value);
+                        T& value) const;
   template <typename T>
   void ReadMappedStrings(std::string const& node_name,
                          std::string const& member_name,
                          std::map<std::string, T> const& mapping,
-                         std::vector<T>& values);
+                         std::vector<T>& values) const;
 
 private:
-  JsonObject* GetNodeObject(std::string const& node_name);
+  JsonObject* GetNodeObject(std::string const& node_name) const;
   JsonArray* GetArray(std::string const& node_name,
-                      std::string const& member_name);
+                      std::string const& member_name) const;
 
 private:
   glib::Object<JsonParser> parser_;
@@ -93,7 +93,7 @@ template <typename T>
 void Parser::ReadMappedStrings(std::string const& node_name,
                                std::string const& member_name,
                                std::map<std::string, T> const& mapping,
-                               std::vector<T>& values)
+                               std::vector<T>& values) const
 {
   JsonArray* array = GetArray(node_name, member_name);
   if (!array)
@@ -115,7 +115,7 @@ template <typename T>
 void Parser::ReadMappedString(std::string const& node_name,
                               std::string const& member_name,
                               std::map<std::string, T> const& mapping,
-                              T& value)
+                              T& value) const
 {
   JsonObject* object = GetNodeObject(node_name);
   if (!object)
