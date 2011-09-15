@@ -104,6 +104,7 @@ void wipe (cairo_t* cr)
 int main (int    argc,
           char** argv)
 {
+  g_type_init();
   // setup
   unity::DashStyleP* pDashStyle = new unity::DashStyleP ();
   cairo_surface_t* surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32,

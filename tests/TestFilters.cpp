@@ -31,6 +31,7 @@
 #include "FilterGenreWidget.h"
 #include "FilterGenreButton.h"
 #include "FilterMultiRangeWidget.h"
+#include "DashStyle.h"
 #include "PlacesStyle.h"
 
 class TestRunner
@@ -109,7 +110,8 @@ int main(int argc, char **argv)
 
   nux::NuxInitialize(0);
 
-  // The instance for the PlacesStyle.
+  // The instances for the pseudo-singletons.
+  unity::DashStyle dash_style;
   unity::PlacesStyle places_style;
 
   TestRunner *test_runner = new TestRunner ();
