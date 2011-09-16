@@ -46,15 +46,6 @@
 #include <Nux/Area.h>
 #include <Nux/Layout.h>
 
-enum
-{
-  ACTIVATE,
-  DEACTIVATE,
-  LAST_SIGNAL
-};
-
-static guint signals [LAST_SIGNAL] = { 0, };
-
 /* GObject */
 static void nux_base_window_accessible_class_init(NuxBaseWindowAccessibleClass* klass);
 static void nux_base_window_accessible_init(NuxBaseWindowAccessible* base_window_accessible);
@@ -65,7 +56,14 @@ static void       nux_base_window_accessible_initialize(AtkObject* accessible,
 static AtkObject* nux_base_window_accessible_get_parent(AtkObject* obj);
 static AtkStateSet* nux_base_window_accessible_ref_state_set(AtkObject* obj);
 
-G_DEFINE_TYPE(NuxBaseWindowAccessible, nux_base_window_accessible,  NUX_TYPE_VIEW_ACCESSIBLE)
+/* AtkWindow.h */
+static void         atk_window_interface_init(AtkWindowIface* iface);
+
+
+G_DEFINE_TYPE_WITH_CODE(NuxBaseWindowAccessible, nux_base_window_accessible,
+                        NUX_TYPE_VIEW_ACCESSIBLE,
+                        G_IMPLEMENT_INTERFACE(ATK_TYPE_WINDOW,
+                                              atk_window_interface_init))
 
 struct _NuxBaseWindowAccessiblePrivate
 {
@@ -89,45 +87,6 @@ nux_base_window_accessible_class_init(NuxBaseWindowAccessibleClass* klass)
   atk_class->ref_state_set = nux_base_window_accessible_ref_state_set;
 
   g_type_class_add_private(gobject_class, sizeof(NuxBaseWindowAccessiblePrivate));
-
-  /**
-   * BaseWindow::activate:
-   * @nux_object: the object which received the signal
-   *
-   * The ::activate signal is emitted when the window receives the key
-   * focus from the underlying window system.
-   *
-   * Toolkit implementation note: it is used when anyone adds a global
-   * event listener to "window:activate"
-   */
-  signals [ACTIVATE] =
-    g_signal_new("activate",
-                 G_TYPE_FROM_CLASS(klass),
-                 G_SIGNAL_RUN_LAST,
-                 0, /* default signal handler */
-                 NULL, NULL,
-                 g_cclosure_marshal_VOID__VOID,
-                 G_TYPE_NONE, 0);
-
-  /**
-   * BaseWindow::deactivate:
-   * @nux_object: the object which received the signal
-   *
-   * The ::deactivate signal is emitted when the window loses key
-   * focus from the underlying window system.
-   *
-   * Toolkit implementation note: it is used when anyone adds a global
-   * event listener to "window:deactivate"
-   */
-  signals [DEACTIVATE] =
-    g_signal_new("deactivate",
-                 G_TYPE_FROM_CLASS(klass),
-                 G_SIGNAL_RUN_LAST,
-                 0, /* default signal handler */
-                 NULL, NULL,
-                 g_cclosure_marshal_VOID__VOID,
-                 G_TYPE_NONE, 0);
-
 }
 
 static void
@@ -199,6 +158,13 @@ nux_base_window_accessible_ref_state_set(AtkObject* obj)
   return state_set;
 }
 
+/* AtkWindow */
+static void
+atk_window_interface_init(AtkWindowIface* iface)
+{
+  /* AtkWindow just define signals at this moment */
+}
+
 /* public */
 /*
  * Checks if we are the active window.
@@ -207,7 +173,7 @@ void
 nux_base_window_accessible_check_active(NuxBaseWindowAccessible* self,
                                         nux::BaseWindow* active_window)
 {
-  gint signal_id;
+  const gchar* signal_name;
   gboolean is_active;
   nux::Object* nux_object = NULL;
   nux::BaseWindow* bwindow = NULL;
@@ -226,12 +192,12 @@ nux_base_window_accessible_check_active(NuxBaseWindowAccessible* self,
     self->priv->active = is_active;
 
     if (is_active)
-      signal_id = ACTIVATE;
+      signal_name = "activate";
     else
-      signal_id = DEACTIVATE;
+      signal_name = "deactivate";
 
     atk_object_notify_state_change(ATK_OBJECT(self),
                                    ATK_STATE_ACTIVE, is_active);
-    g_signal_emit(self, signals [signal_id], 0);
+    g_signal_emit_by_name(self, signal_name, 0);
   }
 }
