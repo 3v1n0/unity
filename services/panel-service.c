@@ -16,6 +16,7 @@
  *
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  *              Rodrigo Moya <rodrigo.moya@canonical.com>
+ *              Marco Trevisan (Treviño) <mail@3v1n0.net>
  */
 
 #if HAVE_CONFIG_H
@@ -286,8 +287,17 @@ get_entry_at(PanelService *self, gint x, gint y)
   g_hash_table_iter_init (&iter, self->priv->entry2geometry_hash);
   while (g_hash_table_iter_next (&iter, &key, &value)) 
     {
-      IndicatorObjectEntry *entry = key;
+      gchar *entry_id = key;
       GdkRectangle *geo = value;
+      IndicatorObjectEntry *entry;
+      entry = g_hash_table_lookup (self->priv->id2entry_hash, entry_id);
+
+      if (!entry)
+        {
+          // Remove invalid entries that haven't be removed on sync
+          g_hash_table_iter_remove(&iter);
+          continue;
+        }
 
       if (x >= geo->x && x <= (geo->x + geo->width) &&
           y >= geo->y && y <= (geo->y + geo->height))
@@ -322,8 +332,8 @@ panel_service_init (PanelService *self)
                                                g_free, NULL);
   priv->entry2indicator_hash = g_hash_table_new (g_direct_hash, g_direct_equal);
 
-  priv->entry2geometry_hash = g_hash_table_new_full (g_direct_hash, g_direct_equal,
-                                                     NULL, g_free);
+  priv->entry2geometry_hash = g_hash_table_new_full (g_str_hash, g_str_equal,
+                                                     g_free, g_free);
 
   suppress_signals = TRUE;
   load_indicators (self);
@@ -362,7 +372,7 @@ panel_service_actually_remove_indicator (PanelService *self, IndicatorObject *in
           gchar *id = g_strdup_printf ("%p", l->data);
           g_hash_table_remove (self->priv->id2entry_hash, id);
           g_hash_table_remove (self->priv->entry2indicator_hash, l->data);
-          g_hash_table_remove (self->priv->entry2geometry_hash, l->data);
+          g_hash_table_remove (self->priv->entry2geometry_hash, id);
           g_free (id);
         }
 
@@ -631,7 +641,11 @@ on_entry_removed (IndicatorObject      *object,
   id = g_strdup_printf ("%p", entry);
   g_hash_table_remove (priv->entry2indicator_hash, entry);
   g_hash_table_remove (priv->id2entry_hash, id);
-  g_hash_table_remove (priv->entry2geometry_hash, entry);
+  /* Don't remove here the value from priv->entry2geometry_hash, this should
+   * be done in during the sync, to avoid false positive.
+   * FIXME this in libappmenu.so to avoid to send an "entry-removed" signal
+   * when switching the focus from a window to one of its dialog children */
+
   g_free (id);
 
   notify_object (object);
@@ -1096,27 +1110,24 @@ panel_service_sync_geometry (PanelService *self,
   IndicatorObjectEntry *entry = g_hash_table_lookup (priv->id2entry_hash, entry_id);
   IndicatorObject *object = g_hash_table_lookup (priv->entry2indicator_hash, entry);
 
-  if (entry)
-  {
-    if (width < 0 || height < 0)
-      {
-        g_hash_table_remove (priv->entry2geometry_hash, entry);
-      }
-    else
-      {
-        GdkRectangle *geo = g_hash_table_lookup (priv->entry2geometry_hash, entry);
+  if (!entry || width < 0 || height < 0)
+    {
+      g_hash_table_remove (priv->entry2geometry_hash, entry_id);
+    }
+  else
+    {
+      GdkRectangle *geo = g_hash_table_lookup (priv->entry2geometry_hash, entry_id);
 
-        if (geo == NULL) {
-          geo = g_new(GdkRectangle, 1);
-          g_hash_table_insert (priv->entry2geometry_hash, entry, geo);
-        }
-
-        geo->x = x;
-        geo->y = y;
-        geo->width = width;
-        geo->height = height;
+      if (geo == NULL) {
+        geo = g_new(GdkRectangle, 1);
+        g_hash_table_insert (priv->entry2geometry_hash, g_strdup(entry_id), geo);
       }
-  }
+
+      geo->x = x;
+      geo->y = y;
+      geo->width = width;
+      geo->height = height;
+    }
 
   g_signal_emit (self, _service_signals[GEOMETRIES_CHANGED], 0, object, entry, x, y, width, height);
 }
