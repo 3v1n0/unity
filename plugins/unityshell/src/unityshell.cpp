@@ -1593,6 +1593,19 @@ void UnityWindow::windowNotify(CompWindowNotify n)
 {
   PluginAdapter::Default()->Notify(window, n);
   window->windowNotify(n);
+  
+  // We do this after the notify to ensure input focus has actually been moved.
+  if (n == CompWindowNotifyFocusChange)
+  {
+    UnityScreen* us = UnityScreen::get(screen);
+    CompWindow *lw;
+    
+    if (us->dash_is_open_)
+    {
+      lw = screen->findWindow(us->launcherWindow->GetInputWindowId());
+      lw->moveInputFocusTo();
+    }
+  }
 }
 
 void UnityWindow::stateChangeNotify(unsigned int lastState)
