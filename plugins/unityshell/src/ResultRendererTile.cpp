@@ -291,12 +291,14 @@ void ResultRendererTile::LoadIcon(Result& row)
   else if (G_IS_ICON(icon))
   {
     container->slot_handle = IconLoader::GetDefault().LoadFromGIconString(icon_name.c_str(), style->GetTileIconSize(), slot);
-    g_object_unref(icon);
   }
   else
   {
     container->slot_handle = IconLoader::GetDefault().LoadFromIconName(icon_name.c_str(), style->GetTileIconSize(), slot);
   }
+
+  if (icon != NULL)
+    g_object_unref(icon);
 }
 
 nux::BaseTexture* ResultRendererTile::CreateTextureCallback(std::string const& texid,
