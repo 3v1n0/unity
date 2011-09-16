@@ -21,7 +21,8 @@
  * @short_description: Root object for the UNITY accessible support
  *
  * #UnityRootAccessible is the root object of the accessibility
- * tree-like hierarchy, exposing the application level.
+ * tree-like hierarchy, exposing the application level. You can see it
+ * as the one exposing UnityScreen information to the a11y framework
  *
  */
 
@@ -63,6 +64,8 @@ struct _UnityRootAccessiblePrivate
   /* we save on window_list the accessible object for the windows
      registered */
   GSList* window_list;
+  nux::BaseWindow* active_window;
+  nux::BaseWindow* launcher_window;
 };
 
 static void
@@ -88,6 +91,8 @@ unity_root_accessible_init(UnityRootAccessible*      root)
   root->priv = UNITY_ROOT_ACCESSIBLE_GET_PRIVATE(root);
 
   root->priv->window_list = NULL;
+  root->priv->active_window = NULL;
+  root->priv->launcher_window = NULL;
 }
 
 AtkObject*
@@ -231,8 +236,7 @@ check_active_window(UnityRootAccessible* self)
   for (iter = self->priv->window_list; iter != NULL; iter = g_slist_next(iter))
   {
     window = NUX_BASE_WINDOW_ACCESSIBLE(iter->data);
-
-    nux_base_window_accessible_check_active(window);
+    nux_base_window_accessible_check_active(window, self->priv->active_window);
   }
 }
 
@@ -303,19 +307,78 @@ remove_window(UnityRootAccessible* self,
 }
 
 static void
-ubus_change_visibility_cb(GVariant* variant,
-                          UnityRootAccessible* self)
+set_active_window(UnityRootAccessible* self,
+                  nux::BaseWindow* window)
 {
+  g_return_if_fail(UNITY_IS_ROOT_ACCESSIBLE(self));
+  g_return_if_fail(window != NULL);
+
+  self->priv->active_window = window;
   check_active_window(self);
 }
 
+nux::BaseWindow*
+search_for_launcher_window(UnityRootAccessible* self)
+{
+  GSList*iter = NULL;
+  nux::Object* nux_object = NULL;
+  nux::BaseWindow* bwindow = NULL;
+  NuxObjectAccessible* accessible = NULL;
+  gboolean found = FALSE;
+
+  for (iter = self->priv->window_list; iter != NULL; iter = g_slist_next(iter))
+  {
+    accessible = NUX_OBJECT_ACCESSIBLE(iter->data);
+
+    nux_object = nux_object_accessible_get_object(accessible);
+    bwindow = dynamic_cast<nux::BaseWindow*>(nux_object);
+
+    if ((bwindow!= NULL) && (g_strcmp0(bwindow->GetWindowName().GetTCharPtr(), "Launcher") == 0))
+    {
+      found = TRUE;
+      break;
+    }
+  }
+
+  if (found)
+    return bwindow;
+  else
+    return NULL;
+}
+
 static void
-wc_change_visibility_window_cb(nux::BaseWindow* window, UnityRootAccessible* self, gboolean visible)
+ubus_launcher_start_key_nav_cb(GVariant* variant,
+                               UnityRootAccessible* self)
+{
+  //launcher window is the same during all the life of Unity
+  if (self->priv->launcher_window == NULL)
+    self->priv->launcher_window = search_for_launcher_window(self);
+
+  //launcher window became the active window
+  set_active_window(self, self->priv->launcher_window);
+}
+
+
+static void
+wc_change_visibility_window_cb(nux::BaseWindow* window,
+                               UnityRootAccessible* self,
+                               gboolean visible)
 {
   if (visible)
+  {
     add_window(self, window);
+    //for the dash and quicklist
+    set_active_window(self, window);
+  }
   else
+  {
+    AtkObject* accessible = NULL;
+
+    accessible = unity_a11y_get_accessible(window);
+    nux_base_window_accessible_check_active(NUX_BASE_WINDOW_ACCESSIBLE(accessible),
+                                            NULL);
     remove_window(self, window);
+  }
 }
 
 static void
@@ -323,15 +386,8 @@ register_interesting_messages(UnityRootAccessible* self)
 {
   static unity::UBusManager ubus_manager;
 
-  ubus_manager.RegisterInterest(UBUS_PLACE_VIEW_SHOWN,
-                                sigc::bind(sigc::ptr_fun(ubus_change_visibility_cb), self));
-  ubus_manager.RegisterInterest(UBUS_PLACE_VIEW_HIDDEN,
-                                sigc::bind(sigc::ptr_fun(ubus_change_visibility_cb), self));
-
   ubus_manager.RegisterInterest(UBUS_LAUNCHER_START_KEY_NAV,
-                                sigc::bind(sigc::ptr_fun(ubus_change_visibility_cb), self));
-  ubus_manager.RegisterInterest(UBUS_LAUNCHER_END_KEY_NAV,
-                                sigc::bind(sigc::ptr_fun(ubus_change_visibility_cb), self));
+                                sigc::bind(sigc::ptr_fun(ubus_launcher_start_key_nav_cb), self));
 
   nux::GetWindowCompositor().sigVisibleViewWindow.
   connect(sigc::bind(sigc::ptr_fun(wc_change_visibility_window_cb), self, TRUE));
