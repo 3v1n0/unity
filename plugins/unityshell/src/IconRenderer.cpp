@@ -223,7 +223,11 @@ void IconRenderer::PreprocessIcons(std::list<RenderArg>& args, nux::Geometry con
   nux::Matrix4 ProjectionMatrix;
   nux::Matrix4 ViewProjectionMatrix;
 
+  _stored_projection_matrix = nux::GetGraphicsEngine().GetOpenGLModelViewProjectionMatrix();
+
   GetInverseScreenPerspectiveMatrix(ViewMatrix, ProjectionMatrix, geo.width, geo.height, 0.1f, 1000.0f, DEGTORAD(90));
+
+  nux::Matrix4 PremultMatrix = ProjectionMatrix * ViewMatrix;
 
   std::list<RenderArg>::iterator it;
   int i;
@@ -252,7 +256,7 @@ void IconRenderer::PreprocessIcons(std::list<RenderArg>& args, nux::Geometry con
                    nux::Matrix4::ROTATEZ(it->z_rotation) *
                    nux::Matrix4::TRANSLATE(-x - w / 2.0f, -y - h / 2.0f, -z); // Put the center the icon to (0, 0)
 
-    ViewProjectionMatrix = ProjectionMatrix * ViewMatrix * ObjectMatrix;
+    ViewProjectionMatrix = PremultMatrix * ObjectMatrix;
 
     UpdateIconTransform(launcher_icon, ViewProjectionMatrix, geo, x, y, w, h, z, AbstractLauncherIcon::TRANSFORM_TILE);
 
@@ -312,7 +316,7 @@ void IconRenderer::PreprocessIcons(std::list<RenderArg>& args, nux::Geometry con
                      nux::Matrix4::ROTATEZ(it->z_rotation) *
                      nux::Matrix4::TRANSLATE(-(it->render_center.x - w / 2.0f) - w / 2.0f, -(it->render_center.y - h / 2.0f) - h / 2.0f, -z); // Put the center the icon to (0, 0)
 
-      ViewProjectionMatrix = ProjectionMatrix * ViewMatrix * ObjectMatrix;
+      ViewProjectionMatrix = PremultMatrix * ObjectMatrix;
 
       UpdateIconSectionTransform(launcher_icon, ViewProjectionMatrix, geo, x, y, emb_w, emb_h, z,
                                  it->render_center.x - w / 2.0f, it->render_center.y - h / 2.0f, w, h, AbstractLauncherIcon::TRANSFORM_EMBLEM);
@@ -671,8 +675,7 @@ void IconRenderer::RenderElement(nux::GraphicsEngine& GfxContext,
     int VPMatrixLocation = local::shader_program_uv_persp_correction->GetUniformLocationARB("ViewProjectionMatrix");
     if (VPMatrixLocation != -1)
     {
-      nux::Matrix4 mat = nux::GetGraphicsEngine().GetOpenGLModelViewProjectionMatrix();
-      local::shader_program_uv_persp_correction->SetUniformLocMatrix4fv((GLint)VPMatrixLocation, 1, false, (GLfloat*) & (mat.m));
+      local::shader_program_uv_persp_correction->SetUniformLocMatrix4fv((GLint)VPMatrixLocation, 1, false, (GLfloat*) & (_stored_projection_matrix.m));
     }
   }
   else
