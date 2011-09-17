@@ -271,7 +271,7 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
                       ret = GDK_FILTER_REMOVE;
                       priv->use_event = TRUE;
                     }
-                  else if (entry == priv->pressed_entry && priv->last_entry && entry != priv->last_entry)
+                  else if (priv->last_entry && entry != priv->last_entry)
                     {
                       /* If we were navigating over indicators using the keyboard
                        * and now we click over the indicator under the mouse, we
