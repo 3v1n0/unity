@@ -48,7 +48,6 @@ static PanelService *static_service = NULL;
 struct _PanelServicePrivate
 {
   GSList     *indicators;
-  GHashTable *id2entry_hash;
   GHashTable *entry2indicator_hash;
   GHashTable *entry2geometry_hash;
 
@@ -118,7 +117,7 @@ static void load_indicators (PanelService    *self);
 static void sort_indicators (PanelService    *self);
 
 static void notify_object (IndicatorObject *object);
-static IndicatorObjectEntry *get_entry_at(PanelService *self, gint x, gint y);
+static IndicatorObjectEntry *get_entry_at (PanelService *self, gint x, gint y);
 
 static GdkFilterReturn event_filter (GdkXEvent    *ev,
                                      GdkEvent     *gev,
@@ -134,7 +133,6 @@ panel_service_class_dispose (GObject *object)
   PanelServicePrivate *priv = PANEL_SERVICE (object)->priv;
   gint i;
 
-  g_hash_table_destroy (priv->id2entry_hash);
   g_hash_table_destroy (priv->entry2indicator_hash);
   g_hash_table_destroy (priv->entry2geometry_hash);
 
@@ -279,7 +277,7 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
 }
 
 static IndicatorObjectEntry *
-get_entry_at(PanelService *self, gint x, gint y)
+get_entry_at (PanelService *self, gint x, gint y)
 {
   GHashTableIter iter;
   gpointer key, value;
@@ -287,17 +285,8 @@ get_entry_at(PanelService *self, gint x, gint y)
   g_hash_table_iter_init (&iter, self->priv->entry2geometry_hash);
   while (g_hash_table_iter_next (&iter, &key, &value)) 
     {
-      gchar *entry_id = key;
+      IndicatorObjectEntry *entry = key;
       GdkRectangle *geo = value;
-      IndicatorObjectEntry *entry;
-      entry = g_hash_table_lookup (self->priv->id2entry_hash, entry_id);
-
-      if (!entry)
-        {
-          // Remove invalid entries that haven't be removed on sync
-          g_hash_table_iter_remove(&iter);
-          continue;
-        }
 
       if (x >= geo->x && x <= (geo->x + geo->width) &&
           y >= geo->y && y <= (geo->y + geo->height))
@@ -305,6 +294,17 @@ get_entry_at(PanelService *self, gint x, gint y)
           return entry;
         }
     }
+
+  return NULL;
+}
+
+static IndicatorObjectEntry *
+get_entry_by_id (const gchar *entry_id)
+{
+  IndicatorObjectEntry *entry;
+  
+  if (sscanf (entry_id, "%p", &entry) == 1)
+    return entry;
 
   return NULL;
 }
@@ -328,12 +328,9 @@ panel_service_init (PanelService *self)
 
   gdk_window_add_filter (NULL, (GdkFilterFunc)event_filter, self);
 
-  priv->id2entry_hash = g_hash_table_new_full (g_str_hash, g_str_equal,
-                                               g_free, NULL);
   priv->entry2indicator_hash = g_hash_table_new (g_direct_hash, g_direct_equal);
-
-  priv->entry2geometry_hash = g_hash_table_new_full (g_str_hash, g_str_equal,
-                                                     g_free, g_free);
+  priv->entry2geometry_hash = g_hash_table_new_full (g_direct_hash, g_direct_equal,
+                                                     NULL, g_free);
 
   suppress_signals = TRUE;
   load_indicators (self);
@@ -369,11 +366,8 @@ panel_service_actually_remove_indicator (PanelService *self, IndicatorObject *in
     {
       for (l = entries; l; l = l->next)
         {
-          gchar *id = g_strdup_printf ("%p", l->data);
-          g_hash_table_remove (self->priv->id2entry_hash, id);
           g_hash_table_remove (self->priv->entry2indicator_hash, l->data);
-          g_hash_table_remove (self->priv->entry2geometry_hash, id);
-          g_free (id);
+          g_hash_table_remove (self->priv->entry2geometry_hash, l->data);
         }
 
       g_list_free (entries);
@@ -575,14 +569,11 @@ on_entry_added (IndicatorObject      *object,
                 PanelService         *self)
 {
   PanelServicePrivate *priv;
-  gchar *id;
 
   g_return_if_fail (PANEL_IS_SERVICE (self));
   g_return_if_fail (entry != NULL);
   priv = self->priv;
 
-  id = g_strdup_printf ("%p", entry);
-  g_hash_table_insert (priv->id2entry_hash, id, entry);
   g_hash_table_insert (priv->entry2indicator_hash, entry, object);
 
   if (GTK_IS_LABEL (entry->label))
@@ -631,22 +622,16 @@ on_entry_removed (IndicatorObject      *object,
                   PanelService         *self)
 {
   PanelServicePrivate *priv;
-  gchar *id;
-
   g_return_if_fail (PANEL_IS_SERVICE (self));
   g_return_if_fail (entry != NULL);
 
   priv = self->priv;
 
-  id = g_strdup_printf ("%p", entry);
   g_hash_table_remove (priv->entry2indicator_hash, entry);
-  g_hash_table_remove (priv->id2entry_hash, id);
   /* Don't remove here the value from priv->entry2geometry_hash, this should
    * be done in during the sync, to avoid false positive.
    * FIXME this in libappmenu.so to avoid to send an "entry-removed" signal
    * when switching the focus from a window to one of its dialog children */
-
-  g_free (id);
 
   notify_object (object);
 }
@@ -1107,26 +1092,30 @@ panel_service_sync_geometry (PanelService *self,
            gint height)
 {
   PanelServicePrivate *priv = self->priv;
-  IndicatorObjectEntry *entry = g_hash_table_lookup (priv->id2entry_hash, entry_id);
+  IndicatorObjectEntry *entry = get_entry_by_id (entry_id);
   IndicatorObject *object = g_hash_table_lookup (priv->entry2indicator_hash, entry);
 
-  if (!entry || width < 0 || height < 0)
+  if (entry)
     {
-      g_hash_table_remove (priv->entry2geometry_hash, entry_id);
-    }
-  else
-    {
-      GdkRectangle *geo = g_hash_table_lookup (priv->entry2geometry_hash, entry_id);
+      if (width < 0 || height < 0)
+        {
+          g_hash_table_remove (priv->entry2geometry_hash, entry);
+        }
+      else
+        {
+          GdkRectangle *geo = g_hash_table_lookup (priv->entry2geometry_hash, entry);
 
-      if (geo == NULL) {
-        geo = g_new(GdkRectangle, 1);
-        g_hash_table_insert (priv->entry2geometry_hash, g_strdup(entry_id), geo);
-      }
+          if (geo == NULL)
+            {
+              geo = g_new (GdkRectangle, 1);
+              g_hash_table_insert (priv->entry2geometry_hash, entry, geo);
+            }
 
-      geo->x = x;
-      geo->y = y;
-      geo->width = width;
-      geo->height = height;
+          geo->x = x;
+          geo->y = y;
+          geo->width = width;
+          geo->height = height;
+        }
     }
 
   g_signal_emit (self, _service_signals[GEOMETRIES_CHANGED], 0, object, entry, x, y, width, height);
@@ -1257,8 +1246,7 @@ on_active_menu_move_current (GtkMenu              *menu,
   priv = self->priv;
 
   /* Not interested in up or down */
-  if (direction == GTK_MENU_DIR_NEXT
-      || direction == GTK_MENU_DIR_PREV)
+  if (direction == GTK_MENU_DIR_NEXT || direction == GTK_MENU_DIR_PREV)
     return;
 
   /* We don't want to distrupt going into submenus */
@@ -1302,9 +1290,11 @@ panel_service_show_entry (PanelService *self,
                           gint32        button)
 {
   PanelServicePrivate  *priv = self->priv;
-  IndicatorObjectEntry *entry = g_hash_table_lookup (priv->id2entry_hash, entry_id);
+  IndicatorObjectEntry *entry = get_entry_by_id (entry_id);
   IndicatorObject      *object = g_hash_table_lookup (priv->entry2indicator_hash, entry);
   GtkWidget            *last_menu;
+
+  g_return_if_fail (entry);
 
   if (priv->last_entry == entry)
     return;
@@ -1393,7 +1383,9 @@ panel_service_secondary_activate_entry (PanelService *self,
                                         guint32       timestamp)
 {
   PanelServicePrivate  *priv = self->priv;
-  IndicatorObjectEntry *entry = g_hash_table_lookup (priv->id2entry_hash, entry_id);
+  IndicatorObjectEntry *entry = get_entry_by_id (entry_id);
+  g_return_if_fail (entry);
+
   IndicatorObject *object = g_hash_table_lookup (priv->entry2indicator_hash, entry);
 
   g_signal_emit_by_name(object, INDICATOR_OBJECT_SIGNAL_SECONDARY_ACTIVATE, entry,
@@ -1406,11 +1398,12 @@ panel_service_scroll_entry (PanelService   *self,
                             gint32         delta)
 {
   PanelServicePrivate  *priv = self->priv;
-  IndicatorObjectEntry *entry = g_hash_table_lookup (priv->id2entry_hash, entry_id);
+  IndicatorObjectEntry *entry = get_entry_by_id (entry_id);
+  g_return_if_fail (entry);
+
   IndicatorObject *object = g_hash_table_lookup (priv->entry2indicator_hash, entry);
   GdkScrollDirection direction = delta < 0 ? GDK_SCROLL_DOWN : GDK_SCROLL_UP;
 
   g_signal_emit_by_name(object, INDICATOR_OBJECT_SIGNAL_ENTRY_SCROLLED, entry,
                         abs(delta/120), direction);
 }
-
