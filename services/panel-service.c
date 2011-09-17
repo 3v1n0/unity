@@ -264,10 +264,22 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
               IndicatorObjectEntry *entry;
               entry = get_entry_at (self, event->root_x, event->root_y);
 
-              if (entry && entry != priv->pressed_entry)
+              if (entry)
                 {
-                  ret = GDK_FILTER_REMOVE;
-                  priv->use_event = TRUE;
+                  if (entry != priv->pressed_entry)
+                    {
+                      ret = GDK_FILTER_REMOVE;
+                      priv->use_event = TRUE;
+                    }
+                  else if (entry == priv->pressed_entry && priv->last_entry && entry != priv->last_entry)
+                    {
+                      /* If we were navigating over indicators using the keyboard
+                       * and now we click over the indicator under the mouse, we
+                       * must force it to show back again, not make it close */
+                      gchar *entry_id = g_strdup_printf ("%p", entry);
+                      g_signal_emit (self, _service_signals[ENTRY_ACTIVATE_REQUEST], 0, entry_id);
+                      g_free (entry_id);
+                    }
                 }
             }
         }
