@@ -72,6 +72,8 @@ public:
   void EndFirstMenuShow();
 
   void SetOpacity(float opacity);
+  
+  void TrackMenuPointer();
 
   unsigned int GetTrayXid ();
 
@@ -117,6 +119,7 @@ private:
   guint       _handle_dash_shown;
   guint       _handle_bg_color_update;
   guint       _track_menu_pointer_id;
+  nux::Point  _tracked_pointer_pos;
 
   std::vector<sigc::connection> _on_indicator_updated_connections;
   BackgroundEffectHelper bg_effect_helper_;

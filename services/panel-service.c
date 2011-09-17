@@ -1245,12 +1245,6 @@ on_active_menu_move_current (GtkMenu              *menu,
   g_return_if_fail (PANEL_IS_SERVICE (self));
   priv = self->priv;
 
-  /* Ignore keyboard events when the mouse is over a menu title */
-  gint x, y;
-  gdk_display_get_pointer (gdk_display_get_default (), NULL, &x, &y, NULL);
-  if (get_entry_at (self, x, y) != NULL)
-    return;
-
   /* Not interested in up or down */
   if (direction == GTK_MENU_DIR_NEXT || direction == GTK_MENU_DIR_PREV)
     return;

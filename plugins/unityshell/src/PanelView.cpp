@@ -427,10 +427,19 @@ void PanelView::OnEntryActivateRequest(std::string const& entry_id)
   if (!ret) _indicators->ActivateEntry(entry_id);
 }
 
-static gboolean track_menu_pointer(PanelView *self)
+void PanelView::TrackMenuPointer()
 {
   auto mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
-  self->OnMenuPointerMoved(mouse.x, mouse.y);
+  if (_tracked_pointer_pos != mouse)
+  {
+    OnMenuPointerMoved(mouse.x, mouse.y);
+    _tracked_pointer_pos = mouse;
+  }
+}
+
+static gboolean track_menu_pointer(PanelView *self)
+{
+  self->TrackMenuPointer();
   return TRUE;
 }
 
@@ -459,6 +468,7 @@ void PanelView::OnEntryActivated(std::string const& entry_id)
       _track_menu_pointer_id = 0;
     }
     _menu_view->AllMenusClosed();
+    _tracked_pointer_pos = {-1, -1}
   }
 }
 
