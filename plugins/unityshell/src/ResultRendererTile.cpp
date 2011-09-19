@@ -103,16 +103,6 @@ void ResultRendererTile::Render(nux::GraphicsEngine& GfxContext,
   // set up our texture mode
   nux::TexCoordXForm texxform;
 
-  // clear what is behind us
-
-  nux::Color col = nux::color::Black;
-  col.alpha = 0;
-  GfxContext.QRP_Color(geometry.x,
-                       geometry.y,
-                       geometry.width,
-                       geometry.height,
-                       col);
-
   int icon_left_hand_side = geometry.x + (geometry.width - style->GetTileIconSize()) / 2;
   int icon_top_side = geometry.y + padding;
 
