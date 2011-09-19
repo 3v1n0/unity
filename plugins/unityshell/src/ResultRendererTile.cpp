@@ -104,10 +104,6 @@ void ResultRendererTile::Render(nux::GraphicsEngine& GfxContext,
   nux::TexCoordXForm texxform;
 
   // clear what is behind us
-  nux::t_u32 alpha = 0, src = 0, dest = 0;
-
-  GfxContext.GetRenderStates().GetBlend(alpha, src, dest);
-  GfxContext.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
   nux::Color col = nux::color::Black;
   col.alpha = 0;
@@ -168,9 +164,6 @@ void ResultRendererTile::Render(nux::GraphicsEngine& GfxContext,
 
 
   }
-
-  GfxContext.GetRenderStates().SetBlend(alpha, src, dest);
-
 }
 
 nux::BaseTexture* ResultRendererTile::DrawHighlight(std::string const& texid, int width, int height)
