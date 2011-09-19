@@ -72,7 +72,7 @@ public:
 
   void Select (int index);
 
-  void SetDetail(bool detail, int min_windows = 1);
+  void SetDetail(bool detail, unsigned int min_windows = 1);
 
   void SelectFirstItem();
 
@@ -93,8 +93,6 @@ private:
   void ConstructView();
 
   void OnModelSelectionChanged(AbstractLauncherIcon *icon);
-
-  int WindowsRelatedToSelection();
 
   static void OnBackgroundUpdate (GVariant *data, SwitcherController *self);
 
