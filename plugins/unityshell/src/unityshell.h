@@ -31,6 +31,7 @@
 
 #include "Introspectable.h"
 #include "DashController.h"
+#include "DashStyle.h"
 #include "FontSettings.h"
 #include "Launcher.h"
 #include "LauncherController.h"
@@ -118,6 +119,7 @@ private:
 #include <compiztoolbox/compiztoolbox.h>
 
 using unity::FontSettings;
+using unity::DashStyle;
 using unity::PlacesStyle;
 using namespace unity::switcher;
 using namespace unity::dash;
@@ -263,7 +265,8 @@ private:
   static void OnLauncherStartKeyNav(GVariant* data, void* value);
   static void OnLauncherEndKeyNav(GVariant* data, void* value);
 
-  PlacesStyle      places_style_;
+  DashStyle               dash_style_;
+  PlacesStyle             places_style_;
   FontSettings            font_settings_;
   Launcher*               launcher;
   LauncherController*     controller;

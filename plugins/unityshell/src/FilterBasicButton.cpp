@@ -91,8 +91,7 @@ namespace unity {
 
   void FilterBasicButton::RedrawTheme (nux::Geometry const& geom, cairo_t *cr, nux::State faked_state)
   {
-    DashStyle *dash_style = DashStyle::GetDefault();
-    dash_style->Button (cr, faked_state, label_);
+    DashStyle::Instance().Button(cr, faked_state, label_);
   }
 
   long FilterBasicButton::ComputeLayout2 ()
