@@ -506,7 +506,8 @@ void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
     foreach(GLTexture * tex, _shadow_texture)
     {
       glEnable(GL_BLEND);
-      glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+      glColor4f(1.0f, 1.0f, 1.0f, panelController->opacity());
+      glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
       GL::activeTexture(GL_TEXTURE0_ARB);
       tex->enable(GLTexture::Fast);
