@@ -501,7 +501,7 @@ void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
   vc[2] = y1;
   vc[3] = y2;
 
-  if (!dash_is_open_ && panelController->opacity())
+  if (!dash_is_open_ && panelController->opacity() > 0.0f)
   {
     foreach(GLTexture * tex, _shadow_texture)
     {
