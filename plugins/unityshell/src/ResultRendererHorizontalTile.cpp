@@ -85,20 +85,6 @@ void ResultRendererHorizontalTile::Render(nux::GraphicsEngine& GfxContext,
   // set up our texture mode
   nux::TexCoordXForm texxform;
 
-  // clear what is behind us
-  nux::t_u32 alpha = 0, src = 0, dest = 0;
-
-  GfxContext.GetRenderStates().GetBlend(alpha, src, dest);
-  GfxContext.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-
-  nux::Color col = nux::color::Black;
-  col.alpha = 0;
-  GfxContext.QRP_Color(geometry.x,
-                       geometry.y,
-                       geometry.width,
-                       geometry.height,
-                       col);
-
   int icon_left_hand_side = geometry.x + padding;
   int icon_top_side = geometry.y + ((geometry.height - style->GetTileIconSize()) / 2);
 
@@ -148,8 +134,6 @@ void ResultRendererHorizontalTile::Render(nux::GraphicsEngine& GfxContext,
                         texxform,
                         nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
   }
-
-  GfxContext.GetRenderStates().SetBlend(alpha, src, dest);
 
 }
 
