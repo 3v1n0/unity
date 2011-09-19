@@ -525,8 +525,6 @@ ResultListBounds ResultViewGrid::GetVisableResults()
 
 void ResultViewGrid::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
-  GfxContext.PushClippingRectangle(GetGeometry());
-
   gPainter.PaintBackground(GfxContext, GetGeometry());
 
   int items_per_row = GetItemsPerRow();
@@ -592,8 +590,6 @@ void ResultViewGrid::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
     }
     y_position += row_size;
   }
-
-  GfxContext.PopClippingRectangle();
 }
 
 void ResultViewGrid::DrawContent(nux::GraphicsEngine& GfxContent, bool force_draw)
