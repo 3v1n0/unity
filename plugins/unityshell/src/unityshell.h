@@ -96,6 +96,8 @@ public:
   void fadeIn ();
   bool animate (unsigned int ms);
   void paintAttrib (GLWindowPaintAttrib &attrib);
+  unsigned int getPaintMask ();
+  void handleEvent (XEvent *);
 
   UnityShowdesktopHandler::State state ();
 

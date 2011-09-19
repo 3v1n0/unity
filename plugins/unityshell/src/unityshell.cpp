@@ -741,7 +741,7 @@ bool UnityShowdesktopHandler::shouldHide (CompWindow *w)
 
 UnityShowdesktopHandler::UnityShowdesktopHandler (CompWindow *w) :
   mWindow (w),
-  mRemover (new compiz::WindowInputRemover (screen->dpy (), ROOTPARENT (w))),
+  mRemover (new compiz::WindowInputRemover (screen->dpy (), w->id ())),
   mState (Visible),
   mProgress (0.0f)
 {
@@ -813,6 +813,26 @@ bool UnityShowdesktopHandler::animate (unsigned int ms)
 void UnityShowdesktopHandler::paintAttrib (GLWindowPaintAttrib &attrib)
 {
   attrib.opacity = attrib.opacity * mProgress;
+}
+
+unsigned int UnityShowdesktopHandler::getPaintMask ()
+{
+    return 0;
+}
+
+void UnityShowdesktopHandler::handleEvent (XEvent *event)
+{
+  /* Ignore sent events from the InputRemover */
+  if (screen->XShape () && event->type ==
+      screen->shapeEvent () + ShapeNotify &&
+      !event->xany.send_event)
+  {
+    if (mRemover)
+    {
+      mRemover->save ();
+      mRemover->remove ();
+    }
+  }
 }
 
 /* called whenever we need to repaint parts of the screen */
@@ -967,6 +987,20 @@ void UnityScreen::handleEvent(XEvent* event)
           }
         }
       }
+      default:
+        if (screen->shapeEvent () + ShapeNotify == event->type)
+        {
+          Window xid = event->xany.window;
+          CompWindow *w = screen->findWindow(xid);
+
+          if (w)
+          {
+            UnityWindow *uw = UnityWindow::get (w);
+
+            if (uw->mShowdesktopHandler)
+              uw->mShowdesktopHandler->handleEvent(event);
+          }
+        }
       break;
   }
 
@@ -1447,7 +1481,10 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
     mask |= compizMinimizeHandler->getPaintMask ();
   }
   else if (mShowdesktopHandler)
+  {
     mShowdesktopHandler->paintAttrib (wAttrib);
+    mask |= mShowdesktopHandler->getPaintMask ();
+  }
 
   if (uScreen->panelController->GetTrayXid () == window->id () && !uScreen->allowWindowPaint)
   {
