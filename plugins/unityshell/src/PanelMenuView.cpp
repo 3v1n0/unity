@@ -709,26 +709,16 @@ PanelMenuView::OnActiveChanged(PanelIndicatorEntryView* view,
   FullRedraw();
 }
 
-void PanelMenuView::OnEntryAdded(unity::indicator::Entry::Ptr const& proxy)
+void
+PanelMenuView::OnEntryAdded(unity::indicator::Entry::Ptr const& entry)
 {
-  PanelIndicatorEntryView* view = new PanelIndicatorEntryView(proxy, 6);
+  auto view = AddEntry(entry, 6, IndicatorEntryPosition::END);
+
+  entry->show_now_changed.connect(sigc::mem_fun(this, &PanelMenuView::UpdateShowNow));
+
   view->active_changed.connect(sigc::mem_fun(this, &PanelMenuView::OnActiveChanged));
-  view->refreshed.connect(sigc::mem_fun(this, &PanelIndicatorsView::OnEntryRefreshed));
-  proxy->show_now_changed.connect(sigc::mem_fun(this, &PanelMenuView::UpdateShowNow));
-
-  _menu_layout->AddView(view, 0, nux::eCenter, nux::eFull, 1.0, nux::NUX_LAYOUT_END);
-  _menu_layout->SetContentDistribution(nux::eStackLeft);
-
-  entries_[proxy->id()] = view;
-  AddChild(view);
-
   view->mouse_enter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
   view->mouse_leave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
-
-  QueueRelayout();
-  QueueDraw();
-
-  on_indicator_updated.emit(view);
 }
 
 void
