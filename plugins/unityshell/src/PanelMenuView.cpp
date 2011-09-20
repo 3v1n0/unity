@@ -15,11 +15,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
+ *              Marco Trevisan <mail@3v1n0.net>
  */
 #include <glib.h>
 #include <pango/pangocairo.h>
 #include <gtk/gtk.h>
-#include <X11/cursorfont.h>
 
 #include <Nux/Nux.h>
 #include <Nux/HLayout.h>
@@ -82,10 +82,6 @@ PanelMenuView::PanelMenuView(int padding)
 {
   WindowManager* win_manager;
 
-  _matcher = bamf_matcher_get_default();
-  _activate_window_changed_id = g_signal_connect(_matcher, "active-window-changed",
-                                                 G_CALLBACK(on_active_window_changed), this);
-
   // TODO: kill _menu_layout - should just use the _layout defined
   // in the base class.
   _menu_layout = new nux::HLayout("", NUX_TRACKER_LOCATION);
@@ -95,6 +91,10 @@ PanelMenuView::PanelMenuView(int padding)
    * shouldn't touch this again
    */
   layout_ = _menu_layout;
+
+  _matcher = bamf_matcher_get_default();
+  _activate_window_changed_id = g_signal_connect(_matcher, "active-window-changed",
+                                                 G_CALLBACK(on_active_window_changed), this);
 
   _padding = padding;
   _name_changed_callback_instance = NULL;
@@ -109,7 +109,7 @@ PanelMenuView::PanelMenuView(int padding)
   _window_buttons->restore_clicked.connect(sigc::mem_fun(this, &PanelMenuView::OnRestoreClicked));
   _window_buttons->mouse_enter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
   _window_buttons->mouse_leave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
-  _window_buttons->mouse_move.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseMove));
+  //_window_buttons->mouse_move.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseMove));
 
   _panel_titlebar_grab_area = new PanelTitlebarGrabArea();
   _panel_titlebar_grab_area->SetParentObject(this);
@@ -124,8 +124,8 @@ PanelMenuView::PanelMenuView(int padding)
 
   win_manager->window_minimized.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowMinimized));
   win_manager->window_unminimized.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowUnminimized));
-  win_manager->initiate_spread.connect(sigc::mem_fun(this, &PanelMenuView::OnSpreadInitiate));
-  win_manager->terminate_spread.connect(sigc::mem_fun(this, &PanelMenuView::OnSpreadTerminate));
+  //win_manager->initiate_spread.connect(sigc::mem_fun(this, &PanelMenuView::OnSpreadInitiate));
+  //win_manager->terminate_spread.connect(sigc::mem_fun(this, &PanelMenuView::OnSpreadTerminate));
 
   win_manager->window_maximized.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowMaximized));
   win_manager->window_restored.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowRestored));
@@ -136,7 +136,7 @@ PanelMenuView::PanelMenuView(int padding)
 
   mouse_enter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
   mouse_leave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
-  mouse_move.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseMove));
+  //mouse_move.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseMove));
 
   _panel_titlebar_grab_area->mouse_enter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
   _panel_titlebar_grab_area->mouse_leave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
@@ -292,7 +292,7 @@ long PanelMenuView::PostLayoutManagement(long LayoutResult)
   _window_buttons->ComputeLayout2();
   new_window_buttons_w = _window_buttons->GetContentWidth();
 
-  /* Explicitly set the size and position of the widgets */
+  /* Explicitly set the size and priority of the widgets */
   geo.x += _padding + new_window_buttons_w + _padding;
   geo.width -= _padding + new_window_buttons_w + _padding;
 
@@ -449,14 +449,16 @@ PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   if (!_is_own_window && !_places_showing && _we_control_active)
   {
     if (_is_inside || _last_active_view || _show_now_activated)
-      layout_->ProcessDraw(GfxContext, force_draw);
+    {
+      _menu_layout->ProcessDraw(GfxContext, force_draw);
+    }
   }
 
-    if ((!_is_own_window && _we_control_active && _is_maximized && _is_inside) ||
-        _places_showing)
-    {
-      _window_buttons->ProcessDraw(GfxContext, true);
-    }
+  if ((!_is_own_window && _we_control_active && _is_maximized && _is_inside) ||
+  _places_showing)
+  {
+    _window_buttons->ProcessDraw(GfxContext, true);
+  }
 
   GfxContext.PopClippingRectangle();
 }
@@ -687,7 +689,6 @@ PanelMenuView::Refresh()
     _title_tex->UnReference();
 
   _title_tex = texture2D;
-
   g_free(label);
 }
 
@@ -725,7 +726,6 @@ void
 PanelMenuView::AllMenusClosed()
 {
   auto mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
-
   _is_inside = GetAbsoluteGeometry().IsPointInside(mouse.x, mouse.y);
   _last_active_view = NULL;
 
@@ -816,7 +816,6 @@ PanelMenuView::OnSpreadTerminate()
 void
 PanelMenuView::OnWindowMinimized(guint32 xid)
 {
-
   if (WindowManager::Default()->IsWindowMaximized(xid))
   {
     WindowManager::Default()->Decorate(xid);
@@ -845,6 +844,7 @@ void
 PanelMenuView::OnWindowMaximized(guint xid)
 {
   BamfWindow* window;
+  bool updated = false;
 
   window = bamf_matcher_get_active_window(_matcher);
   if (BAMF_IS_WINDOW(window) && bamf_window_get_xid(window) == xid)
@@ -852,10 +852,8 @@ PanelMenuView::OnWindowMaximized(guint xid)
     _is_maximized = true;
 
     // We need to update the _is_inside state in the case of maximization by grab
-    gint x, y;
-    gdk_display_get_pointer(gdk_display_get_default(), NULL, &x, &y, NULL);
-    _is_inside = GetAbsoluteGeometry().IsPointInside(x, y);
-
+    auto mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
+    _is_inside = GetAbsoluteGeometry().IsPointInside(mouse.x, mouse.y);
     updated = true;
   }
 
@@ -863,9 +861,7 @@ PanelMenuView::OnWindowMaximized(guint xid)
   _decor_map[xid] = WindowManager::Default()->IsWindowDecorated(xid);
 
   if (_decor_map[xid])
-  {
     WindowManager::Default()->Undecorate(xid);
-  }
 
   _maximized_set.insert(xid);
 
@@ -881,6 +877,9 @@ PanelMenuView::OnWindowRestored(guint xid)
 {
   BamfWindow* window;
 
+  if (_maximized_set.find(xid) == _maximized_set.end())
+    return;
+
   window = bamf_matcher_get_active_window(_matcher);
   if (BAMF_IS_WINDOW(window) && bamf_window_get_xid(window) == xid)
   {
@@ -889,9 +888,7 @@ PanelMenuView::OnWindowRestored(guint xid)
   }
 
   if (_decor_map[xid])
-  {
     WindowManager::Default()->Decorate(xid);
-  }
 
   _maximized_set.erase(xid);
 
@@ -987,7 +984,7 @@ PanelMenuView::GetMaximizedWindow()
   nux::Geometry monitor =  UScreen::GetDefault()->GetMonitorGeometry(_monitor);
 
   // Find the front-most of the maximized windows we are controlling
-  foreach(guint32 xid, _maximized_set)
+  for (auto xid : _maximized_set)
   {
     // We can safely assume only the front-most is visible
     if (WindowManager::Default()->IsWindowOnCurrentDesktop(xid)
