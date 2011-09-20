@@ -54,7 +54,7 @@ public:
                       int x_offset, int y_offset);
 
 protected:
-  void LoadText(Result& row);
+  virtual void LoadText(Result& row);
 
 private:
   nux::BaseTexture* DrawHighlight(std::string const& texid,

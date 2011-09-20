@@ -1,3 +1,559 @@
+2011-09-15  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Fix count of hidden results
+
+2011-09-15  Gord Allott  <gord.allott@canonical.com>
+
+	makes the shine on the dash much less intensive
+
+2011-09-15  Gord Allott  <gord.allott@canonical.com>
+
+	less bright sheen
+
+2011-09-15  Gord Allott  <gord.allott@canonical.com>
+
+	fixes the tiling for icons in the dash, small icons now stretch
+
+2011-09-15  Gord Allott  <gord.allott@canonical.com>
+
+	Makes the icons in the dash scale instead of tile
+
+2011-09-15  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	Mirco's branch to adjust spacing and solve lp:844889
+	
+	Fixed issues:
+	
+	- Category header icons are too large
+	- The font size of category header titles is too larged
+	- The search result icons are too small
+	- The search filter toggle boxes are too high
+	- The search filter toggle boxes are too narrow
+	- the search box is too short
+	- The the font size of the text underneath each icon in the search results is too large
+	- The size and shape of the arrow that points to the currently selected Dash Lens is incorrect
+
+2011-09-15  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	reverted the attempt in changing the dash-size, made category font smaller
+
+2011-09-15  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	Numerous fixes for LP: #844889... about 50% of the states issues still to do
+
+2011-09-15  Gord Allott  <gord.allott@canonical.com>
+
+	changes the dash background to be darker with a shine
+
+2011-09-15  Gord Allott  <gord.allott@canonical.com>
+
+	made the sheen less shiny
+
+2011-09-15  Gord Allott  <gord.allott@canonical.com>
+
+	remove comments
+
+2011-09-15  Gord Allott  <gord.allott@canonical.com>
+
+	fixes the launcher renderering
+
+2011-09-15  Gord Allott  <gord.allott@canonical.com>
+
+	adds a sheen to the launcher, dash and panel
+
+2011-09-14  Gord Allott  <gord.allott@canonical.com>
+
+	shine in the dash
+
+2011-09-14  Gord Allott  <gord.allott@canonical.com>
+
+	darken layer added to the ui elements in dash mode
+
+2011-09-15  Gord Allott  <gord.allott@canonical.com>
+
+	reduce the grid view spacing
+
+2011-09-15  Gord Allott  <gord.allott@canonical.com>
+
+	reduce height of results in the dash by one line of text
+
+2011-09-15  Gord Allott  <gord.allott@canonical.com>
+
+	fixed bug with total rows being +1 instead of ceil
+
+2011-09-15  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Fix Panel icons and text when dash is open
+
+2011-09-15  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Make icons white when the dash is open
+
+2011-09-15  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Make indicators draw white text when Dash is showing
+
+2011-09-15  Gord Allott  <gord.allott@canonical.com>
+
+	Fixes a bug with the horizontal renderer not using the correct text drawing method
+
+2011-09-13  Gord Allott  <gord.allott@canonical.com>
+
+	fixed the horizontal renderer cutting off some of the text
+
+2011-09-13  Gord Allott  <gord.allott@canonical.com>
+
+	Merge in the new dash size branch
+
+2011-09-13  Gord Allott  <gord.allott@canonical.com>
+
+	made the loadtext method in resultrenderer virtual
+
+2011-09-15  Jason Smith  <jason.smith@canonical.com>
+
+	fix timeout delay to be consistent
+
+2011-09-15  Gord Allott  <gord.allott@canonical.com>
+
+	merging in a branch to increase the icon size in the dash, one of many targeting lp:844889
+
+2011-09-14  Gord Allott  <gord.allott@canonical.com>
+
+	changed fallback icon size to use places style code
+
+2011-09-14  Gord Allott  <gord.allott@canonical.com>
+
+	Merged updated fix-missing-icons branch
+
+2011-09-12  Gord Allott  <gord.allott@canonical.com>
+
+	remove spacing from the results grid renderer
+
+2011-09-12  Gord Allott  <gord.allott@canonical.com>
+
+	changed the horizontal renderer to fit the new size
+
+2011-09-12  Gord Allott  <gord.allott@canonical.com>
+
+	changed dash icon size from 42 to 64
+
+2011-09-12  Gord Allott  <gord.allott@canonical.com>
+
+	fix missing icons branch merged in to stop future conflicts
+
+2011-09-12  Gord Allott  <gord.allott@canonical.com>
+
+	quicksave
+
+2011-09-15  Gord Allott  <gord.allott@canonical.com>
+
+	Merges in a branch to fix missing icons, targeting lp:830887
+
+2011-09-14  Gord Allott  <gord.allott@canonical.com>
+
+	fixes icon renderer so that it returns a null reference when it can't find a file rather than silently quitting, so we can use that codepath instead of stating files all the live long day
+
+2011-09-09  Gord Allott  <gord.allott@canonical.com>
+
+	fix lp:830887
+
+2011-09-15  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Merge lp:~smspillaz/unity/unity.fix_crash_on_startup
+
+2011-08-05  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Fix crash on startup
+	
+	On startup, compiz does plugin->vTable->init () for every single plugin in
+	the load queue. It then does plugin->vTable->initScreen (); On some drivers,
+	doing a glGet () before an opengl context is created can result in a crash,
+	so move the detection and failure code to UnityScreen's constructor where
+	opengl has already been loaded.
+
+2011-09-14  Jason Smith  <jason.smith@canonical.com>
+
+	merge branch to make dash not close on DND start
+
+2011-09-14  Jason Smith  <jason.smith@canonical.com>
+
+	Dont close dash on DND start
+
+2011-09-14  Jason Smith  <jason.smith@canonical.com>
+
+	merge top autoscroll branch
+
+2011-09-14  Jason Smith  <jason.smith@canonical.com>
+
+	Restore top autoscroll
+
+2011-09-14  Jason Smith  <jason.smith@canonical.com>
+
+	merge darken pips branch
+
+2011-09-14  Jason Smith  <jason.smith@canonical.com>
+
+	make sure darkening only happens when rendering is done over the tile
+
+2011-09-14  Jason Smith  <jason.smith@canonical.com>
+
+	make pips render darker when in highlight mode
+
+2011-09-14  Jason Smith  <jason.smith@canonical.com>
+
+	merge alt-shift-grave branch
+
+2011-09-14  Jason Smith  <jason.smith@canonical.com>
+
+	make alt-shift-` able to initiate detail mode and start on the last window
+
+2011-09-14  Jason Smith  <jason.smith@canonical.com>
+
+	switch default of detail_on_timeout to match that in xml file
+
+2011-09-14  Jason Smith  <jason.smith@canonical.com>
+
+	add <Alt><Shift>Key Above Tab support
+
+2011-09-14  Jason Smith  <jason.smith@canonical.com>
+
+	merge branch to fix issue with switcher padding
+
+2011-09-14  Jason Smith  <jason.smith@canonical.com>
+
+	fix issue where switcher would layout with improper padding when the number of flat icons was exactly 1
+
+2011-09-14  Jay Taoko  <jay.taoko@canonical.com>
+
+	Removing incorrect call for setting opengl render buffer. The call also is not needed, so I am removing it entirely.
+
+2011-09-14  Jay Taoko  <jay.taoko@canonical.com>
+
+	Fix: Removing incorrect call for setting opengl render buffer.
+
+2011-09-14  Jason Smith  <jason.smith@canonical.com>
+
+	fix f10
+
+2011-09-14  Alex Launi  <alex.launi@canonical.com>
+
+	fix a syntax error in the unity launch script
+
+2011-09-14  Jason Smith  <jason.smith@canonical.com>
+
+	update design resources
+	make Launcher rendering proper for new resources
+
+2011-09-14  Didier Roche  <didier.roche@canonical.com>
+
+	Set alt + tab timeout to true (LP: #838075)
+
+2011-09-14  Didier Roche  <didier.roche@canonical.com>
+
+	Set alt + tab timeout to true (LP: #838075)
+
+2011-09-14  Robert Carr  <racarr@canonical.com>
+
+	Merge lp:~robertcarr/unity/launcherdrag-checkicon
+
+2011-09-14  Robert Carr  <racarr@canonical.com>
+
+	Launcher::StartIconDragRequest. Only set action state if we actually have a drag icon
+
+2011-09-14  Jason Smith  <jason.smith@canonical.com>
+
+	merge branch to fix minor design team issues
+
+2011-09-14  Jason Smith  <jason.smith@canonical.com>
+
+	make BFB launcher use UBusManager rather than C api
+
+2011-09-13  Jason Smith  <jason.smith@canonical.com>
+
+	fix launcher scroll direction
+
+2011-09-13  Jason Smith  <jason.smith@canonical.com>
+
+	Make alt-tab close the dash when it opens
+
+2011-09-13  Jason Smith  <jason.smith@canonical.com>
+
+	fix issue where slow moving pointer would not trigger edge reveal
+
+2011-09-14  Didier Roche  <didier.roche@canonical.com>
+
+	This branch does 2 things:
+	- bring back Super + Shift + Num to open a new instance of an app (LP: #842977)
+	- force sorting at start to get shortcut working (LP: #768076)
+
+2011-09-12  Didier Roche  <didier.roche@canonical.com>
+
+	force sorting at start to get shortcut working (LP: #768076)
+
+2011-09-12  Didier Roche  <didier.roche@canonical.com>
+
+	bring back Super + Shift + Num to open a new instance of an app (LP: #842977)
+
+2011-09-14  Didier Roche  <didier.roche@canonical.com>
+
+	update unity --distro to latest installed files (LP: #847799)
+
+2011-09-12  Didier Roche  <didier.roche@canonical.com>
+
+	update unity --distro to latest installed files (LP: #847799)
+
+2011-09-14  Tim Penhey  <tim.penhey@canonical.com>
+
+	Unload the renderer from the results when the ResultsView dies.
+
+2011-09-14  Tim Penhey  <tim.penhey@canonical.com>
+
+	More logging cleanup.
+
+2011-09-14  Tim Penhey  <tim.penhey@canonical.com>
+
+	Cleaning up unneeded logging.
+
+2011-09-13  Tim Penhey  <tim.penhey@canonical.com>
+
+	Don't log the renderer count.
+
+2011-09-13  Tim Penhey  <tim.penhey@canonical.com>
+
+	Stop counting results.
+
+2011-09-13  Tim Penhey  <tim.penhey@canonical.com>
+
+	Unload any results we have hanging around at destruction time.
+
+2011-09-13  Tim Penhey  <tim.penhey@canonical.com>
+
+	Log the adding and removing of results.
+
+2011-09-13  Tim Penhey  <tim.penhey@canonical.com>
+
+	Count the containers.
+
+2011-09-13  Tim Penhey  <tim.penhey@canonical.com>
+
+	Merged cleanup-filters into renderer-leak.
+
+2011-09-13  Tim Penhey  <tim.penhey@canonical.com>
+
+	Logging and counters.
+
+2011-09-12  Tim Penhey  <tim.penhey@canonical.com>
+
+	Merge trunk.
+
+2011-09-12  Tim Penhey  <tim.penhey@canonical.com>
+
+	Add count check.
+
+2011-09-14  Tim Penhey  <tim.penhey@canonical.com>
+
+	Remove extra references on the layouts and remove the unreferences added
+	in error.
+	
+	Fixes lp:845732.
+
+2011-09-13  Tim Penhey  <tim.penhey@canonical.com>
+
+	Remove unreferences added in error.
+
+2011-09-13  Tim Penhey  <tim.penhey@canonical.com>
+
+	Merge trunk.
+
+2011-09-12  Tim Penhey  <tim.penhey@canonical.com>
+
+	Avoid gratuitous referencing.
+
+2011-09-12  Tim Penhey  <tim.penhey@canonical.com>
+
+	Adding some missed nux object type information.
+
+2011-09-13  Jason Smith  <jason.smith@canonical.com>
+
+	merge switcher crash on window close branch
+
+2011-09-13  Jason Smith  <jason.smith@canonical.com>
+
+	fix crash when window closes and switcher is open
+
+2011-09-13  Jay Taoko  <jay.taoko@canonical.com>
+
+	Set framebuffer depth attachment to 0
+
+2011-09-13  Jason Smith  <jason.smith@canonical.com>
+
+	Fix potential crash when hash table is null in remove entry model
+
+2011-09-13  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Merge lp:~unity-team/unity/unity.fix_847967
+
+2011-09-13  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Add some comments
+
+2011-09-13  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Don't save and restore implicit bounding shapes since this shape will be kept after restore
+
+2011-09-13  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Fix sent shape events not working correctly, ensure that they are sent to clients
+	that will actually receive them.
+	
+	This won't work without http://lists.x.org/archives/xorg-devel/2011-September/024996.html
+	since there's a bug in the X Server
+
+2011-09-12  Jason Smith  <jason.smith@canonical.com>
+
+	Round orange outline
+
+2011-09-12  Jason Smith  <jason.smith@canonical.com>
+
+	merge layout improvements branch
+
+2011-09-12  Jason Smith  <jason.smith@canonical.com>
+
+	make sure we dont let stuff scale up beyond bounds
+
+2011-09-12  Jason Smith  <jason.smith@canonical.com>
+
+	improve layout system to optimize horizontal spacing
+
+2011-09-12  Robert Carr  <racarr@canonical.com>
+
+	Merge lp:~robertcarr/unity/alttab-checkgrabresult
+
+2011-09-12  Robert Carr  <racarr@canonical.com>
+
+	altTabInitiateCommon: Check if we successfully get a grab, if not short circuit
+
+2011-09-12  Robert Carr  <racarr@canonical.com>
+
+	Style
+
+2011-09-12  Robert Carr  <racarr@canonical.com>
+
+	Style
+
+2011-09-12  Robert Carr  <racarr@canonical.com>
+
+	BamfLauncherIcon::ValidateUrisForLaunch: If we are the home launcher we can accept any kind of URI
+
+2011-09-12  Robert Carr  <racarr@canonical.com>
+
+	Merge lp:~robertcarr/unity/tab-lens-navigation
+
+2011-09-11  Robert Carr  <racarr@canonical.com>
+
+	Implement KeyNavIteration on DashView to allow switching through the lens bar with tab and left tab (shift-tab)
+
+2011-09-12  Didier Roche  <didier.roche@canonical.com>
+
+	remove unity-preferences, we will need to add some blessed option as a g-c-c capplet (LP: #847599)
+
+2011-09-12  Didier Roche  <didier.roche@canonical.com>
+
+	remove unity-preferences, we will need to add some blessed option as a g-c-c capplet (LP: #847599)
+
+2011-09-12  Alejandro Piñeiro  <apinheiro@igalia.com>
+
+	a11y: atk-bridge location path changed his format
+
+2011-09-09  Alejandro Piñeiro  <apinheiro@igalia.com>
+
+	a11y: atk-bridge location path changed format
+	
+	Changed the format on this bug:
+	https://bugzilla.gnome.org/show_bug.cgi?id=645321
+	
+	Fixes bug:
+	https://bugs.launchpad.net/unity/+bug/844927
+
+2011-09-11  Jason Smith  <jason.smith@canonical.com>
+
+	merge switcher layout branch
+
+2011-09-11  Jason Smith  <jason.smith@canonical.com>
+
+	fix merge issues
+
+2011-09-11  Jason Smith  <jason.smith@canonical.com>
+
+	fix padding math
+
+2011-09-11  Jason Smith  <jason.smith@canonical.com>
+
+	soften opacity differences as orange outline works now
+
+2011-09-11  Jason Smith  <jason.smith@canonical.com>
+
+	improve layout system and switcher view to more closely match design goals
+
+2011-09-09  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Merge lp:~smspillaz/unity/unity.stack_debug_fixed_minimized_windows
+
+2011-09-09  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Merge lp:~unity-team/unity/unity.stack-debug
+
+2011-09-08  Jason Smith  <jason.smith@canonical.com>
+
+	merge trunk
+
+2011-09-09  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Only remove the input shape on the client window and send a synethetic ShapeNotify when that happens
+	
+	We should only remove the input shape on the client window because core will respond by updating the
+	regions correctly so that if the shape changes again core will be able to restore it correctly. However,
+	we disable XShape events on the client window such that we will not receive a ShapeNotify event
+	on the client window for our own operation which would cause cycling in the shape code. Instead craft
+	a synethetic ShapeNotify event and send that to the root window so that core will update the window
+	region and we can ignore the synethetic ShapeNotify event.
+
+2011-09-08  Jason Smith  <jason.smith@canonical.com>
+
+	merge trunk
+
+2011-09-08  Jason Smith  <jason.smith@canonical.com>
+
+	track upstream stacking changes
+
+2011-09-09  Robert Carr  <racarr@canonical.com>
+
+	Merge lp:~robertcarr/unity/result-dragimages
+
+2011-09-08  Robert Carr  <racarr@canonical.com>
+
+	When dragging from dash results, make better use of the icon_hint the lens gave us, i.e. if it is a filename (presumably a thumbnail) try loading that first. This ensures that the drag image will be the same as the image displayed in the dash
+
+2011-09-08  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[release] 4.14.2
+
+2011-09-08  Mikkel Kamstrup Erlandsen  <mikkel.kamstrup@gmail.com>
+
+	Update tests to new libunity API
+
+2011-09-08  Mikkel Kamstrup Erlandsen  <mikkel.kamstrup@gmail.com>
+
+	Oh, who  wants to NULL initialize GLists anyway?!
+
+2011-09-08  Mikkel Kamstrup Erlandsen  <mikkel.kamstrup@gmail.com>
+
+	Update test cases to reflect latest API breaks in libunity. There's a segv in test-gtest-service inside g_object_new() on a GIcon instance I create. What's up with that?!
+
+2011-09-08  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[release] 4.14.0
+
 2011-09-08  Neil Jagdish Patel  <neil.patel@canonical.com>
 
 	Fix test

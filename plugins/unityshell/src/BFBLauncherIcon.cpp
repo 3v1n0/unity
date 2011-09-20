@@ -20,10 +20,9 @@
 #include "BFBLauncherIcon.h"
 #include "Launcher.h"
 
-#include <glib/gi18n-lib.h>
-
-#include "ubus-server.h"
 #include "UBusMessages.h"
+
+#include <glib/gi18n-lib.h>
 
 BFBLauncherIcon::BFBLauncherIcon(Launcher* IconManager)
  : SimpleLauncherIcon(IconManager)
@@ -34,28 +33,25 @@ BFBLauncherIcon::BFBLauncherIcon(Launcher* IconManager)
   SetQuirk(QUIRK_RUNNING, false);
   SetIconType(TYPE_HOME);
 
-  mouse_enter.connect([&] () { ubus_server_send_message(ubus_server_get_default(),
-                               UBUS_DASH_ABOUT_TO_SHOW, NULL); });
+  _background_color = nux::Color (0xFF333333);
+
+  mouse_enter.connect([&] () { _ubus_manager.SendMessage(UBUS_DASH_ABOUT_TO_SHOW, NULL); });
 }
 
 nux::Color BFBLauncherIcon::BackgroundColor()
 {
-  return nux::Color(0xFF333333);
+  return _background_color;
 }
 
 nux::Color BFBLauncherIcon::GlowColor()
 {
-  return nux::Color(0xFF333333);
+  return _background_color;
 }
 
 void BFBLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 {
   if (arg.button == 1)
-  {
-    UBusServer* ubus = ubus_server_get_default();
-    ubus_server_send_message(ubus, UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
-                             g_variant_new("(sus)", "home.lens", 0, ""));
-  }
+    _ubus_manager.SendMessage (UBUS_PLACE_ENTRY_ACTIVATE_REQUEST, g_variant_new("(sus)", "home.lens", 0, ""));
 
   // dont chain down to avoid random dash close events
 }

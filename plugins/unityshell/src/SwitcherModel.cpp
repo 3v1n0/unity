@@ -33,11 +33,15 @@ SwitcherModel::SwitcherModel(std::vector<AbstractLauncherIcon*> icons)
 {
   detail_selection = false;
   detail_selection_index = 0;
+
+  for (auto icon : _inner)
+    icon->Reference();
 }
 
 SwitcherModel::~SwitcherModel()
 {
-
+  for (auto icon : _inner)
+    icon->UnReference();
 }
 
 SwitcherModel::iterator
@@ -126,7 +130,7 @@ SwitcherModel::DetailXids()
 Window
 SwitcherModel::DetailSelectionWindow ()
 {
-  if (!detail_selection)
+  if (!detail_selection || DetailXids ().empty())
     return 0;
   
   return DetailXids()[detail_selection_index];
@@ -167,7 +171,7 @@ SwitcherModel::NextDetail ()
   if (!detail_selection())
     return;
 
-  if (detail_selection_index < Selection()->RelatedWindows () - 1)
+  if (detail_selection_index < Selection()->RelatedXids ().size () - 1)
     detail_selection_index = detail_selection_index + 1;
   else
     detail_selection_index = 0;
@@ -178,10 +182,10 @@ void SwitcherModel::PrevDetail ()
   if (!detail_selection())
     return;
 
-  if (detail_selection_index > 0)
+  if (detail_selection_index >= (unsigned int) 1)
     detail_selection_index = detail_selection_index - 1;
   else
-    detail_selection_index = Selection()->RelatedWindows () - 1;
+    detail_selection_index = Selection()->RelatedXids ().size () - 1;
 }
 
 void

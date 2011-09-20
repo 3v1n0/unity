@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright 2011 Canonical Ltd.
  *
@@ -19,10 +20,8 @@
  *
  */
 
-
-
-#ifndef FILTEREXPANDERLABEL_H
-#define FILTEREXPANDERLABEL_H
+#ifndef UNITY_FILTEREXPANDERLABEL_H
+#define UNITY_FILTEREXPANDERLABEL_H
 
 #include <Nux/Nux.h>
 #include <Nux/GridHLayout.h>
@@ -32,7 +31,9 @@
 
 namespace unity {
 
-  class FilterExpanderLabel : public nux::View {
+  class FilterExpanderLabel : public nux::View
+  {
+    NUX_DECLARE_OBJECT_TYPE(FilterExpanderLabel, nux::View);
   public:
     FilterExpanderLabel (std::string label, NUX_FILE_LINE_PROTO);
     virtual ~FilterExpanderLabel();
@@ -64,4 +65,4 @@ namespace unity {
 
 }
 
-#endif // FILTEREXPANDERLABEL_H
+#endif

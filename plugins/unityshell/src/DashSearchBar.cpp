@@ -83,6 +83,8 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
   pango_entry_->SetCanFocus(true);
   pango_entry_->activated.connect([&]() { activated.emit(); });
   pango_entry_->cursor_moved.connect([&](int i) { QueueDraw(); });
+  pango_entry_->mouse_down.connect(sigc::mem_fun(this, &SearchBar::OnMouseButtonDown));
+  pango_entry_->end_key_focus.connect(sigc::mem_fun(this, &SearchBar::OnEndKeyFocus));
  
   layered_layout_ = new nux::LayeredLayout();
   layered_layout_->AddLayer(hint_);
@@ -90,7 +92,7 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
   layered_layout_->SetPaintAll(true);
   layered_layout_->SetActiveLayerN(1);
   layered_layout_->SetMinimumWidth(420);
-  layered_layout_->SetMaximumWidth(620);
+  layered_layout_->SetMaximumWidth(645);
   layout_->AddView(layered_layout_, 1, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FIX);
 
   std::string filter_str = _("Filter results");
@@ -390,14 +392,14 @@ void SearchBar::UpdateBackground()
   texture2D->UnReference();
 }
 
-void SearchBar::RecvMouseDownFromWindow(int x, int y,
-                                              unsigned long button_fags,
-                                              unsigned long key_fags)
+void SearchBar::OnMouseButtonDown(int x, int y, unsigned long button, unsigned long key)
 {
-  if (pango_entry_->GetGeometry().IsPointInside(x, y))
-  {
-    hint_->SetText("");
-  }
+  search_hint = "";
+}
+
+void SearchBar::OnEndKeyFocus()
+{
+  search_hint = _("Search");
 }
 
 nux::TextEntry* SearchBar::text_entry() const

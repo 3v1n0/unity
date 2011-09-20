@@ -62,6 +62,11 @@ class WindowManagerDummy : public WindowManager
     return false;
   }
 
+  bool IsWindowMapped(guint32 xid)
+  {
+    return true;
+  }
+
   void Restore(guint32 xid)
   {
     g_debug("%s", G_STRFUNC);
@@ -105,7 +110,9 @@ class WindowManagerDummy : public WindowManager
 
   nux::Geometry GetWindowGeometry(guint xid)
   {
-    return nux::Geometry(0, 0, 1, 1);
+    int width = (guint32)xid >> 16;
+    int height = (guint32)xid & 0x0000FFFF;
+    return nux::Geometry(0, 0, width, height);
   }
 
   nux::Geometry GetScreenGeometry()

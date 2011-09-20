@@ -56,6 +56,7 @@ public:
 
   void SetupBackground ();
 
+  nux::Property<bool> render_boxes;
   nux::Property<int> border_size;
   nux::Property<int> flat_spacing;
   nux::Property<int> icon_size;
@@ -81,12 +82,23 @@ protected:
 private:
   void OnSelectionChanged(AbstractLauncherIcon* selection);
   void OnDetailSelectionChanged (bool detail);
-  void OnDetailSelectionIndexChanged (int index);
+  void OnDetailSelectionIndexChanged (unsigned int index);
 
   void OnIconSizeChanged (int size);
   void OnTileSizeChanged (int size);
 
-  nux::Geometry UpdateRenderTargets (RenderArg const& selection_arg, timespec const& current);
+  nux::Geometry UpdateRenderTargets (nux::Point const& center, timespec const& current);
+  void OffsetRenderTargets (int x, int y);
+
+  nux::Size SpreadSize ();
+
+  void GetFlatIconPositions (int n_flat_icons, 
+                             int size, 
+                             int selection, 
+                             int &first_flat, 
+                             int &last_flat, 
+                             int &half_fold_left, 
+                             int &half_fold_right);
 
   static gboolean OnDrawTimeout(gpointer data);
 
@@ -100,6 +112,7 @@ private:
   guint redraw_handle_;
 
   nux::BaseTexture* background_texture_;
+  nux::BaseTexture* rounding_texture_;
 
   nux::StaticCairoText* text_view_;
 

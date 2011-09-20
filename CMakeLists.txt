@@ -11,8 +11,8 @@ subdirs (doc services tests tools UnityCore guides)
 #
 set (PROJECT_NAME "unity")
 set (UNITY_MAJOR 4)
-set (UNITY_MINOR 14)
-set (UNITY_MICRO 2)
+set (UNITY_MINOR 16)
+set (UNITY_MICRO 0)
 set (UNITY_VERSION "${UNITY_MAJOR}.${UNITY_MINOR}.${UNITY_MICRO}")
 set (UNITY_API_VERSION "4.0")
 
@@ -44,6 +44,7 @@ add_custom_target (dist
   COMMAND bzr export --root=${ARCHIVE_NAME} ${CMAKE_BINARY_DIR}/${ARCHIVE_NAME}.tar.bz2
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   )
+add_dependencies(dist pre-distcheck)
 
 add_custom_target (distcheck
   COMMAND cd ${CMAKE_BINARY_DIR}

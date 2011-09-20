@@ -49,12 +49,13 @@ SwitcherView::SwitcherView(NUX_FILE_LINE_DECL)
   border_size = 50;
   flat_spacing = 10;
   icon_size = 128;
-  minimum_spacing = 20;
+  minimum_spacing = 10;
   tile_size = 150;
   vertical_size = tile_size + 80;
   text_size = 15;
   animation_length = 250;
   spread_size = 3.5f;
+  render_boxes = false;
 
   animation_draw_ = false;
 
@@ -64,6 +65,7 @@ SwitcherView::SwitcherView(NUX_FILE_LINE_DECL)
   render_targets_.clear ();
 
   background_texture_ = nux::CreateTexture2DFromFile(PKGDATADIR"/switcher_background.png", -1, true);
+  rounding_texture_ = nux::CreateTexture2DFromFile(PKGDATADIR"/switcher_round_rect.png", -1, true);
 
   text_view_ = new nux::StaticCairoText("Testing");
   text_view_->SinkReference();
@@ -81,6 +83,7 @@ SwitcherView::SwitcherView(NUX_FILE_LINE_DECL)
 SwitcherView::~SwitcherView()
 {
   background_texture_->UnReference();
+  rounding_texture_->UnReference();
   text_view_->UnReference();
   if (redraw_handle_ > 0)
     g_source_remove(redraw_handle_);
@@ -127,7 +130,7 @@ void SwitcherView::SaveLast ()
   clock_gettime(CLOCK_MONOTONIC, &save_time_);
 }
 
-void SwitcherView::OnDetailSelectionIndexChanged (int index)
+void SwitcherView::OnDetailSelectionIndexChanged (unsigned int index)
 {
   if (model_->detail_selection)
   {
@@ -238,7 +241,7 @@ nux::Geometry SwitcherView::InterpolateBackground (nux::Geometry const& start, n
   return result;
 }
 
-nux::Geometry SwitcherView::UpdateRenderTargets (RenderArg const& selection_arg, timespec const& current)
+nux::Geometry SwitcherView::UpdateRenderTargets (nux::Point const& center, timespec const& current)
 {
   std::vector<Window> xids = model_->DetailXids ();
 
@@ -252,7 +255,7 @@ nux::Geometry SwitcherView::UpdateRenderTargets (RenderArg const& selection_arg,
     if (window == model_->DetailSelectionWindow ())
       layout_window->alpha = 1.0f * progress;
     else
-      layout_window->alpha = 0.75f * progress;
+      layout_window->alpha = 0.9f * progress;
     
     render_targets_.push_back (layout_window);
   }
@@ -260,15 +263,113 @@ nux::Geometry SwitcherView::UpdateRenderTargets (RenderArg const& selection_arg,
   nux::Geometry max_bounds;
 
   nux::Geometry absolute = GetAbsoluteGeometry ();
-  max_bounds.x = absolute.x + selection_arg.render_center.x - (tile_size * spread_size) / 2;
-  max_bounds.y = absolute.y + selection_arg.render_center.y - (tile_size * spread_size) / 2;
-  max_bounds.width = tile_size * spread_size;
-  max_bounds.height = tile_size * spread_size;
+  nux::Size spread_size = SpreadSize();
+  max_bounds.x = absolute.x + center.x - spread_size.width / 2;
+  max_bounds.y = absolute.y + center.y - spread_size.height / 2;
+  max_bounds.width = spread_size.width;
+  max_bounds.height = spread_size.height;
 
   nux::Geometry final_bounds;
   layout_system_->LayoutWindows (render_targets_, max_bounds, final_bounds);
 
   return final_bounds;
+}
+
+void SwitcherView::OffsetRenderTargets (int x, int y)
+{
+  for (LayoutWindow::Ptr target : render_targets_)
+  {
+    target->result.x += x;
+    target->result.y += y;
+  }
+}
+
+nux::Size SwitcherView::SpreadSize()
+{
+  nux::Geometry base = GetGeometry();
+  nux::Size result (base.width - border_size * 2, base.height - border_size * 2);
+  
+  int width_padding = std::max(model_->Size() - 1, 0) * minimum_spacing + tile_size;
+  int height_padding = text_size;
+
+  result.width -= width_padding;
+  result.height -= height_padding;
+  
+  return result;
+}
+
+void SwitcherView::GetFlatIconPositions (int n_flat_icons, 
+                                         int size, 
+                                         int selection, 
+                                         int &first_flat, 
+                                         int &last_flat, 
+                                         int &half_fold_left, 
+                                         int &half_fold_right)
+{
+  half_fold_left = -1;
+  half_fold_right = -1;
+
+  if (n_flat_icons == 0)
+  {
+    first_flat = selection + 1;
+    last_flat = selection;
+  }
+  else if (n_flat_icons == 1)
+  {
+    if (selection == 0)
+    {
+      // selection is first item
+      first_flat = 0;
+      last_flat = n_flat_icons;
+    }
+    else if (selection >= size - 2)
+    {
+      // selection is in ending area where all icons at end should flatten
+      first_flat = size - n_flat_icons - 1;
+      last_flat = size - 1;
+    }
+    else
+    {
+      first_flat = selection;
+      last_flat = selection;
+
+      half_fold_left = first_flat - 1;
+      half_fold_right = last_flat + 1;
+    }
+  }
+  else
+  {
+    if (selection == 0)
+    {
+      // selection is first item
+      first_flat = 0;
+      last_flat = n_flat_icons;
+    }
+    else if (selection >= 1 && selection <= n_flat_icons - 1)
+    {
+      // selection is in "beginning" area before flat section starts moving
+      // first item should half fold still
+      first_flat = 1;
+      last_flat = n_flat_icons;
+
+      half_fold_left = 0;
+      half_fold_right = last_flat + 1;
+    }
+    else if (selection >= size - 2)
+    {
+      // selection is in ending area where all icons at end should flatten
+      first_flat = size - n_flat_icons - 1;
+      last_flat = size - 1;
+    }
+    else
+    {
+      first_flat = selection - n_flat_icons + 2;
+      last_flat = selection + 1;
+
+      half_fold_left = first_flat - 1;
+      half_fold_right = last_flat + 1;
+    }
+  }
 }
 
 std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo, int selection, timespec const& current)
@@ -283,6 +384,7 @@ std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo,
   background_geo.y = base.y + base.height / 2 - (vertical_size / 2);
   background_geo.height = vertical_size + text_size;  
 
+
   if (model_)
   {
 
@@ -290,17 +392,26 @@ std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo,
     int padded_tile_size = tile_size + flat_spacing * 2;
     int max_width = base.width - border_size * 2;
 
+    nux::Geometry spread_bounds;
+    int spread_padded_width = 0;
     if (detail_selection)
-      max_width -= padded_tile_size * (spread_size - 1.0f);
+    {
+      spread_bounds = UpdateRenderTargets (nux::Point (0, 0), current);
+      // remove extra space consumed by spread
+      spread_padded_width = spread_bounds.width + 100;
+      max_width -= spread_padded_width - tile_size;
+
+      int expansion = MAX (0, spread_bounds.height - icon_size);
+      background_geo.y -= expansion / 2;
+      background_geo.height += expansion;
+    }
 
     int flat_width = size * padded_tile_size;
 
-    int n_flat_icons = CLAMP((max_width - 30) / padded_tile_size - 1, 0, size);
-
-    float x = 0;
+    int n_flat_icons = CLAMP((max_width - size * minimum_spacing) / padded_tile_size - 1, 0, size);
 
     int overflow = flat_width - max_width;
-
+    float x = 0;
     if (overflow < 0)
     {
       background_geo.x = base.x - overflow / 2;
@@ -315,41 +426,15 @@ std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo,
       background_geo.width = base.width;
     }
 
-
-    float partial_overflow = (float) overflow / MAX(1.0f, (float)(size - n_flat_icons - 1));
+    int non_flat_icons = std::max (1.0f, (float)size - n_flat_icons - 1);
+    float partial_overflow = (float) overflow / (float)non_flat_icons;
     float partial_overflow_scalar = (float)(padded_tile_size - partial_overflow) / (float)(padded_tile_size);
 
     int first_flat, last_flat;
-    int half_fold_left = -1;
-    int half_fold_right = -1;
+    int half_fold_left;
+    int half_fold_right;
 
-    if (selection == 0)
-    {
-      first_flat = 0;
-      last_flat = n_flat_icons;
-    }
-    else if (selection >= 1 && selection <= n_flat_icons - 1)
-    {
-      first_flat = 1;
-      last_flat = n_flat_icons;
-
-      half_fold_left = 0;
-      half_fold_right = last_flat + 1;
-    }
-    else if (selection >= size - 2)
-    {
-      first_flat = size - n_flat_icons - 1;
-      last_flat = size - 1;
-    }
-    else
-    {
-      first_flat = selection - n_flat_icons + 2;
-      last_flat = selection + 1;
-
-      half_fold_left = first_flat - 1;
-      half_fold_right = last_flat + 1;
-    }
-
+    GetFlatIconPositions (n_flat_icons, size, selection, first_flat, last_flat, half_fold_left, half_fold_right); 
 
     SwitcherModel::iterator it;
     int i = 0;
@@ -373,23 +458,25 @@ std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo,
         scalar += (1.0f - scalar) * 0.5f;
       }
 
+      int half_size = tile_size / 2;
       if (i == selection && detail_selection)
-        scalar = spread_size;
+      {
+        half_size = spread_padded_width / 2;
+        scalar = 1.0f;
+      }
 
-      x += flat_spacing * scalar;
-
-      x += (tile_size / 2) * scalar;
+      x += (half_size + flat_spacing) * scalar;
 
       if (should_flat)
         arg.render_center = nux::Point3((int) x, y, 0);
       else
         arg.render_center = nux::Point3(x, y, 0);
 
-      x += (tile_size / 2 + flat_spacing) * scalar;
+      x += (half_size + flat_spacing) * scalar;
 
       arg.y_rotation = (1.0f - MIN (1.0f, scalar));
 
-      if (!should_flat && overflow > 0)
+      if (!should_flat && overflow > 0 && i != selection)
       {
         if (i > last_flat)
         {
@@ -408,12 +495,7 @@ std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo,
       if (i == selection && detail_selection)
       {
         arg.skip = true;
-        nux::Geometry final_bounds = UpdateRenderTargets (arg, current);
-
-        int expansion = MAX (0, final_bounds.height - icon_size);
-
-        background_geo.y -= expansion / 2;
-        background_geo.height += expansion;
+        OffsetRenderTargets (arg.render_center.x, arg.render_center.y);
       }
 
       results.push_back(arg);
@@ -546,6 +628,39 @@ void SwitcherView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   {
     if (rit->y_rotation >= 0)
       icon_renderer_->RenderIcon(GfxContext, *rit, base, base);
+  }
+
+  if (render_boxes)
+  {
+    float val = 0.1f;
+    for (LayoutWindow::Ptr layout : ExternalTargets())
+    {
+      gPainter.Paint2DQuadColor(GfxContext, layout->result, nux::Color(val, val, val ,val));
+      val += 0.1f;
+
+      if (val > 1)
+        val = 0.1f;
+    }
+
+    for (rit = last_args_.rbegin(); rit != last_args_.rend(); ++rit)
+    {
+      nux::Geometry tmp (rit->render_center.x - 1, rit->render_center.y - 1, 2, 2);
+      gPainter.Paint2DQuadColor(GfxContext, tmp, nux::color::Red);
+    }
+  }
+
+  // render orange box that will encirlce active item(s)
+  for (LayoutWindow::Ptr window : ExternalTargets())
+  {
+    if (window->alpha >= 1.0f)
+    {
+      nux::Geometry orange_box = window->result;
+      orange_box.Expand(3, 3);
+      orange_box.x -= geo_absolute.x;
+      orange_box.y -= geo_absolute.y;
+
+      gPainter.PaintTextureShape(GfxContext, orange_box, rounding_texture_, 4, 4, 4, 4, false);
+    }
   }
 
   GfxContext.PopClippingRectangle();

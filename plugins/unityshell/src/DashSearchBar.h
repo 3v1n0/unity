@@ -72,7 +72,8 @@ private:
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
 
-  void RecvMouseDownFromWindow(int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void OnMouseButtonDown(int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void OnEndKeyFocus();
 
   void UpdateBackground();
   void OnSearchChanged(nux::TextEntry* text_entry);

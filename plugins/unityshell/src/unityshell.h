@@ -31,6 +31,7 @@
 
 #include "Introspectable.h"
 #include "DashController.h"
+#include "DashStyle.h"
 #include "FontSettings.h"
 #include "Launcher.h"
 #include "LauncherController.h"
@@ -62,6 +63,7 @@ public:
   void unbind ();
 
   bool status ();
+  bool bound ();
   void paint ();
 
   GLuint texture () { return mFBTexture; }
@@ -73,6 +75,7 @@ private:
   bool    mFboStatus; // did the framebuffer texture bind succeed
   GLuint   mFBTexture;
   CompOutput *output;
+  unsigned int mBoundCnt;
 };
 
 class UnityShowdesktopHandler
@@ -95,6 +98,9 @@ public:
   void fadeIn ();
   bool animate (unsigned int ms);
   void paintAttrib (GLWindowPaintAttrib &attrib);
+  unsigned int getPaintMask ();
+  void handleEvent (XEvent *);
+  void updateFrameRegion (CompRegion &r);
 
   UnityShowdesktopHandler::State state ();
 
@@ -118,6 +124,7 @@ private:
 #include <compiztoolbox/compiztoolbox.h>
 
 using unity::FontSettings;
+using unity::DashStyle;
 using unity::PlacesStyle;
 using namespace unity::switcher;
 using namespace unity::dash;
@@ -207,6 +214,7 @@ public:
   bool altTabDetailStartInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool altTabDetailStopInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool altTabNextWindowInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool altTabPrevWindowInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
 
   /* handle option changes and change settings inside of the
    * panel and dock views */
@@ -238,7 +246,7 @@ private:
   void SendExecuteCommand();
 
   void EnsureSuperKeybindings ();
-  void CreateSuperNewAction(char shortcut);
+  void CreateSuperNewAction(char shortcut, bool use_shift=false);
 
   static gboolean initPluginActions(gpointer data);
   static void initLauncher(nux::NThread* thread, void* InitData);
@@ -253,6 +261,7 @@ private:
   static void OnStartKeyNav(GVariant* data, void* value);
   static void OnExitKeyNav(GVariant* data, void* value);
   static gboolean OnEdgeTriggerTimeout(gpointer data);
+  static gboolean OnRedrawTimeout(gpointer data);
 
   void startLauncherKeyNav();
   void restartLauncherKeyNav();
@@ -262,7 +271,8 @@ private:
   static void OnLauncherStartKeyNav(GVariant* data, void* value);
   static void OnLauncherEndKeyNav(GVariant* data, void* value);
 
-  PlacesStyle      places_style_;
+  DashStyle               dash_style_;
+  PlacesStyle             places_style_;
   FontSettings            font_settings_;
   Launcher*               launcher;
   LauncherController*     controller;
@@ -276,9 +286,11 @@ private:
   nux::Geometry           lastTooltipArea;
   DebugDBusInterface*     debugger;
   bool                    needsRelayout;
+  bool                    _in_paint;
   guint32                 relayoutSourceId;
   guint                   _edge_timeout;
   guint                   _edge_trigger_handle;
+  guint32                 _redraw_handle;
   gint                    _edge_pointerY;
   guint                   _ubus_handles[3];
 

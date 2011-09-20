@@ -48,7 +48,7 @@ namespace unity
 namespace
 {
 void draw_menu_bg(cairo_t* cr, int width, int height);
-GdkPixbuf* make_pixbuf(int image_type, std::string const& image_data);
+GdkPixbuf* make_pixbuf(int image_type, std::string const& image_data, bool dash_showing);
 }
 
 
@@ -60,6 +60,7 @@ PanelIndicatorEntryView::PanelIndicatorEntryView(
   , util_cg_(CAIRO_FORMAT_ARGB32, 1, 1)
   , padding_(padding)
   , draw_active_(false)
+  , dash_showing_(false)
 {
   on_indicator_activate_changed_connection_ = proxy_->active_changed.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::OnActiveChanged));
   on_indicator_updated_connection_ = proxy_->updated.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::Refresh));
@@ -183,7 +184,8 @@ void PanelIndicatorEntryView::Refresh()
 
   std::string label = proxy_->label();
   glib::Object<GdkPixbuf> pixbuf(make_pixbuf(proxy_->image_type(),
-                                             proxy_->image_data()));
+                                             proxy_->image_data(),
+                                             dash_showing_));
 
 
   int  x = 0;
@@ -295,10 +297,36 @@ void PanelIndicatorEntryView::Refresh()
     if (draw_active_)
       gtk_style_context_set_state(style_context, GTK_STATE_FLAG_PRELIGHT);
 
-    cairo_push_group(cr);
-    gtk_render_icon(style_context, cr, pixbuf, x, (int)((height - gdk_pixbuf_get_height(pixbuf)) / 2));
-    cairo_pop_group_to_source(cr);
-    cairo_paint_with_alpha(cr, proxy_->image_sensitive() ? 1.0 : 0.5);
+    int y = (int)((height - gdk_pixbuf_get_height(pixbuf)) / 2);
+    if (dash_showing_)
+    {
+      /* Most of the images we get are straight pixbufs (annoyingly), so when
+       * the Dash opens, we use the pixbuf as a mask to punch out an icon from
+       * a white square. It works surprisingly well for most symbolic-type
+       * icon themes/icons.
+       */
+      cairo_save(cr);
+
+      cairo_push_group(cr);
+      gdk_cairo_set_source_pixbuf(cr, pixbuf, x, y);
+      cairo_paint_with_alpha(cr, proxy_->image_sensitive() ? 1.0 : 0.5);
+
+      cairo_pattern_t* pat = cairo_pop_group(cr);
+      
+      cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 1.0f);
+      cairo_rectangle(cr, x, y, width, height);
+      cairo_mask(cr, pat);
+
+      cairo_pattern_destroy(pat);
+      cairo_restore(cr);
+    }
+    else
+    {
+      cairo_push_group(cr);
+      gtk_render_icon(style_context, cr, pixbuf, x, y);
+      cairo_pop_group_to_source(cr);
+      cairo_paint_with_alpha(cr, proxy_->image_sensitive() ? 1.0 : 0.5);
+    }
 
     gtk_widget_path_free(widget_path);
 
@@ -328,7 +356,17 @@ void PanelIndicatorEntryView::Refresh()
     if (draw_active_)
       gtk_style_context_set_state(style_context, GTK_STATE_FLAG_PRELIGHT);
 
-    gtk_render_layout(style_context, cr, x, (int)((height - text_height) / 2), layout);
+    int y = (int)((height - text_height) / 2);
+    if (dash_showing_)
+    {
+      cairo_move_to(cr, x, y);
+      cairo_set_source_rgb(cr, 1.0f, 1.0f, 1.0f);
+      pango_cairo_show_layout(cr, layout);
+    }
+    else
+    {
+      gtk_render_layout(style_context, cr, x, y, layout);
+    }
 
     gtk_widget_path_free(widget_path);
 
@@ -362,6 +400,18 @@ void PanelIndicatorEntryView::Refresh()
   NeedRedraw();
 
   refreshed.emit(this);
+}
+
+void PanelIndicatorEntryView::DashShown()
+{
+  dash_showing_ = true;
+  Refresh();
+}
+
+void PanelIndicatorEntryView::DashHidden()
+{
+  dash_showing_ = false;
+  Refresh();
 }
 
 const gchar* PanelIndicatorEntryView::GetName()
@@ -465,9 +515,10 @@ void draw_menu_bg(cairo_t* cr, int width, int height)
   gtk_style_context_restore(style_context);
 }
 
-GdkPixbuf* make_pixbuf(int image_type, std::string const& image_data)
+GdkPixbuf* make_pixbuf(int image_type, std::string const& image_data, bool dash_showing)
 {
   GdkPixbuf* ret = NULL;
+  GtkIconTheme* theme = gtk_icon_theme_get_default();
 
   if (image_type == GTK_IMAGE_PIXBUF)
   {
@@ -486,7 +537,7 @@ GdkPixbuf* make_pixbuf(int image_type, std::string const& image_data)
   else if (image_type == GTK_IMAGE_STOCK ||
            image_type == GTK_IMAGE_ICON_NAME)
   {
-    ret = gtk_icon_theme_load_icon(gtk_icon_theme_get_default(),
+    ret = gtk_icon_theme_load_icon(theme,
                                    image_data.c_str(),
                                    22,
                                    (GtkIconLookupFlags)0,
@@ -495,8 +546,9 @@ GdkPixbuf* make_pixbuf(int image_type, std::string const& image_data)
   else if (image_type == GTK_IMAGE_GICON)
   {
     glib::Object<GIcon> icon(g_icon_new_for_string(image_data.c_str(), NULL));
+
     GtkIconInfo* info = gtk_icon_theme_lookup_by_gicon(
-                          gtk_icon_theme_get_default(), icon, 22, (GtkIconLookupFlags)0);
+                          theme, icon, 22, (GtkIconLookupFlags)0);
     if (info)
     {
       ret = gtk_icon_info_load_icon(info, NULL);

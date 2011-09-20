@@ -54,6 +54,9 @@ public:
   bool IsActive() const;
   int  GetEntryPriority() const;
 
+  void DashShown();
+  void DashHidden();
+
   const gchar* GetName();
   void         AddProperties(GVariantBuilder* builder);
 
@@ -65,6 +68,8 @@ private:
   nux::CairoGraphics util_cg_;
   int padding_;
   bool draw_active_;
+  bool dash_showing_;
+  gulong on_font_changed_connection_;
 
   static void OnFontChanged(GObject* gobject, GParamSpec* pspec, gpointer data);
   void OnMouseDown(int x, int y, long button_flags, long key_flags);
@@ -78,8 +83,6 @@ private:
   sigc::connection on_indicator_activate_changed_connection_;
   sigc::connection on_indicator_updated_connection_;
   sigc::connection on_panelstyle_changed_connection_;
-
-  gulong on_font_changed_connection_;
 };
 
 }

@@ -39,7 +39,7 @@ SwitcherController::SwitcherController()
   ,  detail_timer_(0)
 {
   timeout_length = 150;
-  detail_on_timeout = false;
+  detail_on_timeout = true;
   detail_timeout_length = 1500;
 
   bg_color_ = nux::Color(0.0, 0.0, 0.0, 0.5);
@@ -79,6 +79,8 @@ void SwitcherController::Show(SwitcherController::ShowMode show, SwitcherControl
 
   if (timeout_length > 0)
   {
+    if (show_timer_)
+      g_source_remove (show_timer_);
     show_timer_ = g_timeout_add(timeout_length, &SwitcherController::OnShowTimer, this);
   }
   else
@@ -88,8 +90,14 @@ void SwitcherController::Show(SwitcherController::ShowMode show, SwitcherControl
 
   if (detail_on_timeout)
   {
+    if (detail_timer_)
+      g_source_remove (detail_timer_);
     detail_timer_ = g_timeout_add(detail_timeout_length, &SwitcherController::OnDetailTimer, this);
   }
+
+  ubus_server_send_message(ubus_server_get_default(),
+                           UBUS_PLACE_VIEW_CLOSE_REQUEST,
+                           NULL);
 }
 
 void SwitcherController::Select(int index)
@@ -113,11 +121,12 @@ gboolean SwitcherController::OnDetailTimer(gpointer data)
 {
   SwitcherController* self = static_cast<SwitcherController*>(data);
 
-  if (!self->visible_ || self->model_->detail_selection)
-    return FALSE;
+  if (self->visible_ && !self->model_->detail_selection)
+  {
+    self->SetDetail(true, 2);
+    self->detail_mode_ = TAB_NEXT_WINDOW;
+  }
   
-  self->SetDetail(true, 2);
-  self->detail_mode_ = TAB_NEXT_WINDOW;
   self->detail_timer_ = 0;
   return FALSE;
 }
@@ -179,7 +188,8 @@ void SwitcherController::Hide(bool accept_state)
       }
       else
       {
-        if (selection->GetQuirk (AbstractLauncherIcon::QUIRK_ACTIVE))
+        if (selection->GetQuirk (AbstractLauncherIcon::QUIRK_ACTIVE) &&
+            !model_->DetailXids().empty ())
         {
           selection->Activate(ActionArg (ActionArg::SWITCHER, 0, model_->DetailXids()[0]));
         }
@@ -204,19 +214,16 @@ void SwitcherController::Hide(bool accept_state)
     g_source_remove(show_timer_);
   show_timer_ = 0;
 
+  if (detail_timer_)
+    g_source_remove(detail_timer_);
+  detail_timer_ = 0;
+
   view_.Release();
 }
 
 bool SwitcherController::Visible()
 {
   return visible_;
-}
-
-int SwitcherController::WindowsRelatedToSelection()
-{
-  if (model_->Selection())
-    return model_->Selection()->RelatedWindows ();
-  return 0;
 }
 
 void SwitcherController::Next()
@@ -229,7 +236,7 @@ void SwitcherController::Next()
     switch (detail_mode_)
     {
       case TAB_NEXT_WINDOW:
-        if (model_->detail_selection_index < WindowsRelatedToSelection() - 1)
+        if (model_->detail_selection_index < model_->Selection()->RelatedXids ().size () - 1)
           model_->NextDetail();
         else
           model_->Next();
@@ -258,7 +265,7 @@ void SwitcherController::Prev()
     switch (detail_mode_)
     {
       case TAB_NEXT_WINDOW:
-        if (model_->detail_selection_index > 0)
+        if (model_->detail_selection_index > (unsigned int) 0)
           model_->PrevDetail();
         else
           model_->Prev();
@@ -282,9 +289,10 @@ SwitcherView* SwitcherController::GetView()
   return view_.GetPointer();
 }
 
-void SwitcherController::SetDetail(bool value, int min_windows)
+void SwitcherController::SetDetail(bool value, unsigned
+int min_windows)
 {
-  if (value && model_->Selection()->RelatedWindows() >= min_windows)
+  if (value && model_->Selection()->RelatedXids().size () >= min_windows)
   {
     model_->detail_selection = true;
     detail_mode_ = TAB_NEXT_WINDOW_LOOP;
@@ -310,7 +318,16 @@ void SwitcherController::NextDetail()
 
 void SwitcherController::PrevDetail()
 {
-  model_->PrevDetail();
+  if (!model_->detail_selection)
+  {
+    SetDetail(true);
+    detail_mode_ = TAB_NEXT_TILE;
+    model_->PrevDetail();
+  }
+  else
+  {
+    model_->PrevDetail();
+  }
 }
 
 LayoutWindowList SwitcherController::ExternalRenderTargets ()
