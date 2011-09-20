@@ -66,8 +66,9 @@ PlacesGroup::PlacesGroup()
 
   _cached_name = NULL;
   _group_layout = new nux::VLayout("", NUX_TRACKER_LOCATION);
-  _group_layout->SetVerticalExternalMargin(15);
   _group_layout->SetHorizontalExternalMargin(19);
+
+  _group_layout->AddLayout(new nux::SpaceLayout(15,15,15,15), 0);
 
   _header_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
   _group_layout->AddLayout(_header_layout, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FULL);
