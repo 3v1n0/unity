@@ -32,8 +32,8 @@
 #include "DashStyle.h"
 #include "PlacesStyle.h"
 
-#define WIDTH 958
-#define HEIGHT 574
+#define WIDTH 1024
+#define HEIGHT 768
 
 using namespace unity::dash;
 

@@ -195,7 +195,8 @@ nux::Geometry DashView::GetBestFitGeometry(nux::Geometry const& for_geo)
   width += 19 + 32; // add the left padding and the group plugin padding
 
   height = search_bar_->GetGeometry().height;
-  height += tile_height * 4.75;
+  height += tile_height * 3;
+  height += (24 + 15) * 3; // adding three group headers
   height += lens_bar_->GetGeometry().height;
 
   if (for_geo.width > 800 && for_geo.height > 550)

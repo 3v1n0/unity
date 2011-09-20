@@ -300,27 +300,6 @@ PlacesGroup::ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEv
 void PlacesGroup::Draw(nux::GraphicsEngine& GfxContext,
                        bool                 forceDraw)
 {
-  nux::Geometry geo = GetGeometry();
-  nux::Color col(0.2f, 0.2f, 0.2f, 0.2f);
-
-  GfxContext.PushClippingRectangle(geo);
-
-  if (_draw_sep)
-    nux::GetPainter().Draw2DLine(GfxContext,
-                                 geo.x + 10, geo.y + geo.height - 1,
-                                 geo.x + geo.width - 10, geo.y + geo.height - 1,
-                                 col,
-                                 col);
-
-  GfxContext.PopClippingRectangle();
-
-  col = nux::color::RandomColor();
-  col.alpha = 0;
-  GfxContext.QRP_Color(geo.x,
-                       geo.y,
-                       geo.width,
-                       geo.height,
-                       col);
 }
 
 void
@@ -330,6 +309,24 @@ PlacesGroup::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   GfxContext.PushClippingRectangle(base);
 
   _group_layout->ProcessDraw(GfxContext, force_draw);
+  GfxContext.PopClippingRectangle();
+}
+
+void PlacesGroup::PostDraw(nux::GraphicsEngine& GfxContext,
+                           bool                 forceDraw)
+{
+  nux::Geometry base = GetGeometry();
+  GfxContext.PushClippingRectangle(base);
+
+  nux::Color col(0.2f, 0.2f, 0.2f, 0.2f);
+
+  if (_draw_sep)
+    nux::GetPainter().Draw2DLine(GfxContext,
+                                 base.x + 10, base.y + base.height - 1,
+                                 base.x + base.width - 10, base.y + base.height - 1,
+                                 col,
+                                 col);
+
 
   GfxContext.PopClippingRectangle();
 }

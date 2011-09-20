@@ -101,12 +101,12 @@ int PlacesStyle::GetTileIconSize() const
 
 int PlacesStyle::GetTileWidth() const
 {
-  return _text_width;
+  return MAX(_text_width, 150);
 }
 
 int PlacesStyle::GetTileHeight() const
 {
-  return GetTileIconSize() + (_text_height * 3) + 10;
+  return GetTileIconSize() + (_text_height * 2) + 10;
 }
 
 int PlacesStyle::GetHomeTileIconSize() const

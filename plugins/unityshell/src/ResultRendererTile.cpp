@@ -170,15 +170,6 @@ void ResultRendererTile::Render(nux::GraphicsEngine& GfxContext,
   }
 
   GfxContext.GetRenderStates().SetBlend(alpha, src, dest);
-
-  col = nux::color::RandomColor();
-  col.alpha = 0;
-  GfxContext.QRP_Color(geometry.x,
-                       geometry.y,
-                       geometry.width,
-                       geometry.height,
-                       col);
-
 }
 
 nux::BaseTexture* ResultRendererTile::DrawHighlight(std::string const& texid, int width, int height)
@@ -408,7 +399,7 @@ void ResultRendererTile::LoadText(Result& row)
   pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
   pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_START);
   pango_layout_set_width(layout, (style->GetTileWidth() - (padding * 2))* PANGO_SCALE);
-  pango_layout_set_height(layout, -3);
+  pango_layout_set_height(layout, -2);
 
   pango_layout_set_markup(layout, row.name().c_str(), -1);
 

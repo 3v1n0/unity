@@ -233,14 +233,6 @@ void SearchBar::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
                                            bg_layer_);
 
   GfxContext.PopClippingRectangle();
-
-  nux::Color col = nux::color::Red;
-  col.alpha = 0;
-  GfxContext.QRP_Color(geo.x,
-                       geo.y,
-                       geo.width,
-                       geo.height,
-                       col);
 }
 
 void SearchBar::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
