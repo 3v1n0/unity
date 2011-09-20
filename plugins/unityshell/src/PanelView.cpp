@@ -190,7 +190,7 @@ void PanelView::AddPanelView(PanelIndicatorsView* child,
 
 const gchar* PanelView::GetName()
 {
-  return "Panel";
+  return "UnityPanel";
 }
 
 const gchar*
