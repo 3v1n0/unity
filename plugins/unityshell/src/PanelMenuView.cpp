@@ -114,11 +114,11 @@ PanelMenuView::PanelMenuView(int padding)
   _panel_titlebar_grab_area = new PanelTitlebarGrabArea();
   _panel_titlebar_grab_area->SetParentObject(this);
   _panel_titlebar_grab_area->SinkReference();
+  _panel_titlebar_grab_area->mouse_down.connect(sigc::mem_fun(this, &PanelMenuView::OnMouseMiddleClicked));
   _panel_titlebar_grab_area->mouse_down.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedGrabStart));
   _panel_titlebar_grab_area->mouse_drag.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedGrabMove));
   _panel_titlebar_grab_area->mouse_up.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedGrabEnd));
-  _panel_titlebar_grab_area->mouse_doubleleftclick.connect(sigc::mem_fun(this, &PanelMenuView::OnMouseDoubleClicked));
-  _panel_titlebar_grab_area->mouse_middleclick.connect(sigc::mem_fun(this, &PanelMenuView::OnMouseMiddleClicked));
+  _panel_titlebar_grab_area->mouse_double_click.connect(sigc::mem_fun(this, &PanelMenuView::OnMouseDoubleClicked));
 
   win_manager = WindowManager::Default();
 
@@ -1005,26 +1005,31 @@ PanelMenuView::GetMaximizedWindow()
 }
 
 void
-PanelMenuView::OnMaximizedGrabStart(int x, int y)
+PanelMenuView::OnMaximizedGrabStart(int x, int y, unsigned long button_flags, unsigned long)
 {
+  if (nux::GetEventButton(button_flags) != 1)
+    return;
+
   // When Start dragging the panelmenu of a maximized window, change cursor
   // to simulate the dragging, waiting to go out of the panel area.
   //
   // This is a workaround to avoid that the grid plugin would be fired
   // showing the window shape preview effect. See bug #838923
   if (GetMaximizedWindow() != 0)
-  {
-    Display* d = nux::GetGraphicsDisplay()->GetX11Display();
-    nux::BaseWindow *bw = static_cast<nux::BaseWindow*>(GetTopLevelViewWindow());
-    Cursor c = XCreateFontCursor(d, XC_fleur);
-    XDefineCursor(d, bw->GetInputWindowId(), c);
-    XFreeCursor(d, c);
-  }
+    _panel_titlebar_grab_area->SetGrabbed(true);
 }
 
 void
-PanelMenuView::OnMaximizedGrabMove(int x, int y, int, int, unsigned long, unsigned long)
+PanelMenuView::OnMaximizedGrabMove(int x, int y, int, int, unsigned long button_flags, unsigned long)
 {
+//  FIXME nux doesn't export it with drag event.
+//  if (nux::GetEventButton(button_flags) != 1)
+//    return;
+
+  // We use this, due to the problem above
+  if (!_panel_titlebar_grab_area->IsGrabbed())
+    return;
+
   guint32 window_xid = GetMaximizedWindow();
 
   // When the drag goes out from the Panel, start the real movement.
@@ -1033,9 +1038,7 @@ PanelMenuView::OnMaximizedGrabMove(int x, int y, int, int, unsigned long, unsign
   // showing the window shape preview effect. See bug #838923
   if (window_xid != 0 && !GetAbsoluteGeometry().IsPointInside(x, y))
   {
-    Display* d = nux::GetGraphicsDisplay()->GetX11Display();
-    nux::BaseWindow *bw = static_cast<nux::BaseWindow*>(GetTopLevelViewWindow());
-    XUndefineCursor(d, bw->GetInputWindowId());
+    _panel_titlebar_grab_area->SetGrabbed(false);
 
     WindowManager::Default()->Activate(window_xid);
     _is_inside = true;
@@ -1049,15 +1052,15 @@ PanelMenuView::OnMaximizedGrabMove(int x, int y, int, int, unsigned long, unsign
 void
 PanelMenuView::OnMaximizedGrabEnd(int x, int y, unsigned long, unsigned long)
 {
-  // Restore the window cursor to default.
-  Display* d = nux::GetGraphicsDisplay()->GetX11Display();
-  nux::BaseWindow *bw = static_cast<nux::BaseWindow*>(GetTopLevelViewWindow());
-  XUndefineCursor(d, bw->GetInputWindowId());
+  _panel_titlebar_grab_area->SetGrabbed(false);
 }
 
 void
-PanelMenuView::OnMouseDoubleClicked()
+PanelMenuView::OnMouseDoubleClicked(int x, int y, unsigned long button_flags, unsigned long)
 {
+  if (nux::GetEventButton(button_flags) != 1)
+    return;
+
   guint32 window_xid = GetMaximizedWindow();
 
   if (window_xid != 0)
@@ -1068,8 +1071,11 @@ PanelMenuView::OnMouseDoubleClicked()
 }
 
 void
-PanelMenuView::OnMouseMiddleClicked()
+PanelMenuView::OnMouseMiddleClicked(int x, int y, unsigned long button_flags, unsigned long)
 {
+  if (nux::GetEventButton(button_flags) != 2)
+    return;
+
   guint32 window_xid = GetMaximizedWindow();
 
   if (window_xid != 0)
@@ -1178,6 +1184,7 @@ PanelMenuView::OnPanelViewMouseEnter(int x, int y, unsigned long mouse_button_st
       _is_grabbed = false;
     else
       _is_inside = true;
+
     FullRedraw();
   }
 }

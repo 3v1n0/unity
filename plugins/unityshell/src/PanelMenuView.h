@@ -76,11 +76,11 @@ public:
 
   guint32 GetMaximizedWindow();
 
-  void OnMaximizedGrabStart(int x, int y);
+  void OnMaximizedGrabStart(int, int, unsigned long, unsigned long);
   void OnMaximizedGrabMove(int, int, int, int, unsigned long, unsigned long);
-  void OnMaximizedGrabEnd(int x, int y, unsigned long, unsigned long);
-  void OnMouseDoubleClicked();
-  void OnMouseMiddleClicked();
+  void OnMaximizedGrabEnd(int, int, unsigned long, unsigned long);
+  void OnMouseDoubleClicked(int, int, unsigned long, unsigned long);
+  void OnMouseMiddleClicked(int, int, unsigned long, unsigned long);
 
   void Refresh();
   void AllMenusClosed();
@@ -102,7 +102,7 @@ protected:
   void OnPanelViewMouseEnter(int x, int y, unsigned long mouse_button_state, unsigned long special_keys_state);
   void OnPanelViewMouseLeave(int x, int y, unsigned long mouse_button_state, unsigned long special_keys_state);
   void OnPanelViewMouseMove(int x, int y, int dx, int dy, unsigned long mouse_button_state, unsigned long special_keys_state);
-  virtual void OnEntryAdded(unity::indicator::Entry::Ptr const& proxy);
+  virtual void OnEntryAdded(unity::indicator::Entry::Ptr const& entry);
 
 private:
   gchar* GetActiveViewName();
