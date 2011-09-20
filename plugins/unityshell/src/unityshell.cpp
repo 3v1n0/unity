@@ -553,11 +553,16 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
 {
   CompOutput *output = _last_output;
   Window     tray_xid = panelController->GetTrayXid ();
+  bool       bound = mFbos[output]->bound ();
 
-  mFbos[output]->unbind ();
 
-  /* Draw the bit of the relevant framebuffer for each output */
-  mFbos[output]->paint ();
+  if (bound)
+  {
+    mFbos[output]->unbind ();
+
+    /* Draw the bit of the relevant framebuffer for each output */
+    mFbos[output]->paint ();
+  }
 
   nuxPrologue();
 
@@ -838,11 +843,6 @@ void UnityShowdesktopHandler::handleEvent (XEvent *event)
   }
 }
 
-unsigned int UnityShowdesktopHandler::getPaintMask ()
-{
-    return 0;
-}
-
 void UnityShowdesktopHandler::updateFrameRegion (CompRegion &r)
 {
   unsigned int oldUpdateFrameRegionIndex;
@@ -889,11 +889,20 @@ void UnityScreen::glPaintTransformedOutput(const GLScreenPaintAttrib& attrib,
                                            CompOutput* output,
                                            unsigned int mask)
 {
-  /* bind the framebuffer here */
-  mFbos[output]->bind ();
+  bool bound = mFbos[output]->bound ();
   allowWindowPaint = false;
-  /* urgh */
-  gScreen->glPaintOutput(attrib, transform, region, output, mask);
+
+  if (bound)
+  {
+    /* The screen is transformed, unbind our fbo
+     * and redraw the bits that were transformed
+     * if we were bound */
+    mFbos[output]->unbind ();
+    mFbos[output]->paint ();
+  }
+
+  gScreen->glPaintTransformedOutput(attrib, transform, region, output, mask);
+
 }
 
 void UnityScreen::preparePaint(int ms)
@@ -1975,10 +1984,15 @@ void UnityFBO::paint ()
   //unsigned int    mask = cScreen->damageMask ();
   float texx, texy, texwidth, texheight;
 
+  /* Must be completely unbound before painting */
+  if (mBoundCnt)
+    return;
+
   /* Draw the bit of the relevant framebuffer for each output */
   GLMatrix transform;
 
   glViewport (output->x (), screen->height () - output->y2 (), output->width (), output->height ());
+  GLScreen::get (screen)->clearOutput (output, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   transform.toScreenSpace (output, -DEFAULT_Z_CAMERA);
   glPushMatrix ();
@@ -2031,12 +2045,22 @@ void UnityFBO::paint ()
 
 void UnityFBO::unbind ()
 {
+  mBoundCnt--;
+
+  if (mBoundCnt)
+    return;
+
   uScreen->setActiveFbo (0);
   (*GL::bindFramebuffer) (GL_FRAMEBUFFER_EXT, 0);
 
   glDrawBuffer (GL_BACK);
   glReadBuffer (GL_BACK);
 
+}
+
+bool UnityFBO::bound ()
+{
+  return mBoundCnt > 0;
 }
 
 bool UnityFBO::status ()
@@ -2046,6 +2070,12 @@ bool UnityFBO::status ()
 
 void UnityFBO::bind ()
 {
+  if (mBoundCnt)
+  {
+    mBoundCnt++;
+    return;
+  }
+
   if (!mFBTexture)
   {
     glGenTextures (1, &mFBTexture);
@@ -2141,6 +2171,7 @@ void UnityFBO::bind ()
                output->width(),
                output->height());
 
+    mBoundCnt++;
   }
 }
 
@@ -2148,6 +2179,7 @@ UnityFBO::UnityFBO (CompOutput *o)
  : mFboStatus (false)
  , mFBTexture (0)
  , output (o)
+ , mBoundCnt (0)
 {
   (*GL::genFramebuffers) (1, &mFboHandle);
 }
