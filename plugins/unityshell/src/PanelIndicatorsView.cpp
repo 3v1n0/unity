@@ -189,9 +189,9 @@ PanelIndicatorsView::OnPointerMoved(int x, int y)
   // which causes visible lag in many cases.
   //
 
-  for (auto i = entries_.begin(), end = entries_.end(); i != end; ++i)
+  for (auto entry : entries_)
   {
-    PanelIndicatorEntryView* view = i->second;
+    PanelIndicatorEntryView* view = entry.second;
 
     if (!target && view->GetAbsoluteGeometry().IsPointInside(x, y))
     {
@@ -209,9 +209,9 @@ PanelIndicatorsView::OnPointerMoved(int x, int y)
 
   if (target && !found_old_active)
   {
-    for (auto i = entries_.begin(), end = entries_.end(); i != end; ++i)
+    for (auto entry : entries_)
     {
-      PanelIndicatorEntryView* view = i->second;
+      PanelIndicatorEntryView* view = entry.second;
 
       if (view != target && view->IsActive())
       {
