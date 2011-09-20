@@ -42,7 +42,7 @@
   "button-label": {
     "border-opacity" : [      1.0,       0.5,       0.5,       0.5,       0.5],
     "border-color"   : ["#ffffff", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF"],
-    "border-size"    : [      2.0,       0.5,       1.0,       0.5,       0.5],
+    "border-size"    : [      2.0,       1.0,       1.0,       0.5,       0.5],
     "text-size"      : 1.0,
     "text-color"     : ["#ffffff", "#ffffff", "#ffffff", "#ffffff", "#ffffff"],
     "text-opacity"   : [      1.0,       1.0,       1.0,       1.0,       1.0], 

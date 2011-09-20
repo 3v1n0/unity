@@ -117,128 +117,191 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , painting_tray_ (false)
 {
   Timer timer;
+  gfloat version;
+  gchar* extensions;
+  bool  failed = false;
   configure_logging();
   LOG_DEBUG(logger) << __PRETTY_FUNCTION__;
   int (*old_handler)(Display*, XErrorEvent*);
   old_handler = XSetErrorHandler(NULL);
 
-  notify_init("unityshell");
-
-  g_thread_init(NULL);
-  dbus_g_thread_init();
-
-  unity_a11y_preset_environment();
-
-  XSetErrorHandler(old_handler);
-
-  /* Wrap compiz interfaces */
-  ScreenInterface::setHandler(screen);
-  CompositeScreenInterface::setHandler(cScreen);
-  GLScreenInterface::setHandler(gScreen);
-
-  PluginAdapter::Initialize(screen);
-  WindowManager::SetDefault(PluginAdapter::Default());
-
-  StartupNotifyService::Default()->SetSnDisplay(screen->snDisplay(), screen->screenNum());
-
-  nux::NuxInitialize(0);
-  wt = nux::CreateFromForeignWindow(cScreen->output(),
-                                    glXGetCurrentContext(),
-                                    &UnityScreen::initUnity,
-                                    this);
-
-  wt->RedrawRequested.connect(sigc::mem_fun(this, &UnityScreen::onRedrawRequested));
-
-  unity_a11y_init(wt);
-
-  /* i18n init */
-  bindtextdomain(GETTEXT_PACKAGE, LOCALE_DIR);
-  bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
-
-  wt->Run(NULL);
-  uScreen = this;
-
-  debugger = new DebugDBusInterface(this);
-
-  _edge_timeout = optionGetLauncherRevealEdgeTimeout ();
-
-  if (GL::fbo)
+  /* Ensure OpenGL version is 1.4+. */
+  version = get_opengl_version_f32((const gchar*) glGetString(GL_VERSION));
+  if (version < 1.4f)
   {
-    foreach (CompOutput & o, screen->outputDevs())
-      uScreen->mFbos[&o] = UnityFBO::Ptr (new UnityFBO(&o));
-
-    uScreen->mFbos[&(screen->fullscreenOutput ())] = UnityFBO::Ptr (new UnityFBO(&(screen->fullscreenOutput ())));
+    compLogMessage("unityshell", CompLogLevelError,
+                   "OpenGL 1.4+ not supported\n");
+    setFailed ();
+    failed = true;
   }
 
-  optionSetLauncherHideModeNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
-  optionSetBacklightModeNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
-  optionSetLaunchAnimationNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
-  optionSetUrgentAnimationNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
-  optionSetPanelOpacityNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
-  optionSetLauncherOpacityNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
-  optionSetIconSizeNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
-  optionSetAutohideAnimationNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
-  optionSetDashBlurExperimentalNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
-  optionSetDevicesOptionNotify(boost::bind (&UnityScreen::optionChanged, this, _1, _2));
-  optionSetShowLauncherInitiate(boost::bind(&UnityScreen::showLauncherKeyInitiate, this, _1, _2, _3));
-  optionSetShowLauncherTerminate(boost::bind(&UnityScreen::showLauncherKeyTerminate, this, _1, _2, _3));
-  optionSetKeyboardFocusInitiate(boost::bind(&UnityScreen::setKeyboardFocusKeyInitiate, this, _1, _2, _3));
-  //optionSetKeyboardFocusTerminate (boost::bind (&UnityScreen::setKeyboardFocusKeyTerminate, this, _1, _2, _3));
-  optionSetExecuteCommandInitiate(boost::bind(&UnityScreen::executeCommand, this, _1, _2, _3));
-  optionSetPanelFirstMenuInitiate(boost::bind(&UnityScreen::showPanelFirstMenuKeyInitiate, this, _1, _2, _3));
-  optionSetPanelFirstMenuTerminate(boost::bind(&UnityScreen::showPanelFirstMenuKeyTerminate, this, _1, _2, _3));
-  optionSetLauncherRevealEdgeInitiate(boost::bind(&UnityScreen::launcherRevealEdgeInitiate, this, _1, _2, _3));
-  optionSetLauncherRevealEdgeTimeoutNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
-  optionSetAutomaximizeValueNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
-  optionSetAltTabTimeoutNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+  /* Ensure OpenGL extensions required by the Unity plugin are available. */
+  extensions = (gchar*) glGetString(GL_EXTENSIONS);
+  if (!is_extension_supported(extensions, "GL_ARB_vertex_program"))
+  {
+    compLogMessage("unityshell", CompLogLevelError,
+                   "GL_ARB_vertex_program not supported\n");
+    setFailed ();
+    failed = true;
+  }
+  if (!is_extension_supported(extensions, "GL_ARB_fragment_program"))
+  {
+    compLogMessage("unityshell", CompLogLevelError,
+                   "GL_ARB_fragment_program not supported\n");
+    setFailed ();
+    failed = true;
+  }
+  if (!is_extension_supported(extensions, "GL_ARB_vertex_buffer_object"))
+  {
+    compLogMessage("unityshell", CompLogLevelError,
+                   "GL_ARB_vertex_buffer_object not supported\n");
+    setFailed ();
+    failed = true;
+  }
+  if (!is_extension_supported(extensions, "GL_ARB_framebuffer_object"))
+  {
+    if (!is_extension_supported(extensions, "GL_EXT_framebuffer_object"))
+    {
+      compLogMessage("unityshell", CompLogLevelError,
+                     "GL_ARB_framebuffer_object or GL_EXT_framebuffer_object "
+                     "not supported\n");
+      setFailed();
+      failed = true;
+    }
+  }
+  if (!is_extension_supported(extensions, "GL_ARB_texture_non_power_of_two"))
+  {
+    if (!is_extension_supported(extensions, "GL_ARB_texture_rectangle"))
+    {
+      compLogMessage("unityshell", CompLogLevelError,
+                     "GL_ARB_texture_non_power_of_two or "
+                     "GL_ARB_texture_rectangle not supported\n");
+      setFailed ();
+      failed = true;
+    }
+  }
 
-  optionSetAltTabForwardInitiate(boost::bind(&UnityScreen::altTabForwardInitiate, this, _1, _2, _3));
-  optionSetAltTabForwardTerminate(boost::bind(&UnityScreen::altTabTerminateCommon, this, _1, _2, _3));
-  optionSetAltTabPrevInitiate(boost::bind(&UnityScreen::altTabPrevInitiate, this, _1, _2, _3));
+  if (!failed)
+  {
+     notify_init("unityshell");
 
-  optionSetAltTabDetailStartInitiate(boost::bind(&UnityScreen::altTabDetailStartInitiate, this, _1, _2, _3));
-  optionSetAltTabDetailStopInitiate(boost::bind(&UnityScreen::altTabDetailStopInitiate, this, _1, _2, _3));
+     g_thread_init(NULL);
+     dbus_g_thread_init();
 
-  optionSetAltTabNextWindowInitiate(boost::bind(&UnityScreen::altTabNextWindowInitiate, this, _1, _2, _3));
-  optionSetAltTabNextWindowTerminate(boost::bind(&UnityScreen::altTabTerminateCommon, this, _1, _2, _3));
+     unity_a11y_preset_environment();
 
-  optionSetAltTabLeftInitiate (boost::bind (&UnityScreen::altTabPrevInitiate, this, _1, _2, _3));
-  optionSetAltTabRightInitiate (boost::bind (&UnityScreen::altTabForwardInitiate, this, _1, _2, _3));
+     XSetErrorHandler(old_handler);
 
-  for (unsigned int i = 0; i < G_N_ELEMENTS(_ubus_handles); i++)
-    _ubus_handles[i] = 0;
+     /* Wrap compiz interfaces */
+     ScreenInterface::setHandler(screen);
+     CompositeScreenInterface::setHandler(cScreen);
+     GLScreenInterface::setHandler(gScreen);
 
-  UBusServer* ubus = ubus_server_get_default();
-  _ubus_handles[0] = ubus_server_register_interest(ubus,
-                                                   UBUS_LAUNCHER_START_KEY_NAV,
-                                                   (UBusCallback)&UnityScreen::OnLauncherStartKeyNav,
-                                                   this);
+     PluginAdapter::Initialize(screen);
+     WindowManager::SetDefault(PluginAdapter::Default());
 
-  _ubus_handles[1] = ubus_server_register_interest(ubus,
-                                                   UBUS_LAUNCHER_END_KEY_NAV,
-                                                   (UBusCallback)&UnityScreen::OnLauncherEndKeyNav,
-                                                   this);
+     StartupNotifyService::Default()->SetSnDisplay(screen->snDisplay(), screen->screenNum());
 
-  _ubus_handles[2] = ubus_server_register_interest(ubus,
-                                                   UBUS_QUICKLIST_END_KEY_NAV,
-                                                   (UBusCallback)&UnityScreen::OnQuicklistEndKeyNav,
-                                                   this);
+     nux::NuxInitialize(0);
+     wt = nux::CreateFromForeignWindow(cScreen->output(),
+				       glXGetCurrentContext(),
+				       &UnityScreen::initUnity,
+				       this);
 
-  g_timeout_add(0, &UnityScreen::initPluginActions, this);
-  super_keypressed_ = false;
+     wt->RedrawRequested.connect(sigc::mem_fun(this, &UnityScreen::onRedrawRequested));
 
-  GeisAdapter::Default()->Run();
-  gestureEngine = new GestureEngine(screen);
+     unity_a11y_init(wt);
 
-  CompString name(PKGDATADIR"/panel-shadow.png");
-  CompString pname("unityshell");
-  CompSize size(1, 20);
-  _shadow_texture = GLTexture::readImageToTexture(name, pname, size);
+     /* i18n init */
+     bindtextdomain(GETTEXT_PACKAGE, LOCALE_DIR);
+     bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
 
-  ubus_manager_.RegisterInterest(UBUS_PLACE_VIEW_SHOWN, [&](GVariant * args) { dash_is_open_ = true; });
-  ubus_manager_.RegisterInterest(UBUS_PLACE_VIEW_HIDDEN, [&](GVariant * args) { dash_is_open_ = false; });
+     wt->Run(NULL);
+     uScreen = this;
 
-  LOG_INFO(logger) << "UnityScreen constructed: " << timer.ElapsedSeconds() << "s";
+     debugger = new DebugDBusInterface(this);
+
+     _edge_timeout = optionGetLauncherRevealEdgeTimeout ();
+
+     if (GL::fbo)
+     {
+	 foreach (CompOutput & o, screen->outputDevs())
+	     uScreen->mFbos[&o] = UnityFBO::Ptr (new UnityFBO(&o));
+
+	 uScreen->mFbos[&(screen->fullscreenOutput ())] = UnityFBO::Ptr (new UnityFBO(&(screen->fullscreenOutput ())));
+     }
+
+     optionSetLauncherHideModeNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+     optionSetBacklightModeNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+     optionSetLaunchAnimationNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+     optionSetUrgentAnimationNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+     optionSetPanelOpacityNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+     optionSetLauncherOpacityNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+     optionSetIconSizeNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+     optionSetAutohideAnimationNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+     optionSetDashBlurExperimentalNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+     optionSetDevicesOptionNotify(boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+     optionSetShowLauncherInitiate(boost::bind(&UnityScreen::showLauncherKeyInitiate, this, _1, _2, _3));
+     optionSetShowLauncherTerminate(boost::bind(&UnityScreen::showLauncherKeyTerminate, this, _1, _2, _3));
+     optionSetKeyboardFocusInitiate(boost::bind(&UnityScreen::setKeyboardFocusKeyInitiate, this, _1, _2, _3));
+     //optionSetKeyboardFocusTerminate (boost::bind (&UnityScreen::setKeyboardFocusKeyTerminate, this, _1, _2, _3));
+     optionSetExecuteCommandInitiate(boost::bind(&UnityScreen::executeCommand, this, _1, _2, _3));
+     optionSetPanelFirstMenuInitiate(boost::bind(&UnityScreen::showPanelFirstMenuKeyInitiate, this, _1, _2, _3));
+     optionSetPanelFirstMenuTerminate(boost::bind(&UnityScreen::showPanelFirstMenuKeyTerminate, this, _1, _2, _3));
+     optionSetLauncherRevealEdgeInitiate(boost::bind(&UnityScreen::launcherRevealEdgeInitiate, this, _1, _2, _3));
+     optionSetLauncherRevealEdgeTimeoutNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+     optionSetAutomaximizeValueNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+     optionSetAltTabTimeoutNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+
+     optionSetAltTabForwardInitiate(boost::bind(&UnityScreen::altTabForwardInitiate, this, _1, _2, _3));
+     optionSetAltTabForwardTerminate(boost::bind(&UnityScreen::altTabTerminateCommon, this, _1, _2, _3));
+     optionSetAltTabPrevInitiate(boost::bind(&UnityScreen::altTabPrevInitiate, this, _1, _2, _3));
+
+     optionSetAltTabDetailStartInitiate(boost::bind(&UnityScreen::altTabDetailStartInitiate, this, _1, _2, _3));
+     optionSetAltTabDetailStopInitiate(boost::bind(&UnityScreen::altTabDetailStopInitiate, this, _1, _2, _3));
+
+     optionSetAltTabNextWindowInitiate(boost::bind(&UnityScreen::altTabNextWindowInitiate, this, _1, _2, _3));
+     optionSetAltTabNextWindowTerminate(boost::bind(&UnityScreen::altTabTerminateCommon, this, _1, _2, _3));
+
+     optionSetAltTabPrevWindowInitiate(boost::bind(&UnityScreen::altTabPrevWindowInitiate, this, _1, _2, _3));
+
+     optionSetAltTabLeftInitiate (boost::bind (&UnityScreen::altTabPrevInitiate, this, _1, _2, _3));
+     optionSetAltTabRightInitiate (boost::bind (&UnityScreen::altTabForwardInitiate, this, _1, _2, _3));
+
+     for (unsigned int i = 0; i < G_N_ELEMENTS(_ubus_handles); i++)
+	 _ubus_handles[i] = 0;
+
+     UBusServer* ubus = ubus_server_get_default();
+     _ubus_handles[0] = ubus_server_register_interest(ubus,
+						      UBUS_LAUNCHER_START_KEY_NAV,
+						      (UBusCallback)&UnityScreen::OnLauncherStartKeyNav,
+						      this);
+
+     _ubus_handles[1] = ubus_server_register_interest(ubus,
+						      UBUS_LAUNCHER_END_KEY_NAV,
+						      (UBusCallback)&UnityScreen::OnLauncherEndKeyNav,
+						      this);
+
+     _ubus_handles[2] = ubus_server_register_interest(ubus,
+						      UBUS_QUICKLIST_END_KEY_NAV,
+						      (UBusCallback)&UnityScreen::OnQuicklistEndKeyNav,
+						      this);
+
+     g_timeout_add(0, &UnityScreen::initPluginActions, this);
+     super_keypressed_ = false;
+
+     GeisAdapter::Default()->Run();
+     gestureEngine = new GestureEngine(screen);
+
+     CompString name(PKGDATADIR"/panel-shadow.png");
+     CompString pname("unityshell");
+     CompSize size(1, 20);
+     _shadow_texture = GLTexture::readImageToTexture(name, pname, size);
+
+     ubus_manager_.RegisterInterest(UBUS_PLACE_VIEW_SHOWN, [&](GVariant * args) { dash_is_open_ = true; });
+     ubus_manager_.RegisterInterest(UBUS_PLACE_VIEW_HIDDEN, [&](GVariant * args) { dash_is_open_ = false; });
+      LOG_INFO(logger) << "UnityScreen constructed: " << timer.ElapsedSeconds() << "s";
+  }
 }
 
 UnityScreen::~UnityScreen()
@@ -279,19 +342,35 @@ void UnityScreen::initAltTabNextWindow()
 
   if (above_tab_keysym != NoSymbol)
   {
-    std::ostringstream sout;
-    sout << "<Alt>" << XKeysymToString(above_tab_keysym);
+    {
+      std::ostringstream sout;
+      sout << "<Alt>" << XKeysymToString(above_tab_keysym);
 
-    screen->removeAction(&optionGetAltTabNextWindow());
-    
-    CompAction action = CompAction();
-    action.keyFromString(sout.str());
-    action.setState (CompAction::StateInitKey | CompAction::StateAutoGrab);
-    mOptions[UnityshellOptions::AltTabNextWindow].value().set (action);
-    screen->addAction (&mOptions[UnityshellOptions::AltTabNextWindow].value ().action ());
+      screen->removeAction(&optionGetAltTabNextWindow());
+      
+      CompAction action = CompAction();
+      action.keyFromString(sout.str());
+      action.setState (CompAction::StateInitKey | CompAction::StateAutoGrab);
+      mOptions[UnityshellOptions::AltTabNextWindow].value().set (action);
+      screen->addAction (&mOptions[UnityshellOptions::AltTabNextWindow].value ().action ());
 
-    optionSetAltTabNextWindowInitiate(boost::bind(&UnityScreen::altTabNextWindowInitiate, this, _1, _2, _3));
-    optionSetAltTabNextWindowTerminate(boost::bind(&UnityScreen::altTabTerminateCommon, this, _1, _2, _3));
+      optionSetAltTabNextWindowInitiate(boost::bind(&UnityScreen::altTabNextWindowInitiate, this, _1, _2, _3));
+      optionSetAltTabNextWindowTerminate(boost::bind(&UnityScreen::altTabTerminateCommon, this, _1, _2, _3));
+    }
+    {
+      std::ostringstream sout;
+      sout << "<Alt><Shift>" << XKeysymToString(above_tab_keysym);
+
+      screen->removeAction(&optionGetAltTabPrevWindow());
+      
+      CompAction action = CompAction();
+      action.keyFromString(sout.str());
+      action.setState (CompAction::StateInitKey | CompAction::StateAutoGrab);
+      mOptions[UnityshellOptions::AltTabPrevWindow].value().set (action);
+      screen->addAction (&mOptions[UnityshellOptions::AltTabPrevWindow].value ().action ());
+
+      optionSetAltTabPrevWindowInitiate(boost::bind(&UnityScreen::altTabPrevWindowInitiate, this, _1, _2, _3));
+    }
   }
   else
   {
@@ -313,19 +392,24 @@ void UnityScreen::EnsureSuperKeybindings()
     if (shortcut == 0)
       continue;
     CreateSuperNewAction(static_cast<char>(shortcut));
+    CreateSuperNewAction(static_cast<char>(shortcut), true);
   }
 
   for (auto shortcut : dashController->GetAllShortcuts())
     CreateSuperNewAction(shortcut);
 }
 
-void UnityScreen::CreateSuperNewAction(char shortcut)
+void UnityScreen::CreateSuperNewAction(char shortcut, bool use_shift)
 {
     CompActionPtr action(new CompAction());
 
     CompAction::KeyBinding binding;
     std::ostringstream sout;
-    sout << "<Super>" << shortcut;
+    if (use_shift)
+      sout << "<Shift><Super>" << shortcut;
+    else
+      sout << "<Super>" << shortcut;
+
     binding.fromString(sout.str());
 
     action->setKey(binding);
@@ -561,12 +645,6 @@ void UnityWindow::paintThumbnail (nux::Geometry const& bounding, float alpha)
   matrix.toScreenSpace (UnityScreen::get (screen)->_last_output, -DEFAULT_Z_CAMERA);
 
   nux::Geometry geo = bounding;
-  geo.x += 3;
-  geo.width -= 6;
-
-  geo.y += 3;
-  geo.height -= 6;
-
   last_bound = geo;
 
   GLWindowPaintAttrib attrib = gWindow->lastPaintAttrib ();
@@ -942,10 +1020,9 @@ bool UnityScreen::showPanelFirstMenuKeyInitiate(CompAction* action,
                                                 CompAction::State state,
                                                 CompOption::Vector& options)
 {
+  grab_index_ = screen->pushGrab (None, "unityshell");
   // to receive the Terminate event
-  if (state & CompAction::StateInitKey)
-    action->setState(action->state() | CompAction::StateTermKey);
-
+  action->setState(action->state() | CompAction::StateTermKey);
   panelController->StartFirstMenuShow();
   return false;
 }
@@ -954,6 +1031,8 @@ bool UnityScreen::showPanelFirstMenuKeyTerminate(CompAction* action,
                                                  CompAction::State state,
                                                  CompOption::Vector& options)
 {
+  screen->removeGrab(grab_index_, NULL);
+  action->setState (action->state() & (unsigned)~(CompAction::StateTermKey));
   panelController->EndFirstMenuShow();
   return false;
 }
@@ -962,7 +1041,7 @@ gboolean UnityScreen::OnEdgeTriggerTimeout(gpointer data)
 {
   UnityScreen* self = reinterpret_cast<UnityScreen*>(data);
 
-  if (pointerX == 0)
+  if (pointerX <= 1)
   {
     if (abs(pointerY-self->_edge_pointerY) <= 5)
     {
@@ -1005,7 +1084,7 @@ bool UnityScreen::launcherRevealEdgeInitiate(CompAction* action,
   if (_edge_trigger_handle)
     g_source_remove(_edge_trigger_handle);
 
-  if (pointerX == 0)
+  if (pointerX <= 1)
   {
     _edge_pointerY = pointerY;
     _edge_trigger_handle = g_timeout_add(_edge_timeout,
@@ -1079,6 +1158,11 @@ bool UnityScreen::altTabInitiateCommon(CompAction *action,
 {
   std::vector<AbstractLauncherIcon*> results;
 
+  if (!grab_index_)
+    grab_index_ = screen->pushGrab (screen->invisibleCursor(), "unity-switcher");
+  if (!grab_index_)
+    return false;
+
   if (!switcher_desktop_icon)
   {
     switcher_desktop_icon = new DesktopLauncherIcon(launcher);
@@ -1096,9 +1180,6 @@ bool UnityScreen::altTabInitiateCommon(CompAction *action,
   screen->addAction (&optionGetAltTabDetailStart ());
   screen->addAction (&optionGetAltTabDetailStop ());
   screen->addAction (&optionGetAltTabLeft ());
-
-  if (!grab_index_)
-    grab_index_ = screen->pushGrab (screen->invisibleCursor(), "unity-switcher");
 
   // maybe check launcher position/hide state?
   switcherController->SetWorkspace(nux::Geometry(_primary_monitor.x + 100,
@@ -1181,6 +1262,14 @@ bool UnityScreen::altTabNextWindowInitiate(CompAction* action, CompAction::State
   switcherController->NextDetail();
 
   action->setState(action->state() | CompAction::StateTermKey);
+  return false;
+}
+
+bool UnityScreen::altTabPrevWindowInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
+{
+  if (switcherController->Visible())
+    switcherController->PrevDetail();
+  
   return false;
 }
 
@@ -1504,6 +1593,19 @@ void UnityWindow::windowNotify(CompWindowNotify n)
 {
   PluginAdapter::Default()->Notify(window, n);
   window->windowNotify(n);
+  
+  // We do this after the notify to ensure input focus has actually been moved.
+  if (n == CompWindowNotifyFocusChange)
+  {
+    UnityScreen* us = UnityScreen::get(screen);
+    CompWindow *lw;
+    
+    if (us->dash_is_open_)
+    {
+      lw = screen->findWindow(us->launcherWindow->GetInputWindowId());
+      lw->moveInputFocusTo();
+    }
+  }
 }
 
 void UnityWindow::stateChangeNotify(unsigned int lastState)
@@ -1864,6 +1966,9 @@ void UnityFBO::bind ()
   (*GL::framebufferTexture2D) (GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT,
                                GL_TEXTURE_2D, mFBTexture, 0);
 
+  (*GL::framebufferTexture2D) (GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT,
+                               GL_TEXTURE_2D, 0, 0);
+
   /* Ensure that a framebuffer is actually available */
   if (!mFboStatus)
   {
@@ -2089,65 +2194,12 @@ UnityWindow::~UnityWindow()
 /* vtable init */
 bool UnityPluginVTable::init()
 {
-  gfloat version;
-  gchar* extensions;
-
   if (!CompPlugin::checkPluginABI("core", CORE_ABIVERSION))
     return false;
   if (!CompPlugin::checkPluginABI("composite", COMPIZ_COMPOSITE_ABI))
     return false;
   if (!CompPlugin::checkPluginABI("opengl", COMPIZ_OPENGL_ABI))
     return false;
-
-  /* Ensure OpenGL version is 1.4+. */
-  version = get_opengl_version_f32((const gchar*) glGetString(GL_VERSION));
-  if (version < 1.4f)
-  {
-    compLogMessage("unityshell", CompLogLevelError,
-                   "OpenGL 1.4+ not supported\n");
-    return false;
-  }
-
-  /* Ensure OpenGL extensions required by the Unity plugin are available. */
-  extensions = (gchar*) glGetString(GL_EXTENSIONS);
-  if (!is_extension_supported(extensions, "GL_ARB_vertex_program"))
-  {
-    compLogMessage("unityshell", CompLogLevelError,
-                   "GL_ARB_vertex_program not supported\n");
-    return false;
-  }
-  if (!is_extension_supported(extensions, "GL_ARB_fragment_program"))
-  {
-    compLogMessage("unityshell", CompLogLevelError,
-                   "GL_ARB_fragment_program not supported\n");
-    return false;
-  }
-  if (!is_extension_supported(extensions, "GL_ARB_vertex_buffer_object"))
-  {
-    compLogMessage("unityshell", CompLogLevelError,
-                   "GL_ARB_vertex_buffer_object not supported\n");
-    return false;
-  }
-  if (!is_extension_supported(extensions, "GL_ARB_framebuffer_object"))
-  {
-    if (!is_extension_supported(extensions, "GL_EXT_framebuffer_object"))
-    {
-      compLogMessage("unityshell", CompLogLevelError,
-                     "GL_ARB_framebuffer_object or GL_EXT_framebuffer_object "
-                     "not supported\n");
-      return false;
-    }
-  }
-  if (!is_extension_supported(extensions, "GL_ARB_texture_non_power_of_two"))
-  {
-    if (!is_extension_supported(extensions, "GL_ARB_texture_rectangle"))
-    {
-      compLogMessage("unityshell", CompLogLevelError,
-                     "GL_ARB_texture_non_power_of_two or "
-                     "GL_ARB_texture_rectangle not supported\n");
-      return false;
-    }
-  }
 
   return true;
 }

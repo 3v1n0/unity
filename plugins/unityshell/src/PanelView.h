@@ -25,7 +25,7 @@
 #include <Nux/View.h>
 #include <Nux/TextureArea.h>
 #include <NuxGraphics/GraphicsEngine.h>
-
+#include <NuxImage/CairoGraphics.h>
 #include <gdk/gdkx.h>
 
 #include <UnityCore/DBusIndicators.h>
@@ -94,6 +94,7 @@ private:
   void AddPanelView(PanelIndicatorsView* child, unsigned int stretchFactor);
 
 private:
+  typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
   indicator::DBusIndicators::Ptr _remote;
   // No ownership is taken for these views, that is done by the AddChild method.
 
@@ -101,6 +102,8 @@ private:
   PanelTray*               _tray;
   PanelIndicatorsView*     _indicators;
   nux::AbstractPaintLayer* _bg_layer;
+  nux::ColorLayer*         _bg_darken_layer_;
+  BaseTexturePtr           _panel_sheen;
   nux::HLayout*            _layout;
 
   int _last_width;

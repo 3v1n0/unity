@@ -62,7 +62,7 @@ public:
   Window target;
 };
 
-class AbstractLauncherIcon
+class AbstractLauncherIcon : public nux::InitiallyUnownedObject
 {
 public:
 

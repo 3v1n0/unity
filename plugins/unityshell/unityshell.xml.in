@@ -103,7 +103,7 @@
                 <option name="alt_tab_timeout" type="bool">
                       <_short>Automatically grid windows on timer in switcher</_short>
                       <_long>fixme</_long>
-                      <default>false</default>
+                      <default>true</default>
                 </option>
                 <option name="alt_tab_forward" type="key">
                      <_short>Key to start the switcher</_short>
@@ -146,6 +146,11 @@
         <option name="alt_tab_next_window" type="key">
 		    <_short>Key to flip through windows in the switcher</_short>
 		    <_long>fixme</_long>
+            <passive_grab>false</passive_grab>
+        </option>
+        <option name="alt_tab_prev_window" type="key">
+            <_short>Key to flip through windows in the switcher backwards</_short>
+            <_long>fixme</_long>
             <passive_grab>false</passive_grab>
         </option>
 		<option name="show_minimized_windows" type="bool">

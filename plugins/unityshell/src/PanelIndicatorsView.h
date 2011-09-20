@@ -32,8 +32,9 @@
 namespace unity
 {
 
-class PanelIndicatorsView : public nux::View, public unity::Introspectable
+class PanelIndicatorsView : public nux::View, public Introspectable
 {
+  NUX_DECLARE_OBJECT_TYPE(PanelIndicatorsView, nux::View);
 public:
   PanelIndicatorsView();
   ~PanelIndicatorsView();
@@ -65,6 +66,9 @@ public:
   virtual void OnEntryAdded(indicator::Entry::Ptr const& entry);
   virtual void OnEntryRefreshed(PanelIndicatorEntryView* view);
   virtual void OnEntryRemoved(std::string const& entry_id);
+
+  void DashShown();
+  void DashHidden();
 
   sigc::signal<void, PanelIndicatorEntryView*> on_indicator_updated;
 

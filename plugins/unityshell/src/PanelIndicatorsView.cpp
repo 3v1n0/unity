@@ -36,6 +36,7 @@ nux::logging::Logger logger("unity.indicators");
 
 namespace unity
 {
+NUX_IMPLEMENT_OBJECT_TYPE(PanelIndicatorsView);
 
 PanelIndicatorsView::PanelIndicatorsView()
 : View(NUX_TRACKER_LOCATION)
@@ -279,6 +280,20 @@ void
 PanelIndicatorsView::OnEntryRemoved(std::string const& entry_id)
 {
   RemoveEntry(entry_id);
+}
+
+void
+PanelIndicatorsView::DashShown()
+{
+  for (auto entry: entries_)
+    entry.second->DashShown();
+}
+
+void
+PanelIndicatorsView::DashHidden()
+{
+  for (auto entry: entries_)
+    entry.second->DashHidden();
 }
 
 const gchar* PanelIndicatorsView::GetName()

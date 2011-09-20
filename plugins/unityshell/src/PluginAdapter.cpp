@@ -590,28 +590,19 @@ PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids)
 
   if (any_on_current)
   {
-    // to ensure proper stacking we process windows in reverse order (high to low)
-    // then we active the first window and raise each following window. Due to the
-    // way stack requests work (async), each subsequent raise call will stack below
-    // the previous one.
-    bool first = false;
-    windows.reverse();
+    CompWindow* last = 0;
     for (CompWindow* &win : windows)
     {
       if (win->defaultViewport() == m_Screen->vp() &&
           ((any_mapped && !win->minimized()) || !any_mapped))
       {
-        if (!first)
-        {
-          win->activate();
-          first = true;
-        }
-        else
-        {
-          win->raise();
-        }
+        win->raise();
+        last = win;
       }
     }
+
+    if (last)
+      last->activate();
 
   }
   else
@@ -678,10 +669,10 @@ PluginAdapter::GetWindowGeometry(guint32 xid)
   window = m_Screen->findWindow(win);
   if (window)
   {
-    geo.x = window->x();
-    geo.y = window->y();
-    geo.width = window->width();
-    geo.height = window->height();
+    geo.x = window->borderRect().x();
+    geo.y = window->borderRect().y();
+    geo.width = window->borderRect().width();
+    geo.height = window->borderRect().height();
   }
   return geo;
 }

@@ -57,6 +57,9 @@ private:
   int           mBoundingRectOrdering;
   bool          mRemoved;
 
+  int           mShapeEvent;
+  int           mShapeError;
+
 };
 }
 

@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright 2011 Canonical Ltd.
  *
@@ -36,7 +37,9 @@
 namespace unity {
   class FilterMultiRangeButton;
 
-  class FilterMultiRange : public FilterExpanderLabel, public unity::FilterWidget {
+  class FilterMultiRange : public FilterExpanderLabel, public FilterWidget
+  {
+    NUX_DECLARE_OBJECT_TYPE(FilterMultiRange, FilterExpanderLabel);
   public:
     FilterMultiRange (NUX_FILE_LINE_PROTO);
     virtual ~FilterMultiRange();

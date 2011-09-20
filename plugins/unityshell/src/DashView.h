@@ -94,6 +94,8 @@ private:
   const gchar* GetName();
   void AddProperties(GVariantBuilder* builder);
 
+  nux::Area* KeyNavIteration(nux::KeyNavDirection direction);
+
 private:
   UBusManager ubus_manager_;
   FilesystemLenses lenses_;
@@ -102,6 +104,7 @@ private:
 
   // Background related
   nux::ColorLayer* bg_layer_;
+  nux::ColorLayer* bg_darken_layer_;
   nux::Color bg_color_;
 
   // View related
@@ -117,6 +120,7 @@ private:
   // Drawing related
   nux::Geometry content_geo_;
   nux::ObjectPtr <nux::IOpenGLBaseTexture> bg_blur_texture_;
+  nux::ObjectPtr <nux::IOpenGLBaseTexture> bg_shine_texture_;
 
   std::string last_activated_uri_;
 

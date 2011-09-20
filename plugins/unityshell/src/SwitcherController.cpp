@@ -39,7 +39,7 @@ SwitcherController::SwitcherController()
   ,  detail_timer_(0)
 {
   timeout_length = 150;
-  detail_on_timeout = false;
+  detail_on_timeout = true;
   detail_timeout_length = 1500;
 
   bg_color_ = nux::Color(0.0, 0.0, 0.0, 0.5);
@@ -79,6 +79,8 @@ void SwitcherController::Show(SwitcherController::ShowMode show, SwitcherControl
 
   if (timeout_length > 0)
   {
+    if (show_timer_)
+      g_source_remove (show_timer_);
     show_timer_ = g_timeout_add(timeout_length, &SwitcherController::OnShowTimer, this);
   }
   else
@@ -88,8 +90,14 @@ void SwitcherController::Show(SwitcherController::ShowMode show, SwitcherControl
 
   if (detail_on_timeout)
   {
+    if (detail_timer_)
+      g_source_remove (detail_timer_);
     detail_timer_ = g_timeout_add(detail_timeout_length, &SwitcherController::OnDetailTimer, this);
   }
+
+  ubus_server_send_message(ubus_server_get_default(),
+                           UBUS_PLACE_VIEW_CLOSE_REQUEST,
+                           NULL);
 }
 
 void SwitcherController::Select(int index)
@@ -113,11 +121,12 @@ gboolean SwitcherController::OnDetailTimer(gpointer data)
 {
   SwitcherController* self = static_cast<SwitcherController*>(data);
 
-  if (!self->visible_ || self->model_->detail_selection)
-    return FALSE;
+  if (self->visible_ && !self->model_->detail_selection)
+  {
+    self->SetDetail(true, 2);
+    self->detail_mode_ = TAB_NEXT_WINDOW;
+  }
   
-  self->SetDetail(true, 2);
-  self->detail_mode_ = TAB_NEXT_WINDOW;
   self->detail_timer_ = 0;
   return FALSE;
 }
@@ -203,6 +212,10 @@ void SwitcherController::Hide(bool accept_state)
   if (show_timer_)
     g_source_remove(show_timer_);
   show_timer_ = 0;
+
+  if (detail_timer_)
+    g_source_remove(detail_timer_);
+  detail_timer_ = 0;
 
   view_.Release();
 }
@@ -310,7 +323,16 @@ void SwitcherController::NextDetail()
 
 void SwitcherController::PrevDetail()
 {
-  model_->PrevDetail();
+  if (!model_->detail_selection)
+  {
+    SetDetail(true);
+    detail_mode_ = TAB_NEXT_TILE;
+    model_->PrevDetail();
+  }
+  else
+  {
+    model_->PrevDetail();
+  }
 }
 
 LayoutWindowList SwitcherController::ExternalRenderTargets ()

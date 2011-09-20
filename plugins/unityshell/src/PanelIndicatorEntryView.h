@@ -57,6 +57,9 @@ public:
   bool IsSensitive() const;
   int  GetEntryPriority() const;
 
+  void DashShown();
+  void DashHidden();
+
   const gchar* GetName();
   void         AddProperties(GVariantBuilder* builder);
 
@@ -76,6 +79,8 @@ private:
   gulong on_font_changed_connection_;
 
   static void OnFontChanged(GObject* gobject, GParamSpec* pspec, gpointer data);
+
+  bool dash_showing_;
 };
 
 }
