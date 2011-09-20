@@ -158,7 +158,7 @@ void
 compiz::CompizMinimizedWindowHandler<Screen, Window>::updateFrameRegion (CompRegion &r)
 {
   unsigned int oldUpdateFrameRegionIndex;
-  r -= infiniteRegion;
+  r = CompRegion ();
 
   /* Ensure no other plugins can touch this frame region */
   oldUpdateFrameRegionIndex = priv->mWindow->updateFrameRegionGetCurrentIndex ();

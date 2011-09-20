@@ -98,6 +98,7 @@ public:
   void paintAttrib (GLWindowPaintAttrib &attrib);
   unsigned int getPaintMask ();
   void handleEvent (XEvent *);
+  void updateFrameRegion (CompRegion &r);
 
   UnityShowdesktopHandler::State state ();
 

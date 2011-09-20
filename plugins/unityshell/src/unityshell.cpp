@@ -835,6 +835,38 @@ void UnityShowdesktopHandler::handleEvent (XEvent *event)
   }
 }
 
+unsigned int UnityShowdesktopHandler::getPaintMask ()
+{
+    return 0;
+}
+
+void UnityShowdesktopHandler::handleEvent (XEvent *event)
+{
+  /* Ignore sent events from the InputRemover */
+  if (screen->XShape () && event->type ==
+      screen->shapeEvent () + ShapeNotify &&
+      !event->xany.send_event)
+  {
+    if (mRemover)
+    {
+      mRemover->save ();
+      mRemover->remove ();
+    }
+  }
+}
+
+void UnityShowdesktopHandler::updateFrameRegion (CompRegion &r)
+{
+  unsigned int oldUpdateFrameRegionIndex;
+  r = CompRegion ();
+
+  /* Ensure no other plugins can touch this frame region */
+  oldUpdateFrameRegionIndex = mWindow->updateFrameRegionGetCurrentIndex ();
+  mWindow->updateFrameRegionSetCurrentIndex (MAXSHORT);
+  mWindow->updateFrameRegion (r);
+  mWindow->updateFrameRegionSetCurrentIndex (oldUpdateFrameRegionIndex);
+}
+
 /* called whenever we need to repaint parts of the screen */
 bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
                                 const GLMatrix& transform,
@@ -1700,6 +1732,8 @@ void UnityWindow::updateFrameRegion(CompRegion &region)
 
   if (compizMinimizeHandler)
     compizMinimizeHandler->updateFrameRegion (region);
+  else if (mShowdesktopHandler)
+    mShowdesktopHandler->updateFrameRegion (region);
   else
     window->updateFrameRegion (region);
 }
