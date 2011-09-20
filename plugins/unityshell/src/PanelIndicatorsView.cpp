@@ -50,9 +50,9 @@ PanelIndicatorsView::PanelIndicatorsView()
 
 PanelIndicatorsView::~PanelIndicatorsView()
 {
-  for (auto it = indicators_connections_.begin(); it != indicators_connections_.end(); it++)
+  for (auto ind : indicators_connections_)
   {
-    for (auto conn : it->second)
+    for (auto conn : ind.second)
       conn.disconnect();
   }
 }
@@ -125,11 +125,9 @@ void
 PanelIndicatorsView::QueueDraw()
 {
   nux::View::QueueDraw();
-  for (auto i = entries_.begin(), end = entries_.end(); i != end; ++i)
-  {
-    if (i->second)
-      i->second->QueueDraw();
-  }
+
+  for (auto entry : entries_)
+    entry.second->QueueDraw();
 }
 
 bool
@@ -150,9 +148,9 @@ PanelIndicatorsView::ActivateEntry(std::string const& entry_id)
 bool
 PanelIndicatorsView::ActivateIfSensitive()
 {
-  for (auto i = entries_.begin(), end = entries_.end(); i != end; ++i)
+  for (auto entry : entries_)
   {
-    PanelIndicatorEntryView* view = i->second;
+    PanelIndicatorEntryView* view = entry.second;
     if (view->IsSensitive())
     {
       view->Activate();
@@ -165,19 +163,16 @@ PanelIndicatorsView::ActivateIfSensitive()
 void
 PanelIndicatorsView::GetGeometryForSync(indicator::EntryLocationMap& locations)
 {
-  for (auto i = entries_.begin(), end = entries_.end(); i != end; ++i)
-  {
-    if (i->second)
-      i->second->GetGeometryForSync(locations);
-  }
+  for (auto entry : entries_)
+    entry.second->GetGeometryForSync(locations);
 }
 
 bool
 PanelIndicatorsView::OnPointerMoved(int x, int y)
 {
-  for (auto i = entries_.begin(), end = entries_.end(); i != end; ++i)
+  for (auto entry : entries_)
   {
-    PanelIndicatorEntryView* view = i->second;
+    PanelIndicatorEntryView* view = entry.second;
 
     nux::Geometry geo = view->GetAbsoluteGeometry();
     if (geo.IsPointInside(x, y))
