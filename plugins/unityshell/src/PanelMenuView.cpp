@@ -289,7 +289,7 @@ long PanelMenuView::PostLayoutManagement(long LayoutResult)
   _window_buttons->ComputeLayout2();
   new_window_buttons_w = _window_buttons->GetContentWidth();
 
-  /* Explicitly set the size and priority of the widgets */
+  /* Explicitly set the size and position of the widgets */
   geo.x += _padding + new_window_buttons_w + _padding;
   geo.width -= _padding + new_window_buttons_w + _padding;
 
