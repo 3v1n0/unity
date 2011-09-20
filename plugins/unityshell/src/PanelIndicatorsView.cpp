@@ -21,13 +21,8 @@
 #include <Nux/Nux.h>
 #include <Nux/Area.h>
 #include <Nux/HLayout.h>
-#include <Nux/VLayout.h>
 
 #include <NuxCore/Logger.h>
-
-#include <NuxGraphics/GLThread.h>
-#include <Nux/BaseWindow.h>
-#include <Nux/WindowCompositor.h>
 
 #include "PanelIndicatorsView.h"
 
@@ -198,37 +193,45 @@ void
 PanelIndicatorsView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
   GfxContext.PushClippingRectangle(GetGeometry());
-  if (layout_)
-    layout_->ProcessDraw(GfxContext, force_draw);
+  layout_->ProcessDraw(GfxContext, force_draw);
   GfxContext.PopClippingRectangle();
 }
 
-void
-PanelIndicatorsView::OnEntryAdded(indicator::Entry::Ptr const& entry)
+PanelIndicatorEntryView *
+PanelIndicatorsView::AddEntry(indicator::Entry::Ptr const& entry, int padding, IndicatorEntryPosition pos)
 {
-  auto view = new PanelIndicatorEntryView(entry);
+  PanelIndicatorEntryView *view;
+  int entry_pos = pos;
+
+  if (padding > -1)
+    view = new PanelIndicatorEntryView(entry, padding);
+  else
+    view = new PanelIndicatorEntryView(entry);
+
   view->refreshed.connect(sigc::mem_fun(this, &PanelIndicatorsView::OnEntryRefreshed));
 
-  int indicator_pos = nux::NUX_LAYOUT_BEGIN;
-
-  if (entry->priority() > -1)
+  if (entry_pos == IndicatorEntryPosition::AUTO)
   {
-    for (nux::Area* &area : layout_->GetChildren())
+    entry_pos = nux::NUX_LAYOUT_BEGIN;
+
+    if (entry->priority() > -1)
     {
-      auto en = dynamic_cast<PanelIndicatorEntryView*>(area);
-
-      if (en)
+      for (auto area : layout_->GetChildren())
       {
-        if (en && entry->priority() <= en->GetEntryPriority())
-          break;
+        auto en = dynamic_cast<PanelIndicatorEntryView*>(area);
 
-        indicator_pos++;
+        if (en)
+        {
+          if (en && entry->priority() <= en->GetEntryPriority())
+            break;
+
+          entry_pos++;
+        }
       }
     }
   }
 
-  nux::LayoutPosition pos = (nux::LayoutPosition) indicator_pos;
-  layout_->AddView(view, 0, nux::eCenter, nux::eFull, 1.0, pos);
+  layout_->AddView(view, 0, nux::eCenter, nux::eFull, 1.0, (nux::LayoutPosition) entry_pos);
   layout_->SetContentDistribution(nux::eStackRight);
   entries_[entry->id()] = view;
 
@@ -237,6 +240,14 @@ PanelIndicatorsView::OnEntryAdded(indicator::Entry::Ptr const& entry)
   QueueDraw();
 
   on_indicator_updated.emit(view);
+
+  return view;
+}
+
+void
+PanelIndicatorsView::OnEntryAdded(indicator::Entry::Ptr const& entry)
+{
+  AddEntry(entry);
 }
 
 void
@@ -249,19 +260,25 @@ PanelIndicatorsView::OnEntryRefreshed(PanelIndicatorEntryView* view)
 }
 
 void
-PanelIndicatorsView::OnEntryRemoved(std::string const& entry_id)
+PanelIndicatorsView::RemoveEntry(std::string const& entry_id)
 {
   PanelIndicatorEntryView* view = entries_[entry_id];
 
   if (view)
   {
-    on_indicator_updated.emit(view);
     layout_->RemoveChildObject(view);
     entries_.erase(entry_id);
+    on_indicator_updated.emit(view);
 
     QueueRelayout();
     QueueDraw();
   }
+}
+
+void
+PanelIndicatorsView::OnEntryRemoved(std::string const& entry_id)
+{
+  RemoveEntry(entry_id);
 }
 
 const gchar* PanelIndicatorsView::GetName()

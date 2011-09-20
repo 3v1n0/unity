@@ -22,6 +22,7 @@
 #define PANEL_INDICATORS_VIEW_H
 
 #include <Nux/View.h>
+#include <Nux/Layout.h>
 
 #include <UnityCore/Indicator.h>
 
@@ -40,6 +41,17 @@ public:
   void AddIndicator(indicator::Indicator::Ptr const& indicator);
   void RemoveIndicator(indicator::Indicator::Ptr const& indicator);
 
+  typedef enum {
+    AUTO = -1,
+    START = nux::NUX_LAYOUT_BEGIN,
+    END = nux::NUX_LAYOUT_END,
+  } IndicatorEntryPosition;
+
+  PanelIndicatorEntryView* AddEntry(indicator::Entry::Ptr const& entry,
+                                    int padding = -1,
+                                    IndicatorEntryPosition pos = AUTO);
+  void RemoveEntry(std::string const& entry_id);
+
   bool OnPointerMoved(int x, int y);
   bool ActivateEntry(std::string const& entry_id);
   bool ActivateIfSensitive();
@@ -50,7 +62,7 @@ public:
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void QueueDraw();
 
-  virtual void OnEntryAdded(indicator::Entry::Ptr const& proxy);
+  virtual void OnEntryAdded(indicator::Entry::Ptr const& entry);
   virtual void OnEntryRefreshed(PanelIndicatorEntryView* view);
   virtual void OnEntryRemoved(std::string const& entry_id);
 
