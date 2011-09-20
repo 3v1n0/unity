@@ -348,7 +348,7 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nu
 
   if (support_vert && support_frag && opengl_version >= 2)
   {
-    float noise_factor = 1.2f;
+    float noise_factor = 1.1f;
     float gaussian_sigma = opengl_version >= 3 ? sigma_high : sigma_med;
     int blur_passes = 1;
 
