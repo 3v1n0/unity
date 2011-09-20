@@ -459,6 +459,7 @@ void PanelView::OnObjectRemoved(indicator::Indicator::Ptr const& proxy)
 
 void PanelView::OnIndicatorViewUpdated(PanelIndicatorEntryView* view)
 {
+  _needs_geo_sync = true;
   ComputeChildLayout();
 }
 
