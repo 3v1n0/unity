@@ -130,7 +130,7 @@ void SwitcherView::SaveLast ()
   clock_gettime(CLOCK_MONOTONIC, &save_time_);
 }
 
-void SwitcherView::OnDetailSelectionIndexChanged (int index)
+void SwitcherView::OnDetailSelectionIndexChanged (unsigned int index)
 {
   if (model_->detail_selection)
   {

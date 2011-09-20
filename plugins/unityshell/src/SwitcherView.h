@@ -82,7 +82,7 @@ protected:
 private:
   void OnSelectionChanged(AbstractLauncherIcon* selection);
   void OnDetailSelectionChanged (bool detail);
-  void OnDetailSelectionIndexChanged (int index);
+  void OnDetailSelectionIndexChanged (unsigned int index);
 
   void OnIconSizeChanged (int size);
   void OnTileSizeChanged (int size);

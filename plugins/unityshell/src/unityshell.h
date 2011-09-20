@@ -63,6 +63,7 @@ public:
   void unbind ();
 
   bool status ();
+  bool bound ();
   void paint ();
 
   GLuint texture () { return mFBTexture; }
@@ -74,6 +75,7 @@ private:
   bool    mFboStatus; // did the framebuffer texture bind succeed
   GLuint   mFBTexture;
   CompOutput *output;
+  unsigned int mBoundCnt;
 };
 
 class UnityShowdesktopHandler
@@ -96,6 +98,9 @@ public:
   void fadeIn ();
   bool animate (unsigned int ms);
   void paintAttrib (GLWindowPaintAttrib &attrib);
+  unsigned int getPaintMask ();
+  void handleEvent (XEvent *);
+  void updateFrameRegion (CompRegion &r);
 
   UnityShowdesktopHandler::State state ();
 
