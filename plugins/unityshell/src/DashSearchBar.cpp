@@ -64,7 +64,7 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
 
   layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
   layout_->SetHorizontalInternalMargin(0);
-  layout_->SetVerticalExternalMargin(12);
+  layout_->SetVerticalExternalMargin(11);
   layout_->SetHorizontalExternalMargin(10);
   SetLayout(layout_);
 
@@ -269,7 +269,7 @@ SearchBar::SearchFinished()
 }
 
 
-static void draw_rounded_rect(cairo_t* cr,
+/*static void draw_rounded_rect(cairo_t* cr,
                               double   aspect,
                               double   x,
                               double   y,
@@ -323,7 +323,7 @@ static void draw_rounded_rect(cairo_t* cr,
             180.0f * G_PI / 180.0f,
             270.0f * G_PI / 180.0f);
   cairo_close_path(cr);
-}
+}*/
 
 void SearchBar::UpdateBackground()
 {
@@ -345,19 +345,30 @@ void SearchBar::UpdateBackground()
 
   nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, last_width_, last_height_);
   cairo_t* cr = cairo_graphics.GetContext();
-  cairo_translate(cr, 0.5, 0.5);
+  //cairo_translate(cr, 0.5, 0.5);
   cairo_set_line_width(cr, 1.0);
 
-  draw_rounded_rect(cr, 1.0f, x, y, RADIUS, width, height);
+  //draw_rounded_rect(cr, 1.0f, x, y - 3.0f, RADIUS, width, height);
+  cairo_graphics.DrawRoundedRectangle(cr,
+                                      1.0f,
+                                      x,
+                                      y - 3.0f,
+                                      RADIUS,
+                                      width,
+                                      height,
+                                      true);
 
   cairo_set_source_rgba(cr, 0.0f, 0.0f, 0.0f, 0.5f);
   cairo_fill_preserve(cr);
 
   cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 0.8f);
+  cairo_stroke_preserve(cr);
+
+  cairo_graphics.BlurSurface (3, cairo_get_target (cr));
   cairo_stroke(cr);
 
   //FIXME: This is unti we get proper gow
-  draw_rounded_rect(cr, 1.0f, x - 1, y - 1, RADIUS, width + 2, height + 2);
+  /*draw_rounded_rect(cr, 1.0f, x - 1, y - 1, RADIUS, width + 2, height + 2);
   cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 0.4f);
   cairo_stroke(cr);
 
@@ -367,7 +378,7 @@ void SearchBar::UpdateBackground()
 
   draw_rounded_rect(cr, 1.0f, x - 3, y - 3, RADIUS, width + 6, height + 6);
   cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 0.1f);
-  cairo_stroke(cr);
+  cairo_stroke(cr);*/
 
   cairo_destroy(cr);
   nux::BaseTexture* texture2D = texture_from_cairo_graphics(cairo_graphics);
