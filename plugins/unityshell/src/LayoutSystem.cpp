@@ -155,6 +155,8 @@ std::vector<LayoutWindowList> LayoutSystem::GetRows (LayoutWindowList const& win
 {
   std::vector<LayoutWindowList> rows;
 
+  int size = (int)windows.size();
+
   float total_aspect = 0;
   for (LayoutWindow::Ptr window : windows)
   {
@@ -179,21 +181,35 @@ std::vector<LayoutWindowList> LayoutSystem::GetRows (LayoutWindowList const& win
     int x = 0;
     int y = 0;
 
-    int spare_slots = (width * height) - (int)windows.size();
+    int spare_slots = (width * height) - size;
 
     float row_aspect = 0.0f;
 
     LayoutWindowList row_accum;
-    for (LayoutWindow::Ptr window : windows)
+    
+    int i;
+    for (i = 0; i < size; ++i)
     {
+      LayoutWindow::Ptr window = windows[i];
+
       row_accum.push_back (window);
       row_aspect += window->aspect_ratio;
       
       ++x;
-      if (x == width - 1 && ((row_aspect >= ideal_aspect && spare_slots > 0) || spare_slots == height - y))
+      if (x == width - 1 && spare_slots)
       {
-        ++x;
-        spare_slots--;
+        bool skip = false;
+
+        if (spare_slots == height - y)
+          skip = true;
+        else if (i < size - 1)
+          skip = row_aspect + windows[i+1]->aspect_ratio >= ideal_aspect;
+
+        if (skip)
+        {
+          ++x;
+          spare_slots--;
+        }
       }
 
       if (x >= width)
