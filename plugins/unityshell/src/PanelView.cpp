@@ -529,7 +529,7 @@ void PanelView::OnEntryActivated(std::string const& entry_id)
       _track_menu_pointer_id = 0;
     }
     _menu_view->AllMenusClosed();
-    _tracked_pointer_pos = {-1, -1}
+    _tracked_pointer_pos = {-1, -1};
   }
 }
 
