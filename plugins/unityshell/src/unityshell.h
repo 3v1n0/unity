@@ -256,6 +256,7 @@ private:
   static void OnStartKeyNav(GVariant* data, void* value);
   static void OnExitKeyNav(GVariant* data, void* value);
   static gboolean OnEdgeTriggerTimeout(gpointer data);
+  static gboolean OnRedrawTimeout(gpointer data);
 
   void startLauncherKeyNav();
   void restartLauncherKeyNav();
@@ -280,9 +281,11 @@ private:
   nux::Geometry           lastTooltipArea;
   DebugDBusInterface*     debugger;
   bool                    needsRelayout;
+  bool                    _in_paint;
   guint32                 relayoutSourceId;
   guint                   _edge_timeout;
   guint                   _edge_trigger_handle;
+  guint32                 _redraw_handle;
   gint                    _edge_pointerY;
   guint                   _ubus_handles[3];
 

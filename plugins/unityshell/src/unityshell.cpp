@@ -222,6 +222,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
      debugger = new DebugDBusInterface(this);
 
      _edge_timeout = optionGetLauncherRevealEdgeTimeout ();
+     _in_paint = false;
 
      if (GL::fbo)
      {
@@ -570,7 +571,9 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
 
   BackgroundEffectHelper::monitor_rect_ = geo;
 
+  _in_paint = true;
   wt->RenderInterfaceFromForeignCmd (&geo);
+  _in_paint = false;
   nuxEpilogue();
 
   if (tray_xid && !allowWindowPaint)
@@ -1705,12 +1708,30 @@ void UnityScreen::initUnity(nux::NThread* thread, void* InitData)
   LOG_INFO(logger) << "UnityScreen::initUnity: " << timer.ElapsedSeconds() << "s";
 }
 
+gboolean UnityScreen::OnRedrawTimeout(gpointer data)
+{
+  UnityScreen *self = reinterpret_cast<UnityScreen*>(data);
+
+  self->_redraw_handle = 0;
+  self->onRedrawRequested();
+
+  return FALSE;
+}
+
 void UnityScreen::onRedrawRequested()
 {
   // disable blur updates so we dont waste perf. This can stall the blur during animations
   // but ensures a smooth animation.
-  BackgroundEffectHelper::updates_enabled = false;
-  damageNuxRegions();
+  if (_in_paint)
+  {
+    if (!_redraw_handle)
+      _redraw_handle = g_timeout_add (0, &UnityScreen::OnRedrawTimeout, this);
+  }
+  else
+  {
+    BackgroundEffectHelper::updates_enabled = false;
+    damageNuxRegions();
+  }
 }
 
 /* Handle option changes and plug that into nux windows */
