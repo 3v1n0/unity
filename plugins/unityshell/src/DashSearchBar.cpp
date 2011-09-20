@@ -85,7 +85,7 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
   pango_entry_->cursor_moved.connect([&](int i) { QueueDraw(); });
   pango_entry_->mouse_down.connect(sigc::mem_fun(this, &SearchBar::OnMouseButtonDown));
   pango_entry_->end_key_focus.connect(sigc::mem_fun(this, &SearchBar::OnEndKeyFocus));
- 
+
   layered_layout_ = new nux::LayeredLayout();
   layered_layout_->AddLayer(hint_);
   layered_layout_->AddLayer(pango_entry_);
@@ -233,6 +233,14 @@ void SearchBar::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
                                            bg_layer_);
 
   GfxContext.PopClippingRectangle();
+
+  nux::Color col = nux::color::Red;
+  col.alpha = 0;
+  GfxContext.QRP_Color(geo.x,
+                       geo.y,
+                       geo.width,
+                       geo.height,
+                       col);
 }
 
 void SearchBar::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)

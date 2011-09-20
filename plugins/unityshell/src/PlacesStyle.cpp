@@ -293,6 +293,7 @@ void PlacesStyle::Refresh()
                NULL);
   desc = pango_font_description_from_string(font_description);
   pango_font_description_set_weight(desc, PANGO_WEIGHT_NORMAL);
+  pango_font_description_set_size (desc, 9 * PANGO_SCALE);
 
   layout = pango_cairo_create_layout(cr);
   pango_layout_set_font_description(layout, desc);

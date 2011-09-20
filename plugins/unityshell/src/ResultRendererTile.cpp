@@ -171,6 +171,14 @@ void ResultRendererTile::Render(nux::GraphicsEngine& GfxContext,
 
   GfxContext.GetRenderStates().SetBlend(alpha, src, dest);
 
+  col = nux::color::RandomColor();
+  col.alpha = 0;
+  GfxContext.QRP_Color(geometry.x,
+                       geometry.y,
+                       geometry.width,
+                       geometry.height,
+                       col);
+
 }
 
 nux::BaseTexture* ResultRendererTile::DrawHighlight(std::string const& texid, int width, int height)

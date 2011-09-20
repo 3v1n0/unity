@@ -312,6 +312,14 @@ void PlacesGroup::Draw(nux::GraphicsEngine& GfxContext,
                                  col);
 
   GfxContext.PopClippingRectangle();
+
+  col = nux::color::RandomColor();
+  col.alpha = 0;
+  GfxContext.QRP_Color(geo.x,
+                       geo.y,
+                       geo.width,
+                       geo.height,
+                       col);
 }
 
 void
