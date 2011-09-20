@@ -61,7 +61,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(ResultRendererTile);
 ResultRendererTile::ResultRendererTile(NUX_FILE_LINE_DECL)
   : ResultRenderer(NUX_FILE_LINE_PARAM)
   , highlight_padding(6)
-  , spacing(12)
+  , spacing(10)
   , padding(6)
 {
   PlacesStyle* style = PlacesStyle::GetDefault();
