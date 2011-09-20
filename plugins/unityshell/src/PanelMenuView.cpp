@@ -1061,6 +1061,16 @@ void
 PanelMenuView::OnMaximizedGrabEnd(int x, int y, unsigned long, unsigned long)
 {
   _panel_titlebar_grab_area->SetGrabbed(false);
+
+  x += _panel_titlebar_grab_area->GetAbsoluteX();
+  y += _panel_titlebar_grab_area->GetAbsoluteY();
+  _is_inside = GetAbsoluteGeometry().IsPointInside(x, y);
+
+  if (!_is_inside)
+    _is_grabbed = false;
+
+  Refresh();
+  FullRedraw();
 }
 
 void
