@@ -226,10 +226,10 @@ UnityScreen::UnityScreen(CompScreen* screen)
 
      if (GL::fbo)
      {
-	 foreach (CompOutput & o, screen->outputDevs())
+       foreach (CompOutput & o, screen->outputDevs())
 	     uScreen->mFbos[&o] = UnityFBO::Ptr (new UnityFBO(&o));
 
-	 uScreen->mFbos[&(screen->fullscreenOutput ())] = UnityFBO::Ptr (new UnityFBO(&(screen->fullscreenOutput ())));
+       uScreen->mFbos[&(screen->fullscreenOutput ())] = UnityFBO::Ptr (new UnityFBO(&(screen->fullscreenOutput ())));
      }
 
      optionSetLauncherHideModeNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
@@ -864,7 +864,16 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
 {
   bool ret;
 
-  /* bind the framebuffer here */
+  /* bind the framebuffer here
+   * - it will be unbound and flushed
+   *   to the backbuffer when some
+   *   plugin requests to draw a
+   *   a transformed screen or when
+   *   we have finished this draw cycle.
+   *   once an fbo is bound any further
+   *   attempts to bind it will only increment
+   *   its bind reference so make sure that
+   *   you always unbind as much as you bind */
   mFbos[output]->bind ();
 
   doShellRepaint = true;
