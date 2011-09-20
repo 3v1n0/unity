@@ -257,6 +257,8 @@ void DashView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
                                     true, // write alpha?
                                     rop);
 
+      gPainter.PopBackground();
+
       gfx_context.PopClippingRectangle();
     }
   }
@@ -417,7 +419,7 @@ void DashView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
 {
   bool paint_blur = BackgroundEffectHelper::blur_type != BLUR_NONE;
   nux::Geometry geo = GetGeometry();
-  int bgs = 1;
+  int bgs = 0;
 
   gfx_context.PushClippingRectangle(geo);
 
@@ -450,8 +452,10 @@ void DashView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
 
   // draw the darkening behind our paint
   nux::GetPainter().PushLayer(gfx_context, bg_darken_layer_->GetGeometry(), bg_darken_layer_);
+  bgs++;
 
   nux::GetPainter().PushLayer(gfx_context, bg_layer_->GetGeometry(), bg_layer_);
+  bgs++;
 
   // apply the shine
   rop.Blend = true;
@@ -467,7 +471,7 @@ void DashView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
                                      nux::color::White,
                                      false,
                                      rop);
-
+  bgs++;
 
   layout_->ProcessDraw(gfx_context, force_draw);
 
