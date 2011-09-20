@@ -106,7 +106,7 @@ int PlacesStyle::GetTileWidth() const
 
 int PlacesStyle::GetTileHeight() const
 {
-  return GetTileIconSize() + (_text_height * 2) + 10;
+  return MAX(GetTileIconSize() + (_text_height * 2) + 10, GetTileIconSize() + 50 + 18); // magic design numbers.
 }
 
 int PlacesStyle::GetHomeTileIconSize() const
