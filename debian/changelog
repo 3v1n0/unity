@@ -1,3 +1,10 @@
+unity (4.16.0-0ubuntu2) UNRELEASED; urgency=low
+
+  * com.canonical.Unity.gschema.xml:
+    - add Update-notifier to the whitelist (LP: #779382)
+
+ -- Didier Roche <didrocks@ubuntu.com>  Tue, 20 Sep 2011 08:15:32 +0200
+
 unity (4.16.0-0ubuntu1) oneiric; urgency=low
 
   * New upstream release.
