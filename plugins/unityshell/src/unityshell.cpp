@@ -1592,6 +1592,36 @@ UnityWindow::minimized ()
 void UnityWindow::windowNotify(CompWindowNotify n)
 {
   PluginAdapter::Default()->Notify(window, n);
+
+  switch (n)
+  {
+    case CompWindowNotifyMap:
+    case CompWindowNotifyUnmap:
+      if (UnityScreen::get (screen)->optionGetShowMinimizedWindows () &&
+          window->mapNum ())
+      {
+        bool wasMinimized = window->minimized ();
+        if (wasMinimized)
+          window->unminimize ();
+        window->minimizeSetEnabled (this, true);
+        window->unminimizeSetEnabled (this, true);
+        window->minimizedSetEnabled (this, true);
+
+        if (wasMinimized)
+          window->minimize ();
+      }
+      else
+      {
+        window->minimizeSetEnabled (this, false);
+        window->unminimizeSetEnabled (this, false);
+        window->minimizedSetEnabled (this, false);
+      }
+        break;
+      default:
+        break;
+  }
+
+
   window->windowNotify(n);
   
   // We do this after the notify to ensure input focus has actually been moved.
@@ -2141,24 +2171,9 @@ UnityWindow::UnityWindow(CompWindow* window)
   WindowInterface::setHandler(window);
   GLWindowInterface::setHandler(gWindow);
 
-  if (UnityScreen::get (screen)->optionGetShowMinimizedWindows ())
-  {
-    bool wasMinimized = window->minimized ();
-    if (wasMinimized)
-      window->unminimize ();
-    window->minimizeSetEnabled (this, true);
-    window->unminimizeSetEnabled (this, true);
-    window->minimizedSetEnabled (this, true);
-
-    if (wasMinimized)
-      window->minimize ();
-  }
-  else
-  {
-    window->minimizeSetEnabled (this, false);
-    window->unminimizeSetEnabled (this, false);
-    window->minimizedSetEnabled (this, false);
-  }
+  window->minimizedSetEnabled (this, false);
+  window->minimizeSetEnabled (this, false);
+  window->unminimizeSetEnabled (this, false);
 
   if (window->state () & CompWindowStateFullscreenMask)
     UnityScreen::get (screen)->fullscreen_windows_.push_back(window);

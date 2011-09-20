@@ -113,6 +113,7 @@ public:
   bool IsWindowDecorated(guint xid);
   bool IsWindowOnCurrentDesktop(guint xid);
   bool IsWindowObscured(guint xid);
+  bool IsWindowMapped(guint xid);
   void Restore(guint32 xid);
   void Minimize(guint32 xid);
   void Close(guint32 xid);

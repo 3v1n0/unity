@@ -458,6 +458,18 @@ PluginAdapter::IsWindowObscured(guint32 xid)
   return false;
 }
 
+bool
+PluginAdapter::IsWindowMapped(guint32 xid)
+{
+  Window win = (Window) xid;
+  CompWindow* window;
+
+  window = m_Screen->findWindow(win);
+  if (window)
+    return window->mapNum () > 0;
+  return true;
+}
+
 void
 PluginAdapter::Restore(guint32 xid)
 {
