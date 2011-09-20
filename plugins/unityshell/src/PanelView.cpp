@@ -612,11 +612,13 @@ PanelView::SetPrimary(bool primary)
   _is_primary = primary;
 }
 
-void PanelView::SyncGeometries()
+void
+PanelView::SyncGeometries()
 {
   indicator::EntryLocationMap locations;
   _menu_view->GetGeometryForSync(locations);
   _indicators->GetGeometryForSync(locations);
+  _remote->SyncGeometries(GetName(), locations);
 }
 
 void
