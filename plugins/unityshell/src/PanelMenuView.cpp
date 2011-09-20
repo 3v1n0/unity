@@ -1030,13 +1030,21 @@ PanelMenuView::OnMaximizedGrabMove(int x, int y, int, int, unsigned long button_
   if (!_panel_titlebar_grab_area->IsGrabbed())
     return;
 
+  auto panel = static_cast<nux::BaseWindow*>(GetTopLevelViewWindow());
+
+  if (!panel)
+    return;
+
+  x += _panel_titlebar_grab_area->GetAbsoluteX();
+  y += _panel_titlebar_grab_area->GetAbsoluteY();
+
   guint32 window_xid = GetMaximizedWindow();
 
   // When the drag goes out from the Panel, start the real movement.
   //
   // This is a workaround to avoid that the grid plugin would be fired
   // showing the window shape preview effect. See bug #838923
-  if (window_xid != 0 && !GetAbsoluteGeometry().IsPointInside(x, y))
+  if (window_xid != 0 && panel && !panel->GetAbsoluteGeometry().IsPointInside(x, y))
   {
     _panel_titlebar_grab_area->SetGrabbed(false);
 
