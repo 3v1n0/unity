@@ -843,21 +843,6 @@ unsigned int UnityShowdesktopHandler::getPaintMask ()
     return 0;
 }
 
-void UnityShowdesktopHandler::handleEvent (XEvent *event)
-{
-  /* Ignore sent events from the InputRemover */
-  if (screen->XShape () && event->type ==
-      screen->shapeEvent () + ShapeNotify &&
-      !event->xany.send_event)
-  {
-    if (mRemover)
-    {
-      mRemover->save ();
-      mRemover->remove ();
-    }
-  }
-}
-
 void UnityShowdesktopHandler::updateFrameRegion (CompRegion &r)
 {
   unsigned int oldUpdateFrameRegionIndex;
