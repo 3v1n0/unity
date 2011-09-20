@@ -173,26 +173,43 @@ std::vector<LayoutWindowList> LayoutSystem::GetRows (LayoutWindowList const& win
     int width = grid_size.width;
     int height = grid_size.height;
 
+    float row_height = max_bounds.height / height;
+    float ideal_aspect = (float)max_bounds.width / row_height;
+
     int x = 0;
     int y = 0;
 
-    int first_row_size = (int)windows.size() - (width * (height - 1));
+    int spare_slots = (width * height) - (int)windows.size();
+
+    float row_aspect = 0.0f;
+
     LayoutWindowList row_accum;
     for (LayoutWindow::Ptr window : windows)
     {
       row_accum.push_back (window);
+      row_aspect += window->aspect_ratio;
+      
       ++x;
+      if (x == width - 1 && ((row_aspect >= ideal_aspect && spare_slots > 0) || spare_slots == height - y))
+      {
+        ++x;
+        spare_slots--;
+      }
 
-      if (x >= width || (y == 0 && x == first_row_size))
+      if (x >= width)
       {
         // end of row
         x = 0;
         ++y;
+        row_aspect = 0;
 
         rows.push_back(row_accum);
         row_accum.clear ();
       }
     }
+
+    if (!row_accum.empty())
+      rows.push_back(row_accum);
   }
 
   return rows;
