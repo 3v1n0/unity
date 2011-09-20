@@ -114,11 +114,10 @@ private:
 private:
   BamfMatcher* _matcher;
 
-  nux::AbstractPaintLayer* _title_layer;
+  nux::TextureLayer*       _title_layer;
   nux::HLayout*            _menu_layout;
   nux::CairoGraphics       _util_cg;
   nux::ObjectPtr<nux::IOpenGLBaseTexture> _gradient_texture;
-  nux::BaseTexture*        _title_tex;
 
   bool _is_inside;
   bool _is_grabbed;

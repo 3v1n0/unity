@@ -64,7 +64,6 @@ PanelMenuView::PanelMenuView(int padding)
     _title_layer(NULL),
     _util_cg(CAIRO_FORMAT_ARGB32, 1, 1),
     _gradient_texture(NULL),
-    _title_tex(NULL),
     _is_inside(false),
     _is_maximized(false),
     _is_own_window(false),
@@ -166,8 +165,6 @@ PanelMenuView::~PanelMenuView()
 
   if (_title_layer)
     delete _title_layer;
-  if (_title_tex)
-    _title_tex->UnReference();
 
   _menu_layout->UnReference();
   _window_buttons->UnReference();
@@ -408,12 +405,12 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
       nux::TexCoordXForm texxform1;
 
       // Modulate the checkboard and the gradient texture
-      if (_title_tex)
+      if (_title_layer)
         GfxContext.QRP_2TexMod(geo.x, geo.y,
                                geo.width, geo.height,
                                _gradient_texture, texxform0,
                                nux::color::White,
-                               _title_tex->GetDeviceTexture(),
+                               _title_layer->GetDeviceTexture(),
                                texxform1,
                                nux::color::White);
 
@@ -684,11 +681,7 @@ PanelMenuView::Refresh()
                                        nux::color::White,
                                        true,
                                        rop);
-
-  if (_title_tex)
-    _title_tex->UnReference();
-
-  _title_tex = texture2D;
+  texture2D->UnReference();
   g_free(label);
 }
 
