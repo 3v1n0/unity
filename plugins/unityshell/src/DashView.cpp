@@ -186,13 +186,17 @@ nux::Geometry DashView::GetBestFitGeometry(nux::Geometry const& for_geo)
   int tile_height = style->GetTileHeight();
   int half = for_geo.width / 2;
 
-  while ((width += tile_width) < half)
+  // if default dash size is bigger than half a screens worth of items, go for that.
+  while ((width += tile_width) + (19 * 2) < half)
     ;
 
-  width = MAX(width, tile_width * 7);
+  width = MAX(width, tile_width * 6);
+
+  width += 19 + 32; // add the left padding and the group plugin padding
 
   height = search_bar_->GetGeometry().height;
-  height += tile_height * 4.75;
+  height += tile_height * 3;
+  height += (24 + 15) * 3; // adding three group headers
   height += lens_bar_->GetGeometry().height;
 
   if (for_geo.width > 800 && for_geo.height > 550)

@@ -85,7 +85,7 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
   pango_entry_->cursor_moved.connect([&](int i) { QueueDraw(); });
   pango_entry_->mouse_down.connect(sigc::mem_fun(this, &SearchBar::OnMouseButtonDown));
   pango_entry_->end_key_focus.connect(sigc::mem_fun(this, &SearchBar::OnEndKeyFocus));
- 
+
   layered_layout_ = new nux::LayeredLayout();
   layered_layout_->AddLayer(hint_);
   layered_layout_->AddLayer(pango_entry_);

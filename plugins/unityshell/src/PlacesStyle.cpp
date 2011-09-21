@@ -101,12 +101,12 @@ int PlacesStyle::GetTileIconSize() const
 
 int PlacesStyle::GetTileWidth() const
 {
-  return _text_width;
+  return MAX(_text_width, 150);
 }
 
 int PlacesStyle::GetTileHeight() const
 {
-  return GetTileIconSize() + (_text_height * 3) + 12;
+  return MAX(GetTileIconSize() + (_text_height * 2) + 10, GetTileIconSize() + 50 + 18); // magic design numbers.
 }
 
 int PlacesStyle::GetHomeTileIconSize() const
@@ -293,6 +293,7 @@ void PlacesStyle::Refresh()
                NULL);
   desc = pango_font_description_from_string(font_description);
   pango_font_description_set_weight(desc, PANGO_WEIGHT_NORMAL);
+  pango_font_description_set_size (desc, 9 * PANGO_SCALE);
 
   layout = pango_cairo_create_layout(cr);
   pango_layout_set_font_description(layout, desc);

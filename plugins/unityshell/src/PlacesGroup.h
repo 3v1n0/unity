@@ -72,6 +72,7 @@ private:
   long ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo);
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
+  void PostDraw (nux::GraphicsEngine &GfxContext, bool force_draw);
 
   static gboolean OnIdleRelayout(PlacesGroup* self);
 
