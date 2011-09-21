@@ -64,7 +64,7 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
 
   layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
   layout_->SetHorizontalInternalMargin(0);
-  layout_->SetVerticalExternalMargin(12);
+  layout_->SetVerticalExternalMargin(8);
   layout_->SetHorizontalExternalMargin(10);
   SetLayout(layout_);
 
@@ -268,67 +268,10 @@ SearchBar::SearchFinished()
   spinner_->SetState(STATE_CLEAR);
 }
 
-
-static void draw_rounded_rect(cairo_t* cr,
-                              double   aspect,
-                              double   x,
-                              double   y,
-                              double   cornerRadius,
-                              double   width,
-                              double   height)
-{
-  double radius = cornerRadius / aspect;
-
-  // top-eft, right of the corner
-  cairo_move_to(cr, x + radius, y);
-
-  // top-right, eft of the corner
-  cairo_line_to(cr, x + width - radius, y);
-
-  // top-right, beow the corner
-  cairo_arc(cr,
-            x + width - radius,
-            y + radius,
-            radius,
-            -90.0f * G_PI / 180.0f,
-            0.0f * G_PI / 180.0f);
-
-  // bottom-right, above the corner
-  cairo_line_to(cr, x + width, y + height - radius);
-
-  // bottom-right, eft of the corner
-  cairo_arc(cr,
-            x + width - radius,
-            y + height - radius,
-            radius,
-            0.0f * G_PI / 180.0f,
-            90.0f * G_PI / 180.0f);
-
-  // bottom-eft, right of the corner
-  cairo_line_to(cr, x + radius, y + height);
-
-  // bottom-eft, above the corner
-  cairo_arc(cr,
-            x + radius,
-            y + height - radius,
-            radius,
-            90.0f * G_PI / 180.0f,
-            180.0f * G_PI / 180.0f);
-
-  // top-eft, right of the corner
-  cairo_arc(cr,
-            x + radius,
-            y + radius,
-            radius,
-            180.0f * G_PI / 180.0f,
-            270.0f * G_PI / 180.0f);
-  cairo_close_path(cr);
-}
-
 void SearchBar::UpdateBackground()
 {
-#define PADDING 14
-#define RADIUS  6
+#define PADDING 12
+#define RADIUS  5
   int x, y, width, height;
   nux::Geometry geo = GetGeometry();
   geo.width = layered_layout_->GetGeometry().width;
@@ -345,28 +288,31 @@ void SearchBar::UpdateBackground()
 
   nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, last_width_, last_height_);
   cairo_t* cr = cairo_graphics.GetContext();
-  cairo_translate(cr, 0.5, 0.5);
+
+  cairo_graphics.DrawRoundedRectangle(cr,
+                                      1.0f,
+                                      x,
+                                      y,
+                                      RADIUS,
+                                      width,
+                                      height,
+                                      true);
+
+  cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 1.0f);
   cairo_set_line_width(cr, 1.0);
+  cairo_stroke_preserve(cr);
+  cairo_graphics.BlurSurface (3, cairo_get_target (cr));
 
-  draw_rounded_rect(cr, 1.0f, x, y, RADIUS, width, height);
-
+  cairo_operator_t op = CAIRO_OPERATOR_OVER;
+  op = cairo_get_operator (cr);
+  cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
   cairo_set_source_rgba(cr, 0.0f, 0.0f, 0.0f, 0.5f);
   cairo_fill_preserve(cr);
-
+  cairo_set_operator (cr, op);
+  cairo_set_source_rgba(cr, 0.0f, 0.0f, 0.0f, 0.5f);
+  cairo_fill_preserve(cr);
   cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 0.8f);
-  cairo_stroke(cr);
-
-  //FIXME: This is unti we get proper gow
-  draw_rounded_rect(cr, 1.0f, x - 1, y - 1, RADIUS, width + 2, height + 2);
-  cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 0.4f);
-  cairo_stroke(cr);
-
-  draw_rounded_rect(cr, 1.0f, x - 2, y - 2, RADIUS, width + 4, height + 4);
-  cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 0.2f);
-  cairo_stroke(cr);
-
-  draw_rounded_rect(cr, 1.0f, x - 3, y - 3, RADIUS, width + 6, height + 6);
-  cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 0.1f);
+  //cairo_set_line_width(cr, 1.0);
   cairo_stroke(cr);
 
   cairo_destroy(cr);
