@@ -95,6 +95,7 @@ BackgroundEffectHelper::BackgroundEffectHelper()
   cache_dirty = true;
   enabled.changed.connect (sigc::mem_fun(this, &BackgroundEffectHelper::OnEnabledChanged));
   noise_texture_ = nux::CreateTextureFromFile(PKGDATADIR"/dash_noise.png");
+
   Register(this);
 }
 
@@ -380,26 +381,39 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nu
                                         resized_texture, device_texture,
                                         texxform__bg, nux::color::White);
 
+    blur_fx_struct_.src_texture = resized_texture;
     // Blur at a lower resolution (less pixels to process)
-    nux::ObjectPtr<nux::IOpenGLBaseTexture> low_res_blur;
-    low_res_blur = graphics_engine->QRP_GetHQBlur(x, y, down_size_width, down_size_height,
-                                                  resized_texture, texxform, nux::color::White,
-                                                  gaussian_sigma, blur_passes);
+    // nux::ObjectPtr<nux::IOpenGLBaseTexture> low_res_blur;
+    // low_res_blur = graphics_engine->QRP_GetHQBlur(x, y, down_size_width, down_size_height,
+    //                                               resized_texture, texxform, nux::color::White,
+    //                                               gaussian_sigma, blur_passes);
+
+    graphics_engine->QRP_GLSL_GetHQBlurFx(x, y, down_size_width, down_size_height,
+                                                  &blur_fx_struct_, texxform, nux::color::White,
+                                                 gaussian_sigma, blur_passes);
+
 
     // Up size
     graphics_engine->QRP_GetCopyTexture(buffer_width, buffer_height,
-                                        resized_texture, low_res_blur,
+                                        resized_texture, blur_fx_struct_.dst_texture,
                                         texxform, nux::color::White);
+
+    noise_fx_struct_.src_texture = resized_texture;
 
     // Add Noise
     nux::ObjectPtr<nux::IOpenGLBaseTexture> noisy_blur;
     nux::Color noise_color(noise_factor * 1.0f/buffer_width,
                            noise_factor * 1.0f/buffer_height,
                            1.0f, 1.0f);
-    noisy_blur = graphics_engine->QRP_GLSL_GetDisturbedTexture(
+    // noisy_blur = graphics_engine->QRP_GLSL_GetDisturbedTexture(
+    //   0, 0, buffer_width, buffer_height,
+    //   noise_device_texture->m_Texture, noise_texxform, noise_color,
+    //   resized_texture, texxform, nux::color::White);
+
+    graphics_engine->QRP_GLSL_GetDisturbedTextureFx(
       0, 0, buffer_width, buffer_height,
       noise_device_texture->m_Texture, noise_texxform, noise_color,
-      resized_texture, texxform, nux::color::White);
+      &noise_fx_struct_, texxform, nux::color::White);
 
     // Returns a smaller blur region (minus blur radius).
     texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
@@ -407,7 +421,7 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nu
     texxform.uoffset = dleft / (float) buffer_width;
     texxform.voffset = dbottom / (float) buffer_height;
     graphics_engine->QRP_GetCopyTexture(blur_geometry_.width, blur_geometry_.height,
-                                        blur_texture_, noisy_blur,
+                                        blur_texture_, noise_fx_struct_.dst_texture,
                                         texxform, nux::color::White);
   }
   else

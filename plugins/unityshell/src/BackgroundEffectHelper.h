@@ -71,6 +71,9 @@ public:
 
   static nux::Geometry monitor_rect_;
   
+  nux::FxStructure blur_fx_struct_;
+  nux::FxStructure noise_fx_struct_;
+  
 protected:
   static void Register   (BackgroundEffectHelper* self);
   static void Unregister (BackgroundEffectHelper* self);
