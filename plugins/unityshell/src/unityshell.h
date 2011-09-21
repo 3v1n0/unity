@@ -352,6 +352,7 @@ public:
   void minimize ();
   void unminimize ();
   bool minimized ();
+  bool focus ();
 
   void updateFrameRegion (CompRegion &region);
 
