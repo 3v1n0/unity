@@ -27,6 +27,7 @@
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
 
+#include "Timer.h"
 #include "ubus-server.h"
 #include "UBusMessages.h"
 #include "ResultViewGrid.h"
@@ -52,7 +53,8 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
   , active_index_(-1)
   , selected_index_(-1)
   , preview_row_(0)
-  , lazy_load_queued_(false)
+  , last_lazy_loaded_result_ (0)
+  , lazy_load_handle_(0)
   , last_mouse_down_x_(-1)
   , last_mouse_down_y_(-1)
 {
@@ -88,6 +90,7 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
 
 ResultViewGrid::~ResultViewGrid()
 {
+  g_source_remove(lazy_load_handle_);
 }
 
 gboolean ResultViewGrid::OnLazyLoad (gpointer data)
@@ -99,16 +102,16 @@ gboolean ResultViewGrid::OnLazyLoad (gpointer data)
 
 void ResultViewGrid::QueueLazyLoad()
 {
-  if (lazy_load_queued_ == false)
+  if (lazy_load_handle_ == 0)
   {
-    g_timeout_add(0, (GSourceFunc)(&ResultViewGrid::OnLazyLoad), this);
-    lazy_load_queued_ = true;
+    lazy_load_handle_ = g_timeout_add(0, (GSourceFunc)(&ResultViewGrid::OnLazyLoad), this);
   }
+  last_lazy_loaded_result_ = 0; // we always want to reset the lazy load index here
 }
 
 void ResultViewGrid::DoLazyLoad()
 {
-  lazy_load_queued_ = false;
+  lazy_load_handle_ = 0;
   // FIXME - so this code was nice, it would only load the visible entries on the screen
   // however nux does not give us a good enough indicator right now that we are scrolling,
   // thus if you scroll more than a screen in one frame, you will end up with at least one frame where
@@ -129,21 +132,39 @@ void ResultViewGrid::DoLazyLoad()
     //~ index++;
   //~ }
 
+  util::Timer timer;
+  bool queue_additional_load = false; // if this is set, we will return early and start loading more next frame
+
   // instead we will just pre-load all the items if expanded or just one row if not
   int index = 0;
   int items_per_row = GetItemsPerRow();
-  ResultList::iterator it;
-  for (it = results_.begin(); it != results_.end(); it++)
+  for (auto it = results_.begin() + last_lazy_loaded_result_; it != results_.end(); it++)
   {
     if ((!expanded && index < items_per_row) || expanded)
     {
       renderer_->Preload((*it));
+      last_lazy_loaded_result_ = index;
+    }
+
+    if (timer.ElapsedSeconds() > 0.008)
+    {
+      queue_additional_load = true;
+      break;
     }
 
     if (!expanded && index >= items_per_row)
       break; //early exit
 
     index++;
+  }
+
+  if (queue_additional_load)
+  {
+    //we didn't load all the results because we exceeded our time budget, so queue another lazy load
+    if (lazy_load_handle_ == 0)
+    {
+      lazy_load_handle_ = g_timeout_add(1000/60 - 8, (GSourceFunc)(&ResultViewGrid::OnLazyLoad), this);
+    }
   }
 
   QueueDraw();
