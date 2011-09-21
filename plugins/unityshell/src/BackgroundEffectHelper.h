@@ -53,14 +53,9 @@ public:
 
   void DirtyCache();
 
-  static void QueueDrawOnOwners();
+  static void ProcessDamage(nux::Geometry geo);
 
   static bool HasEnabledHelpers();
-  static void SetDamageBounds(Region damage);
-  static void ResetDamageBounds();
-  static void AddOccludedRegion(Region occluded);
-  static void ResetOcclusionBuffer();
-  static bool OcclusionDetectionActive();
 
   static nux::Property<unity::BlurType> blur_type;
   static nux::Property<float> sigma_high;
@@ -71,6 +66,9 @@ public:
 
   static nux::Geometry monitor_rect_;
   
+  nux::FxStructure blur_fx_struct_;
+  nux::FxStructure noise_fx_struct_;
+  
 protected:
   static void Register   (BackgroundEffectHelper* self);
   static void Unregister (BackgroundEffectHelper* self);
@@ -80,17 +78,13 @@ private:
 
   nux::BaseTexture*                       noise_texture_;
   nux::ObjectPtr<nux::IOpenGLBaseTexture> blur_texture_;
+  nux::ObjectPtr<nux::IOpenGLBaseTexture> resize_tmp_;
+  nux::ObjectPtr<nux::IOpenGLBaseTexture> noisy_tmp_;
   nux::Geometry blur_geometry_;
 
   bool cache_dirty;
 
   static std::list<BackgroundEffectHelper*> registered_list_;
-
-  // FIXME: I couldn't find anything in nux that works
-  // like X Regions do
-  static Region occluded_region_;
-  static Region damage_region_;
-  static Region popup_region_;
 };
 
 #endif
