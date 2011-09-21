@@ -299,6 +299,8 @@ UnityScreen::UnityScreen(CompScreen* screen)
      CompSize size(1, 20);
      _shadow_texture = GLTexture::readImageToTexture(name, pname, size);
 
+     BackgroundEffectHelper::updates_enabled = true;
+
      ubus_manager_.RegisterInterest(UBUS_PLACE_VIEW_SHOWN, [&](GVariant * args) { dash_is_open_ = true; });
      ubus_manager_.RegisterInterest(UBUS_PLACE_VIEW_HIDDEN, [&](GVariant * args) { dash_is_open_ = false; });
       LOG_INFO(logger) << "UnityScreen constructed: " << timer.ElapsedSeconds() << "s";
@@ -573,7 +575,6 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
   nux::GetGraphicsDisplay()->GetGpuDevice()->backup_texture0_ = device_texture;
 
   nux::Geometry geo = nux::Geometry (output->x (), output->y (), output->width (), output->height ());
-
   BackgroundEffectHelper::monitor_rect_ = geo;
 
   _in_paint = true;
@@ -637,7 +638,6 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
 
   doShellRepaint = false;
   damaged = false;
-  BackgroundEffectHelper::updates_enabled = true;
 }
 
 bool UnityScreen::forcePaintOnTop ()
@@ -918,29 +918,6 @@ void UnityScreen::preparePaint(int ms)
 {
   CompWindowList remove_windows;
 
-  if (BackgroundEffectHelper::blur_type == unity::BLUR_ACTIVE)
-  {
-    if (cScreen->damageMask() & COMPOSITE_SCREEN_DAMAGE_ALL_MASK)
-    {
-      CompRegion damage (screen->currentOutputDev().workArea());
-      BackgroundEffectHelper::SetDamageBounds(damage.handle());
-    }
-    else
-    {
-      CompRegion current_damage = cScreen->currentDamage();
-      BackgroundEffectHelper::SetDamageBounds(current_damage.handle());
-    }
-
-    // this causes queue draws to be called, we obviously dont want to disable updates
-    // because we are updating the blur, so ignore them.
-    bool do_updates = BackgroundEffectHelper::updates_enabled;
-    BackgroundEffectHelper::QueueDrawOnOwners();
-    BackgroundEffectHelper::updates_enabled = do_updates;
-
-    BackgroundEffectHelper::ResetOcclusionBuffer();
-    BackgroundEffectHelper::detecting_occlusions = true;
-  }
-
   cScreen->preparePaint(ms);
 
   for (CompWindow *w : UnityShowdesktopHandler::animating_windows)
@@ -1053,6 +1030,23 @@ void UnityScreen::handleEvent(XEvent* event)
       !switcherController->Visible())
   {
     wt->ProcessForeignEvent(event, NULL);
+  }
+
+  if (event->type == cScreen->damageEvent() + XDamageNotify)
+  {
+    XDamageNotifyEvent *de = (XDamageNotifyEvent *) event;
+    CompWindow* w = screen->findWindow (de->drawable);
+
+    if (w)
+    {
+      nux::Geometry damage (de->area.x, de->area.y, de->area.width, de->area.height);
+
+      CompWindow::Geometry geom = w->geometry ();
+      damage.x += geom.x () + geom.border ();
+      damage.y += geom.y () + geom.border ();
+
+      BackgroundEffectHelper::ProcessDamage(damage);
+    }
   }
 }
 
@@ -1533,63 +1527,6 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
     }
   }
 
-  /* Don't bother detecting occlusions if we're not doing updates
-   * or we don't want to repaint the shell this pass. We also
-   * have a global flag detecting_occlusions which is set to false
-   * once we need to *stop* detecting occlusions
-   */
-  if (BackgroundEffectHelper::blur_type != unity::BLUR_ACTIVE ||
-      !BackgroundEffectHelper::updates_enabled() ||
-      !BackgroundEffectHelper::HasEnabledHelpers() ||
-      !BackgroundEffectHelper::detecting_occlusions() ||
-      !uScreen->doShellRepaint ||
-      uScreen->forcePaintOnTop ())
-  {
-    return gWindow->glPaint(wAttrib, matrix, region, mask);
-  }
-
-  /* Compiz paints windows top to bottom during
-   * the occlusion pass, so add windows to occlusion
-   * buffer first and then stop adding windows once we
-   * hit a window below a nux window (since the nux
-   * windows are removed from the paint list) */
-  if (mask & PAINT_WINDOW_OCCLUSION_DETECTION_MASK)
-  {
-    for (CompWindow* w = window; w; w = w->next)
-    {
-      for (const Window & xw : nux::XInputWindow::NativeHandleList())
-      {
-        /* We hit one of our windows, stop detecting occlusions */
-        if (xw == w->id())
-        {
-          BackgroundEffectHelper::detecting_occlusions = false;
-          break;
-        }
-      }
-
-      if (!BackgroundEffectHelper::detecting_occlusions())
-        break;
-    }
-
-    if (BackgroundEffectHelper::detecting_occlusions())
-    {
-      /* glPaint will return true if the window will be
-       * drawon on screen, in that case we need to add
-       * its output rect to the occlusion buffer */
-      if (gWindow->glPaint(attrib, matrix, region, mask))
-      {
-        CompRegion outReg(window->outputRect());
-        BackgroundEffectHelper::AddOccludedRegion(outReg.handle());
-        return true;
-      }
-      else
-        return false;
-    }
-    else
-      return gWindow->glPaint(wAttrib, matrix, region, mask);
-  }
-
-  /* Should never be reached */
   return gWindow->glPaint(wAttrib, matrix, region, mask);
 }
 
@@ -1833,7 +1770,6 @@ void UnityScreen::onRedrawRequested()
   }
   else
   {
-    BackgroundEffectHelper::updates_enabled = false;
     damageNuxRegions();
   }
 }
