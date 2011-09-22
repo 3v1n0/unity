@@ -338,7 +338,7 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   nux::ColorLayer layer(nux::Color(0x00000000), true, rop);
   gPainter.PushDrawLayer(GfxContext, GetGeometry(), &layer);
 
-  if (_is_own_window || !_we_control_active || (_is_maximized && _is_inside))
+  if (_is_own_window || !_we_control_active || (_is_maximized && (_is_inside || _show_now_activated)))
   {
 
   }
@@ -452,7 +452,7 @@ PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
       layout_->ProcessDraw(GfxContext, force_draw);
   }
 
-    if ((!_is_own_window && _we_control_active && _is_maximized && _is_inside) ||
+    if ((!_is_own_window && _we_control_active && _is_maximized && (_is_inside || _show_now_activated)) ||
         _places_showing)
     {
       _window_buttons->ProcessDraw(GfxContext, true);
