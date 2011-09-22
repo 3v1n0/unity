@@ -159,7 +159,6 @@ private:
   CompScreen* m_Screen;
   MultiActionList m_ExpoActionList;
   MultiActionList m_ScaleActionList;
-  std::list <guint32> m_SpreadedWindows;
 
   bool _spread_state;
   bool _expo_state;

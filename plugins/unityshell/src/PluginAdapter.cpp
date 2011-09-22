@@ -99,17 +99,6 @@ PluginAdapter::OnScreenUngrabbed()
 {
   if (_spread_state && !screen->grabExist("scale"))
   {
-    // restore windows to their pre-spread minimized state
-    for (std::list<guint32>::iterator itr = m_SpreadedWindows.begin(); itr != m_SpreadedWindows.end(); ++itr)
-    {
-      if (*itr != m_Screen->activeWindow())
-      {
-        CompWindow* window = m_Screen->findWindow(*itr);
-        if (window)
-          window->minimize();
-      }
-    }
-    m_SpreadedWindows.clear();
     _spread_state = false;
     terminate_spread.emit();
   }
@@ -336,26 +325,6 @@ PluginAdapter::InitiateScale(std::string const& match, int state)
   argument.resize(1);
   argument[0].setName("match", CompOption::TypeMatch);
   argument[0].value().set(m);
-
-  /* FIXME: Lame */
-  foreach(CompWindow * w, screen->windows())
-  {
-    if (m.evaluate(w))
-    {
-      /* FIXME:
-         just unminimize minimized window for now, don't minimize them after the scale if not picked as TerminateScale is only
-         called if you click on the launcher, not on any icon. More generally, we should hook up InitiateScale and TerminateScale
-         to a Scale plugin signal as the shortcut will have a different behaviour then.
-      */
-      if (w->minimized())
-      {
-        // keep track of windows that were unminimzed to restore their state after the spread
-        if (std::find(m_SpreadedWindows.begin(), m_SpreadedWindows.end(), w->id()) == m_SpreadedWindows.end())
-          m_SpreadedWindows.push_back(w->id());
-        w->unminimize();
-      }
-    }
-  }
 
   m_ScaleActionList.InitiateAll(argument, state);
 }

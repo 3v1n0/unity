@@ -1595,6 +1595,38 @@ UnityWindow::unminimize ()
 }
 
 bool
+UnityWindow::focus ()
+{
+  if (!mMinimizeHandler.get ())
+    return window->focus ();
+
+  if (window->overrideRedirect ())
+    return false;
+
+  if (!window->managed ())
+    return false;
+
+  if (!window->onCurrentDesktop ())
+    return false;
+
+  /* Only withdrawn windows 
+   * which are marked hidden
+   * are excluded */
+  if (!window->shaded () &&
+      !window->minimized () &&
+      (window->state () & CompWindowStateHiddenMask))
+    return false;
+
+  if (window->geometry ().x () + window->geometry ().width ()  <= 0	||
+      window->geometry ().y () + window->geometry ().height () <= 0	||
+      window->geometry ().x () >= (int) screen->width ()||
+      window->geometry ().y () >= (int) screen->height ())
+    return false;
+
+  return true;
+}
+
+bool
 UnityWindow::minimized ()
 {
   return mMinimizeHandler.get () != NULL;
@@ -1615,6 +1647,7 @@ void UnityWindow::windowNotify(CompWindowNotify n)
         bool wasMinimized = window->minimized ();
         if (wasMinimized)
           window->unminimize ();
+        window->focusSetEnabled (this, true);
         window->minimizeSetEnabled (this, true);
         window->unminimizeSetEnabled (this, true);
         window->minimizedSetEnabled (this, true);
@@ -1624,6 +1657,7 @@ void UnityWindow::windowNotify(CompWindowNotify n)
       }
       else
       {
+        window->focusSetEnabled (this, false);
         window->minimizeSetEnabled (this, false);
         window->unminimizeSetEnabled (this, false);
         window->minimizedSetEnabled (this, false);
@@ -2225,6 +2259,7 @@ UnityWindow::UnityWindow(CompWindow* window)
   WindowInterface::setHandler(window);
   GLWindowInterface::setHandler(gWindow);
 
+  window->focusSetEnabled (this, false);
   window->minimizedSetEnabled (this, false);
   window->minimizeSetEnabled (this, false);
   window->unminimizeSetEnabled (this, false);
@@ -2244,6 +2279,7 @@ UnityWindow::~UnityWindow()
   if (mMinimizeHandler)
   {
     unminimize ();
+    window->focusSetEnabled (this, false);
     window->minimizeSetEnabled (this, false);
     window->unminimizeSetEnabled (this, false);
     window->minimizedSetEnabled (this, false);
