@@ -78,7 +78,9 @@ PanelMenuView::PanelMenuView(int padding)
     _active_xid(0),
     _active_moved_id(0),
     _place_shown_interest(0),
-    _place_hidden_interest(0)
+    _place_hidden_interest(0),
+    _fade_in_animator(NULL),
+    _fade_out_animator(NULL)
 {
   WindowManager* win_manager;
 
@@ -150,6 +152,17 @@ PanelMenuView::PanelMenuView(int padding)
                                                          (UBusCallback)PanelMenuView::OnPlaceViewHidden,
                                                          this);
 
+  _fade_in_animator = new Animator(200, 150);
+  _fade_out_animator = new Animator(200, 400);
+
+  _fade_in_animator->animation_updated.connect(sigc::mem_fun(this, &PanelMenuView::OnFadeInChanged));
+  _fade_in_animator->animation_ended.connect(sigc::mem_fun(this, &PanelMenuView::FullRedraw));
+  _fade_out_animator->animation_updated.connect(sigc::mem_fun(this, &PanelMenuView::OnFadeOutChanged));
+  _fade_out_animator->animation_ended.connect(sigc::mem_fun(this, &PanelMenuView::FullRedraw));
+
+  SetOpacity(0.0f);
+  _window_buttons->SetOpacity(0.0f);
+
   Refresh();
 }
 
@@ -166,8 +179,15 @@ PanelMenuView::~PanelMenuView()
 
   if (_title_layer)
     delete _title_layer;
+
   if (_title_tex)
     _title_tex->UnReference();
+
+  if (_fade_in_animator)
+    delete _fade_in_animator;
+
+  if (_fade_out_animator)
+    delete _fade_out_animator;
 
   _menu_layout->UnReference();
   _window_buttons->UnReference();
@@ -310,6 +330,32 @@ long PanelMenuView::PostLayoutManagement(long LayoutResult)
     NeedRedraw();
 
   return res;
+}
+
+void
+PanelMenuView::OnFadeInChanged(double opacity)
+{
+  if (DrawMenus() && GetOpacity() != 1.0f)
+    SetOpacity(opacity);
+
+  if (DrawWindowButtons() && _window_buttons->GetOpacity() != 1.0f)
+    _window_buttons->SetOpacity(opacity);
+
+  NeedRedraw();
+}
+
+void
+PanelMenuView::OnFadeOutChanged(double progress)
+{
+  double opacity = 1.0f - progress;
+
+  if (!DrawMenus() && GetOpacity() != 0.0f)
+    SetOpacity(opacity);
+
+  if (!DrawWindowButtons() && _window_buttons->GetOpacity() != 0.0f)
+    _window_buttons->SetOpacity(opacity);
+
+  NeedRedraw();
 }
 
 bool
@@ -475,17 +521,41 @@ void
 PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
   nux::Geometry geo = GetGeometry();
+  bool draw_menus = DrawMenus();
+  bool draw_buttons = DrawWindowButtons();
 
   GfxContext.PushClippingRectangle(geo);
 
-  if (DrawMenus())
+  if (draw_menus)
   {
-    _menu_layout->ProcessDraw(GfxContext, true);
+    _menu_layout->ProcessDraw(GfxContext, force_draw);
+
+    _fade_out_animator->Stop();
+    _fade_in_animator->Start(GetOpacity());
   }
 
-  if (DrawWindowButtons())
+  if (GetOpacity() != 0 && !draw_menus)
   {
-    _window_buttons->ProcessDraw(GfxContext, true);
+    _menu_layout->ProcessDraw(GfxContext, force_draw);
+
+    _fade_in_animator->Stop();
+    _fade_out_animator->Start(1.0f - GetOpacity());
+  }
+
+  if (draw_buttons)
+  {
+    _window_buttons->ProcessDraw(GfxContext, force_draw);
+
+    _fade_out_animator->Stop();
+    _fade_in_animator->Start(_window_buttons->GetOpacity());
+  }
+
+  if (_window_buttons->GetOpacity() != 0 && !draw_buttons)
+  {
+    _window_buttons->ProcessDraw(GfxContext, force_draw);
+
+    _fade_in_animator->Stop();
+    _fade_out_animator->Start(1.0f - _window_buttons->GetOpacity());
   }
 
   GfxContext.PopClippingRectangle();

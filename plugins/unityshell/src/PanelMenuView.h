@@ -30,6 +30,7 @@
 #include "WindowButtons.h"
 #include "PanelTitlebarGrabAreaView.h"
 #include "PluginAdapter.h"
+#include "Animator.h"
 
 #include <libbamf/libbamf.h>
 
@@ -113,6 +114,9 @@ private:
   bool DrawMenus();
   bool DrawWindowButtons();
 
+  void OnFadeInChanged(double);
+  void OnFadeOutChanged(double);
+
 private:
   BamfMatcher* _matcher;
 
@@ -153,6 +157,9 @@ private:
 
   guint32 _place_shown_interest;
   guint32 _place_hidden_interest;
+
+  Animator* _fade_in_animator;
+  Animator* _fade_out_animator;
 };
 
 }
