@@ -73,17 +73,19 @@ LauncherController::~LauncherController()
   delete _model;
 }
 
+
 void
 LauncherController::OnLauncherAddRequest(char* path, LauncherIcon* before)
 {
-  std::list<BamfLauncherIcon*> launchers;
-  std::list<BamfLauncherIcon*>::iterator it;
-
-  launchers = _model->GetSublist<BamfLauncherIcon> ();
-  for (it = launchers.begin(); it != launchers.end(); it++)
+  for (auto it : _model->GetSublist<BamfLauncherIcon> ())
   {
-    if (!g_strcmp0(path, (*it)->DesktopFile()))
+    if (!g_strcmp0(path, it->DesktopFile()))
+    {
+      it->Stick();
+      _model->ReorderBefore(it, before, false);
+      Save();
       return;
+    }
   }
 
   LauncherIcon* result = CreateFavorite(path);
