@@ -312,6 +312,37 @@ long PanelMenuView::PostLayoutManagement(long LayoutResult)
   return res;
 }
 
+bool
+PanelMenuView::DrawMenus()
+{
+  if (!_is_own_window && !_places_showing && _we_control_active)
+  {
+    if (_is_inside || _last_active_view || _show_now_activated)
+    {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+bool
+PanelMenuView::DrawWindowButtons()
+{
+  if (_places_showing)
+    return true;
+
+  if (!_is_own_window && _we_control_active && _is_maximized)
+  {
+    if (_is_inside || _show_now_activated)
+    {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 void
 PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
@@ -338,8 +369,8 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   nux::ColorLayer layer(nux::Color(0x00000000), true, rop);
   gPainter.PushDrawLayer(GfxContext, GetGeometry(), &layer);
 
-  if (_is_own_window || !_we_control_active ||
-      (_is_maximized && ((_is_inside || _show_now_activated))))
+  if ((DrawMenus() && DrawWindowButtons()) ||
+      (GetOpacity() > 0 && _window_buttons->GetOpacity() > 0))
   {
 
   }
@@ -357,7 +388,7 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
       }
     }
 
-    if ((_is_inside || _last_active_view || _show_now_activated) && have_valid_entries)
+    if ((DrawMenus() || GetOpacity() > 0) && have_valid_entries)
     {
       if (_gradient_texture.IsNull())
       {
@@ -447,16 +478,12 @@ PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   GfxContext.PushClippingRectangle(geo);
 
-  if (!_is_own_window && !_places_showing && _we_control_active)
+  if (DrawMenus())
   {
-    if (_is_inside || _last_active_view || _show_now_activated)
-    {
-      _menu_layout->ProcessDraw(GfxContext, true);
-    }
+    _menu_layout->ProcessDraw(GfxContext, true);
   }
 
-  if ((!_is_own_window && _we_control_active && _is_maximized && (_is_inside || _show_now_activated)) ||
-      _places_showing)
+  if (DrawWindowButtons())
   {
     _window_buttons->ProcessDraw(GfxContext, true);
   }

@@ -110,6 +110,9 @@ private:
   void UpdateShowNow(bool ignore);
   static gboolean UpdateActiveWindowPosition(PanelMenuView* self);
 
+  bool DrawMenus();
+  bool DrawWindowButtons();
+
 private:
   BamfMatcher* _matcher;
 
