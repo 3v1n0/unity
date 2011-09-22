@@ -53,10 +53,10 @@ void cairo_set_source_rgba(cairo_t* cr, nux::Color const& color)
 
 inline double _align(double val)
 {
-  double fract = val - static_cast<int>(val);
+  double fract = val - (int) val;
 
   if (fract != 0.5f)
-    return std::trunc(val + 0.5f);
+    return (double) ((int) val + 0.5f);
   else
     return val;
 }
