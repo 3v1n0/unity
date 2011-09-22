@@ -317,8 +317,6 @@ check_selected(UnityLauncherIconAccessible* self)
     atk_object_notify_state_change(ATK_OBJECT(self),
                                    ATK_STATE_ACTIVE,
                                    found);
-    if (found)
-      g_debug("[UnityLauncherIcon %s] selected", atk_object_get_name (ATK_OBJECT(self)));
 
     g_signal_emit_by_name(self, "focus-event", self->priv->selected, &return_val);
     atk_focus_tracker_notify(ATK_OBJECT(self));

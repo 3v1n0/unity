@@ -368,7 +368,6 @@ unity_switcher_accessible_check_pending_notification(NuxAreaAccessible* self)
    * to be shown to the user, so if the parent window gets actived, we
    * assume that the switcher will be automatically focused
    */
-  g_debug("[Switcher] visible focus emission");
   atk_object_notify_state_change(ATK_OBJECT(self), ATK_STATE_FOCUSED, TRUE);
   g_signal_emit_by_name(self, "focus-event", TRUE, NULL);
 
@@ -380,8 +379,6 @@ static void
 on_selection_changed_cb(AbstractLauncherIcon* icon,
                         UnitySwitcherAccessible* switcher_accessible)
 {
-  g_debug ("[Switcher] selection_change");
-
   g_signal_emit_by_name(ATK_OBJECT(switcher_accessible), "selection-changed");
 }
 
