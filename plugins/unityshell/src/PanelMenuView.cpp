@@ -352,7 +352,9 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   nux::ColorLayer layer(nux::Color(0x00000000), true, rop);
   gPainter.PushDrawLayer(GfxContext, GetGeometry(), &layer);
 
-  if (_is_own_window || !_we_control_active || (_is_maximized && (_is_inside || _show_now_activated)))
+  if (_is_own_window || !_we_control_active ||
+      (_is_maximized && ((_is_inside || _show_now_activated) ||
+                         (_fading_menus.GetOpacity() > 0 && _fading_buttons.GetOpacity() > 0))))
   {
 
   }
@@ -479,7 +481,7 @@ PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     _fading_menus.FadeOut(30);
   }
 
-  if ((!_is_own_window && _we_control_active && _is_maximized && _is_inside) ||
+  if ((!_is_own_window && _we_control_active && _is_maximized && (_is_inside || _show_now_activated)) ||
       _places_showing)
   {
     _window_buttons->ProcessDraw(GfxContext, true);
