@@ -150,14 +150,6 @@ PanelMenuView::PanelMenuView(int padding)
                                                          (UBusCallback)PanelMenuView::OnPlaceViewHidden,
                                                          this);
 
-  _fading_menus.SetObject(this);
-  _fading_menus.opacity_changed.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelItemOpacityChanged));
-  _fading_menus.SetOpacity(0);
-
-  _fading_buttons.SetObject(_window_buttons);
-  _fading_buttons.opacity_changed.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelItemOpacityChanged));
-  _fading_menus.SetOpacity(0);
-
   Refresh();
 }
 
@@ -187,12 +179,6 @@ PanelMenuView::~PanelMenuView()
 
   if (_place_hidden_interest != 0)
     ubus_server_unregister_interest(ubus, _place_hidden_interest);
-}
-
-void
-PanelMenuView::OnPanelItemOpacityChanged(FadeController::FadingStatus, double)
-{
-  FullRedraw();
 }
 
 void
@@ -353,8 +339,7 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   gPainter.PushDrawLayer(GfxContext, GetGeometry(), &layer);
 
   if (_is_own_window || !_we_control_active ||
-      (_is_maximized && ((_is_inside || _show_now_activated) ||
-                         (_fading_menus.GetOpacity() > 0 && _fading_buttons.GetOpacity() > 0))))
+      (_is_maximized && ((_is_inside || _show_now_activated))))
   {
 
   }
@@ -372,8 +357,7 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
       }
     }
 
-    if ((_is_inside || _last_active_view || _show_now_activated ||
-         _fading_menus.GetOpacity() > 0) && have_valid_entries)
+    if ((_is_inside || _last_active_view || _show_now_activated) && have_valid_entries)
     {
       if (_gradient_texture.IsNull())
       {
@@ -459,8 +443,6 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 void
 PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
-  bool draw_menu = false;
-  bool draw_buttons = false;
   nux::Geometry geo = GetGeometry();
 
   GfxContext.PushClippingRectangle(geo);
@@ -470,29 +452,13 @@ PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     if (_is_inside || _last_active_view || _show_now_activated)
     {
       _menu_layout->ProcessDraw(GfxContext, true);
-      _fading_menus.FadeIn(5);
-      draw_menu = true;
     }
-  }
-
-  if (_fading_menus.GetOpacity() != 0 && !draw_menu)
-  {
-    _menu_layout->ProcessDraw(GfxContext, true);
-    _fading_menus.FadeOut(30);
   }
 
   if ((!_is_own_window && _we_control_active && _is_maximized && (_is_inside || _show_now_activated)) ||
       _places_showing)
   {
     _window_buttons->ProcessDraw(GfxContext, true);
-    _fading_buttons.FadeIn(5);
-    draw_buttons = true;
-  }
-
-  if (_fading_buttons.GetOpacity() != 0 && !draw_buttons)
-  {
-    _window_buttons->ProcessDraw(GfxContext, true);
-    _fading_buttons.FadeOut(30);
   }
 
   GfxContext.PopClippingRectangle();

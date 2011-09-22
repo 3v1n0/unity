@@ -28,12 +28,10 @@
 #include "PanelIndicatorEntryView.h"
 #include "Introspectable.h"
 
-#include "FadeController.h"
-
 namespace unity
 {
 
-class PanelIndicatorsView : public nux::View, public Introspectable, public FadableObject
+class PanelIndicatorsView : public nux::View, public Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE(PanelIndicatorsView, nux::View);
 public:

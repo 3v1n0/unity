@@ -110,8 +110,6 @@ private:
   void UpdateShowNow(bool ignore);
   static gboolean UpdateActiveWindowPosition(PanelMenuView* self);
 
-  void OnPanelItemOpacityChanged(FadeController::FadingStatus, double);
-
 private:
   BamfMatcher* _matcher;
 
@@ -152,9 +150,6 @@ private:
 
   guint32 _place_shown_interest;
   guint32 _place_hidden_interest;
-
-  FadeController _fading_menus;
-  FadeController _fading_buttons;
 };
 
 }

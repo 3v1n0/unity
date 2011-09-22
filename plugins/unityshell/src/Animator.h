@@ -17,60 +17,53 @@
  * Authored by: Marco Trevisan (Treviño) <mail@3v1n0.net>
  */
 
-#ifndef UNITY_FADE_CONTROLLER_H_
-#define UNITY_FADE_CONTROLLER_H_
+#ifndef UNITY_ANIMATOR_H_
+#define UNITY_ANIMATOR_H_
 
 #include <Nux/Nux.h>
-#include <Nux/TimerProc.h>
-
-#include "Introspectable.h"
 
 namespace unity
 {
   
-class FadableObject
+class FadableObject2
 {
 public:
   virtual void SetOpacity(double value) = 0;
   virtual double GetOpacity() = 0;
 };
 
-class FadeController
+class Animator
 {
 public:
-  FadeController();
-  FadeController(FadableObject* object);
-  ~FadeController();
+  Animator(unsigned int rate, unsigned int duration);
+  ~Animator();
 
-  void FadeIn(unsigned int milliseconds);
-  void FadeOut(unsigned int milliseconds);
+  void SetRate(unsigned int rate);
+  void SetDuration(unsigned int duration);
 
-  void SetOpacity(double opacity);
-  double GetOpacity();
+  unsigned int GetRate();
+  unsigned int GetDuration();
+  double GetProgress();
+  bool IsRunning();
 
-  void SetObject(FadableObject* object);
+  void Start(double start_progress = 0.0f);
+  void Stop();
 
-  typedef enum {
-    FADING_NONE,
-    FADING_IN,
-    FADING_OUT
-  } FadingStatus;
+  sigc::signal<void> animation_started;
+  sigc::signal<void> animation_ended;
 
-  FadingStatus GetStatus();
-
-  sigc::signal<void> faded_in;
-  sigc::signal<void> faded_out;
-  sigc::signal<void, FadingStatus, double> opacity_changed;
+  sigc::signal<void, double> animation_updated;
+  sigc::signal<void, double> animation_stopped;
 
 private:
-  FadableObject* _object;
-  FadingStatus _status;
-  nux::TimerFunctor* _timer_functor;
-  nux::TimerHandle _fade_timehandler;
-  sigc::connection _timeout_connection;
-  double _start_opacity;
+  int64_t _start_time;
+  unsigned int _rate;
+  unsigned int _duration;
+  unsigned int _timeout_id;
+  double _start_progress;
+  double _progress;
 
-  void TimerTimeOut(void *data);
+  static gboolean TimerTimeOut(Animator *self);
 };
 
 }
