@@ -164,6 +164,8 @@ add_executable (test-panel
                 ${UNITY_SRC}/PanelTray.h
                 ${UNITY_SRC}/Introspectable.cpp
                 ${UNITY_SRC}/Introspectable.h
+                ${UNITY_SRC}/LauncherController.cpp
+                ${UNITY_SRC}/LauncherController.h
                 ${UNITY_SRC}/PanelMenuView.cpp
                 ${UNITY_SRC}/PanelMenuView.h
                 ${UNITY_SRC}/Timer.cpp
