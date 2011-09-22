@@ -196,6 +196,8 @@ nux_base_window_accessible_check_active(NuxBaseWindowAccessible* self,
     else
       signal_name = "deactivate";
 
+    g_debug ("[BaseWindow %s] activate %i", atk_object_get_name(ATK_OBJECT(self)), is_active);
+
     atk_object_notify_state_change(ATK_OBJECT(self),
                                    ATK_STATE_ACTIVE, is_active);
     g_signal_emit_by_name(self, signal_name, 0);

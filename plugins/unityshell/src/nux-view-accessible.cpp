@@ -45,13 +45,13 @@ static AtkStateSet* nux_view_accessible_ref_state_set(AtkObject* obj);
 static gint         nux_view_accessible_get_n_children(AtkObject* obj);
 static AtkObject*   nux_view_accessible_ref_child(AtkObject* obj,
                                                   gint i);
-/* NuxAreaAccessible */
-static gboolean      nux_view_accessible_check_pending_notification(NuxAreaAccessible* self);
-
 static AtkStateSet* nux_view_accessible_ref_state_set(AtkObject* obj);
 static gint         nux_view_accessible_get_n_children(AtkObject* obj);
 static AtkObject*   nux_view_accessible_ref_child(AtkObject* obj,
                                                   gint i);
+/* NuxAreaAccessible */
+static gboolean      nux_view_accessible_check_pending_notification(NuxAreaAccessible* self);
+
 /* private methods */
 static void on_layout_changed_cb(nux::View* view,
                                  nux::Layout* layout,
