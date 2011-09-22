@@ -174,6 +174,8 @@ void DashView::Relayout()
   // Minus the padding that gets added to the left
   style->SetDefaultNColumns(floorf((content_geo_.width - 32)/ (float)style->GetTileWidth()));
 
+  ubus_manager_.SendMessage(UBUS_DASH_SIZE_CHANGED, g_variant_new("(ii)", content_geo_.width, content_geo_.height));
+
   QueueDraw();
 }
 
@@ -388,8 +390,8 @@ void DashView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
       gfx_context.PushClippingRectangle(bg_clip);
 
       gfx_context.GetRenderStates().SetBlend(false);
-      gfx_context.QRP_1Tex (content_geo_.x, content_geo_.y, 
-                            content_geo_.width, content_geo_.height, 
+      gfx_context.QRP_1Tex (content_geo_.x, content_geo_.y,
+                            content_geo_.width, content_geo_.height,
                             bg_blur_texture_, texxform_absolute_bg, color::White);
       gPainter.PopBackground();
 
@@ -411,10 +413,10 @@ void DashView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
   gfx_context.GetRenderStates().SetColorMask(true, true, true, false);
   gfx_context.GetRenderStates().SetBlend(true, GL_DST_COLOR, GL_ONE);
 
-  gfx_context.QRP_1Tex (content_geo_.x, content_geo_.y, 
-                        content_geo_.width, content_geo_.height, 
+  gfx_context.QRP_1Tex (content_geo_.x, content_geo_.y,
+                        content_geo_.width, content_geo_.height,
                         bg_shine_texture_, texxform_absolute_bg, color::White);
-                                        
+
 
   // Make round corners
   nux::ROPConfig rop;

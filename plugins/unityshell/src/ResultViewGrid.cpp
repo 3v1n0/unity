@@ -57,6 +57,8 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
   , lazy_load_handle_(0)
   , last_mouse_down_x_(-1)
   , last_mouse_down_y_(-1)
+  , recorded_dash_width_(-1)
+  , recorded_dash_height_(-1)
 {
   auto needredraw_lambda = [&](int value)
   {
@@ -82,6 +84,12 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
   {
     mouse_over_index_ = -1;
     NeedRedraw();
+  });
+
+  ubus_.RegisterInterest(UBUS_DASH_SIZE_CHANGED, [this] (GVariant* data) {
+    // on dash size changed, we update our stored values, this sucks
+    //FIXME in P - make dash size the size of our dash not the entire screen
+    g_variant_get (data, "(ii)", &recorded_dash_width_, &recorded_dash_height_);
   });
 
   SetDndEnabled(true, false);
@@ -559,7 +567,6 @@ void ResultViewGrid::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   uint row_size = renderer_->height + vertical_spacing;
 
   int y_position = padding + GetGeometry().y;
-  nux::Area* top_level_parent = GetToplevel();
 
   ResultListBounds visible_bounds = GetVisableResults();
 
@@ -590,12 +597,17 @@ void ResultViewGrid::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
           state = ResultRenderer::RESULT_RENDERER_ACTIVE;
         }
 
-        int half_width = top_level_parent->GetGeometry().width / 2;
-        // FIXME - we assume the height of the viewport is 600
-        int half_height = top_level_parent->GetGeometry().height;
+        int half_width = recorded_dash_width_ / 2;
+        int half_height = recorded_dash_height_;
 
-        int offset_x = (x_position - half_width) / (half_width / 10);
-        int offset_y = ((y_position + absolute_y) - half_height) / (half_height / 10);
+        int offset_x = MAX(MIN((x_position - half_width) / (half_width / 10), 5), -5);
+        int offset_y = MAX(MIN(((y_position + absolute_y) - half_height) / (half_height / 10), 5), -5);
+
+        if (recorded_dash_width_ < 1 || recorded_dash_height_ < 1)
+        {
+          offset_x = 0;
+          offset_y = 0;
+        }
         nux::Geometry render_geo(x_position, y_position, renderer_->width, renderer_->height);
         renderer_->Render(GfxContext, results_[index], state, render_geo, offset_x, offset_y);
 
