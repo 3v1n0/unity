@@ -1832,9 +1832,30 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       launcher->SetBackgroundAlpha(optionGetLauncherOpacity());
       break;
     case UnityshellOptions::IconSize:
+    {
+      CompPlugin         *p = CompPlugin::find ("expo");
+
       launcher->SetIconSize(optionGetIconSize() + 6, optionGetIconSize());
       dashController->launcher_width = optionGetIconSize() + 18;
+
+      if (p)
+      {
+        CompOption::Vector &opts = p->vTable->getOptions ();
+
+        for (CompOption &o : opts)
+        {
+          if (o.name () == std::string ("x_offset"))
+          {
+            CompOption::Value v;
+            v.set (static_cast <int> (optionGetIconSize() + 18));
+
+            screen->setOptionForPlugin (p->vTable->name ().c_str (), o.name ().c_str (), v);
+            break;
+          }
+        }
+      }
       break;
+    }
     case UnityshellOptions::AutohideAnimation:
       launcher->SetAutoHideAnimation((Launcher::AutoHideAnimation) optionGetAutohideAnimation());
       break;
