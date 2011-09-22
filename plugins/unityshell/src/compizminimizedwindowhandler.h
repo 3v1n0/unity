@@ -137,7 +137,7 @@ compiz::CompizMinimizedWindowHandler<Screen, Window>::minimize ()
     CompWindow *win = screen->findWindow (w);
 
     Window::get (win)->mMinimizeHandler = MinimizedWindowHandler::Ptr (new CompizMinimizedWindowHandler (win));
-    Window::get (win)->minimize ();
+    Window::get (win)->mMinimizeHandler->minimize ();
   }
 
   priv->mWindow->windowNotify (CompWindowNotifyHide);
