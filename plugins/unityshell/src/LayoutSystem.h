@@ -54,6 +54,7 @@ public:
   typedef boost::shared_ptr<LayoutSystem> Ptr;
 
   nux::Property<int> spacing;
+  nux::Property<int> max_row_height;
 
   LayoutSystem ();
   ~LayoutSystem ();

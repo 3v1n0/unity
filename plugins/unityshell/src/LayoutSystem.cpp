@@ -26,6 +26,7 @@ namespace ui {
 LayoutSystem::LayoutSystem()
 {
   spacing = 8;
+  max_row_height = 400;
 }
 
 LayoutSystem::~LayoutSystem()
@@ -175,7 +176,7 @@ std::vector<LayoutWindowList> LayoutSystem::GetRows (LayoutWindowList const& win
     int width = grid_size.width;
     int height = grid_size.height;
 
-    float row_height = max_bounds.height / height;
+    float row_height = std::min (max_bounds.height / height, max_row_height());
     float ideal_aspect = (float)max_bounds.width / row_height;
 
     int x = 0;
@@ -237,7 +238,7 @@ void LayoutSystem::LayoutGridWindows (LayoutWindowList const& windows, nux::Geom
   
   int height = rows.size();
   int non_spacing_height = max_bounds.height - ((height - 1) * spacing);
-  int row_height = non_spacing_height / height;
+  int row_height = std::min (max_row_height(), non_spacing_height / height);
   int start_y = max_bounds.y;
   int low_y = 0;
 
