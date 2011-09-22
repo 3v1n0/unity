@@ -28,10 +28,12 @@
 #include "PanelIndicatorEntryView.h"
 #include "Introspectable.h"
 
+#include "FadeController.h"
+
 namespace unity
 {
 
-class PanelIndicatorsView : public nux::View, public Introspectable
+class PanelIndicatorsView : public nux::View, public Introspectable, public FadableObject
 {
   NUX_DECLARE_OBJECT_TYPE(PanelIndicatorsView, nux::View);
 public:
@@ -58,6 +60,9 @@ public:
   void DashShown();
   void DashHidden();
 
+  void SetOpacity(double opacity);
+  double GetOpacity();
+
   sigc::signal<void, PanelIndicatorEntryView*> on_indicator_updated;
 
 protected:
@@ -72,6 +77,7 @@ protected:
 private:
   typedef std::vector<indicator::Indicator::Ptr> Indicators;
   Indicators indicators_;
+  double opacity_;
 
   std::map<indicator::Indicator::Ptr, std::vector<sigc::connection>> indicators_connections_;
 };

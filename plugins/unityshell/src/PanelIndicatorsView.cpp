@@ -46,6 +46,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(PanelIndicatorsView);
 PanelIndicatorsView::PanelIndicatorsView()
 : View(NUX_TRACKER_LOCATION)
 , layout_(NULL)
+, opacity_(1.0f)
 {
   LOG_DEBUG(logger) << "Indicators View Added: ";
   layout_ = new nux::HLayout("", NUX_TRACKER_LOCATION);
@@ -209,6 +210,7 @@ PanelIndicatorsView::OnEntryAdded(indicator::Entry::Ptr const& entry)
 {
   auto view = new PanelIndicatorEntryView(entry);
   view->refreshed.connect(sigc::mem_fun(this, &PanelIndicatorsView::OnEntryRefreshed));
+  view->SetOpacity(opacity_);
 
   int indicator_pos = nux::NUX_LAYOUT_BEGIN;
 
@@ -275,6 +277,30 @@ void PanelIndicatorsView::DashHidden()
 {
   for (auto entry: entries_)
     entry.second->DashHidden();
+}
+
+double
+PanelIndicatorsView::GetOpacity()
+{
+  return opacity_;
+}
+
+void
+PanelIndicatorsView::SetOpacity(double opacity)
+{
+  if (opacity > 1.0f)
+    opacity = 1.0f;
+  else if (opacity < 0.0f)
+    opacity = 0.0f;
+
+  for (auto entry: entries_)
+    entry.second->SetOpacity(opacity);
+
+  if (opacity_ != opacity)
+  {
+    opacity_ = opacity;
+    NeedRedraw();
+  }
 }
 
 const gchar* PanelIndicatorsView::GetName()
