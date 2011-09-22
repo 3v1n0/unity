@@ -24,8 +24,11 @@
 #include <Nux/View.h>
 
 #include "Introspectable.h"
+#include "FadeController.h"
 
-class WindowButtons : public nux::HLayout, public unity::Introspectable
+namespace unity
+{
+class WindowButtons : public nux::HLayout, public Introspectable, public FadableObject
 {
   // These are the [close][minimize][restore] buttons on the panel when there
   // is a maximized window
@@ -33,6 +36,9 @@ class WindowButtons : public nux::HLayout, public unity::Introspectable
 public:
   WindowButtons();
   ~WindowButtons();
+
+  void SetOpacity(double opacity);
+  double GetOpacity();
 
   sigc::signal<void> close_clicked;
   sigc::signal<void> minimize_clicked;
@@ -52,6 +58,8 @@ private:
   void OnCloseClicked(nux::View *view);
   void OnMinimizeClicked(nux::View *view);
   void OnRestoreClicked(nux::View *view);
-};
 
+  double _opacity;
+};
+}
 #endif

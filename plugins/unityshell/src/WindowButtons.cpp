@@ -56,7 +56,8 @@ public:
       _pressed_dash_tex(NULL),
       _dash_is_open(false),
       _place_shown_interest(0),
-      _place_hidden_interest(0)
+      _place_hidden_interest(0),
+      _opacity(1.0f)
   {
     LoadImages();
     PanelStyle::GetDefault()->changed.connect(sigc::mem_fun(this, &WindowButton::LoadImages));
@@ -115,6 +116,15 @@ public:
         tex = _normal_tex;
     }
 
+    /* "Clear" out the background */
+    nux::ROPConfig rop;
+    rop.Blend = true;
+    rop.SrcBlend = GL_ONE;
+    rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+
+    nux::ColorLayer layer(nux::Color(0x00000000), true, rop);
+    gPainter.PushDrawLayer(GfxContext, geo, &layer);
+
     GfxContext.GetRenderStates().SetBlend(true);
     GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
     GfxContext.GetRenderStates().SetColorMask(true, true, true, true);
@@ -125,7 +135,7 @@ public:
                           (float)geo.height,
                           tex->GetDeviceTexture(),
                           texxform,
-                          nux::color::White);
+                          nux::color::White * _opacity);
     GfxContext.GetRenderStates().SetBlend(false);
     GfxContext.PopClippingRectangle();
   }
@@ -208,6 +218,20 @@ public:
     QueueDraw();
   }
 
+  void SetOpacity(double opacity)
+  {
+    if (_opacity != opacity)
+    {
+      _opacity = opacity;
+      NeedRedraw();
+    }
+  }
+
+  double GetOpacity()
+  {
+    return _opacity;
+  }
+
 private:
   PanelStyle::WindowButtonType _type;
   nux::BaseTexture* _normal_tex;
@@ -219,6 +243,7 @@ private:
   bool _dash_is_open;
   guint32 _place_shown_interest;
   guint32 _place_hidden_interest;
+  double _opacity;
 
   static void OnPlaceViewShown(GVariant* data, void* val)
   {
@@ -279,6 +304,7 @@ private:
 
 WindowButtons::WindowButtons()
   : HLayout("", NUX_TRACKER_LOCATION)
+  , _opacity(1.0f)
 {
   WindowButton* but;
 
@@ -348,6 +374,35 @@ nux::Area*
 WindowButtons::FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type)
 {
   return nux::HLayout::FindAreaUnderMouse(mouse_position, event_type);
+}
+
+void
+WindowButtons::SetOpacity(double opacity)
+{
+  if (opacity < 0.0f)
+    opacity = 0.0f;
+  else if (opacity > 1.0f)
+    opacity = 1.0f;
+
+  for (auto area : GetChildren())
+  {
+    auto but = dynamic_cast<WindowButton*>(area);
+
+    if (but)
+      but->SetOpacity(opacity);
+  }
+
+  if (_opacity != opacity)
+  {
+    _opacity = opacity;
+    NeedRedraw();
+  }
+}
+
+double
+WindowButtons::GetOpacity()
+{
+  return _opacity;
 }
 
 const gchar*
