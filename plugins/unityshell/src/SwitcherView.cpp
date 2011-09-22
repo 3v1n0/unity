@@ -655,11 +655,11 @@ void SwitcherView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     if (window->alpha >= 1.0f)
     {
       nux::Geometry orange_box = window->result;
-      orange_box.Expand(3, 3);
+      orange_box.Expand(5, 5);
       orange_box.x -= geo_absolute.x;
       orange_box.y -= geo_absolute.y;
 
-      gPainter.PaintTextureShape(GfxContext, orange_box, rounding_texture_, 4, 4, 4, 4, false);
+      gPainter.PaintTextureShape(GfxContext, orange_box, rounding_texture_, 6, 6, 6, 6, false);
     }
   }
 
