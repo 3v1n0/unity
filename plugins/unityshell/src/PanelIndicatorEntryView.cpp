@@ -59,6 +59,7 @@ PanelIndicatorEntryView::PanelIndicatorEntryView(
   , proxy_(proxy)
   , util_cg_(CAIRO_FORMAT_ARGB32, 1, 1)
   , padding_(padding)
+  , opacity_(1.0f)
   , dash_showing_(false)
 {
   on_indicator_activate_changed_connection_ = proxy_->active_changed.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::OnActiveChanged));
@@ -383,6 +384,41 @@ void PanelIndicatorEntryView::Refresh()
   refreshed.emit(this);
 }
 
+void PanelIndicatorEntryView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
+{
+  if (opacity_ == 1.0f)
+  {
+    TextureArea::Draw(GfxContext, force_draw);
+    return;
+  }
+
+  GfxContext.PushClippingRectangle(geo);
+
+  /* "Clear" out the background */
+  nux::ROPConfig rop;
+  rop.Blend = true;
+  rop.SrcBlend = GL_ONE;
+  rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+
+  nux::ColorLayer layer(nux::Color(0x00000000), true, rop);
+  gPainter.PushDrawLayer(GfxContext, geo, &layer);
+
+  GfxContext.GetRenderStates().SetBlend(true);
+  GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
+  GfxContext.GetRenderStates().SetColorMask(true, true, true, true);
+
+  if (texture_layer_)
+  {
+    nux::TexCoordXForm texxform;
+    GfxContext.QRP_1Tex(geo.x, geo.y, geo.width, geo.height,
+                        texture_layer_->GetDeviceTexture(), texxform,
+                        nux::color::White * opacity_);
+  }
+
+  GfxContext.GetRenderStates().SetBlend(false);
+  GfxContext.PopClippingRectangle();
+}
+
 void PanelIndicatorEntryView::DashShown()
 {
   dash_showing_ = true;
@@ -393,6 +429,25 @@ void PanelIndicatorEntryView::DashHidden()
 {
   dash_showing_ = false;
   Refresh();
+}
+
+void PanelIndicatorEntryView::SetOpacity(double opacity)
+{
+  if (opacity < 0.0f)
+    opacity = 0.0f;
+  else if (opacity > 1.0f)
+    opacity = 1.0f;
+
+  if (opacity_ != opacity)
+  {
+    opacity_ = opacity;
+    NeedRedraw();
+  }
+}
+
+double PanelIndicatorEntryView::GetOpacity()
+{
+  return opacity_;
 }
 
 const gchar* PanelIndicatorEntryView::GetName()

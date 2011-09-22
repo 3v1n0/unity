@@ -52,6 +52,9 @@ public:
   void OnActiveChanged(bool is_active);
   bool GetShowNow();
 
+  void SetOpacity(double alpha);
+  double GetOpacity();
+
   void GetGeometryForSync(indicator::EntryLocationMap& locations);
   bool IsEntryValid() const;
   bool IsSensitive() const;
@@ -63,6 +66,8 @@ public:
   const gchar* GetName();
   void         AddProperties(GVariantBuilder* builder);
 
+  virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
+
   sigc::signal<void, PanelIndicatorEntryView*, bool> active_changed;
   sigc::signal<void, PanelIndicatorEntryView*> refreshed;
 
@@ -71,6 +76,7 @@ private:
 
   nux::CairoGraphics util_cg_;
   int padding_;
+  double opacity_;
 
   sigc::connection on_indicator_activate_changed_connection_;
   sigc::connection on_indicator_updated_connection_;
