@@ -417,8 +417,8 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   if (!DrawWindowButtons() && _window_buttons->GetOpacity() == 0.0f)
   {
-    bool have_valid_entries = false;
     Entries::iterator it, eit = entries_.end();
+    bool have_valid_entries = false;
 
     for (it = entries_.begin(); it != eit; ++it)
     {
@@ -429,49 +429,50 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
       }
     }
 
-    if ((DrawMenus() || GetOpacity() > 0) && have_valid_entries)
+    if ((DrawMenus() || GetOpacity() > 0.0f) && have_valid_entries)
     {
       if (_gradient_texture.IsNull())
       {
         nux::NTextureData texture_data(nux::BITFMT_R8G8B8A8, geo.width, 1, 1);
-        nux::ImageSurface surface = texture_data.GetSurface(0);
-        nux::SURFACE_LOCKED_RECT lockrect;
-        BYTE* dest;
-        int num_row;
 
         _gradient_texture = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableDeviceTexture(texture_data.GetWidth(), texture_data.GetHeight(), 1, texture_data.GetFormat());
-
-        _gradient_texture->LockRect(0, &lockrect, 0);
-
-        dest = (BYTE*) lockrect.pBits;
-        num_row = surface.GetBlockHeight();
-
-        for (int y = 0; y < num_row; y++)
-        {
-          for (int x = 0; x < geo.width; x++)
-          {
-            BYTE a;
-            if (x < button_width * (factor - 1))
-            {
-              a = 0xff;
-            }
-            else if (x < button_width * factor)
-            {
-              a = 255 - 255 * (((float)x - (button_width * (factor - 1))) / (float)(button_width));
-            }
-            else
-            {
-              a = 0x00;
-            }
-
-            *(dest + y * lockrect.Pitch + 4 * x + 0) = (223 * a) / 255; //red
-            *(dest + y * lockrect.Pitch + 4 * x + 1) = (219 * a) / 255; //green
-            *(dest + y * lockrect.Pitch + 4 * x + 2) = (210 * a) / 255; //blue
-            *(dest + y * lockrect.Pitch + 4 * x + 3) = a;
-          }
-        }
-        _gradient_texture->UnlockRect(0);
       }
+
+      nux::SURFACE_LOCKED_RECT lockrect;
+      BYTE* dest_buffer;
+
+      _gradient_texture->LockRect(0, &lockrect, 0);
+      dest_buffer = (BYTE*) lockrect.pBits;
+
+      int row_opacity = 255.0f * GetOpacity();
+
+      for (int x = 0; x < geo.width; x++)
+      {
+        BYTE a;
+        if (x < button_width * (factor - 1))
+        {
+          a = 0xff;
+        }
+        else if (x < button_width * factor)
+        {
+          a = 0xff - row_opacity * (((float)x - (button_width * (factor - 1))) / (float)(button_width));
+        }
+        else
+        {
+          if (0xff - row_opacity > 0xaa)
+            a = 0xff - row_opacity - 0xaa;
+          else
+            a = 0x00;
+        }
+
+        *(dest_buffer + 4 * x + 0) = (223 * a) / 255; //red
+        *(dest_buffer + 4 * x + 1) = (219 * a) / 255; //green
+        *(dest_buffer + 4 * x + 2) = (210 * a) / 255; //blue
+        *(dest_buffer + 4 * x + 3) = a;
+      }
+
+      _gradient_texture->UnlockRect(0);
+
       guint alpha = 0, src = 0, dest = 0;
 
       GfxContext.GetRenderStates().GetBlend(alpha, src, dest);
@@ -501,9 +502,11 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
     else
     {
       if (_title_layer)
+      {
         gPainter.PushDrawLayer(GfxContext,
                                geo,
                                _title_layer);
+      }
     }
   }
 
