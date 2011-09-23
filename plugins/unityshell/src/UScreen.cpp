@@ -102,6 +102,7 @@ UScreen::Refresh()
   g_print("\nScreen geometry changed:\n");
 
   int lowest_x = std::numeric_limits<int>::max();
+  int highest_y = std::numeric_limits<int>::min();
   for (int i = 0; i < gdk_screen_get_n_monitors(screen); i++)
   {
     GdkRectangle rect = { 0 };
@@ -117,9 +118,10 @@ UScreen::Refresh()
 
     _monitors.push_back(geo);
 
-    if (geo.x < lowest_x)
+    if (geo.x < lowest_x || (geo.x == lowest_x && geo.y > highest_y))
     {
       lowest_x = geo.x;
+      highest_y = geo.y;
       primary_ = i;
     }
 
