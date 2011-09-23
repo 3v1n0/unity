@@ -342,11 +342,9 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   else
   {
     bool have_valid_entries = false;
-    Entries::iterator it, eit = entries_.end();
-
-    for (it = entries_.begin(); it != eit; ++it)
+    for (auto entry : entries_)
     {
-      if (it->second->IsEntryValid())
+      if (entry.second->IsEntryValid())
       {
         have_valid_entries = true;
         break;
@@ -1153,10 +1151,9 @@ void PanelMenuView::UpdateShowNow(bool ignore)
   // looking through all the entries to see if any are shown.
   _show_now_activated = false;
 
-  for (Entries::iterator it = entries_.begin(); it != entries_.end(); ++it)
+  for (auto entry : entries_)
   {
-    PanelIndicatorEntryView* view = it->second;
-    if (view->GetShowNow()) {
+    if (entry.second->GetShowNow()) {
       _show_now_activated = true;
       break;
     }
