@@ -1886,14 +1886,6 @@ void UnityScreen::Relayout()
   if (!needsRelayout)
     return;
 
-  if (GL::fbo)
-  {
-    foreach (CompOutput &o, screen->outputDevs ())
-      uScreen->mFbos[&o] = UnityFBO::Ptr (new UnityFBO (&o));
-
-    uScreen->mFbos[&(screen->fullscreenOutput ())] = UnityFBO::Ptr (new UnityFBO (&(screen->fullscreenOutput ())));
-  }
-
   scr = gdk_screen_get_default ();
   primary_monitor = gdk_screen_get_primary_monitor (scr);
   gdk_screen_get_monitor_geometry (scr, primary_monitor, &rect);
@@ -1956,6 +1948,14 @@ bool UnityScreen::setOptionForPlugin(const char* plugin, const char* name,
 void UnityScreen::outputChangeNotify()
 {
   screen->outputChangeNotify ();
+
+  if (GL::fbo)
+  {
+    foreach (CompOutput &o, screen->outputDevs ())
+      uScreen->mFbos[&o] = UnityFBO::Ptr (new UnityFBO (&o));
+
+    uScreen->mFbos[&(screen->fullscreenOutput ())] = UnityFBO::Ptr (new UnityFBO (&(screen->fullscreenOutput ())));
+  }
 
   ScheduleRelayout(500);
 }
