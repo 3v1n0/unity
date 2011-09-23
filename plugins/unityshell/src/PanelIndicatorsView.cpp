@@ -170,9 +170,9 @@ PanelIndicatorsView::GetGeometryForSync(indicator::EntryLocationMap& locations)
 bool
 PanelIndicatorsView::OnPointerMoved(int x, int y)
 {
-  for (auto entry : entries_)
+  for (auto i = entries_.begin(), end = entries_.end(); i != end; ++i)
   {
-    PanelIndicatorEntryView* view = entry.second;
+    PanelIndicatorEntryView* view = i->second;
 
     nux::Geometry geo = view->GetAbsoluteGeometry();
     if (geo.IsPointInside(x, y))
