@@ -413,29 +413,35 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
   nux::ColorLayer layer(nux::Color(0x00000000), true, rop);
-  gPainter.PushDrawLayer(GfxContext, GetGeometry(), &layer);
+  nux::GetPainter().PushDrawLayer(GfxContext, GetGeometry(), &layer);
 
-  if (!DrawWindowButtons() && _window_buttons->GetOpacity() == 0.0f)
+  if (_title_layer)
   {
-    Entries::iterator it, eit = entries_.end();
-    bool have_valid_entries = false;
+    bool draw_faded_title = false;
 
-    for (it = entries_.begin(); it != eit; ++it)
+    if (!DrawWindowButtons() &&
+        (DrawMenus() || (GetOpacity() > 0.0f && _window_buttons->GetOpacity() == 0.0f)))
     {
-      if (it->second->IsEntryValid())
+      Entries::iterator it, eit = entries_.end();
+      for (it = entries_.begin(); it != eit; ++it)
       {
-        have_valid_entries = true;
-        break;
+        if (it->second->IsEntryValid())
+        {
+          draw_faded_title = true;
+          break;
+        }
       }
     }
 
-    if ((DrawMenus() || GetOpacity() > 0.0f) && have_valid_entries)
+    if (draw_faded_title)
     {
       if (_gradient_texture.IsNull())
       {
         nux::NTextureData texture_data(nux::BITFMT_R8G8B8A8, geo.width, 1, 1);
 
-        _gradient_texture = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableDeviceTexture(texture_data.GetWidth(), texture_data.GetHeight(), 1, texture_data.GetFormat());
+        _gradient_texture = nux::GetGraphicsDisplay()->GetGpuDevice()->
+                            CreateSystemCapableDeviceTexture(texture_data.GetWidth(),
+                            texture_data.GetHeight(), 1, texture_data.GetFormat());
       }
 
       nux::SURFACE_LOCKED_RECT lockrect;
@@ -482,35 +488,35 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
       nux::TexCoordXForm texxform1;
 
       // Modulate the checkboard and the gradient texture
-      if (_title_tex)
-        GfxContext.QRP_2TexMod(geo.x, geo.y,
-                               geo.width, geo.height,
-                               _gradient_texture, texxform0,
-                               nux::color::White,
-                               _title_tex->GetDeviceTexture(),
-                               texxform1,
-                               nux::color::White);
+      GfxContext.QRP_2TexMod(geo.x, geo.y,
+                             geo.width, geo.height,
+                             _gradient_texture, texxform0,
+                             nux::color::White,
+                             _title_layer->GetDeviceTexture(),
+                             texxform1,
+                             nux::color::White);
 
       GfxContext.GetRenderStates().SetBlend(alpha, src, dest);
       // The previous blend is too aggressive on the texture and therefore there
       // is a slight loss of clarity. This fixes that
       geo.width = button_width * (factor - 1);
-      if (_title_layer)
-        gPainter.PushDrawLayer(GfxContext, geo, _title_layer);
+      nux::GetPainter().PushDrawLayer(GfxContext, geo, _title_layer);
       geo = GetGeometry();
     }
-    else
+    else if (_window_buttons->GetOpacity() < 1.0f && _window_buttons->GetOpacity() > 0.0f)
     {
-      if (_title_layer)
-      {
-        gPainter.PushDrawLayer(GfxContext,
-                               geo,
-                               _title_layer);
-      }
+      nux::TexCoordXForm texxform;
+      GfxContext.QRP_1Tex(geo.x, geo.y, geo.width, geo.height,
+                          _title_layer->GetDeviceTexture(), texxform,
+                          nux::color::White * (1.0f - _window_buttons->GetOpacity()));
+    }
+    else if (_window_buttons->GetOpacity() == 0.0f)
+    {
+      nux::GetPainter().PushDrawLayer(GfxContext, geo, _title_layer);
     }
   }
 
-  gPainter.PopBackground();
+  nux::GetPainter().PopBackground();
 
   GfxContext.PopClippingRectangle();
 }
