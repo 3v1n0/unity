@@ -343,7 +343,7 @@ void ResultRendererTile::IconLoaded(std::string const& texid,
     if (container)
       container->slot_handle = 0;
   }
-  else
+  else if (container)
   {
     // we need to load a missing icon
     IconLoader::IconLoaderCallback slot = sigc::bind(sigc::mem_fun(this, &ResultRendererTile::IconLoaded), icon_name, row);
