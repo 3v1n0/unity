@@ -1249,10 +1249,12 @@ bool UnityScreen::altTabInitiateCommon(CompAction *action,
   screen->addAction (&optionGetAltTabLeft ());
 
   // maybe check launcher position/hide state?
-  switcherController->SetWorkspace(nux::Geometry(_primary_monitor.x + 100,
-                                                _primary_monitor.y + 100,
-                                                _primary_monitor.width - 200,
-                                                _primary_monitor.height - 200));
+
+  int device = screen->outputDeviceForPoint (pointerX, pointerY);
+  switcherController->SetWorkspace(nux::Geometry(screen->outputDevs()[device].x1() + 100,
+                                                 screen->outputDevs()[device].y1() + 100,
+                                                 screen->outputDevs()[device].width() - 200,
+                                                 screen->outputDevs()[device].height() - 200));
   switcherController->Show(SwitcherController::ALL, SwitcherController::FOCUS_ORDER, false, results);
   return true;
 }
