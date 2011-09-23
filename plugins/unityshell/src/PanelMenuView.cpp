@@ -508,7 +508,7 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
       nux::GetPainter().PushDrawLayer(GfxContext, geo, _title_layer);
       geo = GetGeometry();
     }
-    else if (_window_buttons->GetOpacity() < 1.0f && _window_buttons->GetOpacity() > 0.0f)
+    else if (!_places_showing && _window_buttons->GetOpacity() < 1.0f && _window_buttons->GetOpacity() > 0.0f)
     {
       nux::TexCoordXForm texxform;
       GfxContext.QRP_1Tex(geo.x, geo.y, geo.width, geo.height,
