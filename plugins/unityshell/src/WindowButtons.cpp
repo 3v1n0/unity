@@ -95,7 +95,6 @@ public:
     nux::TexCoordXForm texxform;
 
     GfxContext.PushClippingRectangle(geo);
-    nux::GetPainter().PaintBackground(GfxContext, geo);
 
     if (_dash_is_open)
     {
