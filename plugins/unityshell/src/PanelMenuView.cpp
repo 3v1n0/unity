@@ -465,7 +465,9 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
         }
         else
         {
-          if (0xff - row_opacity > 0xaa)
+          if (!DrawMenus())
+            a = 0xff - row_opacity;
+          else if (0xff - row_opacity > 0xaa)
             a = 0xff - row_opacity - 0xaa;
           else
             a = 0x00;
