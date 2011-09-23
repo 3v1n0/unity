@@ -22,7 +22,7 @@
 namespace unity
 {
 
-Animator::Animator(unsigned int rate, unsigned int duration)
+Animator::Animator(unsigned int duration, unsigned int fps_rate)
 {
   _start_time = 0;
   _timeout_id = 0;
@@ -32,7 +32,7 @@ Animator::Animator(unsigned int rate, unsigned int duration)
   _duration = 0;
 
   SetDuration(duration);
-  SetRate(rate);
+  SetRate(fps_rate);
 }
 
 Animator::~Animator()
@@ -42,11 +42,10 @@ Animator::~Animator()
 }
 
 void
-Animator::SetRate(unsigned int rate)
+Animator::SetRate(unsigned int fps_rate)
 {
-  if (rate != 0)
-    _rate = 1000 / rate;
-  
+  if (fps_rate != 0)
+    _rate = 1000 / fps_rate;
 }
 
 void

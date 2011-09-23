@@ -152,8 +152,8 @@ PanelMenuView::PanelMenuView(int padding)
                                                          (UBusCallback)PanelMenuView::OnPlaceViewHidden,
                                                          this);
 
-  _fade_in_animator = new Animator(200, 150);
-  _fade_out_animator = new Animator(200, 400);
+  _fade_in_animator = new Animator(150);
+  _fade_out_animator = new Animator(400);
 
   _fade_in_animator->animation_updated.connect(sigc::mem_fun(this, &PanelMenuView::OnFadeInChanged));
   _fade_in_animator->animation_ended.connect(sigc::mem_fun(this, &PanelMenuView::FullRedraw));

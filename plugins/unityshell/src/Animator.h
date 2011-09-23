@@ -35,10 +35,10 @@ public:
 class Animator
 {
 public:
-  Animator(unsigned int rate, unsigned int duration);
+  Animator(unsigned int duration, unsigned int fps_rate = 30);
   ~Animator();
 
-  void SetRate(unsigned int rate);
+  void SetRate(unsigned int fps_rate);
   void SetDuration(unsigned int duration);
 
   unsigned int GetRate();
