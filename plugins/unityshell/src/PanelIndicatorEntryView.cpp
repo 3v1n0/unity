@@ -89,7 +89,7 @@ void PanelIndicatorEntryView::OnActiveChanged(bool is_active)
 {
   active_changed.emit(this, is_active);
 
-  if (draw_active_ && !is_active)
+  if (IsActive() && !is_active)
   {
     draw_active_ = false;
     Refresh();
@@ -157,7 +157,7 @@ void PanelIndicatorEntryView::Unactivate()
 
 void PanelIndicatorEntryView::SetActiveState(bool active, int button)
 {
-  if (draw_active_ != active)
+  if (IsActive() != active)
   {
     draw_active_ = active;
     Refresh();
@@ -273,7 +273,7 @@ void PanelIndicatorEntryView::Refresh()
 
   cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
 
-  if (draw_active_)
+  if (IsActive())
     draw_menu_bg(cr, width, height);
 
   x = padding_;
@@ -294,7 +294,7 @@ void PanelIndicatorEntryView::Refresh()
     gtk_style_context_add_class(style_context, GTK_STYLE_CLASS_MENUBAR);
     gtk_style_context_add_class(style_context, GTK_STYLE_CLASS_MENUITEM);
 
-    if (draw_active_)
+    if (IsActive())
       gtk_style_context_set_state(style_context, GTK_STATE_FLAG_PRELIGHT);
 
     int y = (int)((height - gdk_pixbuf_get_height(pixbuf)) / 2);
@@ -353,7 +353,7 @@ void PanelIndicatorEntryView::Refresh()
     gtk_style_context_add_class(style_context, GTK_STYLE_CLASS_MENUBAR);
     gtk_style_context_add_class(style_context, GTK_STYLE_CLASS_MENUITEM);
 
-    if (draw_active_)
+    if (IsActive())
       gtk_style_context_set_state(style_context, GTK_STATE_FLAG_PRELIGHT);
 
     int y = (int)((height - text_height) / 2);
