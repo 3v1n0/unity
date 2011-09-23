@@ -116,15 +116,6 @@ public:
         tex = _normal_tex;
     }
 
-    /* "Clear" out the background */
-    nux::ROPConfig rop;
-    rop.Blend = true;
-    rop.SrcBlend = GL_ONE;
-    rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
-
-    nux::ColorLayer layer(nux::Color(0x00000000), true, rop);
-    gPainter.PushDrawLayer(GfxContext, geo, &layer);
-
     GfxContext.GetRenderStates().SetBlend(true);
     GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
     GfxContext.GetRenderStates().SetColorMask(true, true, true, true);
