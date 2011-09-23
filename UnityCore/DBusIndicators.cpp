@@ -15,6 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
+ *              Marco Trevisan (Treviño) <3v1n0@ubuntu.com>
  */
 
 #include "DBusIndicators.h"
@@ -135,6 +136,7 @@ public:
   PendingSyncs pending_syncs_;
 
   glib::SignalManager signal_manager_;
+  std::map<std::string, EntryLocationMap> cached_locations_;
 };
 
 
@@ -350,21 +352,47 @@ void DBusIndicators::Impl::SyncGeometries(std::string const& name,
     return;
 
   GVariantBuilder b;
+  bool found_changed_locations = false;
   g_variant_builder_init(&b, G_VARIANT_TYPE("(a(ssiiii))"));
   g_variant_builder_open(&b, G_VARIANT_TYPE("a(ssiiii)"));
+  EntryLocationMap& cached_loc = cached_locations_[name];
 
-  for (EntryLocationMap::const_iterator i = locations.begin(), end = locations.end();
-       i != end; ++i)
+  // Only send to panel service the geometries of items that have changed
+  for (auto i = locations.begin(), end = locations.end(); i != end; ++i)
   {
-    nux::Rect const& rect = i->second;
-    g_variant_builder_add(&b, "(ssiiii)",
-                          name.c_str(),
-                          i->first.c_str(),
-                          rect.x,
-                          rect.y,
-                          rect.width,
-                          rect.height);
+    auto rect = i->second;
+
+    if (cached_loc[i->first] != rect)
+    {
+      g_variant_builder_add(&b, "(ssiiii)",
+                            name.c_str(),
+                            i->first.c_str(),
+                            rect.x,
+                            rect.y,
+                            rect.width,
+                            rect.height);
+      found_changed_locations = true;
+    }
   }
+
+  // Inform panel service of the entries that have been removed sending invalid values
+  for (auto i = cached_loc.begin(), end = cached_loc.end(); i != end; ++i)
+  {
+    if (locations.find(i->first) == locations.end())
+    {
+      g_variant_builder_add(&b, "(ssiiii)",
+                            name.c_str(),
+                            i->first.c_str(),
+                            0,
+                            0,
+                            -1,
+                            -1);
+      found_changed_locations = true;
+    }
+  }
+
+  if (!found_changed_locations)
+    return;
 
   g_variant_builder_close(&b);
   g_dbus_proxy_call(proxy_, "SyncGeometries",
@@ -374,6 +402,8 @@ void DBusIndicators::Impl::SyncGeometries(std::string const& name,
                     NULL,
                     NULL,
                     NULL);
+
+  cached_loc = locations;
 }
 
 std::string DBusIndicators::Impl::name() const

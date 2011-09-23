@@ -59,6 +59,7 @@ PanelIndicatorEntryView::PanelIndicatorEntryView(
   , proxy_(proxy)
   , util_cg_(CAIRO_FORMAT_ARGB32, 1, 1)
   , padding_(padding)
+  , draw_active_(false)
   , dash_showing_(false)
 {
   on_indicator_activate_changed_connection_ = proxy_->active_changed.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::OnActiveChanged));
@@ -87,29 +88,33 @@ PanelIndicatorEntryView::~PanelIndicatorEntryView()
 void PanelIndicatorEntryView::OnActiveChanged(bool is_active)
 {
   active_changed.emit(this, is_active);
+
+  if (draw_active_ && !is_active)
+  {
+    draw_active_ = false;
+    Refresh();
+  }
 }
 
-void PanelIndicatorEntryView::OnMouseDown(int x, int y, long button_flags,
-                                          long key_flags)
+void PanelIndicatorEntryView::ShowMenu(int button)
+{
+  proxy_->ShowMenu(GetAbsoluteX(),
+                   GetAbsoluteY() + PANEL_HEIGHT,
+                   time(NULL),
+                   button);
+}
+
+void PanelIndicatorEntryView::OnMouseDown(int x, int y, long button_flags, long key_flags)
 {
   if (proxy_->active())
     return;
 
+  int button = nux::GetEventButton(button_flags);
+
   if (((proxy_->label_visible() && proxy_->label_sensitive()) ||
-       (proxy_->image_visible() && proxy_->image_sensitive())) &&
-      nux::GetEventButton(button_flags) != 2)
+       (proxy_->image_visible() && proxy_->image_sensitive())) && button != 2)
   {
-    proxy_->ShowMenu(GetAbsoluteX(),
-                     GetAbsoluteY() + PANEL_HEIGHT,
-                     time(NULL),
-                     nux::GetEventButton(button_flags));
-    proxy_->set_active(true);
-    //
-    // ^ Set active even before the menu appears. This allows the below
-    //   Refresh call to know it should draw_menu_bg() immediately
-    //   rather than waiting for slow inter-process communication with
-    //   unity-panel-service, which causes visible lag in many cases.
-    //
+    ShowMenu(button);
   }
   Refresh();
 }
@@ -140,12 +145,26 @@ void PanelIndicatorEntryView::OnMouseWheel(int x, int y, int delta,
   proxy_->Scroll(delta);
 }
 
-void PanelIndicatorEntryView::Activate()
+void PanelIndicatorEntryView::Activate(int button)
 {
-  proxy_->ShowMenu(GetAbsoluteGeometry().x,
-                   GetAbsoluteGeometry().y + PANEL_HEIGHT,
-                   time(NULL),
-                   1);
+  SetActiveState(true, button);
+}
+
+void PanelIndicatorEntryView::Unactivate()
+{
+  SetActiveState(false, 0);
+}
+
+void PanelIndicatorEntryView::SetActiveState(bool active, int button)
+{
+  if (draw_active_ != active)
+  {
+    draw_active_ = active;
+    Refresh();
+
+    if (active)
+      ShowMenu(button);
+  }
 }
 
 // We need to do a couple of things here:
@@ -254,7 +273,7 @@ void PanelIndicatorEntryView::Refresh()
 
   cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
 
-  if (proxy_->active())
+  if (draw_active_)
     draw_menu_bg(cr, width, height);
 
   x = padding_;
@@ -275,7 +294,7 @@ void PanelIndicatorEntryView::Refresh()
     gtk_style_context_add_class(style_context, GTK_STYLE_CLASS_MENUBAR);
     gtk_style_context_add_class(style_context, GTK_STYLE_CLASS_MENUITEM);
 
-    if (proxy_->active())
+    if (draw_active_)
       gtk_style_context_set_state(style_context, GTK_STATE_FLAG_PRELIGHT);
 
     int y = (int)((height - gdk_pixbuf_get_height(pixbuf)) / 2);
@@ -334,7 +353,7 @@ void PanelIndicatorEntryView::Refresh()
     gtk_style_context_add_class(style_context, GTK_STYLE_CLASS_MENUBAR);
     gtk_style_context_add_class(style_context, GTK_STYLE_CLASS_MENUITEM);
 
-    if (proxy_->active())
+    if (draw_active_)
       gtk_style_context_set_state(style_context, GTK_STATE_FLAG_PRELIGHT);
 
     int y = (int)((height - text_height) / 2);
@@ -445,6 +464,11 @@ bool PanelIndicatorEntryView::IsSensitive() const
     return proxy_->image_sensitive() || proxy_->label_sensitive();
   }
   return false;
+}
+
+bool PanelIndicatorEntryView::IsActive() const
+{
+  return draw_active_;
 }
 
 int PanelIndicatorEntryView::GetEntryPriority() const

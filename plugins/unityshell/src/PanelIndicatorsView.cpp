@@ -180,19 +180,48 @@ PanelIndicatorsView::GetGeometryForSync(indicator::EntryLocationMap& locations)
 bool
 PanelIndicatorsView::OnPointerMoved(int x, int y)
 {
-  for (auto i = entries_.begin(), end = entries_.end(); i != end; ++i)
-  {
-    PanelIndicatorEntryView* view = i->second;
+  PanelIndicatorEntryView* target = NULL;
+  bool found_old_active = false;
 
-    nux::Geometry geo = view->GetAbsoluteGeometry();
-    if (geo.IsPointInside(x, y))
+  //
+  // Change the entry active status without waiting
+  // for slow inter-process communication with unity-panel-service,
+  // which causes visible lag in many cases.
+  //
+
+  for (auto entry : entries_)
+  {
+    PanelIndicatorEntryView* view = entry.second;
+
+    if (!target && view->GetAbsoluteGeometry().IsPointInside(x, y))
     {
-      view->OnMouseDown(x, y, 0, 0);
-      return true;
+      view->Activate(0);
+      target = view;
+      break;
+    }
+    else if (target && view->IsActive())
+    {
+      view->Unactivate();
+      found_old_active = true;
+      break;
     }
   }
 
-  return false;
+  if (target && !found_old_active)
+  {
+    for (auto entry : entries_)
+    {
+      PanelIndicatorEntryView* view = entry.second;
+
+      if (view != target && view->IsActive())
+      {
+        view->Unactivate();
+        break;
+      }
+    }
+  }
+
+  return (target != NULL);
 }
 
 void
