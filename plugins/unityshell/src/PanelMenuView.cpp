@@ -549,11 +549,14 @@ PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
     _fade_in_animator->Stop();
 
-    if (!_fade_out_animator->IsRunning())
+    if (_fade_out_animator->GetDuration() != PANEL_ENTRIES_FADEOUT)
     {
+      if (_fade_out_animator->IsRunning())
+        _fade_out_animator->Stop();
+
       _fade_out_animator->SetDuration(PANEL_ENTRIES_FADEOUT);
-      _fade_out_animator->Start(1.0f - GetOpacity());
     }
+    _fade_out_animator->Start(1.0f - GetOpacity());
   }
 
   if (draw_buttons)
