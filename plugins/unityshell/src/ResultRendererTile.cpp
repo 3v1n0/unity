@@ -61,7 +61,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(ResultRendererTile);
 ResultRendererTile::ResultRendererTile(NUX_FILE_LINE_DECL)
   : ResultRenderer(NUX_FILE_LINE_PARAM)
   , highlight_padding(6)
-  , spacing(12)
+  , spacing(10)
   , padding(6)
 {
   PlacesStyle* style = PlacesStyle::GetDefault();
@@ -102,20 +102,6 @@ void ResultRendererTile::Render(nux::GraphicsEngine& GfxContext,
 
   // set up our texture mode
   nux::TexCoordXForm texxform;
-
-  // clear what is behind us
-  nux::t_u32 alpha = 0, src = 0, dest = 0;
-
-  GfxContext.GetRenderStates().GetBlend(alpha, src, dest);
-  GfxContext.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-
-  nux::Color col = nux::color::Black;
-  col.alpha = 0;
-  GfxContext.QRP_Color(geometry.x,
-                       geometry.y,
-                       geometry.width,
-                       geometry.height,
-                       col);
 
   int icon_left_hand_side = geometry.x + (geometry.width - style->GetTileIconSize()) / 2;
   int icon_top_side = geometry.y + padding;
@@ -168,9 +154,6 @@ void ResultRendererTile::Render(nux::GraphicsEngine& GfxContext,
 
 
   }
-
-  GfxContext.GetRenderStates().SetBlend(alpha, src, dest);
-
 }
 
 nux::BaseTexture* ResultRendererTile::DrawHighlight(std::string const& texid, int width, int height)
@@ -400,7 +383,7 @@ void ResultRendererTile::LoadText(Result& row)
   pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
   pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_START);
   pango_layout_set_width(layout, (style->GetTileWidth() - (padding * 2))* PANGO_SCALE);
-  pango_layout_set_height(layout, -3);
+  pango_layout_set_height(layout, -2);
 
   pango_layout_set_markup(layout, row.name().c_str(), -1);
 

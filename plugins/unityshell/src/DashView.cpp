@@ -111,6 +111,9 @@ void DashView::SetupViews()
   SetLayout(layout_);
 
   content_layout_ = new nux::VLayout();
+  content_layout_->SetHorizontalExternalMargin(1);
+  content_layout_->SetVerticalExternalMargin(1);
+
   layout_->AddLayout(content_layout_, 1, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
   search_bar_ = new SearchBar();
   search_bar_->activated.connect(sigc::mem_fun(this, &DashView::OnEntryActivated));
@@ -186,13 +189,17 @@ nux::Geometry DashView::GetBestFitGeometry(nux::Geometry const& for_geo)
   int tile_height = style->GetTileHeight();
   int half = for_geo.width / 2;
 
-  while ((width += tile_width) < half)
+  // if default dash size is bigger than half a screens worth of items, go for that.
+  while ((width += tile_width) + (19 * 2) < half)
     ;
 
-  width = MAX(width, tile_width * 7);
+  width = MAX(width, tile_width * 6);
+
+  width += 19 + 32; // add the left padding and the group plugin padding
 
   height = search_bar_->GetGeometry().height;
-  height += tile_height * 4.75;
+  height += tile_height * 3;
+  height += (24 + 15) * 3; // adding three group headers
   height += lens_bar_->GetGeometry().height;
 
   if (for_geo.width > 800 && for_geo.height > 550)
@@ -228,38 +235,6 @@ void DashView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
   bool paint_blur = BackgroundEffectHelper::blur_type != BLUR_NONE;
   nux::Geometry geo = content_geo_;
   nux::Geometry geo_absolute = GetAbsoluteGeometry();
-
-  if (paint_blur)
-  {
-    nux::Geometry blur_geo(geo_absolute.x, geo_absolute.y, content_geo_.width, content_geo_.height);
-    bg_blur_texture_ = bg_effect_helper_.GetBlurRegion(blur_geo);
-
-    if (bg_blur_texture_.IsValid()  && paint_blur)
-    {
-      nux::TexCoordXForm texxform_blur_bg;
-      texxform_blur_bg.flip_v_coord = true;
-      texxform_blur_bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-      texxform_blur_bg.uoffset = ((float) content_geo_.x) / geo_absolute.width;
-      texxform_blur_bg.voffset = ((float) content_geo_.y) / geo_absolute.height;
-
-      nux::ROPConfig rop;
-      rop.Blend = false;
-      rop.SrcBlend = GL_ONE;
-      rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
-
-      nux::Geometry bg_clip = geo;
-      gfx_context.PushClippingRectangle(bg_clip);
-
-      gPainter.PushDrawTextureLayer(gfx_context, content_geo_,
-                                    bg_blur_texture_,
-                                    texxform_blur_bg,
-                                    nux::color::White,
-                                    true, // write alpha?
-                                    rop);
-
-      gfx_context.PopClippingRectangle();
-    }
-  }
 
   if (settings->GetFormFactor() != DashSettings::NETBOOK)
   {
@@ -395,9 +370,51 @@ void DashView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
     }
   }
 
+  nux::TexCoordXForm texxform_absolute_bg;
+  texxform_absolute_bg.flip_v_coord = true;
+  texxform_absolute_bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+  texxform_absolute_bg.uoffset = ((float) content_geo_.x) / geo_absolute.width;
+  texxform_absolute_bg.voffset = ((float) content_geo_.y) / geo_absolute.height;
+  texxform_absolute_bg.SetWrap(TEXWRAP_CLAMP, TEXWRAP_CLAMP);
+
+  if (paint_blur)
+  {
+    nux::Geometry blur_geo(geo_absolute.x, geo_absolute.y, content_geo_.width, content_geo_.height);
+    bg_blur_texture_ = bg_effect_helper_.GetBlurRegion(blur_geo);
+
+    if (bg_blur_texture_.IsValid()  && paint_blur)
+    {
+      nux::Geometry bg_clip = geo;
+      gfx_context.PushClippingRectangle(bg_clip);
+
+      gfx_context.GetRenderStates().SetBlend(false);
+      gfx_context.QRP_1Tex (content_geo_.x, content_geo_.y, 
+                            content_geo_.width, content_geo_.height, 
+                            bg_blur_texture_, texxform_absolute_bg, color::White);
+      gPainter.PopBackground();
+
+      gfx_context.PopClippingRectangle();
+    }
+  }
+
   bg_darken_layer_->SetGeometry(content_geo_);
+  nux::GetPainter().RenderSinglePaintLayer(gfx_context, content_geo_, bg_darken_layer_);
+
   bg_layer_->SetGeometry(content_geo_);
   nux::GetPainter().RenderSinglePaintLayer(gfx_context, content_geo_, bg_layer_);
+
+
+  texxform_absolute_bg.flip_v_coord = false;
+  texxform_absolute_bg.uoffset = (1.0f / 707) * (GetAbsoluteGeometry().x); // TODO (gord) don't use absolute values here
+  texxform_absolute_bg.voffset = (1.0f / 737) * (GetAbsoluteGeometry().y);
+
+  gfx_context.GetRenderStates().SetColorMask(true, true, true, false);
+  gfx_context.GetRenderStates().SetBlend(true, GL_DST_COLOR, GL_ONE);
+
+  gfx_context.QRP_1Tex (content_geo_.x, content_geo_.y, 
+                        content_geo_.width, content_geo_.height, 
+                        bg_shine_texture_, texxform_absolute_bg, color::White);
+                                        
 
   // Make round corners
   nux::ROPConfig rop;
@@ -411,13 +428,50 @@ void DashView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
                                nux::eCornerBottomRight,
                                true,
                                rop);
+
+  gfx_context.GetRenderStates().SetColorMask(true, true, true, true);
+  gfx_context.GetRenderStates().SetBlend(true);
+  gfx_context.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
+
+  geo = GetGeometry();
+  nux::GetPainter().Paint2DQuadColor(gfx_context,
+                                     nux::Geometry(geo.x,
+                                                   geo.y,
+                                                   1,
+                                                   content_geo_.height + 5),
+                                     nux::Color(0.0f, 0.0f, 0.0f, 0.0f),
+                                     nux::Color(0.15f, 0.15f, 0.15f, 0.15f),
+                                     nux::Color(0.15f, 0.15f, 0.15f, 0.15f),
+                                     nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
+  nux::GetPainter().Paint2DQuadColor(gfx_context,
+                                     nux::Geometry(geo.x,
+                                                   geo.y,
+                                                   content_geo_.width + 5,
+                                                   1),
+                                     nux::Color(0.0f, 0.0f, 0.0f, 0.0f),
+                                     nux::Color(0.0f, 0.0f, 0.0f, 0.0f),
+                                     nux::Color(0.15f, 0.15f, 0.15f, 0.15f),
+                                     nux::Color(0.15f, 0.15f, 0.15f, 0.15f));
+
+  geo = content_geo_;
+  // Fill in corners (meh)
+  for (int i = 1; i < 6; ++i)
+  {
+    nux::Geometry fill_geo (geo.x + geo.width, geo.y + i - 1, 6 - i, 1);
+    nux::GetPainter().Paint2DQuadColor(gfx_context, fill_geo, bg_color_);
+
+    nux::Color dark = bg_color_ * 0.8f;
+    dark.alpha = bg_color_.alpha;
+    fill_geo = nux::Geometry(geo.x + i - 1 , geo.y + geo.height, 1, 6 - i);
+    nux::GetPainter().Paint2DQuadColor(gfx_context, fill_geo, dark);
+  }
 }
 
 void DashView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
 {
   bool paint_blur = BackgroundEffectHelper::blur_type != BLUR_NONE;
   nux::Geometry geo = GetGeometry();
-  int bgs = 1;
+  int bgs = 0;
 
   gfx_context.PushClippingRectangle(geo);
 
@@ -450,8 +504,10 @@ void DashView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
 
   // draw the darkening behind our paint
   nux::GetPainter().PushLayer(gfx_context, bg_darken_layer_->GetGeometry(), bg_darken_layer_);
+  bgs++;
 
   nux::GetPainter().PushLayer(gfx_context, bg_layer_->GetGeometry(), bg_layer_);
+  bgs++;
 
   // apply the shine
   rop.Blend = true;
@@ -467,42 +523,10 @@ void DashView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
                                      nux::color::White,
                                      false,
                                      rop);
-
+  bgs++;
 
   layout_->ProcessDraw(gfx_context, force_draw);
 
-  geo = content_geo_;
-  // Fill in corners (meh)
-  for (int i = 1; i < 6; ++i)
-  {
-    nux::Geometry fill_geo (geo.x + geo.width, geo.y + i - 1, 6 - i, 1);
-    nux::GetPainter().Paint2DQuadColor(gfx_context, fill_geo, bg_color_);
-
-    nux::Color dark = bg_color_ * 0.8f;
-    dark.alpha = bg_color_.alpha;
-    fill_geo = nux::Geometry(geo.x + i - 1 , geo.y + geo.height, 1, 6 - i);
-    nux::GetPainter().Paint2DQuadColor(gfx_context, fill_geo, dark);
-  }
-
-  geo = GetGeometry();
-  nux::GetPainter().Paint2DQuadColor(gfx_context,
-                                     nux::Geometry(geo.x,
-                                                   geo.y,
-                                                   1,
-                                                   content_geo_.height + 5),
-                                     nux::Color(0.0f, 0.0f, 0.0f, 0.0f),
-                                     nux::Color(0.15f, 0.15f, 0.15f, 0.15f),
-                                     nux::Color(0.15f, 0.15f, 0.15f, 0.15f),
-                                     nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
-  nux::GetPainter().Paint2DQuadColor(gfx_context,
-                                     nux::Geometry(geo.x,
-                                                   geo.y,
-                                                   content_geo_.width + 5,
-                                                   1),
-                                     nux::Color(0.0f, 0.0f, 0.0f, 0.0f),
-                                     nux::Color(0.0f, 0.0f, 0.0f, 0.0f),
-                                     nux::Color(0.15f, 0.15f, 0.15f, 0.15f),
-                                     nux::Color(0.15f, 0.15f, 0.15f, 0.15f));
   nux::GetPainter().PopBackground(bgs);
 
   gfx_context.GetRenderStates().SetBlend(false);

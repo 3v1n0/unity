@@ -222,13 +222,14 @@ UnityScreen::UnityScreen(CompScreen* screen)
      debugger = new DebugDBusInterface(this);
 
      _edge_timeout = optionGetLauncherRevealEdgeTimeout ();
+     _in_paint = false;
 
      if (GL::fbo)
      {
-	 foreach (CompOutput & o, screen->outputDevs())
+       foreach (CompOutput & o, screen->outputDevs())
 	     uScreen->mFbos[&o] = UnityFBO::Ptr (new UnityFBO(&o));
 
-	 uScreen->mFbos[&(screen->fullscreenOutput ())] = UnityFBO::Ptr (new UnityFBO(&(screen->fullscreenOutput ())));
+       uScreen->mFbos[&(screen->fullscreenOutput ())] = UnityFBO::Ptr (new UnityFBO(&(screen->fullscreenOutput ())));
      }
 
      optionSetLauncherHideModeNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
@@ -297,6 +298,8 @@ UnityScreen::UnityScreen(CompScreen* screen)
      CompString pname("unityshell");
      CompSize size(1, 20);
      _shadow_texture = GLTexture::readImageToTexture(name, pname, size);
+
+     BackgroundEffectHelper::updates_enabled = true;
 
      ubus_manager_.RegisterInterest(UBUS_PLACE_VIEW_SHOWN, [&](GVariant * args) { dash_is_open_ = true; });
      ubus_manager_.RegisterInterest(UBUS_PLACE_VIEW_HIDDEN, [&](GVariant * args) { dash_is_open_ = false; });
@@ -492,7 +495,7 @@ void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
   float panel_h = 24.0f;
 
   float x1 = output->x();
-  float y1 = panel_h;
+  float y1 = output->y() + panel_h;
   float x2 = x1 + output->width();
   float y2 = y1 + h;
 
@@ -501,12 +504,13 @@ void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
   vc[2] = y1;
   vc[3] = y2;
 
-  if (!dash_is_open_ && panelController->opacity())
+  if (!dash_is_open_ && panelController->opacity() > 0.0f)
   {
     foreach(GLTexture * tex, _shadow_texture)
     {
       glEnable(GL_BLEND);
-      glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+      glColor4f(1.0f, 1.0f, 1.0f, panelController->opacity());
+      glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
       GL::activeTexture(GL_TEXTURE0_ARB);
       tex->enable(GLTexture::Fast);
@@ -552,11 +556,16 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
 {
   CompOutput *output = _last_output;
   Window     tray_xid = panelController->GetTrayXid ();
+  bool       bound = mFbos[output]->bound ();
 
-  mFbos[output]->unbind ();
 
-  /* Draw the bit of the relevant framebuffer for each output */
-  mFbos[output]->paint ();
+  if (bound)
+  {
+    mFbos[output]->unbind ();
+
+    /* Draw the bit of the relevant framebuffer for each output */
+    mFbos[output]->paint ();
+  }
 
   nuxPrologue();
 
@@ -567,10 +576,11 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
   nux::GetGraphicsDisplay()->GetGpuDevice()->backup_texture0_ = device_texture;
 
   nux::Geometry geo = nux::Geometry (output->x (), output->y (), output->width (), output->height ());
-
   BackgroundEffectHelper::monitor_rect_ = geo;
 
+  _in_paint = true;
   wt->RenderInterfaceFromForeignCmd (&geo);
+  _in_paint = false;
   nuxEpilogue();
 
   if (tray_xid && !allowWindowPaint)
@@ -629,7 +639,6 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
 
   doShellRepaint = false;
   damaged = false;
-  BackgroundEffectHelper::updates_enabled = true;
 }
 
 bool UnityScreen::forcePaintOnTop ()
@@ -741,7 +750,7 @@ bool UnityShowdesktopHandler::shouldHide (CompWindow *w)
 
 UnityShowdesktopHandler::UnityShowdesktopHandler (CompWindow *w) :
   mWindow (w),
-  mRemover (new compiz::WindowInputRemover (screen->dpy (), ROOTPARENT (w))),
+  mRemover (new compiz::WindowInputRemover (screen->dpy (), w->id ())),
   mState (Visible),
   mProgress (0.0f)
 {
@@ -815,6 +824,38 @@ void UnityShowdesktopHandler::paintAttrib (GLWindowPaintAttrib &attrib)
   attrib.opacity = attrib.opacity * mProgress;
 }
 
+unsigned int UnityShowdesktopHandler::getPaintMask ()
+{
+    return 0;
+}
+
+void UnityShowdesktopHandler::handleEvent (XEvent *event)
+{
+  /* Ignore sent events from the InputRemover */
+  if (screen->XShape () && event->type ==
+      screen->shapeEvent () + ShapeNotify &&
+      !event->xany.send_event)
+  {
+    if (mRemover)
+    {
+      mRemover->save ();
+      mRemover->remove ();
+    }
+  }
+}
+
+void UnityShowdesktopHandler::updateFrameRegion (CompRegion &r)
+{
+  unsigned int oldUpdateFrameRegionIndex;
+  r = CompRegion ();
+
+  /* Ensure no other plugins can touch this frame region */
+  oldUpdateFrameRegionIndex = mWindow->updateFrameRegionGetCurrentIndex ();
+  mWindow->updateFrameRegionSetCurrentIndex (MAXSHORT);
+  mWindow->updateFrameRegion (r);
+  mWindow->updateFrameRegionSetCurrentIndex (oldUpdateFrameRegionIndex);
+}
+
 /* called whenever we need to repaint parts of the screen */
 bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
                                 const GLMatrix& transform,
@@ -824,7 +865,16 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
 {
   bool ret;
 
-  /* bind the framebuffer here */
+  /* bind the framebuffer here
+   * - it will be unbound and flushed
+   *   to the backbuffer when some
+   *   plugin requests to draw a
+   *   a transformed screen or when
+   *   we have finished this draw cycle.
+   *   once an fbo is bound any further
+   *   attempts to bind it will only increment
+   *   its bind reference so make sure that
+   *   you always unbind as much as you bind */
   mFbos[output]->bind ();
 
   doShellRepaint = true;
@@ -849,39 +899,25 @@ void UnityScreen::glPaintTransformedOutput(const GLScreenPaintAttrib& attrib,
                                            CompOutput* output,
                                            unsigned int mask)
 {
-  /* bind the framebuffer here */
-  mFbos[output]->bind ();
+  bool bound = mFbos[output]->bound ();
   allowWindowPaint = false;
-  /* urgh */
-  gScreen->glPaintOutput(attrib, transform, region, output, mask);
+
+  if (bound)
+  {
+    /* The screen is transformed, unbind our fbo
+     * and redraw the bits that were transformed
+     * if we were bound */
+    mFbos[output]->unbind ();
+    mFbos[output]->paint ();
+  }
+
+  gScreen->glPaintTransformedOutput(attrib, transform, region, output, mask);
+
 }
 
 void UnityScreen::preparePaint(int ms)
 {
   CompWindowList remove_windows;
-
-  if (BackgroundEffectHelper::blur_type == unity::BLUR_ACTIVE)
-  {
-    if (cScreen->damageMask() & COMPOSITE_SCREEN_DAMAGE_ALL_MASK)
-    {
-      CompRegion damage (screen->currentOutputDev().workArea());
-      BackgroundEffectHelper::SetDamageBounds(damage.handle());
-    }
-    else
-    {
-      CompRegion current_damage = cScreen->currentDamage();
-      BackgroundEffectHelper::SetDamageBounds(current_damage.handle());
-    }
-
-    // this causes queue draws to be called, we obviously dont want to disable updates
-    // because we are updating the blur, so ignore them.
-    bool do_updates = BackgroundEffectHelper::updates_enabled;
-    BackgroundEffectHelper::QueueDrawOnOwners();
-    BackgroundEffectHelper::updates_enabled = do_updates;
-
-    BackgroundEffectHelper::ResetOcclusionBuffer();
-    BackgroundEffectHelper::detecting_occlusions = true;
-  }
 
   cScreen->preparePaint(ms);
 
@@ -967,6 +1003,20 @@ void UnityScreen::handleEvent(XEvent* event)
           }
         }
       }
+      default:
+        if (screen->shapeEvent () + ShapeNotify == event->type)
+        {
+          Window xid = event->xany.window;
+          CompWindow *w = screen->findWindow(xid);
+
+          if (w)
+          {
+            UnityWindow *uw = UnityWindow::get (w);
+
+            if (uw->mShowdesktopHandler)
+              uw->mShowdesktopHandler->handleEvent(event);
+          }
+        }
       break;
   }
 
@@ -981,6 +1031,23 @@ void UnityScreen::handleEvent(XEvent* event)
       !switcherController->Visible())
   {
     wt->ProcessForeignEvent(event, NULL);
+  }
+
+  if (event->type == cScreen->damageEvent() + XDamageNotify)
+  {
+    XDamageNotifyEvent *de = (XDamageNotifyEvent *) event;
+    CompWindow* w = screen->findWindow (de->drawable);
+
+    if (w)
+    {
+      nux::Geometry damage (de->area.x, de->area.y, de->area.width, de->area.height);
+
+      CompWindow::Geometry geom = w->geometry ();
+      damage.x += geom.x () + geom.border ();
+      damage.y += geom.y () + geom.border ();
+
+      BackgroundEffectHelper::ProcessDamage(damage);
+    }
   }
 }
 
@@ -1447,7 +1514,10 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
     mask |= compizMinimizeHandler->getPaintMask ();
   }
   else if (mShowdesktopHandler)
+  {
     mShowdesktopHandler->paintAttrib (wAttrib);
+    mask |= mShowdesktopHandler->getPaintMask ();
+  }
 
   if (uScreen->panelController->GetTrayXid () == window->id () && !uScreen->allowWindowPaint)
   {
@@ -1458,63 +1528,6 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
     }
   }
 
-  /* Don't bother detecting occlusions if we're not doing updates
-   * or we don't want to repaint the shell this pass. We also
-   * have a global flag detecting_occlusions which is set to false
-   * once we need to *stop* detecting occlusions
-   */
-  if (BackgroundEffectHelper::blur_type != unity::BLUR_ACTIVE ||
-      !BackgroundEffectHelper::updates_enabled() ||
-      !BackgroundEffectHelper::HasEnabledHelpers() ||
-      !BackgroundEffectHelper::detecting_occlusions() ||
-      !uScreen->doShellRepaint ||
-      uScreen->forcePaintOnTop ())
-  {
-    return gWindow->glPaint(wAttrib, matrix, region, mask);
-  }
-
-  /* Compiz paints windows top to bottom during
-   * the occlusion pass, so add windows to occlusion
-   * buffer first and then stop adding windows once we
-   * hit a window below a nux window (since the nux
-   * windows are removed from the paint list) */
-  if (mask & PAINT_WINDOW_OCCLUSION_DETECTION_MASK)
-  {
-    for (CompWindow* w = window; w; w = w->next)
-    {
-      for (const Window & xw : nux::XInputWindow::NativeHandleList())
-      {
-        /* We hit one of our windows, stop detecting occlusions */
-        if (xw == w->id())
-        {
-          BackgroundEffectHelper::detecting_occlusions = false;
-          break;
-        }
-      }
-
-      if (!BackgroundEffectHelper::detecting_occlusions())
-        break;
-    }
-
-    if (BackgroundEffectHelper::detecting_occlusions())
-    {
-      /* glPaint will return true if the window will be
-       * drawon on screen, in that case we need to add
-       * its output rect to the occlusion buffer */
-      if (gWindow->glPaint(attrib, matrix, region, mask))
-      {
-        CompRegion outReg(window->outputRect());
-        BackgroundEffectHelper::AddOccludedRegion(outReg.handle());
-        return true;
-      }
-      else
-        return false;
-    }
-    else
-      return gWindow->glPaint(wAttrib, matrix, region, mask);
-  }
-
-  /* Should never be reached */
   return gWindow->glPaint(wAttrib, matrix, region, mask);
 }
 
@@ -1583,6 +1596,38 @@ UnityWindow::unminimize ()
 }
 
 bool
+UnityWindow::focus ()
+{
+  if (!mMinimizeHandler.get ())
+    return window->focus ();
+
+  if (window->overrideRedirect ())
+    return false;
+
+  if (!window->managed ())
+    return false;
+
+  if (!window->onCurrentDesktop ())
+    return false;
+
+  /* Only withdrawn windows 
+   * which are marked hidden
+   * are excluded */
+  if (!window->shaded () &&
+      !window->minimized () &&
+      (window->state () & CompWindowStateHiddenMask))
+    return false;
+
+  if (window->geometry ().x () + window->geometry ().width ()  <= 0	||
+      window->geometry ().y () + window->geometry ().height () <= 0	||
+      window->geometry ().x () >= (int) screen->width ()||
+      window->geometry ().y () >= (int) screen->height ())
+    return false;
+
+  return true;
+}
+
+bool
 UnityWindow::minimized ()
 {
   return mMinimizeHandler.get () != NULL;
@@ -1592,6 +1637,38 @@ UnityWindow::minimized ()
 void UnityWindow::windowNotify(CompWindowNotify n)
 {
   PluginAdapter::Default()->Notify(window, n);
+
+  switch (n)
+  {
+    case CompWindowNotifyMap:
+    case CompWindowNotifyUnmap:
+      if (UnityScreen::get (screen)->optionGetShowMinimizedWindows () &&
+          window->mapNum ())
+      {
+        bool wasMinimized = window->minimized ();
+        if (wasMinimized)
+          window->unminimize ();
+        window->focusSetEnabled (this, true);
+        window->minimizeSetEnabled (this, true);
+        window->unminimizeSetEnabled (this, true);
+        window->minimizedSetEnabled (this, true);
+
+        if (wasMinimized)
+          window->minimize ();
+      }
+      else
+      {
+        window->focusSetEnabled (this, false);
+        window->minimizeSetEnabled (this, false);
+        window->unminimizeSetEnabled (this, false);
+        window->minimizedSetEnabled (this, false);
+      }
+        break;
+      default:
+        break;
+  }
+
+
   window->windowNotify(n);
   
   // We do this after the notify to ensure input focus has actually been moved.
@@ -1633,6 +1710,8 @@ void UnityWindow::updateFrameRegion(CompRegion &region)
 
   if (compizMinimizeHandler)
     compizMinimizeHandler->updateFrameRegion (region);
+  else if (mShowdesktopHandler)
+    mShowdesktopHandler->updateFrameRegion (region);
   else
     window->updateFrameRegion (region);
 }
@@ -1705,12 +1784,29 @@ void UnityScreen::initUnity(nux::NThread* thread, void* InitData)
   LOG_INFO(logger) << "UnityScreen::initUnity: " << timer.ElapsedSeconds() << "s";
 }
 
+gboolean UnityScreen::OnRedrawTimeout(gpointer data)
+{
+  UnityScreen *self = reinterpret_cast<UnityScreen*>(data);
+
+  self->_redraw_handle = 0;
+  self->onRedrawRequested();
+
+  return FALSE;
+}
+
 void UnityScreen::onRedrawRequested()
 {
   // disable blur updates so we dont waste perf. This can stall the blur during animations
   // but ensures a smooth animation.
-  BackgroundEffectHelper::updates_enabled = false;
-  damageNuxRegions();
+  if (_in_paint)
+  {
+    if (!_redraw_handle)
+      _redraw_handle = g_timeout_add (0, &UnityScreen::OnRedrawTimeout, this);
+  }
+  else
+  {
+    damageNuxRegions();
+  }
 }
 
 /* Handle option changes and plug that into nux windows */
@@ -1868,10 +1964,15 @@ void UnityFBO::paint ()
   //unsigned int    mask = cScreen->damageMask ();
   float texx, texy, texwidth, texheight;
 
+  /* Must be completely unbound before painting */
+  if (mBoundCnt)
+    return;
+
   /* Draw the bit of the relevant framebuffer for each output */
   GLMatrix transform;
 
   glViewport (output->x (), screen->height () - output->y2 (), output->width (), output->height ());
+  GLScreen::get (screen)->clearOutput (output, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   transform.toScreenSpace (output, -DEFAULT_Z_CAMERA);
   glPushMatrix ();
@@ -1924,12 +2025,22 @@ void UnityFBO::paint ()
 
 void UnityFBO::unbind ()
 {
+  mBoundCnt--;
+
+  if (mBoundCnt)
+    return;
+
   uScreen->setActiveFbo (0);
   (*GL::bindFramebuffer) (GL_FRAMEBUFFER_EXT, 0);
 
   glDrawBuffer (GL_BACK);
   glReadBuffer (GL_BACK);
 
+}
+
+bool UnityFBO::bound ()
+{
+  return mBoundCnt > 0;
 }
 
 bool UnityFBO::status ()
@@ -1939,6 +2050,12 @@ bool UnityFBO::status ()
 
 void UnityFBO::bind ()
 {
+  if (mBoundCnt)
+  {
+    mBoundCnt++;
+    return;
+  }
+
   if (!mFBTexture)
   {
     glGenTextures (1, &mFBTexture);
@@ -2034,6 +2151,7 @@ void UnityFBO::bind ()
                output->width(),
                output->height());
 
+    mBoundCnt++;
   }
 }
 
@@ -2041,6 +2159,7 @@ UnityFBO::UnityFBO (CompOutput *o)
  : mFboStatus (false)
  , mFBTexture (0)
  , output (o)
+ , mBoundCnt (0)
 {
   (*GL::genFramebuffers) (1, &mFboHandle);
 }
@@ -2141,24 +2260,10 @@ UnityWindow::UnityWindow(CompWindow* window)
   WindowInterface::setHandler(window);
   GLWindowInterface::setHandler(gWindow);
 
-  if (UnityScreen::get (screen)->optionGetShowMinimizedWindows ())
-  {
-    bool wasMinimized = window->minimized ();
-    if (wasMinimized)
-      window->unminimize ();
-    window->minimizeSetEnabled (this, true);
-    window->unminimizeSetEnabled (this, true);
-    window->minimizedSetEnabled (this, true);
-
-    if (wasMinimized)
-      window->minimize ();
-  }
-  else
-  {
-    window->minimizeSetEnabled (this, false);
-    window->unminimizeSetEnabled (this, false);
-    window->minimizedSetEnabled (this, false);
-  }
+  window->focusSetEnabled (this, false);
+  window->minimizedSetEnabled (this, false);
+  window->minimizeSetEnabled (this, false);
+  window->unminimizeSetEnabled (this, false);
 
   if (window->state () & CompWindowStateFullscreenMask)
     UnityScreen::get (screen)->fullscreen_windows_.push_back(window);
@@ -2175,6 +2280,7 @@ UnityWindow::~UnityWindow()
   if (mMinimizeHandler)
   {
     unminimize ();
+    window->focusSetEnabled (this, false);
     window->minimizeSetEnabled (this, false);
     window->unminimizeSetEnabled (this, false);
     window->minimizedSetEnabled (this, false);

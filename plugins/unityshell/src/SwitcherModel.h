@@ -44,7 +44,7 @@ public:
   typedef Base::reverse_iterator reverse_iterator;
 
   nux::Property<bool> detail_selection;
-  nux::Property<int> detail_selection_index;
+  nux::Property<unsigned int> detail_selection_index;
 
   // Icons are owned externally and assumed valid for life of switcher.
   // When AbstractLauncherIcon is complete, it will be passed as a shared pointer and this

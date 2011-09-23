@@ -175,6 +175,8 @@ void IconTexture::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   GfxContext.PushClippingRectangle(geo);
 
+  nux::GetPainter().PaintBackground(GfxContext, geo);
+
   if (_texture_cached)
   {
     nux::Color col(1.0f * _opacity, 1.0f * _opacity, 1.0f * _opacity, _opacity);

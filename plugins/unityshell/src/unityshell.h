@@ -63,6 +63,7 @@ public:
   void unbind ();
 
   bool status ();
+  bool bound ();
   void paint ();
 
   GLuint texture () { return mFBTexture; }
@@ -74,6 +75,7 @@ private:
   bool    mFboStatus; // did the framebuffer texture bind succeed
   GLuint   mFBTexture;
   CompOutput *output;
+  unsigned int mBoundCnt;
 };
 
 class UnityShowdesktopHandler
@@ -96,6 +98,9 @@ public:
   void fadeIn ();
   bool animate (unsigned int ms);
   void paintAttrib (GLWindowPaintAttrib &attrib);
+  unsigned int getPaintMask ();
+  void handleEvent (XEvent *);
+  void updateFrameRegion (CompRegion &r);
 
   UnityShowdesktopHandler::State state ();
 
@@ -256,6 +261,7 @@ private:
   static void OnStartKeyNav(GVariant* data, void* value);
   static void OnExitKeyNav(GVariant* data, void* value);
   static gboolean OnEdgeTriggerTimeout(gpointer data);
+  static gboolean OnRedrawTimeout(gpointer data);
 
   void startLauncherKeyNav();
   void restartLauncherKeyNav();
@@ -280,9 +286,11 @@ private:
   nux::Geometry           lastTooltipArea;
   DebugDBusInterface*     debugger;
   bool                    needsRelayout;
+  bool                    _in_paint;
   guint32                 relayoutSourceId;
   guint                   _edge_timeout;
   guint                   _edge_trigger_handle;
+  guint32                 _redraw_handle;
   gint                    _edge_pointerY;
   guint                   _ubus_handles[3];
 
@@ -344,6 +352,7 @@ public:
   void minimize ();
   void unminimize ();
   bool minimized ();
+  bool focus ();
 
   void updateFrameRegion (CompRegion &region);
 

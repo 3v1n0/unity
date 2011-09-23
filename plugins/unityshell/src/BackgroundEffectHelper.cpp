@@ -18,6 +18,7 @@
  */
 
 #include "BackgroundEffectHelper.h"
+#include "TimeUtil.h"
 
 #include <time.h>
 #include <X11/Xregion.h>
@@ -27,67 +28,15 @@
 using namespace unity;
 
 std::list<BackgroundEffectHelper*> BackgroundEffectHelper::registered_list_;
-Region BackgroundEffectHelper::damage_region_ = NULL;
-Region BackgroundEffectHelper::occluded_region_ = NULL;
-Region BackgroundEffectHelper::popup_region_ = NULL;
 
 nux::Geometry BackgroundEffectHelper::monitor_rect_;
 
 nux::Property<BlurType> BackgroundEffectHelper::blur_type (BLUR_ACTIVE);
 nux::Property<float> BackgroundEffectHelper::sigma_high (5.0f);
-nux::Property<float> BackgroundEffectHelper::sigma_med (4.0f);
+nux::Property<float> BackgroundEffectHelper::sigma_med (3.0f);
 nux::Property<float> BackgroundEffectHelper::sigma_low (1.0f);
 nux::Property<bool> BackgroundEffectHelper::updates_enabled (true);
 nux::Property<bool> BackgroundEffectHelper::detecting_occlusions (false);
-
-namespace unity
-{
-namespace x
-{
-// ::Region from XCreateRegion is ... a pointer to a struct.
-class Region : boost::noncopyable
-{
-public:
-  Region()
-    : region_(::XCreateRegion())
-    {}
-
-  Region(::Region r)
-    : region_(r)
-    {}
-
-  ~Region()
-    {
-      ::XDestroyRegion(region_);
-    }
-
-  operator ::Region()
-    {
-      return region_;
-    }
-private:
-  ::Region region_;
-};
-}
-
-/* region must be destroyed after it is used */
-Region geometryToRegion(nux::Geometry const& geo)
-{
-  XRectangle rect;
-  Region     reg;
-
-  rect.x = geo.x;
-  rect.y = geo.y;
-  rect.width = geo.width;
-  rect.height = geo.height;
-
-  reg = XCreateRegion();
-  XUnionRectWithRegion(&rect, reg, reg);
-
-  return reg;
-}
-}
-
 
 BackgroundEffectHelper::BackgroundEffectHelper()
 {
@@ -95,6 +44,7 @@ BackgroundEffectHelper::BackgroundEffectHelper()
   cache_dirty = true;
   enabled.changed.connect (sigc::mem_fun(this, &BackgroundEffectHelper::OnEnabledChanged));
   noise_texture_ = nux::CreateTextureFromFile(PKGDATADIR"/dash_noise.png");
+
   Register(this);
 }
 
@@ -106,112 +56,20 @@ BackgroundEffectHelper::~BackgroundEffectHelper()
 
 void BackgroundEffectHelper::OnEnabledChanged(bool value)
 {
-  XRectangle max_rect;
-
   if (value)
-  {
     DirtyCache();
-
-    max_rect.x = owner ()->GetAbsoluteGeometry().x;
-    max_rect.y = owner ()->GetAbsoluteGeometry().y;
-    max_rect.width = owner ()->GetAbsoluteGeometry().width;
-    max_rect.height = owner ()->GetAbsoluteGeometry().height;
-
-    /* Mark this region as damaged so it gets updated */
-    if (popup_region_)
-    {
-      XDestroyRegion (popup_region_);
-      popup_region_ = NULL;
-    }
-
-    popup_region_ = XCreateRegion ();
-    XUnionRectWithRegion (&max_rect, popup_region_, popup_region_);
-  }
 }
 
-void BackgroundEffectHelper::SetDamageBounds(const Region damage)
+void BackgroundEffectHelper::ProcessDamage(nux::Geometry geo)
 {
-  if (damage_region_)
-    XDestroyRegion(damage_region_);
-
-  damage_region_ = XCreateRegion();
-  XUnionRegion(damage_region_, damage, damage_region_);
-}
-
-void BackgroundEffectHelper::ResetDamageBounds()
-{
-  if (damage_region_)
-    XDestroyRegion(damage_region_);
-
-  damage_region_ = XCreateRegion();
-}
-
-void BackgroundEffectHelper::AddOccludedRegion(const Region occluded)
-{
-  if (!occluded_region_)
-    occluded_region_ = XCreateRegion();
-
-  XUnionRegion(occluded_region_, occluded, occluded_region_);
-}
-
-void BackgroundEffectHelper::ResetOcclusionBuffer()
-{
-  if (occluded_region_)
-    XDestroyRegion(occluded_region_);
-
-  occluded_region_ = NULL;
-}
-
-void BackgroundEffectHelper::QueueDrawOnOwners()
-{
-  for (BackgroundEffectHelper * helper : registered_list_)
+  for (BackgroundEffectHelper * bg_effect_helper : registered_list_)
   {
-    if (!helper->enabled)
+    if (bg_effect_helper->cache_dirty || !bg_effect_helper->owner)
       continue;
 
-    nux::View* owner = helper->owner();
-    if (owner)
+    if (!geo.Intersect (bg_effect_helper->blur_geometry_).IsNull())
     {
-      if (!damage_region_ || XEmptyRegion(damage_region_))
-      {
-        owner->QueueDraw();
-      }
-      else
-      {
-        x::Region xregion(unity::geometryToRegion(owner->GetAbsoluteGeometry()));
-        x::Region damage_intersection;
-        x::Region occlusion_intersection;
-
-        /* Determine if the damage region on screen actually intersected
-         * a blurred region */
-        XIntersectRegion(xregion, damage_region_, damage_intersection);
-
-        /* If we're detecting occlusions, we need to subtract the occluded
-         * region from this region. If they completely overlap, then this
-         * region should not be painted since it is occluded */
-        if (occluded_region_)
-        {
-          XSubtractRegion(xregion, occluded_region_, occlusion_intersection);
-        }
-        else
-        {
-          /* No occlusion detection - fill occlusion intersectiong with the
-           * contents of the geometry region */
-          XUnionRegion(xregion, occlusion_intersection, occlusion_intersection);
-        }
-
-        /* Don't queue draw on owner if the occlusion intersection
-         * is empty (eg, the window is occluded) */
-        if (!XEmptyRegion(occlusion_intersection))
-        {
-          /* Don't queue draw on owner if the underlying region
-           * behind the geometry was not damaged (damage_intersection) */
-          if (!XEmptyRegion(damage_intersection))
-          {
-            owner->QueueDraw();
-          }
-        }
-      }
+      bg_effect_helper->DirtyCache();
     }
   }
 }
@@ -233,30 +91,21 @@ void BackgroundEffectHelper::Register(BackgroundEffectHelper* self)
 void BackgroundEffectHelper::Unregister(BackgroundEffectHelper* self)
 {
   registered_list_.remove(self);
-
-  if (!registered_list_.size())
-  {
-    if (damage_region_)
-    {
-      XDestroyRegion(damage_region_);
-      damage_region_ = NULL;
-    }
-    if (occluded_region_)
-    {
-      XDestroyRegion(occluded_region_);
-      occluded_region_ = NULL;
-    }
-  }
 }
 
 void BackgroundEffectHelper::DirtyCache ()
 {
+  if (cache_dirty)
+    return;
+
   cache_dirty = true;
+  if (owner)
+    owner()->QueueDraw();
 }
 
 nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nux::Geometry geo, bool force_update)
 {
-  bool should_update = updates_enabled() || force_update || cache_dirty;
+  bool should_update = force_update || cache_dirty;
 
   /* Static blur: only update when the size changed */
   if ((blur_type != BLUR_ACTIVE || !should_update)
@@ -264,27 +113,6 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nu
       && (geo == blur_geometry_))
   {
     return blur_texture_;
-  }
-
-  if (damage_region_)
-  {
-    x::Region xregion(unity::geometryToRegion(geo));
-    x::Region damage_intersection;
-
-    // Handle newly created windows
-    if (popup_region_)
-    {
-      XUnionRegion (damage_region_, popup_region_, damage_region_);
-      XDestroyRegion (popup_region_);
-      popup_region_ = NULL;
-    }
-
-    // Active blur, only update if we're forcing one or if
-    // the underlying region on the backup texture has changed
-    XIntersectRegion(xregion, damage_region_, damage_intersection);
-
-    if (XEmptyRegion(damage_intersection) && !force_update)
-      return blur_texture_;
   }
 
   nux::GraphicsEngine* graphics_engine = nux::GetGraphicsDisplay()->GetGraphicsEngine();
@@ -322,7 +150,6 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nu
   int dleft     = blur_geometry_.x - larger_blur_geometry.x;
   int dbottom   = (larger_blur_geometry.y + larger_blur_geometry.height) - (blur_geometry_.y + blur_geometry_.height);
 
-
   // save the current fbo
   nux::ObjectPtr<nux::IOpenGLFrameBufferObject> current_fbo = gpu_device->GetCurrentFrameBufferObject();
   gpu_device->DeactivateFrameBuffer();
@@ -348,7 +175,7 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nu
 
   if (support_vert && support_frag && opengl_version >= 2)
   {
-    float noise_factor = 1.2f;
+    float noise_factor = 1.1f;
     float gaussian_sigma = opengl_version >= 3 ? sigma_high : sigma_med;
     int blur_passes = 1;
 
@@ -374,32 +201,42 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nu
     noise_texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
     noise_texxform.SetFilter(nux::TEXFILTER_NEAREST, nux::TEXFILTER_NEAREST);
 
-    nux::ObjectPtr<nux::IOpenGLBaseTexture> resized_texture;
     // Down size
     graphics_engine->QRP_GetCopyTexture(down_size_width, down_size_height,
-                                        resized_texture, device_texture,
+                                        resize_tmp_, device_texture,
                                         texxform__bg, nux::color::White);
 
+    blur_fx_struct_.src_texture = resize_tmp_;
     // Blur at a lower resolution (less pixels to process)
-    nux::ObjectPtr<nux::IOpenGLBaseTexture> low_res_blur;
-    low_res_blur = graphics_engine->QRP_GetHQBlur(x, y, down_size_width, down_size_height,
-                                                  resized_texture, texxform, nux::color::White,
-                                                  gaussian_sigma, blur_passes);
+    // nux::ObjectPtr<nux::IOpenGLBaseTexture> low_res_blur;
+    // low_res_blur = graphics_engine->QRP_GetHQBlur(x, y, down_size_width, down_size_height,
+    //                                               resized_texture, texxform, nux::color::White,
+    //                                               gaussian_sigma, blur_passes);
+
+    graphics_engine->QRP_GLSL_GetHQBlurFx(x, y, down_size_width, down_size_height,
+                                                  &blur_fx_struct_, texxform, nux::color::White,
+                                                 gaussian_sigma, blur_passes);
+
 
     // Up size
     graphics_engine->QRP_GetCopyTexture(buffer_width, buffer_height,
-                                        resized_texture, low_res_blur,
+                                        resize_tmp_, blur_fx_struct_.dst_texture,
                                         texxform, nux::color::White);
+    noise_fx_struct_.src_texture = resize_tmp_;
 
     // Add Noise
-    nux::ObjectPtr<nux::IOpenGLBaseTexture> noisy_blur;
     nux::Color noise_color(noise_factor * 1.0f/buffer_width,
                            noise_factor * 1.0f/buffer_height,
                            1.0f, 1.0f);
-    noisy_blur = graphics_engine->QRP_GLSL_GetDisturbedTexture(
+    // noisy_tmp_ = graphics_engine->QRP_GLSL_GetDisturbedTexture(
+    //   0, 0, buffer_width, buffer_height,
+    //   noise_device_texture->m_Texture, noise_texxform, noise_color,
+    //   resized_texture, texxform, nux::color::White);
+
+    graphics_engine->QRP_GLSL_GetDisturbedTextureFx(
       0, 0, buffer_width, buffer_height,
       noise_device_texture->m_Texture, noise_texxform, noise_color,
-      resized_texture, texxform, nux::color::White);
+      &noise_fx_struct_, texxform, nux::color::White);
 
     // Returns a smaller blur region (minus blur radius).
     texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
@@ -407,7 +244,7 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nu
     texxform.uoffset = dleft / (float) buffer_width;
     texxform.voffset = dbottom / (float) buffer_height;
     graphics_engine->QRP_GetCopyTexture(blur_geometry_.width, blur_geometry_.height,
-                                        blur_texture_, noisy_blur,
+                                        blur_texture_, noise_fx_struct_.dst_texture,
                                         texxform, nux::color::White);
   }
   else

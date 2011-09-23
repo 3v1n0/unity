@@ -113,6 +113,7 @@ public:
   bool IsWindowDecorated(guint xid);
   bool IsWindowOnCurrentDesktop(guint xid);
   bool IsWindowObscured(guint xid);
+  bool IsWindowMapped(guint xid);
   void Restore(guint32 xid);
   void Minimize(guint32 xid);
   void Close(guint32 xid);
@@ -158,7 +159,6 @@ private:
   CompScreen* m_Screen;
   MultiActionList m_ExpoActionList;
   MultiActionList m_ScaleActionList;
-  std::list <guint32> m_SpreadedWindows;
 
   bool _spread_state;
   bool _expo_state;
