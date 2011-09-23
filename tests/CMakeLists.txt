@@ -137,6 +137,8 @@ add_executable (standalone-dash
                 ${UNITY_SRC}/UBusWrapper.h
                 ${UNITY_SRC}/ubus-server.cpp
                 ${UNITY_SRC}/ubus-server.h
+                ${UNITY_SRC}/UScreen.cpp
+                ${UNITY_SRC}/UScreen.h
                 )
 add_dependencies (standalone-dash unity-core-${UNITY_API_VERSION})
 

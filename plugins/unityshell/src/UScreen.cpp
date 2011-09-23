@@ -56,7 +56,7 @@ UScreen::GetDefault()
 int
 UScreen::GetPrimaryMonitor()
 {
-  return gdk_screen_get_primary_monitor(gdk_screen_get_default());
+  return primary_;
 }
 
 nux::Geometry&
@@ -93,16 +93,15 @@ void
 UScreen::Refresh()
 {
   GdkScreen*    screen;
-  int           primary;
   nux::Geometry last_geo(0, 0, 1, 1);
 
   screen = gdk_screen_get_default();
-  primary = GetPrimaryMonitor();
 
   _monitors.erase(_monitors.begin(), _monitors.end());
 
   g_print("\nScreen geometry changed:\n");
 
+  int lowest_x = std::numeric_limits<int>::max();
   for (int i = 0; i < gdk_screen_get_n_monitors(screen); i++)
   {
     GdkRectangle rect = { 0 };
@@ -118,11 +117,16 @@ UScreen::Refresh()
 
     _monitors.push_back(geo);
 
-    g_print("  Monitor %d%s\n", i, i == primary ? "(primary)" : "");
+    if (geo.x < lowest_x)
+    {
+      lowest_x = geo.x;
+      primary_ = i;
+    }
+
     g_print("   %dx%dx%dx%d\n", geo.x, geo.y, geo.width, geo.height);
   }
 
   g_print("\n");
 
-  changed.emit(primary, _monitors);
+  changed.emit(primary_, _monitors);
 }

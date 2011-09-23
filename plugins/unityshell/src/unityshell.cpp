@@ -54,6 +54,7 @@
 
 #include "ubus-server.h"
 #include "UBusMessages.h"
+#include "UScreen.h"
 
 #include "config.h"
 
@@ -1877,10 +1878,8 @@ void UnityScreen::ScheduleRelayout(guint timeout)
 
 void UnityScreen::Relayout()
 {
-  GdkScreen* scr;
   GdkRectangle rect;
   nux::Geometry lCurGeom;
-  gint primary_monitor;
   int panel_height = 24;
 
   if (!needsRelayout)
@@ -1894,11 +1893,15 @@ void UnityScreen::Relayout()
     uScreen->mFbos[&(screen->fullscreenOutput ())] = UnityFBO::Ptr (new UnityFBO (&(screen->fullscreenOutput ())));
   }
 
-  scr = gdk_screen_get_default ();
-  primary_monitor = gdk_screen_get_primary_monitor (scr);
-  gdk_screen_get_monitor_geometry (scr, primary_monitor, &rect);
-  _primary_monitor = rect;
+  UScreen *uscreen = UScreen::GetDefault();
+  int primary_monitor = uscreen->GetPrimaryMonitor();
+  auto geo = uscreen->GetMonitorGeometry(primary_monitor);
 
+  rect.x = geo.x;
+  rect.y = geo.y;
+  rect.width = geo.width;
+  rect.height = geo.height;
+  _primary_monitor = rect;
 
   wt->SetWindowSize(rect.width, rect.height);
 
