@@ -415,12 +415,7 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   nux::ColorLayer layer(nux::Color(0x00000000), true, rop);
   gPainter.PushDrawLayer(GfxContext, GetGeometry(), &layer);
 
-  if ((DrawMenus() && DrawWindowButtons()) ||
-      (GetOpacity() > 0 && _window_buttons->GetOpacity() > 0))
-  {
-
-  }
-  else
+  if (!DrawWindowButtons() && _window_buttons->GetOpacity() == 0.0f)
   {
     bool have_valid_entries = false;
     Entries::iterator it, eit = entries_.end();
