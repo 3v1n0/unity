@@ -46,6 +46,9 @@
 
 #define WINDOW_TITLE_FONT_KEY "/apps/metacity/general/titlebar_font"
 
+#define PANEL_ENTRIES_FADEIN 150
+#define PANEL_ENTRIES_FADEOUT 400
+
 namespace unity
 {
 
@@ -152,8 +155,8 @@ PanelMenuView::PanelMenuView(int padding)
                                                          (UBusCallback)PanelMenuView::OnPlaceViewHidden,
                                                          this);
 
-  _fade_in_animator = new Animator(150);
-  _fade_out_animator = new Animator(400);
+  _fade_in_animator = new Animator(PANEL_ENTRIES_FADEIN);
+  _fade_out_animator = new Animator(PANEL_ENTRIES_FADEOUT);
 
   _fade_in_animator->animation_updated.connect(sigc::mem_fun(this, &PanelMenuView::OnFadeInChanged));
   _fade_in_animator->animation_ended.connect(sigc::mem_fun(this, &PanelMenuView::FullRedraw));
@@ -545,7 +548,12 @@ PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     _menu_layout->ProcessDraw(GfxContext, force_draw);
 
     _fade_in_animator->Stop();
-    _fade_out_animator->Start(1.0f - GetOpacity());
+
+    if (!_fade_out_animator->IsRunning())
+    {
+      _fade_out_animator->SetDuration(PANEL_ENTRIES_FADEOUT);
+      _fade_out_animator->Start(1.0f - GetOpacity());
+    }
   }
 
   if (draw_buttons)
@@ -561,7 +569,12 @@ PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     _window_buttons->ProcessDraw(GfxContext, force_draw);
 
     _fade_in_animator->Stop();
-    _fade_out_animator->Start(1.0f - _window_buttons->GetOpacity());
+
+    /* If we try to hide only the buttons, then use a faster fadeout */
+    if (!_fade_out_animator->IsRunning()) {
+      _fade_out_animator->SetDuration(PANEL_ENTRIES_FADEOUT/5);
+      _fade_out_animator->Start(1.0f - _window_buttons->GetOpacity());
+    }
   }
 
   GfxContext.PopClippingRectangle();
