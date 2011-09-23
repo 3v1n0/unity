@@ -76,6 +76,7 @@ PanelMenuView::PanelMenuView(int padding)
     _monitor(0),
     _active_xid(0),
     _active_moved_id(0),
+    _update_shownow_id(0),
     _place_shown_interest(0),
     _place_hidden_interest(0)
 {
@@ -1143,22 +1144,53 @@ PanelMenuView::OnPlaceViewHidden(GVariant* data, PanelMenuView* self)
   self->QueueDraw();
 }
 
-void PanelMenuView::UpdateShowNow(bool ignore)
+gboolean
+PanelMenuView::UpdateShowNowWithDelay(PanelMenuView *self)
 {
   // NOTE: This is sub-optimal.  We are getting a dbus event for every menu,
   // and every time that is setting the show now status of an indicator entry,
   // we are getting the event raised, and we are ignoring the status, and
   // looking through all the entries to see if any are shown.
-  _show_now_activated = false;
 
-  for (auto entry : entries_)
+  bool active = false;
+
+  for (auto entry : self->entries_)
   {
-    if (entry.second->GetShowNow()) {
-      _show_now_activated = true;
+    if (entry.second->GetShowNow())
+    {
+      active = true;
       break;
     }
   }
-  QueueDraw();
+
+  self->_update_shownow_id = 0;
+
+  if (active)
+  {
+    self->_show_now_activated = true;
+    self->QueueDraw();
+  }
+
+  return FALSE;
+}
+
+void
+PanelMenuView::UpdateShowNow(bool ignore)
+{
+
+  if (_update_shownow_id != 0)
+  {
+    g_source_remove (time_id);
+    _update_shownow_id = 0;
+  }
+  else if (_show_now_activated == true)
+  {
+    _show_now_activated = false;
+    QueueDraw();
+  }
+
+  _update_shownow_id = g_timeout_add(180, (GSourceFunc)
+                                     &PanelMenuView::UpdateShowNowWithDelay, this);
 }
 
 void

@@ -110,6 +110,7 @@ private:
   static void OnPlaceViewHidden(GVariant* data, PanelMenuView* self);
   void UpdateShowNow(bool ignore);
   static gboolean UpdateActiveWindowPosition(PanelMenuView* self);
+  static gboolean UpdateShowNowWithDelay(PanelMenuView* self);
 
 private:
   BamfMatcher* _matcher;
@@ -144,6 +145,7 @@ private:
   int  _monitor;
   guint32 _active_xid;
   guint32 _active_moved_id;
+  guint32 _update_shownow_id;
   nux::Geometry _monitor_geo;
 
   gulong _activate_window_changed_id;
