@@ -89,7 +89,7 @@ void PanelIndicatorEntryView::OnActiveChanged(bool is_active)
 {
   active_changed.emit(this, is_active);
 
-  if (IsActive() && !is_active)
+  if (draw_active_ && !is_active)
   {
     draw_active_ = false;
     Refresh();
@@ -157,7 +157,7 @@ void PanelIndicatorEntryView::Unactivate()
 
 void PanelIndicatorEntryView::SetActiveState(bool active, int button)
 {
-  if (IsActive() != active)
+  if (draw_active_ != active)
   {
     draw_active_ = active;
     Refresh();
