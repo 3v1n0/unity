@@ -76,7 +76,7 @@ PanelMenuView::PanelMenuView(int padding)
     _monitor(0),
     _active_xid(0),
     _active_moved_id(0),
-    _update_shownow_id(0),
+    _update_show_now_id(0),
     _place_shown_interest(0),
     _place_hidden_interest(0)
 {
@@ -1147,11 +1147,6 @@ PanelMenuView::OnPlaceViewHidden(GVariant* data, PanelMenuView* self)
 gboolean
 PanelMenuView::UpdateShowNowWithDelay(PanelMenuView *self)
 {
-  // NOTE: This is sub-optimal.  We are getting a dbus event for every menu,
-  // and every time that is setting the show now status of an indicator entry,
-  // we are getting the event raised, and we are ignoring the status, and
-  // looking through all the entries to see if any are shown.
-
   bool active = false;
 
   for (auto entry : self->entries_)
@@ -1163,7 +1158,7 @@ PanelMenuView::UpdateShowNowWithDelay(PanelMenuView *self)
     }
   }
 
-  self->_update_shownow_id = 0;
+  self->_update_show_now_id = 0;
 
   if (active)
   {
@@ -1175,22 +1170,32 @@ PanelMenuView::UpdateShowNowWithDelay(PanelMenuView *self)
 }
 
 void
-PanelMenuView::UpdateShowNow(bool ignore)
+PanelMenuView::UpdateShowNow(bool status)
 {
+  /* When we get a show now event, if we are requested to show the menus,
+   * we take the last incoming event and we wait for small delay (to avoid the
+   * Alt+Tab conflict) then we check if any menuitem has requested to show.
+   * If the status is false, we just check that the menus entries are hidden
+   * and we remove any eventual delayed request */
 
-  if (_update_shownow_id != 0)
-  {
-    g_source_remove (time_id);
-    _update_shownow_id = 0;
-  }
-  else if (_show_now_activated == true)
+  if (!status && _show_now_activated)
   {
     _show_now_activated = false;
     QueueDraw();
   }
 
-  _update_shownow_id = g_timeout_add(180, (GSourceFunc)
-                                     &PanelMenuView::UpdateShowNowWithDelay, this);
+  if (_update_show_now_id != 0)
+  {
+    g_source_remove(_update_show_now_id);
+    _update_show_now_id = 0;
+  }
+
+  if (status && !_show_now_activated)
+  {
+    _update_show_now_id = g_timeout_add(180, (GSourceFunc)
+                                        &PanelMenuView::UpdateShowNowWithDelay,
+                                        this);
+  }
 }
 
 void

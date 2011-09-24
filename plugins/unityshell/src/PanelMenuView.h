@@ -145,7 +145,7 @@ private:
   int  _monitor;
   guint32 _active_xid;
   guint32 _active_moved_id;
-  guint32 _update_shownow_id;
+  guint32 _update_show_now_id;
   nux::Geometry _monitor_geo;
 
   gulong _activate_window_changed_id;
