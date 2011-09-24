@@ -298,7 +298,7 @@ void PanelIndicatorEntryView::Refresh()
       gtk_style_context_set_state(style_context, GTK_STATE_FLAG_PRELIGHT);
 
     int y = (int)((height - gdk_pixbuf_get_height(pixbuf)) / 2);
-    if (dash_showing_)
+    if (dash_showing_ && !IsActive())
     {
       /* Most of the images we get are straight pixbufs (annoyingly), so when
        * the Dash opens, we use the pixbuf as a mask to punch out an icon from
