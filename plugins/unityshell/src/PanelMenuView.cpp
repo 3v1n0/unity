@@ -996,7 +996,7 @@ PanelMenuView::GetMaximizedWindow()
 void
 PanelMenuView::OnMaximizedGrabStart(int x, int y, unsigned long button_flags, unsigned long)
 {
-  if (nux::GetEventButton(button_flags) != 1)
+  if (nux::GetEventButton(button_flags) != 1 || _places_showing)
     return;
 
   // When Start dragging the panelmenu of a maximized window, change cursor
