@@ -1916,7 +1916,7 @@ gboolean Launcher::OnScrollTimeout(gpointer data)
   Launcher* self = (Launcher*) data;
   nux::Geometry geo = self->GetGeometry();
 
-  if (!self->_hovered || self->GetActionState() == ACTION_DRAG_LAUNCHER)
+  if (self->_keynav_activated || !self->_hovered || self->GetActionState() == ACTION_DRAG_LAUNCHER)
     return TRUE;
 
   if (self->MouseOverTopScrollArea())
@@ -2633,7 +2633,9 @@ Launcher::RecvKeyPressed(unsigned long    eventType,
         if (it != (LauncherModel::iterator)NULL)
         {
           _current_icon_index = temp_current_icon_index;
-          _launcher_drag_delta += (_icon_size + _space_between_icons);
+          
+          if ((*it)->GetCenter().y + - _icon_size/ 2 < GetGeometry().y)
+            _launcher_drag_delta += (_icon_size + _space_between_icons);
         }
         EnsureAnimation();
         selection_change.emit();
@@ -2657,7 +2659,9 @@ Launcher::RecvKeyPressed(unsigned long    eventType,
         if (it != (LauncherModel::iterator)NULL)
         {
           _current_icon_index = temp_current_icon_index;
-          _launcher_drag_delta -= (_icon_size + _space_between_icons);
+
+          if ((*it)->GetCenter().y + _icon_size / 2 > GetGeometry().height)
+            _launcher_drag_delta -= (_icon_size + _space_between_icons);
         }
 
         EnsureAnimation();
