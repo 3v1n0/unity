@@ -1882,7 +1882,7 @@ void Launcher::SetHover(bool hovered)
 
   if (_dash_is_open && !_hide_machine->GetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE))
   {
-    if (hovered)
+    if (hovered && !_hover_machine->GetQuirk(LauncherHoverMachine::SHORTCUT_KEYS_VISIBLE))
       SaturateIcons();
     else
       DesaturateIcons();
