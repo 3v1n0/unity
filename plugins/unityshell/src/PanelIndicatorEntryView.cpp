@@ -411,6 +411,7 @@ void PanelIndicatorEntryView::Draw(nux::GraphicsEngine& GfxContext, bool force_d
     return;
   }
 
+  auto geo = GetGeometry();
   GfxContext.PushClippingRectangle(geo);
 
   GfxContext.GetRenderStates().SetBlend(true);
