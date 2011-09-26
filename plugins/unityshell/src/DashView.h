@@ -61,6 +61,9 @@ public:
 
   nux::View* default_focus() const;
 
+protected:
+  void ProcessDndEnter();
+
 private:
   void SetupBackground();
   void SetupViews();

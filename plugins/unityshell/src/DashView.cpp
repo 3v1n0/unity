@@ -888,5 +888,10 @@ nux::Area * DashView::KeyNavIteration(nux::KeyNavDirection direction)
   return this;
 }
 
+void DashView::ProcessDndEnter()
+{
+  ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
+}
+
 }
 }
