@@ -1,6 +1,109 @@
 unity (4.18.0-0ubuntu1) UNRELEASED; urgency=low
 
   * New upstream release.
+    - Screen corruption when resuming from suspend/hibernate (LP: #676166)
+    - unity-panel-service crashed with SIGSEGV in bamf_factory_view_for_path()
+      (LP: #764024)
+    - Dash and launcher appear underneath windows (LP: #805087)
+    - unity-panel-service crashed with SIGSEGV in g_type_check_instance_cast()
+      (LP: #811401)
+    - [Oneric] unity-panel-service crashed with SIGSEGV in getenv()
+      (LP: #817691)
+    - compiz crashed with SIGSEGV in unity::FilterBar::RemoveFilter()
+      (LP: #845732)
+    - crash on closing a window (LP: #856015)
+    - Cannot open a window that starts iconified (LP: #732997)
+    - Launcher - When useing Alt F1 launcher keyboard navigation, Launcher
+      should not scroll until top or bottom of Launcher is reached 
+      (LP: #765749)
+    - Stacking problem when switching between apps with multiple windows
+      (LP: #802527)
+    - Pull panel to de-maximize window occasionally not working in a secondary
+      screen (LP: #802651)
+    - Window under Dash gets focused if it opened later (LP: #830730)
+    - Clickable areas of previously active window remains on 'Show Desktop'
+      (LP: #836325)
+    - A minimized window 'remains' behind on the desktop if
+      /apps/compiz-1/plugins/unityshell/screen0/options/show_minimized_windows
+      is set to true (LP: #847967)
+    - a11y support on Unity is broken (LP: #851103)
+    - compiz crashed with SIGSEGV in dee_model_get_tag() (LP: #840758)
+    - crash when looping paint list in preparePaint (on closing windows)
+      (LP: #853807)
+    - Alt-Tab should not preview windows at excessively large sizes
+      (LP: #854740)
+    - Clicking on a tweet/message link sometimes does not work (LP: #790565)
+    - Dragging a launcher icon makes it squashed (LP: #855761)
+    - unable to unminimize gedit windows where more than one window where one
+      has a dialog open (LP: #856030)
+    - (oneiric) alt-tab UX doesn't work well on multi-monitor (LP: #855364)
+    - Launcher shows on the primary monitor instead of the left most monitor
+      (LP: #857668)
+    - Keynav - pressing down key causes launcher items to jump up and down
+      (LP: #858469)
+    - Windows creep cross the screen with ALT+TAB (LP: #722830)
+    - Minimize animation flickr when for maximized apps (LP: #737125)
+    - All unity windows are invisible (panel, launcher, dash) (LP: #745996)
+    - Dash "See 97 more results" has ~1 second of latency (LP: #731158)
+    - Windows cannot be dragged down from panel if banshee closed to sound
+      menu (LP: #781215)
+    - no menu bar on top, compositing bug? (LP: #806358)
+    - Launcher - a spread can accidentally be triggered during the 'dragging
+      and dropping behind the Launcher' interaction  (LP: #832988)
+    - Impossible to navigate between panel menus when the mouse cursor is over
+      the panel (LP: #834065)
+    - Pressing alt on maximized window does show menu but not window controls
+      (LP: #836274)
+    - Application name drawn under Dash controls when window opens under Dash
+      (LP: #838176)
+    - Start dragging a maximized application title causes it to re-decorate
+      (LP: #838923)
+    - Dash loses focus after switching windows or desktops (LP: #842466)
+    - ccsm crashed with KeyError in compizconfig.Plugin.ApplyStringExtensions
+      (src/compizconfig.c:6780)(): '\xd0\t\x9b\n\x01' (LP: #832458)
+    - No feedback when trying to drag&drop an icon that’s already in the
+      launcher (LP: #851619)
+    - Dash - the search box is not aligned correctly relative to the Launcher
+      BFB button (LP: #838904)
+    - Dash - Shape and positioning of most of the elements in the Dash need
+      adjustment (Part 3) (LP: #852030)
+    - minimizing a window with a modal dialog is broken (LP: #855068)
+    - Dash - Dash missing 'streak of reflected light' in the top left corner
+      (LP: #844030)
+    - alt-tab - When the ALT key is pressed, there should be a very short
+      delay before the app menu is exposed in the top bar (LP: #855521)
+    - holding down super while dash is open resaturates launcher but super-
+      key-shortcuts don't appear (LP: #855909)
+    - Panel Titlebar double click is emitted for any mouse button
+      (LP: #736491)
+    - unity panel shadow opacity does not match panel opacity (LP: #747682)
+    - maximising via dragging to panel and unmaximising leaves faded panel
+      title (LP: #761228)
+    - Sometimes dragging down from the panel just stops working (LP: #774121)
+    - Shadowless panel in multi monitor setup (LP: #815454)
+    - Window buttons in the panel have no indication of the "pressed" form
+      (LP: #823353)
+    - Activating a menu item or clicking outside area menu doesn't hide the
+      application menu (LP: #843670)
+    - Using menus with only one click doesn't work as expected (LP: #844309)
+    - Showing menu of a maximized application via dragging needs an extra
+      movement (LP: #845772)
+    - Restored windows dragged down from the panel still shows their menu
+      (LP: #845774)
+    - When the dash is shown, "dragging behind launcher" interaction should
+      not be triggered (LP: #851185)
+    - Make the dash darker (LP: #851243)
+    - Dash unmaximize/maximize button is mismatched with actual window size
+      (LP: #852984)
+    - Alt-tab - Add missing dots to alt-tab border (LP: #838113)
+    - Expo centering need to change when launcher size changed (LP: #856112)
+    - unity confused with chromium web apps (LP: #692462)
+    - alt-tab on multimonitor doesn't work well (LP: #791198)
+    - Unity need gtk_render_icon and therefore gtk+ 3.2 (LP: #846447)
+    - Panel shouldn't be dragged when the dash is showing (LP: #858815)
+  * Cherry-pick:
+    - Dash - dragging a file outside of the Desktop Dash should close the Dash
+      (LP: #764641)
   * debian/control:
     - build-dep on gtk 3.1 and latest nux
 
