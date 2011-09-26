@@ -417,15 +417,17 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   if (_title_layer)
   {
+    guint blend_alpha = 0, blend_src = 0, blend_dest = 0;
     bool draw_faded_title = false;
+
+    GfxContext.GetRenderStates().GetBlend(blend_alpha, blend_src, blend_dest);
 
     if (!DrawWindowButtons() &&
         (DrawMenus() || (GetOpacity() > 0.0f && _window_buttons->GetOpacity() == 0.0f)))
     {
-      Entries::iterator it, eit = entries_.end();
-      for (it = entries_.begin(); it != eit; ++it)
+      for (auto entry : entries_)
       {
-        if (it->second->IsEntryValid())
+        if (entry.second->IsEntryValid())
         {
           draw_faded_title = true;
           break;
@@ -435,24 +437,44 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
     if (draw_faded_title)
     {
+      bool build_gradient = false;
+      nux::SURFACE_LOCKED_RECT lockrect;
+      bool locked = false;
+
       if (_gradient_texture.IsNull())
+      {
+        build_gradient = true;
+      }
+      else
+      {
+        if (_gradient_texture->LockRect(0, &lockrect, NULL) != OGL_OK)
+          build_gradient = true;
+        else
+          locked = true;
+
+        if (!lockrect.pBits)
+        {
+          build_gradient = true;
+
+          if (locked)
+            _gradient_texture->UnlockRect(0);
+        }
+      }
+
+      if (build_gradient)
       {
         nux::NTextureData texture_data(nux::BITFMT_R8G8B8A8, geo.width, 1, 1);
 
         _gradient_texture = nux::GetGraphicsDisplay()->GetGpuDevice()->
                             CreateSystemCapableDeviceTexture(texture_data.GetWidth(),
                             texture_data.GetHeight(), 1, texture_data.GetFormat());
+        locked = (_gradient_texture->LockRect(0, &lockrect, NULL) == OGL_OK);
       }
 
-      nux::SURFACE_LOCKED_RECT lockrect;
-      BYTE* dest_buffer;
+      int gradient_opacity = 255.0f * GetOpacity();
+      BYTE* dest_buffer = (BYTE*) lockrect.pBits;
 
-      _gradient_texture->LockRect(0, &lockrect, 0);
-      dest_buffer = (BYTE*) lockrect.pBits;
-
-      int row_opacity = 255.0f * GetOpacity();
-
-      for (int x = 0; x < geo.width; x++)
+      for (int x = 0; x < geo.width && dest_buffer && locked; x++)
       {
         BYTE a;
         if (x < button_width * (factor - 1))
@@ -461,14 +483,14 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
         }
         else if (x < button_width * factor)
         {
-          a = 0xff - row_opacity * (((float)x - (button_width * (factor - 1))) / (float)(button_width));
+          a = 0xff - gradient_opacity * (((float)x - (button_width * (factor - 1))) / (float)(button_width));
         }
         else
         {
           if (!DrawMenus())
-            a = 0xff - row_opacity;
-          else if (0xff - row_opacity > 0xaa)
-            a = 0xff - row_opacity - 0xaa;
+            a = 0xff - gradient_opacity;
+          else if (0xff - gradient_opacity > 0xaa)
+            a = 0xff - gradient_opacity - 0xaa;
           else
             a = 0x00;
         }
@@ -479,11 +501,10 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
         *(dest_buffer + 4 * x + 3) = a;
       }
 
-      _gradient_texture->UnlockRect(0);
+      // FIXME Nux shouldn't make unity to crash if we try to unlock a wrong rect
+      if (locked)
+        _gradient_texture->UnlockRect(0);
 
-      guint alpha = 0, src = 0, dest = 0;
-
-      GfxContext.GetRenderStates().GetBlend(alpha, src, dest);
       GfxContext.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
       nux::TexCoordXForm texxform0;
@@ -498,7 +519,6 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
                              texxform1,
                              nux::color::White);
 
-      GfxContext.GetRenderStates().SetBlend(alpha, src, dest);
       // The previous blend is too aggressive on the texture and therefore there
       // is a slight loss of clarity. This fixes that
       geo.width = button_width * (factor - 1);
@@ -507,6 +527,8 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
     }
     else if (!_places_showing && _window_buttons->GetOpacity() < 1.0f && _window_buttons->GetOpacity() > 0.0f)
     {
+      GfxContext.GetRenderStates().SetBlend(true);
+
       nux::TexCoordXForm texxform;
       GfxContext.QRP_1Tex(geo.x, geo.y, geo.width, geo.height,
                           _title_layer->GetDeviceTexture(), texxform,
@@ -516,6 +538,8 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
     {
       nux::GetPainter().PushDrawLayer(GfxContext, geo, _title_layer);
     }
+
+    GfxContext.GetRenderStates().SetBlend(blend_alpha, blend_src, blend_dest);
   }
 
   nux::GetPainter().PopBackground();
@@ -571,7 +595,8 @@ PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     _fade_in_animator->Stop();
 
     /* If we try to hide only the buttons, then use a faster fadeout */
-    if (!_fade_out_animator->IsRunning()) {
+    if (!_fade_out_animator->IsRunning())
+    {
       _fade_out_animator->SetDuration(PANEL_ENTRIES_FADEOUT/5);
       _fade_out_animator->Start(1.0f - _window_buttons->GetOpacity());
     }
