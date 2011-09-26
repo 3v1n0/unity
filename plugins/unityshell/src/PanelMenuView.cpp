@@ -488,11 +488,19 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
         else
         {
           if (!DrawMenus())
+          {
             a = 0xff - gradient_opacity;
-          else if (0xff - gradient_opacity > 0xaa)
-            a = 0xff - gradient_opacity - 0xaa;
+          }
+          else if (0xff - gradient_opacity > 0x55)
+          {
+            // If we're fading-out the title, it's better to quickly hide
+            // the transparent right-most area
+            a = 0xff - gradient_opacity - 0x55;
+          }
           else
+          {
             a = 0x00;
+          }
         }
 
         *(dest_buffer + 4 * x + 0) = (223 * a) / 255; //red
@@ -527,8 +535,6 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
     }
     else if (!_places_showing && _window_buttons->GetOpacity() < 1.0f && _window_buttons->GetOpacity() > 0.0f)
     {
-      GfxContext.GetRenderStates().SetBlend(true);
-
       nux::TexCoordXForm texxform;
       GfxContext.QRP_1Tex(geo.x, geo.y, geo.width, geo.height,
                           _title_layer->GetDeviceTexture(), texxform,
