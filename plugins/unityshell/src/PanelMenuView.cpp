@@ -46,8 +46,8 @@
 
 #define WINDOW_TITLE_FONT_KEY "/apps/metacity/general/titlebar_font"
 
-#define PANEL_ENTRIES_FADEIN 200
-#define PANEL_ENTRIES_FADEOUT 500
+#define PANEL_ENTRIES_FADEIN 100
+#define PANEL_ENTRIES_FADEOUT 120
 
 namespace unity
 {
