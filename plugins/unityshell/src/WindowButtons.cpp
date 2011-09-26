@@ -55,11 +55,13 @@ public:
       _prelight_dash_tex(NULL),
       _pressed_dash_tex(NULL),
       _dash_is_open(false),
+      _mouse_is_down(false),
       _place_shown_interest(0),
       _place_hidden_interest(0),
       _opacity(1.0f)
   {
     LoadImages();
+    UpdateDashUnmaximize();
     PanelStyle::GetDefault()->changed.connect(sigc::mem_fun(this, &WindowButton::LoadImages));
     DashSettings::GetDefault()->changed.connect(sigc::mem_fun(this, &WindowButton::UpdateDashUnmaximize));
 
@@ -70,6 +72,14 @@ public:
     _place_hidden_interest = ubus_server_register_interest(ubus, UBUS_PLACE_VIEW_HIDDEN,
                                                            (UBusCallback)&WindowButton::OnPlaceViewHidden,
                                                            this);
+
+    /* FIXME HasMouseFocus() doesn't seem to work correctly, so we use this workaround */
+    mouse_down.connect([&_mouse_is_down](int, int, unsigned long, unsigned long) {
+      _mouse_is_down = true;
+    });
+    mouse_up.connect([&_mouse_is_down](int, int, unsigned long, unsigned long) {
+      _mouse_is_down = false;
+    });
   }
 
   ~WindowButton()
@@ -98,7 +108,8 @@ public:
 
     if (_dash_is_open)
     {
-      if (HasMouseFocus() && IsMouseInside())
+      //FIXME should use HasMouseFocus()
+      if (_mouse_is_down && IsMouseInside())
         tex = _pressed_dash_tex;
       else if (IsMouseInside())
         tex = _prelight_dash_tex;
@@ -107,7 +118,8 @@ public:
     }
     else
     {
-      if (HasMouseFocus() && IsMouseInside())
+      //FIXME should use HasMouseFocus()
+      if (_mouse_is_down && IsMouseInside())
         tex = _pressed_tex;
       else if (IsMouseInside())
         tex = _prelight_tex;
@@ -231,6 +243,7 @@ private:
   nux::BaseTexture* _prelight_dash_tex;
   nux::BaseTexture* _pressed_dash_tex;
   bool _dash_is_open;
+  bool _mouse_is_down;
   guint32 _place_shown_interest;
   guint32 _place_hidden_interest;
   double _opacity;

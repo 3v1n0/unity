@@ -20,6 +20,7 @@
 #include "gdk/gdk.h"
 
 #include "DashSettings.h"
+#include "UScreen.h"
 
 #define FORM_FACTOR "form-factor"
 
@@ -48,13 +49,9 @@ DashSettings::Refresh()
 
   if (_raw_from_factor == 0) //Automatic
   {
-    GdkScreen*   screen;
-    gint         primary_monitor;
-    GdkRectangle geo;
-
-    screen = gdk_screen_get_default();
-    primary_monitor = gdk_screen_get_primary_monitor(screen);
-    gdk_screen_get_monitor_geometry(screen, primary_monitor, &geo);
+    UScreen *uscreen = UScreen::GetDefault();
+    int primary_monitor = uscreen->GetPrimaryMonitor();
+    auto geo = uscreen->GetMonitorGeometry(primary_monitor);
 
     _form_factor = geo.height > 799 ? DESKTOP : NETBOOK;
   }

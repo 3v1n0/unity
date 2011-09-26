@@ -27,6 +27,7 @@
 
 #include <UnityCore/Categories.h>
 #include "ResultView.h"
+#include "UBusWrapper.h"
 
 namespace unity
 {
@@ -99,6 +100,11 @@ private:
   int last_mouse_down_y_;
   std::string current_drag_uri_;
   std::string current_drag_icon_name_;
+
+  int recorded_dash_width_;
+  int recorded_dash_height_;
+
+  UBusManager ubus_;
 
 };
 

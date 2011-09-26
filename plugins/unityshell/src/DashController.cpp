@@ -23,6 +23,7 @@
 
 #include "PluginAdapter.h"
 #include "UBusMessages.h"
+#include "UScreen.h"
 
 namespace unity
 {
@@ -135,11 +136,9 @@ void DashController::OnWindowConfigure(int window_width, int window_height,
 
 nux::Geometry DashController::GetIdealWindowGeometry()
 {
-  GdkScreen* screen = gdk_screen_get_default();
-  int primary_monitor = gdk_screen_get_primary_monitor(screen);
-
-  GdkRectangle monitor_geo = { 0 };
-  gdk_screen_get_monitor_geometry(screen, primary_monitor, &monitor_geo);
+  UScreen *uscreen = UScreen::GetDefault();
+  int primary_monitor = uscreen->GetPrimaryMonitor();
+  auto monitor_geo = uscreen->GetMonitorGeometry(primary_monitor);
   
   // We want to cover as much of the screen as possible to grab any mouse events outside
   // of our window

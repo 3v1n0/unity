@@ -64,7 +64,9 @@ SwitcherView::SwitcherView(NUX_FILE_LINE_DECL)
 
   render_targets_.clear ();
 
-  background_texture_ = nux::CreateTexture2DFromFile(PKGDATADIR"/switcher_background.png", -1, true);
+  background_top_ = nux::CreateTexture2DFromFile(PKGDATADIR"/switcher_top.png", -1, true);
+  background_left_ = nux::CreateTexture2DFromFile(PKGDATADIR"/switcher_left.png", -1, true);
+  background_corner_ = nux::CreateTexture2DFromFile(PKGDATADIR"/switcher_corner.png", -1, true);
   rounding_texture_ = nux::CreateTexture2DFromFile(PKGDATADIR"/switcher_round_rect.png", -1, true);
 
   text_view_ = new nux::StaticCairoText("Testing");
@@ -82,7 +84,9 @@ SwitcherView::SwitcherView(NUX_FILE_LINE_DECL)
 
 SwitcherView::~SwitcherView()
 {
-  background_texture_->UnReference();
+  background_top_->UnReference();
+  background_left_->UnReference();
+  background_corner_->UnReference();
   rounding_texture_->UnReference();
   text_view_->UnReference();
   if (redraw_handle_ > 0)
@@ -533,6 +537,100 @@ gboolean SwitcherView::OnDrawTimeout(gpointer data)
   return FALSE;
 }
 
+void SwitcherView::DrawBackground(nux::GraphicsEngine& GfxContext, nux::Geometry const& geo)
+{
+  int border = 30;
+
+  GfxContext.GetRenderStates().SetBlend (TRUE, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
+  nux::TexCoordXForm texxform;
+  texxform.SetTexCoordType (nux::TexCoordXForm::OFFSET_COORD);
+  texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
+
+  // Draw TOP-LEFT CORNER
+  texxform.u0 = 0;
+  texxform.v0 = 0;
+  texxform.u1 = border;
+  texxform.v1 = border;
+  GfxContext.QRP_1Tex (geo.x, geo.y, 
+                       border, border, background_corner_->GetDeviceTexture(), texxform, nux::color::White);
+  
+  // Draw TOP-RIGHT CORNER
+  texxform.u0 = 0;
+  texxform.v0 = 0;
+  texxform.u1 = border;
+  texxform.v1 = border;
+  texxform.flip_u_coord = true;
+  texxform.flip_v_coord = false;
+  GfxContext.QRP_1Tex (geo.x + geo.width - border, geo.y, 
+                       border, border, background_corner_->GetDeviceTexture(), texxform, nux::color::White);
+  
+  // Draw BOTTOM-LEFT CORNER
+  texxform.u0 = 0;
+  texxform.v0 = 0;
+  texxform.u1 = border;
+  texxform.v1 = border;
+  texxform.flip_u_coord = false;
+  texxform.flip_v_coord = true;
+  GfxContext.QRP_1Tex (geo.x, geo.y + geo.height - border, 
+                       border, border, background_corner_->GetDeviceTexture(), texxform, nux::color::White);
+  
+  // Draw BOTTOM-RIGHT CORNER
+  texxform.u0 = 0;
+  texxform.v0 = 0;
+  texxform.u1 = border;
+  texxform.v1 = border;
+  texxform.flip_u_coord = true;
+  texxform.flip_v_coord = true;
+  GfxContext.QRP_1Tex (geo.x + geo.width - border, geo.y + geo.height - border, 
+                       border, border, background_corner_->GetDeviceTexture(), texxform, nux::color::White);
+  
+  int top_width = background_top_->GetWidth();
+  int top_height = background_top_->GetHeight();
+
+  // Draw TOP BORDER
+  texxform.u0 = 0;
+  texxform.v0 = 0;
+  texxform.u1 = top_width;
+  texxform.v1 = top_height;
+  texxform.flip_u_coord = false;
+  texxform.flip_v_coord = false;
+  GfxContext.QRP_1Tex (geo.x + border, geo.y, geo.width - border - border, border, background_top_->GetDeviceTexture(), texxform, nux::color::White);
+  
+  // Draw BOTTOM BORDER
+  texxform.u0 = 0;
+  texxform.v0 = 0;
+  texxform.u1 = top_width;
+  texxform.v1 = top_height;
+  texxform.flip_u_coord = false;
+  texxform.flip_v_coord = true;
+  GfxContext.QRP_1Tex (geo.x + border, geo.y + geo.height - border, geo.width - border - border, border, background_top_->GetDeviceTexture(), texxform, nux::color::White);
+  
+
+  int left_width = background_left_->GetWidth();
+  int left_height = background_left_->GetHeight();
+
+  // Draw LEFT BORDER
+  texxform.u0 = 0;
+  texxform.v0 = 0;
+  texxform.u1 = left_width;
+  texxform.v1 = left_height;
+  texxform.flip_u_coord = false;
+  texxform.flip_v_coord = false;
+  GfxContext.QRP_1Tex (geo.x, geo.y + border, border, geo.height - border - border, background_left_->GetDeviceTexture(), texxform, nux::color::White);
+  
+  // Draw RIGHT BORDER
+  texxform.u0 = 0;
+  texxform.v0 = 0;
+  texxform.u1 = left_width;
+  texxform.v1 = left_height;
+  texxform.flip_u_coord = true;
+  texxform.flip_v_coord = false;
+  GfxContext.QRP_1Tex (geo.x + geo.width - border, geo.y + border, border, geo.height - border - border, background_left_->GetDeviceTexture(), texxform, nux::color::White);
+
+  GfxContext.GetRenderStates().SetBlend (FALSE);
+}
+
 void SwitcherView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
   timespec current;
@@ -655,18 +753,18 @@ void SwitcherView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     if (window->alpha >= 1.0f)
     {
       nux::Geometry orange_box = window->result;
-      orange_box.Expand(3, 3);
+      orange_box.Expand(5, 5);
       orange_box.x -= geo_absolute.x;
       orange_box.y -= geo_absolute.y;
 
-      gPainter.PaintTextureShape(GfxContext, orange_box, rounding_texture_, 4, 4, 4, 4, false);
+      gPainter.PaintTextureShape(GfxContext, orange_box, rounding_texture_, 6, 6, 6, 6, false);
     }
   }
 
   GfxContext.PopClippingRectangle();
   GfxContext.PopClippingRectangle();
 
-  gPainter.PaintTextureShape(GfxContext, background_geo, background_texture_, 30, 30, 30, 30, false);
+  DrawBackground(GfxContext, background_geo);
 
   text_view_->SetBaseY(background_geo.y + background_geo.height - 45);
   text_view_->Draw(GfxContext, force_draw);

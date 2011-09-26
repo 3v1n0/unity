@@ -54,6 +54,7 @@
 
 #include "ubus-server.h"
 #include "UBusMessages.h"
+#include "UScreen.h"
 
 #include "config.h"
 
@@ -495,7 +496,7 @@ void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
   float panel_h = 24.0f;
 
   float x1 = output->x();
-  float y1 = panel_h;
+  float y1 = output->y() + panel_h;
   float x2 = x1 + output->width();
   float y2 = y1 + h;
 
@@ -504,12 +505,13 @@ void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
   vc[2] = y1;
   vc[3] = y2;
 
-  if (!dash_is_open_ && panelController->opacity())
+  if (!dash_is_open_ && panelController->opacity() > 0.0f)
   {
     foreach(GLTexture * tex, _shadow_texture)
     {
       glEnable(GL_BLEND);
-      glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+      glColor4f(1.0f, 1.0f, 1.0f, panelController->opacity());
+      glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
       GL::activeTexture(GL_TEXTURE0_ARB);
       tex->enable(GLTexture::Fast);
@@ -1248,10 +1250,12 @@ bool UnityScreen::altTabInitiateCommon(CompAction *action,
   screen->addAction (&optionGetAltTabLeft ());
 
   // maybe check launcher position/hide state?
-  switcherController->SetWorkspace(nux::Geometry(_primary_monitor.x + 100,
-                                                _primary_monitor.y + 100,
-                                                _primary_monitor.width - 200,
-                                                _primary_monitor.height - 200));
+
+  int device = screen->outputDeviceForPoint (pointerX, pointerY);
+  switcherController->SetWorkspace(nux::Geometry(screen->outputDevs()[device].x1() + 100,
+                                                 screen->outputDevs()[device].y1() + 100,
+                                                 screen->outputDevs()[device].width() - 200,
+                                                 screen->outputDevs()[device].height() - 200));
   switcherController->Show(SwitcherController::ALL, SwitcherController::FOCUS_ORDER, false, results);
   return true;
 }
@@ -1832,9 +1836,30 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       launcher->SetBackgroundAlpha(optionGetLauncherOpacity());
       break;
     case UnityshellOptions::IconSize:
+    {
+      CompPlugin         *p = CompPlugin::find ("expo");
+
       launcher->SetIconSize(optionGetIconSize() + 6, optionGetIconSize());
       dashController->launcher_width = optionGetIconSize() + 18;
+
+      if (p)
+      {
+        CompOption::Vector &opts = p->vTable->getOptions ();
+
+        for (CompOption &o : opts)
+        {
+          if (o.name () == std::string ("x_offset"))
+          {
+            CompOption::Value v;
+            v.set (static_cast <int> (optionGetIconSize() + 18));
+
+            screen->setOptionForPlugin (p->vTable->name ().c_str (), o.name ().c_str (), v);
+            break;
+          }
+        }
+      }
       break;
+    }
     case UnityshellOptions::AutohideAnimation:
       launcher->SetAutoHideAnimation((Launcher::AutoHideAnimation) optionGetAutohideAnimation());
       break;
@@ -1874,10 +1899,8 @@ void UnityScreen::ScheduleRelayout(guint timeout)
 
 void UnityScreen::Relayout()
 {
-  GdkScreen* scr;
   GdkRectangle rect;
   nux::Geometry lCurGeom;
-  gint primary_monitor;
   int panel_height = 24;
 
   if (!needsRelayout)
@@ -1891,11 +1914,15 @@ void UnityScreen::Relayout()
     uScreen->mFbos[&(screen->fullscreenOutput ())] = UnityFBO::Ptr (new UnityFBO (&(screen->fullscreenOutput ())));
   }
 
-  scr = gdk_screen_get_default ();
-  primary_monitor = gdk_screen_get_primary_monitor (scr);
-  gdk_screen_get_monitor_geometry (scr, primary_monitor, &rect);
-  _primary_monitor = rect;
+  UScreen *uscreen = UScreen::GetDefault();
+  int primary_monitor = uscreen->GetPrimaryMonitor();
+  auto geo = uscreen->GetMonitorGeometry(primary_monitor);
 
+  rect.x = geo.x;
+  rect.y = geo.y;
+  rect.width = geo.width;
+  rect.height = geo.height;
+  _primary_monitor = rect;
 
   wt->SetWindowSize(rect.width, rect.height);
 

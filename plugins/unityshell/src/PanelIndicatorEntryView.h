@@ -38,26 +38,28 @@ namespace unity
 class PanelIndicatorEntryView : public nux::TextureArea, public unity::Introspectable
 {
 public:
-  PanelIndicatorEntryView(indicator::Entry::Ptr const& proxy,
-                                int padding = 5);
+  typedef enum {
+    INDICATOR,
+    MENU,
+    OTHER
+  } IndicatorEntryType;
+
+  PanelIndicatorEntryView(indicator::Entry::Ptr const& proxy, int padding = 5,
+                          IndicatorEntryType type = INDICATOR);
   ~PanelIndicatorEntryView();
 
   void Refresh();
 
-  void OnMouseDown(int x, int y, long button_flags, long key_flags);
-  void OnMouseUp(int x, int y, long button_flags, long key_flags);
-  void OnMouseWheel(int x, int y, int delta, unsigned long mouse_state, unsigned long key_state);
-
-  void Activate();
-  void OnActiveChanged(bool is_active);
+  void Activate(int button = 1);
+  void Unactivate();
   bool GetShowNow();
-
   void SetOpacity(double alpha);
   double GetOpacity();
 
   void GetGeometryForSync(indicator::EntryLocationMap& locations);
   bool IsEntryValid() const;
   bool IsSensitive() const;
+  bool IsActive() const;
   int  GetEntryPriority() const;
 
   void DashShown();
@@ -73,20 +75,27 @@ public:
 
 private:
   unity::indicator::Entry::Ptr proxy_;
-
+  IndicatorEntryType type_;
   nux::CairoGraphics util_cg_;
+  nux::TextureLayer* texture_layer_;
   int padding_;
   double opacity_;
+  bool draw_active_;
+  bool dash_showing_;
+  gulong on_font_changed_connection_;
+
+  static void OnFontChanged(GObject* gobject, GParamSpec* pspec, gpointer data);
+  void OnMouseDown(int x, int y, long button_flags, long key_flags);
+  void OnMouseUp(int x, int y, long button_flags, long key_flags);
+  void OnMouseWheel(int x, int y, int delta, unsigned long mouse_state, unsigned long key_state);
+  void OnActiveChanged(bool is_active);
+
+  void SetActiveState(bool active, int button);
+  void ShowMenu(int button);
 
   sigc::connection on_indicator_activate_changed_connection_;
   sigc::connection on_indicator_updated_connection_;
   sigc::connection on_panelstyle_changed_connection_;
-
-  gulong on_font_changed_connection_;
-
-  static void OnFontChanged(GObject* gobject, GParamSpec* pspec, gpointer data);
-
-  bool dash_showing_;
 };
 
 }

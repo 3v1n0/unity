@@ -137,6 +137,8 @@ add_executable (standalone-dash
                 ${UNITY_SRC}/UBusWrapper.h
                 ${UNITY_SRC}/ubus-server.cpp
                 ${UNITY_SRC}/ubus-server.h
+                ${UNITY_SRC}/UScreen.cpp
+                ${UNITY_SRC}/UScreen.h
                 )
 add_dependencies (standalone-dash unity-core-${UNITY_API_VERSION})
 
@@ -451,6 +453,9 @@ add_executable (test-result-view
                 ${UNITY_SRC}/Timer.cpp
                 ${UNITY_SRC}/DashStyle.cpp
                 ${UNITY_SRC}/JSONParser.cpp
+                ${UNITY_SRC}/UBusMessages.h
+                ${UNITY_SRC}/UBusWrapper.cpp
+                ${UNITY_SRC}/UBusWrapper.h
                 ${UNITY_SRC}/ubus-server.cpp
                 ${UNITY_SRC}/ubus-server.h
                 )

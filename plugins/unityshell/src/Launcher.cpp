@@ -1882,7 +1882,7 @@ void Launcher::SetHover(bool hovered)
 
   if (_dash_is_open && !_hide_machine->GetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE))
   {
-    if (hovered)
+    if (hovered && !_hover_machine->GetQuirk(LauncherHoverMachine::SHORTCUT_KEYS_VISIBLE))
       SaturateIcons();
     else
       DesaturateIcons();
@@ -1916,7 +1916,7 @@ gboolean Launcher::OnScrollTimeout(gpointer data)
   Launcher* self = (Launcher*) data;
   nux::Geometry geo = self->GetGeometry();
 
-  if (!self->_hovered || self->GetActionState() == ACTION_DRAG_LAUNCHER)
+  if (self->_keynav_activated || !self->_hovered || self->GetActionState() == ACTION_DRAG_LAUNCHER)
     return TRUE;
 
   if (self->MouseOverTopScrollArea())
@@ -2633,7 +2633,9 @@ Launcher::RecvKeyPressed(unsigned long    eventType,
         if (it != (LauncherModel::iterator)NULL)
         {
           _current_icon_index = temp_current_icon_index;
-          _launcher_drag_delta += (_icon_size + _space_between_icons);
+          
+          if ((*it)->GetCenter().y + - _icon_size/ 2 < GetGeometry().y)
+            _launcher_drag_delta += (_icon_size + _space_between_icons);
         }
         EnsureAnimation();
         selection_change.emit();
@@ -2657,7 +2659,9 @@ Launcher::RecvKeyPressed(unsigned long    eventType,
         if (it != (LauncherModel::iterator)NULL)
         {
           _current_icon_index = temp_current_icon_index;
-          _launcher_drag_delta -= (_icon_size + _space_between_icons);
+
+          if ((*it)->GetCenter().y + _icon_size / 2 > GetGeometry().height)
+            _launcher_drag_delta -= (_icon_size + _space_between_icons);
         }
 
         EnsureAnimation();
@@ -3050,8 +3054,11 @@ Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
 
   SetMousePosition(x - parent->GetGeometry().x, y - parent->GetGeometry().y);
 
-  if (_mouse_position.x == 0 && _mouse_position.y <= (_parent->GetGeometry().height - _icon_size - 2 * _space_between_icons) && !_drag_edge_touching)
+  if (!_dash_is_open && _mouse_position.x == 0 && _mouse_position.y <= (_parent->GetGeometry().height - _icon_size - 2 * _space_between_icons) && !_drag_edge_touching)
   {
+    if (_dnd_hovered_icon)
+        _dnd_hovered_icon->SendDndLeave();
+        
     _drag_edge_touching = true;
     SetTimeStruct(&_times[TIME_DRAG_EDGE_TOUCH], &_times[TIME_DRAG_EDGE_TOUCH], ANIM_DURATION * 3);
     EnsureAnimation();
@@ -3104,8 +3111,8 @@ Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
     }
   }
   else
-  {
-    if (hovered_icon != _dnd_hovered_icon)
+  {    
+    if (!_drag_edge_touching && hovered_icon != _dnd_hovered_icon)
     {
       if (hovered_icon)
       {

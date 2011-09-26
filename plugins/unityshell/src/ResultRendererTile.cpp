@@ -274,12 +274,14 @@ void ResultRendererTile::LoadIcon(Result& row)
   else if (G_IS_ICON(icon))
   {
     container->slot_handle = IconLoader::GetDefault().LoadFromGIconString(icon_name.c_str(), style->GetTileIconSize(), slot);
-    g_object_unref(icon);
   }
   else
   {
     container->slot_handle = IconLoader::GetDefault().LoadFromIconName(icon_name.c_str(), style->GetTileIconSize(), slot);
   }
+
+  if (icon != NULL)
+    g_object_unref(icon);
 }
 
 nux::BaseTexture* ResultRendererTile::CreateTextureCallback(std::string const& texid,
@@ -343,7 +345,7 @@ void ResultRendererTile::IconLoaded(std::string const& texid,
     if (container)
       container->slot_handle = 0;
   }
-  else
+  else if (container)
   {
     // we need to load a missing icon
     IconLoader::IconLoaderCallback slot = sigc::bind(sigc::mem_fun(this, &ResultRendererTile::IconLoaded), icon_name, row);

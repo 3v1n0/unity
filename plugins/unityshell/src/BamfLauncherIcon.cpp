@@ -777,6 +777,20 @@ void BamfLauncherIcon::OnQuit(DbusmenuMenuitem* item, int time, BamfLauncherIcon
   g_list_free(children);
 }
 
+void BamfLauncherIcon::Stick()
+{
+  BamfView* view = BAMF_VIEW(m_App);
+  
+  if (bamf_view_is_sticky(view))
+    return;
+  
+  const gchar* desktop_file = DesktopFile();
+  bamf_view_set_sticky(view, true);
+  
+  if (desktop_file && strlen(desktop_file) > 0)
+    FavoriteStore::GetDefault().AddFavorite(desktop_file, -1);
+}
+
 void BamfLauncherIcon::UnStick(void)
 {
   BamfView* view = BAMF_VIEW(this->m_App);
