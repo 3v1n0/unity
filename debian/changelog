@@ -104,6 +104,7 @@ unity (4.18.0-0ubuntu1) UNRELEASED; urgency=low
   * Cherry-pick:
     - Dash - dragging a file outside of the Desktop Dash should close the Dash
       (LP: #764641)
+    - Cherry-pick another fix for home dash text height not being cut
   * debian/control:
     - build-dep on gtk 3.1 and latest nux
 
