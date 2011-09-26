@@ -1086,10 +1086,16 @@ std::set<std::string> BamfLauncherIcon::ValidateUrisForLaunch(unity::DndData& ur
   std::set<std::string> result;
   gboolean is_home_launcher = g_str_has_suffix(DesktopFile(), "nautilus-home.desktop");
 
+  if (is_home_launcher)
+  {
+    for (auto k : uris.Uris())
+      result.insert(k);
+    return result;
+  }
+
   for (auto i : uris.Types())
     for (auto j : GetSupportedTypes())
-      if (g_content_type_is_a(i.c_str(), j.c_str()) || 
-          is_home_launcher)
+      if (g_content_type_is_a(i.c_str(), j.c_str()))
       {
         for (auto k : uris.UrisByType(i))
           result.insert(k);
