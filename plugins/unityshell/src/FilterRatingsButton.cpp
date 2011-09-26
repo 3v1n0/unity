@@ -24,6 +24,8 @@
 #include <Nux/Nux.h>
 #include <NuxCore/Logger.h>
 
+#include <math.h>
+
 #include "FilterRatingsButton.h"
 #include "DashStyle.h"
 
@@ -47,7 +49,8 @@ namespace unity {
   {
     InitTheme();
 
-    mouse_down.connect (sigc::mem_fun (this, &FilterRatingsButton::RecvMouseDown) );
+    mouse_up.connect (sigc::mem_fun (this, &FilterRatingsButton::RecvMouseUp) );
+    mouse_drag.connect (sigc::mem_fun (this, &FilterRatingsButton::RecvMouseDrag) );
   }
 
   FilterRatingsButton::~FilterRatingsButton() {
@@ -148,9 +151,16 @@ namespace unity {
     int rating = 5;
     if (filter_ != NULL)
       rating = filter_->rating * 10;
-    int total_full_stars = rating / 2;
-    int total_half_stars = rating % 2;
-
+    // FIXME: 9/26/2011
+    // We should probably support an API for saying whether the ratings
+    // should or shouldn't support half stars...but our only consumer at
+    // the moment is the applications lens which according to design
+    // (Bug #839759) shouldn't. So for now just force rounding.
+    //    int total_half_stars = rating % 2;
+    //    int total_full_stars = rating / 2;
+    int total_full_stars = ceil (rating / 2.0);
+    int total_half_stars = 0;
+    
     nux::Geometry geometry = GetGeometry ();
     //geometry.width = geometry.width / 5;
     geometry.width = 27;
@@ -228,8 +238,18 @@ namespace unity {
     nux::Button::PostDraw(GfxContext, force_draw);
   }
 
-  void FilterRatingsButton::RecvMouseDown (int x, int y, unsigned long button_flags, unsigned long key_flags) {
+  void FilterRatingsButton::RecvMouseUp (int x, int y, unsigned long button_flags, unsigned long key_flags) {
     //int width = GetGeometry().width;
+    int width = 180;
+    float new_rating = (static_cast<float>(x) / width) + 0.10f;
+    if (filter_ != NULL)
+      filter_->rating = new_rating;
+  }
+
+  void FilterRatingsButton::RecvMouseDrag (int x, int y, int dx, int dy, 
+					   unsigned long button_flags, 
+					   unsigned long key_flags)
+  {
     int width = 180;
     float new_rating = (static_cast<float>(x) / width) + 0.10f;
     if (filter_ != NULL)

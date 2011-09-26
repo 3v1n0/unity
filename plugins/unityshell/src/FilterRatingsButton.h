@@ -52,6 +52,8 @@ namespace unity {
     void InitTheme ();
 
     void RecvMouseDown (int x, int y, unsigned long button_flags, unsigned long key_flags);
+    void RecvMouseUp (int x, int y, unsigned long button_flags, unsigned long key_flags);
+    void RecvMouseDrag (int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
     void OnRatingsChanged (int rating);
 
     nux::CairoWrapper *prelight_empty_;
