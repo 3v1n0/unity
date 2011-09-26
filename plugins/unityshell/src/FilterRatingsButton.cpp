@@ -237,23 +237,28 @@ namespace unity {
   void FilterRatingsButton::PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw) {
     nux::Button::PostDraw(GfxContext, force_draw);
   }
-
-  void FilterRatingsButton::RecvMouseUp (int x, int y, unsigned long button_flags, unsigned long key_flags) {
-    //int width = GetGeometry().width;
+  
+  static void _UpdateRatingToMouse (dash::RatingsFilter::Ptr filter, int x)
+  {
     int width = 180;
     float new_rating = (static_cast<float>(x) / width) + 0.10f;
-    if (filter_ != NULL)
-      filter_->rating = new_rating;
+
+    new_rating = ceil(10*new_rating)/10;
+    
+    if (filter != NULL)
+      filter->rating = new_rating;    
+  }
+
+  void FilterRatingsButton::RecvMouseUp (int x, int y, unsigned long button_flags, unsigned long key_flags) 
+  {
+    _UpdateRatingToMouse (filter_, x);
   }
 
   void FilterRatingsButton::RecvMouseDrag (int x, int y, int dx, int dy, 
 					   unsigned long button_flags, 
 					   unsigned long key_flags)
   {
-    int width = 180;
-    float new_rating = (static_cast<float>(x) / width) + 0.10f;
-    if (filter_ != NULL)
-      filter_->rating = new_rating;
+    _UpdateRatingToMouse (filter_, x);
   }
 
   void FilterRatingsButton::OnRatingsChanged (int rating) {
