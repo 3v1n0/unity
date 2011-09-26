@@ -80,9 +80,11 @@ protected:
 
   RenderArg CreateBaseArgForIcon(AbstractLauncherIcon* icon);
 private:
+  void DrawBackground(nux::GraphicsEngine& GfxContext, nux::Geometry const& geo);
+
   void OnSelectionChanged(AbstractLauncherIcon* selection);
   void OnDetailSelectionChanged (bool detail);
-  void OnDetailSelectionIndexChanged (int index);
+  void OnDetailSelectionIndexChanged (unsigned int index);
 
   void OnIconSizeChanged (int size);
   void OnTileSizeChanged (int size);
@@ -111,7 +113,9 @@ private:
 
   guint redraw_handle_;
 
-  nux::BaseTexture* background_texture_;
+  nux::BaseTexture* background_top_;
+  nux::BaseTexture* background_left_;
+  nux::BaseTexture* background_corner_;
   nux::BaseTexture* rounding_texture_;
 
   nux::StaticCairoText* text_view_;

@@ -99,17 +99,6 @@ PluginAdapter::OnScreenUngrabbed()
 {
   if (_spread_state && !screen->grabExist("scale"))
   {
-    // restore windows to their pre-spread minimized state
-    for (std::list<guint32>::iterator itr = m_SpreadedWindows.begin(); itr != m_SpreadedWindows.end(); ++itr)
-    {
-      if (*itr != m_Screen->activeWindow())
-      {
-        CompWindow* window = m_Screen->findWindow(*itr);
-        if (window)
-          window->minimize();
-      }
-    }
-    m_SpreadedWindows.clear();
     _spread_state = false;
     terminate_spread.emit();
   }
@@ -337,26 +326,6 @@ PluginAdapter::InitiateScale(std::string const& match, int state)
   argument[0].setName("match", CompOption::TypeMatch);
   argument[0].value().set(m);
 
-  /* FIXME: Lame */
-  foreach(CompWindow * w, screen->windows())
-  {
-    if (m.evaluate(w))
-    {
-      /* FIXME:
-         just unminimize minimized window for now, don't minimize them after the scale if not picked as TerminateScale is only
-         called if you click on the launcher, not on any icon. More generally, we should hook up InitiateScale and TerminateScale
-         to a Scale plugin signal as the shortcut will have a different behaviour then.
-      */
-      if (w->minimized())
-      {
-        // keep track of windows that were unminimzed to restore their state after the spread
-        if (std::find(m_SpreadedWindows.begin(), m_SpreadedWindows.end(), w->id()) == m_SpreadedWindows.end())
-          m_SpreadedWindows.push_back(w->id());
-        w->unminimize();
-      }
-    }
-  }
-
   m_ScaleActionList.InitiateAll(argument, state);
 }
 
@@ -406,7 +375,36 @@ PluginAdapter::IsWindowMaximized(guint xid)
 bool
 PluginAdapter::IsWindowDecorated(guint32 xid)
 {
-  Window win = (Window)xid;
+  Display* display = m_Screen->dpy();
+  Window win = xid;
+  Atom hints_atom = None;
+  MotifWmHints* hints = NULL;
+  Atom type = None;
+  gint format;
+  gulong nitems;
+  gulong bytes_after;
+  bool ret = true;
+
+  hints_atom = XInternAtom(display, _XA_MOTIF_WM_HINTS, false);
+
+  XGetWindowProperty(display, win, hints_atom, 0,
+                     sizeof(MotifWmHints) / sizeof(long), False,
+                     hints_atom, &type, &format, &nitems, &bytes_after,
+                     (guchar**)&hints);
+
+  if (!hints)
+    return ret;
+
+  if (type == hints_atom && format != 0 && hints->flags & MWM_HINTS_DECORATIONS)
+  {
+    ret = hints->decorations & (MwmDecorAll | MwmDecorTitle);
+  }
+
+  XFree(hints);
+  return ret;
+
+/* FIXME compiz is too slow to update this value, and this could lead to
+ * issues like the bug #838923, since the read value isn't valid anymore
   CompWindow* window;
 
   window = m_Screen->findWindow(win);
@@ -417,6 +415,7 @@ PluginAdapter::IsWindowDecorated(guint32 xid)
     return decor & (MwmDecorAll | MwmDecorTitle);
   }
   return true;
+*/
 }
 
 bool
@@ -450,12 +449,26 @@ PluginAdapter::IsWindowObscured(guint32 xid)
     {
       if (sibling->defaultViewport() == window_vp
           && !sibling->minimized()
+          && sibling->isMapped()
+          && sibling->isViewable()
           && (sibling->state() & MAXIMIZE_STATE) == MAXIMIZE_STATE)
         return true;
     }
   }
 
   return false;
+}
+
+bool
+PluginAdapter::IsWindowMapped(guint32 xid)
+{
+  Window win = (Window) xid;
+  CompWindow* window;
+
+  window = m_Screen->findWindow(win);
+  if (window)
+    return window->mapNum () > 0;
+  return true;
 }
 
 void

@@ -27,6 +27,7 @@
 #include <gtk/gtk.h>
 
 #include "FilterBar.h"
+#include "DashStyle.h"
 #include "PlacesStyle.h"
 
 class TestRunner
@@ -98,7 +99,8 @@ int main(int argc, char **argv)
   gtk_init (&argc, &argv);
 
   nux::NuxInitialize(0);
-  // The instance for the PlacesStyle.
+  // The instances for the pseudo-singletons.
+  unity::DashStyle dash_style;
   unity::PlacesStyle places_style;
 
 

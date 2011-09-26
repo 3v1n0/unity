@@ -1558,7 +1558,7 @@ void Launcher::SetHidden(bool hidden)
   _parent->EnableInputWindow(!hidden, "launcher", false, false);
 
   if (!hidden && GetActionState() == ACTION_DRAG_EXTERNAL)
-    DndLeave();
+    DndReset();
 
   EnsureAnimation();
 
@@ -1633,7 +1633,10 @@ Launcher::OnUpdateDragManagerTimeout(gpointer data)
   self->_collection_window->PushToBack();
   self->_collection_window->EnableInputWindow(false, "DNDCollectionWindow");
 
-  self->DndLeave();
+  if (self->_dash_is_open && !self->_hovered)
+    self->DesaturateIcons();
+
+  self->DndReset();
   self->_hide_machine->SetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE, false);
   self->_hide_machine->SetQuirk(LauncherHideMachine::DND_PUSHED_OFF, false);
 
@@ -1877,9 +1880,9 @@ void Launcher::SetHover(bool hovered)
     SetTimeStruct(&_times[TIME_LEAVE], &_times[TIME_ENTER], ANIM_DURATION);
   }
 
-  if (_dash_is_open)
+  if (_dash_is_open && !_hide_machine->GetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE))
   {
-    if (hovered)
+    if (hovered && !_hover_machine->GetQuirk(LauncherHoverMachine::SHORTCUT_KEYS_VISIBLE))
       SaturateIcons();
     else
       DesaturateIcons();
@@ -1913,7 +1916,7 @@ gboolean Launcher::OnScrollTimeout(gpointer data)
   Launcher* self = (Launcher*) data;
   nux::Geometry geo = self->GetGeometry();
 
-  if (!self->_hovered || self->GetActionState() == ACTION_DRAG_LAUNCHER)
+  if (self->_keynav_activated || !self->_hovered || self->GetActionState() == ACTION_DRAG_LAUNCHER)
     return TRUE;
 
   if (self->MouseOverTopScrollArea())
@@ -2123,7 +2126,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
     // apply the darkening
     GfxContext.GetRenderStates().SetBlend(true, GL_SRC_COLOR, GL_DST_COLOR);
-    gPainter.Paint2DQuadColor(GfxContext, bkg_box, nux::Color(0.2f, 0.2f, 0.2f, 1.0f));
+    gPainter.Paint2DQuadColor(GfxContext, bkg_box, nux::Color(0.0f, 0.0f, 0.0f, 1.0f));
     GfxContext.GetRenderStates().SetBlend (alpha, src, dest);
 
     // apply the bg colour
@@ -2630,7 +2633,9 @@ Launcher::RecvKeyPressed(unsigned long    eventType,
         if (it != (LauncherModel::iterator)NULL)
         {
           _current_icon_index = temp_current_icon_index;
-          _launcher_drag_delta += (_icon_size + _space_between_icons);
+          
+          if ((*it)->GetCenter().y + - _icon_size/ 2 < GetGeometry().y)
+            _launcher_drag_delta += (_icon_size + _space_between_icons);
         }
         EnsureAnimation();
         selection_change.emit();
@@ -2654,7 +2659,9 @@ Launcher::RecvKeyPressed(unsigned long    eventType,
         if (it != (LauncherModel::iterator)NULL)
         {
           _current_icon_index = temp_current_icon_index;
-          _launcher_drag_delta -= (_icon_size + _space_between_icons);
+
+          if ((*it)->GetCenter().y + _icon_size / 2 > GetGeometry().height)
+            _launcher_drag_delta -= (_icon_size + _space_between_icons);
         }
 
         EnsureAnimation();
@@ -2869,9 +2876,9 @@ Launcher::RenderIconToTexture(nux::GraphicsEngine& GfxContext, LauncherIcon* ico
 
   std::list<RenderArg> drag_args;
   drag_args.push_front(arg);
-  icon_renderer->PreprocessIcons(drag_args, nux::Geometry(0, 0, _icon_size, _icon_size));
 
   SetOffscreenRenderTarget(texture);
+  icon_renderer->PreprocessIcons(drag_args, nux::Geometry(0, 0, _icon_size, _icon_size));
   icon_renderer->RenderIcon(nux::GetGraphicsEngine(), arg, nux::Geometry(0, 0, _icon_size, _icon_size), nux::Geometry(0, 0, _icon_size, _icon_size));
   RestoreSystemRenderTarget();
 }
@@ -2917,6 +2924,9 @@ void Launcher::OnDNDDataCollected(const std::list<char*>& mimes)
     return;
 
   _hide_machine->SetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE, true);
+  
+  if (_dash_is_open)
+    SaturateIcons();
 
   for (auto it : _dnd_data.Uris())
   {
@@ -2942,6 +2952,8 @@ void Launcher::OnDNDDataCollected(const std::list<char*>& mimes)
 void
 Launcher::ProcessDndEnter()
 {
+  SetStateMouseOverLauncher(true);
+  
   _dnd_data.Reset();
   _drag_action = nux::DNDACTION_NONE;
   _steal_drag = false;
@@ -2951,9 +2963,8 @@ Launcher::ProcessDndEnter()
 }
 
 void
-Launcher::DndLeave()
+Launcher::DndReset()
 {
-
   _dnd_data.Reset();
 
   for (auto it : *_model)
@@ -2961,18 +2972,15 @@ Launcher::DndLeave()
     it->SetQuirk(LauncherIcon::QUIRK_DROP_PRELIGHT, false);
     it->SetQuirk(LauncherIcon::QUIRK_DROP_DIM, false);
   }
-
-  ProcessDndLeave();
+  
+  DndHoveredIconReset();
 }
 
-void
-Launcher::ProcessDndLeave()
+void Launcher::DndHoveredIconReset()
 {
-  SetStateMouseOverLauncher(false);
   _drag_edge_touching = false;
-
   SetActionState(ACTION_NONE);
-
+  
   if (_steal_drag && _dnd_hovered_icon)
   {
     _dnd_hovered_icon->SetQuirk(LauncherIcon::QUIRK_VISIBLE, false);
@@ -2987,6 +2995,14 @@ Launcher::ProcessDndLeave()
 
   _steal_drag = false;
   _dnd_hovered_icon = 0;
+}
+
+void
+Launcher::ProcessDndLeave()
+{
+  SetStateMouseOverLauncher(false);
+  
+  DndHoveredIconReset();
 }
 
 void
@@ -3038,8 +3054,11 @@ Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
 
   SetMousePosition(x - parent->GetGeometry().x, y - parent->GetGeometry().y);
 
-  if (_mouse_position.x == 0 && _mouse_position.y <= (_parent->GetGeometry().height - _icon_size - 2 * _space_between_icons) && !_drag_edge_touching)
+  if (!_dash_is_open && _mouse_position.x == 0 && _mouse_position.y <= (_parent->GetGeometry().height - _icon_size - 2 * _space_between_icons) && !_drag_edge_touching)
   {
+    if (_dnd_hovered_icon)
+        _dnd_hovered_icon->SendDndLeave();
+        
     _drag_edge_touching = true;
     SetTimeStruct(&_times[TIME_DRAG_EDGE_TOUCH], &_times[TIME_DRAG_EDGE_TOUCH], ANIM_DURATION * 3);
     EnsureAnimation();
@@ -3092,8 +3111,8 @@ Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
     }
   }
   else
-  {
-    if (hovered_icon != _dnd_hovered_icon)
+  {    
+    if (!_drag_edge_touching && hovered_icon != _dnd_hovered_icon)
     {
       if (hovered_icon)
       {
@@ -3162,7 +3181,7 @@ Launcher::ProcessDndDrop(int x, int y)
     SendDndFinished(false, _drag_action);
 
   // reset our shiz
-  DndLeave();
+  DndReset();
 }
 
 /*

@@ -26,6 +26,7 @@ namespace ui {
 LayoutSystem::LayoutSystem()
 {
   spacing = 8;
+  max_row_height = 400;
 }
 
 LayoutSystem::~LayoutSystem()
@@ -151,45 +152,104 @@ nux::Geometry LayoutSystem::LayoutRow (LayoutWindowList const& row, nux::Geometr
   return CompressAndPadRow (row, row_bounds);
 }
 
-void LayoutSystem::LayoutGridWindows (LayoutWindowList const& windows, nux::Geometry const& max_bounds, nux::Geometry& final_bounds)
+std::vector<LayoutWindowList> LayoutSystem::GetRows (LayoutWindowList const& windows, nux::Geometry const& max_bounds)
 {
-  nux::Size grid_size = GridSizeForWindows (windows, max_bounds);
+  std::vector<LayoutWindowList> rows;
 
-  int width = grid_size.width;
-  int height = grid_size.height;
+  int size = (int)windows.size();
 
-  int non_spacing_height = max_bounds.height - ((height - 1) * spacing);
-  int row_height = non_spacing_height / height;
-  int start_y = max_bounds.y;
-
-  int x = 0;
-  int y = 0;
-
-  int low_y = 0;
-
-  int first_row_size = (int)windows.size() - (width * (height - 1));
-
-  LayoutWindowList row_accum;
+  float total_aspect = 0;
   for (LayoutWindow::Ptr window : windows)
   {
-    row_accum.push_back (window);
-    ++x;
+    total_aspect += window->aspect_ratio;
+  }
 
-    if (x >= width || (y == 0 && x == first_row_size))
+  if (total_aspect < 1.8f * ((float)max_bounds.width / max_bounds.height))
+  {
+    // If the total aspect ratio is < 1.8 the max, we fairly safely assume a double row configuration wont be better
+    rows.push_back(windows);
+  }
+  else
+  {
+    nux::Size grid_size = GridSizeForWindows (windows, max_bounds);
+
+    int width = grid_size.width;
+    int height = grid_size.height;
+
+    float row_height = std::min (max_bounds.height / height, max_row_height());
+    float ideal_aspect = (float)max_bounds.width / row_height;
+
+    int x = 0;
+    int y = 0;
+
+    int spare_slots = (width * height) - size;
+
+    float row_aspect = 0.0f;
+
+    LayoutWindowList row_accum;
+    
+    int i;
+    for (i = 0; i < size; ++i)
     {
-      // end of row
-      x = 0;
-      ++y;
+      LayoutWindow::Ptr window = windows[i];
 
-      nux::Geometry row_max_bounds (max_bounds.x, start_y, max_bounds.width, row_height);
-      nux::Geometry row_final_bounds = LayoutRow (row_accum, row_max_bounds);
+      row_accum.push_back (window);
+      row_aspect += window->aspect_ratio;
+      
+      ++x;
+      if (x == width - 1 && spare_slots)
+      {
+        bool skip = false;
 
-      low_y = row_final_bounds.y + row_final_bounds.height;
+        if (spare_slots == height - y)
+          skip = true;
+        else if (i < size - 1)
+          skip = row_aspect + windows[i+1]->aspect_ratio >= ideal_aspect;
 
-      start_y += row_final_bounds.height + spacing;
+        if (skip)
+        {
+          ++x;
+          spare_slots--;
+        }
+      }
 
-      row_accum.clear ();
+      if (x >= width)
+      {
+        // end of row
+        x = 0;
+        ++y;
+        row_aspect = 0;
+
+        rows.push_back(row_accum);
+        row_accum.clear ();
+      }
     }
+
+    if (!row_accum.empty())
+      rows.push_back(row_accum);
+  }
+
+  return rows;
+}
+
+void LayoutSystem::LayoutGridWindows (LayoutWindowList const& windows, nux::Geometry const& max_bounds, nux::Geometry& final_bounds)
+{
+  std::vector<LayoutWindowList> rows = GetRows(windows, max_bounds);
+  
+  int height = rows.size();
+  int non_spacing_height = max_bounds.height - ((height - 1) * spacing);
+  int row_height = std::min (max_row_height(), non_spacing_height / height);
+  int start_y = max_bounds.y;
+  int low_y = 0;
+
+  for (LayoutWindowList row : rows)
+  {
+    nux::Geometry row_max_bounds (max_bounds.x, start_y, max_bounds.width, row_height);
+    nux::Geometry row_final_bounds = LayoutRow (row, row_max_bounds);
+
+    low_y = row_final_bounds.y + row_final_bounds.height;
+
+    start_y += row_final_bounds.height + spacing;
   }
 
   int x1 = G_MAXINT;
@@ -209,44 +269,6 @@ void LayoutSystem::LayoutGridWindows (LayoutWindowList const& windows, nux::Geom
   }
 
   final_bounds = nux::Geometry (x1, y1, x2 - x1, y2 - y1);
-}
-
-nux::Geometry LayoutSystem::ScaleBoxIntoBox (nux::Geometry const& bounds, nux::Geometry const& box)
-{
-	float bound_aspect = (float) bounds.width / (float) bounds.height;
-	float box_aspect = (float) box.width / (float) box.height;
-
-	nux::Geometry result;
-
-	if (box_aspect > bound_aspect)
-	{
-		// box wider than bounds
-		result.x = bounds.x;
-
-		result.width = bounds.width;
-		result.height = result.width / box_aspect;
-
-		result.y = bounds.y + (bounds.height - result.height) / 2;
-	}
-	else
-	{
-		result.y = bounds.y;
-
-		result.height = bounds.height;
-		result.width = result.height * box_aspect;
-
-		result.x = bounds.x + (bounds.width - result.width) / 2;
-	}
-
-  if (result.width > box.width)
-  {
-    result.x += (result.width - box.width) / 2;
-    result.width = box.width;
-    result.y += (result.height - box.height) / 2;
-    result.height = box.height;
-  }
-
-	return result;
 }
 
 LayoutWindow::LayoutWindow(Window xid)

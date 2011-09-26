@@ -89,6 +89,8 @@ private:
   int icon_size;
   int image_size;
   int spacing;
+
+  nux::Matrix4 _stored_projection_matrix;
 };
 
 }

@@ -210,7 +210,6 @@ protected:
   const gchar* GetName();
   void AddProperties(GVariantBuilder* builder);
 
-  void DndLeave();
   void ProcessDndEnter();
   void ProcessDndLeave();
   void ProcessDndMove(int x, int y, std::list<char*> mimes);
@@ -377,6 +376,9 @@ private:
 
   void OnDisplayChanged(Display* display);
   void OnDNDDataCollected(const std::list<char*>& mimes);
+  
+  void DndReset();
+  void DndHoveredIconReset();
 
   nux::HLayout* m_Layout;
   int m_ContentOffsetY;

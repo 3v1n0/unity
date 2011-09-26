@@ -70,7 +70,7 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
   rop.Blend = true;
   rop.SrcBlend = GL_SRC_COLOR;
   rop.DstBlend = GL_DST_COLOR;
-  _bg_darken_layer_ = new nux::ColorLayer(nux::Color(0.2f, 0.2f, 0.2f, 1.0f), false, rop);
+  _bg_darken_layer_ = new nux::ColorLayer(nux::Color(0.0f, 0.0f, 0.0f, 1.0f), false, rop);
 
   _layout = new nux::HLayout("", NUX_TRACKER_LOCATION);
 
@@ -190,7 +190,7 @@ void PanelView::AddPanelView(PanelIndicatorsView* child,
 
 const gchar* PanelView::GetName()
 {
-  return "Panel";
+  return "UnityPanel";
 }
 
 const gchar*
@@ -459,6 +459,7 @@ void PanelView::OnObjectRemoved(indicator::Indicator::Ptr const& proxy)
 
 void PanelView::OnIndicatorViewUpdated(PanelIndicatorEntryView* view)
 {
+  _needs_geo_sync = true;
   ComputeChildLayout();
 }
 
@@ -488,12 +489,19 @@ void PanelView::OnEntryActivateRequest(std::string const& entry_id)
   if (!ret) _indicators->ActivateEntry(entry_id);
 }
 
-static gboolean track_menu_pointer(gpointer data)
+void PanelView::TrackMenuPointer()
 {
-  PanelView *self = (PanelView*)data;
-  gint x, y;
-  gdk_display_get_pointer(gdk_display_get_default(), NULL, &x, &y, NULL);
-  self->OnMenuPointerMoved(x, y);
+  auto mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
+  if (_tracked_pointer_pos != mouse)
+  {
+    OnMenuPointerMoved(mouse.x, mouse.y);
+    _tracked_pointer_pos = mouse;
+  }
+}
+
+static gboolean track_menu_pointer(PanelView *self)
+{
+  self->TrackMenuPointer();
   return TRUE;
 }
 
@@ -512,7 +520,7 @@ void PanelView::OnEntryActivated(std::string const& entry_id)
     // process. All the motion events will go to unity-panel-service while
     // scrubbing because the active panel menu has (needs) the pointer grab.
     //
-    _track_menu_pointer_id = g_timeout_add(16, track_menu_pointer, this);
+    _track_menu_pointer_id = g_timeout_add(16, (GSourceFunc) track_menu_pointer, this);
   }
   else if (!active)
   {
@@ -521,6 +529,8 @@ void PanelView::OnEntryActivated(std::string const& entry_id)
       g_source_remove(_track_menu_pointer_id);
       _track_menu_pointer_id = 0;
     }
+    _menu_view->AllMenusClosed();
+    _tracked_pointer_pos = {-1, -1};
   }
 }
 
@@ -603,11 +613,13 @@ PanelView::SetPrimary(bool primary)
   _is_primary = primary;
 }
 
-void PanelView::SyncGeometries()
+void
+PanelView::SyncGeometries()
 {
   indicator::EntryLocationMap locations;
   _menu_view->GetGeometryForSync(locations);
   _indicators->GetGeometryForSync(locations);
+  _remote->SyncGeometries(GetName(), locations);
 }
 
 void

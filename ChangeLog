@@ -1,3 +1,1010 @@
+2011-09-26  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Call panel_a11y_init before creating dbus services to fix thread-safety issues when dealing with get/setenv
+
+2011-09-26  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Launcher - a spread can accidentally be triggered during the 'dragging and dropping behind the Launcher' interaction
+
+2011-09-24  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Blocks the triggering of a spread during the 'dragging and dropping behind the Launcher' interaction.
+
+2011-09-26  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Bug #855909: holding down super while dash is open resaturates launcher but super-key-shortcuts don't appear
+
+2011-09-25  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Doesn't saturate icons on super key when the dash is open.
+
+2011-09-26  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Launcher - When useing Alt F1 launcher keyboard navigation, Launcher should not scroll until top or bottom of Launcher is reached. It uses lp:~andyrock/unity/fix-858469 as a prerequisite to fix the jump bug.
+
+2011-09-25  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Launcher - When useing Alt F1 launcher keyboard navigation, Launcher should not scroll until top or bottom of Launcher is reached.
+
+2011-09-26  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Don't jump during launcher keynav.
+	
+	To reproduce the problem:
+	1. With a "filled" launcher bar press Alt+F1 (make sure to move your mouse outside of the launcher bar area to not hit bug 858502)
+	2. Press the down key
+	
+	RESULT:
+	* The launcher items jump up and down.
+	
+	---------------------------------------------------------------
+	
+	I think this is not the best solution but this is a kind of workaround. Given that we are now at an advanced stage of the release cycle, I think it is better that launcher.cpp does not change too much (Launcher.cpp is not a file, is a puzzle :P )
+
+2011-09-25  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Don't jump during launcher keynav (bug 858469).
+
+2011-09-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Fixed lots of other PanelMenuView related bugs (see the linked list of "In Progress bugs" for reference).
+	
+	In particular, I've also changed these things:
+	- Moving to nux::GetGraphicsDisplay()->GetMouseScreenCoord() (instead of gdk functions,
+	warning this needs nux bzr-453 or newer not to crash, thanks to Jay for fixing!)
+	- Checking for mouse position after closing menus to hide/show them (bug bug #843670)
+	- Checking for mouse position after dragging a window to to hide/show menus
+	- Fix for PluginAdapter not to consider unmapped windows as maximized (bug #781215)
+	- Panel-service: correctly close menus when releasing mouse outside a menu title (bug #844309)
+	- Panel-service: cache the indicator entries geometry and use the values for checking mouse position
+	- Don't redecorate windows on maximization drag (bug #838923)
+	- panel-service: Remove id2entry_hash and use sscanf to parse the entries IDs
+	- PanelView: track mouse position only when it has been changed (fix bug #834065)
+	- PanelMenuView / PanelIndicatorsView: remove code duplication for adding an entry
+	- Better mouse grab management using only PanelTitleGrabArea
+	- PanelMenuView: even more checks to avoid to show/hide menus when we shouldn't
+	- PanelView: sync geometries for real
+	
+	See the related commit logs for more informations.
+	
+	This branch, to work properly, needs the updated UnityCore code that I've pushed in my lp:~3v1n0/unity/menus-switching-hacks branch (for the entries geometry things), so in the case that the other branch isn't accepted, we need to port its UnityCore changes here.
+	
+	PS: for the record, this is the previous merge request for this branch: https://code.launchpad.net/~3v1n0/unity/panelmenu-fixes/+merge/73622
+
+2011-09-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	WindowButtons: Fixing bug #823353, re-add pressed form for buttons
+
+2011-09-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: don't allow to drag windows from panel when the dash is open
+	
+	Fixing bug #858815
+
+2011-09-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: Some more optimizations in UpdateShowNow to avoid false-positive
+	
+	We now use also the status and we avoid to do unneeded computation when
+	we just requested to hide the menus.
+
+2011-09-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: Add a delay before showing the menus when we press the ALT key
+	
+	This fixes bug #855521 preventing the menus to be shown when doing an
+	alt+tab. The delay is actually set to 180ms and seems to work well.
+
+2011-09-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Remove conflicts with lp:~3v1n0/unity/menus-switching-hacks
+
+2011-09-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: move to foreach to iterate over entries...
+
+2011-09-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with upstream to resolve conflicts.
+
+2011-09-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorsView: use foreach loops when possible
+
+2011-09-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelView: change name to UnityPanel not to clash with unity-2d
+
+2011-09-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelView: sync geometries on indicator entry view Updated.
+
+2011-09-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelView: fixing typo.
+
+2011-09-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: correct wrongly changed comment string...
+
+2011-09-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelView: SyncGeometries doesn't actually sync anything
+	
+	Added missing method to sync geometries with the service.
+
+2011-09-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with upstream.
+
+2011-09-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: we don't need to keep _title_tex, _title_layer is enough
+	
+	Removing _title_tex and using just the saved _title_layer to draw the
+	faded application title.
+
+2011-09-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: Code cleanup
+	
+	Disabling some old code, fixed some spacing and updating some lines around.
+
+2011-09-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: check if we're inside the panel after a drag event.
+	
+	If we release the mouse inside the panel, after dragging it around
+	we need to draw it properly.
+
+2011-09-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: Use all the panel size to check when we have to start dragging
+	
+	We should drag for real only when we're outside the panel, not when
+	we're outside the menuview. In fact, this would cause the grid plugin
+	to start when we're over the indicators (for example).
+
+2011-09-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelTitleGrabArea: control the grabbed status
+	
+	Add the grabbed cursor support to the PanelTitleGrabArea without contrilling
+	this directly from PanelMenuView, and update this one to use the
+	new grab-area interface.
+	
+	Also we directly uses the signals eredited from InputArea in the grab area
+	with no more code duplication.
+
+2011-09-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: avoid code duplication in OnEntryAdded
+	
+	Use the new PanelIndicatorsWidget functions to add an entry to the
+	panel menu view, without code duplication.
+
+2011-09-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorsView: Add AddEntry / RemoveEntry APIs to allow better code reusability
+	
+	Added new APIs to allow to reuse the code to add entries also in the
+	PanelMenuView. Entries can be added in any position, or automatically
+	(by priority).
+
+2011-09-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	panel-service: remove an implicit check.
+
+2011-09-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	panel-service: re-open a menu if clicking over its title after a keyboard navigation
+	
+	If we were navigating over indicators using the keyboard
+	and now we click over the indicator under the mouse, we
+	must force it to show back again, not make all the menus close.
+
+2011-09-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelView: track mouse position only when it has been changed
+	
+	We cache the tracked mouse position to avoid to check for changed
+	position every few milliseconds without any need.
+	
+	This commit fixes bug #834065 since with the previous implementation,
+	when changing the active menu using the keyboard, the mouse position was
+	always checked for opening a menu. Now it's relevant only if it has been
+	changed.
+
+2011-09-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Go back (again) to auto mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord()
+	
+	Since Jay fixed it for us in Nux (commit 453), now we can use it safely here
+	with no more crashes ;)
+
+2011-09-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Ignore keyboard events when the mouse is over a menu title
+	
+	This is a first workaround to but #827582 and it eliminates the visual
+	issue that is happening when using the keyboard arrows when
+	the mouse is over an indicator.
+
+2011-09-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	panel-service: Remove id2entry_hash and go back to a direct hash entry2geometry_hash
+	
+	There's no need to use the id2entry hash since sscanf can do the
+	work for us to get back a pointer from its previously generated string.
+	This works well and saves memory and computation.
+	
+	Also it solves the issue with entry2geometry_hash that now can be again an hashtable
+	using the direct access and doesn't use memory to duplicate the entry_id
+	string
+
+2011-09-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Use a string based hash-table for geometry and don't remove values on entry-removed
+	
+	When switching the focus from a window to one of its dialog children
+	(for example an open dialog, or any other dialog with no proper menu)
+	unity-panel-service gets quickly an "entry-removed" signal for an entry
+	and then a new "entry-added" signal for the very same entry.
+	This causes the panel-service not to sync with the client, since the
+	two events are too near and so if in this case we would have removed
+	the cached geometries for that entry, then the client wouldn't have shown
+	its menu correctly.
+	
+	So now we remove the entries from the entry2geometry_hash hashtable only
+	when the client asked to do that to avoid errors, however we use more
+	memory and a slower hashtable since we need to use strings.
+
+2011-09-15  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Fixing for good the Redecorate maximized windows issue.
+	
+	This fixes bug #838923 (and particularly the redecorate problem
+	also noticed by other bugs like #825230).
+	
+	Really this is more a workaround than a fix, since in the previous
+	implementation of the PluginAdapter::IsWindowDecorated function
+	we used the compiz way to get the decoration parameters.
+	However compiz is too slow to catch the changes we did in the function
+	PluginAdapter::SetMwmWindowHints which actually uses directly the
+	Xlib APIs. So, also when querying for the decorate status
+	we need to use XGetWindowProperty to get the real value.
+	
+	The old code has been left there, with a FIXME statement.
+
+2011-09-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Code cleanup...
+
+2011-09-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	panel-service: Fixed coding style.
+
+2011-09-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Panel-service: cache the entry geometries and use them for parsing mouse events
+	
+	When a client calls the SyncGeometry method the panel-service caches
+	the geometries for the changed entries and then we use them in the
+	event filter function to check if a release event has been done
+	over an indicator entry name or not.
+	
+	This fixes for good bug #844309 and improves the menus handling with
+	a single-click: when a click is released over a non-previously selected
+	menu title, then the release event is ignored, otherwise we use it
+	to close the menus.
+
+2011-09-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	panel-service: Don't remove all release events outside the menu area on first click
+	
+	Unity panel service, after opening a menu was ignoring all the mouse release events
+	to avoid to close the just opened menu. But this was incorrect and caused
+	bug #844309 so it was impossible click on a menu, continue clicking over it
+	and releasing the mouse outside its area (to close it).
+	
+	So now we only ingore release events that are above the menu, so if
+	a mouse button is released above the menu (and so in its title in the panel)
+	the release event is ignored and so the menu doesn't close, otherwise
+	the menu closes.
+
+2011-09-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging missing changes...
+
+2011-09-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Don't consider unmapped and unviewable windows in IsWindowObscured
+	
+	An unmapped or not viewable window can't for sure obscure another window.
+	So, when trying to collect the maximized Windows in PanelMenuWindow
+	(to restore them grabbing from the panel), the unmapped windows
+	(like banshee in the sound menu or deluge reduced to its indicator)
+	must not be considered or the dragging wouldn't work.
+	
+	This should fix bugs like #781215 and #774121
+
+2011-09-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	WindowManager: don't StartMove with negative coordinates
+	
+	Otherwise unity will crash.
+
+2011-09-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Panel: Show the menu after maximizing using the window title drag
+	
+	When a window is maximized we force to check for the mouse position
+	to draw correctly the panel.
+
+2011-09-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	nux::GetGraphicsDisplay()->GetMouseScreenCoord() is buggy, let's move back to GDK
+	
+	It's better to avoid crashes here. Always check mouse position using GDK.
+
+2011-09-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelView, never use nux::GetGraphicsDisplay()->GetMouseScreenCoord();
+	
+	It's too unstable, it could causes crashes when the mouse pointer is
+	grabbed. Reverting to the default implementation, including a FIXME.
+
+2011-09-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Fallback to Gdk display if nux::GetGraphicsDisplay() is null
+	
+	Sometimes nux doesn't seem to work as expected, leading to crashes
+	in the previous implementation. So adding a gdk fallback if needed.
+
+2011-09-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Put back AllMenuClosed and check for new mouse position using Nux
+	
+	This allows to properly fix bug #843670 hiding menus only when the mouse
+	pointer is outside the top menu panel.
+
+2011-09-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with upstream
+
+2011-09-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	This is a set of hacks to improve the reaction of the panel on fast menus switching
+	
+	Everytime unity shows a menu it needs to contact unity-panel-service and to wait for its reply to correctly redraw the panel (selecting the mapped menu title).
+	This is correct, but due to the low speed of this process it causes some visual issues when moving quickly the mouse over the indicators, this gives the impression that the unity interface is slow.
+	
+	To reduce this feeling I've made some hacks to make the Panel update its aspect as soon as a menu has been hovered, without waiting for the panel-service reply both when selecting and de-selecting a menu.
+	However, the panel reply is not ignored, but considered only if our guess was wrong.
+	
+	This allows to navigate over titles without that the panel will show a "redraw cascade effect" caused by the late replies of the panel service.
+	Of course the speed of the menus themselves won't change, but the switch process should look cleaner.
+	
+	Check also this [1] merge proposal for better understanding some of the changes:
+	
+	[1] https://code.launchpad.net/~3v1n0/unity/panelmenu-fixes/+merge/76133
+
+2011-09-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Don't draw white indicators when a menu entry is active.
+	
+	Patch suggested by Andrea Cimitan.
+
+2011-09-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Don't use the IsActive getter when modifying the private value
+
+2011-09-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorEntryView always use the IsActive() function
+	
+	Instead of the draw_active_ variable.
+
+2011-09-26  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	This is relevant to 754689 - when a user changes the launcher size the offsets for the expo plugin need to change.
+
+2011-09-22  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Offset expo plugin space for launcher size
+
+2011-09-26  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	XRegion.h defines TRUE and FALSE too
+
+2011-09-16  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Fix TRUE/FALSE def conflict
+
+2011-09-26  Omer Akram  <om26er@ubuntu.com>
+
+	Dash unmaximize/maximize button is mismatched with actual window size
+
+2011-09-18  Omer Akram  <om26er@ubuntu.com>
+
+	fix for bug 852984 from Wildjiji
+
+2011-09-26  Mikkel Kamstrup Erlandsen  <mikkel.kamstrup@canonical.com>
+
+	ResultRendererTile leaked a lot of GIcons. In fact for any icon string resembling a URI, or when loading an icon by name.
+
+2011-09-16  Mikkel Kamstrup Erlandsen  <mikkel.kamstrup@gmail.com>
+
+	Fix leak of GIcon in ResultRendererTile. It was leaked when loading from a URI or icon name.
+
+2011-09-26  Gordon Allott  <gord.allott@canonical.com>
+
+	this should fix the music lens bug, what seems to have been happening is that tim added some code that resets the handle_counter_ in the IconLoader, but it was watching the wrong container to know when to reset the handle_counter_, which caused handles to get overridden, which caused the wrong slot to get disconnected when we call disconnectbyhandle in ResultRenderer
+	
+	and figuring that out has stolen some of my soul.
+
+2011-09-23  Gord Allott  <gord.allott@canonical.com>
+
+	add protection in icon loading
+
+2011-09-23  Gord Allott  <gord.allott@canonical.com>
+
+	don't zero out the handle index unless the task_map is empty
+
+2011-09-23  Jason Smith  <jason.smith@canonical.com>
+
+	prefer lower left monitor instead of upper left monitor
+
+2011-09-23  Jason Smith  <jason.smith@canonical.com>
+
+	make "primary" monitor be the left most monitor, regardless of what X says...
+	We do this because we are more or less forced to by the design
+
+2011-09-23  Jason Smith  <jason.smith@canonical.com>
+
+	merge gords reflection branch
+
+2011-09-22  Gord Allott  <gord.allott@canonical.com>
+
+	gets the real dash size emitted on ubus, so that the result views can render reflections properly
+
+2011-09-23  Jason Smith  <jason.smith@canonical.com>
+
+	tmp
+
+2011-09-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorsView: use foreach loops in OnPointerMoved.
+
+2011-09-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with upstream.
+
+2011-09-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DBusIndicators: re-use computed rect value.
+
+2011-09-12  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DBusIndicators: cache locations per each different caller
+	
+	When syncing the locations geometries, we must consider also who asked
+	to sync them. Each client should have different geometries, so we must cache
+	them considering the caller name.
+	
+	Also fix a typo causing the file not compile.
+
+2011-09-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DBusIndicators: don't spam the service, just send really changed geometries
+	
+	Cache the last received EntryLocations map in DBusIndicators, so on next
+	call to SyncGeometries we just send to the service informations about
+	the entries that have really changed their geometry.
+	
+	When an entry has been removed, we just send to the service invalid
+	width and height values.
+
+2011-09-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelView: SyncGeometries doesn't actually sync anything
+	
+	Added missing method to sync geometries with the service.
+
+2011-09-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	This is a set of hacks to improve the reaction of the panel on fast menus switching
+	
+	Everytime unity shows a menu it needs to contact unity-panel-service
+	and to wait for its reply to correctly redraw the panel (selecting the
+	mapped menu title).
+	This is correct, but due to the low speed of this process it causes
+	some visual issues when moving quickly the mouse over the indicators,
+	this gives the impression that the unity interface is slow.
+	
+	To reduce this feeling I've made some hacks to make the Panel update
+	its aspect as soon as a menu has been overed, without waiting for
+	the panel-service reply both when selecting and deselecting a menu.
+	However, the panel reply is not ignored, but considered only if our
+	guess was wrong.
+	
+	This allows to navigate over titles without that the panel will show
+	a "redraw cascade effect" caused by the late replies of the panel service.
+	Of course the speed of the menus themselves won't change, but the switch
+	process should look cleaner.
+
+2011-09-22  Jason Smith  <jason.smith@canonical.com>
+
+	merge alt-tab follows mouse branch
+
+2011-09-22  Jason Smith  <jason.smith@canonical.com>
+
+	make alt-tab follow mouse and not focused window
+
+2011-09-22  Jason Smith  <jason.smith@canonical.com>
+
+	Make alt-tab track monitor with mouse on it
+
+2011-09-22  Jason Smith  <jason.smith@canonical.com>
+
+	make switcher dots match those on dash material
+
+2011-09-22  Daniel van Vugt  <vanvugt@gmail.com>
+
+	Fixes LP: #747682. Thanks for the patch, Daniel!
+
+2011-09-19  Daniel van Vugt  <vanvugt@gmail.com>
+
+	Fix unity4-specific shadow toggling.
+
+2011-09-19  Daniel van Vugt  <vanvugt@gmail.com>
+
+	Panel shadow opacity should match panel opacity. (LP: #747682)
+
+2011-09-22  Daniel van Vugt  <vanvugt@gmail.com>
+
+	Fixes LP: #815454. Thanks for the patch, Daniel!
+
+2011-09-21  Daniel van Vugt  <vanvugt@gmail.com>
+
+	Fixed missing panel shadow on secondary monitors. (LP: #815454)
+
+2011-09-22  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fixes LP: #851185. Thanks for the patch, Andrea!
+
+2011-09-16  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Doesn't trigger dnd behind launcher interaction is dash is open.
+
+2011-09-22  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fixes LP: #851619. Thanks for the patch, Andrea!
+
+2011-09-22  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Gives feedback when dropping an icon that's already in launcher.
+
+2011-09-22  Didier Roche  <didier.roche@canonical.com>
+
+	bump build-dep requirement on CMakeLists.txt (LP: #846447)
+
+2011-09-22  Jason Smith  <jason.smith@canonical.com>
+
+	update switcher view glow to match design (minor tweak)
+
+2011-09-22  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	Fix regression in pixel-grid aligned drawing.
+
+2011-09-22  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	Fix regression from DashStyle refactoring messing up the pixel-grid alignment
+
+2011-09-22  Jason Smith  <jason.smith@canonical.com>
+
+	Merge branch from Brandon Schaefer to make window buttons appear when pressing alt
+
+2011-09-18  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	WindowButtons now work when using alt
+
+2011-09-21  Jason Smith  <jason.smith@canonical.com>
+
+	make layout system implement maximum vertical size
+
+2011-09-22  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Merge lp:~smspillaz/unity/unity.fix_855068
+
+2011-09-21  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Fix typo
+
+2011-09-22  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Merge lp:~smspillaz/unity/unity.real_minimize_spread
+
+2011-09-21  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Temporarily allow minimied windows to be "focused" so that other plugins
+	will add them to focus effects (eg scale) and remove temp unminimization.
+
+2011-09-21  Jason Smith  <jason.smith@canonical.com>
+
+	restore paint background to IconTexture
+
+2011-09-21  Jason Smith  <jason.smith@canonical.com>
+
+	fix dash rendering Draw vs DrawContent
+
+2011-09-21  Jason Smith  <jason.smith@canonical.com>
+
+	fix regression in drag icon renderering from rev 1575
+
+2011-09-21  Jason Smith  <jason.smith@canonical.com>
+
+	fix bug where corrupted FBO paints bad data all over screen
+
+2011-09-21  Jason Smith  <jason.smith@canonical.com>
+
+	merge faster blur branch
+
+2011-09-20  Jason Smith  <jason.smith@canonical.com>
+
+	merge jays optimized effects branch
+	tweak to make blurs more reliable and speedy
+
+2011-09-20  Jay Taoko  <jay.taoko@canonical.com>
+
+	Optimized effects creation
+
+2011-09-21  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	Fixed LP: #838904 
+
+2011-09-21  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	Fixed height and alignment relative to the top-most launcher icon of the
+	dash-search-bar.
+
+2011-09-20  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	position, size and glow of the search-bar outline fixed
+
+2011-09-21  Gord Allott  <gord.allott@canonical.com>
+
+	adjusts the layout of the dash somewhat
+
+2011-09-20  Gord Allott  <gord.allott@canonical.com>
+
+	add magic numbers to tile size to make gord sad
+
+2011-09-20  Gord Allott  <gord.allott@canonical.com>
+
+	remove colours
+
+2011-09-20  Gord Allott  <gord.allott@canonical.com>
+
+	make the dash resize code flush against the tiles
+
+2011-09-20  Gord Allott  <gord.allott@canonical.com>
+
+	change places style to suit previous commit
+
+2011-09-20  Gord Allott  <gord.allott@canonical.com>
+
+	set the spacing in result tiles to 10
+
+2011-09-20  Gord Allott  <gord.allott@canonical.com>
+
+	remove padding from result view
+
+2011-09-20  Gord Allott  <gord.allott@canonical.com>
+
+	fix the placesgroup object using too much space vertically
+
+2011-09-20  Gord Allott  <gord.allott@canonical.com>
+
+	draw pretty colours all over the dash
+
+2011-09-21  Gord Allott  <gord.allott@canonical.com>
+
+	chunks the loading of dash items so we never block compiz for more than 8ms
+
+2011-09-19  Gord Allott  <gord.allott@canonical.com>
+
+	fix the off by one error and track the timeout handle
+
+2011-09-19  Gord Allott  <gord.allott@canonical.com>
+
+	do the lazy loading of the dash into 8ms chucks, before queuing to the next frame£
+
+2011-09-21  Gord Allott  <gord.allott@canonical.com>
+
+	Merges in a dash rendering cleanup branch, should be a slightly quicker dash
+
+2011-09-19  Gord Allott  <gord.allott@canonical.com>
+
+	remove the clipping from the result view, in certain cases we actually want to go outside our bounds
+
+2011-09-19  Gord Allott  <gord.allott@canonical.com>
+
+	same for the horizontal tile
+
+2011-09-19  Gord Allott  <gord.allott@canonical.com>
+
+	remove unneeded renderering in the dash
+
+2011-09-19  Gord Allott  <gord.allott@canonical.com>
+
+	remove unneeded blend mode setting
+
+2011-09-20  Jason Smith  <jason.smith@canonical.com>
+
+	fix accounting of dash backgrounds to prevent double painting of blur on scroll
+
+2011-09-20  Robert Carr  <racarr@canonical.com>
+
+	BackgroundEffectHelper: Change the default noise factor for blur from 1.2 to 1.1
+
+2011-09-20  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Merge lp:~smspillaz/unity/unity.fix_invisible_windows
+
+2011-09-20  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Fix spacing and add a comment
+
+2011-09-20  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Merge trunk
+
+2011-09-20  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Reference count the fbos and ensure that we are not binding
+	and painting fbos in the transformed screen case as we don't
+	set up the buffers properly for that
+
+2011-09-20  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Fix dupe
+
+2011-09-20  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Merge trunk
+
+2011-09-20  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Ensure that the frame region is cleared on showdesktop too
+
+2011-09-20  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Merge lp:~unity-team/unity/unity..sdh_invisible_window
+
+2011-09-20  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Fix invisible windows when using showdesktop handler
+
+2011-09-20  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Merge lp:~unity-team/unity/unity.fix_732997
+
+2011-09-20  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Fix LP#732997 - do not override minimization functions until the window
+	is mapped and do not show inaccessible windows which have been withdrawn
+	or started out iconfied in the alt-tab
+
+2011-09-20  Didier Roche  <didier.roche@canonical.com>
+
+	add Update-notifier to the whitelist as per request from the release team LP: #779382
+
+2011-09-19  Jason Smith  <jason.smith@canonical.com>
+
+	merge branch to improve layout system to be smarter with many windows of varying aspect ratios
+
+2011-09-19  Jason Smith  <jason.smith@canonical.com>
+
+	make layout system look ahead to see the effect of the next window on the current row
+
+2011-09-19  Jason Smith  <jason.smith@canonical.com>
+
+	make layout system prefer even layouts when possible
+
+2011-09-19  Andrea Azzarone
+
+	merge branch to saturate/desaturate the launcher when the dash is open and DND starts
+
+2011-09-15  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fixes some problem with saturation/desaturation of the launcher when dash is open and dnd starts.
+
+2011-09-19  Jason Smith  <jason.smith@canonical.com>
+
+	merge branch to make GIMP handle spread mode better in some cases
+
+2011-09-13  Jason Smith  <jason.smith@canonical.com>
+
+	Handle applications like the GIMP better in spread mode
+
+2011-09-19  Jason Smith  <jason.smith@canonical.com>
+
+	make sure we dont tell compiz to draw durring a draw
+
+2011-09-19  Tim Penhey  <tim.penhey@canonical.com>
+
+	DashStyle refactoring.
+
+2011-09-15  Tim Penhey  <tim.penhey@canonical.com>
+
+	Merged dash-style-string-const-ref into dash-style-cmath.
+
+2011-09-15  Tim Penhey  <tim.penhey@canonical.com>
+
+	Merged dash-style-pseudo-singleton into dash-style-string-const-ref.
+
+2011-09-15  Tim Penhey  <tim.penhey@canonical.com>
+
+	Merged dash-style-enums into dash-style-pseudo-singleton.
+
+2011-09-15  Tim Penhey  <tim.penhey@canonical.com>
+
+	Remove tabs.
+
+2011-09-15  Tim Penhey  <tim.penhey@canonical.com>
+
+	Merged dash-style-string-const-ref into dash-style-cmath.
+
+2011-09-15  Tim Penhey  <tim.penhey@canonical.com>
+
+	Merged dash-style-pseudo-singleton into dash-style-string-const-ref.
+
+2011-09-15  Tim Penhey  <tim.penhey@canonical.com>
+
+	Merged dash-style-enums into dash-style-pseudo-singleton.
+
+2011-09-15  Tim Penhey  <tim.penhey@canonical.com>
+
+	Merged dash-style-whitespace into dash-style-enums.
+
+2011-09-15  Tim Penhey  <tim.penhey@canonical.com>
+
+	Merged dash-style-variable-rename into dash-style-whitespace.
+
+2011-09-15  Tim Penhey  <tim.penhey@canonical.com>
+
+	Merge prev pipe.
+
+2011-09-15  Tim Penhey  <tim.penhey@canonical.com>
+
+	Add some const correctness.
+
+2011-09-15  Tim Penhey  <tim.penhey@canonical.com>
+
+	Use <cmath> and anon namespace.
+
+2011-09-15  Tim Penhey  <tim.penhey@canonical.com>
+
+	Pass std::string by const&.
+
+2011-09-15  Tim Penhey  <tim.penhey@canonical.com>
+
+	Update tests.
+
+2011-09-15  Tim Penhey  <tim.penhey@canonical.com>
+
+	Pseudo singleton for DashStyle.
+
+2011-09-15  Tim Penhey  <tim.penhey@canonical.com>
+
+	Use strong enums.
+
+2011-09-15  Tim Penhey  <tim.penhey@canonical.com>
+
+	Fix whitespace in the header.
+
+2011-09-15  Tim Penhey  <tim.penhey@canonical.com>
+
+	Fix the whitespace.
+
+2011-09-15  Tim Penhey  <tim.penhey@canonical.com>
+
+	Rename the member variables to match coding guidelines.
+
+2011-09-15  Tim Penhey  <tim.penhey@canonical.com>
+
+	More tweaks.
+
+2011-09-15  Tim Penhey  <tim.penhey@canonical.com>
+
+	Initial extraction.
+
+2011-09-15  Tim Penhey  <tim.penhey@canonical.com>
+
+	Remove extra constants.
+
+2011-09-15  Tim Penhey  <tim.penhey@canonical.com>
+
+	Generic mapping array too.
+
+2011-09-15  Tim Penhey  <tim.penhey@canonical.com>
+
+	Mapped string reader.
+
+2011-09-15  Tim Penhey  <tim.penhey@canonical.com>
+
+	Mode array and int array changed.
+
+2011-09-15  Tim Penhey  <tim.penhey@canonical.com>
+
+	More reading refactoring.
+
+2011-09-14  Tim Penhey  <tim.penhey@canonical.com>
+
+	Refactoring colors and json reading.
+
+2011-09-14  Tim Penhey  <tim.penhey@canonical.com>
+
+	Minimal changes to make DashStyle use a pimpl.
+
+2011-09-16  Jason Smith  <jason.smith@canonical.com>
+
+	merge optimization branch
+
+2011-09-16  Jason Smith  <jason.smith@canonical.com>
+
+	fix memory leak in dash
+
+2011-09-16  Jason Smith  <jason.smith@canonical.com>
+
+	Optimize unity to minimize number of calls to get projection matrix (math reduction)
+	Remove useless call to draw background in IconTexture
+
+2011-09-16  Jay Taoko  <jay.taoko@canonical.com>
+
+	Fixed regression in the dash search entry. See bug #764859
+
+2011-09-16  Jay Taoko  <jay.taoko@canonical.com>
+
+	Fixed regression in the dash search entry. See bug #764859
+
+2011-09-16  Robert Carr  <racarr@canonical.com>
+
+	Merge lp:~robertcarr/unity/dash-keepfocus
+
+2011-09-16  Robert Carr  <racarr@canonical.com>
+
+	unityshell: If the dash is open dont let other windows steal input focus. closes lp:830730
+
+2011-09-16  Mikkel Kamstrup Erlandsen  <mikkel.kamstrup@gmail.com>
+
+	Merge lp:~cimi/unity/black-dash-layer
+
+2011-09-15  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Use plain black #000000, instead #333333, as dark dash layer
+
+2011-09-16  Alejandro Piñeiro  <apinheiro@igalia.com>
+
+	Adding NUX_[DECLARE/IMPLEMENT]_OBJECT_TYPE macros for LauncherIcon
+
+2011-09-15  Alejandro Piñeiro  <apinheiro@igalia.com>
+
+	Fixing a type on LauncherIcon NUX_DECLARE_TYPE
+
+2011-09-15  Alejandro Piñeiro  <apinheiro@igalia.com>
+
+	Adding the NUX_DECLARE/IMPLEMENT macros for LauncherIcon
+
+2011-09-15  Jason Smith  <jason.smith@canonical.com>
+
+	fix issue where (rarely) alt-tab could enter spread mode prematurely
+
+2011-09-15  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Release\ 4.16.0
+
 2011-09-15  Neil Jagdish Patel  <neil.patel@canonical.com>
 
 	Fix count of hidden results

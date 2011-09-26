@@ -96,21 +96,21 @@ namespace unity {
 
   void FilterRatingsButton::RedrawTheme (nux::Geometry const& geom, cairo_t *cr, int type, nux::State faked_state)
   {
-    DashStyle *dash_style = DashStyle::GetDefault();
+    DashStyle& dash_style = DashStyle::Instance();
     if (type == 0)
     {
       // empty
-      dash_style->StarEmpty (cr, faked_state);
+      dash_style.StarEmpty (cr, faked_state);
     }
     else if (type == 1)
     {
       // half
-      dash_style->StarHalf (cr, faked_state);
+      dash_style.StarHalf (cr, faked_state);
     }
     else
     {
       // full
-      dash_style->StarFull (cr, faked_state);
+      dash_style.StarFull (cr, faked_state);
     }
   }
 

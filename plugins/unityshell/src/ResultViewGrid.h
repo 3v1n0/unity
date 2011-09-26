@@ -27,6 +27,7 @@
 
 #include <UnityCore/Categories.h>
 #include "ResultView.h"
+#include "UBusWrapper.h"
 
 namespace unity
 {
@@ -93,11 +94,17 @@ private:
   uint preview_row_;
   std::string focused_uri_;
 
-  bool lazy_load_queued_;
+  int last_lazy_loaded_result_;
+  uint lazy_load_handle_;
   int last_mouse_down_x_;
   int last_mouse_down_y_;
   std::string current_drag_uri_;
   std::string current_drag_icon_name_;
+
+  int recorded_dash_width_;
+  int recorded_dash_height_;
+
+  UBusManager ubus_;
 
 };
 

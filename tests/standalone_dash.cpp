@@ -29,10 +29,11 @@
 #include "BGHash.h"
 #include "FontSettings.h"
 #include "DashView.h"
+#include "DashStyle.h"
 #include "PlacesStyle.h"
 
-#define WIDTH 958
-#define HEIGHT 574
+#define WIDTH 1024
+#define HEIGHT 768
 
 using namespace unity::dash;
 
@@ -98,7 +99,8 @@ int main(int argc, char **argv)
 
   nux::NuxInitialize(0);
   nux::logging::configure_logging(::getenv("UNITY_LOG_SEVERITY"));
-  // The instance for the PlacesStyle.
+  // The instances for the pseudo-singletons.
+  unity::DashStyle dash_style;
   unity::PlacesStyle places_style;
 
   TestRunner *test_runner = new TestRunner ();

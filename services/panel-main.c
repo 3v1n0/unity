@@ -376,6 +376,8 @@ main (gint argc, gchar **argv)
   introspection_data = g_dbus_node_info_new_for_xml (introspection_xml, NULL);
   g_assert (introspection_data != NULL);
 
+  panel_a11y_init ();
+
   service = panel_service_get_default ();
 
   owner_id = g_bus_own_name (G_BUS_TYPE_SESSION,
@@ -386,8 +388,6 @@ main (gint argc, gchar **argv)
                              on_name_lost,
                              service,
                              NULL);
-
-  panel_a11y_init ();
 
   signal (SIGINT, on_signal);
   signal (SIGTERM, on_signal);

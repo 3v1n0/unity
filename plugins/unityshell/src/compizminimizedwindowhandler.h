@@ -137,7 +137,7 @@ compiz::CompizMinimizedWindowHandler<Screen, Window>::minimize ()
     CompWindow *win = screen->findWindow (w);
 
     Window::get (win)->mMinimizeHandler = MinimizedWindowHandler::Ptr (new CompizMinimizedWindowHandler (win));
-    Window::get (win)->minimize ();
+    Window::get (win)->mMinimizeHandler->minimize ();
   }
 
   priv->mWindow->windowNotify (CompWindowNotifyHide);
@@ -158,7 +158,7 @@ void
 compiz::CompizMinimizedWindowHandler<Screen, Window>::updateFrameRegion (CompRegion &r)
 {
   unsigned int oldUpdateFrameRegionIndex;
-  r -= infiniteRegion;
+  r = CompRegion ();
 
   /* Ensure no other plugins can touch this frame region */
   oldUpdateFrameRegionIndex = priv->mWindow->updateFrameRegionGetCurrentIndex ();
@@ -287,12 +287,13 @@ compiz::CompizMinimizedWindowHandler<Screen, Window>::setFunctions (bool keepMin
   for (CompWindow *w : screen->windows ())
   {
     bool m = w->minimized ();
+    bool enable = keepMinimized && w->mapNum () > 0;
 
     if (m)
       w->unminimize ();
-    w->minimizeSetEnabled (Window::get (w), keepMinimized);
-    w->unminimizeSetEnabled (Window::get (w), keepMinimized);
-    w->minimizedSetEnabled (Window::get (w), keepMinimized);
+    w->minimizeSetEnabled (Window::get (w), enable);
+    w->unminimizeSetEnabled (Window::get (w), enable);
+    w->minimizedSetEnabled (Window::get (w), enable);
     if (m)
       Window::get (w)->window->minimize ();
   }
