@@ -730,7 +730,7 @@ _icon_hint_get_drag_pixbuf (std::string icon_hint)
   if (g_str_has_prefix(icon_hint.c_str(), "/"))
   {
     pbuf = gdk_pixbuf_new_from_file_at_scale (icon_hint.c_str(),
-                                              size, -1, TRUE, &error);
+                                              size, size, FALSE, &error);
     if (error != NULL || !pbuf || !GDK_IS_PIXBUF (pbuf))
     {
       icon_hint = "application-default-icon";
