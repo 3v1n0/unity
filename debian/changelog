@@ -1,4 +1,4 @@
-unity (4.18.0-0ubuntu1) UNRELEASED; urgency=low
+unity (4.18.0-0ubuntu1) oneiric; urgency=low
 
   * New upstream release.
     - Screen corruption when resuming from suspend/hibernate (LP: #676166)
@@ -108,7 +108,7 @@ unity (4.18.0-0ubuntu1) UNRELEASED; urgency=low
   * debian/control:
     - build-dep on gtk 3.1 and latest nux
 
- -- Didier Roche <didrocks@ubuntu.com>  Mon, 26 Sep 2011 12:38:34 +0200
+ -- Didier Roche <didrocks@ubuntu.com>  Mon, 26 Sep 2011 14:43:35 +0200
 
 unity (4.16.0-0ubuntu2) oneiric; urgency=low
 
