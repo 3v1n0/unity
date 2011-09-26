@@ -1,6 +1,8 @@
 unity (4.18.0-0ubuntu1) UNRELEASED; urgency=low
 
   * New upstream release.
+  * debian/control:
+    - build-dep on gtk 3.1 and latest nux
 
  -- Didier Roche <didrocks@ubuntu.com>  Mon, 26 Sep 2011 12:38:34 +0200
 
