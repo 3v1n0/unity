@@ -3056,6 +3056,9 @@ Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
 
   if (!_dash_is_open && _mouse_position.x == 0 && _mouse_position.y <= (_parent->GetGeometry().height - _icon_size - 2 * _space_between_icons) && !_drag_edge_touching)
   {
+    if (_dnd_hovered_icon)
+        _dnd_hovered_icon->SendDndLeave();
+        
     _drag_edge_touching = true;
     SetTimeStruct(&_times[TIME_DRAG_EDGE_TOUCH], &_times[TIME_DRAG_EDGE_TOUCH], ANIM_DURATION * 3);
     EnsureAnimation();
@@ -3108,8 +3111,8 @@ Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
     }
   }
   else
-  {
-    if (hovered_icon != _dnd_hovered_icon)
+  {    
+    if (!_drag_edge_touching && hovered_icon != _dnd_hovered_icon)
     {
       if (hovered_icon)
       {
