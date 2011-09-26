@@ -289,7 +289,47 @@ nux::BaseTexture* ResultRendererTile::CreateTextureCallback(std::string const& t
                                                             int height,
                                                             GdkPixbuf* pixbuf)
 {
-  return nux::CreateTexture2DFromPixbuf(pixbuf, true);
+  int pixbuf_width, pixbuf_height;
+  pixbuf_width = gdk_pixbuf_get_width(pixbuf);
+  pixbuf_height = gdk_pixbuf_get_height(pixbuf);
+
+  if (pixbuf_width == pixbuf_height)
+  {
+    // quick path for square icons
+    return nux::CreateTexture2DFromPixbuf(pixbuf, true);
+  }
+  else
+  {
+    // slow path for non square icons that must be resized to fit in the square
+    // texture
+    nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, width, height);
+    cairo_t* cr = cairo_graphics.GetInternalContext();
+
+    cairo_scale(cr, 1.0f, 1.0f);
+
+    cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 0.0);
+    cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
+    cairo_paint(cr);
+
+    float scale;
+    if (pixbuf_width > pixbuf_height)
+      scale = pixbuf_height / static_cast<float>(pixbuf_width);
+    else
+      scale = pixbuf_width / static_cast<float>(pixbuf_height);
+
+    cairo_translate(cr,
+                    (width - (pixbuf_width * scale)) * 0.5,
+                    (height - (pixbuf_height * scale)) * 0.5);
+
+    cairo_scale(cr, scale, scale);
+
+    cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
+    gdk_cairo_set_source_pixbuf(cr, pixbuf, 0, 0);
+    cairo_paint(cr);
+
+    return texture_from_cairo_graphics(cairo_graphics);
+  }
+
 }
 
 nux::BaseTexture* ResultRendererTile::CreateBlurredTextureCallback(std::string const& texid,
@@ -297,6 +337,10 @@ nux::BaseTexture* ResultRendererTile::CreateBlurredTextureCallback(std::string c
                                                                    int height,
                                                                    GdkPixbuf* pixbuf)
 {
+  int pixbuf_width, pixbuf_height;
+  pixbuf_width = gdk_pixbuf_get_width(pixbuf);
+  pixbuf_height = gdk_pixbuf_get_height(pixbuf);
+
   nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, width + 10, height + 10);
   cairo_t* cr = cairo_graphics.GetInternalContext();
 
@@ -307,9 +351,21 @@ nux::BaseTexture* ResultRendererTile::CreateBlurredTextureCallback(std::string c
   cairo_translate(cr, 5, 5);
   cairo_paint(cr);
 
+  float scale;
+  if (pixbuf_width > pixbuf_height)
+    scale = pixbuf_height / static_cast<float>(pixbuf_width);
+  else
+    scale = pixbuf_width / static_cast<float>(pixbuf_height);
+
+  cairo_translate(cr,
+                  (width - (pixbuf_width * scale)) * 0.5,
+                  (height - (pixbuf_height * scale)) * 0.5);
+
+  cairo_scale(cr, scale, scale);
+
   cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
   gdk_cairo_set_source_pixbuf(cr, pixbuf, 0, 0);
-  cairo_translate(cr, 5, 5);
+
   cairo_paint(cr);
 
   cairo_graphics.BlurSurface(4);
