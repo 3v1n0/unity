@@ -447,7 +447,6 @@ Launcher::startKeyNavMode()
   _hide_machine->SetQuirk(LauncherHideMachine::LAST_ACTION_ACTIVATE, false);
 
   GrabKeyboard();
-  GrabPointer();
 
   // FIXME: long term solution is to rewrite the keynav handle
   if (_focus_keynav_handle > 0)
