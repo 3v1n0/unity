@@ -59,6 +59,7 @@ public:
       _place_hidden_interest(0)
   {
     LoadImages();
+    UpdateDashUnmaximize();
     PanelStyle::GetDefault()->changed.connect(sigc::mem_fun(this, &WindowButton::LoadImages));
     DashSettings::GetDefault()->changed.connect(sigc::mem_fun(this, &WindowButton::UpdateDashUnmaximize));
 
