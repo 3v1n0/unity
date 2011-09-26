@@ -1916,7 +1916,7 @@ gboolean Launcher::OnScrollTimeout(gpointer data)
   Launcher* self = (Launcher*) data;
   nux::Geometry geo = self->GetGeometry();
 
-  if (!self->_hovered || self->GetActionState() == ACTION_DRAG_LAUNCHER)
+  if (self->_keynav_activated || !self->_hovered || self->GetActionState() == ACTION_DRAG_LAUNCHER)
     return TRUE;
 
   if (self->MouseOverTopScrollArea())
