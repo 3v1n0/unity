@@ -535,10 +535,23 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
     }
     else if (!_places_showing && _window_buttons->GetOpacity() < 1.0f && _window_buttons->GetOpacity() > 0.0f)
     {
+      double title_opacity = 1.0f - _window_buttons->GetOpacity();
+      
+      if (!DrawWindowButtons())
+      {
+        // If we're fading-out the buttons/menus, let's fade-in quickly the title
+        title_opacity = CLAMP(title_opacity + 0.25f, 0.0f, 1.0f);
+      }
+      else
+      {
+        // If we're fading-in the buttons/menus, let's fade-out quickly the title
+        title_opacity = CLAMP(title_opacity - 0.25f, 0.0f, 1.0f);
+      }
+
       nux::TexCoordXForm texxform;
       GfxContext.QRP_1Tex(geo.x, geo.y, geo.width, geo.height,
                           _title_layer->GetDeviceTexture(), texxform,
-                          nux::color::White * (1.0f - _window_buttons->GetOpacity()));
+                          nux::color::White * title_opacity);
     }
     else if (_window_buttons->GetOpacity() == 0.0f)
     {
