@@ -2633,7 +2633,9 @@ Launcher::RecvKeyPressed(unsigned long    eventType,
         if (it != (LauncherModel::iterator)NULL)
         {
           _current_icon_index = temp_current_icon_index;
-          _launcher_drag_delta += (_icon_size + _space_between_icons);
+          
+          if ((*it)->GetCenter().y + - _icon_size/ 2 < GetGeometry().y)
+            _launcher_drag_delta += (_icon_size + _space_between_icons);
         }
         EnsureAnimation();
         selection_change.emit();
@@ -2657,7 +2659,9 @@ Launcher::RecvKeyPressed(unsigned long    eventType,
         if (it != (LauncherModel::iterator)NULL)
         {
           _current_icon_index = temp_current_icon_index;
-          _launcher_drag_delta -= (_icon_size + _space_between_icons);
+
+          if ((*it)->GetCenter().y + _icon_size / 2 > GetGeometry().height)
+            _launcher_drag_delta -= (_icon_size + _space_between_icons);
         }
 
         EnsureAnimation();
