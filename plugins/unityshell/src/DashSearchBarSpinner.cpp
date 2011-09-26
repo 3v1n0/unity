@@ -96,6 +96,16 @@ SearchBarSpinner::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
                         texxform,
                         nux::color::White);
   }
+  else if (_state == STATE_CLEAR)
+  {
+    GfxContext.QRP_1Tex(geo.x + ((geo.width - _close->GetWidth()) / 2),
+                        geo.y + ((geo.height - _close->GetHeight()) / 2),
+                        _close->GetWidth(),
+                        _close->GetHeight(),
+                        _close->GetDeviceTexture(),
+                        texxform,
+                        nux::color::White);
+  }
   else if (_state == STATE_SEARCHING)
   {
     nux::Geometry spin_geo(geo.x + ((geo.width - _spin->GetWidth()) / 2),
@@ -174,7 +184,7 @@ SearchBarSpinner::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 gboolean
 SearchBarSpinner::OnTimeout(SearchBarSpinner* self)
 {
-  self->_state = STATE_READY;
+  self->_state = STATE_CLEAR;
   return FALSE;
 }
 
