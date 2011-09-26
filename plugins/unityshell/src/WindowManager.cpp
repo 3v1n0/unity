@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -26,7 +27,7 @@ class WindowManagerDummy : public WindowManager
   {
     return 0;
   }
-  
+
   bool IsScreenGrabbed()
   {
     return false;
@@ -60,6 +61,11 @@ class WindowManagerDummy : public WindowManager
   bool IsWindowObscured(guint32 xid)
   {
     return false;
+  }
+
+  bool IsWindowMapped(guint32 xid)
+  {
+    return true;
   }
 
   void Restore(guint32 xid)
@@ -176,6 +182,9 @@ WindowManager::SetDefault(WindowManager* manager)
 void
 WindowManager::StartMove(guint32 xid, int x, int y)
 {
+  if (x < 0 || y < 0)
+    return;
+
   XEvent ev;
   Display* d = nux::GetGraphicsDisplay()->GetX11Display();
 

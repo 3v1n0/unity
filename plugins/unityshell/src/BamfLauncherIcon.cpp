@@ -246,13 +246,19 @@ std::vector<Window> BamfLauncherIcon::RelatedXids ()
   std::vector<Window> results;
   GList* children, *l;
   BamfView* view;
+  WindowManager *wm = WindowManager::Default ();
 
   children = bamf_view_get_children(BAMF_VIEW(m_App));
   for (l = children; l; l = l->next)
   {
     view = (BamfView*) l->data;
     if (BAMF_IS_WINDOW(view))
-      results.push_back ((Window) bamf_window_get_xid(BAMF_WINDOW(view)));
+    {
+      guint32 xid = bamf_window_get_xid(BAMF_WINDOW(view));
+
+      if (wm->IsWindowMapped(xid))
+        results.push_back ((Window) xid);
+    }
   }
 
   g_list_free(children);
@@ -769,6 +775,20 @@ void BamfLauncherIcon::OnQuit(DbusmenuMenuitem* item, int time, BamfLauncherIcon
   }
 
   g_list_free(children);
+}
+
+void BamfLauncherIcon::Stick()
+{
+  BamfView* view = BAMF_VIEW(m_App);
+  
+  if (bamf_view_is_sticky(view))
+    return;
+  
+  const gchar* desktop_file = DesktopFile();
+  bamf_view_set_sticky(view, true);
+  
+  if (desktop_file && strlen(desktop_file) > 0)
+    FavoriteStore::GetDefault().AddFavorite(desktop_file, -1);
 }
 
 void BamfLauncherIcon::UnStick(void)

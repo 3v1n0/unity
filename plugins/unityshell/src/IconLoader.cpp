@@ -479,7 +479,8 @@ bool IconLoader::Impl::Iteration()
   if (queue_empty)
   {
     idle_id_ = 0;
-    handle_counter_ = 0;
+    if (task_map_.empty())
+      handle_counter_ = 0;
   }
 
   return !queue_empty;

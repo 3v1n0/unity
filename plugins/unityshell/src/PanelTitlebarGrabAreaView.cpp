@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -14,8 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
- * Authored by: Sam Spilsbury <sam.spilsbury@canonical.com>
- * Authored by: Didier Roche <didier.roche@canonical.com>
+ *              Sam Spilsbury <sam.spilsbury@canonical.com>
+ *              Didier Roche <didier.roche@canonical.com>
+ *              Marco Trevisan (Treviño) <mail@3v1n0.net>
  */
 
 #include <Nux/Nux.h>
@@ -31,19 +33,13 @@
 #include <UnityCore/Variant.h>
 
 #include <glib.h>
+#include <X11/cursorfont.h>
 
 #define DELTA_MOUSE_DOUBLE_CLICK 500000000
 
-enum
-{
-  BUTTON_CLOSE = 0,
-  BUTTON_MINIMISE,
-  BUTTON_UNMAXIMISE
-};
-
-
 PanelTitlebarGrabArea::PanelTitlebarGrabArea()
   : InputArea(NUX_TRACKER_LOCATION)
+  , _grab_cursor(None)
 {
   // FIXME: the two following functions should be used instead of the insane trick with fixed value. But nux is broken
   // right now and we need jay to focus on other things
@@ -52,38 +48,44 @@ PanelTitlebarGrabArea::PanelTitlebarGrabArea()
   InputArea::mouse_up.connect(sigc::mem_fun(this, &PanelTitlebarGrabArea::RecvMouseUp));
   _last_click_time.tv_sec = 0;
   _last_click_time.tv_nsec = 0;
-
-  // connect the *Click events before the *Down ones otherwise, weird race happens
-  InputArea::mouse_down.connect(sigc::mem_fun(this, &PanelTitlebarGrabArea::RecvMouseDown));
 }
 
 
 PanelTitlebarGrabArea::~PanelTitlebarGrabArea()
 {
+  if (_grab_cursor)
+    XFreeCursor(nux::GetGraphicsDisplay()->GetX11Display(), _grab_cursor);
 }
 
-void PanelTitlebarGrabArea::RecvMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags)
+void PanelTitlebarGrabArea::SetGrabbed(bool enabled)
 {
-  int button = nux::GetEventButton(button_flags);
-  if (button == 1)
+  auto display = nux::GetGraphicsDisplay()->GetX11Display();
+  auto panel_window = static_cast<nux::BaseWindow*>(GetTopLevelViewWindow());
+
+  if (!panel_window || !display)
+    return;
+
+  if (enabled && !_grab_cursor)
   {
-    mouse_down.emit(x, y);
+    _grab_cursor = XCreateFontCursor(display, XC_fleur);
+    XDefineCursor(display, panel_window->GetInputWindowId(), _grab_cursor);
   }
-  else if (button == 2)
+  else if (!enabled && _grab_cursor)
   {
-    mouse_middleclick.emit();
+    XUndefineCursor(display, panel_window->GetInputWindowId());
+    XFreeCursor(display, _grab_cursor);
+    _grab_cursor = None;
   }
+}
+
+bool PanelTitlebarGrabArea::IsGrabbed()
+{
+  return _grab_cursor != None;
 }
 
 void PanelTitlebarGrabArea::RecvMouseDoubleClick(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  int button = nux::GetEventButton(button_flags);
-  if (button == 1)
-  {
-    mouse_doubleleftclick.emit();
-    return;
-  }
-  mouse_doubleclick.emit();
+  mouse_double_click.emit(x, y, button_flags, key_flags);
 }
 
 // TODO: can be safely removed once OnMouseDoubleClick is fixed in nux

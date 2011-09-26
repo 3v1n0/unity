@@ -27,6 +27,7 @@
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
 
+#include "Timer.h"
 #include "ubus-server.h"
 #include "UBusMessages.h"
 #include "ResultViewGrid.h"
@@ -47,14 +48,17 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
   : ResultView(NUX_FILE_LINE_PARAM)
   , horizontal_spacing(0)
   , vertical_spacing(0)
-  , padding(6)
+  , padding(0)
   , mouse_over_index_(-1)
   , active_index_(-1)
   , selected_index_(-1)
   , preview_row_(0)
-  , lazy_load_queued_(false)
+  , last_lazy_loaded_result_ (0)
+  , lazy_load_handle_(0)
   , last_mouse_down_x_(-1)
   , last_mouse_down_y_(-1)
+  , recorded_dash_width_(-1)
+  , recorded_dash_height_(-1)
 {
   auto needredraw_lambda = [&](int value)
   {
@@ -82,12 +86,19 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
     NeedRedraw();
   });
 
+  ubus_.RegisterInterest(UBUS_DASH_SIZE_CHANGED, [this] (GVariant* data) {
+    // on dash size changed, we update our stored values, this sucks
+    //FIXME in P - make dash size the size of our dash not the entire screen
+    g_variant_get (data, "(ii)", &recorded_dash_width_, &recorded_dash_height_);
+  });
+
   SetDndEnabled(true, false);
   NeedRedraw();
 }
 
 ResultViewGrid::~ResultViewGrid()
 {
+  g_source_remove(lazy_load_handle_);
 }
 
 gboolean ResultViewGrid::OnLazyLoad (gpointer data)
@@ -99,16 +110,16 @@ gboolean ResultViewGrid::OnLazyLoad (gpointer data)
 
 void ResultViewGrid::QueueLazyLoad()
 {
-  if (lazy_load_queued_ == false)
+  if (lazy_load_handle_ == 0)
   {
-    g_timeout_add(0, (GSourceFunc)(&ResultViewGrid::OnLazyLoad), this);
-    lazy_load_queued_ = true;
+    lazy_load_handle_ = g_timeout_add(0, (GSourceFunc)(&ResultViewGrid::OnLazyLoad), this);
   }
+  last_lazy_loaded_result_ = 0; // we always want to reset the lazy load index here
 }
 
 void ResultViewGrid::DoLazyLoad()
 {
-  lazy_load_queued_ = false;
+  lazy_load_handle_ = 0;
   // FIXME - so this code was nice, it would only load the visible entries on the screen
   // however nux does not give us a good enough indicator right now that we are scrolling,
   // thus if you scroll more than a screen in one frame, you will end up with at least one frame where
@@ -129,21 +140,39 @@ void ResultViewGrid::DoLazyLoad()
     //~ index++;
   //~ }
 
+  util::Timer timer;
+  bool queue_additional_load = false; // if this is set, we will return early and start loading more next frame
+
   // instead we will just pre-load all the items if expanded or just one row if not
   int index = 0;
   int items_per_row = GetItemsPerRow();
-  ResultList::iterator it;
-  for (it = results_.begin(); it != results_.end(); it++)
+  for (auto it = results_.begin() + last_lazy_loaded_result_; it != results_.end(); it++)
   {
     if ((!expanded && index < items_per_row) || expanded)
     {
       renderer_->Preload((*it));
+      last_lazy_loaded_result_ = index;
+    }
+
+    if (timer.ElapsedSeconds() > 0.008)
+    {
+      queue_additional_load = true;
+      break;
     }
 
     if (!expanded && index >= items_per_row)
       break; //early exit
 
     index++;
+  }
+
+  if (queue_additional_load)
+  {
+    //we didn't load all the results because we exceeded our time budget, so queue another lazy load
+    if (lazy_load_handle_ == 0)
+    {
+      lazy_load_handle_ = g_timeout_add(1000/60 - 8, (GSourceFunc)(&ResultViewGrid::OnLazyLoad), this);
+    }
   }
 
   QueueDraw();
@@ -525,8 +554,6 @@ ResultListBounds ResultViewGrid::GetVisableResults()
 
 void ResultViewGrid::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
-  GfxContext.PushClippingRectangle(GetGeometry());
-
   gPainter.PaintBackground(GfxContext, GetGeometry());
 
   int items_per_row = GetItemsPerRow();
@@ -540,7 +567,6 @@ void ResultViewGrid::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   uint row_size = renderer_->height + vertical_spacing;
 
   int y_position = padding + GetGeometry().y;
-  nux::Area* top_level_parent = GetToplevel();
 
   ResultListBounds visible_bounds = GetVisableResults();
 
@@ -571,12 +597,17 @@ void ResultViewGrid::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
           state = ResultRenderer::RESULT_RENDERER_ACTIVE;
         }
 
-        int half_width = top_level_parent->GetGeometry().width / 2;
-        // FIXME - we assume the height of the viewport is 600
-        int half_height = top_level_parent->GetGeometry().height;
+        int half_width = recorded_dash_width_ / 2;
+        int half_height = recorded_dash_height_;
 
-        int offset_x = (x_position - half_width) / (half_width / 10);
-        int offset_y = ((y_position + absolute_y) - half_height) / (half_height / 10);
+        int offset_x = MAX(MIN((x_position - half_width) / (half_width / 10), 5), -5);
+        int offset_y = MAX(MIN(((y_position + absolute_y) - half_height) / (half_height / 10), 5), -5);
+
+        if (recorded_dash_width_ < 1 || recorded_dash_height_ < 1)
+        {
+          offset_x = 0;
+          offset_y = 0;
+        }
         nux::Geometry render_geo(x_position, y_position, renderer_->width, renderer_->height);
         renderer_->Render(GfxContext, results_[index], state, render_geo, offset_x, offset_y);
 
@@ -592,8 +623,6 @@ void ResultViewGrid::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
     }
     y_position += row_size;
   }
-
-  GfxContext.PopClippingRectangle();
 }
 
 void ResultViewGrid::DrawContent(nux::GraphicsEngine& GfxContent, bool force_draw)

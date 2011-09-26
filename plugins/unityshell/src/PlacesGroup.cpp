@@ -66,8 +66,9 @@ PlacesGroup::PlacesGroup()
 
   _cached_name = NULL;
   _group_layout = new nux::VLayout("", NUX_TRACKER_LOCATION);
-  _group_layout->SetVerticalExternalMargin(15);
   _group_layout->SetHorizontalExternalMargin(19);
+
+  _group_layout->AddLayout(new nux::SpaceLayout(15,15,15,15), 0);
 
   _header_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
   _group_layout->AddLayout(_header_layout, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FULL);
@@ -299,19 +300,6 @@ PlacesGroup::ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEv
 void PlacesGroup::Draw(nux::GraphicsEngine& GfxContext,
                        bool                 forceDraw)
 {
-  nux::Geometry geo = GetGeometry();
-  nux::Color col(0.2f, 0.2f, 0.2f, 0.2f);
-
-  GfxContext.PushClippingRectangle(geo);
-
-  if (_draw_sep)
-    nux::GetPainter().Draw2DLine(GfxContext,
-                                 geo.x + 10, geo.y + geo.height - 1,
-                                 geo.x + geo.width - 10, geo.y + geo.height - 1,
-                                 col,
-                                 col);
-
-  GfxContext.PopClippingRectangle();
 }
 
 void
@@ -321,6 +309,24 @@ PlacesGroup::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   GfxContext.PushClippingRectangle(base);
 
   _group_layout->ProcessDraw(GfxContext, force_draw);
+  GfxContext.PopClippingRectangle();
+}
+
+void PlacesGroup::PostDraw(nux::GraphicsEngine& GfxContext,
+                           bool                 forceDraw)
+{
+  nux::Geometry base = GetGeometry();
+  GfxContext.PushClippingRectangle(base);
+
+  nux::Color col(0.2f, 0.2f, 0.2f, 0.2f);
+
+  if (_draw_sep)
+    nux::GetPainter().Draw2DLine(GfxContext,
+                                 base.x + 10, base.y + base.height - 1,
+                                 base.x + base.width - 10, base.y + base.height - 1,
+                                 col,
+                                 col);
+
 
   GfxContext.PopClippingRectangle();
 }

@@ -30,6 +30,7 @@ DNDCollectionWindow::DNDCollectionWindow()
 {
   // Make it invisible...
   SetBackgroundColor(nux::Color(0x00000000));
+  SetOpacity(0.0f);
   // ... and as big as the whole screen.
   SetGeometry(WindowManager::Default()->GetScreenGeometry());
   

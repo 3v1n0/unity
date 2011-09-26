@@ -76,13 +76,14 @@ public:
 
   guint32 GetMaximizedWindow();
 
-  void OnMaximizedGrabStart(int x, int y);
+  void OnMaximizedGrabStart(int, int, unsigned long, unsigned long);
   void OnMaximizedGrabMove(int, int, int, int, unsigned long, unsigned long);
-  void OnMaximizedGrabEnd(int x, int y, unsigned long, unsigned long);
-  void OnMouseDoubleClicked();
-  void OnMouseMiddleClicked();
+  void OnMaximizedGrabEnd(int, int, unsigned long, unsigned long);
+  void OnMouseDoubleClicked(int, int, unsigned long, unsigned long);
+  void OnMouseMiddleClicked(int, int, unsigned long, unsigned long);
 
   void Refresh();
+  void AllMenusClosed();
 
   void OnCloseClicked();
   void OnMinimizeClicked();
@@ -101,7 +102,7 @@ protected:
   void OnPanelViewMouseEnter(int x, int y, unsigned long mouse_button_state, unsigned long special_keys_state);
   void OnPanelViewMouseLeave(int x, int y, unsigned long mouse_button_state, unsigned long special_keys_state);
   void OnPanelViewMouseMove(int x, int y, int dx, int dy, unsigned long mouse_button_state, unsigned long special_keys_state);
-  virtual void OnEntryAdded(unity::indicator::Entry::Ptr const& proxy);
+  virtual void OnEntryAdded(unity::indicator::Entry::Ptr const& entry);
 
 private:
   gchar* GetActiveViewName();
@@ -109,15 +110,15 @@ private:
   static void OnPlaceViewHidden(GVariant* data, PanelMenuView* self);
   void UpdateShowNow(bool ignore);
   static gboolean UpdateActiveWindowPosition(PanelMenuView* self);
+  static gboolean UpdateShowNowWithDelay(PanelMenuView* self);
 
 private:
   BamfMatcher* _matcher;
 
-  nux::AbstractPaintLayer* _title_layer;
+  nux::TextureLayer*       _title_layer;
   nux::HLayout*            _menu_layout;
   nux::CairoGraphics       _util_cg;
   nux::ObjectPtr<nux::IOpenGLBaseTexture> _gradient_texture;
-  nux::BaseTexture*        _title_tex;
 
   bool _is_inside;
   bool _is_grabbed;
@@ -144,6 +145,7 @@ private:
   int  _monitor;
   guint32 _active_xid;
   guint32 _active_moved_id;
+  guint32 _update_show_now_id;
   nux::Geometry _monitor_geo;
 
   gulong _activate_window_changed_id;

@@ -16,6 +16,7 @@
  *
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  *              Rodrigo Moya <rodrigo.moya@canonical.com>
+ *              Marco Trevisan (Treviño) <mail@3v1n0.net>
  */
 
 #if HAVE_CONFIG_H
@@ -47,8 +48,8 @@ static PanelService *static_service = NULL;
 struct _PanelServicePrivate
 {
   GSList     *indicators;
-  GHashTable *id2entry_hash;
   GHashTable *entry2indicator_hash;
+  GHashTable *entry2geometry_hash;
 
   guint  initial_sync_id;
   gint32 timeouts[N_TIMEOUT_SLOTS];
@@ -64,6 +65,9 @@ struct _PanelServicePrivate
   gint     last_right;
   gint     last_bottom;
   guint32  last_menu_button;
+
+  IndicatorObjectEntry *pressed_entry;
+  gboolean use_event;
 };
 
 /* Globals */
@@ -113,6 +117,7 @@ static void load_indicators (PanelService    *self);
 static void sort_indicators (PanelService    *self);
 
 static void notify_object (IndicatorObject *object);
+static IndicatorObjectEntry *get_entry_at (PanelService *self, gint x, gint y);
 
 static GdkFilterReturn event_filter (GdkXEvent    *ev,
                                      GdkEvent     *gev,
@@ -128,8 +133,8 @@ panel_service_class_dispose (GObject *object)
   PanelServicePrivate *priv = PANEL_SERVICE (object)->priv;
   gint i;
 
-  g_hash_table_destroy (priv->id2entry_hash);
   g_hash_table_destroy (priv->entry2indicator_hash);
+  g_hash_table_destroy (priv->entry2geometry_hash);
 
   gdk_window_remove_filter (NULL, (GdkFilterFunc)event_filter, object);
 
@@ -239,23 +244,81 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
   if (cookie->type == GenericEvent)
     {
       XIDeviceEvent *event = cookie->data;
+      if (!event)
+        return ret;
 
-      if (event && event->evtype == XI_ButtonRelease &&
-          priv->last_menu_button != 0) //FocusChange
+      if (event->evtype == XI_ButtonPress)
         {
-          if (event->root_x < priv->last_left ||
-              event->root_x > priv->last_right ||
-              event->root_y < priv->last_top ||
-              event->root_y > priv->last_bottom)
-          {
-            ret = GDK_FILTER_REMOVE;
-          }
+          priv->pressed_entry = get_entry_at (self, event->root_x, event->root_y);
+          priv->use_event = (priv->pressed_entry == NULL);
+        }
 
-          priv->last_menu_button = 0;
+      if (event->evtype == XI_ButtonRelease)
+        {
+          if (priv->use_event)
+            {
+              priv->use_event = FALSE;
+            }
+          else
+            {
+              IndicatorObjectEntry *entry;
+              entry = get_entry_at (self, event->root_x, event->root_y);
+
+              if (entry)
+                {
+                  if (entry != priv->pressed_entry)
+                    {
+                      ret = GDK_FILTER_REMOVE;
+                      priv->use_event = TRUE;
+                    }
+                  else if (priv->last_entry && entry != priv->last_entry)
+                    {
+                      /* If we were navigating over indicators using the keyboard
+                       * and now we click over the indicator under the mouse, we
+                       * must force it to show back again, not make it close */
+                      gchar *entry_id = g_strdup_printf ("%p", entry);
+                      g_signal_emit (self, _service_signals[ENTRY_ACTIVATE_REQUEST], 0, entry_id);
+                      g_free (entry_id);
+                    }
+                }
+            }
         }
     }
 
   return ret;
+}
+
+static IndicatorObjectEntry *
+get_entry_at (PanelService *self, gint x, gint y)
+{
+  GHashTableIter iter;
+  gpointer key, value;
+
+  g_hash_table_iter_init (&iter, self->priv->entry2geometry_hash);
+  while (g_hash_table_iter_next (&iter, &key, &value)) 
+    {
+      IndicatorObjectEntry *entry = key;
+      GdkRectangle *geo = value;
+
+      if (x >= geo->x && x <= (geo->x + geo->width) &&
+          y >= geo->y && y <= (geo->y + geo->height))
+        {
+          return entry;
+        }
+    }
+
+  return NULL;
+}
+
+static IndicatorObjectEntry *
+get_entry_by_id (const gchar *entry_id)
+{
+  IndicatorObjectEntry *entry;
+  
+  if (sscanf (entry_id, "%p", &entry) == 1)
+    return entry;
+
+  return NULL;
 }
 
 static gboolean
@@ -277,9 +340,9 @@ panel_service_init (PanelService *self)
 
   gdk_window_add_filter (NULL, (GdkFilterFunc)event_filter, self);
 
-  priv->id2entry_hash = g_hash_table_new_full (g_str_hash, g_str_equal,
-                                               g_free, NULL);
   priv->entry2indicator_hash = g_hash_table_new (g_direct_hash, g_direct_equal);
+  priv->entry2geometry_hash = g_hash_table_new_full (g_direct_hash, g_direct_equal,
+                                                     NULL, g_free);
 
   suppress_signals = TRUE;
   load_indicators (self);
@@ -315,10 +378,8 @@ panel_service_actually_remove_indicator (PanelService *self, IndicatorObject *in
     {
       for (l = entries; l; l = l->next)
         {
-          gchar *id = g_strdup_printf ("%p", l->data);
-          g_hash_table_remove (self->priv->id2entry_hash, id);
           g_hash_table_remove (self->priv->entry2indicator_hash, l->data);
-          g_free (id);
+          g_hash_table_remove (self->priv->entry2geometry_hash, l->data);
         }
 
       g_list_free (entries);
@@ -520,14 +581,11 @@ on_entry_added (IndicatorObject      *object,
                 PanelService         *self)
 {
   PanelServicePrivate *priv;
-  gchar *id;
 
   g_return_if_fail (PANEL_IS_SERVICE (self));
   g_return_if_fail (entry != NULL);
   priv = self->priv;
 
-  id = g_strdup_printf ("%p", entry);
-  g_hash_table_insert (priv->id2entry_hash, id, entry);
   g_hash_table_insert (priv->entry2indicator_hash, entry, object);
 
   if (GTK_IS_LABEL (entry->label))
@@ -576,17 +634,16 @@ on_entry_removed (IndicatorObject      *object,
                   PanelService         *self)
 {
   PanelServicePrivate *priv;
-  gchar *id;
-
   g_return_if_fail (PANEL_IS_SERVICE (self));
   g_return_if_fail (entry != NULL);
 
   priv = self->priv;
 
-  id = g_strdup_printf ("%p", entry);
   g_hash_table_remove (priv->entry2indicator_hash, entry);
-  g_hash_table_remove (priv->id2entry_hash, id);
-  g_free (id);
+  /* Don't remove here the value from priv->entry2geometry_hash, this should
+   * be done in during the sync, to avoid false positive.
+   * FIXME this in libappmenu.so to avoid to send an "entry-removed" signal
+   * when switching the focus from a window to one of its dialog children */
 
   notify_object (object);
 }
@@ -628,7 +685,7 @@ on_indicator_menu_show_now_changed (IndicatorObject      *object,
                                     PanelService         *self)
 {
   gchar *entry_id;
-
+  
   g_return_if_fail (PANEL_IS_SERVICE (self));
   if (entry == NULL)
     {
@@ -637,7 +694,7 @@ on_indicator_menu_show_now_changed (IndicatorObject      *object,
     }
 
   entry_id = g_strdup_printf ("%p", entry);
-  
+
   g_signal_emit (self, _service_signals[ENTRY_SHOW_NOW_CHANGED], 0, entry_id, show_now_changed);
 
   g_free (entry_id);
@@ -967,6 +1024,8 @@ on_active_menu_hidden (GtkMenu *menu, PanelService *self)
   priv->last_top = 0;
   priv->last_bottom = 0;
 
+  priv->pressed_entry = NULL;
+
   g_signal_emit (self, _service_signals[ENTRY_ACTIVATED], 0, "");
 }
 
@@ -1045,8 +1104,31 @@ panel_service_sync_geometry (PanelService *self,
            gint height)
 {
   PanelServicePrivate *priv = self->priv;
-  IndicatorObjectEntry *entry = g_hash_table_lookup (priv->id2entry_hash, entry_id);
+  IndicatorObjectEntry *entry = get_entry_by_id (entry_id);
   IndicatorObject *object = g_hash_table_lookup (priv->entry2indicator_hash, entry);
+
+  if (entry)
+    {
+      if (width < 0 || height < 0)
+        {
+          g_hash_table_remove (priv->entry2geometry_hash, entry);
+        }
+      else
+        {
+          GdkRectangle *geo = g_hash_table_lookup (priv->entry2geometry_hash, entry);
+
+          if (geo == NULL)
+            {
+              geo = g_new (GdkRectangle, 1);
+              g_hash_table_insert (priv->entry2geometry_hash, entry, geo);
+            }
+
+          geo->x = x;
+          geo->y = y;
+          geo->width = width;
+          geo->height = height;
+        }
+    }
 
   g_signal_emit (self, _service_signals[GEOMETRIES_CHANGED], 0, object, entry, x, y, width, height);
 }
@@ -1176,8 +1258,7 @@ on_active_menu_move_current (GtkMenu              *menu,
   priv = self->priv;
 
   /* Not interested in up or down */
-  if (direction == GTK_MENU_DIR_NEXT
-      || direction == GTK_MENU_DIR_PREV)
+  if (direction == GTK_MENU_DIR_NEXT || direction == GTK_MENU_DIR_PREV)
     return;
 
   /* We don't want to distrupt going into submenus */
@@ -1221,15 +1302,17 @@ panel_service_show_entry (PanelService *self,
                           gint32        button)
 {
   PanelServicePrivate  *priv = self->priv;
-  IndicatorObjectEntry *entry = g_hash_table_lookup (priv->id2entry_hash, entry_id);
+  IndicatorObjectEntry *entry = get_entry_by_id (entry_id);
   IndicatorObject      *object = g_hash_table_lookup (priv->entry2indicator_hash, entry);
   GtkWidget            *last_menu;
+
+  g_return_if_fail (entry);
 
   if (priv->last_entry == entry)
     return;
 
   last_menu = GTK_WIDGET (priv->last_menu);
-  
+
   if (GTK_IS_MENU (priv->last_menu))
     {
       priv->last_x = 0;
@@ -1247,6 +1330,8 @@ panel_service_show_entry (PanelService *self,
 
   if (entry != NULL)
     {
+      g_signal_emit (self, _service_signals[ENTRY_ACTIVATED], 0, entry_id);
+
       if (GTK_IS_MENU (entry->menu))
         {
           priv->last_menu = entry->menu;
@@ -1294,8 +1379,6 @@ panel_service_show_entry (PanelService *self,
         priv->last_top = 0;
         priv->last_bottom = 0;
       }
-
-      g_signal_emit (self, _service_signals[ENTRY_ACTIVATED], 0, entry_id);
     }
 
   /* We popdown the old one last so we don't accidently send key focus back to the
@@ -1312,7 +1395,9 @@ panel_service_secondary_activate_entry (PanelService *self,
                                         guint32       timestamp)
 {
   PanelServicePrivate  *priv = self->priv;
-  IndicatorObjectEntry *entry = g_hash_table_lookup (priv->id2entry_hash, entry_id);
+  IndicatorObjectEntry *entry = get_entry_by_id (entry_id);
+  g_return_if_fail (entry);
+
   IndicatorObject *object = g_hash_table_lookup (priv->entry2indicator_hash, entry);
 
   g_signal_emit_by_name(object, INDICATOR_OBJECT_SIGNAL_SECONDARY_ACTIVATE, entry,
@@ -1325,11 +1410,12 @@ panel_service_scroll_entry (PanelService   *self,
                             gint32         delta)
 {
   PanelServicePrivate  *priv = self->priv;
-  IndicatorObjectEntry *entry = g_hash_table_lookup (priv->id2entry_hash, entry_id);
+  IndicatorObjectEntry *entry = get_entry_by_id (entry_id);
+  g_return_if_fail (entry);
+
   IndicatorObject *object = g_hash_table_lookup (priv->entry2indicator_hash, entry);
   GdkScrollDirection direction = delta < 0 ? GDK_SCROLL_DOWN : GDK_SCROLL_UP;
 
   g_signal_emit_by_name(object, INDICATOR_OBJECT_SIGNAL_ENTRY_SCROLLED, entry,
                         abs(delta/120), direction);
 }
-
