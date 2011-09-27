@@ -1167,12 +1167,12 @@ BamfLauncherIcon::ShowInSwitcher()
   return GetQuirk(QUIRK_RUNNING) && GetQuirk(QUIRK_VISIBLE);
 }
 
-unsigned int
+unsigned long long
 BamfLauncherIcon::SwitcherPriority()
 {
   GList* children, *l;
   BamfView* view;
-  unsigned int result = 0;
+  unsigned long long result = 0;
 
   children = bamf_view_get_children(BAMF_VIEW(m_App));
 

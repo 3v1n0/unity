@@ -64,6 +64,8 @@ public:
 
   static void Initialize(CompScreen* screen);
 
+  nux::Property<bool> bias_active_to_viewport;
+
   ~PluginAdapter();
 
   void SetScaleAction(MultiActionList& scale);
@@ -130,7 +132,7 @@ public:
   bool IsScreenGrabbed();
   bool IsViewPortSwitchStarted();
 
-  unsigned int GetWindowActiveNumber (guint32 xid);
+  unsigned long long GetWindowActiveNumber (guint32 xid);
 
   void MaximizeIfBigEnough(CompWindow* window);
 
