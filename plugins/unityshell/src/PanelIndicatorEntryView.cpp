@@ -54,12 +54,14 @@ GdkPixbuf* make_pixbuf(int image_type, std::string const& image_data, bool dash_
 
 PanelIndicatorEntryView::PanelIndicatorEntryView(
   indicator::Entry::Ptr const& proxy,
-  int padding)
+  int padding,
+  IndicatorEntryType type)
   : TextureArea(NUX_TRACKER_LOCATION)
   , proxy_(proxy)
+  , type_(type)
   , util_cg_(CAIRO_FORMAT_ARGB32, 1, 1)
   , texture_layer_(NULL)
-  , padding_(padding)
+  , padding_(padding < 0 ? 0 : padding)
   , opacity_(1.0f)
   , draw_active_(false)
   , dash_showing_(false)
@@ -73,7 +75,8 @@ PanelIndicatorEntryView::PanelIndicatorEntryView(
   InputArea::mouse_up.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::OnMouseUp));
 
   InputArea::SetAcceptMouseWheelEvent(true);
-  InputArea::mouse_wheel.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::OnMouseWheel));
+  if (type_ != MENU)
+    InputArea::mouse_wheel.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::OnMouseWheel));
 
   on_panelstyle_changed_connection_ = PanelStyle::GetDefault()->changed.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::Refresh));
   Refresh();
@@ -113,13 +116,17 @@ void PanelIndicatorEntryView::OnMouseDown(int x, int y, long button_flags, long 
   if (proxy_->active())
     return;
 
-  int button = nux::GetEventButton(button_flags);
-
   if (((proxy_->label_visible() && proxy_->label_sensitive()) ||
-       (proxy_->image_visible() && proxy_->image_sensitive())) && button != 2)
+       (proxy_->image_visible() && proxy_->image_sensitive())))
   {
-    ShowMenu(button);
+    int button = nux::GetEventButton(button_flags);
+
+    if (button == 2 && type_ == INDICATOR)
+      SetOpacity(0.75f);
+    else
+      ShowMenu(button);
   }
+
   Refresh();
 }
 
@@ -128,15 +135,20 @@ void PanelIndicatorEntryView::OnMouseUp(int x, int y, long button_flags, long ke
   if (proxy_->active())
     return;
 
+  int button = nux::GetEventButton(button_flags);
+
   nux::Geometry geo = GetAbsoluteGeometry();
   int px = geo.x + x;
   int py = geo.y + y;
 
   if (((proxy_->label_visible() && proxy_->label_sensitive()) ||
        (proxy_->image_visible() && proxy_->image_sensitive())) &&
-      geo.IsPointInside(px, py) && nux::GetEventButton(button_flags) == 2)
+       button == 2 && type_ == INDICATOR)
   {
-    proxy_->SecondaryActivate(time(NULL));
+    if (geo.IsPointInside(px, py))
+      proxy_->SecondaryActivate(time(NULL));
+
+    SetOpacity(1.0f);
   }
 
   Refresh();

@@ -38,7 +38,14 @@ namespace unity
 class PanelIndicatorEntryView : public nux::TextureArea, public unity::Introspectable
 {
 public:
-  PanelIndicatorEntryView(indicator::Entry::Ptr const& proxy, int padding = 5);
+  typedef enum {
+    INDICATOR,
+    MENU,
+    OTHER
+  } IndicatorEntryType;
+
+  PanelIndicatorEntryView(indicator::Entry::Ptr const& proxy, int padding = 5,
+                          IndicatorEntryType type = INDICATOR);
   ~PanelIndicatorEntryView();
 
   void Refresh();
@@ -68,6 +75,7 @@ public:
 
 private:
   unity::indicator::Entry::Ptr proxy_;
+  IndicatorEntryType type_;
   nux::CairoGraphics util_cg_;
   nux::TextureLayer* texture_layer_;
   int padding_;
