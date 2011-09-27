@@ -58,6 +58,7 @@ PanelIndicatorEntryView::PanelIndicatorEntryView(
   : TextureArea(NUX_TRACKER_LOCATION)
   , proxy_(proxy)
   , util_cg_(CAIRO_FORMAT_ARGB32, 1, 1)
+  , texture_layer_(NULL)
   , padding_(padding)
   , opacity_(1.0f)
   , draw_active_(false)
@@ -84,6 +85,8 @@ PanelIndicatorEntryView::~PanelIndicatorEntryView()
   on_indicator_updated_connection_.disconnect();
   on_panelstyle_changed_connection_.disconnect();
   g_signal_handler_disconnect(gtk_settings_get_default(), on_font_changed_connection_);
+  if (texture_layer_)
+    delete texture_layer_;
 }
 
 void PanelIndicatorEntryView::OnActiveChanged(bool is_active)
@@ -313,7 +316,7 @@ void PanelIndicatorEntryView::Refresh()
       cairo_paint_with_alpha(cr, proxy_->image_sensitive() ? 1.0 : 0.5);
 
       cairo_pattern_t* pat = cairo_pop_group(cr);
-      
+
       cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 1.0f);
       cairo_rectangle(cr, x, y, width, height);
       cairo_mask(cr, pat);
@@ -388,15 +391,15 @@ void PanelIndicatorEntryView::Refresh()
   rop.Blend = true;
   rop.SrcBlend = GL_ONE;
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
-  nux::TextureLayer* texture_layer = new nux::TextureLayer(texture2D->GetDeviceTexture(),
-                                                           texxform,
-                                                           nux::color::White,
-                                                           true,
-                                                           rop);
-  SetPaintLayer(texture_layer);
+
+  if (texture_layer_)
+    delete texture_layer_;
+
+  texture_layer_ = new nux::TextureLayer(texture2D->GetDeviceTexture(), texxform,
+                                         nux::color::White, true, rop);
+  SetPaintLayer(texture_layer_);
 
   texture2D->UnReference();
-  delete texture_layer;
 
   NeedRedraw();
 
