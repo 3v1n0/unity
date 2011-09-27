@@ -133,7 +133,7 @@ public:
     return true;
   }
 
-  unsigned int SwitcherPriority()
+  unsigned long long SwitcherPriority()
   {
     return 0;
   }

@@ -126,7 +126,7 @@ public:
     return false;
   };
 
-  virtual unsigned int SwitcherPriority()
+  virtual unsigned long long SwitcherPriority()
   {
     return 0;
   }
