@@ -136,7 +136,6 @@ PanelMenuView::PanelMenuView(int padding)
   win_manager->window_restored.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowRestored));
   win_manager->window_unmapped.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowUnmapped));
   win_manager->window_moved.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowMoved));
-  win_manager->compiz_screen_viewport_switch_ended.connect(sigc::mem_fun(this, &PanelMenuView::Refresh));
 
   PanelStyle::GetDefault()->changed.connect(sigc::mem_fun(this, &PanelMenuView::Refresh));
 
@@ -417,7 +416,7 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   nux::ColorLayer layer(nux::Color(0x00000000), true, rop);
   nux::GetPainter().PushDrawLayer(GfxContext, GetGeometry(), &layer);
 
-  if (_title_layer && !_is_own_window)
+  if (_title_layer && !_is_own_window && _we_control_active)
   {
     guint blend_alpha = 0, blend_src = 0, blend_dest = 0;
     bool draw_faded_title = false;
