@@ -348,7 +348,7 @@ PanelMenuView::OnFadeInChanged(double opacity)
 void
 PanelMenuView::OnFadeOutChanged(double progress)
 {
-  double opacity = 1.0f - progress;
+  double opacity = CLAMP(1.0f - progress, 0.0f, 1.0f);
 
   if (!DrawMenus() && GetOpacity() != 0.0f)
     SetOpacity(opacity);
