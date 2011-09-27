@@ -416,7 +416,7 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   nux::ColorLayer layer(nux::Color(0x00000000), true, rop);
   nux::GetPainter().PushDrawLayer(GfxContext, GetGeometry(), &layer);
 
-  if (_title_layer)
+  if (_title_layer && !_is_own_window)
   {
     guint blend_alpha = 0, blend_src = 0, blend_dest = 0;
     bool draw_faded_title = false;
