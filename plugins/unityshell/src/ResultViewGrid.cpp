@@ -467,6 +467,9 @@ void ResultViewGrid::OnKeyDown (unsigned long event_type, unsigned long event_ke
   selected_index_ = std::max(0, selected_index_);
   selected_index_ = std::min(static_cast<int>(results_.size() - 1), selected_index_);
   focused_uri_ = results_[selected_index_].uri;
+
+  selection_change.emit();
+
   NeedRedraw();
 }
 
@@ -478,17 +481,21 @@ nux::Area* ResultViewGrid::KeyNavIteration(nux::KeyNavDirection direction)
 // crappy name.
 void ResultViewGrid::OnOnKeyNavFocusChange(nux::Area *area)
 {
-
   if (HasKeyFocus())
   {
     focused_uri_ = results_.front().uri;
     selected_index_ = 0;
+
+    selection_change.emit();
+
     NeedRedraw();
   }
   else
   {
     selected_index_ = -1;
     focused_uri_.clear();
+
+    selection_change.emit();
   }
 }
 
@@ -836,6 +843,12 @@ ResultViewGrid::DndSourceDragFinished(nux::DndAction result)
   last_mouse_down_y_ = -1;
   current_drag_uri_.clear();
   current_drag_icon_name_.clear();
+}
+
+int
+ResultViewGrid::GetSelectedIndex()
+{
+  return selected_index_;
 }
 
 }

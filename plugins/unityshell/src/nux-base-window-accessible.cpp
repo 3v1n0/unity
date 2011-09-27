@@ -178,9 +178,9 @@ nux_base_window_accessible_initialize(AtkObject* accessible,
 
   /* This gives us if the window has the underlying key input */
   bwindow->begin_key_focus.connect(sigc::bind(sigc::ptr_fun(on_change_keyboard_receiver_cb),
-                                                      accessible, TRUE));
+                                              accessible, TRUE));
   bwindow->end_key_focus.connect(sigc::bind(sigc::ptr_fun(on_change_keyboard_receiver_cb),
-                                                     accessible, FALSE));
+                                            accessible, FALSE));
 }
 
 static AtkObject*
@@ -225,7 +225,20 @@ check_active(NuxBaseWindowAccessible* self)
 {
   gint signal_id;
   gboolean is_active;
+  nux::Object* nux_object = NULL;
 
+  nux_object = nux_object_accessible_get_object(NUX_OBJECT_ACCESSIBLE(self));
+  if (nux_object == NULL) /* defunct */
+    return;
+
+  /* FIXME: this method is not infalible, as we lose some
+     window->deactivate, specifically on the Dash, so this could be
+     improved. As we check the active window using UBus messages we
+     could use that information, but would make complex the
+     quicklist.
+
+     Anyway, the relevant message is the activate window, it is ok if
+     we lose some deactivate methods for the moment */
   is_active = (self->priv->key_focused || self->priv->child_key_focused);
 
   if (self->priv->active != is_active)
@@ -256,8 +269,6 @@ on_change_keyboard_receiver_cb(AtkObject* object,
   if (self->priv->key_focused != focus_in)
   {
     self->priv->key_focused = focus_in;
-
-    check_active(self);
   }
 }
 
@@ -271,6 +282,13 @@ nux_base_window_set_child_key_focused(NuxBaseWindowAccessible* self,
   if (self->priv->child_key_focused != value)
   {
     self->priv->child_key_focused = value;
-    check_active(self);
   }
+}
+
+void
+nux_base_window_accessible_check_active(NuxBaseWindowAccessible* self)
+{
+  g_return_if_fail(NUX_IS_BASE_WINDOW_ACCESSIBLE(self));
+
+  check_active(self);
 }
