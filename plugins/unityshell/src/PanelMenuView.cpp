@@ -136,6 +136,7 @@ PanelMenuView::PanelMenuView(int padding)
   win_manager->window_restored.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowRestored));
   win_manager->window_unmapped.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowUnmapped));
   win_manager->window_moved.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowMoved));
+  win_manager->compiz_screen_viewport_switch_ended.connect(sigc::mem_fun(this, &PanelMenuView::Refresh));
 
   PanelStyle::GetDefault()->changed.connect(sigc::mem_fun(this, &PanelMenuView::Refresh));
 
@@ -636,16 +637,21 @@ PanelMenuView::GetActiveViewName()
   if (BAMF_IS_WINDOW(window))
   {
     std::vector<Window> const& our_xids = nux::XInputWindow::NativeHandleList();
+    guint32 window_xid = bamf_window_get_xid(BAMF_WINDOW(window));
 
-    if (std::find(our_xids.begin(), our_xids.end(), bamf_window_get_xid(BAMF_WINDOW(window))) != our_xids.end())
+    if (std::find(our_xids.begin(), our_xids.end(), window_xid) != our_xids.end())
+    {
       _is_own_window = true;
-  }
+      return g_strdup("");
+    }
 
-  if (_is_maximized)
-  {
-    BamfWindow* window = bamf_matcher_get_active_window(_matcher);
+    if (!WindowManager::Default()->IsWindowOnCurrentDesktop(window_xid) ||
+        WindowManager::Default()->IsWindowObscured(window_xid))
+    {
+      return g_strdup("");
+    }
 
-    if (BAMF_IS_WINDOW(window))
+    if (_is_maximized)
       label = bamf_view_get_name(BAMF_VIEW(window));
   }
 
