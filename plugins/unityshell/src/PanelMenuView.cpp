@@ -416,14 +416,14 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   nux::ColorLayer layer(nux::Color(0x00000000), true, rop);
   nux::GetPainter().PushDrawLayer(GfxContext, GetGeometry(), &layer);
 
-  if (_title_layer && !_is_own_window && _we_control_active)
+  if (_title_layer && !_is_own_window)
   {
     guint blend_alpha = 0, blend_src = 0, blend_dest = 0;
     bool draw_faded_title = false;
 
     GfxContext.GetRenderStates().GetBlend(blend_alpha, blend_src, blend_dest);
 
-    if (!DrawWindowButtons() &&
+    if (!DrawWindowButtons() && _we_control_active &&
         (DrawMenus() || (GetOpacity() > 0.0f && _window_buttons->GetOpacity() == 0.0f)))
     {
       for (auto entry : entries_)
@@ -554,7 +554,7 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
                           _title_layer->GetDeviceTexture(), texxform,
                           nux::color::White * title_opacity);
     }
-    else if (_window_buttons->GetOpacity() == 0.0f)
+    else if (_window_buttons->GetOpacity() == 0.0f && _we_control_active)
     {
       nux::GetPainter().PushDrawLayer(GfxContext, geo, _title_layer);
     }
