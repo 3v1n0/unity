@@ -611,7 +611,6 @@ PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   if (_window_buttons->GetOpacity() != 0 && !draw_buttons)
   {
     _window_buttons->ProcessDraw(GfxContext, force_draw);
-
     _fade_in_animator->Stop();
 
     /* If we try to hide only the buttons, then use a faster fadeout */
@@ -871,7 +870,7 @@ PanelMenuView::OnActiveChanged(PanelIndicatorEntryView* view,
 void
 PanelMenuView::OnEntryAdded(unity::indicator::Entry::Ptr const& entry)
 {
-  auto view = AddEntry(entry, 6, IndicatorEntryPosition::END);
+  auto view = AddEntry(entry, 6, IndicatorEntryPosition::END, IndicatorEntryType::MENU);
 
   entry->show_now_changed.connect(sigc::mem_fun(this, &PanelMenuView::UpdateShowNow));
 
