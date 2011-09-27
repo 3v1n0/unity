@@ -57,6 +57,7 @@ public:
   nux::Property<std::string> search_string;
   nux::Property<bool> filters_expanded;
   nux::Property<bool> active;
+  nux::Property<bool> can_refine_search;
 
   sigc::signal<void, std::string const&> uri_activated;
 

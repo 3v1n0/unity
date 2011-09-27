@@ -43,6 +43,7 @@ LensView::LensView()
   : nux::View(NUX_TRACKER_LOCATION)
   , search_string("")
   , filters_expanded(false)
+  , can_refine_search(false)
   , fix_renderering_id_(0)
 {}
 
@@ -50,6 +51,7 @@ LensView::LensView(Lens::Ptr lens)
   : nux::View(NUX_TRACKER_LOCATION)
   , search_string("")
   , filters_expanded(false)
+  , can_refine_search(false)
   , lens_(lens)
   , initial_activation_(true)
   , fix_renderering_id_(0)
@@ -266,6 +268,8 @@ void LensView::OnFilterAdded(Filter::Ptr filter)
   int width = PlacesStyle::GetDefault()->GetTileWidth();
   fscroll_view_->SetMinimumWidth(width*2);
   fscroll_view_->SetMaximumWidth(width*2);
+
+  can_refine_search = true;
 }
 
 void LensView::OnFilterRemoved(Filter::Ptr filter)
