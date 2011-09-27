@@ -44,11 +44,9 @@ PanelController::PanelController()
 
 PanelController::~PanelController()
 {
-  std::vector<nux::BaseWindow*>::iterator it, eit = _windows.end();
-
-  for (it = _windows.begin(); it != eit; ++it)
+  for (auto win : _windows)
   {
-    (*it)->UnReference();
+    win->UnReference();
   }
 }
 
@@ -63,12 +61,9 @@ unsigned int PanelController::GetTrayXid ()
 void
 PanelController::StartFirstMenuShow()
 {
-  std::vector<nux::BaseWindow*>::iterator it, eit = _windows.end();
-
-  for (it = _windows.begin(); it != eit; ++it)
+  for (auto win : _windows)
   {
-    PanelView* view = ViewForWindow(*it);
-
+    PanelView* view = ViewForWindow(win);
     view->StartFirstMenuShow();
   }
 
@@ -78,15 +73,13 @@ PanelController::StartFirstMenuShow()
 void
 PanelController::EndFirstMenuShow()
 {
-  std::vector<nux::BaseWindow*>::iterator it, eit = _windows.end();
-
   if (!_open_menu_start_received)
     return;
   _open_menu_start_received = false;
 
-  for (it = _windows.begin(); it != eit; ++it)
+  for (auto win : _windows)
   {
-    PanelView* view = ViewForWindow(*it);
+    PanelView* view = ViewForWindow(win);
     view->EndFirstMenuShow();
   }
 }
@@ -94,22 +87,27 @@ PanelController::EndFirstMenuShow()
 void
 PanelController::SetOpacity(float opacity)
 {
-  std::vector<nux::BaseWindow*>::iterator it, eit = _windows.end();
-
-  _opacity = opacity;
-
-  for (it = _windows.begin(); it != eit; ++it)
+  for (auto win : _windows)
   {
-    ViewForWindow(*it)->SetOpacity(_opacity);
+    ViewForWindow(win)->SetOpacity(_opacity);
+  }
+  _opacity = opacity;
+}
+
+void
+PanelController::SetOpacityMaximizedToggle(bool enabled)
+{
+  for (auto win : _windows)
+  {
+    ViewForWindow(win)->SetOpacityMaximizedToggle(enabled);
   }
 }
 
 void PanelController::QueueRedraw()
 {
-  std::vector<nux::BaseWindow*>::iterator it, eit = _windows.end();
-  for (it = _windows.begin(); it != eit; ++it)
+  for (auto win : _windows)
   {
-    (*it)->QueueDraw();
+    win->QueueDraw();
   }
 }
 

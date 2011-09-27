@@ -56,6 +56,7 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
   :   View(NUX_FILE_LINE_PARAM),
       _is_dirty(true),
       _opacity(1.0f),
+      _opacity_maximized_toggle(false),
       _is_primary(false),
       _monitor(0),
       _dash_is_open(false)
@@ -94,6 +95,16 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
   _remote->on_entry_activated.connect(sigc::mem_fun(this, &PanelView::OnEntryActivated));
   _remote->on_synced.connect(sigc::mem_fun(this, &PanelView::OnSynced));
   _remote->on_entry_show_menu.connect(sigc::mem_fun(this, &PanelView::OnEntryShowMenu));
+
+  auto win_manager = WindowManager::Default();
+  auto redraw_lambda = [&](guint32) { ForceUpdateBackground(); };
+  win_manager->window_minimized.connect(redraw_lambda);
+  win_manager->window_unminimized.connect(redraw_lambda);
+  win_manager->window_maximized.connect(redraw_lambda);
+  win_manager->window_restored.connect(redraw_lambda);
+  win_manager->window_mapped.connect(redraw_lambda);
+  win_manager->window_unmapped.connect(redraw_lambda);
+  win_manager->compiz_screen_viewport_switch_ended.connect(sigc::mem_fun(this, &PanelView::ForceUpdateBackground));
 
    UBusServer *ubus = ubus_server_get_default();
 
@@ -379,7 +390,15 @@ PanelView::UpdateBackground()
   }
   else
   {
-    nux::NBitmapData* bitmap = _style->GetBackground(geo.width, geo.height, _opacity);
+    double opacity = _opacity;
+    guint32 maximized = _menu_view->GetMaximizedWindow();
+    if (_opacity_maximized_toggle && maximized != 0 &&
+        !WindowManager::Default()->IsWindowObscured(maximized))
+    {
+      opacity = 1.0f;
+    }
+
+    nux::NBitmapData* bitmap = _style->GetBackground(geo.width, geo.height, opacity);
     nux::BaseTexture* texture2D = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
     texture2D->Update(bitmap);
     delete bitmap;
@@ -599,6 +618,16 @@ PanelView::SetOpacity(float opacity)
     bg_effect_helper_.enabled = false;
 
   ForceUpdateBackground();
+}
+
+void
+PanelView::SetOpacityMaximizedToggle(bool enabled)
+{
+  if (_opacity_maximized_toggle != enabled)
+  {
+    _opacity_maximized_toggle = enabled;
+    ForceUpdateBackground();
+  }
 }
 
 bool

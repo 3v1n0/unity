@@ -35,6 +35,7 @@ public:
   void StartFirstMenuShow();
   void EndFirstMenuShow();
   void SetOpacity(float opacity);
+  void SetOpacityMaximizedToggle(bool enabled);
   void QueueRedraw();
 
   unsigned int GetTrayXid ();

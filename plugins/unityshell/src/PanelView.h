@@ -72,6 +72,7 @@ public:
   void EndFirstMenuShow();
 
   void SetOpacity(float opacity);
+  void SetOpacityMaximizedToggle(bool enabled);
   
   void TrackMenuPointer();
 
@@ -113,6 +114,7 @@ private:
   nux::Color  _bg_color;
   bool        _is_dirty;
   float       _opacity;
+  bool        _opacity_maximized_toggle;
   bool        _needs_geo_sync;
   bool        _is_primary;
   int         _monitor;
