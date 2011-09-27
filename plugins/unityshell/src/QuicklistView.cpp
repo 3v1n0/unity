@@ -181,6 +181,8 @@ QuicklistView::RecvKeyPressed(unsigned long    eventType,
         while (IsMenuItemSeperator(_current_item_index))
           _current_item_index--;
 
+        selection_change.emit();
+
         GetNthItems(_current_item_index)->_prelight = true;
         QueueDraw();
       }
@@ -201,6 +203,8 @@ QuicklistView::RecvKeyPressed(unsigned long    eventType,
         while (IsMenuItemSeperator(_current_item_index))
           _current_item_index++;
 
+        selection_change.emit();
+
         GetNthItems(_current_item_index)->_prelight = true;
         QueueDraw();
       }
@@ -210,6 +214,7 @@ QuicklistView::RecvKeyPressed(unsigned long    eventType,
     case NUX_VK_LEFT:
     case NUX_KP_LEFT:
       _current_item_index = 0;
+      selection_change.emit();
       GetNthItems(_current_item_index)->_prelight = true;
       Hide();
       // inform Launcher we switch back to Launcher key-nav
@@ -221,12 +226,14 @@ QuicklistView::RecvKeyPressed(unsigned long    eventType,
       // esc (close quicklist, exit key-nav)
     case NUX_VK_ESCAPE:
       _current_item_index = 0;
+      selection_change.emit();
       GetNthItems(_current_item_index)->_prelight = true;
       Hide();
       // inform UnityScreen we leave key-nav completely
       ubus_server_send_message(ubus_server_get_default(),
                                UBUS_LAUNCHER_END_KEY_NAV,
                                NULL);
+      selection_change.emit();
       break;
 
       // <SPACE>, <RETURN> (activate selected menu-item)
@@ -242,6 +249,7 @@ QuicklistView::RecvKeyPressed(unsigned long    eventType,
                                        NULL,
                                        0);
         _current_item_index = 0;
+        selection_change.emit();
         GetNthItems(_current_item_index)->_prelight = true;
         Hide();
       }
@@ -1564,3 +1572,8 @@ QuicklistView::InspectKeyEvent(unsigned int eventType,
   return true;
 }
 
+QuicklistMenuItem*
+QuicklistView::GetSelectedMenuItem()
+{
+  return GetNthItems(_current_item_index);
+}
