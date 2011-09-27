@@ -578,15 +578,15 @@ PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   if (draw_menus)
   {
-    _menu_layout->ProcessDraw(GfxContext, force_draw);
+    _menu_layout->ProcessDraw(GfxContext, true);
 
     _fade_out_animator->Stop();
     _fade_in_animator->Start(GetOpacity());
   }
 
-  if (GetOpacity() != 0 && !draw_menus)
+  if (GetOpacity() != 0.0f && !draw_menus)
   {
-    _menu_layout->ProcessDraw(GfxContext, force_draw);
+    _menu_layout->ProcessDraw(GfxContext, true);
 
     _fade_in_animator->Stop();
 
@@ -602,15 +602,15 @@ PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   if (draw_buttons)
   {
-    _window_buttons->ProcessDraw(GfxContext, force_draw);
+    _window_buttons->ProcessDraw(GfxContext, true);
 
     _fade_out_animator->Stop();
     _fade_in_animator->Start(_window_buttons->GetOpacity());
   }
 
-  if (_window_buttons->GetOpacity() != 0 && !draw_buttons)
+  if (_window_buttons->GetOpacity() != 0.0f && !draw_buttons)
   {
-    _window_buttons->ProcessDraw(GfxContext, force_draw);
+    _window_buttons->ProcessDraw(GfxContext, true);
     _fade_in_animator->Stop();
 
     /* If we try to hide only the buttons, then use a faster fadeout */
