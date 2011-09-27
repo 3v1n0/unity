@@ -459,10 +459,7 @@ void PanelIndicatorEntryView::DashHidden()
 
 void PanelIndicatorEntryView::SetOpacity(double opacity)
 {
-  if (opacity < 0.0f)
-    opacity = 0.0f;
-  else if (opacity > 1.0f)
-    opacity = 1.0f;
+  opacity = CLAMP(opacity, 0.0f, 1.0f);
 
   if (opacity_ != opacity)
   {

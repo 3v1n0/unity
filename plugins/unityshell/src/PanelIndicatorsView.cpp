@@ -327,10 +327,7 @@ PanelIndicatorsView::GetOpacity()
 void
 PanelIndicatorsView::SetOpacity(double opacity)
 {
-  if (opacity > 1.0f)
-    opacity = 1.0f;
-  else if (opacity < 0.0f)
-    opacity = 0.0f;
+  opacity = CLAMP(opacity, 0.0f, 1.0f);
 
   for (auto entry: entries_)
     entry.second->SetOpacity(opacity);

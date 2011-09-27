@@ -382,10 +382,7 @@ WindowButtons::FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEven
 void
 WindowButtons::SetOpacity(double opacity)
 {
-  if (opacity < 0.0f)
-    opacity = 0.0f;
-  else if (opacity > 1.0f)
-    opacity = 1.0f;
+  opacity = CLAMP(opacity, 0.0f, 1.0f);
 
   for (auto area : GetChildren())
   {
