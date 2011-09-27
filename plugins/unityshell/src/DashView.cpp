@@ -318,19 +318,6 @@ void DashView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
                             nux::color::White);
       }
       {
-        // Bottom left corner
-        texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-        texxform.SetWrap(nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
-
-        gfx_context.QRP_1Tex(geo.x - left_corner_offset,
-                            geo.y + (geo.height - left_corner->GetHeight()),
-                            left_corner->GetWidth(),
-                            left_corner->GetHeight(),
-                            left_corner->GetDeviceTexture(),
-                            texxform,
-                            nux::color::White);
-      }
-      {
         // Right edge
         texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
         texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
@@ -527,7 +514,16 @@ void DashView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
                                      rop);
   bgs++;
 
-  layout_->ProcessDraw(gfx_context, force_draw);
+  if (IsFullRedraw())
+  {
+    nux::GetPainter().PushBackgroundStack();
+    layout_->ProcessDraw(gfx_context, force_draw);
+    nux::GetPainter().PopBackgroundStack();
+  }
+  else
+  {
+    layout_->ProcessDraw(gfx_context, force_draw);
+  }
 
   nux::GetPainter().PopBackground(bgs);
 
