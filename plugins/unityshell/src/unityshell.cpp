@@ -1059,6 +1059,13 @@ void UnityScreen::handleCompizEvent(const char* plugin,
 {
   PluginAdapter::Default()->NotifyCompizEvent(plugin, event, option);
   compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>::handleCompizEvent (plugin, event, option);
+
+  if (dash_is_open_ && 
+      strcmp(event, "start_viewport_switch") == 0)
+  {
+    ubus_server_send_message(ubus_server_get_default(), UBUS_PLACE_VIEW_CLOSE_REQUEST, NULL);
+  }
+
   screen->handleCompizEvent(plugin, event, option);
 }
 
