@@ -48,9 +48,12 @@ public:
     END = nux::NUX_LAYOUT_END,
   } IndicatorEntryPosition;
 
+  typedef PanelIndicatorEntryView::IndicatorEntryType IndicatorEntryType;
+
   PanelIndicatorEntryView* AddEntry(indicator::Entry::Ptr const& entry,
-                                    int padding = -1,
-                                    IndicatorEntryPosition pos = AUTO);
+                                    int padding = 5,
+                                    IndicatorEntryPosition pos = AUTO,
+                                    IndicatorEntryType type = IndicatorEntryType::INDICATOR);
   void RemoveEntry(std::string const& entry_id);
 
   bool OnPointerMoved(int x, int y);

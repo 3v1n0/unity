@@ -224,18 +224,14 @@ PanelIndicatorsView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_dra
 }
 
 PanelIndicatorEntryView *
-PanelIndicatorsView::AddEntry(indicator::Entry::Ptr const& entry, int padding, IndicatorEntryPosition pos)
+PanelIndicatorsView::AddEntry(indicator::Entry::Ptr const& entry, int padding,
+                              IndicatorEntryPosition pos, IndicatorEntryType type)
 {
-  PanelIndicatorEntryView *view;
+  auto view = new PanelIndicatorEntryView(entry, padding, type);
   int entry_pos = pos;
 
-  if (padding > -1)
-    view = new PanelIndicatorEntryView(entry, padding);
-  else
-    view = new PanelIndicatorEntryView(entry);
-
-  view->refreshed.connect(sigc::mem_fun(this, &PanelIndicatorsView::OnEntryRefreshed));
   view->SetOpacity(opacity_);
+  view->refreshed.connect(sigc::mem_fun(this, &PanelIndicatorsView::OnEntryRefreshed));
 
   if (entry_pos == IndicatorEntryPosition::AUTO)
   {
