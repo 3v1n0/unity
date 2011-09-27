@@ -96,16 +96,6 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
   _remote->on_synced.connect(sigc::mem_fun(this, &PanelView::OnSynced));
   _remote->on_entry_show_menu.connect(sigc::mem_fun(this, &PanelView::OnEntryShowMenu));
 
-  auto win_manager = WindowManager::Default();
-  auto redraw_lambda = [&](guint32) { ForceUpdateBackground(); };
-  win_manager->window_minimized.connect(redraw_lambda);
-  win_manager->window_unminimized.connect(redraw_lambda);
-  win_manager->window_maximized.connect(redraw_lambda);
-  win_manager->window_restored.connect(redraw_lambda);
-  win_manager->window_mapped.connect(redraw_lambda);
-  win_manager->window_unmapped.connect(redraw_lambda);
-  win_manager->compiz_screen_viewport_switch_ended.connect(sigc::mem_fun(this, &PanelView::ForceUpdateBackground));
-
    UBusServer *ubus = ubus_server_get_default();
 
    _handle_bg_color_update = ubus_server_register_interest(ubus, UBUS_BACKGROUND_COLOR_CHANGED,
@@ -152,7 +142,12 @@ PanelView::~PanelView()
   ubus_server_unregister_interest(ubus, _handle_bg_color_update);
   ubus_server_unregister_interest(ubus, _handle_dash_hidden);
   ubus_server_unregister_interest(ubus, _handle_dash_shown);
-  _on_indicator_updated_connections.clear();
+
+  for (auto conn : _on_indicator_updated_connections)
+    conn.disconnect();
+
+  for (auto conn : _maximized_opacity_toggle_connections)
+    conn.disconnect();
 
   delete _bg_layer;
 }
@@ -625,6 +620,29 @@ PanelView::SetOpacityMaximizedToggle(bool enabled)
 {
   if (_opacity_maximized_toggle != enabled)
   {
+    if (enabled)
+    {
+      auto win_manager = WindowManager::Default();
+      auto update_bg_lambda = [&](guint32) { ForceUpdateBackground(); };
+      auto conn = &_maximized_opacity_toggle_connections;
+
+      conn->push_back(win_manager->window_minimized.connect(update_bg_lambda));
+      conn->push_back(win_manager->window_unminimized.connect(update_bg_lambda));
+      conn->push_back(win_manager->window_maximized.connect(update_bg_lambda));
+      conn->push_back(win_manager->window_restored.connect(update_bg_lambda));
+      conn->push_back(win_manager->window_mapped.connect(update_bg_lambda));
+      conn->push_back(win_manager->window_unmapped.connect(update_bg_lambda));
+      conn->push_back(win_manager->compiz_screen_viewport_switch_ended.connect(
+        sigc::mem_fun(this, &PanelView::ForceUpdateBackground)));
+    }
+    else
+    {
+      for (auto conn : _maximized_opacity_toggle_connections)
+        conn.disconnect();
+
+      _maximized_opacity_toggle_connections.clear();
+    }
+
     _opacity_maximized_toggle = enabled;
     ForceUpdateBackground();
   }

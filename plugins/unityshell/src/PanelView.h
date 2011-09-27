@@ -73,7 +73,7 @@ public:
 
   void SetOpacity(float opacity);
   void SetOpacityMaximizedToggle(bool enabled);
-  
+
   void TrackMenuPointer();
 
   unsigned int GetTrayXid ();
@@ -127,6 +127,7 @@ private:
   nux::Point  _tracked_pointer_pos;
 
   std::vector<sigc::connection> _on_indicator_updated_connections;
+  std::vector<sigc::connection> _maximized_opacity_toggle_connections;
   BackgroundEffectHelper bg_effect_helper_;
   nux::ObjectPtr <nux::IOpenGLBaseTexture> bg_blur_texture_;
 };
