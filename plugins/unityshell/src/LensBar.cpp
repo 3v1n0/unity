@@ -124,11 +124,13 @@ void LensBar::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
 {
   gfx_context.PushClippingRectangle(GetGeometry());
   
-  nux::GetPainter().PushLayer(gfx_context, bg_layer_->GetGeometry(), bg_layer_);
+  if (!IsFullRedraw())
+    nux::GetPainter().PushLayer(gfx_context, bg_layer_->GetGeometry(), bg_layer_);
   
   layout_->ProcessDraw(gfx_context, force_draw);
 
-  nux::GetPainter().PopBackground();
+  if (!IsFullRedraw())
+    nux::GetPainter().PopBackground();
 
   for (auto icon: icons_)
     if (icon->active)
