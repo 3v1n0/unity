@@ -116,7 +116,7 @@ Animator::TimerTimeOut(Animator *self)
   if (current_time < end_time && self->_progress < 1.0f)
   {
     const double diff_time = current_time - self->_start_time;
-    self->_progress = self->_start_progress + (diff_time / self->_duration);
+    self->_progress = CLAMP(self->_start_progress + (diff_time / self->_duration), 0.0f, 1.0f);
     self->animation_updated.emit(self->_progress);
 
     return TRUE;
