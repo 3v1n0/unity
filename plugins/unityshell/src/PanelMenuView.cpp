@@ -1093,7 +1093,10 @@ PanelMenuView::OnCloseClicked()
 
     window = bamf_matcher_get_active_window(_matcher);
     if (BAMF_IS_WINDOW(window))
+    {
       WindowManager::Default()->Close(bamf_window_get_xid(window));
+      NeedRedraw();
+    }
   }
 }
 
@@ -1111,7 +1114,10 @@ PanelMenuView::OnMinimizeClicked()
 
     window = bamf_matcher_get_active_window(_matcher);
     if (BAMF_IS_WINDOW(window))
+    {
       WindowManager::Default()->Minimize(bamf_window_get_xid(window));
+      NeedRedraw();
+    }
   }
 }
 
@@ -1131,7 +1137,10 @@ PanelMenuView::OnRestoreClicked()
 
     window = bamf_matcher_get_active_window(_matcher);
     if (BAMF_IS_WINDOW(window))
+    {
       WindowManager::Default()->Restore(bamf_window_get_xid(window));
+      NeedRedraw();
+    }
   }
 }
 
@@ -1279,6 +1288,7 @@ void PanelMenuView::AddProperties(GVariantBuilder* builder)
  * C code for callbacks
  */
 static void
+
 on_active_window_changed(BamfMatcher*   matcher,
                          BamfView*      old_view,
                          BamfView*      new_view,
