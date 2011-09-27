@@ -121,7 +121,8 @@ LensView::LensView(Lens::Ptr lens)
         if (child->HasKeyFocus())
         {
           focused_pos.x += child->GetGeometry().x;
-          focused_pos.y += child->GetGeometry().y;
+          focused_pos.y += child->GetGeometry().y - 30;
+          focused_pos.height += 30;
           static_cast<LensScrollView *>(scroll_view_)->ScrollToPosition(focused_pos);
           break;
         }
