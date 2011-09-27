@@ -167,6 +167,7 @@ PanelMenuView::PanelMenuView(int padding)
   _window_buttons->SetOpacity(0.0f);
 
   Refresh();
+  FullRedraw();
 }
 
 PanelMenuView::~PanelMenuView()
