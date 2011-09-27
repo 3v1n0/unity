@@ -165,28 +165,40 @@ void LensView::OnCategoryAdded(Category const& category)
 
 void LensView::OnResultAdded(Result const& result)
 {
-  PlacesGroup* group = categories_[result.category_index];
-  ResultViewGrid* grid = static_cast<ResultViewGrid*>(group->GetChildView());
+  try {
+    PlacesGroup* group = categories_.at(result.category_index);
+    ResultViewGrid* grid = static_cast<ResultViewGrid*>(group->GetChildView());
 
-  std::string uri = result.uri;
-  LOG_TRACE(logger) << "Result added: " << uri;
+    std::string uri = result.uri;
+    LOG_TRACE(logger) << "Result added: " << uri;
 
-  grid->AddResult(const_cast<Result&>(result));
-  counts_[group]++;
-  UpdateCounts(group);
+    grid->AddResult(const_cast<Result&>(result));
+    counts_[group]++;
+    UpdateCounts(group);
+  } catch (std::out_of_range& oor) {
+    LOG_WARN(logger) << "Result does not have a valid category index: "
+                     << boost::lexical_cast<unsigned int>(result.category_index)
+                     << ". Is out of range.";
+  }
 }
 
 void LensView::OnResultRemoved(Result const& result)
 {
-  PlacesGroup* group = categories_[result.category_index];
-  ResultViewGrid* grid = static_cast<ResultViewGrid*>(group->GetChildView());
+  try {
+    PlacesGroup* group = categories_.at(result.category_index);
+    ResultViewGrid* grid = static_cast<ResultViewGrid*>(group->GetChildView());
 
-  std::string uri = result.uri;
-  LOG_TRACE(logger) << "Result removed: " << uri;
+    std::string uri = result.uri;
+    LOG_TRACE(logger) << "Result removed: " << uri;
 
-  grid->RemoveResult(const_cast<Result&>(result));
-  counts_[group]--;
-  UpdateCounts(group);
+    grid->RemoveResult(const_cast<Result&>(result));
+    counts_[group]--;
+    UpdateCounts(group);
+  } catch (std::out_of_range& oor) {
+    LOG_WARN(logger) << "Result does not have a valid category index: "
+                     << boost::lexical_cast<unsigned int>(result.category_index)
+                     << ". Is out of range.";
+  }
 }
 
 void LensView::UpdateCounts(PlacesGroup* group)
