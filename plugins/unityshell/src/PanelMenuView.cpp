@@ -580,10 +580,18 @@ PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   if (draw_menus)
   {
+    for (auto entry : entries_)
+      entry.second->SetDisabled(false);
+
     _menu_layout->ProcessDraw(GfxContext, true);
 
     _fade_out_animator->Stop();
     _fade_in_animator->Start(GetOpacity());
+  }
+  else
+  {
+    for (auto entry : entries_)
+      entry.second->SetDisabled(true);
   }
 
   if (GetOpacity() != 0.0f && !draw_menus)
