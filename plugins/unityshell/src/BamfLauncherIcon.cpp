@@ -172,6 +172,7 @@ BamfLauncherIcon::BamfLauncherIcon(Launcher* IconManager, BamfApplication* app)
   UpdateDesktopFile();
 
   WindowManager::Default()->window_minimized.connect(sigc::mem_fun(this, &BamfLauncherIcon::OnWindowMinimized));
+  WindowManager::Default()->window_moved.connect(sigc::mem_fun(this, &BamfLauncherIcon::OnWindowMoved));
   WindowManager::Default()->compiz_screen_viewport_switch_ended.connect(sigc::mem_fun(this, &BamfLauncherIcon::OnViewPortSwitchEnded));
   WindowManager::Default()->terminate_expo.connect(sigc::mem_fun(this, &BamfLauncherIcon::OnViewPortSwitchEnded));
   IconManager->hidden_changed.connect(sigc::mem_fun(this, &BamfLauncherIcon::OnLauncherHiddenChanged));
@@ -300,6 +301,15 @@ void BamfLauncherIcon::OnWindowMinimized(guint32 xid)
 
   Present(0.5f, 600);
   UpdateQuirkTimeDelayed(300, QUIRK_SHIMMER);
+}
+
+void BamfLauncherIcon::OnWindowMoved(guint32 xid)
+{
+  if (!OwnsWindow(xid))
+    return;
+
+  bool on_viewport = WindowManager::Default()->IsWindowOnCurrentDesktop(xid);
+  SetHasWindowOnViewport(on_viewport);
 }
 
 void BamfLauncherIcon::OnViewPortSwitchEnded()

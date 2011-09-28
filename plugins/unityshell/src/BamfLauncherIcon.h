@@ -111,6 +111,7 @@ private:
   void EnsureMenuItemsReady();
 
   void OnWindowMinimized(guint32 xid);
+  void OnWindowMoved(guint32 xid);
   void OnViewPortSwitchEnded();
   bool OwnsWindow(Window w);
   
