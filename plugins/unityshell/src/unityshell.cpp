@@ -2386,6 +2386,12 @@ UnityWindow::UnityWindow(CompWindow* window)
 
   if (window->state () & CompWindowStateFullscreenMask)
     UnityScreen::get (screen)->fullscreen_windows_.push_back(window);
+  
+  if (window->resName() == "onboard")
+  {
+    Window xid = UnityScreen::get (screen)->dashController->window()->GetInputWindowId();
+    XSetTransientForHint (screen->dpy(), window->id(), xid);
+  }
 }
 
 UnityWindow::~UnityWindow()
