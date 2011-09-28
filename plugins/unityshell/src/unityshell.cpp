@@ -398,7 +398,6 @@ void UnityScreen::EnsureSuperKeybindings()
       continue;
     CreateSuperNewAction(static_cast<char>(shortcut));
     CreateSuperNewAction(static_cast<char>(shortcut), true);
-    CreateSuperNewAction(static_cast<char>(shortcut), true, true);
     CreateSuperNewAction(static_cast<char>(shortcut), false, true);
   }
 
@@ -413,7 +412,7 @@ void UnityScreen::CreateSuperNewAction(char shortcut, bool use_shift, bool use_n
     CompAction::KeyBinding binding;
     std::ostringstream sout;
     if (use_shift)
-      sout << "<Shift><Super>" << ((use_numpad) ? "KP_" : "") << shortcut;
+      sout << "<Shift><Super>"  << shortcut;
     else
       sout << "<Super>" << ((use_numpad) ? "KP_" : "") << shortcut;
 
