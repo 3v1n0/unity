@@ -393,10 +393,11 @@ PluginAdapter::IsWindowDecorated(guint32 xid)
 
   hints_atom = XInternAtom(display, _XA_MOTIF_WM_HINTS, false);
 
-  XGetWindowProperty(display, win, hints_atom, 0,
-                     sizeof(MotifWmHints) / sizeof(long), False,
-                     hints_atom, &type, &format, &nitems, &bytes_after,
-                     (guchar**)&hints);
+  if (XGetWindowProperty(display, win, hints_atom, 0,
+                         sizeof(MotifWmHints) / sizeof(long), False,
+                         hints_atom, &type, &format, &nitems, &bytes_after,
+                         (guchar**)&hints) != Success)
+    return false;
 
   if (!hints)
     return ret;
