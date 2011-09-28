@@ -889,5 +889,59 @@ void DashView::ProcessDndEnter()
   ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
 }
 
+Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
+      unsigned long x11_key_code,
+      unsigned long special_keys_state)
+{
+  // Do what nux::View does, but if the event isn't a key navigation,
+  // designate the text entry to process it.
+
+  nux::KeyNavDirection direction = KEY_NAV_NONE;
+  switch (x11_key_code)
+  {
+  case NUX_VK_UP:
+    direction = KEY_NAV_UP;
+    break;
+  case NUX_VK_DOWN:
+    direction = KEY_NAV_DOWN;
+    break;
+  case NUX_VK_LEFT:
+    direction = KEY_NAV_LEFT;
+    break;
+  case NUX_VK_RIGHT:
+    direction = KEY_NAV_RIGHT;
+    break;
+  case NUX_VK_LEFT_TAB:
+    direction = KEY_NAV_TAB_PREVIOUS;
+    break;
+  case NUX_VK_TAB:
+    direction = KEY_NAV_TAB_NEXT;
+    break;
+  case NUX_VK_ENTER:
+  case NUX_KP_ENTER:
+    // Not sure if Enter should be a navigation key
+    direction = KEY_NAV_ENTER;
+    break;
+  default:
+    direction = KEY_NAV_NONE;
+    break;
+  }
+
+  if (has_key_focus_)
+  {
+    return this;
+  }
+  else if (direction == KEY_NAV_NONE)
+  {
+    // then send the event to the search entry
+    return search_bar_->text_entry();
+  }
+  else if (next_object_to_key_focus_area_)
+  {
+    return next_object_to_key_focus_area_->FindKeyFocusArea(key_symbol, x11_key_code, special_keys_state);
+  }
+  return NULL;
+}
+
 }
 }
