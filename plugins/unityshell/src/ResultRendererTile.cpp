@@ -161,9 +161,6 @@ nux::BaseTexture* ResultRendererTile::DrawHighlight(std::string const& texid, in
   nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, width, height);
   cairo_t* cr = cairo_graphics.GetContext();
 
-  cairo_scale(cr, 1.0f, 1.0f);
-
-  cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 0.0);
   cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
   cairo_paint(cr);
 
@@ -305,9 +302,6 @@ nux::BaseTexture* ResultRendererTile::CreateTextureCallback(std::string const& t
     nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, width, height);
     cairo_t* cr = cairo_graphics.GetInternalContext();
 
-    cairo_scale(cr, 1.0f, 1.0f);
-
-    cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 0.0);
     cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
     cairo_paint(cr);
 
@@ -318,8 +312,8 @@ nux::BaseTexture* ResultRendererTile::CreateTextureCallback(std::string const& t
       scale = pixbuf_width / static_cast<float>(pixbuf_height);
 
     cairo_translate(cr,
-                    (width - (pixbuf_width * scale)) * 0.5,
-                    (height - (pixbuf_height * scale)) * 0.5);
+                    static_cast<int>((width - (pixbuf_width * scale)) * 0.5),
+                    static_cast<int>((height - (pixbuf_height * scale)) * 0.5));
 
     cairo_scale(cr, scale, scale);
 
@@ -344,9 +338,6 @@ nux::BaseTexture* ResultRendererTile::CreateBlurredTextureCallback(std::string c
   nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, width + 10, height + 10);
   cairo_t* cr = cairo_graphics.GetInternalContext();
 
-  cairo_scale(cr, 1.0f, 1.0f);
-
-  cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 0.0);
   cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
   cairo_translate(cr, 5, 5);
   cairo_paint(cr);
@@ -358,8 +349,8 @@ nux::BaseTexture* ResultRendererTile::CreateBlurredTextureCallback(std::string c
     scale = pixbuf_width / static_cast<float>(pixbuf_height);
 
   cairo_translate(cr,
-                  (width - (pixbuf_width * scale)) * 0.5,
-                  (height - (pixbuf_height * scale)) * 0.5);
+                  static_cast<int>((width - (pixbuf_width * scale)) * 0.5),
+                  static_cast<int>((height - (pixbuf_height * scale)) * 0.5));
 
   cairo_scale(cr, scale, scale);
 
