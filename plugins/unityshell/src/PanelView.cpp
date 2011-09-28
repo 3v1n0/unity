@@ -535,6 +535,8 @@ void PanelView::OnEntryActivated(std::string const& entry_id)
     _menu_view->AllMenusClosed();
     _tracked_pointer_pos = {-1, -1};
   }
+
+  ubus_server_send_message(ubus_server_get_default(), UBUS_PLACE_VIEW_CLOSE_REQUEST, NULL);
 }
 
 void PanelView::OnSynced()
