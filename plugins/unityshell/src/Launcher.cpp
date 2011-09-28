@@ -679,7 +679,7 @@ bool Launcher::IconNeedsAnimation(LauncherIcon* icon, struct timespec const& cur
     return true;
 
   time = icon->GetQuirkTime(LauncherIcon::QUIRK_DESAT);
-  if (unity::TimeUtil::TimeDelta(&current, &time) < ANIM_DURATION_LONG)
+  if (unity::TimeUtil::TimeDelta(&current, &time) < ANIM_DURATION_SHORT_SHORT)
     return true;
 
   time = icon->GetQuirkTime(LauncherIcon::QUIRK_DROP_PRELIGHT);
@@ -859,7 +859,7 @@ float Launcher::IconDesatValue(LauncherIcon* icon, struct timespec const& curren
 {
   struct timespec dim_time = icon->GetQuirkTime(LauncherIcon::QUIRK_DESAT);
   int ms = unity::TimeUtil::TimeDelta(&current, &dim_time);
-  float result = CLAMP((float) ms / (float) ANIM_DURATION_LONG, 0.0f, 1.0f);
+  float result = CLAMP((float) ms / (float) ANIM_DURATION_SHORT_SHORT, 0.0f, 1.0f);
 
   if (icon->GetQuirk(LauncherIcon::QUIRK_DESAT))
     return 1.0f - result;
