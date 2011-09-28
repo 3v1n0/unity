@@ -125,6 +125,7 @@ private:
 
 using unity::FontSettings;
 using unity::DashStyle;
+using unity::PanelStyle;
 using unity::PlacesStyle;
 using namespace unity::switcher;
 using namespace unity::dash;
@@ -272,6 +273,7 @@ private:
   static void OnLauncherEndKeyNav(GVariant* data, void* value);
 
   DashStyle               dash_style_;
+  PanelStyle              panel_style_;
   PlacesStyle             places_style_;
   FontSettings            font_settings_;
   Launcher*               launcher;

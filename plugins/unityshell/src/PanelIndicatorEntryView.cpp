@@ -73,7 +73,7 @@ PanelIndicatorEntryView::PanelIndicatorEntryView(
   InputArea::SetAcceptMouseWheelEvent(true);
   InputArea::mouse_wheel.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::OnMouseWheel));
 
-  on_panelstyle_changed_connection_ = PanelStyle::GetDefault()->changed.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::Refresh));
+  on_panelstyle_changed_connection_ = PanelStyle::Instance().changed.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::Refresh));
   Refresh();
 }
 
@@ -280,8 +280,7 @@ void PanelIndicatorEntryView::Refresh()
 
   if (pixbuf && proxy_->image_visible())
   {
-    PanelStyle* style = PanelStyle::GetDefault();
-    GtkStyleContext* style_context = style->GetStyleContext();
+    GtkStyleContext* style_context = PanelStyle::Instance().GetStyleContext();
 
     gtk_style_context_save(style_context);
 
@@ -339,8 +338,7 @@ void PanelIndicatorEntryView::Refresh()
   {
     pango_cairo_update_layout(cr, layout);
 
-    PanelStyle* style = PanelStyle::GetDefault();
-    GtkStyleContext* style_context = style->GetStyleContext();
+    GtkStyleContext* style_context = PanelStyle::Instance().GetStyleContext();
 
     gtk_style_context_save(style_context);
 
@@ -492,8 +490,7 @@ namespace
 
 void draw_menu_bg(cairo_t* cr, int width, int height)
 {
-  PanelStyle* style = PanelStyle::GetDefault();
-  GtkStyleContext* style_context = style->GetStyleContext();
+  GtkStyleContext* style_context = PanelStyle::Instance().GetStyleContext();
 
   gtk_style_context_save(style_context);
 

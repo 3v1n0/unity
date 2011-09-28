@@ -61,7 +61,7 @@ public:
   {
     LoadImages();
     UpdateDashUnmaximize();
-    PanelStyle::GetDefault()->changed.connect(sigc::mem_fun(this, &WindowButton::LoadImages));
+    PanelStyle::Instance().changed.connect(sigc::mem_fun(this, &WindowButton::LoadImages));
     DashSettings::GetDefault()->changed.connect(sigc::mem_fun(this, &WindowButton::UpdateDashUnmaximize));
 
     UBusServer* ubus = ubus_server_get_default();
@@ -144,7 +144,7 @@ public:
 
   void LoadImages()
   {
-    PanelStyle* style = PanelStyle::GetDefault();
+    PanelStyle& style = PanelStyle::Instance();
 
     if (_normal_tex)
       _normal_tex->UnReference();
@@ -159,12 +159,12 @@ public:
     if (_pressed_dash_tex)
       _pressed_dash_tex->UnReference();
 
-    _normal_tex = style->GetWindowButton(_type, PanelStyle::WINDOW_STATE_NORMAL);
-    _prelight_tex = style->GetWindowButton(_type, PanelStyle::WINDOW_STATE_PRELIGHT);
-    _pressed_tex = style->GetWindowButton(_type, PanelStyle::WINDOW_STATE_PRESSED);
-    _normal_dash_tex = GetDashWindowButton(_type, PanelStyle::WINDOW_STATE_NORMAL);
-    _prelight_dash_tex = GetDashWindowButton(_type, PanelStyle::WINDOW_STATE_PRELIGHT);
-    _pressed_dash_tex = GetDashWindowButton(_type, PanelStyle::WINDOW_STATE_PRESSED);
+    _normal_tex = style.GetWindowButton(_type, PanelStyle::WindowState::NORMAL);
+    _prelight_tex = style.GetWindowButton(_type, PanelStyle::WindowState::PRELIGHT);
+    _pressed_tex = style.GetWindowButton(_type, PanelStyle::WindowState::PRESSED);
+    _normal_dash_tex = GetDashWindowButton(_type, PanelStyle::WindowState::NORMAL);
+    _prelight_dash_tex = GetDashWindowButton(_type, PanelStyle::WindowState::PRELIGHT);
+    _pressed_dash_tex = GetDashWindowButton(_type, PanelStyle::WindowState::PRESSED);
 
     if (_dash_is_open)
     {
@@ -183,7 +183,7 @@ public:
   void UpdateDashUnmaximize()
   {
     // only update the unmaximize button
-    if (_type != PanelStyle::WINDOW_BUTTON_UNMAXIMIZE)
+    if (_type != PanelStyle::WindowButtonType::UNMAXIMIZE)
       return;
 
     if (_normal_dash_tex)
@@ -196,16 +196,16 @@ public:
     if (DashSettings::GetDefault()->GetFormFactor() == DashSettings::DESKTOP)
     {
       // get maximize buttons
-      _normal_dash_tex = GetDashMaximizeWindowButton(PanelStyle::WINDOW_STATE_NORMAL);
-      _prelight_dash_tex = GetDashMaximizeWindowButton(PanelStyle::WINDOW_STATE_PRELIGHT);
-      _pressed_dash_tex = GetDashMaximizeWindowButton(PanelStyle::WINDOW_STATE_PRESSED);
+      _normal_dash_tex = GetDashMaximizeWindowButton(PanelStyle::WindowState::NORMAL);
+      _prelight_dash_tex = GetDashMaximizeWindowButton(PanelStyle::WindowState::PRELIGHT);
+      _pressed_dash_tex = GetDashMaximizeWindowButton(PanelStyle::WindowState::PRESSED);
     }
     else
     {
       // get unmaximize buttons
-      _normal_dash_tex = GetDashWindowButton(_type, PanelStyle::WINDOW_STATE_NORMAL);
-      _prelight_dash_tex = GetDashWindowButton(_type, PanelStyle::WINDOW_STATE_PRELIGHT);
-      _pressed_dash_tex = GetDashWindowButton(_type, PanelStyle::WINDOW_STATE_PRESSED);
+      _normal_dash_tex = GetDashWindowButton(_type, PanelStyle::WindowState::NORMAL);
+      _prelight_dash_tex = GetDashWindowButton(_type, PanelStyle::WindowState::PRELIGHT);
+      _pressed_dash_tex = GetDashWindowButton(_type, PanelStyle::WindowState::PRESSED);
     }
 
     // still check if the dash is really opened,
@@ -261,7 +261,8 @@ private:
     const char* states[] = { "", "_prelight", "_pressed" };
 
     std::ostringstream subpath;
-    subpath << names[type] << states[state] << ".png";
+    subpath << names[static_cast<int>(type)]
+            << states[static_cast<int>(state)] << ".png";
 
     glib::String filename(g_build_filename(PKGDATADIR, subpath.str().c_str(), NULL));
 
@@ -277,7 +278,7 @@ private:
     const char* states[] = { "", "_prelight", "_pressed" };
 
     std::ostringstream subpath;
-    subpath << "maximize_dash" << states[state] << ".png";
+    subpath << "maximize_dash" << states[static_cast<int>(state)] << ".png";
 
     glib::String filename(g_build_filename(PKGDATADIR, subpath.str().c_str(), NULL));
 
@@ -310,21 +311,21 @@ WindowButtons::WindowButtons()
     mouse_move.emit(x, y, dx, dy, button_flags, key_flags);
   };
 
-  but = new WindowButton(PanelStyle::WINDOW_BUTTON_CLOSE);
+  but = new WindowButton(PanelStyle::WindowButtonType::CLOSE);
   AddView(but, 0, nux::eCenter, nux::eFix);
   but->activated.connect(sigc::mem_fun(this, &WindowButtons::OnCloseClicked));
   but->mouse_enter.connect(lambda_enter);
   but->mouse_leave.connect(lambda_leave);
   but->mouse_move.connect(lambda_moved);
 
-  but = new WindowButton(PanelStyle::WINDOW_BUTTON_MINIMIZE);
+  but = new WindowButton(PanelStyle::WindowButtonType::MINIMIZE);
   AddView(but, 0, nux::eCenter, nux::eFix);
   but->activated.connect(sigc::mem_fun(this, &WindowButtons::OnMinimizeClicked));
   but->mouse_enter.connect(lambda_enter);
   but->mouse_leave.connect(lambda_leave);
   but->mouse_move.connect(lambda_moved);
 
-  but = new WindowButton(PanelStyle::WINDOW_BUTTON_UNMAXIMIZE);
+  but = new WindowButton(PanelStyle::WindowButtonType::UNMAXIMIZE);
   AddView(but, 0, nux::eCenter, nux::eFix);
   but->activated.connect(sigc::mem_fun(this, &WindowButtons::OnRestoreClicked));
   but->mouse_enter.connect(lambda_enter);

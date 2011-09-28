@@ -25,6 +25,7 @@
 #include "NuxGraphics/GraphicsEngine.h"
 #include <gtk/gtk.h>
 
+#include "PanelStyle.h"
 #include "PanelView.h"
 #include <dbus/dbus-glib.h>
 
@@ -49,6 +50,9 @@ int main(int argc, char** argv)
   dbus_g_thread_init();
 
   nux::NuxInitialize(0);
+
+  // The instances for the pseudo-singletons.
+  unity::PanelStyle panel_style;
 
   nux::WindowThread* wt = nux::CreateGUIThread(TEXT("Unity Panel"), 1024, 24, 0, &ThreadWidgetInit, 0);
 

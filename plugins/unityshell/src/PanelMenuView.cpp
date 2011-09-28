@@ -132,7 +132,7 @@ PanelMenuView::PanelMenuView(int padding)
   win_manager->window_unmapped.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowUnmapped));
   win_manager->window_moved.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowMoved));
 
-  PanelStyle::GetDefault()->changed.connect(sigc::mem_fun(this, &PanelMenuView::Refresh));
+  PanelStyle::Instance().changed.connect(sigc::mem_fun(this, &PanelMenuView::Refresh));
 
   mouse_enter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
   mouse_leave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
@@ -613,8 +613,7 @@ PanelMenuView::Refresh()
 
   if (label)
   {
-    PanelStyle* style = PanelStyle::GetDefault();
-    GtkStyleContext* style_context = style->GetStyleContext();
+    GtkStyleContext* style_context = PanelStyle::Instance().GetStyleContext();
     text_space = width - x;
 
     gtk_style_context_save(style_context);

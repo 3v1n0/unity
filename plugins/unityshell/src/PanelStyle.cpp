@@ -173,7 +173,8 @@ PanelStyle::GetWindowButton(WindowButtonType type, WindowState state)
   const char* states[] = { "", "_focused_prelight", "_focused_pressed" };
 
   std::ostringstream subpath;
-  subpath << "unity/" << names[type] << states[state] << ".png";
+  subpath << "unity/" << names[static_cast<int>(type)]
+          << states[static_cast<int>(state)] << ".png";
 
   // Look in home directory
   const char* home_dir = g_get_home_dir();
@@ -232,14 +233,14 @@ PanelStyle::GetWindowButtonForTheme(WindowButtonType type, WindowState state)
   cairo_t* cr;
   nux::Color main = _text;
 
-  if (type == WINDOW_BUTTON_CLOSE)
+  if (type == WindowButtonType::CLOSE)
   {
     main = nux::Color(1.0f, 0.3f, 0.3f, 0.8f);
   }
 
-  if (state == WINDOW_STATE_PRELIGHT)
+  if (state == WindowState::PRELIGHT)
     main = main * 1.2f;
-  else if (state == WINDOW_STATE_PRESSED)
+  else if (state == WindowState::PRESSED)
     main = main * 0.8f;
 
   cr  = cairo_graphics.GetContext();
@@ -256,14 +257,14 @@ PanelStyle::GetWindowButtonForTheme(WindowButtonType type, WindowState state)
   cairo_arc(cr, width / 2.0f, height / 2.0f, (width - 2) / 2.0f, 0.0f, 360 * (M_PI / 180));
   cairo_stroke(cr);
 
-  if (type == WINDOW_BUTTON_CLOSE)
+  if (type == WindowButtonType::CLOSE)
   {
     cairo_move_to(cr, w, h);
     cairo_line_to(cr, width - w, height - h);
     cairo_move_to(cr, width - w, h);
     cairo_line_to(cr, w, height - h);
   }
-  else if (type == WINDOW_BUTTON_MINIMIZE)
+  else if (type == WindowButtonType::MINIMIZE)
   {
     cairo_move_to(cr, w, height / 2.0f);
     cairo_line_to(cr, width - w, height / 2.0f);
