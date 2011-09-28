@@ -96,6 +96,7 @@ PlacesGroup::PlacesGroup()
   _expand_icon = new IconTexture(arrow, arrow->GetWidth(), arrow->GetHeight());
   _expand_icon->SetOpacity(kExpandDefaultIconOpacity);
   _expand_icon->SetMinimumSize(arrow->GetWidth(), arrow->GetHeight());
+  _expand_icon->SetVisible(false);
   _header_layout->AddView(_expand_icon, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
   SetLayout(_group_layout);
