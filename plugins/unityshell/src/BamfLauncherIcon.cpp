@@ -308,8 +308,7 @@ void BamfLauncherIcon::OnWindowMoved(guint32 xid)
   if (!OwnsWindow(xid))
     return;
 
-  bool on_viewport = WindowManager::Default()->IsWindowOnCurrentDesktop(xid);
-  SetHasWindowOnViewport(on_viewport);
+  OnViewPortSwitchEnded();
 }
 
 void BamfLauncherIcon::OnViewPortSwitchEnded()
