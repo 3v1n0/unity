@@ -116,7 +116,6 @@ compiz::CompizMinimizedWindowHandler<Screen, Window>::setVisibility (bool visibl
   MinimizedWindowHandler::setVisibility (visible, priv->mWindow->id ());
 
   CompositeWindow::get (priv->mWindow)->addDamage ();
-  GLWindow::get (priv->mWindow)->glPaintSetEnabled (Window::get (priv->mWindow), !visible);
 }
 
 template <typename Screen, typename Window>

@@ -270,9 +270,10 @@ UnityScreen::UnityScreen(CompScreen* screen)
 
      optionSetAltTabLeftInitiate (boost::bind (&UnityScreen::altTabPrevInitiate, this, _1, _2, _3));
      optionSetAltTabRightInitiate (boost::bind (&UnityScreen::altTabForwardInitiate, this, _1, _2, _3));
+     optionSetShowMinimizedWindowsNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
 
      for (unsigned int i = 0; i < G_N_ELEMENTS(_ubus_handles); i++)
-	 _ubus_handles[i] = 0;
+       _ubus_handles[i] = 0;
 
      UBusServer* ubus = ubus_server_get_default();
      _ubus_handles[0] = ubus_server_register_interest(ubus,
@@ -741,7 +742,7 @@ bool UnityShowdesktopHandler::shouldHide (CompWindow *w)
 
   if (w->wmType () & (CompWindowTypeDesktopMask |
                       CompWindowTypeDockMask))
-  return false;
+   return false;
 
   if (w->state () & CompWindowStateSkipPagerMask)
     return false;
@@ -822,7 +823,7 @@ bool UnityShowdesktopHandler::animate (unsigned int ms)
 
 void UnityShowdesktopHandler::paintAttrib (GLWindowPaintAttrib &attrib)
 {
-  attrib.opacity = attrib.opacity * mProgress;
+  attrib.opacity = static_cast <int> (static_cast <float> (attrib.opacity) * mProgress);
 }
 
 unsigned int UnityShowdesktopHandler::getPaintMask ()
@@ -1892,6 +1893,8 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       break;
     case UnityshellOptions::ShowMinimizedWindows:
       compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>::setFunctions (optionGetShowMinimizedWindows ());
+      screen->enterShowDesktopModeSetEnabled (this, optionGetShowMinimizedWindows ());
+      screen->leaveShowDesktopModeSetEnabled (this, optionGetShowMinimizedWindows ());
       break;
     default:
       break;
