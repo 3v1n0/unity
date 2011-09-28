@@ -303,12 +303,34 @@ void BamfLauncherIcon::OnWindowMinimized(guint32 xid)
   UpdateQuirkTimeDelayed(300, QUIRK_SHIMMER);
 }
 
-void BamfLauncherIcon::OnWindowMoved(guint32 xid)
+void BamfLauncherIcon::OnWindowMoved(guint32 moved_win)
 {
-  if (!OwnsWindow(xid))
-    return;
+  bool any_on_current = false;
+  bool found_moved = false;
+  GList *children = bamf_view_get_children(BAMF_VIEW(m_App));
 
-  OnViewPortSwitchEnded();
+  for (GList *l = children; l; l = l->next)
+  {
+    BamfView *view = BAMF_VIEW(l->data);
+
+    if (BAMF_IS_WINDOW(view))
+    {
+      Window xid = bamf_window_get_xid(BAMF_WINDOW(view));
+
+      if (moved_win == xid)
+        found_moved = true;
+      
+      if (WindowManager::Default()->IsWindowOnCurrentDesktop(xid))
+        any_on_current = true;
+
+      if (found_moved && any_on_current)
+        break;
+    }
+  }
+
+  SetHasWindowOnViewport(any_on_current);
+
+  g_list_free(children);
 }
 
 void BamfLauncherIcon::OnViewPortSwitchEnded()
