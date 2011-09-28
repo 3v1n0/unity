@@ -1084,7 +1084,10 @@ PanelMenuView::OnWindowMoved(guint xid)
     if (_active_moved_id)
       g_source_remove(_active_moved_id);
 
-    _active_moved_id = g_timeout_add(250, (GSourceFunc)PanelMenuView::UpdateActiveWindowPosition, this);
+    if (!_we_control_active)
+      UpdateActiveWindowPosition(this);
+    else
+      _active_moved_id = g_timeout_add(250, (GSourceFunc)PanelMenuView::UpdateActiveWindowPosition, this);
   }
 }
 
