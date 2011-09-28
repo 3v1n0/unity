@@ -38,6 +38,7 @@ public:
   void QueueRedraw();
 
   unsigned int GetTrayXid ();
+  std::list <nux::Geometry> GetGeometries ();
 
   float opacity() const;
 

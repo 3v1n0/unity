@@ -48,9 +48,12 @@ public:
     END = nux::NUX_LAYOUT_END,
   } IndicatorEntryPosition;
 
+  typedef PanelIndicatorEntryView::IndicatorEntryType IndicatorEntryType;
+
   PanelIndicatorEntryView* AddEntry(indicator::Entry::Ptr const& entry,
-                                    int padding = -1,
-                                    IndicatorEntryPosition pos = AUTO);
+                                    int padding = 5,
+                                    IndicatorEntryPosition pos = AUTO,
+                                    IndicatorEntryType type = IndicatorEntryType::INDICATOR);
   void RemoveEntry(std::string const& entry_id);
 
   bool OnPointerMoved(int x, int y);
@@ -70,6 +73,9 @@ public:
   void DashShown();
   void DashHidden();
 
+  void SetOpacity(double opacity);
+  double GetOpacity();
+
   sigc::signal<void, PanelIndicatorEntryView*> on_indicator_updated;
 
 protected:
@@ -84,6 +90,7 @@ protected:
 private:
   typedef std::vector<indicator::Indicator::Ptr> Indicators;
   Indicators indicators_;
+  double opacity_;
 
   std::map<indicator::Indicator::Ptr, std::vector<sigc::connection>> indicators_connections_;
 };

@@ -241,11 +241,13 @@ void SearchBar::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   GfxContext.PushClippingRectangle(geo);
 
-  gPainter.PushLayer(GfxContext, bg_layer_->GetGeometry(), bg_layer_);
+  if (!IsFullRedraw())
+    gPainter.PushLayer(GfxContext, bg_layer_->GetGeometry(), bg_layer_);
 
   layout_->ProcessDraw(GfxContext, force_draw);
 
-  gPainter.PopBackground();
+  if (!IsFullRedraw())
+    gPainter.PopBackground();
   GfxContext.PopClippingRectangle();
 }
 
