@@ -138,6 +138,7 @@ BamfLauncherIcon::BamfLauncherIcon(Launcher* IconManager, BamfApplication* app)
   _dnd_hover_timer = 0;
   _dnd_hovered = false;
   _launcher = IconManager;
+  _desktop_file_monitor = NULL;
   _menu_desktop_shortcuts = NULL;
   _on_desktop_file_changed_handler_id = 0;
   char* icon_name = bamf_view_get_icon(BAMF_VIEW(m_App));
@@ -347,10 +348,13 @@ void BamfLauncherIcon::UpdateDesktopFile()
     // add a file watch to the desktop file so that if/when the app is removed
     // we can remove ourself from the launcher and when it's changed
     // we can update the quicklist.
-
-    if (_on_desktop_file_changed_handler_id != 0)
-      g_signal_handler_disconnect(G_OBJECT(_desktop_file_monitor),
-                                  _on_desktop_file_changed_handler_id);
+    if (_desktop_file_monitor)
+    {
+      if (_on_desktop_file_changed_handler_id != 0)
+        g_signal_handler_disconnect(G_OBJECT(_desktop_file_monitor),
+                                    _on_desktop_file_changed_handler_id);
+      g_object_unref(_desktop_file_monitor);  
+    }
 
     GFile* desktop_file = g_file_new_for_path(DesktopFile());
     _desktop_file_monitor = g_file_monitor_file(desktop_file, G_FILE_MONITOR_NONE,
