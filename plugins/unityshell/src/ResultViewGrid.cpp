@@ -531,7 +531,7 @@ ResultListBounds ResultViewGrid::GetVisableResults()
   else
   {
     //find the row we start at
-    int absolute_y = GetAbsoluteY();
+    int absolute_y = GetAbsoluteY() - GetToplevel()->GetAbsoluteY();
     uint row_size = renderer_->height + vertical_spacing;
 
     if (absolute_y < 0)
