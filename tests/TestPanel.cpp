@@ -34,6 +34,7 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
   unity::PanelView* view = new unity::PanelView();
 
   //view->SetMinMaxSize(1024, 24);
+  view->SetPrimary(true);
   layout->AddView(view, 1, nux::eCenter, nux::eFull);
   layout->SetContentDistribution(nux::eStackCenter);
 

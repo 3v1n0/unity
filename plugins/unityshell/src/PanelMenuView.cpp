@@ -476,10 +476,16 @@ PanelMenuView::GetActiveViewName()
       _is_own_window = true;
   }
 
+  if (BAMF_IS_WINDOW(window) &&
+      bamf_window_get_window_type(window) == BAMF_WINDOW_DESKTOP)
+  {
+    // Make the special 
+    label = g_strdup(g_dgettext("nautilus", "Desktop"));
+  }
+
   if (_is_maximized)
   {
     BamfWindow* window = bamf_matcher_get_active_window(_matcher);
-
     if (BAMF_IS_WINDOW(window))
       label = bamf_view_get_name(BAMF_VIEW(window));
   }
@@ -541,8 +547,8 @@ PanelMenuView::Refresh()
 {
   nux::Geometry         geo = GetGeometry();
 
-  // We can get into a race that causes the geometry to be wrong as there hasn't been a layout
-  // cycle before the first callback. This is to protect from that.
+  // We can get into a race that causes the geometry to be wrong as there hasn't been a
+  // layout cycle before the first callback. This is to protect from that.
   if (geo.width > _monitor_geo.width)
     return;
 
@@ -573,9 +579,7 @@ PanelMenuView::Refresh()
 
     cr = _util_cg.GetContext();
 
-    g_object_get(settings,
-                 "gtk-xft-dpi", &dpi,
-                 NULL);
+    g_object_get(settings, "gtk-xft-dpi", &dpi, NULL);
 
     font_description = gconf_client_get_string(client, WINDOW_TITLE_FONT_KEY, NULL);
     desc = pango_font_description_from_string(font_description);
