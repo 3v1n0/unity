@@ -173,10 +173,13 @@ void PanelView::OnDashHidden(GVariant* data, PanelView* self)
 
 void PanelView::OnDashShown(GVariant* data, PanelView* self)
 {
-  self->bg_effect_helper_.enabled = true;
-  self->_dash_is_open = true;
-  self->_indicators->DashShown();
-  self->ForceUpdateBackground();
+  if (self->_is_primary)
+  {
+    self->bg_effect_helper_.enabled = true;
+    self->_dash_is_open = true;
+    self->_indicators->DashShown();
+    self->ForceUpdateBackground();
+  }
 }
 
 void PanelView::AddPanelView(PanelIndicatorsView* child,
