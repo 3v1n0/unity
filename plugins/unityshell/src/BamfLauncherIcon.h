@@ -97,6 +97,8 @@ private:
   std::set<std::string> _supported_types;
   bool _supported_types_filled;
   guint _fill_supported_types_id;
+  guint32 _window_moved_id;
+  guint32 _window_moved_xid;
 
   void EnsureWindowState();
 
@@ -137,7 +139,7 @@ private:
 
   static gboolean OnDndHoveredTimeout(gpointer data);
   static gboolean FillSupportedTypes(gpointer data);
+  static gboolean OnWindowMovedTimeout(BamfLauncherIcon *self);
 };
 
 #endif // BAMFLAUNCHERICON_H
-
