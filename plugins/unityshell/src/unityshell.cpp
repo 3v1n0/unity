@@ -1118,7 +1118,10 @@ gboolean UnityScreen::OnEdgeTriggerTimeout(gpointer data)
 
   if (pointerX <= 1)
   {
-    if (abs(pointerY-self->_edge_pointerY) <= 5)
+    if (pointerY <= 24)
+      return true;
+
+    if (abs(pointerY - self->_edge_pointerY) <= 5)
     {
       self->launcher->EdgeRevealTriggered(pointerX, pointerY);
     }
@@ -1126,7 +1129,7 @@ gboolean UnityScreen::OnEdgeTriggerTimeout(gpointer data)
     {
       /* We are still in the edge, but moving in Y, maybe we need another chance */
 
-      if (abs(pointerY-self->_edge_pointerY) > 20)
+      if (abs(pointerY - self->_edge_pointerY) > 20)
       {
         /* We're quite far from the first hit spot, let's wait again */
         self->_edge_pointerY = pointerY;
