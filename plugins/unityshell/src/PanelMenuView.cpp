@@ -579,6 +579,10 @@ void PanelMenuView::DrawText(cairo_t *cr_real,
     {
       int size = pango_font_description_get_size(desc);
       size /= pango_font_description_get_size_is_absolute(desc) ? 1 : PANGO_SCALE;
+
+      // Adjust y depending on size of the font
+      y -= ((unsigned int)(size - 9)) / 2;
+
       size += increase_size;
       
       char* description = g_strdup_printf("%s %d", font_desc, size);
