@@ -644,10 +644,17 @@ PanelMenuView::GetActiveViewName()
       return g_strdup("");
     }
 
+    if (BAMF_IS_WINDOW(window) &&
+        bamf_window_get_window_type(window) == BAMF_WINDOW_DESKTOP)
+    {
+      // Make the special 
+      label = g_strdup(g_dgettext("nautilus", "Desktop"));
+    }
+
     if (!WindowManager::Default()->IsWindowOnCurrentDesktop(window_xid) ||
         WindowManager::Default()->IsWindowObscured(window_xid))
     {
-      return g_strdup("");
+       return g_strdup("");
     }
 
     if (_is_maximized)
@@ -706,49 +713,54 @@ PanelMenuView::GetActiveViewName()
   return label;
 }
 
-void
-PanelMenuView::Refresh()
+void PanelMenuView::DrawText(cairo_t *cr_real,
+                             int &x, int y, int width, int height,
+                             const char* font_desc,
+                             const char* label,
+                             int increase_size
+                             )
 {
-  nux::Geometry         geo = GetGeometry();
-
-  // We can get into a race that causes the geometry to be wrong as there hasn't been a layout
-  // cycle before the first callback. This is to protect from that.
-  if (geo.width > _monitor_geo.width)
-    return;
-
-  char*                 label = GetActiveViewName();
   PangoLayout*          layout = NULL;
   PangoFontDescription* desc = NULL;
   GtkSettings*          settings = gtk_settings_get_default();
   cairo_t*              cr;
   cairo_pattern_t*      linpat;
-  char*                 font_description = NULL;
   GdkScreen*            screen = gdk_screen_get_default();
   int                   dpi = 0;
   const int             fading_pixels = 35;
+  char                 *font_description = g_strdup(font_desc);
 
-  int  x = 0;
-  int  y = 0;
-  int  width = geo.width;
-  int  height = geo.height;
   int  text_width = 0;
   int  text_height = 0;
   int  text_space = 0;
 
-  if (label)
-  {
+  {  // Find out dimensions first
     GConfClient* client = gconf_client_get_default();
     PangoContext* cxt;
     PangoRectangle log_rect;
 
     cr = _util_cg.GetContext();
 
-    g_object_get(settings,
-                 "gtk-xft-dpi", &dpi,
-                 NULL);
+    g_object_get(settings, "gtk-xft-dpi", &dpi, NULL);
 
     font_description = gconf_client_get_string(client, WINDOW_TITLE_FONT_KEY, NULL);
     desc = pango_font_description_from_string(font_description);
+
+    if (font_desc)
+    {
+      int size = pango_font_description_get_size(desc);
+      size /= pango_font_description_get_size_is_absolute(desc) ? 1 : PANGO_SCALE;
+
+      // Adjust y depending on size of the font
+      y -= ((unsigned int)(size - 9)) / 2;
+
+      size += increase_size;
+      
+      char* description = g_strdup_printf("%s %d", font_desc, size);
+      pango_font_description_free(desc);
+      desc = pango_font_description_from_string(description);
+      g_free(description);
+    }
 
     layout = pango_cairo_create_layout(cr);
     pango_layout_set_font_description(layout, desc);
@@ -769,23 +781,11 @@ PanelMenuView::Refresh()
     g_object_unref(client);
   }
 
-  nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, width, height);
-  cr = cairo_graphics.GetContext();
-  cairo_set_line_width(cr, 1);
-
-  cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
-  cairo_paint(cr);
-
-  cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
-
-  x = _padding;
-  y = 0;
-
-  if (label)
-  {
+  { // Draw the text
     PanelStyle* style = PanelStyle::GetDefault();
     GtkStyleContext* style_context = style->GetStyleContext();
     text_space = width - x;
+    cr = cr_real;
 
     gtk_style_context_save(style_context);
 
@@ -823,14 +823,57 @@ PanelMenuView::Refresh()
       gtk_render_layout(style_context, cr, x, y, layout);
     }
 
-    gtk_widget_path_free(widget_path);
+    x += text_width;
 
+    gtk_widget_path_free(widget_path);
     gtk_style_context_restore(style_context);
   }
 
-  cairo_destroy(cr);
   if (layout)
     g_object_unref(layout);
+}
+
+void
+PanelMenuView::Refresh()
+{
+  nux::Geometry         geo = GetGeometry();
+
+  // We can get into a race that causes the geometry to be wrong as there hasn't been a
+  // layout cycle before the first callback. This is to protect from that.
+  if (geo.width > _monitor_geo.width)
+    return;
+
+  char*                 label = GetActiveViewName();
+
+  int  x = 0;
+  int  y = 0;
+  int  width = geo.width;
+  int  height = geo.height;
+
+  nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, width, height);
+  cairo_t* cr = cairo_graphics.GetContext();
+  cairo_set_line_width(cr, 1);
+
+  cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
+  cairo_paint(cr);
+
+  cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
+
+  x = _padding;
+  y = 0;
+
+  BamfWindow* window = bamf_matcher_get_active_window(_matcher);
+  if (BAMF_IS_WINDOW(window) &&
+      bamf_window_get_window_type(window) == BAMF_WINDOW_DESKTOP)
+  {
+    DrawText(cr, x, y, width, height, "Ubuntu", "", 6);
+    x += _padding;
+  }
+
+  if (label)
+    DrawText(cr, x, y, width, height, NULL, label);
+
+  cairo_destroy(cr);
 
   nux::BaseTexture* texture2D = texture_from_cairo_graphics(cairo_graphics);
 

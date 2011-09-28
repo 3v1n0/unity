@@ -83,6 +83,7 @@ LensView::LensView()
   : nux::View(NUX_TRACKER_LOCATION)
   , search_string("")
   , filters_expanded(false)
+  , can_refine_search(false)
   , fix_renderering_id_(0)
 {}
 
@@ -90,6 +91,7 @@ LensView::LensView(Lens::Ptr lens)
   : nux::View(NUX_TRACKER_LOCATION)
   , search_string("")
   , filters_expanded(false)
+  , can_refine_search(false)
   , lens_(lens)
   , initial_activation_(true)
   , fix_renderering_id_(0)
@@ -230,28 +232,40 @@ void LensView::OnCategoryAdded(Category const& category)
 
 void LensView::OnResultAdded(Result const& result)
 {
-  PlacesGroup* group = categories_[result.category_index];
-  ResultViewGrid* grid = static_cast<ResultViewGrid*>(group->GetChildView());
+  try {
+    PlacesGroup* group = categories_.at(result.category_index);
+    ResultViewGrid* grid = static_cast<ResultViewGrid*>(group->GetChildView());
 
-  std::string uri = result.uri;
-  LOG_TRACE(logger) << "Result added: " << uri;
+    std::string uri = result.uri;
+    LOG_TRACE(logger) << "Result added: " << uri;
 
-  grid->AddResult(const_cast<Result&>(result));
-  counts_[group]++;
-  UpdateCounts(group);
+    grid->AddResult(const_cast<Result&>(result));
+    counts_[group]++;
+    UpdateCounts(group);
+  } catch (std::out_of_range& oor) {
+    LOG_WARN(logger) << "Result does not have a valid category index: "
+                     << boost::lexical_cast<unsigned int>(result.category_index)
+                     << ". Is out of range.";
+  }
 }
 
 void LensView::OnResultRemoved(Result const& result)
 {
-  PlacesGroup* group = categories_[result.category_index];
-  ResultViewGrid* grid = static_cast<ResultViewGrid*>(group->GetChildView());
+  try {
+    PlacesGroup* group = categories_.at(result.category_index);
+    ResultViewGrid* grid = static_cast<ResultViewGrid*>(group->GetChildView());
 
-  std::string uri = result.uri;
-  LOG_TRACE(logger) << "Result removed: " << uri;
+    std::string uri = result.uri;
+    LOG_TRACE(logger) << "Result removed: " << uri;
 
-  grid->RemoveResult(const_cast<Result&>(result));
-  counts_[group]--;
-  UpdateCounts(group);
+    grid->RemoveResult(const_cast<Result&>(result));
+    counts_[group]--;
+    UpdateCounts(group);
+  } catch (std::out_of_range& oor) {
+    LOG_WARN(logger) << "Result does not have a valid category index: "
+                     << boost::lexical_cast<unsigned int>(result.category_index)
+                     << ". Is out of range.";
+  }
 }
 
 void LensView::UpdateCounts(PlacesGroup* group)
@@ -319,6 +333,8 @@ void LensView::OnFilterAdded(Filter::Ptr filter)
   int width = PlacesStyle::GetDefault()->GetTileWidth();
   fscroll_view_->SetMinimumWidth(width*2);
   fscroll_view_->SetMaximumWidth(width*2);
+
+  can_refine_search = true;
 }
 
 void LensView::OnFilterRemoved(Filter::Ptr filter)

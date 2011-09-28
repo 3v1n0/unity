@@ -705,7 +705,7 @@ void DashView::OnLensBarActivated(std::string const& id)
   search_bar_->text_entry()->SetFocused(true);
   nux::GetWindowCompositor().SetKeyFocusArea(search_bar_->text_entry());
 
-  search_bar_->can_refine_search = id != "home.lens";
+  search_bar_->can_refine_search = view->can_refine_search();
 
   view->QueueDraw();
   QueueDraw();
