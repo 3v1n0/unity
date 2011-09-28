@@ -26,6 +26,7 @@
 #include "ResultRendererTile.h"
 #include "ResultRendererHorizontalTile.h"
 #include "UBusMessages.h"
+#include "UBusWrapper.h"
 
 namespace unity
 {
@@ -36,6 +37,45 @@ namespace
 {
 nux::logging::Logger logger("unity.dash.lensview");
 }
+
+  // this is so we can access some protected members in scrollview
+class LensScrollView: public nux::ScrollView
+{
+public:
+  LensScrollView(NUX_FILE_LINE_DECL)
+    : nux::ScrollView(NUX_FILE_LINE_PARAM)
+  {
+
+  }
+
+  void ScrollToPosition(nux::Geometry & position)
+  {
+    // much of this code is copied from Nux/ScrollView.cpp
+    int child_y = position.y - GetGeometry ().y;
+    int child_y_diff = child_y - abs (_delta_y);
+
+    if (child_y_diff + position.height < GetGeometry ().height && child_y_diff >= 0)
+    {
+      return;
+    }
+
+    if (child_y_diff < 0)
+    {
+      ScrollUp (1, abs (child_y_diff));
+    }
+    else
+    {
+      int size = child_y_diff - GetGeometry ().height;
+
+      // always keeps the top of a view on the screen
+      size += position.height;
+
+      ScrollDown (1, size);
+    }
+  }
+
+};
+
 
 NUX_IMPLEMENT_OBJECT_TYPE(LensView);
 
@@ -59,12 +99,37 @@ LensView::LensView(Lens::Ptr lens)
   SetupResults();
   SetupFilters();
 
- PlacesStyle::GetDefault()->columns_changed.connect(sigc::mem_fun(this, &LensView::OnColumnsChanged));
+  PlacesStyle::GetDefault()->columns_changed.connect(sigc::mem_fun(this, &LensView::OnColumnsChanged));
 
   lens_->connected.changed.connect([&](bool is_connected) { if (is_connected) initial_activation_ = true; });
   search_string.changed.connect([&](std::string const& search) { lens_->Search(search);  });
   filters_expanded.changed.connect([&](bool expanded) { fscroll_view_->SetVisible(expanded); QueueRelayout(); OnColumnsChanged(); });
   active.changed.connect(sigc::mem_fun(this, &LensView::OnActiveChanged));
+
+  ubus_.RegisterInterest(UBUS_RESULT_VIEW_KEYNAV_CHANGED, [this] (GVariant* data) {
+    // we get this signal when a result view keynav changes,
+    // its a bad way of doing this but nux ABI needs to be broken
+    // to do it properly
+    nux::Geometry focused_pos;
+    g_variant_get (data, "(iiii)", &focused_pos.x, &focused_pos.y, &focused_pos.width, &focused_pos.height);
+
+    for (auto it = categories_.begin(); it != categories_.end(); it++)
+    {
+      if ((*it)->GetLayout() != nullptr)
+      {
+        nux::View *child = (*it)->GetChildView();
+        if (child->HasKeyFocus())
+        {
+          focused_pos.x += child->GetGeometry().x;
+          focused_pos.y += child->GetGeometry().y - 30;
+          focused_pos.height += 30;
+          static_cast<LensScrollView *>(scroll_view_)->ScrollToPosition(focused_pos);
+          break;
+        }
+      }
+    }
+  });
+
 }
 
 LensView::~LensView()
@@ -77,7 +142,7 @@ void LensView::SetupViews()
 {
   layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
 
-  scroll_view_ = new nux::ScrollView(NUX_TRACKER_LOCATION);
+  scroll_view_ = new LensScrollView(NUX_TRACKER_LOCATION);
   scroll_view_->EnableVerticalScrollBar(true);
   scroll_view_->EnableHorizontalScrollBar(false);
   layout_->AddView(scroll_view_);
