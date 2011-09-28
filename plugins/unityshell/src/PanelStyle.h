@@ -1,5 +1,6 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010 Canonical Ltd
+ * Copyright (C) 2010, 2011 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -24,29 +25,30 @@
 
 #include <gtk/gtk.h>
 
-class PanelStyle : public nux::Object
+namespace unity
+{
+
+class PanelStyle
 {
 public:
-  typedef enum
+  enum class WindowButtonType
   {
-    WINDOW_BUTTON_CLOSE = 0,
-    WINDOW_BUTTON_MINIMIZE,
-    WINDOW_BUTTON_UNMAXIMIZE
+    CLOSE,
+    MINIMIZE,
+    UNMAXIMIZE
+  };
 
-  } WindowButtonType;
-
-  typedef enum
+  enum class WindowState
   {
-    WINDOW_STATE_NORMAL,
-    WINDOW_STATE_PRELIGHT,
-    WINDOW_STATE_PRESSED
-
-  } WindowState;
-
-  static PanelStyle* GetDefault();
+    NORMAL,
+    PRELIGHT,
+    PRESSED
+  };
 
   PanelStyle();
   ~PanelStyle();
+
+  static PanelStyle& Instance();
 
   GtkStyleContext* GetStyleContext();
 
@@ -74,4 +76,5 @@ private:
   gulong            _gtk_theme_changed_id;
 };
 
+}
 #endif // PANEL_STYLE_H

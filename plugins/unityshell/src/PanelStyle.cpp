@@ -32,10 +32,11 @@
 
 #include <UnityCore/GLibWrapper.h>
 
-using namespace unity;
-
+namespace unity
+{
 namespace
 {
+PanelStyle* style_instance = nullptr;
 
 nux::logging::Logger logger("unity.panel");
 
@@ -54,6 +55,15 @@ nux::Color ColorFromGdkRGBA(GdkRGBA const& color)
 PanelStyle::PanelStyle()
   : _theme_name(NULL)
 {
+  if (style_instance)
+  {
+    LOG_ERROR(logger) << "More than one PanelStyle created.";
+  }
+  else
+  {
+    style_instance = this;
+  }
+
   _style_context = gtk_style_context_new();
 
   GtkWidgetPath* widget_path = gtk_widget_path_new();
@@ -84,16 +94,21 @@ PanelStyle::~PanelStyle()
     _style = NULL;
 
   g_free(_theme_name);
+
+  if (style_instance == this)
+    style_instance = nullptr;
 }
 
-PanelStyle*
-PanelStyle::GetDefault()
+PanelStyle& PanelStyle::Instance()
 {
-  if (G_UNLIKELY(!_style))
-    _style = new PanelStyle();
+  if (!style_instance)
+  {
+    LOG_ERROR(logger) << "No PanelStyle created yet.";
+  }
 
-  return _style;
+  return *style_instance;
 }
+
 
 void
 PanelStyle::Refresh()
@@ -286,4 +301,6 @@ PanelStyle::GetHomeButton()
                                       (GtkIconLookupFlags)0,
                                       NULL);
   return pixbuf;
+}
+
 }
