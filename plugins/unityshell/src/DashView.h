@@ -64,6 +64,10 @@ public:
 protected:
   void ProcessDndEnter();
 
+  virtual Area* FindKeyFocusArea(unsigned int key_symbol,
+    unsigned long x11_key_code,
+    unsigned long special_keys_state);
+
 private:
   void SetupBackground();
   void SetupViews();
