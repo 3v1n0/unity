@@ -60,6 +60,18 @@ unsigned int PanelController::GetTrayXid ()
     return 0;
 }
 
+std::list <nux::Geometry> PanelController::GetGeometries ()
+{
+  std::list <nux::Geometry> geometries;
+
+  for (auto &window : _windows)
+  {
+    geometries.push_back (window->GetAbsoluteGeometry ());
+  }
+
+  return geometries;
+}
+
 void
 PanelController::StartFirstMenuShow()
 {

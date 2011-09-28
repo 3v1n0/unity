@@ -1730,16 +1730,79 @@ void UnityWindow::resizeNotify(int x, int y, int w, int h)
   window->resizeNotify(x, y, w, h);
 }
 
-CompPoint UnityWindow::tryNotIntersectLauncher(CompPoint& pos)
+CompPoint UnityWindow::tryNotIntersectUI(CompPoint& pos)
 {
   UnityScreen* us = UnityScreen::get(screen);
+  Launcher::LauncherHideMode hideMode = us->launcher->GetHideMode();
   nux::Geometry geo = us->launcher->GetAbsoluteGeometry();
+  CompRegion allowedWorkArea (screen->workArea ());
   CompRect launcherGeo(geo.x, geo.y, geo.width, geo.height);
+  CompRegion wRegion (window->borderRect ());
+  CompRegion intRegion;
 
-  if (launcherGeo.contains(pos))
+  wRegion.translate (pos.x () - wRegion.boundingRect ().x (),
+                     pos.y () - wRegion.boundingRect ().y ());
+
+  /* subtract launcher and panel geometries from allowed workarea */
+  if (!us->launcher->Hidden ())
   {
-    if (screen->workArea().contains(CompRect(launcherGeo.right() + 1, pos.y(), window->width(), window->height())))
-      pos.setX(launcherGeo.right() + 1);
+    switch (hideMode)
+    {
+      case Launcher::LAUNCHER_HIDE_DODGE_WINDOWS:
+      case Launcher::LAUNCHER_HIDE_DODGE_ACTIVE_WINDOW:
+        allowedWorkArea -= launcherGeo;
+        break;
+
+      default:
+        break;
+    }
+  }
+
+  for (nux::Geometry &g : us->panelController->GetGeometries ())
+  {
+    CompRect pg (g.x, g.y, g.width, g.height);
+    allowedWorkArea -= pg;
+  }
+
+  /* Invert allowed work area */
+  allowedWorkArea = CompRegion (screen->workArea ()) - allowedWorkArea;
+
+  /* Now intersect the window region with the allowed work area
+   * region, such that it splits up into a number of rects */
+  intRegion = wRegion.intersected (allowedWorkArea);
+
+  if (intRegion.rects ().size () > 1)
+  {
+    /* Now find the largest rect, this will be the area that we want to move to */
+    CompRect largest;
+
+    for (CompRect &r : intRegion.rects ())
+    {
+      if (r.area () > largest.area ())
+        largest = r;
+    }
+
+    /* Now pad the largest rect with the other rectangles that
+     * were intersecting, padding the opposite side to the one
+     * that they are currently on on the large rect
+     */
+
+    intRegion -= largest;
+
+    for (CompRect &r : intRegion.rects ())
+    {
+      if (r.x1 () > largest.x2 ())
+        largest.setX (largest.x () - r.width ());
+      else if (r.x2 () < largest.x ())
+        largest.setWidth (largest.width () + r.width ());
+
+      if (r.y1 () > largest.y2 ())
+        largest.setY (largest.y () - r.height ());
+      else if (r.y2 () < largest.y ())
+        largest.setWidth (largest.height () + r.height ());
+    }
+
+    pos = largest.pos ();
   }
 
   return pos;
@@ -1747,21 +1810,9 @@ CompPoint UnityWindow::tryNotIntersectLauncher(CompPoint& pos)
 
 bool UnityWindow::place(CompPoint& pos)
 {
-  UnityScreen* us = UnityScreen::get(screen);
-  Launcher::LauncherHideMode hideMode = us->launcher->GetHideMode();
-
   bool result = window->place(pos);
 
-  switch (hideMode)
-  {
-    case Launcher::LAUNCHER_HIDE_DODGE_WINDOWS:
-    case Launcher::LAUNCHER_HIDE_DODGE_ACTIVE_WINDOW:
-      pos = tryNotIntersectLauncher(pos);
-      break;
-
-    default:
-      break;
-  }
+  pos = tryNotIntersectUI(pos);
 
   return result;
 }
