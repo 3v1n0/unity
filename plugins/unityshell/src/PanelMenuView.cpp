@@ -136,6 +136,7 @@ PanelMenuView::PanelMenuView(int padding)
   win_manager->window_restored.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowRestored));
   win_manager->window_unmapped.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowUnmapped));
   win_manager->window_moved.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowMoved));
+  win_manager->window_resized.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowMoved));
 
   PanelStyle::GetDefault()->changed.connect(sigc::mem_fun(this, &PanelMenuView::Refresh));
 
