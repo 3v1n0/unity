@@ -535,7 +535,8 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
       nux::GetPainter().PushDrawLayer(GfxContext, geo, _title_layer);
       geo = GetGeometry();
     }
-    else if (!_places_showing && _window_buttons->GetOpacity() < 1.0f && _window_buttons->GetOpacity() > 0.0f)
+    else if (_window_buttons->GetOpacity() < 1.0f &&
+             _window_buttons->GetOpacity() > 0.0f && !_places_showing)
     {
       double title_opacity = 1.0f - _window_buttons->GetOpacity();
       
@@ -1062,12 +1063,14 @@ PanelMenuView::OnWindowRestored(guint xid)
 gboolean
 PanelMenuView::UpdateActiveWindowPosition(PanelMenuView* self)
 {
-  nux::Geometry geo = WindowManager::Default()->GetWindowGeometry(self->_active_xid);
+  auto window_geo = WindowManager::Default()->GetWindowGeometry(self->_active_xid);
+  auto monitor_geo = UScreen::GetDefault()->GetMonitorGeometry(self->_monitor);
+  auto intersect = monitor_geo.Intersect(window_geo);
 
-  self->_we_control_active = UScreen::GetDefault()->GetMonitorGeometry(self->_monitor).IsPointInside(geo.x + (geo.width / 2), geo.y);
+  self->_we_control_active = (intersect.width > window_geo.width/4 &&
+                              intersect.height > window_geo.height/4);
 
   self->_active_moved_id = 0;
-
   self->QueueDraw();
 
   return FALSE;
