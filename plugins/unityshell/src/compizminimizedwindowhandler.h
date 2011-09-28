@@ -55,6 +55,8 @@ public:
 
   void updateFrameRegion (CompRegion &r);
 
+  void windowNotify (CompWindowNotify n);
+
   static void setFunctions (bool keepMinimized);
   static void handleCompizEvent (const char *, const char *, CompOption::Vector &);
   static void handleEvent (XEvent *event);
@@ -62,6 +64,7 @@ public:
 
   typedef CompizMinimizedWindowHandler<Screen, Window> CompizMinimizedWindowHandler_complete;
   typedef boost::shared_ptr<CompizMinimizedWindowHandler_complete> Ptr;
+  typedef std::list <Ptr> List;
 protected:
 
   virtual std::vector<unsigned int> getTransients ();
@@ -70,8 +73,12 @@ private:
 
   PrivateCompizMinimizedWindowHandler *priv;
   static bool handleEvents;
+  static std::list<Ptr> minimizedWindows;
 };
 }
+
+template <typename Screen, typename Window>
+typename compiz::CompizMinimizedWindowHandler<Screen, Window>::List compiz::CompizMinimizedWindowHandler<Screen, Window>::minimizedWindows;
 
 template <typename Screen, typename Window>
 CompWindowList compiz::CompizMinimizedWindowHandler<Screen, Window>::minimizingWindows;
@@ -126,11 +133,18 @@ compiz::CompizMinimizedWindowHandler<Screen, Window>::minimize ()
   Atom          wmState = XInternAtom (screen->dpy (), "WM_STATE", 0);
   unsigned long data[2];
 
+  typedef compiz::CompizMinimizedWindowHandler<Screen, Window> minimized_window_handler_full;
+
   std::vector<unsigned int> transients = getTransients ();
 
   handleEvents = true;
   priv->mWindow->windowNotify (CompWindowNotifyMinimize);
   priv->mWindow->changeState (priv->mWindow->state () | CompWindowStateHiddenMask);
+
+  compiz::CompizMinimizedWindowHandler<Screen, Window>::Ptr compizMinimizeHandler =
+        boost::dynamic_pointer_cast <minimized_window_handler_full> (Window::get (priv->mWindow)->mMinimizeHandler);
+
+  minimizedWindows.push_back (compizMinimizeHandler);
 
   for (unsigned int &w : transients)
   {
@@ -150,7 +164,31 @@ compiz::CompizMinimizedWindowHandler<Screen, Window>::minimize ()
                    32, PropModeReplace, (unsigned char *) data, 2);
 
   priv->mWindow->changeState (priv->mWindow->state () | CompWindowStateHiddenMask);
+
+  /* Don't allow other windows to be focused by moveInputFocusToOtherWindow */
+  for (auto mh : minimizedWindows)
+    mh->priv->mWindow->focusSetEnabled (Window::get (mh->priv->mWindow), false);
+
   priv->mWindow->moveInputFocusToOtherWindow ();
+
+  for (auto mh : minimizedWindows)
+    mh->priv->mWindow->focusSetEnabled (Window::get (mh->priv->mWindow), true);
+}
+
+template <typename Screen, typename Window>
+void
+compiz::CompizMinimizedWindowHandler<Screen, Window>::windowNotify (CompWindowNotify n)
+{
+  if (n == CompWindowNotifyFocusChange && priv->mWindow->minimized ())
+  {
+    for (auto mh : minimizedWindows)
+      mh->priv->mWindow->focusSetEnabled (Window::get (mh->priv->mWindow), false);
+
+    priv->mWindow->moveInputFocusToOtherWindow ();
+
+    for (auto mh : minimizedWindows)
+      mh->priv->mWindow->focusSetEnabled (Window::get (mh->priv->mWindow), true);
+  }
 }
 
 template <typename Screen, typename Window>
@@ -174,7 +212,16 @@ compiz::CompizMinimizedWindowHandler<Screen, Window>::unminimize ()
   Atom          wmState = XInternAtom (screen->dpy (), "WM_STATE", 0);
   unsigned long data[2];
 
+  typedef compiz::CompizMinimizedWindowHandler<Screen, Window> minimized_window_handler_full;
+
   std::vector<unsigned int> transients = getTransients ();
+
+  compiz::CompizMinimizedWindowHandler<Screen, Window>::Ptr compizMinimizeHandler =
+        boost::dynamic_pointer_cast <minimized_window_handler_full> (Window::get (priv->mWindow)->mMinimizeHandler);
+
+  minimizedWindows.remove (compizMinimizeHandler);
+
+  priv->mWindow->focusSetEnabled (Window::get (priv->mWindow), true);
 
   priv->mWindow->windowNotify (CompWindowNotifyUnminimize);
   priv->mWindow->changeState (priv->mWindow->state () & ~CompWindowStateHiddenMask);
