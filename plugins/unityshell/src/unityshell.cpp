@@ -1829,6 +1829,9 @@ CompPoint UnityWindow::tryNotIntersectUI(CompPoint& pos)
     pos = largest.pos ();
   }
 
+  if (launcherGeo.contains(pos))
+    pos.setX(launcherGeo.x() + launcherGeo.width() + 1);
+
   return pos;
 }
 
