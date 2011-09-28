@@ -76,6 +76,8 @@ protected:
 
   const char* BamfName();
 
+  bool HandlesSpread () { return true; }
+
 private:
   BamfApplication* m_App;
   Launcher* _launcher;

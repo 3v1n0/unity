@@ -1684,7 +1684,19 @@ void UnityWindow::windowNotify(CompWindowNotify n)
 
 
   window->windowNotify(n);
-  
+
+  if (mMinimizeHandler.get () != NULL)
+  {
+    /* The minimize handler will short circuit the frame
+     * region update func and ensure that the frame
+     * does not have a region */
+    typedef compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow> minimized_window_handler_unity;
+
+    compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>::Ptr compizMinimizeHandler =
+        boost::dynamic_pointer_cast <minimized_window_handler_unity> (mMinimizeHandler);
+    compizMinimizeHandler->windowNotify (n);
+  }
+
   // We do this after the notify to ensure input focus has actually been moved.
   if (n == CompWindowNotifyFocusChange)
   {
@@ -2352,10 +2364,25 @@ UnityWindow::UnityWindow(CompWindow* window)
   WindowInterface::setHandler(window);
   GLWindowInterface::setHandler(gWindow);
 
-  window->focusSetEnabled (this, false);
-  window->minimizedSetEnabled (this, false);
-  window->minimizeSetEnabled (this, false);
-  window->unminimizeSetEnabled (this, false);
+  if (UnityScreen::get (screen)->optionGetShowMinimizedWindows () &&
+      window->mapNum ())
+  {
+    bool wasMinimized = window->minimized ();
+    if (wasMinimized)
+      window->unminimize ();
+    window->minimizeSetEnabled (this, true);
+    window->unminimizeSetEnabled (this, true);
+    window->minimizedSetEnabled (this, true);
+
+    if (wasMinimized)
+      window->minimize ();
+  }
+  else
+  {
+    window->minimizeSetEnabled (this, false);
+    window->unminimizeSetEnabled (this, false);
+    window->minimizedSetEnabled (this, false);
+  }
 
   if (window->state () & CompWindowStateFullscreenMask)
     UnityScreen::get (screen)->fullscreen_windows_.push_back(window);
