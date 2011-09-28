@@ -47,7 +47,7 @@ public:
   void ActivateLauncherIcon(ActionArg arg);
 
   virtual bool ShowInSwitcher();
-  virtual unsigned int SwitcherPriority();
+  virtual unsigned long long SwitcherPriority();
 
   std::vector<Window> RelatedXids ();
 

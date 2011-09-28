@@ -2124,8 +2124,8 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     GfxContext.GetRenderStates().GetBlend(alpha, src, dest);
 
     // apply the darkening
-    GfxContext.GetRenderStates().SetBlend(true, GL_SRC_COLOR, GL_DST_COLOR);
-    gPainter.Paint2DQuadColor(GfxContext, bkg_box, nux::Color(0.0f, 0.0f, 0.0f, 1.0f));
+    GfxContext.GetRenderStates().SetBlend(true, GL_ZERO, GL_SRC_COLOR);
+    gPainter.Paint2DQuadColor(GfxContext, bkg_box, nux::Color(0.7f, 0.7f, 0.7f, 1.0f));
     GfxContext.GetRenderStates().SetBlend (alpha, src, dest);
 
     // apply the bg colour
@@ -2632,7 +2632,7 @@ Launcher::RecvKeyPressed(unsigned long    eventType,
         if (it != (LauncherModel::iterator)NULL)
         {
           _current_icon_index = temp_current_icon_index;
-          
+
           if ((*it)->GetCenter().y + - _icon_size/ 2 < GetGeometry().y)
             _launcher_drag_delta += (_icon_size + _space_between_icons);
         }
@@ -2923,7 +2923,7 @@ void Launcher::OnDNDDataCollected(const std::list<char*>& mimes)
     return;
 
   _hide_machine->SetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE, true);
-  
+
   if (_dash_is_open)
     SaturateIcons();
 
@@ -2952,7 +2952,7 @@ void
 Launcher::ProcessDndEnter()
 {
   SetStateMouseOverLauncher(true);
-  
+
   _dnd_data.Reset();
   _drag_action = nux::DNDACTION_NONE;
   _steal_drag = false;
@@ -2971,7 +2971,7 @@ Launcher::DndReset()
     it->SetQuirk(LauncherIcon::QUIRK_DROP_PRELIGHT, false);
     it->SetQuirk(LauncherIcon::QUIRK_DROP_DIM, false);
   }
-  
+
   DndHoveredIconReset();
 }
 
@@ -2979,7 +2979,7 @@ void Launcher::DndHoveredIconReset()
 {
   _drag_edge_touching = false;
   SetActionState(ACTION_NONE);
-  
+
   if (_steal_drag && _dnd_hovered_icon)
   {
     _dnd_hovered_icon->SetQuirk(LauncherIcon::QUIRK_VISIBLE, false);
@@ -3000,7 +3000,7 @@ void
 Launcher::ProcessDndLeave()
 {
   SetStateMouseOverLauncher(false);
-  
+
   DndHoveredIconReset();
 }
 
@@ -3057,7 +3057,7 @@ Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
   {
     if (_dnd_hovered_icon)
         _dnd_hovered_icon->SendDndLeave();
-        
+
     _drag_edge_touching = true;
     SetTimeStruct(&_times[TIME_DRAG_EDGE_TOUCH], &_times[TIME_DRAG_EDGE_TOUCH], ANIM_DURATION * 3);
     EnsureAnimation();
@@ -3110,7 +3110,7 @@ Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
     }
   }
   else
-  {    
+  {
     if (!_drag_edge_touching && hovered_icon != _dnd_hovered_icon)
     {
       if (hovered_icon)

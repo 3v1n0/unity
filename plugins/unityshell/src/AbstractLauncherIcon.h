@@ -152,7 +152,7 @@ public:
 
   virtual bool ShowInSwitcher() = 0;
 
-  virtual unsigned int SwitcherPriority() = 0;
+  virtual unsigned long long SwitcherPriority() = 0;
 
   virtual bool GetQuirk(Quirk quirk) = 0;
 

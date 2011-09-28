@@ -254,6 +254,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetLauncherRevealEdgeTimeoutNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetAutomaximizeValueNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetAltTabTimeoutNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+     optionSetAltTabBiasViewportNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
 
      optionSetAltTabForwardInitiate(boost::bind(&UnityScreen::altTabForwardInitiate, this, _1, _2, _3));
      optionSetAltTabForwardTerminate(boost::bind(&UnityScreen::altTabTerminateCommon, this, _1, _2, _3));
@@ -314,6 +315,7 @@ UnityScreen::~UnityScreen()
     switcher_desktop_icon->UnReference();
   panelController->UnReference();
   delete controller;
+  delete switcherController;
   launcherWindow->UnReference();
 
   notify_uninit();
@@ -333,9 +335,7 @@ UnityScreen::~UnityScreen()
   ::unity::ui::IconRenderer::DestroyTextures();
   QuicklistManager::Destroy();
 
-  // Deleting the windows thread calls XCloseDisplay, which calls XSync, which
-  // sits waiting for a reply.
-  // delete wt;
+  delete wt;
 }
 
 void UnityScreen::initAltTabNextWindow()
@@ -1058,6 +1058,13 @@ void UnityScreen::handleCompizEvent(const char* plugin,
 {
   PluginAdapter::Default()->NotifyCompizEvent(plugin, event, option);
   compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>::handleCompizEvent (plugin, event, option);
+
+  if (dash_is_open_ && 
+      strcmp(event, "start_viewport_switch") == 0)
+  {
+    ubus_server_send_message(ubus_server_get_default(), UBUS_PLACE_VIEW_CLOSE_REQUEST, NULL);
+  }
+
   screen->handleCompizEvent(plugin, event, option);
 }
 
@@ -1877,6 +1884,8 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       break;
     case UnityshellOptions::AltTabTimeout:
       switcherController->detail_on_timeout = optionGetAltTabTimeout();
+    case UnityshellOptions::AltTabBiasViewport:
+      PluginAdapter::Default()->bias_active_to_viewport = optionGetAltTabBiasViewport();
       break;
     case UnityshellOptions::ShowMinimizedWindows:
       compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>::setFunctions (optionGetShowMinimizedWindows ());

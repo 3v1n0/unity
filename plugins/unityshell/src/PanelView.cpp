@@ -68,9 +68,9 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
 
   nux::ROPConfig rop;
   rop.Blend = true;
-  rop.SrcBlend = GL_SRC_COLOR;
-  rop.DstBlend = GL_DST_COLOR;
-  _bg_darken_layer_ = new nux::ColorLayer(nux::Color(0.0f, 0.0f, 0.0f, 1.0f), false, rop);
+  rop.SrcBlend = GL_ZERO;
+  rop.DstBlend = GL_SRC_COLOR;
+  _bg_darken_layer_ = new nux::ColorLayer(nux::Color(0.7f, 0.7f, 0.7f, 1.0f), false, rop);
 
   _layout = new nux::HLayout("", NUX_TRACKER_LOCATION);
 

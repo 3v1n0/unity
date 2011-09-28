@@ -69,6 +69,7 @@ PluginAdapter::PluginAdapter(CompScreen* screen) :
   _grab_hide_action = 0;
   _grab_toggle_action = 0;
   _coverage_area_before_automaximize = 0.75;
+  bias_active_to_viewport = false;
 }
 
 PluginAdapter::~PluginAdapter()
@@ -271,7 +272,7 @@ MultiActionList::TerminateAll(CompOption::Vector& extraArgs)
   }
 }
 
-unsigned int 
+unsigned long long 
 PluginAdapter::GetWindowActiveNumber (guint32 xid)
 {
   Window win = (Window)xid;
@@ -281,7 +282,12 @@ PluginAdapter::GetWindowActiveNumber (guint32 xid)
 
   if (window)
   {
-    return window->activeNum ();
+    // result is actually an unsigned int (32 bits)
+    unsigned long long result = window->activeNum ();
+    if (bias_active_to_viewport() && window->defaultViewport() == m_Screen->vp())
+      result = result << 32;
+    
+    return result;
   }
 
   return 0;
