@@ -127,9 +127,6 @@ public:
         tex = _normal_tex;
     }
 
-    GfxContext.GetRenderStates().SetBlend(true);
-    GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
-    GfxContext.GetRenderStates().SetColorMask(true, true, true, true);
     if (tex)
       GfxContext.QRP_1Tex(geo.x,
                           geo.y,
@@ -138,7 +135,7 @@ public:
                           tex->GetDeviceTexture(),
                           texxform,
                           nux::color::White * _opacity);
-    GfxContext.GetRenderStates().SetBlend(false);
+
     GfxContext.PopClippingRectangle();
   }
 

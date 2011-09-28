@@ -429,10 +429,6 @@ void PanelIndicatorEntryView::Draw(nux::GraphicsEngine& GfxContext, bool force_d
   auto geo = GetGeometry();
   GfxContext.PushClippingRectangle(geo);
 
-  GfxContext.GetRenderStates().SetBlend(true);
-  GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
-  GfxContext.GetRenderStates().SetColorMask(true, true, true, true);
-
   if (texture_layer_)
   {
     nux::TexCoordXForm texxform;
@@ -441,7 +437,6 @@ void PanelIndicatorEntryView::Draw(nux::GraphicsEngine& GfxContext, bool force_d
                         nux::color::White * opacity_);
   }
 
-  GfxContext.GetRenderStates().SetBlend(false);
   GfxContext.PopClippingRectangle();
 }
 
