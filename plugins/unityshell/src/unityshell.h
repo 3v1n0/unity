@@ -267,7 +267,7 @@ private:
   static void OnLauncherEndKeyNav(GVariant* data, void* value);
 
   DashStyle               dash_style_;
-  unity::panel::Style     panel_style_;
+  panel::Style            panel_style_;
   PlacesStyle             places_style_;
   FontSettings            font_settings_;
   Launcher*               launcher;
