@@ -315,6 +315,7 @@ UnityScreen::~UnityScreen()
     switcher_desktop_icon->UnReference();
   panelController->UnReference();
   delete controller;
+  delete switcherController;
   launcherWindow->UnReference();
 
   notify_uninit();
@@ -334,9 +335,7 @@ UnityScreen::~UnityScreen()
   ::unity::ui::IconRenderer::DestroyTextures();
   QuicklistManager::Destroy();
 
-  // Deleting the windows thread calls XCloseDisplay, which calls XSync, which
-  // sits waiting for a reply.
-  // delete wt;
+  delete wt;
 }
 
 void UnityScreen::initAltTabNextWindow()
