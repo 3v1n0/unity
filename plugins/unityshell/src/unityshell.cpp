@@ -62,12 +62,15 @@
    the accessible root object, this include would not be required */
 #include "unity-util-accessible.h"
 
-using namespace unity::switcher;
-
 /* Set up vtable symbols */
-COMPIZ_PLUGIN_20090315(unityshell, UnityPluginVTable);
+COMPIZ_PLUGIN_20090315(unityshell, unity::UnityPluginVTable);
 
-using ::unity::util::Timer;
+
+namespace unity
+{
+using util::Timer;
+// using namespace unity::switcher;
+
 
 namespace
 {
@@ -1263,7 +1266,7 @@ bool UnityScreen::altTabInitiateCommon(CompAction *action,
                                                  screen->outputDevs()[device].y1() + 100,
                                                  screen->outputDevs()[device].width() - 200,
                                                  screen->outputDevs()[device].height() - 200));
-  switcherController->Show(SwitcherController::ALL, SwitcherController::FOCUS_ORDER, false, results);
+  switcherController->Show(switcher::SwitcherController::ALL, switcher::SwitcherController::FOCUS_ORDER, false, results);
   return true;
 }
 
@@ -2238,7 +2241,7 @@ void UnityScreen::initLauncher(nux::NThread* thread, void* InitData)
   self->launcherWindow->InputWindowEnableStruts(true);
   self->launcherWindow->SetEnterFocusInputArea(self->launcher);
 
-  self->switcherController = new SwitcherController();
+  self->switcherController = new switcher::SwitcherController();
   /* FIXME: this should not be manual, should be managed with a
      show/hide callback like in GAIL*/
   if (unity_a11y_initialized () == TRUE)
@@ -2262,7 +2265,7 @@ void UnityScreen::initLauncher(nux::NThread* thread, void* InitData)
   LOG_INFO(logger) << "initLauncher-Panel " << timer.ElapsedSeconds() << "s";
 
   /* Setup Places */
-  self->dashController = DashController::Ptr(new DashController());
+  self->dashController = dash::DashController::Ptr(new dash::DashController());
 
   /* FIXME: this should not be manual, should be managed with a
      show/hide callback like in GAIL
@@ -2438,3 +2441,4 @@ void capture_g_log_calls(const gchar* log_domain,
 }
 
 } // anonymous namespace
+} // namespace unity

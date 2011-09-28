@@ -53,6 +53,8 @@
 #include "BGHash.h"
 #include <compiztoolbox/compiztoolbox.h>
 
+namespace unity
+{
 
 class UnityFBO
 {
@@ -122,13 +124,6 @@ private:
   float                          mProgress;
 };
 
-
-using unity::FontSettings;
-using unity::DashStyle;
-using unity::PlacesStyle;
-using namespace unity::switcher;
-using namespace unity::dash;
-using unity::UBusManager;
 
 /* base screen class */
 class UnityScreen :
@@ -277,9 +272,9 @@ private:
   FontSettings            font_settings_;
   Launcher*               launcher;
   LauncherController*     controller;
-  DashController::Ptr     dashController;
+  dash::DashController::Ptr     dashController;
   PanelController*        panelController;
-  SwitcherController*     switcherController;
+  switcher::SwitcherController*     switcherController;
   GestureEngine*          gestureEngine;
   nux::WindowThread*      wt;
   nux::BaseWindow*        launcherWindow;
@@ -405,5 +400,7 @@ class UnityPluginVTable :
 public:
   bool init();
 };
+
+} // namespace unity
 
 #endif // UNITYSHELL_H

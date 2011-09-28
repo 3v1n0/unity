@@ -30,6 +30,8 @@
 #define SI_METHOD_NAME_GETSTATE  "GetState"
 #define AP_METHOD_NAME_STARTTEST "StartTest"
 
+using namespace unity;
+
 void StartTest(const gchar*);
 GVariant* GetState(const gchar*);
 void DBusMethodCall(GDBusConnection*, const gchar*, const gchar*,
