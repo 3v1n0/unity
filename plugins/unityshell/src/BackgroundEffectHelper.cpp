@@ -190,15 +190,13 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nu
     nux::ObjectPtr<nux::IOpenGLBaseTexture> device_texture = gpu_device->backup_texture0_;
     nux::ObjectPtr<nux::CachedBaseTexture> noise_device_texture = graphics_engine->CacheResource(noise_texture_);
 
-    int down_size_factor = 1;
     unsigned int buffer_width = larger_blur_geometry.width;
     unsigned int buffer_height = larger_blur_geometry.height;
 
-    int x =  0;
-    int y =  0;
-
-    unsigned int down_size_width = buffer_width / down_size_factor;
-    unsigned int down_size_height = buffer_height / down_size_factor;
+    blur_fx_struct_.src_texture = device_texture;
+    graphics_engine->QRP_GLSL_GetHQBlurFx(0, 0, buffer_width, buffer_height,
+                                                  &blur_fx_struct_, texxform__bg, nux::color::White,
+                                                 gaussian_sigma, blur_passes);
 
     nux::TexCoordXForm texxform;
     nux::TexCoordXForm noise_texxform;
@@ -209,51 +207,22 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nu
     noise_texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
     noise_texxform.SetFilter(nux::TEXFILTER_NEAREST, nux::TEXFILTER_NEAREST);
 
-    // Down size
-    graphics_engine->QRP_GetCopyTexture(down_size_width, down_size_height,
-                                        resize_tmp_, device_texture,
-                                        texxform__bg, nux::color::White);
-
-    blur_fx_struct_.src_texture = resize_tmp_;
-    // Blur at a lower resolution (less pixels to process)
-    // nux::ObjectPtr<nux::IOpenGLBaseTexture> low_res_blur;
-    // low_res_blur = graphics_engine->QRP_GetHQBlur(x, y, down_size_width, down_size_height,
-    //                                               resized_texture, texxform, nux::color::White,
-    //                                               gaussian_sigma, blur_passes);
-
-    graphics_engine->QRP_GLSL_GetHQBlurFx(x, y, down_size_width, down_size_height,
-                                                  &blur_fx_struct_, texxform, nux::color::White,
-                                                 gaussian_sigma, blur_passes);
-
-
-    // Up size
-    graphics_engine->QRP_GetCopyTexture(buffer_width, buffer_height,
-                                        resize_tmp_, blur_fx_struct_.dst_texture,
-                                        texxform, nux::color::White);
-    noise_fx_struct_.src_texture = resize_tmp_;
+    noise_fx_struct_.src_texture = blur_fx_struct_.dst_texture;
 
     // Add Noise
     nux::Color noise_color(noise_factor * 1.0f/buffer_width,
                            noise_factor * 1.0f/buffer_height,
                            1.0f, 1.0f);
-    // noisy_tmp_ = graphics_engine->QRP_GLSL_GetDisturbedTexture(
-    //   0, 0, buffer_width, buffer_height,
-    //   noise_device_texture->m_Texture, noise_texxform, noise_color,
-    //   resized_texture, texxform, nux::color::White);
 
+    texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+    texxform.uoffset = (blur_geometry_.x - larger_blur_geometry.x) / (float) buffer_width;
+    texxform.voffset = (blur_geometry_.y - larger_blur_geometry.y) / (float) buffer_height;
     graphics_engine->QRP_GLSL_GetDisturbedTextureFx(
-      0, 0, buffer_width, buffer_height,
+      0, 0, blur_geometry_.width, blur_geometry_.height,
       noise_device_texture->m_Texture, noise_texxform, noise_color,
       &noise_fx_struct_, texxform, nux::color::White);
-
-    // Returns a smaller blur region (minus blur radius).
-    texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-    texxform.flip_v_coord = true;
-    texxform.uoffset = dleft / (float) buffer_width;
-    texxform.voffset = dbottom / (float) buffer_height;
-    graphics_engine->QRP_GetCopyTexture(blur_geometry_.width, blur_geometry_.height,
-                                        blur_texture_, noise_fx_struct_.dst_texture,
-                                        texxform, nux::color::White);
+    
+    blur_texture_ = noise_fx_struct_.dst_texture;
   }
   else
   {
