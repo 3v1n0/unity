@@ -46,6 +46,9 @@
 
 #define WINDOW_TITLE_FONT_KEY "/apps/metacity/general/titlebar_font"
 
+#define PANEL_ENTRIES_FADEIN 100
+#define PANEL_ENTRIES_FADEOUT 120
+
 namespace unity
 {
 
@@ -78,7 +81,9 @@ PanelMenuView::PanelMenuView(int padding)
     _active_moved_id(0),
     _update_show_now_id(0),
     _place_shown_interest(0),
-    _place_hidden_interest(0)
+    _place_hidden_interest(0),
+    _fade_in_animator(NULL),
+    _fade_out_animator(NULL)
 {
   WindowManager* win_manager;
 
@@ -150,7 +155,19 @@ PanelMenuView::PanelMenuView(int padding)
                                                          (UBusCallback)PanelMenuView::OnPlaceViewHidden,
                                                          this);
 
+  _fade_in_animator = new Animator(PANEL_ENTRIES_FADEIN);
+  _fade_out_animator = new Animator(PANEL_ENTRIES_FADEOUT);
+
+  _fade_in_animator->animation_updated.connect(sigc::mem_fun(this, &PanelMenuView::OnFadeInChanged));
+  _fade_in_animator->animation_ended.connect(sigc::mem_fun(this, &PanelMenuView::FullRedraw));
+  _fade_out_animator->animation_updated.connect(sigc::mem_fun(this, &PanelMenuView::OnFadeOutChanged));
+  _fade_out_animator->animation_ended.connect(sigc::mem_fun(this, &PanelMenuView::FullRedraw));
+
+  SetOpacity(0.0f);
+  _window_buttons->SetOpacity(0.0f);
+
   Refresh();
+  FullRedraw();
 }
 
 PanelMenuView::~PanelMenuView()
@@ -166,6 +183,12 @@ PanelMenuView::~PanelMenuView()
 
   if (_title_layer)
     delete _title_layer;
+
+  if (_fade_in_animator)
+    delete _fade_in_animator;
+
+  if (_fade_out_animator)
+    delete _fade_out_animator;
 
   _menu_layout->UnReference();
   _window_buttons->UnReference();
@@ -311,6 +334,63 @@ long PanelMenuView::PostLayoutManagement(long LayoutResult)
 }
 
 void
+PanelMenuView::OnFadeInChanged(double opacity)
+{
+  if (DrawMenus() && GetOpacity() != 1.0f)
+    SetOpacity(opacity);
+
+  if (DrawWindowButtons() && _window_buttons->GetOpacity() != 1.0f)
+    _window_buttons->SetOpacity(opacity);
+
+  NeedRedraw();
+}
+
+void
+PanelMenuView::OnFadeOutChanged(double progress)
+{
+  double opacity = CLAMP(1.0f - progress, 0.0f, 1.0f);
+
+  if (!DrawMenus() && GetOpacity() != 0.0f)
+    SetOpacity(opacity);
+
+  if (!DrawWindowButtons() && _window_buttons->GetOpacity() != 0.0f)
+    _window_buttons->SetOpacity(opacity);
+
+  NeedRedraw();
+}
+
+bool
+PanelMenuView::DrawMenus()
+{
+  if (!_is_own_window && !_places_showing && _we_control_active)
+  {
+    if (_is_inside || _last_active_view || _show_now_activated)
+    {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+bool
+PanelMenuView::DrawWindowButtons()
+{
+  if (_places_showing)
+    return true;
+
+  if (!_is_own_window && _we_control_active && _is_maximized)
+  {
+    if (_is_inside || _show_now_activated)
+    {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+void
 PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
   nux::Geometry geo = GetGeometry();
@@ -334,103 +414,155 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
   nux::ColorLayer layer(nux::Color(0x00000000), true, rop);
-  gPainter.PushDrawLayer(GfxContext, GetGeometry(), &layer);
+  nux::GetPainter().PushDrawLayer(GfxContext, GetGeometry(), &layer);
 
-  if (_is_own_window || !_we_control_active || (_is_maximized && (_is_inside || _show_now_activated)))
+  if (_title_layer && !_is_own_window)
   {
+    guint blend_alpha = 0, blend_src = 0, blend_dest = 0;
+    bool draw_faded_title = false;
 
-  }
-  else
-  {
-    bool have_valid_entries = false;
-    for (auto entry : entries_)
+    GfxContext.GetRenderStates().GetBlend(blend_alpha, blend_src, blend_dest);
+
+    if (!DrawWindowButtons() && _we_control_active &&
+        (DrawMenus() || (GetOpacity() > 0.0f && _window_buttons->GetOpacity() == 0.0f)))
     {
-      if (entry.second->IsEntryValid())
+      for (auto entry : entries_)
       {
-        have_valid_entries = true;
-        break;
+        if (entry.second->IsEntryValid())
+        {
+          draw_faded_title = true;
+          break;
+        }
       }
     }
 
-    if ((_is_inside || _last_active_view || _show_now_activated) && have_valid_entries)
+    if (draw_faded_title)
     {
+      bool build_gradient = false;
+      nux::SURFACE_LOCKED_RECT lockrect;
+      bool locked = false;
+
       if (_gradient_texture.IsNull())
       {
-        nux::NTextureData texture_data(nux::BITFMT_R8G8B8A8, geo.width, 1, 1);
-        nux::ImageSurface surface = texture_data.GetSurface(0);
-        nux::SURFACE_LOCKED_RECT lockrect;
-        BYTE* dest;
-        int num_row;
+        build_gradient = true;
+      }
+      else
+      {
+        if (_gradient_texture->LockRect(0, &lockrect, NULL) != OGL_OK)
+          build_gradient = true;
+        else
+          locked = true;
 
-        _gradient_texture = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableDeviceTexture(texture_data.GetWidth(), texture_data.GetHeight(), 1, texture_data.GetFormat());
-
-        _gradient_texture->LockRect(0, &lockrect, 0);
-
-        dest = (BYTE*) lockrect.pBits;
-        num_row = surface.GetBlockHeight();
-
-        for (int y = 0; y < num_row; y++)
+        if (!lockrect.pBits)
         {
-          for (int x = 0; x < geo.width; x++)
-          {
-            BYTE a;
-            if (x < button_width * (factor - 1))
-            {
-              a = 0xff;
-            }
-            else if (x < button_width * factor)
-            {
-              a = 255 - 255 * (((float)x - (button_width * (factor - 1))) / (float)(button_width));
-            }
-            else
-            {
-              a = 0x00;
-            }
+          build_gradient = true;
 
-            *(dest + y * lockrect.Pitch + 4 * x + 0) = (223 * a) / 255; //red
-            *(dest + y * lockrect.Pitch + 4 * x + 1) = (219 * a) / 255; //green
-            *(dest + y * lockrect.Pitch + 4 * x + 2) = (210 * a) / 255; //blue
-            *(dest + y * lockrect.Pitch + 4 * x + 3) = a;
+          if (locked)
+            _gradient_texture->UnlockRect(0);
+        }
+      }
+
+      if (build_gradient)
+      {
+        nux::NTextureData texture_data(nux::BITFMT_R8G8B8A8, geo.width, 1, 1);
+
+        _gradient_texture = nux::GetGraphicsDisplay()->GetGpuDevice()->
+                            CreateSystemCapableDeviceTexture(texture_data.GetWidth(),
+                            texture_data.GetHeight(), 1, texture_data.GetFormat());
+        locked = (_gradient_texture->LockRect(0, &lockrect, NULL) == OGL_OK);
+      }
+
+      int gradient_opacity = 255.0f * GetOpacity();
+      BYTE* dest_buffer = (BYTE*) lockrect.pBits;
+
+      for (int x = 0; x < geo.width && dest_buffer && locked; x++)
+      {
+        BYTE a;
+        if (x < button_width * (factor - 1))
+        {
+          a = 0xff;
+        }
+        else if (x < button_width * factor)
+        {
+          a = 0xff - gradient_opacity * (((float)x - (button_width * (factor - 1))) / (float)(button_width));
+        }
+        else
+        {
+          if (!DrawMenus())
+          {
+            a = 0xff - gradient_opacity;
+          }
+          else if (0xff - gradient_opacity > 0x55)
+          {
+            // If we're fading-out the title, it's better to quickly hide
+            // the transparent right-most area
+            a = 0xff - gradient_opacity - 0x55;
+          }
+          else
+          {
+            a = 0x00;
           }
         }
-        _gradient_texture->UnlockRect(0);
-      }
-      guint alpha = 0, src = 0, dest = 0;
 
-      GfxContext.GetRenderStates().GetBlend(alpha, src, dest);
+        *(dest_buffer + 4 * x + 0) = (223 * a) / 255; //red
+        *(dest_buffer + 4 * x + 1) = (219 * a) / 255; //green
+        *(dest_buffer + 4 * x + 2) = (210 * a) / 255; //blue
+        *(dest_buffer + 4 * x + 3) = a;
+      }
+
+      // FIXME Nux shouldn't make unity to crash if we try to unlock a wrong rect
+      if (locked)
+        _gradient_texture->UnlockRect(0);
+
       GfxContext.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
       nux::TexCoordXForm texxform0;
       nux::TexCoordXForm texxform1;
 
       // Modulate the checkboard and the gradient texture
-      if (_title_layer)
-        GfxContext.QRP_2TexMod(geo.x, geo.y,
-                               geo.width, geo.height,
-                               _gradient_texture, texxform0,
-                               nux::color::White,
-                               _title_layer->GetDeviceTexture(),
-                               texxform1,
-                               nux::color::White);
+      GfxContext.QRP_2TexMod(geo.x, geo.y,
+                             geo.width, geo.height,
+                             _gradient_texture, texxform0,
+                             nux::color::White,
+                             _title_layer->GetDeviceTexture(),
+                             texxform1,
+                             nux::color::White);
 
-      GfxContext.GetRenderStates().SetBlend(alpha, src, dest);
       // The previous blend is too aggressive on the texture and therefore there
       // is a slight loss of clarity. This fixes that
       geo.width = button_width * (factor - 1);
-      if (_title_layer)
-        gPainter.PushDrawLayer(GfxContext, geo, _title_layer);
+      nux::GetPainter().PushDrawLayer(GfxContext, geo, _title_layer);
       geo = GetGeometry();
     }
-    else
+    else if (!_places_showing && _window_buttons->GetOpacity() < 1.0f && _window_buttons->GetOpacity() > 0.0f)
     {
-      if (_title_layer)
-        gPainter.PushDrawLayer(GfxContext,
-                               geo,
-                               _title_layer);
+      double title_opacity = 1.0f - _window_buttons->GetOpacity();
+      
+      if (!DrawWindowButtons())
+      {
+        // If we're fading-out the buttons/menus, let's fade-in quickly the title
+        title_opacity = CLAMP(title_opacity + 0.25f, 0.0f, 1.0f);
+      }
+      else
+      {
+        // If we're fading-in the buttons/menus, let's fade-out quickly the title
+        title_opacity = CLAMP(title_opacity - 0.25f, 0.0f, 1.0f);
+      }
+
+      nux::TexCoordXForm texxform;
+      GfxContext.QRP_1Tex(geo.x, geo.y, geo.width, geo.height,
+                          _title_layer->GetDeviceTexture(), texxform,
+                          nux::color::White * title_opacity);
     }
+    else if (_window_buttons->GetOpacity() == 0.0f && _we_control_active)
+    {
+      nux::GetPainter().PushDrawLayer(GfxContext, geo, _title_layer);
+    }
+
+    GfxContext.GetRenderStates().SetBlend(blend_alpha, blend_src, blend_dest);
   }
 
-  gPainter.PopBackground();
+  nux::GetPainter().PopBackground();
 
   GfxContext.PopClippingRectangle();
 }
@@ -439,21 +571,54 @@ void
 PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
   nux::Geometry geo = GetGeometry();
+  bool draw_menus = DrawMenus();
+  bool draw_buttons = DrawWindowButtons();
 
   GfxContext.PushClippingRectangle(geo);
 
-  if (!_is_own_window && !_places_showing && _we_control_active)
+  if (draw_menus)
   {
-    if (_is_inside || _last_active_view || _show_now_activated)
-    {
-      _menu_layout->ProcessDraw(GfxContext, force_draw);
-    }
+    _menu_layout->ProcessDraw(GfxContext, true);
+
+    _fade_out_animator->Stop();
+    _fade_in_animator->Start(GetOpacity());
   }
 
-  if ((!_is_own_window && _we_control_active && _is_maximized &&
-      (_is_inside || _show_now_activated)) || _places_showing)
+  if (GetOpacity() != 0.0f && !draw_menus)
+  {
+    _menu_layout->ProcessDraw(GfxContext, true);
+
+    _fade_in_animator->Stop();
+
+    if (_fade_out_animator->GetDuration() != PANEL_ENTRIES_FADEOUT)
+    {
+      if (_fade_out_animator->IsRunning())
+        _fade_out_animator->Stop();
+
+      _fade_out_animator->SetDuration(PANEL_ENTRIES_FADEOUT);
+    }
+    _fade_out_animator->Start(1.0f - GetOpacity());
+  }
+
+  if (draw_buttons)
   {
     _window_buttons->ProcessDraw(GfxContext, true);
+
+    _fade_out_animator->Stop();
+    _fade_in_animator->Start(_window_buttons->GetOpacity());
+  }
+
+  if (_window_buttons->GetOpacity() != 0.0f && !draw_buttons)
+  {
+    _window_buttons->ProcessDraw(GfxContext, true);
+    _fade_in_animator->Stop();
+
+    /* If we try to hide only the buttons, then use a faster fadeout */
+    if (!_fade_out_animator->IsRunning())
+    {
+      _fade_out_animator->SetDuration(PANEL_ENTRIES_FADEOUT/5);
+      _fade_out_animator->Start(1.0f - _window_buttons->GetOpacity());
+    }
   }
 
   GfxContext.PopClippingRectangle();
@@ -471,22 +636,28 @@ PanelMenuView::GetActiveViewName()
   if (BAMF_IS_WINDOW(window))
   {
     std::vector<Window> const& our_xids = nux::XInputWindow::NativeHandleList();
+    guint32 window_xid = bamf_window_get_xid(BAMF_WINDOW(window));
 
-    if (std::find(our_xids.begin(), our_xids.end(), bamf_window_get_xid(BAMF_WINDOW(window))) != our_xids.end())
+    if (std::find(our_xids.begin(), our_xids.end(), window_xid) != our_xids.end())
+    {
       _is_own_window = true;
-  }
+      return g_strdup("");
+    }
 
-  if (BAMF_IS_WINDOW(window) &&
-      bamf_window_get_window_type(window) == BAMF_WINDOW_DESKTOP)
-  {
-    // Make the special 
-    label = g_strdup(g_dgettext("nautilus", "Desktop"));
-  }
+    if (BAMF_IS_WINDOW(window) &&
+        bamf_window_get_window_type(window) == BAMF_WINDOW_DESKTOP)
+    {
+      // Make the special 
+      label = g_strdup(g_dgettext("nautilus", "Desktop"));
+    }
 
-  if (_is_maximized)
-  {
-    BamfWindow* window = bamf_matcher_get_active_window(_matcher);
-    if (BAMF_IS_WINDOW(window))
+    if (!WindowManager::Default()->IsWindowOnCurrentDesktop(window_xid) ||
+        WindowManager::Default()->IsWindowObscured(window_xid))
+    {
+       return g_strdup("");
+    }
+
+    if (_is_maximized)
       label = bamf_view_get_name(BAMF_VIEW(window));
   }
 
@@ -747,7 +918,7 @@ PanelMenuView::OnActiveChanged(PanelIndicatorEntryView* view,
 void
 PanelMenuView::OnEntryAdded(unity::indicator::Entry::Ptr const& entry)
 {
-  auto view = AddEntry(entry, 6, IndicatorEntryPosition::END);
+  auto view = AddEntry(entry, 6, IndicatorEntryPosition::END, IndicatorEntryType::MENU);
 
   entry->show_now_changed.connect(sigc::mem_fun(this, &PanelMenuView::UpdateShowNow));
 
@@ -969,7 +1140,10 @@ PanelMenuView::OnCloseClicked()
 
     window = bamf_matcher_get_active_window(_matcher);
     if (BAMF_IS_WINDOW(window))
+    {
       WindowManager::Default()->Close(bamf_window_get_xid(window));
+      NeedRedraw();
+    }
   }
 }
 
@@ -987,7 +1161,10 @@ PanelMenuView::OnMinimizeClicked()
 
     window = bamf_matcher_get_active_window(_matcher);
     if (BAMF_IS_WINDOW(window))
+    {
       WindowManager::Default()->Minimize(bamf_window_get_xid(window));
+      NeedRedraw();
+    }
   }
 }
 
@@ -1007,7 +1184,10 @@ PanelMenuView::OnRestoreClicked()
 
     window = bamf_matcher_get_active_window(_matcher);
     if (BAMF_IS_WINDOW(window))
+    {
       WindowManager::Default()->Restore(bamf_window_get_xid(window));
+      NeedRedraw();
+    }
   }
 }
 
@@ -1155,6 +1335,7 @@ void PanelMenuView::AddProperties(GVariantBuilder* builder)
  * C code for callbacks
  */
 static void
+
 on_active_window_changed(BamfMatcher*   matcher,
                          BamfView*      old_view,
                          BamfView*      new_view,
