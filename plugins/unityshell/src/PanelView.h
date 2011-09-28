@@ -35,7 +35,6 @@
 #include "PanelMenuView.h"
 #include "PanelTray.h"
 #include "PanelIndicatorsView.h"
-#include "PanelStyle.h"
 
 namespace unity
 {

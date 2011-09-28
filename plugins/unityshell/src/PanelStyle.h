@@ -27,28 +27,30 @@
 
 namespace unity
 {
+namespace panel
+{
 
-class PanelStyle
+enum class WindowButtonType
+{
+  CLOSE,
+  MINIMIZE,
+  UNMAXIMIZE
+};
+
+enum class WindowState
+{
+  NORMAL,
+  PRELIGHT,
+  PRESSED
+};
+
+class Style
 {
 public:
-  enum class WindowButtonType
-  {
-    CLOSE,
-    MINIMIZE,
-    UNMAXIMIZE
-  };
+  Style();
+  ~Style();
 
-  enum class WindowState
-  {
-    NORMAL,
-    PRELIGHT,
-    PRESSED
-  };
-
-  PanelStyle();
-  ~PanelStyle();
-
-  static PanelStyle& Instance();
+  static Style& Instance();
 
   GtkStyleContext* GetStyleContext();
 
@@ -63,11 +65,14 @@ public:
   bool IsAmbianceOrRadiance();
 
 private:
-  void        Refresh();
+  void Refresh();
+
   static void OnStyleChanged(GObject*    gobject,
                              GParamSpec* pspec,
                              gpointer    data);
-  nux::BaseTexture* GetWindowButtonForTheme(WindowButtonType type, WindowState state);
+
+  nux::BaseTexture* GetWindowButtonForTheme(WindowButtonType type,
+                                            WindowState state);
 private:
   GtkStyleContext*   _style_context;
   char*              _theme_name;
@@ -76,5 +81,6 @@ private:
   gulong            _gtk_theme_changed_id;
 };
 
+}
 }
 #endif // PANEL_STYLE_H

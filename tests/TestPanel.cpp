@@ -52,7 +52,7 @@ int main(int argc, char** argv)
   nux::NuxInitialize(0);
 
   // The instances for the pseudo-singletons.
-  unity::PanelStyle panel_style;
+  unity::panel::Style panel_style;
 
   nux::WindowThread* wt = nux::CreateGUIThread(TEXT("Unity Panel"), 1024, 24, 0, &ThreadWidgetInit, 0);
 

@@ -61,7 +61,7 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
       _dash_is_open(false)
 {
   _needs_geo_sync = false;
-  PanelStyle::Instance().changed.connect(sigc::mem_fun(this, &PanelView::ForceUpdateBackground));
+  panel::Style::Instance().changed.connect(sigc::mem_fun(this, &PanelView::ForceUpdateBackground));
 
   _bg_layer = new nux::ColorLayer(nux::Color(0xff595853), true);
 
@@ -377,7 +377,7 @@ PanelView::UpdateBackground()
   }
   else
   {
-    nux::NBitmapData* bitmap = PanelStyle::Instance().GetBackground(geo.width, geo.height, _opacity);
+    nux::NBitmapData* bitmap = panel::Style::Instance().GetBackground(geo.width, geo.height, _opacity);
     nux::BaseTexture* texture2D = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
     texture2D->Update(bitmap);
     delete bitmap;

@@ -22,6 +22,10 @@
 #ifndef UNITYSHELL_H
 #define UNITYSHELL_H
 
+#include <Nux/WindowThread.h>
+#include <sigc++/sigc++.h>
+#include <boost/shared_ptr.hpp>
+
 #include <core/core.h>
 #include <core/pluginclasshandler.h>
 #include <composite/composite.h>
@@ -32,21 +36,23 @@
 #include "Introspectable.h"
 #include "DashController.h"
 #include "DashStyle.h"
+#include "DesktopLauncherIcon.h"
 #include "FontSettings.h"
 #include "Launcher.h"
 #include "LauncherController.h"
 #include "PanelController.h"
+#include "PanelStyle.h"
 #include "PlacesStyle.h"
 #include "UScreen.h"
 #include "GestureEngine.h"
 #include "DebugDBusInterface.h"
 #include "SwitcherController.h"
 #include "UBusWrapper.h"
-#include <Nux/WindowThread.h>
-#include <sigc++/sigc++.h>
-#include <boost/shared_ptr.hpp>
 
 #include "compizminimizedwindowhandler.h"
+#include "BGHash.h"
+#include <compiztoolbox/compiztoolbox.h>
+
 
 class UnityFBO
 {
@@ -115,17 +121,10 @@ private:
   UnityShowdesktopHandler::State mState;
   float                          mProgress;
 };
-  
 
-
-#include "BGHash.h"
-#include "DesktopLauncherIcon.h"
-
-#include <compiztoolbox/compiztoolbox.h>
 
 using unity::FontSettings;
 using unity::DashStyle;
-using unity::PanelStyle;
 using unity::PlacesStyle;
 using namespace unity::switcher;
 using namespace unity::dash;
@@ -273,7 +272,7 @@ private:
   static void OnLauncherEndKeyNav(GVariant* data, void* value);
 
   DashStyle               dash_style_;
-  PanelStyle              panel_style_;
+  unity::panel::Style     panel_style_;
   PlacesStyle             places_style_;
   FontSettings            font_settings_;
   Launcher*               launcher;

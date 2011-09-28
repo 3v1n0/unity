@@ -34,13 +34,13 @@
 
 namespace unity
 {
+namespace panel
+{
 namespace
 {
-PanelStyle* style_instance = nullptr;
+Style* style_instance = nullptr;
 
 nux::logging::Logger logger("unity.panel");
-
-PanelStyle* _style = NULL;
 
 nux::Color ColorFromGdkRGBA(GdkRGBA const& color)
 {
@@ -52,12 +52,12 @@ nux::Color ColorFromGdkRGBA(GdkRGBA const& color)
 
 }
 
-PanelStyle::PanelStyle()
+Style::Style()
   : _theme_name(NULL)
 {
   if (style_instance)
   {
-    LOG_ERROR(logger) << "More than one PanelStyle created.";
+    LOG_ERROR(logger) << "More than one panel::Style created.";
   }
   else
   {
@@ -77,41 +77,36 @@ PanelStyle::PanelStyle()
   gtk_widget_path_free(widget_path);
 
   _gtk_theme_changed_id = g_signal_connect(gtk_settings_get_default(), "notify::gtk-theme-name",
-                                           G_CALLBACK(PanelStyle::OnStyleChanged), this);
+                                           G_CALLBACK(Style::OnStyleChanged), this);
 
   Refresh();
 }
 
-PanelStyle::~PanelStyle()
+Style::~Style()
 {
   if (_gtk_theme_changed_id)
     g_signal_handler_disconnect(gtk_settings_get_default(),
                                 _gtk_theme_changed_id);
 
   g_object_unref(_style_context);
-
-  if (_style == this)
-    _style = NULL;
-
   g_free(_theme_name);
 
   if (style_instance == this)
     style_instance = nullptr;
 }
 
-PanelStyle& PanelStyle::Instance()
+Style& Style::Instance()
 {
   if (!style_instance)
   {
-    LOG_ERROR(logger) << "No PanelStyle created yet.";
+    LOG_ERROR(logger) << "No panel::Style created yet.";
   }
 
   return *style_instance;
 }
 
 
-void
-PanelStyle::Refresh()
+void Style::Refresh()
 {
   GdkRGBA rgba_text;
 
@@ -130,43 +125,36 @@ PanelStyle::Refresh()
   changed.emit();
 }
 
-GtkStyleContext*
-PanelStyle::GetStyleContext()
+GtkStyleContext* Style::GetStyleContext()
 {
   return _style_context;
 }
 
-void
-PanelStyle::OnStyleChanged(GObject*    gobject,
+void Style::OnStyleChanged(GObject*    gobject,
                            GParamSpec* pspec,
                            gpointer    data)
 {
-  PanelStyle* self = (PanelStyle*) data;
+  Style* self = (Style*) data;
 
   self->Refresh();
 }
 
-nux::NBitmapData* PanelStyle::GetBackground(int width, int height, float opacity)
+nux::NBitmapData* Style::GetBackground(int width, int height, float opacity)
 {
-  // TODO: check to see if we can put this on the stack.
-  nux::CairoGraphics* context = new nux::CairoGraphics(CAIRO_FORMAT_ARGB32, width, height);
+  nux::CairoGraphics context(CAIRO_FORMAT_ARGB32, width, height);
+
   // Use the internal context as we know it is good and shiny new.
-  cairo_t* cr = context->GetInternalContext();
+  cairo_t* cr = context.GetInternalContext();
   cairo_push_group(cr);
   gtk_render_background(_style_context, cr, 0, 0, width, height);
   gtk_render_frame(_style_context, cr, 0, 0, width, height);
   cairo_pop_group_to_source(cr);
   cairo_paint_with_alpha(cr, opacity);
 
-  nux::NBitmapData* bitmap = context->GetBitmap();
-
-  delete context;
-
-  return bitmap;
+  return context.GetBitmap();
 }
 
-nux::BaseTexture*
-PanelStyle::GetWindowButton(WindowButtonType type, WindowState state)
+nux::BaseTexture* Style::GetWindowButton(WindowButtonType type, WindowState state)
 {
   nux::BaseTexture* texture = NULL;
   const char* names[] = { "close", "minimize", "unmaximize" };
@@ -223,8 +211,8 @@ PanelStyle::GetWindowButton(WindowButtonType type, WindowState state)
   return texture;
 }
 
-nux::BaseTexture*
-PanelStyle::GetWindowButtonForTheme(WindowButtonType type, WindowState state)
+nux::BaseTexture* Style::GetWindowButtonForTheme(WindowButtonType type,
+                                                 WindowState state)
 {
   int width = 18, height = 18;
   float w = width / 3.0f;
@@ -285,8 +273,7 @@ PanelStyle::GetWindowButtonForTheme(WindowButtonType type, WindowState state)
   return texture_from_cairo_graphics(cairo_graphics);
 }
 
-GdkPixbuf*
-PanelStyle::GetHomeButton()
+GdkPixbuf* Style::GetHomeButton()
 {
   GdkPixbuf* pixbuf = NULL;
 
@@ -304,4 +291,5 @@ PanelStyle::GetHomeButton()
   return pixbuf;
 }
 
-}
+} // namespace panel
+} // namespace unity

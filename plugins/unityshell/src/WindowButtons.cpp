@@ -45,7 +45,7 @@ class WindowButton : public nux::Button
 {
   // A single window button
 public:
-  WindowButton(PanelStyle::WindowButtonType type)
+  WindowButton(panel::WindowButtonType type)
     : nux::Button("", NUX_TRACKER_LOCATION),
       _type(type),
       _normal_tex(NULL),
@@ -61,7 +61,7 @@ public:
   {
     LoadImages();
     UpdateDashUnmaximize();
-    PanelStyle::Instance().changed.connect(sigc::mem_fun(this, &WindowButton::LoadImages));
+    panel::Style::Instance().changed.connect(sigc::mem_fun(this, &WindowButton::LoadImages));
     DashSettings::GetDefault()->changed.connect(sigc::mem_fun(this, &WindowButton::UpdateDashUnmaximize));
 
     UBusServer* ubus = ubus_server_get_default();
@@ -144,7 +144,7 @@ public:
 
   void LoadImages()
   {
-    PanelStyle& style = PanelStyle::Instance();
+    panel::Style& style = panel::Style::Instance();
 
     if (_normal_tex)
       _normal_tex->UnReference();
@@ -159,12 +159,12 @@ public:
     if (_pressed_dash_tex)
       _pressed_dash_tex->UnReference();
 
-    _normal_tex = style.GetWindowButton(_type, PanelStyle::WindowState::NORMAL);
-    _prelight_tex = style.GetWindowButton(_type, PanelStyle::WindowState::PRELIGHT);
-    _pressed_tex = style.GetWindowButton(_type, PanelStyle::WindowState::PRESSED);
-    _normal_dash_tex = GetDashWindowButton(_type, PanelStyle::WindowState::NORMAL);
-    _prelight_dash_tex = GetDashWindowButton(_type, PanelStyle::WindowState::PRELIGHT);
-    _pressed_dash_tex = GetDashWindowButton(_type, PanelStyle::WindowState::PRESSED);
+    _normal_tex = style.GetWindowButton(_type, panel::WindowState::NORMAL);
+    _prelight_tex = style.GetWindowButton(_type, panel::WindowState::PRELIGHT);
+    _pressed_tex = style.GetWindowButton(_type, panel::WindowState::PRESSED);
+    _normal_dash_tex = GetDashWindowButton(_type, panel::WindowState::NORMAL);
+    _prelight_dash_tex = GetDashWindowButton(_type, panel::WindowState::PRELIGHT);
+    _pressed_dash_tex = GetDashWindowButton(_type, panel::WindowState::PRESSED);
 
     if (_dash_is_open)
     {
@@ -183,7 +183,7 @@ public:
   void UpdateDashUnmaximize()
   {
     // only update the unmaximize button
-    if (_type != PanelStyle::WindowButtonType::UNMAXIMIZE)
+    if (_type != panel::WindowButtonType::UNMAXIMIZE)
       return;
 
     if (_normal_dash_tex)
@@ -196,16 +196,16 @@ public:
     if (DashSettings::GetDefault()->GetFormFactor() == DashSettings::DESKTOP)
     {
       // get maximize buttons
-      _normal_dash_tex = GetDashMaximizeWindowButton(PanelStyle::WindowState::NORMAL);
-      _prelight_dash_tex = GetDashMaximizeWindowButton(PanelStyle::WindowState::PRELIGHT);
-      _pressed_dash_tex = GetDashMaximizeWindowButton(PanelStyle::WindowState::PRESSED);
+      _normal_dash_tex = GetDashMaximizeWindowButton(panel::WindowState::NORMAL);
+      _prelight_dash_tex = GetDashMaximizeWindowButton(panel::WindowState::PRELIGHT);
+      _pressed_dash_tex = GetDashMaximizeWindowButton(panel::WindowState::PRESSED);
     }
     else
     {
       // get unmaximize buttons
-      _normal_dash_tex = GetDashWindowButton(_type, PanelStyle::WindowState::NORMAL);
-      _prelight_dash_tex = GetDashWindowButton(_type, PanelStyle::WindowState::PRELIGHT);
-      _pressed_dash_tex = GetDashWindowButton(_type, PanelStyle::WindowState::PRESSED);
+      _normal_dash_tex = GetDashWindowButton(_type, panel::WindowState::NORMAL);
+      _prelight_dash_tex = GetDashWindowButton(_type, panel::WindowState::PRELIGHT);
+      _pressed_dash_tex = GetDashWindowButton(_type, panel::WindowState::PRESSED);
     }
 
     // still check if the dash is really opened,
@@ -221,7 +221,7 @@ public:
   }
 
 private:
-  PanelStyle::WindowButtonType _type;
+  panel::WindowButtonType _type;
   nux::BaseTexture* _normal_tex;
   nux::BaseTexture* _prelight_tex;
   nux::BaseTexture* _pressed_tex;
@@ -255,7 +255,8 @@ private:
     self->QueueDraw();
   }
 
-  nux::BaseTexture* GetDashWindowButton(PanelStyle::WindowButtonType type, PanelStyle::WindowState state)
+  nux::BaseTexture* GetDashWindowButton(panel::WindowButtonType type,
+                                        panel::WindowState state)
   {
     const char* names[] = { "close_dash", "minimize_dash", "unmaximize_dash" };
     const char* states[] = { "", "_prelight", "_pressed" };
@@ -273,7 +274,7 @@ private:
     return nux::CreateTexture2DFromPixbuf(pixbuf, true);
   }
 
-  nux::BaseTexture* GetDashMaximizeWindowButton(PanelStyle::WindowState state)
+  nux::BaseTexture* GetDashMaximizeWindowButton(panel::WindowState state)
   {
     const char* states[] = { "", "_prelight", "_pressed" };
 
@@ -311,21 +312,21 @@ WindowButtons::WindowButtons()
     mouse_move.emit(x, y, dx, dy, button_flags, key_flags);
   };
 
-  but = new WindowButton(PanelStyle::WindowButtonType::CLOSE);
+  but = new WindowButton(panel::WindowButtonType::CLOSE);
   AddView(but, 0, nux::eCenter, nux::eFix);
   but->activated.connect(sigc::mem_fun(this, &WindowButtons::OnCloseClicked));
   but->mouse_enter.connect(lambda_enter);
   but->mouse_leave.connect(lambda_leave);
   but->mouse_move.connect(lambda_moved);
 
-  but = new WindowButton(PanelStyle::WindowButtonType::MINIMIZE);
+  but = new WindowButton(panel::WindowButtonType::MINIMIZE);
   AddView(but, 0, nux::eCenter, nux::eFix);
   but->activated.connect(sigc::mem_fun(this, &WindowButtons::OnMinimizeClicked));
   but->mouse_enter.connect(lambda_enter);
   but->mouse_leave.connect(lambda_leave);
   but->mouse_move.connect(lambda_moved);
 
-  but = new WindowButton(PanelStyle::WindowButtonType::UNMAXIMIZE);
+  but = new WindowButton(panel::WindowButtonType::UNMAXIMIZE);
   AddView(but, 0, nux::eCenter, nux::eFix);
   but->activated.connect(sigc::mem_fun(this, &WindowButtons::OnRestoreClicked));
   but->mouse_enter.connect(lambda_enter);
