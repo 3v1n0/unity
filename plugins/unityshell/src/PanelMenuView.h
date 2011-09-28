@@ -111,6 +111,12 @@ private:
   void UpdateShowNow(bool ignore);
   static gboolean UpdateActiveWindowPosition(PanelMenuView* self);
   static gboolean UpdateShowNowWithDelay(PanelMenuView* self);
+  void DrawText(cairo_t *cr_real,
+                int &x, int y, int width, int height,
+                const char* font_desc,
+                const char* label,
+                int increase_size=0
+                );
 
 private:
   BamfMatcher* _matcher;
