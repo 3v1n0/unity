@@ -119,7 +119,7 @@ int main(int argc, char **argv)
   nux::NuxInitialize(0);
 
   // The instances for the pseudo-singletons.
-  unity::DashStyle dash_style;
+  unity::dash::Style dash_style;
 
   TestRunner *test_runner = new TestRunner ();
   wt = nux::CreateGUIThread(TEXT("Unity Places Tile Test"),

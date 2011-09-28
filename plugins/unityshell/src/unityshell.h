@@ -266,7 +266,7 @@ private:
   static void OnLauncherStartKeyNav(GVariant* data, void* value);
   static void OnLauncherEndKeyNav(GVariant* data, void* value);
 
-  DashStyle               dash_style_;
+  dash::Style             dash_style_;
   panel::Style            panel_style_;
   PlacesStyle             places_style_;
   FontSettings            font_settings_;

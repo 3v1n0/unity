@@ -38,11 +38,13 @@
 
 namespace unity
 {
+namespace dash
+{
 namespace
 {
 nux::logging::Logger logger("unity.dash");
 
-DashStyle* style_instance = nullptr;
+Style* style_instance = nullptr;
 const int STATES = 5;
 
 // These cairo overrides may also be reused somewhere...
@@ -64,7 +66,7 @@ inline double _align(double val)
 } // anon namespace
 
 
-class DashStyle::Impl
+class Style::Impl
 {
 public:
   Impl();
@@ -143,7 +145,7 @@ public:
   double                scrollbar_corner_radius_;
 };
 
-DashStyle::Impl::Impl()
+Style::Impl::Impl()
   : button_label_border_color_(STATES)
   , button_label_border_size_(STATES)
   , button_label_text_color_(STATES)
@@ -226,18 +228,18 @@ DashStyle::Impl::Impl()
   parser.ReadDouble("scrollbar", "corner-radius", scrollbar_corner_radius_);
 }
 
-DashStyle::Impl::~Impl()
+Style::Impl::~Impl()
 {
   if (cairo_font_options_status(default_font_options_) == CAIRO_STATUS_SUCCESS)
     cairo_font_options_destroy(default_font_options_);
 }
 
-DashStyle::DashStyle()
+Style::Style()
   : pimpl(new Impl())
 {
   if (style_instance)
   {
-    LOG_ERROR(logger) << "More than one DashStyle created.";
+    LOG_ERROR(logger) << "More than one dash::Style created.";
   }
   else
   {
@@ -245,24 +247,24 @@ DashStyle::DashStyle()
   }
 }
 
-DashStyle::~DashStyle ()
+Style::~Style ()
 {
   delete pimpl;
   if (style_instance == this)
     style_instance = nullptr;
 }
 
-DashStyle& DashStyle::Instance()
+Style& Style::Instance()
 {
   if (!style_instance)
   {
-    LOG_ERROR(logger) << "No DashStyle created yet.";
+    LOG_ERROR(logger) << "No dash::Style created yet.";
   }
 
   return *style_instance;
 }
 
-void DashStyle::RoundedRect(cairo_t* cr,
+void Style::RoundedRect(cairo_t* cr,
                             double   aspect,
                             double   x,
                             double   y,
@@ -511,12 +513,12 @@ void _expblur(guchar* pixels,
   return;
 }
 
-void DashStyle::Blur(cairo_t* cr, int size)
+void Style::Blur(cairo_t* cr, int size)
 {
   pimpl->Blur(cr, size);
 }
 
-void DashStyle::Impl::Blur(cairo_t* cr, int size)
+void Style::Impl::Blur(cairo_t* cr, int size)
 {
   // sanity check
   if (cairo_status(cr) != CAIRO_STATUS_SUCCESS &&
@@ -562,7 +564,7 @@ void DashStyle::Impl::Blur(cairo_t* cr, int size)
   cairo_surface_mark_dirty(surface);
 }
 
-void DashStyle::Impl::Star(cairo_t* cr, double size)
+void Style::Impl::Star(cairo_t* cr, double size)
 {
   double outter[5][2] = {{0.0, 0.0},
                          {0.0, 0.0},
@@ -599,7 +601,7 @@ void DashStyle::Impl::Star(cairo_t* cr, double size)
   cairo_close_path(cr);
 }
 
-void DashStyle::Impl::SetDefaultValues()
+void Style::Impl::SetDefaultValues()
 {
   // button-label
   button_label_border_color_[nux::NUX_STATE_NORMAL] = nux::Color(0.53, 1.0, 0.66, 0.5);
@@ -668,7 +670,7 @@ void DashStyle::Impl::SetDefaultValues()
   scrollbar_corner_radius_   = 1.5;
 }
 
-void DashStyle::Impl::ArrowPath(cairo_t* cr, Arrow arrow)
+void Style::Impl::ArrowPath(cairo_t* cr, Arrow arrow)
 {
   double x  = 0.0;
   double y  = 0.0;
@@ -716,7 +718,7 @@ void DashStyle::Impl::ArrowPath(cairo_t* cr, Arrow arrow)
   }
 }
 
-void DashStyle::Impl::ButtonOutlinePath (cairo_t* cr, bool align)
+void Style::Impl::ButtonOutlinePath (cairo_t* cr, bool align)
 {
   double x  = 2.0;
   double y  = 2.0;
@@ -852,7 +854,7 @@ void DashStyle::Impl::ButtonOutlinePath (cairo_t* cr, bool align)
   cairo_close_path(cr);
 }
 
-void DashStyle::Impl::RoundedRectSegment(cairo_t*   cr,
+void Style::Impl::RoundedRectSegment(cairo_t*   cr,
                                          double     aspect,
                                          double     x,
                                          double     y,
@@ -979,7 +981,7 @@ void DashStyle::Impl::RoundedRectSegment(cairo_t*   cr,
   }
 }
 
-void DashStyle::Impl::ButtonOutlinePathSegment(cairo_t* cr, Segment segment)
+void Style::Impl::ButtonOutlinePathSegment(cairo_t* cr, Segment segment)
 {
   double   x  = 0.0;
   double   y  = 2.0;
@@ -1136,7 +1138,7 @@ void DashStyle::Impl::ButtonOutlinePathSegment(cairo_t* cr, Segment segment)
   }
 }
 
-void DashStyle::Impl::GetTextExtents(int& width,
+void Style::Impl::GetTextExtents(int& width,
                                      int& height,
                                      int  maxWidth,
                                      int  maxHeight,
@@ -1211,7 +1213,7 @@ void DashStyle::Impl::GetTextExtents(int& width,
   cairo_surface_destroy(surface);
 }
 
-void DashStyle::Impl::Text(cairo_t*    cr,
+void Style::Impl::Text(cairo_t*    cr,
                            nux::Color const&  color,
                            std::string const& label)
 {
@@ -1307,7 +1309,7 @@ void DashStyle::Impl::Text(cairo_t*    cr,
   g_free(fontName);
 }
 
-cairo_operator_t DashStyle::Impl::SetBlendMode(cairo_t* cr, BlendMode mode)
+cairo_operator_t Style::Impl::SetBlendMode(cairo_t* cr, BlendMode mode)
 {
   // sanity checks
   if (cairo_status(cr) != CAIRO_STATUS_SUCCESS)
@@ -1327,7 +1329,7 @@ cairo_operator_t DashStyle::Impl::SetBlendMode(cairo_t* cr, BlendMode mode)
   return old;
 }
 
-void DashStyle::Impl::DrawOverlay(cairo_t*  cr,
+void Style::Impl::DrawOverlay(cairo_t*  cr,
                                   double    opacity,
                                   BlendMode mode,
                                   int       blurSize)
@@ -1400,7 +1402,7 @@ void DashStyle::Impl::DrawOverlay(cairo_t*  cr,
   cairo_set_operator(cr, old);
 }
 
-bool DashStyle::Button(cairo_t* cr, nux::State state, std::string const& label)
+bool Style::Button(cairo_t* cr, nux::State state, std::string const& label)
 {
   // sanity checks
   if (cairo_status(cr) != CAIRO_STATUS_SUCCESS)
@@ -1444,7 +1446,7 @@ bool DashStyle::Button(cairo_t* cr, nux::State state, std::string const& label)
   return true;
 }
 
-bool DashStyle::StarEmpty(cairo_t* cr, nux::State state)
+bool Style::StarEmpty(cairo_t* cr, nux::State state)
 {
   // sanity checks
   if (cairo_status(cr) != CAIRO_STATUS_SUCCESS)
@@ -1470,7 +1472,7 @@ bool DashStyle::StarEmpty(cairo_t* cr, nux::State state)
   return true;
 }
 
-bool DashStyle::StarHalf(cairo_t* cr, nux::State state)
+bool Style::StarHalf(cairo_t* cr, nux::State state)
 {
   // sanity checks
   if (cairo_status(cr) != CAIRO_STATUS_SUCCESS)
@@ -1504,7 +1506,7 @@ bool DashStyle::StarHalf(cairo_t* cr, nux::State state)
   return true;
 }
 
-bool DashStyle::StarFull(cairo_t* cr, nux::State state)
+bool Style::StarFull(cairo_t* cr, nux::State state)
 {
   // sanity checks
   if (cairo_status(cr) != CAIRO_STATUS_SUCCESS)
@@ -1528,7 +1530,7 @@ bool DashStyle::StarFull(cairo_t* cr, nux::State state)
   return true;
 }
 
-bool DashStyle::MultiRangeSegment(cairo_t*    cr,
+bool Style::MultiRangeSegment(cairo_t*    cr,
                                   nux::State  state,
                                   std::string const& label,
                                   Arrow       arrow,
@@ -1584,7 +1586,7 @@ bool DashStyle::MultiRangeSegment(cairo_t*    cr,
   return true;
 }
 
-bool DashStyle::TrackViewNumber(cairo_t*    cr,
+bool Style::TrackViewNumber(cairo_t*    cr,
                                 nux::State  state,
                                 std::string const& trackNumber)
 {
@@ -1598,7 +1600,7 @@ bool DashStyle::TrackViewNumber(cairo_t*    cr,
   return true;
 }
 
-bool DashStyle::TrackViewPlay(cairo_t*   cr,
+bool Style::TrackViewPlay(cairo_t*   cr,
                               nux::State state)
 {
   // sanity checks
@@ -1611,7 +1613,7 @@ bool DashStyle::TrackViewPlay(cairo_t*   cr,
   return true;
 }
 
-bool DashStyle::TrackViewPause(cairo_t*   cr,
+bool Style::TrackViewPause(cairo_t*   cr,
                                nux::State state)
 {
   // sanity checks
@@ -1624,7 +1626,7 @@ bool DashStyle::TrackViewPause(cairo_t*   cr,
   return true;
 }
 
-bool DashStyle::TrackViewProgress(cairo_t* cr)
+bool Style::TrackViewProgress(cairo_t* cr)
 {
   // sanity checks
   if (cairo_status(cr) != CAIRO_STATUS_SUCCESS)
@@ -1636,7 +1638,7 @@ bool DashStyle::TrackViewProgress(cairo_t* cr)
   return true;
 }
 
-bool DashStyle::SeparatorVert(cairo_t* cr)
+bool Style::SeparatorVert(cairo_t* cr)
 {
   // sanity checks
   if (cairo_status(cr) != CAIRO_STATUS_SUCCESS)
@@ -1664,7 +1666,7 @@ bool DashStyle::SeparatorVert(cairo_t* cr)
   return true;
 }
 
-bool DashStyle::SeparatorHoriz(cairo_t* cr)
+bool Style::SeparatorHoriz(cairo_t* cr)
 {
   // sanity checks
   if (cairo_status(cr) != CAIRO_STATUS_SUCCESS)
@@ -1692,7 +1694,7 @@ bool DashStyle::SeparatorHoriz(cairo_t* cr)
   return true;
 }
 
-int DashStyle::GetButtonGarnishSize()
+int Style::GetButtonGarnishSize()
 {
   int maxBlurSize = 0;
 
@@ -1705,14 +1707,15 @@ int DashStyle::GetButtonGarnishSize()
   return 2 * maxBlurSize;
 }
 
-int DashStyle::GetSeparatorGarnishSize()
+int Style::GetSeparatorGarnishSize()
 {
   return pimpl->separator_blur_size_;
 }
 
-int DashStyle::GetScrollbarGarnishSize()
+int Style::GetScrollbarGarnishSize()
 {
   return pimpl->scrollbar_blur_size_;
 }
 
+}
 }

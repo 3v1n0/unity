@@ -24,8 +24,8 @@
 #include <Nux/Nux.h>
 #include <NuxCore/Logger.h>
 
-#include "FilterRatingsButton.h"
 #include "DashStyle.h"
+#include "FilterRatingsButton.h"
 
 namespace {
   nux::logging::Logger logger("unity.dash.FilterRatingsButton");
@@ -96,7 +96,7 @@ namespace unity {
 
   void FilterRatingsButton::RedrawTheme (nux::Geometry const& geom, cairo_t *cr, int type, nux::State faked_state)
   {
-    DashStyle& dash_style = DashStyle::Instance();
+    dash::Style& dash_style = dash::Style::Instance();
     if (type == 0)
     {
       // empty

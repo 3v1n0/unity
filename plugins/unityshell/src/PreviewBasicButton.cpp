@@ -79,7 +79,7 @@ namespace unity {
 
   void PreviewBasicButton::RedrawTheme (nux::Geometry const& geom, cairo_t *cr, nux::State faked_state)
   {
-    DashStyle::Instance().Button(cr, faked_state, label);
+    dash::Style::Instance().Button(cr, faked_state, label);
   }
 
   long PreviewBasicButton::ComputeLayout2 ()

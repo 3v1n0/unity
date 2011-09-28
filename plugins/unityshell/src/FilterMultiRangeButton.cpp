@@ -22,6 +22,7 @@
 
 #include <Nux/Nux.h>
 
+#include "DashStyle.h"
 #include "FilterMultiRangeButton.h"
 
 namespace unity {
@@ -134,26 +135,26 @@ namespace unity {
     if (filter_)
      name = filter_->name;
 
-    DashStyle::Arrow arrow;
+    dash::Arrow arrow;
     if (has_arrow_ == MULTI_RANGE_ARROW_NONE)
-      arrow = DashStyle::Arrow::NONE;
+      arrow = dash::Arrow::NONE;
     else if (has_arrow_ == MULTI_RANGE_ARROW_LEFT)
-      arrow = DashStyle::Arrow::LEFT;
+      arrow = dash::Arrow::LEFT;
     else if (has_arrow_ == MULTI_RANGE_ARROW_BOTH)
-      arrow = DashStyle::Arrow::BOTH;
+      arrow = dash::Arrow::BOTH;
     else
-      arrow = DashStyle::Arrow::RIGHT;
+      arrow = dash::Arrow::RIGHT;
 
-    DashStyle::Segment segment;
+    dash::Segment segment;
     if (side_ == MULTI_RANGE_SIDE_LEFT)
-      segment = DashStyle::Segment::LEFT;
+      segment = dash::Segment::LEFT;
     else if (side_ == MULTI_RANGE_CENTER)
-      segment = DashStyle::Segment::MIDDLE;
+      segment = dash::Segment::MIDDLE;
     else
-      segment = DashStyle::Segment::RIGHT;
+      segment = dash::Segment::RIGHT;
 
 
-    DashStyle::Instance().MultiRangeSegment(cr, faked_state, name, arrow, segment);
+    dash::Style::Instance().MultiRangeSegment(cr, faked_state, name, arrow, segment);
     NeedRedraw();
   }
 

@@ -28,55 +28,57 @@
 
 namespace unity
 {
+namespace dash
+{
 
-class DashStyle
+enum class StockIcon {
+  CHECKMARK,
+  CROSS,
+  GRID_VIEW,
+  FLOW_VIEW,
+  STAR
+};
+
+enum class Orientation {
+  UP,
+  DOWN,
+  LEFT,
+  RIGHT
+};
+
+enum class BlendMode {
+  NORMAL,
+  MULTIPLY,
+  SCREEN
+};
+
+enum class FontWeight {
+  LIGHT,
+  REGULAR,
+  BOLD
+};
+
+enum class Segment {
+  LEFT,
+  MIDDLE,
+  RIGHT
+};
+
+enum class Arrow {
+  LEFT,
+  RIGHT,
+  BOTH,
+  NONE
+};
+
+
+class Style
 {
 public:
+  Style ();
+  ~Style ();
 
-  enum class StockIcon {
-    CHECKMARK,
-    CROSS,
-    GRID_VIEW,
-    FLOW_VIEW,
-    STAR
-  };
-
-  enum class Orientation {
-    UP,
-    DOWN,
-    LEFT,
-    RIGHT
-  };
-
-  enum class BlendMode {
-    NORMAL,
-    MULTIPLY,
-    SCREEN
-  };
-
-  enum class FontWeight {
-    LIGHT,
-    REGULAR,
-    BOLD
-  };
-
-  enum class Segment {
-    LEFT,
-    MIDDLE,
-    RIGHT
-  };
-
-  enum class Arrow {
-    LEFT,
-    RIGHT,
-    BOTH,
-    NONE
-  };
-
-  DashStyle ();
-  ~DashStyle ();
-
-  static DashStyle& Instance();
+  static Style& Instance();
 
   virtual bool Button(cairo_t* cr, nux::State state,
                       std::string const& label);
@@ -131,6 +133,7 @@ private:
   Impl* pimpl;
 };
 
+}
 }
 
 #endif // DASH_STYLE_H
