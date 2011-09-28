@@ -306,7 +306,7 @@ void BamfLauncherIcon::OnWindowMinimized(guint32 xid)
 void BamfLauncherIcon::OnWindowMoved(guint32 moved_win)
 {
   bool any_on_current = false;
-  bool found_moved = false;
+  bool found_moved = (moved_win != 0 ? false : true);
   GList *children = bamf_view_get_children(BAMF_VIEW(m_App));
 
   for (GList *l = children; l; l = l->next)
@@ -335,27 +335,7 @@ void BamfLauncherIcon::OnWindowMoved(guint32 moved_win)
 
 void BamfLauncherIcon::OnViewPortSwitchEnded()
 {
-  bool any_on_current = false;
-  GList *children = bamf_view_get_children(BAMF_VIEW(m_App));
-
-  for (GList *l = children; l; l = l->next)
-  {
-    BamfView *view = BAMF_VIEW(l->data);
-
-    if (BAMF_IS_WINDOW(view))
-    {
-      Window xid = bamf_window_get_xid(BAMF_WINDOW(view));
-      if (WindowManager::Default()->IsWindowOnCurrentDesktop(xid))
-      {
-        any_on_current = true;
-        break;
-      }
-    }
-  }
-
-  SetHasWindowOnViewport(any_on_current);
-
-  g_list_free(children);
+  OnWindowMoved(0);
 }
 
 bool BamfLauncherIcon::IsSticky()
