@@ -57,7 +57,10 @@ void LensBarIcon::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
   nux::GetPainter().PaintBackground(gfx_context, geo);
 
   if (!texture())
+  {
+    gfx_context.PopClippingRectangle();
     return;
+  }
 
   float opacity = active || IsMouseInside() ? 1.0f : inactive_opacity_;
   int width = 0, height = 0;
