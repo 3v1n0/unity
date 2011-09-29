@@ -31,6 +31,7 @@
 #include "FilterBar.h"
 #include "Introspectable.h"
 #include "PlacesGroup.h"
+#include "PlacesVScrollBar.h"
 #include "ResultViewGrid.h"
 #include "UBusWrapper.h"
 
@@ -97,8 +98,10 @@ private:
 
   nux::HLayout* layout_;
   nux::ScrollView* scroll_view_;
+  PlacesVScrollBar* scroll_bar_;
   nux::VLayout* scroll_layout_;
   nux::ScrollView* fscroll_view_;
+  PlacesVScrollBar* fscroll_bar_;
   nux::VLayout* fscroll_layout_;
   FilterBar* filter_bar_;
 
