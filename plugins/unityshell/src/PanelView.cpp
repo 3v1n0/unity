@@ -67,9 +67,9 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
 
   nux::ROPConfig rop;
   rop.Blend = true;
-  rop.SrcBlend = GL_SRC_COLOR;
-  rop.DstBlend = GL_DST_COLOR;
-  _bg_darken_layer_ = new nux::ColorLayer(nux::Color(0.0f, 0.0f, 0.0f, 1.0f), false, rop);
+  rop.SrcBlend = GL_ZERO;
+  rop.DstBlend = GL_SRC_COLOR;
+  _bg_darken_layer_ = new nux::ColorLayer(nux::Color(0.7f, 0.7f, 0.7f, 1.0f), false, rop);
 
   _layout = new nux::HLayout("", NUX_TRACKER_LOCATION);
 
@@ -171,10 +171,13 @@ void PanelView::OnDashHidden(GVariant* data, PanelView* self)
 
 void PanelView::OnDashShown(GVariant* data, PanelView* self)
 {
-  self->bg_effect_helper_.enabled = true;
-  self->_dash_is_open = true;
-  self->_indicators->DashShown();
-  self->ForceUpdateBackground();
+  if (self->_is_primary)
+  {
+    self->bg_effect_helper_.enabled = true;
+    self->_dash_is_open = true;
+    self->_indicators->DashShown();
+    self->ForceUpdateBackground();
+  }
 }
 
 void PanelView::AddPanelView(PanelIndicatorsView* child,
@@ -530,6 +533,8 @@ void PanelView::OnEntryActivated(std::string const& entry_id)
     _menu_view->AllMenusClosed();
     _tracked_pointer_pos = {-1, -1};
   }
+
+  ubus_server_send_message(ubus_server_get_default(), UBUS_PLACE_VIEW_CLOSE_REQUEST, NULL);
 }
 
 void PanelView::OnSynced()

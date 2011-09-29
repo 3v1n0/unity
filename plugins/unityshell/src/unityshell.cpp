@@ -273,9 +273,10 @@ UnityScreen::UnityScreen(CompScreen* screen)
 
      optionSetAltTabLeftInitiate (boost::bind (&UnityScreen::altTabPrevInitiate, this, _1, _2, _3));
      optionSetAltTabRightInitiate (boost::bind (&UnityScreen::altTabForwardInitiate, this, _1, _2, _3));
+     optionSetShowMinimizedWindowsNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
 
      for (unsigned int i = 0; i < G_N_ELEMENTS(_ubus_handles); i++)
-	 _ubus_handles[i] = 0;
+       _ubus_handles[i] = 0;
 
      UBusServer* ubus = ubus_server_get_default();
      _ubus_handles[0] = ubus_server_register_interest(ubus,
@@ -744,7 +745,7 @@ bool UnityShowdesktopHandler::shouldHide (CompWindow *w)
 
   if (w->wmType () & (CompWindowTypeDesktopMask |
                       CompWindowTypeDockMask))
-  return false;
+   return false;
 
   if (w->state () & CompWindowStateSkipPagerMask)
     return false;
@@ -825,7 +826,7 @@ bool UnityShowdesktopHandler::animate (unsigned int ms)
 
 void UnityShowdesktopHandler::paintAttrib (GLWindowPaintAttrib &attrib)
 {
-  attrib.opacity = attrib.opacity * mProgress;
+  attrib.opacity = static_cast <int> (static_cast <float> (attrib.opacity) * mProgress);
 }
 
 unsigned int UnityShowdesktopHandler::getPaintMask ()
@@ -1121,7 +1122,10 @@ gboolean UnityScreen::OnEdgeTriggerTimeout(gpointer data)
 
   if (pointerX <= 1)
   {
-    if (abs(pointerY-self->_edge_pointerY) <= 5)
+    if (pointerY <= 24)
+      return true;
+
+    if (abs(pointerY - self->_edge_pointerY) <= 5)
     {
       self->launcher->EdgeRevealTriggered(pointerX, pointerY);
     }
@@ -1129,7 +1133,7 @@ gboolean UnityScreen::OnEdgeTriggerTimeout(gpointer data)
     {
       /* We are still in the edge, but moving in Y, maybe we need another chance */
 
-      if (abs(pointerY-self->_edge_pointerY) > 20)
+      if (abs(pointerY - self->_edge_pointerY) > 20)
       {
         /* We're quite far from the first hit spot, let's wait again */
         self->_edge_pointerY = pointerY;
@@ -1683,7 +1687,19 @@ void UnityWindow::windowNotify(CompWindowNotify n)
 
 
   window->windowNotify(n);
-  
+
+  if (mMinimizeHandler.get () != NULL)
+  {
+    /* The minimize handler will short circuit the frame
+     * region update func and ensure that the frame
+     * does not have a region */
+    typedef compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow> minimized_window_handler_unity;
+
+    compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>::Ptr compizMinimizeHandler =
+        boost::dynamic_pointer_cast <minimized_window_handler_unity> (mMinimizeHandler);
+    compizMinimizeHandler->windowNotify (n);
+  }
+
   // We do this after the notify to ensure input focus has actually been moved.
   if (n == CompWindowNotifyFocusChange)
   {
@@ -1741,38 +1757,92 @@ void UnityWindow::resizeNotify(int x, int y, int w, int h)
   window->resizeNotify(x, y, w, h);
 }
 
-CompPoint UnityWindow::tryNotIntersectLauncher(CompPoint& pos)
+CompPoint UnityWindow::tryNotIntersectUI(CompPoint& pos)
 {
   UnityScreen* us = UnityScreen::get(screen);
+  Launcher::LauncherHideMode hideMode = us->launcher->GetHideMode();
   nux::Geometry geo = us->launcher->GetAbsoluteGeometry();
+  CompRegion allowedWorkArea (screen->workArea ());
   CompRect launcherGeo(geo.x, geo.y, geo.width, geo.height);
+  CompRegion wRegion (window->borderRect ());
+  CompRegion intRegion;
+
+  wRegion.translate (pos.x () - wRegion.boundingRect ().x (),
+                     pos.y () - wRegion.boundingRect ().y ());
+
+  /* subtract launcher and panel geometries from allowed workarea */
+  if (!us->launcher->Hidden ())
+  {
+    switch (hideMode)
+    {
+      case Launcher::LAUNCHER_HIDE_DODGE_WINDOWS:
+      case Launcher::LAUNCHER_HIDE_DODGE_ACTIVE_WINDOW:
+        allowedWorkArea -= launcherGeo;
+        break;
+
+      default:
+        break;
+    }
+  }
+
+  for (nux::Geometry &g : us->panelController->GetGeometries ())
+  {
+    CompRect pg (g.x, g.y, g.width, g.height);
+    allowedWorkArea -= pg;
+  }
+
+  /* Invert allowed work area */
+  allowedWorkArea = CompRegion (screen->workArea ()) - allowedWorkArea;
+
+  /* Now intersect the window region with the allowed work area
+   * region, such that it splits up into a number of rects */
+  intRegion = wRegion.intersected (allowedWorkArea);
+
+  if (intRegion.rects ().size () > 1)
+  {
+    /* Now find the largest rect, this will be the area that we want to move to */
+    CompRect largest;
+
+    for (CompRect &r : intRegion.rects ())
+    {
+      if (r.area () > largest.area ())
+        largest = r;
+    }
+
+    /* Now pad the largest rect with the other rectangles that
+     * were intersecting, padding the opposite side to the one
+     * that they are currently on on the large rect
+     */
+
+    intRegion -= largest;
+
+    for (CompRect &r : intRegion.rects ())
+    {
+      if (r.x1 () > largest.x2 ())
+        largest.setX (largest.x () - r.width ());
+      else if (r.x2 () < largest.x ())
+        largest.setWidth (largest.width () + r.width ());
+
+      if (r.y1 () > largest.y2 ())
+        largest.setY (largest.y () - r.height ());
+      else if (r.y2 () < largest.y ())
+        largest.setWidth (largest.height () + r.height ());
+    }
+
+    pos = largest.pos ();
+  }
 
   if (launcherGeo.contains(pos))
-  {
-    if (screen->workArea().contains(CompRect(launcherGeo.right() + 1, pos.y(), window->width(), window->height())))
-      pos.setX(launcherGeo.right() + 1);
-  }
+    pos.setX(launcherGeo.x() + launcherGeo.width() + 1);
 
   return pos;
 }
 
 bool UnityWindow::place(CompPoint& pos)
 {
-  UnityScreen* us = UnityScreen::get(screen);
-  Launcher::LauncherHideMode hideMode = us->launcher->GetHideMode();
-
   bool result = window->place(pos);
 
-  switch (hideMode)
-  {
-    case Launcher::LAUNCHER_HIDE_DODGE_WINDOWS:
-    case Launcher::LAUNCHER_HIDE_DODGE_ACTIVE_WINDOW:
-      pos = tryNotIntersectLauncher(pos);
-      break;
-
-    default:
-      break;
-  }
+  pos = tryNotIntersectUI(pos);
 
   return result;
 }
@@ -1892,6 +1962,8 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       break;
     case UnityshellOptions::ShowMinimizedWindows:
       compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>::setFunctions (optionGetShowMinimizedWindows ());
+      screen->enterShowDesktopModeSetEnabled (this, optionGetShowMinimizedWindows ());
+      screen->leaveShowDesktopModeSetEnabled (this, optionGetShowMinimizedWindows ());
       break;
     default:
       break;
@@ -2298,13 +2370,34 @@ UnityWindow::UnityWindow(CompWindow* window)
   WindowInterface::setHandler(window);
   GLWindowInterface::setHandler(gWindow);
 
-  window->focusSetEnabled (this, false);
-  window->minimizedSetEnabled (this, false);
-  window->minimizeSetEnabled (this, false);
-  window->unminimizeSetEnabled (this, false);
+  if (UnityScreen::get (screen)->optionGetShowMinimizedWindows () &&
+      window->mapNum ())
+  {
+    bool wasMinimized = window->minimized ();
+    if (wasMinimized)
+      window->unminimize ();
+    window->minimizeSetEnabled (this, true);
+    window->unminimizeSetEnabled (this, true);
+    window->minimizedSetEnabled (this, true);
+
+    if (wasMinimized)
+      window->minimize ();
+  }
+  else
+  {
+    window->minimizeSetEnabled (this, false);
+    window->unminimizeSetEnabled (this, false);
+    window->minimizedSetEnabled (this, false);
+  }
 
   if (window->state () & CompWindowStateFullscreenMask)
     UnityScreen::get (screen)->fullscreen_windows_.push_back(window);
+  
+  if (window->resName() == "onboard")
+  {
+    Window xid = UnityScreen::get (screen)->dashController->window()->GetInputWindowId();
+    XSetTransientForHint (screen->dpy(), window->id(), xid);
+  }
 }
 
 UnityWindow::~UnityWindow()

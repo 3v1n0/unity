@@ -242,6 +242,8 @@ protected:
 
   virtual void OpenInstanceLauncherIcon(ActionArg arg) {}
 
+  virtual bool HandlesSpread () { return false; }
+
   nux::BaseTexture* TextureFromGtkTheme(const char* name, int size, bool update_glow_colors = true);
 
   nux::BaseTexture* TextureFromSpecificGtkTheme(GtkIconTheme* theme, const char* name, int size, bool update_glow_colors = true, bool is_default_theme = false);
