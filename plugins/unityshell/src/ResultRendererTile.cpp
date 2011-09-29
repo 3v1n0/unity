@@ -432,9 +432,11 @@ void ResultRendererTile::LoadText(Result& row)
   pango_layout_set_width(layout, (style->GetTileWidth() - (padding * 2))* PANGO_SCALE);
   pango_layout_set_height(layout, -2);
 
-  std::string escaped_text = g_markup_escape_text(row.name().c_str()  , -1);
+  char *escaped_text = g_markup_escape_text(row.name().c_str()  , -1);
 
-  pango_layout_set_markup(layout, escaped_text.c_str(), -1);
+  pango_layout_set_markup(layout, escaped_text, -1);
+
+  g_free (escaped_text);
 
   pango_context = pango_layout_get_context(layout);  // is not ref'ed
   pango_cairo_context_set_font_options(pango_context,

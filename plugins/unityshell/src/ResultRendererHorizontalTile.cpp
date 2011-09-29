@@ -87,7 +87,7 @@ void ResultRendererHorizontalTile::Render(nux::GraphicsEngine& GfxContext,
   int icon_top_side = geometry.y + ((geometry.height - style->GetTileIconSize()) / 2);
 
 
-  if (container->blurred_icon)
+  if (container->blurred_icon && state == ResultRendererState::RESULT_RENDERER_NORMAL)
   {
     GfxContext.QRP_1Tex(icon_left_hand_side - 5 - x_offset,
                         icon_top_side - 5 - y_offset,
@@ -126,8 +126,8 @@ void ResultRendererHorizontalTile::Render(nux::GraphicsEngine& GfxContext,
   {
     GfxContext.QRP_1Tex(icon_left_hand_side + style->GetTileIconSize() + spacing,
                         icon_top_side,
-                        width() - style->GetTileIconSize(),
-                        height() - (padding * 2),
+                        container->text->GetWidth(),
+                        container->text->GetHeight(),
                         container->text->GetDeviceTexture(),
                         texxform,
                         nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
@@ -203,12 +203,17 @@ nux::BaseTexture* ResultRendererHorizontalTile::DrawHighlight(std::string const&
 void ResultRendererHorizontalTile::LoadText(Result& row)
 {
   std::stringstream final_text;
-  final_text << g_markup_escape_text(row.name().c_str()  , -1) << "\n<span size=\"small\">"
-             << g_markup_escape_text(row.comment().c_str()  , -1) << "</span>";
+  char *name = g_markup_escape_text(row.name().c_str()  , -1);
+  char *comment = g_markup_escape_text(row.comment().c_str()  , -1);
+  final_text << name << "\n<span size=\"small\">"
+             << comment << "</span>";
+
+  g_free(name);
+  g_free(comment);
 
   PlacesStyle*          style      = PlacesStyle::GetDefault();
   nux::CairoGraphics _cairoGraphics(CAIRO_FORMAT_ARGB32,
-                                    width() - style->GetTileIconSize() + spacing,
+                                    width() - style->GetTileIconSize() + spacing - (padding * 2),
                                     height() - (padding * 2));
 
   cairo_t* cr = _cairoGraphics.GetContext();
