@@ -203,8 +203,13 @@ nux::BaseTexture* ResultRendererHorizontalTile::DrawHighlight(std::string const&
 void ResultRendererHorizontalTile::LoadText(Result& row)
 {
   std::stringstream final_text;
-  final_text << g_markup_escape_text(row.name().c_str()  , -1) << "\n<span size=\"small\">"
-             << g_markup_escape_text(row.comment().c_str()  , -1) << "</span>";
+  char *name = g_markup_escape_text(row.name().c_str()  , -1);
+  char *comment = g_markup_escape_text(row.comment().c_str()  , -1);
+  final_text << name << "\n<span size=\"small\">"
+             << comment << "</span>";
+
+  g_free(name);
+  g_free(comment);
 
   PlacesStyle*          style      = PlacesStyle::GetDefault();
   nux::CairoGraphics _cairoGraphics(CAIRO_FORMAT_ARGB32,
