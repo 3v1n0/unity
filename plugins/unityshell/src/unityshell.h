@@ -383,7 +383,7 @@ public:
   void stateChangeNotify(unsigned int lastState);
 
   bool place(CompPoint& pos);
-  CompPoint tryNotIntersectLauncher(CompPoint& pos);
+  CompPoint tryNotIntersectUI(CompPoint& pos);
 
   void paintThumbnail (nux::Geometry const& bounding, float alpha);
 

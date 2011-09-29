@@ -67,6 +67,7 @@ PlacesGroup::PlacesGroup()
   _cached_name = NULL;
   _group_layout = new nux::VLayout("", NUX_TRACKER_LOCATION);
   _group_layout->SetHorizontalExternalMargin(19);
+  _group_layout->SetVerticalExternalMargin(1);
 
   _group_layout->AddLayout(new nux::SpaceLayout(15,15,15,15), 0);
 
@@ -95,6 +96,7 @@ PlacesGroup::PlacesGroup()
   _expand_icon = new IconTexture(arrow, arrow->GetWidth(), arrow->GetHeight());
   _expand_icon->SetOpacity(kExpandDefaultIconOpacity);
   _expand_icon->SetMinimumSize(arrow->GetWidth(), arrow->GetHeight());
+  _expand_icon->SetVisible(false);
   _header_layout->AddView(_expand_icon, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
   SetLayout(_group_layout);
@@ -300,6 +302,20 @@ PlacesGroup::ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEv
 void PlacesGroup::Draw(nux::GraphicsEngine& GfxContext,
                        bool                 forceDraw)
 {
+  nux::Geometry base = GetGeometry();
+  GfxContext.PushClippingRectangle(base);
+
+  nux::Color col(0.2f, 0.2f, 0.2f, 0.2f);
+
+  if (_draw_sep)
+    nux::GetPainter().Draw2DLine(GfxContext,
+                                 base.x + 10, base.y + base.height - 1,
+                                 base.x + base.width - 10, base.y + base.height - 1,
+                                 col,
+                                 col);
+
+
+  GfxContext.PopClippingRectangle();
 }
 
 void
@@ -315,20 +331,6 @@ PlacesGroup::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 void PlacesGroup::PostDraw(nux::GraphicsEngine& GfxContext,
                            bool                 forceDraw)
 {
-  nux::Geometry base = GetGeometry();
-  GfxContext.PushClippingRectangle(base);
-
-  nux::Color col(0.2f, 0.2f, 0.2f, 0.2f);
-
-  if (_draw_sep)
-    nux::GetPainter().Draw2DLine(GfxContext,
-                                 base.x + 10, base.y + base.height - 1,
-                                 base.x + base.width - 10, base.y + base.height - 1,
-                                 col,
-                                 col);
-
-
-  GfxContext.PopClippingRectangle();
 }
 
 void

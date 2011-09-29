@@ -91,8 +91,10 @@ compiz::WindowInputRemover::sendShapeNotify ()
   if (!mRemoved)
   {
     /* FIXME: these roundtrips suck */
-    XGetGeometry (mDpy, mShapeWindow, &rootReturn, &x, &y, &width, &height, &depth, &border);
-    XQueryTree (mDpy, mShapeWindow, &rootReturn, &parentReturn, &children, &nchildren);
+    if (!XGetGeometry (mDpy, mShapeWindow, &rootReturn, &x, &y, &width, &height, &depth, &border))
+      return;
+    if (!XQueryTree (mDpy, mShapeWindow, &rootReturn, &parentReturn, &children, &nchildren))
+      return;
 
     /* We need to translate the co-ordinates of the origin to the
      * client window to its parent to find out the offset of its
@@ -120,7 +122,7 @@ compiz::WindowInputRemover::sendShapeNotify ()
       Region      boundingRegion = XCreateRegion ();
 
       for (int i = 0; i < mNBoundingRects; i++)
-	XUnionRectWithRegion (&(mBoundingRects[i]), boundingRegion, boundingRegion);
+        XUnionRectWithRegion (&(mBoundingRects[i]), boundingRegion, boundingRegion);
 
       xsev.x = boundingRegion->extents.x1 - xOffset;
       xsev.y = boundingRegion->extents.y1 - yOffset;
@@ -152,7 +154,7 @@ compiz::WindowInputRemover::sendShapeNotify ()
       Region      inputRegion = XCreateRegion ();
 
       for (int i = 0; i < mNInputRects; i++)
-	XUnionRectWithRegion (&(mInputRects[i]), inputRegion, inputRegion);
+        XUnionRectWithRegion (&(mInputRects[i]), inputRegion, inputRegion);
 
       xsev.x = inputRegion->extents.x1 - xOffset;
       xsev.y = inputRegion->extents.y1 - yOffset;
@@ -268,7 +270,8 @@ bool
 compiz::WindowInputRemover::remove ()
 {
   if (!mNInputRects)
-    save ();
+    if (!save ())
+      return false;
 
   XShapeSelectInput (mDpy, mShapeWindow, NoEventMask);
 
@@ -289,7 +292,6 @@ compiz::WindowInputRemover::remove ()
 bool
 compiz::WindowInputRemover::restore ()
 {
-
   XShapeSelectInput (mDpy, mShapeWindow, NoEventMask);
 
   if (mRemoved)
@@ -308,7 +310,11 @@ compiz::WindowInputRemover::restore ()
     }
 
     if (mInputRects)
+    {
       XFree (mInputRects);
+      mInputRects = NULL;
+      mNInputRects = 0;
+    }
 
     if (mNBoundingRects)
     {
@@ -323,7 +329,11 @@ compiz::WindowInputRemover::restore ()
     }
 
     if (mBoundingRects)
+    {
       XFree (mBoundingRects);
+      mBoundingRects = NULL;
+      mNBoundingRects = 0;
+    }
   }
 
   XShapeSelectInput (mDpy, mShapeWindow, mShapeMask);
@@ -332,9 +342,5 @@ compiz::WindowInputRemover::restore ()
 
   sendShapeNotify ();
 
-  mNInputRects  = 0;
-  mInputRects = NULL;
-  mNBoundingRects = 0;
-  mBoundingRects = NULL;
   return true;
 }
