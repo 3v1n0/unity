@@ -84,7 +84,8 @@ public:
 
   void Text(cairo_t* cr,
             nux::Color const& color,
-            std::string const& label);
+            std::string const& label,
+            double horizMargin = 10.0);
 
   void ButtonOutlinePath(cairo_t* cr, bool align);
 
@@ -871,66 +872,70 @@ void DashStyle::Impl::RoundedRectSegment(cairo_t*   cr,
   {
   case Segment::LEFT:
     // top-left, right of the corner
-    cairo_move_to(cr, x + radius, y);
+    cairo_move_to(cr, _align(x + radius), _align(y));
 
     // top-right
-    cairo_line_to(cr, x + width, y);
+    cairo_line_to(cr, _align(x + width), _align(y));
 
     if (arrow == Arrow::RIGHT && state == nux::NUX_STATE_ACTIVE)
 		{
-      cairo_line_to(cr, x + width,           y + height / 2.0 - arrow_h);
-      cairo_line_to(cr, x + width - arrow_w, y + height / 2.0);
-      cairo_line_to(cr, x + width,           y + height / 2.0 + arrow_h);
+      cairo_line_to(cr, _align(x + width),           _align(y + height / 2.0 - arrow_h));
+      cairo_line_to(cr, _align(x + width - arrow_w), _align(y + height / 2.0));
+      cairo_line_to(cr, _align(x + width),           _align(y + height / 2.0 + arrow_h));
 		}
 
     // bottom-right
-    cairo_line_to(cr, x + width, y + height);
+    cairo_line_to(cr, _align(x + width), _align(y + height));
 
     // bottom-left, right of the corner
-    cairo_line_to(cr, x + radius, y + height);
+    cairo_line_to(cr, _align(x + radius), _align(y + height));
 
     // bottom-left, above the corner
     cairo_arc(cr,
-              x + radius,
-              y + height - radius,
+              _align(x + radius),
+              _align(y + height - radius),
               radius,
               90.0f * G_PI / 180.0f,
               180.0f * G_PI / 180.0f);
 
+    // left, right of the corner
+    cairo_line_to(cr, _align(x), _align(y + radius));
+
     // top-left, right of the corner
     cairo_arc(cr,
-              x + radius,
-              y + radius,
+              _align(x + radius),
+              _align(y + radius),
               radius,
               180.0f * G_PI / 180.0f,
               270.0f * G_PI / 180.0f);
+
     break;
 
   case Segment::MIDDLE:
     // top-left
-    cairo_move_to(cr, x, y);
+    cairo_move_to(cr, _align(x), _align(y));
 
     // top-right
-    cairo_line_to(cr, x + width, y);
+    cairo_line_to(cr, _align(x + width), _align(y));
 
     if ((arrow == Arrow::RIGHT || arrow == Arrow::BOTH) && state == nux::NUX_STATE_ACTIVE)
 		{
-      cairo_line_to(cr, x + width,           y + height / 2.0 - arrow_h);
-      cairo_line_to(cr, x + width - arrow_w, y + height / 2.0);
-      cairo_line_to(cr, x + width,           y + height / 2.0 + arrow_h);
+      cairo_line_to(cr, _align(x + width),           _align(y + height / 2.0 - arrow_h));
+      cairo_line_to(cr, _align(x + width - arrow_w), _align(y + height / 2.0));
+      cairo_line_to(cr, _align(x + width),           _align(y + height / 2.0 + arrow_h));
 		}
 
     // bottom-right
-    cairo_line_to(cr, x + width, y + height);
+    cairo_line_to(cr, _align(x + width), _align(y + height));
 
     // bottom-left
-    cairo_line_to(cr, x, y + height);
+    cairo_line_to(cr, _align(x), _align(y + height));
 
     if ((arrow == Arrow::LEFT || arrow == Arrow::BOTH) && state == nux::NUX_STATE_ACTIVE)
 		{
-      cairo_line_to(cr, x,           y + height / 2.0 + arrow_h);
-      cairo_line_to(cr, x + arrow_w, y + height / 2.0);
-      cairo_line_to(cr, x,           y + height / 2.0 - arrow_h);
+      cairo_line_to(cr, _align(x),           _align(y + height / 2.0 + arrow_h));
+      cairo_line_to(cr, _align(x + arrow_w), _align(y + height / 2.0));
+      cairo_line_to(cr, _align(x),           _align(y + height / 2.0 - arrow_h));
 		}
 
     // back to top-left
@@ -939,38 +944,38 @@ void DashStyle::Impl::RoundedRectSegment(cairo_t*   cr,
 
   case Segment::RIGHT:
     // top-left, right of the corner
-    cairo_move_to(cr, x, y);
+    cairo_move_to(cr, _align(x), _align(y));
 
     // top-right, left of the corner
-    cairo_line_to(cr, x + width - radius, y);
+    cairo_line_to(cr, _align(x + width - radius), _align(y));
 
     // top-right, below the corner
     cairo_arc(cr,
-              x + width - radius,
-              y + radius,
+              _align(x + width - radius),
+              _align(y + radius),
               radius,
               -90.0f * G_PI / 180.0f,
               0.0f * G_PI / 180.0f);
 
     // bottom-right, above the corner
-    cairo_line_to(cr, x + width, y + height - radius);
+    cairo_line_to(cr, _align(x + width), _align(y + height - radius));
 
     // bottom-right, left of the corner
     cairo_arc(cr,
-              x + width - radius,
-              y + height - radius,
+              _align(x + width - radius),
+              _align(y + height - radius),
               radius,
               0.0f * G_PI / 180.0f,
               90.0f * G_PI / 180.0f);
 
     // bottom-left
-    cairo_line_to(cr, x, y + height);
+    cairo_line_to(cr, _align(x), _align(y + height));
 
     if (arrow == Arrow::LEFT && state == nux::NUX_STATE_ACTIVE)
 		{
-      cairo_line_to(cr, x,           y + height / 2.0 + arrow_h);
-      cairo_line_to(cr, x + arrow_w, y + height / 2.0);
-      cairo_line_to(cr, x,           y + height / 2.0 - arrow_h);
+      cairo_line_to(cr, _align(x),           _align(y + height / 2.0 + arrow_h));
+      cairo_line_to(cr, _align(x + arrow_w), _align(y + height / 2.0));
+      cairo_line_to(cr, _align(x),           _align(y + height / 2.0 - arrow_h));
 		}
 
     // back to top-left
@@ -1213,7 +1218,8 @@ void DashStyle::Impl::GetTextExtents(int& width,
 
 void DashStyle::Impl::Text(cairo_t*    cr,
                            nux::Color const&  color,
-                           std::string const& label)
+                           std::string const& label,
+                           double horizMargin)
 {
   double                x           = 0.0;
   double                y           = 0.0;
@@ -1226,7 +1232,7 @@ void DashStyle::Impl::Text(cairo_t*    cr,
   GdkScreen*            screen      = gdk_screen_get_default();   // not ref'ed
   GtkSettings*          settings    = gtk_settings_get_default(); // not ref'ed
   gchar*                fontName    = NULL;
-  double                horizMargin = 10.0;
+  //double                horizMargin = 10.0;
 
   w = cairo_image_surface_get_width(cairo_get_target(cr));
   h = cairo_image_surface_get_height(cairo_get_target(cr));
@@ -1579,7 +1585,8 @@ bool DashStyle::MultiRangeSegment(cairo_t*    cr,
   cairo_stroke(cr);
   pimpl->Text(cr,
               pimpl->button_label_text_color_[state],
-              label);
+              label,
+              1.0);
 
   return true;
 }
