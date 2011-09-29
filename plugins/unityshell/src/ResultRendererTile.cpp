@@ -96,8 +96,6 @@ void ResultRendererTile::Render(nux::GraphicsEngine& GfxContext,
   if (container == nullptr)
     return;
 
-  std::string row_text = row.name;
-  std::string row_iconhint = row.icon_hint;
   PlacesStyle* style = PlacesStyle::GetDefault();
 
   // set up our texture mode
