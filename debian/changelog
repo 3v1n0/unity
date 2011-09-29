@@ -1,6 +1,103 @@
 unity (4.20.0-0ubuntu1) UNRELEASED; urgency=low
 
-  * New upstream release.
+  * New upstream release + cherry-pick:
+    - compiz crashed with SIGSEGV in PluginClassHandler<UnityWindow,
+      CompWindow, 0>::get() (LP: #835259)
+    - dash does not scroll down during keyboard navigation (LP: #852506)
+    - compiz crashed with SIGSEGV in _XFreeEventCookies() (LP: #851472)
+    - compiz crashed with SIGSEGV in g_object_unref() (LP: #847512)
+    - compiz crashed with SIGSEGV in nux::WindowCompositor::MouseEventCycle()
+      (LP: #831678)
+    - compiz and X can disagree on the stacking order (LP: #845719)
+    - compiz crashed with SIGSEGV in unity::dash::LensView::OnResultAdded()
+      (LP: #855252)
+    - CCSM crashes Unity (LP: #861643)
+    - compiz crashed with SIGSEGV in PrivateWindow::addWindowStackChanges()
+      (LP: #862115)
+    - Touch - When dragging a window with a 3 touch, dragging to the top
+      should show the maximize gesture preview. (LP: #750316)
+    - compiz crashed with SIGABRT in raise() (LP: #750386)
+    - Launcher - Spread should not affect the state of window (LP: #764673)
+    - [UIFe] Add system setting icon to Launcher (LP: #764744)
+    - compiz crashed with SIGABRT in raise() [Merely unchecking the Unity
+      plugin is enough to crash Compiz...] (LP: #823386)
+    - Launcher - does not hide if revealed from top 24px  of the left edge of
+      the screen (LP: #835989)
+    - Clickable areas of previously active window remains on 'Show Desktop'
+      (LP: #836325)
+    - Cannot search for some apps in Dash (LP: #837075)
+    - Dash - Search box cursor not responding correctly to focus (LP: #839704)
+    - Multi-display: Application menu only showing on primary screen
+      (LP: #845212)
+    - Ellipsized values in size filter (LP: #851359)
+    - (oneiric) dash result expansions don't display icons (LP: #854615)
+    - run the wrong command if enter is hit before the view is refreshed
+      (LP: #856205)
+    - Java application windows cut-off/truncated/not displayed properly
+      (LP: #857201)
+    - compiz crashed with SIGSEGV in sigc::signal_base::impl() (LP: #831769)
+    - Minimizing a window should switch focus to the windows underneath it
+      (breaks restore) (LP: #859885)
+    - Ratings filter allows ratings > 1.0 (LP: #861255)
+    - Serious Unity problem stuck in spread when dragging icons back to the
+      dash (LP: #862045)
+    - Must use hardware keyboard to perform search for applications in Unity
+      (LP: #739812)
+    - Files lens should also search Downloads (LP: #748915)
+    - The dash crosses the monitor boundary when resolution is 1152x864 or
+      lesser width (LP: #765338)
+    - blacklist old geforce fx cards for unity-3d (LP: #769402)
+    - Dash - dragging a file outside of the Desktop Dash should close the Dash
+      (LP: #764641)
+    - Text in Dash search text box overflows and doesn't crop with longer
+      strings; RtL input starts in wrong place (LP: #834765)
+    - Where the average background colour is either very light or dark, adjust
+      this value to darken/lighten in order to preserve readability
+      (LP: #837993)
+    - Dash does not resize when I connect to an external display and mirror
+      displays (LP: #838132)
+    - wrong workspace is activated (LP: #838766)
+    - [oneiric] Clicking the maximize/restore button for the dash window loses
+      the keyboard focus (LP: #850467)
+    - Non-square dash items are stretched to a 1:1 ratio (LP: #851196)
+    - Dash - 'Shortcuts' arrow should be removed (LP: #852130)
+    - Dash - reflections should be fixed on the centre of the viewport, *NOT*
+      the centre of the entire page including occluded areas (LP: #838925)
+    - Dash - horizental divider line in between categories incorrectly drawn
+      (LP: #841750)
+    - Dash - whenever there is a search query in the search box and the search
+      is no longer running, the circle with the X inside should be displayed
+      in place of the magnifying glass (LP: #841760)
+    - Top bar - Pressing F10 as second time should close the top bar app menus
+      (LP: #856468)
+    - Dash - Dash should support drag and drop to external applications
+      (LP: #857431)
+    - (oneirc) default placement of windows is behind panel (LP: #857214)
+    - FFe : Add option to make alt-tab easier to use for workspace users
+      (LP: #860622)
+    - Clicking a filter removes keyboard input focus from search entry
+      (LP: #861251)
+    - UIFe: Desktop should be titled (LP: #732016)
+    - Dash - clicking inside the Dash search box should remove the search hint
+      and display a blinking carete (LP: #764859)
+    - Minimizing a maximized Qt app leaves nothing in focus (LP: #821601)
+    - unmaximizable windows still show orange glow but fail to maximize
+      (LP: #827560)
+    - UIFe: scrollbar in unity dash should be rounded (and with glow)
+      (LP: #836656)
+    - Dash - alt-f2 have 'Filter results' which does nothing (LP: #838127)
+    - Alt-tab - Alt-tab should ellipsis long application names (LP: #850400)
+    - Super+number shortcuts don't work with numpad (LP: #850792)
+    - Dash should close when an app is launched from the messaging menu (or
+      any other indicator) (LP: #853300)
+    - Dash - In the App lens filters, users should only be able filter by
+      'star' rating in one star increments (LP: #839759)
+    - Dash - When the Dash is re-opened and statefully displaying a previous
+      query, it should be possible to add to the query by pressing the 'right
+      arrow cursor key' (LP: #841828)
+    - Dash - When a result is selected or in the mousover state (white box
+      highlight), the casted shadow should be hidden. (LP: #841831)
+    - text in searchbar keeps getting bolder/darker (LP: #861487)
 
  -- Didier Roche <didrocks@ubuntu.com>  Thu, 29 Sep 2011 18:22:42 +0200
 

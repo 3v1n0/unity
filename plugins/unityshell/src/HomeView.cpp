@@ -36,6 +36,26 @@ namespace
 nux::logging::Logger logger("unity.dash.homeview");
 }
 
+
+ // this is so we can access some protected members in scrollview
+class LensScrollView: public nux::ScrollView
+{
+  protected:
+    nux::VScrollBar* vscrollbar_;
+
+public:
+  LensScrollView()
+    : nux::ScrollView()
+  {
+    vscrollbar_ = NULL;
+  }
+
+  void SetVScrollBar(nux::VScrollBar* newVScrollBar)
+  {
+    nux::ScrollView::SetVScrollBar(newVScrollBar);
+  }
+};
+
 NUX_IMPLEMENT_OBJECT_TYPE(HomeView);
 
 HomeView::HomeView()
@@ -69,12 +89,13 @@ void HomeView::SetupViews()
 {
   layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
 
-  scroll_view_ = new nux::ScrollView();
+  scroll_view_ = new LensScrollView();
   scroll_view_->EnableVerticalScrollBar(true);
   scroll_view_->EnableHorizontalScrollBar(false);
+  static_cast<LensScrollView *>(scroll_view_)->SetVScrollBar(new PlacesVScrollBar());
   scroll_view_->SetVisible(false);
   layout_->AddView(scroll_view_);
-  
+
   scroll_layout_ = new nux::VLayout();
   scroll_view_->SetLayout(scroll_layout_);
 
@@ -101,7 +122,7 @@ void HomeView::AddLens(Lens::Ptr lens)
   group->expanded.connect(sigc::mem_fun(this, &HomeView::OnGroupExpanded));
   categories_.push_back(group);
   counts_[group] = 0;
-  
+
   ResultViewGrid* grid = new ResultViewGrid(NUX_TRACKER_LOCATION);
   grid->expanded = false;
   grid->SetModelRenderer(new ResultRendererTile(NUX_TRACKER_LOCATION));
