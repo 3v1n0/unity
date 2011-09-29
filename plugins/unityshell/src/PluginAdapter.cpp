@@ -546,6 +546,8 @@ PluginAdapter::Lower(guint32 xid)
 void 
 PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids)
 {
+  CompPoint target_vp = m_Screen->vp();
+  CompWindow* top_win = NULL;
   bool any_on_current = false;
   bool any_mapped = false;
 
@@ -575,27 +577,30 @@ PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids)
       break;
   }
 
-  if (any_on_current)
+  if (!any_on_current)
   {
-    CompWindow* last = 0;
-    for (CompWindow* &win : windows)
+    for (auto it = windows.rbegin(); it != windows.rend(); it++)
     {
-      if (win->defaultViewport() == m_Screen->vp() &&
-          ((any_mapped && !win->minimized()) || !any_mapped))
+      if ((any_mapped && !(*it)->minimized()) || !any_mapped)
       {
-        win->raise();
-        last = win;
+        target_vp = (*it)->defaultViewport();
+        break;
       }
     }
-
-    if (last)
-      last->activate();
-
   }
-  else
+
+  for (CompWindow* &win : windows)
   {
-    (*(windows.rbegin()))->activate();
+    if (win->defaultViewport() == target_vp &&
+        ((any_mapped && !win->minimized()) || !any_mapped))
+    {
+      win->raise();
+      top_win = win;
+    }
   }
+
+  if (top_win)
+    top_win->activate();
 }
 
 bool 
