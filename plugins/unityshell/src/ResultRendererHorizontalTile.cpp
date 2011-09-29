@@ -126,8 +126,8 @@ void ResultRendererHorizontalTile::Render(nux::GraphicsEngine& GfxContext,
   {
     GfxContext.QRP_1Tex(icon_left_hand_side + style->GetTileIconSize() + spacing,
                         icon_top_side,
-                        width() - style->GetTileIconSize(),
-                        height() - (padding * 2),
+                        container->text->GetWidth(),
+                        container->text->GetHeight(),
                         container->text->GetDeviceTexture(),
                         texxform,
                         nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
@@ -208,7 +208,7 @@ void ResultRendererHorizontalTile::LoadText(Result& row)
 
   PlacesStyle*          style      = PlacesStyle::GetDefault();
   nux::CairoGraphics _cairoGraphics(CAIRO_FORMAT_ARGB32,
-                                    width() - style->GetTileIconSize() + spacing,
+                                    width() - style->GetTileIconSize() + spacing - (padding * 2),
                                     height() - (padding * 2));
 
   cairo_t* cr = _cairoGraphics.GetContext();
