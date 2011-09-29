@@ -148,6 +148,8 @@ add_dependencies (standalone-dash unity-core-${UNITY_API_VERSION})
 #
 add_executable (test-panel
                 TestPanel.cpp
+                ${UNITY_SRC}/Animator.cpp
+                ${UNITY_SRC}/Animator.h
                 ${UNITY_SRC}/BackgroundEffectHelper.cpp
                 ${UNITY_SRC}/BackgroundEffectHelper.h
                 ${UNITY_SRC}/DashSettings.cpp

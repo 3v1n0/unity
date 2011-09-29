@@ -247,6 +247,15 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
       if (!event)
         return ret;
 
+      if (event->evtype == XI_KeyRelease)
+        {
+          if (XKeycodeToKeysym(event->display, event->detail, 0) == GDK_KEY_F10)
+          {
+            if (GTK_MENU (priv->last_menu))
+              gtk_menu_popdown (GTK_MENU (priv->last_menu));
+          }
+        }
+
       if (event->evtype == XI_ButtonPress)
         {
           priv->pressed_entry = get_entry_at (self, event->root_x, event->root_y);
