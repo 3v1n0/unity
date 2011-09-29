@@ -65,6 +65,7 @@ PanelIndicatorEntryView::PanelIndicatorEntryView(
   , opacity_(1.0f)
   , draw_active_(false)
   , dash_showing_(false)
+  , disabled_(false)
 {
   on_indicator_activate_changed_connection_ = proxy_->active_changed.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::OnActiveChanged));
   on_indicator_updated_connection_ = proxy_->updated.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::Refresh));
@@ -113,7 +114,7 @@ void PanelIndicatorEntryView::ShowMenu(int button)
 
 void PanelIndicatorEntryView::OnMouseDown(int x, int y, long button_flags, long key_flags)
 {
-  if (proxy_->active())
+  if (proxy_->active() || IsDisabled())
     return;
 
   if (((proxy_->label_visible() && proxy_->label_sensitive()) ||
@@ -132,7 +133,7 @@ void PanelIndicatorEntryView::OnMouseDown(int x, int y, long button_flags, long 
 
 void PanelIndicatorEntryView::OnMouseUp(int x, int y, long button_flags, long key_flags)
 {
-  if (proxy_->active())
+  if (proxy_->active() || IsDisabled())
     return;
 
   int button = nux::GetEventButton(button_flags);
@@ -158,7 +159,8 @@ void PanelIndicatorEntryView::OnMouseWheel(int x, int y, int delta,
                                            unsigned long mouse_state,
                                            unsigned long key_state)
 {
-  proxy_->Scroll(delta);
+  if (!IsDisabled())
+    proxy_->Scroll(delta);
 }
 
 void PanelIndicatorEntryView::Activate(int button)
@@ -532,6 +534,16 @@ int PanelIndicatorEntryView::GetEntryPriority() const
     return proxy_->priority();
   }
   return -1;
+}
+
+void PanelIndicatorEntryView::SetDisabled(bool disabled)
+{
+  disabled_ = disabled;
+}
+
+bool PanelIndicatorEntryView::IsDisabled()
+{
+  return (disabled_ || !proxy_.get() || !IsSensitive());
 }
 
 void PanelIndicatorEntryView::OnFontChanged(GObject* gobject, GParamSpec* pspec,

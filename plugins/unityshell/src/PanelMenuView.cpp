@@ -136,6 +136,7 @@ PanelMenuView::PanelMenuView(int padding)
   win_manager->window_restored.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowRestored));
   win_manager->window_unmapped.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowUnmapped));
   win_manager->window_moved.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowMoved));
+  win_manager->window_resized.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowMoved));
 
   PanelStyle::GetDefault()->changed.connect(sigc::mem_fun(this, &PanelMenuView::Refresh));
 
@@ -534,7 +535,8 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
       nux::GetPainter().PushDrawLayer(GfxContext, geo, _title_layer);
       geo = GetGeometry();
     }
-    else if (!_places_showing && _window_buttons->GetOpacity() < 1.0f && _window_buttons->GetOpacity() > 0.0f)
+    else if (_window_buttons->GetOpacity() < 1.0f &&
+             _window_buttons->GetOpacity() > 0.0f && !_places_showing)
     {
       double title_opacity = 1.0f - _window_buttons->GetOpacity();
       
@@ -578,10 +580,18 @@ PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   if (draw_menus)
   {
+    for (auto entry : entries_)
+      entry.second->SetDisabled(false);
+
     _menu_layout->ProcessDraw(GfxContext, true);
 
     _fade_out_animator->Stop();
     _fade_in_animator->Start(GetOpacity());
+  }
+  else
+  {
+    for (auto entry : entries_)
+      entry.second->SetDisabled(true);
   }
 
   if (GetOpacity() != 0.0f && !draw_menus)
@@ -1104,12 +1114,14 @@ PanelMenuView::OnWindowRestored(guint xid)
 gboolean
 PanelMenuView::UpdateActiveWindowPosition(PanelMenuView* self)
 {
-  nux::Geometry geo = WindowManager::Default()->GetWindowGeometry(self->_active_xid);
+  auto window_geo = WindowManager::Default()->GetWindowGeometry(self->_active_xid);
+  auto monitor_geo = UScreen::GetDefault()->GetMonitorGeometry(self->_monitor);
+  auto intersect = monitor_geo.Intersect(window_geo);
 
-  self->_we_control_active = UScreen::GetDefault()->GetMonitorGeometry(self->_monitor).IsPointInside(geo.x + (geo.width / 2), geo.y);
+  self->_we_control_active = (intersect.width > window_geo.width/4 &&
+                              intersect.height > window_geo.height/4);
 
   self->_active_moved_id = 0;
-
   self->QueueDraw();
 
   return FALSE;
@@ -1123,7 +1135,10 @@ PanelMenuView::OnWindowMoved(guint xid)
     if (_active_moved_id)
       g_source_remove(_active_moved_id);
 
-    _active_moved_id = g_timeout_add(250, (GSourceFunc)PanelMenuView::UpdateActiveWindowPosition, this);
+    if (!_we_control_active)
+      UpdateActiveWindowPosition(this);
+    else
+      _active_moved_id = g_timeout_add(250, (GSourceFunc)PanelMenuView::UpdateActiveWindowPosition, this);
   }
 }
 

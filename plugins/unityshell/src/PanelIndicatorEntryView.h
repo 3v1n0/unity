@@ -53,6 +53,8 @@ public:
   void Activate(int button = 1);
   void Unactivate();
   bool GetShowNow();
+  void SetDisabled(bool disabled);
+  bool IsDisabled();
   void SetOpacity(double alpha);
   double GetOpacity();
 
@@ -82,6 +84,7 @@ private:
   double opacity_;
   bool draw_active_;
   bool dash_showing_;
+  bool disabled_;
   gulong on_font_changed_connection_;
 
   static void OnFontChanged(GObject* gobject, GParamSpec* pspec, gpointer data);
