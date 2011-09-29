@@ -550,13 +550,13 @@ void BamfLauncherIcon::Focus()
 
     if (BAMF_IS_WINDOW(view))
     {
-      guint32 xid = bamf_window_get_xid(BAMF_WINDOW(view));
+      Window xid = bamf_window_get_xid(BAMF_WINDOW(view));
       bool urgent = bamf_view_is_urgent(view);
 
       if (any_urgent)
       {
         if (urgent)
-          windows.push_back((Window)xid);
+          windows.push_back(xid);
       }
       else
       {
@@ -565,14 +565,13 @@ void BamfLauncherIcon::Focus()
           windows.clear();
           any_urgent = true;
         }
-        windows.push_back((Window)xid);
+        windows.push_back(xid);
       }
     }
   }
 
   g_list_free(children);
   WindowManager::Default()->FocusWindowGroup(windows);
-  return;
 }
 
 bool BamfLauncherIcon::Spread(int state, bool force)
