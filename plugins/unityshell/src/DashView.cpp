@@ -878,10 +878,14 @@ void DashView::AddProperties(GVariantBuilder* builder)
 
 nux::Area * DashView::KeyNavIteration(nux::KeyNavDirection direction)
 {
-  if (direction == KEY_NAV_TAB_NEXT)
-    lens_bar_->ActivateNext();
-  else if (direction == KEY_NAV_TAB_PREVIOUS)
-    lens_bar_->ActivatePrevious();
+  // We don't want to eat the tab as it's used for IM stuff
+  if (!search_bar_->im_active())
+  {
+    if (direction == KEY_NAV_TAB_NEXT)
+      lens_bar_->ActivateNext();
+    else if (direction == KEY_NAV_TAB_PREVIOUS)
+      lens_bar_->ActivatePrevious();
+  }
   return this;
 }
 
