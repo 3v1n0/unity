@@ -55,10 +55,17 @@ inline double _align(double val)
 {
   double fract = val - (int) val;
 
+  // for strokes with an odd line-width
   if (fract != 0.5f)
     return (double) ((int) val + 0.5f);
   else
     return val;
+
+  // for strokes with an even line-width
+  /*if (fract != 0.0f)
+    return (double) ((int) val);
+  else
+    return val;*/
 }
 
 } // anon namespace
@@ -872,39 +879,39 @@ void DashStyle::Impl::RoundedRectSegment(cairo_t*   cr,
   {
   case Segment::LEFT:
     // top-left, right of the corner
-    cairo_move_to(cr, _align(x + radius), _align(y));
+    cairo_move_to(cr, x + radius, y);
 
     // top-right
-    cairo_line_to(cr, _align(x + width), _align(y));
+    cairo_line_to(cr, x + width, y);
 
     if (arrow == Arrow::RIGHT && state == nux::NUX_STATE_ACTIVE)
 		{
-      cairo_line_to(cr, _align(x + width),           _align(y + height / 2.0 - arrow_h));
-      cairo_line_to(cr, _align(x + width - arrow_w), _align(y + height / 2.0));
-      cairo_line_to(cr, _align(x + width),           _align(y + height / 2.0 + arrow_h));
+      cairo_line_to(cr, x + width,           y + height / 2.0 - arrow_h);
+      cairo_line_to(cr, x + width - arrow_w, y + height / 2.0);
+      cairo_line_to(cr, x + width,           y + height / 2.0 + arrow_h);
 		}
 
     // bottom-right
-    cairo_line_to(cr, _align(x + width), _align(y + height));
+    cairo_line_to(cr, x + width, y + height);
 
     // bottom-left, right of the corner
-    cairo_line_to(cr, _align(x + radius), _align(y + height));
+    cairo_line_to(cr, x + radius, y + height);
 
     // bottom-left, above the corner
     cairo_arc(cr,
-              _align(x + radius),
-              _align(y + height - radius),
+              x + radius,
+              y + height - radius,
               radius,
               90.0f * G_PI / 180.0f,
               180.0f * G_PI / 180.0f);
 
     // left, right of the corner
-    cairo_line_to(cr, _align(x), _align(y + radius));
+    cairo_line_to(cr, x, y + radius);
 
     // top-left, right of the corner
     cairo_arc(cr,
-              _align(x + radius),
-              _align(y + radius),
+              x + radius,
+              y + radius,
               radius,
               180.0f * G_PI / 180.0f,
               270.0f * G_PI / 180.0f);
@@ -913,29 +920,29 @@ void DashStyle::Impl::RoundedRectSegment(cairo_t*   cr,
 
   case Segment::MIDDLE:
     // top-left
-    cairo_move_to(cr, _align(x), _align(y));
+    cairo_move_to(cr, x, y);
 
     // top-right
-    cairo_line_to(cr, _align(x + width), _align(y));
+    cairo_line_to(cr, x + width, y);
 
     if ((arrow == Arrow::RIGHT || arrow == Arrow::BOTH) && state == nux::NUX_STATE_ACTIVE)
 		{
-      cairo_line_to(cr, _align(x + width),           _align(y + height / 2.0 - arrow_h));
-      cairo_line_to(cr, _align(x + width - arrow_w), _align(y + height / 2.0));
-      cairo_line_to(cr, _align(x + width),           _align(y + height / 2.0 + arrow_h));
+      cairo_line_to(cr, x + width,           y + height / 2.0 - arrow_h);
+      cairo_line_to(cr, x + width - arrow_w, y + height / 2.0);
+      cairo_line_to(cr, x + width,           y + height / 2.0 + arrow_h);
 		}
 
     // bottom-right
-    cairo_line_to(cr, _align(x + width), _align(y + height));
+    cairo_line_to(cr, x + width, y + height);
 
     // bottom-left
-    cairo_line_to(cr, _align(x), _align(y + height));
+    cairo_line_to(cr, x, y + height);
 
     if ((arrow == Arrow::LEFT || arrow == Arrow::BOTH) && state == nux::NUX_STATE_ACTIVE)
 		{
-      cairo_line_to(cr, _align(x),           _align(y + height / 2.0 + arrow_h));
-      cairo_line_to(cr, _align(x + arrow_w), _align(y + height / 2.0));
-      cairo_line_to(cr, _align(x),           _align(y + height / 2.0 - arrow_h));
+      cairo_line_to(cr, x,           y + height / 2.0 + arrow_h);
+      cairo_line_to(cr, x + arrow_w, y + height / 2.0);
+      cairo_line_to(cr, x,           y + height / 2.0 - arrow_h);
 		}
 
     // back to top-left
@@ -944,38 +951,38 @@ void DashStyle::Impl::RoundedRectSegment(cairo_t*   cr,
 
   case Segment::RIGHT:
     // top-left, right of the corner
-    cairo_move_to(cr, _align(x), _align(y));
+    cairo_move_to(cr, x, y);
 
     // top-right, left of the corner
-    cairo_line_to(cr, _align(x + width - radius), _align(y));
+    cairo_line_to(cr, x + width - radius, y);
 
     // top-right, below the corner
     cairo_arc(cr,
-              _align(x + width - radius),
-              _align(y + radius),
+              x + width - radius,
+              y + radius,
               radius,
               -90.0f * G_PI / 180.0f,
               0.0f * G_PI / 180.0f);
 
     // bottom-right, above the corner
-    cairo_line_to(cr, _align(x + width), _align(y + height - radius));
+    cairo_line_to(cr, x + width, y + height - radius);
 
     // bottom-right, left of the corner
     cairo_arc(cr,
-              _align(x + width - radius),
-              _align(y + height - radius),
+              x + width - radius,
+              y + height - radius,
               radius,
               0.0f * G_PI / 180.0f,
               90.0f * G_PI / 180.0f);
 
     // bottom-left
-    cairo_line_to(cr, _align(x), _align(y + height));
+    cairo_line_to(cr, x, y + height);
 
     if (arrow == Arrow::LEFT && state == nux::NUX_STATE_ACTIVE)
 		{
-      cairo_line_to(cr, _align(x),           _align(y + height / 2.0 + arrow_h));
-      cairo_line_to(cr, _align(x + arrow_w), _align(y + height / 2.0));
-      cairo_line_to(cr, _align(x),           _align(y + height / 2.0 - arrow_h));
+      cairo_line_to(cr, x,           y + height / 2.0 + arrow_h);
+      cairo_line_to(cr, x + arrow_w, y + height / 2.0);
+      cairo_line_to(cr, x,           y + height / 2.0 - arrow_h);
 		}
 
     // back to top-left
