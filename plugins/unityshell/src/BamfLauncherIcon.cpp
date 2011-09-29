@@ -553,9 +553,10 @@ void BamfLauncherIcon::Focus()
       Window xid = bamf_window_get_xid(BAMF_WINDOW(view));
       bool urgent = bamf_view_is_urgent(view);
 
-      if (any_urgent && urgent)
+      if (any_urgent)
       {
-        windows.push_back(xid);
+        if (urgent)
+          windows.push_back(xid);
       }
       else
       {
