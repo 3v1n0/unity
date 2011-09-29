@@ -1,4 +1,4 @@
-unity (4.20.0-0ubuntu1) UNRELEASED; urgency=low
+unity (4.20.0-0ubuntu1) oneiric; urgency=low
 
   * New upstream release + cherry-pick:
     - compiz crashed with SIGSEGV in PluginClassHandler<UnityWindow,
@@ -46,7 +46,6 @@ unity (4.20.0-0ubuntu1) UNRELEASED; urgency=low
     - Files lens should also search Downloads (LP: #748915)
     - The dash crosses the monitor boundary when resolution is 1152x864 or
       lesser width (LP: #765338)
-    - blacklist old geforce fx cards for unity-3d (LP: #769402)
     - Dash - dragging a file outside of the Desktop Dash should close the Dash
       (LP: #764641)
     - Text in Dash search text box overflows and doesn't crop with longer
@@ -99,7 +98,7 @@ unity (4.20.0-0ubuntu1) UNRELEASED; urgency=low
       highlight), the casted shadow should be hidden. (LP: #841831)
     - text in searchbar keeps getting bolder/darker (LP: #861487)
 
- -- Didier Roche <didrocks@ubuntu.com>  Thu, 29 Sep 2011 18:22:42 +0200
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 29 Sep 2011 19:07:09 +0200
 
 unity (4.18.0-0ubuntu1) oneiric; urgency=low
 
