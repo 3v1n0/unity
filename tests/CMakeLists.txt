@@ -100,6 +100,8 @@ add_executable (standalone-dash
                 ${UNITY_SRC}/PlacesTile.h
                 ${UNITY_SRC}/PlacesSimpleTile.cpp
                 ${UNITY_SRC}/PlacesSimpleTile.h
+                ${UNITY_SRC}/PlacesVScrollBar.cpp
+                ${UNITY_SRC}/PlacesVScrollBar.h
                 ${UNITY_SRC}/DashView.cpp
                 ${UNITY_SRC}/DashView.h
                 ${UNITY_SRC}/HomeView.cpp
