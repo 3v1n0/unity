@@ -676,6 +676,7 @@ void DashView::OnLensAdded(Lens::Ptr& lens)
 
   lens->activated.connect(sigc::mem_fun(this, &DashView::OnUriActivatedReply));
   lens->search_finished.connect(sigc::mem_fun(this, &DashView::OnSearchFinished));
+  lens->global_search_finished.connect(sigc::mem_fun(this, &DashView::OnGlobalSearchFinished));
 }
 
 void DashView::OnLensBarActivated(std::string const& id)
@@ -715,6 +716,12 @@ void DashView::OnSearchFinished(std::string const& search_string)
 {
   if (search_bar_->search_string == search_string)
     search_bar_->SearchFinished();
+}
+
+void DashView::OnGlobalSearchFinished(std::string const& search_string)
+{
+  if (active_lens_view_ == home_view_)
+    OnSearchFinished(search_string);
 }
 
 void DashView::OnUriActivated(std::string const& uri)
