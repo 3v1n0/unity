@@ -96,8 +96,6 @@ void ResultRendererTile::Render(nux::GraphicsEngine& GfxContext,
   if (container == nullptr)
     return;
 
-  std::string row_text = row.name;
-  std::string row_iconhint = row.icon_hint;
   PlacesStyle* style = PlacesStyle::GetDefault();
 
   // set up our texture mode
@@ -107,7 +105,7 @@ void ResultRendererTile::Render(nux::GraphicsEngine& GfxContext,
   int icon_top_side = geometry.y + padding;
 
 
-  if (container->blurred_icon)
+  if (container->blurred_icon && state == ResultRendererState::RESULT_RENDERER_NORMAL)
   {
     GfxContext.QRP_1Tex(icon_left_hand_side - 5 - x_offset,
                         icon_top_side - 5 - y_offset,
@@ -161,9 +159,6 @@ nux::BaseTexture* ResultRendererTile::DrawHighlight(std::string const& texid, in
   nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, width, height);
   cairo_t* cr = cairo_graphics.GetContext();
 
-  cairo_scale(cr, 1.0f, 1.0f);
-
-  cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 0.0);
   cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
   cairo_paint(cr);
 
@@ -289,7 +284,44 @@ nux::BaseTexture* ResultRendererTile::CreateTextureCallback(std::string const& t
                                                             int height,
                                                             GdkPixbuf* pixbuf)
 {
-  return nux::CreateTexture2DFromPixbuf(pixbuf, true);
+  int pixbuf_width, pixbuf_height;
+  pixbuf_width = gdk_pixbuf_get_width(pixbuf);
+  pixbuf_height = gdk_pixbuf_get_height(pixbuf);
+
+  if (pixbuf_width == pixbuf_height)
+  {
+    // quick path for square icons
+    return nux::CreateTexture2DFromPixbuf(pixbuf, true);
+  }
+  else
+  {
+    // slow path for non square icons that must be resized to fit in the square
+    // texture
+    nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, width, height);
+    cairo_t* cr = cairo_graphics.GetInternalContext();
+
+    cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
+    cairo_paint(cr);
+
+    float scale;
+    if (pixbuf_width > pixbuf_height)
+      scale = pixbuf_height / static_cast<float>(pixbuf_width);
+    else
+      scale = pixbuf_width / static_cast<float>(pixbuf_height);
+
+    cairo_translate(cr,
+                    static_cast<int>((width - (pixbuf_width * scale)) * 0.5),
+                    static_cast<int>((height - (pixbuf_height * scale)) * 0.5));
+
+    cairo_scale(cr, scale, scale);
+
+    cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
+    gdk_cairo_set_source_pixbuf(cr, pixbuf, 0, 0);
+    cairo_paint(cr);
+
+    return texture_from_cairo_graphics(cairo_graphics);
+  }
+
 }
 
 nux::BaseTexture* ResultRendererTile::CreateBlurredTextureCallback(std::string const& texid,
@@ -297,19 +329,32 @@ nux::BaseTexture* ResultRendererTile::CreateBlurredTextureCallback(std::string c
                                                                    int height,
                                                                    GdkPixbuf* pixbuf)
 {
+  int pixbuf_width, pixbuf_height;
+  pixbuf_width = gdk_pixbuf_get_width(pixbuf);
+  pixbuf_height = gdk_pixbuf_get_height(pixbuf);
+
   nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, width + 10, height + 10);
   cairo_t* cr = cairo_graphics.GetInternalContext();
 
-  cairo_scale(cr, 1.0f, 1.0f);
-
-  cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 0.0);
   cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
   cairo_translate(cr, 5, 5);
   cairo_paint(cr);
 
+  float scale;
+  if (pixbuf_width > pixbuf_height)
+    scale = pixbuf_height / static_cast<float>(pixbuf_width);
+  else
+    scale = pixbuf_width / static_cast<float>(pixbuf_height);
+
+  cairo_translate(cr,
+                  static_cast<int>((width - (pixbuf_width * scale)) * 0.5),
+                  static_cast<int>((height - (pixbuf_height * scale)) * 0.5));
+
+  cairo_scale(cr, scale, scale);
+
   cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
   gdk_cairo_set_source_pixbuf(cr, pixbuf, 0, 0);
-  cairo_translate(cr, 5, 5);
+
   cairo_paint(cr);
 
   cairo_graphics.BlurSurface(4);
@@ -387,7 +432,11 @@ void ResultRendererTile::LoadText(Result& row)
   pango_layout_set_width(layout, (style->GetTileWidth() - (padding * 2))* PANGO_SCALE);
   pango_layout_set_height(layout, -2);
 
-  pango_layout_set_markup(layout, row.name().c_str(), -1);
+  char *escaped_text = g_markup_escape_text(row.name().c_str()  , -1);
+
+  pango_layout_set_markup(layout, escaped_text, -1);
+
+  g_free (escaped_text);
 
   pango_context = pango_layout_get_context(layout);  // is not ref'ed
   pango_cairo_context_set_font_options(pango_context,

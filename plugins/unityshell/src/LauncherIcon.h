@@ -126,7 +126,7 @@ public:
     return false;
   };
 
-  virtual unsigned int SwitcherPriority()
+  virtual unsigned long long SwitcherPriority()
   {
     return 0;
   }
@@ -241,6 +241,8 @@ protected:
   virtual void ActivateLauncherIcon(ActionArg arg) {}
 
   virtual void OpenInstanceLauncherIcon(ActionArg arg) {}
+
+  virtual bool HandlesSpread () { return false; }
 
   nux::BaseTexture* TextureFromGtkTheme(const char* name, int size, bool update_glow_colors = true);
 

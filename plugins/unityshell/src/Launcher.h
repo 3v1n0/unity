@@ -39,6 +39,7 @@
 #include "LauncherHideMachine.h"
 #include "LauncherHoverMachine.h"
 
+#define ANIM_DURATION_SHORT_SHORT 100
 #define ANIM_DURATION_SHORT 125
 #define ANIM_DURATION       200
 #define ANIM_DURATION_LONG  350

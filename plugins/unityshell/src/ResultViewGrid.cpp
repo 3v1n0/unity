@@ -467,6 +467,13 @@ void ResultViewGrid::OnKeyDown (unsigned long event_type, unsigned long event_ke
   selected_index_ = std::max(0, selected_index_);
   selected_index_ = std::min(static_cast<int>(results_.size() - 1), selected_index_);
   focused_uri_ = results_[selected_index_].uri;
+
+  int focused_x = (renderer_->width + horizontal_spacing) * (selected_index_ % items_per_row);
+  int focused_y = (renderer_->height + vertical_spacing) * (selected_index_ / items_per_row);
+
+  ubus_.SendMessage(UBUS_RESULT_VIEW_KEYNAV_CHANGED,
+                    g_variant_new("(iiii)", focused_x, focused_y, renderer_->width(), renderer_->height()));
+
   NeedRedraw();
 }
 
@@ -484,6 +491,13 @@ void ResultViewGrid::OnOnKeyNavFocusChange(nux::Area *area)
     focused_uri_ = results_.front().uri;
     selected_index_ = 0;
     NeedRedraw();
+
+    int items_per_row = GetItemsPerRow();
+    int focused_x = (renderer_->width + horizontal_spacing) * (selected_index_ % items_per_row);
+    int focused_y = (renderer_->height + vertical_spacing) * (selected_index_ / items_per_row);
+
+    ubus_.SendMessage(UBUS_RESULT_VIEW_KEYNAV_CHANGED,
+                      g_variant_new("(iiii)", focused_x, focused_y, renderer_->width(), renderer_->height()));
   }
   else
   {
@@ -517,7 +531,7 @@ ResultListBounds ResultViewGrid::GetVisableResults()
   else
   {
     //find the row we start at
-    int absolute_y = GetAbsoluteY();
+    int absolute_y = GetAbsoluteY() - GetToplevel()->GetAbsoluteY();
     uint row_size = renderer_->height + vertical_spacing;
 
     if (absolute_y < 0)
@@ -730,7 +744,7 @@ _icon_hint_get_drag_pixbuf (std::string icon_hint)
   if (g_str_has_prefix(icon_hint.c_str(), "/"))
   {
     pbuf = gdk_pixbuf_new_from_file_at_scale (icon_hint.c_str(),
-                                              size, -1, TRUE, &error);
+                                              size, size, FALSE, &error);
     if (error != NULL || !pbuf || !GDK_IS_PIXBUF (pbuf))
     {
       icon_hint = "application-default-icon";

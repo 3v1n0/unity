@@ -36,6 +36,7 @@ GestureEngine::GestureEngine(CompScreen* screen)
   _touch_id = 0;
   _drag_grab = 0;
   _pinch_grab = 0;
+  _fleur_cursor = XCreateFontCursor (screen->dpy (), XC_fleur);
 
   GeisAdapter* adapter = GeisAdapter::Default();
 
@@ -60,7 +61,8 @@ GestureEngine::GestureEngine(CompScreen* screen)
 
 GestureEngine::~GestureEngine()
 {
-
+		if (_fleur_cursor)
+	XFreeCursor (screen->dpy (), _fleur_cursor);
 }
 
 void
@@ -125,7 +127,8 @@ GestureEngine::OnDragStart(GeisAdapter::GeisDragData* data)
       return;
     }
 
-    if (_drag_window->state() & MAXIMIZE_STATE)
+    /* Don't allow windows to be dragged if completely maximized */
+    if ((_drag_window->state() & MAXIMIZE_STATE) == MAXIMIZE_STATE)
     {
       _drag_window = 0;
       return;
@@ -134,16 +137,39 @@ GestureEngine::OnDragStart(GeisAdapter::GeisDragData* data)
     if (_drag_grab)
       _screen->removeGrab(_drag_grab, NULL);
     _drag_id = data->id;
-    _drag_grab = _screen->pushGrab(_screen->invisibleCursor(), "unity");
+    _drag_grab = _screen->pushGrab(_fleur_cursor, "unity");
+    _drag_window->grabNotify (_drag_window->serverGeometry ().x (),
+                              _drag_window->serverGeometry ().y (),
+                              0, CompWindowGrabMoveMask | CompWindowGrabButtonMask);
   }
 }
+
+/* FIXME: CompScreen::warpPointer filters out motion events which
+ * other plugins may need to process, but for most cases in core
+ * they should be filtered out. */
 void
 GestureEngine::OnDragUpdate(GeisAdapter::GeisDragData* data)
 {
   if (_drag_id == data->id && _drag_window)
   {
-    _screen->warpPointer((int) data->delta_x, (int) data->delta_y);
-    _drag_window->move((int) data->delta_x, (int) data->delta_y, false);
+    unsigned int px = std::max (std::min (pointerX + static_cast <int> (data->delta_x), screen->width ()), 0);
+    unsigned int py = std::max (std::min (pointerY + static_cast <int> (data->delta_y), screen->height ()), 0);
+
+    if (_drag_window->state () & CompWindowStateMaximizedVertMask)
+      py = pointerY;
+    if (_drag_window->state () & CompWindowStateMaximizedHorzMask)
+      px = pointerX;
+
+    XWarpPointer(screen->dpy (),
+     None, screen->root (),
+     0, 0, 0, 0,
+     px, py);
+
+    XSync(screen->dpy (), false);
+    _drag_window->move(px - pointerX, py - pointerY, false);
+
+    pointerX = px;
+    pointerY = py;
   }
 }
 
@@ -152,6 +178,7 @@ GestureEngine::OnDragFinish(GeisAdapter::GeisDragData* data)
 {
   if (_drag_id == data->id && _drag_window)
   {
+    _drag_window->ungrabNotify ();
     _drag_window->syncPosition();
     EndDrag();
   }

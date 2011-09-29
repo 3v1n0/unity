@@ -246,7 +246,7 @@ private:
   void SendExecuteCommand();
 
   void EnsureSuperKeybindings ();
-  void CreateSuperNewAction(char shortcut, bool use_shift=false);
+  void CreateSuperNewAction(char shortcut, bool use_shift=false, bool use_numpad=false);
 
   static gboolean initPluginActions(gpointer data);
   static void initLauncher(nux::NThread* thread, void* InitData);
@@ -382,7 +382,7 @@ public:
   void stateChangeNotify(unsigned int lastState);
 
   bool place(CompPoint& pos);
-  CompPoint tryNotIntersectLauncher(CompPoint& pos);
+  CompPoint tryNotIntersectUI(CompPoint& pos);
 
   void paintThumbnail (nux::Geometry const& bounding, float alpha);
 
