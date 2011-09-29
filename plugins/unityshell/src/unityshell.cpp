@@ -634,9 +634,12 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
     for (LayoutWindow::Ptr target : targets)
     {
       CompWindow* window = screen->findWindow(target->xid);
-      UnityWindow *unity_window = UnityWindow::get (window);
+      if (window)
+      {
+        UnityWindow *unity_window = UnityWindow::get (window);
 
-      unity_window->paintThumbnail (target->result, target->alpha);
+        unity_window->paintThumbnail (target->result, target->alpha);
+      }
     }
   }
 
