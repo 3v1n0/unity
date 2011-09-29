@@ -105,7 +105,7 @@ void ResultRendererTile::Render(nux::GraphicsEngine& GfxContext,
   int icon_top_side = geometry.y + padding;
 
 
-  if (container->blurred_icon)
+  if (container->blurred_icon && state == ResultRendererState::RESULT_RENDERER_NORMAL)
   {
     GfxContext.QRP_1Tex(icon_left_hand_side - 5 - x_offset,
                         icon_top_side - 5 - y_offset,
