@@ -138,8 +138,10 @@ BamfLauncherIcon::BamfLauncherIcon(Launcher* IconManager, BamfApplication* app)
   _dnd_hover_timer = 0;
   _dnd_hovered = false;
   _launcher = IconManager;
+  _desktop_file_monitor = NULL;
   _menu_desktop_shortcuts = NULL;
   _on_desktop_file_changed_handler_id = 0;
+  _window_moved_id = 0;
   char* icon_name = bamf_view_get_icon(BAMF_VIEW(m_App));
 
   tooltip_text = BamfName();
@@ -172,6 +174,7 @@ BamfLauncherIcon::BamfLauncherIcon(Launcher* IconManager, BamfApplication* app)
   UpdateDesktopFile();
 
   WindowManager::Default()->window_minimized.connect(sigc::mem_fun(this, &BamfLauncherIcon::OnWindowMinimized));
+  WindowManager::Default()->window_moved.connect(sigc::mem_fun(this, &BamfLauncherIcon::OnWindowMoved));
   WindowManager::Default()->compiz_screen_viewport_switch_ended.connect(sigc::mem_fun(this, &BamfLauncherIcon::OnViewPortSwitchEnded));
   WindowManager::Default()->terminate_expo.connect(sigc::mem_fun(this, &BamfLauncherIcon::OnViewPortSwitchEnded));
   IconManager->hidden_changed.connect(sigc::mem_fun(this, &BamfLauncherIcon::OnLauncherHiddenChanged));
@@ -302,10 +305,12 @@ void BamfLauncherIcon::OnWindowMinimized(guint32 xid)
   UpdateQuirkTimeDelayed(300, QUIRK_SHIMMER);
 }
 
-void BamfLauncherIcon::OnViewPortSwitchEnded()
+gboolean BamfLauncherIcon::OnWindowMovedTimeout(BamfLauncherIcon* self)
 {
+  GList *children = bamf_view_get_children(BAMF_VIEW(self->m_App));
+
   bool any_on_current = false;
-  GList *children = bamf_view_get_children(BAMF_VIEW(m_App));
+  bool found_moved = (self->_window_moved_xid != 0 ? false : true);
 
   for (GList *l = children; l; l = l->next)
   {
@@ -314,17 +319,46 @@ void BamfLauncherIcon::OnViewPortSwitchEnded()
     if (BAMF_IS_WINDOW(view))
     {
       Window xid = bamf_window_get_xid(BAMF_WINDOW(view));
+
+      if (self->_window_moved_xid == xid)
+        found_moved = true;
+      
       if (WindowManager::Default()->IsWindowOnCurrentDesktop(xid))
-      {
         any_on_current = true;
+
+      if (found_moved && any_on_current)
         break;
-      }
     }
   }
 
-  SetHasWindowOnViewport(any_on_current);
-
+  self->SetHasWindowOnViewport(any_on_current);
+  self->_window_moved_id = 0;
   g_list_free(children);
+
+  return FALSE;
+}
+
+void BamfLauncherIcon::OnWindowMoved(guint32 moved_win)
+{
+  if (_window_moved_id != 0)
+    g_source_remove(_window_moved_id);
+
+  _window_moved_xid = moved_win;
+
+  if (_window_moved_xid == 0)
+  {
+    OnWindowMovedTimeout(this);
+  }
+  else
+  {
+    _window_moved_id = g_timeout_add(250,
+                      (GSourceFunc)BamfLauncherIcon::OnWindowMovedTimeout, this);
+  }
+}
+
+void BamfLauncherIcon::OnViewPortSwitchEnded()
+{
+  OnWindowMoved(0);
 }
 
 bool BamfLauncherIcon::IsSticky()
@@ -347,10 +381,13 @@ void BamfLauncherIcon::UpdateDesktopFile()
     // add a file watch to the desktop file so that if/when the app is removed
     // we can remove ourself from the launcher and when it's changed
     // we can update the quicklist.
-
-    if (_on_desktop_file_changed_handler_id != 0)
-      g_signal_handler_disconnect(G_OBJECT(_desktop_file_monitor),
-                                  _on_desktop_file_changed_handler_id);
+    if (_desktop_file_monitor)
+    {
+      if (_on_desktop_file_changed_handler_id != 0)
+        g_signal_handler_disconnect(G_OBJECT(_desktop_file_monitor),
+                                    _on_desktop_file_changed_handler_id);
+      g_object_unref(_desktop_file_monitor);  
+    }
 
     GFile* desktop_file = g_file_new_for_path(DesktopFile());
     _desktop_file_monitor = g_file_monitor_file(desktop_file, G_FILE_MONITOR_NONE,

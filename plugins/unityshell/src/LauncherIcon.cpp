@@ -197,7 +197,9 @@ LauncherIcon::AddProperties(GVariantBuilder* builder)
 void
 LauncherIcon::Activate(ActionArg arg)
 {
-  if (WindowManager::Default()->IsScaleActive())
+  /* Launcher Icons that handle spread will adjust the spread state
+   * accordingly, for all other icons we should terminate spread */
+  if (WindowManager::Default()->IsScaleActive() && !HandlesSpread ())
     WindowManager::Default()->TerminateScale();
 
   ActivateLauncherIcon(arg);

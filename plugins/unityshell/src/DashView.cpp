@@ -96,9 +96,9 @@ void DashView::SetupBackground()
   bg_layer_ = new nux::ColorLayer(nux::Color(0.0f, 0.0f, 0.0f, 0.9), true, rop);
 
   rop.Blend = true;
-  rop.SrcBlend = GL_SRC_COLOR;
-  rop.DstBlend = GL_DST_COLOR;
-  bg_darken_layer_ = new nux::ColorLayer(nux::Color(0.0f, 0.0f, 0.0f, 1.0f), false, rop);
+  rop.SrcBlend = GL_ZERO;
+  rop.DstBlend = GL_SRC_COLOR;
+  bg_darken_layer_ = new nux::ColorLayer(nux::Color(0.7f, 0.7f, 0.7f, 1.0f), false, rop);
 
   bg_shine_texture_ = PlacesStyle::GetDefault()->GetDashShine()->GetDeviceTexture();
 
@@ -202,6 +202,7 @@ nux::Geometry DashView::GetBestFitGeometry(nux::Geometry const& for_geo)
   height += tile_height * 3;
   height += (24 + 15) * 3; // adding three group headers
   height += lens_bar_->GetGeometry().height;
+  height += 6; // account for padding in PlacesGroup
 
   if (for_geo.width > 800 && for_geo.height > 550)
   {
@@ -702,7 +703,7 @@ void DashView::OnLensBarActivated(std::string const& id)
   search_bar_->text_entry()->SetFocused(true);
   nux::GetWindowCompositor().SetKeyFocusArea(search_bar_->text_entry());
 
-  search_bar_->can_refine_search = id != "home.lens";
+  search_bar_->can_refine_search = view->can_refine_search();
 
   view->QueueDraw();
   QueueDraw();
@@ -885,6 +886,60 @@ nux::Area * DashView::KeyNavIteration(nux::KeyNavDirection direction)
 void DashView::ProcessDndEnter()
 {
   ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
+}
+
+Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
+      unsigned long x11_key_code,
+      unsigned long special_keys_state)
+{
+  // Do what nux::View does, but if the event isn't a key navigation,
+  // designate the text entry to process it.
+
+  nux::KeyNavDirection direction = KEY_NAV_NONE;
+  switch (x11_key_code)
+  {
+  case NUX_VK_UP:
+    direction = KEY_NAV_UP;
+    break;
+  case NUX_VK_DOWN:
+    direction = KEY_NAV_DOWN;
+    break;
+  case NUX_VK_LEFT:
+    direction = KEY_NAV_LEFT;
+    break;
+  case NUX_VK_RIGHT:
+    direction = KEY_NAV_RIGHT;
+    break;
+  case NUX_VK_LEFT_TAB:
+    direction = KEY_NAV_TAB_PREVIOUS;
+    break;
+  case NUX_VK_TAB:
+    direction = KEY_NAV_TAB_NEXT;
+    break;
+  case NUX_VK_ENTER:
+  case NUX_KP_ENTER:
+    // Not sure if Enter should be a navigation key
+    direction = KEY_NAV_ENTER;
+    break;
+  default:
+    direction = KEY_NAV_NONE;
+    break;
+  }
+
+  if (has_key_focus_)
+  {
+    return this;
+  }
+  else if (direction == KEY_NAV_NONE)
+  {
+    // then send the event to the search entry
+    return search_bar_->text_entry();
+  }
+  else if (next_object_to_key_focus_area_)
+  {
+    return next_object_to_key_focus_area_->FindKeyFocusArea(key_symbol, x11_key_code, special_keys_state);
+  }
+  return NULL;
 }
 
 }
