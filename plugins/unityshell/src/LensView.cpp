@@ -79,23 +79,7 @@ public:
 
   void SetVScrollBar(nux::VScrollBar* newVScrollBar)
   {
-    if(vscrollbar_)
-    {
-      // disconnect old _vscrollbar
-      vscrollbar_->OnScrollUp.connect(sigc::mem_fun (this, &ScrollView::ScrollUp));
-      vscrollbar_->OnScrollDown.connect(sigc::mem_fun (this, &ScrollView::ScrollDown));
-      vscrollbar_->UnReference();
-    }
-
-    vscrollbar_ = newVScrollBar;
-
-    vscrollbar_->Reference();
-    vscrollbar_->SetParentObject(this);
-    vscrollbar_->SetReconfigureParentLayoutOnGeometryChange(false);
-
-    // connect new _vscrollbar
-    vscrollbar_->OnScrollUp.connect(sigc::mem_fun (this, &ScrollView::ScrollUp));
-    vscrollbar_->OnScrollDown.connect(sigc::mem_fun (this, &ScrollView::ScrollDown));
+    nux::ScrollView::SetVScrollBar(newVScrollBar);
   }
 };
 
