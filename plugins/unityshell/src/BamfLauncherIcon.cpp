@@ -1146,8 +1146,10 @@ std::set<std::string> BamfLauncherIcon::ValidateUrisForLaunch(unity::DndData& ur
 gboolean BamfLauncherIcon::OnDndHoveredTimeout(gpointer data)
 {
   BamfLauncherIcon* self = (BamfLauncherIcon*) data;
-  if (self->_dnd_hovered && bamf_view_is_running(BAMF_VIEW(self->m_App)))
-    self->Spread(CompAction::StateInitEdgeDnd, true);
+  
+  // for now, let's not do this, it turns out to be quite buggy
+  //if (self->_dnd_hovered && bamf_view_is_running(BAMF_VIEW(self->m_App)))
+  //  self->Spread(CompAction::StateInitEdgeDnd, true);
 
   self->_dnd_hover_timer = 0;
   return false;
