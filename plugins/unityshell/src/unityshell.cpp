@@ -97,7 +97,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , gScreen(GLScreen::get(screen))
   , launcher(nullptr)
   , controller(nullptr)
-  , panelController(nullptr)
   , switcherController(nullptr)
   , gestureEngine(nullptr)
   , wt(nullptr)
@@ -317,7 +316,6 @@ UnityScreen::~UnityScreen()
 {
   if (switcher_desktop_icon)
     switcher_desktop_icon->UnReference();
-  panelController->UnReference();
   delete controller;
   delete switcherController;
   launcherWindow->UnReference();
@@ -2332,12 +2330,11 @@ void UnityScreen::initLauncher(nux::NThread* thread, void* InitData)
 
   /* Setup panel */
   timer.Reset();
-  self->panelController = new PanelController();
-  self->AddChild(self->panelController);
+  self->panelController.reset(new panel::Controller());
   LOG_INFO(logger) << "initLauncher-Panel " << timer.ElapsedSeconds() << "s";
 
   /* Setup Places */
-  self->dashController = dash::DashController::Ptr(new dash::DashController());
+  self->dashController.reset(new dash::DashController());
 
   /* FIXME: this should not be manual, should be managed with a
      show/hide callback like in GAIL
