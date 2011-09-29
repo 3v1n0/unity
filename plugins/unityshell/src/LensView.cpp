@@ -26,6 +26,8 @@
 #include "ResultRendererTile.h"
 #include "ResultRendererHorizontalTile.h"
 #include "UBusMessages.h"
+#include "UBusWrapper.h"
+#include "PlacesVScrollBar.h"
 
 namespace unity
 {
@@ -37,12 +39,58 @@ namespace
 nux::logging::Logger logger("unity.dash.lensview");
 }
 
+  // this is so we can access some protected members in scrollview
+class LensScrollView: public nux::ScrollView
+{
+  protected:
+    nux::VScrollBar* vscrollbar_;
+
+public:
+  LensScrollView(NUX_FILE_LINE_DECL)
+    : nux::ScrollView(NUX_FILE_LINE_PARAM)
+  {
+    vscrollbar_ = NULL;
+  }
+  void ScrollToPosition(nux::Geometry & position)
+  {
+    // much of this code is copied from Nux/ScrollView.cpp
+    int child_y = position.y - GetGeometry ().y;
+    int child_y_diff = child_y - abs (_delta_y);
+
+    if (child_y_diff + position.height < GetGeometry ().height && child_y_diff >= 0)
+    {
+      return;
+    }
+
+    if (child_y_diff < 0)
+    {
+      ScrollUp (1, abs (child_y_diff));
+    }
+    else
+    {
+      int size = child_y_diff - GetGeometry ().height;
+
+      // always keeps the top of a view on the screen
+      size += position.height;
+
+      ScrollDown (1, size);
+    }
+  }
+
+  void SetVScrollBar(nux::VScrollBar* newVScrollBar)
+  {
+    nux::ScrollView::SetVScrollBar(newVScrollBar);
+  }
+};
+
+
 NUX_IMPLEMENT_OBJECT_TYPE(LensView);
 
 LensView::LensView()
   : nux::View(NUX_TRACKER_LOCATION)
   , search_string("")
   , filters_expanded(false)
+  , can_refine_search(false)
   , fix_renderering_id_(0)
 {}
 
@@ -50,6 +98,7 @@ LensView::LensView(Lens::Ptr lens)
   : nux::View(NUX_TRACKER_LOCATION)
   , search_string("")
   , filters_expanded(false)
+  , can_refine_search(false)
   , lens_(lens)
   , initial_activation_(true)
   , fix_renderering_id_(0)
@@ -59,34 +108,66 @@ LensView::LensView(Lens::Ptr lens)
   SetupResults();
   SetupFilters();
 
- PlacesStyle::GetDefault()->columns_changed.connect(sigc::mem_fun(this, &LensView::OnColumnsChanged));
+  PlacesStyle::GetDefault()->columns_changed.connect(sigc::mem_fun(this, &LensView::OnColumnsChanged));
 
   lens_->connected.changed.connect([&](bool is_connected) { if (is_connected) initial_activation_ = true; });
   search_string.changed.connect([&](std::string const& search) { lens_->Search(search);  });
   filters_expanded.changed.connect([&](bool expanded) { fscroll_view_->SetVisible(expanded); QueueRelayout(); OnColumnsChanged(); });
   active.changed.connect(sigc::mem_fun(this, &LensView::OnActiveChanged));
+
+  ubus_.RegisterInterest(UBUS_RESULT_VIEW_KEYNAV_CHANGED, [this] (GVariant* data) {
+    // we get this signal when a result view keynav changes,
+    // its a bad way of doing this but nux ABI needs to be broken
+    // to do it properly
+    nux::Geometry focused_pos;
+    g_variant_get (data, "(iiii)", &focused_pos.x, &focused_pos.y, &focused_pos.width, &focused_pos.height);
+
+    for (auto it = categories_.begin(); it != categories_.end(); it++)
+    {
+      if ((*it)->GetLayout() != nullptr)
+      {
+        nux::View *child = (*it)->GetChildView();
+        if (child->HasKeyFocus())
+        {
+          focused_pos.x += child->GetGeometry().x;
+          focused_pos.y += child->GetGeometry().y - 30;
+          focused_pos.height += 30;
+          static_cast<LensScrollView *>(scroll_view_)->ScrollToPosition(focused_pos);
+          break;
+        }
+      }
+    }
+  });
+
 }
 
 LensView::~LensView()
 {
   if (fix_renderering_id_)
     g_source_remove(fix_renderering_id_);
+
+  delete scroll_bar_;
+  delete fscroll_bar_;
 }
 
 void LensView::SetupViews()
 {
   layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
 
-  scroll_view_ = new nux::ScrollView(NUX_TRACKER_LOCATION);
+  scroll_view_ = new LensScrollView(NUX_TRACKER_LOCATION);
   scroll_view_->EnableVerticalScrollBar(true);
+  scroll_bar_ = new PlacesVScrollBar();
+  static_cast<LensScrollView *>(scroll_view_)->SetVScrollBar(scroll_bar_);
   scroll_view_->EnableHorizontalScrollBar(false);
   layout_->AddView(scroll_view_);
 
   scroll_layout_ = new nux::VLayout(NUX_TRACKER_LOCATION);
   scroll_view_->SetLayout(scroll_layout_);
 
-  fscroll_view_ = new nux::ScrollView(NUX_TRACKER_LOCATION);
+  fscroll_view_ = new LensScrollView(NUX_TRACKER_LOCATION);
   fscroll_view_->EnableVerticalScrollBar(true);
+  fscroll_bar_ = new PlacesVScrollBar();
+  static_cast<LensScrollView *>(fscroll_view_)->SetVScrollBar(fscroll_bar_);
   fscroll_view_->EnableHorizontalScrollBar(false);
   fscroll_view_->SetVisible(false);
   layout_->AddView(fscroll_view_, 1);
@@ -165,28 +246,40 @@ void LensView::OnCategoryAdded(Category const& category)
 
 void LensView::OnResultAdded(Result const& result)
 {
-  PlacesGroup* group = categories_[result.category_index];
-  ResultViewGrid* grid = static_cast<ResultViewGrid*>(group->GetChildView());
+  try {
+    PlacesGroup* group = categories_.at(result.category_index);
+    ResultViewGrid* grid = static_cast<ResultViewGrid*>(group->GetChildView());
 
-  std::string uri = result.uri;
-  LOG_TRACE(logger) << "Result added: " << uri;
+    std::string uri = result.uri;
+    LOG_TRACE(logger) << "Result added: " << uri;
 
-  grid->AddResult(const_cast<Result&>(result));
-  counts_[group]++;
-  UpdateCounts(group);
+    grid->AddResult(const_cast<Result&>(result));
+    counts_[group]++;
+    UpdateCounts(group);
+  } catch (std::out_of_range& oor) {
+    LOG_WARN(logger) << "Result does not have a valid category index: "
+                     << boost::lexical_cast<unsigned int>(result.category_index)
+                     << ". Is out of range.";
+  }
 }
 
 void LensView::OnResultRemoved(Result const& result)
 {
-  PlacesGroup* group = categories_[result.category_index];
-  ResultViewGrid* grid = static_cast<ResultViewGrid*>(group->GetChildView());
+  try {
+    PlacesGroup* group = categories_.at(result.category_index);
+    ResultViewGrid* grid = static_cast<ResultViewGrid*>(group->GetChildView());
 
-  std::string uri = result.uri;
-  LOG_TRACE(logger) << "Result removed: " << uri;
+    std::string uri = result.uri;
+    LOG_TRACE(logger) << "Result removed: " << uri;
 
-  grid->RemoveResult(const_cast<Result&>(result));
-  counts_[group]--;
-  UpdateCounts(group);
+    grid->RemoveResult(const_cast<Result&>(result));
+    counts_[group]--;
+    UpdateCounts(group);
+  } catch (std::out_of_range& oor) {
+    LOG_WARN(logger) << "Result does not have a valid category index: "
+                     << boost::lexical_cast<unsigned int>(result.category_index)
+                     << ". Is out of range.";
+  }
 }
 
 void LensView::UpdateCounts(PlacesGroup* group)
@@ -254,6 +347,8 @@ void LensView::OnFilterAdded(Filter::Ptr filter)
   int width = PlacesStyle::GetDefault()->GetTileWidth();
   fscroll_view_->SetMinimumWidth(width*2);
   fscroll_view_->SetMaximumWidth(width*2);
+
+  can_refine_search = true;
 }
 
 void LensView::OnFilterRemoved(Filter::Ptr filter)

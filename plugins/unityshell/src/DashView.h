@@ -61,6 +61,13 @@ public:
 
   nux::View* default_focus() const;
 
+protected:
+  void ProcessDndEnter();
+
+  virtual Area* FindKeyFocusArea(unsigned int key_symbol,
+    unsigned long x11_key_code,
+    unsigned long special_keys_state);
+
 private:
   void SetupBackground();
   void SetupViews();
@@ -80,6 +87,7 @@ private:
   void OnLensAdded(Lens::Ptr& lens);
   void OnLensBarActivated(std::string const& id);
   void OnSearchFinished(std::string const& search_string);
+  void OnGlobalSearchFinished(std::string const& search_string);
   void OnUriActivated(std::string const& uri);
   void OnUriActivatedReply(std::string const& uri, HandledType type, Lens::Hints const&);
   bool DoFallbackActivation(std::string const& uri);

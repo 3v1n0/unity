@@ -43,6 +43,8 @@ public:
   ~IMTextEntry();
 
   nux::Property<std::string> preedit_string;
+  nux::Property<bool> im_enabled;
+  nux::Property<bool> im_active;
 
 private:
   void CheckIMEnabled();
@@ -73,8 +75,6 @@ private:
   glib::SignalManager sig_manager_;
   GtkIMContext* im_context_;
   GdkWindow* client_window_;
-  bool im_enabled_;
-  bool im_active_;
   bool focused_;
 };
 

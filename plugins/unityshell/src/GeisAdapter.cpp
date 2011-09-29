@@ -237,8 +237,8 @@ GeisAdapter::GeisTapData* GeisAdapter::ProcessTapGesture(GeisSize count, GeisGes
       result->focus_x = attr.integer_val;
     else if (g_str_equal(attr.name, GEIS_GESTURE_ATTRIBUTE_FOCUS_Y))
       result->focus_y = attr.integer_val;
-    //else if (g_str_equal (attr.name, GEIS_GESTURE_ATTRIBUTE_TOUCHES))
-    //  result->touches = attr.integer_val;
+    else if (g_str_equal (attr.name, GEIS_GESTURE_ATTRIBUTE_TOUCHES))
+      result->touches = attr.integer_val;
     else if (g_str_equal(attr.name, GEIS_GESTURE_ATTRIBUTE_GESTURE_NAME))
     {
       if (!g_strcmp0(attr.string_val, GEIS_GESTURE_TYPE_TAP1))

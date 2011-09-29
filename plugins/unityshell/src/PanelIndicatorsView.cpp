@@ -41,6 +41,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(PanelIndicatorsView);
 PanelIndicatorsView::PanelIndicatorsView()
 : View(NUX_TRACKER_LOCATION)
 , layout_(NULL)
+, opacity_(1.0f)
 {
   LOG_DEBUG(logger) << "Indicators View Added: ";
   layout_ = new nux::HLayout("", NUX_TRACKER_LOCATION);
@@ -223,16 +224,13 @@ PanelIndicatorsView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_dra
 }
 
 PanelIndicatorEntryView *
-PanelIndicatorsView::AddEntry(indicator::Entry::Ptr const& entry, int padding, IndicatorEntryPosition pos)
+PanelIndicatorsView::AddEntry(indicator::Entry::Ptr const& entry, int padding,
+                              IndicatorEntryPosition pos, IndicatorEntryType type)
 {
-  PanelIndicatorEntryView *view;
+  auto view = new PanelIndicatorEntryView(entry, padding, type);
   int entry_pos = pos;
 
-  if (padding > -1)
-    view = new PanelIndicatorEntryView(entry, padding);
-  else
-    view = new PanelIndicatorEntryView(entry);
-
+  view->SetOpacity(opacity_);
   view->refreshed.connect(sigc::mem_fun(this, &PanelIndicatorsView::OnEntryRefreshed));
 
   if (entry_pos == IndicatorEntryPosition::AUTO)
@@ -318,6 +316,27 @@ PanelIndicatorsView::DashHidden()
 {
   for (auto entry: entries_)
     entry.second->DashHidden();
+}
+
+double
+PanelIndicatorsView::GetOpacity()
+{
+  return opacity_;
+}
+
+void
+PanelIndicatorsView::SetOpacity(double opacity)
+{
+  opacity = CLAMP(opacity, 0.0f, 1.0f);
+
+  for (auto entry: entries_)
+    entry.second->SetOpacity(opacity);
+
+  if (opacity_ != opacity)
+  {
+    opacity_ = opacity;
+    NeedRedraw();
+  }
 }
 
 const gchar* PanelIndicatorsView::GetName()

@@ -716,7 +716,18 @@ void SwitcherView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   for (it = last_args_.begin(); it != last_args_.end(); ++it)
   {
     if (it->icon == model_->Selection())
-      text_view_->SetBaseX(it->render_center.x - text_view_->GetBaseWidth() / 2);
+    {
+      int view_width = text_view_->GetBaseWidth();
+      int start_x = it->render_center.x - view_width / 2;
+
+      internal_clip.Expand (-10, -10);
+      if (start_x < internal_clip.x)
+        start_x = internal_clip.x;
+      else if (start_x + view_width > internal_clip.x + internal_clip.width)
+        start_x = (internal_clip.x + internal_clip.width) - view_width;
+
+      text_view_->SetBaseX(start_x);
+    }
     if (it->y_rotation < 0)
       icon_renderer_->RenderIcon(GfxContext, *it, base, base);
   }

@@ -84,7 +84,7 @@ public:
   virtual nux::Geometry GetWindowGeometry(guint32 xid) = 0;
   virtual nux::Geometry GetScreenGeometry() = 0;
 
-  virtual unsigned int GetWindowActiveNumber (guint32 xid) = 0;
+  virtual unsigned long long GetWindowActiveNumber (guint32 xid) = 0;
 
   virtual void SetWindowIconGeometry(Window window, nux::Geometry const& geo) = 0;
 

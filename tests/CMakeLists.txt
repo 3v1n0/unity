@@ -100,6 +100,8 @@ add_executable (standalone-dash
                 ${UNITY_SRC}/PlacesTile.h
                 ${UNITY_SRC}/PlacesSimpleTile.cpp
                 ${UNITY_SRC}/PlacesSimpleTile.h
+                ${UNITY_SRC}/PlacesVScrollBar.cpp
+                ${UNITY_SRC}/PlacesVScrollBar.h
                 ${UNITY_SRC}/DashView.cpp
                 ${UNITY_SRC}/DashView.h
                 ${UNITY_SRC}/HomeView.cpp
@@ -148,6 +150,8 @@ add_dependencies (standalone-dash unity-core-${UNITY_API_VERSION})
 #
 add_executable (test-panel
                 TestPanel.cpp
+                ${UNITY_SRC}/Animator.cpp
+                ${UNITY_SRC}/Animator.h
                 ${UNITY_SRC}/BackgroundEffectHelper.cpp
                 ${UNITY_SRC}/BackgroundEffectHelper.h
                 ${UNITY_SRC}/DashSettings.cpp

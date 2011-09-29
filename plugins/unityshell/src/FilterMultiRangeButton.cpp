@@ -129,10 +129,14 @@ namespace unity {
 
   void FilterMultiRangeButton::RedrawTheme (nux::Geometry const& geom, cairo_t *cr, nux::State faked_state)
   {
-
     std::string name = "10";
+    std::stringstream final;
+
     if (filter_)
-     name = filter_->name;
+    {
+      name = filter_->name;      
+      final << "<small>" << name << "</small>";
+	}
 
     DashStyle::Arrow arrow;
     if (has_arrow_ == MULTI_RANGE_ARROW_NONE)
@@ -152,8 +156,7 @@ namespace unity {
     else
       segment = DashStyle::Segment::RIGHT;
 
-
-    DashStyle::Instance().MultiRangeSegment(cr, faked_state, name, arrow, segment);
+    DashStyle::Instance().MultiRangeSegment(cr, faked_state, final.str(), arrow, segment);
     NeedRedraw();
   }
 

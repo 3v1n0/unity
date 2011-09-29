@@ -121,7 +121,7 @@ int PlacesStyle::GetHomeTileWidth() const
 
 int PlacesStyle::GetHomeTileHeight() const
 {
-  return GetHomeTileIconSize() + (_text_height * 4);
+  return GetHomeTileIconSize() + (_text_height * 5);
 }
 
 int PlacesStyle::GetTextLineHeight() const
