@@ -77,6 +77,7 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
   hint_ = new nux::StaticCairoText(" ");
   hint_->SetTextColor(nux::Color(1.0f, 1.0f, 1.0f, 0.5f));
   hint_->SetCanFocus(false);
+  hint_->SetMaximumWidth(570);
 
   pango_entry_ = new IMTextEntry();
   pango_entry_->sigTextChanged.connect(sigc::mem_fun(this, &SearchBar::OnSearchChanged));
@@ -85,6 +86,7 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
   pango_entry_->cursor_moved.connect([&](int i) { QueueDraw(); });
   pango_entry_->mouse_down.connect(sigc::mem_fun(this, &SearchBar::OnMouseButtonDown));
   pango_entry_->end_key_focus.connect(sigc::mem_fun(this, &SearchBar::OnEndKeyFocus));
+  pango_entry_->SetMaximumWidth(570);
 
   layered_layout_ = new nux::LayeredLayout();
   layered_layout_->AddLayer(hint_);
@@ -241,11 +243,13 @@ void SearchBar::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   GfxContext.PushClippingRectangle(geo);
 
-  gPainter.PushLayer(GfxContext, bg_layer_->GetGeometry(), bg_layer_);
+  if (!IsFullRedraw())
+    gPainter.PushLayer(GfxContext, bg_layer_->GetGeometry(), bg_layer_);
 
   layout_->ProcessDraw(GfxContext, force_draw);
 
-  gPainter.PopBackground();
+  if (!IsFullRedraw())
+    gPainter.PopBackground();
   GfxContext.PopClippingRectangle();
 }
 

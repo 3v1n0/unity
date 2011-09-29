@@ -51,12 +51,13 @@ public:
   virtual ~LensView();
 
   Lens::Ptr lens() const;
-  
+
   virtual void ActivateFirst();
 
   nux::Property<std::string> search_string;
   nux::Property<bool> filters_expanded;
   nux::Property<bool> active;
+  nux::Property<bool> can_refine_search;
 
   sigc::signal<void, std::string const&> uri_activated;
 
@@ -82,7 +83,7 @@ private:
   virtual long ProcessEvent(nux::IEvent& ievent, long traverse_info, long event_info);
   virtual void Draw(nux::GraphicsEngine& gfx_context, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw);
-  
+
   virtual bool AcceptKeyNavFocus();
   virtual const gchar* GetName();
   virtual void AddProperties(GVariantBuilder* builder);
@@ -102,6 +103,8 @@ private:
   FilterBar* filter_bar_;
 
   guint fix_renderering_id_;
+
+  UBusManager ubus_;
 };
 
 

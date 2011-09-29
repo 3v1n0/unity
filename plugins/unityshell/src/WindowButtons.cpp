@@ -57,7 +57,8 @@ public:
       _dash_is_open(false),
       _mouse_is_down(false),
       _place_shown_interest(0),
-      _place_hidden_interest(0)
+      _place_hidden_interest(0),
+      _opacity(1.0f)
   {
     LoadImages();
     UpdateDashUnmaximize();
@@ -104,7 +105,6 @@ public:
     nux::TexCoordXForm texxform;
 
     GfxContext.PushClippingRectangle(geo);
-    nux::GetPainter().PaintBackground(GfxContext, geo);
 
     if (_dash_is_open)
     {
@@ -127,9 +127,6 @@ public:
         tex = _normal_tex;
     }
 
-    GfxContext.GetRenderStates().SetBlend(true);
-    GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
-    GfxContext.GetRenderStates().SetColorMask(true, true, true, true);
     if (tex)
       GfxContext.QRP_1Tex(geo.x,
                           geo.y,
@@ -137,8 +134,8 @@ public:
                           (float)geo.height,
                           tex->GetDeviceTexture(),
                           texxform,
-                          nux::color::White);
-    GfxContext.GetRenderStates().SetBlend(false);
+                          nux::color::White * _opacity);
+
     GfxContext.PopClippingRectangle();
   }
 
@@ -220,6 +217,20 @@ public:
     QueueDraw();
   }
 
+  void SetOpacity(double opacity)
+  {
+    if (_opacity != opacity)
+    {
+      _opacity = opacity;
+      NeedRedraw();
+    }
+  }
+
+  double GetOpacity()
+  {
+    return _opacity;
+  }
+
 private:
   PanelStyle::WindowButtonType _type;
   nux::BaseTexture* _normal_tex;
@@ -232,6 +243,7 @@ private:
   bool _mouse_is_down;
   guint32 _place_shown_interest;
   guint32 _place_hidden_interest;
+  double _opacity;
 
   static void OnPlaceViewShown(GVariant* data, void* val)
   {
@@ -293,6 +305,7 @@ private:
 
 WindowButtons::WindowButtons()
   : HLayout("", NUX_TRACKER_LOCATION)
+  , _opacity(1.0f)
 {
   WindowButton* but;
 
@@ -362,6 +375,32 @@ nux::Area*
 WindowButtons::FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type)
 {
   return nux::HLayout::FindAreaUnderMouse(mouse_position, event_type);
+}
+
+void
+WindowButtons::SetOpacity(double opacity)
+{
+  opacity = CLAMP(opacity, 0.0f, 1.0f);
+
+  for (auto area : GetChildren())
+  {
+    auto but = dynamic_cast<WindowButton*>(area);
+
+    if (but)
+      but->SetOpacity(opacity);
+  }
+
+  if (_opacity != opacity)
+  {
+    _opacity = opacity;
+    NeedRedraw();
+  }
+}
+
+double
+WindowButtons::GetOpacity()
+{
+  return _opacity;
 }
 
 const gchar*

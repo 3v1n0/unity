@@ -72,7 +72,7 @@ public:
   void EndFirstMenuShow();
 
   void SetOpacity(float opacity);
-  
+
   void TrackMenuPointer();
 
   unsigned int GetTrayXid ();
