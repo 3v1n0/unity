@@ -901,18 +901,7 @@ void UnityScreen::glPaintTransformedOutput(const GLScreenPaintAttrib& attrib,
                                            CompOutput* output,
                                            unsigned int mask)
 {
-  bool bound = mFbos[output]->bound ();
   allowWindowPaint = false;
-
-  if (bound)
-  {
-    /* The screen is transformed, unbind our fbo
-     * and redraw the bits that were transformed
-     * if we were bound */
-    mFbos[output]->unbind ();
-    mFbos[output]->paint ();
-  }
-
   gScreen->glPaintTransformedOutput(attrib, transform, region, output, mask);
 
 }
