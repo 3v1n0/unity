@@ -29,6 +29,7 @@
 #include "BGHash.h"
 #include "FontSettings.h"
 #include "DashView.h"
+#include "DashSettings.h"
 #include "DashStyle.h"
 #include "PlacesStyle.h"
 
@@ -100,7 +101,8 @@ int main(int argc, char **argv)
   nux::NuxInitialize(0);
   nux::logging::configure_logging(::getenv("UNITY_LOG_SEVERITY"));
   // The instances for the pseudo-singletons.
-  ::unity::dash::Style dash_style;
+  unity::dash::Style dash_style;
+  unity::dash::Settings dash_settings;
   unity::PlacesStyle places_style;
 
   TestRunner *test_runner = new TestRunner ();

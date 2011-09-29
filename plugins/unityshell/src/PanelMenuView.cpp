@@ -953,10 +953,10 @@ PanelMenuView::OnRestoreClicked()
 {
   if (_places_showing)
   {
-    if (DashSettings::GetDefault()->GetFormFactor() == DashSettings::DESKTOP)
-      DashSettings::GetDefault()->SetFormFactor(DashSettings::NETBOOK);
+    if (dash::Settings::Instance().GetFormFactor() == dash::FormFactor::DESKTOP)
+      dash::Settings::Instance().SetFormFactor(dash::FormFactor::NETBOOK);
     else
-      DashSettings::GetDefault()->SetFormFactor(DashSettings::DESKTOP);
+      dash::Settings::Instance().SetFormFactor(dash::FormFactor::DESKTOP);
   }
   else
   {

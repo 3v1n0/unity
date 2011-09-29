@@ -62,7 +62,7 @@ public:
     LoadImages();
     UpdateDashUnmaximize();
     panel::Style::Instance().changed.connect(sigc::mem_fun(this, &WindowButton::LoadImages));
-    DashSettings::GetDefault()->changed.connect(sigc::mem_fun(this, &WindowButton::UpdateDashUnmaximize));
+    dash::Settings::Instance().changed.connect(sigc::mem_fun(this, &WindowButton::UpdateDashUnmaximize));
 
     UBusServer* ubus = ubus_server_get_default();
     _place_shown_interest = ubus_server_register_interest(ubus, UBUS_PLACE_VIEW_SHOWN,
@@ -193,7 +193,7 @@ public:
     if (_pressed_dash_tex)
       _pressed_dash_tex->UnReference();
 
-    if (DashSettings::GetDefault()->GetFormFactor() == DashSettings::DESKTOP)
+    if (dash::Settings::Instance().GetFormFactor() == dash::FormFactor::DESKTOP)
     {
       // get maximize buttons
       _normal_dash_tex = GetDashMaximizeWindowButton(panel::WindowState::NORMAL);

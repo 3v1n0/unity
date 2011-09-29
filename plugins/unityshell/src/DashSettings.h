@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
-* Copyright (C) 2010 Canonical Ltd
+* Copyright (C) 2010, 2011 Canonical Ltd
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License version 3 as
@@ -20,38 +20,39 @@
 #ifndef DASH_SETTINGS_H
 #define DASH_SETTINGS_H
 
-#include <gio/gio.h>
-#include <Nux/Nux.h>
+#include <sigc++/signal.h>
 
-#include "DashSettings.h"
+namespace unity
+{
+namespace dash
+{
 
-class DashSettings : public nux::Object
+enum class FormFactor
+{
+  DESKTOP = 1,
+  NETBOOK
+};
+
+class Settings
 {
 public:
-  enum FormFactor
-  {
-    DESKTOP = 1,
-    NETBOOK
-  };
+  Settings();
+  ~Settings();
 
-  DashSettings();
-  ~DashSettings();
+  static Settings& Instance();
 
-  static DashSettings* GetDefault();
-
-  FormFactor GetFormFactor();
+  // NOTE: could potentially refactor this into a nux::Property
+  FormFactor GetFormFactor() const;
   void SetFormFactor(FormFactor factor);
 
   sigc::signal<void> changed;
 
 private:
-  void Refresh();
-  static void Changed(GSettings* settings, gchar* key, DashSettings* self);
-
-private:
-  GSettings*   _settings;
-  int          _raw_from_factor;
-  FormFactor   _form_factor;
+  class Impl;
+  Impl* pimpl;
 };
+
+}
+}
 
 #endif // DASH_SETTINGS_H

@@ -55,7 +55,7 @@ DashView::DashView()
   SetupViews();
   SetupUBusConnections();
 
-  DashSettings::GetDefault()->changed.connect(sigc::mem_fun(this, &DashView::Relayout));
+  Settings::Instance().changed.connect(sigc::mem_fun(this, &DashView::Relayout));
   lenses_.lens_added.connect(sigc::mem_fun(this, &DashView::OnLensAdded));
   mouse_down.connect(sigc::mem_fun(this, &DashView::OnMouseButtonDown));
 
@@ -151,11 +151,10 @@ long DashView::PostLayoutManagement (long LayoutResult)
 
 void DashView::Relayout()
 {
-  DashSettings* settings = DashSettings::GetDefault();
   nux::Geometry geo = GetGeometry();
   content_geo_ = GetBestFitGeometry(geo);
 
-  if (settings->GetFormFactor() == DashSettings::NETBOOK)
+  if (Settings::Instance().GetFormFactor() == FormFactor::NETBOOK)
   {
     if (geo.width >= content_geo_.width && geo.height > content_geo_.height)
       content_geo_ = geo;
@@ -233,12 +232,11 @@ long DashView::ProcessEvent(nux::IEvent& ievent, long traverse_info, long event_
 
 void DashView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
 {
-  DashSettings* settings = DashSettings::GetDefault();
   bool paint_blur = BackgroundEffectHelper::blur_type != BLUR_NONE;
   nux::Geometry geo = content_geo_;
   nux::Geometry geo_absolute = GetAbsoluteGeometry();
 
-  if (settings->GetFormFactor() != DashSettings::NETBOOK)
+  if (Settings::Instance().GetFormFactor() != FormFactor::NETBOOK)
   {
     // Paint the edges
     {

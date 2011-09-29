@@ -35,6 +35,7 @@
 
 #include "Introspectable.h"
 #include "DashController.h"
+#include "DashSettings.h"
 #include "DashStyle.h"
 #include "DesktopLauncherIcon.h"
 #include "FontSettings.h"
@@ -266,6 +267,7 @@ private:
   static void OnLauncherStartKeyNav(GVariant* data, void* value);
   static void OnLauncherEndKeyNav(GVariant* data, void* value);
 
+  dash::Settings          dash_settings_;
   dash::Style             dash_style_;
   panel::Style            panel_style_;
   PlacesStyle             places_style_;
