@@ -27,6 +27,7 @@
 #include "ResultRendererHorizontalTile.h"
 #include "UBusMessages.h"
 #include "UBusWrapper.h"
+#include "PlacesVScrollBar.h"
 
 namespace unity
 {
@@ -48,7 +49,7 @@ public:
   LensScrollView(NUX_FILE_LINE_DECL)
     : nux::ScrollView(NUX_FILE_LINE_PARAM)
   {
-
+    vscrollbar_ = NULL;
   }
   void ScrollToPosition(nux::Geometry & position)
   {
