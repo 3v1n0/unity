@@ -52,7 +52,8 @@ SwitcherController::SwitcherController()
 
 SwitcherController::~SwitcherController()
 {
-  view_window_->UnReference();
+  if (view_window_)
+    view_window_->UnReference();
 }
 
 void SwitcherController::OnBackgroundUpdate (GVariant *data, SwitcherController *self)
