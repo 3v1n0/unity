@@ -1832,8 +1832,10 @@ bool UnityWindow::place(CompPoint& pos)
 {
   bool result = window->place(pos);
 
-  pos = tryNotIntersectUI(pos);
+  if (window->type() & NO_FOCUS_MASK)
+    return result;
 
+  pos = tryNotIntersectUI(pos);
   return result;
 }
 
