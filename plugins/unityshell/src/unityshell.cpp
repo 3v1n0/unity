@@ -1646,14 +1646,15 @@ UnityWindow::FocusDesktopTimeout(gpointer data)
   UnityWindow *self = reinterpret_cast<UnityWindow*>(data);
 
   self->mFocusdesktophandle = 0;
+
+  /*int type_dialogs = (CompWindowTypeDialogMask | CompWindowTypeModalDialogMask
+                     | CompWindowTypeUtilMask) & !CompWindowTypeDesktopMask;
+  // Check we don't have any other window
   for (CompWindow *w : screen->windows ())
   {
-    if (!w->managed () || w->grabbed () ||
-        (w->wmType () & (CompWindowTypeDesktopMask |
-                      CompWindowTypeDockMask)) ||
-        (w->state () & CompWindowStateSkipPagerMask))
+    if (w->type() & type_dialogs) 
       return FALSE;
-  }    
+  }*/
   self->window->moveInputFocusTo();
 
   return FALSE;
@@ -1669,7 +1670,7 @@ void UnityWindow::windowNotify(CompWindowNotify n)
     case CompWindowNotifyMap:
       if (window->type() == CompWindowTypeDesktopMask) {
         if (!mFocusdesktophandle)
-           mFocusdesktophandle = g_timeout_add (200, &UnityWindow::FocusDesktopTimeout, this);
+           mFocusdesktophandle = g_timeout_add (1000, &UnityWindow::FocusDesktopTimeout, this);
       }
       break;
     case CompWindowNotifyUnmap:
