@@ -1647,14 +1647,11 @@ UnityWindow::FocusDesktopTimeout(gpointer data)
 
   self->mFocusdesktophandle = 0;
 
-  /*int type_dialogs = (CompWindowTypeDialogMask | CompWindowTypeModalDialogMask
-                     | CompWindowTypeUtilMask) & !CompWindowTypeDesktopMask;
-  // Check we don't have any other window
-  for (CompWindow *w : screen->windows ())
+  for (CompWindow *w : screen->clientList ())
   {
-    if (w->type() & type_dialogs) 
+    if (!(w->type() & NO_FOCUS_MASK) && w->focus ())
       return FALSE;
-  }*/
+  }
   self->window->moveInputFocusTo();
 
   return FALSE;
