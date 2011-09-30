@@ -1645,7 +1645,7 @@ UnityWindow::FocusDesktopTimeout(gpointer data)
 {
   UnityWindow *self = reinterpret_cast<UnityWindow*>(data);
 
-  self->mFocusdesktophandle = 0;
+  self->focusdesktop_handle_ = 0;
 
   for (CompWindow *w : screen->clientList ())
   {
@@ -1666,8 +1666,8 @@ void UnityWindow::windowNotify(CompWindowNotify n)
   {
     case CompWindowNotifyMap:
       if (window->type() == CompWindowTypeDesktopMask) {
-        if (!mFocusdesktophandle)
-           mFocusdesktophandle = g_timeout_add (1000, &UnityWindow::FocusDesktopTimeout, this);
+        if (!focusdesktop_handle_)
+           focusdesktop_handle_ = g_timeout_add (1000, &UnityWindow::FocusDesktopTimeout, this);
       }
       break;
     case CompWindowNotifyUnmap:
@@ -2380,7 +2380,7 @@ UnityWindow::UnityWindow(CompWindow* window)
   , window(window)
   , gWindow(GLWindow::get(window))
   , mShowdesktopHandler(nullptr)
-  , mFocusdesktophandle(0)
+  , focusdesktop_handle_(0)
 {
   WindowInterface::setHandler(window);
   GLWindowInterface::setHandler(gWindow);
@@ -2437,8 +2437,8 @@ UnityWindow::~UnityWindow()
   if (mShowdesktopHandler)
     delete mShowdesktopHandler;
     
-  if (mFocusdesktophandle)
-    g_source_remove(mFocusdesktophandle);
+  if (focusdesktop_handle_)
+    g_source_remove(focusdesktop_handle_);
 
   if (window->state () & CompWindowStateFullscreenMask)
     UnityScreen::get (screen)->fullscreen_windows_.remove(window);

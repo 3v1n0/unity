@@ -395,7 +395,7 @@ public:
   
 private:
 
-  guint  mFocusdesktophandle;
+  guint  focusdesktop_handle_;
   static gboolean FocusDesktopTimeout(gpointer data);
 };
 
