@@ -660,8 +660,7 @@ PanelMenuView::GetActiveViewName()
       // Make the special 
       label = g_strdup(g_dgettext("nautilus", "Desktop"));
     }
-
-    if (!WindowManager::Default()->IsWindowOnCurrentDesktop(window_xid) ||
+    else if (!WindowManager::Default()->IsWindowOnCurrentDesktop(window_xid) ||
         WindowManager::Default()->IsWindowObscured(window_xid))
     {
        return g_strdup("");
