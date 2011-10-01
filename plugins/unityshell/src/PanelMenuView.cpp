@@ -441,6 +441,7 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
     {
       bool build_gradient = false;
       nux::SURFACE_LOCKED_RECT lockrect;
+      lockrect.pBits = 0;
       bool locked = false;
 
       if (_gradient_texture.IsNull())
