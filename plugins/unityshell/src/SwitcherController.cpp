@@ -305,6 +305,9 @@ int min_windows)
 
 void SwitcherController::NextDetail()
 {
+  if (!model_)
+    return;
+
   if (!model_->detail_selection)
   {
     SetDetail(true);
@@ -318,6 +321,9 @@ void SwitcherController::NextDetail()
 
 void SwitcherController::PrevDetail()
 {
+  if (!model_)
+    return;
+    
   if (!model_->detail_selection)
   {
     SetDetail(true);
