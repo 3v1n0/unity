@@ -36,6 +36,7 @@ PluginAdapter* PluginAdapter::_default = 0;
 
 #define MWM_HINTS_FUNCTIONS     (1L << 0)
 #define MWM_HINTS_DECORATIONS   (1L << 1)
+#define MWM_HINTS_UNDECORATED_UNITY 0x80
 #define _XA_MOTIF_WM_HINTS    "_MOTIF_WM_HINTS"
 
 /* static */
@@ -138,6 +139,26 @@ PluginAdapter::NotifyStateChange(CompWindow* window, unsigned int state, unsigne
   {
     WindowManager::window_restored.emit(window->id());
   }
+}
+
+void
+PluginAdapter::NotifyNewDecorationState(guint32 xid)
+{
+  bool wasTracked = (_window_decoration_state.find (xid) != _window_decoration_state.end ());
+  bool wasDecorated = false;
+
+  if (wasTracked)
+    wasDecorated = _window_decoration_state[xid];
+
+  bool decorated = IsWindowDecorated (xid);
+
+  if (decorated == wasDecorated)
+    return;
+
+  if (decorated && (!wasDecorated || !wasTracked))
+    WindowManager::window_decorated.emit(xid);
+  else if (wasDecorated || !wasTracked)
+    WindowManager::window_undecorated.emit(xid);
 }
 
 void
@@ -402,27 +423,20 @@ PluginAdapter::IsWindowDecorated(guint32 xid)
   if (!hints)
     return ret;
 
-  if (type == hints_atom && format != 0 && hints->flags & MWM_HINTS_DECORATIONS)
+  /* Check for the presence of the high bit
+   * if present, it means that we undecorated
+   * this window, so don't mark it as undecorated */
+  if (type == hints_atom && format != 0 &&
+      hints->flags & MWM_HINTS_DECORATIONS)
   {
-    ret = hints->decorations & (MwmDecorAll | MwmDecorTitle);
+    /* Must have both bits set */
+    _window_decoration_state[xid] = ret =
+          (hints->decorations & (MwmDecorAll | MwmDecorTitle))  ||
+          (hints->decorations & MWM_HINTS_UNDECORATED_UNITY);
   }
 
   XFree(hints);
   return ret;
-
-/* FIXME compiz is too slow to update this value, and this could lead to
- * issues like the bug #838923, since the read value isn't valid anymore
-  CompWindow* window;
-
-  window = m_Screen->findWindow(win);
-  if (window)
-  {
-    unsigned int decor = window->mwmDecor();
-
-    return decor & (MwmDecorAll | MwmDecorTitle);
-  }
-  return true;
-*/
 }
 
 bool
@@ -797,7 +811,7 @@ PluginAdapter::Decorate(guint32 xid)
   MotifWmHints hints = { 0 };
 
   hints.flags = MWM_HINTS_DECORATIONS;
-  hints.decorations = GDK_DECOR_ALL;
+  hints.decorations = GDK_DECOR_ALL & ~(MWM_HINTS_UNDECORATED_UNITY);
 
   SetMwmWindowHints(xid, &hints);
 }
@@ -807,8 +821,11 @@ PluginAdapter::Undecorate(guint32 xid)
 {
   MotifWmHints hints = { 0 };
 
+  /* Set the high bit to indicate that we undecorated this
+   * window, when an application attempts to "undecorate"
+   * the window again, this bit will be cleared */
   hints.flags = MWM_HINTS_DECORATIONS;
-  hints.decorations = 0;
+  hints.decorations = MWM_HINTS_UNDECORATED_UNITY;
 
   SetMwmWindowHints(xid, &hints);
 }
@@ -831,12 +848,15 @@ void PluginAdapter::MaximizeIfBigEnough(CompWindow* window)
   Status       status;
   std::string  win_wmclass;
   int          num_monitor;
-  CompOutput   screen;
+
   int          screen_width;
   int          screen_height;
   float        covering_part;
 
   if (!window)
+    return;
+
+  if ((window->state() & MAXIMIZE_STATE) == MAXIMIZE_STATE)
     return;
 
   if (window->type() != CompWindowTypeNormalMask
@@ -856,17 +876,10 @@ void PluginAdapter::MaximizeIfBigEnough(CompWindow* window)
     return;
 
   num_monitor = window->outputDevice();
-  screen = m_Screen->outputDevs().at(num_monitor);
+  CompOutput &o = m_Screen->outputDevs().at(num_monitor);
 
-  screen_height = screen.workArea().height();
-  screen_width = screen.workArea().width();
-
-  if ((window->state() & MAXIMIZE_STATE) == MAXIMIZE_STATE)
-  {
-    LOG_DEBUG(logger) << "window mapped and already maximized, just undecorate";
-    Undecorate(window->id());
-    return;
-  }
+  screen_height = o.workArea().height();
+  screen_width = o.workArea().width();
 
   // use server<parameter> because the window won't show the real parameter as
   // not mapped yet
@@ -879,7 +892,6 @@ void PluginAdapter::MaximizeIfBigEnough(CompWindow* window)
     return;
   }
 
-  Undecorate(window->id());
   window->maximize(MAXIMIZE_STATE);
 }
 

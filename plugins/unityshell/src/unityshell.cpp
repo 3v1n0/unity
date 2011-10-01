@@ -1021,6 +1021,14 @@ void UnityScreen::handleEvent(XEvent* event)
   if (!skip_other_plugins)
     screen->handleEvent(event);
 
+  if (event->type == PropertyNotify)
+  {
+    if (event->xproperty.atom == Atoms::mwmHints)
+    {
+      PluginAdapter::Default ()->NotifyNewDecorationState(event->xproperty.window);
+    }
+  }
+
   if (!skip_other_plugins &&
       screen->otherGrabExist("deco", "move", "switcher", "resize", NULL) &&
       !switcherController->Visible())
