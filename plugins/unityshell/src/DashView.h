@@ -87,6 +87,7 @@ private:
   void OnLensAdded(Lens::Ptr& lens);
   void OnLensBarActivated(std::string const& id);
   void OnSearchFinished(std::string const& search_string);
+  void OnGlobalSearchFinished(std::string const& search_string);
   void OnUriActivated(std::string const& uri);
   void OnUriActivatedReply(std::string const& uri, HandledType type, Lens::Hints const&);
   bool DoFallbackActivation(std::string const& uri);

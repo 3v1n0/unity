@@ -116,6 +116,7 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
   search_hint.changed.connect([&](std::string const& s) { OnSearchHintChanged(); });
   search_string.SetGetterFunction(sigc::mem_fun(this, &SearchBar::get_search_string));
   search_string.SetSetterFunction(sigc::mem_fun(this, &SearchBar::set_search_string));
+  im_active.SetGetterFunction(sigc::mem_fun(this, &SearchBar::get_im_active));
   showing_filters.changed.connect(sigc::mem_fun(this, &SearchBar::OnShowingFiltersChanged));
   can_refine_search.changed.connect([&] (bool can_refine) { show_filters_->SetVisible(can_refine); });
 }
@@ -367,6 +368,11 @@ bool SearchBar::set_search_string(std::string const& string)
   pango_entry_->SetText(string.c_str());
   spinner_->SetState(string == "" ? STATE_READY : STATE_CLEAR);
   return true;
+}
+
+bool SearchBar::get_im_active() const
+{
+  return pango_entry_->im_active();
 }
 
 //

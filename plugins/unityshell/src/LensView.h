@@ -1,5 +1,6 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010 Canonical Ltd
+ * Copyright (C) 2010, 2011 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -31,6 +32,7 @@
 #include "FilterBar.h"
 #include "Introspectable.h"
 #include "PlacesGroup.h"
+#include "PlacesVScrollBar.h"
 #include "ResultViewGrid.h"
 #include "UBusWrapper.h"
 
@@ -38,6 +40,7 @@ namespace unity
 {
 namespace dash
 {
+class LensScrollView;
 
 class LensView : public nux::View, public unity::Introspectable
 {
@@ -96,9 +99,9 @@ private:
   bool initial_activation_;
 
   nux::HLayout* layout_;
-  nux::ScrollView* scroll_view_;
+  LensScrollView* scroll_view_;
   nux::VLayout* scroll_layout_;
-  nux::ScrollView* fscroll_view_;
+  LensScrollView* fscroll_view_;
   nux::VLayout* fscroll_layout_;
   FilterBar* filter_bar_;
 
