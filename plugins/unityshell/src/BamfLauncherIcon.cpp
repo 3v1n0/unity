@@ -228,6 +228,9 @@ BamfLauncherIcon::~BamfLauncherIcon()
 
   if (_fill_supported_types_id != 0)
     g_source_remove(_fill_supported_types_id);
+  
+  if (_window_moved_id != 0)
+    g_source_remove(_window_moved_id);
 
   g_signal_handlers_disconnect_by_func(m_App, (void*) &BamfLauncherIcon::OnChildRemoved,       this);
   g_signal_handlers_disconnect_by_func(m_App, (void*) &BamfLauncherIcon::OnChildAdded,         this);
@@ -550,13 +553,13 @@ void BamfLauncherIcon::Focus()
 
     if (BAMF_IS_WINDOW(view))
     {
-      guint32 xid = bamf_window_get_xid(BAMF_WINDOW(view));
+      Window xid = bamf_window_get_xid(BAMF_WINDOW(view));
       bool urgent = bamf_view_is_urgent(view);
 
       if (any_urgent)
       {
         if (urgent)
-          windows.push_back((Window)xid);
+          windows.push_back(xid);
       }
       else
       {
@@ -565,14 +568,13 @@ void BamfLauncherIcon::Focus()
           windows.clear();
           any_urgent = true;
         }
-        windows.push_back((Window)xid);
+        windows.push_back(xid);
       }
     }
   }
 
   g_list_free(children);
   WindowManager::Default()->FocusWindowGroup(windows);
-  return;
 }
 
 bool BamfLauncherIcon::Spread(int state, bool force)
@@ -1146,8 +1148,10 @@ std::set<std::string> BamfLauncherIcon::ValidateUrisForLaunch(unity::DndData& ur
 gboolean BamfLauncherIcon::OnDndHoveredTimeout(gpointer data)
 {
   BamfLauncherIcon* self = (BamfLauncherIcon*) data;
-  if (self->_dnd_hovered && bamf_view_is_running(BAMF_VIEW(self->m_App)))
-    self->Spread(CompAction::StateInitEdgeDnd, true);
+  
+  // for now, let's not do this, it turns out to be quite buggy
+  //if (self->_dnd_hovered && bamf_view_is_running(BAMF_VIEW(self->m_App)))
+  //  self->Spread(CompAction::StateInitEdgeDnd, true);
 
   self->_dnd_hover_timer = 0;
   return false;

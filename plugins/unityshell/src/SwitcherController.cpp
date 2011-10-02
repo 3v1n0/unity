@@ -52,7 +52,8 @@ SwitcherController::SwitcherController()
 
 SwitcherController::~SwitcherController()
 {
-  view_window_->UnReference();
+  if (view_window_)
+    view_window_->UnReference();
 }
 
 void SwitcherController::OnBackgroundUpdate (GVariant *data, SwitcherController *self)
@@ -305,6 +306,9 @@ int min_windows)
 
 void SwitcherController::NextDetail()
 {
+  if (!model_)
+    return;
+
   if (!model_->detail_selection)
   {
     SetDetail(true);
@@ -318,6 +322,9 @@ void SwitcherController::NextDetail()
 
 void SwitcherController::PrevDetail()
 {
+  if (!model_)
+    return;
+    
   if (!model_->detail_selection)
   {
     SetDetail(true);
