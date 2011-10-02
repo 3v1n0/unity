@@ -21,6 +21,7 @@
 #include <NuxCore/Logger.h>
 #include <Nux/HLayout.h>
 
+#include "DashSettings.h"
 #include "PluginAdapter.h"
 #include "UBusMessages.h"
 #include "UScreen.h"
@@ -51,12 +52,23 @@ DashController::DashController()
   PluginAdapter::Default()->compiz_screen_ungrabbed.connect(sigc::mem_fun(this, &DashController::OnScreenUngrabbed));
 
   ensure_id_ = g_timeout_add_seconds(60, [] (gpointer data) -> gboolean { static_cast<DashController*>(data)->EnsureDash(); return FALSE; }, this);
+
+  DashSettings::GetDefault()->changed.connect([&]()
+  {
+    if (window_)
+    {
+      window_->PushToFront();
+      window_->SetInputFocus();
+      nux::GetWindowCompositor().SetKeyFocusArea(view_->default_focus());
+    }
+  });
 }
 
 DashController::~DashController()
 {
   if (window_)
     window_->UnReference();
+  window_ = 0;
   g_source_remove(timeline_id_);
   g_source_remove(ensure_id_);
 }

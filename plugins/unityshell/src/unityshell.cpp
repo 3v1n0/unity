@@ -401,22 +401,23 @@ void UnityScreen::EnsureSuperKeybindings()
       continue;
     CreateSuperNewAction(static_cast<char>(shortcut));
     CreateSuperNewAction(static_cast<char>(shortcut), true);
+    CreateSuperNewAction(static_cast<char>(shortcut), false, true);
   }
 
   for (auto shortcut : dashController->GetAllShortcuts())
     CreateSuperNewAction(shortcut);
 }
 
-void UnityScreen::CreateSuperNewAction(char shortcut, bool use_shift)
+void UnityScreen::CreateSuperNewAction(char shortcut, bool use_shift, bool use_numpad)
 {
     CompActionPtr action(new CompAction());
 
     CompAction::KeyBinding binding;
     std::ostringstream sout;
     if (use_shift)
-      sout << "<Shift><Super>" << shortcut;
+      sout << "<Shift><Super>"  << shortcut;
     else
-      sout << "<Super>" << shortcut;
+      sout << "<Super>" << ((use_numpad) ? "KP_" : "") << shortcut;
 
     binding.fromString(sout.str());
 
@@ -636,9 +637,12 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
     for (LayoutWindow::Ptr target : targets)
     {
       CompWindow* window = screen->findWindow(target->xid);
-      UnityWindow *unity_window = UnityWindow::get (window);
+      if (window)
+      {
+        UnityWindow *unity_window = UnityWindow::get (window);
 
-      unity_window->paintThumbnail (target->result, target->alpha);
+        unity_window->paintThumbnail (target->result, target->alpha);
+      }
     }
   }
 
@@ -904,18 +908,7 @@ void UnityScreen::glPaintTransformedOutput(const GLScreenPaintAttrib& attrib,
                                            CompOutput* output,
                                            unsigned int mask)
 {
-  bool bound = mFbos[output]->bound ();
   allowWindowPaint = false;
-
-  if (bound)
-  {
-    /* The screen is transformed, unbind our fbo
-     * and redraw the bits that were transformed
-     * if we were bound */
-    mFbos[output]->unbind ();
-    mFbos[output]->paint ();
-  }
-
   gScreen->glPaintTransformedOutput(attrib, transform, region, output, mask);
 
 }
@@ -1650,6 +1643,23 @@ UnityWindow::minimized ()
   return mMinimizeHandler.get () != NULL;
 }
 
+gboolean
+UnityWindow::FocusDesktopTimeout(gpointer data)
+{
+  UnityWindow *self = reinterpret_cast<UnityWindow*>(data);
+
+  self->focusdesktop_handle_ = 0;
+
+  for (CompWindow *w : screen->clientList ())
+  {
+    if (!(w->type() & NO_FOCUS_MASK) && w->focus ())
+      return FALSE;
+  }
+  self->window->moveInputFocusTo();
+
+  return FALSE;
+}
+
 /* Called whenever a window is mapped, unmapped, minimized etc */
 void UnityWindow::windowNotify(CompWindowNotify n)
 {
@@ -1658,6 +1668,11 @@ void UnityWindow::windowNotify(CompWindowNotify n)
   switch (n)
   {
     case CompWindowNotifyMap:
+      if (window->type() == CompWindowTypeDesktopMask) {
+        if (!focusdesktop_handle_)
+           focusdesktop_handle_ = g_timeout_add (1000, &UnityWindow::FocusDesktopTimeout, this);
+      }
+      break;
     case CompWindowNotifyUnmap:
       if (UnityScreen::get (screen)->optionGetShowMinimizedWindows () &&
           window->mapNum ())
@@ -1842,8 +1857,10 @@ bool UnityWindow::place(CompPoint& pos)
 {
   bool result = window->place(pos);
 
-  pos = tryNotIntersectUI(pos);
+  if (window->type() & NO_FOCUS_MASK)
+    return result;
 
+  pos = tryNotIntersectUI(pos);
   return result;
 }
 
@@ -2366,6 +2383,7 @@ UnityWindow::UnityWindow(CompWindow* window)
   , window(window)
   , gWindow(GLWindow::get(window))
   , mShowdesktopHandler(nullptr)
+  , focusdesktop_handle_(0)
 {
   WindowInterface::setHandler(window);
   GLWindowInterface::setHandler(gWindow);
@@ -2421,6 +2439,9 @@ UnityWindow::~UnityWindow()
   }
   if (mShowdesktopHandler)
     delete mShowdesktopHandler;
+    
+  if (focusdesktop_handle_)
+    g_source_remove(focusdesktop_handle_);
 
   if (window->state () & CompWindowStateFullscreenMask)
     UnityScreen::get (screen)->fullscreen_windows_.remove(window);

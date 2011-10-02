@@ -96,8 +96,6 @@ void ResultRendererTile::Render(nux::GraphicsEngine& GfxContext,
   if (container == nullptr)
     return;
 
-  std::string row_text = row.name;
-  std::string row_iconhint = row.icon_hint;
   PlacesStyle* style = PlacesStyle::GetDefault();
 
   // set up our texture mode
@@ -107,7 +105,7 @@ void ResultRendererTile::Render(nux::GraphicsEngine& GfxContext,
   int icon_top_side = geometry.y + padding;
 
 
-  if (container->blurred_icon)
+  if (container->blurred_icon && state == ResultRendererState::RESULT_RENDERER_NORMAL)
   {
     GfxContext.QRP_1Tex(icon_left_hand_side - 5 - x_offset,
                         icon_top_side - 5 - y_offset,
@@ -434,7 +432,11 @@ void ResultRendererTile::LoadText(Result& row)
   pango_layout_set_width(layout, (style->GetTileWidth() - (padding * 2))* PANGO_SCALE);
   pango_layout_set_height(layout, -2);
 
-  pango_layout_set_markup(layout, row.name().c_str(), -1);
+  char *escaped_text = g_markup_escape_text(row.name().c_str()  , -1);
+
+  pango_layout_set_markup(layout, escaped_text, -1);
+
+  g_free (escaped_text);
 
   pango_context = pango_layout_get_context(layout);  // is not ref'ed
   pango_cairo_context_set_font_options(pango_context,
