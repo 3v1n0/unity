@@ -773,8 +773,15 @@ void UnityShowdesktopHandler::fadeOut ()
   mState = UnityShowdesktopHandler::FadeOut;
   mProgress = 1.0f;
 
-  mRemover->save ();
-  mRemover->remove ();
+  mWasHidden = mWindow->state () & CompWindowStateHiddenMask;
+
+  if (!mWasHidden)
+  {
+    mWindow->changeState (mWindow->state () | CompWindowStateHiddenMask);
+    mWindow->windowNotify (CompWindowNotifyHide);
+    mRemover->save ();
+    mRemover->remove ();
+  }
 
   CompositeWindow::get (mWindow)->addDamage ();
 
@@ -788,7 +795,12 @@ void UnityShowdesktopHandler::fadeIn ()
 {
   mState = UnityShowdesktopHandler::FadeIn;
 
-  mRemover->restore ();
+  if (!mWasHidden)
+  {
+    mWindow->changeState (mWindow->state () & ~CompWindowStateHiddenMask);
+    mWindow->windowNotify (CompWindowNotifyShow);
+    mRemover->restore ();
+  }
 
   CompositeWindow::get (mWindow)->addDamage ();
 }
@@ -847,6 +859,20 @@ void UnityShowdesktopHandler::handleEvent (XEvent *event)
       mRemover->save ();
       mRemover->remove ();
     }
+  }
+}
+
+void UnityShowdesktopHandler::windowNotify (CompWindowNotify n)
+{
+  if (n == CompWindowNotifyFocusChange && mWindow->minimized ())
+  {
+    for (CompWindow *w : animating_windows)
+      w->focusSetEnabled (UnityWindow::get (w), false);
+
+    mWindow->moveInputFocusToOtherWindow ();
+
+    for (CompWindow *w : animating_windows)
+      w->focusSetEnabled (UnityWindow::get (w), true);
   }
 }
 
@@ -1688,6 +1714,10 @@ void UnityWindow::windowNotify(CompWindowNotify n)
     compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>::Ptr compizMinimizeHandler =
         boost::dynamic_pointer_cast <minimized_window_handler_unity> (mMinimizeHandler);
     compizMinimizeHandler->windowNotify (n);
+  }
+  else if (mShowdesktopHandler)
+  {
+    mShowdesktopHandler->windowNotify (n);
   }
 
   // We do this after the notify to ensure input focus has actually been moved.

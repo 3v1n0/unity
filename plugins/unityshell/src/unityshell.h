@@ -100,6 +100,7 @@ public:
   void paintAttrib (GLWindowPaintAttrib &attrib);
   unsigned int getPaintMask ();
   void handleEvent (XEvent *);
+  void windowNotify (CompWindowNotify n);
   void updateFrameRegion (CompRegion &r);
 
   UnityShowdesktopHandler::State state ();
@@ -114,6 +115,7 @@ private:
   compiz::WindowInputRemover     *mRemover;
   UnityShowdesktopHandler::State mState;
   float                          mProgress;
+  bool                           mWasHidden;
 };
   
 
