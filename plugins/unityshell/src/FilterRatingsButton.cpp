@@ -244,6 +244,7 @@ namespace unity {
     float new_rating = (static_cast<float>(x) / width) + 0.10f;
 
     new_rating = ceil(10*new_rating)/10;
+    new_rating = new_rating > 1 ? 1 : (new_rating < 0 ? 0 : new_rating);
     
     if (filter != NULL)
       filter->rating = new_rating;    

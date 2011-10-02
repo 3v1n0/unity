@@ -36,6 +36,19 @@ namespace
 nux::logging::Logger logger("unity.dash.homeview");
 }
 
+// This is so we can override the scroll bar for the view.
+class HomeScrollView: public nux::ScrollView
+{
+public:
+  HomeScrollView(nux::VScrollBar* scroll_bar, NUX_FILE_LINE_DECL)
+    : nux::ScrollView(NUX_FILE_LINE_PARAM)
+  {
+    SetVScrollBar(scroll_bar);
+  }
+};
+
+
+
 NUX_IMPLEMENT_OBJECT_TYPE(HomeView);
 
 HomeView::HomeView()
@@ -69,12 +82,13 @@ void HomeView::SetupViews()
 {
   layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
 
-  scroll_view_ = new nux::ScrollView();
+  scroll_view_ = new HomeScrollView(new PlacesVScrollBar(NUX_TRACKER_LOCATION),
+                                    NUX_TRACKER_LOCATION);
   scroll_view_->EnableVerticalScrollBar(true);
   scroll_view_->EnableHorizontalScrollBar(false);
   scroll_view_->SetVisible(false);
   layout_->AddView(scroll_view_);
-  
+
   scroll_layout_ = new nux::VLayout();
   scroll_view_->SetLayout(scroll_layout_);
 
@@ -101,7 +115,7 @@ void HomeView::AddLens(Lens::Ptr lens)
   group->expanded.connect(sigc::mem_fun(this, &HomeView::OnGroupExpanded));
   categories_.push_back(group);
   counts_[group] = 0;
-  
+
   ResultViewGrid* grid = new ResultViewGrid(NUX_TRACKER_LOCATION);
   grid->expanded = false;
   grid->SetModelRenderer(new ResultRendererTile(NUX_TRACKER_LOCATION));

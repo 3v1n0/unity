@@ -55,10 +55,17 @@ inline double _align(double val)
 {
   double fract = val - (int) val;
 
+  // for strokes with an odd line-width
   if (fract != 0.5f)
     return (double) ((int) val + 0.5f);
   else
     return val;
+
+  // for strokes with an even line-width
+  /*if (fract != 0.0f)
+    return (double) ((int) val);
+  else
+    return val;*/
 }
 
 } // anon namespace
@@ -84,7 +91,8 @@ public:
 
   void Text(cairo_t* cr,
             nux::Color const& color,
-            std::string const& label);
+            std::string const& label,
+            double horizMargin = 10.0);
 
   void ButtonOutlinePath(cairo_t* cr, bool align);
 
@@ -897,6 +905,9 @@ void DashStyle::Impl::RoundedRectSegment(cairo_t*   cr,
               90.0f * G_PI / 180.0f,
               180.0f * G_PI / 180.0f);
 
+    // left, right of the corner
+    cairo_line_to(cr, x, y + radius);
+
     // top-left, right of the corner
     cairo_arc(cr,
               x + radius,
@@ -904,6 +915,7 @@ void DashStyle::Impl::RoundedRectSegment(cairo_t*   cr,
               radius,
               180.0f * G_PI / 180.0f,
               270.0f * G_PI / 180.0f);
+
     break;
 
   case Segment::MIDDLE:
@@ -1213,7 +1225,8 @@ void DashStyle::Impl::GetTextExtents(int& width,
 
 void DashStyle::Impl::Text(cairo_t*    cr,
                            nux::Color const&  color,
-                           std::string const& label)
+                           std::string const& label,
+                           double horizMargin)
 {
   double                x           = 0.0;
   double                y           = 0.0;
@@ -1226,7 +1239,7 @@ void DashStyle::Impl::Text(cairo_t*    cr,
   GdkScreen*            screen      = gdk_screen_get_default();   // not ref'ed
   GtkSettings*          settings    = gtk_settings_get_default(); // not ref'ed
   gchar*                fontName    = NULL;
-  double                horizMargin = 10.0;
+  //double                horizMargin = 10.0;
 
   w = cairo_image_surface_get_width(cairo_get_target(cr));
   h = cairo_image_surface_get_height(cairo_get_target(cr));
@@ -1579,7 +1592,8 @@ bool DashStyle::MultiRangeSegment(cairo_t*    cr,
   cairo_stroke(cr);
   pimpl->Text(cr,
               pimpl->button_label_text_color_[state],
-              label);
+              label,
+              1.0);
 
   return true;
 }

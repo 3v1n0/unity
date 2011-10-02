@@ -45,7 +45,6 @@ private:
 
 private:
   nux::BaseTexture* _slider_texture;
-  nux::BaseTexture* _track_texture;
 };
 
 #endif // PLACES_VSCROLLBAR_H
