@@ -674,6 +674,7 @@ void DashView::OnLensAdded(Lens::Ptr& lens)
 
   lens->activated.connect(sigc::mem_fun(this, &DashView::OnUriActivatedReply));
   lens->search_finished.connect(sigc::mem_fun(this, &DashView::OnSearchFinished));
+  lens->global_search_finished.connect(sigc::mem_fun(this, &DashView::OnGlobalSearchFinished));
 }
 
 void DashView::OnLensBarActivated(std::string const& id)
@@ -713,6 +714,12 @@ void DashView::OnSearchFinished(std::string const& search_string)
 {
   if (search_bar_->search_string == search_string)
     search_bar_->SearchFinished();
+}
+
+void DashView::OnGlobalSearchFinished(std::string const& search_string)
+{
+  if (active_lens_view_ == home_view_)
+    OnSearchFinished(search_string);
 }
 
 void DashView::OnUriActivated(std::string const& uri)
@@ -876,10 +883,14 @@ void DashView::AddProperties(GVariantBuilder* builder)
 
 nux::Area * DashView::KeyNavIteration(nux::KeyNavDirection direction)
 {
-  if (direction == KEY_NAV_TAB_NEXT)
-    lens_bar_->ActivateNext();
-  else if (direction == KEY_NAV_TAB_PREVIOUS)
-    lens_bar_->ActivatePrevious();
+  // We don't want to eat the tab as it's used for IM stuff
+  if (!search_bar_->im_active())
+  {
+    if (direction == KEY_NAV_TAB_NEXT)
+      lens_bar_->ActivateNext();
+    else if (direction == KEY_NAV_TAB_PREVIOUS)
+      lens_bar_->ActivatePrevious();
+  }
   return this;
 }
 
