@@ -1,5 +1,6 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010 Canonical Ltd
+ * Copyright (C) 2010, 2011 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -39,18 +40,16 @@ namespace
 nux::logging::Logger logger("unity.dash.lensview");
 }
 
-  // this is so we can access some protected members in scrollview
+// This is so we can access some protected members in scrollview.
 class LensScrollView: public nux::ScrollView
 {
-  protected:
-    nux::VScrollBar* vscrollbar_;
-
 public:
-  LensScrollView(NUX_FILE_LINE_DECL)
+  LensScrollView(nux::VScrollBar* scroll_bar, NUX_FILE_LINE_DECL)
     : nux::ScrollView(NUX_FILE_LINE_PARAM)
   {
-    vscrollbar_ = NULL;
+    SetVScrollBar(scroll_bar);
   }
+
   void ScrollToPosition(nux::Geometry & position)
   {
     // much of this code is copied from Nux/ScrollView.cpp
@@ -75,11 +74,6 @@ public:
 
       ScrollDown (1, size);
     }
-  }
-
-  void SetVScrollBar(nux::VScrollBar* newVScrollBar)
-  {
-    nux::ScrollView::SetVScrollBar(newVScrollBar);
   }
 };
 
@@ -132,7 +126,7 @@ LensView::LensView(Lens::Ptr lens)
           focused_pos.x += child->GetGeometry().x;
           focused_pos.y += child->GetGeometry().y - 30;
           focused_pos.height += 30;
-          static_cast<LensScrollView *>(scroll_view_)->ScrollToPosition(focused_pos);
+          scroll_view_->ScrollToPosition(focused_pos);
           break;
         }
       }
@@ -145,29 +139,24 @@ LensView::~LensView()
 {
   if (fix_renderering_id_)
     g_source_remove(fix_renderering_id_);
-
-  delete scroll_bar_;
-  delete fscroll_bar_;
 }
 
 void LensView::SetupViews()
 {
   layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
 
-  scroll_view_ = new LensScrollView(NUX_TRACKER_LOCATION);
+  scroll_view_ = new LensScrollView(new PlacesVScrollBar(NUX_TRACKER_LOCATION),
+                                    NUX_TRACKER_LOCATION);
   scroll_view_->EnableVerticalScrollBar(true);
-  scroll_bar_ = new PlacesVScrollBar();
-  static_cast<LensScrollView *>(scroll_view_)->SetVScrollBar(scroll_bar_);
   scroll_view_->EnableHorizontalScrollBar(false);
   layout_->AddView(scroll_view_);
 
   scroll_layout_ = new nux::VLayout(NUX_TRACKER_LOCATION);
   scroll_view_->SetLayout(scroll_layout_);
 
-  fscroll_view_ = new LensScrollView(NUX_TRACKER_LOCATION);
+  fscroll_view_ = new LensScrollView(new PlacesVScrollBar(NUX_TRACKER_LOCATION),
+                                     NUX_TRACKER_LOCATION);
   fscroll_view_->EnableVerticalScrollBar(true);
-  fscroll_bar_ = new PlacesVScrollBar();
-  static_cast<LensScrollView *>(fscroll_view_)->SetVScrollBar(fscroll_bar_);
   fscroll_view_->EnableHorizontalScrollBar(false);
   fscroll_view_->SetVisible(false);
   layout_->AddView(fscroll_view_, 1);

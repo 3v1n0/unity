@@ -392,6 +392,11 @@ public:
 
   compiz::MinimizedWindowHandler::Ptr mMinimizeHandler;
   UnityShowdesktopHandler             *mShowdesktopHandler;
+  
+private:
+
+  guint  focusdesktop_handle_;
+  static gboolean FocusDesktopTimeout(gpointer data);
 };
 
 

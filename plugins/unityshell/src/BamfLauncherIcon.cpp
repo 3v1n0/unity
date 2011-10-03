@@ -228,6 +228,9 @@ BamfLauncherIcon::~BamfLauncherIcon()
 
   if (_fill_supported_types_id != 0)
     g_source_remove(_fill_supported_types_id);
+  
+  if (_window_moved_id != 0)
+    g_source_remove(_window_moved_id);
 
   g_signal_handlers_disconnect_by_func(m_App, (void*) &BamfLauncherIcon::OnChildRemoved,       this);
   g_signal_handlers_disconnect_by_func(m_App, (void*) &BamfLauncherIcon::OnChildAdded,         this);

@@ -2201,6 +2201,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   gPainter.PopBackground(push_count);
   GfxContext.PopClippingRectangle();
+  GfxContext.PopClippingRectangle();
 }
 
 void Launcher::PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw)

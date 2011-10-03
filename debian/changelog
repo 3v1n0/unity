@@ -1,3 +1,22 @@
+unity (4.20.0-0ubuntu3) UNRELEASED; urgency=low
+
+  * Merge trunk:
+    - Fix a mem leak
+    - compiz assert failure: *** glibc detected *** compiz: double free or
+      corruption (!prev): 0x00007fa248593900 *** (LP: #862938, #863303)
+    - compiz crashed with SIGSEGV in unity::dash::LensView::~LensView()
+      (LP: #863191)
+    - compiz crashed with SIGSEGV in unity::switcher::SwitcherController
+      ::~SwitcherController() (LP: #863302)
+    - compiz crashed with SIGSEGV in LauncherIcon::SetHasWindowOnViewport()
+      (LP: #863652)
+    - Onboard can cause unity to crash (LP: #863693)
+    - Focus nautilus desktop to get focus at startup (LP: #863037)
+    - The 'Desktop' label isn't shown if you use "Show desktop" in alt + tab
+      (LP: #863129)
+
+ -- Didier Roche <didrocks@ubuntu.com>  Mon, 03 Oct 2011 10:27:29 +0200
+
 unity (4.20.0-0ubuntu2) oneiric; urgency=low
 
   * Merge trunk:

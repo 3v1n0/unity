@@ -1640,6 +1640,23 @@ UnityWindow::minimized ()
   return mMinimizeHandler.get () != NULL;
 }
 
+gboolean
+UnityWindow::FocusDesktopTimeout(gpointer data)
+{
+  UnityWindow *self = reinterpret_cast<UnityWindow*>(data);
+
+  self->focusdesktop_handle_ = 0;
+
+  for (CompWindow *w : screen->clientList ())
+  {
+    if (!(w->type() & NO_FOCUS_MASK) && w->focus ())
+      return FALSE;
+  }
+  self->window->moveInputFocusTo();
+
+  return FALSE;
+}
+
 /* Called whenever a window is mapped, unmapped, minimized etc */
 void UnityWindow::windowNotify(CompWindowNotify n)
 {
@@ -1648,6 +1665,11 @@ void UnityWindow::windowNotify(CompWindowNotify n)
   switch (n)
   {
     case CompWindowNotifyMap:
+      if (window->type() == CompWindowTypeDesktopMask) {
+        if (!focusdesktop_handle_)
+           focusdesktop_handle_ = g_timeout_add (1000, &UnityWindow::FocusDesktopTimeout, this);
+      }
+      break;
     case CompWindowNotifyUnmap:
       if (UnityScreen::get (screen)->optionGetShowMinimizedWindows () &&
           window->mapNum ())
@@ -2358,6 +2380,7 @@ UnityWindow::UnityWindow(CompWindow* window)
   , window(window)
   , gWindow(GLWindow::get(window))
   , mShowdesktopHandler(nullptr)
+  , focusdesktop_handle_(0)
 {
   WindowInterface::setHandler(window);
   GLWindowInterface::setHandler(gWindow);
@@ -2413,6 +2436,9 @@ UnityWindow::~UnityWindow()
   }
   if (mShowdesktopHandler)
     delete mShowdesktopHandler;
+    
+  if (focusdesktop_handle_)
+    g_source_remove(focusdesktop_handle_);
 
   if (window->state () & CompWindowStateFullscreenMask)
     UnityScreen::get (screen)->fullscreen_windows_.remove(window);
