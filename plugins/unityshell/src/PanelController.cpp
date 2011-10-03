@@ -29,8 +29,6 @@
 #include "unitya11y.h"
 #include "unity-util-accessible.h"
 
-using namespace unity;
-
 namespace unity
 {
 namespace panel
@@ -51,8 +49,8 @@ public:
   void EndFirstMenuShow();
   void QueueRedraw();
 
-  unsigned int GetTrayXid ();
-  std::list <nux::Geometry> GetGeometries ();
+  unsigned int GetTrayXid();
+  std::list <nux::Geometry> GetGeometries();
 
   // NOTE: nux::Property maybe?
   void SetOpacity(float opacity);
@@ -67,20 +65,15 @@ private:
                                       nux::Geometry& geo,
                                       void*          user_data);
 private:
-  std::vector<nux::BaseWindow*> _windows;
-  int _bfb_size;
-  float _opacity;
-
-  sigc::connection _on_screen_change_connection;
-
-  bool _open_menu_start_received;
+  std::vector<nux::BaseWindow*> windows_;
+  float opacity_;
+  bool open_menu_start_received_;
 };
 
 
 Controller::Impl::Impl()
-  : _bfb_size(66)
-  , _opacity(1.0f)
-  , _open_menu_start_received(false)
+  : opacity_(1.0f)
+  , open_menu_start_received_(false)
 {
   UScreen* screen = UScreen::GetDefault();
   screen->changed.connect(sigc::mem_fun(this, &Impl::OnScreenChanged));
@@ -89,7 +82,7 @@ Controller::Impl::Impl()
 
 Controller::Impl::~Impl()
 {
-  for (auto window : _windows)
+  for (auto window : windows_)
   {
     window->UnReference();
   }
@@ -97,8 +90,8 @@ Controller::Impl::~Impl()
 
 unsigned int Controller::Impl::GetTrayXid()
 {
-  if (!_windows.empty())
-    return ViewForWindow(_windows.front())->GetTrayXid();
+  if (!windows_.empty())
+    return ViewForWindow(windows_.front())->GetTrayXid();
   else
     return 0;
 }
@@ -107,7 +100,7 @@ std::list<nux::Geometry> Controller::Impl::GetGeometries()
 {
   std::list<nux::Geometry> geometries;
 
-  for (auto window : _windows)
+  for (auto window : windows_)
   {
     geometries.push_back(window->GetAbsoluteGeometry());
   }
@@ -117,22 +110,22 @@ std::list<nux::Geometry> Controller::Impl::GetGeometries()
 
 void Controller::Impl::StartFirstMenuShow()
 {
-  for (auto window: _windows)
+  for (auto window: windows_)
   {
     PanelView* view = ViewForWindow(window);
     view->StartFirstMenuShow();
   }
 
-  _open_menu_start_received = true;
+  open_menu_start_received_ = true;
 }
 
 void Controller::Impl::EndFirstMenuShow()
 {
-  if (!_open_menu_start_received)
+  if (!open_menu_start_received_)
     return;
-  _open_menu_start_received = false;
+  open_menu_start_received_ = false;
 
-  for (auto window: _windows)
+  for (auto window: windows_)
   {
     PanelView* view = ViewForWindow(window);
     view->EndFirstMenuShow();
@@ -141,17 +134,17 @@ void Controller::Impl::EndFirstMenuShow()
 
 void Controller::Impl::SetOpacity(float opacity)
 {
-  _opacity = opacity;
+  opacity_ = opacity;
 
-  for (auto window: _windows)
+  for (auto window: windows_)
   {
-    ViewForWindow(window)->SetOpacity(_opacity);
+    ViewForWindow(window)->SetOpacity(opacity_);
   }
 }
 
 void Controller::Impl::QueueRedraw()
 {
-  for (auto window: _windows)
+  for (auto window: windows_)
   {
     window->QueueDraw();
   }
@@ -169,11 +162,11 @@ PanelView* Controller::Impl::ViewForWindow(nux::BaseWindow* window)
 void Controller::Impl::OnScreenChanged(int primary_monitor,
                                        std::vector<nux::Geometry>& monitors)
 {
-  std::vector<nux::BaseWindow*>::iterator it, eit = _windows.end();
+  std::vector<nux::BaseWindow*>::iterator it, eit = windows_.end();
   int n_monitors = monitors.size();
   int i = 0;
 
-  for (it = _windows.begin(); it != eit; ++it)
+  for (it = windows_.begin(); it != eit; ++it)
   {
     if (i < n_monitors)
     {
@@ -210,7 +203,7 @@ void Controller::Impl::OnScreenChanged(int primary_monitor,
 
       PanelView* view = new PanelView();
       view->SetMaximumHeight(24);
-      view->SetOpacity(_opacity);
+      view->SetOpacity(opacity_);
       view->SetPrimary(i == primary_monitor);
       view->SetMonitor(i);
 
@@ -237,13 +230,13 @@ void Controller::Impl::OnScreenChanged(int primary_monitor,
       if (unity_a11y_initialized() == TRUE)
         unity_util_accessible_add_window(window);
 
-      _windows.push_back(window);
+      windows_.push_back(window);
 
       LOG_DEBUG(logger) << "Added Panel for Monitor " << i;
     }
   }
 
-  if ((int)_windows.size() > n_monitors)
+  if ((int)windows_.size() > n_monitors)
   {
     std::vector<nux::BaseWindow*>::iterator sit;
     for (sit = it; sit != eit; ++sit)
@@ -252,7 +245,7 @@ void Controller::Impl::OnScreenChanged(int primary_monitor,
       LOG_DEBUG(logger) << "Removed extra Panel";
     }
 
-    _windows.erase(it, _windows.end());
+    windows_.erase(it, windows_.end());
   }
 }
 
@@ -267,7 +260,7 @@ void Controller::Impl::WindowConfigureCallback(int window_width,
 
 float Controller::Impl::opacity() const
 {
-  return _opacity;
+  return opacity_;
 }
 
 
