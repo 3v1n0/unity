@@ -1,4 +1,4 @@
-unity (4.20.0-0ubuntu3) UNRELEASED; urgency=low
+unity (4.20.0-0ubuntu3) oneiric; urgency=low
 
   * Merge trunk:
     - Fix a mem leak
@@ -15,7 +15,7 @@ unity (4.20.0-0ubuntu3) UNRELEASED; urgency=low
     - The 'Desktop' label isn't shown if you use "Show desktop" in alt + tab
       (LP: #863129)
 
- -- Didier Roche <didrocks@ubuntu.com>  Mon, 03 Oct 2011 10:27:29 +0200
+ -- Didier Roche <didrocks@ubuntu.com>  Mon, 03 Oct 2011 10:33:29 +0200
 
 unity (4.20.0-0ubuntu2) oneiric; urgency=low
 
