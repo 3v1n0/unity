@@ -36,25 +36,18 @@ namespace
 nux::logging::Logger logger("unity.dash.homeview");
 }
 
-
- // this is so we can access some protected members in scrollview
-class LensScrollView: public nux::ScrollView
+// This is so we can override the scroll bar for the view.
+class HomeScrollView: public nux::ScrollView
 {
-  protected:
-    nux::VScrollBar* vscrollbar_;
-
 public:
-  LensScrollView()
-    : nux::ScrollView()
+  HomeScrollView(nux::VScrollBar* scroll_bar, NUX_FILE_LINE_DECL)
+    : nux::ScrollView(NUX_FILE_LINE_PARAM)
   {
-    vscrollbar_ = NULL;
-  }
-
-  void SetVScrollBar(nux::VScrollBar* newVScrollBar)
-  {
-    nux::ScrollView::SetVScrollBar(newVScrollBar);
+    SetVScrollBar(scroll_bar);
   }
 };
+
+
 
 NUX_IMPLEMENT_OBJECT_TYPE(HomeView);
 
@@ -89,10 +82,10 @@ void HomeView::SetupViews()
 {
   layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
 
-  scroll_view_ = new LensScrollView();
+  scroll_view_ = new HomeScrollView(new PlacesVScrollBar(NUX_TRACKER_LOCATION),
+                                    NUX_TRACKER_LOCATION);
   scroll_view_->EnableVerticalScrollBar(true);
   scroll_view_->EnableHorizontalScrollBar(false);
-  static_cast<LensScrollView *>(scroll_view_)->SetVScrollBar(new PlacesVScrollBar());
   scroll_view_->SetVisible(false);
   layout_->AddView(scroll_view_);
 

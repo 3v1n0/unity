@@ -190,7 +190,7 @@ namespace unity {
       nux::BaseTexture *texture = normal_empty_->GetTexture();
 
       if (index < total_full_stars) {
-        if (state = nux::State::NUX_STATE_NORMAL)
+        if (state == nux::State::NUX_STATE_NORMAL)
           texture = normal_full_->GetTexture();
         else if (state == nux::State::NUX_STATE_PRELIGHT)
           texture = prelight_full_->GetTexture();
@@ -198,7 +198,7 @@ namespace unity {
           texture = active_full_->GetTexture();
       }
       else if (index < total_full_stars + total_half_stars) {
-        if (state = nux::State::NUX_STATE_NORMAL)
+        if (state == nux::State::NUX_STATE_NORMAL)
           texture = normal_half_->GetTexture();
         else if (state == nux::State::NUX_STATE_PRELIGHT)
           texture = prelight_half_->GetTexture();
@@ -206,7 +206,7 @@ namespace unity {
           texture = active_half_->GetTexture();
       }
       else {
-        if (state = nux::State::NUX_STATE_NORMAL)
+        if (state == nux::State::NUX_STATE_NORMAL)
           texture = normal_empty_->GetTexture();
         else if (state == nux::State::NUX_STATE_PRELIGHT)
           texture = prelight_empty_->GetTexture();
