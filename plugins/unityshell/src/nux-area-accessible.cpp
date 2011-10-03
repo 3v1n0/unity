@@ -261,8 +261,9 @@ nux_area_accessible_ref_state_set(AtkObject* obj)
       atk_state_set_add_state(state_set, ATK_STATE_SHOWING);
   }
 
-  if (area->CanFocus())
-    atk_state_set_add_state(state_set, ATK_STATE_FOCUSABLE);
+  // FIXME CanFocus is no longer part of Nux API
+//  if (area->CanFocus())
+//    atk_state_set_add_state(state_set, ATK_STATE_FOCUSABLE);
 
   if (area->HasKeyFocus())
     atk_state_set_add_state(state_set, ATK_STATE_FOCUSED);
@@ -335,7 +336,7 @@ static gboolean
 nux_area_accessible_grab_focus(AtkComponent* component)
 {
   nux::Object* nux_object = NULL;
-  nux::Area* area = NULL;
+  //nux::Area* area = NULL;
 
   g_return_val_if_fail(NUX_IS_AREA_ACCESSIBLE(component), FALSE);
 
@@ -343,9 +344,7 @@ nux_area_accessible_grab_focus(AtkComponent* component)
   if (nux_object == NULL) /* defunct */
     return FALSE;
 
-  area = dynamic_cast<nux::Area*>(nux_object);
-
-  area->SetFocused(TRUE);
+  //area = dynamic_cast<nux::Area*>(nux_object);
 
   /* FIXME: SetFocused doesn't return if the force was succesful or
      not, we suppose that this is the case like in cally and gail */
@@ -539,7 +538,7 @@ check_focus(NuxAreaAccessible* self)
 
   area = dynamic_cast<nux::Area*>(nux_object);
 
-  if (area->GetFocused())
+  if (nux::GetWindowCompositor().GetKeyFocusArea() == area)
     focus_in = TRUE;
 
   if (self->priv->focused != focus_in)

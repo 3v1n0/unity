@@ -141,10 +141,10 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
 
   view->GetView ()->render_boxes = true;
 
-  nux::CheckBox* flipping_check = new nux::CheckBox(TEXT("Enable Automatic Flipping"), NUX_TRACKER_LOCATION);
+  nux::CheckBox* flipping_check = new nux::CheckBox(TEXT("Enable Automatic Flipping"), false, NUX_TRACKER_LOCATION);
   flipping_check->SetMaximumWidth(250);
   flipping_check->SetMaximumHeight(30);
-  flipping_check->active.changed.connect (sigc::ptr_fun (OnFlippingChanged));
+  flipping_check->changed.connect (sigc::ptr_fun (OnFlippingChanged));
   layout->AddView(flipping_check, 1, nux::eRight, nux::eFull);
 
 
@@ -261,15 +261,15 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
   control_buttons_layout->SetHorizontalInternalMargin (10);
 
   nux::Button* prev_button = new nux::Button ("Previous", NUX_TRACKER_LOCATION);
-  prev_button->activated.connect (sigc::ptr_fun (OnPreviousClicked));
+  prev_button->changed.connect (sigc::ptr_fun (OnPreviousClicked));
   control_buttons_layout->AddView(prev_button, 1, nux::eLeft, nux::eFull);
 
   nux::Button* next_button = new nux::Button ("Next", NUX_TRACKER_LOCATION);
-  next_button->activated.connect (sigc::ptr_fun (OnNextClicked));
+  next_button->changed.connect (sigc::ptr_fun (OnNextClicked));
   control_buttons_layout->AddView(next_button, 1, nux::eRight, nux::eFull);
 
   nux::Button* detail_button = new nux::Button ("Detail", NUX_TRACKER_LOCATION);
-  detail_button->activated.connect (sigc::ptr_fun (OnDetailClicked));
+  detail_button->changed.connect (sigc::ptr_fun (OnDetailClicked));
   control_buttons_layout->AddView(detail_button, 1, nux::eRight, nux::eFull);
 
   layout->AddView(control_buttons_layout, 1, nux::eRight, nux::eFull);
