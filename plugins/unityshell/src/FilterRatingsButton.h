@@ -67,7 +67,7 @@ namespace unity {
     nux::CairoWrapper *normal_full_;
     nux::Geometry cached_geometry_;
 
-    void RedrawTheme (nux::Geometry const& geom, cairo_t *cr, int type, nux::State faked_state);
+    void RedrawTheme (nux::Geometry const& geom, cairo_t *cr, int type, nux::ButtonVisualState faked_state);
 
     dash::RatingsFilter::Ptr filter_;
 

@@ -44,8 +44,8 @@ NUX_IMPLEMENT_OBJECT_TYPE(FilterBar);
   }
 
   void FilterBar::Init () {
-    nux::Layout *layout = new nux::VLayout (NUX_TRACKER_LOCATION);
-    layout->SetVerticalInternalMargin(12);
+    nux::LinearLayout *layout = new nux::VLayout (NUX_TRACKER_LOCATION);
+    layout->SetSpaceBetweenChildren(12);
     SetLayout (layout);
   }
 

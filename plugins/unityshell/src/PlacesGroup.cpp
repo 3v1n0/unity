@@ -280,12 +280,6 @@ PlacesGroup::OnIdleRelayout(PlacesGroup* self)
     self->GetChildView()->QueueDraw();
     self->ComputeChildLayout();
     self->_idle_id = 0;
-
-    if (self->GetFocused())
-    {
-      self->SetFocused(false);  // unset focus on all children
-      self->SetFocused(true);  // set focus on first child
-    }
   }
 
   return FALSE;

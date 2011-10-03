@@ -71,7 +71,7 @@ namespace unity {
     dash::FilterOption::Ptr filter_;
 
     void InitTheme ();
-    void RedrawTheme (nux::Geometry const& geom, cairo_t *cr, nux::State faked_state);
+    void RedrawTheme (nux::Geometry const& geom, cairo_t *cr, nux::ButtonVisualState faked_state);
     void OnActivated (nux::Area *area);
     void OnActiveChanged(bool value);
 
