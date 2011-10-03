@@ -49,17 +49,16 @@ NUX_IMPLEMENT_OBJECT_TYPE(FilterGenre);
     InitTheme();
 
     all_button_ = new FilterBasicButton(_("All"), NUX_TRACKER_LOCATION);
-    all_button_->activated.connect(sigc::mem_fun(this, &FilterGenre::OnAllActivated));
-    all_button_->label = _("All");
+    all_button_->changed.connect(sigc::mem_fun(this, &FilterGenre::OnAllActivated));
+    all_button_->SetLabel(_("All"));
 
     PlacesStyle* style = PlacesStyle::GetDefault();
 
     genre_layout_ = new nux::GridHLayout(NUX_TRACKER_LOCATION);
     genre_layout_->ForceChildrenSize(true);
-    genre_layout_->SetHeightMatchContent(true);
-    genre_layout_->SetVerticalInternalMargin (12);
-    genre_layout_->SetVerticalExternalMargin (12);
-    genre_layout_->SetHorizontalInternalMargin (10);
+    genre_layout_->MatchContentSize(true);
+    genre_layout_->SetSpaceBetweenChildren (10, 12);
+    genre_layout_->SetTopAndBottomPadding (12);
     genre_layout_->EnablePartialVisibility (false);
     genre_layout_->SetChildrenSize (style->GetTileWidth() - 12, 35);
 

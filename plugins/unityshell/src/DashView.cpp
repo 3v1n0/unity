@@ -78,7 +78,6 @@ void DashView::AboutToShow()
   visible_ = true;
   bg_effect_helper_.enabled = true;
   search_bar_->text_entry()->SelectAll();
-  search_bar_->text_entry()->SetFocused(true);
 }
 
 void DashView::AboutToHide()
@@ -564,9 +563,6 @@ void DashView::OnActivateRequest(GVariant* args)
   home_view_->search_string = "";
   lens_bar_->Activate(id);
 
-  // Reset focus
-  SetFocused(false);
-  SetFocused(true);
 
   if (id == "home.lens" || !visible_)
     ubus_manager_.SendMessage(UBUS_DASH_EXTERNAL_ACTIVATION);
@@ -703,7 +699,6 @@ void DashView::OnLensBarActivated(std::string const& id)
   search_bar_->showing_filters = expanded;
 
   search_bar_->text_entry()->SelectAll();
-  search_bar_->text_entry()->SetFocused(true);
   nux::GetWindowCompositor().SetKeyFocusArea(search_bar_->text_entry());
 
   search_bar_->can_refine_search = view->can_refine_search();

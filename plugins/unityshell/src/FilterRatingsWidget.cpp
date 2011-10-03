@@ -41,8 +41,8 @@ NUX_IMPLEMENT_OBJECT_TYPE(FilterRatingsWidget);
       : FilterExpanderLabel (_("Rating"), NUX_FILE_LINE_PARAM)
   {
     any_button_ = new FilterBasicButton(_("All"), NUX_TRACKER_LOCATION);
-    any_button_->activated.connect(sigc::mem_fun(this, &FilterRatingsWidget::OnAnyButtonActivated));
-    any_button_->label = _("All");
+    any_button_->changed.connect(sigc::mem_fun(this, &FilterRatingsWidget::OnAnyButtonActivated));
+    any_button_->SetLabel(_("All"));
 
     SetRightHandView(any_button_);
 

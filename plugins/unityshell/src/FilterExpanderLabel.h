@@ -54,8 +54,8 @@ namespace unity {
     void BuildLayout ();
     void DoExpandChange (bool change);
 
-    nux::Layout* layout_;
-    nux::Layout* top_bar_layout_;
+    nux::LinearLayout* layout_;
+    nux::LinearLayout* top_bar_layout_;
     nux::Layout* contents_;
     nux::View* right_hand_contents_;
     nux::View* expander_graphic_;

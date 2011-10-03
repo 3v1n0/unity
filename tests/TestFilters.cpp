@@ -74,8 +74,6 @@ void TestRunner::Init ()
   layout->AddView(genre, 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
   layout->AddView(multi_range, 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
 
-  layout->SetFocused (true);
-
   nux::GetGraphicsThread()->SetLayout (layout);
 }
 
