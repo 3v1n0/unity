@@ -53,7 +53,7 @@ DashController::DashController()
 
   ensure_id_ = g_timeout_add_seconds(60, [] (gpointer data) -> gboolean { static_cast<DashController*>(data)->EnsureDash(); return FALSE; }, this);
 
-  DashSettings::GetDefault()->changed.connect([&]()
+  Settings::Instance().changed.connect([&]()
   {
     if (window_)
     {
