@@ -128,6 +128,46 @@ public:
                    double   height,
                    bool     align);
 
+  nux::Color const& GetTextColor() const;
+
+  // TODO nux::Property<int>
+  int  GetDefaultNColumns() const;
+  void SetDefaultNColumns(int n_cols);
+  sigc::signal<void> columns_changed;
+
+  int GetTileIconSize() const;
+  int GetTileWidth() const;
+  int GetTileHeight() const;
+
+  int GetHomeTileIconSize() const;
+  int GetHomeTileWidth() const;
+  int GetHomeTileHeight() const;
+
+  int GetTextLineHeight() const;
+
+  nux::BaseTexture* GetDashBottomTile();
+  nux::BaseTexture* GetDashRightTile();
+  nux::BaseTexture* GetDashCorner();
+  nux::BaseTexture* GetDashFullscreenIcon();
+  nux::BaseTexture* GetDashLeftEdge();
+  nux::BaseTexture* GetDashLeftCorner();
+  nux::BaseTexture* GetDashLeftTile();
+  nux::BaseTexture* GetDashTopCorner();
+  nux::BaseTexture* GetDashTopTile();
+
+  nux::BaseTexture* GetDashShine();
+
+  nux::BaseTexture* GetSearchMagnifyIcon();
+  nux::BaseTexture* GetSearchCloseIcon();
+  nux::BaseTexture* GetSearchCloseGlowIcon();
+  nux::BaseTexture* GetSearchSpinIcon();
+  nux::BaseTexture* GetSearchSpinGlowIcon();
+
+  nux::BaseTexture* GetGroupUnexpandIcon();
+  nux::BaseTexture* GetGroupExpandIcon();
+
+  sigc::signal<void> changed;
+
 private:
   class Impl;
   Impl* pimpl;

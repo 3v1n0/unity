@@ -28,7 +28,7 @@
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/RadioOptionFilter.h>
 
-#include "PlacesStyle.h"
+#include "DashStyle.h"
 #include "DashSettings.h"
 #include "UBusMessages.h"
 
@@ -100,7 +100,7 @@ void DashView::SetupBackground()
   rop.DstBlend = GL_SRC_COLOR;
   bg_darken_layer_ = new nux::ColorLayer(nux::Color(0.7f, 0.7f, 0.7f, 1.0f), false, rop);
 
-  bg_shine_texture_ = PlacesStyle::GetDefault()->GetDashShine()->GetDeviceTexture();
+  bg_shine_texture_ = dash::Style::Instance().GetDashShine()->GetDeviceTexture();
 
   ubus_manager_.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
 }
@@ -168,10 +168,11 @@ void DashView::Relayout()
 
   layout_->SetMinMaxSize(content_geo_.width, content_geo_.height);
 
-  PlacesStyle* style = PlacesStyle::GetDefault();
+  dash::Style& style = dash::Style::Instance();
 
   // Minus the padding that gets added to the left
-  style->SetDefaultNColumns(floorf((content_geo_.width - 32)/ (float)style->GetTileWidth()));
+  float tile_width = style.GetTileWidth();
+  style.SetDefaultNColumns(floorf((content_geo_.width - 32) / tile_width));
 
   ubus_manager_.SendMessage(UBUS_DASH_SIZE_CHANGED, g_variant_new("(ii)", content_geo_.width, content_geo_.height));
 
@@ -183,11 +184,11 @@ void DashView::Relayout()
 // look tight
 nux::Geometry DashView::GetBestFitGeometry(nux::Geometry const& for_geo)
 {
-  PlacesStyle* style = PlacesStyle::GetDefault();
+  dash::Style& style = dash::Style::Instance();
 
   int width = 0, height = 0;
-  int tile_width = style->GetTileWidth();
-  int tile_height = style->GetTileHeight();
+  int tile_width = style.GetTileWidth();
+  int tile_height = style.GetTileHeight();
   int half = for_geo.width / 2;
 
   // if default dash size is bigger than half a screens worth of items, go for that.
@@ -241,14 +242,14 @@ void DashView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
   {
     // Paint the edges
     {
-      PlacesStyle*  style = PlacesStyle::GetDefault();
-      nux::BaseTexture* bottom = style->GetDashBottomTile();
-      nux::BaseTexture* right = style->GetDashRightTile();
-      nux::BaseTexture* corner = style->GetDashCorner();
-      nux::BaseTexture* left_corner = style->GetDashLeftCorner();
-      nux::BaseTexture* left_tile = style->GetDashLeftTile();
-      nux::BaseTexture* top_corner = style->GetDashTopCorner();
-      nux::BaseTexture* top_tile = style->GetDashTopTile();
+      dash::Style& style = dash::Style::Instance();
+      nux::BaseTexture* bottom = style.GetDashBottomTile();
+      nux::BaseTexture* right = style.GetDashRightTile();
+      nux::BaseTexture* corner = style.GetDashCorner();
+      nux::BaseTexture* left_corner = style.GetDashLeftCorner();
+      nux::BaseTexture* left_tile = style.GetDashLeftTile();
+      nux::BaseTexture* top_corner = style.GetDashTopCorner();
+      nux::BaseTexture* top_tile = style.GetDashTopTile();
       nux::TexCoordXForm texxform;
 
       int left_corner_offset = 10;

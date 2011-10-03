@@ -31,7 +31,6 @@
 #include "DashView.h"
 #include "DashSettings.h"
 #include "DashStyle.h"
-#include "PlacesStyle.h"
 
 #define WIDTH 1024
 #define HEIGHT 768
@@ -103,7 +102,6 @@ int main(int argc, char **argv)
   // The instances for the pseudo-singletons.
   unity::dash::Style dash_style;
   unity::dash::Settings dash_settings;
-  unity::PlacesStyle places_style;
 
   TestRunner *test_runner = new TestRunner ();
   wt = nux::CreateGUIThread(TEXT("Unity Dash"),

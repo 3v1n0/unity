@@ -31,7 +31,7 @@
 #include "FilterGenreWidget.h"
 #include "FilterGenreButton.h"
 #include "FilterBasicButton.h"
-#include "PlacesStyle.h"
+#include "DashStyle.h"
 
 namespace unity
 {
@@ -52,8 +52,6 @@ NUX_IMPLEMENT_OBJECT_TYPE(FilterGenre);
     all_button_->activated.connect(sigc::mem_fun(this, &FilterGenre::OnAllActivated));
     all_button_->label = _("All");
 
-    PlacesStyle* style = PlacesStyle::GetDefault();
-
     genre_layout_ = new nux::GridHLayout(NUX_TRACKER_LOCATION);
     genre_layout_->ForceChildrenSize(true);
     genre_layout_->SetHeightMatchContent(true);
@@ -61,7 +59,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(FilterGenre);
     genre_layout_->SetVerticalExternalMargin (12);
     genre_layout_->SetHorizontalInternalMargin (10);
     genre_layout_->EnablePartialVisibility (false);
-    genre_layout_->SetChildrenSize (style->GetTileWidth() - 12, 35);
+    genre_layout_->SetChildrenSize (dash::Style::Instance().GetTileWidth() - 12, 35);
 
     SetRightHandView(all_button_);
     SetContents(genre_layout_);

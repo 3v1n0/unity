@@ -23,7 +23,7 @@
 
 #include <NuxCore/Logger.h>
 
-#include "PlacesStyle.h"
+#include "DashStyle.h"
 #include "ResultRendererTile.h"
 #include "ResultRendererHorizontalTile.h"
 #include "UBusMessages.h"
@@ -102,7 +102,7 @@ LensView::LensView(Lens::Ptr lens)
   SetupResults();
   SetupFilters();
 
-  PlacesStyle::GetDefault()->columns_changed.connect(sigc::mem_fun(this, &LensView::OnColumnsChanged));
+  dash::Style::Instance().columns_changed.connect(sigc::mem_fun(this, &LensView::OnColumnsChanged));
 
   lens_->connected.changed.connect([&](bool is_connected) { if (is_connected) initial_activation_ = true; });
   search_string.changed.connect([&](std::string const& search) { lens_->Search(search);  });
@@ -273,9 +273,10 @@ void LensView::OnResultRemoved(Result const& result)
 
 void LensView::UpdateCounts(PlacesGroup* group)
 {
-  PlacesStyle* style = PlacesStyle::GetDefault();
+  unsigned int columns = dash::Style::Instance().GetDefaultNColumns();
+  columns -= filters_expanded ? 2 : 0;
 
-  group->SetCounts(style->GetDefaultNColumns() - (filters_expanded ? 2 : 0), counts_[group]);
+  group->SetCounts(columns, counts_[group]);
   group->SetVisible(counts_[group]);
 
   QueueFixRenderering();
@@ -318,8 +319,7 @@ void LensView::OnGroupExpanded(PlacesGroup* group)
 
 void LensView::OnColumnsChanged()
 {
-  unsigned int columns = PlacesStyle::GetDefault()->GetDefaultNColumns();
-
+  unsigned int columns = dash::Style::Instance().GetDefaultNColumns();
   columns -= filters_expanded ? 2 : 0;
 
   for (auto group: categories_)
@@ -333,7 +333,7 @@ void LensView::OnFilterAdded(Filter::Ptr filter)
   std::string id = filter->id;
   filter_bar_->AddFilter(filter);
 
-  int width = PlacesStyle::GetDefault()->GetTileWidth();
+  int width = dash::Style::Instance().GetTileWidth();
   fscroll_view_->SetMinimumWidth(width*2);
   fscroll_view_->SetMaximumWidth(width*2);
 

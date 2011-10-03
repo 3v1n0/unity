@@ -15,7 +15,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Mirco Müller <mirco.mueller@canonical.com
+ *              Neil Jagdish Patel <neil.patel@canonical.com>
  */
+
+#include "DashStyle.h"
 
 #include <string>
 #include <vector>
@@ -29,12 +32,17 @@
 
 #include <NuxCore/Color.h>
 #include <NuxCore/Logger.h>
+#include <NuxImage/CairoGraphics.h>
 
-#include "DashStyle.h"
+#include <UnityCore/GLibSignal.h>
+#include <UnityCore/GLibWrapper.h>
+
 #include "JSONParser.h"
 #include "config.h"
 
 #define DASH_WIDGETS_FILE DATADIR"/unity/themes/dash-widgets.json"
+
+typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
 
 namespace unity
 {
@@ -70,13 +78,25 @@ inline double _align(double val)
     return val;*/
 }
 
+class LazyLoadTexture
+{
+public:
+  LazyLoadTexture(std::string const& filename);
+  nux::BaseTexture* texture();
+private:
+  void LoadTexture();
+private:
+  std::string const& filename_;
+  BaseTexturePtr texture_;
+};
+
 } // anon namespace
 
 
 class Style::Impl
 {
 public:
-  Impl();
+  Impl(Style* owner);
   ~Impl();
 
   void Blur(cairo_t* cr, int size);
@@ -120,7 +140,12 @@ public:
                           Arrow      arrow,
                           nux::State state);
 
+  void Refresh();
+  void OnFontChanged(GtkSettings* object, GParamSpec* pspec);
+
   // Members
+  Style* owner_;
+
   cairo_font_options_t* default_font_options_;
 
   std::vector<nux::Color> button_label_border_color_;
@@ -151,17 +176,79 @@ public:
   int                   scrollbar_blur_size_;
   int                   scrollbar_size_;
   double                scrollbar_corner_radius_;
+
+  glib::SignalManager signal_manager_;
+
+  nux::Color text_color_;
+
+  int text_width_;
+  int text_height_;
+  int number_of_columns_;
+
+  LazyLoadTexture dash_bottom_texture_;
+  LazyLoadTexture dash_right_texture_;
+  LazyLoadTexture dash_corner_texture_;
+  LazyLoadTexture dash_fullscreen_icon_;
+  LazyLoadTexture dash_left_edge_;
+  LazyLoadTexture dash_left_corner_;
+  LazyLoadTexture dash_left_tile_;
+  LazyLoadTexture dash_top_corner_;
+  LazyLoadTexture dash_top_tile_;
+
+  LazyLoadTexture dash_shine_;
+
+  LazyLoadTexture search_magnify_texture_;
+  LazyLoadTexture search_close_texture_;
+  LazyLoadTexture search_close_glow_texture_;
+  LazyLoadTexture search_spin_texture_;
+  LazyLoadTexture search_spin_glow_texture_;
+
+  LazyLoadTexture group_unexpand_texture_;
+  LazyLoadTexture group_expand_texture_;
+
 };
 
-Style::Impl::Impl()
-  : button_label_border_color_(STATES)
+Style::Impl::Impl(Style* owner)
+  : owner_(owner)
+  , button_label_border_color_(STATES)
   , button_label_border_size_(STATES)
   , button_label_text_color_(STATES)
   , button_label_fill_color_(STATES)
   , button_label_overlay_opacity_(STATES)
   , button_label_overlay_mode_(STATES)
   , button_label_blur_size_(STATES)
+  , text_color_(nux::color::White)
+  , text_width_(0)
+  , text_height_(0)
+  , number_of_columns_(6)
+  , dash_bottom_texture_("/dash_bottom_border_tile.png")
+  , dash_right_texture_("/dash_right_border_tile.png")
+  , dash_corner_texture_("/dash_bottom_right_corner.png")
+  , dash_fullscreen_icon_("/dash_fullscreen_icon.png")
+  , dash_left_edge_("/dash_left_edge.png")
+  , dash_left_corner_("/dash_bottom_left_corner.png")
+  , dash_left_tile_("/dash_left_tile.png")
+  , dash_top_corner_("/dash_top_right_corner.png")
+  , dash_top_tile_("/dash_top_tile.png")
+  , dash_shine_("/dash_sheen.png")
+  , search_magnify_texture_("/search_magnify.png")
+  , search_close_texture_("/search_close.png")
+  , search_close_glow_texture_("/search_close_glow.png")
+  , search_spin_texture_("/search_spin.png")
+  , search_spin_glow_texture_("/search_spin_glow.png")
+  , group_unexpand_texture_("/dash_group_unexpand.png")
+  , group_expand_texture_("/dash_group_expand.png")
 {
+  signal_manager_.Add(new glib::Signal<void, GtkSettings*, GParamSpec*>
+                      (gtk_settings_get_default(),
+                       "notify::gtk-font-name",
+                       sigc::mem_fun(this, &Impl::OnFontChanged)));
+  signal_manager_.Add(new glib::Signal<void, GtkSettings*, GParamSpec*>
+                      (gtk_settings_get_default(),
+                       "notify::gtk-xft-dpi",
+                       sigc::mem_fun(this, &Impl::OnFontChanged)));
+  Refresh();
+
   // create fallback font-options
   default_font_options_ = cairo_font_options_create();
   if (cairo_font_options_status(default_font_options_) == CAIRO_STATUS_SUCCESS)
@@ -242,8 +329,55 @@ Style::Impl::~Impl()
     cairo_font_options_destroy(default_font_options_);
 }
 
+void Style::Impl::Refresh()
+{
+  const char* const SAMPLE_MAX_TEXT = "Chromium Web Browser";
+  GtkSettings* settings = ::gtk_settings_get_default();
+
+  nux::CairoGraphics util_cg(CAIRO_FORMAT_ARGB32, 1, 1);
+  cairo_t* cr = util_cg.GetInternalContext();
+
+  glib::String font_description;
+  int dpi = 0;
+  ::g_object_get(settings,
+                 "gtk-font-name", &font_description,
+                 "gtk-xft-dpi", &dpi,
+                 NULL);
+  PangoFontDescription* desc = ::pango_font_description_from_string(font_description);
+  ::pango_font_description_set_weight(desc, PANGO_WEIGHT_NORMAL);
+  ::pango_font_description_set_size(desc, 9 * PANGO_SCALE);
+
+  glib::Object<PangoLayout> layout(::pango_cairo_create_layout(cr));
+  ::pango_layout_set_font_description(layout, desc);
+  ::pango_layout_set_text(layout, SAMPLE_MAX_TEXT, -1);
+
+  PangoContext* cxt = ::pango_layout_get_context(layout);
+
+  GdkScreen* screen = ::gdk_screen_get_default();
+  ::pango_cairo_context_set_font_options(cxt, ::gdk_screen_get_font_options(screen));
+  float pango_scale = PANGO_SCALE;
+  ::pango_cairo_context_set_resolution(cxt, dpi / pango_scale);
+  ::pango_layout_context_changed(layout);
+
+  PangoRectangle log_rect;
+  ::pango_layout_get_extents(layout, NULL, &log_rect);
+  text_width_ = log_rect.width / PANGO_SCALE;
+  text_height_ = log_rect.height / PANGO_SCALE;
+
+  owner_->changed.emit();
+
+  pango_font_description_free(desc);
+}
+
+
+void Style::Impl::OnFontChanged(GtkSettings* object, GParamSpec* pspec)
+{
+  Refresh();
+}
+
+
 Style::Style()
-  : pimpl(new Impl())
+  : pimpl(new Impl(this))
 {
   if (style_instance)
   {
@@ -1731,5 +1865,183 @@ int Style::GetScrollbarGarnishSize()
   return pimpl->scrollbar_blur_size_;
 }
 
+nux::Color const& Style::GetTextColor() const
+{
+  return pimpl->text_color_;
 }
+
+int  Style::GetDefaultNColumns() const
+{
+  return pimpl->number_of_columns_;
 }
+
+void Style::SetDefaultNColumns(int n_cols)
+{
+  if (pimpl->number_of_columns_ == n_cols)
+    return;
+
+  pimpl->number_of_columns_ = n_cols;
+
+  columns_changed.emit();
+}
+
+int Style::GetTileIconSize() const
+{
+  return 64;
+}
+
+int Style::GetTileWidth() const
+{
+  return std::max(pimpl->text_width_, 150);
+}
+
+int Style::GetTileHeight() const
+{
+  return std::max(GetTileIconSize() + (pimpl->text_height_ * 2) + 10,
+                  GetTileIconSize() + 50 + 18); // magic design numbers.
+}
+
+int Style::GetHomeTileIconSize() const
+{
+  return 104;
+}
+
+int Style::GetHomeTileWidth() const
+{
+  return pimpl->text_width_ * 1.2;
+}
+
+int Style::GetHomeTileHeight() const
+{
+  return GetHomeTileIconSize() + (pimpl->text_height_ * 5);
+}
+
+int Style::GetTextLineHeight() const
+{
+  return pimpl->text_height_;
+}
+
+
+nux::BaseTexture* Style::GetDashBottomTile()
+{
+  return pimpl->dash_bottom_texture_.texture();
+}
+
+nux::BaseTexture* Style::GetDashRightTile()
+{
+  return pimpl->dash_right_texture_.texture();
+}
+
+nux::BaseTexture* Style::GetDashCorner()
+{
+  return pimpl->dash_corner_texture_.texture();
+}
+
+
+nux::BaseTexture* Style::GetDashLeftEdge()
+{
+  return pimpl->dash_left_edge_.texture();
+}
+
+nux::BaseTexture* Style::GetDashLeftCorner()
+{
+  return pimpl->dash_left_corner_.texture();
+}
+
+nux::BaseTexture* Style::GetDashLeftTile()
+{
+  return pimpl->dash_left_tile_.texture();
+}
+
+nux::BaseTexture* Style::GetDashTopCorner()
+{
+  return pimpl->dash_top_corner_.texture();
+}
+
+nux::BaseTexture* Style::GetDashTopTile()
+{
+  return pimpl->dash_top_tile_.texture();
+}
+
+nux::BaseTexture* Style::GetDashFullscreenIcon()
+{
+  return pimpl->dash_fullscreen_icon_.texture();
+}
+
+nux::BaseTexture* Style::GetSearchMagnifyIcon()
+{
+  return pimpl->search_magnify_texture_.texture();
+}
+
+nux::BaseTexture* Style::GetSearchCloseIcon()
+{
+  return pimpl->search_close_texture_.texture();
+}
+
+nux::BaseTexture* Style::GetSearchCloseGlowIcon()
+{
+  return pimpl->search_close_glow_texture_.texture();
+}
+
+nux::BaseTexture* Style::GetSearchSpinIcon()
+{
+  return pimpl->search_spin_texture_.texture();
+}
+
+nux::BaseTexture* Style::GetSearchSpinGlowIcon()
+{
+  return pimpl->search_spin_glow_texture_.texture();
+}
+
+nux::BaseTexture* Style::GetGroupUnexpandIcon()
+{
+  return pimpl->group_unexpand_texture_.texture();
+}
+
+nux::BaseTexture* Style::GetGroupExpandIcon()
+{
+  return pimpl->group_expand_texture_.texture();
+}
+
+nux::BaseTexture* Style::GetDashShine()
+{
+  return pimpl->dash_shine_.texture();
+}
+
+
+namespace
+{
+
+LazyLoadTexture::LazyLoadTexture(std::string const& filename)
+  : filename_(filename)
+{
+}
+
+nux::BaseTexture* LazyLoadTexture::texture()
+{
+  if (!texture_)
+    LoadTexture();
+  return texture_.GetPointer();
+}
+
+void LazyLoadTexture::LoadTexture()
+{
+  std::string full_path = PKGDATADIR + filename_;
+  glib::Object<GdkPixbuf> pixbuf;
+  glib::Error error;
+
+  pixbuf = ::gdk_pixbuf_new_from_file(full_path.c_str(), &error);
+  if (error)
+  {
+    LOG_WARN(logger) << "Unable to texture " << full_path << ": " << error;
+  }
+  else
+  {
+    texture_.Adopt(nux::CreateTexture2DFromPixbuf(pixbuf, true));
+  }
+}
+
+} // anon namespace
+
+} // namespace dash
+} // namespace unity

@@ -22,7 +22,7 @@
 
 #include <NuxCore/Logger.h>
 
-#include "PlacesStyle.h"
+#include "DashStyle.h"
 #include "ResultRendererTile.h"
 #include "UBusMessages.h"
 
@@ -143,8 +143,7 @@ void HomeView::AddLens(Lens::Ptr lens)
 
 void HomeView::UpdateCounts(PlacesGroup* group)
 {
-  PlacesStyle* style = PlacesStyle::GetDefault();
-  group->SetCounts(style->GetDefaultNColumns(), counts_[group]);
+  group->SetCounts(dash::Style::Instance().GetDefaultNColumns(), counts_[group]);
   group->SetVisible(counts_[group]);
 
   QueueFixRenderering();
@@ -159,7 +158,7 @@ void HomeView::OnGroupExpanded(PlacesGroup* group)
 
 void HomeView::OnColumnsChanged()
 {
-  unsigned int columns = PlacesStyle::GetDefault()->GetDefaultNColumns();
+  unsigned int columns = dash::Style::Instance().GetDefaultNColumns();
 
   for (auto group: categories_)
   {

@@ -43,7 +43,6 @@
 #include "LauncherController.h"
 #include "PanelController.h"
 #include "PanelStyle.h"
-#include "PlacesStyle.h"
 #include "UScreen.h"
 #include "GestureEngine.h"
 #include "DebugDBusInterface.h"
@@ -270,7 +269,6 @@ private:
   dash::Settings          dash_settings_;
   dash::Style             dash_style_;
   panel::Style            panel_style_;
-  PlacesStyle             places_style_;
   FontSettings            font_settings_;
   Launcher*               launcher;
   LauncherController*     controller;
