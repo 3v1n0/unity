@@ -272,7 +272,7 @@ private:
   FontSettings            font_settings_;
   Launcher*               launcher;
   launcher::Controller::Ptr launcher_controller_;
-  dash::DashController::Ptr     dashController;
+  dash::Controller::Ptr     dashController;
   panel::Controller::Ptr  panelController;
   switcher::SwitcherController*     switcherController;
   GestureEngine*          gestureEngine;

@@ -2349,7 +2349,7 @@ void UnityScreen::initLauncher(nux::NThread* thread, void* InitData)
   LOG_INFO(logger) << "initLauncher-Panel " << timer.ElapsedSeconds() << "s";
 
   /* Setup Places */
-  self->dashController.reset(new dash::DashController());
+  self->dashController.reset(new dash::Controller());
 
   /* FIXME: this should not be manual, should be managed with a
      show/hide callback like in GAIL
