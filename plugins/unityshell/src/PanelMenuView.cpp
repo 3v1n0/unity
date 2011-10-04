@@ -135,8 +135,11 @@ PanelMenuView::PanelMenuView(int padding)
   win_manager->window_maximized.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowMaximized));
   win_manager->window_restored.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowRestored));
   win_manager->window_unmapped.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowUnmapped));
+  win_manager->window_mapped.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowMapped));
   win_manager->window_moved.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowMoved));
   win_manager->window_resized.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowMoved));
+  win_manager->window_decorated.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowDecorated));
+  win_manager->window_undecorated.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowUndecorated));
 
   PanelStyle::GetDefault()->changed.connect(sigc::mem_fun(this, &PanelMenuView::Refresh));
 
@@ -872,14 +875,6 @@ PanelMenuView::Refresh()
   x = _padding;
   y = 0;
 
-  BamfWindow* window = bamf_matcher_get_active_window(_matcher);
-  if (BAMF_IS_WINDOW(window) &&
-      bamf_window_get_window_type(window) == BAMF_WINDOW_DESKTOP)
-  {
-    DrawText(cr, x, y, width, height, "Ubuntu", "", 6);
-    x += _padding;
-  }
-
   if (label)
     DrawText(cr, x, y, width, height, NULL, label);
 
@@ -984,7 +979,7 @@ PanelMenuView::OnActiveWindowChanged(BamfView* old_view,
       // if we've just started tracking this window and it is maximized, let's
       // make sure it's undecorated just in case it slipped by us earlier
       // (I'm looking at you, Chromium!)
-      if (_is_maximized)
+      if (_is_maximized && WindowManager::Default ()->IsWindowDecorated(xid))
       {
         WindowManager::Default()->Undecorate(xid);
         _maximized_set.insert(xid);
@@ -1051,8 +1046,38 @@ PanelMenuView::OnWindowUnminimized(guint32 xid)
 void
 PanelMenuView::OnWindowUnmapped(guint32 xid)
 {
-  _decor_map.erase(xid);
-  _maximized_set.erase(xid);
+  if (WindowManager::Default()->IsWindowMaximized(xid))
+  {
+    WindowManager::Default()->Decorate(xid);
+    _maximized_set.erase(xid);
+  }
+}
+
+void
+PanelMenuView::OnWindowMapped(guint32 xid)
+{
+  if (WindowManager::Default()->IsWindowMaximized(xid))
+  {
+    WindowManager::Default()->Undecorate(xid);
+    _maximized_set.insert(xid);
+  }
+}
+
+void
+PanelMenuView::OnWindowDecorated(guint32 xid)
+{
+  _decor_map[xid] = true;
+
+  if (_maximized_set.find(xid) != _maximized_set.end ())
+  {
+    WindowManager::Default ()->Undecorate(xid);
+  }
+}
+
+void
+PanelMenuView::OnWindowUndecorated(guint32 xid)
+{
+  _decor_map[xid] = false;
 }
 
 void

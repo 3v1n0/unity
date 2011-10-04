@@ -1,21 +1,33 @@
-unity (4.20.0-0ubuntu3) oneiric; urgency=low
+unity (4.22.0-0ubuntu1) UNRELEASED; urgency=low
 
-  * Merge trunk:
-    - Fix a mem leak
+  * New upstream release.
+    - unity 3d firefox window borders disappear (LP: #861143)
+    - Desktop drawn with offset (LP: #862743)
+    - Crash when selecting Evolution in alt-tab (LP: #859431)
+    - unity-panel-service crashed with SIGSEGV in g_type_check_instance_cast()
+      - with a11y enabled (LP: #829367)
+    - compiz crashed with SIGSEGV in
+      unity::switcher::SwitcherController::~SwitcherController() (LP: #863302)
     - compiz assert failure: *** glibc detected *** compiz: double free or
-      corruption (!prev): 0x00007fa248593900 *** (LP: #862938, #863303)
-    - compiz crashed with SIGSEGV in unity::dash::LensView::~LensView()
-      (LP: #863191)
-    - compiz crashed with SIGSEGV in unity::switcher::SwitcherController
-      ::~SwitcherController() (LP: #863302)
+      corruption (!prev): 0x00007fa248593900 *** (LP: #862938)
+    - Onboard can cause unity to crash (LP: #863693)
     - compiz crashed with SIGSEGV in LauncherIcon::SetHasWindowOnViewport()
       (LP: #863652)
-    - Onboard can cause unity to crash (LP: #863693)
-    - Focus nautilus desktop to get focus at startup (LP: #863037)
+    - Dash opens the wrong application after scrolling in the application list
+      (LP: #863555)
+    - Categories "Applications" and "Files and folders" are untranslated
+      (LP: #865430)
+    - focus nautilus desktop to get focus at startup (LP: #863037)
     - The 'Desktop' label isn't shown if you use "Show desktop" in alt + tab
       (LP: #863129)
+    - UIFe: Remove Ubuntu logo again from desktop title (LP: #865150)
+    - compiz assert failure: *** glibc detected *** compiz: free(): corrupted
+      unsorted chunks: 0x0000000004a1d390 *** (LP: #863303)
+    - Fix a mem leak
+    - compiz crashed with SIGSEGV in unity::dash::LensView::~LensView()
+      (LP: #863191)
 
- -- Didier Roche <didrocks@ubuntu.com>  Mon, 03 Oct 2011 10:33:29 +0200
+ -- Didier Roche <didrocks@ubuntu.com>  Tue, 04 Oct 2011 14:28:02 +0200
 
 unity (4.20.0-0ubuntu2) oneiric; urgency=low
 
