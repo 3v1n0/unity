@@ -107,6 +107,8 @@ public:
   sigc::signal<void, guint32> window_resized;
   sigc::signal<void, guint32> window_moved;
   sigc::signal<void, guint32> window_focus_changed;
+  sigc::signal<void, guint32> window_decorated;
+  sigc::signal<void, guint32> window_undecorated;
 
   sigc::signal<void> initiate_spread;
   sigc::signal<void> terminate_spread;
