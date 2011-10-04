@@ -485,11 +485,24 @@ nux::Area* ResultViewGrid::KeyNavIteration(nux::KeyNavDirection direction)
 // crappy name.
 void ResultViewGrid::OnOnKeyNavFocusChange(nux::Area *area)
 {
-
   if (HasKeyFocus())
   {
-    focused_uri_ = results_.front().uri;
-    selected_index_ = 0;
+    if (selected_index_ < 0)
+    {
+      if (mouse_over_index_ >= 0)
+      {
+        // to hack around nux, nux sends the keynavfocuschange event before
+        // mouse clicks, so when mouse click happens we have already scrolled away
+        // because the keynav focus changed
+        focused_uri_ = results_[mouse_over_index_].uri;
+        selected_index_ = mouse_over_index_;
+      }
+      else
+      {
+        focused_uri_ = results_.front().uri;
+        selected_index_ = 0;
+      }
+    }
     NeedRedraw();
 
     int items_per_row = GetItemsPerRow();
@@ -668,6 +681,8 @@ void ResultViewGrid::MouseClick(int x, int y, unsigned long button_flags, unsign
   {
     // we got a click on a button so activate it
     Result result = results_[index];
+    selected_index_ = index;
+    focused_uri_ = result.uri;
     UriActivated.emit(result.uri);
   }
 }

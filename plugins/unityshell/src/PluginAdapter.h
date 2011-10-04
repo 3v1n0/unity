@@ -106,6 +106,7 @@ public:
   void NotifyResized(CompWindow* window, int x, int y, int w, int h);
   void NotifyStateChange(CompWindow* window, unsigned int state, unsigned int last_state);
   void NotifyCompizEvent(const char* plugin, const char* event, CompOption::Vector& option);
+  void NotifyNewDecorationState(guint32 xid);
 
   void Decorate(guint32 xid);
   void Undecorate(guint32 xid);
@@ -174,6 +175,8 @@ private:
 
   bool _in_show_desktop;
   CompWindow* _last_focused_window;
+
+  std::map<guint32, unsigned int> _window_decoration_state;
 
   static PluginAdapter* _default;
 };
