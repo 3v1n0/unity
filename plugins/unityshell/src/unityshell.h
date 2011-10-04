@@ -54,7 +54,7 @@ public:
 
   typedef boost::shared_ptr <UnityFBO> Ptr;
 
-  UnityFBO (CompOutput *o);
+  UnityFBO (CompRect r);
   ~UnityFBO ();
 
 public:
@@ -63,8 +63,7 @@ public:
   void unbind ();
 
   bool status ();
-  bool bound ();
-  void paint ();
+  void paint (CompOutput *o);
 
   GLuint texture () { return mFBTexture; }
 
@@ -74,7 +73,7 @@ private:
   GLuint   mFboHandle; // actual handle to the framebuffer_ext
   bool    mFboStatus; // did the framebuffer texture bind succeed
   GLuint   mFBTexture;
-  CompOutput *output;
+  CompRect mGeometry;
   unsigned int mBoundCnt;
 };
 
@@ -151,6 +150,9 @@ public:
   CompScreen* screen;
   CompositeScreen* cScreen;
   GLScreen* gScreen;
+
+  /* grab everything into an fbo */
+  void paint (CompOutput::ptrList &outputs, unsigned int);
 
   /* prepares nux for drawing */
   void nuxPrologue();
@@ -234,7 +236,7 @@ public:
   void NeedsRelayout();
   void ScheduleRelayout(guint timeout);
 
-  void setActiveFbo (GLuint fbo) { mActiveFbo = fbo; }
+  void setActiveFbo (GLuint fbo) { _active_fbo = fbo; }
 
   bool forcePaintOnTop ();
 
@@ -321,8 +323,8 @@ private:
 
   unity::BGHash _bghash;
 
-  std::map <CompOutput *, UnityFBO::Ptr> mFbos;
-  GLuint                                 mActiveFbo;
+  UnityFBO::Ptr _fbo;
+  GLuint        _active_fbo;
 
   bool   queryForShader ();
 
