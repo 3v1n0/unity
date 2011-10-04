@@ -1,3 +1,150 @@
+2011-10-04  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Add -lm
+
+2011-10-04  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Remove roundel
+
+2011-10-04  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Remove roundel
+
+2011-10-04  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Bug #865430: Categories Applications and Files and folders are untranslated
+
+2011-10-04  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Correctly load translations for Lens names
+
+2011-10-03  Jay Taoko  <jay.taoko@canonical.com>
+
+	Fixed incorrect test
+
+2011-10-03  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Merge lp:~smspillaz/unity/unity.fix_864503
+
+2011-10-02  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Mark hidden showdesktop windows as hidden and don't double-hide windows
+	which might result in their input shape not being restored.
+
+2011-10-03  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Merge lp:~smspillaz/unity/unity.maybe_fix_861143
+
+2011-10-01  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Maybe fix LP#861143
+	
+	Instead of explicitly undecorating windows when they are maximized, listen
+	for changes in decoration state on PropertyNotify events on the windows
+	themselves and respond to them, because we might get the maximization
+	event when the window is mapped before compiz has had a chance to decorate
+	the window.
+	
+	Also cover the case where a window is withdrawn and then mapped maximized
+	again, where we wouldn't redecorate those windows.
+	
+	In order to avoid cycling on our own undecoration requests, we set the
+	high bit on _MOTIF_WM_HINTS decoration field, if that high bit is
+	present and the window is otherwise undecorated, we should treat it
+	like it is still a decorated window and redecorate it when
+	it is restored.
+
+2011-10-03  Gord Allott  <gord.allott@canonical.com>
+
+	fixes key focus getting in the way of mouse clicks, Bug #863555
+
+2011-10-03  Gord Allott  <gord.allott@canonical.com>
+
+	fixes lp:863555 by hacking around nux, nux calls the keynav change event on an object before the click event which causes the scrollview to scroll to the new focused area (the first item) causing the click event to launch the wrong application. 
+
+2011-10-03  Tim Penhey  <tim.penhey@canonical.com>
+
+	Make sure the pop clipping rects match up with the pushes.
+	
+	There is a pending nux branch to use RAII objects to control this.
+
+2011-09-29  Tim Penhey  <tim.penhey@canonical.com>
+
+	Match up the push and pop clipping rectangles.
+
+2011-10-03  Tim Penhey  <tim.penhey@canonical.com>
+
+	Clean up the specialist scroll views in the HomeView and LensView.
+	
+	Don't delete the nux objects, they are deleted through the views.
+	
+	Don't unreference the view_window if it hasn't been created.
+
+2011-09-30  Tim Penhey  <tim.penhey@canonical.com>
+
+	Don't delete nux objects.
+
+2011-09-30  Tim Penhey  <tim.penhey@canonical.com>
+
+	It is possible that the user has never hit alt-tab.
+
+2011-10-01  Jason Smith  <jason.smith@canonical.com>
+
+	fix crash when launcher icon dies within 250ms of window movement
+
+2011-10-01  Jason Smith  <jason.smith@canonical.com>
+
+	initialize memory to prevent crashes if it gets initialized to a non-0 value and the locking of the rectangle fails
+
+2011-09-30  Jason Smith  <jason.smith@canonical.com>
+
+	dont crash when grab fails and trying to do a detail
+	
+	Fixes LP: #863693
+
+2011-09-30  Didier Roche  <didier.roche@canonical.com>
+
+	fix to latest conventions
+
+2011-09-30  Didier Roche  <didier.roche@canonical.com>
+
+	- Focus the desktop when the desktop is mapped and that there is no other window around (focus on startup in particular) (LP: #863037)
+	- Show the 'Desktop' label when desktop has been focused (LP: #863129)
+
+2011-09-30  Didier Roche  <didier.roche@canonical.com>
+
+	check only managed windows
+
+2011-09-30  Didier Roche  <didier.roche@canonical.com>
+
+	increase timeout for slow machine, for now, don't care about the other windows as there is a CompWindowTypeUtilMask at startup (and a terminal has this attribute as well?
+
+2011-09-30  Didier Roche  <didier.roche@canonical.com>
+
+	Show the 'Desktop' label when desktop has been focused (LP: #863129)
+
+2011-09-30  Didier Roche  <didier.roche@canonical.com>
+
+	focus the desktop when the desktop is mapped and that there is no other window around (focus on startup in particular) (LP: #863037)
+
+2011-09-30  Jason Smith  <jason.smith@canonical.com>
+
+	dont try to place windows which we shouldn't be messing with
+	
+	fixes LP:862743
+
+2011-09-29  Gord Allott  <gord.allott@canonical.com>
+
+	fixes the home view not having a scrollbar
+
+2011-09-29  Gord Allott  <gord.allott@canonical.com>
+
+	enables the home view to have the new scrollbar
+
+2011-09-29  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Release\ 4.20.0
+
 2011-09-29  Gord Allott  <gord.allott@canonical.com>
 
 	fixes a leak in the pango escaping code
