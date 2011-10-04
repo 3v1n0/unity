@@ -32,7 +32,7 @@ namespace unity
 namespace switcher
 {
 
-SwitcherController::SwitcherController()
+Controller::Controller()
   :  view_window_(0)
   ,  visible_(false)
   ,  show_timer_(0)
@@ -46,34 +46,35 @@ SwitcherController::SwitcherController()
 
   UBusServer *ubus = ubus_server_get_default();
   ubus_server_register_interest(ubus, UBUS_BACKGROUND_COLOR_CHANGED,
-                                (UBusCallback)&SwitcherController::OnBackgroundUpdate,
+                                (UBusCallback)&Controller::OnBackgroundUpdate,
                                 this);
 }
 
-SwitcherController::~SwitcherController()
+Controller::~Controller()
 {
   if (view_window_)
     view_window_->UnReference();
 }
 
-void SwitcherController::OnBackgroundUpdate (GVariant *data, SwitcherController *self)
+void Controller::OnBackgroundUpdate(GVariant* data, Controller* self)
 {
   gdouble red, green, blue, alpha;
   g_variant_get(data, "(dddd)", &red, &green, &blue, &alpha);
-  self->bg_color_ = nux::Color (red, green, blue, alpha);
+  self->bg_color_ = nux::Color(red, green, blue, alpha);
 
   if (self->view_)
     self->view_->background_color = self->bg_color_;
 }
 
-void SwitcherController::Show(SwitcherController::ShowMode show, SwitcherController::SortMode sort, bool reverse, std::vector<AbstractLauncherIcon*> results)
+void Controller::Show(ShowMode show, SortMode sort, bool reverse,
+                      std::vector<AbstractLauncherIcon*> results)
 {
-  if (sort == FOCUS_ORDER)
+  if (sort == SortMode::FOCUS_ORDER)
     std::sort(results.begin(), results.end(), CompareSwitcherItemsPriority);
 
-  model_ = SwitcherModel::Ptr(new SwitcherModel(results));
-  model_->selection_changed.connect (sigc::mem_fun(this, &SwitcherController::OnModelSelectionChanged));
-  
+  model_.reset(new SwitcherModel(results));
+  model_->selection_changed.connect(sigc::mem_fun(this, &Controller::OnModelSelectionChanged));
+
   SelectFirstItem();
 
   visible_ = true;
@@ -82,18 +83,18 @@ void SwitcherController::Show(SwitcherController::ShowMode show, SwitcherControl
   {
     if (show_timer_)
       g_source_remove (show_timer_);
-    show_timer_ = g_timeout_add(timeout_length, &SwitcherController::OnShowTimer, this);
+    show_timer_ = g_timeout_add(timeout_length, &Controller::OnShowTimer, this);
   }
   else
   {
-    ConstructView ();
+    ConstructView();
   }
 
   if (detail_on_timeout)
   {
     if (detail_timer_)
       g_source_remove (detail_timer_);
-    detail_timer_ = g_timeout_add(detail_timeout_length, &SwitcherController::OnDetailTimer, this);
+    detail_timer_ = g_timeout_add(detail_timeout_length, &Controller::OnDetailTimer, this);
   }
 
   ubus_server_send_message(ubus_server_get_default(),
@@ -101,15 +102,15 @@ void SwitcherController::Show(SwitcherController::ShowMode show, SwitcherControl
                            NULL);
 }
 
-void SwitcherController::Select(int index)
+void Controller::Select(int index)
 {
   if (visible_)
     model_->Select(index);
 }
 
-gboolean SwitcherController::OnShowTimer(gpointer data)
+gboolean Controller::OnShowTimer(gpointer data)
 {
-  SwitcherController* self = static_cast<SwitcherController*>(data);
+  Controller* self = static_cast<Controller*>(data);
 
   if (self->visible_)
     self->ConstructView();
@@ -118,32 +119,32 @@ gboolean SwitcherController::OnShowTimer(gpointer data)
   return FALSE;
 }
 
-gboolean SwitcherController::OnDetailTimer(gpointer data)
+gboolean Controller::OnDetailTimer(gpointer data)
 {
-  SwitcherController* self = static_cast<SwitcherController*>(data);
+  Controller* self = static_cast<Controller*>(data);
 
   if (self->visible_ && !self->model_->detail_selection)
   {
     self->SetDetail(true, 2);
     self->detail_mode_ = TAB_NEXT_WINDOW;
   }
-  
+
   self->detail_timer_ = 0;
   return FALSE;
 }
 
-void SwitcherController::OnModelSelectionChanged(AbstractLauncherIcon *icon)
+void Controller::OnModelSelectionChanged(AbstractLauncherIcon *icon)
 {
   if (detail_on_timeout)
   {
     if (detail_timer_)
       g_source_remove(detail_timer_);
 
-    detail_timer_ = g_timeout_add(detail_timeout_length, &SwitcherController::OnDetailTimer, this);
+    detail_timer_ = g_timeout_add(detail_timeout_length, &Controller::OnDetailTimer, this);
   }
 }
 
-void SwitcherController::ConstructView()
+void Controller::ConstructView()
 {
   view_ = SwitcherView::Ptr(new SwitcherView());
   view_->SetModel(model_);
@@ -164,16 +165,16 @@ void SwitcherController::ConstructView()
   main_layout_->AddView(view_.GetPointer(), 1);
 
   view_window_->SetGeometry(workarea_);
-  view_->SetupBackground ();
+  view_->SetupBackground();
   view_window_->ShowWindow(true);
 }
 
-void SwitcherController::SetWorkspace(nux::Geometry geo)
+void Controller::SetWorkspace(nux::Geometry geo)
 {
   workarea_ = geo;
 }
 
-void SwitcherController::Hide(bool accept_state)
+void Controller::Hide(bool accept_state)
 {
   if (!visible_)
     return;
@@ -222,12 +223,12 @@ void SwitcherController::Hide(bool accept_state)
   view_.Release();
 }
 
-bool SwitcherController::Visible()
+bool Controller::Visible()
 {
   return visible_;
 }
 
-void SwitcherController::Next()
+void Controller::Next()
 {
   if (!model_)
     return;
@@ -256,7 +257,7 @@ void SwitcherController::Next()
   }
 }
 
-void SwitcherController::Prev()
+void Controller::Prev()
 {
   if (!model_)
     return;
@@ -285,13 +286,12 @@ void SwitcherController::Prev()
   }
 }
 
-SwitcherView* SwitcherController::GetView()
+SwitcherView* Controller::GetView()
 {
   return view_.GetPointer();
 }
 
-void SwitcherController::SetDetail(bool value, unsigned
-int min_windows)
+void Controller::SetDetail(bool value, unsigned int min_windows)
 {
   if (value && model_->Selection()->RelatedXids().size () >= min_windows)
   {
@@ -304,7 +304,7 @@ int min_windows)
   }
 }
 
-void SwitcherController::NextDetail()
+void Controller::NextDetail()
 {
   if (!model_)
     return;
@@ -320,11 +320,11 @@ void SwitcherController::NextDetail()
   }
 }
 
-void SwitcherController::PrevDetail()
+void Controller::PrevDetail()
 {
   if (!model_)
     return;
-    
+
   if (!model_->detail_selection)
   {
     SetDetail(true);
@@ -337,39 +337,40 @@ void SwitcherController::PrevDetail()
   }
 }
 
-LayoutWindowList SwitcherController::ExternalRenderTargets ()
+LayoutWindowList Controller::ExternalRenderTargets()
 {
   if (!view_)
   {
     LayoutWindowList result;
     return result;
   }
-  return view_->ExternalTargets ();
+  return view_->ExternalTargets();
 }
 
-bool SwitcherController::CompareSwitcherItemsPriority(AbstractLauncherIcon* first, AbstractLauncherIcon* second)
+bool Controller::CompareSwitcherItemsPriority(AbstractLauncherIcon* first,
+                                              AbstractLauncherIcon* second)
 {
   if (first->Type() == second->Type())
     return first->SwitcherPriority() > second->SwitcherPriority();
   return first->Type() < second->Type();
 }
 
-void SwitcherController::SelectFirstItem()
+void Controller::SelectFirstItem()
 {
   if (!model_)
     return;
 
-  AbstractLauncherIcon *first  = model_->at (1);
-  AbstractLauncherIcon *second = model_->at (2);
+  AbstractLauncherIcon* first  = model_->at(1);
+  AbstractLauncherIcon* second = model_->at(2);
 
   if (!first)
   {
-    model_->Select (0);
+    model_->Select(0);
     return;
   }
   else if (!second)
   {
-    model_->Select (1);
+    model_->Select(1);
     return;
   }
 
@@ -377,9 +378,9 @@ void SwitcherController::SelectFirstItem()
   unsigned int first_second = 0; // first icons second highest active
   unsigned int second_first = 0; // second icons first highest active
 
-  for (guint32 xid : first->RelatedXids ())
+  for (guint32 xid : first->RelatedXids())
   {
-    unsigned int num = WindowManager::Default ()->GetWindowActiveNumber (xid);
+    unsigned int num = WindowManager::Default()->GetWindowActiveNumber(xid);
 
     if (num > first_highest)
     {
@@ -392,9 +393,9 @@ void SwitcherController::SelectFirstItem()
     }
   }
 
-  for (guint32 xid : second->RelatedXids ())
+  for (guint32 xid : second->RelatedXids())
   {
-    second_first = MAX (WindowManager::Default ()->GetWindowActiveNumber (xid), second_first);
+    second_first = MAX (WindowManager::Default()->GetWindowActiveNumber(xid), second_first);
   }
 
   if (first_second > second_first)

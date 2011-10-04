@@ -41,14 +41,14 @@ using namespace unity::ui;
 
 static bool enable_flipping = false;
 
-static SwitcherController *view;
+static Controller *view;
 
 static gboolean on_timeout(gpointer data)
 {
   if (!enable_flipping)
     return TRUE;
 
-  SwitcherController* self = (SwitcherController*) data;
+  Controller* self = static_cast<Controller*>(data);
   self->Next();
 
   return TRUE;
@@ -103,7 +103,7 @@ void OnNumIconsChanged (nux::SpinBox *self)
   for (int i = 0; i < self->GetValue (); i++)
     icons.push_back(new MockLauncherIcon());
 
-  view->Show(SwitcherController::ALL, SwitcherController::FOCUS_ORDER, false, icons);
+  view->Show(ShowMode::ALL, SortMode::FOCUS_ORDER, false, icons);
 }
 
 void OnNextClicked (nux::View *sender)
@@ -124,8 +124,8 @@ void OnPreviousClicked (nux::View *sender)
 void ThreadWidgetInit(nux::NThread* thread, void* InitData)
 {
   nux::VLayout* layout = new nux::VLayout(TEXT(""), NUX_TRACKER_LOCATION);
-  
-  view = new SwitcherController();
+
+  view = new Controller();
   view->timeout_length = 0;
   view->SetWorkspace(nux::Geometry(0, 0, 900, 600));
 
@@ -137,7 +137,7 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
   for (int i = 0; i < 9; i++)
     icons.push_back(new MockLauncherIcon());
 
-  view->Show(SwitcherController::ALL, SwitcherController::FOCUS_ORDER, false, icons);
+  view->Show(ShowMode::ALL, SortMode::FOCUS_ORDER, false, icons);
 
   view->GetView ()->render_boxes = true;
 

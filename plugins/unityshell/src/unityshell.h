@@ -274,7 +274,7 @@ private:
   launcher::Controller::Ptr launcher_controller_;
   dash::Controller::Ptr     dash_controller_;
   panel::Controller::Ptr  panel_controller_;
-  switcher::SwitcherController*     switcherController;
+  switcher::Controller::Ptr  switcher_controller_;
   GestureEngine*          gestureEngine;
   nux::WindowThread*      wt;
   nux::BaseWindow*        launcherWindow;

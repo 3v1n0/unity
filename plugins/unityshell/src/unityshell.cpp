@@ -96,7 +96,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , cScreen(CompositeScreen::get(screen))
   , gScreen(GLScreen::get(screen))
   , launcher(nullptr)
-  , switcherController(nullptr)
   , gestureEngine(nullptr)
   , wt(nullptr)
   , launcherWindow(nullptr)
@@ -315,7 +314,6 @@ UnityScreen::~UnityScreen()
 {
   if (switcher_desktop_icon)
     switcher_desktop_icon->UnReference();
-  delete switcherController;
   launcherWindow->UnReference();
 
   notify_uninit();
@@ -626,9 +624,9 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
     }
   }
 
- if (switcherController->Visible ())
+ if (switcher_controller_->Visible ())
   {
-    LayoutWindowList targets = switcherController->ExternalRenderTargets ();
+    LayoutWindowList targets = switcher_controller_->ExternalRenderTargets ();
 
     for (LayoutWindow::Ptr target : targets)
     {
@@ -649,7 +647,7 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
 bool UnityScreen::forcePaintOnTop ()
 {
     return !allowWindowPaint ||
-	    ((switcherController->Visible() ||
+	    ((switcher_controller_->Visible() ||
 	      dash_is_open_) && !fullscreen_windows_.empty () && (!(screen->grabbed () && !screen->otherGrabExist (NULL))));
 }
 
@@ -1022,7 +1020,7 @@ void UnityScreen::handleEvent(XEvent* event)
 
   if (!skip_other_plugins &&
       screen->otherGrabExist("deco", "move", "switcher", "resize", NULL) &&
-      !switcherController->Visible())
+      !switcher_controller_->Visible())
   {
     wt->ProcessForeignEvent(event, NULL);
   }
@@ -1255,11 +1253,12 @@ bool UnityScreen::altTabInitiateCommon(CompAction *action,
   // maybe check launcher position/hide state?
 
   int device = screen->outputDeviceForPoint (pointerX, pointerY);
-  switcherController->SetWorkspace(nux::Geometry(screen->outputDevs()[device].x1() + 100,
-                                                 screen->outputDevs()[device].y1() + 100,
-                                                 screen->outputDevs()[device].width() - 200,
-                                                 screen->outputDevs()[device].height() - 200));
-  switcherController->Show(switcher::SwitcherController::ALL, switcher::SwitcherController::FOCUS_ORDER, false, results);
+  switcher_controller_->SetWorkspace(nux::Geometry(screen->outputDevs()[device].x1() + 100,
+                                                   screen->outputDevs()[device].y1() + 100,
+                                                   screen->outputDevs()[device].width() - 200,
+                                                   screen->outputDevs()[device].height() - 200));
+  switcher_controller_->Show(switcher::ShowMode::ALL,
+                             switcher::SortMode::FOCUS_ORDER, false, results);
   return true;
 }
 
@@ -1279,7 +1278,7 @@ bool UnityScreen::altTabTerminateCommon(CompAction* action,
     screen->removeAction (&optionGetAltTabLeft ());
 
     bool accept_state = (state & CompAction::StateCancel) == 0;
-    switcherController->Hide(accept_state);
+    switcher_controller_->Hide(accept_state);
   }
 
   action->setState (action->state() & (unsigned)~(CompAction::StateTermKey));
@@ -1290,8 +1289,8 @@ bool UnityScreen::altTabForwardInitiate(CompAction* action,
                                         CompAction::State state,
                                         CompOption::Vector& options)
 {
-  if (switcherController->Visible())
-    switcherController->Next();
+  if (switcher_controller_->Visible())
+    switcher_controller_->Next();
   else
     altTabInitiateCommon(action, state, options);
 
@@ -1302,37 +1301,37 @@ bool UnityScreen::altTabForwardInitiate(CompAction* action,
 
 bool UnityScreen::altTabPrevInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
 {
-  if (switcherController->Visible())
-    switcherController->Prev();
+  if (switcher_controller_->Visible())
+    switcher_controller_->Prev();
 
   return false;
 }
 
 bool UnityScreen::altTabDetailStartInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
 {
-  if (switcherController->Visible())
-    switcherController->SetDetail(true);
+  if (switcher_controller_->Visible())
+    switcher_controller_->SetDetail(true);
 
   return false;
 }
 
 bool UnityScreen::altTabDetailStopInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
 {
-  if (switcherController->Visible())
-    switcherController->SetDetail(false);
+  if (switcher_controller_->Visible())
+    switcher_controller_->SetDetail(false);
 
   return false;
 }
 
 bool UnityScreen::altTabNextWindowInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
 {
-  if (!switcherController->Visible())
+  if (!switcher_controller_->Visible())
   {
     altTabInitiateCommon(action, state, options);
-    switcherController->Select(1); // always select the current application
+    switcher_controller_->Select(1); // always select the current application
   }
   
-  switcherController->NextDetail();
+  switcher_controller_->NextDetail();
 
   action->setState(action->state() | CompAction::StateTermKey);
   return false;
@@ -1340,8 +1339,8 @@ bool UnityScreen::altTabNextWindowInitiate(CompAction* action, CompAction::State
 
 bool UnityScreen::altTabPrevWindowInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
 {
-  if (switcherController->Visible())
-    switcherController->PrevDetail();
+  if (switcher_controller_->Visible())
+    switcher_controller_->PrevDetail();
   
   return false;
 }
@@ -1969,7 +1968,7 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       _edge_timeout = optionGetLauncherRevealEdgeTimeout();
       break;
     case UnityshellOptions::AltTabTimeout:
-      switcherController->detail_on_timeout = optionGetAltTabTimeout();
+      switcher_controller_->detail_on_timeout = optionGetAltTabTimeout();
     case UnityshellOptions::AltTabBiasViewport:
       PluginAdapter::Default()->bias_active_to_viewport = optionGetAltTabBiasViewport();
       break;
@@ -2326,7 +2325,7 @@ void UnityScreen::initLauncher(nux::NThread* thread, void* InitData)
   self->launcherWindow->InputWindowEnableStruts(true);
   self->launcherWindow->SetEnterFocusInputArea(self->launcher);
 
-  self->switcherController = new switcher::SwitcherController();
+  self->switcher_controller_.reset(new switcher::Controller());
   /* FIXME: this should not be manual, should be managed with a
      show/hide callback like in GAIL*/
   if (unity_a11y_initialized () == TRUE)

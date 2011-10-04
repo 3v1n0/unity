@@ -20,6 +20,8 @@
 #ifndef SWITCHERCONTROLLER_H
 #define SWITCHERCONTROLLER_H
 
+#include <memory>
+
 #include "SwitcherModel.h"
 #include "SwitcherView.h"
 
@@ -35,24 +37,26 @@ namespace unity
 namespace switcher
 {
 
-class SwitcherController : public sigc::trackable
+enum class SortMode
 {
+  LAUNCHER_ORDER,
+  FOCUS_ORDER,
+};
 
+enum class ShowMode
+{
+  ALL,
+  CURRENT_VIEWPORT,
+};
+
+
+class Controller : public sigc::trackable
+{
 public:
-  enum SortMode
-  {
-    LAUNCHER_ORDER,
-    FOCUS_ORDER,
-  };
+  typedef std::shared_ptr<Controller> Ptr;
 
-  enum ShowMode
-  {
-    ALL,
-    CURRENT_VIEWPORT,
-  };
-
-  SwitcherController();
-  virtual ~SwitcherController();
+  Controller();
+  virtual ~Controller();
 
   nux::Property<int> timeout_length;
 
@@ -94,7 +98,7 @@ private:
 
   void OnModelSelectionChanged(AbstractLauncherIcon *icon);
 
-  static void OnBackgroundUpdate (GVariant *data, SwitcherController *self);
+  static void OnBackgroundUpdate(GVariant* data, Controller* self);
 
   SwitcherModel::Ptr model_;
   SwitcherView::Ptr view_;
