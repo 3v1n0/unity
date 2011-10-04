@@ -875,14 +875,6 @@ PanelMenuView::Refresh()
   x = _padding;
   y = 0;
 
-  BamfWindow* window = bamf_matcher_get_active_window(_matcher);
-  if (BAMF_IS_WINDOW(window) &&
-      bamf_window_get_window_type(window) == BAMF_WINDOW_DESKTOP)
-  {
-    DrawText(cr, x, y, width, height, "Ubuntu", "", 6);
-    x += _padding;
-  }
-
   if (label)
     DrawText(cr, x, y, width, height, NULL, label);
 
