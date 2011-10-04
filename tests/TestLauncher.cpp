@@ -39,7 +39,7 @@
 using namespace unity::ui;
 
 static Launcher *launcher;
-static LauncherController *controller;
+static unity::launcher::Controller::Ptr controller;
 
 void ThreadWidgetInit(nux::NThread* thread, void* InitData)
 {
@@ -55,7 +55,7 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
   layout->SetVerticalExternalMargin(0);
   layout->SetHorizontalExternalMargin(0);
 
-  controller = new LauncherController(launcher);
+  controller.reset(new unity::launcher::Controller(launcher));
 
   launcherWindow->SetLayout(layout);
   launcherWindow->SetBackgroundColor(nux::Color(0x00000000));

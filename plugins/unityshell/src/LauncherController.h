@@ -20,6 +20,7 @@
 #ifndef LAUNCHERCONTROLLER_H
 #define LAUNCHERCONTROLLER_H
 
+#include <memory>
 /* Compiz */
 #include <core/core.h>
 
@@ -39,14 +40,21 @@
 
 class Launcher;
 
-class LauncherController : public sigc::trackable
+namespace unity
+{
+namespace launcher
 {
 
+class Controller : public sigc::trackable
+{
 public:
-  LauncherController(Launcher* launcher);
-  ~LauncherController();
+  typedef std::shared_ptr<Controller> Ptr;
+
+  Controller(Launcher* launcher);
+  ~Controller();
 
   void UpdateNumWorkspaces(int workspaces);
+
 private:
   BamfMatcher*           _matcher;
   CompAction*            _expo_action;
@@ -94,5 +102,8 @@ private:
 
   sigc::connection _on_expoicon_activate_connection;
 };
+
+}
+}
 
 #endif // LAUNCHERCONTROLLER_H

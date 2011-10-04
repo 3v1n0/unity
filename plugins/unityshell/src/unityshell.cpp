@@ -96,7 +96,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , cScreen(CompositeScreen::get(screen))
   , gScreen(GLScreen::get(screen))
   , launcher(nullptr)
-  , controller(nullptr)
   , switcherController(nullptr)
   , gestureEngine(nullptr)
   , wt(nullptr)
@@ -316,7 +315,6 @@ UnityScreen::~UnityScreen()
 {
   if (switcher_desktop_icon)
     switcher_desktop_icon->UnReference();
-  delete controller;
   delete switcherController;
   launcherWindow->UnReference();
 
@@ -2070,7 +2068,7 @@ bool UnityScreen::setOptionForPlugin(const char* plugin, const char* name,
   {
     if (strcmp(plugin, "core") == 0 && strcmp(name, "hsize") == 0)
     {
-      controller->UpdateNumWorkspaces(screen->vpSize().width() * screen->vpSize().height());
+      launcher_controller_->UpdateNumWorkspaces(screen->vpSize().width() * screen->vpSize().height());
     }
   }
   return status;
@@ -2318,7 +2316,7 @@ void UnityScreen::initLauncher(nux::NThread* thread, void* InitData)
   layout->SetVerticalExternalMargin(0);
   layout->SetHorizontalExternalMargin(0);
 
-  self->controller = new LauncherController(self->launcher);
+  self->launcher_controller_.reset(new launcher::Controller(self->launcher));
 
   self->launcherWindow->SetConfigureNotifyCallback(&UnityScreen::launcherWindowConfigureCallback, self);
   self->launcherWindow->SetLayout(layout);

@@ -271,7 +271,7 @@ private:
   panel::Style            panel_style_;
   FontSettings            font_settings_;
   Launcher*               launcher;
-  LauncherController*     controller;
+  launcher::Controller::Ptr launcher_controller_;
   dash::DashController::Ptr     dashController;
   panel::Controller::Ptr  panelController;
   switcher::SwitcherController*     switcherController;
