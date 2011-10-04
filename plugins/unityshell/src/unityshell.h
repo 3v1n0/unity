@@ -272,8 +272,8 @@ private:
   FontSettings            font_settings_;
   Launcher*               launcher;
   launcher::Controller::Ptr launcher_controller_;
-  dash::Controller::Ptr     dashController;
-  panel::Controller::Ptr  panelController;
+  dash::Controller::Ptr     dash_controller_;
+  panel::Controller::Ptr  panel_controller_;
   switcher::SwitcherController*     switcherController;
   GestureEngine*          gestureEngine;
   nux::WindowThread*      wt;

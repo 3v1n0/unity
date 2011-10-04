@@ -400,7 +400,7 @@ void UnityScreen::EnsureSuperKeybindings()
     CreateSuperNewAction(static_cast<char>(shortcut), false, true);
   }
 
-  for (auto shortcut : dashController->GetAllShortcuts())
+  for (auto shortcut : dash_controller_->GetAllShortcuts())
     CreateSuperNewAction(shortcut);
 }
 
@@ -506,12 +506,12 @@ void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
   vc[2] = y1;
   vc[3] = y2;
 
-  if (!dash_is_open_ && panelController->opacity() > 0.0f)
+  if (!dash_is_open_ && panel_controller_->opacity() > 0.0f)
   {
     foreach(GLTexture * tex, _shadow_texture)
     {
       glEnable(GL_BLEND);
-      glColor4f(1.0f, 1.0f, 1.0f, panelController->opacity());
+      glColor4f(1.0f, 1.0f, 1.0f, panel_controller_->opacity());
       glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
       GL::activeTexture(GL_TEXTURE0_ARB);
@@ -557,7 +557,7 @@ UnityWindow::updateIconPos (int   &wx,
 void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transform, unsigned int mask)
 {
   CompOutput *output = _last_output;
-  Window     tray_xid = panelController->GetTrayXid ();
+  Window     tray_xid = panel_controller_->GetTrayXid ();
   bool       bound = mFbos[output]->bound ();
 
 
@@ -991,7 +991,7 @@ void UnityScreen::handleEvent(XEvent* event)
         if (super_keypressed_) {
           skip_other_plugins = launcher->CheckSuperShortcutPressed(screen->dpy(), key_sym, event->xkey.keycode, event->xkey.state, key_string);
           if (!skip_other_plugins) {
-            skip_other_plugins = dashController->CheckShortcutActivation(key_string);
+            skip_other_plugins = dash_controller_->CheckShortcutActivation(key_string);
             if (skip_other_plugins)
               launcher->SetLatestShortcut(key_string[0]);
           }
@@ -1091,7 +1091,7 @@ bool UnityScreen::showPanelFirstMenuKeyInitiate(CompAction* action,
   grab_index_ = screen->pushGrab (None, "unityshell");
   // to receive the Terminate event
   action->setState(action->state() | CompAction::StateTermKey);
-  panelController->StartFirstMenuShow();
+  panel_controller_->StartFirstMenuShow();
   return false;
 }
 
@@ -1101,7 +1101,7 @@ bool UnityScreen::showPanelFirstMenuKeyTerminate(CompAction* action,
 {
   screen->removeGrab(grab_index_, NULL);
   action->setState (action->state() & (unsigned)~(CompAction::StateTermKey));
-  panelController->EndFirstMenuShow();
+  panel_controller_->EndFirstMenuShow();
   return false;
 }
 
@@ -1525,7 +1525,7 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
     mask |= mShowdesktopHandler->getPaintMask ();
   }
 
-  if (uScreen->panelController->GetTrayXid () == window->id () && !uScreen->allowWindowPaint)
+  if (uScreen->panel_controller_->GetTrayXid () == window->id () && !uScreen->allowWindowPaint)
   {
     if (!uScreen->painting_tray_)
     {
@@ -1796,7 +1796,7 @@ CompPoint UnityWindow::tryNotIntersectUI(CompPoint& pos)
     }
   }
 
-  for (nux::Geometry &g : us->panelController->GetGeometries ())
+  for (nux::Geometry &g : us->panel_controller_->GetGeometries ())
   {
     CompRect pg (g.x, g.y, g.width, g.height);
     allowedWorkArea -= pg;
@@ -1923,7 +1923,7 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       launcher->SetUrgentAnimation((Launcher::UrgentAnimation) optionGetUrgentAnimation());
       break;
     case UnityshellOptions::PanelOpacity:
-      panelController->SetOpacity(optionGetPanelOpacity());
+      panel_controller_->SetOpacity(optionGetPanelOpacity());
       break;
     case UnityshellOptions::LauncherOpacity:
       launcher->SetBackgroundAlpha(optionGetLauncherOpacity());
@@ -1933,7 +1933,7 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       CompPlugin         *p = CompPlugin::find ("expo");
 
       launcher->SetIconSize(optionGetIconSize() + 6, optionGetIconSize());
-      dashController->launcher_width = optionGetIconSize() + 18;
+      dash_controller_->launcher_width = optionGetIconSize() + 18;
 
       if (p)
       {
@@ -2345,11 +2345,11 @@ void UnityScreen::initLauncher(nux::NThread* thread, void* InitData)
 
   /* Setup panel */
   timer.Reset();
-  self->panelController.reset(new panel::Controller());
+  self->panel_controller_.reset(new panel::Controller());
   LOG_INFO(logger) << "initLauncher-Panel " << timer.ElapsedSeconds() << "s";
 
   /* Setup Places */
-  self->dashController.reset(new dash::Controller());
+  self->dash_controller_.reset(new dash::Controller());
 
   /* FIXME: this should not be manual, should be managed with a
      show/hide callback like in GAIL
@@ -2408,7 +2408,7 @@ UnityWindow::UnityWindow(CompWindow* window)
   
   if (window->resName() == "onboard")
   {
-    Window xid = UnityScreen::get (screen)->dashController->window()->GetInputWindowId();
+    Window xid = UnityScreen::get (screen)->dash_controller_->window()->GetInputWindowId();
     XSetTransientForHint (screen->dpy(), window->id(), xid);
   }
 }
