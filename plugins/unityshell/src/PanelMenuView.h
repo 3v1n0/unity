@@ -71,9 +71,12 @@ public:
   void OnWindowMinimized(guint32 xid);
   void OnWindowUnminimized(guint32 xid);
   void OnWindowUnmapped(guint32 xid);
+  void OnWindowMapped(guint32 xid);
   void OnWindowMaximized(guint32 xid);
   void OnWindowRestored(guint32 xid);
   void OnWindowMoved(guint32 xid);
+  void OnWindowDecorated(guint32 xid);
+  void OnWindowUndecorated(guint32 xid);
 
   guint32 GetMaximizedWindow();
 
