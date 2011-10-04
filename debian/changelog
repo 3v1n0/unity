@@ -1,4 +1,4 @@
-unity (4.22.0-0ubuntu1) UNRELEASED; urgency=low
+unity (4.22.0-0ubuntu1) oneiric; urgency=low
 
   * New upstream release.
     - unity 3d firefox window borders disappear (LP: #861143)
@@ -27,7 +27,7 @@ unity (4.22.0-0ubuntu1) UNRELEASED; urgency=low
     - compiz crashed with SIGSEGV in unity::dash::LensView::~LensView()
       (LP: #863191)
 
- -- Didier Roche <didrocks@ubuntu.com>  Tue, 04 Oct 2011 14:28:02 +0200
+ -- Didier Roche <didrocks@ubuntu.com>  Tue, 04 Oct 2011 15:45:58 +0200
 
 unity (4.20.0-0ubuntu2) oneiric; urgency=low
 
