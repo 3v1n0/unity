@@ -2063,11 +2063,11 @@ void UnityScreen::Relayout()
   lCurGeom = launcherWindow->GetGeometry();
   launcher->SetMaximumHeight(rect.height - panel_height);
 
-  g_debug("Setting to primary screen rect: x=%d y=%d w=%d h=%d",
-          rect.x,
-          rect.y,
-          rect.width,
-          rect.height);
+  LOG_DEBUG(logger) << "Setting to primary screen rect:"
+                    << " x=" << rect.x
+                    << " y=" << rect.y
+                    << " w=" << rect.width
+                    << " h=" << rect.height;
 
   launcherWindow->SetGeometry(nux::Geometry(rect.x,
                                             rect.y + panel_height,
