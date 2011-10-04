@@ -38,7 +38,8 @@ namespace unity {
 NUX_IMPLEMENT_OBJECT_TYPE(FilterRatingsWidget);
 
   FilterRatingsWidget::FilterRatingsWidget (NUX_FILE_LINE_DECL)
-      : FilterExpanderLabel (_("Rating"), NUX_FILE_LINE_PARAM)
+      : FilterExpanderLabel (_("Rating"), NUX_FILE_LINE_PARAM),
+        last_rating_ (0.0f)
   {
     any_button_ = new FilterBasicButton(_("All"), NUX_TRACKER_LOCATION);
     any_button_->activated.connect(sigc::mem_fun(this, &FilterRatingsWidget::OnAnyButtonActivated));
@@ -59,12 +60,36 @@ NUX_IMPLEMENT_OBJECT_TYPE(FilterRatingsWidget);
 
   void FilterRatingsWidget::OnAnyButtonActivated(nux::View *view)
   {
-    filter_->Clear();
+    if (any_button_->active)
+    {
+      last_rating_ = filter_->rating;
+      // we need to make sure the property changes, otherwise there'll be no
+      // signals, so we'll set it to 0.0f
+      filter_->rating = 0.0f;
+      filter_->Clear();
+    }
+    else
+    {
+      filter_->rating = last_rating_;
+    }
+  }
+
+  void FilterRatingsWidget::OnFilterRatingChanged(float new_rating)
+  {
+    if (new_rating <= 0.0f)
+    {
+      any_button_->active = true;
+    }
+    else
+    {
+      any_button_->active = false;
+    }
   }
 
   void FilterRatingsWidget::SetFilter (dash::Filter::Ptr filter)
   {
     filter_ = std::static_pointer_cast<dash::RatingsFilter>(filter);
+    filter_->rating.changed.connect (sigc::mem_fun (this, &FilterRatingsWidget::OnFilterRatingChanged));
     ratings_->SetFilter(filter);
     SetLabel(filter_->name);
     NeedRedraw();
