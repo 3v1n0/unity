@@ -49,9 +49,10 @@ const char* GROUP = "Lens";
 struct LensFileData
 {
   LensFileData(GKeyFile* file)
-    : dbus_name(g_key_file_get_string(file, GROUP, "DBusName", NULL))
+    : domain(g_key_file_get_string(file, G_KEY_FILE_DESKTOP_GROUP, "X-Ubuntu-Gettext-Domain", NULL))
+    , dbus_name(g_key_file_get_string(file, GROUP, "DBusName", NULL))
     , dbus_path(g_key_file_get_string(file, GROUP, "DBusPath", NULL))
-    , name(g_key_file_get_locale_string(file, GROUP, "Name", NULL, NULL))
+    , name(g_strdup(g_dgettext(domain.Value(), g_key_file_get_string(file, GROUP, "Name", NULL))))
     , icon(g_key_file_get_string(file, GROUP, "Icon", NULL))
     , description(g_key_file_get_locale_string(file, GROUP, "Description", NULL, NULL))
     , search_hint(g_key_file_get_locale_string(file, GROUP, "SearchHint", NULL, NULL))
@@ -68,6 +69,7 @@ struct LensFileData
             g_key_file_has_key(file, GROUP, "Icon", &error));
   }
 
+  glib::String domain;
   glib::String dbus_name;
   glib::String dbus_path;
   glib::String name;
