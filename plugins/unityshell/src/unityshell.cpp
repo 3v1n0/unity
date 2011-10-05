@@ -1703,7 +1703,7 @@ void UnityWindow::windowNotify(CompWindowNotify n)
         if (!focusdesktop_handle_)
            focusdesktop_handle_ = g_timeout_add (1000, &UnityWindow::FocusDesktopTimeout, this);
       }
-      break;
+    /* Fall through an re-evaluate wraps on map and unmap too */
     case CompWindowNotifyUnmap:
       if (UnityScreen::get (screen)->optionGetShowMinimizedWindows () &&
           window->mapNum ())
