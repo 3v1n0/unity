@@ -899,6 +899,16 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
   allowWindowPaint = true;
   _last_output = output;
 
+  /* bind the framebuffer here
+   * - it will be unbound and flushed
+   *   to the backbuffer when some
+   *   plugin requests to draw a
+   *   a transformed screen or when
+   *   we have finished this draw cycle.
+   *   once an fbo is bound any further
+   *   attempts to bind it will only increment
+   *   its bind reference so make sure that
+   *   you always unbind as much as you bind */
   _fbo->bind ();
 
   /* glPaintOutput is part of the opengl plugin, so we need the GLScreen base class. */
@@ -922,22 +932,6 @@ void UnityScreen::glPaintTransformedOutput(const GLScreenPaintAttrib& attrib,
   allowWindowPaint = false;
   gScreen->glPaintTransformedOutput(attrib, transform, region, output, mask);
 
-}
-
-void UnityScreen::paint (CompOutput::ptrList &outputs, unsigned int mask)
-{
-  /* bind the framebuffer here
-   * - it will be unbound and flushed
-   *   to the backbuffer when some
-   *   plugin requests to draw a
-   *   a transformed screen or when
-   *   we have finished this draw cycle.
-   *   once an fbo is bound any further
-   *   attempts to bind it will only increment
-   *   its bind reference so make sure that
-   *   you always unbind as much as you bind */
-
-  cScreen->paint (outputs, mask);
 }
 
 void UnityScreen::preparePaint(int ms)

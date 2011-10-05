@@ -151,9 +151,6 @@ public:
   CompositeScreen* cScreen;
   GLScreen* gScreen;
 
-  /* grab everything into an fbo */
-  void paint (CompOutput::ptrList &outputs, unsigned int);
-
   /* prepares nux for drawing */
   void nuxPrologue();
   /* pops nux draw stack */
