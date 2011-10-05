@@ -268,18 +268,18 @@ private:
   static void OnLauncherStartKeyNav(GVariant* data, void* value);
   static void OnLauncherEndKeyNav(GVariant* data, void* value);
 
-  dash::Settings          dash_settings_;
-  dash::Style             dash_style_;
-  panel::Style            panel_style_;
-  FontSettings            font_settings_;
-  Launcher*               launcher;
+  dash::Settings dash_settings_;
+  dash::Style    dash_style_;
+  panel::Style   panel_style_;
+  FontSettings   font_settings_;
+
   launcher::Controller::Ptr launcher_controller_;
   dash::Controller::Ptr     dash_controller_;
-  panel::Controller::Ptr  panel_controller_;
-  switcher::Controller::Ptr  switcher_controller_;
+  panel::Controller::Ptr    panel_controller_;
+  switcher::Controller::Ptr switcher_controller_;
+
   GestureEngine*          gestureEngine;
   nux::WindowThread*      wt;
-  nux::BaseWindow*        launcherWindow;
   nux::BaseWindow*        panelWindow;
   nux::Geometry           lastTooltipArea;
   DebugDBusInterface*     debugger;

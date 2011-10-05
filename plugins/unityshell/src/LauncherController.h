@@ -36,7 +36,7 @@ class Controller : public sigc::trackable
 public:
   typedef std::shared_ptr<Controller> Ptr;
 
-  Controller(Launcher* launcher);
+  Controller();
   ~Controller();
 
   void UpdateNumWorkspaces(int workspaces);

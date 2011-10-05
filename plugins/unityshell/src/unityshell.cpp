@@ -95,10 +95,8 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , screen(screen)
   , cScreen(CompositeScreen::get(screen))
   , gScreen(GLScreen::get(screen))
-  , launcher(nullptr)
   , gestureEngine(nullptr)
   , wt(nullptr)
-  , launcherWindow(nullptr)
   , panelWindow(nullptr)
   , debugger(nullptr)
   , needsRelayout(false)
@@ -314,7 +312,6 @@ UnityScreen::~UnityScreen()
 {
   if (switcher_desktop_icon)
     switcher_desktop_icon->UnReference();
-  launcherWindow->UnReference();
 
   notify_uninit();
 
@@ -2338,22 +2335,18 @@ void UnityScreen::initLauncher(nux::NThread* thread, void* InitData)
   Timer timer;
   UnityScreen* self = reinterpret_cast<UnityScreen*>(InitData);
 
-  self->launcherWindow = new nux::BaseWindow(TEXT("LauncherWindow"));
-  self->launcherWindow->SinkReference();
+  self->launcher_controller_.reset(new launcher::Controller(self->launcher));
 
-  self->launcher = new Launcher(self->launcherWindow);
-  self->launcher->display = self->screen->dpy();
-  self->launcher->hidden_changed.connect(sigc::mem_fun(self, &UnityScreen::OnLauncherHiddenChanged));
-
+  // TODO: add launcher to introspectable...
   self->AddChild(self->launcher);
 
   nux::HLayout* layout = new nux::HLayout(NUX_TRACKER_LOCATION);
+  // TODO: need launcher here too...
   layout->AddView(self->launcher, 1);
   layout->SetContentDistribution(nux::eStackLeft);
   layout->SetVerticalExternalMargin(0);
   layout->SetHorizontalExternalMargin(0);
 
-  self->launcher_controller_.reset(new launcher::Controller(self->launcher));
 
   self->launcherWindow->SetConfigureNotifyCallback(&UnityScreen::launcherWindowConfigureCallback, self);
   self->launcherWindow->SetLayout(layout);

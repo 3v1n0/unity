@@ -90,7 +90,8 @@ private: //methods
 
 private:
   BamfMatcher*           matcher_;
-  Launcher*              launcher_;
+  nux::ObjectPtr<nux::BaseWindow> launcher_window_;
+  nux::ObjectPtr<Launcher> launcher_;
   LauncherModel*         model_;
   int                    sort_priority_;
   DeviceLauncherSection* device_section_;
@@ -106,12 +107,37 @@ private:
 };
 
 
-
-Controller::Impl::Impl(Launcher* launcher)
+Controller::Impl::Impl()
   : matcher_(nullptr)
   , sort_priority_(0)
 {
-  launcher_ = launcher;
+  // NOTE: should the launcher itself hold the base window?
+  // seems like it probably should...
+  launcher_window_ = new nux::BaseWindow(TEXT("LauncherWindow"));
+
+  launcher_ = new Launcher(launcher_window_);
+  launcher_->display = screen->dpy(); // TODO get the screen.
+  launcher_->hidden_changed.connect(sigc::mem_fun(self, &UnityScreen::OnLauncherHiddenChanged));
+  launcher_->SetIconSize(54, 48);
+  launcher_->SetBacklightMode(Launcher::BACKLIGHT_ALWAYS_ON);
+  launcher_->SetHideMode(Launcher::LAUNCHER_HIDE_DODGE_WINDOWS);
+  launcher_->SetLaunchAnimation(Launcher::LAUNCH_ANIMATION_PULSE);
+  launcher_->SetUrgentAnimation(Launcher::URGENT_ANIMATION_WIGGLE);
+
+  nux::HLayout* layout = new nux::HLayout(NUX_TRACKER_LOCATION);
+  layout->AddView(launcher_, 1);
+  layout->SetContentDistribution(nux::eStackLeft);
+  layout->SetVerticalExternalMargin(0);
+  layout->SetHorizontalExternalMargin(0);
+
+  launcher_window_->SetConfigureNotifyCallback(&UnityScreen::launcherWindowConfigureCallback, self);
+  launcher_window_->SetLayout(layout);
+  launcher_window_->SetBackgroundColor(nux::color::Transparent);
+  launcher_window_->ShowWindow(true);
+  launcher_window_->EnableInputWindow(true, "launcher", false, false);
+  launcher_window_->InputWindowEnableStruts(true);
+  launcher_window_->SetEnterFocusInputArea(launcher_);
+
   model_ = new LauncherModel();
 
   launcher_->SetModel(model_);
@@ -443,8 +469,8 @@ void Controller::Impl::SetupBamf()
 }
 
 
-Controller::Controller(Launcher* launcher)
-  : pimpl(new Impl(launcher))
+Controller::Controller()
+  : pimpl(new Impl())
 {
 }
 
