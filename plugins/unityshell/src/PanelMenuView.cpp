@@ -1357,18 +1357,17 @@ PanelMenuView::OnMouseMiddleClicked(int x, int y, unsigned long button_flags, un
 const gchar*
 PanelMenuView::GetName()
 {
-  return "MenuView";
+  return NULL;
 }
 
 const gchar*
 PanelMenuView::GetChildsName()
 {
-  return "entries";
+  return NULL;
 }
 
 void PanelMenuView::AddProperties(GVariantBuilder* builder)
 {
-  variant::BuilderWrapper(builder).add(GetGeometry());
 }
 
 /*
