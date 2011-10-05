@@ -2211,9 +2211,9 @@ void Launcher::PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw)
 void Launcher::PreLayoutManagement()
 {
   View::PreLayoutManagement();
-  if (m_CompositionLayout)
+  if (view_layout_)
   {
-    m_CompositionLayout->SetGeometry(GetGeometry());
+    view_layout_->SetGeometry(GetGeometry());
   }
 }
 

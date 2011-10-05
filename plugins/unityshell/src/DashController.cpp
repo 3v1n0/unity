@@ -81,7 +81,6 @@ void DashController::SetupWindow()
   window_->SetConfigureNotifyCallback(&DashController::OnWindowConfigure, this);
   window_->ShowWindow(false);
   window_->SetOpacity(0.0f);
-  window_->SetFocused(true);
   window_->mouse_down_outside_pointer_grab_area.connect(sigc::mem_fun(this, &DashController::OnMouseDownOutsideWindow));
 }
 

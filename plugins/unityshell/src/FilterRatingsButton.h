@@ -43,7 +43,7 @@ namespace unity {
     std::string GetFilterType ();
 
   protected:
-    virtual long ComputeLayout2 ();
+    virtual long ComputeContentSize ();
     virtual long int ProcessEvent(nux::IEvent& ievent, long int TraverseInfo, long int ProcessEventInfo);
     virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
     virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
@@ -51,7 +51,7 @@ namespace unity {
 
     void InitTheme ();
 
-    void RecvMouseDown (int x, int y, unsigned long button_flags, unsigned long key_flags);
+    //void RecvMouseDown (int x, int y, unsigned long button_flags, unsigned long key_flags);
     void RecvMouseUp (int x, int y, unsigned long button_flags, unsigned long key_flags);
     void RecvMouseDrag (int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
     void OnRatingsChanged (int rating);
@@ -67,7 +67,7 @@ namespace unity {
     nux::CairoWrapper *normal_full_;
     nux::Geometry cached_geometry_;
 
-    void RedrawTheme (nux::Geometry const& geom, cairo_t *cr, int type, nux::State faked_state);
+    void RedrawTheme (nux::Geometry const& geom, cairo_t *cr, int type, nux::ButtonVisualState faked_state);
 
     dash::RatingsFilter::Ptr filter_;
 

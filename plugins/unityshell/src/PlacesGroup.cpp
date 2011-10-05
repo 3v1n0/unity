@@ -257,7 +257,7 @@ void
 PlacesGroup::Refresh()
 {
   RefreshLabel();
-  ComputeChildLayout();
+  ComputeContentSize();
   QueueDraw();
 }
 
@@ -278,14 +278,8 @@ PlacesGroup::OnIdleRelayout(PlacesGroup* self)
     self->QueueDraw();
     self->_group_layout->QueueDraw();
     self->GetChildView()->QueueDraw();
-    self->ComputeChildLayout();
+    self->ComputeContentSize();
     self->_idle_id = 0;
-
-    if (self->GetFocused())
-    {
-      self->SetFocused(false);  // unset focus on all children
-      self->SetFocused(true);  // set focus on first child
-    }
   }
 
   return FALSE;

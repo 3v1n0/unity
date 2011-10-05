@@ -439,7 +439,7 @@ void PanelView::OnObjectAdded(indicator::Indicator::Ptr const& proxy)
 
   _layout->SetContentDistribution(nux::eStackLeft);
 
-  ComputeChildLayout();
+  ComputeContentSize();
   NeedRedraw();
 }
 
@@ -456,14 +456,14 @@ void PanelView::OnObjectRemoved(indicator::Indicator::Ptr const& proxy)
 
   _layout->SetContentDistribution(nux::eStackLeft);
 
-  ComputeChildLayout();
+  ComputeContentSize();
   NeedRedraw();
 }
 
 void PanelView::OnIndicatorViewUpdated(PanelIndicatorEntryView* view)
 {
   _needs_geo_sync = true;
-  ComputeChildLayout();
+  ComputeContentSize();
 }
 
 void PanelView::OnMenuPointerMoved(int x, int y)

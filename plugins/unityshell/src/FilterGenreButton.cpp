@@ -28,8 +28,9 @@ namespace unity {
   FilterGenreButton::FilterGenreButton (const std::string label, NUX_FILE_LINE_DECL)
       : FilterBasicButton(label, NUX_FILE_LINE_PARAM) {
     InitTheme();
-    active.changed.connect ([&] (bool is_active) {
-      bool tmp_active = active;
+    
+    state_change.connect ([&] (Button* button) {
+      bool tmp_active = Active();
       if (filter_ != NULL)
         filter_->active = tmp_active;
     });
@@ -38,8 +39,9 @@ namespace unity {
   FilterGenreButton::FilterGenreButton (NUX_FILE_LINE_DECL)
       : FilterBasicButton(NUX_FILE_LINE_PARAM) {
     InitTheme();
-    active.changed.connect ([&] (bool is_active) {
-      bool tmp_active = active;
+
+    state_change.connect ([&] (Button* button) {
+      bool tmp_active = Active();
       if (filter_ != NULL)
         filter_->active = tmp_active;
     });
@@ -51,9 +53,9 @@ namespace unity {
     filter_ = filter;
 
     bool tmp_active = filter_->active;
-    active = tmp_active;
+    SetActive(tmp_active);
     filter_->active.changed.connect ([&] (bool is_active) {
-        active = is_active;
+        SetActive(is_active);
     });
   }
 

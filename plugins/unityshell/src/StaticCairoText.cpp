@@ -60,7 +60,6 @@ StaticCairoText::StaticCairoText(const TCHAR* text,
   _align = NUX_ALIGN_LEFT;
   _valign = NUX_ALIGN_TOP;
   _fontstring = NULL;
-  SetCanFocus(false);
 
   _accept_key_nav_focus = false;
 }

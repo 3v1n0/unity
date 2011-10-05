@@ -71,20 +71,20 @@ namespace unity {
   {
     if (prelight_ == NULL)
     {
-      prelight_ = new nux::CairoWrapper(GetGeometry(), sigc::bind(sigc::mem_fun(this, &PreviewBasicButton::RedrawTheme), nux::State::NUX_STATE_PRELIGHT));
-      active_ = new nux::CairoWrapper(GetGeometry(), sigc::bind(sigc::mem_fun(this, &PreviewBasicButton::RedrawTheme), nux::State::NUX_STATE_ACTIVE));
-      normal_ = new nux::CairoWrapper(GetGeometry(), sigc::bind(sigc::mem_fun(this, &PreviewBasicButton::RedrawTheme), nux::State::NUX_STATE_NORMAL));
+      prelight_ = new nux::CairoWrapper(GetGeometry(), sigc::bind(sigc::mem_fun(this, &PreviewBasicButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_PRELIGHT));
+      active_ = new nux::CairoWrapper(GetGeometry(), sigc::bind(sigc::mem_fun(this, &PreviewBasicButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_PRESSED));
+      normal_ = new nux::CairoWrapper(GetGeometry(), sigc::bind(sigc::mem_fun(this, &PreviewBasicButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_NORMAL));
     }
   }
 
-  void PreviewBasicButton::RedrawTheme (nux::Geometry const& geom, cairo_t *cr, nux::State faked_state)
+  void PreviewBasicButton::RedrawTheme (nux::Geometry const& geom, cairo_t *cr, nux::ButtonVisualState faked_state)
   {
-    DashStyle::Instance().Button(cr, faked_state, label);
+    DashStyle::Instance().Button(cr, faked_state, GetLabel());
   }
 
-  long PreviewBasicButton::ComputeLayout2 ()
+  long PreviewBasicButton::ComputeContentSize ()
   {
-    long ret = nux::Button::ComputeLayout2();
+    long ret = nux::Button::ComputeContentSize();
     if (cached_geometry_ != GetGeometry())
     {
       prelight_->Invalidate(GetGeometry());
@@ -123,9 +123,9 @@ namespace unity {
                          col);
 
     nux::BaseTexture *texture = normal_->GetTexture();
-    if (state == nux::State::NUX_STATE_PRELIGHT)
+    if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_PRELIGHT)
       texture = prelight_->GetTexture();
-    else if (state == nux::State::NUX_STATE_ACTIVE)
+    else if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_PRESSED)
     {
       texture = active_->GetTexture();
     }

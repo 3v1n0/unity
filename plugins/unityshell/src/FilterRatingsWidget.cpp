@@ -42,8 +42,8 @@ NUX_IMPLEMENT_OBJECT_TYPE(FilterRatingsWidget);
         last_rating_ (0.0f)
   {
     any_button_ = new FilterBasicButton(_("All"), NUX_TRACKER_LOCATION);
-    any_button_->activated.connect(sigc::mem_fun(this, &FilterRatingsWidget::OnAnyButtonActivated));
-    any_button_->label = _("All");
+    any_button_->state_change.connect(sigc::mem_fun(this, &FilterRatingsWidget::OnAnyButtonActivated));
+    any_button_->SetLabel(_("All"));
 
     SetRightHandView(any_button_);
 
@@ -60,7 +60,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(FilterRatingsWidget);
 
   void FilterRatingsWidget::OnAnyButtonActivated(nux::View *view)
   {
-    if (any_button_->active)
+    if (any_button_->Active())
     {
       last_rating_ = filter_->rating;
       // we need to make sure the property changes, otherwise there'll be no
@@ -78,11 +78,11 @@ NUX_IMPLEMENT_OBJECT_TYPE(FilterRatingsWidget);
   {
     if (new_rating <= 0.0f)
     {
-      any_button_->active = true;
+      any_button_->SetActive(true);
     }
     else
     {
-      any_button_->active = false;
+      any_button_->SetActive(false);
     }
   }
 

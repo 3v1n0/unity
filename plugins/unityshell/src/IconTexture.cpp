@@ -52,7 +52,6 @@ IconTexture::IconTexture(nux::BaseTexture* texture, guint width, guint height)
     _opacity(1.0f)
 {
   SetMinMaxSize(width, height);
-  SetCanFocus(false);
   _can_pass_focus_to_composite_layout = false;
 
   _accept_key_nav_focus = false;
@@ -73,7 +72,6 @@ IconTexture::IconTexture(const char* icon_name, unsigned int size, bool defer_ic
     LoadIcon();
 
   _can_pass_focus_to_composite_layout = false;
-  SetCanFocus(false);
 }
 
 IconTexture::~IconTexture()

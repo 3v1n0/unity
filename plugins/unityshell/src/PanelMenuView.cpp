@@ -314,7 +314,7 @@ long PanelMenuView::PostLayoutManagement(long LayoutResult)
 
   old_window_buttons_w = _window_buttons->GetContentWidth();
   _window_buttons->SetGeometry(geo.x + _padding, geo.y, old_window_buttons_w, geo.height);
-  _window_buttons->ComputeLayout2();
+  _window_buttons->ComputeContentSize();
   new_window_buttons_w = _window_buttons->GetContentWidth();
 
   /* Explicitly set the size and position of the widgets */
@@ -323,7 +323,7 @@ long PanelMenuView::PostLayoutManagement(long LayoutResult)
 
   old_menu_area_w = _menu_layout->GetContentWidth();
   _menu_layout->SetGeometry(geo.x, geo.y, old_menu_area_w, geo.height);
-  _menu_layout->ComputeLayout2();
+  _menu_layout->ComputeContentSize();
   new_menu_area_w = _menu_layout->GetContentWidth();
 
   geo.x += new_menu_area_w;

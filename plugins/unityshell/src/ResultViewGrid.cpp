@@ -519,11 +519,11 @@ void ResultViewGrid::OnOnKeyNavFocusChange(nux::Area *area)
   }
 }
 
-long ResultViewGrid::ComputeLayout2()
+long ResultViewGrid::ComputeContentSize()
 {
   SizeReallocate();
   QueueLazyLoad();
-  long ret = ResultView::ComputeLayout2();
+  long ret = ResultView::ComputeContentSize();
   return ret;
 
 }

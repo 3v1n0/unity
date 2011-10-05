@@ -42,7 +42,7 @@ namespace unity {
     virtual void SetPreview(dash::Preview::Ptr preview);
 
   protected:
-    virtual long ComputeLayout2();
+    virtual long ComputeContentSize();
     virtual long int ProcessEvent(nux::IEvent& ievent, long int TraverseInfo, long int ProcessEventInfo);
     virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
     virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);

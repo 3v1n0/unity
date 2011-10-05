@@ -41,8 +41,8 @@ NUX_IMPLEMENT_OBJECT_TYPE(FilterMultiRange);
     InitTheme();
 
     all_button_ = new FilterBasicButton(_("All"), NUX_TRACKER_LOCATION);
-    all_button_->activated.connect(sigc::mem_fun(this, &FilterMultiRange::OnAllActivated));
-    all_button_->label = _("All");
+    all_button_->state_change.connect(sigc::mem_fun(this, &FilterMultiRange::OnAllActivated));
+    all_button_->SetLabel(_("All"));
 
     layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
     layout_->SetVerticalExternalMargin (12);
@@ -85,7 +85,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(FilterMultiRange);
       FilterMultiRangeButton* button = (*it);
       dash::FilterOption::Ptr filter = button->GetFilter();
       bool tmp_active = filter->active;
-      button->active = tmp_active;
+      button->SetActive(tmp_active);
       if (filter != NULL)
       {
         if (filter->active)

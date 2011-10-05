@@ -38,9 +38,9 @@ namespace unity {
   {
   }
 
-  long PreviewBase::ComputeLayout2()
+  long PreviewBase::ComputeContentSize()
   {
-    return nux::View::ComputeLayout2();
+    return nux::View::ComputeContentSize();
   }
 
   void PreviewBase::Draw (nux::GraphicsEngine &GfxContext, bool force_draw)

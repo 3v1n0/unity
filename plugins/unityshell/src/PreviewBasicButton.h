@@ -40,7 +40,7 @@ namespace unity {
     virtual ~PreviewBasicButton();
 
   protected:
-    virtual long ComputeLayout2 ();
+    virtual long ComputeContentSize ();
     virtual long int ProcessEvent(nux::IEvent& ievent, long int TraverseInfo, long int ProcessEventInfo);
     virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
     virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
@@ -48,7 +48,7 @@ namespace unity {
 
   private:
     void InitTheme ();
-    void RedrawTheme (nux::Geometry const& geom, cairo_t *cr, nux::State faked_state);
+    void RedrawTheme (nux::Geometry const& geom, cairo_t *cr, nux::ButtonVisualState faked_state);
 
     nux::CairoWrapper *prelight_;
     nux::CairoWrapper *active_;

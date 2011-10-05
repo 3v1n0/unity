@@ -222,9 +222,9 @@ PanelStyle::GetWindowButtonForTheme(WindowButtonType type, WindowState state)
     main = nux::Color(1.0f, 0.3f, 0.3f, 0.8f);
   }
 
-  if (state == WINDOW_STATE_PRELIGHT)
+  if (state == WINDOW_VISUAL_STATE_PRELIGHT)
     main = main * 1.2f;
-  else if (state == WINDOW_STATE_PRESSED)
+  else if (state == WINDOW_VISUAL_STATE_PRESSED)
     main = main * 0.8f;
 
   cr  = cairo_graphics.GetContext();
