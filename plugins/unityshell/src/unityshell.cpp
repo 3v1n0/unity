@@ -2145,31 +2145,19 @@ void UnityFBO::paint (CompOutput *output)
     glPushAttrib (GL_SCISSOR_BIT);
     glEnable (GL_SCISSOR_TEST);
 
-		glScissor (output->x1 (), screen->height () - output->y2 (),
-							 output->width (), output->height ());
+    glScissor (output->x1 (), screen->height () - output->y2 (),
+	       output->width (), output->height ());
 
     /* FIXME: This needs to be GL_TRIANGLE_STRIP */
-    #if 0
-    glBegin (GL_QUADS);
-    glTexCoord2f (texx, texy + texheight);
-    glVertex2i   (0, 0);
-    glTexCoord2f (texx, texy);
-    glVertex2i   (0, screen->height ());
-    glTexCoord2f (texx + texwidth, texy);
-    glVertex2i   (screen->width (), screen->height ());
-    glTexCoord2f (texx + texwidth, texy + texheight);
-    glVertex2i   (screen->width (), 0);
-    glEnd ();
-    #endif
     glBegin (GL_QUADS);
     glTexCoord2f (texx, texy + texheight);
     glVertex2i   (output->x1 (), output->y1 ());
     glTexCoord2f (texx, texy);
-    glVertex2i   (output->x1 (),	output->y2 ());
+    glVertex2i   (output->x1 (), output->y2 ());
     glTexCoord2f (texx + texwidth, texy);
     glVertex2i   (output->x2 (), output->y2 ());
     glTexCoord2f (texx + texwidth, texy + texheight);
-    glVertex2i   (output->x2 (), 	output->y1 ());
+    glVertex2i   (output->x2 (), output->y1 ());
     glEnd ();
 
     GL::activeTexture (GL_TEXTURE0_ARB);
