@@ -77,7 +77,7 @@ on_indicator_entry_removed (IndicatorObject *io, IndicatorObjectEntry *entry, gp
 
   for (l = pia->priv->a11y_children; l != NULL; l = g_slist_next (l))
     {
-      AtkObject *accessible = ATK_OBJECT (l->data);
+      accessible = ATK_OBJECT (l->data);
 
       if (entry == panel_indicator_entry_accessible_get_entry (PANEL_INDICATOR_ENTRY_ACCESSIBLE (accessible)))
         {
