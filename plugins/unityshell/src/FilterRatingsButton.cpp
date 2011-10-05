@@ -148,9 +148,9 @@ namespace unity {
   }
 
   void FilterRatingsButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw) {
-    int rating = 5;
-    if (filter_ != NULL)
-      rating = filter_->rating * 10;
+    int rating = 0;
+    if (filter_ != NULL && filter_->filtering)
+      rating = static_cast<int>(filter_->rating * 5);
     // FIXME: 9/26/2011
     // We should probably support an API for saying whether the ratings
     // should or shouldn't support half stars...but our only consumer at
@@ -158,7 +158,7 @@ namespace unity {
     // (Bug #839759) shouldn't. So for now just force rounding.
     //    int total_half_stars = rating % 2;
     //    int total_full_stars = rating / 2;
-    int total_full_stars = ceil (rating / 2.0);
+    int total_full_stars = rating;
     int total_half_stars = 0;
     
     nux::Geometry geometry = GetGeometry ();
@@ -241,13 +241,14 @@ namespace unity {
   static void _UpdateRatingToMouse (dash::RatingsFilter::Ptr filter, int x)
   {
     int width = 180;
-    float new_rating = (static_cast<float>(x) / width) + 0.10f;
+    float new_rating = (static_cast<float>(x) / width);
 
-    new_rating = ceil(10*new_rating)/10;
+    // FIXME: change to 10 once we decide to support also half-stars
+    new_rating = ceil(5*new_rating)/5;
     new_rating = new_rating > 1 ? 1 : (new_rating < 0 ? 0 : new_rating);
     
     if (filter != NULL)
-      filter->rating = new_rating;    
+      filter->rating = new_rating;
   }
 
   void FilterRatingsButton::RecvMouseUp (int x, int y, unsigned long button_flags, unsigned long key_flags) 
