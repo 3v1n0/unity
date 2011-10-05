@@ -76,17 +76,20 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
    * an unmapped (!= minimized) window around and
    * if so force "Focus" behaviour */
 
-  for (l = bamf_view_get_children(BAMF_VIEW(m_App)); l; l = l->next)
+  if (arg.source != ActionArg::SWITCHER)
   {
-    view = (BamfView*) l->data;
-
-    if (BAMF_IS_WINDOW(view))
+    for (l = bamf_view_get_children(BAMF_VIEW(m_App)); l; l = l->next)
     {
-      Window xid = bamf_window_get_xid(BAMF_WINDOW(view));
-      if (!WindowManager::Default ()->IsWindowMapped(xid))
+      view = (BamfView*) l->data;
+
+      if (BAMF_IS_WINDOW(view))
       {
-        active = false;
-        break;
+        Window xid = bamf_window_get_xid(BAMF_WINDOW(view));
+        if (!WindowManager::Default ()->IsWindowMapped(xid))
+        {
+          active = false;
+          break;
+        }
       }
     }
   }
@@ -119,7 +122,7 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
       if (scaleWasActive) // #5 above
       {
         WindowManager::Default()->TerminateScale();
-        Focus();
+        Focus(arg);
       }
       else // #2 above
       {
@@ -132,13 +135,13 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
       if (scaleWasActive) // #4 above
       {
         WindowManager::Default()->TerminateScale();
-        Focus();
+        Focus(arg);
         if (arg.source != ActionArg::SWITCHER)
           Spread(0, false);
       }
       else // #3 above
       {
-        Focus();
+        Focus(arg);
       }
     }
   }
@@ -557,7 +560,7 @@ void BamfLauncherIcon::OpenInstanceLauncherIcon(ActionArg arg)
   ubus_server_send_message(ubus_server_get_default(), UBUS_LAUNCHER_ACTION_DONE, NULL);
 }
 
-void BamfLauncherIcon::Focus()
+void BamfLauncherIcon::Focus(ActionArg arg)
 {
   GList* children, *l;
   BamfView* view;
@@ -595,7 +598,7 @@ void BamfLauncherIcon::Focus()
   }
 
   g_list_free(children);
-  WindowManager::Default()->FocusWindowGroup(windows);
+  WindowManager::Default()->FocusWindowGroup(windows, arg.source != ActionArg::SWITCHER);
 }
 
 bool BamfLauncherIcon::Spread(int state, bool force)

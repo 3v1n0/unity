@@ -109,7 +109,7 @@ private:
   void UpdateDesktopQuickList();
 
   void OpenInstanceWithUris(std::set<std::string> uris);
-  void Focus();
+  void Focus(ActionArg arg);
   bool Spread(int state, bool force);
 
   void EnsureMenuItemsReady();
