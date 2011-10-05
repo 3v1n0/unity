@@ -86,8 +86,6 @@ private: //methods
 
   /* statics */
 
-  static bool BamfTimerCallback(void* data);
-
   static void OnViewOpened(BamfMatcher* matcher, BamfView* view, gpointer data);
 
 private:
@@ -133,7 +131,6 @@ Controller::Impl::Impl(Launcher* launcher)
   auto setup_bamf = [](gpointer user_data) -> gboolean
   {
     Impl* self = static_cast<Impl*>(user_data);
-    LOG_INFO(logger) << "auto callback worked.";
     self->SetupBamf();
     return FALSE;
   };
@@ -350,13 +347,6 @@ void Controller::Impl::RegisterIcon(LauncherIcon* icon)
   }
 }
 
-bool Controller::Impl::BamfTimerCallback(void* data)
-{
-  Impl* self = static_cast<Impl*>(data);
-  self->SetupBamf();
-  return FALSE;
-}
-
 /* static private */
 void Controller::Impl::OnViewOpened(BamfMatcher* matcher, BamfView* view, gpointer data)
 {
@@ -406,8 +396,6 @@ LauncherIcon* Controller::Impl::CreateFavorite(const char* file_path)
 /* private */
 void Controller::Impl::SetupBamf()
 {
-  LOG_INFO(logger) << "Controller::Impl::SetupBamf()";
-
   GList* apps, *l;
   BamfApplication* app;
   BamfLauncherIcon* icon;
