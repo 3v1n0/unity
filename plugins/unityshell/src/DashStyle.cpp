@@ -86,7 +86,7 @@ public:
 private:
   void LoadTexture();
 private:
-  std::string const& filename_;
+  std::string filename_;
   BaseTexturePtr texture_;
 };
 
