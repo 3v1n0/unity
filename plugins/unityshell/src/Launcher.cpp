@@ -51,7 +51,10 @@
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/Variant.h>
 
-using namespace unity::ui;
+namespace unity
+{
+namespace launcher
+{
 
 namespace
 {
@@ -3297,3 +3300,6 @@ Launcher::InspectKeyEvent(unsigned int eventType,
   // The Launcher accepts all key inputs.
   return true;
 }
+
+} // namespace launcher
+} // namespace unity

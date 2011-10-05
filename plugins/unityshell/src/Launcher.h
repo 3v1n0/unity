@@ -59,9 +59,12 @@ class LauncherIcon;
 class LauncherDragWindow;
 
 
-using namespace unity::ui;
+namespace unity
+{
+namespace launcher
+{
 
-class Launcher : public unity::Introspectable, public nux::View
+class Launcher : public Introspectable, public nux::View
 {
   NUX_DECLARE_OBJECT_TYPE(Launcher, nux::View);
 public:
@@ -503,5 +506,8 @@ private:
   AbstractIconRenderer::Ptr icon_renderer;
   BackgroundEffectHelper bg_effect_helper_;
 };
+
+}
+}
 
 #endif // LAUNCHER_H
