@@ -578,7 +578,7 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
   BackgroundEffectHelper::monitor_rect_ = oGeo;
 
   _in_paint = true;
-  //wt->RenderInterfaceFromForeignCmd (&oGeo);
+  wt->RenderInterfaceFromForeignCmd (&oGeo);
   _in_paint = false;
   nuxEpilogue();
 
@@ -936,6 +936,7 @@ void UnityScreen::paint (CompOutput::ptrList &outputs, unsigned int mask)
    *   attempts to bind it will only increment
    *   its bind reference so make sure that
    *   you always unbind as much as you bind */
+
   cScreen->paint (outputs, mask);
 }
 
