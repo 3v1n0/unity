@@ -69,8 +69,6 @@ COMPIZ_PLUGIN_20090315(unityshell, unity::UnityPluginVTable);
 namespace unity
 {
 using util::Timer;
-// using namespace unity::switcher;
-
 
 namespace
 {
@@ -385,14 +383,11 @@ void UnityScreen::EnsureSuperKeybindings()
 
   _shortcut_actions.clear ();
 
-  for (auto icon : *(launcher->GetModel()))
+  for (auto shortcut : launcher_controller_->GetAllShortcuts())
   {
-    guint64 shortcut = icon->GetShortcut();
-    if (shortcut == 0)
-      continue;
-    CreateSuperNewAction(static_cast<char>(shortcut));
-    CreateSuperNewAction(static_cast<char>(shortcut), true);
-    CreateSuperNewAction(static_cast<char>(shortcut), false, true);
+    CreateSuperNewAction(shortcut);
+    CreateSuperNewAction(shortcut, true);
+    CreateSuperNewAction(shortcut, false, true);
   }
 
   for (auto shortcut : dash_controller_->GetAllShortcuts())
@@ -469,7 +464,7 @@ void UnityScreen::nuxEpilogue()
 
 void UnityScreen::OnLauncherHiddenChanged()
 {
-  if (launcher->Hidden())
+  if (launcher_controller_->launcher().Hidden())
     screen->addAction(&optionGetLauncherRevealEdge());
   else
     screen->removeAction(&optionGetLauncherRevealEdge());
@@ -988,7 +983,7 @@ void UnityScreen::damageNuxRegions()
 void UnityScreen::handleEvent(XEvent* event)
 {
   bool skip_other_plugins = false;
-
+  Launcher& launcher = launcher_controller_.launcher();
   switch (event->type)
   {
     case FocusIn:
@@ -999,26 +994,29 @@ void UnityScreen::handleEvent(XEvent* event)
         PluginAdapter::Default()->OnScreenUngrabbed();
       cScreen->damageScreen();  // evil hack
       if (_key_nav_mode_requested)
-        launcher->startKeyNavMode();
+        launcher.startKeyNavMode();
       _key_nav_mode_requested = false;
       break;
     case KeyPress:
       KeySym key_sym;
       char key_string[2];
-      int result;
-      if ((result = XLookupString(&(event->xkey), key_string, 2, &key_sym, 0)) > 0)
+      int result = XLookupString(&(event->xkey), key_string, 2, &key_sym, 0);
+      if (result > 0)
       {
+        // NOTE: does this have the potential to do an invalid write?  Perhaps
+        // we should just say "key_string[1] = 0" because that is the only
+        // thing that could possibly make sense here.
         key_string[result] = 0;
         if (super_keypressed_) {
-          skip_other_plugins = launcher->CheckSuperShortcutPressed(screen->dpy(), key_sym, event->xkey.keycode, event->xkey.state, key_string);
+          skip_other_plugins = launcher.CheckSuperShortcutPressed(screen->dpy(), key_sym, event->xkey.keycode, event->xkey.state, key_string);
           if (!skip_other_plugins) {
             skip_other_plugins = dash_controller_->CheckShortcutActivation(key_string);
             if (skip_other_plugins)
-              launcher->SetLatestShortcut(key_string[0]);
+              launcher.SetLatestShortcut(key_string[0]);
           }
         }
       }
-      default:
+    default:
         if (screen->shapeEvent () + ShapeNotify == event->type)
         {
           Window xid = event->xany.window;
@@ -1099,7 +1097,7 @@ bool UnityScreen::showLauncherKeyInitiate(CompAction* action,
     action->setState(action->state() | CompAction::StateTermKey);
 
   super_keypressed_ = true;
-  launcher->StartKeyShowLauncher();
+  launcher_controller_->launcher().StartKeyShowLauncher();
   EnsureSuperKeybindings ();
   return false;
 }
@@ -1109,7 +1107,7 @@ bool UnityScreen::showLauncherKeyTerminate(CompAction* action,
                                            CompOption::Vector& options)
 {
   super_keypressed_ = false;
-  launcher->EndKeyShowLauncher();
+  launcher_controller_->launcher().EndKeyShowLauncher();
   return false;
 }
 
@@ -1145,7 +1143,7 @@ gboolean UnityScreen::OnEdgeTriggerTimeout(gpointer data)
 
     if (abs(pointerY - self->_edge_pointerY) <= 5)
     {
-      self->launcher->EdgeRevealTriggered(pointerX, pointerY);
+      self->launcher_controller_->launcher().EdgeRevealTriggered(pointerX, pointerY);
     }
     else
     {
@@ -1219,12 +1217,13 @@ void UnityScreen::restartLauncherKeyNav()
   if (newFocusedWindow != NULL)
   {
     newFocusedWindow->moveInputFocusTo();
-    launcher->startKeyNavMode();
+    launcher_controller_->launcher().startKeyNavMode();
   }
 }
 
 void UnityScreen::startLauncherKeyNav()
 {
+//XXX
   // get CompWindow* of launcher-window
   newFocusedWindow = screen->findWindow(launcherWindow->GetInputWindowId());
 
@@ -1271,10 +1270,9 @@ bool UnityScreen::altTabInitiateCommon(CompAction *action,
 
   results.push_back(switcher_desktop_icon);
 
-  LauncherModel::iterator it;
-  for (it = launcher->GetModel()->begin(); it != launcher->GetModel()->end(); it++)
-    if ((*it)->ShowInSwitcher())
-      results.push_back(*it);
+  for (auto icon : launcher_controller_->model())
+    if (icon->ShowInSwitcher())
+      results.push_back(icon);
 
   screen->addAction (&optionGetAltTabRight ());
   screen->addAction (&optionGetAltTabDetailStart ());
@@ -1894,14 +1892,6 @@ bool UnityWindow::place(CompPoint& pos)
   return result;
 }
 
-/* Configure callback for the launcher window */
-void UnityScreen::launcherWindowConfigureCallback(int WindowWidth, int WindowHeight,
-                                                  nux::Geometry& geo, void* user_data)
-{
-  UnityScreen* self = reinterpret_cast<UnityScreen*>(user_data);
-  geo = nux::Geometry(self->_primary_monitor.x, self->_primary_monitor.y + 24,
-                      geo.width, self->_primary_monitor.height - 24);
-}
 
 /* Start up nux after OpenGL is initialized */
 void UnityScreen::initUnity(nux::NThread* thread, void* InitData)
@@ -2030,10 +2020,6 @@ void UnityScreen::ScheduleRelayout(guint timeout)
 
 void UnityScreen::Relayout()
 {
-  GdkRectangle rect;
-  nux::Geometry lCurGeom;
-  int panel_height = 24;
-
   if (!needsRelayout)
     return;
 
@@ -2049,31 +2035,15 @@ void UnityScreen::Relayout()
   int primary_monitor = uscreen->GetPrimaryMonitor();
   auto geo = uscreen->GetMonitorGeometry(primary_monitor);
 
-  rect.x = geo.x;
-  rect.y = geo.y;
-  rect.width = geo.width;
-  rect.height = geo.height;
-  _primary_monitor = rect;
-
-  wt->SetWindowSize(rect.width, rect.height);
-
-  lCurGeom = launcherWindow->GetGeometry();
-  launcher->SetMaximumHeight(rect.height - panel_height);
+  primary_monitor_ = nux::Geometry(geo.x, geo.y, geo.width, geo.height);
+  wt->SetWindowSize(geo.width, geo.height);
 
   LOG_DEBUG(logger) << "Setting to primary screen rect:"
-                    << " x=" << rect.x
-                    << " y=" << rect.y
-                    << " w=" << rect.width
-                    << " h=" << rect.height;
+                    << " x=" << primary_monitor_.x
+                    << " y=" << primary_monitor_.y
+                    << " w=" << primary_monitor_.width
+                    << " h=" << primary_monitor_.height;
 
-  launcherWindow->SetGeometry(nux::Geometry(rect.x,
-                                            rect.y + panel_height,
-                                            lCurGeom.width,
-                                            rect.height - panel_height));
-  launcher->SetGeometry(nux::Geometry(rect.x,
-                                      rect.y + panel_height,
-                                      lCurGeom.width,
-                                      rect.height - panel_height));
   needsRelayout = false;
 }
 
@@ -2336,40 +2306,14 @@ void UnityScreen::initLauncher(nux::NThread* thread, void* InitData)
   UnityScreen* self = reinterpret_cast<UnityScreen*>(InitData);
 
   self->launcher_controller_.reset(new launcher::Controller(self->launcher));
+  primary_monitor_.changed.connect(sigc::mem_fun(self->launcher_controller_.get(),
+                                                 launcher::Controller::PrimaryMonitorGeometryChanged));
 
-  // TODO: add launcher to introspectable...
-  self->AddChild(self->launcher);
-
-  nux::HLayout* layout = new nux::HLayout(NUX_TRACKER_LOCATION);
-  // TODO: need launcher here too...
-  layout->AddView(self->launcher, 1);
-  layout->SetContentDistribution(nux::eStackLeft);
-  layout->SetVerticalExternalMargin(0);
-  layout->SetHorizontalExternalMargin(0);
-
-
-  self->launcherWindow->SetConfigureNotifyCallback(&UnityScreen::launcherWindowConfigureCallback, self);
-  self->launcherWindow->SetLayout(layout);
-  self->launcherWindow->SetBackgroundColor(nux::Color(0x00000000));
-  self->launcherWindow->ShowWindow(true);
-  self->launcherWindow->EnableInputWindow(true, "launcher", false, false);
-  self->launcherWindow->InputWindowEnableStruts(true);
-  self->launcherWindow->SetEnterFocusInputArea(self->launcher);
+  Launcher& launcher = self->launcher_controller_->launcher();
+  launcher.hidden_changed.connect(sigc::mem_fun(self, &UnityScreen::OnLauncherHiddenChanged));
+  self->AddChild(&launcher);
 
   self->switcher_controller_.reset(new switcher::Controller());
-  /* FIXME: this should not be manual, should be managed with a
-     show/hide callback like in GAIL*/
-  if (unity_a11y_initialized () == TRUE)
-    {
-      AtkObject *atk_obj = NULL;
-
-      atk_obj = unity_util_accessible_add_window (self->launcherWindow);
-
-      atk_object_set_name (atk_obj, _("Launcher"));
-    }
-
-  self->launcher->SetIconSize(54, 48);
-  self->launcher->SetBacklightMode(Launcher::BACKLIGHT_ALWAYS_ON);
 
   LOG_INFO(logger) << "initLauncher-Launcher " << timer.ElapsedSeconds() << "s";
 
@@ -2381,21 +2325,6 @@ void UnityScreen::initLauncher(nux::NThread* thread, void* InitData)
   /* Setup Places */
   self->dash_controller_.reset(new dash::Controller());
 
-  /* FIXME: this should not be manual, should be managed with a
-     show/hide callback like in GAIL
-  if (unity_a11y_initialized() == TRUE)
-  {
-    AtkObject* atk_obj = NULL;
-
-    atk_obj = unity_util_accessible_add_window(self->placesController->GetWindow());
-
-    atk_object_set_name(atk_obj, _("Places"));
-  }
-  */
-
-  self->launcher->SetHideMode(Launcher::LAUNCHER_HIDE_DODGE_WINDOWS);
-  self->launcher->SetLaunchAnimation(Launcher::LAUNCH_ANIMATION_PULSE);
-  self->launcher->SetUrgentAnimation(Launcher::URGENT_ANIMATION_WIGGLE);
   self->ScheduleRelayout(0);
 
   self->OnLauncherHiddenChanged();

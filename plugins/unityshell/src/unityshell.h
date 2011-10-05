@@ -23,6 +23,7 @@
 #define UNITYSHELL_H
 
 #include <Nux/WindowThread.h>
+#include <NuxCore/Property.h>
 #include <sigc++/sigc++.h>
 #include <boost/shared_ptr.hpp>
 
@@ -39,7 +40,6 @@
 #include "DashStyle.h"
 #include "DesktopLauncherIcon.h"
 #include "FontSettings.h"
-#include "Launcher.h"
 #include "LauncherController.h"
 #include "PanelController.h"
 #include "PanelStyle.h"
@@ -252,8 +252,6 @@ private:
   void Relayout();
 
   static gboolean RelayoutTimeout(gpointer data);
-  static void launcherWindowConfigureCallback(int WindowWidth, int WindowHeight,
-                                              nux::Geometry& geo, void* user_data);
   static void initUnity(nux::NThread* thread, void* InitData);
   static void OnStartKeyNav(GVariant* data, void* value);
   static void OnExitKeyNav(GVariant* data, void* value);
@@ -313,7 +311,7 @@ private:
 
   DesktopLauncherIcon* switcher_desktop_icon;
 
-  GdkRectangle _primary_monitor;
+  nux::Property<nux::Geometry> primary_monitor_;
 
   unity::BGHash _bghash;
 

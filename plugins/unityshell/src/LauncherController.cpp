@@ -40,6 +40,9 @@
 #include "WindowManager.h"
 #include "TrashLauncherIcon.h"
 #include "BFBLauncherIcon.h"
+/* FIXME: once we get a better method to add the toplevel windows to
+   the accessible root object, this include would not be required */
+#include "unity-util-accessible.h"
 
 
 namespace unity
@@ -54,12 +57,11 @@ nux::logging::Logger logger("unity.launcher");
 class Controller::Impl
 {
 public:
-  Impl(Launcher* launcher);
+  Impl(Display* display);
   ~Impl();
 
   void UpdateNumWorkspaces(int workspaces);
 
-private: //methods
   void Save();
   void SortAndUpdate();
 
@@ -88,11 +90,10 @@ private: //methods
 
   static void OnViewOpened(BamfMatcher* matcher, BamfView* view, gpointer data);
 
-private:
   BamfMatcher*           matcher_;
+  LauncherModel::Ptr     model_;
   nux::ObjectPtr<nux::BaseWindow> launcher_window_;
   nux::ObjectPtr<Launcher> launcher_;
-  LauncherModel*         model_;
   int                    sort_priority_;
   DeviceLauncherSection* device_section_;
   LauncherEntryRemoteModel remote_model_;
@@ -107,8 +108,9 @@ private:
 };
 
 
-Controller::Impl::Impl()
+Controller::Impl::Impl(Display* display)
   : matcher_(nullptr)
+  , model_(new LauncherModel())
   , sort_priority_(0)
 {
   // NOTE: should the launcher itself hold the base window?
@@ -116,8 +118,7 @@ Controller::Impl::Impl()
   launcher_window_ = new nux::BaseWindow(TEXT("LauncherWindow"));
 
   launcher_ = new Launcher(launcher_window_);
-  launcher_->display = screen->dpy(); // TODO get the screen.
-  launcher_->hidden_changed.connect(sigc::mem_fun(self, &UnityScreen::OnLauncherHiddenChanged));
+  launcher_->display = display;
   launcher_->SetIconSize(54, 48);
   launcher_->SetBacklightMode(Launcher::BACKLIGHT_ALWAYS_ON);
   launcher_->SetHideMode(Launcher::LAUNCHER_HIDE_DODGE_WINDOWS);
@@ -130,7 +131,6 @@ Controller::Impl::Impl()
   layout->SetVerticalExternalMargin(0);
   layout->SetHorizontalExternalMargin(0);
 
-  launcher_window_->SetConfigureNotifyCallback(&UnityScreen::launcherWindowConfigureCallback, self);
   launcher_window_->SetLayout(layout);
   launcher_window_->SetBackgroundColor(nux::color::Transparent);
   launcher_window_->ShowWindow(true);
@@ -138,9 +138,16 @@ Controller::Impl::Impl()
   launcher_window_->InputWindowEnableStruts(true);
   launcher_window_->SetEnterFocusInputArea(launcher_);
 
-  model_ = new LauncherModel();
+  /* FIXME: this should not be manual, should be managed with a
+     show/hide callback like in GAIL*/
+  if (unity_a11y_initialized())
+  {
+    AtkObject *atk_obj = unity_util_accessible_add_window(launcher_window_);
+    atk_object_set_name(atk_obj, _("Launcher"));
+  }
 
-  launcher_->SetModel(model_);
+  // TODO: construct the launcher with the model, and have the launcher keep a reference.
+  launcher_->SetModel(model_.get());
   launcher_->launcher_addrequest.connect(sigc::mem_fun(this, &Impl::OnLauncherAddRequest));
   launcher_->launcher_removerequest.connect(sigc::mem_fun(this, &Impl::OnLauncherRemoveRequest));
 
@@ -177,7 +184,6 @@ Controller::Impl::~Impl()
     g_signal_handler_disconnect((gpointer) matcher_, on_view_opened_id_);
 
   delete device_section_;
-  delete model_;
 }
 
 
@@ -282,11 +288,8 @@ void Controller::Impl::OnLauncherRemoveRequest(LauncherIcon* icon)
 
 void Controller::Impl::OnLauncherEntryRemoteAdded(LauncherEntryRemote* entry)
 {
-  LauncherModel::iterator it;
-  for (it = model_->begin(); it != model_->end(); it++)
+  for (auto icon : *model_)
   {
-    LauncherIcon* icon = *it;
-
     if (!icon || !icon->RemoteUri())
       continue;
 
@@ -299,10 +302,8 @@ void Controller::Impl::OnLauncherEntryRemoteAdded(LauncherEntryRemote* entry)
 
 void Controller::Impl::OnLauncherEntryRemoteRemoved(LauncherEntryRemote* entry)
 {
-  LauncherModel::iterator it;
-  for (it = model_->begin(); it != model_->end(); it++)
+  for (auto icon : *model_)
   {
-    LauncherIcon* icon = *it;
     icon->RemoveEntryRemote(entry);
   }
 }
@@ -469,8 +470,8 @@ void Controller::Impl::SetupBamf()
 }
 
 
-Controller::Controller()
-  : pimpl(new Impl())
+Controller::Controller(Display* display)
+  : pimpl(new Impl(display))
 {
 }
 
@@ -482,6 +483,52 @@ Controller::~Controller()
 void Controller::UpdateNumWorkspaces(int workspaces)
 {
   pimpl->UpdateNumWorkspaces(workspaces);
+}
+
+Launcher& Controller::launcher()
+{
+  return *(pimpl->launcher_);
+}
+
+LauncherModel& Controller::model()
+{
+  return *(pimpl->model_);
+}
+
+std::vector<char> Controller::GetAllShortcuts()
+{
+  std::vector<char> shortcuts;
+  for (auto icon : *(pimpl->model_))
+  {
+    // TODO: find out why the icons use guint64 for shortcuts.
+    char shortcut = icon->GetShortcut();
+    if (shortcut)
+      shortcuts.push_back(shortcut);
+  }
+  return shortcuts;
+}
+
+void Controller::PrimaryMonitorGeometryChanged(nux::Geometry const& rect)
+{
+  const int panel_height = 24;
+
+  int launcher_width = pimpl->launcher_window_->GetGeometry().width;
+
+  nux::Geometry new_geometry(rect.x,
+                             rect.y + panel_height,
+                             launcher_width,
+                             rect.height - panel_height);
+
+  LOG_DEBUG(logger) << "Setting to launcher rect:"
+                    << " x=" << new_geometry.x
+                    << " y=" << new_geometry.y
+                    << " w=" << new_geometry.width
+                    << " h=" << new_geometry.height;
+
+  pimpl->launcher_->SetMaximumHeight(new_geometry.height);
+
+  pimpl->launcher_window_->SetGeometry(new_geometry);
+  pimpl->launcher_->SetGeometry(new_geometry);
 }
 
 

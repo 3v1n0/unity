@@ -22,24 +22,32 @@
 #define LAUNCHERCONTROLLER_H
 
 #include <memory>
+#include <vector>
 #include <sigc++/sigc++.h>
-
-class Launcher;
+#include <core/core.h>
 
 namespace unity
 {
 namespace launcher
 {
+class Launcher;
+class LauncherModel;
 
 class Controller : public sigc::trackable
 {
 public:
   typedef std::shared_ptr<Controller> Ptr;
 
-  Controller();
+  Controller(Display* display);
   ~Controller();
 
+  Launcher& launcher();
+  LauncherModel& model();
+
   void UpdateNumWorkspaces(int workspaces);
+  std::vector<char> GetAllShortcuts();
+
+  void PrimaryMonitorGeometryChanged(nux::Geometry const& geo);
 
 private:
   class Impl;
