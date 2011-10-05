@@ -130,13 +130,14 @@ Controller::Impl::Impl(Launcher* launcher)
   }
   InsertTrash();
 
-  auto setup_bamf = [&](gpointer user_data) -> gboolean
+  auto setup_bamf = [](gpointer user_data) -> gboolean
   {
+    Impl* self = static_cast<Impl*>(user_data);
     LOG_INFO(logger) << "auto callback worked.";
-    SetupBamf();
+    self->SetupBamf();
     return FALSE;
   };
-  _bamf_timer_handler_id = g_timeout_add(500, setup_bamf, 0);
+  _bamf_timer_handler_id = g_timeout_add(500, setup_bamf, this);
 
   _remote_model.entry_added.connect(sigc::mem_fun(this, &Impl::OnLauncherEntryRemoteAdded));
   _remote_model.entry_removed.connect(sigc::mem_fun(this, &Impl::OnLauncherEntryRemoteRemoved));
@@ -359,7 +360,7 @@ bool Controller::Impl::BamfTimerCallback(void* data)
 /* static private */
 void Controller::Impl::OnViewOpened(BamfMatcher* matcher, BamfView* view, gpointer data)
 {
-  Controller* self = (Controller*) data;
+  Impl* self = static_cast<Impl*>(data);
   BamfApplication* app;
 
   if (!BAMF_IS_APPLICATION(view))
@@ -405,7 +406,7 @@ LauncherIcon* Controller::Impl::CreateFavorite(const char* file_path)
 /* private */
 void Controller::Impl::SetupBamf()
 {
-  LOG_INFO("Controller::Impl::SetupBamf()");
+  LOG_INFO(logger) << "Controller::Impl::SetupBamf()";
 
   GList* apps, *l;
   BamfApplication* app;
