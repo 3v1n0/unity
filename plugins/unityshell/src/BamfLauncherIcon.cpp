@@ -59,6 +59,8 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 {
   SimpleLauncherIcon::ActivateLauncherIcon(arg);
   bool scaleWasActive = WindowManager::Default()->IsScaleActive();
+  GList    *l;
+  BamfView *view;
 
   bool active, running;
   active = bamf_view_is_active(BAMF_VIEW(m_App));
@@ -68,6 +70,25 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
   {
     WindowManager::Default()->Activate(arg.target);
     return;
+  }
+
+  /* We should check each child to see if there is
+   * an unmapped (!= minimized) window around and
+   * if so force "Focus" behaviour */
+
+  for (l = bamf_view_get_children(BAMF_VIEW(m_App)); l; l = l->next)
+  {
+    view = (BamfView*) l->data;
+
+    if (BAMF_IS_WINDOW(view))
+    {
+      Window xid = bamf_window_get_xid(BAMF_WINDOW(view));
+      if (!WindowManager::Default ()->IsWindowMapped(xid))
+      {
+        active = false;
+        break;
+      }
+    }
   }
 
   /* Behaviour:
