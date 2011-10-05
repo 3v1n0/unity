@@ -1,3 +1,11 @@
+unity (4.22.0-0ubuntu2) UNRELEASED; urgency=low
+
+  * Cherry-pick upstream:
+    - fix minimize windows not showing when clicking on a launcher icon
+      (LP: #868185)
+
+ -- Didier Roche <didrocks@ubuntu.com>  Wed, 05 Oct 2011 12:02:58 +0200
+
 unity (4.22.0-0ubuntu1) oneiric; urgency=low
 
   * New upstream release.
