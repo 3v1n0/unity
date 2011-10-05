@@ -25,7 +25,7 @@
 
 #include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
-
+#include <NuxCore/Logger.h>
 
 #include "BamfLauncherIcon.h"
 #include "DeviceLauncherIcon.h"
@@ -46,6 +46,10 @@ namespace unity
 {
 namespace launcher
 {
+namespace
+{
+nux::logging::Logger logger("unity.launcher");
+}
 
 class Controller::Impl
 {
@@ -113,11 +117,11 @@ Controller::Impl::Impl(Launcher* launcher)
   _sort_priority = 0;
 
   _launcher->SetModel(_model);
-  _launcher->launcher_addrequest.connect(sigc::mem_fun(this, &Controller::OnLauncherAddRequest));
-  _launcher->launcher_removerequest.connect(sigc::mem_fun(this, &Controller::OnLauncherRemoveRequest));
+  _launcher->launcher_addrequest.connect(sigc::mem_fun(this, &Impl::OnLauncherAddRequest));
+  _launcher->launcher_removerequest.connect(sigc::mem_fun(this, &Impl::OnLauncherRemoveRequest));
 
   _device_section = new DeviceLauncherSection(_launcher);
-  _device_section->IconAdded.connect(sigc::mem_fun(this, &Controller::OnIconAdded));
+  _device_section->IconAdded.connect(sigc::mem_fun(this, &Impl::OnIconAdded));
 
   _num_workspaces = WindowManager::Default()->WorkspaceCount();
   if (_num_workspaces > 1)
@@ -126,10 +130,16 @@ Controller::Impl::Impl(Launcher* launcher)
   }
   InsertTrash();
 
-  _bamf_timer_handler_id = g_timeout_add(500, (GSourceFunc) &Controller::BamfTimerCallback, this);
+  auto setup_bamf = [&](gpointer user_data) -> gboolean
+  {
+    LOG_INFO(logger) << "auto callback worked.";
+    SetupBamf();
+    return FALSE;
+  };
+  _bamf_timer_handler_id = g_timeout_add(500, setup_bamf, 0);
 
-  _remote_model.entry_added.connect(sigc::mem_fun(this, &Controller::OnLauncherEntryRemoteAdded));
-  _remote_model.entry_removed.connect(sigc::mem_fun(this, &Controller::OnLauncherEntryRemoteRemoved));
+  _remote_model.entry_added.connect(sigc::mem_fun(this, &Impl::OnLauncherEntryRemoteAdded));
+  _remote_model.entry_removed.connect(sigc::mem_fun(this, &Impl::OnLauncherEntryRemoteRemoved));
 
   RegisterIcon (new BFBLauncherIcon (launcher));
 }
@@ -339,15 +349,11 @@ void Controller::Impl::RegisterIcon(LauncherIcon* icon)
   }
 }
 
-/* static private */
 bool Controller::Impl::BamfTimerCallback(void* data)
 {
-  Controller* self = (Controller*) data;
-
+  Impl* self = static_cast<Impl*>(data);
   self->SetupBamf();
-
-  self->_bamf_timer_handler_id = 0;
-  return false;
+  return FALSE;
 }
 
 /* static private */
@@ -399,6 +405,8 @@ LauncherIcon* Controller::Impl::CreateFavorite(const char* file_path)
 /* private */
 void Controller::Impl::SetupBamf()
 {
+  LOG_INFO("Controller::Impl::SetupBamf()");
+
   GList* apps, *l;
   BamfApplication* app;
   BamfLauncherIcon* icon;
@@ -443,6 +451,7 @@ void Controller::Impl::SetupBamf()
 
   _model->order_changed.connect(sigc::mem_fun(this, &Impl::SortAndUpdate));
   _model->saved.connect(sigc::mem_fun(this, &Impl::Save));
+  _bamf_timer_handler_id = 0;
 }
 
 
