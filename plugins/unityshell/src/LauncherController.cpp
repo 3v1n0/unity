@@ -531,6 +531,16 @@ void Controller::PrimaryMonitorGeometryChanged(nux::Geometry const& rect)
   pimpl->launcher_->SetGeometry(new_geometry);
 }
 
+Window Controller::launcher_input_window_id()
+{
+  return pimpl->launcher_window_->GetInputWindowId();
+}
+
+void Controller::PushToFront()
+{
+  pimpl->launcher_window_->PushToFront();
+}
+
 
 } // namespace launcher
 } // namespace unity

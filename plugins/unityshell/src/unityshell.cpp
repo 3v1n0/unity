@@ -1223,22 +1223,21 @@ void UnityScreen::restartLauncherKeyNav()
 
 void UnityScreen::startLauncherKeyNav()
 {
-//XXX
   // get CompWindow* of launcher-window
-  newFocusedWindow = screen->findWindow(launcherWindow->GetInputWindowId());
+  newFocusedWindow = screen->findWindow(launcher_controller_->launcher_input_window_id());
 
   // check if currently focused window isn't the launcher-window
   if (newFocusedWindow != screen->findWindow(screen->activeWindow()))
-    PluginAdapter::Default ()->saveInputFocus ();
+    PluginAdapter::Default()->saveInputFocus();
 
   // set input-focus on launcher-window and start key-nav mode
-  if (newFocusedWindow != NULL)
+  if (newFocusedWindow)
   {
     // Put the launcher BaseWindow at the top of the BaseWindow stack. The
     // input focus coming from the XinputWindow will be processed by the
     // launcher BaseWindow only. Then the Launcher BaseWindow will decide
     // which View will get the input focus.
-    launcherWindow->PushToFront();
+    launcher_controller_->PushToFront();
     newFocusedWindow->moveInputFocusTo();
   }
 }
@@ -1748,10 +1747,10 @@ void UnityWindow::windowNotify(CompWindowNotify n)
   {
     UnityScreen* us = UnityScreen::get(screen);
     CompWindow *lw;
-    
+
     if (us->dash_is_open_)
     {
-      lw = screen->findWindow(us->launcherWindow->GetInputWindowId());
+      lw = screen->findWindow(us->launcher_controller_->launcher_input_window_id());
       lw->moveInputFocusTo();
     }
   }
@@ -1803,8 +1802,8 @@ void UnityWindow::resizeNotify(int x, int y, int w, int h)
 CompPoint UnityWindow::tryNotIntersectUI(CompPoint& pos)
 {
   UnityScreen* us = UnityScreen::get(screen);
-  Launcher::LauncherHideMode hideMode = us->launcher->GetHideMode();
-  nux::Geometry geo = us->launcher->GetAbsoluteGeometry();
+  Launcher& launcher = us->launcher_controller_->launcher();
+  nux::Geometry geo = launcher.GetAbsoluteGeometry();
   CompRegion allowedWorkArea (screen->workArea ());
   CompRect launcherGeo(geo.x, geo.y, geo.width, geo.height);
   CompRegion wRegion (window->borderRect ());
@@ -1814,9 +1813,9 @@ CompPoint UnityWindow::tryNotIntersectUI(CompPoint& pos)
                      pos.y () - wRegion.boundingRect ().y ());
 
   /* subtract launcher and panel geometries from allowed workarea */
-  if (!us->launcher->Hidden ())
+  if (!launcher.Hidden())
   {
-    switch (hideMode)
+    switch (launcher.GetHideMode())
     {
       case Launcher::LAUNCHER_HIDE_DODGE_WINDOWS:
       case Launcher::LAUNCHER_HIDE_DODGE_ACTIVE_WINDOW:
@@ -1932,31 +1931,33 @@ void UnityScreen::onRedrawRequested()
 /* Handle option changes and plug that into nux windows */
 void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
 {
+  // Note: perhaps we should put the options here into the controller.
+  Launcher& launcher = launcher_controller_->launcher();
   switch (num)
   {
     case UnityshellOptions::LauncherHideMode:
-      launcher->SetHideMode((Launcher::LauncherHideMode) optionGetLauncherHideMode());
+      launcher.SetHideMode((Launcher::LauncherHideMode) optionGetLauncherHideMode());
       break;
     case UnityshellOptions::BacklightMode:
-      launcher->SetBacklightMode((Launcher::BacklightMode) optionGetBacklightMode());
+      launcher.SetBacklightMode((Launcher::BacklightMode) optionGetBacklightMode());
       break;
     case UnityshellOptions::LaunchAnimation:
-      launcher->SetLaunchAnimation((Launcher::LaunchAnimation) optionGetLaunchAnimation());
+      launcher.SetLaunchAnimation((Launcher::LaunchAnimation) optionGetLaunchAnimation());
       break;
     case UnityshellOptions::UrgentAnimation:
-      launcher->SetUrgentAnimation((Launcher::UrgentAnimation) optionGetUrgentAnimation());
+      launcher.SetUrgentAnimation((Launcher::UrgentAnimation) optionGetUrgentAnimation());
       break;
     case UnityshellOptions::PanelOpacity:
       panel_controller_->SetOpacity(optionGetPanelOpacity());
       break;
     case UnityshellOptions::LauncherOpacity:
-      launcher->SetBackgroundAlpha(optionGetLauncherOpacity());
+      launcher.SetBackgroundAlpha(optionGetLauncherOpacity());
       break;
     case UnityshellOptions::IconSize:
     {
       CompPlugin         *p = CompPlugin::find ("expo");
 
-      launcher->SetIconSize(optionGetIconSize() + 6, optionGetIconSize());
+      launcher.SetIconSize(optionGetIconSize() + 6, optionGetIconSize());
       dash_controller_->launcher_width = optionGetIconSize() + 18;
 
       if (p)
@@ -1978,7 +1979,7 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       break;
     }
     case UnityshellOptions::AutohideAnimation:
-      launcher->SetAutoHideAnimation((Launcher::AutoHideAnimation) optionGetAutohideAnimation());
+      launcher.SetAutoHideAnimation((Launcher::AutoHideAnimation) optionGetAutohideAnimation());
       break;
     case UnityshellOptions::DashBlurExperimental:
       BackgroundEffectHelper::blur_type = (unity::BlurType)optionGetDashBlurExperimental();
