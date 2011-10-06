@@ -190,9 +190,6 @@ PluginAdapter::Notify(CompWindow* window, CompWindowNotify notify)
     case CompWindowNotifyUnmap:
       WindowManager::window_unmapped.emit(window->id());
       break;
-    case CompWindowNotifyReparent:
-      MaximizeIfBigEnough(window);
-      break;
     case CompWindowNotifyFocusChange:
       WindowManager::window_focus_changed.emit(window->id());
       break;
@@ -842,7 +839,8 @@ PluginAdapter::IsViewPortSwitchStarted()
   return _vp_switch_started;
 }
 
-void PluginAdapter::MaximizeIfBigEnough(CompWindow* window)
+/* Returns true if the window was maximized */
+bool PluginAdapter::MaximizeIfBigEnough(CompWindow* window)
 {
   XClassHint   classHint;
   Status       status;
@@ -854,14 +852,14 @@ void PluginAdapter::MaximizeIfBigEnough(CompWindow* window)
   float        covering_part;
 
   if (!window)
-    return;
+    return false;
 
   if ((window->state() & MAXIMIZE_STATE) == MAXIMIZE_STATE)
-    return;
+    return false;
 
   if (window->type() != CompWindowTypeNormalMask
       || (window->actions() & MAXIMIZABLE) != MAXIMIZABLE)
-    return;
+    return false;
 
   status = XGetClassHint(m_Screen->dpy(), window->id(), &classHint);
   if (status && classHint.res_class)
@@ -873,7 +871,7 @@ void PluginAdapter::MaximizeIfBigEnough(CompWindow* window)
       XFree(classHint.res_name);
   }
   else
-    return;
+    return false;
 
   num_monitor = window->outputDevice();
   CompOutput &o = m_Screen->outputDevs().at(num_monitor);
@@ -889,10 +887,12 @@ void PluginAdapter::MaximizeIfBigEnough(CompWindow* window)
       (hints.flags & PMaxSize && (screen_width > hints.max_width || screen_height > hints.max_height)))
   {
     LOG_DEBUG(logger) << win_wmclass << " window size doesn't fit";
-    return;
+    return false;
   }
 
   window->maximize(MAXIMIZE_STATE);
+
+  return true;
 }
 
 void

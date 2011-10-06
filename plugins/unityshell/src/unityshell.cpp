@@ -1890,13 +1890,18 @@ CompPoint UnityWindow::tryNotIntersectUI(CompPoint& pos)
 
 bool UnityWindow::place(CompPoint& pos)
 {
-  bool result = window->place(pos);
+  if (!PluginAdapter::Default ()->MaximizeIfBigEnough(window))
+  {
+    bool result = window->place(pos);
 
-  if (window->type() & NO_FOCUS_MASK)
+    if (window->type() & NO_FOCUS_MASK)
+      return result;
+
+    pos = tryNotIntersectUI(pos);
     return result;
+  }
 
-  pos = tryNotIntersectUI(pos);
-  return result;
+  return true;
 }
 
 /* Configure callback for the launcher window */
