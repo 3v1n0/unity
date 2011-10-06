@@ -447,7 +447,7 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
       lockrect.pBits = 0;
       bool locked = false;
 
-      if (_gradient_texture.IsNull())
+      if (_gradient_texture.IsNull() || (_gradient_texture->GetWidth() != geo.width))
       {
         build_gradient = true;
       }
