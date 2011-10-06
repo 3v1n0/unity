@@ -23,6 +23,8 @@
 
 namespace unity
 {
+using launcher::AbstractLauncherIcon;
+
 namespace switcher
 {
 

@@ -24,6 +24,11 @@
 
 #include "UBusWrapper.h"
 
+namespace unity
+{
+namespace launcher
+{
+
 class BFBLauncherIcon : public SimpleLauncherIcon
 {
 
@@ -38,5 +43,8 @@ private:
   unity::UBusManager _ubus_manager;
   nux::Color _background_color;
 };
+
+}
+}
 
 #endif // UNITYSHELL_BFBLAUNCHERICON_H

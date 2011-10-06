@@ -38,7 +38,6 @@
 #include "DashController.h"
 #include "DashSettings.h"
 #include "DashStyle.h"
-#include "DesktopLauncherIcon.h"
 #include "FontSettings.h"
 #include "LauncherController.h"
 #include "PanelController.h"
@@ -246,7 +245,7 @@ private:
   void CreateSuperNewAction(char shortcut, bool use_shift=false, bool use_numpad=false);
 
   static gboolean initPluginActions(gpointer data);
-  static void initLauncher(nux::NThread* thread, void* InitData);
+  void initLauncher();
   void damageNuxRegions();
   void onRedrawRequested();
   void Relayout();
@@ -308,8 +307,6 @@ private:
   bool    _key_nav_mode_requested;
   CompOutput* _last_output;
   CompWindowList _withRemovedNuxWindows;
-
-  DesktopLauncherIcon* switcher_desktop_icon;
 
   nux::Property<nux::Geometry> primary_monitor_;
 

@@ -53,6 +53,8 @@
 
 namespace unity
 {
+using ui::RenderArg;
+
 namespace launcher
 {
 
@@ -314,7 +316,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
 
   SetDndEnabled(false, true);
 
-  icon_renderer = AbstractIconRenderer::Ptr(new IconRenderer());
+  icon_renderer = ui::AbstractIconRenderer::Ptr(new ui::IconRenderer());
   icon_renderer->SetTargetSize(_icon_size, _icon_image_size, _space_between_icons);
 
   // request the latest colour from bghash

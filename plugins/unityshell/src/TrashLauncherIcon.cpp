@@ -27,7 +27,10 @@
 #include "QuicklistManager.h"
 #include "QuicklistMenuItemLabel.h"
 
-namespace unity {
+namespace unity
+{
+namespace launcher
+{
 
 TrashLauncherIcon::TrashLauncherIcon(Launcher* IconManager)
   : SimpleLauncherIcon(IconManager)
@@ -167,4 +170,5 @@ void TrashLauncherIcon::OnAcceptDrop(unity::DndData& dnd_data)
   SetQuirk(LauncherIcon::QUIRK_PULSE_ONCE, true);
 }
 
+} // namespace launcher
 } // namespace unity

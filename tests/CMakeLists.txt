@@ -230,6 +230,8 @@ add_executable (test-launcher
                 ${UNITY_SRC}/DndData.h
                 ${UNITY_SRC}/TrashLauncherIcon.cpp
                 ${UNITY_SRC}/TrashLauncherIcon.h
+                ${UNITY_SRC}/DesktopLauncherIcon.cpp
+                ${UNITY_SRC}/DesktopLauncherIcon.h
                 ${UNITY_SRC}/DNDCollectionWindow.cpp
                 ${UNITY_SRC}/DNDCollectionWindow.h
                 ${UNITY_SRC}/DeviceLauncherIcon.cpp

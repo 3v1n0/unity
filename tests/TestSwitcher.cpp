@@ -38,6 +38,8 @@
 
 using namespace unity::switcher;
 using namespace unity::ui;
+using unity::launcher::AbstractLauncherIcon;
+using unity::launcher::MockLauncherIcon;
 
 static bool enable_flipping = false;
 

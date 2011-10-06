@@ -32,6 +32,8 @@
 
 namespace unity
 {
+namespace launcher
+{
 namespace
 {
 nux::logging::Logger logger("unity.launcher");
@@ -433,4 +435,5 @@ void DeviceLauncherIcon::OnSettingsChanged()
   UpdateVisibility();
 }
 
+} // namespace launcher
 } // namespace unity

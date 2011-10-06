@@ -33,7 +33,10 @@
 
 #include <UnityCore/GLibWrapper.h>
 
-using unity::FavoriteStore;
+namespace unity
+{
+namespace launcher
+{
 
 struct _ShortcutData
 {
@@ -1294,3 +1297,6 @@ BamfLauncherIcon::FillSupportedTypes(gpointer data)
 
   return false;
 }
+
+} // namespace launcher
+} // namespace unity

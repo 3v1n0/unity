@@ -29,6 +29,10 @@
 
 namespace unity
 {
+using launcher::AbstractLauncherIcon;
+using launcher::ActionArg;
+using ui::LayoutWindowList;
+
 namespace switcher
 {
 

@@ -68,6 +68,11 @@ COMPIZ_PLUGIN_20090315(unityshell, unity::UnityPluginVTable);
 
 namespace unity
 {
+using launcher::AbstractLauncherIcon;
+using launcher::Launcher;
+using ui::KeyboardUtil;
+using ui::LayoutWindow;
+using ui::LayoutWindowList;
 using util::Timer;
 
 namespace
@@ -107,7 +112,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , damaged(false)
   , _key_nav_mode_requested(false)
   , _last_output(nullptr)
-  , switcher_desktop_icon(nullptr)
   , mActiveFbo (0)
   , dash_is_open_ (false)
   , grab_index_ (0)
@@ -308,9 +312,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
 
 UnityScreen::~UnityScreen()
 {
-  if (switcher_desktop_icon)
-    switcher_desktop_icon->UnReference();
-
   notify_uninit();
 
   unity_a11y_finalize();
@@ -983,7 +984,7 @@ void UnityScreen::damageNuxRegions()
 void UnityScreen::handleEvent(XEvent* event)
 {
   bool skip_other_plugins = false;
-  Launcher& launcher = launcher_controller_.launcher();
+  Launcher& launcher = launcher_controller_->launcher();
   switch (event->type)
   {
     case FocusIn:
@@ -998,6 +999,7 @@ void UnityScreen::handleEvent(XEvent* event)
       _key_nav_mode_requested = false;
       break;
     case KeyPress:
+    {
       KeySym key_sym;
       char key_string[2];
       int result = XLookupString(&(event->xkey), key_string, 2, &key_sym, 0);
@@ -1016,6 +1018,7 @@ void UnityScreen::handleEvent(XEvent* event)
           }
         }
       }
+    }
     default:
         if (screen->shapeEvent () + ShapeNotify == event->type)
         {
@@ -1254,24 +1257,10 @@ bool UnityScreen::altTabInitiateCommon(CompAction *action,
                                       CompAction::State state,
                                       CompOption::Vector& options)
 {
-  std::vector<AbstractLauncherIcon*> results;
-
   if (!grab_index_)
     grab_index_ = screen->pushGrab (screen->invisibleCursor(), "unity-switcher");
   if (!grab_index_)
     return false;
-
-  if (!switcher_desktop_icon)
-  {
-    switcher_desktop_icon = new DesktopLauncherIcon(launcher);
-    switcher_desktop_icon->SinkReference();
-  }
-
-  results.push_back(switcher_desktop_icon);
-
-  for (auto icon : launcher_controller_->model())
-    if (icon->ShowInSwitcher())
-      results.push_back(icon);
 
   screen->addAction (&optionGetAltTabRight ());
   screen->addAction (&optionGetAltTabDetailStart ());
@@ -1285,6 +1274,8 @@ bool UnityScreen::altTabInitiateCommon(CompAction *action,
                                                    screen->outputDevs()[device].y1() + 100,
                                                    screen->outputDevs()[device].width() - 200,
                                                    screen->outputDevs()[device].height() - 200));
+
+  std::vector<AbstractLauncherIcon*> results = launcher_controller_->GetAltTabIcons();
   switcher_controller_->Show(switcher::ShowMode::ALL,
                              switcher::SortMode::FOCUS_ORDER, false, results);
   return true;
@@ -1896,7 +1887,8 @@ bool UnityWindow::place(CompPoint& pos)
 void UnityScreen::initUnity(nux::NThread* thread, void* InitData)
 {
   Timer timer;
-  initLauncher(thread, InitData);
+  UnityScreen* self = reinterpret_cast<UnityScreen*>(InitData);
+  self->initLauncher();
 
   nux::ColorLayer background(nux::color::Transparent);
   static_cast<nux::WindowThread*>(thread)->SetWindowBackgroundPaintLayer(&background);
@@ -2040,10 +2032,10 @@ void UnityScreen::Relayout()
   wt->SetWindowSize(geo.width, geo.height);
 
   LOG_DEBUG(logger) << "Setting to primary screen rect:"
-                    << " x=" << primary_monitor_.x
-                    << " y=" << primary_monitor_.y
-                    << " w=" << primary_monitor_.width
-                    << " h=" << primary_monitor_.height;
+                    << " x=" << primary_monitor_().x
+                    << " y=" << primary_monitor_().y
+                    << " w=" << primary_monitor_().width
+                    << " h=" << primary_monitor_().height;
 
   needsRelayout = false;
 }
@@ -2301,34 +2293,39 @@ UnityFBO::~UnityFBO ()
 }
 
 /* Start up the launcher */
-void UnityScreen::initLauncher(nux::NThread* thread, void* InitData)
+void UnityScreen::initLauncher()
 {
   Timer timer;
-  UnityScreen* self = reinterpret_cast<UnityScreen*>(InitData);
+  launcher_controller_.reset(new launcher::Controller(screen->dpy()));
+  primary_monitor_.changed.connect(sigc::mem_fun(launcher_controller_.get(),
+                                                 &launcher::Controller::PrimaryMonitorGeometryChanged));
 
-  self->launcher_controller_.reset(new launcher::Controller(self->launcher));
-  primary_monitor_.changed.connect(sigc::mem_fun(self->launcher_controller_.get(),
-                                                 launcher::Controller::PrimaryMonitorGeometryChanged));
+  Launcher& launcher = launcher_controller_->launcher();
+  launcher.hidden_changed.connect(sigc::mem_fun(this, &UnityScreen::OnLauncherHiddenChanged));
+  AddChild(&launcher);
+  /* FIXME: this should not be manual, should be managed with a
+     show/hide callback like in GAIL*/
+  if (unity_a11y_initialized())
+  {
+    AtkObject *atk_obj = unity_util_accessible_add_window(launcher.GetParent());
+    atk_object_set_name(atk_obj, _("Launcher"));
+  }
 
-  Launcher& launcher = self->launcher_controller_->launcher();
-  launcher.hidden_changed.connect(sigc::mem_fun(self, &UnityScreen::OnLauncherHiddenChanged));
-  self->AddChild(&launcher);
-
-  self->switcher_controller_.reset(new switcher::Controller());
+  switcher_controller_.reset(new switcher::Controller());
 
   LOG_INFO(logger) << "initLauncher-Launcher " << timer.ElapsedSeconds() << "s";
 
   /* Setup panel */
   timer.Reset();
-  self->panel_controller_.reset(new panel::Controller());
+  panel_controller_.reset(new panel::Controller());
   LOG_INFO(logger) << "initLauncher-Panel " << timer.ElapsedSeconds() << "s";
 
   /* Setup Places */
-  self->dash_controller_.reset(new dash::Controller());
+  dash_controller_.reset(new dash::Controller());
 
-  self->ScheduleRelayout(0);
+  ScheduleRelayout(0);
 
-  self->OnLauncherHiddenChanged();
+  OnLauncherHiddenChanged();
 }
 
 /* Window init */

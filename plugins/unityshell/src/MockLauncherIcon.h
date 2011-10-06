@@ -33,6 +33,11 @@
 
 #include "AbstractLauncherIcon.h"
 
+namespace unity
+{
+namespace launcher
+{
+
 class MockLauncherIcon : public AbstractLauncherIcon
 {
 public:
@@ -258,6 +263,9 @@ private:
   nux::BaseTexture* icon_;
 
 };
+
+}
+}
 
 #endif // MOCKLAUNCHERICON_H
 

@@ -30,6 +30,7 @@ namespace unity
 {
 namespace launcher
 {
+class AbstractLauncherIcon;
 class Launcher;
 class LauncherModel;
 
@@ -42,13 +43,15 @@ public:
   ~Controller();
 
   Launcher& launcher();
-  LauncherModel& model();
+//  LauncherModel& model();
   Window launcher_input_window_id();
 
   void UpdateNumWorkspaces(int workspaces);
   std::vector<char> GetAllShortcuts();
+  std::vector<AbstractLauncherIcon*> GetAltTabIcons();
 
   void PrimaryMonitorGeometryChanged(nux::Geometry const& geo);
+  void PushToFront();
 
 private:
   class Impl;

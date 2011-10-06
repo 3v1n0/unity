@@ -22,6 +22,11 @@
 
 #include "SimpleLauncherIcon.h"
 
+namespace unity
+{
+namespace launcher
+{
+
 class DesktopLauncherIcon : public SimpleLauncherIcon
 {
 
@@ -40,5 +45,8 @@ public:
 protected:
   void ActivateLauncherIcon(ActionArg arg);
 };
+
+}
+}
 
 #endif // DESKTOPLAUNCHERICON_H

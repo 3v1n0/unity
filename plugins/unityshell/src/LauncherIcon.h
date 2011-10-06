@@ -43,12 +43,17 @@
 #include "Tooltip.h"
 #include "QuicklistView.h"
 #include "Introspectable.h"
-#include "Launcher.h"
 #include "LauncherEntryRemote.h"
+
+
+namespace unity
+{
+namespace launcher
+{
 
 class Launcher;
 
-class LauncherIcon : public AbstractLauncherIcon, public unity::Introspectable
+class LauncherIcon : public AbstractLauncherIcon, public Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE(LauncherIcon, AbstractLauncherIcon);
 
@@ -336,6 +341,9 @@ private:
   std::map<TransformIndex, std::vector<nux::Vector4> > transform_map;
   
 };
+
+}
+}
 
 #endif // LAUNCHERICON_H
 

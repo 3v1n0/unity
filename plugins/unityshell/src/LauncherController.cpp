@@ -24,10 +24,12 @@
 #include <core/core.h>
 
 #include <Nux/Nux.h>
+#include <Nux/HLayout.h>
 #include <Nux/BaseWindow.h>
 #include <NuxCore/Logger.h>
 
 #include "BamfLauncherIcon.h"
+#include "DesktopLauncherIcon.h"
 #include "DeviceLauncherIcon.h"
 #include "DeviceLauncherSection.h"
 #include "FavoriteStore.h"
@@ -42,6 +44,7 @@
 #include "BFBLauncherIcon.h"
 /* FIXME: once we get a better method to add the toplevel windows to
    the accessible root object, this include would not be required */
+#include "unitya11y.h"
 #include "unity-util-accessible.h"
 
 
@@ -98,6 +101,7 @@ public:
   DeviceLauncherSection* device_section_;
   LauncherEntryRemoteModel remote_model_;
   SimpleLauncherIcon*    expo_icon_;
+  nux::ObjectPtr<AbstractLauncherIcon> desktop_icon_;
   int                    num_workspaces_;
 
   guint            bamf_timer_handler_id_;
@@ -117,7 +121,8 @@ Controller::Impl::Impl(Display* display)
   // seems like it probably should...
   launcher_window_ = new nux::BaseWindow(TEXT("LauncherWindow"));
 
-  launcher_ = new Launcher(launcher_window_);
+  Launcher* raw_launcher = new Launcher(launcher_window_.GetPointer());
+  launcher_ = raw_launcher;
   launcher_->display = display;
   launcher_->SetIconSize(54, 48);
   launcher_->SetBacklightMode(Launcher::BACKLIGHT_ALWAYS_ON);
@@ -126,7 +131,7 @@ Controller::Impl::Impl(Display* display)
   launcher_->SetUrgentAnimation(Launcher::URGENT_ANIMATION_WIGGLE);
 
   nux::HLayout* layout = new nux::HLayout(NUX_TRACKER_LOCATION);
-  layout->AddView(launcher_, 1);
+  layout->AddView(raw_launcher, 1);
   layout->SetContentDistribution(nux::eStackLeft);
   layout->SetVerticalExternalMargin(0);
   layout->SetHorizontalExternalMargin(0);
@@ -136,22 +141,13 @@ Controller::Impl::Impl(Display* display)
   launcher_window_->ShowWindow(true);
   launcher_window_->EnableInputWindow(true, "launcher", false, false);
   launcher_window_->InputWindowEnableStruts(true);
-  launcher_window_->SetEnterFocusInputArea(launcher_);
+  launcher_window_->SetEnterFocusInputArea(raw_launcher);
 
-  /* FIXME: this should not be manual, should be managed with a
-     show/hide callback like in GAIL*/
-  if (unity_a11y_initialized())
-  {
-    AtkObject *atk_obj = unity_util_accessible_add_window(launcher_window_);
-    atk_object_set_name(atk_obj, _("Launcher"));
-  }
-
-  // TODO: construct the launcher with the model, and have the launcher keep a reference.
   launcher_->SetModel(model_.get());
   launcher_->launcher_addrequest.connect(sigc::mem_fun(this, &Impl::OnLauncherAddRequest));
   launcher_->launcher_removerequest.connect(sigc::mem_fun(this, &Impl::OnLauncherRemoveRequest));
 
-  device_section_ = new DeviceLauncherSection(launcher_);
+  device_section_ = new DeviceLauncherSection(raw_launcher);
   device_section_->IconAdded.connect(sigc::mem_fun(this, &Impl::OnIconAdded));
 
   num_workspaces_ = WindowManager::Default()->WorkspaceCount();
@@ -172,7 +168,8 @@ Controller::Impl::Impl(Display* display)
   remote_model_.entry_added.connect(sigc::mem_fun(this, &Impl::OnLauncherEntryRemoteAdded));
   remote_model_.entry_removed.connect(sigc::mem_fun(this, &Impl::OnLauncherEntryRemoteRemoved));
 
-  RegisterIcon (new BFBLauncherIcon (launcher));
+  RegisterIcon(new BFBLauncherIcon(raw_launcher));
+  desktop_icon_ = new DesktopLauncherIcon(raw_launcher);
 }
 
 Controller::Impl::~Impl()
@@ -316,7 +313,7 @@ void Controller::Impl::OnExpoActivated()
 void Controller::Impl::InsertTrash()
 {
   TrashLauncherIcon* icon;
-  icon = new TrashLauncherIcon(launcher_);
+  icon = new TrashLauncherIcon(launcher_.GetPointer());
   RegisterIcon(icon);
 }
 
@@ -336,7 +333,7 @@ void Controller::Impl::UpdateNumWorkspaces(int workspaces)
 
 void Controller::Impl::InsertExpoAction()
 {
-  expo_icon_ = new SimpleLauncherIcon(launcher_);
+  expo_icon_ = new SimpleLauncherIcon(launcher_.GetPointer());
 
   expo_icon_->tooltip_text = _("Workspace Switcher");
   expo_icon_->SetIconName("workspace-switcher");
@@ -388,7 +385,7 @@ void Controller::Impl::OnViewOpened(BamfMatcher* matcher, BamfView* view, gpoint
   if (g_object_get_qdata(G_OBJECT(app), g_quark_from_static_string("unity-seen")))
     return;
 
-  BamfLauncherIcon* icon = new BamfLauncherIcon(self->launcher_, app);
+  BamfLauncherIcon* icon = new BamfLauncherIcon(self->launcher_.GetPointer(), app);
   icon->SetIconType(LauncherIcon::TYPE_APPLICATION);
   icon->SetSortPriority(self->sort_priority_++);
 
@@ -413,7 +410,7 @@ LauncherIcon* Controller::Impl::CreateFavorite(const char* file_path)
   g_object_set_qdata(G_OBJECT(app), g_quark_from_static_string("unity-seen"), GINT_TO_POINTER(1));
 
   bamf_view_set_sticky(BAMF_VIEW(app), true);
-  icon = new BamfLauncherIcon(launcher_, app);
+  icon = new BamfLauncherIcon(launcher_.GetPointer(), app);
   icon->SetIconType(LauncherIcon::TYPE_APPLICATION);
   icon->SetSortPriority(sort_priority_++);
 
@@ -458,7 +455,7 @@ void Controller::Impl::SetupBamf()
       continue;
     g_object_set_qdata(G_OBJECT(app), g_quark_from_static_string("unity-seen"), GINT_TO_POINTER(1));
 
-    icon = new BamfLauncherIcon(launcher_, app);
+    icon = new BamfLauncherIcon(launcher_.GetPointer(), app);
     icon->SetSortPriority(sort_priority_++);
     RegisterIcon(icon);
   }
@@ -490,10 +487,10 @@ Launcher& Controller::launcher()
   return *(pimpl->launcher_);
 }
 
-LauncherModel& Controller::model()
-{
-  return *(pimpl->model_);
-}
+//LauncherModel& Controller::model()
+//{
+// return *(pimpl->model_);
+//}
 
 std::vector<char> Controller::GetAllShortcuts()
 {
@@ -506,6 +503,19 @@ std::vector<char> Controller::GetAllShortcuts()
       shortcuts.push_back(shortcut);
   }
   return shortcuts;
+}
+
+std::vector<AbstractLauncherIcon*> Controller::GetAltTabIcons()
+{
+  std::vector<AbstractLauncherIcon*> results;
+
+  results.push_back(pimpl->desktop_icon_.GetPointer());
+
+  for (auto icon : *(pimpl->model_))
+    if (icon->ShowInSwitcher())
+      results.push_back(icon);
+
+  return results;
 }
 
 void Controller::PrimaryMonitorGeometryChanged(nux::Geometry const& rect)

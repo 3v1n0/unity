@@ -22,6 +22,11 @@
 
 #include "LauncherIcon.h"
 
+namespace unity
+{
+namespace launcher
+{
+
 class Launcher;
 
 class SimpleLauncherIcon : public LauncherIcon
@@ -56,6 +61,9 @@ private:
   std::map<int, nux::BaseTexture*> texture_map;
   int last_size_;
 };
+
+}
+}
 
 #endif // SIMPLELAUNCHERICON_H
 

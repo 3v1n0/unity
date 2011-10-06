@@ -34,6 +34,10 @@
 
 namespace unity
 {
+namespace launcher
+{
+class AbstractLauncherIcon;
+}
 namespace switcher
 {
 
@@ -63,7 +67,7 @@ public:
   nux::Property<bool> detail_on_timeout;
   nux::Property<int>  detail_timeout_length;
 
-  void Show(ShowMode show, SortMode sort, bool reverse, std::vector<AbstractLauncherIcon*> results);
+  void Show(ShowMode show, SortMode sort, bool reverse, std::vector<launcher::AbstractLauncherIcon*> results);
   void Hide(bool accept_state=true);
 
   bool Visible();
@@ -84,7 +88,7 @@ public:
 
   SwitcherView * GetView ();
 
-  LayoutWindowList ExternalRenderTargets ();
+  ui::LayoutWindowList ExternalRenderTargets ();
 
 private:
   enum DetailMode
@@ -96,7 +100,7 @@ private:
 
   void ConstructView();
 
-  void OnModelSelectionChanged(AbstractLauncherIcon *icon);
+  void OnModelSelectionChanged(launcher::AbstractLauncherIcon *icon);
 
   static void OnBackgroundUpdate(GVariant* data, Controller* self);
 
@@ -117,7 +121,7 @@ private:
   static gboolean OnShowTimer(gpointer data);
   static gboolean OnDetailTimer(gpointer data);
 
-  static bool CompareSwitcherItemsPriority(AbstractLauncherIcon* first, AbstractLauncherIcon* second);
+  static bool CompareSwitcherItemsPriority(launcher::AbstractLauncherIcon* first, launcher::AbstractLauncherIcon* second);
 
 };
 
