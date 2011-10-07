@@ -184,7 +184,8 @@ void SearchBar::OnSearchChanged(nux::TextEntry* text_entry)
                                        (GSourceFunc)&OnLiveSearchTimeout,
                                        this);
 
-  bool is_empty = pango_entry_->GetText() == "";
+ 
+  bool is_empty = get_im_active() ? false : pango_entry_->GetText() == ""; 
   hint_->SetVisible(is_empty);
   spinner_->SetState(is_empty ? STATE_READY : STATE_SEARCHING);
 
