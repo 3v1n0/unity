@@ -707,7 +707,7 @@ PluginAdapter::CheckWindowIntersection(nux::Geometry const& region, CompWindow* 
       !(window->type() & intersect_types) ||
       !window->isMapped() ||
       !window->isViewable() ||
-      window->state () & CompWindowStateHiddenMask)
+      window->state() & CompWindowStateHiddenMask)
     return false;
 
   if (CompRegion(window->borderRect()).intersects(CompRect(region.x, region.y, region.width, region.height)))
