@@ -1890,7 +1890,9 @@ CompPoint UnityWindow::tryNotIntersectUI(CompPoint& pos)
 
 bool UnityWindow::place(CompPoint& pos)
 {
-  if (!PluginAdapter::Default ()->MaximizeIfBigEnough(window))
+  bool was_maximized = PluginAdapter::Default ()->MaximizeIfBigEnough(window);
+
+  if (!was_maximized)
   {
     bool result = window->place(pos);
 
