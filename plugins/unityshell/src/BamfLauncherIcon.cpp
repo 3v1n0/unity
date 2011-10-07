@@ -598,7 +598,12 @@ void BamfLauncherIcon::Focus(ActionArg arg)
   }
 
   g_list_free(children);
-  WindowManager::Default()->FocusWindowGroup(windows, arg.source != ActionArg::SWITCHER);
+  if (arg.source != ActionArg::SWITCHER)
+    WindowManager::Default()->FocusWindowGroup(windows,
+      WindowManager::FocusVisibility::ForceUnminimizeInvisible);
+  else
+    WindowManager::Default()->FocusWindowGroup(windows,
+      WindowManager::FocusVisibility::OnlyVisible);
 }
 
 bool BamfLauncherIcon::Spread(int state, bool force)

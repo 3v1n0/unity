@@ -98,7 +98,7 @@ class WindowManagerDummy : public WindowManager
     g_debug("%s", G_STRFUNC);
   }
 
-  void FocusWindowGroup(std::vector<Window> windows, bool force_unminimize)
+  void FocusWindowGroup(std::vector<Window> windows, FocusVisibility)
   {
     g_debug("%s", G_STRFUNC);
   }

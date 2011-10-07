@@ -43,7 +43,13 @@ public:
     m_MoveResizeAtom(XInternAtom(GDK_DISPLAY_XDISPLAY(gdk_display_get_default()),
                                  "_NET_WM_MOVERESIZE", FALSE))
   {
-  }
+  };
+
+  enum class FocusVisibility
+  {
+    OnlyVisible,
+    ForceUnminimizeInvisible
+  };
 
   static WindowManager* Default();
   static void            SetDefault(WindowManager* manager);
@@ -70,7 +76,7 @@ public:
   virtual void InitiateExpo() = 0;
   virtual bool IsExpoActive() = 0;
 
-  virtual void FocusWindowGroup(std::vector<Window> windows, bool force_unminimize) = 0;
+  virtual void FocusWindowGroup(std::vector<Window> windows, FocusVisibility) = 0;
   virtual bool ScaleWindowGroup(std::vector<Window> windows, int state, bool force) = 0;
 
   virtual void Decorate(guint32 xid) {};

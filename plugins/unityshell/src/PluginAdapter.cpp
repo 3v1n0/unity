@@ -559,7 +559,7 @@ PluginAdapter::Lower(guint32 xid)
 }
 
 void 
-PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids, bool force_unminimize)
+PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids, FocusVisibility focus_visibility)
 {
   CompPoint target_vp = m_Screen->vp();
   CompWindow* top_win = NULL;
@@ -612,7 +612,8 @@ PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids, bool force_unmin
         * not going to be accessible by either switcher
         * or scale, so unconditionally unminimize those
         * windows when the launcher icon is activated */
-       if (force_unminimize && win->mapNum () == 0)
+       if (focus_visibility == WindowManager::FocusVisibility::ForceUnminimizeInvisible &&
+           win->mapNum () == 0)
          win->unminimize ();
        else if ((any_mapped && !win->minimized()) || !any_mapped)
        {
