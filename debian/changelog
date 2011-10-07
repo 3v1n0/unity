@@ -1,3 +1,11 @@
+unity (4.22.0-0ubuntu3) UNRELEASED; urgency=low
+
+  * Cherry-pick upstream:
+    - Resize the _gradient_texture (in PanelMenuView::Draw) if needed
+      (LP: #863068, #868293, #869028)
+
+ -- Didier Roche <didrocks@ubuntu.com>  Fri, 07 Oct 2011 08:42:11 +0200
+
 unity (4.22.0-0ubuntu2) oneiric; urgency=low
 
   * Cherry-pick upstream:
