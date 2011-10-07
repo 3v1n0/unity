@@ -559,7 +559,7 @@ PluginAdapter::Lower(guint32 xid)
 }
 
 void 
-PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids)
+PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids, FocusVisibility focus_visibility)
 {
   CompPoint target_vp = m_Screen->vp();
   CompWindow* top_win = NULL;
@@ -606,11 +606,20 @@ PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids)
 
   for (CompWindow* &win : windows)
   {
-    if (win->defaultViewport() == target_vp &&
-        ((any_mapped && !win->minimized()) || !any_mapped))
+    if (win->defaultViewport() == target_vp)
     {
-      win->raise();
-      top_win = win;
+       /* Any window which is actually unmapped is
+        * not going to be accessible by either switcher
+        * or scale, so unconditionally unminimize those
+        * windows when the launcher icon is activated */
+       if (focus_visibility == WindowManager::FocusVisibility::ForceUnminimizeInvisible &&
+           win->mapNum () == 0)
+         win->unminimize ();
+       else if ((any_mapped && !win->minimized()) || !any_mapped)
+       {
+         win->raise();
+         top_win = win;
+       }
     }
   }
 
