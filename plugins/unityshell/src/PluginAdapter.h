@@ -135,7 +135,7 @@ public:
 
   unsigned long long GetWindowActiveNumber (guint32 xid);
 
-  void MaximizeIfBigEnough(CompWindow* window);
+  bool MaximizeIfBigEnough(CompWindow* window);
 
   nux::Geometry GetWindowGeometry(guint32 xid);
   nux::Geometry GetScreenGeometry();
