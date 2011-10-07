@@ -80,7 +80,7 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
   {
     for (l = bamf_view_get_children(BAMF_VIEW(m_App)); l; l = l->next)
     {
-      view = (BamfView*) l->data;
+      view = static_cast <BamfView*> (l->data);
 
       if (BAMF_IS_WINDOW(view))
       {
@@ -281,7 +281,7 @@ std::vector<Window> BamfLauncherIcon::RelatedXids ()
   children = bamf_view_get_children(BAMF_VIEW(m_App));
   for (l = children; l; l = l->next)
   {
-    view = (BamfView*) l->data;
+    view = static_cast <BamfView*> (l->data);
     if (BAMF_IS_WINDOW(view))
     {
       guint32 xid = bamf_window_get_xid(BAMF_WINDOW(view));
@@ -304,7 +304,7 @@ std::string BamfLauncherIcon::NameForWindow (Window window)
   children = bamf_view_get_children(BAMF_VIEW(m_App));
   for (l = children; l; l = l->next)
   {
-    view = (BamfView*) l->data;
+    view = static_cast <BamfView*> (l->data);
     if (BAMF_IS_WINDOW(view) && (Window) bamf_window_get_xid(BAMF_WINDOW(view)) == window)
     {
       gchar *name = bamf_view_get_name (view);
@@ -332,8 +332,9 @@ void BamfLauncherIcon::OnWindowMinimized(guint32 xid)
   UpdateQuirkTimeDelayed(300, QUIRK_SHIMMER);
 }
 
-gboolean BamfLauncherIcon::OnWindowMovedTimeout(BamfLauncherIcon* self)
+gboolean BamfLauncherIcon::OnWindowMovedTimeout(gpointer data)
 {
+  BamfLauncherIcon *self = static_cast <BamfLauncherIcon *> (data);
   GList *children = bamf_view_get_children(BAMF_VIEW(self->m_App));
 
   bool any_on_current = false;
@@ -463,7 +464,7 @@ void BamfLauncherIcon::AddProperties(GVariantBuilder* builder)
   int i = 0;
   for (l = children; l; l = l->next)
   {
-    view = (BamfView*) l->data;
+    view = static_cast <BamfView*> (l->data);
 
     if (BAMF_IS_WINDOW(view))
     {
@@ -486,7 +487,7 @@ bool BamfLauncherIcon::OwnsWindow(Window w)
 
   for (l = children; l; l = l->next)
   {
-    view = (BamfView*) l->data;
+    view = static_cast <BamfView*> (l->data);
 
     if (BAMF_IS_WINDOW(view))
     {
@@ -573,7 +574,7 @@ void BamfLauncherIcon::Focus(ActionArg arg)
   /* get the list of windows */
   for (l = children; l; l = l->next)
   {
-    view = (BamfView*) l->data;
+    view = static_cast <BamfView*> (l->data);
 
     if (BAMF_IS_WINDOW(view))
     {
@@ -615,7 +616,7 @@ bool BamfLauncherIcon::Spread(int state, bool force)
   std::vector<Window> windowList;
   for (l = children; l; l = l->next)
   {
-    view = (BamfView*) l->data;
+    view = static_cast <BamfView*> (l->data);
 
     if (BAMF_IS_WINDOW(view))
     {
@@ -630,7 +631,7 @@ bool BamfLauncherIcon::Spread(int state, bool force)
 
 void BamfLauncherIcon::OnClosed(BamfView* view, gpointer data)
 {
-  BamfLauncherIcon* self = (BamfLauncherIcon*) data;
+  BamfLauncherIcon* self = static_cast <BamfLauncherIcon*> (data);
 
   if (!bamf_view_is_sticky(BAMF_VIEW(self->m_App)))
     self->Remove();
@@ -639,7 +640,7 @@ void BamfLauncherIcon::OnClosed(BamfView* view, gpointer data)
 void BamfLauncherIcon::OnUserVisibleChanged(BamfView* view, gboolean visible,
                                             gpointer data)
 {
-  BamfLauncherIcon* self = (BamfLauncherIcon*) data;
+  BamfLauncherIcon* self = static_cast <BamfLauncherIcon*> (data);
 
   if (!bamf_view_is_sticky(BAMF_VIEW(self->m_App)))
     self->SetQuirk(QUIRK_VISIBLE, visible);
@@ -648,7 +649,7 @@ void BamfLauncherIcon::OnUserVisibleChanged(BamfView* view, gboolean visible,
 void BamfLauncherIcon::OnRunningChanged(BamfView* view, gboolean running,
                                         gpointer data)
 {
-  BamfLauncherIcon* self = (BamfLauncherIcon*) data;
+  BamfLauncherIcon* self = static_cast <BamfLauncherIcon*> (data);
   self->SetQuirk(QUIRK_RUNNING, running);
 
   if (running)
@@ -660,13 +661,13 @@ void BamfLauncherIcon::OnRunningChanged(BamfView* view, gboolean running,
 
 void BamfLauncherIcon::OnActiveChanged(BamfView* view, gboolean active, gpointer data)
 {
-  BamfLauncherIcon* self = (BamfLauncherIcon*) data;
+  BamfLauncherIcon* self = static_cast <BamfLauncherIcon*> (data);
   self->SetQuirk(QUIRK_ACTIVE, active);
 }
 
 void BamfLauncherIcon::OnUrgentChanged(BamfView* view, gboolean urgent, gpointer data)
 {
-  BamfLauncherIcon* self = (BamfLauncherIcon*) data;
+  BamfLauncherIcon* self = static_cast <BamfLauncherIcon*> (data);
   self->SetQuirk(QUIRK_URGENT, urgent);
 }
 
@@ -700,7 +701,7 @@ void BamfLauncherIcon::EnsureWindowState()
 
 void BamfLauncherIcon::OnChildAdded(BamfView* view, BamfView* child, gpointer data)
 {
-  BamfLauncherIcon* self = (BamfLauncherIcon*) data;
+  BamfLauncherIcon* self = static_cast <BamfLauncherIcon*> (data);
   self->EnsureWindowState();
   self->UpdateMenus();
   self->UpdateIconGeometries(self->GetCenter());
@@ -708,7 +709,7 @@ void BamfLauncherIcon::OnChildAdded(BamfView* view, BamfView* child, gpointer da
 
 void BamfLauncherIcon::OnChildRemoved(BamfView* view, BamfView* child, gpointer data)
 {
-  BamfLauncherIcon* self = (BamfLauncherIcon*) data;
+  BamfLauncherIcon* self = static_cast <BamfLauncherIcon*> (data);
   self->EnsureWindowState();
 }
 
@@ -833,7 +834,7 @@ void BamfLauncherIcon::OnQuit(DbusmenuMenuitem* item, int time, BamfLauncherIcon
 
   for (l = children; l; l = l->next)
   {
-    view = (BamfView*) l->data;
+    view = static_cast <BamfView*> (l->data);
 
     if (BAMF_IS_WINDOW(view))
     {
@@ -944,7 +945,7 @@ static void OnAppLabelActivated(DbusmenuMenuitem* sender,
   if (!data)
     return;
 
-  self = (BamfLauncherIcon*) data;
+  self = static_cast <BamfLauncherIcon*> (data);
   self->ActivateLauncherIcon(ActionArg(ActionArg::OTHER, 0));
 }
 
@@ -1117,7 +1118,7 @@ void BamfLauncherIcon::UpdateIconGeometries(nux::Point3 center)
 
   for (l = children; l; l = l->next)
   {
-    view = (BamfView*) l->data;
+    view = static_cast <BamfView*> (l->data);
 
     if (BAMF_IS_WINDOW(view))
     {
@@ -1176,7 +1177,7 @@ std::set<std::string> BamfLauncherIcon::ValidateUrisForLaunch(unity::DndData& ur
 
 gboolean BamfLauncherIcon::OnDndHoveredTimeout(gpointer data)
 {
-  BamfLauncherIcon* self = (BamfLauncherIcon*) data;
+  BamfLauncherIcon* self = static_cast <BamfLauncherIcon*> (data);
   
   // for now, let's not do this, it turns out to be quite buggy
   //if (self->_dnd_hovered && bamf_view_is_running(BAMF_VIEW(self->m_App)))
@@ -1249,7 +1250,7 @@ BamfLauncherIcon::SwitcherPriority()
   /* get the list of windows */
   for (l = children; l; l = l->next)
   {
-    view = (BamfView*) l->data;
+    view = static_cast <BamfView*> (l->data);
 
     if (BAMF_IS_WINDOW(view))
     {
@@ -1274,7 +1275,7 @@ BamfLauncherIcon::GetSupportedTypes()
 gboolean
 BamfLauncherIcon::FillSupportedTypes(gpointer data)
 {
-  BamfLauncherIcon* self = (BamfLauncherIcon*) data;
+  BamfLauncherIcon* self = static_cast <BamfLauncherIcon*> (data);
   
   if (self->_fill_supported_types_id)
   {

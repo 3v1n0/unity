@@ -141,7 +141,7 @@ private:
 
   static gboolean OnDndHoveredTimeout(gpointer data);
   static gboolean FillSupportedTypes(gpointer data);
-  static gboolean OnWindowMovedTimeout(BamfLauncherIcon *self);
+  static gboolean OnWindowMovedTimeout(gpointer data);
 };
 
 #endif // BAMFLAUNCHERICON_H
