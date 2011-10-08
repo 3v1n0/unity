@@ -662,7 +662,7 @@ PanelMenuView::GetActiveViewName()
         bamf_window_get_window_type(window) == BAMF_WINDOW_DESKTOP)
     {
       // Make the special 
-      label = g_strdup(g_dgettext("nautilus", "Desktop"));
+      label = g_strdup(g_dgettext("nautilus", "Ubuntu Desktop"));
     }
     else if (!WindowManager::Default()->IsWindowOnCurrentDesktop(window_xid) ||
         WindowManager::Default()->IsWindowObscured(window_xid))
