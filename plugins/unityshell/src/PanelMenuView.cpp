@@ -38,6 +38,9 @@
 #include <gio/gdesktopappinfo.h>
 #include <gconf/gconf-client.h>
 
+#include <glib.h>
+#include <glib/gi18n-lib.h>
+
 #include "DashSettings.h"
 #include "ubus-server.h"
 #include "UBusMessages.h"
@@ -661,8 +664,7 @@ PanelMenuView::GetActiveViewName()
     if (BAMF_IS_WINDOW(window) &&
         bamf_window_get_window_type(window) == BAMF_WINDOW_DESKTOP)
     {
-      // Make the special 
-      label = g_strdup(g_dgettext("nautilus", "Ubuntu Desktop"));
+      label = g_strdup(_("Ubuntu Desktop"));
     }
     else if (!WindowManager::Default()->IsWindowOnCurrentDesktop(window_xid) ||
         WindowManager::Default()->IsWindowObscured(window_xid))
