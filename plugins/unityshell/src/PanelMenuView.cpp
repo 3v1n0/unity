@@ -447,7 +447,7 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
       lockrect.pBits = 0;
       bool locked = false;
 
-      if (_gradient_texture.IsNull())
+      if (_gradient_texture.IsNull() || (_gradient_texture->GetWidth() != geo.width))
       {
         build_gradient = true;
       }
@@ -1357,18 +1357,17 @@ PanelMenuView::OnMouseMiddleClicked(int x, int y, unsigned long button_flags, un
 const gchar*
 PanelMenuView::GetName()
 {
-  return "MenuView";
+  return NULL;
 }
 
 const gchar*
 PanelMenuView::GetChildsName()
 {
-  return "entries";
+  return NULL;
 }
 
 void PanelMenuView::AddProperties(GVariantBuilder* builder)
 {
-  variant::BuilderWrapper(builder).add(GetGeometry());
 }
 
 /*
