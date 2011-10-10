@@ -370,7 +370,7 @@ PanelView::UpdateBackground()
   _last_height = geo.height;
   _is_dirty = false;
 
-  if (_dash_is_open)
+  if (_dash_is_open && (_menu_view->GetMaximizedWindow() == 0))
   {
     if (_bg_layer)
       delete _bg_layer;
