@@ -26,6 +26,7 @@
 
 #include "FilterBasicButton.h"
 #include "FilterExpanderLabel.h"
+#include "PlacesStyle.h"
 
 namespace unity {
 
@@ -73,6 +74,8 @@ NUX_IMPLEMENT_OBJECT_TYPE(FilterExpanderLabel);
 
   void FilterExpanderLabel::BuildLayout ()
   {
+    PlacesStyle *style = PlacesStyle::GetDefault(); 
+
     layout_ = new nux::VLayout(NUX_TRACKER_LOCATION);
     top_bar_layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
     
@@ -90,8 +93,10 @@ NUX_IMPLEMENT_OBJECT_TYPE(FilterExpanderLabel);
 
     top_bar_layout_->AddView (cairo_label_, 1, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
     top_bar_layout_->AddSpace(1, 1);
+    
+    top_bar_layout_->SetMaximumWidth((style->GetTileWidth() -12)*2+10);
 
-    layout_->AddLayout (top_bar_layout_, 0);
+    layout_->AddLayout (top_bar_layout_, 0, nux::MINOR_POSITION_LEFT);
     layout_->SetVerticalInternalMargin(0);
 
     SetLayout(layout_);
