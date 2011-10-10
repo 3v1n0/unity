@@ -780,11 +780,14 @@ PluginAdapter::SetMwmWindowHints(Window xid, MotifWmHints* new_hints)
 
   hints_atom = XInternAtom(display, _XA_MOTIF_WM_HINTS, false);
 
-  XGetWindowProperty(display,
-                     xid,
-                     hints_atom, 0, sizeof(MotifWmHints) / sizeof(long),
-                     False, AnyPropertyType, &type, &format, &nitems,
-                     &bytes_after, (guchar**)&data);
+  if (XGetWindowProperty(display,
+                         xid,
+                         hints_atom, 0, sizeof(MotifWmHints) / sizeof(long),
+                         False, AnyPropertyType, &type, &format, &nitems,
+                         &bytes_after, (guchar**)&data) != Success)
+  {
+    return;
+  }
 
   if (type != hints_atom || !data)
   {
