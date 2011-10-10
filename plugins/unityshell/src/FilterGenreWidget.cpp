@@ -61,7 +61,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(FilterGenre);
     genre_layout_->SetVerticalExternalMargin (12);
     genre_layout_->SetHorizontalInternalMargin (10);
     genre_layout_->EnablePartialVisibility (false);
-    genre_layout_->SetChildrenSize (style->GetTileWidth() - 12, 35);
+    genre_layout_->SetChildrenSize (style->GetTileWidth() - 12, 32);
 
     SetRightHandView(all_button_);
     SetContents(genre_layout_);
