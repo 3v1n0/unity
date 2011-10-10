@@ -104,6 +104,9 @@ private:
   int recorded_dash_width_;
   int recorded_dash_height_;
 
+  int mouse_last_x_;
+  int mouse_last_y_;
+
   UBusManager ubus_;
 
 };
