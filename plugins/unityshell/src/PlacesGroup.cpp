@@ -305,15 +305,18 @@ void PlacesGroup::Draw(nux::GraphicsEngine& GfxContext,
   nux::Geometry base = GetGeometry();
   GfxContext.PushClippingRectangle(base);
 
-  nux::Color col(0.2f, 0.2f, 0.2f, 0.2f);
+  nux::Color col(0.15f, 0.15f, 0.15f, 0.15f);
 
   if (_draw_sep)
+  {
+    GfxContext.GetRenderStates().SetColorMask(true, true, true, true);
+    GfxContext.GetRenderStates().SetBlend(true);
+    GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
     nux::GetPainter().Draw2DLine(GfxContext,
-                                 base.x + 10, base.y + base.height - 1,
-                                 base.x + base.width - 10, base.y + base.height - 1,
-                                 col,
+                                 base.x + 15, base.y + base.height - 1,
+                                 base.x + base.width - 15, base.y + base.height - 1,
                                  col);
-
+  }
 
   GfxContext.PopClippingRectangle();
 }
