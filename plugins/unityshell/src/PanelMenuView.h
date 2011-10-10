@@ -84,6 +84,7 @@ public:
   void OnMaximizedGrabMove(int, int, int, int, unsigned long, unsigned long);
   void OnMaximizedGrabEnd(int, int, unsigned long, unsigned long);
   void OnMouseDoubleClicked(int, int, unsigned long, unsigned long);
+  void OnMouseClicked(int, int, unsigned long, unsigned long);
   void OnMouseMiddleClicked(int, int, unsigned long, unsigned long);
 
   void Refresh();
