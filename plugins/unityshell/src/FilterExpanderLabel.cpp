@@ -90,7 +90,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(FilterExpanderLabel);
     top_bar_layout_->AddSpace(1, 1);
 
     layout_->AddLayout (top_bar_layout_, 0);
-    layout_->SetVerticalInternalMargin(12);
+    layout_->SetVerticalInternalMargin(0);
 
     SetLayout(layout_);
 
