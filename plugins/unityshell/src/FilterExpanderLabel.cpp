@@ -56,6 +56,8 @@ NUX_IMPLEMENT_OBJECT_TYPE(FilterExpanderLabel);
 
   void FilterExpanderLabel::SetRightHandView (nux::View *view)
   {
+    view->SetMaximumHeight(30);
+
     right_hand_contents_ = view;
     top_bar_layout_->AddView(right_hand_contents_, 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
   }
@@ -73,7 +75,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(FilterExpanderLabel);
   {
     layout_ = new nux::VLayout(NUX_TRACKER_LOCATION);
     top_bar_layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
-
+    
     cairo_label_ = new nux::StaticText(label_.c_str(), NUX_TRACKER_LOCATION);
     cairo_label_->SetFontName("Ubuntu 10");
     cairo_label_->SetTextColor(nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
