@@ -1327,7 +1327,7 @@ PanelMenuView::OnMaximizedGrabEnd(int x, int y, unsigned long, unsigned long)
 void
 PanelMenuView::OnMouseDoubleClicked(int x, int y, unsigned long button_flags, unsigned long)
 {
-  if (nux::GetEventButton(button_flags) != 1)
+  if (nux::GetEventButton(button_flags) != 1 || _places_showing)
     return;
 
   guint32 window_xid = GetMaximizedWindow();
