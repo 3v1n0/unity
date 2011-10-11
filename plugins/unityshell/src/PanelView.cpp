@@ -212,14 +212,6 @@ void PanelView::AddProperties(GVariantBuilder* builder)
   .add(GetGeometry());
 }
 
-long
-PanelView::ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo)
-{
-  long ret = TraverseInfo;
-  ret = _layout->ProcessEvent(ievent, ret, ProcessEventInfo);
-  return ret;
-}
-
 void
 PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
@@ -439,7 +431,7 @@ void PanelView::OnObjectAdded(indicator::Indicator::Ptr const& proxy)
 
   _layout->SetContentDistribution(nux::eStackLeft);
 
-  ComputeChildLayout();
+  ComputeContentSize();
   NeedRedraw();
 }
 
@@ -456,14 +448,14 @@ void PanelView::OnObjectRemoved(indicator::Indicator::Ptr const& proxy)
 
   _layout->SetContentDistribution(nux::eStackLeft);
 
-  ComputeChildLayout();
+  ComputeContentSize();
   NeedRedraw();
 }
 
 void PanelView::OnIndicatorViewUpdated(PanelIndicatorEntryView* view)
 {
   _needs_geo_sync = true;
-  ComputeChildLayout();
+  ComputeContentSize();
 }
 
 void PanelView::OnMenuPointerMoved(int x, int y)

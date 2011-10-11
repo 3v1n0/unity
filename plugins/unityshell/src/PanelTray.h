@@ -42,7 +42,6 @@ public:
   ~PanelTray();
 
   void Draw(nux::GraphicsEngine& gfx_content, bool force_draw);
-  long ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo);
   void Sync();
 
   unsigned int xid ();

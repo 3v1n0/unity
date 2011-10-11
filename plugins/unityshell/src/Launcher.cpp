@@ -2035,13 +2035,6 @@ void Launcher::OnIconNeedsRedraw(AbstractLauncherIcon* icon)
   EnsureAnimation();
 }
 
-long Launcher::ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo)
-{
-  long ret = TraverseInfo;
-  ret = PostProcessEvent2(ievent, ret, ProcessEventInfo);
-  return ret;
-}
-
 void Launcher::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
 
@@ -2211,9 +2204,9 @@ void Launcher::PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw)
 void Launcher::PreLayoutManagement()
 {
   View::PreLayoutManagement();
-  if (m_CompositionLayout)
+  if (view_layout_)
   {
-    m_CompositionLayout->SetGeometry(GetGeometry());
+    view_layout_->SetGeometry(GetGeometry());
   }
 }
 

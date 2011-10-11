@@ -156,12 +156,12 @@ public:
     if (_pressed_dash_tex)
       _pressed_dash_tex->UnReference();
 
-    _normal_tex = style->GetWindowButton(_type, PanelStyle::WINDOW_STATE_NORMAL);
-    _prelight_tex = style->GetWindowButton(_type, PanelStyle::WINDOW_STATE_PRELIGHT);
-    _pressed_tex = style->GetWindowButton(_type, PanelStyle::WINDOW_STATE_PRESSED);
-    _normal_dash_tex = GetDashWindowButton(_type, PanelStyle::WINDOW_STATE_NORMAL);
-    _prelight_dash_tex = GetDashWindowButton(_type, PanelStyle::WINDOW_STATE_PRELIGHT);
-    _pressed_dash_tex = GetDashWindowButton(_type, PanelStyle::WINDOW_STATE_PRESSED);
+    _normal_tex = style->GetWindowButton(_type, PanelStyle::WINDOW_VISUAL_STATE_NORMAL);
+    _prelight_tex = style->GetWindowButton(_type, PanelStyle::WINDOW_VISUAL_STATE_PRELIGHT);
+    _pressed_tex = style->GetWindowButton(_type, PanelStyle::WINDOW_VISUAL_STATE_PRESSED);
+    _normal_dash_tex = GetDashWindowButton(_type, PanelStyle::WINDOW_VISUAL_STATE_NORMAL);
+    _prelight_dash_tex = GetDashWindowButton(_type, PanelStyle::WINDOW_VISUAL_STATE_PRELIGHT);
+    _pressed_dash_tex = GetDashWindowButton(_type, PanelStyle::WINDOW_VISUAL_STATE_PRESSED);
 
     if (_dash_is_open)
     {
@@ -193,16 +193,16 @@ public:
     if (DashSettings::GetDefault()->GetFormFactor() == DashSettings::DESKTOP)
     {
       // get maximize buttons
-      _normal_dash_tex = GetDashMaximizeWindowButton(PanelStyle::WINDOW_STATE_NORMAL);
-      _prelight_dash_tex = GetDashMaximizeWindowButton(PanelStyle::WINDOW_STATE_PRELIGHT);
-      _pressed_dash_tex = GetDashMaximizeWindowButton(PanelStyle::WINDOW_STATE_PRESSED);
+      _normal_dash_tex = GetDashMaximizeWindowButton(PanelStyle::WINDOW_VISUAL_STATE_NORMAL);
+      _prelight_dash_tex = GetDashMaximizeWindowButton(PanelStyle::WINDOW_VISUAL_STATE_PRELIGHT);
+      _pressed_dash_tex = GetDashMaximizeWindowButton(PanelStyle::WINDOW_VISUAL_STATE_PRESSED);
     }
     else
     {
       // get unmaximize buttons
-      _normal_dash_tex = GetDashWindowButton(_type, PanelStyle::WINDOW_STATE_NORMAL);
-      _prelight_dash_tex = GetDashWindowButton(_type, PanelStyle::WINDOW_STATE_PRELIGHT);
-      _pressed_dash_tex = GetDashWindowButton(_type, PanelStyle::WINDOW_STATE_PRESSED);
+      _normal_dash_tex = GetDashWindowButton(_type, PanelStyle::WINDOW_VISUAL_STATE_NORMAL);
+      _prelight_dash_tex = GetDashWindowButton(_type, PanelStyle::WINDOW_VISUAL_STATE_PRELIGHT);
+      _pressed_dash_tex = GetDashWindowButton(_type, PanelStyle::WINDOW_VISUAL_STATE_PRESSED);
     }
 
     // still check if the dash is really opened,
@@ -325,21 +325,21 @@ WindowButtons::WindowButtons()
 
   but = new WindowButton(PanelStyle::WINDOW_BUTTON_CLOSE);
   AddView(but, 0, nux::eCenter, nux::eFix);
-  but->activated.connect(sigc::mem_fun(this, &WindowButtons::OnCloseClicked));
+  but->state_change.connect(sigc::mem_fun(this, &WindowButtons::OnCloseClicked));
   but->mouse_enter.connect(lambda_enter);
   but->mouse_leave.connect(lambda_leave);
   but->mouse_move.connect(lambda_moved);
 
   but = new WindowButton(PanelStyle::WINDOW_BUTTON_MINIMIZE);
   AddView(but, 0, nux::eCenter, nux::eFix);
-  but->activated.connect(sigc::mem_fun(this, &WindowButtons::OnMinimizeClicked));
+  but->state_change.connect(sigc::mem_fun(this, &WindowButtons::OnMinimizeClicked));
   but->mouse_enter.connect(lambda_enter);
   but->mouse_leave.connect(lambda_leave);
   but->mouse_move.connect(lambda_moved);
 
   but = new WindowButton(PanelStyle::WINDOW_BUTTON_UNMAXIMIZE);
   AddView(but, 0, nux::eCenter, nux::eFix);
-  but->activated.connect(sigc::mem_fun(this, &WindowButtons::OnRestoreClicked));
+  but->state_change.connect(sigc::mem_fun(this, &WindowButtons::OnRestoreClicked));
   but->mouse_enter.connect(lambda_enter);
   but->mouse_leave.connect(lambda_leave);
   but->mouse_move.connect(lambda_moved);
