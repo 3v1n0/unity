@@ -136,12 +136,16 @@ PanelView::~PanelView()
 {
   if (_track_menu_pointer_id)
     g_source_remove(_track_menu_pointer_id);
+
   _style->UnReference();
   UBusServer *ubus = ubus_server_get_default();
   ubus_server_unregister_interest(ubus, _handle_bg_color_update);
   ubus_server_unregister_interest(ubus, _handle_dash_hidden);
   ubus_server_unregister_interest(ubus, _handle_dash_shown);
   _on_indicator_updated_connections.clear();
+
+  indicator::EntryLocationMap locations;
+  _remote->SyncGeometries(GetName() + boost::lexical_cast<std::string>(_monitor), locations);
 
   delete _bg_layer;
 }
