@@ -272,7 +272,7 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   GfxContext.PopClippingRectangle();
 
-  if (_needs_geo_sync && _menu_view->GetControlsActive())
+  if (_needs_geo_sync)
   {
     SyncGeometries();
     _needs_geo_sync = false;
@@ -624,7 +624,9 @@ PanelView::SyncGeometries()
   indicator::EntryLocationMap locations;
   std::string panel_id = GetName() + boost::lexical_cast<std::string>(_monitor);
 
-  _menu_view->GetGeometryForSync(locations);
+  if (_menu_view->GetControlsActive())
+    _menu_view->GetGeometryForSync(locations);
+
   _indicators->GetGeometryForSync(locations);
   _remote->SyncGeometries(panel_id, locations);
 }
