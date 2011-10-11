@@ -49,7 +49,7 @@ struct _PanelServicePrivate
 {
   GSList     *indicators;
   GHashTable *entry2indicator_hash;
-  GHashTable *entry2geometry_hash;
+  GHashTable *panel2entries_hash;
 
   guint  initial_sync_id;
   gint32 timeouts[N_TIMEOUT_SLOTS];
@@ -134,7 +134,7 @@ panel_service_class_dispose (GObject *object)
   gint i;
 
   g_hash_table_destroy (priv->entry2indicator_hash);
-  g_hash_table_destroy (priv->entry2geometry_hash);
+  g_hash_table_destroy (priv->panel2entries_hash);
 
   gdk_window_remove_filter (NULL, (GdkFilterFunc)event_filter, object);
 
@@ -300,19 +300,25 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
 static IndicatorObjectEntry *
 get_entry_at (PanelService *self, gint x, gint y)
 {
-  GHashTableIter iter;
-  gpointer key, value;
+  GHashTableIter panel_iter, entries_iter;
+  gpointer key, value, k, v;
 
-  g_hash_table_iter_init (&iter, self->priv->entry2geometry_hash);
-  while (g_hash_table_iter_next (&iter, &key, &value)) 
+  g_hash_table_iter_init (&panel_iter, self->priv->panel2entries_hash);
+  while (g_hash_table_iter_next (&panel_iter, &key, &value))
     {
-      IndicatorObjectEntry *entry = key;
-      GdkRectangle *geo = value;
+      GHashTable *entry2geometry_hash = value;
+      g_hash_table_iter_init (&entries_iter, entry2geometry_hash);
 
-      if (x >= geo->x && x <= (geo->x + geo->width) &&
-          y >= geo->y && y <= (geo->y + geo->height))
+      while (g_hash_table_iter_next (&entries_iter, &k, &v))
         {
-          return entry;
+          IndicatorObjectEntry *entry = k;
+          GdkRectangle *geo = v;
+
+          if (x >= geo->x && x <= (geo->x + geo->width) &&
+              y >= geo->y && y <= (geo->y + geo->height))
+            {
+              return entry;
+            }
         }
     }
 
@@ -350,8 +356,9 @@ panel_service_init (PanelService *self)
   gdk_window_add_filter (NULL, (GdkFilterFunc)event_filter, self);
 
   priv->entry2indicator_hash = g_hash_table_new (g_direct_hash, g_direct_equal);
-  priv->entry2geometry_hash = g_hash_table_new_full (g_direct_hash, g_direct_equal,
-                                                     NULL, g_free);
+  priv->panel2entries_hash = g_hash_table_new_full (g_str_hash, g_str_equal,
+                                                    g_free,
+                                                    (GDestroyNotify) g_hash_table_destroy);
 
   suppress_signals = TRUE;
   load_indicators (self);
@@ -388,7 +395,19 @@ panel_service_actually_remove_indicator (PanelService *self, IndicatorObject *in
       for (l = entries; l; l = l->next)
         {
           g_hash_table_remove (self->priv->entry2indicator_hash, l->data);
-          g_hash_table_remove (self->priv->entry2geometry_hash, l->data);
+
+          GHashTableIter iter;
+          gpointer key, value;
+          g_hash_table_iter_init (&iter, self->priv->panel2entries_hash);
+          while (g_hash_table_iter_next (&iter, &key, &value))
+            {
+              GHashTable *entry2geometry_hash = value;
+
+              if (g_hash_table_size (entry2geometry_hash) > 1)
+                g_hash_table_remove (entry2geometry_hash, l->data);
+              else
+                g_hash_table_iter_remove (&iter);
+            }
         }
 
       g_list_free (entries);
@@ -649,7 +668,7 @@ on_entry_removed (IndicatorObject      *object,
   priv = self->priv;
 
   g_hash_table_remove (priv->entry2indicator_hash, entry);
-  /* Don't remove here the value from priv->entry2geometry_hash, this should
+  /* Don't remove here the value from priv->panel2entries_hash, this should
    * be done in during the sync, to avoid false positive.
    * FIXME this in libappmenu.so to avoid to send an "entry-removed" signal
    * when switching the focus from a window to one of its dialog children */
@@ -1033,6 +1052,7 @@ on_active_menu_hidden (GtkMenu *menu, PanelService *self)
   priv->last_top = 0;
   priv->last_bottom = 0;
 
+  priv->use_event = FALSE;
   priv->pressed_entry = NULL;
 
   g_signal_emit (self, _service_signals[ENTRY_ACTIVATED], 0, "");
@@ -1105,12 +1125,12 @@ panel_service_sync_one (PanelService *self, const gchar *indicator_id)
 
 void
 panel_service_sync_geometry (PanelService *self,
-           const gchar *indicator_id,
-           const gchar *entry_id,
-           gint x,
-           gint y,
-           gint width,
-           gint height)
+                             const gchar *panel_id,
+                             const gchar *entry_id,
+                             gint x,
+                             gint y,
+                             gint width,
+                             gint height)
 {
   PanelServicePrivate *priv = self->priv;
   IndicatorObjectEntry *entry = get_entry_by_id (entry_id);
@@ -1118,18 +1138,41 @@ panel_service_sync_geometry (PanelService *self,
 
   if (entry)
     {
+      GHashTable *entry2geometry_hash = g_hash_table_lookup (priv->panel2entries_hash, panel_id);
+
       if (width < 0 || height < 0)
         {
-          g_hash_table_remove (priv->entry2geometry_hash, entry);
+          if (entry2geometry_hash)
+            {
+              if (g_hash_table_size (entry2geometry_hash) > 1)
+                {
+                  g_hash_table_remove (entry2geometry_hash, entry);
+                }
+              else
+                {
+                  g_hash_table_remove (priv->panel2entries_hash, panel_id);
+                }
+            }
         }
       else
         {
-          GdkRectangle *geo = g_hash_table_lookup (priv->entry2geometry_hash, entry);
+          GdkRectangle *geo = NULL;
+
+          if (entry2geometry_hash == NULL)
+          {
+            entry2geometry_hash = g_hash_table_new_full (g_direct_hash, g_direct_equal,
+                                                         NULL, g_free);
+            g_hash_table_insert (priv->panel2entries_hash, g_strdup(panel_id), entry2geometry_hash);
+          }
+          else
+          {
+            geo = g_hash_table_lookup (entry2geometry_hash, entry);
+          }
 
           if (geo == NULL)
             {
               geo = g_new (GdkRectangle, 1);
-              g_hash_table_insert (priv->entry2geometry_hash, entry, geo);
+              g_hash_table_insert (entry2geometry_hash, entry, geo);
             }
 
           geo->x = x;
