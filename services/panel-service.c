@@ -1052,6 +1052,7 @@ on_active_menu_hidden (GtkMenu *menu, PanelService *self)
   priv->last_top = 0;
   priv->last_bottom = 0;
 
+  priv->use_event = FALSE;
   priv->pressed_entry = NULL;
 
   g_signal_emit (self, _service_signals[ENTRY_ACTIVATED], 0, "");
