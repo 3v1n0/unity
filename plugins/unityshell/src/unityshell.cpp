@@ -2266,6 +2266,9 @@ void UnityFBO::bind ()
       GL::bindFramebuffer (GL_FRAMEBUFFER_EXT, 0);
       GL::deleteFramebuffers (1, &mFboHandle);
 
+      glDrawBuffer (GL_BACK);
+      glReadBuffer (GL_BACK);
+
       mFboHandle = 0;
 
       mFboStatus = false;
@@ -2279,7 +2282,7 @@ void UnityFBO::bind ()
   {
     uScreen->setActiveFbo (mFboHandle);
 
-    glPushAttrib (GL_VIEWPORT_BIT | GL_CURRENT_BIT);
+    glPushAttrib (GL_VIEWPORT_BIT);
 
     glViewport (0,
                0,
