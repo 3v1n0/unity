@@ -105,7 +105,13 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
   show_filters_->SetCanFocus(true);
   show_filters_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_LEFT);
   show_filters_->mouse_click.connect([&] (int x, int y, unsigned long b, unsigned long k) { showing_filters = !showing_filters; });
-  layout_->AddView(show_filters_, 0, nux::MINOR_POSITION_RIGHT, nux::MINOR_SIZE_FIX);
+
+  nux::Layout *filter_layout = new nux::HLayout();
+  filter_layout->SetHorizontalExternalMargin(12);
+  filter_layout->AddLayout(new nux::SpaceLayout(0, 10000, 0, 1), 1);
+  filter_layout->AddView(show_filters_, 0, nux::MINOR_POSITION_RIGHT);
+
+  layout_->AddView(filter_layout, 1, nux::MINOR_POSITION_RIGHT, nux::MINOR_SIZE_FIX);
 
   sig_manager_.Add(new Signal<void, GtkSettings*, GParamSpec*>
       (gtk_settings_get_default(),
