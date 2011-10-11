@@ -1258,6 +1258,7 @@ PanelMenuView::GetMaximizedWindow()
 void
 PanelMenuView::OnMaximizedGrabStart(int x, int y, unsigned long button_flags, unsigned long)
 {
+  Window maximized_win;
   if (nux::GetEventButton(button_flags) != 1 || _places_showing)
     return;
 
@@ -1266,8 +1267,15 @@ PanelMenuView::OnMaximizedGrabStart(int x, int y, unsigned long button_flags, un
   //
   // This is a workaround to avoid that the grid plugin would be fired
   // showing the window shape preview effect. See bug #838923
-  if (GetMaximizedWindow() != 0)
+
+  maximized_win = GetMaximizedWindow ();
+
+  if (maximized_win != 0)
+  {
+    /* Always activate the window in case it is on another monitor */
+    WindowManager::Default ()->Activate (maximized_win);
     _panel_titlebar_grab_area->SetGrabbed(true);
+  }
 }
 
 void
