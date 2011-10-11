@@ -622,9 +622,11 @@ void
 PanelView::SyncGeometries()
 {
   indicator::EntryLocationMap locations;
+  std::string panel_id = GetName() + boost::lexical_cast<std::string>(_monitor);
+
   _menu_view->GetGeometryForSync(locations);
   _indicators->GetGeometryForSync(locations);
-  _remote->SyncGeometries(GetName(), locations);
+  _remote->SyncGeometries(panel_id, locations);
 }
 
 void
