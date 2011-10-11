@@ -1162,7 +1162,7 @@ panel_service_sync_geometry (PanelService *self,
           {
             entry2geometry_hash = g_hash_table_new_full (g_direct_hash, g_direct_equal,
                                                          g_free, g_free);
-            g_hash_table_insert (priv->panel2entries_hash, g_strdup(panel_id),
+            g_hash_table_insert (priv->panel2entries_hash, g_strdup (panel_id),
                                  entry2geometry_hash);
           }
           else
