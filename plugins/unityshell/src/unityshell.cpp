@@ -681,20 +681,49 @@ void UnityScreen::enterShowDesktopMode ()
   for (CompWindow *w : screen->windows ())
   {
     if (UnityShowdesktopHandler::shouldHide (w))
+    {
       UnityWindow::get (w)->enterShowDesktop ();
+      // the animation plugin does strange things here ...
+      // if this notification is sent
+      // w->windowNotify (CompWindowNotifyEnterShowDesktopMode);
+    }
     if (w->type() & CompWindowTypeDesktopMask)
       w->moveInputFocusTo();
   }
 
   PluginAdapter::Default()->OnShowDesktop();
 
+  /* Disable the focus handler as we will report that
+   * minimized windows can be focused which will
+   * allow them to enter showdesktop mode. That's
+   * no good */
+  for (CompWindow *w : screen->windows ())
+  {
+    UnityWindow *uw = UnityWindow::get (w);
+    w->focusSetEnabled (uw, false);
+  }
+
   screen->enterShowDesktopMode ();
+
+  for (CompWindow *w : screen->windows ())
+  {
+    UnityWindow *uw = UnityWindow::get (w);
+    w->focusSetEnabled (uw, true);
+  }
 }
 
 void UnityScreen::leaveShowDesktopMode (CompWindow *w)
 {
   for (CompWindow *cw : screen->windows ())
-    UnityWindow::get (cw)->leaveShowDesktop ();
+  {
+    if (cw->inShowDesktopMode ())
+    {
+      UnityWindow::get (cw)->leaveShowDesktop ();
+      // the animation plugin does strange things here ...
+      // if this notification is sent
+      //cw->windowNotify (CompWindowNotifyLeaveShowDesktopMode);
+    }
+  }
 
   PluginAdapter::Default()->OnLeaveDesktop();
 
@@ -716,6 +745,8 @@ void UnityWindow::leaveShowDesktop ()
   {
     mShowdesktopHandler->fadeIn ();
     window->setShowDesktopMode (false);
+    delete mShowdesktopHandler;
+    mShowdesktopHandler = NULL;
   }
 }
 
@@ -738,6 +769,9 @@ CompWindowList UnityShowdesktopHandler::animating_windows (0);
 
 bool UnityShowdesktopHandler::shouldHide (CompWindow *w)
 {
+  if (w->overrideRedirect ())
+    return false;
+
   if (!w->managed ())
     return false;
 
@@ -748,8 +782,13 @@ bool UnityShowdesktopHandler::shouldHide (CompWindow *w)
                       CompWindowTypeDockMask))
    return false;
 
-  if (w->state () & CompWindowStateSkipPagerMask)
+  if (w->state () & (CompWindowStateSkipPagerMask |
+		     CompWindowStateSkipTaskbarMask))
     return false;
+
+  if ((w->state () & CompWindowStateHiddenMask))
+    if (!(w->inShowDesktopMode () || w->shaded ()))
+      return false;
 
   return true;
 }
