@@ -149,7 +149,12 @@ PanelIndicatorsView::ActivateEntry(std::string const& entry_id)
 bool
 PanelIndicatorsView::ActivateIfSensitive()
 {
+  std::map<int, PanelIndicatorEntryView*> sorted_entries;
+  
   for (auto entry : entries_)
+    sorted_entries[entry.second->GetEntryPriority()] = entry.second;
+  
+  for (auto entry : sorted_entries)
   {
     PanelIndicatorEntryView* view = entry.second;
     if (view->IsSensitive())

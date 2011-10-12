@@ -144,6 +144,8 @@ LensView::~LensView()
 void LensView::SetupViews()
 {
   layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
+  
+  layout_->SetHorizontalExternalMargin(8);
 
   scroll_view_ = new LensScrollView(new PlacesVScrollBar(NUX_TRACKER_LOCATION),
                                     NUX_TRACKER_LOCATION);

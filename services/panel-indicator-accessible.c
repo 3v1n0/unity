@@ -72,19 +72,30 @@ on_indicator_entry_removed (IndicatorObject *io, IndicatorObjectEntry *entry, gp
   GSList *l;
   guint count = 0;
   PanelIndicatorAccessible *pia = PANEL_INDICATOR_ACCESSIBLE (user_data);
+  gboolean found = FALSE;
+  AtkObject *accessible = NULL;
 
-  for (l = pia->priv->a11y_children; l != NULL; l = l->next, count++)
+  for (l = pia->priv->a11y_children; l != NULL; l = g_slist_next (l))
     {
-      AtkObject *accessible = ATK_OBJECT (l->data);
+      accessible = ATK_OBJECT (l->data);
 
       if (entry == panel_indicator_entry_accessible_get_entry (PANEL_INDICATOR_ENTRY_ACCESSIBLE (accessible)))
         {
-	  pia->priv->a11y_children = g_slist_remove (pia->priv->a11y_children, accessible);
-	  g_signal_emit_by_name (ATK_OBJECT (pia), "children-changed::remove",
-				 count, accessible);
-
-	  g_object_unref (accessible);
+          found = TRUE;
+          break;
 	}
+      else
+        count++;
+    }
+
+
+  if (found)
+    {
+      pia->priv->a11y_children = g_slist_remove (pia->priv->a11y_children, accessible);
+      g_signal_emit_by_name (ATK_OBJECT (pia), "children-changed::remove",
+                             count, accessible);
+
+      g_object_unref (accessible);
     }
 }
 
@@ -214,12 +225,10 @@ panel_indicator_accessible_finalize (GObject *object)
           g_object_unref (G_OBJECT (pia->priv->indicator));
         }
 
-      while (pia->priv->a11y_children != NULL)
+      if (pia->priv->a11y_children != NULL)
         {
-	  AtkObject *accessible = ATK_OBJECT (pia->priv->a11y_children->data);
-
-	  pia->priv->a11y_children = g_slist_remove (pia->priv->a11y_children, accessible);
-	  g_object_unref (accessible);
+          g_slist_free_full(pia->priv->a11y_children, g_object_unref);
+          pia->priv->a11y_children = NULL;
 	}
 
       g_signal_handlers_disconnect_by_func (pia->priv->service, on_geometries_changed_cb, pia);

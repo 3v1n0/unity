@@ -111,14 +111,29 @@ void MultiRangeFilter::OptionChanged(bool is_active, std::string const& id)
   }
   else
   {
-    // It's in the middle of the range. See which side to shorten.
-    if (position < (right_pos_/2.0f))
+    // Reset if the one and only block is deactivated
+    if (position == right_pos_ && position == left_pos_)
+    {
+      left_pos_ = -1;
+      right_pos_ = -1;
+    }
+    // If the deactivated block is on either end, remove it
+    else if (position == right_pos_)
+    {
+      right_pos_ = position - 1;
+    }
+    else if (position == left_pos_)
     {
       left_pos_ = position + 1;
     }
+    // It's in the middle of the range, see which side to shorten
+    else if (position < (left_pos_ + ((right_pos_ - left_pos_)/2.0f)))
+    {
+      left_pos_ = position;
+    }
     else
     {
-      right_pos_ = position - 1;
+      right_pos_ = position;
     }
   }
 
