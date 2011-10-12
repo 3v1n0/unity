@@ -512,14 +512,14 @@ TEST_F(TestLens, TestFilterMultiRangeLogic)
   EXPECT_TRUE (filter->filtering);
   EXPECT_TRUE (options[0]->active);
   EXPECT_TRUE (options[1]->active);
-  EXPECT_FALSE (options[2]->active);
+  EXPECT_TRUE (options[2]->active);
   EXPECT_FALSE (options[3]->active);
 
   options[0]->active = false;
   EXPECT_TRUE (filter->filtering);
   EXPECT_FALSE (options[0]->active);
   EXPECT_TRUE (options[1]->active);
-  EXPECT_FALSE (options[2]->active);
+  EXPECT_TRUE (options[2]->active);
   EXPECT_FALSE (options[3]->active);
 
   filter->Clear();
