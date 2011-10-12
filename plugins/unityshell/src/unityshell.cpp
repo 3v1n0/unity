@@ -574,6 +574,7 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
   nux::GetGraphicsDisplay()->GetGpuDevice()->backup_texture0_ = device_texture;
 
   nux::Geometry geo = nux::Geometry (0, 0, screen->width (), screen->height ());
+  nux::Geometry oGeo = nux::Geometry (output->x (), output->y (), output->width (), output->height ());
   BackgroundEffectHelper::monitor_rect_ = geo;
 
   _in_paint = true;
