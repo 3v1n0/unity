@@ -2380,6 +2380,20 @@ UnityFBO::~UnityFBO ()
     glDeleteTextures (1, &mFBTexture);
 }
 
+void UnityScreen::OnDashRealized ()
+{
+  /* stack any windows named "onboard" above us */
+  for (CompWindow *w : screen->windows ())
+  {
+    if (w->resName() == "onboard")
+    {
+      Window xid = dashController->window()->GetInputWindowId();
+      XSetTransientForHint (screen->dpy(), w->id(), xid);
+      w->raise ();
+    }
+  }
+}
+
 /* Start up the launcher */
 void UnityScreen::initLauncher(nux::NThread* thread, void* InitData)
 {
@@ -2436,6 +2450,7 @@ void UnityScreen::initLauncher(nux::NThread* thread, void* InitData)
 
   /* Setup Places */
   self->dashController = DashController::Ptr(new DashController());
+  self->dashController->on_realize.connect (sigc::mem_fun (self, &UnityScreen::OnDashRealized));
 
   /* FIXME: this should not be manual, should be managed with a
      show/hide callback like in GAIL
@@ -2491,11 +2506,24 @@ UnityWindow::UnityWindow(CompWindow* window)
 
   if (window->state () & CompWindowStateFullscreenMask)
     UnityScreen::get (screen)->fullscreen_windows_.push_back(window);
-  
-  if (window->resName() == "onboard")
+
+  /* We might be starting up so make sure that
+   * we don't deref the dashcontroller that doesnt
+   * exist */
+  DashController::Ptr dp = UnityScreen::get (screen)->dashController;
+
+  if (dp)
   {
-    Window xid = UnityScreen::get (screen)->dashController->window()->GetInputWindowId();
-    XSetTransientForHint (screen->dpy(), window->id(), xid);
+    nux::BaseWindow* w = dp->window ();
+
+    if (w)
+    {
+      if (window->resName() == "onboard")
+      {
+        Window xid = dp->window()->GetInputWindowId();
+        XSetTransientForHint (screen->dpy(), window->id(), xid);
+      }
+    }
   }
 }
 
