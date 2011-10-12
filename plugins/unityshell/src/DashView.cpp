@@ -943,7 +943,7 @@ Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
   {
     return this;
   }
-  else if (direction == KEY_NAV_NONE)
+  else if (direction == KEY_NAV_NONE || search_bar_->im_active)
   {
     // then send the event to the search entry
     return search_bar_->text_entry();

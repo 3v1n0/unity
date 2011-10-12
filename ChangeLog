@@ -1,3 +1,379 @@
+2011-10-12  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Fix tests for FilterMultirangeWidget
+
+2011-10-12  Zaid Yeganeh  <zaid.yeganeh@gmail.com>
+
+	Lens range widgets do not function correctly
+
+2011-10-07  Zaid Yeganeh  <zaid.yeganeh@gmail.com>
+
+	[UnityCore] Fixed the mouse interactions with the multi range filter
+	
+	modified:
+	UnityCore/MultiRangeFilter.cpp
+
+2011-10-12  Jay Ó Broin  <ismise@lavabit.com>
+
+	Clicking blank space on top panel doesn't raise maximized window to front
+
+2011-10-10  Jay Ó Broin  <ismise@lavabit.com>
+
+	Add handler to raise maximized window on left-click on panel (LP: #864708)
+
+2011-10-12  Brandon Schaefer  <schbra02@evergreen.edu>
+
+	When the ibus was active and you pressed down it would move the focus to the result grid. Now when the ibus is active it keeps the focus when your press down/up
+
+2011-10-11  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	Now pressing the ddown key with ibus works
+
+2011-10-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Bug #869196: unity panel menus don't stay open when clicked on second monitor with different geometry
+
+2011-10-11  Robert Carr  <robert.carr@canonical.com>
+
+	Always check return value of XGetWindowProperty otherwise we sometimes free a random chunk of memory
+
+2011-10-11  Robert Carr  <robert.carr@canonical.com>
+
+	Minimum height of multi range filter should be the same as for Genre buttons (32)
+
+2011-10-11  Robert Carr  <robert.carr@canonical.com>
+
+	Merge lp:~robertcarr/unity/filtertweaks
+
+2011-10-11  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Merge lp:~smspillaz/unity/unity.fix_870430
+
+2011-10-11  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Use correct memory management and temporarily disable focus handlers when passing
+	the showdesktop wrap chain to core.
+	
+	Core checks for whether or not the window is allowed focus, for minimized windows
+	we set this to true because plugins such as scale need to check this value
+	to determine if a window should be added to their display lists. However, core
+	will set the "in showdesktop mode" value to true if the window is allowed to have
+	focus and wasn't already in showdesktop mode by the time the wrap chain is passed,
+	but the window is already hidden, so it shouldn't be allowed to be included in the
+	showdesktop list, so disable focus handlers such that CompWindow::focus will
+	return false
+
+2011-10-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Bug #870844: Double-click on the dash top panel is taken effect on the window underneith
+
+2011-10-12  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Leak fix
+
+2011-10-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelService: Code spacing fix
+
+2011-10-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelService: entry2geometry_hash free the keys as well.
+
+2011-10-12  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Merge lp:~smspillaz/unity/unity.fix_843958 (lp:unity r1714)
+
+2011-10-11  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Merge lp:~smspillaz/unity/unity.fix_870430 (lp:unity r1709)
+
+2011-10-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Bug #869196: unity panel menus don't stay open when clicked on second monitor with different geometry
+
+2011-10-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelService: reset the use_event variable on menu-hidden
+	
+	This fixes the bug which caused the menus to re-close when opening one
+	after that the previous one has been closed using the "ESC" button.
+
+2011-10-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelView: Sync geometries on panel window destruction
+	
+	This clears the indicators and menus entries geometries cached
+	in unity panel service.
+
+2011-10-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelView: always sync geometries for indicators.
+	
+	Don't sync menus only if they aren't available in the current panel window
+	for the given monitor.
+
+2011-10-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelView: When syncing geometries send a different panel name for each panel window
+	
+	Thanks to the new unity-panel-service code, this finally fixes bug #869196
+	for unity.
+
+2011-10-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelService: Order the entries geometry per-panel to fix multi-monitor issues
+	
+	The entries geometries now are related to their parent panel, so every panel window
+	that is built now can define the geometries of his own entries.
+	This allows to redefine the get_entry_at function to make the event_filter function
+	to work correctly also when we're in a multi-screen environment not cause the indicator
+	menus to close on non-primary monitors.
+	
+	This is the needed base to fix bug #869196
+
+2011-10-11  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Bug #870844: Double-click on the dash top panel is taken effect on the window underneith
+
+2011-10-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: don't react to middle-click when the dash is opened.
+
+2011-10-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: don't react to double-click when the dash is opened.
+	
+	Fixes bug #870844
+
+2011-10-10  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	Bug #841750: Dash - horizental divider line in between categories incorrectly drawn
+
+2011-10-10  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Bug #814610: FFe: Since showing devices in Nautilus is removed, there is no way to format an usb stick
+
+2011-09-24  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add a "Format..." quicklist item to device icons (LP bug# 814610).
+
+2011-10-10  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Bug #862849: F10 opens a random menu item when it should open the first one [regression]
+
+2011-10-10  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Bug #839480: Dash - When the Dash is open and there is a maximised app in the background, the top bar background should not disappear
+
+2011-10-10  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Bug #869109: compiz crashed with SIGSEGV in nux::ROProperty<std::string>::operator std::string()
+
+2011-10-10  Robert Carr  <racarr@canonical.com>
+
+	Minimum height of multi range filter should be the same as for Genre buttons (32)
+
+2011-10-10  Robert Carr  <racarr@canonical.com>
+
+	Always check return value of XGetWindowProperty otherwise we sometimes free a random chunk of memory
+
+2011-10-10  Robert Carr  <racarr@canonical.com>
+
+	Merge lp:~robertcarr/unity/filtertweaks
+
+2011-10-10  Robert Carr  <racarr@canonical.com>
+
+	Fix button opacity
+
+2011-10-10  Robert Carr  <racarr@canonical.com>
+
+	Fix all button positioning and right margin
+
+2011-10-10  Robert Carr  <racarr@canonical.com>
+
+	Fix all button shape
+
+2011-10-10  Robert Carr  <racarr@canonical.com>
+
+	Filter Genre widget buttons are too big, fix to match mockup
+
+2011-10-10  Robert Carr  <racarr@canonical.com>
+
+	Fix some spacing in filter bar. work against 863246
+
+2011-10-10  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	Bug #841750: Dash - horizental divider line in between categories incorrectly drawn
+
+2011-10-10  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	Fixed additional issues (opacity, margin) added to LP: #841750
+
+2011-10-10  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Bug #862849: F10 opens a random menu item when it should open the first one [regression]
+
+2011-10-07  Andrea Azzarone  <azzaronea@gmail.com>
+
+	F10 should open the first menu.
+
+2011-10-10  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Bug #839480: Dash - When the Dash is open and there is a maximised app in the background, the top bar background should not disappear
+
+2011-10-07  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	Don't replace top-bar when dash is opened and there's a maximized window. Fix LP: #839480
+
+2011-10-10  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Bug #869109: compiz crashed with SIGSEGV in nux::ROProperty<std::string>::operator std::string()
+
+2011-10-07  Gord Allott  <gord.allott@canonical.com>
+
+	fixes issues with clicking when you don't actually move the mouse, but the UI moves underneith it
+
+2011-10-10  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] trunk
+
+2011-10-10  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	ibus character selection window not drawn
+
+2011-10-09  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	Fixed the preedit_cursor_
+
+2011-10-07  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	Fixed ibus window and text disappearing. Also the preedit text is now highlighted, like it usually is else where
+
+2011-10-10  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Merge lp:~smspillaz/unity/unity.fix_864758
+
+2011-10-05  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Remove old minimized window handlers from the handler list and null check
+	the transient for windows that we read, since compiz may have already removed
+	them.
+	
+	Fixes LP #864758
+
+2011-10-07  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Merge lp:~smspillaz/unity/unity.fix_868930
+
+2011-10-07  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Use a temporary
+
+2011-10-06  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Do automaximization on placement which only happens once when the window
+	is mapped after it is created, rather than on reparenting which may happen
+	if the window is withdrawn.
+	
+	Fixes LP #868930
+
+2011-10-07  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Merge lp:~smspillaz/unity/unity.fix_867959
+
+2011-10-07  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Fix space
+
+2011-10-06  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Check for hidden windows rather than minimized ones to cover the
+	show-desktop case
+
+2011-10-07  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Merge lp:~smspillaz/unity/unity.fix_854595
+
+2011-10-07  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Cast correctly
+
+2011-10-07  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Use an enum
+
+2011-10-05  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Only force unminimize windows for the launcher case
+
+2011-10-05  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Always unminimize initially minimized windows when a launcher icon is
+	activated since they are inaccessible elsewhere
+	
+	Fix LP #854595
+
+2011-10-06  Jay Taoko  <jay.taoko@canonical.com>
+
+	Resize the _gradient_texture (in PanelMenuView::Draw) if needed
+	
+	Fix: bug #863068
+	Fix: bug #868293
+	Fix: bug #869028
+
+2011-10-06  Alejandro Piñeiro  <apinheiro@igalia.com>
+
+	Fix bug 843280
+
+2011-10-05  Alejandro Piñeiro  <apinheiro@igalia.com>
+
+	Avoid a shadowed variable
+
+2011-10-05  Alejandro Piñeiro  <apinheiro@igalia.com>
+
+	a11y: Solves bug 843280
+
+2011-10-05  Alex Launi  <alex.launi@canonical.com>
+
+	merge fix for GetState crash
+
+2011-10-03  Alex Launi  <alex.launi@canonical.com>
+
+	Remove introspection implementations on PanelMenuView to avoid crash
+
+2011-10-03  Alex Launi  <alex.launi@canonical.com>
+
+	merge trunk
+
+2011-10-05  Michal Hruby  <michal.mhr@gmail.com>
+
+	Merge lp:~mhr3/unity/bug-865482
+
+2011-10-05  Michal Hruby  <michal.mhr@gmail.com>
+
+	Merge lp:~mhr3/unity/bug-865482
+
+2011-10-04  Michal Hruby  <michal.mhr@gmail.com>
+
+	Fix bug #865482
+
+2011-10-05  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Merge lp:~smspillaz/unity/unity.fix_868185
+
+2011-10-05  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Merge lp:~smspillaz/untiy/unity.fix_868185
+
+2011-10-05  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Fix LP#868185 . Fall through the map case when determining whether or
+	not to hook the minimize function in core
+
+2011-10-04  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Release\ 4.22.0
+
 2011-10-04  Neil Jagdish Patel  <neil.patel@canonical.com>
 
 	Add -lm
