@@ -472,7 +472,7 @@ void UnityScreen::nuxEpilogue()
 
   glDisable(GL_SCISSOR_TEST);
 
-  _fbo->bind ();
+  _fbo->bind (_last_output);
 }
 
 void UnityScreen::OnLauncherHiddenChanged()
@@ -909,7 +909,7 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
    *   attempts to bind it will only increment
    *   its bind reference so make sure that
    *   you always unbind as much as you bind */
-  _fbo->bind ();
+  _fbo->bind (output);
 
   /* glPaintOutput is part of the opengl plugin, so we need the GLScreen base class. */
   ret = gScreen->glPaintOutput(attrib, transform, region, output, mask);
@@ -2151,13 +2151,13 @@ void UnityFBO::paint (CompOutput *output)
     /* FIXME: This needs to be GL_TRIANGLE_STRIP */
     glBegin (GL_QUADS);
     glTexCoord2f (texx, texy + texheight);
-    glVertex2i   (output->x1 (), output->y1 ());
+    glVertex2i   (mGeometry.x1 (), mGeometry.y1 ());
     glTexCoord2f (texx, texy);
-    glVertex2i   (output->x1 (), output->y2 ());
+    glVertex2i   (mGeometry.x1 (), mGeometry.y2 ());
     glTexCoord2f (texx + texwidth, texy);
-    glVertex2i   (output->x2 (), output->y2 ());
+    glVertex2i   (mGeometry.x2 (), mGeometry.y2 ());
     glTexCoord2f (texx + texwidth, texy + texheight);
-    glVertex2i   (output->x2 (), output->y1 ());
+    glVertex2i   (mGeometry.x2 (), mGeometry.y1 ());
     glEnd ();
 
     GL::activeTexture (GL_TEXTURE0_ARB);
@@ -2193,7 +2193,7 @@ bool UnityFBO::status ()
   return mFboStatus;
 }
 
-void UnityFBO::bind ()
+void UnityFBO::bind (CompOutput *output)
 {
   if (!mFBTexture)
   {
@@ -2284,10 +2284,10 @@ void UnityFBO::bind ()
 
     glPushAttrib (GL_VIEWPORT_BIT);
 
-    glViewport (0,
-               0,
-               mGeometry.width (),
-               mGeometry.height());
+    glViewport (output->x (),
+	       screen->height () - output->y2 (),
+	       output->width (),
+	       output->height());
   }
 }
 

@@ -59,7 +59,7 @@ public:
 
 public:
 
-  void bind ();
+  void bind (CompOutput *o);
   void unbind ();
 
   bool status ();
