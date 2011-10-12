@@ -569,13 +569,12 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
 
   nux::ObjectPtr<nux::IOpenGLTexture2D> device_texture =
       nux::GetGraphicsDisplay()->GetGpuDevice()->CreateTexture2DFromID(_fbo->texture(),
-                                                                       output->width (), output->height(), 1, nux::BITFMT_R8G8B8A8);
+                                                                       screen->width (), screen->height(), 1, nux::BITFMT_R8G8B8A8);
 
   nux::GetGraphicsDisplay()->GetGpuDevice()->backup_texture0_ = device_texture;
 
   nux::Geometry geo = nux::Geometry (0, 0, screen->width (), screen->height ());
-  nux::Geometry oGeo = nux::Geometry (output->x (), output->y (), output->width (), output->height ());
-  BackgroundEffectHelper::monitor_rect_ = oGeo;
+  BackgroundEffectHelper::monitor_rect_ = geo;
 
   _in_paint = true;
   wt->RenderInterfaceFromForeignCmd (&oGeo);
