@@ -1160,8 +1160,11 @@ panel_service_sync_geometry (PanelService *self,
 
           if (entry2geometry_hash == NULL)
           {
+            //FIXME - this leaks memory but i'm not 100% on the logic,
+            // using g_free as the keys destructor function causes all
+            // kinds of problems 
             entry2geometry_hash = g_hash_table_new_full (g_direct_hash, g_direct_equal,
-                                                         g_free, g_free);
+                                                        NULL, g_free);
             g_hash_table_insert (priv->panel2entries_hash, g_strdup (panel_id),
                                  entry2geometry_hash);
           }
