@@ -78,6 +78,7 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 
   if (arg.source != ActionArg::SWITCHER)
   {
+    bool any_visible = false;
     for (l = bamf_view_get_children(BAMF_VIEW(m_App)); l; l = l->next)
     {
       view = static_cast <BamfView*> (l->data);
@@ -85,13 +86,18 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
       if (BAMF_IS_WINDOW(view))
       {
         Window xid = bamf_window_get_xid(BAMF_WINDOW(view));
+
+        if (WindowManager::Default ()->IsWindowOnCurrentDesktop(xid))
+          any_visible = true;
         if (!WindowManager::Default ()->IsWindowMapped(xid))
         {
           active = false;
-          break;
         }
       }
     }
+
+    if (!any_visible)
+      active = false;
   }
 
   /* Behaviour:
@@ -566,6 +572,7 @@ void BamfLauncherIcon::Focus(ActionArg arg)
   GList* children, *l;
   BamfView* view;
   bool any_urgent = false;
+  bool any_visible = false;
 
   children = bamf_view_get_children(BAMF_VIEW(m_App));
 
@@ -581,6 +588,10 @@ void BamfLauncherIcon::Focus(ActionArg arg)
       Window xid = bamf_window_get_xid(BAMF_WINDOW(view));
       bool urgent = bamf_view_is_urgent(view);
 
+      if (WindowManager::Default ()->IsWindowOnCurrentDesktop (xid) &&
+          WindowManager::Default ()->IsWindowVisible (xid))
+        any_visible = true;
+
       if (any_urgent)
       {
         if (urgent)
@@ -591,17 +602,29 @@ void BamfLauncherIcon::Focus(ActionArg arg)
         if (urgent)
         {
           windows.clear();
+          any_visible = false;
           any_urgent = true;
         }
-        windows.push_back(xid);
       }
+      windows.push_back(xid);
     }
   }
 
   g_list_free(children);
   if (arg.source != ActionArg::SWITCHER)
-    WindowManager::Default()->FocusWindowGroup(windows,
-      WindowManager::FocusVisibility::ForceUnminimizeInvisible);
+  {
+    if (any_visible)
+    {
+      WindowManager::Default()->FocusWindowGroup(windows,
+       WindowManager::FocusVisibility::ForceUnminimizeInvisible);
+    }
+    else
+    {
+            printf ("forcing unminimize\n");
+      WindowManager::Default()->FocusWindowGroup(windows,
+       WindowManager::FocusVisibility::ForceUnminimizeOnCurrentDesktop);
+    }
+  }
   else
     WindowManager::Default()->FocusWindowGroup(windows,
       WindowManager::FocusVisibility::OnlyVisible);
