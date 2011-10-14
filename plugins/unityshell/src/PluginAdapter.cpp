@@ -489,6 +489,19 @@ PluginAdapter::IsWindowMapped(guint32 xid)
   return true;
 }
 
+bool
+PluginAdapter::IsWindowVisible(guint32 xid)
+{
+  Window win = (Window) xid;
+  CompWindow* window;
+
+  window = m_Screen->findWindow(win);
+  if (window)
+    return !(window->state () & CompWindowStateHiddenMask);
+
+  return true;
+}
+
 void
 PluginAdapter::Restore(guint32 xid)
 {
@@ -562,6 +575,7 @@ PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids, FocusVisibility 
   CompWindow* top_win = NULL;
   bool any_on_current = false;
   bool any_mapped = false;
+  bool forced_unminimize = false;
 
   /* sort the list */
   CompWindowList windows;
@@ -609,13 +623,29 @@ PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids, FocusVisibility 
         * not going to be accessible by either switcher
         * or scale, so unconditionally unminimize those
         * windows when the launcher icon is activated */
-       if (focus_visibility == WindowManager::FocusVisibility::ForceUnminimizeInvisible &&
-           win->mapNum () == 0)
+       if ((focus_visibility == WindowManager::FocusVisibility::ForceUnminimizeOnCurrentDesktop &&
+            WindowManager::Default ()->IsWindowOnCurrentDesktop(win->id ())) ||
+            (focus_visibility == WindowManager::FocusVisibility::ForceUnminimizeInvisible &&
+             win->mapNum () == 0))
+       {
+         bool is_mapped = win->mapNum () != 0;
+         top_win = win;
          win->unminimize ();
+
+         forced_unminimize = true;
+
+         /* Initially minimized windows dont get raised */
+         if (!is_mapped)
+           win->raise ();
+       }
        else if ((any_mapped && !win->minimized()) || !any_mapped)
        {
-         win->raise();
-         top_win = win;
+         if (!forced_unminimize ||
+             WindowManager::Default ()->IsWindowOnCurrentDesktop (win->id ()))
+         {
+           win->raise();
+           top_win = win;
+         }
        }
     }
   }
