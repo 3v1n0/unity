@@ -626,7 +626,15 @@ PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids, FocusVisibility 
             WindowManager::Default ()->IsWindowOnCurrentDesktop(win->id ())) ||
             (focus_visibility == WindowManager::FocusVisibility::ForceUnminimizeInvisible &&
              win->mapNum () == 0))
+       {
+         bool is_mapped = win->mapNum () != 0;
+         top_win = win;
          win->unminimize ();
+
+         /* Initially minimized windows dont get raised */
+         if (!is_mapped)
+           win->raise ();
+       }
        else if ((any_mapped && !win->minimized()) || !any_mapped)
        {
          if (WindowManager::Default ()->IsWindowOnCurrentDesktop (win->id ()))
