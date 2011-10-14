@@ -620,7 +620,6 @@ void BamfLauncherIcon::Focus(ActionArg arg)
     }
     else
     {
-            printf ("forcing unminimize\n");
       WindowManager::Default()->FocusWindowGroup(windows,
        WindowManager::FocusVisibility::ForceUnminimizeOnCurrentDesktop);
     }

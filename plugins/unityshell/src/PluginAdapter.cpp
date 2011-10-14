@@ -575,6 +575,7 @@ PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids, FocusVisibility 
   CompWindow* top_win = NULL;
   bool any_on_current = false;
   bool any_mapped = false;
+  bool forced_unminimize = false;
 
   /* sort the list */
   CompWindowList windows;
@@ -631,13 +632,16 @@ PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids, FocusVisibility 
          top_win = win;
          win->unminimize ();
 
+         forced_unminimize = true;
+
          /* Initially minimized windows dont get raised */
          if (!is_mapped)
            win->raise ();
        }
        else if ((any_mapped && !win->minimized()) || !any_mapped)
        {
-         if (WindowManager::Default ()->IsWindowOnCurrentDesktop (win->id ()))
+         if (!forced_unminimize ||
+             WindowManager::Default ()->IsWindowOnCurrentDesktop (win->id ()))
          {
            win->raise();
            top_win = win;
