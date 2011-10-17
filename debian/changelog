@@ -1,4 +1,4 @@
-unity (4.24.0-0ubuntu1) oneiric; urgency=low
+unity (4.24.0-0ubuntu1) oneiric-proposed; urgency=low
 
   * New upstream release and some cherry-pick:
     - compiz crashed with SIGSEGV in PluginClassHandler<UnityWindow,
