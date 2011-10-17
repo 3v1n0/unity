@@ -1,4 +1,4 @@
-unity (4.24.0-0ubuntu1) UNRELEASED; urgency=low
+unity (4.24.0-0ubuntu1) oneiric; urgency=low
 
   * New upstream release and some cherry-pick:
     - compiz crashed with SIGSEGV in PluginClassHandler<UnityWindow,
@@ -32,7 +32,7 @@ unity (4.24.0-0ubuntu1) UNRELEASED; urgency=low
     - Double-click on the dash top panel is taken effect on the window
       underneith (LP: #870844)
 
- -- Didier Roche <didrocks@ubuntu.com>  Wed, 12 Oct 2011 14:42:00 +0200
+ -- Didier Roche <didrocks@ubuntu.com>  Mon, 17 Oct 2011 09:20:09 +0200
 
 unity (4.22.0-0ubuntu3) oneiric; urgency=low
 
