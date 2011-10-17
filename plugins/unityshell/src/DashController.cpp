@@ -131,6 +131,8 @@ void DashController::EnsureDash()
   SetupDashView();
   Relayout();
   ensure_id_ = 0;
+
+  on_realize.emit ();
 }
 
 nux::BaseWindow* DashController::window() const
