@@ -1,6 +1,36 @@
 unity (4.24.0-0ubuntu1) UNRELEASED; urgency=low
 
-  * New upstream release.
+  * New upstream release and some cherry-pick:
+    - compiz crashed with SIGSEGV in PluginClassHandler<UnityWindow,
+      CompWindow, 0>::get() (LP: #864758)
+    - unity panel menus don't stay open when clicked on second monitor
+      (LP: #869196)
+    - (oneiric) menu bar in wrong place and invisible (LP: #845856)
+    - Lens range widgets do not function correctly (LP: #862996)
+    - Cannot raise window from panel after minimize (LP: #863114)
+    - unity-panel-service crashed with SIGSEGV in g_closure_invoke()
+      (LP: #843280)
+    - Windows get corrupted sometimes when semi-maximizing them. (LP: #865177)
+    - Automaximization happens on unminimize (LP: #868930)
+    - compiz crashed with SIGSEGV in nux::ROProperty<std::string>::operator
+      std::string() (LP: #869109)
+    - Dash - horizental divider line in between categories incorrectly drawn
+      (LP: #841750)
+    - F10 opens a random menu item when it should open the first one
+      [regression] (LP: #862849)
+    - Switching desktops after using showdesktop can cause hidden windows to
+      become "active" (LP: #864503)
+    - Clicking blank space on top panel doesn't raise maximized window to
+      front (LP: #864708)
+    - unity launcher loses track of deja-dup windows (LP: #865051)
+    - Dash - App Lens 'Rating' filter behaves incorrectly (LP: #865482)
+    - Launcher does not show on "Show desktop" (LP: #867959)
+    - ibus character selection window not drawn (LP: #867885)
+    - the dash's entry get wrongly colored on left or right key use
+      (LP: #868434)
+    - [ibus] Pressing down when ibus is active moves focus (LP: #872730)
+    - Double-click on the dash top panel is taken effect on the window
+      underneith (LP: #870844)
 
  -- Didier Roche <didrocks@ubuntu.com>  Wed, 12 Oct 2011 14:42:00 +0200
 
