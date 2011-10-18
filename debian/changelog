@@ -1,4 +1,4 @@
-unity (4.24.0-0ubuntu2) UNRELEASED; urgency=low
+unity (4.24.0-0ubuntu2) oneiric-proposed; urgency=low
 
   * Cherry-pick upstream:
     - SRU0-Regression: scrollbar displacement caused dash rows to show less
