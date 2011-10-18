@@ -1,3 +1,13 @@
+unity (4.24.0-0ubuntu2) UNRELEASED; urgency=low
+
+  * Cherry-pick upstream:
+    - SRU0-Regression: scrollbar displacement caused dash rows to show less
+      icons (LP: #875023)
+    - Really reverts the UI change that was still uploaded even if we had
+      reverted it…
+
+ -- Didier Roche <didrocks@ubuntu.com>  Tue, 18 Oct 2011 12:47:54 +0200
+
 unity (4.24.0-0ubuntu1) oneiric-proposed; urgency=low
 
   * New upstream release and some cherry-pick:
