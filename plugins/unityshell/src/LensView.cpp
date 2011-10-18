@@ -145,7 +145,9 @@ void LensView::SetupViews()
 {
   layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
   
-  layout_->SetHorizontalExternalMargin(8);
+  // Breaks the sizing of the whole dash causing some colums to be clipped from result view.
+  // look in to this for P.
+  //  layout_->SetHorizontalExternalMargin(8);
 
   scroll_view_ = new LensScrollView(new PlacesVScrollBar(NUX_TRACKER_LOCATION),
                                     NUX_TRACKER_LOCATION);
