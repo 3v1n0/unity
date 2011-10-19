@@ -71,17 +71,14 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
   spinner_ = new SearchBarSpinner();
   spinner_->SetMinMaxSize(icon->GetWidth(), icon->GetHeight());
   spinner_->mouse_click.connect(sigc::mem_fun(this, &SearchBar::OnClearClicked));
-  spinner_->SetCanFocus(false);
   layout_->AddView(spinner_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
   hint_ = new nux::StaticCairoText(" ");
   hint_->SetTextColor(nux::Color(1.0f, 1.0f, 1.0f, 0.5f));
-  hint_->SetCanFocus(false);
   hint_->SetMaximumWidth(570);
 
   pango_entry_ = new IMTextEntry();
   pango_entry_->sigTextChanged.connect(sigc::mem_fun(this, &SearchBar::OnSearchChanged));
-  pango_entry_->SetCanFocus(true);
   pango_entry_->activated.connect([&]() { activated.emit(); });
   pango_entry_->cursor_moved.connect([&](int i) { QueueDraw(); });
   pango_entry_->mouse_down.connect(sigc::mem_fun(this, &SearchBar::OnMouseButtonDown));
@@ -102,7 +99,6 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
   show_filters_ = new nux::StaticCairoText(filter_str.c_str());
   show_filters_->SetVisible(false);
   show_filters_->SetTextColor(nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
-  show_filters_->SetCanFocus(true);
   show_filters_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_LEFT);
   show_filters_->mouse_click.connect([&] (int x, int y, unsigned long b, unsigned long k) { showing_filters = !showing_filters; });
   layout_->AddView(show_filters_, 0, nux::MINOR_POSITION_RIGHT, nux::MINOR_SIZE_FIX);
@@ -210,15 +206,6 @@ void SearchBar::OnShowingFiltersChanged(bool is_showing)
   filter_str += is_showing ? "▾" : "▸";
   filter_str += "</small>";
   show_filters_->SetText(filter_str.c_str());
-}
-
-long SearchBar::ProcessEvent(nux::IEvent& ievent, long TraverseInfo,
-                                   long ProcessEventInfo)
-{
-  long ret = TraverseInfo;
-  ret = layout_->ProcessEvent(ievent, ret, ProcessEventInfo);
-
-  return ret;
 }
 
 void SearchBar::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)

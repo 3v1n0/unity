@@ -215,51 +215,6 @@ PanelMenuView::FullRedraw()
   NeedRedraw();
 }
 
-long
-PanelMenuView::ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo)
-{
-  long ret = TraverseInfo;
-  nux::Geometry geo = GetAbsoluteGeometry();
-  nux::Geometry geo_buttons = _window_buttons->GetAbsoluteGeometry();
-
-  if (!_we_control_active)
-    return _panel_titlebar_grab_area->OnEvent(ievent, ret, ProcessEventInfo);
-
-  if (geo.IsPointInside(ievent.e_x, ievent.e_y) && !(_is_maximized && geo_buttons.IsPointInside(ievent.e_x, ievent.e_y)))
-  {
-    if (_is_inside != true)
-    {
-      if (_is_grabbed)
-        _is_grabbed = false;
-      else
-        _is_inside = true;
-      FullRedraw();
-    }
-  }
-  else
-  {
-    if (_is_inside != false)
-    {
-      _is_inside = false;
-      FullRedraw();
-    }
-  }
-
-  if (_is_maximized || _places_showing)
-  {
-    if (_window_buttons)
-      ret = _window_buttons->ProcessEvent(ievent, ret, ProcessEventInfo);
-    if (_panel_titlebar_grab_area)
-      ret = _panel_titlebar_grab_area->OnEvent(ievent, ret, ProcessEventInfo);
-  }
-  ret = _panel_titlebar_grab_area->OnEvent(ievent, ret, ProcessEventInfo);
-
-  if (!_is_own_window)
-    ret = _menu_layout->ProcessEvent(ievent, ret, ProcessEventInfo);
-
-  return ret;
-}
-
 nux::Area*
 PanelMenuView::FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type)
 {
@@ -315,7 +270,7 @@ long PanelMenuView::PostLayoutManagement(long LayoutResult)
 
   old_window_buttons_w = _window_buttons->GetContentWidth();
   _window_buttons->SetGeometry(geo.x + _padding, geo.y, old_window_buttons_w, geo.height);
-  _window_buttons->ComputeLayout2();
+  _window_buttons->ComputeContentSize();
   new_window_buttons_w = _window_buttons->GetContentWidth();
 
   /* Explicitly set the size and position of the widgets */
@@ -324,7 +279,7 @@ long PanelMenuView::PostLayoutManagement(long LayoutResult)
 
   old_menu_area_w = _menu_layout->GetContentWidth();
   _menu_layout->SetGeometry(geo.x, geo.y, old_menu_area_w, geo.height);
-  _menu_layout->ComputeLayout2();
+  _menu_layout->ComputeContentSize();
   new_menu_area_w = _menu_layout->GetContentWidth();
 
   geo.x += new_menu_area_w;

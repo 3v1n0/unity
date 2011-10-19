@@ -102,16 +102,6 @@ PanelIndicatorsView::RemoveIndicator(indicator::Indicator::Ptr const& indicator)
   LOG_DEBUG(logger) << "IndicatorRemoved: " << indicator->name();
 }
 
-long
-PanelIndicatorsView::ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo)
-{
-  long ret = TraverseInfo;
-
-  if (layout_)
-    ret = layout_->ProcessEvent(ievent, ret, ProcessEventInfo);
-  return ret;
-}
-
 void
 PanelIndicatorsView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {

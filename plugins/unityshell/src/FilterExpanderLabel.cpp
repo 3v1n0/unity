@@ -113,10 +113,6 @@ NUX_IMPLEMENT_OBJECT_TYPE(FilterExpanderLabel);
     QueueRelayout();
   }
 
-  long int FilterExpanderLabel::ProcessEvent(nux::IEvent& ievent, long int TraverseInfo, long int ProcessEventInfo) {
-    return GetLayout()->ProcessEvent(ievent, TraverseInfo, ProcessEventInfo);
-  }
-
   void FilterExpanderLabel::Draw(nux::GraphicsEngine& GfxContext, bool force_draw) {
     nux::Geometry geo = GetGeometry();
 

@@ -321,11 +321,6 @@ void ResultViewGrid::PositionPreview()
   }
 }
 
-long int ResultViewGrid::ProcessEvent(nux::IEvent& ievent, long int TraverseInfo, long int ProcessEventInfo)
-{
-  return TraverseInfo;
-}
-
 bool ResultViewGrid::InspectKeyEvent(unsigned int eventType, unsigned int keysym, const char* character)
 {
   nux::KeyNavDirection direction = nux::KEY_NAV_NONE;
@@ -536,11 +531,11 @@ void ResultViewGrid::OnOnKeyNavFocusChange(nux::Area *area)
   NeedRedraw();
 }
 
-long ResultViewGrid::ComputeLayout2()
+long ResultViewGrid::ComputeContentSize()
 {
   SizeReallocate();
   QueueLazyLoad();
-  long ret = ResultView::ComputeLayout2();
+  long ret = ResultView::ComputeContentSize();
   return ret;
 
 }

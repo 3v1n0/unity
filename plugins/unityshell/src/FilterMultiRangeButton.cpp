@@ -34,8 +34,7 @@ namespace unity {
       , side_ (MULTI_RANGE_CENTER)
   {
     InitTheme();
-    activated.connect (sigc::mem_fun(this, &FilterMultiRangeButton::OnActivated));
-    active.changed.connect (sigc::mem_fun(this, &FilterMultiRangeButton::OnActiveChanged));
+    state_change.connect (sigc::mem_fun(this, &FilterMultiRangeButton::OnActivated));
   }
 
   FilterMultiRangeButton::FilterMultiRangeButton (NUX_FILE_LINE_DECL)
@@ -47,8 +46,7 @@ namespace unity {
       , side_ (MULTI_RANGE_CENTER)
   {
     InitTheme();
-    activated.connect (sigc::mem_fun(this, &FilterMultiRangeButton::OnActivated));
-    active.changed.connect (sigc::mem_fun(this, &FilterMultiRangeButton::OnActiveChanged));
+    state_change.connect (sigc::mem_fun(this, &FilterMultiRangeButton::OnActivated));
   }
 
   FilterMultiRangeButton::~FilterMultiRangeButton()
@@ -60,7 +58,7 @@ namespace unity {
 
   void FilterMultiRangeButton::OnActivated (nux::Area *area)
   {
-    bool tmp_active = active;
+    bool tmp_active = Active();
     if (filter_ != NULL)
       filter_->active = tmp_active;
   }
@@ -74,7 +72,7 @@ namespace unity {
   {
     filter_ = filter;
     bool tmp_active = filter_->active;
-    active = tmp_active;
+    SetActive(tmp_active);
   }
 
   dash::FilterOption::Ptr FilterMultiRangeButton::GetFilter()
@@ -97,13 +95,13 @@ namespace unity {
     NeedRedraw();
   }
 
-  long FilterMultiRangeButton::ComputeLayout2()
+  long FilterMultiRangeButton::ComputeContentSize()
   {
     if (prelight_ == NULL)
     {
       InitTheme();
     }
-    long ret = nux::ToggleButton::ComputeLayout2();
+    long ret = nux::ToggleButton::ComputeContentSize();
     if (cached_geometry_ != GetGeometry())
     {
       prelight_->Invalidate(GetGeometry());
@@ -119,15 +117,15 @@ namespace unity {
   {
     if (prelight_ == NULL)
     {
-      prelight_ = new nux::CairoWrapper(GetGeometry(), sigc::bind(sigc::mem_fun(this, &FilterMultiRangeButton::RedrawTheme), nux::State::NUX_STATE_PRELIGHT));
-      active_ = new nux::CairoWrapper(GetGeometry(), sigc::bind(sigc::mem_fun(this, &FilterMultiRangeButton::RedrawTheme), nux::State::NUX_STATE_ACTIVE));
-      normal_ = new nux::CairoWrapper(GetGeometry(), sigc::bind(sigc::mem_fun(this, &FilterMultiRangeButton::RedrawTheme), nux::State::NUX_STATE_NORMAL));
+      prelight_ = new nux::CairoWrapper(GetGeometry(), sigc::bind(sigc::mem_fun(this, &FilterMultiRangeButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_PRELIGHT));
+      active_ = new nux::CairoWrapper(GetGeometry(), sigc::bind(sigc::mem_fun(this, &FilterMultiRangeButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_PRESSED));
+      normal_ = new nux::CairoWrapper(GetGeometry(), sigc::bind(sigc::mem_fun(this, &FilterMultiRangeButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_NORMAL));
     }
 
     SetMinimumHeight(32);
   }
 
-  void FilterMultiRangeButton::RedrawTheme (nux::Geometry const& geom, cairo_t *cr, nux::State faked_state)
+  void FilterMultiRangeButton::RedrawTheme (nux::Geometry const& geom, cairo_t *cr, nux::ButtonVisualState faked_state)
   {
     std::string name = "10";
     std::stringstream final;
@@ -160,11 +158,6 @@ namespace unity {
     NeedRedraw();
   }
 
-
-  long int FilterMultiRangeButton::ProcessEvent(nux::IEvent& ievent, long int TraverseInfo, long int ProcessEventInfo) {
-    return nux::ToggleButton::ProcessEvent(ievent, TraverseInfo, ProcessEventInfo);
-  }
-
   void FilterMultiRangeButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw) {
     gPainter.PaintBackground(GfxContext, GetGeometry());
     // set up our texture mode
@@ -187,11 +180,11 @@ namespace unity {
 
     nux::BaseTexture *texture = normal_->GetTexture();
     //FIXME - dashstyle does not give us a focused state yet, so ignore
-    //~ if (state == nux::State::NUX_STATE_PRELIGHT)
+    //~ if (state == nux::ButtonVisualState::NUX_VISUAL_STATE_PRELIGHT)
     //~ {
       //~ texture = prelight_->GetTexture();
     //~ }
-    if (active)
+    if (Active())
     {
       texture = active_->GetTexture();
     }

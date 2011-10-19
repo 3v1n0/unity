@@ -99,7 +99,7 @@ Autopilot::StartTest(const gchar* name)
   if (test_expiration_functor == NULL)
   {
     test_expiration_functor = new nux::TimerFunctor();
-    test_expiration_functor->OnTimerExpired.connect(sigc::ptr_fun(&TestFinished));
+    test_expiration_functor->time_expires.connect(sigc::ptr_fun(&TestFinished));
   }
 
   args->name = g_strdup(name);

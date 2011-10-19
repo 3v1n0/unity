@@ -50,7 +50,6 @@ IMTextEntry::IMTextEntry()
   CheckIMEnabled();
   im_enabled ? SetupMultiIM() : SetupSimpleIM();
 
-  FocusChanged.connect([&] (nux::Area*) { GetFocused() ? OnFocusIn() : OnFocusOut(); });
   mouse_up.connect(sigc::mem_fun(this, &IMTextEntry::OnMouseButtonUp));
 }
 

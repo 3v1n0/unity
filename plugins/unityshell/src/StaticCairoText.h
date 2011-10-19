@@ -66,10 +66,6 @@ public:
 
   long PostLayoutManagement(long layoutResult);
 
-  long ProcessEvent(IEvent& event,
-                    long    traverseInfo,
-                    long    processEventInfo);
-
   void Draw(GraphicsEngine& gfxContext,
             bool             forceDraw);
 
