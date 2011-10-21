@@ -47,7 +47,6 @@ public:
   PanelView(NUX_FILE_LINE_PROTO);
   ~PanelView();
 
-  long ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo);
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
 

@@ -359,11 +359,6 @@ void LensView::OnActiveChanged(bool is_active)
   lens_->active = is_active;
 }
 
-long LensView::ProcessEvent(nux::IEvent& ievent, long traverse_info, long event_info)
-{
-  return layout_->ProcessEvent(ievent, traverse_info, event_info);
-}
-
 void LensView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
 {
   nux::Geometry geo = GetGeometry();

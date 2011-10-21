@@ -99,10 +99,9 @@ PlacesHomeView::PlacesHomeView()
   _layout->ForceChildrenSize(true);
   _layout->SetChildrenSize(style->GetHomeTileWidth(), style->GetHomeTileHeight());
   _layout->EnablePartialVisibility(false);
-  _layout->SetHeightMatchContent(true);
-  _layout->SetHorizontalExternalMargin(32);
-  _layout->SetVerticalInternalMargin(32);
-  _layout->SetHorizontalInternalMargin(32);
+  _layout->MatchContentSize(true);
+  _layout->SetLeftAndRightPadding(32);
+  _layout->SetSpaceBetweenChildren(32, 32);
   _layout->SetMinMaxSize((style->GetHomeTileWidth() * 4) + (32 * 5),
                          (style->GetHomeTileHeight() * 2) + 32);
 
