@@ -48,6 +48,7 @@ namespace unity
     nux::Color CurrentColor ();
     void OnBackgroundChanged (GnomeBG *bg);
     void OnGSettingsChanged (GSettings *settings, gchar *key);
+    void OverrideColor (nux::Color color);
 
   private:
     static gboolean OnSlideshowTransition (BGHash *self);
@@ -72,6 +73,8 @@ namespace unity
     nux::Color _current_color; // the current colour, including steps in transitions
     nux::Color _new_color;     // in transitions, the next colour, otherwise the current colour
     nux::Color _old_color;     // the last colour chosen, used for transitions
+
+    nux::Color _override_color;
 
     guint64 _hires_time_start;
     guint64 _hires_time_end;

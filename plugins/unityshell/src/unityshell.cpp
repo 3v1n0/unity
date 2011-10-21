@@ -233,6 +233,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
        uScreen->mFbos[&(screen->fullscreenOutput ())] = UnityFBO::Ptr (new UnityFBO(&(screen->fullscreenOutput ())));
      }
 
+     optionSetBackgroundColorNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetLauncherHideModeNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetBacklightModeNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetLaunchAnimationNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
@@ -1995,6 +1996,19 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
 {
   switch (num)
   {
+    case UnityshellOptions::BackgroundColor:
+    {
+      nux::Color override_color (optionGetBackgroundColorRed() / 65535.0f, 
+                                 optionGetBackgroundColorGreen() / 65535.0f, 
+                                 optionGetBackgroundColorBlue() / 65535.0f, 
+                                 optionGetBackgroundColorAlpha() / 65535.0f);
+
+      override_color.red = override_color.red / override_color.alpha;
+      override_color.green = override_color.green / override_color.alpha;
+      override_color.blue = override_color.blue / override_color.alpha;
+      _bghash.OverrideColor(override_color);
+      break;
+    }
     case UnityshellOptions::LauncherHideMode:
       launcher->SetHideMode((Launcher::LauncherHideMode) optionGetLauncherHideMode());
       break;
