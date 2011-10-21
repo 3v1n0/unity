@@ -2113,7 +2113,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
       }
     }
 
-    nux::t_u32 alpha = 0, src = 0, dest = 0;
+    unsigned int alpha = 0, src = 0, dest = 0;
     GfxContext.GetRenderStates().GetBlend(alpha, src, dest);
 
     // apply the darkening
