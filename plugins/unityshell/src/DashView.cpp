@@ -376,8 +376,8 @@ void DashView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
 
 
   texxform_absolute_bg.flip_v_coord = false;
-  texxform_absolute_bg.uoffset = (1.0f / 707) * (GetAbsoluteGeometry().x); // TODO (gord) don't use absolute values here
-  texxform_absolute_bg.voffset = (1.0f / 737) * (GetAbsoluteGeometry().y);
+  texxform_absolute_bg.uoffset = (1.0f / bg_shine_texture_->GetWidth()) * (GetAbsoluteGeometry().x);
+  texxform_absolute_bg.voffset = (1.0f / bg_shine_texture_->GetHeight()) * (GetAbsoluteGeometry().y);
 
   gfx_context.GetRenderStates().SetColorMask(true, true, true, false);
   gfx_context.GetRenderStates().SetBlend(true, GL_DST_COLOR, GL_ONE);
@@ -485,8 +485,8 @@ void DashView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
   rop.SrcBlend = GL_DST_COLOR;
   rop.DstBlend = GL_ONE;
   texxform_absolute_bg.flip_v_coord = false;
-  texxform_absolute_bg.uoffset = (1.0f / 707) * (GetAbsoluteGeometry().x); // TODO (gord) don't use absolute values here
-  texxform_absolute_bg.voffset = (1.0f / 737) * (GetAbsoluteGeometry().y);
+  texxform_absolute_bg.uoffset = (1.0f / bg_shine_texture_->GetWidth()) * (GetAbsoluteGeometry().x);
+  texxform_absolute_bg.voffset = (1.0f / bg_shine_texture_->GetHeight()) * (GetAbsoluteGeometry().y);
 
   nux::GetPainter().PushTextureLayer(gfx_context, bg_layer_->GetGeometry(),
                                      bg_shine_texture_,

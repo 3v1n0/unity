@@ -2130,7 +2130,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
     texxform.SetWrap(nux::TEXWRAP_CLAMP, nux::TEXWRAP_CLAMP);
     texxform.uoffset = (1.0f / launcher_sheen_->GetWidth()) * (GetAbsoluteGeometry().x); // TODO (gord) don't use absolute values here
-    texxform.voffset = (1.0f / launcher_sheen_->GetWidth()) * (GetAbsoluteGeometry().y);
+    texxform.voffset = (1.0f / launcher_sheen_->GetHeight()) * (GetAbsoluteGeometry().y);
     GfxContext.QRP_1Tex(base.x, base.y, base.width, base.height,
                         launcher_sheen_->GetDeviceTexture(),
                         texxform,
