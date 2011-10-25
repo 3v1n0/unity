@@ -138,7 +138,7 @@ public:
                           double     height,
                           Segment    segment,
                           Arrow      arrow,
-                          nux::State state);
+                          nux::ButtonVisualState state);
 
   void Refresh();
   void OnFontChanged(GtkSettings* object, GParamSpec* pspec);
@@ -746,49 +746,49 @@ void Style::Impl::Star(cairo_t* cr, double size)
 void Style::Impl::SetDefaultValues()
 {
   // button-label
-  button_label_border_color_[nux::NUX_STATE_NORMAL] = nux::Color(0.53, 1.0, 0.66, 0.5);
-  button_label_border_color_[nux::NUX_STATE_ACTIVE] = nux::Color(1.0, 1.0, 1.0, 0.8);
-  button_label_border_color_[nux::NUX_STATE_PRELIGHT] = nux::Color(0.06, 0.13, 1.0, 0.5);
-  button_label_border_color_[nux::NUX_STATE_SELECTED] = nux::Color(0.07, 0.2, 0.33, 0.5);
-  button_label_border_color_[nux::NUX_STATE_INSENSITIVE] = nux::Color(0.39, 0.26, 0.12, 0.5);
+  button_label_border_color_[nux::VISUAL_STATE_NORMAL] = nux::Color(0.53, 1.0, 0.66, 0.5);
+  button_label_border_color_[nux::VISUAL_STATE_PRESSED] = nux::Color(1.0, 1.0, 1.0, 0.8);
+  button_label_border_color_[nux::VISUAL_STATE_PRELIGHT] = nux::Color(0.06, 0.13, 1.0, 0.5);
+  //button_label_border_color_[nux::NUX_STATE_SELECTED] = nux::Color(0.07, 0.2, 0.33, 0.5);
+  //button_label_border_color_[nux::NUX_STATE_INSENSITIVE] = nux::Color(0.39, 0.26, 0.12, 0.5);
 
-  button_label_border_size_[nux::NUX_STATE_NORMAL]          = 0.5;
-  button_label_border_size_[nux::NUX_STATE_ACTIVE]          = 2.0;
-  button_label_border_size_[nux::NUX_STATE_PRELIGHT]        = 0.5;
-  button_label_border_size_[nux::NUX_STATE_SELECTED]        = 0.5;
-  button_label_border_size_[nux::NUX_STATE_INSENSITIVE]     = 0.5;
+  button_label_border_size_[nux::VISUAL_STATE_NORMAL]          = 0.5;
+  button_label_border_size_[nux::VISUAL_STATE_PRESSED]          = 2.0;
+  button_label_border_size_[nux::VISUAL_STATE_PRELIGHT]        = 0.5;
+  //button_label_border_size_[nux::NUX_STATE_SELECTED]        = 0.5;
+  //button_label_border_size_[nux::NUX_STATE_INSENSITIVE]     = 0.5;
 
   button_label_text_size_                                   = 1.0;
 
-  button_label_text_color_[nux::NUX_STATE_NORMAL] = nux::color::White;
-  button_label_text_color_[nux::NUX_STATE_ACTIVE] = nux::color::Black;
-  button_label_text_color_[nux::NUX_STATE_PRELIGHT] = nux::color::White;
-  button_label_text_color_[nux::NUX_STATE_SELECTED] = nux::color::White;
-  button_label_text_color_[nux::NUX_STATE_INSENSITIVE] = nux::color::White;
+  button_label_text_color_[nux::VISUAL_STATE_NORMAL] = nux::color::White;
+  button_label_text_color_[nux::VISUAL_STATE_PRESSED] = nux::color::Black;
+  button_label_text_color_[nux::VISUAL_STATE_PRELIGHT] = nux::color::White;
+  //button_label_text_color_[nux::NUX_STATE_SELECTED] = nux::color::White;
+  //button_label_text_color_[nux::NUX_STATE_INSENSITIVE] = nux::color::White;
 
-  button_label_fill_color_[nux::NUX_STATE_NORMAL] = nux::color::Transparent;
-  button_label_fill_color_[nux::NUX_STATE_ACTIVE] = nux::color::Transparent;
-  button_label_fill_color_[nux::NUX_STATE_PRELIGHT] = nux::color::Transparent;
-  button_label_fill_color_[nux::NUX_STATE_SELECTED] = nux::color::Transparent;
-  button_label_fill_color_[nux::NUX_STATE_INSENSITIVE] = nux::color::Transparent;
+  button_label_fill_color_[nux::VISUAL_STATE_NORMAL] = nux::color::Transparent;
+  button_label_fill_color_[nux::VISUAL_STATE_PRESSED] = nux::color::Transparent;
+  button_label_fill_color_[nux::VISUAL_STATE_PRELIGHT] = nux::color::Transparent;
+  //button_label_fill_color_[nux::NUX_STATE_SELECTED] = nux::color::Transparent;
+  //button_label_fill_color_[nux::NUX_STATE_INSENSITIVE] = nux::color::Transparent;
 
-  button_label_overlay_opacity_[nux::NUX_STATE_NORMAL]      = 0.0;
-  button_label_overlay_opacity_[nux::NUX_STATE_ACTIVE]      = 0.3;
-  button_label_overlay_opacity_[nux::NUX_STATE_PRELIGHT]    = 0.0;
-  button_label_overlay_opacity_[nux::NUX_STATE_SELECTED]    = 0.0;
-  button_label_overlay_opacity_[nux::NUX_STATE_INSENSITIVE] = 0.0;
+  button_label_overlay_opacity_[nux::VISUAL_STATE_NORMAL]      = 0.0;
+  button_label_overlay_opacity_[nux::VISUAL_STATE_PRESSED]      = 0.3;
+  button_label_overlay_opacity_[nux::VISUAL_STATE_PRELIGHT]    = 0.0;
+  //button_label_overlay_opacity_[nux::NUX_STATE_SELECTED]    = 0.0;
+  //button_label_overlay_opacity_[nux::NUX_STATE_INSENSITIVE] = 0.0;
 
-  button_label_overlay_mode_[nux::NUX_STATE_NORMAL]         = BlendMode::NORMAL;
-  button_label_overlay_mode_[nux::NUX_STATE_ACTIVE]         = BlendMode::NORMAL;
-  button_label_overlay_mode_[nux::NUX_STATE_PRELIGHT]       = BlendMode::NORMAL;
-  button_label_overlay_mode_[nux::NUX_STATE_SELECTED]       = BlendMode::NORMAL;
-  button_label_overlay_mode_[nux::NUX_STATE_INSENSITIVE]    = BlendMode::NORMAL;
+  button_label_overlay_mode_[nux::VISUAL_STATE_NORMAL]         = BlendMode::NORMAL;
+  button_label_overlay_mode_[nux::VISUAL_STATE_PRESSED]         = BlendMode::NORMAL;
+  button_label_overlay_mode_[nux::VISUAL_STATE_PRELIGHT]       = BlendMode::NORMAL;
+  //button_label_overlay_mode_[nux::NUX_STATE_SELECTED]       = BlendMode::NORMAL;
+  //button_label_overlay_mode_[nux::NUX_STATE_INSENSITIVE]    = BlendMode::NORMAL;
 
-  button_label_blur_size_[nux::NUX_STATE_NORMAL]            = 0;
-  button_label_blur_size_[nux::NUX_STATE_ACTIVE]            = 5;
-  button_label_blur_size_[nux::NUX_STATE_PRELIGHT]          = 0;
-  button_label_blur_size_[nux::NUX_STATE_SELECTED]          = 0;
-  button_label_blur_size_[nux::NUX_STATE_INSENSITIVE]       = 0;
+  button_label_blur_size_[nux::VISUAL_STATE_NORMAL]            = 0;
+  button_label_blur_size_[nux::VISUAL_STATE_PRESSED]            = 5;
+  button_label_blur_size_[nux::VISUAL_STATE_PRELIGHT]          = 0;
+  //button_label_blur_size_[nux::NUX_STATE_SELECTED]          = 0;
+  //button_label_blur_size_[nux::NUX_STATE_INSENSITIVE]       = 0;
 
   // regular-text
   regular_text_color_ = nux::color::White;
@@ -1005,7 +1005,7 @@ void Style::Impl::RoundedRectSegment(cairo_t*   cr,
                                          double     height,
                                          Segment    segment,
                                          Arrow      arrow,
-                                         nux::State state)
+                                         nux::ButtonVisualState state)
 {
   double radius = cornerRadius / aspect;
   double arrow_w = radius / 1.5;
@@ -1020,7 +1020,7 @@ void Style::Impl::RoundedRectSegment(cairo_t*   cr,
     // top-right
     cairo_line_to(cr, x + width, y);
 
-    if (arrow == Arrow::RIGHT && state == nux::NUX_STATE_ACTIVE)
+    if (arrow == Arrow::RIGHT && state == nux::VISUAL_STATE_PRESSED)
 		{
       cairo_line_to(cr, x + width,           y + height / 2.0 - arrow_h);
       cairo_line_to(cr, x + width - arrow_w, y + height / 2.0);
@@ -1061,7 +1061,7 @@ void Style::Impl::RoundedRectSegment(cairo_t*   cr,
     // top-right
     cairo_line_to(cr, x + width, y);
 
-    if ((arrow == Arrow::RIGHT || arrow == Arrow::BOTH) && state == nux::NUX_STATE_ACTIVE)
+    if ((arrow == Arrow::RIGHT || arrow == Arrow::BOTH) && state == nux::VISUAL_STATE_PRESSED)
 		{
       cairo_line_to(cr, x + width,           y + height / 2.0 - arrow_h);
       cairo_line_to(cr, x + width - arrow_w, y + height / 2.0);
@@ -1074,7 +1074,7 @@ void Style::Impl::RoundedRectSegment(cairo_t*   cr,
     // bottom-left
     cairo_line_to(cr, x, y + height);
 
-    if ((arrow == Arrow::LEFT || arrow == Arrow::BOTH) && state == nux::NUX_STATE_ACTIVE)
+    if ((arrow == Arrow::LEFT || arrow == Arrow::BOTH) && state == nux::VISUAL_STATE_PRESSED)
 		{
       cairo_line_to(cr, x,           y + height / 2.0 + arrow_h);
       cairo_line_to(cr, x + arrow_w, y + height / 2.0);
@@ -1114,7 +1114,7 @@ void Style::Impl::RoundedRectSegment(cairo_t*   cr,
     // bottom-left
     cairo_line_to(cr, x, y + height);
 
-    if (arrow == Arrow::LEFT && state == nux::NUX_STATE_ACTIVE)
+    if (arrow == Arrow::LEFT && state == nux::VISUAL_STATE_PRESSED)
 		{
       cairo_line_to(cr, x,           y + height / 2.0 + arrow_h);
       cairo_line_to(cr, x + arrow_w, y + height / 2.0);
@@ -1549,7 +1549,7 @@ void Style::Impl::DrawOverlay(cairo_t*  cr,
   cairo_set_operator(cr, old);
 }
 
-bool Style::Button(cairo_t* cr, nux::State state, std::string const& label)
+bool Style::Button(cairo_t* cr, nux::ButtonVisualState state, std::string const& label)
 {
   // sanity checks
   if (cairo_status(cr) != CAIRO_STATUS_SUCCESS)
@@ -1593,7 +1593,7 @@ bool Style::Button(cairo_t* cr, nux::State state, std::string const& label)
   return true;
 }
 
-bool Style::StarEmpty(cairo_t* cr, nux::State state)
+bool Style::StarEmpty(cairo_t* cr, nux::ButtonVisualState state)
 {
   // sanity checks
   if (cairo_status(cr) != CAIRO_STATUS_SUCCESS)
@@ -1619,7 +1619,7 @@ bool Style::StarEmpty(cairo_t* cr, nux::State state)
   return true;
 }
 
-bool Style::StarHalf(cairo_t* cr, nux::State state)
+bool Style::StarHalf(cairo_t* cr, nux::ButtonVisualState state)
 {
   // sanity checks
   if (cairo_status(cr) != CAIRO_STATUS_SUCCESS)
@@ -1653,7 +1653,7 @@ bool Style::StarHalf(cairo_t* cr, nux::State state)
   return true;
 }
 
-bool Style::StarFull(cairo_t* cr, nux::State state)
+bool Style::StarFull(cairo_t* cr, nux::ButtonVisualState state)
 {
   // sanity checks
   if (cairo_status(cr) != CAIRO_STATUS_SUCCESS)
@@ -1678,10 +1678,10 @@ bool Style::StarFull(cairo_t* cr, nux::State state)
 }
 
 bool Style::MultiRangeSegment(cairo_t*    cr,
-                                  nux::State  state,
-                                  std::string const& label,
-                                  Arrow       arrow,
-                                  Segment     segment)
+                              nux::ButtonVisualState  state,
+                              std::string const& label,
+                              Arrow       arrow,
+                              Segment     segment)
 {
   // sanity checks
   if (cairo_status(cr) != CAIRO_STATUS_SUCCESS)
@@ -1735,8 +1735,8 @@ bool Style::MultiRangeSegment(cairo_t*    cr,
 }
 
 bool Style::TrackViewNumber(cairo_t*    cr,
-                                nux::State  state,
-                                std::string const& trackNumber)
+                            nux::ButtonVisualState state,
+                            std::string const& trackNumber)
 {
   // sanity checks
   if (cairo_status(cr) != CAIRO_STATUS_SUCCESS)
@@ -1749,7 +1749,7 @@ bool Style::TrackViewNumber(cairo_t*    cr,
 }
 
 bool Style::TrackViewPlay(cairo_t*   cr,
-                              nux::State state)
+                          nux::ButtonVisualState state)
 {
   // sanity checks
   if (cairo_status(cr) != CAIRO_STATUS_SUCCESS)
@@ -1762,7 +1762,7 @@ bool Style::TrackViewPlay(cairo_t*   cr,
 }
 
 bool Style::TrackViewPause(cairo_t*   cr,
-                               nux::State state)
+                           nux::ButtonVisualState state)
 {
   // sanity checks
   if (cairo_status(cr) != CAIRO_STATUS_SUCCESS)

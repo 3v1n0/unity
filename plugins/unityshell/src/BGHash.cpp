@@ -50,6 +50,7 @@ namespace unity {
       _hires_time_end(20),
       _ubus_handle_request_colour(0)
   {
+    _override_color.alpha= 0.0f;
 
     background_monitor = gnome_bg_new ();
     client = g_settings_new ("org.gnome.desktop.background");
@@ -94,6 +95,12 @@ namespace unity {
     ubus_server_unregister_interest (ubus, _ubus_handle_request_colour);
   }
 
+  void BGHash::OverrideColor (nux::Color color)
+  {
+    _override_color = color;
+    OnBackgroundChanged(background_monitor);
+  }
+
   gboolean BGHash::ForceUpdate (BGHash *self)
   {
     self->OnBackgroundChanged(self->background_monitor);
@@ -107,6 +114,12 @@ namespace unity {
 
   void BGHash::OnBackgroundChanged (GnomeBG *bg)
   {
+    if (_override_color.alpha)
+    {
+      TransitionToNewColor (_override_color);
+      return;
+    }
+
     const gchar *filename = gnome_bg_get_filename (bg);
     if (filename == NULL)
     {

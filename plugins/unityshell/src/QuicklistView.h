@@ -58,10 +58,6 @@ public:
 
   ~QuicklistView();
 
-  long ProcessEvent(nux::IEvent& iEvent,
-                    long    traverseInfo,
-                    long    processEventInfo);
-
   void Draw(nux::GraphicsEngine& gfxContext,
             bool             forceDraw);
 

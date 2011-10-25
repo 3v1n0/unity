@@ -23,7 +23,6 @@
 #include "config.h"
 
 #include <Nux/Nux.h>
-#include <Nux/ColorArea.h>
 #include <NuxGraphics/GLThread.h>
 
 namespace unity

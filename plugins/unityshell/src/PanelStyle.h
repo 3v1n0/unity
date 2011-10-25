@@ -67,9 +67,9 @@ public:
 private:
   void Refresh();
 
-  static void OnStyleChanged(GObject*    gobject,
-                             GParamSpec* pspec,
-                             gpointer    data);
+  static void OnGtkThemeChanged(GObject*    gobject,
+                                GParamSpec* pspec,
+                                gpointer    data);
 
   nux::BaseTexture* GetWindowButtonForTheme(WindowButtonType type,
                                             WindowState state);
