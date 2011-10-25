@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2011 Canonical Ltd
  *
@@ -18,115 +19,138 @@
 
 #include "PanelController.h"
 
+#include <vector>
 #include <NuxCore/Logger.h>
+#include <Nux/BaseWindow.h>
 
 #include "UScreen.h"
 
+#include "PanelView.h"
 #include "unitya11y.h"
 #include "unity-util-accessible.h"
 
-using namespace unity;
+namespace unity
+{
+namespace panel
+{
 
 namespace
 {
 nux::logging::Logger logger("unity.panel");
 }
 
-PanelController::PanelController()
-  : _bfb_size(66),
-    _opacity(1.0f),
-    _open_menu_start_received(false)
+class Controller::Impl : public sigc::trackable
+{
+public:
+  Impl();
+  ~Impl();
+
+  void StartFirstMenuShow();
+  void EndFirstMenuShow();
+  void QueueRedraw();
+
+  unsigned int GetTrayXid();
+  std::list <nux::Geometry> GetGeometries();
+
+  // NOTE: nux::Property maybe?
+  void SetOpacity(float opacity);
+  float opacity() const;
+
+private:
+  unity::PanelView* ViewForWindow(nux::BaseWindow* window);
+  void OnScreenChanged(int primary_monitor, std::vector<nux::Geometry>& monitors);
+
+  static void WindowConfigureCallback(int            window_width,
+                                      int            window_height,
+                                      nux::Geometry& geo,
+                                      void*          user_data);
+private:
+  std::vector<nux::BaseWindow*> windows_;
+  float opacity_;
+  bool open_menu_start_received_;
+};
+
+
+Controller::Impl::Impl()
+  : opacity_(1.0f)
+  , open_menu_start_received_(false)
 {
   UScreen* screen = UScreen::GetDefault();
-  screen->changed.connect(sigc::mem_fun(this, &PanelController::OnScreenChanged));
+  screen->changed.connect(sigc::mem_fun(this, &Impl::OnScreenChanged));
   OnScreenChanged(screen->GetPrimaryMonitor(), screen->GetMonitors());
 }
 
-PanelController::~PanelController()
+Controller::Impl::~Impl()
 {
-  std::vector<nux::BaseWindow*>::iterator it, eit = _windows.end();
-
-  for (it = _windows.begin(); it != eit; ++it)
+  for (auto window : windows_)
   {
-    (*it)->UnReference();
+    window->UnReference();
   }
 }
 
-unsigned int PanelController::GetTrayXid ()
+unsigned int Controller::Impl::GetTrayXid()
 {
-  if (!_windows.empty ())
-    return ViewForWindow (_windows.front ())->GetTrayXid ();
+  if (!windows_.empty())
+    return ViewForWindow(windows_.front())->GetTrayXid();
   else
     return 0;
 }
 
-std::list <nux::Geometry> PanelController::GetGeometries ()
+std::list<nux::Geometry> Controller::Impl::GetGeometries()
 {
-  std::list <nux::Geometry> geometries;
+  std::list<nux::Geometry> geometries;
 
-  for (auto &window : _windows)
+  for (auto window : windows_)
   {
-    geometries.push_back (window->GetAbsoluteGeometry ());
+    geometries.push_back(window->GetAbsoluteGeometry());
   }
 
   return geometries;
 }
 
-void
-PanelController::StartFirstMenuShow()
+void Controller::Impl::StartFirstMenuShow()
 {
-  std::vector<nux::BaseWindow*>::iterator it, eit = _windows.end();
-
-  for (it = _windows.begin(); it != eit; ++it)
+  for (auto window: windows_)
   {
-    PanelView* view = ViewForWindow(*it);
-
+    PanelView* view = ViewForWindow(window);
     view->StartFirstMenuShow();
   }
 
-  _open_menu_start_received = true;
+  open_menu_start_received_ = true;
 }
 
-void
-PanelController::EndFirstMenuShow()
+void Controller::Impl::EndFirstMenuShow()
 {
-  std::vector<nux::BaseWindow*>::iterator it, eit = _windows.end();
-
-  if (!_open_menu_start_received)
+  if (!open_menu_start_received_)
     return;
-  _open_menu_start_received = false;
+  open_menu_start_received_ = false;
 
-  for (it = _windows.begin(); it != eit; ++it)
+  for (auto window: windows_)
   {
-    PanelView* view = ViewForWindow(*it);
+    PanelView* view = ViewForWindow(window);
     view->EndFirstMenuShow();
   }
 }
 
-void
-PanelController::SetOpacity(float opacity)
+void Controller::Impl::SetOpacity(float opacity)
 {
-  std::vector<nux::BaseWindow*>::iterator it, eit = _windows.end();
+  opacity_ = opacity;
 
-  _opacity = opacity;
-
-  for (it = _windows.begin(); it != eit; ++it)
+  for (auto window: windows_)
   {
-    ViewForWindow(*it)->SetOpacity(_opacity);
+    ViewForWindow(window)->SetOpacity(opacity_);
   }
 }
 
-void PanelController::QueueRedraw()
+void Controller::Impl::QueueRedraw()
 {
-  std::vector<nux::BaseWindow*>::iterator it, eit = _windows.end();
-  for (it = _windows.begin(); it != eit; ++it)
+  for (auto window: windows_)
   {
-    (*it)->QueueDraw();
+    window->QueueDraw();
   }
 }
 
-PanelView*
-PanelController::ViewForWindow(nux::BaseWindow* window)
+PanelView* Controller::Impl::ViewForWindow(nux::BaseWindow* window)
 {
   nux::Layout* layout = window->GetLayout();
   std::list<nux::Area*>::iterator it = layout->GetChildren().begin();
@@ -135,14 +159,14 @@ PanelController::ViewForWindow(nux::BaseWindow* window)
 }
 
 // We need to put a panel on every monitor, and try and re-use the panels we already have
-void
-PanelController::OnScreenChanged(int primary_monitor, std::vector<nux::Geometry>& monitors)
+void Controller::Impl::OnScreenChanged(int primary_monitor,
+                                       std::vector<nux::Geometry>& monitors)
 {
-  std::vector<nux::BaseWindow*>::iterator it, eit = _windows.end();
+  std::vector<nux::BaseWindow*>::iterator it, eit = windows_.end();
   int n_monitors = monitors.size();
   int i = 0;
 
-  for (it = _windows.begin(); it != eit; ++it)
+  for (it = windows_.begin(); it != eit; ++it)
   {
     if (i < n_monitors)
     {
@@ -175,29 +199,22 @@ PanelController::OnScreenChanged(int primary_monitor, std::vector<nux::Geometry>
   {
     for (i = i; i < n_monitors; i++)
     {
-      nux::BaseWindow* window;
-      PanelView*       view;
-      nux::HLayout*    layout;
+      nux::HLayout* layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
-      // FIXME(loicm): Several objects created here are leaked.
-
-      layout = new nux::HLayout(NUX_TRACKER_LOCATION);
-
-      view = new PanelView();
+      PanelView* view = new PanelView();
       view->SetMaximumHeight(24);
-      view->SetOpacity(_opacity);
+      view->SetOpacity(opacity_);
       view->SetPrimary(i == primary_monitor);
       view->SetMonitor(i);
-      AddChild(view);
 
       layout->AddView(view, 1);
       layout->SetContentDistribution(nux::eStackLeft);
       layout->SetVerticalExternalMargin(0);
       layout->SetHorizontalExternalMargin(0);
 
-      window = new nux::BaseWindow("");
+      nux::BaseWindow* window = new nux::BaseWindow("");
       window->SinkReference();
-      window->SetConfigureNotifyCallback(&PanelController::WindowConfigureCallback, window);
+      window->SetConfigureNotifyCallback(&Impl::WindowConfigureCallback, window);
       window->SetLayout(layout);
       window->SetBackgroundColor(nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
       window->ShowWindow(true);
@@ -213,13 +230,13 @@ PanelController::OnScreenChanged(int primary_monitor, std::vector<nux::Geometry>
       if (unity_a11y_initialized() == TRUE)
         unity_util_accessible_add_window(window);
 
-      _windows.push_back(window);
+      windows_.push_back(window);
 
       LOG_DEBUG(logger) << "Added Panel for Monitor " << i;
     }
   }
 
-  if ((int)_windows.size() > n_monitors)
+  if ((int)windows_.size() > n_monitors)
   {
     std::vector<nux::BaseWindow*>::iterator sit;
     for (sit = it; sit != eit; ++sit)
@@ -228,33 +245,70 @@ PanelController::OnScreenChanged(int primary_monitor, std::vector<nux::Geometry>
       LOG_DEBUG(logger) << "Removed extra Panel";
     }
 
-    _windows.erase(it, _windows.end());
+    windows_.erase(it, windows_.end());
   }
 }
 
-void
-PanelController::WindowConfigureCallback(int            window_width,
-                                         int            window_height,
-                                         nux::Geometry& geo,
-                                         void*          user_data)
+void Controller::Impl::WindowConfigureCallback(int window_width,
+                                               int window_height,
+                                               nux::Geometry& geo,
+                                               void* user_data)
 {
   nux::BaseWindow* window = static_cast<nux::BaseWindow*>(user_data);
   geo = window->GetGeometry();
 }
 
-float PanelController::opacity() const
+float Controller::Impl::opacity() const
 {
-  return _opacity;
+  return opacity_;
 }
 
-const gchar*
-PanelController::GetName()
+
+Controller::Controller()
+  : pimpl(new Impl())
 {
-  return "PanelController";
 }
 
-void
-PanelController::AddProperties(GVariantBuilder* builder)
+Controller::~Controller()
 {
-
+  delete pimpl;
 }
+
+void Controller::StartFirstMenuShow()
+{
+  pimpl->StartFirstMenuShow();
+}
+
+void Controller::EndFirstMenuShow()
+{
+  pimpl->EndFirstMenuShow();
+}
+
+void Controller::SetOpacity(float opacity)
+{
+  pimpl->SetOpacity(opacity);
+}
+
+void Controller::QueueRedraw()
+{
+  pimpl->QueueRedraw();
+}
+
+unsigned int Controller::GetTrayXid()
+{
+  return pimpl->GetTrayXid();
+}
+
+std::list<nux::Geometry> Controller::GetGeometries()
+{
+  return pimpl->GetGeometries();
+}
+
+float Controller::opacity() const
+{
+  return pimpl->opacity();
+}
+
+
+} // namespace panel
+} // namespace unity

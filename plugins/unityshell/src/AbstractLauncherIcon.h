@@ -33,6 +33,11 @@
 
 #include "DndData.h"
 
+namespace unity
+{
+namespace launcher
+{
+
 class ActionArg
 {
 public:
@@ -193,6 +198,9 @@ public:
   sigc::signal<void, AbstractLauncherIcon*> needs_redraw;
 
 };
+
+}
+}
 
 #endif // LAUNCHERICON_H
 

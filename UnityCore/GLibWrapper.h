@@ -81,6 +81,7 @@ public:
   gchar** operator&();
 
   operator bool() const;
+  operator char*();
   gchar* Value();
   std::string Str() const;
 

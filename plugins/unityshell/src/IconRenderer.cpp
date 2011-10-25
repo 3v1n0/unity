@@ -234,7 +234,7 @@ void IconRenderer::PreprocessIcons(std::list<RenderArg>& args, nux::Geometry con
   for (it = args.begin(), i = 0; it != args.end(); it++, i++)
   {
 
-    AbstractLauncherIcon* launcher_icon = it->icon;
+    launcher::AbstractLauncherIcon* launcher_icon = it->icon;
 
     float w = icon_size;
     float h = icon_size;
@@ -258,7 +258,7 @@ void IconRenderer::PreprocessIcons(std::list<RenderArg>& args, nux::Geometry con
 
     ViewProjectionMatrix = PremultMatrix * ObjectMatrix;
 
-    UpdateIconTransform(launcher_icon, ViewProjectionMatrix, geo, x, y, w, h, z, AbstractLauncherIcon::TRANSFORM_TILE);
+    UpdateIconTransform(launcher_icon, ViewProjectionMatrix, geo, x, y, w, h, z, launcher::AbstractLauncherIcon::TRANSFORM_TILE);
 
     w = image_size;
     h = image_size;
@@ -266,7 +266,7 @@ void IconRenderer::PreprocessIcons(std::list<RenderArg>& args, nux::Geometry con
     y = it->render_center.y - icon_size / 2.0f + (icon_size - image_size) / 2.0f;
     z = it->render_center.z;
 
-    UpdateIconTransform(launcher_icon, ViewProjectionMatrix, geo, x, y, w, h, z, AbstractLauncherIcon::TRANSFORM_IMAGE);
+    UpdateIconTransform(launcher_icon, ViewProjectionMatrix, geo, x, y, w, h, z, launcher::AbstractLauncherIcon::TRANSFORM_IMAGE);
 
     // hardcode values for now until SVG's are in place and we can remove this
     // 200 == size of large glow
@@ -284,7 +284,7 @@ void IconRenderer::PreprocessIcons(std::list<RenderArg>& args, nux::Geometry con
     y = it->render_center.y - icon_glow_size / 2.0f;
     z = it->render_center.z;
 
-    UpdateIconTransform(launcher_icon, ViewProjectionMatrix, geo, x, y, w, h, z, AbstractLauncherIcon::TRANSFORM_GLOW);
+    UpdateIconTransform(launcher_icon, ViewProjectionMatrix, geo, x, y, w, h, z, launcher::AbstractLauncherIcon::TRANSFORM_GLOW);
 
     w = geo.width + 2;
     h = icon_size + spacing;
@@ -294,7 +294,7 @@ void IconRenderer::PreprocessIcons(std::list<RenderArg>& args, nux::Geometry con
     y = it->logical_center.y - h / 2.0f;
     z = it->logical_center.z;
 
-    UpdateIconTransform(launcher_icon, ViewProjectionMatrix, geo, x, y, w, h, z, AbstractLauncherIcon::TRANSFORM_HIT_AREA);
+    UpdateIconTransform(launcher_icon, ViewProjectionMatrix, geo, x, y, w, h, z, launcher::AbstractLauncherIcon::TRANSFORM_HIT_AREA);
 
     if (launcher_icon->Emblem())
     {
@@ -319,19 +319,19 @@ void IconRenderer::PreprocessIcons(std::list<RenderArg>& args, nux::Geometry con
       ViewProjectionMatrix = PremultMatrix * ObjectMatrix;
 
       UpdateIconSectionTransform(launcher_icon, ViewProjectionMatrix, geo, x, y, emb_w, emb_h, z,
-                                 it->render_center.x - w / 2.0f, it->render_center.y - h / 2.0f, w, h, AbstractLauncherIcon::TRANSFORM_EMBLEM);
+                                 it->render_center.x - w / 2.0f, it->render_center.y - h / 2.0f, w, h, launcher::AbstractLauncherIcon::TRANSFORM_EMBLEM);
     }
   }
 }
 
-void IconRenderer::UpdateIconTransform(AbstractLauncherIcon* icon, nux::Matrix4 ViewProjectionMatrix, nux::Geometry const& geo,
-                                       float x, float y, float w, float h, float z, AbstractLauncherIcon::TransformIndex index)
+void IconRenderer::UpdateIconTransform(launcher::AbstractLauncherIcon* icon, nux::Matrix4 ViewProjectionMatrix, nux::Geometry const& geo,
+                                       float x, float y, float w, float h, float z, launcher::AbstractLauncherIcon::TransformIndex index)
 {
   UpdateIconSectionTransform (icon, ViewProjectionMatrix, geo, x, y, w, h, z, x, y, w, h, index);
 }
 
-void IconRenderer::UpdateIconSectionTransform(AbstractLauncherIcon* icon, nux::Matrix4 ViewProjectionMatrix, nux::Geometry const& geo,
-                                              float x, float y, float w, float h, float z, float xx, float yy, float ww, float hh, AbstractLauncherIcon::TransformIndex index)
+void IconRenderer::UpdateIconSectionTransform(launcher::AbstractLauncherIcon* icon, nux::Matrix4 ViewProjectionMatrix, nux::Geometry const& geo,
+                                              float x, float y, float w, float h, float z, float xx, float yy, float ww, float hh, launcher::AbstractLauncherIcon::TransformIndex index)
 {
   nux::Vector4 v0 = nux::Vector4(x,     y,     z, 1.0f);
   nux::Vector4 v1 = nux::Vector4(x,     y + h, z, 1.0f);
@@ -409,7 +409,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
     shine = local::squircle_shine;
   }
 
-  auto tile_transform = arg.icon->GetTransform(AbstractLauncherIcon::TRANSFORM_TILE);
+  auto tile_transform = arg.icon->GetTransform(launcher::AbstractLauncherIcon::TRANSFORM_TILE);
 
   // draw tile
   if (backlight_intensity > 0 && !arg.draw_edge_only)
@@ -441,7 +441,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
                 arg.icon->TextureForSize(image_size)->GetDeviceTexture(),
                 nux::color::White,
                 arg.alpha,
-                arg.icon->GetTransform(AbstractLauncherIcon::TRANSFORM_IMAGE));
+                arg.icon->GetTransform(launcher::AbstractLauncherIcon::TRANSFORM_IMAGE));
 
   // draw overlay shine
   RenderElement(GfxContext,
@@ -459,7 +459,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
                   local::icon_glow[size]->GetDeviceTexture(),
                   glow_color,
                   glow_intensity * arg.alpha,
-                  arg.icon->GetTransform(AbstractLauncherIcon::TRANSFORM_GLOW));
+                  arg.icon->GetTransform(launcher::AbstractLauncherIcon::TRANSFORM_GLOW));
   }
 
   // draw shimmer
@@ -479,7 +479,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
                   local::icon_glow[size]->GetDeviceTexture(),
                   arg.icon->GlowColor(),
                   fade_out * arg.alpha,
-                  arg.icon->GetTransform(AbstractLauncherIcon::TRANSFORM_GLOW));
+                  arg.icon->GetTransform(launcher::AbstractLauncherIcon::TRANSFORM_GLOW));
 
     GfxContext.PopClippingRectangle();
   }
@@ -510,7 +510,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
                   arg.icon->Emblem()->GetDeviceTexture(),
                   nux::color::White,
                   arg.alpha,
-                  arg.icon->GetTransform(AbstractLauncherIcon::TRANSFORM_EMBLEM));
+                  arg.icon->GetTransform(launcher::AbstractLauncherIcon::TRANSFORM_EMBLEM));
   }
 
   // draw indicators
@@ -763,7 +763,7 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
     }
     else
     {
-      auto bounds = arg.icon->GetTransform(AbstractLauncherIcon::TRANSFORM_TILE);
+      auto bounds = arg.icon->GetTransform(launcher::AbstractLauncherIcon::TRANSFORM_TILE);
       markerX = bounds[0].x + 2;
       scale = 2;
     }

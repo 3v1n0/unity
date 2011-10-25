@@ -32,6 +32,8 @@
 
 namespace unity
 {
+namespace launcher
+{
 namespace
 {
 nux::logging::Logger logger("unity.launcher");
@@ -479,13 +481,14 @@ void DeviceLauncherIcon::OnSettingsChanged()
   UpdateVisibility();
 }
 
-namespace {
+namespace
+{
 
 GduDevice* get_device_for_device_file(const gchar *device_file)
 {
   if (device_file == NULL || strlen(device_file) <= 1)
     return NULL;
-    
+
   glib::Object<GduPool> pool(gdu_pool_new());
   GduDevice *device = gdu_pool_get_by_device_file(pool, device_file);
 
@@ -494,4 +497,5 @@ GduDevice* get_device_for_device_file(const gchar *device_file)
 
 } // anonymouse namespace
 
+} // namespace launcher
 } // namespace unity

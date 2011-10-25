@@ -20,7 +20,7 @@
 
 namespace unity
 {
-  class DashStyleO : public DashStyle
+  class DashStyleO : public dash::Style
   {
     public:
       DashStyleO();
@@ -30,7 +30,7 @@ namespace unity
       bool TrackView (cairo_t* cr, nux::ButtonVisualState state);
   };
 
-  class DashStyleP : public DashStyle
+  class DashStyleP : public dash::Style
   {
     public:
       DashStyleP();
@@ -150,40 +150,40 @@ int main (int    argc,
   pDashStyle->MultiRangeSegment (cr,
                                  nux::VISUAL_STATE_NORMAL,
                                  "100KB",
-                                 unity::DashStyle::Arrow::LEFT,
-                                 unity::DashStyle::Segment::LEFT);
+                                 unity::dash::Arrow::LEFT,
+                                 unity::dash::Segment::LEFT);
   cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/multirange-left.png");
   wipe (cr);
 
   pDashStyle->MultiRangeSegment (cr,
                                  nux::VISUAL_STATE_PRESSED,
                                  "10GB",
-                                 unity::DashStyle::Arrow::LEFT,
-                                 unity::DashStyle::Segment::MIDDLE);
+                                 unity::dash::Arrow::LEFT,
+                                 unity::dash::Segment::MIDDLE);
   cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/multirange-middle-left.png");
   wipe (cr);
 
   pDashStyle->MultiRangeSegment (cr,
                                  nux::VISUAL_STATE_PRESSED,
                                  "1MB",
-                                 unity::DashStyle::Arrow::BOTH,
-                                 unity::DashStyle::Segment::MIDDLE);
+                                 unity::dash::Arrow::BOTH,
+                                 unity::dash::Segment::MIDDLE);
   cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/multirange-middle-both.png");
   wipe (cr);
 
   pDashStyle->MultiRangeSegment (cr,
                                  nux::VISUAL_STATE_PRESSED,
                                  "1TB",
-                                 unity::DashStyle::Arrow::RIGHT,
-                                 unity::DashStyle::Segment::MIDDLE);
+                                 unity::dash::Arrow::RIGHT,
+                                 unity::dash::Segment::MIDDLE);
   cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/multirange-middle-right.png");
   wipe (cr);
 
   pDashStyle->MultiRangeSegment (cr,
                                  nux::VISUAL_STATE_PRESSED,
                                  "100KB",
-                                 unity::DashStyle::Arrow::LEFT,
-                                 unity::DashStyle::Segment::RIGHT);
+                                 unity::dash::Arrow::LEFT,
+                                 unity::dash::Segment::RIGHT);
   cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/multirange-right.png");
   wipe (cr);
 

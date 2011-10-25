@@ -42,7 +42,7 @@
 
 #include <Nux/Utils.h>
 
-#include "PlacesStyle.h"
+#include "DashStyle.h"
 
 static const nux::Color kExpandDefaultTextColor(1.0f, 1.0f, 1.0f, 0.6f);
 static const nux::Color kExpandHoverTextColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -61,8 +61,7 @@ PlacesGroup::PlacesGroup()
     _n_total_items(0),
     _draw_sep(true)
 {
-  PlacesStyle* style = PlacesStyle::GetDefault();
-  nux::BaseTexture* arrow = style->GetGroupUnexpandIcon();
+  nux::BaseTexture* arrow = dash::Style::Instance().GetGroupUnexpandIcon();
 
   _cached_name = NULL;
   _group_layout = new nux::VLayout("", NUX_TRACKER_LOCATION);
@@ -340,8 +339,6 @@ PlacesGroup::GetExpanded()
 void
 PlacesGroup::SetExpanded(bool is_expanded)
 {
-  PlacesStyle* style = PlacesStyle::GetDefault();
-
   if (_is_expanded == is_expanded)
     return;
 
@@ -352,8 +349,12 @@ PlacesGroup::SetExpanded(bool is_expanded)
 
   Refresh();
 
-  _expand_icon->SetTexture(_is_expanded ? style->GetGroupUnexpandIcon()
-                           : style->GetGroupExpandIcon());
+  dash::Style& style = dash::Style::Instance();
+  if (_is_expanded)
+    _expand_icon->SetTexture(style.GetGroupUnexpandIcon());
+  else
+    _expand_icon->SetTexture(style.GetGroupExpandIcon());
+
   expanded.emit(this);
 }
 

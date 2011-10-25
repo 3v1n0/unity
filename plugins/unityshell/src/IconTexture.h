@@ -20,8 +20,11 @@
 #ifndef ICON_TEXTURE_H
 #define ICON_TEXTURE_H
 
-#include <Nux/TextureArea.h>
+#include <Nux/Nux.h>
+// FIXME: Nux/View.h needs Nux.h included first.
 #include <Nux/View.h>
+// FIXME: Nux/TextureArea.h needs View included first.
+#include <Nux/TextureArea.h>
 #include <NuxImage/CairoGraphics.h>
 #include <NuxGraphics/GraphicsEngine.h>
 

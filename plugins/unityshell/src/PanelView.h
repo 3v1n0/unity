@@ -35,7 +35,6 @@
 #include "PanelMenuView.h"
 #include "PanelTray.h"
 #include "PanelIndicatorsView.h"
-#include "PanelStyle.h"
 
 namespace unity
 {
@@ -108,7 +107,6 @@ private:
   int _last_width;
   int _last_height;
 
-  PanelStyle* _style;
   nux::Color  _bg_color;
   bool        _is_dirty;
   float       _opacity;

@@ -34,7 +34,6 @@
 #include "DndData.h"
 #include "GeisAdapter.h"
 #include "Introspectable.h"
-#include "LauncherIcon.h"
 #include "LauncherDragWindow.h"
 #include "LauncherHideMachine.h"
 #include "LauncherHoverMachine.h"
@@ -53,15 +52,16 @@
 
 #define MAX_SUPERKEY_LABELS 10
 
-class LauncherModel;
 class QuicklistView;
+
+namespace unity
+{
+namespace launcher
+{
 class LauncherIcon;
-class LauncherDragWindow;
+class LauncherModel;
 
-
-using namespace unity::ui;
-
-class Launcher : public unity::Introspectable, public nux::View
+class Launcher : public Introspectable, public nux::View
 {
   NUX_DECLARE_OBJECT_TYPE(Launcher, nux::View);
 public:
@@ -319,9 +319,9 @@ private:
   void  SetDndDelta(float x, float y, nux::Geometry const& geo, timespec const& current);
   float DragLimiter(float x);
 
-  void SetupRenderArg(LauncherIcon* icon, struct timespec const& current, RenderArg& arg);
+  void SetupRenderArg(LauncherIcon* icon, struct timespec const& current, ui::RenderArg& arg);
   void FillRenderArg(LauncherIcon* icon,
-                     RenderArg& arg,
+                     ui::RenderArg& arg,
                      nux::Point3& center,
                      float folding_threshold,
                      float folded_size,
@@ -331,7 +331,7 @@ private:
                      float animation_neg_rads,
                      struct timespec const& current);
 
-  void RenderArgs(std::list<RenderArg> &launcher_args,
+  void RenderArgs(std::list<ui::RenderArg> &launcher_args,
                   nux::Geometry& box_geo, float* launcher_alpha);
 
   void OnIconAdded(LauncherIcon* icon);
@@ -499,8 +499,11 @@ private:
   BaseTexturePtr   launcher_sheen_;
   bool _dash_is_open;
 
-  AbstractIconRenderer::Ptr icon_renderer;
+  ui::AbstractIconRenderer::Ptr icon_renderer;
   BackgroundEffectHelper bg_effect_helper_;
 };
+
+}
+}
 
 #endif // LAUNCHER_H

@@ -23,6 +23,7 @@
 #include <Nux/Nux.h>
 #include <NuxCore/Logger.h>
 
+#include "DashStyle.h"
 #include "FilterBasicButton.h"
 
 namespace
@@ -91,7 +92,7 @@ namespace unity {
 
   void FilterBasicButton::RedrawTheme (nux::Geometry const& geom, cairo_t *cr, nux::ButtonVisualState faked_state)
   {
-    DashStyle::Instance().Button(cr, faked_state, label_);
+    dash::Style::Instance().Button(cr, faked_state, label_);
   }
 
   long FilterBasicButton::ComputeContentSize ()

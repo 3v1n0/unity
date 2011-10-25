@@ -30,9 +30,13 @@
 
 #include "unity-launcher-icon-accessible.h"
 #include "unity-launcher-accessible.h"
+#include "Launcher.h"
 #include "LauncherIcon.h"
 
 #include "unitya11y.h"
+
+using unity::launcher::Launcher;
+using unity::launcher::LauncherIcon;
 
 /* GObject */
 static void unity_launcher_icon_accessible_class_init(UnityLauncherIconAccessibleClass* klass);

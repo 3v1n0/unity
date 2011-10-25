@@ -28,55 +28,57 @@
 
 namespace unity
 {
+namespace dash
+{
 
-class DashStyle
+enum class StockIcon {
+  CHECKMARK,
+  CROSS,
+  GRID_VIEW,
+  FLOW_VIEW,
+  STAR
+};
+
+enum class Orientation {
+  UP,
+  DOWN,
+  LEFT,
+  RIGHT
+};
+
+enum class BlendMode {
+  NORMAL,
+  MULTIPLY,
+  SCREEN
+};
+
+enum class FontWeight {
+  LIGHT,
+  REGULAR,
+  BOLD
+};
+
+enum class Segment {
+  LEFT,
+  MIDDLE,
+  RIGHT
+};
+
+enum class Arrow {
+  LEFT,
+  RIGHT,
+  BOTH,
+  NONE
+};
+
+
+class Style
 {
 public:
+  Style ();
+  ~Style ();
 
-  enum class StockIcon {
-    CHECKMARK,
-    CROSS,
-    GRID_VIEW,
-    FLOW_VIEW,
-    STAR
-  };
-
-  enum class Orientation {
-    UP,
-    DOWN,
-    LEFT,
-    RIGHT
-  };
-
-  enum class BlendMode {
-    NORMAL,
-    MULTIPLY,
-    SCREEN
-  };
-
-  enum class FontWeight {
-    LIGHT,
-    REGULAR,
-    BOLD
-  };
-
-  enum class Segment {
-    LEFT,
-    MIDDLE,
-    RIGHT
-  };
-
-  enum class Arrow {
-    LEFT,
-    RIGHT,
-    BOTH,
-    NONE
-  };
-
-  DashStyle ();
-  ~DashStyle ();
-
-  static DashStyle& Instance();
+  static Style& Instance();
 
   virtual bool Button(cairo_t* cr, nux::ButtonVisualState state,
                       std::string const& label);
@@ -126,11 +128,52 @@ public:
                    double   height,
                    bool     align);
 
+  nux::Color const& GetTextColor() const;
+
+  // TODO nux::Property<int>
+  int  GetDefaultNColumns() const;
+  void SetDefaultNColumns(int n_cols);
+  sigc::signal<void> columns_changed;
+
+  int GetTileIconSize() const;
+  int GetTileWidth() const;
+  int GetTileHeight() const;
+
+  int GetHomeTileIconSize() const;
+  int GetHomeTileWidth() const;
+  int GetHomeTileHeight() const;
+
+  int GetTextLineHeight() const;
+
+  nux::BaseTexture* GetDashBottomTile();
+  nux::BaseTexture* GetDashRightTile();
+  nux::BaseTexture* GetDashCorner();
+  nux::BaseTexture* GetDashFullscreenIcon();
+  nux::BaseTexture* GetDashLeftEdge();
+  nux::BaseTexture* GetDashLeftCorner();
+  nux::BaseTexture* GetDashLeftTile();
+  nux::BaseTexture* GetDashTopCorner();
+  nux::BaseTexture* GetDashTopTile();
+
+  nux::BaseTexture* GetDashShine();
+
+  nux::BaseTexture* GetSearchMagnifyIcon();
+  nux::BaseTexture* GetSearchCloseIcon();
+  nux::BaseTexture* GetSearchCloseGlowIcon();
+  nux::BaseTexture* GetSearchSpinIcon();
+  nux::BaseTexture* GetSearchSpinGlowIcon();
+
+  nux::BaseTexture* GetGroupUnexpandIcon();
+  nux::BaseTexture* GetGroupExpandIcon();
+
+  sigc::signal<void> changed;
+
 private:
   class Impl;
   Impl* pimpl;
 };
 
+}
 }
 
 #endif // DASH_STYLE_H

@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010 Canonical Ltd
+ * Copyright (C) 2010, 2011 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -15,74 +15,179 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Jason Smith <jason.smith@canonical.com>
+ *              Tim Penhey <tim.penhey@canonical.com>
  */
 
+#include <glib/gi18n-lib.h>
+#include <libbamf/libbamf.h>
+/* Compiz */
+#include <core/core.h>
+
+#include <Nux/Nux.h>
+#include <Nux/HLayout.h>
+#include <Nux/BaseWindow.h>
+#include <NuxCore/Logger.h>
+
+#include "BamfLauncherIcon.h"
+#include "DesktopLauncherIcon.h"
 #include "DeviceLauncherIcon.h"
+#include "DeviceLauncherSection.h"
 #include "FavoriteStore.h"
-#include "LauncherController.h"
-#include "LauncherIcon.h"
 #include "Launcher.h"
+#include "LauncherController.h"
+#include "LauncherEntryRemote.h"
+#include "LauncherEntryRemoteModel.h"
+#include "LauncherIcon.h"
+#include "LauncherModel.h"
 #include "WindowManager.h"
 #include "TrashLauncherIcon.h"
 #include "BFBLauncherIcon.h"
 
-#include <glib/gi18n-lib.h>
 
-#include <Nux/Nux.h>
-#include <Nux/BaseWindow.h>
-
-using namespace unity;
-
-LauncherController::LauncherController(Launcher* launcher)
+namespace unity
 {
-  _launcher = launcher;
-  _model = new LauncherModel();
-  _sort_priority = 0;
+namespace launcher
+{
+namespace
+{
+nux::logging::Logger logger("unity.launcher");
+}
 
-  _launcher->SetModel(_model);
-  _launcher->launcher_addrequest.connect(sigc::mem_fun(this, &LauncherController::OnLauncherAddRequest));
-  _launcher->launcher_removerequest.connect(sigc::mem_fun(this, &LauncherController::OnLauncherRemoveRequest));
+class Controller::Impl
+{
+public:
+  Impl(Display* display);
+  ~Impl();
 
-  _device_section = new DeviceLauncherSection(_launcher);
-  _device_section->IconAdded.connect(sigc::mem_fun(this, &LauncherController::OnIconAdded));
+  void UpdateNumWorkspaces(int workspaces);
 
-  _num_workspaces = WindowManager::Default()->WorkspaceCount();
-  if (_num_workspaces > 1)
+  void Save();
+  void SortAndUpdate();
+
+  void OnIconAdded(LauncherIcon* icon);
+
+  void OnLauncherAddRequest(char* path, LauncherIcon* before);
+  void OnLauncherRemoveRequest(LauncherIcon* icon);
+
+  void OnLauncherEntryRemoteAdded(LauncherEntryRemote* entry);
+  void OnLauncherEntryRemoteRemoved(LauncherEntryRemote* entry);
+
+  void InsertExpoAction();
+  void RemoveExpoAction();
+
+  void InsertTrash();
+
+  void RegisterIcon(LauncherIcon* icon);
+
+  LauncherIcon* CreateFavorite(const char* file_path);
+
+  void SetupBamf();
+
+  void OnExpoActivated();
+
+  /* statics */
+
+  static void OnViewOpened(BamfMatcher* matcher, BamfView* view, gpointer data);
+
+  BamfMatcher*           matcher_;
+  LauncherModel::Ptr     model_;
+  nux::ObjectPtr<nux::BaseWindow> launcher_window_;
+  nux::ObjectPtr<Launcher> launcher_;
+  int                    sort_priority_;
+  DeviceLauncherSection* device_section_;
+  LauncherEntryRemoteModel remote_model_;
+  SimpleLauncherIcon*    expo_icon_;
+  nux::ObjectPtr<AbstractLauncherIcon> desktop_icon_;
+  int                    num_workspaces_;
+
+  guint            bamf_timer_handler_id_;
+
+  guint32 on_view_opened_id_;
+
+  sigc::connection on_expoicon_activate_connection_;
+};
+
+
+Controller::Impl::Impl(Display* display)
+  : matcher_(nullptr)
+  , model_(new LauncherModel())
+  , sort_priority_(0)
+{
+  // NOTE: should the launcher itself hold the base window?
+  // seems like it probably should...
+  launcher_window_ = new nux::BaseWindow(TEXT("LauncherWindow"));
+
+  Launcher* raw_launcher = new Launcher(launcher_window_.GetPointer());
+  launcher_ = raw_launcher;
+  launcher_->display = display;
+  launcher_->SetIconSize(54, 48);
+  launcher_->SetBacklightMode(Launcher::BACKLIGHT_ALWAYS_ON);
+  launcher_->SetHideMode(Launcher::LAUNCHER_HIDE_DODGE_WINDOWS);
+  launcher_->SetLaunchAnimation(Launcher::LAUNCH_ANIMATION_PULSE);
+  launcher_->SetUrgentAnimation(Launcher::URGENT_ANIMATION_WIGGLE);
+
+  nux::HLayout* layout = new nux::HLayout(NUX_TRACKER_LOCATION);
+  layout->AddView(raw_launcher, 1);
+  layout->SetContentDistribution(nux::eStackLeft);
+  layout->SetVerticalExternalMargin(0);
+  layout->SetHorizontalExternalMargin(0);
+
+  launcher_window_->SetLayout(layout);
+  launcher_window_->SetBackgroundColor(nux::color::Transparent);
+  launcher_window_->ShowWindow(true);
+  launcher_window_->EnableInputWindow(true, "launcher", false, false);
+  launcher_window_->InputWindowEnableStruts(true);
+  launcher_window_->SetEnterFocusInputArea(raw_launcher);
+
+  launcher_->SetModel(model_.get());
+  launcher_->launcher_addrequest.connect(sigc::mem_fun(this, &Impl::OnLauncherAddRequest));
+  launcher_->launcher_removerequest.connect(sigc::mem_fun(this, &Impl::OnLauncherRemoveRequest));
+
+  device_section_ = new DeviceLauncherSection(raw_launcher);
+  device_section_->IconAdded.connect(sigc::mem_fun(this, &Impl::OnIconAdded));
+
+  num_workspaces_ = WindowManager::Default()->WorkspaceCount();
+  if (num_workspaces_ > 1)
   {
     InsertExpoAction();
   }
   InsertTrash();
 
-  _bamf_timer_handler_id = g_timeout_add(500, (GSourceFunc) &LauncherController::BamfTimerCallback, this);
+  auto setup_bamf = [](gpointer user_data) -> gboolean
+  {
+    Impl* self = static_cast<Impl*>(user_data);
+    self->SetupBamf();
+    return FALSE;
+  };
+  bamf_timer_handler_id_ = g_timeout_add(500, setup_bamf, this);
 
-  _remote_model.entry_added.connect(sigc::mem_fun(this, &LauncherController::OnLauncherEntryRemoteAdded));
-  _remote_model.entry_removed.connect(sigc::mem_fun(this, &LauncherController::OnLauncherEntryRemoteRemoved));
+  remote_model_.entry_added.connect(sigc::mem_fun(this, &Impl::OnLauncherEntryRemoteAdded));
+  remote_model_.entry_removed.connect(sigc::mem_fun(this, &Impl::OnLauncherEntryRemoteRemoved));
 
-  RegisterIcon (new BFBLauncherIcon (launcher));
+  RegisterIcon(new BFBLauncherIcon(raw_launcher));
+  desktop_icon_ = new DesktopLauncherIcon(raw_launcher);
 }
 
-LauncherController::~LauncherController()
+Controller::Impl::~Impl()
 {
-  if (_bamf_timer_handler_id != 0)
-    g_source_remove(_bamf_timer_handler_id);
+  if (bamf_timer_handler_id_ != 0)
+    g_source_remove(bamf_timer_handler_id_);
 
-  if (_matcher != NULL && _on_view_opened_id != 0)
-    g_signal_handler_disconnect((gpointer) _matcher, _on_view_opened_id);
+  if (matcher_ != NULL && on_view_opened_id_ != 0)
+    g_signal_handler_disconnect((gpointer) matcher_, on_view_opened_id_);
 
-  delete _device_section;
-  delete _model;
+  delete device_section_;
 }
 
 
-void
-LauncherController::OnLauncherAddRequest(char* path, LauncherIcon* before)
+void Controller::Impl::OnLauncherAddRequest(char* path, LauncherIcon* before)
 {
-  for (auto it : _model->GetSublist<BamfLauncherIcon> ())
+  for (auto it : model_->GetSublist<BamfLauncherIcon> ())
   {
     if (!g_strcmp0(path, it->DesktopFile()))
     {
       it->Stick();
-      _model->ReorderBefore(it, before, false);
+      model_->ReorderBefore(it, before, false);
       Save();
       return;
     }
@@ -93,18 +198,18 @@ LauncherController::OnLauncherAddRequest(char* path, LauncherIcon* before)
   {
     RegisterIcon(result);
     if (before)
-      _model->ReorderBefore(result, before, false);
+      model_->ReorderBefore(result, before, false);
   }
   
   Save();
 }
 
-void LauncherController::Save()
+void Controller::Impl::Save()
 {
   unity::FavoriteList desktop_paths;
 
   // Updates gsettings favorites.
-  std::list<BamfLauncherIcon*> launchers = _model->GetSublist<BamfLauncherIcon> ();
+  std::list<BamfLauncherIcon*> launchers = model_->GetSublist<BamfLauncherIcon> ();
   for (auto icon : launchers)
   {
     if (!icon->IsSticky())
@@ -119,12 +224,12 @@ void LauncherController::Save()
   unity::FavoriteStore::GetDefault().SetFavorites(desktop_paths);
 }
 
-void LauncherController::SortAndUpdate()
+void Controller::Impl::SortAndUpdate()
 {
   gint   shortcut = 1;
   gchar* buff;
 
-  std::list<BamfLauncherIcon*> launchers = _model->GetSublist<BamfLauncherIcon> ();
+  std::list<BamfLauncherIcon*> launchers = model_->GetSublist<BamfLauncherIcon> ();
   for (auto it : launchers)
   {
     if (shortcut < 11 && it->GetQuirk(LauncherIcon::QUIRK_VISIBLE))
@@ -142,14 +247,12 @@ void LauncherController::SortAndUpdate()
   }
 }
 
-void
-LauncherController::OnIconAdded(LauncherIcon* icon)
+void Controller::Impl::OnIconAdded(LauncherIcon* icon)
 {
   this->RegisterIcon(icon);
 }
 
-void
-LauncherController::OnLauncherRemoveRequest(LauncherIcon* icon)
+void Controller::Impl::OnLauncherRemoveRequest(LauncherIcon* icon)
 {
   switch (icon->Type())
   {
@@ -176,14 +279,10 @@ LauncherController::OnLauncherRemoveRequest(LauncherIcon* icon)
   }
 }
 
-void
-LauncherController::OnLauncherEntryRemoteAdded(LauncherEntryRemote* entry)
+void Controller::Impl::OnLauncherEntryRemoteAdded(LauncherEntryRemote* entry)
 {
-  LauncherModel::iterator it;
-  for (it = _model->begin(); it != _model->end(); it++)
+  for (auto icon : *model_)
   {
-    LauncherIcon* icon = *it;
-
     if (!icon || !icon->RemoteUri())
       continue;
 
@@ -194,75 +293,66 @@ LauncherController::OnLauncherEntryRemoteAdded(LauncherEntryRemote* entry)
   }
 }
 
-void
-LauncherController::OnLauncherEntryRemoteRemoved(LauncherEntryRemote* entry)
+void Controller::Impl::OnLauncherEntryRemoteRemoved(LauncherEntryRemote* entry)
 {
-  LauncherModel::iterator it;
-  for (it = _model->begin(); it != _model->end(); it++)
+  for (auto icon : *model_)
   {
-    LauncherIcon* icon = *it;
     icon->RemoveEntryRemote(entry);
   }
 }
 
-void
-LauncherController::OnExpoActivated()
+void Controller::Impl::OnExpoActivated()
 {
   WindowManager::Default()->InitiateExpo();
 }
 
-void
-LauncherController::InsertTrash()
+void Controller::Impl::InsertTrash()
 {
   TrashLauncherIcon* icon;
-  icon = new TrashLauncherIcon(_launcher);
+  icon = new TrashLauncherIcon(launcher_.GetPointer());
   RegisterIcon(icon);
 }
 
-void
-LauncherController::UpdateNumWorkspaces(int workspaces)
+void Controller::Impl::UpdateNumWorkspaces(int workspaces)
 {
-  if ((_num_workspaces == 0) && (workspaces > 0))
+  if ((num_workspaces_ == 0) && (workspaces > 0))
   {
     InsertExpoAction();
   }
-  else if ((_num_workspaces > 0) && (workspaces == 0))
+  else if ((num_workspaces_ > 0) && (workspaces == 0))
   {
     RemoveExpoAction();
   }
 
-  _num_workspaces = workspaces;
+  num_workspaces_ = workspaces;
 }
 
-void
-LauncherController::InsertExpoAction()
+void Controller::Impl::InsertExpoAction()
 {
-  _expoIcon = new SimpleLauncherIcon(_launcher);
+  expo_icon_ = new SimpleLauncherIcon(launcher_.GetPointer());
 
-  _expoIcon->tooltip_text = _("Workspace Switcher");
-  _expoIcon->SetIconName("workspace-switcher");
-  _expoIcon->SetQuirk(LauncherIcon::QUIRK_VISIBLE, true);
-  _expoIcon->SetQuirk(LauncherIcon::QUIRK_RUNNING, false);
-  _expoIcon->SetIconType(LauncherIcon::TYPE_EXPO);
-  _expoIcon->SetShortcut('s');
+  expo_icon_->tooltip_text = _("Workspace Switcher");
+  expo_icon_->SetIconName("workspace-switcher");
+  expo_icon_->SetQuirk(LauncherIcon::QUIRK_VISIBLE, true);
+  expo_icon_->SetQuirk(LauncherIcon::QUIRK_RUNNING, false);
+  expo_icon_->SetIconType(LauncherIcon::TYPE_EXPO);
+  expo_icon_->SetShortcut('s');
 
-  _on_expoicon_activate_connection = _expoIcon->activate.connect(sigc::mem_fun(this, &LauncherController::OnExpoActivated));
+  on_expoicon_activate_connection_ = expo_icon_->activate.connect(sigc::mem_fun(this, &Impl::OnExpoActivated));
 
-  RegisterIcon(_expoIcon);
+  RegisterIcon(expo_icon_);
 }
 
-void
-LauncherController::RemoveExpoAction()
+void Controller::Impl::RemoveExpoAction()
 {
-  if (_on_expoicon_activate_connection)
-    _on_expoicon_activate_connection.disconnect();
-  _model->RemoveIcon(_expoIcon);
+  if (on_expoicon_activate_connection_)
+    on_expoicon_activate_connection_.disconnect();
+  model_->RemoveIcon(expo_icon_);
 }
 
-void
-LauncherController::RegisterIcon(LauncherIcon* icon)
+void Controller::Impl::RegisterIcon(LauncherIcon* icon)
 {
-  _model->AddIcon(icon);
+  model_->AddIcon(icon);
 
   BamfLauncherIcon* bamf_icon = dynamic_cast<BamfLauncherIcon*>(icon);
   if (bamf_icon)
@@ -271,29 +361,16 @@ LauncherController::RegisterIcon(LauncherIcon* icon)
     const char* path;
     path = bamf_icon->DesktopFile();
     if (path)
-      entry = _remote_model.LookupByDesktopFile(path);
+      entry = remote_model_.LookupByDesktopFile(path);
     if (entry)
       icon->InsertEntryRemote(entry);
   }
 }
 
 /* static private */
-bool
-LauncherController::BamfTimerCallback(void* data)
+void Controller::Impl::OnViewOpened(BamfMatcher* matcher, BamfView* view, gpointer data)
 {
-  LauncherController* self = (LauncherController*) data;
-
-  self->SetupBamf();
-
-  self->_bamf_timer_handler_id = 0;
-  return false;
-}
-
-/* static private */
-void
-LauncherController::OnViewOpened(BamfMatcher* matcher, BamfView* view, gpointer data)
-{
-  LauncherController* self = (LauncherController*) data;
+  Impl* self = static_cast<Impl*>(data);
   BamfApplication* app;
 
   if (!BAMF_IS_APPLICATION(view))
@@ -304,20 +381,19 @@ LauncherController::OnViewOpened(BamfMatcher* matcher, BamfView* view, gpointer 
   if (g_object_get_qdata(G_OBJECT(app), g_quark_from_static_string("unity-seen")))
     return;
 
-  BamfLauncherIcon* icon = new BamfLauncherIcon(self->_launcher, app);
+  BamfLauncherIcon* icon = new BamfLauncherIcon(self->launcher_.GetPointer(), app);
   icon->SetIconType(LauncherIcon::TYPE_APPLICATION);
-  icon->SetSortPriority(self->_sort_priority++);
+  icon->SetSortPriority(self->sort_priority_++);
 
   self->RegisterIcon(icon);
 }
 
-LauncherIcon*
-LauncherController::CreateFavorite(const char* file_path)
+LauncherIcon* Controller::Impl::CreateFavorite(const char* file_path)
 {
   BamfApplication* app;
   BamfLauncherIcon* icon;
 
-  app = bamf_matcher_get_application_for_desktop_file(_matcher, file_path, true);
+  app = bamf_matcher_get_application_for_desktop_file(matcher_, file_path, true);
   if (!app)
     return NULL;
 
@@ -330,15 +406,14 @@ LauncherController::CreateFavorite(const char* file_path)
   g_object_set_qdata(G_OBJECT(app), g_quark_from_static_string("unity-seen"), GINT_TO_POINTER(1));
 
   bamf_view_set_sticky(BAMF_VIEW(app), true);
-  icon = new BamfLauncherIcon(_launcher, app);
+  icon = new BamfLauncherIcon(launcher_.GetPointer(), app);
   icon->SetIconType(LauncherIcon::TYPE_APPLICATION);
-  icon->SetSortPriority(_sort_priority++);
+  icon->SetSortPriority(sort_priority_++);
 
   return icon;
 }
 
-/* private */
-void LauncherController::SetupBamf()
+void Controller::Impl::SetupBamf()
 {
   GList* apps, *l;
   BamfApplication* app;
@@ -348,7 +423,7 @@ void LauncherController::SetupBamf()
   // (avoids case where first item gets tacked onto end rather than start)
   int priority = 100;
 
-  _matcher = bamf_matcher_get_default();
+  matcher_ = bamf_matcher_get_default();
 
   FavoriteList const& favs = FavoriteStore::GetDefault().GetFavorites();
 
@@ -365,8 +440,8 @@ void LauncherController::SetupBamf()
     }
   }
 
-  apps = bamf_matcher_get_applications(_matcher);
-  _on_view_opened_id = g_signal_connect(_matcher, "view-opened", (GCallback) &LauncherController::OnViewOpened, this);
+  apps = bamf_matcher_get_applications(matcher_);
+  on_view_opened_id_ = g_signal_connect(matcher_, "view-opened", (GCallback) &Impl::OnViewOpened, this);
 
   for (l = apps; l; l = l->next)
   {
@@ -376,13 +451,97 @@ void LauncherController::SetupBamf()
       continue;
     g_object_set_qdata(G_OBJECT(app), g_quark_from_static_string("unity-seen"), GINT_TO_POINTER(1));
 
-    icon = new BamfLauncherIcon(_launcher, app);
-    icon->SetSortPriority(_sort_priority++);
+    icon = new BamfLauncherIcon(launcher_.GetPointer(), app);
+    icon->SetSortPriority(sort_priority_++);
     RegisterIcon(icon);
   }
   SortAndUpdate();
 
-  _model->order_changed.connect(sigc::mem_fun(this, &LauncherController::SortAndUpdate));
-  _model->saved.connect(sigc::mem_fun(this, &LauncherController::Save));
+  model_->order_changed.connect(sigc::mem_fun(this, &Impl::SortAndUpdate));
+  model_->saved.connect(sigc::mem_fun(this, &Impl::Save));
+  bamf_timer_handler_id_ = 0;
 }
 
+
+Controller::Controller(Display* display)
+  : pimpl(new Impl(display))
+{
+}
+
+Controller::~Controller()
+{
+  delete pimpl;
+}
+
+void Controller::UpdateNumWorkspaces(int workspaces)
+{
+  pimpl->UpdateNumWorkspaces(workspaces);
+}
+
+Launcher& Controller::launcher()
+{
+  return *(pimpl->launcher_);
+}
+
+std::vector<char> Controller::GetAllShortcuts()
+{
+  std::vector<char> shortcuts;
+  for (auto icon : *(pimpl->model_))
+  {
+    // TODO: find out why the icons use guint64 for shortcuts.
+    char shortcut = icon->GetShortcut();
+    if (shortcut)
+      shortcuts.push_back(shortcut);
+  }
+  return shortcuts;
+}
+
+std::vector<AbstractLauncherIcon*> Controller::GetAltTabIcons()
+{
+  std::vector<AbstractLauncherIcon*> results;
+
+  results.push_back(pimpl->desktop_icon_.GetPointer());
+
+  for (auto icon : *(pimpl->model_))
+    if (icon->ShowInSwitcher())
+      results.push_back(icon);
+
+  return results;
+}
+
+void Controller::PrimaryMonitorGeometryChanged(nux::Geometry const& rect)
+{
+  const int panel_height = 24;
+
+  int launcher_width = pimpl->launcher_window_->GetGeometry().width;
+
+  nux::Geometry new_geometry(rect.x,
+                             rect.y + panel_height,
+                             launcher_width,
+                             rect.height - panel_height);
+
+  LOG_DEBUG(logger) << "Setting to launcher rect:"
+                    << " x=" << new_geometry.x
+                    << " y=" << new_geometry.y
+                    << " w=" << new_geometry.width
+                    << " h=" << new_geometry.height;
+
+  pimpl->launcher_->SetMaximumHeight(new_geometry.height);
+
+  pimpl->launcher_window_->SetGeometry(new_geometry);
+  pimpl->launcher_->SetGeometry(new_geometry);
+}
+
+Window Controller::launcher_input_window_id()
+{
+  return pimpl->launcher_window_->GetInputWindowId();
+}
+
+void Controller::PushToFront()
+{
+  pimpl->launcher_window_->PushToFront();
+}
+
+
+} // namespace launcher
+} // namespace unity

@@ -94,8 +94,6 @@ add_executable (standalone-dash
                 ${UNITY_SRC}/PlacesGroup.h
                 ${UNITY_SRC}/DashSettings.cpp
                 ${UNITY_SRC}/DashSettings.h
-                ${UNITY_SRC}/PlacesStyle.cpp
-                ${UNITY_SRC}/PlacesStyle.h
                 ${UNITY_SRC}/PlacesTile.cpp
                 ${UNITY_SRC}/PlacesTile.h
                 ${UNITY_SRC}/PlacesSimpleTile.cpp
@@ -232,6 +230,8 @@ add_executable (test-launcher
                 ${UNITY_SRC}/DndData.h
                 ${UNITY_SRC}/TrashLauncherIcon.cpp
                 ${UNITY_SRC}/TrashLauncherIcon.h
+                ${UNITY_SRC}/DesktopLauncherIcon.cpp
+                ${UNITY_SRC}/DesktopLauncherIcon.h
                 ${UNITY_SRC}/DNDCollectionWindow.cpp
                 ${UNITY_SRC}/DNDCollectionWindow.h
                 ${UNITY_SRC}/DeviceLauncherIcon.cpp
@@ -361,8 +361,6 @@ add_executable (test-filters
                 ${UNITY_SRC}/FilterMultiRangeWidget.cpp
                 ${UNITY_SRC}/DashStyle.cpp
                 ${UNITY_SRC}/JSONParser.cpp
-                ${UNITY_SRC}/PlacesStyle.cpp
-                ${UNITY_SRC}/PlacesStyle.h
                 )
 add_dependencies(test-filters unity-core-${UNITY_API_VERSION})
 
@@ -380,8 +378,6 @@ add_executable (test-filter-bar
                 ${UNITY_SRC}/FilterBar.cpp
                 ${UNITY_SRC}/DashStyle.cpp
                 ${UNITY_SRC}/JSONParser.cpp
-                ${UNITY_SRC}/PlacesStyle.cpp
-                ${UNITY_SRC}/PlacesStyle.h
                 )
 add_dependencies(test-filter-bar unity-core-${UNITY_API_VERSION})
 
@@ -437,8 +433,6 @@ add_dependencies(test-preview-music unity-core-${UNITY_API_VERSION})
 
 add_executable (test-result-view
                 TestResultView.cpp
-                ${UNITY_SRC}/PlacesStyle.cpp
-                ${UNITY_SRC}/PlacesStyle.h
                 ${UNITY_SRC}/PreviewApplications.cpp
                 ${UNITY_SRC}/PreviewBase.cpp
                 ${UNITY_SRC}/PreviewBasicButton.cpp

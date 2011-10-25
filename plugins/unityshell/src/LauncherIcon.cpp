@@ -52,7 +52,10 @@
 #define MONO_TEST_ICON "gnome-home"
 #define UNITY_THEME_NAME "unity-icon-theme"
 
-using namespace unity;
+namespace unity
+{
+namespace launcher
+{
 
 namespace
 {
@@ -1159,3 +1162,6 @@ LauncherIcon::OnRemoteProgressVisibleChanged(LauncherEntryRemote* remote)
   if (remote->ProgressVisible())
     SetProgress((float) remote->Progress());
 }
+
+} // namespace launcher
+} // namespace unity

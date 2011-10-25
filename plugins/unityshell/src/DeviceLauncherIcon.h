@@ -27,7 +27,10 @@ G_BEGIN_DECLS
 #include <UnityCore/GLibWrapper.h>
 #include "SimpleLauncherIcon.h"
 
-namespace unity {
+namespace unity
+{
+namespace launcher
+{
 
 class DeviceLauncherIcon : public SimpleLauncherIcon
 {
@@ -70,6 +73,7 @@ private:
   bool keep_in_launcher_;
 };
 
+}
 } // namespace unity
 
 #endif // _DEVICE_LAUNCHER_ICON_H__H

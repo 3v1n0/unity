@@ -22,6 +22,11 @@
 #ifndef UNITYSHELL_H
 #define UNITYSHELL_H
 
+#include <Nux/WindowThread.h>
+#include <NuxCore/Property.h>
+#include <sigc++/sigc++.h>
+#include <boost/shared_ptr.hpp>
+
 #include <core/core.h>
 #include <core/pluginclasshandler.h>
 #include <composite/composite.h>
@@ -31,22 +36,24 @@
 
 #include "Introspectable.h"
 #include "DashController.h"
+#include "DashSettings.h"
 #include "DashStyle.h"
 #include "FontSettings.h"
-#include "Launcher.h"
 #include "LauncherController.h"
 #include "PanelController.h"
-#include "PlacesStyle.h"
+#include "PanelStyle.h"
 #include "UScreen.h"
 #include "GestureEngine.h"
 #include "DebugDBusInterface.h"
 #include "SwitcherController.h"
 #include "UBusWrapper.h"
-#include <Nux/WindowThread.h>
-#include <sigc++/sigc++.h>
-#include <boost/shared_ptr.hpp>
 
 #include "compizminimizedwindowhandler.h"
+#include "BGHash.h"
+#include <compiztoolbox/compiztoolbox.h>
+
+namespace unity
+{
 
 class UnityFBO
 {
@@ -117,20 +124,7 @@ private:
   float                          mProgress;
   bool                           mWasHidden;
 };
-  
 
-
-#include "BGHash.h"
-#include "DesktopLauncherIcon.h"
-
-#include <compiztoolbox/compiztoolbox.h>
-
-using unity::FontSettings;
-using unity::DashStyle;
-using unity::PlacesStyle;
-using namespace unity::switcher;
-using namespace unity::dash;
-using unity::UBusManager;
 
 /* base screen class */
 class UnityScreen :
@@ -251,14 +245,12 @@ private:
   void CreateSuperNewAction(char shortcut, bool use_shift=false, bool use_numpad=false);
 
   static gboolean initPluginActions(gpointer data);
-  static void initLauncher(nux::NThread* thread, void* InitData);
+  void initLauncher();
   void damageNuxRegions();
   void onRedrawRequested();
   void Relayout();
 
   static gboolean RelayoutTimeout(gpointer data);
-  static void launcherWindowConfigureCallback(int WindowWidth, int WindowHeight,
-                                              nux::Geometry& geo, void* user_data);
   static void initUnity(nux::NThread* thread, void* InitData);
   static void OnStartKeyNav(GVariant* data, void* value);
   static void OnExitKeyNav(GVariant* data, void* value);
@@ -275,17 +267,18 @@ private:
   static void OnLauncherStartKeyNav(GVariant* data, void* value);
   static void OnLauncherEndKeyNav(GVariant* data, void* value);
 
-  DashStyle               dash_style_;
-  PlacesStyle             places_style_;
-  FontSettings            font_settings_;
-  Launcher*               launcher;
-  LauncherController*     controller;
-  DashController::Ptr     dashController;
-  PanelController*        panelController;
-  SwitcherController*     switcherController;
+  dash::Settings dash_settings_;
+  dash::Style    dash_style_;
+  panel::Style   panel_style_;
+  FontSettings   font_settings_;
+
+  launcher::Controller::Ptr launcher_controller_;
+  dash::Controller::Ptr     dash_controller_;
+  panel::Controller::Ptr    panel_controller_;
+  switcher::Controller::Ptr switcher_controller_;
+
   GestureEngine*          gestureEngine;
   nux::WindowThread*      wt;
-  nux::BaseWindow*        launcherWindow;
   nux::BaseWindow*        panelWindow;
   nux::Geometry           lastTooltipArea;
   DebugDBusInterface*     debugger;
@@ -317,9 +310,7 @@ private:
   CompOutput* _last_output;
   CompWindowList _withRemovedNuxWindows;
 
-  DesktopLauncherIcon* switcher_desktop_icon;
-
-  GdkRectangle _primary_monitor;
+  nux::Property<nux::Geometry> primary_monitor_;
 
   unity::BGHash _bghash;
 
@@ -413,5 +404,7 @@ class UnityPluginVTable :
 public:
   bool init();
 };
+
+} // namespace unity
 
 #endif // UNITYSHELL_H

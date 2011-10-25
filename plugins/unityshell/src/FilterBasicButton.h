@@ -29,7 +29,6 @@
 #include <Nux/ToggleButton.h>
 
 #include "FilterWidget.h"
-#include "DashStyle.h"
 
 namespace unity {
 

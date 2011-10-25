@@ -37,6 +37,10 @@
 #include "Launcher.h"
 #include "LauncherModel.h"
 
+using unity::launcher::Launcher;
+using unity::launcher::LauncherIcon;
+using unity::launcher::LauncherModel;
+
 /* GObject */
 static void unity_launcher_accessible_class_init(UnityLauncherAccessibleClass* klass);
 static void unity_launcher_accessible_init(UnityLauncherAccessible* self);

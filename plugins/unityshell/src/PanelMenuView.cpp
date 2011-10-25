@@ -142,7 +142,7 @@ PanelMenuView::PanelMenuView(int padding)
   win_manager->window_decorated.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowDecorated));
   win_manager->window_undecorated.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowUndecorated));
 
-  PanelStyle::GetDefault()->changed.connect(sigc::mem_fun(this, &PanelMenuView::Refresh));
+  panel::Style::Instance().changed.connect(sigc::mem_fun(this, &PanelMenuView::Refresh));
 
   mouse_enter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
   mouse_leave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
@@ -751,8 +751,7 @@ void PanelMenuView::DrawText(cairo_t *cr_real,
   }
 
   { // Draw the text
-    PanelStyle* style = PanelStyle::GetDefault();
-    GtkStyleContext* style_context = style->GetStyleContext();
+    GtkStyleContext* style_context = panel::Style::Instance().GetStyleContext();
     text_space = width - x;
     cr = cr_real;
 
@@ -1169,10 +1168,10 @@ PanelMenuView::OnRestoreClicked()
 {
   if (_places_showing)
   {
-    if (DashSettings::GetDefault()->GetFormFactor() == DashSettings::DESKTOP)
-      DashSettings::GetDefault()->SetFormFactor(DashSettings::NETBOOK);
+    if (dash::Settings::Instance().GetFormFactor() == dash::FormFactor::DESKTOP)
+      dash::Settings::Instance().SetFormFactor(dash::FormFactor::NETBOOK);
     else
-      DashSettings::GetDefault()->SetFormFactor(DashSettings::DESKTOP);
+      dash::Settings::Instance().SetFormFactor(dash::FormFactor::DESKTOP);
   }
   else
   {

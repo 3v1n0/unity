@@ -28,10 +28,11 @@
 #include <Nux/Nux.h>
 #include <Nux/WindowCompositor.h>
 
-using namespace unity::ui;
-
 namespace unity
 {
+using namespace ui;
+using launcher::AbstractLauncherIcon;
+
 namespace switcher
 {
 

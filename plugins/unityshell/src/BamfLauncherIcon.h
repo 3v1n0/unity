@@ -31,6 +31,11 @@
 
 #include "SimpleLauncherIcon.h"
 
+namespace unity
+{
+namespace launcher
+{
+
 class Launcher;
 
 class BamfLauncherIcon : public SimpleLauncherIcon
@@ -143,5 +148,8 @@ private:
   static gboolean FillSupportedTypes(gpointer data);
   static gboolean OnWindowMovedTimeout(gpointer data);
 };
+
+}
+}
 
 #endif // BAMFLAUNCHERICON_H

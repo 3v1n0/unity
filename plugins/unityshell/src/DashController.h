@@ -38,13 +38,13 @@ namespace unity
 namespace dash
 {
 
-class DashController : public unity::Introspectable
+class Controller : public unity::Introspectable
 {
 public:
-  typedef std::shared_ptr<DashController> Ptr;
+  typedef std::shared_ptr<Controller> Ptr;
 
-  DashController();
-  ~DashController();
+  Controller();
+  ~Controller();
 
   nux::BaseWindow* window() const;
 
@@ -80,7 +80,7 @@ private:
   void HideDash(bool restore_focus = true);
 
   void StartShowHideTimeline();
-  static gboolean OnViewShowHideFrame(DashController* self);
+  static gboolean OnViewShowHideFrame(Controller* self);
 
   static void OnWindowConfigure(int width, int height, nux::Geometry& geo, void* data);
 
