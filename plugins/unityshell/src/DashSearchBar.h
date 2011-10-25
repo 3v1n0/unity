@@ -69,7 +69,6 @@ private:
   void OnFontChanged(GtkSettings* settings, GParamSpec* pspec=NULL);
   void OnSearchHintChanged();
 
-  long ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo);
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
 

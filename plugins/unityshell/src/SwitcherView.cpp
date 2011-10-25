@@ -173,11 +173,6 @@ SwitcherModel::Ptr SwitcherView::GetModel()
   return model_;
 }
 
-long SwitcherView::ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo)
-{
-  return TraverseInfo;
-}
-
 void SwitcherView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
   return;
