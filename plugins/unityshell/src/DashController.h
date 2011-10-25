@@ -54,6 +54,8 @@ public:
   nux::Property<int> launcher_width;
   nux::Property<int> panel_height;
 
+  sigc::signal<void> on_realize;
+
 protected:
   const gchar* GetName();
   void AddProperties(GVariantBuilder* builder);

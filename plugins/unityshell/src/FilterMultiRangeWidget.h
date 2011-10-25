@@ -50,7 +50,6 @@ namespace unity {
     nux::Property<bool> all_selected;
 
   protected:
-    virtual long int ProcessEvent(nux::IEvent& ievent, long int TraverseInfo, long int ProcessEventInfo);
     virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
     virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
     virtual void PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw);

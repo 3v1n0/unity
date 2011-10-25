@@ -81,7 +81,6 @@ void DashController::SetupWindow()
   window_->SetConfigureNotifyCallback(&DashController::OnWindowConfigure, this);
   window_->ShowWindow(false);
   window_->SetOpacity(0.0f);
-  window_->SetFocused(true);
   window_->mouse_down_outside_pointer_grab_area.connect(sigc::mem_fun(this, &DashController::OnMouseDownOutsideWindow));
 }
 
@@ -131,6 +130,8 @@ void DashController::EnsureDash()
   SetupDashView();
   Relayout();
   ensure_id_ = 0;
+
+  on_realize.emit();
 }
 
 nux::BaseWindow* DashController::window() const
@@ -151,7 +152,7 @@ nux::Geometry DashController::GetIdealWindowGeometry()
   UScreen *uscreen = UScreen::GetDefault();
   int primary_monitor = uscreen->GetPrimaryMonitor();
   auto monitor_geo = uscreen->GetMonitorGeometry(primary_monitor);
-  
+
   // We want to cover as much of the screen as possible to grab any mouse events outside
   // of our window
   return nux::Geometry (monitor_geo.x + launcher_width,
@@ -253,7 +254,6 @@ void DashController::HideDash(bool restore)
   view_->AboutToHide();
 
   window_->CaptureMouseDownAnyWhereElse(false);
-  window_->ForceStopFocus(1, 1);
   window_->EnableInputWindow(false, "Dash", true, false);
   visible_ = false;
 

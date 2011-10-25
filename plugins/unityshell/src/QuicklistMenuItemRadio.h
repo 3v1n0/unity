@@ -45,10 +45,6 @@ protected:
 
   long PostLayoutManagement(long layoutResult);
 
-  long ProcessEvent(nux::IEvent& event,
-                    long         traverseInfo,
-                    long         processEventInfo);
-
   void Draw(nux::GraphicsEngine& gfxContext,
             bool                 forceDraw);
 

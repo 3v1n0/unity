@@ -44,8 +44,8 @@ NUX_IMPLEMENT_OBJECT_TYPE(FilterBar);
   }
 
   void FilterBar::Init () {
-    nux::Layout *layout = new nux::VLayout (NUX_TRACKER_LOCATION);
-    layout->SetVerticalInternalMargin(12);
+    nux::LinearLayout *layout = new nux::VLayout (NUX_TRACKER_LOCATION);
+    layout->SetSpaceBetweenChildren(12);
     SetLayout (layout);
   }
 
@@ -76,11 +76,6 @@ NUX_IMPLEMENT_OBJECT_TYPE(FilterBar);
         break;
       }
     }
-  }
-
-
-  long int FilterBar::ProcessEvent(nux::IEvent& ievent, long int TraverseInfo, long int ProcessEventInfo) {
-    return GetLayout()->ProcessEvent(ievent, TraverseInfo, ProcessEventInfo);
   }
 
   void FilterBar::Draw(nux::GraphicsEngine& GfxContext, bool force_draw) {
