@@ -50,7 +50,6 @@ IMTextEntry::IMTextEntry()
   CheckIMEnabled();
   im_enabled ? SetupMultiIM() : SetupSimpleIM();
 
-  FocusChanged.connect([&] (nux::Area*) { GetFocused() ? OnFocusIn() : OnFocusOut(); });
   mouse_up.connect(sigc::mem_fun(this, &IMTextEntry::OnMouseButtonUp));
 }
 
@@ -243,16 +242,6 @@ void IMTextEntry::OnCommit(GtkIMContext* context, char* str)
   LOG_DEBUG(logger) << "Commit: " << str;
   DeleteSelection();
 
-  /* remove preedit text and set cursor to previous position */
-  if (preedit_cursor_) {
-    std::string new_text = GetText();
-    new_text.replace(cursor_, preedit_cursor_, "");
-    int cursor = cursor_;
-    SetText(new_text.c_str());
-    SetCursor(cursor);
-    preedit_cursor_ = 0;
-  }
-
   if (str)
   {
     std::string new_text = GetText();
@@ -270,49 +259,36 @@ void IMTextEntry::OnPreeditChanged(GtkIMContext* context)
   glib::String preedit;
   int cursor_pos = -1;
 
-  gtk_im_context_get_preedit_string(context, &preedit, NULL, &cursor_pos);
+  gtk_im_context_get_preedit_string(context, &preedit, &preedit_attrs_, &cursor_pos);
 
   LOG_DEBUG(logger) << "Preedit changed: " << preedit;
 
-  preedit_string = preedit.Str();
+  _preedit = preedit.Str();
 
   if (strlen(preedit.Str().c_str())) {
-    DeleteSelection();
-    std::string new_text = GetText();
-    new_text.replace(cursor_, preedit_cursor_, preedit.Str());
-    int cursor = cursor_;
-    SetText(new_text.c_str());
-    SetCursor(cursor);
     preedit_cursor_ = preedit.Str().length();
+    QueueRefresh(true, true); 
+    sigTextChanged.emit(this);
     UpdateCursorLocation();
   }
 }
 
 void IMTextEntry::OnPreeditStart(GtkIMContext* context)
 {
-  preedit_string = "";
   im_active = true;
-  preedit_cursor_ = 0;
 
   LOG_DEBUG(logger) << "Preedit start";
 }
 
 void IMTextEntry::OnPreeditEnd(GtkIMContext* context)
 {
-  preedit_string = "";
   im_active = false;
+  ResetPreedit();
   gtk_im_context_reset(im_context_);
 
-  /* remove preedit text and set cursor to previous position */
-  if (preedit_cursor_) {
-    std::string new_text = GetText();
-    new_text.replace(cursor_, preedit_cursor_, "");
-    int cursor = cursor_;
-    SetText(new_text.c_str());
-    SetCursor(cursor);
-    preedit_cursor_ = 0;
-  }
-
+  QueueRefresh(true, true); 
+  sigTextChanged.emit(this);
+  
   LOG_DEBUG(logger) << "Preedit ended";
 }
 

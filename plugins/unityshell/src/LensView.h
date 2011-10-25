@@ -83,7 +83,6 @@ private:
 
   static gboolean FixRenderering(LensView* self);
 
-  virtual long ProcessEvent(nux::IEvent& ievent, long traverse_info, long event_info);
   virtual void Draw(nux::GraphicsEngine& gfx_context, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw);
 

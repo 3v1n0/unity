@@ -190,9 +190,6 @@ PluginAdapter::Notify(CompWindow* window, CompWindowNotify notify)
     case CompWindowNotifyUnmap:
       WindowManager::window_unmapped.emit(window->id());
       break;
-    case CompWindowNotifyReparent:
-      MaximizeIfBigEnough(window);
-      break;
     case CompWindowNotifyFocusChange:
       WindowManager::window_focus_changed.emit(window->id());
       break;
@@ -492,6 +489,19 @@ PluginAdapter::IsWindowMapped(guint32 xid)
   return true;
 }
 
+bool
+PluginAdapter::IsWindowVisible(guint32 xid)
+{
+  Window win = (Window) xid;
+  CompWindow* window;
+
+  window = m_Screen->findWindow(win);
+  if (window)
+    return !(window->state () & CompWindowStateHiddenMask);
+
+  return true;
+}
+
 void
 PluginAdapter::Restore(guint32 xid)
 {
@@ -559,12 +569,13 @@ PluginAdapter::Lower(guint32 xid)
 }
 
 void 
-PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids)
+PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids, FocusVisibility focus_visibility)
 {
   CompPoint target_vp = m_Screen->vp();
   CompWindow* top_win = NULL;
   bool any_on_current = false;
   bool any_mapped = false;
+  bool forced_unminimize = false;
 
   /* sort the list */
   CompWindowList windows;
@@ -606,11 +617,36 @@ PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids)
 
   for (CompWindow* &win : windows)
   {
-    if (win->defaultViewport() == target_vp &&
-        ((any_mapped && !win->minimized()) || !any_mapped))
+    if (win->defaultViewport() == target_vp)
     {
-      win->raise();
-      top_win = win;
+       /* Any window which is actually unmapped is
+        * not going to be accessible by either switcher
+        * or scale, so unconditionally unminimize those
+        * windows when the launcher icon is activated */
+       if ((focus_visibility == WindowManager::FocusVisibility::ForceUnminimizeOnCurrentDesktop &&
+            WindowManager::Default ()->IsWindowOnCurrentDesktop(win->id ())) ||
+            (focus_visibility == WindowManager::FocusVisibility::ForceUnminimizeInvisible &&
+             win->mapNum () == 0))
+       {
+         bool is_mapped = win->mapNum () != 0;
+         top_win = win;
+         win->unminimize ();
+
+         forced_unminimize = true;
+
+         /* Initially minimized windows dont get raised */
+         if (!is_mapped)
+           win->raise ();
+       }
+       else if ((any_mapped && !win->minimized()) || !any_mapped)
+       {
+         if (!forced_unminimize ||
+             WindowManager::Default ()->IsWindowOnCurrentDesktop (win->id ()))
+         {
+           win->raise();
+           top_win = win;
+         }
+       }
     }
   }
 
@@ -703,7 +739,11 @@ PluginAdapter::CheckWindowIntersection(nux::Geometry const& region, CompWindow* 
   int intersect_types = CompWindowTypeNormalMask | CompWindowTypeDialogMask |
                         CompWindowTypeModalDialogMask | CompWindowTypeUtilMask;
 
-  if (!window || !(window->type() & intersect_types) || !window->isMapped() || !window->isViewable() || window->minimized())
+  if (!window ||
+      !(window->type() & intersect_types) ||
+      !window->isMapped() ||
+      !window->isViewable() ||
+      window->state() & CompWindowStateHiddenMask)
     return false;
 
   if (CompRegion(window->borderRect()).intersects(CompRect(region.x, region.y, region.width, region.height)))
@@ -770,11 +810,14 @@ PluginAdapter::SetMwmWindowHints(Window xid, MotifWmHints* new_hints)
 
   hints_atom = XInternAtom(display, _XA_MOTIF_WM_HINTS, false);
 
-  XGetWindowProperty(display,
-                     xid,
-                     hints_atom, 0, sizeof(MotifWmHints) / sizeof(long),
-                     False, AnyPropertyType, &type, &format, &nitems,
-                     &bytes_after, (guchar**)&data);
+  if (XGetWindowProperty(display,
+                         xid,
+                         hints_atom, 0, sizeof(MotifWmHints) / sizeof(long),
+                         False, AnyPropertyType, &type, &format, &nitems,
+                         &bytes_after, (guchar**)&data) != Success)
+  {
+    return;
+  }
 
   if (type != hints_atom || !data)
   {
@@ -842,7 +885,8 @@ PluginAdapter::IsViewPortSwitchStarted()
   return _vp_switch_started;
 }
 
-void PluginAdapter::MaximizeIfBigEnough(CompWindow* window)
+/* Returns true if the window was maximized */
+bool PluginAdapter::MaximizeIfBigEnough(CompWindow* window)
 {
   XClassHint   classHint;
   Status       status;
@@ -854,14 +898,14 @@ void PluginAdapter::MaximizeIfBigEnough(CompWindow* window)
   float        covering_part;
 
   if (!window)
-    return;
+    return false;
 
   if ((window->state() & MAXIMIZE_STATE) == MAXIMIZE_STATE)
-    return;
+    return false;
 
   if (window->type() != CompWindowTypeNormalMask
       || (window->actions() & MAXIMIZABLE) != MAXIMIZABLE)
-    return;
+    return false;
 
   status = XGetClassHint(m_Screen->dpy(), window->id(), &classHint);
   if (status && classHint.res_class)
@@ -873,7 +917,7 @@ void PluginAdapter::MaximizeIfBigEnough(CompWindow* window)
       XFree(classHint.res_name);
   }
   else
-    return;
+    return false;
 
   num_monitor = window->outputDevice();
   CompOutput &o = m_Screen->outputDevs().at(num_monitor);
@@ -889,10 +933,12 @@ void PluginAdapter::MaximizeIfBigEnough(CompWindow* window)
       (hints.flags & PMaxSize && (screen_width > hints.max_width || screen_height > hints.max_height)))
   {
     LOG_DEBUG(logger) << win_wmclass << " window size doesn't fit";
-    return;
+    return false;
   }
 
   window->maximize(MAXIMIZE_STATE);
+
+  return true;
 }
 
 void
