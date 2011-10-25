@@ -38,9 +38,9 @@ namespace unity {
   {
   }
 
-  long PreviewBase::ComputeLayout2()
+  long PreviewBase::ComputeContentSize()
   {
-    return nux::View::ComputeLayout2();
+    return nux::View::ComputeContentSize();
   }
 
   void PreviewBase::Draw (nux::GraphicsEngine &GfxContext, bool force_draw)
@@ -56,10 +56,6 @@ namespace unity {
       GetCompositionLayout ()->ProcessDraw (GfxContent, force_draw);
 
     GfxContent.PopClippingRectangle();
-  }
-
-  long int PreviewBase::ProcessEvent(nux::IEvent& ievent, long int TraverseInfo, long int ProcessEventInfo) {
-    return PostProcessEvent2 (ievent, TraverseInfo, ProcessEventInfo);
   }
 
   void PreviewBase::PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw)

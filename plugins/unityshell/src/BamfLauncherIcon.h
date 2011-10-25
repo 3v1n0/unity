@@ -114,7 +114,7 @@ private:
   void UpdateDesktopQuickList();
 
   void OpenInstanceWithUris(std::set<std::string> uris);
-  void Focus();
+  void Focus(ActionArg arg);
   bool Spread(int state, bool force);
 
   void EnsureMenuItemsReady();
@@ -146,7 +146,7 @@ private:
 
   static gboolean OnDndHoveredTimeout(gpointer data);
   static gboolean FillSupportedTypes(gpointer data);
-  static gboolean OnWindowMovedTimeout(BamfLauncherIcon *self);
+  static gboolean OnWindowMovedTimeout(gpointer data);
 };
 
 }

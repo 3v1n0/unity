@@ -78,7 +78,6 @@ void DashView::AboutToShow()
   visible_ = true;
   bg_effect_helper_.enabled = true;
   search_bar_->text_entry()->SelectAll();
-  search_bar_->text_entry()->SetFocused(true);
 }
 
 void DashView::AboutToHide()
@@ -212,24 +211,6 @@ nux::Geometry DashView::GetBestFitGeometry(nux::Geometry const& for_geo)
   }
 
   return nux::Geometry(0, 0, width, height);
-}
-
-long DashView::ProcessEvent(nux::IEvent& ievent, long traverse_info, long event_info)
-{
-  long ret = traverse_info;
-
-  if ((ievent.e_event == nux::NUX_KEYDOWN) &&
-      (ievent.GetKeySym() == NUX_VK_ESCAPE))
-  {
-    if (search_bar_->search_string == "")
-      ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
-    else
-      search_bar_->search_string = "";
-    return ret;
-  }
-
-  ret = layout_->ProcessEvent(ievent, traverse_info, event_info);
-  return ret;
 }
 
 void DashView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
@@ -394,8 +375,8 @@ void DashView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
 
 
   texxform_absolute_bg.flip_v_coord = false;
-  texxform_absolute_bg.uoffset = (1.0f / 707) * (GetAbsoluteGeometry().x); // TODO (gord) don't use absolute values here
-  texxform_absolute_bg.voffset = (1.0f / 737) * (GetAbsoluteGeometry().y);
+  texxform_absolute_bg.uoffset = (1.0f / bg_shine_texture_->GetWidth()) * (GetAbsoluteGeometry().x);
+  texxform_absolute_bg.voffset = (1.0f / bg_shine_texture_->GetHeight()) * (GetAbsoluteGeometry().y);
 
   gfx_context.GetRenderStates().SetColorMask(true, true, true, false);
   gfx_context.GetRenderStates().SetBlend(true, GL_DST_COLOR, GL_ONE);
@@ -503,8 +484,8 @@ void DashView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
   rop.SrcBlend = GL_DST_COLOR;
   rop.DstBlend = GL_ONE;
   texxform_absolute_bg.flip_v_coord = false;
-  texxform_absolute_bg.uoffset = (1.0f / 707) * (GetAbsoluteGeometry().x); // TODO (gord) don't use absolute values here
-  texxform_absolute_bg.voffset = (1.0f / 737) * (GetAbsoluteGeometry().y);
+  texxform_absolute_bg.uoffset = (1.0f / bg_shine_texture_->GetWidth()) * (GetAbsoluteGeometry().x);
+  texxform_absolute_bg.voffset = (1.0f / bg_shine_texture_->GetHeight()) * (GetAbsoluteGeometry().y);
 
   nux::GetPainter().PushTextureLayer(gfx_context, bg_layer_->GetGeometry(),
                                      bg_shine_texture_,
@@ -563,9 +544,6 @@ void DashView::OnActivateRequest(GVariant* args)
   home_view_->search_string = "";
   lens_bar_->Activate(id);
 
-  // Reset focus
-  SetFocused(false);
-  SetFocused(true);
 
   if (id == "home.lens" || !visible_)
     ubus_manager_.SendMessage(UBUS_DASH_EXTERNAL_ACTIVATION);
@@ -702,7 +680,6 @@ void DashView::OnLensBarActivated(std::string const& id)
   search_bar_->showing_filters = expanded;
 
   search_bar_->text_entry()->SelectAll();
-  search_bar_->text_entry()->SetFocused(true);
   nux::GetWindowCompositor().SetKeyFocusArea(search_bar_->text_entry());
 
   search_bar_->can_refine_search = view->can_refine_search();
@@ -942,7 +919,7 @@ Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
   {
     return this;
   }
-  else if (direction == KEY_NAV_NONE)
+  else if (direction == KEY_NAV_NONE || search_bar_->im_active)
   {
     // then send the event to the search entry
     return search_bar_->text_entry();

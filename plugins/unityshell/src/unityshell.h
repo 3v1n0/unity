@@ -261,6 +261,8 @@ private:
   void restartLauncherKeyNav();
   void OnLauncherHiddenChanged();
 
+  void OnDashRealized ();
+
   static void OnQuicklistEndKeyNav(GVariant* data, void* value);
   static void OnLauncherStartKeyNav(GVariant* data, void* value);
   static void OnLauncherEndKeyNav(GVariant* data, void* value);

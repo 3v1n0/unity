@@ -289,7 +289,6 @@ protected:
   DbusmenuClient* _menuclient_dynamic_quicklist;
 
   friend class Launcher;
-  // friend class LauncherController;
   friend class LauncherModel;
 
 private:

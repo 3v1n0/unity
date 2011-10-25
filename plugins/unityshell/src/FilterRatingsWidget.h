@@ -51,13 +51,12 @@ namespace unity {
     nux::Property<int> rating;
 
   protected:
-    virtual long int ProcessEvent(nux::IEvent& ievent, long int TraverseInfo, long int ProcessEventInfo);
     virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
     virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
     virtual void PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw);
 
     void OnRatingsRatingChanged(const int& new_rating);
-    void OnFilterRatingChanged(const int& new_rating);
+    void OnFilterRatingChanged(float new_rating);
     void OnAnyButtonActivated(nux::View *view);
 
     FilterBasicButton *any_button_;
@@ -65,6 +64,7 @@ namespace unity {
     dash::RatingsFilter::Ptr filter_;
 
   private:
+    float last_rating_;
   };
 
 }
