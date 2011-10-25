@@ -195,11 +195,6 @@ gboolean HomeView::FixRenderering(HomeView* self)
   return FALSE;
 }
 
-long HomeView::ProcessEvent(nux::IEvent& ievent, long traverse_info, long event_info)
-{
-  return layout_->ProcessEvent(ievent, traverse_info, event_info);
-}
-
 void HomeView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
 {
   nux::Geometry geo = GetGeometry();

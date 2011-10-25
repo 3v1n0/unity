@@ -102,16 +102,6 @@ PanelIndicatorsView::RemoveIndicator(indicator::Indicator::Ptr const& indicator)
   LOG_DEBUG(logger) << "IndicatorRemoved: " << indicator->name();
 }
 
-long
-PanelIndicatorsView::ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo)
-{
-  long ret = TraverseInfo;
-
-  if (layout_)
-    ret = layout_->ProcessEvent(ievent, ret, ProcessEventInfo);
-  return ret;
-}
-
 void
 PanelIndicatorsView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
@@ -149,7 +139,12 @@ PanelIndicatorsView::ActivateEntry(std::string const& entry_id)
 bool
 PanelIndicatorsView::ActivateIfSensitive()
 {
+  std::map<int, PanelIndicatorEntryView*> sorted_entries;
+  
   for (auto entry : entries_)
+    sorted_entries[entry.second->GetEntryPriority()] = entry.second;
+  
+  for (auto entry : sorted_entries)
   {
     PanelIndicatorEntryView* view = entry.second;
     if (view->IsSensitive())

@@ -48,7 +48,6 @@ protected:
 private:
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
-  long ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo);
 
   void RecvMouseEnter(int x, int y, unsigned long button_flags, unsigned long key_flags);
   void RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned long key_flags);

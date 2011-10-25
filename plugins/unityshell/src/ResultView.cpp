@@ -74,11 +74,6 @@ ResultView::~ResultView()
   renderer_->UnReference();
 }
 
-long int ResultView::ProcessEvent(nux::IEvent& ievent, long int TraverseInfo, long int ProcessEventInfo)
-{
-  return TraverseInfo;
-}
-
 void ResultView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
 
@@ -145,7 +140,7 @@ void ResultView::SetPreview(PreviewBase* preview, Result& related_result)
     preview_layout_->Reference();
     //FIXME - replace with nicer button subclass widgets
     nux::Button* left_arrow = new nux::Button("previous", NUX_TRACKER_LOCATION);
-    left_arrow->activated.connect([&](nux::View * view)
+    left_arrow->state_change.connect([&](nux::View * view)
     {
       ResultList::reverse_iterator it;
       std::string next_uri;
@@ -167,7 +162,7 @@ void ResultView::SetPreview(PreviewBase* preview, Result& related_result)
     });
 
     nux::Button* right_arrow = new nux::Button("next", NUX_TRACKER_LOCATION);
-    right_arrow->activated.connect([&](nux::View * view)
+    right_arrow->state_change.connect([&](nux::View * view)
     {
       ResultList::iterator it;
       std::string next_uri;
@@ -204,9 +199,9 @@ void ResultView::SetPreview(PreviewBase* preview, Result& related_result)
   }
 }
 
-long ResultView::ComputeLayout2()
+long ResultView::ComputeContentSize()
 {
-  return View::ComputeLayout2();
+  return View::ComputeContentSize();
 }
 
 
