@@ -53,14 +53,12 @@ StaticCairoText::StaticCairoText(const TCHAR* text,
   _need_new_extent_cache = true;
   _pre_layout_width = 0;
   _pre_layout_height = 0;
-  _can_pass_focus_to_composite_layout = false;
 
   SetMinimumSize(1, 1);
   _ellipsize = NUX_ELLIPSIZE_END;
   _align = NUX_ALIGN_LEFT;
   _valign = NUX_ALIGN_TOP;
   _fontstring = NULL;
-  SetCanFocus(false);
 
   _accept_key_nav_focus = false;
 }
@@ -158,17 +156,6 @@ long StaticCairoText::PostLayoutManagement(long layoutResult)
     result |= eCompliantHeight;
 
   return result;
-}
-
-long
-StaticCairoText::ProcessEvent(IEvent& event,
-                              long    traverseInfo,
-                              long    processEventInfo)
-{
-  long ret = traverseInfo;
-
-  ret = PostProcessEvent2(event, ret, processEventInfo);
-  return ret;
 }
 
 void

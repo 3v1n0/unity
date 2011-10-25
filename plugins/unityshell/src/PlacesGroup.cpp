@@ -256,7 +256,7 @@ void
 PlacesGroup::Refresh()
 {
   RefreshLabel();
-  ComputeChildLayout();
+  ComputeContentSize();
   QueueDraw();
 }
 
@@ -277,25 +277,11 @@ PlacesGroup::OnIdleRelayout(PlacesGroup* self)
     self->QueueDraw();
     self->_group_layout->QueueDraw();
     self->GetChildView()->QueueDraw();
-    self->ComputeChildLayout();
+    self->ComputeContentSize();
     self->_idle_id = 0;
-
-    if (self->GetFocused())
-    {
-      self->SetFocused(false);  // unset focus on all children
-      self->SetFocused(true);  // set focus on first child
-    }
   }
 
   return FALSE;
-}
-
-long
-PlacesGroup::ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo)
-{
-  long ret = TraverseInfo;
-  ret = _group_layout->ProcessEvent(ievent, TraverseInfo, ProcessEventInfo);
-  return ret;
 }
 
 void PlacesGroup::Draw(nux::GraphicsEngine& GfxContext,
@@ -304,15 +290,18 @@ void PlacesGroup::Draw(nux::GraphicsEngine& GfxContext,
   nux::Geometry base = GetGeometry();
   GfxContext.PushClippingRectangle(base);
 
-  nux::Color col(0.2f, 0.2f, 0.2f, 0.2f);
+  nux::Color col(0.15f, 0.15f, 0.15f, 0.15f);
 
   if (_draw_sep)
+  {
+    GfxContext.GetRenderStates().SetColorMask(true, true, true, true);
+    GfxContext.GetRenderStates().SetBlend(true);
+    GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
     nux::GetPainter().Draw2DLine(GfxContext,
-                                 base.x + 10, base.y + base.height - 1,
-                                 base.x + base.width - 10, base.y + base.height - 1,
-                                 col,
+                                 base.x + 15, base.y + base.height - 1,
+                                 base.x + base.width - 15, base.y + base.height - 1,
                                  col);
-
+  }
 
   GfxContext.PopClippingRectangle();
 }

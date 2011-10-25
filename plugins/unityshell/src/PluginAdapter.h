@@ -117,6 +117,7 @@ public:
   bool IsWindowOnCurrentDesktop(guint xid);
   bool IsWindowObscured(guint xid);
   bool IsWindowMapped(guint xid);
+  bool IsWindowVisible(guint32 xid);
   void Restore(guint32 xid);
   void Minimize(guint32 xid);
   void Close(guint32 xid);
@@ -127,7 +128,7 @@ public:
 
   void SetWindowIconGeometry(Window window, nux::Geometry const& geo);
 
-  void FocusWindowGroup(std::vector<Window> windows);
+  void FocusWindowGroup(std::vector<Window> windows, FocusVisibility);
   bool ScaleWindowGroup(std::vector<Window> windows, int state, bool force);
 
   bool IsScreenGrabbed();
@@ -135,7 +136,7 @@ public:
 
   unsigned long long GetWindowActiveNumber (guint32 xid);
 
-  void MaximizeIfBigEnough(CompWindow* window);
+  bool MaximizeIfBigEnough(CompWindow* window);
 
   nux::Geometry GetWindowGeometry(guint32 xid);
   nux::Geometry GetScreenGeometry();

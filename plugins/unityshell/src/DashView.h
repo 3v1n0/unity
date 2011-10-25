@@ -75,7 +75,6 @@ private:
 
   nux::Geometry GetBestFitGeometry(nux::Geometry const& for_geo);
 
-  long ProcessEvent(nux::IEvent& ievent, long traverse_info, long event_info);
   void Draw(nux::GraphicsEngine& gfx_context, bool force_draw);
   void DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw);
   virtual long PostLayoutManagement (long LayoutResult);

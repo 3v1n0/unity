@@ -275,10 +275,4 @@ PanelTray::AddProperties(GVariantBuilder* builder)
 
 }
 
-long
-PanelTray::ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo)
-{
-  return TraverseInfo;
-}
-
 } // namespace unity
