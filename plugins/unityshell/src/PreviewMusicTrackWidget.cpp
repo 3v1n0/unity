@@ -83,7 +83,7 @@ namespace unity {
     //FIXME - use a button subclass for absolute renderering
     play_button_ = new nux::Button(number_.c_str());
 
-    play_button_->activated.connect ([&] (nux::View *view) {
+    play_button_->state_change.connect ([&] (nux::View *view) {
       if (track_is_active)
       {
         is_paused = !is_paused;
@@ -108,12 +108,6 @@ namespace unity {
     track_layout->AddView(track_length, 1, nux::MINOR_POSITION_RIGHT, nux::MINOR_SIZE_FULL);
 
     SetLayout(track_layout);
-  }
-
-
-
-  long int PreviewMusicTrackWidget::ProcessEvent(nux::IEvent& ievent, long int TraverseInfo, long int ProcessEventInfo) {
-    return PostProcessEvent2 (ievent, TraverseInfo, ProcessEventInfo);;
   }
 
   void PreviewMusicTrackWidget::Draw(nux::GraphicsEngine& GfxContext, bool force_draw) {

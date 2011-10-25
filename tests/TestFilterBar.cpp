@@ -37,7 +37,7 @@ public:
 
   static void InitWindowThread (nux::NThread* thread, void* InitData);
   void Init ();
-  nux::Layout *layout;
+  nux::LinearLayout *layout;
 
 private:
 
@@ -58,8 +58,6 @@ void TestRunner::Init ()
   layout = new nux::VLayout(NUX_TRACKER_LOCATION);
 
   layout->AddView (filterbar, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
-
-  layout->SetFocused (true);
 
   filterbar->AddFilter (NULL);
   filterbar->AddFilter (NULL);

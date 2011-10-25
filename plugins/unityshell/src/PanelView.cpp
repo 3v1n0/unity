@@ -141,6 +141,9 @@ PanelView::~PanelView()
   ubus_server_unregister_interest(ubus, _handle_dash_shown);
   _on_indicator_updated_connections.clear();
 
+  indicator::EntryLocationMap locations;
+  _remote->SyncGeometries(GetName() + boost::lexical_cast<std::string>(_monitor), locations);
+
   delete _bg_layer;
 }
 
@@ -210,14 +213,6 @@ void PanelView::AddProperties(GVariantBuilder* builder)
   .add(GetGeometry());
 }
 
-long
-PanelView::ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo)
-{
-  long ret = TraverseInfo;
-  ret = _layout->ProcessEvent(ievent, ret, ProcessEventInfo);
-  return ret;
-}
-
 void
 PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
@@ -270,7 +265,7 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   GfxContext.PopClippingRectangle();
 
-  if (_needs_geo_sync && _menu_view->GetControlsActive())
+  if (_needs_geo_sync)
   {
     SyncGeometries();
     _needs_geo_sync = false;
@@ -368,7 +363,7 @@ PanelView::UpdateBackground()
   _last_height = geo.height;
   _is_dirty = false;
 
-  if (_dash_is_open)
+  if (_dash_is_open && (_menu_view->GetMaximizedWindow() == 0))
   {
     if (_bg_layer)
       delete _bg_layer;
@@ -437,7 +432,7 @@ void PanelView::OnObjectAdded(indicator::Indicator::Ptr const& proxy)
 
   _layout->SetContentDistribution(nux::eStackLeft);
 
-  ComputeChildLayout();
+  ComputeContentSize();
   NeedRedraw();
 }
 
@@ -454,14 +449,14 @@ void PanelView::OnObjectRemoved(indicator::Indicator::Ptr const& proxy)
 
   _layout->SetContentDistribution(nux::eStackLeft);
 
-  ComputeChildLayout();
+  ComputeContentSize();
   NeedRedraw();
 }
 
 void PanelView::OnIndicatorViewUpdated(PanelIndicatorEntryView* view)
 {
   _needs_geo_sync = true;
-  ComputeChildLayout();
+  ComputeContentSize();
 }
 
 void PanelView::OnMenuPointerMoved(int x, int y)
@@ -620,9 +615,13 @@ void
 PanelView::SyncGeometries()
 {
   indicator::EntryLocationMap locations;
-  _menu_view->GetGeometryForSync(locations);
+  std::string panel_id = GetName() + boost::lexical_cast<std::string>(_monitor);
+
+  if (_menu_view->GetControlsActive())
+    _menu_view->GetGeometryForSync(locations);
+
   _indicators->GetGeometryForSync(locations);
-  _remote->SyncGeometries(GetName(), locations);
+  _remote->SyncGeometries(panel_id, locations);
 }
 
 void

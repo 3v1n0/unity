@@ -57,12 +57,6 @@ SearchBarSpinner::~SearchBarSpinner()
     g_source_remove(_frame_timeout);
 }
 
-long
-SearchBarSpinner::ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo)
-{
-  return PostProcessEvent2(ievent, TraverseInfo, ProcessEventInfo);
-}
-
 void
 SearchBarSpinner::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {

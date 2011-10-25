@@ -42,15 +42,10 @@ panel_root_accessible_finalize (GObject *object)
 {
   PanelRootAccessible *root = PANEL_ROOT_ACCESSIBLE (object);
 
-  if (root->priv != NULL)
+  if ((root->priv != NULL) && (root->priv->a11y_children != NULL))
     {
-      while (root->priv->a11y_children != NULL)
-        {
-	  AtkObject *accessible = ATK_OBJECT (root->priv->a11y_children->data);
-
-	  root->priv->a11y_children = g_slist_remove (root->priv->a11y_children, accessible);
-	  g_object_unref (accessible);
-	}
+      g_slist_free_full(root->priv->a11y_children, g_object_unref);
+      root->priv->a11y_children = NULL;
     }
 }
 
