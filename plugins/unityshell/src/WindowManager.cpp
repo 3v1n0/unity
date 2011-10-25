@@ -68,6 +68,11 @@ class WindowManagerDummy : public WindowManager
     return true;
   }
 
+  bool IsWindowVisible(guint32 xid)
+  {
+    return true;
+  }
+
   void Restore(guint32 xid)
   {
     g_debug("%s", G_STRFUNC);
@@ -98,7 +103,7 @@ class WindowManagerDummy : public WindowManager
     g_debug("%s", G_STRFUNC);
   }
 
-  void FocusWindowGroup(std::vector<Window> windows)
+  void FocusWindowGroup(std::vector<Window> windows, FocusVisibility)
   {
     g_debug("%s", G_STRFUNC);
   }

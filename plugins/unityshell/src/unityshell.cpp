@@ -236,6 +236,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
        uScreen->mFbos[&(screen->fullscreenOutput ())] = UnityFBO::Ptr (new UnityFBO(&(screen->fullscreenOutput ())));
      }
 
+     optionSetBackgroundColorNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetLauncherHideModeNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetBacklightModeNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetLaunchAnimationNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
@@ -684,20 +685,49 @@ void UnityScreen::enterShowDesktopMode ()
   for (CompWindow *w : screen->windows ())
   {
     if (UnityShowdesktopHandler::shouldHide (w))
+    {
       UnityWindow::get (w)->enterShowDesktop ();
+      // the animation plugin does strange things here ...
+      // if this notification is sent
+      // w->windowNotify (CompWindowNotifyEnterShowDesktopMode);
+    }
     if (w->type() & CompWindowTypeDesktopMask)
       w->moveInputFocusTo();
   }
 
   PluginAdapter::Default()->OnShowDesktop();
 
+  /* Disable the focus handler as we will report that
+   * minimized windows can be focused which will
+   * allow them to enter showdesktop mode. That's
+   * no good */
+  for (CompWindow *w : screen->windows ())
+  {
+    UnityWindow *uw = UnityWindow::get (w);
+    w->focusSetEnabled (uw, false);
+  }
+
   screen->enterShowDesktopMode ();
+
+  for (CompWindow *w : screen->windows ())
+  {
+    UnityWindow *uw = UnityWindow::get (w);
+    w->focusSetEnabled (uw, true);
+  }
 }
 
 void UnityScreen::leaveShowDesktopMode (CompWindow *w)
 {
   for (CompWindow *cw : screen->windows ())
-    UnityWindow::get (cw)->leaveShowDesktop ();
+  {
+    if (cw->inShowDesktopMode ())
+    {
+      UnityWindow::get (cw)->leaveShowDesktop ();
+      // the animation plugin does strange things here ...
+      // if this notification is sent
+      //cw->windowNotify (CompWindowNotifyLeaveShowDesktopMode);
+    }
+  }
 
   PluginAdapter::Default()->OnLeaveDesktop();
 
@@ -719,6 +749,8 @@ void UnityWindow::leaveShowDesktop ()
   {
     mShowdesktopHandler->fadeIn ();
     window->setShowDesktopMode (false);
+    delete mShowdesktopHandler;
+    mShowdesktopHandler = NULL;
   }
 }
 
@@ -741,6 +773,9 @@ CompWindowList UnityShowdesktopHandler::animating_windows (0);
 
 bool UnityShowdesktopHandler::shouldHide (CompWindow *w)
 {
+  if (w->overrideRedirect ())
+    return false;
+
   if (!w->managed ())
     return false;
 
@@ -751,8 +786,13 @@ bool UnityShowdesktopHandler::shouldHide (CompWindow *w)
                       CompWindowTypeDockMask))
    return false;
 
-  if (w->state () & CompWindowStateSkipPagerMask)
+  if (w->state () & (CompWindowStateSkipPagerMask |
+		     CompWindowStateSkipTaskbarMask))
     return false;
+
+  if ((w->state () & CompWindowStateHiddenMask))
+    if (!(w->inShowDesktopMode () || w->shaded ()))
+      return false;
 
   return true;
 }
@@ -1706,7 +1746,7 @@ void UnityWindow::windowNotify(CompWindowNotify n)
         if (!focusdesktop_handle_)
            focusdesktop_handle_ = g_timeout_add (1000, &UnityWindow::FocusDesktopTimeout, this);
       }
-      break;
+    /* Fall through an re-evaluate wraps on map and unmap too */
     case CompWindowNotifyUnmap:
       if (UnityScreen::get (screen)->optionGetShowMinimizedWindows () &&
           window->mapNum ())
@@ -1893,13 +1933,20 @@ CompPoint UnityWindow::tryNotIntersectUI(CompPoint& pos)
 
 bool UnityWindow::place(CompPoint& pos)
 {
-  bool result = window->place(pos);
+  bool was_maximized = PluginAdapter::Default ()->MaximizeIfBigEnough(window);
 
-  if (window->type() & NO_FOCUS_MASK)
+  if (!was_maximized)
+  {
+    bool result = window->place(pos);
+
+    if (window->type() & NO_FOCUS_MASK)
+      return result;
+
+    pos = tryNotIntersectUI(pos);
     return result;
+  }
 
-  pos = tryNotIntersectUI(pos);
-  return result;
+  return true;
 }
 
 /* Configure callback for the launcher window */
@@ -1952,6 +1999,19 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
 {
   switch (num)
   {
+    case UnityshellOptions::BackgroundColor:
+    {
+      nux::Color override_color (optionGetBackgroundColorRed() / 65535.0f, 
+                                 optionGetBackgroundColorGreen() / 65535.0f, 
+                                 optionGetBackgroundColorBlue() / 65535.0f, 
+                                 optionGetBackgroundColorAlpha() / 65535.0f);
+
+      override_color.red = override_color.red / override_color.alpha;
+      override_color.green = override_color.green / override_color.alpha;
+      override_color.blue = override_color.blue / override_color.alpha;
+      _bghash.OverrideColor(override_color);
+      break;
+    }
     case UnityshellOptions::LauncherHideMode:
       launcher->SetHideMode((Launcher::LauncherHideMode) optionGetLauncherHideMode());
       break;
@@ -2337,6 +2397,20 @@ UnityFBO::~UnityFBO ()
     glDeleteTextures (1, &mFBTexture);
 }
 
+void UnityScreen::OnDashRealized ()
+{
+  /* stack any windows named "onboard" above us */
+  for (CompWindow *w : screen->windows ())
+  {
+    if (w->resName() == "onboard")
+    {
+      Window xid = dashController->window()->GetInputWindowId();
+      XSetTransientForHint (screen->dpy(), w->id(), xid);
+      w->raise ();
+    }
+  }
+}
+
 /* Start up the launcher */
 void UnityScreen::initLauncher(nux::NThread* thread, void* InitData)
 {
@@ -2393,6 +2467,7 @@ void UnityScreen::initLauncher(nux::NThread* thread, void* InitData)
 
   /* Setup Places */
   self->dashController = dash::DashController::Ptr(new dash::DashController());
+  self->dashController->on_realize.connect(sigc::mem_fun(self, &UnityScreen::OnDashRealized));
 
   /* FIXME: this should not be manual, should be managed with a
      show/hide callback like in GAIL
@@ -2448,11 +2523,24 @@ UnityWindow::UnityWindow(CompWindow* window)
 
   if (window->state () & CompWindowStateFullscreenMask)
     UnityScreen::get (screen)->fullscreen_windows_.push_back(window);
-  
-  if (window->resName() == "onboard")
+
+  /* We might be starting up so make sure that
+   * we don't deref the dashcontroller that doesnt
+   * exist */
+  DashController::Ptr dp = UnityScreen::get (screen)->dashController;
+
+  if (dp)
   {
-    Window xid = UnityScreen::get (screen)->dashController->window()->GetInputWindowId();
-    XSetTransientForHint (screen->dpy(), window->id(), xid);
+    nux::BaseWindow* w = dp->window ();
+
+    if (w)
+    {
+      if (window->resName() == "onboard")
+      {
+        Window xid = dp->window()->GetInputWindowId();
+        XSetTransientForHint (screen->dpy(), window->id(), xid);
+      }
+    }
   }
 }
 

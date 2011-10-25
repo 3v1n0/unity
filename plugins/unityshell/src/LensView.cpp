@@ -144,6 +144,8 @@ LensView::~LensView()
 void LensView::SetupViews()
 {
   layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
+  
+  layout_->SetHorizontalExternalMargin(8);
 
   scroll_view_ = new LensScrollView(new PlacesVScrollBar(NUX_TRACKER_LOCATION),
                                     NUX_TRACKER_LOCATION);
@@ -355,11 +357,6 @@ void LensView::OnActiveChanged(bool is_active)
   }
 
   lens_->active = is_active;
-}
-
-long LensView::ProcessEvent(nux::IEvent& ievent, long traverse_info, long event_info)
-{
-  return layout_->ProcessEvent(ievent, traverse_info, event_info);
 }
 
 void LensView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
