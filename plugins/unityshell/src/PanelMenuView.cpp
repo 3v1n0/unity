@@ -119,6 +119,7 @@ PanelMenuView::PanelMenuView(int padding)
   _panel_titlebar_grab_area = new PanelTitlebarGrabArea();
   _panel_titlebar_grab_area->SetParentObject(this);
   _panel_titlebar_grab_area->SinkReference();
+  _panel_titlebar_grab_area->mouse_down.connect(sigc::mem_fun(this, &PanelMenuView::OnMouseClicked));
   _panel_titlebar_grab_area->mouse_down.connect(sigc::mem_fun(this, &PanelMenuView::OnMouseMiddleClicked));
   _panel_titlebar_grab_area->mouse_down.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedGrabStart));
   _panel_titlebar_grab_area->mouse_drag.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedGrabMove));
@@ -214,51 +215,6 @@ PanelMenuView::FullRedraw()
   NeedRedraw();
 }
 
-long
-PanelMenuView::ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo)
-{
-  long ret = TraverseInfo;
-  nux::Geometry geo = GetAbsoluteGeometry();
-  nux::Geometry geo_buttons = _window_buttons->GetAbsoluteGeometry();
-
-  if (!_we_control_active)
-    return _panel_titlebar_grab_area->OnEvent(ievent, ret, ProcessEventInfo);
-
-  if (geo.IsPointInside(ievent.e_x, ievent.e_y) && !(_is_maximized && geo_buttons.IsPointInside(ievent.e_x, ievent.e_y)))
-  {
-    if (_is_inside != true)
-    {
-      if (_is_grabbed)
-        _is_grabbed = false;
-      else
-        _is_inside = true;
-      FullRedraw();
-    }
-  }
-  else
-  {
-    if (_is_inside != false)
-    {
-      _is_inside = false;
-      FullRedraw();
-    }
-  }
-
-  if (_is_maximized || _places_showing)
-  {
-    if (_window_buttons)
-      ret = _window_buttons->ProcessEvent(ievent, ret, ProcessEventInfo);
-    if (_panel_titlebar_grab_area)
-      ret = _panel_titlebar_grab_area->OnEvent(ievent, ret, ProcessEventInfo);
-  }
-  ret = _panel_titlebar_grab_area->OnEvent(ievent, ret, ProcessEventInfo);
-
-  if (!_is_own_window)
-    ret = _menu_layout->ProcessEvent(ievent, ret, ProcessEventInfo);
-
-  return ret;
-}
-
 nux::Area*
 PanelMenuView::FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type)
 {
@@ -314,7 +270,7 @@ long PanelMenuView::PostLayoutManagement(long LayoutResult)
 
   old_window_buttons_w = _window_buttons->GetContentWidth();
   _window_buttons->SetGeometry(geo.x + _padding, geo.y, old_window_buttons_w, geo.height);
-  _window_buttons->ComputeLayout2();
+  _window_buttons->ComputeContentSize();
   new_window_buttons_w = _window_buttons->GetContentWidth();
 
   /* Explicitly set the size and position of the widgets */
@@ -323,7 +279,7 @@ long PanelMenuView::PostLayoutManagement(long LayoutResult)
 
   old_menu_area_w = _menu_layout->GetContentWidth();
   _menu_layout->SetGeometry(geo.x, geo.y, old_menu_area_w, geo.height);
-  _menu_layout->ComputeLayout2();
+  _menu_layout->ComputeContentSize();
   new_menu_area_w = _menu_layout->GetContentWidth();
 
   geo.x += new_menu_area_w;
@@ -447,7 +403,7 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
       lockrect.pBits = 0;
       bool locked = false;
 
-      if (_gradient_texture.IsNull())
+      if (_gradient_texture.IsNull() || (_gradient_texture->GetWidth() != geo.width))
       {
         build_gradient = true;
       }
@@ -1257,6 +1213,7 @@ PanelMenuView::GetMaximizedWindow()
 void
 PanelMenuView::OnMaximizedGrabStart(int x, int y, unsigned long button_flags, unsigned long)
 {
+  Window maximized_win;
   if (nux::GetEventButton(button_flags) != 1 || _places_showing)
     return;
 
@@ -1265,8 +1222,15 @@ PanelMenuView::OnMaximizedGrabStart(int x, int y, unsigned long button_flags, un
   //
   // This is a workaround to avoid that the grid plugin would be fired
   // showing the window shape preview effect. See bug #838923
-  if (GetMaximizedWindow() != 0)
+
+  maximized_win = GetMaximizedWindow ();
+
+  if (maximized_win != 0)
+  {
+    /* Always activate the window in case it is on another monitor */
+    WindowManager::Default ()->Activate (maximized_win);
     _panel_titlebar_grab_area->SetGrabbed(true);
+  }
 }
 
 void
@@ -1326,7 +1290,7 @@ PanelMenuView::OnMaximizedGrabEnd(int x, int y, unsigned long, unsigned long)
 void
 PanelMenuView::OnMouseDoubleClicked(int x, int y, unsigned long button_flags, unsigned long)
 {
-  if (nux::GetEventButton(button_flags) != 1)
+  if (nux::GetEventButton(button_flags) != 1 || _places_showing)
     return;
 
   guint32 window_xid = GetMaximizedWindow();
@@ -1339,9 +1303,23 @@ PanelMenuView::OnMouseDoubleClicked(int x, int y, unsigned long button_flags, un
 }
 
 void
+PanelMenuView::OnMouseClicked(int x, int y, unsigned long button_flags, unsigned long)
+{
+  if (nux::GetEventButton(button_flags) != 1)
+    return;
+
+  guint32 window_xid = GetMaximizedWindow();
+
+  if (window_xid != 0)
+  {
+    WindowManager::Default()->Raise(window_xid);
+  }
+}
+
+void
 PanelMenuView::OnMouseMiddleClicked(int x, int y, unsigned long button_flags, unsigned long)
 {
-  if (nux::GetEventButton(button_flags) != 2)
+  if (nux::GetEventButton(button_flags) != 2 || _places_showing)
     return;
 
   guint32 window_xid = GetMaximizedWindow();
@@ -1356,18 +1334,17 @@ PanelMenuView::OnMouseMiddleClicked(int x, int y, unsigned long button_flags, un
 const gchar*
 PanelMenuView::GetName()
 {
-  return "MenuView";
+  return NULL;
 }
 
 const gchar*
 PanelMenuView::GetChildsName()
 {
-  return "entries";
+  return NULL;
 }
 
 void PanelMenuView::AddProperties(GVariantBuilder* builder)
 {
-  variant::BuilderWrapper(builder).add(GetGeometry());
 }
 
 /*

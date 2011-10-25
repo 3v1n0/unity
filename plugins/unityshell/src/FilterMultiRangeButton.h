@@ -60,8 +60,7 @@ namespace unity {
     void SetHasArrow (MultiRangeArrow arrow); //0 = left, 1 = both, 2 = right, -1 = none
 
   protected:
-    virtual long ComputeLayout2();
-    virtual long int ProcessEvent(nux::IEvent& ievent, long int TraverseInfo, long int ProcessEventInfo);
+    virtual long ComputeContentSize();
     virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
     virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
     virtual void PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw);
@@ -70,7 +69,7 @@ namespace unity {
     dash::FilterOption::Ptr filter_;
 
     void InitTheme ();
-    void RedrawTheme (nux::Geometry const& geom, cairo_t *cr, nux::State faked_state);
+    void RedrawTheme (nux::Geometry const& geom, cairo_t *cr, nux::ButtonVisualState faked_state);
     void OnActivated (nux::Area *area);
     void OnActiveChanged(bool value);
 

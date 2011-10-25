@@ -59,6 +59,8 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
   , last_mouse_down_y_(-1)
   , recorded_dash_width_(-1)
   , recorded_dash_height_(-1)
+  , mouse_last_x_(-1)
+  , mouse_last_y_(-1)
 {
   auto needredraw_lambda = [&](int value)
   {
@@ -78,11 +80,22 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
   {
     last_mouse_down_x_ = x;
     last_mouse_down_y_ = y;
+    uint index = GetIndexAtPosition(x, y);
+    mouse_over_index_ = index;
+    if (index >= 0 && index < results_.size())
+    {
+      // we got a click on a button so activate it
+      Result result = results_[index];
+      selected_index_ = index;
+      focused_uri_ = result.uri;
+    }
   });
 
   mouse_leave.connect([&](int x, int y, unsigned long mouse_state, unsigned long button_state)
   {
     mouse_over_index_ = -1;
+    mouse_last_x_ = -1;
+    mouse_last_y_ = -1;
     NeedRedraw();
   });
 
@@ -263,6 +276,8 @@ void ResultViewGrid::SizeReallocate()
   SetMinimumHeight(total_height + (padding * 2));
   SetMaximumHeight(total_height + (padding * 2));
   PositionPreview();
+
+  mouse_over_index_ = GetIndexAtPosition(mouse_last_x_, mouse_last_y_);
 }
 
 void ResultViewGrid::PositionPreview()
@@ -304,11 +319,6 @@ void ResultViewGrid::PositionPreview()
       break;
     }
   }
-}
-
-long int ResultViewGrid::ProcessEvent(nux::IEvent& ievent, long int TraverseInfo, long int ProcessEventInfo)
-{
-  return TraverseInfo;
 }
 
 bool ResultViewGrid::InspectKeyEvent(unsigned int eventType, unsigned int keysym, const char* character)
@@ -489,7 +499,7 @@ void ResultViewGrid::OnOnKeyNavFocusChange(nux::Area *area)
   {
     if (selected_index_ < 0)
     {
-      if (mouse_over_index_ >= 0)
+      if (mouse_over_index_ >= 0 && mouse_over_index_ < static_cast<int>(results_.size()))
       {
         // to hack around nux, nux sends the keynavfocuschange event before
         // mouse clicks, so when mouse click happens we have already scrolled away
@@ -503,7 +513,7 @@ void ResultViewGrid::OnOnKeyNavFocusChange(nux::Area *area)
         selected_index_ = 0;
       }
     }
-    NeedRedraw();
+
 
     int items_per_row = GetItemsPerRow();
     int focused_x = (renderer_->width + horizontal_spacing) * (selected_index_ % items_per_row);
@@ -517,13 +527,15 @@ void ResultViewGrid::OnOnKeyNavFocusChange(nux::Area *area)
     selected_index_ = -1;
     focused_uri_.clear();
   }
+
+  NeedRedraw();
 }
 
-long ResultViewGrid::ComputeLayout2()
+long ResultViewGrid::ComputeContentSize()
 {
   SizeReallocate();
   QueueLazyLoad();
-  long ret = ResultView::ComputeLayout2();
+  long ret = ResultView::ComputeContentSize();
   return ret;
 
 }
@@ -671,12 +683,17 @@ void ResultViewGrid::MouseMove(int x, int y, int dx, int dy, unsigned long butto
 {
   uint index = GetIndexAtPosition(x, y);
   mouse_over_index_ = index;
+
+  mouse_last_x_ = x;
+  mouse_last_y_ = y;
+
   NeedRedraw();
 }
 
 void ResultViewGrid::MouseClick(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
   uint index = GetIndexAtPosition(x, y);
+  mouse_over_index_ = index;
   if (index >= 0 && index < results_.size())
   {
     // we got a click on a button so activate it
