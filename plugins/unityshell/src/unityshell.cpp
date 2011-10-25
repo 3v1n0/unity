@@ -2359,7 +2359,7 @@ void UnityScreen::OnDashRealized ()
   {
     if (w->resName() == "onboard")
     {
-      Window xid = dashController->window()->GetInputWindowId();
+      Window xid = dash_controller_->window()->GetInputWindowId();
       XSetTransientForHint (screen->dpy(), w->id(), xid);
       w->raise ();
     }
@@ -2398,9 +2398,9 @@ void UnityScreen::initLauncher()
   dash_controller_.reset(new dash::Controller());
   dash_controller_->on_realize.connect(sigc::mem_fun(this, &UnityScreen::OnDashRealized));
 
-  launcher->SetHideMode(Launcher::LAUNCHER_HIDE_DODGE_WINDOWS);
-  launcher->SetLaunchAnimation(Launcher::LAUNCH_ANIMATION_PULSE);
-  launcher->SetUrgentAnimation(Launcher::URGENT_ANIMATION_WIGGLE);
+  launcher.SetHideMode(Launcher::LAUNCHER_HIDE_DODGE_WINDOWS);
+  launcher.SetLaunchAnimation(Launcher::LAUNCH_ANIMATION_PULSE);
+  launcher.SetUrgentAnimation(Launcher::URGENT_ANIMATION_WIGGLE);
 
   ScheduleRelayout(0);
 
