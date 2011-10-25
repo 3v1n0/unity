@@ -114,7 +114,7 @@ namespace unity {
 
       PreviewBasicButton* primary_button = new PreviewBasicButton(preview_->primary_action_name.c_str(), NUX_TRACKER_LOCATION);
       //FIXME - add secondary action when we have the backend for it
-      primary_button->activated.connect ([&] (nux::View *view) { UriActivated.emit (preview_->primary_action_uri); });
+      primary_button->state_change.connect ([&] (nux::View *view) { UriActivated.emit (preview_->primary_action_uri); });
 
 
       nux::HLayout *large_container = new nux::HLayout(NUX_TRACKER_LOCATION);
@@ -175,10 +175,6 @@ namespace unity {
       GetCompositionLayout ()->ProcessDraw (GfxContent, force_draw);
 
     GfxContent.PopClippingRectangle();
-  }
-
-  long int PreviewMusicAlbum::ProcessEvent(nux::IEvent& ievent, long int TraverseInfo, long int ProcessEventInfo) {
-    return PreviewBase::ProcessEvent(ievent, TraverseInfo, ProcessEventInfo);
   }
 
   void PreviewMusicAlbum::PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw) {

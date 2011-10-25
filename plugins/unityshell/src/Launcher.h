@@ -46,7 +46,7 @@
 
 #define SUPER_TAP_DURATION  250
 #define SHORTCUTS_SHOWN_DELAY  750
-#define START_DRAGICON_DURATION 500
+#define START_DRAGICON_DURATION 250
 #define BEFORE_HIDE_LAUNCHER_ON_SUPER_DURATION 1000
 
 #define IGNORE_REPEAT_SHORTCUT_DURATION  250
@@ -109,7 +109,6 @@ public:
 
   nux::Property<Display*> display;
 
-  virtual long ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo);
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw);

@@ -46,6 +46,7 @@ class CompizMinimizedWindowHandler:
 public:
 
   CompizMinimizedWindowHandler (CompWindow *w);
+  ~CompizMinimizedWindowHandler ();
 
   void setVisibility (bool visible);
   unsigned int getPaintMask ();
@@ -94,6 +95,17 @@ compiz::CompizMinimizedWindowHandler<Screen, Window>::CompizMinimizedWindowHandl
 
   priv->mWindow = w;
 
+}
+
+template <typename Screen, typename Window>
+compiz::CompizMinimizedWindowHandler<Screen, Window>::~CompizMinimizedWindowHandler ()
+{
+  typedef compiz::CompizMinimizedWindowHandler<Screen, Window> minimized_window_handler_full;
+
+  compiz::CompizMinimizedWindowHandler<Screen, Window>::Ptr compizMinimizeHandler =
+        boost::dynamic_pointer_cast <minimized_window_handler_full> (Window::get (priv->mWindow)->mMinimizeHandler);
+
+  minimizedWindows.remove (compizMinimizeHandler);
 }
 
 template <typename Screen, typename Window>
@@ -149,8 +161,11 @@ compiz::CompizMinimizedWindowHandler<Screen, Window>::minimize ()
   {
     CompWindow *win = screen->findWindow (w);
 
-    Window::get (win)->mMinimizeHandler = MinimizedWindowHandler::Ptr (new CompizMinimizedWindowHandler (win));
-    Window::get (win)->mMinimizeHandler->minimize ();
+    if (win)
+    {
+      Window::get (win)->mMinimizeHandler = MinimizedWindowHandler::Ptr (new CompizMinimizedWindowHandler (win));
+      Window::get (win)->mMinimizeHandler->minimize ();
+    }
   }
 
   priv->mWindow->windowNotify (CompWindowNotifyHide);
@@ -230,10 +245,13 @@ compiz::CompizMinimizedWindowHandler<Screen, Window>::unminimize ()
   {
     CompWindow *win = screen->findWindow (w);
 
-    if (Window::get (win)->mMinimizeHandler)
-      Window::get (win)->mMinimizeHandler->unminimize ();
+    if (win)
+    {
+      if (Window::get (win)->mMinimizeHandler)
+        Window::get (win)->mMinimizeHandler->unminimize ();
 
-    Window::get (win)->mMinimizeHandler.reset ();
+      Window::get (win)->mMinimizeHandler.reset ();
+    }
   }
 
   setVisibility (true);

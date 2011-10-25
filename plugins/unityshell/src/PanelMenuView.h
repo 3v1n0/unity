@@ -57,7 +57,6 @@ public:
 
   void FullRedraw();
 
-  virtual long ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo);
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual long PostLayoutManagement(long LayoutResult);
@@ -84,6 +83,7 @@ public:
   void OnMaximizedGrabMove(int, int, int, int, unsigned long, unsigned long);
   void OnMaximizedGrabEnd(int, int, unsigned long, unsigned long);
   void OnMouseDoubleClicked(int, int, unsigned long, unsigned long);
+  void OnMouseClicked(int, int, unsigned long, unsigned long);
   void OnMouseMiddleClicked(int, int, unsigned long, unsigned long);
 
   void Refresh();

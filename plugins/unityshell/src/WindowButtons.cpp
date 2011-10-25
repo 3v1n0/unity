@@ -327,21 +327,21 @@ WindowButtons::WindowButtons()
 
   but = new WindowButton(panel::WindowButtonType::CLOSE);
   AddView(but, 0, nux::eCenter, nux::eFix);
-  but->activated.connect(sigc::mem_fun(this, &WindowButtons::OnCloseClicked));
+  but->state_change.connect(sigc::mem_fun(this, &WindowButtons::OnCloseClicked));
   but->mouse_enter.connect(lambda_enter);
   but->mouse_leave.connect(lambda_leave);
   but->mouse_move.connect(lambda_moved);
 
   but = new WindowButton(panel::WindowButtonType::MINIMIZE);
   AddView(but, 0, nux::eCenter, nux::eFix);
-  but->activated.connect(sigc::mem_fun(this, &WindowButtons::OnMinimizeClicked));
+  but->state_change.connect(sigc::mem_fun(this, &WindowButtons::OnMinimizeClicked));
   but->mouse_enter.connect(lambda_enter);
   but->mouse_leave.connect(lambda_leave);
   but->mouse_move.connect(lambda_moved);
 
   but = new WindowButton(panel::WindowButtonType::UNMAXIMIZE);
   AddView(but, 0, nux::eCenter, nux::eFix);
-  but->activated.connect(sigc::mem_fun(this, &WindowButtons::OnRestoreClicked));
+  but->state_change.connect(sigc::mem_fun(this, &WindowButtons::OnRestoreClicked));
   but->mouse_enter.connect(lambda_enter);
   but->mouse_leave.connect(lambda_leave);
   but->mouse_move.connect(lambda_moved);
