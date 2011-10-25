@@ -77,7 +77,7 @@ Style::Style()
   gtk_widget_path_free(widget_path);
 
   _gtk_theme_changed_id = g_signal_connect(gtk_settings_get_default(), "notify::gtk-theme-name",
-                                           G_CALLBACK(Style::OnStyleChanged), this);
+                                           G_CALLBACK(Style::OnGtkThemeChanged), this);
 
   Refresh();
 }
@@ -130,9 +130,9 @@ GtkStyleContext* Style::GetStyleContext()
   return _style_context;
 }
 
-void Style::OnStyleChanged(GObject*    gobject,
-                           GParamSpec* pspec,
-                           gpointer    data)
+void Style::OnGtkThemeChanged(GObject*    gobject,
+                              GParamSpec* pspec,
+                              gpointer    data)
 {
   Style* self = (Style*) data;
 

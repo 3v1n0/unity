@@ -26,6 +26,7 @@
 
 #include "FilterBasicButton.h"
 #include "FilterExpanderLabel.h"
+#include "PlacesStyle.h"
 
 namespace unity {
 
@@ -56,6 +57,8 @@ NUX_IMPLEMENT_OBJECT_TYPE(FilterExpanderLabel);
 
   void FilterExpanderLabel::SetRightHandView (nux::View *view)
   {
+    view->SetMaximumHeight(30);
+
     right_hand_contents_ = view;
     top_bar_layout_->AddView(right_hand_contents_, 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
   }
@@ -71,9 +74,11 @@ NUX_IMPLEMENT_OBJECT_TYPE(FilterExpanderLabel);
 
   void FilterExpanderLabel::BuildLayout ()
   {
+    PlacesStyle *style = PlacesStyle::GetDefault(); 
+
     layout_ = new nux::VLayout(NUX_TRACKER_LOCATION);
     top_bar_layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
-
+    
     cairo_label_ = new nux::StaticText(label_.c_str(), NUX_TRACKER_LOCATION);
     cairo_label_->SetFontName("Ubuntu 10");
     cairo_label_->SetTextColor(nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
@@ -88,9 +93,11 @@ NUX_IMPLEMENT_OBJECT_TYPE(FilterExpanderLabel);
 
     top_bar_layout_->AddView (cairo_label_, 1, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
     top_bar_layout_->AddSpace(1, 1);
+    
+    top_bar_layout_->SetMaximumWidth((style->GetTileWidth() -12)*2+10);
 
-    layout_->AddLayout (top_bar_layout_, 0);
-    layout_->SetVerticalInternalMargin(12);
+    layout_->AddLayout (top_bar_layout_, 0, nux::MINOR_POSITION_LEFT);
+    layout_->SetVerticalInternalMargin(0);
 
     SetLayout(layout_);
 
@@ -104,10 +111,6 @@ NUX_IMPLEMENT_OBJECT_TYPE(FilterExpanderLabel);
       contents_->SetVisible(change);
 
     QueueRelayout();
-  }
-
-  long int FilterExpanderLabel::ProcessEvent(nux::IEvent& ievent, long int TraverseInfo, long int ProcessEventInfo) {
-    return GetLayout()->ProcessEvent(ievent, TraverseInfo, ProcessEventInfo);
   }
 
   void FilterExpanderLabel::Draw(nux::GraphicsEngine& GfxContext, bool force_draw) {

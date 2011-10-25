@@ -65,7 +65,6 @@ void TestRunner::Init ()
   view->DisableBlur();
   view->SetMinMaxSize(WIDTH, HEIGHT);
   layout->AddView (view, 1, nux::MINOR_POSITION_CENTER);
-  layout->SetFocused (true);
   layout->SetMinMaxSize(WIDTH, HEIGHT);
 
   view->AboutToShow();

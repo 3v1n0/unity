@@ -39,7 +39,7 @@ class MinimizedWindowHandler
 public:
 
   MinimizedWindowHandler (Display *dpy, unsigned int xid);
-  ~MinimizedWindowHandler ();
+  virtual ~MinimizedWindowHandler ();
 
   virtual void minimize   ();
   virtual void unminimize ();
