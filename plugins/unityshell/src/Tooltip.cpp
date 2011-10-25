@@ -107,15 +107,6 @@ Area* Tooltip::FindAreaUnderMouse(const Point& mouse_position, NuxEventType even
   return 0;
 }
 
-long Tooltip::ProcessEvent(IEvent& ievent, long TraverseInfo, long ProcessEventInfo)
-{
-  long ret = TraverseInfo;
-
-  _tooltip_text->ProcessEvent(ievent, ret, ProcessEventInfo);
-
-  return ret;
-}
-
 void Tooltip::ShowTooltipWithTipAt(int anchor_tip_x, int anchor_tip_y)
 {
   _anchorX = anchor_tip_x;
