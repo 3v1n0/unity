@@ -42,10 +42,6 @@
 #include "WindowManager.h"
 #include "TrashLauncherIcon.h"
 #include "BFBLauncherIcon.h"
-/* FIXME: once we get a better method to add the toplevel windows to
-   the accessible root object, this include would not be required */
-#include "unitya11y.h"
-#include "unity-util-accessible.h"
 
 
 namespace unity
@@ -486,11 +482,6 @@ Launcher& Controller::launcher()
 {
   return *(pimpl->launcher_);
 }
-
-//LauncherModel& Controller::model()
-//{
-// return *(pimpl->model_);
-//}
 
 std::vector<char> Controller::GetAllShortcuts()
 {

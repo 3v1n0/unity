@@ -43,7 +43,6 @@ public:
   ~Controller();
 
   Launcher& launcher();
-//  LauncherModel& model();
   Window launcher_input_window_id();
 
   void UpdateNumWorkspaces(int workspaces);
