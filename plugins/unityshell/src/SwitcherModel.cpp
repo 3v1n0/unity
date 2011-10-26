@@ -146,7 +146,10 @@ SwitcherModel::DetailSelectionWindow ()
 {
   if (!detail_selection || DetailXids ().empty())
     return 0;
-  
+
+  if (detail_selection_index > DetailXids().size() - 1)
+    return 0;
+ 
   return DetailXids()[detail_selection_index];
 }
 
