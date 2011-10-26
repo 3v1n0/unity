@@ -37,6 +37,11 @@ public:
   virtual nux::Color BackgroundColor();
   virtual nux::Color GlowColor();
 
+  const bool HasWindowOnViewport()
+  {
+    return true;
+  }
+
   bool ShowInSwitcher()
   {
     return true;

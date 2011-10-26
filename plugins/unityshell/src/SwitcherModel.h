@@ -45,6 +45,7 @@ public:
 
   nux::Property<bool> detail_selection;
   nux::Property<unsigned int> detail_selection_index;
+  nux::Property<bool> only_detail_on_viewport;
 
   // Icons are owned externally and assumed valid for life of switcher.
   // When AbstractLauncherIcon is complete, it will be passed as a shared pointer and this

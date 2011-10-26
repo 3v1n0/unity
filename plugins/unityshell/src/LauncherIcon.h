@@ -109,7 +109,7 @@ public:
 
   virtual std::string NameForWindow (Window window) { return std::string(); }
 
-  bool HasWindowOnViewport();
+  const bool HasWindowOnViewport();
 
   virtual bool IsSpacer()
   {

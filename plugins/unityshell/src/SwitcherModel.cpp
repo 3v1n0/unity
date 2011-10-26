@@ -35,6 +35,7 @@ SwitcherModel::SwitcherModel(std::vector<AbstractLauncherIcon*> icons)
 {
   detail_selection = false;
   detail_selection_index = 0;
+  only_detail_on_viewport = false;
 
   for (auto icon : _inner)
     icon->Reference();
@@ -114,11 +115,22 @@ SwitcherModel::CompareWindowsByActive (guint32 first, guint32 second)
   return WindowManager::Default ()->GetWindowActiveNumber (first) > WindowManager::Default ()->GetWindowActiveNumber (second);
 }
 
+bool
+WindowOnOtherViewport(Window xid)
+{
+  return !WindowManager::Default()->IsWindowOnCurrentDesktop(xid);
+}
+
 std::vector<Window>
 SwitcherModel::DetailXids()
 {
   std::vector<Window> results;
   results = Selection()->RelatedXids ();
+
+  if (only_detail_on_viewport)
+  {
+    results.erase(std::remove_if(results.begin(), results.end(), WindowOnOtherViewport), results.end());
+  }
 
   std::sort (results.begin (), results.end (), &CompareWindowsByActive);
 
