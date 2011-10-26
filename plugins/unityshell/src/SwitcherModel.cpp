@@ -185,7 +185,7 @@ SwitcherModel::NextDetail ()
   if (!detail_selection())
     return;
 
-  if (detail_selection_index < Selection()->RelatedXids ().size () - 1)
+  if (detail_selection_index < DetailXids().size() - 1)
     detail_selection_index = detail_selection_index + 1;
   else
     detail_selection_index = 0;
@@ -199,7 +199,7 @@ void SwitcherModel::PrevDetail ()
   if (detail_selection_index >= (unsigned int) 1)
     detail_selection_index = detail_selection_index - 1;
   else
-    detail_selection_index = Selection()->RelatedXids ().size () - 1;
+    detail_selection_index = DetailXids().size() - 1;
 }
 
 void
