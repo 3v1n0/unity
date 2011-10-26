@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: l 10n\n"
 "Report-Msgid-Bugs-To: ayatana-dev@lists.launchpad.net\n"
-"POT-Creation-Date: 2011-07-29 16:39+0200\n"
+"POT-Creation-Date: 2011-10-26 11:59-0400\n"
 "PO-Revision-Date: 2010-03-02 12:36-0500\n"
 "Last-Translator: Canonical OEM\n"
 "Language-Team: Hungarian\n"
@@ -17,16 +17,20 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-msgid "<b>Show the launcher when the pointer:</b>"
+msgid "All"
 msgstr ""
 
-msgid "All items in the Trash will be permanently deleted."
-msgstr ""
-
+#. Browser
 msgid "Browse the Web"
 msgstr ""
 
+msgid "Categories"
+msgstr ""
+
 msgid "Check Email"
+msgstr ""
+
+msgid "Dash home"
 msgstr ""
 
 msgid "Drop To Add Application"
@@ -38,17 +42,17 @@ msgstr ""
 msgid "Eject parent drive"
 msgstr ""
 
-msgid "Empty Trash"
-msgstr ""
-
 msgid "Empty Trash..."
 msgstr ""
 
-msgid "Empty all items from Trash?"
+msgid "Filter results"
 msgstr ""
 
 #. Find Files
 msgid "Find Files"
+msgstr ""
+
+msgid "Format..."
 msgstr ""
 
 #. Internet Apps
@@ -59,7 +63,7 @@ msgstr ""
 msgid "Keep in launcher"
 msgstr "Megtartás a Launcherben"
 
-msgid "Launcher & Menus"
+msgid "Launcher"
 msgstr ""
 
 msgid "Listen to Music"
@@ -73,14 +77,26 @@ msgstr ""
 msgid "More Apps"
 msgstr ""
 
+msgid "Multi-range"
+msgstr ""
+
 msgid "Open"
 msgstr ""
 
-msgid "Pushes the left edge of the screen"
+msgid "Places"
 msgstr ""
 
 msgid "Quit"
 msgstr "Kilépés"
+
+msgid "Rating"
+msgstr ""
+
+#. FIXME: this is the general search bar, but right now it is
+#. only supported the Run Command dialog. When a full Places
+#. support is finished, this would change
+msgid "Run Command Search Entry"
+msgstr ""
 
 msgid "Safely remove"
 msgstr ""
@@ -91,7 +107,7 @@ msgstr ""
 msgid "Search"
 msgstr ""
 
-msgid "Search across all places"
+msgid "Search Bar"
 msgstr ""
 
 msgid "See fewer results"
@@ -100,10 +116,13 @@ msgstr ""
 msgid "Shortcuts"
 msgstr ""
 
+msgid "Show Desktop"
+msgstr ""
+
 msgid "The drive has been successfully ejected"
 msgstr ""
 
-msgid "Touches the top left corner of the screen"
+msgid "Tracks"
 msgstr ""
 
 msgid "Trash"
@@ -118,6 +137,9 @@ msgid "View Photos"
 msgstr ""
 
 msgid "Workspace Switcher"
+msgstr ""
+
+msgid "min"
 msgstr ""
 
 #, fuzzy

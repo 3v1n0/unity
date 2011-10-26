@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: ayatana-dev@lists.launchpad.net\n"
-"POT-Creation-Date: 2011-08-23 20:58-0400\n"
+"POT-Creation-Date: 2011-10-26 12:08-0400\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -24,6 +24,9 @@ msgid "Quit"
 msgstr ""
 
 msgid "Open"
+msgstr ""
+
+msgid "Format..."
 msgstr ""
 
 msgid "Eject"
@@ -45,12 +48,6 @@ msgid "The drive has been successfully ejected"
 msgstr ""
 
 msgid "Workspace Switcher"
-msgstr ""
-
-msgid "Search"
-msgstr ""
-
-msgid "Search across all places"
 msgstr ""
 
 msgid "See fewer results"
@@ -75,6 +72,7 @@ msgstr ""
 msgid "Find Files"
 msgstr ""
 
+#. Browser
 msgid "Browse the Web"
 msgstr ""
 
@@ -98,23 +96,47 @@ msgstr ""
 msgid "Empty Trash..."
 msgstr ""
 
-msgid "Empty all items from Trash?"
+msgid "Dash home"
 msgstr ""
 
-msgid "All items in the Trash will be permanently deleted."
+msgid "Filter results"
 msgstr ""
 
-msgid "Empty Trash"
+msgid "Search"
 msgstr ""
 
-msgid "Launcher & Menus"
+msgid "Show Desktop"
 msgstr ""
 
-msgid "<b>Show the launcher when the pointer:</b>"
+msgid "Categories"
 msgstr ""
 
-msgid "Pushes the left edge of the screen"
+msgid "All"
 msgstr ""
 
-msgid "Touches the top left corner of the screen"
+msgid "Multi-range"
+msgstr ""
+
+msgid "Rating"
+msgstr ""
+
+msgid "Tracks"
+msgstr ""
+
+msgid "min"
+msgstr ""
+
+msgid "Launcher"
+msgstr ""
+
+msgid "Places"
+msgstr ""
+
+msgid "Search Bar"
+msgstr ""
+
+#. FIXME: this is the general search bar, but right now it is
+#. only supported the Run Command dialog. When a full Places
+#. support is finished, this would change
+msgid "Run Command Search Entry"
 msgstr ""
