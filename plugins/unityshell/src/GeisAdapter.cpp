@@ -45,9 +45,10 @@ void
 GeisAdapter::Run()
 {
   int fd = -1;
-  GeisStatus status;
+  GeisStatus status = GEIS_STATUS_NOT_SUPPORTED;
 
-  status = geis_configuration_get_value(_root_instance, GEIS_CONFIG_UNIX_FD, &fd);
+  if (_root_instance != nullptr)
+    status = geis_configuration_get_value(_root_instance, GEIS_CONFIG_UNIX_FD, &fd);
 
   if (status != GEIS_STATUS_SUCCESS)
     return;
@@ -466,7 +467,7 @@ GeisAdapter::RegisterRootInstance()
     GEIS_XCB_FULL_WINDOW,
     &xcb_win_info
   };
-  GeisInstance instance;
+  GeisInstance instance = nullptr;
 
   status = geis_init(&win_info, &instance);
   if (status != GEIS_STATUS_SUCCESS)
