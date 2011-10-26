@@ -1304,10 +1304,10 @@ bool UnityScreen::altTabInitiateCommon(CompAction *action,
   
   std::vector<unity::launcher::AbstractLauncherIcon*> results = launcher_controller_->GetAltTabIcons();
 
-  screen->addAction(&optionGetAltTabRight ());
-  screen->addAction(&optionGetAltTabDetailStart ());
-  screen->addAction(&optionGetAltTabDetailStop ());
-  screen->addAction(&optionGetAltTabLeft ());
+  screen->addAction(&optionGetAltTabRight());
+  screen->addAction(&optionGetAltTabDetailStart());
+  screen->addAction(&optionGetAltTabDetailStop());
+  screen->addAction(&optionGetAltTabLeft());
 
   // maybe check launcher position/hide state?
 
@@ -1317,9 +1317,7 @@ bool UnityScreen::altTabInitiateCommon(CompAction *action,
                                                  screen->outputDevs()[device].width() - 200,
                                                  screen->outputDevs()[device].height() - 200));
 
-  switcher::ShowMode show_mode = switcher::ShowMode::ALL;
-  if (optionGetAltTabBiasViewport())
-    show_mode = switcher::ShowMode::CURRENT_VIEWPORT;
+  switcher::ShowMode show_mode = optionGetAltTabBiasViewport() ? switcher::ShowMode::CURRENT_VIEWPORT : switcher::ShowMode::ALL;
 
   switcher_controller_->Show(show_mode, switcher::SortMode::FOCUS_ORDER, false, results);
   return true;

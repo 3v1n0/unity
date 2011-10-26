@@ -79,7 +79,9 @@ void Controller::Show(ShowMode show, SortMode sort, bool reverse,
                       std::vector<AbstractLauncherIcon*> results)
 {
   if (sort == SortMode::FOCUS_ORDER)
+  {
     std::sort(results.begin(), results.end(), CompareSwitcherItemsPriority);
+  }
   
   if (show == ShowMode::CURRENT_VIEWPORT)
   {
