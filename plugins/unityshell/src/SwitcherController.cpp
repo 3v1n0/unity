@@ -70,14 +70,25 @@ void Controller::OnBackgroundUpdate(GVariant* data, Controller* self)
     self->view_->background_color = self->bg_color_;
 }
 
+bool IsOnOtherViewport (AbstractLauncherIcon* icon)
+{
+  return !icon->HasWindowOnViewport();
+}
+
 void Controller::Show(ShowMode show, SortMode sort, bool reverse,
                       std::vector<AbstractLauncherIcon*> results)
 {
   if (sort == SortMode::FOCUS_ORDER)
     std::sort(results.begin(), results.end(), CompareSwitcherItemsPriority);
+  
+  if (show == ShowMode::CURRENT_VIEWPORT)
+  {
+    results.erase(std::remove_if(results.begin(), results.end(), IsOnOtherViewport), results.end());
+  }
 
   model_.reset(new SwitcherModel(results));
   model_->selection_changed.connect(sigc::mem_fun(this, &Controller::OnModelSelectionChanged));
+  model_->only_detail_on_viewport = (show == ShowMode::CURRENT_VIEWPORT);
 
   SelectFirstItem();
 

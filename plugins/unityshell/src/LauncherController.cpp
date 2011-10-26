@@ -136,7 +136,7 @@ Controller::Impl::Impl(Display* display)
   launcher_window_->SetBackgroundColor(nux::color::Transparent);
   launcher_window_->ShowWindow(true);
   launcher_window_->EnableInputWindow(true, "launcher", false, false);
-  launcher_window_->InputWindowEnableStruts(true);
+  launcher_window_->InputWindowEnableStruts(false);
   launcher_window_->SetEnterFocusInputArea(raw_launcher);
 
   launcher_->SetModel(model_.get());

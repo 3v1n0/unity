@@ -113,7 +113,7 @@ public:
     return 7;
   }
 
-  bool HasWindowOnViewport()
+  const bool HasWindowOnViewport()
   {
     return false;
   }

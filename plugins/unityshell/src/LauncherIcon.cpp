@@ -167,7 +167,7 @@ LauncherIcon::~LauncherIcon()
   }
 }
 
-bool
+const bool
 LauncherIcon::HasWindowOnViewport()
 {
   return _has_visible_window;
