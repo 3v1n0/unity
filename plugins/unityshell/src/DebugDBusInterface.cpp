@@ -30,13 +30,13 @@
 #define SI_METHOD_NAME_GETSTATE  "GetState"
 #define AP_METHOD_NAME_STARTTEST "StartTest"
 
-using namespace unity;
-
 void StartTest(const gchar*);
 GVariant* GetState(const gchar*);
 void DBusMethodCall(GDBusConnection*, const gchar*, const gchar*,
                     const gchar*, const gchar*, GVariant*,
                     GDBusMethodInvocation*, gpointer);
+Introspectable* FindPieceToIntrospect(std::queue<Introspectable*> queue, 
+                                      const gchar* pieceName);
 
 static const GDBusInterfaceVTable si_vtable =
 {
@@ -153,12 +153,12 @@ static const GDBusInterfaceInfo ap_iface_info =
   NULL
 };
 
-static unity::Introspectable* _introspectable;
+static unity::Introspectable* _parent_introspectable;
 static unity::Autopilot* _autopilot;
 
-DebugDBusInterface::DebugDBusInterface(unity::Introspectable* introspectable)
+DebugDBusInterface::DebugDBusInterface(unity::Introspectable* parent)
 {
-  _introspectable = introspectable;
+  _parent_introspectable = parent;
   _owner_id = g_bus_own_name(G_BUS_TYPE_SESSION,
                              UNITY_DBUS_BUS_NAME,
                              G_BUS_NAME_OWNER_FLAGS_NONE,
@@ -182,7 +182,7 @@ DebugDBusInterface::OnBusAcquired(GDBusConnection* connection, const gchar* name
   int i = 0;
   GError* error;
 
-  UnityScreen* uscreen = dynamic_cast<UnityScreen*>(_introspectable);
+  UnityScreen* uscreen = dynamic_cast<UnityScreen*>(_parent_introspectable);
   if (uscreen != NULL)
   {
     _autopilot = new unity::Autopilot(uscreen->screen, connection);
@@ -253,9 +253,23 @@ DBusMethodCall(GDBusConnection* connection,
 }
 
 GVariant*
-GetState(const gchar* piece)
+GetState(const gchar* pieceName)
 {
-  return _introspectable->Introspect();
+  std::queue<Introspectable*> queue;
+  queue.push(_parent_introspectable);
+
+  // Since the empty string won't really match the name of the parent (Unity),
+  // we make sure that we're able to accept a blank string and just define it to
+  // mean the top level.
+  Introspectable* piece = g_strcmp0(pieceName, "") == 0
+    ? _parent_introspectable
+    : FindPieceToIntrospect(queue, pieceName);
+
+  // FIXME this might not work, make sure it does.
+  if (piece == NULL)
+    return NULL;
+
+  return piece->Introspect();
 }
 
 void
@@ -264,71 +278,34 @@ StartTest(const gchar* name)
   _autopilot->StartTest(name);
 }
 
-/* a very contrived example purely for giving QA something purposes */
-GVariant*
-DebugDBusInterface::BuildFakeReturn()
+/*
+ * Do a breadth-first search of the introspectable tree.
+ */
+Introspectable*
+FindPieceToIntrospect(std::queue<Introspectable*> queue, const gchar* pieceName)
 {
-  GVariantBuilder* builder;
-  GVariant* result, *panel_result, *indicators_result, *appmenu_result, *entries_result, *zero_result, *one_result;
+  Introspectable* piece;
 
-  builder = g_variant_builder_new(G_VARIANT_TYPE("a{sv}"));
-  g_variant_builder_add(builder, "{sv}", "label", g_variant_new_string("_File"));
-  g_variant_builder_add(builder, "{sv}", "image", g_variant_new_string(""));
-  g_variant_builder_add(builder, "{sv}", "visible", g_variant_new_boolean(TRUE));
-  g_variant_builder_add(builder, "{sv}", "sensitive", g_variant_new_boolean(TRUE));
-  g_variant_builder_add(builder, "{sv}", "active", g_variant_new_boolean(FALSE));
-  g_variant_builder_add(builder, "{sv}", "label", g_variant_new_int32(34));
-  g_variant_builder_add(builder, "{sv}", "label", g_variant_new_int32(24));
-  zero_result = g_variant_new("(a{sv})", builder);
-  g_variant_builder_unref(builder);
+  g_debug("Searching for %s", pieceName);
 
-  builder = g_variant_builder_new(G_VARIANT_TYPE("a{sv}"));
-  g_variant_builder_add(builder, "{sv}", "label", g_variant_new_string("_Edit"));
-  g_variant_builder_add(builder, "{sv}", "image", g_variant_new_string(""));
-  g_variant_builder_add(builder, "{sv}", "visible", g_variant_new_boolean(TRUE));
-  g_variant_builder_add(builder, "{sv}", "sensitive", g_variant_new_boolean(TRUE));
-  g_variant_builder_add(builder, "{sv}", "active", g_variant_new_boolean(FALSE));
-  g_variant_builder_add(builder, "{sv}", "label", g_variant_new_int32(34));
-  g_variant_builder_add(builder, "{sv}", "label", g_variant_new_int32(24));
-  one_result = g_variant_new("(a{sv})", builder);
-  g_variant_builder_unref(builder);
+  while (!queue.empty())
+  {
+    piece = queue.front();
+    queue.pop();
 
-  builder = g_variant_builder_new(G_VARIANT_TYPE("a{sv}"));
-  g_variant_builder_add(builder, "{sv}", "0", zero_result);
-  g_variant_builder_add(builder, "{sv}", "1", one_result);
-  entries_result = g_variant_new("(a{sv})", builder);
-  g_variant_builder_unref(builder);
+    if (g_strcmp0 (piece->GetName(), pieceName) == 0)
+    {
+      g_debug("We found it! ... maybe? we found %s", piece->GetName());
+      return piece;
+    }
 
-  builder = g_variant_builder_new(G_VARIANT_TYPE("a{sv}"));
-  g_variant_builder_add(builder, "{sv}", "model-name",
-                        g_variant_new_string("com.canonical.Unity.Panel.Service.Indicators.appmenu.324234243"));
-  g_variant_builder_add(builder, "{sv}", "entries", entries_result);
-  appmenu_result = g_variant_new("(a{sv})", builder);
-  g_variant_builder_unref(builder);
+    for (auto it = piece->GetIntrospectableChildren().begin(), last = piece->GetIntrospectableChildren().end(); it != last; it++)
+    {
+      queue.push(*it);
+    }
 
-  builder = g_variant_builder_new(G_VARIANT_TYPE("a{sv}"));
-  g_variant_builder_add(builder, "{sv}", "appmenu", appmenu_result);
-  indicators_result = g_variant_new("(a{sv})", builder);
-  g_variant_builder_unref(builder);
+    FindPieceToIntrospect(queue, pieceName);
+  }
 
-  builder = g_variant_builder_new(G_VARIANT_TYPE("a{sv}"));
-  g_variant_builder_add(builder, "{sv}", "backend",
-                        g_variant_new_string("/com/canonical/Unity/Panel/Service/324234243"));
-  g_variant_builder_add(builder, "{sv}", "launch-type",
-                        g_variant_new_string("dbus"));
-  g_variant_builder_add(builder, "{sv}", "width", g_variant_new_int32(1024));
-  g_variant_builder_add(builder, "{sv}", "width", g_variant_new_int32(32));
-  g_variant_builder_add(builder, "{sv}", "theme", g_variant_new_string("gtk"));
-  g_variant_builder_add(builder, "{sv}", "indicators", indicators_result);
-  panel_result = g_variant_new("(a{sv})", builder);
-  g_variant_builder_unref(builder);
-
-  builder = g_variant_builder_new(G_VARIANT_TYPE("a{sv}"));
-  g_variant_builder_add(builder, "{sv}", "panel", panel_result);
-  result = g_variant_new("(a{sv})", builder);
-  g_variant_builder_unref(builder);
-
-  gchar* s = g_variant_print(result, TRUE);
-  g_free(s);
-  return result;
+  return NULL;
 }
