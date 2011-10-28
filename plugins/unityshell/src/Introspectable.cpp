@@ -30,12 +30,11 @@ Introspectable::Introspect()
   gint             n_children = 0;
 
   builder = g_variant_builder_new(G_VARIANT_TYPE("a{sv}"));
-
   AddProperties(builder);
 
   child_builder = g_variant_builder_new(G_VARIANT_TYPE("a{sv}"));
 
-  for (std::list<Introspectable*>::iterator it = _children.begin(); it != _children.end(); it++)
+  for (auto it = _children.begin(); it != _children.end(); it++)
   {
     if ((*it)->GetName())
     {

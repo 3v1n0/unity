@@ -24,6 +24,8 @@
 #include <gio/gio.h>
 #include "Introspectable.h"
 
+using namespace unity;
+
 #define UNITY_DBUS_BUS_NAME                 "com.canonical.Unity"
 #define UNITY_DBUS_DEBUG_OBJECT_PATH        "/com/canonical/Unity/Debug"
 #define UNITY_DBUS_AP_IFACE_NAME            "com.canonical.Unity.Debug.Autopilot"
@@ -33,19 +35,16 @@
 class DebugDBusInterface
 {
 public:
-  DebugDBusInterface(unity::Introspectable* introspectable);
+  DebugDBusInterface(Introspectable* introspectable);
   ~DebugDBusInterface();
 
 private:
   /* methods */
-
   static void OnBusAcquired(GDBusConnection* connection, const gchar* name, gpointer data);
 
   static void OnNameAcquired(GDBusConnection* connection, const gchar* name, gpointer data);
 
   static void OnNameLost(GDBusConnection* connection, const gchar* name, gpointer data);
-
-  //static GVariant *GetState (const char *piece);
 
   static GVariant* BuildFakeReturn();
 
