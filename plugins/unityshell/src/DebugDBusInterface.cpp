@@ -286,8 +286,6 @@ FindPieceToIntrospect(std::queue<Introspectable*> queue, const gchar* pieceName)
 {
   Introspectable* piece;
 
-  g_debug("Searching for %s", pieceName);
-
   while (!queue.empty())
   {
     piece = queue.front();
@@ -295,7 +293,6 @@ FindPieceToIntrospect(std::queue<Introspectable*> queue, const gchar* pieceName)
 
     if (g_strcmp0 (piece->GetName(), pieceName) == 0)
     {
-      g_debug("We found it! ... maybe? we found %s", piece->GetName());
       return piece;
     }
 
