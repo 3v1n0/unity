@@ -305,7 +305,10 @@ UnityScreen::UnityScreen(CompScreen* screen)
 
      BackgroundEffectHelper::updates_enabled = true;
 
-     ubus_manager_.RegisterInterest(UBUS_PLACE_VIEW_SHOWN, [&](GVariant * args) { dash_is_open_ = true; });
+     ubus_manager_.RegisterInterest(UBUS_PLACE_VIEW_SHOWN, [&](GVariant * args) { 
+       dash_is_open_ = true; 
+       RaiseInputWindows(); 
+     });
      ubus_manager_.RegisterInterest(UBUS_PLACE_VIEW_HIDDEN, [&](GVariant * args) { dash_is_open_ = false; });
       LOG_INFO(logger) << "UnityScreen constructed: " << timer.ElapsedSeconds() << "s";
   }
@@ -1319,6 +1322,7 @@ bool UnityScreen::altTabInitiateCommon(CompAction *action,
 
   switcher::ShowMode show_mode = optionGetAltTabBiasViewport() ? switcher::ShowMode::CURRENT_VIEWPORT : switcher::ShowMode::ALL;
 
+  RaiseInputWindows();
   switcher_controller_->Show(show_mode, switcher::SortMode::FOCUS_ORDER, false, results);
   return true;
 }
@@ -1555,6 +1559,18 @@ const CompWindowList& UnityScreen::getWindowPaintList()
   pl.remove_if(isNuxWindow);
 
   return pl;
+}
+
+void UnityScreen::RaiseInputWindows()
+{
+  std::vector<Window> const& xwns = nux::XInputWindow::NativeHandleList();
+  
+  for (auto window : xwns)
+  {
+    CompWindow* cwin = screen->findWindow(window);
+    if (cwin)
+      cwin->raise();
+  }
 }
 
 /* detect occlusions

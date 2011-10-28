@@ -158,6 +158,8 @@ public:
   void preparePaint (int ms);
   void paintFboForOutput (CompOutput *output);
 
+  void RaiseInputWindows();
+
   void
   handleCompizEvent (const char         *pluginName,
                      const char         *eventName,
