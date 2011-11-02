@@ -25,7 +25,6 @@
 
 #include "Autopilot.h"
 #include "DebugDBusInterface.h"
-#include "unityshell.h"
 
 #define SI_METHOD_NAME_GETSTATE  "GetState"
 #define AP_METHOD_NAME_STARTTEST "StartTest"
@@ -153,11 +152,14 @@ static const GDBusInterfaceInfo ap_iface_info =
   NULL
 };
 
-static unity::Introspectable* _parent_introspectable;
+static CompScreen* _screen;
 static unity::Autopilot* _autopilot;
+static unity::Introspectable* _parent_introspectable;
 
-DebugDBusInterface::DebugDBusInterface(unity::Introspectable* parent)
+DebugDBusInterface::DebugDBusInterface(unity::Introspectable* parent, 
+                                       CompScreen* screen)
 {
+  _screen = screen;
   _parent_introspectable = parent;
   _owner_id = g_bus_own_name(G_BUS_TYPE_SESSION,
                              UNITY_DBUS_BUS_NAME,
@@ -165,7 +167,7 @@ DebugDBusInterface::DebugDBusInterface(unity::Introspectable* parent)
                              &DebugDBusInterface::OnBusAcquired,
                              &DebugDBusInterface::OnNameAcquired,
                              &DebugDBusInterface::OnNameLost,
-                             this,
+                             NULL,
                              NULL);
 }
 
@@ -182,12 +184,8 @@ DebugDBusInterface::OnBusAcquired(GDBusConnection* connection, const gchar* name
   int i = 0;
   GError* error;
 
-  UnityScreen* uscreen = dynamic_cast<UnityScreen*>(_parent_introspectable);
-  if (uscreen != NULL)
-  {
-    _autopilot = new unity::Autopilot(uscreen->screen, connection);
-  }
-
+  _autopilot = new unity::Autopilot(_screen, connection);
+  
   while (debug_object_interfaces[i] != NULL)
   {
     error = NULL;

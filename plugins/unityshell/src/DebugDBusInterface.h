@@ -22,7 +22,11 @@
 
 #include <glib.h>
 #include <gio/gio.h>
+
+#include <core/core.h>
+
 #include "Introspectable.h"
+
 
 using namespace unity;
 
@@ -35,7 +39,7 @@ using namespace unity;
 class DebugDBusInterface
 {
 public:
-  DebugDBusInterface(Introspectable* introspectable);
+  DebugDBusInterface(Introspectable* introspectable, CompScreen* uscreen);
   ~DebugDBusInterface();
 
 private:
