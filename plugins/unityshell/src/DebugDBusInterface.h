@@ -29,17 +29,16 @@
 #define UNITY_DBUS_INTROSPECTION_IFACE_NAME "com.canonical.Unity.Debug.Introspection"
 #define UNITY_DBUS_AP_SIG_TESTFINISHED      "TestFinished"
 
+class CompScreen;
+
 namespace unity
 {
-  class Introspectable;
-};
-
-class CompScreen;
+class Introspectable;
 
 class DebugDBusInterface
 {
 public:
-  DebugDBusInterface(unity::Introspectable* introspectable, CompScreen* uscreen);
+  DebugDBusInterface(Introspectable* introspectable, CompScreen* uscreen);
   ~DebugDBusInterface();
 
 private:
@@ -55,5 +54,6 @@ private:
   /* members */
   guint           _owner_id;
 };
+}
 
 #endif /* _DEBUG_DBUS_INTERFACE_H */

@@ -26,13 +26,15 @@
 #define SI_METHOD_NAME_GETSTATE  "GetState"
 #define AP_METHOD_NAME_STARTTEST "StartTest"
 
+namespace unity
+{
 void StartTest(const gchar*);
 GVariant* GetState(const gchar*);
 void DBusMethodCall(GDBusConnection*, const gchar*, const gchar*,
                     const gchar*, const gchar*, GVariant*,
                     GDBusMethodInvocation*, gpointer);
-unity::Introspectable* FindPieceToIntrospect(std::queue<unity::Introspectable*> queue, 
-                                             const gchar* pieceName);
+Introspectable* FindPieceToIntrospect(std::queue<Introspectable*> queue, 
+                                      const gchar* pieceName);
 
 static const GDBusInterfaceVTable si_vtable =
 {
@@ -150,10 +152,10 @@ static const GDBusInterfaceInfo ap_iface_info =
 };
 
 static CompScreen* _screen;
-static unity::Autopilot* _autopilot;
-static unity::Introspectable* _parent_introspectable;
+static Autopilot* _autopilot;
+static Introspectable* _parent_introspectable;
 
-DebugDBusInterface::DebugDBusInterface(unity::Introspectable* parent, 
+DebugDBusInterface::DebugDBusInterface(Introspectable* parent, 
                                        CompScreen* screen)
 {
   _screen = screen;
@@ -181,7 +183,7 @@ DebugDBusInterface::OnBusAcquired(GDBusConnection* connection, const gchar* name
   int i = 0;
   GError* error;
 
-  _autopilot = new unity::Autopilot(_screen, connection);
+  _autopilot = new Autopilot(_screen, connection);
   
   while (debug_object_interfaces[i] != NULL)
   {
@@ -250,13 +252,13 @@ DBusMethodCall(GDBusConnection* connection,
 GVariant*
 GetState(const gchar* pieceName)
 {
-  std::queue<unity::Introspectable*> queue;
+  std::queue<Introspectable*> queue;
   queue.push(_parent_introspectable);
 
   // Since the empty string won't really match the name of the parent (Unity),
   // we make sure that we're able to accept a blank string and just define it to
   // mean the top level.
-  unity::Introspectable* piece = g_strcmp0(pieceName, "") == 0
+  Introspectable* piece = g_strcmp0(pieceName, "") == 0
     ? _parent_introspectable
     : FindPieceToIntrospect(queue, pieceName);
 
@@ -276,10 +278,10 @@ StartTest(const gchar* name)
 /*
  * Do a breadth-first search of the introspectable tree.
  */
-unity::Introspectable*
-FindPieceToIntrospect(std::queue<unity::Introspectable*> queue, const gchar* pieceName)
+Introspectable*
+FindPieceToIntrospect(std::queue<Introspectable*> queue, const gchar* pieceName)
 {
-  unity::Introspectable* piece;
+  Introspectable* piece;
 
   while (!queue.empty())
   {
@@ -300,4 +302,5 @@ FindPieceToIntrospect(std::queue<unity::Introspectable*> queue, const gchar* pie
   }
 
   return NULL;
+}
 }
