@@ -27,6 +27,8 @@
 #include <NuxCore/Logger.h>
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/RadioOptionFilter.h>
+#include <boost/algorithm/string.hpp>
+#include <boost/foreach.hpp>
 
 #include "DashStyle.h"
 #include "DashSettings.h"
@@ -554,28 +556,29 @@ std::string DashView::AnalyseLensURI(std::string uri)
   std::string id = uri;
   std::size_t pos = uri.find("?");
 
-  // It is a real URI
-  if (pos)
-  {
+  // it's a real URI (with parameters)
+  if (pos != std::string::npos) {
+    // id is the uri from begining to the '?' position
     id = uri.substr(0, pos);
 
+    // the components are from '?' position to the end
     std::string components = uri.substr(++pos);
-    gchar** tokens = g_strsplit(components.c_str(), "&", -1);
 
-    for (int i = 0; tokens[i]; ++i)
-    {
-      gchar** subs = g_strsplit(tokens[i], "=", 2);
+    // split components in tokens
+    std::vector<std::string> tokens;
+    boost::split(tokens, components, boost::is_any_of("&"));
 
-      if (g_str_has_prefix(subs[0], "filter_"))
-      {
-        UpdateLensFilter(id, subs[0] + 7, subs[1]);
-        lens_views_[id]->filters_expanded = true;
+    BOOST_FOREACH (std::string const& token, tokens) {
+      // split each token in a pair
+      std::vector<std::string> subs;
+      boost::split(subs, token, boost::is_any_of("="));
+
+      // check if it's a filter
+      if (boost::starts_with(subs[0], "filter_")) {
+          UpdateLensFilter(id, subs[0].substr(7), subs[1]);
+          lens_views_[id]->filters_expanded = true;
       }
-
-      g_strfreev(subs);
     }
-
-    g_strfreev(tokens);
   }
 
   return id;
