@@ -260,20 +260,7 @@ on_change_keyboard_receiver_cb(AtkObject* accessible,
 
   if (self->priv->key_focused != focus_in)
   {
-    AtkObject* parent_window = NULL;
-
     self->priv->key_focused = focus_in;
-
-    /* this child has the key focus, so we report the top level
-     * window about it. FIXME: that only works if only one object of
-     * the children hierarchy can have the key focus, that is the
-     * case here */
-
-    parent_window =
-      nux_area_accessible_get_parent_window(NUX_AREA_ACCESSIBLE(self));
-
-    nux_base_window_set_child_key_focused(NUX_BASE_WINDOW_ACCESSIBLE(parent_window),
-                                          focus_in);
 
     /* we always led the focus notification to
        _check_pending_notification, in order to allow the proper
