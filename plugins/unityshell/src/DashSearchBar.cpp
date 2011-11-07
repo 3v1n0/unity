@@ -371,7 +371,7 @@ SearchBar::AcceptKeyNavFocus()
   return false;
 }
 
-const gchar* SearchBar::GetName()
+std::string SearchBar::GetName() const
 {
   return "SearchBar";
 }
