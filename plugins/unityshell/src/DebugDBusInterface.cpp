@@ -23,9 +23,6 @@
 #include "DebugDBusInterface.h"
 #include "Introspectable.h"
 
-#define SI_METHOD_NAME_GETSTATE  "GetState"
-#define AP_METHOD_NAME_STARTTEST "StartTest"
-
 namespace unity
 {
 void StartTest(const gchar*);
@@ -65,7 +62,7 @@ static const GDBusArgInfo* const si_getstate_out_arg_pointers[] = { &si_getstate
 static const GDBusMethodInfo si_method_info_getstate =
 {
   -1,
-  (gchar*) SI_METHOD_NAME_GETSTATE,
+  (gchar*) DebugDBusInterface::SI_METHOD_NAME_GETSTATE,
   (GDBusArgInfo**)& si_getstate_in_arg_pointers,
   (GDBusArgInfo**)& si_getstate_out_arg_pointers,
   NULL
@@ -83,7 +80,7 @@ static const GDBusArgInfo* const ap_starttest_in_arg_pointers[] = { &ap_starttes
 static GDBusMethodInfo ap_method_info_starttest =
 {
   -1,
-  (gchar*) AP_METHOD_NAME_STARTTEST,
+  (gchar*) DebugDBusInterface::AP_METHOD_NAME_STARTTEST,
   (GDBusArgInfo**)& ap_starttest_in_arg_pointers,
   NULL,
   NULL
@@ -124,7 +121,7 @@ static const GDBusArgInfo* const ap_signal_testfinished_arg_pointers [] = { &ap_
 static GDBusSignalInfo ap_signal_info_testfinished =
 {
   -1,
-  (gchar*) UNITY_DBUS_AP_SIG_TESTFINISHED,
+  (gchar*) DebugDBusInterface::UNITY_DBUS_AP_SIG_TESTFINISHED,
   (GDBusArgInfo**)& ap_signal_testfinished_arg_pointers,
   NULL
 };
@@ -134,7 +131,7 @@ static const GDBusSignalInfo* const ap_signal_info_pointers [] = { &ap_signal_in
 static const GDBusInterfaceInfo si_iface_info =
 {
   -1,
-  (gchar*) UNITY_DBUS_INTROSPECTION_IFACE_NAME,
+  (gchar*) DebugDBusInterface::UNITY_DBUS_INTROSPECTION_IFACE_NAME,
   (GDBusMethodInfo**)& si_method_info_pointers,
   NULL,
   NULL,
@@ -144,7 +141,7 @@ static const GDBusInterfaceInfo si_iface_info =
 static const GDBusInterfaceInfo ap_iface_info =
 {
   -1,
-  (gchar*) UNITY_DBUS_AP_IFACE_NAME,
+  (gchar*) DebugDBusInterface::UNITY_DBUS_AP_IFACE_NAME,
   (GDBusMethodInfo**)& ap_method_info_pointers,
   (GDBusSignalInfo**)& ap_signal_info_pointers,
   NULL,
@@ -161,7 +158,7 @@ DebugDBusInterface::DebugDBusInterface(Introspectable* parent,
   _screen = screen;
   _parent_introspectable = parent;
   _owner_id = g_bus_own_name(G_BUS_TYPE_SESSION,
-                             UNITY_DBUS_BUS_NAME,
+                             DebugDBusInterface::UNITY_DBUS_BUS_NAME,
                              G_BUS_NAME_OWNER_FLAGS_NONE,
                              &DebugDBusInterface::OnBusAcquired,
                              &DebugDBusInterface::OnNameAcquired,
@@ -189,7 +186,7 @@ DebugDBusInterface::OnBusAcquired(GDBusConnection* connection, const gchar* name
   {
     error = NULL;
     g_dbus_connection_register_object(connection,
-                                      UNITY_DBUS_DEBUG_OBJECT_PATH,
+                                      DebugDBusInterface::UNITY_DBUS_DEBUG_OBJECT_PATH,
                                       (GDBusInterfaceInfo*) debug_object_interfaces[i],
                                       &si_vtable,
                                       NULL,
@@ -224,7 +221,7 @@ DBusMethodCall(GDBusConnection* connection,
                GDBusMethodInvocation* invocation,
                gpointer data)
 {
-  if (g_strcmp0(methodName, SI_METHOD_NAME_GETSTATE) == 0)
+  if (g_strcmp0(methodName, DebugDBusInterface::SI_METHOD_NAME_GETSTATE) == 0)
   {
     GVariant* ret;
     const gchar* input;
@@ -234,7 +231,7 @@ DBusMethodCall(GDBusConnection* connection,
     g_dbus_method_invocation_return_value(invocation, ret);
     g_variant_unref(ret);
   }
-  else if (g_strcmp0(methodName, AP_METHOD_NAME_STARTTEST) == 0)
+  else if (g_strcmp0(methodName, DebugDBusInterface::AP_METHOD_NAME_STARTTEST) == 0)
   {
     const gchar* name;
     g_variant_get(parameters, "(&s)", &name);
@@ -244,7 +241,8 @@ DBusMethodCall(GDBusConnection* connection,
   }
   else
   {
-    g_dbus_method_invocation_return_dbus_error(invocation, UNITY_DBUS_BUS_NAME,
+    g_dbus_method_invocation_return_dbus_error(invocation, 
+                                               DebugDBusInterface::UNITY_DBUS_BUS_NAME,
                                                "Failed to find method");
   }
 }

@@ -23,12 +23,6 @@
 #include <glib.h>
 #include <gio/gio.h>
 
-#define UNITY_DBUS_BUS_NAME                 "com.canonical.Unity"
-#define UNITY_DBUS_DEBUG_OBJECT_PATH        "/com/canonical/Unity/Debug"
-#define UNITY_DBUS_AP_IFACE_NAME            "com.canonical.Unity.Debug.Autopilot"
-#define UNITY_DBUS_INTROSPECTION_IFACE_NAME "com.canonical.Unity.Debug.Introspection"
-#define UNITY_DBUS_AP_SIG_TESTFINISHED      "TestFinished"
-
 class CompScreen;
 
 namespace unity
@@ -40,6 +34,14 @@ class DebugDBusInterface
 public:
   DebugDBusInterface(Introspectable* introspectable, CompScreen* uscreen);
   ~DebugDBusInterface();
+
+  static constexpr gchar* UNITY_DBUS_BUS_NAME = (gchar*) "com.canonical.Unity";
+  static constexpr gchar* UNITY_DBUS_DEBUG_OBJECT_PATH = (gchar*) "/com/canonical/Unity/Debug";
+  static constexpr gchar* UNITY_DBUS_AP_IFACE_NAME = (gchar*) "com.canonical.Unity.Debug.Autopilot";
+  static constexpr gchar* UNITY_DBUS_INTROSPECTION_IFACE_NAME = (gchar*) "com.canonical.Unity.Debug.Introspection";
+  static constexpr gchar* UNITY_DBUS_AP_SIG_TESTFINISHED = (gchar*)  "TestFinished";
+  static constexpr gchar* SI_METHOD_NAME_GETSTATE = (gchar*) "GetState";
+  static constexpr gchar* AP_METHOD_NAME_STARTTEST = (gchar*) "StartTest";
 
 private:
   /* methods */

@@ -42,9 +42,9 @@ TestFinished(void* arg)
 
   g_dbus_connection_emit_signal(_dbus,
                                 NULL,
-                                UNITY_DBUS_DEBUG_OBJECT_PATH,
-                                UNITY_DBUS_AP_IFACE_NAME,
-                                UNITY_DBUS_AP_SIG_TESTFINISHED,
+                                DebugDBusInterface::UNITY_DBUS_DEBUG_OBJECT_PATH,
+                                DebugDBusInterface::UNITY_DBUS_AP_IFACE_NAME,
+                                DebugDBusInterface::UNITY_DBUS_AP_SIG_TESTFINISHED,
                                 result,
                                 &error);
 
