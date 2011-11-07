@@ -31,14 +31,15 @@ typedef std::list<Introspectable*> IntrospectableList;
 
 public:
   GVariant* Introspect();
-  virtual const gchar* GetName() = 0;
+  virtual std::string GetName() const = 0;
   void AddChild(Introspectable* child);
   void RemoveChild(Introspectable* child);
   IntrospectableList const& GetIntrospectableChildren() { return _children; };
 
 protected:
-  virtual const gchar* GetChildsName();
+  virtual std::string GetChildsName() const;
   virtual void AddProperties(GVariantBuilder* builder) = 0;
+
   /*
    * AddProperties should be implemented as such ...
    * void ClassFoo::AddProperties (GVariantBuilder *builder)

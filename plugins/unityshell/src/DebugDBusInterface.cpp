@@ -25,13 +25,13 @@
 
 namespace unity
 {
-void StartTest(const gchar*);
-GVariant* GetState(const gchar*);
+void StartTest(const std::string);
+GVariant* GetState(const std::string);
 void DBusMethodCall(GDBusConnection*, const gchar*, const gchar*,
                     const gchar*, const gchar*, GVariant*,
                     GDBusMethodInvocation*, gpointer);
 Introspectable* FindPieceToIntrospect(std::queue<Introspectable*> queue, 
-                                      const gchar* pieceName);
+                                      const std::string pieceName);
 
 static const GDBusInterfaceVTable si_vtable =
 {
@@ -248,7 +248,7 @@ DBusMethodCall(GDBusConnection* connection,
 }
 
 GVariant*
-GetState(const gchar* pieceName)
+GetState(const std::string pieceName)
 {
   std::queue<Introspectable*> queue;
   queue.push(_parent_introspectable);
@@ -256,7 +256,7 @@ GetState(const gchar* pieceName)
   // Since the empty string won't really match the name of the parent (Unity),
   // we make sure that we're able to accept a blank string and just define it to
   // mean the top level.
-  Introspectable* piece = g_strcmp0(pieceName, "") == 0
+  Introspectable* piece = (pieceName == "")
     ? _parent_introspectable
     : FindPieceToIntrospect(queue, pieceName);
 
@@ -268,7 +268,7 @@ GetState(const gchar* pieceName)
 }
 
 void
-StartTest(const gchar* name)
+StartTest(const std::string name)
 {
   _autopilot->StartTest(name);
 }
@@ -277,7 +277,7 @@ StartTest(const gchar* name)
  * Do a breadth-first search of the introspectable tree.
  */
 Introspectable*
-FindPieceToIntrospect(std::queue<Introspectable*> queue, const gchar* pieceName)
+FindPieceToIntrospect(std::queue<Introspectable*> queue, const std::string pieceName)
 {
   Introspectable* piece;
 
@@ -286,7 +286,7 @@ FindPieceToIntrospect(std::queue<Introspectable*> queue, const gchar* pieceName)
     piece = queue.front();
     queue.pop();
 
-    if (g_strcmp0 (piece->GetName(), pieceName) == 0)
+    if (piece->GetName() == pieceName)
     {
       return piece;
     }

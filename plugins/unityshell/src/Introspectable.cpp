@@ -70,8 +70,8 @@ Introspectable::RemoveChild(Introspectable* child)
   _children.remove(child);
 }
 
-const gchar*
-Introspectable::GetChildsName()
+std::string
+Introspectable::GetChildsName() const
 {
   return GetName();
 }
