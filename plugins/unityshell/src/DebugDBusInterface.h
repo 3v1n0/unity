@@ -20,9 +20,6 @@
 #ifndef _DEBUG_DBUS_INTERFACE_H
 #define _DEBUG_DBUS_INTERFACE_H 1
 
-#include <glib.h>
-#include <gio/gio.h>
-
 class CompScreen;
 
 namespace unity
