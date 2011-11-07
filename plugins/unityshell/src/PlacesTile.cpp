@@ -32,6 +32,7 @@
 
 namespace unity
 {
+NUX_IMPLEMENT_OBJECT_TYPE(PlacesTile);
 
 PlacesTile::PlacesTile(NUX_FILE_LINE_DECL, const void* id) :
   View(NUX_FILE_LINE_PARAM),

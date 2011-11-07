@@ -2395,13 +2395,6 @@ void UnityScreen::initLauncher()
   Launcher& launcher = launcher_controller_->launcher();
   launcher.hidden_changed.connect(sigc::mem_fun(this, &UnityScreen::OnLauncherHiddenChanged));
   AddChild(&launcher);
-  /* FIXME: this should not be manual, should be managed with a
-     show/hide callback like in GAIL*/
-  if (unity_a11y_initialized())
-  {
-    AtkObject *atk_obj = unity_util_accessible_add_window(launcher.GetParent());
-    atk_object_set_name(atk_obj, _("Launcher"));
-  }
 
   switcher_controller_.reset(new switcher::Controller());
 

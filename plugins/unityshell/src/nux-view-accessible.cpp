@@ -143,9 +143,9 @@ nux_view_accessible_initialize(AtkObject* accessible,
   /* Some extra focus things as Focusable is not used on Launcher and
      some BaseWindow */
   view->begin_key_focus.connect(sigc::bind(sigc::ptr_fun(on_change_keyboard_receiver_cb),
-                                                   accessible, TRUE));
+                                           accessible, TRUE));
   view->end_key_focus.connect(sigc::bind(sigc::ptr_fun(on_change_keyboard_receiver_cb),
-                                                  accessible, FALSE));
+                                         accessible, FALSE));
 }
 
 static AtkStateSet*

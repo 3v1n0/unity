@@ -40,6 +40,7 @@ class Validator;
 
 class StaticCairoText : public View
 {
+  NUX_DECLARE_OBJECT_TYPE (StaticCairoText, View);
 public:
   typedef enum
   {
@@ -83,6 +84,8 @@ public:
   void SetTextVerticalAlignment(AlignState state);
   void SetFont(const char* fontstring);
   void SetLines(int maximum_lines);
+
+  NString GetText();
 
   int  GetLineCount();
 
