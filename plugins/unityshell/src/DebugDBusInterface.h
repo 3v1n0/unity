@@ -20,9 +20,6 @@
 #ifndef _DEBUG_DBUS_INTERFACE_H
 #define _DEBUG_DBUS_INTERFACE_H 1
 
-#include <glib.h>
-#include <gio/gio.h>
-
 #define UNITY_DBUS_BUS_NAME                 "com.canonical.Unity"
 #define UNITY_DBUS_DEBUG_OBJECT_PATH        "/com/canonical/Unity/Debug"
 #define UNITY_DBUS_AP_IFACE_NAME            "com.canonical.Unity.Debug.Autopilot"
