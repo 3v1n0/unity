@@ -32,13 +32,13 @@ public:
   DebugDBusInterface(Introspectable* introspectable, CompScreen* uscreen);
   ~DebugDBusInterface();
 
-  static constexpr gchar* UNITY_DBUS_BUS_NAME = (gchar*) "com.canonical.Unity";
-  static constexpr gchar* UNITY_DBUS_DEBUG_OBJECT_PATH = (gchar*) "/com/canonical/Unity/Debug";
-  static constexpr gchar* UNITY_DBUS_AP_IFACE_NAME = (gchar*) "com.canonical.Unity.Debug.Autopilot";
-  static constexpr gchar* UNITY_DBUS_INTROSPECTION_IFACE_NAME = (gchar*) "com.canonical.Unity.Debug.Introspection";
-  static constexpr gchar* UNITY_DBUS_AP_SIG_TESTFINISHED = (gchar*)  "TestFinished";
-  static constexpr gchar* SI_METHOD_NAME_GETSTATE = (gchar*) "GetState";
-  static constexpr gchar* AP_METHOD_NAME_STARTTEST = (gchar*) "StartTest";
+  static const std::string UNITY_DBUS_BUS_NAME;
+  static const std::string UNITY_DBUS_DEBUG_OBJECT_PATH;
+  static const std::string UNITY_DBUS_AP_IFACE_NAME;
+  static const std::string UNITY_DBUS_INTROSPECTION_IFACE_NAME;
+  static const std::string UNITY_DBUS_AP_SIG_TESTFINISHED;
+  static const std::string SI_METHOD_NAME_GETSTATE;
+  static const std::string AP_METHOD_NAME_STARTTEST;
 
 private:
   /* methods */

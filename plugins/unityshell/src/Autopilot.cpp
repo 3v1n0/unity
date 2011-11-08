@@ -122,9 +122,9 @@ void Autopilot::TestFinished(void* arg)
 
   g_dbus_connection_emit_signal(_dbus,
                                 NULL,
-                                DebugDBusInterface::UNITY_DBUS_DEBUG_OBJECT_PATH,
-                                DebugDBusInterface::UNITY_DBUS_AP_IFACE_NAME,
-                                DebugDBusInterface::UNITY_DBUS_AP_SIG_TESTFINISHED,
+                                DebugDBusInterface::UNITY_DBUS_DEBUG_OBJECT_PATH.c_str(),
+                                DebugDBusInterface::UNITY_DBUS_AP_IFACE_NAME.c_str(),
+                                DebugDBusInterface::UNITY_DBUS_AP_SIG_TESTFINISHED.c_str(),
                                 result,
                                 &error);
 
