@@ -167,7 +167,7 @@ namespace unity {
     texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
 
     // clear what is behind us
-    nux::t_u32 alpha = 0, src = 0, dest = 0;
+    unsigned int alpha = 0, src = 0, dest = 0;
 
     GfxContext.GetRenderStates().GetBlend(alpha, src, dest);
     GfxContext.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
