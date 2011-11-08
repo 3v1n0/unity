@@ -34,6 +34,8 @@
 
 #define TEST_TIMEOUT 6000
 
+namespace unity {
+
 typedef struct
 {
   gchar* name;
@@ -42,8 +44,6 @@ typedef struct
   nux::TimerHandle expiration_handle;
   unity::performance::Monitor* monitor;
 } TestArgs;
-
-namespace unity {
 
 class Autopilot
 {
@@ -55,6 +55,12 @@ public:
 
   UBusServer* GetUBusConnection();
   GDBusConnection* GetDBusConnection();
+
+  void RegisterUBusInterest(const gchar* signal, TestArgs* args);
+
+private:
+  static void TestFinished(void* val);
+  static void OnTestPassed(GVariant* payload, TestArgs* args);
 };
 }
 

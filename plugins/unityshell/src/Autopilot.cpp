@@ -31,45 +31,11 @@ UBusServer* _ubus;
 GDBusConnection* _dbus;
 nux::TimerFunctor* test_expiration_functor;
 
-void
-TestFinished(void* arg)
-{
-  GError* error = NULL;
-  TestArgs* args = static_cast<TestArgs*>(arg);
-
-  ubus_server_unregister_interest (_ubus, args->ubus_handle);
-  GVariant* result = g_variant_new("(sb@a{sv})", args->name, args->passed, args->monitor->Stop());
-
-  g_dbus_connection_emit_signal(_dbus,
-                                NULL,
-                                DebugDBusInterface::UNITY_DBUS_DEBUG_OBJECT_PATH,
-                                DebugDBusInterface::UNITY_DBUS_AP_IFACE_NAME,
-                                DebugDBusInterface::UNITY_DBUS_AP_SIG_TESTFINISHED,
-                                result,
-                                &error);
-
-
-  if (error != NULL)
-  {
-    g_warning("An error was encountered emitting TestFinished signal");
-    g_error_free(error);
-  }
-}
-
-void
-on_test_passed(GVariant* payload, TestArgs* args)
-{
-  nux::GetTimer().RemoveTimerHandler(args->expiration_handle);
-  args->passed = TRUE;
-  TestFinished(args);
-}
-
-void
-RegisterUBusInterest(const gchar* signal, TestArgs* args)
+void Autopilot::RegisterUBusInterest(const gchar* signal, TestArgs* args)
 {
   args->ubus_handle = ubus_server_register_interest(_ubus,
                                                     signal,
-                                                    (UBusCallback) on_test_passed,
+                                                    (UBusCallback) &Autopilot::OnTestPassed,
                                                     args);
 
 }
@@ -82,13 +48,11 @@ Autopilot::Autopilot(CompScreen* screen, GDBusConnection* connection)
 
 Autopilot::~Autopilot()
 {
-  delete test_expiration_functor;
 }
 
-void
-Autopilot::StartTest(const gchar* name)
+void Autopilot::StartTest(const gchar* name)
 {
-  TestArgs* args = static_cast<TestArgs*>(g_malloc(sizeof(TestArgs)));
+  TestArgs* args = new TestArgs ();
 
   if (args == NULL)
   {
@@ -99,7 +63,7 @@ Autopilot::StartTest(const gchar* name)
   if (test_expiration_functor == NULL)
   {
     test_expiration_functor = new nux::TimerFunctor();
-    test_expiration_functor->time_expires.connect(sigc::ptr_fun(&TestFinished));
+    test_expiration_functor->time_expires.connect(sigc::ptr_fun(Autopilot::TestFinished));
   }
 
   args->name = g_strdup(name);
@@ -140,5 +104,41 @@ Autopilot::StartTest(const gchar* name)
   {
     /* Some anonymous test. Will always get a failed result since we don't really know how to test it */
   }
+}
+
+void Autopilot::TestFinished(void* arg)
+{
+  GError* error = NULL;
+
+  TestArgs* args = (TestArgs*) arg;
+  if (args == NULL)
+    return;
+
+  ubus_server_unregister_interest (_ubus, args->ubus_handle);
+  GVariant* result = g_variant_new("(sb@a{sv})", args->name, args->passed, args->monitor->Stop());
+
+  g_dbus_connection_emit_signal(_dbus,
+                                NULL,
+                                DebugDBusInterface::UNITY_DBUS_DEBUG_OBJECT_PATH,
+                                DebugDBusInterface::UNITY_DBUS_AP_IFACE_NAME,
+                                DebugDBusInterface::UNITY_DBUS_AP_SIG_TESTFINISHED,
+                                result,
+                                &error);
+
+
+  if (error != NULL)
+  {
+    g_warning("An error was encountered emitting TestFinished signal");
+    g_error_free(error);
+  }
+}
+
+void Autopilot::OnTestPassed(GVariant* payload, TestArgs* val)
+{
+  TestArgs* args = (TestArgs*) val;
+
+  nux::GetTimer().RemoveTimerHandler(args->expiration_handle);
+  args->passed = TRUE;
+  TestFinished(args);
 }
 }
