@@ -36,9 +36,9 @@ Introspectable::Introspect()
 
   for (auto it = _children.begin(); it != _children.end(); it++)
   {
-    if ((*it)->GetName())
+    if ((*it)->GetName() != "")
     {
-      g_variant_builder_add(child_builder, "{sv}", (*it)->GetName(), (*it)->Introspect());
+      g_variant_builder_add(child_builder, "{sv}", (*it)->GetName().c_str(), (*it)->Introspect());
       n_children++;
     }
   }
@@ -48,7 +48,7 @@ Introspectable::Introspect()
     GVariant*        child_results;
 
     child_results = g_variant_new("(a{sv})", child_builder);
-    g_variant_builder_add(builder, "{sv}", GetChildsName(), child_results);
+    g_variant_builder_add(builder, "{sv}", GetChildsName().c_str(), child_results);
   }
   g_variant_builder_unref(child_builder);
 

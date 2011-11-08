@@ -397,7 +397,7 @@ QuicklistMenuItem::DrawText(cairo_t*   cr,
 
 // Introspection
 
-const gchar* QuicklistMenuItem::GetName()
+std::string QuicklistMenuItem::GetName() const
 {
   return _name;
 }

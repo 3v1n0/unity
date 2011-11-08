@@ -31,10 +31,10 @@ UBusServer* _ubus;
 GDBusConnection* _dbus;
 nux::TimerFunctor* test_expiration_functor;
 
-void Autopilot::RegisterUBusInterest(const gchar* signal, TestArgs* args)
+void Autopilot::RegisterUBusInterest(const std::string signal, TestArgs* args)
 {
   args->ubus_handle = ubus_server_register_interest(_ubus,
-                                                    signal,
+                                                    signal.c_str(),
                                                     (UBusCallback) &Autopilot::OnTestPassed,
                                                     args);
 
@@ -50,7 +50,7 @@ Autopilot::~Autopilot()
 {
 }
 
-void Autopilot::StartTest(const gchar* name)
+void Autopilot::StartTest(const std::string name)
 {
   TestArgs* args = new TestArgs ();
 
@@ -66,37 +66,37 @@ void Autopilot::StartTest(const gchar* name)
     test_expiration_functor->time_expires.connect(sigc::ptr_fun(Autopilot::TestFinished));
   }
 
-  args->name = g_strdup(name);
+  args->name = name;
   args->passed = FALSE;
   args->expiration_handle = nux::GetTimer().AddTimerHandler(TEST_TIMEOUT, test_expiration_functor, args);
   args->monitor = new unity::performance::AggregateMonitor();
   args->monitor->Start();
 
-  if (g_strcmp0(name, "show_tooltip") == 0)
+  if (name == "show_tooltip")
   {
     RegisterUBusInterest(UBUS_TOOLTIP_SHOWN, args);
   }
-  else if (g_strcmp0(name, "show_quicklist") == 0)
+  else if (name == "show_quicklist")
   {
     RegisterUBusInterest(UBUS_QUICKLIST_SHOWN, args);
   }
-  else if (g_strcmp0(name, "show_dash") == 0)
+  else if (name == "show_dash")
   {
     RegisterUBusInterest(UBUS_PLACE_VIEW_SHOWN, args);
   }
-  else if (g_strcmp0(name, "drag_launcher") == 0)
+  else if (name == "drag_launcher")
   {
     RegisterUBusInterest(UBUS_LAUNCHER_END_DND, args);
   }
-  else if (g_strcmp0(name, "drag_launcher_icon_along_edge_drop") == 0)
+  else if (name == "drag_launcher_icon_along_edge_drop")
   {
     RegisterUBusInterest(UBUS_LAUNCHER_ICON_END_DND, args);
   }
-  else if (g_strcmp0(name, "drag_launcher_icon_out_and_drop") == 0)
+  else if (name == "drag_launcher_icon_out_and_drop")
   {
     RegisterUBusInterest(UBUS_LAUNCHER_ICON_END_DND, args);
   }
-  else if (g_strcmp0(name, "drag_launcher_icon_out_and_move") == 0)
+  else if (name == "drag_launcher_icon_out_and_move")
   {
     RegisterUBusInterest(UBUS_LAUNCHER_ICON_END_DND, args);
   }
@@ -115,7 +115,10 @@ void Autopilot::TestFinished(void* arg)
     return;
 
   ubus_server_unregister_interest (_ubus, args->ubus_handle);
-  GVariant* result = g_variant_new("(sb@a{sv})", args->name, args->passed, args->monitor->Stop());
+  GVariant* result = g_variant_new("(sb@a{sv})", 
+                                   args->name.c_str(), 
+                                   args->passed, 
+                                   args->monitor->Stop());
 
   g_dbus_connection_emit_signal(_dbus,
                                 NULL,

@@ -50,7 +50,7 @@ private:
   void RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long key_flags);
   struct timespec time_diff(struct timespec start, struct timespec end);
 
-  const gchar* GetName();
+  std::string GetName() const;
   const gchar* GetChildsName();
   void         AddProperties(GVariantBuilder* builder);
 

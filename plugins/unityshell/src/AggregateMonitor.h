@@ -21,6 +21,7 @@
 #define UNITY_PERFORMANCE_AGGREGATE_MONITOR
 
 #include <list>
+#include <string>
 #include <gio/gio.h>
 
 #include "Monitor.h"
@@ -33,7 +34,7 @@ class AggregateMonitor : public Monitor
 public:
   AggregateMonitor();
   ~AggregateMonitor();
-  gchar* GetName ();
+  std::string GetName () const;
 
 protected:
   void StartMonitor();

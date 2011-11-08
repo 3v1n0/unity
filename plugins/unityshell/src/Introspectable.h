@@ -22,6 +22,7 @@
 
 #include <glib.h>
 #include <list>
+#include <string>
 
 namespace unity
 {

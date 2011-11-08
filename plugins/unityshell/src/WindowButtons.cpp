@@ -404,8 +404,8 @@ WindowButtons::GetOpacity()
   return _opacity;
 }
 
-const gchar*
-WindowButtons::GetName()
+std::string
+WindowButtons::GetName() const
 {
   return "window-buttons";
 }

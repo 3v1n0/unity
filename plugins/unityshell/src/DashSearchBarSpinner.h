@@ -53,7 +53,7 @@ public:
 
 protected:
   // Introspectable methods
-  const gchar* GetName();
+  std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
   static gboolean OnTimeout(SearchBarSpinner* self);
   static gboolean OnFrame(SearchBarSpinner* self);

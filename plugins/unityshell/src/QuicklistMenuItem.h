@@ -89,7 +89,7 @@ public:
   virtual bool GetVisible();
 
   // Introspection
-  const gchar* GetName();
+  std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
 protected:
 

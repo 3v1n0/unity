@@ -65,7 +65,7 @@ private:
   void SetActive(LensBarIcon* icon);
 
   bool AcceptKeyNavFocus();
-  const gchar* GetName();
+  std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
 
 private:

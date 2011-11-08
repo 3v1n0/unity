@@ -47,9 +47,9 @@ public:
 protected:
   nux::Geometry GetHighlightGeometry();
 
-  const gchar* GetName();
-  const gchar* GetChildsName();
-  void          AddProperties(GVariantBuilder* builder);
+  std::string GetName() const;
+  std::string GetChildsName() const;
+  void        AddProperties(GVariantBuilder* builder);
 
   virtual bool                    DndSourceDragBegin();
   virtual nux::NBitmapData*       DndSourceGetDragImage();

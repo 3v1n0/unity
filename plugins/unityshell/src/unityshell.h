@@ -235,7 +235,7 @@ public:
   bool forcePaintOnTop ();
 
 protected:
-  const gchar* GetName();
+  std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
 
 private:

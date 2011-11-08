@@ -87,7 +87,7 @@ public:
   void TestMenuItems(DbusmenuMenuitem* root);
 
   // Introspection
-  const gchar* GetName();
+  std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
 
   void EnableQuicklistForTesting(bool enable_testing);

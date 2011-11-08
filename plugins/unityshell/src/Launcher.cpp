@@ -389,8 +389,8 @@ Launcher::~Launcher()
 }
 
 /* Introspection */
-const gchar*
-Launcher::GetName()
+std::string
+Launcher::GetName() const
 {
   return "Launcher";
 }

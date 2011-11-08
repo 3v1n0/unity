@@ -88,7 +88,7 @@ private:
   static gboolean OnLiveSearchTimeout(SearchBar* self);
 
   std::string GetName() const;
-  std::string GetChildsName();
+  std::string GetChildsName() const;
   void AddProperties(GVariantBuilder* builder);
   bool AcceptKeyNavFocus();
 

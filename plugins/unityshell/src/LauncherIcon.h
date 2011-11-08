@@ -197,7 +197,7 @@ public:
   sigc::connection on_order_changed_connection;
 
 protected:
-  const gchar* GetName();
+  std::string GetName() const;
 
   void AddProperties(GVariantBuilder* builder);
 

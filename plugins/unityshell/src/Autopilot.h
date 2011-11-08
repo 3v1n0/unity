@@ -38,8 +38,8 @@ namespace unity {
 
 typedef struct
 {
-  gchar* name;
   gboolean passed;
+  std::string name;
   guint ubus_handle;
   nux::TimerHandle expiration_handle;
   unity::performance::Monitor* monitor;
@@ -51,12 +51,12 @@ public:
   Autopilot(CompScreen* screen, GDBusConnection* connection);
   ~Autopilot();
 
-  void StartTest(const gchar* name);
+  void StartTest(const std::string name);
 
   UBusServer* GetUBusConnection();
   GDBusConnection* GetDBusConnection();
 
-  void RegisterUBusInterest(const gchar* signal, TestArgs* args);
+  void RegisterUBusInterest(const std::string signal, TestArgs* args);
 
 private:
   static void TestFinished(void* val);

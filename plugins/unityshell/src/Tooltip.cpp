@@ -656,7 +656,7 @@ void Tooltip::SetText(NString text)
 
 // Introspection
 
-const gchar* Tooltip::GetName()
+std::string Tooltip::GetName() const
 {
   return g_strdup(_name);
 }

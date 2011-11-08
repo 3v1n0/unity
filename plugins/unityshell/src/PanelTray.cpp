@@ -258,8 +258,8 @@ PanelTray::OnTrayDraw(GtkWidget* widget, cairo_t* cr, PanelTray* tray)
   return FALSE;
 }
 
-const gchar*
-PanelTray::GetName()
+std::string
+PanelTray::GetName() const
 {
   return "PanelTray";
 }

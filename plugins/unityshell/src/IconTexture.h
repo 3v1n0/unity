@@ -58,7 +58,7 @@ protected:
   virtual bool AcceptKeyNavFocus();
   bool _accept_key_nav_focus;
 
-  const gchar* GetName();
+  std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
   virtual bool DoCanFocus();
 

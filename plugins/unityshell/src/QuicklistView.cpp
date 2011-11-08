@@ -1481,7 +1481,7 @@ void QuicklistView::TestMenuItems(DbusmenuMenuitem* root)
 
 // Introspection
 
-const gchar* QuicklistView::GetName()
+std::string QuicklistView::GetName() const
 {
   return "Quicklist";
 }
