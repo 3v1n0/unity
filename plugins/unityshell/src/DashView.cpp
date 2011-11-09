@@ -28,7 +28,6 @@
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/RadioOptionFilter.h>
 #include <boost/algorithm/string.hpp>
-#include <boost/foreach.hpp>
 
 #include "DashStyle.h"
 #include "DashSettings.h"
@@ -557,7 +556,8 @@ std::string DashView::AnalyseLensURI(std::string uri)
   std::size_t pos = uri.find("?");
 
   // it's a real URI (with parameters)
-  if (pos != std::string::npos) {
+  if (pos != std::string::npos)
+  {
     // id is the uri from begining to the '?' position
     id = uri.substr(0, pos);
 
@@ -568,13 +568,15 @@ std::string DashView::AnalyseLensURI(std::string uri)
     std::vector<std::string> tokens;
     boost::split(tokens, components, boost::is_any_of("&"));
 
-    BOOST_FOREACH (std::string const& token, tokens) {
+    for (std::string const& token : tokens)
+    {
       // split each token in a pair
       std::vector<std::string> subs;
       boost::split(subs, token, boost::is_any_of("="));
 
       // check if it's a filter
-      if (boost::starts_with(subs[0], "filter_")) {
+      if (boost::starts_with(subs[0], "filter_"))
+      {
           UpdateLensFilter(id, subs[0].substr(7), subs[1]);
           lens_views_[id]->filters_expanded = true;
       }
