@@ -61,6 +61,14 @@ public:
 
   nux::View* default_focus() const;
 
+  struct LensFilter
+  {
+    std::string id;
+    std::map<std::string, std::string> filters;
+  };
+
+  LensFilter ParseLensURI(std::string uri);
+
 protected:
   void ProcessDndEnter();
 
