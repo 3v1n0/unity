@@ -17,15 +17,11 @@
  * Authored by: Alex Launi <alex.launi@canonical.com>
  */
 
-#include <Nux/Nux.h>
-#include <Nux/HLayout.h>
-#include <Nux/BaseWindow.h>
-#include <Nux/WindowCompositor.h>
-#include <Nux/WindowThread.h>
+#include <core/core.h>
 
 #include "Autopilot.h"
 #include "DebugDBusInterface.h"
-#include "unityshell.h"
+#include "Introspectable.h"
 
 #define SI_METHOD_NAME_GETSTATE  "GetState"
 #define AP_METHOD_NAME_STARTTEST "StartTest"
@@ -35,8 +31,8 @@ GVariant* GetState(const gchar*);
 void DBusMethodCall(GDBusConnection*, const gchar*, const gchar*,
                     const gchar*, const gchar*, GVariant*,
                     GDBusMethodInvocation*, gpointer);
-Introspectable* FindPieceToIntrospect(std::queue<Introspectable*> queue, 
-                                      const gchar* pieceName);
+unity::Introspectable* FindPieceToIntrospect(std::queue<unity::Introspectable*> queue, 
+                                             const gchar* pieceName);
 
 static const GDBusInterfaceVTable si_vtable =
 {
@@ -153,11 +149,14 @@ static const GDBusInterfaceInfo ap_iface_info =
   NULL
 };
 
-static unity::Introspectable* _parent_introspectable;
+static CompScreen* _screen;
 static unity::Autopilot* _autopilot;
+static unity::Introspectable* _parent_introspectable;
 
-DebugDBusInterface::DebugDBusInterface(unity::Introspectable* parent)
+DebugDBusInterface::DebugDBusInterface(unity::Introspectable* parent, 
+                                       CompScreen* screen)
 {
+  _screen = screen;
   _parent_introspectable = parent;
   _owner_id = g_bus_own_name(G_BUS_TYPE_SESSION,
                              UNITY_DBUS_BUS_NAME,
@@ -182,12 +181,8 @@ DebugDBusInterface::OnBusAcquired(GDBusConnection* connection, const gchar* name
   int i = 0;
   GError* error;
 
-  UnityScreen* uscreen = dynamic_cast<UnityScreen*>(_parent_introspectable);
-  if (uscreen != NULL)
-  {
-    _autopilot = new unity::Autopilot(uscreen->screen, connection);
-  }
-
+  _autopilot = new unity::Autopilot(_screen, connection);
+  
   while (debug_object_interfaces[i] != NULL)
   {
     error = NULL;
@@ -255,13 +250,13 @@ DBusMethodCall(GDBusConnection* connection,
 GVariant*
 GetState(const gchar* pieceName)
 {
-  std::queue<Introspectable*> queue;
+  std::queue<unity::Introspectable*> queue;
   queue.push(_parent_introspectable);
 
   // Since the empty string won't really match the name of the parent (Unity),
   // we make sure that we're able to accept a blank string and just define it to
   // mean the top level.
-  Introspectable* piece = g_strcmp0(pieceName, "") == 0
+  unity::Introspectable* piece = g_strcmp0(pieceName, "") == 0
     ? _parent_introspectable
     : FindPieceToIntrospect(queue, pieceName);
 
@@ -281,10 +276,10 @@ StartTest(const gchar* name)
 /*
  * Do a breadth-first search of the introspectable tree.
  */
-Introspectable*
-FindPieceToIntrospect(std::queue<Introspectable*> queue, const gchar* pieceName)
+unity::Introspectable*
+FindPieceToIntrospect(std::queue<unity::Introspectable*> queue, const gchar* pieceName)
 {
-  Introspectable* piece;
+  unity::Introspectable* piece;
 
   while (!queue.empty())
   {
