@@ -1349,6 +1349,13 @@ on_active_menu_move_current (GtkMenu              *menu,
   activate_next_prev_menu (self, object, priv->last_entry, direction);
 }
 
+static void
+menu_deactivated (GtkWidget *menu)
+{
+  g_signal_handlers_disconnect_by_func (menu, menu_deactivated, NULL);
+  gtk_widget_destroy (menu);
+}
+
 void
 panel_service_show_entry (PanelService *self,
                           const gchar  *entry_id,
@@ -1399,7 +1406,7 @@ panel_service_show_entry (PanelService *self,
              stub menu for the duration of this scrub. */
           priv->last_menu = GTK_MENU (gtk_menu_new ());
           g_signal_connect (priv->last_menu, "deactivate",
-                            G_CALLBACK (gtk_widget_destroy), NULL);
+                            G_CALLBACK (menu_deactivated), NULL);
           g_signal_connect (priv->last_menu, "destroy",
                             G_CALLBACK (gtk_widget_destroyed), &priv->last_menu);
         }
