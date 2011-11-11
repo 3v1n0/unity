@@ -17,6 +17,7 @@
  */
 
 #include "DashView.h"
+#include "DashViewPrivate.h"
 
 #include <math.h>
 
@@ -41,6 +42,54 @@ namespace dash
 namespace
 {
 nux::logging::Logger logger("unity.dash.view");
+}
+
+namespace impl
+{
+
+LensFilter parse_lens_uri(std::string const& uri)
+{
+  LensFilter filter;
+
+  filter.id = uri;
+  std::size_t pos = uri.find("?");
+
+  // it's a real URI (with parameters)
+  if (pos != std::string::npos)
+  {
+    // id is the uri from begining to the '?' position
+    filter.id = uri.substr(0, pos);
+
+    // the components are from '?' position to the end
+    std::string components = uri.substr(++pos);
+
+    // split components in tokens
+    std::vector<std::string> tokens;
+    boost::split(tokens, components, boost::is_any_of("&"));
+
+    for (std::string const& token : tokens)
+    {
+      // split each token in a pair
+      std::size_t equals_pos = token.find("=");
+
+      if (equals_pos != std::string::npos)
+      {
+        std::string key = token.substr(0, equals_pos);
+        std::string value = token.substr(equals_pos + 1);
+
+        // check if it's a filter
+        if (boost::starts_with(key, "filter_"))
+        {
+          filter.filters[key.substr(7)] = value;
+        }
+      }
+
+    }
+  }
+
+  return filter;
+}
+
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(DashView);
@@ -550,57 +599,17 @@ void DashView::OnActivateRequest(GVariant* args)
     ubus_manager_.SendMessage(UBUS_DASH_EXTERNAL_ACTIVATION);
 }
 
-DashView::LensFilter DashView::ParseLensURI(std::string uri)
+std::string DashView::AnalyseLensURI(std::string const& uri)
 {
-  DashView::LensFilter filter;
+  impl::LensFilter filter = impl::parse_lens_uri(uri);
 
-  filter.id = uri;
-  std::size_t pos = uri.find("?");
-
-  // it's a real URI (with parameters)
-  if (pos != std::string::npos)
+  if (!filter.filters.empty())
   {
-    // id is the uri from begining to the '?' position
-    filter.id = uri.substr(0, pos);
-
-    // the components are from '?' position to the end
-    std::string components = uri.substr(++pos);
-
-    // split components in tokens
-    std::vector<std::string> tokens;
-    boost::split(tokens, components, boost::is_any_of("&"));
-
-    for (std::string const& token : tokens)
-    {
-      // split each token in a pair
-      std::size_t equals_pos = token.find("=");
-
-      if (equals_pos != std::string::npos)
-      {
-        std::string key = token.substr(0, equals_pos);
-        std::string value = token.substr(equals_pos + 1);
-
-        // check if it's a filter
-        if (boost::starts_with(key, "filter_"))
-        {
-          filter.filters[key.substr(7)] = value;
-        }
-      }
-
-    }
-  }
-
-  return filter;
-}
-
-std::string DashView::AnalyseLensURI(std::string uri)
-{
-  DashView::LensFilter filter = ParseLensURI(uri);
-
-  // update the lens for each filter
-  for (std::pair<std::string, std::string> p : filter.filters) {
-    UpdateLensFilter(filter.id, p.first, p.second);
     lens_views_[filter.id]->filters_expanded = true;
+    // update the lens for each filter
+    for (auto p : filter.filters) {
+      UpdateLensFilter(filter.id, p.first, p.second);
+    }
   }
 
   return filter.id;

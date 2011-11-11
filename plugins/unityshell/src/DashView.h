@@ -61,14 +61,6 @@ public:
 
   nux::View* default_focus() const;
 
-  struct LensFilter
-  {
-    std::string id;
-    std::map<std::string, std::string> filters;
-  };
-
-  LensFilter ParseLensURI(std::string uri);
-
 protected:
   void ProcessDndEnter();
 
@@ -100,7 +92,7 @@ private:
   bool DoFallbackActivation(std::string const& uri);
   bool LaunchApp(std::string const& appname);
   void OnEntryActivated();
-  std::string AnalyseLensURI(std::string uri);
+  std::string AnalyseLensURI(std::string const& uri);
   void UpdateLensFilter(std::string lens, std::string filter, std::string value);
   void UpdateLensFilterValue(Filter::Ptr filter, std::string value);
 
