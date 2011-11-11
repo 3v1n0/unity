@@ -326,12 +326,20 @@ get_entry_at (PanelService *self, gint x, gint y)
 }
 
 static IndicatorObjectEntry *
-get_entry_by_id (const gchar *entry_id)
+panel_service_get_entry_by_id (PanelService *self, const gchar *entry_id)
 {
   IndicatorObjectEntry *entry;
+  PanelServicePrivate *priv = self->priv;
   
+  /* FIXME: eeek, why do we even do this? */
   if (sscanf (entry_id, "%p", &entry) == 1)
-    return entry;
+  {
+    /* check that there really is such IndicatorObjectEntry */
+    if (g_hash_table_lookup (priv->entry2indicator_hash, entry) != NULL)
+    {
+      return entry;
+    }
+  }
 
   return NULL;
 }
@@ -1133,7 +1141,7 @@ panel_service_sync_geometry (PanelService *self,
                              gint height)
 {
   PanelServicePrivate *priv = self->priv;
-  IndicatorObjectEntry *entry = get_entry_by_id (entry_id);
+  IndicatorObjectEntry *entry = panel_service_get_entry_by_id (self, entry_id);
   IndicatorObject *object = g_hash_table_lookup (priv->entry2indicator_hash, entry);
 
   if (entry)
@@ -1184,9 +1192,9 @@ panel_service_sync_geometry (PanelService *self,
           geo->width = width;
           geo->height = height;
         }
-    }
 
-  g_signal_emit (self, _service_signals[GEOMETRIES_CHANGED], 0, object, entry, x, y, width, height);
+      g_signal_emit (self, _service_signals[GEOMETRIES_CHANGED], 0, object, entry, x, y, width, height);
+    }
 }
 
 static gboolean
@@ -1358,7 +1366,7 @@ panel_service_show_entry (PanelService *self,
                           gint32        button)
 {
   PanelServicePrivate  *priv = self->priv;
-  IndicatorObjectEntry *entry = get_entry_by_id (entry_id);
+  IndicatorObjectEntry *entry = panel_service_get_entry_by_id (self, entry_id);
   IndicatorObject      *object = g_hash_table_lookup (priv->entry2indicator_hash, entry);
   GtkWidget            *last_menu;
 
@@ -1451,7 +1459,7 @@ panel_service_secondary_activate_entry (PanelService *self,
                                         guint32       timestamp)
 {
   PanelServicePrivate  *priv = self->priv;
-  IndicatorObjectEntry *entry = get_entry_by_id (entry_id);
+  IndicatorObjectEntry *entry = panel_service_get_entry_by_id (self, entry_id);
   g_return_if_fail (entry);
 
   IndicatorObject *object = g_hash_table_lookup (priv->entry2indicator_hash, entry);
@@ -1466,7 +1474,7 @@ panel_service_scroll_entry (PanelService   *self,
                             gint32         delta)
 {
   PanelServicePrivate  *priv = self->priv;
-  IndicatorObjectEntry *entry = get_entry_by_id (entry_id);
+  IndicatorObjectEntry *entry = panel_service_get_entry_by_id (self, entry_id);
   g_return_if_fail (entry);
 
   IndicatorObject *object = g_hash_table_lookup (priv->entry2indicator_hash, entry);
