@@ -15,7 +15,7 @@
  *
  * Authored by: Marco Biscaro <marcobiscaro2112@gmail.com>
  */
- 
+
 #ifndef UNITY_DASH_VIEW_PRIVATE_H_
 #define UNITY_DASH_VIEW_PRIVATE_H_
 

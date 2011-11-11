@@ -508,6 +508,7 @@ if (${GTEST_FOUND} STREQUAL TRUE)
 # The actual test executable
   add_executable(test-gtest
                  test_categories.cpp
+                 test_dashview_impl.cpp
                  test_filesystem_lenses.cpp
                  test_filter.cpp
                  test_glib_signals.cpp
