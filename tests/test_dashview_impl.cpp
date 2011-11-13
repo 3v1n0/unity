@@ -29,31 +29,55 @@ namespace
 
 TEST(TestParseLensFilter, TestSimpleString)
 {
-  LensFilter filter; // = parse_lens_uri("simple");
+  LensFilter filter = parse_lens_uri("simple");
 
   EXPECT_THAT(filter.id, Eq("simple"));
   EXPECT_TRUE(filter.filters.empty());
 }
 
-TEST(TestParseLensFilter, TestSingleParameter)
+TEST(TestParseLensFilter, TestNonFilterParameter)
 {
-  LensFilter filter; // = parse_lens_uri("uri?param=test");
+  // Only params that start with "filter_" are added.
+  LensFilter filter = parse_lens_uri("uri?param=test");
 
   EXPECT_THAT(filter.id, Eq("uri"));
-  EXPECT_FALSE(filter.filters.empty());
+  EXPECT_TRUE(filter.filters.empty());
+}
+
+TEST(TestParseLensFilter, TestSingleParameter)
+{
+  LensFilter filter = parse_lens_uri("uri?filter_param=test");
+
+  EXPECT_THAT(filter.id, Eq("uri"));
+  EXPECT_THAT(filter.filters.size(), Eq(1));
   EXPECT_THAT(filter.filters["param"], Eq("test"));
-  EXPECT_THAT(filter.filters["unknown"], Eq(""));
+}
+
+TEST(TestParseLensFilter, TestNoEquals)
+{
+  LensFilter filter = parse_lens_uri("uri?filter_param");
+
+  EXPECT_THAT(filter.id, Eq("uri"));
+  EXPECT_TRUE(filter.filters.empty());
+}
+
+TEST(TestParseLensFilter, TestEmbeddedEquals)
+{
+  LensFilter filter = parse_lens_uri("uri?filter_param=a=b");
+
+  EXPECT_THAT(filter.id, Eq("uri"));
+  EXPECT_THAT(filter.filters.size(), Eq(1));
+  EXPECT_THAT(filter.filters["param"], Eq("a=b"));
 }
 
 TEST(TestParseLensFilter, TestMultipleParameters)
 {
-  LensFilter filter;// = parse_lens_uri("uri?param1=first&param2=second");
+  LensFilter filter = parse_lens_uri("uri?filter_param1=first&filter_param2=second");
 
   EXPECT_THAT(filter.id, Eq("uri"));
-  EXPECT_FALSE(filter.filters.empty());
+  EXPECT_THAT(filter.filters.size(), Eq(2));
   EXPECT_THAT(filter.filters["param1"], Eq("first"));
   EXPECT_THAT(filter.filters["param2"], Eq("second"));
-  EXPECT_THAT(filter.filters["unknown"], Eq(""));
 }
 
 }

@@ -28,7 +28,6 @@
 #include <NuxCore/Logger.h>
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/RadioOptionFilter.h>
-#include <boost/algorithm/string.hpp>
 
 #include "DashStyle.h"
 #include "DashSettings.h"
@@ -42,54 +41,6 @@ namespace dash
 namespace
 {
 nux::logging::Logger logger("unity.dash.view");
-}
-
-namespace impl
-{
-
-LensFilter parse_lens_uri(std::string const& uri)
-{
-  LensFilter filter;
-
-  filter.id = uri;
-  std::size_t pos = uri.find("?");
-
-  // it's a real URI (with parameters)
-  if (pos != std::string::npos)
-  {
-    // id is the uri from begining to the '?' position
-    filter.id = uri.substr(0, pos);
-
-    // the components are from '?' position to the end
-    std::string components = uri.substr(++pos);
-
-    // split components in tokens
-    std::vector<std::string> tokens;
-    boost::split(tokens, components, boost::is_any_of("&"));
-
-    for (std::string const& token : tokens)
-    {
-      // split each token in a pair
-      std::size_t equals_pos = token.find("=");
-
-      if (equals_pos != std::string::npos)
-      {
-        std::string key = token.substr(0, equals_pos);
-        std::string value = token.substr(equals_pos + 1);
-
-        // check if it's a filter
-        if (boost::starts_with(key, "filter_"))
-        {
-          filter.filters[key.substr(7)] = value;
-        }
-      }
-
-    }
-  }
-
-  return filter;
-}
-
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(DashView);
