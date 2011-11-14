@@ -28,6 +28,8 @@
 
 #include <X11/Xlib.h>
 
+NUX_IMPLEMENT_OBJECT_TYPE(QuicklistMenuItem);
+
 static void
 OnPropertyChanged(gchar*             property,
                   GValue*            value,
@@ -36,8 +38,6 @@ OnPropertyChanged(gchar*             property,
 static void
 OnItemActivated(guint              timestamp,
                 QuicklistMenuItem* self);
-
-NUX_IMPLEMENT_OBJECT_TYPE(QuicklistMenuItem);
 
 QuicklistMenuItem::QuicklistMenuItem(DbusmenuMenuitem* item,
                                      NUX_FILE_LINE_DECL) :
