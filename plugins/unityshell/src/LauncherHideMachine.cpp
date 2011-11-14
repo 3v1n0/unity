@@ -77,7 +77,7 @@ LauncherHideMachine::SetShouldHide(bool value, bool skip_delay)
 
     if (_hide_changed_emit_handle)
       g_source_remove(_hide_changed_emit_handle);
-    _hide_changed_emit_handle = g_timeout_add(0, &EmitShouldHideChanged, this);
+    _hide_changed_emit_handle = g_idle_add_full (G_PRIORITY_DEFAULT, &EmitShouldHideChanged, this, NULL);
   }
 }
 
