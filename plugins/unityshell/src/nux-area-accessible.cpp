@@ -172,7 +172,7 @@ nux_area_accessible_initialize(AtkObject* accessible,
   area = dynamic_cast<nux::Area*>(nux_object);
 
   /* focus support based on Focusable, used on the Dash */
-  (static_cast<nux::InputArea*>(area))->OnKeyNavFocusChange.connect(sigc::bind(sigc::ptr_fun(on_focus_changed_cb), accessible));
+  area->OnKeyNavFocusChange.connect(sigc::bind(sigc::ptr_fun(on_focus_changed_cb), accessible));
 
   atk_component_add_focus_handler(ATK_COMPONENT(accessible),
                                   nux_area_accessible_focus_handler);
@@ -461,6 +461,7 @@ on_focus_changed_cb(nux::Area* area,
   check_focus(NUX_AREA_ACCESSIBLE(accessible));
 }
 
+/* Check to use GetTopLevelViewWindow */
 static AtkObject*
 search_for_parent_window(AtkObject* object)
 {

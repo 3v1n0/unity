@@ -37,7 +37,6 @@ namespace unity
 {
 namespace dash
 {
-
 class ResultView : public nux::View
 {
 public:
@@ -52,6 +51,8 @@ public:
 
   void AddResult(Result& result);
   void RemoveResult(Result& result);
+
+  ResultList GetResultList ();
 
   void SetPreview(PreviewBase* preview, Result& related_result);
 

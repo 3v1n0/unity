@@ -24,10 +24,7 @@
 #include <Nux/BaseWindow.h>
 
 #include "UScreen.h"
-
 #include "PanelView.h"
-#include "unitya11y.h"
-#include "unity-util-accessible.h"
 
 namespace unity
 {
@@ -224,11 +221,6 @@ void Controller::Impl::OnScreenChanged(int primary_monitor,
       nux::Geometry geo = monitors[i];
       geo.height = 24;
       window->SetGeometry(geo);
-
-      /* FIXME: this should not be manual, should be managed with a
-         show/hide callback like in GAIL*/
-      if (unity_a11y_initialized() == TRUE)
-        unity_util_accessible_add_window(window);
 
       windows_.push_back(window);
 
