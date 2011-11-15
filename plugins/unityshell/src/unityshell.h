@@ -52,6 +52,8 @@
 #include "BGHash.h"
 #include <compiztoolbox/compiztoolbox.h>
 
+#include "HudController.h"
+
 namespace unity
 {
 
@@ -214,6 +216,9 @@ public:
   bool altTabNextWindowInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool altTabPrevWindowInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
 
+  /* handle hud key activations */
+  bool ShowHudInitiate (CompAction* action, CompAction::State state, CompOption::Vector& options);
+
   /* handle option changes and change settings inside of the
    * panel and dock views */
   void optionChanged(CompOption*, Options num);
@@ -278,6 +283,7 @@ private:
   dash::Controller::Ptr     dash_controller_;
   panel::Controller::Ptr    panel_controller_;
   switcher::Controller::Ptr switcher_controller_;
+  hud::Controller::Ptr      hud_controller_;
 
   GestureEngine*          gestureEngine;
   nux::WindowThread*      wt;
@@ -389,7 +395,7 @@ public:
 
   compiz::MinimizedWindowHandler::Ptr mMinimizeHandler;
   UnityShowdesktopHandler             *mShowdesktopHandler;
-  
+
 private:
 
   guint  focusdesktop_handle_;

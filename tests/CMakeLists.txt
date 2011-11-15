@@ -475,6 +475,23 @@ add_executable (test-bg-hash
                )
 add_dependencies (test-bg-hash unity-core-${UNITY_API_VERSION})
 
+add_executable (standalone-hud
+                StandaloneHud.cpp
+                ${UNITY_SRC}/Introspectable.cpp
+                ${UNITY_SRC}/JSONParser.cpp
+                ${UNITY_SRC}/Hud.cpp
+                ${UNITY_SRC}/HudSearchBar.cpp
+                ${UNITY_SRC}/HudButton.cpp
+                ${UNITY_SRC}/DashStyle.cpp
+                ${UNITY_SRC}/DashSearchBarSpinner.cpp
+                ${UNITY_SRC}/StaticCairoText.cpp
+                ${UNITY_SRC}/IMTextEntry.cpp
+                ${UNITY_SRC}/HudView.cpp
+                ${UNITY_SRC}/UBusWrapper.cpp
+                ${UNITY_SRC}/ubus-server.cpp
+               )
+add_dependencies (standalone-hud unity-core-${UNITY_API_VERSION})
+
 add_subdirectory (test-input-remover)
 add_subdirectory (test-minimize-window-handler)
 add_subdirectory (test-get-transients)

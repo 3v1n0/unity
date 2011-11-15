@@ -71,4 +71,6 @@
 // FIXME - fix the nux focus api so we don't need this
 #define UBUS_RESULT_VIEW_KEYNAV_CHANGED "RESULT_VIEW_KEYNAV_CHANGED"
 
+#define UBUS_HUD_CLOSE_REQUEST "HUD_CLOSE_REQUEST"
+
 #endif // UBUS_MESSAGES_H
