@@ -53,6 +53,8 @@ public:
   nux::Property<int> vertical_spacing;
   nux::Property<int> padding;
 
+  sigc::signal<void> selection_change;
+  int GetSelectedIndex();
 
 protected:
   void MouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);

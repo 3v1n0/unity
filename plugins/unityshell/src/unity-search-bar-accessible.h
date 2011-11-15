@@ -1,5 +1,3 @@
-#if 0
-
 /*
  * Copyright (C) 2011 Canonical Ltd
  *
@@ -57,5 +55,3 @@ AtkObject* unity_search_bar_accessible_new(nux::Object* object);
 G_END_DECLS
 
 #endif /* __UNITY_SEARCH_BAR_ACCESSIBLE_H__ */
-
-#endif
