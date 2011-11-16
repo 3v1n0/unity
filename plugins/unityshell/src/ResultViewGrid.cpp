@@ -59,6 +59,8 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
   , last_mouse_down_y_(-1)
   , recorded_dash_width_(-1)
   , recorded_dash_height_(-1)
+  , mouse_last_x_(-1)
+  , mouse_last_y_(-1)
 {
   auto needredraw_lambda = [&](int value)
   {
@@ -78,11 +80,22 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
   {
     last_mouse_down_x_ = x;
     last_mouse_down_y_ = y;
+    uint index = GetIndexAtPosition(x, y);
+    mouse_over_index_ = index;
+    if (index >= 0 && index < results_.size())
+    {
+      // we got a click on a button so activate it
+      Result result = results_[index];
+      selected_index_ = index;
+      focused_uri_ = result.uri;
+    }
   });
 
   mouse_leave.connect([&](int x, int y, unsigned long mouse_state, unsigned long button_state)
   {
     mouse_over_index_ = -1;
+    mouse_last_x_ = -1;
+    mouse_last_y_ = -1;
     NeedRedraw();
   });
 
@@ -263,6 +276,8 @@ void ResultViewGrid::SizeReallocate()
   SetMinimumHeight(total_height + (padding * 2));
   SetMaximumHeight(total_height + (padding * 2));
   PositionPreview();
+
+  mouse_over_index_ = GetIndexAtPosition(mouse_last_x_, mouse_last_y_);
 }
 
 void ResultViewGrid::PositionPreview()
@@ -304,11 +319,6 @@ void ResultViewGrid::PositionPreview()
       break;
     }
   }
-}
-
-long int ResultViewGrid::ProcessEvent(nux::IEvent& ievent, long int TraverseInfo, long int ProcessEventInfo)
-{
-  return TraverseInfo;
 }
 
 bool ResultViewGrid::InspectKeyEvent(unsigned int eventType, unsigned int keysym, const char* character)
@@ -467,6 +477,14 @@ void ResultViewGrid::OnKeyDown (unsigned long event_type, unsigned long event_ke
   selected_index_ = std::max(0, selected_index_);
   selected_index_ = std::min(static_cast<int>(results_.size() - 1), selected_index_);
   focused_uri_ = results_[selected_index_].uri;
+
+  int focused_x = (renderer_->width + horizontal_spacing) * (selected_index_ % items_per_row);
+  int focused_y = (renderer_->height + vertical_spacing) * (selected_index_ / items_per_row);
+
+  ubus_.SendMessage(UBUS_RESULT_VIEW_KEYNAV_CHANGED,
+                    g_variant_new("(iiii)", focused_x, focused_y, renderer_->width(), renderer_->height()));
+  selection_change.emit();
+
   NeedRedraw();
 }
 
@@ -478,25 +496,50 @@ nux::Area* ResultViewGrid::KeyNavIteration(nux::KeyNavDirection direction)
 // crappy name.
 void ResultViewGrid::OnOnKeyNavFocusChange(nux::Area *area)
 {
-
   if (HasKeyFocus())
   {
-    focused_uri_ = results_.front().uri;
-    selected_index_ = 0;
-    NeedRedraw();
+    if (selected_index_ < 0)
+    {
+      if (mouse_over_index_ >= 0 && mouse_over_index_ < static_cast<int>(results_.size()))
+      {
+        // to hack around nux, nux sends the keynavfocuschange event before
+        // mouse clicks, so when mouse click happens we have already scrolled away
+        // because the keynav focus changed
+        focused_uri_ = results_[mouse_over_index_].uri;
+        selected_index_ = mouse_over_index_;
+      }
+      else
+      {
+        focused_uri_ = results_.front().uri;
+        selected_index_ = 0;
+      }
+    }
+
+
+    int items_per_row = GetItemsPerRow();
+    int focused_x = (renderer_->width + horizontal_spacing) * (selected_index_ % items_per_row);
+    int focused_y = (renderer_->height + vertical_spacing) * (selected_index_ / items_per_row);
+
+    ubus_.SendMessage(UBUS_RESULT_VIEW_KEYNAV_CHANGED,
+                      g_variant_new("(iiii)", focused_x, focused_y, renderer_->width(), renderer_->height()));
+    selection_change.emit();
   }
   else
   {
     selected_index_ = -1;
     focused_uri_.clear();
+
+    selection_change.emit();
   }
+
+  NeedRedraw();
 }
 
-long ResultViewGrid::ComputeLayout2()
+long ResultViewGrid::ComputeContentSize()
 {
   SizeReallocate();
   QueueLazyLoad();
-  long ret = ResultView::ComputeLayout2();
+  long ret = ResultView::ComputeContentSize();
   return ret;
 
 }
@@ -517,7 +560,7 @@ ResultListBounds ResultViewGrid::GetVisableResults()
   else
   {
     //find the row we start at
-    int absolute_y = GetAbsoluteY();
+    int absolute_y = GetAbsoluteY() - GetToplevel()->GetAbsoluteY();
     uint row_size = renderer_->height + vertical_spacing;
 
     if (absolute_y < 0)
@@ -644,16 +687,23 @@ void ResultViewGrid::MouseMove(int x, int y, int dx, int dy, unsigned long butto
 {
   uint index = GetIndexAtPosition(x, y);
   mouse_over_index_ = index;
+
+  mouse_last_x_ = x;
+  mouse_last_y_ = y;
+
   NeedRedraw();
 }
 
 void ResultViewGrid::MouseClick(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
   uint index = GetIndexAtPosition(x, y);
+  mouse_over_index_ = index;
   if (index >= 0 && index < results_.size())
   {
     // we got a click on a button so activate it
     Result result = results_[index];
+    selected_index_ = index;
+    focused_uri_ = result.uri;
     UriActivated.emit(result.uri);
   }
 }
@@ -836,6 +886,12 @@ ResultViewGrid::DndSourceDragFinished(nux::DndAction result)
   last_mouse_down_y_ = -1;
   current_drag_uri_.clear();
   current_drag_icon_name_.clear();
+}
+
+int
+ResultViewGrid::GetSelectedIndex()
+{
+  return selected_index_;
 }
 
 }

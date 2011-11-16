@@ -94,6 +94,11 @@ gchar* String::Value()
   return string_;
 }
 
+String::operator char*()
+{
+  return string_;
+}
+
 String::operator bool() const
 {
   return bool(string_);

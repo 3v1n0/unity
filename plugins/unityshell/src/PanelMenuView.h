@@ -30,6 +30,7 @@
 #include "WindowButtons.h"
 #include "PanelTitlebarGrabAreaView.h"
 #include "PluginAdapter.h"
+#include "Animator.h"
 
 #include <libbamf/libbamf.h>
 
@@ -56,7 +57,6 @@ public:
 
   void FullRedraw();
 
-  virtual long ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo);
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual long PostLayoutManagement(long LayoutResult);
@@ -70,9 +70,12 @@ public:
   void OnWindowMinimized(guint32 xid);
   void OnWindowUnminimized(guint32 xid);
   void OnWindowUnmapped(guint32 xid);
+  void OnWindowMapped(guint32 xid);
   void OnWindowMaximized(guint32 xid);
   void OnWindowRestored(guint32 xid);
   void OnWindowMoved(guint32 xid);
+  void OnWindowDecorated(guint32 xid);
+  void OnWindowUndecorated(guint32 xid);
 
   guint32 GetMaximizedWindow();
 
@@ -80,6 +83,7 @@ public:
   void OnMaximizedGrabMove(int, int, int, int, unsigned long, unsigned long);
   void OnMaximizedGrabEnd(int, int, unsigned long, unsigned long);
   void OnMouseDoubleClicked(int, int, unsigned long, unsigned long);
+  void OnMouseClicked(int, int, unsigned long, unsigned long);
   void OnMouseMiddleClicked(int, int, unsigned long, unsigned long);
 
   void Refresh();
@@ -111,6 +115,18 @@ private:
   void UpdateShowNow(bool ignore);
   static gboolean UpdateActiveWindowPosition(PanelMenuView* self);
   static gboolean UpdateShowNowWithDelay(PanelMenuView* self);
+  void DrawText(cairo_t *cr_real,
+                int &x, int y, int width, int height,
+                const char* font_desc,
+                const char* label,
+                int increase_size=0
+                );
+
+  bool DrawMenus();
+  bool DrawWindowButtons();
+
+  void OnFadeInChanged(double);
+  void OnFadeOutChanged(double);
 
 private:
   BamfMatcher* _matcher;
@@ -152,6 +168,9 @@ private:
 
   guint32 _place_shown_interest;
   guint32 _place_hidden_interest;
+
+  Animator* _fade_in_animator;
+  Animator* _fade_out_animator;
 };
 
 }

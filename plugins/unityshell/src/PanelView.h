@@ -35,7 +35,6 @@
 #include "PanelMenuView.h"
 #include "PanelTray.h"
 #include "PanelIndicatorsView.h"
-#include "PanelStyle.h"
 
 namespace unity
 {
@@ -47,7 +46,6 @@ public:
   PanelView(NUX_FILE_LINE_PROTO);
   ~PanelView();
 
-  long ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo);
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
 
@@ -110,7 +108,6 @@ private:
   int _last_width;
   int _last_height;
 
-  PanelStyle* _style;
   nux::Color  _bg_color;
   bool        _is_dirty;
   float       _opacity;

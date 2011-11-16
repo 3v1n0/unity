@@ -1,3 +1,987 @@
+2011-10-04  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Add -lm
+
+2011-10-04  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Remove roundel
+
+2011-10-04  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Remove roundel
+
+2011-10-04  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Bug #865430: Categories Applications and Files and folders are untranslated
+
+2011-10-04  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Correctly load translations for Lens names
+
+2011-10-03  Jay Taoko  <jay.taoko@canonical.com>
+
+	Fixed incorrect test
+
+2011-10-03  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Merge lp:~smspillaz/unity/unity.fix_864503
+
+2011-10-02  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Mark hidden showdesktop windows as hidden and don't double-hide windows
+	which might result in their input shape not being restored.
+
+2011-10-03  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Merge lp:~smspillaz/unity/unity.maybe_fix_861143
+
+2011-10-01  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Maybe fix LP#861143
+	
+	Instead of explicitly undecorating windows when they are maximized, listen
+	for changes in decoration state on PropertyNotify events on the windows
+	themselves and respond to them, because we might get the maximization
+	event when the window is mapped before compiz has had a chance to decorate
+	the window.
+	
+	Also cover the case where a window is withdrawn and then mapped maximized
+	again, where we wouldn't redecorate those windows.
+	
+	In order to avoid cycling on our own undecoration requests, we set the
+	high bit on _MOTIF_WM_HINTS decoration field, if that high bit is
+	present and the window is otherwise undecorated, we should treat it
+	like it is still a decorated window and redecorate it when
+	it is restored.
+
+2011-10-03  Gord Allott  <gord.allott@canonical.com>
+
+	fixes key focus getting in the way of mouse clicks, Bug #863555
+
+2011-10-03  Gord Allott  <gord.allott@canonical.com>
+
+	fixes lp:863555 by hacking around nux, nux calls the keynav change event on an object before the click event which causes the scrollview to scroll to the new focused area (the first item) causing the click event to launch the wrong application. 
+
+2011-10-03  Tim Penhey  <tim.penhey@canonical.com>
+
+	Make sure the pop clipping rects match up with the pushes.
+	
+	There is a pending nux branch to use RAII objects to control this.
+
+2011-09-29  Tim Penhey  <tim.penhey@canonical.com>
+
+	Match up the push and pop clipping rectangles.
+
+2011-10-03  Tim Penhey  <tim.penhey@canonical.com>
+
+	Clean up the specialist scroll views in the HomeView and LensView.
+	
+	Don't delete the nux objects, they are deleted through the views.
+	
+	Don't unreference the view_window if it hasn't been created.
+
+2011-09-30  Tim Penhey  <tim.penhey@canonical.com>
+
+	Don't delete nux objects.
+
+2011-09-30  Tim Penhey  <tim.penhey@canonical.com>
+
+	It is possible that the user has never hit alt-tab.
+
+2011-10-01  Jason Smith  <jason.smith@canonical.com>
+
+	fix crash when launcher icon dies within 250ms of window movement
+
+2011-10-01  Jason Smith  <jason.smith@canonical.com>
+
+	initialize memory to prevent crashes if it gets initialized to a non-0 value and the locking of the rectangle fails
+
+2011-09-30  Jason Smith  <jason.smith@canonical.com>
+
+	dont crash when grab fails and trying to do a detail
+	
+	Fixes LP: #863693
+
+2011-09-30  Didier Roche  <didier.roche@canonical.com>
+
+	fix to latest conventions
+
+2011-09-30  Didier Roche  <didier.roche@canonical.com>
+
+	- Focus the desktop when the desktop is mapped and that there is no other window around (focus on startup in particular) (LP: #863037)
+	- Show the 'Desktop' label when desktop has been focused (LP: #863129)
+
+2011-09-30  Didier Roche  <didier.roche@canonical.com>
+
+	check only managed windows
+
+2011-09-30  Didier Roche  <didier.roche@canonical.com>
+
+	increase timeout for slow machine, for now, don't care about the other windows as there is a CompWindowTypeUtilMask at startup (and a terminal has this attribute as well?
+
+2011-09-30  Didier Roche  <didier.roche@canonical.com>
+
+	Show the 'Desktop' label when desktop has been focused (LP: #863129)
+
+2011-09-30  Didier Roche  <didier.roche@canonical.com>
+
+	focus the desktop when the desktop is mapped and that there is no other window around (focus on startup in particular) (LP: #863037)
+
+2011-09-30  Jason Smith  <jason.smith@canonical.com>
+
+	dont try to place windows which we shouldn't be messing with
+	
+	fixes LP:862743
+
+2011-09-29  Gord Allott  <gord.allott@canonical.com>
+
+	fixes the home view not having a scrollbar
+
+2011-09-29  Gord Allott  <gord.allott@canonical.com>
+
+	enables the home view to have the new scrollbar
+
+2011-09-29  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Release\ 4.20.0
+
+2011-09-29  Gord Allott  <gord.allott@canonical.com>
+
+	fixes a leak in the pango escaping code
+
+2011-09-29  Gord Allott  <gord.allott@canonical.com>
+
+	fix a gord has heat stroke based leak
+
+2011-09-29  Gord Allott  <gord.allott@canonical.com>
+
+	fixes escaping in pango text
+
+2011-09-29  Gord Allott  <gord.allott@canonical.com>
+
+	fixes issue with text not being escaped before being sent to pango
+
+2011-09-29  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Merge lp:~smspillaz/unity/unity.fix_835259
+
+2011-09-29  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	NULL check windows the layout system gives us
+
+2011-09-29  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	Fix rendernig of the scrollbar in the scrolled views of the Dash, LP: #836656
+
+2011-09-29  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	Fix the rendering as much as possible in the remaining 15 minutes
+
+2011-09-29  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	Don't make it crash
+
+2011-09-29  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	Trying to fight g++... ehm... fix #836656
+
+2011-09-29  Gordon Allott  <gord.allott@canonical.com>
+
+	the horizontal renderer was renderering text at the slightly wrong width, which caused a lot of problems with the subpixel font renderering, fixes that by drawing the right width
+
+2011-09-29  Gord Allott  <gord.allott@canonical.com>
+
+	fixes the text for results being rendered the wrong size causing subpixel errors
+
+2011-09-29  Gordon Allott  <gord.allott@canonical.com>
+
+	removes the blur on hover by checking the state before drawing
+
+2011-09-29  Gord Allott  <gord.allott@canonical.com>
+
+	removes the blur on results when highlighted
+
+2011-09-29  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Support for SearchFinished for global results, some fixes for focus
+
+2011-09-29  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[oneiric] Clicking the maximize/restore button for the dash window loses the keyboard focus
+
+2011-09-29  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Fix GlobalSearchFinished listeners
+
+2011-09-29  Gord Allott  <gord.allott@canonical.com>
+
+	removes some unneeded variables
+
+2011-09-29  Gord Allott  <gord.allott@canonical.com>
+
+	removes unneeded variables
+
+2011-09-29  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	Fixed LP: #851359
+
+2011-09-29  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	Revert the pixel-grid alignment for the multi-range widget for the moment
+
+2011-09-29  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	Add dynamic left/right padding to text-drawing, use pango-markups small-tag to help fix LP: #851359
+
+2011-09-29  Mitsuya Shibata
+
+	Fix unvisible pre-edit text in Dash with iBus.
+	https://bugs.launchpad.net/ubuntu-translations/+bug/663776/comments/77
+	
+	How to reproduce:
+	1. Open Dash.
+	2. Startup Input Method(in Japanese, press Ctrl+Space)
+	-> emit signal "preedit-start"
+	3. Type 'a', preedit text should be render, but dont
+	-> emit signal "preedit-changed"
+	4. Press Enter, preedit text is fixed
+	-> emit signal "commit", and render text in Dash
+	
+	In code:
+	OnCommit signal handler call SetText, then text is rendered.
+	However OnPreeditChanged signal handler do nothing.
+	
+	This branch add code to render preedit text in OnPreeditChanged.
+	And at OnCommit, remove preedit text, and reset cursor position.
+	
+	***
+	
+	I've also made it so the Dash doesn't tab between Lenses if IM is currently active, as the tab is a saved key for going through options
+
+2011-09-14  Mitsuya Shibata  <mty.shibata@gmail.com>
+
+	Fix unvisible preedit text with ibus (lp: 663776)
+
+2011-09-29  Robert Carr  <robert.carr@canonical.com>
+
+	Clamp rating values to between 0 and 1
+
+2011-09-28  Robert Carr  <racarr@canonical.com>
+
+	FilterRatingsWidget: Clamp rating values to between 0 and 1
+
+2011-09-29  Robert Carr  <robert.carr@canonical.com>
+
+	Check return value of XGetWindowProperty
+
+2011-09-28  Robert Carr  <racarr@canonical.com>
+
+	Always check the return value of XGetWindowProperty
+
+2011-09-29  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Make sure that launcher shortcuts works also using numpad.
+	
+	I've not yet found a way to make sure the launcher shortcuts works using shift and numlok in the same moment. As you know shift cancels numlock:
+	
+	NumLock off NumLock on
+	---------------------------
+	Shift off 1 2
+	Shift on 3 4
+	
+	In other words state 1 = state 4. Any idea about this?
+
+2011-09-28  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Removes not working code.
+
+2011-09-28  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge Trunk.
+
+2011-09-26  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Super+number shortcuts should work with numpad.
+
+2011-09-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	This is based on the design bug #690143 and bug #688117. Basically when we click on a launcher icon that controls windows that are all in different workspaces, we need to check where is the first valid window (not minimized, if any is not minimized) and then activate that window and all the other windows of the same application that are in the same viewport. This patch fix this issue and should also fix bug #838766.
+	
+	Al this is based on my old branch lp:~3v1n0/unity/fix-688117
+
+2011-09-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: don't mix urgent and non-urgent windows.
+
+2011-09-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PluginAdapter: correctly map the windows in other viewports
+	
+	If a launcher icon is selected to map an application that has more than one
+	window in a different viewport, we should first find the window to map
+	and then map also all the other windows that are in the same viewport.
+
+2011-09-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: Focus, some code cleanup
+
+2011-09-29  Jason Smith  <jason.smith@canonical.com>
+
+	disable spread on hover for now
+
+2011-09-29  Jason Smith  <jason.smith@canonical.com>
+
+	prefer visual glitches in multi-monitor to single monitor until real fix is found
+
+2011-09-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	merge branch of win from Marco that fixes a bug where global menus wont show up with awkward window positioning (50% offscreen)
+
+2011-09-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: disable the menus entries when they aren't shown.
+	
+	This fixes the bug that caused to switch VP and to see a window menu
+	when clicking in the panel.
+
+2011-09-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorEntryView: Add disabled support
+	
+	If an entryview is disabled, it doesn't get any mouse event.
+
+2011-09-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: Don't use the timeout to re-show the window controls when hidden
+	
+	So if we move a window not handled in the panel, as soon as we reach
+	the minimum visible partition, the controls are shown back in the panel.
+
+2011-09-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: Hide the panel content (menus and title) if 1/4 of the window is out
+	
+	If 1/4 of a winndow height or a 1/4 of a window width is not viewable
+	in the current viewport, then don't handle that in the panel.
+
+2011-09-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: Check for window position when resized.
+	
+	This fixes bug #861279 caused by grid plugin: so now when we resize a window
+	we also check that it's currently visible in the current viewport.
+
+2011-09-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	merge branch to make sure viewport indication updates when moving window via alternative means
+
+2011-09-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: Use a timeout when checking for VP on window move.
+	
+	If we're moving a window, don't perform any check until we stopped
+	moving for 250ms.
+
+2011-09-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: use the OnWindowMoved code also for OnViewPortSwitchEnded
+	
+	Better not to duplicate the code...
+
+2011-09-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: some code optimizations, avoid to duplicate loops
+
+2011-09-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: we should check that every launcher window is on current VP
+	
+	Otherwise just moving one would cause the indicator to change.
+
+2011-09-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: check for viewport on window moved to update the indicator
+	
+	So if a window is moved to another viewport using the window decoration controls
+	this is correctly handled.
+
+2011-09-28  Jason Smith  <jason.smith@canonical.com>
+
+	fix potential crash in BamfLauncherIcon
+
+2011-09-29  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Merge my fixes branch, bugs linked
+
+2011-09-29  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Close dash when indicator is clicked
+
+2011-09-29  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Only turn primary monitors Panel into dash mode
+
+2011-09-28  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] trunk
+
+2011-09-28  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Dash - 'Shortcuts' arrow should be removed
+
+2011-09-28  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Text in Dash search text box overflows and doesn't crop with longer strings; RtL input starts in wrong place
+
+2011-09-28  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] trunk
+
+2011-09-28  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] Marcos animating panel
+
+2011-09-28  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Popdown menu on second F10
+
+2011-09-28  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Adjust y position depending on size of font
+
+2011-09-28  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Add support for drawing the Ubuntu roundel
+
+2011-09-28  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Show 'Desktop' for the desktop window title
+
+2011-09-28  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] trunk
+
+2011-09-27  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Show Refine Search only if we have added a filter
+
+2011-09-27  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Don't crash if the result category index is out of bounds
+
+2011-09-28  Jason Smith  <jason.smith@canonical.com>
+
+	ensure we dont overlap launcher on map
+
+2011-09-28  Jason Smith  <jason.smith@canonical.com>
+
+	make onboard stack above the dash like a boss
+
+2011-09-28  Jason Smith  <jason.smith@canonical.com>
+
+	merge branch to fix _XFreeEventCookies (mmmmmmm cookies) crash
+
+2011-09-29  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	NULL free'd rectangle arrays and set the number to zero so that sendConfigureNotify
+	won't try and use them. Also check if an X call failed because we did it on a destroyed
+	window, and in that case return immediately since the return values of XQueryTree
+	will often point to memory that is internal to xlib and freeing that will cause
+	a whole raft of trouble.
+
+2011-09-28  Jason Smith  <jason.smith@canonical.com>
+
+	merge sams branch to ensure minimized windows leave a focus trail
+
+2011-09-28  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Ensure that minimized windows cannot receive the focus while still being
+	in animations which may change the focus so they can be unminimized. Fixes LP #859885
+
+2011-09-28  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Don't initiate scale after terminating it. Fixes LP #764673
+
+2011-09-28  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Don't initiate spread after terminating it. Fixes LP 764673
+
+2011-09-23  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Immediate update framebuffers on output change
+
+2011-09-28  Jason Smith  <jason.smith@canonical.com>
+
+	merge sams branch to fix windows popping up under panels
+
+2011-09-28  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Fix bug #857214
+	
+	Avoid the panels as well when placing windows, using some mad region logic.
+
+2011-09-28  Jason Smith  <jason.smith@canonical.com>
+
+	merge sams branch to make 3 finger drag more magical
+
+2011-09-28  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Warp the pointer correctly, set the correct pointer image and notify external
+	plugins that we are moving the window while it is grabbed.
+
+2011-09-28  Jason Smith  <jason.smith@canonical.com>
+
+	merge sams branch to fix show desktop not masking inputs
+
+2011-09-28  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Fix LP 836325 and trigger the option change correctly
+
+2011-09-28  Jason Smith  <jason.smith@canonical.com>
+
+	fix scrolling by default introduce in previous commit
+
+2011-09-28  Jason Smith  <jason.smith@canonical.com>
+
+	fix issue where launcher would reveal from panel edge
+
+2011-09-28  Jay Taoko  <jay.taoko@canonical.com>
+
+	Fix key navigation problem. see bug #861251
+
+2011-09-28  Jay Taoko  <jay.taoko@canonical.com>
+
+	Fix key navigation problem. see bug #861251
+
+2011-09-28  Gord Allott  <gord.allott@canonical.com>
+
+	fixes the issue with dash results not being drawn in dual monitor top-bottom configurations
+
+2011-09-28  Gord Allott  <gord.allott@canonical.com>
+
+	fix top monitor weirdness maybe
+
+2011-09-28  Jason Smith  <jason.smith@canonical.com>
+
+	make desaturation time match dash show time
+
+2011-09-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merge panel fading branch
+
+2011-09-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	IndicatorEntryView and WindowButtons: no need to set the blending again
+	
+	It's controlled at upper levels.
+
+2011-09-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: correctly use _we_control_active
+	
+	Otherwise it could have lead to wrong drawing.
+
+2011-09-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: don't use the switch viewport signal, go back to _we_control_active
+
+2011-09-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: don't draw the window title if it's not viewable
+	
+	Fixes bad panel title on viewport switch.
+
+2011-09-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: don't draw any title if we're focussing the panel
+
+2011-09-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: always force draw the panel content when requested
+	
+	Othewise buttons could hide while dragging a maximized window.
+
+2011-09-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with upstream
+
+2011-09-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Always use CLAMP when we can.
+
+2011-09-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: add an indicator typed as a MENU
+	
+	This allows to disable some unneeded features like secondary activate and
+	scrolling.
+
+2011-09-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorsView: support for indicator view typing
+	
+	Default type is (like it was before) an Indicator.
+
+2011-09-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorEntryView: Add typing support for indicators view
+	
+	I basically added two types of indicators that can be drawn using
+	PanelIndicatorEntryView: INDICATOR and MENU.
+	
+	A menu is a little bit less complex and it doesn't handle the scrolling over
+	an entry, and supports also the middle-click for being shown.
+	
+	An Indicator is acting like before, but now supports also a kind of
+	secondary-activate feedback. On middle-click down, in fact, the item opacity
+	is decreased a little and then restored on button up. This should give
+	better usability.
+	
+	So now it's possible to use the INDICATOR type for all the system indicators
+	and the MENU for the panelmenu menus, that now will act exactly like
+	the menus of a gtk-menubar.
+
+2011-09-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorEntryView: cache the texture layer, and use it to draw.
+	
+	This code was missing in the previous versions by mistake.
+
+2011-09-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: redraw panel after pressing a window button.
+
+2011-09-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Animator: clamp progress value.
+
+2011-09-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: Clamp on fade-out to get nice value.
+
+2011-09-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: Full-redraw on init.
+	
+	It fixes the issue of the first menu-over.
+
+2011-09-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Fixing compilation issues, due to bad merge.
+
+2011-09-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: improving the cross-fade between title and menus
+	
+	Tuning the rate of the cross fading when switching from menus+buttons bar
+	to a title bar (for maximized windows). We increase the fade-out of the
+	showing item and the fade-in of the hiding one.
+
+2011-09-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: setting the fade in/out values as requested by design
+	
+	Setting the fadein title timing at 100ms and fadeout timing at 120ms as
+	discussed with JohnLea
+
+2011-09-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: tuning the title gradient fade-out
+	
+	If we're fading-out the title, it's better to quickly hide
+	the transparent right-most area.
+
+2011-09-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: Avoid crashes when unlocking/locking the title gradient.
+	
+	After long time of not using, unity it could crash when overing the panel
+	and requesting to apply a gradient mask to the window title.
+	This should fix the crash.
+
+2011-09-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with upstream changes.
+
+2011-09-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: correctly reset the fade-out duration effect
+	
+	If we changed the fade-out duration it should be reset in any case.
+
+2011-09-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: Increasing the fade-in/fade-out durations
+
+2011-09-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: Don't show a window title when the dash is on!
+
+2011-09-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: quickly hide the window buttons if menus aren't hiding
+	
+	If we want to hide only the window buttons (i.e. quitting the dash
+	or clicking over the restore button of a maximized window), we need
+	to do this in a quicker way.
+
+2011-09-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: on fade-out quickly show the cut title part
+	
+	When fading-out the title we need to quickly show back the menu title
+	part that has been previously cut with fade.
+
+2011-09-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenu: use a cross-fade effect when showing the menus and hiding the title
+	
+	Now the window title and the menus are both faded in reverse direction
+	to show a cross-fade effect.
+	
+	It only happens if we show bot the menus and the buttons and the title
+	is not faded.
+
+2011-09-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenu: When the menus are being shown, update the title gradient on opacity change
+	
+	This allows to get a nice effect, also the title now is cut using
+	a progressive mask which increases its opacity following the menu animation.
+
+2011-09-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	WindowButtons: don't paintbackground, make the parent do it!
+
+2011-09-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: Don't show anything in the panel if at least the buttons are there
+	
+	If we draw the windowbuttons, then no title should shown in the panel!
+
+2011-09-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Animator: small API change to set the default FPS value to 30
+	
+	So now when creating an animator we must define only the duration.
+
+2011-09-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	IndicatorEntry and WindowButtons: no need to clear the background
+	
+	Since we redraw them from an higher level, we don't have to clear their
+	area when drawing them.
+
+2011-09-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: use the new Animator class to show/hide menus and buttons
+	
+	Now we animate the panelmenu items using the Animator timer.
+
+2011-09-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: Add DrawMenus and DrawWindowButtons utility functions
+	
+	They allow to check the variables to see if the menus or the window buttons
+	should be drawn. All this for better code readability.
+
+2011-09-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Remove FadeController, add a more generic Animator class
+	
+	It allows basically to manage a timer for animation purposes.
+	It emits signals that can be used to animat widgets.
+	
+	Based on the OsAnimation GObject class by Andrea Cimitan.
+
+2011-09-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: Show the buttons when pressing Alt on maximized windows.
+
+2011-09-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenu: fade-in / out Menus and Buttons when they're shown.
+	
+	It works well for menus of restored windows, while maximized windows
+	are actually bugged.
+
+2011-09-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	WindowButtons: support for opacity and set them as fadable Objects
+
+2011-09-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorsView: support opacity and set as a FadableObject
+	
+	This allows to make indicators fade in/out easily.
+
+2011-09-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	FadeController: new class for handling the fading of FadableObjects
+	
+	This class allows to define an object to be faded-in/out using a nux::Timer
+
+2011-09-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorEntryView: support for drawing items with a different opacity
+
+2011-09-28  Jason Smith  <jason.smith@canonical.com>
+
+	fix line drawing in dash
+
+2011-09-28  Gord Allott  <gord.allott@canonical.com>
+
+	fixes the aspect ratio of non square dash items
+
+2011-09-28  Gord Allott  <gord.allott@canonical.com>
+
+	some cairo cleanups
+
+2011-09-26  Gord Allott  <gord.allott@canonical.com>
+
+	makes sure icon tiles are aspect ratio correct
+
+2011-09-28  Gord Allott  <gord.allott@canonical.com>
+
+	allows the dash to scroll on keynav
+
+2011-09-27  Gord Allott  <gord.allott@canonical.com>
+
+	change the position of the focus callback a little so that we can show the group header too
+
+2011-09-27  Gord Allott  <gord.allott@canonical.com>
+
+	Hacks in a way to have the dash scroll down on keyboard navigation, will fix better in P when we can break nux ABI
+
+2011-09-28  Gord Allott  <gord.allott@canonical.com>
+
+	darkens the dash further
+
+2011-09-28  Gord Allott  <gord.allott@canonical.com>
+
+	darken the launcher/panel/dash
+
+2011-09-28  Robert Carr  <racarr@canonical.com>
+
+	Merge lp:~robertcarr/unity/ratingswidget-fixdesign
+
+2011-09-26  Robert Carr  <racarr@canonical.com>
+
+	Also clamp the filter in the mouse handling so we don't filter by a fractional amount
+
+2011-09-26  Robert Carr  <racarr@canonical.com>
+
+	Update the filter ratings widget to fit design. Firstly the user should not be able to set half stars. Secondly the user should be able to drag and change the star rating
+
+2011-09-28  Jason Smith  <jason.smith@canonical.com>
+
+	merge blur performance branch
+
+2011-09-28  Jason Smith  <jason.smith@canonical.com>
+
+	improve blur rendering performance
+
+2011-09-28  Tim Penhey  <tim.penhey@canonical.com>
+
+	Delete the windows thread and switcher controller when destroying UnityScreen.
+
+2011-09-28  Tim Penhey  <tim.penhey@canonical.com>
+
+	Delete the switcherController and the windows thread when destroying the UnityScreen.
+	Having a clean exit depends on nux not trying to access the windows thread when destroying the Views, Layouts and ResourceData.
+
+2011-09-27  Jason Smith  <jason.smith@canonical.com>
+
+	make switcher view ensure text is inside the switcher
+
+2011-09-27  Robert Carr  <racarr@canonical.com>
+
+	Merge lp:~robertcarr/unity/vpswitch-closedash
+
+2011-09-27  Robert Carr  <racarr@canonical.com>
+
+	Close the dash when we start a viewport switch
+
+2011-09-27  Robert Carr  <racarr@canonical.com>
+
+	Merge lp:~unity-team/unity/unity.viewport-bias
+
+2011-09-26  Jason Smith  <jason.smith@canonical.com>
+
+	make alt-tab able to give priority to windows on the current viewport
+
+2011-09-27  Robert Carr  <racarr@canonical.com>
+
+	Merge lp:~robercarr/unity/launcher-nopointergrab. Have the launcher not take a pointer grab in keynav mode.
+
+2011-09-26  Robert Carr  <racarr@canonical.com>
+
+	Merge the branch in to itself? I suck at bzr
+
+2011-09-26  Robert Carr  <racarr@canonical.com>
+
+	Launcher: Don't take a pointer grab in key nav mode
+
+2011-09-26  Robert Carr  <racarr@canonical.com>
+
+	Use the search close asset in SearchBarSpinner.
+
+2011-09-26  Robert Carr  <racarr@canonical.com>
+
+	Launcher: Don't take a pointer grab in keynav mode
+
+2011-09-27  Didier Roche  <didier.roche@canonical.com>
+
+	Add system setting icon to Launcher (LP: #764744)
+
+2011-09-26  Jason Smith  <jason.smith@canonical.com>
+
+	merge dash draw perf branch
+
+2011-09-26  Jason Smith  <jason.smith@canonical.com>
+
+	improve rendering performance slightly when doing a full dash redraw
+
+2011-09-26  Robert Carr  <racarr@canonical.com>
+
+	Merge lp:~robertcarr/unity/dash-fourfingertap
+
+2011-09-26  Robert Carr  <racarr@canonical.com>
+
+	Uncomment the line using GEIS_GESTURE_ATTRIBUTE_TOUCHES to set in our GeisAdapter, not sure of the history of GEIS (as in why it was disabled originally) but it seems to work fine now and be the appropriate way to access it through the new GEIS API...which we don't use but that's a whole different matter
+
+2011-09-26  Didier Roche  <didier.roche@canonical.com>
+
+	Don't cut text on 2 lines on home dash (Neil fixes for french)
+
+2011-09-26  Robert Carr  <racarr@canonical.com>
+
+	Merge lp:~robertcarr/unity/homelauncher-dnd
+
+2011-09-26  Robert Carr  <racarr@canonical.com>
+
+	A proper fix to enabling DND support to the Home folder launcher. Previously it only worked if you had a nautilus-home.desktop which I patched myself...and then forgot about?
+
+2011-09-26  Robert Carr  <racarr@canonical.com>
+
+	Merge lp:~robertcarr/unity/dnd-iconsize
+
+2011-09-26  Robert Carr  <racarr@canonical.com>
+
+	ResultViewGrid: Use the same size as dash icons for dnd images
+
+2011-09-26  Robert Carr  <racarr@canonical.com>
+
+	Merge lp:~robertcarr/unity/dnd-closedash
+
+2011-09-26  Robert Carr  <racarr@canonical.com>
+
+	DashView: Process DND events to close the Dash when we drag a DND object outside of the dash
+
+2011-09-26  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Release\ 4.18.0
+
 2011-09-26  Neil Jagdish Patel  <neil.patel@canonical.com>
 
 	Call panel_a11y_init before creating dbus services to fix thread-safety issues when dealing with get/setenv

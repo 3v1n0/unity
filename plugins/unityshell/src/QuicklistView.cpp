@@ -181,6 +181,8 @@ QuicklistView::RecvKeyPressed(unsigned long    eventType,
         while (IsMenuItemSeperator(_current_item_index))
           _current_item_index--;
 
+        selection_change.emit();
+
         GetNthItems(_current_item_index)->_prelight = true;
         QueueDraw();
       }
@@ -201,6 +203,8 @@ QuicklistView::RecvKeyPressed(unsigned long    eventType,
         while (IsMenuItemSeperator(_current_item_index))
           _current_item_index++;
 
+        selection_change.emit();
+
         GetNthItems(_current_item_index)->_prelight = true;
         QueueDraw();
       }
@@ -210,6 +214,7 @@ QuicklistView::RecvKeyPressed(unsigned long    eventType,
     case NUX_VK_LEFT:
     case NUX_KP_LEFT:
       _current_item_index = 0;
+      selection_change.emit();
       GetNthItems(_current_item_index)->_prelight = true;
       Hide();
       // inform Launcher we switch back to Launcher key-nav
@@ -221,12 +226,14 @@ QuicklistView::RecvKeyPressed(unsigned long    eventType,
       // esc (close quicklist, exit key-nav)
     case NUX_VK_ESCAPE:
       _current_item_index = 0;
+      selection_change.emit();
       GetNthItems(_current_item_index)->_prelight = true;
       Hide();
       // inform UnityScreen we leave key-nav completely
       ubus_server_send_message(ubus_server_get_default(),
                                UBUS_LAUNCHER_END_KEY_NAV,
                                NULL);
+      selection_change.emit();
       break;
 
       // <SPACE>, <RETURN> (activate selected menu-item)
@@ -242,6 +249,7 @@ QuicklistView::RecvKeyPressed(unsigned long    eventType,
                                        NULL,
                                        0);
         _current_item_index = 0;
+        selection_change.emit();
         GetNthItems(_current_item_index)->_prelight = true;
         Hide();
       }
@@ -353,67 +361,11 @@ void QuicklistView::Hide()
   {
     CancelItemsPrelightStatus();
     CaptureMouseDownAnyWhereElse(false);
-    ForceStopFocus(1, 1);
     UnGrabPointer();
     UnGrabKeyboard();
     //EnableInputWindow (false);
     ShowWindow(false);
   }
-}
-
-long QuicklistView::ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo)
-{
-  long ret = TraverseInfo;
-  long ProcEvInfo = 0;
-
-  nux::IEvent window_event = ievent;
-  nux::Geometry base = GetGeometry();
-  window_event.e_x_root = base.x;
-  window_event.e_y_root = base.y;
-
-  // The child layout get the Mouse down button only if the MouseDown happened inside the client view Area
-  nux::Geometry viewGeometry = GetGeometry();
-
-  if (ievent.e_event == nux::NUX_MOUSE_PRESSED)
-  {
-    if (!viewGeometry.IsPointInside(ievent.e_x - ievent.e_x_root, ievent.e_y - ievent.e_y_root))
-    {
-      ProcEvInfo = nux::eDoNotProcess;
-    }
-  }
-
-  // We choose to test the quicklist items ourselves instead of processing them as it is usual in nux.
-  // This is meant to be easier since the quicklist has a atypical way of working.
-  if (m_layout)
-  {
-    ret = m_layout->ProcessEvent(window_event, ret, ProcEvInfo);
-  }
-
-  // The quicklist itself does not process the evvent. Instead we do some analysis of the event
-  // to detect the user action and perform the correct operation.
-  if (ievent.e_event == nux::NUX_MOUSE_PRESSED)
-  {
-    if (GetGeometry().IsPointInside(ievent.e_x, ievent.e_y))
-    {
-      _mouse_down = true;
-    }
-    else
-    {
-      _mouse_down = false;
-      Hide();
-      return nux::eMouseEventSolved;
-    }
-  }
-  else if ((ievent.e_event == nux::NUX_MOUSE_RELEASED) && _mouse_down)
-  {
-    _mouse_down = false;
-    Hide();
-    return nux::eMouseEventSolved;
-  }
-
-  ret = OnEvent(ievent, ret, ProcessEventInfo);
-
-  return ret;
 }
 
 void QuicklistView::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
@@ -806,7 +758,6 @@ void QuicklistView::RecvMouseDown(int x, int y, unsigned long button_flags, unsi
 //     if (IsVisible ())
 //     {
 //       CaptureMouseDownAnyWhereElse (false);
-//       ForceStopFocus (1, 1);
 //       UnGrabPointer ();
 //       EnableInputWindow (false);
 //       ShowWindow (false);
@@ -1564,3 +1515,8 @@ QuicklistView::InspectKeyEvent(unsigned int eventType,
   return true;
 }
 
+QuicklistMenuItem*
+QuicklistView::GetSelectedMenuItem()
+{
+  return GetNthItems(_current_item_index);
+}

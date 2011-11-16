@@ -27,7 +27,10 @@
 #include "DndData.h"
 #include "SimpleLauncherIcon.h"
 
-namespace unity {
+namespace unity
+{
+namespace launcher
+{
 
 class TrashLauncherIcon : public SimpleLauncherIcon
 {
@@ -60,6 +63,7 @@ private:
   static void OnEmptyTrash(DbusmenuMenuitem* item, int time, TrashLauncherIcon* self);
 };
 
+}
 } // namespace unity
 
 #endif // TRASHLAUNCHERICON_H

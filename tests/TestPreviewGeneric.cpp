@@ -82,7 +82,6 @@ void TestRunner::Init ()
   layout = new nux::VLayout(NUX_TRACKER_LOCATION);
 
   layout->AddView (preview_view, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
-  layout->SetFocused (true);
 
   nux::GetGraphicsThread()->SetLayout (layout);
 }
@@ -120,7 +119,7 @@ int main(int argc, char **argv)
   nux::NuxInitialize(0);
 
   // The instances for the pseudo-singletons.
-  unity::DashStyle dash_style;
+  unity::dash::Style dash_style;
 
   TestRunner *test_runner = new TestRunner ();
   wt = nux::CreateGUIThread(TEXT("Unity Places Tile Test"),

@@ -28,6 +28,11 @@
 #include "ubus-server.h"
 #include "UBusMessages.h"
 
+namespace unity
+{
+namespace launcher
+{
+
 namespace
 {
   nux::logging::Logger logger("unity.dash.CategoryViewGrid");
@@ -135,3 +140,6 @@ void SimpleLauncherIcon::OnIconThemeChanged(GtkIconTheme* icon_theme, gpointer d
   self->_current_theme_is_mono = -1;
   self->ReloadIcon();
 }
+
+} // namespace launcher
+} // namespace unity

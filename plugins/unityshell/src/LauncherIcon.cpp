@@ -52,7 +52,10 @@
 #define MONO_TEST_ICON "gnome-home"
 #define UNITY_THEME_NAME "unity-icon-theme"
 
-using namespace unity;
+namespace unity
+{
+namespace launcher
+{
 
 namespace
 {
@@ -164,7 +167,7 @@ LauncherIcon::~LauncherIcon()
   }
 }
 
-bool
+const bool
 LauncherIcon::HasWindowOnViewport()
 {
   return _has_visible_window;
@@ -197,7 +200,9 @@ LauncherIcon::AddProperties(GVariantBuilder* builder)
 void
 LauncherIcon::Activate(ActionArg arg)
 {
-  if (WindowManager::Default()->IsScaleActive())
+  /* Launcher Icons that handle spread will adjust the spread state
+   * accordingly, for all other icons we should terminate spread */
+  if (WindowManager::Default()->IsScaleActive() && !HandlesSpread ())
     WindowManager::Default()->TerminateScale();
 
   ActivateLauncherIcon(arg);
@@ -1157,3 +1162,6 @@ LauncherIcon::OnRemoteProgressVisibleChanged(LauncherEntryRemote* remote)
   if (remote->ProgressVisible())
     SetProgress((float) remote->Progress());
 }
+
+} // namespace launcher
+} // namespace unity

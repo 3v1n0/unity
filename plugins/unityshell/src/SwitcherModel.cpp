@@ -23,6 +23,8 @@
 
 namespace unity
 {
+using launcher::AbstractLauncherIcon;
+
 namespace switcher
 {
 
@@ -33,6 +35,7 @@ SwitcherModel::SwitcherModel(std::vector<AbstractLauncherIcon*> icons)
 {
   detail_selection = false;
   detail_selection_index = 0;
+  only_detail_on_viewport = false;
 
   for (auto icon : _inner)
     icon->Reference();
@@ -112,11 +115,22 @@ SwitcherModel::CompareWindowsByActive (guint32 first, guint32 second)
   return WindowManager::Default ()->GetWindowActiveNumber (first) > WindowManager::Default ()->GetWindowActiveNumber (second);
 }
 
+bool
+WindowOnOtherViewport(Window xid)
+{
+  return !WindowManager::Default()->IsWindowOnCurrentDesktop(xid);
+}
+
 std::vector<Window>
 SwitcherModel::DetailXids()
 {
   std::vector<Window> results;
   results = Selection()->RelatedXids ();
+
+  if (only_detail_on_viewport)
+  {
+    results.erase(std::remove_if(results.begin(), results.end(), WindowOnOtherViewport), results.end());
+  }
 
   std::sort (results.begin (), results.end (), &CompareWindowsByActive);
 
@@ -132,7 +146,10 @@ SwitcherModel::DetailSelectionWindow ()
 {
   if (!detail_selection || DetailXids ().empty())
     return 0;
-  
+
+  if (detail_selection_index > DetailXids().size() - 1)
+    return 0;
+ 
   return DetailXids()[detail_selection_index];
 }
 
@@ -171,7 +188,7 @@ SwitcherModel::NextDetail ()
   if (!detail_selection())
     return;
 
-  if (detail_selection_index < Selection()->RelatedXids ().size () - 1)
+  if (detail_selection_index < DetailXids().size() - 1)
     detail_selection_index = detail_selection_index + 1;
   else
     detail_selection_index = 0;
@@ -185,7 +202,7 @@ void SwitcherModel::PrevDetail ()
   if (detail_selection_index >= (unsigned int) 1)
     detail_selection_index = detail_selection_index - 1;
   else
-    detail_selection_index = Selection()->RelatedXids ().size () - 1;
+    detail_selection_index = DetailXids().size() - 1;
 }
 
 void

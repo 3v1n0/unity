@@ -37,6 +37,8 @@ using unity::texture_from_cairo_graphics;
 // codebase, that is just rude.
 namespace nux
 {
+  NUX_IMPLEMENT_OBJECT_TYPE (StaticCairoText);
+
 StaticCairoText::StaticCairoText(const TCHAR* text,
                                  NUX_FILE_LINE_DECL) :
   View(NUX_FILE_LINE_PARAM),
@@ -53,14 +55,12 @@ StaticCairoText::StaticCairoText(const TCHAR* text,
   _need_new_extent_cache = true;
   _pre_layout_width = 0;
   _pre_layout_height = 0;
-  _can_pass_focus_to_composite_layout = false;
 
   SetMinimumSize(1, 1);
   _ellipsize = NUX_ELLIPSIZE_END;
   _align = NUX_ALIGN_LEFT;
   _valign = NUX_ALIGN_TOP;
   _fontstring = NULL;
-  SetCanFocus(false);
 
   _accept_key_nav_focus = false;
 }
@@ -160,17 +160,6 @@ long StaticCairoText::PostLayoutManagement(long layoutResult)
   return result;
 }
 
-long
-StaticCairoText::ProcessEvent(IEvent& event,
-                              long    traverseInfo,
-                              long    processEventInfo)
-{
-  long ret = traverseInfo;
-
-  ret = PostProcessEvent2(event, ret, processEventInfo);
-  return ret;
-}
-
 void
 StaticCairoText::Draw(GraphicsEngine& gfxContext,
                       bool             forceDraw)
@@ -188,7 +177,7 @@ StaticCairoText::Draw(GraphicsEngine& gfxContext,
   texxform.SetWrap(TEXWRAP_REPEAT, TEXWRAP_REPEAT);
   texxform.SetTexCoordType(TexCoordXForm::OFFSET_COORD);
 
-  t_u32 alpha = 0, src = 0, dest = 0;
+  unsigned int alpha = 0, src = 0, dest = 0;
 
   gfxContext.GetRenderStates().GetBlend(alpha, src, dest);
   gfxContext.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
@@ -241,6 +230,12 @@ StaticCairoText::SetText(NString text)
     UpdateTexture();
     sigTextChanged.emit(this);
   }
+}
+
+NString
+StaticCairoText::GetText()
+{
+  return _text;
 }
 
 void
@@ -521,6 +516,5 @@ StaticCairoText::AcceptKeyNavFocus()
 {
   return _accept_key_nav_focus;
 }
-
 
 }

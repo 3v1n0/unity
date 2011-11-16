@@ -51,7 +51,12 @@
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/Variant.h>
 
-using namespace unity::ui;
+namespace unity
+{
+using ui::RenderArg;
+
+namespace launcher
+{
 
 namespace
 {
@@ -311,7 +316,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
 
   SetDndEnabled(false, true);
 
-  icon_renderer = AbstractIconRenderer::Ptr(new IconRenderer());
+  icon_renderer = ui::AbstractIconRenderer::Ptr(new ui::IconRenderer());
   icon_renderer->SetTargetSize(_icon_size, _icon_image_size, _space_between_icons);
 
   // request the latest colour from bghash
@@ -679,7 +684,7 @@ bool Launcher::IconNeedsAnimation(LauncherIcon* icon, struct timespec const& cur
     return true;
 
   time = icon->GetQuirkTime(LauncherIcon::QUIRK_DESAT);
-  if (unity::TimeUtil::TimeDelta(&current, &time) < ANIM_DURATION_LONG)
+  if (unity::TimeUtil::TimeDelta(&current, &time) < ANIM_DURATION_SHORT_SHORT)
     return true;
 
   time = icon->GetQuirkTime(LauncherIcon::QUIRK_DROP_PRELIGHT);
@@ -859,7 +864,7 @@ float Launcher::IconDesatValue(LauncherIcon* icon, struct timespec const& curren
 {
   struct timespec dim_time = icon->GetQuirkTime(LauncherIcon::QUIRK_DESAT);
   int ms = unity::TimeUtil::TimeDelta(&current, &dim_time);
-  float result = CLAMP((float) ms / (float) ANIM_DURATION_LONG, 0.0f, 1.0f);
+  float result = CLAMP((float) ms / (float) ANIM_DURATION_SHORT_SHORT, 0.0f, 1.0f);
 
   if (icon->GetQuirk(LauncherIcon::QUIRK_DESAT))
     return 1.0f - result;
@@ -2035,13 +2040,6 @@ void Launcher::OnIconNeedsRedraw(AbstractLauncherIcon* icon)
   EnsureAnimation();
 }
 
-long Launcher::ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo)
-{
-  long ret = TraverseInfo;
-  ret = PostProcessEvent2(ievent, ret, ProcessEventInfo);
-  return ret;
-}
-
 void Launcher::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
 
@@ -2120,12 +2118,12 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
       }
     }
 
-    nux::t_u32 alpha = 0, src = 0, dest = 0;
+    unsigned int alpha = 0, src = 0, dest = 0;
     GfxContext.GetRenderStates().GetBlend(alpha, src, dest);
 
     // apply the darkening
-    GfxContext.GetRenderStates().SetBlend(true, GL_SRC_COLOR, GL_DST_COLOR);
-    gPainter.Paint2DQuadColor(GfxContext, bkg_box, nux::Color(0.0f, 0.0f, 0.0f, 1.0f));
+    GfxContext.GetRenderStates().SetBlend(true, GL_ZERO, GL_SRC_COLOR);
+    gPainter.Paint2DQuadColor(GfxContext, bkg_box, nux::Color(0.7f, 0.7f, 0.7f, 1.0f));
     GfxContext.GetRenderStates().SetBlend (alpha, src, dest);
 
     // apply the bg colour
@@ -2137,7 +2135,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
     texxform.SetWrap(nux::TEXWRAP_CLAMP, nux::TEXWRAP_CLAMP);
     texxform.uoffset = (1.0f / launcher_sheen_->GetWidth()) * (GetAbsoluteGeometry().x); // TODO (gord) don't use absolute values here
-    texxform.voffset = (1.0f / launcher_sheen_->GetWidth()) * (GetAbsoluteGeometry().y);
+    texxform.voffset = (1.0f / launcher_sheen_->GetHeight()) * (GetAbsoluteGeometry().y);
     GfxContext.QRP_1Tex(base.x, base.y, base.width, base.height,
                         launcher_sheen_->GetDeviceTexture(),
                         texxform,
@@ -2201,6 +2199,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   gPainter.PopBackground(push_count);
   GfxContext.PopClippingRectangle();
+  GfxContext.PopClippingRectangle();
 }
 
 void Launcher::PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw)
@@ -2210,9 +2209,9 @@ void Launcher::PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw)
 void Launcher::PreLayoutManagement()
 {
   View::PreLayoutManagement();
-  if (m_CompositionLayout)
+  if (view_layout_)
   {
-    m_CompositionLayout->SetGeometry(GetGeometry());
+    view_layout_->SetGeometry(GetGeometry());
   }
 }
 
@@ -2632,7 +2631,7 @@ Launcher::RecvKeyPressed(unsigned long    eventType,
         if (it != (LauncherModel::iterator)NULL)
         {
           _current_icon_index = temp_current_icon_index;
-          
+
           if ((*it)->GetCenter().y + - _icon_size/ 2 < GetGeometry().y)
             _launcher_drag_delta += (_icon_size + _space_between_icons);
         }
@@ -2923,7 +2922,7 @@ void Launcher::OnDNDDataCollected(const std::list<char*>& mimes)
     return;
 
   _hide_machine->SetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE, true);
-  
+
   if (_dash_is_open)
     SaturateIcons();
 
@@ -2952,7 +2951,7 @@ void
 Launcher::ProcessDndEnter()
 {
   SetStateMouseOverLauncher(true);
-  
+
   _dnd_data.Reset();
   _drag_action = nux::DNDACTION_NONE;
   _steal_drag = false;
@@ -2971,7 +2970,7 @@ Launcher::DndReset()
     it->SetQuirk(LauncherIcon::QUIRK_DROP_PRELIGHT, false);
     it->SetQuirk(LauncherIcon::QUIRK_DROP_DIM, false);
   }
-  
+
   DndHoveredIconReset();
 }
 
@@ -2979,7 +2978,7 @@ void Launcher::DndHoveredIconReset()
 {
   _drag_edge_touching = false;
   SetActionState(ACTION_NONE);
-  
+
   if (_steal_drag && _dnd_hovered_icon)
   {
     _dnd_hovered_icon->SetQuirk(LauncherIcon::QUIRK_VISIBLE, false);
@@ -3000,7 +2999,7 @@ void
 Launcher::ProcessDndLeave()
 {
   SetStateMouseOverLauncher(false);
-  
+
   DndHoveredIconReset();
 }
 
@@ -3057,7 +3056,7 @@ Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
   {
     if (_dnd_hovered_icon)
         _dnd_hovered_icon->SendDndLeave();
-        
+
     _drag_edge_touching = true;
     SetTimeStruct(&_times[TIME_DRAG_EDGE_TOUCH], &_times[TIME_DRAG_EDGE_TOUCH], ANIM_DURATION * 3);
     EnsureAnimation();
@@ -3110,7 +3109,7 @@ Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
     }
   }
   else
-  {    
+  {
     if (!_drag_edge_touching && hovered_icon != _dnd_hovered_icon)
     {
       if (hovered_icon)
@@ -3296,3 +3295,6 @@ Launcher::InspectKeyEvent(unsigned int eventType,
   // The Launcher accepts all key inputs.
   return true;
 }
+
+} // namespace launcher
+} // namespace unity

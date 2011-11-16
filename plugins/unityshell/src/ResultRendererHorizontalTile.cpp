@@ -32,9 +32,9 @@
 #include <UnityCore/GLibWrapper.h>
 
 #include "CairoTexture.h"
+#include "DashStyle.h"
 #include "IconLoader.h"
 #include "IconTexture.h"
-#include "PlacesStyle.h"
 #include "TextureCache.h"
 
 //~ namespace
@@ -51,16 +51,16 @@ NUX_IMPLEMENT_OBJECT_TYPE(ResultRendererHorizontalTile);
 ResultRendererHorizontalTile::ResultRendererHorizontalTile(NUX_FILE_LINE_DECL)
   : ResultRendererTile(NUX_FILE_LINE_PARAM)
 {
-  PlacesStyle* style = PlacesStyle::GetDefault();
-  width = style->GetTileWidth() * 2;
-  height = style->GetTileIconSize() + (padding * 2);
+  Style& style = Style::Instance();
+  width = style.GetTileWidth() * 2;
+  height = style.GetTileIconSize() + (padding * 2);
 
   // pre-load the highlight texture
   // try and get a texture from the texture cache
   TextureCache& cache = TextureCache::GetDefault();
   prelight_cache_ = cache.FindTexture("ResultRendererHorizontalTile.PreLightTexture",
-                                      style->GetTileIconSize() + (highlight_padding * 2),
-                                      style->GetTileIconSize() + (highlight_padding * 2),
+                                      style.GetTileIconSize() + (highlight_padding * 2),
+                                      style.GetTileIconSize() + (highlight_padding * 2),
                                       sigc::mem_fun(this, &ResultRendererHorizontalTile::DrawHighlight));
 }
 
@@ -78,23 +78,21 @@ void ResultRendererHorizontalTile::Render(nux::GraphicsEngine& GfxContext,
   if (container == nullptr)
     return;
 
-  std::string row_text = row.name;
-  std::string row_iconhint = row.icon_hint;
-  PlacesStyle* style = PlacesStyle::GetDefault();
+  Style& style = Style::Instance();
 
   // set up our texture mode
   nux::TexCoordXForm texxform;
 
   int icon_left_hand_side = geometry.x + padding;
-  int icon_top_side = geometry.y + ((geometry.height - style->GetTileIconSize()) / 2);
+  int icon_top_side = geometry.y + ((geometry.height - style.GetTileIconSize()) / 2);
 
 
-  if (container->blurred_icon)
+  if (container->blurred_icon && state == ResultRendererState::RESULT_RENDERER_NORMAL)
   {
     GfxContext.QRP_1Tex(icon_left_hand_side - 5 - x_offset,
                         icon_top_side - 5 - y_offset,
-                        style->GetTileIconSize() + 10,
-                        style->GetTileIconSize() + 10,
+                        style.GetTileIconSize() + 10,
+                        style.GetTileIconSize() + 10,
                         container->blurred_icon->GetDeviceTexture(),
                         texxform,
                         nux::Color(0.5f, 0.5f, 0.5f, 0.5f));
@@ -105,8 +103,8 @@ void ResultRendererHorizontalTile::Render(nux::GraphicsEngine& GfxContext,
   {
     GfxContext.QRP_1Tex(icon_left_hand_side - highlight_padding,
                         icon_top_side - highlight_padding,
-                        style->GetTileIconSize() + (highlight_padding * 2),
-                        style->GetTileIconSize() + (highlight_padding * 2),
+                        style.GetTileIconSize() + (highlight_padding * 2),
+                        style.GetTileIconSize() + (highlight_padding * 2),
                         prelight_cache_->GetDeviceTexture(),
                         texxform,
                         nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
@@ -117,8 +115,8 @@ void ResultRendererHorizontalTile::Render(nux::GraphicsEngine& GfxContext,
   {
     GfxContext.QRP_1Tex(icon_left_hand_side,
                         icon_top_side,
-                        style->GetTileIconSize(),
-                        style->GetTileIconSize(),
+                        style.GetTileIconSize(),
+                        style.GetTileIconSize(),
                         container->icon->GetDeviceTexture(),
                         texxform,
                         nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
@@ -126,10 +124,10 @@ void ResultRendererHorizontalTile::Render(nux::GraphicsEngine& GfxContext,
 
   if (container->text)
   {
-    GfxContext.QRP_1Tex(icon_left_hand_side + style->GetTileIconSize() + spacing,
+    GfxContext.QRP_1Tex(icon_left_hand_side + style.GetTileIconSize() + spacing,
                         icon_top_side,
-                        width() - style->GetTileIconSize(),
-                        height() - (padding * 2),
+                        container->text->GetWidth(),
+                        container->text->GetHeight(),
                         container->text->GetDeviceTexture(),
                         texxform,
                         nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
@@ -205,12 +203,17 @@ nux::BaseTexture* ResultRendererHorizontalTile::DrawHighlight(std::string const&
 void ResultRendererHorizontalTile::LoadText(Result& row)
 {
   std::stringstream final_text;
-  final_text << row.name() << "\n<span size=\"small\">"
-             << row.comment() << "</span>";
+  char *name = g_markup_escape_text(row.name().c_str()  , -1);
+  char *comment = g_markup_escape_text(row.comment().c_str()  , -1);
+  final_text << name << "\n<span size=\"small\">"
+             << comment << "</span>";
 
-  PlacesStyle*          style      = PlacesStyle::GetDefault();
+  g_free(name);
+  g_free(comment);
+
+  Style& style = Style::Instance();
   nux::CairoGraphics _cairoGraphics(CAIRO_FORMAT_ARGB32,
-                                    width() - style->GetTileIconSize() + spacing,
+                                    width() - style.GetTileIconSize() + spacing - (padding * 2),
                                     height() - (padding * 2));
 
   cairo_t* cr = _cairoGraphics.GetContext();
@@ -234,7 +237,7 @@ void ResultRendererHorizontalTile::LoadText(Result& row)
 
   pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
   pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_END);
-  pango_layout_set_width(layout, (width() - style->GetTileIconSize() - spacing)* PANGO_SCALE);
+  pango_layout_set_width(layout, (width() - style.GetTileIconSize() - spacing)* PANGO_SCALE);
   pango_layout_set_height(layout, (height() - (padding * 2)) * PANGO_SCALE);
 
   pango_layout_set_markup(layout, final_text.str().c_str(), -1);

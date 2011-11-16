@@ -24,6 +24,11 @@
 
 #include <glib/gi18n-lib.h>
 
+namespace unity
+{
+namespace launcher
+{
+
 BFBLauncherIcon::BFBLauncherIcon(Launcher* IconManager)
  : SimpleLauncherIcon(IconManager)
 {
@@ -55,3 +60,6 @@ void BFBLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 
   // dont chain down to avoid random dash close events
 }
+
+} // namespace launcher
+} // namespace unity

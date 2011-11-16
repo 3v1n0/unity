@@ -29,8 +29,8 @@
 #include "BGHash.h"
 #include "FontSettings.h"
 #include "DashView.h"
+#include "DashSettings.h"
 #include "DashStyle.h"
-#include "PlacesStyle.h"
 
 #define WIDTH 1024
 #define HEIGHT 768
@@ -64,7 +64,6 @@ void TestRunner::Init ()
   view->DisableBlur();
   view->SetMinMaxSize(WIDTH, HEIGHT);
   layout->AddView (view, 1, nux::MINOR_POSITION_CENTER);
-  layout->SetFocused (true);
   layout->SetMinMaxSize(WIDTH, HEIGHT);
 
   view->AboutToShow();
@@ -100,8 +99,8 @@ int main(int argc, char **argv)
   nux::NuxInitialize(0);
   nux::logging::configure_logging(::getenv("UNITY_LOG_SEVERITY"));
   // The instances for the pseudo-singletons.
-  unity::DashStyle dash_style;
-  unity::PlacesStyle places_style;
+  unity::dash::Style dash_style;
+  unity::dash::Settings dash_settings;
 
   TestRunner *test_runner = new TestRunner ();
   wt = nux::CreateGUIThread(TEXT("Unity Dash"),

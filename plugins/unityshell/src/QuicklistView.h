@@ -58,10 +58,6 @@ public:
 
   ~QuicklistView();
 
-  long ProcessEvent(nux::IEvent& iEvent,
-                    long    traverseInfo,
-                    long    processEventInfo);
-
   void Draw(nux::GraphicsEngine& gfxContext,
             bool             forceDraw);
 
@@ -100,6 +96,10 @@ public:
   virtual bool InspectKeyEvent(unsigned int eventType,
                                unsigned int keysym,
                                const char* character);
+
+  //Required for a11y
+  QuicklistMenuItem* GetSelectedMenuItem();
+  sigc::signal<void> selection_change;
 
 private:
   void RecvCairoTextChanged(QuicklistMenuItem* item);

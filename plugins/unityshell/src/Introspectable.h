@@ -27,13 +27,16 @@ namespace unity
 {
 class Introspectable
 {
+typedef std::list<Introspectable*> IntrospectableList;
+
 public:
   GVariant* Introspect();
+  virtual const gchar* GetName() = 0;
   void AddChild(Introspectable* child);
   void RemoveChild(Introspectable* child);
+  IntrospectableList const& GetIntrospectableChildren() { return _children; };
 
 protected:
-  virtual const gchar* GetName() = 0;
   virtual const gchar* GetChildsName();
   virtual void AddProperties(GVariantBuilder* builder) = 0;
   /*

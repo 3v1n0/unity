@@ -33,6 +33,11 @@
 
 #include "DndData.h"
 
+namespace unity
+{
+namespace launcher
+{
+
 class ActionArg
 {
 public:
@@ -142,7 +147,7 @@ public:
 
   virtual std::string NameForWindow (Window window) = 0;
 
-  virtual bool HasWindowOnViewport() = 0;
+  virtual const bool HasWindowOnViewport() = 0;
 
   virtual bool IsSpacer() = 0;
 
@@ -193,6 +198,9 @@ public:
   sigc::signal<void, AbstractLauncherIcon*> needs_redraw;
 
 };
+
+}
+}
 
 #endif // LAUNCHERICON_H
 

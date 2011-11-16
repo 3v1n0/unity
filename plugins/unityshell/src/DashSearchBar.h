@@ -58,6 +58,7 @@ public:
   nux::Property<std::string> search_hint;
   nux::Property<bool> showing_filters;
   nux::Property<bool> can_refine_search;
+  nux::ROProperty<bool> im_active;
 
   sigc::signal<void> activated;
   sigc::signal<void, std::string const&> search_changed;
@@ -68,7 +69,6 @@ private:
   void OnFontChanged(GtkSettings* settings, GParamSpec* pspec=NULL);
   void OnSearchHintChanged();
 
-  long ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo);
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
 
@@ -83,6 +83,7 @@ private:
 
   std::string get_search_string() const;
   bool set_search_string(std::string const& string);
+  bool get_im_active() const;
 
   static gboolean OnLiveSearchTimeout(SearchBar* self);
 

@@ -20,24 +20,24 @@
 
 namespace unity
 {
-  class DashStyleO : public DashStyle
+  class DashStyleO : public dash::Style
   {
     public:
       DashStyleO();
       ~DashStyleO();
 
-      bool ScrollbarVert (cairo_t* cr, nux::State state);
-      bool TrackView (cairo_t* cr, nux::State state);
+      bool ScrollbarVert (cairo_t* cr, nux::ButtonVisualState state);
+      bool TrackView (cairo_t* cr, nux::ButtonVisualState state);
   };
 
-  class DashStyleP : public DashStyle
+  class DashStyleP : public dash::Style
   {
     public:
       DashStyleP();
       ~DashStyleP();
 
-      bool ScrollbarVert (cairo_t* cr, nux::State state);
-      bool TrackView (cairo_t* cr, nux::State state);
+      bool ScrollbarVert (cairo_t* cr, nux::ButtonVisualState state);
+      bool TrackView (cairo_t* cr, nux::ButtonVisualState state);
   };
 
   DashStyleO::DashStyleO ()
@@ -48,7 +48,7 @@ namespace unity
   {
   }
 
-  bool DashStyleO::ScrollbarVert (cairo_t* cr, nux::State state)
+  bool DashStyleO::ScrollbarVert (cairo_t* cr, nux::ButtonVisualState state)
   {
     cairo_set_source_rgba (cr, 0.0, 1.0, 0.0, 1.0);
     cairo_paint (cr);
@@ -56,7 +56,7 @@ namespace unity
     return true;
   }
 
-  bool DashStyleO::TrackView (cairo_t* cr, nux::State state)
+  bool DashStyleO::TrackView (cairo_t* cr, nux::ButtonVisualState state)
   {
     cairo_set_source_rgba (cr, 0.0, 1.0, 1.0, 1.0);
     cairo_paint (cr);
@@ -72,7 +72,7 @@ namespace unity
   {
   }
 
-  bool DashStyleP::ScrollbarVert (cairo_t* cr, nux::State state)
+  bool DashStyleP::ScrollbarVert (cairo_t* cr, nux::ButtonVisualState state)
   {
     cairo_set_source_rgba (cr, 1.0, 0.0, 0.0, 1.0);
     cairo_paint (cr);
@@ -80,7 +80,7 @@ namespace unity
     return true;
   }
 
-  bool DashStyleP::TrackView (cairo_t* cr, nux::State state)
+  bool DashStyleP::TrackView (cairo_t* cr, nux::ButtonVisualState state)
   {
     cairo_set_source_rgba (cr, 1.0, 1.0, 0.0, 1.0);
     cairo_paint (cr);
@@ -115,87 +115,87 @@ int main (int    argc,
   cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/empty.png");
 
   // render some elements from different styles to PNG-images
-  pDashStyle->Button (cr, nux::NUX_STATE_NORMAL, "Play");
+  pDashStyle->Button (cr, nux::VISUAL_STATE_NORMAL, "Play");
   cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/button-normal.png");
   wipe (cr);
 
-  pDashStyle->Button (cr, nux::NUX_STATE_ACTIVE, "Pause");
+  pDashStyle->Button (cr, nux::VISUAL_STATE_PRESSED, "Pause");
   cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/button-active.png");
   wipe (cr);
 
-  pDashStyle->Button (cr, nux::NUX_STATE_PRELIGHT, "Record");
+  pDashStyle->Button (cr, nux::VISUAL_STATE_PRELIGHT, "Record");
   cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/button-prelight.png");
   wipe (cr);
 
-  pDashStyle->Button (cr, nux::NUX_STATE_SELECTED, "Rewind");
-  cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/button-selected.png");
-  wipe (cr);
+  //pDashStyle->Button (cr, nux::NUX_STATE_SELECTED, "Rewind");
+  //cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/button-selected.png");
+  //wipe (cr);
 
-  pDashStyle->Button (cr, nux::NUX_STATE_INSENSITIVE, "Forward");
-  cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/button-insensitive.png");
-  wipe (cr);
+  //pDashStyle->Button (cr, nux::NUX_STATE_INSENSITIVE, "Forward");
+  //cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/button-insensitive.png");
+  //wipe (cr);
 
-  pDashStyle->StarEmpty (cr, nux::NUX_STATE_NORMAL);
+  pDashStyle->StarEmpty (cr, nux::VISUAL_STATE_NORMAL);
   cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/star-empty.png");
   wipe (cr);
 
-  pDashStyle->StarHalf (cr, nux::NUX_STATE_NORMAL);
+  pDashStyle->StarHalf (cr, nux::VISUAL_STATE_NORMAL);
   cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/star-half.png");
   wipe (cr);
 
-  pDashStyle->StarFull (cr, nux::NUX_STATE_NORMAL);
+  pDashStyle->StarFull (cr, nux::VISUAL_STATE_NORMAL);
   cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/star-full.png");
   wipe (cr);
 
   pDashStyle->MultiRangeSegment (cr,
-                                 nux::NUX_STATE_NORMAL,
+                                 nux::VISUAL_STATE_NORMAL,
                                  "100KB",
-                                 unity::DashStyle::Arrow::LEFT,
-                                 unity::DashStyle::Segment::LEFT);
+                                 unity::dash::Arrow::LEFT,
+                                 unity::dash::Segment::LEFT);
   cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/multirange-left.png");
   wipe (cr);
 
   pDashStyle->MultiRangeSegment (cr,
-                                 nux::NUX_STATE_ACTIVE,
+                                 nux::VISUAL_STATE_PRESSED,
                                  "10GB",
-                                 unity::DashStyle::Arrow::LEFT,
-                                 unity::DashStyle::Segment::MIDDLE);
+                                 unity::dash::Arrow::LEFT,
+                                 unity::dash::Segment::MIDDLE);
   cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/multirange-middle-left.png");
   wipe (cr);
 
   pDashStyle->MultiRangeSegment (cr,
-                                 nux::NUX_STATE_ACTIVE,
+                                 nux::VISUAL_STATE_PRESSED,
                                  "1MB",
-                                 unity::DashStyle::Arrow::BOTH,
-                                 unity::DashStyle::Segment::MIDDLE);
+                                 unity::dash::Arrow::BOTH,
+                                 unity::dash::Segment::MIDDLE);
   cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/multirange-middle-both.png");
   wipe (cr);
 
   pDashStyle->MultiRangeSegment (cr,
-                                 nux::NUX_STATE_ACTIVE,
+                                 nux::VISUAL_STATE_PRESSED,
                                  "1TB",
-                                 unity::DashStyle::Arrow::RIGHT,
-                                 unity::DashStyle::Segment::MIDDLE);
+                                 unity::dash::Arrow::RIGHT,
+                                 unity::dash::Segment::MIDDLE);
   cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/multirange-middle-right.png");
   wipe (cr);
 
   pDashStyle->MultiRangeSegment (cr,
-                                 nux::NUX_STATE_ACTIVE,
+                                 nux::VISUAL_STATE_PRESSED,
                                  "100KB",
-                                 unity::DashStyle::Arrow::LEFT,
-                                 unity::DashStyle::Segment::RIGHT);
+                                 unity::dash::Arrow::LEFT,
+                                 unity::dash::Segment::RIGHT);
   cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/multirange-right.png");
   wipe (cr);
 
-  pDashStyle->TrackViewNumber (cr, nux::NUX_STATE_NORMAL, "42");
+  pDashStyle->TrackViewNumber (cr, nux::VISUAL_STATE_NORMAL, "42");
   cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/track-view-number-normal.png");
   wipe (cr);
 
-  pDashStyle->TrackViewPlay (cr, nux::NUX_STATE_NORMAL);
+  pDashStyle->TrackViewPlay (cr, nux::VISUAL_STATE_NORMAL);
   cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/track-view-play-normal.png");
   wipe (cr);
 
-  pDashStyle->TrackViewPause (cr, nux::NUX_STATE_NORMAL);
+  pDashStyle->TrackViewPause (cr, nux::VISUAL_STATE_NORMAL);
   cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/track-view-pause-normal.png");
   wipe (cr);
 

@@ -25,6 +25,8 @@
 #include "NuxGraphics/GraphicsEngine.h"
 #include <gtk/gtk.h>
 
+#include "DashSettings.h"
+#include "PanelStyle.h"
 #include "PanelView.h"
 #include <dbus/dbus-glib.h>
 
@@ -34,6 +36,7 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
   unity::PanelView* view = new unity::PanelView();
 
   //view->SetMinMaxSize(1024, 24);
+  view->SetPrimary(true);
   layout->AddView(view, 1, nux::eCenter, nux::eFull);
   layout->SetContentDistribution(nux::eStackCenter);
 
@@ -49,6 +52,10 @@ int main(int argc, char** argv)
   dbus_g_thread_init();
 
   nux::NuxInitialize(0);
+
+  // The instances for the pseudo-singletons.
+  unity::panel::Style panel_style;
+  unity::dash::Settings dash_settings;
 
   nux::WindowThread* wt = nux::CreateGUIThread(TEXT("Unity Panel"), 1024, 24, 0, &ThreadWidgetInit, 0);
 

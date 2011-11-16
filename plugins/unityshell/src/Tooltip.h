@@ -66,10 +66,6 @@ public:
 
   ~Tooltip();
 
-  long ProcessEvent(IEvent& iEvent,
-                    long    traverseInfo,
-                    long    processEventInfo);
-
   void Draw(GraphicsEngine& gfxContext,
             bool             forceDraw);
 

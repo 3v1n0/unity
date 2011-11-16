@@ -64,6 +64,10 @@ public:
 protected:
   void ProcessDndEnter();
 
+  virtual Area* FindKeyFocusArea(unsigned int key_symbol,
+    unsigned long x11_key_code,
+    unsigned long special_keys_state);
+
 private:
   void SetupBackground();
   void SetupViews();
@@ -71,7 +75,6 @@ private:
 
   nux::Geometry GetBestFitGeometry(nux::Geometry const& for_geo);
 
-  long ProcessEvent(nux::IEvent& ievent, long traverse_info, long event_info);
   void Draw(nux::GraphicsEngine& gfx_context, bool force_draw);
   void DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw);
   virtual long PostLayoutManagement (long LayoutResult);
@@ -83,6 +86,7 @@ private:
   void OnLensAdded(Lens::Ptr& lens);
   void OnLensBarActivated(std::string const& id);
   void OnSearchFinished(std::string const& search_string);
+  void OnGlobalSearchFinished(std::string const& search_string);
   void OnUriActivated(std::string const& uri);
   void OnUriActivatedReply(std::string const& uri, HandledType type, Lens::Hints const&);
   bool DoFallbackActivation(std::string const& uri);

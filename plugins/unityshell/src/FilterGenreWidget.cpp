@@ -31,7 +31,7 @@
 #include "FilterGenreWidget.h"
 #include "FilterGenreButton.h"
 #include "FilterBasicButton.h"
-#include "PlacesStyle.h"
+#include "DashStyle.h"
 
 namespace unity
 {
@@ -49,19 +49,16 @@ NUX_IMPLEMENT_OBJECT_TYPE(FilterGenre);
     InitTheme();
 
     all_button_ = new FilterBasicButton(_("All"), NUX_TRACKER_LOCATION);
-    all_button_->activated.connect(sigc::mem_fun(this, &FilterGenre::OnAllActivated));
-    all_button_->label = _("All");
-
-    PlacesStyle* style = PlacesStyle::GetDefault();
+    all_button_->state_change.connect(sigc::mem_fun(this, &FilterGenre::OnAllActivated));
+    all_button_->SetLabel(_("All"));
 
     genre_layout_ = new nux::GridHLayout(NUX_TRACKER_LOCATION);
     genre_layout_->ForceChildrenSize(true);
-    genre_layout_->SetHeightMatchContent(true);
-    genre_layout_->SetVerticalInternalMargin (12);
-    genre_layout_->SetVerticalExternalMargin (12);
-    genre_layout_->SetHorizontalInternalMargin (10);
+    genre_layout_->MatchContentSize(true);
+    genre_layout_->SetSpaceBetweenChildren (10, 12);
+    genre_layout_->SetTopAndBottomPadding (12);
     genre_layout_->EnablePartialVisibility (false);
-    genre_layout_->SetChildrenSize (style->GetTileWidth() - 12, 35);
+    genre_layout_->SetChildrenSize (dash::Style::Instance().GetTileWidth() - 12, 32);
 
     SetRightHandView(all_button_);
     SetContents(genre_layout_);
@@ -141,11 +138,6 @@ NUX_IMPLEMENT_OBJECT_TYPE(FilterGenre);
   {
     // just check to see if all the filters are active or not
     // if they are, then set the all status to true
-  }
-
-
-  long int FilterGenre::ProcessEvent(nux::IEvent& ievent, long int TraverseInfo, long int ProcessEventInfo) {
-    return GetLayout()->ProcessEvent(ievent, TraverseInfo, ProcessEventInfo);
   }
 
   void FilterGenre::Draw(nux::GraphicsEngine& GfxContext, bool force_draw) {

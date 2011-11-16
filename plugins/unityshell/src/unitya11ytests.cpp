@@ -40,6 +40,10 @@
 #include "unity-launcher-icon-accessible.h"
 #include "unity-panel-view-accessible.h"
 
+using unity::launcher::Launcher;
+using unity::launcher::LauncherIcon;
+using unity::launcher::SimpleLauncherIcon;
+
 /*
  * This unit test checks if the destroy management is working:
  *

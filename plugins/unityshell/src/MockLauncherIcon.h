@@ -33,6 +33,11 @@
 
 #include "AbstractLauncherIcon.h"
 
+namespace unity
+{
+namespace launcher
+{
+
 class MockLauncherIcon : public AbstractLauncherIcon
 {
 public:
@@ -108,7 +113,7 @@ public:
     return 7;
   }
 
-  bool HasWindowOnViewport()
+  const bool HasWindowOnViewport()
   {
     return false;
   }
@@ -258,6 +263,9 @@ private:
   nux::BaseTexture* icon_;
 
 };
+
+}
+}
 
 #endif // MOCKLAUNCHERICON_H
 

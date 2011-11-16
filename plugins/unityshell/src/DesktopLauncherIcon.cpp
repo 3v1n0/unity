@@ -22,6 +22,11 @@
 
 #include <glib/gi18n-lib.h>
 
+namespace unity
+{
+namespace launcher
+{
+
 DesktopLauncherIcon::DesktopLauncherIcon(Launcher* IconManager)
   :   SimpleLauncherIcon(IconManager)
 {
@@ -54,3 +59,6 @@ DesktopLauncherIcon::ActivateLauncherIcon(ActionArg arg)
   SimpleLauncherIcon::ActivateLauncherIcon(arg);
   WindowManager::Default()->ShowDesktop();
 }
+
+} // namespace launcher
+} // namespace unity

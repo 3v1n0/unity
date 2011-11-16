@@ -28,7 +28,6 @@
 
 #include "FilterBar.h"
 #include "DashStyle.h"
-#include "PlacesStyle.h"
 
 class TestRunner
 {
@@ -38,7 +37,7 @@ public:
 
   static void InitWindowThread (nux::NThread* thread, void* InitData);
   void Init ();
-  nux::Layout *layout;
+  nux::LinearLayout *layout;
 
 private:
 
@@ -59,8 +58,6 @@ void TestRunner::Init ()
   layout = new nux::VLayout(NUX_TRACKER_LOCATION);
 
   layout->AddView (filterbar, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
-
-  layout->SetFocused (true);
 
   filterbar->AddFilter (NULL);
   filterbar->AddFilter (NULL);
@@ -100,8 +97,7 @@ int main(int argc, char **argv)
 
   nux::NuxInitialize(0);
   // The instances for the pseudo-singletons.
-  unity::DashStyle dash_style;
-  unity::PlacesStyle places_style;
+  unity::dash::Style dash_style;
 
 
   TestRunner *test_runner = new TestRunner ();

@@ -42,7 +42,7 @@
 
 #include <Nux/Utils.h>
 
-#include "PlacesStyle.h"
+#include "DashStyle.h"
 
 static const nux::Color kExpandDefaultTextColor(1.0f, 1.0f, 1.0f, 0.6f);
 static const nux::Color kExpandHoverTextColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -51,6 +51,7 @@ static const float kExpandHoverIconOpacity = 1.0f;
 
 namespace unity
 {
+NUX_IMPLEMENT_OBJECT_TYPE(PlacesGroup);
 
 PlacesGroup::PlacesGroup()
   : View(NUX_TRACKER_LOCATION),
@@ -61,12 +62,12 @@ PlacesGroup::PlacesGroup()
     _n_total_items(0),
     _draw_sep(true)
 {
-  PlacesStyle* style = PlacesStyle::GetDefault();
-  nux::BaseTexture* arrow = style->GetGroupUnexpandIcon();
+  nux::BaseTexture* arrow = dash::Style::Instance().GetGroupUnexpandIcon();
 
   _cached_name = NULL;
   _group_layout = new nux::VLayout("", NUX_TRACKER_LOCATION);
   _group_layout->SetHorizontalExternalMargin(19);
+  _group_layout->SetVerticalExternalMargin(1);
 
   _group_layout->AddLayout(new nux::SpaceLayout(15,15,15,15), 0);
 
@@ -95,6 +96,7 @@ PlacesGroup::PlacesGroup()
   _expand_icon = new IconTexture(arrow, arrow->GetWidth(), arrow->GetHeight());
   _expand_icon->SetOpacity(kExpandDefaultIconOpacity);
   _expand_icon->SetMinimumSize(arrow->GetWidth(), arrow->GetHeight());
+  _expand_icon->SetVisible(false);
   _header_layout->AddView(_expand_icon, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
   SetLayout(_group_layout);
@@ -167,6 +169,18 @@ PlacesGroup::SetName(const char* name)
 
   g_free(tmp);
   g_free(final);
+}
+
+nux::StaticCairoText*
+PlacesGroup::GetLabel()
+{
+  return _name;
+}
+
+nux::StaticCairoText*
+PlacesGroup::GetExpandLabel()
+{
+  return _expand_label;
 }
 
 void
@@ -255,7 +269,7 @@ void
 PlacesGroup::Refresh()
 {
   RefreshLabel();
-  ComputeChildLayout();
+  ComputeContentSize();
   QueueDraw();
 }
 
@@ -276,30 +290,33 @@ PlacesGroup::OnIdleRelayout(PlacesGroup* self)
     self->QueueDraw();
     self->_group_layout->QueueDraw();
     self->GetChildView()->QueueDraw();
-    self->ComputeChildLayout();
+    self->ComputeContentSize();
     self->_idle_id = 0;
-
-    if (self->GetFocused())
-    {
-      self->SetFocused(false);  // unset focus on all children
-      self->SetFocused(true);  // set focus on first child
-    }
   }
 
   return FALSE;
 }
 
-long
-PlacesGroup::ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo)
-{
-  long ret = TraverseInfo;
-  ret = _group_layout->ProcessEvent(ievent, TraverseInfo, ProcessEventInfo);
-  return ret;
-}
-
 void PlacesGroup::Draw(nux::GraphicsEngine& GfxContext,
                        bool                 forceDraw)
 {
+  nux::Geometry base = GetGeometry();
+  GfxContext.PushClippingRectangle(base);
+
+  nux::Color col(0.15f, 0.15f, 0.15f, 0.15f);
+
+  if (_draw_sep)
+  {
+    GfxContext.GetRenderStates().SetColorMask(true, true, true, true);
+    GfxContext.GetRenderStates().SetBlend(true);
+    GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
+    nux::GetPainter().Draw2DLine(GfxContext,
+                                 base.x + 15, base.y + base.height - 1,
+                                 base.x + base.width - 15, base.y + base.height - 1,
+                                 col);
+  }
+
+  GfxContext.PopClippingRectangle();
 }
 
 void
@@ -315,20 +332,6 @@ PlacesGroup::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 void PlacesGroup::PostDraw(nux::GraphicsEngine& GfxContext,
                            bool                 forceDraw)
 {
-  nux::Geometry base = GetGeometry();
-  GfxContext.PushClippingRectangle(base);
-
-  nux::Color col(0.2f, 0.2f, 0.2f, 0.2f);
-
-  if (_draw_sep)
-    nux::GetPainter().Draw2DLine(GfxContext,
-                                 base.x + 10, base.y + base.height - 1,
-                                 base.x + base.width - 10, base.y + base.height - 1,
-                                 col,
-                                 col);
-
-
-  GfxContext.PopClippingRectangle();
 }
 
 void
@@ -349,8 +352,6 @@ PlacesGroup::GetExpanded()
 void
 PlacesGroup::SetExpanded(bool is_expanded)
 {
-  PlacesStyle* style = PlacesStyle::GetDefault();
-
   if (_is_expanded == is_expanded)
     return;
 
@@ -361,8 +362,12 @@ PlacesGroup::SetExpanded(bool is_expanded)
 
   Refresh();
 
-  _expand_icon->SetTexture(_is_expanded ? style->GetGroupUnexpandIcon()
-                           : style->GetGroupExpandIcon());
+  dash::Style& style = dash::Style::Instance();
+  if (_is_expanded)
+    _expand_icon->SetTexture(style.GetGroupUnexpandIcon());
+  else
+    _expand_icon->SetTexture(style.GetGroupExpandIcon());
+
   expanded.emit(this);
 }
 

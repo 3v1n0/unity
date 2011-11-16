@@ -54,13 +54,18 @@ GdkPixbuf* make_pixbuf(int image_type, std::string const& image_data, bool dash_
 
 PanelIndicatorEntryView::PanelIndicatorEntryView(
   indicator::Entry::Ptr const& proxy,
-  int padding)
+  int padding,
+  IndicatorEntryType type)
   : TextureArea(NUX_TRACKER_LOCATION)
   , proxy_(proxy)
+  , type_(type)
   , util_cg_(CAIRO_FORMAT_ARGB32, 1, 1)
-  , padding_(padding)
+  , texture_layer_(NULL)
+  , padding_(padding < 0 ? 0 : padding)
+  , opacity_(1.0f)
   , draw_active_(false)
   , dash_showing_(false)
+  , disabled_(false)
 {
   on_indicator_activate_changed_connection_ = proxy_->active_changed.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::OnActiveChanged));
   on_indicator_updated_connection_ = proxy_->updated.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::Refresh));
@@ -71,9 +76,10 @@ PanelIndicatorEntryView::PanelIndicatorEntryView(
   InputArea::mouse_up.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::OnMouseUp));
 
   InputArea::SetAcceptMouseWheelEvent(true);
-  InputArea::mouse_wheel.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::OnMouseWheel));
+  if (type_ != MENU)
+    InputArea::mouse_wheel.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::OnMouseWheel));
 
-  on_panelstyle_changed_connection_ = PanelStyle::GetDefault()->changed.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::Refresh));
+  on_panelstyle_changed_connection_ = panel::Style::Instance().changed.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::Refresh));
   Refresh();
 }
 
@@ -83,6 +89,8 @@ PanelIndicatorEntryView::~PanelIndicatorEntryView()
   on_indicator_updated_connection_.disconnect();
   on_panelstyle_changed_connection_.disconnect();
   g_signal_handler_disconnect(gtk_settings_get_default(), on_font_changed_connection_);
+  if (texture_layer_)
+    delete texture_layer_;
 }
 
 void PanelIndicatorEntryView::OnActiveChanged(bool is_active)
@@ -106,23 +114,29 @@ void PanelIndicatorEntryView::ShowMenu(int button)
 
 void PanelIndicatorEntryView::OnMouseDown(int x, int y, long button_flags, long key_flags)
 {
-  if (proxy_->active())
+  if (proxy_->active() || IsDisabled())
     return;
 
-  int button = nux::GetEventButton(button_flags);
-
   if (((proxy_->label_visible() && proxy_->label_sensitive()) ||
-       (proxy_->image_visible() && proxy_->image_sensitive())) && button != 2)
+       (proxy_->image_visible() && proxy_->image_sensitive())))
   {
-    ShowMenu(button);
+    int button = nux::GetEventButton(button_flags);
+
+    if (button == 2 && type_ == INDICATOR)
+      SetOpacity(0.75f);
+    else
+      ShowMenu(button);
   }
+
   Refresh();
 }
 
 void PanelIndicatorEntryView::OnMouseUp(int x, int y, long button_flags, long key_flags)
 {
-  if (proxy_->active())
+  if (proxy_->active() || IsDisabled())
     return;
+
+  int button = nux::GetEventButton(button_flags);
 
   nux::Geometry geo = GetAbsoluteGeometry();
   int px = geo.x + x;
@@ -130,9 +144,12 @@ void PanelIndicatorEntryView::OnMouseUp(int x, int y, long button_flags, long ke
 
   if (((proxy_->label_visible() && proxy_->label_sensitive()) ||
        (proxy_->image_visible() && proxy_->image_sensitive())) &&
-      geo.IsPointInside(px, py) && nux::GetEventButton(button_flags) == 2)
+       button == 2 && type_ == INDICATOR)
   {
-    proxy_->SecondaryActivate(time(NULL));
+    if (geo.IsPointInside(px, py))
+      proxy_->SecondaryActivate(time(NULL));
+
+    SetOpacity(1.0f);
   }
 
   Refresh();
@@ -142,7 +159,8 @@ void PanelIndicatorEntryView::OnMouseWheel(int x, int y, int delta,
                                            unsigned long mouse_state,
                                            unsigned long key_state)
 {
-  proxy_->Scroll(delta);
+  if (!IsDisabled())
+    proxy_->Scroll(delta);
 }
 
 void PanelIndicatorEntryView::Activate(int button)
@@ -280,8 +298,7 @@ void PanelIndicatorEntryView::Refresh()
 
   if (pixbuf && proxy_->image_visible())
   {
-    PanelStyle* style = PanelStyle::GetDefault();
-    GtkStyleContext* style_context = style->GetStyleContext();
+    GtkStyleContext* style_context = panel::Style::Instance().GetStyleContext();
 
     gtk_style_context_save(style_context);
 
@@ -312,7 +329,7 @@ void PanelIndicatorEntryView::Refresh()
       cairo_paint_with_alpha(cr, proxy_->image_sensitive() ? 1.0 : 0.5);
 
       cairo_pattern_t* pat = cairo_pop_group(cr);
-      
+
       cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 1.0f);
       cairo_rectangle(cr, x, y, width, height);
       cairo_mask(cr, pat);
@@ -339,8 +356,7 @@ void PanelIndicatorEntryView::Refresh()
   {
     pango_cairo_update_layout(cr, layout);
 
-    PanelStyle* style = PanelStyle::GetDefault();
-    GtkStyleContext* style_context = style->GetStyleContext();
+    GtkStyleContext* style_context = panel::Style::Instance().GetStyleContext();
 
     gtk_style_context_save(style_context);
 
@@ -387,19 +403,41 @@ void PanelIndicatorEntryView::Refresh()
   rop.Blend = true;
   rop.SrcBlend = GL_ONE;
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
-  nux::TextureLayer* texture_layer = new nux::TextureLayer(texture2D->GetDeviceTexture(),
-                                                           texxform,
-                                                           nux::color::White,
-                                                           true,
-                                                           rop);
-  SetPaintLayer(texture_layer);
+
+  if (texture_layer_)
+    delete texture_layer_;
+
+  texture_layer_ = new nux::TextureLayer(texture2D->GetDeviceTexture(), texxform,
+                                         nux::color::White, true, rop);
+  SetPaintLayer(texture_layer_);
 
   texture2D->UnReference();
-  delete texture_layer;
 
   NeedRedraw();
 
   refreshed.emit(this);
+}
+
+void PanelIndicatorEntryView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
+{
+  if (opacity_ == 1.0f)
+  {
+    TextureArea::Draw(GfxContext, force_draw);
+    return;
+  }
+
+  auto geo = GetGeometry();
+  GfxContext.PushClippingRectangle(geo);
+
+  if (texture_layer_)
+  {
+    nux::TexCoordXForm texxform;
+    GfxContext.QRP_1Tex(geo.x, geo.y, geo.width, geo.height,
+                        texture_layer_->GetDeviceTexture(), texxform,
+                        nux::color::White * opacity_);
+  }
+
+  GfxContext.PopClippingRectangle();
 }
 
 void PanelIndicatorEntryView::DashShown()
@@ -412,6 +450,22 @@ void PanelIndicatorEntryView::DashHidden()
 {
   dash_showing_ = false;
   Refresh();
+}
+
+void PanelIndicatorEntryView::SetOpacity(double opacity)
+{
+  opacity = CLAMP(opacity, 0.0f, 1.0f);
+
+  if (opacity_ != opacity)
+  {
+    opacity_ = opacity;
+    NeedRedraw();
+  }
+}
+
+double PanelIndicatorEntryView::GetOpacity()
+{
+  return opacity_;
 }
 
 const gchar* PanelIndicatorEntryView::GetName()
@@ -480,6 +534,16 @@ int PanelIndicatorEntryView::GetEntryPriority() const
   return -1;
 }
 
+void PanelIndicatorEntryView::SetDisabled(bool disabled)
+{
+  disabled_ = disabled;
+}
+
+bool PanelIndicatorEntryView::IsDisabled()
+{
+  return (disabled_ || !proxy_.get() || !IsSensitive());
+}
+
 void PanelIndicatorEntryView::OnFontChanged(GObject* gobject, GParamSpec* pspec,
                                             gpointer data)
 {
@@ -492,8 +556,7 @@ namespace
 
 void draw_menu_bg(cairo_t* cr, int width, int height)
 {
-  PanelStyle* style = PanelStyle::GetDefault();
-  GtkStyleContext* style_context = style->GetStyleContext();
+  GtkStyleContext* style_context = panel::Style::Instance().GetStyleContext();
 
   gtk_style_context_save(style_context);
 

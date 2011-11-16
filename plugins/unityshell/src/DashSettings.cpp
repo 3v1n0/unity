@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
-* Copyright (C) 2010 Canonical Ltd
+* Copyright (C) 2010, 2011 Canonical Ltd
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License version 3 as
@@ -17,76 +17,138 @@
 * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
 */
 
-#include "gdk/gdk.h"
+#include <gdk/gdk.h>
+#include <gio/gio.h>
+
+#include <NuxCore/Logger.h>
 
 #include "DashSettings.h"
 #include "UScreen.h"
 
-#define FORM_FACTOR "form-factor"
-
-static DashSettings* _places_settings = NULL;
-
-DashSettings::DashSettings()
-  : _settings(NULL),
-    _raw_from_factor(0),
-    _form_factor(DESKTOP)
+namespace unity
 {
-  _settings = g_settings_new("com.canonical.Unity");
-  g_signal_connect(_settings, "changed",
-                   (GCallback)(DashSettings::Changed), this);
+namespace dash
+{
+namespace
+{
+nux::logging::Logger logger("unity.dash");
+
+Settings* settings_instance = nullptr;
+const char* const FORM_FACTOR = "form-factor";
+}
+
+class Settings::Impl
+{
+public:
+  Impl(Settings* owner);
+  ~Impl();
+
+  FormFactor GetFormFactor() const;
+  void SetFormFactor(FormFactor factor);
+
+private:
+  void Refresh();
+  static void Changed(GSettings* settings, gchar* key, Impl* self);
+
+private:
+  Settings* owner_;
+  GSettings* settings_;
+  FormFactor form_factor_;
+};
+
+
+Settings::Impl::Impl(Settings* owner)
+  : owner_(owner)
+  , settings_(nullptr)
+  , form_factor_(FormFactor::DESKTOP)
+{
+  settings_ = g_settings_new("com.canonical.Unity");
+  g_signal_connect(settings_, "changed",
+                   (GCallback)(Impl::Changed), this);
   Refresh();
 }
 
-DashSettings::~DashSettings()
+Settings::Impl::~Impl()
 {
-  g_object_unref(_settings);
+  g_object_unref(settings_);
 }
 
-void
-DashSettings::Refresh()
+void Settings::Impl::Refresh()
 {
-  _raw_from_factor = g_settings_get_enum(_settings, FORM_FACTOR);
+  int raw_from_factor = g_settings_get_enum(settings_, FORM_FACTOR);
 
-  if (_raw_from_factor == 0) //Automatic
+  if (raw_from_factor == 0) //Automatic
   {
     UScreen *uscreen = UScreen::GetDefault();
     int primary_monitor = uscreen->GetPrimaryMonitor();
     auto geo = uscreen->GetMonitorGeometry(primary_monitor);
 
-    _form_factor = geo.height > 799 ? DESKTOP : NETBOOK;
+    form_factor_ = geo.height > 799 ? FormFactor::DESKTOP : FormFactor::NETBOOK;
   }
   else
   {
-    _form_factor = (FormFactor)_raw_from_factor;
+    form_factor_ = static_cast<FormFactor>(raw_from_factor);
   }
 
-  changed.emit();
+  owner_->changed.emit();
 }
 
-void
-DashSettings::Changed(GSettings* settings, char* key, DashSettings* self)
+void Settings::Impl::Changed(GSettings* settings, char* key, Impl* self)
 {
   self->Refresh();
 }
 
-DashSettings*
-DashSettings::GetDefault()
+FormFactor Settings::Impl::GetFormFactor() const
 {
-  if (G_UNLIKELY(!_places_settings))
-    _places_settings = new DashSettings();
-
-  return _places_settings;
+  return form_factor_;
 }
 
-DashSettings::FormFactor
-DashSettings::GetFormFactor()
+void Settings::Impl::SetFormFactor(FormFactor factor)
 {
-  return _form_factor;
+  form_factor_ = factor;
+  g_settings_set_enum(settings_, FORM_FACTOR, static_cast<int>(factor));
 }
 
-void
-DashSettings::SetFormFactor(FormFactor factor)
+Settings::Settings()
+  : pimpl(new Impl(this))
 {
-  _form_factor = factor;
-  g_settings_set_enum(_settings, FORM_FACTOR, factor);
+  if (settings_instance)
+  {
+    LOG_ERROR(logger) << "More than one dash::Settings created.";
+  }
+  else
+  {
+    settings_instance = this;
+  }
 }
+
+Settings::~Settings()
+{
+  delete pimpl;
+  if (settings_instance == this)
+    settings_instance = nullptr;
+}
+
+Settings& Settings::Instance()
+{
+  if (!settings_instance)
+  {
+    LOG_ERROR(logger) << "No dash::Settings created yet.";
+  }
+
+  return *settings_instance;
+}
+
+FormFactor Settings::GetFormFactor() const
+{
+  return pimpl->GetFormFactor();
+}
+
+void Settings::SetFormFactor(FormFactor factor)
+{
+  pimpl->SetFormFactor(factor);
+}
+
+
+} // namespace dash
+} // namespace unity

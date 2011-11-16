@@ -62,16 +62,15 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
       _dash_is_open(false)
 {
   _needs_geo_sync = false;
-  _style = new PanelStyle();
-  _style->changed.connect(sigc::mem_fun(this, &PanelView::ForceUpdateBackground));
+  panel::Style::Instance().changed.connect(sigc::mem_fun(this, &PanelView::ForceUpdateBackground));
 
   _bg_layer = new nux::ColorLayer(nux::Color(0xff595853), true);
 
   nux::ROPConfig rop;
   rop.Blend = true;
-  rop.SrcBlend = GL_SRC_COLOR;
-  rop.DstBlend = GL_DST_COLOR;
-  _bg_darken_layer_ = new nux::ColorLayer(nux::Color(0.0f, 0.0f, 0.0f, 1.0f), false, rop);
+  rop.SrcBlend = GL_ZERO;
+  rop.DstBlend = GL_SRC_COLOR;
+  _bg_darken_layer_ = new nux::ColorLayer(nux::Color(0.7f, 0.7f, 0.7f, 1.0f), false, rop);
 
   _layout = new nux::HLayout("", NUX_TRACKER_LOCATION);
 
@@ -137,7 +136,6 @@ PanelView::~PanelView()
 {
   if (_track_menu_pointer_id)
     g_source_remove(_track_menu_pointer_id);
-  _style->UnReference();
   UBusServer *ubus = ubus_server_get_default();
   ubus_server_unregister_interest(ubus, _handle_bg_color_update);
   ubus_server_unregister_interest(ubus, _handle_dash_hidden);
@@ -148,6 +146,9 @@ PanelView::~PanelView()
 
   for (auto conn : _maximized_opacity_toggle_connections)
     conn.disconnect();
+
+  indicator::EntryLocationMap locations;
+  _remote->SyncGeometries(GetName() + boost::lexical_cast<std::string>(_monitor), locations);
 
   delete _bg_layer;
 }
@@ -179,10 +180,13 @@ void PanelView::OnDashHidden(GVariant* data, PanelView* self)
 
 void PanelView::OnDashShown(GVariant* data, PanelView* self)
 {
-  self->bg_effect_helper_.enabled = true;
-  self->_dash_is_open = true;
-  self->_indicators->DashShown();
-  self->ForceUpdateBackground();
+  if (self->_is_primary)
+  {
+    self->bg_effect_helper_.enabled = true;
+    self->_dash_is_open = true;
+    self->_indicators->DashShown();
+    self->ForceUpdateBackground();
+  }
 }
 
 void PanelView::AddPanelView(PanelIndicatorsView* child,
@@ -213,14 +217,6 @@ void PanelView::AddProperties(GVariantBuilder* builder)
   .add("service-unique-name", _remote->owner_name())
   .add("using-local-service", _remote->using_local_service())
   .add(GetGeometry());
-}
-
-long
-PanelView::ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo)
-{
-  long ret = TraverseInfo;
-  ret = _layout->ProcessEvent(ievent, ret, ProcessEventInfo);
-  return ret;
 }
 
 void
@@ -275,7 +271,7 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   GfxContext.PopClippingRectangle();
 
-  if (_needs_geo_sync && _menu_view->GetControlsActive())
+  if (_needs_geo_sync)
   {
     SyncGeometries();
     _needs_geo_sync = false;
@@ -373,7 +369,7 @@ PanelView::UpdateBackground()
   _last_height = geo.height;
   _is_dirty = false;
 
-  if (_dash_is_open)
+  if (_dash_is_open && (_menu_view->GetMaximizedWindow() == 0))
   {
     if (_bg_layer)
       delete _bg_layer;
@@ -393,7 +389,7 @@ PanelView::UpdateBackground()
       opacity = 1.0f;
     }
 
-    nux::NBitmapData* bitmap = _style->GetBackground(geo.width, geo.height, opacity);
+    nux::NBitmapData* bitmap = panel::Style::Instance().GetBackground(geo.width, geo.height, opacity);
     nux::BaseTexture* texture2D = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
     texture2D->Update(bitmap);
     delete bitmap;
@@ -450,7 +446,7 @@ void PanelView::OnObjectAdded(indicator::Indicator::Ptr const& proxy)
 
   _layout->SetContentDistribution(nux::eStackLeft);
 
-  ComputeChildLayout();
+  ComputeContentSize();
   NeedRedraw();
 }
 
@@ -467,14 +463,14 @@ void PanelView::OnObjectRemoved(indicator::Indicator::Ptr const& proxy)
 
   _layout->SetContentDistribution(nux::eStackLeft);
 
-  ComputeChildLayout();
+  ComputeContentSize();
   NeedRedraw();
 }
 
 void PanelView::OnIndicatorViewUpdated(PanelIndicatorEntryView* view)
 {
   _needs_geo_sync = true;
-  ComputeChildLayout();
+  ComputeContentSize();
 }
 
 void PanelView::OnMenuPointerMoved(int x, int y)
@@ -546,6 +542,8 @@ void PanelView::OnEntryActivated(std::string const& entry_id)
     _menu_view->AllMenusClosed();
     _tracked_pointer_pos = {-1, -1};
   }
+
+  ubus_server_send_message(ubus_server_get_default(), UBUS_PLACE_VIEW_CLOSE_REQUEST, NULL);
 }
 
 void PanelView::OnSynced()
@@ -664,9 +662,13 @@ void
 PanelView::SyncGeometries()
 {
   indicator::EntryLocationMap locations;
-  _menu_view->GetGeometryForSync(locations);
+  std::string panel_id = GetName() + boost::lexical_cast<std::string>(_monitor);
+
+  if (_menu_view->GetControlsActive())
+    _menu_view->GetGeometryForSync(locations);
+
   _indicators->GetGeometryForSync(locations);
-  _remote->SyncGeometries(GetName(), locations);
+  _remote->SyncGeometries(panel_id, locations);
 }
 
 void

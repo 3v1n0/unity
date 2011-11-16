@@ -106,6 +106,7 @@ public:
   void NotifyResized(CompWindow* window, int x, int y, int w, int h);
   void NotifyStateChange(CompWindow* window, unsigned int state, unsigned int last_state);
   void NotifyCompizEvent(const char* plugin, const char* event, CompOption::Vector& option);
+  void NotifyNewDecorationState(guint32 xid);
 
   void Decorate(guint32 xid);
   void Undecorate(guint32 xid);
@@ -116,6 +117,7 @@ public:
   bool IsWindowOnCurrentDesktop(guint xid);
   bool IsWindowObscured(guint xid);
   bool IsWindowMapped(guint xid);
+  bool IsWindowVisible(guint32 xid);
   void Restore(guint32 xid);
   void Minimize(guint32 xid);
   void Close(guint32 xid);
@@ -126,7 +128,7 @@ public:
 
   void SetWindowIconGeometry(Window window, nux::Geometry const& geo);
 
-  void FocusWindowGroup(std::vector<Window> windows);
+  void FocusWindowGroup(std::vector<Window> windows, FocusVisibility);
   bool ScaleWindowGroup(std::vector<Window> windows, int state, bool force);
 
   bool IsScreenGrabbed();
@@ -134,7 +136,7 @@ public:
 
   unsigned long long GetWindowActiveNumber (guint32 xid);
 
-  void MaximizeIfBigEnough(CompWindow* window);
+  bool MaximizeIfBigEnough(CompWindow* window);
 
   nux::Geometry GetWindowGeometry(guint32 xid);
   nux::Geometry GetScreenGeometry();
@@ -174,6 +176,8 @@ private:
 
   bool _in_show_desktop;
   CompWindow* _last_focused_window;
+
+  std::map<guint32, unsigned int> _window_decoration_state;
 
   static PluginAdapter* _default;
 };

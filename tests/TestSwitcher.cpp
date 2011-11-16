@@ -38,17 +38,19 @@
 
 using namespace unity::switcher;
 using namespace unity::ui;
+using unity::launcher::AbstractLauncherIcon;
+using unity::launcher::MockLauncherIcon;
 
 static bool enable_flipping = false;
 
-static SwitcherController *view;
+static Controller *view;
 
 static gboolean on_timeout(gpointer data)
 {
   if (!enable_flipping)
     return TRUE;
 
-  SwitcherController* self = (SwitcherController*) data;
+  Controller* self = static_cast<Controller*>(data);
   self->Next();
 
   return TRUE;
@@ -103,7 +105,7 @@ void OnNumIconsChanged (nux::SpinBox *self)
   for (int i = 0; i < self->GetValue (); i++)
     icons.push_back(new MockLauncherIcon());
 
-  view->Show(SwitcherController::ALL, SwitcherController::FOCUS_ORDER, false, icons);
+  view->Show(ShowMode::ALL, SortMode::FOCUS_ORDER, false, icons);
 }
 
 void OnNextClicked (nux::View *sender)
@@ -124,8 +126,8 @@ void OnPreviousClicked (nux::View *sender)
 void ThreadWidgetInit(nux::NThread* thread, void* InitData)
 {
   nux::VLayout* layout = new nux::VLayout(TEXT(""), NUX_TRACKER_LOCATION);
-  
-  view = new SwitcherController();
+
+  view = new Controller();
   view->timeout_length = 0;
   view->SetWorkspace(nux::Geometry(0, 0, 900, 600));
 
@@ -137,14 +139,13 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
   for (int i = 0; i < 9; i++)
     icons.push_back(new MockLauncherIcon());
 
-  view->Show(SwitcherController::ALL, SwitcherController::FOCUS_ORDER, false, icons);
+  view->Show(ShowMode::ALL, SortMode::FOCUS_ORDER, false, icons);
 
   view->GetView ()->render_boxes = true;
 
-  nux::CheckBox* flipping_check = new nux::CheckBox(TEXT("Enable Automatic Flipping"), NUX_TRACKER_LOCATION);
+  nux::CheckBox* flipping_check = new nux::CheckBox(TEXT("Enable Automatic Flipping"), false, NUX_TRACKER_LOCATION);
   flipping_check->SetMaximumWidth(250);
-  flipping_check->SetMaximumHeight(30);
-  flipping_check->active.changed.connect (sigc::ptr_fun (OnFlippingChanged));
+  flipping_check->state_change.connect (sigc::ptr_fun (OnFlippingChanged));
   layout->AddView(flipping_check, 1, nux::eRight, nux::eFull);
 
 
@@ -261,15 +262,15 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
   control_buttons_layout->SetHorizontalInternalMargin (10);
 
   nux::Button* prev_button = new nux::Button ("Previous", NUX_TRACKER_LOCATION);
-  prev_button->activated.connect (sigc::ptr_fun (OnPreviousClicked));
+  prev_button->state_change.connect (sigc::ptr_fun (OnPreviousClicked));
   control_buttons_layout->AddView(prev_button, 1, nux::eLeft, nux::eFull);
 
   nux::Button* next_button = new nux::Button ("Next", NUX_TRACKER_LOCATION);
-  next_button->activated.connect (sigc::ptr_fun (OnNextClicked));
+  next_button->state_change.connect (sigc::ptr_fun (OnNextClicked));
   control_buttons_layout->AddView(next_button, 1, nux::eRight, nux::eFull);
 
   nux::Button* detail_button = new nux::Button ("Detail", NUX_TRACKER_LOCATION);
-  detail_button->activated.connect (sigc::ptr_fun (OnDetailClicked));
+  detail_button->state_change.connect (sigc::ptr_fun (OnDetailClicked));
   control_buttons_layout->AddView(detail_button, 1, nux::eRight, nux::eFull);
 
   layout->AddView(control_buttons_layout, 1, nux::eRight, nux::eFull);

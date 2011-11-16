@@ -47,7 +47,7 @@
     "text-color"     : ["#ffffff", "#ffffff", "#ffffff", "#ffffff", "#ffffff"],
     "text-opacity"   : [      1.0,       1.0,       1.0,       1.0,       1.0], 
     "fill-color"     : ["#FFFFFF", "#000000", "#ffffff", "#000000", "#000000"],
-    "fill-opacity"   : [      0.5,       0.0,      0.25,       0.0,       0.0],
+    "fill-opacity"   : [      0.25,       0.0,      0.25,       0.0,       0.0],
     "overlay-opacity": [      0.1,       0.1,       0.1,       0.0,       0.0],
     "overlay-mode"   : [ "normal",  "normal",  "normal",  "normal",  "normal"],
     "blur-size"      : [        1,         1,         1,         0,         0]},

@@ -15,7 +15,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Mirco Müller <mirco.mueller@canonical.com
+ *              Neil Jagdish Patel <neil.patel@canonical.com>
  */
+
+#include "DashStyle.h"
 
 #include <string>
 #include <vector>
@@ -29,20 +32,27 @@
 
 #include <NuxCore/Color.h>
 #include <NuxCore/Logger.h>
+#include <NuxImage/CairoGraphics.h>
 
-#include "DashStyle.h"
+#include <UnityCore/GLibSignal.h>
+#include <UnityCore/GLibWrapper.h>
+
 #include "JSONParser.h"
 #include "config.h"
 
 #define DASH_WIDGETS_FILE DATADIR"/unity/themes/dash-widgets.json"
 
+typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
+
 namespace unity
+{
+namespace dash
 {
 namespace
 {
 nux::logging::Logger logger("unity.dash");
 
-DashStyle* style_instance = nullptr;
+Style* style_instance = nullptr;
 const int STATES = 5;
 
 // These cairo overrides may also be reused somewhere...
@@ -55,19 +65,38 @@ inline double _align(double val)
 {
   double fract = val - (int) val;
 
+  // for strokes with an odd line-width
   if (fract != 0.5f)
     return (double) ((int) val + 0.5f);
   else
     return val;
+
+  // for strokes with an even line-width
+  /*if (fract != 0.0f)
+    return (double) ((int) val);
+  else
+    return val;*/
 }
+
+class LazyLoadTexture
+{
+public:
+  LazyLoadTexture(std::string const& filename);
+  nux::BaseTexture* texture();
+private:
+  void LoadTexture();
+private:
+  std::string filename_;
+  BaseTexturePtr texture_;
+};
 
 } // anon namespace
 
 
-class DashStyle::Impl
+class Style::Impl
 {
 public:
-  Impl();
+  Impl(Style* owner);
   ~Impl();
 
   void Blur(cairo_t* cr, int size);
@@ -84,7 +113,8 @@ public:
 
   void Text(cairo_t* cr,
             nux::Color const& color,
-            std::string const& label);
+            std::string const& label,
+            double horizMargin = 10.0);
 
   void ButtonOutlinePath(cairo_t* cr, bool align);
 
@@ -108,9 +138,14 @@ public:
                           double     height,
                           Segment    segment,
                           Arrow      arrow,
-                          nux::State state);
+                          nux::ButtonVisualState state);
+
+  void Refresh();
+  void OnFontChanged(GtkSettings* object, GParamSpec* pspec);
 
   // Members
+  Style* owner_;
+
   cairo_font_options_t* default_font_options_;
 
   std::vector<nux::Color> button_label_border_color_;
@@ -141,17 +176,79 @@ public:
   int                   scrollbar_blur_size_;
   int                   scrollbar_size_;
   double                scrollbar_corner_radius_;
+
+  glib::SignalManager signal_manager_;
+
+  nux::Color text_color_;
+
+  int text_width_;
+  int text_height_;
+  int number_of_columns_;
+
+  LazyLoadTexture dash_bottom_texture_;
+  LazyLoadTexture dash_right_texture_;
+  LazyLoadTexture dash_corner_texture_;
+  LazyLoadTexture dash_fullscreen_icon_;
+  LazyLoadTexture dash_left_edge_;
+  LazyLoadTexture dash_left_corner_;
+  LazyLoadTexture dash_left_tile_;
+  LazyLoadTexture dash_top_corner_;
+  LazyLoadTexture dash_top_tile_;
+
+  LazyLoadTexture dash_shine_;
+
+  LazyLoadTexture search_magnify_texture_;
+  LazyLoadTexture search_close_texture_;
+  LazyLoadTexture search_close_glow_texture_;
+  LazyLoadTexture search_spin_texture_;
+  LazyLoadTexture search_spin_glow_texture_;
+
+  LazyLoadTexture group_unexpand_texture_;
+  LazyLoadTexture group_expand_texture_;
+
 };
 
-DashStyle::Impl::Impl()
-  : button_label_border_color_(STATES)
+Style::Impl::Impl(Style* owner)
+  : owner_(owner)
+  , button_label_border_color_(STATES)
   , button_label_border_size_(STATES)
   , button_label_text_color_(STATES)
   , button_label_fill_color_(STATES)
   , button_label_overlay_opacity_(STATES)
   , button_label_overlay_mode_(STATES)
   , button_label_blur_size_(STATES)
+  , text_color_(nux::color::White)
+  , text_width_(0)
+  , text_height_(0)
+  , number_of_columns_(6)
+  , dash_bottom_texture_("/dash_bottom_border_tile.png")
+  , dash_right_texture_("/dash_right_border_tile.png")
+  , dash_corner_texture_("/dash_bottom_right_corner.png")
+  , dash_fullscreen_icon_("/dash_fullscreen_icon.png")
+  , dash_left_edge_("/dash_left_edge.png")
+  , dash_left_corner_("/dash_bottom_left_corner.png")
+  , dash_left_tile_("/dash_left_tile.png")
+  , dash_top_corner_("/dash_top_right_corner.png")
+  , dash_top_tile_("/dash_top_tile.png")
+  , dash_shine_("/dash_sheen.png")
+  , search_magnify_texture_("/search_magnify.png")
+  , search_close_texture_("/search_close.png")
+  , search_close_glow_texture_("/search_close_glow.png")
+  , search_spin_texture_("/search_spin.png")
+  , search_spin_glow_texture_("/search_spin_glow.png")
+  , group_unexpand_texture_("/dash_group_unexpand.png")
+  , group_expand_texture_("/dash_group_expand.png")
 {
+  signal_manager_.Add(new glib::Signal<void, GtkSettings*, GParamSpec*>
+                      (gtk_settings_get_default(),
+                       "notify::gtk-font-name",
+                       sigc::mem_fun(this, &Impl::OnFontChanged)));
+  signal_manager_.Add(new glib::Signal<void, GtkSettings*, GParamSpec*>
+                      (gtk_settings_get_default(),
+                       "notify::gtk-xft-dpi",
+                       sigc::mem_fun(this, &Impl::OnFontChanged)));
+  Refresh();
+
   // create fallback font-options
   default_font_options_ = cairo_font_options_create();
   if (cairo_font_options_status(default_font_options_) == CAIRO_STATUS_SUCCESS)
@@ -226,18 +323,65 @@ DashStyle::Impl::Impl()
   parser.ReadDouble("scrollbar", "corner-radius", scrollbar_corner_radius_);
 }
 
-DashStyle::Impl::~Impl()
+Style::Impl::~Impl()
 {
   if (cairo_font_options_status(default_font_options_) == CAIRO_STATUS_SUCCESS)
     cairo_font_options_destroy(default_font_options_);
 }
 
-DashStyle::DashStyle()
-  : pimpl(new Impl())
+void Style::Impl::Refresh()
+{
+  const char* const SAMPLE_MAX_TEXT = "Chromium Web Browser";
+  GtkSettings* settings = ::gtk_settings_get_default();
+
+  nux::CairoGraphics util_cg(CAIRO_FORMAT_ARGB32, 1, 1);
+  cairo_t* cr = util_cg.GetInternalContext();
+
+  glib::String font_description;
+  int dpi = 0;
+  ::g_object_get(settings,
+                 "gtk-font-name", &font_description,
+                 "gtk-xft-dpi", &dpi,
+                 NULL);
+  PangoFontDescription* desc = ::pango_font_description_from_string(font_description);
+  ::pango_font_description_set_weight(desc, PANGO_WEIGHT_NORMAL);
+  ::pango_font_description_set_size(desc, 9 * PANGO_SCALE);
+
+  glib::Object<PangoLayout> layout(::pango_cairo_create_layout(cr));
+  ::pango_layout_set_font_description(layout, desc);
+  ::pango_layout_set_text(layout, SAMPLE_MAX_TEXT, -1);
+
+  PangoContext* cxt = ::pango_layout_get_context(layout);
+
+  GdkScreen* screen = ::gdk_screen_get_default();
+  ::pango_cairo_context_set_font_options(cxt, ::gdk_screen_get_font_options(screen));
+  float pango_scale = PANGO_SCALE;
+  ::pango_cairo_context_set_resolution(cxt, dpi / pango_scale);
+  ::pango_layout_context_changed(layout);
+
+  PangoRectangle log_rect;
+  ::pango_layout_get_extents(layout, NULL, &log_rect);
+  text_width_ = log_rect.width / PANGO_SCALE;
+  text_height_ = log_rect.height / PANGO_SCALE;
+
+  owner_->changed.emit();
+
+  pango_font_description_free(desc);
+}
+
+
+void Style::Impl::OnFontChanged(GtkSettings* object, GParamSpec* pspec)
+{
+  Refresh();
+}
+
+
+Style::Style()
+  : pimpl(new Impl(this))
 {
   if (style_instance)
   {
-    LOG_ERROR(logger) << "More than one DashStyle created.";
+    LOG_ERROR(logger) << "More than one dash::Style created.";
   }
   else
   {
@@ -245,24 +389,24 @@ DashStyle::DashStyle()
   }
 }
 
-DashStyle::~DashStyle ()
+Style::~Style ()
 {
   delete pimpl;
   if (style_instance == this)
     style_instance = nullptr;
 }
 
-DashStyle& DashStyle::Instance()
+Style& Style::Instance()
 {
   if (!style_instance)
   {
-    LOG_ERROR(logger) << "No DashStyle created yet.";
+    LOG_ERROR(logger) << "No dash::Style created yet.";
   }
 
   return *style_instance;
 }
 
-void DashStyle::RoundedRect(cairo_t* cr,
+void Style::RoundedRect(cairo_t* cr,
                             double   aspect,
                             double   x,
                             double   y,
@@ -511,12 +655,12 @@ void _expblur(guchar* pixels,
   return;
 }
 
-void DashStyle::Blur(cairo_t* cr, int size)
+void Style::Blur(cairo_t* cr, int size)
 {
   pimpl->Blur(cr, size);
 }
 
-void DashStyle::Impl::Blur(cairo_t* cr, int size)
+void Style::Impl::Blur(cairo_t* cr, int size)
 {
   // sanity check
   if (cairo_status(cr) != CAIRO_STATUS_SUCCESS &&
@@ -562,7 +706,7 @@ void DashStyle::Impl::Blur(cairo_t* cr, int size)
   cairo_surface_mark_dirty(surface);
 }
 
-void DashStyle::Impl::Star(cairo_t* cr, double size)
+void Style::Impl::Star(cairo_t* cr, double size)
 {
   double outter[5][2] = {{0.0, 0.0},
                          {0.0, 0.0},
@@ -599,52 +743,52 @@ void DashStyle::Impl::Star(cairo_t* cr, double size)
   cairo_close_path(cr);
 }
 
-void DashStyle::Impl::SetDefaultValues()
+void Style::Impl::SetDefaultValues()
 {
   // button-label
-  button_label_border_color_[nux::NUX_STATE_NORMAL] = nux::Color(0.53, 1.0, 0.66, 0.5);
-  button_label_border_color_[nux::NUX_STATE_ACTIVE] = nux::Color(1.0, 1.0, 1.0, 0.8);
-  button_label_border_color_[nux::NUX_STATE_PRELIGHT] = nux::Color(0.06, 0.13, 1.0, 0.5);
-  button_label_border_color_[nux::NUX_STATE_SELECTED] = nux::Color(0.07, 0.2, 0.33, 0.5);
-  button_label_border_color_[nux::NUX_STATE_INSENSITIVE] = nux::Color(0.39, 0.26, 0.12, 0.5);
+  button_label_border_color_[nux::VISUAL_STATE_NORMAL] = nux::Color(0.53, 1.0, 0.66, 0.5);
+  button_label_border_color_[nux::VISUAL_STATE_PRESSED] = nux::Color(1.0, 1.0, 1.0, 0.8);
+  button_label_border_color_[nux::VISUAL_STATE_PRELIGHT] = nux::Color(0.06, 0.13, 1.0, 0.5);
+  //button_label_border_color_[nux::NUX_STATE_SELECTED] = nux::Color(0.07, 0.2, 0.33, 0.5);
+  //button_label_border_color_[nux::NUX_STATE_INSENSITIVE] = nux::Color(0.39, 0.26, 0.12, 0.5);
 
-  button_label_border_size_[nux::NUX_STATE_NORMAL]          = 0.5;
-  button_label_border_size_[nux::NUX_STATE_ACTIVE]          = 2.0;
-  button_label_border_size_[nux::NUX_STATE_PRELIGHT]        = 0.5;
-  button_label_border_size_[nux::NUX_STATE_SELECTED]        = 0.5;
-  button_label_border_size_[nux::NUX_STATE_INSENSITIVE]     = 0.5;
+  button_label_border_size_[nux::VISUAL_STATE_NORMAL]          = 0.5;
+  button_label_border_size_[nux::VISUAL_STATE_PRESSED]          = 2.0;
+  button_label_border_size_[nux::VISUAL_STATE_PRELIGHT]        = 0.5;
+  //button_label_border_size_[nux::NUX_STATE_SELECTED]        = 0.5;
+  //button_label_border_size_[nux::NUX_STATE_INSENSITIVE]     = 0.5;
 
   button_label_text_size_                                   = 1.0;
 
-  button_label_text_color_[nux::NUX_STATE_NORMAL] = nux::color::White;
-  button_label_text_color_[nux::NUX_STATE_ACTIVE] = nux::color::Black;
-  button_label_text_color_[nux::NUX_STATE_PRELIGHT] = nux::color::White;
-  button_label_text_color_[nux::NUX_STATE_SELECTED] = nux::color::White;
-  button_label_text_color_[nux::NUX_STATE_INSENSITIVE] = nux::color::White;
+  button_label_text_color_[nux::VISUAL_STATE_NORMAL] = nux::color::White;
+  button_label_text_color_[nux::VISUAL_STATE_PRESSED] = nux::color::Black;
+  button_label_text_color_[nux::VISUAL_STATE_PRELIGHT] = nux::color::White;
+  //button_label_text_color_[nux::NUX_STATE_SELECTED] = nux::color::White;
+  //button_label_text_color_[nux::NUX_STATE_INSENSITIVE] = nux::color::White;
 
-  button_label_fill_color_[nux::NUX_STATE_NORMAL] = nux::color::Transparent;
-  button_label_fill_color_[nux::NUX_STATE_ACTIVE] = nux::color::Transparent;
-  button_label_fill_color_[nux::NUX_STATE_PRELIGHT] = nux::color::Transparent;
-  button_label_fill_color_[nux::NUX_STATE_SELECTED] = nux::color::Transparent;
-  button_label_fill_color_[nux::NUX_STATE_INSENSITIVE] = nux::color::Transparent;
+  button_label_fill_color_[nux::VISUAL_STATE_NORMAL] = nux::color::Transparent;
+  button_label_fill_color_[nux::VISUAL_STATE_PRESSED] = nux::color::Transparent;
+  button_label_fill_color_[nux::VISUAL_STATE_PRELIGHT] = nux::color::Transparent;
+  //button_label_fill_color_[nux::NUX_STATE_SELECTED] = nux::color::Transparent;
+  //button_label_fill_color_[nux::NUX_STATE_INSENSITIVE] = nux::color::Transparent;
 
-  button_label_overlay_opacity_[nux::NUX_STATE_NORMAL]      = 0.0;
-  button_label_overlay_opacity_[nux::NUX_STATE_ACTIVE]      = 0.3;
-  button_label_overlay_opacity_[nux::NUX_STATE_PRELIGHT]    = 0.0;
-  button_label_overlay_opacity_[nux::NUX_STATE_SELECTED]    = 0.0;
-  button_label_overlay_opacity_[nux::NUX_STATE_INSENSITIVE] = 0.0;
+  button_label_overlay_opacity_[nux::VISUAL_STATE_NORMAL]      = 0.0;
+  button_label_overlay_opacity_[nux::VISUAL_STATE_PRESSED]      = 0.3;
+  button_label_overlay_opacity_[nux::VISUAL_STATE_PRELIGHT]    = 0.0;
+  //button_label_overlay_opacity_[nux::NUX_STATE_SELECTED]    = 0.0;
+  //button_label_overlay_opacity_[nux::NUX_STATE_INSENSITIVE] = 0.0;
 
-  button_label_overlay_mode_[nux::NUX_STATE_NORMAL]         = BlendMode::NORMAL;
-  button_label_overlay_mode_[nux::NUX_STATE_ACTIVE]         = BlendMode::NORMAL;
-  button_label_overlay_mode_[nux::NUX_STATE_PRELIGHT]       = BlendMode::NORMAL;
-  button_label_overlay_mode_[nux::NUX_STATE_SELECTED]       = BlendMode::NORMAL;
-  button_label_overlay_mode_[nux::NUX_STATE_INSENSITIVE]    = BlendMode::NORMAL;
+  button_label_overlay_mode_[nux::VISUAL_STATE_NORMAL]         = BlendMode::NORMAL;
+  button_label_overlay_mode_[nux::VISUAL_STATE_PRESSED]         = BlendMode::NORMAL;
+  button_label_overlay_mode_[nux::VISUAL_STATE_PRELIGHT]       = BlendMode::NORMAL;
+  //button_label_overlay_mode_[nux::NUX_STATE_SELECTED]       = BlendMode::NORMAL;
+  //button_label_overlay_mode_[nux::NUX_STATE_INSENSITIVE]    = BlendMode::NORMAL;
 
-  button_label_blur_size_[nux::NUX_STATE_NORMAL]            = 0;
-  button_label_blur_size_[nux::NUX_STATE_ACTIVE]            = 5;
-  button_label_blur_size_[nux::NUX_STATE_PRELIGHT]          = 0;
-  button_label_blur_size_[nux::NUX_STATE_SELECTED]          = 0;
-  button_label_blur_size_[nux::NUX_STATE_INSENSITIVE]       = 0;
+  button_label_blur_size_[nux::VISUAL_STATE_NORMAL]            = 0;
+  button_label_blur_size_[nux::VISUAL_STATE_PRESSED]            = 5;
+  button_label_blur_size_[nux::VISUAL_STATE_PRELIGHT]          = 0;
+  //button_label_blur_size_[nux::NUX_STATE_SELECTED]          = 0;
+  //button_label_blur_size_[nux::NUX_STATE_INSENSITIVE]       = 0;
 
   // regular-text
   regular_text_color_ = nux::color::White;
@@ -668,7 +812,7 @@ void DashStyle::Impl::SetDefaultValues()
   scrollbar_corner_radius_   = 1.5;
 }
 
-void DashStyle::Impl::ArrowPath(cairo_t* cr, Arrow arrow)
+void Style::Impl::ArrowPath(cairo_t* cr, Arrow arrow)
 {
   double x  = 0.0;
   double y  = 0.0;
@@ -716,7 +860,7 @@ void DashStyle::Impl::ArrowPath(cairo_t* cr, Arrow arrow)
   }
 }
 
-void DashStyle::Impl::ButtonOutlinePath (cairo_t* cr, bool align)
+void Style::Impl::ButtonOutlinePath (cairo_t* cr, bool align)
 {
   double x  = 2.0;
   double y  = 2.0;
@@ -852,7 +996,7 @@ void DashStyle::Impl::ButtonOutlinePath (cairo_t* cr, bool align)
   cairo_close_path(cr);
 }
 
-void DashStyle::Impl::RoundedRectSegment(cairo_t*   cr,
+void Style::Impl::RoundedRectSegment(cairo_t*   cr,
                                          double     aspect,
                                          double     x,
                                          double     y,
@@ -861,7 +1005,7 @@ void DashStyle::Impl::RoundedRectSegment(cairo_t*   cr,
                                          double     height,
                                          Segment    segment,
                                          Arrow      arrow,
-                                         nux::State state)
+                                         nux::ButtonVisualState state)
 {
   double radius = cornerRadius / aspect;
   double arrow_w = radius / 1.5;
@@ -876,7 +1020,7 @@ void DashStyle::Impl::RoundedRectSegment(cairo_t*   cr,
     // top-right
     cairo_line_to(cr, x + width, y);
 
-    if (arrow == Arrow::RIGHT && state == nux::NUX_STATE_ACTIVE)
+    if (arrow == Arrow::RIGHT && state == nux::VISUAL_STATE_PRESSED)
 		{
       cairo_line_to(cr, x + width,           y + height / 2.0 - arrow_h);
       cairo_line_to(cr, x + width - arrow_w, y + height / 2.0);
@@ -897,6 +1041,9 @@ void DashStyle::Impl::RoundedRectSegment(cairo_t*   cr,
               90.0f * G_PI / 180.0f,
               180.0f * G_PI / 180.0f);
 
+    // left, right of the corner
+    cairo_line_to(cr, x, y + radius);
+
     // top-left, right of the corner
     cairo_arc(cr,
               x + radius,
@@ -904,6 +1051,7 @@ void DashStyle::Impl::RoundedRectSegment(cairo_t*   cr,
               radius,
               180.0f * G_PI / 180.0f,
               270.0f * G_PI / 180.0f);
+
     break;
 
   case Segment::MIDDLE:
@@ -913,7 +1061,7 @@ void DashStyle::Impl::RoundedRectSegment(cairo_t*   cr,
     // top-right
     cairo_line_to(cr, x + width, y);
 
-    if ((arrow == Arrow::RIGHT || arrow == Arrow::BOTH) && state == nux::NUX_STATE_ACTIVE)
+    if ((arrow == Arrow::RIGHT || arrow == Arrow::BOTH) && state == nux::VISUAL_STATE_PRESSED)
 		{
       cairo_line_to(cr, x + width,           y + height / 2.0 - arrow_h);
       cairo_line_to(cr, x + width - arrow_w, y + height / 2.0);
@@ -926,7 +1074,7 @@ void DashStyle::Impl::RoundedRectSegment(cairo_t*   cr,
     // bottom-left
     cairo_line_to(cr, x, y + height);
 
-    if ((arrow == Arrow::LEFT || arrow == Arrow::BOTH) && state == nux::NUX_STATE_ACTIVE)
+    if ((arrow == Arrow::LEFT || arrow == Arrow::BOTH) && state == nux::VISUAL_STATE_PRESSED)
 		{
       cairo_line_to(cr, x,           y + height / 2.0 + arrow_h);
       cairo_line_to(cr, x + arrow_w, y + height / 2.0);
@@ -966,7 +1114,7 @@ void DashStyle::Impl::RoundedRectSegment(cairo_t*   cr,
     // bottom-left
     cairo_line_to(cr, x, y + height);
 
-    if (arrow == Arrow::LEFT && state == nux::NUX_STATE_ACTIVE)
+    if (arrow == Arrow::LEFT && state == nux::VISUAL_STATE_PRESSED)
 		{
       cairo_line_to(cr, x,           y + height / 2.0 + arrow_h);
       cairo_line_to(cr, x + arrow_w, y + height / 2.0);
@@ -979,7 +1127,7 @@ void DashStyle::Impl::RoundedRectSegment(cairo_t*   cr,
   }
 }
 
-void DashStyle::Impl::ButtonOutlinePathSegment(cairo_t* cr, Segment segment)
+void Style::Impl::ButtonOutlinePathSegment(cairo_t* cr, Segment segment)
 {
   double   x  = 0.0;
   double   y  = 2.0;
@@ -1136,7 +1284,7 @@ void DashStyle::Impl::ButtonOutlinePathSegment(cairo_t* cr, Segment segment)
   }
 }
 
-void DashStyle::Impl::GetTextExtents(int& width,
+void Style::Impl::GetTextExtents(int& width,
                                      int& height,
                                      int  maxWidth,
                                      int  maxHeight,
@@ -1211,9 +1359,10 @@ void DashStyle::Impl::GetTextExtents(int& width,
   cairo_surface_destroy(surface);
 }
 
-void DashStyle::Impl::Text(cairo_t*    cr,
+void Style::Impl::Text(cairo_t*    cr,
                            nux::Color const&  color,
-                           std::string const& label)
+                           std::string const& label,
+                           double horizMargin)
 {
   double                x           = 0.0;
   double                y           = 0.0;
@@ -1226,7 +1375,7 @@ void DashStyle::Impl::Text(cairo_t*    cr,
   GdkScreen*            screen      = gdk_screen_get_default();   // not ref'ed
   GtkSettings*          settings    = gtk_settings_get_default(); // not ref'ed
   gchar*                fontName    = NULL;
-  double                horizMargin = 10.0;
+  //double                horizMargin = 10.0;
 
   w = cairo_image_surface_get_width(cairo_get_target(cr));
   h = cairo_image_surface_get_height(cairo_get_target(cr));
@@ -1307,7 +1456,7 @@ void DashStyle::Impl::Text(cairo_t*    cr,
   g_free(fontName);
 }
 
-cairo_operator_t DashStyle::Impl::SetBlendMode(cairo_t* cr, BlendMode mode)
+cairo_operator_t Style::Impl::SetBlendMode(cairo_t* cr, BlendMode mode)
 {
   // sanity checks
   if (cairo_status(cr) != CAIRO_STATUS_SUCCESS)
@@ -1327,7 +1476,7 @@ cairo_operator_t DashStyle::Impl::SetBlendMode(cairo_t* cr, BlendMode mode)
   return old;
 }
 
-void DashStyle::Impl::DrawOverlay(cairo_t*  cr,
+void Style::Impl::DrawOverlay(cairo_t*  cr,
                                   double    opacity,
                                   BlendMode mode,
                                   int       blurSize)
@@ -1400,7 +1549,7 @@ void DashStyle::Impl::DrawOverlay(cairo_t*  cr,
   cairo_set_operator(cr, old);
 }
 
-bool DashStyle::Button(cairo_t* cr, nux::State state, std::string const& label)
+bool Style::Button(cairo_t* cr, nux::ButtonVisualState state, std::string const& label)
 {
   // sanity checks
   if (cairo_status(cr) != CAIRO_STATUS_SUCCESS)
@@ -1444,7 +1593,7 @@ bool DashStyle::Button(cairo_t* cr, nux::State state, std::string const& label)
   return true;
 }
 
-bool DashStyle::StarEmpty(cairo_t* cr, nux::State state)
+bool Style::StarEmpty(cairo_t* cr, nux::ButtonVisualState state)
 {
   // sanity checks
   if (cairo_status(cr) != CAIRO_STATUS_SUCCESS)
@@ -1470,7 +1619,7 @@ bool DashStyle::StarEmpty(cairo_t* cr, nux::State state)
   return true;
 }
 
-bool DashStyle::StarHalf(cairo_t* cr, nux::State state)
+bool Style::StarHalf(cairo_t* cr, nux::ButtonVisualState state)
 {
   // sanity checks
   if (cairo_status(cr) != CAIRO_STATUS_SUCCESS)
@@ -1504,7 +1653,7 @@ bool DashStyle::StarHalf(cairo_t* cr, nux::State state)
   return true;
 }
 
-bool DashStyle::StarFull(cairo_t* cr, nux::State state)
+bool Style::StarFull(cairo_t* cr, nux::ButtonVisualState state)
 {
   // sanity checks
   if (cairo_status(cr) != CAIRO_STATUS_SUCCESS)
@@ -1528,11 +1677,11 @@ bool DashStyle::StarFull(cairo_t* cr, nux::State state)
   return true;
 }
 
-bool DashStyle::MultiRangeSegment(cairo_t*    cr,
-                                  nux::State  state,
-                                  std::string const& label,
-                                  Arrow       arrow,
-                                  Segment     segment)
+bool Style::MultiRangeSegment(cairo_t*    cr,
+                              nux::ButtonVisualState  state,
+                              std::string const& label,
+                              Arrow       arrow,
+                              Segment     segment)
 {
   // sanity checks
   if (cairo_status(cr) != CAIRO_STATUS_SUCCESS)
@@ -1579,14 +1728,15 @@ bool DashStyle::MultiRangeSegment(cairo_t*    cr,
   cairo_stroke(cr);
   pimpl->Text(cr,
               pimpl->button_label_text_color_[state],
-              label);
+              label,
+              1.0);
 
   return true;
 }
 
-bool DashStyle::TrackViewNumber(cairo_t*    cr,
-                                nux::State  state,
-                                std::string const& trackNumber)
+bool Style::TrackViewNumber(cairo_t*    cr,
+                            nux::ButtonVisualState state,
+                            std::string const& trackNumber)
 {
   // sanity checks
   if (cairo_status(cr) != CAIRO_STATUS_SUCCESS)
@@ -1598,8 +1748,8 @@ bool DashStyle::TrackViewNumber(cairo_t*    cr,
   return true;
 }
 
-bool DashStyle::TrackViewPlay(cairo_t*   cr,
-                              nux::State state)
+bool Style::TrackViewPlay(cairo_t*   cr,
+                          nux::ButtonVisualState state)
 {
   // sanity checks
   if (cairo_status(cr) != CAIRO_STATUS_SUCCESS)
@@ -1611,8 +1761,8 @@ bool DashStyle::TrackViewPlay(cairo_t*   cr,
   return true;
 }
 
-bool DashStyle::TrackViewPause(cairo_t*   cr,
-                               nux::State state)
+bool Style::TrackViewPause(cairo_t*   cr,
+                           nux::ButtonVisualState state)
 {
   // sanity checks
   if (cairo_status(cr) != CAIRO_STATUS_SUCCESS)
@@ -1624,7 +1774,7 @@ bool DashStyle::TrackViewPause(cairo_t*   cr,
   return true;
 }
 
-bool DashStyle::TrackViewProgress(cairo_t* cr)
+bool Style::TrackViewProgress(cairo_t* cr)
 {
   // sanity checks
   if (cairo_status(cr) != CAIRO_STATUS_SUCCESS)
@@ -1636,7 +1786,7 @@ bool DashStyle::TrackViewProgress(cairo_t* cr)
   return true;
 }
 
-bool DashStyle::SeparatorVert(cairo_t* cr)
+bool Style::SeparatorVert(cairo_t* cr)
 {
   // sanity checks
   if (cairo_status(cr) != CAIRO_STATUS_SUCCESS)
@@ -1664,7 +1814,7 @@ bool DashStyle::SeparatorVert(cairo_t* cr)
   return true;
 }
 
-bool DashStyle::SeparatorHoriz(cairo_t* cr)
+bool Style::SeparatorHoriz(cairo_t* cr)
 {
   // sanity checks
   if (cairo_status(cr) != CAIRO_STATUS_SUCCESS)
@@ -1692,7 +1842,7 @@ bool DashStyle::SeparatorHoriz(cairo_t* cr)
   return true;
 }
 
-int DashStyle::GetButtonGarnishSize()
+int Style::GetButtonGarnishSize()
 {
   int maxBlurSize = 0;
 
@@ -1705,14 +1855,193 @@ int DashStyle::GetButtonGarnishSize()
   return 2 * maxBlurSize;
 }
 
-int DashStyle::GetSeparatorGarnishSize()
+int Style::GetSeparatorGarnishSize()
 {
   return pimpl->separator_blur_size_;
 }
 
-int DashStyle::GetScrollbarGarnishSize()
+int Style::GetScrollbarGarnishSize()
 {
   return pimpl->scrollbar_blur_size_;
 }
 
+nux::Color const& Style::GetTextColor() const
+{
+  return pimpl->text_color_;
 }
+
+int  Style::GetDefaultNColumns() const
+{
+  return pimpl->number_of_columns_;
+}
+
+void Style::SetDefaultNColumns(int n_cols)
+{
+  if (pimpl->number_of_columns_ == n_cols)
+    return;
+
+  pimpl->number_of_columns_ = n_cols;
+
+  columns_changed.emit();
+}
+
+int Style::GetTileIconSize() const
+{
+  return 64;
+}
+
+int Style::GetTileWidth() const
+{
+  return std::max(pimpl->text_width_, 150);
+}
+
+int Style::GetTileHeight() const
+{
+  return std::max(GetTileIconSize() + (pimpl->text_height_ * 2) + 10,
+                  GetTileIconSize() + 50 + 18); // magic design numbers.
+}
+
+int Style::GetHomeTileIconSize() const
+{
+  return 104;
+}
+
+int Style::GetHomeTileWidth() const
+{
+  return pimpl->text_width_ * 1.2;
+}
+
+int Style::GetHomeTileHeight() const
+{
+  return GetHomeTileIconSize() + (pimpl->text_height_ * 5);
+}
+
+int Style::GetTextLineHeight() const
+{
+  return pimpl->text_height_;
+}
+
+
+nux::BaseTexture* Style::GetDashBottomTile()
+{
+  return pimpl->dash_bottom_texture_.texture();
+}
+
+nux::BaseTexture* Style::GetDashRightTile()
+{
+  return pimpl->dash_right_texture_.texture();
+}
+
+nux::BaseTexture* Style::GetDashCorner()
+{
+  return pimpl->dash_corner_texture_.texture();
+}
+
+
+nux::BaseTexture* Style::GetDashLeftEdge()
+{
+  return pimpl->dash_left_edge_.texture();
+}
+
+nux::BaseTexture* Style::GetDashLeftCorner()
+{
+  return pimpl->dash_left_corner_.texture();
+}
+
+nux::BaseTexture* Style::GetDashLeftTile()
+{
+  return pimpl->dash_left_tile_.texture();
+}
+
+nux::BaseTexture* Style::GetDashTopCorner()
+{
+  return pimpl->dash_top_corner_.texture();
+}
+
+nux::BaseTexture* Style::GetDashTopTile()
+{
+  return pimpl->dash_top_tile_.texture();
+}
+
+nux::BaseTexture* Style::GetDashFullscreenIcon()
+{
+  return pimpl->dash_fullscreen_icon_.texture();
+}
+
+nux::BaseTexture* Style::GetSearchMagnifyIcon()
+{
+  return pimpl->search_magnify_texture_.texture();
+}
+
+nux::BaseTexture* Style::GetSearchCloseIcon()
+{
+  return pimpl->search_close_texture_.texture();
+}
+
+nux::BaseTexture* Style::GetSearchCloseGlowIcon()
+{
+  return pimpl->search_close_glow_texture_.texture();
+}
+
+nux::BaseTexture* Style::GetSearchSpinIcon()
+{
+  return pimpl->search_spin_texture_.texture();
+}
+
+nux::BaseTexture* Style::GetSearchSpinGlowIcon()
+{
+  return pimpl->search_spin_glow_texture_.texture();
+}
+
+nux::BaseTexture* Style::GetGroupUnexpandIcon()
+{
+  return pimpl->group_unexpand_texture_.texture();
+}
+
+nux::BaseTexture* Style::GetGroupExpandIcon()
+{
+  return pimpl->group_expand_texture_.texture();
+}
+
+nux::BaseTexture* Style::GetDashShine()
+{
+  return pimpl->dash_shine_.texture();
+}
+
+
+namespace
+{
+
+LazyLoadTexture::LazyLoadTexture(std::string const& filename)
+  : filename_(filename)
+{
+}
+
+nux::BaseTexture* LazyLoadTexture::texture()
+{
+  if (!texture_)
+    LoadTexture();
+  return texture_.GetPointer();
+}
+
+void LazyLoadTexture::LoadTexture()
+{
+  std::string full_path = PKGDATADIR + filename_;
+  glib::Object<GdkPixbuf> pixbuf;
+  glib::Error error;
+
+  pixbuf = ::gdk_pixbuf_new_from_file(full_path.c_str(), &error);
+  if (error)
+  {
+    LOG_WARN(logger) << "Unable to texture " << full_path << ": " << error;
+  }
+  else
+  {
+    texture_.Adopt(nux::CreateTexture2DFromPixbuf(pixbuf, true));
+  }
+}
+
+} // anon namespace
+
+} // namespace dash
+} // namespace unity

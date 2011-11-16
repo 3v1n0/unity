@@ -39,7 +39,7 @@
 #include <UnityCore/Variant.h>
 
 #include "CairoTexture.h"
-#include "PlacesStyle.h"
+#include "DashStyle.h"
 
 #define LIVE_SEARCH_TIMEOUT 250
 
@@ -57,8 +57,7 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
   , can_refine_search(false)
   , live_search_timeout_(0)
 {
-  PlacesStyle* style = PlacesStyle::GetDefault();
-  nux::BaseTexture* icon = style->GetSearchMagnifyIcon();
+  nux::BaseTexture* icon = dash::Style::Instance().GetSearchMagnifyIcon();
 
   bg_layer_ = new nux::ColorLayer(nux::Color(0xff595853), true);
 
@@ -71,20 +70,19 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
   spinner_ = new SearchBarSpinner();
   spinner_->SetMinMaxSize(icon->GetWidth(), icon->GetHeight());
   spinner_->mouse_click.connect(sigc::mem_fun(this, &SearchBar::OnClearClicked));
-  spinner_->SetCanFocus(false);
   layout_->AddView(spinner_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
   hint_ = new nux::StaticCairoText(" ");
   hint_->SetTextColor(nux::Color(1.0f, 1.0f, 1.0f, 0.5f));
-  hint_->SetCanFocus(false);
+  hint_->SetMaximumWidth(570);
 
   pango_entry_ = new IMTextEntry();
   pango_entry_->sigTextChanged.connect(sigc::mem_fun(this, &SearchBar::OnSearchChanged));
-  pango_entry_->SetCanFocus(true);
   pango_entry_->activated.connect([&]() { activated.emit(); });
   pango_entry_->cursor_moved.connect([&](int i) { QueueDraw(); });
   pango_entry_->mouse_down.connect(sigc::mem_fun(this, &SearchBar::OnMouseButtonDown));
   pango_entry_->end_key_focus.connect(sigc::mem_fun(this, &SearchBar::OnEndKeyFocus));
+  pango_entry_->SetMaximumWidth(570);
 
   layered_layout_ = new nux::LayeredLayout();
   layered_layout_->AddLayer(hint_);
@@ -93,14 +91,13 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
   layered_layout_->SetActiveLayerN(1);
   layered_layout_->SetMinimumWidth(420);
   layered_layout_->SetMaximumWidth(645);
-  layout_->AddView(layered_layout_, 1, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FIX);
+  layout_->AddView(layered_layout_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
   std::string filter_str = _("Filter results");
   filter_str+= "  ▸";
   show_filters_ = new nux::StaticCairoText(filter_str.c_str());
   show_filters_->SetVisible(false);
   show_filters_->SetTextColor(nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
-  show_filters_->SetCanFocus(true);
   show_filters_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_LEFT);
   show_filters_->mouse_click.connect([&] (int x, int y, unsigned long b, unsigned long k) { showing_filters = !showing_filters; });
   layout_->AddView(show_filters_, 0, nux::MINOR_POSITION_RIGHT, nux::MINOR_SIZE_FIX);
@@ -114,6 +111,7 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
   search_hint.changed.connect([&](std::string const& s) { OnSearchHintChanged(); });
   search_string.SetGetterFunction(sigc::mem_fun(this, &SearchBar::get_search_string));
   search_string.SetSetterFunction(sigc::mem_fun(this, &SearchBar::set_search_string));
+  im_active.SetGetterFunction(sigc::mem_fun(this, &SearchBar::get_im_active));
   showing_filters.changed.connect(sigc::mem_fun(this, &SearchBar::OnShowingFiltersChanged));
   can_refine_search.changed.connect([&] (bool can_refine) { show_filters_->SetVisible(can_refine); });
 }
@@ -181,7 +179,8 @@ void SearchBar::OnSearchChanged(nux::TextEntry* text_entry)
                                        (GSourceFunc)&OnLiveSearchTimeout,
                                        this);
 
-  bool is_empty = pango_entry_->GetText() == "";
+ 
+  bool is_empty = pango_entry_->im_active() ? false : pango_entry_->GetText() == ""; 
   hint_->SetVisible(is_empty);
   spinner_->SetState(is_empty ? STATE_READY : STATE_SEARCHING);
 
@@ -208,15 +207,6 @@ void SearchBar::OnShowingFiltersChanged(bool is_showing)
   show_filters_->SetText(filter_str.c_str());
 }
 
-long SearchBar::ProcessEvent(nux::IEvent& ievent, long TraverseInfo,
-                                   long ProcessEventInfo)
-{
-  long ret = TraverseInfo;
-  ret = layout_->ProcessEvent(ievent, ret, ProcessEventInfo);
-
-  return ret;
-}
-
 void SearchBar::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
   nux::Geometry geo = GetGeometry();
@@ -241,11 +231,13 @@ void SearchBar::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   GfxContext.PushClippingRectangle(geo);
 
-  gPainter.PushLayer(GfxContext, bg_layer_->GetGeometry(), bg_layer_);
+  if (!IsFullRedraw())
+    gPainter.PushLayer(GfxContext, bg_layer_->GetGeometry(), bg_layer_);
 
   layout_->ProcessDraw(GfxContext, force_draw);
 
-  gPainter.PopBackground();
+  if (!IsFullRedraw())
+    gPainter.PopBackground();
   GfxContext.PopClippingRectangle();
 }
 
@@ -363,6 +355,11 @@ bool SearchBar::set_search_string(std::string const& string)
   pango_entry_->SetText(string.c_str());
   spinner_->SetState(string == "" ? STATE_READY : STATE_CLEAR);
   return true;
+}
+
+bool SearchBar::get_im_active() const
+{
+  return pango_entry_->im_active();
 }
 
 //

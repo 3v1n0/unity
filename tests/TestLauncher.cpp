@@ -36,38 +36,14 @@
 #include "BackgroundEffectHelper.h"
 #include <dbus/dbus-glib.h>
 
-using namespace unity::ui;
+using namespace unity;
 
-static Launcher *launcher;
-static LauncherController *controller;
+static launcher::Controller::Ptr controller;
 
 void ThreadWidgetInit(nux::NThread* thread, void* InitData)
 {
-  nux::BaseWindow* launcherWindow = new nux::BaseWindow(TEXT("LauncherWindow"));
-  launcherWindow->SinkReference();
-  launcherWindow->SetGeometry (nux::Geometry(0, 0, 300, 800));
-
-  launcher = new Launcher(launcherWindow);
-
-  nux::HLayout* layout = new nux::HLayout();
-  layout->AddView(launcher, 1);
-  layout->SetContentDistribution(nux::eStackLeft);
-  layout->SetVerticalExternalMargin(0);
-  layout->SetHorizontalExternalMargin(0);
-
-  controller = new LauncherController(launcher);
-
-  launcherWindow->SetLayout(layout);
-  launcherWindow->SetBackgroundColor(nux::Color(0x00000000));
-  launcherWindow->ShowWindow(true);
-  launcherWindow->SetEnterFocusInputArea(launcher);
-
-  launcher->SetIconSize(54, 48);
-  launcher->SetBacklightMode(Launcher::BACKLIGHT_ALWAYS_ON);
-
-  launcher->SetHideMode(Launcher::LAUNCHER_HIDE_DODGE_WINDOWS);
-  launcher->SetLaunchAnimation(Launcher::LAUNCH_ANIMATION_PULSE);
-  launcher->SetUrgentAnimation(Launcher::URGENT_ANIMATION_WIGGLE);
+//  launcherWindow->SetGeometry (nux::Geometry(0, 0, 300, 800));
+  controller.reset(new launcher::Controller(0));
 }
 
 int main(int argc, char** argv)
@@ -80,7 +56,7 @@ int main(int argc, char** argv)
 
   nux::NuxInitialize(0);
 
-  BackgroundEffectHelper::blur_type = unity::BLUR_NONE;
+  BackgroundEffectHelper::blur_type = BLUR_NONE;
   nux::WindowThread* wt = nux::CreateGUIThread(TEXT("Unity Switcher"), 300, 800, 0, &ThreadWidgetInit, 0);
 
   wt->Run(NULL);

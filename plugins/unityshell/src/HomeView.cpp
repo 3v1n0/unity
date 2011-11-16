@@ -22,7 +22,7 @@
 
 #include <NuxCore/Logger.h>
 
-#include "PlacesStyle.h"
+#include "DashStyle.h"
 #include "ResultRendererTile.h"
 #include "UBusMessages.h"
 
@@ -35,6 +35,19 @@ namespace
 {
 nux::logging::Logger logger("unity.dash.homeview");
 }
+
+// This is so we can override the scroll bar for the view.
+class HomeScrollView: public nux::ScrollView
+{
+public:
+  HomeScrollView(nux::VScrollBar* scroll_bar, NUX_FILE_LINE_DECL)
+    : nux::ScrollView(NUX_FILE_LINE_PARAM)
+  {
+    SetVScrollBar(scroll_bar);
+  }
+};
+
+
 
 NUX_IMPLEMENT_OBJECT_TYPE(HomeView);
 
@@ -69,12 +82,13 @@ void HomeView::SetupViews()
 {
   layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
 
-  scroll_view_ = new nux::ScrollView();
+  scroll_view_ = new HomeScrollView(new PlacesVScrollBar(NUX_TRACKER_LOCATION),
+                                    NUX_TRACKER_LOCATION);
   scroll_view_->EnableVerticalScrollBar(true);
   scroll_view_->EnableHorizontalScrollBar(false);
   scroll_view_->SetVisible(false);
   layout_->AddView(scroll_view_);
-  
+
   scroll_layout_ = new nux::VLayout();
   scroll_view_->SetLayout(scroll_layout_);
 
@@ -101,7 +115,7 @@ void HomeView::AddLens(Lens::Ptr lens)
   group->expanded.connect(sigc::mem_fun(this, &HomeView::OnGroupExpanded));
   categories_.push_back(group);
   counts_[group] = 0;
-  
+
   ResultViewGrid* grid = new ResultViewGrid(NUX_TRACKER_LOCATION);
   grid->expanded = false;
   grid->SetModelRenderer(new ResultRendererTile(NUX_TRACKER_LOCATION));
@@ -129,8 +143,7 @@ void HomeView::AddLens(Lens::Ptr lens)
 
 void HomeView::UpdateCounts(PlacesGroup* group)
 {
-  PlacesStyle* style = PlacesStyle::GetDefault();
-  group->SetCounts(style->GetDefaultNColumns(), counts_[group]);
+  group->SetCounts(dash::Style::Instance().GetDefaultNColumns(), counts_[group]);
   group->SetVisible(counts_[group]);
 
   QueueFixRenderering();
@@ -145,7 +158,7 @@ void HomeView::OnGroupExpanded(PlacesGroup* group)
 
 void HomeView::OnColumnsChanged()
 {
-  unsigned int columns = PlacesStyle::GetDefault()->GetDefaultNColumns();
+  unsigned int columns = dash::Style::Instance().GetDefaultNColumns();
 
   for (auto group: categories_)
   {
@@ -179,11 +192,6 @@ gboolean HomeView::FixRenderering(HomeView* self)
 
   self->fix_renderering_id_ = 0;
   return FALSE;
-}
-
-long HomeView::ProcessEvent(nux::IEvent& ievent, long traverse_info, long event_info)
-{
-  return layout_->ProcessEvent(ievent, traverse_info, event_info);
 }
 
 void HomeView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)

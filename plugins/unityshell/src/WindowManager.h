@@ -43,7 +43,14 @@ public:
     m_MoveResizeAtom(XInternAtom(GDK_DISPLAY_XDISPLAY(gdk_display_get_default()),
                                  "_NET_WM_MOVERESIZE", FALSE))
   {
-  }
+  };
+
+  enum class FocusVisibility
+  {
+    OnlyVisible,
+    ForceUnminimizeInvisible,
+    ForceUnminimizeOnCurrentDesktop
+  };
 
   static WindowManager* Default();
   static void            SetDefault(WindowManager* manager);
@@ -53,6 +60,7 @@ public:
   virtual bool IsWindowOnCurrentDesktop(guint32 xid) = 0;
   virtual bool IsWindowObscured(guint32 xid) = 0;
   virtual bool IsWindowMapped(guint32 xid) = 0;
+  virtual bool IsWindowVisible(guint32 xid) = 0;
 
   virtual void ShowDesktop() = 0;
 
@@ -70,7 +78,7 @@ public:
   virtual void InitiateExpo() = 0;
   virtual bool IsExpoActive() = 0;
 
-  virtual void FocusWindowGroup(std::vector<Window> windows) = 0;
+  virtual void FocusWindowGroup(std::vector<Window> windows, FocusVisibility) = 0;
   virtual bool ScaleWindowGroup(std::vector<Window> windows, int state, bool force) = 0;
 
   virtual void Decorate(guint32 xid) {};
@@ -107,6 +115,8 @@ public:
   sigc::signal<void, guint32> window_resized;
   sigc::signal<void, guint32> window_moved;
   sigc::signal<void, guint32> window_focus_changed;
+  sigc::signal<void, guint32> window_decorated;
+  sigc::signal<void, guint32> window_undecorated;
 
   sigc::signal<void> initiate_spread;
   sigc::signal<void> terminate_spread;
