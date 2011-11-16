@@ -260,36 +260,82 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
         {
           priv->pressed_entry = get_entry_at (self, event->root_x, event->root_y);
           priv->use_event = (priv->pressed_entry == NULL);
+
+          if (priv->pressed_entry)
+            ret = GDK_FILTER_REMOVE;
         }
 
       if (event->evtype == XI_ButtonRelease)
-        {
-          if (priv->use_event)
-            {
-              priv->use_event = FALSE;
-            }
-          else
-            {
-              IndicatorObjectEntry *entry;
-              entry = get_entry_at (self, event->root_x, event->root_y);
+        {       
+          IndicatorObjectEntry *entry;
+          gboolean event_is_a_click = FALSE;
+          entry = get_entry_at (self, event->root_x, event->root_y);
 
-              if (entry)
+          if (XIMaskIsSet (event->buttons.mask, 1) || XIMaskIsSet (event->buttons.mask, 3))
+            {
+              /* Consider only right and left clicks over the indicators entries */
+              event_is_a_click = TRUE;
+            }
+          else if (XIMaskIsSet (event->buttons.mask, 2) && entry)
+            {
+              /* Middle clicks over an appmenu entry are considered just like
+               * all other clicks */
+              IndicatorObject *obj = g_hash_table_lookup (priv->entry2indicator_hash, entry);
+
+              if (g_strcmp0 (g_object_get_data (G_OBJECT (obj), "id"), "libappmenu.so") == 0)
                 {
-                  if (entry != priv->pressed_entry)
+                  event_is_a_click = TRUE;
+                }
+            }
+
+          if (event_is_a_click)
+            {
+              if (priv->use_event)
+                {
+                  priv->use_event = FALSE;
+                }
+              else
+                {
+                  if (entry)
                     {
-                      ret = GDK_FILTER_REMOVE;
-                      priv->use_event = TRUE;
-                    }
-                  else if (priv->last_entry && entry != priv->last_entry)
-                    {
-                      /* If we were navigating over indicators using the keyboard
-                       * and now we click over the indicator under the mouse, we
-                       * must force it to show back again, not make it close */
-                      gchar *entry_id = g_strdup_printf ("%p", entry);
-                      g_signal_emit (self, _service_signals[ENTRY_ACTIVATE_REQUEST], 0, entry_id);
-                      g_free (entry_id);
+                      if (entry != priv->pressed_entry)
+                        {
+                          ret = GDK_FILTER_REMOVE;
+                          priv->use_event = TRUE;
+                        }
+                      else if (priv->last_entry && entry != priv->last_entry)
+                        {
+                          /* If we were navigating over indicators using the keyboard
+                           * and now we click over the indicator under the mouse, we
+                           * must force it to show back again, not make it close */
+                          gchar *entry_id = g_strdup_printf ("%p", entry);
+                          g_signal_emit (self, _service_signals[ENTRY_ACTIVATE_REQUEST], 0, entry_id);
+                          g_free (entry_id);
+                        }
                     }
                 }
+            }
+          else if ((XIMaskIsSet (event->buttons.mask, 2) ||
+                    XIMaskIsSet (event->buttons.mask, 4) ||
+                    XIMaskIsSet (event->buttons.mask, 5)) && entry)
+            {
+              /* If we're scrolling or middle-clicking over an indicator
+               * (which is not an appmenu entry) then we need to send the
+               * event to the indicator itself, and avoid it to close */
+              gchar *entry_id = g_strdup_printf ("%p", entry);
+
+              if (XIMaskIsSet (event->buttons.mask, 4) || XIMaskIsSet (event->buttons.mask, 5))
+                {
+                  gint32 delta = XIMaskIsSet (event->buttons.mask, 4) ? 120 : -120;
+                  panel_service_scroll_entry (self, entry_id, delta);
+                }
+              else if (entry == priv->pressed_entry)
+                {
+                  panel_service_secondary_activate_entry (self, entry_id, time(NULL));
+                }
+
+              ret = GDK_FILTER_REMOVE;
+              g_free (entry_id);
             }
         }
     }
