@@ -368,8 +368,10 @@ PanelView::UpdateBackground()
   _last_width = geo.width;
   _last_height = geo.height;
   _is_dirty = false;
+  
+  guint32 maximized_win = _menu_view->GetMaximizedWindow();
 
-  if (_dash_is_open && (_menu_view->GetMaximizedWindow() == 0))
+  if (_dash_is_open && maximized_win == 0)
   {
     if (_bg_layer)
       delete _bg_layer;
@@ -382,9 +384,8 @@ PanelView::UpdateBackground()
   else
   {
     double opacity = _opacity;
-    guint32 maximized = _menu_view->GetMaximizedWindow();
-    if (_opacity_maximized_toggle && maximized != 0 &&
-        !WindowManager::Default()->IsWindowObscured(maximized))
+    if (_opacity_maximized_toggle && maximized_win != 0 &&
+        !WindowManager::Default()->IsWindowObscured(maximized_win))
     {
       opacity = 1.0f;
     }
