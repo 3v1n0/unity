@@ -57,6 +57,7 @@ Controller::~Controller()
   if (window_)
     window_->UnReference();
   window_ = 0;
+
   g_source_remove(timeline_id_);
   g_source_remove(ensure_id_);
 }
@@ -74,16 +75,18 @@ void Controller::SetupWindow()
 
 void Controller::SetupHudView()
 {
-  view_.reset(new View());
+  view_ = new View();
 
   nux::HLayout* layout = new nux::HLayout(NUX_TRACKER_LOCATION);
-  layout->AddView(view_.get(), 1);
+  layout->AddView(view_, 1);
   layout->SetContentDistribution(nux::eStackLeft);
   layout->SetVerticalExternalMargin(0);
   layout->SetHorizontalExternalMargin(0);
   layout->SetMaximumWidth(940);
   layout->SetMaximumHeight(240);
   window_->SetLayout(layout);
+
+  view_->mouse_down_outside_pointer_grab_area.connect(sigc::mem_fun(this, &Controller::OnMouseDownOutsideWindow));
 }
 
 void Controller::SetupRelayoutCallbacks()
@@ -184,7 +187,9 @@ void Controller::ShowHud()
   window_->PushToFront();
   window_->EnableInputWindow(true, "Hud", true, false);
   window_->SetInputFocus();
+  nux::GetWindowCompositor().SetKeyFocusArea(view_->default_focus());
   window_->CaptureMouseDownAnyWhereElse(true);
+  view_->CaptureMouseDownAnyWhereElse(true);
   window_->QueueDraw();
   window_->SetOpacity(1.0f);
 
@@ -207,6 +212,10 @@ void Controller::HideHud(bool restore)
   visible_ = false;
   window_->SetOpacity(0.0f);
   window_->ShowWindow(false);
+
+  restore = true;
+  if (restore)
+    PluginAdapter::Default ()->restoreInputFocus ();
 }
 
 void Controller::StartShowHideTimeline()

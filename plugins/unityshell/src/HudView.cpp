@@ -55,6 +55,12 @@ View::View()
   , hud_service_("com.canonical.hud", "/com/canonical/hud")
 {
 
+  nux::ROPConfig rop;
+  rop.Blend = true;
+  rop.SrcBlend = GL_ONE;
+  rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+  bg_layer_ = new nux::ColorLayer(nux::Color(0.0f, 0.0f, 0.0f, 0.9), true, rop);
+
   hud_service_.suggestion_search_finished.connect(sigc::mem_fun(this, &View::OnSuggestionsFinished));
   SetupViews();
   search_bar_->key_down.connect (sigc::mem_fun (this, &View::OnKeyDown));
@@ -77,6 +83,11 @@ void View::Relayout()
   layout_->SetMinMaxSize(content_geo_.width, content_geo_.height);
 
   QueueDraw();
+}
+
+nux::View* View::default_focus() const
+{
+  return search_bar_->text_entry();
 }
 
 // Gives us the width and height of the contents that will give us the best "fit",
@@ -201,30 +212,35 @@ void View::OnKeyDown (unsigned long event_type, unsigned long keysym,
 void View::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
 {
   // set up our texture mode
-  nux::TexCoordXForm texxform;
-  texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
-  texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+  //~ nux::TexCoordXForm texxform;
+  //~ texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
+  //~ texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
 
   // clear what is behind us
-  nux::t_u32 alpha = 0, src = 0, dest = 0;
-  gfx_context.GetRenderStates().GetBlend(alpha, src, dest);
-  gfx_context.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-
-  nux::Color col = nux::color::Black;
-  col.alpha = 0.75;
-  gfx_context.QRP_Color(GetGeometry().x,
-                       GetGeometry().y,
-                       GetGeometry().width,
-                       GetGeometry().height,
-                       col);
-
-  gfx_context.QRP_Color(0, 0, 800, 600, col);
-
-
+  //~ nux::t_u32 alpha = 0, src = 0, dest = 0;
+  //~ gfx_context.GetRenderStates().GetBlend(alpha, src, dest);
+  //~ gfx_context.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+//~
+  //~ nux::Color col = nux::color::Black;
+  //~ col.alpha = 0.75;
+  //~ gfx_context.QRP_Color(GetGeometry().x,
+                       //~ GetGeometry().y,
+                       //~ GetGeometry().width,
+                       //~ GetGeometry().height,
+                       //~ col);
+  bg_layer_->SetGeometry(GetGeometry());
+  nux::GetPainter().RenderSinglePaintLayer(gfx_context, content_geo_, bg_layer_);
 }
 
 void View::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
 {
+  int bgs = 0;
+
+  gfx_context.PushClippingRectangle(GetGeometry());
+
+  nux::GetPainter().PushLayer(gfx_context, bg_layer_->GetGeometry(), bg_layer_);
+  bgs++;
+
   if (IsFullRedraw())
   {
     nux::GetPainter().PushBackgroundStack();
@@ -235,6 +251,11 @@ void View::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
   {
     layout_->ProcessDraw(gfx_context, force_draw);
   }
+
+  nux::GetPainter().PopBackground(bgs);
+
+  gfx_context.GetRenderStates().SetBlend(false);
+  gfx_context.PopClippingRectangle();
 }
 
 // Keyboard navigation

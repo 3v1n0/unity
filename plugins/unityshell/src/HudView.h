@@ -43,11 +43,11 @@ class View : public nux::View
 {
   NUX_DECLARE_OBJECT_TYPE(HudView, nux::View);
 public:
-  typedef std::shared_ptr<View> Ptr;
   View();
   ~View();
 
   void Relayout();
+  nux::View* default_focus() const;
 
 protected:
   virtual Area* FindKeyFocusArea(unsigned int key_symbol,
@@ -84,6 +84,8 @@ private:
   Hud hud_service_;
   Hud::Suggestions suggestions_;
   nux::Geometry content_geo_;
+
+  nux::ColorLayer* bg_layer_;
 };
 
 

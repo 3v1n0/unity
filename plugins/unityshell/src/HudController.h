@@ -90,7 +90,7 @@ private:
   float last_opacity_;
   gint64 start_time_;
 
-  View::Ptr view_;
+  View* view_;
   guint ensure_id_;
 };
 

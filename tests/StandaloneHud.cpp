@@ -45,7 +45,7 @@ public:
   static void InitWindowThread (nux::NThread* thread, void* InitData);
   void Init ();
   nux::Layout *layout;
-  unity::hud::View::Ptr hud_view;
+  unity::hud::View* hud_view;
 
 private:
 
@@ -64,10 +64,10 @@ void TestRunner::Init ()
   LOG_WARNING(logger) << "test init";
   layout = new nux::VLayout();
 
-  hud_view.reset(new unity::hud::View());
+  hud_view = new unity::hud::View();
 
-  layout->AddView (hud_view.get(), 1, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FULL);
-  nux::GetWindowCompositor().SetKeyFocusArea(hud_view.get());
+  layout->AddView (hud_view, 1, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FULL);
+  nux::GetWindowCompositor().SetKeyFocusArea(hud_view->default_focus());
 
   nux::GetGraphicsThread()->SetLayout (layout);
 }
