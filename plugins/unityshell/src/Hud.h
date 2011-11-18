@@ -36,7 +36,8 @@ class Hud
 {
 public:
   typedef std::shared_ptr<Hud> Ptr;
-  typedef std::deque<std::string> Suggestions;
+  typedef std::tuple<std::string, std::string, GVariant*> Suggestion;
+  typedef std::deque<Suggestion> Suggestions;
 
   Hud(std::string const& dbus_name,
       std::string const& dbus_path);
@@ -46,7 +47,8 @@ public:
   nux::Property<std::string> target;
 
   void GetSuggestions(std::string const& search_string);
-  void Execute(std::string const& query);
+  void Execute(std::string const& execute_string);
+  void ExecuteByKey(GVariant* key);
 
   sigc::signal<void, Suggestions> suggestion_search_finished;
 
@@ -56,6 +58,7 @@ private:
   glib::DBusProxy proxy_;
 
   void SuggestionCallback(GVariant* data);
+  void ExecuteSuggestionCallback(GVariant* suggests);
 };
 
 }

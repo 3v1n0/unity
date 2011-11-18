@@ -264,5 +264,16 @@ namespace hud {
   void HudButton::PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw) {
     nux::Button::PostDraw(GfxContext, force_draw);
   }
+
+  void HudButton::SetSuggestion(Hud::Suggestion suggestion)
+  {
+    suggestion_ = suggestion;
+    label = std::get<0>(suggestion);
+  }
+
+  Hud::Suggestion HudButton::GetSuggestion()
+  {
+    return suggestion_;
+  }
 }
 }

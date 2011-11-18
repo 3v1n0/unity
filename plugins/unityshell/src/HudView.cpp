@@ -66,8 +66,8 @@ View::View()
   search_bar_->key_down.connect (sigc::mem_fun (this, &View::OnKeyDown));
 
   search_bar_->activated.connect ([&]() {
-   hud_service_.Execute(search_bar_->search_string);
-   ubus.SendMessage(UBUS_HUD_CLOSE_REQUEST);
+    hud_service_.Execute(search_bar_->search_string);
+    ubus.SendMessage(UBUS_HUD_CLOSE_REQUEST);
   });
 
 }
@@ -134,7 +134,7 @@ void View::OnSuggestionsFinished(Hud::Suggestions suggestions)
       break;
 
     HudButton *button = new HudButton();
-    button->label = (*suggestion);
+    button->SetSuggestion(*suggestion);
     button_views_->AddView(button, 0, nux::MINOR_POSITION_LEFT);
 
     button->click.connect([&](nux::View* view) {
@@ -201,7 +201,7 @@ void View::OnKeyDown (unsigned long event_type, unsigned long keysym,
     suggestion += activate_number;
 
    if (suggestion != suggestions_.end())
-      hud_service_.Execute((*suggestion));
+      hud_service_.Execute(std::get<0>(*suggestion));
 
     LOG_DEBUG(logger) << "executing search, escaping";
     ubus.SendMessage(UBUS_HUD_CLOSE_REQUEST);

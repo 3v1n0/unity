@@ -29,6 +29,7 @@
 #include <Nux/Button.h>
 #include <Nux/TextureArea.h>
 
+#include "Hud.h"
 
 namespace unity {
 
@@ -41,6 +42,9 @@ namespace hud {
     HudButton (const std::string label, nux::TextureArea *image, NUX_FILE_LINE_PROTO);
     HudButton (NUX_FILE_LINE_PROTO);
     virtual ~HudButton();
+
+    void SetSuggestion(Hud::Suggestion suggestion);
+    Hud::Suggestion GetSuggestion();
 
     nux::Property<std::string> label;
     nux::Property<std::string> hint;
@@ -56,6 +60,7 @@ namespace hud {
     void RedrawTheme ();
 
   private:
+    Hud::Suggestion suggestion_;
     nux::Geometry cached_geometry_;
     bool is_focused_;
     BaseTexturePtr normal_texture_;
