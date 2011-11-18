@@ -244,6 +244,8 @@ add_executable (test-launcher
                 ${UNITY_SRC}/FavoriteStore.h
                 ${UNITY_SRC}/FavoriteStoreGSettings.cpp
                 ${UNITY_SRC}/FavoriteStoreGSettings.h
+                ${UNITY_SRC}/IconLoader.cpp
+                ${UNITY_SRC}/IconLoader.h
                 ${UNITY_SRC}/LauncherEntryRemoteModel.cpp
                 ${UNITY_SRC}/LauncherEntryRemoteModel.h
                 ${UNITY_SRC}/LauncherEntryRemote.cpp
@@ -293,6 +295,8 @@ add_executable (test-launcher
                 ${UNITY_SRC}/UBusWrapper.h
                 ${UNITY_SRC}/ubus-server.cpp
                 ${UNITY_SRC}/ubus-server.h
+                ${UNITY_SRC}/Timer.cpp
+                ${UNITY_SRC}/Timer.h
                 )
 add_dependencies (test-launcher unity-core-${UNITY_API_VERSION})
 

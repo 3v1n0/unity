@@ -27,6 +27,7 @@
 #include <NuxCore/Logger.h>
 
 #include "DevicesSettings.h"
+#include "IconLoader.h"
 #include "ubus-server.h"
 #include "UBusMessages.h"
 
@@ -294,15 +295,34 @@ void DeviceLauncherIcon::OnEjectReady(GObject* object,
 {
   if (g_volume_eject_with_operation_finish(self->volume_, result, NULL))
   {
-    NotifyNotification* notification;
-    glib::String name(g_volume_get_name(self->volume_));
-
-    notification = notify_notification_new(name.Value(),
-                                           _("The drive has been successfully ejected"),
-                                           "drive-removable-media-usb");
-
-    notify_notification_show(notification, NULL);
+    glib::Object<GIcon> g_icon(g_volume_get_icon(self->volume_));
+    glib::String icon_name(g_icon_to_string(g_icon));
+    
+    
+    // Makes sure the OSD notification is shown also without an icon.
+    if (!IconLoader::GetDefault().LoadFromGIconString(icon_name.Str(), 48,
+                                                     sigc::mem_fun(self, &DeviceLauncherIcon::ShowNotification)))
+    {
+      self->ShowNotification();
+    }
   }
+}
+
+void DeviceLauncherIcon::ShowNotification(std::string const& icon_name, 
+                                          unsigned size,
+                                          GdkPixbuf* pixbuf)
+{
+  NotifyNotification* notification;
+  glib::String name(g_volume_get_name(volume_));
+  
+  notification = notify_notification_new(name,
+                                         _("The drive has been successfully ejected"),
+                                         NULL);
+  
+  if(GDK_IS_PIXBUF(pixbuf))
+    notify_notification_set_image_from_pixbuf(notification, pixbuf);
+    
+  notify_notification_show(notification, NULL);
 }
 
 void DeviceLauncherIcon::Eject()
