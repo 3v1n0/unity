@@ -47,7 +47,7 @@ DeviceLauncherIcon::DeviceLauncherIcon(Launcher* launcher, GVolume* volume)
   : SimpleLauncherIcon(launcher)
   , volume_(volume)
   , device_file_(g_volume_get_identifier(volume_, G_VOLUME_IDENTIFIER_KIND_UNIX_DEVICE))
-  , gdu_device_(get_device_for_device_file(device_file_.Value()))
+  , gdu_device_(get_device_for_device_file(device_file_))
 {  
   DevicesSettings::GetDefault().changed.connect(sigc::mem_fun(this, &DeviceLauncherIcon::OnSettingsChanged));
 
@@ -68,8 +68,8 @@ void DeviceLauncherIcon::UpdateDeviceIcon()
   glib::Object<GIcon> icon(g_volume_get_icon(volume_));
   glib::String icon_string(g_icon_to_string(icon));
 
-  tooltip_text = name.Value();
-  SetIconName(icon_string.Value());
+  tooltip_text = name.Str();
+  icon_name = icon_string.Str();
   
   SetIconType(TYPE_DEVICE);
   SetQuirk(QUIRK_RUNNING, false);
@@ -294,14 +294,10 @@ void DeviceLauncherIcon::OnEjectReady(GObject* object,
                                       DeviceLauncherIcon* self)
 {
   if (g_volume_eject_with_operation_finish(self->volume_, result, NULL))
-  {
-    glib::Object<GIcon> g_icon(g_volume_get_icon(self->volume_));
-    glib::String icon_name(g_icon_to_string(g_icon));
-    
-    
+  {    
     // Makes sure the OSD notification is shown also without an icon.
-    if (!IconLoader::GetDefault().LoadFromGIconString(icon_name.Str(), 48,
-                                                     sigc::mem_fun(self, &DeviceLauncherIcon::ShowNotification)))
+    if (!IconLoader::GetDefault().LoadFromGIconString(self->icon_name(), 48,
+                                                      sigc::mem_fun(self, &DeviceLauncherIcon::ShowNotification)))
     {
       self->ShowNotification();
     }
