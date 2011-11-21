@@ -940,7 +940,8 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
    *   attempts to bind it will only increment
    *   its bind reference so make sure that
    *   you always unbind as much as you bind */
-  mFbos[output]->bind ();
+  if (BackgroundEffectHelper::HasDirtyHelpers())
+    mFbos[output]->bind ();
 
   doShellRepaint = true;
   allowWindowPaint = true;

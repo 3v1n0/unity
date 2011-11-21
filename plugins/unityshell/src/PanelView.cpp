@@ -593,8 +593,7 @@ PanelView::SetOpacity(float opacity)
 
   _opacity = opacity;
 
-  if (_opacity < 1.0f && !_dash_is_open)
-    bg_effect_helper_.enabled = false;
+  bg_effect_helper_.enabled = (_opacity < 1.0f || _dash_is_open);
 
   ForceUpdateBackground();
 }
