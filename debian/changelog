@@ -1,3 +1,10 @@
+unity (4.24.0-0ubuntu3) UNRELEASED; urgency=low
+
+  * debian/control:
+    - add libgdu-dev build-dep
+
+ -- Didier Roche <didrocks@ubuntu.com>  Tue, 22 Nov 2011 18:15:24 +0100
+
 unity (4.24.0-0ubuntu2) oneiric-proposed; urgency=low
 
   * Cherry-pick upstream:
