@@ -471,6 +471,12 @@ void PanelView::OnMenuPointerMoved(int x, int y)
       view = _menu_view->ActivateEntryAt(x, y);
 
     if (!view) _indicators->ActivateEntryAt(x, y);
+
+    _menu_view->SetMousePosition(x, y);
+  }
+  else
+  {
+    _menu_view->SetMousePosition(-1, -1);
   }
 }
 

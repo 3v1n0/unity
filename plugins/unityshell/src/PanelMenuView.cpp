@@ -1483,5 +1483,24 @@ PanelMenuView::OnPanelViewMouseLeave(int x, int y, unsigned long mouse_button_st
 void PanelMenuView::OnPanelViewMouseMove(int x, int y, int dx, int dy, unsigned long mouse_button_state, unsigned long special_keys_state)
 {}
 
-
+void PanelMenuView::SetMousePosition(int x, int y)
+{
+  if (_last_active_view ||
+      (x >= 0 && y >= 0 && GetAbsoluteGeometry().IsPointInside(x, y)))
+  {
+    if (!_is_inside)
+    {
+      _is_inside = true;
+      FullRedraw();
+    }
+  }
+  else
+  {
+    if (_is_inside)
+    {
+      _is_inside = false;
+      FullRedraw();
+    }
+  }
+}
 } // namespace unity
