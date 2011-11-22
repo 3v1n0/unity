@@ -45,6 +45,8 @@ assert_width_increases_with_substring_length (const gchar *test_string)
     g_assert_cmpint(width, >, oldwidth);
     oldwidth = width;
   }
+  
+  delete substring;
 }
 
 static void
