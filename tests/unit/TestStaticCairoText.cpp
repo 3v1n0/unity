@@ -26,17 +26,14 @@
 #include "StaticCairoText.h"
 
 static void
-TestLeftToRightExtentIncreasesWithLength ()
+assert_width_increases_with_substring_length (const gchar *test_string)
 {
   nux::StaticCairoText text("");
-  const gchar *test_string = "Just a string of text";
   gchar *substring = new gchar[strlen(test_string)];
 
   int width, oldwidth;
   int height;
 
-  g_assert(g_utf8_validate(test_string, -1, NULL));
-  
   text.GetTextExtents(width, height);
   // The empty string should have no width...
   g_assert_cmpint (width, ==, 0);
@@ -51,29 +48,23 @@ TestLeftToRightExtentIncreasesWithLength ()
 }
 
 static void
+TestLeftToRightExtentIncreasesWithLength ()
+{
+  const gchar *test_string = "Just a string of text";
+
+  g_assert(g_utf8_validate(test_string, -1, NULL));
+
+  assert_width_increases_with_substring_length (test_string);
+}
+
+static void
 TestRightToLeftExtentIncreasesWithLength ()
 {
-  nux::StaticCairoText text("");
-  // Hebrew is a RTL language.
   const gchar *test_string = "מחרוזת אקראית עברית";
-  gchar *substring = new gchar[strlen(test_string)];
-
-  int width, oldwidth;
-  int height;
 
   g_assert(g_utf8_validate(test_string, -1, NULL));
   
-  text.GetTextExtents(width, height);
-  // The empty string should have no width...
-  g_assert_cmpint (width, ==, 0);
-  oldwidth = width;
-
-  for (int substr_len = 1; substr_len <= g_utf8_strlen(test_string, -1); ++substr_len) {
-    text.SetText (g_utf8_strncpy (substring, test_string, substr_len));
-    text.GetTextExtents(width, height);
-    g_assert_cmpint(width, >, oldwidth);
-    oldwidth = width;
-  }
+  assert_width_increases_with_substring_length (test_string);
 }
 
 void
