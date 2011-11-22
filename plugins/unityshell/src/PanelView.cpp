@@ -465,12 +465,12 @@ void PanelView::OnMenuPointerMoved(int x, int y)
 
   if (geo.IsPointInside(x, y))
   {
-    bool ret = false;
+    PanelIndicatorEntryView* view = NULL;
 
     if (!_menu_view->HasOurWindowFocused())
-      ret = _menu_view->OnPointerMoved(x, y);
+      view = _menu_view->ActivateEntryAt(x, y);
 
-    if (!ret) _indicators->OnPointerMoved(x, y);
+    if (!view) _indicators->ActivateEntryAt(x, y);
   }
 }
 

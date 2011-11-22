@@ -121,19 +121,20 @@ PanelIndicatorsView::QueueDraw()
     entry.second->QueueDraw();
 }
 
-bool
+PanelIndicatorEntryView*
 PanelIndicatorsView::ActivateEntry(std::string const& entry_id)
 {
   auto entry = entries_.find(entry_id);
 
   if (entry != entries_.end() && entry->second->IsEntryValid())
   {
+    PanelIndicatorEntryView* view = entry->second;
     LOG_DEBUG(logger) << "Activating: " << entry_id;
-    entry->second->Activate();
-    return true;
+    view->Activate();
+    return view;
   }
 
-  return false;
+  return NULL;
 }
 
 bool
@@ -163,8 +164,8 @@ PanelIndicatorsView::GetGeometryForSync(indicator::EntryLocationMap& locations)
     entry.second->GetGeometryForSync(locations);
 }
 
-bool
-PanelIndicatorsView::OnPointerMoved(int x, int y)
+PanelIndicatorEntryView*
+PanelIndicatorsView::ActivateEntryAt(int x, int y)
 {
   PanelIndicatorEntryView* target = NULL;
   bool found_old_active = false;
@@ -207,7 +208,7 @@ PanelIndicatorsView::OnPointerMoved(int x, int y)
     }
   }
 
-  return (target != NULL);
+  return target;
 }
 
 void
