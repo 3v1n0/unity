@@ -2058,7 +2058,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   // rely on the compiz event loop to come back to us in a nice throttling
   if (AnimationInProgress())
-    _launcher_animation_timeout = g_timeout_add(0, &Launcher::AnimationTimeout, this);
+    _launcher_animation_timeout = g_idle_add_full (G_PRIORITY_DEFAULT, &Launcher::AnimationTimeout, this, NULL);
 
   nux::ROPConfig ROP;
   ROP.Blend = false;
