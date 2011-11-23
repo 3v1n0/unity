@@ -1106,7 +1106,7 @@ void UnityScreen::handleEvent(XEvent* event)
     CompWindow* w = screen->findWindow (de->drawable);
 
     if (w and !(w->wmType() & CompWindowTypeDndMask))
-    {      
+    {
       nux::Geometry damage (de->area.x, de->area.y, de->area.width, de->area.height);
 
       CompWindow::Geometry geom = w->geometry ();
