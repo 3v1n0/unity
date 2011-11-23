@@ -57,6 +57,14 @@ static void on_active_window_changed(BamfMatcher*   matcher,
                                      BamfView*      new_view,
                                      PanelMenuView* self);
 
+static void on_bamf_view_opened(BamfMatcher*   matcher,
+                                BamfView*      view,
+                                PanelMenuView* self);
+
+static void on_bamf_view_closed(BamfMatcher*   matcher,
+                                BamfView*      view,
+                                PanelMenuView* self);
+
 static void on_name_changed(BamfView*      bamf_view,
                             gchar*         old_name,
                             gchar*         new_name,
@@ -71,6 +79,7 @@ PanelMenuView::PanelMenuView(int padding)
     _is_maximized(false),
     _is_own_window(false),
     _last_active_view(NULL),
+    _new_application(NULL),
     _last_width(0),
     _last_height(0),
     _places_showing(false),
@@ -80,6 +89,7 @@ PanelMenuView::PanelMenuView(int padding)
     _active_xid(0),
     _active_moved_id(0),
     _update_show_now_id(0),
+    _new_app_timeout_id(0),
     _place_shown_interest(0),
     _place_hidden_interest(0),
     _fade_in_animator(NULL),
@@ -98,6 +108,10 @@ PanelMenuView::PanelMenuView(int padding)
   layout_ = _menu_layout;
 
   _matcher = bamf_matcher_get_default();
+  _bamf_view_opened_id = g_signal_connect(_matcher, "view-opened",
+                                          G_CALLBACK(on_bamf_view_opened), this);
+  _bamf_view_closed_id = g_signal_connect(_matcher, "view-closed",
+                                          G_CALLBACK(on_bamf_view_closed), this);
   _activate_window_changed_id = g_signal_connect(_matcher, "active-window-changed",
                                                  G_CALLBACK(on_active_window_changed), this);
 
@@ -180,11 +194,21 @@ PanelMenuView::~PanelMenuView()
   if (_name_changed_callback_id)
     g_signal_handler_disconnect(_name_changed_callback_instance,
                                 _name_changed_callback_id);
+
+  if (_bamf_view_opened_id)
+    g_signal_handler_disconnect(_matcher, _bamf_view_opened_id);
+
+  if (_bamf_view_closed_id)
+    g_signal_handler_disconnect(_matcher, _bamf_view_closed_id);
+
   if (_activate_window_changed_id)
-    g_signal_handler_disconnect(_matcher,
-                                _activate_window_changed_id);
+    g_signal_handler_disconnect(_matcher, _activate_window_changed_id);
+
   if (_active_moved_id)
     g_source_remove(_active_moved_id);
+
+  if (_new_app_timeout_id)
+    g_source_remove(_new_app_timeout_id);
 
   if (_title_layer)
     delete _title_layer;
@@ -205,6 +229,9 @@ PanelMenuView::~PanelMenuView()
 
   if (_place_hidden_interest != 0)
     ubus_server_unregister_interest(ubus, _place_hidden_interest);
+
+  for (auto app : _new_apps)
+    g_object_unref(app);
 }
 
 void
@@ -324,7 +351,7 @@ PanelMenuView::DrawMenus()
 {
   if (!_is_own_window && !_places_showing && _we_control_active)
   {
-    if (_is_inside || _last_active_view || _show_now_activated)
+    if (_is_inside || _last_active_view || _show_now_activated || _new_application)
     {
       return true;
     }
@@ -341,7 +368,7 @@ PanelMenuView::DrawWindowButtons()
 
   if (!_is_own_window && _we_control_active && _is_maximized)
   {
-    if (_is_inside || _show_now_activated)
+    if (_is_inside || _show_now_activated || _new_application)
     {
       return true;
     }
@@ -904,6 +931,43 @@ PanelMenuView::OnNameChanged(gchar* new_name, gchar* old_name)
   FullRedraw();
 }
 
+gboolean
+PanelMenuView::OnNewAppTimeout(PanelMenuView* self)
+{
+  self->OnNewViewClosed(BAMF_VIEW(self->_new_application));
+  self->_new_app_timeout_id = 0;
+  self->FullRedraw();
+
+  return FALSE;
+}
+
+void
+PanelMenuView::OnNewViewOpened(BamfView *view)
+{
+  if (!BAMF_IS_APPLICATION(view) || !bamf_view_user_visible(view))
+    return;
+
+  _new_apps.push_front(BAMF_APPLICATION(g_object_ref(view)));
+}
+
+void
+PanelMenuView::OnNewViewClosed(BamfView *view)
+{
+  if (!BAMF_IS_APPLICATION(view))
+    return;
+
+  BamfApplication* app = BAMF_APPLICATION(view);
+
+  if (std::find(_new_apps.begin(), _new_apps.end(), app) != _new_apps.end())
+  {
+    _new_apps.remove(app);
+    g_object_unref(app);
+
+    if (_new_application == app)
+      _new_application = NULL;
+  }
+}
+
 void
 PanelMenuView::OnActiveWindowChanged(BamfView* old_view,
                                      BamfView* new_view)
@@ -911,9 +975,12 @@ PanelMenuView::OnActiveWindowChanged(BamfView* old_view,
   _show_now_activated = false;
   _is_maximized = false;
   _active_xid = 0;
+
   if (_active_moved_id)
+  {
     g_source_remove(_active_moved_id);
-  _active_moved_id = 0;
+    _active_moved_id = 0;
+  }
 
   if (BAMF_IS_WINDOW(new_view))
   {
@@ -938,6 +1005,42 @@ PanelMenuView::OnActiveWindowChanged(BamfView* old_view,
       {
         WindowManager::Default()->Undecorate(xid);
         _maximized_set.insert(xid);
+      }
+    }
+
+    BamfApplication* new_win_app = NULL;
+    for (auto app : _new_apps)
+    {
+      GList *windows = bamf_application_get_windows(app);
+
+      if (g_list_find(windows, window))
+        new_win_app = app;
+
+      g_list_free(windows);
+
+      if (new_win_app)
+        break;
+    }
+
+    if (new_win_app)
+    {
+      if (_new_application != new_win_app)
+      {
+        _new_application = new_win_app;
+        _new_app_timeout_id = g_timeout_add_seconds(2,
+                                                    (GSourceFunc)PanelMenuView::OnNewAppTimeout,
+                                                    this);
+      }
+    }
+    else
+    {
+      if (_new_application)
+        OnNewViewClosed(BAMF_VIEW(_new_application));
+
+      if (_new_app_timeout_id)
+      {
+        g_source_remove(_new_app_timeout_id);
+        _new_app_timeout_id = 0;
       }
     }
 
@@ -1351,7 +1454,22 @@ void PanelMenuView::AddProperties(GVariantBuilder* builder)
  * C code for callbacks
  */
 static void
+on_bamf_view_opened(BamfMatcher*   matcher,
+                    BamfView*      view,
+                    PanelMenuView* self)
+{
+  self->OnNewViewOpened(view);
+}
 
+static void
+on_bamf_view_closed(BamfMatcher*   matcher,
+                    BamfView*      view,
+                    PanelMenuView* self)
+{
+  self->OnNewViewClosed(view);
+}
+
+static void
 on_active_window_changed(BamfMatcher*   matcher,
                          BamfView*      old_view,
                          BamfView*      new_view,

@@ -62,6 +62,8 @@ public:
   virtual long PostLayoutManagement(long LayoutResult);
 
   void OnActiveChanged(PanelIndicatorEntryView* view, bool is_active);
+  void OnNewViewOpened(BamfView* view);
+  void OnNewViewClosed(BamfView* view);
   void OnActiveWindowChanged(BamfView* old_view, BamfView* new_view);
   void OnNameChanged(gchar* new_name, gchar* old_name);
 
@@ -115,6 +117,7 @@ private:
   void UpdateShowNow(bool ignore);
   static gboolean UpdateActiveWindowPosition(PanelMenuView* self);
   static gboolean UpdateShowNowWithDelay(PanelMenuView* self);
+  static gboolean OnNewAppTimeout(PanelMenuView* self);
   void DrawText(cairo_t *cr_real,
                 int &x, int y, int width, int height,
                 const char* font_desc,
@@ -141,12 +144,15 @@ private:
   bool _is_maximized;
   bool _is_own_window;
   PanelIndicatorEntryView* _last_active_view;
+  BamfApplication* _new_application;
 
   WindowButtons* _window_buttons;
   PanelTitlebarGrabArea* _panel_titlebar_grab_area;
 
   std::map<guint32, bool> _decor_map;
   std::set<guint32> _maximized_set;
+  std::list<BamfApplication*> _new_apps;
+
   int _padding;
   gpointer _name_changed_callback_instance;
   gulong _name_changed_callback_id;
@@ -162,8 +168,11 @@ private:
   guint32 _active_xid;
   guint32 _active_moved_id;
   guint32 _update_show_now_id;
+  guint32 _new_app_timeout_id;
   nux::Geometry _monitor_geo;
 
+  gulong _bamf_view_opened_id;
+  gulong _bamf_view_closed_id;
   gulong _activate_window_changed_id;
 
   guint32 _place_shown_interest;
