@@ -505,8 +505,8 @@ if (${GTEST_FOUND} STREQUAL TRUE)
                  test_service_model.h)
   add_dependencies (test-gtest-service unity-core-${UNITY_API_VERSION})
 
-# The actual test executable
-  add_executable(test-gtest
+# The actual test executable (xless) - do not put anything that requires X in here
+  add_executable(test-gtest-xless
                  test_categories.cpp
                  test_filesystem_lenses.cpp
                  test_filter.cpp
@@ -517,9 +517,8 @@ if (${GTEST_FOUND} STREQUAL TRUE)
                  test_favorite_store_gsettings.cpp
                  test_indicator_entry.cpp
                  test_lens.cpp
-                 test_main.cpp
+                 test_main_xless.cpp
                  test_model.cpp
-                 test_texture_cache.cpp
                  test_utils.h
                  test_ratings_filter.cpp
                  test_results.cpp
@@ -538,9 +537,21 @@ if (${GTEST_FOUND} STREQUAL TRUE)
                  ${UNITY_SRC}/WindowManager.cpp
                  ${UNITY_SRC}/WindowManager.h
                  )
+  target_link_libraries(test-gtest-xless ${GTEST_BOTH_LIBRARIES})
+  add_test(UnityGTestXless test-gtest-xless)
+  add_dependencies(test-gtest-xless unity-core-${UNITY_API_VERSION} test-gtest-service)
+
+# Tests that require X
+  add_executable(test-gtest
+                 test_texture_cache.cpp
+                 test_main.cpp
+                 ${UNITY_SRC}/TextureCache.cpp
+                 ${UNITY_SRC}/TextureCache.h
+                )
   target_link_libraries(test-gtest ${GTEST_BOTH_LIBRARIES})
-  add_test(UnityGTests test-gtest)
-  add_dependencies (test-gtest unity-core-${UNITY_API_VERSION} test-gtest-service)
+  add_test(UnityGTest test-gtest)
+  add_dependencies(test-gtest unity-core-${UNITY_API_VERSION} test-gtest-service)
+
 endif (${GTEST_FOUND} STREQUAL TRUE)
 
 #
@@ -549,12 +560,16 @@ endif (${GTEST_FOUND} STREQUAL TRUE)
 set (TEST_RESULT_DIR ${CMAKE_BINARY_DIR}/tests)
 set (TEST_RESULT_XML ${TEST_RESULT_DIR}/test-results.xml)
 set (TEST_RESULT_HTML ${TEST_RESULT_DIR}/test-results.html)
-set (DBUS_TEST_COMMAND dbus-test-runner --task ./test-gtest-service --task ./test-gtest)
+set (GTEST_TEST_COMMAND dbus-test-runner --task ./test-gtest-service --task ./test-gtest)
+set (GTEST_TEST_COMMAND_XLESS dbus-test-runner --task ./test-gtest-service --task ./test-gtest-xless)
 
 set (TEST_COMMAND
      gtester --verbose -k --g-fatal-warnings -o=${TEST_RESULT_XML} ./test-unit
-  && ${DBUS_TEST_COMMAND})
-add_custom_target (check COMMAND  ${TEST_COMMAND} DEPENDS test-unit test-gtest)
+  && ${GTEST_TEST_COMMAND}
+  && ${GTEST_TEST_COMMAND_XLESS})
+
+add_custom_target (check COMMAND  ${TEST_COMMAND} DEPENDS test-unit test-gtest test-gtest-xless)
+add_custom_target (check-headless COMMAND ${GTEST_TEST_COMMAND_XLESS} DEPENDS test-gtest-xless)
 add_custom_target (check-report COMMAND ${TEST_UNIT_COMMAND} && gtester-report ${TEST_RESULT_XML} > ${TEST_RESULT_HTML})
-add_custom_target (gcheck COMMAND  ${DBUS_TEST_COMMAND} DEPENDS test-gtest)
+add_custom_target (gcheck COMMAND  ${DBUS_TEST_COMMAND} DEPENDS test-gtest test-gtest-xless)
 
