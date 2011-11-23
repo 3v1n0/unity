@@ -227,7 +227,7 @@ void DBusIndicators::Impl::OnEntryShowMenu(std::string const& entry_id,
   data->timestamp = timestamp;
   data->button = button;
 
-  g_timeout_add(0, (GSourceFunc)send_show_entry, data);
+  g_idle_add_full (G_PRIORITY_DEFAULT, (GSourceFunc)send_show_entry, data, NULL);
 }
 
 void DBusIndicators::Impl::OnEntrySecondaryActivate(std::string const& entry_id,

@@ -289,7 +289,7 @@ void LensView::QueueFixRenderering()
   if (fix_renderering_id_)
     return;
 
-  fix_renderering_id_ = g_timeout_add(0, (GSourceFunc)FixRenderering, this);
+  fix_renderering_id_ = g_idle_add_full (G_PRIORITY_DEFAULT, (GSourceFunc)FixRenderering, this, NULL);
 }
 
 gboolean LensView::FixRenderering(LensView* self)
