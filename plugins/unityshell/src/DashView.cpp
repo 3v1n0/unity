@@ -48,6 +48,9 @@ DashView::DashView()
   : nux::View(NUX_TRACKER_LOCATION)
   , active_lens_view_(0)
   , last_activated_uri_("")
+  , searching_timeout_id_(0)
+  , search_in_progress_(false)
+  , activate_on_finish_(false)
   , visible_(false)
 
 {
@@ -68,6 +71,8 @@ DashView::DashView()
 
 DashView::~DashView()
 {
+  if (searching_timeout_id_)
+    g_source_remove (searching_timeout_id_);
   delete bg_layer_;
   delete bg_darken_layer_;
 }
@@ -625,9 +630,32 @@ void DashView::OnBackgroundColorChanged(GVariant* args)
   QueueDraw();
 }
 
+gboolean DashView::ResetSearchStateCb(gpointer data)
+{
+  DashView *self = static_cast<DashView*>(data);
+
+  self->search_in_progress_ = false;
+  self->activate_on_finish_ = false;
+  self->searching_timeout_id_ = 0;
+
+  return FALSE;
+}
+
 void DashView::OnSearchChanged(std::string const& search_string)
 {
   LOG_DEBUG(logger) << "Search changed: " << search_string;
+  if (active_lens_view_)
+  {
+    search_in_progress_ = true;
+    // it isn't guaranteed that we get a SearchFinished signal, so we need
+    // to make sure this isn't set even though we aren't doing any search
+    if (searching_timeout_id_)
+    {
+      g_source_remove (searching_timeout_id_);
+    }
+    // 250ms for the Search method call, rest for the actual search
+    searching_timeout_id_ = g_timeout_add (500, &DashView::ResetSearchStateCb, this);
+  }
 }
 
 void DashView::OnLiveSearchReached(std::string const& search_string)
@@ -691,7 +719,12 @@ void DashView::OnLensBarActivated(std::string const& id)
 void DashView::OnSearchFinished(std::string const& search_string)
 {
   if (search_bar_->search_string == search_string)
+  {
     search_bar_->SearchFinished();
+    search_in_progress_ = false;
+    if (activate_on_finish_)
+      this->OnEntryActivated();
+  }
 }
 
 void DashView::OnGlobalSearchFinished(std::string const& search_string)
@@ -800,7 +833,12 @@ void DashView::DisableBlur()
 }
 void DashView::OnEntryActivated()
 {
-  active_lens_view_->ActivateFirst();
+  if (!search_in_progress_)
+  {
+    active_lens_view_->ActivateFirst();
+  }
+  // delay the activation until we get the SearchFinished signal
+  activate_on_finish_ = search_in_progress_;
 }
 
 // Keyboard navigation
