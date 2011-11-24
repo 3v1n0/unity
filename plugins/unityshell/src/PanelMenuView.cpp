@@ -978,7 +978,10 @@ PanelMenuView::OnNewAppHide(PanelMenuView* self)
 void
 PanelMenuView::OnNewViewOpened(BamfView *view)
 {
-  if (!BAMF_IS_APPLICATION(view) || !bamf_view_user_visible(view))
+  /* FIXME: here we should also check for if the view is also user_visible
+   * but it seems that BAMF doesn't handle this correctly after some
+   * stress tests (repeated launches). */
+  if (!BAMF_IS_APPLICATION(view))
     return;
 
   _new_apps.push_front(BAMF_APPLICATION(g_object_ref(view)));
