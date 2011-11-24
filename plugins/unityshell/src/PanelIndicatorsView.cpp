@@ -134,7 +134,7 @@ PanelIndicatorsView::ActivateEntry(std::string const& entry_id)
     return view;
   }
 
-  return NULL;
+  return nullptr;
 }
 
 bool
@@ -167,7 +167,7 @@ PanelIndicatorsView::GetGeometryForSync(indicator::EntryLocationMap& locations)
 PanelIndicatorEntryView*
 PanelIndicatorsView::ActivateEntryAt(int x, int y)
 {
-  PanelIndicatorEntryView* target = NULL;
+  PanelIndicatorEntryView* target = nullptr;
   bool found_old_active = false;
 
   //
