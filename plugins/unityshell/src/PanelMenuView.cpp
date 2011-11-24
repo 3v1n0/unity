@@ -94,7 +94,8 @@ PanelMenuView::PanelMenuView(int padding)
     _active_xid(0),
     _active_moved_id(0),
     _update_show_now_id(0),
-    _new_app_timeout_id(0),
+    _new_app_show_id(0),
+    _new_app_hide_id(0),
     _place_shown_interest(0),
     _place_hidden_interest(0),
     _fade_in_animator(NULL),
@@ -217,8 +218,11 @@ PanelMenuView::~PanelMenuView()
   if (_active_moved_id)
     g_source_remove(_active_moved_id);
 
-  if (_new_app_timeout_id)
-    g_source_remove(_new_app_timeout_id);
+  if (_new_app_show_id)
+    g_source_remove(_new_app_show_id);
+
+  if (_new_app_hide_id)
+    g_source_remove(_new_app_hide_id);
 
   if (_title_layer)
     delete _title_layer;
@@ -942,10 +946,30 @@ PanelMenuView::OnNameChanged(gchar* new_name, gchar* old_name)
 }
 
 gboolean
-PanelMenuView::OnNewAppTimeout(PanelMenuView* self)
+PanelMenuView::OnNewAppShow(PanelMenuView* self)
+{
+  self->_new_application = bamf_matcher_get_active_application(self->_matcher);
+  self->QueueDraw();
+
+  if (self->_new_app_hide_id)
+  {
+    g_source_remove(self->_new_app_hide_id);
+    self->_new_app_hide_id = 0;
+  }
+
+  self->_new_app_hide_id = g_timeout_add_seconds(2,
+                                                 (GSourceFunc)PanelMenuView::OnNewAppHide,
+                                                 self);
+  self->_new_app_show_id = 0;
+
+  return FALSE;
+}
+
+gboolean
+PanelMenuView::OnNewAppHide(PanelMenuView* self)
 {
   self->OnNewViewClosed(BAMF_VIEW(self->_new_application));
-  self->_new_app_timeout_id = 0;
+  self->_new_app_hide_id = 0;
   self->QueueDraw();
 
   return FALSE;
@@ -988,19 +1012,31 @@ PanelMenuView::OnActiveAppChanged(BamfApplication* old_app,
     {
       if (_new_application != new_app)
       {
-        _new_application = new_app;
-        _new_app_timeout_id = g_timeout_add_seconds(2,
-                                                    (GSourceFunc)PanelMenuView::OnNewAppTimeout,
-                                                    this);
-        QueueDraw();
+        /* Add a small delay before showing the menus, this is done both
+         * to fix the issues with applications that takes some time to loads
+         * menus and to show the menus only when an application has been
+         * kept active for some time */
+
+        if (_new_app_show_id)
+          g_source_remove(_new_app_show_id);
+
+        _new_app_show_id = g_timeout_add(300,
+                                         (GSourceFunc)PanelMenuView::OnNewAppShow,
+                                         this);
       }
     }
     else
     {
-      if (_new_app_timeout_id)
+      if (_new_app_show_id)
       {
-        g_source_remove(_new_app_timeout_id);
-        _new_app_timeout_id = 0;
+        g_source_remove(_new_app_show_id);
+        _new_app_show_id = 0;
+      }
+
+      if (_new_app_hide_id)
+      {
+        g_source_remove(_new_app_hide_id);
+        _new_app_hide_id = 0;
       }
 
       if (_new_application)

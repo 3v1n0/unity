@@ -118,7 +118,8 @@ private:
   void UpdateShowNow(bool ignore);
   static gboolean UpdateActiveWindowPosition(PanelMenuView* self);
   static gboolean UpdateShowNowWithDelay(PanelMenuView* self);
-  static gboolean OnNewAppTimeout(PanelMenuView* self);
+  static gboolean OnNewAppShow(PanelMenuView* self);
+  static gboolean OnNewAppHide(PanelMenuView* self);
   void DrawText(cairo_t *cr_real,
                 int &x, int y, int width, int height,
                 const char* font_desc,
@@ -169,7 +170,8 @@ private:
   guint32 _active_xid;
   guint32 _active_moved_id;
   guint32 _update_show_now_id;
-  guint32 _new_app_timeout_id;
+  guint32 _new_app_show_id;
+  guint32 _new_app_hide_id;
   nux::Geometry _monitor_geo;
 
   gulong _bamf_view_opened_id;
