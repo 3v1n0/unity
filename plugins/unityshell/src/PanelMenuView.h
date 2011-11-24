@@ -64,6 +64,7 @@ public:
   void OnActiveChanged(PanelIndicatorEntryView* view, bool is_active);
   void OnNewViewOpened(BamfView* view);
   void OnNewViewClosed(BamfView* view);
+  void OnActiveAppChanged(BamfApplication* old_app, BamfApplication* new_app);
   void OnActiveWindowChanged(BamfView* old_view, BamfView* new_view);
   void OnNameChanged(gchar* new_name, gchar* old_name);
 
@@ -173,7 +174,8 @@ private:
 
   gulong _bamf_view_opened_id;
   gulong _bamf_view_closed_id;
-  gulong _activate_window_changed_id;
+  gulong _active_app_changed_id;
+  gulong _active_window_changed_id;
 
   guint32 _place_shown_interest;
   guint32 _place_hidden_interest;

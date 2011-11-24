@@ -52,6 +52,11 @@
 namespace unity
 {
 
+static void on_active_app_changed(BamfMatcher*   matcher,
+                                  BamfView*      old_view,
+                                  BamfView*      new_view,
+                                  PanelMenuView* self);
+
 static void on_active_window_changed(BamfMatcher*   matcher,
                                      BamfView*      old_view,
                                      BamfView*      new_view,
@@ -112,8 +117,10 @@ PanelMenuView::PanelMenuView(int padding)
                                           G_CALLBACK(on_bamf_view_opened), this);
   _bamf_view_closed_id = g_signal_connect(_matcher, "view-closed",
                                           G_CALLBACK(on_bamf_view_closed), this);
-  _activate_window_changed_id = g_signal_connect(_matcher, "active-window-changed",
-                                                 G_CALLBACK(on_active_window_changed), this);
+  _active_app_changed_id = g_signal_connect(_matcher, "active-application-changed",
+                                            G_CALLBACK(on_active_app_changed), this);
+  _active_window_changed_id = g_signal_connect(_matcher, "active-window-changed",
+                                               G_CALLBACK(on_active_window_changed), this);
 
   _padding = padding;
   _name_changed_callback_instance = NULL;
@@ -201,8 +208,11 @@ PanelMenuView::~PanelMenuView()
   if (_bamf_view_closed_id)
     g_signal_handler_disconnect(_matcher, _bamf_view_closed_id);
 
-  if (_activate_window_changed_id)
-    g_signal_handler_disconnect(_matcher, _activate_window_changed_id);
+  if (_active_app_changed_id)
+    g_signal_handler_disconnect(_matcher, _active_app_changed_id);
+
+  if (_active_window_changed_id)
+    g_signal_handler_disconnect(_matcher, _active_window_changed_id);
 
   if (_active_moved_id)
     g_source_remove(_active_moved_id);
@@ -936,7 +946,7 @@ PanelMenuView::OnNewAppTimeout(PanelMenuView* self)
 {
   self->OnNewViewClosed(BAMF_VIEW(self->_new_application));
   self->_new_app_timeout_id = 0;
-  self->FullRedraw();
+  self->QueueDraw();
 
   return FALSE;
 }
@@ -965,6 +975,37 @@ PanelMenuView::OnNewViewClosed(BamfView *view)
 
     if (_new_application == app)
       _new_application = NULL;
+  }
+}
+
+void
+PanelMenuView::OnActiveAppChanged(BamfApplication* old_app,
+                                  BamfApplication* new_app)
+{
+  if (BAMF_IS_APPLICATION(new_app))
+  {
+    if (std::find(_new_apps.begin(), _new_apps.end(), new_app) != _new_apps.end())
+    {
+      if (_new_application != new_app)
+      {
+        _new_application = new_app;
+        _new_app_timeout_id = g_timeout_add_seconds(2,
+                                                    (GSourceFunc)PanelMenuView::OnNewAppTimeout,
+                                                    this);
+        QueueDraw();
+      }
+    }
+    else
+    {
+      if (_new_app_timeout_id)
+      {
+        g_source_remove(_new_app_timeout_id);
+        _new_app_timeout_id = 0;
+      }
+
+      if (_new_application)
+        OnNewViewClosed(BAMF_VIEW(_new_application));
+    }
   }
 }
 
@@ -1005,42 +1046,6 @@ PanelMenuView::OnActiveWindowChanged(BamfView* old_view,
       {
         WindowManager::Default()->Undecorate(xid);
         _maximized_set.insert(xid);
-      }
-    }
-
-    BamfApplication* new_win_app = NULL;
-    for (auto app : _new_apps)
-    {
-      GList *windows = bamf_application_get_windows(app);
-
-      if (g_list_find(windows, window))
-        new_win_app = app;
-
-      g_list_free(windows);
-
-      if (new_win_app)
-        break;
-    }
-
-    if (new_win_app)
-    {
-      if (_new_application != new_win_app)
-      {
-        _new_application = new_win_app;
-        _new_app_timeout_id = g_timeout_add_seconds(2,
-                                                    (GSourceFunc)PanelMenuView::OnNewAppTimeout,
-                                                    this);
-      }
-    }
-    else
-    {
-      if (_new_application)
-        OnNewViewClosed(BAMF_VIEW(_new_application));
-
-      if (_new_app_timeout_id)
-      {
-        g_source_remove(_new_app_timeout_id);
-        _new_app_timeout_id = 0;
       }
     }
 
@@ -1467,6 +1472,15 @@ on_bamf_view_closed(BamfMatcher*   matcher,
                     PanelMenuView* self)
 {
   self->OnNewViewClosed(view);
+}
+
+static void
+on_active_app_changed(BamfMatcher*   matcher,
+                      BamfView*      old_view,
+                      BamfView*      new_view,
+                      PanelMenuView* self)
+{
+  self->OnActiveAppChanged(BAMF_APPLICATION(old_view), BAMF_APPLICATION(new_view));
 }
 
 static void
