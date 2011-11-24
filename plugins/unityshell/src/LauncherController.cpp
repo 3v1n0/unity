@@ -378,8 +378,11 @@ void Controller::Impl::OnViewOpened(BamfMatcher* matcher, BamfView* view, gpoint
 
   app = BAMF_APPLICATION(view);
 
-  if (g_object_get_qdata(G_OBJECT(app), g_quark_from_static_string("unity-seen")))
+  if (bamf_view_is_sticky(view) ||
+      g_object_get_qdata(G_OBJECT(app), g_quark_from_static_string("unity-seen")))
+  {
     return;
+  }
 
   BamfLauncherIcon* icon = new BamfLauncherIcon(self->launcher_.GetPointer(), app);
   icon->SetIconType(LauncherIcon::TYPE_APPLICATION);
