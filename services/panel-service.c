@@ -93,7 +93,7 @@ enum
 
 static guint32 _service_signals[LAST_SIGNAL] = { 0 };
 
-static const gchar * indicator_order[][13] = {
+static const gchar * indicator_order[][2] = {
   {"libappmenu.so", NULL},                    /* indicator-appmenu" */
   {"libapplication.so", NULL},                /* indicator-application" */
   {"libapplication.so", "gsd-keyboard-xkb"},  /* keyboard layout selector */
