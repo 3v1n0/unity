@@ -525,11 +525,11 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
         if (x < first_step)
         {
-          int color_increment = (first_step - x)*4;
-          r = (color_increment < 255 - r) ? r + color_increment : 255;
-          g = (color_increment < 255 - g) ? g + color_increment : 255;
-          b = (color_increment < 255 - b) ? b + color_increment : 255;
+          int color_increment = (first_step - x) * 4;
 
+          r = CLAMP(r + color_increment, r, 0xff);
+          g = CLAMP(g + color_increment, g, 0xff);
+          b = CLAMP(b + color_increment, b, 0xff);
           a = 0xff - buttons_opacity;
         }
         else if (x < second_step)
@@ -551,9 +551,9 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
           }
         }
 
-        *(dest_buffer + 4 * x + 0) = (r * a) / 255; //red
-        *(dest_buffer + 4 * x + 1) = (g * a) / 255; //green
-        *(dest_buffer + 4 * x + 2) = (b * a) / 255; //blue
+        *(dest_buffer + 4 * x + 0) = (r * a) / 0xff; //red
+        *(dest_buffer + 4 * x + 1) = (g * a) / 0xff; //green
+        *(dest_buffer + 4 * x + 2) = (b * a) / 0xff; //blue
         *(dest_buffer + 4 * x + 3) = a;
       }
 
