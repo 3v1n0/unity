@@ -41,7 +41,7 @@ RowAdaptorBase& RowAdaptorBase::operator=(RowAdaptorBase const& other)
   model_ = other.model_;
   iter_ = other.iter_;
   tag_ = other.tag_;
-  
+
   return *this;
 }
 

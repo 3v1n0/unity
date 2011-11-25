@@ -1,4 +1,5 @@
-#include <gtest/gtest.h>
+//#include <gtest/gtest.h>
+#include <gmock/gmock.h>
 #include <glib-object.h>
 
 #include <UnityCore/GLibWrapper.h>
@@ -8,6 +9,7 @@
 
 using namespace std;
 using namespace unity::dash;
+using namespace testing;
 
 namespace
 {
@@ -19,20 +21,18 @@ class TestAdaptor : public RowAdaptorBase
 {
 public:
   TestAdaptor(DeeModel* model, DeeModelIter* iter, DeeModelTag* tag)
+    : RowAdaptorBase(model, iter, tag)
   {
-    model_ = model;
-    iter_ = iter;
-    tag_ = tag;
   }
 
   unsigned int index()
   {
-    return dee_model_get_uint32(model_, iter_, 0);
+    return GetUIntAt(0);
   }
 
   string name()
   {
-    return dee_model_get_string(model_, iter_, 1);
+    return GetStringAt(1);
   }
 };
 
@@ -99,6 +99,39 @@ TEST(TestModel, TestSetGetRenderer)
 
     EXPECT_EQ(value.Str(), renderer.Str());
   }
+}
+
+TEST(TestRowAdapterBase, TestGetStringNull)
+{
+  DeeModel* model = dee_sequence_model_new();
+  dee_model_set_schema(model, "s", NULL);
+  // Add on a null string.
+  DeeModelIter* iter = dee_model_append(model, NULL);
+
+  RowAdaptorBase row(model, iter);
+  EXPECT_THAT(row.GetStringAt(0), Eq(""));
+}
+
+TEST(TestRowAdapterBase, TestGetStringEmpty)
+{
+  DeeModel* model = dee_sequence_model_new();
+  dee_model_set_schema(model, "s", NULL);
+  // Add on a null string.
+  DeeModelIter* iter = dee_model_append(model, "");
+
+  RowAdaptorBase row(model, iter);
+  EXPECT_THAT(row.GetStringAt(0), Eq(""));
+}
+
+TEST(TestRowAdapterBase, TestGetStringValue)
+{
+  DeeModel* model = dee_sequence_model_new();
+  dee_model_set_schema(model, "s", NULL);
+  // Add on a null string.
+  DeeModelIter* iter = dee_model_append(model, "Hello");
+
+  RowAdaptorBase row(model, iter);
+  EXPECT_THAT(row.GetStringAt(0), Eq("Hello"));
 }
 
 }
