@@ -35,7 +35,7 @@ public:
 class Animator
 {
 public:
-  Animator(unsigned int duration, unsigned int fps_rate = 30);
+  Animator(unsigned int default_duration, unsigned int fps_rate = 30);
   ~Animator();
 
   void SetRate(unsigned int fps_rate);
@@ -47,6 +47,7 @@ public:
   bool IsRunning();
 
   void Start(double start_progress = 0.0f);
+  void Start(unsigned int one_time_duration, double start_progress = 0.0f);
   void Stop();
 
   sigc::signal<void> animation_started;
@@ -59,6 +60,7 @@ private:
   int64_t _start_time;
   unsigned int _rate;
   unsigned int _duration;
+  unsigned int _one_time_duration;
   unsigned int _timeout_id;
   double _start_progress;
   double _progress;

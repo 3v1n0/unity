@@ -22,7 +22,7 @@
 namespace unity
 {
 
-Animator::Animator(unsigned int duration, unsigned int fps_rate)
+Animator::Animator(unsigned int default_duration, unsigned int fps_rate)
 {
   _start_time = 0;
   _timeout_id = 0;
@@ -30,8 +30,9 @@ Animator::Animator(unsigned int duration, unsigned int fps_rate)
   _start_progress = 0.0f;
   _rate = 1;
   _duration = 0;
+  _one_time_duration = 0;
 
-  SetDuration(duration);
+  SetDuration(default_duration);
   SetRate(fps_rate);
 }
 
@@ -64,7 +65,7 @@ Animator::GetRate()
 unsigned int
 Animator::GetDuration()
 {
-  return _duration / 1000;
+  return (_one_time_duration > 0 ? _one_time_duration : _duration) / 1000;
 }
 
 bool
@@ -80,18 +81,25 @@ Animator::GetProgress()
 }
 
 void
-Animator::Start(double start_progress)
+Animator::Start(unsigned int one_time_duration, double start_progress)
 {
   if (_timeout_id == 0 && start_progress < 1.0f)
   {
     if (start_progress < 0.0f)
       start_progress = 0.0f;
 
+    _one_time_duration = one_time_duration * 1000;
     _start_progress = start_progress;
     _progress = _start_progress;
     _start_time = g_get_monotonic_time();
     _timeout_id = g_timeout_add(_rate, (GSourceFunc) &Animator::TimerTimeOut, this);
   }
+}
+
+void
+Animator::Start(double start_progress)
+{
+  Start(0, start_progress);
 }
 
 void
@@ -103,6 +111,7 @@ Animator::Stop()
     animation_updated.emit(_progress);
     animation_ended.emit();
     animation_stopped.emit(_progress);
+    _one_time_duration = 0;
     _timeout_id = 0;
   }
 }
@@ -111,12 +120,13 @@ gboolean
 Animator::TimerTimeOut(Animator *self)
 {
   const gint64 current_time = g_get_monotonic_time();
-  const gint64 end_time = self->_start_time + self->_duration;
+  const gint64 duration = self->_one_time_duration > 0 ? self->_one_time_duration : self->_duration;
+  const gint64 end_time = self->_start_time + duration;
 
   if (current_time < end_time && self->_progress < 1.0f)
   {
     const double diff_time = current_time - self->_start_time;
-    self->_progress = CLAMP(self->_start_progress + (diff_time / self->_duration), 0.0f, 1.0f);
+    self->_progress = CLAMP(self->_start_progress + (diff_time / duration), 0.0f, 1.0f);
     self->animation_updated.emit(self->_progress);
 
     return TRUE;
@@ -126,6 +136,7 @@ Animator::TimerTimeOut(Animator *self)
     self->_progress = 1.0f;
     self->animation_updated.emit(1.0f);
     self->animation_ended.emit();
+    self->_one_time_duration = 0;
     self->_timeout_id = 0;
 
     return FALSE;
