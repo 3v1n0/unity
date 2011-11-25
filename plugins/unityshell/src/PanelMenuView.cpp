@@ -73,15 +73,15 @@ static void on_name_changed(BamfView*      bamf_view,
                             PanelMenuView* self);
 
 PanelMenuView::PanelMenuView(int padding)
-  : _matcher(NULL),
-    _title_layer(NULL),
+  : _matcher(nullptr),
+    _title_layer(nullptr),
     _util_cg(CAIRO_FORMAT_ARGB32, 1, 1),
-    _gradient_texture(NULL),
+    _gradient_texture(nullptr),
     _is_inside(false),
     _is_maximized(false),
     _is_own_window(false),
-    _last_active_view(NULL),
-    _new_application(NULL),
+    _last_active_view(nullptr),
+    _new_application(nullptr),
     _last_width(0),
     _last_height(0),
     _places_showing(false),
@@ -101,8 +101,8 @@ PanelMenuView::PanelMenuView(int padding)
     _menus_discovery(2),
     _menus_discovery_fadein(200),
     _menus_discovery_fadeout(300),
-    _fade_in_animator(NULL),
-    _fade_out_animator(NULL)
+    _fade_in_animator(nullptr),
+    _fade_out_animator(nullptr)
 {
   WindowManager* win_manager;
 
@@ -127,7 +127,7 @@ PanelMenuView::PanelMenuView(int padding)
                                                G_CALLBACK(on_active_window_changed), this);
 
   _padding = padding;
-  _name_changed_callback_instance = NULL;
+  _name_changed_callback_instance = nullptr;
   _name_changed_callback_id = 0;
 
   _window_buttons = new WindowButtons();
@@ -279,9 +279,9 @@ PanelMenuView::FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEven
   bool mouse_inside = TestMousePointerInclusionFilterMouseWheel(mouse_position, event_type);
 
   if (mouse_inside == false)
-    return NULL;
+    return nullptr;
 
-  Area* found_area = NULL;
+  Area* found_area = nullptr;
   if (!_we_control_active)
   {
     found_area = _panel_titlebar_grab_area->FindAreaUnderMouse(mouse_position, event_type);
@@ -467,7 +467,7 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
       }
       else
       {
-        if (_gradient_texture->LockRect(0, &lockrect, NULL) != OGL_OK)
+        if (_gradient_texture->LockRect(0, &lockrect, nullptr) != OGL_OK)
           build_gradient = true;
         else
           locked = true;
@@ -488,7 +488,7 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
         _gradient_texture = nux::GetGraphicsDisplay()->GetGpuDevice()->
                             CreateSystemCapableDeviceTexture(texture_data.GetWidth(),
                             texture_data.GetHeight(), 1, texture_data.GetFormat());
-        locked = (_gradient_texture->LockRect(0, &lockrect, NULL) == OGL_OK);
+        locked = (_gradient_texture->LockRect(0, &lockrect, nullptr) == OGL_OK);
       }
 
       BYTE* dest_buffer = (BYTE*) lockrect.pBits;
@@ -665,7 +665,7 @@ PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 gchar*
 PanelMenuView::GetActiveViewName()
 {
-  gchar*         label = NULL;
+  gchar*         label = nullptr;
   BamfWindow*    window;
 
   _is_own_window = false;
@@ -725,7 +725,7 @@ PanelMenuView::GetActiveViewName()
         }
       }
 
-      if (label == NULL)
+      if (label == nullptr)
       {
         BamfView* active_view;
 
@@ -757,8 +757,8 @@ void PanelMenuView::DrawText(cairo_t *cr_real,
                              int increase_size
                              )
 {
-  PangoLayout*          layout = NULL;
-  PangoFontDescription* desc = NULL;
+  PangoLayout*          layout = nullptr;
+  PangoFontDescription* desc = nullptr;
   GtkSettings*          settings = gtk_settings_get_default();
   cairo_t*              cr;
   cairo_pattern_t*      linpat;
@@ -778,9 +778,9 @@ void PanelMenuView::DrawText(cairo_t *cr_real,
 
     cr = _util_cg.GetContext();
 
-    g_object_get(settings, "gtk-xft-dpi", &dpi, NULL);
+    g_object_get(settings, "gtk-xft-dpi", &dpi, nullptr);
 
-    font_description = gconf_client_get_string(client, WINDOW_TITLE_FONT_KEY, NULL);
+    font_description = gconf_client_get_string(client, WINDOW_TITLE_FONT_KEY, nullptr);
     desc = pango_font_description_from_string(font_description);
 
     if (font_desc)
@@ -808,7 +808,7 @@ void PanelMenuView::DrawText(cairo_t *cr_real,
     pango_cairo_context_set_resolution(cxt, (float)dpi / (float)PANGO_SCALE);
     pango_layout_context_changed(layout);
 
-    pango_layout_get_extents(layout, NULL, &log_rect);
+    pango_layout_get_extents(layout, nullptr, &log_rect);
     text_width = log_rect.width / PANGO_SCALE;
     text_height = log_rect.height / PANGO_SCALE;
 
@@ -899,7 +899,7 @@ PanelMenuView::Refresh()
   y = 0;
 
   if (label)
-    DrawText(cr, x, y, width, height, NULL, label);
+    DrawText(cr, x, y, width, height, nullptr, label);
 
   cairo_destroy(cr);
 
@@ -935,7 +935,7 @@ PanelMenuView::OnActiveChanged(PanelIndicatorEntryView* view,
   {
     if (_last_active_view == view)
     {
-      _last_active_view = NULL;
+      _last_active_view = nullptr;
     }
   }
 
@@ -960,7 +960,7 @@ PanelMenuView::AllMenusClosed()
 {
   auto mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
   _is_inside = GetAbsoluteGeometry().IsPointInside(mouse.x, mouse.y);
-  _last_active_view = NULL;
+  _last_active_view = nullptr;
 
   FullRedraw();
 }
@@ -1030,7 +1030,7 @@ PanelMenuView::OnNewViewClosed(BamfView *view)
     g_object_unref(app);
 
     if (_new_application == app)
-      _new_application = NULL;
+      _new_application = nullptr;
   }
 }
 
@@ -1304,7 +1304,7 @@ PanelMenuView::OnCloseClicked()
 {
   if (_places_showing)
   {
-    ubus_server_send_message(ubus_server_get_default(), UBUS_PLACE_VIEW_CLOSE_REQUEST, NULL);
+    ubus_server_send_message(ubus_server_get_default(), UBUS_PLACE_VIEW_CLOSE_REQUEST, nullptr);
   }
   else
   {
@@ -1511,13 +1511,13 @@ PanelMenuView::OnMouseMiddleClicked(int x, int y, unsigned long button_flags, un
 const gchar*
 PanelMenuView::GetName()
 {
-  return NULL;
+  return nullptr;
 }
 
 const gchar*
 PanelMenuView::GetChildsName()
 {
-  return NULL;
+  return nullptr;
 }
 
 void PanelMenuView::AddProperties(GVariantBuilder* builder)
