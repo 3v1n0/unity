@@ -49,6 +49,9 @@
 #define PANEL_ENTRIES_FADEIN 100
 #define PANEL_ENTRIES_FADEOUT 120
 
+#define MENU_DISCOVERY_FADEIN 200
+#define MENU_DISCOVERY_FADEOUT 300
+
 namespace unity
 {
 
@@ -587,6 +590,18 @@ PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     _menu_layout->ProcessDraw(GfxContext, true);
 
     _fade_out_animator->Stop();
+
+    if (_new_application && !_is_inside)
+    {
+      _fade_in_animator->SetDuration(MENU_DISCOVERY_FADEIN);
+      _fade_out_animator->SetDuration(MENU_DISCOVERY_FADEOUT);
+    }
+    else
+    {
+      _fade_in_animator->SetDuration(PANEL_ENTRIES_FADEIN);
+      _fade_out_animator->SetDuration(PANEL_ENTRIES_FADEOUT);
+    }
+
     _fade_in_animator->Start(GetOpacity());
   }
   else
@@ -601,7 +616,8 @@ PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
     _fade_in_animator->Stop();
 
-    if (_fade_out_animator->GetDuration() != PANEL_ENTRIES_FADEOUT)
+    if (_fade_out_animator->GetDuration() != PANEL_ENTRIES_FADEOUT &&
+        _fade_out_animator->GetDuration() != MENU_DISCOVERY_FADEOUT)
     {
       if (_fade_out_animator->IsRunning())
         _fade_out_animator->Stop();
