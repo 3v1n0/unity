@@ -512,6 +512,9 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
       int gradient_opacity = 255.0f * GetOpacity();
       int buttons_opacity = 255.0f * _window_buttons->GetOpacity();
 
+      int first_step = button_width * (factor - 1);
+      int second_step = button_width * factor;
+
       for (int x = 0; x < geo.width && dest_buffer && locked; x++)
       {
         BYTE r, g, b, a;
@@ -520,16 +523,29 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
         g = 219;
         b = 210;
 
-        if (x < button_width * (factor - 1))
+        if (x < first_step)
         {
-          r = g = b = 255;
+          if (first_step - x < 255 - r)
+            r += first_step - x;
+          else
+            r = 255;
+
+          if (first_step - x < 255 - b)
+            b += first_step - x;
+          else
+            b = 255;
+
+          if (first_step - x < 255 - g)
+            g += first_step - x;
+          else
+            g = 255;
+
           a = 0xff - buttons_opacity;
         }
-        else if (x < button_width * factor)
+        else if (x < second_step)
         {
-          a = 0xff - gradient_opacity *
-                                  (((float)x - (button_width * (factor - 1))) /
-                                  (float)(button_width));
+          a = 0xff - gradient_opacity * (((float)x - (first_step)) /
+                                         (float)(button_width));
         }
         else
         {
