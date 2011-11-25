@@ -122,7 +122,7 @@ Animator::TimerTimeOut(Animator *self)
   const gint64 duration = self->_one_time_duration > 0 ? self->_one_time_duration : self->_duration;
   const gint64 end_time = self->_start_time + duration;
 
-  if (current_time < end_time && self->_progress < 1.0f && duration)
+  if (current_time < end_time && self->_progress < 1.0f && duration > 0)
   {
     const double diff_time = current_time - self->_start_time;
     self->_progress = CLAMP(self->_start_progress + (diff_time / duration), 0.0f, 1.0f);
