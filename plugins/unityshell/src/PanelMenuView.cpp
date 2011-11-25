@@ -514,9 +514,15 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
       for (int x = 0; x < geo.width && dest_buffer && locked; x++)
       {
-        BYTE a;
+        BYTE r, g, b, a;
+
+        r = 223;
+        g = 219;
+        b = 210;
+
         if (x < button_width * (factor - 1))
         {
+          r = g = b = 255;
           a = 0xff - buttons_opacity;
         }
         else if (x < button_width * factor)
@@ -539,9 +545,9 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
           }
         }
 
-        *(dest_buffer + 4 * x + 0) = (223 * a) / 255; //red
-        *(dest_buffer + 4 * x + 1) = (219 * a) / 255; //green
-        *(dest_buffer + 4 * x + 2) = (210 * a) / 255; //blue
+        *(dest_buffer + 4 * x + 0) = (r * a) / 255; //red
+        *(dest_buffer + 4 * x + 1) = (g * a) / 255; //green
+        *(dest_buffer + 4 * x + 2) = (b * a) / 255; //blue
         *(dest_buffer + 4 * x + 3) = a;
       }
 
@@ -562,15 +568,6 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
                              _title_layer->GetDeviceTexture(),
                              texxform1,
                              nux::color::White);
-
-      // The previous blend is too aggressive on the texture and therefore there
-      // is a slight loss of clarity. This fixes that
-      if (_window_buttons->GetOpacity() == 0.0f)
-      {
-        geo.width = button_width * (factor - 1);
-        nux::GetPainter().PushDrawLayer(GfxContext, geo, _title_layer);
-        geo = GetGeometry();
-      }
     }
     else if (!_places_showing)
     {
