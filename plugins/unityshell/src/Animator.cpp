@@ -64,7 +64,7 @@ Animator::GetRate()
 unsigned int
 Animator::GetDuration()
 {
-  return _duration;
+  return _duration / 1000;
 }
 
 bool
@@ -120,7 +120,9 @@ Animator::TimerTimeOut(Animator *self)
     self->animation_updated.emit(self->_progress);
 
     return TRUE;
-  } else {
+  }
+  else
+  {
     self->_progress = 1.0f;
     self->animation_updated.emit(1.0f);
     self->animation_ended.emit();
