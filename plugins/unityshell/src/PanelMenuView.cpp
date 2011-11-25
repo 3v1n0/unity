@@ -525,20 +525,10 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
         if (x < first_step)
         {
-          if (first_step - x < 255 - r)
-            r += first_step - x;
-          else
-            r = 255;
-
-          if (first_step - x < 255 - b)
-            b += first_step - x;
-          else
-            b = 255;
-
-          if (first_step - x < 255 - g)
-            g += first_step - x;
-          else
-            g = 255;
+          int color_increment = (first_step - x)*4;
+          r = (color_increment < 255 - r) ? r + color_increment : 255;
+          g = (color_increment < 255 - g) ? g + color_increment : 255;
+          b = (color_increment < 255 - b) ? b + color_increment : 255;
 
           a = 0xff - buttons_opacity;
         }
