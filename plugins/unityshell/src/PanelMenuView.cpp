@@ -93,6 +93,7 @@ PanelMenuView::PanelMenuView(int padding)
     _places_showing(false),
     _show_now_activated(false),
     _we_control_active(false),
+    _new_app_menu_shown(false),
     _monitor(0),
     _active_xid(0),
     _active_moved_id(0),
@@ -595,16 +596,13 @@ PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
     if (_new_application && !_is_inside)
     {
-      _fade_in_animator->SetDuration(MENU_DISCOVERY_FADEIN);
-      _fade_out_animator->SetDuration(MENU_DISCOVERY_FADEOUT);
+      _fade_in_animator->Start(MENU_DISCOVERY_FADEIN, GetOpacity());
     }
     else
     {
-      _fade_in_animator->SetDuration(PANEL_ENTRIES_FADEIN);
-      _fade_out_animator->SetDuration(PANEL_ENTRIES_FADEOUT);
+      _fade_in_animator->Start(GetOpacity());
+      _new_app_menu_shown = false;
     }
-
-    _fade_in_animator->Start(GetOpacity());
   }
   else
   {
@@ -618,15 +616,14 @@ PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
     _fade_in_animator->Stop();
 
-    if (_fade_out_animator->GetDuration() != PANEL_ENTRIES_FADEOUT &&
-        _fade_out_animator->GetDuration() != MENU_DISCOVERY_FADEOUT)
+    if (!_new_app_menu_shown)
     {
-      if (_fade_out_animator->IsRunning())
-        _fade_out_animator->Stop();
-
-      _fade_out_animator->SetDuration(PANEL_ENTRIES_FADEOUT);
+      _fade_out_animator->Start(1.0f - GetOpacity());
     }
-    _fade_out_animator->Start(1.0f - GetOpacity());
+    else
+    {
+      _fade_out_animator->Start(MENU_DISCOVERY_FADEOUT, 1.0f - GetOpacity());
+    }
   }
 
   if (draw_buttons)
@@ -645,8 +642,8 @@ PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     /* If we try to hide only the buttons, then use a faster fadeout */
     if (!_fade_out_animator->IsRunning())
     {
-      _fade_out_animator->SetDuration(PANEL_ENTRIES_FADEOUT/5);
-      _fade_out_animator->Start(1.0f - _window_buttons->GetOpacity());
+      _fade_out_animator->Start(PANEL_ENTRIES_FADEOUT/3,
+                                1.0f - _window_buttons->GetOpacity());
     }
   }
 
@@ -973,6 +970,7 @@ PanelMenuView::OnNewAppShow(PanelMenuView* self)
   {
     g_source_remove(self->_new_app_hide_id);
     self->_new_app_hide_id = 0;
+    self->_new_app_menu_shown = false;
   }
 
   self->_new_app_hide_id = g_timeout_add_seconds(2,
@@ -988,6 +986,7 @@ PanelMenuView::OnNewAppHide(PanelMenuView* self)
 {
   self->OnNewViewClosed(BAMF_VIEW(self->_new_application));
   self->_new_app_hide_id = 0;
+  self->_new_app_menu_shown = true;
   self->QueueDraw();
 
   return FALSE;
@@ -1058,6 +1057,7 @@ PanelMenuView::OnActiveAppChanged(BamfApplication* old_app,
       {
         g_source_remove(_new_app_hide_id);
         _new_app_hide_id = 0;
+        _new_app_menu_shown = false;
       }
 
       if (_new_application)

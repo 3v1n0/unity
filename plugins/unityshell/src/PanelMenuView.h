@@ -164,8 +164,9 @@ private:
 
   bool _places_showing;
   bool _show_now_activated;
-
   bool _we_control_active;
+  bool _new_app_menu_shown;
+
   int  _monitor;
   guint32 _active_xid;
   guint32 _active_moved_id;
