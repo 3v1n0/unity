@@ -32,6 +32,7 @@
 #include "PluginAdapter.h"
 #include "Animator.h"
 
+#include <UnityCore/GLibWrapper.h>
 #include <libbamf/libbamf.h>
 
 namespace unity
@@ -137,7 +138,7 @@ private:
   void OnFadeOutChanged(double);
 
 private:
-  BamfMatcher* _matcher;
+  glib::Object<BamfMatcher> _matcher;
 
   nux::TextureLayer*       _title_layer;
   nux::HLayout*            _menu_layout;
@@ -149,7 +150,7 @@ private:
   bool _is_maximized;
   bool _is_own_window;
   PanelIndicatorEntryView* _last_active_view;
-  BamfApplication* _new_application;
+  glib::Object<BamfApplication> _new_application;
 
   WindowButtons* _window_buttons;
   PanelTitlebarGrabArea* _panel_titlebar_grab_area;

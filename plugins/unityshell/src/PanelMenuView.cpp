@@ -1008,7 +1008,7 @@ PanelMenuView::OnNewAppShow(PanelMenuView* self)
 gboolean
 PanelMenuView::OnNewAppHide(PanelMenuView* self)
 {
-  self->OnNewViewClosed(BAMF_VIEW(self->_new_application));
+  self->OnNewViewClosed(BAMF_VIEW(self->_new_application.RawPtr()));
   self->_new_app_hide_id = 0;
   self->_new_app_menu_shown = true;
   self->QueueDraw();
@@ -1085,7 +1085,7 @@ PanelMenuView::OnActiveAppChanged(BamfApplication* old_app,
       }
 
       if (_new_application)
-        OnNewViewClosed(BAMF_VIEW(_new_application));
+        OnNewViewClosed(BAMF_VIEW(_new_application.RawPtr()));
     }
   }
 }
