@@ -449,21 +449,24 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   if (_title_layer && !_is_own_window)
   {
     guint blend_alpha = 0, blend_src = 0, blend_dest = 0;
+    bool has_menu = false;
     bool draw_faded_title = false;
 
     GfxContext.GetRenderStates().GetBlend(blend_alpha, blend_src, blend_dest);
 
-    if (!DrawWindowButtons() && _we_control_active &&
+    for (auto entry : entries_)
+    {
+      if (entry.second->IsEntryValid())
+      {
+        has_menu = true;
+        break;
+      }
+    }
+
+    if (!DrawWindowButtons() && _we_control_active && has_menu &&
         (DrawMenus() || (GetOpacity() > 0.0f && _window_buttons->GetOpacity() == 0.0f)))
     {
-      for (auto entry : entries_)
-      {
-        if (entry.second->IsEntryValid())
-        {
-          draw_faded_title = true;
-          break;
-        }
-      }
+      draw_faded_title = true;
     }
 
     if (draw_faded_title)
@@ -567,30 +570,33 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
         geo = GetGeometry();
       }
     }
-    else if (_window_buttons->GetOpacity() < 1.0f &&
-             _window_buttons->GetOpacity() > 0.0f && !_places_showing)
+    else if (!has_menu || (has_menu && (!DrawMenus() || (DrawMenus() && GetOpacity() < 1.0f))))
     {
-      double title_opacity = 1.0f - _window_buttons->GetOpacity();
-
-      if (!DrawWindowButtons())
+      if (_window_buttons->GetOpacity() < 1.0f &&
+          _window_buttons->GetOpacity() > 0.0f && !_places_showing)
       {
-        // If we're fading-out the buttons/menus, let's fade-in quickly the title
-        title_opacity = CLAMP(title_opacity + 0.1f, 0.0f, 1.0f);
-      }
-      else
-      {
-        // If we're fading-in the buttons/menus, let's fade-out quickly the title
-        title_opacity = CLAMP(title_opacity - 0.2f, 0.0f, 1.0f);
-      }
+        double title_opacity = 1.0f - _window_buttons->GetOpacity();
 
-      nux::TexCoordXForm texxform;
-      GfxContext.QRP_1Tex(geo.x, geo.y, geo.width, geo.height,
-                          _title_layer->GetDeviceTexture(), texxform,
-                          nux::color::White * title_opacity);
-    }
-    else if (_window_buttons->GetOpacity() == 0.0f && _we_control_active)
-    {
-      nux::GetPainter().PushDrawLayer(GfxContext, geo, _title_layer);
+        if (!DrawWindowButtons())
+        {
+          // If we're fading-out the buttons/menus, let's fade-in quickly the title
+          title_opacity = CLAMP(title_opacity + 0.1f, 0.0f, 1.0f);
+        }
+        else
+        {
+          // If we're fading-in the buttons/menus, let's fade-out quickly the title
+          title_opacity = CLAMP(title_opacity - 0.2f, 0.0f, 1.0f);
+        }
+
+        nux::TexCoordXForm texxform;
+        GfxContext.QRP_1Tex(geo.x, geo.y, geo.width, geo.height,
+                            _title_layer->GetDeviceTexture(), texxform,
+                            nux::color::White * title_opacity);
+      }
+      else if (_window_buttons->GetOpacity() == 0.0f && _we_control_active)
+      {
+        nux::GetPainter().PushDrawLayer(GfxContext, geo, _title_layer);
+      }
     }
 
     GfxContext.GetRenderStates().SetBlend(blend_alpha, blend_src, blend_dest);
