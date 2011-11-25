@@ -239,6 +239,11 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetLaunchAnimationNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetUrgentAnimationNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetPanelOpacityNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+     optionSetMenusFadeinNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+     optionSetMenusFadeoutNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+     optionSetMenusDiscoveryDurationNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+     optionSetMenusDiscoveryFadeinNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+     optionSetMenusDiscoveryFadeoutNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetLauncherOpacityNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetIconSizeNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetAutohideAnimationNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
@@ -2414,6 +2419,11 @@ void UnityScreen::initLauncher()
   /* Setup panel */
   timer.Reset();
   panel_controller_.reset(new panel::Controller());
+  panel_controller_->SetMenuShowTimings(optionGetMenusFadein(),
+                                        optionGetMenusFadeout(),
+                                        optionGetMenusDiscoveryDuration(),
+                                        optionGetMenusDiscoveryFadein(),
+                                        optionGetMenusDiscoveryFadeout());
   LOG_INFO(logger) << "initLauncher-Panel " << timer.ElapsedSeconds() << "s";
 
   /* Setup Places */
