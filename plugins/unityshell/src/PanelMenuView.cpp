@@ -449,6 +449,8 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   if (_title_layer && !_is_own_window)
   {
     guint blend_alpha = 0, blend_src = 0, blend_dest = 0;
+    bool draw_menus = DrawMenus();
+    bool draw_window_buttons = DrawWindowButtons();
     bool has_menu = false;
     bool draw_faded_title = false;
 
@@ -463,8 +465,8 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
       }
     }
 
-    if (!DrawWindowButtons() && _we_control_active && has_menu &&
-        (DrawMenus() || (GetOpacity() > 0.0f && _window_buttons->GetOpacity() == 0.0f)))
+    if (!draw_window_buttons && _we_control_active && has_menu &&
+        (draw_menus || (GetOpacity() > 0.0f && _window_buttons->GetOpacity() == 0.0f)))
     {
       draw_faded_title = true;
     }
@@ -525,7 +527,7 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
         }
         else
         {
-          if (!DrawMenus())
+          if (!draw_menus)
           {
             a = 0xff - gradient_opacity;
           }
@@ -570,14 +572,14 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
         geo = GetGeometry();
       }
     }
-    else if (!has_menu || (has_menu && (!DrawMenus() || (DrawMenus() && GetOpacity() < 1.0f))))
+    else if (!has_menu || (has_menu && (!draw_menus || (draw_menus && GetOpacity() < 1.0f))))
     {
       if (_window_buttons->GetOpacity() < 1.0f &&
           _window_buttons->GetOpacity() > 0.0f && !_places_showing)
       {
         double title_opacity = 1.0f - _window_buttons->GetOpacity();
 
-        if (!DrawWindowButtons())
+        if (!draw_window_buttons)
         {
           // If we're fading-out the buttons/menus, let's fade-in quickly the title
           title_opacity = CLAMP(title_opacity + 0.1f, 0.0f, 1.0f);
