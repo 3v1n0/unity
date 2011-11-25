@@ -574,8 +574,8 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
     }
     else if (!_places_showing)
     {
-      if (_we_control_active && (!has_menu || (has_menu && GetOpacity() == 0.0)) &&
-          _window_buttons->GetOpacity() == 0.0)
+      if (_we_control_active && _window_buttons->GetOpacity() == 0.0 &&
+          (!has_menu || (has_menu && GetOpacity() == 0.0)))
       {
         nux::GetPainter().PushDrawLayer(GfxContext, geo, _title_layer);
       }
