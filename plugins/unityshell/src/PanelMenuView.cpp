@@ -255,14 +255,26 @@ void
 PanelMenuView::SetMenuShowTimings(int fadein, int fadeout, int discovery,
                                   int discovery_fadein, int discovery_fadeout)
 {
-  _menus_fadein = fadein;
-  _menus_fadeout = fadeout;
-  _menus_discovery = discovery;
-  _menus_discovery_fadein = discovery_fadein;
-  _menus_discovery_fadeout = discovery_fadeout;
+  if (fadein > -1)
+  {
+    _menus_fadein = fadein;
+    _fade_in_animator->SetDuration(_menus_fadein);
+  }
 
-  _fade_in_animator->SetDuration(_menus_fadein);
-  _fade_out_animator->SetDuration(_menus_fadeout);
+  if (fadeout > -1)
+  {
+    _menus_fadeout = fadeout;
+    _fade_out_animator->SetDuration(_menus_fadeout);
+  }
+
+  if (discovery > -1)
+    _menus_discovery = discovery;
+
+  if (discovery_fadein > -1)
+    _menus_discovery_fadein = discovery_fadein;
+
+  if (discovery_fadeout > -1)
+    _menus_discovery_fadeout = discovery_fadeout;
 }
 
 void
