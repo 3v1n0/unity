@@ -46,12 +46,6 @@
 
 #define WINDOW_TITLE_FONT_KEY "/apps/metacity/general/titlebar_font"
 
-#define PANEL_ENTRIES_FADEIN 100
-#define PANEL_ENTRIES_FADEOUT 120
-
-#define MENU_DISCOVERY_FADEIN 200
-#define MENU_DISCOVERY_FADEOUT 300
-
 namespace unity
 {
 
@@ -102,6 +96,11 @@ PanelMenuView::PanelMenuView(int padding)
     _new_app_hide_id(0),
     _place_shown_interest(0),
     _place_hidden_interest(0),
+    _menus_fadein(100),
+    _menus_fadeout(120),
+    _menus_discovery(2),
+    _menus_discovery_fadein(200),
+    _menus_discovery_fadeout(300),
     _fade_in_animator(NULL),
     _fade_out_animator(NULL)
 {
@@ -186,8 +185,8 @@ PanelMenuView::PanelMenuView(int padding)
                                                          (UBusCallback)PanelMenuView::OnPlaceViewHidden,
                                                          this);
 
-  _fade_in_animator = new Animator(PANEL_ENTRIES_FADEIN);
-  _fade_out_animator = new Animator(PANEL_ENTRIES_FADEOUT);
+  _fade_in_animator = new Animator(_menus_fadein);
+  _fade_out_animator = new Animator(_menus_fadeout);
 
   _fade_in_animator->animation_updated.connect(sigc::mem_fun(this, &PanelMenuView::OnFadeInChanged));
   _fade_in_animator->animation_ended.connect(sigc::mem_fun(this, &PanelMenuView::FullRedraw));
@@ -250,6 +249,20 @@ PanelMenuView::~PanelMenuView()
 
   for (auto app : _new_apps)
     g_object_unref(app);
+}
+
+void
+PanelMenuView::SetMenuShowTimings(int fadein, int fadeout, int discovery,
+                                  int discovery_fadein, int discovery_fadeout)
+{
+  _menus_fadein = fadein;
+  _menus_fadeout = fadeout;
+  _menus_discovery = discovery;
+  _menus_discovery_fadein = discovery_fadein;
+  _menus_discovery_fadeout = discovery_fadeout;
+
+  _fade_in_animator->SetDuration(_menus_fadein);
+  _fade_out_animator->SetDuration(_menus_fadeout);
 }
 
 void
@@ -596,7 +609,7 @@ PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
     if (_new_application && !_is_inside)
     {
-      _fade_in_animator->Start(MENU_DISCOVERY_FADEIN, GetOpacity());
+      _fade_in_animator->Start(_menus_discovery_fadein, GetOpacity());
     }
     else
     {
@@ -622,7 +635,7 @@ PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     }
     else
     {
-      _fade_out_animator->Start(MENU_DISCOVERY_FADEOUT, 1.0f - GetOpacity());
+      _fade_out_animator->Start(_menus_discovery_fadeout, 1.0f - GetOpacity());
     }
   }
 
@@ -642,8 +655,7 @@ PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     /* If we try to hide only the buttons, then use a faster fadeout */
     if (!_fade_out_animator->IsRunning())
     {
-      _fade_out_animator->Start(PANEL_ENTRIES_FADEOUT/3,
-                                1.0f - _window_buttons->GetOpacity());
+      _fade_out_animator->Start(_menus_fadeout/3, 1.0f - _window_buttons->GetOpacity());
     }
   }
 
@@ -973,7 +985,7 @@ PanelMenuView::OnNewAppShow(PanelMenuView* self)
     self->_new_app_menu_shown = false;
   }
 
-  self->_new_app_hide_id = g_timeout_add_seconds(2,
+  self->_new_app_hide_id = g_timeout_add_seconds(self->_menus_discovery,
                                                  (GSourceFunc)PanelMenuView::OnNewAppHide,
                                                  self);
   self->_new_app_show_id = 0;

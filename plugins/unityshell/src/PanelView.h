@@ -70,6 +70,8 @@ public:
   void EndFirstMenuShow();
 
   void SetOpacity(float opacity);
+  void SetMenuShowTimings(int fadein, int fadeout, int discovery,
+                          int discovery_fadein, int discovery_fadeout);
 
   void TrackMenuPointer();
 

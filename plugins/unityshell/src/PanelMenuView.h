@@ -55,6 +55,9 @@ public:
   PanelMenuView(int padding = 6);
   ~PanelMenuView();
 
+  void SetMenuShowTimings(int fadein, int fadeout, int discovery,
+                          int discovery_fadein, int discovery_fadeout);
+
   void FullRedraw();
 
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
@@ -182,6 +185,12 @@ private:
 
   guint32 _place_shown_interest;
   guint32 _place_hidden_interest;
+
+  int _menus_fadein;
+  int _menus_fadeout;
+  int _menus_discovery;
+  int _menus_discovery_fadein;
+  int _menus_discovery_fadeout;
 
   Animator* _fade_in_animator;
   Animator* _fade_out_animator;

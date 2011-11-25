@@ -53,6 +53,9 @@ public:
   void SetOpacity(float opacity);
   float opacity() const;
 
+  void SetMenuShowTimings(int fadein, int fadeout, int discovery,
+                          int discovery_fadein, int discovery_fadeout);
+
 private:
   unity::PanelView* ViewForWindow(nux::BaseWindow* window);
   void OnScreenChanged(int primary_monitor, std::vector<nux::Geometry>& monitors);
@@ -65,6 +68,11 @@ private:
   std::vector<nux::BaseWindow*> windows_;
   float opacity_;
   bool open_menu_start_received_;
+  int menus_fadein_;
+  int menus_fadeout_;
+  int menus_discovery_;
+  int menus_discovery_fadein_;
+  int menus_discovery_fadeout_;
 };
 
 
@@ -139,6 +147,22 @@ void Controller::Impl::SetOpacity(float opacity)
   }
 }
 
+void Controller::Impl::SetMenuShowTimings(int fadein, int fadeout, int discovery,
+                                          int discovery_fadein, int discovery_fadeout)
+{
+  menus_fadein_ = fadein;
+  menus_fadeout_ = fadeout;
+  menus_discovery_ = discovery;
+  menus_discovery_fadein_ = discovery_fadein;
+  menus_discovery_fadeout_ = discovery_fadeout;
+
+  for (auto window: windows_)
+  {
+    ViewForWindow(window)->SetMenuShowTimings(fadein, fadeout, discovery,
+                                              discovery_fadein, discovery_fadeout);
+  }
+}
+
 void Controller::Impl::QueueRedraw()
 {
   for (auto window: windows_)
@@ -201,6 +225,8 @@ void Controller::Impl::OnScreenChanged(int primary_monitor,
       PanelView* view = new PanelView();
       view->SetMaximumHeight(24);
       view->SetOpacity(opacity_);
+      view->SetMenuShowTimings(menus_fadein_, menus_fadeout_, menus_discovery_,
+                               menus_discovery_fadein_, menus_discovery_fadeout_);
       view->SetPrimary(i == primary_monitor);
       view->SetMonitor(i);
 
@@ -279,6 +305,12 @@ void Controller::EndFirstMenuShow()
 void Controller::SetOpacity(float opacity)
 {
   pimpl->SetOpacity(opacity);
+}
+
+void Controller::SetMenuShowTimings(int fadein, int fadeout, int discovery,
+                                    int discovery_fadein, int discovery_fadeout)
+{
+  pimpl->SetMenuShowTimings(fadein, fadeout, discovery, discovery_fadein, discovery_fadeout);
 }
 
 void Controller::QueueRedraw()

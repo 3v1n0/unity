@@ -2020,6 +2020,17 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
     case UnityshellOptions::PanelOpacity:
       panel_controller_->SetOpacity(optionGetPanelOpacity());
       break;
+    case UnityshellOptions::MenusFadein:
+    case UnityshellOptions::MenusFadeout:
+    case UnityshellOptions::MenusDiscoveryFadein:
+    case UnityshellOptions::MenusDiscoveryFadeout:
+    case UnityshellOptions::MenusDiscoveryDuration:
+      panel_controller_->SetMenuShowTimings(optionGetMenusFadein(),
+                                            optionGetMenusFadeout(),
+                                            optionGetMenusDiscoveryDuration(),
+                                            optionGetMenusDiscoveryFadein(),
+                                            optionGetMenusDiscoveryFadeout());
+      break;
     case UnityshellOptions::LauncherOpacity:
       launcher.SetBackgroundAlpha(optionGetLauncherOpacity());
       break;
