@@ -477,19 +477,22 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
         locked = (_gradient_texture->LockRect(0, &lockrect, NULL) == OGL_OK);
       }
 
-      int gradient_opacity = 255.0f * GetOpacity();
       BYTE* dest_buffer = (BYTE*) lockrect.pBits;
+      int gradient_opacity = 255.0f * GetOpacity();
+      int buttons_opacity = 255.0f * _window_buttons->GetOpacity();
 
       for (int x = 0; x < geo.width && dest_buffer && locked; x++)
       {
         BYTE a;
         if (x < button_width * (factor - 1))
         {
-          a = 0xff;
+          a = 0xff - buttons_opacity;
         }
         else if (x < button_width * factor)
         {
-          a = 0xff - gradient_opacity * (((float)x - (button_width * (factor - 1))) / (float)(button_width));
+          a = 0xff - gradient_opacity *
+                                  (((float)x - (button_width * (factor - 1))) /
+                                  (float)(button_width));
         }
         else
         {
@@ -497,15 +500,11 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
           {
             a = 0xff - gradient_opacity;
           }
-          else if (0xff - gradient_opacity > 0x55)
+          else
           {
             // If we're fading-out the title, it's better to quickly hide
             // the transparent right-most area
-            a = 0xff - gradient_opacity - 0x55;
-          }
-          else
-          {
-            a = 0x00;
+            a = CLAMP(0xff - gradient_opacity - 0x55, 0x00, 0xff);
           }
         }
 
@@ -535,9 +534,12 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
       // The previous blend is too aggressive on the texture and therefore there
       // is a slight loss of clarity. This fixes that
-      geo.width = button_width * (factor - 1);
-      nux::GetPainter().PushDrawLayer(GfxContext, geo, _title_layer);
-      geo = GetGeometry();
+      if (_window_buttons->GetOpacity() == 0.0f)
+      {
+        geo.width = button_width * (factor - 1);
+        nux::GetPainter().PushDrawLayer(GfxContext, geo, _title_layer);
+        geo = GetGeometry();
+      }
     }
     else if (_window_buttons->GetOpacity() < 1.0f &&
              _window_buttons->GetOpacity() > 0.0f && !_places_showing)
