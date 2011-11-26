@@ -43,8 +43,8 @@ BFBLauncherIcon::BFBLauncherIcon(Launcher* IconManager)
   SetIconType(TYPE_HOME);
 
   background_color_ = nux::Color (0xFF333333);
-
-  mouse_enter.connect([&] () { ubus_manager_.SendMessage(UBUS_DASH_ABOUT_TO_SHOW, NULL); });
+  
+  mouse_enter.connect([&]() { ubus_manager_.SendMessage(UBUS_DASH_ABOUT_TO_SHOW, NULL); });
 }
 
 nux::Color BFBLauncherIcon::BackgroundColor()
@@ -59,8 +59,7 @@ nux::Color BFBLauncherIcon::GlowColor()
 
 void BFBLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 {
-  if (arg.button == 1)
-    ubus_manager_.SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST, g_variant_new("(sus)", "home.lens", 0, ""));
+  ubus_manager_.SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST, g_variant_new("(sus)", "home.lens", 0, ""));
 
   // dont chain down to avoid random dash close events
 }
