@@ -17,14 +17,14 @@
  * Authored by: Alex Launi <alex.launi@canonical.com>
  */
 
+#include <gio/gio.h>
+
 #ifndef _DEBUG_DBUS_INTERFACE_H
 #define _DEBUG_DBUS_INTERFACE_H 1
 
 #define UNITY_DBUS_BUS_NAME                 "com.canonical.Unity"
 #define UNITY_DBUS_DEBUG_OBJECT_PATH        "/com/canonical/Unity/Debug"
-#define UNITY_DBUS_AP_IFACE_NAME            "com.canonical.Unity.Debug.Autopilot"
 #define UNITY_DBUS_INTROSPECTION_IFACE_NAME "com.canonical.Unity.Debug.Introspection"
-#define UNITY_DBUS_AP_SIG_TESTFINISHED      "TestFinished"
 
 namespace unity
 {
