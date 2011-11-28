@@ -58,7 +58,7 @@ class VLayout;
 class HLayout;
 class SpaceLayout;
 
-class Tooltip : public BaseWindow, public unity::Introspectable
+class Tooltip : public BaseWindow, public unity::debug::Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE(Tooltip, BaseWindow);
 public:

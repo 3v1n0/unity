@@ -41,7 +41,7 @@ namespace unity
 namespace dash
 {
 
-class DashView : public nux::View, public unity::Introspectable
+class DashView : public nux::View, public unity::debug::Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE(DashView, nux::View);
   typedef std::map<std::string, LensView*> LensViews;

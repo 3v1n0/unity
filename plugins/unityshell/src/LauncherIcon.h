@@ -53,7 +53,7 @@ namespace launcher
 
 class Launcher;
 
-class LauncherIcon : public AbstractLauncherIcon, public Introspectable
+class LauncherIcon : public AbstractLauncherIcon, public unity::debug::Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE(LauncherIcon, AbstractLauncherIcon);
 
