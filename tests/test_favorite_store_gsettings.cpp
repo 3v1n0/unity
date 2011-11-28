@@ -51,6 +51,7 @@ const char* base_store_favs[] = { BUILDDIR"/tests/data/ubuntuone-installer.deskt
                                 };
 const int n_base_store_favs = G_N_ELEMENTS(base_store_favs) - 1; /* NULL */
                               
+const std::string other_desktop = BUILDDIR"/tests/data/bzr-handle-patch.desktop";
 
 // Utilities                            
 std::string const& at(FavoriteList const& favs, int index)
@@ -122,7 +123,6 @@ TEST_F(TestFavoriteStoreGSettings, TestGetFavorites)
 TEST_F(TestFavoriteStoreGSettings, TestAddFavorite)
 {
   internal::FavoriteStoreGSettings settings(backend.Release());
-  std::string other_desktop("/usr/share/applications/nautilus.desktop");
   
   settings.AddFavorite(other_desktop, 0);
   FavoriteList const& favs = settings.GetFavorites();
@@ -133,7 +133,6 @@ TEST_F(TestFavoriteStoreGSettings, TestAddFavorite)
 TEST_F(TestFavoriteStoreGSettings, TestAddFavoritePosition)
 {
   internal::FavoriteStoreGSettings settings(backend.Release());
-  std::string other_desktop("/usr/share/applications/nautilus.desktop");
   
   settings.AddFavorite(other_desktop, 2);
   FavoriteList const& favs = settings.GetFavorites();
@@ -144,7 +143,6 @@ TEST_F(TestFavoriteStoreGSettings, TestAddFavoritePosition)
 TEST_F(TestFavoriteStoreGSettings,TestAddFavoriteLast)
 {
   internal::FavoriteStoreGSettings settings(backend.Release());
-  std::string other_desktop("/usr/share/applications/nautilus.desktop");
   
   settings.AddFavorite(other_desktop, -1);
   FavoriteList const& favs = settings.GetFavorites();
@@ -155,7 +153,6 @@ TEST_F(TestFavoriteStoreGSettings,TestAddFavoriteLast)
 TEST_F(TestFavoriteStoreGSettings,TestAddFavoriteOutOfRange)
 {
   internal::FavoriteStoreGSettings settings(backend.Release());
-  std::string other_desktop("/usr/share/applications/nautilus.desktop");
 
   FavoriteList const& favs = settings.GetFavorites();
   settings.AddFavorite(other_desktop, n_base_store_favs + 1);

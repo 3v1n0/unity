@@ -9,6 +9,8 @@ configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/ubuntu-software-center.desktop
                 ${CMAKE_BINARY_DIR}/tests/data/ubuntu-software-center.desktop)
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/update-manager.desktop
                 ${CMAKE_BINARY_DIR}/tests/data/update-manager.desktop)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/bzr-handle-patch.desktop
+                ${CMAKE_BINARY_DIR}/tests/data/bzr-handle-patch.desktop)
 #
 # Unit tests
 #
