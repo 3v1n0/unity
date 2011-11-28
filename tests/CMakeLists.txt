@@ -102,6 +102,8 @@ add_executable (standalone-dash
                 ${UNITY_SRC}/PlacesVScrollBar.h
                 ${UNITY_SRC}/DashView.cpp
                 ${UNITY_SRC}/DashView.h
+                ${UNITY_SRC}/DashViewPrivate.cpp
+                ${UNITY_SRC}/DashViewPrivate.h
                 ${UNITY_SRC}/HomeView.cpp
                 ${UNITY_SRC}/HomeView.h
                 ${UNITY_SRC}/DashStyle.cpp
@@ -508,6 +510,7 @@ if (${GTEST_FOUND} STREQUAL TRUE)
 # The actual test executable
   add_executable(test-gtest
                  test_categories.cpp
+                 test_dashview_impl.cpp
                  test_filesystem_lenses.cpp
                  test_filter.cpp
                  test_glib_signals.cpp
@@ -524,6 +527,8 @@ if (${GTEST_FOUND} STREQUAL TRUE)
                  test_ratings_filter.cpp
                  test_results.cpp
                  ${UNITY_SRC}/AbstractLauncherIcon.h
+                 ${UNITY_SRC}/DashViewPrivate.cpp
+                 ${UNITY_SRC}/DashViewPrivate.h
                  ${UNITY_SRC}/FavoriteStore.cpp
                  ${UNITY_SRC}/FavoriteStore.h
                  ${UNITY_SRC}/FavoriteStoreGSettings.cpp

@@ -17,6 +17,7 @@
  */
 
 #include "DashView.h"
+#include "DashViewPrivate.h"
 
 #include <math.h>
 
@@ -554,36 +555,20 @@ void DashView::OnActivateRequest(GVariant* args)
     ubus_manager_.SendMessage(UBUS_DASH_EXTERNAL_ACTIVATION);
 }
 
-std::string DashView::AnalyseLensURI(std::string uri)
+std::string DashView::AnalyseLensURI(std::string const& uri)
 {
-  std::string id = uri;
-  std::size_t pos = uri.find("?");
+  impl::LensFilter filter = impl::parse_lens_uri(uri);
 
-  // It is a real URI
-  if (pos)
+  if (!filter.filters.empty())
   {
-    id = uri.substr(0, pos);
-
-    std::string components = uri.substr(++pos);
-    gchar** tokens = g_strsplit(components.c_str(), "&", -1);
-
-    for (int i = 0; tokens[i]; ++i)
-    {
-      gchar** subs = g_strsplit(tokens[i], "=", 2);
-
-      if (g_str_has_prefix(subs[0], "filter_"))
-      {
-        UpdateLensFilter(id, subs[0] + 7, subs[1]);
-        lens_views_[id]->filters_expanded = true;
-      }
-
-      g_strfreev(subs);
+    lens_views_[filter.id]->filters_expanded = true;
+    // update the lens for each filter
+    for (auto p : filter.filters) {
+      UpdateLensFilter(filter.id, p.first, p.second);
     }
-
-    g_strfreev(tokens);
   }
 
-  return id;
+  return filter.id;
 }
 
 void DashView::UpdateLensFilter(std::string lens_id, std::string filter_name, std::string value)
