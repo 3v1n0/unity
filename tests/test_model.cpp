@@ -1,4 +1,3 @@
-//#include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <glib-object.h>
 
