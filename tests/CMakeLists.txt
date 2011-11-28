@@ -3,6 +3,10 @@ set(UNITY_SRC ../plugins/unityshell/src)
 #
 # Data
 #
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/ubuntuone-installer.desktop
+                ${CMAKE_BINARY_DIR}/tests/data/ubuntuone-installer.desktop)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/ubuntu-software-center.desktop
+                ${CMAKE_BINARY_DIR}/tests/data/ubuntu-software-center.desktop)
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/update-manager.desktop
                 ${CMAKE_BINARY_DIR}/tests/data/update-manager.desktop)
 #

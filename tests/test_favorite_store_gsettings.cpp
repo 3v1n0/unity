@@ -39,15 +39,14 @@ using namespace unity;
 namespace {
   
 // Constant
-const gchar* CUSTOM_DESKTOP = BUILDDIR"/tests/data/update-manager.desktop";
 const gchar* SCHEMA_DIRECTORY = BUILDDIR"/settings";
 const gchar* BASE_STORE_FILE = BUILDDIR"/settings/test-favorite-store-gsettings.store";
 const gchar* BASE_STORE_CONTENTS = "[desktop/unity/launcher]\n" \
-                                  "favorites=['gedit.desktop', 'firefox.desktop', '%s']";
+                                  "favorites=['%s', '%s', '%s']";
                                   
-const char* base_store_favs[] = { "gedit.desktop",
-                                  "firefox.desktop",
-                                  CUSTOM_DESKTOP,
+const char* base_store_favs[] = { BUILDDIR"/tests/data/ubuntuone-installer.desktop",
+                                  BUILDDIR"/tests/data/ubuntu-software-center.desktop",
+                                  BUILDDIR"/tests/data/update-manager.desktop",
                                   NULL
                                 };
 const int n_base_store_favs = G_N_ELEMENTS(base_store_favs) - 1; /* NULL */
@@ -82,7 +81,11 @@ public:
     g_setenv("GSETTINGS_SCHEMA_DIR", SCHEMA_DIRECTORY, false);
 
     glib::Error error;
-    glib::String contents(g_strdup_printf(BASE_STORE_CONTENTS, CUSTOM_DESKTOP));
+    glib::String contents(g_strdup_printf(BASE_STORE_CONTENTS, 
+                                          base_store_favs[0],
+                                          base_store_favs[1],
+                                          base_store_favs[2]
+                                          ));
 
     g_file_set_contents(BASE_STORE_FILE,
                         contents.Value(),
