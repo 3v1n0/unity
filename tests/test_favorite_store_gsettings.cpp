@@ -27,10 +27,12 @@
 #define G_SETTINGS_ENABLE_BACKEND
 #include <gio/gsettingsbackend.h>
 #include <gtest/gtest.h>
+#include <glib.h>
 
 #include "FavoriteStore.h"
 #include "FavoriteStoreGSettings.h"
 #include <UnityCore/GLibWrapper.h>
+
 
 using namespace unity;
 
@@ -38,6 +40,7 @@ namespace {
   
 // Constant
 const gchar* CUSTOM_DESKTOP = BUILDDIR"/tests/data/update-manager.desktop";
+const gchar* SCHEMA_DIRECTORY = BUILDDIR"/settings";
 const gchar* BASE_STORE_FILE = BUILDDIR"/settings/test-favorite-store-gsettings.store";
 const gchar* BASE_STORE_CONTENTS = "[desktop/unity/launcher]\n" \
                                   "favorites=['gedit.desktop', 'firefox.desktop', '%s']";
@@ -75,6 +78,9 @@ public:
   
   virtual void SetUp()
   {
+    // set the data directory so gsettings can find the schema 
+    g_setenv("GSETTINGS_SCHEMA_DIR", SCHEMA_DIRECTORY, false);
+
     glib::Error error;
     glib::String contents(g_strdup_printf(BASE_STORE_CONTENTS, CUSTOM_DESKTOP));
 
