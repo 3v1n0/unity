@@ -101,37 +101,72 @@ TEST(TestModel, TestSetGetRenderer)
   }
 }
 
-TEST(TestRowAdapterBase, TestGetStringNull)
-{
-  DeeModel* model = dee_sequence_model_new();
-  dee_model_set_schema(model, "s", NULL);
-  // Add on a null string.
-  DeeModelIter* iter = dee_model_append(model, NULL);
 
-  RowAdaptorBase row(model, iter);
-  EXPECT_THAT(row.GetStringAt(0), Eq(""));
+
+void discard_g_log_calls(const gchar* log_domain,
+                         GLogLevelFlags log_level,
+                         const gchar* message,
+                         gpointer user_data)
+{
+  // do nothing for the messages.
 }
 
-TEST(TestRowAdapterBase, TestGetStringEmpty)
+class TestRowAdapterBase : public Test
+{
+public:
+  void SetUp() {
+    logger_ = g_log_set_default_handler(discard_g_log_calls, NULL);
+  }
+  void TearDown() {
+    g_log_set_default_handler(logger_, NULL);
+  }
+private:
+  GLogFunc logger_;
+};
+
+TEST_F(TestRowAdapterBase, TestGetStringNull)
+{
+  DeeModel* model = dee_sequence_model_new();
+  dee_model_set_schema(model, "i", NULL);
+  // Add in zero to an int field
+  DeeModelIter* iter = dee_model_append(model, 0);
+
+  RowAdaptorBase row(model, iter);
+
+  // Check that the method we call is null.
+  const gchar* value = dee_model_get_string(model, iter, 0);
+  ASSERT_THAT(value, IsNull());
+  ASSERT_THAT(model, NotNull());
+  ASSERT_THAT(iter, NotNull());
+  ASSERT_THAT(row.GetStringAt(0), Eq(""));
+}
+
+TEST_F(TestRowAdapterBase, TestGetStringEmpty)
 {
   DeeModel* model = dee_sequence_model_new();
   dee_model_set_schema(model, "s", NULL);
-  // Add on a null string.
+  // Add on a empty string.
   DeeModelIter* iter = dee_model_append(model, "");
 
   RowAdaptorBase row(model, iter);
-  EXPECT_THAT(row.GetStringAt(0), Eq(""));
+
+  ASSERT_THAT(model, NotNull());
+  ASSERT_THAT(iter, NotNull());
+  ASSERT_THAT(row.GetStringAt(0), Eq(""));
 }
 
-TEST(TestRowAdapterBase, TestGetStringValue)
+TEST_F(TestRowAdapterBase, TestGetStringValue)
 {
   DeeModel* model = dee_sequence_model_new();
   dee_model_set_schema(model, "s", NULL);
-  // Add on a null string.
+  // Add on a real string.
   DeeModelIter* iter = dee_model_append(model, "Hello");
 
   RowAdaptorBase row(model, iter);
-  EXPECT_THAT(row.GetStringAt(0), Eq("Hello"));
+
+  ASSERT_THAT(model, NotNull());
+  ASSERT_THAT(iter, NotNull());
+  ASSERT_THAT(row.GetStringAt(0), Eq("Hello"));
 }
 
 }
