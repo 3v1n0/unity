@@ -102,8 +102,8 @@ TEST_F(TestFavoriteStoreGSettings, TestAllocation)
 TEST_F(TestFavoriteStoreGSettings, TestGetFavorites)
 {
   internal::FavoriteStoreGSettings settings(backend.Release());
-
   FavoriteList const& favs = settings.GetFavorites();
+
   ASSERT_EQ(favs.size(), n_base_store_favs);
   EXPECT_TRUE(ends_with(at(favs, 0), base_store_favs[0]));
   EXPECT_TRUE(ends_with(at(favs, 1), base_store_favs[1]));

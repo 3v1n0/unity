@@ -106,6 +106,11 @@ void FavoriteStoreGSettings::Refresh()
   favorites_.clear();
 
   gchar** favs = g_settings_get_strv(settings_, "favorites");
+  if (favs == std::null_ptr)
+  {
+    NUX_ERROR(logger) << "Null returned from gsettings, likely that gsettings is not setup correctly";
+    return;
+  }
 
   for (int i = 0; favs[i] != NULL; ++i)
   {
