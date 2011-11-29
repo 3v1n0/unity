@@ -21,6 +21,7 @@
 #include "config.h"
 
 #include <glib.h>
+#include <pango/pango.h>
 
 #include "Nux/Nux.h"
 #include "StaticCairoText.h"
@@ -55,6 +56,7 @@ TestLeftToRightExtentIncreasesWithLength ()
   const gchar *test_string = "Just a string of text";
 
   g_assert(g_utf8_validate(test_string, -1, NULL));
+  g_assert(pango_find_base_dir(test_string, -1) == PANGO_DIRECTION_LTR);
 
   assert_width_increases_with_substring_length (test_string);
 }
@@ -65,6 +67,7 @@ TestRightToLeftExtentIncreasesWithLength ()
   const gchar *test_string = "מחרוזת אקראית עברית";
 
   g_assert(g_utf8_validate(test_string, -1, NULL));
+  g_assert(pango_find_base_dir(test_string, -1) == PANGO_DIRECTION_RTL);
   
   assert_width_increases_with_substring_length (test_string);
 }
