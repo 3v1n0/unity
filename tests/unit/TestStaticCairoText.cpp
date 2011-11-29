@@ -27,6 +27,21 @@
 #include "StaticCairoText.h"
 
 static void
+switch_language (const char *new_locale)
+{
+  setenv ("LANGUAGE", new_locale, 1);
+
+  /*
+   * The GNU gettext manual suggests this is necessary to ensure the gettext
+   * cache doesn't interfere with the locale change
+   */
+  {
+    extern int _nl_msg_cat_cntr;
+    ++_nl_msg_cat_cntr;
+  }
+}
+
+static void
 assert_width_increases_with_substring_length (const gchar *test_string)
 {
   nux::StaticCairoText text("");
@@ -54,6 +69,8 @@ static void
 TestLeftToRightExtentIncreasesWithLength ()
 {
   const gchar *test_string = "Just a string of text";
+  
+  switch_language("en");
 
   g_assert(g_utf8_validate(test_string, -1, NULL));
   g_assert(pango_find_base_dir(test_string, -1) == PANGO_DIRECTION_LTR);
@@ -65,6 +82,9 @@ static void
 TestRightToLeftExtentIncreasesWithLength ()
 {
   const gchar *test_string = "מחרוזת אקראית עברית";
+
+  // Hebrew is an RTL language
+  switch_language("he");
 
   g_assert(g_utf8_validate(test_string, -1, NULL));
   g_assert(pango_find_base_dir(test_string, -1) == PANGO_DIRECTION_RTL);
