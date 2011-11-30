@@ -20,7 +20,9 @@
 #ifndef UNITY_ANIMATOR_H_
 #define UNITY_ANIMATOR_H_
 
-#include <Nux/Nux.h>
+#include <glib.h>
+#include <cstdint>
+#include <sigc++/sigc++.h>
 
 namespace unity
 {
