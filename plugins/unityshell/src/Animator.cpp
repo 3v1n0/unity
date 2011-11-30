@@ -56,25 +56,25 @@ Animator::SetDuration(unsigned int duration)
 }
 
 unsigned int
-Animator::GetRate()
+Animator::GetRate() const
 {
   return _rate;
 }
 
 unsigned int
-Animator::GetDuration()
+Animator::GetDuration() const
 {
   return (_one_time_duration > 0 ? _one_time_duration : _duration) / 1000;
 }
 
 bool
-Animator::IsRunning()
+Animator::IsRunning() const
 {
   return (_timeout_id != 0);
 }
 
 double
-Animator::GetProgress()
+Animator::GetProgress() const
 {
   return _progress;
 }

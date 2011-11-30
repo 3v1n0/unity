@@ -35,10 +35,10 @@ public:
   void SetRate(unsigned int fps_rate);
   void SetDuration(unsigned int duration);
 
-  unsigned int GetRate();
-  unsigned int GetDuration();
-  double GetProgress();
-  bool IsRunning();
+  unsigned int GetRate() const;
+  unsigned int GetDuration() const;
+  double GetProgress() const;
+  bool IsRunning() const;
 
   void Start(double start_progress = 0.0f);
   void Start(unsigned int one_time_duration, double start_progress = 0.0f);
