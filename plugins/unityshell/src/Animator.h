@@ -24,14 +24,6 @@
 
 namespace unity
 {
-  
-class FadableObject2
-{
-public:
-  virtual void SetOpacity(double value) = 0;
-  virtual double GetOpacity() = 0;
-};
-
 class Animator
 {
 public:
