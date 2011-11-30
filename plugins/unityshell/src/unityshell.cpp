@@ -244,6 +244,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetAutohideAnimationNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetDashBlurExperimentalNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetDevicesOptionNotify(boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+     optionSetShowDesktopIconNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetShowLauncherInitiate(boost::bind(&UnityScreen::showLauncherKeyInitiate, this, _1, _2, _3));
      optionSetShowLauncherTerminate(boost::bind(&UnityScreen::showLauncherKeyTerminate, this, _1, _2, _3));
      optionSetKeyboardFocusInitiate(boost::bind(&UnityScreen::setKeyboardFocusKeyInitiate, this, _1, _2, _3));
@@ -2072,6 +2073,9 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>::setFunctions (optionGetShowMinimizedWindows ());
       screen->enterShowDesktopModeSetEnabled (this, optionGetShowMinimizedWindows ());
       screen->leaveShowDesktopModeSetEnabled (this, optionGetShowMinimizedWindows ());
+      break;
+    case UnityshellOptions::ShowDesktopIcon:
+      launcher_controller_->SetShowDesktopIcon(optionGetShowDesktopIcon());
       break;
     default:
       break;
