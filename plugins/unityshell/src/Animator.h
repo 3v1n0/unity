@@ -42,6 +42,7 @@ public:
 
   void Start(double start_progress = 0.0f);
   void Start(unsigned int one_time_duration, double start_progress = 0.0f);
+  bool DoStep();
   void Stop();
 
   sigc::signal<void> animation_started;

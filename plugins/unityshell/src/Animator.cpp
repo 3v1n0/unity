@@ -115,31 +115,37 @@ Animator::Stop()
   }
 }
 
-gboolean
-Animator::TimerTimeOut(Animator *self)
+bool
+Animator::DoStep()
 {
   const gint64 current_time = g_get_monotonic_time();
-  const gint64 duration = self->one_time_duration_ > 0 ? self->one_time_duration_ : self->duration_;
-  const gint64 end_time = self->start_time_ + duration;
+  const gint64 duration = one_time_duration_ > 0 ? one_time_duration_ : duration_;
+  const gint64 end_time = start_time_ + duration;
 
-  if (current_time < end_time && self->progress_ < 1.0f && duration > 0)
+  if (current_time < end_time && progress_ < 1.0f && duration > 0)
   {
-    const double diff_time = current_time - self->start_time_;
-    self->progress_ = CLAMP(self->start_progress_ + (diff_time / duration), 0.0f, 1.0f);
-    self->animation_updated.emit(self->progress_);
+    const double diff_time = current_time - start_time_;
+    progress_ = CLAMP(start_progress_ + (diff_time / duration), 0.0f, 1.0f);
+    animation_updated.emit(progress_);
 
-    return TRUE;
+    return true;
   }
   else
   {
-    self->progress_ = 1.0f;
-    self->animation_updated.emit(1.0f);
-    self->animation_ended.emit();
-    self->one_time_duration_ = 0;
-    self->timeout_id_ = 0;
+    progress_ = 1.0f;
+    animation_updated.emit(1.0f);
+    animation_ended.emit();
+    one_time_duration_ = 0;
+    timeout_id_ = 0;
 
-    return FALSE;
+    return false;
   }
+}
+
+gboolean
+Animator::TimerTimeOut(Animator *self)
+{
+  return self->DoStep() ? TRUE : FALSE;
 }
 
 } //namespace
