@@ -1,9 +1,11 @@
-unity (4.24.0-0ubuntu3) UNRELEASED; urgency=low
+unity (4.24.0-0ubuntu4) UNRELEASED; urgency=low
 
   * debian/control:
     - add libgdu-dev build-dep
+    - remove now uneeded libgnome-desktop-dev and libgtk2.0-dev build-deps
 
- -- Didier Roche <didrocks@ubuntu.com>  Tue, 22 Nov 2011 18:15:24 +0100
+
+ -- Didier Roche <didrocks@ubuntu.com>  Wed, 30 Nov 2011 18:05:39 +0100
 
 unity (4.24.0-0ubuntu2) oneiric-proposed; urgency=low
 
