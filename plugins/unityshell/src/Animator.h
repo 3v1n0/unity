@@ -51,13 +51,13 @@ public:
   sigc::signal<void, double> animation_stopped;
 
 private:
-  int64_t _start_time;
-  unsigned int _rate;
-  unsigned int _duration;
-  unsigned int _one_time_duration;
-  unsigned int _timeout_id;
-  double _start_progress;
-  double _progress;
+  int64_t start_time_;
+  unsigned int rate_;
+  unsigned int duration_;
+  unsigned int one_time_duration_;
+  unsigned int timeout_id_;
+  double start_progress_;
+  double progress_;
 
   static gboolean TimerTimeOut(Animator *self);
 };

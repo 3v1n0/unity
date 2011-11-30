@@ -24,13 +24,13 @@ namespace unity
 
 Animator::Animator(unsigned int default_duration, unsigned int fps_rate)
 {
-  _start_time = 0;
-  _timeout_id = 0;
-  _progress = 0.0f;
-  _start_progress = 0.0f;
-  _rate = 1;
-  _duration = 0;
-  _one_time_duration = 0;
+  start_time_ = 0;
+  timeout_id_ = 0;
+  progress_ = 0.0f;
+  start_progress_ = 0.0f;
+  rate_ = 1;
+  duration_ = 0;
+  one_time_duration_ = 0;
 
   SetDuration(default_duration);
   SetRate(fps_rate);
@@ -38,60 +38,60 @@ Animator::Animator(unsigned int default_duration, unsigned int fps_rate)
 
 Animator::~Animator()
 {
-  if (_timeout_id != 0)
-    g_source_remove (_timeout_id);
+  if (timeout_id_ != 0)
+    g_source_remove (timeout_id_);
 }
 
 void
 Animator::SetRate(unsigned int fps_rate)
 {
   if (fps_rate != 0)
-    _rate = 1000 / fps_rate;
+    rate_ = 1000 / fps_rate;
 }
 
 void
 Animator::SetDuration(unsigned int duration)
 {
-  _duration = duration * 1000;
+  duration_ = duration * 1000;
 }
 
 unsigned int
 Animator::GetRate() const
 {
-  return _rate;
+  return rate_;
 }
 
 unsigned int
 Animator::GetDuration() const
 {
-  return (_one_time_duration > 0 ? _one_time_duration : _duration) / 1000;
+  return (one_time_duration_ > 0 ? one_time_duration_ : duration_) / 1000;
 }
 
 bool
 Animator::IsRunning() const
 {
-  return (_timeout_id != 0);
+  return (timeout_id_ != 0);
 }
 
 double
 Animator::GetProgress() const
 {
-  return _progress;
+  return progress_;
 }
 
 void
 Animator::Start(unsigned int one_time_duration, double start_progress)
 {
-  if (_timeout_id == 0 && start_progress < 1.0f)
+  if (timeout_id_ == 0 && start_progress < 1.0f)
   {
     if (start_progress < 0.0f)
       start_progress = 0.0f;
 
-    _one_time_duration = one_time_duration * 1000;
-    _start_progress = start_progress;
-    _progress = _start_progress;
-    _start_time = g_get_monotonic_time();
-    _timeout_id = g_timeout_add(_rate, (GSourceFunc) &Animator::TimerTimeOut, this);
+    one_time_duration_ = one_time_duration * 1000;
+    start_progress_ = start_progress;
+    progress_ = start_progress_;
+    start_time_ = g_get_monotonic_time();
+    timeout_id_ = g_timeout_add(rate_, (GSourceFunc) &Animator::TimerTimeOut, this);
   }
 }
 
@@ -104,14 +104,14 @@ Animator::Start(double start_progress)
 void
 Animator::Stop()
 {
-  if (_timeout_id != 0)
+  if (timeout_id_ != 0)
   {
-    g_source_remove(_timeout_id);
-    animation_updated.emit(_progress);
+    g_source_remove(timeout_id_);
+    animation_updated.emit(progress_);
     animation_ended.emit();
-    animation_stopped.emit(_progress);
-    _one_time_duration = 0;
-    _timeout_id = 0;
+    animation_stopped.emit(progress_);
+    one_time_duration_ = 0;
+    timeout_id_ = 0;
   }
 }
 
@@ -119,24 +119,24 @@ gboolean
 Animator::TimerTimeOut(Animator *self)
 {
   const gint64 current_time = g_get_monotonic_time();
-  const gint64 duration = self->_one_time_duration > 0 ? self->_one_time_duration : self->_duration;
-  const gint64 end_time = self->_start_time + duration;
+  const gint64 duration = self->one_time_duration_ > 0 ? self->one_time_duration_ : self->duration_;
+  const gint64 end_time = self->start_time_ + duration;
 
-  if (current_time < end_time && self->_progress < 1.0f && duration > 0)
+  if (current_time < end_time && self->progress_ < 1.0f && duration > 0)
   {
-    const double diff_time = current_time - self->_start_time;
-    self->_progress = CLAMP(self->_start_progress + (diff_time / duration), 0.0f, 1.0f);
-    self->animation_updated.emit(self->_progress);
+    const double diff_time = current_time - self->start_time_;
+    self->progress_ = CLAMP(self->start_progress_ + (diff_time / duration), 0.0f, 1.0f);
+    self->animation_updated.emit(self->progress_);
 
     return TRUE;
   }
   else
   {
-    self->_progress = 1.0f;
+    self->progress_ = 1.0f;
     self->animation_updated.emit(1.0f);
     self->animation_ended.emit();
-    self->_one_time_duration = 0;
-    self->_timeout_id = 0;
+    self->one_time_duration_ = 0;
+    self->timeout_id_ = 0;
 
     return FALSE;
   }
