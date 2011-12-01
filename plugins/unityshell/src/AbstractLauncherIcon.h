@@ -32,6 +32,7 @@
 #include <libdbusmenu-glib/menuitem.h>
 
 #include "DndData.h"
+#include "Introspectable.h"
 
 namespace unity
 {
@@ -67,7 +68,7 @@ public:
   Window target;
 };
 
-class AbstractLauncherIcon : public nux::InitiallyUnownedObject
+class AbstractLauncherIcon : public nux::InitiallyUnownedObject, public Introspectable
 {
 public:
 
@@ -196,6 +197,11 @@ public:
   sigc::signal<void, AbstractLauncherIcon*> show;
   sigc::signal<void, AbstractLauncherIcon*> hide;
   sigc::signal<void, AbstractLauncherIcon*> needs_redraw;
+
+protected:
+  // Introspectable methods
+  virtual const gchar* GetName() = 0;
+  virtual void AddProperties(GVariantBuilder* builder) = 0;
 
 };
 

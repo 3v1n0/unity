@@ -2397,6 +2397,7 @@ void UnityScreen::initLauncher()
   AddChild(&launcher);
 
   switcher_controller_.reset(new switcher::Controller());
+  switcher_controller_->SetParent(this);
 
   LOG_INFO(logger) << "initLauncher-Launcher " << timer.ElapsedSeconds() << "s";
 

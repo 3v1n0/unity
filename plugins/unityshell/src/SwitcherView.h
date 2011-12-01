@@ -26,6 +26,8 @@
 #include "LayoutSystem.h"
 #include "BackgroundEffectHelper.h"
 
+#include "Introspectable.h"
+
 #include <boost/shared_ptr.hpp>
 #include <sigc++/sigc++.h>
 
@@ -43,7 +45,7 @@ class AbstractLauncherIcon;
 namespace switcher
 {
 
-class SwitcherView : public nux::View
+class SwitcherView : public Introspectable, public nux::View
 {
   NUX_DECLARE_OBJECT_TYPE(SwitcherView, nux::View);
 public:
@@ -72,6 +74,10 @@ public:
   nux::Property<nux::Color> background_color;
 
 protected:
+  // Introspectable methods
+  const gchar* GetName();
+  void AddProperties(GVariantBuilder* builder);
+
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
 

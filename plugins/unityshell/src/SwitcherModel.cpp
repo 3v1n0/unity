@@ -21,6 +21,8 @@
 #include "SwitcherModel.h"
 #include "WindowManager.h"
 
+#include <UnityCore/Variant.h>
+
 namespace unity
 {
 using launcher::AbstractLauncherIcon;
@@ -38,13 +40,34 @@ SwitcherModel::SwitcherModel(std::vector<AbstractLauncherIcon*> icons)
   only_detail_on_viewport = false;
 
   for (auto icon : _inner)
+  {
     icon->Reference();
+    AddChild(icon);
+  }
 }
 
 SwitcherModel::~SwitcherModel()
 {
   for (auto icon : _inner)
+  {
+    RemoveChild(icon);
     icon->UnReference();
+  }
+}
+
+const gchar* SwitcherModel::GetName()
+{
+  return "SwitcherModel";
+}
+
+void SwitcherModel::AddProperties(GVariantBuilder* builder)
+{
+  unity::variant::BuilderWrapper(builder)
+  .add("detail-selection", detail_selection)
+  .add("detail-selection-index", (int)detail_selection_index)
+  .add("only-detail-on-viewport", only_detail_on_viewport)
+  .add("selection-index", SelectionIndex())
+  .add("last-selection-index", LastSelectionIndex());
 }
 
 SwitcherModel::iterator

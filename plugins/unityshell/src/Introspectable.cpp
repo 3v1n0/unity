@@ -21,6 +21,25 @@
 
 namespace unity
 {
+
+Introspectable::Introspectable()
+  : _parent (0)
+{
+}
+
+Introspectable::~Introspectable()
+{
+  if (_parent)
+    _parent->RemoveChild(this);
+}
+
+void
+Introspectable::SetParent(Introspectable* parent)
+{
+  _parent = parent;
+  _parent->AddChild(this);
+}
+
 GVariant*
 Introspectable::Introspect()
 {

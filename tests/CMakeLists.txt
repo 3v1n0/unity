@@ -197,6 +197,8 @@ add_executable (test-switcher
                 ${UNITY_SRC}/SwitcherModel.h
                 ${UNITY_SRC}/SwitcherView.cpp
                 ${UNITY_SRC}/SwitcherView.h
+                ${UNITY_SRC}/Introspectable.cpp
+                ${UNITY_SRC}/Introspectable.h
                 ${UNITY_SRC}/LayoutSystem.h
                 ${UNITY_SRC}/LayoutSystem.cpp
                 ${UNITY_SRC}/WindowManager.h
@@ -536,6 +538,8 @@ if (${GTEST_FOUND} STREQUAL TRUE)
                  ${UNITY_SRC}/MockLauncherIcon.h
                  ${UNITY_SRC}/SwitcherModel.cpp
                  ${UNITY_SRC}/SwitcherModel.h
+                 ${UNITY_SRC}/Introspectable.cpp
+                 ${UNITY_SRC}/Introspectable.h
                  ${UNITY_SRC}/TextureCache.cpp
                  ${UNITY_SRC}/TextureCache.h
                  ${UNITY_SRC}/Timer.cpp
