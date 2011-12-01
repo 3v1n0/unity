@@ -507,6 +507,7 @@ if (${GTEST_FOUND} STREQUAL TRUE)
 
 # The actual test executable
   add_executable(test-gtest
+                 test_animator.cpp
                  test_categories.cpp
                  test_filesystem_lenses.cpp
                  test_filter.cpp
@@ -524,6 +525,8 @@ if (${GTEST_FOUND} STREQUAL TRUE)
                  test_ratings_filter.cpp
                  test_results.cpp
                  ${UNITY_SRC}/AbstractLauncherIcon.h
+                 ${UNITY_SRC}/Animator.cpp
+                 ${UNITY_SRC}/Animator.h
                  ${UNITY_SRC}/FavoriteStore.cpp
                  ${UNITY_SRC}/FavoriteStore.h
                  ${UNITY_SRC}/FavoriteStoreGSettings.cpp
