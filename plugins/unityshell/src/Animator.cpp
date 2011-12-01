@@ -58,6 +58,9 @@ Animator::SetDuration(unsigned int duration)
 unsigned int
 Animator::GetRate() const
 {
+  if (rate_ != 0)
+    return 1000 / rate_;
+
   return rate_;
 }
 
