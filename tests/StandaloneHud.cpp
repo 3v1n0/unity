@@ -45,13 +45,14 @@ public:
   static void InitWindowThread (nux::NThread* thread, void* InitData);
   void Init ();
   nux::Layout *layout;
-  unity::hud::View* hud_view;
+  unity::hud::View* hud_view_;
 
 private:
-
+  unity::hud::Hud hud_service_;
 };
 
 TestRunner::TestRunner ()
+  : hud_service_("com.canonical.hud", "/com/canonical/hud")
 {
 }
 
@@ -64,12 +65,29 @@ void TestRunner::Init ()
   LOG_WARNING(logger) << "test init";
   layout = new nux::VLayout();
 
-  hud_view = new unity::hud::View();
+  hud_view_ = new unity::hud::View();
 
-  layout->AddView (hud_view, 1, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FULL);
-  nux::GetWindowCompositor().SetKeyFocusArea(hud_view->default_focus());
+  layout->AddView (hud_view_, 1, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FULL);
+  nux::GetWindowCompositor().SetKeyFocusArea(hud_view_->default_focus());
 
   nux::GetGraphicsThread()->SetLayout (layout);
+
+  // things the controller normally does
+  hud_service_.suggestion_search_finished.connect([&] (unity::hud::Hud::Suggestions suggestions) {
+    hud_view_->SetSuggestions(suggestions);
+  });
+
+  hud_service_.target_icon.changed.connect([&] (std::string icon_name) {
+    hud_view_->SetIcon(icon_name);
+  });
+
+  hud_view_->search_changed.connect([&] (std::string search_string) {
+    hud_service_.GetSuggestions(search_string);
+  });
+
+  hud_view_->search_activated.connect([&] (std::string search_string) {
+    hud_service_.Execute(search_string);
+  });
 }
 
 void TestRunner::InitWindowThread(nux::NThread* thread, void* InitData)
@@ -109,7 +127,7 @@ int main(int argc, char **argv)
 
   TestRunner *test_runner = new TestRunner ();
   wt = nux::CreateGUIThread(TEXT("Hud Prototype Test"),
-                            800, 240,
+                            864, 240,
                             0,
                             &TestRunner::InitWindowThread,
                             test_runner);

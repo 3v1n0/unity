@@ -489,6 +489,10 @@ add_executable (standalone-hud
                 ${UNITY_SRC}/HudView.cpp
                 ${UNITY_SRC}/UBusWrapper.cpp
                 ${UNITY_SRC}/ubus-server.cpp
+                ${UNITY_SRC}/IconTexture.cpp
+                ${UNITY_SRC}/IconLoader.cpp
+                ${UNITY_SRC}/TextureCache.cpp
+                ${UNITY_SRC}/Timer.cpp
                )
 add_dependencies (standalone-hud unity-core-${UNITY_API_VERSION})
 

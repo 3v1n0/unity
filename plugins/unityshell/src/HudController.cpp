@@ -36,6 +36,7 @@ nux::logging::Logger logger("unity.hud.controller");
 Controller::Controller()
   : launcher_width(66)
   , panel_height(24)
+  , hud_service_("com.canonical.hud", "/com/canonical/hud")
   , window_(0)
   , visible_(false)
   , need_show_(false)
@@ -43,12 +44,17 @@ Controller::Controller()
   , last_opacity_(0.0f)
   , start_time_(0)
 {
+  LOG_DEBUG(logger) << "hud startup";
   SetupRelayoutCallbacks();
 
   ubus.RegisterInterest(UBUS_HUD_CLOSE_REQUEST, sigc::mem_fun(this, &Controller::OnExternalHideHud));
 
+  //!!FIXME!! - just hijacks the dash close request so we get some more requests than normal,
+  ubus.RegisterInterest(UBUS_PLACE_VIEW_CLOSE_REQUEST, sigc::mem_fun(this, &Controller::OnExternalHideHud));
+
   PluginAdapter::Default()->compiz_screen_ungrabbed.connect(sigc::mem_fun(this, &Controller::OnScreenUngrabbed));
 
+  hud_service_.suggestion_search_finished.connect(sigc::mem_fun(this, &Controller::OnSuggestionsFinished));
   EnsureHud();
 }
 
@@ -87,6 +93,13 @@ void Controller::SetupHudView()
   window_->SetLayout(layout);
 
   view_->mouse_down_outside_pointer_grab_area.connect(sigc::mem_fun(this, &Controller::OnMouseDownOutsideWindow));
+
+  LOG_DEBUG(logger) << "connecting to signals";
+  view_->search_changed.connect(sigc::mem_fun(this, &Controller::OnSearchChanged));
+  view_->search_activated.connect(sigc::mem_fun(this, &Controller::OnSearchActivated));
+  hud_service_.target_icon.changed.connect([&] (std::string icon_name) {
+    view_->SetIcon(icon_name);
+  });
 }
 
 void Controller::SetupRelayoutCallbacks()
@@ -180,7 +193,7 @@ void Controller::OnExternalHideHud(GVariant* variant)
 
 void Controller::ShowHud()
 {
-  g_debug ("showing the hud");
+  LOG_DEBUG(logger) << "Showing the hud";
   EnsureHud();
 
   window_->ShowWindow(true);
@@ -193,15 +206,12 @@ void Controller::ShowHud()
   window_->QueueDraw();
   window_->SetOpacity(1.0f);
 
-  g_debug ("geo %i, %i - %i, %i", window_->GetGeometry().x, window_->GetGeometry().y, window_->GetGeometry().width, window_->GetGeometry().height);
-
   need_show_ = false;
   visible_ = true;
 }
 void Controller::HideHud(bool restore)
 {
   LOG_DEBUG (logger) << "hiding the hud";
-  g_debug ("Hiding the hud");
   //~ if (!visible_)
    //~ return;
 
@@ -268,6 +278,24 @@ void Controller::OnActivateRequest(GVariant* variant)
 {
   EnsureHud();
   ShowHud();
+}
+
+void Controller::OnSearchChanged(std::string search_string)
+{
+  LOG_DEBUG(logger) << "Search Changed";
+  hud_service_.GetSuggestions(search_string);
+}
+
+void Controller::OnSearchActivated(std::string search_string)
+{
+  hud_service_.Execute(search_string);
+  HideHud();
+}
+
+
+void Controller::OnSuggestionsFinished(Hud::Suggestions suggestions)
+{
+  view_->SetSuggestions(suggestions);
 }
 
 // Introspectable

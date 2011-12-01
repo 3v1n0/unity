@@ -31,6 +31,7 @@
 #include <glib.h>
 
 #include "UBusWrapper.h"
+#include "IconTexture.h"
 #include "HudSearchBar.h"
 #include "Hud.h"
 
@@ -46,8 +47,16 @@ public:
   View();
   ~View();
 
+  void ResetToDefault();
+
   void Relayout();
   nux::View* default_focus() const;
+
+  void SetSuggestions(Hud::Suggestions suggestions);
+  void SetIcon(std::string icon_name);
+
+  sigc::signal<void, std::string> search_changed;
+  sigc::signal<void, std::string> search_activated;
 
 protected:
   virtual Area* FindKeyFocusArea(unsigned int key_symbol,
@@ -56,8 +65,6 @@ protected:
 
   void SetupViews();
   void OnSearchChanged(std::string const& search_string);
-
-  void OnSuggestionsFinished(Hud::Suggestions);
 
 private:
   //virtual bool InspectKeyEvent(unsigned int eventType, unsigned int keysym, const char* character);
@@ -76,12 +83,13 @@ private:
 private:
   UBusManager ubus;
   nux::Layout* layout_;
+  nux::Layout* content_layout_;
   nux::VLayout* button_views_;
   unity::hud::SearchBar* search_bar_;
   nux::StaticCairoText* search_hint_;
+  unity::IconTexture* icon_;
   bool visible_;
 
-  Hud hud_service_;
   Hud::Suggestions suggestions_;
   nux::Geometry content_geo_;
 

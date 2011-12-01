@@ -52,7 +52,6 @@ NUX_IMPLEMENT_OBJECT_TYPE(View);
 View::View()
   : nux::View(NUX_TRACKER_LOCATION)
   , button_views_(NULL)
-  , hud_service_("com.canonical.hud", "/com/canonical/hud")
 {
 
   nux::ROPConfig rop;
@@ -61,19 +60,22 @@ View::View()
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
   bg_layer_ = new nux::ColorLayer(nux::Color(0.0f, 0.0f, 0.0f, 0.9), true, rop);
 
-  hud_service_.suggestion_search_finished.connect(sigc::mem_fun(this, &View::OnSuggestionsFinished));
   SetupViews();
   search_bar_->key_down.connect (sigc::mem_fun (this, &View::OnKeyDown));
 
   search_bar_->activated.connect ([&]() {
-    hud_service_.Execute(search_bar_->search_string);
-    ubus.SendMessage(UBUS_HUD_CLOSE_REQUEST);
+    search_activated.emit(search_bar_->search_string);
   });
 
 }
 
 View::~View()
 {
+}
+
+void View::ResetToDefault()
+{
+  search_bar_->search_string = "";
 }
 
 void View::Relayout()
@@ -90,40 +92,7 @@ nux::View* View::default_focus() const
   return search_bar_->text_entry();
 }
 
-// Gives us the width and height of the contents that will give us the best "fit",
-// which means that the icons/views will not have uneccessary padding, everything will
-// look tight
-nux::Geometry View::GetBestFitGeometry(nux::Geometry const& for_geo)
-{
-  return nux::Geometry(0, 0, 940, 240);
-}
-
-
-void View::SetupViews()
-{
-  layout_ = new nux::VLayout();
-  SetLayout(layout_);
-
-
-  nux::LayeredLayout* search_composite = new nux::LayeredLayout();
-  search_composite->SetPaintAll(true);
-
-  // add the search bar to the composite
-  search_bar_ = new unity::hud::SearchBar();
-  search_bar_->search_hint = "Type your command";
-  search_bar_->search_changed.connect(sigc::mem_fun(this, &View::OnSearchChanged));
-
-  // add the search composite to the overall layout
-  search_composite->SetMinimumHeight(50);
-  layout_->AddView(search_bar_, 0, nux::MINOR_POSITION_LEFT);
-
-  button_views_ = new nux::VLayout();
-  button_views_->SetHorizontalExternalMargin(12);
-  layout_->AddLayout(button_views_, 1, nux::MINOR_POSITION_LEFT);
-
-}
-
-void View::OnSuggestionsFinished(Hud::Suggestions suggestions)
+void View::SetSuggestions(Hud::Suggestions suggestions)
 {
   suggestions_ = suggestions;
   button_views_->Clear();
@@ -138,75 +107,76 @@ void View::OnSuggestionsFinished(Hud::Suggestions suggestions)
     button_views_->AddView(button, 0, nux::MINOR_POSITION_LEFT);
 
     button->click.connect([&](nux::View* view) {
-       hud_service_.Execute(dynamic_cast<HudButton*>(view)->label);
+      search_activated.emit(dynamic_cast<HudButton*>(view)->label);
     });
 
     found_items++;
   }
 }
 
+void View::SetIcon(std::string icon_name)
+{
+  icon_->SetByIconName(icon_name.c_str(), 64);
+}
+
+// Gives us the width and height of the contents that will give us the best "fit",
+// which means that the icons/views will not have uneccessary padding, everything will
+// look tight
+nux::Geometry View::GetBestFitGeometry(nux::Geometry const& for_geo)
+{
+  return nux::Geometry(0, 0, 940, 240);
+}
+
+
+void View::SetupViews()
+{
+  layout_ = new nux::HLayout();
+
+  icon_ = new unity::IconTexture("", 64, 64);
+  icon_->SetBaseSize(64, 64);
+  icon_->SetMinMaxSize(64, 64);
+  layout_->AddView(icon_, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_MATCHCONTENT);
+
+  content_layout_ = new nux::VLayout();
+  layout_->AddLayout(content_layout_, 1, nux::MINOR_POSITION_TOP);
+  SetLayout(layout_);
+
+  nux::LayeredLayout* search_composite = new nux::LayeredLayout();
+  search_composite->SetPaintAll(true);
+
+  // add the search bar to the composite
+  search_bar_ = new unity::hud::SearchBar();
+  search_bar_->search_hint = "Type your command";
+  search_bar_->search_changed.connect(sigc::mem_fun(this, &View::OnSearchChanged));
+
+  // add the search composite to the overall layout
+  search_composite->SetMinimumHeight(50);
+  content_layout_->AddView(search_bar_, 0, nux::MINOR_POSITION_LEFT);
+
+  button_views_ = new nux::VLayout();
+  button_views_->SetHorizontalExternalMargin(12);
+  content_layout_->AddLayout(button_views_, 1, nux::MINOR_POSITION_LEFT);
+}
+
 void View::OnSearchChanged(std::string const& search_string)
 {
-  hud_service_.GetSuggestions(search_string);
+  LOG_DEBUG(logger) << "got search change";
+  search_changed.emit(search_string);
   search_bar_->search_hint = "";
 }
 
 
 void View::OnKeyDown (unsigned long event_type, unsigned long keysym,
-                                unsigned long event_state, const TCHAR* character,
-                                unsigned short key_repeat_count)
+                      unsigned long event_state, const TCHAR* character,
+                      unsigned short key_repeat_count)
 
 //bool View::InspectKeyEvent(unsigned int eventType, unsigned int keysym, const char* character)
 {
-  int activate_number = 0;
-
-  switch (keysym)
+  if (keysym == NUX_VK_ESCAPE)
   {
-    case NUX_VK_ESCAPE:
-      LOG_DEBUG(logger) << "escaping the hud";
-      ubus.SendMessage(UBUS_HUD_CLOSE_REQUEST);
-      break;
-    case NUX_VK_ENTER:
-      activate_number = 0;
-      break;
-    case NUX_VK_F1:
-      activate_number = 1;
-      break;
-    case NUX_VK_F2:
-      activate_number = 2;
-      break;
-    case NUX_VK_F3:
-      activate_number = 3;
-      break;
-    case NUX_VK_F4:
-      activate_number = 4;
-      break;
-    case NUX_VK_F5:
-      activate_number = 5;
-      break;
-    default:
-      activate_number = -1;
-      LOG_DEBUG(logger) << "did not match against " << keysym << " with: " << NUX_VK_ESCAPE;
-      break;
-  }
-
-  if (activate_number < 0)
-  {
-    //return false;
-  }
-  else
-  {
-    // activate one of our buttons
-    auto suggestion = suggestions_.begin();
-    suggestion += activate_number;
-
-   if (suggestion != suggestions_.end())
-      hud_service_.Execute(std::get<0>(*suggestion));
-
-    LOG_DEBUG(logger) << "executing search, escaping";
+    LOG_DEBUG(logger) << "got escape key";
     ubus.SendMessage(UBUS_HUD_CLOSE_REQUEST);
   }
-
 }
 
 void View::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)

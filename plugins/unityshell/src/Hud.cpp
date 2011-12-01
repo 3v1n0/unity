@@ -110,12 +110,21 @@ void Hud::SuggestionCallback(GVariant* suggests)
   suggestions_.clear();
 
   // extract the information from the GVariants
+  // target
+  GVariant * vtarget = g_variant_get_child_value(suggests, 1);
+  target = g_variant_get_string(vtarget, NULL);
+  g_variant_unref(vtarget);
 
-  GVariant * target = g_variant_get_child_value(suggests, 0);
-  // g_print("Target: %s\n", g_variant_get_string(target, NULL));
-  g_variant_unref(target);
+  LOG_DEBUG(logger) << "Got new target: " << target();
 
-  GVariant* suggestions = g_variant_get_child_value(suggests, 1);
+  // icon
+  GVariant * vicon = g_variant_get_child_value(suggests, 0);
+  target_icon = g_variant_get_string(vicon, NULL);
+  g_variant_unref(vicon);
+
+  LOG_DEBUG(logger) << "Got new icon: " << target_icon();
+
+  GVariant* suggestions = g_variant_get_child_value(suggests, 2);
   GVariantIter iter;
   g_variant_iter_init(&iter, suggestions);
   glib::String suggestion;

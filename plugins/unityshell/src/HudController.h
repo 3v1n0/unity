@@ -69,6 +69,10 @@ private:
   void OnExternalShowHud(GVariant* variant);
   void OnExternalHideHud(GVariant* variant);
   void OnActivateRequest(GVariant* variant);
+
+  void OnSearchChanged(std::string search_string);
+  void OnSearchActivated(std::string search_string);
+
 public:
   void ShowHud();
   void HideHud(bool restore_focus = true);
@@ -79,8 +83,11 @@ private:
 
   static void OnWindowConfigure(int width, int height, nux::Geometry& geo, void* data);
 
+  void OnSuggestionsFinished(Hud::Suggestions);
+
 private:
   UBusManager ubus;
+  Hud hud_service_;
   glib::SignalManager sig_manager_;
   nux::BaseWindow* window_;
   bool visible_;

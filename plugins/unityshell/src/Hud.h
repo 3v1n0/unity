@@ -45,6 +45,7 @@ public:
   ~Hud();
 
   nux::Property<std::string> target;
+  nux::Property<std::string> target_icon;
 
   void GetSuggestions(std::string const& search_string);
   void Execute(std::string const& execute_string);
