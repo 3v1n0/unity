@@ -58,22 +58,22 @@ public:
 
 TEST_F(TestAnimator, ConstructDestroy)
 {
-  auto animator = new Animator(200, 25);
+  auto tmp_animator = new Animator(200, 25);
 
-  EXPECT_EQ(animator->GetDuration(), 200);
-  EXPECT_EQ(animator->GetRate(), 25);
+  EXPECT_EQ(tmp_animator->GetDuration(), 200);
+  EXPECT_EQ(tmp_animator->GetRate(), 25);
 
   double progress;
-  animator->animation_updated.connect([&progress](double p){
+  tmp_animator->animation_updated.connect([&progress](double p) {
     progress = p;
   });
 
-  animator->Start();
+  tmp_animator->Start();
 
-  EXPECT_EQ(animator->IsRunning(), true);
+  EXPECT_EQ(tmp_animator->IsRunning(), true);
   EXPECT_GT(progress, 0.0f);
 
-  delete animator;
+  delete tmp_animator;
 }
 
 TEST_F(TestAnimator, SetGetValues)
@@ -86,6 +86,14 @@ TEST_F(TestAnimator, SetGetValues)
 
   EXPECT_EQ(test_animator_.GetProgress(), 0.0f);
   EXPECT_EQ(test_animator_.IsRunning(), false);
+}
+
+TEST_F(TestAnimator, SimulateStep)
+{
+  test_animator_.DoStep();
+  EXPECT_EQ(test_animator_.IsRunning(), false);
+  EXPECT_GT(test_animator_.GetProgress(), 0.0f);
+  ResetValues();
 }
 
 } // Namespace
