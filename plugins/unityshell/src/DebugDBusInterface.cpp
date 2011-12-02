@@ -19,65 +19,42 @@
 
 #include <queue>
 #include <core/core.h>
+#include <NuxCore/Logger.h>
 
 #include "DebugDBusInterface.h"
 #include "Introspectable.h"
 
 #define SI_METHOD_NAME_GETSTATE  "GetState"
+
 namespace unity
 {
 namespace debug
 {
+namespace
+{
+nux::logging::Logger logger("unity.debug.DebugDBusInterface");
+}
+
 GVariant* GetState(const gchar*);
-void DBusMethodCall(GDBusConnection*, const gchar*, const gchar*,
-                    const gchar*, const gchar*, GVariant*,
-                    GDBusMethodInvocation*, gpointer);
+
 Introspectable* FindPieceToIntrospect(std::queue<Introspectable*> queue, 
                                              const gchar* pieceName);
 
-static const GDBusInterfaceVTable si_vtable =
+const gchar DebugDBusInterface::introspection_xml[] =
+  " <node>"
+  "   <interface name='com.canonical.Unity.Introspection'>"
+  ""
+  "     <method name='GetState'>"
+  "       <arg type='s' name='piece' direction='in' />"
+  "       <arg type='a{sv}' name='state' direction='out' />"
+  "     </method>"
+  ""
+  "   </interface>"
+  " </node>";
+
+GDBusInterfaceVTable DebugDBusInterface::interface_vtable =
 {
-  &DBusMethodCall,
-  NULL,
-  NULL
-};
-
-static const GDBusArgInfo si_getstate_in_args =
-{
-  -1,
-  (gchar*) "piece",
-  (gchar*) "s",
-  NULL
-};
-
-static const GDBusArgInfo* const si_getstate_in_arg_pointers[] = { &si_getstate_in_args, NULL };
-
-static const GDBusArgInfo si_getstate_out_args =
-{
-  -1,
-  (gchar*) "state",
-  (gchar*) "a{sv}",
-  NULL
-};
-static const GDBusArgInfo* const si_getstate_out_arg_pointers[] = { &si_getstate_out_args, NULL };
-
-static const GDBusMethodInfo si_method_info_getstate =
-{
-  -1,
-  (gchar*) SI_METHOD_NAME_GETSTATE,
-  (GDBusArgInfo**)& si_getstate_in_arg_pointers,
-  (GDBusArgInfo**)& si_getstate_out_arg_pointers,
-  NULL
-};
-
-static const GDBusMethodInfo* const si_method_info_pointers [] = { &si_method_info_getstate, NULL };
-
-static const GDBusInterfaceInfo si_iface_info =
-{
-  -1,
-  (gchar*) DBUS_INTROSPECTION_IFACE_NAME,
-  (GDBusMethodInfo**)& si_method_info_pointers,
-  NULL,
+  DebugDBusInterface::HandleDBusMethodCall,
   NULL,
   NULL
 };
@@ -105,22 +82,27 @@ DebugDBusInterface::~DebugDBusInterface()
   g_bus_unown_name(_owner_id);
 }
 
-static const GDBusInterfaceInfo* const debug_object_interfaces [] = { &si_iface_info, NULL };
-
 void
 DebugDBusInterface::OnBusAcquired(GDBusConnection* connection, const gchar* name, gpointer data)
 {
   int i = 0;
   GError* error;
 
-  while (debug_object_interfaces[i] != NULL)
+  GDBusNodeInfo* introspection_data = g_dbus_node_info_new_for_xml(introspection_xml, NULL);
+  if (!introspection_data)
+  {
+    LOG_WARNING(logger) << "No dbus introspection data could be loaded. State introspection will not work";
+    return;
+  }
+
+  while (introspection_data->interfaces[i] != NULL) 
   {
     error = NULL;
     g_dbus_connection_register_object(connection,
                                       DBUS_DEBUG_OBJECT_PATH,
-                                      (GDBusInterfaceInfo*) debug_object_interfaces[i],
-                                      &si_vtable,
-                                      NULL,
+                                      introspection_data->interfaces[i],
+                                      &interface_vtable,
+                                      data,
                                       NULL,
                                       &error);
     if (error != NULL)
@@ -143,16 +125,16 @@ DebugDBusInterface::OnNameLost(GDBusConnection* connection, const gchar* name, g
 }
 
 void
-DBusMethodCall(GDBusConnection* connection,
-               const gchar* sender,
-               const gchar* objectPath,
-               const gchar* ifaceName,
-               const gchar* methodName,
-               GVariant* parameters,
-               GDBusMethodInvocation* invocation,
-               gpointer data)
+DebugDBusInterface::HandleDBusMethodCall(GDBusConnection* connection,
+                                         const gchar* sender,
+                                         const gchar* object_path,
+                                         const gchar* interface_name,
+                                         const gchar* method_name,
+                                         GVariant* parameters,
+                                         GDBusMethodInvocation* invocation,
+                                         gpointer user_data)
 {
-  if (g_strcmp0(methodName, SI_METHOD_NAME_GETSTATE) == 0)
+  if (g_strcmp0(method_name, SI_METHOD_NAME_GETSTATE) == 0)
   {
     GVariant* ret;
     const gchar* input;
