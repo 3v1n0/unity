@@ -258,4 +258,25 @@ TEST_F(TestAnimator, SimulateOneTimeDurationStartStop)
   ResetValues();
 }
 
+TEST_F(TestAnimator, SimulateZeroDuration)
+{
+  test_animator_.SetRate(30);
+  test_animator_.SetDuration(0);
+
+  EXPECT_EQ(started_, false);
+  EXPECT_EQ(ended_, false);
+  EXPECT_EQ(test_animator_.IsRunning(), false);
+
+  long long start_time = g_get_monotonic_time() / 1000;
+  test_animator_.Start();
+  EXPECT_EQ(started_, true);
+
+  Utils::WaitUntil(ended_);
+  EXPECT_EQ(ended_, true);
+
+  long long end_time = g_get_monotonic_time() / 1000;
+  EXPECT_LT(end_time - start_time, test_animator_.GetRate()*2);
+}
+
+
 } // Namespace
