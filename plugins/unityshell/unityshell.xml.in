@@ -43,7 +43,7 @@
                 <option name="show_hud" type="key">
                     <_short>Key to show the matrix</_short>
                     <_long>Make the matrix appear with that key</_long>
-                    <default>&lt;Shift&gt;h</default>
+                    <default>&lt;Super&gt;h</default>
                   </option>
                 <option name="launcher_reveal_edge" type="edge">
                     <_short>Reveal Mode</_short>
