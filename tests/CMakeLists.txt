@@ -172,7 +172,8 @@ set (TEST_COMMAND
 
 set (TEST_COMMAND_HEADLESS
      ${GTEST_TEST_COMMAND_XLESS}
-  && ${GTEST_TEST_COMMAND_DBUS})
+  #&& ${GTEST_TEST_COMMAND_DBUS}
+  && echo "Warning, DBus test cases are disabled!!")
 
 add_custom_target (check COMMAND  ${TEST_COMMAND} DEPENDS test-unit test-gtest test-gtest-xless test-gtest-dbus)
 add_custom_target (check-headless COMMAND ${TEST_COMMAND_HEADLESS} DEPENDS test-gtest-xless test-gtest-dbus)
