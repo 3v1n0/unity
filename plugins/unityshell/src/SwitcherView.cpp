@@ -779,7 +779,7 @@ void SwitcherView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   int ms_since_change = TimeUtil::TimeDelta(&current, &save_time_);
 
   if (ms_since_change < animation_length && redraw_handle_ == 0)
-    redraw_handle_ = g_timeout_add(0, &SwitcherView::OnDrawTimeout, this);
+    redraw_handle_ = g_idle_add_full (G_PRIORITY_DEFAULT, &SwitcherView::OnDrawTimeout, this, NULL);
 
   animation_draw_ = false;
 }

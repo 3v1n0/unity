@@ -297,7 +297,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
 						      (UBusCallback)&UnityScreen::OnQuicklistEndKeyNav,
 						      this);
 
-     g_timeout_add(0, &UnityScreen::initPluginActions, this);
+     g_idle_add_full (G_PRIORITY_DEFAULT, &UnityScreen::initPluginActions, this, NULL);
      super_keypressed_ = false;
 
      GeisAdapter::Default()->Run();
@@ -1982,7 +1982,7 @@ void UnityScreen::onRedrawRequested()
   if (_in_paint)
   {
     if (!_redraw_handle)
-      _redraw_handle = g_timeout_add (0, &UnityScreen::OnRedrawTimeout, this);
+      _redraw_handle = g_idle_add_full (G_PRIORITY_DEFAULT, &UnityScreen::OnRedrawTimeout, this, NULL);
   }
   else
   {
