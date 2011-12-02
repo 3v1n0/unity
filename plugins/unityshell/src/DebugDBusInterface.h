@@ -22,14 +22,12 @@
 #ifndef _DEBUG_DBUS_INTERFACE_H
 #define _DEBUG_DBUS_INTERFACE_H 1
 
-#define DBUS_BUS_NAME                 "com.canonical.Unity.Debug"
-#define DBUS_DEBUG_OBJECT_PATH        "/com/canonical/Unity/Debug"
-#define DBUS_INTROSPECTION_IFACE_NAME "com.canonical.Unity.Debug.Introspection"
-
 class CompScreen;
 
 namespace unity
 {
+extern const char* const DBUS_BUS_NAME;
+
 namespace debug
 {
 class Introspectable;
@@ -37,6 +35,7 @@ class Introspectable;
 class DebugDBusInterface
 {
 public:
+
   DebugDBusInterface(Introspectable* introspectable, CompScreen* uscreen);
   ~DebugDBusInterface();
 
@@ -53,6 +52,7 @@ private:
                                    GVariant* parameters,
                                    GDBusMethodInvocation* invocation, 
                                    gpointer user_data);
+  static const char* DBUS_DEBUG_OBJECT_PATH;
   static const gchar introspection_xml[];
   static GDBusInterfaceVTable interface_vtable;
 

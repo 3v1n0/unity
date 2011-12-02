@@ -24,21 +24,22 @@
 #include "DebugDBusInterface.h"
 #include "Introspectable.h"
 
-#define SI_METHOD_NAME_GETSTATE  "GetState"
-
 namespace unity
 {
+const char* const DBUS_BUS_NAME = "com.canonical.Unity";
+
 namespace debug
 {
 namespace
 {
-nux::logging::Logger logger("unity.debug.DebugDBusInterface");
+  nux::logging::Logger logger("unity.debug.DebugDBusInterface");
 }
 
 GVariant* GetState(const gchar*);
-
 Introspectable* FindPieceToIntrospect(std::queue<Introspectable*> queue, 
-                                             const gchar* pieceName);
+                                      const gchar* pieceName);
+
+const char* DBUS_DEBUG_OBJECT_PATH = "/com/canonical/Unity/Debug";
 
 const gchar DebugDBusInterface::introspection_xml[] =
   " <node>"
@@ -68,7 +69,7 @@ DebugDBusInterface::DebugDBusInterface(Introspectable* parent,
   _screen = screen;
   _parent_introspectable = parent;
   _owner_id = g_bus_own_name(G_BUS_TYPE_SESSION,
-                             DBUS_BUS_NAME,
+                             unity::DBUS_BUS_NAME,
                              G_BUS_NAME_OWNER_FLAGS_NONE,
                              &DebugDBusInterface::OnBusAcquired,
                              &DebugDBusInterface::OnNameAcquired,
@@ -99,7 +100,7 @@ DebugDBusInterface::OnBusAcquired(GDBusConnection* connection, const gchar* name
   {
     error = NULL;
     g_dbus_connection_register_object(connection,
-                                      DBUS_DEBUG_OBJECT_PATH,
+                                      DebugDBusInterface::DBUS_DEBUG_OBJECT_PATH,
                                       introspection_data->interfaces[i],
                                       &interface_vtable,
                                       data,
@@ -134,7 +135,7 @@ DebugDBusInterface::HandleDBusMethodCall(GDBusConnection* connection,
                                          GDBusMethodInvocation* invocation,
                                          gpointer user_data)
 {
-  if (g_strcmp0(method_name, SI_METHOD_NAME_GETSTATE) == 0)
+  if (g_strcmp0(method_name, "GetState") == 0)
   {
     GVariant* ret;
     const gchar* input;
@@ -146,7 +147,7 @@ DebugDBusInterface::HandleDBusMethodCall(GDBusConnection* connection,
   }
   else
   {
-    g_dbus_method_invocation_return_dbus_error(invocation, DBUS_BUS_NAME,
+    g_dbus_method_invocation_return_dbus_error(invocation, unity::DBUS_BUS_NAME,
                                                "Failed to find method");
   }
 }
