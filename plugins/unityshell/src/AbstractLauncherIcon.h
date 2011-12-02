@@ -198,7 +198,6 @@ public:
   sigc::signal<void, AbstractLauncherIcon*> hide;
   sigc::signal<void, AbstractLauncherIcon*> needs_redraw;
 
-protected:
   // Introspectable methods
   virtual const gchar* GetName() = 0;
   virtual void AddProperties(GVariantBuilder* builder) = 0;

@@ -40,19 +40,13 @@ SwitcherModel::SwitcherModel(std::vector<AbstractLauncherIcon*> icons)
   only_detail_on_viewport = false;
 
   for (auto icon : _inner)
-  {
     icon->Reference();
-    AddChild(icon);
-  }
 }
 
 SwitcherModel::~SwitcherModel()
 {
   for (auto icon : _inner)
-  {
-    RemoveChild(icon);
     icon->UnReference();
-  }
 }
 
 const gchar* SwitcherModel::GetName()
@@ -62,12 +56,24 @@ const gchar* SwitcherModel::GetName()
 
 void SwitcherModel::AddProperties(GVariantBuilder* builder)
 {
+  GVariantBuilder* children_builder;
+  children_builder = g_variant_builder_new(G_VARIANT_TYPE("a(sv)"));
+
+  for (auto icon : _inner)
+  {
+    if (icon->GetName())
+      g_variant_builder_add(children_builder, "(sv)", icon->GetName(), icon->Introspect());
+  }
+
   unity::variant::BuilderWrapper(builder)
   .add("detail-selection", detail_selection)
   .add("detail-selection-index", (int)detail_selection_index)
   .add("only-detail-on-viewport", only_detail_on_viewport)
   .add("selection-index", SelectionIndex())
-  .add("last-selection-index", LastSelectionIndex());
+  .add("last-selection-index", LastSelectionIndex())
+  .add("children-of-men", g_variant_new("a(sv)", children_builder));
+  
+  g_variant_builder_unref(children_builder);
 }
 
 SwitcherModel::iterator
