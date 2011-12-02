@@ -23,21 +23,13 @@ namespace unity
 {
 
 Introspectable::Introspectable()
-  : _parent (0)
 {
 }
 
 Introspectable::~Introspectable()
 {
-  if (_parent)
-    _parent->RemoveChild(this);
-}
-
-void
-Introspectable::SetParent(Introspectable* parent)
-{
-  _parent = parent;
-  _parent->AddChild(this);
+  for (auto parent : _parents)
+    parent->_children.remove(this);
 }
 
 GVariant*
@@ -81,12 +73,14 @@ void
 Introspectable::AddChild(Introspectable* child)
 {
   _children.push_back(child);
+  child->_parents.push_back(this);
 }
 
 void
 Introspectable::RemoveChild(Introspectable* child)
 {
   _children.remove(child);
+  child->_parents.remove(this);
 }
 
 const gchar*

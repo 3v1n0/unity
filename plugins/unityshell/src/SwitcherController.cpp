@@ -89,7 +89,7 @@ void Controller::Show(ShowMode show, SortMode sort, bool reverse,
   }
 
   model_.reset(new SwitcherModel(results));
-  model_->SetParent(this);
+  AddChild(model_.get());
   model_->selection_changed.connect(sigc::mem_fun(this, &Controller::OnModelSelectionChanged));
   model_->only_detail_on_viewport = (show == ShowMode::CURRENT_VIEWPORT);
 
@@ -165,7 +165,7 @@ void Controller::OnModelSelectionChanged(AbstractLauncherIcon *icon)
 void Controller::ConstructView()
 {
   view_ = SwitcherView::Ptr(new SwitcherView());
-  view_->SetParent(this);
+  AddChild(view_.GetPointer());
   view_->SetModel(model_);
   view_->background_color = bg_color_;
 

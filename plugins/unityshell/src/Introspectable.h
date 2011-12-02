@@ -35,7 +35,6 @@ public:
 
   GVariant* Introspect();
   virtual const gchar* GetName() = 0;
-  void SetParent(Introspectable* parent);
   void AddChild(Introspectable* child);
   void RemoveChild(Introspectable* child);
   IntrospectableList const& GetIntrospectableChildren() { return _children; };
@@ -61,7 +60,7 @@ protected:
 
 private:
   std::list<Introspectable*> _children;
-  Introspectable* _parent;
+  std::list<Introspectable*> _parents;
 };
 }
 #endif
