@@ -62,7 +62,6 @@ BuilderWrapper& BuilderWrapper::add(char const* name, float value)
 
 BuilderWrapper& BuilderWrapper::add(char const* name, GVariant* value)
 {
-  // floats get promoted to doubles automatically
   g_variant_builder_add(builder_, "{sv}", name, value);
   return *this;
 }
