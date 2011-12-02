@@ -65,7 +65,7 @@ void Hud::Execute(std::string const& execute_string)
 
 void Hud::ExecuteSuggestionCallback(GVariant* suggests)
 {
-  GVariant* suggestions = g_variant_get_child_value(suggests, 1);
+  GVariant* suggestions = g_variant_get_child_value(suggests, 2);
   GVariantIter iter;
   g_variant_iter_init(&iter, suggestions);
   glib::String suggestion;

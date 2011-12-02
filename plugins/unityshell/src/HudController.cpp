@@ -206,6 +206,9 @@ void Controller::ShowHud()
   window_->QueueDraw();
   window_->SetOpacity(1.0f);
 
+  view_->ResetToDefault();
+  hud_service_.GetSuggestions("");
+
   need_show_ = false;
   visible_ = true;
 }
