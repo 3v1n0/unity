@@ -95,6 +95,7 @@ Animator::Start(unsigned int one_time_duration, double start_progress)
     progress_ = start_progress_;
     start_time_ = g_get_monotonic_time();
     timeout_id_ = g_timeout_add(rate_, (GSourceFunc) &Animator::TimerTimeOut, this);
+    animation_started.emit();
   }
 }
 
