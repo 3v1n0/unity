@@ -152,11 +152,7 @@ namespace hud {
 
 
     // Draw the first text item
-    char *escaped_text = g_markup_escape_text(label().c_str()  , -1);
-    pango_layout_set_markup(layout, escaped_text, -1);
-
-    g_free (escaped_text);
-
+    pango_layout_set_markup(layout, label().c_str(), -1);
     pango_layout_context_changed(layout);
 
     pango_layout_get_extents(layout, NULL, &logRect);
@@ -168,10 +164,9 @@ namespace hud {
     cairo_move_to(cr, padding, ((height - extent_height) * 0.5));
     pango_cairo_show_layout(cr, layout);
 
-
     // Draw the second text item
     pango_layout_set_alignment(layout, PANGO_ALIGN_RIGHT);
-    escaped_text = g_markup_escape_text(hint().c_str()  , -1);
+    char *escaped_text = g_markup_escape_text(hint().c_str()  , -1);
     std::string string_final_text = "<small>" + std::string(escaped_text) + "</small>";
     pango_layout_set_markup(layout, string_final_text.c_str(), -1);
 
