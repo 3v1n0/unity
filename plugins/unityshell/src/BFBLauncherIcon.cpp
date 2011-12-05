@@ -70,7 +70,7 @@ void BFBLauncherIcon::OnMenuitemActivated(DbusmenuMenuitem* item,
 {
   if (lens != NULL)
   {
-    ubus_manager_.SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST, g_variant_new("(sus)", lens, 0, ""));
+    ubus_manager_.SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST, g_variant_new("(sus)", lens, dash::GOTO_DASH_URI, ""));
     g_free(lens);
   }
 }                                     
