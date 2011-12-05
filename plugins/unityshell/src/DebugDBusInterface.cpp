@@ -17,16 +17,14 @@
  * Authored by: Alex Launi <alex.launi@canonical.com>
  */
 
+#include <queue>
 #include <core/core.h>
 
-#include "Autopilot.h"
 #include "DebugDBusInterface.h"
 #include "Introspectable.h"
 
 #define SI_METHOD_NAME_GETSTATE  "GetState"
-#define AP_METHOD_NAME_STARTTEST "StartTest"
 
-void StartTest(const gchar*);
 GVariant* GetState(const gchar*);
 void DBusMethodCall(GDBusConnection*, const gchar*, const gchar*,
                     const gchar*, const gchar*, GVariant*,
@@ -69,65 +67,7 @@ static const GDBusMethodInfo si_method_info_getstate =
   NULL
 };
 
-static const GDBusArgInfo ap_starttest_in_args =
-{
-  -1,
-  (gchar*) "name",
-  (gchar*) "s",
-  NULL
-};
-static const GDBusArgInfo* const ap_starttest_in_arg_pointers[] = { &ap_starttest_in_args, NULL };
-
-static GDBusMethodInfo ap_method_info_starttest =
-{
-  -1,
-  (gchar*) AP_METHOD_NAME_STARTTEST,
-  (GDBusArgInfo**)& ap_starttest_in_arg_pointers,
-  NULL,
-  NULL
-};
-
 static const GDBusMethodInfo* const si_method_info_pointers [] = { &si_method_info_getstate, NULL };
-static const GDBusMethodInfo* const ap_method_info_pointers [] = { &ap_method_info_starttest, NULL };
-
-static GDBusArgInfo ap_testfinished_arg_name =
-{
-  -1,
-  (gchar*) "name",
-  (gchar*) "s",
-  NULL
-};
-
-static GDBusArgInfo ap_testfinished_arg_passed =
-{
-  -1,
-  (gchar*) "passed",
-  (gchar*) "b",
-  NULL
-};
-
-static GDBusArgInfo ap_testfinished_arg_data =
-{
-  -1,
-  (gchar*) "data",
-  (gchar*) "a{sv}",
-  NULL
-};
-
-static const GDBusArgInfo* const ap_signal_testfinished_arg_pointers [] = { &ap_testfinished_arg_name,
-                                                                            &ap_testfinished_arg_passed,
-                                                                            &ap_testfinished_arg_data,
-                                                                            NULL
-                                                                          };
-static GDBusSignalInfo ap_signal_info_testfinished =
-{
-  -1,
-  (gchar*) UNITY_DBUS_AP_SIG_TESTFINISHED,
-  (GDBusArgInfo**)& ap_signal_testfinished_arg_pointers,
-  NULL
-};
-
-static const GDBusSignalInfo* const ap_signal_info_pointers [] = { &ap_signal_info_testfinished, NULL };
 
 static const GDBusInterfaceInfo si_iface_info =
 {
@@ -139,18 +79,7 @@ static const GDBusInterfaceInfo si_iface_info =
   NULL
 };
 
-static const GDBusInterfaceInfo ap_iface_info =
-{
-  -1,
-  (gchar*) UNITY_DBUS_AP_IFACE_NAME,
-  (GDBusMethodInfo**)& ap_method_info_pointers,
-  (GDBusSignalInfo**)& ap_signal_info_pointers,
-  NULL,
-  NULL
-};
-
 static CompScreen* _screen;
-static unity::Autopilot* _autopilot;
 static unity::Introspectable* _parent_introspectable;
 
 DebugDBusInterface::DebugDBusInterface(unity::Introspectable* parent, 
@@ -173,7 +102,7 @@ DebugDBusInterface::~DebugDBusInterface()
   g_bus_unown_name(_owner_id);
 }
 
-static const GDBusInterfaceInfo* const debug_object_interfaces [] = { &si_iface_info, &ap_iface_info, NULL };
+static const GDBusInterfaceInfo* const debug_object_interfaces [] = { &si_iface_info, NULL };
 
 void
 DebugDBusInterface::OnBusAcquired(GDBusConnection* connection, const gchar* name, gpointer data)
@@ -181,8 +110,6 @@ DebugDBusInterface::OnBusAcquired(GDBusConnection* connection, const gchar* name
   int i = 0;
   GError* error;
 
-  _autopilot = new unity::Autopilot(_screen, connection);
-  
   while (debug_object_interfaces[i] != NULL)
   {
     error = NULL;
@@ -232,14 +159,6 @@ DBusMethodCall(GDBusConnection* connection,
     g_dbus_method_invocation_return_value(invocation, ret);
     g_variant_unref(ret);
   }
-  else if (g_strcmp0(methodName, AP_METHOD_NAME_STARTTEST) == 0)
-  {
-    const gchar* name;
-    g_variant_get(parameters, "(&s)", &name);
-
-    StartTest(name);
-    g_dbus_method_invocation_return_value(invocation, NULL);
-  }
   else
   {
     g_dbus_method_invocation_return_dbus_error(invocation, UNITY_DBUS_BUS_NAME,
@@ -267,12 +186,6 @@ GetState(const gchar* pieceName)
   return piece->Introspect();
 }
 
-void
-StartTest(const gchar* name)
-{
-  _autopilot->StartTest(name);
-}
-
 /*
  * Do a breadth-first search of the introspectable tree.
  */
@@ -295,8 +208,6 @@ FindPieceToIntrospect(std::queue<unity::Introspectable*> queue, const gchar* pie
     {
       queue.push(*it);
     }
-
-    FindPieceToIntrospect(queue, pieceName);
   }
 
   return NULL;
