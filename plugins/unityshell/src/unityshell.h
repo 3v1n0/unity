@@ -39,6 +39,8 @@
 #include "DashSettings.h"
 #include "DashStyle.h"
 #include "FontSettings.h"
+#include "ShortcutController.h"
+#include "ShortcutHint.h"
 #include "LauncherController.h"
 #include "PanelController.h"
 #include "PanelStyle.h"
@@ -268,6 +270,8 @@ private:
   static void OnQuicklistEndKeyNav(GVariant* data, void* value);
   static void OnLauncherStartKeyNav(GVariant* data, void* value);
   static void OnLauncherEndKeyNav(GVariant* data, void* value);
+  
+  void InitHints();
 
   dash::Settings dash_settings_;
   dash::Style    dash_style_;
@@ -278,6 +282,10 @@ private:
   dash::Controller::Ptr     dash_controller_;
   panel::Controller::Ptr    panel_controller_;
   switcher::Controller::Ptr switcher_controller_;
+
+  shortcut::Controller::Ptr shortcut_controller_;
+  std::list<shortcut::AbstractHint*> hints_;
+  bool enable_shortcut_overlay_;
 
   GestureEngine*          gestureEngine;
   nux::WindowThread*      wt;

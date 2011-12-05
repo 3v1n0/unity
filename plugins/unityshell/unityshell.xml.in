@@ -336,6 +336,12 @@
                         <_name>Always</_name>
                     </desc>
                 </option>
+                
+                <option name="shortcut_overlay" type="bool">
+                  <_short>Enable Shortcut Hints Overlay</_short>
+                  <_long>Enable Shortcut Hints Overlay</_long>
+                  <default>true</default>
+                </option>
 
             </group>
         </options>

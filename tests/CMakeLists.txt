@@ -185,6 +185,25 @@ add_executable (test-panel
                 )
 add_dependencies (test-panel unity-core-${UNITY_API_VERSION})
 
+add_executable (test-shortcut
+                TestShortcut.cpp
+                ${UNITY_SRC}/AbstractShortcutHint.h
+                ${UNITY_SRC}/BackgroundEffectHelper.cpp
+                ${UNITY_SRC}/BackgroundEffectHelper.h
+                ${UNITY_SRC}/MockShortcutHint.h
+                ${UNITY_SRC}/ShortcutController.cpp
+                ${UNITY_SRC}/ShortcutController.h
+                ${UNITY_SRC}/ShortcutModel.cpp
+                ${UNITY_SRC}/ShortcutModel.h
+                ${UNITY_SRC}/ShortcutView.cpp
+                ${UNITY_SRC}/ShortcutView.h
+                ${UNITY_SRC}/StaticCairoText.cpp
+                ${UNITY_SRC}/StaticCairoText.h
+                ${UNITY_SRC}/UBusMessages.h
+                ${UNITY_SRC}/ubus-server.cpp
+                ${UNITY_SRC}/ubus-server.h
+                )
+
 add_executable (test-switcher
                 TestSwitcher.cpp
                 ${UNITY_SRC}/AbstractLauncherIcon.h
@@ -509,7 +528,7 @@ if (${GTEST_FOUND} STREQUAL TRUE)
   add_executable(test-gtest
                  test_categories.cpp
                  test_filesystem_lenses.cpp
-                 test_filter.cpp
+                 #test_filter.cpp
                  test_glib_signals.cpp
                  test_glib_signals_utils.cpp
                  test_glib_signals_utils.h
@@ -523,12 +542,17 @@ if (${GTEST_FOUND} STREQUAL TRUE)
                  test_utils.h
                  test_ratings_filter.cpp
                  test_results.cpp
+                 test_shortcut_model.cpp
                  ${UNITY_SRC}/AbstractLauncherIcon.h
+                 ${UNITY_SRC}/AbstractShortcutHint.h
                  ${UNITY_SRC}/FavoriteStore.cpp
                  ${UNITY_SRC}/FavoriteStore.h
                  ${UNITY_SRC}/FavoriteStoreGSettings.cpp
                  ${UNITY_SRC}/FavoriteStoreGSettings.h
                  ${UNITY_SRC}/MockLauncherIcon.h
+                 ${UNITY_SRC}/MockShortcutHint.h
+                 ${UNITY_SRC}/ShortcutModel.cpp
+                 ${UNITY_SRC}/ShortcutModel.h
                  ${UNITY_SRC}/SwitcherModel.cpp
                  ${UNITY_SRC}/SwitcherModel.h
                  ${UNITY_SRC}/TextureCache.cpp
