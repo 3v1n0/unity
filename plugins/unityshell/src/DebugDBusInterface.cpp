@@ -43,7 +43,7 @@ const char* DebugDBusInterface::DBUS_DEBUG_OBJECT_PATH = "/com/canonical/Unity/D
 
 const gchar DebugDBusInterface::introspection_xml[] =
   " <node>"
-  "   <interface name='com.canonical.Unity.Introspection'>"
+  "   <interface name='com.canonical.Unity.Debug.Introspection'>"
   ""
   "     <method name='GetState'>"
   "       <arg type='s' name='piece' direction='in' />"
