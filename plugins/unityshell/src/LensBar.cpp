@@ -91,10 +91,12 @@ void LensBar::AddLens(Lens::Ptr& lens)
 
 void LensBar::Activate(std::string id)
 {
+  std::cout << "Activate " << id << std::endl;
   for (auto icon: icons_)
   {
     if (icon->id == id)
     {
+      std::cout << "SetActive " << id << std::endl;
       SetActive(icon);
       break;
     }

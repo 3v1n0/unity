@@ -17,6 +17,7 @@
  */
 
 #include "DashView.h"
+#include "DashViewPrivate.h"
 
 #include <math.h>
 
@@ -48,6 +49,9 @@ DashView::DashView()
   : nux::View(NUX_TRACKER_LOCATION)
   , active_lens_view_(0)
   , last_activated_uri_("")
+  , searching_timeout_id_(0)
+  , search_in_progress_(false)
+  , activate_on_finish_(false)
   , visible_(false)
 
 {
@@ -68,6 +72,8 @@ DashView::DashView()
 
 DashView::~DashView()
 {
+  if (searching_timeout_id_)
+    g_source_remove (searching_timeout_id_);
   delete bg_layer_;
   delete bg_darken_layer_;
 }
@@ -544,41 +550,24 @@ void DashView::OnActivateRequest(GVariant* args)
   home_view_->search_string = "";
   lens_bar_->Activate(id);
 
-
   if (id == "home.lens" || !visible_)
     ubus_manager_.SendMessage(UBUS_DASH_EXTERNAL_ACTIVATION);
 }
 
-std::string DashView::AnalyseLensURI(std::string uri)
+std::string DashView::AnalyseLensURI(std::string const& uri)
 {
-  std::string id = uri;
-  std::size_t pos = uri.find("?");
+  impl::LensFilter filter = impl::parse_lens_uri(uri);
 
-  // It is a real URI
-  if (pos)
+  if (!filter.filters.empty())
   {
-    id = uri.substr(0, pos);
-
-    std::string components = uri.substr(++pos);
-    gchar** tokens = g_strsplit(components.c_str(), "&", -1);
-
-    for (int i = 0; tokens[i]; ++i)
-    {
-      gchar** subs = g_strsplit(tokens[i], "=", 2);
-
-      if (g_str_has_prefix(subs[0], "filter_"))
-      {
-        UpdateLensFilter(id, subs[0] + 7, subs[1]);
-        lens_views_[id]->filters_expanded = true;
-      }
-
-      g_strfreev(subs);
+    lens_views_[filter.id]->filters_expanded = true;
+    // update the lens for each filter
+    for (auto p : filter.filters) {
+      UpdateLensFilter(filter.id, p.first, p.second);
     }
-
-    g_strfreev(tokens);
   }
 
-  return id;
+  return filter.id;
 }
 
 void DashView::UpdateLensFilter(std::string lens_id, std::string filter_name, std::string value)
@@ -625,9 +614,32 @@ void DashView::OnBackgroundColorChanged(GVariant* args)
   QueueDraw();
 }
 
+gboolean DashView::ResetSearchStateCb(gpointer data)
+{
+  DashView *self = static_cast<DashView*>(data);
+
+  self->search_in_progress_ = false;
+  self->activate_on_finish_ = false;
+  self->searching_timeout_id_ = 0;
+
+  return FALSE;
+}
+
 void DashView::OnSearchChanged(std::string const& search_string)
 {
   LOG_DEBUG(logger) << "Search changed: " << search_string;
+  if (active_lens_view_)
+  {
+    search_in_progress_ = true;
+    // it isn't guaranteed that we get a SearchFinished signal, so we need
+    // to make sure this isn't set even though we aren't doing any search
+    if (searching_timeout_id_)
+    {
+      g_source_remove (searching_timeout_id_);
+    }
+    // 250ms for the Search method call, rest for the actual search
+    searching_timeout_id_ = g_timeout_add (500, &DashView::ResetSearchStateCb, this);
+  }
 }
 
 void DashView::OnLiveSearchReached(std::string const& search_string)
@@ -691,7 +703,12 @@ void DashView::OnLensBarActivated(std::string const& id)
 void DashView::OnSearchFinished(std::string const& search_string)
 {
   if (search_bar_->search_string == search_string)
+  {
     search_bar_->SearchFinished();
+    search_in_progress_ = false;
+    if (activate_on_finish_)
+      this->OnEntryActivated();
+  }
 }
 
 void DashView::OnGlobalSearchFinished(std::string const& search_string)
@@ -800,7 +817,12 @@ void DashView::DisableBlur()
 }
 void DashView::OnEntryActivated()
 {
-  active_lens_view_->ActivateFirst();
+  if (!search_in_progress_)
+  {
+    active_lens_view_->ActivateFirst();
+  }
+  // delay the activation until we get the SearchFinished signal
+  activate_on_finish_ = search_in_progress_;
 }
 
 // Keyboard navigation

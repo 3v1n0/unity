@@ -1,0 +1,13 @@
+Dash search
+-----------
+This test makes sure that the right command is run when you search
+using the dash. (see lp:856205)
+
+#. Press Alt+F2
+#. Press 'g'. Make sure you see some command name (like gcc)
+#. Quickly type 'edit<Enter>' - so you'd run 'gedit'.
+
+Outcome
+  The dash disappears, and gedit is run. If nothing happens or the first
+  command is run (in this case gcc), this test failed.
+

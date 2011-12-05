@@ -92,7 +92,7 @@ private:
   bool DoFallbackActivation(std::string const& uri);
   bool LaunchApp(std::string const& appname);
   void OnEntryActivated();
-  std::string AnalyseLensURI(std::string uri);
+  std::string AnalyseLensURI(std::string const& uri);
   void UpdateLensFilter(std::string lens, std::string filter, std::string value);
   void UpdateLensFilterValue(Filter::Ptr filter, std::string value);
 
@@ -102,6 +102,8 @@ private:
   void AddProperties(GVariantBuilder* builder);
 
   nux::Area* KeyNavIteration(nux::KeyNavDirection direction);
+
+  static gboolean ResetSearchStateCb(gpointer data);
 
 private:
   UBusManager ubus_manager_;
@@ -130,6 +132,10 @@ private:
   nux::ObjectPtr <nux::IOpenGLBaseTexture> bg_shine_texture_;
 
   std::string last_activated_uri_;
+  // we're passing this back to g_* functions, so we'll keep the g* type
+  guint searching_timeout_id_;
+  bool search_in_progress_;
+  bool activate_on_finish_;
 
   bool visible_;
 };

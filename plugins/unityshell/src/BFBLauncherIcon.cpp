@@ -90,7 +90,7 @@ std::list<DbusmenuMenuitem*> BFBLauncherIcon::GetMenus()
   g_signal_connect(menu_item,
                    DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
                    (GCallback)&BFBLauncherIcon::OnMenuitemActivated,
-                   g_strdup("home.lense"));
+                   g_strdup("home.lens"));
   
   result.push_back(menu_item);
   
@@ -100,13 +100,11 @@ std::list<DbusmenuMenuitem*> BFBLauncherIcon::GetMenus()
     if (!lens->visible())
       continue;
     
-    // "Files & folders", you are the culprit!
-    std::string name = lens->name();
-    boost::replace_all(name, "&", "&amp;");
+    glib::String name(g_markup_escape_text(lens->name().c_str(), -1));
     
     menu_item = dbusmenu_menuitem_new();
 
-    dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, name.c_str());
+    dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, name.Value());
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
 
