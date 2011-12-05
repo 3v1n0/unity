@@ -39,7 +39,7 @@ GVariant* GetState(const gchar*);
 Introspectable* FindPieceToIntrospect(std::queue<Introspectable*> queue, 
                                       const gchar* pieceName);
 
-const char* DBUS_DEBUG_OBJECT_PATH = "/com/canonical/Unity/Debug";
+const char* DebugDBusInterface::DBUS_DEBUG_OBJECT_PATH = "/com/canonical/Unity/Debug";
 
 const gchar DebugDBusInterface::introspection_xml[] =
   " <node>"
