@@ -23,7 +23,6 @@
 
 #include "UBusMessages.h"
 
-#include <boost/algorithm/string.hpp>
 #include <glib/gi18n-lib.h>
 
 namespace unity
