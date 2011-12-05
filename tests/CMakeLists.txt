@@ -106,8 +106,6 @@ if (${GTEST_FOUND} STREQUAL TRUE)
                  test_favorite_store_gsettings.cpp
                  test_main_xless.cpp
                  ${UNITY_SRC}/AbstractLauncherIcon.h
-                 ${UNITY_SRC}/DashViewPrivate.cpp
-                 ${UNITY_SRC}/DashViewPrivate.h
                  ${UNITY_SRC}/FavoriteStore.cpp
                  ${UNITY_SRC}/FavoriteStore.h
                  ${UNITY_SRC}/FavoriteStoreGSettings.cpp
@@ -148,6 +146,8 @@ if (${GTEST_FOUND} STREQUAL TRUE)
                  test_dashview_impl.cpp
                  test_texture_cache.cpp
                  test_main.cpp
+                 ${UNITY_SRC}/DashViewPrivate.cpp
+                 ${UNITY_SRC}/DashViewPrivate.h
                  ${UNITY_SRC}/TextureCache.cpp
                  ${UNITY_SRC}/TextureCache.h
                 )
