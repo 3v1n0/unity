@@ -534,6 +534,10 @@ void LauncherIcon::RecvMouseLeave()
 
 bool LauncherIcon::OpenQuicklist(bool default_to_first_item)
 {
+  auto menus = Menus();
+  if (menus.empty())
+    return false;
+
   if (_tooltip_delay_handle)
     g_source_remove(_tooltip_delay_handle);
   _tooltip_delay_handle = 0;
@@ -542,18 +546,8 @@ bool LauncherIcon::OpenQuicklist(bool default_to_first_item)
   _tooltip->ShowWindow(false);
   _quicklist->RemoveAllMenuItem();
 
-  std::list<DbusmenuMenuitem*> menus = Menus();
-  if (menus.empty())
-    return false;
-
-  if (WindowManager::Default()->IsScaleActive())
-    WindowManager::Default()->TerminateScale();
-
-  std::list<DbusmenuMenuitem*>::iterator it;
-  for (it = menus.begin(); it != menus.end(); it++)
+  for (auto menu_item : menus)
   {
-    DbusmenuMenuitem* menu_item = *it;
-
     const gchar* type = dbusmenu_menuitem_property_get(menu_item, DBUSMENU_MENUITEM_PROP_TYPE);
     const gchar* toggle_type = dbusmenu_menuitem_property_get(menu_item, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE);
     gboolean prop_visible = dbusmenu_menuitem_property_get_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE);
@@ -599,7 +593,25 @@ bool LauncherIcon::OpenQuicklist(bool default_to_first_item)
     tip_x = 0;
     tip_y = _center.y;
   }
-  QuicklistManager::Default()->ShowQuicklist(_quicklist, tip_x, tip_y);
+
+  auto win_manager = WindowManager::Default();
+
+  if (win_manager->IsScaleActive())
+    win_manager->TerminateScale();
+
+  /* If the expo plugin is active, we need to wait it to be termated, before
+   * shwing the icon quicklist. */
+  if (win_manager->IsExpoActive())
+  {
+    on_expo_terminated_connection = win_manager->terminate_expo.connect([&]() {
+        QuicklistManager::Default()->ShowQuicklist(_quicklist, tip_x, tip_y);
+        on_expo_terminated_connection.disconnect();
+    });
+  }
+  else
+  {
+    QuicklistManager::Default()->ShowQuicklist(_quicklist, tip_x, tip_y);
+  }
 
   return true;
 }
