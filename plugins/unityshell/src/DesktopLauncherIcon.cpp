@@ -29,6 +29,7 @@ namespace launcher
 
 DesktopLauncherIcon::DesktopLauncherIcon(Launcher* IconManager)
   :   SimpleLauncherIcon(IconManager)
+  ,   show_in_switcher_(true)
 {
   tooltip_text = _("Show Desktop");
   SetIconName("desktop");
