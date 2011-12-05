@@ -22,21 +22,22 @@
 #ifndef _DEBUG_DBUS_INTERFACE_H
 #define _DEBUG_DBUS_INTERFACE_H 1
 
-#define UNITY_DBUS_BUS_NAME                 "com.canonical.Unity"
-#define UNITY_DBUS_DEBUG_OBJECT_PATH        "/com/canonical/Unity/Debug"
-#define UNITY_DBUS_INTROSPECTION_IFACE_NAME "com.canonical.Unity.Debug.Introspection"
+#define DBUS_BUS_NAME                 "com.canonical.Unity.Debug"
+#define DBUS_DEBUG_OBJECT_PATH        "/com/canonical/Unity/Debug"
+#define DBUS_INTROSPECTION_IFACE_NAME "com.canonical.Unity.Debug.Introspection"
+
+class CompScreen;
 
 namespace unity
 {
-  class Introspectable;
-};
-
-class CompScreen;
+namespace debug
+{
+class Introspectable;
 
 class DebugDBusInterface
 {
 public:
-  DebugDBusInterface(unity::Introspectable* introspectable, CompScreen* uscreen);
+  DebugDBusInterface(Introspectable* introspectable, CompScreen* uscreen);
   ~DebugDBusInterface();
 
 private:
@@ -52,5 +53,7 @@ private:
   /* members */
   guint           _owner_id;
 };
+}
+}
 
 #endif /* _DEBUG_DBUS_INTERFACE_H */

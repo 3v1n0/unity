@@ -24,12 +24,15 @@
 #include "Introspectable.h"
 
 #define SI_METHOD_NAME_GETSTATE  "GetState"
-
+namespace unity
+{
+namespace debug
+{
 GVariant* GetState(const gchar*);
 void DBusMethodCall(GDBusConnection*, const gchar*, const gchar*,
                     const gchar*, const gchar*, GVariant*,
                     GDBusMethodInvocation*, gpointer);
-unity::Introspectable* FindPieceToIntrospect(std::queue<unity::Introspectable*> queue, 
+Introspectable* FindPieceToIntrospect(std::queue<Introspectable*> queue, 
                                              const gchar* pieceName);
 
 static const GDBusInterfaceVTable si_vtable =
@@ -72,7 +75,7 @@ static const GDBusMethodInfo* const si_method_info_pointers [] = { &si_method_in
 static const GDBusInterfaceInfo si_iface_info =
 {
   -1,
-  (gchar*) UNITY_DBUS_INTROSPECTION_IFACE_NAME,
+  (gchar*) DBUS_INTROSPECTION_IFACE_NAME,
   (GDBusMethodInfo**)& si_method_info_pointers,
   NULL,
   NULL,
@@ -80,15 +83,15 @@ static const GDBusInterfaceInfo si_iface_info =
 };
 
 static CompScreen* _screen;
-static unity::Introspectable* _parent_introspectable;
+static Introspectable* _parent_introspectable;
 
-DebugDBusInterface::DebugDBusInterface(unity::Introspectable* parent, 
+DebugDBusInterface::DebugDBusInterface(Introspectable* parent, 
                                        CompScreen* screen)
 {
   _screen = screen;
   _parent_introspectable = parent;
   _owner_id = g_bus_own_name(G_BUS_TYPE_SESSION,
-                             UNITY_DBUS_BUS_NAME,
+                             DBUS_BUS_NAME,
                              G_BUS_NAME_OWNER_FLAGS_NONE,
                              &DebugDBusInterface::OnBusAcquired,
                              &DebugDBusInterface::OnNameAcquired,
@@ -114,7 +117,7 @@ DebugDBusInterface::OnBusAcquired(GDBusConnection* connection, const gchar* name
   {
     error = NULL;
     g_dbus_connection_register_object(connection,
-                                      UNITY_DBUS_DEBUG_OBJECT_PATH,
+                                      DBUS_DEBUG_OBJECT_PATH,
                                       (GDBusInterfaceInfo*) debug_object_interfaces[i],
                                       &si_vtable,
                                       NULL,
@@ -161,7 +164,7 @@ DBusMethodCall(GDBusConnection* connection,
   }
   else
   {
-    g_dbus_method_invocation_return_dbus_error(invocation, UNITY_DBUS_BUS_NAME,
+    g_dbus_method_invocation_return_dbus_error(invocation, DBUS_BUS_NAME,
                                                "Failed to find method");
   }
 }
@@ -169,13 +172,13 @@ DBusMethodCall(GDBusConnection* connection,
 GVariant*
 GetState(const gchar* pieceName)
 {
-  std::queue<unity::Introspectable*> queue;
+  std::queue<Introspectable*> queue;
   queue.push(_parent_introspectable);
 
   // Since the empty string won't really match the name of the parent (Unity),
   // we make sure that we're able to accept a blank string and just define it to
   // mean the top level.
-  unity::Introspectable* piece = g_strcmp0(pieceName, "") == 0
+  Introspectable* piece = g_strcmp0(pieceName, "") == 0
     ? _parent_introspectable
     : FindPieceToIntrospect(queue, pieceName);
 
@@ -189,10 +192,10 @@ GetState(const gchar* pieceName)
 /*
  * Do a breadth-first search of the introspectable tree.
  */
-unity::Introspectable*
-FindPieceToIntrospect(std::queue<unity::Introspectable*> queue, const gchar* pieceName)
+Introspectable*
+FindPieceToIntrospect(std::queue<Introspectable*> queue, const gchar* pieceName)
 {
-  unity::Introspectable* piece;
+  Introspectable* piece;
 
   while (!queue.empty())
   {
@@ -211,4 +214,6 @@ FindPieceToIntrospect(std::queue<unity::Introspectable*> queue, const gchar* pie
   }
 
   return NULL;
+}
+}
 }
