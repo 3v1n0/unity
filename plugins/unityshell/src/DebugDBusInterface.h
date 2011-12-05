@@ -41,12 +41,20 @@ public:
   ~DebugDBusInterface();
 
 private:
-  /* methods */
+  /* GDBus */
   static void OnBusAcquired(GDBusConnection* connection, const gchar* name, gpointer data);
-
   static void OnNameAcquired(GDBusConnection* connection, const gchar* name, gpointer data);
-
   static void OnNameLost(GDBusConnection* connection, const gchar* name, gpointer data);
+  static void HandleDBusMethodCall(GDBusConnection* connection, 
+                                   const gchar* sender, 
+                                   const gchar* object_path,
+                                   const gchar* interface_name, 
+                                   const gchar* method_name, 
+                                   GVariant* parameters,
+                                   GDBusMethodInvocation* invocation, 
+                                   gpointer user_data);
+  static const gchar introspection_xml[];
+  static GDBusInterfaceVTable interface_vtable;
 
   static GVariant* BuildFakeReturn();
 
