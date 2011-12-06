@@ -18,7 +18,7 @@ if (COMPIZ_TEST_MINIMIZED_HANDER_FOUND)
 			../x11-window-read-transients.cpp
 			../../plugins/unityshell/src/transientfor.cpp
 			../../plugins/unityshell/src/inputremover.cpp)
-
+        add_dependencies (test-minimize-handler unity-core-${UNITY_API_VERSION})
 	target_link_libraries (test-minimize-handler
 			       ${COMPIZ_TEST_MINIMIZED_HANDER_LIBRARIES})
 
