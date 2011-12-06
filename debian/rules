@@ -23,7 +23,7 @@ override_dh_install:
 	dh_install --fail-missing
 
 override_dh_gencontrol:
-	dh_gencontrol -- -Vcoreabiversion=$(CORE_ABIVERSION)
+	dh_gencontrol -- -Vcoreabiversion=$(CORE_ABIVERSION) -Vnuxabiversion=$(NUX_ABIVERSION)
 	# override netbook-launcher on i386 to get an epoch
 	rm -f debian/netbook-launcher/DEBIAN/control
 	dh_gencontrol -pnetbook-launcher -- -Vcoreabiversion=$(CORE_ABIVERSION) -Vnuxabiversion=$(NUX_ABIVERSION) -v2:$(DEB_VERSION)
