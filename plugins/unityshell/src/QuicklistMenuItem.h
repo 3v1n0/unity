@@ -75,6 +75,7 @@ public:
   QuicklistMenuItemType GetItemType();
 
   void ItemActivated();
+  void EnableLabelMarkup(bool enabled);
 
   sigc::signal<void, QuicklistMenuItem&> sigChanged;
   sigc::signal<void, QuicklistMenuItem*> sigTextChanged;
@@ -102,6 +103,9 @@ protected:
   nux::BaseTexture*     _normalTexture[2];
   nux::BaseTexture*     _prelightTexture[2];
 
+  virtual void Initialize(DbusmenuMenuitem* item);
+
+  gchar* GetText();
   //! Return the size of the text + size of associated radio button or check box
   void GetTextExtents(int& width, int& height);
   void GetTextExtents(const gchar* font, int& width, int& height);
@@ -126,6 +130,7 @@ protected:
   QuicklistMenuItemType _item_type;
 
   nux::Color        _color;   //!< Item rendering color factor.
+  bool              _text_markup;
   bool              _debug;
 
 

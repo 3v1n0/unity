@@ -64,16 +64,11 @@ QuicklistMenuItemRadio::Initialize(DbusmenuMenuitem* item)
   _item_type  = MENUITEM_TYPE_LABEL;
 
   if (item)
-    _text = g_strdup(dbusmenu_menuitem_property_get(item, DBUSMENU_MENUITEM_PROP_LABEL));
+    _text = GetText();
   else
     _text = g_strdup("Radio Button");
 
-  int textWidth = 1;
-  int textHeight = 1;
-  GetTextExtents(textWidth, textHeight);
-  SetMinimumSize(textWidth + ITEM_INDENT_ABS + 3 * ITEM_MARGIN,
-                 textHeight + 2 * ITEM_MARGIN);
-
+  QuicklistMenuItem::Initialize(item);
 }
 
 QuicklistMenuItemRadio::~QuicklistMenuItemRadio()

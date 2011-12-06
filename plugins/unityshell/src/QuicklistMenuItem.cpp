@@ -48,12 +48,13 @@ QuicklistMenuItem::QuicklistMenuItem(DbusmenuMenuitem* item,
     g_warning("Invalid DbusmenuMenuitem in file %s at line %s.", G_STRFUNC, G_STRLOC);
   }
 
-  _name       = 0;
-  _text       = 0;
-  _color      = nux::Color(1.0f, 1.0f, 1.0f, 1.0f);
-  _menuItem   = item;
-  _debug      = false;
-  _item_type  = MENUITEM_TYPE_UNKNOWN;
+  _name        = 0;
+  _text        = 0;
+  _color       = nux::Color(1.0f, 1.0f, 1.0f, 1.0f);
+  _menuItem    = item;
+  _text_markup = false;
+  _debug       = false;
+  _item_type   = MENUITEM_TYPE_UNKNOWN;
 
   _normalTexture[0]   = NULL;
   _normalTexture[1]   = NULL;
@@ -129,6 +130,16 @@ QuicklistMenuItem::~QuicklistMenuItem()
 
   if (_text)
     g_free(_text);
+}
+
+void
+QuicklistMenuItem::Initialize(DbusmenuMenuitem* item)
+{
+  int textWidth = 1;
+  int textHeight = 1;
+  GetTextExtents(textWidth, textHeight);
+  SetMinimumSize(textWidth + ITEM_INDENT_ABS + 3 * ITEM_MARGIN,
+                 textHeight + 2 * ITEM_MARGIN);
 }
 
 QuicklistMenuItemType QuicklistMenuItem::GetItemType()
@@ -210,6 +221,31 @@ void QuicklistMenuItem::ItemActivated()
     sigChanged.emit(*this);
 
   std::cout << "ItemActivated() called" << std::endl;
+}
+
+gchar* QuicklistMenuItem::GetText()
+{
+  const gchar *label;
+  gchar *text;
+
+  if (!_menuItem)
+    return NULL;
+
+  label = dbusmenu_menuitem_property_get(_menuItem, DBUSMENU_MENUITEM_PROP_LABEL);
+
+  if (!label)
+    return NULL;
+
+  if (!_text_markup)
+  {
+    text = g_markup_escape_text(label, -1);
+  }
+  else
+  {
+    text = g_strdup(label);
+  }
+
+  return text;
 }
 
 void QuicklistMenuItem::GetTextExtents(int& width, int& height)
@@ -393,6 +429,23 @@ QuicklistMenuItem::DrawText(cairo_t*   cr,
   pango_font_description_free(desc);
   g_free(fontName);
   g_object_unref(layout);
+}
+
+void
+QuicklistMenuItem::EnableLabelMarkup(bool enabled)
+{
+  if (_text_markup != enabled)
+  {
+    _text_markup = enabled;
+
+    if (_text)
+    {
+      g_free(_text);
+      _text = NULL;
+    }
+
+    Initialize(_menuItem);
+  }
 }
 
 // Introspection
