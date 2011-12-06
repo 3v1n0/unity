@@ -45,7 +45,7 @@ class AbstractLauncherIcon;
 namespace switcher
 {
 
-class SwitcherView : public Introspectable, public nux::View
+class SwitcherView : public debug::Introspectable, public nux::View
 {
   NUX_DECLARE_OBJECT_TYPE(SwitcherView, nux::View);
 public:

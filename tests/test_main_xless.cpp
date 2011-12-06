@@ -8,7 +8,6 @@ int main(int argc, char** argv)
   ::testing::InitGoogleTest(&argc, argv);
   g_type_init();
   g_thread_init(NULL);
-  nux::NuxInitialize (0);
 
   // Slightly higher as we're more likely to test things we know will fail
   nux::logging::configure_logging("<root>=error");

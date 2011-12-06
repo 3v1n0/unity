@@ -57,7 +57,7 @@ enum class ShowMode
 };
 
 
-class Controller : public Introspectable, public sigc::trackable
+class Controller : public debug::Introspectable, public sigc::trackable
 {
 public:
   typedef std::shared_ptr<Controller> Ptr;

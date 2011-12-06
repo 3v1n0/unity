@@ -21,6 +21,8 @@
 
 namespace unity
 {
+namespace debug
+{
 
 Introspectable::Introspectable()
 {
@@ -87,5 +89,6 @@ const gchar*
 Introspectable::GetChildsName()
 {
   return GetName();
+}
 }
 }

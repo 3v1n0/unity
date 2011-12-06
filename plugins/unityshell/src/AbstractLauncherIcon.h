@@ -68,7 +68,7 @@ public:
   Window target;
 };
 
-class AbstractLauncherIcon : public nux::InitiallyUnownedObject, public Introspectable
+class AbstractLauncherIcon : public nux::InitiallyUnownedObject, public debug::Introspectable
 {
 public:
 
@@ -82,6 +82,7 @@ public:
     TYPE_FAVORITE,
     TYPE_APPLICATION,
     TYPE_EXPO,
+    TYPE_DESKTOP,
     TYPE_PLACE,
     TYPE_DEVICE,
     TYPE_TRASH,

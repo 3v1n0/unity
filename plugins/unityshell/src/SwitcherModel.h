@@ -35,7 +35,7 @@ namespace unity
 namespace switcher
 {
 
-class SwitcherModel : public Introspectable, public sigc::trackable
+class SwitcherModel : public debug::Introspectable, public sigc::trackable
 {
 
 public:

@@ -25,6 +25,8 @@
 
 namespace unity
 {
+namespace debug
+{
 class Introspectable
 {
 typedef std::list<Introspectable*> IntrospectableList;
@@ -62,5 +64,6 @@ private:
   std::list<Introspectable*> _children;
   std::list<Introspectable*> _parents;
 };
+}
 }
 #endif

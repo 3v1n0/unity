@@ -13,7 +13,7 @@ if (COMPIZ_TEST_INPUT_REMOVER_FOUND)
 	add_executable (test-input-remover
 			test-input-remover.cpp
 			../../plugins/unityshell/src/inputremover.cpp)
-
+        add_dependencies (test-input-remover unity-core-${UNITY_API_VERSION})
 	target_link_libraries (test-input-remover
 			       ${COMPIZ_TEST_INPUT_REMOVER_LIBRARIES})
 
