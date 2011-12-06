@@ -43,8 +43,9 @@ QuicklistMenuItemRadio::QuicklistMenuItemRadio(DbusmenuMenuitem* item,
   QuicklistMenuItem(item,
                     NUX_FILE_LINE_PARAM)
 {
+  _item_type  = MENUITEM_TYPE_RADIO;
   _name = g_strdup("QuicklistMenuItemRadio");
-  Initialize(item);
+  InitializeText();
 }
 
 QuicklistMenuItemRadio::QuicklistMenuItemRadio(DbusmenuMenuitem* item,
@@ -54,36 +55,18 @@ QuicklistMenuItemRadio::QuicklistMenuItemRadio(DbusmenuMenuitem* item,
                     debug,
                     NUX_FILE_LINE_PARAM)
 {
+  _item_type  = MENUITEM_TYPE_RADIO;
   _name = g_strdup("QuicklistMenuItemRadio");
-  Initialize(item);
-}
-
-void
-QuicklistMenuItemRadio::Initialize(DbusmenuMenuitem* item)
-{
-  _item_type  = MENUITEM_TYPE_LABEL;
-
-  if (item)
-    _text = GetText();
-  else
-    _text = g_strdup("Radio Button");
-
-  QuicklistMenuItem::Initialize(item);
+  InitializeText();
 }
 
 QuicklistMenuItemRadio::~QuicklistMenuItemRadio()
+{}
+
+const gchar*
+QuicklistMenuItemRadio::GetDefaultText()
 {
-  if (_normalTexture[0])
-    _normalTexture[0]->UnReference();
-
-  if (_normalTexture[1])
-    _normalTexture[1]->UnReference();
-
-  if (_prelightTexture[0])
-    _prelightTexture[0]->UnReference();
-
-  if (_prelightTexture[1])
-    _prelightTexture[1]->UnReference();
+  return "Radio Button";
 }
 
 void

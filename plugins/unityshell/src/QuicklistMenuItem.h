@@ -103,7 +103,8 @@ protected:
   nux::BaseTexture*     _normalTexture[2];
   nux::BaseTexture*     _prelightTexture[2];
 
-  virtual void Initialize(DbusmenuMenuitem* item);
+  void InitializeText();
+  virtual const gchar* GetDefaultText();
 
   gchar* GetText();
   //! Return the size of the text + size of associated radio button or check box

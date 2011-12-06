@@ -130,11 +130,34 @@ QuicklistMenuItem::~QuicklistMenuItem()
 
   if (_text)
     g_free(_text);
+
+  if (_normalTexture[0])
+    _normalTexture[0]->UnReference();
+
+  if (_normalTexture[1])
+    _normalTexture[1]->UnReference();
+
+  if (_prelightTexture[0])
+    _prelightTexture[0]->UnReference();
+
+  if (_prelightTexture[1])
+    _prelightTexture[1]->UnReference();
+}
+
+const gchar*
+QuicklistMenuItem::GetDefaultText()
+{
+  return NULL;
 }
 
 void
-QuicklistMenuItem::Initialize(DbusmenuMenuitem* item)
+QuicklistMenuItem::InitializeText()
 {
+  if (_menuItem)
+    _text = GetText();
+  else
+    _text = g_strdup(GetDefaultText());
+
   int textWidth = 1;
   int textHeight = 1;
   GetTextExtents(textWidth, textHeight);
@@ -231,7 +254,7 @@ gchar* QuicklistMenuItem::GetText()
   if (!_menuItem)
     return NULL;
 
-  label = dbusmenu_menuitem_property_get(_menuItem, DBUSMENU_MENUITEM_PROP_LABEL);
+  label = GetLabel();
 
   if (!label)
     return NULL;
@@ -444,7 +467,7 @@ QuicklistMenuItem::EnableLabelMarkup(bool enabled)
       _text = NULL;
     }
 
-    Initialize(_menuItem);
+    InitializeText();
   }
 }
 

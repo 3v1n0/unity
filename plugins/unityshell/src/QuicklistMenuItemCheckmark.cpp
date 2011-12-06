@@ -44,8 +44,9 @@ QuicklistMenuItemCheckmark::QuicklistMenuItemCheckmark(DbusmenuMenuitem* item,
   QuicklistMenuItem(item,
                     NUX_FILE_LINE_PARAM)
 {
+  _item_type  = MENUITEM_TYPE_CHECK;
   _name = g_strdup("QuicklistMenuItemCheckmark");
-  Initialize(item);
+  InitializeText();
 }
 
 QuicklistMenuItemCheckmark::QuicklistMenuItemCheckmark(DbusmenuMenuitem* item,
@@ -55,36 +56,18 @@ QuicklistMenuItemCheckmark::QuicklistMenuItemCheckmark(DbusmenuMenuitem* item,
                     debug,
                     NUX_FILE_LINE_PARAM)
 {
-  _name = g_strdup("QuicklistMenuItemCheckmark");
-  Initialize(item);
-}
-
-void
-QuicklistMenuItemCheckmark::Initialize(DbusmenuMenuitem* item)
-{
   _item_type  = MENUITEM_TYPE_CHECK;
-
-  if (item)
-    _text = GetText();
-  else
-    _text = g_strdup("Check Mark");
-
-  QuicklistMenuItem::Initialize(item);
+  _name = g_strdup("QuicklistMenuItemCheckmark");
+  InitializeText();
 }
 
 QuicklistMenuItemCheckmark::~QuicklistMenuItemCheckmark()
+{}
+
+const gchar*
+QuicklistMenuItemCheckmark::GetDefaultText()
 {
-  if (_normalTexture[0])
-    _normalTexture[0]->UnReference();
-
-  if (_normalTexture[1])
-    _normalTexture[1]->UnReference();
-
-  if (_prelightTexture[0])
-    _prelightTexture[0]->UnReference();
-
-  if (_prelightTexture[1])
-    _prelightTexture[1]->UnReference();
+  return "Check Mark";
 }
 
 void
