@@ -32,6 +32,9 @@ class Introspectable
 typedef std::list<Introspectable*> IntrospectableList;
 
 public:
+  Introspectable();
+  virtual ~Introspectable();
+
   GVariant* Introspect();
   virtual const gchar* GetName() = 0;
   void AddChild(Introspectable* child);
@@ -41,6 +44,7 @@ public:
 protected:
   virtual const gchar* GetChildsName();
   virtual void AddProperties(GVariantBuilder* builder) = 0;
+
   /*
    * AddProperties should be implemented as such ...
    * void ClassFoo::AddProperties (GVariantBuilder *builder)
@@ -58,6 +62,7 @@ protected:
 
 private:
   std::list<Introspectable*> _children;
+  std::list<Introspectable*> _parents;
 };
 }
 }

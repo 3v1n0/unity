@@ -23,6 +23,17 @@ namespace unity
 {
 namespace debug
 {
+
+Introspectable::Introspectable()
+{
+}
+
+Introspectable::~Introspectable()
+{
+  for (auto parent : _parents)
+    parent->_children.remove(this);
+}
+
 GVariant*
 Introspectable::Introspect()
 {
@@ -64,12 +75,14 @@ void
 Introspectable::AddChild(Introspectable* child)
 {
   _children.push_back(child);
+  child->_parents.push_back(this);
 }
 
 void
 Introspectable::RemoveChild(Introspectable* child)
 {
   _children.remove(child);
+  child->_parents.remove(this);
 }
 
 const gchar*

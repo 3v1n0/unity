@@ -24,6 +24,8 @@
 
 #include "TimeUtil.h"
 
+#include <UnityCore/Variant.h>
+
 #include <NuxCore/Object.h>
 #include <Nux/Nux.h>
 #include <Nux/WindowCompositor.h>
@@ -92,6 +94,26 @@ SwitcherView::~SwitcherView()
   text_view_->UnReference();
   if (redraw_handle_ > 0)
     g_source_remove(redraw_handle_);
+}
+
+const gchar* SwitcherView::GetName()
+{
+  return "SwitcherView";
+}
+
+void SwitcherView::AddProperties(GVariantBuilder* builder)
+{
+  unity::variant::BuilderWrapper(builder)
+  .add("render-boxes", render_boxes)
+  .add("border-size", border_size)
+  .add("flat-spacing", flat_spacing)
+  .add("icon-size", icon_size)
+  .add("minimum-spacing", minimum_spacing)
+  .add("tile-size", tile_size)
+  .add("vertical-size", vertical_size)
+  .add("text-size", text_size)
+  .add("animation-length", animation_length)
+  .add("spread-size", (float)spread_size);
 }
 
 void
