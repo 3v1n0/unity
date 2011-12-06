@@ -51,7 +51,7 @@ QuicklistMenuItem::QuicklistMenuItem(DbusmenuMenuitem* item,
   _name        = 0;
   _text        = 0;
   _color       = nux::Color(1.0f, 1.0f, 1.0f, 1.0f);
-  _menuItem    = item;
+  _menuItem    = DBUSMENU_MENUITEM(g_object_ref(item));
   _debug       = false;
   _item_type   = MENUITEM_TYPE_UNKNOWN;
 
@@ -90,7 +90,7 @@ QuicklistMenuItem::QuicklistMenuItem(DbusmenuMenuitem* item,
 {
   _text       = 0;
   _color      = nux::Color(1.0f, 1.0f, 1.0f, 1.0f);
-  _menuItem   = g_object_ref(item);
+  _menuItem   = DBUSMENU_MENUITEM(g_object_ref(item));
   _debug      = debug;
   _item_type  = MENUITEM_TYPE_UNKNOWN;
 
@@ -141,6 +141,9 @@ QuicklistMenuItem::~QuicklistMenuItem()
 
   if (_prelightTexture[1])
     _prelightTexture[1]->UnReference();
+
+  if (_menuItem)
+    g_object_unref(_menuItem);
 }
 
 const gchar*
@@ -258,7 +261,7 @@ gchar* QuicklistMenuItem::GetText()
   if (!label)
     return NULL;
 
-  if (!)
+  if (!IsMarkupEnabled())
   {
     text = g_markup_escape_text(label, -1);
   }
