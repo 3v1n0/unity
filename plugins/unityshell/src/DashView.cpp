@@ -121,6 +121,7 @@ void DashView::SetupViews()
 
   layout_->AddLayout(content_layout_, 1, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
   search_bar_ = new SearchBar();
+  AddChild(search_bar_);
   search_bar_->activated.connect(sigc::mem_fun(this, &DashView::OnEntryActivated));
   search_bar_->search_changed.connect(sigc::mem_fun(this, &DashView::OnSearchChanged));
   search_bar_->live_search_reached.connect(sigc::mem_fun(this, &DashView::OnLiveSearchReached));
