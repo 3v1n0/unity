@@ -558,7 +558,6 @@ bool LauncherIcon::OpenQuicklist(bool default_to_first_item)
     const gchar* type = dbusmenu_menuitem_property_get(menu_item, DBUSMENU_MENUITEM_PROP_TYPE);
     const gchar* toggle_type = dbusmenu_menuitem_property_get(menu_item, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE);
     gboolean prop_visible = dbusmenu_menuitem_property_get_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE);
-    gboolean prop_markup = dbusmenu_menuitem_property_get_bool(menu_item, "unity-use-markup");
 
     // Skip this item, it is invisible right now.
     if (!prop_visible)
@@ -581,7 +580,6 @@ bool LauncherIcon::OpenQuicklist(bool default_to_first_item)
       ql_item = new QuicklistMenuItemLabel(menu_item, NUX_TRACKER_LOCATION);
     }
 
-    ql_item->EnableLabelMarkup(prop_markup);
     _quicklist->AddMenuItem(ql_item);
   }
 

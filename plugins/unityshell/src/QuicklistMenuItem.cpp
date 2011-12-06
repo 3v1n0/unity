@@ -52,7 +52,6 @@ QuicklistMenuItem::QuicklistMenuItem(DbusmenuMenuitem* item,
   _text        = 0;
   _color       = nux::Color(1.0f, 1.0f, 1.0f, 1.0f);
   _menuItem    = item;
-  _text_markup = false;
   _debug       = false;
   _item_type   = MENUITEM_TYPE_UNKNOWN;
 
@@ -91,7 +90,7 @@ QuicklistMenuItem::QuicklistMenuItem(DbusmenuMenuitem* item,
 {
   _text       = 0;
   _color      = nux::Color(1.0f, 1.0f, 1.0f, 1.0f);
-  _menuItem   = item;
+  _menuItem   = g_object_ref(item);
   _debug      = debug;
   _item_type  = MENUITEM_TYPE_UNKNOWN;
 
@@ -259,7 +258,7 @@ gchar* QuicklistMenuItem::GetText()
   if (!label)
     return NULL;
 
-  if (!_text_markup)
+  if (!)
   {
     text = g_markup_escape_text(label, -1);
   }
@@ -457,9 +456,9 @@ QuicklistMenuItem::DrawText(cairo_t*   cr,
 void
 QuicklistMenuItem::EnableLabelMarkup(bool enabled)
 {
-  if (_text_markup != enabled)
+  if (IsMarkupEnabled() != enabled)
   {
-    _text_markup = enabled;
+    dbusmenu_menuitem_property_set_bool(_menuItem, "unity-use-markup", enabled);
 
     if (_text)
     {
@@ -469,6 +468,18 @@ QuicklistMenuItem::EnableLabelMarkup(bool enabled)
 
     InitializeText();
   }
+}
+
+bool
+QuicklistMenuItem::IsMarkupEnabled()
+{
+  gboolean markup;
+
+  if (!_menuItem)
+    return false;
+
+  markup = dbusmenu_menuitem_property_get_bool(_menuItem, "unity-use-markup");
+  return (markup != FALSE);
 }
 
 // Introspection

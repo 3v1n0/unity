@@ -76,17 +76,15 @@ public:
 
   void ItemActivated();
   void EnableLabelMarkup(bool enabled);
+  bool IsMarkupEnabled();
 
   sigc::signal<void, QuicklistMenuItem&> sigChanged;
   sigc::signal<void, QuicklistMenuItem*> sigTextChanged;
   sigc::signal<void, QuicklistMenuItem*> sigColorChanged;
 
   virtual const gchar* GetLabel();
-
   virtual bool GetEnabled();
-
   virtual bool GetActive();
-
   virtual bool GetVisible();
 
   // Introspection
@@ -131,7 +129,6 @@ protected:
   QuicklistMenuItemType _item_type;
 
   nux::Color        _color;   //!< Item rendering color factor.
-  bool              _text_markup;
   bool              _debug;
 
 
