@@ -9,6 +9,7 @@ DEB_VERSION := $(shell dpkg-parsechangelog | egrep '^Version:' | cut -f 2 -d ' '
 CFLAGS=$(shell echo $$CFLAGS | sed -e 's/\-Wall//')
 
 CORE_ABIVERSION := $(shell sed -rn 's/^\#define[[:space:]]+CORE_ABIVERSION[[:space:]]+//p' /usr/include/compiz/core/core.h )
+NUX_ABIVERSION := $(shell sed -rn 's/^\#define[[:space:]]+NUX_ABIVERSION[[:space:]]+//p' Nux/ABI.h )
 
 override_dh_auto_configure:
 	dh_auto_configure -- -DCOMPIZ_BUILD_WITH_RPATH=FALSE -DCOMPIZ_PACKAGING_ENABLED=TRUE -DCOMPIZ_PLUGIN_INSTALL_TYPE=package
@@ -25,7 +26,7 @@ override_dh_gencontrol:
 	dh_gencontrol -- -Vcoreabiversion=$(CORE_ABIVERSION)
 	# override netbook-launcher on i386 to get an epoch
 	rm -f debian/netbook-launcher/DEBIAN/control
-	dh_gencontrol -pnetbook-launcher -- -Vcoreabiversion=$(CORE_ABIVERSION) -v2:$(DEB_VERSION)
+	dh_gencontrol -pnetbook-launcher -- -Vcoreabiversion=$(CORE_ABIVERSION) -Vnuxabiversion=$(NUX_ABIVERSION) -v2:$(DEB_VERSION)
 
 override_dh_makeshlibs:
 	dh_makeshlibs -plibunity-core-4.0-4 -V 'libunity-core-4.0-4 (>= 4.14.2)'
