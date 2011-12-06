@@ -29,7 +29,7 @@ override_dh_gencontrol:
 	dh_gencontrol -pnetbook-launcher -- -Vcoreabiversion=$(CORE_ABIVERSION) -Vnuxabiversion=$(NUX_ABIVERSION) -v2:$(DEB_VERSION)
 
 override_dh_makeshlibs:
-	dh_makeshlibs -plibunity-core-4.0-4 -V 'libunity-core-4.0-4 (>= 4.14.2)'
+	dh_makeshlibs -plibunity-core-5.0-5 -V 'libunity-core-5.0-5 (>= 4.14.2)'
 
 override_dh_auto_test:
 	echo "not working right now"

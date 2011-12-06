@@ -112,7 +112,7 @@ Description: Common files for the Unity interface.
  .
  This package contains commons file that are architecture independent.
 
-Package: libunity-core-4.0-4
+Package: libunity-core-5.0-5
 Section: libs
 Architecture: any
 Depends: ${shlibs:Depends},
@@ -128,11 +128,11 @@ Description: Core library for the Unity interface.
  .
  This package contains shared libraries to be used by unity-3d and unity-2d.
 
-Package: libunity-core-4.0-dev
+Package: libunity-core-5.0-dev
 Section: libdevel
 Architecture: any
 Depends: ${misc:Depends},
-         libunity-core-4.0-4 (= ${binary:Version}),
+         libunity-core-5.0-5 (= ${binary:Version}),
          libglib2.0-dev,
          libsigc++-2.0-dev,
          libnux-2.0-dev (>= 1.0.2),

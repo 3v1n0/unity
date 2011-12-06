@@ -6,6 +6,7 @@ unity (4.24.0-0ubuntu3) UNRELEASED; urgency=low
   * debian/control, debian/rules:
     - depends now on the new Nux ABI mecanism
     - bump de dep on Nux 2.0 as well
+    - bump libunity-core to 5.0
   * debian/source:
     - remove source 3 format, doesn't play well with UDD and drives crazy
       diff for the release team
