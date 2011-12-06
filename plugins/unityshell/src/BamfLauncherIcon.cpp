@@ -1054,7 +1054,10 @@ std::list<DbusmenuMenuitem*> BamfLauncherIcon::GetMenus()
   else
   {
     gchar* app_name;
-    app_name = g_markup_escape_text(BamfName(), -1);
+    gchar* tmp;
+    tmp = g_markup_escape_text(BamfName(), -1);
+    app_name = g_strdup_printf("<b>%s</b>", tmp);
+    g_free(tmp);
 
     item = dbusmenu_menuitem_new();
     dbusmenu_menuitem_property_set(item,
