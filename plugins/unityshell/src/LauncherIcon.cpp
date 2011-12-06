@@ -553,10 +553,12 @@ bool LauncherIcon::OpenQuicklist(bool default_to_first_item)
   for (it = menus.begin(); it != menus.end(); it++)
   {
     DbusmenuMenuitem* menu_item = *it;
+    QuicklistMenuItem* ql_item;
 
     const gchar* type = dbusmenu_menuitem_property_get(menu_item, DBUSMENU_MENUITEM_PROP_TYPE);
     const gchar* toggle_type = dbusmenu_menuitem_property_get(menu_item, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE);
     gboolean prop_visible = dbusmenu_menuitem_property_get_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE);
+    gboolean prop_markup = dbusmenu_menuitem_property_get_bool(menu_item, "unity-use-markup");
 
     // Skip this item, it is invisible right now.
     if (!prop_visible)
@@ -564,24 +566,23 @@ bool LauncherIcon::OpenQuicklist(bool default_to_first_item)
 
     if (g_strcmp0(type, DBUSMENU_CLIENT_TYPES_SEPARATOR) == 0)
     {
-      QuicklistMenuItemSeparator* item = new QuicklistMenuItemSeparator(menu_item, NUX_TRACKER_LOCATION);
-      _quicklist->AddMenuItem(item);
+      ql_item = new QuicklistMenuItemSeparator(menu_item, NUX_TRACKER_LOCATION);
     }
     else if (g_strcmp0(toggle_type, DBUSMENU_MENUITEM_TOGGLE_CHECK) == 0)
     {
-      QuicklistMenuItemCheckmark* item = new QuicklistMenuItemCheckmark(menu_item, NUX_TRACKER_LOCATION);
-      _quicklist->AddMenuItem(item);
+      ql_item = new QuicklistMenuItemCheckmark(menu_item, NUX_TRACKER_LOCATION);
     }
     else if (g_strcmp0(toggle_type, DBUSMENU_MENUITEM_TOGGLE_RADIO) == 0)
     {
-      QuicklistMenuItemRadio* item = new QuicklistMenuItemRadio(menu_item, NUX_TRACKER_LOCATION);
-      _quicklist->AddMenuItem(item);
+      ql_item = new QuicklistMenuItemRadio(menu_item, NUX_TRACKER_LOCATION);
     }
     else //(g_strcmp0 (type, DBUSMENU_MENUITEM_PROP_LABEL) == 0)
     {
-      QuicklistMenuItemLabel* item = new QuicklistMenuItemLabel(menu_item, NUX_TRACKER_LOCATION);
-      _quicklist->AddMenuItem(item);
+      ql_item = new QuicklistMenuItemLabel(menu_item, NUX_TRACKER_LOCATION);
     }
+
+    ql_item->EnableLabelMarkup(prop_markup);
+    _quicklist->AddMenuItem(ql_item);
   }
 
   if (default_to_first_item)

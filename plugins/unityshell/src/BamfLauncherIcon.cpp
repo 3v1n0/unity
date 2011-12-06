@@ -1066,6 +1066,9 @@ std::list<DbusmenuMenuitem*> BamfLauncherIcon::GetMenus()
     dbusmenu_menuitem_property_set_bool(item,
                                         DBUSMENU_MENUITEM_PROP_ENABLED,
                                         true);
+    dbusmenu_menuitem_property_set_bool(item,
+                                        "unity-use-markup",
+                                        true);
     g_signal_connect(item, "item-activated", (GCallback) OnAppLabelActivated, this);
     g_free(app_name);
 
