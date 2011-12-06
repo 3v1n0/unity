@@ -2414,6 +2414,8 @@ void UnityScreen::initLauncher()
   dash_controller_.reset(new dash::Controller());
   dash_controller_->on_realize.connect(sigc::mem_fun(this, &UnityScreen::OnDashRealized));
 
+  AddChild(dash_controller_.get());
+
   launcher.SetHideMode(Launcher::LAUNCHER_HIDE_DODGE_WINDOWS);
   launcher.SetLaunchAnimation(Launcher::LAUNCH_ANIMATION_PULSE);
   launcher.SetUrgentAnimation(Launcher::URGENT_ANIMATION_WIGGLE);
