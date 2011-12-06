@@ -84,8 +84,8 @@ public:
 
   nux::Property<bool> active;
 
-  sigc::signal<void, std::string const&> search_finished;
-  sigc::signal<void, std::string const&> global_search_finished;
+  sigc::signal<void, Hints const&> search_finished;
+  sigc::signal<void, Hints const&> global_search_finished;
   sigc::signal<void, std::string const&, HandledType, Hints const&> activated;
   sigc::signal<void, std::string const&, Preview::Ptr> preview_ready;
 

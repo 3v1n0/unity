@@ -701,9 +701,10 @@ void DashView::OnLensBarActivated(std::string const& id)
   QueueDraw();
 }
 
-void DashView::OnSearchFinished(std::string const& search_string)
+void DashView::OnSearchFinished(Lens::Hints const& hints)
 {
-  if (search_bar_->search_string == search_string)
+  std::string search_string = search_bar_->search_string;
+  if (active_lens_view_ && active_lens_view_->search_string == search_string)
   {
     search_bar_->SearchFinished();
     search_in_progress_ = false;
@@ -712,10 +713,10 @@ void DashView::OnSearchFinished(std::string const& search_string)
   }
 }
 
-void DashView::OnGlobalSearchFinished(std::string const& search_string)
+void DashView::OnGlobalSearchFinished(Lens::Hints const& hints)
 {
   if (active_lens_view_ == home_view_)
-    OnSearchFinished(search_string);
+    OnSearchFinished(hints);
 }
 
 void DashView::OnUriActivated(std::string const& uri)
