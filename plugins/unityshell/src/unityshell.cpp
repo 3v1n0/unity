@@ -220,7 +220,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
      wt->Run(NULL);
      uScreen = this;
 
-     debugger = new DebugDBusInterface(this, this->screen);
+     debugger = new unity::debug::DebugDBusInterface(this, this->screen);
 
      _edge_timeout = optionGetLauncherRevealEdgeTimeout ();
      _in_paint = false;
@@ -1106,7 +1106,7 @@ void UnityScreen::handleEvent(XEvent* event)
     XDamageNotifyEvent *de = (XDamageNotifyEvent *) event;
     CompWindow* w = screen->findWindow (de->drawable);
 
-    if (w)
+    if (w and !(w->wmType() & CompWindowTypeDndMask))
     {
       nux::Geometry damage (de->area.x, de->area.y, de->area.width, de->area.height);
 

@@ -38,7 +38,7 @@ BFBLauncherIcon::BFBLauncherIcon(Launcher* IconManager)
   SetQuirk(QUIRK_RUNNING, false);
   SetIconType(TYPE_HOME);
 
-  _background_color = nux::Color (0xFF333333);
+  _background_color = nux::color::White;
 
   mouse_enter.connect([&] () { _ubus_manager.SendMessage(UBUS_DASH_ABOUT_TO_SHOW, NULL); });
 }
