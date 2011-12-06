@@ -72,7 +72,7 @@ void BFBLauncherIcon::OnMenuitemActivated(DbusmenuMenuitem* item,
     ubus_manager_.SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST, g_variant_new("(sus)", lens, dash::GOTO_DASH_URI, ""));
     g_free(lens);
   }
-}                                     
+}
 
 std::list<DbusmenuMenuitem*> BFBLauncherIcon::GetMenus()
 {  
@@ -99,11 +99,9 @@ std::list<DbusmenuMenuitem*> BFBLauncherIcon::GetMenus()
     if (!lens->visible())
       continue;
     
-    glib::String name(g_markup_escape_text(lens->name().c_str(), -1));
-    
     menu_item = dbusmenu_menuitem_new();
 
-    dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, name.Value());
+    dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, lens->name().c_str());
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
 
