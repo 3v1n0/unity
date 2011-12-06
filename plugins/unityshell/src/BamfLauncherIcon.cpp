@@ -1003,6 +1003,7 @@ std::list<DbusmenuMenuitem*> BamfLauncherIcon::GetMenus()
       if (dbusmenu_menuitem_property_get_bool(item, DBUSMENU_MENUITEM_PROP_VISIBLE))
       {
         first_separator_needed = true;
+        dbusmenu_menuitem_property_set_bool(item, "unity-use-markup", false);
 
         result.push_back(item);
       }
