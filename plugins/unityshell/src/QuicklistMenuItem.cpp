@@ -48,39 +48,7 @@ QuicklistMenuItem::QuicklistMenuItem(DbusmenuMenuitem* item,
     g_warning("Invalid DbusmenuMenuitem in file %s at line %s.", G_STRFUNC, G_STRLOC);
   }
 
-  _name        = 0;
-  _text        = 0;
-  _color       = nux::Color(1.0f, 1.0f, 1.0f, 1.0f);
-  _menuItem    = DBUSMENU_MENUITEM(g_object_ref(item));
-  _debug       = false;
-  _item_type   = MENUITEM_TYPE_UNKNOWN;
-
-  _normalTexture[0]   = NULL;
-  _normalTexture[1]   = NULL;
-  _prelightTexture[0] = NULL;
-  _prelightTexture[1] = NULL;
-
-  if (_menuItem)
-  {
-    g_signal_connect(_menuItem,
-                     "property-changed",
-                     G_CALLBACK(OnPropertyChanged),
-                     this);
-    g_signal_connect(_menuItem,
-                     "item-activated",
-                     G_CALLBACK(OnItemActivated),
-                     this);
-  }
-
-  mouse_down.connect(sigc::mem_fun(this, &QuicklistMenuItem::RecvMouseDown));
-  mouse_up.connect(sigc::mem_fun(this, &QuicklistMenuItem::RecvMouseUp));
-  mouse_click.connect(sigc::mem_fun(this, &QuicklistMenuItem::RecvMouseClick));
-  mouse_move.connect(sigc::mem_fun(this, &QuicklistMenuItem::RecvMouseMove));
-  mouse_drag.connect(sigc::mem_fun(this, &QuicklistMenuItem::RecvMouseDrag));
-  mouse_enter.connect(sigc::mem_fun(this, &QuicklistMenuItem::RecvMouseEnter));
-  mouse_leave.connect(sigc::mem_fun(this, &QuicklistMenuItem::RecvMouseLeave));
-
-  _prelight = false;
+  Initialize(item, false);
 }
 
 QuicklistMenuItem::QuicklistMenuItem(DbusmenuMenuitem* item,
@@ -88,11 +56,18 @@ QuicklistMenuItem::QuicklistMenuItem(DbusmenuMenuitem* item,
                                      NUX_FILE_LINE_DECL) :
   View(NUX_FILE_LINE_PARAM)
 {
-  _text       = 0;
-  _color      = nux::Color(1.0f, 1.0f, 1.0f, 1.0f);
-  _menuItem   = DBUSMENU_MENUITEM(g_object_ref(item));
-  _debug      = debug;
-  _item_type  = MENUITEM_TYPE_UNKNOWN;
+  Initialize(item, debug);
+}
+
+void
+QuicklistMenuItem::Initialize(DbusmenuMenuitem* item, bool debug)
+{
+  _name        = 0;
+  _text        = 0;
+  _color       = nux::Color(1.0f, 1.0f, 1.0f, 1.0f);
+  _menuItem    = DBUSMENU_MENUITEM(g_object_ref(item));
+  _debug       = debug;
+  _item_type   = MENUITEM_TYPE_UNKNOWN;
 
   _normalTexture[0]   = NULL;
   _normalTexture[1]   = NULL;

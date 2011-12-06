@@ -101,6 +101,7 @@ protected:
   nux::BaseTexture*     _normalTexture[2];
   nux::BaseTexture*     _prelightTexture[2];
 
+  void Initialize(DbusmenuMenuitem* item, bool debug);
   void InitializeText();
   virtual const gchar* GetDefaultText();
 
