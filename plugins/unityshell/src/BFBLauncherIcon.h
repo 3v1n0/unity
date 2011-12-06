@@ -22,6 +22,8 @@
 
 #include "SimpleLauncherIcon.h"
 
+#include <UnityCore/FilesystemLenses.h>
+
 #include "UBusWrapper.h"
 
 namespace unity
@@ -39,9 +41,16 @@ public:
   virtual nux::Color GlowColor();
 
   void ActivateLauncherIcon(ActionArg arg);
+
+protected:
+  std::list<DbusmenuMenuitem*> GetMenus();
+
 private:
-  unity::UBusManager _ubus_manager;
-  nux::Color _background_color;
+  static void OnMenuitemActivated(DbusmenuMenuitem* item, int time, gchar* lens);
+                                     
+  static unity::UBusManager ubus_manager_;
+  nux::Color background_color_;
+  dash::FilesystemLenses lenses_;
 };
 
 }
