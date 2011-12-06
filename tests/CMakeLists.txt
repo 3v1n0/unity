@@ -15,7 +15,7 @@ configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/bzr-handle-patch.desktop
 # Unit tests
 #
 find_package (PkgConfig)
-set (TEST_DEPS "${UNITY_PLUGIN_DEPS};unity>=4.0.0")
+set (TEST_DEPS "${UNITY_PLUGIN_DEPS};unity>=4.99.0")
 pkg_check_modules (TEST_UNIT_DEPS REQUIRED ${TEST_DEPS})
 
 set (TESTDATADIR "${CMAKE_CURRENT_SOURCE_DIR}/data")
