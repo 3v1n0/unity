@@ -5,6 +5,9 @@ unity (4.24.0-0ubuntu3) UNRELEASED; urgency=low
     - remove now uneeded libgnome-desktop-dev and libgtk2.0-dev build-deps
   * debian/control, debian/rules:
     - depends now on the new Nux ABI mecanism
+  * debian/source:
+    - remove source 3 format, doesn't play well with UDD and drives crazy
+      diff for the release team
 
  -- Didier Roche <didrocks@ubuntu.com>  Tue, 06 Dec 2011 09:45:13 +0100
 
