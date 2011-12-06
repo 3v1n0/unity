@@ -89,13 +89,13 @@ if (${GTEST_FOUND} STREQUAL TRUE)
   include_directories(${GTEST_INCLUDE_DIRS})
 
 # The service that provides DBus services to test against
-#  add_executable(test-gtest-service
-#                 test_service_lens.c
-#                 test_service_lens.h
-#                 test_service_main.c
-#                 test_service_model.c
-#                 test_service_model.h)
-#  add_dependencies (test-gtest-service unity-core-${UNITY_API_VERSION})
+  add_executable(test-gtest-service
+                 test_service_lens.c
+                 test_service_lens.h
+                 test_service_main.c
+                 test_service_model.c
+                 test_service_model.h)
+  add_dependencies (test-gtest-service unity-core-${UNITY_API_VERSION})
 
 # The actual test executable (xless) - do not put anything that requires X in here
   add_executable(test-gtest-xless
@@ -125,21 +125,21 @@ if (${GTEST_FOUND} STREQUAL TRUE)
   add_dependencies(test-gtest-xless unity-core-${UNITY_API_VERSION})
 
 # tests that require dbus, must not require X
-#  add_executable(test-gtest-dbus
-#                 test_categories.cpp
-#                 test_filesystem_lenses.cpp
-#                 test_filter.cpp
-#                 test_indicator_entry.cpp
-#                 test_lens.cpp
-#                 test_main_dbus.cpp
-#                 test_model.cpp
-#                 test_utils.h
-#                 test_ratings_filter.cpp
-#                 test_results.cpp
-#                 )
-#  target_link_libraries(test-gtest-dbus ${GTEST_BOTH_LIBRARIES})
-#  add_test(UnityGTestDBus test-gtest-dbus)
-#  add_dependencies(test-gtest-dbus unity-core-${UNITY_API_VERSION} test-gtest-service)
+  add_executable(test-gtest-dbus
+                 test_categories.cpp
+                 test_filesystem_lenses.cpp
+                 test_filter.cpp
+                 test_indicator_entry.cpp
+                 test_lens.cpp
+                 test_main_dbus.cpp
+                 test_model.cpp
+                 test_utils.h
+                 test_ratings_filter.cpp
+                 test_results.cpp
+                 )
+  target_link_libraries(test-gtest-dbus ${GTEST_BOTH_LIBRARIES})
+  add_test(UnityGTestDBus test-gtest-dbus)
+  add_dependencies(test-gtest-dbus unity-core-${UNITY_API_VERSION} test-gtest-service)
 
 # Tests that require X
   add_executable(test-gtest
@@ -171,15 +171,15 @@ set (TEST_COMMAND
      gtester --verbose -k --g-fatal-warnings -o=${TEST_RESULT_XML} ./test-unit
   && ${GTEST_TEST_COMMAND}
   && ${GTEST_TEST_COMMAND_XLESS}
-#  && ${GTEST_TEST_COMMAND_DBUS})
-  )
+  && ${GTEST_TEST_COMMAND_DBUS})
+
 set (TEST_COMMAND_HEADLESS
      ${GTEST_TEST_COMMAND_XLESS}
   #&& ${GTEST_TEST_COMMAND_DBUS}
   && echo "Warning, DBus test cases are disabled!!")
 
-add_custom_target (check COMMAND  ${TEST_COMMAND} DEPENDS test-unit test-gtest test-gtest-xless)
-add_custom_target (check-headless COMMAND ${TEST_COMMAND_HEADLESS} DEPENDS test-gtest-xless)
+add_custom_target (check COMMAND  ${TEST_COMMAND} DEPENDS test-unit test-gtest test-gtest-xless test-gtest-dbus)
+add_custom_target (check-headless COMMAND ${TEST_COMMAND_HEADLESS} DEPENDS test-gtest-xless test-gtest-dbus)
 add_custom_target (check-report COMMAND ${TEST_UNIT_COMMAND} && gtester-report ${TEST_RESULT_XML} > ${TEST_RESULT_HTML})
 add_custom_target (gcheck COMMAND  ${DBUS_TEST_COMMAND} DEPENDS test-gtest test-gtest-xless)
 
