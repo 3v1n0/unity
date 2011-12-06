@@ -121,11 +121,11 @@ endif (DISABLE_MAINTAINER_CFLAGS)
 #
 set (UNITY_PLUGIN_DEPS "compiz;nux-2.0 >= 2.0.0;libbamf3;dee-1.0;gio-2.0;gio-unix-2.0;dbusmenu-glib-0.4;x11;libstartup-notification-1.0;gthread-2.0;indicator3-0.4;atk;unity-misc >= 0.4.0;gconf-2.0;libutouch-geis;gtk+-3.0 >= 3.1;sigc++-2.0;json-glib-1.0;libnotify;gnome-desktop-3.0;gdu")
 
-
-find_package (Compiz REQUIRED)
-include (CompizPlugin)
-
-compiz_add_plugins_in_folder ("${CMAKE_SOURCE_DIR}/plugins/")
+add_subdirectory(plugins/unityshell)
+add_subdirectory(plugins/gtkloader)
+add_subdirectory(plugins/networkarearegion)
+add_subdirectory(plugins/unitydialog)
+add_subdirectory(plugins/unity-mt-grab-handles)
 
 # subdirs
 add_subdirectory(doc)
