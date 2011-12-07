@@ -41,6 +41,36 @@ enum OptionType
 class AbstractHint
 {
 public:
+  // Ctor
+  AbstractHint(std::string category, std::string prefix,
+               std::string postfix, std::string description,
+               OptionType type, std::string arg1, 
+               std::string arg2 = "", std::string arg3 = "")
+    : Category(category)
+    , Prefix(prefix)
+    , Postfix(postfix)
+    , Description(description)
+    , Type(type)
+    , Arg1(arg1)
+    , Arg2(arg2)
+    , Arg3(arg3)
+  {
+  }
+  
+  // Copy ctor
+  AbstractHint(unity::shortcut::AbstractHint& obj)
+    : Category(obj.Category())
+    , Prefix(obj.Prefix())
+    , Postfix(obj.Postfix())
+    , Description(obj.Description())
+    , Type(obj.Type())
+    , Arg1(obj.Arg1())
+    , Arg2(obj.Arg2())
+    , Arg3(obj.Arg3())
+    , Value(obj.Value())
+  {
+  }
+  
   // Dtor
   virtual ~AbstractHint(){};
   

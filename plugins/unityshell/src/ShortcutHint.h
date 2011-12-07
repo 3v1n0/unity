@@ -30,16 +30,14 @@ namespace shortcut
 class Hint : public AbstractHint
 {
 public:
-  // Ctor and dtor
-  // TODO: Can i move the costructor into the abstract hint class?
+  // Ctor
   Hint(std::string category, std::string prefix,
        std::string postfix, std::string description,
        OptionType type, std::string arg1, 
        std::string arg2 = "", std::string arg3 = "");
+  
+  // Dtor
   ~Hint();
-
-  // Copy ctor
-  Hint(unity::shortcut::Hint const& obj);
 
   // Public methods
   bool Fill();

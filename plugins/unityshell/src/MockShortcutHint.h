@@ -35,32 +35,11 @@ public:
            std::string postfix, std::string description,
            OptionType type, std::string arg1, 
            std::string arg2 = "", std::string arg3 = "")
+    : AbstractHint(category, prefix, postfix, description, type, arg1, arg2, arg3)
   {
-    Category = category;
-    Prefix = prefix;
-    Postfix = postfix;
-    Description = description;
-    Type = type;
-    Arg1 = arg1;
-    Arg2 = arg2;
-    Arg3 = arg3;
   }
   
   ~MockHint() {};
-  
-  // Copy Ctor
-  MockHint(unity::shortcut::MockHint const& obj) 
-  {
-    Category = obj.Category();
-    Prefix = obj.Prefix();
-    Postfix = obj.Postfix();
-    Description = obj.Description();
-    Type = obj.Type();
-    Arg1 = obj.Arg1();
-    Arg2 = obj.Arg2();
-    Arg3 = obj.Arg3();
-    Value = obj.Value();
-  };
   
   // Methods...
   bool Fill()
