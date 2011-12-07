@@ -514,6 +514,9 @@ if (${GTEST_FOUND} STREQUAL TRUE)
                  test_dashview_impl.cpp
                  test_filesystem_lenses.cpp
                  test_filter.cpp
+                 test_glib_object.cpp
+                 test_glib_object_utils.cpp
+                 test_glib_object_utils.h
                  test_glib_signals.cpp
                  test_glib_signals_utils.cpp
                  test_glib_signals_utils.h
