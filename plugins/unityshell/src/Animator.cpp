@@ -41,21 +41,18 @@ Animator::~Animator()
   Stop();
 }
 
-void
-Animator::SetRate(unsigned int fps_rate)
+void Animator::SetRate(unsigned int fps_rate)
 {
   if (fps_rate != 0)
     rate_ = 1000 / fps_rate;
 }
 
-void
-Animator::SetDuration(unsigned int duration)
+void Animator::SetDuration(unsigned int duration)
 {
   duration_ = duration * 1000;
 }
 
-unsigned int
-Animator::GetRate() const
+unsigned int Animator::GetRate() const
 {
   if (rate_ != 0)
     return 1000 / rate_;
@@ -63,26 +60,22 @@ Animator::GetRate() const
   return rate_;
 }
 
-unsigned int
-Animator::GetDuration() const
+unsigned int Animator::GetDuration() const
 {
   return (one_time_duration_ > 0 ? one_time_duration_ : duration_) / 1000;
 }
 
-bool
-Animator::IsRunning() const
+bool Animator::IsRunning() const
 {
   return (timeout_id_ != 0);
 }
 
-double
-Animator::GetProgress() const
+double Animator::GetProgress() const
 {
   return progress_;
 }
 
-void
-Animator::Start(unsigned int one_time_duration, double start_progress)
+void Animator::Start(unsigned int one_time_duration, double start_progress)
 {
   if (timeout_id_ == 0 && start_progress < 1.0f)
   {
@@ -98,14 +91,12 @@ Animator::Start(unsigned int one_time_duration, double start_progress)
   }
 }
 
-void
-Animator::Start(double start_progress)
+void Animator::Start(double start_progress)
 {
   Start(0, start_progress);
 }
 
-void
-Animator::Stop()
+void Animator::Stop()
 {
   if (timeout_id_ != 0)
   {
@@ -118,8 +109,7 @@ Animator::Stop()
   }
 }
 
-bool
-Animator::DoStep()
+bool Animator::DoStep()
 {
   const gint64 current_time = g_get_monotonic_time();
   const gint64 duration = one_time_duration_ > 0 ? one_time_duration_ : duration_;
@@ -145,8 +135,7 @@ Animator::DoStep()
   }
 }
 
-gboolean
-Animator::TimerTimeOut(Animator *self)
+gboolean Animator::TimerTimeOut(Animator *self)
 {
   return self->DoStep() ? TRUE : FALSE;
 }
