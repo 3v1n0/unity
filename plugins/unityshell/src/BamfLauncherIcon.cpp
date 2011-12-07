@@ -1054,16 +1054,14 @@ std::list<DbusmenuMenuitem*> BamfLauncherIcon::GetMenus()
   }
   else
   {
-    gchar* app_name;
-    gchar* tmp;
-    tmp = g_markup_escape_text(BamfName(), -1);
-    app_name = g_strdup_printf("<b>%s</b>", tmp);
-    g_free(tmp);
+    glib::String app_name(g_markup_escape_text(BamfName(), -1));
+    std::ostringstream bold_app_name;
+    bold_app_name << "<b>" << app_name << "</b>";
 
     item = dbusmenu_menuitem_new();
     dbusmenu_menuitem_property_set(item,
                                    DBUSMENU_MENUITEM_PROP_LABEL,
-                                   app_name);
+                                   bold_app_name.str().c_str());
     dbusmenu_menuitem_property_set_bool(item,
                                         DBUSMENU_MENUITEM_PROP_ENABLED,
                                         true);
@@ -1071,7 +1069,6 @@ std::list<DbusmenuMenuitem*> BamfLauncherIcon::GetMenus()
                                         "unity-use-markup",
                                         true);
     g_signal_connect(item, "item-activated", (GCallback) OnAppLabelActivated, this);
-    g_free(app_name);
 
     _menu_items_extra["AppName"] = item;
   }
