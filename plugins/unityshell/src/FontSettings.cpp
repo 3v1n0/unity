@@ -44,6 +44,8 @@ void FontSettings::Refresh(GtkSettings* unused0, GParamSpec* unused1)
     cairo_subpixel_order_t order = CAIRO_SUBPIXEL_ORDER_DEFAULT;
     glib::String value;
     g_object_get(settings, "gtk-xft-rgba", &value, NULL);
+    gint antialias;
+    g_object_get(settings, "gtk-xft-antialias", &antialias, NULL);
     
     if (value.Str() == "rgb")
       order = CAIRO_SUBPIXEL_ORDER_RGB;
@@ -56,7 +58,7 @@ void FontSettings::Refresh(GtkSettings* unused0, GParamSpec* unused1)
 
     cairo_font_options_set_subpixel_order(font_options, order);
     cairo_font_options_set_antialias(font_options,
-                                     value.Str() == "none" ? CAIRO_ANTIALIAS_NONE 
+                                     value.Str() == "none" ? (antialias ? CAIRO_ANTIALIAS_GRAY : CAIRO_ANTIALIAS_NONE) 
                                                            : CAIRO_ANTIALIAS_SUBPIXEL);
 
   }
