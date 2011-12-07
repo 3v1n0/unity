@@ -87,32 +87,33 @@ protected:
 
 TEST_F(TestAnimator, ConstructDestroy)
 {
-  auto tmp_animator = new Animator(200, 25);
-
-  EXPECT_EQ(tmp_animator->GetDuration(), 200);
-  EXPECT_EQ(tmp_animator->GetRate(), 25);
-
-  double progress = 0.0f;
-  bool got_update = false;
-  tmp_animator->animation_updated.connect([&progress,&got_update](double p) {
-    progress = p;
-    got_update = true;
-  });
-
   bool stopped = false;
-  tmp_animator->animation_stopped.connect([&stopped](double p) {
-    stopped = true;
-  });
+  double progress = 0.0f;
+  
+  {
+    auto tmp_animator = Animator(200, 25);
 
-  tmp_animator->Start();
+    EXPECT_EQ(tmp_animator.GetDuration(), 200);
+    EXPECT_EQ(tmp_animator.GetRate(), 25);
 
-  Utils::WaitUntil(got_update);
+    bool got_update = false;
+    tmp_animator.animation_updated.connect([&progress, &got_update](double p) {
+      progress = p;
+      got_update = true;
+    });
 
-  EXPECT_EQ(tmp_animator->IsRunning(), true);
-  EXPECT_GT(progress, 0.0f);
-  EXPECT_EQ(stopped, false);
+    tmp_animator.animation_stopped.connect([&stopped](double p) {
+      stopped = true;
+    });
 
-  delete tmp_animator;
+    tmp_animator.Start();
+
+    Utils::WaitUntil(got_update);
+
+    EXPECT_EQ(tmp_animator.IsRunning(), true);
+    EXPECT_GT(progress, 0.0f);
+    EXPECT_EQ(stopped, false);
+  }
 
   EXPECT_EQ(stopped, true);
 }
