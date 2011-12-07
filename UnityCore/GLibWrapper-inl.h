@@ -62,9 +62,7 @@ Object<T>::~Object()
 template <typename T>
 void Object<T>::swap(Object<T>& other)
 {
-  using std::swap; 
-
-  swap(this->object_, other.object_);
+  std::swap(this->object_, other.object_);
 }
 
 template <typename T>

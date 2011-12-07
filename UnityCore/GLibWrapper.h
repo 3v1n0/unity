@@ -64,25 +64,31 @@ private:
 template <typename T>
 bool operator==(Object<T> const& lhs, Object<T> const& rhs)
 {
- return ((T*)lhs == (T*)rhs);
+  return (lhs.RawPtr() == rhs.RawPtr());
 }
 
 template <typename T>
 bool operator!=(Object<T> const& lhs, Object<T> const& rhs)
 {
- return ((T*)lhs != (T*)rhs);
+ return !(lhs == rhs);
 }
 
 template <typename T>
 bool operator==(Object<T> const& lhs, T* rhs)
 {
- return ((T*)lhs == rhs);
+ return (lhs.RawPtr() == rhs);
 }
 
 template <typename T>
-bool operator!=(Object<T> const& lhs, T* rhs)
+bool operator==(T* lhs, Object<T> const& rhs)
 {
- return ((T*)lhs != rhs);
+ return (lhs == rhs.RawPtr());
+}
+
+template <typename T>
+bool operator!=(T* lhs, Object<T> const& rhs)
+{
+ return !(lhs.RawPtr() == rhs);
 }
 
 template <typename G, typename T>
