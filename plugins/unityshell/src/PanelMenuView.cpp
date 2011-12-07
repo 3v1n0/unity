@@ -38,6 +38,9 @@
 #include <gio/gdesktopappinfo.h>
 #include <gconf/gconf-client.h>
 
+#include <glib.h>
+#include <glib/gi18n-lib.h>
+
 #include "DashSettings.h"
 #include "ubus-server.h"
 #include "UBusMessages.h"
@@ -713,8 +716,7 @@ PanelMenuView::GetActiveViewName()
     if (BAMF_IS_WINDOW(window) &&
         bamf_window_get_window_type(window) == BAMF_WINDOW_DESKTOP)
     {
-      // Make the special 
-      label = g_strdup(g_dgettext("nautilus", "Desktop"));
+      label = g_strdup(_("Ubuntu Desktop"));
     }
     else if (!WindowManager::Default()->IsWindowOnCurrentDesktop(window_xid) ||
         WindowManager::Default()->IsWindowObscured(window_xid))
@@ -1510,7 +1512,7 @@ PanelMenuView::OnMouseDoubleClicked(int x, int y, unsigned long button_flags, un
 void
 PanelMenuView::OnMouseClicked(int x, int y, unsigned long button_flags, unsigned long)
 {
-  if (nux::GetEventButton(button_flags) != 1)
+  if (nux::GetEventButton(button_flags) != 1 || _places_showing)
     return;
 
   guint32 window_xid = GetMaximizedWindow();

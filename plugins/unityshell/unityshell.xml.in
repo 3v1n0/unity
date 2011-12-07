@@ -337,6 +337,12 @@
                     </desc>
                 </option>
 
+                <option name="show_desktop_icon" type="bool">
+                    <_short>Show "Desktop Icon" in the launcher</_short>
+                    <_long>Enable/Disable "Show Dekstop icon" in the launcher.</_long>
+                    <default>false</default>
+                </option>
+
                 <option name="menus_fadein" type="int">
                     <_short>Menus Fade-in duration</_short>
                     <_long>Duration (in milliseconds) of the menus fade-in animation, used when the mouse goes over the top-panel.</_long>

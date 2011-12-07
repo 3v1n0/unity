@@ -50,7 +50,7 @@
 class QuicklistMenuItem;
 class QuicklistMenuItemLabel;
 
-class QuicklistView : public nux::BaseWindow, public unity::Introspectable
+class QuicklistView : public nux::BaseWindow, public unity::debug::Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE(QuicklistView, nux::BaseWindow);
 public:

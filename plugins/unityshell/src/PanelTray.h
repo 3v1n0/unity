@@ -34,7 +34,7 @@
 namespace unity
 {
 
-class PanelTray : public nux::View, public unity::Introspectable
+class PanelTray : public nux::View, public unity::debug::Introspectable
 {
 public:
   typedef std::vector<NaTrayChild*> TrayChildren;
