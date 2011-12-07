@@ -343,6 +343,12 @@
                   <default>true</default>
                 </option>
 
+		<option name="show_desktop_icon" type="bool">
+                    <_short>Show "Desktop Icon" in the launcher</_short>
+                    <_long>Enable/Disable "Show Dekstop icon" in the launcher.</_long>
+                    <default>false</default>
+                </option>
+
             </group>
         </options>
     </plugin>

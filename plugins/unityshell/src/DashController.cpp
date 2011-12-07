@@ -87,6 +87,7 @@ void Controller::SetupWindow()
 void Controller::SetupDashView()
 {
   view_ = new DashView();
+  AddChild(view_);
 
   nux::HLayout* layout = new nux::HLayout(NUX_TRACKER_LOCATION);
   layout->AddView(view_, 1);
@@ -344,7 +345,9 @@ const gchar* Controller::GetName()
 }
 
 void Controller::AddProperties(GVariantBuilder* builder)
-{}
+{
+  g_variant_builder_add (builder, "{sv}", "visible", g_variant_new_boolean (visible_) );
+}
 
 
 }

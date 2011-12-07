@@ -130,7 +130,7 @@ private:
 
 /* base screen class */
 class UnityScreen :
-  public unity::Introspectable,
+  public unity::debug::Introspectable,
   public sigc::trackable,
   public ScreenInterface,
   public CompositeScreenInterface,
@@ -287,20 +287,20 @@ private:
   std::list<shortcut::AbstractHint*> hints_;
   bool enable_shortcut_overlay_;
 
-  GestureEngine*          gestureEngine;
-  nux::WindowThread*      wt;
-  nux::BaseWindow*        panelWindow;
-  nux::Geometry           lastTooltipArea;
-  DebugDBusInterface*     debugger;
-  bool                    needsRelayout;
-  bool                    _in_paint;
-  guint32                 relayoutSourceId;
-  guint                   _edge_timeout;
-  guint                   _edge_trigger_handle;
-  guint32                 _redraw_handle;
-  gint                    _edge_pointerY;
-  guint                   _ubus_handles[3];
-
+  GestureEngine*                        gestureEngine;
+  nux::WindowThread*                    wt;
+  nux::BaseWindow*                      panelWindow;
+  nux::Geometry                         lastTooltipArea;
+  unity::debug::DebugDBusInterface*     debugger;
+  bool                                  needsRelayout;
+  bool                                  _in_paint;
+  guint32                               relayoutSourceId;
+  guint                                 _edge_timeout;
+  guint                                 _edge_trigger_handle;
+  guint32                               _redraw_handle;
+  gint                                  _edge_pointerY;
+  guint                                 _ubus_handles[3];
+  
   typedef std::shared_ptr<CompAction> CompActionPtr;
   typedef std::vector<CompActionPtr> ShortcutActions;
   ShortcutActions _shortcut_actions;

@@ -221,7 +221,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
      wt->Run(NULL);
      uScreen = this;
 
-     debugger = new DebugDBusInterface(this, this->screen);
+     debugger = new unity::debug::DebugDBusInterface(this, this->screen);
 
      _edge_timeout = optionGetLauncherRevealEdgeTimeout ();
      _in_paint = false;
@@ -246,6 +246,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetDashBlurExperimentalNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetDevicesOptionNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetShortcutOverlayNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+     optionSetShowDesktopIconNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetShowLauncherInitiate(boost::bind(&UnityScreen::showLauncherKeyInitiate, this, _1, _2, _3));
      optionSetShowLauncherTerminate(boost::bind(&UnityScreen::showLauncherKeyTerminate, this, _1, _2, _3));
      optionSetKeyboardFocusInitiate(boost::bind(&UnityScreen::setKeyboardFocusKeyInitiate, this, _1, _2, _3));
@@ -1107,7 +1108,7 @@ void UnityScreen::handleEvent(XEvent* event)
     XDamageNotifyEvent *de = (XDamageNotifyEvent *) event;
     CompWindow* w = screen->findWindow (de->drawable);
 
-    if (w)
+    if (w and !(w->wmType() & CompWindowTypeDndMask))
     {
       nux::Geometry damage (de->area.x, de->area.y, de->area.width, de->area.height);
 
@@ -2091,6 +2092,10 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       break;
     case UnityshellOptions::ShortcutOverlay:
       enable_shortcut_overlay_ = optionGetShortcutOverlay();
+      break;
+    case UnityshellOptions::ShowDesktopIcon:
+      launcher_controller_->SetShowDesktopIcon(optionGetShowDesktopIcon());
+      break;
     default:
       break;
   }
@@ -2415,6 +2420,7 @@ void UnityScreen::initLauncher()
   AddChild(&launcher);
 
   switcher_controller_.reset(new switcher::Controller());
+  AddChild(switcher_controller_.get());
 
   LOG_INFO(logger) << "initLauncher-Launcher " << timer.ElapsedSeconds() << "s";
 
@@ -2430,6 +2436,8 @@ void UnityScreen::initLauncher()
   // Setup Shortcunt Hint
   InitHints();
   shortcut_controller_.reset(new shortcut::Controller(hints_));
+
+  AddChild(dash_controller_.get());
 
   launcher.SetHideMode(Launcher::LAUNCHER_HIDE_DODGE_WINDOWS);
   launcher.SetLaunchAnimation(Launcher::LAUNCH_ANIMATION_PULSE);
