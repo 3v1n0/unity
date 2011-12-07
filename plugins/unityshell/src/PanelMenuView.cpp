@@ -246,9 +246,6 @@ PanelMenuView::~PanelMenuView()
 
   if (_place_hidden_interest != 0)
     ubus_server_unregister_interest(ubus, _place_hidden_interest);
-
-  for (auto app : _new_apps)
-    g_object_unref(app);
 }
 
 void
@@ -1003,7 +1000,8 @@ PanelMenuView::OnNameChanged(gchar* new_name, gchar* old_name)
 gboolean
 PanelMenuView::OnNewAppShow(PanelMenuView* self)
 {
-  self->_new_application = bamf_matcher_get_active_application(self->_matcher);
+  BamfApplication* active_app = bamf_matcher_get_active_application(self->_matcher);
+  self->_new_application = glib::Object<BamfApplication>(active_app, glib::AddRef());
   self->QueueDraw();
 
   if (self->_new_app_hide_id)
@@ -1041,7 +1039,7 @@ PanelMenuView::OnNewViewOpened(BamfView *view)
   if (!BAMF_IS_APPLICATION(view))
     return;
 
-  _new_apps.push_front(BAMF_APPLICATION(g_object_ref(view)));
+  _new_apps.push_front(glib::Object<BamfApplication>(BAMF_APPLICATION(view)));
 }
 
 void
@@ -1054,8 +1052,7 @@ PanelMenuView::OnNewViewClosed(BamfView *view)
 
   if (std::find(_new_apps.begin(), _new_apps.end(), app) != _new_apps.end())
   {
-    _new_apps.remove(app);
-    g_object_unref(app);
+    _new_apps.remove(glib::Object<BamfApplication>(app, glib::AddRef()));
 
     if (_new_application == app)
       _new_application = nullptr;
