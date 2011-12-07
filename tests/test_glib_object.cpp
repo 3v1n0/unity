@@ -51,7 +51,7 @@ TEST(TestGLibObject, ConstructDoubleRef)
 {
   TestGObject *t_obj = test_gobject_new();
   {
-    auto g_obj_double_ref = TestObjectWrapper(t_obj, glib::AddRef());
+    TestObjectWrapper g_obj_double_ref(t_obj, AddRef());
     EXPECT_EQ(g_obj_double_ref.RawPtr(), t_obj);
     EXPECT_EQ(G_OBJECT(g_obj_double_ref.RawPtr())->ref_count, 2);
   }
@@ -73,8 +73,8 @@ TEST(TestGLibObject, ConstructInitialize)
 TEST(TestGLibObject, ConstructCopy)
 {
   TestGObject *t_obj = test_gobject_new();
-  auto g_obj1 = TestObjectWrapper(t_obj);
-  auto g_obj2 = TestObjectWrapper(g_obj1);
+  TestObjectWrapper g_obj1(t_obj);
+  TestObjectWrapper g_obj2(g_obj1);
 
   EXPECT_NE(&g_obj1, &g_obj2);
   EXPECT_EQ(g_obj1.RawPtr(), g_obj2.RawPtr());
@@ -96,8 +96,8 @@ TEST(TestGLibObject, AssignmentOperators)
 TEST(TestGLibObject, AssignmentOperatorOnEqualObject)
 {
   TestGObject *t_obj = test_gobject_new();
-  auto g_obj1 = TestObjectWrapper(t_obj);
-  auto g_obj2 = TestObjectWrapper(t_obj, glib::AddRef());
+  TestObjectWrapper g_obj1(t_obj);
+  TestObjectWrapper g_obj2(t_obj, AddRef());
   EXPECT_EQ(g_obj1.RawPtr(), g_obj2.RawPtr());
 
   g_obj1 = g_obj2;
@@ -117,7 +117,7 @@ TEST(TestGLibObject, EqualityOperators)
   EXPECT_FALSE(g_obj1 != g_obj2);
 
   g_obj1 = t_obj;
-  g_obj2 = TestObjectWrapper(t_obj, glib::AddRef()); //Ref is needed!
+  g_obj2 = TestObjectWrapper(t_obj, AddRef()); //Ref is needed!
   EXPECT_TRUE(g_obj1 == t_obj);
   EXPECT_TRUE(g_obj1.RawPtr() == t_obj);
   EXPECT_TRUE(g_obj1 == g_obj1);
@@ -137,14 +137,14 @@ TEST(TestGLibObject, EqualityOperators)
 TEST(TestGLibObject, CastOperator)
 {
   TestGObject *t_obj = test_gobject_new();
-  auto g_obj = TestObjectWrapper(t_obj);
+  TestObjectWrapper g_obj(t_obj);
 
   EXPECT_TRUE(t_obj == (TestGObject*)g_obj);
 }
 
 TEST(TestGLibObject, CastObject)
 {
-  auto gt_obj = TestObjectWrapper(test_gobject_new());
+  TestObjectWrapper gt_obj(test_gobject_new());
   auto g_obj = glib::object_cast<GObject>(gt_obj);
 
   EXPECT_EQ(g_obj->ref_count, 2);
@@ -164,7 +164,7 @@ TEST(TestGLibObject, BoolOperator)
 
 TEST(TestGLibObject, AccessToMembers)
 {
-  auto g_obj = TestObjectWrapper(test_gobject_new());
+  TestObjectWrapper g_obj(test_gobject_new());
   g_obj->public_value = 1234567890;
   EXPECT_EQ(g_obj->public_value, 1234567890);
   EXPECT_EQ(test_gobject_get_public_value(g_obj), 1234567890);
@@ -175,7 +175,7 @@ TEST(TestGLibObject, AccessToMembers)
 
 TEST(TestGLibObject, UseFunction)
 {
-  auto g_obj = TestObjectWrapper(test_gobject_new());
+  TestObjectWrapper g_obj(test_gobject_new());
 
   EXPECT_NE(test_gobject_get_private_value(g_obj), 0);
 
@@ -186,7 +186,7 @@ TEST(TestGLibObject, UseFunction)
 TEST(TestGLibObject, ReleaseObject)
 {
   TestGObject *t_obj = test_gobject_new();
-  auto g_obj = TestObjectWrapper(t_obj);
+  TestObjectWrapper g_obj(t_obj);
   EXPECT_EQ(g_obj, t_obj);
 
   g_obj.Release();
@@ -202,10 +202,10 @@ TEST(TestGLibObject, SwapObjects)
   TestGObject *t_obj1 = test_gobject_new();
   TestGObject *t_obj2 = test_gobject_new();
 
-  auto g_obj1 = TestObjectWrapper(t_obj1);
+  TestObjectWrapper g_obj1(t_obj1);
   EXPECT_EQ(g_obj1, t_obj1);
 
-  auto g_obj2 = TestObjectWrapper(t_obj2);
+  TestObjectWrapper g_obj2(t_obj2);
   EXPECT_EQ(g_obj2, t_obj2);
 
   std::swap(g_obj1, g_obj2);
@@ -224,11 +224,11 @@ TEST(TestGLibObject, ListOperations)
   list<TestObjectWrapper> obj_list;
   TestGObject *t_obj1 = test_gobject_new();
 
-  auto g_obj1 = TestObjectWrapper(t_obj1);
-  auto g_obj2 = TestObjectWrapper(test_gobject_new());
-  auto g_obj3 = TestObjectWrapper(test_gobject_new());
-  auto g_obj4 = TestObjectWrapper();
-  auto g_obj5 = TestObjectWrapper();
+  TestObjectWrapper g_obj1(t_obj1);
+  TestObjectWrapper g_obj2(test_gobject_new());
+  TestObjectWrapper g_obj3(test_gobject_new());
+  TestObjectWrapper g_obj4;
+  TestObjectWrapper g_obj5;
 
   obj_list.push_back(g_obj1);
   obj_list.push_back(g_obj2);
@@ -243,7 +243,7 @@ TEST(TestGLibObject, ListOperations)
   EXPECT_TRUE(std::find(obj_list.begin(), obj_list.end(), g_obj3) != obj_list.end());
   EXPECT_TRUE(std::find(obj_list.begin(), obj_list.end(), g_obj3.RawPtr()) != obj_list.end());
 
-  obj_list.remove(TestObjectWrapper(t_obj1, glib::AddRef()));
+  obj_list.remove(TestObjectWrapper(t_obj1, AddRef()));
   EXPECT_EQ(obj_list.size(), 3);
 
   EXPECT_TRUE(std::find(obj_list.begin(), obj_list.end(), g_obj4) != obj_list.end());
