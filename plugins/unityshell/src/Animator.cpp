@@ -23,15 +23,14 @@ namespace unity
 {
 
 Animator::Animator(unsigned int default_duration, unsigned int fps_rate)
+  : start_time_(0)
+  , rate_(1)
+  , duration_(0)
+  , one_time_duration_(0)
+  , timeout_id_(0)
+  , start_progress_(0.0f)
+  , progress_(0.0f)
 {
-  start_time_ = 0;
-  timeout_id_ = 0;
-  progress_ = 0.0f;
-  start_progress_ = 0.0f;
-  rate_ = 1;
-  duration_ = 0;
-  one_time_duration_ = 0;
-
   SetDuration(default_duration);
   SetRate(fps_rate);
 }
