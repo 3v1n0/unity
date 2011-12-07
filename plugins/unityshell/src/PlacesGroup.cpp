@@ -72,16 +72,22 @@ PlacesGroup::PlacesGroup()
   _group_layout->AddLayout(new nux::SpaceLayout(15,15,15,15), 0);
 
   _header_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
-  _group_layout->AddLayout(_header_layout, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FULL);
+  _group_layout->AddLayout(_header_layout, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FIX);
 
   _icon = new IconTexture("", 24);
   _icon->SetMinMaxSize(24, 24);
   _header_layout->AddView(_icon, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
+  _text_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
+  _header_layout->AddView(_text_layout, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
+
   _name = new nux::StaticCairoText("", NUX_TRACKER_LOCATION);
   _name->SetTextEllipsize(nux::StaticCairoText::NUX_ELLIPSIZE_END);
   _name->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_LEFT);
-  _header_layout->AddView(_name, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
+  _text_layout->AddView(_name, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
+
+  _expand_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
+  _text_layout->AddLayout(_expand_layout, 0, nux::MINOR_POSITION_END, nux::MINOR_SIZE_FIX);
 
   _expand_label = new nux::StaticCairoText("", NUX_TRACKER_LOCATION);
   _expand_label->SetTextEllipsize(nux::StaticCairoText::NUX_ELLIPSIZE_END);
@@ -91,13 +97,13 @@ PlacesGroup::PlacesGroup()
   _expand_label->OnKeyNavFocusActivate.connect(sigc::mem_fun(this, &PlacesGroup::OnLabelActivated));
   _expand_label->OnKeyNavFocusChange.connect(sigc::mem_fun(this, &PlacesGroup::OnLabelFocusChanged));
 
-  _header_layout->AddView(_expand_label, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
+  _expand_layout->AddView(_expand_label, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
   _expand_icon = new IconTexture(arrow, arrow->GetWidth(), arrow->GetHeight());
   _expand_icon->SetOpacity(kExpandDefaultIconOpacity);
   _expand_icon->SetMinimumSize(arrow->GetWidth(), arrow->GetHeight());
   _expand_icon->SetVisible(false);
-  _header_layout->AddView(_expand_icon, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
+  _expand_layout->AddView(_expand_icon, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
   SetLayout(_group_layout);
 
@@ -297,6 +303,14 @@ PlacesGroup::OnIdleRelayout(PlacesGroup* self)
   return FALSE;
 }
 
+void print_geo (std::string text, nux::Geometry geo)
+{
+  std::cout << text.c_str() << ": "
+            << geo.GetWidth() << "/"
+            << geo.GetHeight()
+            << std::endl;
+}
+
 void PlacesGroup::Draw(nux::GraphicsEngine& GfxContext,
                        bool                 forceDraw)
 {
@@ -304,6 +318,22 @@ void PlacesGroup::Draw(nux::GraphicsEngine& GfxContext,
   GfxContext.PushClippingRectangle(base);
 
   nux::Color col(0.15f, 0.15f, 0.15f, 0.15f);
+
+  nux::Color red(1.0, 0.0, 0.0, 1.0);
+  nux::Color green(0.0, 1.0, 0.0, 1.0);
+  nux::Color blue(0.0, 0.0, 1.0, 1.0);
+
+  nux::Geometry geo;
+  geo = _header_layout->GetGeometry();
+  print_geo ("_header_layout", geo);
+  geo = _text_layout->GetGeometry();
+  print_geo ("_text_layout", geo);
+  geo = _expand_layout->GetGeometry();
+  print_geo ("_expand_layout", geo);
+
+  nux::GetPainter().Paint2DQuadColor(GfxContext, _header_layout->GetGeometry(), red);
+  nux::GetPainter().Paint2DQuadColor(GfxContext, _text_layout->GetGeometry(), green);
+  nux::GetPainter().Paint2DQuadColor(GfxContext, _expand_layout->GetGeometry(), blue);
 
   if (_draw_sep)
   {
