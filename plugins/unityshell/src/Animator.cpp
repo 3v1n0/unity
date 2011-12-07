@@ -38,8 +38,7 @@ Animator::Animator(unsigned int default_duration, unsigned int fps_rate)
 
 Animator::~Animator()
 {
-  if (timeout_id_ != 0)
-    g_source_remove (timeout_id_);
+  Stop();
 }
 
 void

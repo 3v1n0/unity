@@ -92,17 +92,29 @@ TEST_F(TestAnimator, ConstructDestroy)
   EXPECT_EQ(tmp_animator->GetDuration(), 200);
   EXPECT_EQ(tmp_animator->GetRate(), 25);
 
-  double progress;
-  tmp_animator->animation_updated.connect([&progress](double p) {
+  double progress = 0.0f;
+  bool got_update = false;
+  tmp_animator->animation_updated.connect([&progress,&got_update](double p) {
     progress = p;
+    got_update = true;
+  });
+
+  bool stopped = false;
+  tmp_animator->animation_stopped.connect([&stopped](double p) {
+    stopped = true;
   });
 
   tmp_animator->Start();
 
+  Utils::WaitUntil(got_update);
+
   EXPECT_EQ(tmp_animator->IsRunning(), true);
   EXPECT_GT(progress, 0.0f);
+  EXPECT_EQ(stopped, false);
 
   delete tmp_animator;
+
+  EXPECT_EQ(stopped, true);
 }
 
 TEST_F(TestAnimator, SetGetValues)
