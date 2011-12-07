@@ -202,21 +202,29 @@ TEST(TestGLibObject, SwapObjects)
   TestGObject *t_obj1 = test_gobject_new();
   TestGObject *t_obj2 = test_gobject_new();
 
-  TestObjectWrapper g_obj1(t_obj1);
-  EXPECT_EQ(g_obj1, t_obj1);
+  {
+    TestObjectWrapper g_obj1(t_obj1);
+    EXPECT_EQ(g_obj1, t_obj1);
 
-  TestObjectWrapper g_obj2(t_obj2);
-  EXPECT_EQ(g_obj2, t_obj2);
+    TestObjectWrapper g_obj2(t_obj2);
+    EXPECT_EQ(g_obj2, t_obj2);
 
-  std::swap(g_obj1, g_obj2);
+    std::swap(g_obj1, g_obj2);
 
-  EXPECT_EQ(g_obj1, t_obj2);
-  EXPECT_EQ(g_obj2, t_obj1);
+    EXPECT_EQ(g_obj1, t_obj2);
+    EXPECT_EQ(g_obj2, t_obj1);
 
-  g_obj1.swap(g_obj2);
+    g_obj1.swap(g_obj2);
 
-  EXPECT_EQ(g_obj1, t_obj1);
-  EXPECT_EQ(g_obj2, t_obj2);
+    EXPECT_EQ(g_obj1, t_obj1);
+    EXPECT_EQ(g_obj2, t_obj2);
+
+    EXPECT_EQ(object_cast<GObject>(g_obj1)->ref_count, 2);
+    EXPECT_EQ(object_cast<GObject>(g_obj2)->ref_count, 2);
+  }
+
+  EXPECT_FALSE(G_IS_OBJECT(t_obj1));
+  EXPECT_FALSE(G_IS_OBJECT(t_obj2));
 }
 
 TEST(TestGLibObject, ListOperations)
