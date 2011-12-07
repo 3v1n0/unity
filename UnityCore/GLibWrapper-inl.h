@@ -53,13 +53,6 @@ Object<T>::Object(Object const& other)
 }
 
 template <typename T>
-Object<T>::Object(Object&& other)
-{
-  object_ = other.object_;
-  other.object_ = 0;
-}
-
-template <typename T>
 Object<T>::~Object()
 {
   if (object_)

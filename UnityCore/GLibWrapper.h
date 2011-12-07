@@ -43,7 +43,6 @@ public:
   explicit Object(T* val, AddRef const& ref);
 
   Object(Object const&);
-  Object(Object&& other);
   ~Object();
 
   void swap(Object<T>& other);
