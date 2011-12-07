@@ -39,7 +39,7 @@ enum SpinnerState
   STATE_CLEAR
 };
 
-class SearchBarSpinner : public unity::Introspectable, public nux::View
+class SearchBarSpinner : public unity::debug::Introspectable, public nux::View
 {
   NUX_DECLARE_OBJECT_TYPE(SearchBarSpinner, nux::View);
 public:

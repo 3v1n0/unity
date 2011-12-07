@@ -28,7 +28,6 @@
 #include <sigc++/sigc++.h>
 
 #include "IconTexture.h"
-#include "Introspectable.h"
 #include "StaticCairoText.h"
 
 namespace unity

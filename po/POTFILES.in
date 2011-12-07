@@ -1,6 +1,7 @@
 plugins/unityshell/src/BamfLauncherIcon.cpp
 plugins/unityshell/src/DeviceLauncherIcon.cpp
 plugins/unityshell/src/LauncherController.cpp
+plugins/unityshell/src/PanelMenuView.cpp
 plugins/unityshell/src/PlacesGroup.cpp
 plugins/unityshell/src/PlacesHomeView.cpp
 plugins/unityshell/src/SpacerLauncherIcon.cpp
@@ -20,4 +21,3 @@ plugins/unityshell/src/unity-places-view-accessible.cpp
 plugins/unityshell/src/unity-search-bar-accessible.cpp
 plugins/unityshell/src/unityshell.cpp
 plugins/unityshell/unityshell.xml.in
-tools/unity-preferences.c
