@@ -169,7 +169,7 @@ GetState(const gchar* pieceName)
   if (piece == NULL)
     return NULL;
 
-  return piece->Introspect();
+  return piece->Introspect(true);
 }
 
 /*
