@@ -32,6 +32,7 @@
 #include "Animator.h"
 
 #include <UnityCore/GLibWrapper.h>
+#include <UnityCore/GLibSignal.h>
 #include <libbamf/libbamf.h>
 
 namespace unity
@@ -65,11 +66,11 @@ public:
   virtual long PostLayoutManagement(long LayoutResult);
 
   void OnActiveChanged(PanelIndicatorEntryView* view, bool is_active);
-  void OnNewViewOpened(BamfView* view);
-  void OnNewViewClosed(BamfView* view);
-  void OnActiveAppChanged(BamfApplication* old_app, BamfApplication* new_app);
-  void OnActiveWindowChanged(BamfView* old_view, BamfView* new_view);
-  void OnNameChanged(gchar* new_name, gchar* old_name);
+  void OnViewOpened(BamfMatcher* matcher, BamfView* view);
+  void OnViewClosed(BamfMatcher* matcher, BamfView* view);
+  void OnActiveWindowChanged(BamfMatcher* matcher, BamfView* old_view, BamfView* new_view);
+  void OnActiveAppChanged(BamfMatcher* matcher, BamfApplication* old_app, BamfApplication* new_app);
+  void OnNameChanged(BamfView* bamf_view, gchar* new_name, gchar* old_name);
 
   void OnSpreadInitiate();
   void OnSpreadTerminate();
@@ -159,9 +160,6 @@ private:
   std::list<BamfApplication*> _new_apps;
 
   int _padding;
-  gpointer _name_changed_callback_instance;
-  gulong _name_changed_callback_id;
-
   int _last_width;
   int _last_height;
 
@@ -178,10 +176,11 @@ private:
   guint32 _new_app_hide_id;
   nux::Geometry _monitor_geo;
 
-  gulong _bamf_view_opened_id;
-  gulong _bamf_view_closed_id;
-  gulong _active_app_changed_id;
-  gulong _active_window_changed_id;
+  glib::Signal<void, BamfMatcher*, BamfView*> _view_opened_signal;
+  glib::Signal<void, BamfMatcher*, BamfView*> _view_closed_signal;
+  glib::Signal<void, BamfMatcher*, BamfView*, BamfView*> _active_win_changed_signal;
+  glib::Signal<void, BamfMatcher*, BamfApplication*, BamfApplication*> _active_app_changed_signal;
+  glib::Signal<void, BamfView*, gchar*, gchar*> _view_name_changed_signal;
 
   guint32 _place_shown_interest;
   guint32 _place_hidden_interest;

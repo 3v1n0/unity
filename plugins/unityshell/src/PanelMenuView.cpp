@@ -52,31 +52,8 @@
 namespace unity
 {
 
-static void on_active_app_changed(BamfMatcher*   matcher,
-                                  BamfView*      old_view,
-                                  BamfView*      new_view,
-                                  PanelMenuView* self);
-
-static void on_active_window_changed(BamfMatcher*   matcher,
-                                     BamfView*      old_view,
-                                     BamfView*      new_view,
-                                     PanelMenuView* self);
-
-static void on_bamf_view_opened(BamfMatcher*   matcher,
-                                BamfView*      view,
-                                PanelMenuView* self);
-
-static void on_bamf_view_closed(BamfMatcher*   matcher,
-                                BamfView*      view,
-                                PanelMenuView* self);
-
-static void on_name_changed(BamfView*      bamf_view,
-                            gchar*         old_name,
-                            gchar*         new_name,
-                            PanelMenuView* self);
-
 PanelMenuView::PanelMenuView(int padding)
-  : _matcher(nullptr),
+  : _matcher(bamf_matcher_get_default(), glib::AddRef()),
     _title_layer(nullptr),
     _util_cg(CAIRO_FORMAT_ARGB32, 1, 1),
     _gradient_texture(nullptr),
@@ -119,19 +96,16 @@ PanelMenuView::PanelMenuView(int padding)
    */
   layout_ = _menu_layout;
 
-  _matcher = bamf_matcher_get_default();
-  _bamf_view_opened_id = g_signal_connect(_matcher, "view-opened",
-                                          G_CALLBACK(on_bamf_view_opened), this);
-  _bamf_view_closed_id = g_signal_connect(_matcher, "view-closed",
-                                          G_CALLBACK(on_bamf_view_closed), this);
-  _active_app_changed_id = g_signal_connect(_matcher, "active-application-changed",
-                                            G_CALLBACK(on_active_app_changed), this);
-  _active_window_changed_id = g_signal_connect(_matcher, "active-window-changed",
-                                               G_CALLBACK(on_active_window_changed), this);
+  _view_opened_signal.Connect(_matcher, "view-opened",
+                              sigc::mem_fun(this, &PanelMenuView::OnViewOpened));
+  _view_closed_signal.Connect(_matcher, "view-closed",
+                              sigc::mem_fun(this, &PanelMenuView::OnViewClosed));
+  _active_win_changed_signal.Connect(_matcher, "active-window-changed",
+                                     sigc::mem_fun(this, &PanelMenuView::OnActiveWindowChanged));
+  _active_app_changed_signal.Connect(_matcher, "active-application-changed",
+                                     sigc::mem_fun(this, &PanelMenuView::OnActiveAppChanged));
 
   _padding = padding;
-  _name_changed_callback_instance = nullptr;
-  _name_changed_callback_id = 0;
 
   _window_buttons = new WindowButtons();
   _window_buttons->SetParentObject(this);
@@ -205,22 +179,6 @@ PanelMenuView::PanelMenuView(int padding)
 
 PanelMenuView::~PanelMenuView()
 {
-  if (_name_changed_callback_id)
-    g_signal_handler_disconnect(_name_changed_callback_instance,
-                                _name_changed_callback_id);
-
-  if (_bamf_view_opened_id)
-    g_signal_handler_disconnect(_matcher, _bamf_view_opened_id);
-
-  if (_bamf_view_closed_id)
-    g_signal_handler_disconnect(_matcher, _bamf_view_closed_id);
-
-  if (_active_app_changed_id)
-    g_signal_handler_disconnect(_matcher, _active_app_changed_id);
-
-  if (_active_window_changed_id)
-    g_signal_handler_disconnect(_matcher, _active_window_changed_id);
-
   if (_active_moved_id)
     g_source_remove(_active_moved_id);
 
@@ -996,7 +954,7 @@ PanelMenuView::AllMenusClosed()
 }
 
 void
-PanelMenuView::OnNameChanged(gchar* new_name, gchar* old_name)
+PanelMenuView::OnNameChanged(BamfView* bamf_view, gchar* new_name, gchar* old_name)
 {
   Refresh();
   FullRedraw();
@@ -1026,7 +984,7 @@ PanelMenuView::OnNewAppShow(PanelMenuView* self)
 gboolean
 PanelMenuView::OnNewAppHide(PanelMenuView* self)
 {
-  self->OnNewViewClosed(BAMF_VIEW(self->_new_application.RawPtr()));
+  self->OnViewClosed(self->_matcher, BAMF_VIEW(self->_new_application.RawPtr()));
   self->_new_app_hide_id = 0;
   self->_new_app_menu_shown = true;
   self->QueueDraw();
@@ -1035,7 +993,7 @@ PanelMenuView::OnNewAppHide(PanelMenuView* self)
 }
 
 void
-PanelMenuView::OnNewViewOpened(BamfView *view)
+PanelMenuView::OnViewOpened(BamfMatcher *matcher, BamfView *view)
 {
   /* FIXME: here we should also check for if the view is also user_visible
    * but it seems that BAMF doesn't handle this correctly after some
@@ -1047,7 +1005,7 @@ PanelMenuView::OnNewViewOpened(BamfView *view)
 }
 
 void
-PanelMenuView::OnNewViewClosed(BamfView *view)
+PanelMenuView::OnViewClosed(BamfMatcher *matcher, BamfView *view)
 {
   if (!BAMF_IS_APPLICATION(view))
     return;
@@ -1065,7 +1023,8 @@ PanelMenuView::OnNewViewClosed(BamfView *view)
 }
 
 void
-PanelMenuView::OnActiveAppChanged(BamfApplication* old_app,
+PanelMenuView::OnActiveAppChanged(BamfMatcher *matcher,
+                                  BamfApplication* old_app,
                                   BamfApplication* new_app)
 {
   if (BAMF_IS_APPLICATION(new_app))
@@ -1103,13 +1062,14 @@ PanelMenuView::OnActiveAppChanged(BamfApplication* old_app,
       }
 
       if (_new_application)
-        OnNewViewClosed(BAMF_VIEW(_new_application.RawPtr()));
+        OnViewClosed(matcher, BAMF_VIEW(_new_application.RawPtr()));
     }
   }
 }
 
 void
-PanelMenuView::OnActiveWindowChanged(BamfView* old_view,
+PanelMenuView::OnActiveWindowChanged(BamfMatcher *matcher,
+                                     BamfView* old_view,
                                      BamfView* new_view)
 {
   _show_now_activated = false;
@@ -1149,16 +1109,11 @@ PanelMenuView::OnActiveWindowChanged(BamfView* old_view,
     }
 
     // first see if we need to remove and old callback
-    if (_name_changed_callback_id != 0)
-      g_signal_handler_disconnect(_name_changed_callback_instance,
-                                  _name_changed_callback_id);
+    _view_name_changed_signal.Disconnect();
 
-    // register callback for new view and store handler-id
-    _name_changed_callback_instance = G_OBJECT(new_view);
-    _name_changed_callback_id = g_signal_connect(_name_changed_callback_instance,
-                                                 "name-changed",
-                                                 (GCallback) on_name_changed,
-                                                 this);
+    // register callback for new view
+    _view_name_changed_signal.Connect(new_view, "name-changed",
+                                      sigc::mem_fun(this, &PanelMenuView::OnNameChanged));
   }
 
   Refresh();
@@ -1552,52 +1507,6 @@ PanelMenuView::GetChildsName()
 
 void PanelMenuView::AddProperties(GVariantBuilder* builder)
 {
-}
-
-/*
- * C code for callbacks
- */
-static void
-on_bamf_view_opened(BamfMatcher*   matcher,
-                    BamfView*      view,
-                    PanelMenuView* self)
-{
-  self->OnNewViewOpened(view);
-}
-
-static void
-on_bamf_view_closed(BamfMatcher*   matcher,
-                    BamfView*      view,
-                    PanelMenuView* self)
-{
-  self->OnNewViewClosed(view);
-}
-
-static void
-on_active_app_changed(BamfMatcher*   matcher,
-                      BamfView*      old_view,
-                      BamfView*      new_view,
-                      PanelMenuView* self)
-{
-  self->OnActiveAppChanged(BAMF_APPLICATION(old_view), BAMF_APPLICATION(new_view));
-}
-
-static void
-on_active_window_changed(BamfMatcher*   matcher,
-                         BamfView*      old_view,
-                         BamfView*      new_view,
-                         PanelMenuView* self)
-{
-  self->OnActiveWindowChanged(old_view, new_view);
-}
-
-static void
-on_name_changed(BamfView*      bamf_view,
-                gchar*         old_name,
-                gchar*         new_name,
-                PanelMenuView* self)
-{
-  self->OnNameChanged(new_name, old_name);
 }
 
 void
