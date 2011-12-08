@@ -105,6 +105,7 @@ if (${GTEST_FOUND} STREQUAL TRUE)
                  ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_marshal.cpp
                  test_favorite_store_gsettings.cpp
                  test_shortcut_model.cpp
+                 test_shortcut_private.cpp
                  test_main_xless.cpp
                  ${UNITY_SRC}/AbstractLauncherIcon.h
                  ${UNITY_SRC}/AbstractShortcutHint.h
@@ -116,6 +117,8 @@ if (${GTEST_FOUND} STREQUAL TRUE)
                  ${UNITY_SRC}/MockShortcutHint.h
                  ${UNITY_SRC}/ShortcutModel.cpp
                  ${UNITY_SRC}/ShortcutModel.h
+                 ${UNITY_SRC}/ShortcutHintPrivate.cpp
+                 ${UNITY_SRC}/ShortcutHintPrivate.h
                  ${UNITY_SRC}/SwitcherModel.cpp
                  ${UNITY_SRC}/SwitcherModel.h
                  ${UNITY_SRC}/Introspectable.cpp

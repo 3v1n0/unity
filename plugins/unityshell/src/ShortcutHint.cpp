@@ -22,6 +22,8 @@
 #include <core/core.h> // Compiz...
 #include <NuxCore/Logger.h>
 
+#include "ShortcutHintPrivate.h"
+
 namespace unity
 {
 namespace shortcut

@@ -44,7 +44,6 @@ View::View(NUX_FILE_LINE_DECL)
   rounding_texture_ = nux::CreateTexture2DFromFile(PKGDATADIR"/switcher_round_rect.png", -1, true);
 
   text_view_ = new nux::StaticCairoText("Testing");
-  text_view_->SinkReference();
   text_view_->SetLines(1);
   text_view_->SetTextColor(nux::color::White);
   text_view_->SetFont("Ubuntu Bold 20");
@@ -297,7 +296,6 @@ void View::UpdateColumns()
     int column = (category == "Launcher" or category == "Dash" or category == "Top Bar") ? 0 : 1;
     
     nux::StaticCairoText* header = new nux::StaticCairoText("Testing");
-    header->SinkReference();
     header->SetLines(1);
     header->SetTextColor(nux::color::White);
     header->SetFont("Ubuntu Bold 13");
