@@ -18,8 +18,7 @@
 
 #include "ShortcutHintPrivate.h"
 
-#include <algorithm>
-#include <boost/regex.hpp> 
+#include <boost/algorithm/string/replace.hpp>
 
 namespace unity
 {
@@ -30,12 +29,13 @@ namespace impl
 
 std::string FixShortcutFormat(std::string const& scut)
 {
-  std::string ret = scut;
+  std::string ret(scut.begin(), scut.end() - 1);
   
-  // Removes all the '<'
-  ret.erase(std::remove(ret.begin(), ret.end(), '<'), ret.end());
-
-  // FIXME
+  boost::replace_all(ret, "<", "");
+  boost::replace_all(ret, ">", " + ");
+  
+  if (scut[scut.size()-1] != '>')
+    ret += scut[scut.size()-1];
     
   return ret;
 }
