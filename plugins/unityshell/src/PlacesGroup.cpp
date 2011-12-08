@@ -44,9 +44,9 @@
 
 #include "DashStyle.h"
 
-static const nux::Color kExpandDefaultTextColor(1.0f, 1.0f, 1.0f, 0.6f);
+static const nux::Color kExpandDefaultTextColor(1.0f, 1.0f, 1.0f, 0.5f);
 static const nux::Color kExpandHoverTextColor(1.0f, 1.0f, 1.0f, 1.0f);
-static const float kExpandDefaultIconOpacity = 0.6f;
+static const float kExpandDefaultIconOpacity = 0.5f;
 static const float kExpandHoverIconOpacity = 1.0f;
 
 namespace unity
