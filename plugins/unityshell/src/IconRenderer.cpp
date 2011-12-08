@@ -180,6 +180,8 @@ nux::BaseTexture* arrow_empty_ltr = 0;
 nux::BaseTexture* arrow_empty_rtl = 0;
 
 nux::BaseTexture* squircle_base = 0;
+nux::BaseTexture* squircle_base_selected = 0;
+nux::BaseTexture* squircle_glow = 0;
 nux::BaseTexture* squircle_shine = 0;
 
 std::vector<nux::BaseTexture*> icon_background;
@@ -386,6 +388,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
   float glow_intensity = arg.glow_intensity;
 
   nux::BaseTexture* background = local::icon_background[size];
+  nux::BaseTexture* glow = local::icon_glow[size];
   nux::BaseTexture* shine = local::icon_shine[size];
 
   if (arg.keyboard_nav_hl)
@@ -401,11 +404,11 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
 
   if (arg.system_item)
   {
-    background_color = nux::color::White;
-    backlight_intensity = 1.0f;
-    glow_intensity = 0.0f;
+    backlight_intensity = (arg.keyboard_nav_hl) ? 0.85f : 1.0f ;
+    glow_intensity = (arg.keyboard_nav_hl) ? 1.0f : 0.0f ;
 
-    background = local::squircle_base;
+    background = (arg.keyboard_nav_hl) ? local::squircle_base_selected : local::squircle_base;
+    glow = local::squircle_glow;
     shine = local::squircle_shine;
   }
 
@@ -456,7 +459,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
   {
     RenderElement(GfxContext,
                   arg,
-                  local::icon_glow[size]->GetDeviceTexture(),
+                  glow->GetDeviceTexture(),
                   glow_color,
                   glow_intensity * arg.alpha,
                   arg.icon->GetTransform(launcher::AbstractLauncherIcon::TRANSFORM_GLOW));
@@ -1092,6 +1095,8 @@ void generate_textures()
                     PKGDATADIR"/launcher_icon_shine_54.png");
 
   squircle_base = load_texture(PKGDATADIR"/squircle_base_54.png");
+  squircle_base_selected = load_texture(PKGDATADIR"/squircle_base_selected_54.png");
+  squircle_glow = load_texture(PKGDATADIR"/squircle_glow_54.png");
   squircle_shine = load_texture(PKGDATADIR"/squircle_shine_54.png");
 
   pip_ltr = load_texture(PKGDATADIR"/launcher_pip_ltr.png");

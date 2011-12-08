@@ -25,12 +25,17 @@
 
 namespace unity
 {
+namespace debug
+{
 class Introspectable
 {
 typedef std::list<Introspectable*> IntrospectableList;
 
 public:
-  GVariant* Introspect();
+  Introspectable();
+  virtual ~Introspectable();
+
+  GVariant* Introspect(bool wrap = false);
   virtual const gchar* GetName() = 0;
   void AddChild(Introspectable* child);
   void RemoveChild(Introspectable* child);
@@ -39,6 +44,7 @@ public:
 protected:
   virtual const gchar* GetChildsName();
   virtual void AddProperties(GVariantBuilder* builder) = 0;
+
   /*
    * AddProperties should be implemented as such ...
    * void ClassFoo::AddProperties (GVariantBuilder *builder)
@@ -56,6 +62,8 @@ protected:
 
 private:
   std::list<Introspectable*> _children;
+  std::list<Introspectable*> _parents;
 };
+}
 }
 #endif

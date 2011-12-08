@@ -27,28 +27,31 @@
 #define G_SETTINGS_ENABLE_BACKEND
 #include <gio/gsettingsbackend.h>
 #include <gtest/gtest.h>
+#include <glib.h>
 
 #include "FavoriteStore.h"
 #include "FavoriteStoreGSettings.h"
 #include <UnityCore/GLibWrapper.h>
+
 
 using namespace unity;
 
 namespace {
   
 // Constant
-const gchar* CUSTOM_DESKTOP = BUILDDIR"/tests/data/update-manager.desktop";
+const gchar* SCHEMA_DIRECTORY = BUILDDIR"/settings";
 const gchar* BASE_STORE_FILE = BUILDDIR"/settings/test-favorite-store-gsettings.store";
 const gchar* BASE_STORE_CONTENTS = "[desktop/unity/launcher]\n" \
-                                  "favorites=['gedit.desktop', 'firefox.desktop', '%s']";
+                                  "favorites=['%s', '%s', '%s']";
                                   
-const char* base_store_favs[] = { "gedit.desktop",
-                                  "firefox.desktop",
-                                  CUSTOM_DESKTOP,
+const char* base_store_favs[] = { BUILDDIR"/tests/data/ubuntuone-installer.desktop",
+                                  BUILDDIR"/tests/data/ubuntu-software-center.desktop",
+                                  BUILDDIR"/tests/data/update-manager.desktop",
                                   NULL
                                 };
 const int n_base_store_favs = G_N_ELEMENTS(base_store_favs) - 1; /* NULL */
                               
+const std::string other_desktop = BUILDDIR"/tests/data/bzr-handle-patch.desktop";
 
 // Utilities                            
 std::string const& at(FavoriteList const& favs, int index)
@@ -75,8 +78,15 @@ public:
   
   virtual void SetUp()
   {
+    // set the data directory so gsettings can find the schema 
+    g_setenv("GSETTINGS_SCHEMA_DIR", SCHEMA_DIRECTORY, false);
+
     glib::Error error;
-    glib::String contents(g_strdup_printf(BASE_STORE_CONTENTS, CUSTOM_DESKTOP));
+    glib::String contents(g_strdup_printf(BASE_STORE_CONTENTS, 
+                                          base_store_favs[0],
+                                          base_store_favs[1],
+                                          base_store_favs[2]
+                                          ));
 
     g_file_set_contents(BASE_STORE_FILE,
                         contents.Value(),
@@ -102,8 +112,8 @@ TEST_F(TestFavoriteStoreGSettings, TestAllocation)
 TEST_F(TestFavoriteStoreGSettings, TestGetFavorites)
 {
   internal::FavoriteStoreGSettings settings(backend.Release());
-
   FavoriteList const& favs = settings.GetFavorites();
+
   ASSERT_EQ(favs.size(), n_base_store_favs);
   EXPECT_TRUE(ends_with(at(favs, 0), base_store_favs[0]));
   EXPECT_TRUE(ends_with(at(favs, 1), base_store_favs[1]));
@@ -113,7 +123,6 @@ TEST_F(TestFavoriteStoreGSettings, TestGetFavorites)
 TEST_F(TestFavoriteStoreGSettings, TestAddFavorite)
 {
   internal::FavoriteStoreGSettings settings(backend.Release());
-  std::string other_desktop("/usr/share/applications/nautilus.desktop");
   
   settings.AddFavorite(other_desktop, 0);
   FavoriteList const& favs = settings.GetFavorites();
@@ -124,7 +133,6 @@ TEST_F(TestFavoriteStoreGSettings, TestAddFavorite)
 TEST_F(TestFavoriteStoreGSettings, TestAddFavoritePosition)
 {
   internal::FavoriteStoreGSettings settings(backend.Release());
-  std::string other_desktop("/usr/share/applications/nautilus.desktop");
   
   settings.AddFavorite(other_desktop, 2);
   FavoriteList const& favs = settings.GetFavorites();
@@ -135,7 +143,6 @@ TEST_F(TestFavoriteStoreGSettings, TestAddFavoritePosition)
 TEST_F(TestFavoriteStoreGSettings,TestAddFavoriteLast)
 {
   internal::FavoriteStoreGSettings settings(backend.Release());
-  std::string other_desktop("/usr/share/applications/nautilus.desktop");
   
   settings.AddFavorite(other_desktop, -1);
   FavoriteList const& favs = settings.GetFavorites();
@@ -146,7 +153,6 @@ TEST_F(TestFavoriteStoreGSettings,TestAddFavoriteLast)
 TEST_F(TestFavoriteStoreGSettings,TestAddFavoriteOutOfRange)
 {
   internal::FavoriteStoreGSettings settings(backend.Release());
-  std::string other_desktop("/usr/share/applications/nautilus.desktop");
 
   FavoriteList const& favs = settings.GetFavorites();
   settings.AddFavorite(other_desktop, n_base_store_favs + 1);

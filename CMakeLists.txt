@@ -1,24 +1,22 @@
 project (unity)
 cmake_minimum_required(VERSION 2.8)
 
-
 include (cmake/Documentation.cmake)
-
-subdirs (doc services tests tools UnityCore guides)
 
 #
 # Base bits
 #
 set (PROJECT_NAME "unity")
-set (UNITY_MAJOR 4)
-set (UNITY_MINOR 22)
+set (UNITY_MAJOR 5)
+set (UNITY_MINOR 0)
 set (UNITY_MICRO 0)
 set (UNITY_VERSION "${UNITY_MAJOR}.${UNITY_MINOR}.${UNITY_MICRO}")
-set (UNITY_API_VERSION "4.0")
+set (UNITY_API_VERSION "5.0")
 
 set (CMAKE_CXX_FLAGS "-DGNOME_DESKTOP_USE_UNSTABLE_API -std=c++0x -fno-permissive")
 set (CMAKE_CXX_FLAGS_DEBUG "-g3")
 set (CMAKE_CXX_FLAGS_RELEASE "")
+
 
 #
 # Niceties
@@ -121,13 +119,22 @@ endif (DISABLE_MAINTAINER_CFLAGS)
 #
 # Compiz Plugins
 #
-set (UNITY_PLUGIN_DEPS "compiz;nux-1.0 >= 1.2.2;libbamf3;dee-1.0;gio-2.0;gio-unix-2.0;dbusmenu-glib-0.4;x11;libstartup-notification-1.0;gthread-2.0;indicator3-0.4;atk;unity-misc >= 0.4.0;gconf-2.0;libutouch-geis;gtk+-3.0 >= 3.1;sigc++-2.0;json-glib-1.0;libnotify;gnome-desktop-3.0;gdu")
+set (UNITY_PLUGIN_DEPS "compiz;nux-2.0 >= 2.0.0;libbamf3;dee-1.0;gio-2.0;gio-unix-2.0;dbusmenu-glib-0.4;x11;libstartup-notification-1.0;gthread-2.0;indicator3-0.4;atk;unity-misc >= 0.4.0;gconf-2.0;libutouch-geis;gtk+-3.0 >= 3.1;sigc++-2.0;json-glib-1.0;libnotify;gnome-desktop-3.0;gdu")
 
+add_subdirectory(plugins/unityshell)
+add_subdirectory(plugins/gtkloader)
+add_subdirectory(plugins/networkarearegion)
+add_subdirectory(plugins/unitydialog)
+add_subdirectory(plugins/unity-mt-grab-handles)
 
-find_package (Compiz REQUIRED)
-include (CompizPlugin)
-
-compiz_add_plugins_in_folder ("${CMAKE_SOURCE_DIR}/plugins/")
+# subdirs
+add_subdirectory(doc)
+add_subdirectory(services)
+add_subdirectory(tests)
+add_subdirectory(tools)
+add_subdirectory(UnityCore)
+add_subdirectory(guides)
+add_subdirectory(standalone-clients EXCLUDE_FROM_ALL)
 
 #
 # GSettings Schema

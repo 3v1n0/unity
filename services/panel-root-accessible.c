@@ -88,6 +88,26 @@ panel_root_accessible_new (void)
   return accessible;
 }
 
+static void
+on_indicator_removed (gpointer *data, GObject *removed_indicator)
+{
+  PanelRootAccessible *root = data[0];
+  AtkObject *child = data[1];
+
+  g_return_if_fail (PANEL_IS_ROOT_ACCESSIBLE (root));
+  g_return_if_fail (ATK_IS_OBJECT (child));
+
+  gint index = g_slist_index (root->priv->a11y_children, child);
+  if (index >= 0)
+    {
+      root->priv->a11y_children = g_slist_remove (root->priv->a11y_children, child);
+      g_signal_emit_by_name (root, "children-changed::remove", index, child);
+      g_object_unref (child);
+    }
+
+  g_free (data);
+}
+
 /* Implementation of AtkObject methods */
 
 static void
@@ -111,14 +131,23 @@ panel_root_accessible_initialize (AtkObject *accessible, gpointer data)
       IndicatorObject *indicator;
 
       indicator = panel_service_get_indicator_nth (root->priv->service, i);
-      if (indicator != NULL)
+      if (INDICATOR_IS_OBJECT (indicator))
         {
-	  AtkObject *child;
+          AtkObject *child;
+          gpointer *data;
 
-	  child = panel_indicator_accessible_new (indicator);
+          child = panel_indicator_accessible_new (indicator);
+          /* FIXME: use proper signals once we support dynamic adding/removing
+           * of indicators */
+          data = g_new0 (gpointer, 2);
+          data[0] = root;
+          data[1] = child;
+          g_object_weak_ref (G_OBJECT (indicator), 
+              (GWeakNotify) on_indicator_removed, data);
+
           atk_object_set_parent (child, accessible);
-	  root->priv->a11y_children = g_slist_append (root->priv->a11y_children, child);
-	}
+          root->priv->a11y_children = g_slist_append (root->priv->a11y_children, child);
+        }
     }
 }
 

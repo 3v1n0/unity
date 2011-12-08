@@ -37,6 +37,11 @@ public:
   virtual nux::Color BackgroundColor();
   virtual nux::Color GlowColor();
 
+  void SetShowInSwitcher(bool show_in_switcher)
+  {
+    show_in_switcher_ = show_in_switcher;
+  }
+
   const bool HasWindowOnViewport()
   {
     return true;
@@ -44,11 +49,14 @@ public:
 
   bool ShowInSwitcher()
   {
-    return true;
+    return show_in_switcher_;
   }
 
 protected:
   void ActivateLauncherIcon(ActionArg arg);
+
+private:
+  bool show_in_switcher_;
 };
 
 }

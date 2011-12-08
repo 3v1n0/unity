@@ -125,7 +125,7 @@ void ResultViewGrid::QueueLazyLoad()
 {
   if (lazy_load_handle_ == 0)
   {
-    lazy_load_handle_ = g_timeout_add(0, (GSourceFunc)(&ResultViewGrid::OnLazyLoad), this);
+    lazy_load_handle_ = g_idle_add_full (G_PRIORITY_DEFAULT, (GSourceFunc)(&ResultViewGrid::OnLazyLoad), this, NULL);
   }
   last_lazy_loaded_result_ = 0; // we always want to reset the lazy load index here
 }
