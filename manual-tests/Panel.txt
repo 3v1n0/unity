@@ -1,0 +1,18 @@
+Panel Opacity Toggle
+--------------------
+This test shows how works the panel_opacity_maximized_toggle unity option
+
+#. Open CCSM
+#. Go in the "Experimental" tab
+#. Set the "Panel Opacity" setting to a value less than 1.0 (best is 0.0 for testing)
+#. Enable the "Panel Opacity for Maximized Windows Toggle"
+#. Close all your opened windows
+#. The panel should be transparent according to the opacity setting
+#. Now open a window and make sure it is restored
+#. Open another Window and make it maximized
+
+Outcome
+  When there's at least one maximized window on the current screen, the panel
+  should become opaque, also if the opacity setting is set to 0.0. 
+  Once all the maximized windows are closed, restored or not visible,
+  the panel should go back to its defined opacity.
