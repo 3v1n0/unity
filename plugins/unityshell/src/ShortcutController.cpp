@@ -33,7 +33,7 @@ const unsigned int SUPER_TAP_DURATION = 650;
 
 
   
-Controller::Controller(std::list<AbstractHint*> hints)
+Controller::Controller(std::list<AbstractHint*>& hints)
   : view_window_(0)
   , visible_(false)
   , show_timer_(0)

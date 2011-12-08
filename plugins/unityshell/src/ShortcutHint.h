@@ -31,10 +31,14 @@ class Hint : public AbstractHint
 {
 public:
   // Ctor
-  Hint(std::string category, std::string prefix,
-       std::string postfix, std::string description,
-       OptionType type, std::string arg1, 
-       std::string arg2 = "", std::string arg3 = "");
+  Hint(std::string const& category,
+       std::string const& prefix,
+       std::string const& postfix,
+       std::string const& description,
+       OptionType const type,
+       std::string const& arg1, 
+       std::string const& arg2 = "",
+       std::string const& arg3 = "");
   
   // Dtor
   ~Hint();

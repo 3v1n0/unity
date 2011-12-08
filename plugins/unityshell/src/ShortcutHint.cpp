@@ -34,10 +34,14 @@ namespace
 } // anonymouse namespace 
 
 // Ctor
-Hint::Hint(std::string category, std::string prefix,
-           std::string postfix,std::string description,
-           OptionType type, std::string arg1, 
-           std::string arg2, std::string arg3)
+Hint::Hint(std::string const& category,
+           std::string const& prefix,
+           std::string const& postfix,
+           std::string const& description,
+           OptionType const type,
+           std::string const& arg1, 
+           std::string const& arg2,
+           std::string const& arg3)
   : AbstractHint(category, prefix, postfix, description, type, arg1, arg2, arg3)
 {
 }

@@ -25,7 +25,7 @@ namespace shortcut
 {
 
 // Ctor
-Model::Model(std::list<AbstractHint*> hints)
+Model::Model(std::list<AbstractHint*>& hints)
 {
   for (auto hint : hints)
     AddHint(hint);

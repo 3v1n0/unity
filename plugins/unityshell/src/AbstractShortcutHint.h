@@ -42,10 +42,14 @@ class AbstractHint
 {
 public:
   // Ctor
-  AbstractHint(std::string category, std::string prefix,
-               std::string postfix, std::string description,
-               OptionType type, std::string arg1, 
-               std::string arg2 = "", std::string arg3 = "")
+  AbstractHint(std::string const& category, 
+               std::string const& prefix,
+               std::string const& postfix,
+               std::string const& description,
+               OptionType const type,
+               std::string const& arg1, 
+               std::string const& arg2 = "",
+               std::string const& arg3 = "")
     : Category(category)
     , Prefix(prefix)
     , Postfix(postfix)
@@ -58,7 +62,7 @@ public:
   }
   
   // Copy ctor
-  AbstractHint(unity::shortcut::AbstractHint& obj)
+  AbstractHint(unity::shortcut::AbstractHint const& obj)
     : Category(obj.Category())
     , Prefix(obj.Prefix())
     , Postfix(obj.Postfix())

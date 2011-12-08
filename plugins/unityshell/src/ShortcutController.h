@@ -41,7 +41,7 @@ public:
   typedef std::shared_ptr<Controller> Ptr;
   
   // Ctor and dtor
-  Controller(std::list<AbstractHint*> hints);
+  Controller(std::list<AbstractHint*>& hints);
   ~Controller();  
   
   // Public Methods

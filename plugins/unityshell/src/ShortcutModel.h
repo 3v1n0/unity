@@ -40,7 +40,7 @@ public:
   typedef std::shared_ptr<Model> Ptr;
 
   // Ctor and dtor  
-  Model(std::list<AbstractHint*> hints);
+  Model(std::list<AbstractHint*>& hints);
   ~Model();
                
   // Accessors
