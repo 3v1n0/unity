@@ -152,6 +152,8 @@ on_search_changed(UnityScope* scope, UnityLensSearch *search,
     UnitySearchType search_type, GCancellable *canc, ServiceLens* self)
 {
   int i = 0;
+  // to differentiate global and non-global searches, we'll return more items
+  // in the case of global search
   int num_items = search_type == UNITY_SEARCH_TYPE_GLOBAL ? 10 : 5;
 
   DeeModel* model = (DeeModel*)unity_lens_search_get_results_model(search);
