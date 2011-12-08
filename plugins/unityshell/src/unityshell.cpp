@@ -187,7 +187,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   {
      notify_init("unityshell");
 
-     g_thread_init(NULL);
+     //g_thread_init(NULL);
      dbus_g_thread_init();
 
      unity_a11y_preset_environment();
@@ -1154,10 +1154,9 @@ bool UnityScreen::showLauncherKeyInitiate(CompAction* action,
   {    
     // FIXME  
     int device = screen->outputDeviceForPoint(pointerX, pointerY);
-    shortcut_controller_->SetWorkspace(nux::Geometry(screen->outputDevs()[device].x1() + 100,
-                                   screen->outputDevs()[device].y1() + 50,
-                                   screen->outputDevs()[device].width() - 200,
-                                   screen->outputDevs()[device].height() - 100));
+    shortcut_controller_->SetWorkspace(nux::Geometry(screen->outputDevs()[device].x1() + (1366-1000)/2,
+                                       screen->outputDevs()[device].y1() + (768-700)/2,
+                                       1000, 700));
 
     shortcut_controller_->Show();
    }

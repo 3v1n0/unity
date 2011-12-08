@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Andrea Azzarone <azzaronea@gmail.com>
+ *              Jay Taoko <jay.taoko@canonical.com>
  */
  
 #include "ShortcutView.h"
@@ -21,11 +22,21 @@
 #include <glib/gi18n-lib.h>
 #include <boost/algorithm/string.hpp>
 
+#include "LineSeparator.h"
+
 namespace unity
 {
-
 namespace shortcut
 {
+namespace
+{
+  int SECTION_NAME_FONT_SIZE = 12;
+  int SHORTKEY_ENTRY_FONT_SIZE = 10;
+  int INTER_SPACE_SHORTKEY_DESCRIPTION = 10;
+  int SHORTKEY_COLUMN_WIDTH = 150;
+  int DESCRIPTION_COLUMN_WIDTH = 265;
+  int LINE_SPACING = 4;
+} // namespace anonymouse
 
 NUX_IMPLEMENT_OBJECT_TYPE(View);
 
@@ -33,9 +44,8 @@ View::View(NUX_FILE_LINE_DECL)
   : nux::View(NUX_FILE_LINE_PARAM)
 {
   layout_ = new nux::VLayout();
-  //layout_->SetVerticalInternalMargin(10);
-  layout_->SetHorizontalInternalMargin(25);
-  layout_->SetVerticalExternalMargin(30);
+  layout_->SetPadding(50, 50);
+  layout_->SetSpaceBetweenChildren(25);
   SetLayout(layout_);
 
   background_top_ = nux::CreateTexture2DFromFile(PKGDATADIR"/switcher_top.png", -1, true);
@@ -43,23 +53,19 @@ View::View(NUX_FILE_LINE_DECL)
   background_corner_ = nux::CreateTexture2DFromFile(PKGDATADIR"/switcher_corner.png", -1, true);
   rounding_texture_ = nux::CreateTexture2DFromFile(PKGDATADIR"/switcher_round_rect.png", -1, true);
 
-  text_view_ = new nux::StaticCairoText("Testing");
-  text_view_->SetLines(1);
-  text_view_->SetTextColor(nux::color::White);
-  text_view_->SetFont("Ubuntu Bold 20");
-  text_view_->SetText(_("Keyboard Shortcuts"));
-  layout_->AddView(text_view_, 1 , nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+  nux::StaticText* header_view = new nux::StaticText(_("Keyboard Shortcuts"), NUX_TRACKER_LOCATION);
+  header_view->SetTextPointSize(15);
+  header_view->SetFontName("Ubuntu Bold");
+  layout_->AddView(header_view, 1 , nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
   
-  // FIXME: add a separator
-  
-  columns_layout_ = new nux::HLayout();
-  columns_layout_->SetHorizontalExternalMargin(50);
-  
+  layout_->AddView(new HSeparator(), 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);  
+    
+  columns_layout_ = new nux::HLayout();  
+  columns_layout_->SetSpaceBetweenChildren(40);
   layout_->AddLayout(columns_layout_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
   
   // Column 1...
   columns_.push_back(new nux::VLayout());
-  columns_[0]->SetVerticalInternalMargin(10);
   columns_layout_->AddLayout(columns_[0], 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
   
   // Column 2...
@@ -89,8 +95,7 @@ void View::SetModel(Model::Ptr model)
   model_ = model;
 
   // Fills the columns...
-  UpdateColumns();
-  
+  RenderColumns();
 }
 
 Model::Ptr View::GetModel()
@@ -101,6 +106,63 @@ Model::Ptr View::GetModel()
 void View::SetupBackground()
 {
   bg_effect_helper_.enabled = true;
+}
+
+nux::LinearLayout* View::CreateSectionLayout(const char* section_name)
+{
+  nux::VLayout* layout = new nux::VLayout(NUX_TRACKER_LOCATION);
+
+  nux::StaticText* section_name_view = new nux::StaticText(section_name, NUX_TRACKER_LOCATION);
+  section_name_view->SetTextPointSize(SECTION_NAME_FONT_SIZE);
+  section_name_view->SetFontName("Ubuntu Bold");
+  layout->AddView(section_name_view, 0, nux::MINOR_POSITION_START, nux::MINOR_SIZE_MATCHCONTENT);
+  layout->AddView(new nux::SpaceLayout(20, 20, 20, 20), 0, nux::MINOR_POSITION_START, nux::MINOR_SIZE_MATCHCONTENT);
+
+  return layout;
+}
+
+nux::LinearLayout* View::CreateShortKeyEntryLayout(const char* shortkey, const char* description)
+{
+  nux::HLayout* layout = new nux::HLayout("EntryLayout", NUX_TRACKER_LOCATION);
+  nux::HLayout* shortkey_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
+  nux::HLayout* description_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
+
+  nux::StaticText* shortkey_view = new nux::StaticText(shortkey, NUX_TRACKER_LOCATION);
+  shortkey_view->SetTextAlignment(nux::StaticText::ALIGN_LEFT);
+  shortkey_view->SetTextPointSize(SHORTKEY_ENTRY_FONT_SIZE);
+  shortkey_view->SetMinimumWidth(SHORTKEY_COLUMN_WIDTH);
+  shortkey_view->SetMaximumWidth(SHORTKEY_COLUMN_WIDTH);
+
+  nux::StaticText* description_view = new nux::StaticText(description, NUX_TRACKER_LOCATION);
+  description_view->SetTextAlignment(nux::StaticText::ALIGN_LEFT);
+  description_view->SetTextPointSize(SHORTKEY_ENTRY_FONT_SIZE);
+  description_view->SetMinimumWidth(DESCRIPTION_COLUMN_WIDTH);
+  description_view->SetMaximumWidth(DESCRIPTION_COLUMN_WIDTH);
+
+  shortkey_layout->AddView(shortkey_view, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
+  shortkey_layout->SetContentDistribution(nux::MAJOR_POSITION_START);
+  shortkey_layout->SetMinimumWidth(SHORTKEY_COLUMN_WIDTH);
+  shortkey_layout->SetMaximumWidth(SHORTKEY_COLUMN_WIDTH);
+
+  description_layout->AddView(description_view, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
+  description_layout->SetContentDistribution(nux::MAJOR_POSITION_START);
+  description_layout->SetMinimumWidth(DESCRIPTION_COLUMN_WIDTH);
+  description_layout->SetMaximumWidth(DESCRIPTION_COLUMN_WIDTH);
+
+  layout->AddLayout(shortkey_layout, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
+  layout->AddLayout(description_layout, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
+  layout->SetSpaceBetweenChildren(INTER_SPACE_SHORTKEY_DESCRIPTION);
+  description_layout->SetContentDistribution(nux::MAJOR_POSITION_START);
+
+  return layout;
+}
+
+nux::LinearLayout* View::CreateIntermediateLayout()
+{
+  nux::VLayout* layout = new nux::VLayout(NUX_TRACKER_LOCATION);
+  layout->SetSpaceBetweenChildren(LINE_SPACING);
+
+  return layout;
 }
 
 void View::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
@@ -118,7 +180,6 @@ void View::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   nux::Geometry background_geo;
   
-  // FIXME
   background_geo.width = base.width;
   background_geo.height = base.height;
   background_geo.x = (base.width - background_geo.width)/2;
@@ -188,10 +249,6 @@ void View::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
 
   layout_->ProcessDraw(GfxContext, force_draw);
-
-  /*text_view_->SetBaseY(background_geo.y + 40);
-  text_view_->SetBaseX(background_geo.x + 200);
-  text_view_->Draw(GfxContext, force_draw);*/
 }
 
 
@@ -289,55 +346,47 @@ void View::DrawBackground(nux::GraphicsEngine& GfxContext, nux::Geometry const& 
   GfxContext.GetRenderStates().SetBlend(FALSE);
 }
 
-void View::UpdateColumns()
+void View::RenderColumns()
 {
+  int i = 0;
+  int column = 0;
+  
   for (auto category : model_->categories())
   {
-    int column = (category == "Launcher" or category == "Dash" or category == "Top Bar") ? 0 : 1;
+    // Three sections in the fist column...
+    if (i > 2)
+      column = 1;
+      
+    nux::LinearLayout* section_layout = CreateSectionLayout(category.c_str());
+    nux::LinearLayout* intermediate_layout = CreateIntermediateLayout();
+    intermediate_layout->SetContentDistribution(nux::MAJOR_POSITION_START);
     
-    nux::StaticCairoText* header = new nux::StaticCairoText("Testing");
-    header->SetLines(1);
-    header->SetTextColor(nux::color::White);
-    header->SetFont("Ubuntu Bold 13");
-    header->SetText(category);
-    columns_[column]->AddView(header, 1 , nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
-    columns_[column]->AddSpace(1, 1);
-  
     for (auto hint : model_->hints()[category])
     {
-      nux::HLayout *hlayout = new nux::HLayout();
-      hlayout->SinkReference();
-      columns_[column]->AddLayout(hlayout);
+      std::string str_value = hint->Prefix() + hint->Value() + hint->Postfix();
+      boost::replace_all(str_value, "&", "&amp;");
+      boost::replace_all(str_value, "<", "&lt;");
+      boost::replace_all(str_value, ">", "&gt;");
       
-       // "Files & folders", you are the culprit!
-       std::string value = hint->Prefix() + hint->Value() + hint->Postfix();
-       boost::replace_all(value, "&", "&amp;");
-       boost::replace_all(value, "<", "&lt;");
-       boost::replace_all(value, ">", "&gt;");
-      
-      nux::StaticText* shortcut_text = new nux::StaticText("Testing");
-      shortcut_text->SinkReference();
-      //shortcut_text->SetLines(1);
-      shortcut_text->SetTextColor(nux::color::White);
-      //shortcut_text->SetAlignment(nux::NUX_ALIGN_LEFT);
-      shortcut_text->SetFontName("Ubuntu Bold");
-      shortcut_text->SetText("<b>" + value + "</b>");
-      shortcut_text->SetMinimumWidth(200);
-      shortcut_text->SetMaximumWidth(200);
-      hlayout->AddView(shortcut_text, 0);
-      
-      nux::StaticCairoText* description_text = new nux::StaticCairoText("Testing");
-      description_text->SinkReference();
-      description_text->SetLines(1);
-      description_text->SetTextColor(nux::color::White);
-      description_text->SetFont("Ubuntu 11");
-      description_text->SetText(hint->Description());
-      hlayout->AddView(description_text);
+      intermediate_layout->AddLayout(CreateShortKeyEntryLayout(str_value.c_str(), hint->Description().c_str()), 0, nux::MINOR_POSITION_START, nux::MINOR_SIZE_FULL);
     }
-  }
     
-}
+    section_layout->AddLayout(intermediate_layout, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
+    if (i == 0 or i==1 or i==3 or i==4)
+    {
+      // Add space before the line
+      section_layout->AddView(new nux::SpaceLayout(20, 20, 20, 20), 0, nux::MINOR_POSITION_START, nux::MINOR_SIZE_MATCHCONTENT);
+      section_layout->AddView(new HSeparator(), 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+      // Add space after the line
+      section_layout->AddView(new nux::SpaceLayout(30, 30, 30, 30), 0, nux::MINOR_POSITION_START, nux::MINOR_SIZE_MATCHCONTENT);
+    }
+
+    columns_[column]->AddView(section_layout, 1, nux::MINOR_POSITION_START, nux::MINOR_SIZE_FULL);
+      
+    i++;
+  }
+}
   
 } // namespace shortcut
 } // namespace unity

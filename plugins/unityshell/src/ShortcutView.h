@@ -30,7 +30,6 @@
 
 #include "BackgroundEffectHelper.h"
 #include "ShortcutModel.h"
-#include "StaticCairoText.h"
 
 namespace unity
 {
@@ -63,8 +62,12 @@ protected:
 
 private:
   // Private methods
+  nux::LinearLayout* CreateSectionLayout(const char* section_name);
+  nux::LinearLayout* CreateShortKeyEntryLayout(const char* shortkey, const char* description);
+  nux::LinearLayout* CreateIntermediateLayout();
+
   void DrawBackground(nux::GraphicsEngine& GfxContext, nux::Geometry const& geo);
-  void UpdateColumns();
+  void RenderColumns();
   
   // Private members
   Model::Ptr model_;
@@ -75,7 +78,6 @@ private:
   nux::BaseTexture* rounding_texture_;
 
   nux::VLayout* layout_;
-  nux::StaticCairoText* text_view_;
   nux::HLayout* columns_layout_;
   std::vector<nux::VLayout*> columns_;
   
