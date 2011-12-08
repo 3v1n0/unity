@@ -40,7 +40,7 @@ class Object
 public:
   Object();
   explicit Object(T* val);
-  explicit Object(T* val, AddRef const& ref);
+  Object(T* val, AddRef const& ref);
 
   Object(Object const&);
   ~Object();
@@ -70,31 +70,19 @@ bool operator==(Object<T> const& lhs, Object<T> const& rhs)
 template <typename T>
 bool operator!=(Object<T> const& lhs, Object<T> const& rhs)
 {
- return !(lhs == rhs);
-}
-
-template <typename T>
-bool operator==(Object<T> const& lhs, T* rhs)
-{
- return (lhs.RawPtr() == rhs);
-}
-
-template <typename T>
-bool operator==(T* lhs, Object<T> const& rhs)
-{
- return (lhs == rhs.RawPtr());
+  return !(lhs == rhs);
 }
 
 template <typename T>
 bool operator!=(T* lhs, Object<T> const& rhs)
 {
- return !(lhs.RawPtr() == rhs);
+  return !(lhs == rhs.RawPtr());
 }
 
 template <typename G, typename T>
 Object<G> object_cast(Object<T> const& obj)
 {
- return Object<G>((G*)obj.RawPtr(), AddRef());
+  return Object<G>(reinterpret_cast<G*>(obj.RawPtr()), AddRef());
 }
 
 class Error : boost::noncopyable

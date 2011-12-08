@@ -68,7 +68,7 @@ void Object<T>::swap(Object<T>& other)
 template <typename T>
 Object<T>& Object<T>::operator=(T* val)
 {
-  Object<T> copy(val, AddRef());
+  Object<T> copy(val);
   swap(copy);
 
   return *this;

@@ -19,12 +19,13 @@
 
 #include <list>
 #include <algorithm>
-#include <gtest/gtest.h>
+#include <gmock/gmock.h>
 #include <UnityCore/GLibWrapper.h>
 
 #include "test_glib_object_utils.h"
 
 using namespace std;
+using namespace testing;
 using namespace unity;
 using namespace unity::glib;
 
@@ -32,19 +33,60 @@ namespace
 {
 typedef glib::Object<TestGObject> TestObjectWrapper;
 
+bool IsGOBject(TestGObject* t_obj)
+{
+  return G_IS_OBJECT(t_obj);
+}
+
+bool IsGOBject(TestObjectWrapper const& g_obj)
+{
+  return IsGOBject(g_obj.RawPtr());
+}
+
+bool IsNotGOBject(TestGObject* t_obj)
+{
+  return !IsGOBject(t_obj);
+}
+
+bool IsNotGOBject(TestObjectWrapper const& g_obj)
+{
+  return !IsGOBject(g_obj);
+}
+
+unsigned int RefCount(TestGObject* t_obj)
+{
+  return G_OBJECT(t_obj)->ref_count;
+}
+
+unsigned int RefCount(TestObjectWrapper const& g_obj)
+{
+  return RefCount(g_obj.RawPtr());
+}
+
+bool RefCountIs(TestObjectWrapper const& g_obj, unsigned int expected_ref)
+{
+  return (RefCount(g_obj) == expected_ref);
+}
+
+bool RefCountIs(TestGObject* t_obj, unsigned int expected_ref)
+{
+  return (RefCount(t_obj) == expected_ref);
+}
+
 TEST(TestGLibObject, ConstructEmpty)
 {
-  auto empty_obj = TestObjectWrapper();
-  EXPECT_EQ(empty_obj.RawPtr(), nullptr);
+  TestObjectWrapper empty_obj;
+  ASSERT_THAT(empty_obj.RawPtr(), IsNull());
+  EXPECT_TRUE(IsNotGOBject(empty_obj));
 }
 
 TEST(TestGLibObject, ConstructValidObject)
 {
   TestGObject *t_obj = test_gobject_new();
-  auto g_obj = TestObjectWrapper(t_obj);
+  TestObjectWrapper g_obj(t_obj);
+  ASSERT_THAT(t_obj, NotNull());
 
   EXPECT_EQ(g_obj.RawPtr(), t_obj);
-  EXPECT_NE(g_obj.RawPtr(), nullptr);
 }
 
 TEST(TestGLibObject, ConstructDoubleRef)
@@ -53,44 +95,51 @@ TEST(TestGLibObject, ConstructDoubleRef)
   {
     TestObjectWrapper g_obj_double_ref(t_obj, AddRef());
     EXPECT_EQ(g_obj_double_ref.RawPtr(), t_obj);
-    EXPECT_EQ(G_OBJECT(g_obj_double_ref.RawPtr())->ref_count, 2);
+    EXPECT_TRUE(RefCountIs(g_obj_double_ref, 2));
   }
-  EXPECT_EQ(G_OBJECT(t_obj)->ref_count, 1);
+  EXPECT_TRUE(RefCountIs(t_obj, 1));
   g_object_unref(G_OBJECT(t_obj));
 }
 
 TEST(TestGLibObject, ConstructInitialize)
 {
   TestGObject *t_obj = test_gobject_new();
-  TestObjectWrapper g_obj1;
-  g_obj1 = t_obj;
-  EXPECT_EQ(g_obj1.RawPtr(), t_obj);
+  ASSERT_THAT(t_obj, NotNull());
 
-  TestObjectWrapper g_obj2 = g_obj1;
-  EXPECT_EQ(g_obj1.RawPtr(), g_obj2.RawPtr());
+  TestObjectWrapper g_obj1(t_obj);
+  EXPECT_EQ(g_obj1.RawPtr(), t_obj);
 }
 
 TEST(TestGLibObject, ConstructCopy)
 {
   TestGObject *t_obj = test_gobject_new();
   TestObjectWrapper g_obj1(t_obj);
-  TestObjectWrapper g_obj2(g_obj1);
+  EXPECT_TRUE(RefCountIs(t_obj, 1));
 
-  EXPECT_NE(&g_obj1, &g_obj2);
+  TestObjectWrapper g_obj2(g_obj1);
+  EXPECT_TRUE(RefCountIs(t_obj, 2));
+
   EXPECT_EQ(g_obj1.RawPtr(), g_obj2.RawPtr());
 }
 
 TEST(TestGLibObject, AssignmentOperators)
 {
   TestGObject *t_obj = test_gobject_new();
-  TestObjectWrapper g_obj1;
-  TestObjectWrapper g_obj2;
 
-  g_obj1 = t_obj;
-  EXPECT_EQ(g_obj1.RawPtr(), t_obj);
+  {
+    TestObjectWrapper g_obj1;
+    TestObjectWrapper g_obj2;
 
-  g_obj2 = g_obj1;
-  EXPECT_EQ(g_obj1.RawPtr(), g_obj2.RawPtr());
+    g_obj1 = t_obj;
+    EXPECT_EQ(g_obj1.RawPtr(), t_obj);
+    EXPECT_TRUE(RefCountIs(t_obj, 1));
+
+    g_obj2 = g_obj1;
+    EXPECT_EQ(g_obj1.RawPtr(), g_obj2.RawPtr());
+    EXPECT_TRUE(RefCountIs(t_obj, 2));
+  }
+
+  EXPECT_FALSE(IsGOBject(t_obj));
 }
 
 TEST(TestGLibObject, AssignmentOperatorOnEqualObject)
@@ -102,7 +151,7 @@ TEST(TestGLibObject, AssignmentOperatorOnEqualObject)
 
   g_obj1 = g_obj2;
   EXPECT_EQ(g_obj1.RawPtr(), g_obj2.RawPtr());
-  EXPECT_EQ(G_OBJECT(g_obj1.RawPtr())->ref_count, 2);
+  EXPECT_TRUE(RefCountIs(g_obj1, 2));
 }
 
 TEST(TestGLibObject, EqualityOperators)
@@ -111,43 +160,51 @@ TEST(TestGLibObject, EqualityOperators)
   TestObjectWrapper g_obj1;
   TestObjectWrapper g_obj2;
 
+  // self equality checks
   EXPECT_TRUE(g_obj1 == g_obj1);
   EXPECT_FALSE(g_obj1 != g_obj1);
   EXPECT_TRUE(g_obj1 == g_obj2);
   EXPECT_FALSE(g_obj1 != g_obj2);
 
   g_obj1 = t_obj;
-  g_obj2 = TestObjectWrapper(t_obj, AddRef()); //Ref is needed!
+  EXPECT_TRUE(RefCountIs(g_obj1, 1));
+
+  // Ref is needed here, since the t_obj reference is already owned by g_obj1
+  g_obj2 = TestObjectWrapper(t_obj, AddRef());
+
+  // other object equality checks
   EXPECT_TRUE(g_obj1 == t_obj);
-  EXPECT_TRUE(g_obj1.RawPtr() == t_obj);
+  EXPECT_TRUE(t_obj == g_obj1);
   EXPECT_TRUE(g_obj1 == g_obj1);
   EXPECT_TRUE(g_obj1 == g_obj2);
   EXPECT_FALSE(g_obj1 != t_obj);
+  EXPECT_FALSE(t_obj != g_obj1);
   EXPECT_FALSE(g_obj1 != g_obj1);
   EXPECT_FALSE(g_obj1 != g_obj2);
 
-  t_obj = test_gobject_new();
-  g_obj2 = t_obj;
-  EXPECT_TRUE(g_obj2 == t_obj);
+  g_obj2 = test_gobject_new();
   EXPECT_FALSE(g_obj1 == g_obj2);
-  EXPECT_FALSE(g_obj2 != t_obj);
   EXPECT_TRUE(g_obj1 != g_obj2);
 }
 
 TEST(TestGLibObject, CastOperator)
 {
   TestGObject *t_obj = test_gobject_new();
-  TestObjectWrapper g_obj(t_obj);
-
-  EXPECT_TRUE(t_obj == (TestGObject*)g_obj);
+  EXPECT_TRUE(t_obj == (TestGObject*) TestObjectWrapper(t_obj));
 }
 
 TEST(TestGLibObject, CastObject)
 {
   TestObjectWrapper gt_obj(test_gobject_new());
-  auto g_obj = glib::object_cast<GObject>(gt_obj);
 
+  TestGObject* cast_copy = glib::object_cast<TestGObject>(gt_obj);
+  EXPECT_EQ(cast_copy, gt_obj.RawPtr());
+
+  Object<GObject> g_obj = glib::object_cast<GObject>(gt_obj);
   EXPECT_EQ(g_obj->ref_count, 2);
+
+  g_object_set_data(g_obj, "TestData", GINT_TO_POINTER(55));
+  EXPECT_EQ(GPOINTER_TO_INT(g_object_get_data(g_obj, "TestData")), 55);
 }
 
 TEST(TestGLibObject, BoolOperator)
@@ -187,12 +244,12 @@ TEST(TestGLibObject, ReleaseObject)
 {
   TestGObject *t_obj = test_gobject_new();
   TestObjectWrapper g_obj(t_obj);
-  EXPECT_EQ(g_obj, t_obj);
+  ASSERT_THAT(t_obj, NotNull());
 
+  // Release() doesn't unref the object.
   g_obj.Release();
-  EXPECT_NE(g_obj, t_obj);
   EXPECT_EQ(g_obj, 0);
-  EXPECT_EQ(G_OBJECT(t_obj)->ref_count, 1);
+  EXPECT_EQ(RefCount(t_obj), 1);
 
   g_object_unref(t_obj);
 }
@@ -219,8 +276,8 @@ TEST(TestGLibObject, SwapObjects)
     EXPECT_EQ(g_obj1, t_obj1);
     EXPECT_EQ(g_obj2, t_obj2);
 
-    EXPECT_EQ(object_cast<GObject>(g_obj1)->ref_count, 2);
-    EXPECT_EQ(object_cast<GObject>(g_obj2)->ref_count, 2);
+    EXPECT_EQ(RefCount(g_obj1), 1);
+    EXPECT_EQ(RefCount(g_obj2), 1);
   }
 
   EXPECT_FALSE(G_IS_OBJECT(t_obj1));
@@ -238,12 +295,16 @@ TEST(TestGLibObject, ListOperations)
   TestObjectWrapper g_obj4;
   TestObjectWrapper g_obj5;
 
+  EXPECT_EQ(RefCount(g_obj1), 1);
+
   obj_list.push_back(g_obj1);
   obj_list.push_back(g_obj2);
   obj_list.push_back(g_obj3);
   obj_list.push_back(g_obj4);
   obj_list.push_back(g_obj5);
   EXPECT_EQ(obj_list.size(), 5);
+
+  EXPECT_EQ(RefCount(g_obj1), 2);
 
   obj_list.remove(g_obj2);
   EXPECT_EQ(obj_list.size(), 4);
