@@ -31,7 +31,7 @@ class Monitor
 public:
 	void Start();
 	GVariant* Stop();
-	virtual std::string GetName () const = 0;
+	virtual std::string GetName() const = 0;
 
 protected:
 	virtual void StartMonitor () = 0;

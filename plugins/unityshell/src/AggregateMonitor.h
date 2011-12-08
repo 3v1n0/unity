@@ -34,7 +34,7 @@ class AggregateMonitor : public Monitor
 public:
   AggregateMonitor();
   ~AggregateMonitor();
-  std::string GetName () const;
+  std::string GetName() const;
 
 protected:
   void StartMonitor();

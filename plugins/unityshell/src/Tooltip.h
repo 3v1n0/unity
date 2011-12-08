@@ -121,9 +121,6 @@ private:
 
   bool _cairo_text_has_changed;
   void UpdateTexture();
-
-  // Introspection
-  gchar* _name;
 };
 }
 

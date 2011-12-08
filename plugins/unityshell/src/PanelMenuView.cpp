@@ -1336,7 +1336,7 @@ PanelMenuView::OnMouseMiddleClicked(int x, int y, unsigned long button_flags, un
 std::string
 PanelMenuView::GetName() const
 {
-  return NULL;
+  return "";
 }
 
 const gchar*

@@ -37,7 +37,7 @@ namespace
 
 GVariant* GetState(const gchar*);
 Introspectable* FindPieceToIntrospect(std::queue<Introspectable*> queue, 
-                                      const std::string pieceName);
+                                      std::string const& pieceName);
 
 const char* DebugDBusInterface::DBUS_DEBUG_OBJECT_PATH = "/com/canonical/Unity/Debug";
 
@@ -128,14 +128,14 @@ DebugDBusInterface::OnNameLost(GDBusConnection* connection, const gchar* name, g
 void
 DebugDBusInterface::HandleDBusMethodCall(GDBusConnection* connection,
                                          const gchar* sender,
-                                         const gchar* objectPath,
-                                         const gchar* interfaceName,
-                                         const gchar* methodName,
+                                         const gchar* object_path,
+                                         const gchar* interface_name,
+                                         const gchar* method_name,
                                          GVariant* parameters,
                                          GDBusMethodInvocation* invocation,
                                          gpointer user_data)
 {
-  if (g_strcmp0(methodName, "GetState") == 0)
+  if (g_strcmp0(method_name, "GetState") == 0)
   {
     GVariant* ret;
     const gchar* input;
@@ -154,7 +154,7 @@ DebugDBusInterface::HandleDBusMethodCall(GDBusConnection* connection,
 }
 
 GVariant*
-GetState(const std::string pieceName)
+GetState(std::string const& piece_name)
 {
   std::queue<Introspectable*> queue;
   queue.push(_parent_introspectable);
@@ -162,9 +162,9 @@ GetState(const std::string pieceName)
   // Since the empty string won't really match the name of the parent (Unity),
   // we make sure that we're able to accept a blank string and just define it to
   // mean the top level.
-  Introspectable* piece = (pieceName == "")
+  Introspectable* piece = (piece_name == "")
     ? _parent_introspectable
-    : FindPieceToIntrospect(queue, pieceName);
+    : FindPieceToIntrospect(queue, piece_name);
 
   // FIXME this might not work, make sure it does.
   if (piece == NULL)
@@ -177,7 +177,7 @@ GetState(const std::string pieceName)
  * Do a breadth-first search of the introspectable tree.
  */
 Introspectable*
-FindPieceToIntrospect(std::queue<Introspectable*> queue, const std::string pieceName)
+FindPieceToIntrospect(std::queue<Introspectable*> queue, std::string const& piece_name)
 {
   Introspectable* piece;
 
@@ -186,7 +186,7 @@ FindPieceToIntrospect(std::queue<Introspectable*> queue, const std::string piece
     piece = queue.front();
     queue.pop();
 
-    if (piece->GetName() == pieceName)
+    if (piece->GetName() == piece_name)
     {
       return piece;
     }
@@ -196,7 +196,7 @@ FindPieceToIntrospect(std::queue<Introspectable*> queue, const std::string piece
       queue.push(*it);
     }
 
-    FindPieceToIntrospect(queue, pieceName);
+    FindPieceToIntrospect(queue, piece_name);
   }
 
   return NULL;

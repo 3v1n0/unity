@@ -44,7 +44,6 @@ NUX_IMPLEMENT_OBJECT_TYPE(Tooltip);
 
 Tooltip::Tooltip()
 {
-  _name = g_strdup("Tooltip");
   _texture_bg = 0;
   _texture_mask = 0;
   _texture_outline = 0;
@@ -91,9 +90,6 @@ Tooltip::Tooltip()
 
 Tooltip::~Tooltip()
 {
-  if (_name)
-    g_free(_name);
-
   _tooltip_text->UnReference();
 
   if (_texture_bg) _texture_bg->UnReference();
@@ -658,7 +654,7 @@ void Tooltip::SetText(NString text)
 
 std::string Tooltip::GetName() const
 {
-  return g_strdup(_name);
+  return "ToolTip";
 }
 
 void Tooltip::AddProperties(GVariantBuilder* builder)
