@@ -79,6 +79,8 @@ add_executable (dash
                 ${UNITY_SRC}/PlacesVScrollBar.h
                 ${UNITY_SRC}/DashView.cpp
                 ${UNITY_SRC}/DashView.h
+                ${UNITY_SRC}/DashViewPrivate.cpp
+                ${UNITY_SRC}/DashViewPrivate.h
                 ${UNITY_SRC}/HomeView.cpp
                 ${UNITY_SRC}/HomeView.h
                 ${UNITY_SRC}/DashStyle.cpp

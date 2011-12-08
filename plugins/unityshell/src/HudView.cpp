@@ -58,7 +58,7 @@ View::View()
   rop.Blend = true;
   rop.SrcBlend = GL_ONE;
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
-  bg_layer_ = new nux::ColorLayer(nux::Color(0.0f, 0.0f, 0.0f, 0.9), true, rop);
+  bg_layer_ = new nux::ColorLayer(nux::Color(0.0f, 0.0f, 0.0f, 1.0), false, rop);
 
   SetupViews();
   search_bar_->key_down.connect (sigc::mem_fun (this, &View::OnKeyDown));
@@ -141,18 +141,12 @@ void View::SetupViews()
   layout_->AddLayout(content_layout_, 1, nux::MINOR_POSITION_TOP);
   SetLayout(layout_);
 
-  nux::LayeredLayout* search_composite = new nux::LayeredLayout();
-  search_composite->SetPaintAll(true);
-
   // add the search bar to the composite
   search_bar_ = new unity::hud::SearchBar();
   search_bar_->search_hint = "Type your command";
   search_bar_->search_changed.connect(sigc::mem_fun(this, &View::OnSearchChanged));
-
-  // add the search composite to the overall layout
-  search_composite->SetMinimumHeight(50);
   content_layout_->AddView(search_bar_, 0, nux::MINOR_POSITION_LEFT);
-
+  
   button_views_ = new nux::VLayout();
   button_views_->SetHorizontalExternalMargin(12);
   content_layout_->AddLayout(button_views_, 1, nux::MINOR_POSITION_LEFT);
@@ -169,8 +163,6 @@ void View::OnSearchChanged(std::string const& search_string)
 void View::OnKeyDown (unsigned long event_type, unsigned long keysym,
                       unsigned long event_state, const TCHAR* character,
                       unsigned short key_repeat_count)
-
-//bool View::InspectKeyEvent(unsigned int eventType, unsigned int keysym, const char* character)
 {
   if (keysym == NUX_VK_ESCAPE)
   {
@@ -205,12 +197,15 @@ void View::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
 void View::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
 {
   int bgs = 0;
-
+  
   gfx_context.PushClippingRectangle(GetGeometry());
 
+  gfx_context.GetRenderStates().SetBlend(true);
+  gfx_context.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
+  
   nux::GetPainter().PushLayer(gfx_context, bg_layer_->GetGeometry(), bg_layer_);
   bgs++;
-
+  
   if (IsFullRedraw())
   {
     nux::GetPainter().PushBackgroundStack();
