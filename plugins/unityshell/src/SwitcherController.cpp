@@ -49,6 +49,7 @@ Controller::Controller()
   bg_color_ = nux::Color(0.0, 0.0, 0.0, 0.5);
 
   UBusServer *ubus = ubus_server_get_default();
+  bg_update_handle_ =
   ubus_server_register_interest(ubus, UBUS_BACKGROUND_COLOR_CHANGED,
                                 (UBusCallback)&Controller::OnBackgroundUpdate,
                                 this);
@@ -58,6 +59,7 @@ Controller::~Controller()
 {
   if (view_window_)
     view_window_->UnReference();
+  ubus_server_unregister_interest(ubus_server_get_default(), bg_update_handle_);
 }
 
 void Controller::OnBackgroundUpdate(GVariant* data, Controller* self)
