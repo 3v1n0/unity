@@ -41,9 +41,7 @@ public:
 private:
   /* methods */
   static void OnBusAcquired(GDBusConnection* connection, const gchar* name, gpointer data);
-
   static void OnNameAcquired(GDBusConnection* connection, const gchar* name, gpointer data);
-
   static void OnNameLost(GDBusConnection* connection, const gchar* name, gpointer data);
   static void HandleDBusMethodCall(GDBusConnection* connection, 
                                    const gchar* sender, 
