@@ -52,6 +52,8 @@ public:
   void PrimaryMonitorGeometryChanged(nux::Geometry const& geo);
   void PushToFront();
 
+  void SetShowDesktopIcon(bool show_desktop_icon);
+
 private:
   class Impl;
   Impl* pimpl;

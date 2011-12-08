@@ -32,7 +32,7 @@
 namespace unity
 {
 
-class PanelIndicatorsView : public nux::View, public Introspectable
+class PanelIndicatorsView : public nux::View, public unity::debug::Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE(PanelIndicatorsView, nux::View);
 public:

@@ -24,7 +24,6 @@
 #include <map>
 #include <set>
 
-#include "Introspectable.h"
 #include "PanelIndicatorsView.h"
 #include "StaticCairoText.h"
 #include "WindowButtons.h"

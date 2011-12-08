@@ -22,6 +22,9 @@
 
 #include <memory>
 
+#include "Introspectable.h"
+#include <UnityCore/Variant.h>
+
 #include "SwitcherModel.h"
 #include "SwitcherView.h"
 
@@ -54,7 +57,7 @@ enum class ShowMode
 };
 
 
-class Controller : public sigc::trackable
+class Controller : public debug::Introspectable, public sigc::trackable
 {
 public:
   typedef std::shared_ptr<Controller> Ptr;
@@ -89,6 +92,11 @@ public:
   SwitcherView * GetView ();
 
   ui::LayoutWindowList ExternalRenderTargets ();
+
+protected:
+  // Introspectable methods
+  const gchar* GetName();
+  void AddProperties(GVariantBuilder* builder);
 
 private:
   enum DetailMode
