@@ -72,6 +72,7 @@ PlacesGroup::PlacesGroup()
   _group_layout->AddLayout(new nux::SpaceLayout(15,15,15,15), 0);
 
   _header_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
+  _header_layout->SetHorizontalInternalMargin(10);
   _group_layout->AddLayout(_header_layout, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FIX);
 
   _icon = new IconTexture("", 24);
@@ -79,6 +80,7 @@ PlacesGroup::PlacesGroup()
   _header_layout->AddView(_icon, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
   _text_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
+  _text_layout->SetHorizontalInternalMargin(15);
   _header_layout->AddLayout(_text_layout, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
   
   _name = new nux::StaticCairoText("", NUX_TRACKER_LOCATION);
@@ -87,6 +89,7 @@ PlacesGroup::PlacesGroup()
   _text_layout->AddView(_name, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
 
   _expand_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
+  _expand_layout->SetHorizontalInternalMargin(8);
   _text_layout->AddLayout(_expand_layout, 0, nux::MINOR_POSITION_END, nux::MINOR_SIZE_MATCHCONTENT);
 
   _expand_label = new nux::StaticCairoText("", NUX_TRACKER_LOCATION);
@@ -103,7 +106,7 @@ PlacesGroup::PlacesGroup()
   _expand_icon->SetOpacity(kExpandDefaultIconOpacity);
   _expand_icon->SetMinimumSize(arrow->GetWidth(), arrow->GetHeight());
   _expand_icon->SetVisible(false);
-  //_expand_layout->AddView(_expand_icon, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
+  _expand_layout->AddView(_expand_icon, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
   SetLayout(_group_layout);
 
@@ -156,8 +159,8 @@ PlacesGroup::SetName(const char* name)
 {
   // Spaces are on purpose, want padding to be proportional to the size of the text
   // Bear with me, I'm trying something different :)
-  const gchar* temp = "    %s    ";
-  gchar* tmp = NULL;
+  //const gchar* temp = "    %s    ";
+  //gchar* tmp = NULL;
   gchar* final = NULL;
   if (_cached_name != NULL)
   {
@@ -167,13 +170,14 @@ PlacesGroup::SetName(const char* name)
 
   _cached_name = g_strdup(name);
 
-  tmp = g_markup_escape_text(name, -1);
+  //tmp = g_markup_escape_text(name, -1);
+  final = g_markup_escape_text(name, -1);
 
-  final = g_strdup_printf(temp, tmp);
+  //final = g_strdup_printf(temp, tmp);
 
   _name->SetText(final);
 
-  g_free(tmp);
+  //g_free(tmp);
   g_free(final);
 }
 
@@ -218,7 +222,7 @@ void PlacesGroup::SetChildLayout(nux::Layout* layout)
 void
 PlacesGroup::RefreshLabel()
 {
-  const char* temp = "<small>%s</small>";
+  const char* temp = "<span size='small'>%s</span>";
   char*       result_string;
   char*       final;
 
@@ -319,7 +323,7 @@ void PlacesGroup::Draw(nux::GraphicsEngine& GfxContext,
 
   nux::Color col(0.15f, 0.15f, 0.15f, 0.15f);
 
-  nux::Color red(1.0, 0.0, 0.0, 1.0);
+  /*nux::Color red(1.0, 0.0, 0.0, 1.0);
   nux::Color green(0.0, 1.0, 0.0, 1.0);
   nux::Color blue(0.0, 0.0, 1.0, 1.0);
 
@@ -333,7 +337,7 @@ void PlacesGroup::Draw(nux::GraphicsEngine& GfxContext,
 
   nux::GetPainter().Paint2DQuadColor(GfxContext, _header_layout->GetGeometry(), red);
   nux::GetPainter().Paint2DQuadColor(GfxContext, _text_layout->GetGeometry(), green);
-  nux::GetPainter().Paint2DQuadColor(GfxContext, _expand_layout->GetGeometry(), blue);
+  nux::GetPainter().Paint2DQuadColor(GfxContext, _expand_layout->GetGeometry(), blue);*/
 
   if (_draw_sep)
   {
