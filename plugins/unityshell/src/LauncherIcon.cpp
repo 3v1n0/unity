@@ -534,7 +534,8 @@ void LauncherIcon::RecvMouseLeave()
 
 bool LauncherIcon::OpenQuicklist(bool default_to_first_item)
 {
-  auto menus = Menus();
+  std::list<DbusmenuMenuitem*> menus = Menus();
+
   if (menus.empty())
     return false;
 
