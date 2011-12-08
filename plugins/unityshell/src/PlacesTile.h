@@ -26,8 +26,6 @@
 #include <Nux/VLayout.h>
 #include <NuxImage/CairoGraphics.h>
 
-#include "Introspectable.h"
-
 namespace unity
 {
 

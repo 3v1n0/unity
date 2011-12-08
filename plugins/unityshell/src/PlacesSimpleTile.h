@@ -30,7 +30,7 @@
 namespace unity
 {
 
-class PlacesSimpleTile : public unity::Introspectable, public PlacesTile
+class PlacesSimpleTile : public unity::debug::Introspectable, public PlacesTile
 {
   NUX_DECLARE_OBJECT_TYPE(PlacesSimpleTile, PlacesTile);
 public:

@@ -1,5 +1,5 @@
 find_package (PkgConfig)
-pkg_check_modules (CORE_DEPS REQUIRED glib-2.0 gio-2.0 dee-1.0 sigc++-2.0 nux-core-1.0 gdk-pixbuf-2.0 unity)
+pkg_check_modules (CORE_DEPS REQUIRED glib-2.0 gio-2.0 dee-1.0 sigc++-2.0 nux-core-2.0 gdk-pixbuf-2.0 unity)
 
 execute_process (COMMAND ${PKG_CONFIG_EXECUTABLE} unity --variable lensesdir OUTPUT_VARIABLE _lensesdir OUTPUT_STRIP_TRAILING_WHITESPACE)
 
@@ -98,7 +98,7 @@ link_directories(${LIB_PATHS})
 # - If binary compatibility has been broken (eg removed or changed interfaces)
 #   change to C+1:0:0
 # - If the interface is the same as the previous version, change to C:R+1:A
-set (CORE_LIB_LT_CURRENT 4)
+set (CORE_LIB_LT_CURRENT 5)
 set (CORE_LIB_LT_REV 0)
 set (CORE_LIB_LT_AGE 0)
 set (CORE_LIB_LT_VERSION "${CORE_LIB_LT_CURRENT}:${CORE_LIB_LT_REV}:${CORE_LIB_LT_AGE}")

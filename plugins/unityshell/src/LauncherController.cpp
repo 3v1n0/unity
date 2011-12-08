@@ -75,6 +75,9 @@ public:
   void InsertExpoAction();
   void RemoveExpoAction();
 
+  void InsertDesktopIcon();
+  void RemoveDesktopIcon();
+
   void InsertTrash();
 
   void RegisterIcon(LauncherIcon* icon);
@@ -97,8 +100,10 @@ public:
   DeviceLauncherSection* device_section_;
   LauncherEntryRemoteModel remote_model_;
   SimpleLauncherIcon*    expo_icon_;
+  DesktopLauncherIcon*   desktop_launcher_icon_;
   nux::ObjectPtr<AbstractLauncherIcon> desktop_icon_;
   int                    num_workspaces_;
+  bool                   show_desktop_icon_;
 
   guint            bamf_timer_handler_id_;
 
@@ -112,6 +117,7 @@ Controller::Impl::Impl(Display* display)
   : matcher_(nullptr)
   , model_(new LauncherModel())
   , sort_priority_(0)
+  , show_desktop_icon_(false)
 {
   // NOTE: should the launcher itself hold the base window?
   // seems like it probably should...
@@ -151,6 +157,11 @@ Controller::Impl::Impl(Display* display)
   {
     InsertExpoAction();
   }
+
+  // Insert the "Show Desktop" launcher icon in the launcher...
+  if (show_desktop_icon_)
+    InsertDesktopIcon();
+
   InsertTrash();
 
   auto setup_bamf = [](gpointer user_data) -> gboolean
@@ -350,6 +361,20 @@ void Controller::Impl::RemoveExpoAction()
   model_->RemoveIcon(expo_icon_);
 }
 
+void Controller::Impl::InsertDesktopIcon()
+{
+  desktop_launcher_icon_ = new DesktopLauncherIcon(launcher_.GetPointer());
+  desktop_launcher_icon_->SetIconType(LauncherIcon::TYPE_DESKTOP);
+  desktop_launcher_icon_->SetShowInSwitcher(false);
+
+  RegisterIcon(desktop_launcher_icon_);
+}
+
+void Controller::Impl::RemoveDesktopIcon()
+{
+  model_->RemoveIcon(desktop_launcher_icon_);
+}
+
 void Controller::Impl::RegisterIcon(LauncherIcon* icon)
 {
   model_->AddIcon(icon);
@@ -540,6 +565,19 @@ Window Controller::launcher_input_window_id()
 void Controller::PushToFront()
 {
   pimpl->launcher_window_->PushToFront();
+}
+
+void Controller::SetShowDesktopIcon(bool show_desktop_icon)
+{
+  if (pimpl->show_desktop_icon_ == show_desktop_icon)
+    return;
+
+  pimpl->show_desktop_icon_ = show_desktop_icon;
+
+  if (pimpl->show_desktop_icon_)
+    pimpl->InsertDesktopIcon();
+  else
+    pimpl->RemoveDesktopIcon();
 }
 
 

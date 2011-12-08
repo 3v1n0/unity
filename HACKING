@@ -31,4 +31,12 @@ Please note that this will create a systemwide install of unity, if you are deve
 
 changing ~/staging to suit wherever you want to install files locally
 
+Standalone clients are not built by default, they require substantial build time investments and memory investments (500MB and will double your build time) - however they are very useful for development. to build them you can run the standalone clients make target
+  make standalone-clients all
+
+or if you have a specific client you care about you can build that client explictly
+  make dash
+
+Testing is handled through GTest, googles test system, we currently have three test targets; test-gtest, test-gtest-xless, test-gtest-dbus. tests that require Nux should be in test-gtest as they require X, tests that can run headless should be in test-gtest-xless and tests that require dbus should be run with test-gtest-dbus, which tests run with our test service.
+
 for more information see the README file

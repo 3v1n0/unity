@@ -93,7 +93,7 @@ enum
 
 static guint32 _service_signals[LAST_SIGNAL] = { 0 };
 
-static const gchar * indicator_order[][13] = {
+static const gchar * indicator_order[][2] = {
   {"libappmenu.so", NULL},                    /* indicator-appmenu" */
   {"libapplication.so", NULL},                /* indicator-application" */
   {"libapplication.so", "gsd-keyboard-xkb"},  /* keyboard layout selector */
@@ -371,15 +371,30 @@ get_entry_at (PanelService *self, gint x, gint y)
   return NULL;
 }
 
-static IndicatorObjectEntry *
-get_entry_by_id (const gchar *entry_id)
+static void
+panel_service_get_indicator_entry_by_id (PanelService *self, 
+                                         const gchar *entry_id,
+                                         IndicatorObjectEntry **entry,
+                                         IndicatorObject **object)
 {
-  IndicatorObjectEntry *entry;
-  
-  if (sscanf (entry_id, "%p", &entry) == 1)
-    return entry;
+  IndicatorObject *indicator;
+  IndicatorObjectEntry *probably_entry;
+  PanelServicePrivate *priv = self->priv;
 
-  return NULL;
+  /* FIXME: eeek, why do we even do this? */
+  if (sscanf (entry_id, "%p", &probably_entry) == 1)
+  {
+    /* check that there really is such IndicatorObjectEntry */
+    indicator = g_hash_table_lookup (priv->entry2indicator_hash,
+                                     probably_entry);
+    if (object) *object = indicator;
+    if (entry) *entry = indicator != NULL ? probably_entry : NULL;
+  }
+  else
+  {
+    if (object) *object = NULL;
+    if (entry) *entry = NULL;
+  }
 }
 
 static gboolean
@@ -1178,9 +1193,11 @@ panel_service_sync_geometry (PanelService *self,
                              gint width,
                              gint height)
 {
-  PanelServicePrivate *priv = self->priv;
-  IndicatorObjectEntry *entry = get_entry_by_id (entry_id);
-  IndicatorObject *object = g_hash_table_lookup (priv->entry2indicator_hash, entry);
+  IndicatorObject      *object;
+  IndicatorObjectEntry *entry;
+  PanelServicePrivate  *priv = self->priv;
+
+  panel_service_get_indicator_entry_by_id (self, entry_id, &entry, &object);
 
   if (entry)
     {
@@ -1230,9 +1247,9 @@ panel_service_sync_geometry (PanelService *self,
           geo->width = width;
           geo->height = height;
         }
-    }
 
-  g_signal_emit (self, _service_signals[GEOMETRIES_CHANGED], 0, object, entry, x, y, width, height);
+      g_signal_emit (self, _service_signals[GEOMETRIES_CHANGED], 0, object, entry, x, y, width, height);
+    }
 }
 
 static gboolean
@@ -1395,6 +1412,13 @@ on_active_menu_move_current (GtkMenu              *menu,
   activate_next_prev_menu (self, object, priv->last_entry, direction);
 }
 
+static void
+menu_deactivated (GtkWidget *menu)
+{
+  g_signal_handlers_disconnect_by_func (menu, menu_deactivated, NULL);
+  gtk_widget_destroy (menu);
+}
+
 void
 panel_service_show_entry (PanelService *self,
                           const gchar  *entry_id,
@@ -1403,10 +1427,12 @@ panel_service_show_entry (PanelService *self,
                           gint32        y,
                           gint32        button)
 {
-  PanelServicePrivate  *priv = self->priv;
-  IndicatorObjectEntry *entry = get_entry_by_id (entry_id);
-  IndicatorObject      *object = g_hash_table_lookup (priv->entry2indicator_hash, entry);
+  IndicatorObject      *object;
+  IndicatorObjectEntry *entry;
   GtkWidget            *last_menu;
+  PanelServicePrivate  *priv = self->priv;
+
+  panel_service_get_indicator_entry_by_id (self, entry_id, &entry, &object);
 
   g_return_if_fail (entry);
 
@@ -1445,7 +1471,7 @@ panel_service_show_entry (PanelService *self,
              stub menu for the duration of this scrub. */
           priv->last_menu = GTK_MENU (gtk_menu_new ());
           g_signal_connect (priv->last_menu, "deactivate",
-                            G_CALLBACK (gtk_widget_destroy), NULL);
+                            G_CALLBACK (menu_deactivated), NULL);
           g_signal_connect (priv->last_menu, "destroy",
                             G_CALLBACK (gtk_widget_destroyed), &priv->last_menu);
         }
@@ -1496,11 +1522,11 @@ panel_service_secondary_activate_entry (PanelService *self,
                                         const gchar  *entry_id,
                                         guint32       timestamp)
 {
-  PanelServicePrivate  *priv = self->priv;
-  IndicatorObjectEntry *entry = get_entry_by_id (entry_id);
-  g_return_if_fail (entry);
+  IndicatorObject      *object;
+  IndicatorObjectEntry *entry;
 
-  IndicatorObject *object = g_hash_table_lookup (priv->entry2indicator_hash, entry);
+  panel_service_get_indicator_entry_by_id (self, entry_id, &entry, &object);
+  g_return_if_fail (entry);
 
   g_signal_emit_by_name(object, INDICATOR_OBJECT_SIGNAL_SECONDARY_ACTIVATE, entry,
                         timestamp);
@@ -1511,11 +1537,12 @@ panel_service_scroll_entry (PanelService   *self,
                             const gchar    *entry_id,
                             gint32         delta)
 {
-  PanelServicePrivate  *priv = self->priv;
-  IndicatorObjectEntry *entry = get_entry_by_id (entry_id);
+  IndicatorObject      *object;
+  IndicatorObjectEntry *entry;
+
+  panel_service_get_indicator_entry_by_id (self, entry_id, &entry, &object);
   g_return_if_fail (entry);
 
-  IndicatorObject *object = g_hash_table_lookup (priv->entry2indicator_hash, entry);
   GdkScrollDirection direction = delta < 0 ? GDK_SCROLL_DOWN : GDK_SCROLL_UP;
 
   g_signal_emit_by_name(object, INDICATOR_OBJECT_SIGNAL_ENTRY_SCROLLED, entry,
