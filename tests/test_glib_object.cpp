@@ -134,6 +134,9 @@ TEST(TestGLibObject, AssignmentOperators)
     EXPECT_EQ(g_obj1.RawPtr(), t_obj);
     EXPECT_TRUE(RefCountIs(t_obj, 1));
 
+    g_obj1 = g_obj1;
+    EXPECT_TRUE(RefCountIs(t_obj, 1));
+
     g_obj2 = g_obj1;
     EXPECT_EQ(g_obj1.RawPtr(), g_obj2.RawPtr());
     EXPECT_TRUE(RefCountIs(t_obj, 2));
