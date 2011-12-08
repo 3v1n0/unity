@@ -57,9 +57,9 @@ Controller::Controller()
 
 Controller::~Controller()
 {
+  ubus_server_unregister_interest(ubus_server_get_default(), bg_update_handle_);
   if (view_window_)
     view_window_->UnReference();
-  ubus_server_unregister_interest(ubus_server_get_default(), bg_update_handle_);
 }
 
 void Controller::OnBackgroundUpdate(GVariant* data, Controller* self)
