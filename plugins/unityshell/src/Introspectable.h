@@ -26,12 +26,16 @@
 
 namespace unity
 {
+namespace debug
+{
 class Introspectable
 {
 typedef std::list<Introspectable*> IntrospectableList;
 
 public:
-  GVariant* Introspect();
+  Introspectable();
+  virtual ~Introspectable();
+  GVariant* Introspect(bool wrap = false);
   virtual std::string GetName() const = 0;
   void AddChild(Introspectable* child);
   void RemoveChild(Introspectable* child);
@@ -58,6 +62,8 @@ protected:
 
 private:
   std::list<Introspectable*> _children;
+  std::list<Introspectable*> _parents;
 };
+}
 }
 #endif

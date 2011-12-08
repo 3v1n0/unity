@@ -35,7 +35,7 @@
 namespace unity
 {
 
-class PanelIndicatorEntryView : public nux::TextureArea, public unity::Introspectable
+class PanelIndicatorEntryView : public nux::TextureArea, public unity::debug::Introspectable
 {
 public:
   typedef enum {

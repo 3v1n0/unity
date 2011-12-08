@@ -25,6 +25,8 @@
 #include "AbstractLauncherIcon.h"
 #include "LauncherModel.h"
 
+#include "Introspectable.h"
+
 #include <boost/shared_ptr.hpp>
 #include <sigc++/sigc++.h>
 
@@ -33,7 +35,7 @@ namespace unity
 namespace switcher
 {
 
-class SwitcherModel : public sigc::trackable
+class SwitcherModel : public debug::Introspectable, public sigc::trackable
 {
 
 public:
@@ -82,6 +84,11 @@ public:
   void Select(int index);
 
   sigc::signal<void, launcher::AbstractLauncherIcon*> selection_changed;
+
+protected:
+  // Introspectable methods
+  std::string GetName() const;
+  void AddProperties(GVariantBuilder* builder);
 
 private:
 

@@ -37,6 +37,8 @@ using unity::texture_from_cairo_graphics;
 // codebase, that is just rude.
 namespace nux
 {
+  NUX_IMPLEMENT_OBJECT_TYPE (StaticCairoText);
+
 StaticCairoText::StaticCairoText(const TCHAR* text,
                                  NUX_FILE_LINE_DECL) :
   View(NUX_FILE_LINE_PARAM),
@@ -175,7 +177,7 @@ StaticCairoText::Draw(GraphicsEngine& gfxContext,
   texxform.SetWrap(TEXWRAP_REPEAT, TEXWRAP_REPEAT);
   texxform.SetTexCoordType(TexCoordXForm::OFFSET_COORD);
 
-  t_u32 alpha = 0, src = 0, dest = 0;
+  unsigned int alpha = 0, src = 0, dest = 0;
 
   gfxContext.GetRenderStates().GetBlend(alpha, src, dest);
   gfxContext.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
@@ -228,6 +230,12 @@ StaticCairoText::SetText(NString text)
     UpdateTexture();
     sigTextChanged.emit(this);
   }
+}
+
+NString
+StaticCairoText::GetText()
+{
+  return _text;
 }
 
 void
@@ -508,6 +516,5 @@ StaticCairoText::AcceptKeyNavFocus()
 {
   return _accept_key_nav_focus;
 }
-
 
 }

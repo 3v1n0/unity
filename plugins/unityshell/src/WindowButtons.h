@@ -27,7 +27,7 @@
 
 namespace unity
 {
-class WindowButtons : public nux::HLayout, public Introspectable
+class WindowButtons : public nux::HLayout, public unity::debug::Introspectable
 {
   // These are the [close][minimize][restore] buttons on the panel when there
   // is a maximized window

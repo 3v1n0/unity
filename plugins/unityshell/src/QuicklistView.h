@@ -50,7 +50,7 @@
 class QuicklistMenuItem;
 class QuicklistMenuItemLabel;
 
-class QuicklistView : public nux::BaseWindow, public unity::Introspectable
+class QuicklistView : public nux::BaseWindow, public unity::debug::Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE(QuicklistView, nux::BaseWindow);
 public:
@@ -96,6 +96,10 @@ public:
   virtual bool InspectKeyEvent(unsigned int eventType,
                                unsigned int keysym,
                                const char* character);
+
+  //Required for a11y
+  QuicklistMenuItem* GetSelectedMenuItem();
+  sigc::signal<void> selection_change;
 
 private:
   void RecvCairoTextChanged(QuicklistMenuItem* item);

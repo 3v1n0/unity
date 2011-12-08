@@ -125,7 +125,7 @@ void ResultViewGrid::QueueLazyLoad()
 {
   if (lazy_load_handle_ == 0)
   {
-    lazy_load_handle_ = g_timeout_add(0, (GSourceFunc)(&ResultViewGrid::OnLazyLoad), this);
+    lazy_load_handle_ = g_idle_add_full (G_PRIORITY_DEFAULT, (GSourceFunc)(&ResultViewGrid::OnLazyLoad), this, NULL);
   }
   last_lazy_loaded_result_ = 0; // we always want to reset the lazy load index here
 }
@@ -483,6 +483,7 @@ void ResultViewGrid::OnKeyDown (unsigned long event_type, unsigned long event_ke
 
   ubus_.SendMessage(UBUS_RESULT_VIEW_KEYNAV_CHANGED,
                     g_variant_new("(iiii)", focused_x, focused_y, renderer_->width(), renderer_->height()));
+  selection_change.emit();
 
   NeedRedraw();
 }
@@ -521,11 +522,14 @@ void ResultViewGrid::OnOnKeyNavFocusChange(nux::Area *area)
 
     ubus_.SendMessage(UBUS_RESULT_VIEW_KEYNAV_CHANGED,
                       g_variant_new("(iiii)", focused_x, focused_y, renderer_->width(), renderer_->height()));
+    selection_change.emit();
   }
   else
   {
     selected_index_ = -1;
     focused_uri_.clear();
+
+    selection_change.emit();
   }
 
   NeedRedraw();
@@ -882,6 +886,12 @@ ResultViewGrid::DndSourceDragFinished(nux::DndAction result)
   last_mouse_down_y_ = -1;
   current_drag_uri_.clear();
   current_drag_icon_name_.clear();
+}
+
+int
+ResultViewGrid::GetSelectedIndex()
+{
+  return selected_index_;
 }
 
 }

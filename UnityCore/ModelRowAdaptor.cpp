@@ -41,7 +41,7 @@ RowAdaptorBase& RowAdaptorBase::operator=(RowAdaptorBase const& other)
   model_ = other.model_;
   iter_ = other.iter_;
   tag_ = other.tag_;
-  
+
   return *this;
 }
 
@@ -49,7 +49,11 @@ std::string RowAdaptorBase::GetStringAt(int position)
 {
   if (!model_ || !iter_)
     return "";
-  return dee_model_get_string(model_, iter_, position);
+  const gchar* value = dee_model_get_string(model_, iter_, position);
+  if (value)
+    return value;
+  else
+    return ""; // std::strings don't like null.
 }
 
 bool RowAdaptorBase::GetBoolAt(int position)

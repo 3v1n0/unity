@@ -37,7 +37,7 @@ namespace unity
 namespace dash
 {
 
-  class LensBar : public nux::View, public unity::Introspectable
+class LensBar : public nux::View, public unity::debug::Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE(LensBar, nux::View);
   typedef std::vector<LensBarIcon*> LensIcons;

@@ -17,7 +17,7 @@ if (COMPIZ_TEST_GET_TRANSIENTS_FOUND)
 			../../plugins/unityshell/src/inputremover.cpp
 			../x11-window.cpp
 			../x11-window-read-transients.cpp)
-
+        add_dependencies (test-get-transients unity-core-${UNITY_API_VERSION})
 	target_link_libraries (test-get-transients
 			       ${COMPIZ_TEST_GET_TRANSIENTS_LIBRARIES})
 

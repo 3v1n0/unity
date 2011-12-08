@@ -28,7 +28,6 @@
 #include <sigc++/sigc++.h>
 
 #include "IconTexture.h"
-#include "Introspectable.h"
 #include "StaticCairoText.h"
 
 namespace unity
@@ -36,6 +35,7 @@ namespace unity
 
 class PlacesGroup : public nux::View
 {
+  NUX_DECLARE_OBJECT_TYPE(PlacesGroup, nux::View);
 public:
 
   PlacesGroup();
@@ -43,6 +43,9 @@ public:
 
   void SetIcon(const char* icon);
   void SetName(const char* name);
+
+  nux::StaticCairoText* GetLabel();
+  nux::StaticCairoText* GetExpandLabel();
 
   void       SetChildView(nux::View* view);
   nux::View* GetChildView();
@@ -99,6 +102,7 @@ private:
   guint _n_total_items;
   char* _cached_name;
   bool  _draw_sep;
+
 };
 
 }

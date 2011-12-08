@@ -17,12 +17,18 @@
  * Authored by: Alex Launi <alex.launi@canonical.com>
  */
 
+#include <gio/gio.h>
+
 #ifndef _DEBUG_DBUS_INTERFACE_H
 #define _DEBUG_DBUS_INTERFACE_H 1
 
 class CompScreen;
 
 namespace unity
+{
+extern const std::string DBUS_BUS_NAME;
+
+namespace debug
 {
 class Introspectable;
 
@@ -32,14 +38,6 @@ public:
   DebugDBusInterface(Introspectable* introspectable, CompScreen* uscreen);
   ~DebugDBusInterface();
 
-  static const std::string UNITY_DBUS_BUS_NAME;
-  static const std::string UNITY_DBUS_DEBUG_OBJECT_PATH;
-  static const std::string UNITY_DBUS_AP_IFACE_NAME;
-  static const std::string UNITY_DBUS_INTROSPECTION_IFACE_NAME;
-  static const std::string UNITY_DBUS_AP_SIG_TESTFINISHED;
-  static const std::string SI_METHOD_NAME_GETSTATE;
-  static const std::string AP_METHOD_NAME_STARTTEST;
-
 private:
   /* methods */
   static void OnBusAcquired(GDBusConnection* connection, const gchar* name, gpointer data);
@@ -47,12 +45,24 @@ private:
   static void OnNameAcquired(GDBusConnection* connection, const gchar* name, gpointer data);
 
   static void OnNameLost(GDBusConnection* connection, const gchar* name, gpointer data);
+  static void HandleDBusMethodCall(GDBusConnection* connection, 
+                                   const gchar* sender, 
+                                   const gchar* object_path,
+                                   const gchar* interface_name, 
+                                   const gchar* method_name, 
+                                   GVariant* parameters,
+                                   GDBusMethodInvocation* invocation, 
+                                   gpointer user_data);
+  static const char* DBUS_DEBUG_OBJECT_PATH;
+  static const gchar introspection_xml[];
+  static GDBusInterfaceVTable interface_vtable;
 
   static GVariant* BuildFakeReturn();
 
   /* members */
   guint           _owner_id;
 };
+}
 }
 
 #endif /* _DEBUG_DBUS_INTERFACE_H */

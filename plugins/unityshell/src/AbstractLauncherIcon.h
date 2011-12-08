@@ -32,6 +32,7 @@
 #include <libdbusmenu-glib/menuitem.h>
 
 #include "DndData.h"
+#include "Introspectable.h"
 
 namespace unity
 {
@@ -67,7 +68,7 @@ public:
   Window target;
 };
 
-class AbstractLauncherIcon : public nux::InitiallyUnownedObject
+class AbstractLauncherIcon : public nux::InitiallyUnownedObject, public debug::Introspectable
 {
 public:
 
@@ -81,6 +82,7 @@ public:
     TYPE_FAVORITE,
     TYPE_APPLICATION,
     TYPE_EXPO,
+    TYPE_DESKTOP,
     TYPE_PLACE,
     TYPE_DEVICE,
     TYPE_TRASH,

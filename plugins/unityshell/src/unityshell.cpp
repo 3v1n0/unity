@@ -220,7 +220,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
      wt->Run(NULL);
      uScreen = this;
 
-     debugger = new DebugDBusInterface(this, this->screen);
+     debugger = new unity::debug::DebugDBusInterface(this, this->screen);
 
      _edge_timeout = optionGetLauncherRevealEdgeTimeout ();
      _in_paint = false;
@@ -244,6 +244,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetAutohideAnimationNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetDashBlurExperimentalNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetDevicesOptionNotify(boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+     optionSetShowDesktopIconNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetShowLauncherInitiate(boost::bind(&UnityScreen::showLauncherKeyInitiate, this, _1, _2, _3));
      optionSetShowLauncherTerminate(boost::bind(&UnityScreen::showLauncherKeyTerminate, this, _1, _2, _3));
      optionSetKeyboardFocusInitiate(boost::bind(&UnityScreen::setKeyboardFocusKeyInitiate, this, _1, _2, _3));
@@ -292,7 +293,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
 						      (UBusCallback)&UnityScreen::OnQuicklistEndKeyNav,
 						      this);
 
-     g_timeout_add(0, &UnityScreen::initPluginActions, this);
+     g_idle_add_full (G_PRIORITY_DEFAULT, &UnityScreen::initPluginActions, this, NULL);
      super_keypressed_ = false;
 
      GeisAdapter::Default()->Run();
@@ -1105,7 +1106,7 @@ void UnityScreen::handleEvent(XEvent* event)
     XDamageNotifyEvent *de = (XDamageNotifyEvent *) event;
     CompWindow* w = screen->findWindow (de->drawable);
 
-    if (w)
+    if (w and !(w->wmType() & CompWindowTypeDndMask))
     {
       nux::Geometry damage (de->area.x, de->area.y, de->area.width, de->area.height);
 
@@ -1977,7 +1978,7 @@ void UnityScreen::onRedrawRequested()
   if (_in_paint)
   {
     if (!_redraw_handle)
-      _redraw_handle = g_timeout_add (0, &UnityScreen::OnRedrawTimeout, this);
+      _redraw_handle = g_idle_add_full (G_PRIORITY_DEFAULT, &UnityScreen::OnRedrawTimeout, this, NULL);
   }
   else
   {
@@ -2072,6 +2073,9 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>::setFunctions (optionGetShowMinimizedWindows ());
       screen->enterShowDesktopModeSetEnabled (this, optionGetShowMinimizedWindows ());
       screen->leaveShowDesktopModeSetEnabled (this, optionGetShowMinimizedWindows ());
+      break;
+    case UnityshellOptions::ShowDesktopIcon:
+      launcher_controller_->SetShowDesktopIcon(optionGetShowDesktopIcon());
       break;
     default:
       break;
@@ -2395,15 +2399,9 @@ void UnityScreen::initLauncher()
   Launcher& launcher = launcher_controller_->launcher();
   launcher.hidden_changed.connect(sigc::mem_fun(this, &UnityScreen::OnLauncherHiddenChanged));
   AddChild(&launcher);
-  /* FIXME: this should not be manual, should be managed with a
-     show/hide callback like in GAIL*/
-  if (unity_a11y_initialized())
-  {
-    AtkObject *atk_obj = unity_util_accessible_add_window(launcher.GetParent());
-    atk_object_set_name(atk_obj, _("Launcher"));
-  }
 
   switcher_controller_.reset(new switcher::Controller());
+  AddChild(switcher_controller_.get());
 
   LOG_INFO(logger) << "initLauncher-Launcher " << timer.ElapsedSeconds() << "s";
 
@@ -2415,6 +2413,8 @@ void UnityScreen::initLauncher()
   /* Setup Places */
   dash_controller_.reset(new dash::Controller());
   dash_controller_->on_realize.connect(sigc::mem_fun(this, &UnityScreen::OnDashRealized));
+
+  AddChild(dash_controller_.get());
 
   launcher.SetHideMode(Launcher::LAUNCHER_HIDE_DODGE_WINDOWS);
   launcher.SetLaunchAnimation(Launcher::LAUNCH_ANIMATION_PULSE);

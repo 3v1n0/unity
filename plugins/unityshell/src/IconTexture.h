@@ -33,7 +33,7 @@
 namespace unity
 {
 
-class IconTexture : public nux::TextureArea, public unity::Introspectable
+class IconTexture : public nux::TextureArea, public unity::debug::Introspectable
 {
 public:
   IconTexture(nux::BaseTexture* texture, guint width, guint height);

@@ -26,13 +26,12 @@
 #include <Nux/VLayout.h>
 #include <NuxImage/CairoGraphics.h>
 
-#include "Introspectable.h"
-
 namespace unity
 {
 
 class PlacesTile : public nux::View
 {
+  NUX_DECLARE_OBJECT_TYPE(PlacesTile, nux::View);
 public:
   PlacesTile(NUX_FILE_LINE_PROTO, const void* id = NULL);
   ~PlacesTile();

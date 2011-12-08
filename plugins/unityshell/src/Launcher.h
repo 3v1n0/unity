@@ -61,7 +61,7 @@ namespace launcher
 class LauncherIcon;
 class LauncherModel;
 
-class Launcher : public Introspectable, public nux::View
+class Launcher : public unity::debug::Introspectable, public nux::View
 {
   NUX_DECLARE_OBJECT_TYPE(Launcher, nux::View);
 public:
