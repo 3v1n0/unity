@@ -69,6 +69,7 @@ private:
   bool visible_;
   nux::Color bg_color_;
   guint show_timer_;
+  guint bg_update_handle_;
 }; 
 
 } // namespace shortcut

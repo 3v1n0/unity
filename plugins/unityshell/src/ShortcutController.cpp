@@ -42,15 +42,17 @@ Controller::Controller(std::list<AbstractHint*>& hints)
   bg_color_ = nux::Color(0.0, 0.0, 0.0, 0.5);
 
   UBusServer *ubus = ubus_server_get_default();
-  ubus_server_register_interest(ubus, UBUS_BACKGROUND_COLOR_CHANGED,
-                                (UBusCallback)&Controller::OnBackgroundUpdate,
-                                this);
+  bg_update_handle_ = ubus_server_register_interest(ubus, UBUS_BACKGROUND_COLOR_CHANGED,
+                                                    (UBusCallback)&Controller::OnBackgroundUpdate,
+                                                    this);
 
   model_.reset(new Model(hints));
 }
 
 Controller::~Controller()
 {
+  ubus_server_unregister_interest(ubus_server_get_default(), bg_update_handle_);
+  
   if (view_window_)
     view_window_->UnReference();
 }
