@@ -100,7 +100,8 @@ TEST_F(TestIntrospection, TestAbsoluteQueries)
 {
   std::list<Introspectable*> results;
   std::string query = "/Unity/DashController";
-
+  
+  results = FindQueryStartPoints(query, root_.get());
   ASSERT_EQ(1, results.size());
   EXPECT_STREQ("DashController", results.front()->GetName().c_str());
 }
