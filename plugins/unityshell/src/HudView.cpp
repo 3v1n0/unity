@@ -45,6 +45,7 @@ namespace hud
 namespace
 {
 nux::logging::Logger logger("unity.hud.view");
+int icon_size = 42;
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(View);
@@ -116,7 +117,7 @@ void View::SetSuggestions(Hud::Suggestions suggestions)
 
 void View::SetIcon(std::string icon_name)
 {
-  icon_->SetByIconName(icon_name.c_str(), 64);
+  icon_->SetByIconName(icon_name.c_str(), icon_size);
 }
 
 // Gives us the width and height of the contents that will give us the best "fit",
@@ -131,12 +132,18 @@ nux::Geometry View::GetBestFitGeometry(nux::Geometry const& for_geo)
 void View::SetupViews()
 {
   layout_ = new nux::HLayout();
+  layout_->AddLayout(new nux::SpaceLayout(8,8,8,8), 0);
+  
+  icon_ = new unity::IconTexture("", icon_size, icon_size);
+  icon_->SetBaseSize(icon_size, icon_size);
+  icon_->SetMinMaxSize(icon_size, icon_size);
+  
+  nux::Layout* icon_layout = new nux::VLayout();
+  icon_layout->SetVerticalExternalMargin(12);
+  icon_layout->AddView(icon_, 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
+  layout_->AddLayout(icon_layout, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_MATCHCONTENT);
 
-  icon_ = new unity::IconTexture("", 64, 64);
-  icon_->SetBaseSize(64, 64);
-  icon_->SetMinMaxSize(64, 64);
-  layout_->AddView(icon_, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_MATCHCONTENT);
-
+  
   content_layout_ = new nux::VLayout();
   layout_->AddLayout(content_layout_, 1, nux::MINOR_POSITION_TOP);
   SetLayout(layout_);
