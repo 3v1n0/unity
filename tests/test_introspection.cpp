@@ -141,3 +141,16 @@ TEST_F(TestIntrospection, TestSimpleRelativeQueries)
     EXPECT_STREQ("Foo", p->GetName().c_str()); 
   }
 }
+
+TEST_F(TestIntrospection, TestComplexRelativeQueries)
+{
+  std::list<Introspectable*> results;
+  std::string query = "//DashController/Foo";
+
+  results = FindQueryStartPoints(query, root_.get());
+  ASSERT_EQ(3, results.size());
+  for(auto p : results)
+  {
+    EXPECT_STREQ("Foo", p->GetName().c_str()); 
+  }
+}
