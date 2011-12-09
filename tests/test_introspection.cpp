@@ -100,8 +100,26 @@ TEST_F(TestIntrospection, TestAbsoluteQueries)
 {
   std::list<Introspectable*> results;
   std::string query = "/Unity/DashController";
-  
+
   results = FindQueryStartPoints(query, root_.get());
   ASSERT_EQ(1, results.size());
   EXPECT_STREQ("DashController", results.front()->GetName().c_str());
+}
+
+TEST_F(TestIntrospection, TestMalformedRelativeQueries)
+{
+  std::list<Introspectable*> results;
+  std::string query = "Unity";
+
+  results = FindQueryStartPoints(query, root_.get());
+  ASSERT_EQ(1, results.size());
+  EXPECT_STREQ("Unity", results.front()->GetName().c_str()); 
+
+  query = "Foo";
+  results = FindQueryStartPoints(query, root_.get());
+  ASSERT_EQ(3, results.size());
+  for(auto p : results)
+  {
+    EXPECT_STREQ("Foo", p->GetName().c_str()); 
+  }
 }
