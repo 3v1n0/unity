@@ -60,6 +60,8 @@ public:
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual long PostLayoutManagement(long LayoutResult);
 
+  void SetMousePosition(int x, int y);
+
   void OnActiveChanged(PanelIndicatorEntryView* view, bool is_active);
   void OnActiveWindowChanged(BamfView* old_view, BamfView* new_view);
   void OnNameChanged(gchar* new_name, gchar* old_name);

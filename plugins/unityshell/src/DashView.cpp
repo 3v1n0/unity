@@ -121,6 +121,7 @@ void DashView::SetupViews()
 
   layout_->AddLayout(content_layout_, 1, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
   search_bar_ = new SearchBar();
+  AddChild(search_bar_);
   search_bar_->activated.connect(sigc::mem_fun(this, &DashView::OnEntryActivated));
   search_bar_->search_changed.connect(sigc::mem_fun(this, &DashView::OnSearchChanged));
   search_bar_->live_search_reached.connect(sigc::mem_fun(this, &DashView::OnLiveSearchReached));
@@ -542,16 +543,16 @@ void DashView::OnActivateRequest(GVariant* args)
 {
   glib::String uri;
   glib::String search_string;
+  dash::HandledType handled_type;
 
-  g_variant_get(args, "(sus)", &uri, NULL, &search_string);
+  g_variant_get(args, "(sus)", &uri, &handled_type, &search_string);
 
   std::string id = AnalyseLensURI(uri.Str());
 
   home_view_->search_string = "";
   lens_bar_->Activate(id);
 
-
-  if (id == "home.lens" || !visible_)
+  if ((id == "home.lens" && handled_type != GOTO_DASH_URI ) || !visible_)
     ubus_manager_.SendMessage(UBUS_DASH_EXTERNAL_ACTIVATION);
 }
 
