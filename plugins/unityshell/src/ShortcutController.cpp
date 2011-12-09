@@ -35,6 +35,8 @@ Controller::Controller(std::list<AbstractHint*>& hints)
   : view_window_(0)
   , visible_(false)
   , show_timer_(0)
+  , fade_in_animator_(NULL)
+  , fade_out_animator_(NULL)
 
 {
   bg_color_ = nux::Color(0.0, 0.0, 0.0, 0.5);
@@ -48,17 +50,54 @@ Controller::Controller(std::list<AbstractHint*>& hints)
   
   model_->Fill();
   ConstructView();
+  
+  fade_in_animator_ = new Animator(100);
+  fade_out_animator_ = new Animator(100);
+
+  fade_in_animator_->animation_updated.connect(sigc::mem_fun(this, &Controller::OnFadeInUpdated));
+  fade_in_animator_->animation_ended.connect(sigc::mem_fun(this, &Controller::OnFadeInEnded));
+  fade_out_animator_->animation_updated.connect(sigc::mem_fun(this, &Controller::OnFadeOutUpdated));
+  fade_out_animator_->animation_ended.connect(sigc::mem_fun(this, &Controller::OnFadeOutEnded));
 }
 
 Controller::~Controller()
 {
   ubus_server_unregister_interest(ubus_server_get_default(), bg_update_handle_);
   
+  if (fade_in_animator_)
+    delete fade_in_animator_;
+
+  if (fade_out_animator_)
+    delete fade_out_animator_;
+  
   if (view_window_)
     view_window_->UnReference();
     
   view_.Release();
 }
+
+
+void Controller::OnFadeInUpdated(double opacity)
+{
+  view_window_->SetOpacity(opacity);
+}
+
+void Controller::OnFadeInEnded()
+{
+  view_window_->SetOpacity(1.0);
+}
+
+void Controller::OnFadeOutUpdated(double progress)
+{
+  double opacity = CLAMP(1.0f - progress, 0.0f, 1.0f);
+  view_window_->SetOpacity(opacity);
+}
+
+void Controller::OnFadeOutEnded()
+{
+  view_window_->SetOpacity(0.0);
+}
+
 
 void Controller::OnBackgroundUpdate(GVariant* data, Controller* self)
 {
@@ -90,7 +129,8 @@ gboolean Controller::OnShowTimer(gpointer data)
   if (self->visible_)
   {
     self->view_->SetupBackground(true);
-    self->view_window_->SetOpacity(1.0);
+    self->fade_out_animator_->Stop();
+    self->fade_in_animator_->Start(self->view_window_->GetOpacity());
   }
 
   self->show_timer_ = 0;
@@ -138,7 +178,8 @@ void Controller::Hide()
   if (view_window_)
   {
     view_->SetupBackground(false);
-    view_window_->SetOpacity(0.0);
+    fade_in_animator_->Stop();
+    fade_out_animator_->Start(1.0 - view_window_->GetOpacity());
   }
 
   if (show_timer_)

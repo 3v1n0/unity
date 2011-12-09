@@ -26,6 +26,7 @@
 #include <Nux/HLayout.h>
 #include <NuxCore/Color.h>
 
+#include "Animator.h"
 #include "ShortcutView.h"
 #include "ShortcutModel.h"
 
@@ -56,6 +57,11 @@ private:
   // Private Methods
   void ConstructView();
   static void OnBackgroundUpdate(GVariant* data, Controller* self);
+  void OnFadeInUpdated(double opacity);
+  void OnFadeInEnded();
+  void OnFadeOutUpdated(double opacity);
+  void OnFadeOutEnded();
+
   static gboolean OnShowTimer(gpointer data);
   
   // Private Members
@@ -70,6 +76,9 @@ private:
   nux::Color bg_color_;
   guint show_timer_;
   guint bg_update_handle_;
+  
+  Animator* fade_in_animator_;
+  Animator* fade_out_animator_;
 }; 
 
 } // namespace shortcut
