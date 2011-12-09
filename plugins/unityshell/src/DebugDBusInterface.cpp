@@ -193,7 +193,7 @@ std::list<Introspectable*> FindQueryStartPoints(std::string& query, Introspectab
   std::list<std::string> query_parts;
   boost::algorithm::split(query_parts, query, boost::algorithm::is_any_of("/"));
   // Boost's split() implementation does not match it's documentation! According to the 
-  // docs, it's not supposed to add empty string, but it does, which is a PITA. This 
+  // docs, it's not supposed to add empty strings, but it does, which is a PITA. This 
   // next line removes them:
   query_parts.erase( std::remove_if( query_parts.begin(), 
                                       query_parts.end(), 
@@ -206,7 +206,6 @@ std::list<Introspectable*> FindQueryStartPoints(std::string& query, Introspectab
     LOG_DEBUG(logger) << "Query '" << query << "' is absolute.";
     // absolute query - start point is tree root node.
     start_points.push_back(tree_root);
-    query.erase(0,1);
   }
   else
   {
