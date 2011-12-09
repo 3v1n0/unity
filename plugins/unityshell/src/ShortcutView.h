@@ -50,7 +50,7 @@ public:
   void SetModel(Model::Ptr model);
   Model::Ptr GetModel();
 
-  void SetupBackground();
+  void SetupBackground(bool enabled);
 
   // Properties  
   nux::Property<nux::Color> background_color;

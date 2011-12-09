@@ -107,9 +107,9 @@ Model::Ptr View::GetModel()
   return model_;
 }
 
-void View::SetupBackground()
+void View::SetupBackground(bool enabled)
 {
-  bg_effect_helper_.enabled = true;
+  bg_effect_helper_.enabled = enabled;
 }
 
 nux::LinearLayout* View::CreateSectionLayout(const char* section_name)

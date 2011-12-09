@@ -76,7 +76,7 @@ bool Hint::Fill()
       {
           if (opt.name() == Arg2())
           {
-            Value = opt.value().action().keyToString();
+            Value = impl::FixShortcutFormat(opt.value().action().keyToString());
             return true;
           }
       }

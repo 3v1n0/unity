@@ -30,8 +30,6 @@ namespace
 {
 const unsigned int SUPER_TAP_DURATION = 650;
 } // anonymouse namespace;
-
-
   
 Controller::Controller(std::list<AbstractHint*>& hints)
   : view_window_(0)
@@ -47,6 +45,9 @@ Controller::Controller(std::list<AbstractHint*>& hints)
                                                     this);
 
   model_.reset(new Model(hints));
+  
+  model_->Fill();
+  ConstructView();
 }
 
 Controller::~Controller()
@@ -55,6 +56,8 @@ Controller::~Controller()
   
   if (view_window_)
     view_window_->UnReference();
+    
+  view_.Release();
 }
 
 void Controller::OnBackgroundUpdate(GVariant* data, Controller* self)
@@ -73,7 +76,6 @@ void Controller::Show()
     g_source_remove (show_timer_);
   show_timer_ = g_timeout_add(SUPER_TAP_DURATION, &Controller::OnShowTimer, this);
 
-  model_->Fill();
   visible_ = true;
 
   ubus_server_send_message(ubus_server_get_default(),
@@ -86,7 +88,10 @@ gboolean Controller::OnShowTimer(gpointer data)
   Controller* self = static_cast<Controller*>(data);
 
   if (self->visible_)
-    self->ConstructView();
+  {
+    self->view_->SetupBackground(true);
+    self->view_window_->SetOpacity(1.0);
+  }
 
   self->show_timer_ = 0;
   return FALSE;
@@ -112,14 +117,15 @@ void Controller::ConstructView()
 
   main_layout_->AddView(view_.GetPointer(), 1);
 
-  view_window_->SetGeometry(workarea_);
-  view_->SetupBackground();
+  view_->SetupBackground(false);
+  view_window_->SetOpacity(0.0);
   view_window_->ShowWindow(true);
 }
 
 void Controller::SetWorkspace(nux::Geometry geo)
 {
   workarea_ = geo;
+  view_window_->SetGeometry(workarea_);
 }
 
 void Controller::Hide()
@@ -129,17 +135,15 @@ void Controller::Hide()
     
   visible_ = false;
 
-  if (view_)
-    main_layout_->RemoveChildObject(view_.GetPointer());
-
   if (view_window_)
-    view_window_->ShowWindow(false);
+  {
+    view_->SetupBackground(false);
+    view_window_->SetOpacity(0.0);
+  }
 
   if (show_timer_)
     g_source_remove(show_timer_);
   show_timer_ = 0;
-
-  view_.Release();
 }
 
 bool Controller::Visible()
@@ -149,4 +153,3 @@ bool Controller::Visible()
 
 } // namespace shortcut
 } // namespace unity
-

@@ -1151,14 +1151,20 @@ bool UnityScreen::showLauncherKeyInitiate(CompAction* action,
   EnsureSuperKeybindings ();
   
   if (enable_shortcut_overlay_ and !shortcut_controller_->Visible())
-  {    
+  { 
+    static int i = 0;   
     // FIXME  
-    int device = screen->outputDeviceForPoint(pointerX, pointerY);
-    shortcut_controller_->SetWorkspace(nux::Geometry(screen->outputDevs()[device].x1() + (1366-1000)/2,
+    if (!i)
+    {
+      int device = screen->outputDeviceForPoint(pointerX, pointerY);
+      shortcut_controller_->SetWorkspace(nux::Geometry(screen->outputDevs()[device].x1() + (1366-1000)/2,
                                        screen->outputDevs()[device].y1() + (768-700)/2,
                                        1000, 700));
+                                     }
 
     shortcut_controller_->Show();
+    
+    i++;
    }
   
   return false;
@@ -2496,7 +2502,7 @@ void UnityScreen::InitHints()
   hints_.push_back(new shortcut::Hint(_("Windows"), "", "", _("Spreads all windows in current workspace."), shortcut::COMPIZ_OPTION, "scale", "initiate_output_key"));
   hints_.push_back(new shortcut::Hint(_("Windows"), "", "", _("Minimises all windows."), shortcut::COMPIZ_OPTION, "core", "show_desktop_key"));
   // I don't know if it is really hardcoded, but I can't find where this option is stored.
-  hints_.push_back(new shortcut::Hint(_("Windows"), "", "", _("Open window accessibility menu."), shortcut::HARDCODED_OPTION, "Alt+Space"));
+  hints_.push_back(new shortcut::Hint(_("Windows"), "", "", _("Open window accessibility menu."), shortcut::HARDCODED_OPTION, "Alt + Space"));
   hints_.push_back(new shortcut::Hint(_("Windows"), "", "", _("Maximises current window."), shortcut::COMPIZ_OPTION, "core", "maximize_window_key"));
   hints_.push_back(new shortcut::Hint(_("Windows"), "", "", _("Un-maximises current window."), shortcut::COMPIZ_OPTION, "core", "unmaximize_window_key"));
   hints_.push_back(new shortcut::Hint(_("Windows"), "", "", _("Minimises current window."), shortcut::COMPIZ_OPTION, "core", "minimize_window_key"));
