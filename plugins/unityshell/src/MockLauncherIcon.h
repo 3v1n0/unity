@@ -47,6 +47,10 @@ public:
     tooltip_text = "Mock Icon";
   }
 
+  const gchar* GetName() { return "MockLauncherIcon"; }
+  
+  void AddProperties(GVariantBuilder* builder) {}
+
   void HideTooltip() {}
 
   void    SetShortcut(guint64 shortcut) {}

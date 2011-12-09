@@ -38,7 +38,7 @@ namespace unity
 namespace dash
 {
 
-class Controller : public unity::Introspectable
+class Controller : public unity::debug::Introspectable
 {
 public:
   typedef std::shared_ptr<Controller> Ptr;

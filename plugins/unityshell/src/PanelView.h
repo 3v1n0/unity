@@ -39,7 +39,7 @@
 namespace unity
 {
 
-class PanelView : public unity::Introspectable, public nux::View
+class PanelView : public unity::debug::Introspectable, public nux::View
 {
   NUX_DECLARE_OBJECT_TYPE(PanelView, nux::View);
 public:
@@ -70,6 +70,7 @@ public:
   void EndFirstMenuShow();
 
   void SetOpacity(float opacity);
+  void SetOpacityMaximizedToggle(bool enabled);
 
   void TrackMenuPointer();
 
@@ -110,6 +111,7 @@ private:
   nux::Color  _bg_color;
   bool        _is_dirty;
   float       _opacity;
+  bool        _opacity_maximized_toggle;
   bool        _needs_geo_sync;
   bool        _is_primary;
   int         _monitor;
@@ -122,6 +124,7 @@ private:
   nux::Point  _tracked_pointer_pos;
 
   std::vector<sigc::connection> _on_indicator_updated_connections;
+  std::vector<sigc::connection> _maximized_opacity_toggle_connections;
   BackgroundEffectHelper bg_effect_helper_;
   nux::ObjectPtr <nux::IOpenGLBaseTexture> bg_blur_texture_;
 };

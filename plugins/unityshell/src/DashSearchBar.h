@@ -44,7 +44,7 @@ namespace dash
 
 using namespace unity::glib;
 
-class SearchBar : public unity::Introspectable, public nux::View
+class SearchBar : public unity::debug::Introspectable, public nux::View
 {
   NUX_DECLARE_OBJECT_TYPE(SearchBar, nux::View);
 public:

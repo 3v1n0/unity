@@ -390,6 +390,7 @@ const gchar* SearchBar::GetChildsName()
 void SearchBar::AddProperties(GVariantBuilder* builder)
 {
   unity::variant::BuilderWrapper(builder).add(GetGeometry());
+  g_variant_builder_add (builder, "{sv}", "search_string", g_variant_new_string (pango_entry_->GetText().c_str()) );
 }
 
 }

@@ -47,6 +47,7 @@ public:
 
   // NOTE: nux::Property maybe?
   void SetOpacity(float opacity);
+  void SetOpacityMaximizedToggle(bool enabled);
   float opacity() const;
 
 private:
