@@ -43,6 +43,13 @@ enum HandledType
   GOTO_DASH_URI
 };
 
+enum ViewType
+{
+  HIDDEN=0,
+  HOME_VIEW,
+  LENS_VIEW
+};
+
 class Lens : public sigc::trackable, boost::noncopyable
 {
 public:
@@ -82,7 +89,7 @@ public:
   nux::RWProperty<Filters::Ptr> filters;
   nux::RWProperty<bool> connected;
 
-  nux::Property<bool> active;
+  nux::Property<ViewType> view_type;
 
   sigc::signal<void, Hints const&> search_finished;
   sigc::signal<void, Hints const&> global_search_finished;

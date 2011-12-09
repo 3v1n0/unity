@@ -59,7 +59,7 @@ public:
 
   nux::Property<std::string> search_string;
   nux::Property<bool> filters_expanded;
-  nux::Property<bool> active;
+  nux::Property<ViewType> view_type;
   nux::Property<bool> can_refine_search;
 
   sigc::signal<void, std::string const&> uri_activated;
@@ -78,7 +78,7 @@ private:
   void OnColumnsChanged();
   void OnFilterAdded(Filter::Ptr filter);
   void OnFilterRemoved(Filter::Ptr filter);
-  void OnActiveChanged(bool is_active);
+  void OnViewTypeChanged(ViewType view_type);
   void QueueFixRenderering();
 
   static gboolean FixRenderering(LensView* self);

@@ -678,13 +678,15 @@ void DashView::OnLensBarActivated(std::string const& id)
     return;
   }
 
+  LensView* view = active_lens_view_ = lens_views_[id];
+
   for (auto it: lens_views_)
   {
-    it.second->SetVisible(it.first == id);
-    it.second->active = it.first == id;
+    bool id_matches = it.first == id;
+    it.second->SetVisible(id_matches);
+    it.second->view_type = id_matches ? LENS_VIEW : (view == home_view_ ? HOME_VIEW : HIDDEN);
   }
 
-  LensView* view = active_lens_view_ = lens_views_[id];
   search_bar_->search_string = view->search_string;
   if (view != home_view_)
     search_bar_->search_hint = view->lens()->search_hint;

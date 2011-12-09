@@ -107,7 +107,7 @@ LensView::LensView(Lens::Ptr lens)
   lens_->connected.changed.connect([&](bool is_connected) { if (is_connected) initial_activation_ = true; });
   search_string.changed.connect([&](std::string const& search) { lens_->Search(search);  });
   filters_expanded.changed.connect([&](bool expanded) { fscroll_view_->SetVisible(expanded); QueueRelayout(); OnColumnsChanged(); });
-  active.changed.connect(sigc::mem_fun(this, &LensView::OnActiveChanged));
+  view_type.changed.connect(sigc::mem_fun(this, &LensView::OnViewTypeChanged));
 
   ubus_.RegisterInterest(UBUS_RESULT_VIEW_KEYNAV_CHANGED, [this] (GVariant* data) {
     // we get this signal when a result view keynav changes,
@@ -347,16 +347,16 @@ void LensView::OnFilterRemoved(Filter::Ptr filter)
   filter_bar_->RemoveFilter(filter);
 }
 
-void LensView::OnActiveChanged(bool is_active)
+void LensView::OnViewTypeChanged(ViewType view_type)
 {
-  if (is_active && initial_activation_)
+  if (view_type != HIDDEN && initial_activation_)
   {
     /* We reset the lens for ourselves, in case this is a restart or something */
     lens_->Search("");
     initial_activation_ = false;
   }
 
-  lens_->active = is_active;
+  lens_->view_type = view_type;
 }
 
 void LensView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)

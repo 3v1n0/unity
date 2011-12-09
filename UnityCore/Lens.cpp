@@ -70,7 +70,7 @@ public:
                         string const& global_results_model_name,
                         string const& categories_model_name,
                         string const& filters_model_name);
-  void OnActiveChanged(bool is_active);
+  void OnViewTypeChanged(ViewType view_type);
 
   void GlobalSearch(std::string const& search_string);
   void Search(std::string const& search_string);
@@ -168,7 +168,8 @@ Lens::Impl::~Impl()
 void Lens::Impl::OnProxyConnected()
 {
   proxy_.Call("InfoRequest");
-  proxy_.Call("SetActive", g_variant_new("(b)", owner_->active ? TRUE : FALSE));
+  ViewType current_view_type = owner_->view_type;
+  proxy_.Call("SetViewType", g_variant_new("(u)", current_view_type));
 }
 
 void Lens::Impl::OnProxyDisconnected()
@@ -303,9 +304,9 @@ void Lens::Impl::UpdateProperties(bool search_in_global,
   results_->swarm_name = results_model_name;
 }
 
-void Lens::Impl::OnActiveChanged(bool is_active)
+void Lens::Impl::OnViewTypeChanged(ViewType view_type)
 {
-  proxy_.Call("SetActive", g_variant_new("(b)", is_active ? TRUE : FALSE));
+  proxy_.Call("SetViewType", g_variant_new("(u)", view_type));
 }
 
 void Lens::Impl::GlobalSearch(std::string const& search_string)
@@ -508,7 +509,7 @@ Lens::Lens(string const& id_,
   categories.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::categories));
   filters.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::filters));
   connected.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::connected));
-  active.changed.connect(sigc::mem_fun(pimpl, &Lens::Impl::OnActiveChanged));
+  view_type.changed.connect(sigc::mem_fun(pimpl, &Lens::Impl::OnViewTypeChanged));
 }
 
 Lens::~Lens()
