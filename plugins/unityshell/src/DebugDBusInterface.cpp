@@ -251,33 +251,47 @@ std::list<Introspectable*> FindQueryStartPoints(std::string& query, Introspectab
     dbg += p + ":";
   }
   LOG_DEBUG(logger) << dbg;
-
+  LOG_DEBUG(logger) << start_points.size() << "Start points identified";
   query_parts.pop_front();
-
-  auto query_it = query_parts.begin();
-  while (!start_points.empty())
+  typedef std::pair<Introspectable*, std::list<std::string>::iterator> node_match_pair;
+  std::queue<node_match_pair> traverse_queue;
+  foreach(Introspectable *node, start_points)
   {
-    Introspectable *node = start_points.front();
-    start_points.pop_front();
+    traverse_queue.push(node_match_pair(node, query_parts.begin()));
+  }
+  
+  while (!traverse_queue.empty())
+  {
+    node_match_pair p = traverse_queue.front();
+    traverse_queue.pop();
+
+    Introspectable *node = p.first;
+    auto query_it = p.second;
+
+    LOG_DEBUG(logger) <<  "Processing start point: " << node << "(" << node->GetName() << ")";
+
 
     if (query_it == query_parts.end())
     {
       LOG_DEBUG(logger) << "Reached end of query string - we must have found a match!";
       // found a match:
       results.push_back(node);
-      query_it = query_parts.begin();
     }
     else
     {
+      LOG_DEBUG(logger) << "String iterator looks at:" << *query_it;
+      std::string match_name = *query_it;
       // push all children of current node to start of queue, advance search iterator, and loop again.
       foreach (Introspectable *child, node->GetIntrospectableChildren())
       {
-        if (child->GetName() == *query_it)
+        if (child->GetName() == match_name)
         {
-          start_points.push_front(child);
+          LOG_DEBUG(logger) << "Node's child: " << child << "(" << child->GetName() << ") matches next part of query string.";
+          auto it_copy(query_it);
+          ++it_copy;
+          traverse_queue.push(node_match_pair(child, it_copy));
         }
       }
-      ++query_it;
     }
   }
   return results;
