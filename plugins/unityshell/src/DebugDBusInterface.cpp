@@ -248,7 +248,7 @@ std::list<Introspectable*> FindQueryStartPoints(std::string& query, Introspectab
   std::string dbg;
   foreach (std::string p, query_parts)
   {
-    dbg += p;   
+    dbg += p + ":";
   }
   LOG_DEBUG(logger) << dbg;
 
@@ -262,6 +262,7 @@ std::list<Introspectable*> FindQueryStartPoints(std::string& query, Introspectab
 
     if (query_it == query_parts.end())
     {
+      LOG_DEBUG(logger) << "Reached end of query string - we must have found a match!";
       // found a match:
       results.push_back(node);
       query_it = query_parts.begin();
@@ -271,7 +272,10 @@ std::list<Introspectable*> FindQueryStartPoints(std::string& query, Introspectab
       // push all children of current node to start of queue, advance search iterator, and loop again.
       foreach (Introspectable *child, node->GetIntrospectableChildren())
       {
-        start_points.push_front(child);
+        if (child->GetName() == *query_it)
+        {
+          start_points.push_front(child);
+        }
       }
       ++query_it;
     }
