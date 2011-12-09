@@ -182,7 +182,7 @@ GetState(std::string const& query)
  */
 std::list<Introspectable*> FindQueryStartPoints(std::string& query, Introspectable* tree_root)
 {
-  std::deque<Introspectable*> start_points;
+  std::list<Introspectable*> start_points;
   
   // Allow user to be lazy when specifying root node.
   if (query == "" || query == "/")

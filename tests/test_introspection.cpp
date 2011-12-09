@@ -154,3 +154,20 @@ TEST_F(TestIntrospection, TestComplexRelativeQueries)
     EXPECT_STREQ("Foo", p->GetName().c_str()); 
   }
 }
+
+TEST_F(TestIntrospection, TestQueriesWithNoResults)
+{
+  std::list<Introspectable*> results;
+  std::string query = "//Does/Not/Exist";
+
+  results = FindQueryStartPoints(query, root_.get());
+  ASSERT_EQ(0, results.size());
+  
+  query = "DoesNotEverExist";
+  results = FindQueryStartPoints(query, root_.get());
+  ASSERT_EQ(0, results.size());
+
+  query = "/Does/Not/Ever/Exist";
+  results = FindQueryStartPoints(query, root_.get());
+  ASSERT_EQ(0, results.size());
+}
