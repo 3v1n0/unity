@@ -53,9 +53,13 @@ View::View(NUX_FILE_LINE_DECL)
   background_corner_ = nux::CreateTexture2DFromFile(PKGDATADIR"/switcher_corner.png", -1, true);
   rounding_texture_ = nux::CreateTexture2DFromFile(PKGDATADIR"/switcher_round_rect.png", -1, true);
 
-  nux::StaticText* header_view = new nux::StaticText(_("Keyboard Shortcuts"), NUX_TRACKER_LOCATION);
+  std::string header = "<b>";
+  header += _("Keyboard Shortcuts");
+  header += "</b>";
+  
+  nux::StaticText* header_view = new nux::StaticText(header.c_str(), NUX_TRACKER_LOCATION);
   header_view->SetTextPointSize(15);
-  header_view->SetFontName("Ubuntu Bold");
+  header_view->SetFontName("Ubuntu");
   layout_->AddView(header_view, 1 , nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
   
   layout_->AddView(new HSeparator(), 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);  
@@ -111,10 +115,14 @@ void View::SetupBackground()
 nux::LinearLayout* View::CreateSectionLayout(const char* section_name)
 {
   nux::VLayout* layout = new nux::VLayout(NUX_TRACKER_LOCATION);
+  
+  std::string name = "<b>";
+  name += std::string(section_name);
+  name += "</b>";
 
-  nux::StaticText* section_name_view = new nux::StaticText(section_name, NUX_TRACKER_LOCATION);
+  nux::StaticText* section_name_view = new nux::StaticText(name.c_str(), NUX_TRACKER_LOCATION);
   section_name_view->SetTextPointSize(SECTION_NAME_FONT_SIZE);
-  section_name_view->SetFontName("Ubuntu Bold");
+  section_name_view->SetFontName("Ubuntu");
   layout->AddView(section_name_view, 0, nux::MINOR_POSITION_START, nux::MINOR_SIZE_MATCHCONTENT);
   layout->AddView(new nux::SpaceLayout(20, 20, 20, 20), 0, nux::MINOR_POSITION_START, nux::MINOR_SIZE_MATCHCONTENT);
 
@@ -127,14 +135,20 @@ nux::LinearLayout* View::CreateShortKeyEntryLayout(const char* shortkey, const c
   nux::HLayout* shortkey_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
   nux::HLayout* description_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
-  nux::StaticText* shortkey_view = new nux::StaticText(shortkey, NUX_TRACKER_LOCATION);
+  std::string value = "<b>";
+  value += std::string(shortkey);
+  value += "</b>";
+
+  nux::StaticText* shortkey_view = new nux::StaticText(value.c_str(), NUX_TRACKER_LOCATION);
   shortkey_view->SetTextAlignment(nux::StaticText::ALIGN_LEFT);
+  shortkey_view->SetFontName("Ubuntu");
   shortkey_view->SetTextPointSize(SHORTKEY_ENTRY_FONT_SIZE);
   shortkey_view->SetMinimumWidth(SHORTKEY_COLUMN_WIDTH);
   shortkey_view->SetMaximumWidth(SHORTKEY_COLUMN_WIDTH);
 
   nux::StaticText* description_view = new nux::StaticText(description, NUX_TRACKER_LOCATION);
   description_view->SetTextAlignment(nux::StaticText::ALIGN_LEFT);
+  shortkey_view->SetFontName("Ubuntu");
   description_view->SetTextPointSize(SHORTKEY_ENTRY_FONT_SIZE);
   description_view->SetMinimumWidth(DESCRIPTION_COLUMN_WIDTH);
   description_view->SetMaximumWidth(DESCRIPTION_COLUMN_WIDTH);
