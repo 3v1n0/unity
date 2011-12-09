@@ -49,16 +49,25 @@ public:
   TestIntrospection()
   : root_(new MockIntrospectable("Unity")),
   dc_(new MockIntrospectable("DashController")),
-  pc_(new MockIntrospectable("PanelController"))
+  pc_(new MockIntrospectable("PanelController")),
+  foo1_(new MockIntrospectable("Foo")),
+  foo2_(new MockIntrospectable("Foo")),
+  foo3_(new MockIntrospectable("Foo"))
   {
     root_->AddChild(dc_.get());
     root_->AddChild(pc_.get());
+    dc_->AddChild(foo1_.get());
+    dc_->AddChild(foo2_.get());
+    dc_->AddChild(foo3_.get());
   }
 
 protected:
   std::shared_ptr<MockIntrospectable> root_;
   std::shared_ptr<MockIntrospectable> dc_;
   std::shared_ptr<MockIntrospectable> pc_;
+  std::shared_ptr<MockIntrospectable> foo1_;
+  std::shared_ptr<MockIntrospectable> foo2_;
+  std::shared_ptr<MockIntrospectable> foo3_;
 
 };
 
@@ -73,16 +82,25 @@ TEST_F(TestIntrospection, TestVariousRootQueries)
   std::string query;
 
   results = FindQueryStartPoints(query, root_.get());
-  EXPECT_EQ(1, results.size());
+  ASSERT_EQ(1, results.size());
   EXPECT_STREQ("Unity", results.front()->GetName().c_str());
 
   query = "/";  
   results = FindQueryStartPoints(query, root_.get());
-  EXPECT_EQ(1, results.size());
+  ASSERT_EQ(1, results.size());
   EXPECT_STREQ("Unity", results.front()->GetName().c_str());
 
   query = "/Unity";
   results = FindQueryStartPoints(query, root_.get());
-  EXPECT_EQ(1, results.size());
+  ASSERT_EQ(1, results.size());
   EXPECT_STREQ("Unity", results.front()->GetName().c_str());
+}
+
+TEST_F(TestIntrospection, TestAbsoluteQueries)
+{
+  std::list<Introspectable*> results;
+  std::string query = "/Unity/DashController";
+
+  ASSERT_EQ(1, results.size());
+  EXPECT_STREQ("DashController", results.front()->GetName().c_str());
 }
