@@ -21,6 +21,7 @@
 
 #include <glib/gi18n-lib.h>
 #include <boost/algorithm/string.hpp>
+#include <UnityCore/GLibWrapper.h>
 
 #include "LineSeparator.h"
 
@@ -129,24 +130,28 @@ nux::LinearLayout* View::CreateSectionLayout(const char* section_name)
   return layout;
 }
 
-nux::LinearLayout* View::CreateShortKeyEntryLayout(const char* shortkey, const char* description)
+nux::LinearLayout* View::CreateShortKeyEntryLayout(AbstractHint* hint)
 {
   nux::HLayout* layout = new nux::HLayout("EntryLayout", NUX_TRACKER_LOCATION);
   nux::HLayout* shortkey_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
   nux::HLayout* description_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
-  std::string value = "<b>";
-  value += std::string(shortkey);
-  value += "</b>";
+  glib::String shortkey(g_markup_escape_text(hint->Shortkey().c_str(), -1));
+  
+  std::string skey = "<b>";
+  skey += shortkey.Str();
+  skey += "</b>";
 
-  nux::StaticText* shortkey_view = new nux::StaticText(value.c_str(), NUX_TRACKER_LOCATION);
+  nux::StaticText* shortkey_view = new nux::StaticText(skey, NUX_TRACKER_LOCATION);
   shortkey_view->SetTextAlignment(nux::StaticText::ALIGN_LEFT);
   shortkey_view->SetFontName("Ubuntu");
   shortkey_view->SetTextPointSize(SHORTKEY_ENTRY_FONT_SIZE);
   shortkey_view->SetMinimumWidth(SHORTKEY_COLUMN_WIDTH);
   shortkey_view->SetMaximumWidth(SHORTKEY_COLUMN_WIDTH);
+  
+  glib::String es_desc(g_markup_escape_text(hint->Description().c_str(), -1));
 
-  nux::StaticText* description_view = new nux::StaticText(description, NUX_TRACKER_LOCATION);
+  nux::StaticText* description_view = new nux::StaticText(es_desc.Value(), NUX_TRACKER_LOCATION);
   description_view->SetTextAlignment(nux::StaticText::ALIGN_LEFT);
   shortkey_view->SetFontName("Ubuntu");
   description_view->SetTextPointSize(SHORTKEY_ENTRY_FONT_SIZE);
@@ -167,6 +172,16 @@ nux::LinearLayout* View::CreateShortKeyEntryLayout(const char* shortkey, const c
   layout->AddLayout(description_layout, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
   layout->SetSpaceBetweenChildren(INTER_SPACE_SHORTKEY_DESCRIPTION);
   description_layout->SetContentDistribution(nux::MAJOR_POSITION_START);
+  
+   auto on_shortkey_changed = [](std::string const& new_shortkey, nux::StaticText* view) {
+      std::string skey = "<b>";
+      skey += new_shortkey;
+      skey += "</b>";
+      
+      view->SetText(skey);
+   };
+  
+  hint->Shortkey.changed.connect(sigc::bind(sigc::slot<void, std::string const&, nux::StaticText*>(on_shortkey_changed), shortkey_view));
 
   return layout;
 }
@@ -377,12 +392,12 @@ void View::RenderColumns()
     
     for (auto hint : model_->hints()[category])
     {
-      std::string str_value = hint->Prefix() + hint->Value() + hint->Postfix();
-      boost::replace_all(str_value, "&", "&amp;");
-      boost::replace_all(str_value, "<", "&lt;");
-      boost::replace_all(str_value, ">", "&gt;");
+      //std::string str_value = hint->Prefix() + hint->Value() + hint->Postfix();
+      //boost::replace_all(str_value, "&", "&amp;");
+      //boost::replace_all(str_value, "<", "&lt;");
+      //boost::replace_all(str_value, ">", "&gt;");
       
-      intermediate_layout->AddLayout(CreateShortKeyEntryLayout(str_value.c_str(), hint->Description().c_str()), 0, nux::MINOR_POSITION_START, nux::MINOR_SIZE_FULL);
+      intermediate_layout->AddLayout(CreateShortKeyEntryLayout(hint), 0, nux::MINOR_POSITION_START, nux::MINOR_SIZE_FULL);
     }
     
     section_layout->AddLayout(intermediate_layout, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);

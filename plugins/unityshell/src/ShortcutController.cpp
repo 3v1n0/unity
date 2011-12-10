@@ -115,6 +115,7 @@ void Controller::Show()
     g_source_remove (show_timer_);
   show_timer_ = g_timeout_add(SUPER_TAP_DURATION, &Controller::OnShowTimer, this);
 
+  model_->Fill();
   visible_ = true;
 
   ubus_server_send_message(ubus_server_get_default(),

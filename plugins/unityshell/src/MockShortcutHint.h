@@ -52,10 +52,12 @@ public:
     {
       case COMPIZ_OPTION:
         Value = Arg1() + "-" + Arg2();
+        Shortkey = Prefix() + Value() + Postfix();
         return true;
       
       case HARDCODED_OPTION:
         Value = Arg1();
+        Shortkey = Prefix() + Value() + Postfix();
         return true;
     }
     

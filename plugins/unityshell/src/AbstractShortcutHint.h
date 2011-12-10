@@ -72,6 +72,7 @@ public:
     , Arg2(obj.Arg2())
     , Arg3(obj.Arg3())
     , Value(obj.Value())
+    , Shortkey(obj.Shortkey())
   {
   }
   
@@ -91,6 +92,7 @@ public:
   nux::Property<std::string> Arg2;
   nux::Property<std::string> Arg3;
   nux::Property<std::string> Value;
+  nux::Property<std::string> Shortkey;
 };
 
 } // namespace shortcut

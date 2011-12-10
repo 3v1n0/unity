@@ -63,12 +63,12 @@ protected:
 private:
   // Private methods
   nux::LinearLayout* CreateSectionLayout(const char* section_name);
-  nux::LinearLayout* CreateShortKeyEntryLayout(const char* shortkey, const char* description);
+  nux::LinearLayout* CreateShortKeyEntryLayout(AbstractHint* hint);
   nux::LinearLayout* CreateIntermediateLayout();
 
   void DrawBackground(nux::GraphicsEngine& GfxContext, nux::Geometry const& geo);
   void RenderColumns();
-  
+    
   // Private members
   Model::Ptr model_;
 

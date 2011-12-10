@@ -58,9 +58,6 @@ Hint::~Hint()
  */
 bool Hint::Fill()
 {
-  // Reset Value.
-  Value = "";
-
   switch(Type())
   {
     case COMPIZ_OPTION:
@@ -76,7 +73,14 @@ bool Hint::Fill()
       {
           if (opt.name() == Arg2())
           {
-            Value = impl::FixShortcutFormat(opt.value().action().keyToString());
+            std::string temp = impl::FixShortcutFormat(opt.value().action().keyToString());
+            if (Value() != temp)
+            {
+              Value = temp;
+              Shortkey = Prefix() + Value() + Postfix();
+
+            }
+              
             return true;
           }
       }
@@ -84,7 +88,11 @@ bool Hint::Fill()
       break;
     }
     case HARDCODED_OPTION:
-      Value = Arg1();
+      if (Value != Arg1())
+      {
+        Value = Arg1();
+        Shortkey = Prefix() + Value() + Postfix();
+      }
       return true;
 
     default:
