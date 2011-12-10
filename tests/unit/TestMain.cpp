@@ -53,7 +53,7 @@ runThread(nux::WindowThread* thread)
 void
 stopThread(nux::WindowThread* thread)
 {
-  thread->TerminateThread();
+  thread->ExitMainLoop();
   delete thread;
 }
 
@@ -77,7 +77,7 @@ main(int argc, char** argv)
 
   int ret = g_test_run();
 
-  stopThread(thread);
+  delete thread;
 
   return ret;
 }

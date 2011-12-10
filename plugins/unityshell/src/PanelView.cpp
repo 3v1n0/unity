@@ -376,7 +376,7 @@ PanelView::UpdateBackground()
   else
   {
     nux::NBitmapData* bitmap = panel::Style::Instance().GetBackground(geo.width, geo.height, _opacity);
-    nux::BaseTexture* texture2D = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
+    nux::BaseTexture* texture2D = nux::GetWindowThread()->GetGraphicsDisplay().GetGpuDevice()->CreateSystemCapableTexture();
     texture2D->Update(bitmap);
     delete bitmap;
 
@@ -564,7 +564,7 @@ void PanelView::OnEntryShowMenu(std::string const& entry_id,
     True
   };
   XEvent* e = (XEvent*)&ev;
-  nux::GetGraphicsThread()->ProcessForeignEvent(e, NULL);
+  nux::GetWindowThread()->ProcessForeignEvent(e, NULL);
   // --------------------------------------------------------------------------
 }
 
