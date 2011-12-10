@@ -86,14 +86,14 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
   hints.push_back(new shortcut::MockHint(_("Windows"), "", "", _("Move window."), shortcut::COMPIZ_OPTION, "move", "initiate_key"));
       
   controller.reset(new shortcut::Controller(hints));
-  controller->SetWorkspace(nux::Geometry(25, 25, 1200 - 50, 700 - 50));
+  controller->SetWorkspace(nux::Geometry(25, 17, 1200 - 50, 720 - 35));
   controller->Show();
 }
 
 int main(int argc, char** argv)
 {
   g_type_init();
-  g_thread_init(NULL);
+  //g_thread_init(NULL);
   gtk_init(&argc, &argv);
 
   dbus_g_thread_init();
@@ -101,7 +101,7 @@ int main(int argc, char** argv)
   nux::NuxInitialize(0);
   
   BackgroundEffectHelper::blur_type = BLUR_NONE;
-  nux::WindowThread* wt = nux::CreateGUIThread(TEXT("Unity Shortcut Hint Overlay"), 1200, 700, 0, &ThreadWidgetInit, 0);
+  nux::WindowThread* wt = nux::CreateGUIThread(TEXT("Unity Shortcut Hint Overlay"), 1200, 720, 0, &ThreadWidgetInit, 0);
 
   wt->Run(NULL);
   delete wt;

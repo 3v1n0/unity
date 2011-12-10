@@ -450,9 +450,15 @@ add_dependencies (bg-hash unity-core-${UNITY_API_VERSION})
 
 add_executable (test-shortcut
                 TestShortcut.cpp
+                ${UNITY_SRC}/AbstractSeparator.cpp
+                ${UNITY_SRC}/AbstractSeparator.h
                 ${UNITY_SRC}/AbstractShortcutHint.h
+                ${UNITY_SRC}/Animator.cpp
+                ${UNITY_SRC}/Animator.h
                 ${UNITY_SRC}/BackgroundEffectHelper.cpp
                 ${UNITY_SRC}/BackgroundEffectHelper.h
+                ${UNITY_SRC}/LineSeparator.cpp
+                ${UNITY_SRC}/LineSeparator.h
                 ${UNITY_SRC}/MockShortcutHint.h
                 ${UNITY_SRC}/ShortcutController.cpp
                 ${UNITY_SRC}/ShortcutController.h
