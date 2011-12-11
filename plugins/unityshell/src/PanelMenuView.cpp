@@ -1041,7 +1041,7 @@ PanelMenuView::OnNewViewOpened(BamfView *view)
   if (!BAMF_IS_APPLICATION(view))
     return;
 
-  _new_apps.push_front(glib::Object<BamfApplication>(BAMF_APPLICATION(view)));
+  _new_apps.push_front(glib::Object<BamfApplication>(BAMF_APPLICATION(view), glib::AddRef()));
 }
 
 void
