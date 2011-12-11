@@ -66,6 +66,27 @@ GDBusInterfaceVTable DebugDBusInterface::interface_vtable =
 static CompScreen* _screen;
 static Introspectable* _parent_introspectable;
 
+// Stores a part of an XPath query.
+struct XPathQueryPart
+{
+  XPathQueryPart(std::string const& node_name,
+                  std::string const& param_name = "",
+                  std::string const& param_value = "")
+    : node_name_(node_name),
+    param_name_(param_name),
+    param_value_(param_value)
+  {}
+
+  bool Matches(Introspectable* node) const
+  {
+    return node->GetName() == node_name_;
+  }
+
+  std::string node_name_;
+  std::string param_name_;
+  std::string param_value_;
+};
+
 DebugDBusInterface::DebugDBusInterface(Introspectable* parent, 
                                        CompScreen* screen)
 {
@@ -180,43 +201,53 @@ GetState(std::string const& query)
  * Do a breadth-first search of the introspection tree and find all nodes that match the 
  * query. Also modify the query string such that the start points are removed from it.
  */
-std::list<Introspectable*> FindQueryStartPoints(std::string& query, Introspectable* tree_root)
+std::list<Introspectable*> FindQueryStartPoints(std::string const& query, Introspectable* tree_root)
 {
   std::list<Introspectable*> start_points;
-  
+  std::string sanitised_query;
   // Allow user to be lazy when specifying root node.
   if (query == "" || query == "/")
   {
-    query = "/" + tree_root->GetName();
+    sanitised_query = "/" + tree_root->GetName();
+  }
+  else
+  {
+    sanitised_query = query;
   }
   // split query into parts
-  std::list<std::string> query_parts;
-  boost::algorithm::split(query_parts, query, boost::algorithm::is_any_of("/"));
-  // Boost's split() implementation does not match it's documentation! According to the 
-  // docs, it's not supposed to add empty strings, but it does, which is a PITA. This 
-  // next line removes them:
-  query_parts.erase( std::remove_if( query_parts.begin(), 
-                                      query_parts.end(), 
-                                      boost::bind( &std::string::empty, _1 ) ), 
-                    query_parts.end());
+  std::list<XPathQueryPart> query_parts;
+
+  {
+    std::list<std::string> query_strings;
+    boost::algorithm::split(query_strings, sanitised_query, boost::algorithm::is_any_of("/"));
+    // Boost's split() implementation does not match it's documentation! According to the 
+    // docs, it's not supposed to add empty strings, but it does, which is a PITA. This 
+    // next line removes them:
+    query_strings.erase( std::remove_if( query_strings.begin(), 
+                                        query_strings.end(), 
+                                        boost::bind( &std::string::empty, _1 ) ), 
+                      query_strings.end());
+    foreach(std::string part, query_strings)
+    {
+      query_parts.push_back(XPathQueryPart(part));
+    }
+  }
 
   // absolute or relative query string?
-  if (query.at(0) == '/' && query.at(1) != '/')
+  if (sanitised_query.at(0) == '/' && sanitised_query.at(1) != '/')
   {
-    LOG_DEBUG(logger) << "Query '" << query << "' is absolute.";
     // absolute query - start point is tree root node.
     start_points.push_back(tree_root);
   }
   else
   {
-    LOG_DEBUG(logger) << "Query '" << query << "' is relative.";
     // relative - need to do a depth first tree search for all nodes that match the
     // first node in the query.
 
     // warn about malformed queries (all queries must start with '/')
-    if (query.at(0) != '/')
+    if (sanitised_query.at(0) != '/')
     {
-      LOG_WARNING(logger) << "Malformed introspection query: '" << query << "'.";
+      LOG_WARNING(logger) << "Malformed relative introspection query: '" << query << "'.";
     }
     
     // non-recursive BFS traversal to find starting points:
@@ -226,10 +257,10 @@ std::list<Introspectable*> FindQueryStartPoints(std::string& query, Introspectab
     {
       Introspectable *node = queue.front();
       queue.pop();
-      if (node->GetName() == query_parts.front())
+      if (query_parts.front().Matches(node))
       {
-        // found one.
-        LOG_DEBUG(logger) << "Node '" << node->GetName() << "' Matches query start point.";
+        // found one. We keep going deeper, as there may be another node beneath this one
+        // with the same node name.
         start_points.push_back(node);
       }
       // Add all children of current node to queue.
@@ -241,23 +272,15 @@ std::list<Introspectable*> FindQueryStartPoints(std::string& query, Introspectab
   }
 
   // now we have the tree start points, process them:
-  std::list<Introspectable*> results;
-  
-  LOG_DEBUG(logger) << "Query parts is:" << query_parts.size();
-  std::string dbg;
-  foreach (std::string p, query_parts)
-  {
-    dbg += p + ":";
-  }
-  LOG_DEBUG(logger) << dbg;
-  LOG_DEBUG(logger) << start_points.size() << "Start points identified";
   query_parts.pop_front();
-  typedef std::pair<Introspectable*, std::list<std::string>::iterator> node_match_pair;
+  typedef std::pair<Introspectable*, std::list<XPathQueryPart>::iterator> node_match_pair;
+  
   std::queue<node_match_pair> traverse_queue;
   foreach(Introspectable *node, start_points)
   {
     traverse_queue.push(node_match_pair(node, query_parts.begin()));
   }
+  start_points.clear();
   
   while (!traverse_queue.empty())
   {
@@ -267,25 +290,18 @@ std::list<Introspectable*> FindQueryStartPoints(std::string& query, Introspectab
     Introspectable *node = p.first;
     auto query_it = p.second;
 
-    LOG_DEBUG(logger) <<  "Processing start point: " << node << "(" << node->GetName() << ")";
-
-
     if (query_it == query_parts.end())
     {
-      LOG_DEBUG(logger) << "Reached end of query string - we must have found a match!";
       // found a match:
-      results.push_back(node);
+      start_points.push_back(node);
     }
     else
     {
-      LOG_DEBUG(logger) << "String iterator looks at:" << *query_it;
-      std::string match_name = *query_it;
       // push all children of current node to start of queue, advance search iterator, and loop again.
       foreach (Introspectable *child, node->GetIntrospectableChildren())
       {
-        if (child->GetName() == match_name)
+        if (query_it->Matches(child))
         {
-          LOG_DEBUG(logger) << "Node's child: " << child << "(" << child->GetName() << ") matches next part of query string.";
           auto it_copy(query_it);
           ++it_copy;
           traverse_queue.push(node_match_pair(child, it_copy));
@@ -293,7 +309,7 @@ std::list<Introspectable*> FindQueryStartPoints(std::string& query, Introspectab
       }
     }
   }
-  return results;
+  return start_points;
 }
 /*
  * Do a breadth-first search of the introspectable tree.

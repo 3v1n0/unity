@@ -31,7 +31,7 @@ extern const std::string DBUS_BUS_NAME;
 namespace debug
 {
 class Introspectable;
-std::list<Introspectable*> FindQueryStartPoints(std::string& query, Introspectable *tree_root);
+std::list<Introspectable*> FindQueryStartPoints(std::string const& query, Introspectable *tree_root);
 
 class DebugDBusInterface
 {
