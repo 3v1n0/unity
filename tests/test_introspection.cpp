@@ -17,10 +17,11 @@
  * Authored by: Thomi Richards <thomi.richards@canonical.com>
  */
 #include <gtest/gtest.h>
+#include <glib.h>
+#include <memory>
 
 #include "Introspectable.h"
 #include "DebugDBusInterface.h"
-#include "PlacesSimpleTile.h"
 
 
 using namespace unity::debug;
@@ -29,8 +30,26 @@ class MockIntrospectable : public Introspectable
 {
 public:
   MockIntrospectable(std::string const& name)
-  : name_(name)
+  : name_(name),
+  properties_(nullptr)
   {}
+
+  ~MockIntrospectable()
+  {
+    if (properties_ != nullptr)
+    {
+      g_variant_unref(properties_);
+    }
+  }
+
+  void SetProperty(GVariant *prop)
+  {
+    if (properties_ != nullptr)
+    {
+      g_variant_unref(properties_);
+    }
+    properties_ = prop;
+  }
 
   std::string GetName() const
   {
@@ -38,9 +57,11 @@ public:
   }
   void AddProperties(GVariantBuilder* builder)
   {
+    g_variant_builder_add_value(builder, properties_);
   }
 private:
   std::string name_;
+  GVariant *properties_;
 };
 
 class TestIntrospection : public ::testing::Test
@@ -59,6 +80,8 @@ public:
     dc_->AddChild(foo1_.get());
     dc_->AddChild(foo2_.get());
     dc_->AddChild(foo3_.get());
+
+    root_->SetProperty(g_variant_new("{sv}", "SomeProperty", g_variant_new_string("SomeValue")));
   }
 
 protected:
@@ -169,5 +192,17 @@ TEST_F(TestIntrospection, TestQueriesWithNoResults)
 
   query = "/Does/Not/Ever/Exist";
   results = FindQueryStartPoints(query, root_.get());
+  ASSERT_EQ(0, results.size());
+}
+
+TEST_F(TestIntrospection, TestQueriesWithParams)
+{
+  std::list<Introspectable*> results;
+  // this should find our root node:
+  results = FindQueryStartPoints("/Unity[SomeProperty=SomeValue]", root_.get());
+  ASSERT_EQ(1, results.size());
+  EXPECT_STREQ("Unity", results.front()->GetName().c_str());
+  // but this should find nothing:
+  results = FindQueryStartPoints("/Unity[SomeProperty=SomeOtherValue]", root_.get());
   ASSERT_EQ(0, results.size());
 }

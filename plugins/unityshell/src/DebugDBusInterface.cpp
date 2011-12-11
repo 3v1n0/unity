@@ -69,13 +69,34 @@ static Introspectable* _parent_introspectable;
 // Stores a part of an XPath query.
 struct XPathQueryPart
 {
-  XPathQueryPart(std::string const& node_name,
-                  std::string const& param_name = "",
-                  std::string const& param_value = "")
-    : node_name_(node_name),
-    param_name_(param_name),
-    param_value_(param_value)
-  {}
+  XPathQueryPart(std::string const& query_part)
+  {
+    std::vector<std::string> part_pieces;
+    boost::algorithm::split(part_pieces, query_part, boost::algorithm::is_any_of("[]="));
+    // Boost's split() implementation does not match it's documentation! According to the 
+    // docs, it's not supposed to add empty strings, but it does, which is a PITA. This 
+    // next line removes them:
+    part_pieces.erase( std::remove_if( part_pieces.begin(), 
+                                        part_pieces.end(), 
+                                        boost::bind( &std::string::empty, _1 ) ), 
+                      part_pieces.end());
+    if (part_pieces.size() == 1)
+    {
+      node_name_ = part_pieces.at(0);
+    }
+    else if (part_pieces.size() == 3)
+    {
+      node_name_ = part_pieces.at(0);
+      param_name_ = part_pieces.at(1);
+      param_value_ = part_pieces.at(2);
+    }
+    else
+    {
+      LOG_WARNING(logger) << "Malformed query part: " << query_part;
+      // assume it's just a node name:
+      node_name_ = query_part;
+    }
+  }
 
   bool Matches(Introspectable* node) const
   {
