@@ -51,6 +51,8 @@ public:
 
   // NOTE: nux::Property maybe?
   void SetOpacity(float opacity);
+  void SetOpacityMaximizedToggle(bool enabled);
+
   float opacity() const;
 
   void SetMenuShowTimings(int fadein, int fadeout, int discovery,
@@ -67,6 +69,7 @@ private:
 private:
   std::vector<nux::BaseWindow*> windows_;
   float opacity_;
+  bool opacity_maximized_toggle_;
   bool open_menu_start_received_;
   int menus_fadein_;
   int menus_fadeout_;
@@ -78,6 +81,7 @@ private:
 
 Controller::Impl::Impl()
   : opacity_(1.0f)
+  , opacity_maximized_toggle_(false)
   , open_menu_start_received_(false)
 {
   UScreen* screen = UScreen::GetDefault();
@@ -144,6 +148,16 @@ void Controller::Impl::SetOpacity(float opacity)
   for (auto window: windows_)
   {
     ViewForWindow(window)->SetOpacity(opacity_);
+  }
+}
+
+void Controller::Impl::SetOpacityMaximizedToggle(bool enabled)
+{
+  opacity_maximized_toggle_ = enabled;
+
+  for (auto window: windows_)
+  {
+    ViewForWindow(window)->SetOpacityMaximizedToggle(opacity_maximized_toggle_);
   }
 }
 
@@ -225,6 +239,7 @@ void Controller::Impl::OnScreenChanged(int primary_monitor,
       PanelView* view = new PanelView();
       view->SetMaximumHeight(24);
       view->SetOpacity(opacity_);
+      view->SetOpacityMaximizedToggle(opacity_maximized_toggle_);
       view->SetMenuShowTimings(menus_fadein_, menus_fadeout_, menus_discovery_,
                                menus_discovery_fadein_, menus_discovery_fadeout_);
       view->SetPrimary(i == primary_monitor);
@@ -305,6 +320,11 @@ void Controller::EndFirstMenuShow()
 void Controller::SetOpacity(float opacity)
 {
   pimpl->SetOpacity(opacity);
+}
+
+void Controller::SetOpacityMaximizedToggle(bool enabled)
+{
+  pimpl->SetOpacityMaximizedToggle(enabled);
 }
 
 void Controller::SetMenuShowTimings(int fadein, int fadeout, int discovery,

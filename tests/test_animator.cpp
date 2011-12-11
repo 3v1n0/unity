@@ -32,7 +32,7 @@ class TestAnimator : public ::testing::Test
 {
 public:
   TestAnimator() :
-   test_animator_(Animator(100)),
+   test_animator_(100),
    n_steps_(0),
    current_progress_(0.0f),
    got_update_(false),
@@ -91,7 +91,7 @@ TEST_F(TestAnimator, ConstructDestroy)
   double progress = 0.0f;
   
   {
-    auto tmp_animator = Animator(200, 25);
+    Animator tmp_animator(200, 25);
 
     EXPECT_EQ(tmp_animator.GetDuration(), 200);
     EXPECT_EQ(tmp_animator.GetRate(), 25);

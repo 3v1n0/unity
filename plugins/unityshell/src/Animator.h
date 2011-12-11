@@ -23,10 +23,11 @@
 #include <glib.h>
 #include <cstdint>
 #include <sigc++/sigc++.h>
+#include <boost/utility.hpp>
 
 namespace unity
 {
-class Animator
+class Animator : boost::noncopyable
 {
 public:
   Animator(unsigned int default_duration, unsigned int fps_rate = 30);

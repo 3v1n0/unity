@@ -35,7 +35,7 @@ public:
   Introspectable();
   virtual ~Introspectable();
 
-  GVariant* Introspect();
+  GVariant* Introspect(bool wrap = false);
   virtual const gchar* GetName() = 0;
   void AddChild(Introspectable* child);
   void RemoveChild(Introspectable* child);
