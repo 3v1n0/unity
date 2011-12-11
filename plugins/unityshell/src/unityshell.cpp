@@ -2491,7 +2491,7 @@ void UnityScreen::InitHints()
   hints_.push_back(new shortcut::Hint(_("Switching"), "", "", _("Switch between applications."), shortcut::COMPIZ_OPTION, "unityshell", "alt_tab_forward"));
   hints_.push_back(new shortcut::Hint(_("Switching"), "", "", _("Switch windows of current application."), shortcut::COMPIZ_OPTION, "unityshell", "alt_tab_next_window"));
   hints_.push_back(new shortcut::Hint(_("Switching"), "", "", _("Close window switch, return to app switch."), shortcut::COMPIZ_OPTION, "unityshell", "alt_tab_detail_stop"));
-  hints_.push_back(new shortcut::Hint(_("Switching"), "", "", _("Moves the foucs."), shortcut::HARDCODED_OPTION, _("Cursor Left & Right")));
+  hints_.push_back(new shortcut::Hint(_("Switching"), "", "", _("Moves the focus."), shortcut::HARDCODED_OPTION, _("Cursor Left & Right")));
 
   // Workspaces
   hints_.push_back(new shortcut::Hint(_("Workspaces"), "", "", _("Spread workspaces."), shortcut::COMPIZ_OPTION, "expo", "expo_key"));
