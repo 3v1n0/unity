@@ -53,7 +53,7 @@ namespace unity
 {
 
 PanelMenuView::PanelMenuView(int padding)
-  : _matcher(bamf_matcher_get_default(), glib::AddRef()),
+  : _matcher(bamf_matcher_get_default()),
     _title_layer(nullptr),
     _util_cg(CAIRO_FORMAT_ARGB32, 1, 1),
     _gradient_texture(nullptr),
