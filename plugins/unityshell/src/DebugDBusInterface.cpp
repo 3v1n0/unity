@@ -96,11 +96,45 @@ struct XPathQueryPart
       // assume it's just a node name:
       node_name_ = query_part;
     }
+    LOG_DEBUG(logger) << "XPath Matcher constructed with Node Name: '" << node_name_
+                      << "' Param Name: '" << param_name_
+                      << "' Param Value: '" << param_value_ << "'";
   }
 
   bool Matches(Introspectable* node) const
   {
-    return node->GetName() == node_name_;
+    LOG_DEBUG(logger) << "XPath Matcher attempting to match with Node Name: '" << node_name_
+                      << "' Param Name: '" << param_name_
+                      << "' Param Value: '" << param_value_ << "'";
+    bool matches = false;
+    if (param_name_ == "")
+    {
+      matches = node->GetName() == node_name_;
+    }
+    else
+    {
+      GVariant* properties = node->Introspect(true);
+      LOG_DEBUG(logger) << g_variant_print(properties,true);
+      GVariant *prop_dict = g_variant_get_child_value(properties, 0);
+      LOG_DEBUG(logger) << g_variant_print(prop_dict,true);
+      //XXX What to do if the value is not a string?
+      GVariant *prop_value = g_variant_lookup_value(prop_dict, param_name_.c_str(), G_VARIANT_TYPE_STRING);
+      LOG_DEBUG(logger) << g_variant_print(prop_value,true);
+      if (prop_value != NULL)
+      {
+        //const gchar* prop_val = g_variant_get_type_string(prop_value);
+        const gchar* prop_val = g_variant_get_string(prop_value, NULL);
+        LOG_DEBUG(logger) << prop_val;
+        LOG_DEBUG(logger) << param_value_;
+        if (g_strcmp0(prop_val, param_value_.c_str()) == 0)
+        {
+          matches = true;
+        }
+      }
+      g_variant_unref(properties);
+    }
+
+    return matches;
   }
 
   std::string node_name_;
@@ -258,7 +292,10 @@ std::list<Introspectable*> FindQueryStartPoints(std::string const& query, Intros
   if (sanitised_query.at(0) == '/' && sanitised_query.at(1) != '/')
   {
     // absolute query - start point is tree root node.
-    start_points.push_back(tree_root);
+    if (query_parts.front().Matches(tree_root))
+    {
+      start_points.push_back(tree_root);
+    }
   }
   else
   {
