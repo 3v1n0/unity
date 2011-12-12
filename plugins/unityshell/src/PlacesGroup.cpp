@@ -157,10 +157,6 @@ PlacesGroup::OnLabelFocusChanged(nux::Area* label)
 void
 PlacesGroup::SetName(const char* name)
 {
-  // Spaces are on purpose, want padding to be proportional to the size of the text
-  // Bear with me, I'm trying something different :)
-  //const gchar* temp = "    %s    ";
-  //gchar* tmp = NULL;
   gchar* final = NULL;
   if (_cached_name != NULL)
   {
@@ -170,14 +166,10 @@ PlacesGroup::SetName(const char* name)
 
   _cached_name = g_strdup(name);
 
-  //tmp = g_markup_escape_text(name, -1);
   final = g_markup_escape_text(name, -1);
-
-  //final = g_strdup_printf(temp, tmp);
 
   _name->SetText(final);
 
-  //g_free(tmp);
   g_free(final);
 }
 
@@ -307,14 +299,6 @@ PlacesGroup::OnIdleRelayout(PlacesGroup* self)
   return FALSE;
 }
 
-void print_geo (std::string text, nux::Geometry geo)
-{
-  std::cout << text.c_str() << ": "
-            << geo.GetWidth() << "/"
-            << geo.GetHeight()
-            << std::endl;
-}
-
 void PlacesGroup::Draw(nux::GraphicsEngine& GfxContext,
                        bool                 forceDraw)
 {
@@ -322,22 +306,6 @@ void PlacesGroup::Draw(nux::GraphicsEngine& GfxContext,
   GfxContext.PushClippingRectangle(base);
 
   nux::Color col(0.15f, 0.15f, 0.15f, 0.15f);
-
-  /*nux::Color red(1.0, 0.0, 0.0, 1.0);
-  nux::Color green(0.0, 1.0, 0.0, 1.0);
-  nux::Color blue(0.0, 0.0, 1.0, 1.0);
-
-  nux::Geometry geo;
-  geo = _header_layout->GetGeometry();
-  print_geo ("_header_layout", geo);
-  geo = _text_layout->GetGeometry();
-  print_geo ("_text_layout", geo);
-  geo = _expand_layout->GetGeometry();
-  print_geo ("_expand_layout", geo);
-
-  nux::GetPainter().Paint2DQuadColor(GfxContext, _header_layout->GetGeometry(), red);
-  nux::GetPainter().Paint2DQuadColor(GfxContext, _text_layout->GetGeometry(), green);
-  nux::GetPainter().Paint2DQuadColor(GfxContext, _expand_layout->GetGeometry(), blue);*/
 
   if (_draw_sep)
   {
