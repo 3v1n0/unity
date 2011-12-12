@@ -1354,7 +1354,7 @@ void QuicklistView::UpdateTexture()
   cairo_t* cr_mask    = cairo_mask->GetContext();
   cairo_t* cr_outline = cairo_outline->GetContext();
 
-  float   tint_color[4]    = {0.0f, 0.0f, 0.0f, 0.80f};
+  float   tint_color[4]    = {0.0f, 0.0f, 0.0f, 0.60f};
   float   hl_color[4]      = {1.0f, 1.0f, 1.0f, 0.65f};
   float   dot_color[4]     = {1.0f, 1.0f, 1.0f, 0.10f};
   float   shadow_color[4]  = {0.0f, 0.0f, 0.0f, 1.00f};
