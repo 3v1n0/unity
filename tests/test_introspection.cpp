@@ -104,17 +104,17 @@ TEST_F(TestIntrospection, TestVariousRootQueries)
   std::list<Introspectable*> results;
   std::string query;
 
-  results = FindQueryStartPoints(query, root_.get());
+  results = GetIntrospectableNodesFromQuery(query, root_.get());
   ASSERT_EQ(1, results.size());
   EXPECT_STREQ("Unity", results.front()->GetName().c_str());
 
   query = "/";  
-  results = FindQueryStartPoints(query, root_.get());
+  results = GetIntrospectableNodesFromQuery(query, root_.get());
   ASSERT_EQ(1, results.size());
   EXPECT_STREQ("Unity", results.front()->GetName().c_str());
 
   query = "/Unity";
-  results = FindQueryStartPoints(query, root_.get());
+  results = GetIntrospectableNodesFromQuery(query, root_.get());
   ASSERT_EQ(1, results.size());
   EXPECT_STREQ("Unity", results.front()->GetName().c_str());
 }
@@ -124,7 +124,7 @@ TEST_F(TestIntrospection, TestAbsoluteQueries)
   std::list<Introspectable*> results;
   std::string query = "/Unity/DashController";
 
-  results = FindQueryStartPoints(query, root_.get());
+  results = GetIntrospectableNodesFromQuery(query, root_.get());
   ASSERT_EQ(1, results.size());
   EXPECT_STREQ("DashController", results.front()->GetName().c_str());
 }
@@ -134,12 +134,12 @@ TEST_F(TestIntrospection, TestMalformedRelativeQueries)
   std::list<Introspectable*> results;
   std::string query = "Unity";
 
-  results = FindQueryStartPoints(query, root_.get());
+  results = GetIntrospectableNodesFromQuery(query, root_.get());
   ASSERT_EQ(1, results.size());
   EXPECT_STREQ("Unity", results.front()->GetName().c_str()); 
 
   query = "Foo";
-  results = FindQueryStartPoints(query, root_.get());
+  results = GetIntrospectableNodesFromQuery(query, root_.get());
   ASSERT_EQ(3, results.size());
   for(auto p : results)
   {
@@ -152,12 +152,12 @@ TEST_F(TestIntrospection, TestSimpleRelativeQueries)
   std::list<Introspectable*> results;
   std::string query = "//Unity";
 
-  results = FindQueryStartPoints(query, root_.get());
+  results = GetIntrospectableNodesFromQuery(query, root_.get());
   ASSERT_EQ(1, results.size());
   EXPECT_STREQ("Unity", results.front()->GetName().c_str()); 
 
   query = "//Foo";
-  results = FindQueryStartPoints(query, root_.get());
+  results = GetIntrospectableNodesFromQuery(query, root_.get());
   ASSERT_EQ(3, results.size());
   for(auto p : results)
   {
@@ -170,7 +170,7 @@ TEST_F(TestIntrospection, TestComplexRelativeQueries)
   std::list<Introspectable*> results;
   std::string query = "//DashController/Foo";
 
-  results = FindQueryStartPoints(query, root_.get());
+  results = GetIntrospectableNodesFromQuery(query, root_.get());
   ASSERT_EQ(3, results.size());
   for(auto p : results)
   {
@@ -183,15 +183,15 @@ TEST_F(TestIntrospection, TestQueriesWithNoResults)
   std::list<Introspectable*> results;
   std::string query = "//Does/Not/Exist";
 
-  results = FindQueryStartPoints(query, root_.get());
+  results = GetIntrospectableNodesFromQuery(query, root_.get());
   ASSERT_EQ(0, results.size());
   
   query = "DoesNotEverExist";
-  results = FindQueryStartPoints(query, root_.get());
+  results = GetIntrospectableNodesFromQuery(query, root_.get());
   ASSERT_EQ(0, results.size());
 
   query = "/Does/Not/Ever/Exist";
-  results = FindQueryStartPoints(query, root_.get());
+  results = GetIntrospectableNodesFromQuery(query, root_.get());
   ASSERT_EQ(0, results.size());
 }
 
@@ -199,15 +199,15 @@ TEST_F(TestIntrospection, TestQueriesWithParams)
 {
   std::list<Introspectable*> results;
   // this should find our root node:
-  results = FindQueryStartPoints("/Unity[SomeProperty=SomeValue]", root_.get());
+  results = GetIntrospectableNodesFromQuery("/Unity[SomeProperty=SomeValue]", root_.get());
   ASSERT_EQ(1, results.size());
   EXPECT_STREQ("Unity", results.front()->GetName().c_str());
   // but this should find nothing:
-  results = FindQueryStartPoints("/Unity[SomeProperty=SomeOtherValue]", root_.get());
+  results = GetIntrospectableNodesFromQuery("/Unity[SomeProperty=SomeOtherValue]", root_.get());
   ASSERT_EQ(0, results.size());
 
   // make sure relative paths work:
-  results = FindQueryStartPoints("//Foo[Name=Foo]", root_.get());
+  results = GetIntrospectableNodesFromQuery("//Foo[Name=Foo]", root_.get());
   ASSERT_EQ(3, results.size());
   for(auto p : results)
   {
@@ -215,7 +215,7 @@ TEST_F(TestIntrospection, TestQueriesWithParams)
   }
 
   // make sure param queries work with descendant nodes as well:
-  results = FindQueryStartPoints("/Unity[SomeProperty=SomeValue]/DashController[Name=DashController]/Foo", root_.get());
+  results = GetIntrospectableNodesFromQuery("/Unity[SomeProperty=SomeValue]/DashController[Name=DashController]/Foo", root_.get());
   ASSERT_EQ(3, results.size());
   for(auto p : results)
   {
@@ -237,7 +237,7 @@ TEST_F(TestIntrospection, TestQueryTypeBool)
 
   for(auto query : queries)
   {
-    results = FindQueryStartPoints(query, root_.get());
+    results = GetIntrospectableNodesFromQuery(query, root_.get());
     ASSERT_EQ(1, results.size());
     EXPECT_STREQ("Unity", results.front()->GetName().c_str());
   }
@@ -251,7 +251,7 @@ TEST_F(TestIntrospection, TestQueryTypeBool)
             "/Unity[BoolPropertyTrue=ThereWasAManFromNantucket]"};
   for(auto query : queries)
   {
-    results = FindQueryStartPoints(query, root_.get());
+    results = GetIntrospectableNodesFromQuery(query, root_.get());
     ASSERT_EQ(0, results.size());
   }
 }
@@ -273,7 +273,7 @@ TEST_F(TestIntrospection, TestQueryTypeInt)
                                     "/Unity[UInt64PropertyPos=100000056]"};
   for(auto query : queries)
   {
-    results = FindQueryStartPoints(query, root_.get());
+    results = GetIntrospectableNodesFromQuery(query, root_.get());
     ASSERT_EQ(1, results.size()) << "Failing query: " << query;
     EXPECT_STREQ("Unity", results.front()->GetName().c_str());
   }
@@ -289,7 +289,7 @@ TEST_F(TestIntrospection, TestQueryTypeInt)
             "/Unity[UInt32PropertyPos=-23]"};
   for(auto query : queries)
   {
-    results = FindQueryStartPoints(query, root_.get());
+    results = GetIntrospectableNodesFromQuery(query, root_.get());
     ASSERT_EQ(0, results.size());
   }              
 }
@@ -297,7 +297,7 @@ TEST_F(TestIntrospection, TestQueryTypeInt)
 TEST_F(TestIntrospection, TestMalformedQueries)
 {
   // this should work - we have not yet specified a parameter to test against.
-  std::list<Introspectable*> results = FindQueryStartPoints("/Unity[", root_.get());
+  std::list<Introspectable*> results = GetIntrospectableNodesFromQuery("/Unity[", root_.get());
   ASSERT_EQ(1, results.size());
 
   std::list<std::string> queries = {"/Unity[BoolPropertyTrue",
@@ -319,7 +319,7 @@ TEST_F(TestIntrospection, TestMalformedQueries)
 
   for (std::string query : queries)
   {
-    results = FindQueryStartPoints(query, root_.get());
+    results = GetIntrospectableNodesFromQuery(query, root_.get());
     ASSERT_EQ(0, results.size()) << "Failing query: " << query; 
   }
 }

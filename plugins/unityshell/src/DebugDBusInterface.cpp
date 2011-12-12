@@ -334,7 +334,7 @@ GetState(std::string const& query)
  * Do a breadth-first search of the introspection tree and find all nodes that match the 
  * query. Also modify the query string such that the start points are removed from it.
  */
-std::list<Introspectable*> FindQueryStartPoints(std::string const& query, Introspectable* tree_root)
+std::list<Introspectable*> GetIntrospectableNodesFromQuery(std::string const& query, Introspectable* tree_root)
 {
   std::list<Introspectable*> start_points;
   std::string sanitised_query;
