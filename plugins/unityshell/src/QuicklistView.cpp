@@ -74,8 +74,8 @@ QuicklistView::QuicklistView()
 {
   SetGeometry(nux::Geometry(0, 0, 1, 1));
 
-  _left_space = new nux::SpaceLayout(_padding + _anchor_width + _corner_radius,
-                                     _padding + _anchor_width + _corner_radius,
+  _left_space = new nux::SpaceLayout(_padding + _anchor_width + _corner_radius - 1,
+                                     _padding + _anchor_width + _corner_radius - 1,
                                      1, 1000);
   _right_space = new nux::SpaceLayout(_padding + _corner_radius,
                                       _padding + _corner_radius,
@@ -533,12 +533,12 @@ void QuicklistView::PreLayoutManagement()
   if (TotalItemHeight < _anchor_height)
   {
     _top_space->SetMinMaxSize(1, (_anchor_height - TotalItemHeight) / 2 + 1 + _padding + _corner_radius);
-    _bottom_space->SetMinMaxSize(1, (_anchor_height - TotalItemHeight) / 2 + 1 + _padding + _corner_radius);
+    _bottom_space->SetMinMaxSize(1, (_anchor_height - TotalItemHeight) / 2 + 1 + _padding + _corner_radius - 4);
   }
   else
   {
     _top_space->SetMinMaxSize(_padding + _corner_radius, _padding + _corner_radius);
-    _bottom_space->SetMinMaxSize(_padding + _corner_radius, _padding + _corner_radius);
+    _bottom_space->SetMinMaxSize(_padding + _corner_radius - 2, _padding + _corner_radius - 2);
   }
 
   _item_layout->SetMinimumWidth(MaxItemWidth);
@@ -553,8 +553,8 @@ long QuicklistView::PostLayoutManagement(long LayoutResult)
 
   UpdateTexture();
 
-  int x = _padding + _anchor_width + _corner_radius;
-  int y = _padding + _corner_radius;
+  int x = _padding + _anchor_width + _corner_radius - 1;
+  int y = _padding + _corner_radius - 1;
 
   std::list<QuicklistMenuItem*>::iterator it;
   for (it = _item_list.begin(); it != _item_list.end(); it++)
