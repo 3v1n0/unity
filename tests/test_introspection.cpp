@@ -282,6 +282,7 @@ TEST_F(TestIntrospection, TestQueryTypeInt)
   queries = {"/Unity[BytePropertyPos=1234]",
             "/Unity[Int16PropertyPos=0]",
             "/Unity[Int16PropertyNeg=-0]",
+            "/Unity[Int16PropertyNeg=-]",
             "/Unity[UInt16PropertyPos=-1056]",
             "/Unity[Int32PropertyPos=999999999999999]",
             "/Unity[Int32PropertyNeg=Garbage]",
@@ -291,4 +292,34 @@ TEST_F(TestIntrospection, TestQueryTypeInt)
     results = FindQueryStartPoints(query, root_.get());
     ASSERT_EQ(0, results.size());
   }              
+}
+
+TEST_F(TestIntrospection, TestMalformedQueries)
+{
+  // this should work - we have not yet specified a parameter to test against.
+  std::list<Introspectable*> results = FindQueryStartPoints("/Unity[", root_.get());
+  ASSERT_EQ(1, results.size());
+
+  std::list<std::string> queries = {"/Unity[BoolPropertyTrue",
+                                  "/Unity[BoolPropertyTrue=",
+                                  "/Unity[BoolPropertyTrue=]",
+                                  "/Unity[BytePropertyPos=",
+                                  "/Unity[BytePropertyPos=]",
+                                  "/Unity[Int16PropertyPos=",
+                                  "/Unity[Int16PropertyPos=]",
+                                  "/Unity[Int16PropertyNeg=",
+                                  "/Unity[Int16PropertyNeg=]",
+                                  "/Unity[UInt16PropertyPos[=]]",
+                                  "/Unity[Int32PropertyPos[[",
+                                  "/Unity[Int32PropertyNeg]",
+                                  "/Unity[UInt32PropertyPos=[",
+                                  "/Unity[Int64PropertyPos[[",
+                                  "/Unity[Int64PropertyNeg",
+                                  "/Unity[UInt64PropertyPos]"};
+
+  for (std::string query : queries)
+  {
+    results = FindQueryStartPoints(query, root_.get());
+    ASSERT_EQ(0, results.size()) << "Failing query: " << query; 
+  }
 }
