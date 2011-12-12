@@ -40,9 +40,6 @@ namespace
 }
 
 GVariant* GetState(std::string const& query);
-Introspectable* FindPieceToIntrospect(std::queue<Introspectable*> queue, 
-                                      std::string const& pieceName);
-
 
 const char* DebugDBusInterface::DBUS_DEBUG_OBJECT_PATH = "/com/canonical/Unity/Debug";
 
@@ -69,8 +66,9 @@ static CompScreen* _screen;
 static Introspectable* _parent_introspectable;
 
 // Stores a part of an XPath query.
-struct XPathQueryPart
+class XPathQueryPart
 {
+public:
   XPathQueryPart(std::string const& query_part)
   {
     std::vector<std::string> part_pieces;
@@ -109,17 +107,19 @@ struct XPathQueryPart
     }
     else
     {
-      GVariant* properties = node->Introspect(true);
-      //LOG_DEBUG(logger) << g_variant_print(properties,true);
-      GVariant *prop_dict = g_variant_get_child_value(properties, 0);
-      //LOG_DEBUG(logger) << g_variant_print(prop_dict,true);
-      //XXX What to do if the value is not a string?
-      //GVariant *prop_value = g_variant_lookup_value(prop_dict, param_name_.c_str(), G_VARIANT_TYPE_STRING);
+      GVariantBuilder  child_builder;
+      g_variant_builder_init(&child_builder, G_VARIANT_TYPE("a{sv}"));
+      node->AddProperties(&child_builder);
+      GVariant* prop_dict = g_variant_builder_end(&child_builder);
       GVariant *prop_value = g_variant_lookup_value(prop_dict, param_name_.c_str(), NULL);
-      //LOG_DEBUG(logger) << g_variant_print(prop_value,true);
+
       if (prop_value != NULL)
       {
         GVariantClass prop_val_type = g_variant_classify(prop_value);
+        // it'd be nice to be able to do all this with one method. However, the booleans need 
+        // special treatment, and I can't figure out how to group all the integer types together
+        // without resorting to template functions.... and we all know what happens when you 
+        // start doing that...
         switch (prop_val_type)
         {
           case G_VARIANT_CLASS_STRING:
@@ -209,12 +209,13 @@ struct XPathQueryPart
           LOG_WARNING(logger) << "Unable to match against property of unknown type.";
         };
       }
-      g_variant_unref(properties);
+      g_variant_unref(prop_value);
+      g_variant_unref(prop_dict);
     }
 
     return matches;
   }
-
+private:
   std::string node_name_;
   std::string param_name_;
   std::string param_value_;
@@ -310,29 +311,33 @@ DebugDBusInterface::HandleDBusMethodCall(GDBusConnection* connection,
   }
 }
 
-GVariant*
-GetState(std::string const& query)
+
+GVariant* GetState(std::string const& query)
 {
-  std::queue<Introspectable*> queue;
-  queue.push(_parent_introspectable);
+  // process the XPath query:
+  std::list<Introspectable*> parts = GetIntrospectableNodesFromQuery(query, _parent_introspectable);
+  // wrap  all the results into a GVariant.
+  GVariantBuilder  builder;
 
-  // Since the empty string won't really match the name of the parent (Unity),
-  // we make sure that we're able to accept a blank string and just define it to
-  // mean the top level.
-  Introspectable* piece = (query == "")
-    ? _parent_introspectable
-    : FindPieceToIntrospect(queue, query);
+  g_variant_builder_init(&builder, G_VARIANT_TYPE("(a{sv})"));
+  g_variant_builder_open(&builder, G_VARIANT_TYPE("a{sv}"));
 
-  // FIXME this might not work, make sure it does.
-  if (piece == NULL)
-    return NULL;
+  for (Introspectable *node : parts)
+  {
+    if (node->GetName() != "")
+    {
+      g_variant_builder_add(&builder, "{sv}", node->GetName().c_str(), node->Introspect());
+    }
+  }
 
-  return piece->Introspect(true);
+  g_variant_builder_close(&builder);
+  
+  return g_variant_builder_end(&builder);
 }
 
 /*
  * Do a breadth-first search of the introspection tree and find all nodes that match the 
- * query. Also modify the query string such that the start points are removed from it.
+ * query.
  */
 std::list<Introspectable*> GetIntrospectableNodesFromQuery(std::string const& query, Introspectable* tree_root)
 {
@@ -446,34 +451,6 @@ std::list<Introspectable*> GetIntrospectableNodesFromQuery(std::string const& qu
     }
   }
   return start_points;
-}
-/*
- * Do a breadth-first search of the introspectable tree.
- */
-Introspectable*
-FindPieceToIntrospect(std::queue<Introspectable*> queue, std::string const& piece_name)
-{
-  Introspectable* piece;
-
-  while (!queue.empty())
-  {
-    piece = queue.front();
-    queue.pop();
-
-    if (piece->GetName() == piece_name)
-    {
-      return piece;
-    }
-
-    for (auto it = piece->GetIntrospectableChildren().begin(), last = piece->GetIntrospectableChildren().end(); it != last; it++)
-    {
-      queue.push(*it);
-    }
-
-    FindPieceToIntrospect(queue, piece_name);
-  }
-
-  return NULL;
 }
 }
 }

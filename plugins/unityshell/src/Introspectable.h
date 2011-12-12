@@ -40,10 +40,11 @@ public:
   void AddChild(Introspectable* child);
   void RemoveChild(Introspectable* child);
   IntrospectableList const& GetIntrospectableChildren() { return _children; };
-
+  virtual void AddProperties(GVariantBuilder* builder) = 0;
+  
 protected:
   virtual std::string GetChildsName() const;
-  virtual void AddProperties(GVariantBuilder* builder) = 0;
+  
 
   /*
    * AddProperties should be implemented as such ...
