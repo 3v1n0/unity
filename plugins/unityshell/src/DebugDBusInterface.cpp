@@ -18,6 +18,8 @@
  */
 
 #include <queue>
+#include <sstream>
+#include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <core/core.h>
@@ -96,16 +98,10 @@ struct XPathQueryPart
       // assume it's just a node name:
       node_name_ = query_part;
     }
-    LOG_DEBUG(logger) << "XPath Matcher constructed with Node Name: '" << node_name_
-                      << "' Param Name: '" << param_name_
-                      << "' Param Value: '" << param_value_ << "'";
   }
 
   bool Matches(Introspectable* node) const
   {
-    LOG_DEBUG(logger) << "XPath Matcher attempting to match with Node Name: '" << node_name_
-                      << "' Param Name: '" << param_name_
-                      << "' Param Value: '" << param_value_ << "'";
     bool matches = false;
     if (param_name_ == "")
     {
@@ -114,22 +110,104 @@ struct XPathQueryPart
     else
     {
       GVariant* properties = node->Introspect(true);
-      LOG_DEBUG(logger) << g_variant_print(properties,true);
+      //LOG_DEBUG(logger) << g_variant_print(properties,true);
       GVariant *prop_dict = g_variant_get_child_value(properties, 0);
-      LOG_DEBUG(logger) << g_variant_print(prop_dict,true);
+      //LOG_DEBUG(logger) << g_variant_print(prop_dict,true);
       //XXX What to do if the value is not a string?
-      GVariant *prop_value = g_variant_lookup_value(prop_dict, param_name_.c_str(), G_VARIANT_TYPE_STRING);
-      LOG_DEBUG(logger) << g_variant_print(prop_value,true);
+      //GVariant *prop_value = g_variant_lookup_value(prop_dict, param_name_.c_str(), G_VARIANT_TYPE_STRING);
+      GVariant *prop_value = g_variant_lookup_value(prop_dict, param_name_.c_str(), NULL);
+      //LOG_DEBUG(logger) << g_variant_print(prop_value,true);
       if (prop_value != NULL)
       {
-        //const gchar* prop_val = g_variant_get_type_string(prop_value);
-        const gchar* prop_val = g_variant_get_string(prop_value, NULL);
-        LOG_DEBUG(logger) << prop_val;
-        LOG_DEBUG(logger) << param_value_;
-        if (g_strcmp0(prop_val, param_value_.c_str()) == 0)
+        GVariantClass prop_val_type = g_variant_classify(prop_value);
+        switch (prop_val_type)
         {
-          matches = true;
-        }
+          case G_VARIANT_CLASS_STRING:
+          {
+            const gchar* prop_val = g_variant_get_string(prop_value, NULL);
+            if (g_strcmp0(prop_val, param_value_.c_str()) == 0)
+            {
+              matches = true;
+            }
+          }
+          break;
+          case G_VARIANT_CLASS_BOOLEAN:
+          {
+            std::string value = boost::to_upper_copy(param_value_);
+            bool p = value == "TRUE" ||
+                      value == "ON" ||
+                      value == "YES" ||
+                      value == "1";
+            matches = (g_variant_get_boolean(prop_value) == p);
+          }
+          break;
+          case G_VARIANT_CLASS_BYTE:
+          {
+            // It would be nice if I could do all the integer types together, but I couldn't see how...
+            std::stringstream stream(param_value_);
+            int val; // changing this to guchar causes problems.
+            stream >> val;
+            matches = (stream.rdstate() & (stream.badbit|stream.failbit)) == 0 && 
+                      val == g_variant_get_byte(prop_value);
+          }
+          break;
+          case G_VARIANT_CLASS_INT16:
+          {
+            std::stringstream stream(param_value_);
+            gint16 val;
+            stream >> val;
+            matches = (stream.rdstate() & (stream.badbit|stream.failbit)) == 0 && 
+                      val == g_variant_get_int16(prop_value);
+          }
+          break;
+          case G_VARIANT_CLASS_UINT16:
+          {
+            std::stringstream stream(param_value_);
+            guint16 val;
+            stream >> val;
+            matches = (stream.rdstate() & (stream.badbit|stream.failbit)) == 0 && 
+                      val == g_variant_get_uint16(prop_value);            
+          }
+          break;
+          case G_VARIANT_CLASS_INT32:
+          {
+            std::stringstream stream(param_value_);
+            gint32 val;
+            stream >> val;
+            matches = (stream.rdstate() & (stream.badbit|stream.failbit)) == 0 && 
+                      val == g_variant_get_int32(prop_value);
+          }
+          break;
+          case G_VARIANT_CLASS_UINT32:
+          {
+            std::stringstream stream(param_value_);
+            guint32 val;
+            stream >> val;
+            matches = (stream.rdstate() & (stream.badbit|stream.failbit)) == 0 && 
+                      val == g_variant_get_uint32(prop_value);
+          }
+          break;
+          case G_VARIANT_CLASS_INT64:
+          {
+            std::stringstream stream(param_value_);
+            gint64 val;
+            stream >> val;
+            matches = (stream.rdstate() & (stream.badbit|stream.failbit)) == 0 && 
+                      val == g_variant_get_int64(prop_value);
+          }
+          break;
+          case G_VARIANT_CLASS_UINT64:
+          {
+            std::stringstream stream(param_value_);
+            guint64 val;
+            stream >> val;
+            matches = (stream.rdstate() & (stream.badbit|stream.failbit)) == 0 && 
+                      val == g_variant_get_uint64(prop_value);
+          }
+          break;
+        default:
+          LOG_WARNING(logger) << "Unable to match against property of unknown type.";
+        };
       }
       g_variant_unref(properties);
     }

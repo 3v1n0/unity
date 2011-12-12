@@ -19,6 +19,7 @@
 #include <gtest/gtest.h>
 #include <glib.h>
 #include <memory>
+#include <boost/foreach.hpp>
 
 #include "Introspectable.h"
 #include "DebugDBusInterface.h"
@@ -30,26 +31,8 @@ class MockIntrospectable : public Introspectable
 {
 public:
   MockIntrospectable(std::string const& name)
-  : name_(name),
-  properties_(nullptr)
+  : name_(name)
   {}
-
-  ~MockIntrospectable()
-  {
-    if (properties_ != nullptr)
-    {
-      g_variant_unref(properties_);
-    }
-  }
-
-  void SetProperty(GVariant *prop)
-  {
-    if (properties_ != nullptr)
-    {
-      g_variant_unref(properties_);
-    }
-    properties_ = prop;
-  }
 
   std::string GetName() const
   {
@@ -57,11 +40,28 @@ public:
   }
   void AddProperties(GVariantBuilder* builder)
   {
-    g_variant_builder_add_value(builder, properties_);
+    g_variant_builder_add (builder, "{sv}", "Name", g_variant_new_string (name_.c_str()) );
+    g_variant_builder_add (builder, "{sv}", "SomeProperty", g_variant_new_string ("SomeValue") );
+    g_variant_builder_add (builder, "{sv}", "BoolPropertyTrue", g_variant_new_boolean (TRUE) );
+    g_variant_builder_add (builder, "{sv}", "BoolPropertyFalse", g_variant_new_boolean (FALSE) );
+    // 8-bit integer types:
+    g_variant_builder_add (builder, "{sv}", "BytePropertyPos", g_variant_new_byte (12) );
+    // 16-bit integer types:
+    g_variant_builder_add (builder, "{sv}", "Int16PropertyPos", g_variant_new_int16 (1012) );
+    g_variant_builder_add (builder, "{sv}", "Int16PropertyNeg", g_variant_new_int16 (-1034) );
+    g_variant_builder_add (builder, "{sv}", "UInt16PropertyPos", g_variant_new_uint16 (1056) );
+    // 32-bit integer types:
+    g_variant_builder_add (builder, "{sv}", "Int32PropertyPos", g_variant_new_int32 (100012) );
+    g_variant_builder_add (builder, "{sv}", "Int32PropertyNeg", g_variant_new_int32 (-100034) );
+    g_variant_builder_add (builder, "{sv}", "UInt32PropertyPos", g_variant_new_uint32 (100056) );
+    // 64-bit integer types
+    g_variant_builder_add (builder, "{sv}", "Int64PropertyPos", g_variant_new_int32 (100000012) );
+    g_variant_builder_add (builder, "{sv}", "Int64PropertyNeg", g_variant_new_int32 (-100000034) );
+    g_variant_builder_add (builder, "{sv}", "UInt64PropertyPos", g_variant_new_uint32 (100000056) );
+
   }
 private:
   std::string name_;
-  GVariant *properties_;
 };
 
 class TestIntrospection : public ::testing::Test
@@ -81,7 +81,7 @@ public:
     dc_->AddChild(foo2_.get());
     dc_->AddChild(foo3_.get());
 
-    root_->SetProperty(g_variant_new("{sv}", "SomeProperty", g_variant_new_string("SomeValue")));
+    //root_->SetProperty(g_variant_new("{sv}", "SomeProperty", g_variant_new_string("SomeValue")));
   }
 
 protected:
@@ -205,4 +205,90 @@ TEST_F(TestIntrospection, TestQueriesWithParams)
   // but this should find nothing:
   results = FindQueryStartPoints("/Unity[SomeProperty=SomeOtherValue]", root_.get());
   ASSERT_EQ(0, results.size());
+
+  // make sure relative paths work:
+  results = FindQueryStartPoints("//Foo[Name=Foo]", root_.get());
+  ASSERT_EQ(3, results.size());
+  for(auto p : results)
+  {
+    EXPECT_STREQ("Foo", p->GetName().c_str()); 
+  }
+
+  // make sure param queries work with descendant nodes as well:
+  results = FindQueryStartPoints("/Unity[SomeProperty=SomeValue]/DashController[Name=DashController]/Foo", root_.get());
+  ASSERT_EQ(3, results.size());
+  for(auto p : results)
+  {
+    EXPECT_STREQ("Foo", p->GetName().c_str()); 
+  }
+}
+
+TEST_F(TestIntrospection, TestQueryTypeBool)
+{
+  std::list<Introspectable*> results;
+
+  // These are all equivilent and should return the root item and nothing more:
+  std::list<std::string> queries = {"/Unity[BoolPropertyTrue=True]",
+                                    "/Unity[BoolPropertyTrue=true]",
+                                    "/Unity[BoolPropertyTrue=trUE]",
+                                    "/Unity[BoolPropertyTrue=yes]",
+                                    "/Unity[BoolPropertyTrue=ON]",
+                                    "/Unity[BoolPropertyTrue=1]"};
+
+  for(auto query : queries)
+  {
+    results = FindQueryStartPoints(query, root_.get());
+    ASSERT_EQ(1, results.size());
+    EXPECT_STREQ("Unity", results.front()->GetName().c_str());
+  }
+
+  // For boolean properties, anything that's not True, Yes, On or 1 is treated as false:
+  queries = {"/Unity[BoolPropertyTrue=False]",
+            "/Unity[BoolPropertyTrue=fAlSE]",
+            "/Unity[BoolPropertyTrue=No]",
+            "/Unity[BoolPropertyTrue=OFF]",
+            "/Unity[BoolPropertyTrue=0]",
+            "/Unity[BoolPropertyTrue=ThereWasAManFromNantucket]"};
+  for(auto query : queries)
+  {
+    results = FindQueryStartPoints(query, root_.get());
+    ASSERT_EQ(0, results.size());
+  }
+}
+
+TEST_F(TestIntrospection, TestQueryTypeInt)
+{
+  std::list<Introspectable*> results;
+  
+  // these should all select the root Unity node:
+  std::list<std::string> queries = {"/Unity[BytePropertyPos=12]",
+                                    "/Unity[Int16PropertyPos=1012]",
+                                    "/Unity[Int16PropertyNeg=-1034]",
+                                    "/Unity[UInt16PropertyPos=1056]",
+                                    "/Unity[Int32PropertyPos=100012]",
+                                    "/Unity[Int32PropertyNeg=-100034]",
+                                    "/Unity[UInt32PropertyPos=100056]",
+                                    "/Unity[Int64PropertyPos=100000012]",
+                                    "/Unity[Int64PropertyNeg=-100000034]",
+                                    "/Unity[UInt64PropertyPos=100000056]"};
+  for(auto query : queries)
+  {
+    results = FindQueryStartPoints(query, root_.get());
+    ASSERT_EQ(1, results.size()) << "Failing query: " << query;
+    EXPECT_STREQ("Unity", results.front()->GetName().c_str());
+  }
+
+  // but these shouldn't:
+  queries = {"/Unity[BytePropertyPos=1234]",
+            "/Unity[Int16PropertyPos=0]",
+            "/Unity[Int16PropertyNeg=-0]",
+            "/Unity[UInt16PropertyPos=-1056]",
+            "/Unity[Int32PropertyPos=999999999999999]",
+            "/Unity[Int32PropertyNeg=Garbage]",
+            "/Unity[UInt32PropertyPos=-23]"};
+  for(auto query : queries)
+  {
+    results = FindQueryStartPoints(query, root_.get());
+    ASSERT_EQ(0, results.size());
+  }              
 }
