@@ -64,7 +64,7 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
   layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
   layout_->SetHorizontalInternalMargin(0);
   layout_->SetVerticalExternalMargin(8);
-  layout_->SetHorizontalExternalMargin(10);
+  layout_->SetHorizontalExternalMargin(7);
   SetLayout(layout_);
 
   spinner_ = new SearchBarSpinner();
@@ -74,7 +74,7 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
 
   hint_ = new nux::StaticCairoText(" ");
   hint_->SetTextColor(nux::Color(1.0f, 1.0f, 1.0f, 0.5f));
-  hint_->SetMaximumWidth(570);
+  hint_->SetMaximumWidth(642);
 
   pango_entry_ = new IMTextEntry();
   pango_entry_->sigTextChanged.connect(sigc::mem_fun(this, &SearchBar::OnSearchChanged));
@@ -82,14 +82,14 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
   pango_entry_->cursor_moved.connect([&](int i) { QueueDraw(); });
   pango_entry_->mouse_down.connect(sigc::mem_fun(this, &SearchBar::OnMouseButtonDown));
   pango_entry_->end_key_focus.connect(sigc::mem_fun(this, &SearchBar::OnEndKeyFocus));
-  pango_entry_->SetMaximumWidth(570);
+  pango_entry_->SetMaximumWidth(642);
 
   layered_layout_ = new nux::LayeredLayout();
   layered_layout_->AddLayer(hint_);
   layered_layout_->AddLayer(pango_entry_);
   layered_layout_->SetPaintAll(true);
   layered_layout_->SetActiveLayerN(1);
-  layered_layout_->SetMinimumWidth(420);
+  layered_layout_->SetMinimumWidth(642);
   layered_layout_->SetMaximumWidth(645);
   layout_->AddView(layered_layout_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
@@ -280,9 +280,9 @@ void SearchBar::UpdateBackground()
   last_width_ = geo.width;
   last_height_ = geo.height;
 
-  x = y = PADDING;
+  x = y = PADDING - 1;
   width = last_width_ - (2 * PADDING);
-  height = last_height_ - (2 * PADDING);
+  height = last_height_ - (2 * PADDING) + 1;
 
   nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, last_width_, last_height_);
   cairo_t* cr = cairo_graphics.GetContext();
