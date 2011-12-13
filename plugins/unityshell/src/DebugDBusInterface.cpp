@@ -22,6 +22,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/classification.hpp>
+#include <boost/bind.hpp>
 #include <core/core.h>
 #include <NuxCore/Logger.h>
 

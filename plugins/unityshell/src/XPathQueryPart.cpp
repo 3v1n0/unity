@@ -21,8 +21,9 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/classification.hpp>
+#include <boost/bind.hpp>
 #include <NuxCore/Logger.h>
-
+#include "XPathQueryPart.h"
 #include "Introspectable.h"
 
 namespace unity

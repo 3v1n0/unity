@@ -109,6 +109,8 @@ if (${GTEST_FOUND} STREQUAL TRUE)
                  ${UNITY_SRC}/AbstractLauncherIcon.h
                  ${UNITY_SRC}/DebugDBusInterface.h
                  ${UNITY_SRC}/DebugDBusInterface.cpp
+                 ${UNITY_SRC}/XPathQueryPart.h
+                 ${UNITY_SRC}/XPathQueryPart.cpp
                  ${UNITY_SRC}/FavoriteStore.cpp
                  ${UNITY_SRC}/FavoriteStore.h
                  ${UNITY_SRC}/FavoriteStoreGSettings.cpp
