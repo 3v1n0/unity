@@ -160,7 +160,7 @@ void Controller::ConstructView()
   view_window_->ShowWindow(true);
 }
 
-void Controller::SetWorkspace(nux::Geometry geo)
+void Controller::SetWorkspace(nux::Geometry const& geo)
 {
   workarea_ = geo;
   view_window_->SetGeometry(workarea_);

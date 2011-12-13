@@ -50,7 +50,7 @@ public:
   
   bool Visible();
 
-  void SetWorkspace(nux::Geometry geo);
+  void SetWorkspace(nux::Geometry const& geo);
 
 private:
   // Private Methods

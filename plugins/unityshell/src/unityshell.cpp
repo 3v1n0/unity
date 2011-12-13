@@ -1152,20 +1152,27 @@ bool UnityScreen::showLauncherKeyInitiate(CompAction* action,
   EnsureSuperKeybindings ();
   
   if (enable_shortcut_overlay_ and !shortcut_controller_->Visible())
-  { 
-    static int i = 0;   
-    // FIXME  
-    if (!i)
-    {
-      int device = screen->outputDeviceForPoint(pointerX, pointerY);
-      shortcut_controller_->SetWorkspace(nux::Geometry(screen->outputDevs()[device].x1() + (1366-1000)/2,
-                                       screen->outputDevs()[device].y1() + (768-700)/2,
-                                       1000, 700));
-                                     }
-
-    shortcut_controller_->Show();
+  {
+    static nux::Geometry last_geo;
+    UScreen* uscreen = UScreen::GetDefault();
+    int primary_monitor = uscreen->GetPrimaryMonitor();
+    auto monitor_geo = uscreen->GetMonitorGeometry(primary_monitor);
+        
+    int width = 950;
+    int height =  660;
+    int x = monitor_geo.x + (monitor_geo.width - width) / 2;
+    int y = monitor_geo.y + (monitor_geo.height - height) / 2;
     
-    i++;
+    nux::Geometry geo (x, y, width, height);
+    
+    if (last_geo != geo)
+    {
+      shortcut_controller_->SetWorkspace(geo);
+      last_geo = geo;
+    }
+    
+    if (last_geo.x > monitor_geo.x and last_geo.y > monitor_geo.y)
+      shortcut_controller_->Show();
    }
   
   return false;
@@ -2443,7 +2450,7 @@ void UnityScreen::initLauncher()
   dash_controller_.reset(new dash::Controller());
   dash_controller_->on_realize.connect(sigc::mem_fun(this, &UnityScreen::OnDashRealized));
   
-  // Setup Shortcunt Hint
+  // Setup Shortcut Hint
   InitHints();
   shortcut_controller_.reset(new shortcut::Controller(hints_));
 
