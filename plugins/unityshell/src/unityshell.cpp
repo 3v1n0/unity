@@ -187,7 +187,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   {
      notify_init("unityshell");
 
-     //g_thread_init(NULL);
+     g_thread_init(NULL);
      dbus_g_thread_init();
 
      unity_a11y_preset_environment();
@@ -1057,6 +1057,7 @@ void UnityScreen::handleEvent(XEvent* event)
         // thing that could possibly make sense here.
         key_string[result] = 0;
         if (super_keypressed_) {
+          shortcut_controller_->Hide();
           skip_other_plugins = launcher.CheckSuperShortcutPressed(screen->dpy(), key_sym, event->xkey.keycode, event->xkey.state, key_string);
           if (!skip_other_plugins) {
             skip_other_plugins = dash_controller_->CheckShortcutActivation(key_string);
