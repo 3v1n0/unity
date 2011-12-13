@@ -242,22 +242,27 @@
                     </desc>
                 </option>
                 <option type="float" name="panel_opacity">
-              		<_short>Panel Opacity</_short>
-                  <_long>The opacity of the Panel background.</_long>
-              		<default>1.0</default>
-              		<min>0.0</min>
-              		<max>1.0</max>
-              		<precision>0.01</precision>
+                    <_short>Panel Opacity</_short>
+                    <_long>The opacity of the Panel background.</_long>
+                    <default>1.0</default>
+                    <min>0.0</min>
+                    <max>1.0</max>
+                    <precision>0.01</precision>
+                </option>
+                <option type="bool" name="panel_opacity_maximized_toggle">
+                  <_short>Panel Opacity for Maximized Windows Toggle.</_short>
+                  <_long>When a window is maximized and visible in the current viewport, the panel opacity is disabled</_long>
+                  <default>false</default>
                 </option>
                 <option type="float" name="launcher_opacity">
-              		<_short>Launcher Opacity</_short>
-                  <_long>The opacity of the Launcher background.</_long>
-              		<default>0.6667</default>
-              		<min>0.0</min>
-              		<max>1.0</max>
-              		<precision>0.0001</precision>
+                    <_short>Launcher Opacity</_short>
+                    <_long>The opacity of the Launcher background.</_long>
+                    <default>0.6667</default>
+                    <min>0.0</min>
+                    <max>1.0</max>
+                    <precision>0.0001</precision>
                 </option>
-            		<option name="icon_size" type="int">
+                <option name="icon_size" type="int">
                     <_short>Launcher icon size</_short>
                     <_long>The size of the launcher icons</_long>
                     <default>48</default>
@@ -335,6 +340,12 @@
                         <value>2</value>
                         <_name>Always</_name>
                     </desc>
+                </option>
+
+		<option name="show_desktop_icon" type="bool">
+                    <_short>Show "Desktop Icon" in the launcher</_short>
+                    <_long>Enable/Disable "Show Dekstop icon" in the launcher.</_long>
+                    <default>false</default>
                 </option>
 
             </group>

@@ -35,7 +35,7 @@
 namespace unity
 {
 
-class PlacesHomeView : public unity::Introspectable, public PlacesGroup
+class PlacesHomeView : public unity::debug::Introspectable, public PlacesGroup
 {
 public:
   PlacesHomeView();
