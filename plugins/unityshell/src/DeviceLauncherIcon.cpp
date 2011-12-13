@@ -102,7 +102,7 @@ std::list<DbusmenuMenuitem*> DeviceLauncherIcon::GetMenus()
   {
     menu_item = dbusmenu_menuitem_new();
 
-    dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, !keep_in_launcher_ ? ("Lock to launcher") : _("Unlock from launcher"));
+    dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, !keep_in_launcher_ ? _("Lock to launcher") : _("Unlock from launcher"));
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
     
