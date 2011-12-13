@@ -45,7 +45,7 @@ View::View(NUX_FILE_LINE_DECL)
   : nux::View(NUX_FILE_LINE_PARAM)
 {
   layout_ = new nux::VLayout();
-  layout_->SetPadding(50, 50);
+  layout_->SetPadding(40, 40);
   layout_->SetSpaceBetweenChildren(25);
   SetLayout(layout_);
 
@@ -66,7 +66,7 @@ View::View(NUX_FILE_LINE_DECL)
   layout_->AddView(new HSeparator(), 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);  
     
   columns_layout_ = new nux::HLayout();  
-  columns_layout_->SetSpaceBetweenChildren(40);
+  columns_layout_->SetSpaceBetweenChildren(25);
   layout_->AddLayout(columns_layout_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
   
   // Column 1...
