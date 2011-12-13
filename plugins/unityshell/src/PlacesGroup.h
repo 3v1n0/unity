@@ -88,6 +88,8 @@ private:
 private:
   nux::VLayout* _group_layout;
   nux::HLayout* _header_layout;
+  nux::HLayout* _text_layout;
+  nux::HLayout* _expand_layout;
   nux::View*  _child_view;
 
   IconTexture*          _icon;

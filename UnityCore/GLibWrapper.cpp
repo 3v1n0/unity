@@ -49,6 +49,11 @@ Error::operator bool() const
   return bool(error_);
 }
 
+Error::operator GError* ()
+{
+    return error_;
+}
+
 std::string Error::Message() const
 {
   std::string result;

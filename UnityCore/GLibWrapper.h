@@ -63,6 +63,8 @@ public:
   GError** AsOutParam();
   GError** operator&();
 
+  operator GError*();
+
   operator bool() const;
   std::string Message() const;
 
