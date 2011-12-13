@@ -929,8 +929,6 @@ void BamfLauncherIcon::EnsureMenuItemsReady()
   {
     menu_item = dbusmenu_menuitem_new();
 
-    dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE, DBUSMENU_MENUITEM_TOGGLE_CHECK);
-    dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Keep in launcher"));
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
 
@@ -938,12 +936,11 @@ void BamfLauncherIcon::EnsureMenuItemsReady()
 
     _menu_items["Pin"] = menu_item;
   }
-  int checked = !bamf_view_is_sticky(BAMF_VIEW(m_App)) ?
-                DBUSMENU_MENUITEM_TOGGLE_STATE_CHECKED : DBUSMENU_MENUITEM_TOGGLE_STATE_UNCHECKED;
+  
+  const char* label = !bamf_view_is_sticky(BAMF_VIEW(m_App)) ?
+                      _("Lock to launcher") : _("Unlock from launcher");
 
-  dbusmenu_menuitem_property_set_int(_menu_items["Pin"],
-                                     DBUSMENU_MENUITEM_PROP_TOGGLE_STATE,
-                                     checked);
+  dbusmenu_menuitem_property_set(_menu_items["Pin"], DBUSMENU_MENUITEM_PROP_LABEL, label);
 
 
   /* Quit */
