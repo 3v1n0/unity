@@ -130,7 +130,7 @@ add_subdirectory(plugins/unity-mt-grab-handles)
 # subdirs
 add_subdirectory(doc)
 add_subdirectory(services)
-add_subdirectory(tests)
+#add_subdirectory(tests)
 add_subdirectory(tools)
 add_subdirectory(UnityCore)
 add_subdirectory(guides)

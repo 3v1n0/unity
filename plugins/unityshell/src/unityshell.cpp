@@ -2473,7 +2473,7 @@ void UnityScreen::InitHints()
   hints_.push_back(new shortcut::Hint(_("Launcher"), "", _(" (Press)"), _("Open Launcher, displays shortcuts."), shortcut::COMPIZ_OPTION, "unityshell", "show_launcher" ));
   hints_.push_back(new shortcut::Hint(_("Launcher"), "", "", _("Open Launcher keyboard navigation mode."), shortcut::COMPIZ_OPTION, "unityshell", "keyboard_focus"));
   // FIXME: Implement it...
-  hints_.push_back(new shortcut::Hint(_("Launcher"), "", "", _("Switch application via Launcher."), shortcut::HARDCODED_OPTION, "Super + Tab"));
+  //hints_.push_back(new shortcut::Hint(_("Launcher"), "", "", _("Switch application via Launcher."), shortcut::HARDCODED_OPTION, "Super + Tab"));
   hints_.push_back(new shortcut::Hint(_("Launcher"), "", _(" + 1 to 9"), _("Same as clicking on a Launcher icon."), shortcut::COMPIZ_OPTION, "unityshell", "show_launcher"));
   hints_.push_back(new shortcut::Hint(_("Launcher"), "", _(" + Shift + 1 to 9"), _("Open a new window of the app."), shortcut::COMPIZ_OPTION, "unityshell", "show_launcher"));
   hints_.push_back(new shortcut::Hint(_("Launcher"), "", " + T", _("Open the Rubbish Bin."), shortcut::COMPIZ_OPTION, "unityshell", "show_launcher")); 
@@ -2486,20 +2486,19 @@ void UnityScreen::InitHints()
   hints_.push_back(new shortcut::Hint(_("Dash"), "", " + M", _("Open the Dash Music Lens."), shortcut::COMPIZ_OPTION, "unityshell", "show_launcher"));
   hints_.push_back(new shortcut::Hint(_("Dash"), "", "", _("Switches between Lenses."), shortcut::HARDCODED_OPTION, "Ctrl + Tab"));
   hints_.push_back(new shortcut::Hint(_("Dash"), "", "", _("Moves the focus."), shortcut::HARDCODED_OPTION, _("Cursor Keys")));
-  hints_.push_back(new shortcut::Hint(_("Dash"), "", "", _("Open currently focused item."), shortcut::HARDCODED_OPTION, _("Enter / Return")));
+  hints_.push_back(new shortcut::Hint(_("Dash"), "", "", _("Open currently focused item."), shortcut::HARDCODED_OPTION, _("Enter & Return")));
   hints_.push_back(new shortcut::Hint(_("Dash"), "", "", _("'Run Command' mode."), shortcut::COMPIZ_OPTION, "unityshell", "execute_command"));
  
   // Top Bar
   // Is it really hard coded?
   hints_.push_back(new shortcut::Hint(_("Top Bar"), "", "", _("Reveals application menu."), shortcut::HARDCODED_OPTION, "Alt"));
   hints_.push_back(new shortcut::Hint(_("Top Bar"), "", "", _("Opens the indicator menu."), shortcut::COMPIZ_OPTION, "unityshell", "panel_first_menu"));
-  hints_.push_back(new shortcut::Hint(_("Top Bar"), "", "", _("Moves focus between indicators."), shortcut::HARDCODED_OPTION, _("Cursor Left & Right")));
+  hints_.push_back(new shortcut::Hint(_("Top Bar"), "", "", _("Moves focus between indicators."), shortcut::HARDCODED_OPTION, _("Cursor Left or Right")));
 
   // Switching
   hints_.push_back(new shortcut::Hint(_("Switching"), "", "", _("Switch between applications."), shortcut::COMPIZ_OPTION, "unityshell", "alt_tab_forward"));
   hints_.push_back(new shortcut::Hint(_("Switching"), "", "", _("Switch windows of current application."), shortcut::COMPIZ_OPTION, "unityshell", "alt_tab_next_window"));
-  hints_.push_back(new shortcut::Hint(_("Switching"), "", "", _("Close window switch, return to app switch."), shortcut::COMPIZ_OPTION, "unityshell", "alt_tab_detail_stop"));
-  hints_.push_back(new shortcut::Hint(_("Switching"), "", "", _("Moves the focus."), shortcut::HARDCODED_OPTION, _("Cursor Left & Right")));
+  hints_.push_back(new shortcut::Hint(_("Switching"), "", "", _("Moves the focus."), shortcut::HARDCODED_OPTION, _("Cursor Left or Right")));
 
   // Workspaces
   hints_.push_back(new shortcut::Hint(_("Workspaces"), "", "", _("Spread workspaces."), shortcut::COMPIZ_OPTION, "expo", "expo_key"));
@@ -2510,8 +2509,8 @@ void UnityScreen::InitHints()
   hints_.push_back(new shortcut::Hint(_("Windows"), "", "", _("Spreads all windows in current workspace."), shortcut::COMPIZ_OPTION, "scale", "initiate_output_key"));
   hints_.push_back(new shortcut::Hint(_("Windows"), "", "", _("Minimises all windows."), shortcut::COMPIZ_OPTION, "core", "show_desktop_key"));
   // I don't know if it is really hardcoded, but I can't find where this option is stored.
-  hints_.push_back(new shortcut::Hint(_("Windows"), "", "", _("Open window accessibility menu."), shortcut::HARDCODED_OPTION, "Alt + Space"));
-  hints_.push_back(new shortcut::Hint(_("Windows"), "", "", _("Maximises current window."), shortcut::COMPIZ_OPTION, "core", "maximize_window_key"));
+  hints_.push_back(new shortcut::Hint(_("Windows"), "", "", _("Opens window accessibility menu."), shortcut::HARDCODED_OPTION, "Alt + Space"));
+  hints_.push_back(new shortcut::Hint(_("Windows"), "", "", _("Maximises the current window."), shortcut::COMPIZ_OPTION, "core", "maximize_window_key"));
   hints_.push_back(new shortcut::Hint(_("Windows"), "", "", _("Un-maximises current window."), shortcut::COMPIZ_OPTION, "core", "unmaximize_window_key"));
   hints_.push_back(new shortcut::Hint(_("Windows"), "", "", _("Minimises current window."), shortcut::COMPIZ_OPTION, "core", "minimize_window_key"));
   hints_.push_back(new shortcut::Hint(_("Windows"), "", "", _("Resizes current window."), shortcut::COMPIZ_OPTION, "resize", "initiate_key"));
