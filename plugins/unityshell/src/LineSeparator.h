@@ -29,7 +29,7 @@ class HSeparator: public AbstractSeparator
 {
 public:
   HSeparator();
-  HSeparator(nux::Color const& color, float Alpha0, float Alpha1, int Border);
+  HSeparator(nux::Color const& color, float alpha0, float alpha1, int border);
 
   ~HSeparator();
 

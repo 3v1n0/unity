@@ -35,8 +35,8 @@ Controller::Controller(std::list<AbstractHint*>& hints)
   : view_window_(0)
   , visible_(false)
   , show_timer_(0)
-  , fade_in_animator_(NULL)
-  , fade_out_animator_(NULL)
+  , fade_in_animator_(new Animator(100))
+  , fade_out_animator_(new Animator(100))
 
 {
   bg_color_ = nux::Color(0.0, 0.0, 0.0, 0.5);
@@ -50,9 +50,6 @@ Controller::Controller(std::list<AbstractHint*>& hints)
   
   model_->Fill();
   ConstructView();
-  
-  fade_in_animator_ = new Animator(100);
-  fade_out_animator_ = new Animator(100);
 
   fade_in_animator_->animation_updated.connect(sigc::mem_fun(this, &Controller::OnFadeInUpdated));
   fade_in_animator_->animation_ended.connect(sigc::mem_fun(this, &Controller::OnFadeInEnded));

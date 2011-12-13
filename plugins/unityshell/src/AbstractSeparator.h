@@ -30,12 +30,12 @@ class AbstractSeparator: public nux::View
 {
 public:
   AbstractSeparator(NUX_FILE_LINE_PROTO);
-  AbstractSeparator(nux::Color const& color, float Alpha0, float Alpha1, int Border, NUX_FILE_LINE_PROTO);
+  AbstractSeparator(nux::Color const& color, float alpha0, float alpha1, int vorder, NUX_FILE_LINE_PROTO);
   ~AbstractSeparator();
   
   void SetColor(nux::Color const& color);
-  void SetAlpha(float Alpha0, float Alpha1);
-  void SetBorderSize(int Border);
+  void SetAlpha(float alpha0, float alpha1);
+  void SetBorderSize(int border);
 
 protected:
   nux::Color color_;

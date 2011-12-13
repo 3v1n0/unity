@@ -49,8 +49,6 @@ void Model::AddHint(AbstractHint* hint)
 }
 
 
-// We need this function because nux::Property doesn't allow to set a 
-// getter function.
 void Model::Fill()
 {
   for (auto category : categories_)
@@ -60,4 +58,3 @@ void Model::Fill()
 
 } // namespace shortcut
 } // namespace unity
-

@@ -30,8 +30,8 @@ HSeparator::HSeparator()
   SetMaximumHeight(1);
 }
 
-HSeparator::HSeparator(nux::Color const& color, float Alpha0, float Alpha1, int Border)
-  : AbstractSeparator(color, Alpha0, Alpha1, Border)
+HSeparator::HSeparator(nux::Color const& color, float alpha0, float alpha1, int border)
+  : AbstractSeparator(color, alpha0, alpha1, border)
 {
   SetMinimumHeight(1);
   SetMaximumHeight(1);

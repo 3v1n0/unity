@@ -78,7 +78,6 @@ bool Hint::Fill()
             {
               Value = temp;
               Shortkey = Prefix() + Value() + Postfix();
-
             }
               
             return true;

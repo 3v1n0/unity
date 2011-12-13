@@ -27,12 +27,11 @@
 #include <NuxCore/Color.h>
 
 #include "Animator.h"
-#include "ShortcutView.h"
 #include "ShortcutModel.h"
+#include "ShortcutView.h"
 
 namespace unity
 {
-
 namespace shortcut
 {
 
@@ -82,7 +81,6 @@ private:
 }; 
 
 } // namespace shortcut
-
 } // namespace unity
 
 #endif //UNITYSHELL_SHORTCUTHINTCONTROLLER_H

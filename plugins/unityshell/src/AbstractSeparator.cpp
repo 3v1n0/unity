@@ -26,7 +26,7 @@ namespace unity
 
 AbstractSeparator::AbstractSeparator(NUX_FILE_LINE_DECL)
   : nux::View(NUX_FILE_LINE_PARAM)
-  , color_(0xFFFFFFFF)
+  , color_(nux::color::White)
   , alpha0_(0.0f)
   , alpha1_(0.592f)
   , border_size_(10)
@@ -34,13 +34,13 @@ AbstractSeparator::AbstractSeparator(NUX_FILE_LINE_DECL)
 }
 
 // Maybe it's better to use default arguments?
-AbstractSeparator::AbstractSeparator(nux::Color const& color, float Alpha0, 
-                                     float Alpha1, int Border, NUX_FILE_LINE_DECL)
+AbstractSeparator::AbstractSeparator(nux::Color const& color, float alpha0, 
+                                     float alpha1, int border, NUX_FILE_LINE_DECL)
   : nux::View(NUX_FILE_LINE_PARAM)
   , color_(color)
-  , alpha0_(Alpha0)
-  , alpha1_(Alpha1)
-  , border_size_(Border)
+  , alpha0_(alpha0)
+  , alpha1_(alpha1)
+  , border_size_(border)
 {
 }
 
@@ -54,15 +54,15 @@ void AbstractSeparator::SetColor(nux::Color const &color)
   color_ = color;
 }
 
-void AbstractSeparator::SetAlpha(float Alpha0, float Alpha1)
+void AbstractSeparator::SetAlpha(float alpha0, float alpha1)
 {
-  alpha0_ = Alpha0;
-  alpha1_ = Alpha1;
+  alpha0_ = alpha0;
+  alpha1_ = alpha1;
 }
 
-void AbstractSeparator::SetBorderSize(int Border)
+void AbstractSeparator::SetBorderSize(int border)
 {
-  border_size_ = Border;
+  border_size_ = border;
 }
 
 } // namespace unity
