@@ -205,20 +205,25 @@ void Controller::Hide(bool accept_state)
     AbstractLauncherIcon* selection = model_->Selection();
     if (selection)
     {
+      /* Instead of defining a new type of ActionArg we only use the "button"
+       * ActionArg value to indicate to the view if we're performing a quick
+       * switch or not.                                                      */
+      unsigned int is_quick = (view_window_ && view_window_->IsVisible()) ? 0 : 1;
+
       if (model_->detail_selection)
       {
-        selection->Activate(ActionArg(ActionArg::SWITCHER, 0, model_->DetailSelectionWindow ()));
+        selection->Activate(ActionArg(ActionArg::SWITCHER, is_quick, model_->DetailSelectionWindow ()));
       }
       else
       {
         if (selection->GetQuirk (AbstractLauncherIcon::QUIRK_ACTIVE) &&
             !model_->DetailXids().empty ())
         {
-          selection->Activate(ActionArg (ActionArg::SWITCHER, 0, model_->DetailXids()[0]));
+          selection->Activate(ActionArg (ActionArg::SWITCHER, is_quick, model_->DetailXids()[0]));
         }
         else
         {
-          selection->Activate(ActionArg(ActionArg::SWITCHER, 0));
+          selection->Activate(ActionArg(ActionArg::SWITCHER, is_quick));
         }
       }
     }
