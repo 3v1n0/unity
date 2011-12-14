@@ -48,6 +48,7 @@ public:
   enum class FocusVisibility
   {
     OnlyVisible,
+    OnlyVisibleOnTop,
     ForceUnminimizeInvisible,
     ForceUnminimizeOnCurrentDesktop
   };
