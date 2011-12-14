@@ -159,7 +159,7 @@ private:
 
   std::map<guint32, bool> _decor_map;
   std::set<guint32> _maximized_set;
-  std::list<BamfApplication*> _new_apps;
+  std::list<glib::Object<BamfApplication>> _new_apps;
 
   int _padding;
   int _last_width;

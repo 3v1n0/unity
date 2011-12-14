@@ -100,6 +100,9 @@ if (${GTEST_FOUND} STREQUAL TRUE)
 # The actual test executable (xless) - do not put anything that requires X in here
   add_executable(test-gtest-xless
                  test_animator.cpp
+                 test_glib_object.cpp
+                 test_glib_object_utils.cpp
+                 test_glib_object_utils.h
                  test_glib_signals.cpp
                  test_glib_signals_utils.cpp
                  test_glib_signals_utils.h
