@@ -240,6 +240,11 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetUrgentAnimationNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetPanelOpacityNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetPanelOpacityMaximizedToggleNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+     optionSetMenusFadeinNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+     optionSetMenusFadeoutNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+     optionSetMenusDiscoveryDurationNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+     optionSetMenusDiscoveryFadeinNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+     optionSetMenusDiscoveryFadeoutNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetLauncherOpacityNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetIconSizeNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetAutohideAnimationNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
@@ -2025,6 +2030,17 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
     case UnityshellOptions::PanelOpacityMaximizedToggle:
       panel_controller_->SetOpacityMaximizedToggle(optionGetPanelOpacityMaximizedToggle());
       break;
+    case UnityshellOptions::MenusFadein:
+    case UnityshellOptions::MenusFadeout:
+    case UnityshellOptions::MenusDiscoveryFadein:
+    case UnityshellOptions::MenusDiscoveryFadeout:
+    case UnityshellOptions::MenusDiscoveryDuration:
+      panel_controller_->SetMenuShowTimings(optionGetMenusFadein(),
+                                            optionGetMenusFadeout(),
+                                            optionGetMenusDiscoveryDuration(),
+                                            optionGetMenusDiscoveryFadein(),
+                                            optionGetMenusDiscoveryFadeout());
+      break;
     case UnityshellOptions::LauncherOpacity:
       launcher.SetBackgroundAlpha(optionGetLauncherOpacity());
       break;
@@ -2412,6 +2428,11 @@ void UnityScreen::initLauncher()
   /* Setup panel */
   timer.Reset();
   panel_controller_.reset(new panel::Controller());
+  panel_controller_->SetMenuShowTimings(optionGetMenusFadein(),
+                                        optionGetMenusFadeout(),
+                                        optionGetMenusDiscoveryDuration(),
+                                        optionGetMenusDiscoveryFadein(),
+                                        optionGetMenusDiscoveryFadeout());
   LOG_INFO(logger) << "initLauncher-Panel " << timer.ElapsedSeconds() << "s";
 
   /* Setup Places */

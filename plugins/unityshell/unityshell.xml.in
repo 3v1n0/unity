@@ -342,10 +342,50 @@
                     </desc>
                 </option>
 
-		<option name="show_desktop_icon" type="bool">
+                <option name="show_desktop_icon" type="bool">
                     <_short>Show "Desktop Icon" in the launcher</_short>
                     <_long>Enable/Disable "Show Dekstop icon" in the launcher.</_long>
                     <default>false</default>
+                </option>
+
+                <option name="menus_fadein" type="int">
+                    <_short>Menus Fade-in duration</_short>
+                    <_long>Duration (in milliseconds) of the menus fade-in animation, used when the mouse goes over the top-panel.</_long>
+                    <min>0</min>
+                    <max>1000</max>
+                    <default>100</default>
+                </option>
+
+                <option name="menus_fadeout" type="int">
+                    <_short>Menus fade-out duration</_short>
+                    <_long>Duration (in milliseconds) of the menus fade-out animation, used when the mouse goes over the top-panel.</_long>
+                    <min>0</min>
+                    <max>1000</max>
+                    <default>120</default>
+                </option>
+
+                <option name="menus_discovery_duration" type="int">
+                    <_short>Menus discovery duration</_short>
+                    <_long>How many seconds the menus should be shown when a new application has been launched.</_long>
+                    <min>0</min>
+                    <max>10</max>
+                    <default>2</default>
+                </option>
+
+                <option name="menus_discovery_fadein" type="int">
+                    <_short>Menus discovery fade-in duration</_short>
+                    <_long>Duration (in milliseconds) of the menus fade-in animation, used when the menus of a new launched application have been shown.</_long>
+                    <min>0</min>
+                    <max>1000</max>
+                    <default>200</default>
+                </option>
+
+                <option name="menus_discovery_fadeout" type="int">
+                    <_short>Menus discovery fade-out duration</_short>
+                    <_long>Duration (in milliseconds) of the menus fade-out animation, used when the menus of a new launched application have been shown.</_long>
+                    <min>0</min>
+                    <max>1000</max>
+                    <default>300</default>
                 </option>
 
             </group>

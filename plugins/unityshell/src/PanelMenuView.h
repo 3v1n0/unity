@@ -31,6 +31,8 @@
 #include "PluginAdapter.h"
 #include "Animator.h"
 
+#include <UnityCore/GLibWrapper.h>
+#include <UnityCore/GLibSignal.h>
 #include <libbamf/libbamf.h>
 
 namespace unity
@@ -54,6 +56,9 @@ public:
   PanelMenuView(int padding = 6);
   ~PanelMenuView();
 
+  void SetMenuShowTimings(int fadein, int fadeout, int discovery,
+                          int discovery_fadein, int discovery_fadeout);
+
   void FullRedraw();
 
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
@@ -63,8 +68,11 @@ public:
   void SetMousePosition(int x, int y);
 
   void OnActiveChanged(PanelIndicatorEntryView* view, bool is_active);
-  void OnActiveWindowChanged(BamfView* old_view, BamfView* new_view);
-  void OnNameChanged(gchar* new_name, gchar* old_name);
+  void OnViewOpened(BamfMatcher* matcher, BamfView* view);
+  void OnViewClosed(BamfMatcher* matcher, BamfView* view);
+  void OnActiveWindowChanged(BamfMatcher* matcher, BamfView* old_view, BamfView* new_view);
+  void OnActiveAppChanged(BamfMatcher* matcher, BamfApplication* old_app, BamfApplication* new_app);
+  void OnNameChanged(BamfView* bamf_view, gchar* new_name, gchar* old_name);
 
   void OnSpreadInitiate();
   void OnSpreadTerminate();
@@ -116,6 +124,8 @@ private:
   void UpdateShowNow(bool ignore);
   static gboolean UpdateActiveWindowPosition(PanelMenuView* self);
   static gboolean UpdateShowNowWithDelay(PanelMenuView* self);
+  static gboolean OnNewAppShow(PanelMenuView* self);
+  static gboolean OnNewAppHide(PanelMenuView* self);
   void DrawText(cairo_t *cr_real,
                 int &x, int y, int width, int height,
                 const char* font_desc,
@@ -130,7 +140,7 @@ private:
   void OnFadeOutChanged(double);
 
 private:
-  BamfMatcher* _matcher;
+  glib::Object<BamfMatcher> _matcher;
 
   nux::TextureLayer*       _title_layer;
   nux::HLayout*            _menu_layout;
@@ -142,33 +152,46 @@ private:
   bool _is_maximized;
   bool _is_own_window;
   PanelIndicatorEntryView* _last_active_view;
+  glib::Object<BamfApplication> _new_application;
 
   WindowButtons* _window_buttons;
   PanelTitlebarGrabArea* _panel_titlebar_grab_area;
 
   std::map<guint32, bool> _decor_map;
   std::set<guint32> _maximized_set;
-  int _padding;
-  gpointer _name_changed_callback_instance;
-  gulong _name_changed_callback_id;
+  std::list<BamfApplication*> _new_apps;
 
+  int _padding;
   int _last_width;
   int _last_height;
 
   bool _places_showing;
   bool _show_now_activated;
-
   bool _we_control_active;
+  bool _new_app_menu_shown;
+
   int  _monitor;
   guint32 _active_xid;
   guint32 _active_moved_id;
   guint32 _update_show_now_id;
+  guint32 _new_app_show_id;
+  guint32 _new_app_hide_id;
   nux::Geometry _monitor_geo;
 
-  gulong _activate_window_changed_id;
+  glib::Signal<void, BamfMatcher*, BamfView*> _view_opened_signal;
+  glib::Signal<void, BamfMatcher*, BamfView*> _view_closed_signal;
+  glib::Signal<void, BamfMatcher*, BamfView*, BamfView*> _active_win_changed_signal;
+  glib::Signal<void, BamfMatcher*, BamfApplication*, BamfApplication*> _active_app_changed_signal;
+  glib::Signal<void, BamfView*, gchar*, gchar*> _view_name_changed_signal;
 
   guint32 _place_shown_interest;
   guint32 _place_hidden_interest;
+
+  int _menus_fadein;
+  int _menus_fadeout;
+  int _menus_discovery;
+  int _menus_discovery_fadein;
+  int _menus_discovery_fadeout;
 
   Animator* _fade_in_animator;
   Animator* _fade_out_animator;

@@ -621,6 +621,13 @@ PanelView::SetOpacity(float opacity)
 }
 
 void
+PanelView::SetMenuShowTimings(int fadein, int fadeout, int discovery,
+                              int discovery_fadein, int discovery_fadeout)
+{
+  _menu_view->SetMenuShowTimings(fadein, fadeout, discovery, discovery_fadein, discovery_fadeout);
+}
+
+void
 PanelView::SetOpacityMaximizedToggle(bool enabled)
 {
   if (_opacity_maximized_toggle != enabled)

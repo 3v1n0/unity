@@ -99,6 +99,7 @@ if (${GTEST_FOUND} STREQUAL TRUE)
 
 # The actual test executable (xless) - do not put anything that requires X in here
   add_executable(test-gtest-xless
+                 test_animator.cpp
                  test_glib_signals.cpp
                  test_glib_signals_utils.cpp
                  test_glib_signals_utils.h
@@ -107,6 +108,8 @@ if (${GTEST_FOUND} STREQUAL TRUE)
                  test_introspection.cpp
                  test_main_xless.cpp
                  ${UNITY_SRC}/AbstractLauncherIcon.h
+                 ${UNITY_SRC}/Animator.cpp
+                 ${UNITY_SRC}/Animator.h
                  ${UNITY_SRC}/DebugDBusInterface.h
                  ${UNITY_SRC}/DebugDBusInterface.cpp
                  ${UNITY_SRC}/XPathQueryPart.h

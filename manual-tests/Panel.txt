@@ -16,3 +16,18 @@ Outcome
   should become opaque, also if the opacity setting is set to 0.0. 
   Once all the maximized windows are closed, restored or not visible,
   the panel should go back to its defined opacity.
+
+
+Panel Menus Revelation
+----------------------
+This test shows how the menus should be revealed when a new application has been
+launched.
+
+#. Start with a clear screen
+#. Open a new application that has menus (i.e. gnome-terminal)
+
+Outcome
+  The panel should show the menus in global menu bar for two seconds.
+  If a new gnome-terminal window is opened, the menus are not shown again.
+  If more than one application is open at once, the menus of each application
+  are shown once is focused.
