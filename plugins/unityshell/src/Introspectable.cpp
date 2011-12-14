@@ -35,31 +35,23 @@ Introspectable::~Introspectable()
 }
 
 GVariant*
-Introspectable::Introspect(bool wrap)
+Introspectable::Introspect()
 {
   GVariantBuilder  builder;
   GVariantBuilder  child_builder;
   gint             n_children = 0;
 
-  if (wrap)
-  {
-    g_variant_builder_init(&builder, G_VARIANT_TYPE("(a{sv})"));
-    g_variant_builder_open(&builder, G_VARIANT_TYPE("a{sv}"));
-  }
-  else
-  {
-    g_variant_builder_init(&builder, G_VARIANT_TYPE("a{sv}"));
-  }
+  g_variant_builder_init(&builder, G_VARIANT_TYPE("a{sv}"));
 
   AddProperties(&builder);
 
-  g_variant_builder_init(&child_builder, G_VARIANT_TYPE("a{sv}"));
+  g_variant_builder_init(&child_builder, G_VARIANT_TYPE("a(sv)"));
 
   for (auto it = _children.begin(); it != _children.end(); it++)
   {
     if ((*it)->GetName() != "")
     {
-      g_variant_builder_add(&child_builder, "{sv}", (*it)->GetName().c_str(), (*it)->Introspect());
+      g_variant_builder_add(&child_builder, "(sv)", (*it)->GetName().c_str(), (*it)->Introspect());
       n_children++;
     }
   }
@@ -67,11 +59,7 @@ Introspectable::Introspect(bool wrap)
   GVariant* child_results = g_variant_builder_end(&child_builder);
   
   if (n_children > 0)
-    g_variant_builder_add(&builder, "{sv}", GetChildsName().c_str(), child_results);
-
-  if (wrap)
-    g_variant_builder_close(&builder);
-  
+    g_variant_builder_add(&builder, "{sv}", "Children", child_results);
   return g_variant_builder_end(&builder);
 }
 

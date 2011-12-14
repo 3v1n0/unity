@@ -35,7 +35,7 @@ typedef std::list<Introspectable*> IntrospectableList;
 public:
   Introspectable();
   virtual ~Introspectable();
-  GVariant* Introspect(bool wrap = false);
+  GVariant* Introspect();
   virtual std::string GetName() const = 0;
   void AddChild(Introspectable* child);
   void RemoveChild(Introspectable* child);
