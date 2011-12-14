@@ -49,6 +49,7 @@ Controller::Controller()
   bg_color_ = nux::Color(0.0, 0.0, 0.0, 0.5);
 
   UBusServer *ubus = ubus_server_get_default();
+  bg_update_handle_ =
   ubus_server_register_interest(ubus, UBUS_BACKGROUND_COLOR_CHANGED,
                                 (UBusCallback)&Controller::OnBackgroundUpdate,
                                 this);
@@ -56,6 +57,7 @@ Controller::Controller()
 
 Controller::~Controller()
 {
+  ubus_server_unregister_interest(ubus_server_get_default(), bg_update_handle_);
   if (view_window_)
     view_window_->UnReference();
 }
@@ -89,6 +91,7 @@ void Controller::Show(ShowMode show, SortMode sort, bool reverse,
   }
 
   model_.reset(new SwitcherModel(results));
+  AddChild(model_.get());
   model_->selection_changed.connect(sigc::mem_fun(this, &Controller::OnModelSelectionChanged));
   model_->only_detail_on_viewport = (show == ShowMode::CURRENT_VIEWPORT);
 
@@ -164,6 +167,7 @@ void Controller::OnModelSelectionChanged(AbstractLauncherIcon *icon)
 void Controller::ConstructView()
 {
   view_ = SwitcherView::Ptr(new SwitcherView());
+  AddChild(view_.GetPointer());
   view_->SetModel(model_);
   view_->background_color = bg_color_;
 
@@ -419,6 +423,24 @@ void Controller::SelectFirstItem()
     model_->Select (first);
   else
     model_->Select (second);
+}
+
+/* Introspection */
+const gchar*
+Controller::GetName()
+{
+  return "SwitcherController";
+}
+
+void
+Controller::AddProperties(GVariantBuilder* builder)
+{
+  unity::variant::BuilderWrapper(builder)
+  .add("timeout-length", timeout_length())
+  .add("detail-on-timeout", detail_on_timeout())
+  .add("detail-timeout-length", detail_timeout_length())
+  .add("visible", visible_)
+  .add("detail-mode", detail_mode_);
 }
 
 }

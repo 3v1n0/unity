@@ -6,8 +6,7 @@ G_DEFINE_TYPE(ServiceLens, service_lens, G_TYPE_OBJECT);
 
 static void add_categories(ServiceLens* self);
 static void add_filters(ServiceLens *self);
-static void on_search_changed(UnityScope* scope, GParamSpec* pspec, ServiceLens* self);
-static void on_global_search_changed(UnityScope* scope, GParamSpec* pspec, ServiceLens* self);
+static void on_search_changed(UnityScope* scope, UnityLensSearch *lens_search, UnitySearchType search_type, GCancellable *canc, ServiceLens* self);
 static UnityActivationResponse* on_activate_uri(UnityScope* scope, const char* uri, ServiceLens* self);
 static UnityPreview* on_preview_uri(UnityScope* scope, const char* uri, ServiceLens *self);
 
@@ -56,10 +55,8 @@ service_lens_init(ServiceLens* self)
   priv->scope = unity_scope_new("/com/canonical/unity/testscope");
   unity_scope_set_search_in_global(priv->scope, TRUE);
 
-  g_signal_connect(priv->scope, "notify::active-search",
+  g_signal_connect(priv->scope, "search-changed",
                    G_CALLBACK(on_search_changed), self);
-  g_signal_connect(priv->scope, "notify::active-global-search",
-                   G_CALLBACK(on_global_search_changed), self);
   g_signal_connect(priv->scope, "activate-uri",
                    G_CALLBACK(on_activate_uri), self);
   g_signal_connect(priv->scope, "preview-uri",
@@ -151,13 +148,17 @@ add_filters(ServiceLens *self)
 }
 
 static void
-on_search_changed(UnityScope* scope, GParamSpec* pspec, ServiceLens* self)
+on_search_changed(UnityScope* scope, UnityLensSearch *search,
+    UnitySearchType search_type, GCancellable *canc, ServiceLens* self)
 {
-  UnityLensSearch* search = unity_scope_get_active_search(self->priv->scope);
-  DeeModel* model = (DeeModel*)unity_scope_get_results_model(self->priv->scope);
   int i = 0;
+  // to differentiate global and non-global searches, we'll return more items
+  // in the case of global search
+  int num_items = search_type == UNITY_SEARCH_TYPE_GLOBAL ? 10 : 5;
 
-  for (i = 0; i < 5; i++)
+  DeeModel* model = (DeeModel*)unity_lens_search_get_results_model(search);
+
+  for (i = 0; i < num_items; i++)
   {
     gchar* name = g_strdup_printf("%s%d",
                                   unity_lens_search_get_search_string(search),
@@ -172,30 +173,8 @@ on_search_changed(UnityScope* scope, GParamSpec* pspec, ServiceLens* self)
                      "file:///test");
     g_free(name);
   }
-}
 
-static void
-on_global_search_changed(UnityScope* scope, GParamSpec* pspec, ServiceLens* self)
-{
-  UnityLensSearch* search = unity_scope_get_active_global_search(self->priv->scope);
-  DeeModel* model = (DeeModel*)unity_scope_get_global_results_model(self->priv->scope);
-  int i = 0;
-
-  for (i = 0; i < 10; i++)
-  {
-    gchar* name = g_strdup_printf("%s%d",
-                                  unity_lens_search_get_search_string(search),
-                                  i);
-    dee_model_append(model,
-                     "file:///test",
-                     "gtk-apply",
-                     i,
-                     "text/html",
-                     name,
-                     "kamstrup likes ponies",
-                     "file:///test");
-    g_free(name);
-  }
+  g_signal_emit_by_name (search, "finished");
 }
 
 static UnityActivationResponse*

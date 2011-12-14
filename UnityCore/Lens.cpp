@@ -70,7 +70,7 @@ public:
                         string const& global_results_model_name,
                         string const& categories_model_name,
                         string const& filters_model_name);
-  void OnActiveChanged(bool is_active);
+  void OnViewTypeChanged(ViewType view_type);
 
   void GlobalSearch(std::string const& search_string);
   void Search(std::string const& search_string);
@@ -116,6 +116,8 @@ public:
   string private_connection_name_;
 
   glib::DBusProxy proxy_;
+  glib::Object<GCancellable> search_cancellable_;
+  glib::Object<GCancellable> global_search_cancellable_;
 };
 
 Lens::Impl::Impl(Lens* owner,
@@ -149,17 +151,25 @@ Lens::Impl::Impl(Lens* owner,
   proxy_.connected.connect(sigc::mem_fun(this, &Lens::Impl::OnProxyConnected));
   proxy_.disconnected.connect(sigc::mem_fun(this, &Lens::Impl::OnProxyDisconnected));
   proxy_.Connect("Changed", sigc::mem_fun(this, &Lens::Impl::OnChanged));
-  proxy_.Connect("SearchFinished", sigc::mem_fun(this, &Lens::Impl::OnSearchFinished));
-  proxy_.Connect("GlobalSearchFinished", sigc::mem_fun(this, &Lens::Impl::OnGlobalSearchFinished));
 }
 
 Lens::Impl::~Impl()
-{}
+{
+  if (search_cancellable_)
+  {
+    g_cancellable_cancel (search_cancellable_);
+  }
+  if (global_search_cancellable_)
+  {
+    g_cancellable_cancel (global_search_cancellable_);
+  }
+}
 
 void Lens::Impl::OnProxyConnected()
 {
   proxy_.Call("InfoRequest");
-  proxy_.Call("SetActive", g_variant_new("(b)", owner_->active ? TRUE : FALSE));
+  ViewType current_view_type = owner_->view_type;
+  proxy_.Call("SetViewType", g_variant_new("(u)", current_view_type));
 }
 
 void Lens::Impl::OnProxyDisconnected()
@@ -170,18 +180,32 @@ void Lens::Impl::OnProxyDisconnected()
 
 void Lens::Impl::OnSearchFinished(GVariant* parameters)
 {
-  glib::String search_string;
+  GVariantIter* hints_iter;
+  Hints hints;
+  
+  g_variant_get(parameters, "(a{sv})", &hints_iter);
+  
+  Utils::ASVToHints(hints, hints_iter);
 
-  g_variant_get(parameters, "(sa{sv})", &search_string, NULL);
-  owner_->search_finished.emit(search_string.Str());
+  // FIXME: make sure the model is updated, wait if it isn't (once Dee supports
+  // that)
+  owner_->search_finished.emit(hints);
+
+  g_variant_iter_free(hints_iter);
 }
 
 void Lens::Impl::OnGlobalSearchFinished(GVariant* parameters)
 {
-  glib::String search_string;
+  GVariantIter* hints_iter;
+  Hints hints;
+  
+  g_variant_get(parameters, "(a{sv})", &hints_iter);
+  
+  Utils::ASVToHints(hints, hints_iter);
 
-  g_variant_get(parameters, "(sa{sv})", &search_string, NULL);
-  owner_->global_search_finished.emit(search_string.Str());
+  owner_->global_search_finished.emit(hints);
+
+  g_variant_iter_free(hints_iter);
 }
 
 void Lens::Impl::OnChanged(GVariant* parameters)
@@ -280,9 +304,9 @@ void Lens::Impl::UpdateProperties(bool search_in_global,
   results_->swarm_name = results_model_name;
 }
 
-void Lens::Impl::OnActiveChanged(bool is_active)
+void Lens::Impl::OnViewTypeChanged(ViewType view_type)
 {
-  proxy_.Call("SetActive", g_variant_new("(b)", is_active ? TRUE : FALSE));
+  proxy_.Call("SetViewType", g_variant_new("(u)", view_type));
 }
 
 void Lens::Impl::GlobalSearch(std::string const& search_string)
@@ -292,10 +316,16 @@ void Lens::Impl::GlobalSearch(std::string const& search_string)
   GVariantBuilder b;
   g_variant_builder_init(&b, G_VARIANT_TYPE("a{sv}"));
 
+  if (global_search_cancellable_)
+    g_cancellable_cancel (global_search_cancellable_);
+  global_search_cancellable_ = g_cancellable_new ();
+
   proxy_.Call("GlobalSearch",
               g_variant_new("(sa{sv})",
                             search_string.c_str(),
-                            &b));
+                            &b),
+              sigc::mem_fun(this, &Lens::Impl::OnGlobalSearchFinished),
+              global_search_cancellable_);
   g_variant_builder_clear(&b);
 }
 
@@ -306,10 +336,16 @@ void Lens::Impl::Search(std::string const& search_string)
   GVariantBuilder b;
   g_variant_builder_init(&b, G_VARIANT_TYPE("a{sv}"));
 
+  if (search_cancellable_) g_cancellable_cancel (search_cancellable_);
+  search_cancellable_ = g_cancellable_new ();
+
   proxy_.Call("Search",
               g_variant_new("(sa{sv})",
                             search_string.c_str(),
-                            &b));
+                            &b),
+              sigc::mem_fun(this, &Lens::Impl::OnSearchFinished),
+              search_cancellable_);
+
   g_variant_builder_clear(&b);
 }
 
@@ -473,7 +509,7 @@ Lens::Lens(string const& id_,
   categories.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::categories));
   filters.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::filters));
   connected.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::connected));
-  active.changed.connect(sigc::mem_fun(pimpl, &Lens::Impl::OnActiveChanged));
+  view_type.changed.connect(sigc::mem_fun(pimpl, &Lens::Impl::OnViewTypeChanged));
 }
 
 Lens::~Lens()

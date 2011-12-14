@@ -49,6 +49,7 @@ public:
   void Call(std::string const& method_name,
             GVariant* parameters = NULL,
             ReplyCallback callback = sigc::ptr_fun(&NoReplyCallback),
+            GCancellable *cancellable = NULL,
             GDBusCallFlags flags = G_DBUS_CALL_FLAGS_NONE,
             int timeout_msec = -1);
 

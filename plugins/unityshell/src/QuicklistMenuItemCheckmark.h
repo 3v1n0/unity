@@ -53,7 +53,7 @@ protected:
 
   void PostDraw(nux::GraphicsEngine& gfxContext, bool forceDraw);
 
-  void Initialize(DbusmenuMenuitem* item);
+  virtual const gchar* GetDefaultText();
 
   virtual void UpdateTexture();
   virtual int CairoSurfaceWidth();

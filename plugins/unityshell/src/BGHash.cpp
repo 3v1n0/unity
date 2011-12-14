@@ -72,7 +72,7 @@ namespace unity {
     glib::Object<GdkPixbuf> pixbuf(GetPixbufFromBG());
     LoadPixbufToHash(pixbuf);
 
-    g_timeout_add (0, (GSourceFunc)ForceUpdate, (gpointer)this);
+    g_idle_add_full (G_PRIORITY_DEFAULT, (GSourceFunc)ForceUpdate, (gpointer)this, NULL);
 
     // avoids making a new object method when all we are doing is
     // calling a method with no logic

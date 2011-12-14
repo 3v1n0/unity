@@ -24,7 +24,6 @@
 #include <map>
 #include <set>
 
-#include "Introspectable.h"
 #include "PanelIndicatorsView.h"
 #include "StaticCairoText.h"
 #include "WindowButtons.h"
@@ -60,6 +59,8 @@ public:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual long PostLayoutManagement(long LayoutResult);
+
+  void SetMousePosition(int x, int y);
 
   void OnActiveChanged(PanelIndicatorEntryView* view, bool is_active);
   void OnActiveWindowChanged(BamfView* old_view, BamfView* new_view);

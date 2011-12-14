@@ -1,4 +1,4 @@
-#include <gtest/gtest.h>
+#include <gmock/gmock.h>
 #include <glib-object.h>
 
 #include <UnityCore/GLibWrapper.h>
@@ -8,6 +8,7 @@
 
 using namespace std;
 using namespace unity::dash;
+using namespace testing;
 
 namespace
 {
@@ -19,20 +20,18 @@ class TestAdaptor : public RowAdaptorBase
 {
 public:
   TestAdaptor(DeeModel* model, DeeModelIter* iter, DeeModelTag* tag)
+    : RowAdaptorBase(model, iter, tag)
   {
-    model_ = model;
-    iter_ = iter;
-    tag_ = tag;
   }
 
   unsigned int index()
   {
-    return dee_model_get_uint32(model_, iter_, 0);
+    return GetUIntAt(0);
   }
 
   string name()
   {
-    return dee_model_get_string(model_, iter_, 1);
+    return GetStringAt(1);
   }
 };
 
@@ -99,6 +98,74 @@ TEST(TestModel, TestSetGetRenderer)
 
     EXPECT_EQ(value.Str(), renderer.Str());
   }
+}
+
+
+
+void discard_g_log_calls(const gchar* log_domain,
+                         GLogLevelFlags log_level,
+                         const gchar* message,
+                         gpointer user_data)
+{
+  // do nothing for the messages.
+}
+
+class TestRowAdapterBase : public Test
+{
+public:
+  void SetUp() {
+    logger_ = g_log_set_default_handler(discard_g_log_calls, NULL);
+  }
+  void TearDown() {
+    g_log_set_default_handler(logger_, NULL);
+  }
+private:
+  GLogFunc logger_;
+};
+
+TEST_F(TestRowAdapterBase, TestGetStringNull)
+{
+  DeeModel* model = dee_sequence_model_new();
+  dee_model_set_schema(model, "i", NULL);
+  // Add in zero to an int field
+  DeeModelIter* iter = dee_model_append(model, 0);
+
+  RowAdaptorBase row(model, iter);
+
+  // Check that the method we call is null.
+  const gchar* value = dee_model_get_string(model, iter, 0);
+  ASSERT_THAT(value, IsNull());
+  ASSERT_THAT(model, NotNull());
+  ASSERT_THAT(iter, NotNull());
+  ASSERT_THAT(row.GetStringAt(0), Eq(""));
+}
+
+TEST_F(TestRowAdapterBase, TestGetStringEmpty)
+{
+  DeeModel* model = dee_sequence_model_new();
+  dee_model_set_schema(model, "s", NULL);
+  // Add on a empty string.
+  DeeModelIter* iter = dee_model_append(model, "");
+
+  RowAdaptorBase row(model, iter);
+
+  ASSERT_THAT(model, NotNull());
+  ASSERT_THAT(iter, NotNull());
+  ASSERT_THAT(row.GetStringAt(0), Eq(""));
+}
+
+TEST_F(TestRowAdapterBase, TestGetStringValue)
+{
+  DeeModel* model = dee_sequence_model_new();
+  dee_model_set_schema(model, "s", NULL);
+  // Add on a real string.
+  DeeModelIter* iter = dee_model_append(model, "Hello");
+
+  RowAdaptorBase row(model, iter);
+
+  ASSERT_THAT(model, NotNull());
+  ASSERT_THAT(iter, NotNull());
+  ASSERT_THAT(row.GetStringAt(0), Eq("Hello"));
 }
 
 }
