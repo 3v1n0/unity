@@ -19,19 +19,24 @@
  *
  */
 
+#ifndef UNITYSHELL_FILTERFACTORY_H
+#define UNITYSHELL_FILTERFACTORY_H
 
+namespace unity
+{
+namespace dash
+{
 
-#ifndef FILTERFACTORY_H
-#define FILTERFACTORY_H
-namespace unity {
+class FilterFactory
+{
+public:
+  FilterFactory();
+  virtual ~FilterFactory();
 
-  class FilterFactory
-  {
-  public:
-    FilterFactory();
-    virtual ~FilterFactory();
-
-    nux::View *WidgetForFilter (dash::Filter::Ptr filter);
-  };
+  nux::View* WidgetForFilter(dash::Filter::Ptr filter);
 };
-#endif // FILTERFACTORY_H
+
+} // namespace dash
+} // namespace unity
+
+#endif // UNITYSHELL_FILTERFACTORY_H

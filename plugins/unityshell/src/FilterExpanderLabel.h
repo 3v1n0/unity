@@ -20,8 +20,8 @@
  *
  */
 
-#ifndef UNITY_FILTEREXPANDERLABEL_H
-#define UNITY_FILTEREXPANDERLABEL_H
+#ifndef UNITYSHELL_FILTEREXPANDERLABEL_H
+#define UNITYSHELL_FILTEREXPANDERLABEL_H
 
 #include <Nux/Nux.h>
 #include <Nux/GridHLayout.h>
@@ -29,39 +29,43 @@
 #include <Nux/VLayout.h>
 #include <Nux/StaticText.h>
 
-namespace unity {
+namespace unity
+{
+namespace dash
+{
 
-  class FilterExpanderLabel : public nux::View
-  {
-    NUX_DECLARE_OBJECT_TYPE(FilterExpanderLabel, nux::View);
-  public:
-    FilterExpanderLabel (std::string label, NUX_FILE_LINE_PROTO);
-    virtual ~FilterExpanderLabel();
+class FilterExpanderLabel : public nux::View
+{
+  NUX_DECLARE_OBJECT_TYPE(FilterExpanderLabel, nux::View);
+public:
+  FilterExpanderLabel(std::string const& label, NUX_FILE_LINE_PROTO);
+  virtual ~FilterExpanderLabel();
 
-    void SetRightHandView (nux::View *view);
-    void SetLabel (std::string label);
-    void SetContents (nux::Layout *layout);
+  void SetRightHandView(nux::View* view);
+  void SetLabel(std::string const& label);
+  void SetContents(nux::Layout* layout);
 
-    nux::Property<bool> expanded;
+  nux::Property<bool> expanded;
 
-  protected:
-    virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
-    virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
-    virtual void PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw);
+protected:
+  virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
+  virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
+  virtual void PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw);
 
-  private:
-    void BuildLayout ();
-    void DoExpandChange (bool change);
+private:
+  void BuildLayout();
+  void DoExpandChange(bool change);
 
-    nux::LinearLayout* layout_;
-    nux::LinearLayout* top_bar_layout_;
-    nux::Layout* contents_;
-    nux::View* right_hand_contents_;
-    nux::View* expander_graphic_;
-    nux::StaticText* cairo_label_;
-    std::string label_;
-  };
+  nux::LinearLayout* layout_;
+  nux::LinearLayout* top_bar_layout_;
+  nux::Layout* contents_;
+  nux::View* right_hand_contents_;
+  nux::View* expander_graphic_;
+  nux::StaticText* cairo_label_;
+  std::string label_;
+};
 
-}
+} // namespace dash
+} // namespace unity
 
-#endif
+#endif // UNITYSHELL_FILTEREXPANDERLABEL_H

@@ -20,10 +20,8 @@
  *
  */
 
-
-
-#ifndef FILTERRATINGSWIDGET_H
-#define FILTERRATINGSWIDGET_H
+#ifndef UNITYSHELL_FILTERRATINGSWIDGET_H
+#define UNITYSHELL_FILTERRATINGSWIDGET_H
 
 #include <Nux/Nux.h>
 #include <Nux/GridHLayout.h>
@@ -34,39 +32,44 @@
 #include "FilterWidget.h"
 #include "FilterExpanderLabel.h"
 
-namespace unity {
-  class FilterBasicButton;
-  class FilterRatingsButton;
+namespace unity
+{
+namespace dash
+{
+  
+class FilterBasicButton;
+class FilterRatingsButton;
 
-  class FilterRatingsWidget : public FilterExpanderLabel, public FilterWidget
-  {
-    NUX_DECLARE_OBJECT_TYPE(FilterRatingsWidget, FilterExpanderLabel);
-  public:
-    FilterRatingsWidget (NUX_FILE_LINE_PROTO);
-    virtual ~FilterRatingsWidget();
+class FilterRatingsWidget : public FilterExpanderLabel, public FilterWidget
+{
+  NUX_DECLARE_OBJECT_TYPE(FilterRatingsWidget, FilterExpanderLabel);
+public:
+  FilterRatingsWidget(NUX_FILE_LINE_PROTO);
+  virtual ~FilterRatingsWidget();
 
-    void SetFilter (dash::Filter::Ptr filter);
-    std::string GetFilterType ();
+  void SetFilter(Filter::Ptr filter);
+  std::string GetFilterType();
 
-    nux::Property<int> rating;
+  nux::Property<int> rating;
 
-  protected:
-    virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
-    virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
-    virtual void PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw);
+protected:
+  virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
+  virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
+  virtual void PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw);
 
-    void OnRatingsRatingChanged(const int& new_rating);
-    void OnFilterRatingChanged(float new_rating);
-    void OnAnyButtonActivated(nux::View *view);
+  void OnRatingsRatingChanged(int const& new_rating);
+  void OnFilterRatingChanged(float new_rating);
+  void OnAnyButtonActivated(nux::View* view);
 
-    FilterBasicButton *any_button_;
-    FilterRatingsButton *ratings_;
-    dash::RatingsFilter::Ptr filter_;
+  FilterBasicButton* any_button_;
+  FilterRatingsButton* ratings_;
+  RatingsFilter::Ptr filter_;
 
-  private:
-    float last_rating_;
-  };
+private:
+  float last_rating_;
+};
 
-}
+} // namespace dash
+} // namespace unity
 
-#endif // FILTERRATINGSWIDGET_H
+#endif // UNITYSHELL_FILTERRATINGSWIDGET_H

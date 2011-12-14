@@ -20,10 +20,8 @@
  *
  */
 
-
-
-#ifndef FILTERGENREWIDGET_H
-#define FILTERGENREWIDGET_H
+#ifndef UNITYSHELL_FILTERGENREWIDGET_H
+#define UNITYSHELL_FILTERGENREWIDGET_H
 
 #include <Nux/Nux.h>
 #include <Nux/GridHLayout.h>
@@ -35,42 +33,47 @@
 #include "FilterWidget.h"
 #include "FilterExpanderLabel.h"
 
-namespace unity {
-  class FilterBasicButton;
-  class FilterGenreButton;
+namespace unity
+{
+namespace dash
+{
+  
+class FilterBasicButton;
+class FilterGenreButton;
 
-  class FilterGenre : public FilterExpanderLabel, public FilterWidget
-  {
-    NUX_DECLARE_OBJECT_TYPE(FilterGenre, FilterExpanderLabel);
-  public:
-    FilterGenre (NUX_FILE_LINE_PROTO);
-    virtual ~FilterGenre();
+class FilterGenre : public FilterExpanderLabel, public FilterWidget
+{
+  NUX_DECLARE_OBJECT_TYPE(FilterGenre, FilterExpanderLabel);
+public:
+  FilterGenre(NUX_FILE_LINE_PROTO);
+  virtual ~FilterGenre();
 
-    void SetFilter (dash::Filter::Ptr filter);
-    std::string GetFilterType ();
+  void SetFilter(Filter::Ptr filter);
+  std::string GetFilterType();
 
-    nux::Property<bool> all_selected;
+  nux::Property<bool> all_selected;
 
-  protected:
-    virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
-    virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
-    virtual void PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw);
+protected:
+  virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
+  virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
+  virtual void PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw);
 
-    void InitTheme ();
+  void InitTheme();
 
-  private:
-    void OnAllActivated(nux::View* view);
-    void OnGenreActivated(nux::View* view);
-    void OnOptionAdded(dash::FilterOption::Ptr new_filter);
-    void OnOptionRemoved(dash::FilterOption::Ptr removed_filter);
+private:
+  void OnAllActivated(nux::View* view);
+  void OnGenreActivated(nux::View* view);
+  void OnOptionAdded(dash::FilterOption::Ptr new_filter);
+  void OnOptionRemoved(dash::FilterOption::Ptr removed_filter);
 
-    nux::GridHLayout* genre_layout_;
-    FilterBasicButton* all_button_;
+  nux::GridHLayout* genre_layout_;
+  FilterBasicButton* all_button_;
 
-    std::vector<FilterGenreButton*> buttons_;
-    dash::CheckOptionFilter::Ptr filter_;
-  };
+  std::vector<FilterGenreButton*> buttons_;
+  CheckOptionFilter::Ptr filter_;
+};
 
-}
+} // namespace dash
+} // namespace unity
 
-#endif // FILTERGENRESWIDGET_H
+#endif // UNITYSHELL_FILTERGENRESWIDGET_H

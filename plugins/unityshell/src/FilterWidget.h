@@ -19,24 +19,26 @@
  * Authored by: Gordon Allott <gord.allott@canonical.com>
  *
  */
-#ifndef UNITY_FILTERWIDGET_H
-#define UNITY_FILTERWIDGET_H
+#ifndef UNITYSHELL_FILTERWIDGET_H
+#define UNITYSHELL_FILTERWIDGET_H
 
 #include <Nux/View.h>
 #include <UnityCore/Filter.h>
 
-
 namespace unity
+{
+namespace dash
 {
 
 class FilterWidget
 {
 public:
-  virtual ~FilterWidget () {}
-  virtual void SetFilter (dash::Filter::Ptr filter) = 0;
-  virtual std::string GetFilterType () = 0;
+  virtual ~FilterWidget() {};
+  virtual void SetFilter(Filter::Ptr filter) = 0;
+  virtual std::string GetFilterType() = 0;
 };
 
-}
+} // namespace dash
+} // namespace unity
 
-#endif
+#endif //UNITYSHELL_FILTERWIDGET_H
