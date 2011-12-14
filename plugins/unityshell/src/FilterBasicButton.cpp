@@ -35,7 +35,6 @@ namespace unity {
 
   FilterBasicButton::FilterBasicButton (nux::TextureArea *image, NUX_FILE_LINE_DECL)
       : nux::ToggleButton (image, NUX_FILE_LINE_PARAM)
-      , prelight_ (NULL)
       , active_ (NULL)
       , normal_ (NULL)
   {
@@ -44,7 +43,6 @@ namespace unity {
 
   FilterBasicButton::FilterBasicButton (const std::string label, NUX_FILE_LINE_DECL)
       : nux::ToggleButton (NUX_FILE_LINE_PARAM)
-      , prelight_ (NULL)
       , active_ (NULL)
       , normal_ (NULL)
       , label_ (label)
@@ -54,7 +52,6 @@ namespace unity {
 
   FilterBasicButton::FilterBasicButton (const std::string label, nux::TextureArea *image, NUX_FILE_LINE_DECL)
       : nux::ToggleButton (image, NUX_FILE_LINE_PARAM)
-      , prelight_ (NULL)
       , active_ (NULL)
       , normal_ (NULL)
       , label_ (label)
@@ -64,25 +61,22 @@ namespace unity {
 
   FilterBasicButton::FilterBasicButton (NUX_FILE_LINE_DECL)
       : nux::ToggleButton (NUX_FILE_LINE_PARAM)
-      , prelight_ (NULL)
       , active_ (NULL)
       , normal_ (NULL)
   {
     InitTheme();
   }
 
-  FilterBasicButton::~FilterBasicButton() {
-   delete prelight_;
+  FilterBasicButton::~FilterBasicButton()
+  {
     delete active_;
     delete normal_;
-
   }
 
   void FilterBasicButton::InitTheme()
   {
-    if (prelight_ == NULL)
+    if (active_ == NULL)
     {
-      prelight_ = new nux::CairoWrapper(GetGeometry(), sigc::bind(sigc::mem_fun(this, &FilterBasicButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_PRELIGHT));
       active_ = new nux::CairoWrapper(GetGeometry(), sigc::bind(sigc::mem_fun(this, &FilterBasicButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_PRESSED));
       normal_ = new nux::CairoWrapper(GetGeometry(), sigc::bind(sigc::mem_fun(this, &FilterBasicButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_NORMAL));
     }
@@ -101,7 +95,6 @@ namespace unity {
     if (cached_geometry_ != GetGeometry())
     {
       nux::Geometry geo = GetGeometry();
-      prelight_->Invalidate(geo);
       active_->Invalidate(geo);
       normal_->Invalidate(geo);
     }
@@ -133,8 +126,6 @@ namespace unity {
     nux::BaseTexture *texture = normal_->GetTexture();
     if (Active())
       texture = active_->GetTexture();
-    else if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_PRELIGHT)
-      texture = prelight_->GetTexture();
     else if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_PRESSED)
     {
       texture = active_->GetTexture();
@@ -159,3 +150,4 @@ namespace unity {
   }
 
 }
+

@@ -49,7 +49,6 @@ namespace unity {
     void InitTheme ();
     void RedrawTheme (nux::Geometry const& geom, cairo_t *cr, nux::ButtonVisualState faked_state);
 
-    nux::CairoWrapper *prelight_;
     nux::CairoWrapper *active_;
     nux::CairoWrapper *normal_;
     nux::Geometry cached_geometry_;
