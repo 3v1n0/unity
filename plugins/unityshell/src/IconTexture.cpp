@@ -221,7 +221,7 @@ bool IconTexture::DoCanFocus()
   return false;
 }
 
-const gchar* IconTexture::GetName()
+std::string IconTexture::GetName() const
 {
   return "IconTexture";
 }

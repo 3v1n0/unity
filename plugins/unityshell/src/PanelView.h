@@ -71,6 +71,8 @@ public:
 
   void SetOpacity(float opacity);
   void SetOpacityMaximizedToggle(bool enabled);
+  void SetMenuShowTimings(int fadein, int fadeout, int discovery,
+                          int discovery_fadein, int discovery_fadeout);
 
   void TrackMenuPointer();
 
@@ -78,7 +80,7 @@ public:
 
 protected:
   // Introspectable methods
-  const gchar* GetName();
+  std::string GetName() const;
   const gchar* GetChildsName();
   void AddProperties(GVariantBuilder* builder);
 

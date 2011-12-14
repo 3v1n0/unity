@@ -232,14 +232,14 @@ PlacesSimpleTile::SetURI(const char* uri)
     _uri = g_strdup(uri);
 }
 
-const gchar*
-PlacesSimpleTile::GetName()
+std::string
+PlacesSimpleTile::GetName() const
 {
   return "PlacesTile";
 }
 
-const gchar*
-PlacesSimpleTile::GetChildsName()
+std::string
+PlacesSimpleTile::GetChildsName() const
 {
   return "PlacesTileContents";
 }

@@ -877,7 +877,7 @@ nux::View* DashView::default_focus() const
 }
 
 // Introspectable
-const gchar* DashView::GetName()
+std::string DashView::GetName() const
 {
   return "DashView";
 }

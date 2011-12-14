@@ -48,36 +48,11 @@ public:
   {
     n_filters_++;
   }
-
-  static gboolean TimeoutCallback(gpointer data)
-  {
-    *(bool*)data = true;
-    return FALSE;
-  };
-
-  guint32 ScheduleTimeout(bool* timeout_reached)
-  {
-    return g_timeout_add_seconds(10, TimeoutCallback, timeout_reached);
-  }
-
-  void WaitUntil(bool& success)
-  {
-    bool timeout_reached = false;
-    guint32 timeout_id = ScheduleTimeout(&timeout_reached);
-
-    while (!success && !timeout_reached)
-      g_main_context_iteration(g_main_context_get_thread_default(), TRUE);
-
-    if (success)
-      g_source_remove(timeout_id);
-
-    EXPECT_TRUE(success);
-  }
  
   void WaitForConnected()
   {
     bool timeout_reached = false;
-    guint32 timeout_id = ScheduleTimeout(&timeout_reached);
+    guint32 timeout_id = Utils::ScheduleTimeout(&timeout_reached);
 
     while (!lens_->connected && !timeout_reached)
     {
@@ -93,7 +68,7 @@ public:
   void WaitForModel(Model<Adaptor>* model, unsigned int n_rows)
   {
     bool timeout_reached = false;
-    guint32 timeout_id = ScheduleTimeout(&timeout_reached);
+    guint32 timeout_id = Utils::ScheduleTimeout(&timeout_reached);
     
     while (model->count != n_rows && !timeout_reached)
     {
@@ -229,7 +204,7 @@ TEST_F(TestLens, TestActivation)
   lens_->activated.connect(sigc::slot<void, std::string const&, HandledType,Lens::Hints const&>(activated_cb));  
   
   lens_->Activate(uri);
-  WaitUntil(activated);
+  Utils::WaitUntil(activated);
 }
 
 TEST_F(TestLens, TestPreview)
@@ -262,7 +237,7 @@ TEST_F(TestLens, TestPreview)
   lens_->preview_ready.connect(sigc::slot<void, std::string const&, Preview::Ptr>(preview_cb));
 
   lens_->Preview(uri);
-  WaitUntil(previewed);
+  Utils::WaitUntil(previewed);
 }
 
 TEST_F(TestLens, TestFilterSync)

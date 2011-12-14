@@ -57,9 +57,9 @@ Introspectable::Introspect(bool wrap)
 
   for (auto it = _children.begin(); it != _children.end(); it++)
   {
-    if ((*it)->GetName())
+    if ((*it)->GetName() != "")
     {
-      g_variant_builder_add(&child_builder, "{sv}", (*it)->GetName(), (*it)->Introspect());
+      g_variant_builder_add(&child_builder, "{sv}", (*it)->GetName().c_str(), (*it)->Introspect());
       n_children++;
     }
   }
@@ -67,7 +67,7 @@ Introspectable::Introspect(bool wrap)
   GVariant* child_results = g_variant_builder_end(&child_builder);
   
   if (n_children > 0)
-    g_variant_builder_add(&builder, "{sv}", GetChildsName(), child_results);
+    g_variant_builder_add(&builder, "{sv}", GetChildsName().c_str(), child_results);
 
   if (wrap)
     g_variant_builder_close(&builder);
@@ -89,8 +89,8 @@ Introspectable::RemoveChild(Introspectable* child)
   child->_parents.remove(this);
 }
 
-const gchar*
-Introspectable::GetChildsName()
+std::string
+Introspectable::GetChildsName() const
 {
   return GetName();
 }

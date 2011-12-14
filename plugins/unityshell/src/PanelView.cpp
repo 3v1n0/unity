@@ -198,7 +198,7 @@ void PanelView::AddPanelView(PanelIndicatorsView* child,
   AddChild(child);
 }
 
-const gchar* PanelView::GetName()
+std::string PanelView::GetName() const
 {
   return "UnityPanel";
 }
@@ -618,6 +618,13 @@ PanelView::SetOpacity(float opacity)
     bg_effect_helper_.enabled = false;
 
   ForceUpdateBackground();
+}
+
+void
+PanelView::SetMenuShowTimings(int fadein, int fadeout, int discovery,
+                              int discovery_fadein, int discovery_fadeout)
+{
+  _menu_view->SetMenuShowTimings(fadein, fadeout, discovery, discovery_fadein, discovery_fadeout);
 }
 
 void

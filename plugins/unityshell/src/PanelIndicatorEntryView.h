@@ -67,7 +67,7 @@ public:
   void DashShown();
   void DashHidden();
 
-  const gchar* GetName();
+  std::string GetName() const;
   void         AddProperties(GVariantBuilder* builder);
 
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);

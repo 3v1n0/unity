@@ -204,7 +204,7 @@ bool LensBar::AcceptKeyNavFocus()
 }
 
 // Introspectable
-const gchar* LensBar::GetName()
+std::string LensBar::GetName() const
 {
   return "LensBar";
 }
