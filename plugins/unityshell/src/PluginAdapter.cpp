@@ -568,7 +568,7 @@ PluginAdapter::Lower(guint32 xid)
     window->lower();
 }
 
-void 
+void
 PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids, FocusVisibility focus_visibility)
 {
   CompPoint target_vp = m_Screen->vp();
@@ -603,50 +603,63 @@ PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids, FocusVisibility 
       break;
   }
 
-  if (!any_on_current)
+  if (!any_on_current || focus_visibility == FocusVisibility::OnlyVisibleOnTop)
   {
-    for (auto it = windows.rbegin(); it != windows.rend(); it++)
+    for (auto it = windows.rbegin(); it != windows.rend(); ++it)
     {
-      if ((any_mapped && !(*it)->minimized()) || !any_mapped)
+      CompWindow* win = *it;
+      if ((any_mapped && !win->minimized()) || !any_mapped)
       {
-        target_vp = (*it)->defaultViewport();
+        if (focus_visibility == FocusVisibility::OnlyVisibleOnTop)
+        {
+          win->raise();
+          top_win = win;
+        }
+        else
+        {
+          target_vp = win->defaultViewport();
+        }
+
         break;
       }
     }
   }
 
-  for (CompWindow* &win : windows)
+  if (focus_visibility != FocusVisibility::OnlyVisibleOnTop)
   {
-    if (win->defaultViewport() == target_vp)
+    for (CompWindow* &win : windows)
     {
-       /* Any window which is actually unmapped is
+      if (win->defaultViewport() == target_vp)
+      {
+        /* Any window which is actually unmapped is
         * not going to be accessible by either switcher
         * or scale, so unconditionally unminimize those
         * windows when the launcher icon is activated */
-       if ((focus_visibility == WindowManager::FocusVisibility::ForceUnminimizeOnCurrentDesktop &&
-            WindowManager::Default ()->IsWindowOnCurrentDesktop(win->id ())) ||
-            (focus_visibility == WindowManager::FocusVisibility::ForceUnminimizeInvisible &&
+        if ((focus_visibility == FocusVisibility::ForceUnminimizeOnCurrentDesktop &&
+             WindowManager::Default()->IsWindowOnCurrentDesktop(win->id())) ||
+            (focus_visibility == FocusVisibility::ForceUnminimizeInvisible &&
              win->mapNum () == 0))
-       {
-         bool is_mapped = win->mapNum () != 0;
-         top_win = win;
-         win->unminimize ();
+        {
+          bool is_mapped = win->mapNum() != 0;
+          win->unminimize();
+          top_win = win;
 
-         forced_unminimize = true;
+          forced_unminimize = true;
 
-         /* Initially minimized windows dont get raised */
-         if (!is_mapped)
-           win->raise ();
-       }
-       else if ((any_mapped && !win->minimized()) || !any_mapped)
-       {
-         if (!forced_unminimize ||
-             WindowManager::Default ()->IsWindowOnCurrentDesktop (win->id ()))
-         {
-           win->raise();
-           top_win = win;
-         }
-       }
+          /* Initially minimized windows dont get raised */
+          if (!is_mapped)
+            win->raise();
+        }
+        else if ((any_mapped && !win->minimized()) || !any_mapped)
+        {
+          if (!forced_unminimize ||
+              WindowManager::Default()->IsWindowOnCurrentDesktop(win->id()))
+          {
+            win->raise();
+            top_win = win;
+          }
+        }
+      }
     }
   }
 
