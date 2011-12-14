@@ -1,0 +1,17 @@
+Quick Alt+Tab
+-------------
+This test shows how the alt+tab works when pressed quickly
+
+#. Start on a clean screen
+#. Open two windows of the same application (i.e. gnome-terminal)
+#. Open another window of another application (i.e. gedit)
+#. Focus a gnome-terminal window
+#. Quickly press Alt+Tab
+#. The gedit window should be now on focus
+#. Press again Alt+Tab
+
+Outcome
+  The gnome-terminal window that had been in focus before should be brought to
+  focus again. The second gnome-terminal window should below the gnome-terminal
+  and gedit windows. The same should happen if the gnome-terminal windows are
+  in different workspaces.
