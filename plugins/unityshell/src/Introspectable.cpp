@@ -59,7 +59,7 @@ Introspectable::Introspect()
   GVariant* child_results = g_variant_builder_end(&child_builder);
   
   if (n_children > 0)
-    g_variant_builder_add(&builder, "{sv}", "Children", child_results);
+    g_variant_builder_add(&builder, "{sv}", GetChildsName().c_str(), child_results);
   return g_variant_builder_end(&builder);
 }
 
@@ -80,7 +80,7 @@ Introspectable::RemoveChild(Introspectable* child)
 std::string
 Introspectable::GetChildsName() const
 {
-  return GetName();
+  return "Children";
 }
 }
 }

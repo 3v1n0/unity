@@ -1496,12 +1496,6 @@ PanelMenuView::GetName() const
   return "";
 }
 
-const gchar*
-PanelMenuView::GetChildsName()
-{
-  return nullptr;
-}
-
 void PanelMenuView::AddProperties(GVariantBuilder* builder)
 {
 }

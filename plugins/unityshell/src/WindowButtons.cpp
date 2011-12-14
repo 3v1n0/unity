@@ -410,12 +410,6 @@ WindowButtons::GetName() const
   return "window-buttons";
 }
 
-const gchar*
-WindowButtons::GetChildsName()
-{
-  return "";
-}
-
 void
 WindowButtons::AddProperties(GVariantBuilder* builder)
 {

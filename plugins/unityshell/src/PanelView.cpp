@@ -203,8 +203,7 @@ std::string PanelView::GetName() const
   return "UnityPanel";
 }
 
-const gchar*
-PanelView::GetChildsName()
+std::string PanelView::GetChildsName()
 {
   return "indicators";
 }

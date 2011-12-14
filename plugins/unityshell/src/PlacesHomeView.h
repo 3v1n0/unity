@@ -46,7 +46,6 @@ public:
 protected:
   // Introspectable methods
   std::string GetName() const;
-  const gchar* GetChildsName();
   void AddProperties(GVariantBuilder* builder);
 
 private:

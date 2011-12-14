@@ -370,12 +370,6 @@ std::string PlacesHomeView::GetName() const
   return "PlacesHomeView";
 }
 
-const gchar*
-PlacesHomeView::GetChildsName()
-{
-  return "";
-}
-
 void PlacesHomeView::AddProperties(GVariantBuilder* builder)
 {
   unity::variant::BuilderWrapper(builder).add(GetGeometry());
