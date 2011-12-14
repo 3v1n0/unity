@@ -139,7 +139,7 @@ void TrashLauncherIcon::UpdateTrashIconCb(GObject* source,
     
     self->icon_name = icon_string.Str();
 
-    self->empty_ = (self->icon_name() == "user-trash");
+    self->empty_ = (self->icon_name == "user-trash");
   }
 }
 
