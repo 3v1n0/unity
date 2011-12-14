@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010 Canonical Ltd
+ * Copyright (C) 2010-2011 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -21,21 +21,11 @@
  */
 
 #include <Nux/Nux.h>
-#include <Nux/HLayout.h>
-#include <Nux/VLayout.h>
-#include <Nux/Button.h>
-
-#include <NuxGraphics/GLThread.h>
-#include <Nux/BaseWindow.h>
-#include <Nux/WindowCompositor.h>
 
 #include "PanelTitlebarGrabAreaView.h"
+
 #include <UnityCore/Variant.h>
-
-#include <glib.h>
 #include <X11/cursorfont.h>
-
-#define DELTA_MOUSE_DOUBLE_CLICK 500000000
 
 PanelTitlebarGrabArea::PanelTitlebarGrabArea()
   : InputArea(NUX_TRACKER_LOCATION)
@@ -73,7 +63,7 @@ void PanelTitlebarGrabArea::SetGrabbed(bool enabled)
 
 bool PanelTitlebarGrabArea::IsGrabbed()
 {
-  return _grab_cursor != None;
+  return (_grab_cursor != None);
 }
 
 std::string
