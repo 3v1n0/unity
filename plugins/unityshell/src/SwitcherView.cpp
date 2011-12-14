@@ -96,7 +96,7 @@ SwitcherView::~SwitcherView()
     g_source_remove(redraw_handle_);
 }
 
-const gchar* SwitcherView::GetName()
+std::string SwitcherView::GetName() const
 {
   return "SwitcherView";
 }

@@ -20,7 +20,8 @@
 #ifndef UNITY_PERFORMANCE_MONITOR
 #define UNITY_PERFORMANCE_MONITOR
 
-#include <gio/gio.h>
+#include <string>
+#include <glib.h>
 
 namespace unity {
 namespace performance {
@@ -30,7 +31,7 @@ class Monitor
 public:
 	void Start();
 	GVariant* Stop();
-	virtual gchar* GetName () = 0;
+	virtual std::string GetName() const = 0;
 
 protected:
 	virtual void StartMonitor () = 0;

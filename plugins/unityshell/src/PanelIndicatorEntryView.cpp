@@ -468,10 +468,10 @@ double PanelIndicatorEntryView::GetOpacity()
   return opacity_;
 }
 
-const gchar* PanelIndicatorEntryView::GetName()
+std::string PanelIndicatorEntryView::GetName() const
 {
   if (proxy_->IsUnused())
-    return NULL;
+    return "";
   else
     return proxy_->id().c_str();
 }

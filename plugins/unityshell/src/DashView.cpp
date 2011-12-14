@@ -678,13 +678,15 @@ void DashView::OnLensBarActivated(std::string const& id)
     return;
   }
 
+  LensView* view = active_lens_view_ = lens_views_[id];
+
   for (auto it: lens_views_)
   {
-    it.second->SetVisible(it.first == id);
-    it.second->active = it.first == id;
+    bool id_matches = it.first == id;
+    it.second->SetVisible(id_matches);
+    it.second->view_type = id_matches ? LENS_VIEW : (view == home_view_ ? HOME_VIEW : HIDDEN);
   }
 
-  LensView* view = active_lens_view_ = lens_views_[id];
   search_bar_->search_string = view->search_string;
   if (view != home_view_)
     search_bar_->search_hint = view->lens()->search_hint;
@@ -701,9 +703,10 @@ void DashView::OnLensBarActivated(std::string const& id)
   QueueDraw();
 }
 
-void DashView::OnSearchFinished(std::string const& search_string)
+void DashView::OnSearchFinished(Lens::Hints const& hints)
 {
-  if (search_bar_->search_string == search_string)
+  std::string search_string = search_bar_->search_string;
+  if (active_lens_view_ && active_lens_view_->search_string == search_string)
   {
     search_bar_->SearchFinished();
     search_in_progress_ = false;
@@ -712,10 +715,10 @@ void DashView::OnSearchFinished(std::string const& search_string)
   }
 }
 
-void DashView::OnGlobalSearchFinished(std::string const& search_string)
+void DashView::OnGlobalSearchFinished(Lens::Hints const& hints)
 {
   if (active_lens_view_ == home_view_)
-    OnSearchFinished(search_string);
+    OnSearchFinished(hints);
 }
 
 void DashView::OnUriActivated(std::string const& uri)
@@ -874,7 +877,7 @@ nux::View* DashView::default_focus() const
 }
 
 // Introspectable
-const gchar* DashView::GetName()
+std::string DashView::GetName() const
 {
   return "DashView";
 }
