@@ -47,7 +47,7 @@ public:
     tooltip_text = "Mock Icon";
   }
 
-  const gchar* GetName() { return "MockLauncherIcon"; }
+  std::string GetName() { return "MockLauncherIcon"; }
   
   void AddProperties(GVariantBuilder* builder) {}
 
