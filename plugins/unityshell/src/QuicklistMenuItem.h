@@ -140,6 +140,9 @@ protected:
                 int        height,
                 nux::Color color);
 
+  // Introspection
+  std::string _name;
+
   friend class QuicklistView;
 };
 

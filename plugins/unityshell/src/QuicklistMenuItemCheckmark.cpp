@@ -45,7 +45,7 @@ QuicklistMenuItemCheckmark::QuicklistMenuItemCheckmark(DbusmenuMenuitem* item,
                     NUX_FILE_LINE_PARAM)
 {
   _item_type  = MENUITEM_TYPE_CHECK;
-  _name = g_strdup("QuicklistMenuItemCheckmark");
+  _name = "QuicklistMenuItemCheckmark";
   InitializeText();
 }
 
@@ -57,7 +57,7 @@ QuicklistMenuItemCheckmark::QuicklistMenuItemCheckmark(DbusmenuMenuitem* item,
                     NUX_FILE_LINE_PARAM)
 {
   _item_type  = MENUITEM_TYPE_CHECK;
-  _name = g_strdup("QuicklistMenuItemCheckmark");
+  _name = "QuicklistMenuItemCheckmark";
   InitializeText();
 }
 

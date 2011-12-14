@@ -460,7 +460,7 @@ QuicklistMenuItem::IsMarkupEnabled()
 
 std::string QuicklistMenuItem::GetName() const
 {
-  return "QuickListMenuItem"
+  return _name;
 }
 
 void QuicklistMenuItem::AddProperties(GVariantBuilder* builder)

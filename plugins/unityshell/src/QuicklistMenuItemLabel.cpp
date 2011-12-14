@@ -34,7 +34,7 @@ QuicklistMenuItemLabel::QuicklistMenuItemLabel(DbusmenuMenuitem* item,
                     NUX_FILE_LINE_PARAM)
 {
   _item_type  = MENUITEM_TYPE_LABEL;
-  _name = g_strdup("QuicklistMenuItemLabel");
+  _name = "QuicklistMenuItemLabel";
   InitializeText();
 }
 
@@ -46,7 +46,7 @@ QuicklistMenuItemLabel::QuicklistMenuItemLabel(DbusmenuMenuitem* item,
                     NUX_FILE_LINE_PARAM)
 {
   _item_type  = MENUITEM_TYPE_LABEL;
-  _name = g_strdup("QuicklistMenuItemLabel");
+  _name = "QuicklistMenuItemLabel";
   InitializeText();
 }
 
