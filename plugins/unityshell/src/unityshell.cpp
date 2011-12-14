@@ -1533,7 +1533,7 @@ void UnityScreen::AddProperties(GVariantBuilder* builder)
 {
 }
 
-const gchar* UnityScreen::GetName()
+std::string UnityScreen::GetName() const
 {
   return "Unity";
 }

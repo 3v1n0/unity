@@ -118,8 +118,8 @@ struct timespec PanelTitlebarGrabArea::time_diff(struct timespec start, struct t
   return temp;
 }
 
-const gchar*
-PanelTitlebarGrabArea::GetName()
+std::string
+PanelTitlebarGrabArea::GetName() const
 {
   return "panel-titlebar-grab-area";
 }

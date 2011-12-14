@@ -57,7 +57,7 @@ public:
   sigc::signal<void> on_realize;
 
 protected:
-  const gchar* GetName();
+  std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
 
 private:

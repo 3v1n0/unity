@@ -198,7 +198,7 @@ void PanelView::AddPanelView(PanelIndicatorsView* child,
   AddChild(child);
 }
 
-const gchar* PanelView::GetName()
+std::string PanelView::GetName() const
 {
   return "UnityPanel";
 }

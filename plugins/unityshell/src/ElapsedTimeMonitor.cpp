@@ -23,9 +23,9 @@
 namespace unity{
 namespace performance {
 
-gchar* ElapsedTimeMonitor::GetName()
+std::string ElapsedTimeMonitor::GetName() const
 {
-  return (gchar*) "ElapsedTimeMonitor";
+  return "ElapsedTimeMonitor";
 }
 
 void ElapsedTimeMonitor::StartMonitor()

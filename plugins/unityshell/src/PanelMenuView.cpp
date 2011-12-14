@@ -1333,10 +1333,10 @@ PanelMenuView::OnMouseMiddleClicked(int x, int y, unsigned long button_flags, un
 }
 
 // Introspectable
-const gchar*
-PanelMenuView::GetName()
+std::string
+PanelMenuView::GetName() const
 {
-  return NULL;
+  return "";
 }
 
 const gchar*

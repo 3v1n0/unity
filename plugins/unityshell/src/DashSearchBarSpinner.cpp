@@ -209,8 +209,8 @@ SearchBarSpinner::SetState(SpinnerState state)
   QueueDraw();
 }
 
-const gchar*
-SearchBarSpinner::GetName()
+std::string
+SearchBarSpinner::GetName() const
 {
   return "SearchBarSpinner";
 }

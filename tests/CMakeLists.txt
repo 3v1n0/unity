@@ -104,8 +104,13 @@ if (${GTEST_FOUND} STREQUAL TRUE)
                  test_glib_signals_utils.h
                  ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_marshal.cpp
                  test_favorite_store_gsettings.cpp
+                 test_introspection.cpp
                  test_main_xless.cpp
                  ${UNITY_SRC}/AbstractLauncherIcon.h
+                 ${UNITY_SRC}/DebugDBusInterface.h
+                 ${UNITY_SRC}/DebugDBusInterface.cpp
+                 ${UNITY_SRC}/XPathQueryPart.h
+                 ${UNITY_SRC}/XPathQueryPart.cpp
                  ${UNITY_SRC}/FavoriteStore.cpp
                  ${UNITY_SRC}/FavoriteStore.h
                  ${UNITY_SRC}/FavoriteStoreGSettings.cpp

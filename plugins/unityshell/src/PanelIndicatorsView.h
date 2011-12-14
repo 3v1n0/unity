@@ -82,7 +82,7 @@ protected:
   typedef std::map<std::string, PanelIndicatorEntryView*> Entries;
   Entries entries_;
 
-  const gchar* GetName();
+  std::string GetName() const;
   const gchar* GetChildsName();
   void         AddProperties(GVariantBuilder* builder);
 

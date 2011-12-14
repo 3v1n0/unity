@@ -99,7 +99,7 @@ public:
   bool HasOurWindowFocused();
 
 protected:
-  const gchar* GetName();
+  std::string GetName() const;
   const gchar* GetChildsName();
   void          AddProperties(GVariantBuilder* builder);
 
