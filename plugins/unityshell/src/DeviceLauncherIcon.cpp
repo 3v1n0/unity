@@ -306,12 +306,11 @@ void DeviceLauncherIcon::ShowNotification(std::string const& icon_name,
                                           unsigned size,
                                           GdkPixbuf* pixbuf)
 {
-  NotifyNotification* notification;
-  glib::String name(g_volume_get_name(volume_));
   
-  notification = notify_notification_new(name,
-                                         _("The drive has been successfully ejected"),
-                                         NULL);
+  glib::String name(g_volume_get_name(volume_));
+  glib::Object<NotifyNotification> notification(notify_notification_new(name,
+                                                                        _("The drive has been successfully ejected"),
+                                                                        NULL));
   
   if(GDK_IS_PIXBUF(pixbuf))
     notify_notification_set_image_from_pixbuf(notification, pixbuf);
