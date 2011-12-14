@@ -58,26 +58,26 @@ Hint::~Hint()
  */
 bool Hint::Fill()
 {
-  switch(Type())
+  switch(type())
   {
     case COMPIZ_OPTION:
     {
       // Arg1 = Plugin name
       // Arg2 = Option name
-      CompPlugin* p = CompPlugin::find(Arg1().c_str());
+      CompPlugin* p = CompPlugin::find(arg1().c_str());
 
       if (!p) 
         return false;
 
       foreach (CompOption &opt, p->vTable->getOptions())
       {
-          if (opt.name() == Arg2())
+          if (opt.name() == arg2())
           {
             std::string temp = impl::FixShortcutFormat(opt.value().action().keyToString());
-            if (Value() != temp)
+            if (value() != temp)
             {
-              Value = temp;
-              Shortkey = Prefix() + Value() + Postfix();
+              value = temp;
+              shortkey = prefix() + value() + postfix();
             }
               
             return true;
@@ -87,15 +87,15 @@ bool Hint::Fill()
       break;
     }
     case HARDCODED_OPTION:
-      if (Value != Arg1())
+      if (value != arg1())
       {
-        Value = Arg1();
-        Shortkey = Prefix() + Value() + Postfix();
+        value = arg1();
+        shortkey = prefix() + value() + postfix();
       }
       return true;
 
     default:
-      LOG_WARNING(logger) << "Unable to find the option type" << Type(); 
+      LOG_WARNING(logger) << "Unable to find the option type" << type(); 
   }
 
   return false;

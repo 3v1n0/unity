@@ -58,10 +58,10 @@ TEST(TestShortcutModel, TestFill)
   model.Fill();
   
   // We cannot test CompOption here... :/
-  EXPECT_EQ(model.hints()["Launcher"].front()->Value(), "Plugin 1-key_option_1");
-  EXPECT_EQ(model.hints()["Launcher"].back()->Value(), "Value 2");
-  EXPECT_EQ(model.hints()["Dash"].front()->Value(),"Plugin 3-key_option_3");
-  EXPECT_EQ(model.hints()["Top Bar"].front()->Value(), "Value 4");
+  EXPECT_EQ(model.hints()["Launcher"].front()->value(), "Plugin 1-key_option_1");
+  EXPECT_EQ(model.hints()["Launcher"].back()->value(), "Value 2");
+  EXPECT_EQ(model.hints()["Dash"].front()->value(),"Plugin 3-key_option_3");
+  EXPECT_EQ(model.hints()["Top Bar"].front()->value(), "Value 4");
 }
 
 TEST(TestShortcutModel, TestProperty)
@@ -72,13 +72,13 @@ TEST(TestShortcutModel, TestProperty)
   
   Model model(hints);
   
-  EXPECT_EQ(model.hints()["Launcher"].front()->Category(), "Launcher");
-  EXPECT_EQ(model.hints()["Launcher"].front()->Prefix(), "Prefix1");
-  EXPECT_EQ(model.hints()["Launcher"].front()->Postfix(), "Postfix1");
-  EXPECT_EQ(model.hints()["Launcher"].front()->Description(), "Description1");
-  EXPECT_EQ(model.hints()["Launcher"].front()->Type(), COMPIZ_OPTION);
-  EXPECT_EQ(model.hints()["Launcher"].front()->Arg1(), "Plugin1");
-  EXPECT_EQ(model.hints()["Launcher"].front()->Arg2(), "key_option1");  
+  EXPECT_EQ(model.hints()["Launcher"].front()->category(), "Launcher");
+  EXPECT_EQ(model.hints()["Launcher"].front()->prefix(), "Prefix1");
+  EXPECT_EQ(model.hints()["Launcher"].front()->postfix(), "Postfix1");
+  EXPECT_EQ(model.hints()["Launcher"].front()->description(), "Description1");
+  EXPECT_EQ(model.hints()["Launcher"].front()->type(), COMPIZ_OPTION);
+  EXPECT_EQ(model.hints()["Launcher"].front()->arg1(), "Plugin1");
+  EXPECT_EQ(model.hints()["Launcher"].front()->arg2(), "key_option1");  
 }
 
 } // anonymouse namespace

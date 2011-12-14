@@ -136,7 +136,7 @@ nux::LinearLayout* View::CreateShortKeyEntryLayout(AbstractHint* hint)
   nux::HLayout* shortkey_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
   nux::HLayout* description_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
-  glib::String shortkey(g_markup_escape_text(hint->Shortkey().c_str(), -1));
+  glib::String shortkey(g_markup_escape_text(hint->shortkey().c_str(), -1));
   
   std::string skey = "<b>";
   skey += shortkey.Str();
@@ -149,7 +149,7 @@ nux::LinearLayout* View::CreateShortKeyEntryLayout(AbstractHint* hint)
   shortkey_view->SetMinimumWidth(SHORTKEY_COLUMN_WIDTH);
   shortkey_view->SetMaximumWidth(SHORTKEY_COLUMN_WIDTH);
   
-  glib::String es_desc(g_markup_escape_text(hint->Description().c_str(), -1));
+  glib::String es_desc(g_markup_escape_text(hint->description().c_str(), -1));
 
   nux::StaticText* description_view = new nux::StaticText(es_desc.Value(), NUX_TRACKER_LOCATION);
   description_view->SetTextAlignment(nux::StaticText::ALIGN_LEFT);
@@ -181,7 +181,7 @@ nux::LinearLayout* View::CreateShortKeyEntryLayout(AbstractHint* hint)
       view->SetText(skey);
    };
   
-  hint->Shortkey.changed.connect(sigc::bind(sigc::slot<void, std::string const&, nux::StaticText*>(on_shortkey_changed), shortkey_view));
+  hint->shortkey.changed.connect(sigc::bind(sigc::slot<void, std::string const&, nux::StaticText*>(on_shortkey_changed), shortkey_view));
 
   return layout;
 }
@@ -392,7 +392,7 @@ void View::RenderColumns()
     
     for (auto hint : model_->hints()[category])
     {
-      //std::string str_value = hint->Prefix() + hint->Value() + hint->Postfix();
+      //std::string str_value = hint->prefix() + hint->value() + hint->postfix();
       //boost::replace_all(str_value, "&", "&amp;");
       //boost::replace_all(str_value, "<", "&lt;");
       //boost::replace_all(str_value, ">", "&gt;");

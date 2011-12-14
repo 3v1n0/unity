@@ -48,16 +48,16 @@ public:
   // Methods...
   bool Fill()
   {
-    switch (Type())
+    switch (type())
     {
       case COMPIZ_OPTION:
-        Value = Arg1() + "-" + Arg2();
-        Shortkey = Prefix() + Value() + Postfix();
+        value = arg1() + "-" + arg2();
+        shortkey = prefix() + value() + postfix();
         return true;
       
       case HARDCODED_OPTION:
-        Value = Arg1();
-        Shortkey = Prefix() + Value() + Postfix();
+        value = arg1();
+        shortkey = prefix() + value() + postfix();
         return true;
     }
     

@@ -50,29 +50,29 @@ public:
                std::string const& arg1, 
                std::string const& arg2 = "",
                std::string const& arg3 = "")
-    : Category(category)
-    , Prefix(prefix)
-    , Postfix(postfix)
-    , Description(description)
-    , Type(type)
-    , Arg1(arg1)
-    , Arg2(arg2)
-    , Arg3(arg3)
+    : category(category)
+    , prefix(prefix)
+    , postfix(postfix)
+    , description(description)
+    , type(type)
+    , arg1(arg1)
+    , arg2(arg2)
+    , arg3(arg3)
   {
   }
   
   // Copy ctor
   AbstractHint(unity::shortcut::AbstractHint const& obj)
-    : Category(obj.Category())
-    , Prefix(obj.Prefix())
-    , Postfix(obj.Postfix())
-    , Description(obj.Description())
-    , Type(obj.Type())
-    , Arg1(obj.Arg1())
-    , Arg2(obj.Arg2())
-    , Arg3(obj.Arg3())
-    , Value(obj.Value())
-    , Shortkey(obj.Shortkey())
+    : category(obj.category())
+    , prefix(obj.prefix())
+    , postfix(obj.postfix())
+    , description(obj.description())
+    , type(obj.type())
+    , arg1(obj.arg1())
+    , arg2(obj.arg2())
+    , arg3(obj.arg3())
+    , value(obj.value())
+    , shortkey(obj.shortkey())
   {
   }
   
@@ -83,16 +83,16 @@ public:
   virtual bool Fill() = 0;
   
   // Properties
-  nux::Property<std::string> Category;
-  nux::Property<std::string> Prefix;
-  nux::Property<std::string> Postfix;
-  nux::Property<std::string> Description;
-  nux::Property<OptionType> Type;
-  nux::Property<std::string> Arg1;
-  nux::Property<std::string> Arg2;
-  nux::Property<std::string> Arg3;
-  nux::Property<std::string> Value;
-  nux::Property<std::string> Shortkey;
+  nux::Property<std::string> category;
+  nux::Property<std::string> prefix;
+  nux::Property<std::string> postfix;
+  nux::Property<std::string> description;
+  nux::Property<OptionType> type;
+  nux::Property<std::string> arg1;
+  nux::Property<std::string> arg2;
+  nux::Property<std::string> arg3;
+  nux::Property<std::string> value;
+  nux::Property<std::string> shortkey;
 };
 
 } // namespace shortcut

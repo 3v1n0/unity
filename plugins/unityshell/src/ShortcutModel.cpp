@@ -42,10 +42,10 @@ void Model::AddHint(AbstractHint* hint)
   if (!hint)
     return;
     
-  if (hints_.find(hint->Category()) == hints_.end())
-    categories_.push_back(hint->Category());
+  if (hints_.find(hint->category()) == hints_.end())
+    categories_.push_back(hint->category());
     
-  hints_[hint->Category()].push_back(hint);
+  hints_[hint->category()].push_back(hint);
 }
 
 
