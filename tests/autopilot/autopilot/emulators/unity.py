@@ -46,7 +46,7 @@ class Unity(object):
         self._introspection_iface = dbus.Interface(self._debug_proxy_obj,
                                                    self.INTROSPECTION_IFACE)
 
-    def get_state(self, piece=''):
+    def get_state(self, piece='/Unity'):
         '''
         returns a full dump of unity's state via the introspection interface
         '''
@@ -80,7 +80,7 @@ class Launcher(Unity):
     
     def __get_state(self):
         # get the state for the 'launcher' piece
-        return super(Launcher, self).get_state('Launcher')
+        return super(Launcher, self).get_state('/Unity/Launcher')[0]
 
 
 class UnityLauncherIconTooltip(Unity):
@@ -150,7 +150,8 @@ class Switcher(Unity):
         self._keyboard.press_and_release('^S`')
 
     def __get_icon(self, index):
-        return self.get_state('SwitcherModel')['children-of-men'][index][1][0]
+        import ipdb; ipdb.set_trace()
+        return self.get_state('/Unity/SwitcherController/SwitcherModel')[0]['children-of-men'][index][1][0]
 
     def get_icon_name(self, index):
         return self.__get_icon(index)['tooltip-text']
@@ -162,16 +163,16 @@ class Switcher(Unity):
             return None
 
     def get_model_size(self):
-        return len(self.get_state('SwitcherModel')['children-of-men'])
+        return len(self.get_state('/Unity/SwitcherController/SwitcherModel')[0]['children-of-men'])
 
     def get_selection_index(self):
-        return int(self.get_state('SwitcherModel')['selection-index'])
+        return int(self.get_state('/Unity/SwitcherController/SwitcherModel')[0]['selection-index'])
 
     def get_last_selection_index(self):
-        return bool(self.get_state('SwitcherModel')['last-selection-index'])
+        return bool(self.get_state('/Unity/SwitcherController/SwitcherModel')[0]['last-selection-index'])
 
     def get_is_visible(self):
-        return bool(self.get_state('SwitcherController')['visible'])
+        return bool(self.get_state('/Unity/SwitcherController')[0]['visible'])
 
 
 
@@ -210,10 +211,10 @@ class Dash(Unity):
 		"""
 		Is the dash visible?
 		"""
-		return bool(self.get_state("DashController")["visible"])
+        return bool(self.get_state("/Unity/DashController")[0]["visible"])
 
 	def get_search_string(self):
 		"""
 		Return the current dash search bar search string.
 		"""
-		return unicode(self.get_state("SearchBar")['search_string'])
+        return unicode(self.get_state("//SearchBar")[0]['search_string'])
