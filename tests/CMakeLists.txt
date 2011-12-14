@@ -184,4 +184,5 @@ add_custom_target (check COMMAND  ${TEST_COMMAND} DEPENDS test-unit test-gtest t
 add_custom_target (check-headless COMMAND ${TEST_COMMAND_HEADLESS} DEPENDS test-gtest-xless test-gtest-dbus)
 add_custom_target (check-report COMMAND ${TEST_UNIT_COMMAND} && gtester-report ${TEST_RESULT_XML} > ${TEST_RESULT_HTML})
 add_custom_target (gcheck COMMAND  ${DBUS_TEST_COMMAND} DEPENDS test-gtest test-gtest-xless)
-
+set (AUTOPILOTDIR "${CMAKE_CURRENT_SOURCE_DIR}/autopilot")
+add_custom_target (autopilot COMMAND cd ${AUTOPILOTDIR} && make check)
