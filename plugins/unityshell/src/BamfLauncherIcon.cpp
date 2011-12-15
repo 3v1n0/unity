@@ -295,8 +295,10 @@ std::vector<Window> BamfLauncherIcon::RelatedXids ()
     {
       guint32 xid = bamf_window_get_xid(BAMF_WINDOW(view));
 
-      if (wm->IsWindowMapped(xid))
-        results.push_back ((Window) xid);
+      if (wm->IsWindowMapped(xid) && !bamf_window_get_transient(BAMF_WINDOW(view)))
+      {
+        results.push_back (xid);
+      }
     }
   }
 
