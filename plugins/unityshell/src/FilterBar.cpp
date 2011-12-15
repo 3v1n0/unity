@@ -40,7 +40,7 @@ nux::logging::Logger logger("unity.dash.filterbar");
 NUX_IMPLEMENT_OBJECT_TYPE(FilterBar);
 
 FilterBar::FilterBar(NUX_FILE_LINE_DECL)
-: View(NUX_FILE_LINE_PARAM)
+  : View(NUX_FILE_LINE_PARAM)
 {
   // TODO - does the filterbar associate itself with a model of some sort?
   // does libunity provide a Lens.Filters model or something that we can update on?

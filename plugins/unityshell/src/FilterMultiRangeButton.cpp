@@ -60,9 +60,8 @@ FilterMultiRangeButton::~FilterMultiRangeButton()
 
 void FilterMultiRangeButton::OnActivated(nux::Area* area)
 {
-  bool tmp_active = Active();
-  if (filter_ != NULL)
-    filter_->active = tmp_active;
+  if (filter_)
+    filter_->active = Active();
 }
 
 void FilterMultiRangeButton::OnActiveChanged(bool value)
@@ -114,7 +113,7 @@ long FilterMultiRangeButton::ComputeContentSize()
 
 void FilterMultiRangeButton::InitTheme()
 {
-  if (active_ == NULL)
+  if (!active_)
   {
     active_ = new nux::CairoWrapper(GetGeometry(), sigc::bind(sigc::mem_fun(this, &FilterMultiRangeButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_PRESSED));
     normal_ = new nux::CairoWrapper(GetGeometry(), sigc::bind(sigc::mem_fun(this, &FilterMultiRangeButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_NORMAL));
