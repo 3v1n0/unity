@@ -198,7 +198,7 @@ public:
   sigc::connection on_expo_terminated_connection;
 
 protected:
-  const gchar* GetName();
+  std::string GetName() const;
 
   void AddProperties(GVariantBuilder* builder);
 

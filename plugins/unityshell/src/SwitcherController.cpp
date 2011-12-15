@@ -426,8 +426,8 @@ void Controller::SelectFirstItem()
 }
 
 /* Introspection */
-const gchar*
-Controller::GetName()
+std::string
+Controller::GetName() const
 {
   return "SwitcherController";
 }

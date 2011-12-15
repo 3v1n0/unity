@@ -335,7 +335,7 @@ PanelIndicatorsView::SetOpacity(double opacity)
   }
 }
 
-const gchar* PanelIndicatorsView::GetName()
+std::string PanelIndicatorsView::GetName() const
 {
   return "IndicatorsView";
 }

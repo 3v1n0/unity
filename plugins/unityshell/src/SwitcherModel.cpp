@@ -49,7 +49,7 @@ SwitcherModel::~SwitcherModel()
     icon->UnReference();
 }
 
-const gchar* SwitcherModel::GetName()
+std::string SwitcherModel::GetName() const
 {
   return "SwitcherModel";
 }
@@ -61,8 +61,8 @@ void SwitcherModel::AddProperties(GVariantBuilder* builder)
 
   for (auto icon : _inner)
   {
-    if (icon->GetName())
-      g_variant_builder_add(&children_builder, "(sv)", icon->GetName(), icon->Introspect());
+    if (icon->GetName() != "")
+      g_variant_builder_add(&children_builder, "(sv)", icon->GetName().c_str(), icon->Introspect());
   }
 
   unity::variant::BuilderWrapper(builder)
