@@ -61,17 +61,16 @@ public:
 
   typedef boost::shared_ptr <UnityFBO> Ptr;
 
-  UnityFBO (CompOutput *o);
+  UnityFBO (CompRect r);
   ~UnityFBO ();
 
 public:
 
-  void bind ();
+  void bind (CompOutput *o);
   void unbind ();
 
   bool status ();
-  bool bound ();
-  void paint ();
+  void paint (CompOutput *o);
 
   GLuint texture () { return mFBTexture; }
 
@@ -81,7 +80,7 @@ private:
   GLuint   mFboHandle; // actual handle to the framebuffer_ext
   bool    mFboStatus; // did the framebuffer texture bind succeed
   GLuint   mFBTexture;
-  CompOutput *output;
+  CompRect mGeometry;
   unsigned int mBoundCnt;
 };
 
@@ -230,7 +229,7 @@ public:
   void NeedsRelayout();
   void ScheduleRelayout(guint timeout);
 
-  void setActiveFbo (GLuint fbo) { mActiveFbo = fbo; }
+  void setActiveFbo (GLuint fbo) { _active_fbo = fbo; }
 
   bool forcePaintOnTop ();
 
@@ -316,8 +315,8 @@ private:
 
   unity::BGHash _bghash;
 
-  std::map <CompOutput *, UnityFBO::Ptr> mFbos;
-  GLuint                                 mActiveFbo;
+  UnityFBO::Ptr _fbo;
+  GLuint        _active_fbo;
 
   bool   queryForShader ();
 
