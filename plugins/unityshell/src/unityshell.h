@@ -47,6 +47,7 @@
 #include "DebugDBusInterface.h"
 #include "SwitcherController.h"
 #include "UBusWrapper.h"
+#include "ScreenEffectFramebufferObject.h"
 
 #include "compizminimizedwindowhandler.h"
 #include "BGHash.h"
@@ -54,40 +55,6 @@
 
 namespace unity
 {
-
-class ScreenEffectFramebufferObject
-{
-public:
-
-  typedef boost::shared_ptr <ScreenEffectFramebufferObject> Ptr;
-
-  ScreenEffectFramebufferObject (const nux::Geometry &geom);
-  ~ScreenEffectFramebufferObject ();
-
-public:
-
-  void bind (const nux::Geometry &geom);
-  void unbind ();
-
-  bool status ();
-  void paint (const nux::Geometry &geom);
-  bool bound () { return mBoundCnt > 0; }
-
-  GLuint texture () { return mFBTexture; }
-  
-  void onScreenSizeChanged (const nux::Geometry &screenSize);
-
-private:
-
-  /* compiz fbo handle that goes through to nux */
-  GLuint   mFboHandle; // actual handle to the framebuffer_ext
-  bool    mFboStatus; // did the framebuffer texture bind succeed
-  GLuint   mFBTexture;
-  nux::Geometry mGeometry;
-  unsigned int mBoundCnt;
-  
-  nux::Geometry mScreenSize;
-};
 
 class UnityShowdesktopHandler
 {
@@ -233,8 +200,6 @@ public:
   void outputChangeNotify();
   void NeedsRelayout();
   void ScheduleRelayout(guint timeout);
-
-  void setActiveFbo (GLuint fbo) { _active_fbo = fbo; }
 
   bool forcePaintOnTop ();
 
