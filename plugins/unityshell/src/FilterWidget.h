@@ -34,6 +34,7 @@ class FilterWidget
 {
 public:
   virtual ~FilterWidget() {};
+  
   virtual void SetFilter(Filter::Ptr filter) = 0;
   virtual std::string GetFilterType() = 0;
 };

@@ -28,6 +28,7 @@
 #include <Nux/VLayout.h>
 #include <UnityCore/MultiRangeFilter.h>
 
+#include "FilterAllButton.h"
 #include "FilterWidget.h"
 #include "FilterBasicButton.h"
 #include "FilterExpanderLabel.h"
@@ -49,8 +50,6 @@ public:
   void SetFilter(Filter::Ptr filter);
   std::string GetFilterType();
 
-  nux::Property<bool> all_selected;
-
 protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
@@ -65,10 +64,10 @@ private:
   void OnActiveChanged(bool value);
 
   nux::HLayout* layout_;
-  FilterBasicButton* all_button_;
+  FilterAllButton* all_button_;
 
   std::vector<FilterMultiRangeButton*> buttons_;
-  dash::MultiRangeFilter::Ptr filter_;
+  MultiRangeFilter::Ptr filter_;
 };
 
 } // unityshell dash

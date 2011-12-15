@@ -29,6 +29,7 @@
 #include <Nux/VLayout.h>
 #include <UnityCore/RatingsFilter.h>
 
+#include "FilterAllButton.h"
 #include "FilterWidget.h"
 #include "FilterExpanderLabel.h"
 
@@ -50,23 +51,14 @@ public:
   void SetFilter(Filter::Ptr filter);
   std::string GetFilterType();
 
-  nux::Property<int> rating;
-
 protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw);
 
-  void OnRatingsRatingChanged(int const& new_rating);
-  void OnFilterRatingChanged(float new_rating);
-  void OnAnyButtonActivated(nux::View* view);
-
-  FilterBasicButton* any_button_;
+  FilterAllButton* all_button_;
   FilterRatingsButton* ratings_;
   RatingsFilter::Ptr filter_;
-
-private:
-  float last_rating_;
 };
 
 } // namespace dash

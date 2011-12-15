@@ -30,6 +30,7 @@
 
 #include <UnityCore/CheckOptionFilter.h>
 
+#include "FilterAllButton.h"
 #include "FilterWidget.h"
 #include "FilterExpanderLabel.h"
 
@@ -50,9 +51,7 @@ public:
 
   void SetFilter(Filter::Ptr filter);
   std::string GetFilterType();
-
-  nux::Property<bool> all_selected;
-
+  
 protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
@@ -61,13 +60,11 @@ protected:
   void InitTheme();
 
 private:
-  void OnAllActivated(nux::View* view);
-  void OnGenreActivated(nux::View* view);
-  void OnOptionAdded(dash::FilterOption::Ptr new_filter);
-  void OnOptionRemoved(dash::FilterOption::Ptr removed_filter);
+  void OnOptionAdded(FilterOption::Ptr new_filter);
+  void OnOptionRemoved(FilterOption::Ptr removed_filter);
 
   nux::GridHLayout* genre_layout_;
-  FilterBasicButton* all_button_;
+  FilterAllButton* all_button_;
 
   std::vector<FilterGenreButton*> buttons_;
   CheckOptionFilter::Ptr filter_;

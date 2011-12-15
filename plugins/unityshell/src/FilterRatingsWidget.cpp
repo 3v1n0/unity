@@ -20,7 +20,6 @@
  *
  */
 
-
 #include <Nux/Nux.h>
 #include <glib.h>
 #include <glib/gi18n-lib.h>
@@ -31,7 +30,6 @@
 #include "FilterRatingsButton.h"
 #include "FilterRatingsWidget.h"
 
-
 namespace unity
 {
 namespace dash
@@ -41,20 +39,15 @@ NUX_IMPLEMENT_OBJECT_TYPE(FilterRatingsWidget);
 
 FilterRatingsWidget::FilterRatingsWidget(NUX_FILE_LINE_DECL)
   : FilterExpanderLabel(_("Rating"), NUX_FILE_LINE_PARAM)
-  , last_rating_(0.0f)
 {
-  any_button_ = new FilterBasicButton(_("All"), NUX_TRACKER_LOCATION);
-  any_button_->state_change.connect(sigc::mem_fun(this, &FilterRatingsWidget::OnAnyButtonActivated));
-  any_button_->SetActive(true);
-  any_button_->DisableView();
-  any_button_->SetLabel(_("All"));
-
-  SetRightHandView(any_button_);
+  all_button_ = new FilterAllButton(NUX_TRACKER_LOCATION);
 
   nux::VLayout* layout = new nux::VLayout(NUX_TRACKER_LOCATION);
   ratings_ = new FilterRatingsButton(NUX_TRACKER_LOCATION);
 
   layout->AddView(ratings_);
+
+  SetRightHandView(all_button_);
   SetContents(layout);
 }
 
@@ -62,32 +55,13 @@ FilterRatingsWidget::~FilterRatingsWidget()
 {
 }
 
-void FilterRatingsWidget::OnAnyButtonActivated(nux::View* view)
-{
-  if (any_button_->Active())
-  {
-    last_rating_ = filter_->rating;
-    // we need to make sure the property changes, otherwise there'll be no
-    // signals, so we'll set it to 0.0f
-    filter_->rating = 0.0f;
-    filter_->Clear();
-  }
-  else
-  {
-    filter_->rating = last_rating_;
-  }
-}
-
-void FilterRatingsWidget::OnFilterRatingChanged(float new_rating)
-{
-  any_button_->SetActive(new_rating <= 0.0f);
-}
-
 void FilterRatingsWidget::SetFilter(Filter::Ptr filter)
 {
   filter_ = std::static_pointer_cast<RatingsFilter>(filter);
-  filter_->rating.changed.connect(sigc::mem_fun(this, &FilterRatingsWidget::OnFilterRatingChanged));
+  
+  all_button_->SetFilter(filter_);
   ratings_->SetFilter(filter);
+  
   SetLabel(filter_->name);
   NeedRedraw();
 }

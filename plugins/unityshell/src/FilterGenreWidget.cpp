@@ -38,21 +38,17 @@ NUX_IMPLEMENT_OBJECT_TYPE(FilterGenre);
 
 FilterGenre::FilterGenre(NUX_FILE_LINE_DECL)
  : FilterExpanderLabel(_("Categories"), NUX_FILE_LINE_PARAM)
- , all_selected(false)
 {
   InitTheme();
-
-  all_button_ = new FilterBasicButton(_("All"), NUX_TRACKER_LOCATION);
-  all_button_->state_change.connect(sigc::mem_fun(this, &FilterGenre::OnAllActivated));
-  all_button_->SetActive(true);
-  all_button_->SetLabel(_("All"));
+  
+  all_button_ = new FilterAllButton(NUX_TRACKER_LOCATION);
 
   genre_layout_ = new nux::GridHLayout(NUX_TRACKER_LOCATION);
   genre_layout_->ForceChildrenSize(true);
   genre_layout_->MatchContentSize(true);
   genre_layout_->SetSpaceBetweenChildren(10, 12);
   genre_layout_->SetTopAndBottomPadding(12);
-  genre_layout_->EnablePartialVisibility (false);
+  genre_layout_->EnablePartialVisibility(false);
   genre_layout_->SetChildrenSize(Style::Instance().GetTileWidth() - 12, 32);
 
   SetRightHandView(all_button_);
@@ -66,7 +62,9 @@ FilterGenre::~FilterGenre()
 void FilterGenre::SetFilter(Filter::Ptr filter)
 {
   filter_ = std::static_pointer_cast<CheckOptionFilter>(filter);
-
+  
+  all_button_->SetFilter(filter_);
+  
   filter_->option_added.connect(sigc::mem_fun(this, &FilterGenre::OnOptionAdded));
   filter_->option_removed.connect(sigc::mem_fun(this, &FilterGenre::OnOptionRemoved));
 
@@ -111,19 +109,6 @@ std::string FilterGenre::GetFilterType()
 void FilterGenre::InitTheme()
 {
   //FIXME - build theme here - store images, cache them, fun fun fun
-}
-
-void FilterGenre::OnAllActivated(nux::View* view)
-{
-  if (filter_)
-    filter_->Clear();
-}
-
-void FilterGenre::OnGenreActivated(nux::View *view)
-{
-  std::cout << "OnGenreActivated" << std::endl;
-  // just check to see if all the filters are active or not
-  // if they are, then set the all status to true
 }
 
 void FilterGenre::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)

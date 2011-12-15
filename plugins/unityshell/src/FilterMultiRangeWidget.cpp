@@ -38,15 +38,10 @@ NUX_IMPLEMENT_OBJECT_TYPE(FilterMultiRange);
 
 FilterMultiRange::FilterMultiRange(NUX_FILE_LINE_DECL)
   : FilterExpanderLabel(_("Multi-range"), NUX_FILE_LINE_PARAM)
-  , all_selected(false)
 {
   InitTheme();
-
-  all_button_ = new FilterBasicButton(_("All"), NUX_TRACKER_LOCATION);
-  all_button_->state_change.connect(sigc::mem_fun(this, &FilterMultiRange::OnAllActivated));
-  all_button_->SetActive(true);
-  all_button_->DisableView();
-  all_button_->SetLabel(_("All"));
+  
+  all_button_ = new FilterAllButton(NUX_TRACKER_LOCATION);
 
   layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
   layout_->SetVerticalExternalMargin(12);
@@ -63,6 +58,8 @@ FilterMultiRange::~FilterMultiRange()
 void FilterMultiRange::SetFilter(Filter::Ptr filter)
 {
   filter_ = std::static_pointer_cast<MultiRangeFilter>(filter);
+  
+  all_button_->SetFilter(filter_);
 
   filter_->option_added.connect(sigc::mem_fun(this, &FilterMultiRange::OnOptionAdded));
   filter_->option_removed.connect(sigc::mem_fun(this, &FilterMultiRange::OnOptionRemoved));
@@ -160,12 +157,6 @@ std::string FilterMultiRange::GetFilterType()
 void FilterMultiRange::InitTheme()
 {
   //FIXME - build theme here - store images, cache them, fun fun fun
-}
-
-void FilterMultiRange::OnAllActivated(nux::View* view)
-{
-  if (filter_)
-    filter_->Clear();
 }
 
 void FilterMultiRange::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
