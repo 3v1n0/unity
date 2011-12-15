@@ -20,8 +20,7 @@
 #include "ScreenEffectFramebufferObject.h"
 #include "BackgroundEffectHelper.h"
 #include <NuxCore/Logger.h>
-#include <core/core.h>
-#include <opengl/opengl.h>
+#include <dlfcn.h>
 
 namespace
 {
@@ -46,7 +45,7 @@ void unity::ScreenEffectFramebufferObject::paint (const nux::Geometry &output)
   if (mFBTexture)
   {
     glEnable (GL_TEXTURE_2D);
-    GL::activeTexture (GL_TEXTURE0_ARB);
+    activeTexture (GL_TEXTURE0_ARB);
     glBindTexture (GL_TEXTURE_2D, mFBTexture);
     glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -69,7 +68,7 @@ void unity::ScreenEffectFramebufferObject::paint (const nux::Geometry &output)
     glVertex2i   (mGeometry.x + mGeometry.width, mGeometry.y);
     glEnd ();
 
-    GL::activeTexture (GL_TEXTURE0_ARB);
+    activeTexture (GL_TEXTURE0_ARB);
     glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glBindTexture (GL_TEXTURE_2D, 0);
@@ -94,7 +93,7 @@ void unity::ScreenEffectFramebufferObject::unbind ()
 
   mBoundCnt--;
 
-  (*GL::bindFramebuffer) (GL_FRAMEBUFFER_EXT, 0);
+  (*bindFramebuffer) (GL_FRAMEBUFFER_EXT, 0);
 
   glDrawBuffer (GL_BACK);
   glReadBuffer (GL_BACK);
@@ -136,18 +135,18 @@ void unity::ScreenEffectFramebufferObject::bind (const nux::Geometry &output)
 
   glGetError ();
 
-  (*GL::bindFramebuffer) (GL_FRAMEBUFFER_EXT, mFboHandle);
+  (*bindFramebuffer) (GL_FRAMEBUFFER_EXT, mFboHandle);
 
-  (*GL::framebufferTexture2D) (GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT,
+  (*framebufferTexture2D) (GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT,
                                GL_TEXTURE_2D, mFBTexture, 0);
 
-  (*GL::framebufferTexture2D) (GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT,
+  (*framebufferTexture2D) (GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT,
                                GL_TEXTURE_2D, 0, 0);
 
   /* Ensure that a framebuffer is actually available */
   if (!mFboStatus)
   {
-    GLint status = (*GL::checkFramebufferStatus) (GL_DRAW_FRAMEBUFFER);
+    GLint status = (*checkFramebufferStatus) (GL_DRAW_FRAMEBUFFER);
 
     if (status != GL_FRAMEBUFFER_COMPLETE)
     {
@@ -182,8 +181,8 @@ void unity::ScreenEffectFramebufferObject::bind (const nux::Geometry &output)
           break;
       }
 
-      GL::bindFramebuffer (GL_FRAMEBUFFER_EXT, 0);
-      GL::deleteFramebuffers (1, &mFboHandle);
+      bindFramebuffer (GL_FRAMEBUFFER_EXT, 0);
+      deleteFramebuffers (1, &mFboHandle);
 
       glDrawBuffer (GL_BACK);
       glReadBuffer (GL_BACK);
@@ -209,6 +208,30 @@ void unity::ScreenEffectFramebufferObject::bind (const nux::Geometry &output)
   mBoundCnt++;
 }
 
+unity::ScreenEffectFramebufferObject::FuncPtr
+unity::ScreenEffectFramebufferObject::getProcAddr(const std::string &name)
+{
+  static void *dlhand = NULL;
+  FuncPtr funcPtr = NULL;
+  
+  if (!funcPtr)
+  {
+    if (!dlhand)
+      dlhand = dlopen ("libopengl.so", RTLD_LAZY);
+
+    if (dlhand)
+    {
+      dlerror ();
+      funcPtr = (FuncPtr) dlsym (dlhand, name.c_str ());
+      if (dlerror () != NULL)
+        funcPtr = NULL;
+    }
+  }
+
+  return funcPtr;
+}
+
+
 unity::ScreenEffectFramebufferObject::ScreenEffectFramebufferObject (const nux::Geometry &geom)
  : mFboStatus (false)
  , mFBTexture (0)
@@ -216,12 +239,20 @@ unity::ScreenEffectFramebufferObject::ScreenEffectFramebufferObject (const nux::
  , mBoundCnt (0)
  , mScreenSize (geom)
 {
-  (*GL::genFramebuffers) (1, &mFboHandle);
+  getProcAddressGLX = (GLXGetProcAddressProc) getProcAddr ("glXGetProcAddressARB");
+  activeTexture = (GLActiveTextureProc) (*getProcAddressGLX) ((GLubyte *) "glActiveTexture");
+  genFramebuffers = (GLGenFramebuffersProc) (*getProcAddressGLX) ((GLubyte *)"glGenFramebuffersEXT");
+  deleteFramebuffers = (GLDeleteFramebuffersProc) (*getProcAddressGLX) ((GLubyte *)"glDeleteFramebuffersEXT");
+  bindFramebuffer = (GLBindFramebufferProc) (*getProcAddressGLX) ((GLubyte *)"glBindFramebufferEXT");
+  checkFramebufferStatus = (GLCheckFramebufferStatusProc) (*getProcAddressGLX) ((GLubyte *) "glCheckFramebufferStatusEXT");
+  framebufferTexture2D = (GLFramebufferTexture2DProc) (*getProcAddressGLX) ((GLubyte *) "glFramebufferTexture2DEXT");
+  
+  (*genFramebuffers) (1, &mFboHandle);
 }
 
 unity::ScreenEffectFramebufferObject::~ScreenEffectFramebufferObject ()
 {
-  (*GL::deleteFramebuffers) (1, &mFboHandle);
+  (*deleteFramebuffers) (1, &mFboHandle);
 
   if (mFBTexture)
     glDeleteTextures (1, &mFBTexture);

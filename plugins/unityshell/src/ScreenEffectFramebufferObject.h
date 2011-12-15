@@ -29,6 +29,7 @@ class ScreenEffectFramebufferObject
 public:
 
   typedef boost::shared_ptr <ScreenEffectFramebufferObject> Ptr;
+  typedef void (*FuncPtr) (void);
 
   ScreenEffectFramebufferObject (const nux::Geometry &geom);
   ~ScreenEffectFramebufferObject ();
@@ -48,6 +49,30 @@ public:
 
 private:
 
+  FuncPtr getProcAddr (const std::string &);
+
+  typedef FuncPtr (*GLXGetProcAddressProc) (const GLubyte *procName);
+  typedef void (*GLActiveTextureProc) (GLenum texture);
+  typedef void (*GLGenFramebuffersProc) (GLsizei n,
+                                         GLuint  *framebuffers);
+  typedef void (*GLDeleteFramebuffersProc) (GLsizei n,
+                                            GLuint  *framebuffers);
+  typedef void (*GLBindFramebufferProc) (GLenum target,
+                                         GLuint framebuffer);
+  typedef GLenum (*GLCheckFramebufferStatusProc) (GLenum target);
+  typedef void (*GLFramebufferTexture2DProc) (GLenum target,
+                                              GLenum attachment,
+                                              GLenum textarget,
+                                              GLuint texture,
+                                              GLint  level);
+  
+  GLXGetProcAddressProc getProcAddressGLX;
+  GLActiveTextureProc activeTexture;
+  GLGenFramebuffersProc genFramebuffers;
+  GLDeleteFramebuffersProc deleteFramebuffers;
+  GLBindFramebufferProc bindFramebuffer;
+  GLCheckFramebufferStatusProc checkFramebufferStatus;
+  GLFramebufferTexture2DProc framebufferTexture2D;
   /* compiz fbo handle that goes through to nux */
   GLuint   mFboHandle; // actual handle to the framebuffer_ext
   bool    mFboStatus; // did the framebuffer texture bind succeed
