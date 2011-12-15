@@ -226,8 +226,9 @@ UnityScreen::UnityScreen(CompScreen* screen)
 
      if (GL::fbo)
      {
-       CompRect geometry = CompRect (0, 0, screen->width (), screen->height ());
-       uScreen->_fbo = UnityFBO::Ptr (new UnityFBO (geometry));
+       nux::Geometry geometry (0, 0, screen->width (), screen->height ());
+       uScreen->_fbo = ScreenEffectFramebufferObject::Ptr (new ScreenEffectFramebufferObject (geometry));
+       uScreen->_fbo->onScreenSizeChanged (geometry);
      }
 
      optionSetBackgroundColorNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
@@ -558,12 +559,21 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
   CompOutput *output = _last_output;
   Window     tray_xid = panel_controller_->GetTrayXid ();
 
+  bool was_bound = _fbo->bound ();
   _fbo->unbind ();
   nuxPrologue();
 
   /* Draw the bit of the relevant framebuffer for each output */
-  
-  _fbo->paint (output);
+
+  if (was_bound)
+  {
+    GLMatrix sTransform (transform);
+    sTransform.toScreenSpace (&screen->fullscreenOutput (), -DEFAULT_Z_CAMERA);
+    glPushMatrix ();
+    glLoadMatrixf (sTransform.getMatrix ());
+    _fbo->paint (nux::Geometry (output->x (), output->y (), output->width (), output->height ()));
+    glPopMatrix ();
+  }
 
   nux::ObjectPtr<nux::IOpenGLTexture2D> device_texture =
       nux::GetGraphicsDisplay()->GetGpuDevice()->CreateTexture2DFromID(_fbo->texture(),
@@ -944,7 +954,7 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
    *   attempts to bind it will only increment
    *   its bind reference so make sure that
    *   you always unbind as much as you bind */
-  _fbo->bind (output);
+  _fbo->bind (nux::Geometry (output->x (), output->y (), output->width (), output->height ()));
 
   /* glPaintOutput is part of the opengl plugin, so we need the GLScreen base class. */
   ret = gScreen->glPaintOutput(attrib, transform, region, output, mask);
@@ -2108,14 +2118,15 @@ void UnityScreen::ScheduleRelayout(guint timeout)
 
 void UnityScreen::Relayout()
 {
-  CompRect geometry = CompRect (0, 0, screen->width (), screen->height ());
+  nux::Geometry geometry (0, 0, screen->width (), screen->height ());
 
   if (!needsRelayout)
     return;
 
   if (GL::fbo)
   {
-    uScreen->_fbo = UnityFBO::Ptr (new UnityFBO (geometry));
+    uScreen->_fbo = ScreenEffectFramebufferObject::Ptr (new ScreenEffectFramebufferObject (geometry));
+    uScreen->_fbo->onScreenSizeChanged (geometry);
   }
 
   UScreen *uscreen = UScreen::GetDefault();
@@ -2170,22 +2181,15 @@ void UnityScreen::outputChangeNotify()
   ScheduleRelayout(500);
 }
 
-void UnityFBO::paint (CompOutput *output)
+void ScreenEffectFramebufferObject::paint (const nux::Geometry &output)
 {
   float texx, texy, texwidth, texheight;
-
-  if (!mBoundCnt)
-    return;
 
   /* Draw the bit of the relevant framebuffer for each output */
   GLMatrix transform;
 
   glPushAttrib (GL_VIEWPORT_BIT);
-  glViewport (0, 0, screen->width (), screen->height ());
-
-  transform.toScreenSpace (&screen->fullscreenOutput (), -DEFAULT_Z_CAMERA);
-  glPushMatrix ();
-  glLoadMatrixf (transform.getMatrix ());
+  glViewport (0, mScreenSize.height - (output.y + output.height), mScreenSize.width, mScreenSize.height);
 
   /* Note that texcoords here are normalized, so it's just (0,0)-(1,1) */
   texx = 0.0;
@@ -2204,19 +2208,19 @@ void UnityFBO::paint (CompOutput *output)
     glPushAttrib (GL_SCISSOR_BIT);
     glEnable (GL_SCISSOR_TEST);
 
-    glScissor (output->x1 (), screen->height () - output->y2 (),
-	       output->width (), output->height ());
+    glScissor (output.x, mScreenSize.height - (output.y + output.height),
+	       output.width, output.height);
 
     /* FIXME: This needs to be GL_TRIANGLE_STRIP */
     glBegin (GL_QUADS);
     glTexCoord2f (texx, texy + texheight);
-    glVertex2i   (mGeometry.x1 (), mGeometry.y1 ());
+    glVertex2i   (mGeometry.x, mGeometry.y);
     glTexCoord2f (texx, texy);
-    glVertex2i   (mGeometry.x1 (), mGeometry.y2 ());
+    glVertex2i   (mGeometry.x, mGeometry.y + mGeometry.height);
     glTexCoord2f (texx + texwidth, texy);
-    glVertex2i   (mGeometry.x2 (), mGeometry.y2 ());
+    glVertex2i   (mGeometry.x + mGeometry.width, mGeometry.y + mGeometry.height);
     glTexCoord2f (texx + texwidth, texy + texheight);
-    glVertex2i   (mGeometry.x2 (), mGeometry.y1 ());
+    glVertex2i   (mGeometry.x + mGeometry.width, mGeometry.y);
     glEnd ();
 
     GL::activeTexture (GL_TEXTURE0_ARB);
@@ -2229,11 +2233,15 @@ void UnityFBO::paint (CompOutput *output)
     glPopAttrib ();
   }
   glPopAttrib ();
-
-  glPopMatrix();
 }
 
-void UnityFBO::unbind ()
+void ScreenEffectFramebufferObject::onScreenSizeChanged(const nux::Geometry& screenSize)
+{
+  mScreenSize = screenSize;
+}
+
+
+void ScreenEffectFramebufferObject::unbind ()
 {
   if (!mBoundCnt)
     return;
@@ -2251,12 +2259,12 @@ void UnityFBO::unbind ()
 
 }
 
-bool UnityFBO::status ()
+bool ScreenEffectFramebufferObject::status ()
 {
   return mFboStatus;
 }
 
-void UnityFBO::bind (CompOutput *output)
+void ScreenEffectFramebufferObject::bind (const nux::Geometry &output)
 {
   if (!BackgroundEffectHelper::HasDirtyHelpers())
     return;
@@ -2270,7 +2278,7 @@ void UnityFBO::bind (CompOutput *output)
     glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, mGeometry.width (), mGeometry.height (), 0, GL_BGRA,
+    glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, mGeometry.width, mGeometry.height, 0, GL_BGRA,
 #if IMAGE_BYTE_ORDER == MSBFirst
                  GL_UNSIGNED_INT_8_8_8_8_REV,
 #else
@@ -2350,25 +2358,26 @@ void UnityFBO::bind (CompOutput *output)
 
     glPushAttrib (GL_VIEWPORT_BIT);
 
-    glViewport (output->x (),
-	       screen->height () - output->y2 (),
-	       output->width (),
-	       output->height());
+    glViewport (output.x,
+	       mScreenSize.height - (output.y + output.height),
+	       output.width,
+	       output.height);
   }
 
   mBoundCnt++;
 }
 
-UnityFBO::UnityFBO (CompRect geometry)
+ScreenEffectFramebufferObject::ScreenEffectFramebufferObject (const nux::Geometry &geom)
  : mFboStatus (false)
  , mFBTexture (0)
- , mGeometry (geometry)
+ , mGeometry (geom)
  , mBoundCnt (0)
+ , mScreenSize (geom)
 {
   (*GL::genFramebuffers) (1, &mFboHandle);
 }
 
-UnityFBO::~UnityFBO ()
+ScreenEffectFramebufferObject::~ScreenEffectFramebufferObject ()
 {
   (*GL::deleteFramebuffers) (1, &mFboHandle);
 

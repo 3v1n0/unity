@@ -55,24 +55,27 @@
 namespace unity
 {
 
-class UnityFBO
+class ScreenEffectFramebufferObject
 {
 public:
 
-  typedef boost::shared_ptr <UnityFBO> Ptr;
+  typedef boost::shared_ptr <ScreenEffectFramebufferObject> Ptr;
 
-  UnityFBO (CompRect r);
-  ~UnityFBO ();
+  ScreenEffectFramebufferObject (const nux::Geometry &geom);
+  ~ScreenEffectFramebufferObject ();
 
 public:
 
-  void bind (CompOutput *o);
+  void bind (const nux::Geometry &geom);
   void unbind ();
 
   bool status ();
-  void paint (CompOutput *o);
+  void paint (const nux::Geometry &geom);
+  bool bound () { return mBoundCnt > 0; }
 
   GLuint texture () { return mFBTexture; }
+  
+  void onScreenSizeChanged (const nux::Geometry &screenSize);
 
 private:
 
@@ -80,8 +83,10 @@ private:
   GLuint   mFboHandle; // actual handle to the framebuffer_ext
   bool    mFboStatus; // did the framebuffer texture bind succeed
   GLuint   mFBTexture;
-  CompRect mGeometry;
+  nux::Geometry mGeometry;
   unsigned int mBoundCnt;
+  
+  nux::Geometry mScreenSize;
 };
 
 class UnityShowdesktopHandler
@@ -315,8 +320,8 @@ private:
 
   unity::BGHash _bghash;
 
-  UnityFBO::Ptr _fbo;
-  GLuint        _active_fbo;
+  ScreenEffectFramebufferObject::Ptr _fbo;
+  GLuint                             _active_fbo;
 
   bool   queryForShader ();
 
