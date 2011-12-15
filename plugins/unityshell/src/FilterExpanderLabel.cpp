@@ -38,7 +38,10 @@ FilterExpanderLabel::FilterExpanderLabel(std::string const& label, NUX_FILE_LINE
   , contents_(nullptr)
   , right_hand_contents_(nullptr)
   , expander_graphic_(nullptr)
-  , label_("<span size='larger' weight='bold'>" + label + "</span>")
+  , cairo_label_(nullptr)
+  , space_(nullptr)
+  , raw_label_(label)
+  , label_("<span size='larger' weight='bold'>" + label + "</span>" + "  ▾")
 {
   expanded.changed.connect(sigc::mem_fun(this, &FilterExpanderLabel::DoExpandChange));
   BuildLayout();
@@ -46,11 +49,21 @@ FilterExpanderLabel::FilterExpanderLabel(std::string const& label, NUX_FILE_LINE
 
 FilterExpanderLabel::~FilterExpanderLabel()
 {
+  if (contents_)
+    contents_->UnReference();
+    
+  if (space_)
+    space_->UnReference();
 }
 
 void FilterExpanderLabel::SetLabel(std::string const& label)
 {
-  label_ = "<span size='larger' weight='bold'>" + label + "</span>";
+  raw_label_ = label;
+
+  label_ = "<span size='larger' weight='bold'>";
+  label_ += raw_label_;
+  label_ += "</span>";
+  label_ += expanded ? "  ▾" : "  ▸";
   cairo_label_->SetText(label_.c_str());
 }
 
@@ -64,8 +77,12 @@ void FilterExpanderLabel::SetRightHandView(nux::View* view)
 
 void FilterExpanderLabel::SetContents(nux::Layout* contents)
 {
+  if (contents_)
+    contents_->UnReference();
+    
   contents_ = contents;
-  contents_->SetVisible(expanded);
+  contents_->SinkReference();
+  
   layout_->AddLayout(contents_, 1, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
 
   QueueDraw();
@@ -83,10 +100,10 @@ void FilterExpanderLabel::BuildLayout()
     [&](int x, int y, unsigned long button_flags, unsigned long key_flag)
     {
       expanded = !expanded;
-      if (contents_)
-        contents_->SetVisible(expanded);
-      QueueDraw();
     });
+    
+  space_ = new nux::SpaceLayout(0, 0, 10, 10);
+  space_->SinkReference();
 
   top_bar_layout_->AddView(cairo_label_, 1, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
   top_bar_layout_->AddSpace(1, 1);
@@ -104,10 +121,33 @@ void FilterExpanderLabel::BuildLayout()
 
 void FilterExpanderLabel::DoExpandChange(bool change)
 {
-  if (contents_)
-    contents_->SetVisible(change);
-
-  QueueRelayout();
+  label_ = "<span size='larger' weight='bold'>";
+  label_ += raw_label_;
+  label_ += "</span>";
+  label_ += expanded ? "  ▾" : "  ▸";
+  
+  if (cairo_label_)
+    cairo_label_->SetText(label_);
+  
+  if (contents_ and !contents_->IsChildOf(layout_) and change)
+  {
+    layout_->AddLayout(contents_, 1, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
+    if (space_ and space_->IsChildOf(space_))
+    {
+      layout_->RemoveChildObject(space_);
+    }
+  }
+  else if (contents_ and contents_->IsChildOf(layout_) and !change)
+  {
+    layout_->RemoveChildObject(contents_);
+    if (space_ and !space_->IsChildOf(layout_))
+    {
+      layout_->AddView(space_, 1);
+    }
+  }
+  
+  layout_->ComputeContentSize(); 
+  QueueDraw();
 }
 
 void FilterExpanderLabel::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)

@@ -131,9 +131,7 @@ void FilterGenre::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 void FilterGenre::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
   GfxContext.PushClippingRectangle(GetGeometry());
-
   GetLayout()->ProcessDraw(GfxContext, force_draw);
-
   GfxContext.PopClippingRectangle();
 }
 
