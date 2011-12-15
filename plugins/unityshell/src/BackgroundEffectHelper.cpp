@@ -91,6 +91,15 @@ bool BackgroundEffectHelper::HasEnabledHelpers()
   return false;
 }
 
+bool BackgroundEffectHelper::HasDirtyHelpers()
+{
+  for (BackgroundEffectHelper * bg_effect_helper : registered_list_)
+    if (bg_effect_helper->enabled && bg_effect_helper->cache_dirty)
+      return true;
+
+  return false;
+}
+
 void BackgroundEffectHelper::Register(BackgroundEffectHelper* self)
 {
   registered_list_.push_back(self);
