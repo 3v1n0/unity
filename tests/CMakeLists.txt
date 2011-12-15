@@ -195,5 +195,9 @@ add_custom_target (check COMMAND  ${TEST_COMMAND} DEPENDS test-unit test-gtest t
 add_custom_target (check-headless COMMAND ${TEST_COMMAND_HEADLESS} DEPENDS test-gtest-xless test-gtest-dbus)
 add_custom_target (check-report COMMAND ${TEST_UNIT_COMMAND} && gtester-report ${TEST_RESULT_XML} > ${TEST_RESULT_HTML})
 add_custom_target (gcheck COMMAND  ${DBUS_TEST_COMMAND} DEPENDS test-gtest test-gtest-xless)
+
+# make target to allow devs to run "make autopilot" from build dir:
 set (AUTOPILOTDIR "${CMAKE_CURRENT_SOURCE_DIR}/autopilot")
+# Rules to install autopilot files and executable script:
+install(CODE "execute_process(COMMAND python setup.py install --prefix ${CMAKE_INSTALL_PREFIX} WORKING_DIRECTORY ${AUTOPILOTDIR})")
 add_custom_target (autopilot COMMAND cd ${AUTOPILOTDIR} && make check)

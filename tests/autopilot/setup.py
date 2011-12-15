@@ -10,5 +10,6 @@ setup(
     author_email='alex.launi@canonical.com',
     url='https://launchpad.net/unity',
     license='GPLv3',
-    packages=['autopilot'],
+    packages=['autopilot', 'autopilot.emulators', 'autopilot.tests'],
+    scripts=['bin/run_autopilot'],
 )
