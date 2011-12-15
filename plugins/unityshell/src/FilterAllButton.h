@@ -23,7 +23,6 @@
 #ifndef UNITYSHELL_FILTERALLBUTTON_H
 #define UNITYSHELL_FILTERALLBUTTON_H
 
-#include <Nux/Nux.h>
 #include <sigc++/connection.h>
 
 #include "FilterBasicButton.h"

@@ -23,18 +23,16 @@
 #define UNITYSHELL_FILTERRATINGSBUTTONWIDGET_H
 
 #include <Nux/Nux.h>
-#include <Nux/Button.h>
+#include <Nux/ToggleButton.h>
 #include <Nux/CairoWrapper.h>
 #include <UnityCore/RatingsFilter.h>
-
-#include "FilterWidget.h"
 
 namespace unity
 {
 namespace dash
 {
 
-class FilterRatingsButton : public nux::Button, public FilterWidget
+class FilterRatingsButton : public nux::ToggleButton
 {
 public:
   FilterRatingsButton(NUX_FILE_LINE_PROTO);

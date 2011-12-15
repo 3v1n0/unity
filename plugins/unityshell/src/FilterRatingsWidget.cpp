@@ -60,7 +60,7 @@ void FilterRatingsWidget::SetFilter(Filter::Ptr filter)
   filter_ = std::static_pointer_cast<RatingsFilter>(filter);
   
   all_button_->SetFilter(filter_);
-  ratings_->SetFilter(filter);
+  ratings_->SetFilter(filter_);
   
   SetLabel(filter_->name);
   NeedRedraw();

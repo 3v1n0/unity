@@ -34,7 +34,7 @@ FilterGenreButton::FilterGenreButton(std::string const& label, NUX_FILE_LINE_DEC
   state_change.connect([&] (Button* button)
   {
     bool tmp_active = Active();
-    if (filter_ != nullptr)
+    if (filter_)
       filter_->active = tmp_active;
   });
 }
@@ -47,7 +47,7 @@ FilterGenreButton::FilterGenreButton(NUX_FILE_LINE_DECL)
   state_change.connect([&] (Button* button)
   {
     bool tmp_active = Active();
-    if (filter_ != NULL)
+    if (filter_)
       filter_->active = tmp_active;
   });
 }

@@ -20,6 +20,7 @@
  *
  */
 
+
 #include <glib.h>
 #include <glib/gi18n-lib.h>
 
@@ -48,7 +49,7 @@ void FilterAllButton::SetFilter(Filter::Ptr filter)
     filtering_connection_.disconnect();
     
   filter_ = filter;
-  OnFilteringChanged(filter_->filtering);
+  OnFilteringChanged(filter_->filtering); // Evil hack ;)
   
   filtering_connection_ = filter_->filtering.changed.connect(sigc::mem_fun(this, &FilterAllButton::OnFilteringChanged));
 }

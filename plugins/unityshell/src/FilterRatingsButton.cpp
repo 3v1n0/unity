@@ -33,7 +33,7 @@ namespace dash
 {
 
 FilterRatingsButton::FilterRatingsButton(NUX_FILE_LINE_DECL)
-  : nux::Button(NUX_FILE_LINE_PARAM)
+  : nux::ToggleButton(NUX_FILE_LINE_PARAM)
   , active_empty_(nullptr)
   , normal_empty_(nullptr)
   , active_half_(nullptr)
@@ -71,7 +71,7 @@ std::string FilterRatingsButton::GetFilterType()
 
 void FilterRatingsButton::InitTheme()
 {
-  if (active_empty_ == nullptr)
+  if (!active_empty_)
   {
     nux::Geometry geometry = GetGeometry();
     geometry.width /= 5;
@@ -131,7 +131,7 @@ long FilterRatingsButton::ComputeContentSize()
 void FilterRatingsButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
   int rating = 0;
-  if (filter_ != nullptr && filter_->filtering)
+  if (filter_ && filter_->filtering)
     rating = static_cast<int>(filter_->rating * 5);
   // FIXME: 9/26/2011
   // We should probably support an API for saying whether the ratings
@@ -171,23 +171,29 @@ void FilterRatingsButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   {
     nux::BaseTexture* texture = normal_empty_->GetTexture();
 
-    if (index < total_full_stars) {
-      if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_NORMAL)
-        texture = normal_full_->GetTexture();
-      else if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_PRESSED)
+    if (index < total_full_stars)
+    {
+      texture = normal_full_->GetTexture();
+      if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_PRESSED)
+      {
         texture = active_full_->GetTexture();
+      }
     }
-    else if (index < total_full_stars + total_half_stars) {
-      if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_NORMAL)
-        texture = normal_half_->GetTexture();
-      else if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_PRESSED)
+    else if (index < total_full_stars + total_half_stars)
+    {
+      texture = normal_half_->GetTexture();
+      if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_PRESSED)
+      {
         texture = active_half_->GetTexture();
+      }
     }
-    else {
-      if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_NORMAL)
-        texture = normal_empty_->GetTexture();
-      else if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_PRESSED)
+    else
+    {
+      texture = normal_empty_->GetTexture();
+      if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_PRESSED)
+      {
         texture = active_empty_->GetTexture();
+      }
     }
 
     GfxContext.QRP_1Tex(geometry.x,
@@ -225,7 +231,7 @@ static void _UpdateRatingToMouse(RatingsFilter::Ptr filter, int x)
   new_rating = ceil(5*new_rating)/5;
   new_rating = new_rating > 1 ? 1 : (new_rating < 0 ? 0 : new_rating);
   
-  if (filter != nullptr)
+  if (filter)
     filter->rating = new_rating;
 }
 
