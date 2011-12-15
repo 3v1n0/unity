@@ -944,7 +944,7 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
    *   its bind reference so make sure that
    *   you always unbind as much as you bind */
   if (BackgroundEffectHelper::HasDirtyHelpers())
-    mFbos[output]->bind ();
+    _fbo->bind ();
 
   /* glPaintOutput is part of the opengl plugin, so we need the GLScreen base class. */
   ret = gScreen->glPaintOutput(attrib, transform, region, output, mask);
