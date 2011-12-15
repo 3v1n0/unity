@@ -43,6 +43,7 @@ FilterRatingsWidget::FilterRatingsWidget(NUX_FILE_LINE_DECL)
   all_button_ = new FilterAllButton(NUX_TRACKER_LOCATION);
 
   nux::VLayout* layout = new nux::VLayout(NUX_TRACKER_LOCATION);
+  layout->SetTopAndBottomPadding(10, 0);
   ratings_ = new FilterRatingsButton(NUX_TRACKER_LOCATION);
 
   layout->AddView(ratings_);

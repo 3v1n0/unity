@@ -115,6 +115,9 @@ public:
   static const unsigned int fade_time;
   static CompWindowList     animating_windows;
   static bool shouldHide (CompWindow *);
+  static void inhibitLeaveShowdesktopMode (guint32 xid);
+  static void allowLeaveShowdesktopMode (guint32 xid);
+  static guint32 inhibitingXid ();
 
 private:
 
@@ -123,6 +126,7 @@ private:
   UnityShowdesktopHandler::State mState;
   float                          mProgress;
   bool                           mWasHidden;
+  static guint32		 mInhibitingXid;
 };
 
 
@@ -350,6 +354,7 @@ public:
   void unminimize ();
   bool minimized ();
   bool focus ();
+  void activate ();
 
   void updateFrameRegion (CompRegion &region);
 
