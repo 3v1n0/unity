@@ -562,6 +562,7 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
   nuxPrologue();
 
   /* Draw the bit of the relevant framebuffer for each output */
+  
   _fbo->paint (output);
 
   nux::ObjectPtr<nux::IOpenGLTexture2D> device_texture =
@@ -943,8 +944,7 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
    *   attempts to bind it will only increment
    *   its bind reference so make sure that
    *   you always unbind as much as you bind */
-  if (BackgroundEffectHelper::HasDirtyHelpers())
-    _fbo->bind (output);
+  _fbo->bind (output);
 
   /* glPaintOutput is part of the opengl plugin, so we need the GLScreen base class. */
   ret = gScreen->glPaintOutput(attrib, transform, region, output, mask);
@@ -2174,6 +2174,9 @@ void UnityFBO::paint (CompOutput *output)
 {
   float texx, texy, texwidth, texheight;
 
+  if (!mBoundCnt)
+    return;
+
   /* Draw the bit of the relevant framebuffer for each output */
   GLMatrix transform;
 
@@ -2232,6 +2235,10 @@ void UnityFBO::paint (CompOutput *output)
 
 void UnityFBO::unbind ()
 {
+  if (!mBoundCnt)
+    return;
+
+  mBoundCnt--;
 
   uScreen->setActiveFbo (0);
   (*GL::bindFramebuffer) (GL_FRAMEBUFFER_EXT, 0);
@@ -2251,6 +2258,9 @@ bool UnityFBO::status ()
 
 void UnityFBO::bind (CompOutput *output)
 {
+  if (!BackgroundEffectHelper::HasDirtyHelpers())
+    return;
+
   if (!mFBTexture)
   {
     glGenTextures (1, &mFBTexture);
@@ -2345,12 +2355,15 @@ void UnityFBO::bind (CompOutput *output)
 	       output->width (),
 	       output->height());
   }
+
+  mBoundCnt++;
 }
 
 UnityFBO::UnityFBO (CompRect geometry)
  : mFboStatus (false)
  , mFBTexture (0)
  , mGeometry (geometry)
+ , mBoundCnt (0)
 {
   (*GL::genFramebuffers) (1, &mFboHandle);
 }
