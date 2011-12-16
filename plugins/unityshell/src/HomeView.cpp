@@ -81,6 +81,7 @@ HomeView::~HomeView()
 void HomeView::SetupViews()
 {
   layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
+  layout_->SetHorizontalExternalMargin(8);
 
   scroll_view_ = new HomeScrollView(new PlacesVScrollBar(NUX_TRACKER_LOCATION),
                                     NUX_TRACKER_LOCATION);
