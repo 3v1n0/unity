@@ -65,7 +65,7 @@ private:
   static void OnUnmountReady(GObject* object, GAsyncResult* result, DeviceLauncherIcon* self);
   static void OnDriveStop(DbusmenuMenuitem* item, int time, DeviceLauncherIcon* self);
   void OnSettingsChanged();
-  void ShowNotification(std::string const& icon_name = "", unsigned size = 0, GdkPixbuf* pixbuf = nullptr);
+  void ShowNotification(std::string const& icon_name, unsigned size, GdkPixbuf* pixbuf);
 
 private:
   GVolume* volume_;

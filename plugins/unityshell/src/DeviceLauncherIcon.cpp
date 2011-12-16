@@ -293,12 +293,8 @@ void DeviceLauncherIcon::OnEjectReady(GObject* object,
 {
   if (g_volume_eject_with_operation_finish(self->volume_, result, NULL))
   {    
-    // Makes sure the OSD notification is shown also without an icon.
-    if (!IconLoader::GetDefault().LoadFromGIconString(self->icon_name(), 48,
-                                                      sigc::mem_fun(self, &DeviceLauncherIcon::ShowNotification)))
-    {
-      self->ShowNotification();
-    }
+    IconLoader::GetDefault().LoadFromGIconString(self->icon_name(), 48,
+                                                 sigc::mem_fun(self, &DeviceLauncherIcon::ShowNotification));
   }
 }
 
@@ -311,6 +307,10 @@ void DeviceLauncherIcon::ShowNotification(std::string const& icon_name,
   glib::Object<NotifyNotification> notification(notify_notification_new(name,
                                                                         _("The drive has been successfully ejected"),
                                                                         NULL));
+                                                                        
+  notify_notification_set_hint(notification,
+                               "x-canonical-private-synchronous",
+                               g_variant_new_boolean(TRUE));
   
   if(GDK_IS_PIXBUF(pixbuf))
     notify_notification_set_image_from_pixbuf(notification, pixbuf);
