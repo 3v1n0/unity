@@ -224,10 +224,21 @@ UnityScreen::UnityScreen(CompScreen* screen)
      _edge_timeout = optionGetLauncherRevealEdgeTimeout ();
      _in_paint = false;
 
+    void *dlhand = dlopen ("libopengl.so", RTLD_LAZY);
+
+    if (dlhand)
+    {
+      dlerror ();
+      glXGetProcAddressP = (ScreenEffectFramebufferObject::GLXGetProcAddressProc) dlsym (dlhand, "glXGetProcAddressP");
+      if (dlerror () != NULL)
+        glXGetProcAddressP = NULL;
+      }
+    }
+
      if (GL::fbo)
      {
        nux::Geometry geometry (0, 0, screen->width (), screen->height ());
-       uScreen->_fbo = ScreenEffectFramebufferObject::Ptr (new ScreenEffectFramebufferObject (geometry));
+       uScreen->_fbo = ScreenEffectFramebufferObject::Ptr (new ScreenEffectFramebufferObject (glXGetProcAddressP, geometry));
        uScreen->_fbo->onScreenSizeChanged (geometry);
      }
 
@@ -2125,7 +2136,7 @@ void UnityScreen::Relayout()
 
   if (GL::fbo)
   {
-    uScreen->_fbo = ScreenEffectFramebufferObject::Ptr (new ScreenEffectFramebufferObject (geometry));
+    uScreen->_fbo = ScreenEffectFramebufferObject::Ptr (new ScreenEffectFramebufferObject (glXGetProcAddressP, geometry));
     uScreen->_fbo->onScreenSizeChanged (geometry);
   }
 

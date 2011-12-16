@@ -297,6 +297,8 @@ private:
   bool                   painting_tray_;
   unsigned int           tray_paint_mask_;
 
+  ScreenEffectFramebufferObject::GLXGetProcAddressProc glXGetProcAddressP;
+
   friend class UnityWindow;
 };
 

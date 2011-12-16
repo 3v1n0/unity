@@ -57,6 +57,7 @@ void unity::ScreenEffectFramebufferObject::paint (const nux::Geometry &output)
 	       output.width, output.height);
 
     /* FIXME: This needs to be GL_TRIANGLE_STRIP */
+    glGetError ();
     glBegin (GL_QUADS);
     glTexCoord2f (texx, texy + texheight);
     glVertex2i   (mGeometry.x, mGeometry.y);
@@ -208,38 +209,15 @@ void unity::ScreenEffectFramebufferObject::bind (const nux::Geometry &output)
   mBoundCnt++;
 }
 
-unity::ScreenEffectFramebufferObject::FuncPtr
-unity::ScreenEffectFramebufferObject::getProcAddr(const std::string &name)
-{
-  static void *dlhand = NULL;
-  FuncPtr funcPtr = NULL;
-  
-  if (!funcPtr)
-  {
-    if (!dlhand)
-      dlhand = dlopen ("libopengl.so", RTLD_LAZY);
 
-    if (dlhand)
-    {
-      dlerror ();
-      funcPtr = (FuncPtr) dlsym (dlhand, name.c_str ());
-      if (dlerror () != NULL)
-        funcPtr = NULL;
-    }
-  }
-
-  return funcPtr;
-}
-
-
-unity::ScreenEffectFramebufferObject::ScreenEffectFramebufferObject (const nux::Geometry &geom)
+unity::ScreenEffectFramebufferObject::ScreenEffectFramebufferObject (GLXGetProcAddressProc p, const nux::Geometry &geom)
  : mFboStatus (false)
  , mFBTexture (0)
  , mGeometry (geom)
  , mBoundCnt (0)
  , mScreenSize (geom)
+ , getProcAddressGLX (p)
 {
-  getProcAddressGLX = (GLXGetProcAddressProc) getProcAddr ("glXGetProcAddressARB");
   activeTexture = (GLActiveTextureProc) (*getProcAddressGLX) ((GLubyte *) "glActiveTexture");
   genFramebuffers = (GLGenFramebuffersProc) (*getProcAddressGLX) ((GLubyte *)"glGenFramebuffersEXT");
   deleteFramebuffers = (GLDeleteFramebuffersProc) (*getProcAddressGLX) ((GLubyte *)"glDeleteFramebuffersEXT");

@@ -30,8 +30,9 @@ public:
 
   typedef boost::shared_ptr <ScreenEffectFramebufferObject> Ptr;
   typedef void (*FuncPtr) (void);
+  typedef FuncPtr (*GLXGetProcAddressProc) (const GLubyte *procName);
 
-  ScreenEffectFramebufferObject (const nux::Geometry &geom);
+  ScreenEffectFramebufferObject (GLXGetProcAddressProc, const nux::Geometry &geom);
   ~ScreenEffectFramebufferObject ();
 
 public:
@@ -51,7 +52,6 @@ private:
 
   FuncPtr getProcAddr (const std::string &);
 
-  typedef FuncPtr (*GLXGetProcAddressProc) (const GLubyte *procName);
   typedef void (*GLActiveTextureProc) (GLenum texture);
   typedef void (*GLGenFramebuffersProc) (GLsizei n,
                                          GLuint  *framebuffers);
