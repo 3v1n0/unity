@@ -125,24 +125,12 @@ class Triangle :
 
     typedef boost::shared_ptr <Triangle> Ptr;
 
-    Triangle ();
-    virtual ~Triangle ();
-
   protected:
 
     void glDraw (unsigned int width, unsigned int height);
     void applyRotation () { mRotation += 5.0f; }
     void getRotationAxes (float &x, float &y, float &z) { x = 0.0f; y = 1.0f; z = 0.0f; }
 };
-
-Triangle::Triangle () :
-  Shape ()
-{
-}
-
-Triangle::~Triangle ()
-{
-}
 
 void
 Triangle::glDraw (unsigned int width, unsigned int height)
@@ -164,9 +152,6 @@ class Square :
 
     typedef boost::shared_ptr <Square> Ptr;
 
-    Square ();
-    virtual ~Square ();
-
   protected:
 
     void glDraw (unsigned int width, unsigned int height);
@@ -174,15 +159,6 @@ class Square :
     void getRotationAxes (float &x, float &y, float &z) { x = 1.0f; y = 0.0f; z = 0.0f; }
     
 };
-
-Square::Square () :
-  Shape ()
-{
-}
-
-Square::~Square ()
-{
-}
 
 void
 Square::glDraw (unsigned int width, unsigned int height)
