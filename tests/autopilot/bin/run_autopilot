@@ -8,4 +8,7 @@ if __name__ == "__main__":
 	loader = TestLoader()
 	test_suite = loader.discover('autopilot.tests')
 	runner = TextTestRunner()
-	exit(int(not runner.run(test_suite)))
+	success = runner.run(test_suite).wasSuccessful()
+	if not success:
+		exit(1)
+		
