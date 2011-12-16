@@ -52,13 +52,14 @@
 #include "compizminimizedwindowhandler.h"
 #include "BGHash.h"
 #include <compiztoolbox/compiztoolbox.h>
+#include <dlfcn.h>
 
 namespace unity
 {
 
 class UnityShowdesktopHandler
 {
-public:
+ public:
 
   UnityShowdesktopHandler (CompWindow *w);
   ~UnityShowdesktopHandler ();

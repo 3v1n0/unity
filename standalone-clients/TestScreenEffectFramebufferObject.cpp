@@ -36,26 +36,42 @@
 #include <unistd.h>
 #include <glib.h>
 #include <gtk/gtk.h>
+#include <cmath>
 
 using namespace unity::GLLoader;
 
 namespace
 {
   nux::logging::Logger logger ("unity.test-screeneffectframebufferobject");
-  static bool nuxReady;
-  nux::VLayout *root_layout = NULL;
-  nux::View    *root_view = NULL;
-  nux::ColorLayer background (nux::color::Transparent);
-  GLXGetProcAddressProc glXGetProcAddressP;
+
+  const static int attributes[] = { GLX_RENDER_TYPE, GLX_RGBA_BIT,
+                                    GLX_X_RENDERABLE, True,
+                                    GLX_DRAWABLE_TYPE, GLX_WINDOW_BIT,
+                                    GLX_DOUBLEBUFFER, True,
+                                    GLX_RED_SIZE, 8,
+                                    GLX_GREEN_SIZE, 8,
+                                    GLX_BLUE_SIZE, 8, 0};
 }
 
-static int attributes[] = { GLX_RENDER_TYPE, GLX_RGBA_BIT,
-                            GLX_X_RENDERABLE, True,
-                            GLX_DRAWABLE_TYPE, GLX_WINDOW_BIT,
-                            GLX_DOUBLEBUFFER, True,
-                            GLX_RED_SIZE, 8,
-                            GLX_GREEN_SIZE, 8,
-                            GLX_BLUE_SIZE, 8, 0};
+namespace GLFuncs
+{
+  GLXGetProcAddressProc           glXGetProcAddressP;
+  PFNGLXCHOOSEFBCONFIGPROC        glXChooseFBConfigP;
+  PFNGLXGETVISUALFROMFBCONFIGPROC glXGetVisualFromFBConfigP;
+  PFNGLXCREATEWINDOWPROC          glXCreateWindowP;
+  PFNGLXDESTROYWINDOWPROC         glXDestroyWindowP;
+  PFNGLXMAKECONTEXTCURRENTPROC    glXMakeContextCurrentP;
+
+  void init ()
+  {
+    glXGetProcAddressP = (GLXGetProcAddressProc) getProcAddr ("glXGetProcAddress");
+    glXChooseFBConfigP = (PFNGLXCHOOSEFBCONFIGPROC) (*glXGetProcAddressP) ((const GLubyte *) "glXChooseFBConfig");
+    glXGetVisualFromFBConfigP = (PFNGLXGETVISUALFROMFBCONFIGPROC) (*glXGetProcAddressP) ((const GLubyte *) "glXGetVisualFromFBConfig");
+    glXCreateWindowP = (PFNGLXCREATEWINDOWPROC) (*glXGetProcAddressP) ((const GLubyte *) "glXCreateWindow");
+    glXMakeContextCurrentP = (PFNGLXMAKECONTEXTCURRENTPROC) (*glXGetProcAddressP) ((const GLubyte *) "glXMakeContextCurrent");
+    glXDestroyWindowP      = (PFNGLXDESTROYWINDOWPROC) (*glXGetProcAddressP) ((const GLubyte *) "glXDestroyWindow");
+  }
+}
 
 class EffectView :
   public nux::View
@@ -69,6 +85,423 @@ public:
 private:
   BackgroundEffectHelper bg_effect_helper_;
 };
+
+class Shape
+{
+  public:
+
+    typedef boost::shared_ptr <Shape> Ptr;
+
+    Shape ();
+    virtual ~Shape ();
+
+    float rotation () { return mRotation; }
+
+    void draw (unsigned int width, unsigned int height) { glDraw (width, height); }
+    void rotate () { applyRotation (); }
+
+  protected:
+
+    float mRotation;
+
+    virtual void glDraw (unsigned int width, unsigned int height) = 0;
+    virtual void applyRotation () = 0;
+    virtual void getRotationAxes (float &x, float &y, float &z) = 0;
+};
+
+Shape::Shape () :
+ mRotation (0.0f)
+{
+}
+
+Shape::~Shape ()
+{
+}
+
+class Triangle :
+  public Shape
+{
+  public:
+
+    typedef boost::shared_ptr <Triangle> Ptr;
+
+    Triangle ();
+    virtual ~Triangle ();
+
+  protected:
+
+    void glDraw (unsigned int width, unsigned int height);
+    void applyRotation () { mRotation += 5.0f; }
+    void getRotationAxes (float &x, float &y, float &z) { x = 0.0f; y = 1.0f; z = 0.0f; }
+};
+
+Triangle::Triangle () :
+  Shape ()
+{
+}
+
+Triangle::~Triangle ()
+{
+}
+
+void
+Triangle::glDraw (unsigned int width, unsigned int height)
+{
+  glBegin(GL_TRIANGLES);
+      glColor3f(1.0f, 0.0f, 0.0f);
+      glVertex3f(width / 4, height, 0.0f);
+      glColor3f(0.0f, 1.0f, 0.0f);
+      glVertex3f(0.0f, 0.0f, 0.0f);
+      glColor3f(0.0f, 0.0f, 1.0f);
+      glVertex3f(width / 2, 0.0f, 0.0f);
+  glEnd();
+}
+
+class Square :
+  public Shape
+{
+  public:
+
+    typedef boost::shared_ptr <Square> Ptr;
+
+    Square ();
+    virtual ~Square ();
+
+  protected:
+
+    void glDraw (unsigned int width, unsigned int height);
+    void applyRotation () { mRotation -= 2.5f; }
+    void getRotationAxes (float &x, float &y, float &z) { x = 1.0f; y = 0.0f; z = 0.0f; }
+    
+};
+
+Square::Square () :
+  Shape ()
+{
+}
+
+Square::~Square ()
+{
+}
+
+void
+Square::glDraw (unsigned int width, unsigned int height)
+{
+  glBegin(GL_QUADS);
+    glColor3f(sin (rotation () / 100.0f), -sin (rotation () / 100.0f), cos (rotation () / 100.0f));
+    glVertex3f(width / 2, height, 0.0f);
+    glColor3f(-sin (rotation () / 100.0f), sin (rotation () / 100.0f), cos (rotation () / 100.0f));
+    glVertex3f(width, height, 0.0f);
+    glColor3f(sin (rotation () / 100.0f), sin (rotation () / 100.0f), sin (rotation () / 100.0f));
+    glVertex3f(width, 0.0f, 0.0f);
+    glColor3f(-sin (rotation () / 100.0f), cos (rotation () / 100.0f), cos (rotation () / 100.0f));
+    glVertex3f(width / 2, 0.0f, 0.0f);
+  glEnd();
+}
+
+class BaseContext
+{
+  public:
+
+    BaseContext (Display *);
+    ~BaseContext ();
+
+    void run ();
+
+  protected:
+
+    bool eventHandler ();
+    bool paintDispatch ();
+
+    enum class ModifierApplication
+    {
+      Square,
+      Triangle,
+      Both
+    };
+
+    void nextWindowPosition ();
+    void nextShapeRotation ();
+    void setupContextForSize (unsigned int width,
+                              unsigned int height);
+    void drawShape (const Shape::Ptr &) {};
+
+  private:
+
+    static gboolean onNewEvents (GIOChannel   *channel,
+                                 GIOCondition condition,
+                                 gpointer     data);
+
+    static gboolean onPaintTimeout (gpointer data);
+
+    static void onWindowThreadCreation (nux::NThread *thread, void *d);
+
+    Display                                   *mDisplay;
+    Window                                    mWindow;
+    Colormap                                  mColormap;
+    nux::WindowThread                         *mWindowThread;
+    nux::View                                 *mRootView;
+    unity::ScreenEffectFramebufferObject::Ptr mFbo;
+    GLXWindow                                 mGlxWindow;
+    GLXContext                                mContext;
+    ModifierApplication                       mRotating;
+    ModifierApplication                       mBlur;
+    unsigned int                              mWidth;
+    unsigned int                              mHeight;
+    bool                                      mNuxReady;
+    Shape::Ptr                                mTriangle;
+    Shape::Ptr                                mSquare;
+};
+
+BaseContext::BaseContext (Display *display) :
+  mDisplay (display),
+  mWindowThread (NULL),
+  mRotating (ModifierApplication::Both),
+  mBlur (ModifierApplication::Both),
+  mWidth (640),
+  mHeight (480),
+  mNuxReady (false),
+  mTriangle  (new Triangle ()),
+  mSquare (new Square ())
+{
+  int            numFBConfig = 0;  
+  GLXFBConfig    *fbConfigs = (*GLFuncs::glXChooseFBConfigP) (mDisplay,
+                                                              DefaultScreen (mDisplay),
+                                                              attributes,
+                                                              &numFBConfig);
+  XVisualInfo    *visinfo = (*GLFuncs::glXGetVisualFromFBConfigP) (mDisplay,
+                                                                   fbConfigs[0]);
+
+  mContext = glXCreateContext (mDisplay, visinfo, 0, GL_TRUE);
+  mColormap = XCreateColormap (mDisplay,
+                               DefaultRootWindow (mDisplay),
+                               visinfo->visual,
+                               AllocNone);
+
+  XSetWindowAttributes wa;
+
+  wa.colormap = mColormap;
+  wa.border_pixel = 0;
+  wa.event_mask = StructureNotifyMask | KeyPressMask | ExposureMask;
+
+  mWindow = XCreateWindow (mDisplay, DefaultRootWindow (mDisplay),
+                           0, 0, mWidth, mHeight, 0, visinfo->depth, InputOutput,
+                           visinfo->visual, CWColormap | CWEventMask | CWBorderPixel,
+                           &wa);
+
+  mGlxWindow = (*GLFuncs::glXCreateWindowP) (mDisplay, fbConfigs[0], mWindow, NULL);
+
+  XStoreName (mDisplay, mWindow, "F1: Toggle Effect, F2: Rotation, F3: Effect");
+  XMapWindow (mDisplay, mWindow);
+
+  bool ready = false;
+
+  do
+  {
+    XEvent ev;
+    XNextEvent (mDisplay, &ev);
+    switch (ev.type)
+    {
+      case MapNotify:
+      case ConfigureNotify:
+      case Expose:
+        ready = true;
+        break;
+      default:
+        break;
+    }
+
+  } while (!ready);
+
+  (*GLFuncs::glXMakeContextCurrentP) (mDisplay, mGlxWindow, mGlxWindow, mContext);
+
+  setupContextForSize (mWidth, mHeight);
+}
+
+void
+BaseContext::run ()
+{
+  GIOChannel        *channel;
+  mWindowThread = nux::CreateFromForeignWindow (mWindow,
+                                                mContext,
+                                                &BaseContext::onWindowThreadCreation,
+                                                (void *) this);
+
+  mWindowThread->Run(NULL);
+
+  while (!mNuxReady);
+  g_timeout_add (128, &BaseContext::onPaintTimeout, (gpointer) this);
+
+  channel = g_io_channel_unix_new (ConnectionNumber (mDisplay));
+
+  g_io_add_watch (channel, (GIOCondition) (G_IO_IN | G_IO_HUP | G_IO_ERR),
+                  &BaseContext::onNewEvents, (gpointer) this);
+  gtk_main ();
+}
+
+BaseContext::~BaseContext ()
+{
+  delete mWindowThread;
+
+  (*GLFuncs::glXMakeContextCurrentP) (mDisplay, None, None, mContext);
+  glXDestroyContext (mDisplay, mContext);
+  (*GLFuncs::glXDestroyWindowP) (mDisplay, mGlxWindow);
+
+  XFreeColormap (mDisplay, mColormap);
+  XDestroyWindow (mDisplay, mWindow);
+}
+
+void
+BaseContext::setupContextForSize (unsigned int width,
+                                  unsigned int height)
+{
+  mWidth = width;
+  mHeight = height;
+
+  glViewport(0, 0, width, height);
+  glDrawBuffer (GL_BACK);
+  glReadBuffer (GL_BACK);
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  gluPerspective(60.0f, 1.0f, 0.1f, 100.0f);
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity ();
+  glClearColor (1, 1, 1, 1);
+  glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glXSwapBuffers (mDisplay, mGlxWindow);
+
+  if (mFbo)
+    mFbo.reset (new unity::ScreenEffectFramebufferObject (GLFuncs::glXGetProcAddressP, nux::Geometry (0, 0, mWidth, mHeight)));
+
+  if (mRootView && mNuxReady)
+  {
+    switch (mBlur)
+    {
+      case ModifierApplication::Both:
+        mRootView->SetGeometry (nux::Geometry (0, 0, mWidth / 2, mHeight));
+        break;
+      case ModifierApplication::Triangle:
+        mRootView->SetGeometry (nux::Geometry (mWidth / 2, 0, mWidth / 2, mHeight));
+        break;
+      case ModifierApplication::Square:
+        mRootView->SetGeometry (nux::Geometry (0, 0, mWidth, mHeight));
+        break;
+      default:
+        break;
+    }
+  }
+}
+
+bool
+BaseContext::eventHandler ()
+{
+  XEvent event;
+  XEvent *ev = &event;
+
+  XNextEvent (mDisplay, &event);
+
+  switch (ev->type)
+  {
+    case KeyPress:
+      if (XLookupKeysym (&ev->xkey, 0) == XK_Escape)
+        return false;
+      else if (XLookupKeysym (&ev->xkey, 0) == XK_F1)
+      {
+        if (!mFbo)
+        {
+          BackgroundEffectHelper::blur_type = unity::BLUR_ACTIVE;
+          mFbo.reset (new unity::ScreenEffectFramebufferObject (GLFuncs::glXGetProcAddressP, nux::Geometry (0, 0, mWidth, mHeight)));
+        }
+        else
+        {
+          BackgroundEffectHelper::blur_type = unity::BLUR_NONE;
+          mFbo.reset ();
+        }
+      }
+      else if (XLookupKeysym (&ev->xkey, 0) == XK_F2)
+        nextShapeRotation ();
+      else if (XLookupKeysym (&ev->xkey, 0) == XK_F3)
+        nextWindowPosition ();
+      break;
+    case ConfigureNotify:
+      setupContextForSize (ev->xconfigure.width, ev->xconfigure.height);
+    default:
+      break;
+  }
+
+  return true;
+}
+
+gboolean
+BaseContext::onNewEvents (GIOChannel   *channel,
+                          GIOCondition condition,
+                          gpointer     data)
+{
+  BaseContext *self = static_cast <BaseContext *> (data);
+  gboolean    keep_going = TRUE;
+
+  if (condition & G_IO_IN)
+  {
+    if (self->eventHandler ())
+      return TRUE;
+    else
+      return FALSE;
+  }
+
+  return TRUE;
+}
+
+gboolean
+BaseContext::onPaintTimeout (gpointer data)
+{
+  BaseContext *self = static_cast <BaseContext *> (data);
+
+  if (self->paintDispatch ())
+    return TRUE;
+
+  return FALSE;
+}
+
+void
+BaseContext::nextShapeRotation ()
+{
+  switch (mRotating)
+  {
+    case ModifierApplication::Both:
+      mRotating = ModifierApplication::Triangle;
+      break;
+    case ModifierApplication::Triangle:
+      mRotating = ModifierApplication::Square;
+      break;
+    case ModifierApplication::Square:
+      mRotating = ModifierApplication::Both;
+      break;
+    default:
+      break;
+  }
+}
+
+void
+BaseContext::nextWindowPosition ()
+{
+  switch (mBlur)
+  {
+    case ModifierApplication::Both:
+      mBlur = ModifierApplication::Triangle;
+      mRootView->SetGeometry (nux::Geometry (0, 0, mWidth / 2, mHeight));
+      break;
+    case ModifierApplication::Triangle:
+      mBlur = ModifierApplication::Square;
+      mRootView->SetGeometry (nux::Geometry (mWidth / 2, 0, mWidth / 2, mHeight));
+      break;
+    case ModifierApplication::Square:
+      mBlur = ModifierApplication::Both;
+      mRootView->SetGeometry (nux::Geometry (0, 0, mWidth, mHeight));
+      break;
+    default:
+      break;
+  }
+}
 
 EffectView::EffectView (NUX_FILE_LINE_DECL)
   : View (NUX_FILE_LINE_PARAM)
@@ -118,135 +551,78 @@ void EffectView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
   GfxContext.PopClippingRectangle();
 }
 
-struct paintLoopData
+bool
+BaseContext::paintDispatch ()
 {
-    Display *display;
-    Window win;
-    nux::WindowThread *wt;
-    boost::shared_ptr <unity::ScreenEffectFramebufferObject> fbo;
-    GLXWindow glxWindow;
-    GLdouble rotTri;
-    GLdouble rotQuad;
-    unsigned int rotate;
-    unsigned int side;
-};
-
-static Bool
-paintLoop (void *data)
-{
-  paintLoopData *pld = static_cast <paintLoopData *> (data);
-
-  bool done = false;
-
-  XEvent ev;
-  if (XCheckWindowEvent (pld->display, pld->win, KeyPressMask, &ev))
+  if (mFbo)
   {
-    if (XLookupKeysym (&ev.xkey, 0) == XK_Escape)
-      done = true;
-    else if (XLookupKeysym (&ev.xkey, 0) == XK_F1)
+    switch (mRotating)
     {
-      if (!pld->fbo)
-      {
-        BackgroundEffectHelper::blur_type = unity::BLUR_ACTIVE;
-        pld->fbo.reset (new unity::ScreenEffectFramebufferObject (glXGetProcAddressP, nux::Geometry (0, 0, 640, 480)));
-      }
-      else
-      {
-        BackgroundEffectHelper::blur_type = unity::BLUR_NONE;
-        pld->fbo.reset ();
-      }
+      case ModifierApplication::Both:
+        BackgroundEffectHelper::ProcessDamage (nux::Geometry (0, 0, mWidth, mHeight));
+        break;
+      case ModifierApplication::Triangle:
+        BackgroundEffectHelper::ProcessDamage (nux::Geometry (0, 0, mWidth / 2, mHeight));
+        break;
+      case ModifierApplication::Square:
+        BackgroundEffectHelper::ProcessDamage (nux::Geometry (mWidth / 2, 0, mWidth / 2, mHeight));
+        break;
     }
-    else if (XLookupKeysym (&ev.xkey, 0) == XK_F2)
-    {
-      pld->rotate = (pld->rotate + 1) % 3;
-    }
-    else if (XLookupKeysym (&ev.xkey, 0) == XK_F3)
-    {
-      pld->side = (pld->side + 1) % 3;
 
-      if (pld->side == 2)
-        root_view->SetGeometry (nux::Geometry (0, 0, 640, 480));
-      else if (pld->side == 1)
-        root_view->SetGeometry (nux::Geometry (0, 0, 320, 480));
-      else if (pld->side == 0)
-        root_view->SetGeometry (nux::Geometry (320, 0, 320, 480));
-    }
+    mFbo->bind (nux::Geometry (0, 0, mWidth, mHeight));
+
+    if (!mFbo->status ())
+      LOG_INFO (logger) << "FBO not ok!";
   }
 
-  if (pld->fbo)
-  {
-    if (pld->rotate == 2)
-      BackgroundEffectHelper::ProcessDamage (nux::Geometry (0, 0, 680, 480));
-    else if (pld->rotate == 1)
-      BackgroundEffectHelper::ProcessDamage (nux::Geometry (0, 0, 320, 480));
-    else if (pld->rotate == 0)
-      BackgroundEffectHelper::ProcessDamage (nux::Geometry (320, 0, 320, 480));
-    pld->fbo->bind (nux::Geometry (0, 0, 640, 480));
-  }
+  glClearColor (1, 1, 1, 1);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glPushMatrix ();
+  glLoadIdentity();
+  glTranslatef(-0.5f, -0.5f, -0.866025404f);
+  glScalef (1.0f / mWidth, 1.0f / mHeight, 0.0f);
+  glTranslatef(mWidth * 0.25, 0, 0);
+  glRotatef(mTriangle->rotation (), 0.0f, 1.0f, 0.0f);
+  glTranslatef(-(mWidth * 0.25), 0, 0);
 
-  if (!pld->fbo || pld->fbo->status ())
-  {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glPushMatrix ();
-    glLoadIdentity();
-    glTranslatef(-0.5f, -0.5f, -0.866025404f);
-    glScalef (1.0f / 640, 1.0f / 480, 0.0f);
-    glTranslatef(160, 0, 0);
-    glRotatef(pld->rotTri, 0.0f, 1.0f, 0.0f);
-    glTranslatef(-160, 0, 0);
-    glBegin(GL_TRIANGLES);
-        glColor3f(1.0f, 0.0f, 0.0f);
-        glVertex3f(160.0f, 480.0f, 0.0f);
-        glColor3f(0.0f, 1.0f, 0.0f);
-        glVertex3f(0.0f, 0.0f, 0.0f);
-        glColor3f(0.0f, 0.0f, 1.0f);
-        glVertex3f(320.0f, 0.0f, 0.0f);
-    glEnd();
-    glLoadIdentity();
-    glTranslatef(-0.5f, -0.5f, -0.866025404f);
-    glScalef (1.0f / 640, 1.0f / 480, 0.0f);
-    glTranslatef(480, 240, 0);
-    glRotatef(pld->rotQuad, 1.0f, 0.0f, 0.0f);
-    glTranslatef(-480, -240, 0);
-    glColor3f(0.5f, 0.5f, 1.0f);
-    glBegin(GL_QUADS);
-        glVertex3f(320.f, 480.0f, 0.0f);
-        glVertex3f(640.f, 480.0f, 0.0f);
-        glVertex3f(640.f, 0.0f, 0.0f);
-        glVertex3f(320.f, 0.0f, 0.0f);
-    glEnd();
-    glColor4f (1.0f, 1.0f, 1.0f, 5.0f);
-    glPopMatrix ();
-  }
-  else
-    LOG_INFO (logger) << "FBO not ok!";
+  mTriangle->draw (mWidth, mHeight);
 
-  if (pld->fbo)
-    pld->fbo->unbind ();
+  glLoadIdentity();
+  glTranslatef(-0.5f, -0.5f, -0.866025404f);
+  glScalef (1.0f / mWidth, 1.0f / mHeight, 0.0f);
+  glTranslatef(mWidth * 0.75, 0, 0);
+  glRotatef(mSquare->rotation (), 0.0f, 1.0f, 0.0f);
+  glTranslatef(-(mWidth * 0.75), 0, 0);
 
-  if (pld->fbo && pld->fbo->status ())
+  mSquare->draw (mWidth, mHeight);
+
+  glColor4f (1.0f, 1.0f, 1.0f, 5.0f);
+  glPopMatrix ();
+
+  if (mFbo)
+    mFbo->unbind ();
+
+  if (mFbo && mFbo->status ())
   {
     glClearColor (1, 1, 1, 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glPushMatrix ();
     glLoadIdentity();
     glTranslatef(-0.5f, 0.5f, -0.866025404f);
-    glScalef (1.0f / 640, -(1.0f / 480), 0.0f);
-    pld->fbo->paint (nux::Geometry (0, 0, 640, 480));
+    glScalef (1.0f / mWidth, -(1.0f / mHeight), 0.0f);
+    mFbo->paint (nux::Geometry (0, 0, mWidth, mHeight));
     glPopMatrix ();
-  }
 
-  if (pld->fbo && pld->fbo->status ())
-  {
     nux::ObjectPtr<nux::IOpenGLTexture2D> device_texture =
-        nux::GetGraphicsDisplay()->GetGpuDevice()->CreateTexture2DFromID(pld->fbo->texture(),
-                                                                         640, 480, 1, nux::BITFMT_R8G8B8A8);
+        nux::GetGraphicsDisplay()->GetGpuDevice()->CreateTexture2DFromID (mFbo->texture(),
+                                                                          mWidth, mHeight, 1, nux::BITFMT_R8G8B8A8);
 
     nux::GetGraphicsDisplay()->GetGpuDevice()->backup_texture0_ = device_texture;
 
-    nux::Geometry geo = nux::Geometry (0, 0, 640, 480);
+    nux::Geometry geo = nux::Geometry (0, 0, mWidth, mHeight);
     BackgroundEffectHelper::monitor_rect_ = geo;
   }
+
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
 
@@ -254,8 +630,7 @@ paintLoop (void *data)
   glPushMatrix();
   glPushAttrib(GL_VIEWPORT_BIT | GL_ENABLE_BIT |
                GL_TEXTURE_BIT | GL_COLOR_BUFFER_BIT | GL_SCISSOR_BIT);
-
-  root_view->ProcessDraw (pld->wt->GetGraphicsEngine(), true);
+  mRootView->ProcessDraw (mWindowThread->GetGraphicsEngine (), true);
   glMatrixMode(GL_PROJECTION);
   glPopMatrix();
   glMatrixMode(GL_MODELVIEW);
@@ -266,128 +641,52 @@ paintLoop (void *data)
 
   glPopAttrib();
 
-  glXSwapBuffers (pld->display, pld->glxWindow);
+  glXSwapBuffers (mDisplay, mGlxWindow);
 
-  if (pld->rotate == 2 || pld->rotate == 0)
-    pld->rotTri += 5.0f;
-  if (pld->rotate == 2 || pld->rotate == 1)
-  pld->rotQuad -= 1.5f;
+  switch (mRotating)
+  {
+    case ModifierApplication::Both:
+      mTriangle->rotate ();
+      mSquare->rotate ();
+      break;
+    case ModifierApplication::Triangle:
+      mTriangle->rotate ();
+      break;
+    case ModifierApplication::Square:
+      mSquare->rotate ();
+      break;
+  }
 
-  return !done;
+  return true;
 }
 
-void initThread (nux::NThread *thread, void *d)
+void
+BaseContext::onWindowThreadCreation (nux::NThread *thread, void *data)
 {
-  static_cast<nux::WindowThread*> (thread)->SetWindowBackgroundPaintLayer(&background);
-  static_cast<nux::WindowThread*> (thread)->SetLayout (root_layout);
-  root_layout = new nux::VLayout ();
-  root_view = new EffectView ();
-  root_view->SetGeometry (nux::Geometry (0, 0, 640, 480));
-  nuxReady = true;
+  BaseContext *bc = static_cast <BaseContext *> (data);
+
+  bc->mRootView = new EffectView ();
+  bc->mRootView->SetGeometry (nux::Geometry (0, 0, 640, 480));
+  bc->mNuxReady = true;
   BackgroundEffectHelper::blur_type = unity::BLUR_ACTIVE;
 }
 
 int main (int argc, char **argv)
 {
-  XVisualInfo *visinfo;
-  int numFBConfig = 0;  
-
-  nuxReady = false;
-
-  glXGetProcAddressP = (GLXGetProcAddressProc) getProcAddr ("glXGetProcAddress");
-  PFNGLXCHOOSEFBCONFIGPROC glXChooseFBConfigP = (PFNGLXCHOOSEFBCONFIGPROC) (*glXGetProcAddressP) ((const GLubyte *) "glXChooseFBConfig");
-  PFNGLXGETVISUALFROMFBCONFIGPROC glXGetVisualFromFBConfigP = (PFNGLXGETVISUALFROMFBCONFIGPROC) (*glXGetProcAddressP) ((const GLubyte *) "glXGetVisualFromFBConfig");
-  PFNGLXCREATEWINDOWPROC glXCreateWindowP = (PFNGLXCREATEWINDOWPROC) (*glXGetProcAddressP) ((const GLubyte *) "glXCreateWindow");
-  PFNGLXMAKECONTEXTCURRENTPROC glXMakeContextCurrentP = (PFNGLXMAKECONTEXTCURRENTPROC) (*glXGetProcAddressP) ((const GLubyte *) "glXMakeContextCurrent");
-  //PFNGLXSWAPBUFFERSPROC glXSwapBuffersP = (PFNGLXSWAPBUFFERSPROC) (*glXGetProcAddressP) ((const GLubyte *) "glXSwapBuffers");
   Display *display = XOpenDisplay (NULL);
   nux::NuxInitialize (0);
-  GLXFBConfig *fbConfigs = (*glXChooseFBConfigP) (display, DefaultScreen (display), attributes, &numFBConfig);
-  visinfo = (*glXGetVisualFromFBConfigP) (display, fbConfigs[0]);
-
-  GLXContext ctx = glXCreateContext (display, visinfo, 0, GL_TRUE);
-  Colormap   cmap = XCreateColormap (display, DefaultRootWindow (display), visinfo->visual, AllocNone);
-
-  XSetWindowAttributes wa;
-
-  wa.colormap = cmap;
-  wa.border_pixel = 0;
-  wa.event_mask = StructureNotifyMask | KeyPressMask;
-  Window win = XCreateWindow (display, DefaultRootWindow (display), 0, 0, 640, 480, 0, visinfo->depth, InputOutput, visinfo->visual,
-                              CWColormap | CWEventMask | CWBorderPixel, &wa);
-
-  GLXWindow glxWindow = (*glXCreateWindowP) (display, fbConfigs[0], win, NULL);
-
-	g_type_init();
-  g_thread_init(NULL);
+  GLFuncs::init ();
+	g_type_init ();
+  g_thread_init (NULL);
   gtk_init(&argc, &argv);
 
+  BaseContext *bc = new BaseContext (display);
 
-  XStoreName (display, win, "F1: Toggle Effect, F2: Rotation, F3: Effect");
-  XMapWindow (display, win);
+  bc->run ();
 
-  while (1)
-  {
-    XEvent ev;
-    bool done = false;
+  delete bc;
 
-    XNextEvent (display, &ev);
-    switch (ev.type)
-    {
-      case MapNotify:
-      case ConfigureNotify:
-        done = true;
-        break;
-      default:
-        break;
-    }
-
-    if (done)
-      break;
-  }
-
-  (*glXMakeContextCurrentP) (display, glxWindow, glxWindow, ctx);
-
-  glViewport(0, 0, 640, 480);
-  glDrawBuffer (GL_BACK);
-  glReadBuffer (GL_BACK);
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  gluPerspective(60.0f, 1.0f, 0.1f, 100.0f);
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity ();
-  glClearColor (1, 1, 1, 1);
-  glClear (GL_COLOR_BUFFER_BIT);
-  glXSwapBuffers (display, glxWindow);
-
-  GLenum error = glGetError ();
-
-  nux::WindowThread *wt = nux::CreateFromForeignWindow (win,
-			                                                  ctx,
-			                                                  &initThread,
-			                                                  NULL);
-
-  wt->Run(NULL);
-
-  bool done = false;
-  while (!nuxReady);
-
-  paintLoopData *pld = new paintLoopData;
-
-  pld->wt = wt;
-  pld->display = display;
-  pld->win = win;
-  pld->glxWindow = glxWindow;
-  pld->rotQuad = 0;
-  pld->rotTri = 0;
-  pld->rotate = 2;
-  pld->side = 2;
-
-  g_timeout_add (16, &paintLoop, pld);
-  gtk_main ();
-
-  (*glXMakeContextCurrentP) (display, None, None, ctx);
-  glXDestroyContext (display, ctx);
+  XCloseDisplay (display);
 
   return 0;
 }

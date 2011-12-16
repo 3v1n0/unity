@@ -232,7 +232,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
       glXGetProcAddressP = (ScreenEffectFramebufferObject::GLXGetProcAddressProc) dlsym (dlhand, "glXGetProcAddressP");
       if (dlerror () != NULL)
         glXGetProcAddressP = NULL;
-      }
     }
 
      if (GL::fbo)
