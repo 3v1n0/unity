@@ -31,3 +31,17 @@ Outcome
   If a new gnome-terminal window is opened, the menus are not shown again.
   If more than one application is open at once, the menus of each application
   are shown once is focused.
+
+
+Panel Double Clicks
+-------------------
+This test shows how the double click over the top panel should work.
+
+#. Start with a clear screen
+#. Open a window and maximize it
+#. Double-click on the top-panel grab area (the empty area between the menus and
+   the indicators).
+
+Outcome
+  The maximized window should restore. If no maximized window is available on
+  the current workspace, nothing should happen.
