@@ -83,7 +83,7 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
   pango_entry_->cursor_moved.connect([&](int i) { QueueDraw(); });
   pango_entry_->mouse_down.connect(sigc::mem_fun(this, &SearchBar::OnMouseButtonDown));
   pango_entry_->end_key_focus.connect(sigc::mem_fun(this, &SearchBar::OnEndKeyFocus));
-  pango_entry_->SetMaximumWidth(search_bar_width_ - icon->GetWidth());
+  pango_entry_->SetMaximumWidth(search_bar_width_ - 1.5 * icon->GetWidth());
 
   layered_layout_ = new nux::LayeredLayout();
   layered_layout_->AddLayer(hint_);
