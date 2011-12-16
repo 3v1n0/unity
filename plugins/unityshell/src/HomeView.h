@@ -69,7 +69,7 @@ private:
   void DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw);
   
   bool AcceptKeyNavFocus();
-  std::string GetName();
+  std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
 
 private:
