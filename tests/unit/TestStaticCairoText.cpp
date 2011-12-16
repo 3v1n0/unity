@@ -81,7 +81,10 @@ TestLeftToRightExtentIncreasesWithLength ()
 static void
 TestRightToLeftExtentIncreasesWithLength ()
 {
-  const gchar *test_string = "מחרוזת אקראית עברית";
+  // This is the UTF-8 encoding of מחרוזת אקראית עברית, a hebrew test string.
+  const gchar *test_string = "\xd7\x9e\xd7\x97\xd7\xa8\xd7\x95\xd7\x96\xd7\xaa"
+                             " \xd7\x90\xd7\xa7\xd7\xa8\xd7\x90\xd7\x99\xd7\xaa"
+                             "\xd7\xa2\xd7\x91\xd7\xa8\xd7\x99\xd7\xaa";
 
   // Hebrew is an RTL language
   switch_language("he");
