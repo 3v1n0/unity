@@ -1158,8 +1158,8 @@ bool UnityScreen::showLauncherKeyInitiate(CompAction* action,
     int primary_monitor = uscreen->GetPrimaryMonitor();
     auto monitor_geo = uscreen->GetMonitorGeometry(primary_monitor);
         
-    int width = 950;
-    int height =  660;
+    int width = 970;
+    int height =  680;
     int x = monitor_geo.x + (monitor_geo.width - width) / 2;
     int y = monitor_geo.y + (monitor_geo.height - height) / 2;
     
@@ -2473,7 +2473,7 @@ void UnityScreen::InitHints()
   hints_.push_back(new shortcut::Hint(_("Launcher"), "", _(" (Press)"), _("Open Launcher, displays shortcuts."), shortcut::COMPIZ_OPTION, "unityshell", "show_launcher" ));
   hints_.push_back(new shortcut::Hint(_("Launcher"), "", "", _("Open Launcher keyboard navigation mode."), shortcut::COMPIZ_OPTION, "unityshell", "keyboard_focus"));
   // FIXME: Implement it...
-  //hints_.push_back(new shortcut::Hint(_("Launcher"), "", "", _("Switch application via Launcher."), shortcut::HARDCODED_OPTION, "Super + Tab"));
+  hints_.push_back(new shortcut::Hint(_("Launcher"), "", "", _("Switch application via Launcher."), shortcut::HARDCODED_OPTION, "Super + Tab"));
   hints_.push_back(new shortcut::Hint(_("Launcher"), "", _(" + 1 to 9"), _("Same as clicking on a Launcher icon."), shortcut::COMPIZ_OPTION, "unityshell", "show_launcher"));
   hints_.push_back(new shortcut::Hint(_("Launcher"), "", _(" + Shift + 1 to 9"), _("Open a new window of the app."), shortcut::COMPIZ_OPTION, "unityshell", "show_launcher"));
   hints_.push_back(new shortcut::Hint(_("Launcher"), "", " + T", _("Open the Rubbish Bin."), shortcut::COMPIZ_OPTION, "unityshell", "show_launcher")); 

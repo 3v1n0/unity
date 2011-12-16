@@ -24,6 +24,7 @@
 #include <UnityCore/GLibWrapper.h>
 
 #include "LineSeparator.h"
+#include "StaticCairoText.h"
 
 namespace unity
 {
@@ -31,12 +32,12 @@ namespace shortcut
 {
 namespace
 {
-  int SECTION_NAME_FONT_SIZE = 12;
-  int SHORTKEY_ENTRY_FONT_SIZE = 10;
+  int SECTION_NAME_FONT_SIZE = 17/1.33;
+  int SHORTKEY_ENTRY_FONT_SIZE = 13/1.33;
   int INTER_SPACE_SHORTKEY_DESCRIPTION = 10;
   int SHORTKEY_COLUMN_WIDTH = 150;
   int DESCRIPTION_COLUMN_WIDTH = 265;
-  int LINE_SPACING = 4;
+  int LINE_SPACING = 5;
 } // namespace anonymouse
 
 NUX_IMPLEMENT_OBJECT_TYPE(View);
@@ -45,8 +46,8 @@ View::View(NUX_FILE_LINE_DECL)
   : nux::View(NUX_FILE_LINE_PARAM)
 {
   layout_ = new nux::VLayout();
-  layout_->SetPadding(40, 40);
-  layout_->SetSpaceBetweenChildren(25);
+  layout_->SetPadding(50, 38);
+  layout_->SetSpaceBetweenChildren(20);
   SetLayout(layout_);
 
   background_top_ = nux::CreateTexture2DFromFile(PKGDATADIR"/switcher_top.png", -1, true);
@@ -59,14 +60,14 @@ View::View(NUX_FILE_LINE_DECL)
   header += "</b>";
   
   nux::StaticText* header_view = new nux::StaticText(header.c_str(), NUX_TRACKER_LOCATION);
-  header_view->SetTextPointSize(15);
+  header_view->SetTextPointSize(20/1.33);
   header_view->SetFontName("Ubuntu");
   layout_->AddView(header_view, 1 , nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
   
   layout_->AddView(new HSeparator(), 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);  
     
   columns_layout_ = new nux::HLayout();  
-  columns_layout_->SetSpaceBetweenChildren(25);
+  columns_layout_->SetSpaceBetweenChildren(30);
   layout_->AddLayout(columns_layout_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
   
   // Column 1...
@@ -121,11 +122,13 @@ nux::LinearLayout* View::CreateSectionLayout(const char* section_name)
   name += std::string(section_name);
   name += "</b>";
 
+
   nux::StaticText* section_name_view = new nux::StaticText(name.c_str(), NUX_TRACKER_LOCATION);
   section_name_view->SetTextPointSize(SECTION_NAME_FONT_SIZE);
   section_name_view->SetFontName("Ubuntu");
+  layout->AddView(new nux::SpaceLayout(10, 10, 10, 10), 0, nux::MINOR_POSITION_START, nux::MINOR_SIZE_MATCHCONTENT);
   layout->AddView(section_name_view, 0, nux::MINOR_POSITION_START, nux::MINOR_SIZE_MATCHCONTENT);
-  layout->AddView(new nux::SpaceLayout(20, 20, 20, 20), 0, nux::MINOR_POSITION_START, nux::MINOR_SIZE_MATCHCONTENT);
+  layout->AddView(new nux::SpaceLayout(15, 15, 15, 15), 0, nux::MINOR_POSITION_START, nux::MINOR_SIZE_MATCHCONTENT);
 
   return layout;
 }
@@ -405,10 +408,10 @@ void View::RenderColumns()
     if (i == 0 or i==1 or i==3 or i==4)
     {
       // Add space before the line
-      section_layout->AddView(new nux::SpaceLayout(20, 20, 20, 20), 0, nux::MINOR_POSITION_START, nux::MINOR_SIZE_MATCHCONTENT);
+      section_layout->AddView(new nux::SpaceLayout(23, 23, 23, 23), 0, nux::MINOR_POSITION_START, nux::MINOR_SIZE_MATCHCONTENT);
       section_layout->AddView(new HSeparator(), 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
       // Add space after the line
-      section_layout->AddView(new nux::SpaceLayout(30, 30, 30, 30), 0, nux::MINOR_POSITION_START, nux::MINOR_SIZE_MATCHCONTENT);
+      section_layout->AddView(new nux::SpaceLayout(20, 20, 20, 20), 0, nux::MINOR_POSITION_START, nux::MINOR_SIZE_MATCHCONTENT);
     }
 
     columns_[column]->AddView(section_layout, 1, nux::MINOR_POSITION_START, nux::MINOR_SIZE_FULL);

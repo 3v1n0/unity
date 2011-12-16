@@ -28,8 +28,8 @@ AbstractSeparator::AbstractSeparator(NUX_FILE_LINE_DECL)
   : nux::View(NUX_FILE_LINE_PARAM)
   , color_(nux::color::White)
   , alpha0_(0.0f)
-  , alpha1_(0.592f)
-  , border_size_(10)
+  , alpha1_(0.10f)
+  , border_size_(0)
 {
 }
 
