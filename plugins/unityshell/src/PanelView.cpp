@@ -54,6 +54,8 @@ NUX_IMPLEMENT_OBJECT_TYPE(PanelView);
 
 PanelView::PanelView(NUX_FILE_LINE_DECL)
   :   View(NUX_FILE_LINE_PARAM),
+      _last_width(0),
+      _last_height(0),
       _is_dirty(true),
       _opacity(1.0f),
       _opacity_maximized_toggle(false),
@@ -361,7 +363,7 @@ PanelView::UpdateBackground()
 {
   nux::Geometry geo = GetGeometry();
 
-  if (geo.width == _last_width && geo.height == _last_height && !_is_dirty)
+  if (!_is_dirty && geo.width == _last_width && geo.height == _last_height)
     return;
 
   _last_width = geo.width;
