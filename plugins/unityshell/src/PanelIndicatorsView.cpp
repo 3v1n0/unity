@@ -340,7 +340,7 @@ std::string PanelIndicatorsView::GetName() const
   return "IndicatorsView";
 }
 
-std::string PanelIndicatorsView::GetChildsName()
+std::string PanelIndicatorsView::GetChildsName() const
 {
   return "entries";
 }

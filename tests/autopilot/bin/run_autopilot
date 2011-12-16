@@ -11,4 +11,3 @@ if __name__ == "__main__":
 	success = runner.run(test_suite).wasSuccessful()
 	if not success:
 		exit(1)
-		
