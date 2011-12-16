@@ -116,8 +116,8 @@ void DashView::SetupViews()
   SetLayout(layout_);
 
   content_layout_ = new nux::VLayout();
-  content_layout_->SetHorizontalExternalMargin(1);
-  content_layout_->SetVerticalExternalMargin(1);
+  content_layout_->SetHorizontalExternalMargin(0);
+  content_layout_->SetVerticalExternalMargin(0);
 
   layout_->AddLayout(content_layout_, 1, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
   search_bar_ = new SearchBar();

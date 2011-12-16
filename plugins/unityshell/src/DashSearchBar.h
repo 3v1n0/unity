@@ -99,8 +99,11 @@ private:
   nux::LayeredLayout* layered_layout_;
   nux::StaticCairoText* hint_;
   IMTextEntry* pango_entry_;
+  nux::HLayout* filter_layout_;
+  nux::SpaceLayout* filter_space_;
   nux::StaticCairoText* show_filters_;
-  
+  int search_bar_width_;
+
   int last_width_;
   int last_height_;
   
