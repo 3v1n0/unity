@@ -382,11 +382,6 @@ std::string SearchBar::GetName() const
   return "SearchBar";
 }
 
-std::string SearchBar::GetChildsName() const
-{
-  return "";
-}
-
 void SearchBar::AddProperties(GVariantBuilder* builder)
 {
   unity::variant::BuilderWrapper(builder).add(GetGeometry());

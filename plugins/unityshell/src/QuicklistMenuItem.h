@@ -141,7 +141,7 @@ protected:
                 nux::Color color);
 
   // Introspection
-  gchar* _name;
+  std::string _name;
 
   friend class QuicklistView;
 };

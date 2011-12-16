@@ -124,12 +124,6 @@ PanelTitlebarGrabArea::GetName() const
   return "panel-titlebar-grab-area";
 }
 
-const gchar*
-PanelTitlebarGrabArea::GetChildsName()
-{
-  return "";
-}
-
 void
 PanelTitlebarGrabArea::AddProperties(GVariantBuilder* builder)
 {

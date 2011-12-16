@@ -51,7 +51,7 @@ const gchar DebugDBusInterface::introspection_xml[] =
   ""
   "     <method name='GetState'>"
   "       <arg type='s' name='piece' direction='in' />"
-  "       <arg type='a{sv}' name='state' direction='out' />"
+  "       <arg type='aa{sv}' name='state' direction='out' />"
   "     </method>"
   ""
   "   </interface>"
@@ -162,23 +162,15 @@ GVariant* GetState(std::string const& query)
 {
   // process the XPath query:
   std::list<Introspectable*> parts = GetIntrospectableNodesFromQuery(query, _parent_introspectable);
-  // wrap  all the results into a GVariant.
   GVariantBuilder  builder;
-
-  g_variant_builder_init(&builder, G_VARIANT_TYPE("(a{sv})"));
-  g_variant_builder_open(&builder, G_VARIANT_TYPE("a{sv}"));
-
+  g_variant_builder_init(&builder, G_VARIANT_TYPE("aa{sv}"));
+  
   for (Introspectable *node : parts)
   {
-    if (node->GetName() != "")
-    {
-      g_variant_builder_add(&builder, "{sv}", node->GetName().c_str(), node->Introspect());
-    }
+    g_variant_builder_add_value(&builder, node->Introspect());
   }
-
-  g_variant_builder_close(&builder);
   
-  return g_variant_builder_end(&builder);
+  return g_variant_new("(aa{sv})", &builder);
 }
 
 /*

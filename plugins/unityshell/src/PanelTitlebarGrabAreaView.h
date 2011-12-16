@@ -51,7 +51,6 @@ private:
   struct timespec time_diff(struct timespec start, struct timespec end);
 
   std::string GetName() const;
-  const gchar* GetChildsName();
   void         AddProperties(GVariantBuilder* builder);
 
   struct timespec _last_click_time;

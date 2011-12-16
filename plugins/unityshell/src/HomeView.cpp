@@ -238,7 +238,7 @@ bool HomeView::AcceptKeyNavFocus()
 }
 
 // Introspectable
-const gchar* HomeView::GetName()
+std::string HomeView::GetName() const
 {
   return "HomeView";
 }
