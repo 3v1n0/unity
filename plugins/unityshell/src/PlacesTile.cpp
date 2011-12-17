@@ -286,4 +286,10 @@ PlacesTile::OnFocusActivated(nux::Area* label)
   sigClick.emit(this);
 }
 
+bool
+PlacesTile::AcceptKeyNavFocusOnMouseDown()
+{
+  return false;
+}
+
 } // namespace unity

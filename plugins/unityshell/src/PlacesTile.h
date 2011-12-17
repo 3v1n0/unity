@@ -43,6 +43,7 @@ public:
 protected:
   virtual nux::Geometry GetHighlightGeometry();
   nux::Area* FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type);
+  virtual bool AcceptKeyNavFocusOnMouseDown();
 
 private:
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);

@@ -82,13 +82,6 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
     last_mouse_down_y_ = y;
     uint index = GetIndexAtPosition(x, y);
     mouse_over_index_ = index;
-    if (index >= 0 && index < results_.size())
-    {
-      // we got a click on a button so activate it
-      Result result = results_[index];
-      selected_index_ = index;
-      focused_uri_ = result.uri;
-    }
   });
 
   mouse_leave.connect([&](int x, int y, unsigned long mouse_state, unsigned long button_state)
@@ -382,6 +375,11 @@ bool ResultViewGrid::AcceptKeyNavFocus()
   return true;
 }
 
+bool ResultViewGrid::AcceptKeyNavFocusOnMouseDown()
+{
+  return false;
+}
+
 void ResultViewGrid::OnKeyDown (unsigned long event_type, unsigned long event_keysym,
                                 unsigned long event_state, const TCHAR* character,
                                 unsigned short key_repeat_count)
@@ -495,26 +493,14 @@ nux::Area* ResultViewGrid::KeyNavIteration(nux::KeyNavDirection direction)
 
 // crappy name.
 void ResultViewGrid::OnOnKeyNavFocusChange(nux::Area *area)
-{
+{ 
   if (HasKeyFocus())
   {
     if (selected_index_ < 0)
     {
-      if (mouse_over_index_ >= 0 && mouse_over_index_ < static_cast<int>(results_.size()))
-      {
-        // to hack around nux, nux sends the keynavfocuschange event before
-        // mouse clicks, so when mouse click happens we have already scrolled away
-        // because the keynav focus changed
-        focused_uri_ = results_[mouse_over_index_].uri;
-        selected_index_ = mouse_over_index_;
-      }
-      else
-      {
         focused_uri_ = results_.front().uri;
         selected_index_ = 0;
-      }
     }
-
 
     int items_per_row = GetItemsPerRow();
     int focused_x = (renderer_->width + horizontal_spacing) * (selected_index_ % items_per_row);
@@ -886,6 +872,15 @@ ResultViewGrid::DndSourceDragFinished(nux::DndAction result)
   last_mouse_down_y_ = -1;
   current_drag_uri_.clear();
   current_drag_icon_name_.clear();
+  
+  EmitMouseLeaveSignal(0, 0, 0, 0);
+  
+  Display* display = nux::GetGraphicsDisplay()->GetX11Display();
+  if (display)
+  {
+    XWarpPointer(display, None, None, 0, 0, 0, 0, 0, 0);
+    XFlush(display);
+  }
 }
 
 int
