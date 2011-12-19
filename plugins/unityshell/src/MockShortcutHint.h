@@ -50,7 +50,8 @@ public:
   {
     switch (type())
     {
-      case COMPIZ_OPTION:
+      case COMPIZ_MOUSE_OPTION:
+      case COMPIZ_KEY_OPTION:
         value = arg1() + "-" + arg2();
         shortkey = prefix() + value() + postfix();
         return true;

@@ -2470,49 +2470,49 @@ void UnityScreen::InitHints()
   // TODO move category text into a vector...
   
   // Launcher...
-  hints_.push_back(new shortcut::Hint(_("Launcher"), "", _(" (Press)"), _("Open Launcher, displays shortcuts."), shortcut::COMPIZ_OPTION, "unityshell", "show_launcher" ));
-  hints_.push_back(new shortcut::Hint(_("Launcher"), "", "", _("Open Launcher keyboard navigation mode."), shortcut::COMPIZ_OPTION, "unityshell", "keyboard_focus"));
+  hints_.push_back(new shortcut::Hint(_("Launcher"), "", _(" (Press)"), _("Open Launcher, displays shortcuts."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "show_launcher" ));
+  hints_.push_back(new shortcut::Hint(_("Launcher"), "", "", _("Open Launcher keyboard navigation mode."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "keyboard_focus"));
   hints_.push_back(new shortcut::Hint(_("Launcher"), "", "", _("Switch applications via Launcher."), shortcut::HARDCODED_OPTION, "Super + Tab"));
-  hints_.push_back(new shortcut::Hint(_("Launcher"), "", _(" + 1 to 9"), _("Same as clicking on a Launcher icon."), shortcut::COMPIZ_OPTION, "unityshell", "show_launcher"));
-  hints_.push_back(new shortcut::Hint(_("Launcher"), "", _(" + Shift + 1 to 9"), _("Open new window of the app."), shortcut::COMPIZ_OPTION, "unityshell", "show_launcher"));
-  hints_.push_back(new shortcut::Hint(_("Launcher"), "", " + T", _("Open the Rubbish Bin."), shortcut::COMPIZ_OPTION, "unityshell", "show_launcher")); 
+  hints_.push_back(new shortcut::Hint(_("Launcher"), "", _(" + 1 to 9"), _("Same as clicking on a Launcher icon."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "show_launcher"));
+  hints_.push_back(new shortcut::Hint(_("Launcher"), "", _(" + Shift + 1 to 9"), _("Open new window of the app."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "show_launcher"));
+  hints_.push_back(new shortcut::Hint(_("Launcher"), "", " + T", _("Open the Rubbish Bin."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "show_launcher")); 
 
   // Dash...
-  hints_.push_back(new shortcut::Hint(_("Dash"), "", _(" (Tap)"), _("Open the Dash Home."), shortcut::COMPIZ_OPTION, "unityshell", "show_launcher"));
-  hints_.push_back(new shortcut::Hint(_("Dash"), "", " + A", _("Open the Dash App Lens."), shortcut::COMPIZ_OPTION, "unityshell", "show_launcher"));
-  hints_.push_back(new shortcut::Hint(_("Dash"), "", " + F", _("Open the Dash Files Lens."), shortcut::COMPIZ_OPTION,"unityshell", "show_launcher"));
-  hints_.push_back(new shortcut::Hint(_("Dash"), "", " + M", _("Open the Dash Music Lens."), shortcut::COMPIZ_OPTION, "unityshell", "show_launcher"));
+  hints_.push_back(new shortcut::Hint(_("Dash"), "", _(" (Tap)"), _("Open the Dash Home."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "show_launcher"));
+  hints_.push_back(new shortcut::Hint(_("Dash"), "", " + A", _("Open the Dash App Lens."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "show_launcher"));
+  hints_.push_back(new shortcut::Hint(_("Dash"), "", " + F", _("Open the Dash Files Lens."), shortcut::COMPIZ_KEY_OPTION,"unityshell", "show_launcher"));
+  hints_.push_back(new shortcut::Hint(_("Dash"), "", " + M", _("Open the Dash Music Lens."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "show_launcher"));
   hints_.push_back(new shortcut::Hint(_("Dash"), "", "", _("Switches between Lenses."), shortcut::HARDCODED_OPTION, "Ctrl + Tab"));
   hints_.push_back(new shortcut::Hint(_("Dash"), "", "", _("Moves the focus."), shortcut::HARDCODED_OPTION, _("Cursor Keys")));
   hints_.push_back(new shortcut::Hint(_("Dash"), "", "", _("Open currently focused item."), shortcut::HARDCODED_OPTION, _("Enter & Return")));
-  hints_.push_back(new shortcut::Hint(_("Dash"), "", "", _("'Run Command' mode."), shortcut::COMPIZ_OPTION, "unityshell", "execute_command"));
+  hints_.push_back(new shortcut::Hint(_("Dash"), "", "", _("'Run Command' mode."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "execute_command"));
  
   // Top Bar
   hints_.push_back(new shortcut::Hint(_("Top Bar"), "", "", _("Reveals application menu."), shortcut::HARDCODED_OPTION, "Alt"));
-  hints_.push_back(new shortcut::Hint(_("Top Bar"), "", "", _("Opens the indicator menu."), shortcut::COMPIZ_OPTION, "unityshell", "panel_first_menu"));
+  hints_.push_back(new shortcut::Hint(_("Top Bar"), "", "", _("Opens the indicator menu."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "panel_first_menu"));
   hints_.push_back(new shortcut::Hint(_("Top Bar"), "", "", _("Moves focus between indicators."), shortcut::HARDCODED_OPTION, _("Cursor Left or Right")));
 
   // Switching
-  hints_.push_back(new shortcut::Hint(_("Switching"), "", "", _("Switch between applications."), shortcut::COMPIZ_OPTION, "unityshell", "alt_tab_forward"));
-  hints_.push_back(new shortcut::Hint(_("Switching"), "", "", _("Switch windows of current application."), shortcut::COMPIZ_OPTION, "unityshell", "alt_tab_next_window"));
+  hints_.push_back(new shortcut::Hint(_("Switching"), "", "", _("Switch between applications."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "alt_tab_forward"));
+  hints_.push_back(new shortcut::Hint(_("Switching"), "", "", _("Switch windows of current application."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "alt_tab_next_window"));
   hints_.push_back(new shortcut::Hint(_("Switching"), "", "", _("Moves the focus."), shortcut::HARDCODED_OPTION, _("Cursor Left or Right")));
 
   // Workspaces
-  hints_.push_back(new shortcut::Hint(_("Workspaces"), "", "", _("Spread workspaces."), shortcut::COMPIZ_OPTION, "expo", "expo_key"));
+  hints_.push_back(new shortcut::Hint(_("Workspaces"), "", "", _("Spread workspaces."), shortcut::COMPIZ_KEY_OPTION, "expo", "expo_key"));
   hints_.push_back(new shortcut::Hint(_("Workspaces"), "", "", _("Switch workspaces."), shortcut::HARDCODED_OPTION, _("Super + Cursor Keys")));
   hints_.push_back(new shortcut::Hint(_("Workspaces"), "", " or Right", _("Move focused window to different workspace."), shortcut::HARDCODED_OPTION, _("Super + Alt + Cursor Keys")));
 
   // Windows
-  hints_.push_back(new shortcut::Hint(_("Windows"), "", "", _("Spreads all windows in the current workspace."), shortcut::COMPIZ_OPTION, "scale", "initiate_all_key"));
-  hints_.push_back(new shortcut::Hint(_("Windows"), "", "", _("Minimises all windows."), shortcut::COMPIZ_OPTION, "core", "show_desktop_key"));
-  hints_.push_back(new shortcut::Hint(_("Windows"), "", "", _("Maximises the current window."), shortcut::COMPIZ_OPTION, "core", "maximize_window_key"));
-  hints_.push_back(new shortcut::Hint(_("Windows"), "", "", _("Restores or minimises current window."), shortcut::COMPIZ_OPTION, "core", "unmaximize_window_key"));
-  hints_.push_back(new shortcut::Hint(_("Windows"), "", " or Right", _("Semi-maximises current window."), shortcut::COMPIZ_OPTION, "grid", "put_left_key"));
-  hints_.push_back(new shortcut::Hint(_("Windows"), "", "", _("Closes current window."), shortcut::COMPIZ_OPTION, "core", "close_window_key"));
+  hints_.push_back(new shortcut::Hint(_("Windows"), "", "", _("Spreads all windows in the current workspace."), shortcut::COMPIZ_KEY_OPTION, "scale", "initiate_all_key"));
+  hints_.push_back(new shortcut::Hint(_("Windows"), "", "", _("Minimises all windows."), shortcut::COMPIZ_KEY_OPTION, "core", "show_desktop_key"));
+  hints_.push_back(new shortcut::Hint(_("Windows"), "", "", _("Maximises the current window."), shortcut::COMPIZ_KEY_OPTION, "core", "maximize_window_key"));
+  hints_.push_back(new shortcut::Hint(_("Windows"), "", "", _("Restores or minimises current window."), shortcut::COMPIZ_KEY_OPTION, "core", "unmaximize_window_key"));
+  hints_.push_back(new shortcut::Hint(_("Windows"), "", " or Right", _("Semi-maximises current window."), shortcut::COMPIZ_KEY_OPTION, "grid", "put_left_key"));
+  hints_.push_back(new shortcut::Hint(_("Windows"), "", "", _("Closes current window."), shortcut::COMPIZ_KEY_OPTION, "core", "close_window_key"));
   hints_.push_back(new shortcut::Hint(_("Windows"), "", "", _("Opens window accessibility menu."), shortcut::HARDCODED_OPTION, "Alt + Space"));
   hints_.push_back(new shortcut::Hint(_("Windows"), "", "", _("Places window in corresponding positions."), shortcut::HARDCODED_OPTION, "Ctrl + Alt + Num"));
-  hints_.push_back(new shortcut::Hint(_("Windows"), "", "", _("Move window."), shortcut::COMPIZ_OPTION, "move", "initiate_button"));
-  hints_.push_back(new shortcut::Hint(_("Windows"), "", "", _("Resize window."), shortcut::COMPIZ_OPTION, "resize", "initiate_button"));
+  hints_.push_back(new shortcut::Hint(_("Windows"), "", " Drag", _("Move window."), shortcut::COMPIZ_MOUSE_OPTION, "move", "initiate_button"));
+  hints_.push_back(new shortcut::Hint(_("Windows"), "", " Drag", _("Resize window."), shortcut::COMPIZ_MOUSE_OPTION, "resize", "initiate_button"));
 }
 
 /* Window init */

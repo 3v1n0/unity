@@ -29,6 +29,7 @@ namespace impl
 {
 
 std::string FixShortcutFormat(std::string const& scut);
+std::string FixMouseShortcut(std::string const& scut);
 std::string ProperCase(std::string const& str);
 
 } // namespace impl

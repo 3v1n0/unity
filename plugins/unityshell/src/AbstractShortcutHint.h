@@ -32,7 +32,8 @@ namespace shortcut
 
 enum OptionType
 {
-  COMPIZ_OPTION = 0,
+  COMPIZ_KEY_OPTION = 0,
+  COMPIZ_MOUSE_OPTION,
   HARDCODED_OPTION
   /* GSETTINGS_OPTION,
    * GCONF_OPTION */

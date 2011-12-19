@@ -63,4 +63,12 @@ TEST(TestShortcutHintPrivate, TestProperCase)
   EXPECT_EQ(ProperCase("<super><alt>a"), "<Super><Alt>A");
 }
 
+TEST(TestShortcutHintPrivate, TestFixMouseShortcut)
+{
+  EXPECT_EQ(TestFixMouseShortcut("Super<Button1>"), "Super<Left Mouse>");
+  EXPECT_EQ(TestFixMouseShortcut("Super<Button2>"), "Super<Middle Mouse>");
+  EXPECT_EQ(TestFixMouseShortcut("Super<Button3>"), "Super<Right Mouse>");
+
+}
+
 } // anonymouse namespace

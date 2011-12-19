@@ -40,6 +40,17 @@ std::string FixShortcutFormat(std::string const& scut)
   return ret;
 }
 
+std::string FixMouseShortcut(std::string const& scut)
+{
+  std::string ret(scut);
+  
+  boost::replace_all(ret, "Button1", "Left Mouse");
+  boost::replace_all(ret, "Button2", "Middle Mouse");
+  boost::replace_all(ret, "Button3", "Right Mouse");
+      
+  return ret;
+}
+
 std::string ProperCase(std::string const& str)
 {
   std::string ret = str;

@@ -60,10 +60,40 @@ bool Hint::Fill()
 {
   switch(type())
   {
-    case COMPIZ_OPTION:
+    case COMPIZ_MOUSE_OPTION:
     {
       // Arg1 = Plugin name
-      // Arg2 = Option name
+      // Arg2 = key Option name
+      CompPlugin* p = CompPlugin::find(arg1().c_str());
+
+      if (!p) 
+        return false;
+
+      foreach (CompOption &opt, p->vTable->getOptions())
+      {
+          if (opt.name() == arg2())
+          {
+            std::string temp = impl::FixMouseShortcut(impl::FixShortcutFormat(opt.value().action().buttonToString()));
+            temp = impl::ProperCase(temp);
+            
+            if (value() != temp)
+            {
+              value = temp;
+              shortkey = prefix() + value() + postfix();
+            }
+              
+            return true;
+          }
+      }
+
+      break;
+    }
+    break;
+    
+    case COMPIZ_KEY_OPTION:
+    {
+      // Arg1 = Plugin name
+      // Arg2 = key Option name
       CompPlugin* p = CompPlugin::find(arg1().c_str());
 
       if (!p) 

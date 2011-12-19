@@ -36,54 +36,54 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
   std::list<shortcut::AbstractHint*> hints;
   
   // Launcher...
-  hints.push_back(new shortcut::MockHint(_("Launcher"), "", _(" (Press)"), _("Open Launcher, displays shortcuts."), shortcut::COMPIZ_OPTION, "unityshell", "show_launcher" ));
-  hints.push_back(new shortcut::MockHint(_("Launcher"), "", "", _("Open Launcher keyboard navigation mode."), shortcut::COMPIZ_OPTION, "unityshell", "keyboard_focus"));
+  hints.push_back(new shortcut::MockHint(_("Launcher"), "", _(" (Press)"), _("Open Launcher, displays shortcuts."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "show_launcher" ));
+  hints.push_back(new shortcut::MockHint(_("Launcher"), "", "", _("Open Launcher keyboard navigation mode."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "keyboard_focus"));
   // FIXME: Implement it...
   hints.push_back(new shortcut::MockHint(_("Launcher"), "", "", _("Switch application via Launcher."), shortcut::HARDCODED_OPTION, "Super + Tab"));
-  hints.push_back(new shortcut::MockHint(_("Launcher"), "", _(" + 1 to 9"), _("Same as clicking on a Launcher icon."), shortcut::COMPIZ_OPTION, "unityshell", "show_launcher"));
-  hints.push_back(new shortcut::MockHint(_("Launcher"), "", _(" + Shift + 1 to 9"), _("Open a new window of the app."), shortcut::COMPIZ_OPTION, "unityshell", "show_launcher"));
-  hints.push_back(new shortcut::MockHint(_("Launcher"), "", " + T", _("Open the Rubbish Bin."), shortcut::COMPIZ_OPTION, "unityshell", "show_launcher")); 
+  hints.push_back(new shortcut::MockHint(_("Launcher"), "", _(" + 1 to 9"), _("Same as clicking on a Launcher icon."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "show_launcher"));
+  hints.push_back(new shortcut::MockHint(_("Launcher"), "", _(" + Shift + 1 to 9"), _("Open a new window of the app."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "show_launcher"));
+  hints.push_back(new shortcut::MockHint(_("Launcher"), "", " + T", _("Open the Rubbish Bin."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "show_launcher")); 
 
   // Dash...
-  hints.push_back(new shortcut::MockHint(_("Dash"), "", _(" (Tap)"), _("Open the Dash Home."), shortcut::COMPIZ_OPTION, "unityshell", "show_launcher"));
+  hints.push_back(new shortcut::MockHint(_("Dash"), "", _(" (Tap)"), _("Open the Dash Home."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "show_launcher"));
   // These are not really hardcoded...
-  hints.push_back(new shortcut::MockHint(_("Dash"), "", " + A", _("Open the Dash App Lens."), shortcut::COMPIZ_OPTION, "unityshell", "show_launcher"));
-  hints.push_back(new shortcut::MockHint(_("Dash"), "", " + F", _("Open the Dash Files Lens."), shortcut::COMPIZ_OPTION,"unityshell", "show_launcher"));
-  hints.push_back(new shortcut::MockHint(_("Dash"), "", " + M", _("Open the Dash Music Lens."), shortcut::COMPIZ_OPTION, "unityshell", "show_launcher"));
+  hints.push_back(new shortcut::MockHint(_("Dash"), "", " + A", _("Open the Dash App Lens."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "show_launcher"));
+  hints.push_back(new shortcut::MockHint(_("Dash"), "", " + F", _("Open the Dash Files Lens."), shortcut::COMPIZ_KEY_OPTION,"unityshell", "show_launcher"));
+  hints.push_back(new shortcut::MockHint(_("Dash"), "", " + M", _("Open the Dash Music Lens."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "show_launcher"));
   hints.push_back(new shortcut::MockHint(_("Dash"), "", "", _("Switches between Lenses."), shortcut::HARDCODED_OPTION, "Ctrl + Tab"));
   hints.push_back(new shortcut::MockHint(_("Dash"), "", "", _("Moves the focus."), shortcut::HARDCODED_OPTION, _("Cursor Keys")));
   hints.push_back(new shortcut::MockHint(_("Dash"), "", "", _("Open currently focused item."), shortcut::HARDCODED_OPTION, _("Enter / Return")));
-  hints.push_back(new shortcut::MockHint(_("Dash"), "", "", _("'Run Command' mode."), shortcut::COMPIZ_OPTION, "unityshell", "execute_command"));
+  hints.push_back(new shortcut::MockHint(_("Dash"), "", "", _("'Run Command' mode."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "execute_command"));
  
   // Top Bar
   // Is it really hard coded?
   hints.push_back(new shortcut::MockHint(_("Top Bar"), "", "", _("Reveals application menu."), shortcut::HARDCODED_OPTION, "Alt"));
-  hints.push_back(new shortcut::MockHint(_("Top Bar"), "", "", _("Opens the indicator menu."), shortcut::COMPIZ_OPTION, "unityshell", "panel_first_menu"));
+  hints.push_back(new shortcut::MockHint(_("Top Bar"), "", "", _("Opens the indicator menu."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "panel_first_menu"));
   hints.push_back(new shortcut::MockHint(_("Top Bar"), "", "", _("Moves focus between indicators."), shortcut::HARDCODED_OPTION, _("Cursor Left & Right")));
 
   // Switching
-  hints.push_back(new shortcut::MockHint(_("Switching"), "", "", _("Switch between applications."), shortcut::COMPIZ_OPTION, "unityshell", "alt_tab_forward"));
-  hints.push_back(new shortcut::MockHint(_("Switching"), "", "", _("Switch windows of current application."), shortcut::COMPIZ_OPTION, "unityshell", "alt_tab_next_window"));
-  hints.push_back(new shortcut::MockHint(_("Switching"), "", "", _("Close window switch, return to app switch."), shortcut::COMPIZ_OPTION, "unityshell", "alt_tab_detail_stop"));
+  hints.push_back(new shortcut::MockHint(_("Switching"), "", "", _("Switch between applications."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "alt_tab_forward"));
+  hints.push_back(new shortcut::MockHint(_("Switching"), "", "", _("Switch windows of current application."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "alt_tab_next_window"));
+  hints.push_back(new shortcut::MockHint(_("Switching"), "", "", _("Close window switch, return to app switch."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "alt_tab_detail_stop"));
   hints.push_back(new shortcut::MockHint(_("Switching"), "", "", _("Moves the foucs."), shortcut::HARDCODED_OPTION, _("Cursor Left & Right")));
 
   // Workspaces
-  hints.push_back(new shortcut::MockHint(_("Workspaces"), "", "", _("Spread workspaces."), shortcut::COMPIZ_OPTION, "expo", "expo_key"));
+  hints.push_back(new shortcut::MockHint(_("Workspaces"), "", "", _("Spread workspaces."), shortcut::COMPIZ_KEY_OPTION, "expo", "expo_key"));
   hints.push_back(new shortcut::MockHint(_("Workspaces"), "", "", _("Switch workspaces."), shortcut::HARDCODED_OPTION, _("Cursor Keys")));
   //hints.push_back(new shortcut::MockHint(_("Workspaces"), "", "", _("Move focused window to other workspace."), ...)
 
   // Windows
-  hints.push_back(new shortcut::MockHint(_("Windows"), "", "", _("Spreads all windows in current workspace."), shortcut::COMPIZ_OPTION, "scale", "initiate_output_key"));
-  hints.push_back(new shortcut::MockHint(_("Windows"), "", "", _("Minimises all windows."), shortcut::COMPIZ_OPTION, "core", "show_desktop_key"));
+  hints.push_back(new shortcut::MockHint(_("Windows"), "", "", _("Spreads all windows in current workspace."), shortcut::COMPIZ_KEY_OPTION, "scale", "initiate_output_key"));
+  hints.push_back(new shortcut::MockHint(_("Windows"), "", "", _("Minimises all windows."), shortcut::COMPIZ_KEY_OPTION, "core", "show_desktop_key"));
   // I don't know if it is really hardcoded, but I can't find where this option is stored.
   hints.push_back(new shortcut::MockHint(_("Windows"), "", "", _("Open window accessibility menu."), shortcut::HARDCODED_OPTION, "Alt+Space"));
-  hints.push_back(new shortcut::MockHint(_("Windows"), "", "", _("Maximises current window."), shortcut::COMPIZ_OPTION, "core", "maximize_window_key"));
-  hints.push_back(new shortcut::MockHint(_("Windows"), "", "", _("Un-maximises current window."), shortcut::COMPIZ_OPTION, "core", "unmaximize_window_key"));
-  hints.push_back(new shortcut::MockHint(_("Windows"), "", "", _("Minimises current window."), shortcut::COMPIZ_OPTION, "core", "minimize_window_key"));
-  hints.push_back(new shortcut::MockHint(_("Windows"), "", "", _("Resizes current window."), shortcut::COMPIZ_OPTION, "resize", "initiate_key"));
-  hints.push_back(new shortcut::MockHint(_("Windows"), "", "", _("Closes current window."), shortcut::COMPIZ_OPTION, "core", "close_window_key"));
+  hints.push_back(new shortcut::MockHint(_("Windows"), "", "", _("Maximises current window."), shortcut::COMPIZ_KEY_OPTION, "core", "maximize_window_key"));
+  hints.push_back(new shortcut::MockHint(_("Windows"), "", "", _("Un-maximises current window."), shortcut::COMPIZ_KEY_OPTION, "core", "unmaximize_window_key"));
+  hints.push_back(new shortcut::MockHint(_("Windows"), "", "", _("Minimises current window."), shortcut::COMPIZ_KEY_OPTION, "core", "minimize_window_key"));
+  hints.push_back(new shortcut::MockHint(_("Windows"), "", "", _("Resizes current window."), shortcut::COMPIZ_KEY_OPTION, "resize", "initiate_key"));
+  hints.push_back(new shortcut::MockHint(_("Windows"), "", "", _("Closes current window."), shortcut::COMPIZ_KEY_OPTION, "core", "close_window_key"));
   hints.push_back(new shortcut::MockHint(_("Windows"), "", "", _("Places window in corresponding positions."), shortcut::HARDCODED_OPTION, "Ctrl + Alt + Num"));
-  hints.push_back(new shortcut::MockHint(_("Windows"), "", "", _("Move window."), shortcut::COMPIZ_OPTION, "move", "initiate_key"));
+  hints.push_back(new shortcut::MockHint(_("Windows"), "", "", _("Move window."), shortcut::COMPIZ_KEY_OPTION, "move", "initiate_key"));
       
   controller.reset(new shortcut::Controller(hints));
   controller->SetWorkspace(nux::Geometry(25, 17, 1200 - 50, 720 - 35));

@@ -30,9 +30,9 @@ TEST(TestShortcutModel, TestConstruction)
 {
   std::list<AbstractHint*> hints;
   
-  hints.push_back(new MockHint("Launcher", "", "", "Description 1", COMPIZ_OPTION, "Plugin 1", "key_option_1"));
+  hints.push_back(new MockHint("Launcher", "", "", "Description 1", COMPIZ_KEY_OPTION, "Plugin 1", "key_option_1"));
   hints.push_back(new MockHint("Launcher", "", "", "Description 2", HARDCODED_OPTION, "Value 2"));
-  hints.push_back(new MockHint("Dash", "Prefix", "Postfix", "Description 3", COMPIZ_OPTION, "Plugin 3", "key_option_3"));
+  hints.push_back(new MockHint("Dash", "Prefix", "Postfix", "Description 3", COMPIZ_KEY_OPTION, "Plugin 3", "key_option_3"));
   hints.push_back(new MockHint("Top Bar", "Prefix", "Postfix", "Description 4", HARDCODED_OPTION, "Value4"));
   
   Model model(hints);
@@ -48,9 +48,9 @@ TEST(TestShortcutModel, TestFill)
 {
   std::list<AbstractHint*> hints;
   
-  hints.push_back(new MockHint("Launcher", "", "", "Description 1", COMPIZ_OPTION, "Plugin 1", "key_option_1"));
+  hints.push_back(new MockHint("Launcher", "", "", "Description 1", COMPIZ_KEY_OPTION, "Plugin 1", "key_option_1"));
   hints.push_back(new MockHint("Launcher", "", "", "Description 2", HARDCODED_OPTION, "Value 2"));
-  hints.push_back(new MockHint("Dash", "Prefix", "Postfix", "Description 3", COMPIZ_OPTION, "Plugin 3", "key_option_3"));
+  hints.push_back(new MockHint("Dash", "Prefix", "Postfix", "Description 3", COMPIZ_KEY_OPTION, "Plugin 3", "key_option_3"));
   hints.push_back(new MockHint("Top Bar", "Prefix", "Postfix", "Description 4", HARDCODED_OPTION, "Value 4"));
   
   Model model(hints);
@@ -68,7 +68,7 @@ TEST(TestShortcutModel, TestProperty)
 {
   std::list<AbstractHint*> hints;
   
-  hints.push_back(new MockHint("Launcher", "Prefix1", "Postfix1", "Description1", COMPIZ_OPTION, "Plugin1", "key_option1"));
+  hints.push_back(new MockHint("Launcher", "Prefix1", "Postfix1", "Description1", COMPIZ_KEY_OPTION, "Plugin1", "key_option1"));
   
   Model model(hints);
   
@@ -76,7 +76,7 @@ TEST(TestShortcutModel, TestProperty)
   EXPECT_EQ(model.hints()["Launcher"].front()->prefix(), "Prefix1");
   EXPECT_EQ(model.hints()["Launcher"].front()->postfix(), "Postfix1");
   EXPECT_EQ(model.hints()["Launcher"].front()->description(), "Description1");
-  EXPECT_EQ(model.hints()["Launcher"].front()->type(), COMPIZ_OPTION);
+  EXPECT_EQ(model.hints()["Launcher"].front()->type(), COMPIZ_KEY_OPTION);
   EXPECT_EQ(model.hints()["Launcher"].front()->arg1(), "Plugin1");
   EXPECT_EQ(model.hints()["Launcher"].front()->arg2(), "key_option1");  
 }
