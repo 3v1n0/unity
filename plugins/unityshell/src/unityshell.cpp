@@ -224,12 +224,12 @@ UnityScreen::UnityScreen(CompScreen* screen)
      _edge_timeout = optionGetLauncherRevealEdgeTimeout ();
      _in_paint = false;
 
-    void *dlhand = dlopen ("libopengl.so", RTLD_LAZY);
+    void *dlhand = dlopen ("libunityshell.so", RTLD_LAZY);
 
     if (dlhand)
     {
       dlerror ();
-      glXGetProcAddressP = (ScreenEffectFramebufferObject::GLXGetProcAddressProc) dlsym (dlhand, "glXGetProcAddressP");
+      glXGetProcAddressP = (ScreenEffectFramebufferObject::GLXGetProcAddressProc) dlsym (dlhand, "glXGetProcAddress");
       if (dlerror () != NULL)
         glXGetProcAddressP = NULL;
     }
