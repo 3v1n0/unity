@@ -88,7 +88,7 @@ public:
   virtual bool GetVisible();
 
   // Introspection
-  const gchar* GetName();
+  std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
 protected:
 
@@ -141,7 +141,7 @@ protected:
                 nux::Color color);
 
   // Introspection
-  gchar* _name;
+  std::string _name;
 
   friend class QuicklistView;
 };

@@ -22,6 +22,7 @@
 
 #include <glib.h>
 #include <list>
+#include <string>
 
 namespace unity
 {
@@ -34,16 +35,16 @@ typedef std::list<Introspectable*> IntrospectableList;
 public:
   Introspectable();
   virtual ~Introspectable();
-
-  GVariant* Introspect(bool wrap = false);
-  virtual const gchar* GetName() = 0;
+  GVariant* Introspect();
+  virtual std::string GetName() const = 0;
   void AddChild(Introspectable* child);
   void RemoveChild(Introspectable* child);
   IntrospectableList const& GetIntrospectableChildren() { return _children; };
-
-protected:
-  virtual const gchar* GetChildsName();
   virtual void AddProperties(GVariantBuilder* builder) = 0;
+  
+protected:
+  virtual std::string GetChildsName() const;
+  
 
   /*
    * AddProperties should be implemented as such ...

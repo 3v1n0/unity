@@ -87,7 +87,7 @@ public:
   void TestMenuItems(DbusmenuMenuitem* root);
 
   // Introspection
-  const gchar* GetName();
+  std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
 
   void EnableQuicklistForTesting(bool enable_testing);
@@ -166,6 +166,10 @@ private:
   float _anchor_height;
   float _corner_radius;
   float _padding;
+  float _left_padding_correction;
+  float _bottom_padding_correction_normal;
+  float _bottom_padding_correction_single_item;
+  float _offset_correction;
   nux::HLayout* _hlayout;
   nux::VLayout* _vlayout;
   nux::VLayout* _item_layout;

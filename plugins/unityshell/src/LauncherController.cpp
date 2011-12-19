@@ -92,7 +92,7 @@ public:
 
   static void OnViewOpened(BamfMatcher* matcher, BamfView* view, gpointer data);
 
-  BamfMatcher*           matcher_;
+  glib::Object<BamfMatcher> matcher_;
   LauncherModel::Ptr     model_;
   nux::ObjectPtr<nux::BaseWindow> launcher_window_;
   nux::ObjectPtr<Launcher> launcher_;
@@ -184,7 +184,7 @@ Controller::Impl::~Impl()
   if (bamf_timer_handler_id_ != 0)
     g_source_remove(bamf_timer_handler_id_);
 
-  if (matcher_ != NULL && on_view_opened_id_ != 0)
+  if (matcher_ != nullptr && on_view_opened_id_ != 0)
     g_signal_handler_disconnect((gpointer) matcher_, on_view_opened_id_);
 
   delete device_section_;
@@ -403,8 +403,11 @@ void Controller::Impl::OnViewOpened(BamfMatcher* matcher, BamfView* view, gpoint
 
   app = BAMF_APPLICATION(view);
 
-  if (g_object_get_qdata(G_OBJECT(app), g_quark_from_static_string("unity-seen")))
+  if (bamf_view_is_sticky(view) ||
+      g_object_get_qdata(G_OBJECT(app), g_quark_from_static_string("unity-seen")))
+  {
     return;
+  }
 
   BamfLauncherIcon* icon = new BamfLauncherIcon(self->launcher_.GetPointer(), app);
   icon->SetIconType(LauncherIcon::TYPE_APPLICATION);

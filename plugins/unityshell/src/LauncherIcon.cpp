@@ -173,8 +173,8 @@ LauncherIcon::HasWindowOnViewport()
   return _has_visible_window;
 }
 
-const gchar*
-LauncherIcon::GetName()
+std::string
+LauncherIcon::GetName() const
 {
   return "LauncherIcon";
 }

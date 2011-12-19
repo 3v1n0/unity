@@ -87,7 +87,7 @@ private:
   virtual void DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw);
 
   virtual bool AcceptKeyNavFocus();
-  virtual const gchar* GetName();
+  virtual std::string GetName() const;
   virtual void AddProperties(GVariantBuilder* builder);
 
 private:

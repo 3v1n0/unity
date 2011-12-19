@@ -26,21 +26,21 @@ class CompScreen;
 
 namespace unity
 {
-extern const char* const DBUS_BUS_NAME;
+extern const std::string DBUS_BUS_NAME;
 
 namespace debug
 {
 class Introspectable;
+std::list<Introspectable*> GetIntrospectableNodesFromQuery(std::string const& query, Introspectable *tree_root);
 
 class DebugDBusInterface
 {
 public:
-
   DebugDBusInterface(Introspectable* introspectable, CompScreen* uscreen);
   ~DebugDBusInterface();
 
 private:
-  /* GDBus */
+  /* methods */
   static void OnBusAcquired(GDBusConnection* connection, const gchar* name, gpointer data);
   static void OnNameAcquired(GDBusConnection* connection, const gchar* name, gpointer data);
   static void OnNameLost(GDBusConnection* connection, const gchar* name, gpointer data);

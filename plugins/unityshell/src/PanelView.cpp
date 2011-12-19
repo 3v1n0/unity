@@ -54,6 +54,8 @@ NUX_IMPLEMENT_OBJECT_TYPE(PanelView);
 
 PanelView::PanelView(NUX_FILE_LINE_DECL)
   :   View(NUX_FILE_LINE_PARAM),
+      _last_width(0),
+      _last_height(0),
       _is_dirty(true),
       _opacity(1.0f),
       _opacity_maximized_toggle(false),
@@ -198,13 +200,12 @@ void PanelView::AddPanelView(PanelIndicatorsView* child,
   AddChild(child);
 }
 
-const gchar* PanelView::GetName()
+std::string PanelView::GetName() const
 {
   return "UnityPanel";
 }
 
-const gchar*
-PanelView::GetChildsName()
+std::string PanelView::GetChildsName() const
 {
   return "indicators";
 }
@@ -362,7 +363,7 @@ PanelView::UpdateBackground()
 {
   nux::Geometry geo = GetGeometry();
 
-  if (geo.width == _last_width && geo.height == _last_height && !_is_dirty)
+  if (!_is_dirty && geo.width == _last_width && geo.height == _last_height)
     return;
 
   _last_width = geo.width;
@@ -618,6 +619,13 @@ PanelView::SetOpacity(float opacity)
     bg_effect_helper_.enabled = false;
 
   ForceUpdateBackground();
+}
+
+void
+PanelView::SetMenuShowTimings(int fadein, int fadeout, int discovery,
+                              int discovery_fadein, int discovery_fadeout)
+{
+  _menu_view->SetMenuShowTimings(fadein, fadeout, discovery, discovery_fadein, discovery_fadeout);
 }
 
 void

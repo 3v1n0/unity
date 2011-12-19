@@ -48,6 +48,7 @@ add_executable (test-unit
                 unit/TestQuicklistMenuitems.cpp
                 unit/TestMain.cpp
                 unit/TestUBus.cpp
+                unit/TestStaticCairoText.cpp
                 ${UNITY_SRC}/ubus-server.cpp
                 ${UNITY_SRC}/ubus-server.h
                 ${UNITY_SRC}/Introspectable.cpp
@@ -63,6 +64,8 @@ add_executable (test-unit
                 ${UNITY_SRC}/QuicklistMenuItemSeparator.h
                 ${UNITY_SRC}/QuicklistView.cpp
                 ${UNITY_SRC}/QuicklistView.h
+                ${UNITY_SRC}/StaticCairoText.cpp
+                ${UNITY_SRC}/StaticCairoText.h
                 ${UNITY_SRC}/
                 )
 add_dependencies (test-unit unity-core-${UNITY_API_VERSION})
@@ -99,6 +102,10 @@ if (${GTEST_FOUND} STREQUAL TRUE)
 
 # The actual test executable (xless) - do not put anything that requires X in here
   add_executable(test-gtest-xless
+                 test_animator.cpp
+                 test_glib_object.cpp
+                 test_glib_object_utils.cpp
+                 test_glib_object_utils.h
                  test_glib_signals.cpp
                  test_glib_signals_utils.cpp
                  test_glib_signals_utils.h
@@ -106,9 +113,16 @@ if (${GTEST_FOUND} STREQUAL TRUE)
                  test_favorite_store_gsettings.cpp
                  test_shortcut_model.cpp
                  test_shortcut_private.cpp
+                 test_introspection.cpp
                  test_main_xless.cpp
                  ${UNITY_SRC}/AbstractLauncherIcon.h
                  ${UNITY_SRC}/AbstractShortcutHint.h
+                 ${UNITY_SRC}/Animator.cpp
+                 ${UNITY_SRC}/Animator.h
+                 ${UNITY_SRC}/DebugDBusInterface.h
+                 ${UNITY_SRC}/DebugDBusInterface.cpp
+                 ${UNITY_SRC}/XPathQueryPart.h
+                 ${UNITY_SRC}/XPathQueryPart.cpp
                  ${UNITY_SRC}/FavoriteStore.cpp
                  ${UNITY_SRC}/FavoriteStore.h
                  ${UNITY_SRC}/FavoriteStoreGSettings.cpp
@@ -193,3 +207,8 @@ add_custom_target (check-headless COMMAND ${TEST_COMMAND_HEADLESS} DEPENDS test-
 add_custom_target (check-report COMMAND ${TEST_UNIT_COMMAND} && gtester-report ${TEST_RESULT_XML} > ${TEST_RESULT_HTML})
 add_custom_target (gcheck COMMAND  ${DBUS_TEST_COMMAND} DEPENDS test-gtest test-gtest-xless)
 
+# make target to allow devs to run "make autopilot" from build dir:
+set (AUTOPILOTDIR "${CMAKE_CURRENT_SOURCE_DIR}/autopilot")
+# Rules to install autopilot files and executable script:
+install(CODE "execute_process(COMMAND python setup.py install --prefix ${CMAKE_INSTALL_PREFIX} WORKING_DIRECTORY ${AUTOPILOTDIR})")
+add_custom_target (autopilot COMMAND cd ${AUTOPILOTDIR} && make check)

@@ -62,7 +62,6 @@ QuicklistMenuItem::QuicklistMenuItem(DbusmenuMenuitem* item,
 void
 QuicklistMenuItem::Initialize(DbusmenuMenuitem* item, bool debug)
 {
-  _name        = 0;
   _text        = 0;
   _color       = nux::Color(1.0f, 1.0f, 1.0f, 1.0f);
   _menuItem    = DBUSMENU_MENUITEM(g_object_ref(item));
@@ -99,9 +98,6 @@ QuicklistMenuItem::Initialize(DbusmenuMenuitem* item, bool debug)
 
 QuicklistMenuItem::~QuicklistMenuItem()
 {
-  if (_name)
-    g_free(_name);
-
   if (_text)
     g_free(_text);
 
@@ -462,7 +458,7 @@ QuicklistMenuItem::IsMarkupEnabled()
 
 // Introspection
 
-const gchar* QuicklistMenuItem::GetName()
+std::string QuicklistMenuItem::GetName() const
 {
   return _name;
 }

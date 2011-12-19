@@ -104,8 +104,10 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , panelWindow(nullptr)
   , debugger(nullptr)
   , needsRelayout(false)
+  , _in_paint(false)
   , relayoutSourceId(0)
   , _edge_trigger_handle(0)
+  , _redraw_handle(0)
   , _edge_pointerY(0)
   , newFocusedWindow(nullptr)
   , doShellRepaint(false)
@@ -241,6 +243,11 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetUrgentAnimationNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetPanelOpacityNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetPanelOpacityMaximizedToggleNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+     optionSetMenusFadeinNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+     optionSetMenusFadeoutNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+     optionSetMenusDiscoveryDurationNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+     optionSetMenusDiscoveryFadeinNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+     optionSetMenusDiscoveryFadeoutNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetLauncherOpacityNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetIconSizeNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetAutohideAnimationNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
@@ -712,20 +719,37 @@ void UnityScreen::enterShowDesktopMode ()
 
 void UnityScreen::leaveShowDesktopMode (CompWindow *w)
 {
-  for (CompWindow *cw : screen->windows ())
+  /* Where a window is inhibiting, only allow the window
+   * that is inhibiting the leave show desktop to actually
+   * fade in again - all other windows should remain faded out */
+  if (!UnityShowdesktopHandler::inhibitingXid ())
   {
-    if (cw->inShowDesktopMode ())
+    for (CompWindow *cw : screen->windows ())
     {
-      UnityWindow::get (cw)->leaveShowDesktop ();
-      // the animation plugin does strange things here ...
-      // if this notification is sent
-      //cw->windowNotify (CompWindowNotifyLeaveShowDesktopMode);
+      if (cw->inShowDesktopMode ())
+      {
+	UnityWindow::get (cw)->leaveShowDesktop ();
+	// the animation plugin does strange things here ...
+	// if this notification is sent
+	//cw->windowNotify (CompWindowNotifyLeaveShowDesktopMode);
+      }
+    }
+
+    PluginAdapter::Default()->OnLeaveDesktop();
+
+    screen->leaveShowDesktopMode (w);
+  }
+  else
+  {
+    CompWindow *cw = screen->findWindow (UnityShowdesktopHandler::inhibitingXid ());
+    if (cw)
+    {
+      if (cw->inShowDesktopMode ())
+      {
+	UnityWindow::get (cw)->leaveShowDesktop ();
+      }
     }
   }
-
-  PluginAdapter::Default()->OnLeaveDesktop();
-
-  screen->leaveShowDesktopMode (w);
 }
 
 void UnityWindow::enterShowDesktop ()
@@ -746,6 +770,13 @@ void UnityWindow::leaveShowDesktop ()
     delete mShowdesktopHandler;
     mShowdesktopHandler = NULL;
   }
+}
+
+void UnityWindow::activate ()
+{
+  UnityShowdesktopHandler::inhibitLeaveShowdesktopMode (window->id ());
+  window->activate ();
+  UnityShowdesktopHandler::allowLeaveShowdesktopMode (window->id ());
 }
 
 bool UnityWindow::handleAnimations (unsigned int ms)
@@ -789,6 +820,28 @@ bool UnityShowdesktopHandler::shouldHide (CompWindow *w)
       return false;
 
   return true;
+}
+
+guint32 UnityShowdesktopHandler::mInhibitingXid = 0;
+
+void
+UnityShowdesktopHandler::inhibitLeaveShowdesktopMode (guint32 xid)
+{
+  if (!mInhibitingXid)
+    mInhibitingXid = xid;
+}
+
+void
+UnityShowdesktopHandler::allowLeaveShowdesktopMode (guint32 xid)
+{
+  if (mInhibitingXid == xid)
+    mInhibitingXid = 0;
+}
+
+guint32
+UnityShowdesktopHandler::inhibitingXid ()
+{
+  return mInhibitingXid;
 }
 
 UnityShowdesktopHandler::UnityShowdesktopHandler (CompWindow *w) :
@@ -1562,7 +1615,7 @@ void UnityScreen::AddProperties(GVariantBuilder* builder)
 {
 }
 
-const gchar* UnityScreen::GetName()
+std::string UnityScreen::GetName() const
 {
   return "Unity";
 }
@@ -2054,6 +2107,17 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
     case UnityshellOptions::PanelOpacityMaximizedToggle:
       panel_controller_->SetOpacityMaximizedToggle(optionGetPanelOpacityMaximizedToggle());
       break;
+    case UnityshellOptions::MenusFadein:
+    case UnityshellOptions::MenusFadeout:
+    case UnityshellOptions::MenusDiscoveryFadein:
+    case UnityshellOptions::MenusDiscoveryFadeout:
+    case UnityshellOptions::MenusDiscoveryDuration:
+      panel_controller_->SetMenuShowTimings(optionGetMenusFadein(),
+                                            optionGetMenusFadeout(),
+                                            optionGetMenusDiscoveryDuration(),
+                                            optionGetMenusDiscoveryFadein(),
+                                            optionGetMenusDiscoveryFadeout());
+      break;
     case UnityshellOptions::LauncherOpacity:
       launcher.SetBackgroundAlpha(optionGetLauncherOpacity());
       break;
@@ -2444,6 +2508,11 @@ void UnityScreen::initLauncher()
   /* Setup panel */
   timer.Reset();
   panel_controller_.reset(new panel::Controller());
+  panel_controller_->SetMenuShowTimings(optionGetMenusFadein(),
+                                        optionGetMenusFadeout(),
+                                        optionGetMenusDiscoveryDuration(),
+                                        optionGetMenusDiscoveryFadein(),
+                                        optionGetMenusDiscoveryFadeout());
   LOG_INFO(logger) << "initLauncher-Panel " << timer.ElapsedSeconds() << "s";
 
   /* Setup Places */

@@ -32,9 +32,9 @@ AggregateMonitor::~AggregateMonitor()
 {
 }
 
-gchar* AggregateMonitor::GetName()
+std::string AggregateMonitor::GetName() const
 {
-  return (gchar*) "AggregateMonitor";
+  return "AggregateMonitor";
 }
 
 void AggregateMonitor::StartMonitor()
@@ -53,7 +53,7 @@ void AggregateMonitor::StopMonitor(GVariantBuilder* builder)
        iter != end; ++iter)
   {
     Monitor* monitor = *iter;
-    g_variant_builder_add(builder, "{sv}", monitor->GetName(), monitor->Stop());
+    g_variant_builder_add(builder, "{sv}", monitor->GetName().c_str(), monitor->Stop());
   }
 }
 
