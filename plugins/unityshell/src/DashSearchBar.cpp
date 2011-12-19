@@ -57,7 +57,7 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
   , can_refine_search(false)
   , live_search_timeout_(0)
 {
-  nux::BaseTexture *icon = dash::Style::Instance().GetSearchMagnifyIcon();
+  nux::BaseTexture* icon = dash::Style::Instance().GetSearchMagnifyIcon();
 
   bg_layer_ = new nux::ColorLayer(nux::Color(0xff595853), true);
 
