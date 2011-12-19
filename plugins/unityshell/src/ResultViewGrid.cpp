@@ -873,13 +873,17 @@ ResultViewGrid::DndSourceDragFinished(nux::DndAction result)
   current_drag_uri_.clear();
   current_drag_icon_name_.clear();
   
+  // We need this because the drag can start in a ResultViewGrid and can
+  // end in another ResultViewGrid
   EmitMouseLeaveSignal(0, 0, 0, 0);
   
+  // We need an extra mouse motion to highlight the icon under the mouse
+  // as soon as dnd finish
   Display* display = nux::GetGraphicsDisplay()->GetX11Display();
   if (display)
   {
     XWarpPointer(display, None, None, 0, 0, 0, 0, 0, 0);
-    XFlush(display);
+    XSync(display, 0);
   }
 }
 
