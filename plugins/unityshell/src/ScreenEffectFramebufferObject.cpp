@@ -211,12 +211,12 @@ void unity::ScreenEffectFramebufferObject::bind (const nux::Geometry &output)
 
 
 unity::ScreenEffectFramebufferObject::ScreenEffectFramebufferObject (GLXGetProcAddressProc p, const nux::Geometry &geom)
- : mFboStatus (false)
+ : getProcAddressGLX (p)
+ , mFboStatus (false)
  , mFBTexture (0)
  , mGeometry (geom)
  , mBoundCnt (0)
  , mScreenSize (geom)
- , getProcAddressGLX (p)
 {
   activeTexture = (GLActiveTextureProc) (*getProcAddressGLX) ((GLubyte *) "glActiveTexture");
   genFramebuffers = (GLGenFramebuffersProc) (*getProcAddressGLX) ((GLubyte *)"glGenFramebuffersEXT");
