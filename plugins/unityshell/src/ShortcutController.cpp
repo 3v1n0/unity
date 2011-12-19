@@ -114,15 +114,15 @@ void Controller::Show()
 
   model_->Fill();
   visible_ = true;
-
-  ubus_server_send_message(ubus_server_get_default(),
-                           UBUS_PLACE_VIEW_CLOSE_REQUEST,
-                           NULL);
 }
 
 gboolean Controller::OnShowTimer(gpointer data)
 {
   Controller* self = static_cast<Controller*>(data);
+  
+  ubus_server_send_message(ubus_server_get_default(),
+                           UBUS_PLACE_VIEW_CLOSE_REQUEST,
+                           NULL);
 
   if (self->visible_)
   {
