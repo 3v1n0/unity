@@ -1213,8 +1213,10 @@ bool UnityScreen::showLauncherKeyInitiate(CompAction* action,
         
     int width = 970;
     int height =  680;
-    int x = monitor_geo.x + (monitor_geo.width - width) / 2;
-    int y = monitor_geo.y + (monitor_geo.height - height) / 2;
+    int launcher_width = optionGetIconSize() + 18;
+    int panel_height = 24;
+    int x = monitor_geo.x + launcher_width + (monitor_geo.width - launcher_width- width) / 2;
+    int y = monitor_geo.y + panel_height + (monitor_geo.height - panel_height - height) / 2;
     
     nux::Geometry geo (x, y, width, height);
     
