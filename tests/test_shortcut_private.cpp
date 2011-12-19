@@ -54,4 +54,13 @@ TEST(TestShortcutHintPrivate, TestFixShortcutComplete)
   EXPECT_EQ(FixShortcutFormat("<Super><Alt>A"), "Super + Alt + A");
 }
 
+TEST(TestShortcutHintPrivate, TestProperCase)
+{
+  EXPECT_EQ(ProperCase("super"), "Super");
+  EXPECT_EQ(ProperCase("sUper"), "SUper");
+  EXPECT_EQ(ProperCase("super + a"), "Super + A");
+  EXPECT_EQ(ProperCase("super+a"), "Super+A");
+  EXPECT_EQ(ProperCase("<super><alt>a"), "<Super><Alt>A");
+}
+
 } // anonymouse namespace

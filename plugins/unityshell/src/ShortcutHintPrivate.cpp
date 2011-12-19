@@ -40,6 +40,28 @@ std::string FixShortcutFormat(std::string const& scut)
   return ret;
 }
 
+std::string ProperCase(std::string const& str)
+{
+  std::string ret = str;
+  
+	bool cap_next = true;
+
+	for (unsigned int i = 0; i < ret.length(); ++i)
+	{
+		if (cap_next and isalpha(ret[i]))
+		{
+			ret[i]=toupper(ret[i]);
+			cap_next = false;
+		}
+    else
+    {
+      cap_next = ispunct(ret[i]) || isspace(ret[i]);
+    }
+	}
+  
+  return ret;
+}
+
 } // namespace impl
 } // namespace shortcut
 } // namespace unity
