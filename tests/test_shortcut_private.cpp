@@ -65,9 +65,9 @@ TEST(TestShortcutHintPrivate, TestProperCase)
 
 TEST(TestShortcutHintPrivate, TestFixMouseShortcut)
 {
-  EXPECT_EQ(TestFixMouseShortcut("Super<Button1>"), "Super<Left Mouse>");
-  EXPECT_EQ(TestFixMouseShortcut("Super<Button2>"), "Super<Middle Mouse>");
-  EXPECT_EQ(TestFixMouseShortcut("Super<Button3>"), "Super<Right Mouse>");
+  EXPECT_EQ(FixMouseShortcut("Super<Button1>"), "Super<Left Mouse>");
+  EXPECT_EQ(FixMouseShortcut("Super<Button2>"), "Super<Middle Mouse>");
+  EXPECT_EQ(FixMouseShortcut("Super<Button3>"), "Super<Right Mouse>");
 
 }
 
