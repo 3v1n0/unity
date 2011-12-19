@@ -54,7 +54,7 @@ runThread(nux::WindowThread* thread)
 void
 stopThread(nux::WindowThread* thread)
 {
-  thread->TerminateThread();
+  thread->ExitMainLoop();
   delete thread;
 }
 

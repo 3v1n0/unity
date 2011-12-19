@@ -125,7 +125,7 @@ bool IMTextEntry::TryHandleEvent(unsigned int eventType,
                                  unsigned int keysym,
                                  const char* character)
 {
-  nux::Event event = nux::GetGraphicsThread()->GetWindow().GetCurrentEvent();
+  nux::Event event = nux::GetWindowThread()->GetGraphicsDisplay().GetCurrentEvent();
   
   CheckValidClientWindow(event.e_x11_window);
   
@@ -169,7 +169,7 @@ void IMTextEntry::KeyEventToGdkEventKey(Event& event, GdkEventKey& gdk_event)
 
 bool IMTextEntry::TryHandleSpecial(unsigned int eventType, unsigned int keysym, const char* character)
 {
-  nux::Event event = nux::GetGraphicsThread()->GetWindow().GetCurrentEvent();
+  nux::Event event = nux::GetWindowThread()->GetGraphicsDisplay().GetCurrentEvent();
   unsigned int keyval = keysym;
   bool shift = (event.GetKeyState() & NUX_STATE_SHIFT);
   bool ctrl = (event.GetKeyState() & NUX_STATE_CTRL);
@@ -220,7 +220,7 @@ void IMTextEntry::Copy()
   {
     GtkClipboard* clip = gtk_clipboard_get_for_display(gdk_display_get_default(),
                                                        GDK_SELECTION_CLIPBOARD);
-    gtk_clipboard_set_text(clip, _text.c_str() + start, end - start);
+    gtk_clipboard_set_text(clip, text_.c_str() + start, end - start);
   }
 }
 
@@ -263,11 +263,11 @@ void IMTextEntry::OnPreeditChanged(GtkIMContext* context)
 
   LOG_DEBUG(logger) << "Preedit changed: " << preedit;
 
-  _preedit = preedit.Str();
+  preedit_ = preedit.Str();
 
   if (strlen(preedit.Str().c_str())) {
     preedit_cursor_ = preedit.Str().length();
-    QueueRefresh(true, true); 
+    QueueRefresh(true, true);
     sigTextChanged.emit(this);
     UpdateCursorLocation();
   }
@@ -286,7 +286,7 @@ void IMTextEntry::OnPreeditEnd(GtkIMContext* context)
   ResetPreedit();
   gtk_im_context_reset(im_context_);
 
-  QueueRefresh(true, true); 
+  QueueRefresh(true, true);
   sigTextChanged.emit(this);
   
   LOG_DEBUG(logger) << "Preedit ended";
