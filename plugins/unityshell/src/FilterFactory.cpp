@@ -43,10 +43,6 @@ namespace unity
 namespace dash
 {
 
-FilterFactory::FilterFactory()
-{
-}
-
 nux::View* FilterFactory::WidgetForFilter(Filter::Ptr const& filter)
 {
   std::string filter_type(filter->renderer_name);

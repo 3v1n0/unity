@@ -33,8 +33,6 @@ namespace dash
 class FilterFactory
 {
 public:
-  FilterFactory();
-
   nux::View* WidgetForFilter(Filter::Ptr const& filter);
 };
 

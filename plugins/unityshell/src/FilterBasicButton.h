@@ -46,8 +46,8 @@ protected:
   virtual long ComputeContentSize();
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
 
-  void InitTheme ();
-  void RedrawTheme (nux::Geometry const& geom, cairo_t* cr, nux::ButtonVisualState faked_state);
+  void InitTheme();
+  void RedrawTheme(nux::Geometry const& geom, cairo_t* cr, nux::ButtonVisualState faked_state);
   
   typedef std::unique_ptr<nux::CairoWrapper> NuxCairoPtr;
 

@@ -96,10 +96,8 @@ void FilterMultiRange::OnActiveChanged(bool value)
   }
 
   index = 0;
-  for (auto it : buttons_)
+  for (auto button : buttons_)
   {
-    FilterMultiRangeButton* button = (it);
-
     if (index == start && index == end)
       button->SetHasArrow(MultiRangeArrow::BOTH);
     else if (index == start)

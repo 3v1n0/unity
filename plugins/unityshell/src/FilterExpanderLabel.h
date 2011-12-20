@@ -57,13 +57,13 @@ private:
 
   nux::LinearLayout* layout_;
   nux::LinearLayout* top_bar_layout_;
-  nux::Layout* contents_;
   nux::View* right_hand_contents_;
   nux::View* expander_graphic_;
   nux::StaticText* cairo_label_;
-  nux::Layout* space_;
   std::string raw_label_;
   std::string label_;
+  
+  nux::ObjectPtr<nux::Layout> contents_;
 };
 
 } // namespace dash
