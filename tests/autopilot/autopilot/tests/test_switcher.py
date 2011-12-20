@@ -32,6 +32,7 @@ class SwitcherTests(TestCase):
 
         self.launch_application("gucharmap.desktop")
         self.launch_application("gcalctool.desktop")
+        self.launch_application("users-admin.desktop")
         
         sleep(5)
         super(SwitcherTests, self).setUp()
