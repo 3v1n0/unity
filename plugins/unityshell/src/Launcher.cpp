@@ -44,6 +44,7 @@
 #include "IconRenderer.h"
 #include "TimeUtil.h"
 #include "WindowManager.h"
+#include "BamfLauncherIcon.h"
 
 #include "ubus-server.h"
 #include "UBusMessages.h"
@@ -2323,6 +2324,15 @@ void Launcher::EndIconDrag()
       hovered_icon->SetQuirk(LauncherIcon::QUIRK_PULSE_ONCE, true);
 
       launcher_removerequest.emit(_drag_icon);
+      
+      if (_drag_icon && _drag_icon->Type() == LauncherIcon::TYPE_APPLICATION)
+      {
+        BamfLauncherIcon* bamf_icon = dynamic_cast<BamfLauncherIcon*>(_drag_icon);
+        
+        if (bamf_icon)
+          bamf_icon->Quit();
+      }
+            
       _drag_window->ShowWindow(false);
       EnsureAnimation();
     }
