@@ -217,6 +217,8 @@ add_executable (launcher
                 ${UNITY_SRC}/FavoriteStore.h
                 ${UNITY_SRC}/FavoriteStoreGSettings.cpp
                 ${UNITY_SRC}/FavoriteStoreGSettings.h
+                ${UNITY_SRC}/IconLoader.cpp
+                ${UNITY_SRC}/IconLoader.h
                 ${UNITY_SRC}/LauncherEntryRemoteModel.cpp
                 ${UNITY_SRC}/LauncherEntryRemoteModel.h
                 ${UNITY_SRC}/LauncherEntryRemote.cpp
@@ -261,6 +263,8 @@ add_executable (launcher
                 ${UNITY_SRC}/QuicklistView.h
                 ${UNITY_SRC}/QuicklistManager.cpp
                 ${UNITY_SRC}/QuicklistManager.h
+                ${UNITY_SRC}/Timer.cpp
+                ${UNITY_SRC}/Timer.h
                 ${UNITY_SRC}/UBusMessages.h
                 ${UNITY_SRC}/UBusWrapper.cpp
                 ${UNITY_SRC}/UBusWrapper.h
