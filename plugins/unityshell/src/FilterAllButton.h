@@ -38,7 +38,7 @@ public:
    FilterAllButton(NUX_FILE_LINE_PROTO);
    ~FilterAllButton();
    
-   void SetFilter(Filter::Ptr filter);
+   void SetFilter(Filter::Ptr const& filter);
 
 private:
   void OnFilteringChanged(bool filtering);
@@ -52,3 +52,4 @@ private:
 } // namespace unity
 
 #endif // UNITYSHELL_FILTERALLBUTTON_H
+

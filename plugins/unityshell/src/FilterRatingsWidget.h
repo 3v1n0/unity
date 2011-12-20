@@ -48,13 +48,12 @@ public:
   FilterRatingsWidget(NUX_FILE_LINE_PROTO);
   virtual ~FilterRatingsWidget();
 
-  void SetFilter(Filter::Ptr filter);
+  void SetFilter(Filter::Ptr const& filter);
   std::string GetFilterType();
 
 protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
-  virtual void PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw);
 
   FilterAllButton* all_button_;
   FilterRatingsButton* ratings_;
@@ -65,3 +64,4 @@ protected:
 } // namespace unity
 
 #endif // UNITYSHELL_FILTERRATINGSWIDGET_H
+

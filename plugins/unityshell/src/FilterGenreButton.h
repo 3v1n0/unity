@@ -39,13 +39,8 @@ public:
   FilterGenreButton(std::string const& label, NUX_FILE_LINE_PROTO);
   FilterGenreButton(NUX_FILE_LINE_PROTO);
 
-  void SetFilter(dash::FilterOption::Ptr filter);
+  void SetFilter(FilterOption::Ptr const& filter);
   FilterOption::Ptr GetFilter();
-
-protected:
-  virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
-  virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
-  virtual void PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw);
 
 private:
   FilterOption::Ptr filter_;
@@ -55,3 +50,4 @@ private:
 } // namespace unity
 
 #endif // FILTERGENREBUTTON_H
+

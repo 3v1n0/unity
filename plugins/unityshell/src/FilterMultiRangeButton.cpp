@@ -30,12 +30,10 @@ namespace unity
 namespace dash
 {
   
-FilterMultiRangeButton::FilterMultiRangeButton(const std::string label, NUX_FILE_LINE_DECL)
+FilterMultiRangeButton::FilterMultiRangeButton(std::string const& label, NUX_FILE_LINE_DECL)
   : nux::ToggleButton(label, NUX_FILE_LINE_PARAM)
-  , active_(nullptr)
-  , normal_(nullptr)
-  , has_arrow_(MULTI_RANGE_ARROW_NONE)
-  , side_(MULTI_RANGE_CENTER)
+  , has_arrow_(MultiRangeArrow::NONE)
+  , side_(MultiRangeSide::CENTER)
 {
   InitTheme();
   state_change.connect(sigc::mem_fun(this, &FilterMultiRangeButton::OnActivated));
@@ -43,10 +41,8 @@ FilterMultiRangeButton::FilterMultiRangeButton(const std::string label, NUX_FILE
 
 FilterMultiRangeButton::FilterMultiRangeButton(NUX_FILE_LINE_DECL)
   : nux::ToggleButton(NUX_FILE_LINE_PARAM)
-  , active_(nullptr)
-  , normal_(nullptr)
-  , has_arrow_(MULTI_RANGE_ARROW_NONE)
-  , side_(MULTI_RANGE_CENTER)
+  , has_arrow_(MultiRangeArrow::NONE)
+  , side_(MultiRangeSide::CENTER)
 {
   InitTheme();
   state_change.connect(sigc::mem_fun(this, &FilterMultiRangeButton::OnActivated));
@@ -54,8 +50,6 @@ FilterMultiRangeButton::FilterMultiRangeButton(NUX_FILE_LINE_DECL)
 
 FilterMultiRangeButton::~FilterMultiRangeButton()
 {
-  delete normal_;
-  delete active_;
 }
 
 void FilterMultiRangeButton::OnActivated(nux::Area* area)
@@ -69,7 +63,7 @@ void FilterMultiRangeButton::OnActiveChanged(bool value)
   NeedRedraw();
 }
 
-void FilterMultiRangeButton::SetFilter(FilterOption::Ptr filter)
+void FilterMultiRangeButton::SetFilter(FilterOption::Ptr const& filter)
 {
   filter_ = filter;
   SetActive(filter_->active);
@@ -82,9 +76,11 @@ FilterOption::Ptr FilterMultiRangeButton::GetFilter()
 
 void FilterMultiRangeButton::SetVisualSide(MultiRangeSide side)
 {
+  nux::Geometry const& geo = GetGeometry();
+
   side_ = side;
-  active_->Invalidate(GetGeometry());
-  normal_->Invalidate(GetGeometry());
+  active_->Invalidate(geo);
+  normal_->Invalidate(geo);
 }
 
 void FilterMultiRangeButton::SetHasArrow(MultiRangeArrow value)
@@ -96,18 +92,20 @@ void FilterMultiRangeButton::SetHasArrow(MultiRangeArrow value)
 
 long FilterMultiRangeButton::ComputeContentSize()
 {
-  if (active_ == nullptr)
+  if (!active_)
   {
     InitTheme();
   }
   long ret = nux::ToggleButton::ComputeContentSize();
-  if (cached_geometry_ != GetGeometry())
+  nux::Geometry const& geo = GetGeometry();
+  if (cached_geometry_ != geo)
   {
-    active_->Invalidate(GetGeometry());
-    normal_->Invalidate(GetGeometry());
+    active_->Invalidate(geo);
+    normal_->Invalidate(geo);
+    cached_geometry_ = geo;
+
   }
 
-  cached_geometry_ = GetGeometry();
   return ret;
 }
 
@@ -115,8 +113,9 @@ void FilterMultiRangeButton::InitTheme()
 {
   if (!active_)
   {
-    active_ = new nux::CairoWrapper(GetGeometry(), sigc::bind(sigc::mem_fun(this, &FilterMultiRangeButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_PRESSED));
-    normal_ = new nux::CairoWrapper(GetGeometry(), sigc::bind(sigc::mem_fun(this, &FilterMultiRangeButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_NORMAL));
+    nux::Geometry const& geo = GetGeometry();
+    active_.reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &FilterMultiRangeButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_PRESSED)));
+    normal_.reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &FilterMultiRangeButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_NORMAL)));
   }
 
   SetMinimumHeight(32);
@@ -124,7 +123,7 @@ void FilterMultiRangeButton::InitTheme()
 
 void FilterMultiRangeButton::RedrawTheme(nux::Geometry const& geom, cairo_t* cr, nux::ButtonVisualState faked_state)
 {
-  std::string name = "10";
+  std::string name("10");
   std::stringstream final;
 
   if (filter_)
@@ -134,19 +133,19 @@ void FilterMultiRangeButton::RedrawTheme(nux::Geometry const& geom, cairo_t* cr,
   }
 
   Arrow arrow;
-  if (has_arrow_ == MULTI_RANGE_ARROW_NONE)
+  if (has_arrow_ == MultiRangeArrow::NONE)
     arrow = Arrow::NONE;
-  else if (has_arrow_ == MULTI_RANGE_ARROW_LEFT)
+  else if (has_arrow_ == MultiRangeArrow::LEFT)
     arrow = Arrow::LEFT;
-  else if (has_arrow_ == MULTI_RANGE_ARROW_BOTH)
+  else if (has_arrow_ == MultiRangeArrow::BOTH)
     arrow = Arrow::BOTH;
   else
     arrow = Arrow::RIGHT;
 
   Segment segment;
-  if (side_ == MULTI_RANGE_SIDE_LEFT)
+  if (side_ == MultiRangeSide::LEFT)
     segment = Segment::LEFT;
-  else if (side_ == MULTI_RANGE_CENTER)
+  else if (side_ == MultiRangeSide::CENTER)
     segment = Segment::MIDDLE;
   else
     segment = Segment::RIGHT;
@@ -157,7 +156,9 @@ void FilterMultiRangeButton::RedrawTheme(nux::Geometry const& geom, cairo_t* cr,
 
 void FilterMultiRangeButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
-  gPainter.PaintBackground(GfxContext, GetGeometry());
+  nux::Geometry const& geo = GetGeometry();
+  
+  gPainter.PaintBackground(GfxContext, geo);
   // set up our texture mode
   nux::TexCoordXForm texxform;
   texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
@@ -170,10 +171,10 @@ void FilterMultiRangeButton::Draw(nux::GraphicsEngine& GfxContext, bool force_dr
 
   nux::Color col = nux::color::Black;
   col.alpha = 0;
-  GfxContext.QRP_Color(GetGeometry().x,
-                       GetGeometry().y,
-                       GetGeometry().width,
-                       GetGeometry().height,
+  GfxContext.QRP_Color(geo.x,
+                       geo.y,
+                       geo.width,
+                       geo.height,
                        col);
 
   nux::BaseTexture* texture = normal_->GetTexture();
@@ -187,25 +188,16 @@ void FilterMultiRangeButton::Draw(nux::GraphicsEngine& GfxContext, bool force_dr
     texture = active_->GetTexture();
   }
 
-  GfxContext.QRP_1Tex(GetGeometry().x,
-                      GetGeometry().y,
-                      GetGeometry().width,
-                      GetGeometry().height,
+  GfxContext.QRP_1Tex(geo.x,
+                      geo.y,
+                      geo.width,
+                      geo.height,
                       texture->GetDeviceTexture(),
                       texxform,
                       nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
   GfxContext.GetRenderStates().SetBlend(alpha, src, dest);
 }
 
-void FilterMultiRangeButton::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
-{
-  //nux::ToggleButton::DrawContent(GfxContext, force_draw);
-}
-
-void FilterMultiRangeButton::PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw)
-{
-  nux::ToggleButton::PostDraw(GfxContext, force_draw);
-}
-
 } // namespace dash
 } // namespace unity
+

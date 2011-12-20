@@ -21,7 +21,6 @@
 
 #include <Nux/Nux.h>
 #include <NuxCore/Logger.h>
-#include <Nux/View.h>
 
 #include "FilterBasicButton.h"
 #include "FilterFactory.h"
@@ -48,31 +47,27 @@ FilterFactory::FilterFactory()
 {
 }
 
-FilterFactory::~FilterFactory()
+nux::View* FilterFactory::WidgetForFilter(Filter::Ptr const& filter)
 {
-}
-
-nux::View* FilterFactory::WidgetForFilter(Filter::Ptr filter)
-{
-  std::string filter_type = filter->renderer_name;
+  std::string filter_type(filter->renderer_name);
   LOG_DEBUG(logger) << "building filter of type, " << filter_type;
 
-  nux::View* view = nullptr;
+  FilterWidget* widget = nullptr;
   if (filter_type == renderer_type_check_options)
   {
-    view = static_cast<nux::View *> (new FilterGenre(NUX_TRACKER_LOCATION));
+    widget = new FilterGenre(NUX_TRACKER_LOCATION);
   }
   else if (filter_type == renderer_type_ratings)
   {
-    view = static_cast<nux::View *> (new FilterRatingsWidget(NUX_TRACKER_LOCATION));
+    widget = new FilterRatingsWidget(NUX_TRACKER_LOCATION);
   }
   else if (filter_type == renderer_type_multirange)
   {
-    view = static_cast<nux::View *> (new FilterMultiRange(NUX_TRACKER_LOCATION));
+    widget = new FilterMultiRange(NUX_TRACKER_LOCATION);
   }
   else if (filter_type == renderer_type_radio_options)
   {
-    view = static_cast<nux::View *> (new FilterGenre(NUX_TRACKER_LOCATION));
+    widget = new FilterGenre(NUX_TRACKER_LOCATION);
   }
   else
   {
@@ -81,10 +76,12 @@ nux::View* FilterFactory::WidgetForFilter(Filter::Ptr filter)
                         << "\"";
   }
 
-  dynamic_cast<FilterWidget *>(view)->SetFilter(filter);
+  if (widget)
+    widget->SetFilter(filter);
 
-  return view;
+  return dynamic_cast<nux::View*>(widget);
 }
 
 } // namespace dash
 } // namespace unity
+

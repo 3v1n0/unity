@@ -22,6 +22,9 @@
 #ifndef UNITYSHELL_FILTERFACTORY_H
 #define UNITYSHELL_FILTERFACTORY_H
 
+#include <Nux/View.h>
+#include <UnityCore/Filter.h>
+
 namespace unity
 {
 namespace dash
@@ -31,12 +34,12 @@ class FilterFactory
 {
 public:
   FilterFactory();
-  virtual ~FilterFactory();
 
-  nux::View* WidgetForFilter(dash::Filter::Ptr filter);
+  nux::View* WidgetForFilter(Filter::Ptr const& filter);
 };
 
 } // namespace dash
 } // namespace unity
 
 #endif // UNITYSHELL_FILTERFACTORY_H
+

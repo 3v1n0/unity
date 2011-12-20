@@ -47,20 +47,19 @@ public:
   FilterMultiRange(NUX_FILE_LINE_PROTO);
   virtual ~FilterMultiRange();
 
-  void SetFilter(Filter::Ptr filter);
+  void SetFilter(Filter::Ptr const& filter);
   std::string GetFilterType();
 
 protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
-  virtual void PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw);
 
   void InitTheme();
 
 private:
   void OnAllActivated(nux::View* view);
-  void OnOptionAdded(dash::FilterOption::Ptr new_filter);
-  void OnOptionRemoved(dash::FilterOption::Ptr removed_filter);
+  void OnOptionAdded(dash::FilterOption::Ptr const& new_filter);
+  void OnOptionRemoved(dash::FilterOption::Ptr const& removed_filter);
   void OnActiveChanged(bool value);
 
   nux::HLayout* layout_;
@@ -74,3 +73,4 @@ private:
 } // unityshell unity
 
 #endif // UNITYSHELL_FILTERMULTIRANGE_H
+

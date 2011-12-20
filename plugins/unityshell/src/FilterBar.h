@@ -41,15 +41,14 @@ public:
   FilterBar(NUX_FILE_LINE_PROTO);
   ~FilterBar();
 
-  void SetFilters(Filters::Ptr filters);
+  void SetFilters(Filters::Ptr const& filters);
 
-  void AddFilter(Filter::Ptr filter);
-  void RemoveFilter(Filter::Ptr filter);
+  void AddFilter(Filter::Ptr const& filter);
+  void RemoveFilter(Filter::Ptr const& filter);
 
 protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
-  virtual void PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw);
 
 private:
   void Init();
@@ -63,3 +62,4 @@ private:
 } // namespace unity
 
 #endif // UNITYSHELL_FILTERBAR_H
+

@@ -56,7 +56,7 @@ FilterRatingsWidget::~FilterRatingsWidget()
 {
 }
 
-void FilterRatingsWidget::SetFilter(Filter::Ptr filter)
+void FilterRatingsWidget::SetFilter(Filter::Ptr const& filter)
 {
   filter_ = std::static_pointer_cast<RatingsFilter>(filter);
   
@@ -74,7 +74,7 @@ std::string FilterRatingsWidget::GetFilterType()
 
 void FilterRatingsWidget::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
-  nux::Geometry geo = GetGeometry();
+  nux::Geometry const& geo = GetGeometry();
 
   GfxContext.PushClippingRectangle(geo);
   nux::GetPainter().PaintBackground(GfxContext, geo);
@@ -88,10 +88,6 @@ void FilterRatingsWidget::DrawContent(nux::GraphicsEngine& GfxContext, bool forc
   GfxContext.PopClippingRectangle();
 }
 
-void FilterRatingsWidget::PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw)
-{
-  nux::View::PostDraw(GfxContext, force_draw);
-}
-
 } // namespace dash
 } // namespace unity
+

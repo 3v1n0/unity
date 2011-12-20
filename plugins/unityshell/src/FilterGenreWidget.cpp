@@ -59,7 +59,7 @@ FilterGenre::~FilterGenre()
 {
 }
 
-void FilterGenre::SetFilter(Filter::Ptr filter)
+void FilterGenre::SetFilter(Filter::Ptr const& filter)
 {
   filter_ = std::static_pointer_cast<CheckOptionFilter>(filter);
   
@@ -75,9 +75,9 @@ void FilterGenre::SetFilter(Filter::Ptr filter)
   SetLabel(filter_->name);
 }
 
-void FilterGenre::OnOptionAdded(FilterOption::Ptr new_filter)
+void FilterGenre::OnOptionAdded(FilterOption::Ptr const& new_filter)
 {
-  std::string tmp_label = new_filter->name;
+  std::string tmp_label(new_filter->name);
 
   glib::String escape(g_markup_escape_text(tmp_label.c_str(), -1));
   std::string label(escape.Value());
@@ -88,9 +88,9 @@ void FilterGenre::OnOptionAdded(FilterOption::Ptr new_filter)
   buttons_.push_back(button);
 }
 
-void FilterGenre::OnOptionRemoved(FilterOption::Ptr removed_filter)
+void FilterGenre::OnOptionRemoved(FilterOption::Ptr const& removed_filter)
 {
-  for (auto it=buttons_.begin() ; it != buttons_.end(); it++)
+  for (auto it=buttons_.begin() ; it != buttons_.end(); ++it)
   {
     if ((*it)->GetFilter() == removed_filter)
     {
@@ -113,7 +113,7 @@ void FilterGenre::InitTheme()
 
 void FilterGenre::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
-  nux::Geometry geo = GetGeometry();
+  nux::Geometry const& geo = GetGeometry();
   nux::Color col(0.2f, 0.2f, 0.2f, 0.2f);
 
   GfxContext.PushClippingRectangle(geo);
@@ -135,10 +135,6 @@ void FilterGenre::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   GfxContext.PopClippingRectangle();
 }
 
-void FilterGenre::PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw)
-{
-  nux::View::PostDraw(GfxContext, force_draw);
-}
-
 } // namespace dash
 } // namespace unity
+

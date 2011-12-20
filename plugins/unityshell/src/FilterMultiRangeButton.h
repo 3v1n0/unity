@@ -22,6 +22,8 @@
 #ifndef UNITYSHELL_FILTERMULTIRANGEBUTTON_H
 #define UNITYSHELL_FILTERMULTIRANGEBUTTON_H
 
+#include <memory>
+
 #include <Nux/Nux.h>
 #include <Nux/CairoWrapper.h>
 #include <Nux/ToggleButton.h>
@@ -33,28 +35,30 @@ namespace unity
 {
 namespace dash
 {
+  
+enum class MultiRangeSide
+{
+  LEFT,
+  RIGHT,
+  CENTER
+};
 
-typedef enum {
-  MULTI_RANGE_SIDE_LEFT,
-  MULTI_RANGE_SIDE_RIGHT,
-  MULTI_RANGE_CENTER
-} MultiRangeSide;
-
-typedef enum {
-  MULTI_RANGE_ARROW_LEFT,
-  MULTI_RANGE_ARROW_RIGHT,
-  MULTI_RANGE_ARROW_BOTH,
-  MULTI_RANGE_ARROW_NONE
-} MultiRangeArrow;
+enum class MultiRangeArrow
+{
+  LEFT,
+  RIGHT,
+  BOTH,
+  NONE
+};
 
 class FilterMultiRangeButton : public nux::ToggleButton
 {
 public:
-  FilterMultiRangeButton (const std::string label, NUX_FILE_LINE_PROTO);
+  FilterMultiRangeButton (std::string const& label, NUX_FILE_LINE_PROTO);
   FilterMultiRangeButton (NUX_FILE_LINE_PROTO);
-  virtual ~FilterMultiRangeButton();
+  ~FilterMultiRangeButton();
 
-  void SetFilter(FilterOption::Ptr filter);
+  void SetFilter(FilterOption::Ptr const& filter);
   FilterOption::Ptr GetFilter();
 
   void SetVisualSide(MultiRangeSide side); //0 = left, 1 = center, 2 = right - sucky api i know :(
@@ -63,8 +67,6 @@ public:
 protected:
   virtual long ComputeContentSize();
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
-  virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
-  virtual void PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw);
 
 private:
   void InitTheme();
@@ -73,10 +75,11 @@ private:
   void OnActiveChanged(bool value);
   
   FilterOption::Ptr filter_;
-
-  nux::CairoWrapper* prelight_;
-  nux::CairoWrapper* active_;
-  nux::CairoWrapper* normal_;
+  
+  typedef std::unique_ptr<nux::CairoWrapper> NuxCairoPtr;
+  
+  NuxCairoPtr active_;
+  NuxCairoPtr normal_;
   nux::Geometry cached_geometry_;
   MultiRangeArrow has_arrow_;
   MultiRangeSide side_;
@@ -86,3 +89,4 @@ private:
 } // namespace unity
 
 #endif // UNITYSHELL_FILTERMULTIRANGEBUTTON_H
+

@@ -34,16 +34,17 @@ namespace dash
 FilterAllButton::FilterAllButton(NUX_FILE_LINE_DECL)
  : FilterBasicButton(_("All"), NUX_FILE_LINE_PARAM)
 {
-  state_change.connect(sigc::mem_fun(this, &FilterAllButton::OnStateChanged));
   SetActive(true);
   SetInputEventSensitivity(false);
+  
+  state_change.connect(sigc::mem_fun(this, &FilterAllButton::OnStateChanged));
 }
 
 FilterAllButton::~FilterAllButton()
 {
 }
 
-void FilterAllButton::SetFilter(Filter::Ptr filter)
+void FilterAllButton::SetFilter(Filter::Ptr const& filter)
 {
   if (filtering_connection_.connected())
     filtering_connection_.disconnect();
@@ -68,3 +69,4 @@ void FilterAllButton::OnFilteringChanged(bool filtering)
 
 } // namespace dash
 } // namespace unity
+

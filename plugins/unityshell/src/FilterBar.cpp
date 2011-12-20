@@ -60,12 +60,12 @@ void FilterBar::Init()
   SetLayout(layout);
 }
 
-void FilterBar::SetFilters(Filters::Ptr filters)
+void FilterBar::SetFilters(Filters::Ptr const& filters)
 {
   filters_ = filters;
 }
 
-void FilterBar::AddFilter(Filter::Ptr filter)
+void FilterBar::AddFilter(Filter::Ptr const& filter)
 {
   if (filter_map_.count(filter) > 0)
   {
@@ -78,7 +78,7 @@ void FilterBar::AddFilter(Filter::Ptr filter)
   GetLayout()->AddView(filter_view, 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
 }
 
-void FilterBar::RemoveFilter(Filter::Ptr filter)
+void FilterBar::RemoveFilter(Filter::Ptr const& filter)
 {
   for (auto iter: filter_map_)
   {
@@ -94,7 +94,7 @@ void FilterBar::RemoveFilter(Filter::Ptr filter)
 
 void FilterBar::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
-  nux::Geometry geo = GetGeometry();
+  nux::Geometry const& geo = GetGeometry();
 
   GfxContext.PushClippingRectangle(geo);
   nux::GetPainter().PaintBackground(GfxContext, geo);
@@ -108,10 +108,7 @@ void FilterBar::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   GfxContext.PopClippingRectangle();
 }
 
-void FilterBar::PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw)
-{
-  nux::View::PostDraw(GfxContext, force_draw);
-}
 
 } // namespace dash
 } // namespace unity
+

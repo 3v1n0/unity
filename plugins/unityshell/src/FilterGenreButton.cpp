@@ -31,11 +31,10 @@ FilterGenreButton::FilterGenreButton(std::string const& label, NUX_FILE_LINE_DEC
 {
   InitTheme();
   
-  state_change.connect([&] (Button* button)
+  state_change.connect([&](nux::Button* button)
   {
-    bool tmp_active = Active();
     if (filter_)
-      filter_->active = tmp_active;
+      filter_->active = Active();
   });
 }
 
@@ -44,16 +43,15 @@ FilterGenreButton::FilterGenreButton(NUX_FILE_LINE_DECL)
 {
   InitTheme();
 
-  state_change.connect([&] (Button* button)
+  state_change.connect([&](nux::Button* button)
   {
-    bool tmp_active = Active();
     if (filter_)
-      filter_->active = tmp_active;
+      filter_->active = Active();
   });
 }
 
 
-void FilterGenreButton::SetFilter(FilterOption::Ptr filter)
+void FilterGenreButton::SetFilter(FilterOption::Ptr const& filter)
 {
   filter_ = filter;
 
@@ -70,20 +68,6 @@ FilterOption::Ptr FilterGenreButton::GetFilter()
   return filter_;
 }
 
-void FilterGenreButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
-{
-  FilterBasicButton::Draw(GfxContext, force_draw);
-}
-
-void FilterGenreButton::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
-{
-  FilterBasicButton::DrawContent(GfxContext, force_draw);
-}
-
-void FilterGenreButton::PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw)
-{
-  FilterBasicButton::PostDraw(GfxContext, force_draw);
-}
-
 } // namespace dash
 } // namespace unity
+

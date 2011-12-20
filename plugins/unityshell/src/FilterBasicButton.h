@@ -35,24 +35,24 @@ namespace dash
 
 class FilterBasicButton : public nux::ToggleButton
 {
-public:
+public:  
   FilterBasicButton(nux::TextureArea* image, NUX_FILE_LINE_PROTO);
-  FilterBasicButton(const std::string& label, NUX_FILE_LINE_PROTO);
-  FilterBasicButton(const std::string& label, nux::TextureArea* image, NUX_FILE_LINE_PROTO);
+  FilterBasicButton(std::string const& label, NUX_FILE_LINE_PROTO);
+  FilterBasicButton(std::string const& label, nux::TextureArea* image, NUX_FILE_LINE_PROTO);
   FilterBasicButton(NUX_FILE_LINE_PROTO);
   virtual ~FilterBasicButton();
 
 protected:
   virtual long ComputeContentSize();
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
-  virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
-  virtual void PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw);
 
   void InitTheme ();
   void RedrawTheme (nux::Geometry const& geom, cairo_t* cr, nux::ButtonVisualState faked_state);
+  
+  typedef std::unique_ptr<nux::CairoWrapper> NuxCairoPtr;
 
-  nux::CairoWrapper* active_;
-  nux::CairoWrapper* normal_;
+  NuxCairoPtr active_;
+  NuxCairoPtr normal_;
   nux::Geometry cached_geometry_;
 
 private:
@@ -63,3 +63,4 @@ private:
 } // namespace unity
 
 #endif // UNITYSHELL_FILTERBASICBUTTON_H
+

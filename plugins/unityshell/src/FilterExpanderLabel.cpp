@@ -34,6 +34,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(FilterExpanderLabel);
 FilterExpanderLabel::FilterExpanderLabel(std::string const& label, NUX_FILE_LINE_DECL)
   : nux::View(NUX_FILE_LINE_PARAM)
   , expanded(true)
+  , layout_(nullptr)  
   , top_bar_layout_(nullptr)
   , contents_(nullptr)
   , right_hand_contents_(nullptr)
@@ -76,10 +77,7 @@ void FilterExpanderLabel::SetRightHandView(nux::View* view)
 }
 
 void FilterExpanderLabel::SetContents(nux::Layout* contents)
-{
-  if (contents_)
-    contents_->UnReference();
-    
+{    
   contents_ = contents;
   contents_->SinkReference();
   
@@ -132,7 +130,7 @@ void FilterExpanderLabel::DoExpandChange(bool change)
   if (contents_ and !contents_->IsChildOf(layout_) and change)
   {
     layout_->AddLayout(contents_, 1, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
-    if (space_ and space_->IsChildOf(space_))
+    if (space_ and space_->IsChildOf(layout_))
     {
       layout_->RemoveChildObject(space_);
     }
@@ -142,7 +140,7 @@ void FilterExpanderLabel::DoExpandChange(bool change)
     layout_->RemoveChildObject(contents_);
     if (space_ and !space_->IsChildOf(layout_))
     {
-      layout_->AddView(space_, 1);
+      layout_->AddView(space_);
     }
   }
   
@@ -152,7 +150,7 @@ void FilterExpanderLabel::DoExpandChange(bool change)
 
 void FilterExpanderLabel::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
-  nux::Geometry geo = GetGeometry();
+  nux::Geometry const& geo = GetGeometry();
 
   GfxContext.PushClippingRectangle(geo);
   nux::GetPainter().PaintBackground(GfxContext, geo);
@@ -162,16 +160,10 @@ void FilterExpanderLabel::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 void FilterExpanderLabel::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
   GfxContext.PushClippingRectangle(GetGeometry());
-
   GetLayout()->ProcessDraw(GfxContext, force_draw);
-
   GfxContext.PopClippingRectangle();
-}
-
-void FilterExpanderLabel::PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw)
-{
-  nux::View::PostDraw(GfxContext, force_draw);
 }
 
 } // namespace dash
 } // namespace unity
+

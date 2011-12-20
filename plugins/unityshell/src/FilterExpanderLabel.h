@@ -50,7 +50,6 @@ public:
 protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
-  virtual void PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw);
 
 private:
   void BuildLayout();
@@ -71,3 +70,4 @@ private:
 } // namespace unity
 
 #endif // UNITYSHELL_FILTEREXPANDERLABEL_H
+

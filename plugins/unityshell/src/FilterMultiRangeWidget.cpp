@@ -55,7 +55,7 @@ FilterMultiRange::~FilterMultiRange()
 {
 }
 
-void FilterMultiRange::SetFilter(Filter::Ptr filter)
+void FilterMultiRange::SetFilter(Filter::Ptr const& filter)
 {
   filter_ = std::static_pointer_cast<MultiRangeFilter>(filter);
   
@@ -74,14 +74,11 @@ void FilterMultiRange::SetFilter(Filter::Ptr filter)
 void FilterMultiRange::OnActiveChanged(bool value)
 {
   // go through all the buttons, and set the state :(
-
-  std::vector<FilterMultiRangeButton*>::iterator it;
   int start = 2000;
   int end = 0;
   int index = 0;
-  for(auto it : buttons_)
+  for (auto button : buttons_)
   {
-    FilterMultiRangeButton* button = (it);
     FilterOption::Ptr filter = button->GetFilter();
     bool tmp_active = filter->active;
     button->SetActive(tmp_active);
@@ -104,37 +101,37 @@ void FilterMultiRange::OnActiveChanged(bool value)
     FilterMultiRangeButton* button = (it);
 
     if (index == start && index == end)
-      button->SetHasArrow(MultiRangeArrow::MULTI_RANGE_ARROW_BOTH);
+      button->SetHasArrow(MultiRangeArrow::BOTH);
     else if (index == start)
-      button->SetHasArrow(MultiRangeArrow::MULTI_RANGE_ARROW_LEFT);
+      button->SetHasArrow(MultiRangeArrow::LEFT);
     else if (index == end)
-      button->SetHasArrow(MultiRangeArrow::MULTI_RANGE_ARROW_RIGHT);
+      button->SetHasArrow(MultiRangeArrow::RIGHT);
     else
-      button->SetHasArrow(MultiRangeArrow::MULTI_RANGE_ARROW_NONE);
+      button->SetHasArrow(MultiRangeArrow::NONE);
 
     if (index == 0)
-      button->SetVisualSide(MULTI_RANGE_SIDE_LEFT);
+      button->SetVisualSide(MultiRangeSide::LEFT);
     else if (index == (int)buttons_.size() - 1)
-      button->SetVisualSide(MULTI_RANGE_SIDE_RIGHT);
+      button->SetVisualSide(MultiRangeSide::RIGHT);
     else
-      button->SetVisualSide(MULTI_RANGE_CENTER);
+      button->SetVisualSide(MultiRangeSide::CENTER);
 
     index++;
   }
 }
 
-void FilterMultiRange::OnOptionAdded(FilterOption::Ptr new_filter)
+void FilterMultiRange::OnOptionAdded(FilterOption::Ptr const& new_filter)
 {
   FilterMultiRangeButton* button = new FilterMultiRangeButton(NUX_TRACKER_LOCATION);
   button->SetFilter(new_filter);
-  layout_->AddView(button, 1);
+  layout_->AddView(button);
   buttons_.push_back(button);
   new_filter->active.changed.connect(sigc::mem_fun(this, &FilterMultiRange::OnActiveChanged));
   OnActiveChanged(false);
 
 }
 
-void FilterMultiRange::OnOptionRemoved(FilterOption::Ptr removed_filter)
+void FilterMultiRange::OnOptionRemoved(FilterOption::Ptr const& removed_filter)
 {
   for (auto it=buttons_.begin() ; it != buttons_.end(); it++)
   {
@@ -161,7 +158,7 @@ void FilterMultiRange::InitTheme()
 
 void FilterMultiRange::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
-  nux::Geometry geo = GetGeometry();
+  nux::Geometry const& geo = GetGeometry();
   nux::Color col(0.2f, 0.2f, 0.2f, 0.2f);
 
   GfxContext.PushClippingRectangle(geo);
@@ -183,10 +180,6 @@ void FilterMultiRange::DrawContent(nux::GraphicsEngine& GfxContext, bool force_d
   GfxContext.PopClippingRectangle();
 }
 
-void FilterMultiRange::PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw)
-{
-  nux::View::PostDraw(GfxContext, force_draw);
-}
-
 } // namespace dash
 } // namespace unity
+
