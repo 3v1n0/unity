@@ -42,6 +42,7 @@ class SwitcherTests(TestCase):
     def tearDown(self):
         call(["killall", "gcalctool"])
         call(["killall", "gucharmap"])
+        call(["killall", "users-admin"])
         super(SwitcherTests, self).tearDown()
         sleep(1)
 
