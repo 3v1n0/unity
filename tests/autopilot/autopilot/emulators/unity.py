@@ -173,6 +173,9 @@ class Switcher(Unity):
     def get_last_selection_index(self):
         return bool(self.get_state('/Unity/SwitcherController/SwitcherModel')[0]['last-selection-index'])
 
+    def get_is_visible(self):
+        return bool(self.get_state('/Unity/SwitcherController')[0]['visible'])
+
 class Dash(Unity):
 	"""
 	An emulator class that makes it easier to interact with the unity dash.
