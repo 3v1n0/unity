@@ -203,8 +203,8 @@ Unity::MT::GrabHandle::reposition(int          x,
 
   if (flags & PositionSet)
   {
-    mRect.setX(x);
-    mRect.setY(y);
+    mRect.x = x;
+    mRect.y = y;
   }
 
   if (flags & PositionLock)
@@ -227,29 +227,28 @@ Unity::MT::GrabHandle::reposition(int x, int y, unsigned int flags) const
 Unity::MT::TextureLayout
 Unity::MT::GrabHandle::layout()
 {
-  return TextureLayout(mTexture, &mRect);
+  return TextureLayout(mTexture, mRect);
 }
 
 Unity::MT::GrabHandle::GrabHandle(GLTexture::List *texture,
-                                  CompSize        size,
+                                  unsigned int    width,
+                                  unsigned int    height,
                                   const boost::shared_ptr <GrabHandleGroup> &owner,
-				  unsigned int    id,
-				  Damager         *damager) :
+				  unsigned int    id) :
   mOwner(owner),
   mTexture (texture),
   mId(id),
-  mRect (0, 0, size.width(), size.height()),
-  mDamager (damager),
+  mRect (0, 0, width, height),
   mImpl (NULL)
 {
 }
 
 Unity::MT::GrabHandle::Ptr
-Unity::MT::GrabHandle::create (GLTexture::List *texture, CompSize size,
+Unity::MT::GrabHandle::create (GLTexture::List *texture, unsigned int width, unsigned int height,
                                const boost::shared_ptr <GrabHandleGroup> &owner,
-                               unsigned int id, Damager *damager)
+                               unsigned int id)
 {
-  Unity::MT::GrabHandle::Ptr p (new Unity::MT::GrabHandle (texture, size, owner, id, damager));
+  Unity::MT::GrabHandle::Ptr p (new Unity::MT::GrabHandle (texture, width, height, owner, id));
   p->mImpl = Unity::MT::GrabHandle::ImplFactory::Default ()->create (p);
 
   return p;
@@ -339,7 +338,7 @@ Unity::MT::GrabHandleGroup::needsAnimate()
 }
 
 void
-Unity::MT::GrabHandleGroup::relayout(const CompRect& rect, bool hard)
+Unity::MT::GrabHandleGroup::relayout(const nux::Geometry& rect, bool hard)
 {
   /* Each grab handle at each vertex, eg:
    *
@@ -364,10 +363,10 @@ Unity::MT::GrabHandleGroup::relayout(const CompRect& rect, bool hard)
   for (unsigned int i = 0; i < NUM_HANDLES; i++)
   {
     Unity::MT::GrabHandle::Ptr & handle = mHandles.at(i);
-    CompPoint p(rect.x() + rect.width() * pos[i][0] -
-                handle->width() / 2,
-                rect.y() + rect.height() * pos[i][1] -
-                handle->height() / 2);
+    CompPoint p(rect.x + rect.width * pos[i][0] -
+                handle->width () / 2,
+                rect.y + rect.height * pos[i][1] -
+                handle->height () / 2);
 
     handle->reposition (p.x (), p.y (), Unity::MT::PositionSet | (hard ? Unity::MT::PositionLock : 0));
   }
@@ -418,8 +417,7 @@ UnityMTGrabHandlesWindow::requestMovement (int x,
 }
 
 Unity::MT::GrabHandleGroup::GrabHandleGroup(GrabHandleWindow *owner,
-					    std::vector <Unity::MT::TextureSize>  &textures,
-					    Damager *damager) :
+					    std::vector <Unity::MT::TextureSize>  &textures) :
   mState(State::NONE),
   mOpacity(0.0f),
   mMoreAnimate(false),
@@ -429,23 +427,25 @@ Unity::MT::GrabHandleGroup::GrabHandleGroup(GrabHandleWindow *owner,
 
 Unity::MT::GrabHandleGroup::Ptr
 Unity::MT::GrabHandleGroup::create (GrabHandleWindow *owner,
-                                    std::vector<Unity::MT::TextureSize> &textures,
-                                    Damager *damager)
+                                    std::vector<Unity::MT::TextureSize> &textures)
 {
-    Unity::MT::GrabHandleGroup::Ptr p = Unity::MT::GrabHandleGroup::Ptr (new Unity::MT::GrabHandleGroup (owner, textures, damager));
+    Unity::MT::GrabHandleGroup::Ptr p = Unity::MT::GrabHandleGroup::Ptr (new Unity::MT::GrabHandleGroup (owner, textures));
     for (unsigned int i = 0; i < NUM_HANDLES; i++)
-      p->mHandles.push_back(Unity::MT::GrabHandle::create (&textures.at(i).first,
-                                                           textures.at(i).second, p, (handlesMask.find (i))->second, damager));
+      p->mHandles.push_back(Unity::MT::GrabHandle::create (textures.at(i).first,
+                                                           textures.at(i).second.width,
+                                                           textures.at(i).second.height,
+                                                           p,
+                                                           handlesMask.find (i)->second));
     return p;
 }
 
 Unity::MT::GrabHandleGroup::~GrabHandleGroup()
 {
   for (Unity::MT::GrabHandle::Ptr & handle : mHandles)
-    handle->damage (CompRect (handle->x (),
-                             handle->y (),
-                             handle->width (),
-                             handle->height ()));
+    handle->damage (nux::Geometry (handle->x (),
+                                   handle->y (),
+                                   handle->width (),
+                                   handle->height ()));
 }
 
 void
@@ -748,10 +748,10 @@ UnityMTGrabHandlesScreen::donePaint()
       {
           handles->forEachHandle ([&](const Unity::MT::GrabHandle::Ptr &h)
 				  {
-				    h->damage (CompRect (h->x (),
-							 h->y (),
-							 h->width (),
-							 h->height ()));
+				    h->damage (nux::Geometry (h->x (),
+							      h->y (),
+							      h->width (),
+							      h->height ()));
 				  });
       }
     }
@@ -834,7 +834,7 @@ UnityMTGrabHandlesWindow::glDraw(const GLMatrix&            transform,
     {
       /* We want to set the geometry of the handle to the window
        * region */
-      CompRegion reg = CompRegion(*layout.second);
+      CompRegion reg = CompRegion(layout.second.x, layout.second.y, layout.second.width, layout.second.height);
 
       for(GLTexture * tex : *layout.first)
       {
@@ -890,7 +890,7 @@ void
 UnityMTGrabHandlesWindow::relayout(const CompRect& r, bool hard)
 {
   if (mHandles)
-    mHandles->relayout(r, hard);
+    mHandles->relayout(nux::Geometry (r.x (), r.y (), r.width (), r.height ()), hard);
 }
 
 void
@@ -903,7 +903,8 @@ void
 UnityMTGrabHandlesWindow::moveNotify(int dx, int dy, bool immediate)
 {
   if (mHandles)
-    mHandles->relayout((const CompRect&) window->inputRect(), false);
+    mHandles->relayout(nux::Geometry (window->inputRect ().x (), window->inputRect ().y (),
+                                      window->inputRect ().width (), window->inputRect ().height ()), false);
 
   window->moveNotify(dx, dy, immediate);
 }
@@ -974,7 +975,7 @@ UnityMTGrabHandlesWindow::showHandles(bool use_timer)
 
   if (!mHandles)
   {
-    mHandles = Unity::MT::GrabHandleGroup::create (this, us->textures (), us);
+    mHandles = Unity::MT::GrabHandleGroup::create (this, us->textures ());
     us->addHandles(mHandles);
   }
 
@@ -983,7 +984,10 @@ UnityMTGrabHandlesWindow::showHandles(bool use_timer)
     unsigned int showingMask = Unity::MT::getLayoutForMask (window->state (), window->actions ());
     activate();
     mHandles->show(showingMask);
-    mHandles->relayout(window->inputRect(), true);
+    mHandles->relayout(nux::Geometry (window->inputRect().x (),
+                                      window->inputRect().y (),
+                                      window->inputRect().width(),
+                                      window->inputRect().height()), true);
 
     window->updateWindowOutputExtents();
     cWindow->damageOutputExtents();
@@ -1132,11 +1136,15 @@ UnityMTGrabHandlesScreen::UnityMTGrabHandlesScreen(CompScreen* s) :
   {
     CompString fname = "handle-";
     CompString pname("unitymtgrabhandles");
+    CompSize   size;
 
     fname = compPrintf("%s%i.png", fname.c_str(), i);
     mHandleTextures.at(i).first =
-      GLTexture::readImageToTexture(fname, pname,
-                                    mHandleTextures.at(i).second);
+      new GLTexture::List (GLTexture::readImageToTexture(fname, pname,
+                                                         size));
+
+    mHandleTextures.at (i).second.width = size.width ();
+    mHandleTextures.at (i).second.height = size.height ();
   }
 
   optionSetToggleHandlesKeyInitiate(boost::bind(&UnityMTGrabHandlesScreen::toggleHandles, this, _1, _2, _3));
@@ -1147,7 +1155,9 @@ UnityMTGrabHandlesScreen::UnityMTGrabHandlesScreen(CompScreen* s) :
 UnityMTGrabHandlesScreen::~UnityMTGrabHandlesScreen()
 {
   mGrabHandles.clear ();
-  mHandleTextures.clear();
+  for (auto it : mHandleTextures)
+    if (it.first)
+      delete it.first;
 }
 
 UnityMTGrabHandlesWindow::UnityMTGrabHandlesWindow(CompWindow* w) :

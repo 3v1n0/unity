@@ -16,7 +16,7 @@
  * Authored by: Sam Spilsbury <sam.spilsbury@canonical.com>
  */
 
-
+#include <Nux/Nux.h>
 #include <glib.h>
 #include <core/core.h>
 #include <composite/composite.h>
@@ -34,28 +34,17 @@ namespace Unity
 {
 namespace MT
 {
-typedef std::pair <GLTexture::List, CompSize> TextureSize;
-typedef std::pair <GLTexture::List*, CompRect*> TextureLayout;
-
-class Damager
-{
-public:
-
-    virtual void damage (const CompRegion &) = 0;
-};
+typedef std::pair <GLTexture::List*, nux::Geometry> TextureSize;
+typedef std::pair <GLTexture::List*, nux::Geometry> TextureLayout;
 
 class DummyDamager
 {
 public:
 
-    void damage (const CompRegion &reg)
+    void damage (const nux::Geometry &g)
     {
-	std::cout << "Damage rects: " << std::endl;
-	for (const CompRect &r : reg.rects ())
-	    std::cout << "Rect: " << r.x () << " "
-				  << r.y () << " "
-				  << r.width () << " "
-				  << r.height () << std::endl;
+      std::cout << "Damage rects: " << std::endl;
+      std::cout << "x: " << g.x << " y: " << g.y << " width: " << g.width << " height: " << g.height << std::endl;
     }
 };
 
@@ -113,10 +102,10 @@ public:
   typedef boost::shared_ptr <GrabHandle> Ptr;
 
   static GrabHandle::Ptr create (GLTexture::List *texture,
-                                 CompSize        size,
+                                 unsigned int    width,
+                                 unsigned int    height,
                                  const boost::shared_ptr <GrabHandleGroup> &owner,
-                                 unsigned int id,
-                                 Damager      *damager);
+                                 unsigned int id);
   ~GrabHandle();
 
   bool operator== (const GrabHandle &other) const
@@ -149,12 +138,12 @@ public:
   TextureLayout layout();
 
   unsigned int id () const { return mId; }
-  unsigned int width () const { return mRect.width (); }
-  unsigned int height () const { return mRect.height (); }
-  int          x () const { return mRect.x (); }
-  int          y () const { return mRect.y (); }
+  unsigned int width () const { return mRect.width; }
+  unsigned int height () const { return mRect.height; }
+  int          x () const { return mRect.x; }
+  int          y () const { return mRect.y; }
 
-  void damage (const CompRegion &r) const { mDamager->damage (r); }
+  void damage (const nux::Geometry &g) const { mImpl->damage (g); }
 
 public:
 
@@ -175,6 +164,8 @@ public:
       virtual void lockPosition (int x,
                                  int y,
                                  unsigned int flags) = 0;
+
+      virtual void damage (const nux::Geometry &g) = 0;
   };
 
   class ImplFactory
@@ -201,17 +192,15 @@ public:
 private:
 
   GrabHandle(GLTexture::List *texture,
-             CompSize        size,
+             unsigned int    width,
+             unsigned int    height,
              const boost::shared_ptr <GrabHandleGroup> &owner,
-             unsigned int id,
-             Damager      *damager);
+             unsigned int id);
 
   boost::weak_ptr <GrabHandleGroup>      mOwner;
   GLTexture::List                        *mTexture;
-  CompSize                               mTexSize;
   unsigned int                           mId;
-  CompRect                               mRect;
-  Damager                                *mDamager;
+  nux::Geometry                          mRect;
   Impl                                   *mImpl;
 };
 
@@ -249,6 +238,12 @@ public:
                      int y,
                      unsigned int flags);
 
+  void damage (const nux::Geometry &g)
+  {
+    CompRegion r (g.x, g.y, g.width, g.height);
+    CompositeScreen::get (screen)->damageRegion (r);
+  }
+
 private:
 
   boost::weak_ptr <Unity::MT::GrabHandle>  mGrabHandle;
@@ -277,11 +272,10 @@ public:
   typedef boost::shared_ptr <GrabHandleGroup> Ptr;
 
   static GrabHandleGroup::Ptr create (GrabHandleWindow *owner,
-                                      std::vector<TextureSize> &textures,
-                                      Damager *damager);
+                                      std::vector<TextureSize> &textures);
   ~GrabHandleGroup();
 
-  void relayout(const CompRect&, bool);
+  void relayout(const nux::Geometry&, bool);
   void restack();
 
   bool visible();
@@ -305,8 +299,7 @@ public:
 private:
 
   GrabHandleGroup(GrabHandleWindow *owner,
-                  std::vector<TextureSize> &textures,
-                  Damager *damager);
+                  std::vector<TextureSize> &textures);
 
   enum class State
   {
@@ -330,7 +323,6 @@ class UnityMTGrabHandlesScreen :
   public ScreenInterface,
   public CompositeScreenInterface,
   public GLScreenInterface,
-  public Unity::MT::Damager,
   public UnitymtgrabhandlesOptions
 {
 public:
@@ -372,13 +364,6 @@ public:
   std::vector <Unity::MT::TextureSize>  & textures()
   {
     return mHandleTextures;
-  }
-
-protected:
-
-  void damage (const CompRegion &r)
-  {
-      CompositeScreen::get (screen)->damageRegion (r);
   }
 
 private:
