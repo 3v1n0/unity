@@ -30,7 +30,7 @@
 
 #include "unitymtgrabhandles_options.h"
 
-namespace Unity
+namespace unity
 {
 namespace MT
 {
@@ -246,7 +246,7 @@ public:
 
 private:
 
-  boost::weak_ptr <Unity::MT::GrabHandle>  mGrabHandle;
+  boost::weak_ptr <unity::MT::GrabHandle>  mGrabHandle;
   Window                                   mIpw;
   Display                                  *mDpy;
 };
@@ -260,7 +260,7 @@ class GrabHandleWindow
                                   int y,
                                   unsigned int direction,
 				  unsigned int button) = 0;
-    virtual void raiseGrabHandle (const boost::shared_ptr <const Unity::MT::GrabHandle> &) = 0;
+    virtual void raiseGrabHandle (const boost::shared_ptr <const unity::MT::GrabHandle> &) = 0;
 };
 
 class GrabHandleGroup :
@@ -286,11 +286,11 @@ public:
 
   void hide();
   void show(unsigned int handles = ~0);
-  void raiseHandle (const boost::shared_ptr <const Unity::MT::GrabHandle> &);
+  void raiseHandle (const boost::shared_ptr <const unity::MT::GrabHandle> &);
 
   std::vector <TextureLayout> layout(unsigned int handles);
 
-  void forEachHandle (const std::function<void (const Unity::MT::GrabHandle::Ptr &)> &);
+  void forEachHandle (const std::function<void (const unity::MT::GrabHandle::Ptr &)> &);
 
   void requestMovement (int x,
                         int y,
@@ -312,7 +312,7 @@ private:
   int   			      mOpacity;
 
   bool 				           mMoreAnimate;
-  std::vector <Unity::MT::GrabHandle::Ptr> mHandles;
+  std::vector <unity::MT::GrabHandle::Ptr> mHandles;
   GrabHandleWindow 		           *mOwner;
 };
 };
@@ -349,29 +349,29 @@ public:
                    CompAction::State  state,
                    CompOption::Vector& options);
 
-  void addHandles(const Unity::MT::GrabHandleGroup::Ptr & handles);
-  void removeHandles(const Unity::MT::GrabHandleGroup::Ptr & handles);
+  void addHandles(const unity::MT::GrabHandleGroup::Ptr & handles);
+  void removeHandles(const unity::MT::GrabHandleGroup::Ptr & handles);
 
-  void addHandleWindow(const Unity::MT::GrabHandle::Ptr &, Window);
+  void addHandleWindow(const unity::MT::GrabHandle::Ptr &, Window);
   void removeHandleWindow(Window);
 
   void preparePaint(int);
   void donePaint();
 
-  void raiseHandle (const boost::shared_ptr <const Unity::MT::GrabHandle> &,
+  void raiseHandle (const boost::shared_ptr <const unity::MT::GrabHandle> &,
                     Window                      owner);
 
-  std::vector <Unity::MT::TextureSize>  & textures()
+  std::vector <unity::MT::TextureSize>  & textures()
   {
     return mHandleTextures;
   }
 
 private:
 
-  std::list <Unity::MT::GrabHandleGroup::Ptr> mGrabHandles;
-  std::vector <Unity::MT::TextureSize> mHandleTextures;
+  std::list <unity::MT::GrabHandleGroup::Ptr> mGrabHandles;
+  std::vector <unity::MT::TextureSize> mHandleTextures;
 
-  std::map <Window, const Unity::MT::GrabHandle::Ptr> mInputHandles;
+  std::map <Window, const unity::MT::GrabHandle::Ptr> mInputHandles;
   CompWindowVector         		    mLastClientListStacking;
   Atom             			    mCompResizeWindowAtom;
 
@@ -386,7 +386,7 @@ class UnityMTGrabHandlesWindow :
   public WindowInterface,
   public CompositeWindowInterface,
   public GLWindowInterface,
-  public Unity::MT::GrabHandleWindow
+  public unity::MT::GrabHandleWindow
 {
 public:
 
@@ -426,7 +426,7 @@ public:
 
 protected:
 
-  void raiseGrabHandle (const boost::shared_ptr <const Unity::MT::GrabHandle> &h);
+  void raiseGrabHandle (const boost::shared_ptr <const unity::MT::GrabHandle> &h);
   void requestMovement (int x,
                         int y,
                         unsigned int direction,
@@ -436,7 +436,7 @@ private:
 
   bool onHideTimeout();
 
-  Unity::MT::GrabHandleGroup::Ptr mHandles;
+  unity::MT::GrabHandleGroup::Ptr mHandles;
   CompTimer                       mTimer;
 };
 
