@@ -54,16 +54,16 @@ unity::MT::GrabHandleGroup::animate(unsigned int msec)
   {
     case State::FADE_IN:
 
-      mOpacity += ((float) msec / (float) unity::MT::FADE_MSEC) * std::numeric_limits <short>::max ();
+      mOpacity += ((float) msec / (float) unity::MT::FADE_MSEC) * std::numeric_limits <unsigned short>::max ();
 
-      if (mOpacity >= std::numeric_limits <short>::max ())
+      if (mOpacity >= std::numeric_limits <unsigned short>::max ())
       {
-        mOpacity = std::numeric_limits <short>::max ();
+        mOpacity = std::numeric_limits <unsigned short>::max ();
         mState = State::NONE;
       }
       break;
     case State::FADE_OUT:
-      mOpacity -= ((float) msec / (float) unity::MT::FADE_MSEC) * std::numeric_limits <short>::max ();
+      mOpacity -= ((float) msec / (float) unity::MT::FADE_MSEC) * std::numeric_limits <unsigned short>::max ();
 
       if (mOpacity <= 0)
       {
