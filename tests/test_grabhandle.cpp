@@ -42,6 +42,31 @@ public:
   virtual GrabHandle::Impl * create (const GrabHandle::Ptr &h);
 };
 
+class MockAnimationGrabHandleImpl : public unity::MT::GrabHandle::Impl
+{
+public:
+  MockAnimationGrabHandleImpl () : unity::MT::GrabHandle::Impl ()
+  {
+    EXPECT_CALL (*this, damage (_)).Times (AtLeast (unity::MT::FADE_MSEC * 2));
+    EXPECT_CALL (*this, show ()).Times (AtLeast (1));
+    EXPECT_CALL (*this, hide ()).Times (AtLeast (1));
+  }
+
+  MOCK_METHOD0 (show, void ());
+  MOCK_METHOD0 (hide, void ());
+  MOCK_CONST_METHOD3 (buttonPress, void (int, int, unsigned int));
+  MOCK_METHOD3 (lockPosition, void (int, int, unsigned int));
+  MOCK_METHOD1 (damage, void (const nux::Geometry &));
+};
+
+class MockAnimationGrabHandleImplFactory : public unity::MT::GrabHandle::ImplFactory
+{
+public:
+  MockAnimationGrabHandleImplFactory () : ImplFactory () {};
+
+  virtual GrabHandle::Impl * create (const GrabHandle::Ptr &h);
+};
+
 class MockShowHideGrabHandleImpl : public unity::MT::GrabHandle::Impl
 {
 public:
@@ -106,6 +131,12 @@ GrabHandle::Impl *
 MockShowHideGrabHandleImplFactory::create (const GrabHandle::Ptr &h)
 {
   return new MockShowHideGrabHandleImpl ();
+}
+
+GrabHandle::Impl *
+MockAnimationGrabHandleImplFactory::create (const GrabHandle::Ptr &h)
+{
+  return new MockAnimationGrabHandleImpl ();
 }
 
 namespace {
@@ -242,6 +273,87 @@ TEST_F(UnityMTGrabHandleTest, TestShowHide)
   group->hide ();
   group->show ();
   group->hide ();
+}
+
+TEST_F(UnityMTGrabHandleTest, TestAnimations)
+{
+  int opacity = 0;
+  unity::MT::GrabHandle::ImplFactory::SetDefault (new MockAnimationGrabHandleImplFactory ());
+  unity::MT::Texture::Factory::SetDefault (new MockGrabHandleTextureFactory ());
+
+  unity::MT::FADE_MSEC = 10;
+
+  std::vector <TextureSize> textures;
+
+  for (unsigned int i = 0; i < unity::MT::NUM_HANDLES; i++)
+    textures.push_back (TextureSize (MockGrabHandleTextureFactory::Default ()->create (), nux::Geometry (0, 0, 100, 100)));
+
+  GrabHandleGroup::Ptr group = GrabHandleGroup::create (window, textures);
+
+  group->show ();
+  for (unsigned int i = 0; i < unity::MT::FADE_MSEC; i++)
+  {
+    group->animate (1);
+    EXPECT_TRUE (group->needsAnimate ());
+    EXPECT_TRUE (group->visible ());
+    opacity += ((1 /
+                static_cast <float> (unity::MT::FADE_MSEC)) *
+                std::numeric_limits <unsigned short>::max ());
+    opacity = std::min (opacity, static_cast <int> (std::numeric_limits <unsigned short>::max ()));
+    EXPECT_EQ (group->opacity (), opacity);
+    group->forEachHandle ([&](const unity::MT::GrabHandle::Ptr &h)
+                          {
+                            h->damage (nux::Geometry (h->x (),
+                                                      h->y (),
+                                                      h->width (),
+                                                      h->height ()));
+                          });
+  }
+
+  group->animate (1);
+  group->forEachHandle ([&](const unity::MT::GrabHandle::Ptr &h)
+                        {
+                          h->damage (nux::Geometry (h->x (),
+                                                    h->y (),
+                                                    h->width (),
+                                                    h->height ()));
+                        });
+  EXPECT_FALSE (group->needsAnimate ());
+  EXPECT_EQ (group->opacity (), std::numeric_limits <unsigned short>::max ());
+
+  opacity = group->opacity ();
+
+  group->hide ();
+  for (unsigned int i = 0; i < unity::MT::FADE_MSEC - 1; i++)
+  {
+    group->animate (1);
+    EXPECT_TRUE (group->needsAnimate ());
+    EXPECT_TRUE (group->visible ());
+    opacity -= ((1 /
+                static_cast <float> (unity::MT::FADE_MSEC)) *
+                std::numeric_limits <unsigned short>::max ());
+    opacity = std::max (opacity, 0);
+    EXPECT_EQ (group->opacity (), opacity);
+    group->forEachHandle ([&](const unity::MT::GrabHandle::Ptr &h)
+                          {
+                            h->damage (nux::Geometry (h->x (),
+                                                      h->y (),
+                                                      h->width (),
+                                                      h->height ()));
+                          });
+  }
+
+  group->animate (1);
+  group->forEachHandle ([&](const unity::MT::GrabHandle::Ptr &h)
+                        {
+                          h->damage (nux::Geometry (h->x (),
+                                                    h->y (),
+                                                    h->width (),
+                                                    h->height ()));
+                        });
+  EXPECT_FALSE (group->needsAnimate ());
+  EXPECT_EQ (group->opacity (), 0);
+
 }
 
 }  // namespace
