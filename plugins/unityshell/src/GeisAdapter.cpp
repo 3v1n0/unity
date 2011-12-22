@@ -480,7 +480,8 @@ GeisAdapter::RegisterRootInstance()
   if (status != GEIS_STATUS_SUCCESS)
   {
     fprintf(stderr, "error subscribing to input devices\n");
-    return;;
+    geis_finish(instance);
+    return;
   }
 
   status = geis_subscribe(instance,
@@ -491,6 +492,7 @@ GeisAdapter::RegisterRootInstance()
   if (status != GEIS_STATUS_SUCCESS)
   {
     fprintf(stderr, "error subscribing to gestures\n");
+    geis_finish(instance);
     return;
   }
 
