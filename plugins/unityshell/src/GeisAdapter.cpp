@@ -39,6 +39,8 @@ GeisAdapter::GeisAdapter() : _root_instance(nullptr)
 
 GeisAdapter::~GeisAdapter()
 {
+  if (_root_instance != nullptr)
+    geis_finish(_root_instance);
 }
 
 void
