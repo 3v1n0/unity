@@ -39,7 +39,7 @@ class MockGrabHandleImplFactory : public unity::MT::GrabHandle::ImplFactory
 public:
   MockGrabHandleImplFactory () : ImplFactory () {};
 
-  virtual GrabHandle::Impl * create (const GrabHandle::Ptr &h);
+  GrabHandle::Impl * create (const GrabHandle::Ptr &h);
 };
 
 class MockGrabHandleTexture : public unity::MT::Texture
@@ -89,15 +89,6 @@ protected:
   {
     unity::MT::GrabHandle::ImplFactory::SetDefault (new MockGrabHandleImplFactory ());
     unity::MT::Texture::Factory::SetDefault (new MockGrabHandleTextureFactory ());
-  }
-
-  virtual ~UnityMTGrabHandleTest() {
-  }
-
-  virtual void SetUp() {
-  }
-
-  virtual void TearDown() {
   }
 
   unsigned int handlesMask;
