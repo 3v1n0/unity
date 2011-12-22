@@ -172,7 +172,7 @@ public:
   {
     public:
 
-      virtual ~ImplFactory();
+      virtual ~ImplFactory() {};
 
       static ImplFactory *
       Default();
@@ -186,7 +186,7 @@ public:
 
       static ImplFactory *mDefault;
 
-      ImplFactory();
+      ImplFactory() {};
   };
 
 private:
@@ -210,7 +210,6 @@ class X11ImplFactory :
   public:
 
     X11ImplFactory (Display *dpy);
-    ~X11ImplFactory ();
 
     GrabHandle::Impl * create (const GrabHandle::Ptr &h);
   private:

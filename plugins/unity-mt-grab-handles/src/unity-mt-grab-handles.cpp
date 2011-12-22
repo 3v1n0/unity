@@ -26,14 +26,6 @@ COMPIZ_PLUGIN_20090315(unitymtgrabhandles, UnityMTGrabHandlesPluginVTable);
 
 Unity::MT::GrabHandle::ImplFactory * Unity::MT::GrabHandle::ImplFactory::mDefault = NULL;
 
-Unity::MT::GrabHandle::ImplFactory::ImplFactory ()
-{
-}
-
-Unity::MT::GrabHandle::ImplFactory::~ImplFactory ()
-{
-}
-
 Unity::MT::GrabHandle::ImplFactory *
 Unity::MT::GrabHandle::ImplFactory::Default()
 {
@@ -54,10 +46,6 @@ Unity::MT::GrabHandle::ImplFactory::SetDefault (ImplFactory *factory)
 
 Unity::MT::X11ImplFactory::X11ImplFactory (Display *dpy) :
   mDpy (dpy)
-{
-}
-
-Unity::MT::X11ImplFactory::~X11ImplFactory ()
 {
 }
 
