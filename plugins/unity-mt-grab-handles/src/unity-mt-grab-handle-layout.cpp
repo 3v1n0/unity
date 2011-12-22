@@ -85,6 +85,14 @@ unity::MT::getLayoutForMask (unsigned int state,
     },
   };
 
+  /* Set the high bit if it was zero */
+  if (!state)
+    state |= 0x8000;
+
+  /* Set the high bit if it was zero */
+  if (!actions)
+    actions |= 0x8000;
+
   for (unsigned int j = 0; j < numSkipInfo; j++)
   {
     const bool exactState = skip[j].state && skip[j].state != static_cast <unsigned int> (~0);
