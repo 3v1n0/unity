@@ -21,14 +21,6 @@
 
 unity::MT::GrabHandle::ImplFactory * unity::MT::GrabHandle::ImplFactory::mDefault = NULL;
 
-unity::MT::GrabHandle::ImplFactory::ImplFactory ()
-{
-}
-
-unity::MT::GrabHandle::ImplFactory::~ImplFactory ()
-{
-}
-
 unity::MT::GrabHandle::ImplFactory *
 unity::MT::GrabHandle::ImplFactory::Default()
 {

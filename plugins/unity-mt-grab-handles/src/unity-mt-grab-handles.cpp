@@ -26,15 +26,6 @@ unsigned int unity::MT::MaximizedVertMask = CompWindowStateMaximizedVertMask;
 unsigned int unity::MT::MoveMask = CompWindowActionMoveMask;
 unsigned int unity::MT::ResizeMask = CompWindowActionResizeMask;
 
-unity::MT::X11TextureFactory::X11TextureFactory () :
-  Factory ()
-{
-}
-
-unity::MT::X11TextureFactory::~X11TextureFactory ()
-{
-}
-
 void
 unity::MT::X11TextureFactory::setActiveWrap (const GLTexture::List &t)
 {
@@ -60,10 +51,6 @@ unity::MT::X11Texture::get ()
 
 unity::MT::X11ImplFactory::X11ImplFactory (Display *dpy) :
   mDpy (dpy)
-{
-}
-
-unity::MT::X11ImplFactory::~X11ImplFactory ()
 {
 }
 
