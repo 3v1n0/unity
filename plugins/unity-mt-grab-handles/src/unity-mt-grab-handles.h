@@ -57,8 +57,6 @@ class X11TextureFactory :
   public Texture::Factory
 {
   public:
-    X11TextureFactory ();
-    ~X11TextureFactory ();
 
     void setActiveWrap (const GLTexture::List &);
 
@@ -91,7 +89,6 @@ class X11ImplFactory :
   public:
 
     X11ImplFactory (Display *dpy);
-    ~X11ImplFactory ();
 
     GrabHandle::Impl * create (const GrabHandle::Ptr &h);
   private:

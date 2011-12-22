@@ -36,7 +36,7 @@ class GrabHandle::ImplFactory
 {
   public:
 
-    virtual ~ImplFactory();
+    virtual ~ImplFactory() {};
 
     static ImplFactory *
     Default();
@@ -50,7 +50,7 @@ class GrabHandle::ImplFactory
 
     static ImplFactory *mDefault;
 
-    ImplFactory();
+    ImplFactory() {};
 };
 };
 };
