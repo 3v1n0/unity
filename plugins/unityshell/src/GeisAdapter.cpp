@@ -32,7 +32,7 @@ GeisAdapter::Default()
   return _default;
 }
 
-GeisAdapter::GeisAdapter()
+GeisAdapter::GeisAdapter() : _root_instance(nullptr)
 {
   RegisterRootInstance();
 }
@@ -467,7 +467,7 @@ GeisAdapter::RegisterRootInstance()
     GEIS_XCB_FULL_WINDOW,
     &xcb_win_info
   };
-  GeisInstance instance = nullptr;
+  GeisInstance instance;
 
   status = geis_init(&win_info, &instance);
   if (status != GEIS_STATUS_SUCCESS)
