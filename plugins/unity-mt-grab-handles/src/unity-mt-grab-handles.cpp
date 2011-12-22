@@ -24,18 +24,10 @@
 
 COMPIZ_PLUGIN_20090315(unitymtgrabhandles, UnityMTGrabHandlesPluginVTable);
 
-unity::MT::GrabHandle::ImplFactory * unity::MT::GrabHandle::ImplFactory::mDefault = NULL;
+Unity::MT::GrabHandle::ImplFactory * Unity::MT::GrabHandle::ImplFactory::mDefault = NULL;
 
-unity::MT::GrabHandle::ImplFactory::ImplFactory ()
-{
-}
-
-unity::MT::GrabHandle::ImplFactory::~ImplFactory ()
-{
-}
-
-unity::MT::GrabHandle::ImplFactory *
-unity::MT::GrabHandle::ImplFactory::Default()
+Unity::MT::GrabHandle::ImplFactory *
+Unity::MT::GrabHandle::ImplFactory::Default()
 {
   return mDefault;
 }
@@ -57,12 +49,8 @@ unity::MT::X11ImplFactory::X11ImplFactory (Display *dpy) :
 {
 }
 
-unity::MT::X11ImplFactory::~X11ImplFactory ()
-{
-}
-
-unity::MT::GrabHandle::Impl *
-unity::MT::X11ImplFactory::create (const GrabHandle::Ptr &handle)
+Unity::MT::GrabHandle::Impl *
+Unity::MT::X11ImplFactory::create (const GrabHandle::Ptr &handle)
 {
   unity::MT::GrabHandle::Impl *impl = new X11GrabHandleImpl (mDpy, handle);
   return impl;
