@@ -571,7 +571,6 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
 
   bool was_bound = _fbo->bound ();
   _fbo->unbind ();
-  nuxPrologue();
 
   /* Draw the bit of the relevant framebuffer for each output */
 
@@ -595,6 +594,7 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
   nux::Geometry oGeo = nux::Geometry (output->x (), output->y (), output->width (), output->height ());
   BackgroundEffectHelper::monitor_rect_ = geo;
 
+  nuxPrologue();
   _in_paint = true;
   wt->RenderInterfaceFromForeignCmd (&oGeo);
   _in_paint = false;
