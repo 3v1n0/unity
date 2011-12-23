@@ -19,9 +19,9 @@
 #include "unity-mt-grab-handle-impl-factory.h"
 #include "unity-mt-grab-handle.h"
 
-unity::MT::GrabHandle::ImplFactory * unity::MT::GrabHandle::ImplFactory::mDefault = NULL;
+boost::shared_ptr <unity::MT::GrabHandle::ImplFactory> unity::MT::GrabHandle::ImplFactory::mDefault;
 
-unity::MT::GrabHandle::ImplFactory *
+boost::shared_ptr <unity::MT::GrabHandle::ImplFactory>
 unity::MT::GrabHandle::ImplFactory::Default()
 {
   return mDefault;
@@ -30,11 +30,5 @@ unity::MT::GrabHandle::ImplFactory::Default()
 void
 unity::MT::GrabHandle::ImplFactory::SetDefault (ImplFactory *factory)
 {
-  if (mDefault)
-  {
-    delete mDefault;
-    mDefault = NULL;
-  }
-
-  mDefault = factory;
+  mDefault.reset (factory);
 }
