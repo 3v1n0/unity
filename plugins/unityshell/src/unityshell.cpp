@@ -1124,16 +1124,37 @@ void UnityScreen::handleEvent(XEvent* event)
   {
     XDamageNotifyEvent *de = (XDamageNotifyEvent *) event;
     CompWindow* w = screen->findWindow (de->drawable);
+    std::vector<Window> const& xwns = nux::XInputWindow::NativeHandleList();
+    CompWindow* lastNWindow = screen->findWindow (xwns.back ());
+    bool        processDamage = true;
 
-    if (w and !(w->wmType() & CompWindowTypeDndMask))
+    if (w)
     {
-      nux::Geometry damage (de->area.x, de->area.y, de->area.width, de->area.height);
+      if (!w->overrideRedirect () &&
+          w->isViewable () &&
+          !w->invisible ())
+      {
 
-      CompWindow::Geometry geom = w->geometry ();
-      damage.x += geom.x () + geom.border ();
-      damage.y += geom.y () + geom.border ();
+        for (; lastNWindow != NULL; lastNWindow = lastNWindow->next)
+        {
+          if (lastNWindow == w)
+          {
+            processDamage = false;
+            break;
+          }
+        }
 
-      BackgroundEffectHelper::ProcessDamage(damage);
+        if (processDamage)
+        {
+          nux::Geometry damage (de->area.x, de->area.y, de->area.width, de->area.height);
+
+          const CompWindow::Geometry &geom = w->geometry ();
+          damage.x += geom.x () + geom.border ();
+          damage.y += geom.y () + geom.border ();
+
+          BackgroundEffectHelper::ProcessDamage(damage);
+        }
+      }
     }
   }
 }
