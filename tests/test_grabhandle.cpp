@@ -54,7 +54,7 @@ class MockGrabHandleTextureFactory : public unity::MT::Texture::Factory
 public:
   MockGrabHandleTextureFactory () : Factory () {};
 
-  virtual unity::MT::Texture::Ptr create ();
+  unity::MT::Texture::Ptr create ();
 };
 
 class MockGrabHandleWindow : public unity::MT::GrabHandleWindow
