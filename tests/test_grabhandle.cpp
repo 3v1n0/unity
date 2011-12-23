@@ -39,7 +39,7 @@ class MockLayoutGrabHandleImplFactory : public unity::MT::GrabHandle::ImplFactor
 public:
   MockLayoutGrabHandleImplFactory () : ImplFactory () {};
 
-  virtual GrabHandle::Impl * create (const GrabHandle::Ptr &h);
+  GrabHandle::Impl * create (const GrabHandle::Ptr &h);
 };
 
 class MockShowHideGrabHandleImpl : public unity::MT::GrabHandle::Impl
