@@ -576,7 +576,7 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
 
   if (was_bound)
   {
-    GLMatrix sTransform (transform);
+    GLMatrix sTransform;
     sTransform.toScreenSpace (&screen->fullscreenOutput (), -DEFAULT_Z_CAMERA);
     glPushMatrix ();
     glLoadMatrixf (sTransform.getMatrix ());
