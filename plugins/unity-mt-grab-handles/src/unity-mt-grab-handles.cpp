@@ -776,7 +776,7 @@ UnityMTGrabHandlesScreen::UnityMTGrabHandlesScreen(CompScreen* s) :
     GLTexture::List t = GLTexture::readImageToTexture(fname, pname,
                                                       size);
 
-    (static_cast <unity::MT::X11TextureFactory *> (unity::MT::Texture::Factory::Default ()))->setActiveWrap (t);
+    (boost::shared_static_cast <unity::MT::X11TextureFactory> (unity::MT::Texture::Factory::Default ()))->setActiveWrap (t);
 
     mHandleTextures.at(i).first = unity::MT::Texture::Factory::Default ()->create ();
     mHandleTextures.at (i).second.width = size.width ();
