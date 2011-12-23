@@ -38,7 +38,7 @@ class GrabHandle::ImplFactory
 
     virtual ~ImplFactory() {};
 
-    static ImplFactory *
+    static boost::shared_ptr <ImplFactory>
     Default();
 
     static void
@@ -48,7 +48,7 @@ class GrabHandle::ImplFactory
 
   protected:
 
-    static ImplFactory *mDefault;
+    static boost::shared_ptr <ImplFactory> mDefault;
 
     ImplFactory() {};
 };
