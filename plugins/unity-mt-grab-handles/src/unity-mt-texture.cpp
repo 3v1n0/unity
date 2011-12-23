@@ -18,7 +18,7 @@
 
 #include "unity-mt-texture.h"
 
-unity::MT::Texture::Factory * unity::MT::Texture::Factory::mDefault = NULL;
+boost::shared_ptr <unity::MT::Texture::Factory> unity::MT::Texture::Factory::mDefault;
 
 unity::MT::Texture::Factory::Factory ()
 {
@@ -31,16 +31,10 @@ unity::MT::Texture::Factory::~Factory ()
 void
 unity::MT::Texture::Factory::SetDefault (Factory *f)
 {
-  if (mDefault)
-  {
-    delete mDefault;
-    mDefault = NULL;
-  }
-
-  mDefault = f;
+  mDefault.reset (f);
 }
 
-unity::MT::Texture::Factory *
+boost::shared_ptr <unity::MT::Texture::Factory>
 unity::MT::Texture::Factory::Default ()
 {
   return mDefault;
