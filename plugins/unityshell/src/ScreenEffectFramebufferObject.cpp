@@ -29,18 +29,10 @@ namespace
 
 void unity::ScreenEffectFramebufferObject::paint (const nux::Geometry &output)
 {
-  float texx, texy, texwidth, texheight;
-
   /* Draw the bit of the relevant framebuffer for each output */
 
   glPushAttrib (GL_VIEWPORT_BIT);
   glViewport (0, mScreenSize.height - (output.y + output.height), mScreenSize.width, mScreenSize.height);
-
-  /* Note that texcoords here are normalized, so it's just (0,0)-(1,1) */
-  texx = 0.0;
-  texy = 0.0;
-  texwidth = 1.0f;
-  texheight = 1.0f;
 
   if (mFBTexture)
   {
@@ -59,13 +51,13 @@ void unity::ScreenEffectFramebufferObject::paint (const nux::Geometry &output)
     /* FIXME: This needs to be GL_TRIANGLE_STRIP */
     glGetError ();
     glBegin (GL_QUADS);
-    glTexCoord2f (texx, texy + texheight);
+    glTexCoord2f (0, 1);
     glVertex2i   (mGeometry.x, mGeometry.y);
-    glTexCoord2f (texx, texy);
+    glTexCoord2f (0, 0);
     glVertex2i   (mGeometry.x, mGeometry.y + mGeometry.height);
-    glTexCoord2f (texx + texwidth, texy);
+    glTexCoord2f (1, 0);
     glVertex2i   (mGeometry.x + mGeometry.width, mGeometry.y + mGeometry.height);
-    glTexCoord2f (texx + texwidth, texy + texheight);
+    glTexCoord2f (1, 1);
     glVertex2i   (mGeometry.x + mGeometry.width, mGeometry.y);
     glEnd ();
 
@@ -73,8 +65,7 @@ void unity::ScreenEffectFramebufferObject::paint (const nux::Geometry &output)
     glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glBindTexture (GL_TEXTURE_2D, 0);
-    glEnable (GL_TEXTURE_2D);
-
+    glDisable (GL_TEXTURE_2D);
     glDisable (GL_SCISSOR_TEST);
     glPopAttrib ();
   }
