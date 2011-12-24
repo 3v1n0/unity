@@ -19,29 +19,34 @@
 #include "unity-mt-grab-handles.h"
 #include <iostream>
 
-#define NUM_HANDLES 9
-#define FADE_MSEC UnityMTGrabHandlesScreen::get (screen)->optionGetFadeDuration ()
-
 COMPIZ_PLUGIN_20090315(unitymtgrabhandles, UnityMTGrabHandlesPluginVTable);
 
-Unity::MT::GrabHandle::ImplFactory * Unity::MT::GrabHandle::ImplFactory::mDefault = NULL;
-
-Unity::MT::GrabHandle::ImplFactory *
-Unity::MT::GrabHandle::ImplFactory::Default()
-{
-  return mDefault;
-}
+unsigned int unity::MT::MaximizedHorzMask = CompWindowStateMaximizedHorzMask;
+unsigned int unity::MT::MaximizedVertMask = CompWindowStateMaximizedVertMask;
+unsigned int unity::MT::MoveMask = CompWindowActionMoveMask;
+unsigned int unity::MT::ResizeMask = CompWindowActionResizeMask;
 
 void
-unity::MT::GrabHandle::ImplFactory::SetDefault (ImplFactory *factory)
+unity::MT::X11TextureFactory::setActiveWrap (const GLTexture::List &t)
 {
-  if (mDefault)
-  {
-    delete mDefault;
-    mDefault = NULL;
-  }
+  mWrap = t;
+}
 
-  mDefault = factory;
+unity::MT::Texture::Ptr
+unity::MT::X11TextureFactory::create ()
+{
+  return boost::shared_static_cast <unity::MT::Texture> (unity::MT::X11Texture::Ptr (new unity::MT::X11Texture (mWrap)));
+}
+
+unity::MT::X11Texture::X11Texture (const GLTexture::List &t)
+{
+  mTexture = t;
+}
+
+const GLTexture::List &
+unity::MT::X11Texture::get ()
+{
+  return mTexture;
 }
 
 unity::MT::X11ImplFactory::X11ImplFactory (Display *dpy) :
@@ -49,8 +54,8 @@ unity::MT::X11ImplFactory::X11ImplFactory (Display *dpy) :
 {
 }
 
-Unity::MT::GrabHandle::Impl *
-Unity::MT::X11ImplFactory::create (const GrabHandle::Ptr &handle)
+unity::MT::GrabHandle::Impl *
+unity::MT::X11ImplFactory::create (const GrabHandle::Ptr &handle)
 {
   unity::MT::GrabHandle::Impl *impl = new X11GrabHandleImpl (mDpy, handle);
   return impl;
@@ -146,221 +151,6 @@ unity::MT::X11GrabHandleImpl::buttonPress (int x,
 }
 
 void
-unity::MT::GrabHandle::buttonPress (int x,
-                                    int y,
-                                    unsigned int button) const
-{
-  mImpl->buttonPress (x, y, button);
-}
-
-void
-unity::MT::GrabHandle::requestMovement (int x,
-                                        int y,
-                                        unsigned int button) const
-{
-  unity::MT::GrabHandleGroup::Ptr ghg = mOwner.lock ();
-  ghg->requestMovement (x, y, (maskHandles.find (mId))->second, button);
-}
-
-void
-unity::MT::GrabHandle::show ()
-{
-  mImpl->show ();
-}
-
-void
-unity::MT::GrabHandle::hide ()
-{
-  mImpl->hide ();
-}
-
-void
-unity::MT::GrabHandle::raise () const
-{
-  unity::MT::GrabHandleGroup::Ptr ghg = mOwner.lock ();
-  boost::shared_ptr <const unity::MT::GrabHandle> gh = shared_from_this ();
-  ghg->raiseHandle (gh);
-}
-
-void
-unity::MT::GrabHandle::reposition(int          x,
-                                  int          y,
-				  unsigned int flags)
-{
-  damage (mRect);
-
-  if (flags & PositionSet)
-  {
-    mRect.x = x;
-    mRect.y = y;
-  }
-
-  if (flags & PositionLock)
-  {
-    mImpl->lockPosition (x, y, flags);
-  }
-
-  damage (mRect);
-}
-
-void
-unity::MT::GrabHandle::reposition(int x, int y, unsigned int flags) const
-{
-  if (flags & PositionLock)
-  {
-    mImpl->lockPosition (x, y, flags);
-  }
-}
-
-unity::MT::TextureLayout
-unity::MT::GrabHandle::layout()
-{
-  return TextureLayout(mTexture, mRect);
-}
-
-unity::MT::GrabHandle::GrabHandle(GLTexture::List *texture,
-                                  unsigned int    width,
-                                  unsigned int    height,
-                                  const boost::shared_ptr <GrabHandleGroup> &owner,
-				  unsigned int    id) :
-  mOwner(owner),
-  mTexture (texture),
-  mId(id),
-  mRect (0, 0, width, height),
-  mImpl (NULL)
-{
-}
-
-unity::MT::GrabHandle::Ptr
-unity::MT::GrabHandle::create (GLTexture::List *texture, unsigned int width, unsigned int height,
-                               const boost::shared_ptr <GrabHandleGroup> &owner,
-                               unsigned int id)
-{
-  unity::MT::GrabHandle::Ptr p (new unity::MT::GrabHandle (texture, width, height, owner, id));
-  p->mImpl = unity::MT::GrabHandle::ImplFactory::Default ()->create (p);
-
-  return p;
-}
-
-unity::MT::GrabHandle::~GrabHandle()
-{
-  delete mImpl;
-}
-
-void
-unity::MT::GrabHandleGroup::show(unsigned int handles)
-{
-  for(const unity::MT::GrabHandle::Ptr & handle : mHandles)
-    if (handles & handle->id ())
-      handle->show();
-
-  mState = State::FADE_IN;
-}
-
-void
-unity::MT::GrabHandleGroup::hide()
-{
-  for(const unity::MT::GrabHandle::Ptr & handle : mHandles)
-    handle->hide();
-
-  mState = State::FADE_OUT;
-}
-
-void
-unity::MT::GrabHandleGroup::raiseHandle(const boost::shared_ptr <const unity::MT::GrabHandle> &h)
-{
-  mOwner->raiseGrabHandle (h);
-}
-
-bool
-unity::MT::GrabHandleGroup::animate(unsigned int msec)
-{
-  mMoreAnimate = false;
-
-  switch (mState)
-  {
-    case State::FADE_IN:
-
-      mOpacity += ((float) msec / (float) FADE_MSEC) * OPAQUE;
-
-      if (mOpacity >= OPAQUE)
-      {
-        mOpacity = OPAQUE;
-        mState = State::NONE;
-      }
-      break;
-    case State::FADE_OUT:
-      mOpacity -= ((float) msec / (float) FADE_MSEC) * OPAQUE;
-
-      if (mOpacity <= 0)
-      {
-        mOpacity = 0;
-        mState = State::NONE;
-      }
-      break;
-    default:
-      break;
-  }
-
-  mMoreAnimate = mState != State::NONE;
-
-  return mMoreAnimate;
-}
-
-int
-unity::MT::GrabHandleGroup::opacity()
-{
-  return mOpacity;
-}
-
-bool
-unity::MT::GrabHandleGroup::visible()
-{
-  return mOpacity > 0.0f;
-}
-
-bool
-unity::MT::GrabHandleGroup::needsAnimate()
-{
-  return mMoreAnimate;
-}
-
-void
-unity::MT::GrabHandleGroup::relayout(const nux::Geometry& rect, bool hard)
-{
-  /* Each grab handle at each vertex, eg:
-   *
-   * 1 - topleft
-   * 2 - top
-   * 3 - topright
-   * 4 - right
-   * 5 - bottom-right
-   * 6 - bottom
-   * 7 - bottom-left
-   * 8 - left
-   */
-
-  const float pos[9][2] =
-  {
-    {0.0f, 0.0f}, {0.5f, 0.0f}, {1.0f, 0.0f},
-    {1.0f, 0.5f}, {1.0f, 1.0f},
-    {0.5f, 1.0f}, {0.0f, 1.0f}, {0.0f, 0.5f},
-    {0.5f, 0.5f} /* middle */
-  };
-
-  for (unsigned int i = 0; i < NUM_HANDLES; i++)
-  {
-    unity::MT::GrabHandle::Ptr & handle = mHandles.at(i);
-    CompPoint p(rect.x + rect.width * pos[i][0] -
-                handle->width () / 2,
-                rect.y + rect.height * pos[i][1] -
-                handle->height () / 2);
-
-    handle->reposition (p.x (), p.y (), unity::MT::PositionSet | (hard ? unity::MT::PositionLock : 0));
-  }
-}
-
-void
 UnityMTGrabHandlesWindow::raiseGrabHandle (const boost::shared_ptr <const unity::MT::GrabHandle> &h)
 {
   UnityMTGrabHandlesScreen::get (screen)->raiseHandle (h, window->frame ());
@@ -402,161 +192,6 @@ UnityMTGrabHandlesWindow::requestMovement (int x,
   XSendEvent(screen->dpy(), screen->root(), false,
              SubstructureRedirectMask | SubstructureNotifyMask,
              &event);
-}
-
-unity::MT::GrabHandleGroup::GrabHandleGroup(GrabHandleWindow *owner,
-                                            std::vector <unity::MT::TextureSize>  &textures) :
-  mState(State::NONE),
-  mOpacity(0.0f),
-  mMoreAnimate(false),
-  mOwner(owner)
-{
-}
-
-unity::MT::GrabHandleGroup::Ptr
-unity::MT::GrabHandleGroup::create (GrabHandleWindow *owner,
-                                    std::vector<unity::MT::TextureSize> &textures)
-{
-    unity::MT::GrabHandleGroup::Ptr p = unity::MT::GrabHandleGroup::Ptr (new unity::MT::GrabHandleGroup (owner, textures));
-    for (unsigned int i = 0; i < NUM_HANDLES; i++)
-      p->mHandles.push_back(unity::MT::GrabHandle::create (textures.at(i).first,
-                                                           textures.at(i).second.width,
-                                                           textures.at(i).second.height,
-                                                           p,
-                                                           handlesMask.find (i)->second));
-    return p;
-}
-
-unity::MT::GrabHandleGroup::~GrabHandleGroup()
-{
-  for (unity::MT::GrabHandle::Ptr & handle : mHandles)
-    handle->damage (nux::Geometry (handle->x (),
-                                   handle->y (),
-                                   handle->width (),
-                                   handle->height ()));
-}
-
-void
-unity::MT::GrabHandleGroup::requestMovement (int x,
-                                             int y,
-					     unsigned int direction,
-					     unsigned int button)
-{
-  mOwner->requestMovement (x, y, direction, button);
-}
-
-unsigned int
-unity::MT::getLayoutForMask (unsigned int state,
-                             unsigned int actions)
-{
-  unsigned int allHandles = 0;
-  for (unsigned int i = 0; i < NUM_HANDLES; i++)
-  {
-    allHandles |= (1 << i);
-  }
-
-  struct _skipInfo
-  {
-    /* All must match in order for skipping to apply */
-    unsigned int state; /* Match if in state */
-    unsigned int notstate; /* Match if not in state */
-    unsigned int actions; /* Match if in actions */
-    unsigned int notactions; /* Match if not in actions */
-    unsigned int allowOnly;
-  };
-
-  const unsigned int numSkipInfo = 5;
-  const struct _skipInfo skip[5] =
-  {
-    /* Vertically maximized, don't care
-     * about left or right handles, or
-     * the movement handle */
-    {
-      CompWindowStateMaximizedVertMask,
-      CompWindowStateMaximizedHorzMask,
-      0, ~0,
-      LeftHandle | RightHandle | MiddleHandle
-    },
-    /* Horizontally maximized, don't care
-     * about top or bottom handles, or
-     * the movement handle */
-    {
-      CompWindowStateMaximizedHorzMask,
-      CompWindowStateMaximizedVertMask,
-      0, ~0,
-      TopHandle | BottomHandle | MiddleHandle
-    },
-    /* Maximized, don't care about the movement
-    * handle */
-    {
-      CompWindowStateMaximizedVertMask | CompWindowStateMaximizedHorzMask,
-      0, 0, ~0,
-      MiddleHandle
-    },
-    /* Immovable, don't show move handle */
-    {
-      0,
-      ~0,
-      ~0, CompWindowActionMoveMask,
-      TopLeftHandle | TopHandle | TopRightHandle |
-      LeftHandle | RightHandle |
-      BottomLeftHandle | BottomHandle | BottomRightHandle
-    },
-    /* Not resizable, don't show resize handle */
-    {
-      0,
-      ~0,
-      ~0, CompWindowActionResizeMask,
-      MiddleHandle
-    },
-  };
-
-  for (unsigned int j = 0; j < numSkipInfo; j++)
-  {
-    const bool exactState = skip[j].state && skip[j].state != static_cast <unsigned int> (~0);
-    const bool exactActions = skip[j].actions && skip[j].actions != static_cast <unsigned int> (~0);
-
-    bool stateMatch = false;
-    bool actionMatch = false;
-
-    if (exactState)
-      stateMatch = (skip[j].state & state) == skip[j].state;
-    else
-      stateMatch = skip[j].state & state;
-
-    stateMatch &= !(state & skip[j].notstate);
-
-    if (exactActions)
-      actionMatch = (skip[j].actions & actions) == skip[j].actions;
-    else
-      actionMatch = skip[j].actions & actions;
-
-    actionMatch &= !(actions & skip[j].notactions);
-
-    if (stateMatch || actionMatch)
-      allHandles &= skip[j].allowOnly;  
-  }
-
-  return allHandles;
-}
-
-std::vector <unity::MT::TextureLayout>
-unity::MT::GrabHandleGroup::layout(unsigned int handles)
-{
-  std::vector <unity::MT::TextureLayout> layout;
-
-  for(const unity::MT::GrabHandle::Ptr & handle : mHandles)
-    if (handle->id () & handles)
-      layout.push_back (handle->layout ());
-
-  return layout;
-}
-
-void
-unity::MT::GrabHandleGroup::forEachHandle (const std::function <void (const unity::MT::GrabHandle::Ptr &)> &f)
-{
-  for (unity::MT::GrabHandle::Ptr &h : mHandles)
-    f (h);
 }
 
 /* Super speed hack */
@@ -824,7 +459,7 @@ UnityMTGrabHandlesWindow::glDraw(const GLMatrix&            transform,
        * region */
       CompRegion reg = CompRegion(layout.second.x, layout.second.y, layout.second.width, layout.second.height);
 
-      for(GLTexture * tex : *layout.first)
+      for(GLTexture * tex : boost::shared_static_cast <unity::MT::X11Texture> (layout.first)->get ())
       {
         GLTexture::MatrixList matl;
         GLTexture::Matrix     mat = tex->matrix();
@@ -1101,6 +736,16 @@ UnityMTGrabHandlesScreen::hideHandles(CompAction*         action,
   return true;
 }
 
+void
+UnityMTGrabHandlesScreen::optionChanged (CompOption *option,
+                                         UnitymtgrabhandlesOptions::Options num)
+{
+  if (num == UnitymtgrabhandlesOptions::FadeDuration)
+  {
+    unity::MT::FADE_MSEC = optionGetFadeDuration ();
+  }
+}
+
 UnityMTGrabHandlesScreen::UnityMTGrabHandlesScreen(CompScreen* s) :
   PluginClassHandler <UnityMTGrabHandlesScreen, CompScreen> (s),
   cScreen(CompositeScreen::get(s)),
@@ -1113,39 +758,42 @@ UnityMTGrabHandlesScreen::UnityMTGrabHandlesScreen(CompScreen* s) :
   mMoreAnimate(false)
 {
   unity::MT::GrabHandle::ImplFactory::SetDefault (new unity::MT::X11ImplFactory (screen->dpy ()));
+  unity::MT::Texture::Factory::SetDefault (new unity::MT::X11TextureFactory ());
 
   ScreenInterface::setHandler(s);
   CompositeScreenInterface::setHandler(cScreen);
   GLScreenInterface::setHandler(gScreen);
 
-  mHandleTextures.resize(NUM_HANDLES);
+  mHandleTextures.resize(unity::MT::NUM_HANDLES);
 
-  for (unsigned int i = 0; i < NUM_HANDLES; i++)
+  for (unsigned int i = 0; i < unity::MT::NUM_HANDLES; i++)
   {
     CompString fname = "handle-";
     CompString pname("unitymtgrabhandles");
     CompSize   size;
 
     fname = compPrintf("%s%i.png", fname.c_str(), i);
-    mHandleTextures.at(i).first =
-      new GLTexture::List (GLTexture::readImageToTexture(fname, pname,
-                                                         size));
+    GLTexture::List t = GLTexture::readImageToTexture(fname, pname,
+                                                      size);
 
+    (boost::shared_static_cast <unity::MT::X11TextureFactory> (unity::MT::Texture::Factory::Default ()))->setActiveWrap (t);
+
+    mHandleTextures.at(i).first = unity::MT::Texture::Factory::Default ()->create ();
     mHandleTextures.at (i).second.width = size.width ();
     mHandleTextures.at (i).second.height = size.height ();
   }
 
+  unity::MT::FADE_MSEC = optionGetFadeDuration ();
+
   optionSetToggleHandlesKeyInitiate(boost::bind(&UnityMTGrabHandlesScreen::toggleHandles, this, _1, _2, _3));
   optionSetShowHandlesKeyInitiate(boost::bind(&UnityMTGrabHandlesScreen::showHandles, this, _1, _2, _3));
   optionSetHideHandlesKeyInitiate(boost::bind(&UnityMTGrabHandlesScreen::hideHandles, this, _1, _2, _3));
+  optionSetFadeDurationNotify(boost::bind(&UnityMTGrabHandlesScreen::optionChanged, this, _1, _2));
 }
 
 UnityMTGrabHandlesScreen::~UnityMTGrabHandlesScreen()
 {
   mGrabHandles.clear ();
-  for (auto it : mHandleTextures)
-    if (it.first)
-      delete it.first;
 }
 
 UnityMTGrabHandlesWindow::UnityMTGrabHandlesWindow(CompWindow* w) :
