@@ -96,11 +96,9 @@ public:
   sigc::signal<void, StaticCairoText*> sigFontChanged;
 
   void SetAcceptKeyNavFocus(bool accept);
-
 protected:
   // Key navigation
   virtual bool AcceptKeyNavFocus();
-
   bool _accept_key_nav_focus;
 
 private:
