@@ -35,8 +35,7 @@
 
 #include "unitya11y.h"
 
-using unity::launcher::Launcher;
-using unity::launcher::LauncherIcon;
+using namespace unity::launcher;
 
 /* GObject */
 static void unity_launcher_icon_accessible_class_init(UnityLauncherIconAccessibleClass* klass);
@@ -61,6 +60,14 @@ static void     unity_launcher_icon_accessible_remove_focus_handler(AtkComponent
 static void     unity_launcher_icon_accessible_focus_handler(AtkObject* accessible,
                                                              gboolean focus_in);
 
+/* AtkAction */
+static void         atk_action_interface_init(AtkActionIface *iface);
+static gboolean     unity_launcher_icon_accessible_do_action(AtkAction *action,
+                                                              gint i);
+static gint         unity_launcher_icon_accessible_get_n_actions(AtkAction *action);
+static const gchar* unity_launcher_icon_accessible_get_name(AtkAction *action,
+                                                            gint i);
+
 /* private/utility methods*/
 static void check_selected(UnityLauncherIconAccessible* self);
 static void on_parent_selection_change_cb(AtkSelection* selection,
@@ -73,7 +80,9 @@ G_DEFINE_TYPE_WITH_CODE(UnityLauncherIconAccessible,
                         unity_launcher_icon_accessible,
                         NUX_TYPE_OBJECT_ACCESSIBLE,
                         G_IMPLEMENT_INTERFACE(ATK_TYPE_COMPONENT,
-                                              atk_component_interface_init))
+                                              atk_component_interface_init)
+                        G_IMPLEMENT_INTERFACE(ATK_TYPE_ACTION,
+                                              atk_action_interface_init))
 
 #define UNITY_LAUNCHER_ICON_ACCESSIBLE_GET_PRIVATE(obj) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), UNITY_TYPE_LAUNCHER_ICON_ACCESSIBLE, \
@@ -430,7 +439,6 @@ unity_launcher_icon_accessible_focus_handler(AtkObject* accessible,
   atk_object_notify_state_change(accessible, ATK_STATE_FOCUSED, focus_in);
 }
 
-/* Public */
 static gint
 unity_launcher_icon_accessible_get_index_in_parent(AtkObject* obj)
 {
@@ -438,6 +446,55 @@ unity_launcher_icon_accessible_get_index_in_parent(AtkObject* obj)
 
   return UNITY_LAUNCHER_ICON_ACCESSIBLE(obj)->priv->index_in_parent;
 }
+
+/* AtkAction */
+static void
+atk_action_interface_init(AtkActionIface *iface)
+{
+  iface->do_action = unity_launcher_icon_accessible_do_action;
+  iface->get_n_actions = unity_launcher_icon_accessible_get_n_actions;
+  iface->get_name = unity_launcher_icon_accessible_get_name;
+}
+
+static gboolean
+unity_launcher_icon_accessible_do_action(AtkAction *action,
+                                         gint i)
+{
+  LauncherIcon* icon = NULL;
+  nux::Object* nux_object = NULL;
+
+  g_return_val_if_fail(UNITY_IS_LAUNCHER_ICON_ACCESSIBLE(action), FALSE);
+
+  nux_object = nux_object_accessible_get_object(NUX_OBJECT_ACCESSIBLE(action));
+  if (nux_object == NULL)
+    return FALSE;
+
+  icon = dynamic_cast<LauncherIcon*>(nux_object);
+
+  icon->Activate(ActionArg(ActionArg::LAUNCHER, 0));
+
+  return TRUE;
+}
+
+static gint
+unity_launcher_icon_accessible_get_n_actions(AtkAction *action)
+{
+  g_return_val_if_fail(UNITY_IS_LAUNCHER_ICON_ACCESSIBLE(action), 0);
+
+  return 1;
+}
+
+static const gchar*
+unity_launcher_icon_accessible_get_name(AtkAction *action,
+                                        gint i)
+{
+  g_return_val_if_fail(UNITY_IS_LAUNCHER_ICON_ACCESSIBLE(action), NULL);
+  g_return_val_if_fail(i == 0, NULL);
+
+  return "activate";
+}
+
+/* Public */
 
 void
 unity_launcher_icon_accessible_set_index(UnityLauncherIconAccessible* self,
