@@ -225,7 +225,7 @@ void IconRenderer::PreprocessIcons(std::list<RenderArg>& args, nux::Geometry con
   nux::Matrix4 ProjectionMatrix;
   nux::Matrix4 ViewProjectionMatrix;
 
-  _stored_projection_matrix = nux::GetGraphicsEngine().GetOpenGLModelViewProjectionMatrix();
+  _stored_projection_matrix = nux::GetWindowThread()->GetGraphicsEngine().GetOpenGLModelViewProjectionMatrix();
 
   GetInverseScreenPerspectiveMatrix(ViewMatrix, ProjectionMatrix, geo.width, geo.height, 0.1f, 1000.0f, DEGTORAD(90));
 
@@ -662,7 +662,7 @@ void IconRenderer::RenderElement(nux::GraphicsEngine& GfxContext,
   int FragmentColor;
   int DesatFactor;
 
-  if (nux::GetGraphicsEngine().UsingGLSLCodePath())
+  if (nux::GetWindowThread()->GetGraphicsEngine().UsingGLSLCodePath())
   {
     local::shader_program_uv_persp_correction->Begin();
 
@@ -688,7 +688,7 @@ void IconRenderer::RenderElement(nux::GraphicsEngine& GfxContext,
     VertexLocation        = nux::VTXATTRIB_POSITION;
     TextureCoord0Location = nux::VTXATTRIB_TEXCOORD0;
 
-    nux::GetGraphicsEngine().SetTexture(GL_TEXTURE0, icon);
+    nux::GetWindowThread()->GetGraphicsEngine().SetTexture(GL_TEXTURE0, icon);
 
     // Set the model-view matrix
     CHECKGL(glMatrixMode(GL_MODELVIEW));
@@ -710,12 +710,12 @@ void IconRenderer::RenderElement(nux::GraphicsEngine& GfxContext,
 
   nux::Color bg_color = bkg_color * alpha;
 
-  if (nux::GetGraphicsEngine().UsingGLSLCodePath())
+  if (nux::GetWindowThread()->GetGraphicsEngine().UsingGLSLCodePath())
   {
     CHECKGL(glUniform4fARB(FragmentColor, bg_color.red, bg_color.green, bg_color.blue, bg_color.alpha));
     CHECKGL(glUniform4fARB(DesatFactor, arg.saturation, arg.saturation, arg.saturation, arg.saturation));
 
-    nux::GetGraphicsEngine().SetTexture(GL_TEXTURE0, icon);
+    nux::GetWindowThread()->GetGraphicsEngine().SetTexture(GL_TEXTURE0, icon);
     CHECKGL(glDrawArrays(GL_QUADS, 0, 4));
   }
   else
@@ -723,7 +723,7 @@ void IconRenderer::RenderElement(nux::GraphicsEngine& GfxContext,
     CHECKGL(glProgramLocalParameter4fARB(GL_FRAGMENT_PROGRAM_ARB, 0, bg_color.red, bg_color.green, bg_color.blue, bg_color.alpha));
     CHECKGL(glProgramLocalParameter4fARB(GL_FRAGMENT_PROGRAM_ARB, 1, arg.saturation, arg.saturation, arg.saturation, arg.saturation));
 
-    nux::GetGraphicsEngine().SetTexture(GL_TEXTURE0, icon);
+    nux::GetWindowThread()->GetGraphicsEngine().SetTexture(GL_TEXTURE0, icon);
     CHECKGL(glDrawArrays(GL_QUADS, 0, 4));
   }
 
@@ -734,7 +734,7 @@ void IconRenderer::RenderElement(nux::GraphicsEngine& GfxContext,
 //   if(VertexColorLocation != -1)
 //     CHECKGL( glDisableVertexAttribArrayARB(VertexColorLocation) );
 
-  if (nux::GetGraphicsEngine().UsingGLSLCodePath())
+  if (nux::GetWindowThread()->GetGraphicsEngine().UsingGLSLCodePath())
   {
     local::shader_program_uv_persp_correction->End();
   }
@@ -1033,7 +1033,7 @@ namespace
 {
 void setup_shaders()
 {
-  if (nux::GetGraphicsEngine().UsingGLSLCodePath())
+  if (nux::GetWindowThread()->GetGraphicsEngine().UsingGLSLCodePath())
   {
     shader_program_uv_persp_correction = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateShaderProgram();
     shader_program_uv_persp_correction->LoadIShader(gPerspectiveCorrectShader.GetTCharPtr());
