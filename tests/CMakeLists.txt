@@ -40,6 +40,7 @@ set (LIB_PATHS ${TEST_UNIT_DEPS_LIBRARY_DIRS})
 link_directories (${CMAKE_BINARY_DIR}/UnityCore ${LIB_PATHS})
 
 include_directories (. .. ../services ../UnityCore ${UNITY_SRC} ${CMAKE_BINARY_DIR})
+include_directories (${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src)
 
 # We can't have convenience libs so we need to rebuild with what we need
 # Please keep actual test files alphabetically at top and then files
@@ -88,7 +89,13 @@ add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_ma
 
 enable_testing()
 find_package(GTest)
-if (${GTEST_FOUND} STREQUAL TRUE)
+# :(
+find_library (GMOCK_LIB gmock)
+find_library (GMOCK_MAIN_LIB gmock_main)
+
+if (GTEST_FOUND AND
+    GMOCK_LIB AND
+    GMOCK_MAIN_LIB)
   include_directories(${GTEST_INCLUDE_DIRS})
 
 # The service that provides DBus services to test against
@@ -113,6 +120,7 @@ if (${GTEST_FOUND} STREQUAL TRUE)
                  test_favorite_store_gsettings.cpp
                  test_introspection.cpp
                  test_main_xless.cpp
+		 test_grabhandle.cpp
                  ${UNITY_SRC}/AbstractLauncherIcon.h
                  ${UNITY_SRC}/Animator.cpp
                  ${UNITY_SRC}/Animator.h
@@ -135,8 +143,13 @@ if (${GTEST_FOUND} STREQUAL TRUE)
                  ${UNITY_SRC}/Timer.h
                  ${UNITY_SRC}/WindowManager.cpp
                  ${UNITY_SRC}/WindowManager.h
+		 ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle.cpp
+		 ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle-group.cpp
+		 ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle-impl-factory.cpp
+		 ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle-layout.cpp
+		 ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-texture.cpp
                  )
-  target_link_libraries(test-gtest-xless ${GTEST_BOTH_LIBRARIES})
+  target_link_libraries(test-gtest-xless ${GTEST_BOTH_LIBRARIES} ${GMOCK_LIB} ${GMOCK_MAIN_LIB})
   add_test(UnityGTestXless test-gtest-xless)
   add_dependencies(test-gtest-xless unity-core-${UNITY_API_VERSION})
 
@@ -171,7 +184,9 @@ if (${GTEST_FOUND} STREQUAL TRUE)
   add_test(UnityGTest test-gtest)
   add_dependencies(test-gtest unity-core-${UNITY_API_VERSION})
 
-endif (${GTEST_FOUND} STREQUAL TRUE)
+endif (GTEST_FOUND AND
+       GMOCK_LIB AND
+       GMOCK_MAIN_LIB)
 
 #
 # check target
