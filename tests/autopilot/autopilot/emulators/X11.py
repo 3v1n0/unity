@@ -171,6 +171,14 @@ class Mouse(object):
 	
     def __init__(self):
         self._display = Display()
+
+    @property
+    def x(self):
+        return self.position()[0]
+
+    @property
+    def y(self):
+        return self.position()[1]
 		
     def press(self, button=1):
         '''Press mouse button at current mouse location'''
