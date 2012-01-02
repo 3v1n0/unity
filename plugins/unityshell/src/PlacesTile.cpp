@@ -41,6 +41,8 @@ PlacesTile::PlacesTile(NUX_FILE_LINE_DECL, const void* id) :
   _last_width(0),
   _last_height(0)
 {
+  SetAcceptKeyNavFocusOnMouseDown(false);
+  
   mouse_down.connect(sigc::mem_fun(this, &PlacesTile::RecvMouseDown));
   mouse_up.connect(sigc::mem_fun(this, &PlacesTile::RecvMouseUp));
   mouse_click.connect(sigc::mem_fun(this, &PlacesTile::RecvMouseClick));
@@ -284,12 +286,6 @@ void
 PlacesTile::OnFocusActivated(nux::Area* label)
 {
   sigClick.emit(this);
-}
-
-bool
-PlacesTile::AcceptKeyNavFocusOnMouseDown()
-{
-  return false;
 }
 
 } // namespace unity

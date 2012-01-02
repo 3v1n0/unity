@@ -68,7 +68,6 @@ protected:
 
   virtual bool InspectKeyEvent(unsigned int eventType, unsigned int keysym, const char* character);
   virtual bool AcceptKeyNavFocus();
-  virtual bool AcceptKeyNavFocusOnMouseDown();
   virtual nux::Area* KeyNavIteration(nux::KeyNavDirection direction);
   virtual void OnOnKeyNavFocusChange(nux::Area *);
   void OnKeyDown(unsigned long event_type, unsigned long event_keysym, unsigned long event_state, const TCHAR* character, unsigned short key_repeat_count);

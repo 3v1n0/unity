@@ -63,7 +63,7 @@ StaticCairoText::StaticCairoText(const TCHAR* text,
   _fontstring = NULL;
 
   _accept_key_nav_focus = false;
-  _accept_key_nav_focus_on_mouse_down = false;
+  SetAcceptKeyNavFocusOnMouseDown(false);
 }
 
 StaticCairoText::~StaticCairoText()
@@ -516,18 +516,6 @@ bool
 StaticCairoText::AcceptKeyNavFocus()
 {
   return _accept_key_nav_focus;
-}
-
-void
-StaticCairoText::SetAcceptKeyNavFocusOnMouseDown(bool accept)
-{
-  _accept_key_nav_focus_on_mouse_down = accept;
-}
-
-bool
-StaticCairoText::AcceptKeyNavFocusOnMouseDown()
-{
-  return _accept_key_nav_focus_on_mouse_down;
 }
 
 }

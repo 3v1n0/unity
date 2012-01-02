@@ -62,6 +62,8 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
   , mouse_last_x_(-1)
   , mouse_last_y_(-1)
 {
+  SetAcceptKeyNavFocusOnMouseDown(false);
+  
   auto needredraw_lambda = [&](int value)
   {
     NeedRedraw();
@@ -375,11 +377,6 @@ bool ResultViewGrid::AcceptKeyNavFocus()
   return true;
 }
 
-bool ResultViewGrid::AcceptKeyNavFocusOnMouseDown()
-{
-  return false;
-}
-
 void ResultViewGrid::OnKeyDown (unsigned long event_type, unsigned long event_keysym,
                                 unsigned long event_state, const TCHAR* character,
                                 unsigned short key_repeat_count)
@@ -493,7 +490,7 @@ nux::Area* ResultViewGrid::KeyNavIteration(nux::KeyNavDirection direction)
 
 // crappy name.
 void ResultViewGrid::OnOnKeyNavFocusChange(nux::Area *area)
-{ 
+{
   if (HasKeyFocus())
   {
     if (selected_index_ < 0)
