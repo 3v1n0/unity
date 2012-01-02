@@ -1116,6 +1116,7 @@ void UnityScreen::handleEvent(XEvent* event)
           }
         }
       }
+      break;
     }
     default:
         if (screen->shapeEvent () + ShapeNotify == event->type)
