@@ -18,10 +18,10 @@ using namespace unity::MT;
 using ::testing::AtLeast;
 using ::testing::_;
 
-class MockGrabHandleImpl : public unity::MT::GrabHandle::Impl
+class MockLayoutGrabHandleImpl : public unity::MT::GrabHandle::Impl
 {
 public:
-  MockGrabHandleImpl () : unity::MT::GrabHandle::Impl ()
+  MockLayoutGrabHandleImpl () : unity::MT::GrabHandle::Impl ()
   {
     EXPECT_CALL (*this, damage (_)).Times (AtLeast (3));
     EXPECT_CALL (*this, lockPosition (_, _, unity::MT::PositionSet | unity::MT::PositionLock)).Times (AtLeast (1));
@@ -34,10 +34,35 @@ public:
   MOCK_METHOD1 (damage, void (const nux::Geometry &));
 };
 
-class MockGrabHandleImplFactory : public unity::MT::GrabHandle::ImplFactory
+class MockLayoutGrabHandleImplFactory : public unity::MT::GrabHandle::ImplFactory
 {
 public:
-  MockGrabHandleImplFactory () : ImplFactory () {};
+  MockLayoutGrabHandleImplFactory () : ImplFactory () {};
+
+  GrabHandle::Impl * create (const GrabHandle::Ptr &h);
+};
+
+class MockShowHideGrabHandleImpl : public unity::MT::GrabHandle::Impl
+{
+public:
+  MockShowHideGrabHandleImpl () : unity::MT::GrabHandle::Impl ()
+  {
+    EXPECT_CALL (*this, damage (_)).Times (AtLeast (1));
+    EXPECT_CALL (*this, show ()).Times (AtLeast (2));
+    EXPECT_CALL (*this, hide ()).Times (AtLeast (2));
+  }
+
+  MOCK_METHOD0 (show, void ());
+  MOCK_METHOD0 (hide, void ());
+  MOCK_CONST_METHOD3 (buttonPress, void (int, int, unsigned int));
+  MOCK_METHOD3 (lockPosition, void (int, int, unsigned int));
+  MOCK_METHOD1 (damage, void (const nux::Geometry &));
+};
+
+class MockShowHideGrabHandleImplFactory : public unity::MT::GrabHandle::ImplFactory
+{
+public:
+  MockShowHideGrabHandleImplFactory () : ImplFactory () {};
 
   GrabHandle::Impl * create (const GrabHandle::Ptr &h);
 };
@@ -72,9 +97,15 @@ MockGrabHandleTextureFactory::create ()
 }
 
 GrabHandle::Impl *
-MockGrabHandleImplFactory::create (const GrabHandle::Ptr &h)
+MockLayoutGrabHandleImplFactory::create (const GrabHandle::Ptr &h)
 {
-  return new MockGrabHandleImpl ();
+  return new MockLayoutGrabHandleImpl ();
+}
+
+GrabHandle::Impl *
+MockShowHideGrabHandleImplFactory::create (const GrabHandle::Ptr &h)
+{
+  return new MockShowHideGrabHandleImpl ();
 }
 
 namespace {
@@ -87,8 +118,7 @@ protected:
     handlesMask (0),
     window (new MockGrabHandleWindow)
   {
-    unity::MT::GrabHandle::ImplFactory::SetDefault (new MockGrabHandleImplFactory ());
-    unity::MT::Texture::Factory::SetDefault (new MockGrabHandleTextureFactory ());
+
   }
 
   unsigned int handlesMask;
@@ -96,6 +126,9 @@ protected:
 };
 
 TEST_F(UnityMTGrabHandleTest, TestLayoutMasks) {
+  unity::MT::GrabHandle::ImplFactory::SetDefault (new MockLayoutGrabHandleImplFactory ());
+  unity::MT::Texture::Factory::SetDefault (new MockGrabHandleTextureFactory ());
+
   handlesMask = unity::MT::getLayoutForMask (MaximizedVertMask, MoveMask | ResizeMask);
   EXPECT_EQ (handlesMask, LeftHandle | RightHandle | MiddleHandle);
 
@@ -136,6 +169,9 @@ TEST_F(UnityMTGrabHandleTest, TestLayoutMasks) {
 
 TEST_F(UnityMTGrabHandleTest, TestLayouts)
 {
+  unity::MT::GrabHandle::ImplFactory::SetDefault (new MockLayoutGrabHandleImplFactory ());
+  unity::MT::Texture::Factory::SetDefault (new MockGrabHandleTextureFactory ());
+
   std::vector <TextureSize> textures;
 
   for (unsigned int i = 0; i < unity::MT::NUM_HANDLES; i++)
@@ -173,6 +209,30 @@ TEST_F(UnityMTGrabHandleTest, TestLayouts)
                           EXPECT_EQ (h->y (), positions[count].y);
                           count++;
                         });
+}
+
+TEST_F(UnityMTGrabHandleTest, TestShowHide)
+{
+  unity::MT::GrabHandle::ImplFactory::SetDefault (new MockShowHideGrabHandleImplFactory ());
+  unity::MT::Texture::Factory::SetDefault (new MockGrabHandleTextureFactory ());
+
+  std::vector <TextureSize> textures;
+
+  for (unsigned int i = 0; i < unity::MT::NUM_HANDLES; i++)
+    textures.push_back (TextureSize (MockGrabHandleTextureFactory::Default ()->create (), nux::Geometry (0, 0, 100, 100)));
+
+  GrabHandleGroup::Ptr group = GrabHandleGroup::create (window, textures);
+
+  group->show (0);
+  group->show (TopLeftHandle | TopHandle | TopRightHandle);
+  group->show (LeftHandle);
+  group->show (MiddleHandle);
+  group->show (RightHandle);
+  group->show (BottomLeftHandle | BottomHandle | BottomRightHandle);
+
+  group->hide ();
+  group->show ();
+  group->hide ();
 }
 
 }  // namespace
