@@ -12,6 +12,6 @@ class LauncherTests(TestCase):
         self.server = Launcher()
 
     def test_reveal_on_mouse_to_edge(self):
-        self.assertThat(self.server.is_showing(), Equals(False))
+        self.server.move_mouse_outside_of_boundry()
         self.server.move_mouse_to_reveal_pos()
         self.assertThat(self.server.is_showing(), Equals(True))
