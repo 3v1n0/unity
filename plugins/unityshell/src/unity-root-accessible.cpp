@@ -258,6 +258,9 @@ add_window(UnityRootAccessible* self,
   window_accessible =
     unity_a11y_get_accessible(window);
 
+  /* FIXME: temporal */
+  atk_object_set_name (window_accessible, window->GetWindowName().GetTCharPtr());
+
   if (g_slist_find(self->priv->window_list, window_accessible))
     return;
 
@@ -293,6 +296,8 @@ remove_window(UnityRootAccessible* self,
   window_accessible =
     unity_a11y_get_accessible(window);
 
+  return;
+  
   if (!g_slist_find(self->priv->window_list, window_accessible))
     return;
 
