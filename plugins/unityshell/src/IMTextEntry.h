@@ -26,6 +26,7 @@
 #include <Nux/Nux.h>
 #include <Nux/TextEntry.h>
 #include <UnityCore/GLibSignal.h>
+#include <UnityCore/GLibWrapper.h>
 
 namespace unity
 {
@@ -40,7 +41,6 @@ class IMTextEntry : public nux::TextEntry
   NUX_DECLARE_OBJECT_TYPE(IMTextEntry, nux::TextEntry);
 public:
   IMTextEntry();
-  ~IMTextEntry();
 
   nux::Property<std::string> preedit_string;
   nux::Property<bool> im_enabled;
@@ -74,8 +74,8 @@ private:
 
  private:
   glib::SignalManager sig_manager_;
-  GtkIMContext* im_context_;
-  GdkWindow* client_window_;
+  glib::Object<GtkIMContext> im_context_;
+  glib::Object<GdkWindow> client_window_;
   bool focused_;
 };
 

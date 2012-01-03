@@ -42,8 +42,8 @@ IMTextEntry::IMTextEntry()
   , preedit_string("")
   , im_enabled(false)
   , im_active(false)
-  , im_context_(0)
-  , client_window_(0)
+  , im_context_()
+  , client_window_()
   , focused_(false)
 {
   g_setenv("IBUS_ENABLE_SYNC_MODE", "1", TRUE);
@@ -51,14 +51,6 @@ IMTextEntry::IMTextEntry()
   im_enabled ? SetupMultiIM() : SetupSimpleIM();
 
   mouse_up.connect(sigc::mem_fun(this, &IMTextEntry::OnMouseButtonUp));
-}
-
-IMTextEntry::~IMTextEntry()
-{
-  if (im_context_)
-    g_object_unref(im_context_);
-  if (client_window_)
-    g_object_unref(client_window_);
 }
 
 void IMTextEntry::CheckIMEnabled()
@@ -100,7 +92,7 @@ bool IMTextEntry::InspectKeyEvent(unsigned int event_type,
   bool propagate_event = !(TryHandleEvent(event_type, keysym, character));
 
   LOG_DEBUG(logger) << "Input method "
-                    << (im_enabled ? gtk_im_multicontext_get_context_id(GTK_IM_MULTICONTEXT(im_context_)) : "simple")
+                    << (im_enabled ? gtk_im_multicontext_get_context_id(object_cast<GtkIMMulticontext>(im_context_)) : "simple")
                     << " "
                     << (propagate_event ? "did not handle " : "handled ") 
                     << "event ("
@@ -337,8 +329,8 @@ void IMTextEntry::OnMouseButtonUp(int x, int y, unsigned long bflags, unsigned l
   if (button == 3)
   {
     GtkWidget* menu = gtk_menu_new();
-    gtk_im_multicontext_append_menuitems(GTK_IM_MULTICONTEXT(im_context_),
-                                          GTK_MENU_SHELL(menu));
+    gtk_im_multicontext_append_menuitems(object_cast<GtkIMMulticontext>(im_context_),
+                                         GTK_MENU_SHELL(menu));
     gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL, 3, GDK_CURRENT_TIME);
   }
   else if (button == 2)
