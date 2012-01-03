@@ -132,9 +132,6 @@ unity_quicklist_accessible_initialize(AtkObject* accessible,
 
   if (quicklist == NULL) /* status defunct */
     return;
-
-  atk_object_set_name(accessible, "Quicklist");
-
 }
 
 static gint

@@ -335,7 +335,6 @@ check_selected(UnityLauncherIconAccessible* self)
     atk_object_notify_state_change(ATK_OBJECT(self),
                                    ATK_STATE_ACTIVE,
                                    found);
-
     g_signal_emit_by_name(self, "focus-event", self->priv->selected, &return_val);
     atk_focus_tracker_notify(ATK_OBJECT(self));
   }

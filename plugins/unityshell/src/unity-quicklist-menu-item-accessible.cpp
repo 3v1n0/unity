@@ -279,6 +279,9 @@ check_selected(UnityQuicklistMenuItemAccessible* self)
 
     self->priv->selected = found;
     atk_object_notify_state_change(ATK_OBJECT(self),
+                                   ATK_STATE_FOCUSED,
+                                   found);
+    atk_object_notify_state_change(ATK_OBJECT(self),
                                    ATK_STATE_SELECTED,
                                    found);
     atk_object_notify_state_change(ATK_OBJECT(self),
