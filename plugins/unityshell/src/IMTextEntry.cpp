@@ -224,7 +224,8 @@ void IMTextEntry::Paste(bool primary)
   auto callback = [](GtkClipboard* clip, const char* text, gpointer user_data)
    {
      IMTextEntry* self = static_cast<IMTextEntry*>(user_data);
-     self->InsertTextAt(self->cursor_, std::string(text));
+     if (text)
+      self->InsertTextAt(self->cursor_, std::string(text));
    };
 
   gtk_clipboard_request_text(clip, callback, this);
