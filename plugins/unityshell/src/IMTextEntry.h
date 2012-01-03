@@ -56,9 +56,10 @@ private:
   void KeyEventToGdkEventKey(Event& event, GdkEventKey& gdk_event);
   inline void CheckValidClientWindow(Window window);
   bool TryHandleSpecial(unsigned int eventType, unsigned int keysym, const char* character);
+  void InsertTextAt(unsigned int position, std::string const& text);
   void Cut();
   void Copy();
-  void Paste();
+  void Paste(bool primary = false);
 
   void OnCommit(GtkIMContext* context, char* str);
   void OnPreeditChanged(GtkIMContext* context);
