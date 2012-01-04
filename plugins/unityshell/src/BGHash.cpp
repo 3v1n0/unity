@@ -559,7 +559,7 @@ namespace unity {
 
       nux::color::HueSaturationValue hsv_color (chosen_color);
 
-      hsv_color.saturation = std::min(base_hsv.saturation, hsv_color.saturation) * 1.36;
+      hsv_color.saturation = std::min(base_hsv.saturation, hsv_color.saturation) * 1.36f;
       hsv_color.value = std::min(std::min(base_hsv.value, hsv_color.value), 0.2f);
       chosen_color = nux::Color (nux::color::RedGreenBlue(hsv_color));
     }
