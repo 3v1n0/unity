@@ -23,6 +23,7 @@
 
 #include <gdk/gdk.h>
 #include <UnityCore/GLibSignal.h>
+#include <UnityCore/Hud.h>
 
 #include <NuxCore/Property.h>
 #include <NuxGraphics/GraphicsEngine.h>

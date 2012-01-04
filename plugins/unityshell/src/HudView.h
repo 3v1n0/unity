@@ -30,10 +30,12 @@
 
 #include <glib.h>
 
+#include <UnityCore/Hud.h>
+
 #include "UBusWrapper.h"
 #include "IconTexture.h"
 #include "HudSearchBar.h"
-#include "Hud.h"
+
 
 namespace unity
 {

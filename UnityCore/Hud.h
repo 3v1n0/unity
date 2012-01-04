@@ -24,8 +24,8 @@
 #include <string>
 #include <memory>
 #include <NuxCore/Property.h>
-#include <UnityCore/GLibDBusProxy.h>
-#include <UnityCore/GLibWrapper.h>
+#include "GLibDBusProxy.h"
+#include "GLibWrapper.h"  
 
 namespace unity
 {
@@ -36,9 +36,14 @@ class Hud
 {
 public:
   typedef std::shared_ptr<Hud> Ptr;
-  typedef std::tuple<std::string, std::string, GVariant*> Suggestion;
+  typedef std::tuple<std::string, std::string, GVariant*> Suggestion; // target, icon, key
   typedef std::deque<Suggestion> Suggestions;
 
+  /*
+   * Constructor for the hud
+   * \param dbus_name string that specifies the name of the hud service
+   * \param dbus_path string that specifies the path of the hud service
+   */
   Hud(std::string const& dbus_name,
       std::string const& dbus_path);
 
@@ -47,10 +52,26 @@ public:
   nux::Property<std::string> target;
   nux::Property<std::string> target_icon;
 
+  /*
+   * Queries the service for new suggestions, will fire off the 
+   * suggestion_search_finished signal when the suggestions are returned
+   */
   void GetSuggestions(std::string const& search_string);
+
+  /*
+   * Sends the given string to the execute method of the service, does not 
+   * require a key
+   */
   void Execute(std::string const& execute_string);
+
+  /*
+   * Executes a suggestion associated with the given key
+   */
   void ExecuteByKey(GVariant* key);
 
+  /*
+   * Returns a deque of Suggestion types when the service provides them
+   */
   sigc::signal<void, Suggestions> suggestion_search_finished;
 
 private:

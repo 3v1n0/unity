@@ -28,8 +28,7 @@
 #include <Nux/CairoWrapper.h>
 #include <Nux/Button.h>
 #include <Nux/TextureArea.h>
-
-#include "Hud.h"
+#include <UnityCore/Hud.h>
 
 namespace unity {
 

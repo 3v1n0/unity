@@ -22,7 +22,7 @@
 #include <gio/gio.h>
 #include <glib.h>
 #include <NuxCore/Logger.h>
-#include <UnityCore/GLibWrapper.h>
+#include "GLibWrapper.h"
 
 #include "config.h"
 
@@ -139,19 +139,6 @@ void Hud::SuggestionCallback(GVariant* suggests)
   }
 
   g_variant_unref(suggestions);
-
-
-  //~ gchar *ctarget = NULL;
-  //~ gchar *suggestion = NULL;
-  //~ GVariantIter *iter = NULL;
-//~
-  //~ suggestions_.clear();
-//~
-  //~ g_variant_get(data, "(sas)", &ctarget, &iter);
-  //~ while (g_variant_iter_loop(iter, "s", &suggestion))
-    //~ suggestions_.push_back(std::string(suggestion));
-//~
-  //~ g_variant_iter_free(iter);
 
   suggestion_search_finished.emit(suggestions_);
 }

@@ -454,7 +454,6 @@ add_executable (hud
                 StandaloneHud.cpp
                 ${UNITY_SRC}/Introspectable.cpp
                 ${UNITY_SRC}/JSONParser.cpp
-                ${UNITY_SRC}/Hud.cpp
                 ${UNITY_SRC}/HudSearchBar.cpp
                 ${UNITY_SRC}/HudButton.cpp
                 ${UNITY_SRC}/DashStyle.cpp
