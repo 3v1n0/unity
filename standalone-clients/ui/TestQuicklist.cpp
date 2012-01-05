@@ -201,7 +201,7 @@ ThreadWidgetInit (nux::NThread* thread,
   gCheckmark = createCheckmarkItem("Item9, disabled checkmark, unchecked", false, false);
   gQuicklist->AddMenuItem (gCheckmark);
 
-  gLabel = createLabelItem("Item1, disabled", false);
+  gLabel = createLabelItem("Item10, disabled", false);
   gQuicklist->AddMenuItem (gLabel);
 
   gQuicklist->EnableQuicklistForTesting (true);
