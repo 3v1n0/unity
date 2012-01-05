@@ -66,7 +66,7 @@ createCheckmarkItem ()
 
   dbusmenu_menuitem_property_set (item,
                                   DBUSMENU_MENUITEM_PROP_LABEL,
-                                  "Unchecked");
+                                  "Unchecked Checkmark");
 
   dbusmenu_menuitem_property_set (item,
                                   DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE,
@@ -78,7 +78,7 @@ createCheckmarkItem ()
 
   dbusmenu_menuitem_property_set_int (item,
                                       DBUSMENU_MENUITEM_PROP_TOGGLE_STATE,
-                                      DBUSMENU_MENUITEM_TOGGLE_STATE_CHECKED);
+                                      DBUSMENU_MENUITEM_TOGGLE_STATE_UNCHECKED);
 
   checkmark = new QuicklistMenuItemCheckmark (item, true);
 
@@ -100,7 +100,7 @@ createRadioItem ()
 
   dbusmenu_menuitem_property_set (item,
                                   DBUSMENU_MENUITEM_PROP_LABEL,
-                                  "Radio Active");
+                                  "Disabled Checked Radio");
 
   dbusmenu_menuitem_property_set (item,
                                   DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE,
@@ -112,7 +112,7 @@ createRadioItem ()
 
   dbusmenu_menuitem_property_set_int (item,
                                       DBUSMENU_MENUITEM_PROP_TOGGLE_STATE,
-                                      DBUSMENU_MENUITEM_TOGGLE_STATE_UNCHECKED);
+                                      DBUSMENU_MENUITEM_TOGGLE_STATE_CHECKED);
 
   radio = new QuicklistMenuItemRadio (item, true);
 
