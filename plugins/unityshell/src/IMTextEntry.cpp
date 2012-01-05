@@ -322,12 +322,9 @@ void IMTextEntry::UpdateCursorLocation()
 
 void IMTextEntry::OnMouseButtonUp(int x, int y, unsigned long bflags, unsigned long kflags)
 {
-  if (!im_enabled)
-    return;
-
   int button = nux::GetEventButton(bflags);
 
-  if (button == 3)
+  if (im_enabled && button == 3)
   {
     GtkWidget* menu = gtk_menu_new();
     gtk_im_multicontext_append_menuitems(object_cast<GtkIMMulticontext>(im_context_),
