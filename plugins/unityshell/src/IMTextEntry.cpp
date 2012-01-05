@@ -90,7 +90,7 @@ bool IMTextEntry::InspectKeyEvent(unsigned int event_type,
   bool propagate_event = !(TryHandleEvent(event_type, keysym, character));
 
   LOG_DEBUG(logger) << "Input method "
-                    << (im_enabled ? gtk_im_multicontext_get_context_id(object_cast<GtkIMMulticontext>(im_context_)) : "simple")
+                    << (im_enabled ? gtk_im_multicontext_get_context_id(glib::object_cast<GtkIMMulticontext>(im_context_)) : "simple")
                     << " "
                     << (propagate_event ? "did not handle " : "handled ") 
                     << "event ("
@@ -325,7 +325,7 @@ void IMTextEntry::OnMouseButtonUp(int x, int y, unsigned long bflags, unsigned l
   if (im_enabled && button == 3)
   {
     GtkWidget* menu = gtk_menu_new();
-    gtk_im_multicontext_append_menuitems(object_cast<GtkIMMulticontext>(im_context_),
+    gtk_im_multicontext_append_menuitems(glib::object_cast<GtkIMMulticontext>(im_context_),
                                          GTK_MENU_SHELL(menu));
     gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL, 3, GDK_CURRENT_TIME);
   }
