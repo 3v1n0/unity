@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Mirco Müller <mirco.mueller@canonical.com>
+ *              Marco Trevisan (Treviño) <3v1n0@ubuntu.com>
  */
 
 #include <glib.h>
@@ -35,7 +36,7 @@
 #include <X11/Xlib.h>
 
 #define WIN_WIDTH  400
-#define WIN_HEIGHT 300
+#define WIN_HEIGHT 400
 
 gboolean gResult[3] = {false, false, false};
 
@@ -43,6 +44,7 @@ QuicklistView*                gQuicklist = NULL;
 QuicklistMenuItemCheckmark*   gCheckmark = NULL;
 QuicklistMenuItemRadio*       gRadio     = NULL;
 QuicklistMenuItemLabel*       gLabel     = NULL;
+QuicklistMenuItemSeparator*   gSeparator = NULL;
 
 void
 activatedCallback (DbusmenuMenuitem* item,
@@ -56,42 +58,10 @@ activatedCallback (DbusmenuMenuitem* item,
   g_print ("Quicklist-item activated\n");
 }
 
-QuicklistMenuItemCheckmark*
-createCheckmarkItem ()
-{
-  DbusmenuMenuitem*           item      = NULL;
-  QuicklistMenuItemCheckmark* checkmark = NULL;
-
-  item = dbusmenu_menuitem_new ();
-
-  dbusmenu_menuitem_property_set (item,
-                                  DBUSMENU_MENUITEM_PROP_LABEL,
-                                  "Unchecked Checkmark");
-
-  dbusmenu_menuitem_property_set (item,
-                                  DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE,
-                                  DBUSMENU_MENUITEM_TOGGLE_CHECK);
-
-  dbusmenu_menuitem_property_set_bool (item,
-                                       DBUSMENU_MENUITEM_PROP_ENABLED,
-                                       true);
-
-  dbusmenu_menuitem_property_set_int (item,
-                                      DBUSMENU_MENUITEM_PROP_TOGGLE_STATE,
-                                      DBUSMENU_MENUITEM_TOGGLE_STATE_UNCHECKED);
-
-  checkmark = new QuicklistMenuItemCheckmark (item, true);
-
-  g_signal_connect (item,
-                    DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
-                    G_CALLBACK (activatedCallback),
-                    &gResult[0]);
-
-  return checkmark;
-}
-
 QuicklistMenuItemRadio*
-createRadioItem ()
+createRadioItem (const gchar* label,
+                 gboolean     enabled,
+                 gboolean     checked)
 {
   DbusmenuMenuitem*       item  = NULL;
   QuicklistMenuItemRadio* radio = NULL;
@@ -100,7 +70,7 @@ createRadioItem ()
 
   dbusmenu_menuitem_property_set (item,
                                   DBUSMENU_MENUITEM_PROP_LABEL,
-                                  "Disabled Checked Radio");
+                                  label);
 
   dbusmenu_menuitem_property_set (item,
                                   DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE,
@@ -108,24 +78,56 @@ createRadioItem ()
 
   dbusmenu_menuitem_property_set_bool (item,
                                        DBUSMENU_MENUITEM_PROP_ENABLED,
-                                       false);
+                                       enabled);
 
   dbusmenu_menuitem_property_set_int (item,
                                       DBUSMENU_MENUITEM_PROP_TOGGLE_STATE,
-                                      DBUSMENU_MENUITEM_TOGGLE_STATE_CHECKED);
+                                      (checked ?
+                                        DBUSMENU_MENUITEM_TOGGLE_STATE_CHECKED :
+                                        DBUSMENU_MENUITEM_TOGGLE_STATE_UNCHECKED
+                                      ));
 
   radio = new QuicklistMenuItemRadio (item, true);
-
-  g_signal_connect (item,
-                    DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
-                    G_CALLBACK (activatedCallback),
-                    &gResult[1]);
     
   return radio;
 }
 
+QuicklistMenuItemCheckmark*
+createCheckmarkItem (const gchar* label,
+                     gboolean     enabled,
+                     gboolean     checked)
+{
+  DbusmenuMenuitem*           item      = NULL;
+  QuicklistMenuItemCheckmark* checkmark = NULL;
+
+  item = dbusmenu_menuitem_new ();
+
+  dbusmenu_menuitem_property_set (item,
+                                  DBUSMENU_MENUITEM_PROP_LABEL,
+                                  label);
+
+  dbusmenu_menuitem_property_set (item,
+                                  DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE,
+                                  DBUSMENU_MENUITEM_TOGGLE_CHECK);
+
+  dbusmenu_menuitem_property_set_bool (item,
+                                       DBUSMENU_MENUITEM_PROP_ENABLED,
+                                       enabled);
+
+  dbusmenu_menuitem_property_set_int (item,
+                                      DBUSMENU_MENUITEM_PROP_TOGGLE_STATE,
+                                      (checked ?
+                                        DBUSMENU_MENUITEM_TOGGLE_STATE_CHECKED :
+                                        DBUSMENU_MENUITEM_TOGGLE_STATE_UNCHECKED
+                                      ));
+
+  checkmark = new QuicklistMenuItemCheckmark (item, true);
+    
+  return checkmark;
+}
+
 QuicklistMenuItemLabel*
-createLabelItem ()
+createLabelItem (const gchar* string, bool enabled = true)
 {
   DbusmenuMenuitem*       item  = NULL;
   QuicklistMenuItemLabel* label = NULL;
@@ -134,20 +136,32 @@ createLabelItem ()
 
   dbusmenu_menuitem_property_set (item,
                                   DBUSMENU_MENUITEM_PROP_LABEL,
-                                  "A Label");
+                                  string);
+
+  dbusmenu_menuitem_property_set_bool (item,
+                                       DBUSMENU_MENUITEM_PROP_ENABLED,
+                                       enabled);
+
+  label = new QuicklistMenuItemLabel (item, true);
+
+  return label;
+}
+
+QuicklistMenuItemSeparator*
+createSeparatorItem ()
+{
+  DbusmenuMenuitem*           item      = NULL;
+  QuicklistMenuItemSeparator* separator = NULL;
+
+  item = dbusmenu_menuitem_new ();
 
   dbusmenu_menuitem_property_set_bool (item,
                                        DBUSMENU_MENUITEM_PROP_ENABLED,
                                        true);
 
-  label = new QuicklistMenuItemLabel (item, true);
+  separator = new QuicklistMenuItemSeparator (item, true);
 
-  g_signal_connect (item,
-                    DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
-                    G_CALLBACK (activatedCallback),
-                    &gResult[2]);
-
-  return label;
+  return separator;
 }
 
 void
@@ -157,11 +171,37 @@ ThreadWidgetInit (nux::NThread* thread,
   gQuicklist = new QuicklistView ();
   gQuicklist->Reference ();
 
-  gCheckmark = createCheckmarkItem ();
-  gQuicklist->AddMenuItem (gCheckmark);
-  gRadio = createRadioItem ();
+  gLabel = createLabelItem("Item1, normal");
+  gQuicklist->AddMenuItem (gLabel);
+
+  gSeparator = createSeparatorItem();
+  gQuicklist->AddMenuItem (gSeparator);
+
+  gRadio = createRadioItem("Item2, radio, checked", true, true);
   gQuicklist->AddMenuItem (gRadio);
-  gLabel = createLabelItem ();
+
+  gRadio = createRadioItem("Item3, radio, unchecked", true, false);
+  gQuicklist->AddMenuItem (gRadio);
+
+  gRadio = createRadioItem("Item4, disabled radio, checked", false, true);
+  gQuicklist->AddMenuItem (gRadio);
+
+  gRadio = createRadioItem("Item5, disabled radio, unchecked", false, false);
+  gQuicklist->AddMenuItem (gRadio);
+
+  gCheckmark = createCheckmarkItem("Item6, checkmark, checked", true, true);
+  gQuicklist->AddMenuItem (gCheckmark);
+
+  gCheckmark = createCheckmarkItem("Item7, checkmark, unchecked", true, false);
+  gQuicklist->AddMenuItem (gCheckmark);
+
+  gCheckmark = createCheckmarkItem("Item8, disabled checkmark, checked", false, true);
+  gQuicklist->AddMenuItem (gCheckmark);
+
+  gCheckmark = createCheckmarkItem("Item9, disabled checkmark, unchecked", false, false);
+  gQuicklist->AddMenuItem (gCheckmark);
+
+  gLabel = createLabelItem("Item1, disabled", false);
   gQuicklist->AddMenuItem (gLabel);
 
   gQuicklist->EnableQuicklistForTesting (true);
