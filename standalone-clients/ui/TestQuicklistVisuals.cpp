@@ -166,7 +166,8 @@ ThreadWidgetInit (nux::NThread* thread,
   gQuicklists[0]->AddMenuItem (radio);
   separator = createSeparatorItem ();
   gQuicklists[0]->AddMenuItem (separator);
-  label = createLabelItem ("Application Name");
+  label = createLabelItem ("<b>Application Name</b>");
+  label->EnableLabelMarkup(true);
   gQuicklists[0]->AddMenuItem (label);
   separator = createSeparatorItem ();
   gQuicklists[0]->AddMenuItem (separator);
@@ -189,7 +190,8 @@ ThreadWidgetInit (nux::NThread* thread,
   gQuicklists[1]->AddMenuItem (checkmark);
   separator = createSeparatorItem ();
   gQuicklists[1]->AddMenuItem (separator);
-  label = createLabelItem ("Application Name");
+  label = createLabelItem ("<b>Application Name</b>");
+  label->EnableLabelMarkup(true);
   gQuicklists[1]->AddMenuItem (label);
   separator = createSeparatorItem ();
   gQuicklists[1]->AddMenuItem (separator);
@@ -214,7 +216,8 @@ ThreadWidgetInit (nux::NThread* thread,
   gQuicklists[2]->AddMenuItem (label);
   separator = createSeparatorItem ();
   gQuicklists[2]->AddMenuItem (separator);
-  label = createLabelItem ("Application Name");
+  label = createLabelItem ("<b>Application Name</b>");
+  label->EnableLabelMarkup(true);
   gQuicklists[2]->AddMenuItem (label);
   separator = createSeparatorItem ();
   gQuicklists[2]->AddMenuItem (separator);
