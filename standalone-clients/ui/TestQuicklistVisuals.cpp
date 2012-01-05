@@ -107,7 +107,7 @@ createCheckmarkItem (const gchar* label,
 }
 
 QuicklistMenuItemLabel*
-createLabelItem (const gchar* string)
+createLabelItem (const gchar* string, bool enabled = true)
 {
   DbusmenuMenuitem*       item  = NULL;
   QuicklistMenuItemLabel* label = NULL;
@@ -120,7 +120,7 @@ createLabelItem (const gchar* string)
 
   dbusmenu_menuitem_property_set_bool (item,
                                        DBUSMENU_MENUITEM_PROP_ENABLED,
-                                       true);
+                                       enabled);
 
   label = new QuicklistMenuItemLabel (item, true);
 
@@ -210,8 +210,8 @@ ThreadWidgetInit (nux::NThread* thread,
   gQuicklists[2]->AddMenuItem (separator);
   checkmark = createCheckmarkItem ("Option 03", false, true);
   gQuicklists[2]->AddMenuItem (checkmark);
-  checkmark = createCheckmarkItem ("Option 04", false, true);
-  gQuicklists[2]->AddMenuItem (checkmark);
+  label = createLabelItem ("Option 04", false);
+  gQuicklists[2]->AddMenuItem (label);
   separator = createSeparatorItem ();
   gQuicklists[2]->AddMenuItem (separator);
   label = createLabelItem ("Application Name");
