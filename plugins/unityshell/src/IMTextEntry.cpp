@@ -235,7 +235,7 @@ void IMTextEntry::InsertTextAt(unsigned int position, std::string const& text)
 
   if (!text.empty())
   {
-    std::string new_text = GetText();
+    std::string new_text(GetText());
     new_text.insert(position, text);
 
     int cursor = position;
@@ -267,7 +267,7 @@ void IMTextEntry::OnPreeditChanged(GtkIMContext* context)
 
   _preedit = preedit.Str();
 
-  if (strlen(preedit.Str().c_str())) {
+  if (!preedit.Str().empty()) {
     preedit_cursor_ = preedit.Str().length();
     QueueRefresh(true, true); 
     sigTextChanged.emit(this);
