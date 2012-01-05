@@ -876,7 +876,7 @@ void IconRenderer::RenderProgressToTexture(nux::GraphicsEngine& GfxContext,
   }
 
   int fill_y = (height - fill_height) / 2;
-  int progress_y = (height - progress_height) / 2;
+  int progress_y = fill_y + (fill_height - progress_height) / 2;
   int half_size = (right_edge - left_edge) / 2;
 
   SetOffscreenRenderTarget(texture);
