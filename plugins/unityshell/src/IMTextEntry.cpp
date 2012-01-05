@@ -42,8 +42,6 @@ IMTextEntry::IMTextEntry()
   , preedit_string("")
   , im_enabled(false)
   , im_active(false)
-  , im_context_()
-  , client_window_()
   , focused_(false)
 {
   g_setenv("IBUS_ENABLE_SYNC_MODE", "1", TRUE);
