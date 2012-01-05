@@ -60,14 +60,12 @@ createRadioItem (const gchar* label,
                                        DBUSMENU_MENUITEM_PROP_ENABLED,
                                        enabled);
 
-  if (checked)
-    dbusmenu_menuitem_property_set_int (item,
-                                        DBUSMENU_MENUITEM_PROP_TOGGLE_STATE,
-                                        DBUSMENU_MENUITEM_TOGGLE_STATE_UNCHECKED);
-  else
-    dbusmenu_menuitem_property_set_int (item,
-                                        DBUSMENU_MENUITEM_PROP_TOGGLE_STATE,
-                                        DBUSMENU_MENUITEM_TOGGLE_STATE_CHECKED);
+  dbusmenu_menuitem_property_set_int (item,
+                                      DBUSMENU_MENUITEM_PROP_TOGGLE_STATE,
+                                      (checked ?
+                                        DBUSMENU_MENUITEM_TOGGLE_STATE_CHECKED :
+                                        DBUSMENU_MENUITEM_TOGGLE_STATE_UNCHECKED
+                                      ));
 
   radio = new QuicklistMenuItemRadio (item, true);
     
@@ -96,14 +94,12 @@ createCheckmarkItem (const gchar* label,
                                        DBUSMENU_MENUITEM_PROP_ENABLED,
                                        enabled);
 
-  if (checked)
-    dbusmenu_menuitem_property_set_int (item,
-                                        DBUSMENU_MENUITEM_PROP_TOGGLE_STATE,
-                                        DBUSMENU_MENUITEM_TOGGLE_STATE_UNCHECKED);
-  else
-    dbusmenu_menuitem_property_set_int (item,
-                                        DBUSMENU_MENUITEM_PROP_TOGGLE_STATE,
-                                        DBUSMENU_MENUITEM_TOGGLE_STATE_CHECKED);
+  dbusmenu_menuitem_property_set_int (item,
+                                      DBUSMENU_MENUITEM_PROP_TOGGLE_STATE,
+                                      (checked ?
+                                        DBUSMENU_MENUITEM_TOGGLE_STATE_CHECKED :
+                                        DBUSMENU_MENUITEM_TOGGLE_STATE_UNCHECKED
+                                      ));
 
   checkmark = new QuicklistMenuItemCheckmark (item, true);
     
