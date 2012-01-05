@@ -49,7 +49,6 @@ void unity::ScreenEffectFramebufferObject::paint (const nux::Geometry &output)
 	       output.width, output.height);
 
     /* FIXME: This needs to be GL_TRIANGLE_STRIP */
-    glGetError ();
     glBegin (GL_QUADS);
     glTexCoord2f (0, 1);
     glVertex2i   (mGeometry.x, mGeometry.y);
@@ -66,7 +65,6 @@ void unity::ScreenEffectFramebufferObject::paint (const nux::Geometry &output)
     glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glBindTexture (GL_TEXTURE_2D, 0);
     glDisable (GL_TEXTURE_2D);
-    glDisable (GL_SCISSOR_TEST);
     glPopAttrib ();
   }
   glPopAttrib ();
@@ -105,6 +103,9 @@ void unity::ScreenEffectFramebufferObject::bind (const nux::Geometry &output)
   if (!BackgroundEffectHelper::HasDirtyHelpers())
     return;
 
+  /* Clear the error bit */
+  glGetError ();
+
   if (!mFBTexture)
   {
     glGenTextures (1, &mFBTexture);
@@ -123,9 +124,14 @@ void unity::ScreenEffectFramebufferObject::bind (const nux::Geometry &output)
                  NULL);
 
     glBindTexture (GL_TEXTURE_2D, 0);
-  }
 
-  glGetError ();
+    if (glGetError () != GL_NO_ERROR)
+    {
+      mFboHandle = 0;
+      mFboStatus = false;
+      return;
+    }
+  }
 
   (*bindFramebuffer) (GL_FRAMEBUFFER_EXT, mFboHandle);
 
