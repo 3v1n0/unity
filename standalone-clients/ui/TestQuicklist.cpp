@@ -38,7 +38,7 @@
 #define WIN_WIDTH  400
 #define WIN_HEIGHT 400
 
-gboolean gResult[3] = {false, false, false};
+gboolean gResult[9] = {false, false, false, false, false, false, false, false, false};
 
 QuicklistView*                gQuicklist = NULL;
 QuicklistMenuItemCheckmark*   gCheckmark = NULL;
@@ -51,17 +51,17 @@ activatedCallback (DbusmenuMenuitem* item,
                    int               time,
                    gpointer          data)
 {
-  gboolean* result = (gboolean*) data;
+  unsigned int item_index = GPOINTER_TO_UINT (data);
+  gResult[item_index] = true;
 
-  *result = true;
-
-  g_print ("Quicklist-item activated\n");
+  g_print ("Quicklist-item %u activated\n", (item_index + 1));
 }
 
 QuicklistMenuItemRadio*
 createRadioItem (const gchar* label,
                  gboolean     enabled,
-                 gboolean     checked)
+                 gboolean     checked,
+                 unsigned int item_index)
 {
   DbusmenuMenuitem*       item  = NULL;
   QuicklistMenuItemRadio* radio = NULL;
@@ -87,15 +87,21 @@ createRadioItem (const gchar* label,
                                         DBUSMENU_MENUITEM_TOGGLE_STATE_UNCHECKED
                                       ));
 
+  g_signal_connect (item,
+                    DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
+                    G_CALLBACK (activatedCallback),
+                    GUINT_TO_POINTER (item_index));
+
   radio = new QuicklistMenuItemRadio (item, true);
-    
+
   return radio;
 }
 
 QuicklistMenuItemCheckmark*
 createCheckmarkItem (const gchar* label,
                      gboolean     enabled,
-                     gboolean     checked)
+                     gboolean     checked,
+                     unsigned int item_index)
 {
   DbusmenuMenuitem*           item      = NULL;
   QuicklistMenuItemCheckmark* checkmark = NULL;
@@ -121,13 +127,20 @@ createCheckmarkItem (const gchar* label,
                                         DBUSMENU_MENUITEM_TOGGLE_STATE_UNCHECKED
                                       ));
 
+  g_signal_connect (item,
+                    DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
+                    G_CALLBACK (activatedCallback),
+                    GUINT_TO_POINTER (item_index));
+
   checkmark = new QuicklistMenuItemCheckmark (item, true);
     
   return checkmark;
 }
 
 QuicklistMenuItemLabel*
-createLabelItem (const gchar* string, bool enabled = true)
+createLabelItem (const gchar* string,
+                 unsigned int item_index,
+                 bool enabled = true)
 {
   DbusmenuMenuitem*       item  = NULL;
   QuicklistMenuItemLabel* label = NULL;
@@ -141,6 +154,11 @@ createLabelItem (const gchar* string, bool enabled = true)
   dbusmenu_menuitem_property_set_bool (item,
                                        DBUSMENU_MENUITEM_PROP_ENABLED,
                                        enabled);
+
+  g_signal_connect (item,
+                    DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
+                    G_CALLBACK (activatedCallback),
+                    GUINT_TO_POINTER (item_index));
 
   label = new QuicklistMenuItemLabel (item, true);
 
@@ -171,37 +189,37 @@ ThreadWidgetInit (nux::NThread* thread,
   gQuicklist = new QuicklistView ();
   gQuicklist->Reference ();
 
-  gLabel = createLabelItem("Item1, normal");
+  gLabel = createLabelItem("Item1, normal", 0);
   gQuicklist->AddMenuItem (gLabel);
 
   gSeparator = createSeparatorItem();
   gQuicklist->AddMenuItem (gSeparator);
 
-  gRadio = createRadioItem("Item2, radio, checked", true, true);
+  gRadio = createRadioItem("Item2, radio, checked", true, true, 1);
   gQuicklist->AddMenuItem (gRadio);
 
-  gRadio = createRadioItem("Item3, radio, unchecked", true, false);
+  gRadio = createRadioItem("Item3, radio, unchecked", true, false, 2);
   gQuicklist->AddMenuItem (gRadio);
 
-  gRadio = createRadioItem("Item4, disabled radio, checked", false, true);
+  gRadio = createRadioItem("Item4, disabled radio, checked", false, true, 3);
   gQuicklist->AddMenuItem (gRadio);
 
-  gRadio = createRadioItem("Item5, disabled radio, unchecked", false, false);
+  gRadio = createRadioItem("Item5, disabled radio, unchecked", false, false, 4);
   gQuicklist->AddMenuItem (gRadio);
 
-  gCheckmark = createCheckmarkItem("Item6, checkmark, checked", true, true);
+  gCheckmark = createCheckmarkItem("Item6, checkmark, checked", true, true, 5);
   gQuicklist->AddMenuItem (gCheckmark);
 
-  gCheckmark = createCheckmarkItem("Item7, checkmark, unchecked", true, false);
+  gCheckmark = createCheckmarkItem("Item7, checkmark, unchecked", true, false, 6);
   gQuicklist->AddMenuItem (gCheckmark);
 
-  gCheckmark = createCheckmarkItem("Item8, disabled checkmark, checked", false, true);
+  gCheckmark = createCheckmarkItem("Item8, disabled checkmark, checked", false, true, 7);
   gQuicklist->AddMenuItem (gCheckmark);
 
-  gCheckmark = createCheckmarkItem("Item9, disabled checkmark, unchecked", false, false);
+  gCheckmark = createCheckmarkItem("Item9, disabled checkmark, unchecked", false, false, 8);
   gQuicklist->AddMenuItem (gCheckmark);
 
-  gLabel = createLabelItem("Item10, disabled", false);
+  gLabel = createLabelItem("Item10, disabled", 9, false);
   gQuicklist->AddMenuItem (gLabel);
 
   gQuicklist->EnableQuicklistForTesting (true);
@@ -343,6 +361,13 @@ main (int argc, char **argv)
   g_assert_cmpint (gResult[0], ==, true);
   g_assert_cmpint (gResult[1], ==, true);
   g_assert_cmpint (gResult[2], ==, true);
+  g_assert_cmpint (gResult[3], ==, false);
+  g_assert_cmpint (gResult[4], ==, false);
+  g_assert_cmpint (gResult[5], ==, true);
+  g_assert_cmpint (gResult[6], ==, true);
+  g_assert_cmpint (gResult[7], ==, false);
+  g_assert_cmpint (gResult[8], ==, false);
+  g_assert_cmpint (gResult[9], ==, false);
 
   return 0;
 }
