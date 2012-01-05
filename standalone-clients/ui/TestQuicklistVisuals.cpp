@@ -227,6 +227,9 @@ ThreadWidgetInit (nux::NThread* thread,
   gQuicklists[2]->EnableQuicklistForTesting (true);
   gQuicklists[2]->SetBaseXY (45, 290);
   gQuicklists[2]->ShowWindow (true);
+
+  nux::ColorLayer background (nux::Color (0x772953));
+  static_cast<nux::WindowThread*>(thread)->SetWindowBackgroundPaintLayer(&background);
 }
 
 int
