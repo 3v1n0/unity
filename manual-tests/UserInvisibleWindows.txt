@@ -1,0 +1,47 @@
+Management of user-invisible windows
+------------------------------------
+This test shows how unity should manage the user-invisible windows (i.e the
+windows with the skip-taskbar flag on).
+
+#. Start on a clean screen
+#. Open a window of an unsticky application with the skip-taskbar flag set to ON
+
+Outcome
+  Unity should ignore it, not showing it both on the launcher and on the Alt+Tab.
+
+
+Pinned Application user-invisible window
+----------------------------------------
+This test shows how unity should manage the user-invisible windows (i.e the
+windows with the skip-taskbar flag on) that belongs to an application sticked
+to launcher.
+
+#. Start on a clean screen
+#. Open one or more windows of a sticky application with the skip-taskbar flag
+   set to ON
+
+Outcome
+  Unity should show the pinned application icon in the running state with only
+  one left indicator (pip), but clicking on it should make a new instance of the
+  application to run.
+  Otherwise, selecting that application in the Alt+Tab should bring the user-invisible
+  window(s) to focus.
+
+
+Running Application with both visible and invisible windows
+-----------------------------------------------------------
+This test shows how unity should manage applications with both user visible
+and invisible windows.
+
+#. Start on a clean screen
+#. Open one or more windows of an application with the skip-taskbar flag set to OFF
+#. Open one or more windows of that application with the skip-taskbar flag set to ON
+
+Outcome
+  The launcher icon should count with left icon indicators (pips) only the visible
+  window(s); when clicking on it or selecting it via Alt+Tab unity should bring
+  to focus only the visible windows, while at the second click over the launcher
+  the spread with both visible and invisible windows should be activated.
+  When all the user-visible windows are closed, the application should stay in
+  the launcher or in the Alt+Tab (and show as running) only if is sticky,
+  otherwise the icon should hide.
