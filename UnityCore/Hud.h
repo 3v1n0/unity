@@ -24,20 +24,54 @@
 #include <string>
 #include <memory>
 #include <NuxCore/Property.h>
-#include "GLibDBusProxy.h"
-#include "GLibWrapper.h"  
+#include <glib/gvariant.h>
 
 namespace unity
 {
 namespace hud
 {
 
+
+class SuggestionImpl;
+class Suggestion
+{
+public:
+  typedef std::shared_ptr<Suggestion> Ptr;
+  
+  Suggestion(std::string const& formatted_text_, std::string const& icon_name_,
+                         std::string const& item_icon_, std::string const& completion_text_,
+                         GVariant* key_)
+  : formatted_text(formatted_text_)
+  , icon_name(icon_name_)
+  , item_icon(item_icon_)
+  , completion_text(completion_text_)
+  , key(key_)
+  {
+    g_variant_ref(key);
+  }
+  
+  ~Suggestion()
+  {
+    g_variant_unref(key);
+  }
+  
+  Suggestion(const Suggestion &rhs);
+  Suggestion& operator=(Suggestion);
+
+  std::string formatted_text;   // Pango formatted text
+  std::string icon_name;        // icon name using standard lookups
+  std::string item_icon;        // Future API
+  std::string completion_text; // Non formatted text f or completion
+  GVariant *key;
+};
+
+
+class HudImpl;
 class Hud
 {
 public:
   typedef std::shared_ptr<Hud> Ptr;
-  typedef std::tuple<std::string, std::string, GVariant*> Suggestion; // target, icon, key
-  typedef std::deque<Suggestion> Suggestions;
+  typedef std::deque<Suggestion::Ptr> Suggestions;
 
   /*
    * Constructor for the hud
@@ -48,6 +82,9 @@ public:
       std::string const& dbus_path);
 
   ~Hud();
+
+  Hud(const Hud &rhs);
+  Hud& operator=(Hud);
 
   nux::Property<std::string> target;
   nux::Property<std::string> target_icon;
@@ -65,9 +102,9 @@ public:
   void Execute(std::string const& execute_string);
 
   /*
-   * Executes a suggestion associated with the given key
+   * Executes a suggestion
    */
-  void ExecuteByKey(GVariant* key);
+  void ExecuteBySuggestion(Suggestion const& suggestion);
 
   /*
    * Returns a deque of Suggestion types when the service provides them
@@ -75,12 +112,7 @@ public:
   sigc::signal<void, Suggestions> suggestion_search_finished;
 
 private:
-  Suggestions suggestions_;
-  std::string private_connection_name_;
-  glib::DBusProxy proxy_;
-
-  void SuggestionCallback(GVariant* data);
-  void ExecuteSuggestionCallback(GVariant* suggests);
+  HudImpl *pimpl_;
 };
 
 }

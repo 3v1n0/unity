@@ -260,13 +260,13 @@ namespace hud {
     nux::Button::PostDraw(GfxContext, force_draw);
   }
 
-  void HudButton::SetSuggestion(Hud::Suggestion suggestion)
+  void HudButton::SetSuggestion(std::shared_ptr<Suggestion> suggestion)
   {
     suggestion_ = suggestion;
-    label = std::get<0>(suggestion);
+    label = suggestion->formatted_text;
   }
 
-  Hud::Suggestion HudButton::GetSuggestion()
+  std::shared_ptr<Suggestion> HudButton::GetSuggestion()
   {
     return suggestion_;
   }

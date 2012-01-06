@@ -16,13 +16,14 @@
  *
  * Authored by: Gordon Allott <gord.allott@canonical.com>
  */
-
+// 
 #include "Hud.h"
 
 #include <gio/gio.h>
 #include <glib.h>
 #include <NuxCore/Logger.h>
 #include "GLibWrapper.h"
+#include "GLibDBusProxy.h"
 
 #include "config.h"
 
@@ -35,24 +36,116 @@ namespace
 {
 nux::logging::Logger logger("unity.hud.hud");
 }
-//
+
+// Impl classes
+class HudImpl
+{
+public:
+  HudImpl(std::string const& dbus_name,
+          std::string const& dbus_path)
+  : proxy_(dbus_name, dbus_path, "com.canonical.hud")
+  {    
+  }
+  void SuggestionCallback(GVariant* data);
+  void ExecuteSuggestionCallback(GVariant* suggests);
+  void ExecuteByKey(GVariant* key);
+
+  Hud::Suggestions suggestions_;
+  glib::DBusProxy proxy_;
+  Hud* parent_;
+};
+
+void HudImpl::ExecuteByKey(GVariant* key)
+{
+  LOG_DEBUG(logger) << "Executing by Key";
+  
+  GVariantBuilder tuple;
+  g_variant_builder_init(&tuple, G_VARIANT_TYPE_TUPLE);
+  g_variant_builder_add_value(&tuple, g_variant_new_variant(key));
+  g_variant_builder_add_value(&tuple, g_variant_new_uint32(0));
+  
+  proxy_.Call("ExecuteQuery", g_variant_builder_end(&tuple));
+}
+
+void HudImpl::ExecuteSuggestionCallback(GVariant* suggests)
+{
+  if (suggests == nullptr)
+  {
+    LOG_ERROR(logger) << "received null suggestion value";
+    return;
+  }
+  
+  GVariant * target = g_variant_get_child_value(suggests, 0);
+  g_variant_unref(target);
+  
+  GVariant* suggestions = g_variant_get_child_value(suggests, 1);
+  GVariantIter iter;
+  g_variant_iter_init(&iter, suggestions);
+  glib::String suggestion;
+  glib::String icon;
+  glib::String item_icon;
+  glib::String completion_text;
+  GVariant* key = NULL;
+  
+  while (g_variant_iter_loop(&iter, "(ssssv)", &suggestion, &icon, &item_icon, &completion_text, &key))
+  {
+    LOG_DEBUG(logger) << "Attempting to execute suggestion: " << suggestion;
+    ExecuteByKey(key);
+    break;
+  }
+  
+  g_variant_unref(suggestions);
+}
+
+void HudImpl::SuggestionCallback(GVariant* suggests)
+{
+  suggestions_.clear();
+  
+  // extract the information from the GVariants
+  GVariant * target = g_variant_get_child_value(suggests, 0);
+  g_variant_unref(target);
+  
+  GVariant* suggestions = g_variant_get_child_value(suggests, 1);
+  GVariantIter iter;
+  g_variant_iter_init(&iter, suggestions);
+  glib::String suggestion;
+  glib::String icon;
+  glib::String item_icon;
+  glib::String completion_text;
+  GVariant* key = NULL;
+  
+  while (g_variant_iter_loop(&iter, "(ssssv)", &suggestion, &icon, &item_icon, &completion_text, &key))
+  {
+    LOG_DEBUG(logger) << "Found suggestion: " << suggestion;
+    g_variant_ref(key);
+    suggestions_.push_back(Suggestion::Ptr(new Suggestion(std::string(suggestion), std::string(icon),
+                                                          std::string(item_icon), std::string(completion_text),
+                                                          key)));
+  }
+  
+  g_variant_unref(suggestions);
+  
+  parent_->suggestion_search_finished.emit(suggestions_);
+}
+
+
 Hud::Hud(std::string const& dbus_name,
          std::string const& dbus_path)
-    : proxy_(dbus_name, dbus_path, "com.canonical.hud")
+    : pimpl_(new HudImpl(dbus_name, dbus_path))
 {
-
+  pimpl_->parent_ = this;
 }
 
 Hud::~Hud()
 {
-
+  delete pimpl_;
 }
 
 void Hud::GetSuggestions(std::string const& search_string)
 {
   LOG_DEBUG(logger) << "Getting suggestions: " << search_string;
   GVariant* paramaters = g_variant_new("(s)", search_string.c_str());
-  proxy_.Call("GetSuggestions", paramaters, sigc::mem_fun(this, &Hud::SuggestionCallback));
+  pimpl_->proxy_.Call("GetSuggestions", paramaters, sigc::mem_fun(this->pimpl_, &HudImpl::SuggestionCallback));
 }
 
 void Hud::Execute(std::string const& execute_string)
@@ -60,87 +153,23 @@ void Hud::Execute(std::string const& execute_string)
   // we do a search and execute based on the results of that search
   LOG_DEBUG(logger) << "Executing string: " << execute_string;
   GVariant* paramaters = g_variant_new("(s)", execute_string.c_str());
-  proxy_.Call("GetSuggestions", paramaters, sigc::mem_fun(this, &Hud::ExecuteSuggestionCallback));
+  pimpl_->proxy_.Call("GetSuggestions", paramaters, sigc::mem_fun(this->pimpl_, &HudImpl::ExecuteSuggestionCallback));
 }
 
-void Hud::ExecuteSuggestionCallback(GVariant* suggests)
+
+void Hud::ExecuteBySuggestion(Suggestion const& suggestion)
 {
-  GVariant* suggestions = g_variant_get_child_value(suggests, 2);
-  GVariantIter iter;
-  g_variant_iter_init(&iter, suggestions);
-  glib::String suggestion;
-  glib::String icon;
-  GVariant* key = NULL;
-
-  while (g_variant_iter_loop(&iter, "(ssv)", &suggestion, &icon, &key))
+  LOG_DEBUG(logger) << "Executing by Suggestion: " << suggestion.formatted_text;
+  if (suggestion.key == nullptr)
   {
-    LOG_DEBUG(logger) << "Attempting to execute suggestion: " << suggestion;
-    ExecuteByKey(key);
-    break;
+    LOG_ERROR(logger) << "Tried to execute suggestion with no key: " << suggestion.formatted_text;
   }
-
-  g_variant_unref(suggestions);
+  else
+  {
+    pimpl_->ExecuteByKey(suggestion.key);
+    pimpl_->suggestions_.clear();
+  }
 }
 
-void Hud::ExecuteByKey(GVariant* key)
-{
-  LOG_DEBUG(logger) << "Executing by key";
-
-  GVariantBuilder tuple;
-  g_variant_builder_init(&tuple, G_VARIANT_TYPE_TUPLE);
-  g_variant_builder_add_value(&tuple, g_variant_new_variant(key));
-  g_variant_builder_add_value(&tuple, g_variant_new_uint32(0));
-
-  proxy_.Call("ExecuteQuery", g_variant_builder_end(&tuple));
-}
-
-
-void Hud::SuggestionCallback(GVariant* suggests)
-{
-  // we first have to loop through the previous suggestions and unref
-  // all the variants
-  // !!FIXME!! - create a Variant class in GlibWrapper so scoping handles this for us
-
-  for (auto it = suggestions_.begin(); it != suggestions_.end(); it++)
-  {
-    // get the third element in our tuple
-    GVariant* key = std::get<2>((*it));
-    g_variant_unref(key);
-  }
-  suggestions_.clear();
-
-  // extract the information from the GVariants
-  // target
-  GVariant * vtarget = g_variant_get_child_value(suggests, 1);
-  target = g_variant_get_string(vtarget, NULL);
-  g_variant_unref(vtarget);
-
-  LOG_DEBUG(logger) << "Got new target: " << target();
-
-  // icon
-  GVariant * vicon = g_variant_get_child_value(suggests, 0);
-  target_icon = g_variant_get_string(vicon, NULL);
-  g_variant_unref(vicon);
-
-  LOG_DEBUG(logger) << "Got new icon: " << target_icon();
-
-  GVariant* suggestions = g_variant_get_child_value(suggests, 2);
-  GVariantIter iter;
-  g_variant_iter_init(&iter, suggestions);
-  glib::String suggestion;
-  glib::String icon;
-  GVariant* key = NULL;
-
-  while (g_variant_iter_loop(&iter, "(ssv)", &suggestion, &icon, &key))
-  {
-    LOG_DEBUG(logger) << "Found suggestion: " << suggestion;
-    g_variant_ref(key);
-    suggestions_.push_back(Suggestion(std::string(suggestion), std::string(icon), key));
-  }
-
-  g_variant_unref(suggestions);
-
-  suggestion_search_finished.emit(suggestions_);
-}
 }
 }
