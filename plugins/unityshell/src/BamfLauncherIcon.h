@@ -121,7 +121,6 @@ private:
 
   void OnWindowMinimized(guint32 xid);
   void OnWindowMoved(guint32 xid);
-  void OnViewPortSwitchEnded();
   bool OwnsWindow(Window w);
   
   const std::set<std::string>& GetSupportedTypes();
@@ -146,7 +145,6 @@ private:
 
   static gboolean OnDndHoveredTimeout(gpointer data);
   static gboolean FillSupportedTypes(gpointer data);
-  static gboolean OnWindowMovedTimeout(gpointer data);
 };
 
 }
