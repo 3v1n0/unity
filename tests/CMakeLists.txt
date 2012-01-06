@@ -89,13 +89,16 @@ if (${GTEST_FOUND} STREQUAL TRUE)
   include_directories(${GTEST_INCLUDE_DIRS})
 
 # The service that provides DBus services to test against
-#  add_executable(test-gtest-service
-#                 test_service_lens.c
-#                 test_service_lens.h
-#                 test_service_main.c
-#                 test_service_model.c
-#                 test_service_model.h)
-#  add_dependencies (test-gtest-service unity-core-${UNITY_API_VERSION})
+add_executable(test-gtest-service
+               test_service_hud.c
+               test_service_hud.h
+               #               test_service_lens.c
+               #test_service_lens.h
+               test_service_main.c
+               #test_service_model.c
+               #test_service_model.h)
+                )
+add_dependencies (test-gtest-service unity-core-${UNITY_API_VERSION})
 
 # The actual test executable (xless) - do not put anything that requires X in here
   add_executable(test-gtest-xless
