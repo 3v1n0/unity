@@ -6,7 +6,7 @@ from unittest.loader import TestLoader
 from unittest.runner import TextTestRunner
 
 if __name__ == "__main__":
-	r_file = open('test-result.xml',"w")
+	r_file = open('test-result.xml','w')
 	loader = TestLoader()
 	result = junitxml.JUnitXmlResult(r_file)
 	result.startTestRun()
