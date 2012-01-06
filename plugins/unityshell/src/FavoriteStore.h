@@ -57,10 +57,11 @@ public:
   // Therse only emit if something has changed the GSettings object externally
 
   //desktop_path, position
-  sigc::signal<void, std::string, int> favorite_added;
+  sigc::signal<void, std::string const&, std::string const&, bool> favorite_added;
   //desktop_path
-  sigc::signal<void, std::string> favorite_removed;
+  sigc::signal<void, std::string const&> favorite_removed;
   sigc::signal<void> reordered;
+  sigc::signal<void> changed;
 };
 
 }

@@ -71,6 +71,11 @@ public:
 
   void OnLauncherEntryRemoteAdded(LauncherEntryRemote* entry);
   void OnLauncherEntryRemoteRemoved(LauncherEntryRemote* entry);
+  
+  void OnFavoriteStoreFavoriteAdded(std::string const& entry, std::string const& pos, bool before);
+  void OnFavoriteStoreFavoriteRemoved(std::string const& entry);
+  void OnFavoriteStoreFavoriteReordered();
+
 
   void InsertExpoAction();
   void RemoveExpoAction();
@@ -174,6 +179,10 @@ Controller::Impl::Impl(Display* display)
 
   remote_model_.entry_added.connect(sigc::mem_fun(this, &Impl::OnLauncherEntryRemoteAdded));
   remote_model_.entry_removed.connect(sigc::mem_fun(this, &Impl::OnLauncherEntryRemoteRemoved));
+  
+  FavoriteStore::GetDefault().favorite_added.connect(sigc::mem_fun(this, &Impl::OnFavoriteStoreFavoriteAdded));
+  FavoriteStore::GetDefault().favorite_removed.connect(sigc::mem_fun(this, &Impl::OnFavoriteStoreFavoriteRemoved));
+  FavoriteStore::GetDefault().reordered.connect(sigc::mem_fun(this, &Impl::OnFavoriteStoreFavoriteReordered));
 
   RegisterIcon(new BFBLauncherIcon(raw_launcher));
   desktop_icon_ = new DesktopLauncherIcon(raw_launcher);
@@ -310,6 +319,55 @@ void Controller::Impl::OnLauncherEntryRemoteRemoved(LauncherEntryRemote* entry)
   {
     icon->RemoveEntryRemote(entry);
   }
+}
+
+void Controller::Impl::OnFavoriteStoreFavoriteAdded(std::string const& entry, std::string const& pos, bool before)
+{
+  LauncherIcon* other = nullptr; 
+  for (auto it : model_->GetSublist<BamfLauncherIcon>())
+  {
+    if (pos == it->DesktopFile())
+      other = it;
+  }
+  
+  for (auto it : model_->GetSublist<BamfLauncherIcon> ())
+  {
+    if (entry == it->DesktopFile())
+    {
+      it->Stick();
+      if (!before)
+        model_->ReorderAfter(it, other);
+      else
+        model_->ReorderBefore(it, other, false);
+      return;
+    }
+  }
+
+  LauncherIcon* result = CreateFavorite(entry.c_str());
+  if (result)
+  {
+    RegisterIcon(result);
+    if (!before)
+      model_->ReorderAfter(result, other);
+    else
+      model_->ReorderBefore(result, other, false);
+  }
+}
+
+void Controller::Impl::OnFavoriteStoreFavoriteRemoved(std::string const& entry)
+{
+  for (auto it : model_->GetSublist<BamfLauncherIcon> ())
+  {
+    if (it->DesktopFile() == entry)
+    {
+      OnLauncherRemoveRequest(it);
+      break;
+     }
+  }
+}
+
+void Controller::Impl::OnFavoriteStoreFavoriteReordered()
+{
 }
 
 void Controller::Impl::OnExpoActivated()

@@ -190,6 +190,36 @@ LauncherModel::IconHasSister(LauncherIcon* icon)
 }
 
 void
+LauncherModel::ReorderAfter(LauncherIcon* icon, LauncherIcon* other)
+{
+  if (icon == other)
+    return;
+
+  int i = 0;
+  for (LauncherModel::iterator it = begin(); it != end(); it++)
+  {
+    if ((*it) == icon)
+      continue;
+
+    if ((*it) == other)
+    {
+      (*it)->SetSortPriority(i);
+      i++;
+
+      icon->SetSortPriority(i);
+      i++;
+    }
+    else
+    {
+      (*it)->SetSortPriority(i);
+      i++;
+    }
+  }
+
+  Sort();
+}
+
+void
 LauncherModel::ReorderBefore(LauncherIcon* icon, LauncherIcon* other, bool save)
 {
   if (icon == other)

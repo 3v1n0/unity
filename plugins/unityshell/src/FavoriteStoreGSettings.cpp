@@ -20,7 +20,7 @@
 #include "FavoriteStoreGSettings.h"
 
 #include <algorithm>
-#include <iostream>
+#include <boost/utility.hpp>
 
 #include <gio/gdesktopappinfo.h>
 
@@ -103,7 +103,12 @@ void FavoriteStoreGSettings::Init()
 
 void FavoriteStoreGSettings::Refresh()
 {
-  favorites_.clear();
+  FillList(favorites_);
+}
+
+void FavoriteStoreGSettings::FillList(FavoriteList& list)
+{
+  list.clear();
 
   gchar** favs = g_settings_get_strv(settings_, "favorites");
 
@@ -114,7 +119,7 @@ void FavoriteStoreGSettings::Refresh()
     {
       if (g_file_test(favs[i], G_FILE_TEST_EXISTS))
       {
-        favorites_.push_back(favs[i]);
+        list.push_back(favs[i]);
       }
       else
       {
@@ -131,12 +136,11 @@ void FavoriteStoreGSettings::Refresh()
 
       if (filename)
       {
-        favorites_.push_back(filename);
+        list.push_back(filename);
       }
       else
       {
-        LOG_WARNING(logger) << "Unable to load GDesktopAppInfo for '"
-                         << favs[i] << "'";
+        LOG_WARNING(logger) << "Unable to load GDesktopAppInfo for '" << favs[i] << "'";
       }
     }
   }
@@ -254,10 +258,43 @@ void FavoriteStoreGSettings::SaveFavorites(FavoriteList const& favorites)
 
 void FavoriteStoreGSettings::Changed(std::string const& key)
 {
-  if (ignore_signals_)
+  if (ignore_signals_ or key != "favorites")
     return;
+    
+  FavoriteList old(favorites_);
+  FillList(favorites_);
+  FavoriteList fresh(favorites_);
+  FavoriteList result;
 
-  LOG_DEBUG(logger) << "Changed: " << key;
+  old.sort();
+  fresh.sort();
+  
+  // fresh - old
+  std::set_difference(fresh.begin(), fresh.end(), old.begin(), old.end(),
+                      std::inserter(result, result.end()));
+                      
+  for (FavoriteList::iterator it = result.begin(); it != result.end(); it++)
+  {
+    FavoriteList::iterator newbie = std::find(favorites_.begin(), favorites_.end(), *it);
+    bool before = ( newbie == favorites_.begin());
+    
+    std::string pos = "";
+    if (favorites_.size() > 1)
+      pos = (before) ? *(boost::next(newbie)) : *(boost::prior(newbie));
+      
+    favorite_added.emit(*it, pos , before);
+  }
+                     
+  // old - fresh
+  result.clear();
+  std::set_difference(old.begin(), old.end(), fresh.begin(), fresh.end(),
+                      std::inserter(result, result.end()));
+                      
+  for (auto it : result)
+  {
+    favorite_removed.emit(it); 
+  }
+ 
 }
 
 namespace
