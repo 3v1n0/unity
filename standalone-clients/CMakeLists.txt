@@ -26,13 +26,13 @@ set (CFLAGS
      )
 add_definitions (${CFLAGS})
 
-set (LIBS ${TEST_UNIT_DEPS_LIBRARIES} "-lunity-core-${UNITY_API_VERSION} -lm")
+set (LIBS ${TEST_UNIT_DEPS_LIBRARIES} "-lunity-core-${UNITY_API_VERSION} -lm -lGL -lGLU")
 link_libraries (${LIBS})
 
 set (LIB_PATHS ${TEST_UNIT_DEPS_LIBRARY_DIRS})
 link_directories (${CMAKE_BINARY_DIR}/UnityCore ${LIB_PATHS})
 
-include_directories (. .. ../services ../UnityCore ${UNITY_SRC} ${CMAKE_BINARY_DIR})
+include_directories (. .. ../services ../UnityCore ${UNITY_SRC} ${CMAKE_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
 
 # We can't have convenience libs so we need to rebuild with what we need
 # Please keep actual test files alphabetically at top and then files
@@ -451,6 +451,20 @@ add_executable (bg-hash
                 ${UNITY_SRC}/ubus-server.h
                )
 add_dependencies (bg-hash unity-core-${UNITY_API_VERSION})
+
+find_package (OpenGL)
+
+include_directories (${OPENGL_gl_INCDIRS})
+add_library (glfuncloader SHARED
+	     ${CMAKE_CURRENT_SOURCE_DIR}/GLFuncLoader.cpp)
+target_link_libraries (glfuncloader dl ${OPENGL_gl_LIBRARY})
+add_executable (screen-effect-fbo
+		TestScreenEffectFramebufferObject.cpp
+		${UNITY_SRC}/ScreenEffectFramebufferObject.cpp
+		${UNITY_SRC}/BackgroundEffectHelper.cpp)
+
+target_link_libraries (screen-effect-fbo glfuncloader ${OPENGL_gl_LIBRARY})
+add_dependencies (screen-effect-fbo ${UNITY_API_VERSION})
 
 
 # Custom target to make all the other targets here, add your test to this list
