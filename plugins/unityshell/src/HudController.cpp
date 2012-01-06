@@ -97,9 +97,9 @@ void Controller::SetupHudView()
   LOG_DEBUG(logger) << "connecting to signals";
   view_->search_changed.connect(sigc::mem_fun(this, &Controller::OnSearchChanged));
   view_->search_activated.connect(sigc::mem_fun(this, &Controller::OnSearchActivated));
-  hud_service_.target_icon.changed.connect([&] (std::string icon_name) {
-    view_->SetIcon(icon_name);
-  });
+//   hud_service_.target_icon.changed.connect([&] (std::string icon_name) {
+//     view_->SetIcon(icon_name);
+//   });
 }
 
 void Controller::SetupRelayoutCallbacks()

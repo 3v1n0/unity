@@ -77,9 +77,9 @@ void TestRunner::Init ()
     hud_view_->SetSuggestions(suggestions);
   });
 
-  hud_service_.target_icon.changed.connect([&] (std::string icon_name) {
-    hud_view_->SetIcon(icon_name);
-  });
+//   hud_service_.target_icon.changed.connect([&] (std::string icon_name) {
+//     hud_view_->SetIcon(icon_name);
+//   });
 
   hud_view_->search_changed.connect([&] (std::string search_string) {
     hud_service_.GetSuggestions(search_string);

@@ -87,7 +87,6 @@ public:
   Hud& operator=(Hud);
 
   nux::Property<std::string> target;
-  nux::Property<std::string> target_icon;
 
   /*
    * Queries the service for new suggestions, will fire off the 
