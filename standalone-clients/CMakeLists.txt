@@ -457,6 +457,7 @@ find_package (OpenGL)
 include_directories (${OPENGL_gl_INCDIRS})
 add_library (glfuncloader SHARED
 	     ${CMAKE_CURRENT_SOURCE_DIR}/GLFuncLoader.cpp)
+add_dependencies (glfuncloader unity-core-${UNITY_API_VERSION})
 target_link_libraries (glfuncloader dl ${OPENGL_gl_LIBRARY})
 add_executable (screen-effect-fbo
 		TestScreenEffectFramebufferObject.cpp
