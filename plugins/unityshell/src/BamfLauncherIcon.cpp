@@ -142,7 +142,7 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
       {
         if (arg.source != ActionArg::SWITCHER)
         {
-          Spread(0, false);
+          Spread(true, 0, false);
         }
       }
     }
@@ -153,7 +153,7 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
         WindowManager::Default()->TerminateScale();
         Focus(arg);
         if (arg.source != ActionArg::SWITCHER)
-          Spread(0, false);
+          Spread(true, 0, false);
       }
       else // #3 above
       {
@@ -611,11 +611,12 @@ void BamfLauncherIcon::Focus(ActionArg arg)
   }
 }
 
-bool BamfLauncherIcon::Spread(int state, bool force)
+bool BamfLauncherIcon::Spread(bool current_desktop, int state, bool force)
 {
   BamfView* view;
   GList* children, *l;
   children = bamf_view_get_children(BAMF_VIEW(m_App));
+  WindowManager* wm = WindowManager::Default();
 
   std::vector<Window> windowList;
   for (l = children; l; l = l->next)
@@ -625,7 +626,11 @@ bool BamfLauncherIcon::Spread(int state, bool force)
     if (BAMF_IS_WINDOW(view))
     {
       guint32 xid = bamf_window_get_xid(BAMF_WINDOW(view));
-      windowList.push_back((Window) xid);
+
+      if (!current_desktop || (current_desktop && wm->IsWindowOnCurrentDesktop(xid)))
+      {
+        windowList.push_back((Window) xid);
+      }
     }
   }
 

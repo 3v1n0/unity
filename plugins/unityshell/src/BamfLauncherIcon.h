@@ -115,7 +115,7 @@ private:
 
   void OpenInstanceWithUris(std::set<std::string> uris);
   void Focus(ActionArg arg);
-  bool Spread(int state, bool force);
+  bool Spread(bool current_desktop, int state, bool force);
 
   void EnsureMenuItemsReady();
 
