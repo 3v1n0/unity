@@ -263,12 +263,17 @@ void FavoriteStoreGSettings::Changed(std::string const& key)
   FavoriteList old(favorites_);
   FillList(favorites_);
 
-  for (auto it : impl::GetNewbies(old, favorites_))
+  auto newbies = impl::GetNewbies(old, favorites_);
+
+  for (auto it : favorites_)
   {
+    if (std::find(newbies.begin(), newbies.end(), it) == newbies.end())
+      continue;
+    
     std::string pos;
     bool before;
     
-    impl::GetSignalAddedInfo(favorites_, it, pos, before);
+    impl::GetSignalAddedInfo(favorites_, newbies , it, pos, before);
     favorite_added.emit(it, pos, before);
   }
                      

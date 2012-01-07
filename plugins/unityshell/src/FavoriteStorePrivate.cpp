@@ -44,14 +44,26 @@ std::vector<std::string> GetNewbies(std::list<std::string> const& old, std::list
   return result;
 }
 
-void GetSignalAddedInfo(std::list<std::string> const& favs, std::string const& path, std::string& position, bool& before)
+void GetSignalAddedInfo(std::list<std::string> const& favs, std::vector<std::string> const& newbies,
+                        std::string const& path, std::string& position, bool& before)
 {
   auto it = std::find(favs.begin(), favs.end(), path);
   before = (it == favs.begin());
   position = "";
 
-  if (favs.size() > 1)
-    position = (before) ? *(boost::next(it)) : *(boost::prior(it));
+  if (before and favs.size() > 1)
+  {    
+    while (it != favs.end() && std::find(newbies.begin(), newbies.end(), *it) != newbies.end())
+      it++;
+    
+    if (it != favs.end())
+      position = *it;
+  }
+  else if (!before)
+  {
+    position = *(boost::prior(it));
+  }
+  
 }
 
 std::vector<std::string> GetRemoved(std::list<std::string> const& old, std::list<std::string> const& fresh)

@@ -103,6 +103,7 @@ TEST(TestFavoriteStorePrivate, TestGetNewbies)
 TEST(TestFavoriteStorePrivate, TestGetSignalAddedInfo)
 {
   std::list<std::string> favs;
+  std::vector<std::string> newbies;
   std::string position;
   bool before;
   
@@ -113,36 +114,60 @@ TEST(TestFavoriteStorePrivate, TestGetSignalAddedInfo)
   favs.push_back("e");
   
   // b c d e -> a b c d e
-  internal::impl::GetSignalAddedInfo(favs, "a", position, before);
+  newbies.push_back("a");
+  internal::impl::GetSignalAddedInfo(favs, newbies, "a", position, before);
   EXPECT_TRUE(before);
   EXPECT_EQ(position, "b");
   
   // a c d e -> a b c d e
-  internal::impl::GetSignalAddedInfo(favs, "b", position, before);
+  newbies.clear();
+  newbies.push_back("b");
+  internal::impl::GetSignalAddedInfo(favs, newbies, "b", position, before);
   EXPECT_FALSE(before);
   EXPECT_EQ(position, "a");
   
   // a b d e -> a b c d e
-  internal::impl::GetSignalAddedInfo(favs, "c", position, before);
+  newbies.clear();
+  newbies.push_back("c");
+  internal::impl::GetSignalAddedInfo(favs, newbies, "c", position, before);
   EXPECT_FALSE(before);
   EXPECT_EQ(position, "b");
   
   // a b c e -> a b c d e
-  internal::impl::GetSignalAddedInfo(favs, "d", position, before);
+  newbies.clear();
+  newbies.push_back("d");
+  internal::impl::GetSignalAddedInfo(favs, newbies, "d", position, before);
   EXPECT_FALSE(before);
   EXPECT_EQ(position, "c");
   
   // a b c d -> a b c d e
-  internal::impl::GetSignalAddedInfo(favs, "e", position, before);
+  newbies.clear();
+  newbies.push_back("e");
+  internal::impl::GetSignalAddedInfo(favs, newbies, "e", position, before);
   EXPECT_FALSE(before);
   EXPECT_EQ(position, "d");
   
-  // -> a
+  // -> b a c
   favs.clear();
+  favs.push_back("b");
   favs.push_back("a");
-  internal::impl::GetSignalAddedInfo(favs, "a", position, before);
+  favs.push_back("c");
+  newbies.clear();
+  newbies.push_back("a");
+  newbies.push_back("b");
+  newbies.push_back("c");
+  
+  internal::impl::GetSignalAddedInfo(favs, newbies, "b", position, before);
   EXPECT_TRUE(before);
   EXPECT_EQ(position, "");
+  
+  internal::impl::GetSignalAddedInfo(favs, newbies, "a", position, before);
+  EXPECT_FALSE(before);
+  EXPECT_EQ(position, "b");
+  
+  internal::impl::GetSignalAddedInfo(favs, newbies, "c", position, before);
+  EXPECT_FALSE(before);
+  EXPECT_EQ(position, "a");
 }
 
 

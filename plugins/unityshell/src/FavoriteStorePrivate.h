@@ -32,7 +32,8 @@ namespace impl
 
 std::vector<std::string> GetNewbies(std::list<std::string> const& old, std::list<std::string> const& fresh);
 
-void GetSignalAddedInfo(std::list<std::string> const& favs, std::string const& path, std::string& position, bool& before);
+void GetSignalAddedInfo(std::list<std::string> const& favs, std::vector<std::string> const& newbies, 
+                        std::string const& path, std::string& position, bool& before);
 
 std::vector<std::string> GetRemoved(std::list<std::string> const& old, std::list<std::string> const& fresh);
 
