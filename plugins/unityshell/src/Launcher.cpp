@@ -2664,6 +2664,10 @@ void Launcher::KeySwitcherActivate()
 
   _key_switcher_activated = true;
 
+  ubus_server_send_message(ubus_server_get_default(),
+                           UBUS_LAUNCHER_START_KEY_SWTICHER,
+                           g_variant_new_boolean(true));
+
   KeySwitcherNext();
 }
 
@@ -2679,6 +2683,10 @@ void Launcher::KeySwitcherTerminate()
 
   _hide_machine->SetQuirk(LauncherHideMachine::KEY_NAV_ACTIVE, false);
   _hover_machine->SetQuirk(LauncherHoverMachine::KEY_NAV_ACTIVE, false);
+
+  ubus_server_send_message(ubus_server_get_default(),
+                           UBUS_LAUNCHER_END_KEY_SWTICHER,
+                           g_variant_new_boolean(true));
 
   _key_switcher_activated = false;
   _current_icon_index = -1;
