@@ -328,7 +328,6 @@ void Controller::Impl::OnFavoriteStoreFavoriteAdded(std::string const& entry, st
   
   if (!pos.empty())
   {
-    // TODO: use a find_if
     for (auto it : bamf_list)
     {
       if (it->GetQuirk(LauncherIcon::QUIRK_VISIBLE) && pos == it->DesktopFile())
