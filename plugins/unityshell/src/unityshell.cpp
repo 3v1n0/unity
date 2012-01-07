@@ -1510,27 +1510,25 @@ bool UnityScreen::altTabPrevWindowInitiate(CompAction* action, CompAction::State
 
 bool UnityScreen::launcherSwitcherForwardInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
 {
-  if (!launcher_controller_->launcher().KeySwitcherIsActive())
-    launcher_controller_->launcher().KeySwitcherActivate();
-  else
-    launcher_controller_->launcher().KeySwitcherNext();
+  Launcher& launcher = launcher_controller_->launcher();
 
-  g_debug("GO On with super-tab!");
+  if (!launcher.KeySwitcherIsActive())
+    launcher.KeySwitcherActivate();
+  else
+    launcher.KeySwitcherNext();
 
   return false;
 }
 bool UnityScreen::launcherSwitcherPrevInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
 {
-  if (launcher_controller_->launcher().KeySwitcherIsActive())
-    launcher_controller_->launcher().KeySwitcherPrevious();
+  launcher_controller_->launcher().KeySwitcherPrevious();
 
-  g_debug("GO back with super-tab!");
   return false;
 }
 bool UnityScreen::launcherSwitcherTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options)
 {
   launcher_controller_->launcher().KeySwitcherTerminate();
-  g_debug("Stop supertab!");
+
   return false;
 }
 
