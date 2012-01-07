@@ -28,6 +28,9 @@ namespace
 
 nux::logging::Logger logger("unity.plugin");
 
+const int THRESHOLD_HEIGHT = 600;
+const int THRESHOLD_WIDTH = 1024;
+
 }
 
 PluginAdapter* PluginAdapter::_default = 0;
@@ -924,6 +927,10 @@ bool PluginAdapter::MaximizeIfBigEnough(CompWindow* window)
 
   screen_height = o.workArea().height();
   screen_width = o.workArea().width();
+  
+  // See bug #797808.
+  if (screen_height > THRESHOLD_HEIGHT && screen_width > THRESHOLD_WIDTH)
+    return false;
 
   // use server<parameter> because the window won't show the real parameter as
   // not mapped yet
