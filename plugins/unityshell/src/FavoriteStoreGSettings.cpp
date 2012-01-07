@@ -225,7 +225,7 @@ void FavoriteStoreGSettings::SetFavorites(FavoriteList const& favorites)
   Refresh();
 }
 
-void FavoriteStoreGSettings::SaveFavorites(FavoriteList const& favorites)
+void FavoriteStoreGSettings::SaveFavorites(FavoriteList const& favorites, bool ignore)
 {
   const int size = favorites.size();
   const char* favs[size + 1];
@@ -247,7 +247,7 @@ void FavoriteStoreGSettings::SaveFavorites(FavoriteList const& favorites)
     favs[index] = iter->c_str();
   }
 
-  ignore_signals_ = true;
+  ignore_signals_ = ignore;
   if (!g_settings_set_strv(settings_, "favorites", favs))
   {
     LOG_WARNING(logger) << "Saving favorites failed.";
