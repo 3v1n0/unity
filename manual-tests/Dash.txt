@@ -10,4 +10,29 @@ using the dash. (see lp:856205)
 Outcome
   The dash disappears, and gedit is run. If nothing happens or the first
   command is run (in this case gcc), this test failed.
+  
+
+Category headers focus
+----------------------
+This test makes sure that clicking on a category headers doesn't focus it.
+
+#. Open the apps lens.
+#. Click on the dash search bar to make sure that the search bar has the focus.
+#. Click on a category header to expand/collapse a category
+
+Outcome
+  The category should expand/collaspe and the search bar still has the focus.
+  
+  
+Drag and drop dash icons
+----------------------------
+This test makes sure that.
+
+#. Open the apps lens.
+#. Drag a dash icon.
+#. Now drop it inside the dash but on another icon or on a blank space.
+
+Outcome
+  The dropped icon should not have the keyboard focus and should not remain
+  enlightened.
 

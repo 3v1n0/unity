@@ -44,7 +44,6 @@
 #include "IconRenderer.h"
 #include "TimeUtil.h"
 #include "WindowManager.h"
-#include "BamfLauncherIcon.h"
 
 #include "ubus-server.h"
 #include "UBusMessages.h"
@@ -2324,14 +2323,6 @@ void Launcher::EndIconDrag()
       hovered_icon->SetQuirk(LauncherIcon::QUIRK_PULSE_ONCE, true);
 
       launcher_removerequest.emit(_drag_icon);
-      
-      if (_drag_icon && _drag_icon->Type() == LauncherIcon::TYPE_APPLICATION)
-      {
-        BamfLauncherIcon* bamf_icon = dynamic_cast<BamfLauncherIcon*>(_drag_icon);
-        
-        if (bamf_icon)
-          bamf_icon->Quit();
-      }
             
       _drag_window->ShowWindow(false);
       EnsureAnimation();
@@ -2887,7 +2878,7 @@ Launcher::RenderIconToTexture(nux::GraphicsEngine& GfxContext, LauncherIcon* ico
 
   SetOffscreenRenderTarget(texture);
   icon_renderer->PreprocessIcons(drag_args, nux::Geometry(0, 0, _icon_size, _icon_size));
-  icon_renderer->RenderIcon(nux::GetGraphicsEngine(), arg, nux::Geometry(0, 0, _icon_size, _icon_size), nux::Geometry(0, 0, _icon_size, _icon_size));
+  icon_renderer->RenderIcon(nux::GetWindowThread()->GetGraphicsEngine(), arg, nux::Geometry(0, 0, _icon_size, _icon_size), nux::Geometry(0, 0, _icon_size, _icon_size));
   RestoreSystemRenderTarget();
 }
 
@@ -2924,7 +2915,7 @@ void Launcher::OnDNDDataCollected(const std::list<char*>& mimes)
     if (!g_str_equal(it, uri_list_const.Value()))
       continue;
 
-    _dnd_data.Fill(nux::GetWindow().GetDndData(uri_list_const.Value()));
+    _dnd_data.Fill(nux::GetWindowThread()->GetGraphicsDisplay().GetDndData(uri_list_const.Value()));
     break;
   }
 
@@ -3030,7 +3021,7 @@ Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
       if (!g_str_equal(it, uri_list_const.Value()))
         continue;
 
-      _dnd_data.Fill(nux::GetWindow().GetDndData(uri_list_const.Value()));
+      _dnd_data.Fill(nux::GetWindowThread()->GetGraphicsDisplay().GetDndData(uri_list_const.Value()));
       break;
     }
 

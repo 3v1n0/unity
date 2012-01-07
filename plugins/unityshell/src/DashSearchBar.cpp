@@ -240,12 +240,25 @@ void SearchBar::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   GfxContext.PushClippingRectangle(geo);
 
   if (!IsFullRedraw())
+  {
     gPainter.PushLayer(GfxContext, bg_layer_->GetGeometry(), bg_layer_);
+  }
+  else
+  {
+    nux::GetPainter().PushPaintLayerStack();
+  }  
 
   layout_->ProcessDraw(GfxContext, force_draw);
 
   if (!IsFullRedraw())
+  {
     gPainter.PopBackground();
+  }
+  else
+  {
+    nux::GetPainter().PopPaintLayerStack();
+  }
+
   GfxContext.PopClippingRectangle();
 }
 
