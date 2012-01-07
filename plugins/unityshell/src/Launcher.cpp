@@ -2323,7 +2323,7 @@ void Launcher::EndIconDrag()
       hovered_icon->SetQuirk(LauncherIcon::QUIRK_PULSE_ONCE, true);
 
       launcher_removerequest.emit(_drag_icon);
-            
+
       _drag_window->ShowWindow(false);
       EnsureAnimation();
     }
