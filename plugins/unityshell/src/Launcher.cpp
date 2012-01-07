@@ -247,6 +247,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
   _render_drag_window     = false;
   _drag_edge_touching     = false;
   _keynav_activated       = false;
+  _key_switcher_activated = false;
   _backlight_mode         = BACKLIGHT_NORMAL;
   _last_button_press      = 0;
   _selection_atom         = 0;
@@ -1459,7 +1460,7 @@ gboolean Launcher::SuperShowShortcutsTimeout(gpointer data)
 {
   Launcher* self = (Launcher*) data;
 
-  if (!self->_super_tab_active)
+  if (!self->_key_switcher_activated)
   {
     self->_shortcuts_shown = true;
     self->_hover_machine->SetQuirk(LauncherHoverMachine::SHORTCUT_KEYS_VISIBLE, true);
@@ -1923,7 +1924,7 @@ gboolean Launcher::OnScrollTimeout(gpointer data)
   Launcher* self = (Launcher*) data;
   nux::Geometry geo = self->GetGeometry();
 
-  if (self->_keynav_activated || self->_super_tab_active || !self->_hovered ||
+  if (self->_keynav_activated || self->_key_switcher_activated || !self->_hovered ||
       self->GetActionState() == ACTION_DRAG_LAUNCHER)
     return TRUE;
 
@@ -2601,24 +2602,22 @@ Launcher::EdgeRevealTriggered(int mouse_x, int mouse_y)
 }
 
 
-void
-Launcher::SuperTabActivate()
+void Launcher::KeySwitcherActivate()
 {
-  if (_super_tab_active)
+  if (_key_switcher_activated)
     return;
 
   _hide_machine->SetQuirk(LauncherHideMachine::KEY_NAV_ACTIVE, true);
   _hover_machine->SetQuirk(LauncherHoverMachine::KEY_NAV_ACTIVE, true);
 
-  _super_tab_active = true;
+  _key_switcher_activated = true;
 
-  SuperTabNext();
+  KeySwitcherNext();
 }
 
-void
-Launcher::SuperTabTerminate()
+void Launcher::KeySwitcherTerminate()
 {
-  if (!_super_tab_active)
+  if (!_key_switcher_activated)
     return;
 
   LauncherModel::iterator it = _model->at(_current_icon_index);
@@ -2629,7 +2628,7 @@ Launcher::SuperTabTerminate()
   _hide_machine->SetQuirk(LauncherHideMachine::KEY_NAV_ACTIVE, false);
   _hover_machine->SetQuirk(LauncherHoverMachine::KEY_NAV_ACTIVE, false);
 
-  _super_tab_active = false;
+  _key_switcher_activated = false;
   _current_icon_index = -1;
   _last_icon_index = -1;
   QueueDraw();
@@ -2637,10 +2636,14 @@ Launcher::SuperTabTerminate()
   selection_change.emit();
 }
 
-void
-Launcher::SuperTabNext()
+bool Launcher::KeySwitcherIsActive()
 {
-  if (_super_tab_active && _current_icon_index < _model->Size() - 1)
+  return _key_switcher_activated;
+}
+
+void Launcher::KeySwitcherNext()
+{
+  if (_key_switcher_activated && _current_icon_index < _model->Size() - 1)
   {
     LauncherModel::iterator it;
     int temp_current_icon_index = _current_icon_index;
@@ -2665,10 +2668,9 @@ Launcher::SuperTabNext()
   }
 }
 
-void
-Launcher::SuperTabPrevious()
+void Launcher::KeySwitcherPrevious()
 {
-  if (_super_tab_active && _current_icon_index > 0)
+  if (_key_switcher_activated && _current_icon_index > 0)
   {
     LauncherModel::iterator it;
     int temp_current_icon_index = _current_icon_index;
@@ -2888,10 +2890,10 @@ void Launcher::MouseDownLogic(int x, int y, unsigned long button_flags, unsigned
 
     launcher_icon->mouse_down.emit(nux::GetEventButton(button_flags));
 
-    if (_super_tab_active)
+    if (_key_switcher_activated)
     {
       _current_icon_index = -1;
-      SuperTabTerminate();
+      KeySwitcherTerminate();
     }
   }
 }
