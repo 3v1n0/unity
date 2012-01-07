@@ -2601,6 +2601,58 @@ Launcher::EdgeRevealTriggered(int mouse_x, int mouse_y)
   _hide_machine->SetQuirk(LauncherHideMachine::MOUSE_MOVE_POST_REVEAL, true);
 }
 
+void Launcher::SelectPreviousIcon()
+{
+  if (_current_icon_index > 0)
+  {
+    LauncherModel::iterator it;
+    int temp_current_icon_index = _current_icon_index;
+    do
+    {
+      temp_current_icon_index --;
+      it = _model->at(temp_current_icon_index);
+    }
+    while (it != (LauncherModel::iterator)NULL && !(*it)->GetQuirk(LauncherIcon::QUIRK_VISIBLE));
+
+    if (it != (LauncherModel::iterator)NULL)
+    {
+      _current_icon_index = temp_current_icon_index;
+
+      if ((*it)->GetCenter().y + - _icon_size/ 2 < GetGeometry().y)
+        _launcher_drag_delta += (_icon_size + _space_between_icons);
+    }
+    EnsureAnimation();
+    selection_change.emit();
+  }
+}
+
+void Launcher::SelectNextIcon()
+{
+  if (_current_icon_index < _model->Size() - 1)
+  {
+    LauncherModel::iterator it;
+    int temp_current_icon_index = _current_icon_index;
+
+    do
+    {
+      temp_current_icon_index ++;
+      it = _model->at(temp_current_icon_index);
+    }
+    while (it != (LauncherModel::iterator)nullptr &&
+           !(*it)->GetQuirk(LauncherIcon::QUIRK_VISIBLE));
+
+    if (it != (LauncherModel::iterator)nullptr)
+    {
+      _current_icon_index = temp_current_icon_index;
+
+      if ((*it)->GetCenter().y + _icon_size / 2 > GetGeometry().height)
+        _launcher_drag_delta -= (_icon_size + _space_between_icons);
+    }
+
+    EnsureAnimation();
+    selection_change.emit();
+  }
+}
 
 void Launcher::KeySwitcherActivate()
 {
@@ -2643,54 +2695,18 @@ bool Launcher::KeySwitcherIsActive()
 
 void Launcher::KeySwitcherNext()
 {
-  if (_key_switcher_activated && _current_icon_index < _model->Size() - 1)
-  {
-    LauncherModel::iterator it;
-    int temp_current_icon_index = _current_icon_index;
+  if (!_key_switcher_activated)
+    return;
 
-    do
-    {
-      temp_current_icon_index ++;
-      it = _model->at(temp_current_icon_index);
-    }
-    while (it != (LauncherModel::iterator)NULL && !(*it)->GetQuirk(LauncherIcon::QUIRK_VISIBLE));
-
-    if (it != (LauncherModel::iterator)NULL)
-    {
-      _current_icon_index = temp_current_icon_index;
-
-      if ((*it)->GetCenter().y + _icon_size / 2 > GetGeometry().height)
-        _launcher_drag_delta -= (_icon_size + _space_between_icons);
-    }
-
-    EnsureAnimation();
-    selection_change.emit();
-  }
+  SelectNextIcon();
 }
 
 void Launcher::KeySwitcherPrevious()
 {
-  if (_key_switcher_activated && _current_icon_index > 0)
-  {
-    LauncherModel::iterator it;
-    int temp_current_icon_index = _current_icon_index;
-    do
-    {
-      temp_current_icon_index --;
-      it = _model->at(temp_current_icon_index);
-    }
-    while (it != (LauncherModel::iterator)NULL && !(*it)->GetQuirk(LauncherIcon::QUIRK_VISIBLE));
+  if (!_key_switcher_activated)
+    return;
 
-    if (it != (LauncherModel::iterator)NULL)
-    {
-      _current_icon_index = temp_current_icon_index;
-
-      if ((*it)->GetCenter().y + - _icon_size/ 2 < GetGeometry().y)
-        _launcher_drag_delta += (_icon_size + _space_between_icons);
-    }
-    EnsureAnimation();
-    selection_change.emit();
-  }
+  SelectPreviousIcon();
 }
 
 void
@@ -2715,53 +2731,13 @@ Launcher::RecvKeyPressed(unsigned long    eventType,
       // up (move selection up or go to global-menu if at top-most icon)
     case NUX_VK_UP:
     case NUX_KP_UP:
-      if (_current_icon_index > 0)
-      {
-        int temp_current_icon_index = _current_icon_index;
-        do
-        {
-          temp_current_icon_index --;
-          it = _model->at(temp_current_icon_index);
-        }
-        while (it != (LauncherModel::iterator)NULL && !(*it)->GetQuirk(LauncherIcon::QUIRK_VISIBLE));
-
-        if (it != (LauncherModel::iterator)NULL)
-        {
-          _current_icon_index = temp_current_icon_index;
-
-          if ((*it)->GetCenter().y + - _icon_size/ 2 < GetGeometry().y)
-            _launcher_drag_delta += (_icon_size + _space_between_icons);
-        }
-        EnsureAnimation();
-        selection_change.emit();
-      }
+      SelectPreviousIcon();
       break;
 
       // down (move selection down and unfold launcher if needed)
     case NUX_VK_DOWN:
     case NUX_KP_DOWN:
-      if (_current_icon_index < _model->Size() - 1)
-      {
-        int temp_current_icon_index = _current_icon_index;
-
-        do
-        {
-          temp_current_icon_index ++;
-          it = _model->at(temp_current_icon_index);
-        }
-        while (it != (LauncherModel::iterator)NULL && !(*it)->GetQuirk(LauncherIcon::QUIRK_VISIBLE));
-
-        if (it != (LauncherModel::iterator)NULL)
-        {
-          _current_icon_index = temp_current_icon_index;
-
-          if ((*it)->GetCenter().y + _icon_size / 2 > GetGeometry().height)
-            _launcher_drag_delta -= (_icon_size + _space_between_icons);
-        }
-
-        EnsureAnimation();
-        selection_change.emit();
-      }
+      SelectNextIcon();
       break;
 
       // esc/left (close quicklist or exit laucher key-focus)

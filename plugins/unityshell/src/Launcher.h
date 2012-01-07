@@ -199,11 +199,13 @@ public:
   sigc::signal<void> selection_change;
   sigc::signal<void> hidden_changed;
 
-
   // Key navigation
   virtual bool InspectKeyEvent(unsigned int eventType,
                                unsigned int keysym,
                                const char* character);
+
+  void SelectPreviousIcon();
+  void SelectNextIcon();
 
   void KeySwitcherActivate();
   void KeySwitcherTerminate();
