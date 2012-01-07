@@ -388,6 +388,5 @@ TEST(TestFavoriteStorePrivate, TestNeedToBeReorderedMixed)
   fresh.push_back("h");
   
   EXPECT_TRUE(internal::impl::NeedToBeReordered(old, fresh));
-  
 }
    

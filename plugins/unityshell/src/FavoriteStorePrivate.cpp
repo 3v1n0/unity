@@ -31,8 +31,8 @@ namespace impl
 
 std::vector<std::string> GetNewbies(std::list<std::string> const& old, std::list<std::string> const& fresh)
 {
-  std::list<std::string> sorted_old(old);
-  std::list<std::string> sorted_fresh(fresh);
+  auto sorted_old(old);
+  auto sorted_fresh(fresh);
   
   sorted_old.sort();
   sorted_fresh.sort();
@@ -46,19 +46,18 @@ std::vector<std::string> GetNewbies(std::list<std::string> const& old, std::list
 
 void GetSignalAddedInfo(std::list<std::string> const& favs, std::string const& path, std::string& position, bool& before)
 {
-
-  std::list<std::string>::const_iterator it = std::find(favs.begin(), favs.end(), path);
+  auto it = std::find(favs.begin(), favs.end(), path);
   before = (it == favs.begin());
   position = "";
-  
+
   if (favs.size() > 1)
     position = (before) ? *(boost::next(it)) : *(boost::prior(it));
 }
 
 std::vector<std::string> GetRemoved(std::list<std::string> const& old, std::list<std::string> const& fresh)
 {
-  std::list<std::string> sorted_old(old);
-  std::list<std::string> sorted_fresh(fresh);
+  auto sorted_old(old);
+  auto sorted_fresh(fresh);
   
   sorted_old.sort();
   sorted_fresh.sort();
@@ -73,21 +72,21 @@ std::vector<std::string> GetRemoved(std::list<std::string> const& old, std::list
 
 bool NeedToBeReordered(std::list<std::string> const& old, std::list<std::string> const& fresh)
 {
-  std::list<std::string> sorted_old(old);
-  std::list<std::string> sorted_fresh(fresh);
+  auto sorted_old(old);
+  auto sorted_fresh(fresh);
   
   sorted_old.sort();
   sorted_fresh.sort();
   
-  std::list<std::string> ignore_old, ignore_fresh;
+  std::vector<std::string> ignore_old, ignore_fresh;
   
   std::set_difference(sorted_old.begin(), sorted_old.end(), sorted_fresh.begin(), sorted_fresh.end(),
                       std::inserter(ignore_old, ignore_old.end()));
   std::set_difference(sorted_fresh.begin(), sorted_fresh.end(), sorted_old.begin(), sorted_old.end(),
                       std::inserter(ignore_fresh, ignore_fresh.end()));
                       
-  std::list<std::string>::const_iterator it_old = old.begin();
-  std::list<std::string>::const_iterator it_fresh = fresh.begin();
+  auto it_old = old.begin();
+  auto it_fresh = fresh.begin();
   
   while (it_old != old.end() && it_fresh != fresh.end())
   {

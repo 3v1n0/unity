@@ -52,7 +52,7 @@ private:
   void Refresh();
   void SaveFavorites(FavoriteList const& favorites);
   void FillList(FavoriteList& list);
-  
+
   FavoriteList favorites_;
   glib::Object<GSettings> settings_;
   bool ignore_signals_;

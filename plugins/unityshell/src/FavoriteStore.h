@@ -34,7 +34,7 @@ namespace unity
 // Use GetDefault () to get the correct store for the session
 typedef std::list<std::string> FavoriteList;
 
-class FavoriteStore : boost::noncopyable
+class FavoriteStore : public sigc::trackable, boost::noncopyable
 {
 public:
   virtual ~FavoriteStore();
@@ -54,14 +54,13 @@ public:
   virtual void SetFavorites(FavoriteList const& desktop_paths) = 0;
 
   // Signals
-  // Therse only emit if something has changed the GSettings object externally
+  // These only emit if something has changed the GSettings object externally
 
-  //desktop_path, position
+  //desktop_path, position, before/after
   sigc::signal<void, std::string const&, std::string const&, bool> favorite_added;
   //desktop_path
   sigc::signal<void, std::string const&> favorite_removed;
   sigc::signal<void> reordered;
-  sigc::signal<void> changed;
 };
 
 }
