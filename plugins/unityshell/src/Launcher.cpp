@@ -1459,10 +1459,13 @@ gboolean Launcher::SuperShowShortcutsTimeout(gpointer data)
 {
   Launcher* self = (Launcher*) data;
 
-  self->_shortcuts_shown = true;
-  self->_hover_machine->SetQuirk(LauncherHoverMachine::SHORTCUT_KEYS_VISIBLE, true);
+  if (!self->_super_tab_active)
+  {
+    self->_shortcuts_shown = true;
+    self->_hover_machine->SetQuirk(LauncherHoverMachine::SHORTCUT_KEYS_VISIBLE, true);
 
-  self->QueueDraw();
+    self->QueueDraw();
+  }
 
   self->_super_show_shortcuts_handle = 0;
   return false;
@@ -1920,7 +1923,8 @@ gboolean Launcher::OnScrollTimeout(gpointer data)
   Launcher* self = (Launcher*) data;
   nux::Geometry geo = self->GetGeometry();
 
-  if (self->_keynav_activated || !self->_hovered || self->GetActionState() == ACTION_DRAG_LAUNCHER)
+  if (self->_keynav_activated || self->_super_tab_active || !self->_hovered ||
+      self->GetActionState() == ACTION_DRAG_LAUNCHER)
     return TRUE;
 
   if (self->MouseOverTopScrollArea())
@@ -2596,6 +2600,97 @@ Launcher::EdgeRevealTriggered(int mouse_x, int mouse_y)
   _hide_machine->SetQuirk(LauncherHideMachine::MOUSE_MOVE_POST_REVEAL, true);
 }
 
+
+void
+Launcher::SuperTabActivate()
+{
+  if (_super_tab_active)
+    return;
+
+  _hide_machine->SetQuirk(LauncherHideMachine::KEY_NAV_ACTIVE, true);
+  _hover_machine->SetQuirk(LauncherHoverMachine::KEY_NAV_ACTIVE, true);
+
+  _super_tab_active = true;
+
+  SuperTabNext();
+}
+
+void
+Launcher::SuperTabTerminate()
+{
+  if (!_super_tab_active)
+    return;
+
+  LauncherModel::iterator it = _model->at(_current_icon_index);
+
+  if (it != (LauncherModel::iterator)NULL)
+    (*it)->Activate(ActionArg(ActionArg::LAUNCHER, 0));
+
+  _hide_machine->SetQuirk(LauncherHideMachine::KEY_NAV_ACTIVE, false);
+  _hover_machine->SetQuirk(LauncherHoverMachine::KEY_NAV_ACTIVE, false);
+
+  _super_tab_active = false;
+  _current_icon_index = -1;
+  _last_icon_index = -1;
+  QueueDraw();
+
+  selection_change.emit();
+}
+
+void
+Launcher::SuperTabNext()
+{
+  if (_super_tab_active && _current_icon_index < _model->Size() - 1)
+  {
+    LauncherModel::iterator it;
+    int temp_current_icon_index = _current_icon_index;
+
+    do
+    {
+      temp_current_icon_index ++;
+      it = _model->at(temp_current_icon_index);
+    }
+    while (it != (LauncherModel::iterator)NULL && !(*it)->GetQuirk(LauncherIcon::QUIRK_VISIBLE));
+
+    if (it != (LauncherModel::iterator)NULL)
+    {
+      _current_icon_index = temp_current_icon_index;
+
+      if ((*it)->GetCenter().y + _icon_size / 2 > GetGeometry().height)
+        _launcher_drag_delta -= (_icon_size + _space_between_icons);
+    }
+
+    EnsureAnimation();
+    selection_change.emit();
+  }
+}
+
+void
+Launcher::SuperTabPrevious()
+{
+  if (_super_tab_active && _current_icon_index > 0)
+  {
+    LauncherModel::iterator it;
+    int temp_current_icon_index = _current_icon_index;
+    do
+    {
+      temp_current_icon_index --;
+      it = _model->at(temp_current_icon_index);
+    }
+    while (it != (LauncherModel::iterator)NULL && !(*it)->GetQuirk(LauncherIcon::QUIRK_VISIBLE));
+
+    if (it != (LauncherModel::iterator)NULL)
+    {
+      _current_icon_index = temp_current_icon_index;
+
+      if ((*it)->GetCenter().y + - _icon_size/ 2 < GetGeometry().y)
+        _launcher_drag_delta += (_icon_size + _space_between_icons);
+    }
+    EnsureAnimation();
+    selection_change.emit();
+  }
+}
+
 void
 Launcher::RecvKeyPressed(unsigned long    eventType,
                          unsigned long    key_sym,
@@ -2792,6 +2887,12 @@ void Launcher::MouseDownLogic(int x, int y, unsigned long button_flags, unsigned
     _start_dragicon_handle = g_timeout_add(START_DRAGICON_DURATION, &Launcher::StartIconDragTimeout, this);
 
     launcher_icon->mouse_down.emit(nux::GetEventButton(button_flags));
+
+    if (_super_tab_active)
+    {
+      _current_icon_index = -1;
+      SuperTabTerminate();
+    }
   }
 }
 

@@ -288,6 +288,11 @@ UnityScreen::UnityScreen(CompScreen* screen)
 
      optionSetAltTabLeftInitiate (boost::bind (&UnityScreen::altTabPrevInitiate, this, _1, _2, _3));
      optionSetAltTabRightInitiate (boost::bind (&UnityScreen::altTabForwardInitiate, this, _1, _2, _3));
+
+     optionSetSuperTabForwardInitiate(boost::bind(&UnityScreen::superTabForwardInitiate, this, _1, _2, _3));
+     optionSetSuperTabPrevInitiate(boost::bind(&UnityScreen::superTabPrevInitiate, this, _1, _2, _3));
+     optionSetSuperTabForwardTerminate(boost::bind(&UnityScreen::superTabTerminate, this, _1, _2, _3));
+
      optionSetShowMinimizedWindowsNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
 
      for (unsigned int i = 0; i < G_N_ELEMENTS(_ubus_handles); i++)
@@ -1120,9 +1125,11 @@ void UnityScreen::handleEvent(XEvent* event)
         // we should just say "key_string[1] = 0" because that is the only
         // thing that could possibly make sense here.
         key_string[result] = 0;
-        if (super_keypressed_) {
+        if (super_keypressed_)
+        {
           skip_other_plugins = launcher.CheckSuperShortcutPressed(screen->dpy(), key_sym, event->xkey.keycode, event->xkey.state, key_string);
-          if (!skip_other_plugins) {
+          if (!skip_other_plugins)
+          {
             skip_other_plugins = dash_controller_->CheckShortcutActivation(key_string);
             if (skip_other_plugins)
               launcher.SetLatestShortcut(key_string[0]);
@@ -1244,6 +1251,7 @@ bool UnityScreen::showLauncherKeyTerminate(CompAction* action,
 {
   super_keypressed_ = false;
   launcher_controller_->launcher().EndKeyShowLauncher();
+  launcher_controller_->launcher().SuperTabTerminate();
   return false;
 }
 
@@ -1497,6 +1505,32 @@ bool UnityScreen::altTabPrevWindowInitiate(CompAction* action, CompAction::State
   if (switcher_controller_->Visible())
     switcher_controller_->PrevDetail();
   
+  return false;
+}
+
+bool UnityScreen::superTabForwardInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
+{
+  if (!launcher_controller_->launcher()._super_tab_active)
+    launcher_controller_->launcher().SuperTabActivate();
+  else
+    launcher_controller_->launcher().SuperTabNext();
+
+  g_debug("GO On with super-tab!");
+
+  return false;
+}
+bool UnityScreen::superTabPrevInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
+{
+  if (launcher_controller_->launcher()._super_tab_active)
+    launcher_controller_->launcher().SuperTabPrevious();
+
+  g_debug("GO back with super-tab!");
+  return false;
+}
+bool UnityScreen::superTabTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options)
+{
+  launcher_controller_->launcher().SuperTabTerminate();
+  g_debug("Stop supertab!");
   return false;
 }
 

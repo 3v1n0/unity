@@ -190,6 +190,10 @@ public:
   bool altTabNextWindowInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool altTabPrevWindowInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
 
+  bool superTabForwardInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool superTabPrevInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool superTabTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options);
+
   /* handle option changes and change settings inside of the
    * panel and dock views */
   void optionChanged(CompOption*, Options num);

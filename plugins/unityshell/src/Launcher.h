@@ -205,6 +205,12 @@ public:
                                unsigned int keysym,
                                const char* character);
 
+  void SuperTabActivate();
+  void SuperTabTerminate();
+  void SuperTabNext();
+  void SuperTabPrevious();
+  bool _super_tab_active;
+
 protected:
   // Introspectable methods
   std::string GetName() const;
