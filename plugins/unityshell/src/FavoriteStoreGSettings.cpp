@@ -17,14 +17,13 @@
 * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
 */
 
-#include "FavoriteStoreGSettings.h"
-
 #include <algorithm>
-#include <boost/utility.hpp>
 
 #include <gio/gdesktopappinfo.h>
-
 #include <NuxCore/Logger.h>
+
+#include "FavoriteStoreGSettings.h"
+#include "FavoriteStorePrivate.h"
 
 #include "config.h"
 
@@ -263,37 +262,23 @@ void FavoriteStoreGSettings::Changed(std::string const& key)
     
   FavoriteList old(favorites_);
   FillList(favorites_);
-  FavoriteList fresh(favorites_);
-  FavoriteList result;
 
-  old.sort();
-  fresh.sort();
-  
-  // fresh - old
-  std::set_difference(fresh.begin(), fresh.end(), old.begin(), old.end(),
-                      std::inserter(result, result.end()));
-                      
-  for (FavoriteList::iterator it = result.begin(); it != result.end(); it++)
+  for (auto it : impl::GetNewbies(old, favorites_))
   {
-    FavoriteList::iterator newbie = std::find(favorites_.begin(), favorites_.end(), *it);
-    bool before = ( newbie == favorites_.begin());
+    std::string pos;
+    bool before;
     
-    std::string pos = "";
-    if (favorites_.size() > 1)
-      pos = (before) ? *(boost::next(newbie)) : *(boost::prior(newbie));
-      
-    favorite_added.emit(*it, pos , before);
+    impl::GetSignalAddedInfo(favorites_, it, pos, before);
+    favorite_added.emit(it, pos, before);
   }
                      
-  // old - fresh
-  result.clear();
-  std::set_difference(old.begin(), old.end(), fresh.begin(), fresh.end(),
-                      std::inserter(result, result.end()));
-                      
-  for (auto it : result)
+  for (auto it : impl::GetRemoved(old, favorites_))
   {
     favorite_removed.emit(it); 
   }
+  
+  if (impl::NeedToBeReordered(old, favorites_))
+    reordered.emit();
  
 }
 

@@ -118,6 +118,7 @@ if (GTEST_FOUND AND
                  test_glib_signals_utils.h
                  ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_marshal.cpp
                  test_favorite_store_gsettings.cpp
+                 test_favorite_store_private.cpp
                  test_introspection.cpp
                  test_main_xless.cpp
 		 test_grabhandle.cpp
@@ -132,6 +133,8 @@ if (GTEST_FOUND AND
                  ${UNITY_SRC}/FavoriteStore.h
                  ${UNITY_SRC}/FavoriteStoreGSettings.cpp
                  ${UNITY_SRC}/FavoriteStoreGSettings.h
+                 ${UNITY_SRC}/FavoriteStorePrivate.cpp
+                 ${UNITY_SRC}/FavoriteStorePrivate.h
                  ${UNITY_SRC}/MockLauncherIcon.h
                  ${UNITY_SRC}/SwitcherModel.cpp
                  ${UNITY_SRC}/SwitcherModel.h
