@@ -1528,10 +1528,16 @@ void PanelMenuView::OnSwitcherShown(GVariant* data, PanelMenuView* self)
 {
   self->_switcher_showing = g_variant_get_boolean(data);
 
-  if (!self->_switcher_showing && self->_panel_title)
+  if (!self->_switcher_showing)
   {
-    g_free(self->_panel_title);
-    self->_panel_title = nullptr;
+    auto mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
+    self->_is_inside = self->GetAbsoluteGeometry().IsPointInside(mouse.x, mouse.y);
+
+    if (self->_panel_title)
+    {
+      g_free(self->_panel_title);
+      self->_panel_title = nullptr;
+    }
   }
 
   self->Refresh();
