@@ -1607,7 +1607,7 @@ PanelMenuView::UpdateShowNow(bool status)
 
   if (status && !_show_now_activated)
   {
-    _update_show_now_id = g_timeout_add(120, (GSourceFunc)
+    _update_show_now_id = g_timeout_add(180, (GSourceFunc)
                                         &PanelMenuView::UpdateShowNowWithDelay,
                                         this);
   }
