@@ -357,7 +357,7 @@ PanelMenuView::OnFadeOutChanged(double progress)
 bool
 PanelMenuView::DrawMenus()
 {
-  if (!_is_own_window && !_places_showing && _we_control_active)
+  if (!_is_own_window && !_places_showing && _we_control_active && !_switcher_showing)
   {
     if (_is_inside || _last_active_view || _show_now_activated || _new_application)
     {
@@ -374,7 +374,7 @@ PanelMenuView::DrawWindowButtons()
   if (_places_showing)
     return true;
 
-  if (!_is_own_window && _we_control_active && _is_maximized)
+  if (!_is_own_window && _we_control_active && _is_maximized && !_switcher_showing)
   {
     if (_is_inside || _show_now_activated || _new_application)
     {
@@ -1527,7 +1527,6 @@ void PanelMenuView::OnPlaceViewHidden(GVariant* data, PanelMenuView* self)
 void PanelMenuView::OnSwitcherShown(GVariant* data, PanelMenuView* self)
 {
   self->_switcher_showing = g_variant_get_boolean(data);
-  g_debug("Switcher just shown: %d",self->_switcher_showing);
 
   if (!self->_switcher_showing && self->_panel_title)
   {
@@ -1598,7 +1597,7 @@ PanelMenuView::UpdateShowNow(bool status)
 
   if (status && !_show_now_activated)
   {
-    _update_show_now_id = g_timeout_add(180, (GSourceFunc)
+    _update_show_now_id = g_timeout_add(120, (GSourceFunc)
                                         &PanelMenuView::UpdateShowNowWithDelay,
                                         this);
   }
