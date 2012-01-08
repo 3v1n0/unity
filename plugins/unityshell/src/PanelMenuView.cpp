@@ -1539,6 +1539,10 @@ void PanelMenuView::OnSwitcherShown(GVariant* data, PanelMenuView* self)
       self->_panel_title = nullptr;
     }
   }
+  else
+  {
+    self->_show_now_activated = false;
+  }
 
   self->Refresh();
   self->QueueDraw();
