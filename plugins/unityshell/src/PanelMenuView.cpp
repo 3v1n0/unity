@@ -1026,7 +1026,7 @@ PanelMenuView::OnViewClosed(BamfMatcher *matcher, BamfView *view)
   {
     _new_apps.remove(glib::Object<BamfApplication>(app, glib::AddRef()));
 
-    if (_new_application == app)
+    if (_new_application == app || _new_apps.empty())
       _new_application = nullptr;
   }
 }
