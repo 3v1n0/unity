@@ -189,10 +189,7 @@ private:
   glib::Signal<void, BamfMatcher*, BamfApplication*, BamfApplication*> _active_app_changed_signal;
   glib::Signal<void, BamfView*, gchar*, gchar*> _view_name_changed_signal;
 
-  guint32 _place_shown_interest;
-  guint32 _place_hidden_interest;
-  guint32 _switcher_shown_interest;
-  guint32 _switcher_sel_changed_int;
+  std::vector<unsigned int> _ubus_interests;
 
   int _menus_fadein;
   int _menus_fadeout;

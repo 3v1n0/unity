@@ -75,10 +75,6 @@ PanelMenuView::PanelMenuView(int padding)
     _update_show_now_id(0),
     _new_app_show_id(0),
     _new_app_hide_id(0),
-    _place_shown_interest(0),
-    _place_hidden_interest(0),
-    _switcher_shown_interest(0),
-    _switcher_sel_changed_int(0),
     _menus_fadein(100),
     _menus_fadeout(120),
     _menus_discovery(2),
@@ -159,19 +155,19 @@ PanelMenuView::PanelMenuView(int padding)
 
   // Register for all the interesting events
   UBusServer* ubus = ubus_server_get_default();
-  _place_shown_interest = ubus_server_register_interest(ubus, UBUS_PLACE_VIEW_SHOWN,
-                                                        (UBusCallback)PanelMenuView::OnPlaceViewShown,
-                                                        this);
-  _place_hidden_interest = ubus_server_register_interest(ubus, UBUS_PLACE_VIEW_HIDDEN,
-                                                         (UBusCallback)PanelMenuView::OnPlaceViewHidden,
-                                                         this);
+  _ubus_interests.push_back(ubus_server_register_interest(ubus, UBUS_PLACE_VIEW_SHOWN,
+                                                          (UBusCallback)PanelMenuView::OnPlaceViewShown,
+                                                          this));
+  _ubus_interests.push_back(ubus_server_register_interest(ubus, UBUS_PLACE_VIEW_HIDDEN,
+                                                          (UBusCallback)PanelMenuView::OnPlaceViewHidden,
+                                                          this));
 
-  _switcher_shown_interest = ubus_server_register_interest(ubus, UBUS_SWITCHER_SHOWN,
-                                                           (UBusCallback)PanelMenuView::OnSwitcherShown,
-                                                           this);
-  _switcher_sel_changed_int = ubus_server_register_interest(ubus, UBUS_SWITCHER_SELECTION_CHANGED,
-                                                            (UBusCallback)PanelMenuView::OnSwitcherSelectionChanged,
-                                                            this);
+  _ubus_interests.push_back(ubus_server_register_interest(ubus, UBUS_SWITCHER_SHOWN,
+                                                          (UBusCallback)PanelMenuView::OnSwitcherShown,
+                                                          this));
+  _ubus_interests.push_back(ubus_server_register_interest(ubus, UBUS_SWITCHER_SELECTION_CHANGED,
+                                                          (UBusCallback)PanelMenuView::OnSwitcherSelectionChanged,
+                                                          this));
 
   _fade_in_animator = new Animator(_menus_fadein);
   _fade_out_animator = new Animator(_menus_fadeout);
@@ -213,17 +209,11 @@ PanelMenuView::~PanelMenuView()
   _panel_titlebar_grab_area->UnReference();
 
   UBusServer* ubus = ubus_server_get_default();
-  if (_place_shown_interest != 0)
-    ubus_server_unregister_interest(ubus, _place_shown_interest);
-
-  if (_place_hidden_interest != 0)
-    ubus_server_unregister_interest(ubus, _place_hidden_interest);
-
-  if (_switcher_shown_interest != 0)
-    ubus_server_unregister_interest(ubus, _switcher_shown_interest);
-
-  if (_switcher_sel_changed_int != 0)
-    ubus_server_unregister_interest(ubus, _switcher_sel_changed_int);
+  for (auto interest : _ubus_interests)
+  {
+    if (interest != 0)
+      ubus_server_unregister_interest(ubus, interest);
+  }
 }
 
 void
