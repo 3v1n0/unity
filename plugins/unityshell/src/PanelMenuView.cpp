@@ -65,6 +65,7 @@ PanelMenuView::PanelMenuView(int padding)
     _last_width(0),
     _last_height(0),
     _places_showing(false),
+    _switcher_showing(false),
     _show_now_activated(false),
     _we_control_active(false),
     _new_app_menu_shown(false),
@@ -76,11 +77,14 @@ PanelMenuView::PanelMenuView(int padding)
     _new_app_hide_id(0),
     _place_shown_interest(0),
     _place_hidden_interest(0),
+    _switcher_shown_interest(0),
+    _switcher_sel_changed_int(0),
     _menus_fadein(100),
     _menus_fadeout(120),
     _menus_discovery(2),
     _menus_discovery_fadein(200),
     _menus_discovery_fadeout(300),
+    _panel_title(nullptr),
     _fade_in_animator(nullptr),
     _fade_out_animator(nullptr)
 {
@@ -162,6 +166,13 @@ PanelMenuView::PanelMenuView(int padding)
                                                          (UBusCallback)PanelMenuView::OnPlaceViewHidden,
                                                          this);
 
+  _switcher_shown_interest = ubus_server_register_interest(ubus, UBUS_SWITCHER_SHOWN,
+                                                           (UBusCallback)PanelMenuView::OnSwitcherShown,
+                                                           this);
+  _switcher_sel_changed_int = ubus_server_register_interest(ubus, UBUS_SWITCHER_SELECTION_CHANGED,
+                                                            (UBusCallback)PanelMenuView::OnSwitcherSelectionChanged,
+                                                            this);
+
   _fade_in_animator = new Animator(_menus_fadein);
   _fade_out_animator = new Animator(_menus_fadeout);
 
@@ -207,6 +218,12 @@ PanelMenuView::~PanelMenuView()
 
   if (_place_hidden_interest != 0)
     ubus_server_unregister_interest(ubus, _place_hidden_interest);
+
+  if (_switcher_shown_interest != 0)
+    ubus_server_unregister_interest(ubus, _switcher_shown_interest);
+
+  if (_switcher_sel_changed_int != 0)
+    ubus_server_unregister_interest(ubus, _switcher_sel_changed_int);
 }
 
 void
@@ -864,8 +881,6 @@ PanelMenuView::Refresh()
   if (geo.width > _monitor_geo.width)
     return;
 
-  char*                 label = GetActiveViewName();
-
   int  x = 0;
   int  y = 0;
   int  width = geo.width;
@@ -883,8 +898,16 @@ PanelMenuView::Refresh()
   x = _padding;
   y = 0;
 
-  if (label)
-    DrawText(cr, x, y, width, height, nullptr, label);
+  if (_panel_title)
+  {
+    DrawText(cr, x, y, width, height, nullptr, _panel_title);
+  }
+  else
+  {
+    char* title = GetActiveViewName();
+    DrawText(cr, x, y, width, height, nullptr, title);
+    g_free(title);
+  }
 
   cairo_destroy(cr);
 
@@ -907,7 +930,6 @@ PanelMenuView::Refresh()
                                        true,
                                        rop);
   texture2D->UnReference();
-  g_free(label);
 }
 
 void
@@ -1500,17 +1522,41 @@ void PanelMenuView::AddProperties(GVariantBuilder* builder)
 {
 }
 
-void
-PanelMenuView::OnPlaceViewShown(GVariant* data, PanelMenuView* self)
+void PanelMenuView::OnPlaceViewShown(GVariant* data, PanelMenuView* self)
 {
   self->_places_showing = true;
   self->QueueDraw();
 }
 
-void
-PanelMenuView::OnPlaceViewHidden(GVariant* data, PanelMenuView* self)
+void PanelMenuView::OnPlaceViewHidden(GVariant* data, PanelMenuView* self)
 {
   self->_places_showing = false;
+  self->QueueDraw();
+}
+
+void PanelMenuView::OnSwitcherShown(GVariant* data, PanelMenuView* self)
+{
+  self->_switcher_showing = g_variant_get_boolean(data);
+  g_debug("Switcher just shown: %d",self->_switcher_showing);
+
+  if (!self->_switcher_showing && self->_panel_title)
+  {
+    g_free(self->_panel_title);
+    self->_panel_title = nullptr;
+  }
+
+  self->Refresh();
+  self->QueueDraw();
+}
+
+void PanelMenuView::OnSwitcherSelectionChanged(GVariant* data, PanelMenuView* self)
+{
+  if (self->_panel_title)
+    g_free(self->_panel_title);
+
+  self->_panel_title = g_strdup(g_variant_get_string(data, 0));
+
+  self->Refresh();
   self->QueueDraw();
 }
 
