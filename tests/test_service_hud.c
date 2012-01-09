@@ -116,10 +116,10 @@ service_hud_init(ServiceHud* self)
   self->priv->bus = NULL;
   self->priv->bus_lookup = NULL;
   self->priv->bus_registration = 0;
-
+  
   self->priv->bus_lookup = g_cancellable_new();
   g_bus_get(G_BUS_TYPE_SESSION, self->priv->bus_lookup, bus_got_cb, self);
-
+  
 }
 
 ServiceHud*
@@ -146,13 +146,19 @@ bus_got_cb (GObject *object, GAsyncResult * res, gpointer user_data)
 
   /* Register object */
   self->priv->bus_registration = g_dbus_connection_register_object(bus,
-                                                  /* path */       "com.canonical.Unity.Test",
+                                                  /* path */       "/com/canonical/hud",
                                                   /* interface */  iface_info,
                                                   /* vtable */     &bus_vtable,
                                                   /* userdata */   self,
                                                   /* destroy */    NULL,
                                                   /* error */      &error);
 
+  if (error != NULL) {
+    g_critical ("Unable to create bus connection object, %s", error->message);
+    g_error_free(error);
+    return;
+  }
+  
   return;
 }
 
@@ -172,7 +178,7 @@ bus_method (GDBusConnection *connection, const gchar *sender, const gchar *objec
     g_variant_builder_add_value(&ret_builder, g_variant_new_string("target"));
     GVariantBuilder builder;
     
-    if (g_strcmp0(query, "RequestEmptySuggestions"))
+    if (g_strcmp0(query, "RequestEmpty"))
     {
       g_variant_builder_init(&builder, G_VARIANT_TYPE_ARRAY);
         
@@ -192,14 +198,17 @@ bus_method (GDBusConnection *connection, const gchar *sender, const gchar *objec
         g_variant_builder_add_value(&tuple, g_variant_new_string(completion_text));
 
         // build a fake key
-        GVariantBuilder builder;
-        g_variant_builder_init(&builder, G_VARIANT_TYPE_TUPLE);
-        g_variant_builder_add_value(&builder, g_variant_new_string("dummy string"));
-        g_variant_builder_add_value(&builder, g_variant_new_string("dummy string"));
-        g_variant_builder_add_value(&builder, g_variant_new_string("dummy string"));
-        g_variant_builder_add_value(&builder, g_variant_new_int32(1986));
+        GVariant* key;
+        {
+          GVariantBuilder keybuilder;
+          g_variant_builder_init(&keybuilder, G_VARIANT_TYPE_TUPLE);
+          g_variant_builder_add_value(&keybuilder, g_variant_new_string("dummy string"));
+          g_variant_builder_add_value(&keybuilder, g_variant_new_string("dummy string"));
+          g_variant_builder_add_value(&keybuilder, g_variant_new_string("dummy string"));
+          g_variant_builder_add_value(&keybuilder, g_variant_new_int32(1986));
 
-        GVariant* key = g_variant_new_variant(g_variant_builder_end(&builder));
+          key = g_variant_new_variant(g_variant_builder_end(&keybuilder));
+        }
         g_variant_ref_sink(key);
 
         g_variant_builder_add_value(&tuple, key);
@@ -210,13 +219,14 @@ bus_method (GDBusConnection *connection, const gchar *sender, const gchar *objec
         g_free(future_icon);
         g_free(completion_text);
       }
+      
+      g_variant_builder_add_value(&ret_builder, g_variant_builder_end(&builder));
     } 
     else
     {
       g_variant_builder_add_value(&ret_builder, g_variant_new_array(G_VARIANT_TYPE("(ssssv)"), NULL, 0));
     }
-
-    g_variant_builder_add_value(&ret_builder, g_variant_builder_end(&builder));
+    
     ret = g_variant_builder_end(&ret_builder);
 
     g_dbus_method_invocation_return_value(invocation, ret);

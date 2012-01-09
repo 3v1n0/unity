@@ -42,10 +42,15 @@ class HudImpl
 {
 public:
   HudImpl(std::string const& dbus_name,
-          std::string const& dbus_path)
+          std::string const& dbus_path,
+          Hud *parent)
   : proxy_(dbus_name, dbus_path, "com.canonical.hud")
-  {    
+  , parent_(parent)
+  {
+    LOG_DEBUG(logger) << "Hud init with name: " << dbus_name << "and path: " << dbus_path;
+    proxy_.connected.connect([&](){ LOG_DEBUG(logger) << "Hud Connected"; parent_->connected = true; });
   }
+
   void SuggestionCallback(GVariant* data);
   void ExecuteSuggestionCallback(GVariant* suggests);
   void ExecuteByKey(GVariant* key);
@@ -131,7 +136,8 @@ void HudImpl::SuggestionCallback(GVariant* suggests)
 
 Hud::Hud(std::string const& dbus_name,
          std::string const& dbus_path)
-    : pimpl_(new HudImpl(dbus_name, dbus_path))
+    : connected(false)
+    , pimpl_(new HudImpl(dbus_name, dbus_path, this))
 {
   pimpl_->parent_ = this;
 }
@@ -145,6 +151,7 @@ void Hud::GetSuggestions(std::string const& search_string)
 {
   LOG_DEBUG(logger) << "Getting suggestions: " << search_string;
   GVariant* paramaters = g_variant_new("(s)", search_string.c_str());
+  
   pimpl_->proxy_.Call("GetSuggestions", paramaters, sigc::mem_fun(this->pimpl_, &HudImpl::SuggestionCallback));
 }
 

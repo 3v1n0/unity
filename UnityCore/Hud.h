@@ -87,6 +87,7 @@ public:
   Hud& operator=(Hud);
 
   nux::Property<std::string> target;
+  nux::Property<bool> connected;
 
   /*
    * Queries the service for new suggestions, will fire off the 
