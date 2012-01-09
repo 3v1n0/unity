@@ -2,15 +2,25 @@
 
 import sys
 import junitxml
+from optparse import OptionParser
 from unittest.loader import TestLoader
 from unittest.runner import TextTestRunner
 
 if __name__ == "__main__":
-	r_file = open('test-result.xml','w')
+	parser = OptionParser()
+	parser.add_option('-o', '--output', dest='outfile', default='',
+			  help='Write test result report to file. Defaults to stdout')
+	(options, args) = parser.parse_args()
+
+	if options.outfile == '':
+		results_stream = sys.stdout
+	else:
+		results_stream = open(options.outfile, 'w')
+
 	loader = TestLoader()
-	result = junitxml.JUnitXmlResult(r_file)
+	result = junitxml.JUnitXmlResult(results_stream)
 	result.startTestRun()
 	test_suite = loader.discover('autopilot.tests')
 	test_suite.run(result)
 	result.stopTestRun()
-	r_file.close()
+	results_stream.close()
