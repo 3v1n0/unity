@@ -16,8 +16,9 @@ if __name__ == "__main__":
 	if options.outfile == '':
 		results_stream = sys.stdout
 	else:
-		if not os.path.exists(options.outfile):
-			os.makedirs(options.outfile)
+		path = os.dir.dirname(options.outfile)
+		if not os.path.exists(path):
+			os.makedirs(path)
 		results_stream = open(options.outfile, 'w')
 
 	loader = TestLoader()
