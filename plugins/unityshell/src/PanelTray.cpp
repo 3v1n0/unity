@@ -264,12 +264,6 @@ PanelTray::GetName() const
   return "PanelTray";
 }
 
-const gchar*
-PanelTray::GetChildsName()
-{
-  return "";
-}
-
 void
 PanelTray::AddProperties(GVariantBuilder* builder)
 {

@@ -54,6 +54,8 @@ NUX_IMPLEMENT_OBJECT_TYPE(PanelView);
 
 PanelView::PanelView(NUX_FILE_LINE_DECL)
   :   View(NUX_FILE_LINE_PARAM),
+      _last_width(0),
+      _last_height(0),
       _is_dirty(true),
       _opacity(1.0f),
       _opacity_maximized_toggle(false),
@@ -203,8 +205,7 @@ std::string PanelView::GetName() const
   return "UnityPanel";
 }
 
-const gchar*
-PanelView::GetChildsName()
+std::string PanelView::GetChildsName() const
 {
   return "indicators";
 }
@@ -362,7 +363,7 @@ PanelView::UpdateBackground()
 {
   nux::Geometry geo = GetGeometry();
 
-  if (geo.width == _last_width && geo.height == _last_height && !_is_dirty)
+  if (!_is_dirty && geo.width == _last_width && geo.height == _last_height)
     return;
 
   _last_width = geo.width;
@@ -392,6 +393,7 @@ PanelView::UpdateBackground()
 
     nux::NBitmapData* bitmap = panel::Style::Instance().GetBackground(geo.width, geo.height, opacity);
     nux::BaseTexture* texture2D = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
+
     texture2D->Update(bitmap);
     delete bitmap;
 
@@ -585,7 +587,7 @@ void PanelView::OnEntryShowMenu(std::string const& entry_id,
     True
   };
   XEvent* e = (XEvent*)&ev;
-  nux::GetGraphicsThread()->ProcessForeignEvent(e, NULL);
+  nux::GetWindowThread()->ProcessForeignEvent(e, NULL);
   // --------------------------------------------------------------------------
 }
 
@@ -614,8 +616,7 @@ PanelView::SetOpacity(float opacity)
 
   _opacity = opacity;
 
-  if (_opacity < 1.0f && !_dash_is_open)
-    bg_effect_helper_.enabled = false;
+  bg_effect_helper_.enabled = (_opacity < 1.0f || _dash_is_open);
 
   ForceUpdateBackground();
 }

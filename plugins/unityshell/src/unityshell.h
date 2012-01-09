@@ -47,47 +47,19 @@
 #include "DebugDBusInterface.h"
 #include "SwitcherController.h"
 #include "UBusWrapper.h"
+#include "ScreenEffectFramebufferObject.h"
 
 #include "compizminimizedwindowhandler.h"
 #include "BGHash.h"
 #include <compiztoolbox/compiztoolbox.h>
+#include <dlfcn.h>
 
 namespace unity
 {
 
-class UnityFBO
-{
-public:
-
-  typedef boost::shared_ptr <UnityFBO> Ptr;
-
-  UnityFBO (CompOutput *o);
-  ~UnityFBO ();
-
-public:
-
-  void bind ();
-  void unbind ();
-
-  bool status ();
-  bool bound ();
-  void paint ();
-
-  GLuint texture () { return mFBTexture; }
-
-private:
-
-  /* compiz fbo handle that goes through to nux */
-  GLuint   mFboHandle; // actual handle to the framebuffer_ext
-  bool    mFboStatus; // did the framebuffer texture bind succeed
-  GLuint   mFBTexture;
-  CompOutput *output;
-  unsigned int mBoundCnt;
-};
-
 class UnityShowdesktopHandler
 {
-public:
+ public:
 
   UnityShowdesktopHandler (CompWindow *w);
   ~UnityShowdesktopHandler ();
@@ -234,8 +206,6 @@ public:
   void NeedsRelayout();
   void ScheduleRelayout(guint timeout);
 
-  void setActiveFbo (GLuint fbo) { mActiveFbo = fbo; }
-
   bool forcePaintOnTop ();
 
 protected:
@@ -320,8 +290,8 @@ private:
 
   unity::BGHash _bghash;
 
-  std::map <CompOutput *, UnityFBO::Ptr> mFbos;
-  GLuint                                 mActiveFbo;
+  ScreenEffectFramebufferObject::Ptr _fbo;
+  GLuint                             _active_fbo;
 
   bool   queryForShader ();
 
@@ -331,6 +301,8 @@ private:
   CompWindowList         fullscreen_windows_;
   bool                   painting_tray_;
   unsigned int           tray_paint_mask_;
+
+  ScreenEffectFramebufferObject::GLXGetProcAddressProc glXGetProcAddressP;
 
   friend class UnityWindow;
 };

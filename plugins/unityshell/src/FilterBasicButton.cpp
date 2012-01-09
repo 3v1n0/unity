@@ -63,6 +63,7 @@ void FilterBasicButton::InitTheme()
   {
     nux::Geometry const& geo = GetGeometry();
     
+    prelight_.reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &FilterBasicButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_PRELIGHT)));
     active_.reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &FilterBasicButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_PRESSED)));
     normal_.reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &FilterBasicButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_NORMAL)));
   }
@@ -82,6 +83,7 @@ long FilterBasicButton::ComputeContentSize()
 
   if (cached_geometry_ != geo)
   {
+    prelight_->Invalidate(geo);
     active_->Invalidate(geo);
     normal_->Invalidate(geo);
     
@@ -117,6 +119,8 @@ void FilterBasicButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   nux::BaseTexture* texture = normal_->GetTexture();
   if (Active())
     texture = active_->GetTexture();
+  else if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_PRELIGHT)
+    texture = prelight_->GetTexture();
   else if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_PRESSED)
     texture = active_->GetTexture();
 

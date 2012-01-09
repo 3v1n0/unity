@@ -55,6 +55,7 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
   , search_hint("")
   , showing_filters(false)
   , can_refine_search(false)
+  , search_bar_width_(642)
   , live_search_timeout_(0)
 {
   nux::BaseTexture* icon = dash::Style::Instance().GetSearchMagnifyIcon();
@@ -64,7 +65,7 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
   layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
   layout_->SetHorizontalInternalMargin(0);
   layout_->SetVerticalExternalMargin(8);
-  layout_->SetHorizontalExternalMargin(10);
+  layout_->SetHorizontalExternalMargin(7);
   SetLayout(layout_);
 
   spinner_ = new SearchBarSpinner();
@@ -74,7 +75,7 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
 
   hint_ = new nux::StaticCairoText(" ");
   hint_->SetTextColor(nux::Color(1.0f, 1.0f, 1.0f, 0.5f));
-  hint_->SetMaximumWidth(570);
+  hint_->SetMaximumWidth(search_bar_width_ - icon->GetWidth());
 
   pango_entry_ = new IMTextEntry();
   pango_entry_->sigTextChanged.connect(sigc::mem_fun(this, &SearchBar::OnSearchChanged));
@@ -82,15 +83,15 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
   pango_entry_->cursor_moved.connect([&](int i) { QueueDraw(); });
   pango_entry_->mouse_down.connect(sigc::mem_fun(this, &SearchBar::OnMouseButtonDown));
   pango_entry_->end_key_focus.connect(sigc::mem_fun(this, &SearchBar::OnEndKeyFocus));
-  pango_entry_->SetMaximumWidth(570);
+  pango_entry_->SetMaximumWidth(search_bar_width_ - 1.5 * icon->GetWidth());
 
   layered_layout_ = new nux::LayeredLayout();
   layered_layout_->AddLayer(hint_);
   layered_layout_->AddLayer(pango_entry_);
   layered_layout_->SetPaintAll(true);
   layered_layout_->SetActiveLayerN(1);
-  layered_layout_->SetMinimumWidth(420);
-  layered_layout_->SetMaximumWidth(645);
+  layered_layout_->SetMinimumWidth(search_bar_width_);
+  layered_layout_->SetMaximumWidth(search_bar_width_);
   layout_->AddView(layered_layout_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
   std::string filter_str = _("Filter results");
@@ -101,12 +102,13 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
   show_filters_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_LEFT);
   show_filters_->mouse_click.connect([&] (int x, int y, unsigned long b, unsigned long k) { showing_filters = !showing_filters; });
 
-  nux::Layout *filter_layout = new nux::HLayout();
-  filter_layout->SetHorizontalExternalMargin(12);
-  filter_layout->AddLayout(new nux::SpaceLayout(0, 10000, 0, 1), 1);
-  filter_layout->AddView(show_filters_, 0, nux::MINOR_POSITION_RIGHT);
+  filter_layout_ = new nux::HLayout();
+  filter_layout_->SetHorizontalExternalMargin(12);
+  filter_space_ = new nux::SpaceLayout(0, 10000, 0, 1);
+  filter_layout_->AddLayout(filter_space_, 1);
+  filter_layout_->AddView(show_filters_, 0, nux::MINOR_POSITION_RIGHT);
 
-  layout_->AddView(filter_layout, 1, nux::MINOR_POSITION_RIGHT, nux::MINOR_SIZE_FIX);
+  layout_->AddView(filter_layout_, 0, nux::MINOR_POSITION_RIGHT, nux::MINOR_SIZE_FIX);
 
   sig_manager_.Add(new Signal<void, GtkSettings*, GParamSpec*>
       (gtk_settings_get_default(),
@@ -238,12 +240,25 @@ void SearchBar::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   GfxContext.PushClippingRectangle(geo);
 
   if (!IsFullRedraw())
+  {
     gPainter.PushLayer(GfxContext, bg_layer_->GetGeometry(), bg_layer_);
+  }
+  else
+  {
+    nux::GetPainter().PushPaintLayerStack();
+  }  
 
   layout_->ProcessDraw(GfxContext, force_draw);
 
   if (!IsFullRedraw())
+  {
     gPainter.PopBackground();
+  }
+  else
+  {
+    nux::GetPainter().PopPaintLayerStack();
+  }
+
   GfxContext.PopClippingRectangle();
 }
 
@@ -280,9 +295,9 @@ void SearchBar::UpdateBackground()
   last_width_ = geo.width;
   last_height_ = geo.height;
 
-  x = y = PADDING;
+  x = y = PADDING - 1;
   width = last_width_ - (2 * PADDING);
-  height = last_height_ - (2 * PADDING);
+  height = last_height_ - (2 * PADDING) + 1;
 
   nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, last_width_, last_height_);
   cairo_t* cr = cairo_graphics.GetContext();
@@ -380,11 +395,6 @@ SearchBar::AcceptKeyNavFocus()
 std::string SearchBar::GetName() const
 {
   return "SearchBar";
-}
-
-std::string SearchBar::GetChildsName() const
-{
-  return "";
 }
 
 void SearchBar::AddProperties(GVariantBuilder* builder)

@@ -175,10 +175,10 @@ BamfLauncherIcon::BamfLauncherIcon(Launcher* IconManager, BamfApplication* app)
   _menu_desktop_shortcuts = NULL;
   _on_desktop_file_changed_handler_id = 0;
   _window_moved_id = 0;
-  char* icon_name = bamf_view_get_icon(BAMF_VIEW(m_App));
+  glib::String icon(bamf_view_get_icon(BAMF_VIEW(m_App)));
 
   tooltip_text = BamfName();
-  SetIconName(icon_name);
+  icon_name = icon.Str();
   SetIconType(TYPE_APPLICATION);
 
   if (bamf_view_is_sticky(BAMF_VIEW(m_App)))
@@ -188,8 +188,6 @@ BamfLauncherIcon::BamfLauncherIcon(Launcher* IconManager, BamfApplication* app)
 
   SetQuirk(QUIRK_ACTIVE, bamf_view_is_active(BAMF_VIEW(m_App)));
   SetQuirk(QUIRK_RUNNING, bamf_view_is_running(BAMF_VIEW(m_App)));
-
-  g_free(icon_name);
 
   g_signal_connect(app, "child-removed", (GCallback) &BamfLauncherIcon::OnChildRemoved, this);
   g_signal_connect(app, "child-added", (GCallback) &BamfLauncherIcon::OnChildAdded, this);
@@ -852,10 +850,15 @@ void BamfLauncherIcon::UpdateMenus()
 
 void BamfLauncherIcon::OnQuit(DbusmenuMenuitem* item, int time, BamfLauncherIcon* self)
 {
+  self->Quit();
+}
+
+void BamfLauncherIcon::Quit()
+{
   GList* children, *l;
   BamfView* view;
 
-  children = bamf_view_get_children(BAMF_VIEW(self->m_App));
+  children = bamf_view_get_children(BAMF_VIEW(m_App));
 
   for (l = children; l; l = l->next)
   {

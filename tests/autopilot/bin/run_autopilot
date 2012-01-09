@@ -1,0 +1,13 @@
+#!/usr/bin/env python
+
+
+from unittest.loader import TestLoader
+from unittest.runner import TextTestRunner
+
+if __name__ == "__main__":
+	loader = TestLoader()
+	test_suite = loader.discover('autopilot.tests')
+	runner = TextTestRunner()
+	success = runner.run(test_suite).wasSuccessful()
+	if not success:
+		exit(1)

@@ -108,7 +108,6 @@ public:
 
 protected:
   std::string GetName() const;
-  const gchar* GetChildsName();
   void          AddProperties(GVariantBuilder* builder);
 
   virtual nux::Area* FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type);

@@ -80,6 +80,7 @@ private:
   
   NuxCairoPtr active_;
   NuxCairoPtr normal_;
+  NuxCairoPtr prelight_;
   nux::Geometry cached_geometry_;
   MultiRangeArrow has_arrow_;
   MultiRangeSide side_;

@@ -317,7 +317,7 @@ void QuicklistView::ShowQuicklistWithTipAt(int anchor_tip_x, int anchor_tip_y)
     {
       int offscreen_size = GetBaseY() +
                            GetBaseHeight() -
-                           nux::GetWindow().GetWindowHeight();
+                           nux::GetWindowThread()->GetGraphicsDisplay().GetWindowHeight();
 
       if (offscreen_size > 0)
         _top_size = offscreen_size;
@@ -445,8 +445,8 @@ void QuicklistView::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
       nux::color::White);
   }
 
-  nux::GetGraphicsEngine().GetRenderStates().SetBlend(true);
-  nux::GetGraphicsEngine().GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
+  nux::GetWindowThread()->GetGraphicsEngine().GetRenderStates().SetBlend(true);
+  nux::GetWindowThread()->GetGraphicsEngine().GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
   gfxContext.QRP_2TexMod(base.x,
                          base.y,
                          base.width,
@@ -463,8 +463,8 @@ void QuicklistView::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
   texxform.SetWrap(nux::TEXWRAP_CLAMP, nux::TEXWRAP_CLAMP);
   texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
 
-  nux::GetGraphicsEngine().GetRenderStates().SetBlend(true);
-  nux::GetGraphicsEngine().GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
+  nux::GetWindowThread()->GetGraphicsEngine().GetRenderStates().SetBlend(true);
+  nux::GetWindowThread()->GetGraphicsEngine().GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
   gfxContext.QRP_1Tex(base.x,
                       base.y,
                       base.width,
@@ -473,7 +473,7 @@ void QuicklistView::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
                       texxform,
                       nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
 
-  nux::GetGraphicsEngine().GetRenderStates().SetBlend(false);
+  nux::GetWindowThread()->GetGraphicsEngine().GetRenderStates().SetBlend(false);
 
   std::list<QuicklistMenuItem*>::iterator it;
   for (it = _item_list.begin(); it != _item_list.end(); it++)
@@ -830,7 +830,7 @@ void QuicklistView::RemoveAllMenuItem()
   _item_layout->Clear();
   _default_item_layout->Clear();
   _cairo_text_has_changed = true;
-  nux::GetGraphicsThread()->AddObjectToRefreshList(this);
+  nux::GetWindowThread()->QueueObjectLayout(this);
 }
 
 void QuicklistView::AddMenuItem(QuicklistMenuItem* item)
@@ -852,7 +852,7 @@ void QuicklistView::AddMenuItem(QuicklistMenuItem* item)
   AddChild(item);
 
   _cairo_text_has_changed = true;
-  nux::GetGraphicsThread()->AddObjectToRefreshList(this);
+  nux::GetWindowThread()->QueueObjectLayout(this);
   NeedRedraw();
 }
 
@@ -1332,7 +1332,7 @@ void QuicklistView::UpdateTexture()
     {
       int offscreen_size = GetBaseY() +
                            GetBaseHeight() -
-                           nux::GetWindow().GetWindowHeight();
+                           nux::GetWindowThread()->GetGraphicsDisplay().GetWindowHeight();
 
       if (offscreen_size > 0)
         _top_size = offscreen_size;

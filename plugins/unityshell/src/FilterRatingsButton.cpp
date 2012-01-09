@@ -66,12 +66,15 @@ void FilterRatingsButton::InitTheme()
     
     active_empty_.reset(new nux::CairoWrapper(geometry, sigc::bind(sigc::mem_fun(this, &FilterRatingsButton::RedrawTheme), 0, nux::ButtonVisualState::VISUAL_STATE_PRESSED)));
     normal_empty_.reset(new nux::CairoWrapper(geometry, sigc::bind(sigc::mem_fun(this, &FilterRatingsButton::RedrawTheme), 0, nux::ButtonVisualState::VISUAL_STATE_NORMAL)));
+    prelight_empty_.reset(new nux::CairoWrapper(geometry, sigc::bind(sigc::mem_fun(this, &FilterRatingsButton::RedrawTheme), 0, nux::ButtonVisualState::VISUAL_STATE_PRELIGHT)));
 
     active_half_.reset(new nux::CairoWrapper(geometry, sigc::bind(sigc::mem_fun(this, &FilterRatingsButton::RedrawTheme), 1, nux::ButtonVisualState::VISUAL_STATE_PRESSED)));
     normal_half_.reset(new nux::CairoWrapper(geometry, sigc::bind(sigc::mem_fun(this, &FilterRatingsButton::RedrawTheme), 1, nux::ButtonVisualState::VISUAL_STATE_NORMAL)));
+    prelight_half_.reset(new nux::CairoWrapper(geometry, sigc::bind(sigc::mem_fun(this, &FilterRatingsButton::RedrawTheme), 1, nux::ButtonVisualState::VISUAL_STATE_PRELIGHT)));
 
     active_full_.reset(new nux::CairoWrapper(geometry, sigc::bind(sigc::mem_fun(this, &FilterRatingsButton::RedrawTheme), 2, nux::ButtonVisualState::VISUAL_STATE_PRESSED)));
     normal_full_.reset(new nux::CairoWrapper(geometry, sigc::bind(sigc::mem_fun(this, &FilterRatingsButton::RedrawTheme), 2, nux::ButtonVisualState::VISUAL_STATE_NORMAL)));
+    prelight_full_.reset(new nux::CairoWrapper(geometry, sigc::bind(sigc::mem_fun(this, &FilterRatingsButton::RedrawTheme), 2, nux::ButtonVisualState::VISUAL_STATE_PRELIGHT)));
   }
 }
 
@@ -105,12 +108,15 @@ long FilterRatingsButton::ComputeContentSize()
     geo.width = 27;
     active_empty_->Invalidate(geo);
     normal_empty_->Invalidate(geo);
+    prelight_empty_->Invalidate(geo);
 
     active_half_->Invalidate(geo);
     normal_half_->Invalidate(geo);
+    prelight_half_->Invalidate(geo);
 
     active_full_->Invalidate(geo);
     normal_full_->Invalidate(geo);
+    prelight_full_->Invalidate(geo);
     
     cached_geometry_ = geo;
   }
@@ -160,30 +166,32 @@ void FilterRatingsButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   for (int index = 0; index < 5; index++)
   {
     nux::BaseTexture* texture = normal_empty_->GetTexture();
-
     if (index < total_full_stars)
     {
-      texture = normal_full_->GetTexture();
-      if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_PRESSED)
-      {
+      if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_NORMAL)
+        texture = normal_full_->GetTexture();
+      else if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_PRELIGHT)
+        texture = prelight_full_->GetTexture();
+      else if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_PRESSED)
         texture = active_full_->GetTexture();
-      }
     }
     else if (index < total_full_stars + total_half_stars)
     {
-      texture = normal_half_->GetTexture();
-      if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_PRESSED)
-      {
+      if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_NORMAL)
+        texture = normal_half_->GetTexture();
+      else if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_PRELIGHT)
+        texture = prelight_half_->GetTexture();
+      else if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_PRESSED)
         texture = active_half_->GetTexture();
-      }
     }
     else
     {
-      texture = normal_empty_->GetTexture();
-      if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_PRESSED)
-      {
+      if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_NORMAL)
+        texture = normal_empty_->GetTexture();
+      else if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_PRELIGHT)
+        texture = prelight_empty_->GetTexture();
+      else if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_PRESSED)
         texture = active_empty_->GetTexture();
-      }
     }
 
     GfxContext.QRP_1Tex(geo_star.x,

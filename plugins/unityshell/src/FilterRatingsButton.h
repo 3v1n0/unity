@@ -59,10 +59,13 @@ protected:
 
   NuxCairoPtr active_empty_;
   NuxCairoPtr normal_empty_;
+  NuxCairoPtr prelight_empty_;
   NuxCairoPtr active_half_;
   NuxCairoPtr normal_half_;
+  NuxCairoPtr prelight_half_;
   NuxCairoPtr active_full_;
   NuxCairoPtr normal_full_;
+  NuxCairoPtr prelight_full_;
   nux::Geometry cached_geometry_;
 
   dash::RatingsFilter::Ptr filter_;

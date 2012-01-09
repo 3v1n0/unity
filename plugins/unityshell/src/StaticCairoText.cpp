@@ -63,6 +63,7 @@ StaticCairoText::StaticCairoText(const TCHAR* text,
   _fontstring = NULL;
 
   _accept_key_nav_focus = false;
+  SetAcceptKeyNavFocusOnMouseDown(false);
 }
 
 StaticCairoText::~StaticCairoText()
@@ -362,8 +363,8 @@ void StaticCairoText::GetTextExtents(const TCHAR* font,
   pango_layout_context_changed(layout);
   pango_layout_get_extents(layout, NULL, &logRect);
 
-  width  = (logRect.x + logRect.width) / PANGO_SCALE;
-  height = (logRect.y + logRect.height) / PANGO_SCALE;
+  width  = logRect.width / PANGO_SCALE;
+  height = logRect.height / PANGO_SCALE;
   _cached_extent_height = height;
   _cached_extent_width = width;
 

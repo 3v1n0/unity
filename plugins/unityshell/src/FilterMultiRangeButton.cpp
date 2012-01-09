@@ -79,6 +79,7 @@ void FilterMultiRangeButton::SetVisualSide(MultiRangeSide side)
   nux::Geometry const& geo = GetGeometry();
 
   side_ = side;
+  prelight_->Invalidate(geo);
   active_->Invalidate(geo);
   normal_->Invalidate(geo);
 }
@@ -100,10 +101,10 @@ long FilterMultiRangeButton::ComputeContentSize()
   nux::Geometry const& geo = GetGeometry();
   if (cached_geometry_ != geo)
   {
+    prelight_->Invalidate(geo);
     active_->Invalidate(geo);
     normal_->Invalidate(geo);
     cached_geometry_ = geo;
-
   }
 
   return ret;
@@ -116,6 +117,7 @@ void FilterMultiRangeButton::InitTheme()
     nux::Geometry const& geo = GetGeometry();
     active_.reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &FilterMultiRangeButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_PRESSED)));
     normal_.reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &FilterMultiRangeButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_NORMAL)));
+    prelight_.reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &FilterMultiRangeButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_PRELIGHT)));
   }
 
   SetMinimumHeight(32);

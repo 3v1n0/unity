@@ -81,6 +81,7 @@ HomeView::~HomeView()
 void HomeView::SetupViews()
 {
   layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
+  layout_->SetHorizontalExternalMargin(7);
 
   scroll_view_ = new HomeScrollView(new PlacesVScrollBar(NUX_TRACKER_LOCATION),
                                     NUX_TRACKER_LOCATION);
@@ -238,7 +239,7 @@ bool HomeView::AcceptKeyNavFocus()
 }
 
 // Introspectable
-const gchar* HomeView::GetName()
+std::string HomeView::GetName() const
 {
   return "HomeView";
 }
