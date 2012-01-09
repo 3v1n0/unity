@@ -181,10 +181,11 @@ void FilterMultiRangeButton::Draw(nux::GraphicsEngine& GfxContext, bool force_dr
 
   nux::BaseTexture* texture = normal_->GetTexture();
   //FIXME - dashstyle does not give us a focused state yet, so ignore
-  //~ if (state == nux::ButtonVisualState::NUX_VISUAL_STATE_PRELIGHT)
-  //~ {
-    //~ texture = prelight_->GetTexture();
-  //~ }
+  if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_PRELIGHT)
+  {
+    texture = prelight_->GetTexture();
+  }
+  
   if (Active())
   {
     texture = active_->GetTexture();
