@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import os
 import sys
 import junitxml
 from optparse import OptionParser
@@ -15,6 +16,8 @@ if __name__ == "__main__":
 	if options.outfile == '':
 		results_stream = sys.stdout
 	else:
+		if not os.path.exists(options.outfile):
+			os.makedirs(options.outfile)
 		results_stream = open(options.outfile, 'w')
 
 	loader = TestLoader()
