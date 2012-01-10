@@ -97,6 +97,7 @@ void Controller::SetupHudView()
   LOG_DEBUG(logger) << "connecting to signals";
   view_->search_changed.connect(sigc::mem_fun(this, &Controller::OnSearchChanged));
   view_->search_activated.connect(sigc::mem_fun(this, &Controller::OnSearchActivated));
+  view_->suggestion_activated.connect(sigc::mem_fun(this, &Controller::OnSuggestionActivated));
 //   hud_service_.target_icon.changed.connect([&] (std::string icon_name) {
 //     view_->SetIcon(icon_name);
 //   });
@@ -292,6 +293,12 @@ void Controller::OnSearchChanged(std::string search_string)
 void Controller::OnSearchActivated(std::string search_string)
 {
   hud_service_.Execute(search_string);
+  HideHud();
+}
+
+void Controller::OnSuggestionActivated(Suggestion::Ptr suggestion)
+{
+  hud_service_.ExecuteBySuggestion(suggestion);
   HideHud();
 }
 

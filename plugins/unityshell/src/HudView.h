@@ -59,6 +59,7 @@ public:
 
   sigc::signal<void, std::string> search_changed;
   sigc::signal<void, std::string> search_activated;
+  sigc::signal<void, Suggestion::Ptr> suggestion_activated;
 
 protected:
   virtual Area* FindKeyFocusArea(unsigned int key_symbol,
