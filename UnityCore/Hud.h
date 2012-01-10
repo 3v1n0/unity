@@ -61,7 +61,8 @@ public:
   std::string formatted_text;   // Pango formatted text
   std::string icon_name;        // icon name using standard lookups
   std::string item_icon;        // Future API
-  std::string completion_text; // Non formatted text f or completion
+  std::string completion_text;  // Non formatted text f or completion
+  std::string shortcut;         // Shortcut key
   GVariant *key;
 };
 
