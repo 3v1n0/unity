@@ -81,6 +81,7 @@ void Controller::SetupWindow()
 
 void Controller::SetupHudView()
 {
+  LOG_DEBUG(logger) << "SetupHudView called";
   view_ = new View();
 
   nux::HLayout* layout = new nux::HLayout(NUX_TRACKER_LOCATION);
@@ -97,6 +98,7 @@ void Controller::SetupHudView()
   LOG_DEBUG(logger) << "connecting to signals";
   view_->search_changed.connect(sigc::mem_fun(this, &Controller::OnSearchChanged));
   view_->search_activated.connect(sigc::mem_fun(this, &Controller::OnSearchActivated));
+  view_->suggestion_activated.connect(sigc::mem_fun(this, &Controller::OnSuggestionActivated));
 //   hud_service_.target_icon.changed.connect([&] (std::string icon_name) {
 //     view_->SetIcon(icon_name);
 //   });
@@ -292,6 +294,13 @@ void Controller::OnSearchChanged(std::string search_string)
 void Controller::OnSearchActivated(std::string search_string)
 {
   hud_service_.Execute(search_string);
+  HideHud();
+}
+
+void Controller::OnSuggestionActivated(Suggestion::Ptr suggestion)
+{
+  LOG_DEBUG(logger) << "Activating suggestion, " << suggestion->formatted_text;
+  hud_service_.ExecuteBySuggestion(suggestion);
   HideHud();
 }
 

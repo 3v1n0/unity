@@ -65,6 +65,7 @@ View::View()
   search_bar_->key_down.connect (sigc::mem_fun (this, &View::OnKeyDown));
 
   search_bar_->activated.connect ([&]() {
+    LOG_WARN(logger) << "got search bar activated";
     search_activated.emit(search_bar_->search_string);
   });
 
@@ -108,11 +109,18 @@ void View::SetSuggestions(Hud::Suggestions suggestions)
     button_views_->AddView(button, 0, nux::MINOR_POSITION_LEFT);
 
     button->click.connect([&](nux::View* view) {
-      search_activated.emit(dynamic_cast<HudButton*>(view)->label);
+      suggestion_activated.emit(dynamic_cast<HudButton*>(view)->GetSuggestion());
     });
-
+    
+    button->OnKeyNavFocusActivate.connect([&](nux::Area *area) {
+      suggestion_activated.emit(dynamic_cast<HudButton*>(area)->GetSuggestion());
+    });
+    
     found_items++;
   }
+  
+  QueueRelayout();
+  QueueDraw();
 }
 
 void View::SetIcon(std::string icon_name)
@@ -249,6 +257,7 @@ nux::Area* View::FindKeyFocusArea(unsigned int key_symbol,
       unsigned long x11_key_code,
       unsigned long special_keys_state)
 {
+  LOG_WARN(logger) << "got find key focus area";
   // Do what nux::View does, but if the event isn't a key navigation,
   // designate the text entry to process it.
 
@@ -275,6 +284,7 @@ nux::Area* View::FindKeyFocusArea(unsigned int key_symbol,
     break;
   case NUX_VK_ENTER:
   case NUX_KP_ENTER:
+    LOG_WARN(logger) << "got enter";
     // Not sure if Enter should be a navigation key
     direction = nux::KEY_NAV_ENTER;
     break;

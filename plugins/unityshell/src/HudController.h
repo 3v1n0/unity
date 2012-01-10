@@ -73,6 +73,7 @@ private:
 
   void OnSearchChanged(std::string search_string);
   void OnSearchActivated(std::string search_string);
+  void OnSuggestionActivated(Suggestion::Ptr suggestion);
 
 public:
   void ShowHud();
