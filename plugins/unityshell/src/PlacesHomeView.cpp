@@ -365,15 +365,9 @@ PlacesHomeView::OnShortcutClicked(PlacesTile* tile)
   }
 }
 
-const gchar* PlacesHomeView::GetName()
+std::string PlacesHomeView::GetName() const
 {
   return "PlacesHomeView";
-}
-
-const gchar*
-PlacesHomeView::GetChildsName()
-{
-  return "";
 }
 
 void PlacesHomeView::AddProperties(GVariantBuilder* builder)

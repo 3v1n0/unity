@@ -56,8 +56,8 @@ public:
                                     IndicatorEntryType type = IndicatorEntryType::INDICATOR);
   void RemoveEntry(std::string const& entry_id);
 
-  bool OnPointerMoved(int x, int y);
-  bool ActivateEntry(std::string const& entry_id);
+  PanelIndicatorEntryView* ActivateEntryAt(int x, int y);
+  PanelIndicatorEntryView* ActivateEntry(std::string const& entry_id);
   bool ActivateIfSensitive();
   void GetGeometryForSync(indicator::EntryLocationMap& locations);
 
@@ -82,8 +82,8 @@ protected:
   typedef std::map<std::string, PanelIndicatorEntryView*> Entries;
   Entries entries_;
 
-  const gchar* GetName();
-  const gchar* GetChildsName();
+  std::string GetName() const;
+  std::string GetChildsName() const;
   void         AddProperties(GVariantBuilder* builder);
 
 private:

@@ -49,44 +49,40 @@
 
 #define WINDOW_TITLE_FONT_KEY "/apps/metacity/general/titlebar_font"
 
-#define PANEL_ENTRIES_FADEIN 100
-#define PANEL_ENTRIES_FADEOUT 120
-
 namespace unity
 {
 
-static void on_active_window_changed(BamfMatcher*   matcher,
-                                     BamfView*      old_view,
-                                     BamfView*      new_view,
-                                     PanelMenuView* self);
-
-static void on_name_changed(BamfView*      bamf_view,
-                            gchar*         old_name,
-                            gchar*         new_name,
-                            PanelMenuView* self);
-
 PanelMenuView::PanelMenuView(int padding)
-  : _matcher(NULL),
-    _title_layer(NULL),
+  : _matcher(bamf_matcher_get_default()),
+    _title_layer(nullptr),
     _util_cg(CAIRO_FORMAT_ARGB32, 1, 1),
-    _gradient_texture(NULL),
+    _gradient_texture(nullptr),
     _is_inside(false),
     _is_maximized(false),
     _is_own_window(false),
-    _last_active_view(NULL),
+    _last_active_view(nullptr),
+    _new_application(nullptr),
     _last_width(0),
     _last_height(0),
     _places_showing(false),
     _show_now_activated(false),
     _we_control_active(false),
+    _new_app_menu_shown(false),
     _monitor(0),
     _active_xid(0),
     _active_moved_id(0),
     _update_show_now_id(0),
+    _new_app_show_id(0),
+    _new_app_hide_id(0),
     _place_shown_interest(0),
     _place_hidden_interest(0),
-    _fade_in_animator(NULL),
-    _fade_out_animator(NULL)
+    _menus_fadein(100),
+    _menus_fadeout(120),
+    _menus_discovery(2),
+    _menus_discovery_fadein(200),
+    _menus_discovery_fadeout(300),
+    _fade_in_animator(nullptr),
+    _fade_out_animator(nullptr)
 {
   WindowManager* win_manager;
 
@@ -100,13 +96,16 @@ PanelMenuView::PanelMenuView(int padding)
    */
   layout_ = _menu_layout;
 
-  _matcher = bamf_matcher_get_default();
-  _activate_window_changed_id = g_signal_connect(_matcher, "active-window-changed",
-                                                 G_CALLBACK(on_active_window_changed), this);
+  _view_opened_signal.Connect(_matcher, "view-opened",
+                              sigc::mem_fun(this, &PanelMenuView::OnViewOpened));
+  _view_closed_signal.Connect(_matcher, "view-closed",
+                              sigc::mem_fun(this, &PanelMenuView::OnViewClosed));
+  _active_win_changed_signal.Connect(_matcher, "active-window-changed",
+                                     sigc::mem_fun(this, &PanelMenuView::OnActiveWindowChanged));
+  _active_app_changed_signal.Connect(_matcher, "active-application-changed",
+                                     sigc::mem_fun(this, &PanelMenuView::OnActiveAppChanged));
 
   _padding = padding;
-  _name_changed_callback_instance = NULL;
-  _name_changed_callback_id = 0;
 
   _window_buttons = new WindowButtons();
   _window_buttons->SetParentObject(this);
@@ -163,8 +162,8 @@ PanelMenuView::PanelMenuView(int padding)
                                                          (UBusCallback)PanelMenuView::OnPlaceViewHidden,
                                                          this);
 
-  _fade_in_animator = new Animator(PANEL_ENTRIES_FADEIN);
-  _fade_out_animator = new Animator(PANEL_ENTRIES_FADEOUT);
+  _fade_in_animator = new Animator(_menus_fadein);
+  _fade_out_animator = new Animator(_menus_fadeout);
 
   _fade_in_animator->animation_updated.connect(sigc::mem_fun(this, &PanelMenuView::OnFadeInChanged));
   _fade_in_animator->animation_ended.connect(sigc::mem_fun(this, &PanelMenuView::FullRedraw));
@@ -180,14 +179,14 @@ PanelMenuView::PanelMenuView(int padding)
 
 PanelMenuView::~PanelMenuView()
 {
-  if (_name_changed_callback_id)
-    g_signal_handler_disconnect(_name_changed_callback_instance,
-                                _name_changed_callback_id);
-  if (_activate_window_changed_id)
-    g_signal_handler_disconnect(_matcher,
-                                _activate_window_changed_id);
   if (_active_moved_id)
     g_source_remove(_active_moved_id);
+
+  if (_new_app_show_id)
+    g_source_remove(_new_app_show_id);
+
+  if (_new_app_hide_id)
+    g_source_remove(_new_app_hide_id);
 
   if (_title_layer)
     delete _title_layer;
@@ -211,6 +210,32 @@ PanelMenuView::~PanelMenuView()
 }
 
 void
+PanelMenuView::SetMenuShowTimings(int fadein, int fadeout, int discovery,
+                                  int discovery_fadein, int discovery_fadeout)
+{
+  if (fadein > -1)
+  {
+    _menus_fadein = fadein;
+    _fade_in_animator->SetDuration(_menus_fadein);
+  }
+
+  if (fadeout > -1)
+  {
+    _menus_fadeout = fadeout;
+    _fade_out_animator->SetDuration(_menus_fadeout);
+  }
+
+  if (discovery > -1)
+    _menus_discovery = discovery;
+
+  if (discovery_fadein > -1)
+    _menus_discovery_fadein = discovery_fadein;
+
+  if (discovery_fadeout > -1)
+    _menus_discovery_fadeout = discovery_fadeout;
+}
+
+void
 PanelMenuView::FullRedraw()
 {
   _menu_layout->NeedRedraw();
@@ -224,9 +249,9 @@ PanelMenuView::FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEven
   bool mouse_inside = TestMousePointerInclusionFilterMouseWheel(mouse_position, event_type);
 
   if (mouse_inside == false)
-    return NULL;
+    return nullptr;
 
-  Area* found_area = NULL;
+  Area* found_area = nullptr;
   if (!_we_control_active)
   {
     found_area = _panel_titlebar_grab_area->FindAreaUnderMouse(mouse_position, event_type);
@@ -327,7 +352,7 @@ PanelMenuView::DrawMenus()
 {
   if (!_is_own_window && !_places_showing && _we_control_active)
   {
-    if (_is_inside || _last_active_view || _show_now_activated)
+    if (_is_inside || _last_active_view || _show_now_activated || _new_application)
     {
       return true;
     }
@@ -344,7 +369,7 @@ PanelMenuView::DrawWindowButtons()
 
   if (!_is_own_window && _we_control_active && _is_maximized)
   {
-    if (_is_inside || _show_now_activated)
+    if (_is_inside || _show_now_activated || _new_application)
     {
       return true;
     }
@@ -382,21 +407,26 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   if (_title_layer && !_is_own_window)
   {
     guint blend_alpha = 0, blend_src = 0, blend_dest = 0;
+    bool draw_menus = DrawMenus();
+    bool draw_window_buttons = DrawWindowButtons();
+    bool has_menu = false;
     bool draw_faded_title = false;
 
     GfxContext.GetRenderStates().GetBlend(blend_alpha, blend_src, blend_dest);
 
-    if (!DrawWindowButtons() && _we_control_active &&
-        (DrawMenus() || (GetOpacity() > 0.0f && _window_buttons->GetOpacity() == 0.0f)))
+    for (auto entry : entries_)
     {
-      for (auto entry : entries_)
+      if (entry.second->IsEntryValid())
       {
-        if (entry.second->IsEntryValid())
-        {
-          draw_faded_title = true;
-          break;
-        }
+        has_menu = true;
+        break;
       }
+    }
+
+    if (!draw_window_buttons && _we_control_active && has_menu &&
+        (draw_menus || (GetOpacity() > 0.0f && _window_buttons->GetOpacity() == 0.0f)))
+    {
+      draw_faded_title = true;
     }
 
     if (draw_faded_title)
@@ -412,7 +442,7 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
       }
       else
       {
-        if (_gradient_texture->LockRect(0, &lockrect, NULL) != OGL_OK)
+        if (_gradient_texture->LockRect(0, &lockrect, nullptr) != OGL_OK)
           build_gradient = true;
         else
           locked = true;
@@ -433,44 +463,55 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
         _gradient_texture = nux::GetGraphicsDisplay()->GetGpuDevice()->
                             CreateSystemCapableDeviceTexture(texture_data.GetWidth(),
                             texture_data.GetHeight(), 1, texture_data.GetFormat());
-        locked = (_gradient_texture->LockRect(0, &lockrect, NULL) == OGL_OK);
+        locked = (_gradient_texture->LockRect(0, &lockrect, nullptr) == OGL_OK);
       }
 
-      int gradient_opacity = 255.0f * GetOpacity();
       BYTE* dest_buffer = (BYTE*) lockrect.pBits;
+      int gradient_opacity = 255.0f * GetOpacity();
+      int buttons_opacity = 255.0f * _window_buttons->GetOpacity();
+
+      int first_step = button_width * (factor - 1);
+      int second_step = button_width * factor;
 
       for (int x = 0; x < geo.width && dest_buffer && locked; x++)
       {
-        BYTE a;
-        if (x < button_width * (factor - 1))
+        BYTE r, g, b, a;
+
+        r = 223;
+        g = 219;
+        b = 210;
+
+        if (x < first_step)
         {
-          a = 0xff;
+          int color_increment = (first_step - x) * 4;
+
+          r = CLAMP(r + color_increment, r, 0xff);
+          g = CLAMP(g + color_increment, g, 0xff);
+          b = CLAMP(b + color_increment, b, 0xff);
+          a = 0xff - buttons_opacity;
         }
-        else if (x < button_width * factor)
+        else if (x < second_step)
         {
-          a = 0xff - gradient_opacity * (((float)x - (button_width * (factor - 1))) / (float)(button_width));
+          a = 0xff - gradient_opacity * (((float)x - (first_step)) /
+                                         (float)(button_width));
         }
         else
         {
-          if (!DrawMenus())
+          if (!draw_menus)
           {
             a = 0xff - gradient_opacity;
           }
-          else if (0xff - gradient_opacity > 0x55)
+          else
           {
             // If we're fading-out the title, it's better to quickly hide
             // the transparent right-most area
-            a = 0xff - gradient_opacity - 0x55;
-          }
-          else
-          {
-            a = 0x00;
+            a = CLAMP(0xff - gradient_opacity - 0x55, 0x00, 0xff);
           }
         }
 
-        *(dest_buffer + 4 * x + 0) = (223 * a) / 255; //red
-        *(dest_buffer + 4 * x + 1) = (219 * a) / 255; //green
-        *(dest_buffer + 4 * x + 2) = (210 * a) / 255; //blue
+        *(dest_buffer + 4 * x + 0) = (r * a) / 0xff; //red
+        *(dest_buffer + 4 * x + 1) = (g * a) / 0xff; //green
+        *(dest_buffer + 4 * x + 2) = (b * a) / 0xff; //blue
         *(dest_buffer + 4 * x + 3) = a;
       }
 
@@ -491,37 +532,39 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
                              _title_layer->GetDeviceTexture(),
                              texxform1,
                              nux::color::White);
-
-      // The previous blend is too aggressive on the texture and therefore there
-      // is a slight loss of clarity. This fixes that
-      geo.width = button_width * (factor - 1);
-      nux::GetPainter().PushDrawLayer(GfxContext, geo, _title_layer);
-      geo = GetGeometry();
     }
-    else if (_window_buttons->GetOpacity() < 1.0f &&
-             _window_buttons->GetOpacity() > 0.0f && !_places_showing)
+    else if (!_places_showing)
     {
-      double title_opacity = 1.0f - _window_buttons->GetOpacity();
-      
-      if (!DrawWindowButtons())
+      if (_we_control_active && _window_buttons->GetOpacity() == 0.0 &&
+          (!has_menu || (has_menu && GetOpacity() == 0.0)))
       {
-        // If we're fading-out the buttons/menus, let's fade-in quickly the title
-        title_opacity = CLAMP(title_opacity + 0.25f, 0.0f, 1.0f);
+        nux::GetPainter().PushDrawLayer(GfxContext, geo, _title_layer);
       }
       else
       {
-        // If we're fading-in the buttons/menus, let's fade-out quickly the title
-        title_opacity = CLAMP(title_opacity - 0.25f, 0.0f, 1.0f);
-      }
+        double title_opacity = 1.0f;
 
-      nux::TexCoordXForm texxform;
-      GfxContext.QRP_1Tex(geo.x, geo.y, geo.width, geo.height,
-                          _title_layer->GetDeviceTexture(), texxform,
-                          nux::color::White * title_opacity);
-    }
-    else if (_window_buttons->GetOpacity() == 0.0f && _we_control_active)
-    {
-      nux::GetPainter().PushDrawLayer(GfxContext, geo, _title_layer);
+        if (has_menu)
+          title_opacity -= MAX(GetOpacity(), _window_buttons->GetOpacity());
+        else
+          title_opacity -= _window_buttons->GetOpacity();
+
+        if (!draw_window_buttons && !draw_menus)
+        {
+          // If we're fading-out the buttons/menus, let's fade-in quickly the title
+          title_opacity = CLAMP(title_opacity + 0.1f, 0.0f, 1.0f);
+        }
+        else
+        {
+          // If we're fading-in the buttons/menus, let's fade-out quickly the title
+          title_opacity = CLAMP(title_opacity - 0.2f, 0.0f, 1.0f);
+        }
+
+        nux::TexCoordXForm texxform;
+        GfxContext.QRP_1Tex(geo.x, geo.y, geo.width, geo.height,
+                            _title_layer->GetDeviceTexture(), texxform,
+                            nux::color::White * title_opacity);
+      }
     }
 
     GfxContext.GetRenderStates().SetBlend(blend_alpha, blend_src, blend_dest);
@@ -549,7 +592,16 @@ PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     _menu_layout->ProcessDraw(GfxContext, true);
 
     _fade_out_animator->Stop();
-    _fade_in_animator->Start(GetOpacity());
+
+    if (_new_application && !_is_inside)
+    {
+      _fade_in_animator->Start(_menus_discovery_fadein, GetOpacity());
+    }
+    else
+    {
+      _fade_in_animator->Start(GetOpacity());
+      _new_app_menu_shown = false;
+    }
   }
   else
   {
@@ -563,14 +615,14 @@ PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
     _fade_in_animator->Stop();
 
-    if (_fade_out_animator->GetDuration() != PANEL_ENTRIES_FADEOUT)
+    if (!_new_app_menu_shown)
     {
-      if (_fade_out_animator->IsRunning())
-        _fade_out_animator->Stop();
-
-      _fade_out_animator->SetDuration(PANEL_ENTRIES_FADEOUT);
+      _fade_out_animator->Start(1.0f - GetOpacity());
     }
-    _fade_out_animator->Start(1.0f - GetOpacity());
+    else
+    {
+      _fade_out_animator->Start(_menus_discovery_fadeout, 1.0f - GetOpacity());
+    }
   }
 
   if (draw_buttons)
@@ -589,8 +641,7 @@ PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     /* If we try to hide only the buttons, then use a faster fadeout */
     if (!_fade_out_animator->IsRunning())
     {
-      _fade_out_animator->SetDuration(PANEL_ENTRIES_FADEOUT/5);
-      _fade_out_animator->Start(1.0f - _window_buttons->GetOpacity());
+      _fade_out_animator->Start(_menus_fadeout/3, 1.0f - _window_buttons->GetOpacity());
     }
   }
 
@@ -600,7 +651,7 @@ PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 gchar*
 PanelMenuView::GetActiveViewName()
 {
-  gchar*         label = NULL;
+  gchar*         label = nullptr;
   BamfWindow*    window;
 
   _is_own_window = false;
@@ -659,7 +710,7 @@ PanelMenuView::GetActiveViewName()
         }
       }
 
-      if (label == NULL)
+      if (label == nullptr)
       {
         BamfView* active_view;
 
@@ -691,8 +742,8 @@ void PanelMenuView::DrawText(cairo_t *cr_real,
                              int increase_size
                              )
 {
-  PangoLayout*          layout = NULL;
-  PangoFontDescription* desc = NULL;
+  PangoLayout*          layout = nullptr;
+  PangoFontDescription* desc = nullptr;
   GtkSettings*          settings = gtk_settings_get_default();
   cairo_t*              cr;
   cairo_pattern_t*      linpat;
@@ -712,9 +763,9 @@ void PanelMenuView::DrawText(cairo_t *cr_real,
 
     cr = _util_cg.GetContext();
 
-    g_object_get(settings, "gtk-xft-dpi", &dpi, NULL);
+    g_object_get(settings, "gtk-xft-dpi", &dpi, nullptr);
 
-    font_description = gconf_client_get_string(client, WINDOW_TITLE_FONT_KEY, NULL);
+    font_description = gconf_client_get_string(client, WINDOW_TITLE_FONT_KEY, nullptr);
     desc = pango_font_description_from_string(font_description);
 
     if (font_desc)
@@ -742,7 +793,7 @@ void PanelMenuView::DrawText(cairo_t *cr_real,
     pango_cairo_context_set_resolution(cxt, (float)dpi / (float)PANGO_SCALE);
     pango_layout_context_changed(layout);
 
-    pango_layout_get_extents(layout, NULL, &log_rect);
+    pango_layout_get_extents(layout, nullptr, &log_rect);
     text_width = log_rect.width / PANGO_SCALE;
     text_height = log_rect.height / PANGO_SCALE;
 
@@ -833,7 +884,7 @@ PanelMenuView::Refresh()
   y = 0;
 
   if (label)
-    DrawText(cr, x, y, width, height, NULL, label);
+    DrawText(cr, x, y, width, height, nullptr, label);
 
   cairo_destroy(cr);
 
@@ -869,7 +920,7 @@ PanelMenuView::OnActiveChanged(PanelIndicatorEntryView* view,
   {
     if (_last_active_view == view)
     {
-      _last_active_view = NULL;
+      _last_active_view = nullptr;
     }
   }
 
@@ -894,28 +945,139 @@ PanelMenuView::AllMenusClosed()
 {
   auto mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
   _is_inside = GetAbsoluteGeometry().IsPointInside(mouse.x, mouse.y);
-  _last_active_view = NULL;
+  _last_active_view = nullptr;
 
   FullRedraw();
 }
 
 void
-PanelMenuView::OnNameChanged(gchar* new_name, gchar* old_name)
+PanelMenuView::OnNameChanged(BamfView* bamf_view, gchar* new_name, gchar* old_name)
 {
   Refresh();
   FullRedraw();
 }
 
+gboolean
+PanelMenuView::OnNewAppShow(PanelMenuView* self)
+{
+  BamfApplication* active_app = bamf_matcher_get_active_application(self->_matcher);
+  self->_new_application = glib::Object<BamfApplication>(active_app, glib::AddRef());
+  self->QueueDraw();
+
+  if (self->_new_app_hide_id)
+  {
+    g_source_remove(self->_new_app_hide_id);
+    self->_new_app_hide_id = 0;
+    self->_new_app_menu_shown = false;
+  }
+
+  self->_new_app_hide_id = g_timeout_add_seconds(self->_menus_discovery,
+                                                 (GSourceFunc)PanelMenuView::OnNewAppHide,
+                                                 self);
+  self->_new_app_show_id = 0;
+
+  return FALSE;
+}
+
+gboolean
+PanelMenuView::OnNewAppHide(PanelMenuView* self)
+{
+  self->OnViewClosed(self->_matcher, BAMF_VIEW(self->_new_application.RawPtr()));
+  self->_new_app_hide_id = 0;
+  self->_new_app_menu_shown = true;
+  self->QueueDraw();
+
+  return FALSE;
+}
+
 void
-PanelMenuView::OnActiveWindowChanged(BamfView* old_view,
+PanelMenuView::OnViewOpened(BamfMatcher *matcher, BamfView *view)
+{
+  /* FIXME: here we should also check for if the view is also user_visible
+   * but it seems that BAMF doesn't handle this correctly after some
+   * stress tests (repeated launches). */
+  if (!BAMF_IS_APPLICATION(view))
+    return;
+
+  _new_apps.push_front(glib::Object<BamfApplication>(BAMF_APPLICATION(view), glib::AddRef()));
+}
+
+void
+PanelMenuView::OnViewClosed(BamfMatcher *matcher, BamfView *view)
+{
+  if (!BAMF_IS_APPLICATION(view))
+    return;
+
+  BamfApplication* app = BAMF_APPLICATION(view);
+
+  if (std::find(_new_apps.begin(), _new_apps.end(), app) != _new_apps.end())
+  {
+    _new_apps.remove(glib::Object<BamfApplication>(app, glib::AddRef()));
+
+    if (_new_application == app)
+      _new_application = nullptr;
+  }
+}
+
+void
+PanelMenuView::OnActiveAppChanged(BamfMatcher *matcher,
+                                  BamfApplication* old_app,
+                                  BamfApplication* new_app)
+{
+  if (BAMF_IS_APPLICATION(new_app))
+  {
+    if (std::find(_new_apps.begin(), _new_apps.end(), new_app) != _new_apps.end())
+    {
+      if (_new_application != new_app)
+      {
+        /* Add a small delay before showing the menus, this is done both
+         * to fix the issues with applications that takes some time to loads
+         * menus and to show the menus only when an application has been
+         * kept active for some time */
+
+        if (_new_app_show_id)
+          g_source_remove(_new_app_show_id);
+
+        _new_app_show_id = g_timeout_add(300,
+                                         (GSourceFunc)PanelMenuView::OnNewAppShow,
+                                         this);
+      }
+    }
+    else
+    {
+      if (_new_app_show_id)
+      {
+        g_source_remove(_new_app_show_id);
+        _new_app_show_id = 0;
+      }
+
+      if (_new_app_hide_id)
+      {
+        g_source_remove(_new_app_hide_id);
+        _new_app_hide_id = 0;
+        _new_app_menu_shown = false;
+      }
+
+      if (_new_application)
+        OnViewClosed(matcher, BAMF_VIEW(_new_application.RawPtr()));
+    }
+  }
+}
+
+void
+PanelMenuView::OnActiveWindowChanged(BamfMatcher *matcher,
+                                     BamfView* old_view,
                                      BamfView* new_view)
 {
   _show_now_activated = false;
   _is_maximized = false;
   _active_xid = 0;
+
   if (_active_moved_id)
+  {
     g_source_remove(_active_moved_id);
-  _active_moved_id = 0;
+    _active_moved_id = 0;
+  }
 
   if (BAMF_IS_WINDOW(new_view))
   {
@@ -944,16 +1106,11 @@ PanelMenuView::OnActiveWindowChanged(BamfView* old_view,
     }
 
     // first see if we need to remove and old callback
-    if (_name_changed_callback_id != 0)
-      g_signal_handler_disconnect(_name_changed_callback_instance,
-                                  _name_changed_callback_id);
+    _view_name_changed_signal.Disconnect();
 
-    // register callback for new view and store handler-id
-    _name_changed_callback_instance = G_OBJECT(new_view);
-    _name_changed_callback_id = g_signal_connect(_name_changed_callback_instance,
-                                                 "name-changed",
-                                                 (GCallback) on_name_changed,
-                                                 this);
+    // register callback for new view
+    _view_name_changed_signal.Connect(new_view, "name-changed",
+                                      sigc::mem_fun(this, &PanelMenuView::OnNameChanged));
   }
 
   Refresh();
@@ -1129,7 +1286,7 @@ PanelMenuView::OnCloseClicked()
 {
   if (_places_showing)
   {
-    ubus_server_send_message(ubus_server_get_default(), UBUS_PLACE_VIEW_CLOSE_REQUEST, NULL);
+    ubus_server_send_message(ubus_server_get_default(), UBUS_PLACE_VIEW_CLOSE_REQUEST, nullptr);
   }
   else
   {
@@ -1333,42 +1490,14 @@ PanelMenuView::OnMouseMiddleClicked(int x, int y, unsigned long button_flags, un
 }
 
 // Introspectable
-const gchar*
-PanelMenuView::GetName()
+std::string
+PanelMenuView::GetName() const
 {
-  return NULL;
-}
-
-const gchar*
-PanelMenuView::GetChildsName()
-{
-  return NULL;
+  return "";
 }
 
 void PanelMenuView::AddProperties(GVariantBuilder* builder)
 {
-}
-
-/*
- * C code for callbacks
- */
-static void
-
-on_active_window_changed(BamfMatcher*   matcher,
-                         BamfView*      old_view,
-                         BamfView*      new_view,
-                         PanelMenuView* self)
-{
-  self->OnActiveWindowChanged(old_view, new_view);
-}
-
-static void
-on_name_changed(BamfView*      bamf_view,
-                gchar*         old_name,
-                gchar*         new_name,
-                PanelMenuView* self)
-{
-  self->OnNameChanged(new_name, old_name);
 }
 
 void
@@ -1485,5 +1614,24 @@ PanelMenuView::OnPanelViewMouseLeave(int x, int y, unsigned long mouse_button_st
 void PanelMenuView::OnPanelViewMouseMove(int x, int y, int dx, int dy, unsigned long mouse_button_state, unsigned long special_keys_state)
 {}
 
-
+void PanelMenuView::SetMousePosition(int x, int y)
+{
+  if (_last_active_view ||
+      (x >= 0 && y >= 0 && GetAbsoluteGeometry().IsPointInside(x, y)))
+  {
+    if (!_is_inside)
+    {
+      _is_inside = true;
+      FullRedraw();
+    }
+  }
+  else
+  {
+    if (_is_inside)
+    {
+      _is_inside = false;
+      FullRedraw();
+    }
+  }
+}
 } // namespace unity

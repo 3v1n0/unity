@@ -177,9 +177,10 @@ nux_area_accessible_initialize(AtkObject* accessible,
   atk_component_add_focus_handler(ATK_COMPONENT(accessible),
                                   nux_area_accessible_focus_handler);
 
-  /* NOTE: we can't search for the parent window on initilization, or
-     we could enter on a infinite loop, as this is called on the
-     initalization */
+  /* NOTE: we can't search for the parent window on initilization as a
+     general rule, or we could enter on a infinite loop. At area this
+     is done on the focus event. On the Switcher this is done on their
+     initialize itself */
 }
 
 static AtkObject*

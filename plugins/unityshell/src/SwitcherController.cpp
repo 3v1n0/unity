@@ -49,6 +49,7 @@ Controller::Controller()
   bg_color_ = nux::Color(0.0, 0.0, 0.0, 0.5);
 
   UBusServer *ubus = ubus_server_get_default();
+  bg_update_handle_ =
   ubus_server_register_interest(ubus, UBUS_BACKGROUND_COLOR_CHANGED,
                                 (UBusCallback)&Controller::OnBackgroundUpdate,
                                 this);
@@ -56,6 +57,7 @@ Controller::Controller()
 
 Controller::~Controller()
 {
+  ubus_server_unregister_interest(ubus_server_get_default(), bg_update_handle_);
   if (view_window_)
     view_window_->UnReference();
 }
@@ -424,8 +426,8 @@ void Controller::SelectFirstItem()
 }
 
 /* Introspection */
-const gchar*
-Controller::GetName()
+std::string
+Controller::GetName() const
 {
   return "SwitcherController";
 }

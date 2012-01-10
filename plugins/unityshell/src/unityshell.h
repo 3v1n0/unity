@@ -47,49 +47,21 @@
 #include "DebugDBusInterface.h"
 #include "SwitcherController.h"
 #include "UBusWrapper.h"
+#include "ScreenEffectFramebufferObject.h"
 
 #include "compizminimizedwindowhandler.h"
 #include "BGHash.h"
 #include <compiztoolbox/compiztoolbox.h>
+#include <dlfcn.h>
 
 #include "HudController.h"
 
 namespace unity
 {
 
-class UnityFBO
-{
-public:
-
-  typedef boost::shared_ptr <UnityFBO> Ptr;
-
-  UnityFBO (CompOutput *o);
-  ~UnityFBO ();
-
-public:
-
-  void bind ();
-  void unbind ();
-
-  bool status ();
-  bool bound ();
-  void paint ();
-
-  GLuint texture () { return mFBTexture; }
-
-private:
-
-  /* compiz fbo handle that goes through to nux */
-  GLuint   mFboHandle; // actual handle to the framebuffer_ext
-  bool    mFboStatus; // did the framebuffer texture bind succeed
-  GLuint   mFBTexture;
-  CompOutput *output;
-  unsigned int mBoundCnt;
-};
-
 class UnityShowdesktopHandler
 {
-public:
+ public:
 
   UnityShowdesktopHandler (CompWindow *w);
   ~UnityShowdesktopHandler ();
@@ -117,6 +89,9 @@ public:
   static const unsigned int fade_time;
   static CompWindowList     animating_windows;
   static bool shouldHide (CompWindow *);
+  static void inhibitLeaveShowdesktopMode (guint32 xid);
+  static void allowLeaveShowdesktopMode (guint32 xid);
+  static guint32 inhibitingXid ();
 
 private:
 
@@ -125,6 +100,7 @@ private:
   UnityShowdesktopHandler::State mState;
   float                          mProgress;
   bool                           mWasHidden;
+  static guint32		 mInhibitingXid;
 };
 
 
@@ -235,12 +211,10 @@ public:
   void NeedsRelayout();
   void ScheduleRelayout(guint timeout);
 
-  void setActiveFbo (GLuint fbo) { mActiveFbo = fbo; }
-
   bool forcePaintOnTop ();
 
 protected:
-  const gchar* GetName();
+  std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
 
 private:
@@ -322,8 +296,8 @@ private:
 
   unity::BGHash _bghash;
 
-  std::map <CompOutput *, UnityFBO::Ptr> mFbos;
-  GLuint                                 mActiveFbo;
+  ScreenEffectFramebufferObject::Ptr _fbo;
+  GLuint                             _active_fbo;
 
   bool   queryForShader ();
 
@@ -333,6 +307,8 @@ private:
   CompWindowList         fullscreen_windows_;
   bool                   painting_tray_;
   unsigned int           tray_paint_mask_;
+
+  ScreenEffectFramebufferObject::GLXGetProcAddressProc glXGetProcAddressP;
 
   friend class UnityWindow;
 };
@@ -356,6 +332,7 @@ public:
   void unminimize ();
   bool minimized ();
   bool focus ();
+  void activate ();
 
   void updateFrameRegion (CompRegion &region);
 

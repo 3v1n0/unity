@@ -15,6 +15,7 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *
 * Authored by: Tim Penhey <tim.penhey@canonical.com>
+*              Marco Trevisan (Treviño) <3v1n0@ubuntu.com>
 */
 
 #ifndef UNITY_GLIB_WRAPPER_H
@@ -31,28 +32,58 @@ namespace unity
 namespace glib
 {
 
+struct AddRef{};
+
 template <typename T>
 class Object
 {
 public:
   Object();
   explicit Object(T* val);
+  Object(T* val, AddRef const& ref);
+
   Object(Object const&);
   ~Object();
 
-  Object& operator=(T* val);
-  Object& operator=(Object const& other);
+  void swap(Object<T>& other);
 
-  operator T* ();
-  operator bool();
-  T* operator->();
-  T* RawPtr();
+  Object& operator=(T* val);
+  Object& operator=(Object other);
+
+  operator T* () const;
+  operator bool() const;
+  T* operator->() const;
+  T* RawPtr() const;
   // Release ownership of the object. No unref will occur.
   T* Release();
 
 private:
   T* object_;
 };
+
+template <typename T>
+bool operator==(Object<T> const& lhs, Object<T> const& rhs)
+{
+  return (lhs.RawPtr() == rhs.RawPtr());
+}
+
+template <typename T>
+bool operator!=(Object<T> const& lhs, Object<T> const& rhs)
+{
+  return !(lhs == rhs);
+}
+
+template <typename T>
+bool operator!=(T* lhs, Object<T> const& rhs)
+{
+  return !(lhs == rhs.RawPtr());
+}
+
+template <typename G, typename T>
+Object<G> object_cast(Object<T> const& obj)
+{
+  return Object<G>(reinterpret_cast<G*>(obj.RawPtr()), AddRef());
+}
 
 class Error : boost::noncopyable
 {
@@ -62,6 +93,8 @@ public:
 
   GError** AsOutParam();
   GError** operator&();
+
+  operator GError*();
 
   operator bool() const;
   std::string Message() const;
@@ -93,6 +126,15 @@ std::ostream& operator<<(std::ostream& o, Error const& e);
 std::ostream& operator<<(std::ostream& o, String const& s);
 
 }
+}
+
+namespace std
+{
+  template <typename T> 
+  void swap (unity::glib::Object<T>& lhs, unity::glib::Object<T>& rhs)
+  {
+    lhs.swap(rhs);
+  }
 }
 
 #include "GLibWrapper-inl.h"

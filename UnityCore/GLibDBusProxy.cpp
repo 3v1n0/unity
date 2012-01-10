@@ -66,6 +66,7 @@ public:
   void Call(string const& method_name,
             GVariant* parameters,
             ReplyCallback callback,
+            GCancellable* cancellable,
             GDBusCallFlags flags,
             int timeout_msec);
 
@@ -231,6 +232,7 @@ void DBusProxy::Impl::OnProxySignal(GDBusProxy* proxy,
 void DBusProxy::Impl::Call(string const& method_name,
                            GVariant* parameters,
                            ReplyCallback callback,
+                           GCancellable* cancellable,
                            GDBusCallFlags flags,
                            int timeout_msec)
 {
@@ -245,7 +247,7 @@ void DBusProxy::Impl::Call(string const& method_name,
                       parameters,
                       flags,
                       timeout_msec,
-                      cancellable_,
+                      cancellable != NULL ? cancellable : cancellable_,
                       DBusProxy::Impl::OnCallCallback,
                       data);
   }
@@ -262,7 +264,11 @@ void DBusProxy::Impl::OnCallCallback(GObject* source, GAsyncResult* res, gpointe
   std::unique_ptr<CallData> data (static_cast<CallData*>(call_data));
   GVariant* result = g_dbus_proxy_call_finish(G_DBUS_PROXY(source), res, &error);
 
-  if (error)
+  if (error && g_error_matches (error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
+  {
+    // silently ignore
+  }
+  else if (error)
   {
     // Do not touch the impl pointer as the operation may have been cancelled
     LOG_WARNING(logger) << "Calling method failed: " << error;
@@ -295,10 +301,12 @@ DBusProxy::~DBusProxy()
 void DBusProxy::Call(string const& method_name,
                      GVariant* parameters,
                      ReplyCallback callback,
+                     GCancellable* cancellable,
                      GDBusCallFlags flags,
                      int timeout_msec)
 {
-  pimpl->Call(method_name, parameters, callback, flags, timeout_msec);
+  pimpl->Call(method_name, parameters, callback, cancellable, flags,
+              timeout_msec);
 }
 
 void DBusProxy::Connect(std::string const& signal_name, ReplyCallback callback)

@@ -40,6 +40,7 @@ namespace
 
 SimpleLauncherIcon::SimpleLauncherIcon(Launcher* IconManager)
   : LauncherIcon(IconManager)
+  , icon_name("", sigc::mem_fun(this, &SimpleLauncherIcon::SetIconName))
   , theme_changed_id_(0)
 {
   LauncherIcon::mouse_down.connect(sigc::mem_fun(this, &SimpleLauncherIcon::OnMouseDown));
@@ -97,29 +98,27 @@ nux::BaseTexture* SimpleLauncherIcon::GetTextureForSize(int size)
   if (texture_map[size] != 0)
     return texture_map[size];
 
-  if (icon_name_.empty())
+  std::string icon_string(icon_name());
+
+  if (icon_string.empty())
     return 0;
 
-  if (icon_name_[0] == '/')
-    texture_map[size] = TextureFromPath(icon_name_.c_str(), size);
+  if (icon_string[0] == '/')
+    texture_map[size] = TextureFromPath(icon_string.c_str(), size);
   else
-    texture_map[size] = TextureFromGtkTheme(icon_name_.c_str(), size);
+    texture_map[size] = TextureFromGtkTheme(icon_string.c_str(), size);
   return texture_map[size];
 }
 
-void SimpleLauncherIcon::SetIconName(const char* name)
+bool SimpleLauncherIcon::SetIconName(std::string& target, std::string const& value)
 {
-  if (name == NULL)
-  {
-    LOG_WARNING(logger) << "attempted to set NULL as IconName";
-    icon_name_.clear();
-  }
-  else
-  {
-    icon_name_ = name;
-  }
+  if (target == value)
+    return false;
 
+  target = value;
   ReloadIcon();
+  
+  return true;
 }
 
 void SimpleLauncherIcon::ReloadIcon()

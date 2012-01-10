@@ -75,7 +75,7 @@ public:
 
 protected:
   // Introspectable methods
-  const gchar* GetName();
+  std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
 
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);

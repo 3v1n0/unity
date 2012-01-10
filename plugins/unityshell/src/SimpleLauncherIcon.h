@@ -17,8 +17,8 @@
  * Authored by: Jason Smith <jason.smith@canonical.com>
  */
 
-#ifndef SIMPLELAUNCHERICON_H
-#define SIMPLELAUNCHERICON_H
+#ifndef UNITYSHELL_SIMPLELAUNCHERICON_H
+#define UNITYSHELL_SIMPLELAUNCHERICON_H
 
 #include "LauncherIcon.h"
 
@@ -35,11 +35,13 @@ public:
   SimpleLauncherIcon(Launcher* IconManager);
   virtual ~SimpleLauncherIcon();
 
-  /* override */
+  // override
   nux::BaseTexture* GetTextureForSize(int size);
 
-  void SetIconName(const char* name);
-
+  // Properties
+  nux::Property<std::string> icon_name;
+  
+  // Signals
   sigc::signal<void> activate;
 
 protected:
@@ -53,9 +55,9 @@ protected:
 private:
   void ReloadIcon();
   static void OnIconThemeChanged(GtkIconTheme* icon_theme, gpointer data);
+  bool SetIconName(std::string& target, std::string const& value);
 
 private:
-  std::string icon_name_;
   guint32 theme_changed_id_;
 
   std::map<int, nux::BaseTexture*> texture_map;

@@ -175,10 +175,10 @@ BamfLauncherIcon::BamfLauncherIcon(Launcher* IconManager, BamfApplication* app)
   _menu_desktop_shortcuts = NULL;
   _on_desktop_file_changed_handler_id = 0;
   _window_moved_id = 0;
-  char* icon_name = bamf_view_get_icon(BAMF_VIEW(m_App));
+  glib::String icon(bamf_view_get_icon(BAMF_VIEW(m_App)));
 
   tooltip_text = BamfName();
-  SetIconName(icon_name);
+  icon_name = icon.Str();
   SetIconType(TYPE_APPLICATION);
 
   if (bamf_view_is_sticky(BAMF_VIEW(m_App)))
@@ -188,8 +188,6 @@ BamfLauncherIcon::BamfLauncherIcon(Launcher* IconManager, BamfApplication* app)
 
   SetQuirk(QUIRK_ACTIVE, bamf_view_is_active(BAMF_VIEW(m_App)));
   SetQuirk(QUIRK_RUNNING, bamf_view_is_running(BAMF_VIEW(m_App)));
-
-  g_free(icon_name);
 
   g_signal_connect(app, "child-removed", (GCallback) &BamfLauncherIcon::OnChildRemoved, this);
   g_signal_connect(app, "child-added", (GCallback) &BamfLauncherIcon::OnChildAdded, this);
@@ -852,10 +850,15 @@ void BamfLauncherIcon::UpdateMenus()
 
 void BamfLauncherIcon::OnQuit(DbusmenuMenuitem* item, int time, BamfLauncherIcon* self)
 {
+  self->Quit();
+}
+
+void BamfLauncherIcon::Quit()
+{
   GList* children, *l;
   BamfView* view;
 
-  children = bamf_view_get_children(BAMF_VIEW(self->m_App));
+  children = bamf_view_get_children(BAMF_VIEW(m_App));
 
   for (l = children; l; l = l->next)
   {
@@ -929,8 +932,6 @@ void BamfLauncherIcon::EnsureMenuItemsReady()
   {
     menu_item = dbusmenu_menuitem_new();
 
-    dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE, DBUSMENU_MENUITEM_TOGGLE_CHECK);
-    dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Keep in launcher"));
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
 
@@ -938,12 +939,11 @@ void BamfLauncherIcon::EnsureMenuItemsReady()
 
     _menu_items["Pin"] = menu_item;
   }
-  int checked = !bamf_view_is_sticky(BAMF_VIEW(m_App)) ?
-                DBUSMENU_MENUITEM_TOGGLE_STATE_CHECKED : DBUSMENU_MENUITEM_TOGGLE_STATE_UNCHECKED;
+  
+  const char* label = !bamf_view_is_sticky(BAMF_VIEW(m_App)) ?
+                      _("Lock to launcher") : _("Unlock from launcher");
 
-  dbusmenu_menuitem_property_set_int(_menu_items["Pin"],
-                                     DBUSMENU_MENUITEM_PROP_TOGGLE_STATE,
-                                     checked);
+  dbusmenu_menuitem_property_set(_menu_items["Pin"], DBUSMENU_MENUITEM_PROP_LABEL, label);
 
 
   /* Quit */
@@ -1003,6 +1003,7 @@ std::list<DbusmenuMenuitem*> BamfLauncherIcon::GetMenus()
       if (dbusmenu_menuitem_property_get_bool(item, DBUSMENU_MENUITEM_PROP_VISIBLE))
       {
         first_separator_needed = true;
+        dbusmenu_menuitem_property_set_bool(item, "unity-use-markup", FALSE);
 
         result.push_back(item);
       }
@@ -1053,18 +1054,21 @@ std::list<DbusmenuMenuitem*> BamfLauncherIcon::GetMenus()
   }
   else
   {
-    gchar* app_name;
-    app_name = g_markup_escape_text(BamfName(), -1);
+    glib::String app_name(g_markup_escape_text(BamfName(), -1));
+    std::ostringstream bold_app_name;
+    bold_app_name << "<b>" << app_name << "</b>";
 
     item = dbusmenu_menuitem_new();
     dbusmenu_menuitem_property_set(item,
                                    DBUSMENU_MENUITEM_PROP_LABEL,
-                                   app_name);
+                                   bold_app_name.str().c_str());
     dbusmenu_menuitem_property_set_bool(item,
                                         DBUSMENU_MENUITEM_PROP_ENABLED,
                                         true);
+    dbusmenu_menuitem_property_set_bool(item,
+                                        "unity-use-markup",
+                                        true);
     g_signal_connect(item, "item-activated", (GCallback) OnAppLabelActivated, this);
-    g_free(app_name);
 
     _menu_items_extra["AppName"] = item;
   }

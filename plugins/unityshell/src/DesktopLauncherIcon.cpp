@@ -32,7 +32,7 @@ DesktopLauncherIcon::DesktopLauncherIcon(Launcher* IconManager)
   ,   show_in_switcher_(true)
 {
   tooltip_text = _("Show Desktop");
-  SetIconName("desktop");
+  icon_name = "desktop";
   SetQuirk(QUIRK_VISIBLE, true);
   SetQuirk(QUIRK_RUNNING, true);
   SetIconType(TYPE_BEGIN);
