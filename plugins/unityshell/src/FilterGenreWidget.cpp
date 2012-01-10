@@ -40,7 +40,7 @@ FilterGenre::FilterGenre(NUX_FILE_LINE_DECL)
  : FilterExpanderLabel(_("Categories"), NUX_FILE_LINE_PARAM)
 {
   InitTheme();
-  
+
   all_button_ = new FilterAllButton(NUX_TRACKER_LOCATION);
 
   genre_layout_ = new nux::GridHLayout(NUX_TRACKER_LOCATION);
@@ -62,9 +62,9 @@ FilterGenre::~FilterGenre()
 void FilterGenre::SetFilter(Filter::Ptr const& filter)
 {
   filter_ = std::static_pointer_cast<CheckOptionFilter>(filter);
-  
+
   all_button_->SetFilter(filter_);
-  
+
   filter_->option_added.connect(sigc::mem_fun(this, &FilterGenre::OnOptionAdded));
   filter_->option_removed.connect(sigc::mem_fun(this, &FilterGenre::OnOptionRemoved));
 
@@ -137,4 +137,3 @@ void FilterGenre::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
 } // namespace dash
 } // namespace unity
-

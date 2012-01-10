@@ -36,7 +36,7 @@ namespace unity
 {
 namespace dash
 {
-  
+
 class FilterBasicButton;
 class FilterRatingsButton;
 
@@ -63,4 +63,3 @@ protected:
 } // namespace unity
 
 #endif // UNITYSHELL_FILTERRATINGSWIDGET_H
-

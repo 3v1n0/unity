@@ -35,7 +35,7 @@ namespace unity
 {
 namespace dash
 {
-  
+
 enum class MultiRangeSide
 {
   LEFT,
@@ -73,11 +73,11 @@ private:
   void RedrawTheme(nux::Geometry const& geom, cairo_t* cr, nux::ButtonVisualState faked_state);
   void OnActivated(nux::Area* area);
   void OnActiveChanged(bool value);
-  
+
   FilterOption::Ptr filter_;
-  
+
   typedef std::unique_ptr<nux::CairoWrapper> NuxCairoPtr;
-  
+
   NuxCairoPtr active_;
   NuxCairoPtr normal_;
   NuxCairoPtr prelight_;
@@ -90,4 +90,3 @@ private:
 } // namespace unity
 
 #endif // UNITYSHELL_FILTERMULTIRANGEBUTTON_H
-

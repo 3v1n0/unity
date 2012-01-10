@@ -37,7 +37,7 @@ class FilterWidget : public nux::View
 public:
   FilterWidget(NUX_FILE_LINE_PROTO);
   virtual ~FilterWidget() {};
-  
+
   virtual void SetFilter(Filter::Ptr const& filter) = 0;
   virtual std::string GetFilterType() = 0;
 };
@@ -46,4 +46,3 @@ public:
 } // namespace unity
 
 #endif //UNITYSHELL_FILTERWIDGET_H
-

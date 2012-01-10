@@ -25,12 +25,12 @@ namespace unity
 {
 namespace dash
 {
-  
+
 FilterGenreButton::FilterGenreButton(std::string const& label, NUX_FILE_LINE_DECL)
   : FilterBasicButton(label, NUX_FILE_LINE_PARAM)
 {
   InitTheme();
-  
+
   state_change.connect([&](nux::Button* button)
   {
     if (filter_)
@@ -56,7 +56,7 @@ void FilterGenreButton::SetFilter(FilterOption::Ptr const& filter)
   filter_ = filter;
 
   SetActive(filter_->active);
-  
+
   filter_->active.changed.connect([&](bool is_active)
   {
     SetActive(is_active);
@@ -70,4 +70,3 @@ FilterOption::Ptr FilterGenreButton::GetFilter()
 
 } // namespace dash
 } // namespace unity
-

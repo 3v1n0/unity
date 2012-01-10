@@ -40,7 +40,7 @@ FilterMultiRange::FilterMultiRange(NUX_FILE_LINE_DECL)
   : FilterExpanderLabel(_("Multi-range"), NUX_FILE_LINE_PARAM)
 {
   InitTheme();
-  
+
   all_button_ = new FilterAllButton(NUX_TRACKER_LOCATION);
 
   layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
@@ -58,7 +58,7 @@ FilterMultiRange::~FilterMultiRange()
 void FilterMultiRange::SetFilter(Filter::Ptr const& filter)
 {
   filter_ = std::static_pointer_cast<MultiRangeFilter>(filter);
-  
+
   all_button_->SetFilter(filter_);
 
   filter_->option_added.connect(sigc::mem_fun(this, &FilterMultiRange::OnOptionAdded));
@@ -180,4 +180,3 @@ void FilterMultiRange::DrawContent(nux::GraphicsEngine& GfxContext, bool force_d
 
 } // namespace dash
 } // namespace unity
-

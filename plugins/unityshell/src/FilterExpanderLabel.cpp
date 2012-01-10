@@ -70,9 +70,9 @@ void FilterExpanderLabel::SetRightHandView(nux::View* view)
 }
 
 void FilterExpanderLabel::SetContents(nux::Layout* contents)
-{    
+{
   contents_.Adopt(contents);
-  
+
   layout_->AddLayout(contents_.GetPointer(), 1, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
   top_bar_layout_->SetTopAndBottomPadding(0);
 
@@ -113,10 +113,10 @@ void FilterExpanderLabel::DoExpandChange(bool change)
   label_ += raw_label_;
   label_ += "</span>";
   label_ += expanded ? "  ▾" : "  ▸";
-  
+
   if (cairo_label_)
     cairo_label_->SetText(label_);
-  
+
   if (change and contents_ and !contents_->IsChildOf(layout_))
   {
     layout_->AddLayout(contents_.GetPointer(), 1, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
@@ -127,8 +127,8 @@ void FilterExpanderLabel::DoExpandChange(bool change)
     layout_->RemoveChildObject(contents_.GetPointer());
     top_bar_layout_->SetTopAndBottomPadding(0, 10);
   }
-  
-  layout_->ComputeContentSize(); 
+
+  layout_->ComputeContentSize();
   QueueDraw();
 }
 
@@ -150,4 +150,3 @@ void FilterExpanderLabel::DrawContent(nux::GraphicsEngine& GfxContext, bool forc
 
 } // namespace dash
 } // namespace unity
-

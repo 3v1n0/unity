@@ -64,7 +64,7 @@ private:
   nux::StaticText* cairo_label_;
   std::string raw_label_;
   std::string label_;
-  
+
   nux::ObjectPtr<nux::Layout> contents_;
 };
 
@@ -72,4 +72,3 @@ private:
 } // namespace unity
 
 #endif // UNITYSHELL_FILTEREXPANDERLABEL_H
-

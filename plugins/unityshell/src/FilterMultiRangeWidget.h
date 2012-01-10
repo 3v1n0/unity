@@ -36,7 +36,7 @@ namespace unity
 {
 namespace dash
 {
-  
+
 class FilterMultiRangeButton;
 
 class FilterMultiRange : public FilterExpanderLabel
@@ -72,4 +72,3 @@ private:
 } // unityshell unity
 
 #endif // UNITYSHELL_FILTERMULTIRANGE_H
-

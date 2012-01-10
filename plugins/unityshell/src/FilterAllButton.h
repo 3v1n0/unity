@@ -19,7 +19,7 @@
  * Authored by: Andrea Azzarone <azzaronea@gmail.com>
  *
  */
- 
+
 #ifndef UNITYSHELL_FILTERALLBUTTON_H
 #define UNITYSHELL_FILTERALLBUTTON_H
 
@@ -37,7 +37,7 @@ class FilterAllButton : public FilterBasicButton
 public:
    FilterAllButton(NUX_FILE_LINE_PROTO);
    ~FilterAllButton();
-   
+
    void SetFilter(Filter::Ptr const& filter);
 
 private:

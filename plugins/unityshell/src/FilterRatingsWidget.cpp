@@ -59,10 +59,10 @@ FilterRatingsWidget::~FilterRatingsWidget()
 void FilterRatingsWidget::SetFilter(Filter::Ptr const& filter)
 {
   filter_ = std::static_pointer_cast<RatingsFilter>(filter);
-  
+
   all_button_->SetFilter(filter_);
   ratings_->SetFilter(filter_);
-  
+
   SetLabel(filter_->name);
   NeedRedraw();
 }
@@ -90,4 +90,3 @@ void FilterRatingsWidget::DrawContent(nux::GraphicsEngine& GfxContext, bool forc
 
 } // namespace dash
 } // namespace unity
-

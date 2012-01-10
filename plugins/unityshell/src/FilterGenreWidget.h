@@ -37,7 +37,7 @@ namespace unity
 {
 namespace dash
 {
-  
+
 class FilterBasicButton;
 class FilterGenreButton;
 
@@ -50,7 +50,7 @@ public:
 
   void SetFilter(Filter::Ptr const& filter);
   std::string GetFilterType();
-  
+
 protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
@@ -72,4 +72,3 @@ private:
 } // namespace unity
 
 #endif // UNITYSHELL_FILTERGENRESWIDGET_H
-

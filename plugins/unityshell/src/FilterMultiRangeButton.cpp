@@ -29,7 +29,7 @@ namespace unity
 {
 namespace dash
 {
-  
+
 FilterMultiRangeButton::FilterMultiRangeButton(std::string const& label, NUX_FILE_LINE_DECL)
   : nux::ToggleButton(label, NUX_FILE_LINE_PARAM)
   , has_arrow_(MultiRangeArrow::NONE)
@@ -159,7 +159,7 @@ void FilterMultiRangeButton::RedrawTheme(nux::Geometry const& geom, cairo_t* cr,
 void FilterMultiRangeButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
   nux::Geometry const& geo = GetGeometry();
-  
+
   gPainter.PaintBackground(GfxContext, geo);
   // set up our texture mode
   nux::TexCoordXForm texxform;
@@ -185,7 +185,7 @@ void FilterMultiRangeButton::Draw(nux::GraphicsEngine& GfxContext, bool force_dr
   {
     texture = prelight_->GetTexture();
   }
-  
+
   if (Active())
   {
     texture = active_->GetTexture();
@@ -203,4 +203,3 @@ void FilterMultiRangeButton::Draw(nux::GraphicsEngine& GfxContext, bool force_dr
 
 } // namespace dash
 } // namespace unity
-
