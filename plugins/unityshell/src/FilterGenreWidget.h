@@ -31,7 +31,6 @@
 #include <UnityCore/CheckOptionFilter.h>
 
 #include "FilterAllButton.h"
-#include "FilterWidget.h"
 #include "FilterExpanderLabel.h"
 
 namespace unity
@@ -42,7 +41,7 @@ namespace dash
 class FilterBasicButton;
 class FilterGenreButton;
 
-class FilterGenre : public FilterExpanderLabel, public FilterWidget
+class FilterGenre : public FilterExpanderLabel
 {
   NUX_DECLARE_OBJECT_TYPE(FilterGenre, FilterExpanderLabel);
 public:

@@ -29,7 +29,6 @@
 #include <UnityCore/MultiRangeFilter.h>
 
 #include "FilterAllButton.h"
-#include "FilterWidget.h"
 #include "FilterBasicButton.h"
 #include "FilterExpanderLabel.h"
 
@@ -40,7 +39,7 @@ namespace dash
   
 class FilterMultiRangeButton;
 
-class FilterMultiRange : public FilterExpanderLabel, public FilterWidget
+class FilterMultiRange : public FilterExpanderLabel
 {
   NUX_DECLARE_OBJECT_TYPE(FilterMultiRange, FilterExpanderLabel);
 public:

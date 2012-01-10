@@ -16,34 +16,23 @@
  * License version 3 along with this program.  If not, see
  * <http://www.gnu.org/licenses/>
  *
- * Authored by: Gordon Allott <gord.allott@canonical.com>
+ * Authored by: Andrea Azzarone <azzaronea@gmail.com>
  *
  */
-#ifndef UNITYSHELL_FILTERWIDGET_H
-#define UNITYSHELL_FILTERWIDGET_H
 
-#include <Nux/Nux.h>
-#include <Nux/View.h>
-#include <UnityCore/Filter.h>
+#include "FilterWidget.h"
 
 namespace unity
 {
 namespace dash
 {
 
-class FilterWidget : public nux::View
-{
-  NUX_DECLARE_OBJECT_TYPE(FilterWidget, nux::View);
-public:
-  FilterWidget(NUX_FILE_LINE_PROTO);
-  virtual ~FilterWidget() {};
-  
-  virtual void SetFilter(Filter::Ptr const& filter) = 0;
-  virtual std::string GetFilterType() = 0;
-};
+NUX_IMPLEMENT_OBJECT_TYPE(FilterWidget);
 
+FilterWidget::FilterWidget( NUX_FILE_LINE_DECL)
+  : nux::View(NUX_FILE_LINE_PARAM)
+{
+}
+  
 } // namespace dash
 } // namespace unity
-
-#endif //UNITYSHELL_FILTERWIDGET_H
-

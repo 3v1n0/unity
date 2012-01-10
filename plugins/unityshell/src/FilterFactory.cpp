@@ -75,7 +75,7 @@ nux::View* FilterFactory::WidgetForFilter(Filter::Ptr const& filter)
   if (widget)
     widget->SetFilter(filter);
 
-  return dynamic_cast<nux::View*>(widget);
+  return widget;
 }
 
 } // namespace dash

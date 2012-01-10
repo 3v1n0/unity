@@ -30,7 +30,6 @@
 #include <UnityCore/RatingsFilter.h>
 
 #include "FilterAllButton.h"
-#include "FilterWidget.h"
 #include "FilterExpanderLabel.h"
 
 namespace unity
@@ -41,7 +40,7 @@ namespace dash
 class FilterBasicButton;
 class FilterRatingsButton;
 
-class FilterRatingsWidget : public FilterExpanderLabel, public FilterWidget
+class FilterRatingsWidget : public FilterExpanderLabel
 {
   NUX_DECLARE_OBJECT_TYPE(FilterRatingsWidget, FilterExpanderLabel);
 public:

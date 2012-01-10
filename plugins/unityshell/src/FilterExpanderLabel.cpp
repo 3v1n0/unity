@@ -32,9 +32,9 @@ namespace dash
 NUX_IMPLEMENT_OBJECT_TYPE(FilterExpanderLabel);
 
 FilterExpanderLabel::FilterExpanderLabel(std::string const& label, NUX_FILE_LINE_DECL)
-  : nux::View(NUX_FILE_LINE_PARAM)
+  : FilterWidget(NUX_FILE_LINE_PARAM)
   , expanded(true)
-  , layout_(nullptr)  
+  , layout_(nullptr)
   , top_bar_layout_(nullptr)
   , right_hand_contents_(nullptr)
   , expander_graphic_(nullptr)

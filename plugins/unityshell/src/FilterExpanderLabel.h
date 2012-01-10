@@ -29,14 +29,16 @@
 #include <Nux/VLayout.h>
 #include <Nux/StaticText.h>
 
+#include "FilterWidget.h"
+
 namespace unity
 {
 namespace dash
 {
 
-class FilterExpanderLabel : public nux::View
+class FilterExpanderLabel : public FilterWidget
 {
-  NUX_DECLARE_OBJECT_TYPE(FilterExpanderLabel, nux::View);
+  NUX_DECLARE_OBJECT_TYPE(FilterExpanderLabel, FilterWidget);
 public:
   FilterExpanderLabel(std::string const& label, NUX_FILE_LINE_PROTO);
   virtual ~FilterExpanderLabel();
