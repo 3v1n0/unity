@@ -212,7 +212,7 @@ void Controller::Impl::OnLauncherAddRequest(char* path, LauncherIcon* before)
     if (before)
       model_->ReorderBefore(result, before, false);
   }
-  
+
   Save();
 }
 
@@ -266,7 +266,6 @@ void Controller::Impl::OnIconAdded(LauncherIcon* icon)
 
 void Controller::Impl::OnIconRemoved(LauncherIcon* icon)
 {
-  std::cout << "OnIconRemoved" << std::endl;
   SortAndUpdate();
 }
 
@@ -457,7 +456,7 @@ void Controller::Impl::SetupBamf()
   BamfApplication* app;
   BamfLauncherIcon* icon;
 
-  // Sufficiently large number such that we ensure proper sorting 
+  // Sufficiently large number such that we ensure proper sorting
   // (avoids case where first item gets tacked onto end rather than start)
   int priority = 100;
 
