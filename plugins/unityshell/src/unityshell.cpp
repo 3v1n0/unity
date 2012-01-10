@@ -1197,7 +1197,7 @@ void UnityScreen::handleEvent(XEvent* event)
         {
           nux::Geometry damage (de->area.x, de->area.y, de->area.width, de->area.height);
 
-          const CompWindow::Geometry &geom = w->geometry ();
+	  const compiz::window::Geometry &geom = w->geometry ();
           damage.x += geom.x () + geom.border ();
           damage.y += geom.y () + geom.border ();
 

@@ -154,6 +154,10 @@ GestureEngine::OnDragUpdate(GeisAdapter::GeisDragData* data)
   {
     unsigned int px = std::max (std::min (pointerX + static_cast <int> (data->delta_x), screen->width ()), 0);
     unsigned int py = std::max (std::min (pointerY + static_cast <int> (data->delta_y), screen->height ()), 0);
+    compiz::window::Geometry g (px, py,
+			        _drag_window->serverGeometry ().width (),
+			        _drag_window->serverGeometry ().height (),
+			        _drag_window->serverGeometry ().border ());
 
     if (_drag_window->state () & CompWindowStateMaximizedVertMask)
       py = pointerY;
@@ -166,7 +170,7 @@ GestureEngine::OnDragUpdate(GeisAdapter::GeisDragData* data)
      px, py);
 
     XSync(screen->dpy (), false);
-    _drag_window->move(px - pointerX, py - pointerY, false);
+    _drag_window->position (g, false);
 
     pointerX = px;
     pointerY = py;
@@ -179,7 +183,6 @@ GestureEngine::OnDragFinish(GeisAdapter::GeisDragData* data)
   if (_drag_id == data->id && _drag_window)
   {
     _drag_window->ungrabNotify ();
-    _drag_window->syncPosition();
     EndDrag();
   }
 }

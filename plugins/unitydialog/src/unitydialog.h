@@ -267,8 +267,9 @@ public:
                   unsigned int state,
                   unsigned int mask);
   void ungrabNotify();
-  void moveNotify(int x, int y, bool immediate);
-  void resizeNotify(int, int, int, int);
+  bool position (compiz::window::Geometry &g,
+		 unsigned int,
+		 unsigned int);
 
   bool place(CompPoint&);
 
