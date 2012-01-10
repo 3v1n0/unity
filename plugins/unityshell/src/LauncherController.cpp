@@ -65,6 +65,7 @@ public:
   void SortAndUpdate();
 
   void OnIconAdded(LauncherIcon* icon);
+  void OnIconRemoved(LauncherIcon* icon);
 
   void OnLauncherAddRequest(char* path, LauncherIcon* before);
   void OnLauncherRemoveRequest(LauncherIcon* icon);
@@ -261,6 +262,12 @@ void Controller::Impl::SortAndUpdate()
 void Controller::Impl::OnIconAdded(LauncherIcon* icon)
 {
   this->RegisterIcon(icon);
+}
+
+void Controller::Impl::OnIconRemoved(LauncherIcon* icon)
+{
+  std::cout << "OnIconRemoved" << std::endl;
+  SortAndUpdate();
 }
 
 void Controller::Impl::OnLauncherRemoveRequest(LauncherIcon* icon)
@@ -489,6 +496,7 @@ void Controller::Impl::SetupBamf()
   SortAndUpdate();
 
   model_->order_changed.connect(sigc::mem_fun(this, &Impl::SortAndUpdate));
+  model_->icon_removed.connect(sigc::mem_fun(this, &Impl::OnIconRemoved));
   model_->saved.connect(sigc::mem_fun(this, &Impl::Save));
   bamf_timer_handler_id_ = 0;
 }
