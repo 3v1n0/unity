@@ -164,16 +164,16 @@ void Hud::Execute(std::string const& execute_string)
 }
 
 
-void Hud::ExecuteBySuggestion(Suggestion const& suggestion)
+void Hud::ExecuteBySuggestion(Suggestion::Ptr suggestion)
 {
-  LOG_DEBUG(logger) << "Executing by Suggestion: " << suggestion.formatted_text;
-  if (suggestion.key == nullptr)
+  LOG_DEBUG(logger) << "Executing by Suggestion: " << suggestion->formatted_text;
+  if (suggestion->key == nullptr)
   {
-    LOG_ERROR(logger) << "Tried to execute suggestion with no key: " << suggestion.formatted_text;
+    LOG_ERROR(logger) << "Tried to execute suggestion with no key: " << suggestion->formatted_text;
   }
   else
   {
-    pimpl_->ExecuteByKey(suggestion.key);
+    pimpl_->ExecuteByKey(suggestion->key);
     pimpl_->suggestions_.clear();
   }
 }

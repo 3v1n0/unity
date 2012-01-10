@@ -104,7 +104,7 @@ public:
   /*
    * Executes a suggestion
    */
-  void ExecuteBySuggestion(Suggestion const& suggestion);
+  void ExecuteBySuggestion(Suggestion::Ptr suggestion);
 
   /*
    * Returns a deque of Suggestion types when the service provides them

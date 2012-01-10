@@ -118,6 +118,9 @@ void View::SetSuggestions(Hud::Suggestions suggestions)
     
     found_items++;
   }
+  
+  QueueRelayout();
+  QueueDraw();
 }
 
 void View::SetIcon(std::string icon_name)

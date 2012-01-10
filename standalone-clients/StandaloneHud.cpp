@@ -77,6 +77,10 @@ void TestRunner::Init ()
     hud_view_->SetSuggestions(suggestions);
   });
 
+  hud_view_->suggestion_activated.connect([&] (unity::hud::Suggestion::Ptr suggestion) {
+    hud_service_.ExecuteBySuggestion(suggestion);
+  });  
+  
 //   hud_service_.target_icon.changed.connect([&] (std::string icon_name) {
 //     hud_view_->SetIcon(icon_name);
 //   });
@@ -88,6 +92,8 @@ void TestRunner::Init ()
   hud_view_->search_activated.connect([&] (std::string search_string) {
     hud_service_.Execute(search_string);
   });
+  
+
 }
 
 void TestRunner::InitWindowThread(nux::NThread* thread, void* InitData)
@@ -120,6 +126,10 @@ int main(int argc, char **argv)
   gtk_init (&argc, &argv);
 
   nux::NuxInitialize(0);
+  
+  // Slightly higher as we're more likely to test things we know will fail
+  nux::logging::configure_logging("unity.hud=debug");
+  
   nux::logging::configure_logging(::getenv("UNITY_LOG_SEVERITY"));
   LOG_DEBUG(logger) << "starting the standalone hud";
   // The instances for the pseudo-singletons.

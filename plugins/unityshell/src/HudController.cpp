@@ -81,6 +81,7 @@ void Controller::SetupWindow()
 
 void Controller::SetupHudView()
 {
+  LOG_DEBUG(logger) << "SetupHudView called";
   view_ = new View();
 
   nux::HLayout* layout = new nux::HLayout(NUX_TRACKER_LOCATION);
@@ -298,6 +299,7 @@ void Controller::OnSearchActivated(std::string search_string)
 
 void Controller::OnSuggestionActivated(Suggestion::Ptr suggestion)
 {
+  LOG_DEBUG(logger) << "Activating suggestion, " << suggestion->formatted_text;
   hud_service_.ExecuteBySuggestion(suggestion);
   HideHud();
 }
