@@ -11,13 +11,9 @@ import dbus
 
 __all__ = ["Bamf", "BamfApplication"]
 
-class _BamfAccess:
-    bamf_bus_name = 'org.ayatana.bamf'
-    matcher_path = '/org/ayatana/bamf/matcher'
-    matcher_interface = 'org.ayatana.bamf.matcher'
-    bus = dbus.SessionBus()
-    matcher_proxy_obj = bus.get_object(bamf_bus_name, matcher_path)
-    matcher_interface = dbus.Interface(matcher_proxy_obj, matcher_interface)
+
+BAMF_BUS_NAME = 'org.ayatana.bamf'
+session_bus = dbus.SessionBus()
 
 class Bamf:
     """
@@ -25,11 +21,17 @@ class Bamf:
     to inspect the state of running applications and open windows.
     """
 
+    def __init__(self):
+        matcher_path = '/org/ayatana/bamf/matcher'
+        matcher_interface = 'org.ayatana.bamf.matcher'
+        self.matcher_proxy = session_bus.get_object(BAMF_BUS_NAME, matcher_path)
+        self.matcher_interface = dbus.Interface(self.matcher_proxy, matcher_interface)
+
     def get_running_applications(self):
         """
         Get a list of the currently running applications.
         """
-        apps = _BamfAccess.matcher_interface.RunningApplications()
+        apps = self.matcher_interface.RunningApplications()
         return [BamfApplication(p) for p in apps]
 
 class BamfApplication:
@@ -39,7 +41,7 @@ class BamfApplication:
     """
     def __init__(self, bamf_app_path):
         self.bamf_app_path = bamf_app_path
-        self.app_proxy = _BamfAccess.bus.get_object(_BamfAccess.bamf_bus_name, bamf_app_path)
+        self.app_proxy = session_bus.get_object(BAMF_BUS_NAME, bamf_app_path)
         self.view_iface = dbus.Interface(self.app_proxy, 'org.ayatana.bamf.view')
 
     @property
@@ -84,7 +86,7 @@ class BamfWindow:
     """
     def __init__(self, window_path):
         self.bamf_win_path = window_path
-        self.app_proxy = _BamfAccess.bus.get_object(_BamfAccess.bamf_bus_name, window_path)
+        self.app_proxy = session_bus.get_object(BAMF_BUS_NAME, window_path)
         self.window_iface = dbus.Interface(self.app_proxy, 'org.ayatana.bamf.window')
         self.view_iface = dbus.Interface(self.app_proxy, 'org.ayatana.bamf.view')
 
