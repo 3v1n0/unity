@@ -22,6 +22,7 @@
 #include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
 #include <Nux/HLayout.h>
+#include <Nux/VLayout.h>
 #include <Nux/Layout.h>
 #include <Nux/WindowCompositor.h>
 
@@ -118,7 +119,15 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
   filter_space_ = new nux::SpaceLayout(100, 10000, 0, 1);
   filter_layout_->AddLayout(filter_space_, 1);
   filter_layout_->AddView(show_filters_, 0, nux::MINOR_POSITION_CENTER);
-  filter_layout_->AddView(expand_icon_, 0, nux::MINOR_POSITION_CENTER);
+
+  arrow_layout_  = new nux::VLayout();
+  arrow_top_space_ = new nux::SpaceLayout(2, 2, 12, 12);
+  arrow_bottom_space_ = new nux::SpaceLayout(2, 2, 8, 8);
+  arrow_layout_->AddView(arrow_top_space_, 0, nux::MINOR_POSITION_CENTER);
+  arrow_layout_->AddView(expand_icon_, 0, nux::MINOR_POSITION_CENTER);
+  arrow_layout_->AddView(arrow_bottom_space_, 0, nux::MINOR_POSITION_CENTER);
+
+  filter_layout_->AddView(arrow_layout_, 0, nux::MINOR_POSITION_CENTER);
 
   layout_->AddView(filter_layout_, 1, nux::MINOR_POSITION_RIGHT, nux::MINOR_SIZE_FULL);
 
