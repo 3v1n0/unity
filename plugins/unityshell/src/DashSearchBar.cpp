@@ -94,7 +94,7 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
   layered_layout_->SetActiveLayerN(1);
   layered_layout_->SetMinimumWidth(search_bar_width_);
   layered_layout_->SetMaximumWidth(search_bar_width_);
-  layout_->AddView(layered_layout_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
+  layout_->AddView(layered_layout_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
   std::string filter_str = _("<b>Filter results</b>");
   show_filters_ = new nux::StaticCairoText(filter_str.c_str());
@@ -120,7 +120,7 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
   filter_layout_->AddView(show_filters_, 0, nux::MINOR_POSITION_CENTER);
   filter_layout_->AddView(expand_icon_, 0, nux::MINOR_POSITION_CENTER);
 
-  layout_->AddView(filter_layout_, 0, nux::MINOR_POSITION_RIGHT, nux::MINOR_SIZE_FULL);
+  layout_->AddView(filter_layout_, 1, nux::MINOR_POSITION_RIGHT, nux::MINOR_SIZE_FULL);
 
   sig_manager_.Add(new Signal<void, GtkSettings*, GParamSpec*>
       (gtk_settings_get_default(),
@@ -245,20 +245,6 @@ void SearchBar::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   nux::GetPainter().RenderSinglePaintLayer(GfxContext,
                                            bg_layer_->GetGeometry(),
                                            bg_layer_);
-
-
-  // debug layout
-  /*nux::Color red(1.0, 0.0, 0.0, 1.0);
-  nux::Color blue(0.0, 1.0, 0.0, 1.0);
-  nux::Color green(0.0, 0.0, 1.0, 1.0);
-  nux::Color orange(1.0, 0.5, 0.25, 1.0);
-  nux::Color yellow(1.0, 1.0, 0.0, 1.0);
-    
-  nux::GetPainter().Paint2DQuadColor(GfxContext, layout_->GetGeometry(), red);
-  nux::GetPainter().Paint2DQuadColor(GfxContext, spinner_->GetGeometry(), blue);
-  nux::GetPainter().Paint2DQuadColor(GfxContext, layered_layout_->GetGeometry(), green);
-  nux::GetPainter().Paint2DQuadColor(GfxContext, filter_layout_->GetGeometry(), orange);
-  nux::GetPainter().Paint2DQuadColor(GfxContext, filter_space_->GetGeometry(), yellow);*/
 
   GfxContext.PopClippingRectangle();
 }
