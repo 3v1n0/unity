@@ -61,6 +61,7 @@ void FilterRatingsWidget::SetFilter(Filter::Ptr const& filter)
   filter_ = std::static_pointer_cast<RatingsFilter>(filter);
 
   all_button_->SetFilter(filter_);
+  expanded = !filter_->collapsed();
   ratings_->SetFilter(filter_);
 
   SetLabel(filter_->name);

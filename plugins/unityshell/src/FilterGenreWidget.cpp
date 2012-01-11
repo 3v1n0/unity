@@ -64,7 +64,8 @@ void FilterGenre::SetFilter(Filter::Ptr const& filter)
   filter_ = std::static_pointer_cast<CheckOptionFilter>(filter);
 
   all_button_->SetFilter(filter_);
-
+  expanded = !filter_->collapsed();
+  
   filter_->option_added.connect(sigc::mem_fun(this, &FilterGenre::OnOptionAdded));
   filter_->option_removed.connect(sigc::mem_fun(this, &FilterGenre::OnOptionRemoved));
 

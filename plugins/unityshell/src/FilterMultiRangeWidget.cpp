@@ -60,6 +60,7 @@ void FilterMultiRange::SetFilter(Filter::Ptr const& filter)
   filter_ = std::static_pointer_cast<MultiRangeFilter>(filter);
 
   all_button_->SetFilter(filter_);
+  expanded = !filter_->collapsed();
 
   filter_->option_added.connect(sigc::mem_fun(this, &FilterMultiRange::OnOptionAdded));
   filter_->option_removed.connect(sigc::mem_fun(this, &FilterMultiRange::OnOptionRemoved));
