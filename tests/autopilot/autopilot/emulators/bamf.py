@@ -26,8 +26,8 @@ __default_screen = wnck.screen_get_default()
 
 class Bamf:
     """
-    High-level class for interacting with Bamf from within a test. Use this class
-    to inspect the state of running applications and open windows.
+    High-level class for interacting with Bamf from within a test. Use this 
+    class to inspect the state of running applications and open windows.
     """
 
     def __init__(self):
@@ -43,6 +43,14 @@ class Bamf:
         apps = self.matcher_interface.RunningApplications()
         return [BamfApplication(p) for p in apps]
 
+    def get_running_applications_by_title(self, app_title):
+        """
+        Return a list of currently running applications that have the title 
+        `app_title`. This method may return an empty list, if no applications
+        are found with the specified title.
+        """
+        return [a for a in self.get_running_applications() if a.name == app_title]
+
 class BamfApplication:
     """
     Represents an application, with information as returned by Bamf. Don't instantiate 
@@ -50,8 +58,13 @@ class BamfApplication:
     """
     def __init__(self, bamf_app_path):
         self.bamf_app_path = bamf_app_path
-        self.app_proxy = _session_bus.get_object(_BAMF_BUS_NAME, bamf_app_path)
-        self.view_iface = dbus.Interface(self.app_proxy, 'org.ayatana.bamf.view')
+        try:
+            self.app_proxy = _session_bus.get_object(_BAMF_BUS_NAME, bamf_app_path)
+            self.view_iface = dbus.Interface(self.app_proxy, 'org.ayatana.bamf.view')
+        except dbus.DBusException, e:
+            e.message += 'bamf_app_path=%r' % (bamf_app_path)
+            raise
+
 
     @property
     def name(self):
@@ -134,3 +147,9 @@ class BamfWindow:
         direction it is not considered maximized.
         """
         return self.wnck_window.is_maximized()
+
+    def close(self):
+        """
+        Close the window.
+        """
+        self.wnck_window.close(0)
