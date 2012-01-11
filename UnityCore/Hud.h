@@ -108,6 +108,12 @@ public:
   void ExecuteBySuggestion(Suggestion::Ptr suggestion);
 
   /*
+   * Sends a close hint to the service, Should be called when the Hud is no longer in use
+   * However, does not close the connection to the Hud, so no extra setup is needed.
+   */
+  void CloseHint();
+
+  /*
    * Returns a deque of Suggestion types when the service provides them
    */
   sigc::signal<void, Suggestions> suggestion_search_finished;

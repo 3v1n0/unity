@@ -27,6 +27,11 @@
 
 #include "config.h"
 
+namespace
+{
+  const int request_number_of_results = 6;
+}
+
 namespace unity
 {
 namespace hud
@@ -176,6 +181,11 @@ void Hud::ExecuteBySuggestion(Suggestion::Ptr suggestion)
     pimpl_->ExecuteByKey(suggestion->key);
     pimpl_->suggestions_.clear();
   }
+}
+
+void Hud::CloseHint()
+{
+  //Send close hint to the hud
 }
 
 }
