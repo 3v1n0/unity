@@ -177,44 +177,44 @@ class Switcher(Unity):
         return bool(self.get_state('/Unity/SwitcherController')[0]['visible'])
 
 class Dash(Unity):
-	"""
-	An emulator class that makes it easier to interact with the unity dash.
-	"""
+    """
+    An emulator class that makes it easier to interact with the unity dash.
+    """
 
-	def __init__(self):
-		self.plugin = Plugin(global_context, "unityshell")
-		self.setting = Setting(self.plugin, "show_launcher")
-		super(Dash, self).__init__()
+    def __init__(self):
+        self.plugin = Plugin(global_context, "unityshell")
+        self.setting = Setting(self.plugin, "show_launcher")
+        super(Dash, self).__init__()
 
-	def toggle_reveal(self):
-		"""
-		Reveals the dash if it's currently hidden, hides it otherwise.
-		"""
-		self._keyboard.press_and_release("^W")
-		sleep(1)
+    def toggle_reveal(self):
+        """
+        Reveals the dash if it's currently hidden, hides it otherwise.
+        """
+        self._keyboard.press_and_release("^W")
+        sleep(1)
 
-	def ensure_visible(self):
-		"""
-		Ensures the dash is visible.
-		"""
-		if not self.get_is_visible():
-			self.toggle_reveal();
+    def ensure_visible(self):
+        """
+        Ensures the dash is visible.
+        """
+        if not self.get_is_visible():
+            self.toggle_reveal();
 
-	def ensure_hidden(self):
-		"""
-		Ensures the dash is hidden.
-		"""
-		if self.get_is_visible():
-			self.toggle_reveal();
+    def ensure_hidden(self):
+        """
+        Ensures the dash is hidden.
+        """
+        if self.get_is_visible():
+            self.toggle_reveal();
 
-	def get_is_visible(self):
-		"""
-		Is the dash visible?
-		"""
+    def get_is_visible(self):
+        """
+        Is the dash visible?
+        """
         return bool(self.get_state("/Unity/DashController")[0]["visible"])
 
-	def get_search_string(self):
-		"""
-		Return the current dash search bar search string.
-		"""
+    def get_search_string(self):
+        """
+        Return the current dash search bar search string.
+        """
         return unicode(self.get_state("//SearchBar")[0]['search_string'])
