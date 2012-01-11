@@ -187,7 +187,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
   {
      notify_init("unityshell");
 
-     g_thread_init(NULL);
      dbus_g_thread_init();
 
      unity_a11y_preset_environment();
