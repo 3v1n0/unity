@@ -71,5 +71,11 @@ class DashTests(TestCase):
         self.dash.reveal_file_lens()
         self.assertEqual(self.dash.get_current_lens(), u'files.lens')
 
+    def test_command_lens_shortcut(self):
+        """
+        Run Command lens must reveat on alt+F2.
+        """
+        pass
+
 
         

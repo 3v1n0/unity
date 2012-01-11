@@ -249,3 +249,9 @@ class Dash(Unity):
         self._keyboard.press("^W")
         self._keyboard.press_and_release("f")
         self._keyboard.release("^W")
+
+    def reveal_command_lens(self):
+        """
+        Reveal the 'run command' lens.
+        """
+        pass
