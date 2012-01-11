@@ -51,6 +51,21 @@ class Bamf:
         """
         return [a for a in self.get_running_applications() if a.name == app_title]
 
+    def get_open_windows(self):
+        """
+        Get a list of currently open windows.
+        """
+        windows = self.matcher_interface.WindowPaths()
+        return [BamfWindow(w) for w in windows]
+
+    def get_open_windows_by_title(self, win_title):
+        """
+        Get a list of all open windows with a specific window title. This
+        method may return an empty list if no currently open windows have the
+        specified title.
+        """
+        return [w for w in self.get_open_windows() if w.title == win_title]
+
 class BamfApplication:
     """
     Represents an application, with information as returned by Bamf. Don't instantiate 
@@ -59,8 +74,8 @@ class BamfApplication:
     def __init__(self, bamf_app_path):
         self.bamf_app_path = bamf_app_path
         try:
-            self.app_proxy = _session_bus.get_object(_BAMF_BUS_NAME, bamf_app_path)
-            self.view_iface = dbus.Interface(self.app_proxy, 'org.ayatana.bamf.view')
+            self._app_proxy = _session_bus.get_object(_BAMF_BUS_NAME, bamf_app_path)
+            self._view_iface = dbus.Interface(self._app_proxy, 'org.ayatana.bamf.view')
         except dbus.DBusException, e:
             e.message += 'bamf_app_path=%r' % (bamf_app_path)
             raise
@@ -71,21 +86,21 @@ class BamfApplication:
         """
         Get the application name.
         """
-        return self.view_iface.Name()
+        return self._view_iface.Name()
 
     @property
     def is_active(self):
         """
         Is the application active (i.e.- has keyboard focus)?
         """
-        return self.view_iface.IsActive()
+        return self._view_iface.IsActive()
 
     @property
     def is_urgent(self):
         """
         Is the application currently signalling urgency?
         """
-        return self.view_iface.IsUrgent()
+        return self._view_iface.IsUrgent()
 
     @property
     def user_visible(self):
@@ -93,13 +108,13 @@ class BamfApplication:
         Is this application visible to the user? Some applications (such as the panel) are
         hidden to the user but will still be returned by bamf.
         """
-        return self.view_iface.UserVisible()
+        return self._view_iface.UserVisible()
 
     def get_windows(self):
         """
         Get a list of the application windows.
         """
-        return [BamfWindow(w) for w in self.view_iface.Children()]
+        return [BamfWindow(w) for w in self._view_iface.Children()]
 
 class BamfWindow:
     """
@@ -107,13 +122,12 @@ class BamfWindow:
     this class yourself. Instead, use the appropriate methods in BamfApplication.
     """
     def __init__(self, window_path):
-        self.bamf_win_path = window_path
-        self.app_proxy = _session_bus.get_object(_BAMF_BUS_NAME, window_path)
-        self.window_iface = dbus.Interface(self.app_proxy, 'org.ayatana.bamf.window')
-        self.view_iface = dbus.Interface(self.app_proxy, 'org.ayatana.bamf.view')
+        self._bamf_win_path = window_path
+        self._app_proxy = _session_bus.get_object(_BAMF_BUS_NAME, window_path)
+        self._window_iface = dbus.Interface(self._app_proxy, 'org.ayatana.bamf.window')
+        self._view_iface = dbus.Interface(self._app_proxy, 'org.ayatana.bamf.view')
 
-        self.xid = self.window_iface.GetXid()
-        self.wnck_window = wnck.window_get(self.xid)
+        self._wnck_window = wnck.window_get(self.xid)
 
 
     @property
@@ -121,14 +135,14 @@ class BamfWindow:
         """
         Get the X11 Window Id.
         """
-        return self.xid
+        return self._wnck_window.get_xid()
 
     @property
-    def window_name(self):
+    def title(self):
         """
-        Get the window name. This may be different from the application name.
+        Get the window title. This may be different from the application name.
         """
-        return self.wnck_window.get_name()
+        return self._wnck_window.get_name()
 
     @property
     def geometry(self):
@@ -137,7 +151,7 @@ class BamfWindow:
         containing (x, y, width, height)
         """
         
-        return self.wnck_window.get_geometry()
+        return self._wnck_window.get_geometry()
 
     @property
     def is_maximized(self):
@@ -146,10 +160,25 @@ class BamfWindow:
         vertically and horizontally. If a window is only maximized in one 
         direction it is not considered maximized.
         """
-        return self.wnck_window.is_maximized()
+        return self._wnck_window.is_maximized()
+
+    @property
+    def application(self):
+        """
+        Get the application that owns this window. This method may return None
+        if the window does not have an associated application. The 'desktop' 
+        window is one such example.
+        """
+        # BAMF returns a list of parents since some windows don't have an
+        # associated application. For these windows we return none.
+        parents = self._view_iface.Parents()
+        if parents:
+            return BamfApplication(parents[0])
+        else:
+            return None
 
     def close(self):
         """
         Close the window.
         """
-        self.wnck_window.close(0)
+        self._wnck_window.close(0)
