@@ -43,5 +43,12 @@ class DashTests(TestCase):
         self.dash.toggle_reveal()
         self.assertFalse(self.dash.get_is_visible())
 
+    def test_dash_app_lense_search(self):
+        """
+        Test that the dash app lense executes the right application when enter
+        is pressed before the lense view refreshes.
+        """
+        self.dash.ensure_hidden()
+        
 
         
