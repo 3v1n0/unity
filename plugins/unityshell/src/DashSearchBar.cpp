@@ -43,6 +43,8 @@
 
 #define LIVE_SEARCH_TIMEOUT 250
 
+static const float kExpandDefaultIconOpacity = 1.0f;
+
 namespace unity
 {
 namespace dash
@@ -94,21 +96,31 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
   layered_layout_->SetMaximumWidth(search_bar_width_);
   layout_->AddView(layered_layout_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
-  std::string filter_str = _("Filter results");
-  filter_str+= "  ▸";
+  std::string filter_str = _("<b>Filter results</b>");
   show_filters_ = new nux::StaticCairoText(filter_str.c_str());
   show_filters_->SetVisible(false);
   show_filters_->SetTextColor(nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
   show_filters_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_LEFT);
   show_filters_->mouse_click.connect([&] (int x, int y, unsigned long b, unsigned long k) { showing_filters = !showing_filters; });
 
+  nux::BaseTexture* arrow;
+  arrow = dash::Style::Instance().GetGroupExpandIcon();
+  expand_icon_ = new IconTexture(arrow,
+                                 arrow->GetWidth(),
+                                 arrow->GetHeight());
+  expand_icon_->SetOpacity(kExpandDefaultIconOpacity);
+  expand_icon_->SetMinimumSize(arrow->GetWidth(), arrow->GetHeight());
+  expand_icon_->SetVisible(false);
+
   filter_layout_ = new nux::HLayout();
   filter_layout_->SetHorizontalExternalMargin(12);
+  filter_layout_->SetHorizontalInternalMargin(8);
   filter_space_ = new nux::SpaceLayout(0, 10000, 0, 1);
   filter_layout_->AddLayout(filter_space_, 1);
-  filter_layout_->AddView(show_filters_, 0, nux::MINOR_POSITION_RIGHT);
+  filter_layout_->AddView(show_filters_, 0, nux::MINOR_POSITION_CENTER);
+  filter_layout_->AddView(expand_icon_, 0, nux::MINOR_POSITION_CENTER);
 
-  layout_->AddView(filter_layout_, 0, nux::MINOR_POSITION_RIGHT, nux::MINOR_SIZE_FIX);
+  layout_->AddView(filter_layout_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
   sig_manager_.Add(new Signal<void, GtkSettings*, GParamSpec*>
       (gtk_settings_get_default(),
@@ -208,11 +220,15 @@ gboolean SearchBar::OnLiveSearchTimeout(SearchBar* sef)
 
 void SearchBar::OnShowingFiltersChanged(bool is_showing)
 {
-  std::string filter_str = _("Filter results");
-  filter_str += "  <small>";
-  filter_str += is_showing ? "▾" : "▸";
-  filter_str += "</small>";
+  std::string filter_str = _("<b>Filter results</b>");
   show_filters_->SetText(filter_str.c_str());
+  expand_icon_->SetVisible(true);
+
+  dash::Style& style = dash::Style::Instance();
+  if (is_showing)
+    expand_icon_->SetTexture(style.GetGroupUnexpandIcon());
+  else
+    expand_icon_->SetTexture(style.GetGroupExpandIcon());
 }
 
 void SearchBar::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
@@ -229,6 +245,18 @@ void SearchBar::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   nux::GetPainter().RenderSinglePaintLayer(GfxContext,
                                            bg_layer_->GetGeometry(),
                                            bg_layer_);
+
+
+  // debug layout
+  nux::Color red(1.0, 0.0, 0.0, 1.0);
+  nux::Color blue(0.0, 1.0, 0.0, 1.0);
+  nux::Color green(0.0, 0.0, 1.0, 1.0);
+  nux::Color orange(1.0, 0.5, 0.25, 1.0);
+    
+  nux::GetPainter().Paint2DQuadColor(GfxContext, layout_->GetGeometry(), red);
+  nux::GetPainter().Paint2DQuadColor(GfxContext, spinner_->GetGeometry(), blue);
+  nux::GetPainter().Paint2DQuadColor(GfxContext, layered_layout_->GetGeometry(), green);
+  nux::GetPainter().Paint2DQuadColor(GfxContext, filter_layout_->GetGeometry(), orange);
 
   GfxContext.PopClippingRectangle();
 }
