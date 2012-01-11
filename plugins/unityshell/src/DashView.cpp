@@ -137,6 +137,7 @@ void DashView::SetupViews()
   lenses_layout_->AddView(home_view_);
 
   lens_bar_ = new LensBar();
+  AddChild(lens_bar_);
   lens_bar_->lens_activated.connect(sigc::mem_fun(this, &DashView::OnLensBarActivated));
   content_layout_->AddView(lens_bar_, 0, nux::MINOR_POSITION_CENTER);
 }

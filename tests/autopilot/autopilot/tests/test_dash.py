@@ -16,6 +16,10 @@ class DashTests(TestCase):
         super(DashTests, self).setUp()
         self.dash = Dash()
 
+    def tearDown(self):
+        super(DashTests, self).tearDown()
+        self.dash.ensure_hidden()
+
     def test_dash_reveal(self):
         """
         Ensure we can show and hide the dash.
@@ -43,12 +47,29 @@ class DashTests(TestCase):
         self.dash.toggle_reveal()
         self.assertFalse(self.dash.get_is_visible())
 
-    def test_dash_app_lense_search(self):
+    def test_application_lens_shortcut(self):
         """
-        Test that the dash app lense executes the right application when enter
-        is pressed before the lense view refreshes.
+        Application lense must reveal when Super+a is pressed.
         """
         self.dash.ensure_hidden()
-        
+        self.dash.reveal_application_lens()
+        self.assertEqual(self.dash.get_current_lens(), u'applications.lens')
+
+    def test_music_lens_shortcut(self):
+        """
+        Music lense must reveal when Super+w is pressed.
+        """
+        self.dash.ensure_hidden()
+        self.dash.reveal_music_lens()
+        self.assertEqual(self.dash.get_current_lens(), u'music.lens')
+    
+    def test_file_lens_shortcut(self):
+        """
+        File lense must reveal when Super+f is pressed.
+        """
+        self.dash.ensure_hidden()
+        self.dash.reveal_file_lens()
+        self.assertEqual(self.dash.get_current_lens(), u'files.lens')
+
 
         

@@ -218,3 +218,34 @@ class Dash(Unity):
         Return the current dash search bar search string.
         """
         return unicode(self.get_state("//SearchBar")[0]['search_string'])
+
+    def get_current_lens(self):
+        """
+        Returns the id of the current lens. For example, the default lens is
+        'home.lens', the run-command lens is 'commands.lens'.
+        """
+        return unicode(self.get_state("//DashController/DashView/LensBar")[0]['active-lens'])
+
+    def reveal_application_lens(self):
+        """
+        Reveal the application lense.
+        """
+        self._keyboard.press("^W")
+        self._keyboard.press_and_release("a")
+        self._keyboard.release("^W")
+
+    def reveal_music_lens(self):
+        """
+        Reveal the music lense.
+        """
+        self._keyboard.press("^W")
+        self._keyboard.press_and_release("m")
+        self._keyboard.release("^W")
+
+    def reveal_file_lens(self):
+        """
+        Reveal the file lense.
+        """
+        self._keyboard.press("^W")
+        self._keyboard.press_and_release("f")
+        self._keyboard.release("^W")
