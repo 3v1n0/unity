@@ -65,8 +65,6 @@ HomeView::HomeView()
     {
       group->SetVisible(search != "" && counts_[group]);
     }
-    home_view_->SetVisible(search == "");
-    scroll_view_->SetVisible(search != "");
 
     QueueDraw();
   });
@@ -87,14 +85,11 @@ void HomeView::SetupViews()
                                     NUX_TRACKER_LOCATION);
   scroll_view_->EnableVerticalScrollBar(true);
   scroll_view_->EnableHorizontalScrollBar(false);
-  scroll_view_->SetVisible(false);
+  scroll_view_->SetVisible(true);
   layout_->AddView(scroll_view_);
 
   scroll_layout_ = new nux::VLayout();
   scroll_view_->SetLayout(scroll_layout_);
-
-  home_view_ = new PlacesHomeView();
-  layout_->AddView(home_view_);
 
   SetLayout(layout_);
 }

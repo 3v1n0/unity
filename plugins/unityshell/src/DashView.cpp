@@ -53,7 +53,7 @@ DashView::DashView()
   , search_in_progress_(false)
   , activate_on_finish_(false)
   , visible_(false)
-
+  , lenses_initialized_(false)
 {
   SetupBackground();
   SetupViews();
@@ -84,12 +84,32 @@ void DashView::AboutToShow()
   visible_ = true;
   bg_effect_helper_.enabled = true;
   search_bar_->text_entry()->SelectAll();
+
+  /* Before we map the first time,
+   * initialize all the lenses for the home screen */
+  EnsureLensesInitialized();
 }
 
 void DashView::AboutToHide()
 {
   visible_ = false;
   bg_effect_helper_.enabled = false;
+}
+
+void DashView::EnsureLensesInitialized()
+{
+  if (!lenses_initialized_)
+  {
+    int i, count = lenses_.count;
+    for (i = 0; i < count; i++)
+    {
+      Lens::Ptr lens = lenses_.GetLensAtIndex (i);
+      lens->view_type = ViewType::HOME_VIEW;
+      lens->GlobalSearch ("");
+      printf ("Initializing lens %s\n", lens->id().c_str());
+    }
+    lenses_initialized_ = true;
+  }
 }
 
 void DashView::SetupBackground()
@@ -668,6 +688,15 @@ void DashView::OnLensAdded(Lens::Ptr& lens)
   lens->activated.connect(sigc::mem_fun(this, &DashView::OnUriActivatedReply));
   lens->search_finished.connect(sigc::mem_fun(this, &DashView::OnSearchFinished));
   lens->global_search_finished.connect(sigc::mem_fun(this, &DashView::OnGlobalSearchFinished));
+
+  /* If we've initialized the lenses we already have,
+   * also initialize this late comer. If we haven't initialized the lenses
+   * before we haven't mapped yet and we should hold it off */
+  if (lenses_initialized_)
+    {
+      lens->view_type = ViewType::HOME_VIEW;
+      lens->GlobalSearch ("");
+    }
 }
 
 void DashView::OnLensBarActivated(std::string const& id)

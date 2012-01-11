@@ -95,6 +95,7 @@ private:
   std::string AnalyseLensURI(std::string const& uri);
   void UpdateLensFilter(std::string lens, std::string filter, std::string value);
   void UpdateLensFilterValue(Filter::Ptr filter, std::string value);
+  void EnsureLensesInitialized();
 
   bool AcceptKeyNavFocus();
   bool InspectKeyEvent(unsigned int eventType, unsigned int key_sym, const char* character);
@@ -138,6 +139,7 @@ private:
   bool activate_on_finish_;
 
   bool visible_;
+  bool lenses_initialized_;
 };
 
 

@@ -82,8 +82,6 @@ private:
   nux::ScrollView* scroll_view_;
   nux::VLayout* scroll_layout_;
 
-  PlacesHomeView* home_view_;
-
   guint fix_renderering_id_;
 };
 
