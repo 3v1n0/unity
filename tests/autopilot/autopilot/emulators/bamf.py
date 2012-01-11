@@ -8,12 +8,21 @@
 "Various classes for interacting with BAMF."
 
 import dbus
+import wnck
 
-__all__ = ["Bamf", "BamfApplication"]
+__all__ = ["Bamf", 
+        "BamfApplication", 
+        "BamfWindow",
+        ]
 
 
-BAMF_BUS_NAME = 'org.ayatana.bamf'
-session_bus = dbus.SessionBus()
+_BAMF_BUS_NAME = 'org.ayatana.bamf'
+_session_bus = dbus.SessionBus()
+
+#
+# There's a bug in libwnck - you need to access a screen before any of the
+# window methods will work. see lp:914665
+__default_screen = wnck.screen_get_default()
 
 class Bamf:
     """
@@ -24,7 +33,7 @@ class Bamf:
     def __init__(self):
         matcher_path = '/org/ayatana/bamf/matcher'
         matcher_interface = 'org.ayatana.bamf.matcher'
-        self.matcher_proxy = session_bus.get_object(BAMF_BUS_NAME, matcher_path)
+        self.matcher_proxy = _session_bus.get_object(_BAMF_BUS_NAME, matcher_path)
         self.matcher_interface = dbus.Interface(self.matcher_proxy, matcher_interface)
 
     def get_running_applications(self):
@@ -41,7 +50,7 @@ class BamfApplication:
     """
     def __init__(self, bamf_app_path):
         self.bamf_app_path = bamf_app_path
-        self.app_proxy = session_bus.get_object(BAMF_BUS_NAME, bamf_app_path)
+        self.app_proxy = _session_bus.get_object(_BAMF_BUS_NAME, bamf_app_path)
         self.view_iface = dbus.Interface(self.app_proxy, 'org.ayatana.bamf.view')
 
     @property
@@ -77,7 +86,7 @@ class BamfApplication:
         """
         Get a list of the application windows.
         """
-        return []
+        return [BamfWindow(w) for w in self.view_iface.Children()]
 
 class BamfWindow:
     """
@@ -86,22 +95,42 @@ class BamfWindow:
     """
     def __init__(self, window_path):
         self.bamf_win_path = window_path
-        self.app_proxy = session_bus.get_object(BAMF_BUS_NAME, window_path)
+        self.app_proxy = _session_bus.get_object(_BAMF_BUS_NAME, window_path)
         self.window_iface = dbus.Interface(self.app_proxy, 'org.ayatana.bamf.window')
         self.view_iface = dbus.Interface(self.app_proxy, 'org.ayatana.bamf.view')
+
+        self.xid = self.window_iface.GetXid()
+        self.wnck_window = wnck.window_get(self.xid)
+
 
     @property
     def x_id(self):
         """
         Get the X11 Window Id.
         """
-        return self.window_iface.GetXid()
+        return self.xid
 
     @property
     def window_name(self):
         """
         Get the window name. This may be different from the application name.
         """
-        return self.view_iface.Name()
+        return self.wnck_window.get_name()
 
-    
+    @property
+    def geometry(self):
+        """
+        Get the Xlib geometry object for this window. Returns a tuple
+        containing (x, y, width, height)
+        """
+        
+        return self.wnck_window.get_geometry()
+
+    @property
+    def is_maximized(self):
+        """
+        Is the window maximized? Maximized in this case means both maximized 
+        vertically and horizontally. If a window is only maximized in one 
+        direction it is not considered maximized.
+        """
+        return self.wnck_window.is_maximized()
