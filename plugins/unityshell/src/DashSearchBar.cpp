@@ -111,16 +111,16 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
   expand_icon_->SetOpacity(kExpandDefaultIconOpacity);
   expand_icon_->SetMinimumSize(arrow->GetWidth(), arrow->GetHeight());
   expand_icon_->SetVisible(false);
+  expand_icon_->mouse_click.connect([&] (int x, int y, unsigned long b, unsigned long k) { showing_filters = !showing_filters; });
 
   filter_layout_ = new nux::HLayout();
-  //filter_layout_->SetHorizontalExternalMargin(12);
   filter_layout_->SetHorizontalInternalMargin(8);
-  filter_space_ = new nux::SpaceLayout(107, 10000, 0, 1);
+  filter_space_ = new nux::SpaceLayout(100, 10000, 0, 1);
   filter_layout_->AddLayout(filter_space_, 1);
   filter_layout_->AddView(show_filters_, 0, nux::MINOR_POSITION_CENTER);
   filter_layout_->AddView(expand_icon_, 0, nux::MINOR_POSITION_CENTER);
 
-  layout_->AddView(filter_layout_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+  layout_->AddView(filter_layout_, 0, nux::MINOR_POSITION_RIGHT, nux::MINOR_SIZE_FULL);
 
   sig_manager_.Add(new Signal<void, GtkSettings*, GParamSpec*>
       (gtk_settings_get_default(),
@@ -133,7 +133,11 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
   search_string.SetSetterFunction(sigc::mem_fun(this, &SearchBar::set_search_string));
   im_active.SetGetterFunction(sigc::mem_fun(this, &SearchBar::get_im_active));
   showing_filters.changed.connect(sigc::mem_fun(this, &SearchBar::OnShowingFiltersChanged));
-  can_refine_search.changed.connect([&] (bool can_refine) { show_filters_->SetVisible(can_refine); });
+  can_refine_search.changed.connect([&] (bool can_refine)
+  {
+    show_filters_->SetVisible(can_refine);
+    expand_icon_->SetVisible(can_refine);
+  });
 }
 
 SearchBar::~SearchBar()
@@ -220,10 +224,6 @@ gboolean SearchBar::OnLiveSearchTimeout(SearchBar* sef)
 
 void SearchBar::OnShowingFiltersChanged(bool is_showing)
 {
-  std::string filter_str = _("<b>Filter results</b>");
-  show_filters_->SetText(filter_str.c_str());
-  expand_icon_->SetVisible(true);
-
   dash::Style& style = dash::Style::Instance();
   if (is_showing)
     expand_icon_->SetTexture(style.GetGroupUnexpandIcon());
