@@ -9,6 +9,7 @@
 
 import dbus
 import wnck
+from time import sleep
 
 __all__ = ["Bamf", 
         "BamfApplication", 
@@ -79,6 +80,35 @@ class Bamf:
 
         """
         return [w for w in self.get_open_windows() if w.title == win_title]
+
+    def application_is_running(self, app_name):
+        """Detect if an application with a given name is currently running.
+
+        'app_name' is the name of the application you are looking for.
+        """
+        return app_name in [a.name for a in self.get_running_applications()]
+
+    def wait_until_application_is_running(self, app_name, timeout):
+        """Wait until a given application is running.
+
+        'app_name' is the name of the application.
+        'timeout' is the maximum time to wait, in seconds.
+
+        This method returns true once the application is found, or false 
+        if the application was not found until the timeout was reached.
+        """
+        # I'd love a better way to do this, but polling seems to be the 
+        # only option right now.
+        wait_forever = timeout > 0
+        while True:
+            if self.application_is_running(app_name):
+                return True
+            elif not wait_forever:
+                timeout -= 0.5
+                sleep(0.5)
+                if timeout < 0:
+                    return False
+
 
 class BamfApplication:
     """Represents an application, with information as returned by Bamf. 
