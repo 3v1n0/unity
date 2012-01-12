@@ -79,7 +79,7 @@ class Keyboard(object):
     def __init__(self):
         self._display = Display()
 
-    def press(self, keys):
+    def press(self, keys, delay=0.1):
         """
         Send key press events only.
 
@@ -92,9 +92,9 @@ class Keyboard(object):
         press(['Alt_L', 'F2'])
         """
         self.__perform_on_keys(keys, X.KeyPress)            
-        sleep(0.2)
+        sleep(delay)
 
-    def release(self, keys):
+    def release(self, keys, delay=0.1):
         """
         Send key release events only.
 
@@ -107,9 +107,9 @@ class Keyboard(object):
         press(['Alt_L', 'F2'])
         """
         self.__perform_on_keys(keys, X.KeyRelease)
-        sleep(0.2)
+        sleep(delay)
         
-    def press_and_release(self, keys):
+    def press_and_release(self, keys, delay=0.1):
         """
         Send key press events for all items in 'keys', then send key release events.
         This is the same as calling 'press(keys);release(keys)'.
@@ -122,10 +122,10 @@ class Keyboard(object):
 
         press(['Alt_L', 'F2'])
         """
-        self.press(keys)
-        self.release(keys)
+        self.press(keys, delay)
+        self.release(keys, delay)
 
-    def type(self, keys):
+    def type(self, keys, delay=0.1):
         """
         Simulate a user typing the keys specified in 'keys'. 
 
@@ -138,8 +138,8 @@ class Keyboard(object):
         list), in which case each item in the sequence is treated as an X11 keycode.
         """
         for key in keys:
-            self.press(key)
-            self.release(key)
+            self.press(key, delay)
+            self.release(key, delay)
 
     def __perform_on_keys(self, keys, event):
         control_key = False

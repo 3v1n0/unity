@@ -87,6 +87,40 @@ class Launcher(Unity):
         # get the state for the 'launcher' piece
         return super(Launcher, self).get_state('/Unity/Launcher')[0]
 
+    def get_launcher_icons(self):
+        """
+        Get a list of launcher icons in this launcher.
+        """
+        icons = self.get_state("//Launcher/LauncherIcon")
+        return [LauncherIcon(icon_dict) for icon_dict in icons]
+
+    def click_launcher_icon(self, icon, button=1):
+        """
+        Move the mouse over the launcher icon, and click it.
+        """
+        self.move_mouse_to_reveal_pos()
+        self._mouse.move(icon.x, icon.y + (self.icon_width / 2))
+        self._mouse.click(button)
+        self.move_mouse_outside_of_boundry()
+
+
+class LauncherIcon:
+    """
+    Holds information about a launcher icon. Do not instantiate an instance
+    of this class yourself. Instead, use the appropriate methods in the Launcher
+    class instead.
+    """
+
+    def __init__(self, icon_dict):
+        self.tooltip_text = icon_dict['tooltip-text']
+        self.x = icon_dict['x']
+        self.y = icon_dict['y']
+        self.num_windows = icon_dict['related-windows']
+        self.visible = icon_dict['quirk-visible']
+        self.active = icon_dict['quirk-active']
+        self.running = icon_dict['quirk-running']
+        self.presented = icon_dict['quirk-presented']
+        self.urgent = icon_dict['quirk-urgent']
 
 class Switcher(Unity):
     """
