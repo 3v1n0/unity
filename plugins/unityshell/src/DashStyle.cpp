@@ -61,21 +61,26 @@ void cairo_set_source_rgba(cairo_t* cr, nux::Color const& color)
   ::cairo_set_source_rgba(cr, color.red, color.green, color.blue, color.alpha);
 }
 
-inline double _align(double val)
+inline double _align(double val, bool odd=true)
 {
   double fract = val - (int) val;
 
-  // for strokes with an odd line-width
-  if (fract != 0.5f)
-    return (double) ((int) val + 0.5f);
+  if (odd)
+  {
+    // for strokes with an odd line-width
+    if (fract != 0.5f)
+      return (double) ((int) val + 0.5f);
+    else
+      return val;
+  }
   else
-    return val;
-
-  // for strokes with an even line-width
-  /*if (fract != 0.0f)
-    return (double) ((int) val);
-  else
-    return val;*/
+  {
+    // for strokes with an even line-width
+    if (fract != 0.0f)
+      return (double) ((int) val);
+    else
+      return val;
+  }
 }
 
 class LazyLoadTexture
@@ -1007,47 +1012,50 @@ void Style::Impl::RoundedRectSegment(cairo_t*   cr,
                                          Arrow      arrow,
                                          nux::ButtonVisualState state)
 {
-  double radius = cornerRadius / aspect;
+  double radius  = cornerRadius / aspect;
   double arrow_w = radius / 1.5;
   double arrow_h = radius / 2.0;
+  bool odd = true;
+
+  odd = cairo_get_line_width (cr) == 2.0 ? false : true;
 
   switch (segment)
   {
   case Segment::LEFT:
     // top-left, right of the corner
-    cairo_move_to(cr, _align(x + radius), _align(y));
+    cairo_move_to(cr, _align(x + radius, odd), _align(y, odd));
 
     // top-right
-    cairo_line_to(cr, _align(x + width), _align(y));
+    cairo_line_to(cr, _align(x + width, odd), _align(y, odd));
 
     if (arrow == Arrow::RIGHT && state == nux::VISUAL_STATE_PRESSED)
 		{
-      cairo_line_to(cr, _align(x + width),           _align(y + height / 2.0 - arrow_h));
-      cairo_line_to(cr, _align(x + width - arrow_w), _align(y + height / 2.0));
-      cairo_line_to(cr, _align(x + width),           _align(y + height / 2.0 + arrow_h));
+      cairo_line_to(cr, _align(x + width, odd),           _align(y + height / 2.0 - arrow_h, odd));
+      cairo_line_to(cr, _align(x + width - arrow_w, odd), _align(y + height / 2.0, odd));
+      cairo_line_to(cr, _align(x + width, odd),           _align(y + height / 2.0 + arrow_h, odd));
 		}
 
     // bottom-right
-    cairo_line_to(cr, _align(x + width), _align(y + height));
+    cairo_line_to(cr, _align(x + width, odd), _align(y + height, odd));
 
     // bottom-left, right of the corner
-    cairo_line_to(cr, _align(x + radius), _align(y + height));
+    cairo_line_to(cr, _align(x + radius, odd), _align(y + height, odd));
 
     // bottom-left, above the corner
     cairo_arc(cr,
-              _align(x + radius),
-              _align(y + height - radius),
+              _align(x + radius, odd),
+              _align(y + height - radius, odd),
               radius,
               90.0f * G_PI / 180.0f,
               180.0f * G_PI / 180.0f);
 
     // left, right of the corner
-    cairo_line_to(cr, _align(x), _align(y + radius));
+    cairo_line_to(cr, _align(x, odd), _align(y + radius, odd));
 
     // top-left, right of the corner
     cairo_arc(cr,
-              _align(x + radius),
-              _align(y + radius),
+              _align(x + radius, odd),
+              _align(y + radius, odd),
               radius,
               180.0f * G_PI / 180.0f,
               270.0f * G_PI / 180.0f);
@@ -1056,29 +1064,29 @@ void Style::Impl::RoundedRectSegment(cairo_t*   cr,
 
   case Segment::MIDDLE:
     // top-left
-    cairo_move_to(cr, _align(x), _align(y));
+    cairo_move_to(cr, _align(x, odd), _align(y, odd));
 
     // top-right
-    cairo_line_to(cr, _align(x + width), _align(y));
+    cairo_line_to(cr, _align(x + width, odd), _align(y, odd));
 
     if ((arrow == Arrow::RIGHT || arrow == Arrow::BOTH) && state == nux::VISUAL_STATE_PRESSED)
 		{
-      cairo_line_to(cr, _align(x + width),           _align(y + height / 2.0 - arrow_h));
-      cairo_line_to(cr, _align(x + width - arrow_w), _align(y + height / 2.0));
-      cairo_line_to(cr, _align(x + width),           _align(y + height / 2.0 + arrow_h));
+      cairo_line_to(cr, _align(x + width, odd),           _align(y + height / 2.0 - arrow_h, odd));
+      cairo_line_to(cr, _align(x + width - arrow_w, odd), _align(y + height / 2.0, odd));
+      cairo_line_to(cr, _align(x + width, odd),           _align(y + height / 2.0 + arrow_h, odd));
 		}
 
     // bottom-right
-    cairo_line_to(cr, _align(x + width), _align(y + height));
+    cairo_line_to(cr, _align(x + width, odd), _align(y + height, odd));
 
     // bottom-left
-    cairo_line_to(cr, _align(x), _align(y + height));
+    cairo_line_to(cr, _align(x, odd), _align(y + height, odd));
 
     if ((arrow == Arrow::LEFT || arrow == Arrow::BOTH) && state == nux::VISUAL_STATE_PRESSED)
 		{
-      cairo_line_to(cr, _align(x),           _align(y + height / 2.0 + arrow_h));
-      cairo_line_to(cr, _align(x + arrow_w), _align(y + height / 2.0));
-      cairo_line_to(cr, _align(x),           _align(y + height / 2.0 - arrow_h));
+      cairo_line_to(cr, _align(x, odd),           _align(y + height / 2.0 + arrow_h, odd));
+      cairo_line_to(cr, _align(x + arrow_w, odd), _align(y + height / 2.0, odd));
+      cairo_line_to(cr, _align(x, odd),           _align(y + height / 2.0 - arrow_h, odd));
 		}
 
     // back to top-left
@@ -1087,38 +1095,38 @@ void Style::Impl::RoundedRectSegment(cairo_t*   cr,
 
   case Segment::RIGHT:
     // top-left, right of the corner
-    cairo_move_to(cr, _align(x), _align(y));
+    cairo_move_to(cr, _align(x, odd), _align(y, odd));
 
     // top-right, left of the corner
-    cairo_line_to(cr, _align(x + width - radius), _align(y));
+    cairo_line_to(cr, _align(x + width - radius, odd), _align(y, odd));
 
     // top-right, below the corner
     cairo_arc(cr,
-              _align(x + width - radius),
-              _align(y + radius),
+              _align(x + width - radius, odd),
+              _align(y + radius, odd),
               radius,
               -90.0f * G_PI / 180.0f,
               0.0f * G_PI / 180.0f);
 
     // bottom-right, above the corner
-    cairo_line_to(cr, _align(x + width), _align(y + height - radius));
+    cairo_line_to(cr, _align(x + width, odd), _align(y + height - radius, odd));
 
     // bottom-right, left of the corner
     cairo_arc(cr,
-              _align(x + width - radius),
-              _align(y + height - radius),
+              _align(x + width - radius, odd),
+              _align(y + height - radius, odd),
               radius,
               0.0f * G_PI / 180.0f,
               90.0f * G_PI / 180.0f);
 
     // bottom-left
-    cairo_line_to(cr, _align(x), _align(y + height));
+    cairo_line_to(cr, _align(x, odd), _align(y + height, odd));
 
     if (arrow == Arrow::LEFT && state == nux::VISUAL_STATE_PRESSED)
 		{
-      cairo_line_to(cr, _align(x),           _align(y + height / 2.0 + arrow_h));
-      cairo_line_to(cr, _align(x + arrow_w), _align(y + height / 2.0));
-      cairo_line_to(cr, _align(x),           _align(y + height / 2.0 - arrow_h));
+      cairo_line_to(cr, _align(x, odd),           _align(y + height / 2.0 + arrow_h, odd));
+      cairo_line_to(cr, _align(x + arrow_w, odd), _align(y + height / 2.0, odd));
+      cairo_line_to(cr, _align(x, odd),           _align(y + height / 2.0 - arrow_h, odd));
 		}
 
     // back to top-left
@@ -1707,16 +1715,30 @@ bool Style::MultiRangeSegment(cairo_t*    cr,
     w -= 2.0;
 	}
 
-  pimpl->RoundedRectSegment(cr,
-                            1.0,
-                            x,
-                            y,
-                            h / 4.0,
-                            w,
-                            h,
-                            segment,
-                            arrow,
-                            state);
+  cairo_set_line_width(cr, pimpl->button_label_border_size_[state]);
+
+  if (pimpl->button_label_border_size_[state] == 2.0)
+    pimpl->RoundedRectSegment(cr,
+                              1.0,
+                              x+1.0,
+                              y+1.0,
+                              (h-1.0) / 4.0,
+                              w-1.0,
+                              h-1.0,
+                              segment,
+                              arrow,
+                              state);
+  else
+    pimpl->RoundedRectSegment(cr,
+                              1.0,
+                              x,
+                              y,
+                              h / 4.0,
+                              w,
+                              h,
+                              segment,
+                              arrow,
+                              state);
 
   if (pimpl->button_label_fill_color_[state].alpha != 0.0)
   {
@@ -1724,7 +1746,6 @@ bool Style::MultiRangeSegment(cairo_t*    cr,
     cairo_fill_preserve(cr);
   }
   cairo_set_source_rgba(cr, pimpl->button_label_border_color_[state]);
-  cairo_set_line_width(cr, pimpl->button_label_border_size_[state]);
   cairo_stroke(cr);
   pimpl->Text(cr,
               pimpl->button_label_text_color_[state],
