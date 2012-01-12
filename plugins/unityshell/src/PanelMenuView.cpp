@@ -1526,6 +1526,9 @@ void PanelMenuView::OnPlaceViewHidden(GVariant* data, PanelMenuView* self)
 
 void PanelMenuView::OnSwitcherShown(GVariant* data, PanelMenuView* self)
 {
+  if (!self || !data)
+    return;
+
   self->_switcher_showing = g_variant_get_boolean(data);
 
   if (!self->_switcher_showing)
@@ -1550,6 +1553,9 @@ void PanelMenuView::OnSwitcherShown(GVariant* data, PanelMenuView* self)
 
 void PanelMenuView::OnSwitcherSelectionChanged(GVariant* data, PanelMenuView* self)
 {
+  if (!self || !data)
+    return;
+
   if (self->_panel_title)
     g_free(self->_panel_title);
 
