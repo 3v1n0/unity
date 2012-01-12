@@ -2406,6 +2406,9 @@ UnityWindow::~UnityWindow()
 /* vtable init */
 bool UnityPluginVTable::init()
 {
+  if (!gtk_init_check (&programArgc, &programArgv))
+    return false;
+
   if (!CompPlugin::checkPluginABI("core", CORE_ABIVERSION))
     return false;
   if (!CompPlugin::checkPluginABI("composite", COMPIZ_COMPOSITE_ABI))
