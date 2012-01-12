@@ -1,5 +1,6 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010 Canonical Ltd
+ * Copyright (C) 2010, 2011 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -24,29 +25,32 @@
 
 #include <gtk/gtk.h>
 
-class PanelStyle : public nux::Object
+namespace unity
+{
+namespace panel
+{
+
+enum class WindowButtonType
+{
+  CLOSE,
+  MINIMIZE,
+  UNMAXIMIZE
+};
+
+enum class WindowState
+{
+  NORMAL,
+  PRELIGHT,
+  PRESSED
+};
+
+class Style
 {
 public:
-  typedef enum
-  {
-    WINDOW_BUTTON_CLOSE = 0,
-    WINDOW_BUTTON_MINIMIZE,
-    WINDOW_BUTTON_UNMAXIMIZE
+  Style();
+  ~Style();
 
-  } WindowButtonType;
-
-  typedef enum
-  {
-    WINDOW_STATE_NORMAL,
-    WINDOW_STATE_PRELIGHT,
-    WINDOW_STATE_PRESSED
-
-  } WindowState;
-
-  static PanelStyle* GetDefault();
-
-  PanelStyle();
-  ~PanelStyle();
+  static Style& Instance();
 
   GtkStyleContext* GetStyleContext();
 
@@ -61,11 +65,14 @@ public:
   bool IsAmbianceOrRadiance();
 
 private:
-  void        Refresh();
-  static void OnStyleChanged(GObject*    gobject,
-                             GParamSpec* pspec,
-                             gpointer    data);
-  nux::BaseTexture* GetWindowButtonForTheme(WindowButtonType type, WindowState state);
+  void Refresh();
+
+  static void OnGtkThemeChanged(GObject*    gobject,
+                                GParamSpec* pspec,
+                                gpointer    data);
+
+  nux::BaseTexture* GetWindowButtonForTheme(WindowButtonType type,
+                                            WindowState state);
 private:
   GtkStyleContext*   _style_context;
   char*              _theme_name;
@@ -74,4 +81,6 @@ private:
   gulong            _gtk_theme_changed_id;
 };
 
+}
+}
 #endif // PANEL_STYLE_H

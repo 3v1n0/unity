@@ -42,15 +42,16 @@
 
 #include <Nux/Utils.h>
 
-#include "PlacesStyle.h"
+#include "DashStyle.h"
 
-static const nux::Color kExpandDefaultTextColor(1.0f, 1.0f, 1.0f, 0.6f);
+static const nux::Color kExpandDefaultTextColor(1.0f, 1.0f, 1.0f, 0.5f);
 static const nux::Color kExpandHoverTextColor(1.0f, 1.0f, 1.0f, 1.0f);
-static const float kExpandDefaultIconOpacity = 0.6f;
+static const float kExpandDefaultIconOpacity = 0.5f;
 static const float kExpandHoverIconOpacity = 1.0f;
 
 namespace unity
 {
+NUX_IMPLEMENT_OBJECT_TYPE(PlacesGroup);
 
 PlacesGroup::PlacesGroup()
   : View(NUX_TRACKER_LOCATION),
@@ -61,27 +62,35 @@ PlacesGroup::PlacesGroup()
     _n_total_items(0),
     _draw_sep(true)
 {
-  PlacesStyle* style = PlacesStyle::GetDefault();
-  nux::BaseTexture* arrow = style->GetGroupUnexpandIcon();
+  nux::BaseTexture* arrow = dash::Style::Instance().GetGroupUnexpandIcon();
 
   _cached_name = NULL;
   _group_layout = new nux::VLayout("", NUX_TRACKER_LOCATION);
-  _group_layout->SetHorizontalExternalMargin(19);
+  _group_layout->SetHorizontalExternalMargin(12);
   _group_layout->SetVerticalExternalMargin(1);
 
   _group_layout->AddLayout(new nux::SpaceLayout(15,15,15,15), 0);
 
   _header_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
-  _group_layout->AddLayout(_header_layout, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FULL);
+  _header_layout->SetHorizontalInternalMargin(10);
+  _group_layout->AddLayout(_header_layout, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FIX);
 
   _icon = new IconTexture("", 24);
   _icon->SetMinMaxSize(24, 24);
   _header_layout->AddView(_icon, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
+  _text_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
+  _text_layout->SetHorizontalInternalMargin(15);
+  _header_layout->AddLayout(_text_layout, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
+  
   _name = new nux::StaticCairoText("", NUX_TRACKER_LOCATION);
   _name->SetTextEllipsize(nux::StaticCairoText::NUX_ELLIPSIZE_END);
   _name->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_LEFT);
-  _header_layout->AddView(_name, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
+  _text_layout->AddView(_name, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
+
+  _expand_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
+  _expand_layout->SetHorizontalInternalMargin(8);
+  _text_layout->AddLayout(_expand_layout, 0, nux::MINOR_POSITION_END, nux::MINOR_SIZE_MATCHCONTENT);
 
   _expand_label = new nux::StaticCairoText("", NUX_TRACKER_LOCATION);
   _expand_label->SetTextEllipsize(nux::StaticCairoText::NUX_ELLIPSIZE_END);
@@ -91,13 +100,13 @@ PlacesGroup::PlacesGroup()
   _expand_label->OnKeyNavFocusActivate.connect(sigc::mem_fun(this, &PlacesGroup::OnLabelActivated));
   _expand_label->OnKeyNavFocusChange.connect(sigc::mem_fun(this, &PlacesGroup::OnLabelFocusChanged));
 
-  _header_layout->AddView(_expand_label, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
+  _expand_layout->AddView(_expand_label, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
   _expand_icon = new IconTexture(arrow, arrow->GetWidth(), arrow->GetHeight());
   _expand_icon->SetOpacity(kExpandDefaultIconOpacity);
   _expand_icon->SetMinimumSize(arrow->GetWidth(), arrow->GetHeight());
   _expand_icon->SetVisible(false);
-  _header_layout->AddView(_expand_icon, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
+  _expand_layout->AddView(_expand_icon, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
   SetLayout(_group_layout);
 
@@ -148,10 +157,6 @@ PlacesGroup::OnLabelFocusChanged(nux::Area* label)
 void
 PlacesGroup::SetName(const char* name)
 {
-  // Spaces are on purpose, want padding to be proportional to the size of the text
-  // Bear with me, I'm trying something different :)
-  const gchar* temp = "    %s    ";
-  gchar* tmp = NULL;
   gchar* final = NULL;
   if (_cached_name != NULL)
   {
@@ -161,14 +166,23 @@ PlacesGroup::SetName(const char* name)
 
   _cached_name = g_strdup(name);
 
-  tmp = g_markup_escape_text(name, -1);
-
-  final = g_strdup_printf(temp, tmp);
+  final = g_markup_escape_text(name, -1);
 
   _name->SetText(final);
 
-  g_free(tmp);
   g_free(final);
+}
+
+nux::StaticCairoText*
+PlacesGroup::GetLabel()
+{
+  return _name;
+}
+
+nux::StaticCairoText*
+PlacesGroup::GetExpandLabel()
+{
+  return _expand_label;
 }
 
 void
@@ -200,7 +214,7 @@ void PlacesGroup::SetChildLayout(nux::Layout* layout)
 void
 PlacesGroup::RefreshLabel()
 {
-  const char* temp = "<small>%s</small>";
+  const char* temp = "<span size='small'>%s</span>";
   char*       result_string;
   char*       final;
 
@@ -257,7 +271,7 @@ void
 PlacesGroup::Refresh()
 {
   RefreshLabel();
-  ComputeChildLayout();
+  ComputeContentSize();
   QueueDraw();
 }
 
@@ -278,25 +292,11 @@ PlacesGroup::OnIdleRelayout(PlacesGroup* self)
     self->QueueDraw();
     self->_group_layout->QueueDraw();
     self->GetChildView()->QueueDraw();
-    self->ComputeChildLayout();
+    self->ComputeContentSize();
     self->_idle_id = 0;
-
-    if (self->GetFocused())
-    {
-      self->SetFocused(false);  // unset focus on all children
-      self->SetFocused(true);  // set focus on first child
-    }
   }
 
   return FALSE;
-}
-
-long
-PlacesGroup::ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo)
-{
-  long ret = TraverseInfo;
-  ret = _group_layout->ProcessEvent(ievent, TraverseInfo, ProcessEventInfo);
-  return ret;
 }
 
 void PlacesGroup::Draw(nux::GraphicsEngine& GfxContext,
@@ -354,8 +354,6 @@ PlacesGroup::GetExpanded()
 void
 PlacesGroup::SetExpanded(bool is_expanded)
 {
-  PlacesStyle* style = PlacesStyle::GetDefault();
-
   if (_is_expanded == is_expanded)
     return;
 
@@ -366,8 +364,12 @@ PlacesGroup::SetExpanded(bool is_expanded)
 
   Refresh();
 
-  _expand_icon->SetTexture(_is_expanded ? style->GetGroupUnexpandIcon()
-                           : style->GetGroupExpandIcon());
+  dash::Style& style = dash::Style::Instance();
+  if (_is_expanded)
+    _expand_icon->SetTexture(style.GetGroupUnexpandIcon());
+  else
+    _expand_icon->SetTexture(style.GetGroupExpandIcon());
+
   expanded.emit(this);
 }
 

@@ -67,7 +67,7 @@ public:
   {
   }
 
-  AbstractLauncherIcon* icon;
+  launcher::AbstractLauncherIcon* icon;
   nux::Point3   render_center;
   nux::Point3   logical_center;
   float         x_rotation;

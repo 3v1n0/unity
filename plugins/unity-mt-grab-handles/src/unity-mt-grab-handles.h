@@ -16,84 +16,119 @@
  * Authored by: Sam Spilsbury <sam.spilsbury@canonical.com>
  */
 
-
+#include <Nux/Nux.h>
 #include <glib.h>
 #include <core/core.h>
 #include <composite/composite.h>
 #include <opengl/opengl.h>
+#include <boost/noncopyable.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/enable_shared_from_this.hpp>
+#include <boost/weak_ptr.hpp>
 
 #include <core/atoms.h>
 
+#include "unity-mt-texture.h"
+#include "unity-mt-grab-handle.h"
+#include "unity-mt-grab-handle-group.h"
+#include "unity-mt-grab-handle-window.h"
+#include "unity-mt-grab-handle-impl-factory.h"
+#include "unity-mt-grab-handle-layout.h"
+
 #include "unitymtgrabhandles_options.h"
 
-namespace Unity
+namespace unity
 {
 namespace MT
 {
-typedef std::pair <GLTexture::List, CompSize> TextureSize;
-typedef std::pair <GLTexture::List*, CompRect*> TextureLayout;
 
-
-class GrabHandle :
-  public CompRect
+class DummyDamager
 {
 public:
 
-  GrabHandle(TextureSize* texture, Window owner, unsigned int id);
-  ~GrabHandle();
-
-  void handleButtonPress(XButtonEvent* ev);
-  void reposition(CompPoint* p, bool);
-
-  void show();
-  void hide();
-
-  TextureLayout layout();
-
-private:
-
-  Window    mIpw;
-  Window    mOwner;
-  TextureSize*     mTexture;
-  unsigned int    mId;
+    void damage (const nux::Geometry &g)
+    {
+      std::cout << "Damage rects: " << std::endl;
+      std::cout << "x: " << g.x << " y: " << g.y << " width: " << g.width << " height: " << g.height << std::endl;
+    }
 };
 
-class GrabHandleGroup :
-  public std::vector <Unity::MT::GrabHandle>
+class X11TextureFactory :
+  public Texture::Factory
+{
+  public:
+
+    void setActiveWrap (const GLTexture::List &);
+
+    Texture::Ptr create ();
+
+  private:
+
+    GLTexture::List mWrap;
+};
+
+class X11Texture :
+  public Texture
+{
+  public:
+
+    typedef boost::shared_ptr <X11Texture> Ptr;
+
+    X11Texture (const GLTexture::List &t);
+
+    const GLTexture::List & get ();
+
+  private:
+
+    GLTexture::List mTexture;
+};
+
+class X11ImplFactory :
+  public GrabHandle::ImplFactory
+{
+  public:
+
+    X11ImplFactory (Display *dpy);
+
+    GrabHandle::Impl * create (const GrabHandle::Ptr &h);
+  private:
+    Display *mDpy;
+};
+
+class X11GrabHandleImpl :
+  public GrabHandle::Impl
 {
 public:
 
-  GrabHandleGroup(Window owner);
-  ~GrabHandleGroup();
+  X11GrabHandleImpl (Display *dpy, const GrabHandle::Ptr &h);
+  ~X11GrabHandleImpl ();
 
-  void relayout(const CompRect&, bool);
-  void restack();
+public:
 
-  bool visible();
-  bool animate(unsigned int);
-  bool needsAnimate();
+  void show ();
+  void hide ();
 
-  int opacity();
+  void buttonPress (int x,
+                    int y,
+                    unsigned int button) const;
 
-  void hide();
-  void show();
+  void lockPosition (int x,
+                     int y,
+                     unsigned int flags);
 
-  std::vector <TextureLayout> layout();
-
-private:
-
-  typedef enum _state
+  void damage (const nux::Geometry &g)
   {
-    FADE_IN = 1,
-    FADE_OUT,
-    NONE
-  } State;
+    CompRegion r (g.x, g.y, g.width, g.height);
+    CompositeScreen::get (screen)->damageRegion (r);
+  }
 
-  State  mState;
-  int    mOpacity;
+private:
 
-  bool mMoreAnimate;
+  boost::weak_ptr <unity::MT::GrabHandle>  mGrabHandle;
+  Window                                   mIpw;
+  Display                                  *mDpy;
 };
+
 };
 };
 
@@ -128,33 +163,36 @@ public:
                    CompAction::State  state,
                    CompOption::Vector& options);
 
-  void addHandles(Unity::MT::GrabHandleGroup* handles);
-  void removeHandles(Unity::MT::GrabHandleGroup* handles);
+  void optionChanged (CompOption *option,
+                      UnitymtgrabhandlesOptions::Options num);
 
-  void addHandleWindow(Unity::MT::GrabHandle*, Window);
+  void addHandles(const unity::MT::GrabHandleGroup::Ptr & handles);
+  void removeHandles(const unity::MT::GrabHandleGroup::Ptr & handles);
+
+  void addHandleWindow(const unity::MT::GrabHandle::Ptr &, Window);
   void removeHandleWindow(Window);
 
   void preparePaint(int);
   void donePaint();
 
-  std::vector <Unity::MT::TextureSize>  & textures()
+  void raiseHandle (const boost::shared_ptr <const unity::MT::GrabHandle> &,
+                    Window                      owner);
+
+  std::vector <unity::MT::TextureSize>  & textures()
   {
     return mHandleTextures;
   }
 
 private:
 
-  std::list <Unity::MT::GrabHandleGroup*> mGrabHandles;
-  std::vector <Unity::MT::TextureSize> mHandleTextures;
+  std::list <unity::MT::GrabHandleGroup::Ptr> mGrabHandles;
+  std::vector <unity::MT::TextureSize> mHandleTextures;
 
-  std::map <Window, Unity::MT::GrabHandle*> mInputHandles;
-  CompWindowVector         mLastClientListStacking;
-  Atom             mCompResizeWindowAtom;
+  std::map <Window, const unity::MT::GrabHandle::Ptr> mInputHandles;
+  CompWindowVector         		    mLastClientListStacking;
+  Atom             			    mCompResizeWindowAtom;
 
   bool          mMoreAnimate;
-
-  // hack
-  friend class UnityMTGrabHandlesWindow;
 };
 
 #define UMTGH_SCREEN(screen)                  \
@@ -164,7 +202,8 @@ class UnityMTGrabHandlesWindow :
   public PluginClassHandler <UnityMTGrabHandlesWindow, CompWindow>,
   public WindowInterface,
   public CompositeWindowInterface,
-  public GLWindowInterface
+  public GLWindowInterface,
+  public unity::MT::GrabHandleWindow
 {
 public:
 
@@ -202,15 +241,20 @@ public:
   void resetTimer();
   void disableTimer();
 
+protected:
+
+  void raiseGrabHandle (const boost::shared_ptr <const unity::MT::GrabHandle> &h);
+  void requestMovement (int x,
+                        int y,
+                        unsigned int direction,
+			unsigned int button);
+
 private:
 
-  static gboolean onHideTimeout(gpointer data);
+  bool onHideTimeout();
 
-  Unity::MT::GrabHandleGroup* mHandles;
-  UnityMTGrabHandlesScreen* _mt_screen;
-  guint _timer_handle;
-
-  friend class Unity::MT::GrabHandle;
+  unity::MT::GrabHandleGroup::Ptr mHandles;
+  CompTimer                       mTimer;
 };
 
 #define UMTGH_WINDOW(window)                  \

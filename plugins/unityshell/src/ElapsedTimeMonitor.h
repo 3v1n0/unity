@@ -31,7 +31,7 @@ namespace performance {
 class ElapsedTimeMonitor : public Monitor
 {
 public:
-  gchar* GetName();
+  std::string GetName() const;
 
 protected:
   void StartMonitor();

@@ -45,13 +45,13 @@ static AtkStateSet* nux_view_accessible_ref_state_set(AtkObject* obj);
 static gint         nux_view_accessible_get_n_children(AtkObject* obj);
 static AtkObject*   nux_view_accessible_ref_child(AtkObject* obj,
                                                   gint i);
-/* NuxAreaAccessible */
-static gboolean      nux_view_accessible_check_pending_notification(NuxAreaAccessible* self);
-
 static AtkStateSet* nux_view_accessible_ref_state_set(AtkObject* obj);
 static gint         nux_view_accessible_get_n_children(AtkObject* obj);
 static AtkObject*   nux_view_accessible_ref_child(AtkObject* obj,
                                                   gint i);
+/* NuxAreaAccessible */
+static gboolean      nux_view_accessible_check_pending_notification(NuxAreaAccessible* self);
+
 /* private methods */
 static void on_layout_changed_cb(nux::View* view,
                                  nux::Layout* layout,
@@ -143,9 +143,9 @@ nux_view_accessible_initialize(AtkObject* accessible,
   /* Some extra focus things as Focusable is not used on Launcher and
      some BaseWindow */
   view->begin_key_focus.connect(sigc::bind(sigc::ptr_fun(on_change_keyboard_receiver_cb),
-                                                   accessible, TRUE));
+                                           accessible, TRUE));
   view->end_key_focus.connect(sigc::bind(sigc::ptr_fun(on_change_keyboard_receiver_cb),
-                                                  accessible, FALSE));
+                                         accessible, FALSE));
 }
 
 static AtkStateSet*
@@ -260,20 +260,7 @@ on_change_keyboard_receiver_cb(AtkObject* accessible,
 
   if (self->priv->key_focused != focus_in)
   {
-    AtkObject* parent_window = NULL;
-
     self->priv->key_focused = focus_in;
-
-    /* this child has the key focus, so we report the top level
-     * window about it. FIXME: that only works if only one object of
-     * the children hierarchy can have the key focus, that is the
-     * case here */
-
-    parent_window =
-      nux_area_accessible_get_parent_window(NUX_AREA_ACCESSIBLE(self));
-
-    nux_base_window_set_child_key_focused(NUX_BASE_WINDOW_ACCESSIBLE(parent_window),
-                                          focus_in);
 
     /* we always led the focus notification to
        _check_pending_notification, in order to allow the proper

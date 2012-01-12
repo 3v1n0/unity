@@ -53,6 +53,8 @@ public:
   nux::Property<int> vertical_spacing;
   nux::Property<int> padding;
 
+  sigc::signal<void> selection_change;
+  int GetSelectedIndex();
 
 protected:
   void MouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
@@ -71,9 +73,8 @@ protected:
   void OnKeyDown(unsigned long event_type, unsigned long event_keysym, unsigned long event_state, const TCHAR* character, unsigned short key_repeat_count);
 
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);;
-  virtual long int ProcessEvent(nux::IEvent& ievent, long int TraverseInfo, long int ProcessEventInfo);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
-  virtual long ComputeLayout2();
+  virtual long ComputeContentSize();
 
 private:
   typedef std::tuple <int, int> ResultListBounds;

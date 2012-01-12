@@ -43,12 +43,17 @@
 #include "Tooltip.h"
 #include "QuicklistView.h"
 #include "Introspectable.h"
-#include "Launcher.h"
 #include "LauncherEntryRemote.h"
+
+
+namespace unity
+{
+namespace launcher
+{
 
 class Launcher;
 
-class LauncherIcon : public AbstractLauncherIcon, public unity::Introspectable
+class LauncherIcon : public AbstractLauncherIcon
 {
   NUX_DECLARE_OBJECT_TYPE(LauncherIcon, AbstractLauncherIcon);
 
@@ -104,7 +109,7 @@ public:
 
   virtual std::string NameForWindow (Window window) { return std::string(); }
 
-  bool HasWindowOnViewport();
+  const bool HasWindowOnViewport();
 
   virtual bool IsSpacer()
   {
@@ -190,9 +195,10 @@ public:
   sigc::connection on_icon_added_connection;
   sigc::connection on_icon_removed_connection;
   sigc::connection on_order_changed_connection;
+  sigc::connection on_expo_terminated_connection;
 
 protected:
-  const gchar* GetName();
+  std::string GetName() const;
 
   void AddProperties(GVariantBuilder* builder);
 
@@ -284,7 +290,6 @@ protected:
   DbusmenuClient* _menuclient_dynamic_quicklist;
 
   friend class Launcher;
-  friend class LauncherController;
   friend class LauncherModel;
 
 private:
@@ -336,6 +341,9 @@ private:
   std::map<TransformIndex, std::vector<nux::Vector4> > transform_map;
   
 };
+
+}
+}
 
 #endif // LAUNCHERICON_H
 

@@ -23,7 +23,6 @@
 #include "config.h"
 
 #include <Nux/Nux.h>
-#include <Nux/ColorArea.h>
 #include <NuxGraphics/GLThread.h>
 
 namespace unity
@@ -54,7 +53,7 @@ public:
   void DirtyCache();
 
   static void ProcessDamage(nux::Geometry geo);
-
+  static bool HasDirtyHelpers();
   static bool HasEnabledHelpers();
 
   static nux::Property<unity::BlurType> blur_type;

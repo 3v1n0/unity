@@ -20,8 +20,11 @@
 #ifndef ICON_TEXTURE_H
 #define ICON_TEXTURE_H
 
-#include <Nux/TextureArea.h>
+#include <Nux/Nux.h>
+// FIXME: Nux/View.h needs Nux.h included first.
 #include <Nux/View.h>
+// FIXME: Nux/TextureArea.h needs View included first.
+#include <Nux/TextureArea.h>
 #include <NuxImage/CairoGraphics.h>
 #include <NuxGraphics/GraphicsEngine.h>
 
@@ -30,7 +33,7 @@
 namespace unity
 {
 
-class IconTexture : public nux::TextureArea, public unity::Introspectable
+class IconTexture : public nux::TextureArea, public unity::debug::Introspectable
 {
 public:
   IconTexture(nux::BaseTexture* texture, guint width, guint height);
@@ -55,7 +58,7 @@ protected:
   virtual bool AcceptKeyNavFocus();
   bool _accept_key_nav_focus;
 
-  const gchar* GetName();
+  std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
   virtual bool DoCanFocus();
 

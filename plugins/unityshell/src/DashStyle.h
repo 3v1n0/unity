@@ -28,80 +28,82 @@
 
 namespace unity
 {
+namespace dash
+{
 
-class DashStyle
+enum class StockIcon {
+  CHECKMARK,
+  CROSS,
+  GRID_VIEW,
+  FLOW_VIEW,
+  STAR
+};
+
+enum class Orientation {
+  UP,
+  DOWN,
+  LEFT,
+  RIGHT
+};
+
+enum class BlendMode {
+  NORMAL,
+  MULTIPLY,
+  SCREEN
+};
+
+enum class FontWeight {
+  LIGHT,
+  REGULAR,
+  BOLD
+};
+
+enum class Segment {
+  LEFT,
+  MIDDLE,
+  RIGHT
+};
+
+enum class Arrow {
+  LEFT,
+  RIGHT,
+  BOTH,
+  NONE
+};
+
+
+class Style
 {
 public:
+  Style ();
+  ~Style ();
 
-  enum class StockIcon {
-    CHECKMARK,
-    CROSS,
-    GRID_VIEW,
-    FLOW_VIEW,
-    STAR
-  };
+  static Style& Instance();
 
-  enum class Orientation {
-    UP,
-    DOWN,
-    LEFT,
-    RIGHT
-  };
-
-  enum class BlendMode {
-    NORMAL,
-    MULTIPLY,
-    SCREEN
-  };
-
-  enum class FontWeight {
-    LIGHT,
-    REGULAR,
-    BOLD
-  };
-
-  enum class Segment {
-    LEFT,
-    MIDDLE,
-    RIGHT
-  };
-
-  enum class Arrow {
-    LEFT,
-    RIGHT,
-    BOTH,
-    NONE
-  };
-
-  DashStyle ();
-  ~DashStyle ();
-
-  static DashStyle& Instance();
-
-  virtual bool Button(cairo_t* cr, nux::State state,
+  virtual bool Button(cairo_t* cr, nux::ButtonVisualState state,
                       std::string const& label);
 
-  virtual bool StarEmpty(cairo_t* cr, nux::State state);
+  virtual bool StarEmpty(cairo_t* cr, nux::ButtonVisualState state);
 
-  virtual bool StarHalf(cairo_t* cr, nux::State state);
+  virtual bool StarHalf(cairo_t* cr, nux::ButtonVisualState state);
 
-  virtual bool StarFull(cairo_t* cr, nux::State state);
+  virtual bool StarFull(cairo_t* cr, nux::ButtonVisualState state);
 
   virtual bool MultiRangeSegment(cairo_t*    cr,
-                                 nux::State  state,
+                                 nux::ButtonVisualState  state,
                                  std::string const& label,
                                  Arrow       arrow,
                                  Segment     segment);
 
   virtual bool TrackViewNumber(cairo_t*    cr,
-                               nux::State  state,
+                               nux::ButtonVisualState  state,
                                std::string const& trackNumber);
 
   virtual bool TrackViewPlay(cairo_t*   cr,
-                             nux::State state);
+                             nux::ButtonVisualState state);
 
   virtual bool TrackViewPause(cairo_t*   cr,
-                              nux::State state);
+                              nux::ButtonVisualState state);
 
   virtual bool TrackViewProgress(cairo_t* cr);
 
@@ -126,11 +128,52 @@ public:
                    double   height,
                    bool     align);
 
+  nux::Color const& GetTextColor() const;
+
+  // TODO nux::Property<int>
+  int  GetDefaultNColumns() const;
+  void SetDefaultNColumns(int n_cols);
+  sigc::signal<void> columns_changed;
+
+  int GetTileIconSize() const;
+  int GetTileWidth() const;
+  int GetTileHeight() const;
+
+  int GetHomeTileIconSize() const;
+  int GetHomeTileWidth() const;
+  int GetHomeTileHeight() const;
+
+  int GetTextLineHeight() const;
+
+  nux::BaseTexture* GetDashBottomTile();
+  nux::BaseTexture* GetDashRightTile();
+  nux::BaseTexture* GetDashCorner();
+  nux::BaseTexture* GetDashFullscreenIcon();
+  nux::BaseTexture* GetDashLeftEdge();
+  nux::BaseTexture* GetDashLeftCorner();
+  nux::BaseTexture* GetDashLeftTile();
+  nux::BaseTexture* GetDashTopCorner();
+  nux::BaseTexture* GetDashTopTile();
+
+  nux::BaseTexture* GetDashShine();
+
+  nux::BaseTexture* GetSearchMagnifyIcon();
+  nux::BaseTexture* GetSearchCloseIcon();
+  nux::BaseTexture* GetSearchCloseGlowIcon();
+  nux::BaseTexture* GetSearchSpinIcon();
+  nux::BaseTexture* GetSearchSpinGlowIcon();
+
+  nux::BaseTexture* GetGroupUnexpandIcon();
+  nux::BaseTexture* GetGroupExpandIcon();
+
+  sigc::signal<void> changed;
+
 private:
   class Impl;
   Impl* pimpl;
 };
 
+}
 }
 
 #endif // DASH_STYLE_H

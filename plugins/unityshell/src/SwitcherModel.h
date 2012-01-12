@@ -25,6 +25,8 @@
 #include "AbstractLauncherIcon.h"
 #include "LauncherModel.h"
 
+#include "Introspectable.h"
+
 #include <boost/shared_ptr.hpp>
 #include <sigc++/sigc++.h>
 
@@ -33,23 +35,24 @@ namespace unity
 namespace switcher
 {
 
-class SwitcherModel : public sigc::trackable
+class SwitcherModel : public debug::Introspectable, public sigc::trackable
 {
 
 public:
   typedef boost::shared_ptr<SwitcherModel> Ptr;
 
-  typedef std::vector<AbstractLauncherIcon*> Base;
+  typedef std::vector<launcher::AbstractLauncherIcon*> Base;
   typedef Base::iterator iterator;
   typedef Base::reverse_iterator reverse_iterator;
 
   nux::Property<bool> detail_selection;
   nux::Property<unsigned int> detail_selection_index;
+  nux::Property<bool> only_detail_on_viewport;
 
   // Icons are owned externally and assumed valid for life of switcher.
   // When AbstractLauncherIcon is complete, it will be passed as a shared pointer and this
   // will no longer be a worry.
-  SwitcherModel(std::vector<AbstractLauncherIcon*> icons);
+  SwitcherModel(std::vector<launcher::AbstractLauncherIcon*> icons);
   virtual ~SwitcherModel();
 
   iterator begin();
@@ -58,14 +61,14 @@ public:
   reverse_iterator rbegin();
   reverse_iterator rend();
 
-  AbstractLauncherIcon* at(unsigned int index);
+  launcher::AbstractLauncherIcon* at(unsigned int index);
 
   int Size();
 
-  AbstractLauncherIcon* Selection();
+  launcher::AbstractLauncherIcon* Selection();
   int SelectionIndex();
 
-  AbstractLauncherIcon* LastSelection();
+  launcher::AbstractLauncherIcon* LastSelection();
   int LastSelectionIndex();
 
   std::vector<Window> DetailXids ();
@@ -77,10 +80,15 @@ public:
   void NextDetail();
   void PrevDetail();
 
-  void Select(AbstractLauncherIcon* selection);
+  void Select(launcher::AbstractLauncherIcon* selection);
   void Select(int index);
 
-  sigc::signal<void, AbstractLauncherIcon*> selection_changed;
+  sigc::signal<void, launcher::AbstractLauncherIcon*> selection_changed;
+
+protected:
+  // Introspectable methods
+  std::string GetName() const;
+  void AddProperties(GVariantBuilder* builder);
 
 private:
 

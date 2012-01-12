@@ -48,7 +48,8 @@ public:
   enum class FocusVisibility
   {
     OnlyVisible,
-    ForceUnminimizeInvisible
+    ForceUnminimizeInvisible,
+    ForceUnminimizeOnCurrentDesktop
   };
 
   static WindowManager* Default();
@@ -59,6 +60,7 @@ public:
   virtual bool IsWindowOnCurrentDesktop(guint32 xid) = 0;
   virtual bool IsWindowObscured(guint32 xid) = 0;
   virtual bool IsWindowMapped(guint32 xid) = 0;
+  virtual bool IsWindowVisible(guint32 xid) = 0;
 
   virtual void ShowDesktop() = 0;
 

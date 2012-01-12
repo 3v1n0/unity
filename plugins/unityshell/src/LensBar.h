@@ -37,7 +37,7 @@ namespace unity
 namespace dash
 {
 
-  class LensBar : public nux::View, public unity::Introspectable
+class LensBar : public nux::View, public unity::debug::Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE(LensBar, nux::View);
   typedef std::vector<LensBarIcon*> LensIcons;
@@ -59,14 +59,13 @@ private:
   void SetupLayout();
   void SetupHomeLens();
 
-  long ProcessEvent(nux::IEvent& ievent, long traverse_info, long event_info);
   void Draw(nux::GraphicsEngine& gfx_context, bool force_draw);
   void DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw);
 
   void SetActive(LensBarIcon* icon);
 
   bool AcceptKeyNavFocus();
-  const gchar* GetName();
+  std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
 
 private:

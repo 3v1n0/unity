@@ -20,33 +20,30 @@
 #ifndef UNITY_ANIMATOR_H_
 #define UNITY_ANIMATOR_H_
 
-#include <Nux/Nux.h>
+#include <glib.h>
+#include <cstdint>
+#include <sigc++/sigc++.h>
+#include <boost/utility.hpp>
 
 namespace unity
 {
-  
-class FadableObject2
+class Animator : boost::noncopyable
 {
 public:
-  virtual void SetOpacity(double value) = 0;
-  virtual double GetOpacity() = 0;
-};
-
-class Animator
-{
-public:
-  Animator(unsigned int duration, unsigned int fps_rate = 30);
+  Animator(unsigned int default_duration, unsigned int fps_rate = 30);
   ~Animator();
 
   void SetRate(unsigned int fps_rate);
   void SetDuration(unsigned int duration);
 
-  unsigned int GetRate();
-  unsigned int GetDuration();
-  double GetProgress();
-  bool IsRunning();
+  unsigned int GetRate() const;
+  unsigned int GetDuration() const;
+  double GetProgress() const;
+  bool IsRunning() const;
 
   void Start(double start_progress = 0.0f);
+  void Start(unsigned int one_time_duration, double start_progress = 0.0f);
+  bool DoStep();
   void Stop();
 
   sigc::signal<void> animation_started;
@@ -56,12 +53,13 @@ public:
   sigc::signal<void, double> animation_stopped;
 
 private:
-  int64_t _start_time;
-  unsigned int _rate;
-  unsigned int _duration;
-  unsigned int _timeout_id;
-  double _start_progress;
-  double _progress;
+  int64_t start_time_;
+  unsigned int rate_;
+  unsigned int duration_;
+  unsigned int one_time_duration_;
+  unsigned int timeout_id_;
+  double start_progress_;
+  double progress_;
 
   static gboolean TimerTimeOut(Animator *self);
 };

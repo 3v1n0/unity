@@ -93,7 +93,7 @@ enum
 
 static guint32 _service_signals[LAST_SIGNAL] = { 0 };
 
-static const gchar * indicator_order[][13] = {
+static const gchar * indicator_order[][2] = {
   {"libappmenu.so", NULL},                    /* indicator-appmenu" */
   {"libapplication.so", NULL},                /* indicator-application" */
   {"libapplication.so", "gsd-keyboard-xkb"},  /* keyboard layout selector */
@@ -260,36 +260,82 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
         {
           priv->pressed_entry = get_entry_at (self, event->root_x, event->root_y);
           priv->use_event = (priv->pressed_entry == NULL);
+
+          if (priv->pressed_entry)
+            ret = GDK_FILTER_REMOVE;
         }
 
       if (event->evtype == XI_ButtonRelease)
-        {
-          if (priv->use_event)
-            {
-              priv->use_event = FALSE;
-            }
-          else
-            {
-              IndicatorObjectEntry *entry;
-              entry = get_entry_at (self, event->root_x, event->root_y);
+        {       
+          IndicatorObjectEntry *entry;
+          gboolean event_is_a_click = FALSE;
+          entry = get_entry_at (self, event->root_x, event->root_y);
 
-              if (entry)
+          if (XIMaskIsSet (event->buttons.mask, 1) || XIMaskIsSet (event->buttons.mask, 3))
+            {
+              /* Consider only right and left clicks over the indicators entries */
+              event_is_a_click = TRUE;
+            }
+          else if (XIMaskIsSet (event->buttons.mask, 2) && entry)
+            {
+              /* Middle clicks over an appmenu entry are considered just like
+               * all other clicks */
+              IndicatorObject *obj = g_hash_table_lookup (priv->entry2indicator_hash, entry);
+
+              if (g_strcmp0 (g_object_get_data (G_OBJECT (obj), "id"), "libappmenu.so") == 0)
                 {
-                  if (entry != priv->pressed_entry)
+                  event_is_a_click = TRUE;
+                }
+            }
+
+          if (event_is_a_click)
+            {
+              if (priv->use_event)
+                {
+                  priv->use_event = FALSE;
+                }
+              else
+                {
+                  if (entry)
                     {
-                      ret = GDK_FILTER_REMOVE;
-                      priv->use_event = TRUE;
-                    }
-                  else if (priv->last_entry && entry != priv->last_entry)
-                    {
-                      /* If we were navigating over indicators using the keyboard
-                       * and now we click over the indicator under the mouse, we
-                       * must force it to show back again, not make it close */
-                      gchar *entry_id = g_strdup_printf ("%p", entry);
-                      g_signal_emit (self, _service_signals[ENTRY_ACTIVATE_REQUEST], 0, entry_id);
-                      g_free (entry_id);
+                      if (entry != priv->pressed_entry)
+                        {
+                          ret = GDK_FILTER_REMOVE;
+                          priv->use_event = TRUE;
+                        }
+                      else if (priv->last_entry && entry != priv->last_entry)
+                        {
+                          /* If we were navigating over indicators using the keyboard
+                           * and now we click over the indicator under the mouse, we
+                           * must force it to show back again, not make it close */
+                          gchar *entry_id = g_strdup_printf ("%p", entry);
+                          g_signal_emit (self, _service_signals[ENTRY_ACTIVATE_REQUEST], 0, entry_id);
+                          g_free (entry_id);
+                        }
                     }
                 }
+            }
+          else if ((XIMaskIsSet (event->buttons.mask, 2) ||
+                    XIMaskIsSet (event->buttons.mask, 4) ||
+                    XIMaskIsSet (event->buttons.mask, 5)) && entry)
+            {
+              /* If we're scrolling or middle-clicking over an indicator
+               * (which is not an appmenu entry) then we need to send the
+               * event to the indicator itself, and avoid it to close */
+              gchar *entry_id = g_strdup_printf ("%p", entry);
+
+              if (XIMaskIsSet (event->buttons.mask, 4) || XIMaskIsSet (event->buttons.mask, 5))
+                {
+                  gint32 delta = XIMaskIsSet (event->buttons.mask, 4) ? 120 : -120;
+                  panel_service_scroll_entry (self, entry_id, delta);
+                }
+              else if (entry == priv->pressed_entry)
+                {
+                  panel_service_secondary_activate_entry (self, entry_id, time(NULL));
+                }
+
+              ret = GDK_FILTER_REMOVE;
+              g_free (entry_id);
             }
         }
     }
@@ -325,15 +371,30 @@ get_entry_at (PanelService *self, gint x, gint y)
   return NULL;
 }
 
-static IndicatorObjectEntry *
-get_entry_by_id (const gchar *entry_id)
+static void
+panel_service_get_indicator_entry_by_id (PanelService *self, 
+                                         const gchar *entry_id,
+                                         IndicatorObjectEntry **entry,
+                                         IndicatorObject **object)
 {
-  IndicatorObjectEntry *entry;
-  
-  if (sscanf (entry_id, "%p", &entry) == 1)
-    return entry;
+  IndicatorObject *indicator;
+  IndicatorObjectEntry *probably_entry;
+  PanelServicePrivate *priv = self->priv;
 
-  return NULL;
+  /* FIXME: eeek, why do we even do this? */
+  if (sscanf (entry_id, "%p", &probably_entry) == 1)
+  {
+    /* check that there really is such IndicatorObjectEntry */
+    indicator = g_hash_table_lookup (priv->entry2indicator_hash,
+                                     probably_entry);
+    if (object) *object = indicator;
+    if (entry) *entry = indicator != NULL ? probably_entry : NULL;
+  }
+  else
+  {
+    if (object) *object = NULL;
+    if (entry) *entry = NULL;
+  }
 }
 
 static gboolean
@@ -1132,9 +1193,11 @@ panel_service_sync_geometry (PanelService *self,
                              gint width,
                              gint height)
 {
-  PanelServicePrivate *priv = self->priv;
-  IndicatorObjectEntry *entry = get_entry_by_id (entry_id);
-  IndicatorObject *object = g_hash_table_lookup (priv->entry2indicator_hash, entry);
+  IndicatorObject      *object;
+  IndicatorObjectEntry *entry;
+  PanelServicePrivate  *priv = self->priv;
+
+  panel_service_get_indicator_entry_by_id (self, entry_id, &entry, &object);
 
   if (entry)
     {
@@ -1160,8 +1223,11 @@ panel_service_sync_geometry (PanelService *self,
 
           if (entry2geometry_hash == NULL)
           {
+            //FIXME - this leaks memory but i'm not 100% on the logic,
+            // using g_free as the keys destructor function causes all
+            // kinds of problems 
             entry2geometry_hash = g_hash_table_new_full (g_direct_hash, g_direct_equal,
-                                                         g_free, g_free);
+                                                        NULL, g_free);
             g_hash_table_insert (priv->panel2entries_hash, g_strdup (panel_id),
                                  entry2geometry_hash);
           }
@@ -1181,9 +1247,9 @@ panel_service_sync_geometry (PanelService *self,
           geo->width = width;
           geo->height = height;
         }
-    }
 
-  g_signal_emit (self, _service_signals[GEOMETRIES_CHANGED], 0, object, entry, x, y, width, height);
+      g_signal_emit (self, _service_signals[GEOMETRIES_CHANGED], 0, object, entry, x, y, width, height);
+    }
 }
 
 static gboolean
@@ -1346,6 +1412,13 @@ on_active_menu_move_current (GtkMenu              *menu,
   activate_next_prev_menu (self, object, priv->last_entry, direction);
 }
 
+static void
+menu_deactivated (GtkWidget *menu)
+{
+  g_signal_handlers_disconnect_by_func (menu, menu_deactivated, NULL);
+  gtk_widget_destroy (menu);
+}
+
 void
 panel_service_show_entry (PanelService *self,
                           const gchar  *entry_id,
@@ -1354,10 +1427,12 @@ panel_service_show_entry (PanelService *self,
                           gint32        y,
                           gint32        button)
 {
-  PanelServicePrivate  *priv = self->priv;
-  IndicatorObjectEntry *entry = get_entry_by_id (entry_id);
-  IndicatorObject      *object = g_hash_table_lookup (priv->entry2indicator_hash, entry);
+  IndicatorObject      *object;
+  IndicatorObjectEntry *entry;
   GtkWidget            *last_menu;
+  PanelServicePrivate  *priv = self->priv;
+
+  panel_service_get_indicator_entry_by_id (self, entry_id, &entry, &object);
 
   g_return_if_fail (entry);
 
@@ -1396,7 +1471,7 @@ panel_service_show_entry (PanelService *self,
              stub menu for the duration of this scrub. */
           priv->last_menu = GTK_MENU (gtk_menu_new ());
           g_signal_connect (priv->last_menu, "deactivate",
-                            G_CALLBACK (gtk_widget_destroy), NULL);
+                            G_CALLBACK (menu_deactivated), NULL);
           g_signal_connect (priv->last_menu, "destroy",
                             G_CALLBACK (gtk_widget_destroyed), &priv->last_menu);
         }
@@ -1447,11 +1522,11 @@ panel_service_secondary_activate_entry (PanelService *self,
                                         const gchar  *entry_id,
                                         guint32       timestamp)
 {
-  PanelServicePrivate  *priv = self->priv;
-  IndicatorObjectEntry *entry = get_entry_by_id (entry_id);
-  g_return_if_fail (entry);
+  IndicatorObject      *object;
+  IndicatorObjectEntry *entry;
 
-  IndicatorObject *object = g_hash_table_lookup (priv->entry2indicator_hash, entry);
+  panel_service_get_indicator_entry_by_id (self, entry_id, &entry, &object);
+  g_return_if_fail (entry);
 
   g_signal_emit_by_name(object, INDICATOR_OBJECT_SIGNAL_SECONDARY_ACTIVATE, entry,
                         timestamp);
@@ -1462,11 +1537,12 @@ panel_service_scroll_entry (PanelService   *self,
                             const gchar    *entry_id,
                             gint32         delta)
 {
-  PanelServicePrivate  *priv = self->priv;
-  IndicatorObjectEntry *entry = get_entry_by_id (entry_id);
+  IndicatorObject      *object;
+  IndicatorObjectEntry *entry;
+
+  panel_service_get_indicator_entry_by_id (self, entry_id, &entry, &object);
   g_return_if_fail (entry);
 
-  IndicatorObject *object = g_hash_table_lookup (priv->entry2indicator_hash, entry);
   GdkScrollDirection direction = delta < 0 ? GDK_SCROLL_DOWN : GDK_SCROLL_UP;
 
   g_signal_emit_by_name(object, INDICATOR_OBJECT_SIGNAL_ENTRY_SCROLLED, entry,

@@ -23,6 +23,7 @@
 #include <Nux/Nux.h>
 #include <NuxCore/Logger.h>
 
+#include "DashStyle.h"
 #include "FilterBasicButton.h"
 
 namespace
@@ -81,22 +82,22 @@ namespace unity {
   {
     if (prelight_ == NULL)
     {
-      prelight_ = new nux::CairoWrapper(GetGeometry(), sigc::bind(sigc::mem_fun(this, &FilterBasicButton::RedrawTheme), nux::State::NUX_STATE_PRELIGHT));
-      active_ = new nux::CairoWrapper(GetGeometry(), sigc::bind(sigc::mem_fun(this, &FilterBasicButton::RedrawTheme), nux::State::NUX_STATE_ACTIVE));
-      normal_ = new nux::CairoWrapper(GetGeometry(), sigc::bind(sigc::mem_fun(this, &FilterBasicButton::RedrawTheme), nux::State::NUX_STATE_NORMAL));
+      prelight_ = new nux::CairoWrapper(GetGeometry(), sigc::bind(sigc::mem_fun(this, &FilterBasicButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_PRELIGHT));
+      active_ = new nux::CairoWrapper(GetGeometry(), sigc::bind(sigc::mem_fun(this, &FilterBasicButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_PRESSED));
+      normal_ = new nux::CairoWrapper(GetGeometry(), sigc::bind(sigc::mem_fun(this, &FilterBasicButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_NORMAL));
     }
 
    // SetMinimumHeight(32);
   }
 
-  void FilterBasicButton::RedrawTheme (nux::Geometry const& geom, cairo_t *cr, nux::State faked_state)
+  void FilterBasicButton::RedrawTheme (nux::Geometry const& geom, cairo_t *cr, nux::ButtonVisualState faked_state)
   {
-    DashStyle::Instance().Button(cr, faked_state, label_);
+    dash::Style::Instance().Button(cr, faked_state, label_);
   }
 
-  long FilterBasicButton::ComputeLayout2 ()
+  long FilterBasicButton::ComputeContentSize ()
   {
-    long ret = nux::Button::ComputeLayout2();
+    long ret = nux::Button::ComputeContentSize();
     if (cached_geometry_ != GetGeometry())
     {
       nux::Geometry geo = GetGeometry();
@@ -109,10 +110,6 @@ namespace unity {
     return ret;
   }
 
-  long int FilterBasicButton::ProcessEvent(nux::IEvent& ievent, long int TraverseInfo, long int ProcessEventInfo) {
-    return nux::Button::ProcessEvent(ievent, TraverseInfo, ProcessEventInfo);
-  }
-
   void FilterBasicButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw) {
     gPainter.PaintBackground(GfxContext, GetGeometry());
     // set up our texture mode
@@ -121,7 +118,7 @@ namespace unity {
     texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
 
     // clear what is behind us
-    nux::t_u32 alpha = 0, src = 0, dest = 0;
+    unsigned int alpha = 0, src = 0, dest = 0;
     GfxContext.GetRenderStates().GetBlend(alpha, src, dest);
     GfxContext.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -134,11 +131,11 @@ namespace unity {
                          col);
 
     nux::BaseTexture *texture = normal_->GetTexture();
-    if (active)
+    if (Active())
       texture = active_->GetTexture();
-    else if (state == nux::State::NUX_STATE_PRELIGHT)
+    else if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_PRELIGHT)
       texture = prelight_->GetTexture();
-    else if (state == nux::State::NUX_STATE_ACTIVE)
+    else if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_PRESSED)
     {
       texture = active_->GetTexture();
     }

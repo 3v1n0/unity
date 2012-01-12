@@ -22,6 +22,11 @@
 
 #include "SimpleLauncherIcon.h"
 
+namespace unity
+{
+namespace launcher
+{
+
 class DesktopLauncherIcon : public SimpleLauncherIcon
 {
 
@@ -32,13 +37,29 @@ public:
   virtual nux::Color BackgroundColor();
   virtual nux::Color GlowColor();
 
-  bool ShowInSwitcher()
+  void SetShowInSwitcher(bool show_in_switcher)
+  {
+    show_in_switcher_ = show_in_switcher;
+  }
+
+  const bool HasWindowOnViewport()
   {
     return true;
   }
 
+  bool ShowInSwitcher()
+  {
+    return show_in_switcher_;
+  }
+
 protected:
   void ActivateLauncherIcon(ActionArg arg);
+
+private:
+  bool show_in_switcher_;
 };
+
+}
+}
 
 #endif // DESKTOPLAUNCHERICON_H

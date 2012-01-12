@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2011 Canonical Ltd
  *
@@ -19,49 +20,44 @@
 #ifndef _PANEL_CONTROLLER_H_
 #define _PANEL_CONTROLLER_H_
 
+#include <list>
+#include <memory>
+
 #include <Nux/Nux.h>
-#include <Nux/BaseWindow.h>
-#include <vector>
 
-#include "Introspectable.h"
-#include "PanelView.h"
+namespace unity
+{
+namespace panel
+{
 
-class PanelController : public nux::Object, public unity::Introspectable
+class Controller
 {
 public:
-  PanelController();
-  ~PanelController();
+  typedef std::shared_ptr<Controller> Ptr;
+
+  Controller();
+  ~Controller();
 
   void StartFirstMenuShow();
   void EndFirstMenuShow();
-  void SetOpacity(float opacity);
   void QueueRedraw();
 
   unsigned int GetTrayXid ();
-  std::list <nux::Geometry> GetGeometries ();
+  std::list<nux::Geometry> GetGeometries ();
+
+  // NOTE: nux::Property maybe?
+  void SetOpacity(float opacity);
+  void SetOpacityMaximizedToggle(bool enabled);
+  void SetMenuShowTimings(int fadein, int fadeout, int discovery, int discovery_fadein, int discovery_fadeout);
 
   float opacity() const;
 
-protected:
-  const gchar* GetName();
-  void          AddProperties(GVariantBuilder* builder);
-
 private:
-  unity::PanelView* ViewForWindow(nux::BaseWindow* window);
-  void OnScreenChanged(int primary_monitor, std::vector<nux::Geometry>& monitors);
-
-  static void WindowConfigureCallback(int            window_width,
-                                      int            window_height,
-                                      nux::Geometry& geo,
-                                      void*          user_data);
-private:
-  std::vector<nux::BaseWindow*> _windows;
-  int _bfb_size;
-  float _opacity;
-
-  sigc::connection _on_screen_change_connection;
-
-  bool _open_menu_start_received;
+  class Impl;
+  Impl* pimpl;
 };
+
+}
+}
 
 #endif // _PANEL_CONTROLLER_H_

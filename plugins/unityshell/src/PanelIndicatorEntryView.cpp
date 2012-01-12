@@ -79,7 +79,7 @@ PanelIndicatorEntryView::PanelIndicatorEntryView(
   if (type_ != MENU)
     InputArea::mouse_wheel.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::OnMouseWheel));
 
-  on_panelstyle_changed_connection_ = PanelStyle::GetDefault()->changed.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::Refresh));
+  on_panelstyle_changed_connection_ = panel::Style::Instance().changed.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::Refresh));
   Refresh();
 }
 
@@ -298,8 +298,7 @@ void PanelIndicatorEntryView::Refresh()
 
   if (pixbuf && proxy_->image_visible())
   {
-    PanelStyle* style = PanelStyle::GetDefault();
-    GtkStyleContext* style_context = style->GetStyleContext();
+    GtkStyleContext* style_context = panel::Style::Instance().GetStyleContext();
 
     gtk_style_context_save(style_context);
 
@@ -357,8 +356,7 @@ void PanelIndicatorEntryView::Refresh()
   {
     pango_cairo_update_layout(cr, layout);
 
-    PanelStyle* style = PanelStyle::GetDefault();
-    GtkStyleContext* style_context = style->GetStyleContext();
+    GtkStyleContext* style_context = panel::Style::Instance().GetStyleContext();
 
     gtk_style_context_save(style_context);
 
@@ -470,10 +468,10 @@ double PanelIndicatorEntryView::GetOpacity()
   return opacity_;
 }
 
-const gchar* PanelIndicatorEntryView::GetName()
+std::string PanelIndicatorEntryView::GetName() const
 {
   if (proxy_->IsUnused())
-    return NULL;
+    return "";
   else
     return proxy_->id().c_str();
 }
@@ -558,8 +556,7 @@ namespace
 
 void draw_menu_bg(cairo_t* cr, int width, int height)
 {
-  PanelStyle* style = PanelStyle::GetDefault();
-  GtkStyleContext* style_context = style->GetStyleContext();
+  GtkStyleContext* style_context = panel::Style::Instance().GetStyleContext();
 
   gtk_style_context_save(style_context);
 

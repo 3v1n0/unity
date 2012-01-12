@@ -68,6 +68,11 @@ class WindowManagerDummy : public WindowManager
     return true;
   }
 
+  bool IsWindowVisible(guint32 xid)
+  {
+    return true;
+  }
+
   void Restore(guint32 xid)
   {
     g_debug("%s", G_STRFUNC);
@@ -212,7 +217,7 @@ WindowManager::StartMove(guint32 xid, int x, int y)
     True
   };
   XEvent* e = (XEvent*)&bev;
-  nux::GetGraphicsThread()->ProcessForeignEvent(e, NULL);
+  nux::GetWindowThread()->ProcessForeignEvent(e, NULL);
 
   ev.xclient.type    = ClientMessage;
   ev.xclient.display = d;

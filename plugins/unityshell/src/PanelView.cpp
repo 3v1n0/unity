@@ -54,15 +54,17 @@ NUX_IMPLEMENT_OBJECT_TYPE(PanelView);
 
 PanelView::PanelView(NUX_FILE_LINE_DECL)
   :   View(NUX_FILE_LINE_PARAM),
+      _last_width(0),
+      _last_height(0),
       _is_dirty(true),
       _opacity(1.0f),
+      _opacity_maximized_toggle(false),
       _is_primary(false),
       _monitor(0),
       _dash_is_open(false)
 {
   _needs_geo_sync = false;
-  _style = new PanelStyle();
-  _style->changed.connect(sigc::mem_fun(this, &PanelView::ForceUpdateBackground));
+  panel::Style::Instance().changed.connect(sigc::mem_fun(this, &PanelView::ForceUpdateBackground));
 
   _bg_layer = new nux::ColorLayer(nux::Color(0xff595853), true);
 
@@ -136,13 +138,16 @@ PanelView::~PanelView()
 {
   if (_track_menu_pointer_id)
     g_source_remove(_track_menu_pointer_id);
-
-  _style->UnReference();
   UBusServer *ubus = ubus_server_get_default();
   ubus_server_unregister_interest(ubus, _handle_bg_color_update);
   ubus_server_unregister_interest(ubus, _handle_dash_hidden);
   ubus_server_unregister_interest(ubus, _handle_dash_shown);
-  _on_indicator_updated_connections.clear();
+
+  for (auto conn : _on_indicator_updated_connections)
+    conn.disconnect();
+
+  for (auto conn : _maximized_opacity_toggle_connections)
+    conn.disconnect();
 
   indicator::EntryLocationMap locations;
   _remote->SyncGeometries(GetName() + boost::lexical_cast<std::string>(_monitor), locations);
@@ -195,13 +200,12 @@ void PanelView::AddPanelView(PanelIndicatorsView* child,
   AddChild(child);
 }
 
-const gchar* PanelView::GetName()
+std::string PanelView::GetName() const
 {
   return "UnityPanel";
 }
 
-const gchar*
-PanelView::GetChildsName()
+std::string PanelView::GetChildsName() const
 {
   return "indicators";
 }
@@ -214,14 +218,6 @@ void PanelView::AddProperties(GVariantBuilder* builder)
   .add("service-unique-name", _remote->owner_name())
   .add("using-local-service", _remote->using_local_service())
   .add(GetGeometry());
-}
-
-long
-PanelView::ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo)
-{
-  long ret = TraverseInfo;
-  ret = _layout->ProcessEvent(ievent, ret, ProcessEventInfo);
-  return ret;
 }
 
 void
@@ -367,14 +363,16 @@ PanelView::UpdateBackground()
 {
   nux::Geometry geo = GetGeometry();
 
-  if (geo.width == _last_width && geo.height == _last_height && !_is_dirty)
+  if (!_is_dirty && geo.width == _last_width && geo.height == _last_height)
     return;
 
   _last_width = geo.width;
   _last_height = geo.height;
   _is_dirty = false;
+  
+  guint32 maximized_win = _menu_view->GetMaximizedWindow();
 
-  if (_dash_is_open && (_menu_view->GetMaximizedWindow() == 0))
+  if (_dash_is_open && maximized_win == 0)
   {
     if (_bg_layer)
       delete _bg_layer;
@@ -386,8 +384,16 @@ PanelView::UpdateBackground()
   }
   else
   {
-    nux::NBitmapData* bitmap = _style->GetBackground(geo.width, geo.height, _opacity);
+    double opacity = _opacity;
+    if (_opacity_maximized_toggle && maximized_win != 0 &&
+        !WindowManager::Default()->IsWindowObscured(maximized_win))
+    {
+      opacity = 1.0f;
+    }
+
+    nux::NBitmapData* bitmap = panel::Style::Instance().GetBackground(geo.width, geo.height, opacity);
     nux::BaseTexture* texture2D = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
+
     texture2D->Update(bitmap);
     delete bitmap;
 
@@ -443,7 +449,7 @@ void PanelView::OnObjectAdded(indicator::Indicator::Ptr const& proxy)
 
   _layout->SetContentDistribution(nux::eStackLeft);
 
-  ComputeChildLayout();
+  ComputeContentSize();
   NeedRedraw();
 }
 
@@ -460,14 +466,14 @@ void PanelView::OnObjectRemoved(indicator::Indicator::Ptr const& proxy)
 
   _layout->SetContentDistribution(nux::eStackLeft);
 
-  ComputeChildLayout();
+  ComputeContentSize();
   NeedRedraw();
 }
 
 void PanelView::OnIndicatorViewUpdated(PanelIndicatorEntryView* view)
 {
   _needs_geo_sync = true;
-  ComputeChildLayout();
+  ComputeContentSize();
 }
 
 void PanelView::OnMenuPointerMoved(int x, int y)
@@ -476,12 +482,18 @@ void PanelView::OnMenuPointerMoved(int x, int y)
 
   if (geo.IsPointInside(x, y))
   {
-    bool ret = false;
+    PanelIndicatorEntryView* view = nullptr;
 
     if (!_menu_view->HasOurWindowFocused())
-      ret = _menu_view->OnPointerMoved(x, y);
+      view = _menu_view->ActivateEntryAt(x, y);
 
-    if (!ret) _indicators->OnPointerMoved(x, y);
+    if (!view) _indicators->ActivateEntryAt(x, y);
+
+    _menu_view->SetMousePosition(x, y);
+  }
+  else
+  {
+    _menu_view->SetMousePosition(-1, -1);
   }
 }
 
@@ -575,7 +587,7 @@ void PanelView::OnEntryShowMenu(std::string const& entry_id,
     True
   };
   XEvent* e = (XEvent*)&ev;
-  nux::GetGraphicsThread()->ProcessForeignEvent(e, NULL);
+  nux::GetWindowThread()->ProcessForeignEvent(e, NULL);
   // --------------------------------------------------------------------------
 }
 
@@ -604,10 +616,49 @@ PanelView::SetOpacity(float opacity)
 
   _opacity = opacity;
 
-  if (_opacity < 1.0f && !_dash_is_open)
-    bg_effect_helper_.enabled = false;
+  bg_effect_helper_.enabled = (_opacity < 1.0f || _dash_is_open);
 
   ForceUpdateBackground();
+}
+
+void
+PanelView::SetMenuShowTimings(int fadein, int fadeout, int discovery,
+                              int discovery_fadein, int discovery_fadeout)
+{
+  _menu_view->SetMenuShowTimings(fadein, fadeout, discovery, discovery_fadein, discovery_fadeout);
+}
+
+void
+PanelView::SetOpacityMaximizedToggle(bool enabled)
+{
+  if (_opacity_maximized_toggle != enabled)
+  {
+    if (enabled)
+    {
+      auto win_manager = WindowManager::Default();
+      auto update_bg_lambda = [&](guint32) { ForceUpdateBackground(); };
+      auto conn = &_maximized_opacity_toggle_connections;
+
+      conn->push_back(win_manager->window_minimized.connect(update_bg_lambda));
+      conn->push_back(win_manager->window_unminimized.connect(update_bg_lambda));
+      conn->push_back(win_manager->window_maximized.connect(update_bg_lambda));
+      conn->push_back(win_manager->window_restored.connect(update_bg_lambda));
+      conn->push_back(win_manager->window_mapped.connect(update_bg_lambda));
+      conn->push_back(win_manager->window_unmapped.connect(update_bg_lambda));
+      conn->push_back(win_manager->compiz_screen_viewport_switch_ended.connect(
+        sigc::mem_fun(this, &PanelView::ForceUpdateBackground)));
+    }
+    else
+    {
+      for (auto conn : _maximized_opacity_toggle_connections)
+        conn.disconnect();
+
+      _maximized_opacity_toggle_connections.clear();
+    }
+
+    _opacity_maximized_toggle = enabled;
+    ForceUpdateBackground();
+  }
 }
 
 bool

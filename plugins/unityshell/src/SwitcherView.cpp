@@ -24,14 +24,17 @@
 
 #include "TimeUtil.h"
 
+#include <UnityCore/Variant.h>
+
 #include <NuxCore/Object.h>
 #include <Nux/Nux.h>
 #include <Nux/WindowCompositor.h>
 
-using namespace unity::ui;
-
 namespace unity
 {
+using namespace ui;
+using launcher::AbstractLauncherIcon;
+
 namespace switcher
 {
 
@@ -91,6 +94,26 @@ SwitcherView::~SwitcherView()
   text_view_->UnReference();
   if (redraw_handle_ > 0)
     g_source_remove(redraw_handle_);
+}
+
+std::string SwitcherView::GetName() const
+{
+  return "SwitcherView";
+}
+
+void SwitcherView::AddProperties(GVariantBuilder* builder)
+{
+  unity::variant::BuilderWrapper(builder)
+  .add("render-boxes", render_boxes)
+  .add("border-size", border_size)
+  .add("flat-spacing", flat_spacing)
+  .add("icon-size", icon_size)
+  .add("minimum-spacing", minimum_spacing)
+  .add("tile-size", tile_size)
+  .add("vertical-size", vertical_size)
+  .add("text-size", text_size)
+  .add("animation-length", animation_length)
+  .add("spread-size", (float)spread_size);
 }
 
 void
@@ -171,11 +194,6 @@ void SwitcherView::OnSelectionChanged(AbstractLauncherIcon* selection)
 SwitcherModel::Ptr SwitcherView::GetModel()
 {
   return model_;
-}
-
-long SwitcherView::ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo)
-{
-  return TraverseInfo;
 }
 
 void SwitcherView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
@@ -783,7 +801,7 @@ void SwitcherView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   int ms_since_change = TimeUtil::TimeDelta(&current, &save_time_);
 
   if (ms_since_change < animation_length && redraw_handle_ == 0)
-    redraw_handle_ = g_timeout_add(0, &SwitcherView::OnDrawTimeout, this);
+    redraw_handle_ = g_idle_add_full (G_PRIORITY_DEFAULT, &SwitcherView::OnDrawTimeout, this, NULL);
 
   animation_draw_ = false;
 }

@@ -42,7 +42,7 @@ namespace dash
 {
 class LensScrollView;
 
-class LensView : public nux::View, public unity::Introspectable
+class LensView : public nux::View, public unity::debug::Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE(LensView, nux::View);
   typedef std::vector<PlacesGroup*> CategoryGroups;
@@ -59,7 +59,7 @@ public:
 
   nux::Property<std::string> search_string;
   nux::Property<bool> filters_expanded;
-  nux::Property<bool> active;
+  nux::Property<ViewType> view_type;
   nux::Property<bool> can_refine_search;
 
   sigc::signal<void, std::string const&> uri_activated;
@@ -78,17 +78,16 @@ private:
   void OnColumnsChanged();
   void OnFilterAdded(Filter::Ptr filter);
   void OnFilterRemoved(Filter::Ptr filter);
-  void OnActiveChanged(bool is_active);
+  void OnViewTypeChanged(ViewType view_type);
   void QueueFixRenderering();
 
   static gboolean FixRenderering(LensView* self);
 
-  virtual long ProcessEvent(nux::IEvent& ievent, long traverse_info, long event_info);
   virtual void Draw(nux::GraphicsEngine& gfx_context, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw);
 
   virtual bool AcceptKeyNavFocus();
-  virtual const gchar* GetName();
+  virtual std::string GetName() const;
   virtual void AddProperties(GVariantBuilder* builder);
 
 private:

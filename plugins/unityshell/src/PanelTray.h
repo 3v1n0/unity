@@ -34,7 +34,7 @@
 namespace unity
 {
 
-class PanelTray : public nux::View, public unity::Introspectable
+class PanelTray : public nux::View, public unity::debug::Introspectable
 {
 public:
   typedef std::vector<NaTrayChild*> TrayChildren;
@@ -42,7 +42,6 @@ public:
   ~PanelTray();
 
   void Draw(nux::GraphicsEngine& gfx_content, bool force_draw);
-  long ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo);
   void Sync();
 
   unsigned int xid ();
@@ -50,8 +49,7 @@ public:
 public:
   char**     _whitelist;
 protected:
-  const gchar* GetName();
-  const gchar* GetChildsName();
+  std::string GetName() const;
   void          AddProperties(GVariantBuilder* builder);
 
 private:

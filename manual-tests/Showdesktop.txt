@@ -1,0 +1,15 @@
+Test Showdesktop Mode
+-------------------
+This test shows that the "show desktop" mode works correctly
+
+#. Open two applications
+#. Use either alt-tab or ctrl-alt-d to activate "show desktop" mode
+#. Use either alt-tab or ctrl-alt-d to deactivate "show desktop" mode
+#. Use either alt-tab or ctrl-alt-d to activate "show desktop" mode
+#. Select an active application from the launcher
+#. Use either alt-tab or ctrl-alt-d to deactivate "show desktop" mode
+
+Outcome
+  Both windows will fade out, both windows will fade in, both windows
+  will fade out, the clicked application will fade in only, all other
+  windows will fade in.
