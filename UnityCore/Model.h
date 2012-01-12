@@ -35,6 +35,12 @@ namespace unity
 namespace dash
 {
 
+enum ModelType
+{
+  REMOTE,
+  LOCAL
+};
+
 /* This template class encapsulates the basics of talking to a DeeSharedModel,
  * however it is a template as you can choose your own RowAdaptor (see
  * ResultsRowAdaptor.h for an example) which then presents the data in the rows
@@ -47,6 +53,7 @@ public:
   typedef std::shared_ptr<Model> Ptr;
 
   Model();
+  Model (ModelType model_type);
   virtual ~Model();
 
   const RowAdaptor RowAtIndex(std::size_t index);
@@ -54,6 +61,7 @@ public:
   nux::Property<std::string> swarm_name;
   nux::ROProperty<std::size_t> count;
   nux::ROProperty<unsigned long long> seqnum;
+  nux::ROProperty<glib::Object<DeeModel>> model;
 
   sigc::signal<void, RowAdaptor&> row_added;
   sigc::signal<void, RowAdaptor&> row_changed;
@@ -71,11 +79,13 @@ private:
   void OnSwarmNameChanged(std::string const& swarm_name);
   std::size_t get_count();
   unsigned long long get_seqnum();
+  glib::Object<DeeModel> get_model();
 
 private:
   glib::Object<DeeModel> model_;
   glib::SignalManager sig_manager_;
   DeeModelTag* renderer_tag_;
+  ModelType model_type_;
 };
 
 }

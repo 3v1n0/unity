@@ -68,6 +68,8 @@ DashView::DashView()
 
   bg_effect_helper_.owner = this;
   bg_effect_helper_.enabled = false;
+
+  home_lens_.AddLenses(lenses_);
 }
 
 DashView::~DashView()
@@ -106,7 +108,6 @@ void DashView::EnsureLensesInitialized()
       Lens::Ptr lens = lenses_.GetLensAtIndex (i);
       lens->view_type = ViewType::HOME_VIEW;
       lens->GlobalSearch ("");
-      printf ("Initializing lens %s\n", lens->id().c_str());
     }
     lenses_initialized_ = true;
   }

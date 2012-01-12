@@ -66,6 +66,17 @@ public:
        bool visible = true,
        std::string const& shortcut = "");
 
+  Lens(std::string const& id,
+         std::string const& dbus_name,
+         std::string const& dbus_path,
+         std::string const& name,
+         std::string const& icon,
+         std::string const& description,
+         std::string const& search_hint,
+         bool visible,
+         std::string const& shortcut,
+         ModelType model_type);
+
   ~Lens();
 
   void GlobalSearch(std::string const& search_string);

@@ -52,7 +52,8 @@ public:
        string const& description,
        string const& search_hint,
        bool visible,
-       string const& shortcut);
+       string const& shortcut,
+       ModelType model_type);
 
   ~Impl();
 
@@ -139,7 +140,8 @@ Lens::Impl::Impl(Lens* owner,
                  string const& description,
                  string const& search_hint,
                  bool visible,
-                 string const& shortcut)
+                 string const& shortcut,
+                 ModelType model_type)
   : owner_(owner)
   , id_(id)
   , dbus_name_(dbus_name)
@@ -151,10 +153,10 @@ Lens::Impl::Impl(Lens* owner,
   , visible_(visible)
   , search_in_global_(false)
   , shortcut_(shortcut)
-  , results_(new Results())
-  , global_results_(new Results())
-  , categories_(new Categories())
-  , filters_(new Filters())
+  , results_(new Results(model_type))
+  , global_results_(new Results(model_type))
+  , categories_(new Categories(model_type))
+  , filters_(new Filters(model_type))
   , connected_(false)
   , proxy_(dbus_name, dbus_path, "com.canonical.Unity.Lens")
   , results_variant_(NULL)
@@ -165,6 +167,23 @@ Lens::Impl::Impl(Lens* owner,
   proxy_.Connect("Changed", sigc::mem_fun(this, &Lens::Impl::OnChanged));
   results_->end_transaction.connect(sigc::mem_fun(this, &Lens::Impl::ResultsModelUpdated));
   global_results_->end_transaction.connect(sigc::mem_fun(this, &Lens::Impl::GlobalResultsModelUpdated));
+
+  owner_->id.SetGetterFunction(sigc::mem_fun(this, &Lens::Impl::id));
+  owner_->dbus_name.SetGetterFunction(sigc::mem_fun(this, &Lens::Impl::dbus_name));
+  owner_->dbus_path.SetGetterFunction(sigc::mem_fun(this, &Lens::Impl::dbus_path));
+  owner_->name.SetGetterFunction(sigc::mem_fun(this, &Lens::Impl::name));
+  owner_->icon_hint.SetGetterFunction(sigc::mem_fun(this, &Lens::Impl::icon_hint));
+  owner_->description.SetGetterFunction(sigc::mem_fun(this, &Lens::Impl::description));
+  owner_->search_hint.SetGetterFunction(sigc::mem_fun(this, &Lens::Impl::search_hint));
+  owner_->visible.SetGetterFunction(sigc::mem_fun(this, &Lens::Impl::visible));
+  owner_->search_in_global.SetGetterFunction(sigc::mem_fun(this, &Lens::Impl::search_in_global));
+  owner_->shortcut.SetGetterFunction(sigc::mem_fun(this, &Lens::Impl::shortcut));
+  owner_->results.SetGetterFunction(sigc::mem_fun(this, &Lens::Impl::results));
+  owner_->global_results.SetGetterFunction(sigc::mem_fun(this, &Lens::Impl::global_results));
+  owner_->categories.SetGetterFunction(sigc::mem_fun(this, &Lens::Impl::categories));
+  owner_->filters.SetGetterFunction(sigc::mem_fun(this, &Lens::Impl::filters));
+  owner_->connected.SetGetterFunction(sigc::mem_fun(this, &Lens::Impl::connected));
+  owner_->view_type.changed.connect(sigc::mem_fun(this, &Lens::Impl::OnViewTypeChanged));
 }
 
 Lens::Impl::~Impl()
@@ -604,25 +623,33 @@ Lens::Lens(string const& id_,
                    description_,
                    search_hint_,
                    visible_,
-                   shortcut_))
-{
-  id.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::id));
-  dbus_name.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::dbus_name));
-  dbus_path.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::dbus_path));
-  name.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::name));
-  icon_hint.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::icon_hint));
-  description.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::description));
-  search_hint.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::search_hint));
-  visible.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::visible));
-  search_in_global.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::search_in_global));
-  shortcut.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::shortcut));
-  results.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::results));
-  global_results.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::global_results));
-  categories.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::categories));
-  filters.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::filters));
-  connected.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::connected));
-  view_type.changed.connect(sigc::mem_fun(pimpl, &Lens::Impl::OnViewTypeChanged));
-}
+                   shortcut_,
+                   ModelType::REMOTE))
+{}
+
+Lens::Lens(string const& id_,
+            string const& dbus_name_,
+            string const& dbus_path_,
+            string const& name_,
+            string const& icon_hint_,
+            string const& description_,
+            string const& search_hint_,
+            bool visible_,
+            string const& shortcut_,
+            ModelType model_type)
+
+  : pimpl(new Impl(this,
+                   id_,
+                   dbus_name_,
+                   dbus_path_,
+                   name_,
+                   icon_hint_,
+                   description_,
+                   search_hint_,
+                   visible_,
+                   shortcut_,
+                   model_type))
+{}
 
 Lens::~Lens()
 {

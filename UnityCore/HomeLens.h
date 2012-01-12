@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2011 Canonical Ltd
+ * Copyright (C) 2012 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -14,38 +14,42 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
+ * Authored by: Mikkel Kamstrup Erlandsen <mikkel.kamstrup@canonical.com>
  */
 
-#ifndef UNITY_CATEGORIES_H
-#define UNITY_CATEGORIES_H
+#ifndef UNITY_HOME_LENS_H
+#define UNITY_HOME_LENS_H
 
+#include <vector>
 #include <memory>
+#include <sigc++/signal.h>
+#include <sigc++/trackable.h>
 
-#include "Model.h"
-#include "Category.h"
+#include "Lenses.h"
+#include "Lens.h"
 
 namespace unity
 {
 namespace dash
 {
 
-class Categories : public Model<Category>
+class HomeLens : public Lens, public Lenses
 {
 public:
-  typedef std::shared_ptr<Categories> Ptr;
+  typedef std::shared_ptr<HomeLens> Ptr;
 
-  Categories();
-  Categories(ModelType model_type);
+  HomeLens();
+  virtual ~HomeLens();
 
-  sigc::signal<void, Category const&> category_added;
-  sigc::signal<void, Category const&> category_changed;
-  sigc::signal<void, Category const&> category_removed;
+  void AddLenses(Lenses& lenses);
+
+  Lenses::LensList GetLenses() const;
+  Lens::Ptr GetLens(std::string const& lens_id) const;
+  Lens::Ptr GetLensAtIndex(std::size_t index) const;
 
 private:
-  void OnRowAdded(Category& category);
-  void OnRowChanged(Category& category);
-  void OnRowRemoved(Category& category);
+  class Impl;
+  Impl* pimpl;
 };
 
 }

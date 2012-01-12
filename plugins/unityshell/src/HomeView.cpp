@@ -103,38 +103,45 @@ void HomeView::AddLens(Lens::Ptr lens)
 
   LOG_DEBUG(logger) << "Lens added " << name;
 
-  PlacesGroup* group = new PlacesGroup();
-  group->SetName(name.c_str());
-  group->SetIcon(icon_hint.c_str());
-  group->SetExpanded(false);
-  group->SetVisible(false);
-  group->expanded.connect(sigc::mem_fun(this, &HomeView::OnGroupExpanded));
-  categories_.push_back(group);
-  counts_[group] = 0;
+  // ---------------
+  Categories::Ptr categories = lens->categories;
+  printf ("HOME LENS: %s\n", lens->name().c_str());
+  for (unsigned int i = 0; i < categories->count(); ++i)
+    printf ("ADD CAT: %s\n", categories->RowAtIndex(i).name().c_str());
+  // -------------
+
+  PlacesGroup* category = new PlacesGroup();
+  category->SetName(name.c_str());
+  category->SetIcon(icon_hint.c_str());
+  category->SetExpanded(false);
+  category->SetVisible(false);
+  category->expanded.connect(sigc::mem_fun(this, &HomeView::OnGroupExpanded));
+  categories_.push_back(category);
+  counts_[category] = 0;
 
   ResultViewGrid* grid = new ResultViewGrid(NUX_TRACKER_LOCATION);
   grid->expanded = false;
   grid->SetModelRenderer(new ResultRendererTile(NUX_TRACKER_LOCATION));
   grid->UriActivated.connect([&, lens] (std::string const& uri) { uri_activated.emit(uri); lens->Activate(uri); });
-  group->SetChildView(grid);
+  category->SetChildView(grid);
 
   Results::Ptr results = lens->global_results;
-  results->result_added.connect([&, group, grid] (Result const& result)
+  results->result_added.connect([&, category, grid] (Result const& result)
   {
     grid->AddResult(const_cast<Result&>(result));
-    counts_[group]++;
-    UpdateCounts(group);
+    counts_[category]++;
+    UpdateCounts(category);
   });
 
-  results->result_removed.connect([&, group, grid] (Result const& result)
+  results->result_removed.connect([&, category, grid] (Result const& result)
   {
     grid->RemoveResult(const_cast<Result&>(result));
-    counts_[group]--;
-    UpdateCounts(group);
+    counts_[category]--;
+    UpdateCounts(category);
   });
 
 
-  scroll_layout_->AddView(group, 0);
+  scroll_layout_->AddView(category, 0);
 }
 
 void HomeView::UpdateCounts(PlacesGroup* group)

@@ -27,6 +27,7 @@
 #include <Nux/View.h>
 #include <Nux/VLayout.h>
 #include <UnityCore/FilesystemLenses.h>
+#include <UnityCore/HomeLens.h>
 
 #include "BackgroundEffectHelper.h"
 #include "DashSearchBar.h"
@@ -109,6 +110,7 @@ private:
 private:
   UBusManager ubus_manager_;
   FilesystemLenses lenses_;
+  HomeLens home_lens_;
   BackgroundEffectHelper bg_effect_helper_;
   LensViews lens_views_;
 

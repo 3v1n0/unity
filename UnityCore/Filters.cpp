@@ -56,6 +56,14 @@ Filters::Filters()
   row_removed.connect(sigc::mem_fun(this, &Filters::OnRowRemoved));
 }
 
+Filters::Filters(ModelType model_type)
+ : Model<FilterAdaptor>::Model(model_type)
+{
+  row_added.connect(sigc::mem_fun(this, &Filters::OnRowAdded));
+  row_changed.connect(sigc::mem_fun(this, &Filters::OnRowChanged));
+  row_removed.connect(sigc::mem_fun(this, &Filters::OnRowRemoved));
+}
+
 Filters::~Filters()
 {}
 
