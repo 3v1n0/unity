@@ -44,8 +44,9 @@ QuicklistMenuItemCheckmark::QuicklistMenuItemCheckmark(DbusmenuMenuitem* item,
   QuicklistMenuItem(item,
                     NUX_FILE_LINE_PARAM)
 {
-  _name = g_strdup("QuicklistMenuItemCheckmark");
-  Initialize(item);
+  _item_type  = MENUITEM_TYPE_CHECK;
+  _name = "QuicklistMenuItemCheckmark";
+  InitializeText();
 }
 
 QuicklistMenuItemCheckmark::QuicklistMenuItemCheckmark(DbusmenuMenuitem* item,
@@ -55,40 +56,18 @@ QuicklistMenuItemCheckmark::QuicklistMenuItemCheckmark(DbusmenuMenuitem* item,
                     debug,
                     NUX_FILE_LINE_PARAM)
 {
-  _name = g_strdup("QuicklistMenuItemCheckmark");
-  Initialize(item);
-}
-
-void
-QuicklistMenuItemCheckmark::Initialize(DbusmenuMenuitem* item)
-{
   _item_type  = MENUITEM_TYPE_CHECK;
-
-  if (item)
-    _text = g_strdup(dbusmenu_menuitem_property_get(item, DBUSMENU_MENUITEM_PROP_LABEL));
-  else
-    _text = g_strdup("Check Mark");
-
-  int textWidth = 1;
-  int textHeight = 1;
-  GetTextExtents(textWidth, textHeight);
-  SetMinimumSize(textWidth + ITEM_INDENT_ABS + 3 * ITEM_MARGIN,
-                 textHeight + 2 * ITEM_MARGIN);
+  _name = "QuicklistMenuItemCheckmark";
+  InitializeText();
 }
 
 QuicklistMenuItemCheckmark::~QuicklistMenuItemCheckmark()
+{}
+
+const gchar*
+QuicklistMenuItemCheckmark::GetDefaultText()
 {
-  if (_normalTexture[0])
-    _normalTexture[0]->UnReference();
-
-  if (_normalTexture[1])
-    _normalTexture[1]->UnReference();
-
-  if (_prelightTexture[0])
-    _prelightTexture[0]->UnReference();
-
-  if (_prelightTexture[1])
-    _prelightTexture[1]->UnReference();
+  return "Check Mark";
 }
 
 void
@@ -127,17 +106,6 @@ QuicklistMenuItemCheckmark::PostLayoutManagement(long layoutResult)
   else
     result |= nux::eCompliantHeight;
 
-  return result;
-}
-
-long
-QuicklistMenuItemCheckmark::ProcessEvent(nux::IEvent& event,
-                                         long         traverseInfo,
-                                         long         processEventInfo)
-{
-  long result = traverseInfo;
-
-  result = nux::View::PostProcessEvent2(event, result, processEventInfo);
   return result;
 }
 

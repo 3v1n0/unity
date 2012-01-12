@@ -253,6 +253,7 @@ on_service_entry_activate_request (PanelService    *service,
                                    GDBusConnection *connection)
 {
   GError *error = NULL;
+  g_warning ("%s, entry_id:%s", G_STRFUNC, entry_id);
   g_dbus_connection_emit_signal (connection,
                                  S_NAME,
                                  S_PATH,
@@ -359,6 +360,13 @@ on_signal (int sig)
                     G_CALLBACK (on_indicators_cleared), NULL);
 }
 
+static void
+discard_log_message (const gchar *log_domain, GLogLevelFlags log_level,
+                     const gchar *message, gpointer user_data)
+{
+  return;
+}
+
 gint
 main (gint argc, gchar **argv)
 {
@@ -372,6 +380,11 @@ main (gint argc, gchar **argv)
   gtk_init (&argc, &argv);
   gtk_icon_theme_append_search_path (gtk_icon_theme_get_default(),
 				     INDICATORICONDIR);
+
+  if (g_getenv ("SILENT_PANEL_SERVICE") != NULL)
+  {
+    g_log_set_default_handler (discard_log_message, NULL);
+  }
 
   introspection_data = g_dbus_node_info_new_for_xml (introspection_xml, NULL);
   g_assert (introspection_data != NULL);

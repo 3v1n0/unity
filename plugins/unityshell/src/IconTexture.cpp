@@ -52,8 +52,6 @@ IconTexture::IconTexture(nux::BaseTexture* texture, guint width, guint height)
     _opacity(1.0f)
 {
   SetMinMaxSize(width, height);
-  SetCanFocus(false);
-  _can_pass_focus_to_composite_layout = false;
 
   _accept_key_nav_focus = false;
 }
@@ -71,9 +69,6 @@ IconTexture::IconTexture(const char* icon_name, unsigned int size, bool defer_ic
 
   if (!g_strcmp0(_icon_name, "") == 0 && !defer_icon_loading)
     LoadIcon();
-
-  _can_pass_focus_to_composite_layout = false;
-  SetCanFocus(false);
 }
 
 IconTexture::~IconTexture()
@@ -226,7 +221,7 @@ bool IconTexture::DoCanFocus()
   return false;
 }
 
-const gchar* IconTexture::GetName()
+std::string IconTexture::GetName() const
 {
   return "IconTexture";
 }

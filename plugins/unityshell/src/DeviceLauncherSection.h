@@ -31,7 +31,10 @@
 class Launcher;
 class LauncherIcon;
 
-namespace unity {
+namespace unity
+{
+namespace launcher
+{
 
 class DeviceLauncherSection : public sigc::trackable
 {
@@ -71,6 +74,7 @@ private:
   gulong on_device_populate_entry_id_;
 };
 
+}
 } // namespace unity
 
 #endif // _DEVICE_LAUNCHER_SECTION_H_

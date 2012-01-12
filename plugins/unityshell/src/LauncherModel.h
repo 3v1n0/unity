@@ -20,14 +20,20 @@
 #ifndef LAUNCHERMODEL_H
 #define LAUNCHERMODEL_H
 
-#include "LauncherIcon.h"
+#include <memory>
 
+#include "LauncherIcon.h"
 #include <sigc++/sigc++.h>
+
+namespace unity
+{
+namespace launcher
+{
 
 class LauncherModel : public sigc::trackable
 {
-
 public:
+  typedef std::shared_ptr<LauncherModel> Ptr;
   typedef std::list<LauncherIcon*> Base;
   typedef Base::iterator iterator;
   typedef Base::reverse_iterator reverse_iterator;
@@ -107,6 +113,9 @@ public:
     return result;
   }
 };
+
+}
+}
 
 #endif // LAUNCHERMODEL_H
 

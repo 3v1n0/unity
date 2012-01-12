@@ -22,20 +22,30 @@
 
 #include <glib.h>
 #include <list>
+#include <string>
 
 namespace unity
 {
+namespace debug
+{
 class Introspectable
 {
+typedef std::list<Introspectable*> IntrospectableList;
+
 public:
+  Introspectable();
+  virtual ~Introspectable();
   GVariant* Introspect();
+  virtual std::string GetName() const = 0;
   void AddChild(Introspectable* child);
   void RemoveChild(Introspectable* child);
-
-protected:
-  virtual const gchar* GetName() = 0;
-  virtual const gchar* GetChildsName();
+  IntrospectableList const& GetIntrospectableChildren() { return _children; };
   virtual void AddProperties(GVariantBuilder* builder) = 0;
+  
+protected:
+  virtual std::string GetChildsName() const;
+  
+
   /*
    * AddProperties should be implemented as such ...
    * void ClassFoo::AddProperties (GVariantBuilder *builder)
@@ -53,6 +63,8 @@ protected:
 
 private:
   std::list<Introspectable*> _children;
+  std::list<Introspectable*> _parents;
 };
+}
 }
 #endif

@@ -68,11 +68,11 @@ protected:
                                float progress_fill,
                                float bias);
 
-  void UpdateIconTransform(AbstractLauncherIcon* icon, nux::Matrix4 ViewProjectionMatrix, nux::Geometry const& geo,
-                           float x, float y, float w, float h, float z, AbstractLauncherIcon::TransformIndex index);
+  void UpdateIconTransform(launcher::AbstractLauncherIcon* icon, nux::Matrix4 ViewProjectionMatrix, nux::Geometry const& geo,
+                           float x, float y, float w, float h, float z, launcher::AbstractLauncherIcon::TransformIndex index);
 
-  void UpdateIconSectionTransform(AbstractLauncherIcon* icon, nux::Matrix4 ViewProjectionMatrix, nux::Geometry const& geo,
-                                  float x, float y, float w, float h, float z, float xx, float yy, float ww, float hh, AbstractLauncherIcon::TransformIndex index);
+  void UpdateIconSectionTransform(launcher::AbstractLauncherIcon* icon, nux::Matrix4 ViewProjectionMatrix, nux::Geometry const& geo,
+                                  float x, float y, float w, float h, float z, float xx, float yy, float ww, float hh, launcher::AbstractLauncherIcon::TransformIndex index);
 
   void GetInverseScreenPerspectiveMatrix(nux::Matrix4& ViewMatrix, nux::Matrix4& PerspectiveMatrix,
                                          int ViewportWidth,

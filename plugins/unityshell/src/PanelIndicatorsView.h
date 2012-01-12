@@ -32,7 +32,7 @@
 namespace unity
 {
 
-class PanelIndicatorsView : public nux::View, public Introspectable
+class PanelIndicatorsView : public nux::View, public unity::debug::Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE(PanelIndicatorsView, nux::View);
 public:
@@ -56,12 +56,11 @@ public:
                                     IndicatorEntryType type = IndicatorEntryType::INDICATOR);
   void RemoveEntry(std::string const& entry_id);
 
-  bool OnPointerMoved(int x, int y);
-  bool ActivateEntry(std::string const& entry_id);
+  PanelIndicatorEntryView* ActivateEntryAt(int x, int y);
+  PanelIndicatorEntryView* ActivateEntry(std::string const& entry_id);
   bool ActivateIfSensitive();
   void GetGeometryForSync(indicator::EntryLocationMap& locations);
 
-  virtual long ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo);
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void QueueDraw();
@@ -83,8 +82,8 @@ protected:
   typedef std::map<std::string, PanelIndicatorEntryView*> Entries;
   Entries entries_;
 
-  const gchar* GetName();
-  const gchar* GetChildsName();
+  std::string GetName() const;
+  std::string GetChildsName() const;
   void         AddProperties(GVariantBuilder* builder);
 
 private:

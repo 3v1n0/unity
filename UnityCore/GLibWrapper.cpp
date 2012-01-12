@@ -49,6 +49,11 @@ Error::operator bool() const
   return bool(error_);
 }
 
+Error::operator GError* ()
+{
+    return error_;
+}
+
 std::string Error::Message() const
 {
   std::string result;
@@ -90,6 +95,11 @@ gchar** String::operator&()
 }
 
 gchar* String::Value()
+{
+  return string_;
+}
+
+String::operator char*()
 {
   return string_;
 }

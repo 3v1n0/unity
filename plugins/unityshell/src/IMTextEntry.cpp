@@ -50,7 +50,6 @@ IMTextEntry::IMTextEntry()
   CheckIMEnabled();
   im_enabled ? SetupMultiIM() : SetupSimpleIM();
 
-  FocusChanged.connect([&] (nux::Area*) { GetFocused() ? OnFocusIn() : OnFocusOut(); });
   mouse_up.connect(sigc::mem_fun(this, &IMTextEntry::OnMouseButtonUp));
 }
 
@@ -126,9 +125,9 @@ bool IMTextEntry::TryHandleEvent(unsigned int eventType,
                                  unsigned int keysym,
                                  const char* character)
 {
-  nux::Event event = nux::GetGraphicsThread()->GetWindow().GetCurrentEvent();
+  nux::Event event = nux::GetWindowThread()->GetGraphicsDisplay().GetCurrentEvent();
   
-  CheckValidClientWindow(event.e_x11_window);
+  CheckValidClientWindow(event.x11_window);
   
   GdkEventKey ev;
   KeyEventToGdkEventKey(event, ev);
@@ -152,25 +151,25 @@ inline void IMTextEntry::CheckValidClientWindow(Window window)
 
 void IMTextEntry::KeyEventToGdkEventKey(Event& event, GdkEventKey& gdk_event)
 {
-  gdk_event.type = event.e_event == nux::NUX_KEYDOWN ? GDK_KEY_PRESS : GDK_KEY_RELEASE;
+  gdk_event.type = event.type == nux::NUX_KEYDOWN ? GDK_KEY_PRESS : GDK_KEY_RELEASE;
   gdk_event.window = client_window_;
   gdk_event.send_event = FALSE;
-  gdk_event.time = event.e_x11_timestamp;
-  gdk_event.state = event.e_x11_state;
-  gdk_event.keyval = event.e_keysym;
+  gdk_event.time = event.x11_timestamp;
+  gdk_event.state = event.x11_key_state;
+  gdk_event.keyval = event.x11_keysym;
 
   gchar* txt = const_cast<gchar*>(event.GetText());
   gdk_event.length = strlen(txt);
   gdk_event.string = txt;
 
-  gdk_event.hardware_keycode = event.e_x11_keycode;
+  gdk_event.hardware_keycode = event.x11_keycode;
   gdk_event.group = 0;
   gdk_event.is_modifier = 0;
 }
 
 bool IMTextEntry::TryHandleSpecial(unsigned int eventType, unsigned int keysym, const char* character)
 {
-  nux::Event event = nux::GetGraphicsThread()->GetWindow().GetCurrentEvent();
+  nux::Event event = nux::GetWindowThread()->GetGraphicsDisplay().GetCurrentEvent();
   unsigned int keyval = keysym;
   bool shift = (event.GetKeyState() & NUX_STATE_SHIFT);
   bool ctrl = (event.GetKeyState() & NUX_STATE_CTRL);
@@ -221,7 +220,7 @@ void IMTextEntry::Copy()
   {
     GtkClipboard* clip = gtk_clipboard_get_for_display(gdk_display_get_default(),
                                                        GDK_SELECTION_CLIPBOARD);
-    gtk_clipboard_set_text(clip, _text.c_str() + start, end - start);
+    gtk_clipboard_set_text(clip, text_.c_str() + start, end - start);
   }
 }
 
@@ -264,11 +263,11 @@ void IMTextEntry::OnPreeditChanged(GtkIMContext* context)
 
   LOG_DEBUG(logger) << "Preedit changed: " << preedit;
 
-  _preedit = preedit.Str();
+  preedit_ = preedit.Str();
 
   if (strlen(preedit.Str().c_str())) {
     preedit_cursor_ = preedit.Str().length();
-    QueueRefresh(true, true); 
+    QueueRefresh(true, true);
     sigTextChanged.emit(this);
     UpdateCursorLocation();
   }
@@ -287,7 +286,7 @@ void IMTextEntry::OnPreeditEnd(GtkIMContext* context)
   ResetPreedit();
   gtk_im_context_reset(im_context_);
 
-  QueueRefresh(true, true); 
+  QueueRefresh(true, true);
   sigTextChanged.emit(this);
   
   LOG_DEBUG(logger) << "Preedit ended";

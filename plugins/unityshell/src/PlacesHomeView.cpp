@@ -38,9 +38,9 @@
 #include "UBusMessages.h"
 
 #include "PlacesHomeView.h"
-
 #include "PlacesSimpleTile.h"
-#include "PlacesStyle.h"
+
+#include "DashStyle.h"
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/Variant.h>
 
@@ -86,7 +86,7 @@ public:
 PlacesHomeView::PlacesHomeView()
   : _ubus_handle(0)
 {
-  PlacesStyle* style = PlacesStyle::GetDefault();
+  dash::Style& style = dash::Style::Instance();
 
   SetName(_("Shortcuts"));
   SetIcon(PKGDATADIR"/shortcuts_group_icon.png");
@@ -97,14 +97,13 @@ PlacesHomeView::PlacesHomeView()
   SetChildLayout(_layout);
 
   _layout->ForceChildrenSize(true);
-  _layout->SetChildrenSize(style->GetHomeTileWidth(), style->GetHomeTileHeight());
+  _layout->SetChildrenSize(style.GetHomeTileWidth(), style.GetHomeTileHeight());
   _layout->EnablePartialVisibility(false);
-  _layout->SetHeightMatchContent(true);
-  _layout->SetHorizontalExternalMargin(32);
-  _layout->SetVerticalInternalMargin(32);
-  _layout->SetHorizontalInternalMargin(32);
-  _layout->SetMinMaxSize((style->GetHomeTileWidth() * 4) + (32 * 5),
-                         (style->GetHomeTileHeight() * 2) + 32);
+  _layout->MatchContentSize(true);
+  _layout->SetLeftAndRightPadding(32);
+  _layout->SetSpaceBetweenChildren(32, 32);
+  _layout->SetMinMaxSize((style.GetHomeTileWidth() * 4) + (32 * 5),
+                         (style.GetHomeTileHeight() * 2) + 32);
 
   _ubus_handle = ubus_server_register_interest(ubus_server_get_default(),
                                                UBUS_PLACE_VIEW_SHOWN,
@@ -155,11 +154,10 @@ PlacesHomeView::DashVisible(GVariant* data, void* val)
 void
 PlacesHomeView::Refresh(PlacesGroup*foo)
 {
-  PlacesStyle* style = PlacesStyle::GetDefault();
   Shortcut*   shortcut = NULL;
   gchar*      markup = NULL;
   const char* temp = "<big>%s</big>";
-  int         icon_size = style->GetHomeTileIconSize();
+  int         icon_size = dash::Style::Instance().GetHomeTileIconSize();
 
   _layout->Clear();
 
@@ -235,7 +233,7 @@ PlacesHomeView::CreateShortcutFromExec(const char* exec,
                                        const char* name,
                                        std::vector<std::string>& alternatives)
 {
-  PlacesStyle*     style = PlacesStyle::GetDefault();
+  dash::Style&     style = dash::Style::Instance();
   Shortcut*        shortcut = NULL;
   gchar*           id;
   gchar*           markup;
@@ -282,7 +280,7 @@ PlacesHomeView::CreateShortcutFromExec(const char* exec,
       icon = g_icon_to_string(g_app_info_get_icon(G_APP_INFO(info)));
       real_exec = g_strdup(g_app_info_get_executable(G_APP_INFO(info)));
 
-      shortcut = new Shortcut(icon, markup, style->GetHomeTileIconSize());
+      shortcut = new Shortcut(icon, markup, style.GetHomeTileIconSize());
       shortcut->_id = TYPE_EXEC;
       shortcut->_exec = real_exec;
       _layout->AddView(shortcut, 1, nux::eLeft, nux::eFull);
@@ -302,7 +300,7 @@ void PlacesHomeView::CreateShortcutFromMime(const char* mime,
                                             const char* name,
                                             std::vector<std::string>& alternatives)
 {
-  PlacesStyle* style = PlacesStyle::GetDefault();
+  dash::Style& style = dash::Style::Instance();
   GAppInfo* info = g_app_info_get_default_for_type(mime, FALSE);
 
   // If it was invalid check alternatives for backup
@@ -323,7 +321,7 @@ void PlacesHomeView::CreateShortcutFromMime(const char* mime,
     glib::String icon(g_icon_to_string(g_app_info_get_icon(G_APP_INFO(info))));
     glib::String markup(g_strdup_printf("<big>%s</big>", name));
     
-    Shortcut*   shortcut = new Shortcut(icon.Value(), markup.Value(), style->GetHomeTileIconSize());
+    Shortcut*   shortcut = new Shortcut(icon.Value(), markup.Value(), style.GetHomeTileIconSize());
     shortcut->_id = TYPE_EXEC;
     shortcut->_exec = g_strdup (g_app_info_get_executable(G_APP_INFO(info)));;
     shortcut->sigClick.connect(sigc::mem_fun(this, &PlacesHomeView::OnShortcutClicked));
@@ -367,15 +365,9 @@ PlacesHomeView::OnShortcutClicked(PlacesTile* tile)
   }
 }
 
-const gchar* PlacesHomeView::GetName()
+std::string PlacesHomeView::GetName() const
 {
   return "PlacesHomeView";
-}
-
-const gchar*
-PlacesHomeView::GetChildsName()
-{
-  return "";
 }
 
 void PlacesHomeView::AddProperties(GVariantBuilder* builder)

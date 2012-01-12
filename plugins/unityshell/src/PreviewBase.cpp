@@ -38,9 +38,9 @@ namespace unity {
   {
   }
 
-  long PreviewBase::ComputeLayout2()
+  long PreviewBase::ComputeContentSize()
   {
-    return nux::View::ComputeLayout2();
+    return nux::View::ComputeContentSize();
   }
 
   void PreviewBase::Draw (nux::GraphicsEngine &GfxContext, bool force_draw)
@@ -58,10 +58,6 @@ namespace unity {
     GfxContent.PopClippingRectangle();
   }
 
-  long int PreviewBase::ProcessEvent(nux::IEvent& ievent, long int TraverseInfo, long int ProcessEventInfo) {
-    return PostProcessEvent2 (ievent, TraverseInfo, ProcessEventInfo);
-  }
-
   void PreviewBase::PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw)
   {
     nux::View::PostDraw(GfxContext, force_draw);
@@ -70,7 +66,7 @@ namespace unity {
     {
       // draw a box around the content layout
       nux::Geometry geometry = content_layout_->GetGeometry();
-      nux::t_u32 alpha = 0, src = 0, dest = 0;
+      unsigned int alpha = 0, src = 0, dest = 0;
 
       GfxContext.GetRenderStates().GetBlend(alpha, src, dest);
       GfxContext.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);

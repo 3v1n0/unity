@@ -20,10 +20,6 @@
  *
  */
 
-#include "PlacesStyle.h"
-#include "ubus-server.h"
-#include "UBusMessages.h"
-
 #include "PlacesSimpleTile.h"
 
 #include <NuxImage/GdkGraphics.h>
@@ -32,8 +28,14 @@
 
 #include <UnityCore/Variant.h>
 
+#include "DashStyle.h"
+#include "ubus-server.h"
+#include "UBusMessages.h"
+
+
 namespace unity
 {
+NUX_IMPLEMENT_OBJECT_TYPE(PlacesSimpleTile);
 
 PlacesSimpleTile::PlacesSimpleTile(const char* icon_name,
                                    const char* label,
@@ -46,18 +48,18 @@ PlacesSimpleTile::PlacesSimpleTile(const char* icon_name,
     _uri(NULL),
     _idealiconsize(icon_size)
 {
-  PlacesStyle* style = PlacesStyle::GetDefault();
+  dash::Style& style = dash::Style::Instance();
   nux::VLayout* layout = new nux::VLayout("", NUX_TRACKER_LOCATION);
 
   _label = g_strdup(label);
   _icon = g_strdup(icon_name);
 
   _icontex = new IconTexture(_icon, icon_size, defer_icon_loading);
-  _icontex->SetMinMaxSize(style->GetTileWidth(), icon_size);
+  _icontex->SetMinMaxSize(style.GetTileWidth(), icon_size);
   AddChild(_icontex);
 
   _cairotext = new nux::StaticCairoText("");
-  _cairotext->SetMaximumWidth(style->GetTileWidth());
+  _cairotext->SetMaximumWidth(style.GetTileWidth());
   _cairotext->SetTextEllipsize(nux::StaticCairoText::NUX_ELLIPSIZE_START);
   _cairotext->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_CENTRE);
   _cairotext->SetText(_label);
@@ -67,7 +69,7 @@ PlacesSimpleTile::PlacesSimpleTile(const char* icon_name,
   layout->AddLayout(new nux::SpaceLayout(0, 0, 12, 12));
   layout->AddView(_cairotext, 0, nux::eCenter, nux::eFull);
 
-  SetMinMaxSize(style->GetTileWidth(), style->GetTileHeight());
+  SetMinMaxSize(style.GetTileWidth(), style.GetTileHeight());
 
   SetLayout(layout);
 
@@ -230,14 +232,14 @@ PlacesSimpleTile::SetURI(const char* uri)
     _uri = g_strdup(uri);
 }
 
-const gchar*
-PlacesSimpleTile::GetName()
+std::string
+PlacesSimpleTile::GetName() const
 {
   return "PlacesTile";
 }
 
-const gchar*
-PlacesSimpleTile::GetChildsName()
+std::string
+PlacesSimpleTile::GetChildsName() const
 {
   return "PlacesTileContents";
 }

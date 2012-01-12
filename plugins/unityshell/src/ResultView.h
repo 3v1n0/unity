@@ -37,7 +37,6 @@ namespace unity
 {
 namespace dash
 {
-
 class ResultView : public nux::View
 {
 public:
@@ -53,6 +52,8 @@ public:
   void AddResult(Result& result);
   void RemoveResult(Result& result);
 
+  ResultList GetResultList ();
+
   void SetPreview(PreviewBase* preview, Result& related_result);
 
   nux::Property<bool> expanded;
@@ -61,9 +62,8 @@ public:
 
 protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
-  virtual long int ProcessEvent(nux::IEvent& ievent, long int TraverseInfo, long int ProcessEventInfo);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
-  virtual long ComputeLayout2();
+  virtual long ComputeContentSize();
 
   // properties
   nux::Layout* preview_layout_;

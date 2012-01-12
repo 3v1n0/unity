@@ -32,22 +32,25 @@ GeisAdapter::Default()
   return _default;
 }
 
-GeisAdapter::GeisAdapter()
+GeisAdapter::GeisAdapter() : _root_instance(nullptr)
 {
   RegisterRootInstance();
 }
 
 GeisAdapter::~GeisAdapter()
 {
+  if (_root_instance != nullptr)
+    geis_finish(_root_instance);
 }
 
 void
 GeisAdapter::Run()
 {
   int fd = -1;
-  GeisStatus status;
+  GeisStatus status = GEIS_STATUS_NOT_SUPPORTED;
 
-  status = geis_configuration_get_value(_root_instance, GEIS_CONFIG_UNIX_FD, &fd);
+  if (_root_instance != nullptr)
+    status = geis_configuration_get_value(_root_instance, GEIS_CONFIG_UNIX_FD, &fd);
 
   if (status != GEIS_STATUS_SUCCESS)
     return;
@@ -479,7 +482,8 @@ GeisAdapter::RegisterRootInstance()
   if (status != GEIS_STATUS_SUCCESS)
   {
     fprintf(stderr, "error subscribing to input devices\n");
-    return;;
+    geis_finish(instance);
+    return;
   }
 
   status = geis_subscribe(instance,
@@ -490,6 +494,7 @@ GeisAdapter::RegisterRootInstance()
   if (status != GEIS_STATUS_SUCCESS)
   {
     fprintf(stderr, "error subscribing to gestures\n");
+    geis_finish(instance);
     return;
   }
 

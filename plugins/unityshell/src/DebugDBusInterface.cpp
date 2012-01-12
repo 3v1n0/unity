@@ -17,148 +17,63 @@
  * Authored by: Alex Launi <alex.launi@canonical.com>
  */
 
-#include <Nux/Nux.h>
-#include <Nux/HLayout.h>
-#include <Nux/BaseWindow.h>
-#include <Nux/WindowCompositor.h>
-#include <Nux/WindowThread.h>
+#include <queue>
+#include <sstream>
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/bind.hpp>
+#include <core/core.h>
+#include <NuxCore/Logger.h>
 
-#include "Autopilot.h"
 #include "DebugDBusInterface.h"
-#include "unityshell.h"
+#include "Introspectable.h"
+#include "XPathQueryPart.h"
 
-#define SI_METHOD_NAME_GETSTATE  "GetState"
-#define AP_METHOD_NAME_STARTTEST "StartTest"
-
-void StartTest(const gchar*);
-GVariant* GetState(const gchar*);
-void DBusMethodCall(GDBusConnection*, const gchar*, const gchar*,
-                    const gchar*, const gchar*, GVariant*,
-                    GDBusMethodInvocation*, gpointer);
-
-static const GDBusInterfaceVTable si_vtable =
+namespace unity
 {
-  &DBusMethodCall,
+const std::string DBUS_BUS_NAME = "com.canonical.Unity";
+
+namespace debug
+{
+namespace
+{
+  nux::logging::Logger logger("unity.debug.DebugDBusInterface");
+}
+
+GVariant* GetState(std::string const& query);
+
+const char* DebugDBusInterface::DBUS_DEBUG_OBJECT_PATH = "/com/canonical/Unity/Debug";
+
+const gchar DebugDBusInterface::introspection_xml[] =
+  " <node>"
+  "   <interface name='com.canonical.Unity.Debug.Introspection'>"
+  ""
+  "     <method name='GetState'>"
+  "       <arg type='s' name='piece' direction='in' />"
+  "       <arg type='aa{sv}' name='state' direction='out' />"
+  "     </method>"
+  ""
+  "   </interface>"
+  " </node>";
+
+GDBusInterfaceVTable DebugDBusInterface::interface_vtable =
+{
+  DebugDBusInterface::HandleDBusMethodCall,
   NULL,
   NULL
 };
 
-static const GDBusArgInfo si_getstate_in_args =
+static CompScreen* _screen;
+static Introspectable* _parent_introspectable;
+
+DebugDBusInterface::DebugDBusInterface(Introspectable* parent, 
+                                       CompScreen* screen)
 {
-  -1,
-  (gchar*) "piece",
-  (gchar*) "s",
-  NULL
-};
-
-static const GDBusArgInfo* const si_getstate_in_arg_pointers[] = { &si_getstate_in_args, NULL };
-
-static const GDBusArgInfo si_getstate_out_args =
-{
-  -1,
-  (gchar*) "state",
-  (gchar*) "a{sv}",
-  NULL
-};
-static const GDBusArgInfo* const si_getstate_out_arg_pointers[] = { &si_getstate_out_args, NULL };
-
-static const GDBusMethodInfo si_method_info_getstate =
-{
-  -1,
-  (gchar*) SI_METHOD_NAME_GETSTATE,
-  (GDBusArgInfo**)& si_getstate_in_arg_pointers,
-  (GDBusArgInfo**)& si_getstate_out_arg_pointers,
-  NULL
-};
-
-static const GDBusArgInfo ap_starttest_in_args =
-{
-  -1,
-  (gchar*) "name",
-  (gchar*) "s",
-  NULL
-};
-static const GDBusArgInfo* const ap_starttest_in_arg_pointers[] = { &ap_starttest_in_args, NULL };
-
-static GDBusMethodInfo ap_method_info_starttest =
-{
-  -1,
-  (gchar*) AP_METHOD_NAME_STARTTEST,
-  (GDBusArgInfo**)& ap_starttest_in_arg_pointers,
-  NULL,
-  NULL
-};
-
-static const GDBusMethodInfo* const si_method_info_pointers [] = { &si_method_info_getstate, NULL };
-static const GDBusMethodInfo* const ap_method_info_pointers [] = { &ap_method_info_starttest, NULL };
-
-static GDBusArgInfo ap_testfinished_arg_name =
-{
-  -1,
-  (gchar*) "name",
-  (gchar*) "s",
-  NULL
-};
-
-static GDBusArgInfo ap_testfinished_arg_passed =
-{
-  -1,
-  (gchar*) "passed",
-  (gchar*) "b",
-  NULL
-};
-
-static GDBusArgInfo ap_testfinished_arg_data =
-{
-  -1,
-  (gchar*) "data",
-  (gchar*) "a{sv}",
-  NULL
-};
-
-static const GDBusArgInfo* const ap_signal_testfinished_arg_pointers [] = { &ap_testfinished_arg_name,
-                                                                            &ap_testfinished_arg_passed,
-                                                                            &ap_testfinished_arg_data,
-                                                                            NULL
-                                                                          };
-static GDBusSignalInfo ap_signal_info_testfinished =
-{
-  -1,
-  (gchar*) UNITY_DBUS_AP_SIG_TESTFINISHED,
-  (GDBusArgInfo**)& ap_signal_testfinished_arg_pointers,
-  NULL
-};
-
-static const GDBusSignalInfo* const ap_signal_info_pointers [] = { &ap_signal_info_testfinished, NULL };
-
-static const GDBusInterfaceInfo si_iface_info =
-{
-  -1,
-  (gchar*) UNITY_DBUS_INTROSPECTION_IFACE_NAME,
-  (GDBusMethodInfo**)& si_method_info_pointers,
-  NULL,
-  NULL,
-  NULL
-};
-
-static const GDBusInterfaceInfo ap_iface_info =
-{
-  -1,
-  (gchar*) UNITY_DBUS_AP_IFACE_NAME,
-  (GDBusMethodInfo**)& ap_method_info_pointers,
-  (GDBusSignalInfo**)& ap_signal_info_pointers,
-  NULL,
-  NULL
-};
-
-static unity::Introspectable* _introspectable;
-static unity::Autopilot* _autopilot;
-
-DebugDBusInterface::DebugDBusInterface(unity::Introspectable* introspectable)
-{
-  _introspectable = introspectable;
+  _screen = screen;
+  _parent_introspectable = parent;
   _owner_id = g_bus_own_name(G_BUS_TYPE_SESSION,
-                             UNITY_DBUS_BUS_NAME,
+                             unity::DBUS_BUS_NAME.c_str(),
                              G_BUS_NAME_OWNER_FLAGS_NONE,
                              &DebugDBusInterface::OnBusAcquired,
                              &DebugDBusInterface::OnNameAcquired,
@@ -172,28 +87,27 @@ DebugDBusInterface::~DebugDBusInterface()
   g_bus_unown_name(_owner_id);
 }
 
-static const GDBusInterfaceInfo* const debug_object_interfaces [] = { &si_iface_info, &ap_iface_info, NULL };
-
 void
 DebugDBusInterface::OnBusAcquired(GDBusConnection* connection, const gchar* name, gpointer data)
 {
   int i = 0;
   GError* error;
 
-  UnityScreen* uscreen = dynamic_cast<UnityScreen*>(_introspectable);
-  if (uscreen != NULL)
+  GDBusNodeInfo* introspection_data = g_dbus_node_info_new_for_xml(introspection_xml, NULL);
+  if (!introspection_data)
   {
-    _autopilot = new unity::Autopilot(uscreen->screen, connection);
+    LOG_WARNING(logger) << "No dbus introspection data could be loaded. State introspection will not work";
+    return;
   }
 
-  while (debug_object_interfaces[i] != NULL)
+  while (introspection_data->interfaces[i] != NULL) 
   {
     error = NULL;
     g_dbus_connection_register_object(connection,
-                                      UNITY_DBUS_DEBUG_OBJECT_PATH,
-                                      (GDBusInterfaceInfo*) debug_object_interfaces[i],
-                                      &si_vtable,
-                                      NULL,
+                                      DebugDBusInterface::DBUS_DEBUG_OBJECT_PATH,
+                                      introspection_data->interfaces[i],
+                                      &interface_vtable,
+                                      data,
                                       NULL,
                                       &error);
     if (error != NULL)
@@ -216,16 +130,16 @@ DebugDBusInterface::OnNameLost(GDBusConnection* connection, const gchar* name, g
 }
 
 void
-DBusMethodCall(GDBusConnection* connection,
-               const gchar* sender,
-               const gchar* objectPath,
-               const gchar* ifaceName,
-               const gchar* methodName,
-               GVariant* parameters,
-               GDBusMethodInvocation* invocation,
-               gpointer data)
+DebugDBusInterface::HandleDBusMethodCall(GDBusConnection* connection,
+                                         const gchar* sender,
+                                         const gchar* object_path,
+                                         const gchar* interface_name,
+                                         const gchar* method_name,
+                                         GVariant* parameters,
+                                         GDBusMethodInvocation* invocation,
+                                         gpointer user_data)
 {
-  if (g_strcmp0(methodName, SI_METHOD_NAME_GETSTATE) == 0)
+  if (g_strcmp0(method_name, "GetState") == 0)
   {
     GVariant* ret;
     const gchar* input;
@@ -235,98 +149,146 @@ DBusMethodCall(GDBusConnection* connection,
     g_dbus_method_invocation_return_value(invocation, ret);
     g_variant_unref(ret);
   }
-  else if (g_strcmp0(methodName, AP_METHOD_NAME_STARTTEST) == 0)
-  {
-    const gchar* name;
-    g_variant_get(parameters, "(&s)", &name);
-
-    StartTest(name);
-    g_dbus_method_invocation_return_value(invocation, NULL);
-  }
   else
   {
-    g_dbus_method_invocation_return_dbus_error(invocation, UNITY_DBUS_BUS_NAME,
+    g_dbus_method_invocation_return_dbus_error(invocation, 
+                                               unity::DBUS_BUS_NAME.c_str(),
                                                "Failed to find method");
   }
 }
 
-GVariant*
-GetState(const gchar* piece)
+
+GVariant* GetState(std::string const& query)
 {
-  return _introspectable->Introspect();
+  // process the XPath query:
+  std::list<Introspectable*> parts = GetIntrospectableNodesFromQuery(query, _parent_introspectable);
+  GVariantBuilder  builder;
+  g_variant_builder_init(&builder, G_VARIANT_TYPE("aa{sv}"));
+  
+  for (Introspectable *node : parts)
+  {
+    g_variant_builder_add_value(&builder, node->Introspect());
+  }
+  
+  return g_variant_new("(aa{sv})", &builder);
 }
 
-void
-StartTest(const gchar* name)
+/*
+ * Do a breadth-first search of the introspection tree and find all nodes that match the 
+ * query.
+ */
+std::list<Introspectable*> GetIntrospectableNodesFromQuery(std::string const& query, Introspectable* tree_root)
 {
-  _autopilot->StartTest(name);
+  std::list<Introspectable*> start_points;
+  std::string sanitised_query;
+  // Allow user to be lazy when specifying root node.
+  if (query == "" || query == "/")
+  {
+    sanitised_query = "/" + tree_root->GetName();
+  }
+  else
+  {
+    sanitised_query = query;
+  }
+  // split query into parts
+  std::list<XPathQueryPart> query_parts;
+
+  {
+    std::list<std::string> query_strings;
+    boost::algorithm::split(query_strings, sanitised_query, boost::algorithm::is_any_of("/"));
+    // Boost's split() implementation does not match it's documentation! According to the 
+    // docs, it's not supposed to add empty strings, but it does, which is a PITA. This 
+    // next line removes them:
+    query_strings.erase( std::remove_if( query_strings.begin(), 
+                                        query_strings.end(), 
+                                        boost::bind( &std::string::empty, _1 ) ), 
+                      query_strings.end());
+    foreach(std::string part, query_strings)
+    {
+      query_parts.push_back(XPathQueryPart(part));
+    }
+  }
+
+  // absolute or relative query string?
+  if (sanitised_query.at(0) == '/' && sanitised_query.at(1) != '/')
+  {
+    // absolute query - start point is tree root node.
+    if (query_parts.front().Matches(tree_root))
+    {
+      start_points.push_back(tree_root);
+    }
+  }
+  else
+  {
+    // relative - need to do a depth first tree search for all nodes that match the
+    // first node in the query.
+
+    // warn about malformed queries (all queries must start with '/')
+    if (sanitised_query.at(0) != '/')
+    {
+      LOG_WARNING(logger) << "Malformed relative introspection query: '" << query << "'.";
+    }
+    
+    // non-recursive BFS traversal to find starting points:
+    std::queue<Introspectable*> queue;
+    queue.push(tree_root);
+    while (!queue.empty())
+    {
+      Introspectable *node = queue.front();
+      queue.pop();
+      if (query_parts.front().Matches(node))
+      {
+        // found one. We keep going deeper, as there may be another node beneath this one
+        // with the same node name.
+        start_points.push_back(node);
+      }
+      // Add all children of current node to queue.
+      foreach(Introspectable* child, node->GetIntrospectableChildren())
+      {
+        queue.push(child);
+      }
+    }
+  }
+
+  // now we have the tree start points, process them:
+  query_parts.pop_front();
+  typedef std::pair<Introspectable*, std::list<XPathQueryPart>::iterator> node_match_pair;
+  
+  std::queue<node_match_pair> traverse_queue;
+  foreach(Introspectable *node, start_points)
+  {
+    traverse_queue.push(node_match_pair(node, query_parts.begin()));
+  }
+  start_points.clear();
+  
+  while (!traverse_queue.empty())
+  {
+    node_match_pair p = traverse_queue.front();
+    traverse_queue.pop();
+
+    Introspectable *node = p.first;
+    auto query_it = p.second;
+
+    if (query_it == query_parts.end())
+    {
+      // found a match:
+      start_points.push_back(node);
+    }
+    else
+    {
+      // push all children of current node to start of queue, advance search iterator, and loop again.
+      foreach (Introspectable *child, node->GetIntrospectableChildren())
+      {
+        if (query_it->Matches(child))
+        {
+          auto it_copy(query_it);
+          ++it_copy;
+          traverse_queue.push(node_match_pair(child, it_copy));
+        }
+      }
+    }
+  }
+  return start_points;
 }
-
-/* a very contrived example purely for giving QA something purposes */
-GVariant*
-DebugDBusInterface::BuildFakeReturn()
-{
-  GVariantBuilder* builder;
-  GVariant* result, *panel_result, *indicators_result, *appmenu_result, *entries_result, *zero_result, *one_result;
-
-  builder = g_variant_builder_new(G_VARIANT_TYPE("a{sv}"));
-  g_variant_builder_add(builder, "{sv}", "label", g_variant_new_string("_File"));
-  g_variant_builder_add(builder, "{sv}", "image", g_variant_new_string(""));
-  g_variant_builder_add(builder, "{sv}", "visible", g_variant_new_boolean(TRUE));
-  g_variant_builder_add(builder, "{sv}", "sensitive", g_variant_new_boolean(TRUE));
-  g_variant_builder_add(builder, "{sv}", "active", g_variant_new_boolean(FALSE));
-  g_variant_builder_add(builder, "{sv}", "label", g_variant_new_int32(34));
-  g_variant_builder_add(builder, "{sv}", "label", g_variant_new_int32(24));
-  zero_result = g_variant_new("(a{sv})", builder);
-  g_variant_builder_unref(builder);
-
-  builder = g_variant_builder_new(G_VARIANT_TYPE("a{sv}"));
-  g_variant_builder_add(builder, "{sv}", "label", g_variant_new_string("_Edit"));
-  g_variant_builder_add(builder, "{sv}", "image", g_variant_new_string(""));
-  g_variant_builder_add(builder, "{sv}", "visible", g_variant_new_boolean(TRUE));
-  g_variant_builder_add(builder, "{sv}", "sensitive", g_variant_new_boolean(TRUE));
-  g_variant_builder_add(builder, "{sv}", "active", g_variant_new_boolean(FALSE));
-  g_variant_builder_add(builder, "{sv}", "label", g_variant_new_int32(34));
-  g_variant_builder_add(builder, "{sv}", "label", g_variant_new_int32(24));
-  one_result = g_variant_new("(a{sv})", builder);
-  g_variant_builder_unref(builder);
-
-  builder = g_variant_builder_new(G_VARIANT_TYPE("a{sv}"));
-  g_variant_builder_add(builder, "{sv}", "0", zero_result);
-  g_variant_builder_add(builder, "{sv}", "1", one_result);
-  entries_result = g_variant_new("(a{sv})", builder);
-  g_variant_builder_unref(builder);
-
-  builder = g_variant_builder_new(G_VARIANT_TYPE("a{sv}"));
-  g_variant_builder_add(builder, "{sv}", "model-name",
-                        g_variant_new_string("com.canonical.Unity.Panel.Service.Indicators.appmenu.324234243"));
-  g_variant_builder_add(builder, "{sv}", "entries", entries_result);
-  appmenu_result = g_variant_new("(a{sv})", builder);
-  g_variant_builder_unref(builder);
-
-  builder = g_variant_builder_new(G_VARIANT_TYPE("a{sv}"));
-  g_variant_builder_add(builder, "{sv}", "appmenu", appmenu_result);
-  indicators_result = g_variant_new("(a{sv})", builder);
-  g_variant_builder_unref(builder);
-
-  builder = g_variant_builder_new(G_VARIANT_TYPE("a{sv}"));
-  g_variant_builder_add(builder, "{sv}", "backend",
-                        g_variant_new_string("/com/canonical/Unity/Panel/Service/324234243"));
-  g_variant_builder_add(builder, "{sv}", "launch-type",
-                        g_variant_new_string("dbus"));
-  g_variant_builder_add(builder, "{sv}", "width", g_variant_new_int32(1024));
-  g_variant_builder_add(builder, "{sv}", "width", g_variant_new_int32(32));
-  g_variant_builder_add(builder, "{sv}", "theme", g_variant_new_string("gtk"));
-  g_variant_builder_add(builder, "{sv}", "indicators", indicators_result);
-  panel_result = g_variant_new("(a{sv})", builder);
-  g_variant_builder_unref(builder);
-
-  builder = g_variant_builder_new(G_VARIANT_TYPE("a{sv}"));
-  g_variant_builder_add(builder, "{sv}", "panel", panel_result);
-  result = g_variant_new("(a{sv})", builder);
-  g_variant_builder_unref(builder);
-
-  gchar* s = g_variant_print(result, TRUE);
-  g_free(s);
-  return result;
+}
 }

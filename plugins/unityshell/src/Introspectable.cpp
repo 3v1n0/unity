@@ -21,59 +21,66 @@
 
 namespace unity
 {
+namespace debug
+{
+
+Introspectable::Introspectable()
+{
+}
+
+Introspectable::~Introspectable()
+{
+  for (auto parent : _parents)
+    parent->_children.remove(this);
+}
+
 GVariant*
 Introspectable::Introspect()
 {
-  GVariantBuilder* builder;
-  GVariant*        result;
-  GVariantBuilder* child_builder;
+  GVariantBuilder  builder;
+  GVariantBuilder  child_builder;
   gint             n_children = 0;
 
-  builder = g_variant_builder_new(G_VARIANT_TYPE("a{sv}"));
+  g_variant_builder_init(&builder, G_VARIANT_TYPE("a{sv}"));
 
-  AddProperties(builder);
+  AddProperties(&builder);
 
-  child_builder = g_variant_builder_new(G_VARIANT_TYPE("a{sv}"));
+  g_variant_builder_init(&child_builder, G_VARIANT_TYPE("a(sv)"));
 
-  for (std::list<Introspectable*>::iterator it = _children.begin(); it != _children.end(); it++)
+  for (auto it = _children.begin(); it != _children.end(); it++)
   {
-    if ((*it)->GetName())
+    if ((*it)->GetName() != "")
     {
-      g_variant_builder_add(child_builder, "{sv}", (*it)->GetName(), (*it)->Introspect());
+      g_variant_builder_add(&child_builder, "(sv)", (*it)->GetName().c_str(), (*it)->Introspect());
       n_children++;
     }
   }
 
+  GVariant* child_results = g_variant_builder_end(&child_builder);
+  
   if (n_children > 0)
-  {
-    GVariant*        child_results;
-
-    child_results = g_variant_new("(a{sv})", child_builder);
-    g_variant_builder_add(builder, "{sv}", GetChildsName(), child_results);
-  }
-  g_variant_builder_unref(child_builder);
-
-  result = g_variant_new("(a{sv})", builder);
-  g_variant_builder_unref(builder);
-
-  return result;
+    g_variant_builder_add(&builder, "{sv}", GetChildsName().c_str(), child_results);
+  return g_variant_builder_end(&builder);
 }
 
 void
 Introspectable::AddChild(Introspectable* child)
 {
   _children.push_back(child);
+  child->_parents.push_back(this);
 }
 
 void
 Introspectable::RemoveChild(Introspectable* child)
 {
   _children.remove(child);
+  child->_parents.remove(this);
 }
 
-const gchar*
-Introspectable::GetChildsName()
+std::string
+Introspectable::GetChildsName() const
 {
-  return GetName();
+  return "Children";
+}
 }
 }

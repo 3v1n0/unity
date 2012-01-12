@@ -22,7 +22,7 @@
 
 #include <NuxCore/Logger.h>
 
-#include "PlacesStyle.h"
+#include "DashStyle.h"
 #include "ResultRendererTile.h"
 #include "UBusMessages.h"
 
@@ -81,6 +81,7 @@ HomeView::~HomeView()
 void HomeView::SetupViews()
 {
   layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
+  layout_->SetHorizontalExternalMargin(7);
 
   scroll_view_ = new HomeScrollView(new PlacesVScrollBar(NUX_TRACKER_LOCATION),
                                     NUX_TRACKER_LOCATION);
@@ -143,8 +144,7 @@ void HomeView::AddLens(Lens::Ptr lens)
 
 void HomeView::UpdateCounts(PlacesGroup* group)
 {
-  PlacesStyle* style = PlacesStyle::GetDefault();
-  group->SetCounts(style->GetDefaultNColumns(), counts_[group]);
+  group->SetCounts(dash::Style::Instance().GetDefaultNColumns(), counts_[group]);
   group->SetVisible(counts_[group]);
 
   QueueFixRenderering();
@@ -159,7 +159,7 @@ void HomeView::OnGroupExpanded(PlacesGroup* group)
 
 void HomeView::OnColumnsChanged()
 {
-  unsigned int columns = PlacesStyle::GetDefault()->GetDefaultNColumns();
+  unsigned int columns = dash::Style::Instance().GetDefaultNColumns();
 
   for (auto group: categories_)
   {
@@ -172,7 +172,7 @@ void HomeView::QueueFixRenderering()
   if (fix_renderering_id_)
     return;
 
-  fix_renderering_id_ = g_timeout_add(0, (GSourceFunc)FixRenderering, this);
+  fix_renderering_id_ = g_idle_add_full (G_PRIORITY_DEFAULT, (GSourceFunc)FixRenderering, this, NULL);
 }
 
 gboolean HomeView::FixRenderering(HomeView* self)
@@ -193,11 +193,6 @@ gboolean HomeView::FixRenderering(HomeView* self)
 
   self->fix_renderering_id_ = 0;
   return FALSE;
-}
-
-long HomeView::ProcessEvent(nux::IEvent& ievent, long traverse_info, long event_info)
-{
-  return layout_->ProcessEvent(ievent, traverse_info, event_info);
 }
 
 void HomeView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
@@ -244,7 +239,7 @@ bool HomeView::AcceptKeyNavFocus()
 }
 
 // Introspectable
-const gchar* HomeView::GetName()
+std::string HomeView::GetName() const
 {
   return "HomeView";
 }

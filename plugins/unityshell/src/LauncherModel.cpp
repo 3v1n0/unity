@@ -20,6 +20,11 @@
 #include "LauncherModel.h"
 #include "LauncherIcon.h"
 
+namespace unity
+{
+namespace launcher
+{
+
 typedef struct
 {
   LauncherIcon* icon;
@@ -378,3 +383,6 @@ LauncherModel::shelf_rend()
 {
   return _inner_shelf.rend();
 }
+
+} // namespace launcher
+} // namespace unity

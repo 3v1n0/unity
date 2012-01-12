@@ -23,7 +23,7 @@
 
 #include <NuxCore/Logger.h>
 
-#include "PlacesStyle.h"
+#include "DashStyle.h"
 #include "ResultRendererTile.h"
 #include "ResultRendererHorizontalTile.h"
 #include "UBusMessages.h"
@@ -102,12 +102,12 @@ LensView::LensView(Lens::Ptr lens)
   SetupResults();
   SetupFilters();
 
-  PlacesStyle::GetDefault()->columns_changed.connect(sigc::mem_fun(this, &LensView::OnColumnsChanged));
+  dash::Style::Instance().columns_changed.connect(sigc::mem_fun(this, &LensView::OnColumnsChanged));
 
   lens_->connected.changed.connect([&](bool is_connected) { if (is_connected) initial_activation_ = true; });
   search_string.changed.connect([&](std::string const& search) { lens_->Search(search);  });
   filters_expanded.changed.connect([&](bool expanded) { fscroll_view_->SetVisible(expanded); QueueRelayout(); OnColumnsChanged(); });
-  active.changed.connect(sigc::mem_fun(this, &LensView::OnActiveChanged));
+  view_type.changed.connect(sigc::mem_fun(this, &LensView::OnViewTypeChanged));
 
   ubus_.RegisterInterest(UBUS_RESULT_VIEW_KEYNAV_CHANGED, [this] (GVariant* data) {
     // we get this signal when a result view keynav changes,
@@ -277,9 +277,10 @@ void LensView::OnResultRemoved(Result const& result)
 
 void LensView::UpdateCounts(PlacesGroup* group)
 {
-  PlacesStyle* style = PlacesStyle::GetDefault();
+  unsigned int columns = dash::Style::Instance().GetDefaultNColumns();
+  columns -= filters_expanded ? 2 : 0;
 
-  group->SetCounts(style->GetDefaultNColumns() - (filters_expanded ? 2 : 0), counts_[group]);
+  group->SetCounts(columns, counts_[group]);
   group->SetVisible(counts_[group]);
 
   QueueFixRenderering();
@@ -290,7 +291,7 @@ void LensView::QueueFixRenderering()
   if (fix_renderering_id_)
     return;
 
-  fix_renderering_id_ = g_timeout_add(0, (GSourceFunc)FixRenderering, this);
+  fix_renderering_id_ = g_idle_add_full (G_PRIORITY_DEFAULT, (GSourceFunc)FixRenderering, this, NULL);
 }
 
 gboolean LensView::FixRenderering(LensView* self)
@@ -322,8 +323,7 @@ void LensView::OnGroupExpanded(PlacesGroup* group)
 
 void LensView::OnColumnsChanged()
 {
-  unsigned int columns = PlacesStyle::GetDefault()->GetDefaultNColumns();
-
+  unsigned int columns = dash::Style::Instance().GetDefaultNColumns();
   columns -= filters_expanded ? 2 : 0;
 
   for (auto group: categories_)
@@ -337,7 +337,7 @@ void LensView::OnFilterAdded(Filter::Ptr filter)
   std::string id = filter->id;
   filter_bar_->AddFilter(filter);
 
-  int width = PlacesStyle::GetDefault()->GetTileWidth();
+  int width = dash::Style::Instance().GetTileWidth();
   fscroll_view_->SetMinimumWidth(width*2);
   fscroll_view_->SetMaximumWidth(width*2);
 
@@ -349,21 +349,16 @@ void LensView::OnFilterRemoved(Filter::Ptr filter)
   filter_bar_->RemoveFilter(filter);
 }
 
-void LensView::OnActiveChanged(bool is_active)
+void LensView::OnViewTypeChanged(ViewType view_type)
 {
-  if (is_active && initial_activation_)
+  if (view_type != HIDDEN && initial_activation_)
   {
     /* We reset the lens for ourselves, in case this is a restart or something */
     lens_->Search("");
     initial_activation_ = false;
   }
 
-  lens_->active = is_active;
-}
-
-long LensView::ProcessEvent(nux::IEvent& ievent, long traverse_info, long event_info)
-{
-  return layout_->ProcessEvent(ievent, traverse_info, event_info);
+  lens_->view_type = view_type;
 }
 
 void LensView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
@@ -424,7 +419,7 @@ bool LensView::AcceptKeyNavFocus()
 }
 
 // Introspectable
-const gchar* LensView::GetName()
+std::string LensView::GetName() const
 {
   return "LensView";
 }

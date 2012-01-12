@@ -102,16 +102,6 @@ PanelIndicatorsView::RemoveIndicator(indicator::Indicator::Ptr const& indicator)
   LOG_DEBUG(logger) << "IndicatorRemoved: " << indicator->name();
 }
 
-long
-PanelIndicatorsView::ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo)
-{
-  long ret = TraverseInfo;
-
-  if (layout_)
-    ret = layout_->ProcessEvent(ievent, ret, ProcessEventInfo);
-  return ret;
-}
-
 void
 PanelIndicatorsView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
@@ -131,19 +121,20 @@ PanelIndicatorsView::QueueDraw()
     entry.second->QueueDraw();
 }
 
-bool
+PanelIndicatorEntryView*
 PanelIndicatorsView::ActivateEntry(std::string const& entry_id)
 {
   auto entry = entries_.find(entry_id);
 
   if (entry != entries_.end() && entry->second->IsEntryValid())
   {
+    PanelIndicatorEntryView* view = entry->second;
     LOG_DEBUG(logger) << "Activating: " << entry_id;
-    entry->second->Activate();
-    return true;
+    view->Activate();
+    return view;
   }
 
-  return false;
+  return nullptr;
 }
 
 bool
@@ -173,10 +164,10 @@ PanelIndicatorsView::GetGeometryForSync(indicator::EntryLocationMap& locations)
     entry.second->GetGeometryForSync(locations);
 }
 
-bool
-PanelIndicatorsView::OnPointerMoved(int x, int y)
+PanelIndicatorEntryView*
+PanelIndicatorsView::ActivateEntryAt(int x, int y)
 {
-  PanelIndicatorEntryView* target = NULL;
+  PanelIndicatorEntryView* target = nullptr;
   bool found_old_active = false;
 
   //
@@ -217,7 +208,7 @@ PanelIndicatorsView::OnPointerMoved(int x, int y)
     }
   }
 
-  return (target != NULL);
+  return target;
 }
 
 void
@@ -344,13 +335,12 @@ PanelIndicatorsView::SetOpacity(double opacity)
   }
 }
 
-const gchar* PanelIndicatorsView::GetName()
+std::string PanelIndicatorsView::GetName() const
 {
   return "IndicatorsView";
 }
 
-const gchar*
-PanelIndicatorsView::GetChildsName()
+std::string PanelIndicatorsView::GetChildsName() const
 {
   return "entries";
 }

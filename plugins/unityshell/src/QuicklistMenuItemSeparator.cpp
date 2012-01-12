@@ -29,7 +29,7 @@ QuicklistMenuItemSeparator::QuicklistMenuItemSeparator(DbusmenuMenuitem* item,
   QuicklistMenuItem(item,
                     NUX_FILE_LINE_PARAM)
 {
-  _name = g_strdup("QuicklistMenuItemSeparator");
+  _name = "QuicklistMenuItemSeparator";
   SetMinimumHeight(5);
   SetBaseSize(64, 5);
   //_normalTexture = NULL;
@@ -45,7 +45,7 @@ QuicklistMenuItemSeparator::QuicklistMenuItemSeparator(DbusmenuMenuitem* item,
                     debug,
                     NUX_FILE_LINE_PARAM)
 {
-  _name = g_strdup("QuicklistMenuItemSeparator");
+  _name = "QuicklistMenuItemSeparator";
   SetMinimumHeight(5);
   SetBaseSize(64, 5);
   //_normalTexture = NULL;
@@ -95,18 +95,6 @@ QuicklistMenuItemSeparator::PostLayoutManagement(long layoutResult)
     result |= nux::eCompliantHeight;
 
   return result;
-}
-
-long
-QuicklistMenuItemSeparator::ProcessEvent(nux::IEvent& event,
-                                         long         traverseInfo,
-                                         long         processEventInfo)
-{
-  long result = traverseInfo;
-
-  result = nux::View::PostProcessEvent2(event, result, processEventInfo);
-  return result;
-
 }
 
 void

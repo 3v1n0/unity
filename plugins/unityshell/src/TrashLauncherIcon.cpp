@@ -27,14 +27,17 @@
 #include "QuicklistManager.h"
 #include "QuicklistMenuItemLabel.h"
 
-namespace unity {
+namespace unity
+{
+namespace launcher
+{
 
 TrashLauncherIcon::TrashLauncherIcon(Launcher* IconManager)
   : SimpleLauncherIcon(IconManager)
   , proxy_("org.gnome.Nautilus", "/org/gnome/Nautilus", "org.gnome.Nautilus.FileOperations")
 {
   tooltip_text = _("Trash");
-  SetIconName("user-trash");
+  icon_name = "user-trash";
   SetQuirk(QUIRK_VISIBLE, true);
   SetQuirk(QUIRK_RUNNING, false);
   SetIconType(TYPE_TRASH);
@@ -132,11 +135,11 @@ void TrashLauncherIcon::UpdateTrashIconCb(GObject* source,
   if (info)
   {    
     glib::Object<GIcon> icon(g_file_info_get_icon(info));
-    glib::String icon_name(g_icon_to_string(icon));
+    glib::String icon_string(g_icon_to_string(icon));
     
-    self->SetIconName(icon_name.Value());
+    self->icon_name = icon_string.Str();
 
-    self->empty_ = g_strcmp0(icon_name.Value(), "user-trash") == 0;
+    self->empty_ = (self->icon_name == "user-trash");
   }
 }
 
@@ -167,4 +170,5 @@ void TrashLauncherIcon::OnAcceptDrop(unity::DndData& dnd_data)
   SetQuirk(LauncherIcon::QUIRK_PULSE_ONCE, true);
 }
 
+} // namespace launcher
 } // namespace unity

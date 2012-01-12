@@ -51,7 +51,12 @@
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/Variant.h>
 
-using namespace unity::ui;
+namespace unity
+{
+using ui::RenderArg;
+
+namespace launcher
+{
 
 namespace
 {
@@ -311,7 +316,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
 
   SetDndEnabled(false, true);
 
-  icon_renderer = AbstractIconRenderer::Ptr(new IconRenderer());
+  icon_renderer = ui::AbstractIconRenderer::Ptr(new ui::IconRenderer());
   icon_renderer->SetTargetSize(_icon_size, _icon_image_size, _space_between_icons);
 
   // request the latest colour from bghash
@@ -384,8 +389,8 @@ Launcher::~Launcher()
 }
 
 /* Introspection */
-const gchar*
-Launcher::GetName()
+std::string
+Launcher::GetName() const
 {
   return "Launcher";
 }
@@ -2035,13 +2040,6 @@ void Launcher::OnIconNeedsRedraw(AbstractLauncherIcon* icon)
   EnsureAnimation();
 }
 
-long Launcher::ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo)
-{
-  long ret = TraverseInfo;
-  ret = PostProcessEvent2(ievent, ret, ProcessEventInfo);
-  return ret;
-}
-
 void Launcher::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
 
@@ -2060,7 +2058,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   // rely on the compiz event loop to come back to us in a nice throttling
   if (AnimationInProgress())
-    _launcher_animation_timeout = g_timeout_add(0, &Launcher::AnimationTimeout, this);
+    _launcher_animation_timeout = g_idle_add_full (G_PRIORITY_DEFAULT, &Launcher::AnimationTimeout, this, NULL);
 
   nux::ROPConfig ROP;
   ROP.Blend = false;
@@ -2120,7 +2118,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
       }
     }
 
-    nux::t_u32 alpha = 0, src = 0, dest = 0;
+    unsigned int alpha = 0, src = 0, dest = 0;
     GfxContext.GetRenderStates().GetBlend(alpha, src, dest);
 
     // apply the darkening
@@ -2137,7 +2135,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
     texxform.SetWrap(nux::TEXWRAP_CLAMP, nux::TEXWRAP_CLAMP);
     texxform.uoffset = (1.0f / launcher_sheen_->GetWidth()) * (GetAbsoluteGeometry().x); // TODO (gord) don't use absolute values here
-    texxform.voffset = (1.0f / launcher_sheen_->GetWidth()) * (GetAbsoluteGeometry().y);
+    texxform.voffset = (1.0f / launcher_sheen_->GetHeight()) * (GetAbsoluteGeometry().y);
     GfxContext.QRP_1Tex(base.x, base.y, base.width, base.height,
                         launcher_sheen_->GetDeviceTexture(),
                         texxform,
@@ -2211,9 +2209,9 @@ void Launcher::PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw)
 void Launcher::PreLayoutManagement()
 {
   View::PreLayoutManagement();
-  if (m_CompositionLayout)
+  if (view_layout_)
   {
-    m_CompositionLayout->SetGeometry(GetGeometry());
+    view_layout_->SetGeometry(GetGeometry());
   }
 }
 
@@ -2325,6 +2323,7 @@ void Launcher::EndIconDrag()
       hovered_icon->SetQuirk(LauncherIcon::QUIRK_PULSE_ONCE, true);
 
       launcher_removerequest.emit(_drag_icon);
+
       _drag_window->ShowWindow(false);
       EnsureAnimation();
     }
@@ -2879,7 +2878,7 @@ Launcher::RenderIconToTexture(nux::GraphicsEngine& GfxContext, LauncherIcon* ico
 
   SetOffscreenRenderTarget(texture);
   icon_renderer->PreprocessIcons(drag_args, nux::Geometry(0, 0, _icon_size, _icon_size));
-  icon_renderer->RenderIcon(nux::GetGraphicsEngine(), arg, nux::Geometry(0, 0, _icon_size, _icon_size), nux::Geometry(0, 0, _icon_size, _icon_size));
+  icon_renderer->RenderIcon(nux::GetWindowThread()->GetGraphicsEngine(), arg, nux::Geometry(0, 0, _icon_size, _icon_size), nux::Geometry(0, 0, _icon_size, _icon_size));
   RestoreSystemRenderTarget();
 }
 
@@ -2916,7 +2915,7 @@ void Launcher::OnDNDDataCollected(const std::list<char*>& mimes)
     if (!g_str_equal(it, uri_list_const.Value()))
       continue;
 
-    _dnd_data.Fill(nux::GetWindow().GetDndData(uri_list_const.Value()));
+    _dnd_data.Fill(nux::GetWindowThread()->GetGraphicsDisplay().GetDndData(uri_list_const.Value()));
     break;
   }
 
@@ -3022,7 +3021,7 @@ Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
       if (!g_str_equal(it, uri_list_const.Value()))
         continue;
 
-      _dnd_data.Fill(nux::GetWindow().GetDndData(uri_list_const.Value()));
+      _dnd_data.Fill(nux::GetWindowThread()->GetGraphicsDisplay().GetDndData(uri_list_const.Value()));
       break;
     }
 
@@ -3297,3 +3296,6 @@ Launcher::InspectKeyEvent(unsigned int eventType,
   // The Launcher accepts all key inputs.
   return true;
 }
+
+} // namespace launcher
+} // namespace unity

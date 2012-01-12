@@ -32,11 +32,6 @@
       <summary>Version of last migration done</summary>
       <description>This is a detection key for the favorite migration script to know whether the needed migration is done or not.</description>
     </key>
-    <key type="b" name="shows-on-edge">
-      <default>true</default>
-      <summary>Launcher should show on mouse touching left edge.</summary>
-      <description>Launcher should show on mouse touching left edge of screen.</description>
-    </key>
   </schema>
 	<schema path="/desktop/unity/panel/" id="com.canonical.Unity.Panel" gettext-domain="unity">
     <key type="as" name="systray-whitelist">
@@ -52,11 +47,4 @@
         <description>These devices are shown in the Launcher by default.</description>
     </key>
     </schema>
-  <schema path="/desktop/unity/runner/" id="com.canonical.Unity.Runner" gettext-domain="unity">
-    <key type="as" name="history">
-        <default>[]</default>
-        <summary>History of Alt + F2 command</summary>
-        <description>Key for storing the history of the Alt + F2 command.  </description>
-    </key>
-  </schema>
 </schemalist>

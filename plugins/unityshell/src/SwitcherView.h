@@ -26,6 +26,8 @@
 #include "LayoutSystem.h"
 #include "BackgroundEffectHelper.h"
 
+#include "Introspectable.h"
+
 #include <boost/shared_ptr.hpp>
 #include <sigc++/sigc++.h>
 
@@ -33,14 +35,17 @@
 #include <NuxCore/ObjectPtr.h>
 #include <NuxCore/Property.h>
 
-using namespace unity::ui;
 
 namespace unity
 {
+namespace launcher
+{
+class AbstractLauncherIcon;
+}
 namespace switcher
 {
 
-class SwitcherView : public nux::View
+class SwitcherView : public debug::Introspectable, public nux::View
 {
   NUX_DECLARE_OBJECT_TYPE(SwitcherView, nux::View);
 public:
@@ -49,7 +54,7 @@ public:
   SwitcherView(NUX_FILE_LINE_PROTO);
   virtual ~SwitcherView();
 
-  LayoutWindowList ExternalTargets ();
+  ui::LayoutWindowList ExternalTargets ();
 
   void SetModel(SwitcherModel::Ptr model);
   SwitcherModel::Ptr GetModel();
@@ -69,20 +74,23 @@ public:
   nux::Property<nux::Color> background_color;
 
 protected:
-  long ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo);
+  // Introspectable methods
+  std::string GetName() const;
+  void AddProperties(GVariantBuilder* builder);
+
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
 
-  RenderArg InterpolateRenderArgs(RenderArg const& start, RenderArg const& end, float progress);
+  ui::RenderArg InterpolateRenderArgs(ui::RenderArg const& start, ui::RenderArg const& end, float progress);
   nux::Geometry InterpolateBackground (nux::Geometry const& start, nux::Geometry const& end, float progress);
 
-  std::list<RenderArg> RenderArgsFlat(nux::Geometry& background_geo, int selection, timespec const& current);
+  std::list<ui::RenderArg> RenderArgsFlat(nux::Geometry& background_geo, int selection, timespec const& current);
 
-  RenderArg CreateBaseArgForIcon(AbstractLauncherIcon* icon);
+  ui::RenderArg CreateBaseArgForIcon(launcher::AbstractLauncherIcon* icon);
 private:
   void DrawBackground(nux::GraphicsEngine& GfxContext, nux::Geometry const& geo);
 
-  void OnSelectionChanged(AbstractLauncherIcon* selection);
+  void OnSelectionChanged(launcher::AbstractLauncherIcon* selection);
   void OnDetailSelectionChanged (bool detail);
   void OnDetailSelectionIndexChanged (unsigned int index);
 
@@ -106,8 +114,8 @@ private:
 
   void SaveLast ();
 
-  LayoutSystem::Ptr layout_system_;
-  AbstractIconRenderer::Ptr icon_renderer_;
+  ui::LayoutSystem::Ptr layout_system_;
+  ui::AbstractIconRenderer::Ptr icon_renderer_;
   SwitcherModel::Ptr model_;
   bool target_sizes_set_;
 
@@ -120,13 +128,13 @@ private:
 
   nux::StaticCairoText* text_view_;
 
-  std::list<RenderArg> last_args_;
-  std::list<RenderArg> saved_args_;
+  std::list<ui::RenderArg> last_args_;
+  std::list<ui::RenderArg> saved_args_;
 
   nux::Geometry last_background_;
   nux::Geometry saved_background_;
 
-  LayoutWindowList render_targets_;
+  ui::LayoutWindowList render_targets_;
 
   timespec save_time_;
 
