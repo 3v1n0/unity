@@ -24,7 +24,9 @@ from Xlib.display import Display
 from Xlib.ext.xtest import fake_input
 
 class Keyboard(object):
-    '''Wrapper around xlib to make faking keyboard input possible'''
+    '''
+    Wrapper around xlib to make faking keyboard input possible.
+    '''
     _lame_hardcoded_keycodes = {
         'A' : 64, 
         'C' : 37,
@@ -79,25 +81,46 @@ class Keyboard(object):
 
     def press(self, keys):
         """
-        Send key press events for every key in the 'keys' string.
+        Send key press events only.
+
+        keys can either be a string, in which case each character in the string
+        is treated as a separate key press, or it can be a sequence type (tuple,
+        list), in which case each item in the sequence is treated as an X11 keycode.
+
+        For example, to press the alt+F2 combination, one would call:
+
+        press(['Alt_L', 'F2'])
         """
         self.__perform_on_keys(keys, X.KeyPress)            
         sleep(0.2)
 
     def release(self, keys):
         """
-        Send key release events for every key in the 'keys' string.
+        Send key release events only.
+
+        keys can either be a string, in which case each character in the string
+        is treated as a separate key press, or it can be a sequence type (tuple,
+        list), in which case each item in the sequence is treated as an X11 keycode.
+
+        For example, to press the alt+F2 combination, one would call:
+
+        press(['Alt_L', 'F2'])
         """
         self.__perform_on_keys(keys, X.KeyRelease)
         sleep(0.2)
         
     def press_and_release(self, keys):
         """
-        Send key press events for every key in the 'keys' string, then send
-        key release events for every key in the 'keys' string. 
+        Send key press events for all items in 'keys', then send key release events.
+        This is the same as calling 'press(keys);release(keys)'.
 
-        This method is not appropriate for simulating a user typing a string
-        of text, since it presses all the keys, and then releases them all. 
+        keys can either be a string, in which case each character in the string
+        is treated as a separate key press, or it can be a sequence type (tuple,
+        list), in which case each item in the sequence is treated as an X11 keycode.
+
+        For example, to press the alt+F2 combination, one would call:
+
+        press(['Alt_L', 'F2'])
         """
         self.press(keys)
         self.release(keys)
@@ -108,7 +131,11 @@ class Keyboard(object):
 
         Each key will be pressed and released before the next key is processed. If
         you need to simulate multiple keys being pressed at the same time, use the 
-        'press_and_release' method above.
+        'press_and_release' method above. 
+
+        Keys can either be a string, in which case each character in the string
+        is treated as a separate key press, or it can be a sequence type (tuple,
+        list), in which case each item in the sequence is treated as an X11 keycode.
         """
         for key in keys:
             self.press(key)
@@ -147,9 +174,9 @@ class Keyboard(object):
         return keysym
         
     def __is_shifted(self, key) :
-        if key.isupper() :
+        if len(key) == 1 and key.isupper():
             return True
-        if "~!@#$%^&*()_+{}|:\"<>?".find(key) >= 0 :
+        if len(key) == 1 and key in "~!@#$%^&*()_+{}|:\"<>?":
             return True
         return False
 
