@@ -1,5 +1,6 @@
 unity (5.0.0-0ubuntu1) UNRELEASED; urgency=low
 
+  * New upstream release.
   [ Didier Roche ]
   * debian/control:
     - add libgdu-dev build-dep
@@ -15,9 +16,8 @@ unity (5.0.0-0ubuntu1) UNRELEASED; urgency=low
   [ Aurélien Gâteau ]
   * debian/control:
     - update build-dep of libunity, libdee and libbamf
-  * New upstream release.
 
- -- Aurélien Gâteau <aurelien.gateau@ubuntu.com>  Thu, 12 Jan 2012 17:59:36 +0100
+ -- Aurélien Gâteau <aurelien.gateau@ubuntu.com>  Thu, 12 Jan 2012 18:04:17 +0100
 
 unity (4.24.0-0ubuntu2) oneiric-proposed; urgency=low
 
