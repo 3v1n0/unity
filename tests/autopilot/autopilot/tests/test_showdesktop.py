@@ -18,9 +18,7 @@ from autopilot.glibrunner import GlibRunner
 
 
 class ShowDesktopTests(TestCase):
-    """
-    Test the 'Show Desktop' functionality
-    """
+    """Test the 'Show Desktop' functionality."""
     run_test_with = GlibRunner
     
     def launch_application(self, desktop_file):
@@ -35,8 +33,7 @@ class ShowDesktopTests(TestCase):
         super(ShowDesktopTests, self).tearDown()
 
     def test_showdesktop(self):
-        """
-        This test shows that the "show desktop" mode works correctly
+        """This test shows that the "show desktop" mode works correctly
 
         #. Open two applications
         #. Use either alt-tab or ctrl-alt-d to activate "show desktop" mode
@@ -49,6 +46,7 @@ class ShowDesktopTests(TestCase):
           Both windows will fade out, both windows will fade in, both windows
           will fade out, the clicked application will fade in only, all other
           windows will fade in.
+
         """
         self.launch_application("gucharmap.desktop")
         self.launch_application("gcalctool.desktop")
@@ -108,6 +106,3 @@ class ShowDesktopTests(TestCase):
                 self.assertFalse(win.is_hidden, "Window '%s' is shown after show desktop deactivated." % (win.title))
         call(["killall", "gcalctool"])
         call(["killall", "gucharmap"])
-
-
-

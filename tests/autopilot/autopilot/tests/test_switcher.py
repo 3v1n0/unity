@@ -1,3 +1,11 @@
+# -*- Mode: Python; coding: utf-8; indent-tabs-mode: nil; tab-width: 4 -*-
+# Copyright 2010 Canonical
+# Author: Thomi Richards
+#
+# This program is free software: you can redistribute it and/or modify it 
+# under the terms of the GNU General Public License version 3, as published 
+# by the Free Software Foundation.
+
 import gio
 from subprocess import call
 from time import sleep
@@ -16,6 +24,7 @@ from autopilot.glibrunner import GlibRunner
 
 
 class SwitcherTests(TestCase):
+    """Test the switcher."""
     run_test_with = GlibRunner
 
     def launch_application(self, desktop_file):

@@ -10,9 +10,10 @@
 # X and test the GL calls that Unity makes, so that we can easily find out if
 # we are triggering graphics driver/X bugs.
 
-"""
-A collection of emulators for X11 - namely keyboards and mice. In the future we may 
-also need other devices.
+"""A collection of emulators for X11 - namely keyboards and mice. 
+
+In the future we may also need other devices.
+
 """
 
 
@@ -24,9 +25,7 @@ from Xlib.display import Display
 from Xlib.ext.xtest import fake_input
 
 class Keyboard(object):
-    '''
-    Wrapper around xlib to make faking keyboard input possible.
-    '''
+    """Wrapper around xlib to make faking keyboard input possible."""
     _lame_hardcoded_keycodes = {
         'A' : 64, 
         'C' : 37,
@@ -80,8 +79,7 @@ class Keyboard(object):
         self._display = Display()
 
     def press(self, keys, delay=0.1):
-        """
-        Send key press events only.
+        """Send key press events only.
 
         keys can either be a string, in which case each character in the string
         is treated as a separate key press, or it can be a sequence type (tuple,
@@ -90,13 +88,13 @@ class Keyboard(object):
         For example, to press the alt+F2 combination, one would call:
 
         press(['Alt_L', 'F2'])
+
         """
         self.__perform_on_keys(keys, X.KeyPress)            
         sleep(delay)
 
     def release(self, keys, delay=0.1):
-        """
-        Send key release events only.
+        """Send key release events only.
 
         keys can either be a string, in which case each character in the string
         is treated as a separate key press, or it can be a sequence type (tuple,
@@ -105,13 +103,14 @@ class Keyboard(object):
         For example, to press the alt+F2 combination, one would call:
 
         press(['Alt_L', 'F2'])
+
         """
         self.__perform_on_keys(keys, X.KeyRelease)
         sleep(delay)
         
     def press_and_release(self, keys, delay=0.1):
-        """
-        Send key press events for all items in 'keys', then send key release events.
+        """Press and release all items in 'keys'.
+
         This is the same as calling 'press(keys);release(keys)'.
 
         keys can either be a string, in which case each character in the string
@@ -121,13 +120,13 @@ class Keyboard(object):
         For example, to press the alt+F2 combination, one would call:
 
         press(['Alt_L', 'F2'])
+
         """
         self.press(keys, delay)
         self.release(keys, delay)
 
     def type(self, keys, delay=0.1):
-        """
-        Simulate a user typing the keys specified in 'keys'. 
+        """Simulate a user typing the keys specified in 'keys'. 
 
         Each key will be pressed and released before the next key is processed. If
         you need to simulate multiple keys being pressed at the same time, use the 
@@ -136,6 +135,7 @@ class Keyboard(object):
         Keys can either be a string, in which case each character in the string
         is treated as a separate key press, or it can be a sequence type (tuple,
         list), in which case each item in the sequence is treated as an X11 keycode.
+
         """
         for key in keys:
             self.press(key, delay)
@@ -194,37 +194,39 @@ class Keyboard(object):
         return keycode, shift_mask
 
 class Mouse(object):
-    '''Wrapper around xlib to make moving the mouse easier'''
+    """Wrapper around xlib to make moving the mouse easier."""
 	
     def __init__(self):
         self._display = Display()
 
     @property
     def x(self):
+        """Mouse position X coordinate."""
         return self.position()[0]
 
     @property
     def y(self):
+        """Mouse position Y coordinate."""
         return self.position()[1]
 		
     def press(self, button=1):
-        '''Press mouse button at current mouse location'''
+        """Press mouse button at current mouse location."""
         fake_input(self._display, X.ButtonPress, button)
         self._display.sync()
 		
     def release(self, button=1):
-        '''Releases mouse button at current mouse location'''
+        """Releases mouse button at current mouse location."""
         fake_input(self._display, X.ButtonRelease, button)
         self._display.sync()
 		
     def click(self, button=1):
-        '''Click mouse at current location'''
+        """Click mouse at current location."""
         self.press(button)
         sleep(0.25)
         self.release(button)
 		
     def move(self, x, y, animate=True):
-        '''Moves mouse to location (x, y)'''
+        """Moves mouse to location (x, y)."""
         def perform_move(x, y):
             fake_input(self._display, X.MotionNotify, x=x, y=y)
             self._display.sync()
@@ -256,7 +258,7 @@ class Mouse(object):
                 perform_move(curr_x, curr_y)
 				
     def position(self):
-        '''Returns the current position of the mouse pointer'''
+        """Returns the current position of the mouse pointer."""
         coord = self._display.screen().root.query_pointer()._data
         x, y = coord["root_x"], coord["root_y"]
         return x, y

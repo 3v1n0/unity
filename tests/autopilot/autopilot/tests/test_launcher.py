@@ -4,6 +4,7 @@ from autopilot.emulators.unity import Launcher
 from autopilot.glibrunner import GlibRunner
 
 class LauncherTests(TestCase):
+    """Test the launcher."""
     run_test_with = GlibRunner
 
     def setUp(self):
@@ -11,6 +12,7 @@ class LauncherTests(TestCase):
         self.server = Launcher()
 
     def test_reveal_on_mouse_to_edge(self):
+        """Test that we can reveal the launcher with the mouse."""
         self.server.move_mouse_outside_of_boundry()
         self.server.move_mouse_to_reveal_pos()
         self.assertTrue(self.server.is_showing())

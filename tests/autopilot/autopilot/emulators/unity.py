@@ -10,9 +10,7 @@
 # X and test the GL calls that Unity makes, so that we can easily find out if
 # we are triggering graphics driver/X bugs.
 
-"""
-A collection of emulators that make it easier to interact with Unity.
-"""
+"""A collection of emulators that make it easier to interact with Unity."""
 
 from compizconfig import Setting
 from compizconfig import Plugin
@@ -23,12 +21,12 @@ from autopilot.emulators.X11 import Keyboard, Mouse
 from autopilot.globals import global_context
 
 class Unity(object):
-    '''
-    High level class to abstract interactions with the unity shell.
+    """High level class to abstract interactions with the unity shell.
 
-    This class should not be used directly. Instead, use one of the derived classes to
-    interact with a different piece of the Unity system.
-    '''
+    This class should not be used directly. Instead, use one of the derived 
+    classes to interact with a different piece of the Unity system.
+
+    """
 
     def __init__(self):
         ## TODO
@@ -47,16 +45,12 @@ class Unity(object):
                                                    self.INTROSPECTION_IFACE)
 
     def get_state(self, piece='/Unity'):
-        '''
-        returns a full dump of unity's state via the introspection interface
-        '''
+        """Returns a full dump of unity's state."""
         return self._introspection_iface.GetState(piece)
 
 
 class Launcher(Unity):
-    """
-    Interact with the unity Launcher.
-    """
+    """Interact with the unity Launcher."""
 
     def __init__(self):
         super(Launcher, self).__init__()
@@ -72,14 +66,17 @@ class Launcher(Unity):
         
 
     def move_mouse_to_reveal_pos(self):
+        """Move the mouse to the launcher reveal position."""
         self._mouse.move(*self.reveal_pos)
         sleep(self.show_timeout)
 
     def move_mouse_outside_of_boundry(self):
+        """Move the mouse outside the launcher."""
         self._mouse.move(*self.hide_pos)
         sleep(self.hide_timeout)
 
     def is_showing(self):
+        """Is the launcher showing?"""
         state = self.__get_state()
         return not bool(state['hidden'])
     
@@ -88,16 +85,12 @@ class Launcher(Unity):
         return super(Launcher, self).get_state('/Unity/Launcher')[0]
 
     def get_launcher_icons(self):
-        """
-        Get a list of launcher icons in this launcher.
-        """
+        """Get a list of launcher icons in this launcher."""
         icons = self.get_state("//Launcher/LauncherIcon")
         return [LauncherIcon(icon_dict) for icon_dict in icons]
 
     def click_launcher_icon(self, icon, button=1):
-        """
-        Move the mouse over the launcher icon, and click it.
-        """
+        """Move the mouse over the launcher icon, and click it."""
         self.move_mouse_to_reveal_pos()
         self._mouse.move(icon.x, icon.y + (self.icon_width / 2))
         self._mouse.click(button)
@@ -105,10 +98,11 @@ class Launcher(Unity):
 
 
 class LauncherIcon:
-    """
-    Holds information about a launcher icon. Do not instantiate an instance
-    of this class yourself. Instead, use the appropriate methods in the Launcher
-    class instead.
+    """Holds information about a launcher icon. 
+
+    Do not instantiate an instance of this class yourself. Instead, use the 
+    appropriate methods in the Launcher class instead.
+
     """
 
     def __init__(self, icon_dict):
@@ -123,40 +117,47 @@ class LauncherIcon:
         self.urgent = icon_dict['quirk-urgent']
 
 class Switcher(Unity):
-    """
-    Interact with the Unity switcher.
-    """
+    """Interact with the Unity switcher."""
 
     def __init__(self):
         super(Switcher, self).__init__()
 
     def initiate(self):
+        """Start the switcher with alt+tab."""
         self._keyboard.press('^A^T')
         self._keyboard.release('^T')
 
     def initiate_detail_mode(self):
+        """Start detail mode with alt+`"""
         self._keyboard.press('^A`')
         self._keyboard.release('`')
 
     def terminate(self):
+        """Stop switcher."""
         self._keyboard.release('^A')
 
     def next_icon(self):
+        """Move to the next application."""
         self._keyboard.press_and_release('^T')
 
     def previous_icon(self):
+        """Move to the previous application."""
         self._keyboard.press_and_release('^S^T')
 
     def show_details(self):
+        """Show detail mode."""
         self._keyboard.press_and_release('`')
 
     def hide_details(self):
+        """Hide detail mode."""
         self._keyboard.press_and_release('^U')
 
     def next_detail(self):
+        """Move to next detail in the switcher."""
         self._keyboard.press_and_release('`')
 
     def previous_detail(self):
+        """Move to the previous detail in the switcher."""
         self._keyboard.press_and_release('^S`')
 
     def __get_icon(self, index):
@@ -185,9 +186,7 @@ class Switcher(Unity):
         return bool(self.get_state('/Unity/SwitcherController')[0]['visible'])
 
 class Dash(Unity):
-    """
-    An emulator class that makes it easier to interact with the unity dash.
-    """
+    """An emulator class that makes it easier to interact with the unity dash."""
 
     def __init__(self):
         self.plugin = Plugin(global_context, "unityshell")
@@ -195,71 +194,55 @@ class Dash(Unity):
         super(Dash, self).__init__()
 
     def toggle_reveal(self):
-        """
-        Reveals the dash if it's currently hidden, hides it otherwise.
-        """
+        """Reveals the dash if it's currently hidden, hides it otherwise."""
         self._keyboard.press_and_release("^W")
         sleep(1)
 
     def ensure_visible(self):
-        """
-        Ensures the dash is visible.
-        """
+        """Ensures the dash is visible."""
         if not self.get_is_visible():
             self.toggle_reveal();
 
     def ensure_hidden(self):
-        """
-        Ensures the dash is hidden.
-        """
+        """Ensures the dash is hidden."""
         if self.get_is_visible():
             self.toggle_reveal();
 
     def get_is_visible(self):
-        """
-        Is the dash visible?
-        """
+        """Is the dash visible?"""
         return bool(self.get_state("/Unity/DashController")[0]["visible"])
 
     def get_search_string(self):
-        """
-        Return the current dash search bar search string.
-        """
+        """Return the current dash search bar search string."""
         return unicode(self.get_state("//SearchBar")[0]['search_string'])
 
     def get_current_lens(self):
-        """
-        Returns the id of the current lens. For example, the default lens is
-        'home.lens', the run-command lens is 'commands.lens'.
+        """Returns the id of the current lens. 
+
+        For example, the default lens is 'home.lens', the run-command lens is
+        'commands.lens'.
+
         """
         return unicode(self.get_state("//DashController/DashView/LensBar")[0]['active-lens'])
 
     def reveal_application_lens(self):
-        """
-        Reveal the application lense.
-        """
+        """Reveal the application lense."""
         self._keyboard.press("^W")
         self._keyboard.press_and_release("a")
         self._keyboard.release("^W")
 
     def reveal_music_lens(self):
-        """
-        Reveal the music lense.
-        """
+        """Reveal the music lense."""
         self._keyboard.press("^W")
         self._keyboard.press_and_release("m")
         self._keyboard.release("^W")
 
     def reveal_file_lens(self):
-        """
-        Reveal the file lense.
-        """
+        """Reveal the file lense."""
         self._keyboard.press("^W")
         self._keyboard.press_and_release("f")
         self._keyboard.release("^W")
 
     def reveal_command_lens(self):
-        """
-        Reveal the 'run command' lens.
-        """
+        """Reveal the 'run command' lens."""
         self._keyboard.press_and_release(['Alt_L','F2'])

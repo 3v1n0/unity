@@ -15,9 +15,7 @@ from autopilot.glibrunner import GlibRunner
 
 
 class DashTests(TestCase):
-    """
-    Test the unity Dash.
-    """
+    """Test the unity Dash."""
     run_test_with = GlibRunner
     
     def setUp(self):
@@ -29,9 +27,7 @@ class DashTests(TestCase):
         self.dash.ensure_hidden()
 
     def test_dash_reveal(self):
-        """
-        Ensure we can show and hide the dash.
-        """
+        """Ensure we can show and hide the dash."""
         self.dash.ensure_hidden()
 
         self.assertFalse(self.dash.get_is_visible())
@@ -41,9 +37,7 @@ class DashTests(TestCase):
         self.assertFalse(self.dash.get_is_visible())
 
     def test_dash_keyboard_focus(self):
-        """
-        Dash must put keyboard focus on the search bar at all times.
-        """
+        """Dash must put keyboard focus on the search bar at all times."""
         self.dash.ensure_hidden()
 
         self.assertFalse(self.dash.get_is_visible())
@@ -56,33 +50,25 @@ class DashTests(TestCase):
         self.assertFalse(self.dash.get_is_visible())
 
     def test_application_lens_shortcut(self):
-        """
-        Application lense must reveal when Super+a is pressed.
-        """
+        """Application lense must reveal when Super+a is pressed."""
         self.dash.ensure_hidden()
         self.dash.reveal_application_lens()
         self.assertEqual(self.dash.get_current_lens(), u'applications.lens')
 
     def test_music_lens_shortcut(self):
-        """
-        Music lense must reveal when Super+w is pressed.
-        """
+        """Music lense must reveal when Super+w is pressed."""
         self.dash.ensure_hidden()
         self.dash.reveal_music_lens()
         self.assertEqual(self.dash.get_current_lens(), u'music.lens')
     
     def test_file_lens_shortcut(self):
-        """
-        File lense must reveal when Super+f is pressed.
-        """
+        """File lense must reveal when Super+f is pressed."""
         self.dash.ensure_hidden()
         self.dash.reveal_file_lens()
         self.assertEqual(self.dash.get_current_lens(), u'files.lens')
 
     def test_command_lens_shortcut(self):
-        """
-        Run Command lens must reveat on alt+F2.
-        """
+        """Run Command lens must reveat on alt+F2."""
         self.dash.ensure_hidden()
         self.dash.reveal_command_lens()
         self.assertEqual(self.dash.get_current_lens(), u'commands.lens')
