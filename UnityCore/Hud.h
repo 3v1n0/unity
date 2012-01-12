@@ -95,11 +95,17 @@ public:
    * suggestion_search_finished signal when the suggestions are returned
    */
   void RequestQuery(std::string const& search_string);
-
+  
   /*
    * Executes a Query
    */
   void ExecuteQuery(Query::Ptr query, unsigned int timestamp);
+
+  /*
+   * Executes a query that returns from a search,
+   * Implicitly calls CloseQuery();
+   */
+  void ExecuteQueryBySearch(std::string execute_string, unsigned int timestamp);
 
   /*
    * Closes the query connection, call when the hud closes

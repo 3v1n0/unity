@@ -27,6 +27,8 @@
 
 #include "config.h"
 
+#include <sigc++/bind.h>
+
 namespace unity
 {
 namespace hud
@@ -62,6 +64,7 @@ public:
   void UpdateQueryCallback(GVariant* data);
   void BuildQueries(GVariant* query_array);
   void ExecuteByKey(GVariant* key, unsigned int timestamp);
+  void ExecuteQueryByStringCallback(GVariant* query, unsigned int timestamp);
   void CloseQuery();
 
   GVariant* query_key_;
@@ -80,6 +83,25 @@ void HudImpl::ExecuteByKey(GVariant* key, unsigned int timestamp)
   g_variant_builder_add_value(&tuple, g_variant_new_uint32(timestamp));
   
   proxy_.Call("ExecuteQuery", g_variant_builder_end(&tuple));
+}
+
+void HudImpl::ExecuteQueryByStringCallback(GVariant* query, unsigned int timestamp)
+{
+  queries_.clear();
+  
+  GVariant* query_key = g_variant_get_child_value(query, 2);
+  query_key_ = query_key; 
+ 
+  GVariant* queries = g_variant_get_child_value(query, 1);
+  BuildQueries(queries);
+  g_variant_unref(queries);
+  
+  if (queries_.empty() == false)
+  {
+    // we now execute based off the first result
+    ExecuteByKey(queries_.front()->key, timestamp);
+    CloseQuery();
+  }
 }
 
 void HudImpl::QueryCallback(GVariant* query)
@@ -185,11 +207,27 @@ void Hud::RequestQuery(std::string const& search_string)
 
 void Hud::ExecuteQuery(Query::Ptr query, unsigned int timestamp)
 {
-  // we do a search and execute based on the results of that search
   LOG_DEBUG(logger) << "Executing query: " << query->formatted_text;
   pimpl_->ExecuteByKey(query->key, timestamp);
 }
 
+void Hud::ExecuteQueryBySearch(std::string execute_string, unsigned int timestamp)
+{
+  //Does a search then executes the result based on that search
+  LOG_DEBUG(logger) << "Executing by string" << execute_string;
+  if (pimpl_->query_key_ != NULL)
+  {
+    CloseQuery(); 
+  }
+
+  GVariant* paramaters = g_variant_new("(si)", 
+                                       execute_string.c_str(),
+                                       1);
+
+  auto functor = sigc::mem_fun(this->pimpl_, &HudImpl::ExecuteQueryByStringCallback);
+
+  pimpl_->proxy_.Call("StartQuery", paramaters, sigc::bind(functor, timestamp));
+}
 
 void Hud::CloseQuery()
 {

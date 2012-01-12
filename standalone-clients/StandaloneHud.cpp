@@ -73,12 +73,12 @@ void TestRunner::Init ()
   nux::GetWindowThread()->SetLayout (layout);
 
   // things the controller normally does
-  hud_service_.suggestion_search_finished.connect([&] (unity::hud::Hud::Suggestions suggestions) {
-    hud_view_->SetSuggestions(suggestions);
+  hud_service_.queries_updated.connect([&] (unity::hud::Hud::Queries queries) {
+    hud_view_->SetQueries(queries);
   });
 
-  hud_view_->suggestion_activated.connect([&] (unity::hud::Suggestion::Ptr suggestion) {
-    hud_service_.ExecuteBySuggestion(suggestion);
+  hud_view_->query_activated.connect([&] (unity::hud::Query::Ptr query) {
+    hud_service_.ExecuteQuery(query, 0);
   });  
   
 //   hud_service_.target_icon.changed.connect([&] (std::string icon_name) {
@@ -86,11 +86,11 @@ void TestRunner::Init ()
 //   });
 
   hud_view_->search_changed.connect([&] (std::string search_string) {
-    hud_service_.GetSuggestions(search_string);
+    hud_service_.RequestQuery(search_string);
   });
 
   hud_view_->search_activated.connect([&] (std::string search_string) {
-    hud_service_.Execute(search_string);
+    hud_service_.ExecuteQueryBySearch(search_string, 0);
   });
   
 
