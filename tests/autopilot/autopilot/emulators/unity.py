@@ -61,19 +61,22 @@ class Launcher(Unity):
     def __init__(self):
         super(Launcher, self).__init__()
         # set up base launcher vars
-        self.x = 0
-        self.y = 120
-        self.width = 0
-        self.height = 0
+        state = self.__get_state()
+        self.icon_width = int(state['icon-size'])
+
+        self.reveal_pos = (0, 120)
+        self.hide_pos = (self.icon_width *2, 120)
+        
         self.show_timeout = 1
         self.hide_timeout = 1
+        
 
     def move_mouse_to_reveal_pos(self):
-        self._mouse.move(self.x, self.y)
+        self._mouse.move(*self.reveal_pos)
         sleep(self.show_timeout)
 
     def move_mouse_outside_of_boundry(self):
-        self._mouse.move(self.x + (self.width *2), self._mouse.y)
+        self._mouse.move(*self.hide_pos)
         sleep(self.hide_timeout)
 
     def is_showing(self):
@@ -83,35 +86,6 @@ class Launcher(Unity):
     def __get_state(self):
         # get the state for the 'launcher' piece
         return super(Launcher, self).get_state('/Unity/Launcher')[0]
-
-
-class UnityLauncherIconTooltip(Unity):
-    """
-    Interact with the Launcher Icon Tooltips?
-    """
-    RENDER_TIMEOUT_MS = 0
-    SHOW_X_POS = 0
-    SHOW_Y_POS = 32
-    HIDE_X_POS = 64
-    HIDE_Y_POS = 0
-    WIDTH = 0
-    HEIGHT = 0
-
-    def __init__(self, TooltipText=None):
-        self.mouse = Mouse()
-
-    def setUp(self):
-        self.mouse.move(200, 200)
-
-    def show_on_mouse_hover(self):
-        self.mouse.move(self.SHOW_X_POS, self.SHOW_Y_POS)
-        sleep(self.RENDER_TIMEOUT_MS)
-
-    def hide_on_mouse_out(self):
-        self.mouse.move(self.HIDE_X_POS, self.HIDE_Y_POS)
-
-    def isRendered(self):
-        return False
 
 
 class Switcher(Unity):

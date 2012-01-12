@@ -537,6 +537,7 @@ Launcher::AddProperties(GVariantBuilder* builder)
   .add("hidden", _hidden)
   .add("hide-quirks", _hide_machine->DebugHideQuirks().c_str())
   .add("hover-quirks", _hover_machine->DebugHoverQuirks().c_str());
+  g_variant_builder_add (builder, "{sv}", "icon-size", g_variant_new_int32 (_icon_size) );
 }
 
 void Launcher::SetMousePosition(int x, int y)
