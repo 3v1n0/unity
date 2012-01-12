@@ -32,31 +32,31 @@ namespace hud
 {
 
 
-class SuggestionImpl;
-class Suggestion
+class Query
 {
 public:
-  typedef std::shared_ptr<Suggestion> Ptr;
+  typedef std::shared_ptr<Query> Ptr;
   
-  Suggestion(std::string const& formatted_text_, std::string const& icon_name_,
-                         std::string const& item_icon_, std::string const& completion_text_,
-                         GVariant* key_)
+  Query(std::string const& formatted_text_, std::string const& icon_name_,
+        std::string const& item_icon_, std::string const& completion_text_,
+        std::string const& shortcut_, GVariant* key_)
   : formatted_text(formatted_text_)
   , icon_name(icon_name_)
   , item_icon(item_icon_)
   , completion_text(completion_text_)
+  , shortcut(shortcut_)
   , key(key_)
   {
     g_variant_ref(key);
   }
   
-  ~Suggestion()
+  ~Query()
   {
     g_variant_unref(key);
   }
   
-  Suggestion(const Suggestion &rhs);
-  Suggestion& operator=(Suggestion);
+  Query(const Query &rhs);
+  Query& operator=(Query);
 
   std::string formatted_text;   // Pango formatted text
   std::string icon_name;        // icon name using standard lookups
@@ -72,7 +72,7 @@ class Hud
 {
 public:
   typedef std::shared_ptr<Hud> Ptr;
-  typedef std::deque<Suggestion::Ptr> Suggestions;
+  typedef std::deque<Query::Ptr> Queries;
 
   /*
    * Constructor for the hud
@@ -94,29 +94,22 @@ public:
    * Queries the service for new suggestions, will fire off the 
    * suggestion_search_finished signal when the suggestions are returned
    */
-  void GetSuggestions(std::string const& search_string);
+  void RequestQuery(std::string const& search_string);
 
   /*
-   * Sends the given string to the execute method of the service, does not 
-   * require a key
+   * Executes a Query
    */
-  void Execute(std::string const& execute_string);
+  void ExecuteQuery(Query::Ptr query, unsigned int timestamp);
 
   /*
-   * Executes a suggestion
+   * Closes the query connection, call when the hud closes
    */
-  void ExecuteBySuggestion(Suggestion::Ptr suggestion);
+  void CloseQuery();
 
   /*
-   * Sends a close hint to the service, Should be called when the Hud is no longer in use
-   * However, does not close the connection to the Hud, so no extra setup is needed.
+   * Returns a deque of Query types when the service provides them
    */
-  void CloseHint();
-
-  /*
-   * Returns a deque of Suggestion types when the service provides them
-   */
-  sigc::signal<void, Suggestions> suggestion_search_finished;
+  sigc::signal<void, Queries> queries_updated;
 
 private:
   HudImpl *pimpl_;

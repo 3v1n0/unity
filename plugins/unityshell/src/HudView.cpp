@@ -94,26 +94,26 @@ nux::View* View::default_focus() const
   return search_bar_->text_entry();
 }
 
-void View::SetSuggestions(Hud::Suggestions suggestions)
+void View::SetQueries(Hud::Queries queries)
 {
-  suggestions_ = suggestions;
+  queries_ = queries_;
   button_views_->Clear();
   int found_items = 0;
-  for (auto suggestion = suggestions.begin(); suggestion != suggestions.end(); suggestion++)
+  for (auto query = queries.begin(); query != queries.end(); query++)
   {
     if (found_items > 5)
       break;
 
     HudButton *button = new HudButton();
-    button->SetSuggestion(*suggestion);
+    button->SetQuery(*query);
     button_views_->AddView(button, 0, nux::MINOR_POSITION_LEFT);
 
     button->click.connect([&](nux::View* view) {
-      suggestion_activated.emit(dynamic_cast<HudButton*>(view)->GetSuggestion());
+      query_activated.emit(dynamic_cast<HudButton*>(view)->GetQuery());
     });
     
     button->OnKeyNavFocusActivate.connect([&](nux::Area *area) {
-      suggestion_activated.emit(dynamic_cast<HudButton*>(area)->GetSuggestion());
+      query_activated.emit(dynamic_cast<HudButton*>(area)->GetQuery());
     });
     
     found_items++;

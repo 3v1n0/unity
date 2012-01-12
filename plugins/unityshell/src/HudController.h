@@ -73,7 +73,7 @@ private:
 
   void OnSearchChanged(std::string search_string);
   void OnSearchActivated(std::string search_string);
-  void OnSuggestionActivated(Suggestion::Ptr suggestion);
+  void OnQueryActivated(Query::Ptr query);
 
 public:
   void ShowHud();
@@ -85,7 +85,7 @@ private:
 
   static void OnWindowConfigure(int width, int height, nux::Geometry& geo, void* data);
 
-  void OnSuggestionsFinished(Hud::Suggestions);
+  void OnQueriesFinished(Hud::Queries queries);
 
 private:
   UBusManager ubus;

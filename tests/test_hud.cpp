@@ -15,31 +15,25 @@ class TestHud : public ::testing::Test
 {
 public:
   TestHud()
-    : suggestion_return_result(false)
+    : query__return_result(false)
     , connected_result(false)
   {
   }
-  unity::hud::Hud::Suggestions suggestions;
-  bool suggestion_return_result;
+  unity::hud::Hud::Query queries;
+  bool query_return_result;
   bool connected_result;
 };
 
 static gboolean
 timeout_cb(TestHud* hud)
-{
-  g_critical("got timeout");
-  hud->suggestion_return_result = false;
-  g_main_loop_quit(loop_);
-  return FALSE;
-}
  
 TEST_F(TestHud, TestConstruction)
 {
   loop_ = g_main_loop_new(NULL, FALSE);
   hud = new unity::hud::Hud("com.canonical.Unity.Test", "/com/canonical/hud");
   
-  // check every one second to see if the hud is connected
-  g_timeout_add_seconds(1, [] (gpointer data) -> gboolean
+  // performs a check on the hud, if the hud is connected, report a sucess
+  auto timeout_check = [] (gpointer data) -> gboolean
   {
     TestHud* self = static_cast<TestHud*>(data);
     if (hud->connected)
@@ -53,46 +47,69 @@ TEST_F(TestHud, TestConstruction)
       self->connected_result = false;
       return TRUE;
     }
-  }, this);
+  }
   
-  // if the hud is not connected in ten seconds, fail.
-  g_timeout_add_seconds(10, [] (gpointer data) -> gboolean 
+
+  // if the hud is not connected when this lambda runs, fail.
+  auto timeout_bailout = [] (gpointer data) -> gboolean 
   {
     TestHud* self = static_cast<TestHud*>(data);
     // reached timeout, failed testing
     self->connected_result = false;
     g_main_loop_quit(loop_);
     return FALSE;
-  }, this);
+  }
   
+  g_timeout_add_seconds(1, timeout_check, this);
+  g_timeout_add_seconts(10, timeout_bailout, this);
+
   g_main_loop_run(loop_);
   
   EXPECT_EQ(connected_result, true);
 }
 
-TEST_F(TestHud, TestSuggestionReturn)
+TEST_F(TestHud, TestQueryReturn)
 {
-  suggestion_return_result = false;
+  query_return_result = false;
   
-  // make sure we receive the suggestions
-  auto suggestion_connection = [this](unity::hud::Hud::Suggestions suggestions_) 
+  // make sure we receive the queries
+  auto query_connection = [this](unity::hud::Hud::Queries queries_) 
   { 
-    suggestion_return_result = true;
+    query_return_result = true;
     g_main_loop_quit(loop_);
-    suggestions = suggestions_;
+    queries = queries_;
   };
-  
+
+  auto timeout_bailout = [] (gpointer data) -> gboolean
+  {
+    TestHud* self = static_cast<TestHud*>(data);
+    self->query_return_result = false;
+    g_main_loop_quit(loop_);
+    return FALSE;
+  }
    
-  hud->suggestion_search_finished.connect(suggestion_connection);
+  hud->query_search_finished.connect(query_connection);
  
-  g_timeout_add_seconds(10, (GSourceFunc)timeout_cb, (void*)(this));
+  guint source_id = g_timeout_add_seconds(10, timeout_bailout, this);
  
-  hud->GetSuggestions("Request30Suggestions");
-  
+  // first request no returned entries 
+  hud->RequestQueries("RequestNothing");
   g_main_loop_run(loop_);
-  EXPECT_EQ(suggestion_return_result, true);
-  EXPECT_EQ(suggestions.size(), 30);
-  
+  EXPECT_EQ(query_return_result, true);
+  EXPECT_EQ(queries.size(), 0);
+  g_timeout_remove(source_id);
+
+  // next check we get 30 entries from this specific known callback
+  source_id = g_timeout_add_seconds(10, timeout_bailout, this);
+  hud->RequestQueries("Request30Queries");
+  g_main_loop_run(loop_);
+  EXPECT_EQ(query_return_result, true);
+  EXPECT_EQ(queries.size(), 30);
+  g_timeout_remove(source_id);
+
+  // finally close the connection - Nothing to check for here
+  hud->CloseQuery();
 }
+
 
 }

@@ -54,7 +54,7 @@ Controller::Controller()
 
   PluginAdapter::Default()->compiz_screen_ungrabbed.connect(sigc::mem_fun(this, &Controller::OnScreenUngrabbed));
 
-  hud_service_.suggestion_search_finished.connect(sigc::mem_fun(this, &Controller::OnSuggestionsFinished));
+  hud_service_.queries_updated.connect(sigc::mem_fun(this, &Controller::OnQueriesFinished));
   EnsureHud();
 }
 
@@ -98,7 +98,7 @@ void Controller::SetupHudView()
   LOG_DEBUG(logger) << "connecting to signals";
   view_->search_changed.connect(sigc::mem_fun(this, &Controller::OnSearchChanged));
   view_->search_activated.connect(sigc::mem_fun(this, &Controller::OnSearchActivated));
-  view_->suggestion_activated.connect(sigc::mem_fun(this, &Controller::OnSuggestionActivated));
+  view_->query_activated.connect(sigc::mem_fun(this, &Controller::OnQueryActivated));
 //   hud_service_.target_icon.changed.connect([&] (std::string icon_name) {
 //     view_->SetIcon(icon_name);
 //   });
@@ -209,7 +209,7 @@ void Controller::ShowHud()
   window_->SetOpacity(1.0f);
 
   view_->ResetToDefault();
-  hud_service_.GetSuggestions("");
+  hud_service_.RequestQuery("");
 
   need_show_ = false;
   visible_ = true;
@@ -231,6 +231,8 @@ void Controller::HideHud(bool restore)
   restore = true;
   if (restore)
     PluginAdapter::Default ()->restoreInputFocus ();
+
+  hud_service_.CloseQuery();
 }
 
 void Controller::StartShowHideTimeline()
@@ -288,26 +290,26 @@ void Controller::OnActivateRequest(GVariant* variant)
 void Controller::OnSearchChanged(std::string search_string)
 {
   LOG_DEBUG(logger) << "Search Changed";
-  hud_service_.GetSuggestions(search_string);
+  hud_service_.RequestQuery(search_string);
 }
 
 void Controller::OnSearchActivated(std::string search_string)
 {
-  hud_service_.Execute(search_string);
+  //hud_service_.ExecuteQuery(search_string);
   HideHud();
 }
 
-void Controller::OnSuggestionActivated(Suggestion::Ptr suggestion)
+void Controller::OnQueryActivated(Query::Ptr query)
 {
-  LOG_DEBUG(logger) << "Activating suggestion, " << suggestion->formatted_text;
-  hud_service_.ExecuteBySuggestion(suggestion);
+  LOG_DEBUG(logger) << "Activating query, " << query->formatted_text;
+  hud_service_.ExecuteQuery(query, 0); // FIXME - supply real timestamp
   HideHud();
 }
 
 
-void Controller::OnSuggestionsFinished(Hud::Suggestions suggestions)
+void Controller::OnQueriesFinished(Hud::Queries queries)
 {
-  view_->SetSuggestions(suggestions);
+  view_->SetQueries(queries);
 }
 
 // Introspectable

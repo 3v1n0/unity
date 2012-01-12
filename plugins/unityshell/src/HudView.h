@@ -54,23 +54,22 @@ public:
   void Relayout();
   nux::View* default_focus() const;
 
-  void SetSuggestions(Hud::Suggestions suggestions);
+  void SetQueries(Hud::Queries queries);
   void SetIcon(std::string icon_name);
 
   sigc::signal<void, std::string> search_changed;
   sigc::signal<void, std::string> search_activated;
-  sigc::signal<void, Suggestion::Ptr> suggestion_activated;
+  sigc::signal<void, Query::Ptr> query_activated;
 
 protected:
   virtual Area* FindKeyFocusArea(unsigned int key_symbol,
-    unsigned long x11_key_code,
-    unsigned long special_keys_state);
+  unsigned long x11_key_code,
+  unsigned long special_keys_state);
 
   void SetupViews();
   void OnSearchChanged(std::string const& search_string);
 
 private:
-  //virtual bool InspectKeyEvent(unsigned int eventType, unsigned int keysym, const char* character);
   void OnKeyDown (unsigned long event_type, unsigned long event_keysym,
                                 unsigned long event_state, const TCHAR* character,
                                 unsigned short key_repeat_count);
@@ -93,7 +92,7 @@ private:
   unity::IconTexture* icon_;
   bool visible_;
 
-  Hud::Suggestions suggestions_;
+  Hud::Queries queries_;
   nux::Geometry content_geo_;
 
   nux::ColorLayer* bg_layer_;

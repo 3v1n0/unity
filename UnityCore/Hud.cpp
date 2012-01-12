@@ -27,11 +27,6 @@
 
 #include "config.h"
 
-namespace
-{
-  const int request_number_of_results = 6;
-}
-
 namespace unity
 {
 namespace hud
@@ -40,6 +35,7 @@ namespace hud
 namespace
 {
 nux::logging::Logger logger("unity.hud.hud");
+const int request_number_of_results = 6;
 }
 
 // Impl classes
@@ -49,93 +45,113 @@ public:
   HudImpl(std::string const& dbus_name,
           std::string const& dbus_path,
           Hud *parent)
-  : proxy_(dbus_name, dbus_path, "com.canonical.hud")
+  : query_key_(NULL)
+  , proxy_(dbus_name, dbus_path, "com.canonical.hud")
   , parent_(parent)
   {
     LOG_DEBUG(logger) << "Hud init with name: " << dbus_name << "and path: " << dbus_path;
-    proxy_.connected.connect([&](){ LOG_DEBUG(logger) << "Hud Connected"; parent_->connected = true; });
+    proxy_.connected.connect([&]() { 
+      LOG_DEBUG(logger) << "Hud Connected"; 
+      parent_->connected = true; 
+    });
+
+    proxy_.Connect("UpdatedQuery", sigc::mem_fun(this, &HudImpl::UpdateQueryCallback));
   }
 
-  void SuggestionCallback(GVariant* data);
-  void ExecuteSuggestionCallback(GVariant* suggests);
-  void ExecuteByKey(GVariant* key);
+  void QueryCallback(GVariant* data);
+  void UpdateQueryCallback(GVariant* data);
+  void BuildQueries(GVariant* query_array);
+  void ExecuteByKey(GVariant* key, unsigned int timestamp);
+  void CloseQuery();
 
-  Hud::Suggestions suggestions_;
+  GVariant* query_key_;
+  Hud::Queries queries_;
   glib::DBusProxy proxy_;
   Hud* parent_;
 };
 
-void HudImpl::ExecuteByKey(GVariant* key)
+void HudImpl::ExecuteByKey(GVariant* key, unsigned int timestamp)
 {
   LOG_DEBUG(logger) << "Executing by Key";
   
   GVariantBuilder tuple;
   g_variant_builder_init(&tuple, G_VARIANT_TYPE_TUPLE);
   g_variant_builder_add_value(&tuple, g_variant_new_variant(key));
-  g_variant_builder_add_value(&tuple, g_variant_new_uint32(0));
+  g_variant_builder_add_value(&tuple, g_variant_new_uint32(timestamp));
   
   proxy_.Call("ExecuteQuery", g_variant_builder_end(&tuple));
 }
 
-void HudImpl::ExecuteSuggestionCallback(GVariant* suggests)
+void HudImpl::QueryCallback(GVariant* query)
 {
-  if (suggests == nullptr)
-  {
-    LOG_ERROR(logger) << "received null suggestion value";
-    return;
-  }
-  
-  GVariant * target = g_variant_get_child_value(suggests, 0);
+  queries_.clear();
+
+  // extract the information from the GVariants
+  GVariant* target = g_variant_get_child_value(query, 0);
   g_variant_unref(target);
   
-  GVariant* suggestions = g_variant_get_child_value(suggests, 1);
-  GVariantIter iter;
-  g_variant_iter_init(&iter, suggestions);
-  glib::String suggestion;
-  glib::String icon;
-  glib::String item_icon;
-  glib::String completion_text;
-  GVariant* key = NULL;
+  GVariant* query_key = g_variant_get_child_value(query, 2);
+  query_key_ = query_key; 
+ 
+  GVariant* queries = g_variant_get_child_value(query, 1);
+  BuildQueries(queries);
+  g_variant_unref(queries);
   
-  while (g_variant_iter_loop(&iter, "(ssssv)", &suggestion, &icon, &item_icon, &completion_text, &key))
-  {
-    LOG_DEBUG(logger) << "Attempting to execute suggestion: " << suggestion;
-    ExecuteByKey(key);
-    break;
-  }
-  
-  g_variant_unref(suggestions);
+  parent_->queries_updated.emit(queries_);
 }
 
-void HudImpl::SuggestionCallback(GVariant* suggests)
+void HudImpl::UpdateQueryCallback(GVariant* query)
 {
-  suggestions_.clear();
-  
-  // extract the information from the GVariants
-  GVariant * target = g_variant_get_child_value(suggests, 0);
-  g_variant_unref(target);
-  
-  GVariant* suggestions = g_variant_get_child_value(suggests, 1);
+  // as we are expecting an update, we want to check
+  // and make sure that we are the actual recievers of
+  // the signal
+
+  GVariant* query_key = g_variant_get_child_value(query, 2);
+  if (g_variant_equal(query_key_, query_key))
+  {
+    GVariant* queries = g_variant_get_child_value(query, 1);
+    BuildQueries(queries);
+    g_variant_unref(queries);
+  }
+}
+
+void HudImpl::BuildQueries(GVariant* query_array)
+{
   GVariantIter iter;
-  g_variant_iter_init(&iter, suggestions);
-  glib::String suggestion;
+  g_variant_iter_init(&iter, query_array);
+  glib::String formatted_text;
   glib::String icon;
   glib::String item_icon;
   glib::String completion_text;
+  glib::String shortcut;
   GVariant* key = NULL;
   
-  while (g_variant_iter_loop(&iter, "(ssssv)", &suggestion, &icon, &item_icon, &completion_text, &key))
+  while (g_variant_iter_loop(&iter, "(sssssv)", 
+         &formatted_text, &icon, &item_icon, &completion_text, &shortcut, &key))
   {
-    LOG_DEBUG(logger) << "Found suggestion: " << suggestion;
-    g_variant_ref(key);
-    suggestions_.push_back(Suggestion::Ptr(new Suggestion(std::string(suggestion), std::string(icon),
-                                                          std::string(item_icon), std::string(completion_text),
-                                                          key)));
+    queries_.push_back(Query::Ptr(new Query(std::string(formatted_text), 
+                                            std::string(icon),
+                                            std::string(item_icon), 
+                                            std::string(completion_text),
+                                            std::string(shortcut),
+                                            key)));
   }
-  
-  g_variant_unref(suggestions);
-  
-  parent_->suggestion_search_finished.emit(suggestions_);
+}
+
+void HudImpl::CloseQuery()
+{ 
+  if (query_key_ == NULL)
+  {
+    LOG_WARN(logger) << "Attempted to close the hud connection without starting it";
+  }
+  else
+  {
+    GVariant* paramaters = g_variant_new("(v)", query_key_);
+    proxy_.Call("CloseQuery", paramaters);
+    g_variant_unref(query_key_);
+    query_key_ = NULL;
+    queries_.clear();
+  }
 }
 
 
@@ -152,40 +168,33 @@ Hud::~Hud()
   delete pimpl_;
 }
 
-void Hud::GetSuggestions(std::string const& search_string)
+void Hud::RequestQuery(std::string const& search_string)
 {
-  LOG_DEBUG(logger) << "Getting suggestions: " << search_string;
-  GVariant* paramaters = g_variant_new("(s)", search_string.c_str());
-  
-  pimpl_->proxy_.Call("GetSuggestions", paramaters, sigc::mem_fun(this->pimpl_, &HudImpl::SuggestionCallback));
+  LOG_DEBUG(logger) << "Getting Query: " << search_string;
+  if (pimpl_->query_key_ != NULL)
+  {
+    CloseQuery();
+  }
+
+  GVariant* paramaters = g_variant_new("(si)", 
+                                       search_string.c_str(), 
+                                       request_number_of_results);
+  pimpl_->proxy_.Call("StartQuery", paramaters, sigc::mem_fun(this->pimpl_, &HudImpl::QueryCallback));
 }
 
-void Hud::Execute(std::string const& execute_string)
+
+void Hud::ExecuteQuery(Query::Ptr query, unsigned int timestamp)
 {
   // we do a search and execute based on the results of that search
-  LOG_DEBUG(logger) << "Executing string: " << execute_string;
-  GVariant* paramaters = g_variant_new("(s)", execute_string.c_str());
-  pimpl_->proxy_.Call("GetSuggestions", paramaters, sigc::mem_fun(this->pimpl_, &HudImpl::ExecuteSuggestionCallback));
+  LOG_DEBUG(logger) << "Executing query: " << query->formatted_text;
+  pimpl_->ExecuteByKey(query->key, timestamp);
 }
 
 
-void Hud::ExecuteBySuggestion(Suggestion::Ptr suggestion)
-{
-  LOG_DEBUG(logger) << "Executing by Suggestion: " << suggestion->formatted_text;
-  if (suggestion->key == nullptr)
-  {
-    LOG_ERROR(logger) << "Tried to execute suggestion with no key: " << suggestion->formatted_text;
-  }
-  else
-  {
-    pimpl_->ExecuteByKey(suggestion->key);
-    pimpl_->suggestions_.clear();
-  }
-}
-
-void Hud::CloseHint()
+void Hud::CloseQuery()
 {
   //Send close hint to the hud
+  pimpl_->CloseQuery();
 }
 
 }
