@@ -140,7 +140,8 @@ class BamfWindow:
         self._window_iface = dbus.Interface(self._app_proxy, 'org.ayatana.bamf.window')
         self._view_iface = dbus.Interface(self._app_proxy, 'org.ayatana.bamf.view')
 
-        self._wnck_window = wnck.window_get(self._window_iface.GetXid())
+        self.xid = self._window_iface.GetXid()
+        self._wnck_window = wnck.window_get(self.xid)
 
 
     @property
@@ -148,7 +149,7 @@ class BamfWindow:
         """
         Get the X11 Window Id.
         """
-        return self._wnck_window.get_xid()
+        return self.xid
 
     @property
     def title(self):
@@ -211,6 +212,14 @@ class BamfWindow:
         mode is activated.
         """
         return bool(wnck.WINDOW_STATE_HIDDEN & self._wnck_window.get_state())
+
+    @property
+    def is_valid(self):
+        """
+        Is this window object valid? Invalid windows are caused by windows closing during
+        the construction of this object instance.
+        """
+        return not self._wnck_window is None
 
     def close(self):
         """
