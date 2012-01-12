@@ -49,6 +49,7 @@ public:
 
 private:
   class Impl;
+  class ModelMerger;
   Impl* pimpl;
 };
 

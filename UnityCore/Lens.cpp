@@ -123,7 +123,7 @@ public:
 
   string private_connection_name_;
 
-  glib::DBusProxy proxy_;
+  glib::DBusProxy* proxy_;
   glib::Object<GCancellable> search_cancellable_;
   glib::Object<GCancellable> global_search_cancellable_;
 
@@ -158,13 +158,18 @@ Lens::Impl::Impl(Lens* owner,
   , categories_(new Categories(model_type))
   , filters_(new Filters(model_type))
   , connected_(false)
-  , proxy_(dbus_name, dbus_path, "com.canonical.Unity.Lens")
+  , proxy_(NULL)
   , results_variant_(NULL)
   , global_results_variant_(NULL)
 {
-  proxy_.connected.connect(sigc::mem_fun(this, &Lens::Impl::OnProxyConnected));
-  proxy_.disconnected.connect(sigc::mem_fun(this, &Lens::Impl::OnProxyDisconnected));
-  proxy_.Connect("Changed", sigc::mem_fun(this, &Lens::Impl::OnChanged));
+  if (dbus_name != "")
+  {
+    proxy_ = new glib::DBusProxy(dbus_name, dbus_path, "com.canonical.Unity.Lens");
+    proxy_->connected.connect(sigc::mem_fun(this, &Lens::Impl::OnProxyConnected));
+    proxy_->disconnected.connect(sigc::mem_fun(this, &Lens::Impl::OnProxyDisconnected));
+    proxy_->Connect("Changed", sigc::mem_fun(this, &Lens::Impl::OnChanged));
+  }
+
   results_->end_transaction.connect(sigc::mem_fun(this, &Lens::Impl::ResultsModelUpdated));
   global_results_->end_transaction.connect(sigc::mem_fun(this, &Lens::Impl::GlobalResultsModelUpdated));
 
@@ -196,13 +201,16 @@ Lens::Impl::~Impl()
   {
     g_cancellable_cancel (global_search_cancellable_);
   }
+
+  if (proxy_)
+    delete proxy_;
 }
 
 void Lens::Impl::OnProxyConnected()
 {
-  proxy_.Call("InfoRequest");
+  proxy_->Call("InfoRequest");
   ViewType current_view_type = owner_->view_type;
-  proxy_.Call("SetViewType", g_variant_new("(u)", current_view_type));
+  proxy_->Call("SetViewType", g_variant_new("(u)", current_view_type));
 }
 
 void Lens::Impl::OnProxyDisconnected()
@@ -425,7 +433,8 @@ void Lens::Impl::UpdateProperties(bool search_in_global,
 
 void Lens::Impl::OnViewTypeChanged(ViewType view_type)
 {
-  proxy_.Call("SetViewType", g_variant_new("(u)", view_type));
+  if (proxy_)
+    proxy_->Call("SetViewType", g_variant_new("(u)", view_type));
 }
 
 void Lens::Impl::GlobalSearch(std::string const& search_string)
@@ -445,7 +454,7 @@ void Lens::Impl::GlobalSearch(std::string const& search_string)
     global_results_variant_ = NULL;
   }
 
-  proxy_.Call("GlobalSearch",
+  proxy_->Call("GlobalSearch",
               g_variant_new("(sa{sv})",
                             search_string.c_str(),
                             &b),
@@ -470,12 +479,12 @@ void Lens::Impl::Search(std::string const& search_string)
     results_variant_ = NULL;
   }
 
-  proxy_.Call("Search",
-              g_variant_new("(sa{sv})",
-                            search_string.c_str(),
-                            &b),
-              sigc::mem_fun(this, &Lens::Impl::OnSearchFinished),
-              search_cancellable_);
+  proxy_->Call("Search",
+               g_variant_new("(sa{sv})",
+                             search_string.c_str(),
+                             &b),
+               sigc::mem_fun(this, &Lens::Impl::OnSearchFinished),
+               search_cancellable_);
 
   g_variant_builder_clear(&b);
 }
@@ -484,9 +493,9 @@ void Lens::Impl::Activate(std::string const& uri)
 {
   LOG_DEBUG(logger) << "Activating " << uri << " on  " << id_;
 
-  proxy_.Call("Activate",
-              g_variant_new("(su)", uri.c_str(), 0),
-              sigc::mem_fun(this, &Lens::Impl::ActivationReply));
+  proxy_->Call("Activate",
+               g_variant_new("(su)", uri.c_str(), 0),
+               sigc::mem_fun(this, &Lens::Impl::ActivationReply));
 }
 
 void Lens::Impl::ActivationReply(GVariant* parameters)
@@ -509,9 +518,9 @@ void Lens::Impl::Preview(std::string const& uri)
 {
   LOG_DEBUG(logger) << "Previewing " << uri << " on  " << id_;
 
-  proxy_.Call("Preview",
-              g_variant_new("(s)", uri.c_str()),
-              sigc::mem_fun(this, &Lens::Impl::PreviewReply));
+  proxy_->Call("Preview",
+               g_variant_new("(s)", uri.c_str()),
+               sigc::mem_fun(this, &Lens::Impl::PreviewReply));
 }
 
 void Lens::Impl::PreviewReply(GVariant* parameters)

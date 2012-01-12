@@ -49,6 +49,9 @@ Model<RowAdaptor>::Model (ModelType model_type)
   count.SetGetterFunction(sigc::mem_fun(this, &Model<RowAdaptor>::get_count));
   seqnum.SetGetterFunction(sigc::mem_fun(this, &Model<RowAdaptor>::get_seqnum));
   model.SetGetterFunction(sigc::mem_fun(this, &Model<RowAdaptor>::get_model));
+
+  if (model_type == ModelType::LOCAL)
+    swarm_name = ":local";
 }
 
 template<class RowAdaptor>
@@ -82,6 +85,8 @@ void Model<RowAdaptor>::OnSwarmNameChanged(std::string const& swarm_name)
       LOG_ERROR(_model_inl_logger) <<  "Unexpected ModelType " << model_type_;
       break;
   }
+
+  model.EmitChanged(model_);
 
 
   renderer_tag_ = dee_model_register_tag(model_, NULL);

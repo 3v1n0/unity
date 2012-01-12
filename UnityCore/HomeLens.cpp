@@ -24,6 +24,7 @@
 #include "GLibSignal.h"
 #include "HomeLens.h"
 #include "Lens.h"
+#include "Model.h"
 
 namespace unity
 {
@@ -37,6 +38,27 @@ nux::logging::Logger logger("unity.dash.homelens");
 
 }
 
+class HomeLens::ModelMerger : public sigc::trackable
+{
+public:
+  ModelMerger(glib::Object<DeeModel> target);
+  ~ModelMerger();
+
+  void AddSource(glib::Object<DeeModel> source);
+
+private:
+  void OnSourceRowAdded(DeeModel *model, DeeModelIter *iter);
+  //void OnSourceRowRemoved(DeeModel* model, DeeModelIter* iter);
+  //void OnSourceRowChanged(DeeModel* model, DeeModelIter* iter);
+  void EnsureRowBuf(DeeModel *source);
+
+private:
+  glib::SignalManager sig_manager_;
+  GVariant** row_buf_;
+  unsigned int n_cols_;
+  glib::Object<DeeModel> target_;
+};
+
 class HomeLens::Impl : public sigc::trackable
 {
 public:
@@ -44,27 +66,123 @@ public:
   ~Impl();
 
   void OnLensAdded(Lens::Ptr& lens);
-  void OnRowAdded(DeeModel* model, DeeModelIter* iter);
-  //void OnRowRemoved(DeeModel* model, DeeModelIter* iter);
-  //void OnRowChanged(DeeModel* model, DeeModelIter* iter);
+  void OnGlobalResultsModelChanged(glib::Object<DeeModel> model);
+  //HomeLens::Impl::OnGlobalResultsModelChanged
+  //HomeLens::Impl::OnGlobalResultsModelChanged
 
   HomeLens* owner_;
   Lenses::LensList lenses_;
-  glib::SignalManager sig_manager_;
-  GVariant** row_buf_;
-  unsigned int n_cols;
+  HomeLens::ModelMerger results_merger_;
+  HomeLens::ModelMerger categories_merger_;
+  HomeLens::ModelMerger filters_merger_;
 };
+
+HomeLens::ModelMerger::ModelMerger(glib::Object<DeeModel> target)
+  : target_(target)
+{}
+
+HomeLens::ModelMerger::~ModelMerger()
+{
+  if (row_buf_)
+    delete row_buf_;
+}
+
+void HomeLens::ModelMerger::AddSource(glib::Object<DeeModel> source)
+{
+  typedef glib::Signal<void, DeeModel*, DeeModelIter*> RowSignalType;
+
+  if (source.RawPtr() == NULL)
+  {
+    LOG_ERROR(logger) << "Trying to add NULL source to ModelMerger";
+    return;
+  }
+
+  // FIXME row-removed and row-changed
+  sig_manager_.Add(new RowSignalType(source.RawPtr(),
+                                     "row-added",
+                                     sigc::mem_fun(this, &HomeLens::ModelMerger::OnSourceRowAdded)));
+}
+
+void HomeLens::ModelMerger::OnSourceRowAdded(DeeModel *model, DeeModelIter *iter)
+{
+  EnsureRowBuf(model);
+
+  dee_model_get_row (model, iter, row_buf_);
+  dee_model_append_row (target_, row_buf_);
+
+  for (unsigned int i = 0; i < n_cols_; i++) g_variant_unref(row_buf_[i]);
+}
+
+void HomeLens::ModelMerger::EnsureRowBuf(DeeModel *model)
+{
+  if (G_UNLIKELY (n_cols_ == 0))
+  {
+    n_cols_ = dee_model_get_n_columns(model);
+
+    if (n_cols_ == 0)
+    {
+      LOG_ERROR(logger) << "Source model has not provided a schema for the model merger!";
+      return;
+    }
+
+    /* Lazily adopt schema from source if we don't have one.
+     * If we do have a schema let's validate that they match the source */
+    if (dee_model_get_n_columns(target_) == 0)
+    {
+      dee_model_set_schema_full(target_,
+                                dee_model_get_schema(model, NULL),
+                                n_cols_);
+    }
+    else
+    {
+      unsigned int n_cols1;
+      const gchar* const *schema1 = dee_model_get_schema(target_, &n_cols1);
+      const gchar* const *schema2 = dee_model_get_schema(model, NULL);
+
+      if (n_cols_ != n_cols1)
+      {
+        LOG_ERROR(logger) << "Schema mismatch between source and target model. Expected "
+                          << n_cols1 << " columns, but found"
+                          << n_cols_ << ".";
+        return;
+      }
+
+      for (unsigned int i = 0; i < n_cols_; i++)
+      {
+        if (g_strcmp0(schema1[i], schema2[i]) != 0)
+        {
+          LOG_ERROR(logger) << "Schema mismatch between source and target model. Expected column "
+                            << i << " to be '" << schema1[i] << "', but found '"
+                            << schema2[i] << "'.";
+          return;
+        }
+      }
+    }
+
+    row_buf_ = g_new0 (GVariant*, n_cols_);
+  }
+}
 
 HomeLens::Impl::Impl(HomeLens *owner)
   : owner_(owner)
+  , results_merger_(owner->results()->model())
+  , categories_merger_(owner->categories()->model())
+  , filters_merger_(owner->filters()->model())
 {
-  n_cols = dee_model_get_n_columns(owner->results()->model());
-  row_buf_= g_new0(GVariant*, n_cols);
+  DeeModel* model = owner->results()->model();
+  bool has_results_schema = dee_model_get_n_columns(model) > 0;
+
+  if (!has_results_schema)
+  {
+    dee_model_set_schema(model, "s", "s", "u", "s", "s", "s", "s", NULL);
+  }
+
+  // FIXME filters and categories schemas
 }
 
 HomeLens::Impl::~Impl()
 {
-  g_free(row_buf_);
+
 }
 
 // FIXME i18n _("Home") description, searchhint
@@ -72,26 +190,33 @@ HomeLens::Impl::~Impl()
 
 void HomeLens::Impl::OnLensAdded (Lens::Ptr& lens)
 {
-  typedef glib::Signal<void, DeeModel*, DeeModelIter*> RowSignalType;
-
   lenses_.push_back (lens);
   owner_->lens_added.emit(lens);
 
-  sig_manager_.Add(new RowSignalType(lens->global_results()->model(),
-                                     "row-added",
-                                     sigc::mem_fun(this, &HomeLens::Impl::OnRowAdded)));
-// FIXME row-removed and row-changed
+  nux::ROProperty<glib::Object<DeeModel>>& results_prop = lens->global_results()->model;
+  nux::ROProperty<glib::Object<DeeModel>>& categories_prop = lens->categories()->model;
+  nux::ROProperty<glib::Object<DeeModel>>& filters_prop = lens->filters()->model;
 
+  /* Most lenses add models lazily, but we can't know that;
+   * so try to see if we can add them up front */
+  if (results_prop().RawPtr())
+    results_merger_.AddSource(results_prop());
+
+  if (categories_prop().RawPtr())
+    categories_merger_.AddSource(categories_prop());
+
+  if (filters_prop().RawPtr())
+    filters_merger_.AddSource(filters_prop());
+
+  // FIXME
+  results_prop.changed.connect(sigc::mem_fun(this, &HomeLens::Impl::OnGlobalResultsModelChanged));
+  /*categories_prop.changed.connect(sigc::mem_fun(this, &HomeLens::Impl::OnCategoriesModelChanged));
+  filters_prop.changed.connect(sigc::mem_fun(this, &HomeLens::Impl::OnFiltersModelChanged));*/
 }
 
-void HomeLens::Impl::OnRowAdded(DeeModel* model, DeeModelIter* iter)
+void HomeLens::Impl::OnGlobalResultsModelChanged(glib::Object<DeeModel> model)
 {
-  printf ("ROW ADDED\n"); // FIXME
-
-  dee_model_get_row (model, iter, row_buf_);
-  dee_model_append_row (owner_->results()->model(), row_buf_);
-
-  for (unsigned int i = 0; i < n_cols; i++) g_variant_unref(row_buf_[i]);
+  results_merger_.AddSource(model);
 }
 
 HomeLens::HomeLens()
