@@ -75,7 +75,10 @@ class DashTests(TestCase):
         """
         Run Command lens must reveat on alt+F2.
         """
-        pass
+        self.dash.ensure_hidden()
+        self.dash.reveal_command_lens()
+        self.assertEqual(self.dash.get_current_lens(), u'commands.lens')
+        
 
 
         

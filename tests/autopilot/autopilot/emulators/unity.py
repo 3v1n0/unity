@@ -254,4 +254,4 @@ class Dash(Unity):
         """
         Reveal the 'run command' lens.
         """
-        pass
+        self._keyboard.press_and_release(['Alt_L','F2'])
