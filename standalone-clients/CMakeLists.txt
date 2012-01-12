@@ -26,13 +26,13 @@ set (CFLAGS
      )
 add_definitions (${CFLAGS})
 
-set (LIBS ${TEST_UNIT_DEPS_LIBRARIES} "-lunity-core-${UNITY_API_VERSION} -lm")
+set (LIBS ${TEST_UNIT_DEPS_LIBRARIES} "-lunity-core-${UNITY_API_VERSION} -lm -lGL -lGLU")
 link_libraries (${LIBS})
 
 set (LIB_PATHS ${TEST_UNIT_DEPS_LIBRARY_DIRS})
 link_directories (${CMAKE_BINARY_DIR}/UnityCore ${LIB_PATHS})
 
-include_directories (. .. ../services ../UnityCore ${UNITY_SRC} ${CMAKE_BINARY_DIR})
+include_directories (. .. ../services ../UnityCore ${UNITY_SRC} ${CMAKE_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
 
 # We can't have convenience libs so we need to rebuild with what we need
 # Please keep actual test files alphabetically at top and then files
@@ -219,6 +219,8 @@ add_executable (launcher
                 ${UNITY_SRC}/FavoriteStore.h
                 ${UNITY_SRC}/FavoriteStoreGSettings.cpp
                 ${UNITY_SRC}/FavoriteStoreGSettings.h
+                ${UNITY_SRC}/IconLoader.cpp
+                ${UNITY_SRC}/IconLoader.h
                 ${UNITY_SRC}/LauncherEntryRemoteModel.cpp
                 ${UNITY_SRC}/LauncherEntryRemoteModel.h
                 ${UNITY_SRC}/LauncherEntryRemote.cpp
@@ -263,6 +265,8 @@ add_executable (launcher
                 ${UNITY_SRC}/QuicklistView.h
                 ${UNITY_SRC}/QuicklistManager.cpp
                 ${UNITY_SRC}/QuicklistManager.h
+                ${UNITY_SRC}/Timer.cpp
+                ${UNITY_SRC}/Timer.h
                 ${UNITY_SRC}/UBusMessages.h
                 ${UNITY_SRC}/UBusWrapper.cpp
                 ${UNITY_SRC}/UBusWrapper.h
@@ -469,6 +473,22 @@ add_executable (hud
                 ${UNITY_SRC}/Timer.cpp
                )
 add_dependencies (hud unity-core-${UNITY_API_VERSION})
+
+find_package (OpenGL)
+
+include_directories (${OPENGL_gl_INCDIRS})
+add_library (glfuncloader SHARED
+	     ${CMAKE_CURRENT_SOURCE_DIR}/GLFuncLoader.cpp)
+add_dependencies (glfuncloader unity-core-${UNITY_API_VERSION})
+target_link_libraries (glfuncloader dl ${OPENGL_gl_LIBRARY})
+add_executable (screen-effect-fbo
+		TestScreenEffectFramebufferObject.cpp
+		${UNITY_SRC}/ScreenEffectFramebufferObject.cpp
+		${UNITY_SRC}/BackgroundEffectHelper.cpp)
+
+target_link_libraries (screen-effect-fbo glfuncloader ${OPENGL_gl_LIBRARY})
+add_dependencies (screen-effect-fbo ${UNITY_API_VERSION})
+
 
 
 # Custom target to make all the other targets here, add your test to this list

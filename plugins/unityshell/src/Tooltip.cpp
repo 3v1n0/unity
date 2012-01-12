@@ -44,7 +44,6 @@ NUX_IMPLEMENT_OBJECT_TYPE(Tooltip);
 
 Tooltip::Tooltip()
 {
-  _name = g_strdup("Tooltip");
   _texture_bg = 0;
   _texture_mask = 0;
   _texture_outline = 0;
@@ -91,9 +90,6 @@ Tooltip::Tooltip()
 
 Tooltip::~Tooltip()
 {
-  if (_name)
-    g_free(_name);
-
   _tooltip_text->UnReference();
 
   if (_texture_bg) _texture_bg->UnReference();
@@ -135,7 +131,7 @@ void Tooltip::Draw(GraphicsEngine& gfxContext, bool forceDraw)
   base.SetY(0);
   gfxContext.PushClippingRectangle(base);
 
-  GetGraphicsEngine().GetRenderStates().SetBlend(false);
+  nux::GetWindowThread()->GetGraphicsDisplay().GetGraphicsEngine()->GetRenderStates().SetBlend(false);
 
   TexCoordXForm texxform_bg;
   texxform_bg.SetWrap(TEXWRAP_CLAMP, TEXWRAP_CLAMP);
@@ -162,8 +158,8 @@ void Tooltip::Draw(GraphicsEngine& gfxContext, bool forceDraw)
   texxform.SetWrap(TEXWRAP_CLAMP, TEXWRAP_CLAMP);
   texxform.SetTexCoordType(TexCoordXForm::OFFSET_COORD);
 
-  GetGraphicsEngine().GetRenderStates().SetBlend(true);
-  GetGraphicsEngine().GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
+  nux::GetWindowThread()->GetGraphicsDisplay().GetGraphicsEngine()->GetRenderStates().SetBlend(true);
+  nux::GetWindowThread()->GetGraphicsDisplay().GetGraphicsEngine()->GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
   gfxContext.QRP_1Tex(base.x,
                       base.y,
                       base.width,
@@ -172,7 +168,7 @@ void Tooltip::Draw(GraphicsEngine& gfxContext, bool forceDraw)
                       texxform,
                       Color(1.0f, 1.0f, 1.0f, 1.0f));
 
-  GetGraphicsEngine().GetRenderStates().SetBlend(false);
+  nux::GetWindowThread()->GetGraphicsDisplay().GetGraphicsEngine()->GetRenderStates().SetBlend(false);
 
   _tooltip_text->ProcessDraw(gfxContext, forceDraw);
 
@@ -656,9 +652,9 @@ void Tooltip::SetText(NString text)
 
 // Introspection
 
-const gchar* Tooltip::GetName()
+std::string Tooltip::GetName() const
 {
-  return g_strdup(_name);
+  return "ToolTip";
 }
 
 void Tooltip::AddProperties(GVariantBuilder* builder)

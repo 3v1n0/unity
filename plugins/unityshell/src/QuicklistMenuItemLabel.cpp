@@ -33,8 +33,9 @@ QuicklistMenuItemLabel::QuicklistMenuItemLabel(DbusmenuMenuitem* item,
   QuicklistMenuItem(item,
                     NUX_FILE_LINE_PARAM)
 {
-  _name = g_strdup("QuicklistMenuItemLabel");
-  Initialize(item);
+  _item_type  = MENUITEM_TYPE_LABEL;
+  _name = "QuicklistMenuItemLabel";
+  InitializeText();
 }
 
 QuicklistMenuItemLabel::QuicklistMenuItemLabel(DbusmenuMenuitem* item,
@@ -44,40 +45,18 @@ QuicklistMenuItemLabel::QuicklistMenuItemLabel(DbusmenuMenuitem* item,
                     debug,
                     NUX_FILE_LINE_PARAM)
 {
-  _name = g_strdup("QuicklistMenuItemLabel");
-  Initialize(item);
-}
-
-void
-QuicklistMenuItemLabel::Initialize(DbusmenuMenuitem* item)
-{
   _item_type  = MENUITEM_TYPE_LABEL;
-
-  if (item)
-    _text = g_strdup(dbusmenu_menuitem_property_get(item, DBUSMENU_MENUITEM_PROP_LABEL));
-  else
-    _text = g_strdup("Label");
-
-  int textWidth = 1;
-  int textHeight = 1;
-  GetTextExtents(textWidth, textHeight);
-  SetMinimumSize(textWidth + ITEM_INDENT_ABS + 3 * ITEM_MARGIN,
-                 textHeight + 2 * ITEM_MARGIN);
+  _name = "QuicklistMenuItemLabel";
+  InitializeText();
 }
 
 QuicklistMenuItemLabel::~QuicklistMenuItemLabel()
+{}
+
+const gchar*
+QuicklistMenuItemLabel::GetDefaultText()
 {
-  if (_normalTexture[0])
-    _normalTexture[0]->UnReference();
-
-  if (_normalTexture[1])
-    _normalTexture[1]->UnReference();
-
-  if (_prelightTexture[0])
-    _prelightTexture[0]->UnReference();
-
-  if (_prelightTexture[1])
-    _prelightTexture[1]->UnReference();
+  return "Label";
 }
 
 void

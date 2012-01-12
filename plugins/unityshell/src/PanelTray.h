@@ -49,8 +49,7 @@ public:
 public:
   char**     _whitelist;
 protected:
-  const gchar* GetName();
-  const gchar* GetChildsName();
+  std::string GetName() const;
   void          AddProperties(GVariantBuilder* builder);
 
 private:

@@ -339,7 +339,7 @@ std::vector<char> Controller::GetAllShortcuts()
 }
 
 // Introspectable
-const gchar* Controller::GetName()
+std::string Controller::GetName() const
 {
   return "DashController";
 }

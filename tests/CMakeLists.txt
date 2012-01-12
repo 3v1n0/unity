@@ -15,7 +15,7 @@ configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/bzr-handle-patch.desktop
 # Unit tests
 #
 find_package (PkgConfig)
-set (TEST_DEPS "${UNITY_PLUGIN_DEPS};unity>=4.0.0")
+set (TEST_DEPS "${UNITY_PLUGIN_DEPS};unity>=4.99.0")
 pkg_check_modules (TEST_UNIT_DEPS REQUIRED ${TEST_DEPS})
 
 set (TESTDATADIR "${CMAKE_CURRENT_SOURCE_DIR}/data")
@@ -40,6 +40,7 @@ set (LIB_PATHS ${TEST_UNIT_DEPS_LIBRARY_DIRS})
 link_directories (${CMAKE_BINARY_DIR}/UnityCore ${LIB_PATHS})
 
 include_directories (. .. ../services ../UnityCore ${UNITY_SRC} ${CMAKE_BINARY_DIR})
+include_directories (${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src)
 
 # We can't have convenience libs so we need to rebuild with what we need
 # Please keep actual test files alphabetically at top and then files
@@ -48,6 +49,7 @@ add_executable (test-unit
                 unit/TestQuicklistMenuitems.cpp
                 unit/TestMain.cpp
                 unit/TestUBus.cpp
+                unit/TestStaticCairoText.cpp
                 ${UNITY_SRC}/ubus-server.cpp
                 ${UNITY_SRC}/ubus-server.h
                 ${UNITY_SRC}/Introspectable.cpp
@@ -63,6 +65,8 @@ add_executable (test-unit
                 ${UNITY_SRC}/QuicklistMenuItemSeparator.h
                 ${UNITY_SRC}/QuicklistView.cpp
                 ${UNITY_SRC}/QuicklistView.h
+                ${UNITY_SRC}/StaticCairoText.cpp
+                ${UNITY_SRC}/StaticCairoText.h
                 ${UNITY_SRC}/
                 )
 add_dependencies (test-unit unity-core-${UNITY_API_VERSION})
@@ -85,30 +89,47 @@ add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_ma
 
 enable_testing()
 find_package(GTest)
-if (${GTEST_FOUND} STREQUAL TRUE)
+# :(
+find_library (GMOCK_LIB gmock)
+find_library (GMOCK_MAIN_LIB gmock_main)
+
+if (GTEST_FOUND AND
+    GMOCK_LIB AND
+    GMOCK_MAIN_LIB)
   include_directories(${GTEST_INCLUDE_DIRS})
 
 # The service that provides DBus services to test against
-add_executable(test-gtest-service
-               test_service_hud.c
-               test_service_hud.h
-               #               test_service_lens.c
-               #test_service_lens.h
-               test_service_main.c
-               #test_service_model.c
-               #test_service_model.h)
-                )
-add_dependencies (test-gtest-service unity-core-${UNITY_API_VERSION})
+  add_executable(test-gtest-service
+                 test_service_hud.c
+                 test_service_hud.h
+                 test_service_lens.c
+                 test_service_lens.h
+                 test_service_main.c
+                 test_service_model.c
+                 test_service_model.h)
+  add_dependencies (test-gtest-service unity-core-${UNITY_API_VERSION})
 
 # The actual test executable (xless) - do not put anything that requires X in here
   add_executable(test-gtest-xless
+                 test_animator.cpp
+                 test_glib_object.cpp
+                 test_glib_object_utils.cpp
+                 test_glib_object_utils.h
                  test_glib_signals.cpp
                  test_glib_signals_utils.cpp
                  test_glib_signals_utils.h
                  ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_marshal.cpp
                  test_favorite_store_gsettings.cpp
+                 test_introspection.cpp
                  test_main_xless.cpp
+		 test_grabhandle.cpp
                  ${UNITY_SRC}/AbstractLauncherIcon.h
+                 ${UNITY_SRC}/Animator.cpp
+                 ${UNITY_SRC}/Animator.h
+                 ${UNITY_SRC}/DebugDBusInterface.h
+                 ${UNITY_SRC}/DebugDBusInterface.cpp
+                 ${UNITY_SRC}/XPathQueryPart.h
+                 ${UNITY_SRC}/XPathQueryPart.cpp
                  ${UNITY_SRC}/FavoriteStore.cpp
                  ${UNITY_SRC}/FavoriteStore.h
                  ${UNITY_SRC}/FavoriteStoreGSettings.cpp
@@ -124,27 +145,32 @@ add_dependencies (test-gtest-service unity-core-${UNITY_API_VERSION})
                  ${UNITY_SRC}/Timer.h
                  ${UNITY_SRC}/WindowManager.cpp
                  ${UNITY_SRC}/WindowManager.h
+		 ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle.cpp
+		 ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle-group.cpp
+		 ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle-impl-factory.cpp
+		 ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle-layout.cpp
+		 ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-texture.cpp
                  )
-  target_link_libraries(test-gtest-xless ${GTEST_BOTH_LIBRARIES})
+  target_link_libraries(test-gtest-xless ${GTEST_BOTH_LIBRARIES} ${GMOCK_LIB} ${GMOCK_MAIN_LIB})
   add_test(UnityGTestXless test-gtest-xless)
   add_dependencies(test-gtest-xless unity-core-${UNITY_API_VERSION})
 
 # tests that require dbus, must not require X
-#  add_executable(test-gtest-dbus
-#                 test_categories.cpp
-#                 test_filesystem_lenses.cpp
-#                 test_filter.cpp
-#                 test_indicator_entry.cpp
-#                 test_lens.cpp
-#                 test_main_dbus.cpp
-#                 test_model.cpp
-#                 test_utils.h
-#                 test_ratings_filter.cpp
-#                 test_results.cpp
-#                 )
-#  target_link_libraries(test-gtest-dbus ${GTEST_BOTH_LIBRARIES})
-#  add_test(UnityGTestDBus test-gtest-dbus)
-#  add_dependencies(test-gtest-dbus unity-core-${UNITY_API_VERSION} test-gtest-service)
+  add_executable(test-gtest-dbus
+                 test_categories.cpp
+                 test_filesystem_lenses.cpp
+                 test_filter.cpp
+                 test_indicator_entry.cpp
+                 test_lens.cpp
+                 test_main_dbus.cpp
+                 test_model.cpp
+                 test_utils.h
+                 test_ratings_filter.cpp
+                 test_results.cpp
+                 )
+  target_link_libraries(test-gtest-dbus ${GTEST_BOTH_LIBRARIES})
+  add_test(UnityGTestDBus test-gtest-dbus)
+  add_dependencies(test-gtest-dbus unity-core-${UNITY_API_VERSION} test-gtest-service)
 
 # Tests that require X
   add_executable(test-gtest
@@ -160,7 +186,9 @@ add_dependencies (test-gtest-service unity-core-${UNITY_API_VERSION})
   add_test(UnityGTest test-gtest)
   add_dependencies(test-gtest unity-core-${UNITY_API_VERSION})
 
-endif (${GTEST_FOUND} STREQUAL TRUE)
+endif (GTEST_FOUND AND
+       GMOCK_LIB AND
+       GMOCK_MAIN_LIB)
 
 #
 # check target
@@ -176,15 +204,20 @@ set (TEST_COMMAND
      gtester --verbose -k --g-fatal-warnings -o=${TEST_RESULT_XML} ./test-unit
   && ${GTEST_TEST_COMMAND}
   && ${GTEST_TEST_COMMAND_XLESS}
-#  && ${GTEST_TEST_COMMAND_DBUS})
-  )
+  && ${GTEST_TEST_COMMAND_DBUS})
+
 set (TEST_COMMAND_HEADLESS
      ${GTEST_TEST_COMMAND_XLESS}
   #&& ${GTEST_TEST_COMMAND_DBUS}
   && echo "Warning, DBus test cases are disabled!!")
 
-add_custom_target (check COMMAND  ${TEST_COMMAND} DEPENDS test-unit test-gtest test-gtest-xless)
-add_custom_target (check-headless COMMAND ${TEST_COMMAND_HEADLESS} DEPENDS test-gtest-xless)
+add_custom_target (check COMMAND  ${TEST_COMMAND} DEPENDS test-unit test-gtest test-gtest-xless test-gtest-dbus)
+add_custom_target (check-headless COMMAND ${TEST_COMMAND_HEADLESS} DEPENDS test-gtest-xless test-gtest-dbus)
 add_custom_target (check-report COMMAND ${TEST_UNIT_COMMAND} && gtester-report ${TEST_RESULT_XML} > ${TEST_RESULT_HTML})
 add_custom_target (gcheck COMMAND  ${DBUS_TEST_COMMAND} DEPENDS test-gtest test-gtest-xless)
 
+# make target to allow devs to run "make autopilot" from build dir:
+set (AUTOPILOTDIR "${CMAKE_CURRENT_SOURCE_DIR}/autopilot")
+# Rules to install autopilot files and executable script:
+install(CODE "execute_process(COMMAND python setup.py install --prefix ${CMAKE_INSTALL_PREFIX} WORKING_DIRECTORY ${AUTOPILOTDIR})")
+add_custom_target (autopilot COMMAND cd ${AUTOPILOTDIR} && make check)

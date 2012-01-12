@@ -95,7 +95,7 @@ public:
 
 protected:
   // Introspectable methods
-  const gchar* GetName();
+  std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
 
 private:
@@ -125,6 +125,7 @@ private:
   guint detail_timer_;
   nux::Color bg_color_;
   DetailMode detail_mode_;
+  guint bg_update_handle_;
 
   static gboolean OnShowTimer(gpointer data);
   static gboolean OnDetailTimer(gpointer data);

@@ -36,7 +36,6 @@
 #include "unitya11y.h"
 #include "Launcher.h"
 #include "LauncherModel.h"
-#include "QuicklistView.h"
 
 using unity::launcher::Launcher;
 using unity::launcher::LauncherIcon;
@@ -211,6 +210,7 @@ unity_launcher_accessible_ref_child(AtkObject* obj,
   LauncherModel::iterator it;
   nux::Object* child = NULL;
   AtkObject* child_accessible = NULL;
+  AtkObject* parent = NULL;
 
   g_return_val_if_fail(UNITY_IS_LAUNCHER_ACCESSIBLE(obj), NULL);
   num = atk_object_get_n_accessible_children(obj);
@@ -229,6 +229,10 @@ unity_launcher_accessible_ref_child(AtkObject* obj,
 
   child = dynamic_cast<nux::Object*>(*it);
   child_accessible = unity_a11y_get_accessible(child);
+
+  parent = atk_object_get_parent(child_accessible);
+  if (parent != obj)
+    atk_object_set_parent(child_accessible, obj);
 
   g_object_ref(child_accessible);
 

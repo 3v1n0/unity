@@ -129,5 +129,5 @@ set (EXEC_PREFIX "${CMAKE_INSTALL_PREFIX}")
 set (LIBDIR "${CMAKE_INSTALL_PREFIX}/lib")
 set (INCLUDEDIR "${CMAKE_INSTALL_PREFIX}/include")
 
-configure_file (unity-core.pc.cmake ${CMAKE_CURRENT_BINARY_DIR}/${CORE_LIB_NAME}.pc)
+configure_file (unity-core.pc.cmake ${CMAKE_CURRENT_BINARY_DIR}/${CORE_LIB_NAME}.pc @ONLY)
 install (FILES ${CMAKE_CURRENT_BINARY_DIR}/${CORE_LIB_NAME}.pc DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/pkgconfig)

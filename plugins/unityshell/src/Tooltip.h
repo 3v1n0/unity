@@ -77,7 +77,7 @@ public:
   void ShowTooltipWithTipAt(int anchor_tip_x, int anchor_tip_y);
 
   // Introspection
-  const gchar* GetName();
+  std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
 
   virtual Area* FindAreaUnderMouse(const Point& mouse_position, NuxEventType event_type);
@@ -121,9 +121,6 @@ private:
 
   bool _cairo_text_has_changed;
   void UpdateTexture();
-
-  // Introspection
-  gchar* _name;
 };
 }
 

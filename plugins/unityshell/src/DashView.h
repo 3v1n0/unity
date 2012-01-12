@@ -85,8 +85,8 @@ private:
   void OnLiveSearchReached(std::string const& search_string);
   void OnLensAdded(Lens::Ptr& lens);
   void OnLensBarActivated(std::string const& id);
-  void OnSearchFinished(std::string const& search_string);
-  void OnGlobalSearchFinished(std::string const& search_string);
+  void OnSearchFinished(Lens::Hints const& hints);
+  void OnGlobalSearchFinished(Lens::Hints const& hints);
   void OnUriActivated(std::string const& uri);
   void OnUriActivatedReply(std::string const& uri, HandledType type, Lens::Hints const&);
   bool DoFallbackActivation(std::string const& uri);
@@ -98,7 +98,7 @@ private:
 
   bool AcceptKeyNavFocus();
   bool InspectKeyEvent(unsigned int eventType, unsigned int key_sym, const char* character);
-  const gchar* GetName();
+  std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
 
   nux::Area* KeyNavIteration(nux::KeyNavDirection direction);

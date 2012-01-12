@@ -260,15 +260,15 @@ namespace hud {
     nux::Button::PostDraw(GfxContext, force_draw);
   }
 
-  void HudButton::SetSuggestion(std::shared_ptr<Suggestion> suggestion)
+  void HudButton::SetQuery(Query::Ptr query)
   {
-    suggestion_ = suggestion;
-    label = suggestion->formatted_text;
+    query_ = query;
+    label = query->formatted_text;
   }
 
-  std::shared_ptr<Suggestion> HudButton::GetSuggestion()
+  Query::Ptr HudButton::GetQuery()
   {
-    return suggestion_;
+    return query_;
   }
 }
 }

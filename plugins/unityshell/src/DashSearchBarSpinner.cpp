@@ -34,7 +34,8 @@ SearchBarSpinner::SearchBarSpinner()
   : nux::View(NUX_TRACKER_LOCATION),
     _state(STATE_READY),
     _rotation(0.0f),
-    _spinner_timeout(0)
+    _spinner_timeout(0),
+    _frame_timeout(0)
 {
   dash::Style& style = dash::Style::Instance();
 
@@ -209,8 +210,8 @@ SearchBarSpinner::SetState(SpinnerState state)
   QueueDraw();
 }
 
-const gchar*
-SearchBarSpinner::GetName()
+std::string
+SearchBarSpinner::GetName() const
 {
   return "SearchBarSpinner";
 }

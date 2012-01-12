@@ -15,6 +15,7 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *
 * Authored by: Tim Penhey <tim.penhey@canonical.com>
+*              Marco Trevisan (Treviño) <3v1n0@ubuntu.com>
 */
 
 #ifndef UNITY_GLIB_WRAPPER_INL_H
@@ -36,6 +37,14 @@ Object<T>::Object(T* val)
 {}
 
 template <typename T>
+Object<T>::Object(T* val, AddRef const& ref)
+  : object_(val)
+{
+  if (object_)
+    g_object_ref(object_);
+}
+
+template <typename T>
 Object<T>::Object(Object const& other)
   : object_(other.object_)
 {
@@ -51,47 +60,47 @@ Object<T>::~Object()
 }
 
 template <typename T>
+void Object<T>::swap(Object<T>& other)
+{
+  std::swap(this->object_, other.object_);
+}
+
+template <typename T>
 Object<T>& Object<T>::operator=(T* val)
 {
-  if (object_)
-    g_object_unref(object_);
-  object_ = val;
+  Object<T> copy(val);
+  swap(copy);
 
   return *this;
 }
 
 template <typename T>
-Object<T>& Object<T>::operator=(Object const& other)
+Object<T>& Object<T>::operator=(Object other)
 {
-  if (object_)
-    g_object_unref(object_);
-  object_ = other.object_;
-  if (object_)
-    g_object_ref(object_);
-
+  swap(other);
   return *this;
 }
 
 template <typename T>
-Object<T>::operator T* ()
+Object<T>::operator T* () const
 {
   return object_;
 }
 
 template <typename T>
-T* Object<T>::operator->()
+T* Object<T>::operator->() const
 {
   return object_;
 }
 
 template <typename T>
-Object<T>::operator bool()
+Object<T>::operator bool() const
 {
   return bool(object_);
 }
 
 template <typename T>
-T* Object<T>::RawPtr()
+T* Object<T>::RawPtr() const
 {
   return object_;
 }

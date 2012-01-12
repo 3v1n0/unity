@@ -70,7 +70,7 @@ void TestRunner::Init ()
   layout->AddView (hud_view_, 1, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FULL);
   nux::GetWindowCompositor().SetKeyFocusArea(hud_view_->default_focus());
 
-  nux::GetGraphicsThread()->SetLayout (layout);
+  nux::GetWindowThread()->SetLayout (layout);
 
   // things the controller normally does
   hud_service_.suggestion_search_finished.connect([&] (unity::hud::Hud::Suggestions suggestions) {
@@ -122,7 +122,6 @@ int main(int argc, char **argv)
   // for views
 
   g_type_init ();
-  g_thread_init (NULL);
   gtk_init (&argc, &argv);
 
   nux::NuxInitialize(0);

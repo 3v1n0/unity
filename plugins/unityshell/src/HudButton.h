@@ -42,8 +42,8 @@ namespace hud {
     HudButton (NUX_FILE_LINE_PROTO);
     virtual ~HudButton();
 
-    void SetSuggestion(std::shared_ptr<Suggestion> suggestion);
-    std::shared_ptr<Suggestion> GetSuggestion();
+    void SetQuery(Query::Ptr query);
+    std::shared_ptr<Query> GetQuery();
 
     nux::Property<std::string> label;
     nux::Property<std::string> hint;
@@ -59,7 +59,7 @@ namespace hud {
     void RedrawTheme ();
 
   private:
-    std::shared_ptr<Suggestion> suggestion_;
+    Query::Ptr query_;
     nux::Geometry cached_geometry_;
     bool is_focused_;
     BaseTexturePtr normal_texture_;
