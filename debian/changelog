@@ -1,7 +1,105 @@
 unity (5.0.0-0ubuntu1) UNRELEASED; urgency=low
 
-  * New upstream release.
   [ Didier Roche ]
+  * New upstream release.
+    - compiz crashed with SIGSEGV in __dynamic_cast() (LP: #853038)
+    - unity-panel-service crashed with SIGSEGV in panel_service_show_entry()
+      (LP: #861144)
+    - unity-panel-service crashed with SIGSEGV in
+      panel_indicator_entry_accessible_get_n_children() (LP: #869816)
+    - Launcher - Launcher icon for Dash does not highlight when the Alt+F1 key
+      shortcut is pressed (LP: #849561)
+    - compiz crashed with SIGSEGV in unity::PanelTray::FilterTrayCallback()
+      (LP: #868868)
+    - [regression] Compiz: Visible tearing is worse in 11.10 than 11.04, even
+      when "Sync To VBlank" is enabled, but only when Unity is active.
+      (LP: #880707)
+    - [regression] All apps have a lower frame rate under Unity. (LP: #861061)
+    - compiz crashed with SIGSEGV in
+      nux::Property<nux::color::Color>::operator=() from
+      unity::switcher::SwitcherController::OnBackgroundUpdate() (LP: #887465)
+    - DashSearchBarSpinner.cpp:56: Conditional jump or move depends on
+      uninitialised value(s) (LP: #901610)
+    - quicklist shows in incorrect position when launched from workspace
+      switcher (LP: #914251)
+    - Build "show me the desktop" mini-app that adds a show desktop button to
+      Launcher (LP: #681348)
+    - Select quicklist items with just one right click (LP: #688830)
+    - cannot change volume by scrolling on the icon when the SoundMenu is
+      opened (LP: #722082)
+    - [a11y] Unity launcher buttons are not Actionable (LP: #772573)
+    - Ubuntu Start launcher item doesn't start dash with keyboard navigation
+      (LP: #825037)
+    - multimonitor , window management -  Multi-Monitor Maximized Difficulty
+      (LP: #843958)
+    - [regression] Drag and drop inside dash is very slow with Active Blur
+      activated (LP: #851172)
+    - Activating an alt-tab icon that holds initially unminimized windows
+      should unminimize all windows (LP: #854595)
+    - Dash - The Dash category headers are positioned incorrectly
+      (LP: #839467)
+    - Missing global menu with a semi-maximized window dragged to the right.
+      (LP: #861279)
+    - Launcher - Dragging and dropping a running application in to the Trash
+      should quit the application and (if the app is pinned to the Launcher)
+      un-pin the application from the Launcher (LP: #870143)
+    - top bar, integrated menu - when a application is first launched, the
+      integrated menu should be displayed for 2 seconds before fading out of
+      view (LP: #874254)
+    - Window control buttons are not shown when an indicator is opened and the
+      pointer is over the top-left corner (LP: #890970)
+    - Quicklist item using some special chars doesn't show at all
+      (LP: #899677)
+    - PanelView.cpp:370: Conditional jump or move depends on uninitialised
+      value(s) (LP: #901602)
+    - unityshell.cpp:1982,1984: Conditional jump or move depends on
+      uninitialised value(s) (LP: #901603)
+    - Dash Search spinner sometimes doesn't spin at all (LP: #903090)
+    - Point of tooltip is misaligned to focused application indicator arrow
+      (LP: #702989)
+    - Dash - "See more..." line should be base-aligned with section header
+      (LP: #748101)
+    - right-clicking launcher when choosing a workspace causes quicklists to
+      freeze (LP: #791810)
+    - Panel should (optionally) go opaque when window is maximized
+      (LP: #807891)
+    - love handles don't show on windows that cannot be resized (LP: #827566)
+    - dconf shows-on-edge setting ignored (LP: #853086)
+    - Icon selection stays is Dash after dragging shortcut outside
+      (LP: #867548)
+    - right click on the dash icon should display a list of the lenses
+      (LP: #868452)
+    - Top Bar - rename the "Desktop" title in the Top Bar (displayed when no
+      window has focus)  to "Ubuntu Desktop" (LP: #869873)
+    - Dash should close on "Spread" (LP: #870284)
+    - Double-click on the dash top panel is taken effect on the window
+      underneith (LP: #870844)
+    - Clicking on the panel when the dash is open causes a maximized window to
+      raise (LP: #873100)
+    - Launcher - the "Keep in Launcher" quicklist option should change from
+      the current checkbox option to a two state toggle (LP: #874380)
+    - Launcher - Reduce Launcher icon de-coupling delay  (LP: #874410)
+    - When ejecting optical discs, the notification displays a USB stick icon
+      (LP: #875467)
+    - Menus are not shown when an indicator is opened and the pointer is over
+      the global-menu area (LP: #888650)
+    - Application title on quicklist should be bold (or more visible)
+      (LP: #900400)
+    - Clicking on a dash category header should not give it keyboard focus
+      (LP: #905921)
+    - unable to remove the "Apps Available for Download" section from
+      Applications Lens (LP: #785101)
+    - Global Menu Fade should be configurable (LP: #875472)
+    - BaseWindow on UnityRootAccessible shouldn't be added manually
+      (LP: #702700)
+    - Unity Dash not accessible (LP: #731403)
+    - Quicklist items are not yet accessible. (LP: #740698)
+    - Unity acts not as a dock for LibreOffice but as a launcher (LP: #741995)
+    - Unity accessible support should use AtkWindow (LP: #842033)
+    - Alt+tab switcher doesn't works with Orca (LP: #856392)
+    - Libreoffice Calc icon does not appear when opened via Writer
+      (LP: #861355)
+    - Libreoffice and unity integration broken. (LP: #842566)
   * debian/control:
     - add libgdu-dev build-dep
     - remove now uneeded libgnome-desktop-dev and libgtk2.0-dev build-deps
@@ -18,6 +116,21 @@ unity (5.0.0-0ubuntu1) UNRELEASED; urgency=low
     - update build-dep of libunity, libdee and libbamf
 
  -- Aurélien Gâteau <aurelien.gateau@ubuntu.com>  Thu, 12 Jan 2012 18:04:17 +0100
+
+unity (4.24.0-0ubuntu1) UNRELEASED; urgency=low
+
+  * debian/control:
+    - add libgdu-dev build-dep
+    - remove now uneeded libgnome-desktop-dev and libgtk2.0-dev build-deps
+  * debian/control, debian/rules:
+    - depends now on the new Nux ABI mecanism
+    - bump de dep on Nux 2.0 as well
+    - bump libunity-core to 5.0
+  * debian/source:
+    - remove source 3 format, doesn't play well with UDD and drives crazy
+      diff for the release team
+
+ -- Didier Roche <didrocks@ubuntu.com>  Tue, 06 Dec 2011 09:45:13 +0100
 
 unity (4.24.0-0ubuntu2) oneiric-proposed; urgency=low
 
