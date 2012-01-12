@@ -5,32 +5,42 @@
 const char * hud_interface = 
 "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
 "<node name=\"/\">\n"
-" <interface name=\"com.canonical.hud\">\n"
+"        <interface name=\"com.canonical.hud\">\n"
 "<!-- Properties -->\n"
-"   <!-- None -->\n"
+"                <!-- None -->\n"
 "\n"
 "<!-- Functions -->\n"
-"   <method name=\"GetSuggestions\">\n"
-"     <arg type=\"s\" name=\"query\" direction=\"in\" />\n"
-"     <arg type=\"s\" name=\"target\" direction=\"out\" />\n"
-"     <arg type=\"a(ssssv)\" name=\"suggestions\" direction=\"out\" />\n"
-"   </method>\n"
+"                <method name=\"StartQuery\">\n"
+"                        <!-- in -->\n"
+"                        <arg type=\"s\" name=\"query\" direction=\"in\" />\n"
+"                        <arg type=\"i\" name=\"entries\" direction=\"in\" />\n"
+"                        <!-- out -->\n"
+"                        <arg type=\"s\" name=\"target\" direction=\"out\" />\n"
+"                        <arg type=\"a(sssssv)\" name=\"suggestions\" direction=\"out\" />\n"
+"                        <arg type=\"v\" name=\"querykey\" direction=\"out\" />\n"
+"                </method>\n"
 "\n"
-"   <method name=\"ExecuteQuery\">\n"
-"     <arg type=\"v\" name=\"key\" direction=\"in\" />\n"
-"     <arg type=\"u\" name=\"timestamp\" direction=\"in\" />\n"
-"   </method>\n"
+"                <method name=\"ExecuteQuery\">\n"
+"                        <arg type=\"v\" name=\"key\" direction=\"in\" />\n"
+"                        <arg type=\"u\" name=\"timestamp\" direction=\"in\" />\n"
+"                </method>\n"
+"\n"
+"                <method name=\"CloseQuery\">\n"
+"                        <arg type=\"v\" name=\"querykey\" direction=\"in\" />\n"
+"                </method>\n"
 "\n"
 "<!-- Signals -->\n"
-"   <!-- None -->\n"
+"                <signal name=\"UpdatedQuery\">\n"
+"                        <arg type=\"s\" name=\"target\" direction=\"out\" />\n"
+"                        <arg type=\"a(sssssv)\" name=\"suggestions\" direction=\"out\" />\n"
+"                        <arg type=\"v\" name=\"querykey\" direction=\"out\" />\n"
+"                </signal>\n"
 "\n"
 "<!-- End of interesting stuff -->\n"
 "\n"
-" </interface>\n"
+"        </interface>\n"
 "</node>\n"
 ;
-
-
 static void bus_got_cb          (GObject *object, GAsyncResult * res, gpointer user_data);
 static void bus_method          (GDBusConnection *connection,
                                 const gchar *sender,
@@ -165,12 +175,13 @@ bus_got_cb (GObject *object, GAsyncResult * res, gpointer user_data)
 static void
 bus_method (GDBusConnection *connection, const gchar *sender, const gchar *object_path, const gchar *interface_name, const gchar *method_name, GVariant *parameters, GDBusMethodInvocation *invocation, gpointer user_data)
 {
-  if (g_strcmp0(method_name, "GetSuggestions") == 0) 
+  if (g_strcmp0(method_name, "StartQuery") == 0) 
   {
     GVariant * ret = NULL;
     gchar * query = NULL;
+    int num_entries = 0;
 
-    g_variant_get(parameters, "(s)", &query);
+    g_variant_get(parameters, "(si)", &query, &num_entries);
 
     /* Build into into a variant */
     GVariantBuilder ret_builder;
@@ -178,54 +189,59 @@ bus_method (GDBusConnection *connection, const gchar *sender, const gchar *objec
     g_variant_builder_add_value(&ret_builder, g_variant_new_string("target"));
     GVariantBuilder builder;
     
-    if (g_strcmp0(query, "RequestEmpty"))
+    g_variant_builder_init(&builder, G_VARIANT_TYPE_ARRAY);
+     
+    int i = 0;
+    for (i = 0; i < num_entries; i++) 
     {
-      g_variant_builder_init(&builder, G_VARIANT_TYPE_ARRAY);
-        
-      int i = 0;
-      for (i = 0; i < 30; i++) 
+      gchar* target = g_strdup_printf("test-%i", i);
+      gchar* icon = g_strdup_printf("icon-%i", i);
+      gchar* future_icon = g_strdup(icon);
+      gchar* completion_text = g_strdup_printf("completion-%i", i);
+      gchar* accelerator = g_strdup_printf("<alt>+whatever");
+
+      GVariantBuilder tuple;
+      g_variant_builder_init(&tuple, G_VARIANT_TYPE_TUPLE);
+      g_variant_builder_add_value(&tuple, g_variant_new_string(target));
+      g_variant_builder_add_value(&tuple, g_variant_new_string(icon));
+      g_variant_builder_add_value(&tuple, g_variant_new_string(future_icon));
+      g_variant_builder_add_value(&tuple, g_variant_new_string(completion_text));
+      g_variant_builder_add_value(&tuple, g_variant_new_string(accelerator));
+      // build a fake key
+      GVariant* key;
       {
-        gchar* target = g_strdup_printf("test-%i", i);
-        gchar* icon = g_strdup_printf("icon-%i", i);
-        gchar* future_icon = g_strdup(icon);
-        gchar* completion_text = g_strdup_printf("completion-%i", i);
+        GVariantBuilder keybuilder;
+        g_variant_builder_init(&keybuilder, G_VARIANT_TYPE_TUPLE);
+        g_variant_builder_add_value(&keybuilder, g_variant_new_string("dummy string"));
+        g_variant_builder_add_value(&keybuilder, g_variant_new_string("dummy string"));
+        g_variant_builder_add_value(&keybuilder, g_variant_new_string("dummy string"));
+        g_variant_builder_add_value(&keybuilder, g_variant_new_int32(1986));
 
-        GVariantBuilder tuple;
-        g_variant_builder_init(&tuple, G_VARIANT_TYPE_TUPLE);
-        g_variant_builder_add_value(&tuple, g_variant_new_string(target));
-        g_variant_builder_add_value(&tuple, g_variant_new_string(icon));
-        g_variant_builder_add_value(&tuple, g_variant_new_string(future_icon));
-        g_variant_builder_add_value(&tuple, g_variant_new_string(completion_text));
-
-        // build a fake key
-        GVariant* key;
-        {
-          GVariantBuilder keybuilder;
-          g_variant_builder_init(&keybuilder, G_VARIANT_TYPE_TUPLE);
-          g_variant_builder_add_value(&keybuilder, g_variant_new_string("dummy string"));
-          g_variant_builder_add_value(&keybuilder, g_variant_new_string("dummy string"));
-          g_variant_builder_add_value(&keybuilder, g_variant_new_string("dummy string"));
-          g_variant_builder_add_value(&keybuilder, g_variant_new_int32(1986));
-
-          key = g_variant_new_variant(g_variant_builder_end(&keybuilder));
-        }
-        g_variant_ref_sink(key);
-
-        g_variant_builder_add_value(&tuple, key);
-        g_variant_builder_add_value(&builder, g_variant_builder_end(&tuple));
-
-        g_free(target);
-        g_free(icon);
-        g_free(future_icon);
-        g_free(completion_text);
+        key = g_variant_new_variant(g_variant_builder_end(&keybuilder));
       }
-      
-      g_variant_builder_add_value(&ret_builder, g_variant_builder_end(&builder));
-    } 
-    else
-    {
-      g_variant_builder_add_value(&ret_builder, g_variant_new_array(G_VARIANT_TYPE("(ssssv)"), NULL, 0));
+      g_variant_ref_sink(key);
+      g_variant_builder_add_value(&tuple, key);
+      g_variant_builder_add_value(&builder, g_variant_builder_end(&tuple));
+      g_free(target);
+      g_free(icon);
+      g_free(future_icon);
+      g_free(completion_text);
     }
+    g_variant_builder_add_value(&ret_builder, g_variant_builder_end(&builder));
+   
+    GVariant* query_key;
+    {
+      GVariantBuilder keybuilder;
+      g_variant_builder_init(&keybuilder, G_VARIANT_TYPE_TUPLE);
+      g_variant_builder_add_value(&keybuilder, g_variant_new_string("dummy string"));
+      g_variant_builder_add_value(&keybuilder, g_variant_new_string("dummy string"));
+      g_variant_builder_add_value(&keybuilder, g_variant_new_string("dummy string"));
+      g_variant_builder_add_value(&keybuilder, g_variant_new_int32(1986));
+
+      query_key = g_variant_new_variant(g_variant_builder_end(&keybuilder));
+    }
+    g_variant_ref_sink(query_key);
+    g_variant_builder_add_value(&ret_builder, query_key);
     
     ret = g_variant_builder_end(&ret_builder);
 
@@ -233,6 +249,13 @@ bus_method (GDBusConnection *connection, const gchar *sender, const gchar *objec
     g_free(query);
   } 
   else if (g_strcmp0(method_name, "ExecuteQuery") == 0) 
+  {
+    GVariant * key = NULL;
+    key = g_variant_get_child_value(parameters, 0);
+    g_dbus_method_invocation_return_value(invocation, NULL);
+    g_variant_unref(key);
+  }
+  else if (g_strcmp0(method_name, "CloseQuery") == 0)
   {
     GVariant * key = NULL;
     key = g_variant_get_child_value(parameters, 0);
