@@ -418,13 +418,14 @@ void UnityScreen::EnsureSuperKeybindings()
 void UnityScreen::CreateSuperNewAction(char shortcut, bool use_shift, bool use_numpad)
 {
     CompActionPtr action(new CompAction());
+    const std::string key(optionGetShowLauncher().keyToString());
 
     CompAction::KeyBinding binding;
     std::ostringstream sout;
     if (use_shift)
-      sout << "<Shift><Super>"  << shortcut;
+      sout << "<Shift>" << key  << shortcut;
     else
-      sout << "<Super>" << ((use_numpad) ? "KP_" : "") << shortcut;
+      sout << key << ((use_numpad) ? "KP_" : "") << shortcut;
 
     binding.fromString(sout.str());
 
