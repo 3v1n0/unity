@@ -36,12 +36,17 @@ class Bamf:
         self.matcher_proxy = _session_bus.get_object(_BAMF_BUS_NAME, matcher_path)
         self.matcher_interface = dbus.Interface(self.matcher_proxy, matcher_interface)
 
-    def get_running_applications(self):
+    def get_running_applications(self, user_visible_only=True):
         """
         Get a list of the currently running applications.
+
+        If user_visible_only is True (the default), only applications
+        visible to the user in the switcher will be returned.
         """
-        apps = self.matcher_interface.RunningApplications()
-        return [BamfApplication(p) for p in apps]
+        apps = [BamfApplication(p) for p in self.matcher_interface.RunningApplications()]
+        if user_visible_only:
+            return filter(lambda(a): a.user_visible, apps)
+        return apps
 
     def get_running_applications_by_title(self, app_title):
         """
@@ -51,12 +56,17 @@ class Bamf:
         """
         return [a for a in self.get_running_applications() if a.name == app_title]
 
-    def get_open_windows(self):
+    def get_open_windows(self, user_visible_only=True):
         """
         Get a list of currently open windows.
+
+        If user_visible_only is True (the default), only applications
+        visible to the user in the switcher will be returned.
         """
-        windows = self.matcher_interface.WindowPaths()
-        return [BamfWindow(w) for w in windows]
+        windows = [BamfWindow(w) for w in self.matcher_interface.WindowPaths()]
+        if user_visible_only:
+            return filter(lambda(a): a.user_visible, windows)
+        return windows
 
     def get_open_windows_by_title(self, win_title):
         """
@@ -116,6 +126,9 @@ class BamfApplication:
         """
         return [BamfWindow(w) for w in self._view_iface.Children()]
 
+    def __repr__(self):
+        return "<BamfApplication '%s'>" % (self.name)
+
 class BamfWindow:
     """
     Represents an application window, as returned by Bamf. Don't instantiate
@@ -127,7 +140,7 @@ class BamfWindow:
         self._window_iface = dbus.Interface(self._app_proxy, 'org.ayatana.bamf.window')
         self._view_iface = dbus.Interface(self._app_proxy, 'org.ayatana.bamf.view')
 
-        self._wnck_window = wnck.window_get(self.xid)
+        self._wnck_window = wnck.window_get(self._window_iface.GetXid())
 
 
     @property
@@ -163,6 +176,13 @@ class BamfWindow:
         return self._wnck_window.is_maximized()
 
     @property
+    def is_minimized(self):
+        """
+        Is the window minimized?
+        """
+        return self._wnck_window.is_minimized()
+
+    @property
     def application(self):
         """
         Get the application that owns this window. This method may return None
@@ -177,8 +197,18 @@ class BamfWindow:
         else:
             return None
 
+    @property
+    def user_visible(self):
+        """
+        Is this window visible to the user in the switcher?
+        """
+        return self._view_iface.UserVisible()
+
     def close(self):
         """
         Close the window.
         """
         self._wnck_window.close(0)
+
+    def __repr__(self):
+        return "<BamfWindow '%s'>" % (self.title)
