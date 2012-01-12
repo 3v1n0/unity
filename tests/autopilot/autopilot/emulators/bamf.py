@@ -204,6 +204,14 @@ class BamfWindow:
         """
         return self._view_iface.UserVisible()
 
+    @property
+    def is_hidden(self):
+        """
+        Is this window hidden? Windows are hidden when the 'Show Desktop' 
+        mode is activated.
+        """
+        return bool(wnck.WINDOW_STATE_HIDDEN & self._wnck_window.get_state())
+
     def close(self):
         """
         Close the window.
