@@ -36,3 +36,15 @@ Outcome
   The dropped icon should not have the keyboard focus and should not remain
   enlightened.
 
+
+Test Dash Key Focus
+-------------------
+This test shows that the search bar in the dash gets key focus when using the super key to start the dash on start up.
+
+#. Start on a fresh login
+#. Press the <super> key
+#. Wait for dash to appear
+#. Type "hello"
+
+Outcome
+  The dash will appear, and "hello" will be in the search box.
