@@ -55,6 +55,7 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
   , search_hint("")
   , showing_filters(false)
   , can_refine_search(false)
+  , im_focus(false)
   , search_bar_width_(642)
   , live_search_timeout_(0)
 {
@@ -122,6 +123,7 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
   im_active.SetGetterFunction(sigc::mem_fun(this, &SearchBar::get_im_active));
   showing_filters.changed.connect(sigc::mem_fun(this, &SearchBar::OnShowingFiltersChanged));
   can_refine_search.changed.connect([&] (bool can_refine) { show_filters_->SetVisible(can_refine); });
+  im_focus.changed.connect([&] (bool focus) { focus ? pango_entry_->OnFocusIn() : pango_entry_->OnFocusOut();});
 }
 
 SearchBar::~SearchBar()
