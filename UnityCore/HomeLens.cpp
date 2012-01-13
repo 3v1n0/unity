@@ -63,7 +63,8 @@ public:
 
   int FindCategoryOffset(const gchar* display_name)
     {
-      std::map<std::string,unsigned int>::iterator i = reg_by_display_name_.find(display_name);
+      std::map<std::string,unsigned int>::iterator i =
+                                        reg_by_display_name_.find(display_name);
       if (i != reg_by_display_name_.end())
         return i->second;
 
@@ -129,13 +130,13 @@ class HomeLens::ResultsMerger : public ModelMerger
 {
 public:
   ResultsMerger(glib::Object<DeeModel> target,
-                  CategoryRegistry*      cat_registry);
+                  HomeLens::CategoryRegistry* cat_registry);
 
 protected:
-  virtual void OnSourceRowAdded(DeeModel *model, DeeModelIter *iter);
+  void OnSourceRowAdded(DeeModel *model, DeeModelIter *iter);
 
 private:
-  CategoryRegistry* cat_registry_;
+  HomeLens::CategoryRegistry* cat_registry_;
 };
 
 /*
@@ -151,13 +152,13 @@ class HomeLens::CategoryMerger : public ModelMerger
 {
 public:
   CategoryMerger(glib::Object<DeeModel> target,
-                   CategoryRegistry*      cat_registry);
+                 HomeLens::CategoryRegistry* cat_registry);
 
 protected:
-  virtual void OnSourceRowAdded(DeeModel *model, DeeModelIter *iter);
+  void OnSourceRowAdded(DeeModel *model, DeeModelIter *iter);
 
 private:
-  CategoryRegistry* cat_registry_;
+  HomeLens::CategoryRegistry* cat_registry_;
 };
 
 class HomeLens::Impl : public sigc::trackable
@@ -173,7 +174,7 @@ public:
 
   HomeLens* owner_;
   Lenses::LensList lenses_;
-  CategoryRegistry cat_registry_;
+  HomeLens::CategoryRegistry cat_registry_;
   HomeLens::ResultsMerger results_merger_;
   HomeLens::CategoryMerger categories_merger_;
   HomeLens::ModelMerger filters_merger_;
@@ -182,6 +183,18 @@ public:
 HomeLens::ModelMerger::ModelMerger(glib::Object<DeeModel> target)
   : n_cols_(0)
   , target_(target)
+{}
+
+HomeLens::ResultsMerger::ResultsMerger(glib::Object<DeeModel> target,
+                                            CategoryRegistry *cat_registry)
+  : HomeLens::ModelMerger::ModelMerger(target)
+  , cat_registry_(cat_registry)
+{}
+
+HomeLens::CategoryMerger::CategoryMerger(glib::Object<DeeModel> target,
+                                              CategoryRegistry *cat_registry)
+  : HomeLens::ModelMerger::ModelMerger(target)
+  , cat_registry_(cat_registry)
 {}
 
 HomeLens::ModelMerger::~ModelMerger()
