@@ -79,10 +79,10 @@ public:
 
   ~Lens();
 
-  void GlobalSearch(std::string const& search_string);
-  void Search(std::string const& search_string);
-  void Activate(std::string const& uri);
-  void Preview(std::string const& uri);
+  virtual void GlobalSearch(std::string const& search_string);
+  virtual void Search(std::string const& search_string);
+  virtual void Activate(std::string const& uri);
+  virtual void Preview(std::string const& uri);
 
   nux::RWProperty<std::string> id;
   nux::RWProperty<std::string> dbus_name;

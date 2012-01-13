@@ -555,5 +555,25 @@ Lens::Ptr HomeLens::GetLensAtIndex(std::size_t index) const
   return Lens::Ptr();
 }
 
+void HomeLens::GlobalSearch(std::string const& search_string)
+{
+  LOG_DEBUG(logger) << "Global search '" << search_string << "'";
+}
+
+void HomeLens::Search(std::string const& search_string)
+{
+  LOG_DEBUG(logger) << "Search '" << search_string << "'";
+}
+
+void HomeLens::Activate(std::string const& uri)
+{
+  LOG_DEBUG(logger) << "Activate '" << uri << "'";
+}
+
+void HomeLens::Preview(std::string const& uri)
+{
+  LOG_DEBUG(logger) << "Preview '" << uri << "'";
+}
+
 }
 }
