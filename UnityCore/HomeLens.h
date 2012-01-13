@@ -33,6 +33,14 @@ namespace unity
 namespace dash
 {
 
+/**
+ * A special Lens implementation that merges together a set of source Lens
+ * instances.
+ *
+ * NOTE: Changes in the filter models are currently not propagated back to the
+ *       the source lenses. If we want to support filters on the dash home
+ *       screen this needs to be addressed.
+ */
 class HomeLens : public Lens, public Lenses
 {
 public:
@@ -50,6 +58,9 @@ public:
 private:
   class Impl;
   class ModelMerger;
+  class ResultsMerger;
+  class CategoryMerger;
+  class CategoryRegistry;
   Impl* pimpl;
 };
 

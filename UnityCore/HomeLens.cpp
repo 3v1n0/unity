@@ -39,28 +39,125 @@ nux::logging::Logger logger("unity.dash.homelens");
 
 }
 
+/*
+ * Helper class that maps category offsets between the merged lens and
+ * source lenses. We also use it to merge categories from different lenses
+ * with the same display name into the same category.
+ */
+class HomeLens::CategoryRegistry
+{
+public:
+  CategoryRegistry() {}
+
+  int FindCategoryOffset(DeeModel* model, unsigned int source_cat_offset)
+  {
+    gchar* c_id = g_strdup_printf("%u+%p", source_cat_offset, model);
+    std::map<std::string,unsigned int>::iterator i = reg_by_id_.find(c_id);
+    g_free(c_id);
+
+    if (i != reg_by_id_.end())
+      return i->second;
+
+    return -1;
+  }
+
+  int FindCategoryOffset(const gchar* display_name)
+    {
+      std::map<std::string,unsigned int>::iterator i = reg_by_display_name_.find(display_name);
+      if (i != reg_by_display_name_.end())
+        return i->second;
+
+      return -1;
+    }
+
+  void RegisterCategoryOffset(DeeModel*     model,
+                                 unsigned int source_cat_offset,
+                                 const gchar*  display_name,
+                                 unsigned int target_cat_offset)
+  {
+    gchar* c_id = g_strdup_printf("%u+%p", source_cat_offset, model);
+    reg_by_id_[c_id] = target_cat_offset;
+
+    /* Callers pass a NULL display_name when they already have a category
+     * with the right display registered */
+    if (display_name != NULL)
+      reg_by_display_name_[display_name] = target_cat_offset;
+
+    g_free(c_id);
+  }
+
+private:
+  std::map<std::string,unsigned int> reg_by_id_;
+  std::map<std::string,unsigned int> reg_by_display_name_;
+};
+
+/* Helper class that merges a set of DeeModels into one super model */
 class HomeLens::ModelMerger : public sigc::trackable
 {
 public:
   ModelMerger(glib::Object<DeeModel> target);
-  ~ModelMerger();
+  virtual ~ModelMerger();
 
   void AddSource(glib::Object<DeeModel> source);
 
-private:
-  void OnSourceRowAdded(DeeModel *model, DeeModelIter *iter);
-  void OnSourceRowRemoved(DeeModel* model, DeeModelIter* iter);
-  void OnSourceRowChanged(DeeModel* model, DeeModelIter* iter);
+protected:
+  virtual void OnSourceRowAdded(DeeModel *model, DeeModelIter *iter);
+  virtual void OnSourceRowRemoved(DeeModel* model, DeeModelIter* iter);
+  virtual void OnSourceRowChanged(DeeModel* model, DeeModelIter* iter);
   void EnsureRowBuf(DeeModel *source);
   DeeModelTag* FindMergerTag(DeeModel *model);
   DeeModelTag* RegisterMergerTag(DeeModel *model);
 
-private:
+protected:
   glib::SignalManager sig_manager_;
   GVariant** row_buf_;
   unsigned int n_cols_;
   glib::Object<DeeModel> target_;
   std::map<DeeModel*,DeeModelTag*> merger_tags_;
+};
+
+/*
+ * Specialized ModelMerger that takes care merging results models.
+ * We need special handling here because rows in each lens' results model
+ * specifies an offset into the lens' categories model where the display
+ * name of the category is defined.
+ *
+ * This class converts the offset of the source lens' categories into
+ * offsets into the merged category model.
+ */
+class HomeLens::ResultsMerger : public ModelMerger
+{
+public:
+  ResultsMerger(glib::Object<DeeModel> target,
+                  CategoryRegistry*      cat_registry);
+
+protected:
+  virtual void OnSourceRowAdded(DeeModel *model, DeeModelIter *iter);
+
+private:
+  CategoryRegistry* cat_registry_;
+};
+
+/*
+ * Specialized ModelMerger that takes care merging category models.
+ * We need special handling here because rows in each lens' results model
+ * specifies an offset into the lens' categories model where the display
+ * name of the category is defined.
+ *
+ * This class records a map of the offsets from the original source category
+ * models to the offsets in the combined categories model.
+ */
+class HomeLens::CategoryMerger : public ModelMerger
+{
+public:
+  CategoryMerger(glib::Object<DeeModel> target,
+                   CategoryRegistry*      cat_registry);
+
+protected:
+  virtual void OnSourceRowAdded(DeeModel *model, DeeModelIter *iter);
+
+private:
+  CategoryRegistry* cat_registry_;
 };
 
 class HomeLens::Impl : public sigc::trackable
@@ -76,8 +173,9 @@ public:
 
   HomeLens* owner_;
   Lenses::LensList lenses_;
-  HomeLens::ModelMerger results_merger_;
-  HomeLens::ModelMerger categories_merger_;
+  CategoryRegistry cat_registry_;
+  HomeLens::ResultsMerger results_merger_;
+  HomeLens::CategoryMerger categories_merger_;
   HomeLens::ModelMerger filters_merger_;
 };
 
@@ -134,6 +232,76 @@ void HomeLens::ModelMerger::OnSourceRowAdded(DeeModel *model, DeeModelIter *iter
   for (unsigned int i = 0; i < n_cols_; i++) g_variant_unref(row_buf_[i]);
 }
 
+void HomeLens::ResultsMerger::OnSourceRowAdded(DeeModel *model, DeeModelIter *iter)
+{
+  DeeModelIter* target_iter;
+  DeeModelTag*  target_tag;
+  unsigned int target_cat_offset,
+                source_cat_offset;
+  const unsigned int CATEGORY_COLUMN = 2;
+
+  EnsureRowBuf(model);
+
+  dee_model_get_row (model, iter, row_buf_);
+  target_tag = FindMergerTag(model);
+
+  /* Update the row with the corrected category offset */
+  source_cat_offset = dee_model_get_uint32(model, iter, CATEGORY_COLUMN);
+  target_cat_offset = cat_registry_->FindCategoryOffset(model, source_cat_offset);
+
+  if (target_cat_offset >= 0)
+  {
+    g_variant_unref (row_buf_[CATEGORY_COLUMN]);
+    row_buf_[CATEGORY_COLUMN] = g_variant_new_uint32(target_cat_offset);
+
+    target_iter = dee_model_append_row (target_, row_buf_);
+    dee_model_set_tag (model, iter, target_tag, target_iter);
+  }
+  else
+  {
+    LOG_ERROR(logger) << "No category registered for model "
+                      << model << ", offset " << source_cat_offset << ".";
+  }
+
+  for (unsigned int i = 0; i < n_cols_; i++) g_variant_unref(row_buf_[i]);
+}
+
+void HomeLens::CategoryMerger::OnSourceRowAdded(DeeModel *model, DeeModelIter *iter)
+{
+  DeeModelIter* target_iter;
+  DeeModelTag*  target_tag;
+  unsigned int target_cat_offset,
+                source_cat_offset;
+  const gchar* display_name;
+  const unsigned int DISPLAY_NAME_COLUMN = 1;
+
+  EnsureRowBuf(model);
+
+  dee_model_get_row (model, iter, row_buf_);
+  target_tag = FindMergerTag(model);
+  source_cat_offset = dee_model_get_position(model, iter);
+
+  /* If we already have a category registered with the same display name
+   * then we just use that. Otherwise register a new category for it */
+  display_name = dee_model_get_string(model, iter, DISPLAY_NAME_COLUMN);
+  target_cat_offset = cat_registry_->FindCategoryOffset(display_name);
+  if (target_cat_offset >= 0)
+  {
+    cat_registry_->RegisterCategoryOffset(model, source_cat_offset,
+                                          NULL, target_cat_offset);
+  }
+  else
+  {
+    target_iter = dee_model_append_row (target_, row_buf_);
+    dee_model_set_tag (model, iter, target_tag, target_iter);
+    target_cat_offset = dee_model_get_position(target_, target_iter);
+    cat_registry_->RegisterCategoryOffset(model, source_cat_offset,
+                                          display_name, target_cat_offset);
+  }
+
+  for (unsigned int i = 0; i < n_cols_; i++) g_variant_unref(row_buf_[i]);
+}
+
 void HomeLens::ModelMerger::OnSourceRowRemoved(DeeModel *model, DeeModelIter *iter)
 {
   DeeModelIter* target_iter;
@@ -146,7 +314,10 @@ void HomeLens::ModelMerger::OnSourceRowRemoved(DeeModel *model, DeeModelIter *it
                                                                 iter,
                                                                 target_tag));
 
-  dee_model_remove(target_, target_iter);
+  /* We might not have registered a target iter for the row.
+   * This fx. happens if we re-used a category based on display_name */
+  if (target_iter != NULL)
+    dee_model_remove(target_, target_iter);
 }
 
 void HomeLens::ModelMerger::OnSourceRowChanged(DeeModel *model, DeeModelIter *iter)
@@ -242,8 +413,8 @@ DeeModelTag* HomeLens::ModelMerger::RegisterMergerTag(DeeModel *model)
 
 HomeLens::Impl::Impl(HomeLens *owner)
   : owner_(owner)
-  , results_merger_(owner->results()->model())
-  , categories_merger_(owner->categories()->model())
+  , results_merger_(owner->results()->model(), &cat_registry_)
+  , categories_merger_(owner->categories()->model(), &cat_registry_)
   , filters_merger_(owner->filters()->model())
 {
   DeeModel* results = owner->results()->model();
@@ -272,6 +443,7 @@ HomeLens::Impl::~Impl()
 
 // FIXME i18n _("Home") description, searchhint
 // FIXME should use home icon
+// FIXME category merging
 
 void HomeLens::Impl::OnLensAdded (Lens::Ptr& lens)
 {
