@@ -997,9 +997,9 @@ void Style::Impl::RoundedRectSegment(cairo_t*   cr,
 
     // bottom-left, above the corner
     cairo_arc(cr,
-              _align(x + radius, odd),
-              _align(y + height - radius, odd),
-              radius,
+              _align(x, odd) + _align(radius, odd),
+              _align(y + height, odd) - _align(radius, odd),
+              _align(radius, odd),
               90.0f * G_PI / 180.0f,
               180.0f * G_PI / 180.0f);
 
@@ -1008,9 +1008,9 @@ void Style::Impl::RoundedRectSegment(cairo_t*   cr,
 
     // top-left, right of the corner
     cairo_arc(cr,
-              _align(x + radius, odd),
-              _align(y + radius, odd),
-              radius,
+              _align(x, odd) + _align(radius, odd),
+              _align(y, odd) + _align(radius, odd),
+              _align(radius, odd),
               180.0f * G_PI / 180.0f,
               270.0f * G_PI / 180.0f);
 
@@ -1056,9 +1056,9 @@ void Style::Impl::RoundedRectSegment(cairo_t*   cr,
 
     // top-right, below the corner
     cairo_arc(cr,
-              _align(x + width - radius, odd),
-              _align(y + radius, odd),
-              radius,
+              _align(x + width, odd) - _align(radius, odd),
+              _align(y, odd) + _align(radius, odd),
+              _align(radius, odd),
               -90.0f * G_PI / 180.0f,
               0.0f * G_PI / 180.0f);
 
@@ -1067,9 +1067,9 @@ void Style::Impl::RoundedRectSegment(cairo_t*   cr,
 
     // bottom-right, left of the corner
     cairo_arc(cr,
-              _align(x + width - radius, odd),
-              _align(y + height - radius, odd),
-              radius,
+              _align(x + width, odd) - _align(radius, odd),
+              _align(y + height, odd) - _align(radius, odd),
+              _align(radius, odd),
               0.0f * G_PI / 180.0f,
               90.0f * G_PI / 180.0f);
 
