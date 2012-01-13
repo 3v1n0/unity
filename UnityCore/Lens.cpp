@@ -439,7 +439,7 @@ void Lens::Impl::OnViewTypeChanged(ViewType view_type)
 
 void Lens::Impl::GlobalSearch(std::string const& search_string)
 {
-  LOG_DEBUG(logger) << "Global Searching " << id_ << " for " << search_string;
+  LOG_DEBUG(logger) << "Global Searching '" << id_ << "' for '" << search_string << "'";
 
   GVariantBuilder b;
   g_variant_builder_init(&b, G_VARIANT_TYPE("a{sv}"));
@@ -465,7 +465,7 @@ void Lens::Impl::GlobalSearch(std::string const& search_string)
 
 void Lens::Impl::Search(std::string const& search_string)
 {
-  LOG_DEBUG(logger) << "Searching " << id_ << " for " << search_string;
+  LOG_DEBUG(logger) << "Searching '" << id_ << "' for '" << search_string << "'";
 
   GVariantBuilder b;
   g_variant_builder_init(&b, G_VARIANT_TYPE("a{sv}"));
@@ -491,7 +491,7 @@ void Lens::Impl::Search(std::string const& search_string)
 
 void Lens::Impl::Activate(std::string const& uri)
 {
-  LOG_DEBUG(logger) << "Activating " << uri << " on  " << id_;
+  LOG_DEBUG(logger) << "Activating '" << uri << "' on  '" << id_ << "'";
 
   proxy_->Call("Activate",
                g_variant_new("(su)", uri.c_str(), 0),
@@ -516,7 +516,7 @@ void Lens::Impl::ActivationReply(GVariant* parameters)
 
 void Lens::Impl::Preview(std::string const& uri)
 {
-  LOG_DEBUG(logger) << "Previewing " << uri << " on  " << id_;
+  LOG_DEBUG(logger) << "Previewing '" << uri << "' on  '" << id_ << "'";
 
   proxy_->Call("Preview",
                g_variant_new("(s)", uri.c_str()),
