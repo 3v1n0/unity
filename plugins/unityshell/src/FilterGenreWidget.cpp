@@ -55,10 +55,10 @@ NUX_IMPLEMENT_OBJECT_TYPE(FilterGenre);
     genre_layout_ = new nux::GridHLayout(NUX_TRACKER_LOCATION);
     genre_layout_->ForceChildrenSize(true);
     genre_layout_->MatchContentSize(true);
-    genre_layout_->SetSpaceBetweenChildren (10, 12);
+    genre_layout_->SetSpaceBetweenChildren (7, 9);
     genre_layout_->SetTopAndBottomPadding (12);
     genre_layout_->EnablePartialVisibility (false);
-    genre_layout_->SetChildrenSize (dash::Style::Instance().GetTileWidth() - 12, 32);
+    genre_layout_->SetChildrenSize (dash::Style::Instance().GetTileWidth() - 12, 33);
 
     SetRightHandView(all_button_);
     SetContents(genre_layout_);
