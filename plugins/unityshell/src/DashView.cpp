@@ -47,6 +47,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(DashView);
 
 DashView::DashView()
   : nux::View(NUX_TRACKER_LOCATION)
+  , home_lens_(new HomeLens())
   , active_lens_view_(0)
   , last_activated_uri_("")
   , searching_timeout_id_(0)
@@ -69,7 +70,8 @@ DashView::DashView()
   bg_effect_helper_.owner = this;
   bg_effect_helper_.enabled = false;
 
-  home_lens_.AddLenses(lenses_);
+  home_lens_->AddLenses(lenses_);
+
 }
 
 DashView::~DashView()
@@ -152,9 +154,9 @@ void DashView::SetupViews()
   lenses_layout_ = new nux::VLayout();
   content_layout_->AddView(lenses_layout_, 1, nux::MINOR_POSITION_LEFT);
 
-  home_view_ = new HomeView();
+  home_view_ = new LensView(home_lens_);
   active_lens_view_ = home_view_;
-  lens_views_["home.lens"] = home_view_;
+  lens_views_[home_lens_->id] = home_view_;
   lenses_layout_->AddView(home_view_);
 
   lens_bar_ = new LensBar();
@@ -678,7 +680,7 @@ void DashView::OnLensAdded(Lens::Ptr& lens)
 {
   std::string id = lens->id;
   lens_bar_->AddLens(lens);
-  home_view_->AddLens(lens);
+  //home_view_->AddLens(lens);
 
   LensView* view = new LensView(lens);
   view->SetVisible(false);

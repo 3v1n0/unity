@@ -110,7 +110,7 @@ private:
 private:
   UBusManager ubus_manager_;
   FilesystemLenses lenses_;
-  HomeLens home_lens_;
+  HomeLens::Ptr home_lens_;
   BackgroundEffectHelper bg_effect_helper_;
   LensViews lens_views_;
 
@@ -126,7 +126,7 @@ private:
   nux::VLayout* lenses_layout_;
   LensBar* lens_bar_;
 
-  HomeView* home_view_;
+  LensView* home_view_;
   LensView* active_lens_view_;
 
   // Drawing related
