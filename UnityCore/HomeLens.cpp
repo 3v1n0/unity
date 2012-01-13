@@ -288,6 +288,10 @@ void HomeLens::ResultsMerger::OnSourceRowAdded(DeeModel *model, DeeModelIter *it
     g_variant_unref (row_buf_[CATEGORY_COLUMN]);
     row_buf_[CATEGORY_COLUMN] = g_variant_new_uint32(target_cat_offset);
 
+    /* Sink the ref on the new row member. By Dee API contract they must all
+     * be strong refs */
+    g_variant_ref_sink(row_buf_[CATEGORY_COLUMN]);
+
     target_iter = dee_model_append_row (target_, row_buf_);
     dee_model_set_tag (model, iter, target_tag, target_iter);
   }
