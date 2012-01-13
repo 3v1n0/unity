@@ -77,12 +77,32 @@ public:
                                  unsigned int target_cat_offset)
   {
     gchar* c_id = g_strdup_printf("%u+%p", source_cat_offset, model);
+
+    std::map<std::string,unsigned int>::iterator i = reg_by_id_.find(c_id);
+    if (i != reg_by_id_.end())
+    {
+      LOG_ERROR(logger) << "Category '" << c_id << "' already registered!";
+      return;
+    }
+
     reg_by_id_[c_id] = target_cat_offset;
 
     /* Callers pass a NULL display_name when they already have a category
      * with the right display registered */
     if (display_name != NULL)
+    {
       reg_by_display_name_[display_name] = target_cat_offset;
+      LOG_DEBUG(logger) << "Registered category '" << display_name
+                        << "' with source offset " << source_cat_offset
+                        << " and target offset " << target_cat_offset
+                        << ". Id " << c_id;
+    }
+    else
+    {
+      LOG_DEBUG(logger) << "Registered category with source offset "
+                        << source_cat_offset << " and target offset "
+                        << target_cat_offset << ". Id " << c_id;
+    }
 
     g_free(c_id);
   }
@@ -249,8 +269,7 @@ void HomeLens::ResultsMerger::OnSourceRowAdded(DeeModel *model, DeeModelIter *it
 {
   DeeModelIter* target_iter;
   DeeModelTag*  target_tag;
-  unsigned int target_cat_offset,
-                source_cat_offset;
+  int target_cat_offset, source_cat_offset;
   const unsigned int CATEGORY_COLUMN = 2;
 
   EnsureRowBuf(model);
@@ -283,10 +302,9 @@ void HomeLens::CategoryMerger::OnSourceRowAdded(DeeModel *model, DeeModelIter *i
 {
   DeeModelIter* target_iter;
   DeeModelTag*  target_tag;
-  unsigned int target_cat_offset,
-                source_cat_offset;
+  int target_cat_offset, source_cat_offset;
   const gchar* display_name;
-  const unsigned int DISPLAY_NAME_COLUMN = 1;
+  const unsigned int DISPLAY_NAME_COLUMN = 0;
 
   EnsureRowBuf(model);
 
@@ -557,12 +575,23 @@ Lens::Ptr HomeLens::GetLensAtIndex(std::size_t index) const
 
 void HomeLens::GlobalSearch(std::string const& search_string)
 {
-  LOG_DEBUG(logger) << "Global search '" << search_string << "'";
+  LOG_WARN(logger) << "Global search not enabled for HomeLens class."
+                   << " Ignoring query '" << search_string << "'";
 }
 
 void HomeLens::Search(std::string const& search_string)
 {
   LOG_DEBUG(logger) << "Search '" << search_string << "'";
+
+  for (auto lens: pimpl->lenses_)
+  {
+    if (lens->search_in_global())
+    {
+      LOG_DEBUG(logger) << " - Global search on '" << lens->id() << "' for '"
+          << search_string << "'";
+      lens->GlobalSearch(search_string);
+    }
+  }
 }
 
 void HomeLens::Activate(std::string const& uri)
