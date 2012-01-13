@@ -277,8 +277,6 @@ void HomeLens::ResultsMerger::OnSourceRowAdded(DeeModel *model, DeeModelIter *it
   dee_model_get_row (model, iter, row_buf_);
   target_tag = FindMergerTag(model);
 
-  LOG_DEBUG(logger) << "Found '" << g_variant_get_string(row_buf_[0], NULL) << "'";
-
   /* Update the row with the corrected category offset */
   source_cat_offset = dee_model_get_uint32(model, iter, CATEGORY_COLUMN);
   target_cat_offset = cat_registry_->FindCategoryOffset(model, source_cat_offset);
