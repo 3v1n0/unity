@@ -20,6 +20,7 @@
 #include <glib.h>
 #include <string>
 #include <stdexcept>
+#include <map>
 
 #include "GLibSignal.h"
 #include "HomeLens.h"
@@ -48,15 +49,18 @@ public:
 
 private:
   void OnSourceRowAdded(DeeModel *model, DeeModelIter *iter);
-  //void OnSourceRowRemoved(DeeModel* model, DeeModelIter* iter);
-  //void OnSourceRowChanged(DeeModel* model, DeeModelIter* iter);
+  void OnSourceRowRemoved(DeeModel* model, DeeModelIter* iter);
+  void OnSourceRowChanged(DeeModel* model, DeeModelIter* iter);
   void EnsureRowBuf(DeeModel *source);
+  DeeModelTag* FindMergerTag(DeeModel *model);
+  DeeModelTag* RegisterMergerTag(DeeModel *model);
 
 private:
   glib::SignalManager sig_manager_;
   GVariant** row_buf_;
   unsigned int n_cols_;
   glib::Object<DeeModel> target_;
+  std::map<DeeModel*,DeeModelTag*> merger_tags_;
 };
 
 class HomeLens::Impl : public sigc::trackable
@@ -98,18 +102,67 @@ void HomeLens::ModelMerger::AddSource(glib::Object<DeeModel> source)
     return;
   }
 
-  // FIXME row-removed and row-changed
+  RegisterMergerTag(source);
+
   sig_manager_.Add(new RowSignalType(source.RawPtr(),
                                      "row-added",
                                      sigc::mem_fun(this, &HomeLens::ModelMerger::OnSourceRowAdded)));
+
+  sig_manager_.Add(new RowSignalType(source.RawPtr(),
+                                       "row-removed",
+                                       sigc::mem_fun(this, &HomeLens::ModelMerger::OnSourceRowRemoved)));
+
+  sig_manager_.Add(new RowSignalType(source.RawPtr(),
+                                       "row-changed",
+                                       sigc::mem_fun(this, &HomeLens::ModelMerger::OnSourceRowChanged)));
 }
 
 void HomeLens::ModelMerger::OnSourceRowAdded(DeeModel *model, DeeModelIter *iter)
 {
+  DeeModelIter* target_iter;
+  DeeModelTag*  target_tag;
+
   EnsureRowBuf(model);
 
   dee_model_get_row (model, iter, row_buf_);
-  dee_model_append_row (target_, row_buf_);
+  target_tag = FindMergerTag(model);
+
+  /* NOTE: This is a silly merge strategy. Consider some clever sorting? */
+  target_iter = dee_model_append_row (target_, row_buf_);
+  dee_model_set_tag (model, iter, target_tag, target_iter);
+
+  for (unsigned int i = 0; i < n_cols_; i++) g_variant_unref(row_buf_[i]);
+}
+
+void HomeLens::ModelMerger::OnSourceRowRemoved(DeeModel *model, DeeModelIter *iter)
+{
+  DeeModelIter* target_iter;
+  DeeModelTag*  target_tag;
+
+  EnsureRowBuf(model);
+
+  target_tag = FindMergerTag(model);
+  target_iter = static_cast<DeeModelIter*>(dee_model_get_tag(model,
+                                                                iter,
+                                                                target_tag));
+
+  dee_model_remove(target_, target_iter);
+}
+
+void HomeLens::ModelMerger::OnSourceRowChanged(DeeModel *model, DeeModelIter *iter)
+{
+  DeeModelIter* target_iter;
+  DeeModelTag*  target_tag;
+
+  EnsureRowBuf(model);
+
+  dee_model_get_row (model, iter, row_buf_);
+  target_tag = FindMergerTag(model);
+  target_iter = static_cast<DeeModelIter*>(dee_model_get_tag(model,
+                                                                 iter,
+                                                                 target_tag));
+
+  dee_model_set_row (target_, target_iter, row_buf_);
 
   for (unsigned int i = 0; i < n_cols_; i++) g_variant_unref(row_buf_[i]);
 }
@@ -175,6 +228,18 @@ void HomeLens::ModelMerger::EnsureRowBuf(DeeModel *model)
   }
 }
 
+DeeModelTag* HomeLens::ModelMerger::FindMergerTag(DeeModel *model)
+{
+  return merger_tags_[model];
+}
+
+DeeModelTag* HomeLens::ModelMerger::RegisterMergerTag(DeeModel *model)
+{
+  DeeModelTag* merger_tag = dee_model_register_tag(model, NULL);
+  merger_tags_[model] = merger_tag;
+  return merger_tag;
+}
+
 HomeLens::Impl::Impl(HomeLens *owner)
   : owner_(owner)
   , results_merger_(owner->results()->model())
@@ -228,7 +293,7 @@ void HomeLens::Impl::OnLensAdded (Lens::Ptr& lens)
   if (filters_prop().RawPtr())
     filters_merger_.AddSource(filters_prop());
 
-  /* Pick it up when lens set models lazily */
+  /* Pick it up when the lens set models lazily */
   results_prop.changed.connect(sigc::mem_fun(this, &HomeLens::Impl::OnGlobalResultsModelChanged));
   categories_prop.changed.connect(sigc::mem_fun(this, &HomeLens::Impl::OnCategoriesModelChanged));
   filters_prop.changed.connect(sigc::mem_fun(this, &HomeLens::Impl::OnFiltersModelChanged));
@@ -256,11 +321,6 @@ HomeLens::HomeLens()
 {
   count.SetGetterFunction(sigc::mem_fun(&pimpl->lenses_, &Lenses::LensList::size));
   search_in_global = false;
-
-  /*global_results = Results::Ptr(new Results(ModelType::LOCAL));
-  results = Results::Ptr(new Results(ModelType::LOCAL));
-  categories = Categories::Ptr(new Categories(ModelType::LOCAL));
-  filters = Filters::Ptr(new Filters(ModelType::LOCAL));*/
 }
 
 HomeLens::~HomeLens()
