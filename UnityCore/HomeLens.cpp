@@ -43,6 +43,9 @@ nux::logging::Logger logger("unity.dash.homelens");
  * Helper class that maps category offsets between the merged lens and
  * source lenses. We also use it to merge categories from different lenses
  * with the same display name into the same category.
+ *
+ * NOTE: The model pointers passed in are expected to be pointers to the
+ *       results models - and not the category models!
  */
 class HomeLens::CategoryRegistry
 {
@@ -172,7 +175,7 @@ class HomeLens::CategoryMerger : public ModelMerger
 {
 public:
   CategoryMerger(glib::Object<DeeModel> target,
-                 HomeLens::CategoryRegistry* cat_registry);
+                   HomeLens::CategoryRegistry* cat_registry);
 
 protected:
   void OnSourceRowAdded(DeeModel *model, DeeModelIter *iter);
@@ -188,9 +191,6 @@ public:
   ~Impl();
 
   void OnLensAdded(Lens::Ptr& lens);
-  void OnGlobalResultsModelChanged(glib::Object<DeeModel> model);
-  void OnCategoriesModelChanged(glib::Object<DeeModel> model);
-  void OnFiltersModelChanged(glib::Object<DeeModel> model);
 
   HomeLens* owner_;
   Lenses::LensList lenses_;
@@ -277,6 +277,8 @@ void HomeLens::ResultsMerger::OnSourceRowAdded(DeeModel *model, DeeModelIter *it
   dee_model_get_row (model, iter, row_buf_);
   target_tag = FindMergerTag(model);
 
+  LOG_DEBUG(logger) << "Found '" << g_variant_get_string(row_buf_[0], NULL) << "'";
+
   /* Update the row with the corrected category offset */
   source_cat_offset = dee_model_get_uint32(model, iter, CATEGORY_COLUMN);
   target_cat_offset = cat_registry_->FindCategoryOffset(model, source_cat_offset);
@@ -300,6 +302,7 @@ void HomeLens::ResultsMerger::OnSourceRowAdded(DeeModel *model, DeeModelIter *it
 
 void HomeLens::CategoryMerger::OnSourceRowAdded(DeeModel *model, DeeModelIter *iter)
 {
+  DeeModel* results_model;
   DeeModelIter* target_iter;
   DeeModelTag*  target_tag;
   int target_cat_offset, source_cat_offset;
@@ -307,6 +310,16 @@ void HomeLens::CategoryMerger::OnSourceRowAdded(DeeModel *model, DeeModelIter *i
   const unsigned int DISPLAY_NAME_COLUMN = 0;
 
   EnsureRowBuf(model);
+
+  results_model = static_cast<DeeModel*>(g_object_get_data(
+                              G_OBJECT(model), "unity-homelens-results-model"));
+  if (results_model == NULL)
+  {
+    LOG_DEBUG(logger) << "Category model " << model
+                      << " does not have a results model yet";
+    return;
+    // FIXME: Register cats when we get the results model
+  }
 
   dee_model_get_row (model, iter, row_buf_);
   target_tag = FindMergerTag(model);
@@ -318,7 +331,7 @@ void HomeLens::CategoryMerger::OnSourceRowAdded(DeeModel *model, DeeModelIter *i
   target_cat_offset = cat_registry_->FindCategoryOffset(display_name);
   if (target_cat_offset >= 0)
   {
-    cat_registry_->RegisterCategoryOffset(model, source_cat_offset,
+    cat_registry_->RegisterCategoryOffset(results_model, source_cat_offset,
                                           NULL, target_cat_offset);
   }
   else
@@ -326,7 +339,7 @@ void HomeLens::CategoryMerger::OnSourceRowAdded(DeeModel *model, DeeModelIter *i
     target_iter = dee_model_append_row (target_, row_buf_);
     dee_model_set_tag (model, iter, target_tag, target_iter);
     target_cat_offset = dee_model_get_position(target_, target_iter);
-    cat_registry_->RegisterCategoryOffset(model, source_cat_offset,
+    cat_registry_->RegisterCategoryOffset(results_model, source_cat_offset,
                                           display_name, target_cat_offset);
   }
 
@@ -474,7 +487,6 @@ HomeLens::Impl::~Impl()
 
 // FIXME i18n _("Home") description, searchhint
 // FIXME should use home icon
-// FIXME category merging
 
 void HomeLens::Impl::OnLensAdded (Lens::Ptr& lens)
 {
@@ -484,6 +496,13 @@ void HomeLens::Impl::OnLensAdded (Lens::Ptr& lens)
   nux::ROProperty<glib::Object<DeeModel>>& results_prop = lens->global_results()->model;
   nux::ROProperty<glib::Object<DeeModel>>& categories_prop = lens->categories()->model;
   nux::ROProperty<glib::Object<DeeModel>>& filters_prop = lens->filters()->model;
+
+  /*
+   * Important: We must ensure that the categories model is annotated
+   *            with the results model in the "unity-homelens-results-model"
+   *            data slot. We need it later to compute the transfermed offsets
+   *            of the categories in the merged category model.
+   */
 
   /* Most lenses add models lazily, but we can't know that;
    * so try to see if we can add them up front */
@@ -496,25 +515,37 @@ void HomeLens::Impl::OnLensAdded (Lens::Ptr& lens)
   if (filters_prop().RawPtr())
     filters_merger_.AddSource(filters_prop());
 
-  /* Pick it up when the lens set models lazily */
-  results_prop.changed.connect(sigc::mem_fun(this, &HomeLens::Impl::OnGlobalResultsModelChanged));
-  categories_prop.changed.connect(sigc::mem_fun(this, &HomeLens::Impl::OnCategoriesModelChanged));
-  filters_prop.changed.connect(sigc::mem_fun(this, &HomeLens::Impl::OnFiltersModelChanged));
-}
+  /*
+   * Pick it up when the lens set models lazily.
+   */
+  results_prop.changed.connect([&] (glib::Object<DeeModel> model)
+  {
+    DeeModel* categories = lens->categories()->model();
 
-void HomeLens::Impl::OnGlobalResultsModelChanged(glib::Object<DeeModel> model)
-{
-  results_merger_.AddSource(model);
-}
+    if (categories)
+      g_object_set_data(G_OBJECT(categories),
+                          "unity-homelens-results-model",
+                          model.RawPtr());
 
-void HomeLens::Impl::OnCategoriesModelChanged(glib::Object<DeeModel> model)
-{
-  categories_merger_.AddSource(model);
-}
+    results_merger_.AddSource(model);
+  });
 
-void HomeLens::Impl::OnFiltersModelChanged(glib::Object<DeeModel> model)
-{
-  filters_merger_.AddSource(model);
+  categories_prop.changed.connect([&] (glib::Object<DeeModel> model)
+  {
+    DeeModel* results = lens->global_results()->model();
+
+    if (results)
+      g_object_set_data(G_OBJECT(model.RawPtr()),
+                          "unity-homelens-results-model",
+                          results);
+
+    categories_merger_.AddSource(model);
+  });
+
+  filters_prop.changed.connect([&] (glib::Object<DeeModel> model)
+  {
+    filters_merger_.AddSource(model);
+  });
 }
 
 HomeLens::HomeLens()
