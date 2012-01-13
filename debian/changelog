@@ -1,4 +1,4 @@
-unity (5.0.0-0ubuntu1) UNRELEASED; urgency=low
+unity (5.0.0-0ubuntu1) precise; urgency=low
 
   [ Didier Roche ]
   * New upstream release.
@@ -115,7 +115,7 @@ unity (5.0.0-0ubuntu1) UNRELEASED; urgency=low
   * debian/control:
     - update build-dep of libunity, libdee and libbamf
 
- -- Aurélien Gâteau <aurelien.gateau@ubuntu.com>  Thu, 12 Jan 2012 18:04:17 +0100
+ -- Didier Roche <didrocks@ubuntu.com>  Fri, 13 Jan 2012 09:10:59 +0100
 
 unity (4.24.0-0ubuntu1) UNRELEASED; urgency=low
 
