@@ -23,9 +23,9 @@
 
   "button-icon": {
     "color"          : ["#ffffff", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF"],
-    "opacity"        : [      1.0,       1.0,       0.8,       0.8,       0.8],
-    "overlay-opacity": [     0.30,      0.48,      0.45,      0.45,      0.45],
-    "overlay-mode"   : [ "normal","multiply",  "normal",  "normal",  "normal"],
+    "opacity"        : [      1.0,       1.0,       1.0,       0.8,       0.8],
+    "overlay-opacity": [     0.30,      0.48,      0.48,      0.45,      0.45],
+    "overlay-mode"   : [ "normal","multiply",  "multiply",  "normal",  "normal"],
     "blur-size"      : [        5,         0,         0,         0,         0]},
 
   "icon-only"        : {
