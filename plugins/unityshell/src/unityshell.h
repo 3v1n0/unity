@@ -288,7 +288,7 @@ private:
 
   nux::Property<nux::Geometry> primary_monitor_;
 
-  unity::BGHash _bghash;
+  unity::BGHash* _bghash;
 
   ScreenEffectFramebufferObject::Ptr _fbo;
   GLuint                             _active_fbo;
