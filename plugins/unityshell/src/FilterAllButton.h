@@ -16,33 +16,40 @@
  * License version 3 along with this program.  If not, see
  * <http://www.gnu.org/licenses/>
  *
- * Authored by: Gordon Allott <gord.allott@canonical.com>
+ * Authored by: Andrea Azzarone <azzaronea@gmail.com>
  *
  */
-#ifndef UNITYSHELL_FILTERWIDGET_H
-#define UNITYSHELL_FILTERWIDGET_H
 
-#include <Nux/Nux.h>
-#include <Nux/View.h>
-#include <UnityCore/Filter.h>
+#ifndef UNITYSHELL_FILTERALLBUTTON_H
+#define UNITYSHELL_FILTERALLBUTTON_H
+
+#include <sigc++/connection.h>
+
+#include "FilterBasicButton.h"
 
 namespace unity
 {
 namespace dash
 {
 
-class FilterWidget : public nux::View
+class FilterAllButton : public FilterBasicButton
 {
-  NUX_DECLARE_OBJECT_TYPE(FilterWidget, nux::View);
 public:
-  FilterWidget(NUX_FILE_LINE_PROTO);
-  virtual ~FilterWidget() {};
+   FilterAllButton(NUX_FILE_LINE_PROTO);
+   ~FilterAllButton();
 
-  virtual void SetFilter(Filter::Ptr const& filter) = 0;
-  virtual std::string GetFilterType() = 0;
+   void SetFilter(Filter::Ptr const& filter);
+
+private:
+  void OnFilteringChanged(bool filtering);
+  void OnStateChanged(nux::View* view);
+
+  Filter::Ptr filter_;
+  sigc::connection filtering_connection_;
 };
 
 } // namespace dash
 } // namespace unity
 
-#endif //UNITYSHELL_FILTERWIDGET_H
+#endif // UNITYSHELL_FILTERALLBUTTON_H
+
