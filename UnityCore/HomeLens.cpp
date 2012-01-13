@@ -67,8 +67,8 @@ public:
 
   void OnLensAdded(Lens::Ptr& lens);
   void OnGlobalResultsModelChanged(glib::Object<DeeModel> model);
-  //HomeLens::Impl::OnGlobalResultsModelChanged
-  //HomeLens::Impl::OnGlobalResultsModelChanged
+  void OnCategoriesModelChanged(glib::Object<DeeModel> model);
+  void OnFiltersModelChanged(glib::Object<DeeModel> model);
 
   HomeLens* owner_;
   Lenses::LensList lenses_;
@@ -78,7 +78,8 @@ public:
 };
 
 HomeLens::ModelMerger::ModelMerger(glib::Object<DeeModel> target)
-  : target_(target)
+  : n_cols_(0)
+  , target_(target)
 {}
 
 HomeLens::ModelMerger::~ModelMerger()
@@ -117,6 +118,13 @@ void HomeLens::ModelMerger::EnsureRowBuf(DeeModel *model)
 {
   if (G_UNLIKELY (n_cols_ == 0))
   {
+    /* We have two things to accomplish here.
+     * 1) Allocate the row_buf_, and
+     * 2) Make sure that the target model has the correct schema set.
+     *
+     * INVARIANT: n_cols_ == 0 iff row_buf_ == NULL.
+     */
+
     n_cols_ = dee_model_get_n_columns(model);
 
     if (n_cols_ == 0)
@@ -139,14 +147,17 @@ void HomeLens::ModelMerger::EnsureRowBuf(DeeModel *model)
       const gchar* const *schema1 = dee_model_get_schema(target_, &n_cols1);
       const gchar* const *schema2 = dee_model_get_schema(model, NULL);
 
+      /* At the very least we should have an equal number of rows */
       if (n_cols_ != n_cols1)
       {
         LOG_ERROR(logger) << "Schema mismatch between source and target model. Expected "
                           << n_cols1 << " columns, but found"
                           << n_cols_ << ".";
+        n_cols_ = 0;
         return;
       }
 
+      /* Compare schemas */
       for (unsigned int i = 0; i < n_cols_; i++)
       {
         if (g_strcmp0(schema1[i], schema2[i]) != 0)
@@ -154,6 +165,7 @@ void HomeLens::ModelMerger::EnsureRowBuf(DeeModel *model)
           LOG_ERROR(logger) << "Schema mismatch between source and target model. Expected column "
                             << i << " to be '" << schema1[i] << "', but found '"
                             << schema2[i] << "'.";
+          n_cols_ = 0;
           return;
         }
       }
@@ -169,15 +181,23 @@ HomeLens::Impl::Impl(HomeLens *owner)
   , categories_merger_(owner->categories()->model())
   , filters_merger_(owner->filters()->model())
 {
-  DeeModel* model = owner->results()->model();
-  bool has_results_schema = dee_model_get_n_columns(model) > 0;
-
-  if (!has_results_schema)
+  DeeModel* results = owner->results()->model();
+  if (dee_model_get_n_columns(results) == 0)
   {
-    dee_model_set_schema(model, "s", "s", "u", "s", "s", "s", "s", NULL);
+    dee_model_set_schema(results, "s", "s", "u", "s", "s", "s", "s", NULL);
   }
 
-  // FIXME filters and categories schemas
+  DeeModel* categories = owner->categories()->model();
+  if (dee_model_get_n_columns(categories) == 0)
+  {
+    dee_model_set_schema(categories, "s", "s", "s", "a{sv}", NULL);
+  }
+
+  DeeModel* filters = owner->filters()->model();
+  if (dee_model_get_n_columns(filters) == 0)
+  {
+    dee_model_set_schema(filters, "s", "s", "s", "s", "a{sv}", "b", "b", "b", NULL);
+  }
 }
 
 HomeLens::Impl::~Impl()
@@ -208,15 +228,25 @@ void HomeLens::Impl::OnLensAdded (Lens::Ptr& lens)
   if (filters_prop().RawPtr())
     filters_merger_.AddSource(filters_prop());
 
-  // FIXME
+  /* Pick it up when lens set models lazily */
   results_prop.changed.connect(sigc::mem_fun(this, &HomeLens::Impl::OnGlobalResultsModelChanged));
-  /*categories_prop.changed.connect(sigc::mem_fun(this, &HomeLens::Impl::OnCategoriesModelChanged));
-  filters_prop.changed.connect(sigc::mem_fun(this, &HomeLens::Impl::OnFiltersModelChanged));*/
+  categories_prop.changed.connect(sigc::mem_fun(this, &HomeLens::Impl::OnCategoriesModelChanged));
+  filters_prop.changed.connect(sigc::mem_fun(this, &HomeLens::Impl::OnFiltersModelChanged));
 }
 
 void HomeLens::Impl::OnGlobalResultsModelChanged(glib::Object<DeeModel> model)
 {
   results_merger_.AddSource(model);
+}
+
+void HomeLens::Impl::OnCategoriesModelChanged(glib::Object<DeeModel> model)
+{
+  categories_merger_.AddSource(model);
+}
+
+void HomeLens::Impl::OnFiltersModelChanged(glib::Object<DeeModel> model)
+{
+  filters_merger_.AddSource(model);
 }
 
 HomeLens::HomeLens()
