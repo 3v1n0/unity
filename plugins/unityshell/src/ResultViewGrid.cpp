@@ -62,6 +62,8 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
   , mouse_last_x_(-1)
   , mouse_last_y_(-1)
 {
+  SetAcceptKeyNavFocusOnMouseDown(false);
+  
   auto needredraw_lambda = [&](int value)
   {
     NeedRedraw();
@@ -82,13 +84,6 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
     last_mouse_down_y_ = y;
     uint index = GetIndexAtPosition(x, y);
     mouse_over_index_ = index;
-    if (index >= 0 && index < results_.size())
-    {
-      // we got a click on a button so activate it
-      Result result = results_[index];
-      selected_index_ = index;
-      focused_uri_ = result.uri;
-    }
   });
 
   mouse_leave.connect([&](int x, int y, unsigned long mouse_state, unsigned long button_state)
@@ -500,21 +495,9 @@ void ResultViewGrid::OnOnKeyNavFocusChange(nux::Area *area)
   {
     if (selected_index_ < 0)
     {
-      if (mouse_over_index_ >= 0 && mouse_over_index_ < static_cast<int>(results_.size()))
-      {
-        // to hack around nux, nux sends the keynavfocuschange event before
-        // mouse clicks, so when mouse click happens we have already scrolled away
-        // because the keynav focus changed
-        focused_uri_ = results_[mouse_over_index_].uri;
-        selected_index_ = mouse_over_index_;
-      }
-      else
-      {
         focused_uri_ = results_.front().uri;
         selected_index_ = 0;
-      }
     }
-
 
     int items_per_row = GetItemsPerRow();
     int focused_x = (renderer_->width + horizontal_spacing) * (selected_index_ % items_per_row);
@@ -886,6 +869,19 @@ ResultViewGrid::DndSourceDragFinished(nux::DndAction result)
   last_mouse_down_y_ = -1;
   current_drag_uri_.clear();
   current_drag_icon_name_.clear();
+  
+  // We need this because the drag can start in a ResultViewGrid and can
+  // end in another ResultViewGrid
+  EmitMouseLeaveSignal(0, 0, 0, 0);
+  
+  // We need an extra mouse motion to highlight the icon under the mouse
+  // as soon as dnd finish
+  Display* display = nux::GetGraphicsDisplay()->GetX11Display();
+  if (display)
+  {
+    XWarpPointer(display, None, None, 0, 0, 0, 0, 0, 0);
+    XSync(display, 0);
+  }
 }
 
 int

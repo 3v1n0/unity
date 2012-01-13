@@ -41,7 +41,7 @@ RatingsFilter::RatingsFilter(DeeModel* model, DeeModelIter* iter)
 
 void RatingsFilter::Clear()
 {
-  UpdateState(0.0f, false);
+  rating = 0.0f;
 }
 
 void RatingsFilter::Update(Filter::Hints& hints)
@@ -61,13 +61,15 @@ void RatingsFilter::Update(Filter::Hints& hints)
 
 void RatingsFilter::OnRatingChanged(float new_value)
 {
-  UpdateState(new_value, true);
+  UpdateState(new_value);
 }
 
-void RatingsFilter::UpdateState(float raw_rating, bool raw_filtering)
+void RatingsFilter::UpdateState(float raw_rating)
 {
   if (!IsValid())
     return;
+    
+  bool new_filtering = raw_rating > 0.0f;
 
   GVariantBuilder b;
   g_variant_builder_init(&b, G_VARIANT_TYPE("a{sv}"));
@@ -79,7 +81,7 @@ void RatingsFilter::UpdateState(float raw_rating, bool raw_filtering)
                       g_variant_builder_end(&b));
   dee_model_set_value(model_, iter_,
                       FilterColumn::FILTERING,
-                      g_variant_new("b", raw_filtering ? TRUE : FALSE));
+                      g_variant_new("b", new_filtering ? TRUE : FALSE));
   IgnoreChanges(false);
 
   filtering.EmitChanged(filtering);

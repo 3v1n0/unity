@@ -66,6 +66,7 @@ class Launcher(Unity):
         self.width = 0
         self.height = 0
         self.show_timeout = 1
+        self.hide_timeout = 1
 
     def move_mouse_to_reveal_pos(self):
         self._mouse.move(self.x, self.y)
@@ -73,6 +74,7 @@ class Launcher(Unity):
 
     def move_mouse_outside_of_boundry(self):
         self._mouse.move(self.x + (self.width *2), self._mouse.y)
+        sleep(self.hide_timeout)
 
     def is_showing(self):
         state = self.__get_state()
@@ -173,8 +175,6 @@ class Switcher(Unity):
 
     def get_is_visible(self):
         return bool(self.get_state('/Unity/SwitcherController')[0]['visible'])
-
-
 
 class Dash(Unity):
 	"""

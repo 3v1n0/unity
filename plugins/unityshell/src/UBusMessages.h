@@ -71,4 +71,8 @@
 // FIXME - fix the nux focus api so we don't need this
 #define UBUS_RESULT_VIEW_KEYNAV_CHANGED "RESULT_VIEW_KEYNAV_CHANGED"
 
+// Signals sent when the switcher is shown, hidden or changes selection
+#define UBUS_SWITCHER_SHOWN             "SWITCHER_SHOWN"
+#define UBUS_SWITCHER_SELECTION_CHANGED "SWITCHER_SELECTION_CHANGED"
+
 #endif // UBUS_MESSAGES_H

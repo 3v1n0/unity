@@ -272,7 +272,10 @@ void Controller::Impl::OnLauncherRemoveRequest(LauncherIcon* icon)
       BamfLauncherIcon* bamf_icon = dynamic_cast<BamfLauncherIcon*>(icon);
 
       if (bamf_icon)
+      {
         bamf_icon->UnStick();
+        bamf_icon->Quit();
+      }
 
       break;
     }
@@ -343,7 +346,7 @@ void Controller::Impl::InsertExpoAction()
   expo_icon_ = new SimpleLauncherIcon(launcher_.GetPointer());
 
   expo_icon_->tooltip_text = _("Workspace Switcher");
-  expo_icon_->SetIconName("workspace-switcher");
+  expo_icon_->icon_name = "workspace-switcher";
   expo_icon_->SetQuirk(LauncherIcon::QUIRK_VISIBLE, true);
   expo_icon_->SetQuirk(LauncherIcon::QUIRK_RUNNING, false);
   expo_icon_->SetIconType(LauncherIcon::TYPE_EXPO);

@@ -120,11 +120,16 @@ private:
   gchar* GetActiveViewName();
   static void OnPlaceViewShown(GVariant* data, PanelMenuView* self);
   static void OnPlaceViewHidden(GVariant* data, PanelMenuView* self);
+  static void OnSwitcherShown(GVariant* data, PanelMenuView* self);
+  static void OnSwitcherSelectionChanged(GVariant* data, PanelMenuView* self);
+
   void UpdateShowNow(bool ignore);
+
   static gboolean UpdateActiveWindowPosition(PanelMenuView* self);
   static gboolean UpdateShowNowWithDelay(PanelMenuView* self);
   static gboolean OnNewAppShow(PanelMenuView* self);
   static gboolean OnNewAppHide(PanelMenuView* self);
+
   void DrawText(cairo_t *cr_real,
                 int &x, int y, int width, int height,
                 const char* font_desc,
@@ -165,6 +170,7 @@ private:
   int _last_height;
 
   bool _places_showing;
+  bool _switcher_showing;
   bool _show_now_activated;
   bool _we_control_active;
   bool _new_app_menu_shown;
@@ -183,14 +189,15 @@ private:
   glib::Signal<void, BamfMatcher*, BamfApplication*, BamfApplication*> _active_app_changed_signal;
   glib::Signal<void, BamfView*, gchar*, gchar*> _view_name_changed_signal;
 
-  guint32 _place_shown_interest;
-  guint32 _place_hidden_interest;
+  std::vector<unsigned int> _ubus_interests;
 
   int _menus_fadein;
   int _menus_fadeout;
   int _menus_discovery;
   int _menus_discovery_fadein;
   int _menus_discovery_fadeout;
+
+  gchar* _panel_title;
 
   Animator* _fade_in_animator;
   Animator* _fade_out_animator;

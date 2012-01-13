@@ -40,3 +40,4 @@ or if you have a specific client you care about you can build that client explic
 Testing is handled through GTest, googles test system, we currently have three test targets; test-gtest, test-gtest-xless, test-gtest-dbus. tests that require Nux should be in test-gtest as they require X, tests that can run headless should be in test-gtest-xless and tests that require dbus should be run with test-gtest-dbus, which tests run with our test service.
 
 for more information see the README file
+
