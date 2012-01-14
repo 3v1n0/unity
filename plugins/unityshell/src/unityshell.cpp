@@ -1128,7 +1128,16 @@ void UnityScreen::handleEvent(XEvent* event)
         key_string[result] = 0;
         if (super_keypressed_)
         {
-          shortcut_controller_->Hide();
+          g_idle_add([] (gpointer data) -> gboolean {
+            auto self = static_cast<UnityScreen*>(data);
+            if (!self->launcher_controller_->launcher().KeySwitcherIsActive())
+            {
+              self->shortcut_controller_->SetEnabled(false);
+              self->shortcut_controller_->Hide();
+            }
+            return FALSE;
+          }, this);
+
           skip_other_plugins = launcher.CheckSuperShortcutPressed(screen->dpy(), key_sym, event->xkey.keycode, event->xkey.state, key_string);
           if (!skip_other_plugins)
           {
@@ -1244,33 +1253,33 @@ bool UnityScreen::showLauncherKeyInitiate(CompAction* action,
   super_keypressed_ = true;
   launcher_controller_->launcher().StartKeyShowLauncher();
   EnsureSuperKeybindings ();
-  
-  if (enable_shortcut_overlay_ and !shortcut_controller_->Visible())
+
+  if (!shortcut_controller_->Visible() && shortcut_controller_->IsEnabled())
   {
     static nux::Geometry last_geo;
     UScreen* uscreen = UScreen::GetDefault();
     int primary_monitor = uscreen->GetPrimaryMonitor();
     auto monitor_geo = uscreen->GetMonitorGeometry(primary_monitor);
-        
+
     int width = 970;
     int height =  680;
     int launcher_width = optionGetIconSize() + 18;
     int panel_height = 24;
     int x = monitor_geo.x + launcher_width + (monitor_geo.width - launcher_width- width) / 2;
     int y = monitor_geo.y + panel_height + (monitor_geo.height - panel_height - height) / 2;
-    
+
     nux::Geometry geo (x, y, width, height);
-    
+
     if (last_geo != geo)
     {
       shortcut_controller_->SetWorkspace(geo);
       last_geo = geo;
     }
-    
+
     if (last_geo.x > monitor_geo.x and last_geo.y > monitor_geo.y)
       shortcut_controller_->Show();
    }
-  
+
   return false;
 }
 
@@ -1281,6 +1290,8 @@ bool UnityScreen::showLauncherKeyTerminate(CompAction* action,
   super_keypressed_ = false;
   launcher_controller_->launcher().EndKeyShowLauncher();
   launcher_controller_->launcher().KeySwitcherTerminate();
+
+  shortcut_controller_->SetEnabled(enable_shortcut_overlay_);
   shortcut_controller_->Hide();
   return false;
 }
@@ -2241,6 +2252,7 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       break;
     case UnityshellOptions::ShortcutOverlay:
       enable_shortcut_overlay_ = optionGetShortcutOverlay();
+      shortcut_controller_->SetEnabled(enable_shortcut_overlay_);
       break;
     case UnityshellOptions::ShowDesktopIcon:
       launcher_controller_->SetShowDesktopIcon(optionGetShowDesktopIcon());
