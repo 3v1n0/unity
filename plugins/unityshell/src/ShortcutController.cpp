@@ -37,14 +37,31 @@ Controller::Controller(std::list<AbstractHint*>& hints)
   , show_timer_(0)
   , fade_in_animator_(new Animator(100))
   , fade_out_animator_(new Animator(100))
+  , enabled_(true)
 
 {
   bg_color_ = nux::Color(0.0, 0.0, 0.0, 0.5);
 
   UBusServer *ubus = ubus_server_get_default();
-  bg_update_handle_ = ubus_server_register_interest(ubus, UBUS_BACKGROUND_COLOR_CHANGED,
-                                                    (UBusCallback)&Controller::OnBackgroundUpdate,
-                                                    this);
+  unsigned int interest;
+  interest = ubus_server_register_interest(ubus, UBUS_BACKGROUND_COLOR_CHANGED,
+                                           (UBusCallback)&Controller::OnBackgroundUpdate,
+                                           this);
+  ubus_interests_.push_back(interest);
+
+  interest = ubus_server_register_interest(ubus, UBUS_LAUNCHER_START_KEY_SWTICHER,
+                                           [] (GVariant* data, gpointer user_data) {
+                                             auto self = static_cast<Controller*>(user_data);
+                                             self->enabled_ = false;
+                                           }, this);
+  ubus_interests_.push_back(interest);
+
+  interest = ubus_server_register_interest(ubus, UBUS_LAUNCHER_END_KEY_SWTICHER,
+                                           [] (GVariant* data, gpointer user_data) {
+                                             auto self = static_cast<Controller*>(user_data);
+                                             self->enabled_ = true;
+                                           }, this);
+  ubus_interests_.push_back(interest);
 
   model_.reset(new Model(hints));
   
@@ -59,8 +76,10 @@ Controller::Controller(std::list<AbstractHint*>& hints)
 
 Controller::~Controller()
 {
-  ubus_server_unregister_interest(ubus_server_get_default(), bg_update_handle_);
-  
+  UBusServer* ubus = ubus_server_get_default();
+  for (auto interest : ubus_interests_)
+    ubus_server_unregister_interest(ubus, interest);
+
   if (fade_in_animator_)
     delete fade_in_animator_;
 
@@ -110,7 +129,9 @@ void Controller::Show()
 {
   if (show_timer_)
     g_source_remove (show_timer_);
-  show_timer_ = g_timeout_add(SUPER_TAP_DURATION, &Controller::OnShowTimer, this);
+
+  if (enabled_)
+    show_timer_ = g_timeout_add(SUPER_TAP_DURATION, &Controller::OnShowTimer, this);
 
   model_->Fill();
   visible_ = true;
@@ -119,7 +140,12 @@ void Controller::Show()
 gboolean Controller::OnShowTimer(gpointer data)
 {
   Controller* self = static_cast<Controller*>(data);
-  
+
+  if (!self->enabled_)
+  {
+    return FALSE;
+  }
+
   ubus_server_send_message(ubus_server_get_default(),
                            UBUS_PLACE_VIEW_CLOSE_REQUEST,
                            NULL);
@@ -188,6 +214,16 @@ void Controller::Hide()
 bool Controller::Visible()
 {
   return visible_;
+}
+
+bool Controller::IsEnabled()
+{
+  return enabled_;
+}
+
+void Controller::SetEnabled(bool enabled)
+{
+  enabled_ = enabled;
 }
 
 } // namespace shortcut

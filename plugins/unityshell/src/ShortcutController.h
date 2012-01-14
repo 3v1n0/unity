@@ -49,8 +49,10 @@ public:
   void Hide();
   
   bool Visible();
+  bool IsEnabled();
 
   void SetWorkspace(nux::Geometry const& geo);
+  void SetEnabled(bool enabled);
 
 private:
   // Private Methods
@@ -74,10 +76,12 @@ private:
   bool visible_;
   nux::Color bg_color_;
   guint show_timer_;
-  guint bg_update_handle_;
   
   Animator* fade_in_animator_;
   Animator* fade_out_animator_;
+
+  bool enabled_;
+  std::vector<unsigned int> ubus_interests_;
 }; 
 
 } // namespace shortcut
