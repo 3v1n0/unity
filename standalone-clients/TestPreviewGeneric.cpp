@@ -113,7 +113,7 @@ int main(int argc, char **argv)
   // for views
 
   g_type_init ();
-  g_thread_init (NULL);
+  
   gtk_init (&argc, &argv);
 
   nux::NuxInitialize(0);

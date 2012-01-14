@@ -53,17 +53,24 @@ public:
 
   nux::Property<std::string> swarm_name;
   nux::ROProperty<std::size_t> count;
+  nux::ROProperty<unsigned long long> seqnum;
 
   sigc::signal<void, RowAdaptor&> row_added;
   sigc::signal<void, RowAdaptor&> row_changed;
   sigc::signal<void, RowAdaptor&> row_removed;
 
+  sigc::signal<void, unsigned long long, unsigned long long> begin_transaction;
+  sigc::signal<void, unsigned long long, unsigned long long> end_transaction;
+
 private:
   void OnRowAdded(DeeModel* model, DeeModelIter* iter);
   void OnRowChanged(DeeModel* model, DeeModelIter* iter);
   void OnRowRemoved(DeeModel* model, DeeModelIter* iter);
+  void OnTransactionBegin(DeeModel* model, guint64 begin_seq, guint64 end_seq);
+  void OnTransactionEnd(DeeModel* model, guint64 begin_seq, guint64 end_seq);
   void OnSwarmNameChanged(std::string const& swarm_name);
   std::size_t get_count();
+  unsigned long long get_seqnum();
 
 private:
   glib::Object<DeeModel> model_;

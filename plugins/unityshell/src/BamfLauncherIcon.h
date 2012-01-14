@@ -46,6 +46,7 @@ public:
 
   const char* DesktopFile();
   bool IsSticky();
+  void Quit();
   void Stick();
   void UnStick();
 

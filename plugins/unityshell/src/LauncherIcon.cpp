@@ -604,7 +604,7 @@ bool LauncherIcon::OpenQuicklist(bool default_to_first_item)
    * shwing the icon quicklist. */
   if (win_manager->IsExpoActive())
   {
-    on_expo_terminated_connection = win_manager->terminate_expo.connect([&]() {
+    on_expo_terminated_connection = win_manager->terminate_expo.connect([&, tip_x, tip_y]() {
         QuicklistManager::Default()->ShowQuicklist(_quicklist, tip_x, tip_y);
         on_expo_terminated_connection.disconnect();
     });
