@@ -51,6 +51,10 @@ Controller::Controller(std::list<AbstractHint*>& hints)
                                    enabled_ = true;
                                  });
 
+  ubus_manager_.RegisterInterest(UBUS_PLACE_VIEW_SHOWN, [&] (GVariant*) {
+                                   Hide();
+                                 });
+
   model_.reset(new Model(hints));
 
   model_->Fill();
