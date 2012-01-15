@@ -255,16 +255,12 @@ Controller::Impl::OnLauncherAddRequestSpecial(char* path, LauncherIcon* before, 
   SoftwareCenterLauncherIcon* result = CreateSCLauncherIcon(path, aptdaemon_trans_id);
   if (result)
   {
-    model_->AddIcon((LauncherIcon*)result);
+    RegisterIcon(result);
 
-    LauncherEntryRemote* entry = NULL;
-    if (path)
-      entry = remote_model_.LookupByDesktopFile(path);
-    if (entry)
-      result->InsertEntryRemote(entry);
     if (before)
       model_->ReorderBefore(result, before, false);
-    }
+  }
+  Save();
 }
 
 void Controller::Impl::SortAndUpdate()
