@@ -150,7 +150,7 @@ Controller::Impl::Impl(Display* display)
 
   launcher_->SetModel(model_.get());
   launcher_->launcher_addrequest.connect(sigc::mem_fun(this, &Impl::OnLauncherAddRequest));
-  launcher_->launcher_addrequest_special.connect(sigc::mem_fun(this, &LauncherController::OnLauncherAddRequestSpecial));
+  launcher_->launcher_addrequest_special.connect(sigc::mem_fun(this, &Impl::OnLauncherAddRequestSpecial));
   launcher_->launcher_removerequest.connect(sigc::mem_fun(this, &Impl::OnLauncherRemoveRequest));
 
   device_section_ = new DeviceLauncherSection(raw_launcher);
@@ -240,7 +240,7 @@ void Controller::Impl::Save()
 }
 
 void
-LauncherController::OnLauncherAddRequestSpecial(char* path, LauncherIcon* before, char* aptdaemon_trans_id)
+Controller::Impl::OnLauncherAddRequestSpecial(char* path, LauncherIcon* before, char* aptdaemon_trans_id)
 {
   std::list<BamfLauncherIcon*> launchers;
   std::list<BamfLauncherIcon*>::iterator it;
@@ -471,12 +471,12 @@ LauncherIcon* Controller::Impl::CreateFavorite(const char* file_path)
 }
 
 SoftwareCenterLauncherIcon*
-LauncherController::CreateSCLauncherIcon(const char* file_path, const char* aptdaemon_trans_id)
+Controller::Impl::CreateSCLauncherIcon(const char* file_path, const char* aptdaemon_trans_id)
 {
   BamfApplication* app;
   SoftwareCenterLauncherIcon* icon;
 
-  app = bamf_matcher_get_application_for_desktop_file(_matcher, file_path, true);
+  app = bamf_matcher_get_application_for_desktop_file(matcher_, file_path, true);
   if (!BAMF_IS_APPLICATION(app))
     return NULL;
 
@@ -489,9 +489,9 @@ LauncherController::CreateSCLauncherIcon(const char* file_path, const char* aptd
   g_object_set_qdata(G_OBJECT(app), g_quark_from_static_string("unity-seen"), GINT_TO_POINTER(1));
 
   bamf_view_set_sticky(BAMF_VIEW(app), true);
-  icon = new SoftwareCenterLauncherIcon(launcher_, app, (char*)aptdaemon_trans_id);
+  icon = new SoftwareCenterLauncherIcon(launcher_.GetPointer(), app, (char*)aptdaemon_trans_id);
   icon->SetIconType(LauncherIcon::TYPE_APPLICATION);
-  icon->SetSortPriority(_sort_priority++);
+  icon->SetSortPriority(sort_priority_++);
 
   return icon;
 }

@@ -39,6 +39,11 @@
 
 #include "SoftwareCenterLauncherIcon.h"
 
+namespace unity
+{
+namespace launcher
+{
+
 SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(Launcher* IconManager, BamfApplication* app, char* aptdaemon_trans_id)
 : BamfLauncherIcon(IconManager, app)
 {
@@ -66,6 +71,7 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(Launcher* IconManager, Ba
                                           "org.debian.apt.transaction",
                                           "Progress"),
                                 sigc::mem_fun(*this, &SoftwareCenterLauncherIcon::OnGetProgressCallback),
+                                NULL,
                                 G_DBUS_CALL_FLAGS_NO_AUTO_START,
                                 2000);
 
@@ -121,3 +127,5 @@ SoftwareCenterLauncherIcon::OnPropertyChanged(GVariant* params) {
 
 }
 
+}
+}

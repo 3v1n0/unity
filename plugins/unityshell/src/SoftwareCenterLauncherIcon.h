@@ -29,6 +29,13 @@
 #include <glib/gvariant.h>
 #include <UnityCore/GLibDBusProxy.h>
 
+
+namespace unity
+{
+namespace launcher
+{
+
+
 class SoftwareCenterLauncherIcon : public BamfLauncherIcon
 {
 public:
@@ -49,5 +56,8 @@ private:
 
     void OnPropertyChanged(GVariant* params);
 };
+
+}
+}
 
 #endif
