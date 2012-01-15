@@ -653,7 +653,7 @@ int main (int argc, char **argv)
   nux::NuxInitialize (0);
   GLFuncs::init ();
 	g_type_init ();
-  g_thread_init (NULL);
+  
   gtk_init(&argc, &argv);
 
   BaseContext *bc = new BaseContext (display);

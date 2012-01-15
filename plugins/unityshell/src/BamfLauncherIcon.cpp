@@ -849,10 +849,15 @@ void BamfLauncherIcon::UpdateMenus()
 
 void BamfLauncherIcon::OnQuit(DbusmenuMenuitem* item, int time, BamfLauncherIcon* self)
 {
+  self->Quit();
+}
+
+void BamfLauncherIcon::Quit()
+{
   GList* children, *l;
   BamfView* view;
 
-  children = bamf_view_get_children(BAMF_VIEW(self->m_App));
+  children = bamf_view_get_children(BAMF_VIEW(m_App));
 
   for (l = children; l; l = l->next)
   {
