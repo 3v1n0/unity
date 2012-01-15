@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright 2011 Canonical Ltd.
  *
@@ -19,53 +20,55 @@
  *
  */
 
-
-
-#ifndef FILTERMULTIRANGE_H
-#define FILTERMULTIRANGE_H
+#ifndef UNITYSHELL_FILTERMULTIRANGE_H
+#define UNITYSHELL_FILTERMULTIRANGE_H
 
 #include <Nux/Nux.h>
 #include <Nux/HLayout.h>
 #include <Nux/VLayout.h>
 #include <UnityCore/MultiRangeFilter.h>
-#include "FilterWidget.h"
+
+#include "FilterAllButton.h"
 #include "FilterBasicButton.h"
 #include "FilterExpanderLabel.h"
 
-namespace unity {
-  class FilterMultiRangeButton;
+namespace unity
+{
+namespace dash
+{
 
-  class FilterMultiRange : public FilterExpanderLabel, public unity::FilterWidget {
-  public:
-    FilterMultiRange (NUX_FILE_LINE_PROTO);
-    virtual ~FilterMultiRange();
+class FilterMultiRangeButton;
 
-    void SetFilter (dash::Filter::Ptr filter);
-    std::string GetFilterType ();
+class FilterMultiRange : public FilterExpanderLabel
+{
+  NUX_DECLARE_OBJECT_TYPE(FilterMultiRange, FilterExpanderLabel);
+public:
+  FilterMultiRange(NUX_FILE_LINE_PROTO);
+  virtual ~FilterMultiRange();
 
-    nux::Property<bool> all_selected;
+  void SetFilter(Filter::Ptr const& filter);
+  std::string GetFilterType();
 
-  protected:
-    virtual long int ProcessEvent(nux::IEvent& ievent, long int TraverseInfo, long int ProcessEventInfo);
-    virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
-    virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
-    virtual void PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw);
+protected:
+  virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
+  virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
 
-    void InitTheme ();
+  void InitTheme();
 
-  private:
-    void OnAllActivated(nux::View* view);
-    void OnOptionAdded(dash::FilterOption::Ptr new_filter);
-    void OnOptionRemoved(dash::FilterOption::Ptr removed_filter);
-    void OnActiveChanged(bool value);
+private:
+  void OnAllActivated(nux::View* view);
+  void OnOptionAdded(dash::FilterOption::Ptr const& new_filter);
+  void OnOptionRemoved(dash::FilterOption::Ptr const& removed_filter);
+  void OnActiveChanged(bool value);
 
-    nux::HLayout *layout_;
-    FilterBasicButton* all_button_;
+  nux::HLayout* layout_;
+  FilterAllButton* all_button_;
 
-    std::vector<FilterMultiRangeButton*> buttons_;
-    dash::MultiRangeFilter::Ptr filter_;
-  };
+  std::vector<FilterMultiRangeButton*> buttons_;
+  MultiRangeFilter::Ptr filter_;
+};
 
-}
+} // unityshell dash
+} // unityshell unity
 
-#endif // FILTERMULTIRANGE_H
+#endif // UNITYSHELL_FILTERMULTIRANGE_H

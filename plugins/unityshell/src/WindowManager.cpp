@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -22,11 +23,11 @@ static WindowManager* window_manager = NULL;
 
 class WindowManagerDummy : public WindowManager
 {
-  unsigned int GetWindowActiveNumber (guint32 xid)
+  unsigned long long GetWindowActiveNumber (guint32 xid)
   {
     return 0;
   }
-  
+
   bool IsScreenGrabbed()
   {
     return false;
@@ -62,6 +63,16 @@ class WindowManagerDummy : public WindowManager
     return false;
   }
 
+  bool IsWindowMapped(guint32 xid)
+  {
+    return true;
+  }
+
+  bool IsWindowVisible(guint32 xid)
+  {
+    return true;
+  }
+
   void Restore(guint32 xid)
   {
     g_debug("%s", G_STRFUNC);
@@ -92,7 +103,7 @@ class WindowManagerDummy : public WindowManager
     g_debug("%s", G_STRFUNC);
   }
 
-  void FocusWindowGroup(std::vector<Window> windows)
+  void FocusWindowGroup(std::vector<Window> windows, FocusVisibility)
   {
     g_debug("%s", G_STRFUNC);
   }
@@ -105,7 +116,9 @@ class WindowManagerDummy : public WindowManager
 
   nux::Geometry GetWindowGeometry(guint xid)
   {
-    return nux::Geometry(0, 0, 1, 1);
+    int width = (guint32)xid >> 16;
+    int height = (guint32)xid & 0x0000FFFF;
+    return nux::Geometry(0, 0, width, height);
   }
 
   nux::Geometry GetScreenGeometry()
@@ -174,6 +187,9 @@ WindowManager::SetDefault(WindowManager* manager)
 void
 WindowManager::StartMove(guint32 xid, int x, int y)
 {
+  if (x < 0 || y < 0)
+    return;
+
   XEvent ev;
   Display* d = nux::GetGraphicsDisplay()->GetX11Display();
 
@@ -201,7 +217,7 @@ WindowManager::StartMove(guint32 xid, int x, int y)
     True
   };
   XEvent* e = (XEvent*)&bev;
-  nux::GetGraphicsThread()->ProcessForeignEvent(e, NULL);
+  nux::GetWindowThread()->ProcessForeignEvent(e, NULL);
 
   ev.xclient.type    = ClientMessage;
   ev.xclient.display = d;

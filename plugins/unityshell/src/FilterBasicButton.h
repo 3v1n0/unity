@@ -19,45 +19,48 @@
  *
  */
 
-
-
-#ifndef FILTERBASICBUTTON_H
-#define FILTERBASICBUTTON_H
+#ifndef UNITYSHELL_FILTERBASICBUTTON_H
+#define UNITYSHELL_FILTERBASICBUTTON_H
 
 #include <Nux/Nux.h>
 #include <Nux/CairoWrapper.h>
-#include "Nux/ToggleButton.h"
+#include <Nux/ToggleButton.h>
+
 #include "FilterWidget.h"
-#include "DashStyle.h"
 
-namespace unity {
+namespace unity
+{
+namespace dash
+{
 
-  class FilterBasicButton : public nux::ToggleButton {
-  public:
-    FilterBasicButton (nux::TextureArea *image, NUX_FILE_LINE_PROTO);
-    FilterBasicButton (const std::string label, NUX_FILE_LINE_PROTO);
-    FilterBasicButton (const std::string label, nux::TextureArea *image, NUX_FILE_LINE_PROTO);
-    FilterBasicButton (NUX_FILE_LINE_PROTO);
-    virtual ~FilterBasicButton();
+class FilterBasicButton : public nux::ToggleButton
+{
+public:
+  FilterBasicButton(nux::TextureArea* image, NUX_FILE_LINE_PROTO);
+  FilterBasicButton(std::string const& label, NUX_FILE_LINE_PROTO);
+  FilterBasicButton(std::string const& label, nux::TextureArea* image, NUX_FILE_LINE_PROTO);
+  FilterBasicButton(NUX_FILE_LINE_PROTO);
+  virtual ~FilterBasicButton();
 
-  protected:
-    virtual long ComputeLayout2();
-    virtual long int ProcessEvent(nux::IEvent& ievent, long int TraverseInfo, long int ProcessEventInfo);
-    virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
-    virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
-    virtual void PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw);
+protected:
+  virtual long ComputeContentSize();
+  virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
 
-    void InitTheme ();
-    void RedrawTheme (nux::Geometry const& geom, cairo_t *cr, nux::State faked_state);
+  void InitTheme();
+  void RedrawTheme(nux::Geometry const& geom, cairo_t* cr, nux::ButtonVisualState faked_state);
 
-    nux::CairoWrapper *prelight_;
-    nux::CairoWrapper *active_;
-    nux::CairoWrapper *normal_;
-    nux::Geometry cached_geometry_;
+  typedef std::unique_ptr<nux::CairoWrapper> NuxCairoPtr;
 
-  private:
-    std::string label_;
-  };
+  NuxCairoPtr prelight_;
+  NuxCairoPtr active_;
+  NuxCairoPtr normal_;
+  nux::Geometry cached_geometry_;
 
-}
-#endif // FILTERBASICBUTTON_H
+private:
+  std::string label_;
+};
+
+} // namespace dash
+} // namespace unity
+
+#endif // UNITYSHELL_FILTERBASICBUTTON_H

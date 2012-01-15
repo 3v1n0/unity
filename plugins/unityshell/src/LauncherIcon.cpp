@@ -19,16 +19,16 @@
 
 #include <sys/time.h>
 
-#include "Nux/Nux.h"
-#include "Nux/VScrollBar.h"
-#include "Nux/HLayout.h"
-#include "Nux/VLayout.h"
-#include "Nux/MenuPage.h"
-#include "Nux/WindowCompositor.h"
-#include "Nux/BaseWindow.h"
-#include "Nux/MenuPage.h"
-#include "NuxCore/Color.h"
-#include "NuxCore/Logger.h"
+#include <Nux/Nux.h>
+#include <Nux/VScrollBar.h>
+#include <Nux/HLayout.h>
+#include <Nux/VLayout.h>
+#include <Nux/MenuPage.h>
+#include <Nux/WindowCompositor.h>
+#include <Nux/BaseWindow.h>
+#include <Nux/MenuPage.h>
+#include <NuxCore/Color.h>
+#include <NuxCore/Logger.h>
 
 #include "CairoTexture.h"
 #include "LauncherIcon.h"
@@ -52,7 +52,10 @@
 #define MONO_TEST_ICON "gnome-home"
 #define UNITY_THEME_NAME "unity-icon-theme"
 
-using namespace unity;
+namespace unity
+{
+namespace launcher
+{
 
 namespace
 {
@@ -86,8 +89,6 @@ LauncherIcon::LauncherIcon(Launcher* launcher)
   , _glow_color(nux::color::White)
   , _shortcut(0)
   , _icon_type(TYPE_NONE)
-  , _emblem(nullptr)
-  , _superkey_label(nullptr)
 {
   for (int i = 0; i < QUIRK_LAST; i++)
   {
@@ -143,10 +144,6 @@ LauncherIcon::~LauncherIcon()
   if (_tooltip_delay_handle)
     g_source_remove(_tooltip_delay_handle);
   _tooltip_delay_handle = 0;
-
-  if (_superkey_label)
-    _superkey_label->UnReference();
-
   // clean up the whole signal-callback mess
   if (needs_redraw_connection.connected())
     needs_redraw_connection.disconnect();
@@ -170,14 +167,14 @@ LauncherIcon::~LauncherIcon()
   }
 }
 
-bool
+const bool
 LauncherIcon::HasWindowOnViewport()
 {
   return _has_visible_window;
 }
 
-const gchar*
-LauncherIcon::GetName()
+std::string
+LauncherIcon::GetName() const
 {
   return "LauncherIcon";
 }
@@ -203,7 +200,9 @@ LauncherIcon::AddProperties(GVariantBuilder* builder)
 void
 LauncherIcon::Activate(ActionArg arg)
 {
-  if (WindowManager::Default()->IsScaleActive())
+  /* Launcher Icons that handle spread will adjust the spread state
+   * accordingly, for all other icons we should terminate spread */
+  if (WindowManager::Default()->IsScaleActive() && !HandlesSpread ())
     WindowManager::Default()->TerminateScale();
 
   ActivateLauncherIcon(arg);
@@ -535,6 +534,11 @@ void LauncherIcon::RecvMouseLeave()
 
 bool LauncherIcon::OpenQuicklist(bool default_to_first_item)
 {
+  std::list<DbusmenuMenuitem*> menus = Menus();
+
+  if (menus.empty())
+    return false;
+
   if (_tooltip_delay_handle)
     g_source_remove(_tooltip_delay_handle);
   _tooltip_delay_handle = 0;
@@ -543,17 +547,9 @@ bool LauncherIcon::OpenQuicklist(bool default_to_first_item)
   _tooltip->ShowWindow(false);
   _quicklist->RemoveAllMenuItem();
 
-  std::list<DbusmenuMenuitem*> menus = Menus();
-  if (menus.empty())
-    return false;
-
-  if (WindowManager::Default()->IsScaleActive())
-    WindowManager::Default()->TerminateScale();
-
-  std::list<DbusmenuMenuitem*>::iterator it;
-  for (it = menus.begin(); it != menus.end(); it++)
+  for (auto menu_item : menus)
   {
-    DbusmenuMenuitem* menu_item = *it;
+    QuicklistMenuItem* ql_item;
 
     const gchar* type = dbusmenu_menuitem_property_get(menu_item, DBUSMENU_MENUITEM_PROP_TYPE);
     const gchar* toggle_type = dbusmenu_menuitem_property_get(menu_item, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE);
@@ -565,24 +561,22 @@ bool LauncherIcon::OpenQuicklist(bool default_to_first_item)
 
     if (g_strcmp0(type, DBUSMENU_CLIENT_TYPES_SEPARATOR) == 0)
     {
-      QuicklistMenuItemSeparator* item = new QuicklistMenuItemSeparator(menu_item, NUX_TRACKER_LOCATION);
-      _quicklist->AddMenuItem(item);
+      ql_item = new QuicklistMenuItemSeparator(menu_item, NUX_TRACKER_LOCATION);
     }
     else if (g_strcmp0(toggle_type, DBUSMENU_MENUITEM_TOGGLE_CHECK) == 0)
     {
-      QuicklistMenuItemCheckmark* item = new QuicklistMenuItemCheckmark(menu_item, NUX_TRACKER_LOCATION);
-      _quicklist->AddMenuItem(item);
+      ql_item = new QuicklistMenuItemCheckmark(menu_item, NUX_TRACKER_LOCATION);
     }
     else if (g_strcmp0(toggle_type, DBUSMENU_MENUITEM_TOGGLE_RADIO) == 0)
     {
-      QuicklistMenuItemRadio* item = new QuicklistMenuItemRadio(menu_item, NUX_TRACKER_LOCATION);
-      _quicklist->AddMenuItem(item);
+      ql_item = new QuicklistMenuItemRadio(menu_item, NUX_TRACKER_LOCATION);
     }
     else //(g_strcmp0 (type, DBUSMENU_MENUITEM_PROP_LABEL) == 0)
     {
-      QuicklistMenuItemLabel* item = new QuicklistMenuItemLabel(menu_item, NUX_TRACKER_LOCATION);
-      _quicklist->AddMenuItem(item);
+      ql_item = new QuicklistMenuItemLabel(menu_item, NUX_TRACKER_LOCATION);
     }
+
+    _quicklist->AddMenuItem(ql_item);
   }
 
   if (default_to_first_item)
@@ -600,7 +594,25 @@ bool LauncherIcon::OpenQuicklist(bool default_to_first_item)
     tip_x = 0;
     tip_y = _center.y;
   }
-  QuicklistManager::Default()->ShowQuicklist(_quicklist, tip_x, tip_y);
+
+  auto win_manager = WindowManager::Default();
+
+  if (win_manager->IsScaleActive())
+    win_manager->TerminateScale();
+
+  /* If the expo plugin is active, we need to wait it to be termated, before
+   * shwing the icon quicklist. */
+  if (win_manager->IsExpoActive())
+  {
+    on_expo_terminated_connection = win_manager->terminate_expo.connect([&, tip_x, tip_y]() {
+        QuicklistManager::Default()->ShowQuicklist(_quicklist, tip_x, tip_y);
+        on_expo_terminated_connection.disconnect();
+    });
+  }
+  else
+  {
+    QuicklistManager::Default()->ShowQuicklist(_quicklist, tip_x, tip_y);
+  }
 
   return true;
 }
@@ -763,6 +775,9 @@ LauncherIcon::SetRelatedWindows(int windows)
 void
 LauncherIcon::Remove()
 {
+  if (_quicklist->IsVisible())
+      _quicklist->Hide();
+
   SetQuirk(QUIRK_VISIBLE, false);
   remove.emit(this);
 }
@@ -908,18 +923,12 @@ std::list<DbusmenuMenuitem*> LauncherIcon::GetMenus()
 nux::BaseTexture*
 LauncherIcon::Emblem()
 {
-  return _emblem;
+  return _emblem.GetPointer();
 }
 
 void
-LauncherIcon::SetEmblem(nux::BaseTexture* emblem)
+LauncherIcon::SetEmblem(LauncherIcon::BaseTexturePtr const& emblem)
 {
-  if (_emblem == emblem)
-    return;
-
-  if (_emblem)
-    _emblem->UnReference();
-
   _emblem = emblem;
   needs_redraw.emit(this);
 }
@@ -927,7 +936,7 @@ LauncherIcon::SetEmblem(nux::BaseTexture* emblem)
 void
 LauncherIcon::SetEmblemIconName(const char* name)
 {
-  nux::BaseTexture* emblem;
+  BaseTexturePtr emblem;
 
   if (g_str_has_prefix(name, "/"))
     emblem = TextureFromPath(name, 22, false);
@@ -935,6 +944,8 @@ LauncherIcon::SetEmblemIconName(const char* name)
     emblem = TextureFromGtkTheme(name, 22, false);
 
   SetEmblem(emblem);
+  // Ownership isn't taken, but shared, so we need to unref here.
+  emblem->UnReference();
 }
 
 std::vector<nux::Vector4> &
@@ -1022,7 +1033,7 @@ LauncherIcon::SetEmblemText(const char* text)
                 (int)((height - pango_units_to_double(logical_rect.height)) / 2.0f - pango_units_to_double(logical_rect.y)));
   pango_cairo_show_layout(cr, layout);
 
-  SetEmblem(texture_from_cairo_graphics(cg));
+  SetEmblem(texture_ptr_from_cairo_graphics(cg));
 
   // clean up
   g_object_unref(layout);
@@ -1032,7 +1043,7 @@ LauncherIcon::SetEmblemText(const char* text)
 void
 LauncherIcon::DeleteEmblem()
 {
-  SetEmblem(0);
+  SetEmblem(BaseTexturePtr());
 }
 
 void
@@ -1164,3 +1175,6 @@ LauncherIcon::OnRemoteProgressVisibleChanged(LauncherEntryRemote* remote)
   if (remote->ProgressVisible())
     SetProgress((float) remote->Progress());
 }
+
+} // namespace launcher
+} // namespace unity

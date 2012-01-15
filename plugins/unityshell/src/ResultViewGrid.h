@@ -27,6 +27,7 @@
 
 #include <UnityCore/Categories.h>
 #include "ResultView.h"
+#include "UBusWrapper.h"
 
 namespace unity
 {
@@ -52,7 +53,8 @@ public:
   nux::Property<int> vertical_spacing;
   nux::Property<int> padding;
 
-
+  sigc::signal<void> selection_change;
+  int GetSelectedIndex();
 
 protected:
   void MouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
@@ -71,11 +73,17 @@ protected:
   void OnKeyDown(unsigned long event_type, unsigned long event_keysym, unsigned long event_state, const TCHAR* character, unsigned short key_repeat_count);
 
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);;
-  virtual long int ProcessEvent(nux::IEvent& ievent, long int TraverseInfo, long int ProcessEventInfo);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
-  virtual long ComputeLayout2();
+  virtual long ComputeContentSize();
 
 private:
+  typedef std::tuple <int, int> ResultListBounds;
+  ResultListBounds GetVisableResults();
+
+  static gboolean OnLazyLoad (gpointer data);
+  void QueueLazyLoad();
+  void DoLazyLoad();
+
   int GetItemsPerRow();
   void SizeReallocate();
   void PositionPreview();
@@ -87,10 +95,20 @@ private:
   uint preview_row_;
   std::string focused_uri_;
 
+  int last_lazy_loaded_result_;
+  uint lazy_load_handle_;
   int last_mouse_down_x_;
   int last_mouse_down_y_;
   std::string current_drag_uri_;
   std::string current_drag_icon_name_;
+
+  int recorded_dash_width_;
+  int recorded_dash_height_;
+
+  int mouse_last_x_;
+  int mouse_last_y_;
+
+  UBusManager ubus_;
 
 };
 

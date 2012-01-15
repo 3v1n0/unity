@@ -22,6 +22,11 @@
 #ifndef UNITYSHELL_H
 #define UNITYSHELL_H
 
+#include <Nux/WindowThread.h>
+#include <NuxCore/Property.h>
+#include <sigc++/sigc++.h>
+#include <boost/shared_ptr.hpp>
+
 #include <core/core.h>
 #include <core/pluginclasshandler.h>
 #include <composite/composite.h>
@@ -31,52 +36,32 @@
 
 #include "Introspectable.h"
 #include "DashController.h"
+#include "DashSettings.h"
+#include "DashStyle.h"
 #include "FontSettings.h"
-#include "Launcher.h"
+#include "ShortcutController.h"
+#include "ShortcutHint.h"
 #include "LauncherController.h"
 #include "PanelController.h"
+#include "PanelStyle.h"
 #include "UScreen.h"
 #include "GestureEngine.h"
 #include "DebugDBusInterface.h"
 #include "SwitcherController.h"
 #include "UBusWrapper.h"
-#include <Nux/WindowThread.h>
-#include <sigc++/sigc++.h>
-#include <boost/shared_ptr.hpp>
+#include "ScreenEffectFramebufferObject.h"
 
 #include "compizminimizedwindowhandler.h"
+#include "BGHash.h"
+#include <compiztoolbox/compiztoolbox.h>
+#include <dlfcn.h>
 
-class UnityFBO
+namespace unity
 {
-public:
-
-  typedef boost::shared_ptr <UnityFBO> Ptr;
-
-  UnityFBO (CompOutput *o);
-  ~UnityFBO ();
-
-public:
-
-  void bind ();
-  void unbind ();
-
-  bool status ();
-  void paint ();
-
-  GLuint texture () { return mFBTexture; }
-
-private:
-
-  /* compiz fbo handle that goes through to nux */
-  GLuint   mFboHandle; // actual handle to the framebuffer_ext
-  bool    mFboStatus; // did the framebuffer texture bind succeed
-  GLuint   mFBTexture;
-  CompOutput *output;
-};
 
 class UnityShowdesktopHandler
 {
-public:
+ public:
 
   UnityShowdesktopHandler (CompWindow *w);
   ~UnityShowdesktopHandler ();
@@ -94,12 +79,19 @@ public:
   void fadeIn ();
   bool animate (unsigned int ms);
   void paintAttrib (GLWindowPaintAttrib &attrib);
+  unsigned int getPaintMask ();
+  void handleEvent (XEvent *);
+  void windowNotify (CompWindowNotify n);
+  void updateFrameRegion (CompRegion &r);
 
   UnityShowdesktopHandler::State state ();
 
   static const unsigned int fade_time;
   static CompWindowList     animating_windows;
   static bool shouldHide (CompWindow *);
+  static void inhibitLeaveShowdesktopMode (guint32 xid);
+  static void allowLeaveShowdesktopMode (guint32 xid);
+  static guint32 inhibitingXid ();
 
 private:
 
@@ -107,23 +99,14 @@ private:
   compiz::WindowInputRemover     *mRemover;
   UnityShowdesktopHandler::State mState;
   float                          mProgress;
+  bool                           mWasHidden;
+  static guint32		 mInhibitingXid;
 };
-  
 
-
-#include "BGHash.h"
-#include "DesktopLauncherIcon.h"
-
-#include <compiztoolbox/compiztoolbox.h>
-
-using unity::FontSettings;
-using namespace unity::switcher;
-using namespace unity::dash;
-using unity::UBusManager;
 
 /* base screen class */
 class UnityScreen :
-  public unity::Introspectable,
+  public unity::debug::Introspectable,
   public sigc::trackable,
   public ScreenInterface,
   public CompositeScreenInterface,
@@ -152,6 +135,8 @@ public:
 
   void preparePaint (int ms);
   void paintFboForOutput (CompOutput *output);
+
+  void RaiseInputWindows();
 
   void
   handleCompizEvent (const char         *pluginName,
@@ -205,6 +190,11 @@ public:
   bool altTabDetailStartInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool altTabDetailStopInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool altTabNextWindowInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool altTabPrevWindowInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
+
+  bool launcherSwitcherForwardInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool launcherSwitcherPrevInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool launcherSwitcherTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options);
 
   /* handle option changes and change settings inside of the
    * panel and dock views */
@@ -222,12 +212,10 @@ public:
   void NeedsRelayout();
   void ScheduleRelayout(guint timeout);
 
-  void setActiveFbo (GLuint fbo) { mActiveFbo = fbo; }
-
   bool forcePaintOnTop ();
 
 protected:
-  const gchar* GetName();
+  std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
 
 private:
@@ -235,52 +223,66 @@ private:
 
   void SendExecuteCommand();
 
-  void EnsureKeybindings ();
+  void EnsureSuperKeybindings ();
+  void CreateSuperNewAction(char shortcut, bool use_shift=false, bool use_numpad=false);
 
   static gboolean initPluginActions(gpointer data);
-  static void initLauncher(nux::NThread* thread, void* InitData);
+  void initLauncher();
   void damageNuxRegions();
   void onRedrawRequested();
   void Relayout();
 
   static gboolean RelayoutTimeout(gpointer data);
-  static void launcherWindowConfigureCallback(int WindowWidth, int WindowHeight,
-                                              nux::Geometry& geo, void* user_data);
   static void initUnity(nux::NThread* thread, void* InitData);
   static void OnStartKeyNav(GVariant* data, void* value);
   static void OnExitKeyNav(GVariant* data, void* value);
   static gboolean OnEdgeTriggerTimeout(gpointer data);
+  static gboolean OnRedrawTimeout(gpointer data);
 
   void startLauncherKeyNav();
   void restartLauncherKeyNav();
   void OnLauncherHiddenChanged();
 
+  void OnDashRealized ();
+
   static void OnQuicklistEndKeyNav(GVariant* data, void* value);
   static void OnLauncherStartKeyNav(GVariant* data, void* value);
   static void OnLauncherEndKeyNav(GVariant* data, void* value);
+  
+  void InitHints();
 
-  FontSettings            font_settings_;
-  Launcher*               launcher;
-  LauncherController*     controller;
-  DashController::Ptr     dashController;
-  PanelController*        panelController;
-  SwitcherController*     switcherController;
-  GestureEngine*          gestureEngine;
-  nux::WindowThread*      wt;
-  nux::BaseWindow*        launcherWindow;
-  nux::BaseWindow*        panelWindow;
-  nux::Geometry           lastTooltipArea;
-  DebugDBusInterface*     debugger;
-  bool                    needsRelayout;
-  guint32                 relayoutSourceId;
-  guint                   _edge_timeout;
-  guint                   _edge_trigger_handle;
-  gint                    _edge_pointerY;
-  guint                   _ubus_handles[3];
+  dash::Settings dash_settings_;
+  dash::Style    dash_style_;
+  panel::Style   panel_style_;
+  FontSettings   font_settings_;
 
+  launcher::Controller::Ptr launcher_controller_;
+  dash::Controller::Ptr     dash_controller_;
+  panel::Controller::Ptr    panel_controller_;
+  switcher::Controller::Ptr switcher_controller_;
+
+  shortcut::Controller::Ptr shortcut_controller_;
+  std::list<shortcut::AbstractHint*> hints_;
+  bool enable_shortcut_overlay_;
+
+  GestureEngine*                        gestureEngine;
+  nux::WindowThread*                    wt;
+  nux::BaseWindow*                      panelWindow;
+  nux::Geometry                         lastTooltipArea;
+  unity::debug::DebugDBusInterface*     debugger;
+  bool                                  needsRelayout;
+  bool                                  _in_paint;
+  guint32                               relayoutSourceId;
+  guint                                 _edge_timeout;
+  guint                                 _edge_trigger_handle;
+  guint32                               _redraw_handle;
+  gint                                  _edge_pointerY;
+  guint                                 _ubus_handles[3];
+  
   typedef std::shared_ptr<CompAction> CompActionPtr;
   typedef std::vector<CompActionPtr> ShortcutActions;
   ShortcutActions _shortcut_actions;
+  bool            super_keypressed_;
 
   /* keyboard-nav mode */
   CompWindow* newFocusedWindow;
@@ -296,14 +298,12 @@ private:
   CompOutput* _last_output;
   CompWindowList _withRemovedNuxWindows;
 
-  DesktopLauncherIcon* switcher_desktop_icon;
-
-  GdkRectangle _primary_monitor;
+  nux::Property<nux::Geometry> primary_monitor_;
 
   unity::BGHash _bghash;
 
-  std::map <CompOutput *, UnityFBO::Ptr> mFbos;
-  GLuint                                 mActiveFbo;
+  ScreenEffectFramebufferObject::Ptr _fbo;
+  GLuint                             _active_fbo;
 
   bool   queryForShader ();
 
@@ -313,6 +313,8 @@ private:
   CompWindowList         fullscreen_windows_;
   bool                   painting_tray_;
   unsigned int           tray_paint_mask_;
+
+  ScreenEffectFramebufferObject::GLXGetProcAddressProc glXGetProcAddressP;
 
   friend class UnityWindow;
 };
@@ -335,6 +337,8 @@ public:
   void minimize ();
   void unminimize ();
   bool minimized ();
+  bool focus ();
+  void activate ();
 
   void updateFrameRegion (CompRegion &region);
 
@@ -364,7 +368,7 @@ public:
   void stateChangeNotify(unsigned int lastState);
 
   bool place(CompPoint& pos);
-  CompPoint tryNotIntersectLauncher(CompPoint& pos);
+  CompPoint tryNotIntersectUI(CompPoint& pos);
 
   void paintThumbnail (nux::Geometry const& bounding, float alpha);
 
@@ -374,6 +378,11 @@ public:
 
   compiz::MinimizedWindowHandler::Ptr mMinimizeHandler;
   UnityShowdesktopHandler             *mShowdesktopHandler;
+  
+private:
+
+  guint  focusdesktop_handle_;
+  static gboolean FocusDesktopTimeout(gpointer data);
 };
 
 
@@ -386,5 +395,7 @@ class UnityPluginVTable :
 public:
   bool init();
 };
+
+} // namespace unity
 
 #endif // UNITYSHELL_H

@@ -31,6 +31,11 @@
 
 #include "SimpleLauncherIcon.h"
 
+namespace unity
+{
+namespace launcher
+{
+
 class Launcher;
 
 class BamfLauncherIcon : public SimpleLauncherIcon
@@ -41,13 +46,14 @@ public:
 
   const char* DesktopFile();
   bool IsSticky();
+  void Quit();
+  void Stick();
   void UnStick();
 
-  virtual void Activate(ActionArg arg);
   void ActivateLauncherIcon(ActionArg arg);
 
   virtual bool ShowInSwitcher();
-  virtual unsigned int SwitcherPriority();
+  virtual unsigned long long SwitcherPriority();
 
   std::vector<Window> RelatedXids ();
 
@@ -76,11 +82,14 @@ protected:
 
   const char* BamfName();
 
+  bool HandlesSpread () { return true; }
+
 private:
   BamfApplication* m_App;
   Launcher* _launcher;
   std::map<std::string, DbusmenuClient*> _menu_clients;
   std::map<std::string, DbusmenuMenuitem*> _menu_items;
+  std::map<std::string, DbusmenuMenuitem*> _menu_items_extra;
   std::map<std::string, gulong> _menu_callbacks;
   DbusmenuMenuitem* _menu_desktop_shortcuts;
   gchar* _remote_uri;
@@ -92,22 +101,27 @@ private:
 
   GFileMonitor* _desktop_file_monitor;
   gulong _on_desktop_file_changed_handler_id;
-  
+
   std::set<std::string> _supported_types;
   bool _supported_types_filled;
   guint _fill_supported_types_id;
+  guint32 _window_moved_id;
+  guint32 _window_moved_xid;
 
   void EnsureWindowState();
 
+  void UpdateDesktopFile();
   void UpdateMenus();
+  void UpdateDesktopQuickList();
 
   void OpenInstanceWithUris(std::set<std::string> uris);
-  void Focus();
+  void Focus(ActionArg arg);
   bool Spread(int state, bool force);
 
   void EnsureMenuItemsReady();
 
   void OnWindowMinimized(guint32 xid);
+  void OnWindowMoved(guint32 xid);
   void OnViewPortSwitchEnded();
   bool OwnsWindow(Window w);
   
@@ -133,7 +147,10 @@ private:
 
   static gboolean OnDndHoveredTimeout(gpointer data);
   static gboolean FillSupportedTypes(gpointer data);
+  static gboolean OnWindowMovedTimeout(gpointer data);
 };
 
-#endif // BAMFLAUNCHERICON_H
+}
+}
 
+#endif // BAMFLAUNCHERICON_H

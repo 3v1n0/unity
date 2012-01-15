@@ -479,7 +479,8 @@ bool IconLoader::Impl::Iteration()
   if (queue_empty)
   {
     idle_id_ = 0;
-    handle_counter_ = 0;
+    if (task_map_.empty())
+      handle_counter_ = 0;
   }
 
   return !queue_empty;
@@ -507,6 +508,7 @@ void IconLoader::Impl::LoadContentsReady(GObject* obj,
   {
     LOG_WARNING(logger) << "Unable to load contents of "
                         << task->data << ": " << error;
+    task->slot(task->data, task->size, nullptr);
   }
   task->self->task_map_.erase(task->handle);
   delete task;

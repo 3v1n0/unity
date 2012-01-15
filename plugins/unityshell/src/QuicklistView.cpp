@@ -18,16 +18,16 @@
 * Authored by: Mirco Müller <mirco.mueller@canonical.com
 */
 
-#include "Nux/Nux.h"
-#include "Nux/VLayout.h"
-#include "Nux/HLayout.h"
-#include "Nux/WindowThread.h"
-#include "Nux/WindowCompositor.h"
-#include "Nux/BaseWindow.h"
-#include "Nux/Button.h"
-#include "NuxGraphics/GraphicsEngine.h"
-#include "Nux/TextureArea.h"
-#include "NuxImage/CairoGraphics.h"
+#include <Nux/Nux.h>
+#include <Nux/VLayout.h>
+#include <Nux/HLayout.h>
+#include <Nux/WindowThread.h>
+#include <Nux/WindowCompositor.h>
+#include <Nux/BaseWindow.h>
+#include <Nux/Button.h>
+#include <NuxGraphics/GraphicsEngine.h>
+#include <Nux/TextureArea.h>
+#include <NuxImage/CairoGraphics.h>
 
 #include "CairoTexture.h"
 
@@ -68,14 +68,24 @@ QuicklistView::QuicklistView()
   , _anchor_height(18)
   , _corner_radius(4)
   , _padding(13)
+  , _left_padding_correction(-1)
+  , _bottom_padding_correction_normal(-2)
+  , _bottom_padding_correction_single_item(-4)
+  , _offset_correction(-1)
   , _cairo_text_has_changed(true)
   , _compute_blur_bkg(true)
   , _current_item_index(0)
 {
   SetGeometry(nux::Geometry(0, 0, 1, 1));
 
-  _left_space = new nux::SpaceLayout(_padding + _anchor_width + _corner_radius,
-                                     _padding + _anchor_width + _corner_radius,
+  _left_space = new nux::SpaceLayout(_padding +
+                                     _anchor_width +
+                                     _corner_radius +
+                                     _left_padding_correction,
+                                     _padding +
+                                     _anchor_width +
+                                     _corner_radius +
+                                     _left_padding_correction,
                                      1, 1000);
   _right_space = new nux::SpaceLayout(_padding + _corner_radius,
                                       _padding + _corner_radius,
@@ -181,6 +191,8 @@ QuicklistView::RecvKeyPressed(unsigned long    eventType,
         while (IsMenuItemSeperator(_current_item_index))
           _current_item_index--;
 
+        selection_change.emit();
+
         GetNthItems(_current_item_index)->_prelight = true;
         QueueDraw();
       }
@@ -201,6 +213,8 @@ QuicklistView::RecvKeyPressed(unsigned long    eventType,
         while (IsMenuItemSeperator(_current_item_index))
           _current_item_index++;
 
+        selection_change.emit();
+
         GetNthItems(_current_item_index)->_prelight = true;
         QueueDraw();
       }
@@ -210,6 +224,7 @@ QuicklistView::RecvKeyPressed(unsigned long    eventType,
     case NUX_VK_LEFT:
     case NUX_KP_LEFT:
       _current_item_index = 0;
+      selection_change.emit();
       GetNthItems(_current_item_index)->_prelight = true;
       Hide();
       // inform Launcher we switch back to Launcher key-nav
@@ -221,12 +236,14 @@ QuicklistView::RecvKeyPressed(unsigned long    eventType,
       // esc (close quicklist, exit key-nav)
     case NUX_VK_ESCAPE:
       _current_item_index = 0;
+      selection_change.emit();
       GetNthItems(_current_item_index)->_prelight = true;
       Hide();
       // inform UnityScreen we leave key-nav completely
       ubus_server_send_message(ubus_server_get_default(),
                                UBUS_LAUNCHER_END_KEY_NAV,
                                NULL);
+      selection_change.emit();
       break;
 
       // <SPACE>, <RETURN> (activate selected menu-item)
@@ -242,6 +259,7 @@ QuicklistView::RecvKeyPressed(unsigned long    eventType,
                                        NULL,
                                        0);
         _current_item_index = 0;
+        selection_change.emit();
         GetNthItems(_current_item_index)->_prelight = true;
         Hide();
       }
@@ -299,7 +317,7 @@ void QuicklistView::ShowQuicklistWithTipAt(int anchor_tip_x, int anchor_tip_y)
     {
       int offscreen_size = GetBaseY() +
                            GetBaseHeight() -
-                           nux::GetWindow().GetWindowHeight();
+                           nux::GetWindowThread()->GetGraphicsDisplay().GetWindowHeight();
 
       if (offscreen_size > 0)
         _top_size = offscreen_size;
@@ -353,67 +371,11 @@ void QuicklistView::Hide()
   {
     CancelItemsPrelightStatus();
     CaptureMouseDownAnyWhereElse(false);
-    ForceStopFocus(1, 1);
     UnGrabPointer();
     UnGrabKeyboard();
     //EnableInputWindow (false);
     ShowWindow(false);
   }
-}
-
-long QuicklistView::ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo)
-{
-  long ret = TraverseInfo;
-  long ProcEvInfo = 0;
-
-  nux::IEvent window_event = ievent;
-  nux::Geometry base = GetGeometry();
-  window_event.e_x_root = base.x;
-  window_event.e_y_root = base.y;
-
-  // The child layout get the Mouse down button only if the MouseDown happened inside the client view Area
-  nux::Geometry viewGeometry = GetGeometry();
-
-  if (ievent.e_event == nux::NUX_MOUSE_PRESSED)
-  {
-    if (!viewGeometry.IsPointInside(ievent.e_x - ievent.e_x_root, ievent.e_y - ievent.e_y_root))
-    {
-      ProcEvInfo = nux::eDoNotProcess;
-    }
-  }
-
-  // We choose to test the quicklist items ourselves instead of processing them as it is usual in nux.
-  // This is meant to be easier since the quicklist has a atypical way of working.
-  if (m_layout)
-  {
-    ret = m_layout->ProcessEvent(window_event, ret, ProcEvInfo);
-  }
-
-  // The quicklist itself does not process the evvent. Instead we do some analysis of the event
-  // to detect the user action and perform the correct operation.
-  if (ievent.e_event == nux::NUX_MOUSE_PRESSED)
-  {
-    if (GetGeometry().IsPointInside(ievent.e_x, ievent.e_y))
-    {
-      _mouse_down = true;
-    }
-    else
-    {
-      _mouse_down = false;
-      Hide();
-      return nux::eMouseEventSolved;
-    }
-  }
-  else if ((ievent.e_event == nux::NUX_MOUSE_RELEASED) && _mouse_down)
-  {
-    _mouse_down = false;
-    Hide();
-    return nux::eMouseEventSolved;
-  }
-
-  ret = OnEvent(ievent, ret, ProcessEventInfo);
-
-  return ret;
 }
 
 void QuicklistView::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
@@ -483,8 +445,8 @@ void QuicklistView::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
       nux::color::White);
   }
 
-  nux::GetGraphicsEngine().GetRenderStates().SetBlend(true);
-  nux::GetGraphicsEngine().GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
+  nux::GetWindowThread()->GetGraphicsEngine().GetRenderStates().SetBlend(true);
+  nux::GetWindowThread()->GetGraphicsEngine().GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
   gfxContext.QRP_2TexMod(base.x,
                          base.y,
                          base.width,
@@ -501,8 +463,8 @@ void QuicklistView::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
   texxform.SetWrap(nux::TEXWRAP_CLAMP, nux::TEXWRAP_CLAMP);
   texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
 
-  nux::GetGraphicsEngine().GetRenderStates().SetBlend(true);
-  nux::GetGraphicsEngine().GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
+  nux::GetWindowThread()->GetGraphicsEngine().GetRenderStates().SetBlend(true);
+  nux::GetWindowThread()->GetGraphicsEngine().GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
   gfxContext.QRP_1Tex(base.x,
                       base.y,
                       base.width,
@@ -511,7 +473,7 @@ void QuicklistView::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
                       texxform,
                       nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
 
-  nux::GetGraphicsEngine().GetRenderStates().SetBlend(false);
+  nux::GetWindowThread()->GetGraphicsEngine().GetRenderStates().SetBlend(false);
 
   std::list<QuicklistMenuItem*>::iterator it;
   for (it = _item_list.begin(); it != _item_list.end(); it++)
@@ -581,12 +543,16 @@ void QuicklistView::PreLayoutManagement()
   if (TotalItemHeight < _anchor_height)
   {
     _top_space->SetMinMaxSize(1, (_anchor_height - TotalItemHeight) / 2 + 1 + _padding + _corner_radius);
-    _bottom_space->SetMinMaxSize(1, (_anchor_height - TotalItemHeight) / 2 + 1 + _padding + _corner_radius);
+    _bottom_space->SetMinMaxSize(1, (_anchor_height - TotalItemHeight) / 2 + 1 +
+                                     _padding + _corner_radius +
+                                     _bottom_padding_correction_single_item);
   }
   else
   {
     _top_space->SetMinMaxSize(_padding + _corner_radius, _padding + _corner_radius);
-    _bottom_space->SetMinMaxSize(_padding + _corner_radius, _padding + _corner_radius);
+    _bottom_space->SetMinMaxSize(_padding + _corner_radius - 2,
+                                 _padding + _corner_radius +
+                                 _bottom_padding_correction_normal);
   }
 
   _item_layout->SetMinimumWidth(MaxItemWidth);
@@ -601,8 +567,8 @@ long QuicklistView::PostLayoutManagement(long LayoutResult)
 
   UpdateTexture();
 
-  int x = _padding + _anchor_width + _corner_radius;
-  int y = _padding + _corner_radius;
+  int x = _padding + _anchor_width + _corner_radius + _offset_correction;
+  int y = _padding + _corner_radius + _offset_correction;
 
   std::list<QuicklistMenuItem*>::iterator it;
   for (it = _item_list.begin(); it != _item_list.end(); it++)
@@ -806,7 +772,6 @@ void QuicklistView::RecvMouseDown(int x, int y, unsigned long button_flags, unsi
 //     if (IsVisible ())
 //     {
 //       CaptureMouseDownAnyWhereElse (false);
-//       ForceStopFocus (1, 1);
 //       UnGrabPointer ();
 //       EnableInputWindow (false);
 //       ShowWindow (false);
@@ -865,7 +830,7 @@ void QuicklistView::RemoveAllMenuItem()
   _item_layout->Clear();
   _default_item_layout->Clear();
   _cairo_text_has_changed = true;
-  nux::GetGraphicsThread()->AddObjectToRefreshList(this);
+  nux::GetWindowThread()->QueueObjectLayout(this);
 }
 
 void QuicklistView::AddMenuItem(QuicklistMenuItem* item)
@@ -887,7 +852,7 @@ void QuicklistView::AddMenuItem(QuicklistMenuItem* item)
   AddChild(item);
 
   _cairo_text_has_changed = true;
-  nux::GetGraphicsThread()->AddObjectToRefreshList(this);
+  nux::GetWindowThread()->QueueObjectLayout(this);
   NeedRedraw();
 }
 
@@ -1367,7 +1332,7 @@ void QuicklistView::UpdateTexture()
     {
       int offscreen_size = GetBaseY() +
                            GetBaseHeight() -
-                           nux::GetWindow().GetWindowHeight();
+                           nux::GetWindowThread()->GetGraphicsDisplay().GetWindowHeight();
 
       if (offscreen_size > 0)
         _top_size = offscreen_size;
@@ -1403,7 +1368,7 @@ void QuicklistView::UpdateTexture()
   cairo_t* cr_mask    = cairo_mask->GetContext();
   cairo_t* cr_outline = cairo_outline->GetContext();
 
-  float   tint_color[4]    = {0.0f, 0.0f, 0.0f, 0.80f};
+  float   tint_color[4]    = {0.0f, 0.0f, 0.0f, 0.60f};
   float   hl_color[4]      = {1.0f, 1.0f, 1.0f, 0.65f};
   float   dot_color[4]     = {1.0f, 1.0f, 1.0f, 0.10f};
   float   shadow_color[4]  = {0.0f, 0.0f, 0.0f, 1.00f};
@@ -1538,7 +1503,7 @@ void QuicklistView::TestMenuItems(DbusmenuMenuitem* root)
 
 // Introspection
 
-const gchar* QuicklistView::GetName()
+std::string QuicklistView::GetName() const
 {
   return "Quicklist";
 }
@@ -1564,3 +1529,8 @@ QuicklistView::InspectKeyEvent(unsigned int eventType,
   return true;
 }
 
+QuicklistMenuItem*
+QuicklistView::GetSelectedMenuItem()
+{
+  return GetNthItems(_current_item_index);
+}

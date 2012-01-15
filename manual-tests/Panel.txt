@@ -1,0 +1,62 @@
+Panel Opacity Toggle
+--------------------
+This test shows how works the panel_opacity_maximized_toggle unity option
+
+#. Open CCSM
+#. Go in the "Experimental" tab
+#. Set the "Panel Opacity" setting to a value less than 1.0 (best is 0.0 for testing)
+#. Enable the "Panel Opacity for Maximized Windows Toggle"
+#. Close all your opened windows
+#. The panel should be transparent according to the opacity setting
+#. Now open a window and make sure it is restored
+#. Open another Window and make it maximized
+
+Outcome
+  When there's at least one maximized window on the current screen, the panel
+  should become opaque, also if the opacity setting is set to 0.0. 
+  Once all the maximized windows are closed, restored or not visible,
+  the panel should go back to its defined opacity.
+
+
+Panel Menus Revelation
+----------------------
+This test shows how the menus should be revealed when a new application has been
+launched.
+
+#. Start with a clear screen
+#. Open a new application that has menus (i.e. gnome-terminal)
+
+Outcome
+  The panel should show the menus in global menu bar for two seconds.
+  If a new gnome-terminal window is opened, the menus are not shown again.
+  If more than one application is open at once, the menus of each application
+  are shown once is focused.
+
+
+Panel Double Clicks
+-------------------
+This test shows how the double click over the top panel should work.
+
+#. Start with a clear screen
+#. Open a window and maximize it
+#. Double-click on the top-panel grab area (the empty area between the menus and
+   the indicators).
+
+Outcome
+  The maximized window should restore. If no maximized window is available on
+  the current workspace, nothing should happen.
+
+
+Panel on Alt+Tab
+----------------
+This test shows react on Alt+Tab
+
+#. Start with a clear screen
+#. Open some new applications
+#. Press Alt+Tab
+
+Outcome
+  When you press Alt+Tab to switch window, the application title in the top left
+  of the panel should change inline with changes in alt-tab focus.
+  Also the menus shouldn't ever show. Even if the mouse has been left over
+  the panel when starting the Alt+Tab.

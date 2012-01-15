@@ -43,8 +43,9 @@ QuicklistMenuItemRadio::QuicklistMenuItemRadio(DbusmenuMenuitem* item,
   QuicklistMenuItem(item,
                     NUX_FILE_LINE_PARAM)
 {
-  _name = g_strdup("QuicklistMenuItemRadio");
-  Initialize(item);
+  _item_type  = MENUITEM_TYPE_RADIO;
+  _name = "QuicklistMenuItemRadio";
+  InitializeText();
 }
 
 QuicklistMenuItemRadio::QuicklistMenuItemRadio(DbusmenuMenuitem* item,
@@ -54,41 +55,18 @@ QuicklistMenuItemRadio::QuicklistMenuItemRadio(DbusmenuMenuitem* item,
                     debug,
                     NUX_FILE_LINE_PARAM)
 {
-  _name = g_strdup("QuicklistMenuItemRadio");
-  Initialize(item);
-}
-
-void
-QuicklistMenuItemRadio::Initialize(DbusmenuMenuitem* item)
-{
-  _item_type  = MENUITEM_TYPE_LABEL;
-
-  if (item)
-    _text = g_strdup(dbusmenu_menuitem_property_get(item, DBUSMENU_MENUITEM_PROP_LABEL));
-  else
-    _text = g_strdup("Radio Button");
-
-  int textWidth = 1;
-  int textHeight = 1;
-  GetTextExtents(textWidth, textHeight);
-  SetMinimumSize(textWidth + ITEM_INDENT_ABS + 3 * ITEM_MARGIN,
-                 textHeight + 2 * ITEM_MARGIN);
-
+  _item_type  = MENUITEM_TYPE_RADIO;
+  _name = "QuicklistMenuItemRadio";
+  InitializeText();
 }
 
 QuicklistMenuItemRadio::~QuicklistMenuItemRadio()
+{}
+
+const gchar*
+QuicklistMenuItemRadio::GetDefaultText()
 {
-  if (_normalTexture[0])
-    _normalTexture[0]->UnReference();
-
-  if (_normalTexture[1])
-    _normalTexture[1]->UnReference();
-
-  if (_prelightTexture[0])
-    _prelightTexture[0]->UnReference();
-
-  if (_prelightTexture[1])
-    _prelightTexture[1]->UnReference();
+  return "Radio Button";
 }
 
 void
@@ -127,17 +105,6 @@ QuicklistMenuItemRadio::PostLayoutManagement(long layoutResult)
   else
     result |= nux::eCompliantHeight;
 
-  return result;
-}
-
-long
-QuicklistMenuItemRadio::ProcessEvent(nux::IEvent& event,
-                                     long         traverseInfo,
-                                     long         processEventInfo)
-{
-  long result = traverseInfo;
-
-  result = nux::View::PostProcessEvent2(event, result, processEventInfo);
   return result;
 }
 
@@ -342,3 +309,4 @@ int QuicklistMenuItemRadio::CairoSurfaceWidth()
 
   return 0;
 }
+

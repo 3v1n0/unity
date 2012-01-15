@@ -41,7 +41,7 @@ namespace unity
 namespace dash
 {
 
-class DashView : public nux::View, public unity::Introspectable
+class DashView : public nux::View, public unity::debug::Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE(DashView, nux::View);
   typedef std::map<std::string, LensView*> LensViews;
@@ -56,7 +56,17 @@ public:
   void DisableBlur();
   void OnActivateRequest(GVariant* args);
 
+  std::string const GetIdForShortcutActivation(std::string const& shortcut) const;
+  std::vector<char> GetAllShortcuts();
+
   nux::View* default_focus() const;
+
+protected:
+  void ProcessDndEnter();
+
+  virtual Area* FindKeyFocusArea(unsigned int key_symbol,
+    unsigned long x11_key_code,
+    unsigned long special_keys_state);
 
 private:
   void SetupBackground();
@@ -65,9 +75,9 @@ private:
 
   nux::Geometry GetBestFitGeometry(nux::Geometry const& for_geo);
 
-  long ProcessEvent(nux::IEvent& ievent, long traverse_info, long event_info);
   void Draw(nux::GraphicsEngine& gfx_context, bool force_draw);
   void DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw);
+  virtual long PostLayoutManagement (long LayoutResult);
 
   void OnMouseButtonDown(int x, int y, unsigned long button, unsigned long key);
   void OnBackgroundColorChanged(GVariant* args);
@@ -75,20 +85,25 @@ private:
   void OnLiveSearchReached(std::string const& search_string);
   void OnLensAdded(Lens::Ptr& lens);
   void OnLensBarActivated(std::string const& id);
-  void OnSearchFinished(std::string const& search_string);
+  void OnSearchFinished(Lens::Hints const& hints);
+  void OnGlobalSearchFinished(Lens::Hints const& hints);
   void OnUriActivated(std::string const& uri);
   void OnUriActivatedReply(std::string const& uri, HandledType type, Lens::Hints const&);
   bool DoFallbackActivation(std::string const& uri);
   bool LaunchApp(std::string const& appname);
   void OnEntryActivated();
-  std::string AnalyseLensURI(std::string uri);
+  std::string AnalyseLensURI(std::string const& uri);
   void UpdateLensFilter(std::string lens, std::string filter, std::string value);
   void UpdateLensFilterValue(Filter::Ptr filter, std::string value);
-  
+
   bool AcceptKeyNavFocus();
   bool InspectKeyEvent(unsigned int eventType, unsigned int key_sym, const char* character);
-  const gchar* GetName();
+  std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
+
+  nux::Area* KeyNavIteration(nux::KeyNavDirection direction);
+
+  static gboolean ResetSearchStateCb(gpointer data);
 
 private:
   UBusManager ubus_manager_;
@@ -98,6 +113,7 @@ private:
 
   // Background related
   nux::ColorLayer* bg_layer_;
+  nux::ColorLayer* bg_darken_layer_;
   nux::Color bg_color_;
 
   // View related
@@ -113,9 +129,14 @@ private:
   // Drawing related
   nux::Geometry content_geo_;
   nux::ObjectPtr <nux::IOpenGLBaseTexture> bg_blur_texture_;
+  nux::ObjectPtr <nux::IOpenGLBaseTexture> bg_shine_texture_;
 
   std::string last_activated_uri_;
-  
+  // we're passing this back to g_* functions, so we'll keep the g* type
+  guint searching_timeout_id_;
+  bool search_in_progress_;
+  bool activate_on_finish_;
+
   bool visible_;
 };
 

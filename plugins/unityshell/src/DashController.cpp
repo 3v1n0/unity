@@ -18,11 +18,13 @@
 
 #include "DashController.h"
 
-#include "NuxCore/Logger.h"
-#include "Nux/HLayout.h"
+#include <NuxCore/Logger.h>
+#include <Nux/HLayout.h>
 
+#include "DashSettings.h"
 #include "PluginAdapter.h"
 #include "UBusMessages.h"
+#include "UScreen.h"
 
 namespace unity
 {
@@ -34,7 +36,7 @@ namespace
 nux::logging::Logger logger("unity.dash.controller");
 }
 
-DashController::DashController()
+Controller::Controller()
   : launcher_width(66)
   , panel_height(24)
   , window_(0)
@@ -47,34 +49,45 @@ DashController::DashController()
   SetupRelayoutCallbacks();
   RegisterUBusInterests();
 
-  PluginAdapter::Default()->compiz_screen_ungrabbed.connect(sigc::mem_fun(this, &DashController::OnScreenUngrabbed));
+  PluginAdapter::Default()->compiz_screen_ungrabbed.connect(sigc::mem_fun(this, &Controller::OnScreenUngrabbed));
 
-  ensure_id_ = g_timeout_add_seconds(60, [] (gpointer data) -> gboolean { static_cast<DashController*>(data)->EnsureDash(); return FALSE; }, this);
+  ensure_id_ = g_timeout_add_seconds(60, [] (gpointer data) -> gboolean { static_cast<Controller*>(data)->EnsureDash(); return FALSE; }, this);
+
+  Settings::Instance().changed.connect([&]()
+  {
+    if (window_)
+    {
+      window_->PushToFront();
+      window_->SetInputFocus();
+      nux::GetWindowCompositor().SetKeyFocusArea(view_->default_focus());
+    }
+  });
 }
 
-DashController::~DashController()
+Controller::~Controller()
 {
   if (window_)
     window_->UnReference();
+  window_ = 0;
   g_source_remove(timeline_id_);
   g_source_remove(ensure_id_);
 }
 
-void DashController::SetupWindow()
+void Controller::SetupWindow()
 {
   window_ = new nux::BaseWindow("Dash");
   window_->SinkReference();
   window_->SetBackgroundColor(nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
-  window_->SetConfigureNotifyCallback(&DashController::OnWindowConfigure, this);
+  window_->SetConfigureNotifyCallback(&Controller::OnWindowConfigure, this);
   window_->ShowWindow(false);
   window_->SetOpacity(0.0f);
-  window_->SetFocused(true);
-  window_->mouse_down_outside_pointer_grab_area.connect(sigc::mem_fun(this, &DashController::OnMouseDownOutsideWindow));
+  window_->mouse_down_outside_pointer_grab_area.connect(sigc::mem_fun(this, &Controller::OnMouseDownOutsideWindow));
 }
 
-void DashController::SetupDashView()
+void Controller::SetupDashView()
 {
   view_ = new DashView();
+  AddChild(view_);
 
   nux::HLayout* layout = new nux::HLayout(NUX_TRACKER_LOCATION);
   layout->AddView(view_, 1);
@@ -85,29 +98,29 @@ void DashController::SetupDashView()
   window_->SetLayout(layout);
 }
 
-void DashController::SetupRelayoutCallbacks()
+void Controller::SetupRelayoutCallbacks()
 {
   GdkScreen* screen = gdk_screen_get_default();
 
   sig_manager_.Add(new glib::Signal<void, GdkScreen*>(screen,
-    "monitors-changed", sigc::mem_fun(this, &DashController::Relayout)));
+    "monitors-changed", sigc::mem_fun(this, &Controller::Relayout)));
   sig_manager_.Add(new glib::Signal<void, GdkScreen*>(screen,
-    "size-changed", sigc::mem_fun(this, &DashController::Relayout)));
+    "size-changed", sigc::mem_fun(this, &Controller::Relayout)));
 }
 
-void DashController::RegisterUBusInterests()
+void Controller::RegisterUBusInterests()
 {
   ubus_manager_.RegisterInterest(UBUS_DASH_EXTERNAL_ACTIVATION,
-                                 sigc::mem_fun(this, &DashController::OnExternalShowDash));
+                                 sigc::mem_fun(this, &Controller::OnExternalShowDash));
   ubus_manager_.RegisterInterest(UBUS_PLACE_VIEW_CLOSE_REQUEST,
-                                 sigc::mem_fun(this, &DashController::OnExternalHideDash));
+                                 sigc::mem_fun(this, &Controller::OnExternalHideDash));
   ubus_manager_.RegisterInterest(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
-                                 sigc::mem_fun(this, &DashController::OnActivateRequest));
+                                 sigc::mem_fun(this, &Controller::OnActivateRequest));
   ubus_manager_.RegisterInterest(UBUS_DASH_ABOUT_TO_SHOW,
                                  [&] (GVariant*) { EnsureDash(); });
 }
 
-void DashController::EnsureDash()
+void Controller::EnsureDash()
 {
   if (window_)
     return;
@@ -118,29 +131,29 @@ void DashController::EnsureDash()
   SetupDashView();
   Relayout();
   ensure_id_ = 0;
+
+  on_realize.emit();
 }
 
-nux::BaseWindow* DashController::window() const
+nux::BaseWindow* Controller::window() const
 {
   return window_;
 }
 
 // We update the @geo that's sent in with our desired width and height
-void DashController::OnWindowConfigure(int window_width, int window_height,
+void Controller::OnWindowConfigure(int window_width, int window_height,
                                        nux::Geometry& geo, void* data)
 {
-  DashController* self = static_cast<DashController*>(data);
+  Controller* self = static_cast<Controller*>(data);
   geo = self->GetIdealWindowGeometry();
 }
 
-nux::Geometry DashController::GetIdealWindowGeometry()
+nux::Geometry Controller::GetIdealWindowGeometry()
 {
-  GdkScreen* screen = gdk_screen_get_default();
-  int primary_monitor = gdk_screen_get_primary_monitor(screen);
+  UScreen *uscreen = UScreen::GetDefault();
+  int primary_monitor = uscreen->GetPrimaryMonitor();
+  auto monitor_geo = uscreen->GetMonitorGeometry(primary_monitor);
 
-  GdkRectangle monitor_geo = { 0 };
-  gdk_screen_get_monitor_geometry(screen, primary_monitor, &monitor_geo);
-  
   // We want to cover as much of the screen as possible to grab any mouse events outside
   // of our window
   return nux::Geometry (monitor_geo.x + launcher_width,
@@ -149,7 +162,7 @@ nux::Geometry DashController::GetIdealWindowGeometry()
                         monitor_geo.height - panel_height);
 }
 
-void DashController::Relayout(GdkScreen*screen)
+void Controller::Relayout(GdkScreen*screen)
 {
   EnsureDash();
 
@@ -158,13 +171,13 @@ void DashController::Relayout(GdkScreen*screen)
   view_->Relayout();
 }
 
-void DashController::OnMouseDownOutsideWindow(int x, int y,
+void Controller::OnMouseDownOutsideWindow(int x, int y,
                                               unsigned long bflags, unsigned long kflags)
 {
   HideDash();
 }
 
-void DashController::OnScreenUngrabbed()
+void Controller::OnScreenUngrabbed()
 {
   if (need_show_)
   {
@@ -173,19 +186,27 @@ void DashController::OnScreenUngrabbed()
   }
 }
 
-void DashController::OnExternalShowDash(GVariant* variant)
+void Controller::OnExternalShowDash(GVariant* variant)
 {
   EnsureDash();
   visible_ ? HideDash() : ShowDash();
 }
 
-void DashController::OnExternalHideDash(GVariant* variant)
+void Controller::OnExternalHideDash(GVariant* variant)
 {
   EnsureDash();
-  HideDash();
+  
+  if (variant)
+  {
+    HideDash(g_variant_get_boolean(variant));
+  }
+  else
+  {
+    HideDash();
+  }
 }
 
-void DashController::ShowDash()
+void Controller::ShowDash()
 {
   EnsureDash();
 
@@ -207,7 +228,7 @@ void DashController::ShowDash()
 
   view_->AboutToShow();
 
-  window_->ShowWindow(true, true);
+  window_->ShowWindow(true);
   window_->PushToFront();
   window_->EnableInputWindow(true, "Dash", true, false);
   window_->SetInputFocus();
@@ -224,7 +245,7 @@ void DashController::ShowDash()
   ubus_manager_.SendMessage(UBUS_PLACE_VIEW_SHOWN);
 }
 
-void DashController::HideDash()
+void Controller::HideDash(bool restore)
 {
   if (!visible_)
    return;
@@ -234,31 +255,31 @@ void DashController::HideDash()
   view_->AboutToHide();
 
   window_->CaptureMouseDownAnyWhereElse(false);
-  window_->ForceStopFocus(1, 1);
   window_->EnableInputWindow(false, "Dash", true, false);
   visible_ = false;
 
-  PluginAdapter::Default ()->restoreInputFocus ();
+  if (restore)
+    PluginAdapter::Default ()->restoreInputFocus ();
 
   StartShowHideTimeline();
 
   ubus_manager_.SendMessage(UBUS_PLACE_VIEW_HIDDEN);
 }
 
-void DashController::StartShowHideTimeline()
+void Controller::StartShowHideTimeline()
 {
   EnsureDash();
 
   if (timeline_id_)
     g_source_remove(timeline_id_);
 
-  timeline_id_ = g_timeout_add(15, (GSourceFunc)DashController::OnViewShowHideFrame, this);
+  timeline_id_ = g_timeout_add(15, (GSourceFunc)Controller::OnViewShowHideFrame, this);
   last_opacity_ = window_->GetOpacity();
   start_time_ = g_get_monotonic_time();
 
 }
 
-gboolean DashController::OnViewShowHideFrame(DashController* self)
+gboolean Controller::OnViewShowHideFrame(Controller* self)
 {
 #define _LENGTH_ 90000
   float diff = g_get_monotonic_time() - self->start_time_;
@@ -282,7 +303,7 @@ gboolean DashController::OnViewShowHideFrame(DashController* self)
     self->window_->SetOpacity(self->visible_ ? 1.0f : 0.0f);
     if (!self->visible_)
     {
-      self->window_->ShowWindow(false, false);
+      self->window_->ShowWindow(false);
     }
 
     return FALSE;
@@ -291,7 +312,7 @@ gboolean DashController::OnViewShowHideFrame(DashController* self)
   return TRUE;
 }
 
-void DashController::OnActivateRequest(GVariant* variant)
+void Controller::OnActivateRequest(GVariant* variant)
 {
   EnsureDash();
   ubus_manager_.UnregisterInterest(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST);
@@ -299,14 +320,34 @@ void DashController::OnActivateRequest(GVariant* variant)
   ShowDash();
 }
 
+gboolean Controller::CheckShortcutActivation(const char* key_string)
+{
+  EnsureDash();
+  std::string lens_id = view_->GetIdForShortcutActivation(std::string(key_string));
+  if (lens_id != "")
+  {
+    OnActivateRequest(g_variant_new("(sus)", lens_id.c_str(), 0, ""));
+    return true;
+  }
+  return false;
+}
+
+std::vector<char> Controller::GetAllShortcuts()
+{
+  EnsureDash();
+  return view_->GetAllShortcuts();
+}
+
 // Introspectable
-const gchar* DashController::GetName()
+std::string Controller::GetName() const
 {
   return "DashController";
 }
 
-void DashController::AddProperties(GVariantBuilder* builder)
-{}
+void Controller::AddProperties(GVariantBuilder* builder)
+{
+  g_variant_builder_add (builder, "{sv}", "visible", g_variant_new_boolean (visible_) );
+}
 
 
 }

@@ -1,5 +1,6 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010 Canonical Ltd
+ * Copyright (C) 2010-2011 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -14,118 +15,61 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
- * Authored by: Sam Spilsbury <sam.spilsbury@canonical.com>
- * Authored by: Didier Roche <didier.roche@canonical.com>
+ *              Sam Spilsbury <sam.spilsbury@canonical.com>
+ *              Didier Roche <didier.roche@canonical.com>
+ *              Marco Trevisan (Treviño) <mail@3v1n0.net>
  */
 
-#include "Nux/Nux.h"
-#include "Nux/HLayout.h"
-#include "Nux/VLayout.h"
-#include "Nux/Button.h"
-
-#include "NuxGraphics/GLThread.h"
-#include "Nux/BaseWindow.h"
-#include "Nux/WindowCompositor.h"
+#include <Nux/Nux.h>
 
 #include "PanelTitlebarGrabAreaView.h"
+
 #include <UnityCore/Variant.h>
-
-#include <glib.h>
-
-#define DELTA_MOUSE_DOUBLE_CLICK 500000000
-
-enum
-{
-  BUTTON_CLOSE = 0,
-  BUTTON_MINIMISE,
-  BUTTON_UNMAXIMISE
-};
-
+#include <X11/cursorfont.h>
 
 PanelTitlebarGrabArea::PanelTitlebarGrabArea()
   : InputArea(NUX_TRACKER_LOCATION)
+  , _grab_cursor(None)
 {
-  // FIXME: the two following functions should be used instead of the insane trick with fixed value. But nux is broken
-  // right now and we need jay to focus on other things
-  /*InputArea::EnableDoubleClick (true);
-  InputArea::OnMouseDoubleClick.connect (sigc::mem_fun (this, &PanelTitlebarGrabArea::RecvMouseDoubleClick));*/
-  InputArea::mouse_up.connect(sigc::mem_fun(this, &PanelTitlebarGrabArea::RecvMouseUp));
-  _last_click_time.tv_sec = 0;
-  _last_click_time.tv_nsec = 0;
-
-  // connect the *Click events before the *Down ones otherwise, weird race happens
-  InputArea::mouse_down.connect(sigc::mem_fun(this, &PanelTitlebarGrabArea::RecvMouseDown));
+  EnableDoubleClick(true);
 }
-
 
 PanelTitlebarGrabArea::~PanelTitlebarGrabArea()
 {
+  if (_grab_cursor)
+    XFreeCursor(nux::GetGraphicsDisplay()->GetX11Display(), _grab_cursor);
 }
 
-void PanelTitlebarGrabArea::RecvMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags)
+void PanelTitlebarGrabArea::SetGrabbed(bool enabled)
 {
-  int button = nux::GetEventButton(button_flags);
-  if (button == 1)
-  {
-    mouse_down.emit(x, y);
-  }
-  else if (button == 2)
-  {
-    mouse_middleclick.emit();
-  }
-}
+  auto display = nux::GetGraphicsDisplay()->GetX11Display();
+  auto panel_window = static_cast<nux::BaseWindow*>(GetTopLevelViewWindow());
 
-void PanelTitlebarGrabArea::RecvMouseDoubleClick(int x, int y, unsigned long button_flags, unsigned long key_flags)
-{
-  int button = nux::GetEventButton(button_flags);
-  if (button == 1)
-  {
-    mouse_doubleleftclick.emit();
+  if (!panel_window || !display)
     return;
-  }
-  mouse_doubleclick.emit();
-}
 
-// TODO: can be safely removed once OnMouseDoubleClick is fixed in nux
-void PanelTitlebarGrabArea::RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long key_flags)
-{
-  struct timespec event_time, delta;
-  clock_gettime(CLOCK_MONOTONIC, &event_time);
-  delta = time_diff(_last_click_time, event_time);
-
-  _last_click_time.tv_sec = event_time.tv_sec;
-  _last_click_time.tv_nsec = event_time.tv_nsec;
-
-  if ((delta.tv_sec == 0) && (delta.tv_nsec < DELTA_MOUSE_DOUBLE_CLICK))
-    RecvMouseDoubleClick(x, y, button_flags, key_flags);
-}
-
-struct timespec PanelTitlebarGrabArea::time_diff(struct timespec start, struct timespec end)
-{
-  struct timespec temp;
-  if ((end.tv_nsec - start.tv_nsec) < 0)
+  if (enabled && !_grab_cursor)
   {
-    temp.tv_sec = end.tv_sec - start.tv_sec - 1;
-    temp.tv_nsec = 1000000000 + end.tv_nsec - start.tv_nsec;
+    _grab_cursor = XCreateFontCursor(display, XC_fleur);
+    XDefineCursor(display, panel_window->GetInputWindowId(), _grab_cursor);
   }
-  else
+  else if (!enabled && _grab_cursor)
   {
-    temp.tv_sec = end.tv_sec - start.tv_sec;
-    temp.tv_nsec = end.tv_nsec - start.tv_nsec;
+    XUndefineCursor(display, panel_window->GetInputWindowId());
+    XFreeCursor(display, _grab_cursor);
+    _grab_cursor = None;
   }
-  return temp;
 }
 
-const gchar*
-PanelTitlebarGrabArea::GetName()
+bool PanelTitlebarGrabArea::IsGrabbed()
+{
+  return (_grab_cursor != None);
+}
+
+std::string
+PanelTitlebarGrabArea::GetName() const
 {
   return "panel-titlebar-grab-area";
-}
-
-const gchar*
-PanelTitlebarGrabArea::GetChildsName()
-{
-  return "";
 }
 
 void

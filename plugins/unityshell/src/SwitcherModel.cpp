@@ -21,8 +21,12 @@
 #include "SwitcherModel.h"
 #include "WindowManager.h"
 
+#include <UnityCore/Variant.h>
+
 namespace unity
 {
+using launcher::AbstractLauncherIcon;
+
 namespace switcher
 {
 
@@ -33,11 +37,41 @@ SwitcherModel::SwitcherModel(std::vector<AbstractLauncherIcon*> icons)
 {
   detail_selection = false;
   detail_selection_index = 0;
+  only_detail_on_viewport = false;
+
+  for (auto icon : _inner)
+    icon->Reference();
 }
 
 SwitcherModel::~SwitcherModel()
 {
+  for (auto icon : _inner)
+    icon->UnReference();
+}
 
+std::string SwitcherModel::GetName() const
+{
+  return "SwitcherModel";
+}
+
+void SwitcherModel::AddProperties(GVariantBuilder* builder)
+{
+  GVariantBuilder children_builder;
+  g_variant_builder_init(&children_builder, G_VARIANT_TYPE("a(sv)"));
+
+  for (auto icon : _inner)
+  {
+    if (icon->GetName() != "")
+      g_variant_builder_add(&children_builder, "(sv)", icon->GetName().c_str(), icon->Introspect());
+  }
+
+  unity::variant::BuilderWrapper(builder)
+  .add("detail-selection", detail_selection)
+  .add("detail-selection-index", (int)detail_selection_index)
+  .add("only-detail-on-viewport", only_detail_on_viewport)
+  .add("selection-index", SelectionIndex())
+  .add("last-selection-index", LastSelectionIndex())
+  .add("children-of-men", g_variant_builder_end(&children_builder));
 }
 
 SwitcherModel::iterator
@@ -108,11 +142,22 @@ SwitcherModel::CompareWindowsByActive (guint32 first, guint32 second)
   return WindowManager::Default ()->GetWindowActiveNumber (first) > WindowManager::Default ()->GetWindowActiveNumber (second);
 }
 
+bool
+WindowOnOtherViewport(Window xid)
+{
+  return !WindowManager::Default()->IsWindowOnCurrentDesktop(xid);
+}
+
 std::vector<Window>
 SwitcherModel::DetailXids()
 {
   std::vector<Window> results;
   results = Selection()->RelatedXids ();
+
+  if (only_detail_on_viewport)
+  {
+    results.erase(std::remove_if(results.begin(), results.end(), WindowOnOtherViewport), results.end());
+  }
 
   std::sort (results.begin (), results.end (), &CompareWindowsByActive);
 
@@ -126,9 +171,12 @@ SwitcherModel::DetailXids()
 Window
 SwitcherModel::DetailSelectionWindow ()
 {
-  if (!detail_selection)
+  if (!detail_selection || DetailXids ().empty())
     return 0;
-  
+
+  if (detail_selection_index > DetailXids().size() - 1)
+    return 0;
+ 
   return DetailXids()[detail_selection_index];
 }
 
@@ -167,7 +215,7 @@ SwitcherModel::NextDetail ()
   if (!detail_selection())
     return;
 
-  if (detail_selection_index < Selection()->RelatedWindows () - 1)
+  if (detail_selection_index < DetailXids().size() - 1)
     detail_selection_index = detail_selection_index + 1;
   else
     detail_selection_index = 0;
@@ -178,10 +226,10 @@ void SwitcherModel::PrevDetail ()
   if (!detail_selection())
     return;
 
-  if (detail_selection_index > 0)
+  if (detail_selection_index >= (unsigned int) 1)
     detail_selection_index = detail_selection_index - 1;
   else
-    detail_selection_index = Selection()->RelatedWindows () - 1;
+    detail_selection_index = DetailXids().size() - 1;
 }
 
 void

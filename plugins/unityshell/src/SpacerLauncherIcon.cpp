@@ -22,6 +22,11 @@
 
 #include <glib/gi18n-lib.h>
 
+namespace unity
+{
+namespace launcher
+{
+
 SpacerLauncherIcon::SpacerLauncherIcon(Launcher* IconManager)
   :   SimpleLauncherIcon(IconManager)
 {
@@ -32,6 +37,6 @@ SpacerLauncherIcon::SpacerLauncherIcon(Launcher* IconManager)
   tooltip_text = _("Drop To Add Application");
 }
 
-SpacerLauncherIcon::~SpacerLauncherIcon()
-{
-}
+
+} // namespace launcher
+} // namespace unity

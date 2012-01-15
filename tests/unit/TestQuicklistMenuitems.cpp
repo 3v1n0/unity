@@ -87,6 +87,7 @@ TestMenuItemCheckmark()
   g_assert_cmpstr(qlCheckmarkItem->GetLabel(), == , "Unchecked");
   g_assert_cmpint(qlCheckmarkItem->GetEnabled(), == , false);
   g_assert_cmpint(qlCheckmarkItem->GetActive(), == , false);
+  g_assert_cmpint(qlCheckmarkItem->IsMarkupEnabled(), == , false);
 
   //qlCheckmarkItem->sigChanged.connect (sigc::mem_fun (pointerToCallerClass,
   //                                                    &CallerClass::RecvChanged));
@@ -111,12 +112,17 @@ TestMenuItemLabel()
                                       DBUSMENU_MENUITEM_PROP_ENABLED,
                                       true);
 
+  dbusmenu_menuitem_property_set_bool(item,
+                                      "unity-use-markup",
+                                      true);
+
   QuicklistMenuItemLabel* qlLabelItem = NULL;
 
   qlLabelItem = new QuicklistMenuItemLabel(item, true);
 
   g_assert_cmpstr(qlLabelItem->GetLabel(), == , "A Label");
   g_assert_cmpint(qlLabelItem->GetEnabled(), == , true);
+  g_assert_cmpint(qlLabelItem->IsMarkupEnabled(), == , true);
 
   //qlLabelItem->sigChanged.connect (sigc::mem_fun (pointerToCallerClass,
   //                                                &CallerClass::RecvChanged));
@@ -151,10 +157,12 @@ TestMenuItemRadio()
   QuicklistMenuItemRadio* qlRadioItem = NULL;
 
   qlRadioItem = new QuicklistMenuItemRadio(item, true);
+  qlRadioItem->EnableLabelMarkup(true);
 
   g_assert_cmpstr(qlRadioItem->GetLabel(), == , "Radio Active");
   g_assert_cmpint(qlRadioItem->GetEnabled(), == , true);
   g_assert_cmpint(qlRadioItem->GetActive(), == , true);
+  g_assert_cmpint(qlRadioItem->IsMarkupEnabled(), == , true);
 
   //qlRadioItem->sigChanged.connect (sigc::mem_fun (pointerToCallerClass,
   //                                                &CallerClass::RecvChanged));

@@ -31,15 +31,25 @@ import time
 home_dir = os.path.expanduser("~%s" % os.getenv("SUDO_USER"))
 supported_prefix = "/usr/local"
 
-well_known_local_path = ("%s/share/unity" % supported_prefix,
-                         "%s/share/ccsm/icons/*/*/*/*unity*" % supported_prefix,
-                         "%s/share/locale/*/LC_MESSAGES/*unity*" % supported_prefix,
+well_known_local_path = ("%s/share/locale/*/LC_MESSAGES/*unity*" % supported_prefix,
+                         "%s/share/man/man1/*unity*" % supported_prefix,
+                         "%s/lib/*unity*" % supported_prefix,
+                         "%s/share/dbus-1/services/*Unity*" % supported_prefix,
+                         "%s/bin/*unity*" % supported_prefix,
+                         "%s/include/Unity*"  % supported_prefix,
+                         "%s/lib/pkgconfig/unity*"  % supported_prefix,
+                         "%s/.compiz-1/*/*gtkloader*" % home_dir,
+                         "%s/.config/compiz-1/gsettings/schemas/*gtkloader*" % home_dir,
+                         "%s/.gconf/schemas/*gtkloader*" % home_dir,
+                         "%s/.compiz-1/*/*networkarearegion*" % home_dir,
+                         "%s/.config/compiz-1/gsettings/schemas/*networkarearegion*" % home_dir,
+                         "%s/.gconf/schemas/*networkarearegion*" % home_dir,
                          "%s/.compiz-1/*/*unity*" % home_dir,
+                         "%s/.config/compiz-1/gsettings/schemas/*unity*" % home_dir,
                          "%s/.gconf/schemas/*unity*" % home_dir,
-                         "%s/lib/*unity*"  % supported_prefix,
-                         "%s/share/dbus-1/services/*Unity*"  % supported_prefix,
-                         "%s/bin/*unity*"  % supported_prefix,
-                         "%s/share/man/man1/*unity*"  % supported_prefix,
+                         "%s/share/ccsm/icons/*/*/*/*unity*" % supported_prefix,
+                         "%s/share/unity" % supported_prefix,
+                         "%s/.compiz-1/unity*" % home_dir,
                          "%s/lib/*nux*"  % supported_prefix,
                          "%s/lib/pkgconfig/nux*"  % supported_prefix,
                          "%s/include/Nux*"  % supported_prefix
@@ -101,16 +111,18 @@ def reset_launcher_icons ():
     '''Reset the default launcher icon and restart it.'''
     subprocess.Popen(["gsettings", "reset" ,"com.canonical.Unity.Launcher" , "favorites"]) 
 
-def process_and_start_unity (verbose, debug, compiz_args, log_file):
+def process_and_start_unity (verbose, debug_mode, compiz_args, log_file):
     '''launch unity under compiz (replace the current shell in any case)'''
     
     cli = []
     
-    if debug:
+    if debug_mode > 0:
         # we can do more check later as if it's in PATH...
         if not os.path.isfile('/usr/bin/gdb'):
             print("ERROR: you don't have gdb in your system. Please install it to run in advanced debug mode.")
             sys.exit(1)
+        elif debug_mode == 1:
+            cli.extend(['gdb', '-ex', 'run', '-ex', 'bt', '--batch', '--args'])
         elif 'DESKTOP_SESSION' in os.environ:
             print("ERROR: it seems you are under a graphical environment. That's incompatible with executing advanced-debug option. You should be in a tty.")
             sys.exit(1)
@@ -119,7 +131,7 @@ def process_and_start_unity (verbose, debug, compiz_args, log_file):
     
     cli.extend(['compiz', '--replace'])
     if options.verbose:
-        cli.append("--debug")    
+        cli.append("--debug")
     if args:
         cli.extend(compiz_args)
     
@@ -132,11 +144,12 @@ def process_and_start_unity (verbose, debug, compiz_args, log_file):
     return subprocess.Popen(" ".join(cli), env=dict(os.environ), shell=True)
     
 
-def run_unity (verbose, debug, compiz_args, log_file):
+def run_unity (verbose, debug, advanced_debug, compiz_args, log_file):
     '''run the unity shell and handle Ctrl + C'''
 
     try:
-        unity_instance = process_and_start_unity (verbose, debug, compiz_args, log_file)
+        debug_mode = 2 if advanced_debug else 1 if debug else 0
+        unity_instance = process_and_start_unity (verbose, debug_mode, compiz_args, log_file)
         subprocess.Popen(["killall", "unity-panel-service"])
         unity_instance.wait()
     except KeyboardInterrupt, e:
@@ -179,7 +192,9 @@ if __name__ == '__main__':
     parser = OptionParser(version= "%prog @UNITY_VERSION@", usage=usage)
 
     parser.add_option("--advanced-debug", action="store_true",
-                      help="Run unity under debugging to help debugging an issue. /!\ Only if devs ask for it.")    
+                      help="Run unity under debugging to help debugging an issue. /!\ Only if devs ask for it.")
+    parser.add_option("--debug", action="store_true",
+                      help="Run unity under gdb and print a backtrace on crash. /!\ Only if devs ask for it.")
     parser.add_option("--distro", action="store_true",
                       help="Remove local build if present with default values to return to the package value (this doesn't run unity and need root access)")    
     parser.add_option("--log", action="store",
@@ -208,4 +223,4 @@ if __name__ == '__main__':
 	if options.replace:
 		print ("WARNING: This is for compatibility with other desktop interfaces please use unity without --replace")
 			
-    run_unity (options.verbose, options.advanced_debug, args, options.log)
+    run_unity (options.verbose, options.debug, options.advanced_debug, args, options.log)

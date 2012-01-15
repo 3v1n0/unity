@@ -64,6 +64,8 @@ public:
 
   static void Initialize(CompScreen* screen);
 
+  nux::Property<bool> bias_active_to_viewport;
+
   ~PluginAdapter();
 
   void SetScaleAction(MultiActionList& scale);
@@ -104,6 +106,7 @@ public:
   void NotifyResized(CompWindow* window, int x, int y, int w, int h);
   void NotifyStateChange(CompWindow* window, unsigned int state, unsigned int last_state);
   void NotifyCompizEvent(const char* plugin, const char* event, CompOption::Vector& option);
+  void NotifyNewDecorationState(guint32 xid);
 
   void Decorate(guint32 xid);
   void Undecorate(guint32 xid);
@@ -113,6 +116,8 @@ public:
   bool IsWindowDecorated(guint xid);
   bool IsWindowOnCurrentDesktop(guint xid);
   bool IsWindowObscured(guint xid);
+  bool IsWindowMapped(guint xid);
+  bool IsWindowVisible(guint32 xid);
   void Restore(guint32 xid);
   void Minimize(guint32 xid);
   void Close(guint32 xid);
@@ -123,19 +128,19 @@ public:
 
   void SetWindowIconGeometry(Window window, nux::Geometry const& geo);
 
-  void FocusWindowGroup(std::vector<Window> windows);
+  void FocusWindowGroup(std::vector<Window> windows, FocusVisibility);
   bool ScaleWindowGroup(std::vector<Window> windows, int state, bool force);
 
   bool IsScreenGrabbed();
   bool IsViewPortSwitchStarted();
 
-  unsigned int GetWindowActiveNumber (guint32 xid);
+  unsigned long long GetWindowActiveNumber (guint32 xid);
 
-  void MaximizeIfBigEnough(CompWindow* window);
+  bool MaximizeIfBigEnough(CompWindow* window);
 
   nux::Geometry GetWindowGeometry(guint32 xid);
   nux::Geometry GetScreenGeometry();
-
+  
   void CheckWindowIntersections(nux::Geometry const& region, bool &active, bool &any);
 
   int WorkspaceCount();
@@ -158,7 +163,6 @@ private:
   CompScreen* m_Screen;
   MultiActionList m_ExpoActionList;
   MultiActionList m_ScaleActionList;
-  std::list <guint32> m_SpreadedWindows;
 
   bool _spread_state;
   bool _expo_state;
@@ -172,6 +176,8 @@ private:
 
   bool _in_show_desktop;
   CompWindow* _last_focused_window;
+
+  std::map<guint32, unsigned int> _window_decoration_state;
 
   static PluginAdapter* _default;
 };

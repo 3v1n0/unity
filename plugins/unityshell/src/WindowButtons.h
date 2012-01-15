@@ -25,7 +25,9 @@
 
 #include "Introspectable.h"
 
-class WindowButtons : public nux::HLayout, public unity::Introspectable
+namespace unity
+{
+class WindowButtons : public nux::HLayout, public unity::debug::Introspectable
 {
   // These are the [close][minimize][restore] buttons on the panel when there
   // is a maximized window
@@ -33,6 +35,9 @@ class WindowButtons : public nux::HLayout, public unity::Introspectable
 public:
   WindowButtons();
   ~WindowButtons();
+
+  void SetOpacity(double opacity);
+  double GetOpacity();
 
   sigc::signal<void> close_clicked;
   sigc::signal<void> minimize_clicked;
@@ -44,14 +49,15 @@ public:
   virtual nux::Area* FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type);
 
 protected:
-  const gchar* GetName();
-  const gchar* GetChildsName();
+  std::string GetName() const;
   void          AddProperties(GVariantBuilder* builder);
 
 private:
   void OnCloseClicked(nux::View *view);
   void OnMinimizeClicked(nux::View *view);
   void OnRestoreClicked(nux::View *view);
-};
 
+  double _opacity;
+};
+}
 #endif

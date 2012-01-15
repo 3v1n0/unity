@@ -33,6 +33,11 @@
 
 #include "AbstractLauncherIcon.h"
 
+namespace unity
+{
+namespace launcher
+{
+
 class MockLauncherIcon : public AbstractLauncherIcon
 {
 public:
@@ -41,6 +46,10 @@ public:
   {
     tooltip_text = "Mock Icon";
   }
+
+  std::string GetName() const { return "MockLauncherIcon"; }
+  
+  void AddProperties(GVariantBuilder* builder) {}
 
   void HideTooltip() {}
 
@@ -54,6 +63,16 @@ public:
   std::vector<Window> RelatedXids ()
   {
     std::vector<Window> result;
+
+    result.push_back ((100 << 16) + 200);
+    result.push_back ((500 << 16) + 200);
+    result.push_back ((300 << 16) + 200);
+    result.push_back ((200 << 16) + 200);
+    result.push_back ((300 << 16) + 200);
+    result.push_back ((100 << 16) + 200);
+    result.push_back ((300 << 16) + 200);
+    result.push_back ((600 << 16) + 200);
+
     return result;
   }
 
@@ -95,10 +114,10 @@ public:
 
   int RelatedWindows()
   {
-    return 0;
+    return 7;
   }
 
-  bool HasWindowOnViewport()
+  const bool HasWindowOnViewport()
   {
     return false;
   }
@@ -123,7 +142,7 @@ public:
     return true;
   }
 
-  unsigned int SwitcherPriority()
+  unsigned long long SwitcherPriority()
   {
     return 0;
   }
@@ -248,6 +267,9 @@ private:
   nux::BaseTexture* icon_;
 
 };
+
+}
+}
 
 #endif // MOCKLAUNCHERICON_H
 

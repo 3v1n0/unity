@@ -27,6 +27,7 @@
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
 
+#include "Timer.h"
 #include "ubus-server.h"
 #include "UBusMessages.h"
 #include "ResultViewGrid.h"
@@ -34,7 +35,7 @@
 
 namespace
 {
-nux::logging::Logger logger("unity.dash.ResultViewGrid");
+nux::logging::Logger logger("unity.dash.results");
 }
 
 namespace unity
@@ -45,16 +46,24 @@ NUX_IMPLEMENT_OBJECT_TYPE(ResultViewGrid);
 
 ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
   : ResultView(NUX_FILE_LINE_PARAM)
-  , horizontal_spacing(6)
-  , vertical_spacing(6)
-  , padding(6)
+  , horizontal_spacing(0)
+  , vertical_spacing(0)
+  , padding(0)
   , mouse_over_index_(-1)
   , active_index_(-1)
   , selected_index_(-1)
   , preview_row_(0)
+  , last_lazy_loaded_result_ (0)
+  , lazy_load_handle_(0)
   , last_mouse_down_x_(-1)
   , last_mouse_down_y_(-1)
+  , recorded_dash_width_(-1)
+  , recorded_dash_height_(-1)
+  , mouse_last_x_(-1)
+  , mouse_last_y_(-1)
 {
+  SetAcceptKeyNavFocusOnMouseDown(false);
+  
   auto needredraw_lambda = [&](int value)
   {
     NeedRedraw();
@@ -73,12 +82,22 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
   {
     last_mouse_down_x_ = x;
     last_mouse_down_y_ = y;
+    uint index = GetIndexAtPosition(x, y);
+    mouse_over_index_ = index;
   });
 
   mouse_leave.connect([&](int x, int y, unsigned long mouse_state, unsigned long button_state)
   {
     mouse_over_index_ = -1;
+    mouse_last_x_ = -1;
+    mouse_last_y_ = -1;
     NeedRedraw();
+  });
+
+  ubus_.RegisterInterest(UBUS_DASH_SIZE_CHANGED, [this] (GVariant* data) {
+    // on dash size changed, we update our stored values, this sucks
+    //FIXME in P - make dash size the size of our dash not the entire screen
+    g_variant_get (data, "(ii)", &recorded_dash_width_, &recorded_dash_height_);
   });
 
   SetDndEnabled(true, false);
@@ -87,7 +106,86 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
 
 ResultViewGrid::~ResultViewGrid()
 {
+  g_source_remove(lazy_load_handle_);
 }
+
+gboolean ResultViewGrid::OnLazyLoad (gpointer data)
+{
+  ResultViewGrid *self = (ResultViewGrid*)data;
+  self->DoLazyLoad();
+  return FALSE;
+}
+
+void ResultViewGrid::QueueLazyLoad()
+{
+  if (lazy_load_handle_ == 0)
+  {
+    lazy_load_handle_ = g_idle_add_full (G_PRIORITY_DEFAULT, (GSourceFunc)(&ResultViewGrid::OnLazyLoad), this, NULL);
+  }
+  last_lazy_loaded_result_ = 0; // we always want to reset the lazy load index here
+}
+
+void ResultViewGrid::DoLazyLoad()
+{
+  lazy_load_handle_ = 0;
+  // FIXME - so this code was nice, it would only load the visible entries on the screen
+  // however nux does not give us a good enough indicator right now that we are scrolling,
+  // thus if you scroll more than a screen in one frame, you will end up with at least one frame where
+  // no icons are displayed (they have not been preloaded yet) - it sucked. we should fix this next cycle when we can break api
+  //~ int index = 0;
+//~
+  //~ ResultListBounds visible_bounds = GetVisableResults();
+  //~ int lower_bound = std::get<0>(visible_bounds);
+  //~ int upper_bound = std::get<1>(visible_bounds);
+//~
+  //~ ResultList::iterator it;
+  //~ for (it = results_.begin(); it != results_.end(); it++)
+  //~ {
+    //~ if (index >= lower_bound && index <= upper_bound)
+    //~ {
+      //~ renderer_->Preload((*it));
+    //~ }
+    //~ index++;
+  //~ }
+
+  util::Timer timer;
+  bool queue_additional_load = false; // if this is set, we will return early and start loading more next frame
+
+  // instead we will just pre-load all the items if expanded or just one row if not
+  int index = 0;
+  int items_per_row = GetItemsPerRow();
+  for (auto it = results_.begin() + last_lazy_loaded_result_; it != results_.end(); it++)
+  {
+    if ((!expanded && index < items_per_row) || expanded)
+    {
+      renderer_->Preload((*it));
+      last_lazy_loaded_result_ = index;
+    }
+
+    if (timer.ElapsedSeconds() > 0.008)
+    {
+      queue_additional_load = true;
+      break;
+    }
+
+    if (!expanded && index >= items_per_row)
+      break; //early exit
+
+    index++;
+  }
+
+  if (queue_additional_load)
+  {
+    //we didn't load all the results because we exceeded our time budget, so queue another lazy load
+    if (lazy_load_handle_ == 0)
+    {
+      lazy_load_handle_ = g_timeout_add(1000/60 - 8, (GSourceFunc)(&ResultViewGrid::OnLazyLoad), this);
+    }
+  }
+
+  QueueDraw();
+}
+
 
 int ResultViewGrid::GetItemsPerRow()
 {
@@ -135,14 +233,18 @@ void ResultViewGrid::SetModelRenderer(ResultRenderer* renderer)
 
 void ResultViewGrid::AddResult(Result& result)
 {
-  ResultView::AddResult(result);
+  results_.push_back(result);
+
   SizeReallocate();
+  QueueLazyLoad();
+  NeedRedraw();
 }
 
 void ResultViewGrid::RemoveResult(Result& result)
 {
   ResultView::RemoveResult(result);
   SizeReallocate();
+  QueueLazyLoad();
 }
 
 void ResultViewGrid::SizeReallocate()
@@ -150,7 +252,7 @@ void ResultViewGrid::SizeReallocate()
   //FIXME - needs to use the geometry assigned to it, but only after a layout
   int items_per_row = GetItemsPerRow();
 
-  int total_rows = (results_.size() / items_per_row);
+  int total_rows = std::ceil(results_.size() / (double)items_per_row) ;
   int total_height = 0;
 
   if (expanded)
@@ -169,6 +271,8 @@ void ResultViewGrid::SizeReallocate()
   SetMinimumHeight(total_height + (padding * 2));
   SetMaximumHeight(total_height + (padding * 2));
   PositionPreview();
+
+  mouse_over_index_ = GetIndexAtPosition(mouse_last_x_, mouse_last_y_);
 }
 
 void ResultViewGrid::PositionPreview()
@@ -210,11 +314,6 @@ void ResultViewGrid::PositionPreview()
       break;
     }
   }
-}
-
-long int ResultViewGrid::ProcessEvent(nux::IEvent& ievent, long int TraverseInfo, long int ProcessEventInfo)
-{
-  return TraverseInfo;
 }
 
 bool ResultViewGrid::InspectKeyEvent(unsigned int eventType, unsigned int keysym, const char* character)
@@ -373,6 +472,14 @@ void ResultViewGrid::OnKeyDown (unsigned long event_type, unsigned long event_ke
   selected_index_ = std::max(0, selected_index_);
   selected_index_ = std::min(static_cast<int>(results_.size() - 1), selected_index_);
   focused_uri_ = results_[selected_index_].uri;
+
+  int focused_x = (renderer_->width + horizontal_spacing) * (selected_index_ % items_per_row);
+  int focused_y = (renderer_->height + vertical_spacing) * (selected_index_ / items_per_row);
+
+  ubus_.SendMessage(UBUS_RESULT_VIEW_KEYNAV_CHANGED,
+                    g_variant_new("(iiii)", focused_x, focused_y, renderer_->width(), renderer_->height()));
+  selection_change.emit();
+
   NeedRedraw();
 }
 
@@ -384,32 +491,95 @@ nux::Area* ResultViewGrid::KeyNavIteration(nux::KeyNavDirection direction)
 // crappy name.
 void ResultViewGrid::OnOnKeyNavFocusChange(nux::Area *area)
 {
-
   if (HasKeyFocus())
   {
-    focused_uri_ = results_.front().uri;
-    selected_index_ = 0;
-    NeedRedraw();
+    if (selected_index_ < 0)
+    {
+        focused_uri_ = results_.front().uri;
+        selected_index_ = 0;
+    }
+
+    int items_per_row = GetItemsPerRow();
+    int focused_x = (renderer_->width + horizontal_spacing) * (selected_index_ % items_per_row);
+    int focused_y = (renderer_->height + vertical_spacing) * (selected_index_ / items_per_row);
+
+    ubus_.SendMessage(UBUS_RESULT_VIEW_KEYNAV_CHANGED,
+                      g_variant_new("(iiii)", focused_x, focused_y, renderer_->width(), renderer_->height()));
+    selection_change.emit();
   }
   else
   {
     selected_index_ = -1;
     focused_uri_.clear();
+
+    selection_change.emit();
   }
+
+  NeedRedraw();
 }
 
-long ResultViewGrid::ComputeLayout2()
+long ResultViewGrid::ComputeContentSize()
 {
   SizeReallocate();
-  long ret = ResultView::ComputeLayout2();
+  QueueLazyLoad();
+  long ret = ResultView::ComputeContentSize();
   return ret;
 
 }
 
+
+typedef std::tuple <int, int> ResultListBounds;
+ResultListBounds ResultViewGrid::GetVisableResults()
+{
+  int items_per_row = GetItemsPerRow();
+  int start, end;
+
+  if (!expanded)
+  {
+    // we are not expanded, so the bounds are known
+    start = 0;
+    end = items_per_row - 1;
+  }
+  else
+  {
+    //find the row we start at
+    int absolute_y = GetAbsoluteY() - GetToplevel()->GetAbsoluteY();
+    uint row_size = renderer_->height + vertical_spacing;
+
+    if (absolute_y < 0)
+    {
+      // we are scrolled up a little,
+      int row_index = abs(absolute_y) / row_size;
+      start = row_index * items_per_row;
+    }
+    else
+    {
+      start = 0;
+    }
+
+    if (absolute_y + GetAbsoluteHeight() > GetToplevel()->GetAbsoluteHeight())
+    {
+      // our elements overflow the visable viewport
+      int visible_height = (GetToplevel()->GetAbsoluteHeight() - std::max(absolute_y, 0));
+      visible_height = std::min(visible_height, absolute_y + GetAbsoluteHeight());
+
+      int visible_rows = std::ceil(visible_height / static_cast<float>(row_size));
+      end = start + (visible_rows * items_per_row) + items_per_row;
+    }
+    else
+    {
+      end = results_.size() - 1;
+    }
+  }
+
+  start = std::max(start, 0);
+  end = std::min(end, static_cast<int>(results_.size()) - 1);
+
+  return ResultListBounds(start, end);
+}
+
 void ResultViewGrid::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
-  GfxContext.PushClippingRectangle(GetGeometry());
-
   gPainter.PaintBackground(GfxContext, GetGeometry());
 
   int items_per_row = GetItemsPerRow();
@@ -423,16 +593,14 @@ void ResultViewGrid::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   uint row_size = renderer_->height + vertical_spacing;
 
   int y_position = padding + GetGeometry().y;
-  nux::Area* top_level_parent = GetToplevel();
+
+  ResultListBounds visible_bounds = GetVisableResults();
 
   for (uint row_index = 0; row_index <= total_rows; row_index++)
   {
-    // check if the row is displayed on the screen,
-    // FIXME - optimisation - replace 2048 with the height of the displayed viewport
-    // or at the very least, with the largest monitor resolution
-    //~ if ((y_position + renderer_->height) + absolute_y >= 0
-    //~ && (y_position - renderer_->height) + absolute_y <= top_level_parent->GetGeometry().height)
-    if (1)
+    int row_lower_bound = row_index * items_per_row;
+    if (row_lower_bound >= std::get<0>(visible_bounds) &&
+        row_lower_bound <= std::get<1>(visible_bounds))
     {
       int x_position = padding + GetGeometry().x;
       for (int column_index = 0; column_index < items_per_row; column_index++)
@@ -455,12 +623,17 @@ void ResultViewGrid::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
           state = ResultRenderer::RESULT_RENDERER_ACTIVE;
         }
 
-        int half_width = top_level_parent->GetGeometry().width / 2;
-        // FIXME - we assume the height of the viewport is 600
-        int half_height = top_level_parent->GetGeometry().height;
+        int half_width = recorded_dash_width_ / 2;
+        int half_height = recorded_dash_height_;
 
-        int offset_x = (x_position - half_width) / (half_width / 10);
-        int offset_y = ((y_position + absolute_y) - half_height) / (half_height / 10);
+        int offset_x = MAX(MIN((x_position - half_width) / (half_width / 10), 5), -5);
+        int offset_y = MAX(MIN(((y_position + absolute_y) - half_height) / (half_height / 10), 5), -5);
+
+        if (recorded_dash_width_ < 1 || recorded_dash_height_ < 1)
+        {
+          offset_x = 0;
+          offset_y = 0;
+        }
         nux::Geometry render_geo(x_position, y_position, renderer_->width, renderer_->height);
         renderer_->Render(GfxContext, results_[index], state, render_geo, offset_x, offset_y);
 
@@ -476,8 +649,6 @@ void ResultViewGrid::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
     }
     y_position += row_size;
   }
-
-  GfxContext.PopClippingRectangle();
 }
 
 void ResultViewGrid::DrawContent(nux::GraphicsEngine& GfxContent, bool force_draw)
@@ -499,16 +670,23 @@ void ResultViewGrid::MouseMove(int x, int y, int dx, int dy, unsigned long butto
 {
   uint index = GetIndexAtPosition(x, y);
   mouse_over_index_ = index;
+
+  mouse_last_x_ = x;
+  mouse_last_y_ = y;
+
   NeedRedraw();
 }
 
 void ResultViewGrid::MouseClick(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
   uint index = GetIndexAtPosition(x, y);
+  mouse_over_index_ = index;
   if (index >= 0 && index < results_.size())
   {
     // we got a click on a button so activate it
     Result result = results_[index];
+    selected_index_ = index;
+    focused_uri_ = result.uri;
     UriActivated.emit(result.uri);
   }
 }
@@ -554,9 +732,6 @@ ResultViewGrid::DndSourceDragBegin()
     return false;
 
   Reference();
-  ubus_server_send_message(ubus_server_get_default(),
-                           UBUS_PLACE_VIEW_CLOSE_REQUEST,
-                           NULL);
 
   Result drag_result = results_[drag_index];
 
@@ -574,66 +749,84 @@ ResultViewGrid::DndSourceDragBegin()
   return true;
 }
 
+GdkPixbuf *
+_icon_hint_get_drag_pixbuf (std::string icon_hint)
+{
+  GdkPixbuf *pbuf;
+  GtkIconTheme *theme;
+  GtkIconInfo *info;
+  GError *error = NULL;
+  GIcon *icon;
+  int size = 64;
+  if (icon_hint.empty())
+    icon_hint = "application-default-icon";
+  if (g_str_has_prefix(icon_hint.c_str(), "/"))
+  {
+    pbuf = gdk_pixbuf_new_from_file_at_scale (icon_hint.c_str(),
+                                              size, size, FALSE, &error);
+    if (error != NULL || !pbuf || !GDK_IS_PIXBUF (pbuf))
+    {
+      icon_hint = "application-default-icon";
+      g_error_free (error);
+      error = NULL;
+    }
+    else
+      return pbuf;
+  }
+  theme = gtk_icon_theme_get_default();
+  icon = g_icon_new_for_string(icon_hint.c_str(), NULL);
+
+  if (G_IS_ICON(icon))
+  {
+     info = gtk_icon_theme_lookup_by_gicon(theme, icon, size, (GtkIconLookupFlags)0);
+      g_object_unref(icon);
+  }
+  else
+  {
+     info = gtk_icon_theme_lookup_icon(theme,
+                                        icon_hint.c_str(),
+                                        size,
+                                        (GtkIconLookupFlags) 0);
+  }
+
+  if (!info)
+  {
+      info = gtk_icon_theme_lookup_icon(theme,
+                                        "application-default-icon",
+                                        size,
+                                        (GtkIconLookupFlags) 0);
+  }
+
+  if (gtk_icon_info_get_filename(info) == NULL)
+  {
+      gtk_icon_info_free(info);
+      info = gtk_icon_theme_lookup_icon(theme,
+                                        "application-default-icon",
+                                        size,
+                                        (GtkIconLookupFlags) 0);
+  }
+
+  pbuf = gtk_icon_info_load_icon(info, &error);
+
+  if (error != NULL)
+  {
+    LOG_WARN (logger) << "could not find a pixbuf for " << icon_hint;
+    g_error_free (error);
+    pbuf = NULL;
+  }
+
+  gtk_icon_info_free(info);
+  return pbuf;
+}
+
 nux::NBitmapData*
 ResultViewGrid::DndSourceGetDragImage()
 {
   nux::NBitmapData* result = 0;
   GdkPixbuf* pbuf;
-  GtkIconTheme* theme;
-  GtkIconInfo* info;
-  GError* error = NULL;
-  GIcon* icon;
+  pbuf = _icon_hint_get_drag_pixbuf (current_drag_icon_name_);
 
-  std::string icon_name = current_drag_icon_name_.c_str();
-  int size = 64;
-
-  if (icon_name.empty())
-    icon_name = "application-default-icon";
-
-  theme = gtk_icon_theme_get_default();
-  icon = g_icon_new_for_string(icon_name.c_str(), NULL);
-
-  if (G_IS_ICON(icon))
-  {
-    info = gtk_icon_theme_lookup_by_gicon(theme, icon, size, (GtkIconLookupFlags)0);
-    g_object_unref(icon);
-  }
-  else
-  {
-    info = gtk_icon_theme_lookup_icon(theme,
-                                      icon_name.c_str(),
-                                      size,
-                                      (GtkIconLookupFlags) 0);
-  }
-
-  if (!info)
-  {
-    info = gtk_icon_theme_lookup_icon(theme,
-                                      "application-default-icon",
-                                      size,
-                                      (GtkIconLookupFlags) 0);
-  }
-
-  if (gtk_icon_info_get_filename(info) == NULL)
-  {
-    gtk_icon_info_free(info);
-    info = gtk_icon_theme_lookup_icon(theme,
-                                      "application-default-icon",
-                                      size,
-                                      (GtkIconLookupFlags) 0);
-  }
-
-  pbuf = gtk_icon_info_load_icon(info, &error);
-  if (error != NULL)
-  {
-    LOG_WARN (logger) << "could not find a pixbuf for " << icon_name;
-    g_error_free (error);
-    result = NULL;
-  }
-
-  gtk_icon_info_free(info);
-
-  if (GDK_IS_PIXBUF(pbuf))
+  if (pbuf && GDK_IS_PIXBUF(pbuf))
   {
     // we don't free the pbuf as GdkGraphics will do it for us will do it for us
     nux::GdkGraphics graphics(pbuf);
@@ -676,6 +869,25 @@ ResultViewGrid::DndSourceDragFinished(nux::DndAction result)
   last_mouse_down_y_ = -1;
   current_drag_uri_.clear();
   current_drag_icon_name_.clear();
+  
+  // We need this because the drag can start in a ResultViewGrid and can
+  // end in another ResultViewGrid
+  EmitMouseLeaveSignal(0, 0, 0, 0);
+  
+  // We need an extra mouse motion to highlight the icon under the mouse
+  // as soon as dnd finish
+  Display* display = nux::GetGraphicsDisplay()->GetX11Display();
+  if (display)
+  {
+    XWarpPointer(display, None, None, 0, 0, 0, 0, 0, 0);
+    XSync(display, 0);
+  }
+}
+
+int
+ResultViewGrid::GetSelectedIndex()
+{
+  return selected_index_;
 }
 
 }

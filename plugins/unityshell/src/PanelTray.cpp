@@ -18,7 +18,7 @@
 
 #include "PanelTray.h"
 
-#include "NuxCore/Logger.h"
+#include <NuxCore/Logger.h>
 
 #define SETTINGS_NAME "com.canonical.Unity.Panel"
 #define PADDING 3
@@ -32,7 +32,8 @@ namespace unity
 {
 
 PanelTray::PanelTray()
-  : _window(0),
+  : View(NUX_TRACKER_LOCATION),
+    _window(0),
     _tray(NULL),
     _last_x(0),
     _last_y(0),
@@ -94,6 +95,7 @@ PanelTray::~PanelTray()
   if (_tray)
   {
     g_signal_handler_disconnect(na_tray_get_manager(_tray), _tray_icon_added_id);
+    g_object_unref (_tray);
     _tray = NULL;
   }
 
@@ -256,23 +258,10 @@ PanelTray::OnTrayDraw(GtkWidget* widget, cairo_t* cr, PanelTray* tray)
   return FALSE;
 }
 
-//
-// We don't use these
-//
-void PanelTray::OnEntryAdded(indicator::Entry::Ptr const& proxy)
-{
-}
-
-const gchar*
-PanelTray::GetName()
+std::string
+PanelTray::GetName() const
 {
   return "PanelTray";
-}
-
-const gchar*
-PanelTray::GetChildsName()
-{
-  return "";
 }
 
 void

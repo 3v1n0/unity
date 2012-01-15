@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2011 Canonical Ltd
  *
@@ -19,244 +20,159 @@
 #ifndef DASH_STYLE_H
 #define DASH_STYLE_H
 
-#include "Nux/Nux.h"
-#include "Nux/View.h"
-#include "Nux/AbstractButton.h"
+#include <Nux/Nux.h>
+#include <Nux/View.h>
+#include <Nux/AbstractButton.h>
 
-#include <json-glib/json-glib.h>
 #include <cairo.h>
-
-#define STATES   5
-#define CHANNELS 3
-#define R        0
-#define G        1
-#define B        2
 
 namespace unity
 {
-  class DashStyle
-  {
-    public:
+namespace dash
+{
 
-      typedef enum {
-        STOCK_ICON_CHECKMARK = 0,
-        STOCK_ICON_CROSS,
-        STOCK_ICON_GRID_VIEW,
-        STOCK_ICON_FLOW_VIEW,
-        STOCK_ICON_STAR
-      } StockIcon;
+enum class StockIcon {
+  CHECKMARK,
+  CROSS,
+  GRID_VIEW,
+  FLOW_VIEW,
+  STAR
+};
 
-      typedef enum {
-        ORIENTATION_UP = 0,
-        ORIENTATION_DOWN,
-        ORIENTATION_LEFT,
-        ORIENTATION_RIGHT
-      } Orientation;
+enum class Orientation {
+  UP,
+  DOWN,
+  LEFT,
+  RIGHT
+};
 
-      typedef enum {
-        BLEND_MODE_NORMAL = 0,
-        BLEND_MODE_MULTIPLY,
-        BLEND_MODE_SCREEN
-    } BlendMode;
+enum class BlendMode {
+  NORMAL,
+  MULTIPLY,
+  SCREEN
+};
 
-      typedef enum {
-        FONT_WEIGHT_LIGHT = 0,
-        FONT_WEIGHT_REGULAR,
-        FONT_WEIGHT_BOLD
-    } FontWeight;
+enum class FontWeight {
+  LIGHT,
+  REGULAR,
+  BOLD
+};
 
-      typedef enum {
-        SEGMENT_LEFT = 0,
-		SEGMENT_MIDDLE,
-		SEGMENT_RIGHT
-	  } Segment;
+enum class Segment {
+  LEFT,
+  MIDDLE,
+  RIGHT
+};
 
-      typedef enum {
-        ARROW_LEFT = 0,
-		ARROW_RIGHT,
-		ARROW_BOTH,
-		ARROW_NONE
-	  } Arrow;
+enum class Arrow {
+  LEFT,
+  RIGHT,
+  BOTH,
+  NONE
+};
 
-      DashStyle ();
-      ~DashStyle ();
 
-      static DashStyle* GetDefault();
+class Style
+{
+public:
+  Style ();
+  ~Style ();
 
-    virtual bool Button (cairo_t* cr, nux::State state, std::string label);
+  static Style& Instance();
 
-    virtual bool StarEmpty (cairo_t* cr, nux::State state);
+  virtual bool Button(cairo_t* cr, nux::ButtonVisualState state,
+                      std::string const& label);
 
-    virtual bool StarHalf (cairo_t* cr, nux::State state);
+  virtual bool StarEmpty(cairo_t* cr, nux::ButtonVisualState state);
 
-    virtual bool StarFull (cairo_t* cr, nux::State state);
+  virtual bool StarHalf(cairo_t* cr, nux::ButtonVisualState state);
 
-    virtual bool MultiRangeSegment (cairo_t*    cr,
-                                    nux::State  state,
-                                    std::string label,
-                                    Arrow       arrow,
-                                    Segment     segment);
+  virtual bool StarFull(cairo_t* cr, nux::ButtonVisualState state);
 
-    virtual bool TrackViewNumber (cairo_t*    cr,
-                                  nux::State  state,
-                                  std::string trackNumber);
+  virtual bool MultiRangeSegment(cairo_t*    cr,
+                                 nux::ButtonVisualState  state,
+                                 std::string const& label,
+                                 Arrow       arrow,
+                                 Segment     segment);
 
-    virtual bool TrackViewPlay (cairo_t*   cr,
-                                nux::State state);
+  virtual bool TrackViewNumber(cairo_t*    cr,
+                               nux::ButtonVisualState  state,
+                               std::string const& trackNumber);
 
-    virtual bool TrackViewPause (cairo_t*   cr,
-                                 nux::State state);
+  virtual bool TrackViewPlay(cairo_t*   cr,
+                             nux::ButtonVisualState state);
 
-    virtual bool TrackViewProgress (cairo_t* cr);
+  virtual bool TrackViewPause(cairo_t*   cr,
+                              nux::ButtonVisualState state);
 
-    virtual bool SeparatorVert (cairo_t* cr);
+  virtual bool TrackViewProgress(cairo_t* cr);
 
-    virtual bool SeparatorHoriz (cairo_t* cr);
+  virtual bool SeparatorVert(cairo_t* cr);
 
-    virtual int GetButtonGarnishSize ();
+  virtual bool SeparatorHoriz(cairo_t* cr);
 
-    virtual int GetSeparatorGarnishSize ();
+  virtual int GetButtonGarnishSize();
 
-    virtual int GetScrollbarGarnishSize ();
+  virtual int GetSeparatorGarnishSize();
 
-    void Blur (cairo_t* cr, int size);
+  virtual int GetScrollbarGarnishSize();
 
-    void RoundedRect (cairo_t* cr,
-                      double   aspect,
-                      double   x,
-                      double   y,
-                      double   cornerRadius,
-                      double   width,
-                      double   height,
-                      bool     align);
+  void Blur(cairo_t* cr, int size);
 
-    private:
-      void UseDefaultValues ();
+  void RoundedRect(cairo_t* cr,
+                   double   aspect,
+                   double   x,
+                   double   y,
+                   double   cornerRadius,
+                   double   width,
+                   double   height);
 
-      bool ReadColorSingle (JsonNode*    root,
-                            const gchar* nodeName,
-                            const gchar* memberName,
-                            double*      color);
+  nux::Color const& GetTextColor() const;
 
-      bool ReadColorArray (JsonNode*    root,
-                           const gchar* nodeName,
-                           const gchar* memberName,
-                           double       colors[][CHANNELS]);
+  // TODO nux::Property<int>
+  int  GetDefaultNColumns() const;
+  void SetDefaultNColumns(int n_cols);
+  sigc::signal<void> columns_changed;
 
-      bool ReadDoubleSingle (JsonNode*    root,
-                             const gchar* nodeName,
-                             const gchar* memberName,
-                             double*      value);
+  int GetTileIconSize() const;
+  int GetTileWidth() const;
+  int GetTileHeight() const;
 
-      bool ReadDoubleArray (JsonNode*    root,
-                            const gchar* nodeName,
-                            const gchar* memberName,
-                            double*      values);
+  int GetHomeTileIconSize() const;
+  int GetHomeTileWidth() const;
+  int GetHomeTileHeight() const;
 
-      bool ReadIntSingle (JsonNode*    root,
-                          const gchar* nodeName,
-                          const gchar* memberName,
-                          int*         value);
+  int GetTextLineHeight() const;
 
-      bool ReadIntArray (JsonNode*    root,
-                         const gchar* nodeName,
-                         const gchar* memberName,
-                         int*         values);
+  nux::BaseTexture* GetDashBottomTile();
+  nux::BaseTexture* GetDashRightTile();
+  nux::BaseTexture* GetDashCorner();
+  nux::BaseTexture* GetDashFullscreenIcon();
+  nux::BaseTexture* GetDashLeftEdge();
+  nux::BaseTexture* GetDashLeftCorner();
+  nux::BaseTexture* GetDashLeftTile();
+  nux::BaseTexture* GetDashTopCorner();
+  nux::BaseTexture* GetDashTopTile();
 
-      bool ReadModeSingle (JsonNode*    root,
-                           const gchar* nodeName,
-                           const gchar* memberName,
-                           BlendMode*   mode);
+  nux::BaseTexture* GetDashShine();
 
-      bool ReadModeArray (JsonNode*    root,
-                          const gchar* nodeName,
-                          const gchar* memberName,
-                          BlendMode*   modes);
+  nux::BaseTexture* GetSearchMagnifyIcon();
+  nux::BaseTexture* GetSearchCloseIcon();
+  nux::BaseTexture* GetSearchCloseGlowIcon();
+  nux::BaseTexture* GetSearchSpinIcon();
+  nux::BaseTexture* GetSearchSpinGlowIcon();
 
-      bool ReadWeightSingle (JsonNode*    root,
-                             const gchar* nodeName,
-                             const gchar* memberName,
-                             FontWeight*  weight);
+  nux::BaseTexture* GetGroupUnexpandIcon();
+  nux::BaseTexture* GetGroupExpandIcon();
 
-      bool ReadWeightArray (JsonNode*    root,
-                            const gchar* nodeName,
-                            const gchar* memberName,
-                            FontWeight*  weights);
+  sigc::signal<void> changed;
 
-      void Star (cairo_t* cr, double size);
+private:
+  class Impl;
+  Impl* pimpl;
+};
 
-      void GetTextExtents (int& width,
-                           int& height,
-                           int  maxWidth,
-                           int  maxHeight,
-                           const std::string text);
-
-      void Text (cairo_t*    cr,
-                 double      size,
-                 double*     color,
-                 double      opacity,
-                 std::string label);
-
-      void ButtonOutlinePath (cairo_t* cr, bool align);
-
-      void ButtonOutlinePathSegment (cairo_t* cr, Segment segment);
-
-      void ArrowPath (cairo_t* cr, Arrow arrow);
-
-      cairo_operator_t SetBlendMode (cairo_t* cr, BlendMode mode);
-
-      void DrawOverlay (cairo_t*  cr,
-                        double    opacity,
-                        BlendMode mode,
-                        int       blurSize);
-
-      void RoundedRectSegment (cairo_t*   cr,
-                               double     aspect,
-                               double     x,
-                               double     y,
-                               double     cornerRadius,
-                               double     width,
-                               double     height,
-                               Segment    segment,
-                               Arrow      arrow,
-                               nux::State state);
-
-    private:
-      cairo_font_options_t* _defaultFontOptions;
-
-      double                _buttonLabelBorderColor[STATES][CHANNELS];
-      double                _buttonLabelBorderOpacity[STATES];
-      double                _buttonLabelBorderSize[STATES];
-      double                _buttonLabelTextSize;
-      double                _buttonLabelTextColor[STATES][CHANNELS];
-      double                _buttonLabelTextOpacity[STATES];
-      double                _buttonLabelFillColor[STATES][CHANNELS];
-      double                _buttonLabelFillOpacity[STATES];
-      double                _buttonLabelOverlayOpacity[STATES];
-      BlendMode             _buttonLabelOverlayMode[STATES];
-      int                   _buttonLabelBlurSize[STATES];
-
-      double                _regularTextColor[CHANNELS];
-      double                _regularTextOpacity;
-      double                _regularTextSize;
-      BlendMode             _regularTextMode;
-      FontWeight            _regularTextWeight;
-
-      double                _separatorSize;
-      double                _separatorColor[CHANNELS];
-      double                _separatorOpacity;
-      double                _separatorOverlayOpacity;
-      BlendMode             _separatorOverlayMode;
-      int                   _separatorBlurSize;
-
-      double                _scrollbarColor[CHANNELS];
-      double                _scrollbarOpacity;
-      double                _scrollbarOverlayOpacity;
-      BlendMode             _scrollbarOverlayMode;
-      int                   _scrollbarBlurSize;
-      int                   _scrollbarSize;
-      double                _scrollbarCornerRadius;
-  };
+}
 }
 
 #endif // DASH_STYLE_H

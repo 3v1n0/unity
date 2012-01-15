@@ -23,7 +23,7 @@
   </schema>
 	<schema path="/desktop/unity/launcher/" id="com.canonical.Unity.Launcher" gettext-domain="unity">
     <key type="as" name="favorites">
-      <default>[ 'ubiquity-gtkui.desktop', 'nautilus-home.desktop', 'firefox.desktop', 'libreoffice-writer.desktop', 'libreoffice-calc.desktop', 'libreoffice-impress.desktop', 'ubuntu-software-center.desktop', 'ubuntuone-control-panel-gtk.desktop' ]</default>
+      <default>[ 'ubiquity-gtkui.desktop', 'nautilus-home.desktop', 'firefox.desktop', 'libreoffice-writer.desktop', 'libreoffice-calc.desktop', 'libreoffice-impress.desktop', 'ubuntu-software-center.desktop', 'ubuntuone-installer.desktop', 'gnome-control-center.desktop' ]</default>
       <summary>List of desktop file ids for favorites on the launcher.</summary>
       <description>These applications are shown in the Launcher by default.</description>
     </key>
@@ -32,15 +32,10 @@
       <summary>Version of last migration done</summary>
       <description>This is a detection key for the favorite migration script to know whether the needed migration is done or not.</description>
     </key>
-    <key type="b" name="shows-on-edge">
-      <default>true</default>
-      <summary>Launcher should show on mouse touching left edge.</summary>
-      <description>Launcher should show on mouse touching left edge of screen.</description>
-    </key>
   </schema>
 	<schema path="/desktop/unity/panel/" id="com.canonical.Unity.Panel" gettext-domain="unity">
     <key type="as" name="systray-whitelist">
-      <default>[ 'JavaEmbeddedFrame', 'Wine', 'scp-dbus-service' ]</default>
+      <default>[ 'JavaEmbeddedFrame', 'Wine', 'scp-dbus-service', 'Update-notifier' ]</default>
       <summary>List of client names, resource classes or wm classes to allow in the Panel's systray implementation.</summary>
       <description>"" (empty) will not allow any tray icons, "all" will allow all tray icons, otherwise there will be an attempt to match each icon to a value here.</description>
     </key>
@@ -52,11 +47,4 @@
         <description>These devices are shown in the Launcher by default.</description>
     </key>
     </schema>
-  <schema path="/desktop/unity/runner/" id="com.canonical.Unity.Runner" gettext-domain="unity">
-    <key type="as" name="history">
-        <default>[]</default>
-        <summary>History of Alt + F2 command</summary>
-        <description>Key for storing the history of the Alt + F2 command.  </description>
-    </key>
-  </schema>
 </schemalist>

@@ -38,21 +38,26 @@ namespace unity
 namespace dash
 {
 
-class DashController : public unity::Introspectable
+class Controller : public unity::debug::Introspectable
 {
 public:
-  typedef std::shared_ptr<DashController> Ptr;
+  typedef std::shared_ptr<Controller> Ptr;
 
-  DashController();
-  ~DashController();
+  Controller();
+  ~Controller();
 
   nux::BaseWindow* window() const;
+
+  gboolean CheckShortcutActivation(const char* key_string);
+  std::vector<char> GetAllShortcuts();
 
   nux::Property<int> launcher_width;
   nux::Property<int> panel_height;
 
+  sigc::signal<void> on_realize;
+
 protected:
-  const gchar* GetName();
+  std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
 
 private:
@@ -72,10 +77,10 @@ private:
   void OnActivateRequest(GVariant* variant);
 
   void ShowDash();
-  void HideDash();
+  void HideDash(bool restore_focus = true);
 
   void StartShowHideTimeline();
-  static gboolean OnViewShowHideFrame(DashController* self);
+  static gboolean OnViewShowHideFrame(Controller* self);
 
   static void OnWindowConfigure(int width, int height, nux::Geometry& geo, void* data);
 

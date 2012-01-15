@@ -29,7 +29,7 @@
 #include "nux-layout-accessible.h"
 
 /* unity accessible objects */
-#include "Nux/Button.h"
+#include <Nux/Button.h>
 
 #include "Launcher.h"
 #include "LauncherIcon.h"
@@ -39,6 +39,10 @@
 #include "unity-launcher-accessible.h"
 #include "unity-launcher-icon-accessible.h"
 #include "unity-panel-view-accessible.h"
+
+using unity::launcher::Launcher;
+using unity::launcher::LauncherIcon;
+using unity::launcher::SimpleLauncherIcon;
 
 /*
  * This unit test checks if the destroy management is working:

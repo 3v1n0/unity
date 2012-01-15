@@ -43,7 +43,9 @@ LensBar::LensBar()
 }
 
 LensBar::~LensBar()
-{}
+{
+  delete bg_layer_;
+}
 
 void LensBar::SetupBackground()
 {
@@ -58,11 +60,11 @@ void LensBar::SetupLayout()
 {
   layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
   layout_->SetContentDistribution(nux::MAJOR_POSITION_CENTER);
-  layout_->SetHorizontalInternalMargin(32);
+  layout_->SetHorizontalInternalMargin(40);
   SetLayout(layout_);
 
-  SetMinimumHeight(40);
-  SetMaximumHeight(40);
+  SetMinimumHeight(46);
+  SetMaximumHeight(46);
 }
 
 void LensBar::SetupHomeLens()
@@ -99,11 +101,6 @@ void LensBar::Activate(std::string id)
   }
 }
 
-long LensBar::ProcessEvent(nux::IEvent& ievent, long traverse_info, long event_info)
-{
-  return layout_->ProcessEvent(ievent, traverse_info, event_info);
-}
-
 void LensBar::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
 {
   nux::Geometry geo = GetGeometry();
@@ -114,6 +111,7 @@ void LensBar::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
   bg_layer_->SetGeometry(geo);
   nux::GetPainter().RenderSinglePaintLayer(gfx_context, geo, bg_layer_);
 
+	
   gfx_context.PopClippingRectangle();
 }
 
@@ -121,12 +119,30 @@ void LensBar::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
 {
   gfx_context.PushClippingRectangle(GetGeometry());
   
-  nux::GetPainter().PushLayer(gfx_context, bg_layer_->GetGeometry(), bg_layer_);
+  if (!IsFullRedraw())
+    nux::GetPainter().PushLayer(gfx_context, bg_layer_->GetGeometry(), bg_layer_);
   
   layout_->ProcessDraw(gfx_context, force_draw);
 
-  nux::GetPainter().PopBackground();
-  
+  if (!IsFullRedraw())
+    nux::GetPainter().PopBackground();
+
+  for (auto icon: icons_)
+    if (icon->active)
+	{
+      nux::Geometry geo = icon->GetGeometry();
+      int middle = geo.x + geo.width/2;
+      int size = 5;
+      int y = geo.y - 11;
+
+      nux::GetPainter().Draw2DTriangleColor(gfx_context,
+                                            middle - size, y,
+                                            middle, y + size,
+                                            middle + size, y,
+                                            nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
+
+	}
+
   gfx_context.PopClippingRectangle();
 }
 
@@ -138,6 +154,49 @@ void LensBar::SetActive(LensBarIcon* activated)
   lens_activated.emit(activated->id);
 }
 
+void LensBar::ActivateNext()
+{
+  bool activate_next = false; 
+  for (auto it = icons_.begin();
+       it < icons_.end();
+       it++)
+  {
+    LensBarIcon *icon = *it;
+    
+    if (activate_next && icon->IsVisible())
+    {
+      SetActive(icon);
+      return;
+    }
+    if (icon->active)
+      activate_next = true;
+  }
+  SetActive(icons_[0]);
+
+}
+
+void LensBar::ActivatePrevious()
+{
+  bool activate_previous = false;
+  
+  for (auto it = icons_.rbegin();
+       it < icons_.rend();
+       ++it)
+  {
+    LensBarIcon *icon = *it;
+    
+    if (activate_previous && icon->IsVisible())
+    {
+	SetActive(icon);
+	return;
+    }
+    if (icon->active)
+      activate_previous = true;
+  }
+  SetActive(icons_.back());
+  
+}
+
 // Keyboard navigation
 bool LensBar::AcceptKeyNavFocus()
 {
@@ -145,7 +204,7 @@ bool LensBar::AcceptKeyNavFocus()
 }
 
 // Introspectable
-const gchar* LensBar::GetName()
+std::string LensBar::GetName() const
 {
   return "LensBar";
 }

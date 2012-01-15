@@ -32,6 +32,7 @@
 
 namespace unity
 {
+NUX_IMPLEMENT_OBJECT_TYPE(PlacesTile);
 
 PlacesTile::PlacesTile(NUX_FILE_LINE_DECL, const void* id) :
   View(NUX_FILE_LINE_PARAM),
@@ -40,6 +41,8 @@ PlacesTile::PlacesTile(NUX_FILE_LINE_DECL, const void* id) :
   _last_width(0),
   _last_height(0)
 {
+  SetAcceptKeyNavFocusOnMouseDown(false);
+  
   mouse_down.connect(sigc::mem_fun(this, &PlacesTile::RecvMouseDown));
   mouse_up.connect(sigc::mem_fun(this, &PlacesTile::RecvMouseUp));
   mouse_click.connect(sigc::mem_fun(this, &PlacesTile::RecvMouseClick));
@@ -47,7 +50,6 @@ PlacesTile::PlacesTile(NUX_FILE_LINE_DECL, const void* id) :
   mouse_leave.connect(sigc::mem_fun(this, &PlacesTile::RecvMouseLeave));
   OnKeyNavFocusChange.connect(sigc::mem_fun(this, &PlacesTile::OnFocusChanged));
   OnKeyNavFocusActivate.connect(sigc::mem_fun(this, &PlacesTile::OnFocusActivated));
-  _can_pass_focus_to_composite_layout = false;
 }
 
 PlacesTile::~PlacesTile()
@@ -180,12 +182,6 @@ PlacesTile::UpdateBackground()
                                          nux::color::White,
                                          true,
                                          rop);
-}
-
-long
-PlacesTile::ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo)
-{
-  return PostProcessEvent2(ievent, TraverseInfo, ProcessEventInfo);
 }
 
 nux::Area*

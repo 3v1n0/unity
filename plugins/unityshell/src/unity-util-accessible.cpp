@@ -256,9 +256,6 @@ translate_nux_modifiers_to_gdk_state(unsigned long nux_modifier)
   if (nux_modifier & nux::NUX_STATE_ALT)
     result |= GDK_MOD1_MASK;
 
-  if (nux_modifier & nux::NUX_STATE_META)
-    result |= GDK_META_MASK;
-
   /* FIXME: not sure how to translate this ones */
   // if (nux_modifier & NUX_STATE_SCROLLLOCK)
   // if (nux_modifier & NUX_STATE_NUMLOCK)
@@ -277,7 +274,7 @@ atk_key_event_from_nux_event_key(nux::Event* event)
   gint n_keys = 0;
   gboolean success = FALSE;
 
-  switch (event->e_event)
+  switch (event->type)
   {
     case nux::NUX_KEYDOWN:
       atk_event->type = ATK_KEY_EVENT_PRESS;
@@ -292,10 +289,10 @@ atk_key_event_from_nux_event_key(nux::Event* event)
       return NULL;
   }
 
-  atk_event->state = translate_nux_modifiers_to_gdk_state(event->e_key_modifiers);
+  atk_event->state = translate_nux_modifiers_to_gdk_state(event->key_modifiers);
 
-  atk_event->keyval = event->e_keysym;
-  atk_event->keycode = event->e_x11_keycode;
+  atk_event->keyval = event->x11_keysym;
+  atk_event->keycode = event->x11_keycode;
 
   /* GDK applies the modifiers to the keyval, and ATK expects that, so
    * we need to do this also here, as it is not done on the release  */
@@ -327,9 +324,9 @@ atk_key_event_from_nux_event_key(nux::Event* event)
   }
 
   atk_event->string = NULL;
-  if (event->e_text && event->e_text[0])
+  if (event->text && event->text[0])
   {
-    key_unichar = g_utf8_get_char(event->e_text);
+    key_unichar = g_utf8_get_char(event->text);
 
     if (g_unichar_validate(key_unichar) && g_unichar_isgraph(key_unichar))
     {
@@ -345,8 +342,6 @@ atk_key_event_from_nux_event_key(nux::Event* event)
   /* If ->string is still NULL we compute it from the keyval*/
   if (atk_event->string == NULL)
     atk_event->string = g_strdup(gdk_keyval_name(atk_event->keyval));
-
-  atk_event->length = event->e_length;
 
   /* e_x11_timestamp is zero, see bug LB#735645*/
   atk_event->timestamp = g_get_real_time() / 1000;
@@ -372,7 +367,7 @@ unity_util_event_inspector(nux::Area* area,
   AtkKeyEventStruct* atk_key_event = NULL;
   gint result = 0;
 
-  if ((event->e_event != nux::NUX_KEYDOWN) && (event->e_event != nux::NUX_KEYUP))
+  if ((event->type != nux::NUX_KEYDOWN) && (event->type != nux::NUX_KEYUP))
     return 0;
 
   atk_key_event = atk_key_event_from_nux_event_key(event);
@@ -446,17 +441,6 @@ unity_util_accessible_remove_key_event_listener(guint remove_listener)
 }
 
 /* Public */
-AtkObject*
-unity_util_accessible_add_window(nux::BaseWindow* window)
-{
-  AtkObject* atk_obj = NULL;
-
-  atk_obj = unity_root_accessible_add_window
-            (UNITY_ROOT_ACCESSIBLE(unity_util_accessible_get_root()), window);
-
-  return atk_obj;
-}
-
 void
 unity_util_accessible_set_window_thread(nux::WindowThread* wt)
 {

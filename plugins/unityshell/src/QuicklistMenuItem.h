@@ -24,9 +24,9 @@
 #include <libdbusmenu-glib/menuitem.h>
 #include <libdbusmenu-glib/client.h>
 
-#include "Nux/Nux.h"
-#include "Nux/View.h"
-#include "NuxImage/CairoGraphics.h"
+#include <Nux/Nux.h>
+#include <Nux/View.h>
+#include <NuxImage/CairoGraphics.h>
 
 #include <pango/pango.h>
 #include <pango/pangocairo.h>
@@ -46,8 +46,9 @@ typedef enum
   MENUITEM_TYPE_RADIO,
 } QuicklistMenuItemType;
 
-class QuicklistMenuItem : public nux::View, public unity::Introspectable
+class QuicklistMenuItem : public nux::View, public unity::debug::Introspectable
 {
+  NUX_DECLARE_OBJECT_TYPE(QuicklistMenuItem, nux::View);
 public:
   QuicklistMenuItem(DbusmenuMenuitem* item,
                     NUX_FILE_LINE_PROTO);
@@ -62,10 +63,6 @@ public:
 
   long PostLayoutManagement(long layoutResult);
 
-  long ProcessEvent(nux::IEvent& event,
-                    long         traverseInfo,
-                    long         processEventInfo);
-
   void Draw(nux::GraphicsEngine& gfxContext,
             bool                 forceDraw);
 
@@ -78,21 +75,20 @@ public:
   QuicklistMenuItemType GetItemType();
 
   void ItemActivated();
+  void EnableLabelMarkup(bool enabled);
+  bool IsMarkupEnabled();
 
   sigc::signal<void, QuicklistMenuItem&> sigChanged;
   sigc::signal<void, QuicklistMenuItem*> sigTextChanged;
   sigc::signal<void, QuicklistMenuItem*> sigColorChanged;
 
   virtual const gchar* GetLabel();
-
   virtual bool GetEnabled();
-
   virtual bool GetActive();
-
   virtual bool GetVisible();
 
   // Introspection
-  const gchar* GetName();
+  std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
 protected:
 
@@ -105,6 +101,11 @@ protected:
   nux::BaseTexture*     _normalTexture[2];
   nux::BaseTexture*     _prelightTexture[2];
 
+  void Initialize(DbusmenuMenuitem* item, bool debug);
+  void InitializeText();
+  virtual const gchar* GetDefaultText();
+
+  gchar* GetText();
   //! Return the size of the text + size of associated radio button or check box
   void GetTextExtents(int& width, int& height);
   void GetTextExtents(const gchar* font, int& width, int& height);
@@ -140,7 +141,7 @@ protected:
                 nux::Color color);
 
   // Introspection
-  gchar* _name;
+  std::string _name;
 
   friend class QuicklistView;
 };

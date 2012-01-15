@@ -29,6 +29,7 @@
 #include "nux-view-accessible.h"
 #include "nux-base-window-accessible.h"
 #include "nux-layout-accessible.h"
+#include "nux-text-entry-accessible.h"
 
 /* unity accessible objects */
 #include "Launcher.h"
@@ -36,14 +37,27 @@
 #include "SimpleLauncherIcon.h"
 #include "PanelView.h"
 #include "DashView.h"
+#include "PlacesSimpleTile.h"
+#include "PlacesGroup.h"
+#include "QuicklistView.h"
+#include "QuicklistMenuItem.h"
+#include "SwitcherView.h"
 #include "unity-launcher-accessible.h"
 #include "unity-launcher-icon-accessible.h"
 #include "unity-panel-view-accessible.h"
-#include "unity-places-view-accessible.h"
+#include "unity-dash-view-accessible.h"
 #include "unity-search-bar-accessible.h"
+#include "unity-sctext-accessible.h"
+#include "unity-rvgrid-accessible.h"
+#include "unity-places-simple-tile-accessible.h"
+#include "unity-places-group-accessible.h"
+#include "unity-quicklist-accessible.h"
+#include "unity-quicklist-menu-item-accessible.h"
+#include "unity-switcher-accessible.h"
 
 using namespace unity;
 using namespace unity::dash;
+using namespace unity::launcher;
 
 static GHashTable* accessible_table = NULL;
 /* FIXME: remove accessible objects when not required anymore */
@@ -113,14 +127,17 @@ static gchar*
 get_atk_bridge_path(void)
 {
   GSettings* atspi_settings = NULL;
+  GVariant *variant = NULL;
   char* value = NULL;
 
   if (!has_gsettings_schema(AT_SPI_SCHEMA))
     return NULL;
 
   atspi_settings = g_settings_new(AT_SPI_SCHEMA);
-  value = g_settings_get_string(atspi_settings, ATK_BRIDGE_LOCATION_KEY);
+  variant = g_settings_get_value (atspi_settings, ATK_BRIDGE_LOCATION_KEY);
+  value = g_variant_dup_bytestring (variant, NULL);
 
+  g_variant_unref (variant);
   g_object_unref(atspi_settings);
 
   return value;
@@ -199,7 +216,7 @@ unity_a11y_init(nux::WindowThread* wt)
 
   if (a11y_invoke_module(bridge_path))
   {
-    g_debug("Unity accessibility started, using bridge on %s",
+    g_debug("Unity Oneiric accessibility started, using bridge on %s",
             bridge_path);
     a11y_initialized = TRUE;
   }
@@ -262,13 +279,36 @@ unity_a11y_create_accessible(nux::Object* object)
     return unity_panel_view_accessible_new(object);
 
   if (object->Type().IsDerivedFromType(DashView::StaticObjectType))
-    return unity_places_view_accessible_new(object);
+    return unity_dash_view_accessible_new(object);
 
-  
-  //FIXME:if (object->Type().IsDerivedFromType(PlacesSearchBar::StaticObjectType))
-    //return unity_search_bar_accessible_new(object);
+  if (object->Type().IsDerivedFromType(PlacesSimpleTile::StaticObjectType))
+    return unity_places_simple_tile_accessible_new(object);
+
+  if (object->Type().IsDerivedFromType(PlacesGroup::StaticObjectType))
+    return unity_places_group_accessible_new(object);
+
+  if (object->Type().IsDerivedFromType(QuicklistView::StaticObjectType))
+    return unity_quicklist_accessible_new(object);
+
+  if (object->Type().IsDerivedFromType(QuicklistMenuItem::StaticObjectType))
+    return unity_quicklist_menu_item_accessible_new(object);
+
+  if (object->Type().IsDerivedFromType(nux::StaticCairoText::StaticObjectType))
+    return unity_sctext_accessible_new(object);
+
+  if (object->Type().IsDerivedFromType(unity::dash::ResultViewGrid::StaticObjectType))
+    return unity_rvgrid_accessible_new(object);
+
+  if (object->Type().IsDerivedFromType(unity::dash::SearchBar::StaticObjectType))
+    return unity_search_bar_accessible_new(object);
+
+  if (object->Type().IsDerivedFromType(unity::switcher::SwitcherView::StaticObjectType))
+    return unity_switcher_accessible_new(object);
 
   /* NUX classes  */
+  if (object->Type().IsDerivedFromType(nux::TextEntry::StaticObjectType))
+    return nux_text_entry_accessible_new(object);
+
   if (object->Type().IsDerivedFromType(nux::BaseWindow::StaticObjectType))
     return nux_base_window_accessible_new(object);
 

@@ -25,6 +25,8 @@
 
 #include <Nux/View.h>
 #include <Nux/BaseWindow.h>
+#include <Nux/TimerProc.h>
+#include <NuxGraphics/IOpenGLAsmShader.h>
 
 #include "AbstractIconRenderer.h"
 #include "BackgroundEffectHelper.h"
@@ -32,35 +34,34 @@
 #include "DndData.h"
 #include "GeisAdapter.h"
 #include "Introspectable.h"
-#include "LauncherIcon.h"
 #include "LauncherDragWindow.h"
 #include "LauncherHideMachine.h"
 #include "LauncherHoverMachine.h"
-#include "NuxGraphics/IOpenGLAsmShader.h"
-#include "Nux/TimerProc.h"
 
+#define ANIM_DURATION_SHORT_SHORT 100
 #define ANIM_DURATION_SHORT 125
 #define ANIM_DURATION       200
 #define ANIM_DURATION_LONG  350
 
 #define SUPER_TAP_DURATION  250
 #define SHORTCUTS_SHOWN_DELAY  750
-#define START_DRAGICON_DURATION 500
+#define START_DRAGICON_DURATION 250
 #define BEFORE_HIDE_LAUNCHER_ON_SUPER_DURATION 1000
 
 #define IGNORE_REPEAT_SHORTCUT_DURATION  250
 
 #define MAX_SUPERKEY_LABELS 10
 
-class LauncherModel;
 class QuicklistView;
+
+namespace unity
+{
+namespace launcher
+{
 class LauncherIcon;
-class LauncherDragWindow;
+class LauncherModel;
 
-
-using namespace unity::ui;
-
-class Launcher : public unity::Introspectable, public nux::View
+class Launcher : public unity::debug::Introspectable, public nux::View
 {
   NUX_DECLARE_OBJECT_TYPE(Launcher, nux::View);
 public:
@@ -108,7 +109,6 @@ public:
 
   nux::Property<Display*> display;
 
-  virtual long ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo);
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw);
@@ -117,7 +117,7 @@ public:
 
   void SetIconSize(int tile_size, int icon_size);
   void SetBackgroundAlpha(float background_alpha);
-  
+
   LauncherHideMachine* HideMachine() { return _hide_machine; }
 
   bool Hidden()
@@ -156,6 +156,7 @@ public:
   void EdgeRevealTriggered(int x, int y);
 
   gboolean CheckSuperShortcutPressed(Display *x_display, unsigned int key_sym, unsigned long key_code, unsigned long key_state, char* key_string);
+  void SetLatestShortcut(guint64 shortcut);
 
   nux::BaseWindow* GetParent()
   {
@@ -199,23 +200,32 @@ public:
   sigc::signal<void> selection_change;
   sigc::signal<void> hidden_changed;
 
-
   // Key navigation
   virtual bool InspectKeyEvent(unsigned int eventType,
                                unsigned int keysym,
                                const char* character);
 
+  void SelectPreviousIcon();
+  void SelectNextIcon();
+
+  void KeySwitcherActivate();
+  void KeySwitcherTerminate();
+  bool KeySwitcherIsActive();
+  void KeySwitcherNext();
+  void KeySwitcherPrevious();
+
 protected:
   // Introspectable methods
-  const gchar* GetName();
+  std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
 
-  void DndLeave();
   void ProcessDndEnter();
   void ProcessDndLeave();
   void ProcessDndMove(int x, int y, std::list<char*> mimes);
   void ProcessDndDrop(int x, int y);
 private:
+  typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
+
   typedef enum
   {
     ACTION_NONE,
@@ -318,9 +328,9 @@ private:
   void  SetDndDelta(float x, float y, nux::Geometry const& geo, timespec const& current);
   float DragLimiter(float x);
 
-  void SetupRenderArg(LauncherIcon* icon, struct timespec const& current, RenderArg& arg);
+  void SetupRenderArg(LauncherIcon* icon, struct timespec const& current, ui::RenderArg& arg);
   void FillRenderArg(LauncherIcon* icon,
-                     RenderArg& arg,
+                     ui::RenderArg& arg,
                      nux::Point3& center,
                      float folding_threshold,
                      float folded_size,
@@ -330,7 +340,7 @@ private:
                      float animation_neg_rads,
                      struct timespec const& current);
 
-  void RenderArgs(std::list<RenderArg> &launcher_args,
+  void RenderArgs(std::list<ui::RenderArg> &launcher_args,
                   nux::Geometry& box_geo, float* launcher_alpha);
 
   void OnIconAdded(LauncherIcon* icon);
@@ -341,6 +351,9 @@ private:
 
   static void OnPlaceViewHidden(GVariant* data, void* val);
   static void OnPlaceViewShown(GVariant* data, void* val);
+
+  void DesaturateIcons();
+  void SaturateIcons();
 
   static void OnBGColorChanged (GVariant *data, void *val);
 
@@ -370,7 +383,11 @@ private:
 
   gboolean TapOnSuper();
 
+  void OnDisplayChanged(Display* display);
   void OnDNDDataCollected(const std::list<char*>& mimes);
+  
+  void DndReset();
+  void DndHoveredIconReset();
 
   nux::HLayout* m_Layout;
   int m_ContentOffsetY;
@@ -394,8 +411,8 @@ private:
   bool  _check_window_over_launcher;
 
   bool          _shortcuts_shown;
-  bool          _super_pressed;
   bool          _keynav_activated;
+  bool          _key_switcher_activated;
   guint64       _latest_shortcut;
 
   BacklightMode _backlight_mode;
@@ -489,10 +506,14 @@ private:
   guint _ubus_handles[4];
 
   nux::Color _background_color;
+  BaseTexturePtr   launcher_sheen_;
   bool _dash_is_open;
-  
-  AbstractIconRenderer::Ptr icon_renderer;
+
+  ui::AbstractIconRenderer::Ptr icon_renderer;
   BackgroundEffectHelper bg_effect_helper_;
 };
+
+}
+}
 
 #endif // LAUNCHER_H

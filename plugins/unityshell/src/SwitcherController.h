@@ -20,6 +20,11 @@
 #ifndef SWITCHERCONTROLLER_H
 #define SWITCHERCONTROLLER_H
 
+#include <memory>
+
+#include "Introspectable.h"
+#include <UnityCore/Variant.h>
+
 #include "SwitcherModel.h"
 #include "SwitcherView.h"
 
@@ -32,34 +37,40 @@
 
 namespace unity
 {
+namespace launcher
+{
+class AbstractLauncherIcon;
+}
 namespace switcher
 {
 
-class SwitcherController : public sigc::trackable
+enum class SortMode
 {
+  LAUNCHER_ORDER,
+  FOCUS_ORDER,
+};
 
+enum class ShowMode
+{
+  ALL,
+  CURRENT_VIEWPORT,
+};
+
+
+class Controller : public debug::Introspectable, public sigc::trackable
+{
 public:
-  enum SortMode
-  {
-    LAUNCHER_ORDER,
-    FOCUS_ORDER,
-  };
+  typedef std::shared_ptr<Controller> Ptr;
 
-  enum ShowMode
-  {
-    ALL,
-    CURRENT_VIEWPORT,
-  };
-
-  SwitcherController();
-  virtual ~SwitcherController();
+  Controller();
+  virtual ~Controller();
 
   nux::Property<int> timeout_length;
 
   nux::Property<bool> detail_on_timeout;
   nux::Property<int>  detail_timeout_length;
 
-  void Show(ShowMode show, SortMode sort, bool reverse, std::vector<AbstractLauncherIcon*> results);
+  void Show(ShowMode show, SortMode sort, bool reverse, std::vector<launcher::AbstractLauncherIcon*> results);
   void Hide(bool accept_state=true);
 
   bool Visible();
@@ -72,7 +83,7 @@ public:
 
   void Select (int index);
 
-  void SetDetail(bool detail, int min_windows = 1);
+  void SetDetail(bool detail, unsigned int min_windows = 1);
 
   void SelectFirstItem();
 
@@ -80,7 +91,12 @@ public:
 
   SwitcherView * GetView ();
 
-  LayoutWindowList ExternalRenderTargets ();
+  ui::LayoutWindowList ExternalRenderTargets ();
+
+protected:
+  // Introspectable methods
+  std::string GetName() const;
+  void AddProperties(GVariantBuilder* builder);
 
 private:
   enum DetailMode
@@ -92,11 +108,9 @@ private:
 
   void ConstructView();
 
-  void OnModelSelectionChanged(AbstractLauncherIcon *icon);
+  void OnModelSelectionChanged(launcher::AbstractLauncherIcon *icon);
 
-  int WindowsRelatedToSelection();
-
-  static void OnBackgroundUpdate (GVariant *data, SwitcherController *self);
+  static void OnBackgroundUpdate(GVariant* data, Controller* self);
 
   SwitcherModel::Ptr model_;
   SwitcherView::Ptr view_;
@@ -111,12 +125,12 @@ private:
   guint detail_timer_;
   nux::Color bg_color_;
   DetailMode detail_mode_;
+  guint bg_update_handle_;
 
   static gboolean OnShowTimer(gpointer data);
   static gboolean OnDetailTimer(gpointer data);
 
-  static bool CompareSwitcherItemsPriority(AbstractLauncherIcon* first, AbstractLauncherIcon* second);
-
+  static bool CompareSwitcherItemsPriority(launcher::AbstractLauncherIcon* first, launcher::AbstractLauncherIcon* second);
 };
 
 }

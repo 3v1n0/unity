@@ -44,7 +44,7 @@ namespace dash
 
 using namespace unity::glib;
 
-class SearchBar : public unity::Introspectable, public nux::View
+class SearchBar : public unity::debug::Introspectable, public nux::View
 {
   NUX_DECLARE_OBJECT_TYPE(SearchBar, nux::View);
 public:
@@ -57,6 +57,8 @@ public:
   nux::RWProperty<std::string> search_string;
   nux::Property<std::string> search_hint;
   nux::Property<bool> showing_filters;
+  nux::Property<bool> can_refine_search;
+  nux::ROProperty<bool> im_active;
 
   sigc::signal<void> activated;
   sigc::signal<void, std::string const&> search_changed;
@@ -67,11 +69,11 @@ private:
   void OnFontChanged(GtkSettings* settings, GParamSpec* pspec=NULL);
   void OnSearchHintChanged();
 
-  long ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo);
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
 
-  void RecvMouseDownFromWindow(int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void OnMouseButtonDown(int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void OnEndKeyFocus();
 
   void UpdateBackground();
   void OnSearchChanged(nux::TextEntry* text_entry);
@@ -81,11 +83,11 @@ private:
 
   std::string get_search_string() const;
   bool set_search_string(std::string const& string);
+  bool get_im_active() const;
 
   static gboolean OnLiveSearchTimeout(SearchBar* self);
 
-  const gchar* GetName();
-  const gchar* GetChildsName();
+  std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
   bool AcceptKeyNavFocus();
 
@@ -97,8 +99,11 @@ private:
   nux::LayeredLayout* layered_layout_;
   nux::StaticCairoText* hint_;
   IMTextEntry* pango_entry_;
+  nux::HLayout* filter_layout_;
+  nux::SpaceLayout* filter_space_;
   nux::StaticCairoText* show_filters_;
-  
+  int search_bar_width_;
+
   int last_width_;
   int last_height_;
   

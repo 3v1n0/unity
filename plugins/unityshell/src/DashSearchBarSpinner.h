@@ -39,14 +39,13 @@ enum SpinnerState
   STATE_CLEAR
 };
 
-class SearchBarSpinner : public unity::Introspectable, public nux::View
+class SearchBarSpinner : public unity::debug::Introspectable, public nux::View
 {
   NUX_DECLARE_OBJECT_TYPE(SearchBarSpinner, nux::View);
 public:
   SearchBarSpinner();
   ~SearchBarSpinner();
 
-  long ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo);
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
 
@@ -54,7 +53,7 @@ public:
 
 protected:
   // Introspectable methods
-  const gchar* GetName();
+  std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
   static gboolean OnTimeout(SearchBarSpinner* self);
   static gboolean OnFrame(SearchBarSpinner* self);

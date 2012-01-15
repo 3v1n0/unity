@@ -43,15 +43,22 @@
 #include "Tooltip.h"
 #include "QuicklistView.h"
 #include "Introspectable.h"
-#include "Launcher.h"
 #include "LauncherEntryRemote.h"
+
+
+namespace unity
+{
+namespace launcher
+{
 
 class Launcher;
 
-class LauncherIcon : public AbstractLauncherIcon, public unity::Introspectable, public nux::InitiallyUnownedObject
+class LauncherIcon : public AbstractLauncherIcon
 {
-  NUX_DECLARE_OBJECT_TYPE(LauncherIcon, nux::InitiallyUnownedObject);
+  NUX_DECLARE_OBJECT_TYPE(LauncherIcon, AbstractLauncherIcon);
+
 public:
+  typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
 
   LauncherIcon(Launcher* launcher);
 
@@ -102,7 +109,7 @@ public:
 
   virtual std::string NameForWindow (Window window) { return std::string(); }
 
-  bool HasWindowOnViewport();
+  const bool HasWindowOnViewport();
 
   virtual bool IsSpacer()
   {
@@ -124,7 +131,7 @@ public:
     return false;
   };
 
-  virtual unsigned int SwitcherPriority()
+  virtual unsigned long long SwitcherPriority()
   {
     return 0;
   }
@@ -188,9 +195,10 @@ public:
   sigc::connection on_icon_added_connection;
   sigc::connection on_icon_removed_connection;
   sigc::connection on_order_changed_connection;
+  sigc::connection on_expo_terminated_connection;
 
 protected:
-  const gchar* GetName();
+  std::string GetName() const;
 
   void AddProperties(GVariantBuilder* builder);
 
@@ -212,9 +220,7 @@ protected:
 
   void Unpresent();
 
-  void SetEmblem(nux::BaseTexture* emblem);
-
-  void SetSuperkeyLabel(nux::BaseTexture* label);
+  void SetEmblem(BaseTexturePtr const& emblem);
 
   virtual std::list<DbusmenuMenuitem*> GetMenus();
 
@@ -241,6 +247,8 @@ protected:
   virtual void ActivateLauncherIcon(ActionArg arg) {}
 
   virtual void OpenInstanceLauncherIcon(ActionArg arg) {}
+
+  virtual bool HandlesSpread () { return false; }
 
   nux::BaseTexture* TextureFromGtkTheme(const char* name, int size, bool update_glow_colors = true);
 
@@ -282,7 +290,6 @@ protected:
   DbusmenuClient* _menuclient_dynamic_quicklist;
 
   friend class Launcher;
-  friend class LauncherController;
   friend class LauncherModel;
 
 private:
@@ -325,8 +332,7 @@ private:
 
   static GtkIconTheme* _unity_theme;
 
-  nux::BaseTexture* _emblem;
-  nux::BaseTexture* _superkey_label;
+  BaseTexturePtr _emblem;
 
   bool             _quirks[QUIRK_LAST];
   struct timespec  _quirk_times[QUIRK_LAST];
@@ -335,6 +341,9 @@ private:
   std::map<TransformIndex, std::vector<nux::Vector4> > transform_map;
   
 };
+
+}
+}
 
 #endif // LAUNCHERICON_H
 

@@ -38,7 +38,11 @@ public:
   void ActivateEntry(std::string const& entry_id);
   void SetEntryShowNow(std::string const& entry_id, bool show_now);
 
-  Indicator& GetIndicator(std::string const& name);
+  IndicatorsList GetIndicators() const;
+
+  Indicator::Ptr GetIndicator(std::string const& name);
+  Indicator::Ptr AddIndicator(std::string const& name);
+  void RemoveIndicator(std::string const& name);
 
   void OnEntryAdded(Entry::Ptr const& entry);
 
@@ -72,9 +76,24 @@ void Indicators::SetEntryShowNow(std::string const& entry_id, bool show_now)
   pimpl->SetEntryShowNow(entry_id, show_now);
 }
 
-Indicator& Indicators::GetIndicator(std::string const& name)
+Indicators::IndicatorsList Indicators::GetIndicators() const
+{
+  return pimpl->GetIndicators();
+}
+
+Indicator::Ptr Indicators::AddIndicator(std::string const& name)
+{
+  return pimpl->AddIndicator(name);
+}
+
+Indicator::Ptr Indicators::GetIndicator(std::string const& name)
 {
   return pimpl->GetIndicator(name);
+}
+
+void Indicators::RemoveIndicator(std::string const& name)
+{
+  return pimpl->RemoveIndicator(name);
 }
 
 void Indicators::Impl::ActivateEntry(std::string const& entry_id)
@@ -98,21 +117,50 @@ void Indicators::Impl::SetEntryShowNow(std::string const& entry_id,
   }
 }
 
-Indicator& Indicators::Impl::GetIndicator(std::string const& name)
+Indicators::IndicatorsList Indicators::Impl::GetIndicators() const
 {
-  IndicatorMap::iterator i = indicators_.find(name);
-  if (i != indicators_.end())
-    return *(i->second);
+  Indicators::IndicatorsList list;
 
-  // Make a new one
+  for (auto it = indicators_.begin(); it != indicators_.end(); it++)
+  {
+    list.push_back(it->second);
+  }
+
+  return list;
+}
+
+Indicator::Ptr Indicators::Impl::AddIndicator(std::string const& name)
+{
   Indicator::Ptr indicator(new Indicator(name));
+
   // The owner Indicators class is interested in the other events.
   indicator->on_show_menu.connect(sigc::mem_fun(owner_, &Indicators::OnEntryShowMenu));
   indicator->on_secondary_activate.connect(sigc::mem_fun(owner_, &Indicators::OnEntrySecondaryActivate));
   indicator->on_scroll.connect(sigc::mem_fun(owner_, &Indicators::OnEntryScroll));
   indicators_[name] = indicator;
   owner_->on_object_added.emit(indicator);
-  return *indicator;
+
+  return indicator;
+}
+
+Indicator::Ptr Indicators::Impl::GetIndicator(std::string const& name)
+{
+  IndicatorMap::iterator i = indicators_.find(name);
+  if (i != indicators_.end())
+    return i->second;
+
+  return Indicator::Ptr();
+}
+
+void Indicators::Impl::RemoveIndicator(std::string const& name)
+{
+  auto indicator = GetIndicator(name);
+
+  if (indicator)
+  {
+    owner_->on_object_removed.emit(indicator);
+    indicators_.erase(name);
+  }
 }
 
 Entry::Ptr Indicators::Impl::GetEntry(std::string const& entry_id)

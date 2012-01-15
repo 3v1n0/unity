@@ -20,9 +20,10 @@
 #ifndef QUICKLISTMENUITEMSEPARATOR_H
 #define QUICKLISTMENUITEMSEPARATOR_H
 
-#include "Nux/Nux.h"
-#include "Nux/View.h"
-#include "NuxImage/CairoGraphics.h"
+#include <Nux/Nux.h>
+#include <Nux/View.h>
+#include <NuxImage/CairoGraphics.h>
+
 #include "QuicklistMenuItem.h"
 
 #include <X11/Xlib.h>
@@ -44,8 +45,6 @@ protected:
   void PreLayoutManagement();
 
   long PostLayoutManagement(long layoutResult);
-
-  long ProcessEvent(nux::IEvent& event, long traverseInfo, long processEventInfo);
 
   void Draw(nux::GraphicsEngine& gfxContext, bool forceDraw);
 

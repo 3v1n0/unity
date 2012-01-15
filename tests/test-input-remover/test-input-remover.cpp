@@ -77,9 +77,10 @@ int main (int argc, char **argv)
   Window                     xid;
   int                        time = 0;
   compiz::WindowInputRemover *remover;
-  bool		       shapeExt;
-  int			       shapeEvent;
-  int			       shapeError;
+  bool		             shapeExt;
+  int			     shapeEvent;
+  int			     shapeError;
+  XEvent                     event;
 
   if ((argc == 2 && std::string (argv[1]) == "--help") || argc > 3)
   {
@@ -109,33 +110,37 @@ int main (int argc, char **argv)
   else
   {
     XSetWindowAttributes attrib;
-    XEvent		     e;
+
+    attrib.backing_pixel = 0x0;
 
     xid = XCreateWindow (dpy, DefaultRootWindow (dpy), 0, 0, 100, 100, 0,
                          DefaultDepth (dpy, DefaultScreen (dpy)), InputOutput,
-                         DefaultVisual (dpy, DefaultScreen (dpy)), 0, &attrib);
+                         DefaultVisual (dpy, DefaultScreen (dpy)), CWBackingPixel, &attrib);
 
     XSelectInput (dpy, xid, ExposureMask | StructureNotifyMask);
     XMapRaised (dpy, xid);
-    while (1)
+    do
     {
-	    XNextEvent (dpy, &e);
-	    bool exposed = false;
+      XNextEvent (dpy, &event);
+      bool exposed = false;
 
-	    switch (e.type)
-	    {
-      case Expose:
-		    if (e.xexpose.window == xid)
-          exposed = true;
-		    break;
-      default:
-		    break;
-	    }
+      switch (event.type)
+      {
+        case Expose:
+          if (event.xexpose.window == xid)
+            exposed = true;
+          break;
+        default:
+          break;
+      }
 
-	    if (exposed)
+      if (exposed)
         break;
-    }
+
+    } while (XPending (dpy));
   }
+
+  XShapeSelectInput (dpy, xid, ShapeNotifyMask);
 
   if (argc == 3)
     std::stringstream (argv[2]) >> std::dec >> time;
@@ -150,7 +155,26 @@ int main (int argc, char **argv)
   remover->save ();
   std::cout << "Removing input shape of 0x" << std::hex << xid << std::dec << std::endl;
   remover->remove ();
-  XSync (dpy, false);
+
+  /* We won't get a synethetic ShapeNotify event if this
+   * is on a window that we don't own */
+
+  if (argc == 1)
+  {
+    do
+    {
+      XNextEvent (dpy, &event);
+      if (event.type == shapeEvent + ShapeNotify &&
+  	event.xany.send_event)
+      {
+        std::cout << "received ShapeNotify on 0x" << std::hex << xid << std::endl;
+  	break;
+      }
+
+    } while (XPending (dpy));
+  }
+  else
+    XSync (dpy, false);
 
   std::cout << "Getting input rects for 0x" << std::hex << xid << std::dec << std::endl;
   if (print_rects (dpy, xid))
@@ -163,9 +187,26 @@ int main (int argc, char **argv)
 
   std::cout << "Waiting " << std::dec << time << " seconds" << std::endl;
   sleep (time);
+
   std::cout << "Restoring input shape of 0x" << std::hex << xid << std::dec << std::endl;
   remover->restore ();
-  XSync (dpy, false);
+
+  if (argc == 1)
+  {
+    do
+    {
+      XNextEvent (dpy, &event);
+      if (event.type == shapeEvent + ShapeNotify &&
+  	event.xany.send_event)
+      {
+          std::cout << "received ShapeNotify on 0x" << std::hex << xid << std::endl;
+  	break;
+      }
+
+    } while (XPending (dpy));
+  }
+  else
+    XSync (dpy, false);
 
   if (!print_rects (dpy, xid))
   {

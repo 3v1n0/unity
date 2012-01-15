@@ -28,15 +28,15 @@ namespace dash
 NUX_IMPLEMENT_OBJECT_TYPE(LensBarIcon);
 
 LensBarIcon::LensBarIcon(std::string id_, std::string icon_hint)
-  : IconTexture(icon_hint.c_str(), 26)
+  : IconTexture(icon_hint.c_str(), 24)
   , id(id_)
   , active(false)
   , inactive_opacity_(0.4f)
 {
-  SetMinimumWidth(26);
-  SetMaximumWidth(26);
-  SetMinimumHeight(40);
-  SetMaximumHeight(40);
+  SetMinimumWidth(24);
+  SetMaximumWidth(24);
+  SetMinimumHeight(24);
+  SetMaximumHeight(24);
   SetOpacity(inactive_opacity_);
 
   active.changed.connect(sigc::mem_fun(this, &LensBarIcon::OnActiveChanged));
@@ -57,7 +57,10 @@ void LensBarIcon::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
   nux::GetPainter().PaintBackground(gfx_context, geo);
 
   if (!texture())
+  {
+    gfx_context.PopClippingRectangle();
     return;
+  }
 
   float opacity = active || IsMouseInside() ? 1.0f : inactive_opacity_;
   int width = 0, height = 0;
@@ -75,19 +78,6 @@ void LensBarIcon::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
                       texture()->GetDeviceTexture(),
                       texxform,
                       col);
-  if (active)
-  {
-    nux::Geometry geo = GetGeometry();
-    int middle = geo.x + geo.width/2;
-    int size = 4;
-    int y = geo.y + 1;
-
-    nux::GetPainter().Draw2DTriangleColor(gfx_context,
-                                          middle - size, y,
-                                          middle, y + size,
-                                          middle + size, y,
-                                          nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
-  }
 
   gfx_context.PopClippingRectangle();
 }

@@ -235,12 +235,11 @@ panel_indicator_entry_accessible_initialize (AtkObject *accessible, gpointer dat
     {
       atk_object_set_role (accessible, ATK_ROLE_IMAGE);
       if (piea->priv->entry->accessible_desc != NULL)
-        {
- 	  atk_object_set_name (accessible, atk_object_get_name (ATK_OBJECT (piea->priv->entry->image)));
-	}
+        atk_object_set_name (accessible, piea->priv->entry->accessible_desc);
     }
 
-  atk_object_set_description (accessible, piea->priv->entry->accessible_desc);
+  if (piea->priv->entry->accessible_desc != NULL)
+    atk_object_set_description (accessible, piea->priv->entry->accessible_desc);
 }
 
 static gint
@@ -273,7 +272,10 @@ panel_indicator_entry_accessible_ref_child (AtkObject *accessible, gint i)
       atk_object_set_parent (child, accessible);
     }
 
-  return child;
+  if (child != NULL)
+    return g_object_ref (child);
+  else
+    return NULL;
 }
 
 static AtkStateSet *

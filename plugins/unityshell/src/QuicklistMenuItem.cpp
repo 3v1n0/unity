@@ -21,11 +21,14 @@
 #include <gdk/gdk.h>
 #include <gtk/gtk.h>
 
-#include "Nux/Nux.h"
+#include <Nux/Nux.h>
+
 #include "QuicklistMenuItem.h"
 #include <UnityCore/Variant.h>
 
 #include <X11/Xlib.h>
+
+NUX_IMPLEMENT_OBJECT_TYPE(QuicklistMenuItem);
 
 static void
 OnPropertyChanged(gchar*             property,
@@ -45,39 +48,7 @@ QuicklistMenuItem::QuicklistMenuItem(DbusmenuMenuitem* item,
     g_warning("Invalid DbusmenuMenuitem in file %s at line %s.", G_STRFUNC, G_STRLOC);
   }
 
-  _name       = 0;
-  _text       = 0;
-  _color      = nux::Color(1.0f, 1.0f, 1.0f, 1.0f);
-  _menuItem   = item;
-  _debug      = false;
-  _item_type  = MENUITEM_TYPE_UNKNOWN;
-
-  _normalTexture[0]   = NULL;
-  _normalTexture[1]   = NULL;
-  _prelightTexture[0] = NULL;
-  _prelightTexture[1] = NULL;
-
-  if (_menuItem)
-  {
-    g_signal_connect(_menuItem,
-                     "property-changed",
-                     G_CALLBACK(OnPropertyChanged),
-                     this);
-    g_signal_connect(_menuItem,
-                     "item-activated",
-                     G_CALLBACK(OnItemActivated),
-                     this);
-  }
-
-  mouse_down.connect(sigc::mem_fun(this, &QuicklistMenuItem::RecvMouseDown));
-  mouse_up.connect(sigc::mem_fun(this, &QuicklistMenuItem::RecvMouseUp));
-  mouse_click.connect(sigc::mem_fun(this, &QuicklistMenuItem::RecvMouseClick));
-  mouse_move.connect(sigc::mem_fun(this, &QuicklistMenuItem::RecvMouseMove));
-  mouse_drag.connect(sigc::mem_fun(this, &QuicklistMenuItem::RecvMouseDrag));
-  mouse_enter.connect(sigc::mem_fun(this, &QuicklistMenuItem::RecvMouseEnter));
-  mouse_leave.connect(sigc::mem_fun(this, &QuicklistMenuItem::RecvMouseLeave));
-
-  _prelight = false;
+  Initialize(item, false);
 }
 
 QuicklistMenuItem::QuicklistMenuItem(DbusmenuMenuitem* item,
@@ -85,11 +56,17 @@ QuicklistMenuItem::QuicklistMenuItem(DbusmenuMenuitem* item,
                                      NUX_FILE_LINE_DECL) :
   View(NUX_FILE_LINE_PARAM)
 {
-  _text       = 0;
-  _color      = nux::Color(1.0f, 1.0f, 1.0f, 1.0f);
-  _menuItem   = item;
-  _debug      = debug;
-  _item_type  = MENUITEM_TYPE_UNKNOWN;
+  Initialize(item, debug);
+}
+
+void
+QuicklistMenuItem::Initialize(DbusmenuMenuitem* item, bool debug)
+{
+  _text        = 0;
+  _color       = nux::Color(1.0f, 1.0f, 1.0f, 1.0f);
+  _menuItem    = DBUSMENU_MENUITEM(g_object_ref(item));
+  _debug       = debug;
+  _item_type   = MENUITEM_TYPE_UNKNOWN;
 
   _normalTexture[0]   = NULL;
   _normalTexture[1]   = NULL;
@@ -121,11 +98,44 @@ QuicklistMenuItem::QuicklistMenuItem(DbusmenuMenuitem* item,
 
 QuicklistMenuItem::~QuicklistMenuItem()
 {
-  if (_name)
-    g_free(_name);
-
   if (_text)
     g_free(_text);
+
+  if (_normalTexture[0])
+    _normalTexture[0]->UnReference();
+
+  if (_normalTexture[1])
+    _normalTexture[1]->UnReference();
+
+  if (_prelightTexture[0])
+    _prelightTexture[0]->UnReference();
+
+  if (_prelightTexture[1])
+    _prelightTexture[1]->UnReference();
+
+  if (_menuItem)
+    g_object_unref(_menuItem);
+}
+
+const gchar*
+QuicklistMenuItem::GetDefaultText()
+{
+  return NULL;
+}
+
+void
+QuicklistMenuItem::InitializeText()
+{
+  if (_menuItem)
+    _text = GetText();
+  else
+    _text = g_strdup(GetDefaultText());
+
+  int textWidth = 1;
+  int textHeight = 1;
+  GetTextExtents(textWidth, textHeight);
+  SetMinimumSize(textWidth + ITEM_INDENT_ABS + 3 * ITEM_MARGIN,
+                 textHeight + 2 * ITEM_MARGIN);
 }
 
 QuicklistMenuItemType QuicklistMenuItem::GetItemType()
@@ -145,18 +155,6 @@ QuicklistMenuItem::PostLayoutManagement(long layoutResult)
   long result = View::PostLayoutManagement(layoutResult);
 
   return result;
-}
-
-long
-QuicklistMenuItem::ProcessEvent(nux::IEvent& event,
-                                long         traverseInfo,
-                                long         processEventInfo)
-{
-  long result = traverseInfo;
-
-  result = nux::View::PostProcessEvent2(event, result, processEventInfo);
-  return result;
-
 }
 
 void
@@ -219,6 +217,31 @@ void QuicklistMenuItem::ItemActivated()
     sigChanged.emit(*this);
 
   std::cout << "ItemActivated() called" << std::endl;
+}
+
+gchar* QuicklistMenuItem::GetText()
+{
+  const gchar *label;
+  gchar *text;
+
+  if (!_menuItem)
+    return NULL;
+
+  label = GetLabel();
+
+  if (!label)
+    return NULL;
+
+  if (!IsMarkupEnabled())
+  {
+    text = g_markup_escape_text(label, -1);
+  }
+  else
+  {
+    text = g_strdup(label);
+  }
+
+  return text;
 }
 
 void QuicklistMenuItem::GetTextExtents(int& width, int& height)
@@ -404,9 +427,38 @@ QuicklistMenuItem::DrawText(cairo_t*   cr,
   g_object_unref(layout);
 }
 
+void
+QuicklistMenuItem::EnableLabelMarkup(bool enabled)
+{
+  if (IsMarkupEnabled() != enabled)
+  {
+    dbusmenu_menuitem_property_set_bool(_menuItem, "unity-use-markup", enabled);
+
+    if (_text)
+    {
+      g_free(_text);
+      _text = NULL;
+    }
+
+    InitializeText();
+  }
+}
+
+bool
+QuicklistMenuItem::IsMarkupEnabled()
+{
+  gboolean markup;
+
+  if (!_menuItem)
+    return false;
+
+  markup = dbusmenu_menuitem_property_get_bool(_menuItem, "unity-use-markup");
+  return (markup != FALSE);
+}
+
 // Introspection
 
-const gchar* QuicklistMenuItem::GetName()
+std::string QuicklistMenuItem::GetName() const
 {
   return _name;
 }

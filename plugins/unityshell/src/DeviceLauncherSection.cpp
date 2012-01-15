@@ -20,6 +20,8 @@
 
 namespace unity
 {
+namespace launcher
+{
 
 DeviceLauncherSection::DeviceLauncherSection(Launcher* launcher)
   : launcher_(launcher)
@@ -148,4 +150,5 @@ void DeviceLauncherSection::OnMountPreUnmount(GVolumeMonitor* monitor,
     it->second->UpdateVisibility(0);
 }
 
+} // namespace launcher
 } // namespace unity

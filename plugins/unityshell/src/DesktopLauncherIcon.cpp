@@ -22,11 +22,17 @@
 
 #include <glib/gi18n-lib.h>
 
+namespace unity
+{
+namespace launcher
+{
+
 DesktopLauncherIcon::DesktopLauncherIcon(Launcher* IconManager)
   :   SimpleLauncherIcon(IconManager)
+  ,   show_in_switcher_(true)
 {
   tooltip_text = _("Show Desktop");
-  SetIconName("desktop");
+  icon_name = "desktop";
   SetQuirk(QUIRK_VISIBLE, true);
   SetQuirk(QUIRK_RUNNING, true);
   SetIconType(TYPE_BEGIN);
@@ -51,5 +57,9 @@ DesktopLauncherIcon::GlowColor()
 void
 DesktopLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 {
+  SimpleLauncherIcon::ActivateLauncherIcon(arg);
   WindowManager::Default()->ShowDesktop();
 }
+
+} // namespace launcher
+} // namespace unity

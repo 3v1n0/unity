@@ -25,7 +25,7 @@
 #include <Nux/View.h>
 #include <Nux/TextureArea.h>
 #include <NuxGraphics/GraphicsEngine.h>
-
+#include <NuxImage/CairoGraphics.h>
 #include <gdk/gdkx.h>
 
 #include <UnityCore/DBusIndicators.h>
@@ -34,19 +34,18 @@
 #include "Introspectable.h"
 #include "PanelMenuView.h"
 #include "PanelTray.h"
-#include "PanelStyle.h"
+#include "PanelIndicatorsView.h"
 
 namespace unity
 {
 
-class PanelView : public unity::Introspectable, public nux::View
+class PanelView : public unity::debug::Introspectable, public nux::View
 {
   NUX_DECLARE_OBJECT_TYPE(PanelView, nux::View);
 public:
   PanelView(NUX_FILE_LINE_PROTO);
   ~PanelView();
 
-  long ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo);
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
 
@@ -54,6 +53,8 @@ public:
   long PostLayoutManagement(long LayoutResult);
 
   void OnObjectAdded(indicator::Indicator::Ptr const& proxy);
+  void OnObjectRemoved(indicator::Indicator::Ptr const& proxy);
+  void OnIndicatorViewUpdated(PanelIndicatorEntryView* view);
   void OnMenuPointerMoved(int x, int y);
   void OnEntryActivateRequest(std::string const& entry_id);
   void OnEntryActivated(std::string const& entry_id);
@@ -69,13 +70,18 @@ public:
   void EndFirstMenuShow();
 
   void SetOpacity(float opacity);
+  void SetOpacityMaximizedToggle(bool enabled);
+  void SetMenuShowTimings(int fadein, int fadeout, int discovery,
+                          int discovery_fadein, int discovery_fadeout);
+
+  void TrackMenuPointer();
 
   unsigned int GetTrayXid ();
 
 protected:
   // Introspectable methods
-  const gchar* GetName();
-  const gchar* GetChildsName();
+  std::string GetName() const;
+  std::string GetChildsName() const;
   void AddProperties(GVariantBuilder* builder);
 
 private:
@@ -86,27 +92,28 @@ private:
   void UpdateBackground();
   void ForceUpdateBackground();
   void SyncGeometries();
-  void AddPanelView(PanelIndicatorObjectView* child,
-                    unsigned int stretchFactor);
+  void AddPanelView(PanelIndicatorsView* child, unsigned int stretchFactor);
 
 private:
+  typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
   indicator::DBusIndicators::Ptr _remote;
   // No ownership is taken for these views, that is done by the AddChild method.
-  typedef std::vector<PanelIndicatorObjectView*> Children;
-  Children children_;
 
   PanelMenuView*           _menu_view;
   PanelTray*               _tray;
+  PanelIndicatorsView*     _indicators;
   nux::AbstractPaintLayer* _bg_layer;
+  nux::ColorLayer*         _bg_darken_layer_;
+  BaseTexturePtr           _panel_sheen;
   nux::HLayout*            _layout;
 
   int _last_width;
   int _last_height;
 
-  PanelStyle* _style;
   nux::Color  _bg_color;
   bool        _is_dirty;
   float       _opacity;
+  bool        _opacity_maximized_toggle;
   bool        _needs_geo_sync;
   bool        _is_primary;
   int         _monitor;
@@ -116,7 +123,10 @@ private:
   guint       _handle_dash_shown;
   guint       _handle_bg_color_update;
   guint       _track_menu_pointer_id;
+  nux::Point  _tracked_pointer_pos;
 
+  std::vector<sigc::connection> _on_indicator_updated_connections;
+  std::vector<sigc::connection> _maximized_opacity_toggle_connections;
   BackgroundEffectHelper bg_effect_helper_;
   nux::ObjectPtr <nux::IOpenGLBaseTexture> bg_blur_texture_;
 };

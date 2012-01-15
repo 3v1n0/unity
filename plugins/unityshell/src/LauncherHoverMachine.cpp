@@ -55,7 +55,7 @@ LauncherHoverMachine::EnsureHoverState()
 {
   bool should_hover;
 
-  if (GetQuirk(LAUNCHER_HIDDEN) || GetQuirk(PLACES_VISIBLE))
+  if (GetQuirk(LAUNCHER_HIDDEN))
   {
     SetShouldHover(false);
     return;
@@ -79,7 +79,7 @@ LauncherHoverMachine::SetShouldHover(bool value)
 
   if (_hover_changed_emit_handle)
     g_source_remove(_hover_changed_emit_handle);
-  _hover_changed_emit_handle = g_timeout_add(0, &EmitShouldHoverChanged, this);
+  _hover_changed_emit_handle = g_idle_add_full (G_PRIORITY_DEFAULT, &EmitShouldHoverChanged, this, NULL);
 }
 
 gboolean

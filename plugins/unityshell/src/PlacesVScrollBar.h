@@ -20,12 +20,12 @@
 #ifndef PLACES_VSCROLLBAR_H
 #define PLACES_VSCROLLBAR_H
 
-#include "Nux/Nux.h"
-#include "Nux/View.h"
-#include "Nux/ScrollView.h"
-#include "Nux/BaseWindow.h"
-#include "Nux/VScrollBar.h"
-#include "NuxImage/CairoGraphics.h"
+#include <Nux/Nux.h>
+#include <Nux/View.h>
+#include <Nux/ScrollView.h>
+#include <Nux/BaseWindow.h>
+#include <Nux/VScrollBar.h>
+#include <NuxImage/CairoGraphics.h>
 
 class PlacesVScrollBar : public nux::VScrollBar
 {
@@ -45,7 +45,6 @@ private:
 
 private:
   nux::BaseTexture* _slider_texture;
-  nux::BaseTexture* _track_texture;
 };
 
 #endif // PLACES_VSCROLLBAR_H

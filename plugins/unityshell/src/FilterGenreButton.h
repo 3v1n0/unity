@@ -19,35 +19,35 @@
  *
  */
 
-
-
-#ifndef FILTERGENREBUTTON_H
-#define FILTERGENREBUTTON_H
+#ifndef UNITYSHELL_FILTERGENREBUTTON_H
+#define UNITYSHELL_FILTERGENREBUTTON_H
 
 #include <Nux/Nux.h>
-#include "Nux/ToggleButton.h"
+#include <Nux/ToggleButton.h>
+
 #include "FilterWidget.h"
 #include "FilterBasicButton.h"
 
-namespace unity {
+namespace unity
+{
+namespace dash
+{
 
-  class FilterGenreButton : public FilterBasicButton {
-  public:
-    FilterGenreButton (const std::string label, NUX_FILE_LINE_PROTO);
-    FilterGenreButton (NUX_FILE_LINE_PROTO);
+class FilterGenreButton : public FilterBasicButton
+{
+public:
+  FilterGenreButton(std::string const& label, NUX_FILE_LINE_PROTO);
+  FilterGenreButton(NUX_FILE_LINE_PROTO);
 
-    void SetFilter (dash::FilterOption::Ptr filter);
-    dash::FilterOption::Ptr GetFilter();
+  void SetFilter(FilterOption::Ptr const& filter);
+  FilterOption::Ptr GetFilter();
 
-  protected:
-    virtual long int ProcessEvent(nux::IEvent& ievent, long int TraverseInfo, long int ProcessEventInfo);
-    virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
-    virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
-    virtual void PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw);
+private:
+  FilterOption::Ptr filter_;
+};
 
-  private:
-    dash::FilterOption::Ptr filter_;
-  };
+} // namespace dash
+} // namespace unity
 
-}
 #endif // FILTERGENREBUTTON_H
+

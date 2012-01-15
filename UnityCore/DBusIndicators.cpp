@@ -15,6 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
+ *              Marco Trevisan (Treviño) <3v1n0@ubuntu.com>
  */
 
 #include "DBusIndicators.h"
@@ -135,6 +136,7 @@ public:
   PendingSyncs pending_syncs_;
 
   glib::SignalManager signal_manager_;
+  std::map<std::string, EntryLocationMap> cached_locations_;
 };
 
 
@@ -156,7 +158,7 @@ DBusIndicators::Impl::~Impl()
 
 void DBusIndicators::Impl::Reconnect()
 {
-  g_spawn_command_line_sync("killall unity-panel-service",
+  g_spawn_command_line_sync("killall -9 unity-panel-service",
                             NULL, NULL, NULL, NULL);
 
   if (g_getenv("PANEL_USE_LOCAL_SERVICE"))
@@ -225,7 +227,7 @@ void DBusIndicators::Impl::OnEntryShowMenu(std::string const& entry_id,
   data->timestamp = timestamp;
   data->button = button;
 
-  g_timeout_add(0, (GSourceFunc)send_show_entry, data);
+  g_idle_add_full (G_PRIORITY_DEFAULT, (GSourceFunc)send_show_entry, data, NULL);
 }
 
 void DBusIndicators::Impl::OnEntrySecondaryActivate(std::string const& entry_id,
@@ -247,6 +249,7 @@ void DBusIndicators::Impl::OnEntryScroll(std::string const& entry_id, int delta)
 void DBusIndicators::Impl::Sync(GVariant* args, SyncData* data)
 {
   GVariantIter* iter            = NULL;
+  gchar*        name_hint       = NULL;
   gchar*        indicator_id    = NULL;
   gchar*        entry_id        = NULL;
   gchar*        label           = NULL;
@@ -256,60 +259,72 @@ void DBusIndicators::Impl::Sync(GVariant* args, SyncData* data)
   gchar*        image_data      = NULL;
   gboolean      image_sensitive = false;
   gboolean      image_visible   = false;
+  gint32        priority        = -1;
 
   // sanity check
   if (!args)
     return;
 
-  std::map<std::string, Indicator::Entries> indicators;
-  // We need to make sure they are added in the order they arrive.
-  std::vector<std::string> indicator_order;
+  std::map<Indicator::Ptr, Indicator::Entries> indicators;
 
-  g_variant_get(args, "(a(sssbbusbb))", &iter);
-  while (g_variant_iter_loop(iter, "(sssbbusbb)",
+  g_variant_get(args, "(a(ssssbbusbbi))", &iter);
+  while (g_variant_iter_loop(iter, "(ssssbbusbbi)",
                              &indicator_id,
                              &entry_id,
+                             &name_hint,
                              &label,
                              &label_sensitive,
                              &label_visible,
                              &image_type,
                              &image_data,
                              &image_sensitive,
-                             &image_visible))
+                             &image_visible,
+                             &priority))
   {
-    // NULL entries (entry_id == "") are just padding.
     std::string entry(entry_id);
-    // The reason for the padding is to provide the ordering for the
-    // indicators... so we must record the order of the indicators provided
-    // even if they only have padding entries.
-    indicator_order.push_back(indicator_id);
+    std::string indicator_name(indicator_id);
+
+    Indicator::Ptr indicator = owner_->GetIndicator(indicator_name);
+    if (!indicator)
+    {
+      indicator = owner_->AddIndicator(indicator_name);
+    }
+
+    Indicator::Entries& entries = indicators[indicator];
+
+    // NULL entries (entry_id == "") are empty indicators.
     if (entry != "")
     {
-      Indicator::Entries& entries = indicators[indicator_id];
-      Entry::Ptr e(new Entry(entry,
-                             label,
-                             label_sensitive,
-                             label_visible,
-                             image_type,
-                             image_data,
-                             image_sensitive,
-                             image_visible));
+      Entry::Ptr e = indicator->GetEntry(entry_id);
+
+      if (!e)
+      {
+        e = Entry::Ptr(new Entry(entry,
+                                 name_hint,
+                                 label,
+                                 label_sensitive,
+                                 label_visible,
+                                 image_type,
+                                 image_data,
+                                 image_sensitive,
+                                 image_visible,
+                                 priority));
+      }
+      else
+      {
+        e->setLabel(label, label_sensitive, label_visible);
+        e->setImage(image_type, image_data, image_sensitive, image_visible);
+        e->setPriority(priority);
+      }
+
       entries.push_back(e);
     }
   }
   g_variant_iter_free(iter);
 
-  // Now update each of the entries.
-  std::string curr_indicator;
-  for (std::vector<std::string>::iterator i = indicator_order.begin(), end = indicator_order.end();
-       i != end; ++i)
+  for (auto i = indicators.begin(), end = indicators.end(); i != end; ++i)
   {
-    std::string const& indicator_name = *i;
-    if (curr_indicator != indicator_name)
-    {
-      curr_indicator = indicator_name;
-      owner_->GetIndicator(curr_indicator).Sync(indicators[curr_indicator]);
-    }
+    i->first->Sync(indicators[i->first]);
   }
 
   // Clean up the SyncData.  NOTE: don't use find when passing in a raw
@@ -337,21 +352,47 @@ void DBusIndicators::Impl::SyncGeometries(std::string const& name,
     return;
 
   GVariantBuilder b;
+  bool found_changed_locations = false;
   g_variant_builder_init(&b, G_VARIANT_TYPE("(a(ssiiii))"));
   g_variant_builder_open(&b, G_VARIANT_TYPE("a(ssiiii)"));
+  EntryLocationMap& cached_loc = cached_locations_[name];
 
-  for (EntryLocationMap::const_iterator i = locations.begin(), end = locations.end();
-       i != end; ++i)
+  // Only send to panel service the geometries of items that have changed
+  for (auto i = locations.begin(), end = locations.end(); i != end; ++i)
   {
-    nux::Rect const& rect = i->second;
-    g_variant_builder_add(&b, "(ssiiii)",
-                          name.c_str(),
-                          i->first.c_str(),
-                          rect.x,
-                          rect.y,
-                          rect.width,
-                          rect.height);
+    auto rect = i->second;
+
+    if (cached_loc[i->first] != rect)
+    {
+      g_variant_builder_add(&b, "(ssiiii)",
+                            name.c_str(),
+                            i->first.c_str(),
+                            rect.x,
+                            rect.y,
+                            rect.width,
+                            rect.height);
+      found_changed_locations = true;
+    }
   }
+
+  // Inform panel service of the entries that have been removed sending invalid values
+  for (auto i = cached_loc.begin(), end = cached_loc.end(); i != end; ++i)
+  {
+    if (locations.find(i->first) == locations.end())
+    {
+      g_variant_builder_add(&b, "(ssiiii)",
+                            name.c_str(),
+                            i->first.c_str(),
+                            0,
+                            0,
+                            -1,
+                            -1);
+      found_changed_locations = true;
+    }
+  }
+
+  if (!found_changed_locations)
+    return;
 
   g_variant_builder_close(&b);
   g_dbus_proxy_call(proxy_, "SyncGeometries",
@@ -361,6 +402,8 @@ void DBusIndicators::Impl::SyncGeometries(std::string const& name,
                     NULL,
                     NULL,
                     NULL);
+
+  cached_loc = locations;
 }
 
 std::string DBusIndicators::Impl::name() const
@@ -389,6 +432,11 @@ void DBusIndicators::Impl::OnProxyNameOwnerChanged(GDBusProxy* proxy,
 
   if (name_owner == NULL)
   {
+    for (auto indicator : owner_->GetIndicators())
+    {
+      owner_->RemoveIndicator(indicator->name());
+    }
+
     // The panel service has stopped for some reason.  Restart it if not in
     // dev mode
     if (!g_getenv("UNITY_DEV_MODE"))
@@ -584,7 +632,6 @@ void on_sync_ready_cb(GObject* source, GAsyncResult* res, gpointer data)
 {
   SyncData* sync_data = reinterpret_cast<SyncData*>(data);
   GError* error = NULL;
-
   GVariant* args = g_dbus_proxy_call_finish((GDBusProxy*)source, res, &error);
 
   if (args == NULL)

@@ -25,8 +25,9 @@
 #define PREVIEWMUSICTRACKWIDGET_H
 
 #include <string>
+
 #include <Nux/Nux.h>
-#include "Nux/Button.h"
+#include <Nux/Button.h>
 
 namespace unity {
 
@@ -43,7 +44,6 @@ namespace unity {
     sigc::signal<void, std::string> UriActivated;
 
   protected:
-    virtual long int ProcessEvent(nux::IEvent& ievent, long int TraverseInfo, long int ProcessEventInfo);
     virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
     virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
     virtual void PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw);

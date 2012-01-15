@@ -21,8 +21,8 @@
 
 #include <atk/atk.h>
 
-#include "Nux/Nux.h"
-#include "Nux/BaseWindow.h"
+#include <Nux/Nux.h>
+#include <Nux/BaseWindow.h>
 
 G_BEGIN_DECLS
 
@@ -52,7 +52,6 @@ struct _UnityUtilAccessibleClass
 
 GType unity_util_accessible_get_type(void);
 
-AtkObject*  unity_util_accessible_add_window(nux::BaseWindow* window);
 void        unity_util_accessible_set_window_thread(nux::WindowThread* wt);
 
 G_END_DECLS

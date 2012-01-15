@@ -32,6 +32,12 @@
 #include <libdbusmenu-glib/menuitem.h>
 
 #include "DndData.h"
+#include "Introspectable.h"
+
+namespace unity
+{
+namespace launcher
+{
 
 class ActionArg
 {
@@ -62,7 +68,7 @@ public:
   Window target;
 };
 
-class AbstractLauncherIcon
+class AbstractLauncherIcon : public nux::InitiallyUnownedObject, public debug::Introspectable
 {
 public:
 
@@ -76,6 +82,7 @@ public:
     TYPE_FAVORITE,
     TYPE_APPLICATION,
     TYPE_EXPO,
+    TYPE_DESKTOP,
     TYPE_PLACE,
     TYPE_DEVICE,
     TYPE_TRASH,
@@ -142,7 +149,7 @@ public:
 
   virtual std::string NameForWindow (Window window) = 0;
 
-  virtual bool HasWindowOnViewport() = 0;
+  virtual const bool HasWindowOnViewport() = 0;
 
   virtual bool IsSpacer() = 0;
 
@@ -152,7 +159,7 @@ public:
 
   virtual bool ShowInSwitcher() = 0;
 
-  virtual unsigned int SwitcherPriority() = 0;
+  virtual unsigned long long SwitcherPriority() = 0;
 
   virtual bool GetQuirk(Quirk quirk) = 0;
 
@@ -193,6 +200,9 @@ public:
   sigc::signal<void, AbstractLauncherIcon*> needs_redraw;
 
 };
+
+}
+}
 
 #endif // LAUNCHERICON_H
 

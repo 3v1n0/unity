@@ -40,17 +40,16 @@ NUX_IMPLEMENT_OBJECT_TYPE(IMTextEntry);
 IMTextEntry::IMTextEntry()
   : TextEntry("", "", 80085)
   , preedit_string("")
+  , im_enabled(false)
+  , im_active(false)
   , im_context_(0)
   , client_window_(0)
-  , im_enabled_(false)
-  , im_active_(false)
   , focused_(false)
 {
   g_setenv("IBUS_ENABLE_SYNC_MODE", "1", TRUE);
   CheckIMEnabled();
-  im_enabled_ ? SetupMultiIM() : SetupSimpleIM();
+  im_enabled ? SetupMultiIM() : SetupSimpleIM();
 
-  FocusChanged.connect([&] (nux::Area*) { GetFocused() ? OnFocusIn() : OnFocusOut(); });
   mouse_up.connect(sigc::mem_fun(this, &IMTextEntry::OnMouseButtonUp));
 }
 
@@ -68,10 +67,10 @@ void IMTextEntry::CheckIMEnabled()
   if (module &&
       g_strcmp0(module, "") &&
       g_strcmp0(module, "gtk-im-context-simple"))
-    im_enabled_ = true;
+    im_enabled = true;
 
   LOG_DEBUG(logger) << "Input method support is "
-                    << (im_enabled_ ? "enabled" : "disabled");
+                    << (im_enabled ? "enabled" : "disabled");
 }
 
 void IMTextEntry::SetupSimpleIM()
@@ -101,7 +100,7 @@ bool IMTextEntry::InspectKeyEvent(unsigned int event_type,
   bool propagate_event = !(TryHandleEvent(event_type, keysym, character));
 
   LOG_DEBUG(logger) << "Input method "
-                    << (im_enabled_ ? gtk_im_multicontext_get_context_id(GTK_IM_MULTICONTEXT(im_context_)) : "simple")
+                    << (im_enabled ? gtk_im_multicontext_get_context_id(GTK_IM_MULTICONTEXT(im_context_)) : "simple")
                     << " "
                     << (propagate_event ? "did not handle " : "handled ") 
                     << "event ("
@@ -126,9 +125,9 @@ bool IMTextEntry::TryHandleEvent(unsigned int eventType,
                                  unsigned int keysym,
                                  const char* character)
 {
-  nux::Event event = nux::GetGraphicsThread()->GetWindow().GetCurrentEvent();
+  nux::Event event = nux::GetWindowThread()->GetGraphicsDisplay().GetCurrentEvent();
   
-  CheckValidClientWindow(event.e_x11_window);
+  CheckValidClientWindow(event.x11_window);
   
   GdkEventKey ev;
   KeyEventToGdkEventKey(event, ev);
@@ -152,31 +151,35 @@ inline void IMTextEntry::CheckValidClientWindow(Window window)
 
 void IMTextEntry::KeyEventToGdkEventKey(Event& event, GdkEventKey& gdk_event)
 {
-  gdk_event.type = event.e_event == nux::NUX_KEYDOWN ? GDK_KEY_PRESS : GDK_KEY_RELEASE;
+  gdk_event.type = event.type == nux::NUX_KEYDOWN ? GDK_KEY_PRESS : GDK_KEY_RELEASE;
   gdk_event.window = client_window_;
   gdk_event.send_event = FALSE;
-  gdk_event.time = event.e_x11_timestamp;
-  gdk_event.state = event.e_x11_state;
-  gdk_event.keyval = event.e_keysym;
+  gdk_event.time = event.x11_timestamp;
+  gdk_event.state = event.x11_key_state;
+  gdk_event.keyval = event.x11_keysym;
 
   gchar* txt = const_cast<gchar*>(event.GetText());
   gdk_event.length = strlen(txt);
   gdk_event.string = txt;
 
-  gdk_event.hardware_keycode = event.e_x11_keycode;
+  gdk_event.hardware_keycode = event.x11_keycode;
   gdk_event.group = 0;
   gdk_event.is_modifier = 0;
 }
 
 bool IMTextEntry::TryHandleSpecial(unsigned int eventType, unsigned int keysym, const char* character)
 {
-  nux::Event event = nux::GetGraphicsThread()->GetWindow().GetCurrentEvent();
+  nux::Event event = nux::GetWindowThread()->GetGraphicsDisplay().GetCurrentEvent();
   unsigned int keyval = keysym;
   bool shift = (event.GetKeyState() & NUX_STATE_SHIFT);
   bool ctrl = (event.GetKeyState() & NUX_STATE_CTRL);
 
   if (eventType != NUX_KEYDOWN)
     return false;
+
+  /* If IM is active, de-activate Copy & Paste */
+  if (im_active)
+    return true;
 
   if (((keyval == NUX_VK_x) && ctrl && !shift) ||
       ((keyval == NUX_VK_DELETE) && shift && !ctrl))
@@ -192,6 +195,10 @@ bool IMTextEntry::TryHandleSpecial(unsigned int eventType, unsigned int keysym, 
       ((keyval == NUX_VK_INSERT) && shift && (!ctrl)))
   {
     Paste();
+  }
+  else if (keyval == NUX_VK_TAB || keyval == NUX_VK_LEFT_TAB)
+  {
+    return true;
   }
   else
   {
@@ -213,7 +220,7 @@ void IMTextEntry::Copy()
   {
     GtkClipboard* clip = gtk_clipboard_get_for_display(gdk_display_get_default(),
                                                        GDK_SELECTION_CLIPBOARD);
-    gtk_clipboard_set_text(clip, _text.c_str() + start, end - start);
+    gtk_clipboard_set_text(clip, text_.c_str() + start, end - start);
   }
 }
 
@@ -234,9 +241,12 @@ void IMTextEntry::OnCommit(GtkIMContext* context, char* str)
 {
   LOG_DEBUG(logger) << "Commit: " << str;
   DeleteSelection();
+
   if (str)
   {
-    std::string new_text = GetText() + str;
+    std::string new_text = GetText();
+    new_text.insert(cursor_, str);
+		
     int cursor = cursor_;
     SetText(new_text.c_str());
     SetCursor(cursor + strlen(str));
@@ -249,27 +259,36 @@ void IMTextEntry::OnPreeditChanged(GtkIMContext* context)
   glib::String preedit;
   int cursor_pos = -1;
 
-  gtk_im_context_get_preedit_string(context, &preedit, NULL, &cursor_pos);
+  gtk_im_context_get_preedit_string(context, &preedit, &preedit_attrs_, &cursor_pos);
 
   LOG_DEBUG(logger) << "Preedit changed: " << preedit;
 
-  preedit_string = preedit.Str();
+  preedit_ = preedit.Str();
+
+  if (strlen(preedit.Str().c_str())) {
+    preedit_cursor_ = preedit.Str().length();
+    QueueRefresh(true, true);
+    sigTextChanged.emit(this);
+    UpdateCursorLocation();
+  }
 }
 
 void IMTextEntry::OnPreeditStart(GtkIMContext* context)
 {
-  preedit_string = "";
-  im_active_ = true;
+  im_active = true;
 
   LOG_DEBUG(logger) << "Preedit start";
 }
 
 void IMTextEntry::OnPreeditEnd(GtkIMContext* context)
 {
-  preedit_string = "";
-  im_active_ = false;
+  im_active = false;
+  ResetPreedit();
   gtk_im_context_reset(im_context_);
 
+  QueueRefresh(true, true);
+  sigTextChanged.emit(this);
+  
   LOG_DEBUG(logger) << "Preedit ended";
 }
 
@@ -299,7 +318,7 @@ void IMTextEntry::UpdateCursorLocation()
 
 void IMTextEntry::OnMouseButtonUp(int x, int y, unsigned long bflags, unsigned long kflags)
 {
-  if (nux::GetEventButton(bflags) == 3 && im_enabled_)
+  if (nux::GetEventButton(bflags) == 3 && im_enabled)
   {
     GtkWidget* menu = gtk_menu_new();
     gtk_im_multicontext_append_menuitems(GTK_IM_MULTICONTEXT(im_context_),

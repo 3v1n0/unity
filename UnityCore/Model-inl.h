@@ -37,12 +37,14 @@ Model<RowAdaptor>::Model()
 {
   swarm_name.changed.connect(sigc::mem_fun(this, &Model<RowAdaptor>::OnSwarmNameChanged));
   count.SetGetterFunction(sigc::mem_fun(this, &Model<RowAdaptor>::get_count));
+  seqnum.SetGetterFunction(sigc::mem_fun(this, &Model<RowAdaptor>::get_seqnum));
 }
 
 template<class RowAdaptor>
 void Model<RowAdaptor>::OnSwarmNameChanged(std::string const& swarm_name)
 {
   typedef glib::Signal<void, DeeModel*, DeeModelIter*> RowSignalType;
+  typedef glib::Signal<void, DeeModel*, guint64, guint64> TransactionSignalType;
 
   LOG_DEBUG(_model_inl_logger) << "New swarm name: " << swarm_name;
 
@@ -64,6 +66,14 @@ void Model<RowAdaptor>::OnSwarmNameChanged(std::string const& swarm_name)
   sig_manager_.Add(new RowSignalType(model_,
                                      "row-removed",
                                      sigc::mem_fun(this, &Model<RowAdaptor>::OnRowRemoved)));
+
+  sig_manager_.Add(new TransactionSignalType(model_,
+                                             "begin-transaction",
+                                             sigc::mem_fun(this, &Model<RowAdaptor>::OnTransactionBegin)));
+
+  sig_manager_.Add(new TransactionSignalType(model_,
+                                             "end-transaction",
+                                             sigc::mem_fun(this, &Model<RowAdaptor>::OnTransactionEnd)));
 }
 
 template<class RowAdaptor>
@@ -92,6 +102,26 @@ void Model<RowAdaptor>::OnRowRemoved(DeeModel* model, DeeModelIter* iter)
 }
 
 template<class RowAdaptor>
+void Model<RowAdaptor>::OnTransactionBegin(DeeModel* model, guint64 begin_seqnum64, guint64 end_seqnum64)
+{
+  unsigned long long begin_seqnum, end_seqnum;
+
+  begin_seqnum = static_cast<unsigned long long> (begin_seqnum64);
+  end_seqnum = static_cast<unsigned long long> (end_seqnum64);
+  begin_transaction.emit(begin_seqnum, end_seqnum);
+}
+
+template<class RowAdaptor>
+void Model<RowAdaptor>::OnTransactionEnd(DeeModel* model, guint64 begin_seqnum64, guint64 end_seqnum64)
+{
+  unsigned long long begin_seqnum, end_seqnum;
+
+  begin_seqnum = static_cast<unsigned long long> (begin_seqnum64);
+  end_seqnum = static_cast<unsigned long long> (end_seqnum64);
+  end_transaction.emit(begin_seqnum, end_seqnum);
+}
+
+template<class RowAdaptor>
 const RowAdaptor Model<RowAdaptor>::RowAtIndex(std::size_t index)
 {
   RowAdaptor it(model_,
@@ -105,6 +135,15 @@ std::size_t Model<RowAdaptor>::get_count()
 {
   if (model_)
     return dee_model_get_n_rows(model_);
+  else
+    return 0;
+}
+
+template<class RowAdaptor>
+unsigned long long Model<RowAdaptor>::get_seqnum()
+{
+  if (model_ && DEE_IS_SERIALIZABLE_MODEL ((DeeModel*) model_))
+    return dee_serializable_model_get_seqnum(model_);
   else
     return 0;
 }

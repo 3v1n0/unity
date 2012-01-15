@@ -19,14 +19,14 @@
 
 #include "config.h"
 
-#include "Nux/Nux.h"
-#include "Nux/HLayout.h"
-#include "Nux/VLayout.h"
-#include "Nux/Button.h"
+#include <Nux/Nux.h>
+#include <Nux/HLayout.h>
+#include <Nux/VLayout.h>
+#include <Nux/Button.h>
 
-#include "NuxGraphics/GLThread.h"
-#include "Nux/BaseWindow.h"
-#include "Nux/WindowCompositor.h"
+#include <NuxGraphics/GLThread.h>
+#include <Nux/BaseWindow.h>
+#include <Nux/WindowCompositor.h>
 
 #include <UnityCore/Variant.h>
 #include "WindowButtons.h"
@@ -45,7 +45,7 @@ class WindowButton : public nux::Button
 {
   // A single window button
 public:
-  WindowButton(PanelStyle::WindowButtonType type)
+  WindowButton(panel::WindowButtonType type)
     : nux::Button("", NUX_TRACKER_LOCATION),
       _type(type),
       _normal_tex(NULL),
@@ -55,12 +55,15 @@ public:
       _prelight_dash_tex(NULL),
       _pressed_dash_tex(NULL),
       _dash_is_open(false),
+      _mouse_is_down(false),
       _place_shown_interest(0),
-      _place_hidden_interest(0)
+      _place_hidden_interest(0),
+      _opacity(1.0f)
   {
     LoadImages();
-    PanelStyle::GetDefault()->changed.connect(sigc::mem_fun(this, &WindowButton::LoadImages));
-    DashSettings::GetDefault()->changed.connect(sigc::mem_fun(this, &WindowButton::UpdateDashUnmaximize));
+    UpdateDashUnmaximize();
+    panel::Style::Instance().changed.connect(sigc::mem_fun(this, &WindowButton::LoadImages));
+    dash::Settings::Instance().changed.connect(sigc::mem_fun(this, &WindowButton::UpdateDashUnmaximize));
 
     UBusServer* ubus = ubus_server_get_default();
     _place_shown_interest = ubus_server_register_interest(ubus, UBUS_PLACE_VIEW_SHOWN,
@@ -69,6 +72,14 @@ public:
     _place_hidden_interest = ubus_server_register_interest(ubus, UBUS_PLACE_VIEW_HIDDEN,
                                                            (UBusCallback)&WindowButton::OnPlaceViewHidden,
                                                            this);
+
+    /* FIXME HasMouseFocus() doesn't seem to work correctly, so we use this workaround */
+    mouse_down.connect([&_mouse_is_down](int, int, unsigned long, unsigned long) {
+      _mouse_is_down = true;
+    });
+    mouse_up.connect([&_mouse_is_down](int, int, unsigned long, unsigned long) {
+      _mouse_is_down = false;
+    });
   }
 
   ~WindowButton()
@@ -94,11 +105,11 @@ public:
     nux::TexCoordXForm texxform;
 
     GfxContext.PushClippingRectangle(geo);
-    nux::GetPainter().PaintBackground(GfxContext, geo);
 
     if (_dash_is_open)
     {
-      if (HasMouseFocus() && IsMouseInside())
+      //FIXME should use HasMouseFocus()
+      if (_mouse_is_down && IsMouseInside())
         tex = _pressed_dash_tex;
       else if (IsMouseInside())
         tex = _prelight_dash_tex;
@@ -107,7 +118,8 @@ public:
     }
     else
     {
-      if (HasMouseFocus() && IsMouseInside())
+      //FIXME should use HasMouseFocus()
+      if (_mouse_is_down && IsMouseInside())
         tex = _pressed_tex;
       else if (IsMouseInside())
         tex = _prelight_tex;
@@ -115,9 +127,6 @@ public:
         tex = _normal_tex;
     }
 
-    GfxContext.GetRenderStates().SetBlend(true);
-    GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
-    GfxContext.GetRenderStates().SetColorMask(true, true, true, true);
     if (tex)
       GfxContext.QRP_1Tex(geo.x,
                           geo.y,
@@ -125,14 +134,14 @@ public:
                           (float)geo.height,
                           tex->GetDeviceTexture(),
                           texxform,
-                          nux::color::White);
-    GfxContext.GetRenderStates().SetBlend(false);
+                          nux::color::White * _opacity);
+
     GfxContext.PopClippingRectangle();
   }
 
   void LoadImages()
   {
-    PanelStyle* style = PanelStyle::GetDefault();
+    panel::Style& style = panel::Style::Instance();
 
     if (_normal_tex)
       _normal_tex->UnReference();
@@ -147,12 +156,12 @@ public:
     if (_pressed_dash_tex)
       _pressed_dash_tex->UnReference();
 
-    _normal_tex = style->GetWindowButton(_type, PanelStyle::WINDOW_STATE_NORMAL);
-    _prelight_tex = style->GetWindowButton(_type, PanelStyle::WINDOW_STATE_PRELIGHT);
-    _pressed_tex = style->GetWindowButton(_type, PanelStyle::WINDOW_STATE_PRESSED);
-    _normal_dash_tex = GetDashWindowButton(_type, PanelStyle::WINDOW_STATE_NORMAL);
-    _prelight_dash_tex = GetDashWindowButton(_type, PanelStyle::WINDOW_STATE_PRELIGHT);
-    _pressed_dash_tex = GetDashWindowButton(_type, PanelStyle::WINDOW_STATE_PRESSED);
+    _normal_tex = style.GetWindowButton(_type, panel::WindowState::NORMAL);
+    _prelight_tex = style.GetWindowButton(_type, panel::WindowState::PRELIGHT);
+    _pressed_tex = style.GetWindowButton(_type, panel::WindowState::PRESSED);
+    _normal_dash_tex = GetDashWindowButton(_type, panel::WindowState::NORMAL);
+    _prelight_dash_tex = GetDashWindowButton(_type, panel::WindowState::PRELIGHT);
+    _pressed_dash_tex = GetDashWindowButton(_type, panel::WindowState::PRESSED);
 
     if (_dash_is_open)
     {
@@ -171,7 +180,7 @@ public:
   void UpdateDashUnmaximize()
   {
     // only update the unmaximize button
-    if (_type != PanelStyle::WINDOW_BUTTON_UNMAXIMIZE)
+    if (_type != panel::WindowButtonType::UNMAXIMIZE)
       return;
 
     if (_normal_dash_tex)
@@ -181,19 +190,19 @@ public:
     if (_pressed_dash_tex)
       _pressed_dash_tex->UnReference();
 
-    if (DashSettings::GetDefault()->GetFormFactor() == DashSettings::DESKTOP)
+    if (dash::Settings::Instance().GetFormFactor() == dash::FormFactor::DESKTOP)
     {
       // get maximize buttons
-      _normal_dash_tex = GetDashMaximizeWindowButton(PanelStyle::WINDOW_STATE_NORMAL);
-      _prelight_dash_tex = GetDashMaximizeWindowButton(PanelStyle::WINDOW_STATE_PRELIGHT);
-      _pressed_dash_tex = GetDashMaximizeWindowButton(PanelStyle::WINDOW_STATE_PRESSED);
+      _normal_dash_tex = GetDashMaximizeWindowButton(panel::WindowState::NORMAL);
+      _prelight_dash_tex = GetDashMaximizeWindowButton(panel::WindowState::PRELIGHT);
+      _pressed_dash_tex = GetDashMaximizeWindowButton(panel::WindowState::PRESSED);
     }
     else
     {
       // get unmaximize buttons
-      _normal_dash_tex = GetDashWindowButton(_type, PanelStyle::WINDOW_STATE_NORMAL);
-      _prelight_dash_tex = GetDashWindowButton(_type, PanelStyle::WINDOW_STATE_PRELIGHT);
-      _pressed_dash_tex = GetDashWindowButton(_type, PanelStyle::WINDOW_STATE_PRESSED);
+      _normal_dash_tex = GetDashWindowButton(_type, panel::WindowState::NORMAL);
+      _prelight_dash_tex = GetDashWindowButton(_type, panel::WindowState::PRELIGHT);
+      _pressed_dash_tex = GetDashWindowButton(_type, panel::WindowState::PRESSED);
     }
 
     // still check if the dash is really opened,
@@ -208,8 +217,22 @@ public:
     QueueDraw();
   }
 
+  void SetOpacity(double opacity)
+  {
+    if (_opacity != opacity)
+    {
+      _opacity = opacity;
+      NeedRedraw();
+    }
+  }
+
+  double GetOpacity()
+  {
+    return _opacity;
+  }
+
 private:
-  PanelStyle::WindowButtonType _type;
+  panel::WindowButtonType _type;
   nux::BaseTexture* _normal_tex;
   nux::BaseTexture* _prelight_tex;
   nux::BaseTexture* _pressed_tex;
@@ -217,8 +240,10 @@ private:
   nux::BaseTexture* _prelight_dash_tex;
   nux::BaseTexture* _pressed_dash_tex;
   bool _dash_is_open;
+  bool _mouse_is_down;
   guint32 _place_shown_interest;
   guint32 _place_hidden_interest;
+  double _opacity;
 
   static void OnPlaceViewShown(GVariant* data, void* val)
   {
@@ -242,13 +267,15 @@ private:
     self->QueueDraw();
   }
 
-  nux::BaseTexture* GetDashWindowButton(PanelStyle::WindowButtonType type, PanelStyle::WindowState state)
+  nux::BaseTexture* GetDashWindowButton(panel::WindowButtonType type,
+                                        panel::WindowState state)
   {
     const char* names[] = { "close_dash", "minimize_dash", "unmaximize_dash" };
     const char* states[] = { "", "_prelight", "_pressed" };
 
     std::ostringstream subpath;
-    subpath << names[type] << states[state] << ".png";
+    subpath << names[static_cast<int>(type)]
+            << states[static_cast<int>(state)] << ".png";
 
     glib::String filename(g_build_filename(PKGDATADIR, subpath.str().c_str(), NULL));
 
@@ -259,12 +286,12 @@ private:
     return nux::CreateTexture2DFromPixbuf(pixbuf, true);
   }
 
-  nux::BaseTexture* GetDashMaximizeWindowButton(PanelStyle::WindowState state)
+  nux::BaseTexture* GetDashMaximizeWindowButton(panel::WindowState state)
   {
     const char* states[] = { "", "_prelight", "_pressed" };
 
     std::ostringstream subpath;
-    subpath << "maximize_dash" << states[state] << ".png";
+    subpath << "maximize_dash" << states[static_cast<int>(state)] << ".png";
 
     glib::String filename(g_build_filename(PKGDATADIR, subpath.str().c_str(), NULL));
 
@@ -279,6 +306,7 @@ private:
 
 WindowButtons::WindowButtons()
   : HLayout("", NUX_TRACKER_LOCATION)
+  , _opacity(1.0f)
 {
   WindowButton* but;
 
@@ -297,23 +325,23 @@ WindowButtons::WindowButtons()
     mouse_move.emit(x, y, dx, dy, button_flags, key_flags);
   };
 
-  but = new WindowButton(PanelStyle::WINDOW_BUTTON_CLOSE);
+  but = new WindowButton(panel::WindowButtonType::CLOSE);
   AddView(but, 0, nux::eCenter, nux::eFix);
-  but->activated.connect(sigc::mem_fun(this, &WindowButtons::OnCloseClicked));
+  but->state_change.connect(sigc::mem_fun(this, &WindowButtons::OnCloseClicked));
   but->mouse_enter.connect(lambda_enter);
   but->mouse_leave.connect(lambda_leave);
   but->mouse_move.connect(lambda_moved);
 
-  but = new WindowButton(PanelStyle::WINDOW_BUTTON_MINIMIZE);
+  but = new WindowButton(panel::WindowButtonType::MINIMIZE);
   AddView(but, 0, nux::eCenter, nux::eFix);
-  but->activated.connect(sigc::mem_fun(this, &WindowButtons::OnMinimizeClicked));
+  but->state_change.connect(sigc::mem_fun(this, &WindowButtons::OnMinimizeClicked));
   but->mouse_enter.connect(lambda_enter);
   but->mouse_leave.connect(lambda_leave);
   but->mouse_move.connect(lambda_moved);
 
-  but = new WindowButton(PanelStyle::WINDOW_BUTTON_UNMAXIMIZE);
+  but = new WindowButton(panel::WindowButtonType::UNMAXIMIZE);
   AddView(but, 0, nux::eCenter, nux::eFix);
-  but->activated.connect(sigc::mem_fun(this, &WindowButtons::OnRestoreClicked));
+  but->state_change.connect(sigc::mem_fun(this, &WindowButtons::OnRestoreClicked));
   but->mouse_enter.connect(lambda_enter);
   but->mouse_leave.connect(lambda_leave);
   but->mouse_move.connect(lambda_moved);
@@ -350,16 +378,36 @@ WindowButtons::FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEven
   return nux::HLayout::FindAreaUnderMouse(mouse_position, event_type);
 }
 
-const gchar*
-WindowButtons::GetName()
+void
+WindowButtons::SetOpacity(double opacity)
 {
-  return "window-buttons";
+  opacity = CLAMP(opacity, 0.0f, 1.0f);
+
+  for (auto area : GetChildren())
+  {
+    auto but = dynamic_cast<WindowButton*>(area);
+
+    if (but)
+      but->SetOpacity(opacity);
+  }
+
+  if (_opacity != opacity)
+  {
+    _opacity = opacity;
+    NeedRedraw();
+  }
 }
 
-const gchar*
-WindowButtons::GetChildsName()
+double
+WindowButtons::GetOpacity()
 {
-  return "";
+  return _opacity;
+}
+
+std::string
+WindowButtons::GetName() const
+{
+  return "window-buttons";
 }
 
 void

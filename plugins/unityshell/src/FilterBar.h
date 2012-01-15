@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright 2011 Canonical Ltd.
  *
@@ -19,41 +20,46 @@
  *
  */
 
+#ifndef UNITYSHELL_FILTERBAR_H
+#define UNITYSHELL_FILTERBAR_H
+
 #include <Nux/View.h>
 
-#ifndef FILTERBAR_H
-#define FILTERBAR_H
-
 #include <UnityCore/Filters.h>
+
 #include "FilterFactory.h"
 
-namespace unity {
+namespace unity
+{
+namespace dash
+{
 
-  class FilterBar : public nux::View
-  {
-  public:
-    FilterBar(NUX_FILE_LINE_PROTO);
-    ~FilterBar();
+class FilterBar : public nux::View
+{
+  NUX_DECLARE_OBJECT_TYPE(FilterBar, nux::View);
+public:
+  FilterBar(NUX_FILE_LINE_PROTO);
+  ~FilterBar();
 
-    void SetFilters (dash::Filters::Ptr filters);
+  void SetFilters(Filters::Ptr const& filters);
 
-    void AddFilter (dash::Filter::Ptr filter);
-    void RemoveFilter (dash::Filter::Ptr filter);
-    void ClearFilters ();
+  void AddFilter(Filter::Ptr const& filter);
+  void RemoveFilter(Filter::Ptr const& filter);
 
-  protected:
-    virtual long int ProcessEvent(nux::IEvent& ievent, long int TraverseInfo, long int ProcessEventInfo);
-    virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
-    virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
-    virtual void PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw);
+protected:
+  virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
+  virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
 
-  private:
-    void Init ();
+private:
+  void Init();
 
-    FilterFactory factory_;
-    dash::Filters::Ptr filters_;
-    std::map <dash::Filter::Ptr, nux::View *> filter_map_;
-  };
-}
+  FilterFactory factory_;
+  Filters::Ptr filters_;
+  std::map<Filter::Ptr, nux::View*> filter_map_;
+};
 
-#endif // FILTERBAR_H
+} // namespace dash
+} // namespace unity
+
+#endif // UNITYSHELL_FILTERBAR_H
+

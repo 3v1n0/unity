@@ -21,8 +21,8 @@
 
 #include <atk/atk.h>
 
-#include "Nux/Nux.h"
-#include "NuxCore/Object.h"
+#include <Nux/Nux.h>
+#include <NuxCore/Object.h>
 
 G_BEGIN_DECLS
 

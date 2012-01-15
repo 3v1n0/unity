@@ -6,8 +6,7 @@ G_DEFINE_TYPE(ServiceLens, service_lens, G_TYPE_OBJECT);
 
 static void add_categories(ServiceLens* self);
 static void add_filters(ServiceLens *self);
-static void on_search_changed(UnityScope* scope, GParamSpec* pspec, ServiceLens* self);
-static void on_global_search_changed(UnityScope* scope, GParamSpec* pspec, ServiceLens* self);
+static void on_search_changed(UnityScope* scope, UnityLensSearch *lens_search, UnitySearchType search_type, GCancellable *canc, ServiceLens* self);
 static UnityActivationResponse* on_activate_uri(UnityScope* scope, const char* uri, ServiceLens* self);
 static UnityPreview* on_preview_uri(UnityScope* scope, const char* uri, ServiceLens *self);
 
@@ -56,10 +55,8 @@ service_lens_init(ServiceLens* self)
   priv->scope = unity_scope_new("/com/canonical/unity/testscope");
   unity_scope_set_search_in_global(priv->scope, TRUE);
 
-  g_signal_connect(priv->scope, "notify::active-search",
+  g_signal_connect(priv->scope, "search-changed",
                    G_CALLBACK(on_search_changed), self);
-  g_signal_connect(priv->scope, "notify::active-global-search",
-                   G_CALLBACK(on_global_search_changed), self);
   g_signal_connect(priv->scope, "activate-uri",
                    G_CALLBACK(on_activate_uri), self);
   g_signal_connect(priv->scope, "preview-uri",
@@ -78,55 +75,90 @@ service_lens_init(ServiceLens* self)
 static void
 add_categories(ServiceLens* self)
 {
-  UnityCategory* categories[3];
-    
-  categories[0] = unity_category_new("Category1", "gtk-apply", UNITY_CATEGORY_RENDERER_VERTICAL_TILE);
+  GList *cats = NULL;
+  GIcon *icon;
+
+  icon = g_themed_icon_new("gtk-apply");
+  cats = g_list_append (cats, unity_category_new("Category1", icon,
+                                                 UNITY_CATEGORY_RENDERER_VERTICAL_TILE));
+  g_object_unref (icon);
   
-  categories[1] = unity_category_new("Category2", "gtk-cancel", UNITY_CATEGORY_RENDERER_HORIZONTAL_TILE);
+  icon = g_themed_icon_new("gtk-cancel");
+  cats = g_list_append (cats, unity_category_new("Category2", icon,
+                                                 UNITY_CATEGORY_RENDERER_HORIZONTAL_TILE));
+  g_object_unref (icon);
 
-  categories[2] = unity_category_new("Category3", "gtk-close", UNITY_CATEGORY_RENDERER_FLOW);
- 
-  unity_lens_set_categories(self->priv->lens, categories, 3);
+  icon = g_themed_icon_new("gtk-close");
+  cats = g_list_append (cats, unity_category_new("Category3", icon,
+                                                 UNITY_CATEGORY_RENDERER_FLOW));
+  g_object_unref (icon);
 
-  g_object_unref(categories[0]);
-  g_object_unref(categories[1]);
-  g_object_unref(categories[2]);
+
+  unity_lens_set_categories(self->priv->lens, cats);
+  g_list_free_full (cats, (GDestroyNotify) g_object_unref);
 }
 
 static void
 add_filters(ServiceLens *self)
 {
-  UnityFilter* filters[4];
+  GList       *filters = NULL;
+  UnityFilter *filter;
+  GIcon       *icon;
 
-  filters[0] = (UnityFilter*) unity_radio_option_filter_new("when", "When", "", FALSE);
-  unity_options_filter_add_option(UNITY_OPTIONS_FILTER(filters[0]), "today", "Today", "");
-  unity_options_filter_add_option(UNITY_OPTIONS_FILTER(filters[0]), "yesterday", "Yesterday", "");
-  unity_options_filter_add_option(UNITY_OPTIONS_FILTER(filters[0]), "lastweek", "Last Week", "");
+  filter = UNITY_FILTER (unity_radio_option_filter_new("when", "When",
+                                                       NULL, FALSE));
+  unity_options_filter_add_option(UNITY_OPTIONS_FILTER (filter),
+                                  "today", "Today", NULL);
+  unity_options_filter_add_option(UNITY_OPTIONS_FILTER (filter),
+                                  "yesterday", "Yesterday", NULL);
+  unity_options_filter_add_option(UNITY_OPTIONS_FILTER (filter),
+                                  "lastweek", "Last Week", NULL);
+  filters = g_list_append (filters, filter);
 
-  filters[1] = (UnityFilter*) unity_check_option_filter_new("type", "Type", "", FALSE);
-  unity_options_filter_add_option(UNITY_OPTIONS_FILTER(filters[1]), "apps", "Apps", "gtk-apps");
-  unity_options_filter_add_option(UNITY_OPTIONS_FILTER(filters[1]), "files", "Files", "gtk-files");
-  unity_options_filter_add_option(UNITY_OPTIONS_FILTER(filters[1]), "music", "Music", "gtk-music");
+  filter = UNITY_FILTER (unity_check_option_filter_new("type", "Type",
+                                                       NULL, FALSE));
+  icon = g_themed_icon_new ("gtk-apps");
+  unity_options_filter_add_option(UNITY_OPTIONS_FILTER (filter),
+                                  "apps", "Apps", icon);
+  g_object_unref (icon);
+  icon = g_themed_icon_new ("gtk-files");
+  unity_options_filter_add_option(UNITY_OPTIONS_FILTER (filter),
+                                  "files", "Files", icon);
+  g_object_unref (icon);
+  icon = g_themed_icon_new ("gtk-music");
+  unity_options_filter_add_option(UNITY_OPTIONS_FILTER (filter),
+                                  "music", "Music", icon);
+  g_object_unref (icon);
+  filters = g_list_append (filters, filter);
 
-  filters[2] = (UnityFilter*) unity_ratings_filter_new("ratings", "Ratings", "", FALSE);
+  filters = g_list_append (filters, unity_ratings_filter_new("ratings",
+                                                             "Ratings",
+                                                             NULL, FALSE));
 
-  filters[3] = (UnityFilter*) unity_multi_range_filter_new("size", "Size", "", TRUE);
-  unity_options_filter_add_option(UNITY_OPTIONS_FILTER(filters[3]), "1MB", "1MB", "");
-  unity_options_filter_add_option(UNITY_OPTIONS_FILTER(filters[3]), "10MB", "10MB", "");
-  unity_options_filter_add_option(UNITY_OPTIONS_FILTER(filters[3]), "100MB", "100MB", "");
-  unity_options_filter_add_option(UNITY_OPTIONS_FILTER(filters[3]), "1000MB", "1000MB", "");
+  filter = UNITY_FILTER (unity_multi_range_filter_new("size", "Size", NULL, TRUE));
+  unity_options_filter_add_option(UNITY_OPTIONS_FILTER(filter), "1MB", "1MB", NULL);
+  unity_options_filter_add_option(UNITY_OPTIONS_FILTER(filter), "10MB", "10MB", NULL);
+  unity_options_filter_add_option(UNITY_OPTIONS_FILTER(filter), "100MB", "100MB", NULL);
+  unity_options_filter_add_option(UNITY_OPTIONS_FILTER(filter), "1000MB", "1000MB", NULL);
+  filters = g_list_append (filters, filter);
  
-  unity_lens_set_filters(self->priv->lens, filters, 4);
+
+  unity_lens_set_filters(self->priv->lens, filters);
+  g_list_free_full (filters, (GDestroyNotify) g_object_unref);
 }
 
 static void
-on_search_changed(UnityScope* scope, GParamSpec* pspec, ServiceLens* self)
+on_search_changed(UnityScope* scope, UnityLensSearch *search,
+    UnitySearchType search_type, GCancellable *canc, ServiceLens* self)
 {
-  UnityLensSearch* search = unity_scope_get_active_search(self->priv->scope);
-  DeeModel* model = (DeeModel*)unity_scope_get_results_model(self->priv->scope);
   int i = 0;
+  // to differentiate global and non-global searches, we'll return more items
+  // in the case of global search
+  int num_items = search_type == UNITY_SEARCH_TYPE_GLOBAL ? 10 : 5;
 
-  for (i = 0; i < 5; i++)
+  DeeModel* model = (DeeModel*)unity_lens_search_get_results_model(search);
+
+  for (i = 0; i < num_items; i++)
   {
     gchar* name = g_strdup_printf("%s%d",
                                   unity_lens_search_get_search_string(search),
@@ -141,30 +173,8 @@ on_search_changed(UnityScope* scope, GParamSpec* pspec, ServiceLens* self)
                      "file:///test");
     g_free(name);
   }
-}
 
-static void
-on_global_search_changed(UnityScope* scope, GParamSpec* pspec, ServiceLens* self)
-{
-  UnityLensSearch* search = unity_scope_get_active_global_search(self->priv->scope);
-  DeeModel* model = (DeeModel*)unity_scope_get_global_results_model(self->priv->scope);
-  int i = 0;
-
-  for (i = 0; i < 10; i++)
-  {
-    gchar* name = g_strdup_printf("%s%d",
-                                  unity_lens_search_get_search_string(search),
-                                  i);
-    dee_model_append(model,
-                     "file:///test",
-                     "gtk-apply",
-                     i,
-                     "text/html",
-                     name,
-                     "kamstrup likes ponies",
-                     "file:///test");
-    g_free(name);
-  }
+  g_signal_emit_by_name (search, "finished");
 }
 
 static UnityActivationResponse*

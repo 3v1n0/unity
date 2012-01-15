@@ -24,8 +24,8 @@
 
 #include <gdk/gdkx.h>
 
+#include <Nux/View.h>
 #include "Introspectable.h"
-#include "PanelIndicatorObjectView.h"
 
 #include <unity-misc/na-tray.h>
 #include <unity-misc/na-tray-child.h>
@@ -34,9 +34,7 @@
 namespace unity
 {
 
-// NOTE: Why does this inherit from PanelIndicatorObjectView?
-// It doesn't ever get any indicator object.
-class PanelTray : public PanelIndicatorObjectView
+class PanelTray : public nux::View, public unity::debug::Introspectable
 {
 public:
   typedef std::vector<NaTrayChild*> TrayChildren;
@@ -48,13 +46,10 @@ public:
 
   unsigned int xid ();
 
-  virtual void OnEntryAdded(unity::indicator::Entry::Ptr const& proxy);
-
 public:
   char**     _whitelist;
 protected:
-  const gchar* GetName();
-  const gchar* GetChildsName();
+  std::string GetName() const;
   void          AddProperties(GVariantBuilder* builder);
 
 private:

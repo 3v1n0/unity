@@ -30,8 +30,9 @@
 namespace unity
 {
 
-class PlacesSimpleTile : public unity::Introspectable, public PlacesTile
+class PlacesSimpleTile : public unity::debug::Introspectable, public PlacesTile
 {
+  NUX_DECLARE_OBJECT_TYPE(PlacesSimpleTile, PlacesTile);
 public:
 
   PlacesSimpleTile(const char* icon, const char* label, int icon_size = 64, bool defer_icon_loading = false, const void* id = NULL);
@@ -47,9 +48,9 @@ public:
 protected:
   nux::Geometry GetHighlightGeometry();
 
-  const gchar* GetName();
-  const gchar* GetChildsName();
-  void          AddProperties(GVariantBuilder* builder);
+  std::string GetName() const;
+  std::string GetChildsName() const;
+  void        AddProperties(GVariantBuilder* builder);
 
   virtual bool                    DndSourceDragBegin();
   virtual nux::NBitmapData*       DndSourceGetDragImage();
