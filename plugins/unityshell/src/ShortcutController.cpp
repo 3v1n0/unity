@@ -19,7 +19,6 @@
 #include "ShortcutController.h"
 
 #include "UBusMessages.h"
-#include "ubus-server.h"
 #include "WindowManager.h"
 
 namespace unity
@@ -34,37 +33,27 @@ const unsigned int SUPER_TAP_DURATION = 650;
 Controller::Controller(std::list<AbstractHint*>& hints)
   : view_window_(0)
   , visible_(false)
+  , enabled_(true)
   , show_timer_(0)
   , fade_in_animator_(new Animator(100))
   , fade_out_animator_(new Animator(100))
-  , enabled_(true)
 
 {
   bg_color_ = nux::Color(0.0, 0.0, 0.0, 0.5);
 
-  UBusServer *ubus = ubus_server_get_default();
-  unsigned int interest;
-  interest = ubus_server_register_interest(ubus, UBUS_BACKGROUND_COLOR_CHANGED,
-                                           (UBusCallback)&Controller::OnBackgroundUpdate,
-                                           this);
-  ubus_interests_.push_back(interest);
+  ubus_manager_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED,
+                                 sigc::mem_fun(this, &Controller::OnBackgroundUpdate));
 
-  interest = ubus_server_register_interest(ubus, UBUS_LAUNCHER_START_KEY_SWTICHER,
-                                           [] (GVariant* data, gpointer user_data) {
-                                             auto self = static_cast<Controller*>(user_data);
-                                             self->enabled_ = false;
-                                           }, this);
-  ubus_interests_.push_back(interest);
+  ubus_manager_.RegisterInterest(UBUS_LAUNCHER_START_KEY_SWTICHER, [&] (GVariant*) {
+                                   enabled_ = false;
+                                 });
 
-  interest = ubus_server_register_interest(ubus, UBUS_LAUNCHER_END_KEY_SWTICHER,
-                                           [] (GVariant* data, gpointer user_data) {
-                                             auto self = static_cast<Controller*>(user_data);
-                                             self->enabled_ = true;
-                                           }, this);
-  ubus_interests_.push_back(interest);
+  ubus_manager_.RegisterInterest(UBUS_LAUNCHER_END_KEY_SWTICHER, [&] (GVariant*) {
+                                   enabled_ = true;
+                                 });
 
   model_.reset(new Model(hints));
-  
+
   model_->Fill();
   ConstructView();
 
@@ -76,10 +65,6 @@ Controller::Controller(std::list<AbstractHint*>& hints)
 
 Controller::~Controller()
 {
-  UBusServer* ubus = ubus_server_get_default();
-  for (auto interest : ubus_interests_)
-    ubus_server_unregister_interest(ubus, interest);
-
   if (fade_in_animator_)
     delete fade_in_animator_;
 
@@ -115,14 +100,14 @@ void Controller::OnFadeOutEnded()
 }
 
 
-void Controller::OnBackgroundUpdate(GVariant* data, Controller* self)
+void Controller::OnBackgroundUpdate(GVariant* data)
 {
   gdouble red, green, blue, alpha;
   g_variant_get(data, "(dddd)", &red, &green, &blue, &alpha);
-  self->bg_color_ = nux::Color(red, green, blue, alpha);
+  bg_color_ = nux::Color(red, green, blue, alpha);
 
-  if (self->view_)
-    self->view_->background_color = self->bg_color_;
+  if (view_)
+    view_->background_color = bg_color_;
 }
 
 void Controller::Show()

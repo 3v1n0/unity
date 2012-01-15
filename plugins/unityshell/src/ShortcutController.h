@@ -29,6 +29,7 @@
 #include "Animator.h"
 #include "ShortcutModel.h"
 #include "ShortcutView.h"
+#include "UBusWrapper.h"
 
 namespace unity
 {
@@ -57,7 +58,7 @@ public:
 private:
   // Private Methods
   void ConstructView();
-  static void OnBackgroundUpdate(GVariant* data, Controller* self);
+  void OnBackgroundUpdate(GVariant* data);
   void OnFadeInUpdated(double opacity);
   void OnFadeInEnded();
   void OnFadeOutUpdated(double opacity);
@@ -74,15 +75,15 @@ private:
   nux::HLayout* main_layout_;
   
   bool visible_;
+  bool enabled_;
   nux::Color bg_color_;
   guint show_timer_;
   
   Animator* fade_in_animator_;
   Animator* fade_out_animator_;
 
-  bool enabled_;
-  std::vector<unsigned int> ubus_interests_;
-}; 
+  UBusManager ubus_manager_;
+};
 
 } // namespace shortcut
 } // namespace unity
