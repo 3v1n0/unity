@@ -245,7 +245,7 @@ LauncherController::OnLauncherAddRequestSpecial(char* path, LauncherIcon* before
   std::list<BamfLauncherIcon*> launchers;
   std::list<BamfLauncherIcon*>::iterator it;
 
-  launchers = _model->GetSublist<BamfLauncherIcon> ();
+  launchers = model_->GetSublist<BamfLauncherIcon> ();
   for (it = launchers.begin(); it != launchers.end(); it++)
   {
     if (!g_strcmp0(path, (*it)->DesktopFile()))
@@ -257,7 +257,7 @@ LauncherController::OnLauncherAddRequestSpecial(char* path, LauncherIcon* before
   {
     RegisterIcon((LauncherIcon*)result);
     if (before)
-      _model->ReorderBefore(result, before, false);
+      model_->ReorderBefore(result, before, false);
   }
 }
 
@@ -489,7 +489,7 @@ LauncherController::CreateSCLauncherIcon(const char* file_path, const char* aptd
   g_object_set_qdata(G_OBJECT(app), g_quark_from_static_string("unity-seen"), GINT_TO_POINTER(1));
 
   bamf_view_set_sticky(BAMF_VIEW(app), true);
-  icon = new SoftwareCenterLauncherIcon(_launcher, app, (char*)aptdaemon_trans_id);
+  icon = new SoftwareCenterLauncherIcon(launcher_, app, (char*)aptdaemon_trans_id);
   icon->SetIconType(LauncherIcon::TYPE_APPLICATION);
   icon->SetSortPriority(_sort_priority++);
 
