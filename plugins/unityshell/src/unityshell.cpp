@@ -296,13 +296,13 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetShowMinimizedWindowsNotify (boost::bind(&UnityScreen::optionChanged, this, _1, _2));
 
      ubus_manager_.RegisterInterest(UBUS_LAUNCHER_START_KEY_NAV,
- 						       sigc::mem_fun(this, &UnityScreen::OnLauncherStartKeyNav));
+                   sigc::mem_fun(this, &UnityScreen::OnLauncherStartKeyNav));
 
      ubus_manager_.RegisterInterest(UBUS_LAUNCHER_END_KEY_NAV,
- 						       sigc::mem_fun(this, &UnityScreen::OnLauncherEndKeyNav));
+                   sigc::mem_fun(this, &UnityScreen::OnLauncherEndKeyNav));
 
      ubus_manager_.RegisterInterest(UBUS_QUICKLIST_END_KEY_NAV,
- 						       sigc::mem_fun(this, &UnityScreen::OnQuicklistEndKeyNav));
+                   sigc::mem_fun(this, &UnityScreen::OnQuicklistEndKeyNav));
 
      g_idle_add_full (G_PRIORITY_DEFAULT, &UnityScreen::initPluginActions, this, NULL);
      super_keypressed_ = false;
