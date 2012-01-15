@@ -52,7 +52,6 @@
 
 #include "unitya11y.h"
 
-#include "ubus-server.h"
 #include "UBusMessages.h"
 #include "UScreen.h"
 
@@ -294,26 +293,16 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetLauncherSwitcherPrevInitiate(boost::bind(&UnityScreen::launcherSwitcherPrevInitiate, this, _1, _2, _3));
      optionSetLauncherSwitcherForwardTerminate(boost::bind(&UnityScreen::launcherSwitcherTerminate, this, _1, _2, _3));
 
-     optionSetShowMinimizedWindowsNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+     optionSetShowMinimizedWindowsNotify (boost::bind(&UnityScreen::optionChanged, this, _1, _2));
 
-     for (unsigned int i = 0; i < G_N_ELEMENTS(_ubus_handles); i++)
-       _ubus_handles[i] = 0;
+     ubus_manager_.RegisterInterest(UBUS_LAUNCHER_START_KEY_NAV,
+ 						       sigc::mem_fun(this, &UnityScreen::OnLauncherStartKeyNav));
 
-     UBusServer* ubus = ubus_server_get_default();
-     _ubus_handles[0] = ubus_server_register_interest(ubus,
-						      UBUS_LAUNCHER_START_KEY_NAV,
-						      (UBusCallback)&UnityScreen::OnLauncherStartKeyNav,
-						      this);
+     ubus_manager_.RegisterInterest(UBUS_LAUNCHER_END_KEY_NAV,
+ 						       sigc::mem_fun(this, &UnityScreen::OnLauncherEndKeyNav));
 
-     _ubus_handles[1] = ubus_server_register_interest(ubus,
-						      UBUS_LAUNCHER_END_KEY_NAV,
-						      (UBusCallback)&UnityScreen::OnLauncherEndKeyNav,
-						      this);
-
-     _ubus_handles[2] = ubus_server_register_interest(ubus,
-						      UBUS_QUICKLIST_END_KEY_NAV,
-						      (UBusCallback)&UnityScreen::OnQuicklistEndKeyNav,
-						      this);
+     ubus_manager_.RegisterInterest(UBUS_QUICKLIST_END_KEY_NAV,
+ 						       sigc::mem_fun(this, &UnityScreen::OnQuicklistEndKeyNav));
 
      g_idle_add_full (G_PRIORITY_DEFAULT, &UnityScreen::initPluginActions, this, NULL);
      super_keypressed_ = false;
@@ -342,13 +331,6 @@ UnityScreen::~UnityScreen()
   notify_uninit();
 
   unity_a11y_finalize();
-
-  UBusServer* ubus = ubus_server_get_default();
-  for (unsigned int i = 0; i < G_N_ELEMENTS(_ubus_handles); i++)
-  {
-    if (_ubus_handles[i] != 0)
-      ubus_server_unregister_interest(ubus, _ubus_handles[i]);
-  }
 
   if (relayoutSourceId != 0)
     g_source_remove(relayoutSourceId);
@@ -1573,13 +1555,12 @@ bool UnityScreen::launcherSwitcherTerminate(CompAction* action, CompAction::Stat
   return false;
 }
 
-void UnityScreen::OnLauncherStartKeyNav(GVariant* data, void* value)
+void UnityScreen::OnLauncherStartKeyNav(GVariant* data)
 {
-  UnityScreen* self = reinterpret_cast<UnityScreen*>(value);
-  self->startLauncherKeyNav();
+  startLauncherKeyNav();
 }
 
-void UnityScreen::OnLauncherEndKeyNav(GVariant* data, void* value)
+void UnityScreen::OnLauncherEndKeyNav(GVariant* data)
 {
   bool preserve_focus = false;
 
@@ -1594,10 +1575,9 @@ void UnityScreen::OnLauncherEndKeyNav(GVariant* data, void* value)
     PluginAdapter::Default ()->restoreInputFocus ();
 }
 
-void UnityScreen::OnQuicklistEndKeyNav(GVariant* data, void* value)
+void UnityScreen::OnQuicklistEndKeyNav(GVariant* data)
 {
-  UnityScreen* self = reinterpret_cast<UnityScreen*>(value);
-  self->restartLauncherKeyNav();
+  restartLauncherKeyNav();
 }
 
 gboolean UnityScreen::initPluginActions(gpointer data)
