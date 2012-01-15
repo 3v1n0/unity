@@ -287,8 +287,13 @@ UnityScreen::UnityScreen(CompScreen* screen)
 
      optionSetAltTabPrevWindowInitiate(boost::bind(&UnityScreen::altTabPrevWindowInitiate, this, _1, _2, _3));
 
-     optionSetAltTabLeftInitiate (boost::bind (&UnityScreen::altTabPrevInitiate, this, _1, _2, _3));
-     optionSetAltTabRightInitiate (boost::bind (&UnityScreen::altTabForwardInitiate, this, _1, _2, _3));
+     optionSetAltTabLeftInitiate(boost::bind (&UnityScreen::altTabPrevInitiate, this, _1, _2, _3));
+     optionSetAltTabRightInitiate(boost::bind (&UnityScreen::altTabForwardInitiate, this, _1, _2, _3));
+
+     optionSetLauncherSwitcherForwardInitiate(boost::bind(&UnityScreen::launcherSwitcherForwardInitiate, this, _1, _2, _3));
+     optionSetLauncherSwitcherPrevInitiate(boost::bind(&UnityScreen::launcherSwitcherPrevInitiate, this, _1, _2, _3));
+     optionSetLauncherSwitcherForwardTerminate(boost::bind(&UnityScreen::launcherSwitcherTerminate, this, _1, _2, _3));
+
      optionSetShowMinimizedWindowsNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
 
      for (unsigned int i = 0; i < G_N_ELEMENTS(_ubus_handles); i++)
@@ -1121,10 +1126,12 @@ void UnityScreen::handleEvent(XEvent* event)
         // we should just say "key_string[1] = 0" because that is the only
         // thing that could possibly make sense here.
         key_string[result] = 0;
-        if (super_keypressed_) {
+        if (super_keypressed_)
+        {
           shortcut_controller_->Hide();
           skip_other_plugins = launcher.CheckSuperShortcutPressed(screen->dpy(), key_sym, event->xkey.keycode, event->xkey.state, key_string);
-          if (!skip_other_plugins) {
+          if (!skip_other_plugins)
+          {
             skip_other_plugins = dash_controller_->CheckShortcutActivation(key_string);
             if (skip_other_plugins)
               launcher.SetLatestShortcut(key_string[0]);
@@ -1273,6 +1280,7 @@ bool UnityScreen::showLauncherKeyTerminate(CompAction* action,
 {
   super_keypressed_ = false;
   launcher_controller_->launcher().EndKeyShowLauncher();
+  launcher_controller_->launcher().KeySwitcherTerminate();
   shortcut_controller_->Hide();
   return false;
 }
@@ -1527,6 +1535,30 @@ bool UnityScreen::altTabPrevWindowInitiate(CompAction* action, CompAction::State
   if (switcher_controller_->Visible())
     switcher_controller_->PrevDetail();
   
+  return false;
+}
+
+bool UnityScreen::launcherSwitcherForwardInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
+{
+  Launcher& launcher = launcher_controller_->launcher();
+
+  if (!launcher.KeySwitcherIsActive())
+    launcher.KeySwitcherActivate();
+  else
+    launcher.KeySwitcherNext();
+
+  return false;
+}
+bool UnityScreen::launcherSwitcherPrevInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
+{
+  launcher_controller_->launcher().KeySwitcherPrevious();
+
+  return false;
+}
+bool UnityScreen::launcherSwitcherTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options)
+{
+  launcher_controller_->launcher().KeySwitcherTerminate();
+
   return false;
 }
 
