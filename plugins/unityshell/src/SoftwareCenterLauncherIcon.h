@@ -48,9 +48,6 @@ public:
 private:
     char* _aptdaemon_trans_id;
     unity::glib::DBusProxy* _aptdaemon_trans;
-    unity::glib::DBusProxy* _aptdaemon_trans_prop;
-
-    void OnGetProgressCallback(GVariant* progress_value);
 
     void OnFinished(GVariant* params);
 
