@@ -35,9 +35,8 @@ Controller::Controller(std::list<AbstractHint*>& hints)
   , visible_(false)
   , enabled_(true)
   , show_timer_(0)
-  , fade_in_animator_(new Animator(100))
-  , fade_out_animator_(new Animator(100))
-
+  , fade_in_animator_(100)
+  , fade_out_animator_(100)
 {
   bg_color_ = nux::Color(0.0, 0.0, 0.0, 0.5);
 
@@ -57,20 +56,14 @@ Controller::Controller(std::list<AbstractHint*>& hints)
   model_->Fill();
   ConstructView();
 
-  fade_in_animator_->animation_updated.connect(sigc::mem_fun(this, &Controller::OnFadeInUpdated));
-  fade_in_animator_->animation_ended.connect(sigc::mem_fun(this, &Controller::OnFadeInEnded));
-  fade_out_animator_->animation_updated.connect(sigc::mem_fun(this, &Controller::OnFadeOutUpdated));
-  fade_out_animator_->animation_ended.connect(sigc::mem_fun(this, &Controller::OnFadeOutEnded));
+  fade_in_animator_.animation_updated.connect(sigc::mem_fun(this, &Controller::OnFadeInUpdated));
+  fade_in_animator_.animation_ended.connect(sigc::mem_fun(this, &Controller::OnFadeInEnded));
+  fade_out_animator_.animation_updated.connect(sigc::mem_fun(this, &Controller::OnFadeOutUpdated));
+  fade_out_animator_.animation_ended.connect(sigc::mem_fun(this, &Controller::OnFadeOutEnded));
 }
 
 Controller::~Controller()
 {
-  if (fade_in_animator_)
-    delete fade_in_animator_;
-
-  if (fade_out_animator_)
-    delete fade_out_animator_;
-  
   if (view_window_)
     view_window_->UnReference();
     
@@ -138,8 +131,8 @@ gboolean Controller::OnShowTimer(gpointer data)
   if (self->visible_)
   {
     self->view_->SetupBackground(true);
-    self->fade_out_animator_->Stop();
-    self->fade_in_animator_->Start(self->view_window_->GetOpacity());
+    self->fade_out_animator_.Stop();
+    self->fade_in_animator_.Start(self->view_window_->GetOpacity());
   }
 
   self->show_timer_ = 0;
@@ -187,8 +180,8 @@ void Controller::Hide()
   if (view_window_)
   {
     view_->SetupBackground(false);
-    fade_in_animator_->Stop();
-    fade_out_animator_->Start(1.0 - view_window_->GetOpacity());
+    fade_in_animator_.Stop();
+    fade_out_animator_.Start(1.0 - view_window_->GetOpacity());
   }
 
   if (show_timer_)

@@ -79,8 +79,8 @@ private:
   nux::Color bg_color_;
   guint show_timer_;
   
-  Animator* fade_in_animator_;
-  Animator* fade_out_animator_;
+  Animator fade_in_animator_;
+  Animator fade_out_animator_;
 
   UBusManager ubus_manager_;
 };
