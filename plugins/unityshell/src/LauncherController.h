@@ -38,18 +38,21 @@ class Controller : public sigc::trackable
 {
 public:
   typedef std::shared_ptr<Controller> Ptr;
+  typedef std::vector<nux::ObjectPtr<Launcher> > LauncherList;
+
+  nux::Property<Options::Ptr> options;
 
   Controller(Display* display);
   ~Controller();
 
   Launcher& launcher();
+  LauncherList& launchers();
   Window launcher_input_window_id();
 
   void UpdateNumWorkspaces(int workspaces);
   std::vector<char> GetAllShortcuts();
   std::vector<AbstractLauncherIcon*> GetAltTabIcons();
 
-  void PrimaryMonitorGeometryChanged(nux::Geometry const& geo);
   void PushToFront();
 
   void SetShowDesktopIcon(bool show_desktop_icon);

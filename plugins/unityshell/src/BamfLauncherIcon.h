@@ -41,7 +41,7 @@ class Launcher;
 class BamfLauncherIcon : public SimpleLauncherIcon
 {
 public:
-  BamfLauncherIcon(Launcher* IconManager, BamfApplication* app);
+  BamfLauncherIcon(BamfApplication* app);
   virtual ~BamfLauncherIcon();
 
   const char* DesktopFile();
@@ -62,8 +62,8 @@ public:
 protected:
   std::list<DbusmenuMenuitem*> GetMenus();
 
-  void UpdateIconGeometries(nux::Point3 center);
-  void OnCenterStabilized(nux::Point3 center);
+  void UpdateIconGeometries(std::vector<nux::Point3> center);
+  void OnCenterStabilized(std::vector<nux::Point3> center);
 
   void OnLauncherHiddenChanged();
 
@@ -86,7 +86,6 @@ protected:
 
 private:
   BamfApplication* m_App;
-  Launcher* _launcher;
   std::map<std::string, DbusmenuClient*> _menu_clients;
   std::map<std::string, DbusmenuMenuitem*> _menu_items;
   std::map<std::string, DbusmenuMenuitem*> _menu_items_extra;

@@ -51,6 +51,8 @@ namespace unity
 namespace launcher
 {
 
+const int max_num_monitors = 6;
+
 class Launcher;
 
 class LauncherIcon : public AbstractLauncherIcon
@@ -60,14 +62,9 @@ class LauncherIcon : public AbstractLauncherIcon
 public:
   typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
 
-  LauncherIcon(Launcher* launcher);
+  LauncherIcon();
 
   virtual ~LauncherIcon();
-
-  Launcher* GetLauncher()
-  {
-    return _launcher;
-  };
 
   bool SetTooltipText(std::string& target, std::string const& value);
 
@@ -77,23 +74,23 @@ public:
 
   void SetSortPriority(int priority);
 
-  void RecvMouseEnter();
+  void RecvMouseEnter(int monitor);
 
-  void RecvMouseLeave();
+  void RecvMouseLeave(int monitor);
 
-  void RecvMouseDown(int button);
+  void RecvMouseDown(int button, int monitor);
 
-  void RecvMouseUp(int button);
+  void RecvMouseUp(int button, int monitor);
 
-  void RecvMouseClick(int button);
+  void RecvMouseClick(int button, int monitor);
 
   void HideTooltip();
 
   bool OpenQuicklist(bool default_to_first_item = false);
 
-  void        SetCenter(nux::Point3 center);
+  void        SetCenter(nux::Point3 center, int parent_monitor, nux::Geometry parent_geo);
 
-  nux::Point3 GetCenter();
+  nux::Point3 GetCenter(int monitor);
 
   virtual void Activate(ActionArg arg);
 
@@ -109,7 +106,7 @@ public:
 
   virtual std::string NameForWindow (Window window) { return std::string(); }
 
-  const bool HasWindowOnViewport();
+  const bool HasWindowOnViewport(int monitor);
 
   virtual bool IsSpacer()
   {
@@ -198,6 +195,8 @@ public:
   sigc::connection on_expo_terminated_connection;
 
 protected:
+  std::vector<nux::Point3> GetCenters();
+
   std::string GetName() const;
 
   void AddProperties(GVariantBuilder* builder);
@@ -214,7 +213,7 @@ protected:
 
   void SetProgress(float progress);
 
-  void SetHasWindowOnViewport(bool val);
+  void SetHasWindowOnViewport(bool val, int monitor);
 
   void Present(float urgency, int length);
 
@@ -226,7 +225,7 @@ protected:
 
   virtual nux::BaseTexture* GetTextureForSize(int size) = 0;
 
-  virtual void OnCenterStabilized(nux::Point3 center) {}
+  virtual void OnCenterStabilized(std::vector<nux::Point3> center) {}
 
   virtual const gchar* GetRemoteUri()
   {
@@ -276,8 +275,6 @@ protected:
 
   void OnRemoteProgressVisibleChanged(LauncherEntryRemote* remote);
 
-  Launcher* _launcher;
-
   nux::Tooltip* _tooltip;
   QuicklistView* _quicklist;
 
@@ -308,27 +305,29 @@ private:
 
   void ColorForIcon(GdkPixbuf* pixbuf, nux::Color& background, nux::Color& glow);
 
-  bool             _has_visible_window;
-  bool             _quicklist_is_initialized;
-  bool             _remote_urgent;
-  float            _present_urgency;
-  float            _progress;
-  guint            _center_stabilize_handle;
-  guint            _present_time_handle;
-  guint            _time_delay_handle;
-  guint            _tooltip_delay_handle;
-  int              _related_windows;
-  int              _sort_priority;
-  nux::Color       _background_color;
-  nux::Color       _glow_color;
-  static gboolean  _skip_tooltip_delay;
+  std::vector<bool> _has_visible_window;
+  bool              _quicklist_is_initialized;
+  bool              _remote_urgent;
+  float             _present_urgency;
+  float             _progress;
+  guint             _center_stabilize_handle;
+  guint             _present_time_handle;
+  guint             _time_delay_handle;
+  guint             _tooltip_delay_handle;
+  int               _related_windows;
+  int               _sort_priority;
+  int               _last_monitor;
+  nux::Color        _background_color;
+  nux::Color        _glow_color;
+  static gboolean   _skip_tooltip_delay;
+  
+  gint64            _shortcut;
 
-  gint64           _shortcut;
-
-  nux::Point3      _center;
-  nux::Point3      _last_stable;
-  nux::Point3      _saved_center;
-  IconType         _icon_type;
+  std::vector<nux::Point3> _center;
+  std::vector<nux::Point3> _last_stable;
+  std::vector<nux::Point3> _saved_center;
+  std::vector<nux::Geometry> _parent_geo;
+  IconType                 _icon_type;
 
   static GtkIconTheme* _unity_theme;
 

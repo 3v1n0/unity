@@ -71,10 +71,8 @@ int LauncherIcon::_current_theme_is_mono = -1;
 GtkIconTheme* LauncherIcon::_unity_theme = NULL;
 gboolean LauncherIcon::_skip_tooltip_delay = false;
 
-LauncherIcon::LauncherIcon(Launcher* launcher)
-  : _launcher(launcher)
-  , _menuclient_dynamic_quicklist(nullptr)
-  , _has_visible_window(false)
+LauncherIcon::LauncherIcon()
+  : _menuclient_dynamic_quicklist(nullptr)
   , _quicklist_is_initialized(false)
   , _remote_urgent(false)
   , _present_urgency(0)
@@ -90,6 +88,12 @@ LauncherIcon::LauncherIcon(Launcher* launcher)
   , _shortcut(0)
   , _icon_type(TYPE_NONE)
 {
+  _has_visible_window.resize(max_num_monitors);
+  _center.resize(max_num_monitors);
+  _saved_center.resize(max_num_monitors);
+  _last_stable.resize(max_num_monitors);
+  _parent_geo.resize(max_num_monitors);
+
   for (int i = 0; i < QUIRK_LAST; i++)
   {
     _quirks[i] = false;
@@ -168,9 +172,9 @@ LauncherIcon::~LauncherIcon()
 }
 
 const bool
-LauncherIcon::HasWindowOnViewport()
+LauncherIcon::HasWindowOnViewport(int monitor)
 {
-  return _has_visible_window;
+  return _has_visible_window[monitor];
 }
 
 std::string
@@ -183,9 +187,9 @@ void
 LauncherIcon::AddProperties(GVariantBuilder* builder)
 {
   unity::variant::BuilderWrapper(builder)
-  .add("x", _center.x)
-  .add("y", _center.y)
-  .add("z", _center.z)
+  .add("x", _center[0].x)
+  .add("y", _center[0].y)
+  .add("z", _center[0].z)
   .add("related-windows", _related_windows)
   .add("icon-type", _icon_type)
   .add("tooltip-text", tooltip_text().c_str())
@@ -489,12 +493,14 @@ LauncherIcon::OnTooltipTimeout(gpointer data)
 {
   LauncherIcon* self = (LauncherIcon*) data;
 
-  if (!self->_launcher)
-    return FALSE;
-
-  nux::Geometry geo = self->_launcher->GetAbsoluteGeometry();
-  int tip_x = geo.x + geo.width + 1;
-  int tip_y = geo.y + self->_center.y;
+  int tip_x = 100;
+  int tip_y = 100;
+  if (self->_last_monitor >= 0)
+  {
+    nux::Geometry geo = self->_parent_geo[self->_last_monitor];
+    tip_x = geo.x + geo.width + 1;
+    tip_y = geo.y + self->_center[self->_last_monitor].y;
+  }
 
   self->_tooltip->ShowTooltipWithTipAt(tip_x, tip_y);
 
@@ -509,8 +515,9 @@ LauncherIcon::OnTooltipTimeout(gpointer data)
 }
 
 void
-LauncherIcon::RecvMouseEnter()
+LauncherIcon::RecvMouseEnter(int monitor)
 {
+  _last_monitor = monitor;
   if (QuicklistManager::Default()->Current())
   {
     // A quicklist is active
@@ -523,8 +530,10 @@ LauncherIcon::RecvMouseEnter()
     OnTooltipTimeout(this);
 }
 
-void LauncherIcon::RecvMouseLeave()
+void LauncherIcon::RecvMouseLeave(int monitor)
 {
+  _last_monitor = -1;
+
   if (_tooltip_delay_handle)
     g_source_remove(_tooltip_delay_handle);
   _tooltip_delay_handle = 0;
@@ -582,18 +591,9 @@ bool LauncherIcon::OpenQuicklist(bool default_to_first_item)
   if (default_to_first_item)
     _quicklist->DefaultToFirstItem();
 
-  int tip_x, tip_y;
-  if (_launcher)
-  {
-    nux::Geometry geo = _launcher->GetAbsoluteGeometry();
-    tip_x = geo.x + geo.width + 1;
-    tip_y = geo.y + _center.y;
-  }
-  else
-  {
-    tip_x = 0;
-    tip_y = _center.y;
-  }
+  nux::Geometry geo = _parent_geo[_last_monitor];
+  int tip_x = geo.x + geo.width + 1;
+  int tip_y = geo.y + _center[_last_monitor].y; 
 
   auto win_manager = WindowManager::Default();
 
@@ -617,13 +617,13 @@ bool LauncherIcon::OpenQuicklist(bool default_to_first_item)
   return true;
 }
 
-void LauncherIcon::RecvMouseDown(int button)
+void LauncherIcon::RecvMouseDown(int button, int monitor)
 {
   if (button == 3)
     OpenQuicklist();
 }
 
-void LauncherIcon::RecvMouseUp(int button)
+void LauncherIcon::RecvMouseUp(int button, int monitor)
 {
   if (button == 3)
   {
@@ -632,7 +632,7 @@ void LauncherIcon::RecvMouseUp(int button)
   }
 }
 
-void LauncherIcon::RecvMouseClick(int button)
+void LauncherIcon::RecvMouseClick(int button, int monitor)
 {
   ActionArg arg(ActionArg::LAUNCHER, button);
   if (button == 1)
@@ -656,7 +656,7 @@ LauncherIcon::OnCenterTimeout(gpointer data)
 {
   LauncherIcon* self = (LauncherIcon*)data;
 
-  if (self->_last_stable != self->_center)
+  if (!std::equal(self->_center.begin(), self->_center.end(), self->_last_stable.begin()))
   {
     self->OnCenterStabilized(self->_center);
     self->_last_stable = self->_center;
@@ -667,27 +667,22 @@ LauncherIcon::OnCenterTimeout(gpointer data)
 }
 
 void
-LauncherIcon::SetCenter(nux::Point3 center)
+LauncherIcon::SetCenter(nux::Point3 center, int monitor, nux::Geometry geo)
 {
-  _center = center;
+  _center[monitor] = center;
+  _parent_geo[monitor] = geo;
 
-  int tip_x, tip_y;
-  if (_launcher)
+  if (monitor == _last_monitor)
   {
-    nux::Geometry geo = _launcher->GetAbsoluteGeometry();
+    int tip_x, tip_y;
     tip_x = geo.x + geo.width + 1;
-    tip_y = geo.y + _center.y;
-  }
-  else
-  {
-    tip_x = 0;
-    tip_y = _center.y;
-  }
+    tip_y = geo.y + _center[monitor].y;
 
-  if (_quicklist->IsVisible())
-    QuicklistManager::Default()->ShowQuicklist(_quicklist, tip_x, tip_y);
-  else if (_tooltip->IsVisible())
-    _tooltip->ShowTooltipWithTipAt(tip_x, tip_y);
+    if (_quicklist->IsVisible())
+      QuicklistManager::Default()->ShowQuicklist(_quicklist, tip_x, tip_y);
+    else if (_tooltip->IsVisible())
+      _tooltip->ShowTooltipWithTipAt(tip_x, tip_y);
+  }
 
   if (_center_stabilize_handle)
     g_source_remove(_center_stabilize_handle);
@@ -696,7 +691,12 @@ LauncherIcon::SetCenter(nux::Point3 center)
 }
 
 nux::Point3
-LauncherIcon::GetCenter()
+LauncherIcon::GetCenter(int monitor)
+{
+  return _center[monitor];
+}
+
+std::vector<nux::Point3> LauncherIcon::GetCenters()
 {
   return _center;
 }
@@ -709,12 +709,12 @@ LauncherIcon::SaveCenter()
 }
 
 void
-LauncherIcon::SetHasWindowOnViewport(bool val)
+LauncherIcon::SetHasWindowOnViewport(bool val, int monitor)
 {
-  if (_has_visible_window == val)
+  if (_has_visible_window[monitor] == val)
     return;
 
-  _has_visible_window = val;
+  _has_visible_window[monitor] = val;
   needs_redraw.emit(this);
 }
 
@@ -763,16 +763,6 @@ LauncherIcon::Unpresent()
 }
 
 void
-LauncherIcon::SetRelatedWindows(int windows)
-{
-  if (_related_windows == windows)
-    return;
-
-  _related_windows = windows;
-  needs_redraw.emit(this);
-}
-
-void
 LauncherIcon::Remove()
 {
   if (_quicklist->IsVisible())
@@ -817,9 +807,6 @@ LauncherIcon::SetQuirk(LauncherIcon::Quirk quirk, bool value)
 {
   if (_quirks[quirk] == value)
     return;
-      
-  if (quirk == QUIRK_PULSE_ONCE)
-    _launcher->HideMachine()->SetQuirk(LauncherHideMachine::LAUNCHER_PULSE, value);
   
   _quirks[quirk] = value;
   if (quirk == QUIRK_VISIBLE)

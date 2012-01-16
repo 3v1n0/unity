@@ -67,6 +67,7 @@ COMPIZ_PLUGIN_20090315(unityshell, unity::UnityPluginVTable);
 
 namespace unity
 {
+using namespace launcher;
 using launcher::AbstractLauncherIcon;
 using launcher::Launcher;
 using ui::KeyboardUtil;
@@ -1956,8 +1957,8 @@ CompPoint UnityWindow::tryNotIntersectUI(CompPoint& pos)
   {
     switch (launcher.GetHideMode())
     {
-      case Launcher::LAUNCHER_HIDE_DODGE_WINDOWS:
-      case Launcher::LAUNCHER_HIDE_DODGE_ACTIVE_WINDOW:
+      case LAUNCHER_HIDE_DODGE_WINDOWS:
+      case LAUNCHER_HIDE_DODGE_ACTIVE_WINDOW:
         allowedWorkArea -= launcherGeo;
         break;
 
@@ -2079,7 +2080,7 @@ void UnityScreen::onRedrawRequested()
 void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
 {
   // Note: perhaps we should put the options here into the controller.
-  Launcher& launcher = launcher_controller_->launcher();
+  unity::launcher::Options::Ptr launcher_options = launcher_controller_->options();
   switch (num)
   {
     case UnityshellOptions::BackgroundColor:
@@ -2096,16 +2097,16 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       break;
     }
     case UnityshellOptions::LauncherHideMode:
-      launcher.SetHideMode((Launcher::LauncherHideMode) optionGetLauncherHideMode());
+      launcher_options->hide_mode = (unity::launcher::LauncherHideMode) optionGetLauncherHideMode();
       break;
     case UnityshellOptions::BacklightMode:
-      launcher.SetBacklightMode((Launcher::BacklightMode) optionGetBacklightMode());
+      launcher_options->backlight_mode = (unity::launcher::BacklightMode) optionGetBacklightMode();
       break;
     case UnityshellOptions::LaunchAnimation:
-      launcher.SetLaunchAnimation((Launcher::LaunchAnimation) optionGetLaunchAnimation());
+      launcher_options->launch_animation = (unity::launcher::LaunchAnimation) optionGetLaunchAnimation();
       break;
     case UnityshellOptions::UrgentAnimation:
-      launcher.SetUrgentAnimation((Launcher::UrgentAnimation) optionGetUrgentAnimation());
+      launcher_options->urgent_animation = (unity::launcher::UrgentAnimation) optionGetUrgentAnimation();
       break;
     case UnityshellOptions::PanelOpacity:
       panel_controller_->SetOpacity(optionGetPanelOpacity());
@@ -2125,13 +2126,15 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
                                             optionGetMenusDiscoveryFadeout());
       break;
     case UnityshellOptions::LauncherOpacity:
-      launcher.SetBackgroundAlpha(optionGetLauncherOpacity());
+      launcher_options->background_alpha = optionGetLauncherOpacity();
       break;
     case UnityshellOptions::IconSize:
     {
       CompPlugin         *p = CompPlugin::find ("expo");
 
-      launcher.SetIconSize(optionGetIconSize() + 6, optionGetIconSize());
+      launcher_options->icon_size = optionGetIconSize();
+      launcher_options->tile_size = optionGetIconSize() + 6;
+
       dash_controller_->launcher_width = optionGetIconSize() + 18;
 
       if (p)
@@ -2153,7 +2156,7 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       break;
     }
     case UnityshellOptions::AutohideAnimation:
-      launcher.SetAutoHideAnimation((Launcher::AutoHideAnimation) optionGetAutohideAnimation());
+      launcher_options->auto_hide_animation = (unity::launcher::AutoHideAnimation) optionGetAutohideAnimation();
       break;
     case UnityshellOptions::DashBlurExperimental:
       BackgroundEffectHelper::blur_type = (unity::BlurType)optionGetDashBlurExperimental();
@@ -2280,9 +2283,7 @@ void UnityScreen::initLauncher()
 {
   Timer timer;
   launcher_controller_.reset(new launcher::Controller(screen->dpy()));
-  primary_monitor_.changed.connect(sigc::mem_fun(launcher_controller_.get(),
-                                                 &launcher::Controller::PrimaryMonitorGeometryChanged));
-
+  
   Launcher& launcher = launcher_controller_->launcher();
   launcher.hidden_changed.connect(sigc::mem_fun(this, &UnityScreen::OnLauncherHiddenChanged));
   AddChild(&launcher);
@@ -2307,10 +2308,6 @@ void UnityScreen::initLauncher()
   dash_controller_->on_realize.connect(sigc::mem_fun(this, &UnityScreen::OnDashRealized));
 
   AddChild(dash_controller_.get());
-
-  launcher.SetHideMode(Launcher::LAUNCHER_HIDE_DODGE_WINDOWS);
-  launcher.SetLaunchAnimation(Launcher::LAUNCH_ANIMATION_PULSE);
-  launcher.SetUrgentAnimation(Launcher::URGENT_ANIMATION_WIGGLE);
 
   ScheduleRelayout(0);
 

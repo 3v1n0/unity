@@ -31,7 +31,7 @@ class DesktopLauncherIcon : public SimpleLauncherIcon
 {
 
 public:
-  DesktopLauncherIcon(Launcher* launcher);
+  DesktopLauncherIcon();
   ~DesktopLauncherIcon();
 
   virtual nux::Color BackgroundColor();

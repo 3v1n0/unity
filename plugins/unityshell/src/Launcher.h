@@ -34,6 +34,7 @@
 #include "DndData.h"
 #include "GeisAdapter.h"
 #include "Introspectable.h"
+#include "LauncherOptions.h"
 #include "LauncherDragWindow.h"
 #include "LauncherHideMachine.h"
 #include "LauncherHoverMachine.h"
@@ -65,49 +66,13 @@ class Launcher : public unity::debug::Introspectable, public nux::View
 {
   NUX_DECLARE_OBJECT_TYPE(Launcher, nux::View);
 public:
-  typedef enum
-  {
-    LAUNCHER_HIDE_NEVER,
-    LAUNCHER_HIDE_AUTOHIDE,
-    LAUNCHER_HIDE_DODGE_WINDOWS,
-    LAUNCHER_HIDE_DODGE_ACTIVE_WINDOW,
-  } LauncherHideMode;
-
-  typedef enum
-  {
-    LAUNCH_ANIMATION_NONE,
-    LAUNCH_ANIMATION_PULSE,
-    LAUNCH_ANIMATION_BLINK,
-  } LaunchAnimation;
-
-  typedef enum
-  {
-    URGENT_ANIMATION_NONE,
-    URGENT_ANIMATION_PULSE,
-    URGENT_ANIMATION_WIGGLE,
-  } UrgentAnimation;
-
-  typedef enum
-  {
-    FADE_OR_SLIDE,
-    SLIDE_ONLY,
-    FADE_ONLY,
-    FADE_AND_SLIDE,
-  } AutoHideAnimation;
-
-  typedef enum
-  {
-    BACKLIGHT_ALWAYS_ON,
-    BACKLIGHT_NORMAL,
-    BACKLIGHT_ALWAYS_OFF,
-    BACKLIGHT_EDGE_TOGGLE,
-    BACKLIGHT_NORMAL_EDGE_TOGGLE
-  } BacklightMode;
 
   Launcher(nux::BaseWindow* parent, NUX_FILE_LINE_PROTO);
   ~Launcher();
 
   nux::Property<Display*> display;
+  nux::Property<int> monitor;
+  nux::Property<Options::Ptr> options;
 
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
@@ -240,6 +205,10 @@ private:
     TIME_LAST
   } LauncherActionTimes;
 
+  void OnOptionsChanged(Options::Ptr options);
+  void OnOptionChanged();
+  void UpdateOptions(Options::Ptr options);
+
   void OnWindowMaybeIntellihide(guint32 xid);
   void OnWindowMaybeIntellihideDelayed(guint32 xid);
   static gboolean CheckWindowOverLauncherSync(Launcher* self);
@@ -323,6 +292,7 @@ private:
   void FillRenderArg(LauncherIcon* icon,
                      ui::RenderArg& arg,
                      nux::Point3& center,
+                     nux::Geometry const& parent_abs_geo,
                      float folding_threshold,
                      float folded_size,
                      float folded_spacing,
@@ -332,7 +302,7 @@ private:
                      struct timespec const& current);
 
   void RenderArgs(std::list<ui::RenderArg> &launcher_args,
-                  nux::Geometry& box_geo, float* launcher_alpha);
+                  nux::Geometry& box_geo, float* launcher_alpha, nux::Geometry const& parent_abs_geo);
 
   void OnIconAdded(LauncherIcon* icon);
   void OnIconRemoved(LauncherIcon* icon);
@@ -379,6 +349,8 @@ private:
   
   void DndReset();
   void DndHoveredIconReset();
+
+  void Resize();
 
   nux::HLayout* m_Layout;
   int m_ContentOffsetY;

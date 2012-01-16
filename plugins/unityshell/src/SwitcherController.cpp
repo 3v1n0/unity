@@ -74,7 +74,7 @@ void Controller::OnBackgroundUpdate(GVariant* data, Controller* self)
 
 bool IsOnOtherViewport (AbstractLauncherIcon* icon)
 {
-  return !icon->HasWindowOnViewport();
+  return !icon->HasWindowOnViewport(0); //FIXME
 }
 
 void Controller::Show(ShowMode show, SortMode sort, bool reverse,

@@ -28,6 +28,7 @@
 #include <Nux/BaseWindow.h>
 #include <NuxCore/Logger.h>
 
+#include "LauncherOptions.h"
 #include "BamfLauncherIcon.h"
 #include "DesktopLauncherIcon.h"
 #include "DeviceLauncherIcon.h"
@@ -42,7 +43,7 @@
 #include "WindowManager.h"
 #include "TrashLauncherIcon.h"
 #include "BFBLauncherIcon.h"
-
+#include "UScreen.h"
 
 namespace unity
 {
@@ -56,10 +57,12 @@ nux::logging::Logger logger("unity.launcher");
 class Controller::Impl
 {
 public:
-  Impl(Display* display);
+  Impl(Display* display, Controller* parent);
   ~Impl();
 
   void UpdateNumWorkspaces(int workspaces);
+
+  Launcher* CreateLauncher(int monitor);
 
   void Save();
   void SortAndUpdate();
@@ -92,9 +95,9 @@ public:
 
   static void OnViewOpened(BamfMatcher* matcher, BamfView* view, gpointer data);
 
+  Controller* parent_;
   glib::Object<BamfMatcher> matcher_;
   LauncherModel::Ptr     model_;
-  nux::ObjectPtr<nux::BaseWindow> launcher_window_;
   nux::ObjectPtr<Launcher> launcher_;
   int                    sort_priority_;
   DeviceLauncherSection* device_section_;
@@ -104,52 +107,46 @@ public:
   nux::ObjectPtr<AbstractLauncherIcon> desktop_icon_;
   int                    num_workspaces_;
   bool                   show_desktop_icon_;
+  Display*               display_;
 
-  guint            bamf_timer_handler_id_;
+  guint                  bamf_timer_handler_id_;
+  guint32                on_view_opened_id_;
 
-  guint32 on_view_opened_id_;
+  LauncherList launchers;
 
   sigc::connection on_expoicon_activate_connection_;
 };
 
 
-Controller::Impl::Impl(Display* display)
-  : matcher_(nullptr)
+Controller::Impl::Impl(Display* display, Controller* parent)
+  : parent_(parent)
+  , matcher_(nullptr)
   , model_(new LauncherModel())
   , sort_priority_(0)
   , show_desktop_icon_(false)
+  , display_(display)
 {
-  // NOTE: should the launcher itself hold the base window?
-  // seems like it probably should...
-  launcher_window_ = new nux::BaseWindow(TEXT("LauncherWindow"));
+  // the xserver currently only support triple monitor at best. It
+  // is quicker to just set up for 3 monitors than to resize dynamically
+  launchers.resize(3);
 
-  Launcher* raw_launcher = new Launcher(launcher_window_.GetPointer());
-  launcher_ = raw_launcher;
-  launcher_->display = display;
-  launcher_->SetIconSize(54, 48);
-  launcher_->SetBacklightMode(Launcher::BACKLIGHT_ALWAYS_ON);
-  launcher_->SetHideMode(Launcher::LAUNCHER_HIDE_DODGE_WINDOWS);
-  launcher_->SetLaunchAnimation(Launcher::LAUNCH_ANIMATION_PULSE);
-  launcher_->SetUrgentAnimation(Launcher::URGENT_ANIMATION_WIGGLE);
+  UScreen* uscreen = UScreen::GetDefault();
+  auto monitors = uscreen->GetMonitors();
 
-  nux::HLayout* layout = new nux::HLayout(NUX_TRACKER_LOCATION);
-  layout->AddView(raw_launcher, 1);
-  layout->SetContentDistribution(nux::eStackLeft);
-  layout->SetVerticalExternalMargin(0);
-  layout->SetHorizontalExternalMargin(0);
+  /*std::vector<nux::Geometry> monitors;
+  monitors.push_back(nux::Geometry (0, 0, 840, 1050));
+  monitors.push_back(nux::Geometry (840, 0, 840, 1050));*/
+  int i = 0;
+  for (auto monitor : monitors)
+  {
+    Launcher* launcher = CreateLauncher(i);
+    launchers[i] = launcher;
+    i++;
+  }
 
-  launcher_window_->SetLayout(layout);
-  launcher_window_->SetBackgroundColor(nux::color::Transparent);
-  launcher_window_->ShowWindow(true);
-  launcher_window_->EnableInputWindow(true, "launcher", false, false);
-  launcher_window_->InputWindowEnableStruts(false);
-  launcher_window_->SetEnterFocusInputArea(raw_launcher);
+  launcher_ = launchers[0];
 
-  launcher_->SetModel(model_.get());
-  launcher_->launcher_addrequest.connect(sigc::mem_fun(this, &Impl::OnLauncherAddRequest));
-  launcher_->launcher_removerequest.connect(sigc::mem_fun(this, &Impl::OnLauncherRemoveRequest));
-
-  device_section_ = new DeviceLauncherSection(raw_launcher);
+  device_section_ = new DeviceLauncherSection();
   device_section_->IconAdded.connect(sigc::mem_fun(this, &Impl::OnIconAdded));
 
   num_workspaces_ = WindowManager::Default()->WorkspaceCount();
@@ -175,8 +172,8 @@ Controller::Impl::Impl(Display* display)
   remote_model_.entry_added.connect(sigc::mem_fun(this, &Impl::OnLauncherEntryRemoteAdded));
   remote_model_.entry_removed.connect(sigc::mem_fun(this, &Impl::OnLauncherEntryRemoteRemoved));
 
-  RegisterIcon(new BFBLauncherIcon(raw_launcher));
-  desktop_icon_ = new DesktopLauncherIcon(raw_launcher);
+  RegisterIcon(new BFBLauncherIcon());
+  desktop_icon_ = new DesktopLauncherIcon();
 }
 
 Controller::Impl::~Impl()
@@ -190,6 +187,34 @@ Controller::Impl::~Impl()
   delete device_section_;
 }
 
+Launcher* Controller::Impl::CreateLauncher(int monitor)
+{
+  nux::BaseWindow* launcher_window = new nux::BaseWindow(TEXT("LauncherWindow"));
+
+  Launcher* launcher = new Launcher(launcher_window);
+  launcher->display = display_;
+  launcher->monitor = monitor;
+  launcher->options = parent_->options();
+
+  nux::HLayout* layout = new nux::HLayout(NUX_TRACKER_LOCATION);
+  layout->AddView(launcher, 1);
+  layout->SetContentDistribution(nux::eStackLeft);
+  layout->SetVerticalExternalMargin(0);
+  layout->SetHorizontalExternalMargin(0);
+
+  launcher_window->SetLayout(layout);
+  launcher_window->SetBackgroundColor(nux::color::Transparent);
+  launcher_window->ShowWindow(true);
+  launcher_window->EnableInputWindow(true, "launcher", false, false);
+  launcher_window->InputWindowEnableStruts(false);
+  launcher_window->SetEnterFocusInputArea(launcher);
+
+  launcher->SetModel(model_.get());
+  launcher->launcher_addrequest.connect(sigc::mem_fun(this, &Impl::OnLauncherAddRequest));
+  launcher->launcher_removerequest.connect(sigc::mem_fun(this, &Impl::OnLauncherRemoveRequest));
+
+  return launcher;
+}
 
 void Controller::Impl::OnLauncherAddRequest(char* path, LauncherIcon* before)
 {
@@ -323,7 +348,7 @@ void Controller::Impl::OnExpoActivated()
 void Controller::Impl::InsertTrash()
 {
   TrashLauncherIcon* icon;
-  icon = new TrashLauncherIcon(launcher_.GetPointer());
+  icon = new TrashLauncherIcon();
   RegisterIcon(icon);
 }
 
@@ -343,7 +368,7 @@ void Controller::Impl::UpdateNumWorkspaces(int workspaces)
 
 void Controller::Impl::InsertExpoAction()
 {
-  expo_icon_ = new SimpleLauncherIcon(launcher_.GetPointer());
+  expo_icon_ = new SimpleLauncherIcon();
 
   expo_icon_->tooltip_text = _("Workspace Switcher");
   expo_icon_->icon_name = "workspace-switcher";
@@ -366,7 +391,7 @@ void Controller::Impl::RemoveExpoAction()
 
 void Controller::Impl::InsertDesktopIcon()
 {
-  desktop_launcher_icon_ = new DesktopLauncherIcon(launcher_.GetPointer());
+  desktop_launcher_icon_ = new DesktopLauncherIcon();
   desktop_launcher_icon_->SetIconType(LauncherIcon::TYPE_DESKTOP);
   desktop_launcher_icon_->SetShowInSwitcher(false);
 
@@ -412,7 +437,7 @@ void Controller::Impl::OnViewOpened(BamfMatcher* matcher, BamfView* view, gpoint
     return;
   }
 
-  BamfLauncherIcon* icon = new BamfLauncherIcon(self->launcher_.GetPointer(), app);
+  BamfLauncherIcon* icon = new BamfLauncherIcon(app);
   icon->SetIconType(LauncherIcon::TYPE_APPLICATION);
   icon->SetSortPriority(self->sort_priority_++);
 
@@ -437,7 +462,7 @@ LauncherIcon* Controller::Impl::CreateFavorite(const char* file_path)
   g_object_set_qdata(G_OBJECT(app), g_quark_from_static_string("unity-seen"), GINT_TO_POINTER(1));
 
   bamf_view_set_sticky(BAMF_VIEW(app), true);
-  icon = new BamfLauncherIcon(launcher_.GetPointer(), app);
+  icon = new BamfLauncherIcon(app);
   icon->SetIconType(LauncherIcon::TYPE_APPLICATION);
   icon->SetSortPriority(sort_priority_++);
 
@@ -482,7 +507,7 @@ void Controller::Impl::SetupBamf()
       continue;
     g_object_set_qdata(G_OBJECT(app), g_quark_from_static_string("unity-seen"), GINT_TO_POINTER(1));
 
-    icon = new BamfLauncherIcon(launcher_.GetPointer(), app);
+    icon = new BamfLauncherIcon(app);
     icon->SetSortPriority(sort_priority_++);
     RegisterIcon(icon);
   }
@@ -495,8 +520,18 @@ void Controller::Impl::SetupBamf()
 
 
 Controller::Controller(Display* display)
-  : pimpl(new Impl(display))
 {
+  options = Options::Ptr(new Options());
+
+  options()->tile_size = 54;
+  options()->icon_size = 48;
+  options()->backlight_mode = BACKLIGHT_ALWAYS_ON;
+  options()->hide_mode = LAUNCHER_HIDE_DODGE_WINDOWS;
+  options()->launch_animation = LAUNCH_ANIMATION_PULSE;
+  options()->urgent_animation = URGENT_ANIMATION_WIGGLE;
+  
+  // options must be set before creating pimpl which loads launchers
+  pimpl = new Impl(display, this);
 }
 
 Controller::~Controller()
@@ -512,6 +547,11 @@ void Controller::UpdateNumWorkspaces(int workspaces)
 Launcher& Controller::launcher()
 {
   return *(pimpl->launcher_);
+}
+
+Controller::LauncherList& Controller::launchers()
+{
+  return pimpl->launchers;
 }
 
 std::vector<char> Controller::GetAllShortcuts()
@@ -540,37 +580,14 @@ std::vector<AbstractLauncherIcon*> Controller::GetAltTabIcons()
   return results;
 }
 
-void Controller::PrimaryMonitorGeometryChanged(nux::Geometry const& rect)
-{
-  const int panel_height = 24;
-
-  int launcher_width = pimpl->launcher_window_->GetGeometry().width;
-
-  nux::Geometry new_geometry(rect.x,
-                             rect.y + panel_height,
-                             launcher_width,
-                             rect.height - panel_height);
-
-  LOG_DEBUG(logger) << "Setting to launcher rect:"
-                    << " x=" << new_geometry.x
-                    << " y=" << new_geometry.y
-                    << " w=" << new_geometry.width
-                    << " h=" << new_geometry.height;
-
-  pimpl->launcher_->SetMaximumHeight(new_geometry.height);
-
-  pimpl->launcher_window_->SetGeometry(new_geometry);
-  pimpl->launcher_->SetGeometry(new_geometry);
-}
-
 Window Controller::launcher_input_window_id()
 {
-  return pimpl->launcher_window_->GetInputWindowId();
+  return pimpl->launcher_->GetParent()->GetInputWindowId();
 }
 
 void Controller::PushToFront()
 {
-  pimpl->launcher_window_->PushToFront();
+  pimpl->launcher_->GetParent()->PushToFront();
 }
 
 void Controller::SetShowDesktopIcon(bool show_desktop_icon)

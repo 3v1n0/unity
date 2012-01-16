@@ -38,8 +38,8 @@ namespace
   nux::logging::Logger logger("unity.dash.CategoryViewGrid");
 }
 
-SimpleLauncherIcon::SimpleLauncherIcon(Launcher* IconManager)
-  : LauncherIcon(IconManager)
+SimpleLauncherIcon::SimpleLauncherIcon()
+  : LauncherIcon()
   , icon_name("", sigc::mem_fun(this, &SimpleLauncherIcon::SetIconName))
   , theme_changed_id_(0)
 {
@@ -65,23 +65,23 @@ SimpleLauncherIcon::~SimpleLauncherIcon()
     g_signal_handler_disconnect(gtk_icon_theme_get_default(), theme_changed_id_);
 }
 
-void SimpleLauncherIcon::OnMouseDown(int button)
+void SimpleLauncherIcon::OnMouseDown(int button, int monitor)
 {
 }
 
-void SimpleLauncherIcon::OnMouseUp(int button)
+void SimpleLauncherIcon::OnMouseUp(int button, int monitor)
 {
 }
 
-void SimpleLauncherIcon::OnMouseClick(int button)
+void SimpleLauncherIcon::OnMouseClick(int button, int monitor)
 {
 }
 
-void SimpleLauncherIcon::OnMouseEnter()
+void SimpleLauncherIcon::OnMouseEnter(int monitor)
 {
 }
 
-void SimpleLauncherIcon::OnMouseLeave()
+void SimpleLauncherIcon::OnMouseLeave(int monitor)
 {
 }
 

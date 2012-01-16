@@ -32,7 +32,7 @@ class Launcher;
 class SimpleLauncherIcon : public LauncherIcon
 {
 public:
-  SimpleLauncherIcon(Launcher* IconManager);
+  SimpleLauncherIcon();
   virtual ~SimpleLauncherIcon();
 
   // override
@@ -45,11 +45,11 @@ public:
   sigc::signal<void> activate;
 
 protected:
-  virtual void OnMouseDown(int button);
-  virtual void OnMouseUp(int button);
-  virtual void OnMouseClick(int button);
-  virtual void OnMouseEnter();
-  virtual void OnMouseLeave();
+  virtual void OnMouseDown(int button, int monitor);
+  virtual void OnMouseUp(int button, int monitor);
+  virtual void OnMouseClick(int button, int monitor);
+  virtual void OnMouseEnter(int monitor);
+  virtual void OnMouseLeave(int monitor);
   virtual void ActivateLauncherIcon(ActionArg arg);
 
 private:

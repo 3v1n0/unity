@@ -131,9 +131,9 @@ public:
 
   virtual bool OpenQuicklist(bool default_to_first_item = false) = 0;
 
-  virtual void        SetCenter(nux::Point3 center) = 0;
+  virtual void        SetCenter(nux::Point3 center, int monitor, nux::Geometry parent_geo) = 0;
 
-  virtual nux::Point3 GetCenter() = 0;
+  virtual nux::Point3 GetCenter(int monitor) = 0;
 
   virtual std::vector<nux::Vector4> & GetTransform(TransformIndex index) = 0;
 
@@ -149,7 +149,7 @@ public:
 
   virtual std::string NameForWindow (Window window) = 0;
 
-  virtual const bool HasWindowOnViewport() = 0;
+  virtual const bool HasWindowOnViewport(int monitor) = 0;
 
   virtual bool IsSpacer() = 0;
 
@@ -189,11 +189,11 @@ public:
 
   virtual void SendDndLeave() = 0;
 
-  sigc::signal<void, int> mouse_down;
-  sigc::signal<void, int> mouse_up;
-  sigc::signal<void, int> mouse_click;
-  sigc::signal<void>      mouse_enter;
-  sigc::signal<void>      mouse_leave;
+  sigc::signal<void, int, int> mouse_down;
+  sigc::signal<void, int, int> mouse_up;
+  sigc::signal<void, int, int> mouse_click;
+  sigc::signal<void, int>      mouse_enter;
+  sigc::signal<void, int>      mouse_leave;
 
   sigc::signal<void, AbstractLauncherIcon*> show;
   sigc::signal<void, AbstractLauncherIcon*> hide;
