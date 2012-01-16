@@ -85,6 +85,10 @@ void TestRunner::Init ()
 //     hud_view_->SetIcon(icon_name);
 //   });
 
+  hud_view_->query_selected.connect([&] (unity::hud::Query::Ptr query) {
+    hud_view_->SetIcon(query->icon_name);
+  });
+
   hud_view_->search_changed.connect([&] (std::string search_string) {
     hud_service_.RequestQuery(search_string);
   });

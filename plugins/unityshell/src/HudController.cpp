@@ -99,6 +99,8 @@ void Controller::SetupHudView()
   view_->search_changed.connect(sigc::mem_fun(this, &Controller::OnSearchChanged));
   view_->search_activated.connect(sigc::mem_fun(this, &Controller::OnSearchActivated));
   view_->query_activated.connect(sigc::mem_fun(this, &Controller::OnQueryActivated));
+  view_->query_selected.connect(sigc::mem_fun(this, &Controller::OnQuerySelected));
+
 //   hud_service_.target_icon.changed.connect([&] (std::string icon_name) {
 //     view_->SetIcon(icon_name);
 //   });
@@ -295,21 +297,33 @@ void Controller::OnSearchChanged(std::string search_string)
 
 void Controller::OnSearchActivated(std::string search_string)
 {
-  //hud_service_.ExecuteQuery(search_string);
+  unsigned int timestamp = nux::GetWindowThread()->GetGraphicsDisplay().GetCurrentEvent().x11_timestamp;
+  hud_service_.ExecuteQueryBySearch(search_string, timestamp);
   HideHud();
 }
 
 void Controller::OnQueryActivated(Query::Ptr query)
 {
   LOG_DEBUG(logger) << "Activating query, " << query->formatted_text;
-  hud_service_.ExecuteQuery(query, 0); // FIXME - supply real timestamp
+  unsigned int timestamp = nux::GetWindowThread()->GetGraphicsDisplay().GetCurrentEvent().x11_timestamp;
+  hud_service_.ExecuteQuery(query, timestamp); 
   HideHud();
+}
+
+void Controller::OnQuerySelected(Query::Ptr query)
+{
+  LOG_DEBUG(logger) << "Selected query, " << query->formatted_text;
+  view_->SetIcon(query->icon_name);
 }
 
 
 void Controller::OnQueriesFinished(Hud::Queries queries)
 {
   view_->SetQueries(queries);
+  if (queries.empty() == false)
+  {
+    view_->SetIcon(queries.front()->icon_name);
+  }
 }
 
 // Introspectable

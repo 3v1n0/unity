@@ -74,7 +74,7 @@ private:
   void OnSearchChanged(std::string search_string);
   void OnSearchActivated(std::string search_string);
   void OnQueryActivated(Query::Ptr query);
-
+  void OnQuerySelected(Query::Ptr query);
 public:
   void ShowHud();
   void HideHud(bool restore_focus = true);

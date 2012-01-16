@@ -60,6 +60,7 @@ public:
   sigc::signal<void, std::string> search_changed;
   sigc::signal<void, std::string> search_activated;
   sigc::signal<void, Query::Ptr> query_activated;
+  sigc::signal<void, Query::Ptr> query_selected;
 
 protected:
   virtual Area* FindKeyFocusArea(unsigned int key_symbol,
