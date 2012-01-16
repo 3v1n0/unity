@@ -33,6 +33,8 @@ class OverlayRendererImpl;
 class OverlayRenderer
 {
 public:
+  // We only ever want one OverlayRenderer per view, so if you must take a pointer, take this unique one that will die 
+  // when it goes out of scope
   typedef std::unique_ptr<OverlayRenderer> Ptr;
   
   OverlayRenderer();
