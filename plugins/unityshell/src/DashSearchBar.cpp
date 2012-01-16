@@ -319,13 +319,12 @@ void SearchBar::UpdateBackground()
   cairo_operator_t op = CAIRO_OPERATOR_OVER;
   op = cairo_get_operator (cr);
   cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
-  cairo_set_source_rgba(cr, 0.0f, 0.0f, 0.0f, 0.5f);
+  cairo_set_source_rgba(cr, 0.0f, 0.0f, 0.0f, 0.35f);
   cairo_fill_preserve(cr);
   cairo_set_operator (cr, op);
-  cairo_set_source_rgba(cr, 0.0f, 0.0f, 0.0f, 0.5f);
+  cairo_set_source_rgba(cr, 0.0f, 0.0f, 0.0f, 0.35f);
   cairo_fill_preserve(cr);
   cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 0.8f);
-  //cairo_set_line_width(cr, 1.0);
   cairo_stroke(cr);
 
   cairo_destroy(cr);

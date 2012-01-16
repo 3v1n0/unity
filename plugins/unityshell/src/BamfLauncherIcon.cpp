@@ -65,9 +65,10 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
   GList    *l;
   BamfView *view;
 
-  bool active, running;
+  bool active, running, user_visible;
   active = bamf_view_is_active(BAMF_VIEW(m_App));
   running = bamf_view_is_running(BAMF_VIEW(m_App));
+  user_visible = running;
 
   if (arg.target && OwnsWindow (arg.target))
   {
@@ -81,6 +82,8 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 
   if (arg.source != ActionArg::SWITCHER)
   {
+    user_visible = bamf_view_user_visible(BAMF_VIEW(m_App));
+
     bool any_visible = false;
     for (l = bamf_view_get_children(BAMF_VIEW(m_App)); l; l = l->next)
     {
@@ -90,9 +93,11 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
       {
         Window xid = bamf_window_get_xid(BAMF_WINDOW(view));
 
-        if (WindowManager::Default ()->IsWindowOnCurrentDesktop(xid))
+        if (!any_visible && WindowManager::Default()->IsWindowOnCurrentDesktop(xid))
+        {
           any_visible = true;
-        if (!WindowManager::Default ()->IsWindowMapped(xid))
+        }
+        if (active && !WindowManager::Default()->IsWindowMapped(xid))
         {
           active = false;
         }
@@ -104,14 +109,14 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
   }
 
   /* Behaviour:
-   * 1) Nothing running -> launch application
+   * 1) Nothing running, or nothing visible -> launch application
    * 2) Running and active -> spread application
    * 3) Running and not active -> focus application
    * 4) Spread is active and different icon pressed -> change spread
    * 5) Spread is active -> Spread de-activated, and fall through
    */
 
-  if (!running) // #1 above
+  if (!running || (running && !user_visible)) // #1 above
   {
     if (GetQuirk(QUIRK_STARTING))
       return;
@@ -122,7 +127,7 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
     }
 
     SetQuirk(QUIRK_STARTING, true);
-    OpenInstanceLauncherIcon(ActionArg ());
+    OpenInstanceLauncherIcon(ActionArg());
   }
   else // app is running
   {
@@ -136,7 +141,9 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
       else // #2 above
       {
         if (arg.source != ActionArg::SWITCHER)
+        {
           Spread(0, false);
+        }
       }
     }
     else
@@ -283,7 +290,7 @@ std::vector<Window> BamfLauncherIcon::RelatedXids ()
   std::vector<Window> results;
   GList* children, *l;
   BamfView* view;
-  WindowManager *wm = WindowManager::Default ();
+  WindowManager *wm = WindowManager::Default();
 
   children = bamf_view_get_children(BAMF_VIEW(m_App));
   for (l = children; l; l = l->next)
@@ -294,7 +301,9 @@ std::vector<Window> BamfLauncherIcon::RelatedXids ()
       guint32 xid = bamf_window_get_xid(BAMF_WINDOW(view));
 
       if (wm->IsWindowMapped(xid))
-        results.push_back ((Window) xid);
+      {
+        results.push_back (xid);
+      }
     }
   }
 
@@ -574,6 +583,7 @@ void BamfLauncherIcon::Focus(ActionArg arg)
   BamfView* view;
   bool any_urgent = false;
   bool any_visible = false;
+  bool any_user_visible = false;
 
   children = bamf_view_get_children(BAMF_VIEW(m_App));
 
@@ -588,30 +598,40 @@ void BamfLauncherIcon::Focus(ActionArg arg)
     {
       Window xid = bamf_window_get_xid(BAMF_WINDOW(view));
       bool urgent = bamf_view_is_urgent(view);
-
-      if (WindowManager::Default ()->IsWindowOnCurrentDesktop (xid) &&
-          WindowManager::Default ()->IsWindowVisible (xid))
-        any_visible = true;
+      bool user_visible = bamf_view_user_visible(view);
 
       if (any_urgent)
       {
         if (urgent)
           windows.push_back(xid);
       }
+      else if (any_user_visible && !urgent)
+      {
+        if (user_visible)
+          windows.push_back(xid);
+      }
       else
       {
-        if (urgent)
+        if (urgent || user_visible)
         {
           windows.clear();
           any_visible = false;
-          any_urgent = true;
+          any_urgent = (any_urgent || urgent);
+          any_user_visible = (any_user_visible || user_visible);
         }
+
+        windows.push_back(xid);
       }
-      windows.push_back(xid);
+
+      if (WindowManager::Default()->IsWindowOnCurrentDesktop(xid) &&
+          WindowManager::Default()->IsWindowVisible(xid))
+      {
+        any_visible = true;
+      }
     }
   }
-
   g_list_free(children);
+
   if (arg.source != ActionArg::SWITCHER)
   {
     if (any_visible)
@@ -626,8 +646,10 @@ void BamfLauncherIcon::Focus(ActionArg arg)
     }
   }
   else
+  {
     WindowManager::Default()->FocusWindowGroup(windows,
       WindowManager::FocusVisibility::OnlyVisible);
+  }
 }
 
 bool BamfLauncherIcon::Spread(int state, bool force)
@@ -697,7 +719,8 @@ void BamfLauncherIcon::OnUrgentChanged(BamfView* view, gboolean urgent, gpointer
 void BamfLauncherIcon::EnsureWindowState()
 {
   GList* children, *l;
-  int count = 0;
+  unsigned int children_count = 0;
+  unsigned int user_visible_count = 0;
   bool has_visible = false;
 
   children = bamf_view_get_children(BAMF_VIEW(m_App));
@@ -713,10 +736,23 @@ void BamfLauncherIcon::EnsureWindowState()
         has_visible = true;
     }
 
-    count++;
+    if (bamf_view_user_visible (BAMF_VIEW (l->data)))
+    {
+      user_visible_count++;
+    }
+
+    children_count++;
   }
 
-  SetRelatedWindows(count);
+  if (user_visible_count > 0)
+  {
+    SetRelatedWindows(user_visible_count);
+  }
+  else if (children_count > 0)
+  {
+    SetRelatedWindows(1);
+  }
+
   SetHasWindowOnViewport(has_visible);
 
   g_list_free(children);
@@ -897,10 +933,11 @@ void BamfLauncherIcon::UnStick(void)
 
   const gchar* desktop_file = DesktopFile();
   bamf_view_set_sticky(view, false);
-  if (bamf_view_is_closed(view))
+
+  if (bamf_view_is_closed(view) || !bamf_view_user_visible(view))
     this->Remove();
 
-  if (desktop_file && strlen(desktop_file) > 0)
+  if (desktop_file && desktop_file[0] != '\0')
     FavoriteStore::GetDefault().RemoveFavorite(desktop_file);
 }
 

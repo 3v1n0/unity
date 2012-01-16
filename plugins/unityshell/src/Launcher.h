@@ -199,11 +199,19 @@ public:
   sigc::signal<void> selection_change;
   sigc::signal<void> hidden_changed;
 
-
   // Key navigation
   virtual bool InspectKeyEvent(unsigned int eventType,
                                unsigned int keysym,
                                const char* character);
+
+  void SelectPreviousIcon();
+  void SelectNextIcon();
+
+  void KeySwitcherActivate();
+  void KeySwitcherTerminate();
+  bool KeySwitcherIsActive();
+  void KeySwitcherNext();
+  void KeySwitcherPrevious();
 
 protected:
   // Introspectable methods
@@ -403,6 +411,7 @@ private:
 
   bool          _shortcuts_shown;
   bool          _keynav_activated;
+  bool          _key_switcher_activated;
   guint64       _latest_shortcut;
 
   BacklightMode _backlight_mode;

@@ -83,7 +83,7 @@ void TestRunner::Init ()
 
   layout->AddView (preview_view, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
-  nux::GetGraphicsThread()->SetLayout (layout);
+  nux::GetWindowThread()->SetLayout (layout);
 }
 
 void TestRunner::InitWindowThread(nux::NThread* thread, void* InitData)

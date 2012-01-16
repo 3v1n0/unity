@@ -125,8 +125,7 @@ public:
                    double   y,
                    double   cornerRadius,
                    double   width,
-                   double   height,
-                   bool     align);
+                   double   height);
 
   nux::Color const& GetTextColor() const;
 

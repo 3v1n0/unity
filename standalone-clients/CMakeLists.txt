@@ -456,8 +456,32 @@ add_executable (bg-hash
                )
 add_dependencies (bg-hash unity-core-${UNITY_API_VERSION})
 
-find_package (OpenGL)
+add_executable (test-shortcut
+                TestShortcut.cpp
+                ${UNITY_SRC}/AbstractSeparator.cpp
+                ${UNITY_SRC}/AbstractSeparator.h
+                ${UNITY_SRC}/AbstractShortcutHint.h
+                ${UNITY_SRC}/Animator.cpp
+                ${UNITY_SRC}/Animator.h
+                ${UNITY_SRC}/BackgroundEffectHelper.cpp
+                ${UNITY_SRC}/BackgroundEffectHelper.h
+                ${UNITY_SRC}/LineSeparator.cpp
+                ${UNITY_SRC}/LineSeparator.h
+                ${UNITY_SRC}/MockShortcutHint.h
+                ${UNITY_SRC}/ShortcutController.cpp
+                ${UNITY_SRC}/ShortcutController.h
+                ${UNITY_SRC}/ShortcutModel.cpp
+                ${UNITY_SRC}/ShortcutModel.h
+                ${UNITY_SRC}/ShortcutView.cpp
+                ${UNITY_SRC}/ShortcutView.h
+                ${UNITY_SRC}/StaticCairoText.cpp
+                ${UNITY_SRC}/StaticCairoText.h
+                ${UNITY_SRC}/UBusMessages.h
+                ${UNITY_SRC}/ubus-server.cpp
+                ${UNITY_SRC}/ubus-server.h
+                )            
 
+find_package (OpenGL)
 include_directories (${OPENGL_gl_INCDIRS})
 add_library (glfuncloader SHARED
 	     ${CMAKE_CURRENT_SOURCE_DIR}/GLFuncLoader.cpp)
@@ -471,9 +495,8 @@ add_executable (screen-effect-fbo
 target_link_libraries (screen-effect-fbo glfuncloader ${OPENGL_gl_LIBRARY})
 add_dependencies (screen-effect-fbo ${UNITY_API_VERSION})
 
-
 # Custom target to make all the other targets here, add your test to this list
-add_custom_target(standalone-clients DEPENDS dash panel launcher switcher keyutil quicklist quicklist-visuals filters filter-bar preview-applicaiton preview-generic preview-music result-view dash-style bg-hash)
+add_custom_target(standalone-clients DEPENDS dash panel launcher switcher keyutil quicklist quicklist-visuals filters filter-bar preview-applicaiton preview-generic preview-music result-view dash-style bg-hash shortcut-view)
 
 
 

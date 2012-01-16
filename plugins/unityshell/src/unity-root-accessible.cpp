@@ -352,8 +352,8 @@ search_for_launcher_window(UnityRootAccessible* self)
 }
 
 static void
-ubus_launcher_start_key_nav_cb(GVariant* variant,
-                               UnityRootAccessible* self)
+ubus_launcher_register_interest_cb(GVariant* variant,
+                                   UnityRootAccessible* self)
 {
   //launcher window is the same during all the life of Unity
   if (self->priv->launcher_window == NULL)
@@ -392,7 +392,12 @@ register_interesting_messages(UnityRootAccessible* self)
   static unity::UBusManager ubus_manager;
 
   ubus_manager.RegisterInterest(UBUS_LAUNCHER_START_KEY_NAV,
-                                sigc::bind(sigc::ptr_fun(ubus_launcher_start_key_nav_cb), self));
+                                sigc::bind(sigc::ptr_fun(ubus_launcher_register_interest_cb),
+                                self));
+
+  ubus_manager.RegisterInterest(UBUS_LAUNCHER_START_KEY_SWTICHER,
+                                sigc::bind(sigc::ptr_fun(ubus_launcher_register_interest_cb),
+                                self));
 
   nux::GetWindowCompositor().sigVisibleViewWindow.
   connect(sigc::bind(sigc::ptr_fun(wc_change_visibility_window_cb), self, TRUE));
