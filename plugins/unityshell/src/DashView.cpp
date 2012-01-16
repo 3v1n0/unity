@@ -186,7 +186,7 @@ void DashView::Relayout()
 }
 
 // Gives us the width and height of the contents that will give us the best "fit",
-// which means that the icons/views will not have uneccessary padding, everything will
+// which means that the icons/views will not have unnecessary padding, everything will
 // look tight
 nux::Geometry DashView::GetBestFitGeometry(nux::Geometry const& for_geo)
 {
