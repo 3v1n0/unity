@@ -55,6 +55,10 @@ DashView::DashView()
   , visible_(false)
 {
   renderer_.SetOwner(this);
+  renderer_.need_redraw.connect([this] () { 
+    QueueDraw();
+  });
+  
   SetupViews();
   SetupUBusConnections();
 
@@ -77,11 +81,13 @@ void DashView::AboutToShow()
   ubus_manager_.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
   visible_ = true;
   search_bar_->text_entry()->SelectAll();
+  renderer_.AboutToShow();
 }
 
 void DashView::AboutToHide()
 {
   visible_ = false;
+  renderer_.AboutToHide();
 }
 
 void DashView::SetupViews()
@@ -490,6 +496,7 @@ bool DashView::LaunchApp(std::string const& appname)
 
 void DashView::DisableBlur()
 {
+  renderer_.DisableBlur();
 }
 void DashView::OnEntryActivated()
 {
