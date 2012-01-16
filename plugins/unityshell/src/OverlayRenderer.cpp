@@ -75,11 +75,13 @@ OverlayRendererImpl::OverlayRendererImpl(OverlayRenderer *parent_)
   , parent(parent_)
 {
   bg_effect_helper_.enabled = false;
+  Init();
 }
 
 OverlayRendererImpl::~OverlayRendererImpl()
 {
-
+  delete bg_layer_;
+  delete bg_darken_layer_;
 }
 
 void OverlayRendererImpl::Init()
