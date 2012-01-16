@@ -133,7 +133,7 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
 
   layout->SetContentDistribution(nux::eStackCenter);
   layout->SetHorizontalExternalMargin (10);
-  nux::GetGraphicsThread()->SetLayout(layout);
+  nux::GetWindowThread()->SetLayout(layout);
 
   std::vector<AbstractLauncherIcon*> icons;
   for (int i = 0; i < 9; i++)
