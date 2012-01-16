@@ -44,7 +44,7 @@ namespace unity
 namespace launcher
 {
 
-SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(Launcher* IconManager, BamfApplication* app, char* aptdaemon_trans_id)
+SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(Launcher* IconManager, BamfApplication* app, char* aptdaemon_trans_id, char* icon_path)
 : BamfLauncherIcon(IconManager, app)
 {
     _aptdaemon_trans_id = aptdaemon_trans_id; 
@@ -59,6 +59,8 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(Launcher* IconManager, Ba
 
     _aptdaemon_trans->Connect("Finished", sigc::mem_fun(*this, &SoftwareCenterLauncherIcon::OnFinished));
     _aptdaemon_trans->Connect("PropertyChanged", sigc::mem_fun(*this, &SoftwareCenterLauncherIcon::OnPropertyChanged));
+
+    icon_name = icon_path;
 }
 
 SoftwareCenterLauncherIcon::~SoftwareCenterLauncherIcon() {
@@ -71,9 +73,6 @@ SoftwareCenterLauncherIcon::OnFinished(GVariant* params) {
    tooltip_text = BamfName();
 
    SetQuirk(LauncherIcon::QUIRK_PROGRESS, FALSE); 
-
-   g_free(_aptdaemon_trans);
-   g_free(_aptdaemon_trans_id);
 }
 
 void

@@ -40,7 +40,7 @@ class SoftwareCenterLauncherIcon : public BamfLauncherIcon
 {
 public:
 
-    SoftwareCenterLauncherIcon(Launcher* IconManager, BamfApplication* app, char* aptdaemon_trans_id);
+    SoftwareCenterLauncherIcon(Launcher* IconManager, BamfApplication* app, char* aptdaemon_trans_id, char* icon_path);
     virtual ~SoftwareCenterLauncherIcon();
 
     gchar* original_tooltip_text;

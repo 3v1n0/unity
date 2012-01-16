@@ -195,7 +195,7 @@ public:
   void EnableCheckWindowOverLauncher(gboolean enabled);
 
   sigc::signal<void, char*, LauncherIcon*> launcher_addrequest;
-  sigc::signal<void, char*, LauncherIcon*, char*> launcher_addrequest_special;
+  sigc::signal<void, char*, LauncherIcon*, char*, char*> launcher_addrequest_special;
   sigc::signal<void, LauncherIcon*> launcher_removerequest;
   sigc::signal<void> selection_change;
   sigc::signal<void> hidden_changed;
