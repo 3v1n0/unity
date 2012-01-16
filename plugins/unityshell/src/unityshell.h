@@ -39,6 +39,8 @@
 #include "DashSettings.h"
 #include "DashStyle.h"
 #include "FontSettings.h"
+#include "ShortcutController.h"
+#include "ShortcutHint.h"
 #include "LauncherController.h"
 #include "PanelController.h"
 #include "PanelStyle.h"
@@ -194,6 +196,9 @@ public:
 
   /* handle hud key activations */
   bool ShowHudInitiate (CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool launcherSwitcherForwardInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool launcherSwitcherPrevInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool launcherSwitcherTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options);
 
   /* handle option changes and change settings inside of the
    * panel and dock views */
@@ -247,6 +252,8 @@ private:
   static void OnQuicklistEndKeyNav(GVariant* data, void* value);
   static void OnLauncherStartKeyNav(GVariant* data, void* value);
   static void OnLauncherEndKeyNav(GVariant* data, void* value);
+  
+  void InitHints();
 
   dash::Settings dash_settings_;
   dash::Style    dash_style_;
@@ -258,6 +265,10 @@ private:
   panel::Controller::Ptr    panel_controller_;
   switcher::Controller::Ptr switcher_controller_;
   hud::Controller::Ptr      hud_controller_;
+
+  shortcut::Controller::Ptr shortcut_controller_;
+  std::list<shortcut::AbstractHint*> hints_;
+  bool enable_shortcut_overlay_;
 
   GestureEngine*                        gestureEngine;
   nux::WindowThread*                    wt;
@@ -272,7 +283,7 @@ private:
   guint32                               _redraw_handle;
   gint                                  _edge_pointerY;
   guint                                 _ubus_handles[3];
-
+  
   typedef std::shared_ptr<CompAction> CompActionPtr;
   typedef std::vector<CompActionPtr> ShortcutActions;
   ShortcutActions _shortcut_actions;

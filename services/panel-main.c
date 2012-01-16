@@ -253,6 +253,7 @@ on_service_entry_activate_request (PanelService    *service,
                                    GDBusConnection *connection)
 {
   GError *error = NULL;
+  g_warning ("%s, entry_id:%s", G_STRFUNC, entry_id);
   g_dbus_connection_emit_signal (connection,
                                  S_NAME,
                                  S_PATH,
