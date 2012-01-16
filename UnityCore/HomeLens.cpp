@@ -489,6 +489,8 @@ HomeLens::Impl::~Impl()
 
 // FIXME i18n _("Home") description, searchhint
 // FIXME should use home icon
+// FIXME Filter feedback to the lenses
+// Activation
 
 void HomeLens::Impl::OnLensAdded (Lens::Ptr& lens)
 {
@@ -505,6 +507,9 @@ void HomeLens::Impl::OnLensAdded (Lens::Ptr& lens)
    *            data slot. We need it later to compute the transfermed offsets
    *            of the categories in the merged category model.
    */
+
+  // FIXME: Set "unity-homelens-results-model" on cats model when we
+  //        have it early
 
   /* Most lenses add models lazily, but we can't know that;
    * so try to see if we can add them up front */
