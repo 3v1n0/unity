@@ -372,7 +372,7 @@ PanelView::UpdateBackground()
   
   guint32 maximized_win = _menu_view->GetMaximizedWindow();
 
-  if (_dash_is_open && maximized_win == 0)
+  if (_dash_is_open)
   {
     if (_bg_layer)
       delete _bg_layer;
