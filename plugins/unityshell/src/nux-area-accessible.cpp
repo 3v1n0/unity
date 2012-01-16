@@ -83,6 +83,7 @@ static void         nux_area_accessible_focus_handler(AtkObject* accessible,
                                                       gboolean focus_in);
 /* private */
 static void          on_focus_changed_cb(nux::Area* area,
+                                         nux::KeyNavDirection direction,
                                          AtkObject* accessible);
 static void          on_parent_window_activate_cb(AtkObject* parent_window,
                                                   NuxAreaAccessible* self);
@@ -457,6 +458,7 @@ nux_area_accessible_parent_window_active(NuxAreaAccessible* self)
 
 static void
 on_focus_changed_cb(nux::Area* area,
+                    nux::KeyNavDirection direction,
                     AtkObject* accessible)
 {
   check_focus(NUX_AREA_ACCESSIBLE(accessible));

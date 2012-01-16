@@ -141,7 +141,7 @@ PlacesGroup::OnLabelActivated(nux::Area* label)
 }
 
 void
-PlacesGroup::OnLabelFocusChanged(nux::Area* label)
+PlacesGroup::OnLabelFocusChanged(nux::Area* label, nux::KeyNavDirection direction)
 {
   if (_expand_label->HasKeyFocus() || _expand_icon->HasKeyFocus())
   {

@@ -62,7 +62,7 @@ private:
   nux::ObjectPtr<nux::BaseTexture> _hilight_background;
   nux::TextureLayer* _hilight_layer;
 
-  void OnFocusChanged(nux::Area* label);
+  void OnFocusChanged(nux::Area* label, nux::KeyNavDirection direction);
   void OnFocusActivated(nux::Area* label);
   int _last_width;
   int _last_height;

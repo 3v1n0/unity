@@ -68,7 +68,7 @@ PlacesTile::GetId()
 }
 
 void
-PlacesTile::OnFocusChanged(nux::Area* label)
+PlacesTile::OnFocusChanged(nux::Area* label, nux::KeyNavDirection direction)
 {
   QueueDraw();
 }

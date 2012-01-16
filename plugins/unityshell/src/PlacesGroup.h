@@ -82,7 +82,7 @@ private:
   void RecvMouseEnter(int x, int y, unsigned long button_flags, unsigned long key_flags);
   void RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned long key_flags);
   void OnLabelActivated(nux::Area* label);
-  void OnLabelFocusChanged(nux::Area* label);
+  void OnLabelFocusChanged(nux::Area* label, nux::KeyNavDirection direction);
   void RefreshLabel();
 
 private:
