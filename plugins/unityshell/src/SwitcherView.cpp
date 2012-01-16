@@ -210,7 +210,7 @@ RenderArg SwitcherView::CreateBaseArgForIcon(AbstractLauncherIcon* icon)
   // tells the renderer to render arrows by number
   arg.running_on_viewport = true;
 
-  arg.window_indicators = icon->RelatedWindows();
+  arg.window_indicators = icon->Windows().size();
   if (arg.window_indicators > 1)
     arg.running_arrow = true;
   else

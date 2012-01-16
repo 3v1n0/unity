@@ -55,7 +55,8 @@ public:
   virtual bool ShowInSwitcher();
   virtual unsigned long long SwitcherPriority();
 
-  std::vector<Window> RelatedXids ();
+  std::vector<Window> Windows ();
+  std::vector<Window> WindowsForMonitor(int monitor);
 
   std::string NameForWindow (Window window);
 

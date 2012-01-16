@@ -81,7 +81,6 @@ LauncherIcon::LauncherIcon()
   , _present_time_handle(0)
   , _time_delay_handle(0)
   , _tooltip_delay_handle(0)
-  , _related_windows(0)
   , _sort_priority(0)
   , _background_color(nux::color::White)
   , _glow_color(nux::color::White)
@@ -190,7 +189,7 @@ LauncherIcon::AddProperties(GVariantBuilder* builder)
   .add("x", _center[0].x)
   .add("y", _center[0].y)
   .add("z", _center[0].z)
-  .add("related-windows", _related_windows)
+  .add("related-windows", (int)Windows().size())
   .add("icon-type", _icon_type)
   .add("tooltip-text", tooltip_text().c_str())
   .add("sort-priority", _sort_priority)
@@ -872,12 +871,6 @@ struct timespec
 LauncherIcon::GetQuirkTime(LauncherIcon::Quirk quirk)
 {
   return _quirk_times[quirk];
-}
-
-int
-LauncherIcon::RelatedWindows()
-{
-  return _related_windows;
 }
 
 void

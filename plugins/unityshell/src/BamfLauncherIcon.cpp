@@ -275,7 +275,7 @@ BamfLauncherIcon::~BamfLauncherIcon()
   g_free(_cached_name);
 }
 
-std::vector<Window> BamfLauncherIcon::RelatedXids ()
+std::vector<Window> BamfLauncherIcon::Windows ()
 {
   std::vector<Window> results;
   GList* children, *l;
@@ -287,6 +287,30 @@ std::vector<Window> BamfLauncherIcon::RelatedXids ()
   {
     view = static_cast <BamfView*> (l->data);
     if (BAMF_IS_WINDOW(view))
+    {
+      guint32 xid = bamf_window_get_xid(BAMF_WINDOW(view));
+
+      if (wm->IsWindowMapped(xid))
+        results.push_back ((Window) xid);
+    }
+  }
+
+  g_list_free(children);
+  return results;
+}
+
+std::vector<Window> BamfLauncherIcon::WindowsForMonitor (int monitor)
+{
+  std::vector<Window> results;
+  GList* children, *l;
+  BamfView* view;
+  WindowManager *wm = WindowManager::Default ();
+
+  children = bamf_view_get_children(BAMF_VIEW(m_App));
+  for (l = children; l; l = l->next)
+  {
+    view = static_cast <BamfView*> (l->data);
+    if (BAMF_IS_WINDOW(view) && bamf_window_get_monitor(BAMF_WINDOW(view)) == monitor)
     {
       guint32 xid = bamf_window_get_xid(BAMF_WINDOW(view));
 
@@ -334,32 +358,7 @@ void BamfLauncherIcon::OnWindowMinimized(guint32 xid)
 gboolean BamfLauncherIcon::OnWindowMovedTimeout(gpointer data)
 {
   BamfLauncherIcon *self = static_cast <BamfLauncherIcon *> (data);
-  GList *children = bamf_view_get_children(BAMF_VIEW(self->m_App));
-
-  std::vector<bool> monitors;
-  monitors.resize(max_num_monitors);
-
-  for (GList *l = children; l; l = l->next)
-  {
-    BamfView *view = BAMF_VIEW(l->data);
-
-    if (BAMF_IS_WINDOW(view))
-    {
-      Window xid = bamf_window_get_xid(BAMF_WINDOW(view));
-      
-      int monitor = bamf_window_get_monitor(BAMF_WINDOW(view));
-      if (WindowManager::Default()->IsWindowOnCurrentDesktop(xid) && monitor >= 0)
-        monitors[monitor] = true;
-    }
-  }
-
-  for (int i = 0; i < max_num_monitors; i++)
-  {
-    self->SetHasWindowOnViewport(monitors[i], i);
-  }
-
-  self->_window_moved_id = 0;
-  g_list_free(children);
+  self->EnsureWindowState();
 
   return FALSE;
 }
@@ -688,7 +687,6 @@ void BamfLauncherIcon::OnUrgentChanged(BamfView* view, gboolean urgent, gpointer
 void BamfLauncherIcon::EnsureWindowState()
 {
   GList* children, *l;
-  int count = 0;
 
   std::vector<bool> monitors;
   monitors.resize(max_num_monitors);
@@ -703,11 +701,7 @@ void BamfLauncherIcon::EnsureWindowState()
     int monitor = bamf_window_get_monitor(BAMF_WINDOW(l->data));
     if (WindowManager::Default()->IsWindowOnCurrentDesktop(xid) && monitor >= 0)
       monitors[monitor] = true;
-
-    count++;
   }
-
-  SetRelatedWindows(count);
 
   for (int i = 0; i < max_num_monitors; i++)
     SetHasWindowOnViewport(monitors[i], i);

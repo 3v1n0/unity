@@ -1080,7 +1080,7 @@ void Launcher::SetupRenderArg(LauncherIcon* icon, struct timespec const& current
   }
   else
   {
-    arg.window_indicators = icon->RelatedWindows();
+    arg.window_indicators = std::max<int> (icon->WindowsForMonitor(monitor).size(), 1);
   }
 
   arg.backlight_intensity = IconBackgroundIntensity(icon, current);

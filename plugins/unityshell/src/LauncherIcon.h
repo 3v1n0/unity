@@ -100,9 +100,9 @@ public:
 
   int SortPriority();
 
-  int RelatedWindows();
+  virtual std::vector<Window> Windows () { return std::vector<Window> (); }
 
-  virtual std::vector<Window> RelatedXids () { return std::vector<Window> (); }
+  virtual std::vector<Window> WindowsForMonitor (int monitor) { return std::vector<Window> (); }
 
   virtual std::string NameForWindow (Window window) { return std::string(); }
 
@@ -206,8 +206,6 @@ protected:
   void UpdateQuirkTime(Quirk quirk);
 
   void ResetQuirkTime(Quirk quirk);
-
-  void SetRelatedWindows(int windows);
 
   void Remove();
 
@@ -314,7 +312,6 @@ private:
   guint             _present_time_handle;
   guint             _time_delay_handle;
   guint             _tooltip_delay_handle;
-  int               _related_windows;
   int               _sort_priority;
   int               _last_monitor;
   nux::Color        _background_color;

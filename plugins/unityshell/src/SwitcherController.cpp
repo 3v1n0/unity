@@ -259,7 +259,7 @@ void Controller::Next()
     switch (detail_mode_)
     {
       case TAB_NEXT_WINDOW:
-        if (model_->detail_selection_index < model_->Selection()->RelatedXids ().size () - 1)
+        if (model_->detail_selection_index < model_->Selection()->Windows().size () - 1)
           model_->NextDetail();
         else
           model_->Next();
@@ -314,7 +314,7 @@ SwitcherView* Controller::GetView()
 
 void Controller::SetDetail(bool value, unsigned int min_windows)
 {
-  if (value && model_->Selection()->RelatedXids().size () >= min_windows)
+  if (value && model_->Selection()->Windows().size () >= min_windows)
   {
     model_->detail_selection = true;
     detail_mode_ = TAB_NEXT_WINDOW_LOOP;
@@ -399,7 +399,7 @@ void Controller::SelectFirstItem()
   unsigned int first_second = 0; // first icons second highest active
   unsigned int second_first = 0; // second icons first highest active
 
-  for (guint32 xid : first->RelatedXids())
+  for (guint32 xid : first->Windows())
   {
     unsigned int num = WindowManager::Default()->GetWindowActiveNumber(xid);
 
@@ -414,7 +414,7 @@ void Controller::SelectFirstItem()
     }
   }
 
-  for (guint32 xid : second->RelatedXids())
+  for (guint32 xid : second->Windows())
   {
     second_first = MAX (WindowManager::Default()->GetWindowActiveNumber(xid), second_first);
   }

@@ -143,9 +143,9 @@ public:
 
   virtual int SortPriority() = 0;
 
-  virtual int RelatedWindows() = 0;
+  virtual std::vector<Window> Windows() = 0;
 
-  virtual std::vector<Window> RelatedXids () = 0;
+  virtual std::vector<Window> WindowsForMonitor(int monitor) = 0;
 
   virtual std::string NameForWindow (Window window) = 0;
 
