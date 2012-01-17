@@ -10,7 +10,7 @@ int main(int argc, char** argv)
 {
   ::testing::InitGoogleTest(&argc, argv);
   g_type_init();
-  g_thread_init(NULL);
+  
   nux::NuxInitialize (0);
 
   // We need the service to be ready before we are

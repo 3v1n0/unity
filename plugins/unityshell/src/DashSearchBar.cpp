@@ -41,7 +41,8 @@
 #include "CairoTexture.h"
 #include "DashStyle.h"
 
-#define LIVE_SEARCH_TIMEOUT 250
+#define LIVE_SEARCH_TIMEOUT 40
+#define SPINNER_TIMEOUT 100
 
 namespace unity
 {
@@ -57,6 +58,7 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
   , can_refine_search(false)
   , search_bar_width_(642)
   , live_search_timeout_(0)
+  , start_spinner_timeout_(0)
 {
   nux::BaseTexture* icon = dash::Style::Instance().GetSearchMagnifyIcon();
 
@@ -130,6 +132,9 @@ SearchBar::~SearchBar()
 
   if (live_search_timeout_)
     g_source_remove(live_search_timeout_);
+
+  if (start_spinner_timeout_)
+    g_source_remove(start_spinner_timeout_);
 }
 
 void SearchBar::OnFontChanged(GtkSettings* settings, GParamSpec* pspec)
@@ -187,10 +192,17 @@ void SearchBar::OnSearchChanged(nux::TextEntry* text_entry)
                                        (GSourceFunc)&OnLiveSearchTimeout,
                                        this);
 
+  // Don't animate the spinner immediately, the searches are fast and
+  // the spinner would just flicker
+  if (start_spinner_timeout_)
+    g_source_remove(start_spinner_timeout_);
+
+  start_spinner_timeout_ = g_timeout_add(SPINNER_TIMEOUT,
+                                         (GSourceFunc)&OnSpinnerStartCb,
+                                         this);
  
   bool is_empty = pango_entry_->im_active() ? false : pango_entry_->GetText() == ""; 
   hint_->SetVisible(is_empty);
-  spinner_->SetState(is_empty ? STATE_READY : STATE_SEARCHING);
 
   pango_entry_->QueueDraw();
   hint_->QueueDraw();
@@ -203,6 +215,15 @@ gboolean SearchBar::OnLiveSearchTimeout(SearchBar* sef)
 {
   sef->live_search_reached.emit(sef->pango_entry_->GetText());
   sef->live_search_timeout_ = 0;
+
+  return FALSE;
+}
+
+gboolean SearchBar::OnSpinnerStartCb(SearchBar* sef)
+{
+  sef->spinner_->SetState(STATE_SEARCHING);
+  sef->start_spinner_timeout_ = 0;
+
   return FALSE;
 }
 
@@ -266,7 +287,11 @@ void SearchBar::OnClearClicked(int x, int y, unsigned long button_fags,
                                      unsigned long key_fags)
 {
   pango_entry_->SetText("");
-  spinner_->SetState(STATE_READY);
+  if (start_spinner_timeout_)
+  {
+    g_source_remove(start_spinner_timeout_);
+    start_spinner_timeout_ = 0;
+  }
   live_search_reached.emit("");
 }
 
@@ -278,7 +303,15 @@ void SearchBar::OnEntryActivated()
 void
 SearchBar::SearchFinished()
 {
-  spinner_->SetState(STATE_CLEAR);
+  if (start_spinner_timeout_)
+  {
+    g_source_remove(start_spinner_timeout_);
+    start_spinner_timeout_ = 0;
+  }
+
+  bool is_empty = pango_entry_->im_active() ?
+    false : pango_entry_->GetText() == ""; 
+  spinner_->SetState(is_empty ? STATE_READY : STATE_CLEAR);
 }
 
 void SearchBar::UpdateBackground()
@@ -319,13 +352,12 @@ void SearchBar::UpdateBackground()
   cairo_operator_t op = CAIRO_OPERATOR_OVER;
   op = cairo_get_operator (cr);
   cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
-  cairo_set_source_rgba(cr, 0.0f, 0.0f, 0.0f, 0.5f);
+  cairo_set_source_rgba(cr, 0.0f, 0.0f, 0.0f, 0.35f);
   cairo_fill_preserve(cr);
   cairo_set_operator (cr, op);
-  cairo_set_source_rgba(cr, 0.0f, 0.0f, 0.0f, 0.5f);
+  cairo_set_source_rgba(cr, 0.0f, 0.0f, 0.0f, 0.35f);
   cairo_fill_preserve(cr);
   cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 0.8f);
-  //cairo_set_line_width(cr, 1.0);
   cairo_stroke(cr);
 
   cairo_destroy(cr);
@@ -375,6 +407,14 @@ bool SearchBar::set_search_string(std::string const& string)
 {
   pango_entry_->SetText(string.c_str());
   spinner_->SetState(string == "" ? STATE_READY : STATE_CLEAR);
+
+  // we don't want the spinner animating in this case
+  if (start_spinner_timeout_)
+  {
+    g_source_remove(start_spinner_timeout_);
+    start_spinner_timeout_ = 0;
+  }
+
   return true;
 }
 

@@ -120,6 +120,9 @@ void Controller::Show(ShowMode show, SortMode sort, bool reverse,
   ubus_server_send_message(ubus_server_get_default(),
                            UBUS_PLACE_VIEW_CLOSE_REQUEST,
                            NULL);
+
+  ubus_server_send_message(ubus_server_get_default(),
+                           UBUS_SWITCHER_SHOWN, g_variant_new_boolean(true));
 }
 
 void Controller::Select(int index)
@@ -162,6 +165,10 @@ void Controller::OnModelSelectionChanged(AbstractLauncherIcon *icon)
 
     detail_timer_ = g_timeout_add(detail_timeout_length, &Controller::OnDetailTimer, this);
   }
+
+  ubus_server_send_message(ubus_server_get_default(),
+                           UBUS_SWITCHER_SELECTION_CHANGED,
+                           g_variant_new_string(icon->tooltip_text().c_str()));
 }
 
 void Controller::ConstructView()
@@ -240,6 +247,9 @@ void Controller::Hide(bool accept_state)
   if (detail_timer_)
     g_source_remove(detail_timer_);
   detail_timer_ = 0;
+
+  ubus_server_send_message(ubus_server_get_default(),
+                           UBUS_SWITCHER_SHOWN, g_variant_new_boolean(false));
 
   view_.Release();
 }
