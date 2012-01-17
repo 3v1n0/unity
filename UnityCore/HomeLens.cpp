@@ -27,6 +27,8 @@
 #include "Lens.h"
 #include "Model.h"
 
+#include "config.h"
+
 namespace unity
 {
 namespace dash
@@ -115,7 +117,9 @@ private:
   std::map<std::string,unsigned int> reg_by_display_name_;
 };
 
-/* Helper class that merges a set of DeeModels into one super model */
+/*
+ * Helper class that merges a set of DeeModels into one super model
+ */
 class HomeLens::ModelMerger : public sigc::trackable
 {
 public:
@@ -129,6 +133,9 @@ protected:
   virtual void OnSourceRowRemoved(DeeModel* model, DeeModelIter* iter);
   virtual void OnSourceRowChanged(DeeModel* model, DeeModelIter* iter);
   void EnsureRowBuf(DeeModel *source);
+
+  /* The merge tag lives on the source models, pointing to the mapped
+   * row in the target model */
   DeeModelTag* FindMergerTag(DeeModel *model);
   DeeModelTag* RegisterMergerTag(DeeModel *model);
 
@@ -148,6 +155,9 @@ protected:
  *
  * This class converts the offset of the source lens' categories into
  * offsets into the merged category model.
+ *
+ * Each row added to the target is tagged with a pointer to the Lens instance
+ * from which it came
  */
 class HomeLens::ResultsMerger : public ModelMerger
 {
@@ -184,6 +194,9 @@ private:
   HomeLens::CategoryRegistry* cat_registry_;
 };
 
+/*
+ * Pimpl for HomeLens
+ */
 class HomeLens::Impl : public sigc::trackable
 {
 public:
@@ -191,6 +204,8 @@ public:
   ~Impl();
 
   void OnLensAdded(Lens::Ptr& lens);
+  void EnsureCategoryAnnotation (DeeModel* results, DeeModel* categories);
+  Lens::Ptr FindLensForUri(std::string const& uri);
 
   HomeLens* owner_;
   Lenses::LensList lenses_;
@@ -199,6 +214,10 @@ public:
   HomeLens::CategoryMerger categories_merger_;
   HomeLens::ModelMerger filters_merger_;
 };
+
+/*
+ * IMPLEMENTATION
+ */
 
 HomeLens::ModelMerger::ModelMerger(glib::Object<DeeModel> target)
   : n_cols_(0)
@@ -258,7 +277,8 @@ void HomeLens::ModelMerger::OnSourceRowAdded(DeeModel *model, DeeModelIter *iter
   dee_model_get_row (model, iter, row_buf_);
   target_tag = FindMergerTag(model);
 
-  /* NOTE: This is a silly merge strategy. Consider some clever sorting? */
+  /* NOTE: This is a silly merge strategy (always appending).
+   * Consider some clever sorting? */
   target_iter = dee_model_append_row (target_, row_buf_);
   dee_model_set_tag (model, iter, target_tag, target_iter);
 
@@ -287,11 +307,11 @@ void HomeLens::ResultsMerger::OnSourceRowAdded(DeeModel *model, DeeModelIter *it
     row_buf_[CATEGORY_COLUMN] = g_variant_new_uint32(target_cat_offset);
 
     /* Sink the ref on the new row member. By Dee API contract they must all
-     * be strong refs */
+     * be strong refs, not floating */
     g_variant_ref_sink(row_buf_[CATEGORY_COLUMN]);
 
     target_iter = dee_model_append_row (target_, row_buf_);
-    dee_model_set_tag (model, iter, target_tag, target_iter);
+    dee_model_set_tag(model, iter, target_tag, target_iter);
   }
   else
   {
@@ -487,10 +507,43 @@ HomeLens::Impl::~Impl()
 
 }
 
+void HomeLens::Impl::EnsureCategoryAnnotation (DeeModel* results,
+                                                     DeeModel* categories)
+{
+  if (categories && results)
+        g_object_set_data(G_OBJECT(categories),
+                            "unity-homelens-results-model",
+                            results);
+}
+
+Lens::Ptr HomeLens::Impl::FindLensForUri(std::string const& uri)
+{
+  /* We iterate over all lenses looking for the given uri in their
+   * global results. This might seem like a sucky approach, but it
+   * saves us from a ship load of book keeping */
+
+  for (auto lens : lenses_)
+  {
+    DeeModel* results = lens->global_results()->model();
+    DeeModelIter* iter = dee_model_get_first_iter(results);
+    DeeModelIter* end = dee_model_get_last_iter(results);
+    const int URI_COLUMN = 0;
+
+    while (iter != end)
+      {
+        if (g_strcmp0(uri.c_str(), dee_model_get_string(results, iter, URI_COLUMN)) == 0)
+        {
+          return lens;
+        }
+        iter = dee_model_next(results, iter);
+      }
+  }
+
+  return Lens::Ptr();
+}
+
 // FIXME i18n _("Home") description, searchhint
-// FIXME should use home icon
 // FIXME Filter feedback to the lenses
-// Activation
 
 void HomeLens::Impl::OnLensAdded (Lens::Ptr& lens)
 {
@@ -508,16 +561,19 @@ void HomeLens::Impl::OnLensAdded (Lens::Ptr& lens)
    *            of the categories in the merged category model.
    */
 
-  // FIXME: Set "unity-homelens-results-model" on cats model when we
-  //        have it early
-
   /* Most lenses add models lazily, but we can't know that;
    * so try to see if we can add them up front */
   if (results_prop().RawPtr())
+  {
+    EnsureCategoryAnnotation(categories_prop(), results_prop());
     results_merger_.AddSource(results_prop());
+  }
 
   if (categories_prop().RawPtr())
+  {
+    EnsureCategoryAnnotation(categories_prop(), results_prop());
     categories_merger_.AddSource(categories_prop());
+  }
 
   if (filters_prop().RawPtr())
     filters_merger_.AddSource(filters_prop());
@@ -527,25 +583,13 @@ void HomeLens::Impl::OnLensAdded (Lens::Ptr& lens)
    */
   results_prop.changed.connect([&] (glib::Object<DeeModel> model)
   {
-    DeeModel* categories = lens->categories()->model();
-
-    if (categories)
-      g_object_set_data(G_OBJECT(categories),
-                          "unity-homelens-results-model",
-                          model.RawPtr());
-
+    EnsureCategoryAnnotation(lens->categories()->model(), model);
     results_merger_.AddSource(model);
   });
 
   categories_prop.changed.connect([&] (glib::Object<DeeModel> model)
   {
-    DeeModel* results = lens->global_results()->model();
-
-    if (results)
-      g_object_set_data(G_OBJECT(model.RawPtr()),
-                          "unity-homelens-results-model",
-                          results);
-
+    EnsureCategoryAnnotation(model, lens->global_results()->model());
     categories_merger_.AddSource(model);
   });
 
@@ -556,8 +600,8 @@ void HomeLens::Impl::OnLensAdded (Lens::Ptr& lens)
 }
 
 HomeLens::HomeLens()
-  : Lens("home.lens", "", "", "Home", "iconhint",
-         "description", "searchhint", true, "", ModelType::LOCAL)
+  : Lens("home.lens", "", "", "FIXME: name", PKGDATADIR"/lens-nav-home.svg",
+         "FIXME: description", "FIXME: searchhint", true, "", ModelType::LOCAL)
   , pimpl(new Impl(this))
 {
   count.SetGetterFunction(sigc::mem_fun(&pimpl->lenses_, &Lenses::LensList::size));
@@ -635,11 +679,31 @@ void HomeLens::Search(std::string const& search_string)
 void HomeLens::Activate(std::string const& uri)
 {
   LOG_DEBUG(logger) << "Activate '" << uri << "'";
+
+  Lens::Ptr lens = pimpl->FindLensForUri(uri);
+
+  /* Fall back to default handling of URIs if no lens is found.
+   *  - Although, this shouldn't really happen */
+  if (lens)
+    lens->Activate(uri);
+  else
+  {
+    LOG_WARN(logger) << "Unable to find a lens for activating '" << uri
+                     << "'. Using fallback activation.";
+    activated.emit(uri, HandledType::NOT_HANDLED, Hints());
+  }
 }
 
 void HomeLens::Preview(std::string const& uri)
 {
   LOG_DEBUG(logger) << "Preview '" << uri << "'";
+
+  Lens::Ptr lens = pimpl->FindLensForUri(uri);
+
+  if (lens)
+    lens->Preview(uri);
+  else
+    LOG_WARN(logger) << "Unable to find a lens for previewing '" << uri << "'";
 }
 
 }
