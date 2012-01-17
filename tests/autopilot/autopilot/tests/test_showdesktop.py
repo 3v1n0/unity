@@ -14,7 +14,6 @@ from autopilot.emulators.bamf import Bamf
 from autopilot.emulators.X11 import Keyboard
 from autopilot.emulators.unity import Launcher
 from autopilot.glibrunner import GlibRunner
-import wnck
 
 
 class ShowDesktopTests(TestCase):
@@ -53,24 +52,24 @@ class ShowDesktopTests(TestCase):
         kb.press_and_release(['Control_L','Meta_L','d'])
         sleep(1)
         open_wins = bamf.get_open_windows() 
+        self.assertGreaterEqual(len(open_wins), 2)
         for win in open_wins:
-            if win.is_valid:
-                print "Window %s hidden = %r" % (win.title, win.is_hidden)
-                self.assertTrue(win.is_hidden, "Window '%s' is not hidden after show desktop activated." % (win.title))
+            self.assertTrue(win.is_valid)
+            self.assertTrue(win.is_hidden, "Window '%s' is not hidden after show desktop activated." % (win.title))
 
         # hide desktop, verify all windows are shown:
         kb.press_and_release(['Control_L','Meta_L','d'])
         sleep(1)
         for win in bamf.get_open_windows():
-            if win.is_valid:
-                self.assertFalse(win.is_hidden, "Window '%s' is shown after show desktop deactivated." % (win.title))
+            self.assertTrue(win.is_valid)
+            self.assertFalse(win.is_hidden, "Window '%s' is shown after show desktop deactivated." % (win.title))
 
         # show desktop again, verify all windows are hidden.
         kb.press_and_release(['Control_L','Meta_L','d'])
         sleep(1)
         for win in bamf.get_open_windows():
-            if win.is_valid:
-                self.assertTrue(win.is_hidden, "Window '%s' is not hidden after show desktop activated." % (win.title))
+            self.assertTrue(win.is_valid)
+            self.assertTrue(win.is_hidden, "Window '%s' is not hidden after show desktop activated." % (win.title))
 
         # We'll un-minimise the character map - find it's launcherIcon in the launcher:
         l = Launcher()

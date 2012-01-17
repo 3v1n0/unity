@@ -21,11 +21,7 @@ __all__ = ["Bamf",
 
 _BAMF_BUS_NAME = 'org.ayatana.bamf'
 _session_bus = dbus.SessionBus()
-
-#
-# There's a bug in libwnck - you need to access a screen before any of the
-# window methods will work. see lp:914665
-#__default_screen = wnck.screen_get_default()
+_X_DISPLAY = display.Display()
 
 class Bamf:
     """High-level class for interacting with Bamf from within a test.
@@ -188,16 +184,16 @@ class BamfWindow:
         self._window_iface = dbus.Interface(self._app_proxy, 'org.ayatana.bamf.window')
         self._view_iface = dbus.Interface(self._app_proxy, 'org.ayatana.bamf.view')
 
-        self.xid = self._window_iface.GetXid()
-        self.x_display = display.Display()
-        self.x_root_win = self.x_display.screen().root
-        self.x_win = self.x_display.create_resource_object('window', self.xid)
+        self._xid = self._window_iface.GetXid()
+        self._x_display = _X_DISPLAY
+        self._x_root_win = self._x_display.screen().root
+        self._x_win = self._x_display.create_resource_object('window', self._xid)
 
 
     @property
     def x_id(self):
         """Get the X11 Window Id."""
-        return self.xid
+        return self._xid
 
     @property
     def title(self):
@@ -216,7 +212,7 @@ class BamfWindow:
 
         """
         
-        geometry = self.x_win.get_geometry()
+        geometry = self._x_win.get_geometry()
         return (geometry.x, geometry.y, geometry.width, geometry.height)
 
     @property
@@ -271,15 +267,15 @@ class BamfWindow:
         this object instance.
 
         """
-        return not self.x_win is None
+        return not self._x_win is None
 
     def close(self):
         """Close the window."""
 
-        self._setProperty('_NET_CLOSE_WINDOW', [int(time.mktime(time.localtime())), 1], self.x_win)
+        self._setProperty('_NET_CLOSE_WINDOW', [int(time.mktime(time.localtime())), 1], self._x_win)
 
     def __repr__(self):
-        return "<BamfWindow '%s'>" % (self.title if self.x_win else str(self.xid))
+        return "<BamfWindow '%s'>" % (self.title if self._x_win else str(self._xid))
 
     def _getProperty(self, _type):
         """Get an X11 property.
@@ -287,7 +283,7 @@ class BamfWindow:
         _type is a string naming the property type. win is the X11 window object.
 
         """
-        atom = self.x_win.get_full_property(self.x_display.get_atom(_type), X.AnyPropertyType)
+        atom = self._x_win.get_full_property(self._x_display.get_atom(_type), X.AnyPropertyType)
         if atom: return atom.value
 
     def _setProperty(self, _type, data, mask=None):
@@ -297,13 +293,13 @@ class BamfWindow:
             data = (data+[0]*(5-len(data)))[:5]
             dataSize = 32
         
-        ev = protocol.event.ClientMessage(window=self.x_win, client_type=self.display.get_atom(_type), data=(dataSize, data))
+        ev = protocol.event.ClientMessage(window=self._x_win, client_type=self.display.get_atom(_type), data=(dataSize, data))
 
         if not mask:
             mask = (X.SubstructureRedirectMask|X.SubstructureNotifyMask)
-        self.x_root_win.send_event(ev, event_mask=mask)
+        self._x_root_win.send_event(ev, event_mask=mask)
 
     def _get_window_states(self):
         """Return a list of strings representing the current window state."""
 
-        return map(self.x_display.get_atom_name, self._getProperty('_NET_WM_STATE'))
+        return map(self._x_display.get_atom_name, self._getProperty('_NET_WM_STATE'))
