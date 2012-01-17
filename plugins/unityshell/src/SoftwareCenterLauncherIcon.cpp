@@ -83,7 +83,7 @@ SoftwareCenterLauncherIcon::OnPropertyChanged(GVariant* params) {
     GVariant* property_value;
 
     g_variant_get_child (params, 0, "s", &property_name);
-    if (!g_strcmp0 (property_name, "Progress")) {
+    if (g_strcmp0 (property_name, "Progress") == 0) {
         g_variant_get_child (params,1,"v",&property_value);
         g_variant_get (property_value, "i", &progress);
 
