@@ -21,6 +21,70 @@
 
 namespace unity
 {
+namespace glib
+{
+
+Variant::Variant()
+  : variant_(NULL)
+{}
+
+Variant::Variant(GVariant* variant)
+  : variant_(variant)
+{
+  g_variant_ref_sink(variant_);
+}
+
+Variant::Variant(GVariant* variant, StealRef const& ref)
+  : variant_(variant)
+{}
+
+Variant::Variant(Variant const& other)
+  : variant_(other.variant_)
+{
+  if (variant_) g_variant_ref_sink(variant_);
+}
+
+Variant::~Variant()
+{
+  if (variant_) g_variant_unref(variant_);
+}
+
+std::string Variant::GetString() const
+{
+  return g_variant_get_string (variant_, NULL);
+}
+
+int Variant::GetInt() const
+{
+  return static_cast<int>(g_variant_get_int32 (variant_));
+}
+
+unsigned Variant::GetUInt() const
+{
+  return static_cast<unsigned>(g_variant_get_uint32 (variant_));
+}
+
+bool Variant::GetBool() const
+{
+  return (g_variant_get_boolean (variant_) != FALSE);
+}
+
+Variant& Variant::operator=(GVariant* val)
+{
+  if (variant_) g_variant_unref (variant_);
+  variant_ = g_variant_ref_sink (val);
+
+  return *this;
+}
+
+
+Variant::operator GVariant* () const
+{
+  return variant_;
+}
+
+} // namespace glib
+
 namespace variant
 {
 

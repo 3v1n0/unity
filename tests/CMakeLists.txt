@@ -116,6 +116,7 @@ if (GTEST_FOUND AND
                  test_glib_signals.cpp
                  test_glib_signals_utils.cpp
                  test_glib_signals_utils.h
+                 test_glib_variant.cpp
                  ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_marshal.cpp
                  test_favorite_store_gsettings.cpp
                  test_shortcut_model.cpp

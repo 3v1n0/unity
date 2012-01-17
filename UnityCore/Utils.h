@@ -24,6 +24,7 @@
 #include <string>
 
 #include <glib.h>
+#include "Variant.h"
 
 namespace unity
 {
@@ -33,9 +34,7 @@ namespace dash
 class Utils
 {
 public:
-  typedef std::map<std::string, GVariant*> HintsMap;
-
-  static void ASVToHints(HintsMap& hints, GVariantIter *iter)
+  static void ASVToHints(unity::glib::HintsMap& hints, GVariantIter *iter)
   {
     char* key = NULL;
     GVariant* value = NULL;
