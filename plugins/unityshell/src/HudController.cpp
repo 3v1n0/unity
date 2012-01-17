@@ -207,7 +207,6 @@ void Controller::ShowHud()
   window_->CaptureMouseDownAnyWhereElse(true);
   view_->CaptureMouseDownAnyWhereElse(true);
   window_->QueueDraw();
-  //window_->SetOpacity(1.0f);
 
   view_->ResetToDefault();
   hud_service_.RequestQuery("");
@@ -222,16 +221,14 @@ void Controller::ShowHud()
 void Controller::HideHud(bool restore)
 {
   LOG_DEBUG (logger) << "hiding the hud";
-  //~ if (!visible_)
-   //~ return;
+  if (visible_ == false)
+    return;
 
   EnsureHud();
   view_->AboutToHide();
   window_->CaptureMouseDownAnyWhereElse(false);
   window_->EnableInputWindow(false, "Hud", true, false);
   visible_ = false;
-  //window_->SetOpacity(0.0f);
-  //window_->ShowWindow(false);
 
   StartShowHideTimeline();
 
