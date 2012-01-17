@@ -51,7 +51,9 @@ Variant::~Variant()
 
 std::string Variant::GetString() const
 {
-  return g_variant_get_string (variant_, NULL);
+  // g_variant_get_string doesn't duplicate the string
+  const gchar *result = g_variant_get_string (variant, NULL);
+  return result != NULL ? result : "";
 }
 
 int Variant::GetInt() const
@@ -76,7 +78,6 @@ Variant& Variant::operator=(GVariant* val)
 
   return *this;
 }
-
 
 Variant::operator GVariant* () const
 {
