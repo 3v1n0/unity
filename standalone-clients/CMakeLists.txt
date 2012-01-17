@@ -61,6 +61,7 @@ add_executable (dash
                 ${UNITY_SRC}/FilterAllButton.h
                 ${UNITY_SRC}/FilterExpanderLabel.cpp
                 ${UNITY_SRC}/FilterFactory.cpp
+                ${UNITY_SRC}/FilterAllButton.cpp
                 ${UNITY_SRC}/FilterBasicButton.cpp
                 ${UNITY_SRC}/FilterRatingsButton.cpp
                 ${UNITY_SRC}/FilterRatingsWidget.cpp
@@ -101,6 +102,7 @@ add_executable (dash
                 ${UNITY_SRC}/LensBarIcon.h
                 ${UNITY_SRC}/LensView.cpp
                 ${UNITY_SRC}/LensView.h
+                ${UNITY_SRC}/OverlayRenderer.cpp
                 ${UNITY_SRC}/PreviewApplications.cpp
                 ${UNITY_SRC}/PreviewBase.cpp
                 ${UNITY_SRC}/PreviewBasicButton.cpp
