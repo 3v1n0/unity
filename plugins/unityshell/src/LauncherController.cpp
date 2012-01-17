@@ -91,6 +91,8 @@ public:
 
   void OnExpoActivated();
 
+  void OnScreenChanged(int primary_monitor, std::vector<nux::Geometry>& monitors);
+
   /* statics */
 
   static void OnViewOpened(BamfMatcher* matcher, BamfView* view, gpointer data);
@@ -126,21 +128,14 @@ Controller::Impl::Impl(Display* display, Controller* parent)
   , show_desktop_icon_(false)
   , display_(display)
 {
-  // the xserver currently only support triple monitor at best. It
-  // is quicker to just set up for 3 monitors than to resize dynamically
-  launchers.resize(3);
-
   UScreen* uscreen = UScreen::GetDefault();
   auto monitors = uscreen->GetMonitors();
 
-  /*std::vector<nux::Geometry> monitors;
-  monitors.push_back(nux::Geometry (0, 0, 840, 1050));
-  monitors.push_back(nux::Geometry (840, 0, 840, 1050));*/
   int i = 0;
   for (auto monitor : monitors)
   {
     Launcher* launcher = CreateLauncher(i);
-    launchers[i] = launcher;
+    launchers.push_back(nux::ObjectPtr<Launcher> (launcher));
     i++;
   }
 
@@ -174,6 +169,8 @@ Controller::Impl::Impl(Display* display, Controller* parent)
 
   RegisterIcon(new BFBLauncherIcon());
   desktop_icon_ = new DesktopLauncherIcon();
+
+  uscreen->changed.connect(sigc::mem_fun(this, &Controller::Impl::OnScreenChanged));
 }
 
 Controller::Impl::~Impl()
@@ -185,6 +182,19 @@ Controller::Impl::~Impl()
     g_signal_handler_disconnect((gpointer) matcher_, on_view_opened_id_);
 
   delete device_section_;
+}
+
+void Controller::Impl::OnScreenChanged(int primary_monitor, std::vector<nux::Geometry>& monitors)
+{
+  unsigned int num_monitors = monitors.size();
+
+  for (unsigned int i = 0; i < num_monitors; i++)
+  {
+    if (i >= launchers.size())
+      launchers.push_back(nux::ObjectPtr<Launcher> (CreateLauncher(i)));
+    
+    launchers[i]->Resize();
+  }
 }
 
 Launcher* Controller::Impl::CreateLauncher(int monitor)

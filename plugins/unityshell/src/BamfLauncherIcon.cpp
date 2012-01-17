@@ -715,12 +715,16 @@ void BamfLauncherIcon::OnChildAdded(BamfView* view, BamfView* child, gpointer da
   self->EnsureWindowState();
   self->UpdateMenus();
   self->UpdateIconGeometries(self->GetCenters());
+
+  self->needs_redraw.emit(self);
 }
 
 void BamfLauncherIcon::OnChildRemoved(BamfView* view, BamfView* child, gpointer data)
 {
   BamfLauncherIcon* self = static_cast <BamfLauncherIcon*> (data);
   self->EnsureWindowState();
+
+  self->needs_redraw.emit(self);
 }
 
 void BamfLauncherIcon::UpdateDesktopQuickList()

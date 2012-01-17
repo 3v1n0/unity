@@ -156,6 +156,8 @@ public:
   int GetMouseX();
   int GetMouseY();
 
+  void Resize();
+
   void CheckWindowOverLauncher();
   void EnableCheckWindowOverLauncher(gboolean enabled);
 
@@ -357,8 +359,6 @@ private:
   
   void DndReset();
   void DndHoveredIconReset();
-
-  void Resize();
 
   nux::HLayout* m_Layout;
   int m_ContentOffsetY;
