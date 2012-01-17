@@ -98,6 +98,8 @@ public:
 
   void SaveCenter();
 
+  nux::Point3 GetSavedCenter(int monitor);
+
   int SortPriority();
 
   virtual std::vector<Window> Windows () { return std::vector<Window> (); }
@@ -185,14 +187,6 @@ public:
   std::vector<nux::Vector4> & GetTransform(TransformIndex index);
 
   static void SetSkipTooltipDelay(gboolean skip_tooltip_delay);
-
-  sigc::signal<void, LauncherIcon*> remove;
-
-  sigc::connection needs_redraw_connection;
-  sigc::connection on_icon_added_connection;
-  sigc::connection on_icon_removed_connection;
-  sigc::connection on_order_changed_connection;
-  sigc::connection on_expo_terminated_connection;
 
 protected:
   std::vector<nux::Point3> GetCenters();

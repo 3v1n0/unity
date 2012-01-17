@@ -22,7 +22,7 @@
 
 #include <memory>
 
-#include "LauncherIcon.h"
+#include "AbstractLauncherIcon.h"
 #include <sigc++/sigc++.h>
 
 namespace unity
@@ -34,26 +34,26 @@ class LauncherModel : public sigc::trackable
 {
 public:
   typedef std::shared_ptr<LauncherModel> Ptr;
-  typedef std::list<LauncherIcon*> Base;
+  typedef std::list<AbstractLauncherIcon*> Base;
   typedef Base::iterator iterator;
   typedef Base::reverse_iterator reverse_iterator;
 
   LauncherModel();
   ~LauncherModel();
 
-  void AddIcon(LauncherIcon* icon);
-  void RemoveIcon(LauncherIcon* icon);
+  void AddIcon(AbstractLauncherIcon* icon);
+  void RemoveIcon(AbstractLauncherIcon* icon);
   void Save();
   void Sort();
   int  Size();
 
-  void OnIconRemove(LauncherIcon* icon);
+  void OnIconRemove(AbstractLauncherIcon* icon);
 
-  bool IconHasSister(LauncherIcon* icon);
+  bool IconHasSister(AbstractLauncherIcon* icon);
 
-  void ReorderBefore(LauncherIcon* icon, LauncherIcon* other, bool save);
+  void ReorderBefore(AbstractLauncherIcon* icon, AbstractLauncherIcon* other, bool save);
 
-  void ReorderSmart(LauncherIcon* icon, LauncherIcon* other, bool save);
+  void ReorderSmart(AbstractLauncherIcon* icon, AbstractLauncherIcon* other, bool save);
 
   iterator begin();
   iterator end();
@@ -71,8 +71,8 @@ public:
   reverse_iterator shelf_rbegin();
   reverse_iterator shelf_rend();
 
-  sigc::signal<void, LauncherIcon*> icon_added;
-  sigc::signal<void, LauncherIcon*> icon_removed;
+  sigc::signal<void, AbstractLauncherIcon*> icon_added;
+  sigc::signal<void, AbstractLauncherIcon*> icon_removed;
   sigc::signal<void> order_changed;
   sigc::signal<void> saved;
   
@@ -83,11 +83,11 @@ private:
 
   bool Populate();
 
-  bool IconShouldShelf(LauncherIcon* icon);
+  bool IconShouldShelf(AbstractLauncherIcon* icon);
 
   static gboolean RemoveCallback(gpointer data);
 
-  static bool CompareIcons(LauncherIcon* first, LauncherIcon* second);
+  static bool CompareIcons(AbstractLauncherIcon* first, AbstractLauncherIcon* second);
 
   /* Template Methods */
 public:

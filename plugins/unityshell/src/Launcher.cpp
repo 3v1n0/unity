@@ -36,7 +36,7 @@
 #include <Nux/WindowCompositor.h>
 
 #include "Launcher.h"
-#include "LauncherIcon.h"
+#include "AbstractLauncherIcon.h"
 #include "SpacerLauncherIcon.h"
 #include "LauncherModel.h"
 #include "QuicklistManager.h"
@@ -646,53 +646,53 @@ void Launcher::EnsureAnimation()
   NeedRedraw();
 }
 
-bool Launcher::IconNeedsAnimation(LauncherIcon* icon, struct timespec const& current)
+bool Launcher::IconNeedsAnimation(AbstractLauncherIcon* icon, struct timespec const& current)
 {
-  struct timespec time = icon->GetQuirkTime(LauncherIcon::QUIRK_VISIBLE);
+  struct timespec time = icon->GetQuirkTime(AbstractLauncherIcon::QUIRK_VISIBLE);
   if (unity::TimeUtil::TimeDelta(&current, &time) < ANIM_DURATION_SHORT)
     return true;
 
-  time = icon->GetQuirkTime(LauncherIcon::QUIRK_RUNNING);
+  time = icon->GetQuirkTime(AbstractLauncherIcon::QUIRK_RUNNING);
   if (unity::TimeUtil::TimeDelta(&current, &time) < ANIM_DURATION_SHORT)
     return true;
 
-  time = icon->GetQuirkTime(LauncherIcon::QUIRK_STARTING);
+  time = icon->GetQuirkTime(AbstractLauncherIcon::QUIRK_STARTING);
   if (unity::TimeUtil::TimeDelta(&current, &time) < (ANIM_DURATION_LONG * MAX_STARTING_BLINKS * STARTING_BLINK_LAMBDA * 2))
     return true;
 
-  time = icon->GetQuirkTime(LauncherIcon::QUIRK_URGENT);
+  time = icon->GetQuirkTime(AbstractLauncherIcon::QUIRK_URGENT);
   if (unity::TimeUtil::TimeDelta(&current, &time) < (ANIM_DURATION_LONG * URGENT_BLINKS * 2))
     return true;
 
-  time = icon->GetQuirkTime(LauncherIcon::QUIRK_PULSE_ONCE);
+  time = icon->GetQuirkTime(AbstractLauncherIcon::QUIRK_PULSE_ONCE);
   if (unity::TimeUtil::TimeDelta(&current, &time) < (ANIM_DURATION_LONG * PULSE_BLINK_LAMBDA * 2))
     return true;
 
-  time = icon->GetQuirkTime(LauncherIcon::QUIRK_PRESENTED);
+  time = icon->GetQuirkTime(AbstractLauncherIcon::QUIRK_PRESENTED);
   if (unity::TimeUtil::TimeDelta(&current, &time) < ANIM_DURATION)
     return true;
 
-  time = icon->GetQuirkTime(LauncherIcon::QUIRK_SHIMMER);
+  time = icon->GetQuirkTime(AbstractLauncherIcon::QUIRK_SHIMMER);
   if (unity::TimeUtil::TimeDelta(&current, &time) < ANIM_DURATION_LONG)
     return true;
 
-  time = icon->GetQuirkTime(LauncherIcon::QUIRK_CENTER_SAVED);
+  time = icon->GetQuirkTime(AbstractLauncherIcon::QUIRK_CENTER_SAVED);
   if (unity::TimeUtil::TimeDelta(&current, &time) < ANIM_DURATION)
     return true;
 
-  time = icon->GetQuirkTime(LauncherIcon::QUIRK_PROGRESS);
+  time = icon->GetQuirkTime(AbstractLauncherIcon::QUIRK_PROGRESS);
   if (unity::TimeUtil::TimeDelta(&current, &time) < ANIM_DURATION)
     return true;
 
-  time = icon->GetQuirkTime(LauncherIcon::QUIRK_DROP_DIM);
+  time = icon->GetQuirkTime(AbstractLauncherIcon::QUIRK_DROP_DIM);
   if (unity::TimeUtil::TimeDelta(&current, &time) < ANIM_DURATION)
     return true;
 
-  time = icon->GetQuirkTime(LauncherIcon::QUIRK_DESAT);
+  time = icon->GetQuirkTime(AbstractLauncherIcon::QUIRK_DESAT);
   if (unity::TimeUtil::TimeDelta(&current, &time) < ANIM_DURATION_SHORT_SHORT)
     return true;
 
-  time = icon->GetQuirkTime(LauncherIcon::QUIRK_DROP_PRELIGHT);
+  time = icon->GetQuirkTime(AbstractLauncherIcon::QUIRK_DROP_PRELIGHT);
   if (unity::TimeUtil::TimeDelta(&current, &time) < ANIM_DURATION)
     return true;
 
@@ -782,17 +782,17 @@ float Launcher::GetAutohidePositionMax()
 }
 
 
-float IconVisibleProgress(LauncherIcon* icon, struct timespec const& current)
+float IconVisibleProgress(AbstractLauncherIcon* icon, struct timespec const& current)
 {
-  if (icon->GetQuirk(LauncherIcon::QUIRK_VISIBLE))
+  if (icon->GetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE))
   {
-    struct timespec icon_visible_time = icon->GetQuirkTime(LauncherIcon::QUIRK_VISIBLE);
+    struct timespec icon_visible_time = icon->GetQuirkTime(AbstractLauncherIcon::QUIRK_VISIBLE);
     int enter_ms = unity::TimeUtil::TimeDelta(&current, &icon_visible_time);
     return CLAMP((float) enter_ms / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
   }
   else
   {
-    struct timespec icon_hide_time = icon->GetQuirkTime(LauncherIcon::QUIRK_VISIBLE);
+    struct timespec icon_hide_time = icon->GetQuirkTime(AbstractLauncherIcon::QUIRK_VISIBLE);
     int hide_ms = unity::TimeUtil::TimeDelta(&current, &icon_hide_time);
     return 1.0f - CLAMP((float) hide_ms / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
   }
@@ -800,7 +800,7 @@ float IconVisibleProgress(LauncherIcon* icon, struct timespec const& current)
 
 void Launcher::SetDndDelta(float x, float y, nux::Geometry const& geo, timespec const& current)
 {
-  LauncherIcon* anchor = 0;
+  AbstractLauncherIcon* anchor = 0;
   LauncherModel::iterator it;
   anchor = MouseIconIntersection(x, _enter_y);
 
@@ -824,21 +824,21 @@ void Launcher::SetDndDelta(float x, float y, nux::Geometry const& geo, timespec 
   }
 }
 
-float Launcher::IconPresentProgress(LauncherIcon* icon, struct timespec const& current)
+float Launcher::IconPresentProgress(AbstractLauncherIcon* icon, struct timespec const& current)
 {
-  struct timespec icon_present_time = icon->GetQuirkTime(LauncherIcon::QUIRK_PRESENTED);
+  struct timespec icon_present_time = icon->GetQuirkTime(AbstractLauncherIcon::QUIRK_PRESENTED);
   int ms = unity::TimeUtil::TimeDelta(&current, &icon_present_time);
   float result = CLAMP((float) ms / (float) ANIM_DURATION, 0.0f, 1.0f);
 
-  if (icon->GetQuirk(LauncherIcon::QUIRK_PRESENTED))
+  if (icon->GetQuirk(AbstractLauncherIcon::QUIRK_PRESENTED))
     return result;
   else
     return 1.0f - result;
 }
 
-float Launcher::IconUrgentProgress(LauncherIcon* icon, struct timespec const& current)
+float Launcher::IconUrgentProgress(AbstractLauncherIcon* icon, struct timespec const& current)
 {
-  struct timespec urgent_time = icon->GetQuirkTime(LauncherIcon::QUIRK_URGENT);
+  struct timespec urgent_time = icon->GetQuirkTime(AbstractLauncherIcon::QUIRK_URGENT);
   int urgent_ms = unity::TimeUtil::TimeDelta(&current, &urgent_time);
   float result;
 
@@ -847,118 +847,118 @@ float Launcher::IconUrgentProgress(LauncherIcon* icon, struct timespec const& cu
   else
     result = CLAMP((float) urgent_ms / (float)(ANIM_DURATION_LONG * URGENT_BLINKS * 2), 0.0f, 1.0f);
 
-  if (icon->GetQuirk(LauncherIcon::QUIRK_URGENT))
+  if (icon->GetQuirk(AbstractLauncherIcon::QUIRK_URGENT))
     return result;
   else
     return 1.0f - result;
 }
 
-float Launcher::IconDropDimValue(LauncherIcon* icon, struct timespec const& current)
+float Launcher::IconDropDimValue(AbstractLauncherIcon* icon, struct timespec const& current)
 {
-  struct timespec dim_time = icon->GetQuirkTime(LauncherIcon::QUIRK_DROP_DIM);
+  struct timespec dim_time = icon->GetQuirkTime(AbstractLauncherIcon::QUIRK_DROP_DIM);
   int dim_ms = unity::TimeUtil::TimeDelta(&current, &dim_time);
   float result = CLAMP((float) dim_ms / (float) ANIM_DURATION, 0.0f, 1.0f);
 
-  if (icon->GetQuirk(LauncherIcon::QUIRK_DROP_DIM))
+  if (icon->GetQuirk(AbstractLauncherIcon::QUIRK_DROP_DIM))
     return 1.0f - result;
   else
     return result;
 }
 
-float Launcher::IconDesatValue(LauncherIcon* icon, struct timespec const& current)
+float Launcher::IconDesatValue(AbstractLauncherIcon* icon, struct timespec const& current)
 {
-  struct timespec dim_time = icon->GetQuirkTime(LauncherIcon::QUIRK_DESAT);
+  struct timespec dim_time = icon->GetQuirkTime(AbstractLauncherIcon::QUIRK_DESAT);
   int ms = unity::TimeUtil::TimeDelta(&current, &dim_time);
   float result = CLAMP((float) ms / (float) ANIM_DURATION_SHORT_SHORT, 0.0f, 1.0f);
 
-  if (icon->GetQuirk(LauncherIcon::QUIRK_DESAT))
+  if (icon->GetQuirk(AbstractLauncherIcon::QUIRK_DESAT))
     return 1.0f - result;
   else
     return result;
 }
 
-float Launcher::IconShimmerProgress(LauncherIcon* icon, struct timespec const& current)
+float Launcher::IconShimmerProgress(AbstractLauncherIcon* icon, struct timespec const& current)
 {
-  struct timespec shimmer_time = icon->GetQuirkTime(LauncherIcon::QUIRK_SHIMMER);
+  struct timespec shimmer_time = icon->GetQuirkTime(AbstractLauncherIcon::QUIRK_SHIMMER);
   int shimmer_ms = unity::TimeUtil::TimeDelta(&current, &shimmer_time);
   return CLAMP((float) shimmer_ms / (float) ANIM_DURATION_LONG, 0.0f, 1.0f);
 }
 
-float Launcher::IconCenterTransitionProgress(LauncherIcon* icon, struct timespec const& current)
+float Launcher::IconCenterTransitionProgress(AbstractLauncherIcon* icon, struct timespec const& current)
 {
-  struct timespec save_time = icon->GetQuirkTime(LauncherIcon::QUIRK_CENTER_SAVED);
+  struct timespec save_time = icon->GetQuirkTime(AbstractLauncherIcon::QUIRK_CENTER_SAVED);
   int save_ms = unity::TimeUtil::TimeDelta(&current, &save_time);
   return CLAMP((float) save_ms / (float) ANIM_DURATION, 0.0f, 1.0f);
 }
 
-float Launcher::IconUrgentPulseValue(LauncherIcon* icon, struct timespec const& current)
+float Launcher::IconUrgentPulseValue(AbstractLauncherIcon* icon, struct timespec const& current)
 {
-  if (!icon->GetQuirk(LauncherIcon::QUIRK_URGENT))
+  if (!icon->GetQuirk(AbstractLauncherIcon::QUIRK_URGENT))
     return 1.0f; // we are full on in a normal condition
 
   double urgent_progress = (double) IconUrgentProgress(icon, current);
   return 0.5f + (float)(std::cos(M_PI * (float)(URGENT_BLINKS * 2) * urgent_progress)) * 0.5f;
 }
 
-float Launcher::IconPulseOnceValue(LauncherIcon *icon, struct timespec const &current)
+float Launcher::IconPulseOnceValue(AbstractLauncherIcon *icon, struct timespec const &current)
 {
-  struct timespec pulse_time = icon->GetQuirkTime(LauncherIcon::QUIRK_PULSE_ONCE);
+  struct timespec pulse_time = icon->GetQuirkTime(AbstractLauncherIcon::QUIRK_PULSE_ONCE);
   int pulse_ms = unity::TimeUtil::TimeDelta(&current, &pulse_time);
   double pulse_progress = (double) CLAMP((float) pulse_ms / (ANIM_DURATION_LONG * PULSE_BLINK_LAMBDA * 2), 0.0f, 1.0f);
 
   if (pulse_progress == 1.0f)
-    icon->SetQuirk(LauncherIcon::QUIRK_PULSE_ONCE, false);
+    icon->SetQuirk(AbstractLauncherIcon::QUIRK_PULSE_ONCE, false);
 
   return 0.5f + (float) (std::cos(M_PI * 2.0 * pulse_progress)) * 0.5f;
 }
 
-float Launcher::IconUrgentWiggleValue(LauncherIcon* icon, struct timespec const& current)
+float Launcher::IconUrgentWiggleValue(AbstractLauncherIcon* icon, struct timespec const& current)
 {
-  if (!icon->GetQuirk(LauncherIcon::QUIRK_URGENT))
+  if (!icon->GetQuirk(AbstractLauncherIcon::QUIRK_URGENT))
     return 0.0f; // we are full on in a normal condition
 
   double urgent_progress = (double) IconUrgentProgress(icon, current);
   return 0.3f * (float)(std::sin(M_PI * (float)(WIGGLE_CYCLES * 2) * urgent_progress)) * 0.5f;
 }
 
-float Launcher::IconStartingBlinkValue(LauncherIcon* icon, struct timespec const& current)
+float Launcher::IconStartingBlinkValue(AbstractLauncherIcon* icon, struct timespec const& current)
 {
-  struct timespec starting_time = icon->GetQuirkTime(LauncherIcon::QUIRK_STARTING);
+  struct timespec starting_time = icon->GetQuirkTime(AbstractLauncherIcon::QUIRK_STARTING);
   int starting_ms = unity::TimeUtil::TimeDelta(&current, &starting_time);
   double starting_progress = (double) CLAMP((float) starting_ms / (float)(ANIM_DURATION_LONG * STARTING_BLINK_LAMBDA), 0.0f, 1.0f);
   double val = IsBackLightModeToggles() ? 3.0f : 4.0f;
   return 0.5f + (float)(std::cos(M_PI * val * starting_progress)) * 0.5f;
 }
 
-float Launcher::IconStartingPulseValue(LauncherIcon* icon, struct timespec const& current)
+float Launcher::IconStartingPulseValue(AbstractLauncherIcon* icon, struct timespec const& current)
 {
-  struct timespec starting_time = icon->GetQuirkTime(LauncherIcon::QUIRK_STARTING);
+  struct timespec starting_time = icon->GetQuirkTime(AbstractLauncherIcon::QUIRK_STARTING);
   int starting_ms = unity::TimeUtil::TimeDelta(&current, &starting_time);
   double starting_progress = (double) CLAMP((float) starting_ms / (float)(ANIM_DURATION_LONG * MAX_STARTING_BLINKS * STARTING_BLINK_LAMBDA * 2), 0.0f, 1.0f);
 
-  if (starting_progress == 1.0f && !icon->GetQuirk(LauncherIcon::QUIRK_RUNNING))
+  if (starting_progress == 1.0f && !icon->GetQuirk(AbstractLauncherIcon::QUIRK_RUNNING))
   {
-    icon->SetQuirk(LauncherIcon::QUIRK_STARTING, false);
-    icon->ResetQuirkTime(LauncherIcon::QUIRK_STARTING);
+    icon->SetQuirk(AbstractLauncherIcon::QUIRK_STARTING, false);
+    icon->ResetQuirkTime(AbstractLauncherIcon::QUIRK_STARTING);
   }
 
   return 0.5f + (float)(std::cos(M_PI * (float)(MAX_STARTING_BLINKS * 2) * starting_progress)) * 0.5f;
 }
 
-float Launcher::IconBackgroundIntensity(LauncherIcon* icon, struct timespec const& current)
+float Launcher::IconBackgroundIntensity(AbstractLauncherIcon* icon, struct timespec const& current)
 {
   float result = 0.0f;
 
-  struct timespec running_time = icon->GetQuirkTime(LauncherIcon::QUIRK_RUNNING);
+  struct timespec running_time = icon->GetQuirkTime(AbstractLauncherIcon::QUIRK_RUNNING);
   int running_ms = unity::TimeUtil::TimeDelta(&current, &running_time);
   float running_progress = CLAMP((float) running_ms / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
 
-  if (!icon->GetQuirk(LauncherIcon::QUIRK_RUNNING))
+  if (!icon->GetQuirk(AbstractLauncherIcon::QUIRK_RUNNING))
     running_progress = 1.0f - running_progress;
 
   // After we finish a fade in from running, we can reset the quirk
-  if (running_progress == 1.0f && icon->GetQuirk(LauncherIcon::QUIRK_RUNNING))
-    icon->SetQuirk(LauncherIcon::QUIRK_STARTING, false);
+  if (running_progress == 1.0f && icon->GetQuirk(AbstractLauncherIcon::QUIRK_RUNNING))
+    icon->SetQuirk(AbstractLauncherIcon::QUIRK_STARTING, false);
 
   float backlight_strength;
   if (_backlight_mode == BACKLIGHT_ALWAYS_ON)
@@ -982,8 +982,8 @@ float Launcher::IconBackgroundIntensity(LauncherIcon* icon, struct timespec cons
         result = backlight_strength; // The blink concept is a failure in this case (it just doesn't work right)
       break;
     case LAUNCH_ANIMATION_PULSE:
-      if (running_progress == 1.0f && icon->GetQuirk(LauncherIcon::QUIRK_RUNNING))
-        icon->ResetQuirkTime(LauncherIcon::QUIRK_STARTING);
+      if (running_progress == 1.0f && icon->GetQuirk(AbstractLauncherIcon::QUIRK_RUNNING))
+        icon->ResetQuirkTime(AbstractLauncherIcon::QUIRK_STARTING);
 
       result = backlight_strength;
       if (_backlight_mode == BACKLIGHT_ALWAYS_ON)
@@ -995,7 +995,7 @@ float Launcher::IconBackgroundIntensity(LauncherIcon* icon, struct timespec cons
       break;
   }
 
-  if (icon->GetQuirk(LauncherIcon::QUIRK_PULSE_ONCE))
+  if (icon->GetQuirk(AbstractLauncherIcon::QUIRK_PULSE_ONCE))
   {
     if (_backlight_mode == BACKLIGHT_ALWAYS_ON)
       result *= CLAMP(running_progress + IconPulseOnceValue(icon, current), 0.0f, 1.0f);
@@ -1006,25 +1006,25 @@ float Launcher::IconBackgroundIntensity(LauncherIcon* icon, struct timespec cons
   }
 
   // urgent serves to bring the total down only
-  if (icon->GetQuirk(LauncherIcon::QUIRK_URGENT) && _urgent_animation == URGENT_ANIMATION_PULSE)
+  if (icon->GetQuirk(AbstractLauncherIcon::QUIRK_URGENT) && _urgent_animation == URGENT_ANIMATION_PULSE)
     result *= 0.2f + 0.8f * IconUrgentPulseValue(icon, current);
 
   return result;
 }
 
-float Launcher::IconProgressBias(LauncherIcon* icon, struct timespec const& current)
+float Launcher::IconProgressBias(AbstractLauncherIcon* icon, struct timespec const& current)
 {
-  struct timespec icon_progress_time = icon->GetQuirkTime(LauncherIcon::QUIRK_PROGRESS);
+  struct timespec icon_progress_time = icon->GetQuirkTime(AbstractLauncherIcon::QUIRK_PROGRESS);
   int ms = unity::TimeUtil::TimeDelta(&current, &icon_progress_time);
   float result = CLAMP((float) ms / (float) ANIM_DURATION, 0.0f, 1.0f);
 
-  if (icon->GetQuirk(LauncherIcon::QUIRK_PROGRESS))
+  if (icon->GetQuirk(AbstractLauncherIcon::QUIRK_PROGRESS))
     return -1.0f + result;
   else
     return result;
 }
 
-bool Launcher::IconDrawEdgeOnly(LauncherIcon* icon)
+bool Launcher::IconDrawEdgeOnly(AbstractLauncherIcon* icon)
 {
   if (_backlight_mode == BACKLIGHT_EDGE_TOGGLE)
     return true;
@@ -1035,14 +1035,14 @@ bool Launcher::IconDrawEdgeOnly(LauncherIcon* icon)
   return false;
 }
 
-void Launcher::SetupRenderArg(LauncherIcon* icon, struct timespec const& current, RenderArg& arg)
+void Launcher::SetupRenderArg(AbstractLauncherIcon* icon, struct timespec const& current, RenderArg& arg)
 {
   float desat_value = IconDesatValue(icon, current);
   arg.icon                = icon;
   arg.alpha               = 0.5f + 0.5f * desat_value;
   arg.saturation          = desat_value;
-  arg.running_arrow       = icon->GetQuirk(LauncherIcon::QUIRK_RUNNING);
-  arg.running_colored     = icon->GetQuirk(LauncherIcon::QUIRK_URGENT);
+  arg.running_arrow       = icon->GetQuirk(AbstractLauncherIcon::QUIRK_RUNNING);
+  arg.running_colored     = icon->GetQuirk(AbstractLauncherIcon::QUIRK_URGENT);
   arg.running_on_viewport = icon->HasWindowOnViewport(monitor);
   arg.draw_edge_only      = IconDrawEdgeOnly(icon);
   arg.active_colored      = false;
@@ -1055,12 +1055,12 @@ void Launcher::SetupRenderArg(LauncherIcon* icon, struct timespec const& current
   arg.progress_bias       = IconProgressBias(icon, current);
   arg.progress            = CLAMP(icon->GetProgress(), 0.0f, 1.0f);
   arg.draw_shortcut       = _shortcuts_shown && !_hide_machine->GetQuirk(LauncherHideMachine::PLACES_VISIBLE);
-  arg.system_item         = icon->Type() == LauncherIcon::TYPE_HOME;
+  arg.system_item         = icon->Type() == AbstractLauncherIcon::TYPE_HOME;
 
   if (_dash_is_open)
-    arg.active_arrow = icon->Type() == LauncherIcon::TYPE_HOME;
+    arg.active_arrow = icon->Type() == AbstractLauncherIcon::TYPE_HOME;
   else
-    arg.active_arrow = icon->GetQuirk(LauncherIcon::QUIRK_ACTIVE);
+    arg.active_arrow = icon->GetQuirk(AbstractLauncherIcon::QUIRK_ACTIVE);
 
   guint64 shortcut = icon->GetShortcut();
   if (shortcut > 32)
@@ -1069,9 +1069,9 @@ void Launcher::SetupRenderArg(LauncherIcon* icon, struct timespec const& current
     arg.shortcut_label = 0;
 
   // we dont need to show strays
-  if (!icon->GetQuirk(LauncherIcon::QUIRK_RUNNING))
+  if (!icon->GetQuirk(AbstractLauncherIcon::QUIRK_RUNNING))
   {
-    if (icon->GetQuirk(LauncherIcon::QUIRK_URGENT))
+    if (icon->GetQuirk(AbstractLauncherIcon::QUIRK_URGENT))
     {
       arg.running_arrow = true;
       arg.window_indicators = 1;
@@ -1089,13 +1089,13 @@ void Launcher::SetupRenderArg(LauncherIcon* icon, struct timespec const& current
 
   float urgent_progress = IconUrgentProgress(icon, current);
 
-  if (icon->GetQuirk(LauncherIcon::QUIRK_URGENT))
+  if (icon->GetQuirk(AbstractLauncherIcon::QUIRK_URGENT))
     urgent_progress = CLAMP(urgent_progress * 3.0f, 0.0f, 1.0f);  // we want to go 3x faster than the urgent normal cycle
   else
     urgent_progress = CLAMP(urgent_progress * 3.0f - 2.0f, 0.0f, 1.0f);  // we want to go 3x faster than the urgent normal cycle
   arg.glow_intensity = urgent_progress;
 
-  if (icon->GetQuirk(LauncherIcon::QUIRK_URGENT) && _urgent_animation == URGENT_ANIMATION_WIGGLE)
+  if (icon->GetQuirk(AbstractLauncherIcon::QUIRK_URGENT) && _urgent_animation == URGENT_ANIMATION_WIGGLE)
   {
     arg.z_rotation = IconUrgentWiggleValue(icon, current);
   }
@@ -1111,7 +1111,7 @@ void Launcher::SetupRenderArg(LauncherIcon* icon, struct timespec const& current
     }
 }
 
-void Launcher::FillRenderArg(LauncherIcon* icon,
+void Launcher::FillRenderArg(AbstractLauncherIcon* icon,
                              RenderArg& arg,
                              nux::Point3& center,
                              nux::Geometry const& parent_abs_geo,
@@ -1177,7 +1177,7 @@ void Launcher::FillRenderArg(LauncherIcon* icon,
   float center_transit_progress = IconCenterTransitionProgress(icon, current);
   if (center_transit_progress <= 1.0f)
   {
-    centerOffset.y = (icon->_saved_center[monitor].y - (center.y + (half_size * size_modifier))) * (1.0f - center_transit_progress);
+    centerOffset.y = (icon->GetSavedCenter(monitor).y - (center.y + (half_size * size_modifier))) * (1.0f - center_transit_progress);
   }
 
   center.y += half_size * size_modifier;   // move to center
@@ -1342,7 +1342,7 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
   for (it = _model->main_begin(); it != _model->main_end(); it++)
   {
     RenderArg arg;
-    LauncherIcon* icon = *it;
+    AbstractLauncherIcon* icon = *it;
 
     FillRenderArg(icon, arg, center, parent_abs_geo, folding_threshold, folded_size, folded_spacing,
                   autohide_offset, folded_z_distance, animation_neg_rads, current);
@@ -1370,7 +1370,7 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
   for (it = _model->shelf_begin(); it != _model->shelf_end(); it++)
   {
     RenderArg arg;
-    LauncherIcon* icon = *it;
+    AbstractLauncherIcon* icon = *it;
 
     FillRenderArg(icon, arg, center, parent_abs_geo, folding_threshold, folded_size, folded_spacing,
                   autohide_offset, folded_z_distance, animation_neg_rads, current);
@@ -1491,8 +1491,8 @@ void Launcher::DesaturateIcons()
 {
   for (auto icon : *_model)
   {
-    if (icon->Type () != LauncherIcon::TYPE_HOME)
-      icon->SetQuirk(LauncherIcon::QUIRK_DESAT, true);
+    if (icon->Type () != AbstractLauncherIcon::TYPE_HOME)
+      icon->SetQuirk(AbstractLauncherIcon::QUIRK_DESAT, true);
     icon->HideTooltip();
   }
 }
@@ -1501,7 +1501,7 @@ void Launcher::SaturateIcons()
 {
   for (auto icon : *_model)
   {
-    icon->SetQuirk(LauncherIcon::QUIRK_DESAT, false);
+    icon->SetQuirk(AbstractLauncherIcon::QUIRK_DESAT, false);
   }
 }
 
@@ -2026,17 +2026,16 @@ void Launcher::SetBackgroundAlpha(float background_alpha)
   NeedRedraw();
 }
 
-void Launcher::OnIconAdded(LauncherIcon* icon)
+void Launcher::OnIconAdded(AbstractLauncherIcon* icon)
 {
   EnsureAnimation();
 
-  // needs to be disconnected
-  icon->needs_redraw_connection = icon->needs_redraw.connect(sigc::mem_fun(this, &Launcher::OnIconNeedsRedraw));
+  icon->needs_redraw.connect(sigc::mem_fun(this, &Launcher::OnIconNeedsRedraw));
 
   AddChild(icon);
 }
 
-void Launcher::OnIconRemoved(LauncherIcon* icon)
+void Launcher::OnIconRemoved(AbstractLauncherIcon* icon)
 {
   if (icon->needs_redraw_connection.connected())
     icon->needs_redraw_connection.disconnect();
@@ -2292,7 +2291,7 @@ gboolean Launcher::StartIconDragTimeout(gpointer data)
 
 void Launcher::StartIconDragRequest(int x, int y)
 {
-  LauncherIcon* drag_icon = MouseIconIntersection((int)(GetGeometry().x / 2.0f), y);
+  AbstractLauncherIcon* drag_icon = MouseIconIntersection((int)(GetGeometry().x / 2.0f), y);
 
   // FIXME: nux doesn't give nux::GetEventButton (button_flags) there, relying
   // on an internal Launcher property then
@@ -2321,7 +2320,7 @@ void Launcher::StartIconDragRequest(int x, int y)
   }
 }
 
-void Launcher::StartIconDrag(LauncherIcon* icon)
+void Launcher::StartIconDrag(AbstractLauncherIcon* icon)
 {
   if (!icon)
     return;
@@ -2350,11 +2349,11 @@ void Launcher::EndIconDrag()
 {
   if (_drag_window)
   {
-    LauncherIcon* hovered_icon = MouseIconIntersection(_mouse_position.x, _mouse_position.y);
+    AbstractLauncherIcon* hovered_icon = MouseIconIntersection(_mouse_position.x, _mouse_position.y);
 
-    if (hovered_icon && hovered_icon->Type() == LauncherIcon::TYPE_TRASH)
+    if (hovered_icon && hovered_icon->Type() == AbstractLauncherIcon::TYPE_TRASH)
     {
-      hovered_icon->SetQuirk(LauncherIcon::QUIRK_PULSE_ONCE, true);
+      hovered_icon->SetQuirk(AbstractLauncherIcon::QUIRK_PULSE_ONCE, true);
 
       launcher_removerequest.emit(_drag_icon);
 
@@ -2391,7 +2390,7 @@ void Launcher::UpdateDragWindowPosition(int x, int y)
     nux::Geometry geo = _drag_window->GetGeometry();
     _drag_window->SetBaseXY(x - geo.width / 2 + _parent->GetGeometry().x, y - geo.height / 2 + _parent->GetGeometry().y);
 
-    LauncherIcon* hovered_icon = MouseIconIntersection((int)(GetGeometry().x / 2.0f), y);
+    AbstractLauncherIcon* hovered_icon = MouseIconIntersection((int)(GetGeometry().x / 2.0f), y);
 
     struct timespec current;
     clock_gettime(CLOCK_MONOTONIC, &current);
@@ -2514,7 +2513,7 @@ void Launcher::RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned
 {
   SetMousePosition(x, y);
   SetStateMouseOverLauncher(false);
-  LauncherIcon::SetSkipTooltipDelay(false);
+  //AbstractLauncherIcon::SetSkipTooltipDelay(false);
 
   EventLogic();
   EnsureAnimation();
@@ -2642,7 +2641,7 @@ void Launcher::SelectPreviousIcon()
       temp_current_icon_index --;
       it = _model->at(temp_current_icon_index);
     }
-    while (it != (LauncherModel::iterator)NULL && !(*it)->GetQuirk(LauncherIcon::QUIRK_VISIBLE));
+    while (it != (LauncherModel::iterator)NULL && !(*it)->GetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE));
 
     if (it != (LauncherModel::iterator)NULL)
     {
@@ -2669,7 +2668,7 @@ void Launcher::SelectNextIcon()
       it = _model->at(temp_current_icon_index);
     }
     while (it != (LauncherModel::iterator)nullptr &&
-           !(*it)->GetQuirk(LauncherIcon::QUIRK_VISIBLE));
+           !(*it)->GetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE));
 
     if (it != (LauncherModel::iterator)nullptr)
     {
@@ -2863,7 +2862,7 @@ void Launcher::EventLogic()
       GetActionState() == ACTION_DRAG_LAUNCHER)
     return;
 
-  LauncherIcon* launcher_icon = 0;
+  AbstractLauncherIcon* launcher_icon = 0;
 
   if (_hide_machine->GetQuirk(LauncherHideMachine::MOUSE_OVER_LAUNCHER)
       && _hide_machine->GetQuirk(LauncherHideMachine::MOUSE_MOVE_POST_REVEAL))
@@ -2889,7 +2888,7 @@ void Launcher::EventLogic()
 
 void Launcher::MouseDownLogic(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  LauncherIcon* launcher_icon = 0;
+  AbstractLauncherIcon* launcher_icon = 0;
   launcher_icon = MouseIconIntersection(_mouse_position.x, _mouse_position.y);
 
   _hide_machine->SetQuirk(LauncherHideMachine::LAST_ACTION_ACTIVATE, false);
@@ -2914,7 +2913,7 @@ void Launcher::MouseDownLogic(int x, int y, unsigned long button_flags, unsigned
 
 void Launcher::MouseUpLogic(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  LauncherIcon* launcher_icon = 0;
+  AbstractLauncherIcon* launcher_icon = 0;
 
   launcher_icon = MouseIconIntersection(_mouse_position.x, _mouse_position.y);
 
@@ -2945,7 +2944,7 @@ void Launcher::MouseUpLogic(int x, int y, unsigned long button_flags, unsigned l
   _icon_mouse_down = 0;
 }
 
-LauncherIcon* Launcher::MouseIconIntersection(int x, int y)
+AbstractLauncherIcon* Launcher::MouseIconIntersection(int x, int y)
 {
   LauncherModel::iterator it;
   // We are looking for the icon at screen coordinates x, y;
@@ -2954,7 +2953,7 @@ LauncherIcon* Launcher::MouseIconIntersection(int x, int y)
 
   for (it = _model->begin(); it != _model->end(); it++)
   {
-    if (!(*it)->GetQuirk(LauncherIcon::QUIRK_VISIBLE))
+    if (!(*it)->GetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE))
       continue;
 
     nux::Point2 screen_coord [4];
@@ -2973,7 +2972,7 @@ LauncherIcon* Launcher::MouseIconIntersection(int x, int y)
 }
 
 void
-Launcher::RenderIconToTexture(nux::GraphicsEngine& GfxContext, LauncherIcon* icon, nux::ObjectPtr<nux::IOpenGLBaseTexture> texture)
+Launcher::RenderIconToTexture(nux::GraphicsEngine& GfxContext, AbstractLauncherIcon* icon, nux::ObjectPtr<nux::IOpenGLBaseTexture> texture)
 {
   RenderArg arg;
   struct timespec current;
@@ -3057,9 +3056,9 @@ void Launcher::OnDNDDataCollected(const std::list<char*>& mimes)
     for (auto it : *_model)
     {
       if (it->QueryAcceptDrop(_dnd_data) != nux::DNDACTION_NONE)
-        it->SetQuirk(LauncherIcon::QUIRK_DROP_PRELIGHT, true);
+        it->SetQuirk(AbstractLauncherIcon::QUIRK_DROP_PRELIGHT, true);
       else
-        it->SetQuirk(LauncherIcon::QUIRK_DROP_DIM, true);
+        it->SetQuirk(AbstractLauncherIcon::QUIRK_DROP_DIM, true);
     }
   }
 }
@@ -3084,8 +3083,8 @@ Launcher::DndReset()
 
   for (auto it : *_model)
   {
-    it->SetQuirk(LauncherIcon::QUIRK_DROP_PRELIGHT, false);
-    it->SetQuirk(LauncherIcon::QUIRK_DROP_DIM, false);
+    it->SetQuirk(AbstractLauncherIcon::QUIRK_DROP_PRELIGHT, false);
+    it->SetQuirk(AbstractLauncherIcon::QUIRK_DROP_DIM, false);
   }
 
   DndHoveredIconReset();
@@ -3098,7 +3097,7 @@ void Launcher::DndHoveredIconReset()
 
   if (_steal_drag && _dnd_hovered_icon)
   {
-    _dnd_hovered_icon->SetQuirk(LauncherIcon::QUIRK_VISIBLE, false);
+    _dnd_hovered_icon->SetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE, false);
     _dnd_hovered_icon->remove.emit(_dnd_hovered_icon);
   }
 
@@ -3160,9 +3159,9 @@ Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
       for (auto it : *_model)
       {
         if (it->QueryAcceptDrop(_dnd_data) != nux::DNDACTION_NONE)
-          it->SetQuirk(LauncherIcon::QUIRK_DROP_PRELIGHT, true);
+          it->SetQuirk(AbstractLauncherIcon::QUIRK_DROP_PRELIGHT, true);
         else
-          it->SetQuirk(LauncherIcon::QUIRK_DROP_DIM, true);
+          it->SetQuirk(AbstractLauncherIcon::QUIRK_DROP_DIM, true);
       }
     }
   }
@@ -3186,15 +3185,15 @@ Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
   }
 
   EventLogic();
-  LauncherIcon* hovered_icon = MouseIconIntersection(_mouse_position.x, _mouse_position.y);
+  AbstractLauncherIcon* hovered_icon = MouseIconIntersection(_mouse_position.x, _mouse_position.y);
 
   bool hovered_icon_is_appropriate = false;
   if (hovered_icon)
   {
-    if (hovered_icon->Type() == LauncherIcon::TYPE_TRASH)
+    if (hovered_icon->Type() == AbstractLauncherIcon::TYPE_TRASH)
       _steal_drag = false;
 
-    if (hovered_icon->Type() == LauncherIcon::TYPE_APPLICATION || hovered_icon->Type() == LauncherIcon::TYPE_EXPO)
+    if (hovered_icon->Type() == AbstractLauncherIcon::TYPE_APPLICATION || hovered_icon->Type() == AbstractLauncherIcon::TYPE_EXPO)
       hovered_icon_is_appropriate = true;
   }
 
@@ -3218,7 +3217,7 @@ Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
         }
         else
         {
-          _dnd_hovered_icon->SetQuirk(LauncherIcon::QUIRK_VISIBLE, false);
+          _dnd_hovered_icon->SetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE, false);
           _dnd_hovered_icon->remove.emit(_dnd_hovered_icon);
           _dnd_hovered_icon = 0;
         }
@@ -3303,7 +3302,7 @@ Launcher::ProcessDndDrop(int x, int y)
  * Returns the current selected icon if it is in keynavmode
  * It will return NULL if it is not on keynavmode
  */
-LauncherIcon*
+AbstractLauncherIcon*
 Launcher::GetSelectedMenuIcon()
 {
   LauncherModel::iterator it;

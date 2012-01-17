@@ -38,7 +38,7 @@
 #include "LauncherController.h"
 #include "LauncherEntryRemote.h"
 #include "LauncherEntryRemoteModel.h"
-#include "LauncherIcon.h"
+#include "AbstractLauncherIcon.h"
 #include "LauncherModel.h"
 #include "WindowManager.h"
 #include "TrashLauncherIcon.h"
@@ -67,10 +67,10 @@ public:
   void Save();
   void SortAndUpdate();
 
-  void OnIconAdded(LauncherIcon* icon);
+  void OnIconAdded(AbstractLauncherIcon* icon);
 
-  void OnLauncherAddRequest(char* path, LauncherIcon* before);
-  void OnLauncherRemoveRequest(LauncherIcon* icon);
+  void OnLauncherAddRequest(char* path, AbstractLauncherIcon* before);
+  void OnLauncherRemoveRequest(AbstractLauncherIcon* icon);
 
   void OnLauncherEntryRemoteAdded(LauncherEntryRemote* entry);
   void OnLauncherEntryRemoteRemoved(LauncherEntryRemote* entry);
@@ -83,9 +83,9 @@ public:
 
   void InsertTrash();
 
-  void RegisterIcon(LauncherIcon* icon);
+  void RegisterIcon(AbstractLauncherIcon* icon);
 
-  LauncherIcon* CreateFavorite(const char* file_path);
+  AbstractLauncherIcon* CreateFavorite(const char* file_path);
 
   void SetupBamf();
 
@@ -226,7 +226,7 @@ Launcher* Controller::Impl::CreateLauncher(int monitor)
   return launcher;
 }
 
-void Controller::Impl::OnLauncherAddRequest(char* path, LauncherIcon* before)
+void Controller::Impl::OnLauncherAddRequest(char* path, AbstractLauncherIcon* before)
 {
   for (auto it : model_->GetSublist<BamfLauncherIcon> ())
   {
@@ -239,7 +239,7 @@ void Controller::Impl::OnLauncherAddRequest(char* path, LauncherIcon* before)
     }
   }
 
-  LauncherIcon* result = CreateFavorite(path);
+  AbstractLauncherIcon* result = CreateFavorite(path);
   if (result)
   {
     RegisterIcon(result);
@@ -278,7 +278,7 @@ void Controller::Impl::SortAndUpdate()
   std::list<BamfLauncherIcon*> launchers = model_->GetSublist<BamfLauncherIcon> ();
   for (auto it : launchers)
   {
-    if (shortcut < 11 && it->GetQuirk(LauncherIcon::QUIRK_VISIBLE))
+    if (shortcut < 11 && it->GetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE))
     {
       buff = g_strdup_printf("%d", shortcut % 10);
       it->SetShortcut(buff[0]);
@@ -293,16 +293,16 @@ void Controller::Impl::SortAndUpdate()
   }
 }
 
-void Controller::Impl::OnIconAdded(LauncherIcon* icon)
+void Controller::Impl::OnIconAdded(AbstractLauncherIcon* icon)
 {
   this->RegisterIcon(icon);
 }
 
-void Controller::Impl::OnLauncherRemoveRequest(LauncherIcon* icon)
+void Controller::Impl::OnLauncherRemoveRequest(AbstractLauncherIcon* icon)
 {
   switch (icon->Type())
   {
-    case LauncherIcon::TYPE_APPLICATION:
+    case AbstractLauncherIcon::TYPE_APPLICATION:
     {
       BamfLauncherIcon* bamf_icon = dynamic_cast<BamfLauncherIcon*>(icon);
 
@@ -314,7 +314,7 @@ void Controller::Impl::OnLauncherRemoveRequest(LauncherIcon* icon)
 
       break;
     }
-    case LauncherIcon::TYPE_DEVICE:
+    case AbstractLauncherIcon::TYPE_DEVICE:
     {
       DeviceLauncherIcon* device_icon = dynamic_cast<DeviceLauncherIcon*>(icon);
 
@@ -382,9 +382,9 @@ void Controller::Impl::InsertExpoAction()
 
   expo_icon_->tooltip_text = _("Workspace Switcher");
   expo_icon_->icon_name = "workspace-switcher";
-  expo_icon_->SetQuirk(LauncherIcon::QUIRK_VISIBLE, true);
-  expo_icon_->SetQuirk(LauncherIcon::QUIRK_RUNNING, false);
-  expo_icon_->SetIconType(LauncherIcon::TYPE_EXPO);
+  expo_icon_->SetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE, true);
+  expo_icon_->SetQuirk(AbstractLauncherIcon::QUIRK_RUNNING, false);
+  expo_icon_->SetIconType(AbstractLauncherIcon::TYPE_EXPO);
   expo_icon_->SetShortcut('s');
 
   on_expoicon_activate_connection_ = expo_icon_->activate.connect(sigc::mem_fun(this, &Impl::OnExpoActivated));
@@ -402,7 +402,7 @@ void Controller::Impl::RemoveExpoAction()
 void Controller::Impl::InsertDesktopIcon()
 {
   desktop_launcher_icon_ = new DesktopLauncherIcon();
-  desktop_launcher_icon_->SetIconType(LauncherIcon::TYPE_DESKTOP);
+  desktop_launcher_icon_->SetIconType(AbstractLauncherIcon::TYPE_DESKTOP);
   desktop_launcher_icon_->SetShowInSwitcher(false);
 
   RegisterIcon(desktop_launcher_icon_);
@@ -413,7 +413,7 @@ void Controller::Impl::RemoveDesktopIcon()
   model_->RemoveIcon(desktop_launcher_icon_);
 }
 
-void Controller::Impl::RegisterIcon(LauncherIcon* icon)
+void Controller::Impl::RegisterIcon(AbstractLauncherIcon* icon)
 {
   model_->AddIcon(icon);
 
@@ -448,13 +448,13 @@ void Controller::Impl::OnViewOpened(BamfMatcher* matcher, BamfView* view, gpoint
   }
 
   BamfLauncherIcon* icon = new BamfLauncherIcon(app);
-  icon->SetIconType(LauncherIcon::TYPE_APPLICATION);
+  icon->SetIconType(AbstractLauncherIcon::TYPE_APPLICATION);
   icon->SetSortPriority(self->sort_priority_++);
 
   self->RegisterIcon(icon);
 }
 
-LauncherIcon* Controller::Impl::CreateFavorite(const char* file_path)
+AbstractLauncherIcon* Controller::Impl::CreateFavorite(const char* file_path)
 {
   BamfApplication* app;
   BamfLauncherIcon* icon;
@@ -473,7 +473,7 @@ LauncherIcon* Controller::Impl::CreateFavorite(const char* file_path)
 
   bamf_view_set_sticky(BAMF_VIEW(app), true);
   icon = new BamfLauncherIcon(app);
-  icon->SetIconType(LauncherIcon::TYPE_APPLICATION);
+  icon->SetIconType(AbstractLauncherIcon::TYPE_APPLICATION);
   icon->SetSortPriority(sort_priority_++);
 
   return icon;
@@ -496,7 +496,7 @@ void Controller::Impl::SetupBamf()
   for (FavoriteList::const_iterator i = favs.begin(), end = favs.end();
        i != end; ++i)
   {
-    LauncherIcon* fav = CreateFavorite(i->c_str());
+    AbstractLauncherIcon* fav = CreateFavorite(i->c_str());
 
     if (fav)
     {

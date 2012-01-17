@@ -695,6 +695,12 @@ LauncherIcon::GetCenter(int monitor)
   return _center[monitor];
 }
 
+nux::Point3
+LauncherIcon::GetSavedCenter(int monitor)
+{
+  return _saved_center[monitor];
+}
+
 std::vector<nux::Point3> LauncherIcon::GetCenters()
 {
   return _center;

@@ -33,6 +33,7 @@
 
 #include "DndData.h"
 #include "Introspectable.h"
+#include "LauncherEntryRemote.h"
 
 namespace unity
 {
@@ -135,6 +136,10 @@ public:
 
   virtual nux::Point3 GetCenter(int monitor) = 0;
 
+  virtual nux::Point3 GetSavedCenter(int monitor) = 0;
+
+  virtual void SaveCenter() = 0;
+
   virtual std::vector<nux::Vector4> & GetTransform(TransformIndex index) = 0;
 
   virtual void Activate(ActionArg arg) = 0;
@@ -167,6 +172,8 @@ public:
 
   virtual struct timespec GetQuirkTime(Quirk quirk) = 0;
 
+  virtual void ResetQuirkTime(Quirk quirk) = 0;
+
   virtual IconType Type() = 0;
 
   virtual nux::Color BackgroundColor() = 0;
@@ -189,6 +196,10 @@ public:
 
   virtual void SendDndLeave() = 0;
 
+  virtual void InsertEntryRemote(LauncherEntryRemote* remote) = 0;
+
+  virtual void RemoveEntryRemote(LauncherEntryRemote* remote) = 0;
+
   sigc::signal<void, int, int> mouse_down;
   sigc::signal<void, int, int> mouse_up;
   sigc::signal<void, int, int> mouse_click;
@@ -198,7 +209,13 @@ public:
   sigc::signal<void, AbstractLauncherIcon*> show;
   sigc::signal<void, AbstractLauncherIcon*> hide;
   sigc::signal<void, AbstractLauncherIcon*> needs_redraw;
+  sigc::signal<void, AbstractLauncherIcon*> remove;
 
+  sigc::connection needs_redraw_connection;
+  sigc::connection on_icon_added_connection;
+  sigc::connection on_icon_removed_connection;
+  sigc::connection on_order_changed_connection;
+  sigc::connection on_expo_terminated_connection;
 };
 
 }

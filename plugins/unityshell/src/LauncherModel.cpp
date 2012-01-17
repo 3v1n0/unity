@@ -18,7 +18,7 @@
  */
 
 #include "LauncherModel.h"
-#include "LauncherIcon.h"
+#include "AbstractLauncherIcon.h"
 
 namespace unity
 {
@@ -27,7 +27,7 @@ namespace launcher
 
 typedef struct
 {
-  LauncherIcon* icon;
+  AbstractLauncherIcon* icon;
   LauncherModel* self;
 } RemoveArg;
 
@@ -44,12 +44,12 @@ LauncherModel::~LauncherModel()
     icon->UnReference();
 }
 
-bool LauncherModel::IconShouldShelf(LauncherIcon* icon)
+bool LauncherModel::IconShouldShelf(AbstractLauncherIcon* icon)
 {
-  return icon->Type() == LauncherIcon::TYPE_TRASH;
+  return icon->Type() == AbstractLauncherIcon::TYPE_TRASH;
 }
 
-bool LauncherModel::CompareIcons(LauncherIcon* first, LauncherIcon* second)
+bool LauncherModel::CompareIcons(AbstractLauncherIcon* first, AbstractLauncherIcon* second)
 {
   if (first->Type() < second->Type())
     return true;
@@ -85,7 +85,7 @@ LauncherModel::Populate()
 }
 
 void
-LauncherModel::AddIcon(LauncherIcon* icon)
+LauncherModel::AddIcon(AbstractLauncherIcon* icon)
 {
   icon->SinkReference();
 
@@ -104,7 +104,7 @@ LauncherModel::AddIcon(LauncherIcon* icon)
 }
 
 void
-LauncherModel::RemoveIcon(LauncherIcon* icon)
+LauncherModel::RemoveIcon(AbstractLauncherIcon* icon)
 {
   size_t size;
 
@@ -133,7 +133,7 @@ LauncherModel::RemoveCallback(gpointer data)
 }
 
 void
-LauncherModel::OnIconRemove(LauncherIcon* icon)
+LauncherModel::OnIconRemove(AbstractLauncherIcon* icon)
 {
   RemoveArg* arg = (RemoveArg*) g_malloc0(sizeof(RemoveArg));
   arg->icon = icon;
@@ -159,7 +159,7 @@ LauncherModel::Sort()
 }
 
 bool
-LauncherModel::IconHasSister(LauncherIcon* icon)
+LauncherModel::IconHasSister(AbstractLauncherIcon* icon)
 {
   iterator it;
   iterator end;
@@ -180,7 +180,7 @@ LauncherModel::IconHasSister(LauncherIcon* icon)
 
   for (; it != end; ++it)
   {
-    LauncherIcon* iter_icon = *it;
+    AbstractLauncherIcon* iter_icon = *it;
     if ((iter_icon  != icon)
         && iter_icon->Type() == icon->Type())
       return true;
@@ -190,7 +190,7 @@ LauncherModel::IconHasSister(LauncherIcon* icon)
 }
 
 void
-LauncherModel::ReorderBefore(LauncherIcon* icon, LauncherIcon* other, bool save)
+LauncherModel::ReorderBefore(AbstractLauncherIcon* icon, AbstractLauncherIcon* other, bool save)
 {
   if (icon == other)
     return;
@@ -233,7 +233,7 @@ LauncherModel::ReorderBefore(LauncherIcon* icon, LauncherIcon* other, bool save)
 }
 
 void
-LauncherModel::ReorderSmart(LauncherIcon* icon, LauncherIcon* other, bool save)
+LauncherModel::ReorderSmart(AbstractLauncherIcon* icon, AbstractLauncherIcon* other, bool save)
 {
   if (icon == other)
     return;
