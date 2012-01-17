@@ -43,6 +43,7 @@ struct CallData
 {
   DBusProxy::ReplyCallback callback;
   DBusProxy::Impl* impl;
+  std::string method_name;
 };
 
 class DBusProxy::Impl
@@ -242,6 +243,7 @@ void DBusProxy::Impl::Call(string const& method_name,
     CallData* data = new CallData();
     data->callback = callback;
     data->impl = this;
+    data->method_name = method_name;
 
     g_dbus_proxy_call(proxy_,
                       method_name.c_str(),
@@ -272,7 +274,10 @@ void DBusProxy::Impl::OnCallCallback(GObject* source, GAsyncResult* res, gpointe
   else if (error)
   {
     // Do not touch the impl pointer as the operation may have been cancelled
-    LOG_WARNING(logger) << "Calling method failed: " << error;
+    LOG_WARNING(logger) << "Calling method \"" << data->method_name
+      << "\" on object path: \""
+      << g_dbus_proxy_get_object_path (G_DBUS_PROXY (source))
+      << "\" failed: " << error;
   }
   else
   {
