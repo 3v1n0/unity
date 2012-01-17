@@ -36,6 +36,7 @@
 #include "LensBar.h"
 #include "LensView.h"
 #include "UBusWrapper.h"
+#include "OverlayRenderer.h"
 
 namespace unity
 {
@@ -70,7 +71,6 @@ protected:
     unsigned long special_keys_state);
 
 private:
-  void SetupBackground();
   void SetupViews();
   void SetupUBusConnections();
 
@@ -111,13 +111,8 @@ private:
   UBusManager ubus_manager_;
   FilesystemLenses lenses_;
   HomeLens::Ptr home_lens_;
-  BackgroundEffectHelper bg_effect_helper_;
   LensViews lens_views_;
 
-  // Background related
-  nux::ColorLayer* bg_layer_;
-  nux::ColorLayer* bg_darken_layer_;
-  nux::Color bg_color_;
 
   // View related
   nux::VLayout* layout_;
@@ -131,8 +126,7 @@ private:
 
   // Drawing related
   nux::Geometry content_geo_;
-  nux::ObjectPtr <nux::IOpenGLBaseTexture> bg_blur_texture_;
-  nux::ObjectPtr <nux::IOpenGLBaseTexture> bg_shine_texture_;
+  OverlayRenderer renderer_;
 
   std::string last_activated_uri_;
   // we're passing this back to g_* functions, so we'll keep the g* type
