@@ -312,6 +312,10 @@ void HomeLens::ResultsMerger::OnSourceRowAdded(DeeModel *model, DeeModelIter *it
 
     target_iter = dee_model_append_row (target_, row_buf_);
     dee_model_set_tag(model, iter, target_tag, target_iter);
+
+    LOG_DEBUG(logger) << "Found " << dee_model_get_string(model, iter, 0)
+                      << " (source cat " << source_cat_offset << ", target cat "
+                      << target_cat_offset << ")";
   }
   else
   {
@@ -340,7 +344,6 @@ void HomeLens::CategoryMerger::OnSourceRowAdded(DeeModel *model, DeeModelIter *i
     LOG_DEBUG(logger) << "Category model " << model
                       << " does not have a results model yet";
     return;
-    // FIXME: Register cats when we get the results model
   }
 
   dee_model_get_row (model, iter, row_buf_);
@@ -507,13 +510,26 @@ HomeLens::Impl::~Impl()
 
 }
 
-void HomeLens::Impl::EnsureCategoryAnnotation (DeeModel* results,
-                                                     DeeModel* categories)
+void HomeLens::Impl::EnsureCategoryAnnotation (DeeModel* categories,
+                                                     DeeModel* results)
 {
   if (categories && results)
-        g_object_set_data(G_OBJECT(categories),
-                            "unity-homelens-results-model",
-                            results);
+  {
+    if (!(DEE_IS_MODEL(results) && DEE_IS_MODEL(categories)))
+    {
+      LOG_ERROR(logger) << "The "
+                        << std::string(DEE_IS_MODEL(results) ? "categories" : "results")
+                        << " model is not a valid DeeModel";
+      return;
+    }
+
+    g_object_set_data(G_OBJECT(categories),
+                      "unity-homelens-results-model",
+                      results);
+
+    LOG_DEBUG(logger) << "Registering results model "  << results
+                      << " on category model " << categories;
+  }
 }
 
 Lens::Ptr HomeLens::Impl::FindLensForUri(std::string const& uri)
@@ -685,7 +701,10 @@ void HomeLens::Activate(std::string const& uri)
   /* Fall back to default handling of URIs if no lens is found.
    *  - Although, this shouldn't really happen */
   if (lens)
+  {
+    LOG_DEBUG(logger) << "Activation request passed to '" << lens->id() << "'";
     lens->Activate(uri);
+  }
   else
   {
     LOG_WARN(logger) << "Unable to find a lens for activating '" << uri
