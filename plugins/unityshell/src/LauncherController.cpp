@@ -248,7 +248,7 @@ Controller::Impl::OnLauncherAddRequestSpecial(char* path, LauncherIcon* before, 
   launchers = model_->GetSublist<BamfLauncherIcon> ();
   for (it = launchers.begin(); it != launchers.end(); it++)
   {
-    if (!g_strcmp0(path, (*it)->DesktopFile()))
+    if (g_strcmp0(path, (*it)->DesktopFile()) == 0)
       return;
   }
 

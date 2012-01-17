@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010 Canonical Ltd
+ * Copyright (C) 2012 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -57,8 +57,8 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(Launcher* IconManager, Ba
                                     G_BUS_TYPE_SYSTEM,
                                     G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START);
 
-    _aptdaemon_trans->Connect("Finished", sigc::mem_fun(*this, &SoftwareCenterLauncherIcon::OnFinished));
-    _aptdaemon_trans->Connect("PropertyChanged", sigc::mem_fun(*this, &SoftwareCenterLauncherIcon::OnPropertyChanged));
+    _aptdaemon_trans->Connect("Finished", sigc::mem_fun(this, &SoftwareCenterLauncherIcon::OnFinished));
+    _aptdaemon_trans->Connect("PropertyChanged", sigc::mem_fun(this, &SoftwareCenterLauncherIcon::OnPropertyChanged));
 
     icon_name = icon_path;
 }
