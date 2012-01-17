@@ -101,6 +101,7 @@ LauncherHideMachine::SetShouldHide(bool value, bool skip_delay)
     MT_DRAG_OUT            = 1 << 18, 256k #VISIBLE_REQUIRED
     MOUSE_OVER_ACTIVE_EDGE = 1 << 19, 512k
     LAUNCHER_PULSE         = 1 << 20, 1M   #VISIBLE_REQUIRED
+    LOCK_HIDE              = 1 << 21, 2M
 */
 
 #define VISIBLE_REQUIRED (QUICKLIST_OPEN | EXTERNAL_DND_ACTIVE | \
@@ -123,6 +124,13 @@ LauncherHideMachine::EnsureHideState(bool skip_delay)
   {
     // first we check the condition where external DND is active and the push off has happened
     if (GetQuirk((HideQuirk)(EXTERNAL_DND_ACTIVE | DND_PUSHED_OFF), false))
+    {
+      should_hide = true;
+      break;
+    }
+
+    // early check to see if we are locking to hidden
+    if (GetQuirk(LOCK_HIDE))
     {
       should_hide = true;
       break;

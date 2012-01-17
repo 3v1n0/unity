@@ -37,6 +37,7 @@
 #include "LauncherDragWindow.h"
 #include "LauncherHideMachine.h"
 #include "LauncherHoverMachine.h"
+#include "UBusWrapper.h"
 
 #define ANIM_DURATION_SHORT_SHORT 100
 #define ANIM_DURATION_SHORT 125
@@ -348,15 +349,17 @@ private:
 
   void OnIconNeedsRedraw(AbstractLauncherIcon* icon);
 
-  static void OnPlaceViewHidden(GVariant* data, void* val);
-  static void OnPlaceViewShown(GVariant* data, void* val);
+  void OnPlaceViewHidden(GVariant* data);
+  void OnPlaceViewShown(GVariant* data);
 
   void DesaturateIcons();
   void SaturateIcons();
 
-  static void OnBGColorChanged (GVariant *data, void *val);
+  void OnBGColorChanged(GVariant *data);
 
-  static void OnActionDone(GVariant* data, void* val);
+  void OnLockHideChanged(GVariant *data);
+
+  void OnActionDone(GVariant* data);
 
   void RenderIconToTexture(nux::GraphicsEngine& GfxContext, LauncherIcon* icon, nux::ObjectPtr<nux::IOpenGLBaseTexture> texture);
 
@@ -502,7 +505,7 @@ private:
 
   bool _initial_drag_animation;
 
-  guint _ubus_handles[4];
+  UBusManager ubus;
 
   nux::Color _background_color;
   BaseTexturePtr   launcher_sheen_;
