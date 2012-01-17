@@ -19,6 +19,7 @@ from compizconfig import Plugin
 
 from autopilot.globals import global_context
 from autopilot.emulators.unity import Switcher
+from autopilot.emulators.bamf import Bamf
 from autopilot.glibrunner import GlibRunner
 
 
@@ -27,10 +28,6 @@ class SwitcherTests(TestCase):
     """Test the switcher."""
     run_test_with = GlibRunner
 
-    def launch_application(self, desktop_file):
-        proc = gio.unix.DesktopAppInfo(desktop_file)
-        proc.launch()
-
     def set_timeout_setting(self, value):
         self.setting.Value = value
         global_context.Write()
@@ -38,12 +35,12 @@ class SwitcherTests(TestCase):
     def setUp(self):
         self.plugin = Plugin(global_context, "unityshell")
         self.setting = Setting(self.plugin, "alt_tab_timeout")
+        self.bamf = Bamf()
 
-        self.launch_application("gucharmap.desktop")
-        self.launch_application("gcalctool.desktop")
-        self.launch_application("mahjongg.desktop")
+        self.bamf.launch_application("gucharmap.desktop")
+        self.bamf.launch_application("gcalctool.desktop")
+        self.bamf.launch_application("mahjongg.desktop")
         
-        sleep(5)
         super(SwitcherTests, self).setUp()
         
         self.server = Switcher()

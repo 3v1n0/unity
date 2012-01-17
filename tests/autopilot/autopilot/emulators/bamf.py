@@ -8,8 +8,10 @@
 "Various classes for interacting with BAMF."
 
 import dbus
-import wnck
+import gio
 from time import sleep
+from Xlib import display, X, protocol, Xatom
+import time
 
 __all__ = ["Bamf", 
         "BamfApplication", 
@@ -23,7 +25,7 @@ _session_bus = dbus.SessionBus()
 #
 # There's a bug in libwnck - you need to access a screen before any of the
 # window methods will work. see lp:914665
-__default_screen = wnck.screen_get_default()
+#__default_screen = wnck.screen_get_default()
 
 class Bamf:
     """High-level class for interacting with Bamf from within a test.
@@ -92,7 +94,8 @@ class Bamf:
         """Wait until a given application is running.
 
         'app_name' is the name of the application.
-        'timeout' is the maximum time to wait, in seconds.
+        'timeout' is the maximum time to wait, in seconds. If set to
+        something less than 0, this method will wait forever.
 
         This method returns true once the application is found, or false 
         if the application was not found until the timeout was reached.
@@ -108,6 +111,19 @@ class Bamf:
                 sleep(0.5)
                 if timeout < 0:
                     return False
+
+    def launch_application(self, desktop_file, wait=True):
+        """Launch an application by specifying a desktop file.
+
+        Returns the Gobject process object. if wait is True (the default),
+        this method will not return until an instance of this application
+        appears in the BAMF application list.
+        """
+        proc = gio.unix.DesktopAppInfo(desktop_file)
+        proc.launch()
+        if wait:
+            self.wait_until_application_is_running(proc.get_name(), -1)
+        return proc
 
 
 class BamfApplication:
@@ -173,7 +189,9 @@ class BamfWindow:
         self._view_iface = dbus.Interface(self._app_proxy, 'org.ayatana.bamf.view')
 
         self.xid = self._window_iface.GetXid()
-        self._wnck_window = wnck.window_get(self.xid)
+        self.x_display = display.Display()
+        self.x_root_win = self.x_display.screen().root
+        self.x_win = self.x_display.create_resource_object('window', self.xid)
 
 
     @property
@@ -188,7 +206,7 @@ class BamfWindow:
         This may be different from the application name.
 
         """
-        return self._wnck_window.get_name()
+        return self._getProperty('_NET_WM_NAME')
 
     @property
     def geometry(self):
@@ -198,7 +216,8 @@ class BamfWindow:
 
         """
         
-        return self._wnck_window.get_geometry()
+        geometry = self.x_win.get_geometry()
+        return (geometry.x, geometry.y, geometry.width, geometry.height)
 
     @property
     def is_maximized(self):
@@ -209,12 +228,9 @@ class BamfWindow:
         direction it is not considered maximized.
 
         """
-        return self._wnck_window.is_maximized()
-
-    @property
-    def is_minimized(self):
-        """Is the window minimized?"""
-        return self._wnck_window.is_minimized()
+        win_state = self._get_window_states()
+        return '_NET_WM_STATE_MAXIMIZED_VERT' in win_state and \
+            '_NET_WM_STATE_MAXIMIZED_HORZ' in win_state
 
     @property
     def application(self):
@@ -244,7 +260,8 @@ class BamfWindow:
         Windows are hidden when the 'Show Desktop' mode is activated.
 
         """
-        return bool(wnck.WINDOW_STATE_HIDDEN & self._wnck_window.get_state())
+        win_state = self._get_window_states()
+        return '_NET_WM_STATE_HIDDEN' in win_state
 
     @property
     def is_valid(self):
@@ -254,11 +271,39 @@ class BamfWindow:
         this object instance.
 
         """
-        return not self._wnck_window is None
+        return not self.x_win is None
 
     def close(self):
         """Close the window."""
-        self._wnck_window.close(0)
+
+        self._setProperty('_NET_CLOSE_WINDOW', [int(time.mktime(time.localtime())), 1], self.x_win)
 
     def __repr__(self):
-        return "<BamfWindow '%s'>" % (self.title)
+        return "<BamfWindow '%s'>" % (self.title if self.x_win else str(self.xid))
+
+    def _getProperty(self, _type):
+        """Get an X11 property.
+
+        _type is a string naming the property type. win is the X11 window object.
+
+        """
+        atom = self.x_win.get_full_property(self.x_display.get_atom(_type), X.AnyPropertyType)
+        if atom: return atom.value
+
+    def _setProperty(self, _type, data, mask=None):
+        if type(data) is str:
+            dataSize = 8
+        else:
+            data = (data+[0]*(5-len(data)))[:5]
+            dataSize = 32
+        
+        ev = protocol.event.ClientMessage(window=self.x_win, client_type=self.display.get_atom(_type), data=(dataSize, data))
+
+        if not mask:
+            mask = (X.SubstructureRedirectMask|X.SubstructureNotifyMask)
+        self.x_root_win.send_event(ev, event_mask=mask)
+
+    def _get_window_states(self):
+        """Return a list of strings representing the current window state."""
+
+        return map(self.x_display.get_atom_name, self._getProperty('_NET_WM_STATE'))

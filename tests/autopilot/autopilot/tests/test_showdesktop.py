@@ -6,7 +6,6 @@
 # under the terms of the GNU General Public License version 3, as published 
 # by the Free Software Foundation.
 
-import gio
 from testtools import TestCase
 from time import sleep
 from subprocess import call
@@ -15,22 +14,12 @@ from autopilot.emulators.bamf import Bamf
 from autopilot.emulators.X11 import Keyboard
 from autopilot.emulators.unity import Launcher
 from autopilot.glibrunner import GlibRunner
+import wnck
 
 
 class ShowDesktopTests(TestCase):
     """Test the 'Show Desktop' functionality."""
     run_test_with = GlibRunner
-    
-    def launch_application(self, desktop_file):
-        proc = gio.unix.DesktopAppInfo(desktop_file)
-        proc.launch()
-
-    def setUp(self):
-        super(ShowDesktopTests, self).setUp()
-        
-
-    def tearDown(self):
-        super(ShowDesktopTests, self).tearDown()
 
     def test_showdesktop(self):
         """This test shows that the "show desktop" mode works correctly
@@ -48,11 +37,13 @@ class ShowDesktopTests(TestCase):
           windows will fade in.
 
         """
-        self.launch_application("gucharmap.desktop")
-        self.launch_application("gcalctool.desktop")
-        sleep(5)
-
         bamf = Bamf()
+        
+        bamf.launch_application("gucharmap.desktop")
+        self.addCleanup(call, ["killall", "gcalctool"])
+        bamf.launch_application("gcalctool.desktop")
+        self.addCleanup(call, ["killall", "gucharmap"])
+        
         open_app_names = [a.name for a in bamf.get_running_applications() if a.user_visible]
         self.assertIn('Character Map', open_app_names)
         self.assertIn('Calculator', open_app_names)
@@ -61,8 +52,10 @@ class ShowDesktopTests(TestCase):
         kb = Keyboard()
         kb.press_and_release(['Control_L','Meta_L','d'])
         sleep(1)
-        for win in bamf.get_open_windows():
+        open_wins = bamf.get_open_windows() 
+        for win in open_wins:
             if win.is_valid:
+                print "Window %s hidden = %r" % (win.title, win.is_hidden)
                 self.assertTrue(win.is_hidden, "Window '%s' is not hidden after show desktop activated." % (win.title))
 
         # hide desktop, verify all windows are shown:
@@ -104,5 +97,3 @@ class ShowDesktopTests(TestCase):
         for win in bamf.get_open_windows():
             if win.is_valid:
                 self.assertFalse(win.is_hidden, "Window '%s' is shown after show desktop deactivated." % (win.title))
-        call(["killall", "gcalctool"])
-        call(["killall", "gucharmap"])
