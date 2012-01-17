@@ -51,6 +51,14 @@ add_executable (dash
                 ${UNITY_SRC}/DashSearchBar.h
                 ${UNITY_SRC}/DashSearchBarSpinner.cpp
                 ${UNITY_SRC}/DashSearchBarSpinner.h
+                ${UNITY_SRC}/DashView.cpp
+                ${UNITY_SRC}/DashView.h
+                ${UNITY_SRC}/DashViewPrivate.cpp
+                ${UNITY_SRC}/DashViewPrivate.h
+                ${UNITY_SRC}/DashSettings.cpp
+                ${UNITY_SRC}/DashSettings.h
+                ${UNITY_SRC}/FilterAllButton.cpp
+                ${UNITY_SRC}/FilterAllButton.h
                 ${UNITY_SRC}/FilterExpanderLabel.cpp
                 ${UNITY_SRC}/FilterFactory.cpp
                 ${UNITY_SRC}/FilterBasicButton.cpp
@@ -61,6 +69,8 @@ add_executable (dash
                 ${UNITY_SRC}/FilterGenreButton.cpp
                 ${UNITY_SRC}/FilterGenreWidget.cpp
                 ${UNITY_SRC}/FilterBar.cpp
+                ${UNITY_SRC}/FilterWidget.cpp
+                ${UNITY_SRC}/FilterWidget.h
                 ${UNITY_SRC}/FontSettings.cpp
                 ${UNITY_SRC}/FontSettings.h
                 ${UNITY_SRC}/IMTextEntry.cpp
@@ -69,16 +79,12 @@ add_executable (dash
                 ${UNITY_SRC}/PlacesHomeView.h
                 ${UNITY_SRC}/PlacesGroup.cpp
                 ${UNITY_SRC}/PlacesGroup.h
-                ${UNITY_SRC}/DashSettings.cpp
-                ${UNITY_SRC}/DashSettings.h
                 ${UNITY_SRC}/PlacesTile.cpp
                 ${UNITY_SRC}/PlacesTile.h
                 ${UNITY_SRC}/PlacesSimpleTile.cpp
                 ${UNITY_SRC}/PlacesSimpleTile.h
                 ${UNITY_SRC}/PlacesVScrollBar.cpp
                 ${UNITY_SRC}/PlacesVScrollBar.h
-                ${UNITY_SRC}/DashView.cpp
-                ${UNITY_SRC}/DashView.h
                 ${UNITY_SRC}/HomeView.cpp
                 ${UNITY_SRC}/HomeView.h
                 ${UNITY_SRC}/DashStyle.cpp
