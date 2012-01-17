@@ -687,6 +687,7 @@ void HomeLens::Search(std::string const& search_string)
     {
       LOG_DEBUG(logger) << " - Global search on '" << lens->id() << "' for '"
           << search_string << "'";
+      lens->view_type = ViewType::HOME_VIEW;
       lens->GlobalSearch(search_string);
     }
   }

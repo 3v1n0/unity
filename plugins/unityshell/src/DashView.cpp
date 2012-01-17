@@ -90,7 +90,6 @@ void DashView::AboutToShow()
    * initialize all the lenses for the home screen */
   EnsureLensesInitialized();
   renderer_.AboutToShow();
-
 }
 
 void DashView::AboutToHide()
@@ -103,13 +102,8 @@ void DashView::EnsureLensesInitialized()
 {
   if (!lenses_initialized_)
   {
-    int i, count = lenses_.count;
-    for (i = 0; i < count; i++)
-    {
-      Lens::Ptr lens = lenses_.GetLensAtIndex (i);
-      lens->view_type = ViewType::HOME_VIEW;
-      lens->GlobalSearch ("");
-    }
+    // The HomeLens will initialize all know lenses
+    home_lens_->Search("");
     lenses_initialized_ = true;
   }
 }
@@ -377,6 +371,7 @@ void DashView::OnLensAdded(Lens::Ptr& lens)
    * before we haven't mapped yet and we should hold it off */
   if (lenses_initialized_)
     {
+      LOG_DEBUG(logger) << "Initializing lens '" << lens->id() << "'";
       lens->view_type = ViewType::HOME_VIEW;
       lens->GlobalSearch ("");
     }
