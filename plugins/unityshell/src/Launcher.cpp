@@ -282,30 +282,11 @@ Launcher::Launcher(nux::BaseWindow* parent,
   _drag_window = NULL;
   _offscreen_drag_texture = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableDeviceTexture(2, 2, 1, nux::BITFMT_R8G8B8A8);
 
-  for (unsigned int i = 0; i < G_N_ELEMENTS(_ubus_handles); ++i)
-    _ubus_handles[i] = 0;
-
-  UBusServer* ubus = ubus_server_get_default();
-  _ubus_handles[0] = ubus_server_register_interest(ubus,
-                                                   UBUS_PLACE_VIEW_SHOWN,
-                                                   (UBusCallback) &Launcher::OnPlaceViewShown,
-                                                   this);
-
-  _ubus_handles[1] = ubus_server_register_interest(ubus,
-                                                   UBUS_PLACE_VIEW_HIDDEN,
-                                                   (UBusCallback)&Launcher::OnPlaceViewHidden,
-                                                   this);
-
-  _ubus_handles[2] = ubus_server_register_interest(ubus,
-                                                   UBUS_LAUNCHER_ACTION_DONE,
-                                                   (UBusCallback) &Launcher::OnActionDone,
-                                                   this);
-
-  _ubus_handles[3] = ubus_server_register_interest (ubus,
-                                                    UBUS_BACKGROUND_COLOR_CHANGED,
-                                                    (UBusCallback) &Launcher::OnBGColorChanged,
-                                                    this);
-
+  ubus.RegisterInterest(UBUS_PLACE_VIEW_SHOWN, sigc::mem_fun(this, &Launcher::OnPlaceViewShown));
+  ubus.RegisterInterest(UBUS_PLACE_VIEW_HIDDEN, sigc::mem_fun(this, &Launcher::OnPlaceViewHidden));
+  ubus.RegisterInterest(UBUS_LAUNCHER_ACTION_DONE, sigc::mem_fun(this, &Launcher::OnActionDone));
+  ubus.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED, sigc::mem_fun(this, &Launcher::OnBGColorChanged));
+  ubus.RegisterInterest(UBUS_LAUNCHER_LOCK_HIDE, sigc::mem_fun(this, &Launcher::OnLockHideChanged));
   _dbus_owner = g_bus_own_name(G_BUS_TYPE_SESSION,
                                S_DBUS_NAME,
                                (GBusNameOwnerFlags)(G_BUS_NAME_OWNER_FLAGS_REPLACE | G_BUS_NAME_OWNER_FLAGS_ALLOW_REPLACEMENT),
@@ -321,7 +302,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
   icon_renderer->SetTargetSize(_icon_size, _icon_image_size, _space_between_icons);
 
   // request the latest colour from bghash
-  ubus_server_send_message (ubus, UBUS_BACKGROUND_REQUEST_COLOUR_EMIT, NULL);
+  ubus.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT, NULL);
 
   SetAcceptMouseWheelEvent(true);
 
@@ -372,13 +353,6 @@ Launcher::~Launcher()
 
   if (_on_data_collected_connection.connected())
       _on_data_collected_connection.disconnect();
-
-  UBusServer* ubus = ubus_server_get_default();
-  for (unsigned int i = 0; i < G_N_ELEMENTS(_ubus_handles); ++i)
-  {
-    if (_ubus_handles[i] != 0)
-      ubus_server_unregister_interest(ubus, _ubus_handles[i]);
-  }
 
   g_idle_remove_by_data(this);
 
@@ -1472,14 +1446,30 @@ gboolean Launcher::SuperShowShortcutsTimeout(gpointer data)
   return false;
 }
 
-void Launcher::OnBGColorChanged(GVariant *data, void *val)
+void Launcher::OnBGColorChanged(GVariant *data)
 {
-  Launcher *self = (Launcher*)val;
   double red = 0.0f, green = 0.0f, blue = 0.0f, alpha = 0.0f;
 
   g_variant_get(data, "(dddd)", &red, &green, &blue, &alpha);
-  self->_background_color = nux::Color(red, green, blue, alpha);
-  self->NeedRedraw();
+  _background_color = nux::Color(red, green, blue, alpha);
+  NeedRedraw();
+}
+
+void Launcher::OnLockHideChanged(GVariant *data)
+{
+  gboolean enable_lock = FALSE;
+  g_variant_get(data, "(b)", &enable_lock);
+
+  if (enable_lock) 
+  {
+    _hide_machine->SetQuirk(LauncherHideMachine::LOCK_HIDE, true);
+    _hide_machine->SetShowOnEdge(false);
+  }
+  else
+  {
+    _hide_machine->SetQuirk(LauncherHideMachine::LOCK_HIDE, false);
+    _hide_machine->SetShowOnEdge(true);
+  }
 }
 
 void Launcher::DesaturateIcons()
@@ -1500,42 +1490,39 @@ void Launcher::SaturateIcons()
   }
 }
 
-void Launcher::OnPlaceViewShown(GVariant* data, void* val)
+void Launcher::OnPlaceViewShown(GVariant* data)
 {
-  Launcher* self = (Launcher*)val;
   LauncherModel::iterator it;
 
-  self->_dash_is_open = true;
-  self->bg_effect_helper_.enabled = true;
-  self->_hide_machine->SetQuirk(LauncherHideMachine::PLACES_VISIBLE, true);
-  self->_hover_machine->SetQuirk(LauncherHoverMachine::PLACES_VISIBLE, true);
+  _dash_is_open = true;
+  bg_effect_helper_.enabled = true;
+  _hide_machine->SetQuirk(LauncherHideMachine::PLACES_VISIBLE, true);
+  _hover_machine->SetQuirk(LauncherHoverMachine::PLACES_VISIBLE, true);
 
-  self->DesaturateIcons();
+  DesaturateIcons();
 }
 
-void Launcher::OnPlaceViewHidden(GVariant* data, void* val)
+void Launcher::OnPlaceViewHidden(GVariant* data)
 {
-  Launcher* self = (Launcher*)val;
   LauncherModel::iterator it;
 
-  self->_dash_is_open = false;
-  self->bg_effect_helper_.enabled = false;
-  self->_hide_machine->SetQuirk(LauncherHideMachine::PLACES_VISIBLE, false);
-  self->_hover_machine->SetQuirk(LauncherHoverMachine::PLACES_VISIBLE, false);
+  _dash_is_open = false;
+  bg_effect_helper_.enabled = false;
+  _hide_machine->SetQuirk(LauncherHideMachine::PLACES_VISIBLE, false);
+  _hover_machine->SetQuirk(LauncherHoverMachine::PLACES_VISIBLE, false);
 
   // as the leave event is no more received when the place is opened
   // FIXME: remove when we change the mouse grab strategy in nux
   nux::Point pt = nux::GetWindowCompositor().GetMousePosition();
 
-  self->SetStateMouseOverLauncher(self->GetAbsoluteGeometry().IsInside(pt));
+  SetStateMouseOverLauncher(GetAbsoluteGeometry().IsInside(pt));
 
-  self->SaturateIcons();
+  SaturateIcons();
 }
 
-void Launcher::OnActionDone(GVariant* data, void* val)
+void Launcher::OnActionDone(GVariant* data)
 {
-  Launcher* self = (Launcher*)val;
-  self->_hide_machine->SetQuirk(LauncherHideMachine::LAST_ACTION_ACTIVATE, true);
+  _hide_machine->SetQuirk(LauncherHideMachine::LAST_ACTION_ACTIVATE, true);
 }
 
 void Launcher::SetHidden(bool hidden)

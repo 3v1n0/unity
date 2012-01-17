@@ -86,6 +86,7 @@ private:
   bool get_im_active() const;
 
   static gboolean OnLiveSearchTimeout(SearchBar* self);
+  static gboolean OnSpinnerStartCb(SearchBar* self);
 
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
@@ -108,6 +109,7 @@ private:
   int last_height_;
   
   guint live_search_timeout_;
+  guint start_spinner_timeout_;
 
   SearchBarSpinner* spinner_;
 };
