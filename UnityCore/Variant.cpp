@@ -52,7 +52,7 @@ Variant::~Variant()
 std::string Variant::GetString() const
 {
   // g_variant_get_string doesn't duplicate the string
-  const gchar *result = g_variant_get_string (variant, NULL);
+  const gchar *result = g_variant_get_string (variant_, NULL);
   return result != NULL ? result : "";
 }
 
@@ -69,6 +69,30 @@ unsigned Variant::GetUInt() const
 bool Variant::GetBool() const
 {
   return (g_variant_get_boolean (variant_) != FALSE);
+}
+
+bool Variant::ASVToHints(HintsMap& hints) const
+{
+  GVariantIter* hints_iter;
+  char* key = NULL;
+  GVariant* value = NULL;
+
+  if (!g_variant_is_of_type (variant_, G_VARIANT_TYPE ("(a{sv})")) &&
+      !g_variant_is_of_type (variant_, G_VARIANT_TYPE ("a{sv}")))
+  {
+    return false;
+  }
+
+  g_variant_get(variant_, g_variant_get_type_string(variant_), &hints_iter);
+
+  while (g_variant_iter_loop(hints_iter, "{sv}", &key, &value))
+  {
+    hints[key] = value;
+  }
+
+  g_variant_iter_free (hints_iter);
+
+  return true;
 }
 
 Variant& Variant::operator=(GVariant* val)

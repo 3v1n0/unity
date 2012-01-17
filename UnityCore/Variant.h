@@ -31,6 +31,9 @@ namespace unity
 namespace glib
 {
 
+class Variant;
+typedef std::map<std::string, Variant> HintsMap;
+
 struct StealRef {};
 
 class Variant
@@ -48,13 +51,13 @@ public:
   unsigned GetUInt() const;
   bool GetBool() const;
 
+  bool ASVToHints(HintsMap& hints) const;
+
   Variant& operator=(GVariant*);
   operator GVariant*() const;
 private:
   GVariant* variant_;
 };
-
-typedef std::map<std::string, Variant> HintsMap;
 
 }
 

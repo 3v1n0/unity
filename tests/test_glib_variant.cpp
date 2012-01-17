@@ -21,7 +21,6 @@
 #include <algorithm>
 #include <gmock/gmock.h>
 #include <UnityCore/Variant.h>
-#include <UnityCore/Utils.h>
 
 using namespace std;
 using namespace testing;
@@ -130,10 +129,8 @@ TEST(TestGLibVariant, HintsMap)
   EXPECT_TRUE(IsVariant(dict));
   EXPECT_FALSE(IsFloating(dict));
 
-  GVariantIter *iter;
-  g_variant_get (dict, "(a{sv})", &iter);
   HintsMap hints;
-  dash::Utils::ASVToHints (hints, iter);
+  EXPECT_TRUE(dict.ASVToHints (hints));
 
   EXPECT_EQ(hints["string-key"].GetString(), "string-value");
   EXPECT_EQ(hints["int-key"].GetInt(), 123);
@@ -141,10 +138,10 @@ TEST(TestGLibVariant, HintsMap)
   EXPECT_EQ(hints["last"].GetString(), "foo");
 
   // throw away all references to the original variant
-  g_variant_iter_free (iter);
   dict = g_variant_new_string ("bar");
   EXPECT_TRUE(IsVariant(dict));
   EXPECT_FALSE(IsFloating(dict));
+  EXPECT_EQ(dict.GetString(), "bar");
 
   // this has to still work
   EXPECT_EQ(hints["string-key"].GetString(), "string-value");
