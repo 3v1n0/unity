@@ -116,6 +116,7 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
 
   filter_layout_ = new nux::HLayout();
   filter_layout_->SetHorizontalInternalMargin(8);
+  filter_layout_->SetHorizontalExternalMargin(6);
   filter_space_ = new nux::SpaceLayout(100, 10000, 0, 1);
   filter_layout_->AddLayout(filter_space_, 1);
   filter_layout_->AddView(show_filters_, 0, nux::MINOR_POSITION_CENTER);
