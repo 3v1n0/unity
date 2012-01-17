@@ -101,6 +101,8 @@ private:
 
   View* view_;
   guint ensure_id_;
+
+  nux::Layout* layout_;
 };
 
 

@@ -54,6 +54,10 @@ View::View()
   : nux::View(NUX_TRACKER_LOCATION)
   , button_views_(NULL)
 {
+  renderer_.SetOwner(this);
+  renderer_.need_redraw.connect([this] () { 
+    QueueDraw();
+  });
 
   nux::ROPConfig rop;
   rop.Blend = true;
@@ -65,7 +69,6 @@ View::View()
   search_bar_->key_down.connect (sigc::mem_fun (this, &View::OnKeyDown));
 
   search_bar_->activated.connect ([&]() {
-    LOG_WARN(logger) << "got search bar activated";
     search_activated.emit(search_bar_->search_string);
   });
 
@@ -125,6 +128,7 @@ void View::SetQueries(Hud::Queries queries)
 
 void View::SetIcon(std::string icon_name)
 {
+  LOG_DEBUG(logger) << "Setting icon to " << icon_name;
   icon_->SetByIconName(icon_name.c_str(), icon_size);
 }
 
@@ -134,6 +138,24 @@ void View::SetIcon(std::string icon_name)
 nux::Geometry View::GetBestFitGeometry(nux::Geometry const& for_geo)
 {
   return nux::Geometry(0, 0, 940, 240);
+}
+
+void View::AboutToShow()
+{
+  renderer_.AboutToShow();
+}
+
+void View::AboutToHide()
+{
+  renderer_.AboutToHide();
+}
+
+void View::SetWindowGeometry(nux::Geometry const& absolute_geo, nux::Geometry const& geo)
+{
+  window_geometry_ = geo;
+  window_geometry_.x = 0;
+  window_geometry_.y = 0;
+  absolute_window_geometry_ = absolute_geo;
 }
 
 
@@ -188,38 +210,12 @@ void View::OnKeyDown (unsigned long event_type, unsigned long keysym,
 
 void View::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
 {
-  // set up our texture mode
-  //~ nux::TexCoordXForm texxform;
-  //~ texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
-  //~ texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-
-  // clear what is behind us
-  //~ nux::t_u32 alpha = 0, src = 0, dest = 0;
-  //~ gfx_context.GetRenderStates().GetBlend(alpha, src, dest);
-  //~ gfx_context.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-//~
-  //~ nux::Color col = nux::color::Black;
-  //~ col.alpha = 0.75;
-  //~ gfx_context.QRP_Color(GetGeometry().x,
-                       //~ GetGeometry().y,
-                       //~ GetGeometry().width,
-                       //~ GetGeometry().height,
-                       //~ col);
-  bg_layer_->SetGeometry(GetGeometry());
-  nux::GetPainter().RenderSinglePaintLayer(gfx_context, content_geo_, bg_layer_);
+  renderer_.DrawFull(gfx_context, layout_->GetGeometry(), absolute_window_geometry_, window_geometry_);
 }
 
 void View::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
 {
-  int bgs = 0;
-  
-  gfx_context.PushClippingRectangle(GetGeometry());
-
-  gfx_context.GetRenderStates().SetBlend(true);
-  gfx_context.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
-  
-  nux::GetPainter().PushLayer(gfx_context, bg_layer_->GetGeometry(), bg_layer_);
-  bgs++;
+  renderer_.DrawInner(gfx_context, layout_->GetGeometry(), absolute_window_geometry_, window_geometry_);
   
   if (IsFullRedraw())
   {
@@ -232,10 +228,7 @@ void View::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
     layout_->ProcessDraw(gfx_context, force_draw);
   }
 
-  nux::GetPainter().PopBackground(bgs);
-
-  gfx_context.GetRenderStates().SetBlend(false);
-  gfx_context.PopClippingRectangle();
+  renderer_.DrawInnerCleanup(gfx_context, layout_->GetGeometry(), absolute_window_geometry_, window_geometry_);
 }
 
 // Keyboard navigation
@@ -257,7 +250,6 @@ nux::Area* View::FindKeyFocusArea(unsigned int key_symbol,
       unsigned long x11_key_code,
       unsigned long special_keys_state)
 {
-  LOG_WARN(logger) << "got find key focus area";
   // Do what nux::View does, but if the event isn't a key navigation,
   // designate the text entry to process it.
 
@@ -284,7 +276,6 @@ nux::Area* View::FindKeyFocusArea(unsigned int key_symbol,
     break;
   case NUX_VK_ENTER:
   case NUX_KP_ENTER:
-    LOG_WARN(logger) << "got enter";
     // Not sure if Enter should be a navigation key
     direction = nux::KEY_NAV_ENTER;
     break;

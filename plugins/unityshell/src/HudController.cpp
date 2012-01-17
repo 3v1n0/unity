@@ -84,14 +84,9 @@ void Controller::SetupHudView()
   LOG_DEBUG(logger) << "SetupHudView called";
   view_ = new View();
 
-  nux::HLayout* layout = new nux::HLayout(NUX_TRACKER_LOCATION);
-  layout->AddView(view_, 1);
-  layout->SetContentDistribution(nux::eStackLeft);
-  layout->SetVerticalExternalMargin(0);
-  layout->SetHorizontalExternalMargin(0);
-  layout->SetMaximumWidth(940);
-  layout->SetMaximumHeight(240);
-  window_->SetLayout(layout);
+  layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
+  layout_->AddView(view_, 1);
+  window_->SetLayout(layout_);
 
   view_->mouse_down_outside_pointer_grab_area.connect(sigc::mem_fun(this, &Controller::OnMouseDownOutsideWindow));
 
@@ -159,9 +154,12 @@ nux::Geometry Controller::GetIdealWindowGeometry()
 void Controller::Relayout(GdkScreen*screen)
 {
   EnsureHud();
-
+  nux::Geometry content_geo = view_->GetGeometry();
   nux::Geometry geo = GetIdealWindowGeometry();
+
   window_->SetGeometry(geo);
+  layout_->SetMinMaxSize(content_geo.width, content_geo.height);
+  view_->SetWindowGeometry(window_->GetAbsoluteGeometry(), window_->GetGeometry());
   view_->Relayout();
 }
 
@@ -199,6 +197,7 @@ void Controller::ShowHud()
 {
   LOG_DEBUG(logger) << "Showing the hud";
   EnsureHud();
+  view_->AboutToShow();
 
   window_->ShowWindow(true);
   window_->PushToFront();
@@ -208,13 +207,17 @@ void Controller::ShowHud()
   window_->CaptureMouseDownAnyWhereElse(true);
   view_->CaptureMouseDownAnyWhereElse(true);
   window_->QueueDraw();
-  window_->SetOpacity(1.0f);
+  //window_->SetOpacity(1.0f);
 
   view_->ResetToDefault();
   hud_service_.RequestQuery("");
 
   need_show_ = false;
   visible_ = true;
+
+  StartShowHideTimeline();
+
+  view_->SetWindowGeometry(window_->GetAbsoluteGeometry(), window_->GetGeometry());
 }
 void Controller::HideHud(bool restore)
 {
@@ -223,12 +226,14 @@ void Controller::HideHud(bool restore)
    //~ return;
 
   EnsureHud();
-
+  view_->AboutToHide();
   window_->CaptureMouseDownAnyWhereElse(false);
   window_->EnableInputWindow(false, "Hud", true, false);
   visible_ = false;
-  window_->SetOpacity(0.0f);
-  window_->ShowWindow(false);
+  //window_->SetOpacity(0.0f);
+  //window_->ShowWindow(false);
+
+  StartShowHideTimeline();
 
   restore = true;
   if (restore)
@@ -322,8 +327,10 @@ void Controller::OnQueriesFinished(Hud::Queries queries)
   view_->SetQueries(queries);
   if (queries.empty() == false)
   {
+    LOG_DEBUG(logger) << "setting icon to " << queries.front()->icon_name;
     view_->SetIcon(queries.front()->icon_name);
   }
+  view_->NeedRedraw();
 }
 
 // Introspectable

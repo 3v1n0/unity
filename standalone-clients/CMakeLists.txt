@@ -459,12 +459,16 @@ add_dependencies (bg-hash unity-core-${UNITY_API_VERSION})
 
 add_executable (hud
                 StandaloneHud.cpp
+                ${UNITY_SRC}/BackgroundEffectHelper.cpp
+                ${UNITY_SRC}/BackgroundEffectHelper.h
+                ${UNITY_SRC}/DashSettings.cpp
+                ${UNITY_SRC}/DashSettings.h
+                ${UNITY_SRC}/DashStyle.cpp
+                ${UNITY_SRC}/DashSearchBarSpinner.cpp
                 ${UNITY_SRC}/Introspectable.cpp
                 ${UNITY_SRC}/JSONParser.cpp
                 ${UNITY_SRC}/HudSearchBar.cpp
                 ${UNITY_SRC}/HudButton.cpp
-                ${UNITY_SRC}/DashStyle.cpp
-                ${UNITY_SRC}/DashSearchBarSpinner.cpp
                 ${UNITY_SRC}/StaticCairoText.cpp
                 ${UNITY_SRC}/IMTextEntry.cpp
                 ${UNITY_SRC}/HudView.cpp
@@ -474,6 +478,9 @@ add_executable (hud
                 ${UNITY_SRC}/IconLoader.cpp
                 ${UNITY_SRC}/TextureCache.cpp
                 ${UNITY_SRC}/Timer.cpp
+                ${UNITY_SRC}/OverlayRenderer.cpp
+                ${UNITY_SRC}/UScreen.cpp
+                ${UNITY_SRC}/UScreen.h
                )
 add_dependencies (hud unity-core-${UNITY_API_VERSION})
 

@@ -35,7 +35,7 @@
 #include "UBusWrapper.h"
 #include "IconTexture.h"
 #include "HudSearchBar.h"
-
+#include "OverlayRenderer.h"
 
 namespace unity
 {
@@ -56,12 +56,17 @@ public:
 
   void SetQueries(Hud::Queries queries);
   void SetIcon(std::string icon_name);
+  
+  void AboutToShow();
+  void AboutToHide();
+
+  void SetWindowGeometry(nux::Geometry const& absolute_geo, nux::Geometry const& geo);
 
   sigc::signal<void, std::string> search_changed;
   sigc::signal<void, std::string> search_activated;
   sigc::signal<void, Query::Ptr> query_activated;
   sigc::signal<void, Query::Ptr> query_selected;
-
+  
 protected:
   virtual Area* FindKeyFocusArea(unsigned int key_symbol,
   unsigned long x11_key_code,
@@ -95,8 +100,10 @@ private:
 
   Hud::Queries queries_;
   nux::Geometry content_geo_;
-
+  OverlayRenderer renderer_;
   nux::ColorLayer* bg_layer_;
+  nux::Geometry window_geometry_;
+  nux::Geometry absolute_window_geometry_;
 };
 
 

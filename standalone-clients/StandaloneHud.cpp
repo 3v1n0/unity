@@ -29,6 +29,7 @@
 
 #include "HudView.h"
 #include "DashStyle.h"
+#include "DashSettings.h"
 #include <NuxCore/Logger.h>
 
 namespace
@@ -46,6 +47,7 @@ public:
   void Init ();
   nux::Layout *layout;
   unity::hud::View* hud_view_;
+  unity::dash::Settings dash_settings_;
 
 private:
   unity::hud::Hud hud_service_;
@@ -75,6 +77,10 @@ void TestRunner::Init ()
   // things the controller normally does
   hud_service_.queries_updated.connect([&] (unity::hud::Hud::Queries queries) {
     hud_view_->SetQueries(queries);
+    if (queries.empty() == false)
+    {
+      hud_view_->SetIcon(queries.front()->icon_name);
+    }
   });
 
   hud_view_->query_activated.connect([&] (unity::hud::Query::Ptr query) {
@@ -96,6 +102,8 @@ void TestRunner::Init ()
   hud_view_->search_activated.connect([&] (std::string search_string) {
     hud_service_.ExecuteQueryBySearch(search_string, 0);
   });
+
+  hud_service_.RequestQuery("");
   
 
 }
@@ -140,7 +148,7 @@ int main(int argc, char **argv)
 
   TestRunner *test_runner = new TestRunner ();
   wt = nux::CreateGUIThread(TEXT("Hud Prototype Test"),
-                            864, 240,
+                            1024, 400,
                             0,
                             &TestRunner::InitWindowThread,
                             test_runner);
