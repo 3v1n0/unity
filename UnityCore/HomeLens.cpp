@@ -553,6 +553,7 @@ Lens::Ptr HomeLens::Impl::FindLensForUri(std::string const& uri)
 // FIXME: i18n of user visible labels _("Home") description, searchhint
 // FIXME: sorting lenses/categories. apps.lens first
 // FIXME: activate correct hit, waiting for search.finished() and seqnum
+// FIXME: When first shown the dash home screen doesn't show anything
 
 void HomeLens::Impl::OnLensAdded (Lens::Ptr& lens)
 {
