@@ -35,6 +35,7 @@ namespace
   const std::string renderer_type_ratings = "filter-ratings";
   const std::string renderer_type_multirange = "filter-multirange";
   const std::string renderer_type_check_options = "filter-checkoption";
+  const std::string renderer_type_check_options_compact = "filter-checkoption-compact";
   const std::string renderer_type_radio_options = "filter-radiooption";
 }
 
@@ -51,7 +52,11 @@ nux::View* FilterFactory::WidgetForFilter(Filter::Ptr const& filter)
   FilterWidget* widget = nullptr;
   if (filter_type == renderer_type_check_options)
   {
-    widget = new FilterGenre(NUX_TRACKER_LOCATION);
+    widget = new FilterGenre(2, NUX_TRACKER_LOCATION);
+  }
+  if (filter_type == renderer_type_check_options_compact)
+  {
+    widget = new FilterGenre(3, NUX_TRACKER_LOCATION);
   }
   else if (filter_type == renderer_type_ratings)
   {
@@ -63,7 +68,7 @@ nux::View* FilterFactory::WidgetForFilter(Filter::Ptr const& filter)
   }
   else if (filter_type == renderer_type_radio_options)
   {
-    widget = new FilterGenre(NUX_TRACKER_LOCATION);
+    widget = new FilterGenre(2, NUX_TRACKER_LOCATION);
   }
   else
   {
