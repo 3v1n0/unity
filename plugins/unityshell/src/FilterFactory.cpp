@@ -54,7 +54,7 @@ nux::View* FilterFactory::WidgetForFilter(Filter::Ptr const& filter)
   {
     widget = new FilterGenre(2, NUX_TRACKER_LOCATION);
   }
-  if (filter_type == renderer_type_check_options_compact)
+  else if (filter_type == renderer_type_check_options_compact)
   {
     widget = new FilterGenre(3, NUX_TRACKER_LOCATION);
   }
