@@ -114,6 +114,13 @@ LauncherHideMachine::EnsureHideState(bool skip_delay)
 {
   bool should_hide;
 
+  // early check to see if we are locking to hidden
+  if (GetQuirk(LOCK_HIDE))
+  {
+    SetShouldHide(true, true);
+    return;
+  }
+
   if (_mode == HIDE_NEVER)
   {
     SetShouldHide(false, skip_delay);
@@ -124,13 +131,6 @@ LauncherHideMachine::EnsureHideState(bool skip_delay)
   {
     // first we check the condition where external DND is active and the push off has happened
     if (GetQuirk((HideQuirk)(EXTERNAL_DND_ACTIVE | DND_PUSHED_OFF), false))
-    {
-      should_hide = true;
-      break;
-    }
-
-    // early check to see if we are locking to hidden
-    if (GetQuirk(LOCK_HIDE))
     {
       should_hide = true;
       break;
