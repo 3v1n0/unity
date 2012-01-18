@@ -148,7 +148,7 @@ int main(int argc, char **argv)
 
   TestRunner *test_runner = new TestRunner ();
   wt = nux::CreateGUIThread(TEXT("Hud Prototype Test"),
-                            1024, 400,
+                            1024, 768,
                             0,
                             &TestRunner::InitWindowThread,
                             test_runner);

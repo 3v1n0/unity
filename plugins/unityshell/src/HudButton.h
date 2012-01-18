@@ -33,38 +33,43 @@
 namespace unity {
 
 namespace hud {
-  class HudButton : public nux::Button {
-    typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
-  public:
-    HudButton (nux::TextureArea *image, NUX_FILE_LINE_PROTO);
-    HudButton (const std::string label, NUX_FILE_LINE_PROTO);
-    HudButton (const std::string label, nux::TextureArea *image, NUX_FILE_LINE_PROTO);
-    HudButton (NUX_FILE_LINE_PROTO);
-    virtual ~HudButton();
+class HudButton : public nux::Button {
+  typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
+public:
+  HudButton (nux::TextureArea *image, NUX_FILE_LINE_PROTO);
+  HudButton (const std::string label, NUX_FILE_LINE_PROTO);
+  HudButton (const std::string label, nux::TextureArea *image, NUX_FILE_LINE_PROTO);
+  HudButton (NUX_FILE_LINE_PROTO);
+  virtual ~HudButton();
 
-    void SetQuery(Query::Ptr query);
-    std::shared_ptr<Query> GetQuery();
+  void SetQuery(Query::Ptr query);
+  std::shared_ptr<Query> GetQuery();
 
-    nux::Property<std::string> label;
-    nux::Property<std::string> hint;
+  nux::Property<std::string> label;
+  nux::Property<std::string> hint;
 
-  protected:
-    virtual bool AcceptKeyNavFocus();
-    virtual long ComputeContentSize();
-    virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
-    virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
-    virtual void PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw);
+protected:
+  virtual bool AcceptKeyNavFocus();
+  virtual long ComputeContentSize();
+  virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
+  virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
+  virtual void PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw);
 
-    void InitTheme ();
-    void RedrawTheme ();
+  void InitTheme ();
+  void RedrawTheme(nux::Geometry const& geom, cairo_t* cr, nux::ButtonVisualState faked_state);
+  typedef std::unique_ptr<nux::CairoWrapper> NuxCairoPtr;
 
-  private:
-    Query::Ptr query_;
-    nux::Geometry cached_geometry_;
-    bool is_focused_;
-    BaseTexturePtr normal_texture_;
-    BaseTexturePtr focused_texture_;
-  };
+  NuxCairoPtr prelight_;
+  NuxCairoPtr active_;
+  NuxCairoPtr normal_;
+
+private:
+  std::string label_;
+
+  Query::Ptr query_;
+  nux::Geometry cached_geometry_;
+  bool is_focused_;
+};
 }
 }
 #endif // FILTERBASICBUTTON_H

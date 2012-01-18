@@ -1409,6 +1409,9 @@ void Style::Impl::Text(cairo_t*    cr,
   pango_layout_get_extents(layout, &ink, &log);
   x = ((double) w - pango_units_to_double(ink.width)) / 2.0 + horizMargin;
   y = ((double) h - pango_units_to_double(log.height)) / 2.0;
+  
+  //!!FIXME!! - forces all text to be left aligned
+  x = 0;
   cairo_move_to(cr, x, y);
   pango_cairo_show_layout(cr, layout);
 

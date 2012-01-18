@@ -163,7 +163,7 @@ nux::Geometry View::GetBestFitGeometry(nux::Geometry const& for_geo)
 
   height = search_bar_->GetGeometry().height;
   height += 6;
-  height += (style.GetTextLineHeight() + 12) * 6;
+  height += (style.GetTextLineHeight() + (12*2)) * 6;
   height += 6;
 
   LOG_DEBUG (logger) << "best fit is, " << width << ", " << height;

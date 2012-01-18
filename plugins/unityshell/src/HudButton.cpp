@@ -30,245 +30,153 @@
 #include <NuxImage/CairoGraphics.h>
 #include <NuxGraphics/NuxGraphics.h>
 #include <UnityCore/GLibWrapper.h>
+#include "DashStyle.h"
+
 #include "HudButton.h"
 
 namespace
 {
 nux::logging::Logger logger("unity.hud.HudButton");
 }
-// Create a texture from the CairoGraphics object.
-//
-// Returns a new BaseTexture that has a ref count of 1.
-static nux::BaseTexture* texture_from_cairo_graphics(nux::CairoGraphics& cg)
+
+namespace unity 
 {
-  nux::NBitmapData* bitmap = cg.GetBitmap();
-  nux::BaseTexture* tex = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
-  tex->Update(bitmap);
-  delete bitmap;
-  return tex;
+namespace hud 
+{
+
+
+HudButton::HudButton (nux::TextureArea *image, NUX_FILE_LINE_DECL)
+    : nux::Button (image, NUX_FILE_LINE_PARAM)
+    , is_focused_(false)
+{
+  InitTheme();
+  OnKeyNavFocusChange.connect([this](nux::Area *area){ QueueDraw(); });
+}
+
+HudButton::HudButton (const std::string label_, NUX_FILE_LINE_DECL)
+    : nux::Button (NUX_FILE_LINE_PARAM)
+    , is_focused_(false)
+{
+  InitTheme();
+}
+
+HudButton::HudButton (const std::string label_, nux::TextureArea *image, NUX_FILE_LINE_DECL)
+    : nux::Button (image, NUX_FILE_LINE_PARAM)
+    , is_focused_(false)
+{
+  InitTheme();
+}
+
+HudButton::HudButton (NUX_FILE_LINE_DECL)
+    : nux::Button (NUX_FILE_LINE_PARAM)
+    , is_focused_(false)
+{
+  InitTheme();
+}
+
+HudButton::~HudButton() {
+}
+
+void HudButton::InitTheme()
+{
+  SetMinimumHeight(42);
+  if (!active_)
+  {
+    nux::Geometry const& geo = GetGeometry();
+
+    prelight_.reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &HudButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_PRELIGHT)));
+    active_.reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &HudButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_PRESSED)));
+    normal_.reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &HudButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_NORMAL)));
+  }
+}
+
+void HudButton::RedrawTheme(nux::Geometry const& geom, cairo_t* cr, nux::ButtonVisualState faked_state)
+{
+  dash::Style::Instance().Button(cr, faked_state, label_);
+}
+
+bool HudButton::AcceptKeyNavFocus()
+{
+  return true;
 }
 
 
-namespace unity {
-namespace hud {
-  HudButton::HudButton (nux::TextureArea *image, NUX_FILE_LINE_DECL)
-      : nux::Button (image, NUX_FILE_LINE_PARAM)
-      , is_focused_(false)
+long HudButton::ComputeContentSize ()
+{
+  long ret = nux::Button::ComputeContentSize();
+  nux::Geometry const& geo = GetGeometry();
+
+  if (cached_geometry_ != geo)
   {
-    RedrawTheme();
-    OnKeyNavFocusChange.connect([this](nux::Area *area){ QueueDraw(); });
-    label.changed.connect([this](std::string new_label) { SetLabel(new_label); RedrawTheme(); });
-    hint.changed.connect([this](std::string new_label) { RedrawTheme(); });
+    prelight_->Invalidate(geo);
+    active_->Invalidate(geo);
+    normal_->Invalidate(geo);
+
+    cached_geometry_ = geo;
   }
+  
+  return ret;
+} 
 
-  HudButton::HudButton (const std::string label_, NUX_FILE_LINE_DECL)
-      : nux::Button (NUX_FILE_LINE_PARAM)
-      , is_focused_(false)
-  {
-    RedrawTheme();
-    label.changed.connect([this](std::string new_label) { SetLabel(new_label); RedrawTheme(); });
-    hint.changed.connect([this](std::string new_label) { RedrawTheme(); });
-  }
+void HudButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw) 
+{
+  nux::Geometry const& geo = GetGeometry();
 
-  HudButton::HudButton (const std::string label_, nux::TextureArea *image, NUX_FILE_LINE_DECL)
-      : nux::Button (image, NUX_FILE_LINE_PARAM)
-      , is_focused_(false)
-  {
-    RedrawTheme();
-    label.changed.connect([this](std::string new_label) { SetLabel(new_label); RedrawTheme(); });
-    hint.changed.connect([this](std::string new_label) { RedrawTheme(); });
-  }
+  gPainter.PaintBackground(GfxContext, geo);
+  // set up our texture mode
+  nux::TexCoordXForm texxform;
+  texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
+  texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
 
-  HudButton::HudButton (NUX_FILE_LINE_DECL)
-      : nux::Button (NUX_FILE_LINE_PARAM)
-      , is_focused_(false)
-  {
-    RedrawTheme();
-    label.changed.connect([this](std::string new_label) { SetLabel(new_label); RedrawTheme(); });
-  }
+  // clear what is behind us
+  unsigned int alpha = 0, src = 0, dest = 0;
+  GfxContext.GetRenderStates().GetBlend(alpha, src, dest);
+  GfxContext.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
-  HudButton::~HudButton() {
-    normal_texture_->UnReference();
-    focused_texture_->UnReference();
-  }
+  nux::Color col = nux::color::Black;
+  col.alpha = 0;
+  GfxContext.QRP_Color(geo.x,
+                       geo.y,
+                       geo.width,
+                       geo.height,
+                       col);
 
-  void HudButton::RedrawTheme ()
-  {
+  nux::BaseTexture* texture = normal_->GetTexture();
+  if (HasKeyFocus())
+    texture = active_->GetTexture();
+  else if (HasKeyFocus())
+    texture = prelight_->GetTexture();
+  else if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_PRESSED)
+    texture = active_->GetTexture();
 
-    if (normal_texture_ != nullptr)
-      normal_texture_->UnReference();
+  GfxContext.QRP_1Tex(geo.x,
+                      geo.y,
+                      geo.width,
+                      geo.height,
+                      texture->GetDeviceTexture(),
+                      texxform,
+                      nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
 
-    if (focused_texture_ != nullptr)
-      focused_texture_->UnReference();
+  GfxContext.GetRenderStates().SetBlend(alpha, src, dest);
+}
 
-    nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, GetGeometry().width, GetGeometry().height);
-    cairo_t* cr = cairo_graphics.GetContext();
+void HudButton::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw) {
+}
 
-    cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
-    cairo_paint(cr);
+void HudButton::PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw) {
+  nux::Button::PostDraw(GfxContext, force_draw);
+}
 
-    int padding = 4;
+void HudButton::SetQuery(Query::Ptr query)
+{
+  query_ = query;
+  label_ = query->formatted_text;
+  label = query->formatted_text;
+}
 
-    // draw the lines
-    double width = GetGeometry().width;
-    double height = GetGeometry().height;
-
-    nux::Color line_color(1.0f, 1.0f, 1.0f, 0.5f);
-    cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
-    cairo_graphics.DrawLine(0.0, 0.0, 0.0, height, 1.0, line_color);
-    cairo_graphics.DrawLine(0.0, height, width, height, 1.0, line_color);
-    cairo_graphics.DrawLine(width, height, width, 0.0, 1.0, line_color);
-
-
-    // draw the text
-    PangoLayout*          layout     = NULL;
-    PangoFontDescription* desc       = NULL;
-    PangoContext*         pango_context   = NULL;
-    PangoRectangle        logRect  = {0, 0, 0, 0};
-    GdkScreen*            screen     = gdk_screen_get_default();    // not ref'ed
-    glib::String          font;
-    int                   dpi = -1;
-
-    g_object_get(gtk_settings_get_default(), "gtk-font-name", &font, NULL);
-    g_object_get(gtk_settings_get_default(), "gtk-xft-dpi", &dpi, NULL);
-
-    cairo_set_font_options(cr, gdk_screen_get_font_options(screen));
-    layout = pango_cairo_create_layout(cr);
-    desc = pango_font_description_from_string(font.Value());
-    pango_font_description_set_size (desc, 14 * PANGO_SCALE);
-
-    pango_layout_set_font_description(layout, desc);
-    pango_layout_set_alignment(layout, PANGO_ALIGN_LEFT);
-
-    pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_END);
-    pango_layout_set_width(layout, (width - (padding * 2)) * PANGO_SCALE);
-    pango_layout_set_height(layout, -1);
-
-    pango_context = pango_layout_get_context(layout);  // is not ref'ed
-    pango_cairo_context_set_font_options(pango_context,
-                                         gdk_screen_get_font_options(screen));
-    pango_cairo_context_set_resolution(pango_context,
-                                       dpi == -1 ? 96.0f : dpi/(float) PANGO_SCALE);
-
-
-    // Draw the first text item
-    pango_layout_set_markup(layout, label().c_str(), -1);
-    pango_layout_context_changed(layout);
-
-    pango_layout_get_extents(layout, NULL, &logRect);
-    int extent_height = (logRect.y + logRect.height) / PANGO_SCALE;
-
-    cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
-    cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 0.5f);
-
-    cairo_move_to(cr, padding, ((height - extent_height) * 0.5));
-    pango_cairo_show_layout(cr, layout);
-
-    // Draw the second text item
-    pango_layout_set_alignment(layout, PANGO_ALIGN_RIGHT);
-    char *escaped_text = g_markup_escape_text(hint().c_str()  , -1);
-    std::string string_final_text = "<small>" + std::string(escaped_text) + "</small>";
-    pango_layout_set_markup(layout, string_final_text.c_str(), -1);
-
-    g_free (escaped_text);
-
-    pango_layout_context_changed(layout);
-
-    cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
-    cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 0.5f);
-
-    cairo_move_to(cr, 0.0f, 0.0f);
-    pango_cairo_show_layout(cr, layout);
-
-    normal_texture_ = texture_from_cairo_graphics(cairo_graphics);
-
-    cairo_set_operator(cr, CAIRO_OPERATOR_DEST_OVER);
-    cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 0.5f);
-    cairo_rectangle(cr, 0, 0, width, height);
-    cairo_fill(cr);
-
-    focused_texture_ = texture_from_cairo_graphics(cairo_graphics);
-
-    // clean up
-    pango_font_description_free(desc);
-    g_object_unref(layout);
-    cairo_destroy(cr);
-
-    QueueDraw();
-  }
-
-  bool HudButton::AcceptKeyNavFocus()
-  {
-    return true;
-  }
-
-
-  long HudButton::ComputeContentSize ()
-  {
-    long ret = nux::Button::ComputeContentSize();
-    if (cached_geometry_.width != GetGeometry().height || cached_geometry_.height != GetGeometry().height)
-    {
-      RedrawTheme();
-    }
-
-    cached_geometry_ = GetGeometry();
-    return ret;
-  }
-
-  void HudButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw) {
-    gPainter.PaintBackground(GfxContext, GetGeometry());
-    // set up our texture mode
-    nux::TexCoordXForm texxform;
-    texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
-    texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-
-    // clear what is behind us
-    nux::t_u32 alpha = 0, src = 0, dest = 0;
-    GfxContext.GetRenderStates().GetBlend(alpha, src, dest);
-    GfxContext.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-
-    nux::Color col = nux::color::Black;
-    col.alpha = 0;
-    GfxContext.QRP_Color(GetGeometry().x,
-                         GetGeometry().y,
-                         GetGeometry().width,
-                         GetGeometry().height,
-                         col);
-
-    BaseTexturePtr texture = normal_texture_;
-    if (nux::GetWindowCompositor().GetKeyFocusArea() == this)
-    {
-      texture = focused_texture_;
-    }
-
-
-    GfxContext.QRP_1Tex(GetGeometry().x,
-                        GetGeometry().y,
-                        GetGeometry().width,
-                        GetGeometry().height,
-                        texture->GetDeviceTexture(),
-                        texxform,
-                        nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
-
-    GfxContext.GetRenderStates().SetBlend(alpha, src, dest);
-  }
-
-  void HudButton::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw) {
-  }
-
-  void HudButton::PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw) {
-    nux::Button::PostDraw(GfxContext, force_draw);
-  }
-
-  void HudButton::SetQuery(Query::Ptr query)
-  {
-    query_ = query;
-    label = query->formatted_text;
-  }
-
-  Query::Ptr HudButton::GetQuery()
-  {
-    return query_;
-  }
+Query::Ptr HudButton::GetQuery()
+{
+  return query_;
+}
 }
 }
