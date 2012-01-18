@@ -36,6 +36,7 @@
 #include <NuxCore/Logger.h>
 #include "HudButton.h"
 #include "UBusMessages.h"
+#include "DashStyle.h"
 
 namespace unity
 {
@@ -72,6 +73,8 @@ View::View()
     search_activated.emit(search_bar_->search_string);
   });
 
+  Relayout();
+
 }
 
 View::~View()
@@ -87,10 +90,19 @@ void View::Relayout()
 {
   nux::Geometry geo = GetGeometry();
   content_geo_ = GetBestFitGeometry(geo);
+  LOG_DEBUG(logger) << "content_geo: " << content_geo_.width << "x" << content_geo_.height;
+
   layout_->SetMinMaxSize(content_geo_.width, content_geo_.height);
 
   QueueDraw();
 }
+
+long View::PostLayoutManagement(long LayoutResult)
+{
+  Relayout();
+  return LayoutResult;
+}
+
 
 nux::View* View::default_focus() const
 {
@@ -137,7 +149,26 @@ void View::SetIcon(std::string icon_name)
 // look tight
 nux::Geometry View::GetBestFitGeometry(nux::Geometry const& for_geo)
 {
-  return nux::Geometry(0, 0, 940, 240);
+  dash::Style& style = dash::Style::Instance();
+  int width = 0, height = 0;
+  int tile_width = style.GetTileWidth();
+  int half = for_geo.width / 2;
+
+  while ((width += tile_width) + (19 * 2) < half)
+    ;
+
+  width = MAX(width, tile_width * 6);
+
+  width += 19 + 32;
+
+  height = search_bar_->GetGeometry().height;
+  height += 6;
+  height += (style.GetTextLineHeight() + 12) * 6;
+  height += 6;
+
+  LOG_DEBUG (logger) << "best fit is, " << width << ", " << height;
+
+  return nux::Geometry(0, 0, width, height);
 }
 
 void View::AboutToShow()
@@ -157,7 +188,6 @@ void View::SetWindowGeometry(nux::Geometry const& absolute_geo, nux::Geometry co
   window_geometry_.y = 0;
   absolute_window_geometry_ = absolute_geo;
 }
-
 
 void View::SetupViews()
 {

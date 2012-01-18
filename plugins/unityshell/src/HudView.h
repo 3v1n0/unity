@@ -74,7 +74,7 @@ protected:
 
   void SetupViews();
   void OnSearchChanged(std::string const& search_string);
-
+  virtual long PostLayoutManagement(long LayoutResult);
 private:
   void OnKeyDown (unsigned long event_type, unsigned long event_keysym,
                                 unsigned long event_state, const TCHAR* character,
