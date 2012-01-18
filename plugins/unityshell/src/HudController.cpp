@@ -215,8 +215,11 @@ void Controller::ShowHud()
   visible_ = true;
 
   StartShowHideTimeline();
-
   view_->SetWindowGeometry(window_->GetAbsoluteGeometry(), window_->GetGeometry());
+
+  // hide the launcher
+  GVariant* message_data = g_variant_new("(b)", TRUE);
+  ubus.SendMessage(UBUS_LAUNCHER_LOCK_HIDE, message_data);
 }
 void Controller::HideHud(bool restore)
 {
@@ -237,6 +240,10 @@ void Controller::HideHud(bool restore)
     PluginAdapter::Default ()->restoreInputFocus ();
 
   hud_service_.CloseQuery();
+
+  //unhide the launcher
+  GVariant* message_data = g_variant_new("(b)", FALSE);
+  ubus.SendMessage(UBUS_LAUNCHER_LOCK_HIDE, message_data);
 }
 
 void Controller::StartShowHideTimeline()
