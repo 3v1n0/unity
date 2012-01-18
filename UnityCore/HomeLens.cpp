@@ -269,20 +269,11 @@ void HomeLens::ModelMerger::AddSource(glib::Object<DeeModel> source)
 
 void HomeLens::ModelMerger::OnSourceRowAdded(DeeModel *model, DeeModelIter *iter)
 {
-  DeeModelIter* target_iter;
-  DeeModelTag*  target_tag;
-
-  EnsureRowBuf(model);
-
-  dee_model_get_row (model, iter, row_buf_);
-  target_tag = FindMergerTag(model);
-
-  /* NOTE: This is a silly merge strategy (always appending).
-   * Consider some clever sorting? */
-  target_iter = dee_model_append_row (target_, row_buf_);
-  dee_model_set_tag (model, iter, target_tag, target_iter);
-
-  for (unsigned int i = 0; i < n_cols_; i++) g_variant_unref(row_buf_[i]);
+  // Default impl. does nothing.
+  // Note that the filters_merger_ relies on this behavior. Supporting
+  // filters on the home screen is possible, but *quite* tricky.
+  // So...
+  //       Discard ALL the rows!
 }
 
 void HomeLens::ResultsMerger::OnSourceRowAdded(DeeModel *model, DeeModelIter *iter)
@@ -320,7 +311,8 @@ void HomeLens::ResultsMerger::OnSourceRowAdded(DeeModel *model, DeeModelIter *it
   else
   {
     LOG_ERROR(logger) << "No category registered for model "
-                      << model << ", offset " << source_cat_offset << ".";
+                      << model << ", source offset " << source_cat_offset
+                      << ": " << dee_model_get_string(model, iter, 0);
   }
 
   for (unsigned int i = 0; i < n_cols_; i++) g_variant_unref(row_buf_[i]);
