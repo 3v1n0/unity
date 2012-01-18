@@ -1,0 +1,22 @@
+Super Tab Launcher Switcher
+---------------------------
+This test shows how the Super+Tab launcher switcher works
+
+#. Open some applications pinned to the launcher
+#. Press Super+Tab
+#. Release and Press again Tab some times
+#. Press also the Shift key and press again Tab
+#. Release all the keys
+
+Outcome:
+  The first launcher item should be highlighted.
+  Pressing Tab multiple times makes the next launcher icon to be highlighted.
+  If clicking on the launcher while the Super+Tab switcher is active, the switcher
+  should terminate and the standard click action should be done.
+  When also the Shift modifier is pressed, pressing Tab highlights the previous
+  icon.
+  When releasing Super the highlighted launcher icon should be activated, and
+  the default launcher icon action should be performed.
+  If in the launcher there are many icons and they are shown as collapsed,
+  when the Super+Tab is activated and the icons should be expanded when
+  neeeded.

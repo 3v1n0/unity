@@ -73,7 +73,7 @@ void TestRunner::Init ()
   layout->AddView(genre, 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
   layout->AddView(multi_range, 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
 
-  nux::GetGraphicsThread()->SetLayout (layout);
+  nux::GetWindowThread()->SetLayout (layout);
 }
 
 void TestRunner::InitWindowThread(nux::NThread* thread, void* InitData)
@@ -102,7 +102,7 @@ int main(int argc, char **argv)
   // for views
 
   g_type_init ();
-  g_thread_init (NULL);
+  
   gtk_init (&argc, &argv);
 
   nux::NuxInitialize(0);
