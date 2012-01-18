@@ -145,9 +145,9 @@ nux::Geometry Controller::GetIdealWindowGeometry()
 
    // We want to cover as much of the screen as possible to grab any mouse events outside
    // of our window
-   return nux::Geometry (monitor_geo.x + launcher_width,
+   return nux::Geometry (monitor_geo.x,
                          monitor_geo.y + panel_height,
-                         monitor_geo.width - launcher_width,
+                         monitor_geo.width,
                          monitor_geo.height - panel_height);
 }
 
