@@ -281,7 +281,10 @@ void Controller::Impl::OnLauncherRemoveRequest(LauncherIcon* icon)
       BamfLauncherIcon* bamf_icon = dynamic_cast<BamfLauncherIcon*>(icon);
 
       if (bamf_icon)
+      {
         bamf_icon->UnStick();
+        bamf_icon->Quit();
+      }
 
       break;
     }
