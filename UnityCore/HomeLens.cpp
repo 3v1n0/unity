@@ -550,8 +550,9 @@ Lens::Ptr HomeLens::Impl::FindLensForUri(std::string const& uri)
   return Lens::Ptr();
 }
 
-// FIXME i18n _("Home") description, searchhint
-// FIXME Filter feedback to the lenses
+// FIXME: i18n of user visible labels _("Home") description, searchhint
+// FIXME: sorting lenses/categories. apps.lens first
+// FIXME: activate correct hit, waiting for search.finished() and seqnum
 
 void HomeLens::Impl::OnLensAdded (Lens::Ptr& lens)
 {
@@ -608,8 +609,9 @@ void HomeLens::Impl::OnLensAdded (Lens::Ptr& lens)
 }
 
 HomeLens::HomeLens()
-  : Lens("home.lens", "", "", "FIXME: name", PKGDATADIR"/lens-nav-home.svg",
-         "FIXME: description", "FIXME: searchhint", true, "", ModelType::LOCAL)
+  : Lens("home.lens", "", "", "FIXME: i18n name", PKGDATADIR"/lens-nav-home.svg",
+         "FIXME: i18n description", "FIXME: i18n searchhint", true, "",
+         ModelType::LOCAL)
   , pimpl(new Impl(this))
 {
   count.SetGetterFunction(sigc::mem_fun(&pimpl->lenses_, &Lenses::LensList::size));
