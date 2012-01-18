@@ -45,7 +45,7 @@ class FilterGenre : public FilterExpanderLabel
 {
   NUX_DECLARE_OBJECT_TYPE(FilterGenre, FilterExpanderLabel);
 public:
-  FilterGenre(NUX_FILE_LINE_PROTO);
+  FilterGenre(int columns, NUX_FILE_LINE_PROTO);
   virtual ~FilterGenre();
 
   void SetFilter(Filter::Ptr const& filter);

@@ -25,6 +25,7 @@
 #include <NuxCore/Property.h>
 #include <sigc++/trackable.h>
 
+#include "Variant.h"
 #include "Categories.h"
 #include "Filters.h"
 #include "Preview.h"
@@ -54,7 +55,7 @@ class Lens : public sigc::trackable, boost::noncopyable
 {
 public:
   typedef std::shared_ptr<Lens> Ptr;
-  typedef std::map<std::string, GVariant*> Hints;
+  typedef std::map<std::string, unity::glib::Variant> Hints;
 
   Lens(std::string const& id,
        std::string const& dbus_name,
