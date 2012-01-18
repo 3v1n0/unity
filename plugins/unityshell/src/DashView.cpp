@@ -412,6 +412,14 @@ void DashView::OnLensBarActivated(std::string const& id)
 
 void DashView::OnSearchFinished(Lens::Hints const& hints)
 {
+  Lens::Hints::const_iterator it;
+  it = hints.find("no-results-hint");
+  
+  if (it != hints.end())
+  {
+    LOG_DEBUG(logger) << "We have no-results-hint: " << g_variant_get_string (it->second, NULL);
+  }
+
   std::string search_string = search_bar_->search_string;
   if (active_lens_view_ && active_lens_view_->search_string == search_string)
   {

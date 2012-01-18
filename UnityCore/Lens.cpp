@@ -26,7 +26,6 @@
 #include "config.h"
 #include "GLibDBusProxy.h"
 #include "GLibWrapper.h"
-#include "Utils.h"
 
 namespace unity
 {
@@ -225,18 +224,13 @@ void Lens::Impl::ResultsModelUpdated(unsigned long long begin_seqnum,
   if (results_variant_ != NULL &&
       end_seqnum >= ExtractModelSeqnum (results_variant_))
   {
-    GVariantIter* hints_iter;
+    glib::Variant dict(results_variant_, glib::StealRef());
     Hints hints;
 
-    g_variant_get(results_variant_, "(a{sv})", &hints_iter);
-    
-    Utils::ASVToHints(hints, hints_iter);
+    dict.ASVToHints(hints);
 
     owner_->search_finished.emit(hints);
 
-    g_variant_iter_free(hints_iter);
-    
-    g_variant_unref(results_variant_);
     results_variant_ = NULL;
   }
 }
@@ -247,18 +241,13 @@ void Lens::Impl::GlobalResultsModelUpdated(unsigned long long begin_seqnum,
   if (global_results_variant_ != NULL &&
       end_seqnum >= ExtractModelSeqnum (global_results_variant_))
   {
-    GVariantIter* hints_iter;
+    glib::Variant dict(global_results_variant_, glib::StealRef());
     Hints hints;
 
-    g_variant_get(global_results_variant_, "(a{sv})", &hints_iter);
-    
-    Utils::ASVToHints(hints, hints_iter);
+    dict.ASVToHints(hints);
 
     owner_->global_search_finished.emit(hints);
 
-    g_variant_iter_free(hints_iter);
-
-    g_variant_unref(global_results_variant_);
     global_results_variant_ = NULL;
   }
 }
@@ -285,7 +274,6 @@ unsigned long long Lens::Impl::ExtractModelSeqnum(GVariant *parameters)
 
 void Lens::Impl::OnSearchFinished(GVariant* parameters)
 {
-  GVariantIter* hints_iter;
   Hints hints;
   unsigned long long reply_seqnum;
 
@@ -300,18 +288,14 @@ void Lens::Impl::OnSearchFinished(GVariant* parameters)
     return;
   }
 
-  g_variant_get(parameters, "(a{sv})", &hints_iter);
-  
-  Utils::ASVToHints(hints, hints_iter);
+  glib::Variant dict (parameters);
+  dict.ASVToHints(hints);
 
   owner_->search_finished.emit(hints);
-
-  g_variant_iter_free(hints_iter);
 }
 
 void Lens::Impl::OnGlobalSearchFinished(GVariant* parameters)
 {
-  GVariantIter* hints_iter;
   Hints hints;
   unsigned long long reply_seqnum;
   
@@ -326,13 +310,10 @@ void Lens::Impl::OnGlobalSearchFinished(GVariant* parameters)
     return;
   }
 
-  g_variant_get(parameters, "(a{sv})", &hints_iter);
-  
-  Utils::ASVToHints(hints, hints_iter);
+  glib::Variant dict (parameters);
+  dict.ASVToHints(hints);
 
   owner_->global_search_finished.emit(hints);
-
-  g_variant_iter_free(hints_iter);
 }
 
 void Lens::Impl::OnChanged(GVariant* parameters)
@@ -502,16 +483,15 @@ void Lens::Impl::ActivationReply(GVariant* parameters)
 {
   glib::String uri;
   guint32 handled;
-  GVariantIter* hints_iter;
+  GVariant* hints_variant;
   Hints hints;
   
-  g_variant_get(parameters, "((sua{sv}))", &uri, &handled, &hints_iter);
-  
-  Utils::ASVToHints(hints, hints_iter);
+  g_variant_get(parameters, "((su@a{sv}))", &uri, &handled, &hints_variant);
+
+  glib::Variant dict (hints_variant, glib::StealRef());
+  dict.ASVToHints(hints);
 
   owner_->activated.emit(uri.Str(), static_cast<HandledType>(handled), hints);
-
-  g_variant_iter_free(hints_iter);
 }
 
 void Lens::Impl::Preview(std::string const& uri)
@@ -527,16 +507,16 @@ void Lens::Impl::PreviewReply(GVariant* parameters)
 {
   glib::String uri;
   glib::String renderer_name;
-  GVariantIter* hints_iter;
+  GVariant* hints_variant;
   Hints hints;
   
-  g_variant_get(parameters, "((ssa{sv}))", &uri, &renderer_name, &hints_iter);
-  Utils::ASVToHints(hints, hints_iter);
+  g_variant_get(parameters, "((ss@a{sv}))", &uri, &renderer_name, &hints_variant);
+
+  glib::Variant dict (hints_variant, glib::StealRef());
+  dict.ASVToHints(hints);
 
   Preview::Ptr preview = Preview::PreviewForProperties(renderer_name.Str(), hints);
   owner_->preview_ready.emit(uri.Str(), preview);
-
-  g_variant_iter_free(hints_iter);
 }
 string const& Lens::Impl::id() const
 {

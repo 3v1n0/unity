@@ -59,6 +59,9 @@
 // Signal to send on icon action and that you want to request hiding the launcher
 #define UBUS_LAUNCHER_ACTION_DONE "LAUNCHER_ACTION_DONE"
 
+// Signal to force the launcher into locked mode, (b)
+#define UBUS_LAUNCHER_LOCK_HIDE "LAUNCHER_LOCK_HIDE"
+
 // Signal sent when a quicklist is shown.
 #define UBUS_QUICKLIST_SHOWN "QUICKLIST_SHOWN"
 

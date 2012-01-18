@@ -33,6 +33,7 @@
 #include <UnityCore/GLibSignal.h>
 
 #include "DashSearchBarSpinner.h"
+#include "IconTexture.h"
 #include "IMTextEntry.h"
 #include "Introspectable.h"
 #include "StaticCairoText.h"
@@ -103,7 +104,12 @@ private:
   nux::HLayout* filter_layout_;
   nux::SpaceLayout* filter_space_;
   nux::StaticCairoText* show_filters_;
+  nux::VLayout* arrow_layout_;
+  nux::SpaceLayout* arrow_top_space_;
+  nux::SpaceLayout* arrow_bottom_space_;
+  IconTexture* expand_icon_;
   int search_bar_width_;
+
 
   int last_width_;
   int last_height_;

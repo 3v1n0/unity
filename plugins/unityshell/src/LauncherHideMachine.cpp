@@ -101,6 +101,7 @@ LauncherHideMachine::SetShouldHide(bool value, bool skip_delay)
     MT_DRAG_OUT            = 1 << 18, 256k #VISIBLE_REQUIRED
     MOUSE_OVER_ACTIVE_EDGE = 1 << 19, 512k
     LAUNCHER_PULSE         = 1 << 20, 1M   #VISIBLE_REQUIRED
+    LOCK_HIDE              = 1 << 21, 2M
 */
 
 #define VISIBLE_REQUIRED (QUICKLIST_OPEN | EXTERNAL_DND_ACTIVE | \
@@ -112,6 +113,13 @@ void
 LauncherHideMachine::EnsureHideState(bool skip_delay)
 {
   bool should_hide;
+
+  // early check to see if we are locking to hidden
+  if (GetQuirk(LOCK_HIDE))
+  {
+    SetShouldHide(true, true);
+    return;
+  }
 
   if (_mode == HIDE_NEVER)
   {
