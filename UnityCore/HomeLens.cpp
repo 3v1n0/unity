@@ -213,6 +213,8 @@ public:
   HomeLens::ResultsMerger results_merger_;
   HomeLens::CategoryMerger categories_merger_;
   HomeLens::ModelMerger filters_merger_;
+
+  int running_searches_;
 };
 
 /*
@@ -477,6 +479,7 @@ HomeLens::Impl::Impl(HomeLens *owner)
   , results_merger_(owner->results()->model(), &cat_registry_)
   , categories_merger_(owner->categories()->model(), &cat_registry_)
   , filters_merger_(owner->filters()->model())
+  , running_searches_(0)
 {
   DeeModel* results = owner->results()->model();
   if (dee_model_get_n_columns(results) == 0)
@@ -552,13 +555,24 @@ Lens::Ptr HomeLens::Impl::FindLensForUri(std::string const& uri)
 
 // FIXME: i18n of user visible labels _("Home") description, searchhint
 // FIXME: sorting lenses/categories. apps.lens first
-// FIXME: activate correct hit, waiting for search.finished() and seqnum
 // FIXME: When first shown the dash home screen doesn't show anything
 
 void HomeLens::Impl::OnLensAdded (Lens::Ptr& lens)
 {
   lenses_.push_back (lens);
   owner_->lens_added.emit(lens);
+
+  /* When we dispatch a search we inc the search count and when we finish
+   * one we decrease it. When we reach 0 we'll emit search_finished. */
+  lens->global_search_finished.connect([&] (Hints const& hints) {
+      running_searches_--;
+
+      if (running_searches_ <= 0)
+      {
+        owner_->search_finished.emit(Hints());
+        LOG_DEBUG(logger) << "Search finished";
+      }
+  });
 
   nux::ROProperty<glib::Object<DeeModel>>& results_prop = lens->global_results()->model;
   nux::ROProperty<glib::Object<DeeModel>>& categories_prop = lens->categories()->model;
@@ -676,6 +690,9 @@ void HomeLens::Search(std::string const& search_string)
 {
   LOG_DEBUG(logger) << "Search '" << search_string << "'";
 
+  /* Reset running search counter */
+  pimpl->running_searches_ = 0;
+
   for (auto lens: pimpl->lenses_)
   {
     if (lens->search_in_global())
@@ -684,6 +701,7 @@ void HomeLens::Search(std::string const& search_string)
           << search_string << "'";
       lens->view_type = ViewType::HOME_VIEW;
       lens->GlobalSearch(search_string);
+      pimpl->running_searches_++;
     }
   }
 }
