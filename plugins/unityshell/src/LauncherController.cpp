@@ -65,6 +65,7 @@ public:
   void SortAndUpdate();
 
   void OnIconAdded(LauncherIcon* icon);
+  void OnIconRemoved(LauncherIcon* icon);
 
   void OnLauncherAddRequest(char* path, LauncherIcon* before);
   void OnLauncherRemoveRequest(LauncherIcon* icon);
@@ -211,7 +212,7 @@ void Controller::Impl::OnLauncherAddRequest(char* path, LauncherIcon* before)
     if (before)
       model_->ReorderBefore(result, before, false);
   }
-  
+
   Save();
 }
 
@@ -261,6 +262,11 @@ void Controller::Impl::SortAndUpdate()
 void Controller::Impl::OnIconAdded(LauncherIcon* icon)
 {
   this->RegisterIcon(icon);
+}
+
+void Controller::Impl::OnIconRemoved(LauncherIcon* icon)
+{
+  SortAndUpdate();
 }
 
 void Controller::Impl::OnLauncherRemoveRequest(LauncherIcon* icon)
@@ -450,7 +456,7 @@ void Controller::Impl::SetupBamf()
   BamfApplication* app;
   BamfLauncherIcon* icon;
 
-  // Sufficiently large number such that we ensure proper sorting 
+  // Sufficiently large number such that we ensure proper sorting
   // (avoids case where first item gets tacked onto end rather than start)
   int priority = 100;
 
@@ -489,6 +495,7 @@ void Controller::Impl::SetupBamf()
   SortAndUpdate();
 
   model_->order_changed.connect(sigc::mem_fun(this, &Impl::SortAndUpdate));
+  model_->icon_removed.connect(sigc::mem_fun(this, &Impl::OnIconRemoved));
   model_->saved.connect(sigc::mem_fun(this, &Impl::Save));
   bamf_timer_handler_id_ = 0;
 }
