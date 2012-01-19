@@ -114,7 +114,7 @@ PanelTray::~PanelTray()
 void
 PanelTray::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
 {
-  nux::Geometry geo = GetAbsoluteGeometry();
+  nux::Geometry geo(GetAbsoluteGeometry());
 
   gfx_context.PushClippingRectangle(geo);
   nux::GetPainter().PaintBackground(gfx_context, geo);
