@@ -55,6 +55,8 @@ Controller::Controller(std::list<AbstractHint*>& hints)
                                    Hide();
                                  });
 
+  ubus_manager_.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
+
   model_.reset(new Model(hints));
 
   model_->Fill();
@@ -128,9 +130,7 @@ gboolean Controller::OnShowTimer(gpointer data)
     return FALSE;
   }
 
-  ubus_server_send_message(ubus_server_get_default(),
-                           UBUS_PLACE_VIEW_CLOSE_REQUEST,
-                           NULL);
+  self->ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
 
   if (self->visible_)
   {
