@@ -2,8 +2,19 @@
 
 #
 # Script to generate a nice PNG file of the currently running unity introspection tree.
+from sys import argv
+
+if len(argv) != 2:
+    print """Usage: %s output_file.png.
+
+This script queries the currently running Unity process and dumps the entire
+introspection tree into a graph, and renders this to a PNG file.
+""" % (argv[0])
+    exit(1)
+
 import dbus
 from autopilot.emulators.unity import Unity
+
 
 try:
     import pydot
@@ -27,7 +38,7 @@ def string_rep(dbus_type):
     else:
         return repr(dbus_type)
 def escape(s):
-    return pydot.quote_if_necessary(s)
+    return pydot.quote_if_necessary(s).replace('<','\\<').replace('>', '\\>')
 
 def traverse_graph(state, parent, graph):
     global NEXT_NODE_ID
@@ -35,7 +46,7 @@ def traverse_graph(state, parent, graph):
     # first, set labels for this node:
     bits = ["%s=%s" % (k, string_rep(state[k])) for k in state.keys() if k != 'Children']
     lbl += "\l".join(bits)
-    parent.set_label('"{' + lbl + '}"')
+    parent.set_label(escape('"{' + lbl + '}"'))
     if state.has_key('Children'):
         # Add all array nodes as children of this node.
         for child_name, child_state in state['Children']:
@@ -51,13 +62,11 @@ def traverse_graph(state, parent, graph):
 if __name__ == '__main__':
     u = Unity()
     introspection_tree = u.get_state()
-    graph = pydot.Graph()
+    graph = pydot.Dot()
     graph.set_simplify(False)
     graph.set_node_defaults(shape='Mrecord')
     gnode_unity = pydot.Node("Unity")
     gnode_unity.set_comment("Unity")
     traverse_graph(introspection_tree[0], gnode_unity, graph)
 
-    #buff = StringIO()
-    #graph.dot(buff)
-    open('out.dot', 'w').write(graph.to_string())
+    graph.write(argv[1], format='png')
