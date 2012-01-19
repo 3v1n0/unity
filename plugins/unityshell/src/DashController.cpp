@@ -242,7 +242,8 @@ void Controller::ShowDash()
 
   StartShowHideTimeline();
 
-  ubus_manager_.SendMessage(UBUS_PLACE_VIEW_SHOWN);
+  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "dash", TRUE);
+  ubus_manager_.SendMessage(UBUS_OVERLAY_SHOWN, info);
 }
 
 void Controller::HideDash(bool restore)
@@ -262,8 +263,9 @@ void Controller::HideDash(bool restore)
     PluginAdapter::Default ()->restoreInputFocus ();
 
   StartShowHideTimeline();
-
-  ubus_manager_.SendMessage(UBUS_PLACE_VIEW_HIDDEN);
+  
+  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "dash", TRUE);
+  ubus_manager_.SendMessage(UBUS_OVERLAY_HIDDEN, info);
 }
 
 void Controller::StartShowHideTimeline()

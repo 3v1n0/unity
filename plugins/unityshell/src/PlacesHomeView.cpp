@@ -106,7 +106,7 @@ PlacesHomeView::PlacesHomeView()
                          (style.GetHomeTileHeight() * 2) + 32);
 
   _ubus_handle = ubus_server_register_interest(ubus_server_get_default(),
-                                               UBUS_PLACE_VIEW_SHOWN,
+                                               UBUS_OVERLAY_SHOWN,
                                                (UBusCallback) &PlacesHomeView::DashVisible,
                                                this);
 

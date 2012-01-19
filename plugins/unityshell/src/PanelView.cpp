@@ -103,11 +103,11 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
                                                           (UBusCallback)&PanelView::OnBackgroundUpdate,
                                                           this);
 
-   _handle_dash_hidden = ubus_server_register_interest(ubus, UBUS_PLACE_VIEW_HIDDEN,
+   _handle_dash_hidden = ubus_server_register_interest(ubus, UBUS_OVERLAY_HIDDEN,
                                                       (UBusCallback)&PanelView::OnDashHidden,
                                                       this);
 
-   _handle_dash_shown = ubus_server_register_interest(ubus, UBUS_PLACE_VIEW_SHOWN,
+   _handle_dash_shown = ubus_server_register_interest(ubus, UBUS_OVERLAY_SHOWN,
                                                      (UBusCallback)&PanelView::OnDashShown,
                                                      this);
    // request the latest colour from bghash

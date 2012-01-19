@@ -34,9 +34,11 @@
 #define UBUS_PLACE_ENTRY_ACTIVATE_REQUEST "PLACE_ENTRY_ACTIVATE_REQUEST"
 #define UBUS_DASH_ABOUT_TO_SHOW "DASH_ABOUT_TO_SHOW"
 
-// Signal send when places are shown or hidden
-#define UBUS_PLACE_VIEW_HIDDEN "PLACE_VIEW_HIDDEN"
-#define UBUS_PLACE_VIEW_SHOWN "PLACE_VIEW_SHOWN"
+// Signal sent when an overlay interface is shown, includes a gvariant
+// gvariant format is (sb), (interface-name, can_maximize?) 
+#define UBUS_OVERLAY_FORMAT_STRING "(sb)"
+#define UBUS_OVERLAY_HIDDEN "OVERLAY_HIDDEN"
+#define UBUS_OVERLAY_SHOWN "OVERLAY_SHOWN"
 
 #define UBUS_PLACE_VIEW_QUEUE_DRAW "PLACE_VIEW_QUEUE_DRAW"
 
