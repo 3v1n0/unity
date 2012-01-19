@@ -1,16 +1,3 @@
-Test Dash Key Focus
--------------------
-This test shows that the search bar in the dash gets key focus when using the super key to start the dash on start up.
-
-#. Start on a fresh login
-#. Press the <super> key
-#. Wait for dash to appear
-#. Type "hello"
-
-Outcome
-  The dash will appear, and "hello" will be in the search box.
-
-
 Test Launcher Icon with Windows in multiple workspaces
 ------------------------------------------------------
 This test shows how the launcher should draw when there are application windows
