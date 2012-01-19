@@ -209,6 +209,7 @@ public:
 
   void KeySwitcherActivate();
   void KeySwitcherTerminate();
+  void KeySwitcherCancel();
   bool KeySwitcherIsActive();
   void KeySwitcherNext();
   void KeySwitcherPrevious();

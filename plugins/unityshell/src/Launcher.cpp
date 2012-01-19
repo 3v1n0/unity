@@ -2711,6 +2711,15 @@ void Launcher::KeySwitcherTerminate()
   selection_change.emit();
 }
 
+void Launcher::KeySwitcherCancel()
+{
+  if (!_key_switcher_activated)
+    return;
+
+  _current_icon_index = -1;
+  KeySwitcherTerminate();
+}
+
 bool Launcher::KeySwitcherIsActive()
 {
   return _key_switcher_activated;
@@ -2898,13 +2907,9 @@ void Launcher::MouseDownLogic(int x, int y, unsigned long button_flags, unsigned
     _start_dragicon_handle = g_timeout_add(START_DRAGICON_DURATION, &Launcher::StartIconDragTimeout, this);
 
     launcher_icon->mouse_down.emit(nux::GetEventButton(button_flags));
-
-    if (_key_switcher_activated)
-    {
-      _current_icon_index = -1;
-      KeySwitcherTerminate();
-    }
   }
+
+  KeySwitcherCancel();
 }
 
 void Launcher::MouseUpLogic(int x, int y, unsigned long button_flags, unsigned long key_flags)
