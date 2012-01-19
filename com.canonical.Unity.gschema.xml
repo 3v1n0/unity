@@ -21,7 +21,7 @@
       <description>Whether the home screen should be expanded.</description>
     </key>
   </schema>
-	<schema path="/desktop/unity/launcher/" id="com.canonical.Unity.Launcher" gettext-domain="unity">
+  <schema path="/desktop/unity/launcher/" id="com.canonical.Unity.Launcher" gettext-domain="unity">
     <key type="as" name="favorites">
       <default>[ 'ubiquity-gtkui.desktop', 'nautilus-home.desktop', 'firefox.desktop', 'libreoffice-writer.desktop', 'libreoffice-calc.desktop', 'libreoffice-impress.desktop', 'ubuntu-software-center.desktop', 'ubuntuone-installer.desktop', 'gnome-control-center.desktop' ]</default>
       <summary>List of desktop file ids for favorites on the launcher.</summary>
@@ -33,7 +33,7 @@
       <description>This is a detection key for the favorite migration script to know whether the needed migration is done or not.</description>
     </key>
   </schema>
-	<schema path="/desktop/unity/panel/" id="com.canonical.Unity.Panel" gettext-domain="unity">
+  <schema path="/desktop/unity/panel/" id="com.canonical.Unity.Panel" gettext-domain="unity">
     <key type="as" name="systray-whitelist">
       <default>[ 'JavaEmbeddedFrame', 'Wine', 'scp-dbus-service', 'Update-notifier' ]</default>
       <summary>List of client names, resource classes or wm classes to allow in the Panel's systray implementation.</summary>
