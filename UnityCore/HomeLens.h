@@ -46,7 +46,11 @@ class HomeLens : public Lens, public Lenses
 public:
   typedef std::shared_ptr<HomeLens> Ptr;
 
-  HomeLens();
+  /**
+   * Should be constructed with i18n arguments:
+   *                         _("Home"), _("Home screen"), _("Search")
+   */
+  HomeLens(std::string const& name, std::string const& description, std::string const& search_hint);
   virtual ~HomeLens();
 
   void AddLenses(Lenses& lenses);

@@ -553,9 +553,7 @@ Lens::Ptr HomeLens::Impl::FindLensForUri(std::string const& uri)
   return Lens::Ptr();
 }
 
-// FIXME: i18n of user visible labels _("Home") description, searchhint
 // FIXME: sorting lenses/categories. apps.lens first
-// FIXME: When first shown the dash home screen doesn't show anything
 
 void HomeLens::Impl::OnLensAdded (Lens::Ptr& lens)
 {
@@ -623,9 +621,9 @@ void HomeLens::Impl::OnLensAdded (Lens::Ptr& lens)
   });
 }
 
-HomeLens::HomeLens()
-  : Lens("home.lens", "", "", "FIXME: i18n name", PKGDATADIR"/lens-nav-home.svg",
-         "FIXME: i18n description", "FIXME: i18n searchhint", true, "",
+HomeLens::HomeLens(std::string const& name, std::string const& description, std::string const& search_hint)
+  : Lens("home.lens", "", "", name, PKGDATADIR"/lens-nav-home.svg",
+         description, search_hint, true, "",
          ModelType::LOCAL)
   , pimpl(new Impl(this))
 {

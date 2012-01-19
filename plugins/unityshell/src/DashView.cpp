@@ -47,14 +47,13 @@ NUX_IMPLEMENT_OBJECT_TYPE(DashView);
 
 DashView::DashView()
   : nux::View(NUX_TRACKER_LOCATION)
-  , home_lens_(new HomeLens())
+  , home_lens_(new HomeLens(_("Home"), _("Home screen"), _("Search")))
   , active_lens_view_(0)
   , last_activated_uri_("")
   , searching_timeout_id_(0)
   , search_in_progress_(false)
   , activate_on_finish_(false)
   , visible_(false)
-  , lenses_initialized_(false)
 {
   renderer_.SetOwner(this);
   renderer_.need_redraw.connect([this] () { 
@@ -120,16 +119,6 @@ void DashView::AboutToHide()
   home_lens_->view_type = ViewType::HIDDEN;
   LOG_DEBUG(logger) << "Setting ViewType " << ViewType::HIDDEN
                             << " on '" << home_lens_->id() << "'";
-}
-
-void DashView::EnsureLensesInitialized()
-{
-  if (!lenses_initialized_)
-  {
-    // The HomeLens will initialize all know lenses
-    home_lens_->Search("");
-    lenses_initialized_ = true;
-  }
 }
 
 void DashView::SetupViews()
@@ -378,7 +367,6 @@ void DashView::OnLensAdded(Lens::Ptr& lens)
 {
   std::string id = lens->id;
   lens_bar_->AddLens(lens);
-  //home_view_->AddLens(lens);
 
   LensView* view = new LensView(lens);
   view->SetVisible(false);
@@ -389,16 +377,6 @@ void DashView::OnLensAdded(Lens::Ptr& lens)
   lens->activated.connect(sigc::mem_fun(this, &DashView::OnUriActivatedReply));
   lens->search_finished.connect(sigc::mem_fun(this, &DashView::OnSearchFinished));
   lens->global_search_finished.connect(sigc::mem_fun(this, &DashView::OnGlobalSearchFinished));
-
-  /* If we've initialized the lenses we already have,
-   * also initialize this late comer. If we haven't initialized the lenses
-   * before we haven't mapped yet and we should hold it off */
-  if (lenses_initialized_)
-    {
-      LOG_DEBUG(logger) << "Initializing lens '" << lens->id() << "'";
-      lens->view_type = ViewType::HOME_VIEW;
-      lens->GlobalSearch ("");
-    }
 }
 
 void DashView::OnLensBarActivated(std::string const& id)
@@ -422,12 +400,8 @@ void DashView::OnLensBarActivated(std::string const& id)
                       << " on '" << it.first << "'";
   }
 
-  // FIXME: Once we have i18n of the HomeLens class in UnityCore always just set search_hint to view->lens()->search_hint;
   search_bar_->search_string = view->search_string;
-  if (view != home_view_)
-    search_bar_->search_hint = view->lens()->search_hint;
-  else
-    search_bar_->search_hint = _("Search");
+  search_bar_->search_hint = view->lens()->search_hint;
 
   bool expanded = view->filters_expanded;
   search_bar_->showing_filters = expanded;

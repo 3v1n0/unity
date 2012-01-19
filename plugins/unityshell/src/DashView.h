@@ -135,7 +135,6 @@ private:
   bool activate_on_finish_;
 
   bool visible_;
-  bool lenses_initialized_;
 };
 
 
