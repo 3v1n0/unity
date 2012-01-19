@@ -2619,9 +2619,17 @@ void Launcher::SelectPreviousIcon()
     {
       _current_icon_index = temp_current_icon_index;
 
-      if ((*it)->GetCenter().y + - _icon_size/ 2 < GetGeometry().y)
+      if ((*it)->GetCenter().y - _icon_size / 2 < GetGeometry().y)
+      {
         _launcher_drag_delta += (_icon_size + _space_between_icons);
+      }
+      else if ((*it)->GetCenter().y + _icon_size / 2 > GetGeometry().height)
+      {
+        _launcher_drag_delta -= (*it)->GetCenter().y + _icon_size/2 +
+                                _space_between_icons - GetGeometry().height;
+      }
     }
+
     EnsureAnimation();
     selection_change.emit();
   }
@@ -2647,7 +2655,13 @@ void Launcher::SelectNextIcon()
       _current_icon_index = temp_current_icon_index;
 
       if ((*it)->GetCenter().y + _icon_size / 2 > GetGeometry().height)
+      {
         _launcher_drag_delta -= (_icon_size + _space_between_icons);
+      }
+      else if ((*it)->GetCenter().y - _icon_size / 2 < GetGeometry().y)
+      {
+        _launcher_drag_delta += GetGeometry().y - ((*it)->GetCenter().y - _icon_size);
+      }
     }
 
     EnsureAnimation();
@@ -2707,6 +2721,11 @@ void Launcher::KeySwitcherNext()
   if (!_key_switcher_activated)
     return;
 
+  if (_current_icon_index == _model->Size() - 1)
+  {
+    _current_icon_index = -1;
+  }
+
   SelectNextIcon();
 }
 
@@ -2714,6 +2733,11 @@ void Launcher::KeySwitcherPrevious()
 {
   if (!_key_switcher_activated)
     return;
+
+  if (_current_icon_index == 0)
+  {
+    _current_icon_index = _model->Size();
+  }
 
   SelectPreviousIcon();
 }
