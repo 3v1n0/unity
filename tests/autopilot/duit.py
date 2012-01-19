@@ -11,6 +11,8 @@ except ImportError:
     print "Error: the 'pydot' module is required to run this script."
     print "Try installing the 'python-pydot' package."
 
+NEXT_NODE_ID=1
+
 def string_rep(dbus_type):
     if type(dbus_type) == dbus.Boolean:
         return repr(bool(dbus_type))
@@ -28,18 +30,26 @@ def escape(s):
     return pydot.quote_if_necessary(s)
 
 def traverse_graph(state, parent, graph):
+    global NEXT_NODE_ID
+    lbl = parent.get_comment() + "|"
+    # first, set labels for this node:
     for key in state.keys():
         #if type(state[key]) == dbus.Array:
         if key == 'Children':
-            # Add all array nodes as children of this node.
-            for child_name, child_state in state[key]:
-                child = pydot.Node(child_name)
-                graph.add_node(child)
-                graph.add_edge(pydot.Edge(parent, child))
-                traverse_graph(child_state, child, graph)
-        else:
-            pass
-            #graph.propertyAppend(parent, escape(key), string_rep(state[key]))
+            continue
+        lbl += "\l " + key + "=" + string_rep(state[key])
+    parent.set_label('"{' + lbl + '}"')
+    if state.has_key('Children'):
+        # Add all array nodes as children of this node.
+        for child_name, child_state in state['Children']:
+            child = pydot.Node(str(NEXT_NODE_ID))
+            NEXT_NODE_ID+=1
+            child.set_comment(child_name)
+            graph.add_node(child)
+            graph.add_edge(pydot.Edge(parent, child))
+
+            traverse_graph(child_state, child, graph)
+        
 
 if __name__ == '__main__':
     u = Unity()
@@ -48,6 +58,7 @@ if __name__ == '__main__':
     graph.set_simplify(False)
     graph.set_node_defaults(shape='record')
     gnode_unity = pydot.Node("Unity")
+    gnode_unity.set_comment("Unity")
     traverse_graph(introspection_tree[0], gnode_unity, graph)
 
     #buff = StringIO()
