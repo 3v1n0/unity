@@ -33,11 +33,8 @@ def traverse_graph(state, parent, graph):
     global NEXT_NODE_ID
     lbl = parent.get_comment() + "|"
     # first, set labels for this node:
-    for key in state.keys():
-        #if type(state[key]) == dbus.Array:
-        if key == 'Children':
-            continue
-        lbl += "\l " + key + "=" + string_rep(state[key])
+    bits = ["%s=%s" % (k, string_rep(state[k])) for k in state.keys() if k != 'Children']
+    lbl += "\l".join(bits)
     parent.set_label('"{' + lbl + '}"')
     if state.has_key('Children'):
         # Add all array nodes as children of this node.
@@ -56,7 +53,7 @@ if __name__ == '__main__':
     introspection_tree = u.get_state()
     graph = pydot.Graph()
     graph.set_simplify(False)
-    graph.set_node_defaults(shape='record')
+    graph.set_node_defaults(shape='Mrecord')
     gnode_unity = pydot.Node("Unity")
     gnode_unity.set_comment("Unity")
     traverse_graph(introspection_tree[0], gnode_unity, graph)
