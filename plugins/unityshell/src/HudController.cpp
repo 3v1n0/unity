@@ -220,6 +220,9 @@ void Controller::ShowHud()
   // hide the launcher
   GVariant* message_data = g_variant_new("(b)", TRUE);
   ubus.SendMessage(UBUS_LAUNCHER_LOCK_HIDE, message_data);
+
+  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "hud", FALSE);
+  ubus.SendMessage(UBUS_OVERLAY_SHOWN, info);
 }
 void Controller::HideHud(bool restore)
 {
@@ -244,6 +247,9 @@ void Controller::HideHud(bool restore)
   //unhide the launcher
   GVariant* message_data = g_variant_new("(b)", FALSE);
   ubus.SendMessage(UBUS_LAUNCHER_LOCK_HIDE, message_data);
+  
+  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "hud", FALSE);
+  ubus.SendMessage(UBUS_OVERLAY_HIDDEN, info);
 }
 
 void Controller::StartShowHideTimeline()
