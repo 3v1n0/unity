@@ -56,7 +56,7 @@ public:
 
   ~Impl();
 
-  void OnProxyConnected();
+  void OnProxyConnectionChanged();
   void OnProxyDisconnected();
 
   void ResultsModelUpdated(unsigned long long begin_seqnum, 
@@ -164,7 +164,7 @@ Lens::Impl::Impl(Lens* owner,
   if (dbus_name != "")
   {
     proxy_ = new glib::DBusProxy(dbus_name, dbus_path, "com.canonical.Unity.Lens");
-    proxy_->connected.connect(sigc::mem_fun(this, &Lens::Impl::OnProxyConnected));
+    proxy_->connected.connect(sigc::mem_fun(this, &Lens::Impl::OnProxyConnectionChanged));
     proxy_->disconnected.connect(sigc::mem_fun(this, &Lens::Impl::OnProxyDisconnected));
     proxy_->Connect("Changed", sigc::mem_fun(this, &Lens::Impl::OnChanged));
   }
@@ -205,11 +205,14 @@ Lens::Impl::~Impl()
     delete proxy_;
 }
 
-void Lens::Impl::OnProxyConnected()
+void Lens::Impl::OnProxyConnectionChanged()
 {
-  proxy_->Call("InfoRequest");
-  ViewType current_view_type = owner_->view_type;
-  proxy_->Call("SetViewType", g_variant_new("(u)", current_view_type));
+  if (proxy_->IsConnected())
+  {
+    proxy_->Call("InfoRequest");
+    ViewType current_view_type = owner_->view_type;
+    proxy_->Call("SetViewType", g_variant_new("(u)", current_view_type));
+  }
 }
 
 void Lens::Impl::OnProxyDisconnected()
@@ -414,7 +417,7 @@ void Lens::Impl::UpdateProperties(bool search_in_global,
 
 void Lens::Impl::OnViewTypeChanged(ViewType view_type)
 {
-  if (proxy_)
+  if (proxy_ && proxy_->IsConnected())
     proxy_->Call("SetViewType", g_variant_new("(u)", view_type));
 }
 
@@ -448,6 +451,12 @@ void Lens::Impl::Search(std::string const& search_string)
 {
   LOG_DEBUG(logger) << "Searching '" << id_ << "' for '" << search_string << "'";
 
+  if (!proxy_->IsConnected())
+  {
+    LOG_DEBUG(logger) << "Skipping search. Proxy not connected. ('" << id_ << "')";
+    return;
+  }
+
   GVariantBuilder b;
   g_variant_builder_init(&b, G_VARIANT_TYPE("a{sv}"));
 
@@ -474,6 +483,12 @@ void Lens::Impl::Activate(std::string const& uri)
 {
   LOG_DEBUG(logger) << "Activating '" << uri << "' on  '" << id_ << "'";
 
+  if (!proxy_->IsConnected())
+    {
+      LOG_DEBUG(logger) << "Skipping activation. Proxy not connected. ('" << id_ << "')";
+      return;
+    }
+
   proxy_->Call("Activate",
                g_variant_new("(su)", uri.c_str(), 0),
                sigc::mem_fun(this, &Lens::Impl::ActivationReply));
@@ -497,6 +512,12 @@ void Lens::Impl::ActivationReply(GVariant* parameters)
 void Lens::Impl::Preview(std::string const& uri)
 {
   LOG_DEBUG(logger) << "Previewing '" << uri << "' on  '" << id_ << "'";
+
+  if (!proxy_->IsConnected())
+    {
+      LOG_DEBUG(logger) << "Skipping preview. Proxy not connected. ('" << id_ << "')";
+      return;
+    }
 
   proxy_->Call("Preview",
                g_variant_new("(s)", uri.c_str()),
