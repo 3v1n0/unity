@@ -1383,17 +1383,14 @@ void Style::Impl::Text(cairo_t*    cr,
   switch (alignment)
   {
   case Alignment::LEFT:
-    LOG_WARN(logger) << "left alignment on button";
     pango_alignment = PANGO_ALIGN_LEFT;
     break;
   
   case Alignment::CENTER:
-    LOG_WARN(logger) << "centre alignment on button";
     pango_alignment = PANGO_ALIGN_CENTER;
     break;
 
   case Alignment::RIGHT:
-    LOG_WARN(logger) << "right alignment on button";
     pango_alignment = PANGO_ALIGN_RIGHT;
     break;
   }
