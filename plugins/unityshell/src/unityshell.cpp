@@ -557,6 +557,7 @@ void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
       glEnd();
 
       tex->disable();
+      glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
       glDisable(GL_BLEND);
     }
   }

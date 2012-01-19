@@ -34,7 +34,6 @@ set (CORE_HEADERS
      ModelRowAdaptor.h
      ModelRowAdaptor-inl.h
      Preview.h
-     Utils.h
      RadioOptionFilter.h
      RatingsFilter.h
      Result.h

@@ -22,6 +22,7 @@
 #include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
 #include <Nux/HLayout.h>
+#include <Nux/VLayout.h>
 #include <Nux/Layout.h>
 #include <Nux/WindowCompositor.h>
 
@@ -43,6 +44,8 @@
 
 #define LIVE_SEARCH_TIMEOUT 40
 #define SPINNER_TIMEOUT 100
+
+static const float kExpandDefaultIconOpacity = 1.0f;
 
 namespace unity
 {
@@ -94,23 +97,42 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
   layered_layout_->SetActiveLayerN(1);
   layered_layout_->SetMinimumWidth(search_bar_width_);
   layered_layout_->SetMaximumWidth(search_bar_width_);
-  layout_->AddView(layered_layout_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
+  layout_->AddView(layered_layout_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
-  std::string filter_str = _("Filter results");
-  filter_str+= "  ▸";
+  std::string filter_str = _("<b>Filter results</b>");
   show_filters_ = new nux::StaticCairoText(filter_str.c_str());
   show_filters_->SetVisible(false);
   show_filters_->SetTextColor(nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
   show_filters_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_LEFT);
   show_filters_->mouse_click.connect([&] (int x, int y, unsigned long b, unsigned long k) { showing_filters = !showing_filters; });
 
-  filter_layout_ = new nux::HLayout();
-  filter_layout_->SetHorizontalExternalMargin(12);
-  filter_space_ = new nux::SpaceLayout(0, 10000, 0, 1);
-  filter_layout_->AddLayout(filter_space_, 1);
-  filter_layout_->AddView(show_filters_, 0, nux::MINOR_POSITION_RIGHT);
+  nux::BaseTexture* arrow;
+  arrow = dash::Style::Instance().GetGroupExpandIcon();
+  expand_icon_ = new IconTexture(arrow,
+                                 arrow->GetWidth(),
+                                 arrow->GetHeight());
+  expand_icon_->SetOpacity(kExpandDefaultIconOpacity);
+  expand_icon_->SetMinimumSize(arrow->GetWidth(), arrow->GetHeight());
+  expand_icon_->SetVisible(false);
+  expand_icon_->mouse_click.connect([&] (int x, int y, unsigned long b, unsigned long k) { showing_filters = !showing_filters; });
 
-  layout_->AddView(filter_layout_, 0, nux::MINOR_POSITION_RIGHT, nux::MINOR_SIZE_FIX);
+  filter_layout_ = new nux::HLayout();
+  filter_layout_->SetHorizontalInternalMargin(8);
+  filter_layout_->SetHorizontalExternalMargin(6);
+  filter_space_ = new nux::SpaceLayout(100, 10000, 0, 1);
+  filter_layout_->AddLayout(filter_space_, 1);
+  filter_layout_->AddView(show_filters_, 0, nux::MINOR_POSITION_CENTER);
+
+  arrow_layout_  = new nux::VLayout();
+  arrow_top_space_ = new nux::SpaceLayout(2, 2, 12, 12);
+  arrow_bottom_space_ = new nux::SpaceLayout(2, 2, 8, 8);
+  arrow_layout_->AddView(arrow_top_space_, 0, nux::MINOR_POSITION_CENTER);
+  arrow_layout_->AddView(expand_icon_, 0, nux::MINOR_POSITION_CENTER);
+  arrow_layout_->AddView(arrow_bottom_space_, 0, nux::MINOR_POSITION_CENTER);
+
+  filter_layout_->AddView(arrow_layout_, 0, nux::MINOR_POSITION_CENTER);
+
+  layout_->AddView(filter_layout_, 1, nux::MINOR_POSITION_RIGHT, nux::MINOR_SIZE_FULL);
 
   sig_manager_.Add(new Signal<void, GtkSettings*, GParamSpec*>
       (gtk_settings_get_default(),
@@ -123,7 +145,11 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
   search_string.SetSetterFunction(sigc::mem_fun(this, &SearchBar::set_search_string));
   im_active.SetGetterFunction(sigc::mem_fun(this, &SearchBar::get_im_active));
   showing_filters.changed.connect(sigc::mem_fun(this, &SearchBar::OnShowingFiltersChanged));
-  can_refine_search.changed.connect([&] (bool can_refine) { show_filters_->SetVisible(can_refine); });
+  can_refine_search.changed.connect([&] (bool can_refine)
+  {
+    show_filters_->SetVisible(can_refine);
+    expand_icon_->SetVisible(can_refine);
+  });
 }
 
 SearchBar::~SearchBar()
@@ -229,11 +255,11 @@ gboolean SearchBar::OnSpinnerStartCb(SearchBar* sef)
 
 void SearchBar::OnShowingFiltersChanged(bool is_showing)
 {
-  std::string filter_str = _("Filter results");
-  filter_str += "  <small>";
-  filter_str += is_showing ? "▾" : "▸";
-  filter_str += "</small>";
-  show_filters_->SetText(filter_str.c_str());
+  dash::Style& style = dash::Style::Instance();
+  if (is_showing)
+    expand_icon_->SetTexture(style.GetGroupUnexpandIcon());
+  else
+    expand_icon_->SetTexture(style.GetGroupExpandIcon());
 }
 
 void SearchBar::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
