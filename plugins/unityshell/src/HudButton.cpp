@@ -92,7 +92,7 @@ void HudButton::InitTheme()
 
 void HudButton::RedrawTheme(nux::Geometry const& geom, cairo_t* cr, nux::ButtonVisualState faked_state)
 {
-  dash::Style::Instance().Button(cr, faked_state, label_);
+  dash::Style::Instance().Button(cr, faked_state, label_, dash::Alignment::LEFT);
 }
 
 bool HudButton::AcceptKeyNavFocus()
