@@ -86,6 +86,22 @@ void DashView::AboutToShow()
   visible_ = true;
   search_bar_->text_entry()->SelectAll();
 
+  /* Give the lenses a chance to prep data before we map them  */
+  lens_bar_->Activate(active_lens_view_->lens()->id());
+  if (active_lens_view_->lens()->id() == "home.lens")
+  {
+    for (auto lens : lenses_.GetLenses())
+      {
+        lens->view_type = ViewType::HOME_VIEW;
+        LOG_DEBUG(logger) << "Setting ViewType " << ViewType::HOME_VIEW
+                              << " on '" << lens->id() << "'";
+      }
+
+      home_lens_->view_type = ViewType::LENS_VIEW;
+      LOG_DEBUG(logger) << "Setting ViewType " << ViewType::LENS_VIEW
+                                << " on '" << home_lens_->id() << "'";
+  }
+
   renderer_.AboutToShow();
 }
 
