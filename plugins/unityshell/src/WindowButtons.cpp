@@ -54,7 +54,7 @@ public:
       _normal_dash_tex(NULL),
       _prelight_dash_tex(NULL),
       _pressed_dash_tex(NULL),
-      _dash_is_open(false),
+      _overlay_is_open(false),
       _mouse_is_down(false),
       _place_shown_interest(0),
       _place_hidden_interest(0),
@@ -66,11 +66,11 @@ public:
     dash::Settings::Instance().changed.connect(sigc::mem_fun(this, &WindowButton::UpdateDashUnmaximize));
 
     UBusServer* ubus = ubus_server_get_default();
-    _place_shown_interest = ubus_server_register_interest(ubus, UBUS_PLACE_VIEW_SHOWN,
-                                                          (UBusCallback)&WindowButton::OnPlaceViewShown,
+    _place_shown_interest = ubus_server_register_interest(ubus, UBUS_OVERLAY_SHOWN,
+                                                          (UBusCallback)&WindowButton::OnOverlayShown,
                                                           this);
-    _place_hidden_interest = ubus_server_register_interest(ubus, UBUS_PLACE_VIEW_HIDDEN,
-                                                           (UBusCallback)&WindowButton::OnPlaceViewHidden,
+    _place_hidden_interest = ubus_server_register_interest(ubus, UBUS_OVERLAY_HIDDEN,
+                                                           (UBusCallback)&WindowButton::OnOverlayHidden,
                                                            this);
 
     /* FIXME HasMouseFocus() doesn't seem to work correctly, so we use this workaround */
@@ -106,7 +106,7 @@ public:
 
     GfxContext.PushClippingRectangle(geo);
 
-    if (_dash_is_open)
+    if (_overlay_is_open)
     {
       //FIXME should use HasMouseFocus()
       if (_mouse_is_down && IsMouseInside())
@@ -163,7 +163,7 @@ public:
     _prelight_dash_tex = GetDashWindowButton(_type, panel::WindowState::PRELIGHT);
     _pressed_dash_tex = GetDashWindowButton(_type, panel::WindowState::PRESSED);
 
-    if (_dash_is_open)
+    if (_overlay_is_open)
     {
       if (_normal_dash_tex)
         SetMinMaxSize(_normal_dash_tex->GetWidth(), _normal_dash_tex->GetHeight());
@@ -190,6 +190,7 @@ public:
     if (_pressed_dash_tex)
       _pressed_dash_tex->UnReference();
 
+    //!!FIXME!! - don't have disabled instances of the (un)maximize buttons
     if (dash::Settings::Instance().GetFormFactor() == dash::FormFactor::DESKTOP)
     {
       // get maximize buttons
@@ -208,7 +209,7 @@ public:
     // still check if the dash is really opened,
     // someone could change the form factor through dconf
     // when the dash is closed
-    if (_dash_is_open)
+    if (_overlay_is_open)
     {
       if (_normal_dash_tex)
         SetMinMaxSize(_normal_dash_tex->GetWidth(), _normal_dash_tex->GetHeight());
@@ -239,28 +240,35 @@ private:
   nux::BaseTexture* _normal_dash_tex;
   nux::BaseTexture* _prelight_dash_tex;
   nux::BaseTexture* _pressed_dash_tex;
-  bool _dash_is_open;
+  bool _overlay_is_open;
+  bool _overlay_can_maximize;
   bool _mouse_is_down;
   guint32 _place_shown_interest;
   guint32 _place_hidden_interest;
   double _opacity;
 
-  static void OnPlaceViewShown(GVariant* data, void* val)
+  static void OnOverlayShown(GVariant* data, void* val)
   {
+    gchar* overlay_identity = NULL;
+    gboolean can_maximise = FALSE;
+    g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING, 
+                  &overlay_identity, &can_maximise);
     WindowButton* self = (WindowButton*)val;
 
-    self->_dash_is_open = true;
+    self->_overlay_is_open = true;
     if (self->_normal_dash_tex)
       self->SetMinMaxSize(self->_normal_dash_tex->GetWidth(), self->_normal_dash_tex->GetHeight());
+
+    self->_overlay_can_maximize = (can_maximise) ? true : false;
 
     self->QueueDraw();
   }
 
-  static void OnPlaceViewHidden(GVariant* data, void* val)
+  static void OnOverlayHidden(GVariant* data, void* val)
   {
     WindowButton* self = (WindowButton*)val;
 
-    self->_dash_is_open = false;
+    self->_overlay_is_open = false;
     if (self->_normal_tex)
       self->SetMinMaxSize(self->_normal_tex->GetWidth(), self->_normal_tex->GetHeight());
 
