@@ -86,9 +86,6 @@ void DashView::AboutToShow()
   visible_ = true;
   search_bar_->text_entry()->SelectAll();
 
-  /* Before we map the first time,
-   * initialize all the lenses for the home screen */
-  EnsureLensesInitialized();
   renderer_.AboutToShow();
 }
 
@@ -96,6 +93,17 @@ void DashView::AboutToHide()
 {
   visible_ = false;
   renderer_.AboutToHide();
+
+  for (auto lens : lenses_.GetLenses())
+  {
+    lens->view_type = ViewType::HIDDEN;
+    LOG_DEBUG(logger) << "Setting ViewType " << ViewType::HIDDEN
+                          << " on '" << lens->id() << "'";
+  }
+
+  home_lens_->view_type = ViewType::HIDDEN;
+  LOG_DEBUG(logger) << "Setting ViewType " << ViewType::HIDDEN
+                            << " on '" << home_lens_->id() << "'";
 }
 
 void DashView::EnsureLensesInitialized()
@@ -390,15 +398,21 @@ void DashView::OnLensBarActivated(std::string const& id)
   for (auto it: lens_views_)
   {
     bool id_matches = it.first == id;
+    ViewType view_type = id_matches ? LENS_VIEW : (view == home_view_ ? HOME_VIEW : HIDDEN);
     it.second->SetVisible(id_matches);
-    it.second->view_type = id_matches ? LENS_VIEW : (view == home_view_ ? HOME_VIEW : HIDDEN);
+    it.second->view_type = view_type;
+
+    LOG_DEBUG(logger) << "Setting ViewType " << view_type
+                      << " on '" << it.first << "'";
   }
 
+  // FIXME: Once we have i18n of the HomeLens class in UnityCore always just set search_hint to view->lens()->search_hint;
   search_bar_->search_string = view->search_string;
   if (view != home_view_)
     search_bar_->search_hint = view->lens()->search_hint;
   else
     search_bar_->search_hint = _("Search");
+
   bool expanded = view->filters_expanded;
   search_bar_->showing_filters = expanded;
 
