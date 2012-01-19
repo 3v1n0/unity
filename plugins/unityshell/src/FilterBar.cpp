@@ -98,6 +98,28 @@ void FilterBar::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   GfxContext.PushClippingRectangle(geo);
   nux::GetPainter().PaintBackground(GfxContext, geo);
+
+  nux::Color col(1.0f, 1.0f, 1.0f, 0.15f);
+  int i = 0;
+  int num_filters = filter_map_.size() - 1;
+
+  for (auto iter: filter_map_)
+  {
+    if (i != num_filters)
+    {
+      nux::View* filter_view = iter.second;
+      nux::Geometry const& geom = filter_view->GetGeometry();
+      GfxContext.GetRenderStates().SetBlend(true);
+      nux::GetPainter().Draw2DLine(GfxContext,
+                                   geom.x, geom.y + geom.height - 1,
+                                   geom.x + geom.width, geom.y + geom.height - 1,
+                                   col,
+                                   col);
+      GfxContext.GetRenderStates().SetBlend(false);
+    }
+    i++;
+  }
+
   GfxContext.PopClippingRectangle();
 }
 
