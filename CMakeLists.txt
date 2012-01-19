@@ -136,6 +136,10 @@ add_subdirectory(UnityCore)
 add_subdirectory(guides)
 add_subdirectory(standalone-clients EXCLUDE_FROM_ALL)
 
+if (USE_GLES)
+  SET (MAINTAINER_CFLAGS ${MAINTAINER_CFLAGS} " -DNUX_OPENGLES_20 -DUSE_GLES")
+endif (USE_GLES)
+
 #
 # GSettings Schema
 #
