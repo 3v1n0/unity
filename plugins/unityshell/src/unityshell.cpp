@@ -1215,10 +1215,9 @@ void UnityScreen::handleCompizEvent(const char* plugin,
   PluginAdapter::Default()->NotifyCompizEvent(plugin, event, option);
   compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>::handleCompizEvent (plugin, event, option);
 
-  if (dash_is_open_ && 
-      strcmp(event, "start_viewport_switch") == 0)
+  if (dash_is_open_ && g_strcmp0(event, "start_viewport_switch") == 0)
   {
-    ubus_server_send_message(ubus_server_get_default(), UBUS_PLACE_VIEW_CLOSE_REQUEST, NULL);
+    ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
   }
 
   screen->handleCompizEvent(plugin, event, option);
@@ -1362,12 +1361,8 @@ bool UnityScreen::launcherRevealEdgeInitiate(CompAction* action,
 
 void UnityScreen::SendExecuteCommand()
 {
-  ubus_server_send_message(ubus_server_get_default(),
-                           UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
-                           g_variant_new("(sus)",
-                                         "commands.lens",
-                                         0,
-                                         ""));
+  ubus_manager_.SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
+                            g_variant_new("(sus)", "commands.lens", 0, ""));
 }
 
 bool UnityScreen::executeCommand(CompAction* action,
