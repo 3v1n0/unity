@@ -34,6 +34,8 @@
             <requirement>
                 <plugin>opengl</plugin>
                 <plugin>compiztoolbox</plugin>
+                <plugin>scale</plugin>
+                <plugin>wall</plugin>
                 <feature>largedesktop</feature>
             </requirement>
         </deps>
