@@ -39,6 +39,12 @@ enum class StockIcon {
   STAR
 };
 
+enum class Alignment {
+  LEFT,
+  CENTER,
+  RIGHT
+};
+
 enum class Orientation {
   UP,
   DOWN,
@@ -81,7 +87,8 @@ public:
   static Style& Instance();
 
   virtual bool Button(cairo_t* cr, nux::ButtonVisualState state,
-                      std::string const& label);
+                      std::string const& label,
+                      Alignment alignment = Alignment::CENTER); 
 
   virtual bool StarEmpty(cairo_t* cr, nux::ButtonVisualState state);
 

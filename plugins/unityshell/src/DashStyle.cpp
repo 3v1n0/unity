@@ -119,7 +119,8 @@ public:
   void Text(cairo_t* cr,
             nux::Color const& color,
             std::string const& label,
-            double horizMargin = 10.0);
+            double horizMargin = 10.0,
+            Alignment alignment = Alignment::CENTER);
 
   void ButtonOutlinePath(cairo_t* cr, bool align);
 
@@ -1322,9 +1323,10 @@ void Style::Impl::GetTextExtents(int& width,
 }
 
 void Style::Impl::Text(cairo_t*    cr,
-                           nux::Color const&  color,
-                           std::string const& label,
-                           double horizMargin)
+                       nux::Color const&  color,
+                       std::string const& label,
+                       double horizMargin,
+                       Alignment alignment)
 {
   double                x           = 0.0;
   double                y           = 0.0;
@@ -1377,6 +1379,26 @@ void Style::Impl::Text(cairo_t*    cr,
   pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
   pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_END);
 
+  PangoAlignment pango_alignment = PANGO_ALIGN_LEFT;
+  switch (alignment)
+  {
+  case Alignment::LEFT:
+    LOG_WARN(logger) << "left alignment on button";
+    pango_alignment = PANGO_ALIGN_LEFT;
+    break;
+  
+  case Alignment::CENTER:
+    LOG_WARN(logger) << "centre alignment on button";
+    pango_alignment = PANGO_ALIGN_CENTER;
+    break;
+
+  case Alignment::RIGHT:
+    LOG_WARN(logger) << "right alignment on button";
+    pango_alignment = PANGO_ALIGN_RIGHT;
+    break;
+  }
+  pango_layout_set_alignment(layout, pango_alignment);
+
   pango_layout_set_markup(layout, label.c_str(), -1);
   pango_layout_set_width(layout, w * PANGO_SCALE);
 
@@ -1407,7 +1429,7 @@ void Style::Impl::Text(cairo_t*    cr,
   PangoRectangle ink = {0, 0, 0, 0};
   PangoRectangle log = {0, 0, 0, 0};
   pango_layout_get_extents(layout, &ink, &log);
-  x = ((double) w - pango_units_to_double(ink.width)) / 2.0 + horizMargin;
+  x = horizMargin; // let pango alignment handle the x position
   y = ((double) h - pango_units_to_double(log.height)) / 2.0;
   cairo_move_to(cr, x, y);
   pango_cairo_show_layout(cr, layout);
@@ -1511,7 +1533,7 @@ void Style::Impl::DrawOverlay(cairo_t*  cr,
   cairo_set_operator(cr, old);
 }
 
-bool Style::Button(cairo_t* cr, nux::ButtonVisualState state, std::string const& label)
+bool Style::Button(cairo_t* cr, nux::ButtonVisualState state, std::string const& label, Alignment alignment)
 {
   // sanity checks
   if (cairo_status(cr) != CAIRO_STATUS_SUCCESS)
@@ -1562,7 +1584,9 @@ bool Style::Button(cairo_t* cr, nux::ButtonVisualState state, std::string const&
 
   pimpl->Text(cr,
               pimpl->button_label_text_color_[state],
-              label);
+              label,
+              10.0,
+              alignment);
 
   return true;
 }
