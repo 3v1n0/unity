@@ -67,7 +67,7 @@ public:
   typedef std::list <Type *> List;
 protected:
 
-  virtual std::vector<unsigned int> getTransients ();
+  std::vector<unsigned int> getTransients ();
 
 private:
 
