@@ -376,7 +376,10 @@ public:
   void leaveShowDesktop ();
   bool handleAnimations (unsigned int ms);
 
-  compiz::MinimizedWindowHandler::Ptr mMinimizeHandler;
+  typedef compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>
+          UnityMinimizedHandler;
+  UnityMinimizedHandler *mMinimizeHandler;
+
   UnityShowdesktopHandler             *mShowdesktopHandler;
   
 private:
