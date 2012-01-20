@@ -205,11 +205,6 @@ std::string PanelView::GetName() const
   return "UnityPanel";
 }
 
-std::string PanelView::GetChildsName() const
-{
-  return "indicators";
-}
-
 void PanelView::AddProperties(GVariantBuilder* builder)
 {
   variant::BuilderWrapper(builder)
