@@ -1742,11 +1742,7 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
 
   if (mMinimizeHandler)
   {
-    typedef compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow> minimized_window_handler_unity;
-
-    compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>::Ptr compizMinimizeHandler =
-        boost::dynamic_pointer_cast <minimized_window_handler_unity> (mMinimizeHandler);
-    mask |= compizMinimizeHandler->getPaintMask ();
+    mask |= mMinimizeHandler->getPaintMask ();
   }
   else if (mShowdesktopHandler)
   {
@@ -1815,7 +1811,7 @@ UnityWindow::minimize ()
 
   if (!mMinimizeHandler)
   {
-    mMinimizeHandler = compiz::MinimizedWindowHandler::Ptr (new compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow> (window));
+    mMinimizeHandler = new UnityMinimizedHandler (window);
     mMinimizeHandler->minimize ();
   }
 }
@@ -1826,14 +1822,15 @@ UnityWindow::unminimize ()
   if (mMinimizeHandler)
   {
     mMinimizeHandler->unminimize ();
-    mMinimizeHandler.reset ();
+    delete mMinimizeHandler;
+    mMinimizeHandler = nullptr;
   }
 }
 
 bool
 UnityWindow::focus ()
 {
-  if (!mMinimizeHandler.get ())
+  if (!mMinimizeHandler)
     return window->focus ();
 
   if (window->overrideRedirect ())
@@ -1865,7 +1862,7 @@ UnityWindow::focus ()
 bool
 UnityWindow::minimized ()
 {
-  return mMinimizeHandler.get () != NULL;
+  return mMinimizeHandler != nullptr;
 }
 
 gboolean
@@ -1928,16 +1925,12 @@ void UnityWindow::windowNotify(CompWindowNotify n)
 
   window->windowNotify(n);
 
-  if (mMinimizeHandler.get () != NULL)
+  if (mMinimizeHandler)
   {
     /* The minimize handler will short circuit the frame
      * region update func and ensure that the frame
      * does not have a region */
-    typedef compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow> minimized_window_handler_unity;
-
-    compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>::Ptr compizMinimizeHandler =
-        boost::dynamic_pointer_cast <minimized_window_handler_unity> (mMinimizeHandler);
-    compizMinimizeHandler->windowNotify (n);
+    mMinimizeHandler->windowNotify (n);
   }
   else if (mShowdesktopHandler)
   {
@@ -1976,13 +1969,9 @@ void UnityWindow::updateFrameRegion(CompRegion &region)
   /* The minimize handler will short circuit the frame
    * region update func and ensure that the frame
    * does not have a region */
-  typedef compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow> minimized_window_handler_unity;
 
-  compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>::Ptr compizMinimizeHandler =
-      boost::dynamic_pointer_cast <minimized_window_handler_unity> (mMinimizeHandler);
-
-  if (compizMinimizeHandler)
-    compizMinimizeHandler->updateFrameRegion (region);
+  if (mMinimizeHandler)
+    mMinimizeHandler->updateFrameRegion (region);
   else if (mShowdesktopHandler)
     mShowdesktopHandler->updateFrameRegion (region);
   else
@@ -2453,6 +2442,7 @@ UnityWindow::UnityWindow(CompWindow* window)
   , PluginClassHandler<UnityWindow, CompWindow>(window)
   , window(window)
   , gWindow(GLWindow::get(window))
+  , mMinimizeHandler(nullptr)
   , mShowdesktopHandler(nullptr)
   , focusdesktop_handle_(0)
 {
@@ -2519,8 +2509,10 @@ UnityWindow::~UnityWindow()
     window->minimizedSetEnabled (this, false);
     window->minimize ();
 
-    mMinimizeHandler.reset ();
+    delete mMinimizeHandler;
+    mMinimizeHandler = nullptr;
   }
+
   if (mShowdesktopHandler)
     delete mShowdesktopHandler;
     
