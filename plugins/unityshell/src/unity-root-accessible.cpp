@@ -338,9 +338,6 @@ search_for_launcher_window(UnityRootAccessible* self)
     nux_object = nux_object_accessible_get_object(accessible);
     bwindow = dynamic_cast<nux::BaseWindow*>(nux_object);
 
-    /*
-     * FIXME: We should probably obtain this from somewhere in the launcher
-       object, rather than hard coding it. */
     if ((bwindow!= NULL) && (g_strcmp0(bwindow->GetWindowName().GetTCharPtr(), "LauncherWindow") == 0))
     {
       found = TRUE;
