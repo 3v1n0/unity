@@ -424,6 +424,25 @@ void UnityScreen::CreateSuperNewAction(char shortcut, bool use_shift, bool use_n
     _shortcut_actions.push_back(action);
 }
 
+void UnityScreen::EnableCancelAction(bool enabled, int modifiers)
+{
+  if (enabled)
+  {
+    /* Create a new keybinding for the Escape key and the current modifiers */
+    CompAction::KeyBinding binding(9, modifiers);
+
+    _escape_action = CompActionPtr(new CompAction());
+    _escape_action->setKey(binding);
+
+    screen->addAction(_escape_action.get());
+  }
+  else if (!enabled && _escape_action.get())
+  {
+    screen->removeAction(_escape_action.get());
+    _escape_action = nullptr;
+  }
+}
+
 void UnityScreen::nuxPrologue()
 {
   /* Vertex lighting isn't used in Unity, we disable that state as it could have
@@ -1102,11 +1121,7 @@ void UnityScreen::handleEvent(XEvent* event)
       if (super_keypressed_)
       {
         launcher.KeySwitcherCancel();
-        if (_escape_action)
-        {
-          screen->removeAction(_escape_action.get());
-          _escape_action = nullptr;
-        }
+        EnableCancelAction(false);
       }
       break;
     case KeyPress:
@@ -1548,15 +1563,8 @@ bool UnityScreen::launcherSwitcherForwardInitiate(CompAction* action, CompAction
 
   if (!launcher.KeySwitcherIsActive())
   {
+    EnableCancelAction(true, action->key().modifiers());
     launcher.KeySwitcherActivate();
-
-    /* Create a new keybinding for the Escape key and the current modifiers */
-    CompAction::KeyBinding binding(9, action->key().modifiers());
-
-    _escape_action = CompActionPtr(new CompAction());
-    _escape_action->setKey(binding);
-
-    screen->addAction(_escape_action.get());
   }
   else
   {
@@ -1576,19 +1584,20 @@ bool UnityScreen::launcherSwitcherPrevInitiate(CompAction* action, CompAction::S
 
 bool UnityScreen::launcherSwitcherTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options)
 {
-  if (state & CompAction::StateCancel)
-  {
-    launcher_controller_->launcher().KeySwitcherCancel();
-  }
-  else
-  {
-    launcher_controller_->launcher().KeySwitcherTerminate();
-  }
+  Launcher& launcher = launcher_controller_->launcher();
 
-  if (_escape_action)
+  if (launcher.KeySwitcherIsActive())
   {
-    screen->removeAction(_escape_action.get());
-    _escape_action = nullptr;
+    if (state & CompAction::StateCancel)
+    {
+      launcher.KeySwitcherCancel();
+    }
+    else
+    {
+      launcher.KeySwitcherTerminate();
+    }
+
+    EnableCancelAction(false);
   }
 
   return false;

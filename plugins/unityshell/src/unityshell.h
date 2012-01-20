@@ -225,6 +225,7 @@ private:
 
   void EnsureSuperKeybindings ();
   void CreateSuperNewAction(char shortcut, bool use_shift=false, bool use_numpad=false);
+  void EnableCancelAction(bool enabled, int modifiers = 0);
 
   static gboolean initPluginActions(gpointer data);
   void initLauncher();
