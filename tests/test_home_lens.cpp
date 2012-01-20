@@ -2,6 +2,7 @@
 #include <glib-object.h>
 #include <dee.h>
 #include <string>
+#include <iostream>
 #include <stdexcept>
 #include <map>
 #include <memory>
@@ -9,6 +10,7 @@
 #include <sigc++/trackable.h>
 
 #include <UnityCore/GLibWrapper.h>
+#include <UnityCore/Variant.h>
 #include <UnityCore/HomeLens.h>
 #include <UnityCore/Lens.h>
 #include <UnityCore/Lenses.h>
@@ -22,7 +24,33 @@ namespace
 {
 
 /*
- * Mock Lens instance that does not use DBus
+ * FORWARDS
+ */
+
+class StaticTestLens;
+
+typedef struct {
+  StaticTestLens* lens;
+  gchar*          search_string;
+} LensSearchClosure;
+
+static gboolean dispatch_global_search(gpointer userdata);
+
+
+/*
+ * Mock Lens instance that does not use DBus. The default search does like this:
+ * For input "bar" output:
+ *
+ * i = 0
+ * for letter in "bar":
+ *   put result row [ "uri+$letter+$lens_id", "icon+$letter+$lens_id", i % 3, "mime+$letter+$lens_id", ...]
+ *   i++
+ *
+ * The mock lens has 3 categories:
+ *
+ *  0) "cat0+$lens_id"
+ *  1) "cat1+$lens_id"
+ *  2) "Shared cat"
  */
 class StaticTestLens : public Lens
 {
@@ -32,30 +60,97 @@ public:
   StaticTestLens(string const& id, string const& name, string const& description, string const& search_hint)
     : Lens(id, "", "", name, "lens-icon.png",
            description, search_hint, true, "",
-           ModelType::LOCAL) {}
+           ModelType::LOCAL)
+  {
+    search_in_global(true);
+
+    DeeModel* cats = categories()->model();
+    DeeModel* results = global_results()->model();
+    DeeModel* flters = filters()->model();
+
+    // Set model schemas
+    dee_model_set_schema(cats, "s", "s", "s", "a{sv}", NULL);
+    dee_model_set_schema(results, "s", "s", "u", "s", "s", "s", "s", NULL);
+    dee_model_set_schema(flters, "s", "s", "s", "s", "a{sv}", "b", "b", "b", NULL);
+
+    // Populate categories model
+    ostringstream cat0, cat1;
+    cat0 << "cat0+" << id;
+    cat1 << "cat1+" << id;
+    GVariantBuilder b;
+    g_variant_builder_init(&b, G_VARIANT_TYPE_VARDICT);
+    GVariant *asv = g_variant_builder_end(&b);
+
+    dee_model_append(cats, cat0.str().c_str(), "icon.png", "tile-vertical", asv);
+    dee_model_append(cats, cat1.str().c_str(), "icon.png", "tile-vertical", asv);
+    dee_model_append(cats, "Shared cat", "icon.png", "tile-vertical", asv);
+  }
 
   virtual ~StaticTestLens() {}
 
-  void GlobalSearch(std::string const& search_string)
+  virtual void DoGlobalSearch(string const& search_string)
+  {
+    DeeModel* model = global_results()->model();
+    GVariant** row_buf = g_new(GVariant*, 8);
+
+    row_buf[1] = g_variant_new_string("");
+    row_buf[3] = g_variant_new_string("");
+    row_buf[4] = g_variant_new_string("");
+    row_buf[5] = g_variant_new_string("");
+    row_buf[6] = g_variant_new_string("");
+    row_buf[7] = NULL;
+
+    unsigned int i;
+    for (i = 0; i < search_string.size(); i++)
+    {
+      ostringstream uri;
+      uri << "uri+" << search_string.at(i) << "+" << id();
+      row_buf[0] = g_variant_new_string(uri.str().c_str());
+      row_buf[2] = g_variant_new_uint32(i % 3);
+
+      dee_model_append_row(model, row_buf);
+    }
+
+    g_free(row_buf);
+  }
+
+  void GlobalSearch(string const& search_string)
+  {
+    /* Dispatch search async, because that's */
+    LensSearchClosure* closure = g_new0(LensSearchClosure, 1);
+    closure->lens = this;
+    closure->search_string = g_strdup(search_string.c_str());
+    g_idle_add(dispatch_global_search, closure);
+  }
+
+  void Search(string const& search_string)
   {
 
   }
 
-  void Search(std::string const& search_string)
+  void Activate(string const& uri)
   {
 
   }
 
-  void Activate(std::string const& uri)
+  void Preview(string const& uri)
   {
 
   }
 
-  void Preview(std::string const& uri)
-  {
-
-  }
 };
+
+static gboolean dispatch_global_search(gpointer userdata)
+{
+  LensSearchClosure* closure = (LensSearchClosure*) userdata;
+
+  closure->lens->DoGlobalSearch(closure->search_string);
+
+  g_free(closure->search_string);
+  g_free(closure);
+
+  return FALSE;
+}
 
 /*
  * Mock Lenses class that comes with 2 pre-allocated lenses
@@ -136,6 +231,37 @@ TEST(TestHomeLens, TestTwoStaticLenses)
   home_lens_.AddLenses(lenses_);
 
   EXPECT_EQ(home_lens_.count, (size_t) 2);
+
+  /* Test iteration of registered lensess */
+  map<string,string> remaining;
+  remaining["first.lens"] = "";
+  remaining["second.lens"] = "";
+  for (auto lens : home_lens_.GetLenses())
+  {
+    remaining.erase(lens->id());
+  }
+
+  EXPECT_EQ(remaining.size(), 0);
+
+  /* Test sorting and GetAtIndex */
+  EXPECT_EQ(home_lens_.GetLensAtIndex(0)->id(), "first.lens");
+  EXPECT_EQ(home_lens_.GetLensAtIndex(1)->id(), "second.lens");
+}
+
+TEST(TestHomeLens, TestOneSearch)
+{
+  HomeLens home_lens_("name", "description", "searchhint");
+  StaticTestLenses lenses_;
+  DeeModel* results = home_lens_.results()->model();
+
+  home_lens_.AddLenses(lenses_);
+
+  home_lens_.Search("ape");
+
+  Utils::WaitForTimeoutMSec();
+
+  EXPECT_EQ(dee_model_get_n_rows(results), 6);
+  // FIXME: validate results model contents
 }
 
 }
