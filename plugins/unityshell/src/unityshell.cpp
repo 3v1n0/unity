@@ -107,6 +107,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , _edge_trigger_handle(0)
   , _redraw_handle(0)
   , _edge_pointerY(0)
+  , _escape_action(nullptr)
   , newFocusedWindow(nullptr)
   , doShellRepaint(false)
   , allowWindowPaint(false)
@@ -1097,6 +1098,17 @@ void UnityScreen::handleEvent(XEvent* event)
         launcher.startKeyNavMode();
       _key_nav_mode_requested = false;
       break;
+    case ButtonPress:
+      if (super_keypressed_)
+      {
+        launcher.KeySwitcherCancel();
+        if (_escape_action)
+        {
+          screen->removeAction(_escape_action.get());
+          _escape_action = nullptr;
+        }
+      }
+      break;
     case KeyPress:
     {
       KeySym key_sym;
@@ -1271,7 +1283,6 @@ bool UnityScreen::showLauncherKeyTerminate(CompAction* action,
 {
   super_keypressed_ = false;
   launcher_controller_->launcher().EndKeyShowLauncher();
-  launcher_controller_->launcher().KeySwitcherTerminate();
 
   shortcut_controller_->SetEnabled(enable_shortcut_overlay_);
   shortcut_controller_->Hide();
@@ -1536,21 +1547,49 @@ bool UnityScreen::launcherSwitcherForwardInitiate(CompAction* action, CompAction
   Launcher& launcher = launcher_controller_->launcher();
 
   if (!launcher.KeySwitcherIsActive())
+  {
     launcher.KeySwitcherActivate();
-  else
-    launcher.KeySwitcherNext();
 
+    /* Create a new keybinding for the Escape key and the current modifiers */
+    CompAction::KeyBinding binding(9, action->key().modifiers());
+
+    _escape_action = CompActionPtr(new CompAction());
+    _escape_action->setKey(binding);
+
+    screen->addAction(_escape_action.get());
+  }
+  else
+  {
+    launcher.KeySwitcherNext();
+  }
+
+  action->setState(action->state() | CompAction::StateTermKey);
   return false;
 }
+
 bool UnityScreen::launcherSwitcherPrevInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
 {
   launcher_controller_->launcher().KeySwitcherPrevious();
 
   return false;
 }
+
 bool UnityScreen::launcherSwitcherTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options)
 {
-  launcher_controller_->launcher().KeySwitcherTerminate();
+  if (state & CompAction::StateCancel)
+  {
+    launcher_controller_->launcher().KeySwitcherCancel();
+  }
+  else
+  {
+    launcher_controller_->launcher().KeySwitcherTerminate();
+  }
+
+  if (_escape_action)
+  {
+    screen->removeAction(_escape_action.get());
+    _escape_action = nullptr;
+  }
 
   return false;
 }
