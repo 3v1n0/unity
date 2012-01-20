@@ -138,6 +138,10 @@ def process_and_start_unity (verbose, debug_mode, compiz_args, log_file):
     if log_file:
         cli.extend(['2>&1', '|', 'tee', log_file])
 
+    # kill a previous compiz if was there (this is a hack as compiz can
+    # sometimes get stuck and not exit on --replace)
+    subprocess.call (["pkill", "compiz"])
+
     # shell = True as it's the simpest way to | tee.
     # In this case, we need a string and not a list
     # FIXME: still some bug with 2>&1 not showing everything before wait()
