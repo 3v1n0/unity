@@ -2500,18 +2500,7 @@ UnityWindow::~UnityWindow()
 
   UnityShowdesktopHandler::animating_windows.remove (window);
 
-  if (mMinimizeHandler)
-  {
-    unminimize ();
-    window->focusSetEnabled (this, false);
-    window->minimizeSetEnabled (this, false);
-    window->unminimizeSetEnabled (this, false);
-    window->minimizedSetEnabled (this, false);
-    window->minimize ();
-
-    delete mMinimizeHandler;
-    mMinimizeHandler = nullptr;
-  }
+  delete mMinimizeHandler;
 
   if (mShowdesktopHandler)
     delete mShowdesktopHandler;
