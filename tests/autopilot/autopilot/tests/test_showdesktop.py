@@ -12,7 +12,7 @@ from subprocess import call
 
 from autopilot.emulators.bamf import Bamf
 from autopilot.emulators.X11 import Keyboard
-from autopilot.emulators.unity import Launcher
+from autopilot.emulators.unity import Launcher, Switcher
 from autopilot.glibrunner import GlibRunner
 
 
@@ -20,54 +20,65 @@ class ShowDesktopTests(TestCase):
     """Test the 'Show Desktop' functionality."""
     run_test_with = GlibRunner
 
-    def test_showdesktop(self):
-        """This test shows that the "show desktop" mode works correctly
+    def setUp(self):
+        super(ShowDesktopTests, self).setUp()
+        self.addCleanup(Keyboard.cleanup)
+        self.bamf = Bamf()
 
-        #. Open two applications
-        #. Use either alt-tab or ctrl-alt-d to activate "show desktop" mode
-        #. Use either alt-tab or ctrl-alt-d to deactivate "show desktop" mode
-        #. Use either alt-tab or ctrl-alt-d to activate "show desktop" mode
-        #. Select an active application from the launcher
-        #. Use either alt-tab or ctrl-alt-d to deactivate "show desktop" mode
-
-        Outcome
-          Both windows will fade out, both windows will fade in, both windows
-          will fade out, the clicked application will fade in only, all other
-          windows will fade in.
-
-        """
-        bamf = Bamf()
-        
-        bamf.launch_application("gucharmap.desktop")
-        self.addCleanup(call, ["killall", "gcalctool"])
-        bamf.launch_application("gcalctool.desktop")
+    def launch_test_apps(self):
+        """Launch character map and calculator apps."""
+        self.bamf.launch_application("gucharmap.desktop")
         self.addCleanup(call, ["killall", "gucharmap"])
-        
-        open_app_names = [a.name for a in bamf.get_running_applications() if a.user_visible]
-        self.assertIn('Character Map', open_app_names)
-        self.assertIn('Calculator', open_app_names)
+        self.bamf.launch_application("gcalctool.desktop")
+        self.addCleanup(call, ["killall", "gcalctool"])
+
+    def test_showdesktop_hides_apps(self):
+        """Show Desktop keyboard shortcut must hide applications."""
+        self.launch_test_apps()
+
+        # show desktop, verify all windows are hidden:
+        kb = Keyboard()
+        kb.press_and_release(['Control_L','Meta_L','d'])
+        self.addCleanup(kb.press_and_release, keys=['Control_L','Meta_L','d'])
+        sleep(1)
+        open_wins = self.bamf.get_open_windows() 
+        self.assertGreaterEqual(len(open_wins), 2)
+        for win in open_wins:
+            self.assertTrue(win.is_valid)
+            self.assertTrue(win.is_hidden, "Window '%s' is not hidden after show desktop activated." % (win.title))
+    
+    def test_showdesktop_unhides_apps(self):
+        """Show desktop shortcut must re-show all hidden apps."""
+        self.launch_test_apps()
 
         # show desktop, verify all windows are hidden:
         kb = Keyboard()
         kb.press_and_release(['Control_L','Meta_L','d'])
         sleep(1)
-        open_wins = bamf.get_open_windows() 
+        open_wins = self.bamf.get_open_windows() 
         self.assertGreaterEqual(len(open_wins), 2)
         for win in open_wins:
             self.assertTrue(win.is_valid)
             self.assertTrue(win.is_hidden, "Window '%s' is not hidden after show desktop activated." % (win.title))
 
-        # hide desktop, verify all windows are shown:
+        # un-show desktop, verify all windows are shown:
         kb.press_and_release(['Control_L','Meta_L','d'])
         sleep(1)
-        for win in bamf.get_open_windows():
+        for win in self.bamf.get_open_windows():
             self.assertTrue(win.is_valid)
             self.assertFalse(win.is_hidden, "Window '%s' is shown after show desktop deactivated." % (win.title))
 
-        # show desktop again, verify all windows are hidden.
+    def test_unhide_single_app(self):
+        """Un-hide a single app from launcher after hiding all apps."""
+        self.launch_test_apps()
+
+        # show desktop, verify all windows are hidden:
+        kb = Keyboard()
         kb.press_and_release(['Control_L','Meta_L','d'])
         sleep(1)
-        for win in bamf.get_open_windows():
+        open_wins = self.bamf.get_open_windows() 
+        self.assertGreaterEqual(len(open_wins), 2)
+        for win in open_wins:
             self.assertTrue(win.is_valid)
             self.assertTrue(win.is_hidden, "Window '%s' is not hidden after show desktop activated." % (win.title))
 
@@ -83,7 +94,7 @@ class ShowDesktopTests(TestCase):
         self.assertTrue(found, "Could not find launcher icon in launcher.")
 
         sleep(1)
-        for win in bamf.get_open_windows():
+        for win in self.bamf.get_open_windows():
             if win.is_valid:
                 if win.title == 'Character Map':
                     self.assertFalse(win.is_hidden, "Character map did not un-hide from launcher.")
@@ -93,6 +104,35 @@ class ShowDesktopTests(TestCase):
         # hide desktop - now all windows should be visible:
         kb.press_and_release(['Control_L','Meta_L','d'])
         sleep(1)
-        for win in bamf.get_open_windows():
+        for win in self.bamf.get_open_windows():
             if win.is_valid:
                 self.assertFalse(win.is_hidden, "Window '%s' is shown after show desktop deactivated." % (win.title))
+
+    def test_showdesktop_switcher(self):
+        """Show desktop item in switcher should hide all hidden apps."""
+        self.launch_test_apps()
+
+        # show desktop, verify all windows are hidden:
+        switcher = Switcher()
+        switcher.initiate()
+        sleep(0.5)
+        found = False
+        for i in range(switcher.get_model_size()):
+            current_icon = switcher.current_icon
+            self.assertIsNotNone(current_icon)
+            if current_icon.tooltip_text == 'Show Desktop':
+                found = True
+                break
+            switcher.next_icon()
+            sleep(0.5)
+        self.assertTrue(found, "Could not find 'Show Desktop' entry in switcher.")
+        switcher.terminate()
+        kb = Keyboard()
+        self.addCleanup(kb.press_and_release, keys=['Control_L','Meta_L','d'])
+
+        sleep(1)
+        open_wins = self.bamf.get_open_windows() 
+        self.assertGreaterEqual(len(open_wins), 2)
+        for win in open_wins:
+            self.assertTrue(win.is_valid)
+            self.assertTrue(win.is_hidden, "Window '%s' is not hidden after show desktop activated." % (win.title))
