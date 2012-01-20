@@ -73,6 +73,8 @@ View::View()
     search_activated.emit(search_bar_->search_string);
   });
 
+  mouse_down.connect(sigc::mem_fun(this, &View::OnMouseButtonDown));
+  
   Relayout();
 
 }
@@ -238,6 +240,14 @@ void View::OnKeyDown (unsigned long event_type, unsigned long keysym,
   }
 }
 
+void View::OnMouseButtonDown(int x, int y, unsigned long button, unsigned long key)
+{
+  if (!content_geo_.IsPointInside(x, y))
+  {
+    ubus.SendMessage(UBUS_HUD_CLOSE_REQUEST);
+  }
+}
+
 void View::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
 {
   renderer_.DrawFull(gfx_context, layout_->GetGeometry(), absolute_window_geometry_, window_geometry_);
@@ -275,6 +285,21 @@ const gchar* View::GetName()
 
 void View::AddProperties(GVariantBuilder* builder)
 {}
+
+bool View::InspectKeyEvent(unsigned int eventType,
+                           unsigned int key_sym,
+                           const char* character)
+{
+  if ((eventType == nux::NUX_KEYDOWN) && (key_sym == NUX_VK_ESCAPE))
+  {
+    if (search_bar_->search_string == "")
+      ubus.SendMessage(UBUS_HUD_CLOSE_REQUEST);
+    else
+      search_bar_->search_string = "";
+    return true;
+  }
+  return false;
+}
 
 nux::Area* View::FindKeyFocusArea(unsigned int key_symbol,
       unsigned long x11_key_code,
