@@ -40,11 +40,12 @@ namespace ui
 {
 
 #ifdef USE_GLES
-  #define VertexShaderHeader   "version 100\n"
-  #define FragmentShaderHeader "version 100\n precision mediump float;\n"
+  #define VertexShaderHeader   "#version 100\n"
+  #define FragmentShaderHeader "#version 100\n precision mediump float;\n"
 #else
-  #define VertexShaderHeader   "version 120\n"
-  #define FragmentShaderHeader "version 110\n"
+  #define VertexShaderHeader   "#version 120\n"
+  #define FragmentShaderHeader "#version 110\n"
+#endif
 
 /*
   Use this shader to pass vertices in screen coordinates in the C++ code and compute use
