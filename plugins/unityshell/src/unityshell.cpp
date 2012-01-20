@@ -1135,7 +1135,7 @@ void UnityScreen::handleEvent(XEvent* event)
         // we should just say "key_string[1] = 0" because that is the only
         // thing that could possibly make sense here.
         key_string[result] = 0;
-        if (super_keypressed_)
+        if (super_keypressed_ && key_sym != XK_Escape)
         {
           g_idle_add([] (gpointer data) -> gboolean {
             auto self = static_cast<UnityScreen*>(data);
