@@ -52,7 +52,9 @@ nux::logging::Logger logger("unity.dash.homelens");
 class HomeLens::CategoryRegistry
 {
 public:
-  CategoryRegistry() {}
+  CategoryRegistry(HomeLens* owner)
+    : is_dirty_(false)
+    , owner_(owner) {}
 
   int FindCategoryOffset(DeeModel* model, unsigned int source_cat_offset)
   {
@@ -90,6 +92,27 @@ public:
       return;
     }
 
+    /* Any existing categories with offsets >= target_cat_offset must be
+     * pushed up. Update both maps by id and display name */
+    std::map<std::string,unsigned int>::iterator end = reg_by_id_.end();
+    for (i = reg_by_id_.begin(); i != end; i++)
+    {
+      if (i->second >= target_cat_offset)
+      {
+        i->second = i->second + 1;
+        is_dirty_ = true;
+      }
+    }
+
+    for (i = reg_by_display_name_.begin(), end = reg_by_display_name_.end(); i != end; i++)
+    {
+      if (i->second >= target_cat_offset)
+      {
+        i->second = i->second + 1;
+        is_dirty_ = true;
+      }
+    }
+
     reg_by_id_[c_id] = target_cat_offset;
 
     /* Callers pass a NULL display_name when they already have a category
@@ -112,9 +135,22 @@ public:
     g_free(c_id);
   }
 
+  /**
+   * Returns true and resets the dirty state if the registry was dirty.
+   * When you've checked a dirty registry you must either clear the
+   * merged results model or recalibrate all category offset in it
+   * (and Unity probably wont support the latter?).
+   */
+  bool CheckDirty()
+  {
+    return is_dirty_ ? (is_dirty_ = false, true) : false;
+  }
+
 private:
   std::map<std::string,unsigned int> reg_by_id_;
   std::map<std::string,unsigned int> reg_by_display_name_;
+  bool is_dirty_;
+  HomeLens* owner_;
 };
 
 /*
@@ -128,7 +164,6 @@ public:
 
   void AddSource(glib::Object<DeeModel> source);
 
-protected:
   virtual void OnSourceRowAdded(DeeModel *model, DeeModelIter *iter);
   virtual void OnSourceRowRemoved(DeeModel* model, DeeModelIter* iter);
   virtual void OnSourceRowChanged(DeeModel* model, DeeModelIter* iter);
@@ -189,9 +224,11 @@ public:
 
 protected:
   void OnSourceRowAdded(DeeModel *model, DeeModelIter *iter);
+  void OnSourceRowRemoved(DeeModel *model, DeeModelIter *iter);
 
 private:
   HomeLens::CategoryRegistry* cat_registry_;
+  DeeModelTag* priority_tag_;
 };
 
 /*
@@ -204,7 +241,8 @@ public:
   ~Impl();
 
   void OnLensAdded(Lens::Ptr& lens);
-  void EnsureCategoryAnnotation (DeeModel* results, DeeModel* categories);
+  gsize FindLensPriority (Lens::Ptr& lens);
+  void EnsureCategoryAnnotation(Lens::Ptr& lens, DeeModel* results, DeeModel* categories);
   Lens::Ptr FindLensForUri(std::string const& uri);
 
   HomeLens* owner_;
@@ -213,8 +251,8 @@ public:
   HomeLens::ResultsMerger results_merger_;
   HomeLens::CategoryMerger categories_merger_;
   HomeLens::ModelMerger filters_merger_;
-
   int running_searches_;
+  glib::Object<GSettings> settings_;
 };
 
 /*
@@ -236,6 +274,7 @@ HomeLens::CategoryMerger::CategoryMerger(glib::Object<DeeModel> target,
                                               CategoryRegistry *cat_registry)
   : HomeLens::ModelMerger::ModelMerger(target)
   , cat_registry_(cat_registry)
+  , priority_tag_(dee_model_register_tag(target, NULL))
 {}
 
 HomeLens::ModelMerger::~ModelMerger()
@@ -287,6 +326,9 @@ void HomeLens::ResultsMerger::OnSourceRowAdded(DeeModel *model, DeeModelIter *it
 
   EnsureRowBuf(model);
 
+  /* If category offsets has changed. All merged results are invalidated */
+  // FIXME: CheckCategories();
+
   dee_model_get_row (model, iter, row_buf_);
   target_tag = FindMergerTag(model);
 
@@ -324,10 +366,12 @@ void HomeLens::CategoryMerger::OnSourceRowAdded(DeeModel *model, DeeModelIter *i
 {
   DeeModel* results_model;
   DeeModelIter* target_iter;
+  DeeModelIter* target_end;
   DeeModelTag*  target_tag;
   int target_cat_offset, source_cat_offset;
   const gchar* display_name;
   const unsigned int DISPLAY_NAME_COLUMN = 0;
+  gsize lens_priority, prio;
 
   EnsureRowBuf(model);
 
@@ -352,17 +396,55 @@ void HomeLens::CategoryMerger::OnSourceRowAdded(DeeModel *model, DeeModelIter *i
   {
     cat_registry_->RegisterCategoryOffset(results_model, source_cat_offset,
                                           NULL, target_cat_offset);
-  }
-  else
-  {
-    target_iter = dee_model_append_row (target_, row_buf_);
-    dee_model_set_tag (model, iter, target_tag, target_iter);
-    target_cat_offset = dee_model_get_position(target_, target_iter);
-    cat_registry_->RegisterCategoryOffset(results_model, source_cat_offset,
-                                          display_name, target_cat_offset);
+    goto cleanup;
   }
 
-  for (unsigned int i = 0; i < n_cols_; i++) g_variant_unref(row_buf_[i]);
+  /*
+   * Below we can assume that we have a genuinely new category.
+   *
+   * Our goal is to insert the category at a position suitable for its
+   * priority. We insert it as the last item in the set of items which
+   * have equal priority.
+   *
+   * We allow our selves to do linear inserts as we wont expect a lot
+   * of categories.
+   */
+
+  lens_priority = GPOINTER_TO_SIZE(g_object_get_data(
+                              G_OBJECT(model), "unity-homelens-priority"));
+
+  /* Seek correct position in the merged category model */
+  target_iter = dee_model_get_first_iter(target_);
+  target_end = dee_model_get_last_iter(target_);
+  while (target_iter != target_end)
+  {
+    prio = GPOINTER_TO_SIZE(dee_model_get_tag(target_, target_iter, priority_tag_));
+    if (lens_priority > prio)
+      break;
+    target_iter = dee_model_next(target_, target_iter);
+  }
+
+  /* Add the row to the merged categories model and store required metadata */
+  target_iter = dee_model_insert_row_before(target_, target_iter, row_buf_);
+  dee_model_set_tag(model, iter, target_tag, target_iter);
+  dee_model_set_tag(target_, target_iter, priority_tag_, GSIZE_TO_POINTER(lens_priority));
+  target_cat_offset = dee_model_get_position(target_, target_iter);
+  cat_registry_->RegisterCategoryOffset(results_model, source_cat_offset,
+                                        display_name, target_cat_offset);
+
+  cleanup:
+    for (unsigned int i = 0; i < n_cols_; i++) g_variant_unref(row_buf_[i]);
+}
+
+void HomeLens::CategoryMerger::OnSourceRowRemoved(DeeModel *model, DeeModelIter *iter)
+{
+  /* We don't support removals of categories.
+   * You can check out any time you like, but you can never leave
+   *
+   * The category registry code is spaghettified enough already.
+   * No more please.
+   */
+  LOG_DEBUG(logger) << "Removal of categories not supported.";
 }
 
 void HomeLens::ModelMerger::OnSourceRowRemoved(DeeModel *model, DeeModelIter *iter)
@@ -476,10 +558,12 @@ DeeModelTag* HomeLens::ModelMerger::RegisterMergerTag(DeeModel *model)
 
 HomeLens::Impl::Impl(HomeLens *owner)
   : owner_(owner)
+  , cat_registry_(owner)
   , results_merger_(owner->results()->model(), &cat_registry_)
   , categories_merger_(owner->categories()->model(), &cat_registry_)
   , filters_merger_(owner->filters()->model())
   , running_searches_(0)
+  , settings_(g_settings_new("com.canonical.Unity.Dash"))
 {
   DeeModel* results = owner->results()->model();
   if (dee_model_get_n_columns(results) == 0)
@@ -505,7 +589,71 @@ HomeLens::Impl::~Impl()
 
 }
 
-void HomeLens::Impl::EnsureCategoryAnnotation (DeeModel* categories,
+/*void HomeLens::Impl::CheckCategories()
+{
+  DeeModel* results;
+  DeeModel* source;
+  DeeModelTag* merger_tag;
+  const unsigned int CATEGORY_COLUMN = 2;
+
+  if (G_UNLIKELY(!cat_registry_->CheckDirty()))
+    return;
+
+  LOG_DEBUG(logger) << "Category registry marked dirty. Fixing category offsets.";
+  //FIXME fix seqnums, and do this on changes and deletions as well
+
+  results = owner_->results()->model();
+
+  for (auto lens : lenses_)
+  {
+    source = lens->global_results()->model();
+    merger_tag = results_merger_.FindMergerTag(source);
+
+    DeeModelIter* iter = dee_model_get_first_iter(source);
+    DeeModelIter* end = dee_model_get_last_iter(source);
+
+    while (iter != end)
+    {
+      DeeModelIter *results_iter = dee_model_get_tag(source, merger_tag);
+      int source_cat_offset = dee_model_get_uint32(source, iter, CATEGORY_COLUMN);
+      int cat_offset = cat_registry_.FindCategoryOffset(source, source_cat_offset);
+
+      if (G_LIKELY(cat_offset >= 0))
+      {
+        dee_model_set_value(results, results_iter, CATEGORY_COLUMN,
+                            g_variant_new_uint32(cat_offset));
+      }
+      else
+      {
+        LOG_ERROR(logger) << "No registered category id for category "
+            << source_cat_offset << " on lens '"
+            << lens->id() << "'.";
+        // We can't really recover from this :-(
+      }
+
+      iter = dee_model_next(target_, iter);
+    }
+  }
+}*/
+
+gsize HomeLens::Impl::FindLensPriority (Lens::Ptr& lens)
+{
+  gchar** lenses = g_settings_get_strv(settings_, "home-lens-ordering");
+  gsize pos = 0, len = g_strv_length(lenses);
+
+  for (pos = 0; pos < len; pos++)
+  {
+    if (g_strcmp0(lenses[pos], lens->id().c_str()) == 0)
+      break;
+  }
+
+  g_strfreev(lenses);
+
+  return len - pos;
+}
+
+void HomeLens::Impl::EnsureCategoryAnnotation (Lens::Ptr& lens,
+                                                     DeeModel* categories,
                                                      DeeModel* results)
 {
   if (categories && results)
@@ -514,7 +662,8 @@ void HomeLens::Impl::EnsureCategoryAnnotation (DeeModel* categories,
     {
       LOG_ERROR(logger) << "The "
                         << std::string(DEE_IS_MODEL(results) ? "categories" : "results")
-                        << " model is not a valid DeeModel";
+                        << " model is not a valid DeeModel. ("
+                        << lens->id() << ")";
       return;
     }
 
@@ -522,8 +671,15 @@ void HomeLens::Impl::EnsureCategoryAnnotation (DeeModel* categories,
                       "unity-homelens-results-model",
                       results);
 
+    gsize lens_priority = FindLensPriority(lens);
+    g_object_set_data(G_OBJECT(categories),
+                      "unity-homelens-priority",
+                      GSIZE_TO_POINTER(lens_priority));
+
     LOG_DEBUG(logger) << "Registering results model "  << results
-                      << " on category model " << categories;
+                      << " and lens priority " << lens_priority
+                      << " on category model " << categories << ". ("
+                      << lens->id() << ")";
   }
 }
 
@@ -554,6 +710,7 @@ Lens::Ptr HomeLens::Impl::FindLensForUri(std::string const& uri)
 }
 
 // FIXME: sorting lenses/categories. apps.lens first
+// FIXME: on no results https://bugs.launchpad.net/unity/+bug/711199
 
 void HomeLens::Impl::OnLensAdded (Lens::Ptr& lens)
 {
@@ -587,13 +744,13 @@ void HomeLens::Impl::OnLensAdded (Lens::Ptr& lens)
    * so try to see if we can add them up front */
   if (results_prop().RawPtr())
   {
-    EnsureCategoryAnnotation(categories_prop(), results_prop());
+    EnsureCategoryAnnotation(lens, categories_prop(), results_prop());
     results_merger_.AddSource(results_prop());
   }
 
   if (categories_prop().RawPtr())
   {
-    EnsureCategoryAnnotation(categories_prop(), results_prop());
+    EnsureCategoryAnnotation(lens, categories_prop(), results_prop());
     categories_merger_.AddSource(categories_prop());
   }
 
@@ -605,13 +762,13 @@ void HomeLens::Impl::OnLensAdded (Lens::Ptr& lens)
    */
   results_prop.changed.connect([&] (glib::Object<DeeModel> model)
   {
-    EnsureCategoryAnnotation(lens->categories()->model(), model);
+    EnsureCategoryAnnotation(lens, lens->categories()->model(), model);
     results_merger_.AddSource(model);
   });
 
   categories_prop.changed.connect([&] (glib::Object<DeeModel> model)
   {
-    EnsureCategoryAnnotation(model, lens->global_results()->model());
+    EnsureCategoryAnnotation(lens, model, lens->global_results()->model());
     categories_merger_.AddSource(model);
   });
 
