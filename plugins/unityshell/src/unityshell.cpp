@@ -555,6 +555,7 @@ void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
       glEnd();
 
       tex->disable();
+      glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
       glDisable(GL_BLEND);
     }
   }
@@ -2621,9 +2622,8 @@ void capture_g_log_calls(const gchar* log_domain,
                          const gchar* message,
                          gpointer user_data)
 {
-  // Since we aren't entirely sure if log_domain contains anything, lets have
-  // a glib prefix.
-  std::string module("glib");
+  // If nothing else, all log messages from unity should be identified as such
+  std::string module("unity");
   if (log_domain)
   {
     module += std::string(".") + log_domain;
