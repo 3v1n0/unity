@@ -47,7 +47,7 @@ nux::logging::Logger logger("unity.dash.homelens");
  * with the same display name into the same category.
  *
  * NOTE: The model pointers passed in are expected to be pointers to the
- *       results models - and not the category models!
+ *       result source models - and not the category source models!
  */
 class HomeLens::CategoryRegistry
 {
@@ -164,6 +164,7 @@ public:
 
   void AddSource(glib::Object<DeeModel> source);
 
+protected:
   virtual void OnSourceRowAdded(DeeModel *model, DeeModelIter *iter);
   virtual void OnSourceRowRemoved(DeeModel* model, DeeModelIter* iter);
   virtual void OnSourceRowChanged(DeeModel* model, DeeModelIter* iter);
@@ -171,15 +172,14 @@ public:
 
   /* The merge tag lives on the source models, pointing to the mapped
    * row in the target model */
-  DeeModelTag* FindMergerTag(DeeModel *model);
-  DeeModelTag* RegisterMergerTag(DeeModel *model);
+  DeeModelTag* FindSourceToTargetTag(DeeModel *model);
 
 protected:
   glib::SignalManager sig_manager_;
   GVariant** row_buf_;
   unsigned int n_cols_;
   glib::Object<DeeModel> target_;
-  std::map<DeeModel*,DeeModelTag*> merger_tags_;
+  std::map<DeeModel*,DeeModelTag*> source_to_target_tags_;
 };
 
 /*
@@ -202,6 +202,9 @@ public:
 
 protected:
   void OnSourceRowAdded(DeeModel *model, DeeModelIter *iter);
+  void OnSourceRowRemoved(DeeModel *model, DeeModelIter *iter);
+  void OnSourceRowChanged(DeeModel *model, DeeModelIter *iter);
+  void CheckCategoryRegistryDirty();
 
 private:
   HomeLens::CategoryRegistry* cat_registry_;
@@ -287,13 +290,14 @@ void HomeLens::ModelMerger::AddSource(glib::Object<DeeModel> source)
 {
   typedef glib::Signal<void, DeeModel*, DeeModelIter*> RowSignalType;
 
-  if (source.RawPtr() == NULL)
+  if (!source)
   {
     LOG_ERROR(logger) << "Trying to add NULL source to ModelMerger";
     return;
   }
 
-  RegisterMergerTag(source);
+  DeeModelTag* merger_tag = dee_model_register_tag(source, NULL);
+  source_to_target_tags_[source.RawPtr()] = merger_tag;
 
   sig_manager_.Add(new RowSignalType(source.RawPtr(),
                                      "row-added",
@@ -325,12 +329,10 @@ void HomeLens::ResultsMerger::OnSourceRowAdded(DeeModel *model, DeeModelIter *it
   const unsigned int CATEGORY_COLUMN = 2;
 
   EnsureRowBuf(model);
-
-  /* If category offsets has changed. All merged results are invalidated */
-  // FIXME: CheckCategories();
+  CheckCategoryRegistryDirty();
 
   dee_model_get_row (model, iter, row_buf_);
-  target_tag = FindMergerTag(model);
+  target_tag = FindSourceToTargetTag(model);
 
   /* Update the row with the corrected category offset */
   source_cat_offset = dee_model_get_uint32(model, iter, CATEGORY_COLUMN);
@@ -385,7 +387,7 @@ void HomeLens::CategoryMerger::OnSourceRowAdded(DeeModel *model, DeeModelIter *i
   }
 
   dee_model_get_row (model, iter, row_buf_);
-  target_tag = FindMergerTag(model);
+  target_tag = FindSourceToTargetTag(model);
   source_cat_offset = dee_model_get_position(model, iter);
 
   /* If we already have a category registered with the same display name
@@ -454,7 +456,7 @@ void HomeLens::ModelMerger::OnSourceRowRemoved(DeeModel *model, DeeModelIter *it
 
   EnsureRowBuf(model);
 
-  target_tag = FindMergerTag(model);
+  target_tag = FindSourceToTargetTag(model);
   target_iter = static_cast<DeeModelIter*>(dee_model_get_tag(model,
                                                                 iter,
                                                                 target_tag));
@@ -465,6 +467,12 @@ void HomeLens::ModelMerger::OnSourceRowRemoved(DeeModel *model, DeeModelIter *it
     dee_model_remove(target_, target_iter);
 }
 
+void HomeLens::ResultsMerger::OnSourceRowRemoved(DeeModel *model, DeeModelIter *iter)
+{
+  CheckCategoryRegistryDirty();
+  ModelMerger::OnSourceRowRemoved(model, iter);
+}
+
 void HomeLens::ModelMerger::OnSourceRowChanged(DeeModel *model, DeeModelIter *iter)
 {
   DeeModelIter* target_iter;
@@ -473,7 +481,7 @@ void HomeLens::ModelMerger::OnSourceRowChanged(DeeModel *model, DeeModelIter *it
   EnsureRowBuf(model);
 
   dee_model_get_row (model, iter, row_buf_);
-  target_tag = FindMergerTag(model);
+  target_tag = FindSourceToTargetTag(model);
   target_iter = static_cast<DeeModelIter*>(dee_model_get_tag(model,
                                                                  iter,
                                                                  target_tag));
@@ -481,6 +489,12 @@ void HomeLens::ModelMerger::OnSourceRowChanged(DeeModel *model, DeeModelIter *it
   dee_model_set_row (target_, target_iter, row_buf_);
 
   for (unsigned int i = 0; i < n_cols_; i++) g_variant_unref(row_buf_[i]);
+}
+
+void HomeLens::ResultsMerger::OnSourceRowChanged(DeeModel *model, DeeModelIter *iter)
+{
+  // FIXME: We can support this, but we need to re-calculate the category offset
+  LOG_WARN(logger) << "In-line changing of results not supported in the home lens. Sorry.";
 }
 
 void HomeLens::ModelMerger::EnsureRowBuf(DeeModel *model)
@@ -544,16 +558,63 @@ void HomeLens::ModelMerger::EnsureRowBuf(DeeModel *model)
   }
 }
 
-DeeModelTag* HomeLens::ModelMerger::FindMergerTag(DeeModel *model)
+DeeModelTag* HomeLens::ModelMerger::FindSourceToTargetTag(DeeModel *model)
 {
-  return merger_tags_[model];
+  return source_to_target_tags_[model];
 }
 
-DeeModelTag* HomeLens::ModelMerger::RegisterMergerTag(DeeModel *model)
+void HomeLens::ResultsMerger::CheckCategoryRegistryDirty()
 {
-  DeeModelTag* merger_tag = dee_model_register_tag(model, NULL);
-  merger_tags_[model] = merger_tag;
-  return merger_tag;
+  DeeModel* source;
+  DeeModelTag* target_tag;
+  const unsigned int CATEGORY_COLUMN = 2;
+  std::map<DeeModel*,DeeModelTag*>::iterator i, end;
+
+  if (G_LIKELY(!cat_registry_->CheckDirty()))
+    return;
+
+  LOG_DEBUG(logger) << "Category registry marked dirty. Fixing category offsets.";
+
+  /*
+   * Iterate over all results in each source model and re-calculate the
+   * the category offset in the corresponding rows in the target model
+   */
+  for (i = source_to_target_tags_.begin(), end = source_to_target_tags_.end();
+       i != end; i++)
+  {
+    source = i->first;
+    target_tag = i->second;
+
+    DeeModelIter* source_iter = dee_model_get_first_iter(source);
+    DeeModelIter* source_end = dee_model_get_last_iter(source);
+
+    for (source_iter = dee_model_get_first_iter(source), source_end = dee_model_get_last_iter(source);
+         source_iter != source_end;
+         source_iter = dee_model_next(source, source_iter))
+    {
+      DeeModelIter* target_iter = static_cast<DeeModelIter*>(dee_model_get_tag(source, source_iter, target_tag));
+
+      /* No guarantee that rows in the source are mapped to the target */
+      if (target_iter == NULL)
+        continue;
+
+      unsigned int source_cat_offset = dee_model_get_uint32(source, source_iter, CATEGORY_COLUMN);
+      int cat_offset = cat_registry_->FindCategoryOffset(source, source_cat_offset);
+
+      if (G_LIKELY(cat_offset >= 0))
+      {
+        dee_model_set_value(target_, target_iter, CATEGORY_COLUMN,
+                            g_variant_new_uint32(cat_offset));
+      }
+      else
+      {
+        LOG_ERROR(logger) << "No registered category id for category "
+            << source_cat_offset << " on result source model "
+            << source << ".";
+        /* We can't really recover from this :-( */
+      }
+    }
+  }
 }
 
 HomeLens::Impl::Impl(HomeLens *owner)
@@ -591,49 +652,7 @@ HomeLens::Impl::~Impl()
 
 /*void HomeLens::Impl::CheckCategories()
 {
-  DeeModel* results;
-  DeeModel* source;
-  DeeModelTag* merger_tag;
-  const unsigned int CATEGORY_COLUMN = 2;
 
-  if (G_UNLIKELY(!cat_registry_->CheckDirty()))
-    return;
-
-  LOG_DEBUG(logger) << "Category registry marked dirty. Fixing category offsets.";
-  //FIXME fix seqnums, and do this on changes and deletions as well
-
-  results = owner_->results()->model();
-
-  for (auto lens : lenses_)
-  {
-    source = lens->global_results()->model();
-    merger_tag = results_merger_.FindMergerTag(source);
-
-    DeeModelIter* iter = dee_model_get_first_iter(source);
-    DeeModelIter* end = dee_model_get_last_iter(source);
-
-    while (iter != end)
-    {
-      DeeModelIter *results_iter = dee_model_get_tag(source, merger_tag);
-      int source_cat_offset = dee_model_get_uint32(source, iter, CATEGORY_COLUMN);
-      int cat_offset = cat_registry_.FindCategoryOffset(source, source_cat_offset);
-
-      if (G_LIKELY(cat_offset >= 0))
-      {
-        dee_model_set_value(results, results_iter, CATEGORY_COLUMN,
-                            g_variant_new_uint32(cat_offset));
-      }
-      else
-      {
-        LOG_ERROR(logger) << "No registered category id for category "
-            << source_cat_offset << " on lens '"
-            << lens->id() << "'.";
-        // We can't really recover from this :-(
-      }
-
-      iter = dee_model_next(target_, iter);
-    }
-  }
 }*/
 
 gsize HomeLens::Impl::FindLensPriority (Lens::Ptr& lens)
@@ -709,7 +728,6 @@ Lens::Ptr HomeLens::Impl::FindLensForUri(std::string const& uri)
   return Lens::Ptr();
 }
 
-// FIXME: sorting lenses/categories. apps.lens first
 // FIXME: Coordinated sorting between the lens bar and home screen categories. Make void FilesystemLenses::Impl::DecrementAndCheckChildrenWaiting() use the gsettings key
 // FIXME: on no results https://bugs.launchpad.net/unity/+bug/711199
 
