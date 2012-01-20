@@ -1296,6 +1296,9 @@ bool UnityScreen::showLauncherKeyTerminate(CompAction* action,
                                            CompAction::State state,
                                            CompOption::Vector& options)
 {
+  if (state & CompAction::StateCancel)
+    return false;
+
   super_keypressed_ = false;
   launcher_controller_->launcher().EndKeyShowLauncher();
 
