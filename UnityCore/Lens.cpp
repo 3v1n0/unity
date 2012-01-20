@@ -95,6 +95,7 @@ public:
   string const& search_hint() const;
   bool visible() const;
   bool search_in_global() const;
+  bool set_search_in_global(bool val);
   string const& shortcut() const;
   Results::Ptr const& results() const;
   Results::Ptr const& global_results() const;
@@ -161,7 +162,7 @@ Lens::Impl::Impl(Lens* owner,
   , results_variant_(NULL)
   , global_results_variant_(NULL)
 {
-  if (dbus_name != "")
+  if (model_type == ModelType::REMOTE)
   {
     proxy_ = new glib::DBusProxy(dbus_name, dbus_path, "com.canonical.Unity.Lens");
     proxy_->connected.connect(sigc::mem_fun(this, &Lens::Impl::OnProxyConnectionChanged));
@@ -169,6 +170,9 @@ Lens::Impl::Impl(Lens* owner,
     proxy_->Connect("Changed", sigc::mem_fun(this, &Lens::Impl::OnChanged));
   }
 
+  /* Technically these signals will only be fired by remote models, but we
+   * connect them no matter the ModelType. Dee may grow support in the future.
+   */
   results_->end_transaction.connect(sigc::mem_fun(this, &Lens::Impl::ResultsModelUpdated));
   global_results_->end_transaction.connect(sigc::mem_fun(this, &Lens::Impl::GlobalResultsModelUpdated));
 
@@ -181,6 +185,7 @@ Lens::Impl::Impl(Lens* owner,
   owner_->search_hint.SetGetterFunction(sigc::mem_fun(this, &Lens::Impl::search_hint));
   owner_->visible.SetGetterFunction(sigc::mem_fun(this, &Lens::Impl::visible));
   owner_->search_in_global.SetGetterFunction(sigc::mem_fun(this, &Lens::Impl::search_in_global));
+  owner_->search_in_global.SetSetterFunction(sigc::mem_fun(this, &Lens::Impl::set_search_in_global));
   owner_->shortcut.SetGetterFunction(sigc::mem_fun(this, &Lens::Impl::shortcut));
   owner_->results.SetGetterFunction(sigc::mem_fun(this, &Lens::Impl::results));
   owner_->global_results.SetGetterFunction(sigc::mem_fun(this, &Lens::Impl::global_results));
@@ -581,6 +586,17 @@ bool Lens::Impl::visible() const
 
 bool Lens::Impl::search_in_global() const
 {
+  return search_in_global_;
+}
+
+bool Lens::Impl::set_search_in_global(bool val)
+{
+  if (search_in_global_ != val)
+  {
+    search_in_global_ = val;
+    owner_->search_in_global.EmitChanged(val);
+  }
+
   return search_in_global_;
 }
 
