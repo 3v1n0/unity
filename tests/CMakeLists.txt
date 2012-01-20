@@ -119,6 +119,7 @@ if (GTEST_FOUND AND
                  test_glib_variant.cpp
                  ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_marshal.cpp
                  test_favorite_store_gsettings.cpp
+                 test_home_lens.cpp
                  test_shortcut_model.cpp
                  test_shortcut_private.cpp
                  test_introspection.cpp
