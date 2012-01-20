@@ -10,7 +10,7 @@
 import dbus
 import gio
 from time import sleep
-from Xlib import display, X, protocol, Xatom
+from Xlib import display, X, protocol
 import time
 
 __all__ = ["Bamf", 
@@ -22,6 +22,18 @@ __all__ = ["Bamf",
 _BAMF_BUS_NAME = 'org.ayatana.bamf'
 _session_bus = dbus.SessionBus()
 _X_DISPLAY = display.Display()
+
+def _filter_user_visible(win):
+    """Filter out non-user-visible objects.
+
+    In some cases the DBus method we need to call hasn't been registered yet,
+    in which case we do the safe thing and return False.
+
+    """
+    try:
+        return win.user_visible
+    except dbus.DBusException:
+        return False
 
 class Bamf:
     """High-level class for interacting with Bamf from within a test.
@@ -46,7 +58,7 @@ class Bamf:
         """
         apps = [BamfApplication(p) for p in self.matcher_interface.RunningApplications()]
         if user_visible_only:
-            return filter(lambda(a): a.user_visible, apps)
+            return filter(_filter_user_visible, apps)
         return apps
 
     def get_running_applications_by_title(self, app_title):
@@ -65,9 +77,10 @@ class Bamf:
         visible to the user in the switcher will be returned.
 
         """
+
         windows = [BamfWindow(w) for w in self.matcher_interface.WindowPaths()]
         if user_visible_only:
-            return filter(lambda(a): a.user_visible, windows)
+            return filter(_filter_user_visible, windows)
         return windows
 
     def get_open_windows_by_title(self, win_title):
