@@ -70,7 +70,6 @@ add_executable (test-unit
                 ${UNITY_SRC}/
                 )
 add_dependencies (test-unit unity-core-${UNITY_API_VERSION})
-
 add_subdirectory (test-input-remover)
 add_subdirectory (test-minimize-window-handler)
 add_subdirectory (test-get-transients)
@@ -107,6 +106,7 @@ if (GTEST_FOUND AND
                  test_service_model.h)
   add_dependencies (test-gtest-service unity-core-${UNITY_API_VERSION})
 
+
 # The actual test executable (xless) - do not put anything that requires X in here
   add_executable(test-gtest-xless
                  test_animator.cpp
@@ -116,12 +116,16 @@ if (GTEST_FOUND AND
                  test_glib_signals.cpp
                  test_glib_signals_utils.cpp
                  test_glib_signals_utils.h
+                 test_glib_variant.cpp
                  ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_marshal.cpp
                  test_favorite_store_gsettings.cpp
+                 test_shortcut_model.cpp
+                 test_shortcut_private.cpp
                  test_introspection.cpp
                  test_main_xless.cpp
 		 test_grabhandle.cpp
                  ${UNITY_SRC}/AbstractLauncherIcon.h
+                 ${UNITY_SRC}/AbstractShortcutHint.h
                  ${UNITY_SRC}/Animator.cpp
                  ${UNITY_SRC}/Animator.h
                  ${UNITY_SRC}/DebugDBusInterface.h
@@ -133,6 +137,11 @@ if (GTEST_FOUND AND
                  ${UNITY_SRC}/FavoriteStoreGSettings.cpp
                  ${UNITY_SRC}/FavoriteStoreGSettings.h
                  ${UNITY_SRC}/MockLauncherIcon.h
+                 ${UNITY_SRC}/MockShortcutHint.h
+                 ${UNITY_SRC}/ShortcutModel.cpp
+                 ${UNITY_SRC}/ShortcutModel.h
+                 ${UNITY_SRC}/ShortcutHintPrivate.cpp
+                 ${UNITY_SRC}/ShortcutHintPrivate.h
                  ${UNITY_SRC}/SwitcherModel.cpp
                  ${UNITY_SRC}/SwitcherModel.h
                  ${UNITY_SRC}/Introspectable.cpp

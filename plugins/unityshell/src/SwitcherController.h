@@ -131,7 +131,6 @@ private:
   static gboolean OnDetailTimer(gpointer data);
 
   static bool CompareSwitcherItemsPriority(launcher::AbstractLauncherIcon* first, launcher::AbstractLauncherIcon* second);
-
 };
 
 }

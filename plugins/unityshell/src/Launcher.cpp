@@ -247,6 +247,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
   _render_drag_window     = false;
   _drag_edge_touching     = false;
   _keynav_activated       = false;
+  _key_switcher_activated = false;
   _backlight_mode         = BACKLIGHT_NORMAL;
   _last_button_press      = 0;
   _selection_atom         = 0;
@@ -281,30 +282,11 @@ Launcher::Launcher(nux::BaseWindow* parent,
   _drag_window = NULL;
   _offscreen_drag_texture = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableDeviceTexture(2, 2, 1, nux::BITFMT_R8G8B8A8);
 
-  for (unsigned int i = 0; i < G_N_ELEMENTS(_ubus_handles); ++i)
-    _ubus_handles[i] = 0;
-
-  UBusServer* ubus = ubus_server_get_default();
-  _ubus_handles[0] = ubus_server_register_interest(ubus,
-                                                   UBUS_PLACE_VIEW_SHOWN,
-                                                   (UBusCallback) &Launcher::OnPlaceViewShown,
-                                                   this);
-
-  _ubus_handles[1] = ubus_server_register_interest(ubus,
-                                                   UBUS_PLACE_VIEW_HIDDEN,
-                                                   (UBusCallback)&Launcher::OnPlaceViewHidden,
-                                                   this);
-
-  _ubus_handles[2] = ubus_server_register_interest(ubus,
-                                                   UBUS_LAUNCHER_ACTION_DONE,
-                                                   (UBusCallback) &Launcher::OnActionDone,
-                                                   this);
-
-  _ubus_handles[3] = ubus_server_register_interest (ubus,
-                                                    UBUS_BACKGROUND_COLOR_CHANGED,
-                                                    (UBusCallback) &Launcher::OnBGColorChanged,
-                                                    this);
-
+  ubus.RegisterInterest(UBUS_PLACE_VIEW_SHOWN, sigc::mem_fun(this, &Launcher::OnPlaceViewShown));
+  ubus.RegisterInterest(UBUS_PLACE_VIEW_HIDDEN, sigc::mem_fun(this, &Launcher::OnPlaceViewHidden));
+  ubus.RegisterInterest(UBUS_LAUNCHER_ACTION_DONE, sigc::mem_fun(this, &Launcher::OnActionDone));
+  ubus.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED, sigc::mem_fun(this, &Launcher::OnBGColorChanged));
+  ubus.RegisterInterest(UBUS_LAUNCHER_LOCK_HIDE, sigc::mem_fun(this, &Launcher::OnLockHideChanged));
   _dbus_owner = g_bus_own_name(G_BUS_TYPE_SESSION,
                                S_DBUS_NAME,
                                (GBusNameOwnerFlags)(G_BUS_NAME_OWNER_FLAGS_REPLACE | G_BUS_NAME_OWNER_FLAGS_ALLOW_REPLACEMENT),
@@ -320,7 +302,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
   icon_renderer->SetTargetSize(_icon_size, _icon_image_size, _space_between_icons);
 
   // request the latest colour from bghash
-  ubus_server_send_message (ubus, UBUS_BACKGROUND_REQUEST_COLOUR_EMIT, NULL);
+  ubus.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT, NULL);
 
   SetAcceptMouseWheelEvent(true);
 
@@ -371,13 +353,6 @@ Launcher::~Launcher()
 
   if (_on_data_collected_connection.connected())
       _on_data_collected_connection.disconnect();
-
-  UBusServer* ubus = ubus_server_get_default();
-  for (unsigned int i = 0; i < G_N_ELEMENTS(_ubus_handles); ++i)
-  {
-    if (_ubus_handles[i] != 0)
-      ubus_server_unregister_interest(ubus, _ubus_handles[i]);
-  }
 
   g_idle_remove_by_data(this);
 
@@ -1244,7 +1219,7 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
 
   float autohide_offset = 0.0f;
   *launcher_alpha = 1.0f;
-  if (_hidemode != LAUNCHER_HIDE_NEVER)
+  if (_hidemode != LAUNCHER_HIDE_NEVER || _hide_machine->GetQuirk(LauncherHideMachine::LOCK_HIDE))
   {
 
     float autohide_progress = AutohideProgress(current) * (1.0f - DragOutProgress(current));
@@ -1273,7 +1248,7 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
   // Inform the painter where to paint the box
   box_geo = geo;
 
-  if (_hidemode != LAUNCHER_HIDE_NEVER)
+  if (_hidemode != LAUNCHER_HIDE_NEVER || _hide_machine->GetQuirk(LauncherHideMachine::LOCK_HIDE))
     box_geo.x += autohide_offset;
 
   /* Why we need last_geo? It stores the last box_geo (note: as it is a static variable,
@@ -1460,23 +1435,42 @@ gboolean Launcher::SuperShowShortcutsTimeout(gpointer data)
 {
   Launcher* self = (Launcher*) data;
 
-  self->_shortcuts_shown = true;
-  self->_hover_machine->SetQuirk(LauncherHoverMachine::SHORTCUT_KEYS_VISIBLE, true);
+  if (!self->_key_switcher_activated)
+  {
+    self->_shortcuts_shown = true;
+    self->_hover_machine->SetQuirk(LauncherHoverMachine::SHORTCUT_KEYS_VISIBLE, true);
 
-  self->QueueDraw();
+    self->QueueDraw();
+  }
 
   self->_super_show_shortcuts_handle = 0;
   return false;
 }
 
-void Launcher::OnBGColorChanged(GVariant *data, void *val)
+void Launcher::OnBGColorChanged(GVariant *data)
 {
-  Launcher *self = (Launcher*)val;
   double red = 0.0f, green = 0.0f, blue = 0.0f, alpha = 0.0f;
 
   g_variant_get(data, "(dddd)", &red, &green, &blue, &alpha);
-  self->_background_color = nux::Color(red, green, blue, alpha);
-  self->NeedRedraw();
+  _background_color = nux::Color(red, green, blue, alpha);
+  NeedRedraw();
+}
+
+void Launcher::OnLockHideChanged(GVariant *data)
+{
+  gboolean enable_lock = FALSE;
+  g_variant_get(data, "(b)", &enable_lock);
+
+  if (enable_lock) 
+  {
+    _hide_machine->SetQuirk(LauncherHideMachine::LOCK_HIDE, true);
+    _hide_machine->SetShowOnEdge(false);
+  }
+  else
+  {
+    _hide_machine->SetQuirk(LauncherHideMachine::LOCK_HIDE, false);
+    _hide_machine->SetShowOnEdge(true);
+  }
 }
 
 void Launcher::DesaturateIcons()
@@ -1497,42 +1491,39 @@ void Launcher::SaturateIcons()
   }
 }
 
-void Launcher::OnPlaceViewShown(GVariant* data, void* val)
+void Launcher::OnPlaceViewShown(GVariant* data)
 {
-  Launcher* self = (Launcher*)val;
   LauncherModel::iterator it;
 
-  self->_dash_is_open = true;
-  self->bg_effect_helper_.enabled = true;
-  self->_hide_machine->SetQuirk(LauncherHideMachine::PLACES_VISIBLE, true);
-  self->_hover_machine->SetQuirk(LauncherHoverMachine::PLACES_VISIBLE, true);
+  _dash_is_open = true;
+  bg_effect_helper_.enabled = true;
+  _hide_machine->SetQuirk(LauncherHideMachine::PLACES_VISIBLE, true);
+  _hover_machine->SetQuirk(LauncherHoverMachine::PLACES_VISIBLE, true);
 
-  self->DesaturateIcons();
+  DesaturateIcons();
 }
 
-void Launcher::OnPlaceViewHidden(GVariant* data, void* val)
+void Launcher::OnPlaceViewHidden(GVariant* data)
 {
-  Launcher* self = (Launcher*)val;
   LauncherModel::iterator it;
 
-  self->_dash_is_open = false;
-  self->bg_effect_helper_.enabled = false;
-  self->_hide_machine->SetQuirk(LauncherHideMachine::PLACES_VISIBLE, false);
-  self->_hover_machine->SetQuirk(LauncherHoverMachine::PLACES_VISIBLE, false);
+  _dash_is_open = false;
+  bg_effect_helper_.enabled = false;
+  _hide_machine->SetQuirk(LauncherHideMachine::PLACES_VISIBLE, false);
+  _hover_machine->SetQuirk(LauncherHoverMachine::PLACES_VISIBLE, false);
 
   // as the leave event is no more received when the place is opened
   // FIXME: remove when we change the mouse grab strategy in nux
   nux::Point pt = nux::GetWindowCompositor().GetMousePosition();
 
-  self->SetStateMouseOverLauncher(self->GetAbsoluteGeometry().IsInside(pt));
+  SetStateMouseOverLauncher(GetAbsoluteGeometry().IsInside(pt));
 
-  self->SaturateIcons();
+  SaturateIcons();
 }
 
-void Launcher::OnActionDone(GVariant* data, void* val)
+void Launcher::OnActionDone(GVariant* data)
 {
-  Launcher* self = (Launcher*)val;
-  self->_hide_machine->SetQuirk(LauncherHideMachine::LAST_ACTION_ACTIVATE, true);
+  _hide_machine->SetQuirk(LauncherHideMachine::LAST_ACTION_ACTIVATE, true);
 }
 
 void Launcher::SetHidden(bool hidden)
@@ -1921,7 +1912,8 @@ gboolean Launcher::OnScrollTimeout(gpointer data)
   Launcher* self = (Launcher*) data;
   nux::Geometry geo = self->GetGeometry();
 
-  if (self->_keynav_activated || !self->_hovered || self->GetActionState() == ACTION_DRAG_LAUNCHER)
+  if (self->_keynav_activated || self->_key_switcher_activated || !self->_hovered ||
+      self->GetActionState() == ACTION_DRAG_LAUNCHER)
     return TRUE;
 
   if (self->MouseOverTopScrollArea())
@@ -2598,6 +2590,122 @@ Launcher::EdgeRevealTriggered(int mouse_x, int mouse_y)
   _hide_machine->SetQuirk(LauncherHideMachine::MOUSE_MOVE_POST_REVEAL, true);
 }
 
+void Launcher::SelectPreviousIcon()
+{
+  if (_current_icon_index > 0)
+  {
+    LauncherModel::iterator it;
+    int temp_current_icon_index = _current_icon_index;
+    do
+    {
+      temp_current_icon_index --;
+      it = _model->at(temp_current_icon_index);
+    }
+    while (it != (LauncherModel::iterator)NULL && !(*it)->GetQuirk(LauncherIcon::QUIRK_VISIBLE));
+
+    if (it != (LauncherModel::iterator)NULL)
+    {
+      _current_icon_index = temp_current_icon_index;
+
+      if ((*it)->GetCenter().y + - _icon_size/ 2 < GetGeometry().y)
+        _launcher_drag_delta += (_icon_size + _space_between_icons);
+    }
+    EnsureAnimation();
+    selection_change.emit();
+  }
+}
+
+void Launcher::SelectNextIcon()
+{
+  if (_current_icon_index < _model->Size() - 1)
+  {
+    LauncherModel::iterator it;
+    int temp_current_icon_index = _current_icon_index;
+
+    do
+    {
+      temp_current_icon_index ++;
+      it = _model->at(temp_current_icon_index);
+    }
+    while (it != (LauncherModel::iterator)nullptr &&
+           !(*it)->GetQuirk(LauncherIcon::QUIRK_VISIBLE));
+
+    if (it != (LauncherModel::iterator)nullptr)
+    {
+      _current_icon_index = temp_current_icon_index;
+
+      if ((*it)->GetCenter().y + _icon_size / 2 > GetGeometry().height)
+        _launcher_drag_delta -= (_icon_size + _space_between_icons);
+    }
+
+    EnsureAnimation();
+    selection_change.emit();
+  }
+}
+
+void Launcher::KeySwitcherActivate()
+{
+  if (_key_switcher_activated)
+    return;
+
+  _hide_machine->SetQuirk(LauncherHideMachine::KEY_NAV_ACTIVE, true);
+  _hover_machine->SetQuirk(LauncherHoverMachine::KEY_NAV_ACTIVE, true);
+
+  _key_switcher_activated = true;
+
+  ubus_server_send_message(ubus_server_get_default(),
+                           UBUS_LAUNCHER_START_KEY_SWTICHER,
+                           g_variant_new_boolean(true));
+
+  KeySwitcherNext();
+}
+
+void Launcher::KeySwitcherTerminate()
+{
+  if (!_key_switcher_activated)
+    return;
+
+  LauncherModel::iterator it = _model->at(_current_icon_index);
+
+  if (it != (LauncherModel::iterator)NULL)
+    (*it)->Activate(ActionArg(ActionArg::LAUNCHER, 0));
+
+  _hide_machine->SetQuirk(LauncherHideMachine::KEY_NAV_ACTIVE, false);
+  _hover_machine->SetQuirk(LauncherHoverMachine::KEY_NAV_ACTIVE, false);
+
+  ubus_server_send_message(ubus_server_get_default(),
+                           UBUS_LAUNCHER_END_KEY_SWTICHER,
+                           g_variant_new_boolean(true));
+
+  _key_switcher_activated = false;
+  _current_icon_index = -1;
+  _last_icon_index = -1;
+  QueueDraw();
+
+  selection_change.emit();
+}
+
+bool Launcher::KeySwitcherIsActive()
+{
+  return _key_switcher_activated;
+}
+
+void Launcher::KeySwitcherNext()
+{
+  if (!_key_switcher_activated)
+    return;
+
+  SelectNextIcon();
+}
+
+void Launcher::KeySwitcherPrevious()
+{
+  if (!_key_switcher_activated)
+    return;
+
+  SelectPreviousIcon();
+}
+
 void
 Launcher::RecvKeyPressed(unsigned long    eventType,
                          unsigned long    key_sym,
@@ -2620,53 +2728,13 @@ Launcher::RecvKeyPressed(unsigned long    eventType,
       // up (move selection up or go to global-menu if at top-most icon)
     case NUX_VK_UP:
     case NUX_KP_UP:
-      if (_current_icon_index > 0)
-      {
-        int temp_current_icon_index = _current_icon_index;
-        do
-        {
-          temp_current_icon_index --;
-          it = _model->at(temp_current_icon_index);
-        }
-        while (it != (LauncherModel::iterator)NULL && !(*it)->GetQuirk(LauncherIcon::QUIRK_VISIBLE));
-
-        if (it != (LauncherModel::iterator)NULL)
-        {
-          _current_icon_index = temp_current_icon_index;
-
-          if ((*it)->GetCenter().y + - _icon_size/ 2 < GetGeometry().y)
-            _launcher_drag_delta += (_icon_size + _space_between_icons);
-        }
-        EnsureAnimation();
-        selection_change.emit();
-      }
+      SelectPreviousIcon();
       break;
 
       // down (move selection down and unfold launcher if needed)
     case NUX_VK_DOWN:
     case NUX_KP_DOWN:
-      if (_current_icon_index < _model->Size() - 1)
-      {
-        int temp_current_icon_index = _current_icon_index;
-
-        do
-        {
-          temp_current_icon_index ++;
-          it = _model->at(temp_current_icon_index);
-        }
-        while (it != (LauncherModel::iterator)NULL && !(*it)->GetQuirk(LauncherIcon::QUIRK_VISIBLE));
-
-        if (it != (LauncherModel::iterator)NULL)
-        {
-          _current_icon_index = temp_current_icon_index;
-
-          if ((*it)->GetCenter().y + _icon_size / 2 > GetGeometry().height)
-            _launcher_drag_delta -= (_icon_size + _space_between_icons);
-        }
-
-        EnsureAnimation();
-        selection_change.emit();
-      }
+      SelectNextIcon();
       break;
 
       // esc/left (close quicklist or exit laucher key-focus)
@@ -2794,6 +2862,12 @@ void Launcher::MouseDownLogic(int x, int y, unsigned long button_flags, unsigned
     _start_dragicon_handle = g_timeout_add(START_DRAGICON_DURATION, &Launcher::StartIconDragTimeout, this);
 
     launcher_icon->mouse_down.emit(nux::GetEventButton(button_flags));
+
+    if (_key_switcher_activated)
+    {
+      _current_icon_index = -1;
+      KeySwitcherTerminate();
+    }
   }
 }
 

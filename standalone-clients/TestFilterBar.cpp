@@ -63,7 +63,7 @@ void TestRunner::Init ()
   filterbar->AddFilter (NULL);
   filterbar->AddFilter (NULL);
 
-  nux::GetGraphicsThread()->SetLayout (layout);
+  nux::GetWindowThread()->SetLayout (layout);
 }
 
 void TestRunner::InitWindowThread(nux::NThread* thread, void* InitData)
