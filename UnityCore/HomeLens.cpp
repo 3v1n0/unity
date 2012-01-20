@@ -263,7 +263,8 @@ public:
  */
 
 HomeLens::ModelMerger::ModelMerger(glib::Object<DeeModel> target)
-  : n_cols_(0)
+  : row_buf_(NULL)
+  , n_cols_(0)
   , target_(target)
 {}
 
