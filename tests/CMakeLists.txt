@@ -123,7 +123,7 @@ if (GTEST_FOUND AND
                  test_shortcut_private.cpp
                  test_introspection.cpp
                  test_main_xless.cpp
-		 test_grabhandle.cpp
+                 test_grabhandle.cpp
                  ${UNITY_SRC}/AbstractLauncherIcon.h
                  ${UNITY_SRC}/AbstractShortcutHint.h
                  ${UNITY_SRC}/Animator.cpp
@@ -152,11 +152,11 @@ if (GTEST_FOUND AND
                  ${UNITY_SRC}/Timer.h
                  ${UNITY_SRC}/WindowManager.cpp
                  ${UNITY_SRC}/WindowManager.h
-		 ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle.cpp
-		 ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle-group.cpp
-		 ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle-impl-factory.cpp
-		 ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle-layout.cpp
-		 ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-texture.cpp
+                 ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle.cpp
+                 ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle-group.cpp
+                 ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle-impl-factory.cpp
+                 ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle-layout.cpp
+                 ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-texture.cpp
                  )
   target_link_libraries(test-gtest-xless ${GTEST_BOTH_LIBRARIES} ${GMOCK_LIB} ${GMOCK_MAIN_LIB})
   add_test(UnityGTestXless test-gtest-xless)
