@@ -710,6 +710,7 @@ Lens::Ptr HomeLens::Impl::FindLensForUri(std::string const& uri)
 }
 
 // FIXME: sorting lenses/categories. apps.lens first
+// FIXME: Coordinated sorting between the lens bar and home screen categories. Make void FilesystemLenses::Impl::DecrementAndCheckChildrenWaiting() use the gsettings key
 // FIXME: on no results https://bugs.launchpad.net/unity/+bug/711199
 
 void HomeLens::Impl::OnLensAdded (Lens::Ptr& lens)
