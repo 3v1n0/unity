@@ -176,7 +176,6 @@ public:
 
   bool executeCommand(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool setKeyboardFocusKeyInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
-  bool launcherRevealEdgeInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
 
   bool altTabInitiateCommon(CompAction* action,
                             CompAction::State state,
@@ -236,12 +235,10 @@ private:
   static void initUnity(nux::NThread* thread, void* InitData);
   static void OnStartKeyNav(GVariant* data, void* value);
   static void OnExitKeyNav(GVariant* data, void* value);
-  static gboolean OnEdgeTriggerTimeout(gpointer data);
   static gboolean OnRedrawTimeout(gpointer data);
 
   void startLauncherKeyNav();
   void restartLauncherKeyNav();
-  void OnLauncherHiddenChanged();
 
   void OnDashRealized ();
 
@@ -273,10 +270,7 @@ private:
   bool                                  needsRelayout;
   bool                                  _in_paint;
   guint32                               relayoutSourceId;
-  guint                                 _edge_timeout;
-  guint                                 _edge_trigger_handle;
   guint32                               _redraw_handle;
-  gint                                  _edge_pointerY;
   guint                                 _ubus_handles[3];
   
   typedef std::shared_ptr<CompAction> CompActionPtr;

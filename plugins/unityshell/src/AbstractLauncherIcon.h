@@ -140,7 +140,7 @@ public:
 
   virtual void SaveCenter() = 0;
 
-  virtual std::vector<nux::Vector4> & GetTransform(TransformIndex index) = 0;
+  virtual std::vector<nux::Vector4> & GetTransform(TransformIndex index, int monitor) = 0;
 
   virtual void Activate(ActionArg arg) = 0;
 

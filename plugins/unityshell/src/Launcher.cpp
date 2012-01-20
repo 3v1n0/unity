@@ -55,6 +55,7 @@
 namespace unity
 {
 using ui::RenderArg;
+using ui::PointerBarrierWrapper;
 
 namespace launcher
 {
@@ -329,6 +330,8 @@ Launcher::Launcher(nux::BaseWindow* parent,
     launcher_sheen_->UnReference();
   }
 
+  _pointer_barrier = PointerBarrierWrapper::Ptr(new PointerBarrierWrapper());
+
   options.changed.connect (sigc::mem_fun (this, &Launcher::OnOptionsChanged));
 }
 
@@ -532,13 +535,8 @@ void Launcher::SetMousePosition(int x, int y)
 void Launcher::SetStateMouseOverLauncher(bool over_launcher)
 {
   _hide_machine->SetQuirk(LauncherHideMachine::MOUSE_OVER_LAUNCHER, over_launcher);
+  _hide_machine->SetQuirk(LauncherHideMachine::REVEAL_PRESSURE_PASS, false);
   _hover_machine->SetQuirk(LauncherHoverMachine::MOUSE_OVER_LAUNCHER, over_launcher);
-
-  if (!over_launcher)
-  {
-    // reset state for some corner case like x=0, show dash (leave event not received)
-    _hide_machine->SetQuirk(LauncherHideMachine::MOUSE_OVER_ACTIVE_EDGE, false);
-  }
 }
 
 void Launcher::SetStateKeyNav(bool keynav_activated)
@@ -1540,10 +1538,7 @@ void Launcher::SetHidden(bool hidden)
   _hover_machine->SetQuirk(LauncherHoverMachine::LAUNCHER_HIDDEN, hidden);
 
   _hide_machine->SetQuirk(LauncherHideMachine::LAST_ACTION_ACTIVATE, false);
-  if (_hide_machine->GetQuirk(LauncherHideMachine::MOUSE_OVER_ACTIVE_EDGE))
-    _hide_machine->SetQuirk(LauncherHideMachine::MOUSE_MOVE_POST_REVEAL, true);
-  else
-    _hide_machine->SetQuirk(LauncherHideMachine::MOUSE_MOVE_POST_REVEAL, false);
+  _hide_machine->SetQuirk(LauncherHideMachine::MOUSE_MOVE_POST_REVEAL, false);
 
   if (hidden)  {
     _hide_machine->SetQuirk(LauncherHideMachine::MT_DRAG_OUT, false);
@@ -2002,6 +1997,17 @@ void Launcher::Resize()
   SetMaximumHeight(new_geometry.height);
   _parent->SetGeometry(new_geometry);
   SetGeometry(new_geometry);
+
+  _pointer_barrier->DestroyBarrier();
+
+  _pointer_barrier->x1 = new_geometry.x;
+  _pointer_barrier->x2 = new_geometry.x;
+  _pointer_barrier->y1 = new_geometry.y;
+  _pointer_barrier->y2 = new_geometry.y + new_geometry.height;
+  _pointer_barrier->threshold = 3000;
+
+  _pointer_barrier->ConstructBarrier();
+
 }
 
 void Launcher::SetBackgroundAlpha(float background_alpha)
@@ -2071,6 +2077,8 @@ void Launcher::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
 void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
+  icon_renderer->monitor = monitor();
+
   nux::Geometry base = GetGeometry();
   nux::Geometry bkg_box;
   std::list<RenderArg> args;
@@ -2488,10 +2496,6 @@ void Launcher::RecvMouseEnter(int x, int y, unsigned long button_flags, unsigned
   SetMousePosition(x, y);
   SetStateMouseOverLauncher(true);
 
-  // make sure we actually get a chance to get events before turning this off
-  if (x > 0)
-    _hide_machine->SetQuirk(LauncherHideMachine::MOUSE_OVER_ACTIVE_EDGE, false);
-
   EventLogic();
   EnsureAnimation();
 }
@@ -2510,18 +2514,22 @@ void Launcher::RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_
 {
   SetMousePosition(x, y);
 
-  // make sure we actually get a chance to get events before turning this off
-  if (x > 0)
-    _hide_machine->SetQuirk(LauncherHideMachine::MOUSE_OVER_ACTIVE_EDGE, false);
+  if (_hidden)
+  {
+    _hide_machine->AddRevealPressure(40);
+  }
+  else
+  {
+    _postreveal_mousemove_delta_x += dx;
+    _postreveal_mousemove_delta_y += dy;
+    
+    // check the state before changing it to avoid uneeded hide calls
+    if (!_hide_machine->GetQuirk(LauncherHideMachine::MOUSE_MOVE_POST_REVEAL) &&
+        (nux::Abs(_postreveal_mousemove_delta_x) > MOUSE_DEADZONE ||
+         nux::Abs(_postreveal_mousemove_delta_y) > MOUSE_DEADZONE))
+      _hide_machine->SetQuirk(LauncherHideMachine::MOUSE_MOVE_POST_REVEAL, true);
+  }
 
-  _postreveal_mousemove_delta_x += dx;
-  _postreveal_mousemove_delta_y += dy;
-
-  // check the state before changing it to avoid uneeded hide calls
-  if (!_hide_machine->GetQuirk(LauncherHideMachine::MOUSE_MOVE_POST_REVEAL) &&
-      (nux::Abs(_postreveal_mousemove_delta_x) > MOUSE_DEADZONE ||
-       nux::Abs(_postreveal_mousemove_delta_y) > MOUSE_DEADZONE))
-    _hide_machine->SetQuirk(LauncherHideMachine::MOUSE_MOVE_POST_REVEAL, true);
 
 
   // Every time the mouse moves, we check if it is inside an icon...
@@ -2606,15 +2614,6 @@ void Launcher::SetLatestShortcut(guint64 shortcut)
   if (_ignore_repeat_shortcut_handle > 0)
     g_source_remove(_ignore_repeat_shortcut_handle);
   _ignore_repeat_shortcut_handle = g_timeout_add(IGNORE_REPEAT_SHORTCUT_DURATION, &Launcher::ResetRepeatShorcutTimeout, this);
-}
-
-void
-Launcher::EdgeRevealTriggered(int mouse_x, int mouse_y)
-{
-  SetMousePosition(mouse_x, mouse_y - GetAbsoluteGeometry().y);
-
-  _hide_machine->SetQuirk(LauncherHideMachine::MOUSE_OVER_ACTIVE_EDGE, true);
-  _hide_machine->SetQuirk(LauncherHideMachine::MOUSE_MOVE_POST_REVEAL, true);
 }
 
 void Launcher::SelectPreviousIcon()
@@ -2851,8 +2850,7 @@ void Launcher::EventLogic()
 
   AbstractLauncherIcon* launcher_icon = 0;
 
-  if (_hide_machine->GetQuirk(LauncherHideMachine::MOUSE_OVER_LAUNCHER)
-      && _hide_machine->GetQuirk(LauncherHideMachine::MOUSE_MOVE_POST_REVEAL))
+  if (!_hidden)
   {
     launcher_icon = MouseIconIntersection(_mouse_position.x, _mouse_position.y);
   }
@@ -2946,7 +2944,7 @@ AbstractLauncherIcon* Launcher::MouseIconIntersection(int x, int y)
     nux::Point2 screen_coord [4];
     for (int i = 0; i < 4; ++i)
     {
-      auto hit_transform = (*it)->GetTransform(AbstractLauncherIcon::TRANSFORM_HIT_AREA);
+      auto hit_transform = (*it)->GetTransform(AbstractLauncherIcon::TRANSFORM_HIT_AREA, monitor);
       screen_coord [i].x = hit_transform [i].x;
       screen_coord [i].y = hit_transform [i].y;
     }

@@ -28,6 +28,7 @@
 #include <Nux/TimerProc.h>
 #include <NuxGraphics/IOpenGLAsmShader.h>
 
+#include "PointerBarrier.h"
 #include "AbstractIconRenderer.h"
 #include "BackgroundEffectHelper.h"
 #include "DNDCollectionWindow.h"
@@ -39,6 +40,7 @@
 #include "LauncherHideMachine.h"
 #include "LauncherHoverMachine.h"
 #include "UBusWrapper.h"
+
 
 #define ANIM_DURATION_SHORT_SHORT 100
 #define ANIM_DURATION_SHORT 125
@@ -118,8 +120,6 @@ public:
 
   void SetAutoHideAnimation(AutoHideAnimation animation);
   AutoHideAnimation GetAutoHideAnimation();
-
-  void EdgeRevealTriggered(int x, int y);
 
   gboolean CheckSuperShortcutPressed(Display *x_display, unsigned int key_sym, unsigned long key_code, unsigned long key_state, char* key_string);
   void SetLatestShortcut(guint64 shortcut);
@@ -405,6 +405,8 @@ private:
   AutoHideAnimation _autohide_animation;
 
   nux::ObjectPtr<nux::IOpenGLBaseTexture> _offscreen_drag_texture;
+
+  ui::PointerBarrierWrapper::Ptr _pointer_barrier;
 
   int _space_between_icons;
   int _icon_size;

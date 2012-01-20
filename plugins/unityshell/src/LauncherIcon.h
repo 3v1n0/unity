@@ -86,6 +86,8 @@ public:
 
   void HideTooltip();
 
+  void ShowTooltip();
+
   bool OpenQuicklist(bool default_to_first_item = false);
 
   void        SetCenter(nux::Point3 center, int parent_monitor, nux::Geometry parent_geo);
@@ -184,9 +186,7 @@ public:
 
   void SetIconType(IconType type);
 
-  std::vector<nux::Vector4> & GetTransform(TransformIndex index);
-
-  static void SetSkipTooltipDelay(gboolean skip_tooltip_delay);
+  std::vector<nux::Vector4> & GetTransform(TransformIndex index, int monitor);
 
 protected:
   std::vector<nux::Point3> GetCenters();
@@ -293,7 +293,6 @@ private:
   static gboolean OnPresentTimeout(gpointer data);
   static gboolean OnCenterTimeout(gpointer data);
   static gboolean OnDelayedUpdateTimeout(gpointer data);
-  static gboolean OnTooltipTimeout(gpointer data);
 
   void ColorForIcon(GdkPixbuf* pixbuf, nux::Color& background, nux::Color& glow);
 
@@ -305,12 +304,10 @@ private:
   guint             _center_stabilize_handle;
   guint             _present_time_handle;
   guint             _time_delay_handle;
-  guint             _tooltip_delay_handle;
   int               _sort_priority;
   int               _last_monitor;
   nux::Color        _background_color;
   nux::Color        _glow_color;
-  static gboolean   _skip_tooltip_delay;
   
   gint64            _shortcut;
 
@@ -328,7 +325,7 @@ private:
   struct timespec  _quirk_times[QUIRK_LAST];
 
   std::list<LauncherEntryRemote*> _entry_list;
-  std::map<TransformIndex, std::vector<nux::Vector4> > transform_map;
+  std::vector<std::map<TransformIndex, std::vector<nux::Vector4> > > transform_map;
   
 };
 

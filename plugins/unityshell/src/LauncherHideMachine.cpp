@@ -59,6 +59,18 @@ LauncherHideMachine::~LauncherHideMachine()
 }
 
 void
+LauncherHideMachine::AddRevealPressure(int pressure)
+{
+  _reveal_pressure += pressure;
+
+  if (_reveal_pressure > 4000)
+  {
+    SetQuirk(REVEAL_PRESSURE_PASS, true);
+    _reveal_pressure = 0;
+  }
+}
+
+void
 LauncherHideMachine::SetShouldHide(bool value, bool skip_delay)
 {
   if (_should_hide == value)
@@ -99,7 +111,6 @@ LauncherHideMachine::SetShouldHide(bool value, bool skip_delay)
     SCALE_ACTIVE           = 1 << 16, 64k  #VISIBLE_REQUIRED
     EXPO_ACTIVE            = 1 << 17, 128k #VISIBLE_REQUIRED
     MT_DRAG_OUT            = 1 << 18, 256k #VISIBLE_REQUIRED
-    MOUSE_OVER_ACTIVE_EDGE = 1 << 19, 512k
     LAUNCHER_PULSE         = 1 << 20, 1M   #VISIBLE_REQUIRED
     LOCK_HIDE              = 1 << 21, 2M
 */
@@ -156,11 +167,7 @@ LauncherHideMachine::EnsureHideState(bool skip_delay)
     HideQuirk _should_show_quirk;
     if (GetQuirk(LAUNCHER_HIDDEN))
     {
-      _should_show_quirk = (HideQuirk)(VISIBLE_REQUIRED);
-
-      if (_show_on_edge)
-        _should_show_quirk = (HideQuirk)(_should_show_quirk | MOUSE_OVER_ACTIVE_EDGE);
-
+      _should_show_quirk = (HideQuirk) ((VISIBLE_REQUIRED) | REVEAL_PRESSURE_PASS);
     }
     else
     {
@@ -168,9 +175,6 @@ LauncherHideMachine::EnsureHideState(bool skip_delay)
       // mouse position over launcher is only taken into account if we move it after the revealing state
       if (GetQuirk(MOUSE_MOVE_POST_REVEAL))
         _should_show_quirk = (HideQuirk)(_should_show_quirk | MOUSE_OVER_LAUNCHER);
-
-      if (_show_on_edge)
-        _should_show_quirk = (HideQuirk)(_should_show_quirk | MOUSE_OVER_ACTIVE_EDGE);
     }
 
     if (GetQuirk(_should_show_quirk))

@@ -69,7 +69,6 @@ QuicklistView* LauncherIcon::_current_quicklist = 0;
 
 int LauncherIcon::_current_theme_is_mono = -1;
 GtkIconTheme* LauncherIcon::_unity_theme = NULL;
-gboolean LauncherIcon::_skip_tooltip_delay = false;
 
 LauncherIcon::LauncherIcon()
   : _menuclient_dynamic_quicklist(nullptr)
@@ -80,7 +79,6 @@ LauncherIcon::LauncherIcon()
   , _center_stabilize_handle(0)
   , _present_time_handle(0)
   , _time_delay_handle(0)
-  , _tooltip_delay_handle(0)
   , _sort_priority(0)
   , _background_color(nux::color::White)
   , _glow_color(nux::color::White)
@@ -92,6 +90,7 @@ LauncherIcon::LauncherIcon()
   _saved_center.resize(max_num_monitors);
   _last_stable.resize(max_num_monitors);
   _parent_geo.resize(max_num_monitors);
+  transform_map.resize(max_num_monitors);
 
   for (int i = 0; i < QUIRK_LAST; i++)
   {
@@ -144,9 +143,6 @@ LauncherIcon::~LauncherIcon()
     g_source_remove(_time_delay_handle);
   _time_delay_handle = 0;
 
-  if (_tooltip_delay_handle)
-    g_source_remove(_tooltip_delay_handle);
-  _tooltip_delay_handle = 0;
   // clean up the whole signal-callback mess
   if (needs_redraw_connection.connected())
     needs_redraw_connection.disconnect();
@@ -482,35 +478,22 @@ LauncherIcon::GetShortcut()
 }
 
 void
-LauncherIcon::SetSkipTooltipDelay(gboolean skip_tooltip_delay)
+LauncherIcon::ShowTooltip()
 {
-  _skip_tooltip_delay = skip_tooltip_delay;
-}
-
-gboolean
-LauncherIcon::OnTooltipTimeout(gpointer data)
-{
-  LauncherIcon* self = (LauncherIcon*) data;
+  if (_quicklist->IsVisible())
+    return;
 
   int tip_x = 100;
   int tip_y = 100;
-  if (self->_last_monitor >= 0)
+  if (_last_monitor >= 0)
   {
-    nux::Geometry geo = self->_parent_geo[self->_last_monitor];
+    nux::Geometry geo = _parent_geo[_last_monitor];
     tip_x = geo.x + geo.width + 1;
-    tip_y = geo.y + self->_center[self->_last_monitor].y;
+    tip_y = geo.y + _center[_last_monitor].y;
   }
 
-  self->_tooltip->ShowTooltipWithTipAt(tip_x, tip_y);
-
-  if (!self->_quicklist->IsVisible())
-  {
-    self->_tooltip->ShowWindow(!self->tooltip_text().empty());
-    _skip_tooltip_delay = TRUE;
-  }
-
-  self->_tooltip_delay_handle = 0;
-  return FALSE;
+  _tooltip->ShowTooltipWithTipAt(tip_x, tip_y);
+  _tooltip->ShowWindow(!tooltip_text().empty());
 }
 
 void
@@ -523,19 +506,12 @@ LauncherIcon::RecvMouseEnter(int monitor)
     return;
   }
 
-  if (!_skip_tooltip_delay)
-    _tooltip_delay_handle = g_timeout_add(500, &LauncherIcon::OnTooltipTimeout, this);
-  else
-    OnTooltipTimeout(this);
+  ShowTooltip();
 }
 
 void LauncherIcon::RecvMouseLeave(int monitor)
 {
   _last_monitor = -1;
-
-  if (_tooltip_delay_handle)
-    g_source_remove(_tooltip_delay_handle);
-  _tooltip_delay_handle = 0;
 
   _tooltip->ShowWindow(false);
 }
@@ -546,11 +522,6 @@ bool LauncherIcon::OpenQuicklist(bool default_to_first_item)
 
   if (menus.empty())
     return false;
-
-  if (_tooltip_delay_handle)
-    g_source_remove(_tooltip_delay_handle);
-  _tooltip_delay_handle = 0;
-  _skip_tooltip_delay = false;
 
   _tooltip->ShowWindow(false);
   _quicklist->RemoveAllMenuItem();
@@ -642,11 +613,6 @@ void LauncherIcon::RecvMouseClick(int button, int monitor)
 
 void LauncherIcon::HideTooltip()
 {
-  if (_tooltip_delay_handle)
-    g_source_remove(_tooltip_delay_handle);
-  _tooltip_delay_handle = 0;
-  _skip_tooltip_delay = false;
-
   _tooltip->ShowWindow(false);
 }
 
@@ -935,12 +901,12 @@ LauncherIcon::SetEmblemIconName(const char* name)
 }
 
 std::vector<nux::Vector4> &
-LauncherIcon::GetTransform(TransformIndex index)
+LauncherIcon::GetTransform(TransformIndex index, int monitor)
 {
-  auto iter = transform_map.find(index);
-  if (iter == transform_map.end())
+  auto iter = transform_map[monitor].find(index);
+  if (iter == transform_map[monitor].end())
   {
-    auto iter2 = transform_map.insert(std::map<TransformIndex, std::vector<nux::Vector4> >::value_type(index, std::vector<nux::Vector4>(4)));
+    auto iter2 = transform_map[monitor].insert(std::map<TransformIndex, std::vector<nux::Vector4> >::value_type(index, std::vector<nux::Vector4>(4)));
     return iter2.first->second;
   }
 

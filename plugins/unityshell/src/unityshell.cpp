@@ -106,9 +106,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , needsRelayout(false)
   , _in_paint(false)
   , relayoutSourceId(0)
-  , _edge_trigger_handle(0)
   , _redraw_handle(0)
-  , _edge_pointerY(0)
   , newFocusedWindow(nullptr)
   , doShellRepaint(false)
   , allowWindowPaint(false)
@@ -224,7 +222,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
 
      debugger = new unity::debug::DebugDBusInterface(this, this->screen);
 
-     _edge_timeout = optionGetLauncherRevealEdgeTimeout ();
      _in_paint = false;
 
     void *dlhand = dlopen ("libunityshell.so", RTLD_LAZY);
@@ -270,8 +267,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetExecuteCommandInitiate(boost::bind(&UnityScreen::executeCommand, this, _1, _2, _3));
      optionSetPanelFirstMenuInitiate(boost::bind(&UnityScreen::showPanelFirstMenuKeyInitiate, this, _1, _2, _3));
      optionSetPanelFirstMenuTerminate(boost::bind(&UnityScreen::showPanelFirstMenuKeyTerminate, this, _1, _2, _3));
-     optionSetLauncherRevealEdgeInitiate(boost::bind(&UnityScreen::launcherRevealEdgeInitiate, this, _1, _2, _3));
-     optionSetLauncherRevealEdgeTimeoutNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetAutomaximizeValueNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetAltTabTimeoutNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetAltTabBiasViewportNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
@@ -489,14 +484,6 @@ void UnityScreen::nuxEpilogue()
   glPopAttrib();
 
   glDisable(GL_SCISSOR_TEST);
-}
-
-void UnityScreen::OnLauncherHiddenChanged()
-{
-  if (launcher_controller_->launcher().Hidden())
-    screen->addAction(&optionGetLauncherRevealEdge());
-  else
-    screen->removeAction(&optionGetLauncherRevealEdge());
 }
 
 void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
@@ -1304,67 +1291,6 @@ bool UnityScreen::showPanelFirstMenuKeyTerminate(CompAction* action,
   screen->removeGrab(grab_index_, NULL);
   action->setState (action->state() & (unsigned)~(CompAction::StateTermKey));
   panel_controller_->EndFirstMenuShow();
-  return false;
-}
-
-gboolean UnityScreen::OnEdgeTriggerTimeout(gpointer data)
-{
-  UnityScreen* self = reinterpret_cast<UnityScreen*>(data);
-
-  if (pointerX <= 1)
-  {
-    if (pointerY <= 24)
-      return true;
-
-    if (abs(pointerY - self->_edge_pointerY) <= 5)
-    {
-      self->launcher_controller_->launcher().EdgeRevealTriggered(pointerX, pointerY);
-    }
-    else
-    {
-      /* We are still in the edge, but moving in Y, maybe we need another chance */
-
-      if (abs(pointerY - self->_edge_pointerY) > 20)
-      {
-        /* We're quite far from the first hit spot, let's wait again */
-        self->_edge_pointerY = pointerY;
-        return true;
-      }
-      else
-      {
-        /* We're quite near to the first hit spot, so we can reduce our timeout */
-        self->_edge_pointerY = pointerY;
-        g_source_remove(self->_edge_trigger_handle);
-        self->_edge_trigger_handle = g_timeout_add(self->_edge_timeout/2,
-                                                   &UnityScreen::OnEdgeTriggerTimeout,
-                                                   self);
-        return false;
-      }
-    }
-  }
-
-  self->_edge_trigger_handle = 0;
-  return false;
-}
-
-bool UnityScreen::launcherRevealEdgeInitiate(CompAction* action,
-                                             CompAction::State state,
-                                             CompOption::Vector& options)
-{
-  if (screen->grabbed())
-    return false;
-
-  if (_edge_trigger_handle)
-    g_source_remove(_edge_trigger_handle);
-
-  if (pointerX <= 1)
-  {
-    _edge_pointerY = pointerY;
-    _edge_trigger_handle = g_timeout_add(_edge_timeout,
-                                         &UnityScreen::OnEdgeTriggerTimeout,
-                                         this);
-  }
-
   return false;
 }
 
@@ -2229,9 +2155,6 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
     case UnityshellOptions::DevicesOption:
       unity::DevicesSettings::GetDefault().SetDevicesOption((unity::DevicesSettings::DevicesOption) optionGetDevicesOption());
       break;
-    case UnityshellOptions::LauncherRevealEdgeTimeout:
-      _edge_timeout = optionGetLauncherRevealEdgeTimeout();
-      break;
     case UnityshellOptions::AltTabTimeout:
       switcher_controller_->detail_on_timeout = optionGetAltTabTimeout();
     case UnityshellOptions::AltTabBiasViewport:
@@ -2350,7 +2273,6 @@ void UnityScreen::initLauncher()
   launcher_controller_.reset(new launcher::Controller(screen->dpy()));
   
   Launcher& launcher = launcher_controller_->launcher();
-  launcher.hidden_changed.connect(sigc::mem_fun(this, &UnityScreen::OnLauncherHiddenChanged));
   AddChild(&launcher);
 
   switcher_controller_.reset(new switcher::Controller());
@@ -2379,8 +2301,6 @@ void UnityScreen::initLauncher()
   AddChild(dash_controller_.get());
 
   ScheduleRelayout(0);
-
-  OnLauncherHiddenChanged();
 }
 
 void UnityScreen::InitHints()

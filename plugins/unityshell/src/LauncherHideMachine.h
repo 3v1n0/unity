@@ -55,7 +55,7 @@ public:
     SCALE_ACTIVE           = 1 << 16,
     EXPO_ACTIVE            = 1 << 17,
     MT_DRAG_OUT            = 1 << 18,
-    MOUSE_OVER_ACTIVE_EDGE = 1 << 19,
+    REVEAL_PRESSURE_PASS   = 1 << 19,
     LAUNCHER_PULSE         = 1 << 20,
     LOCK_HIDE              = 1 << 21
   } HideQuirk;
@@ -65,6 +65,8 @@ public:
 
   void     SetMode(HideMode mode);
   HideMode GetMode();
+
+  void AddRevealPressure(int pressure);
 
   void     SetShowOnEdge(bool value);
   bool     GetShowOnEdge();
@@ -90,6 +92,7 @@ private:
   bool      _show_on_edge;
   HideQuirk _quirks;
   HideMode  _mode;
+  int       _reveal_pressure;
   unsigned int _hide_delay_timeout_length;
 
   guint _hide_delay_handle;
