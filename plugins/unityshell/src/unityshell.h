@@ -149,6 +149,11 @@ public:
                      const CompRegion&,
                      CompOutput*,
                      unsigned int);
+#ifdef USE_GLES
+  void glPaintCompositedOutput (const CompRegion    &region,
+                                GLFramebufferObject *fbo,
+                                unsigned int         mask);
+#endif
 
   /* paint in the special case that the output is transformed */
   void glPaintTransformedOutput(const GLScreenPaintAttrib&,
@@ -339,7 +344,11 @@ public:
 
   /* basic window draw function */
   bool glDraw(const GLMatrix& matrix,
+#ifndef USE_GLES
               GLFragment::Attrib& attrib,
+#else
+              const GLWindowPaintAttrib& attrib,
+#endif
               const CompRegion& region,
               unsigned intmask);
 
