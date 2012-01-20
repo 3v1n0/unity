@@ -161,29 +161,37 @@ class Switcher(Unity):
         self._keyboard.press_and_release('^S`')
 
     def __get_icon(self, index):
-        import ipdb; ipdb.set_trace()
-        return self.get_state('/Unity/SwitcherController/SwitcherModel')[0]['children-of-men'][index][1][0]
+        return self.__get_model()['Children'][index][1][0]
 
-    def get_icon_name(self, index):
-        return self.__get_icon(index)['tooltip-text']
-
-    def get_icon_desktop_file(self, index):
+    @property
+    def current_icon(self):
+        """Get the currently-selected icon."""
+        if not self.get_is_visible:
+            return None
+        model = self.__get_model()
+        sel_idx = self.get_selection_index()
         try:
-            return self.__get_icon(index)['desktop-file']
-        except:
+            return LauncherIcon(model['Children'][sel_idx][1])
+        except KeyError:
             return None
 
     def get_model_size(self):
-        return len(self.get_state('/Unity/SwitcherController/SwitcherModel')[0]['children-of-men'])
+        return len(self.__get_model()['Children'])
 
     def get_selection_index(self):
-        return int(self.get_state('/Unity/SwitcherController/SwitcherModel')[0]['selection-index'])
+        return int(self.__get_model()['selection-index'])
 
     def get_last_selection_index(self):
-        return bool(self.get_state('/Unity/SwitcherController/SwitcherModel')[0]['last-selection-index'])
+        return bool(self.__get_model()['last-selection-index'])
 
     def get_is_visible(self):
-        return bool(self.get_state('/Unity/SwitcherController')[0]['visible'])
+        return bool(self.__get_controller()['visible'])
+
+    def __get_model(self):
+        return self.get_state('/Unity/SwitcherController/SwitcherModel')[0]
+
+    def __get_controller(self):
+        return self.set_state('/unity/SwitcherController')[0]
 
 class Dash(Unity):
     """An emulator class that makes it easier to interact with the unity dash."""
@@ -246,3 +254,10 @@ class Dash(Unity):
     def reveal_command_lens(self):
         """Reveal the 'run command' lens."""
         self._keyboard.press_and_release(['Alt_L','F2'])
+
+if __name__ == '__main__':
+    s = Switcher()
+    s.initiate()
+    from time import sleep
+    sleep(5)
+    s.terminate()
