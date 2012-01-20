@@ -113,7 +113,9 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , damaged(false)
   , _key_nav_mode_requested(false)
   , _last_output(nullptr)
+#ifndef USE_GLES
   , _active_fbo (0)
+#endif
   , dash_is_open_ (false)
   , grab_index_ (0)
   , painting_tray_ (false)
@@ -669,7 +671,11 @@ UnityWindow::updateIconPos (int   &wx,
   wy = y + (last_bound.height - height) / 2;
 }
 
+#ifdef USE_GLES
+void UnityScreen::paintDisplay()
+#else
 void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transform, unsigned int mask)
+#endif
 {
   CompOutput *output = _last_output;
   Window     tray_xid = panel_controller_->GetTrayXid ();
@@ -733,7 +739,9 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
 #endif
       unsigned int oldGlAddGeometryIndex = uTrayWindow->gWindow->glAddGeometryGetCurrentIndex ();
       unsigned int oldGlDrawIndex = uTrayWindow->gWindow->glDrawGetCurrentIndex ();
+#ifndef USE_GLES
       unsigned int oldGlDrawGeometryIndex = uTrayWindow->gWindow->glDrawGeometryGetCurrentIndex ();
+#endif
 
 #ifndef USE_GLES
       attrib.setOpacity (OPAQUE);
@@ -757,12 +765,16 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
       /* force the use of the core functions */
       uTrayWindow->gWindow->glDrawSetCurrentIndex (MAXSHORT);
       uTrayWindow->gWindow->glAddGeometrySetCurrentIndex ( MAXSHORT);
+#ifndef USE_GLES
       uTrayWindow->gWindow->glDrawGeometrySetCurrentIndex (MAXSHORT);
+#endif
       uTrayWindow->gWindow->glDraw (oTransform, attrib, infiniteRegion,
 				     PAINT_WINDOW_TRANSFORMED_MASK |
 				     PAINT_WINDOW_BLEND_MASK |
 				     PAINT_WINDOW_ON_TRANSFORMED_SCREEN_MASK);
+#ifndef USE_GLES
       uTrayWindow->gWindow->glDrawGeometrySetCurrentIndex (oldGlDrawGeometryIndex);
+#endif
       uTrayWindow->gWindow->glAddGeometrySetCurrentIndex (oldGlAddGeometryIndex);
       uTrayWindow->gWindow->glDrawSetCurrentIndex (oldGlDrawIndex);
       painting_tray_ = false;
@@ -1891,7 +1903,11 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
       {
         if (xwns[i] == id)
         {
+#ifdef USE_GLES
+          uScreen->paintDisplay();
+#else
           uScreen->paintDisplay(region, matrix, mask);
+#endif          
           break;
         }
       }

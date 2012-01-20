@@ -661,7 +661,7 @@ UnityDialogWindow::glDraw(const GLMatrix& transform,
    * dim render on top */
   bool status = gWindow->glDraw(transform,
 #ifdef USE_GLES
-                                attrib
+                                attrib,
 #else
                                 fragment,
 #endif

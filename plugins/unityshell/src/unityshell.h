@@ -47,7 +47,9 @@
 #include "DebugDBusInterface.h"
 #include "SwitcherController.h"
 #include "UBusWrapper.h"
+#ifndef USE_GLES
 #include "ScreenEffectFramebufferObject.h"
+#endif
 
 #include "compizminimizedwindowhandler.h"
 #include "BGHash.h"
@@ -128,7 +130,11 @@ public:
   void nuxEpilogue();
 
   /* nux draw wrapper */
+#ifdef USE_GLES
+  void paintDisplay();
+#else
   void paintDisplay(const CompRegion& region, const GLMatrix& transform, unsigned int mask);
+#endif
   void paintPanelShadow(const GLMatrix& matrix);
 
   void preparePaint (int ms);
@@ -295,8 +301,12 @@ private:
 
   unity::BGHash _bghash;
 
+#ifdef USE_GLES
+  GLFramebufferObject *oldFbo;
+#else
   ScreenEffectFramebufferObject::Ptr _fbo;
   GLuint                             _active_fbo;
+#endif
 
   bool   queryForShader ();
 
@@ -307,7 +317,9 @@ private:
   bool                   painting_tray_;
   unsigned int           tray_paint_mask_;
 
+#ifndef USE_GLES
   ScreenEffectFramebufferObject::GLXGetProcAddressProc glXGetProcAddressP;
+#endif
 
   friend class UnityWindow;
 };

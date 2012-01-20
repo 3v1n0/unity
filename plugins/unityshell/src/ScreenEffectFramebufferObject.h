@@ -20,6 +20,7 @@
 #ifndef UNITY_SCREENEFFECT_FRAMEBUFFER_H
 #define UNITY_SCREENEFFECT_FRAMEBUFFER_H
 
+#ifndef USE_GLES
 #include <Nux/Nux.h>
 
 namespace unity
@@ -84,4 +85,5 @@ private:
 };
 } // namespace unity
 
+#endif // USE_GLES
 #endif
