@@ -68,7 +68,8 @@ void FilterBasicButton::InitTheme()
     normal_.reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &FilterBasicButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_NORMAL)));
   }
 
-  // SetMinimumHeight(32);
+  SetMinimumHeight(30);
+  SetMinimumWidth(48);
 }
 
 void FilterBasicButton::RedrawTheme(nux::Geometry const& geom, cairo_t* cr, nux::ButtonVisualState faked_state)
@@ -79,6 +80,7 @@ void FilterBasicButton::RedrawTheme(nux::Geometry const& geom, cairo_t* cr, nux:
 long FilterBasicButton::ComputeContentSize()
 {
   long ret = nux::Button::ComputeContentSize();
+  
   nux::Geometry const& geo = GetGeometry();
 
   if (cached_geometry_ != geo)

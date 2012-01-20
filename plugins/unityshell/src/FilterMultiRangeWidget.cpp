@@ -163,12 +163,12 @@ void FilterMultiRange::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   nux::GetPainter().PaintBackground(GfxContext, geo);
 
   // debug layout
-  nux::Color blue(0.0, 0.0, 1.0, 0.5);
+  /*nux::Color blue(0.0, 0.0, 1.0, 0.5);
   nux::Color orange(1.0, 0.5, 0.25, 0.5);
   nux::Color yellow(1.0, 1.0, 0.0, 0.5);
   nux::GetPainter().Paint2DQuadColor(GfxContext, GetGeometry(), yellow);
   nux::GetPainter().Paint2DQuadColor(GfxContext, layout_->GetGeometry(), blue);
-  nux::GetPainter().Paint2DQuadColor(GfxContext, all_button_->GetGeometry(), orange);
+  nux::GetPainter().Paint2DQuadColor(GfxContext, all_button_->GetGeometry(), orange);*/
 
   GfxContext.PopClippingRectangle();
 }
