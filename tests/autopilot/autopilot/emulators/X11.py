@@ -24,6 +24,9 @@ from Xlib import XK
 from Xlib.display import Display
 from Xlib.ext.xtest import fake_input
 
+_PRESSED_KEYS = []
+_DISPLAY = Display()
+
 class Keyboard(object):
     """Wrapper around xlib to make faking keyboard input possible."""
     _lame_hardcoded_keycodes = {
@@ -74,11 +77,8 @@ class Keyboard(object):
         '}' : "braceright",
         '~' : "asciitilde"
         }
-    
-    def __init__(self):
-        self._display = Display()
 
-    def press(self, keys, delay=0.1):
+    def press(self, keys, delay=0.2):
         """Send key press events only.
 
         keys can either be a string, in which case each character in the string
@@ -93,7 +93,7 @@ class Keyboard(object):
         self.__perform_on_keys(keys, X.KeyPress)            
         sleep(delay)
 
-    def release(self, keys, delay=0.1):
+    def release(self, keys, delay=0.2):
         """Send key release events only.
 
         keys can either be a string, in which case each character in the string
@@ -108,7 +108,7 @@ class Keyboard(object):
         self.__perform_on_keys(keys, X.KeyRelease)
         sleep(delay)
         
-    def press_and_release(self, keys, delay=0.1):
+    def press_and_release(self, keys, delay=0.2):
         """Press and release all items in 'keys'.
 
         This is the same as calling 'press(keys);release(keys)'.
@@ -141,6 +141,17 @@ class Keyboard(object):
             self.press(key, delay)
             self.release(key, delay)
 
+    @staticmethod
+    def cleanup():
+        """Generate KeyRelease events for any pressed keys.
+
+        Make sure you call this at the end of any test to release 
+        any keys that were pressed and not released.
+
+        """
+        for keycode in _PRESSED_KEYS:
+            fake_input(_DISPLAY, X.KeyRelease, keycode)
+
     def __perform_on_keys(self, keys, event):
         control_key = False
         keycode = 0
@@ -159,10 +170,15 @@ class Keyboard(object):
                 keycode, shift_mask = self.__char_to_keycode(key)
 
             if shift_mask != 0:
-                fake_input(self._display, event, 50)
+                fake_input(_DISPLAY, event, 50)
 
-            fake_input(self._display, event, keycode)
-        self._display.sync()
+            if event == X.KeyPress:
+                _PRESSED_KEYS.append(keycode)
+            elif event == X.KeyRelease:
+                _PRESSED_KEYS.remove(keycode)
+
+            fake_input(_DISPLAY, event, keycode)
+        _DISPLAY.sync()
 
     def __get_keysym(self, key) :
         keysym = XK.string_to_keysym(key)
@@ -182,7 +198,7 @@ class Keyboard(object):
 
     def __char_to_keycode(self, key) :
         keysym = self.__get_keysym(key)
-        keycode = self._display.keysym_to_keycode(keysym)
+        keycode = _DISPLAY.keysym_to_keycode(keysym)
         if keycode == 0 :
             print "Sorry, can't map", key
             
@@ -195,9 +211,6 @@ class Keyboard(object):
 
 class Mouse(object):
     """Wrapper around xlib to make moving the mouse easier."""
-	
-    def __init__(self):
-        self._display = Display()
 
     @property
     def x(self):
@@ -211,13 +224,13 @@ class Mouse(object):
 		
     def press(self, button=1):
         """Press mouse button at current mouse location."""
-        fake_input(self._display, X.ButtonPress, button)
-        self._display.sync()
+        fake_input(_DISPLAY, X.ButtonPress, button)
+        _DISPLAY.sync()
 		
     def release(self, button=1):
         """Releases mouse button at current mouse location."""
-        fake_input(self._display, X.ButtonRelease, button)
-        self._display.sync()
+        fake_input(_DISPLAY, X.ButtonRelease, button)
+        _DISPLAY.sync()
 		
     def click(self, button=1):
         """Click mouse at current location."""
@@ -228,8 +241,8 @@ class Mouse(object):
     def move(self, x, y, animate=True):
         """Moves mouse to location (x, y)."""
         def perform_move(x, y):
-            fake_input(self._display, X.MotionNotify, x=x, y=y)
-            self._display.sync()
+            fake_input(_DISPLAY, X.MotionNotify, x=x, y=y)
+            _DISPLAY.sync()
             sleep(0.001)
 
         if not animate:
@@ -259,7 +272,7 @@ class Mouse(object):
 				
     def position(self):
         """Returns the current position of the mouse pointer."""
-        coord = self._display.screen().root.query_pointer()._data
+        coord = _DISPLAY.screen().root.query_pointer()._data
         x, y = coord["root_x"], coord["root_y"]
         return x, y
 	
