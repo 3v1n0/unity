@@ -89,6 +89,7 @@ public:
     if (i != reg_by_id_.end())
     {
       LOG_ERROR(logger) << "Category '" << c_id << "' already registered!";
+      g_free(c_id);
       return;
     }
 
@@ -225,7 +226,6 @@ public:
   CategoryMerger(glib::Object<DeeModel> target,
                    HomeLens::CategoryRegistry* cat_registry);
 
-protected:
   void OnSourceRowAdded(DeeModel *model, DeeModelIter *iter);
   void OnSourceRowRemoved(DeeModel *model, DeeModelIter *iter);
 
@@ -535,7 +535,7 @@ void HomeLens::ModelMerger::EnsureRowBuf(DeeModel *model)
       if (n_cols_ != n_cols1)
       {
         LOG_ERROR(logger) << "Schema mismatch between source and target model. Expected "
-                          << n_cols1 << " columns, but found"
+                          << n_cols1 << " columns, but found "
                           << n_cols_ << ".";
         n_cols_ = 0;
         return;
@@ -796,6 +796,20 @@ void HomeLens::Impl::OnLensAdded (Lens::Ptr& lens)
   {
     filters_merger_.AddSource(model);
   });
+
+  /*
+   * Register pre-existing categories up front
+   * FIXME: Do the same for results?
+   */
+  DeeModel* cats = categories_prop();
+  DeeModelIter* cats_iter;
+  DeeModelIter* cats_end;
+  for (cats_iter = dee_model_get_first_iter(cats), cats_end = dee_model_get_last_iter(cats);
+      cats_iter != cats_end;
+      cats_iter = dee_model_next(cats, cats_iter))
+  {
+    categories_merger_.OnSourceRowAdded(cats, cats_iter);
+  }
 }
 
 HomeLens::HomeLens(std::string const& name, std::string const& description, std::string const& search_hint)
