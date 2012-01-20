@@ -76,12 +76,13 @@ protected:
   void OnSearchChanged(std::string const& search_string);
   virtual long PostLayoutManagement(long LayoutResult);
 private:
+  void OnMouseButtonDown(int x, int y, unsigned long button, unsigned long key);
   void OnKeyDown (unsigned long event_type, unsigned long event_keysym,
                                 unsigned long event_state, const TCHAR* character,
                                 unsigned short key_repeat_count);
   void Draw(nux::GraphicsEngine& gfx_context, bool force_draw);
   void DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw);
-
+  bool InspectKeyEvent(unsigned int eventType, unsigned int key_sym, const char* character);
   bool AcceptKeyNavFocus();
   nux::Geometry GetBestFitGeometry(nux::Geometry const& for_geo);
 
