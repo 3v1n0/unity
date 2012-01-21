@@ -47,62 +47,34 @@ public:
   void Quit();
   void Stick();
   void UnStick();
-
   void ActivateLauncherIcon(ActionArg arg);
 
   virtual bool ShowInSwitcher();
   virtual unsigned long long SwitcherPriority();
 
   std::vector<Window> RelatedXids();
-
   std::string NameForWindow (Window window);
 
 protected:
-  std::list<DbusmenuMenuitem*> GetMenus();
-
   void UpdateIconGeometries(nux::Point3 center);
   void OnCenterStabilized(nux::Point3 center);
-
   void AddProperties(GVariantBuilder* builder);
-
-  const gchar* GetRemoteUri();
-
-  nux::DndAction OnQueryAcceptDrop(unity::DndData& dnd_data);
   void OnAcceptDrop(unity::DndData& dnd_data);
   void OnDndEnter();
   void OnDndLeave();
-
   void OpenInstanceLauncherIcon(ActionArg arg);
 
+  nux::DndAction OnQueryAcceptDrop(unity::DndData& dnd_data);
+
+  std::list<DbusmenuMenuitem*> GetMenus();
   std::set<std::string> ValidateUrisForLaunch(unity::DndData& dnd_data);
 
+  const gchar* GetRemoteUri();
   char* BamfName();
 
   bool HandlesSpread() { return true; }
 
 private:
-  glib::Object<BamfApplication> _bamf_app;
-  Launcher* _launcher;
-  std::map<std::string, DbusmenuClient*> _menu_clients;
-  std::map<std::string, DbusmenuMenuitem*> _menu_items;
-  std::map<std::string, DbusmenuMenuitem*> _menu_items_extra;
-  std::map<std::string, gulong> _menu_callbacks;
-  DbusmenuMenuitem* _menu_desktop_shortcuts;
-  gchar* _remote_uri;
-  bool _dnd_hovered;
-  guint _dnd_hover_timer;
-
-  gchar* _cached_desktop_file;
-  gchar* _cached_name;
-
-  GFileMonitor* _desktop_file_monitor;
-  gulong _on_desktop_file_changed_handler_id;
-
-  std::set<std::string> _supported_types;
-  bool _supported_types_filled;
-  guint _fill_supported_types_id;
-  guint32 _window_moved_id;
-
   void EnsureWindowState();
 
   void UpdateDesktopFile();
@@ -117,8 +89,9 @@ private:
 
   void OnWindowMinimized(guint32 xid);
   void OnWindowMoved(guint32 xid);
+
   bool OwnsWindow(Window w);
-  
+
   const std::set<std::string>& GetSupportedTypes();
 
   static void OnClosed(BamfView* view, gpointer data);
@@ -141,6 +114,29 @@ private:
 
   static gboolean OnDndHoveredTimeout(gpointer data);
   static gboolean FillSupportedTypes(gpointer data);
+
+
+  glib::Object<BamfApplication> _bamf_app;
+  Launcher* _launcher;
+  std::map<std::string, DbusmenuClient*> _menu_clients;
+  std::map<std::string, DbusmenuMenuitem*> _menu_items;
+  std::map<std::string, DbusmenuMenuitem*> _menu_items_extra;
+  std::map<std::string, gulong> _menu_callbacks;
+  DbusmenuMenuitem* _menu_desktop_shortcuts;
+  gchar* _remote_uri;
+  bool _dnd_hovered;
+  guint _dnd_hover_timer;
+
+  gchar* _cached_desktop_file;
+  gchar* _cached_name;
+
+  GFileMonitor* _desktop_file_monitor;
+  gulong _on_desktop_file_changed_handler_id;
+
+  std::set<std::string> _supported_types;
+  bool _supported_types_filled;
+  guint _fill_supported_types_id;
+  guint32 _window_moved_id;
 };
 
 }
