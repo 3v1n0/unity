@@ -163,7 +163,7 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
   }
 
   if (arg.source != ActionArg::SWITCHER)
-    ubus_server_send_message(ubus_server_get_default(), UBUS_LAUNCHER_ACTION_DONE, NULL);
+    ubus_server_send_message(ubus_server_get_default(), UBUS_LAUNCHER_ACTION_DONE, nullptr);
 }
 
 BamfLauncherIcon::BamfLauncherIcon(Launcher* IconManager, BamfApplication* app)
@@ -171,15 +171,15 @@ BamfLauncherIcon::BamfLauncherIcon(Launcher* IconManager, BamfApplication* app)
   , _supported_types_filled(false)
   , _fill_supported_types_id(0)
 {
-  _cached_desktop_file = NULL;
-  _cached_name = NULL;
+  _cached_desktop_file = nullptr;
+  _cached_name = nullptr;
   m_App = app;
   _remote_uri = 0;
   _dnd_hover_timer = 0;
   _dnd_hovered = false;
   _launcher = IconManager;
-  _desktop_file_monitor = NULL;
-  _menu_desktop_shortcuts = NULL;
+  _desktop_file_monitor = nullptr;
+  _menu_desktop_shortcuts = nullptr;
   _on_desktop_file_changed_handler_id = 0;
   _window_moved_id = 0;
   glib::String icon(bamf_view_get_icon(BAMF_VIEW(m_App)));
@@ -372,12 +372,12 @@ bool BamfLauncherIcon::IsSticky()
 
 void BamfLauncherIcon::UpdateDesktopFile()
 {
-  char* filename = NULL;
+  char* filename = nullptr;
   filename = (char*) bamf_application_get_desktop_file(m_App);
 
-  if (filename != NULL && g_strcmp0(_cached_desktop_file, filename) != 0)
+  if (filename != nullptr && g_strcmp0(_cached_desktop_file, filename) != 0)
   {
-    if (_cached_desktop_file != NULL)
+    if (_cached_desktop_file != nullptr)
       g_free(_cached_desktop_file);
 
     _cached_desktop_file = g_strdup(filename);
@@ -395,7 +395,7 @@ void BamfLauncherIcon::UpdateDesktopFile()
 
     GFile* desktop_file = g_file_new_for_path(DesktopFile());
     _desktop_file_monitor = g_file_monitor_file(desktop_file, G_FILE_MONITOR_NONE,
-                                                NULL, NULL);
+                                                nullptr, nullptr);
     g_file_monitor_set_rate_limit (_desktop_file_monitor, 1000);
     _on_desktop_file_changed_handler_id = g_signal_connect(_desktop_file_monitor,
                                                            "changed",
@@ -414,10 +414,10 @@ const char* BamfLauncherIcon::BamfName()
 {
   gchar* name = bamf_view_get_name(BAMF_VIEW(m_App));
 
-  if (name == NULL)
+  if (name == nullptr)
     name = g_strdup("");
 
-  if (_cached_name != NULL)
+  if (_cached_name != nullptr)
     g_free(_cached_name);
 
   _cached_name = name;
@@ -484,30 +484,30 @@ bool BamfLauncherIcon::OwnsWindow(Window w)
 void BamfLauncherIcon::OpenInstanceWithUris(std::set<std::string> uris)
 {
   GDesktopAppInfo* appInfo;
-  GError* error = NULL;
+  GError* error = nullptr;
 
   appInfo = g_desktop_app_info_new_from_filename(DesktopFile());
 
   if (g_app_info_supports_uris(G_APP_INFO(appInfo)))
   {
-    GList* list = NULL;
+    GList* list = nullptr;
 
     for (auto  it : uris)
       list = g_list_prepend(list, g_strdup(it.c_str()));
 
-    g_app_info_launch_uris(G_APP_INFO(appInfo), list, NULL, &error);
+    g_app_info_launch_uris(G_APP_INFO(appInfo), list, nullptr, &error);
     g_list_free_full(list, g_free);
   }
   else if (g_app_info_supports_files(G_APP_INFO(appInfo)))
   {
-    GList* list = NULL, *l;
+    GList* list = nullptr, *l;
     
     for (auto it : uris)
     {
       GFile* file = g_file_new_for_uri(it.c_str());
       list = g_list_prepend(list, file);
     }
-    g_app_info_launch(G_APP_INFO(appInfo), list, NULL, &error);
+    g_app_info_launch(G_APP_INFO(appInfo), list, nullptr, &error);
 
     for (l = list; l; l = l->next)
       g_object_unref(G_FILE(list->data));
@@ -516,7 +516,7 @@ void BamfLauncherIcon::OpenInstanceWithUris(std::set<std::string> uris)
   }
   else
   {
-    g_app_info_launch(G_APP_INFO(appInfo), NULL, NULL, &error);
+    g_app_info_launch(G_APP_INFO(appInfo), nullptr, nullptr, &error);
   }
 
   g_object_unref(appInfo);
@@ -534,7 +534,7 @@ void BamfLauncherIcon::OpenInstanceLauncherIcon(ActionArg arg)
 {
   std::set<std::string> empty;
   OpenInstanceWithUris(empty);
-  ubus_server_send_message(ubus_server_get_default(), UBUS_LAUNCHER_ACTION_DONE, NULL);
+  ubus_server_send_message(ubus_server_get_default(), UBUS_LAUNCHER_ACTION_DONE, nullptr);
 }
 
 void BamfLauncherIcon::Focus(ActionArg arg)
@@ -740,7 +740,7 @@ void BamfLauncherIcon::UpdateDesktopQuickList()
 {
   IndicatorDesktopShortcuts* desktop_shortcuts;
   GKeyFile* keyfile;
-  GError* error = NULL;
+  GError* error = nullptr;
   const char *desktop_file;
 
   desktop_file = DesktopFile();
@@ -755,7 +755,7 @@ void BamfLauncherIcon::UpdateDesktopQuickList()
   keyfile = g_key_file_new();
   g_key_file_load_from_file(keyfile, desktop_file, G_KEY_FILE_NONE, &error);
 
-  if (error != NULL)
+  if (error != nullptr)
   {
     g_warning("Could not load desktop file for: %s", desktop_file);
     g_key_file_free(keyfile);
@@ -764,7 +764,7 @@ void BamfLauncherIcon::UpdateDesktopQuickList()
   }
 
   if (g_key_file_has_key(keyfile, G_KEY_FILE_DESKTOP_GROUP,
-                         "X-Ayatana-Desktop-Shortcuts", NULL))
+                         "X-Ayatana-Desktop-Shortcuts", nullptr))
   {
     DbusmenuMenuitem* root = dbusmenu_menuitem_new();
     dbusmenu_menuitem_set_root(root, TRUE);
@@ -835,7 +835,7 @@ void BamfLauncherIcon::UpdateMenus()
   g_list_free(children);
 
   // add dynamic quicklist
-  if (_menuclient_dynamic_quicklist != NULL)
+  if (_menuclient_dynamic_quicklist != nullptr)
   {
     auto menu_client = DBUSMENU_CLIENT(g_object_ref(_menuclient_dynamic_quicklist));
     _menu_clients["dynamicquicklist"] = menu_client;
@@ -967,7 +967,7 @@ static void OnAppLabelActivated(DbusmenuMenuitem* sender,
                                 guint             timestamp,
                                 gpointer data)
 {
-  BamfLauncherIcon* self = NULL;
+  BamfLauncherIcon* self = nullptr;
 
   if (!data)
     return;
@@ -981,21 +981,21 @@ std::list<DbusmenuMenuitem*> BamfLauncherIcon::GetMenus()
   std::map<std::string, DbusmenuClient*>::iterator it;
   std::list<DbusmenuMenuitem*> result;
   bool first_separator_needed = false;
-  DbusmenuMenuitem* item = NULL;
+  DbusmenuMenuitem* item = nullptr;
 
   // FIXME for O: hack around the wrong abstraction
   UpdateMenus();
 
   for (it = _menu_clients.begin(); it != _menu_clients.end(); it++)
   {
-    GList* child = NULL;
+    GList* child = nullptr;
     DbusmenuClient* client = (*it).second;
     DbusmenuMenuitem* root = dbusmenu_client_get_root(client);
 
     if (!root || !dbusmenu_menuitem_property_get_bool(root, DBUSMENU_MENUITEM_PROP_VISIBLE))
       continue;
 
-    for (child = dbusmenu_menuitem_get_children(root); child != NULL; child = g_list_next(child))
+    for (child = dbusmenu_menuitem_get_children(root); child != nullptr; child = g_list_next(child))
     {
       DbusmenuMenuitem* item = (DbusmenuMenuitem*) child->data;
 
@@ -1015,10 +1015,10 @@ std::list<DbusmenuMenuitem*> BamfLauncherIcon::GetMenus()
   // FIXME: this should totally be added as a _menu_client
   if (DBUSMENU_IS_MENUITEM(_menu_desktop_shortcuts))
   {
-    GList* child = NULL;
+    GList* child = nullptr;
     DbusmenuMenuitem* root = _menu_desktop_shortcuts;
 
-    for (child = dbusmenu_menuitem_get_children(root); child != NULL; child = g_list_next(child))
+    for (child = dbusmenu_menuitem_get_children(root); child != nullptr; child = g_list_next(child))
     {
       DbusmenuMenuitem* item = (DbusmenuMenuitem*) child->data;
 
@@ -1107,7 +1107,7 @@ std::list<DbusmenuMenuitem*> BamfLauncherIcon::GetMenus()
     for (it_l = result.begin(); it_l != result.end(); it_l++)
     {
       const gchar* type = dbusmenu_menuitem_property_get(*it_l, DBUSMENU_MENUITEM_PROP_TYPE);
-      if (type == NULL)//(g_strcmp0 (type, DBUSMENU_MENUITEM_PROP_LABEL) == 0)
+      if (type == nullptr)//(g_strcmp0 (type, DBUSMENU_MENUITEM_PROP_LABEL) == 0)
       {
         std::string label_menu = dbusmenu_menuitem_property_get(*it_l, DBUSMENU_MENUITEM_PROP_LABEL);
         if (label_menu.compare(label_default) == 0)
@@ -1336,7 +1336,7 @@ BamfLauncherIcon::FillSupportedTypes(gpointer data)
       return false;
     }
     
-    char** mimes = g_key_file_get_string_list(key_file, "Desktop Entry", "MimeType", NULL, NULL);
+    char** mimes = g_key_file_get_string_list(key_file, "Desktop Entry", "MimeType", nullptr, nullptr);
     if (!mimes)
     {
       g_key_file_free(key_file);
