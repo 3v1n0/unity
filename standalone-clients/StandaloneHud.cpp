@@ -77,20 +77,24 @@ void TestRunner::Init ()
   // things the controller normally does
   hud_service_.queries_updated.connect([&] (unity::hud::Hud::Queries queries) {
     hud_view_->SetQueries(queries);
-    if (queries.empty() == false)
+    std::string icon_name = "";
+    for (auto query = queries.begin(); query != queries.end(); query++)
     {
-      hud_view_->SetIcon(queries.front()->icon_name);
+      if (!(*query)->icon_name.empty())
+      {
+        icon_name = (*query)->icon_name;
+        break;
+      }
     }
+ 
+   hud_view_->SetIcon(icon_name);
+
   });
 
   hud_view_->query_activated.connect([&] (unity::hud::Query::Ptr query) {
     hud_service_.ExecuteQuery(query, 0);
   });  
   
-//   hud_service_.target_icon.changed.connect([&] (std::string icon_name) {
-//     hud_view_->SetIcon(icon_name);
-//   });
-
   hud_view_->query_selected.connect([&] (unity::hud::Query::Ptr query) {
     hud_view_->SetIcon(query->icon_name);
   });
@@ -104,7 +108,8 @@ void TestRunner::Init ()
   });
 
   hud_service_.RequestQuery("");
-  
+ 
+  hud_view_->SetWindowGeometry(layout->GetAbsoluteGeometry(), layout->GetGeometry());
 
 }
 

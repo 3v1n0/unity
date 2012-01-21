@@ -47,6 +47,7 @@ namespace
 {
 nux::logging::Logger logger("unity.hud.view");
 int icon_size = 42;
+const std::string default_text = _("Type your command");
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(View);
@@ -86,6 +87,7 @@ View::~View()
 void View::ResetToDefault()
 {
   search_bar_->search_string = "";
+  search_bar_->search_hint = default_text;
 }
 
 void View::Relayout()
@@ -212,7 +214,7 @@ void View::SetupViews()
 
   // add the search bar to the composite
   search_bar_ = new unity::hud::SearchBar();
-  search_bar_->search_hint = "Type your command";
+  search_bar_->search_hint = default_text;
   search_bar_->search_changed.connect(sigc::mem_fun(this, &View::OnSearchChanged));
   content_layout_->AddView(search_bar_, 0, nux::MINOR_POSITION_LEFT);
   
@@ -225,7 +227,14 @@ void View::OnSearchChanged(std::string const& search_string)
 {
   LOG_DEBUG(logger) << "got search change";
   search_changed.emit(search_string);
-  search_bar_->search_hint = "";
+  if (search_string.empty())
+  {
+    search_bar_->search_hint = default_text;
+  }
+  else
+  {
+    search_bar_->search_hint = "";
+  }
 }
 
 
@@ -293,9 +302,14 @@ bool View::InspectKeyEvent(unsigned int eventType,
   if ((eventType == nux::NUX_KEYDOWN) && (key_sym == NUX_VK_ESCAPE))
   {
     if (search_bar_->search_string == "")
+    {
       ubus.SendMessage(UBUS_HUD_CLOSE_REQUEST);
+    }
     else
+    {
       search_bar_->search_string = "";
+      search_bar_->search_hint = default_text;
+    }
     return true;
   }
   return false;

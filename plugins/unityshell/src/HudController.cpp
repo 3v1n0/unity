@@ -335,12 +335,17 @@ void Controller::OnQuerySelected(Query::Ptr query)
 void Controller::OnQueriesFinished(Hud::Queries queries)
 {
   view_->SetQueries(queries);
-  if (queries.empty() == false)
+  std::string icon_name = "";
+  for (auto query = queries.begin(); query != queries.end(); query++)
   {
-    LOG_DEBUG(logger) << "setting icon to " << queries.front()->icon_name;
-    view_->SetIcon(queries.front()->icon_name);
+    if (!(*query)->icon_name.empty())
+    {
+      icon_name = (*query)->icon_name;
+      break;
+    }
   }
-  view_->NeedRedraw();
+  
+  view_->SetIcon(icon_name);
 }
 
 // Introspectable
