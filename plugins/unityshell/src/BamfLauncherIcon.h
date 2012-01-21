@@ -122,7 +122,7 @@ private:
   std::map<std::string, DbusmenuMenuitem*> _menu_items;
   std::map<std::string, DbusmenuMenuitem*> _menu_items_extra;
   std::map<std::string, gulong> _menu_callbacks;
-  DbusmenuMenuitem* _menu_desktop_shortcuts;
+  glib::Object<DbusmenuMenuitem> _menu_desktop_shortcuts;
   gchar* _remote_uri;
   bool _dnd_hovered;
   guint _dnd_hover_timer;

@@ -256,9 +256,6 @@ BamfLauncherIcon::~BamfLauncherIcon()
     g_object_unref(G_OBJECT(it->second));
   }
 
-  if (G_IS_OBJECT(_menu_desktop_shortcuts))
-    g_object_unref(G_OBJECT(_menu_desktop_shortcuts));
-
   if (_on_desktop_file_changed_handler_id != 0)
     g_signal_handler_disconnect(G_OBJECT(_desktop_file_monitor),
                                 _on_desktop_file_changed_handler_id);
@@ -759,8 +756,8 @@ void BamfLauncherIcon::UpdateDesktopQuickList()
   if (g_key_file_has_key(keyfile, G_KEY_FILE_DESKTOP_GROUP,
                          "X-Ayatana-Desktop-Shortcuts", nullptr))
   {
-    DbusmenuMenuitem* root = dbusmenu_menuitem_new();
-    dbusmenu_menuitem_set_root(root, TRUE);
+    _menu_desktop_shortcuts = dbusmenu_menuitem_new();
+    dbusmenu_menuitem_set_root(_menu_desktop_shortcuts, TRUE);
     desktop_shortcuts = indicator_desktop_shortcuts_new(desktop_file, "Unity");
     const gchar** nicks = indicator_desktop_shortcuts_get_nicks(desktop_shortcuts);
 
@@ -770,7 +767,6 @@ void BamfLauncherIcon::UpdateDesktopQuickList()
       while (((gpointer*) nicks)[index])
       {
         gchar* name;
-        DbusmenuMenuitem* item;
         name = indicator_desktop_shortcuts_nick_get_name(desktop_shortcuts,
                                                          nicks[index]);
         ShortcutData* data = g_slice_new0(ShortcutData);
@@ -778,7 +774,7 @@ void BamfLauncherIcon::UpdateDesktopQuickList()
         data->shortcuts = INDICATOR_DESKTOP_SHORTCUTS(g_object_ref(desktop_shortcuts));
         data->nick = g_strdup(nicks[index]);
 
-        item = dbusmenu_menuitem_new();
+        glib::Object<DbusmenuMenuitem> item(dbusmenu_menuitem_new());
         dbusmenu_menuitem_property_set(item, DBUSMENU_MENUITEM_PROP_LABEL, name);
         dbusmenu_menuitem_property_set_bool(item, DBUSMENU_MENUITEM_PROP_ENABLED, TRUE);
         dbusmenu_menuitem_property_set_bool(item, DBUSMENU_MENUITEM_PROP_VISIBLE, TRUE);
@@ -786,19 +782,12 @@ void BamfLauncherIcon::UpdateDesktopQuickList()
                               (GCallback) shortcut_activated, (gpointer) data,
                               (GClosureNotify) shortcut_data_destroy, (GConnectFlags)0);
 
-        dbusmenu_menuitem_child_append(root, item);
-        g_object_unref(item);
-
+        dbusmenu_menuitem_child_append(_menu_desktop_shortcuts, item);
         index++;
 
         g_free(name);
       }
     }
-
-    if (G_IS_OBJECT(_menu_desktop_shortcuts))
-      g_object_unref(G_OBJECT(_menu_desktop_shortcuts));
-
-    _menu_desktop_shortcuts = root;
   }
 
   g_key_file_free(keyfile);
@@ -835,7 +824,7 @@ void BamfLauncherIcon::UpdateMenus()
   }
 
   // make a client for desktop file actions
-  if (!DBUSMENU_IS_MENUITEM(_menu_desktop_shortcuts))
+  if (!DBUSMENU_IS_MENUITEM(_menu_desktop_shortcuts.RawPtr()))
   {
     UpdateDesktopQuickList();
   }
@@ -988,7 +977,7 @@ std::list<DbusmenuMenuitem*> BamfLauncherIcon::GetMenus()
     if (!root || !dbusmenu_menuitem_property_get_bool(root, DBUSMENU_MENUITEM_PROP_VISIBLE))
       continue;
 
-    for (child = dbusmenu_menuitem_get_children(root); child != nullptr; child = g_list_next(child))
+    for (child = dbusmenu_menuitem_get_children(root); child; child = child->next)
     {
       DbusmenuMenuitem* item = (DbusmenuMenuitem*) child->data;
 
@@ -1006,12 +995,11 @@ std::list<DbusmenuMenuitem*> BamfLauncherIcon::GetMenus()
   }
 
   // FIXME: this should totally be added as a _menu_client
-  if (DBUSMENU_IS_MENUITEM(_menu_desktop_shortcuts))
+  if (DBUSMENU_IS_MENUITEM(_menu_desktop_shortcuts.RawPtr()))
   {
     GList* child = nullptr;
-    DbusmenuMenuitem* root = _menu_desktop_shortcuts;
 
-    for (child = dbusmenu_menuitem_get_children(root); child != nullptr; child = g_list_next(child))
+    for (child = dbusmenu_menuitem_get_children(_menu_desktop_shortcuts); child; child = child->next)
     {
       DbusmenuMenuitem* item = (DbusmenuMenuitem*) child->data;
 
