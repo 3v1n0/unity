@@ -20,9 +20,6 @@
 #ifndef BAMFLAUNCHERICON_H
 #define BAMFLAUNCHERICON_H
 
-/* Compiz */
-#include <core/core.h>
-
 #include <Nux/BaseWindow.h>
 #include <NuxCore/Math/MathInc.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
@@ -55,7 +52,7 @@ public:
   virtual bool ShowInSwitcher();
   virtual unsigned long long SwitcherPriority();
 
-  std::vector<Window> RelatedXids ();
+  std::vector<Window> RelatedXids();
 
   std::string NameForWindow (Window window);
 
@@ -82,7 +79,7 @@ protected:
 
   const char* BamfName();
 
-  bool HandlesSpread () { return true; }
+  bool HandlesSpread() { return true; }
 
 private:
   BamfApplication* m_App;
@@ -106,7 +103,6 @@ private:
   bool _supported_types_filled;
   guint _fill_supported_types_id;
   guint32 _window_moved_id;
-  guint32 _window_moved_xid;
 
   void EnsureWindowState();
 

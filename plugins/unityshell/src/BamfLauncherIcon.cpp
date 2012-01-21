@@ -350,10 +350,11 @@ void BamfLauncherIcon::OnWindowMinimized(guint32 xid)
 
 void BamfLauncherIcon::OnWindowMoved(guint32 moved_win)
 {
+  if (!OwnsWindow(moved_win))
+    return;
+
   if (_window_moved_id != 0)
     g_source_remove(_window_moved_id);
-
-  _window_moved_xid = moved_win;
 
   _window_moved_id = g_timeout_add(250, [] (gpointer data) -> gboolean
   {
@@ -793,6 +794,7 @@ void BamfLauncherIcon::UpdateDesktopQuickList()
                               (GClosureNotify) shortcut_data_destroy, (GConnectFlags)0);
 
         dbusmenu_menuitem_child_append(root, item);
+        g_object_unref(item);
 
         index++;
 
