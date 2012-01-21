@@ -80,7 +80,7 @@ protected:
   bool HandlesSpread() { return true; }
 
 private:
-  BamfApplication* m_App;
+  BamfApplication* _bamf_app;
   Launcher* _launcher;
   std::map<std::string, DbusmenuClient*> _menu_clients;
   std::map<std::string, DbusmenuMenuitem*> _menu_items;
