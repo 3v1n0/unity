@@ -134,6 +134,10 @@ void View::SetQueries(Hud::Queries queries)
     button->OnKeyNavFocusActivate.connect([&](nux::Area *area) {
       query_activated.emit(dynamic_cast<HudButton*>(area)->GetQuery());
     });
+
+    button->OnKeyNavFocusChange.connect([&](nux::Area *area){
+      query_selected.emit(dynamic_cast<HudButton*>(area)->GetQuery());
+    });
     
     found_items++;
   }
