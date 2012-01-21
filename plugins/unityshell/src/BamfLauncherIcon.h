@@ -24,7 +24,7 @@
 #include <NuxCore/Math/MathInc.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <libbamf/libbamf.h>
-#include <sigc++/sigc++.h>
+#include <UnityCore/GLibSignal.h>
 
 #include "SimpleLauncherIcon.h"
 
@@ -62,8 +62,6 @@ protected:
   void UpdateIconGeometries(nux::Point3 center);
   void OnCenterStabilized(nux::Point3 center);
 
-  void OnLauncherHiddenChanged();
-
   void AddProperties(GVariantBuilder* builder);
 
   const gchar* GetRemoteUri();
@@ -77,7 +75,7 @@ protected:
 
   std::set<std::string> ValidateUrisForLaunch(unity::DndData& dnd_data);
 
-  const char* BamfName();
+  char* BamfName();
 
   bool HandlesSpread() { return true; }
 

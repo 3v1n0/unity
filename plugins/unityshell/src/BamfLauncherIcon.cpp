@@ -168,20 +168,21 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 
 BamfLauncherIcon::BamfLauncherIcon(Launcher* IconManager, BamfApplication* app)
   : SimpleLauncherIcon(IconManager)
+  , m_App(app)
+  , _launcher(IconManager)
+  , _menu_desktop_shortcuts(nullptr)
+  , _remote_uri(nullptr)
+  , _dnd_hovered(false)
+  , _dnd_hover_timer(0)
+  , _cached_desktop_file(nullptr)
+  , _cached_name(nullptr)
+  , _desktop_file_monitor(nullptr)
+  , _on_desktop_file_changed_handler_id(0)
   , _supported_types_filled(false)
   , _fill_supported_types_id(0)
+  , _window_moved_id(0)
 {
-  _cached_desktop_file = nullptr;
-  _cached_name = nullptr;
-  m_App = app;
-  _remote_uri = 0;
-  _dnd_hover_timer = 0;
-  _dnd_hovered = false;
-  _launcher = IconManager;
-  _desktop_file_monitor = nullptr;
-  _menu_desktop_shortcuts = nullptr;
-  _on_desktop_file_changed_handler_id = 0;
-  _window_moved_id = 0;
+  g_object_ref(m_App);
   glib::String icon(bamf_view_get_icon(BAMF_VIEW(m_App)));
 
   tooltip_text = BamfName();
@@ -204,18 +205,15 @@ BamfLauncherIcon::BamfLauncherIcon(Launcher* IconManager, BamfApplication* app)
   g_signal_connect(app, "user-visible-changed", (GCallback) &BamfLauncherIcon::OnUserVisibleChanged, this);
   g_signal_connect(app, "closed", (GCallback) &BamfLauncherIcon::OnClosed, this);
 
-  g_object_ref(m_App);
-
   EnsureWindowState();
   UpdateMenus();
-
   UpdateDesktopFile();
 
   WindowManager::Default()->window_minimized.connect(sigc::mem_fun(this, &BamfLauncherIcon::OnWindowMinimized));
   WindowManager::Default()->window_moved.connect(sigc::mem_fun(this, &BamfLauncherIcon::OnWindowMoved));
   WindowManager::Default()->compiz_screen_viewport_switch_ended.connect(sigc::mem_fun(this, &BamfLauncherIcon::EnsureWindowState));
   WindowManager::Default()->terminate_expo.connect(sigc::mem_fun(this, &BamfLauncherIcon::EnsureWindowState));
-  IconManager->hidden_changed.connect(sigc::mem_fun(this, &BamfLauncherIcon::OnLauncherHiddenChanged));
+  IconManager->hidden_changed.connect([&] () { UpdateIconGeometries(GetCenter()); });
 
   // hack
   SetProgress(0.0f);
@@ -334,11 +332,6 @@ std::string BamfLauncherIcon::NameForWindow (Window window)
   return result;
 }
 
-void BamfLauncherIcon::OnLauncherHiddenChanged()
-{
-  UpdateIconGeometries(GetCenter());
-}
-
 void BamfLauncherIcon::OnWindowMinimized(guint32 xid)
 {
   if (!OwnsWindow(xid))
@@ -410,7 +403,7 @@ const char* BamfLauncherIcon::DesktopFile()
   return _cached_desktop_file;
 }
 
-const char* BamfLauncherIcon::BamfName()
+char* BamfLauncherIcon::BamfName()
 {
   gchar* name = bamf_view_get_name(BAMF_VIEW(m_App));
 
