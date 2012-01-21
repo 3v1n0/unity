@@ -472,20 +472,22 @@ add_executable (hud
                 ${UNITY_SRC}/DashSettings.h
                 ${UNITY_SRC}/DashStyle.cpp
                 ${UNITY_SRC}/DashSearchBarSpinner.cpp
-                ${UNITY_SRC}/Introspectable.cpp
-                ${UNITY_SRC}/JSONParser.cpp
                 ${UNITY_SRC}/HudSearchBar.cpp
                 ${UNITY_SRC}/HudButton.cpp
-                ${UNITY_SRC}/StaticCairoText.cpp
-                ${UNITY_SRC}/IMTextEntry.cpp
+                ${UNITY_SRC}/HudIcon.cpp
+                ${UNITY_SRC}/HudIcon.h
                 ${UNITY_SRC}/HudView.cpp
-                ${UNITY_SRC}/UBusWrapper.cpp
-                ${UNITY_SRC}/ubus-server.cpp
+                ${UNITY_SRC}/IMTextEntry.cpp
+                ${UNITY_SRC}/Introspectable.cpp
                 ${UNITY_SRC}/IconTexture.cpp
                 ${UNITY_SRC}/IconLoader.cpp
+                ${UNITY_SRC}/JSONParser.cpp
+                ${UNITY_SRC}/OverlayRenderer.cpp
+                ${UNITY_SRC}/StaticCairoText.cpp
                 ${UNITY_SRC}/TextureCache.cpp
                 ${UNITY_SRC}/Timer.cpp
-                ${UNITY_SRC}/OverlayRenderer.cpp
+                ${UNITY_SRC}/UBusWrapper.cpp
+                ${UNITY_SRC}/ubus-server.cpp
                 ${UNITY_SRC}/UScreen.cpp
                 ${UNITY_SRC}/UScreen.h
                )

@@ -134,6 +134,10 @@ void View::SetQueries(Hud::Queries queries)
     button->OnKeyNavFocusActivate.connect([&](nux::Area *area) {
       query_activated.emit(dynamic_cast<HudButton*>(area)->GetQuery());
     });
+
+    button->OnKeyNavFocusChange.connect([&](nux::Area *area){
+      query_selected.emit(dynamic_cast<HudButton*>(area)->GetQuery());
+    });
     
     found_items++;
   }
@@ -198,9 +202,9 @@ void View::SetupViews()
   layout_ = new nux::HLayout();
   layout_->AddLayout(new nux::SpaceLayout(8,8,8,8), 0);
   
-  icon_ = new unity::IconTexture("unity", icon_size, icon_size);
-  icon_->SetBaseSize(icon_size, icon_size);
-  icon_->SetMinMaxSize(icon_size, icon_size);
+  icon_ = new Icon("unity", icon_size, icon_size);
+  //icon_->SetBaseSize(icon_size, icon_size);
+  //icon_->SetMinMaxSize(icon_size, icon_size);
   
   nux::Layout* icon_layout = new nux::VLayout();
   icon_layout->SetVerticalExternalMargin(12);

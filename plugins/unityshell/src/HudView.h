@@ -33,7 +33,7 @@
 #include <UnityCore/Hud.h>
 
 #include "UBusWrapper.h"
-#include "IconTexture.h"
+#include "HudIcon.h"
 #include "HudSearchBar.h"
 #include "OverlayRenderer.h"
 
@@ -96,7 +96,7 @@ private:
   nux::VLayout* button_views_;
   unity::hud::SearchBar* search_bar_;
   nux::StaticCairoText* search_hint_;
-  unity::IconTexture* icon_;
+  Icon* icon_;
   bool visible_;
 
   Hud::Queries queries_;
