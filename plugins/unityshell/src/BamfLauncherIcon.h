@@ -25,6 +25,7 @@
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <libbamf/libbamf.h>
 #include <UnityCore/GLibSignal.h>
+#include <UnityCore/GLibWrapper.h>
 
 #include "SimpleLauncherIcon.h"
 
@@ -80,7 +81,7 @@ protected:
   bool HandlesSpread() { return true; }
 
 private:
-  BamfApplication* _bamf_app;
+  glib::Object<BamfApplication> _bamf_app;
   Launcher* _launcher;
   std::map<std::string, DbusmenuClient*> _menu_clients;
   std::map<std::string, DbusmenuMenuitem*> _menu_items;
