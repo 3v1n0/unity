@@ -394,7 +394,7 @@ TEST_F(TestLens, TestFilterCheckOptionLogic)
   EXPECT_FALSE (options[2]->active);
 
   options[2]->active = true;
-  EXPECT_TRUE (filter->filtering);
+  EXPECT_FALSE (filter->filtering);
   EXPECT_TRUE (options[0]->active);
   EXPECT_TRUE (options[1]->active);
   EXPECT_TRUE (options[2]->active);
