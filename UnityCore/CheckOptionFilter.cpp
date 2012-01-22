@@ -89,6 +89,7 @@ void CheckOptionFilter::UpdateState()
   if (!IsValid())
     return;
   gboolean raw_filtering = FALSE;
+  gboolean all_activated = TRUE;
 
   GVariantBuilder options;
   g_variant_builder_init(&options, G_VARIANT_TYPE("a(sssb)"));
@@ -101,12 +102,15 @@ void CheckOptionFilter::UpdateState()
     bool active = option->active;
 
     raw_filtering = raw_filtering ? TRUE : active;
+    all_activated = all_activated ? active : FALSE;
 
     g_variant_builder_add(&options, "(sssb)",
                           id.c_str(), name.c_str(),
                           icon_hint.c_str(), active ? TRUE : FALSE);
   }
-  
+
+  raw_filtering = all_activated ? FALSE : raw_filtering;
+
   GVariantBuilder hints;
   g_variant_builder_init(&hints, G_VARIANT_TYPE("a{sv}"));
   g_variant_builder_add(&hints, "{sv}", "options", g_variant_builder_end(&options));
