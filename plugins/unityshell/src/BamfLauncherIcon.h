@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010 Canonical Ltd
+ * Copyright (C) 2010-2012 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -15,6 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Jason Smith <jason.smith@canonical.com>
+ *              Marco Trevisan (Treviño) <3v1n0@ubuntu.com>
  */
 
 #ifndef BAMFLAUNCHERICON_H
@@ -89,6 +90,7 @@ private:
 
   void OnWindowMinimized(guint32 xid);
   void OnWindowMoved(guint32 xid);
+  void OnLauncherHiddenChanged();
 
   bool OwnsWindow(Window w);
 
@@ -118,11 +120,6 @@ private:
 
   glib::Object<BamfApplication> _bamf_app;
   Launcher* _launcher;
-  std::map<std::string, DbusmenuClient*> _menu_clients;
-  std::map<std::string, DbusmenuMenuitem*> _menu_items;
-  std::map<std::string, DbusmenuMenuitem*> _menu_items_extra;
-  std::map<std::string, gulong> _menu_callbacks;
-  glib::Object<DbusmenuMenuitem> _menu_desktop_shortcuts;
   gchar* _remote_uri;
   bool _dnd_hovered;
   guint _dnd_hover_timer;
@@ -133,10 +130,16 @@ private:
   GFileMonitor* _desktop_file_monitor;
   gulong _on_desktop_file_changed_handler_id;
 
-  std::set<std::string> _supported_types;
   bool _supported_types_filled;
   guint _fill_supported_types_id;
   guint32 _window_moved_id;
+
+  std::set<std::string> _supported_types;
+  std::map<std::string, DbusmenuClient*> _menu_clients;
+  std::map<std::string, DbusmenuMenuitem*> _menu_items;
+  std::map<std::string, DbusmenuMenuitem*> _menu_items_extra;
+  std::map<std::string, gulong> _menu_callbacks;
+  glib::Object<DbusmenuMenuitem> _menu_desktop_shortcuts;
 };
 
 }

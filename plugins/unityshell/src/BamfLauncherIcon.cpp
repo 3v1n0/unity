@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010 Canonical Ltd
+ * Copyright (C) 2010-2012 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -15,6 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Jason Smith <jason.smith@canonical.com>
+ *              Marco Trevisan (Treviño) <3v1n0@ubuntu.com>
  */
 
 #include <Nux/Nux.h>
@@ -170,7 +171,6 @@ BamfLauncherIcon::BamfLauncherIcon(Launcher* IconManager, BamfApplication* app)
   : SimpleLauncherIcon(IconManager)
   , _bamf_app(app, glib::AddRef())
   , _launcher(IconManager)
-  , _menu_desktop_shortcuts(nullptr)
   , _remote_uri(nullptr)
   , _dnd_hovered(false)
   , _dnd_hover_timer(0)
@@ -212,7 +212,7 @@ BamfLauncherIcon::BamfLauncherIcon(Launcher* IconManager, BamfApplication* app)
   WindowManager::Default()->window_moved.connect(sigc::mem_fun(this, &BamfLauncherIcon::OnWindowMoved));
   WindowManager::Default()->compiz_screen_viewport_switch_ended.connect(sigc::mem_fun(this, &BamfLauncherIcon::EnsureWindowState));
   WindowManager::Default()->terminate_expo.connect(sigc::mem_fun(this, &BamfLauncherIcon::EnsureWindowState));
-  IconManager->hidden_changed.connect([&] () { UpdateIconGeometries(GetCenter()); });
+  IconManager->hidden_changed.connect(sigc::mem_fun(this, &BamfLauncherIcon::OnLauncherHiddenChanged));
 
   // hack
   SetProgress(0.0f);
@@ -353,6 +353,11 @@ void BamfLauncherIcon::OnWindowMoved(guint32 moved_win)
     self->_window_moved_id = 0;
     return FALSE;
   }, this);
+}
+
+void BamfLauncherIcon::OnLauncherHiddenChanged()
+{
+  UpdateIconGeometries(GetCenter());
 }
 
 bool BamfLauncherIcon::IsSticky()
