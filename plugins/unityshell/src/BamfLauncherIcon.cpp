@@ -39,26 +39,6 @@ namespace unity
 namespace launcher
 {
 
-struct _ShortcutData
-{
-  BamfLauncherIcon* self;
-  IndicatorDesktopShortcuts* shortcuts;
-  char* nick;
-};
-typedef struct _ShortcutData ShortcutData;
-static void shortcut_data_destroy(ShortcutData* data)
-{
-  g_object_unref(data->shortcuts);
-  g_free(data->nick);
-  g_slice_free(ShortcutData, data);
-}
-
-static void shortcut_activated(DbusmenuMenuitem* _sender, guint timestamp, gpointer userdata)
-{
-  ShortcutData* data = (ShortcutData*)userdata;
-  indicator_desktop_shortcuts_nick_exec(data->shortcuts, data->nick);
-}
-
 BamfLauncherIcon::BamfLauncherIcon(Launcher* IconManager, BamfApplication* app)
   : SimpleLauncherIcon(IconManager)
   , _bamf_app(app, glib::AddRef())
@@ -689,6 +669,26 @@ void BamfLauncherIcon::EnsureWindowState()
   g_list_free(children);
 }
 
+namespace {
+struct ShortcutData
+{
+  IndicatorDesktopShortcuts* shortcuts;
+  gchar* nick;
+};
+
+static void shortcut_data_destroy(ShortcutData* data)
+{
+  g_object_unref(data->shortcuts);
+  g_free(data->nick);
+  delete data;
+}
+
+static void shortcut_activated(DbusmenuMenuitem* _sender, guint timestamp, ShortcutData* data)
+{
+  indicator_desktop_shortcuts_nick_exec(data->shortcuts, data->nick);
+}
+}
+
 void BamfLauncherIcon::UpdateDesktopQuickList()
 {
   IndicatorDesktopShortcuts* desktop_shortcuts;
@@ -698,7 +698,7 @@ void BamfLauncherIcon::UpdateDesktopQuickList()
 
   desktop_file = DesktopFile();
 
-  if (!desktop_file || g_strcmp0(desktop_file, "") == 0)
+  if (!desktop_file || desktop_file[0] == '\0')
     return;
 
   // check that we have the X-Ayatana-Desktop-Shortcuts flag
@@ -731,8 +731,7 @@ void BamfLauncherIcon::UpdateDesktopQuickList()
       {
         glib::String name(indicator_desktop_shortcuts_nick_get_name(desktop_shortcuts,
                                                                     nicks[index]));
-        ShortcutData* data = g_slice_new0(ShortcutData);
-        data->self = this;
+        auto data = new ShortcutData();
         data->shortcuts = INDICATOR_DESKTOP_SHORTCUTS(g_object_ref(desktop_shortcuts));
         data->nick = g_strdup(nicks[index]);
 
@@ -741,7 +740,7 @@ void BamfLauncherIcon::UpdateDesktopQuickList()
         dbusmenu_menuitem_property_set_bool(item, DBUSMENU_MENUITEM_PROP_ENABLED, TRUE);
         dbusmenu_menuitem_property_set_bool(item, DBUSMENU_MENUITEM_PROP_VISIBLE, TRUE);
         g_signal_connect_data(item, "item-activated",
-                              (GCallback) shortcut_activated, (gpointer) data,
+                              (GCallback) shortcut_activated, data,
                               (GClosureNotify) shortcut_data_destroy, (GConnectFlags)0);
 
         dbusmenu_menuitem_child_append(_menu_desktop_shortcuts, item);
@@ -1113,7 +1112,9 @@ std::set<std::string> BamfLauncherIcon::ValidateUrisForLaunch(unity::DndData& ur
   }
 
   for (auto i : uris.Types())
+  {
     for (auto j : GetSupportedTypes())
+    {
       if (g_content_type_is_a(i.c_str(), j.c_str()))
       {
         for (auto k : uris.UrisByType(i))
@@ -1121,6 +1122,8 @@ std::set<std::string> BamfLauncherIcon::ValidateUrisForLaunch(unity::DndData& ur
 
         break;
       }
+    }
+  }
 
   return result;
 }
