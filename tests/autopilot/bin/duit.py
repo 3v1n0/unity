@@ -65,6 +65,9 @@ if __name__ == '__main__':
     graph = pydot.Dot()
     graph.set_simplify(False)
     graph.set_node_defaults(shape='Mrecord')
+    graph.set_fontname('Ubuntu')
+    graph.set_fontsize('10')
+    
     gnode_unity = pydot.Node("Unity")
     gnode_unity.set_comment("Unity")
     traverse_graph(introspection_tree[0], gnode_unity, graph)
