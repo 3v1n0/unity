@@ -88,8 +88,9 @@ void CheckOptionFilter::UpdateState()
 {
   if (!IsValid())
     return;
-  gboolean raw_filtering = FALSE;
-  gboolean all_activated = TRUE;
+    
+  bool raw_filtering = false;
+  bool all_activated = true;
 
   GVariantBuilder options;
   g_variant_builder_init(&options, G_VARIANT_TYPE("a(sssb)"));
@@ -101,8 +102,8 @@ void CheckOptionFilter::UpdateState()
     std::string icon_hint = option->icon_hint;
     bool active = option->active;
 
-    raw_filtering = raw_filtering ? TRUE : active;
-    all_activated = all_activated ? active : FALSE;
+    raw_filtering |= active;
+    all_activated &= active;
 
     g_variant_builder_add(&options, "(sssb)",
                           id.c_str(), name.c_str(),
@@ -121,7 +122,7 @@ void CheckOptionFilter::UpdateState()
                       g_variant_builder_end(&hints));
   dee_model_set_value(model_, iter_,
                       FilterColumn::FILTERING,
-                      g_variant_new("b", raw_filtering));
+                      g_variant_new("b", raw_filtering ? TRUE : FALSE));
   IgnoreChanges(false);
 
   filtering.EmitChanged(filtering);
