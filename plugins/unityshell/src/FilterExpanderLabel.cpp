@@ -96,7 +96,7 @@ void FilterExpanderLabel::BuildLayout()
   top_bar_layout_->AddView(cairo_label_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
   top_bar_layout_->AddSpace(1, 1);
 
-  top_bar_layout_->SetMaximumWidth((Style::Instance().GetTileWidth() - 12) * 2 + 10);
+  top_bar_layout_->SetMaximumWidth((Style::Instance().GetTileWidth() - 12) * 2 + 20);
 
   layout_->AddLayout(top_bar_layout_, 0, nux::MINOR_POSITION_LEFT);
   layout_->SetVerticalInternalMargin(0);

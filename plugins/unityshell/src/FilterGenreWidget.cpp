@@ -55,7 +55,7 @@ FilterGenre::FilterGenre(int columns, NUX_FILE_LINE_DECL)
   }
   else
   {
-    genre_layout_->SetChildrenSize(Style::Instance().GetTileWidth() - 12, 33);
+    genre_layout_->SetChildrenSize(Style::Instance().GetTileWidth() - 7, 33);
   }
 
   SetRightHandView(all_button_);
