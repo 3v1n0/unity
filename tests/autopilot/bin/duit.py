@@ -73,3 +73,4 @@ if __name__ == '__main__':
     traverse_graph(introspection_tree[0], gnode_unity, graph)
 
     graph.write(argv[1], format='png')
+
