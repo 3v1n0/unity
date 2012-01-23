@@ -193,6 +193,12 @@ void Controller::OnExternalHideHud(GVariant* variant)
   HideHud();
 }
 
+void Controller::ShowHideHud()
+{
+  EnsureHud();
+  visible_ ? HideHud() : ShowHud();
+}
+
 void Controller::ShowHud()
 {
   LOG_DEBUG(logger) << "Showing the hud";

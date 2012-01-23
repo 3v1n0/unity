@@ -51,6 +51,10 @@ public:
   nux::Property<int> launcher_width;
   nux::Property<int> panel_height;
 
+  void ShowHideHud();
+  void ShowHud();
+  void HideHud(bool restore_focus = true);
+
 protected:
   const gchar* GetName();
   void AddProperties(GVariantBuilder* builder);
@@ -75,9 +79,7 @@ private:
   void OnSearchActivated(std::string search_string);
   void OnQueryActivated(Query::Ptr query);
   void OnQuerySelected(Query::Ptr query);
-public:
-  void ShowHud();
-  void HideHud(bool restore_focus = true);
+
 
 private:
   void StartShowHideTimeline();

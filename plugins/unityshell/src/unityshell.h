@@ -195,7 +195,8 @@ public:
   bool altTabPrevWindowInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
 
   /* handle hud key activations */
-  bool ShowHudInitiate (CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool ShowHudInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool ShowHudTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool launcherSwitcherForwardInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool launcherSwitcherPrevInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool launcherSwitcherTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options);
@@ -318,6 +319,7 @@ private:
   CompWindowList         fullscreen_windows_;
   bool                   painting_tray_;
   unsigned int           tray_paint_mask_;
+  gint64                 last_hud_show_time_;
 
   ScreenEffectFramebufferObject::GLXGetProcAddressProc glXGetProcAddressP;
 

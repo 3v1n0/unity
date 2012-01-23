@@ -41,9 +41,9 @@
             <group>
                 <_short>Behaviour</_short>
                 <option name="show_hud" type="key">
-                    <_short>Key to show the matrix</_short>
-                    <_long>Make the matrix appear with that key</_long>
-                    <default>&lt;Super&gt;h</default>
+                    <_short>Key to show the HUD</_short>
+                    <_long>Make the HUD appear with this key</_long>
+                    <default>&lt;Alt&gt;</default>
                   </option>
                 <option name="launcher_reveal_edge" type="edge">
                     <_short>Reveal Mode</_short>
