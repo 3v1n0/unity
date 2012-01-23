@@ -182,37 +182,82 @@ BamfLauncherIcon::BamfLauncherIcon(Launcher* IconManager, BamfApplication* app)
   , _fill_supported_types_id(0)
   , _window_moved_id(0)
 {
-  glib::String icon(bamf_view_get_icon(BAMF_VIEW(_bamf_app.RawPtr())));
+  auto bamf_view = glib::object_cast<BamfView>(_bamf_app);
+
+  glib::String icon(bamf_view_get_icon(bamf_view));
 
   tooltip_text = BamfName();
   icon_name = icon.Str();
   SetIconType(TYPE_APPLICATION);
 
-  if (bamf_view_is_sticky(BAMF_VIEW(_bamf_app.RawPtr())))
+  if (bamf_view_is_sticky(bamf_view))
     SetQuirk(QUIRK_VISIBLE, true);
   else
-    SetQuirk(QUIRK_VISIBLE, bamf_view_user_visible(BAMF_VIEW(_bamf_app.RawPtr())));
+    SetQuirk(QUIRK_VISIBLE, bamf_view_user_visible(bamf_view));
 
-  SetQuirk(QUIRK_ACTIVE, bamf_view_is_active(BAMF_VIEW(_bamf_app.RawPtr())));
-  SetQuirk(QUIRK_RUNNING, bamf_view_is_running(BAMF_VIEW(_bamf_app.RawPtr())));
+  SetQuirk(QUIRK_ACTIVE, bamf_view_is_active(bamf_view));
+  SetQuirk(QUIRK_RUNNING, bamf_view_is_running(bamf_view));
 
-  g_signal_connect(app, "child-removed", (GCallback) &BamfLauncherIcon::OnChildRemoved, this);
-  g_signal_connect(app, "child-added", (GCallback) &BamfLauncherIcon::OnChildAdded, this);
-  g_signal_connect(app, "urgent-changed", (GCallback) &BamfLauncherIcon::OnUrgentChanged, this);
-  g_signal_connect(app, "running-changed", (GCallback) &BamfLauncherIcon::OnRunningChanged, this);
-  g_signal_connect(app, "active-changed", (GCallback) &BamfLauncherIcon::OnActiveChanged, this);
-  g_signal_connect(app, "user-visible-changed", (GCallback) &BamfLauncherIcon::OnUserVisibleChanged, this);
-  g_signal_connect(app, "closed", (GCallback) &BamfLauncherIcon::OnClosed, this);
 
-  EnsureWindowState();
-  UpdateMenus();
-  UpdateDesktopFile();
+  glib::SignalBase* sig;
+  sig = new glib::Signal<void, BamfView*, BamfView*>(bamf_view, "child-removed",
+                          [&] (BamfView*, BamfView*) { EnsureWindowState(); });
+  gsignals_.Add(sig);
+
+  sig = new glib::Signal<void, BamfView*, BamfView*>(bamf_view, "child-added",
+                          [&] (BamfView*, BamfView*) {
+                            EnsureWindowState();
+                            UpdateMenus();
+                            UpdateIconGeometries(GetCenter());
+                          });
+  gsignals_.Add(sig);
+
+  sig = new glib::Signal<void, BamfView*, gboolean>(bamf_view, "urgent-changed",
+                          [&] (BamfView*, gboolean urgent) {
+                            SetQuirk(QUIRK_URGENT, urgent);
+                          });
+  gsignals_.Add(sig);
+
+  sig = new glib::Signal<void, BamfView*, gboolean>(bamf_view, "active-changed",
+                          [&] (BamfView*, gboolean active) {
+                            SetQuirk(QUIRK_ACTIVE, active);
+                          });
+  gsignals_.Add(sig);
+
+  sig = new glib::Signal<void, BamfView*, gboolean>(bamf_view, "running-changed",
+                          [&] (BamfView*, gboolean running) {
+                            SetQuirk(QUIRK_RUNNING, running);
+                            if (running)
+                            {
+                              EnsureWindowState();
+                              UpdateIconGeometries(GetCenter());
+                            }
+                          });
+  gsignals_.Add(sig);
+
+  sig = new glib::Signal<void, BamfView*, gboolean>(bamf_view, "user-visible-changed",
+                          [&] (BamfView*, gboolean visible) {
+                            if (!IsSticky())
+                              SetQuirk(QUIRK_VISIBLE, visible);
+                          });
+  gsignals_.Add(sig);
+
+  sig = new glib::Signal<void, BamfView*>(bamf_view, "closed",
+                          [&] (BamfView*) {
+                            if (!IsSticky())
+                              Remove();
+                          });
+  gsignals_.Add(sig);
 
   WindowManager::Default()->window_minimized.connect(sigc::mem_fun(this, &BamfLauncherIcon::OnWindowMinimized));
   WindowManager::Default()->window_moved.connect(sigc::mem_fun(this, &BamfLauncherIcon::OnWindowMoved));
   WindowManager::Default()->compiz_screen_viewport_switch_ended.connect(sigc::mem_fun(this, &BamfLauncherIcon::EnsureWindowState));
   WindowManager::Default()->terminate_expo.connect(sigc::mem_fun(this, &BamfLauncherIcon::EnsureWindowState));
   IconManager->hidden_changed.connect(sigc::mem_fun(this, &BamfLauncherIcon::OnLauncherHiddenChanged));
+
+  EnsureWindowState();
+  UpdateMenus();
+  UpdateDesktopFile();
 
   // hack
   SetProgress(0.0f);
@@ -265,14 +310,6 @@ BamfLauncherIcon::~BamfLauncherIcon()
 
   if (_window_moved_id != 0)
     g_source_remove(_window_moved_id);
-
-  g_signal_handlers_disconnect_by_func(_bamf_app, (void*) &BamfLauncherIcon::OnChildRemoved,       this);
-  g_signal_handlers_disconnect_by_func(_bamf_app, (void*) &BamfLauncherIcon::OnChildAdded,         this);
-  g_signal_handlers_disconnect_by_func(_bamf_app, (void*) &BamfLauncherIcon::OnUrgentChanged,      this);
-  g_signal_handlers_disconnect_by_func(_bamf_app, (void*) &BamfLauncherIcon::OnRunningChanged,     this);
-  g_signal_handlers_disconnect_by_func(_bamf_app, (void*) &BamfLauncherIcon::OnActiveChanged,      this);
-  g_signal_handlers_disconnect_by_func(_bamf_app, (void*) &BamfLauncherIcon::OnUserVisibleChanged, this);
-  g_signal_handlers_disconnect_by_func(_bamf_app, (void*) &BamfLauncherIcon::OnClosed,             this);
 
   g_object_unref(_desktop_file_monitor);
 
@@ -634,48 +671,6 @@ bool BamfLauncherIcon::Spread(bool current_desktop, int state, bool force)
   return WindowManager::Default()->ScaleWindowGroup(windowList, state, force);
 }
 
-void BamfLauncherIcon::OnClosed(BamfView* view, gpointer data)
-{
-  BamfLauncherIcon* self = static_cast <BamfLauncherIcon*> (data);
-
-  if (!bamf_view_is_sticky(BAMF_VIEW(self->_bamf_app.RawPtr())))
-    self->Remove();
-}
-
-void BamfLauncherIcon::OnUserVisibleChanged(BamfView* view, gboolean visible,
-                                            gpointer data)
-{
-  BamfLauncherIcon* self = static_cast <BamfLauncherIcon*> (data);
-
-  if (!bamf_view_is_sticky(BAMF_VIEW(self->_bamf_app.RawPtr())))
-    self->SetQuirk(QUIRK_VISIBLE, visible);
-}
-
-void BamfLauncherIcon::OnRunningChanged(BamfView* view, gboolean running,
-                                        gpointer data)
-{
-  BamfLauncherIcon* self = static_cast <BamfLauncherIcon*> (data);
-  self->SetQuirk(QUIRK_RUNNING, running);
-
-  if (running)
-  {
-    self->EnsureWindowState();
-    self->UpdateIconGeometries(self->GetCenter());
-  }
-}
-
-void BamfLauncherIcon::OnActiveChanged(BamfView* view, gboolean active, gpointer data)
-{
-  BamfLauncherIcon* self = static_cast <BamfLauncherIcon*> (data);
-  self->SetQuirk(QUIRK_ACTIVE, active);
-}
-
-void BamfLauncherIcon::OnUrgentChanged(BamfView* view, gboolean urgent, gpointer data)
-{
-  BamfLauncherIcon* self = static_cast <BamfLauncherIcon*> (data);
-  self->SetQuirk(QUIRK_URGENT, urgent);
-}
-
 void BamfLauncherIcon::EnsureWindowState()
 {
   GList* children, *l;
@@ -715,20 +710,6 @@ void BamfLauncherIcon::EnsureWindowState()
   SetHasWindowOnViewport(has_win_on_current_vp);
 
   g_list_free(children);
-}
-
-void BamfLauncherIcon::OnChildAdded(BamfView* view, BamfView* child, gpointer data)
-{
-  BamfLauncherIcon* self = static_cast <BamfLauncherIcon*> (data);
-  self->EnsureWindowState();
-  self->UpdateMenus();
-  self->UpdateIconGeometries(self->GetCenter());
-}
-
-void BamfLauncherIcon::OnChildRemoved(BamfView* view, BamfView* child, gpointer data)
-{
-  BamfLauncherIcon* self = static_cast <BamfLauncherIcon*> (data);
-  self->EnsureWindowState();
 }
 
 void BamfLauncherIcon::UpdateDesktopQuickList()

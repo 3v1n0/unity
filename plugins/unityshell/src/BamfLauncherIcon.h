@@ -96,14 +96,6 @@ private:
 
   const std::set<std::string>& GetSupportedTypes();
 
-  static void OnClosed(BamfView* view, gpointer data);
-  static void OnUserVisibleChanged(BamfView* view, gboolean visible, gpointer data);
-  static void OnActiveChanged(BamfView* view, gboolean active, gpointer data);
-  static void OnRunningChanged(BamfView* view, gboolean running, gpointer data);
-  static void OnUrgentChanged(BamfView* view, gboolean urgent, gpointer data);
-  static void OnChildAdded(BamfView* view, BamfView* child, gpointer data);
-  static void OnChildRemoved(BamfView* view, BamfView* child, gpointer data);
-
   static void OnQuit(DbusmenuMenuitem* item, int time, BamfLauncherIcon* self);
   static void OnLaunch(DbusmenuMenuitem* item, int time, BamfLauncherIcon* self);
   static void OnTogglePin(DbusmenuMenuitem* item, int time, BamfLauncherIcon* self);
@@ -140,6 +132,7 @@ private:
   std::map<std::string, DbusmenuMenuitem*> _menu_items_extra;
   std::map<std::string, gulong> _menu_callbacks;
   glib::Object<DbusmenuMenuitem> _menu_desktop_shortcuts;
+  glib::SignalManager gsignals_;
 };
 
 }
