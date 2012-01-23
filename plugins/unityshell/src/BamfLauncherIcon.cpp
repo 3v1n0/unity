@@ -174,7 +174,7 @@ BamfLauncherIcon::BamfLauncherIcon(Launcher* IconManager, BamfApplication* app)
   , _remote_uri(nullptr)
   , _dnd_hovered(false)
   , _dnd_hover_timer(0)
-  , _cached_desktop_file(nullptr)
+  , _desktop_file(nullptr)
   , _cached_name(nullptr)
   , _supported_types_filled(false)
   , _fill_supported_types_id(0)
@@ -304,7 +304,6 @@ BamfLauncherIcon::~BamfLauncherIcon()
   if (_window_moved_id != 0)
     g_source_remove(_window_moved_id);
 
-  g_free(_cached_desktop_file);
   g_free(_cached_name);
 }
 
@@ -398,12 +397,9 @@ void BamfLauncherIcon::UpdateDesktopFile()
   char* filename = nullptr;
   filename = (char*) bamf_application_get_desktop_file(_bamf_app);
 
-  if (filename != nullptr && g_strcmp0(_cached_desktop_file, filename) != 0)
+  if (filename != nullptr && _desktop_file != filename)
   {
-    if (_cached_desktop_file != nullptr)
-      g_free(_cached_desktop_file);
-
-    _cached_desktop_file = g_strdup(filename);
+    _desktop_file = filename;
 
     // add a file watch to the desktop file so that if/when the app is removed
     // we can remove ourself from the launcher and when it's changed
@@ -437,7 +433,7 @@ void BamfLauncherIcon::UpdateDesktopFile()
 const char* BamfLauncherIcon::DesktopFile()
 {
   UpdateDesktopFile();
-  return _cached_desktop_file;
+  return _desktop_file;
 }
 
 char* BamfLauncherIcon::BamfName()

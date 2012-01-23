@@ -116,7 +116,7 @@ private:
   bool _dnd_hovered;
   guint _dnd_hover_timer;
 
-  gchar* _cached_desktop_file;
+  const gchar* _desktop_file;
   gchar* _cached_name;
 
   bool _supported_types_filled;
