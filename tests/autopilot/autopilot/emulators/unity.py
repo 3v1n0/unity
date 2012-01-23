@@ -254,10 +254,3 @@ class Dash(Unity):
     def reveal_command_lens(self):
         """Reveal the 'run command' lens."""
         self._keyboard.press_and_release(['Alt_L','F2'])
-
-if __name__ == '__main__':
-    s = Switcher()
-    s.initiate()
-    from time import sleep
-    sleep(5)
-    s.terminate()
