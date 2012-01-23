@@ -63,7 +63,7 @@ LauncherHideMachine::AddRevealPressure(int pressure)
 {
   _reveal_pressure += pressure;
 
-  if (_reveal_pressure > 4000)
+  if (_reveal_pressure > 400)
   {
     SetQuirk(REVEAL_PRESSURE_PASS, true);
     _reveal_pressure = 0;

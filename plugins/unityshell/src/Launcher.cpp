@@ -2516,7 +2516,10 @@ void Launcher::RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_
 
   if (_hidden)
   {
-    _hide_machine->AddRevealPressure(40);
+    int velocity = nux::GetGraphicsDisplay()->GetCurrentEvent().velocity;
+    velocity = sqrt(velocity);
+    velocity = std::max<int>(velocity, 20);
+    _hide_machine->AddRevealPressure(velocity);
   }
   else
   {
