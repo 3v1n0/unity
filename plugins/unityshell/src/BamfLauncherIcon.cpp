@@ -166,16 +166,6 @@ BamfLauncherIcon::~BamfLauncherIcon()
     g_object_unref(G_OBJECT(it->second));
   }
 
-  for (auto it = _menu_items.begin(); it != _menu_items.end(); it++)
-  {
-    g_object_unref(G_OBJECT(it->second));
-  }
-
-  for (auto it = _menu_items_extra.begin(); it != _menu_items_extra.end(); it++)
-  {
-    g_object_unref(G_OBJECT(it->second));
-  }
-
   if (_fill_supported_types_id != 0)
     g_source_remove(_fill_supported_types_id);
 
@@ -883,7 +873,7 @@ void BamfLauncherIcon::EnsureMenuItemsReady()
                                       ToggleSticky();
                                     }));
 
-    _menu_items["Pin"] = menu_item;
+    _menu_items["Pin"] = glib::Object<DbusmenuMenuitem>(menu_item, glib::AddRef());
   }
 
   const char* label = !IsSticky() ? _("Lock to launcher") : _("Unlock from launcher");
@@ -905,7 +895,7 @@ void BamfLauncherIcon::EnsureMenuItemsReady()
                                       Quit();
                                     }));
 
-    _menu_items["Quit"] = menu_item;
+    _menu_items["Quit"] = glib::Object<DbusmenuMenuitem>(menu_item, glib::AddRef());
   }
 }
 
@@ -975,7 +965,7 @@ std::list<DbusmenuMenuitem*> BamfLauncherIcon::GetMenus()
       dbusmenu_menuitem_property_set(item,
                                      DBUSMENU_MENUITEM_PROP_TYPE,
                                      DBUSMENU_CLIENT_TYPES_SEPARATOR);
-      _menu_items_extra["FirstSeparator"] = item;
+      _menu_items_extra["FirstSeparator"] = glib::Object<DbusmenuMenuitem>(item, glib::AddRef());
     }
     result.push_back(item);
   }
@@ -1007,7 +997,7 @@ std::list<DbusmenuMenuitem*> BamfLauncherIcon::GetMenus()
                                       ActivateLauncherIcon(ActionArg(ActionArg::OTHER, 0));
                                     }));
 
-    _menu_items_extra["AppName"] = item;
+    _menu_items_extra["AppName"] = glib::Object<DbusmenuMenuitem>(item, glib::AddRef());
   }
   result.push_back(item);
 
@@ -1022,7 +1012,7 @@ std::list<DbusmenuMenuitem*> BamfLauncherIcon::GetMenus()
     dbusmenu_menuitem_property_set(item,
                                    DBUSMENU_MENUITEM_PROP_TYPE,
                                    DBUSMENU_CLIENT_TYPES_SEPARATOR);
-    _menu_items_extra["SecondSeparator"] = item;
+    _menu_items_extra["SecondSeparator"] = glib::Object<DbusmenuMenuitem>(item, glib::AddRef());
   }
   result.push_back(item);
 
