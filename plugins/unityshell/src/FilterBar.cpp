@@ -98,28 +98,6 @@ void FilterBar::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   GfxContext.PushClippingRectangle(geo);
   nux::GetPainter().PaintBackground(GfxContext, geo);
-
-  nux::Color col(1.0f, 1.0f, 1.0f, 0.15f);
-  int i = 0;
-  int num_filters = filter_map_.size() - 1;
-
-  for (auto iter: filter_map_)
-  {
-    if (i != num_filters)
-    {
-      nux::View* filter_view = iter.second;
-      nux::Geometry const& geom = filter_view->GetGeometry();
-      GfxContext.GetRenderStates().SetBlend(true);
-      nux::GetPainter().Draw2DLine(GfxContext,
-                                   geom.x, geom.y + geom.height - 1,
-                                   geom.x + geom.width, geom.y + geom.height - 1,
-                                   col,
-                                   col);
-      GfxContext.GetRenderStates().SetBlend(false);
-    }
-    i++;
-  }
-
   GfxContext.PopClippingRectangle();
 }
 
@@ -127,6 +105,36 @@ void FilterBar::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
   GfxContext.PushClippingRectangle(GetGeometry());
   GetLayout()->ProcessDraw(GfxContext, force_draw);
+
+  nux::Color col(0.15f, 0.15f, 0.15f, 0.15f);
+
+  std::list<Area *>& layout_list = GetLayout()->GetChildren();
+  std::list<Area*>::iterator iter;
+  int i = 0;
+  int num_separators = layout_list.size() - 1;
+
+  for (iter = layout_list.begin(); iter != layout_list.end(); iter++)
+  {
+    if (i != num_separators)
+    {
+      nux::Area* filter_view = (*iter);
+      nux::Geometry const& geom = filter_view->GetGeometry();
+
+      unsigned int alpha = 0, src = 0, dest = 0;
+      GfxContext.GetRenderStates().GetBlend(alpha, src, dest);
+
+      GfxContext.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+      GfxContext.GetRenderStates().SetColorMask(true, true, true, false);
+      nux::GetPainter().Draw2DLine(GfxContext,
+                                   geom.x             , geom.y + geom.height - 1,
+                                   geom.x + geom.width, geom.y + geom.height - 1,
+                                   col);
+      //GfxContext.GetRenderStates().SetBlend(false);
+      GfxContext.GetRenderStates().SetBlend(alpha, src, dest);
+    }
+    i++;
+  }
+
   GfxContext.PopClippingRectangle();
 }
 
