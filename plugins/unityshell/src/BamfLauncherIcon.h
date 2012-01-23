@@ -46,7 +46,13 @@ public:
   void ActivateLauncherIcon(ActionArg arg);
 
   const char* DesktopFile();
+
   bool IsSticky();
+  bool IsVisible();
+  bool IsActive();
+  bool IsRunning();
+  bool IsUrgent();
+
   void Quit();
   void Stick();
   void UnStick();
@@ -100,12 +106,6 @@ private:
   static void OnQuit(DbusmenuMenuitem* item, int time, BamfLauncherIcon* self);
   static void OnLaunch(DbusmenuMenuitem* item, int time, BamfLauncherIcon* self);
   static void OnTogglePin(DbusmenuMenuitem* item, int time, BamfLauncherIcon* self);
-
-  static void OnDesktopFileChanged(GFileMonitor*        monitor,
-                                   GFile*               file,
-                                   GFile*               other_file,
-                                   GFileMonitorEvent    event_type,
-                                   gpointer             data);
 
   static gboolean OnDndHoveredTimeout(gpointer data);
   static gboolean FillSupportedTypes(gpointer data);
