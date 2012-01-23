@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: l 10n\n"
 "Report-Msgid-Bugs-To: ayatana-dev@lists.launchpad.net\n"
-"POT-Creation-Date: 2012-01-17 14:36+0100\n"
+"POT-Creation-Date: 2011-07-29 16:39+0200\n"
 "PO-Revision-Date: 2010-03-02 12:37-0500\n"
 "Last-Translator: Canonical OEM\n"
 "Language-Team: Chinese (simplified)\n"
@@ -16,48 +16,16 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-msgid " (Press)"
+msgid "<b>Show the launcher when the pointer:</b>"
 msgstr ""
 
-msgid " (Tap)"
+msgid "All items in the Trash will be permanently deleted."
 msgstr ""
 
-msgid " + 1 to 9"
-msgstr ""
-
-msgid " + Shift + 1 to 9"
-msgstr ""
-
-msgid "'Run Command' mode."
-msgstr ""
-
-#. Browser
 msgid "Browse the Web"
 msgstr ""
 
-msgid "Categories"
-msgstr ""
-
 msgid "Check Email"
-msgstr ""
-
-msgid "Closes current window."
-msgstr ""
-
-msgid "Cursor Keys"
-msgstr ""
-
-msgid "Cursor Left or Right"
-msgstr ""
-
-#. Dash...
-msgid "Dash"
-msgstr ""
-
-msgid "Dash Home"
-msgstr ""
-
-msgid "Dash home"
 msgstr ""
 
 msgid "Drop To Add Application"
@@ -69,120 +37,49 @@ msgstr ""
 msgid "Eject parent drive"
 msgstr ""
 
+msgid "Empty Trash"
+msgstr ""
+
 msgid "Empty Trash..."
 msgstr ""
 
-msgid "Enter & Return"
-msgstr ""
-
-msgid "Filter results"
+msgid "Empty all items from Trash?"
 msgstr ""
 
 #. Find Files
 msgid "Find Files"
 msgstr ""
 
-msgid "Format..."
-msgstr ""
-
 #. Internet Apps
 msgid "Internet Apps"
 msgstr ""
 
-#. TODO move category text into a vector...
-#. Launcher...
-msgid "Launcher"
+#, fuzzy
+msgid "Keep in launcher"
+msgstr "保留在启动程序中"
+
+msgid "Launcher & Menus"
 msgstr ""
 
 msgid "Listen to Music"
-msgstr ""
-
-#, fuzzy
-msgid "Lock to launcher"
-msgstr "从启动程序中删除"
-
-msgid "Maximises the current window."
 msgstr ""
 
 #. Media Apps
 msgid "Media Apps"
 msgstr ""
 
-msgid "Minimises all windows."
-msgstr ""
-
 #. More Apps
 msgid "More Apps"
-msgstr ""
-
-msgid "Move focused window to different workspace."
-msgstr ""
-
-msgid "Move window."
-msgstr ""
-
-msgid "Moves focus between indicators."
-msgstr ""
-
-msgid "Moves the focus."
-msgstr ""
-
-msgid "Multi-range"
 msgstr ""
 
 msgid "Open"
 msgstr ""
 
-msgid "Open Launcher keyboard navigation mode."
-msgstr ""
-
-msgid "Open Launcher, displays shortcuts."
-msgstr ""
-
-msgid "Open currently focused item."
-msgstr ""
-
-msgid "Open new window of the app."
-msgstr ""
-
-msgid "Open the Dash App Lens."
-msgstr ""
-
-msgid "Open the Dash Files Lens."
-msgstr ""
-
-msgid "Open the Dash Home."
-msgstr ""
-
-msgid "Open the Dash Music Lens."
-msgstr ""
-
-msgid "Open the Rubbish Bin."
-msgstr ""
-
-msgid "Opens the indicator menu."
-msgstr ""
-
-msgid "Opens window accessibility menu."
-msgstr ""
-
-msgid "Places window in corresponding positions."
+msgid "Pushes the left edge of the screen"
 msgstr ""
 
 msgid "Quit"
 msgstr "退出"
-
-msgid "Rating"
-msgstr ""
-
-msgid "Resize window."
-msgstr ""
-
-msgid "Restores or minimises current window."
-msgstr ""
-
-msgid "Reveals application menu."
-msgstr ""
 
 msgid "Safely remove"
 msgstr ""
@@ -190,74 +87,26 @@ msgstr ""
 msgid "Safely remove parent drive"
 msgstr ""
 
-msgid "Same as clicking on a Launcher icon."
+msgid "Search"
 msgstr ""
 
-msgid "Search"
+msgid "Search across all places"
 msgstr ""
 
 msgid "See fewer results"
 msgstr ""
 
-msgid "Semi-maximises current window."
-msgstr ""
-
 msgid "Shortcuts"
-msgstr ""
-
-msgid "Show Desktop"
-msgstr ""
-
-msgid "Spread workspaces."
-msgstr ""
-
-msgid "Spreads all windows in the current workspace."
-msgstr ""
-
-msgid "Super + Alt + Cursor Keys"
-msgstr ""
-
-msgid "Super + Cursor Keys"
-msgstr ""
-
-msgid "Switch applications via Launcher."
-msgstr ""
-
-msgid "Switch between applications."
-msgstr ""
-
-msgid "Switch windows of current application."
-msgstr ""
-
-msgid "Switch workspaces."
-msgstr ""
-
-msgid "Switches between Lenses."
-msgstr ""
-
-#. Switching
-msgid "Switching"
 msgstr ""
 
 msgid "The drive has been successfully ejected"
 msgstr ""
 
-#. Top Bar
-msgid "Top Bar"
-msgstr ""
-
-msgid "Tracks"
+msgid "Touches the top left corner of the screen"
 msgstr ""
 
 msgid "Trash"
 msgstr ""
-
-msgid "Ubuntu Desktop"
-msgstr ""
-
-#, fuzzy
-msgid "Unlock from launcher"
-msgstr "从启动程序中删除"
 
 msgid "Unmount"
 msgstr ""
@@ -267,20 +116,9 @@ msgstr ""
 msgid "View Photos"
 msgstr ""
 
-#. Windows
-msgid "Windows"
-msgstr ""
-
 msgid "Workspace Switcher"
 msgstr ""
 
-#. Workspaces
-msgid "Workspaces"
-msgstr ""
-
-msgid "min"
-msgstr ""
-
 #, fuzzy
-#~ msgid "Keep in launcher"
-#~ msgstr "保留在启动程序中"
+#~ msgid "Remove from launcher"
+#~ msgstr "从启动程序中删除"
