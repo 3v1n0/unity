@@ -64,7 +64,6 @@ BamfLauncherIcon::BamfLauncherIcon(Launcher* IconManager, BamfApplication* app)
   , _bamf_app(app, glib::AddRef())
   , _launcher(IconManager)
   , _desktop_file(nullptr)
-  , _remote_uri(nullptr)
   , _dnd_hovered(false)
   , _dnd_hover_timer(0)
   , _supported_types_filled(false)
@@ -1122,15 +1121,17 @@ void BamfLauncherIcon::OnCenterStabilized(nux::Point3 center)
 
 const gchar* BamfLauncherIcon::GetRemoteUri()
 {
-  if (!_remote_uri)
+  if (_remote_uri.empty())
   {
+    std::ostringstream remote_uri_stream;
     const gchar* desktop_file = DesktopFile();
     glib::String basename(g_path_get_basename(desktop_file));
 
-    _remote_uri = g_strdup_printf("application://%s", basename.Value());
+    remote_uri_stream << "application://" << basename.Str();
+    _remote_uri = remote_uri_stream.str();
   }
 
-  return _remote_uri;
+  return _remote_uri.c_str();
 }
 
 std::set<std::string> BamfLauncherIcon::ValidateUrisForLaunch(unity::DndData& uris)

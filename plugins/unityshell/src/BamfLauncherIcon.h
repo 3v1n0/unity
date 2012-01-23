@@ -114,7 +114,6 @@ private:
   glib::Object<BamfApplication> _bamf_app;
   Launcher* _launcher;
   const gchar* _desktop_file;
-  gchar* _remote_uri;
   bool _dnd_hovered;
   guint _dnd_hover_timer;
 
@@ -122,6 +121,7 @@ private:
   guint _fill_supported_types_id;
   guint32 _window_moved_id;
 
+  std::string _remote_uri;
   std::set<std::string> _supported_types;
   std::map<std::string, DbusmenuClient*> _menu_clients;
   std::map<std::string, DbusmenuMenuitem*> _menu_items;
