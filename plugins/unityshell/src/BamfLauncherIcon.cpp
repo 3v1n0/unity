@@ -864,7 +864,6 @@ void BamfLauncherIcon::EnsureMenuItemsReady()
   if (_menu_items.find("Pin") == _menu_items.end())
   {
     menu_item = dbusmenu_menuitem_new();
-
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
 
@@ -873,7 +872,7 @@ void BamfLauncherIcon::EnsureMenuItemsReady()
                                       ToggleSticky();
                                     }));
 
-    _menu_items["Pin"] = glib::Object<DbusmenuMenuitem>(menu_item, glib::AddRef());
+    _menu_items["Pin"] = glib::Object<DbusmenuMenuitem>(menu_item);
   }
 
   const char* label = !IsSticky() ? _("Lock to launcher") : _("Unlock from launcher");
@@ -885,7 +884,6 @@ void BamfLauncherIcon::EnsureMenuItemsReady()
   if (_menu_items.find("Quit") == _menu_items.end())
   {
     menu_item = dbusmenu_menuitem_new();
-
     dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Quit"));
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
@@ -895,7 +893,7 @@ void BamfLauncherIcon::EnsureMenuItemsReady()
                                       Quit();
                                     }));
 
-    _menu_items["Quit"] = glib::Object<DbusmenuMenuitem>(menu_item, glib::AddRef());
+    _menu_items["Quit"] = glib::Object<DbusmenuMenuitem>(menu_item);
   }
 }
 
@@ -965,7 +963,7 @@ std::list<DbusmenuMenuitem*> BamfLauncherIcon::GetMenus()
       dbusmenu_menuitem_property_set(item,
                                      DBUSMENU_MENUITEM_PROP_TYPE,
                                      DBUSMENU_CLIENT_TYPES_SEPARATOR);
-      _menu_items_extra["FirstSeparator"] = glib::Object<DbusmenuMenuitem>(item, glib::AddRef());
+      _menu_items_extra["FirstSeparator"] = glib::Object<DbusmenuMenuitem>(item);
     }
     result.push_back(item);
   }
@@ -997,7 +995,7 @@ std::list<DbusmenuMenuitem*> BamfLauncherIcon::GetMenus()
                                       ActivateLauncherIcon(ActionArg(ActionArg::OTHER, 0));
                                     }));
 
-    _menu_items_extra["AppName"] = glib::Object<DbusmenuMenuitem>(item, glib::AddRef());
+    _menu_items_extra["AppName"] = glib::Object<DbusmenuMenuitem>(item);
   }
   result.push_back(item);
 
@@ -1012,7 +1010,7 @@ std::list<DbusmenuMenuitem*> BamfLauncherIcon::GetMenus()
     dbusmenu_menuitem_property_set(item,
                                    DBUSMENU_MENUITEM_PROP_TYPE,
                                    DBUSMENU_CLIENT_TYPES_SEPARATOR);
-    _menu_items_extra["SecondSeparator"] = glib::Object<DbusmenuMenuitem>(item, glib::AddRef());
+    _menu_items_extra["SecondSeparator"] = glib::Object<DbusmenuMenuitem>(item);
   }
   result.push_back(item);
 
