@@ -112,8 +112,8 @@ const gchar Launcher::introspection_xml[] =
   "  <interface name='com.canonical.Unity.Launcher'>"
   ""
   "    <method name='AddLauncherItemFromPosition'>"
-  "      <arg type='s' name='icon' direction='in'/>"
   "      <arg type='s' name='title' direction='in'/>"
+  "      <arg type='s' name='icon' direction='in'/>"
   "      <arg type='i' name='icon_x' direction='in'/>"
   "      <arg type='i' name='icon_y' direction='in'/>"
   "      <arg type='i' name='icon_size' direction='in'/>"
@@ -3300,10 +3300,10 @@ Launcher::handle_dbus_method_call(GDBusConnection*       connection,
     gchar*  desktop_file;
     gchar*  aptdaemon_task;
 
-    g_variant_get(parameters, "(ssiiiss)", &icon, &title, &icon_x, &icon_y, &icon_size, &desktop_file, &aptdaemon_task, NULL);
+    g_variant_get(parameters, "(ssiiiss)", &title, &icon, &icon_x, &icon_y, &icon_size, &desktop_file, &aptdaemon_task, NULL);
 
     Launcher* self = (Launcher*)user_data;
-    self->launcher_addrequest.emit(desktop_file, NULL);
+    self->launcher_addrequest_special.emit(desktop_file, NULL, aptdaemon_task, icon);
 
     g_dbus_method_invocation_return_value(invocation, NULL);
     g_free(icon);
