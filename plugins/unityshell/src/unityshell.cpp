@@ -118,6 +118,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , dash_is_open_ (false)
   , grab_index_ (0)
   , painting_tray_ (false)
+  , last_hud_show_time_(0)
 {
   Timer timer;
   gfloat version;
@@ -243,6 +244,9 @@ UnityScreen::UnityScreen(CompScreen* screen)
        uScreen->_fbo->onScreenSizeChanged (geometry);
      }
 
+     optionSetShowHudInitiate(boost::bind(&UnityScreen::ShowHudInitiate, this, _1, _2, _3));
+     optionSetShowHudTerminate(boost::bind(&UnityScreen::ShowHudTerminate, this, _1, _2, _3));
+
      optionSetBackgroundColorNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetLauncherHideModeNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetBacklightModeNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
@@ -295,8 +299,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetLauncherSwitcherForwardTerminate(boost::bind(&UnityScreen::launcherSwitcherTerminate, this, _1, _2, _3));
 
      optionSetShowMinimizedWindowsNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
-
-     optionSetShowHudInitiate(boost::bind(&UnityScreen::ShowHudInitiate, this, _1, _2, _3));
 
      for (unsigned int i = 0; i < G_N_ELEMENTS(_ubus_handles); i++)
        _ubus_handles[i] = 0;
@@ -1588,9 +1590,29 @@ void UnityScreen::OnLauncherEndKeyNav(GVariant* data, void* value)
 
 bool UnityScreen::ShowHudInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
 {
-  LOG_DEBUG(logger) << "Got ShowHudInitiate key";
-  g_debug ("what up yo");
-  hud_controller_->ShowHud();
+  // to receive the Terminate event
+  if (state & CompAction::StateInitKey)
+    action->setState(action->state() | CompAction::StateTermKey);  
+
+  last_hud_show_time_ = g_get_monotonic_time();
+
+  return false;
+}
+
+bool UnityScreen::ShowHudTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options)
+{
+  if (optionGetShowHud().key().toString() == action->key().toString())
+  {
+    if (switcher_controller_->Visible())
+      return false; // early exit if the switcher is open
+
+    gint64 current_time = g_get_monotonic_time();
+    if (current_time - last_hud_show_time_ < 50 * 10000)
+    {
+      // less than 50 ms have passed, thats a tap
+      hud_controller_->ShowHideHud();
+    }
+  } 
   return false;
 }
 
