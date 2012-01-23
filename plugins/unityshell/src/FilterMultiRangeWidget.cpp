@@ -44,7 +44,7 @@ FilterMultiRange::FilterMultiRange(NUX_FILE_LINE_DECL)
   all_button_ = new FilterAllButton(NUX_TRACKER_LOCATION);
 
   layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
-  layout_->SetVerticalExternalMargin(9);
+  layout_->SetTopAndBottomPadding(9, 12);
 
   SetRightHandView(all_button_);
   SetContents(layout_);
