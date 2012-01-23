@@ -258,11 +258,68 @@ TEST(TestHomeLens, TestTwoStaticLenses)
   EXPECT_EQ(home_lens_.GetLensAtIndex(1)->id(), "second.lens");
 }
 
+TEST(TestHomeLens, TestCategoryMerging)
+{
+  HomeLens home_lens_("name", "description", "searchhint");
+  TwoStaticTestLenses lenses_;
+  DeeModel* cats = home_lens_.categories()->model();
+  DeeModelIter* iter;
+  unsigned int cat0_first = 0,
+                cat1_first = 1,
+                cat_shared = 2,
+                cat0_second = 3,
+                cat1_second = 4;
+  const unsigned int NAME_COLUMN = 0;
+
+  home_lens_.AddLenses(lenses_);
+
+  EXPECT_EQ(dee_model_get_n_rows(cats), 5); // 5 because each lens has 3 cats, but 1 is shared between them
+
+  /* Validate the merged categories */
+  iter = dee_model_get_iter_at_row(cats, cat0_first);
+  EXPECT_EQ("cat0+first.lens", string(dee_model_get_string(cats, iter, NAME_COLUMN)));
+
+  iter = dee_model_get_iter_at_row(cats, cat1_first);
+  EXPECT_EQ("cat1+first.lens", string(dee_model_get_string(cats, iter, NAME_COLUMN)));
+
+  iter = dee_model_get_iter_at_row(cats, cat_shared);
+  EXPECT_EQ("Shared cat", string(dee_model_get_string(cats, iter, NAME_COLUMN)));
+
+  iter = dee_model_get_iter_at_row(cats, cat0_second);
+  EXPECT_EQ("cat0+second.lens", string(dee_model_get_string(cats, iter, NAME_COLUMN)));
+
+  iter = dee_model_get_iter_at_row(cats, cat1_second);
+  EXPECT_EQ("cat1+second.lens", string(dee_model_get_string(cats, iter, NAME_COLUMN)));
+}
+
+// It's not that we must not support filters. It is just not implemented yet.
+// But we actively test against it to make sure we don't end up with broken
+// filters in the UI. When/if we land support for filters on the home screen
+// this test should obviously be removed
+TEST(TestHomeLens, TestIgnoreFilters)
+{
+  HomeLens home_lens_("name", "description", "searchhint");
+  TwoStaticTestLenses lenses_;
+  DeeModel* filters = home_lens_.filters()->model();
+
+  EXPECT_EQ(dee_model_get_n_rows(filters), 0);
+}
+
 TEST(TestHomeLens, TestOneSearch)
 {
   HomeLens home_lens_("name", "description", "searchhint");
   TwoStaticTestLenses lenses_;
   DeeModel* results = home_lens_.results()->model();
+  DeeModel* cats = home_lens_.categories()->model();
+  DeeModel* filters = home_lens_.filters()->model();
+  DeeModelIter* iter;
+  unsigned int cat0_first = 0,
+                cat1_first = 1,
+                cat_shared = 2,
+                cat0_second = 3,
+                cat1_second = 4;
+  const unsigned int URI_COLUMN = 0;
+  const unsigned int CAT_COLUMN = 2;
 
   home_lens_.AddLenses(lenses_);
 
@@ -270,8 +327,36 @@ TEST(TestHomeLens, TestOneSearch)
 
   Utils::WaitForTimeoutMSec();
 
-  EXPECT_EQ(dee_model_get_n_rows(results), 6);
-  // FIXME: validate results model contents
+  /* Validate counts */
+  EXPECT_EQ(dee_model_get_n_rows(results), 6); // 3 hits from each lens
+  EXPECT_EQ(dee_model_get_n_rows(cats), 5); // 5 because each lens has 3 cats, but 1 is shared between them
+  EXPECT_EQ(dee_model_get_n_rows(filters), 0); // We ignore filters deliberately currently
+
+  /* Validate results. In particular that we get the correct merged
+   * category offsets assigned */
+  iter = dee_model_get_iter_at_row(results, 0);
+  EXPECT_EQ(string("uri+a+first.lens"), string(dee_model_get_string(results, iter, URI_COLUMN)));
+  EXPECT_EQ(cat0_first, dee_model_get_uint32(results, iter, CAT_COLUMN));
+
+  iter = dee_model_get_iter_at_row(results, 1);
+  EXPECT_EQ(string("uri+p+first.lens"), string(dee_model_get_string(results, iter, URI_COLUMN)));
+  EXPECT_EQ(cat1_first, dee_model_get_uint32(results, iter, CAT_COLUMN));
+
+  iter = dee_model_get_iter_at_row(results, 2);
+  EXPECT_EQ(string("uri+e+first.lens"), string(dee_model_get_string(results, iter, URI_COLUMN)));
+  EXPECT_EQ(cat_shared, dee_model_get_uint32(results, iter, CAT_COLUMN));
+
+  iter = dee_model_get_iter_at_row(results, 3);
+  EXPECT_EQ(string("uri+a+second.lens"), string(dee_model_get_string(results, iter, URI_COLUMN)));
+  EXPECT_EQ(cat0_second, dee_model_get_uint32(results, iter, CAT_COLUMN));
+
+  iter = dee_model_get_iter_at_row(results, 4);
+  EXPECT_EQ(string("uri+p+second.lens"), string(dee_model_get_string(results, iter, URI_COLUMN)));
+  EXPECT_EQ(cat1_second, dee_model_get_uint32(results, iter, CAT_COLUMN));
+
+  iter = dee_model_get_iter_at_row(results, 5);
+  EXPECT_EQ(string("uri+e+second.lens"), string(dee_model_get_string(results, iter, URI_COLUMN)));
+  EXPECT_EQ(cat_shared, dee_model_get_uint32(results, iter, CAT_COLUMN));
 }
 
 }

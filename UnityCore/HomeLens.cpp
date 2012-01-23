@@ -78,6 +78,7 @@ public:
       return -1;
     }
 
+  /* Register a new category */
   void RegisterCategoryOffset(DeeModel*     model,
                                  unsigned int source_cat_offset,
                                  const gchar*  display_name,
@@ -91,6 +92,17 @@ public:
       LOG_ERROR(logger) << "Category '" << c_id << "' already registered!";
       g_free(c_id);
       return;
+    }
+
+    if (display_name != NULL)
+    {
+      i = reg_by_display_name_.find(display_name);
+      if (i != reg_by_display_name_.end())
+      {
+        LOG_ERROR(logger) << "Category '" << display_name << "' already registered!";
+        g_free(c_id);
+        return;
+      }
     }
 
     /* Any existing categories with offsets >= target_cat_offset must be
@@ -132,6 +144,27 @@ public:
                         << source_cat_offset << " and target offset "
                         << target_cat_offset << ". Id " << c_id;
     }
+
+    g_free(c_id);
+  }
+
+  /* Associate a source results model and category offset with an existing
+   * target category offset */
+  void AssociateCategoryOffset(DeeModel*     model,
+                               unsigned int source_cat_offset,
+                               unsigned int target_cat_offset)
+  {
+    gchar* c_id = g_strdup_printf("%u+%p", source_cat_offset, model);
+
+    std::map<std::string,unsigned int>::iterator i = reg_by_id_.find(c_id);
+    if (i != reg_by_id_.end())
+    {
+      LOG_ERROR(logger) << "Category '" << c_id << "' already registered!";
+      g_free(c_id);
+      return;
+    }
+
+    reg_by_id_[c_id] = target_cat_offset;
 
     g_free(c_id);
   }
@@ -397,8 +430,8 @@ void HomeLens::CategoryMerger::OnSourceRowAdded(DeeModel *model, DeeModelIter *i
   target_cat_offset = cat_registry_->FindCategoryOffset(display_name);
   if (target_cat_offset >= 0)
   {
-    cat_registry_->RegisterCategoryOffset(results_model, source_cat_offset,
-                                          NULL, target_cat_offset);
+    cat_registry_->AssociateCategoryOffset(results_model, source_cat_offset,
+                                           target_cat_offset);
     goto cleanup;
   }
 
