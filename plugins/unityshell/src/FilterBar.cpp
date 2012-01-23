@@ -56,7 +56,7 @@ FilterBar::~FilterBar()
 void FilterBar::Init()
 {
   nux::LinearLayout* layout = new nux::VLayout(NUX_TRACKER_LOCATION);
-  layout->SetSpaceBetweenChildren(12);
+  layout->SetSpaceBetweenChildren(10);
   SetLayout(layout);
 }
 
