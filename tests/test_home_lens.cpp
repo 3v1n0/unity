@@ -153,7 +153,7 @@ static gboolean dispatch_global_search(gpointer userdata)
 }
 
 /*
- * Mock Lenses class that comes with 2 pre-allocated lenses
+ * Mock Lenses class
  */
 class StaticTestLenses : public Lenses
 {
@@ -161,12 +161,8 @@ public:
   typedef std::shared_ptr<StaticTestLenses> Ptr;
 
   StaticTestLenses()
-    : lens_1_(new StaticTestLens("first.lens", "First Lens", "The very first lens", "First search hint"))
-    , lens_2_(new StaticTestLens("second.lens", "Second Lens", "The second lens", "Second search hint"))
   {
     count.SetGetterFunction(sigc::mem_fun(&list_, &Lenses::LensList::size));
-    list_.push_back(lens_1_);
-    list_.push_back(lens_2_);
   }
 
   virtual ~StaticTestLenses() {}
@@ -191,8 +187,22 @@ public:
     return list_.at(index);
   }
 
-private:
+protected:
   Lenses::LensList list_;
+};
+
+class TwoStaticTestLenses : public StaticTestLenses
+{
+public:
+  TwoStaticTestLenses()
+  : lens_1_(new StaticTestLens("first.lens", "First Lens", "The very first lens", "First search hint"))
+  , lens_2_(new StaticTestLens("second.lens", "Second Lens", "The second lens", "Second search hint"))
+  {
+    list_.push_back(lens_1_);
+    list_.push_back(lens_2_);
+  }
+
+private:
   Lens::Ptr lens_1_;
   Lens::Ptr lens_2_;
 };
@@ -226,7 +236,7 @@ TEST(TestHomeLens, TestInitiallyEmpty)
 TEST(TestHomeLens, TestTwoStaticLenses)
 {
   HomeLens home_lens_("name", "description", "searchhint");
-  StaticTestLenses lenses_;
+  TwoStaticTestLenses lenses_;
 
   home_lens_.AddLenses(lenses_);
 
@@ -251,7 +261,7 @@ TEST(TestHomeLens, TestTwoStaticLenses)
 TEST(TestHomeLens, TestOneSearch)
 {
   HomeLens home_lens_("name", "description", "searchhint");
-  StaticTestLenses lenses_;
+  TwoStaticTestLenses lenses_;
   DeeModel* results = home_lens_.results()->model();
 
   home_lens_.AddLenses(lenses_);
