@@ -676,14 +676,7 @@ struct ShortcutData
   gchar* nick;
 };
 
-static void shortcut_data_destroy(ShortcutData* data)
-{
-  g_object_unref(data->shortcuts);
-  g_free(data->nick);
-  delete data;
-}
-
-static void shortcut_activated(DbusmenuMenuitem* _sender, guint timestamp, ShortcutData* data)
+static void shortcut_activated(DbusmenuMenuitem* item, guint time, ShortcutData* data)
 {
   indicator_desktop_shortcuts_nick_exec(data->shortcuts, data->nick);
 }
@@ -741,7 +734,12 @@ void BamfLauncherIcon::UpdateDesktopQuickList()
         dbusmenu_menuitem_property_set_bool(item, DBUSMENU_MENUITEM_PROP_VISIBLE, TRUE);
         g_signal_connect_data(item, "item-activated",
                               (GCallback) shortcut_activated, data,
-                              (GClosureNotify) shortcut_data_destroy, (GConnectFlags)0);
+                              [] (gpointer user_data, GClosure*) {
+                                auto data = static_cast<ShortcutData*>(user_data);
+                                g_object_unref(data->shortcuts);
+                                g_free(data->nick);
+                                delete data;
+                              }, (GConnectFlags) 0);
 
         dbusmenu_menuitem_child_append(_menu_desktop_shortcuts, item);
         index++;
