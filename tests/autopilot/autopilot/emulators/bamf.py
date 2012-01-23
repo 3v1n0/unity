@@ -111,7 +111,7 @@ class Bamf:
         """
         # I'd love a better way to do this, but polling seems to be the 
         # only option right now.
-        wait_forever = timeout > 0
+        wait_forever = timeout < 0
         while True:
             if self.application_is_running(app_name):
                 return True
