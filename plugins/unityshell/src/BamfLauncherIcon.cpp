@@ -59,114 +59,6 @@ static void shortcut_activated(DbusmenuMenuitem* _sender, guint timestamp, gpoin
   indicator_desktop_shortcuts_nick_exec(data->shortcuts, data->nick);
 }
 
-void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
-{
-  SimpleLauncherIcon::ActivateLauncherIcon(arg);
-  bool scaleWasActive = WindowManager::Default()->IsScaleActive();
-  GList    *l;
-  BamfView *view;
-
-  bool active, running, user_visible;
-  active = bamf_view_is_active(BAMF_VIEW(_bamf_app.RawPtr()));
-  running = bamf_view_is_running(BAMF_VIEW(_bamf_app.RawPtr()));
-  user_visible = running;
-
-  if (arg.target && OwnsWindow (arg.target))
-  {
-    WindowManager::Default()->Activate(arg.target);
-    return;
-  }
-
-  /* We should check each child to see if there is
-   * an unmapped (!= minimized) window around and
-   * if so force "Focus" behaviour */
-
-  if (arg.source != ActionArg::SWITCHER)
-  {
-    user_visible = bamf_view_user_visible(BAMF_VIEW(_bamf_app.RawPtr()));
-
-    bool any_visible = false;
-    for (l = bamf_view_get_children(BAMF_VIEW(_bamf_app.RawPtr())); l; l = l->next)
-    {
-      view = BAMF_VIEW(l->data);
-
-      if (BAMF_IS_WINDOW(view))
-      {
-        Window xid = bamf_window_get_xid(BAMF_WINDOW(view));
-
-        if (!any_visible && WindowManager::Default()->IsWindowOnCurrentDesktop(xid))
-        {
-          any_visible = true;
-        }
-        if (active && !WindowManager::Default()->IsWindowMapped(xid))
-        {
-          active = false;
-        }
-      }
-    }
-
-    if (!any_visible)
-      active = false;
-  }
-
-  /* Behaviour:
-   * 1) Nothing running, or nothing visible -> launch application
-   * 2) Running and active -> spread application
-   * 3) Running and not active -> focus application
-   * 4) Spread is active and different icon pressed -> change spread
-   * 5) Spread is active -> Spread de-activated, and fall through
-   */
-
-  if (!running || (running && !user_visible)) // #1 above
-  {
-    if (GetQuirk(QUIRK_STARTING))
-      return;
-
-    if (scaleWasActive)
-    {
-      WindowManager::Default()->TerminateScale();
-    }
-
-    SetQuirk(QUIRK_STARTING, true);
-    OpenInstanceLauncherIcon(ActionArg());
-  }
-  else // app is running
-  {
-    if (active)
-    {
-      if (scaleWasActive) // #5 above
-      {
-        WindowManager::Default()->TerminateScale();
-        Focus(arg);
-      }
-      else // #2 above
-      {
-        if (arg.source != ActionArg::SWITCHER)
-        {
-          Spread(true, 0, false);
-        }
-      }
-    }
-    else
-    {
-      if (scaleWasActive) // #4 above
-      {
-        WindowManager::Default()->TerminateScale();
-        Focus(arg);
-        if (arg.source != ActionArg::SWITCHER)
-          Spread(true, 0, false);
-      }
-      else // #3 above
-      {
-        Focus(arg);
-      }
-    }
-  }
-
-  if (arg.source != ActionArg::SWITCHER)
-    ubus_server_send_message(ubus_server_get_default(), UBUS_LAUNCHER_ACTION_DONE, nullptr);
-}
-
 BamfLauncherIcon::BamfLauncherIcon(Launcher* IconManager, BamfApplication* app)
   : SimpleLauncherIcon(IconManager)
   , _bamf_app(app, glib::AddRef())
@@ -305,6 +197,114 @@ BamfLauncherIcon::~BamfLauncherIcon()
     g_source_remove(_window_moved_id);
 
   g_free(_cached_name);
+}
+
+void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
+{
+  SimpleLauncherIcon::ActivateLauncherIcon(arg);
+  bool scaleWasActive = WindowManager::Default()->IsScaleActive();
+  GList    *l;
+  BamfView *view;
+
+  bool active, running, user_visible;
+  active = bamf_view_is_active(BAMF_VIEW(_bamf_app.RawPtr()));
+  running = bamf_view_is_running(BAMF_VIEW(_bamf_app.RawPtr()));
+  user_visible = running;
+
+  if (arg.target && OwnsWindow (arg.target))
+  {
+    WindowManager::Default()->Activate(arg.target);
+    return;
+  }
+
+  /* We should check each child to see if there is
+   * an unmapped (!= minimized) window around and
+   * if so force "Focus" behaviour */
+
+  if (arg.source != ActionArg::SWITCHER)
+  {
+    user_visible = bamf_view_user_visible(BAMF_VIEW(_bamf_app.RawPtr()));
+
+    bool any_visible = false;
+    for (l = bamf_view_get_children(BAMF_VIEW(_bamf_app.RawPtr())); l; l = l->next)
+    {
+      view = BAMF_VIEW(l->data);
+
+      if (BAMF_IS_WINDOW(view))
+      {
+        Window xid = bamf_window_get_xid(BAMF_WINDOW(view));
+
+        if (!any_visible && WindowManager::Default()->IsWindowOnCurrentDesktop(xid))
+        {
+          any_visible = true;
+        }
+        if (active && !WindowManager::Default()->IsWindowMapped(xid))
+        {
+          active = false;
+        }
+      }
+    }
+
+    if (!any_visible)
+      active = false;
+  }
+
+  /* Behaviour:
+   * 1) Nothing running, or nothing visible -> launch application
+   * 2) Running and active -> spread application
+   * 3) Running and not active -> focus application
+   * 4) Spread is active and different icon pressed -> change spread
+   * 5) Spread is active -> Spread de-activated, and fall through
+   */
+
+  if (!running || (running && !user_visible)) // #1 above
+  {
+    if (GetQuirk(QUIRK_STARTING))
+      return;
+
+    if (scaleWasActive)
+    {
+      WindowManager::Default()->TerminateScale();
+    }
+
+    SetQuirk(QUIRK_STARTING, true);
+    OpenInstanceLauncherIcon(ActionArg());
+  }
+  else // app is running
+  {
+    if (active)
+    {
+      if (scaleWasActive) // #5 above
+      {
+        WindowManager::Default()->TerminateScale();
+        Focus(arg);
+      }
+      else // #2 above
+      {
+        if (arg.source != ActionArg::SWITCHER)
+        {
+          Spread(true, 0, false);
+        }
+      }
+    }
+    else
+    {
+      if (scaleWasActive) // #4 above
+      {
+        WindowManager::Default()->TerminateScale();
+        Focus(arg);
+        if (arg.source != ActionArg::SWITCHER)
+          Spread(true, 0, false);
+      }
+      else // #3 above
+      {
+        Focus(arg);
+      }
+    }
+  }
+
+  if (arg.source != ActionArg::SWITCHER)
+    ubus_server_send_message(ubus_server_get_default(), UBUS_LAUNCHER_ACTION_DONE, nullptr);
 }
 
 std::vector<Window> BamfLauncherIcon::RelatedXids ()

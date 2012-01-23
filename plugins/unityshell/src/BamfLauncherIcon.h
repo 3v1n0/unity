@@ -43,12 +43,13 @@ public:
   BamfLauncherIcon(Launcher* IconManager, BamfApplication* app);
   virtual ~BamfLauncherIcon();
 
+  void ActivateLauncherIcon(ActionArg arg);
+
   const char* DesktopFile();
   bool IsSticky();
   void Quit();
   void Stick();
   void UnStick();
-  void ActivateLauncherIcon(ActionArg arg);
 
   virtual bool ShowInSwitcher();
   virtual unsigned long long SwitcherPriority();
