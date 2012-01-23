@@ -47,7 +47,7 @@ FilterGenre::FilterGenre(int columns, NUX_FILE_LINE_DECL)
   genre_layout_->ForceChildrenSize(true);
   genre_layout_->MatchContentSize(true);
   genre_layout_->SetSpaceBetweenChildren (9, 9);
-  genre_layout_->SetTopAndBottomPadding(12);
+  genre_layout_->SetTopAndBottomPadding(9);
   genre_layout_->EnablePartialVisibility(false);
   if (columns == 3)
   {

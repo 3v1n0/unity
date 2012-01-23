@@ -129,7 +129,6 @@ void FilterBar::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
                                    geom.x             , geom.y + geom.height - 1,
                                    geom.x + geom.width, geom.y + geom.height - 1,
                                    col);
-      //GfxContext.GetRenderStates().SetBlend(false);
       GfxContext.GetRenderStates().SetBlend(alpha, src, dest);
     }
     i++;
