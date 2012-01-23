@@ -166,18 +166,6 @@ BamfLauncherIcon::~BamfLauncherIcon()
     g_object_unref(G_OBJECT(it->second));
   }
 
-  if (_menu_items.find("Pin") != _menu_items.end())
-  {
-    g_signal_handler_disconnect(G_OBJECT(_menu_items["Pin"]),
-                                _menu_callbacks["Pin"]);
-  }
-
-  if (_menu_items.find("Quit") != _menu_items.end())
-  {
-    g_signal_handler_disconnect(G_OBJECT(_menu_items["Quit"]),
-                                _menu_callbacks["Quit"]);
-  }
-
   for (auto it = _menu_items.begin(); it != _menu_items.end(); it++)
   {
     g_object_unref(G_OBJECT(it->second));
@@ -813,11 +801,6 @@ void BamfLauncherIcon::UpdateMenus()
 
 }
 
-void BamfLauncherIcon::OnQuit(DbusmenuMenuitem* item, int time, BamfLauncherIcon* self)
-{
-  self->Quit();
-}
-
 void BamfLauncherIcon::Quit()
 {
   GList* children, *l;
@@ -867,18 +850,16 @@ void BamfLauncherIcon::UnStick()
     FavoriteStore::GetDefault().RemoveFavorite(desktop_file);
 }
 
-void BamfLauncherIcon::OnTogglePin(DbusmenuMenuitem* item, int time, BamfLauncherIcon* self)
+void BamfLauncherIcon::ToggleSticky()
 {
-  BamfView* view = BAMF_VIEW(self->_bamf_app.RawPtr());
-  const gchar* desktop_file = self->DesktopFile();
-
-  if (self->IsSticky())
+  if (IsSticky())
   {
-    self->UnStick();
+    UnStick();
   }
   else
   {
-    bamf_view_set_sticky(view, true);
+    bamf_view_set_sticky(BAMF_VIEW(_bamf_app.RawPtr()), true);
+    const gchar* desktop_file = DesktopFile();
 
     if (desktop_file && strlen(desktop_file) > 0)
       FavoriteStore::GetDefault().AddFavorite(desktop_file, -1);
@@ -897,7 +878,10 @@ void BamfLauncherIcon::EnsureMenuItemsReady()
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
 
-    _menu_callbacks["Pin"] = g_signal_connect(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, (GCallback) &BamfLauncherIcon::OnTogglePin, this);
+    _gsignals.Add(new glib::Signal<void, DbusmenuMenuitem*, int>(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
+                                    [&] (DbusmenuMenuitem*, int) {
+                                      ToggleSticky();
+                                    }));
 
     _menu_items["Pin"] = menu_item;
   }
@@ -916,23 +900,13 @@ void BamfLauncherIcon::EnsureMenuItemsReady()
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
 
-    _menu_callbacks["Quit"] = g_signal_connect(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, (GCallback) &BamfLauncherIcon::OnQuit, this);
+    _gsignals.Add(new glib::Signal<void, DbusmenuMenuitem*, int>(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
+                                    [&] (DbusmenuMenuitem*, int) {
+                                      Quit();
+                                    }));
 
     _menu_items["Quit"] = menu_item;
   }
-}
-
-static void OnAppLabelActivated(DbusmenuMenuitem* sender,
-                                guint             timestamp,
-                                gpointer data)
-{
-  BamfLauncherIcon* self = nullptr;
-
-  if (!data)
-    return;
-
-  self = static_cast <BamfLauncherIcon*> (data);
-  self->ActivateLauncherIcon(ActionArg(ActionArg::OTHER, 0));
 }
 
 std::list<DbusmenuMenuitem*> BamfLauncherIcon::GetMenus()
@@ -1027,7 +1001,11 @@ std::list<DbusmenuMenuitem*> BamfLauncherIcon::GetMenus()
     dbusmenu_menuitem_property_set_bool(item,
                                         "unity-use-markup",
                                         true);
-    g_signal_connect(item, "item-activated", (GCallback) OnAppLabelActivated, this);
+
+    _gsignals.Add(new glib::Signal<void, DbusmenuMenuitem*, int>(item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
+                                    [&] (DbusmenuMenuitem*, int) {
+                                      ActivateLauncherIcon(ActionArg(ActionArg::OTHER, 0));
+                                    }));
 
     _menu_items_extra["AppName"] = item;
   }
@@ -1191,14 +1169,14 @@ nux::DndAction BamfLauncherIcon::OnQueryAcceptDrop(unity::DndData& dnd_data)
   return ValidateUrisForLaunch(dnd_data).empty() ? nux::DNDACTION_NONE : nux::DNDACTION_COPY;
 }
 
-void  BamfLauncherIcon::OnAcceptDrop(unity::DndData& dnd_data)
+void BamfLauncherIcon::OnAcceptDrop(unity::DndData& dnd_data)
 {
   OpenInstanceWithUris(ValidateUrisForLaunch(dnd_data));
 }
 
 bool BamfLauncherIcon::ShowInSwitcher()
 {
-  return GetQuirk(QUIRK_RUNNING) && GetQuirk(QUIRK_VISIBLE);
+  return IsRunning() && IsVisible();
 }
 
 unsigned long long BamfLauncherIcon::SwitcherPriority()

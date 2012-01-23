@@ -71,6 +71,7 @@ protected:
   void OnDndEnter();
   void OnDndLeave();
   void OpenInstanceLauncherIcon(ActionArg arg);
+  void ToggleSticky();
 
   nux::DndAction OnQueryAcceptDrop(unity::DndData& dnd_data);
 
@@ -84,7 +85,6 @@ protected:
 
 private:
   void EnsureWindowState();
-
   void UpdateDesktopFile();
   void UpdateMenus();
   void UpdateDesktopQuickList();
@@ -102,10 +102,6 @@ private:
   bool OwnsWindow(Window w);
 
   const std::set<std::string>& GetSupportedTypes();
-
-  static void OnQuit(DbusmenuMenuitem* item, int time, BamfLauncherIcon* self);
-  static void OnLaunch(DbusmenuMenuitem* item, int time, BamfLauncherIcon* self);
-  static void OnTogglePin(DbusmenuMenuitem* item, int time, BamfLauncherIcon* self);
 
   static gboolean OnDndHoveredTimeout(gpointer data);
   static gboolean FillSupportedTypes(gpointer data);
@@ -126,7 +122,6 @@ private:
   std::map<std::string, DbusmenuClient*> _menu_clients;
   std::map<std::string, DbusmenuMenuitem*> _menu_items;
   std::map<std::string, DbusmenuMenuitem*> _menu_items_extra;
-  std::map<std::string, gulong> _menu_callbacks;
   glib::Object<DbusmenuMenuitem> _menu_desktop_shortcuts;
   glib::Object<GFileMonitor> _desktop_file_monitor;
   glib::SignalManager _gsignals;
