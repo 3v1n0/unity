@@ -176,8 +176,6 @@ BamfLauncherIcon::BamfLauncherIcon(Launcher* IconManager, BamfApplication* app)
   , _dnd_hover_timer(0)
   , _cached_desktop_file(nullptr)
   , _cached_name(nullptr)
-  , _desktop_file_monitor(nullptr)
-  , _on_desktop_file_changed_handler_id(0)
   , _supported_types_filled(false)
   , _fill_supported_types_id(0)
   , _window_moved_id(0)
@@ -198,11 +196,7 @@ BamfLauncherIcon::BamfLauncherIcon(Launcher* IconManager, BamfApplication* app)
   SetQuirk(QUIRK_ACTIVE, bamf_view_is_active(bamf_view));
   SetQuirk(QUIRK_RUNNING, bamf_view_is_running(bamf_view));
 
-
   glib::SignalBase* sig;
-  sig = new glib::Signal<void, BamfView*, BamfView*>(bamf_view, "child-removed",
-                          [&] (BamfView*, BamfView*) { EnsureWindowState(); });
-  gsignals_.Add(sig);
 
   sig = new glib::Signal<void, BamfView*, BamfView*>(bamf_view, "child-added",
                           [&] (BamfView*, BamfView*) {
@@ -210,19 +204,23 @@ BamfLauncherIcon::BamfLauncherIcon(Launcher* IconManager, BamfApplication* app)
                             UpdateMenus();
                             UpdateIconGeometries(GetCenter());
                           });
-  gsignals_.Add(sig);
+  _gsignals.Add(sig);
+
+  sig = new glib::Signal<void, BamfView*, BamfView*>(bamf_view, "child-removed",
+                          [&] (BamfView*, BamfView*) { EnsureWindowState(); });
+  _gsignals.Add(sig);
 
   sig = new glib::Signal<void, BamfView*, gboolean>(bamf_view, "urgent-changed",
                           [&] (BamfView*, gboolean urgent) {
                             SetQuirk(QUIRK_URGENT, urgent);
                           });
-  gsignals_.Add(sig);
+  _gsignals.Add(sig);
 
   sig = new glib::Signal<void, BamfView*, gboolean>(bamf_view, "active-changed",
                           [&] (BamfView*, gboolean active) {
                             SetQuirk(QUIRK_ACTIVE, active);
                           });
-  gsignals_.Add(sig);
+  _gsignals.Add(sig);
 
   sig = new glib::Signal<void, BamfView*, gboolean>(bamf_view, "running-changed",
                           [&] (BamfView*, gboolean running) {
@@ -233,21 +231,21 @@ BamfLauncherIcon::BamfLauncherIcon(Launcher* IconManager, BamfApplication* app)
                               UpdateIconGeometries(GetCenter());
                             }
                           });
-  gsignals_.Add(sig);
+  _gsignals.Add(sig);
 
   sig = new glib::Signal<void, BamfView*, gboolean>(bamf_view, "user-visible-changed",
                           [&] (BamfView*, gboolean visible) {
                             if (!IsSticky())
                               SetQuirk(QUIRK_VISIBLE, visible);
                           });
-  gsignals_.Add(sig);
+  _gsignals.Add(sig);
 
   sig = new glib::Signal<void, BamfView*>(bamf_view, "closed",
                           [&] (BamfView*) {
                             if (!IsSticky())
                               Remove();
                           });
-  gsignals_.Add(sig);
+  _gsignals.Add(sig);
 
   WindowManager::Default()->window_minimized.connect(sigc::mem_fun(this, &BamfLauncherIcon::OnWindowMinimized));
   WindowManager::Default()->window_moved.connect(sigc::mem_fun(this, &BamfLauncherIcon::OnWindowMoved));
@@ -264,7 +262,6 @@ BamfLauncherIcon::BamfLauncherIcon(Launcher* IconManager, BamfApplication* app)
 
   // Calls when there are no higher priority events pending to the default main loop.
   _fill_supported_types_id = g_idle_add((GSourceFunc)FillSupportedTypes, this);
-
 }
 
 BamfLauncherIcon::~BamfLauncherIcon()
@@ -301,17 +298,11 @@ BamfLauncherIcon::~BamfLauncherIcon()
     g_object_unref(G_OBJECT(it->second));
   }
 
-  if (_on_desktop_file_changed_handler_id != 0)
-    g_signal_handler_disconnect(G_OBJECT(_desktop_file_monitor),
-                                _on_desktop_file_changed_handler_id);
-
   if (_fill_supported_types_id != 0)
     g_source_remove(_fill_supported_types_id);
 
   if (_window_moved_id != 0)
     g_source_remove(_window_moved_id);
-
-  g_object_unref(_desktop_file_monitor);
 
   g_free(_cached_desktop_file);
   g_free(_cached_name);
@@ -418,21 +409,28 @@ void BamfLauncherIcon::UpdateDesktopFile()
     // we can remove ourself from the launcher and when it's changed
     // we can update the quicklist.
     if (_desktop_file_monitor)
-    {
-      if (_on_desktop_file_changed_handler_id != 0)
-        g_signal_handler_disconnect(G_OBJECT(_desktop_file_monitor),
-                                    _on_desktop_file_changed_handler_id);
-      g_object_unref(_desktop_file_monitor);
-    }
+      _gsignals.Disconnect(_desktop_file_monitor, "changed");
 
-    GFile* desktop_file = g_file_new_for_path(DesktopFile());
+    glib::Object<GFile> desktop_file(g_file_new_for_path(DesktopFile()));
     _desktop_file_monitor = g_file_monitor_file(desktop_file, G_FILE_MONITOR_NONE,
                                                 nullptr, nullptr);
-    g_file_monitor_set_rate_limit (_desktop_file_monitor, 1000);
-    _on_desktop_file_changed_handler_id = g_signal_connect(_desktop_file_monitor,
-                                                           "changed",
-                                                           G_CALLBACK(&BamfLauncherIcon::OnDesktopFileChanged),
-                                                           this);
+    g_file_monitor_set_rate_limit(_desktop_file_monitor, 1000);
+
+    auto sig = new glib::Signal<void, GFileMonitor*, GFile*, GFile*, GFileMonitorEvent>(_desktop_file_monitor, "changed",
+                                [&] (GFileMonitor*, GFile*, GFile*, GFileMonitorEvent event_type) {
+                                  switch (event_type)
+                                  {
+                                    case G_FILE_MONITOR_EVENT_DELETED:
+                                      UnStick();
+                                      break;
+                                    case G_FILE_MONITOR_EVENT_CHANGES_DONE_HINT:
+                                      UpdateDesktopQuickList();
+                                      break;
+                                    default:
+                                      break;
+                                  }
+                                });
+    _gsignals.Add(sig);
   }
 }
 

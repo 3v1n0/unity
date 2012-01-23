@@ -119,9 +119,6 @@ private:
   gchar* _cached_desktop_file;
   gchar* _cached_name;
 
-  GFileMonitor* _desktop_file_monitor;
-  gulong _on_desktop_file_changed_handler_id;
-
   bool _supported_types_filled;
   guint _fill_supported_types_id;
   guint32 _window_moved_id;
@@ -132,7 +129,8 @@ private:
   std::map<std::string, DbusmenuMenuitem*> _menu_items_extra;
   std::map<std::string, gulong> _menu_callbacks;
   glib::Object<DbusmenuMenuitem> _menu_desktop_shortcuts;
-  glib::SignalManager gsignals_;
+  glib::Object<GFileMonitor> _desktop_file_monitor;
+  glib::SignalManager _gsignals;
 };
 
 }
