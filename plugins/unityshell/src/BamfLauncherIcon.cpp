@@ -63,11 +63,10 @@ BamfLauncherIcon::BamfLauncherIcon(Launcher* IconManager, BamfApplication* app)
   : SimpleLauncherIcon(IconManager)
   , _bamf_app(app, glib::AddRef())
   , _launcher(IconManager)
+  , _desktop_file(nullptr)
   , _remote_uri(nullptr)
   , _dnd_hovered(false)
   , _dnd_hover_timer(0)
-  , _desktop_file(nullptr)
-  , _cached_name(nullptr)
   , _supported_types_filled(false)
   , _fill_supported_types_id(0)
   , _window_moved_id(0)
@@ -195,8 +194,6 @@ BamfLauncherIcon::~BamfLauncherIcon()
 
   if (_window_moved_id != 0)
     g_source_remove(_window_moved_id);
-
-  g_free(_cached_name);
 }
 
 void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
@@ -333,7 +330,7 @@ std::vector<Window> BamfLauncherIcon::RelatedXids ()
   return results;
 }
 
-std::string BamfLauncherIcon::NameForWindow (Window window)
+std::string BamfLauncherIcon::NameForWindow(Window window)
 {
   std::string result;
   GList* children, *l;
@@ -436,19 +433,9 @@ const char* BamfLauncherIcon::DesktopFile()
   return _desktop_file;
 }
 
-char* BamfLauncherIcon::BamfName()
+std::string BamfLauncherIcon::BamfName()
 {
-  gchar* name = bamf_view_get_name(BAMF_VIEW(_bamf_app.RawPtr()));
-
-  if (name == nullptr)
-    name = g_strdup("");
-
-  if (_cached_name != nullptr)
-    g_free(_cached_name);
-
-  _cached_name = name;
-
-  return _cached_name;
+  return bamf_view_get_name(BAMF_VIEW(_bamf_app.RawPtr()));
 }
 
 void BamfLauncherIcon::AddProperties(GVariantBuilder* builder)
@@ -1017,7 +1004,7 @@ std::list<DbusmenuMenuitem*> BamfLauncherIcon::GetMenus()
   }
   else
   {
-    glib::String app_name(g_markup_escape_text(BamfName(), -1));
+    glib::String app_name(g_markup_escape_text(BamfName().c_str(), -1));
     std::ostringstream bold_app_name;
     bold_app_name << "<b>" << app_name << "</b>";
 

@@ -72,7 +72,7 @@ protected:
   std::set<std::string> ValidateUrisForLaunch(unity::DndData& dnd_data);
 
   const gchar* GetRemoteUri();
-  char* BamfName();
+  std::string BamfName();
 
   bool HandlesSpread() { return true; }
 
@@ -113,12 +113,10 @@ private:
 
   glib::Object<BamfApplication> _bamf_app;
   Launcher* _launcher;
+  const gchar* _desktop_file;
   gchar* _remote_uri;
   bool _dnd_hovered;
   guint _dnd_hover_timer;
-
-  const gchar* _desktop_file;
-  gchar* _cached_name;
 
   bool _supported_types_filled;
   guint _fill_supported_types_id;
