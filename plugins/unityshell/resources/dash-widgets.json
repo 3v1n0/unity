@@ -40,7 +40,7 @@
     "icon-gap"       : 40},
 
   "button-label": {
-    "border-opacity" : [      1.0,      0.15,      0.15,      0.15,      0.15],
+    "border-opacity" : [      0.8,      0.15,      0.15,      0.15,      0.15],
     "border-color"   : ["#ffffff", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF"],
     "border-size"    : [      2.0,       1.0,       1.0,       0.5,       0.5],
     "text-size"      : 1.0,

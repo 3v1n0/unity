@@ -44,13 +44,18 @@
 
 #include "DashStyle.h"
 
-static const nux::Color kExpandDefaultTextColor(1.0f, 1.0f, 1.0f, 0.5f);
-static const nux::Color kExpandHoverTextColor(1.0f, 1.0f, 1.0f, 1.0f);
-static const float kExpandDefaultIconOpacity = 0.5f;
-static const float kExpandHoverIconOpacity = 1.0f;
-
 namespace unity
 {
+namespace
+{
+
+const nux::Color kExpandDefaultTextColor(1.0f, 1.0f, 1.0f, 1.0f);
+const nux::Color kExpandHoverTextColor(1.0f, 1.0f, 1.0f, 1.0f);
+const float kExpandDefaultIconOpacity = 1.0f;
+const float kExpandHoverIconOpacity = 1.0f;
+
+}
+
 NUX_IMPLEMENT_OBJECT_TYPE(PlacesGroup);
 
 PlacesGroup::PlacesGroup()
@@ -82,7 +87,7 @@ PlacesGroup::PlacesGroup()
   _text_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
   _text_layout->SetHorizontalInternalMargin(15);
   _header_layout->AddLayout(_text_layout, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
-  
+
   _name = new nux::StaticCairoText("", NUX_TRACKER_LOCATION);
   _name->SetTextEllipsize(nux::StaticCairoText::NUX_ELLIPSIZE_END);
   _name->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_LEFT);
@@ -143,17 +148,10 @@ PlacesGroup::OnLabelActivated(nux::Area* label)
 void
 PlacesGroup::OnLabelFocusChanged(nux::Area* label)
 {
-  if (_expand_label->HasKeyFocus() || _expand_icon->HasKeyFocus())
-  {
-    _expand_label->SetTextColor(kExpandHoverTextColor);
-    _expand_icon->SetOpacity(kExpandHoverIconOpacity);
-  }
-  else if (!IsMouseInside())
-  {
-    _expand_label->SetTextColor(kExpandDefaultTextColor);
-    _expand_icon->SetOpacity(kExpandDefaultIconOpacity);
-  }
+  _expand_label->QueueDraw();
+  QueueDraw();
 }
+
 void
 PlacesGroup::SetName(const char* name)
 {
@@ -302,19 +300,21 @@ PlacesGroup::OnIdleRelayout(PlacesGroup* self)
 void PlacesGroup::Draw(nux::GraphicsEngine& GfxContext,
                        bool                 forceDraw)
 {
-  nux::Geometry base = GetGeometry();
+  nux::Geometry const& base = GetGeometry();
   GfxContext.PushClippingRectangle(base);
-
-  nux::Color col(0.15f, 0.15f, 0.15f, 0.15f);
+  
+  nux::GetPainter().PaintBackground(GfxContext, base);
 
   if (_draw_sep)
   {
+    nux::Color col(0.15f, 0.15f, 0.15f, 0.15f);
+
     GfxContext.GetRenderStates().SetColorMask(true, true, true, true);
     GfxContext.GetRenderStates().SetBlend(true);
     GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
     nux::GetPainter().Draw2DLine(GfxContext,
-                                 base.x + 15, base.y + base.height - 1,
-                                 base.x + base.width - 15, base.y + base.height - 1,
+                                 base.x + 11, base.y + base.height - 1,
+                                 base.x + base.width - 5, base.y + base.height - 1,
                                  col);
   }
 
@@ -324,10 +324,22 @@ void PlacesGroup::Draw(nux::GraphicsEngine& GfxContext,
 void
 PlacesGroup::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
-  nux::Geometry base = GetGeometry();
+  nux::Geometry const& base = GetGeometry();
+
   GfxContext.PushClippingRectangle(base);
+  
+  if (_expand_label->HasKeyFocus())
+  {
+    nux::Color col(0.2, 0.2, 0.2, 0.2);
+    nux::Geometry geo(_header_layout->GetGeometry());
+    geo.x = base.x;
+    geo.width = base.width;
+    
+    nux::GetPainter().Paint2DQuadColor(GfxContext, geo, col);
+  }
 
   _group_layout->ProcessDraw(GfxContext, force_draw);
+
   GfxContext.PopClippingRectangle();
 }
 
@@ -382,18 +394,13 @@ PlacesGroup::RecvMouseClick(int x, int y, unsigned long button_flags, unsigned l
 void
 PlacesGroup::RecvMouseEnter(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  _expand_label->SetTextColor(kExpandHoverTextColor);
-  _expand_icon->SetOpacity(kExpandHoverIconOpacity);
+  QueueDraw();
 }
 
 void
 PlacesGroup::RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  if (!_expand_label->HasKeyFocus())
-  {
-    _expand_label->SetTextColor(kExpandDefaultTextColor);
-    _expand_icon->SetOpacity(kExpandDefaultIconOpacity);
-  }
+  QueueDraw();
 }
 
 int

@@ -65,6 +65,7 @@ IconTexture::IconTexture(const char* icon_name, unsigned int size, bool defer_ic
     _loading(false),
     _opacity(1.0f)
 {
+  _accept_key_nav_focus = false;
   _icon_name = g_strdup(icon_name ? icon_name : DEFAULT_ICON);
 
   if (!g_strcmp0(_icon_name, "") == 0 && !defer_icon_loading)

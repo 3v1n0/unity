@@ -44,7 +44,7 @@ FilterMultiRange::FilterMultiRange(NUX_FILE_LINE_DECL)
   all_button_ = new FilterAllButton(NUX_TRACKER_LOCATION);
 
   layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
-  layout_->SetVerticalExternalMargin(12);
+  layout_->SetTopAndBottomPadding(9, 12);
 
   SetRightHandView(all_button_);
   SetContents(layout_);
@@ -158,16 +158,17 @@ void FilterMultiRange::InitTheme()
 void FilterMultiRange::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
   nux::Geometry const& geo = GetGeometry();
-  nux::Color col(0.2f, 0.2f, 0.2f, 0.2f);
 
   GfxContext.PushClippingRectangle(geo);
   nux::GetPainter().PaintBackground(GfxContext, geo);
 
-  nux::GetPainter().Draw2DLine(GfxContext,
-                               geo.x, geo.y + geo.height - 1,
-                               geo.x + geo.width, geo.y + geo.height - 1,
-                               col,
-                               col);
+  // debug layout
+  /*nux::Color blue(0.0, 0.0, 1.0, 0.5);
+  nux::Color orange(1.0, 0.5, 0.25, 0.5);
+  nux::Color yellow(1.0, 1.0, 0.0, 0.5);
+  nux::GetPainter().Paint2DQuadColor(GfxContext, GetGeometry(), yellow);
+  nux::GetPainter().Paint2DQuadColor(GfxContext, layout_->GetGeometry(), blue);
+  nux::GetPainter().Paint2DQuadColor(GfxContext, all_button_->GetGeometry(), orange);*/
 
   GfxContext.PopClippingRectangle();
 }
