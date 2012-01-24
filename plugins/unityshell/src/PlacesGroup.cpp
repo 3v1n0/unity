@@ -349,7 +349,7 @@ PlacesGroup::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
 
   graphics_engine.PushClippingRectangle(base);
   
-  if (_expand_label->HasKeyFocus() && (force_draw == false))
+  if (_expand_label->HasKeyFocus() && !IsFullRedraw())
   {
     nux::Geometry geo(_header_layout->GetGeometry());
     geo.x = base.x;
