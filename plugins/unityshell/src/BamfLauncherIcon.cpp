@@ -682,29 +682,26 @@ void BamfLauncherIcon::UpdateDesktopQuickList()
     const gchar** nicks = indicator_desktop_shortcuts_get_nicks(_desktop_shortcuts);
 
     int index = 0;
-    if (nicks)
+    while (nicks[index])
     {
-      while (nicks[index])
-      {
-        glib::String name(indicator_desktop_shortcuts_nick_get_name(_desktop_shortcuts,
-                                                                    nicks[index]));
-        glib::Object<DbusmenuMenuitem> item(dbusmenu_menuitem_new());
-        dbusmenu_menuitem_property_set(item, DBUSMENU_MENUITEM_PROP_LABEL, name);
-        dbusmenu_menuitem_property_set_bool(item, DBUSMENU_MENUITEM_PROP_ENABLED, TRUE);
-        dbusmenu_menuitem_property_set_bool(item, DBUSMENU_MENUITEM_PROP_VISIBLE, TRUE);
-        dbusmenu_menuitem_property_set(item, "shortcut-nick", nicks[index]);
+      glib::String name(indicator_desktop_shortcuts_nick_get_name(_desktop_shortcuts,
+                                                                  nicks[index]));
+      glib::Object<DbusmenuMenuitem> item(dbusmenu_menuitem_new());
+      dbusmenu_menuitem_property_set(item, DBUSMENU_MENUITEM_PROP_LABEL, name);
+      dbusmenu_menuitem_property_set_bool(item, DBUSMENU_MENUITEM_PROP_ENABLED, TRUE);
+      dbusmenu_menuitem_property_set_bool(item, DBUSMENU_MENUITEM_PROP_VISIBLE, TRUE);
+      dbusmenu_menuitem_property_set(item, "shortcut-nick", nicks[index]);
 
-        auto sig = new glib::Signal<void, DbusmenuMenuitem*, gint>(item, "item-activated",
-                                    [&] (DbusmenuMenuitem* item, gint) {
-                                      const gchar *nick;
-                                      nick = dbusmenu_menuitem_property_get(item, "shortcut-nick");
-                                      indicator_desktop_shortcuts_nick_exec(_desktop_shortcuts, nick);
-                                    });
-        _gsignals.Add(sig);
+      auto sig = new glib::Signal<void, DbusmenuMenuitem*, gint>(item, "item-activated",
+                                  [&] (DbusmenuMenuitem* item, gint) {
+                                    const gchar *nick;
+                                    nick = dbusmenu_menuitem_property_get(item, "shortcut-nick");
+                                    indicator_desktop_shortcuts_nick_exec(_desktop_shortcuts, nick);
+                                  });
+      _gsignals.Add(sig);
 
-        dbusmenu_menuitem_child_append(_menu_desktop_shortcuts, item);
-        index++;
-      }
+      dbusmenu_menuitem_child_append(_menu_desktop_shortcuts, item);
+      index++;
     }
   }
 
@@ -1048,7 +1045,7 @@ const gchar* BamfLauncherIcon::GetRemoteUri()
 {
   if (_remote_uri.empty())
   {
-    std::string prefix = "application://";
+    const std::string prefix = "application://";
     glib::String basename(g_path_get_basename(DesktopFile().c_str()));
 
     if (!basename.Str().empty())
