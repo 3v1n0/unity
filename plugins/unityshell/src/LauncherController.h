@@ -53,7 +53,7 @@ public:
 
   void UpdateNumWorkspaces(int workspaces);
   std::vector<char> GetAllShortcuts();
-  std::vector<AbstractLauncherIcon*> GetAltTabIcons();
+  std::vector<AbstractLauncherIcon*> GetAltTabIcons(bool current);
 
   void PushToFront();
 

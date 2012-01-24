@@ -117,7 +117,7 @@ public:
     return 7;
   }
 
-  const bool HasWindowOnViewport()
+  const bool WindowVisibleOnMonitor()
   {
     return false;
   }

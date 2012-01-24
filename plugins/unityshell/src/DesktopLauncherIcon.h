@@ -42,12 +42,7 @@ public:
     show_in_switcher_ = show_in_switcher;
   }
 
-  const bool HasWindowOnViewport()
-  {
-    return true;
-  }
-
-  bool ShowInSwitcher()
+  bool ShowInSwitcher(bool current)
   {
     return show_in_switcher_;
   }

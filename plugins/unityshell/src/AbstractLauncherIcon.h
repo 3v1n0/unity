@@ -154,7 +154,7 @@ public:
 
   virtual std::string NameForWindow (Window window) = 0;
 
-  virtual const bool HasWindowOnViewport(int monitor) = 0;
+  virtual const bool WindowVisibleOnMonitor(int monitor) = 0;
 
   virtual bool IsSpacer() = 0;
 
@@ -162,7 +162,7 @@ public:
 
   virtual float GetProgress() = 0;
 
-  virtual bool ShowInSwitcher() = 0;
+  virtual bool ShowInSwitcher(bool current) = 0;
 
   virtual unsigned long long SwitcherPriority() = 0;
 

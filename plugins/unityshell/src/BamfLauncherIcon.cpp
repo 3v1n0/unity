@@ -714,7 +714,7 @@ void BamfLauncherIcon::EnsureWindowState()
   }
 
   for (int i = 0; i < max_num_monitors; i++)
-    SetHasWindowOnViewport(monitors[i], i);
+    SetWindowVisibleOnMonitor(monitors[i], i);
 
   g_list_free(children);
 }
@@ -1256,9 +1256,30 @@ void BamfLauncherIcon::OnDesktopFileChanged(GFileMonitor*        monitor,
 }
 
 bool
-BamfLauncherIcon::ShowInSwitcher()
+BamfLauncherIcon::ShowInSwitcher(bool current)
 {
-  return GetQuirk(QUIRK_RUNNING) && GetQuirk(QUIRK_VISIBLE);
+  bool result = false;
+
+  if (GetQuirk(QUIRK_RUNNING) && GetQuirk(QUIRK_VISIBLE))
+  {
+    if (current)
+    {
+      result = true;
+    }
+    else
+    {
+      for (int i = 0; i < max_num_monitors; i++)
+      {
+        if (WindowVisibleOnMonitor(i))
+        {
+          result = true;
+          break;
+        }
+      }
+    }
+  }
+
+  return result;
 }
 
 unsigned long long

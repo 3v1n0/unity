@@ -52,7 +52,7 @@ public:
 
   void ActivateLauncherIcon(ActionArg arg);
 
-  virtual bool ShowInSwitcher();
+  virtual bool ShowInSwitcher(bool current);
   virtual unsigned long long SwitcherPriority();
 
   std::vector<Window> Windows ();

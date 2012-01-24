@@ -638,14 +638,14 @@ std::vector<char> Controller::GetAllShortcuts()
   return shortcuts;
 }
 
-std::vector<AbstractLauncherIcon*> Controller::GetAltTabIcons()
+std::vector<AbstractLauncherIcon*> Controller::GetAltTabIcons(bool current)
 {
   std::vector<AbstractLauncherIcon*> results;
 
   results.push_back(pimpl->desktop_icon_.GetPointer());
 
   for (auto icon : *(pimpl->model_))
-    if (icon->ShowInSwitcher())
+    if (icon->ShowInSwitcher(current))
       results.push_back(icon);
 
   return results;

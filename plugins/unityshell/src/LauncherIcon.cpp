@@ -167,7 +167,7 @@ LauncherIcon::~LauncherIcon()
 }
 
 const bool
-LauncherIcon::HasWindowOnViewport(int monitor)
+LauncherIcon::WindowVisibleOnMonitor(int monitor)
 {
   return _has_visible_window[monitor];
 }
@@ -680,7 +680,7 @@ LauncherIcon::SaveCenter()
 }
 
 void
-LauncherIcon::SetHasWindowOnViewport(bool val, int monitor)
+LauncherIcon::SetWindowVisibleOnMonitor(bool val, int monitor)
 {
   if (_has_visible_window[monitor] == val)
     return;

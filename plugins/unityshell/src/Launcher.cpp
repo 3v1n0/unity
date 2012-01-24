@@ -1001,7 +1001,7 @@ bool Launcher::IconDrawEdgeOnly(AbstractLauncherIcon* icon)
   if (_backlight_mode == BACKLIGHT_EDGE_TOGGLE)
     return true;
 
-  if (_backlight_mode == BACKLIGHT_NORMAL_EDGE_TOGGLE && !icon->HasWindowOnViewport(monitor))
+  if (_backlight_mode == BACKLIGHT_NORMAL_EDGE_TOGGLE && !icon->WindowVisibleOnMonitor(monitor))
     return true;
 
   return false;
@@ -1015,7 +1015,7 @@ void Launcher::SetupRenderArg(AbstractLauncherIcon* icon, struct timespec const&
   arg.saturation          = desat_value;
   arg.running_arrow       = icon->GetQuirk(AbstractLauncherIcon::QUIRK_RUNNING);
   arg.running_colored     = icon->GetQuirk(AbstractLauncherIcon::QUIRK_URGENT);
-  arg.running_on_viewport = icon->HasWindowOnViewport(monitor);
+  arg.running_on_viewport = icon->WindowVisibleOnMonitor(monitor);
   arg.draw_edge_only      = IconDrawEdgeOnly(icon);
   arg.active_colored      = false;
   arg.x_rotation          = 0.0f;

@@ -45,6 +45,7 @@ Controller::Controller()
   timeout_length = 150;
   detail_on_timeout = true;
   detail_timeout_length = 1500;
+  monitor_ = 0;
 
   bg_color_ = nux::Color(0.0, 0.0, 0.0, 0.5);
 
@@ -72,14 +73,6 @@ void Controller::OnBackgroundUpdate(GVariant* data, Controller* self)
     self->view_->background_color = self->bg_color_;
 }
 
-bool IsOnOtherViewport (AbstractLauncherIcon* icon)
-{
-  if (icon->Type() == AbstractLauncherIcon::TYPE_BEGIN)
-    return false;
-
-  return !icon->HasWindowOnViewport(0); //FIXME
-}
-
 void Controller::Show(ShowMode show, SortMode sort, bool reverse,
                       std::vector<AbstractLauncherIcon*> results)
 {
@@ -88,11 +81,6 @@ void Controller::Show(ShowMode show, SortMode sort, bool reverse,
     std::sort(results.begin(), results.end(), CompareSwitcherItemsPriority);
   }
   
-  if (show == ShowMode::CURRENT_VIEWPORT)
-  {
-    results.erase(std::remove_if(results.begin(), results.end(), IsOnOtherViewport), results.end());
-  }
-
   model_.reset(new SwitcherModel(results));
   AddChild(model_.get());
   model_->selection_changed.connect(sigc::mem_fun(this, &Controller::OnModelSelectionChanged));
@@ -200,8 +188,9 @@ void Controller::ConstructView()
   view_window_->ShowWindow(true);
 }
 
-void Controller::SetWorkspace(nux::Geometry geo)
+void Controller::SetWorkspace(nux::Geometry geo, int monitor)
 {
+  monitor_ = monitor;
   workarea_ = geo;
 }
 

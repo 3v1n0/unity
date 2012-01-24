@@ -110,7 +110,7 @@ public:
 
   virtual std::string NameForWindow (Window window) { return std::string(); }
 
-  const bool HasWindowOnViewport(int monitor);
+  const bool WindowVisibleOnMonitor(int monitor);
 
   virtual bool IsSpacer()
   {
@@ -127,7 +127,7 @@ public:
 
   void DeleteEmblem();
 
-  virtual bool ShowInSwitcher()
+  virtual bool ShowInSwitcher(bool current)
   {
     return false;
   };
@@ -205,7 +205,7 @@ protected:
 
   void SetProgress(float progress);
 
-  void SetHasWindowOnViewport(bool val, int monitor);
+  void SetWindowVisibleOnMonitor(bool val, int monitor);
 
   void Present(float urgency, int length);
 
