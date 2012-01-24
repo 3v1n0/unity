@@ -193,8 +193,6 @@ LauncherModel::ReorderBefore(LauncherIcon* icon, LauncherIcon* other, bool save)
   if (icon == other)
     return;
 
-  LauncherModel::iterator it;
-
   int i = 0;
   int j = 0;
   for (auto it : _inner)
