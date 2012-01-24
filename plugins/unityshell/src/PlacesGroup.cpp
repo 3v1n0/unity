@@ -128,6 +128,12 @@ PlacesGroup::PlacesGroup()
   _expand_icon->mouse_click.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseClick));
   _expand_icon->mouse_enter.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseEnter));
   _expand_icon->mouse_leave.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseLeave));
+
+  nux::ROPConfig rop;
+  rop.Blend = true;
+  rop.SrcBlend = GL_ONE;
+  rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+  bkg_color_layer_ = new nux::ColorLayer(nux::Color(0.2f, 0.2f, 0.2f, 0.2f), false, rop);
 }
 
 PlacesGroup::~PlacesGroup()
@@ -137,6 +143,8 @@ PlacesGroup::~PlacesGroup()
 
   if (_cached_name != NULL)
     g_free(_cached_name);
+
+  delete bkg_color_layer_;
 }
 
 void
@@ -297,53 +305,65 @@ PlacesGroup::OnIdleRelayout(PlacesGroup* self)
   return FALSE;
 }
 
-void PlacesGroup::Draw(nux::GraphicsEngine& GfxContext,
+void PlacesGroup::Draw(nux::GraphicsEngine& graphics_engine,
                        bool                 forceDraw)
 {
   nux::Geometry const& base = GetGeometry();
-  GfxContext.PushClippingRectangle(base);
+  graphics_engine.PushClippingRectangle(base);
   
-  nux::GetPainter().PaintBackground(GfxContext, base);
+  nux::GetPainter().PaintBackground(graphics_engine, base);
+
+  graphics_engine.GetRenderStates().SetColorMask(true, true, true, false);
+  graphics_engine.GetRenderStates().SetBlend(true);
+  graphics_engine.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
 
   if (_draw_sep)
   {
     nux::Color col(0.15f, 0.15f, 0.15f, 0.15f);
 
-    GfxContext.GetRenderStates().SetColorMask(true, true, true, true);
-    GfxContext.GetRenderStates().SetBlend(true);
-    GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
-    nux::GetPainter().Draw2DLine(GfxContext,
+    nux::GetPainter().Draw2DLine(graphics_engine,
                                  base.x + 11, base.y + base.height - 1,
                                  base.x + base.width - 5, base.y + base.height - 1,
                                  col);
   }
+  
+  graphics_engine.GetRenderStates().SetColorMask(true, true, true, true);
 
-  GfxContext.PopClippingRectangle();
+  if (_expand_label->HasKeyFocus())
+  {
+    nux::Geometry geo(_header_layout->GetGeometry());
+    geo.x = base.x;
+    geo.width = base.width;
+
+    bkg_color_layer_->SetGeometry(geo);
+    bkg_color_layer_->Renderlayer(graphics_engine);
+  }
+
+  graphics_engine.PopClippingRectangle();
 }
 
 void
-PlacesGroup::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
+PlacesGroup::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
 {
   nux::Geometry const& base = GetGeometry();
 
-  GfxContext.PushClippingRectangle(base);
+  graphics_engine.PushClippingRectangle(base);
   
-  if (_expand_label->HasKeyFocus())
+  if (_expand_label->HasKeyFocus() && (force_draw == false))
   {
-    nux::Color col(0.2, 0.2, 0.2, 0.2);
     nux::Geometry geo(_header_layout->GetGeometry());
     geo.x = base.x;
     geo.width = base.width;
     
-    nux::GetPainter().Paint2DQuadColor(GfxContext, geo, col);
+    nux::GetPainter().PushLayer(graphics_engine, geo, bkg_color_layer_);
   }
 
-  _group_layout->ProcessDraw(GfxContext, force_draw);
+  _group_layout->ProcessDraw(graphics_engine, force_draw);
 
-  GfxContext.PopClippingRectangle();
+  graphics_engine.PopClippingRectangle();
 }
 
-void PlacesGroup::PostDraw(nux::GraphicsEngine& GfxContext,
+void PlacesGroup::PostDraw(nux::GraphicsEngine& graphics_engine,
                            bool                 forceDraw)
 {
 }
