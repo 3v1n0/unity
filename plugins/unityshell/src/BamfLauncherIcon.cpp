@@ -475,49 +475,40 @@ bool BamfLauncherIcon::OwnsWindow(Window w)
 
 void BamfLauncherIcon::OpenInstanceWithUris(std::set<std::string> uris)
 {
-  GDesktopAppInfo* appInfo;
-  GError* error = nullptr;
+  glib::Error error;
+  glib::Object<GDesktopAppInfo> desktopInfo(g_desktop_app_info_new_from_filename(DesktopFile()));
+  auto appInfo = glib::object_cast<GAppInfo>(desktopInfo);
 
-  appInfo = g_desktop_app_info_new_from_filename(DesktopFile());
-
-  if (g_app_info_supports_uris(G_APP_INFO(appInfo)))
+  if (g_app_info_supports_uris(appInfo))
   {
     GList* list = nullptr;
 
     for (auto  it : uris)
       list = g_list_prepend(list, g_strdup(it.c_str()));
 
-    g_app_info_launch_uris(G_APP_INFO(appInfo), list, nullptr, &error);
+    g_app_info_launch_uris(appInfo, list, nullptr, &error);
     g_list_free_full(list, g_free);
   }
-  else if (g_app_info_supports_files(G_APP_INFO(appInfo)))
+  else if (g_app_info_supports_files(appInfo))
   {
-    GList* list = nullptr, *l;
+    GList* list = nullptr;
 
     for (auto it : uris)
     {
       GFile* file = g_file_new_for_uri(it.c_str());
       list = g_list_prepend(list, file);
     }
-    g_app_info_launch(G_APP_INFO(appInfo), list, nullptr, &error);
 
-    for (l = list; l; l = l->next)
-      g_object_unref(G_FILE(list->data));
-
-    g_list_free(list);
+    g_app_info_launch(appInfo, list, nullptr, &error);
+    g_list_free_full(list, g_object_unref);
   }
   else
   {
-    g_app_info_launch(G_APP_INFO(appInfo), nullptr, nullptr, &error);
+    g_app_info_launch(appInfo, nullptr, nullptr, &error);
   }
-
-  g_object_unref(appInfo);
 
   if (error)
-  {
-    g_warning("%s\n", error->message);
-    g_error_free(error);
-  }
+    g_warning("%s\n", error.Message().c_str());
 
   UpdateQuirkTime(QUIRK_STARTING);
 }
@@ -675,7 +666,7 @@ void BamfLauncherIcon::EnsureWindowState()
 void BamfLauncherIcon::UpdateDesktopQuickList()
 {
   GKeyFile* keyfile;
-  GError* error = nullptr;
+  glib::Error error;
   const char *desktop_file;
 
   desktop_file = DesktopFile();
@@ -690,11 +681,10 @@ void BamfLauncherIcon::UpdateDesktopQuickList()
   keyfile = g_key_file_new();
   g_key_file_load_from_file(keyfile, desktop_file, G_KEY_FILE_NONE, &error);
 
-  if (error != nullptr)
+  if (error)
   {
     g_warning("Could not load desktop file for: %s", desktop_file);
     g_key_file_free(keyfile);
-    g_error_free(error);
     return;
   }
 
@@ -1209,7 +1199,7 @@ void BamfLauncherIcon::FillSupportedTypes()
       return;
 
     GKeyFile* key_file = g_key_file_new();
-    unity::glib::Error error;
+    glib::Error error;
 
     g_key_file_load_from_file(key_file, desktop_file, (GKeyFileFlags) 0, &error);
 
