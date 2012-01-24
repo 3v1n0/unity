@@ -3,18 +3,8 @@
 #
 # Script to generate a nice PNG file of the currently running unity introspection tree.
 from sys import argv
-
-if len(argv) != 2:
-    print """Usage: %s output_file.png.
-
-This script queries the currently running Unity process and dumps the entire
-introspection tree into a graph, and renders this to a PNG file.
-""" % (argv[0])
-    exit(1)
-
 import dbus
 from autopilot.emulators.unity import Unity
-
 
 try:
     import pydot
@@ -25,6 +15,7 @@ except ImportError:
 NEXT_NODE_ID=1
 
 def string_rep(dbus_type):
+    """Get a string representation of various dbus types."""
     if type(dbus_type) == dbus.Boolean:
         return repr(bool(dbus_type))
     if type(dbus_type) == dbus.String:
@@ -37,10 +28,15 @@ def string_rep(dbus_type):
         return ', '.join([string_rep(i) for i in dbus_type])
     else:
         return repr(dbus_type)
+
+
 def escape(s):
+    """Escape a string so it can be use in a dot label."""
     return pydot.quote_if_necessary(s).replace('<','\\<').replace('>', '\\>')
 
-def traverse_graph(state, parent, graph):
+
+def traverse_tree(state, parent, graph):
+    """Recursively traverse state tree, building dot graph as we go."""
     global NEXT_NODE_ID
     lbl = parent.get_comment() + "|"
     # first, set labels for this node:
@@ -56,10 +52,18 @@ def traverse_graph(state, parent, graph):
             graph.add_node(child)
             graph.add_edge(pydot.Edge(parent, child))
 
-            traverse_graph(child_state, child, graph)
+            traverse_tree(child_state, child, graph)
         
 
 if __name__ == '__main__':
+    if len(argv) != 2:
+        print """Usage: %s output_file.png.
+
+This script queries the currently running Unity process and dumps the entire
+introspection tree into a graph, and renders this to a PNG file.
+""" % (argv[0])
+        exit(1)
+
     u = Unity()
     introspection_tree = u.get_state()
     graph = pydot.Dot()
@@ -70,7 +74,7 @@ if __name__ == '__main__':
     
     gnode_unity = pydot.Node("Unity")
     gnode_unity.set_comment("Unity")
-    traverse_graph(introspection_tree[0], gnode_unity, graph)
+    traverse_tree(introspection_tree[0], gnode_unity, graph)
 
     graph.write(argv[1], format='png')
 
