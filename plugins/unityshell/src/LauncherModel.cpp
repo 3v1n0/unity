@@ -197,31 +197,31 @@ LauncherModel::ReorderBefore(LauncherIcon* icon, LauncherIcon* other, bool save)
 
   int i = 0;
   int j = 0;
-  for (it = begin(); it != end(); it++)
+  for (auto it : _inner)
   {
-    if ((*it) == icon)
+    if (it == icon)
     {
       j++;
       continue;
     }
 
-    if ((*it) == other)
+    if (it == other)
     {
       icon->SetSortPriority(i);
       if (i != j && save)
-        (*it)->SaveCenter();
+        it->SaveCenter();
       i++;
 
-      (*it)->SetSortPriority(i);
+      it->SetSortPriority(i);
       if (i != j && save)
-        (*it)->SaveCenter();
+        it->SaveCenter();
       i++;
     }
     else
     {
-      (*it)->SetSortPriority(i);
+      it->SetSortPriority(i);
       if (i != j && save)
-        (*it)->SaveCenter();
+        it->SaveCenter();
       i++;
     }
     j++;
@@ -236,48 +236,46 @@ LauncherModel::ReorderSmart(LauncherIcon* icon, LauncherIcon* other, bool save)
   if (icon == other)
     return;
 
-  LauncherModel::iterator it;
-
   int i = 0;
   int j = 0;
   bool skipped = false;
-  for (it = begin(); it != end(); it++)
+  for (auto it : _inner)
   {
-    if ((*it) == icon)
+    if (it == icon)
     {
       skipped = true;
       j++;
       continue;
     }
 
-    if ((*it) == other)
+    if (it == other)
     {
       if (!skipped)
       {
         icon->SetSortPriority(i);
         if (i != j && save)
-          (*it)->SaveCenter();
+          it->SaveCenter();
         i++;
       }
 
-      (*it)->SetSortPriority(i);
+      it->SetSortPriority(i);
       if (i != j && save)
-        (*it)->SaveCenter();
+        it->SaveCenter();
       i++;
 
       if (skipped)
       {
         icon->SetSortPriority(i);
         if (i != j && save)
-          (*it)->SaveCenter();
+          it->SaveCenter();
         i++;
       }
     }
     else
     {
-      (*it)->SetSortPriority(i);
+      it->SetSortPriority(i);
       if (i != j && save)
-        (*it)->SaveCenter();
+        it->SaveCenter();
       i++;
     }
     j++;
