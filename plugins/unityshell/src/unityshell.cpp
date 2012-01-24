@@ -1361,8 +1361,6 @@ bool UnityScreen::altTabInitiateCommon(CompAction *action,
   if (!grab_index_)
     return false;
   
-  std::vector<unity::launcher::AbstractLauncherIcon*> results = launcher_controller_->GetAltTabIcons();
-
   screen->addAction(&optionGetAltTabRight());
   screen->addAction(&optionGetAltTabDetailStart());
   screen->addAction(&optionGetAltTabDetailStop());
@@ -1379,6 +1377,8 @@ bool UnityScreen::altTabInitiateCommon(CompAction *action,
   switcher::ShowMode show_mode = optionGetAltTabBiasViewport() ? switcher::ShowMode::CURRENT_VIEWPORT : switcher::ShowMode::ALL;
 
   RaiseInputWindows();
+
+  std::vector<unity::launcher::AbstractLauncherIcon*> results = launcher_controller_->GetAltTabIcons();
   switcher_controller_->Show(show_mode, switcher::SortMode::FOCUS_ORDER, false, results);
   return true;
 }

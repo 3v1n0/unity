@@ -74,6 +74,9 @@ void Controller::OnBackgroundUpdate(GVariant* data, Controller* self)
 
 bool IsOnOtherViewport (AbstractLauncherIcon* icon)
 {
+  if (icon->Type() == AbstractLauncherIcon::TYPE_BEGIN)
+    return false;
+
   return !icon->HasWindowOnViewport(0); //FIXME
 }
 
