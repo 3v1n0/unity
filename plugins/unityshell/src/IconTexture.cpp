@@ -24,6 +24,7 @@
 #include <pango/pangocairo.h>
 
 #include <Nux/Nux.h>
+#include <NuxCore/Logger.h>
 #include <NuxGraphics/GLThread.h>
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/Variant.h>
@@ -37,6 +38,7 @@ namespace unity
 namespace
 {
 const char* const DEFAULT_ICON = "text-x-preview";
+nux::logging::Logger logger("unity.icontexture");
 }
 
 using namespace unity;
@@ -67,7 +69,7 @@ IconTexture::IconTexture(const char* icon_name, unsigned int size, bool defer_ic
 {
   _icon_name = g_strdup(icon_name ? icon_name : DEFAULT_ICON);
 
-  if (!g_strcmp0(_icon_name, "") == 0 && !defer_icon_loading)
+  if (g_strcmp0(_icon_name, "") != 0 && !defer_icon_loading)
     LoadIcon();
 }
 
@@ -78,24 +80,34 @@ IconTexture::~IconTexture()
 
 void IconTexture::SetByIconName(const char* icon_name, unsigned int size)
 {
-  g_free(_icon_name);
-  _icon_name = g_strdup(icon_name);
-  _size = size;
-  LoadIcon();
+  if (g_strcmp0(icon_name, "") != 0)
+  {
+    g_free(_icon_name);
+    _icon_name = g_strdup(icon_name);
+    _size = size;
+    LoadIcon();
+  }
 }
 
 void IconTexture::SetByFilePath(const char* file_path, unsigned int size)
 {
-  g_free(_icon_name);
-  _icon_name = g_strdup(file_path);
-  _size = size;
+  if (g_strcmp0(file_path, "") != 0)
+  {
+    g_free(_icon_name);
+    _icon_name = g_strdup(file_path);
+    _size = size;
 
-  LoadIcon();
+    LoadIcon();
+  }
 }
 
 void IconTexture::LoadIcon()
 {
   static const char* const DEFAULT_GICON = ". GThemedIcon text-x-preview";
+  if (_icon_name == NULL)
+    return;
+ 
+  LOG_DEBUG(logger) << "Loading Icon " << _loading;
 
   if (_loading)
     return;
@@ -144,11 +156,13 @@ void IconTexture::Refresh(GdkPixbuf* pixbuf)
                                       _texture_height,
                                       sigc::mem_fun(this, &IconTexture::CreateTextureCallback));
   QueueDraw();
+  _loading = false;
 }
 
 void IconTexture::IconLoaded(std::string const& icon_name, unsigned size,
                              GdkPixbuf* pixbuf)
 {
+  LOG_DEBUG(logger) << "IconLoaded " << icon_name;
   if (GDK_IS_PIXBUF(pixbuf))
   {
     Refresh(pixbuf);
@@ -162,6 +176,8 @@ void IconTexture::IconLoaded(std::string const& icon_name, unsigned size,
     if (icon_name != DEFAULT_ICON)
       SetByIconName(DEFAULT_ICON, _size);
   }
+
+  QueueDraw();
 }
 
 void IconTexture::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)

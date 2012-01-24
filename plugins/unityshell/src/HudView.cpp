@@ -150,6 +150,7 @@ void View::SetIcon(std::string icon_name)
 {
   LOG_DEBUG(logger) << "Setting icon to " << icon_name;
   icon_->SetByIconName(icon_name.c_str(), icon_size);
+  QueueDraw();
 }
 
 // Gives us the width and height of the contents that will give us the best "fit",
@@ -202,7 +203,7 @@ void View::SetupViews()
   layout_ = new nux::HLayout();
   layout_->AddLayout(new nux::SpaceLayout(8,8,8,8), 0);
   
-  icon_ = new Icon("unity", icon_size, icon_size);
+  icon_ = new Icon("", icon_size, true);
   //icon_->SetBaseSize(icon_size, icon_size);
   //icon_->SetMinMaxSize(icon_size, icon_size);
   

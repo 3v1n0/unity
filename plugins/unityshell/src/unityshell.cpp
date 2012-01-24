@@ -1611,6 +1611,7 @@ bool UnityScreen::ShowHudTerminate(CompAction* action, CompAction::State state, 
     {
       // less than 50 ms have passed, thats a tap
       hud_controller_->ShowHideHud();
+      last_hud_show_time_ = 0;
     }
   } 
   return false;

@@ -95,10 +95,6 @@ void Controller::SetupHudView()
   view_->search_activated.connect(sigc::mem_fun(this, &Controller::OnSearchActivated));
   view_->query_activated.connect(sigc::mem_fun(this, &Controller::OnQueryActivated));
   view_->query_selected.connect(sigc::mem_fun(this, &Controller::OnQuerySelected));
-
-//   hud_service_.target_icon.changed.connect([&] (std::string icon_name) {
-//     view_->SetIcon(icon_name);
-//   });
 }
 
 void Controller::SetupRelayoutCallbacks()
