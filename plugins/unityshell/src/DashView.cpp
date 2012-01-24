@@ -270,7 +270,6 @@ void DashView::OnActivateRequest(GVariant* args)
 
   std::string id = AnalyseLensURI(uri.Str());
 
-  home_view_->search_string = "";
   lens_bar_->Activate(id);
 
   if ((id == "home.lens" && handled_type != GOTO_DASH_URI ) || !visible_)
@@ -583,8 +582,7 @@ bool DashView::InspectKeyEvent(unsigned int eventType,
   {
     if (search_bar_->search_string == "")
       ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
-    else
-      search_bar_->search_string = "";
+
     return true;
   }
   return false;
