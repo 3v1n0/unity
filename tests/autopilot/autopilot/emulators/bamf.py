@@ -113,8 +113,11 @@ class Bamf:
         This method returns true once the application is found, or false 
         if the application was not found until the timeout was reached.
         """
-        # maybe the app is running already?
+        # python workaround since you can't assign to variables in the enclosing scope:
+        # see on_timeout_reached below...
         found_app = [True]
+
+        # maybe the app is running already?
         if not self.application_is_running(app_name):
             wait_forever = timeout < 0
             gobject_loop = gobject.MainLoop()
@@ -218,10 +221,9 @@ class BamfWindow:
         self._window_iface = dbus.Interface(self._app_proxy, 'org.ayatana.bamf.window')
         self._view_iface = dbus.Interface(self._app_proxy, 'org.ayatana.bamf.view')
 
-        self._xid = self._window_iface.GetXid()
-        self._x_display = _X_DISPLAY
-        self._x_root_win = self._x_display.screen().root
-        self._x_win = self._x_display.create_resource_object('window', self._xid)
+        self._xid = int(self._window_iface.GetXid())
+        self._x_root_win = _X_DISPLAY.screen().root
+        self._x_win = _X_DISPLAY.create_resource_object('window', self._xid)
 
 
     @property
@@ -306,7 +308,7 @@ class BamfWindow:
     def close(self):
         """Close the window."""
 
-        self._setProperty('_NET_CLOSE_WINDOW', [int(time.mktime(time.localtime())), 1], self._x_win)
+        self._setProperty('_NET_CLOSE_WINDOW', [0, 0])
 
     def __repr__(self):
         return "<BamfWindow '%s'>" % (self.title if self._x_win else str(self._xid))
@@ -317,7 +319,7 @@ class BamfWindow:
         _type is a string naming the property type. win is the X11 window object.
 
         """
-        atom = self._x_win.get_full_property(self._x_display.get_atom(_type), X.AnyPropertyType)
+        atom = self._x_win.get_full_property(_X_DISPLAY.get_atom(_type), X.AnyPropertyType)
         if atom: return atom.value
 
     def _setProperty(self, _type, data, mask=None):
@@ -327,13 +329,14 @@ class BamfWindow:
             data = (data+[0]*(5-len(data)))[:5]
             dataSize = 32
         
-        ev = protocol.event.ClientMessage(window=self._x_win, client_type=self.display.get_atom(_type), data=(dataSize, data))
+        ev = protocol.event.ClientMessage(window=self._x_win, client_type=_X_DISPLAY.get_atom(_type), data=(dataSize, data))
 
         if not mask:
             mask = (X.SubstructureRedirectMask|X.SubstructureNotifyMask)
         self._x_root_win.send_event(ev, event_mask=mask)
+        _X_DISPLAY.sync()
 
     def _get_window_states(self):
         """Return a list of strings representing the current window state."""
 
-        return map(self._x_display.get_atom_name, self._getProperty('_NET_WM_STATE'))
+        return map(_X_DISPLAY.get_atom_name, self._getProperty('_NET_WM_STATE'))
