@@ -23,10 +23,12 @@
 
 #include <Nux/BaseWindow.h>
 #include <NuxCore/Math/MathInc.h>
-#include <gdk-pixbuf/gdk-pixbuf.h>
-#include <libbamf/libbamf.h>
+
 #include <UnityCore/GLibSignal.h>
 #include <UnityCore/GLibWrapper.h>
+
+#include <libbamf/libbamf.h>
+#include <libindicator/indicator-desktop-shortcuts.h>
 
 #include "SimpleLauncherIcon.h"
 
@@ -122,6 +124,7 @@ private:
   std::map<std::string, DbusmenuClient*> _menu_clients;
   std::map<std::string, glib::Object<DbusmenuMenuitem>> _menu_items;
   std::map<std::string, glib::Object<DbusmenuMenuitem>> _menu_items_extra;
+  glib::Object<IndicatorDesktopShortcuts> _desktop_shortcuts;
   glib::Object<DbusmenuMenuitem> _menu_desktop_shortcuts;
   glib::Object<GFileMonitor> _desktop_file_monitor;
   glib::SignalManager _gsignals;

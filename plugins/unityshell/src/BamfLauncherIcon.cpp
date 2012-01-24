@@ -30,7 +30,6 @@
 
 #include <glib/gi18n-lib.h>
 #include <gio/gdesktopappinfo.h>
-#include <libindicator/indicator-desktop-shortcuts.h>
 
 #include <UnityCore/GLibWrapper.h>
 
@@ -667,19 +666,6 @@ void BamfLauncherIcon::EnsureWindowState()
   g_list_free(children);
 }
 
-namespace {
-struct ShortcutData
-{
-  glib::Object<IndicatorDesktopShortcuts> shortcuts;
-  std::string nick;
-};
-
-static void shortcut_activated(DbusmenuMenuitem* item, guint time, ShortcutData* data)
-{
-  indicator_desktop_shortcuts_nick_exec(data->shortcuts, data->nick.c_str());
-}
-}
-
 void BamfLauncherIcon::UpdateDesktopQuickList()
 {
   GKeyFile* keyfile;
@@ -709,33 +695,35 @@ void BamfLauncherIcon::UpdateDesktopQuickList()
   if (g_key_file_has_key(keyfile, G_KEY_FILE_DESKTOP_GROUP,
                          "X-Ayatana-Desktop-Shortcuts", nullptr))
   {
+    for (GList *l = dbusmenu_menuitem_get_children(_menu_desktop_shortcuts); l; l = l->next)
+      _gsignals.Disconnect(l->data, "item-activated");
+
     _menu_desktop_shortcuts = dbusmenu_menuitem_new();
     dbusmenu_menuitem_set_root(_menu_desktop_shortcuts, TRUE);
 
-    auto shortcuts = indicator_desktop_shortcuts_new(desktop_file, "Unity");
-    glib::Object<IndicatorDesktopShortcuts> desktop_shortcuts(shortcuts);
-    const gchar** nicks = indicator_desktop_shortcuts_get_nicks(desktop_shortcuts);
+    _desktop_shortcuts = indicator_desktop_shortcuts_new(desktop_file, "Unity");
+    const gchar** nicks = indicator_desktop_shortcuts_get_nicks(_desktop_shortcuts);
 
     int index = 0;
     if (nicks)
     {
       while (nicks[index])
       {
-        glib::String name(indicator_desktop_shortcuts_nick_get_name(desktop_shortcuts,
+        glib::String name(indicator_desktop_shortcuts_nick_get_name(_desktop_shortcuts,
                                                                     nicks[index]));
-        auto data = new ShortcutData();
-        data->shortcuts = glib::Object<IndicatorDesktopShortcuts>(desktop_shortcuts, glib::AddRef());
-        data->nick = nicks[index];
-
         glib::Object<DbusmenuMenuitem> item(dbusmenu_menuitem_new());
         dbusmenu_menuitem_property_set(item, DBUSMENU_MENUITEM_PROP_LABEL, name);
         dbusmenu_menuitem_property_set_bool(item, DBUSMENU_MENUITEM_PROP_ENABLED, TRUE);
         dbusmenu_menuitem_property_set_bool(item, DBUSMENU_MENUITEM_PROP_VISIBLE, TRUE);
-        g_signal_connect_data(item, "item-activated",
-                              (GCallback) shortcut_activated, data,
-                              [] (gpointer user_data, GClosure*) {
-                                delete static_cast<ShortcutData*>(user_data);
-                              }, (GConnectFlags) 0);
+        dbusmenu_menuitem_property_set(item, "shortcut-nick", nicks[index]);
+
+        auto sig = new glib::Signal<void, DbusmenuMenuitem*, gint>(item, "item-activated",
+                                    [&] (DbusmenuMenuitem* item, gint) {
+                                      const gchar *nick;
+                                      nick = dbusmenu_menuitem_property_get(item, "shortcut-nick");
+                                      indicator_desktop_shortcuts_nick_exec(_desktop_shortcuts, nick);
+                                    });
+        _gsignals.Add(sig);
 
         dbusmenu_menuitem_child_append(_menu_desktop_shortcuts, item);
         index++;
