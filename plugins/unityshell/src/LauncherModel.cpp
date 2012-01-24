@@ -32,6 +32,9 @@ typedef struct
 } RemoveArg;
 
 LauncherModel::LauncherModel()
+  : _inner(0)
+  , _inner_shelf(0)
+  , _inner_main(0)
 {
 }
 
