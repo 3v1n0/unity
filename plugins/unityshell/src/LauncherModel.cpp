@@ -163,7 +163,7 @@ LauncherModel::IconHasSister(AbstractLauncherIcon* icon)
 {
   iterator it;
   iterator end;
-  
+
   if (icon && icon->Type() == AbstractLauncherIcon::TYPE_DEVICE)
     return true;
 

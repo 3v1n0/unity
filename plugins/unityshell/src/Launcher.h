@@ -41,7 +41,6 @@
 #include "LauncherHoverMachine.h"
 #include "UBusWrapper.h"
 
-
 #define ANIM_DURATION_SHORT_SHORT 100
 #define ANIM_DURATION_SHORT 125
 #define ANIM_DURATION       200
@@ -163,6 +162,7 @@ public:
   void EnableCheckWindowOverLauncher(gboolean enabled);
 
   sigc::signal<void, char*, AbstractLauncherIcon*> launcher_addrequest;
+  sigc::signal<void, char*, AbstractLauncherIcon*, char*, char*> launcher_addrequest_special;
   sigc::signal<void, AbstractLauncherIcon*> launcher_removerequest;
   sigc::signal<void> selection_change;
   sigc::signal<void> hidden_changed;

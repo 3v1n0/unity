@@ -63,9 +63,8 @@ public:
   static void handleEvent (XEvent *event);
   static std::list<CompWindow *> minimizingWindows;
 
-  typedef CompizMinimizedWindowHandler<Screen, Window> CompizMinimizedWindowHandler_complete;
-  typedef boost::shared_ptr<CompizMinimizedWindowHandler_complete> Ptr;
-  typedef std::list <Ptr> List;
+  typedef CompizMinimizedWindowHandler<Screen, Window> Type;
+  typedef std::list <Type *> List;
 protected:
 
   virtual std::vector<unsigned int> getTransients ();
@@ -74,10 +73,14 @@ private:
 
   PrivateCompizMinimizedWindowHandler *priv;
   static bool handleEvents;
-  static std::list<Ptr> minimizedWindows;
+  static List minimizedWindows;
 };
 }
 
+/* XXX minimizedWindows should be removed because it is dangerous to keep
+ *     a list of windows separate to compiz-core. The list could get out of
+ *     sync and cause more crashes like LP: #918329, LP: #864758.
+ */
 template <typename Screen, typename Window>
 typename compiz::CompizMinimizedWindowHandler<Screen, Window>::List compiz::CompizMinimizedWindowHandler<Screen, Window>::minimizedWindows;
 
@@ -100,12 +103,7 @@ compiz::CompizMinimizedWindowHandler<Screen, Window>::CompizMinimizedWindowHandl
 template <typename Screen, typename Window>
 compiz::CompizMinimizedWindowHandler<Screen, Window>::~CompizMinimizedWindowHandler ()
 {
-  typedef compiz::CompizMinimizedWindowHandler<Screen, Window> minimized_window_handler_full;
-
-  compiz::CompizMinimizedWindowHandler<Screen, Window>::Ptr compizMinimizeHandler =
-        boost::dynamic_pointer_cast <minimized_window_handler_full> (Window::get (priv->mWindow)->mMinimizeHandler);
-
-  minimizedWindows.remove (compizMinimizeHandler);
+  minimizedWindows.remove (this);
 }
 
 template <typename Screen, typename Window>
@@ -144,18 +142,13 @@ compiz::CompizMinimizedWindowHandler<Screen, Window>::minimize ()
   Atom          wmState = XInternAtom (screen->dpy (), "WM_STATE", 0);
   unsigned long data[2];
 
-  typedef compiz::CompizMinimizedWindowHandler<Screen, Window> minimized_window_handler_full;
-
   std::vector<unsigned int> transients = getTransients ();
 
   handleEvents = true;
   priv->mWindow->windowNotify (CompWindowNotifyMinimize);
   priv->mWindow->changeState (priv->mWindow->state () | CompWindowStateHiddenMask);
 
-  compiz::CompizMinimizedWindowHandler<Screen, Window>::Ptr compizMinimizeHandler =
-        boost::dynamic_pointer_cast <minimized_window_handler_full> (Window::get (priv->mWindow)->mMinimizeHandler);
-
-  minimizedWindows.push_back (compizMinimizeHandler);
+  minimizedWindows.push_back (this);
 
   for (unsigned int &w : transients)
   {
@@ -163,8 +156,10 @@ compiz::CompizMinimizedWindowHandler<Screen, Window>::minimize ()
 
     if (win)
     {
-      Window::get (win)->mMinimizeHandler = MinimizedWindowHandler::Ptr (new CompizMinimizedWindowHandler (win));
-      Window::get (win)->mMinimizeHandler->minimize ();
+      Window *w = Window::get (win);
+      if (!w->mMinimizeHandler)
+        w->mMinimizeHandler = new Type (win);
+      w->mMinimizeHandler->minimize ();
     }
   }
 
@@ -226,14 +221,9 @@ compiz::CompizMinimizedWindowHandler<Screen, Window>::unminimize ()
   Atom          wmState = XInternAtom (screen->dpy (), "WM_STATE", 0);
   unsigned long data[2];
 
-  typedef compiz::CompizMinimizedWindowHandler<Screen, Window> minimized_window_handler_full;
-
   std::vector<unsigned int> transients = getTransients ();
 
-  compiz::CompizMinimizedWindowHandler<Screen, Window>::Ptr compizMinimizeHandler =
-        boost::dynamic_pointer_cast <minimized_window_handler_full> (Window::get (priv->mWindow)->mMinimizeHandler);
-
-  minimizedWindows.remove (compizMinimizeHandler);
+  minimizedWindows.remove (this);
 
   priv->mWindow->focusSetEnabled (Window::get (priv->mWindow), true);
 
@@ -247,10 +237,13 @@ compiz::CompizMinimizedWindowHandler<Screen, Window>::unminimize ()
 
     if (win)
     {
-      if (Window::get (win)->mMinimizeHandler)
-        Window::get (win)->mMinimizeHandler->unminimize ();
-
-      Window::get (win)->mMinimizeHandler.reset ();
+      Window *w = Window::get (win);
+      if (w && w->mMinimizeHandler)
+      {
+        w->mMinimizeHandler->unminimize ();
+        delete w->mMinimizeHandler;
+        w->mMinimizeHandler = NULL;
+      }
     }
   }
 
@@ -330,10 +323,9 @@ compiz::CompizMinimizedWindowHandler<Screen, Window>::handleEvent (XEvent *event
 
     if (w)
     {
-      typedef compiz::CompizMinimizedWindowHandler<Screen, Window> plugin_handler;
       Window *pw = Window::get (w);
-      plugin_handler::Ptr compizMinimizeHandler =
-        boost::dynamic_pointer_cast <plugin_handler> (pw->mMinimizeHandler);
+      Type *compizMinimizeHandler = pw->mMinimizeHandler;
+
       /* Restore and re-save input shape and remove */
       if (compizMinimizeHandler)
       {

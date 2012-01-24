@@ -26,6 +26,8 @@
 #include <sigc++/sigc++.h>
 #include <core/core.h>
 
+#include "SoftwareCenterLauncherIcon.h"
+
 namespace unity
 {
 namespace launcher
