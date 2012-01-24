@@ -31,7 +31,6 @@
 
 #include "BackgroundEffectHelper.h"
 #include "DashSearchBar.h"
-#include "HomeView.h"
 #include "Introspectable.h"
 #include "LensBar.h"
 #include "LensView.h"
