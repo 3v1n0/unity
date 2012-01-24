@@ -47,7 +47,7 @@ public:
 
   void ActivateLauncherIcon(ActionArg arg);
 
-  const char* DesktopFile();
+  std::string DesktopFile();
 
   bool IsSticky() const;
   bool IsVisible();

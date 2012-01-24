@@ -364,7 +364,7 @@ void BamfLauncherIcon::UpdateDesktopFile()
 {
   const char* filename = bamf_application_get_desktop_file(_bamf_app);
 
-  if (filename != nullptr && _desktop_file != filename)
+  if (filename != nullptr && filename[0] != '\0' && _desktop_file != filename)
   {
     _desktop_file = filename;
 
@@ -397,10 +397,10 @@ void BamfLauncherIcon::UpdateDesktopFile()
   }
 }
 
-const char* BamfLauncherIcon::DesktopFile()
+std::string BamfLauncherIcon::DesktopFile()
 {
   UpdateDesktopFile();
-  return _desktop_file.c_str();
+  return _desktop_file;
 }
 
 std::string BamfLauncherIcon::BamfName() const
@@ -413,7 +413,7 @@ void BamfLauncherIcon::AddProperties(GVariantBuilder* builder)
 {
   LauncherIcon::AddProperties(builder);
 
-  g_variant_builder_add(builder, "{sv}", "desktop-file", g_variant_new_string(DesktopFile()));
+  g_variant_builder_add(builder, "{sv}", "desktop-file", g_variant_new_string(DesktopFile().c_str()));
 
   GList* children, *l;
   BamfView* view;
@@ -468,7 +468,7 @@ bool BamfLauncherIcon::OwnsWindow(Window w) const
 void BamfLauncherIcon::OpenInstanceWithUris(std::set<std::string> uris)
 {
   glib::Error error;
-  glib::Object<GDesktopAppInfo> desktopInfo(g_desktop_app_info_new_from_filename(DesktopFile()));
+  glib::Object<GDesktopAppInfo> desktopInfo(g_desktop_app_info_new_from_filename(DesktopFile().c_str()));
   auto appInfo = glib::object_cast<GAppInfo>(desktopInfo);
 
   if (g_app_info_supports_uris(appInfo))
@@ -659,11 +659,9 @@ void BamfLauncherIcon::UpdateDesktopQuickList()
 {
   GKeyFile* keyfile;
   glib::Error error;
-  const char *desktop_file;
+  std::string const& desktop_file = DesktopFile();
 
-  desktop_file = DesktopFile();
-
-  if (!desktop_file || desktop_file[0] == '\0')
+  if (desktop_file.empty())
     return;
 
   // check that we have the X-Ayatana-Desktop-Shortcuts flag
@@ -671,11 +669,11 @@ void BamfLauncherIcon::UpdateDesktopQuickList()
   // and not report errors when it can't find the key.
   // so FIXME when ted is around
   keyfile = g_key_file_new();
-  g_key_file_load_from_file(keyfile, desktop_file, G_KEY_FILE_NONE, &error);
+  g_key_file_load_from_file(keyfile, desktop_file.c_str(), G_KEY_FILE_NONE, &error);
 
   if (error)
   {
-    g_warning("Could not load desktop file for: %s", desktop_file);
+    g_warning("Could not load desktop file for: %s", desktop_file.c_str());
     g_key_file_free(keyfile);
     return;
   }
@@ -689,7 +687,7 @@ void BamfLauncherIcon::UpdateDesktopQuickList()
     _menu_desktop_shortcuts = dbusmenu_menuitem_new();
     dbusmenu_menuitem_set_root(_menu_desktop_shortcuts, TRUE);
 
-    _desktop_shortcuts = indicator_desktop_shortcuts_new(desktop_file, "Unity");
+    _desktop_shortcuts = indicator_desktop_shortcuts_new(desktop_file.c_str(), "Unity");
     const gchar** nicks = indicator_desktop_shortcuts_get_nicks(_desktop_shortcuts);
 
     int index = 0;
@@ -793,11 +791,11 @@ void BamfLauncherIcon::Stick()
   if (IsSticky())
     return;
 
-  const gchar* desktop_file = DesktopFile();
+  std::string const& desktop_file = DesktopFile();
   bamf_view_set_sticky(BAMF_VIEW(_bamf_app.RawPtr()), true);
 
-  if (desktop_file && desktop_file[0] != '\0')
-    FavoriteStore::GetDefault().AddFavorite(desktop_file, -1);
+  if (!desktop_file.empty())
+    FavoriteStore::GetDefault().AddFavorite(desktop_file.c_str(), -1);
 }
 
 void BamfLauncherIcon::UnStick()
@@ -805,15 +803,15 @@ void BamfLauncherIcon::UnStick()
   if (!IsSticky())
     return;
 
-  const gchar* desktop_file = DesktopFile();
+  std::string const& desktop_file = DesktopFile();
   BamfView* view = BAMF_VIEW(_bamf_app.RawPtr());
   bamf_view_set_sticky(view, false);
 
   if (bamf_view_is_closed(view) || !bamf_view_user_visible(view))
     Remove();
 
-  if (desktop_file && desktop_file[0] != '\0')
-    FavoriteStore::GetDefault().RemoveFavorite(desktop_file);
+  if (!desktop_file.empty())
+    FavoriteStore::GetDefault().RemoveFavorite(desktop_file.c_str());
 }
 
 void BamfLauncherIcon::ToggleSticky()
@@ -825,10 +823,10 @@ void BamfLauncherIcon::ToggleSticky()
   else
   {
     bamf_view_set_sticky(BAMF_VIEW(_bamf_app.RawPtr()), true);
-    const gchar* desktop_file = DesktopFile();
+    std::string const& desktop_file = DesktopFile();
 
-    if (desktop_file && strlen(desktop_file) > 0)
-      FavoriteStore::GetDefault().AddFavorite(desktop_file, -1);
+    if (!desktop_file.empty())
+      FavoriteStore::GetDefault().AddFavorite(desktop_file.c_str(), -1);
   }
 }
 
@@ -1065,12 +1063,13 @@ const gchar* BamfLauncherIcon::GetRemoteUri()
 {
   if (_remote_uri.empty())
   {
-    std::ostringstream remote_uri_stream;
-    const gchar* desktop_file = DesktopFile();
-    glib::String basename(g_path_get_basename(desktop_file));
+    std::string prefix = "application://";
+    glib::String basename(g_path_get_basename(DesktopFile().c_str()));
 
-    remote_uri_stream << "application://" << basename.Str();
-    _remote_uri = remote_uri_stream.str();
+    if (!basename.Str().empty())
+    {
+      _remote_uri = prefix + basename.Str();
+    }
   }
 
   return _remote_uri.c_str();
@@ -1079,7 +1078,7 @@ const gchar* BamfLauncherIcon::GetRemoteUri()
 std::set<std::string> BamfLauncherIcon::ValidateUrisForLaunch(unity::DndData& uris)
 {
   std::set<std::string> result;
-  gboolean is_home_launcher = g_str_has_suffix(DesktopFile(), "nautilus-home.desktop");
+  gboolean is_home_launcher = g_str_has_suffix(DesktopFile().c_str(), "nautilus-home.desktop");
 
   if (is_home_launcher)
   {
@@ -1192,15 +1191,15 @@ void BamfLauncherIcon::FillSupportedTypes()
     _supported_types_filled = true;
     _supported_types.clear();
 
-    const char* desktop_file = DesktopFile();
+    std::string const& desktop_file = DesktopFile();
 
-    if (!desktop_file || desktop_file[0] == '\0')
+    if (desktop_file.empty())
       return;
 
     GKeyFile* key_file = g_key_file_new();
     glib::Error error;
 
-    g_key_file_load_from_file(key_file, desktop_file, (GKeyFileFlags) 0, &error);
+    g_key_file_load_from_file(key_file, desktop_file.c_str(), (GKeyFileFlags) 0, &error);
 
     if (error)
     {

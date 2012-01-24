@@ -196,7 +196,7 @@ void Controller::Impl::OnLauncherAddRequest(char* path, LauncherIcon* before)
 {
   for (auto it : model_->GetSublist<BamfLauncherIcon> ())
   {
-    if (!g_strcmp0(path, it->DesktopFile()))
+    if (path && path == it->DesktopFile())
     {
       it->Stick();
       model_->ReorderBefore(it, before, false);
@@ -227,10 +227,10 @@ void Controller::Impl::Save()
     if (!icon->IsSticky())
       continue;
 
-    const char* desktop_file = icon->DesktopFile();
+    std::string const& desktop_file = icon->DesktopFile();
 
-    if (desktop_file && strlen(desktop_file) > 0)
-      desktop_paths.push_back(desktop_file);
+    if (!desktop_file.empty())
+      desktop_paths.push_back(desktop_file.c_str());
   }
 
   unity::FavoriteStore::GetDefault().SetFavorites(desktop_paths);
@@ -392,10 +392,9 @@ void Controller::Impl::RegisterIcon(LauncherIcon* icon)
   if (bamf_icon)
   {
     LauncherEntryRemote* entry = NULL;
-    const char* path;
-    path = bamf_icon->DesktopFile();
-    if (path)
-      entry = remote_model_.LookupByDesktopFile(path);
+    std::string const& path = bamf_icon->DesktopFile();
+    if (!path.empty())
+      entry = remote_model_.LookupByDesktopFile(path.c_str());
     if (entry)
       icon->InsertEntryRemote(entry);
   }
