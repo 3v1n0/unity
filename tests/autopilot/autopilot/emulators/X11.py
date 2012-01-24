@@ -73,13 +73,13 @@ class Keyboard(object):
     def press(self, keys, delay=0.2):
         """Send key press events only.
 
-        keys can either be a string, in which case each character in the string
-        is treated as a separate key press, or it can be a sequence type (tuple,
-        list), in which case each item in the sequence is treated as an X11 keycode.
+        Keys must be a sequence type (string, tuple, or list)  of keys you want
+        pressed. For keys that don't have a single-character represetnation,
+        you must use the X11 keysym name. For example:
 
-        For example, to press the alt+F2 combination, one would call:
+        press(['Meta_L', 'F2'])
 
-        press(['Alt_L', 'F2'])
+        presses the 'Alt+F2' combination.
 
         """
         self.__perform_on_keys(keys, X.KeyPress)            
@@ -88,13 +88,13 @@ class Keyboard(object):
     def release(self, keys, delay=0.2):
         """Send key release events only.
 
-        keys can either be a string, in which case each character in the string
-        is treated as a separate key press, or it can be a sequence type (tuple,
-        list), in which case each item in the sequence is treated as an X11 keycode.
+        Keys must be a sequence type (string, tuple, or list)  of keys you want
+        pressed. For keys that don't have a single-character represetnation,
+        you must use the X11 keysym name. For example:
 
-        For example, to press the alt+F2 combination, one would call:
+        release(['Meta_L', 'F2'])
 
-        press(['Alt_L', 'F2'])
+        releases the 'Alt+F2' combination.
 
         """
         self.__perform_on_keys(keys, X.KeyRelease)
@@ -104,14 +104,14 @@ class Keyboard(object):
         """Press and release all items in 'keys'.
 
         This is the same as calling 'press(keys);release(keys)'.
+        
+        Keys must be a sequence type (string, tuple, or list)  of keys you want
+        pressed. For keys that don't have a single-character represetnation,
+        you must use the X11 keysym name. For example:
 
-        keys can either be a string, in which case each character in the string
-        is treated as a separate key press, or it can be a sequence type (tuple,
-        list), in which case each item in the sequence is treated as an X11 keycode.
+        press_and_release(['Meta_L', 'F2'])
 
-        For example, to press the alt+F2 combination, one would call:
-
-        press(['Alt_L', 'F2'])
+        presses the 'Alt+F2' combination, and then releases both keys.
 
         """
         self.press(keys, delay)
@@ -125,7 +125,7 @@ class Keyboard(object):
 
     @staticmethod
     def cleanup():
-        """Generate KeyRelease events for any pressed keys.
+        """Generate KeyRelease events for any un-released keys.
 
         Make sure you call this at the end of any test to release 
         any keys that were pressed and not released.
@@ -178,8 +178,8 @@ class Keyboard(object):
             shift_mask = X.ShiftMask
         else :
             shift_mask = 0
-
         return keycode, shift_mask
+
 
 class Mouse(object):
     """Wrapper around xlib to make moving the mouse easier."""
