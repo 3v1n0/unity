@@ -29,15 +29,7 @@ _DISPLAY = Display()
 
 class Keyboard(object):
     """Wrapper around xlib to make faking keyboard input possible."""
-    _lame_hardcoded_keycodes = {
-        'A' : 64, 
-        'C' : 37,
-        'S' : 50,
-        'T' : 23,
-        'W' : 133,
-        'U' : 111
-        }
-
+    
     _special_X_keysyms = {
         ' ' : "space",
         '\t' : "Tab",
@@ -125,19 +117,9 @@ class Keyboard(object):
         self.press(keys, delay)
         self.release(keys, delay)
 
-    def type(self, keys, delay=0.1):
-        """Simulate a user typing the keys specified in 'keys'. 
-
-        Each key will be pressed and released before the next key is processed. If
-        you need to simulate multiple keys being pressed at the same time, use the 
-        'press_and_release' method above. 
-
-        Keys can either be a string, in which case each character in the string
-        is treated as a separate key press, or it can be a sequence type (tuple,
-        list), in which case each item in the sequence is treated as an X11 keycode.
-
-        """
-        for key in keys:
+    def type(self, string, delay=0.1):
+        """Simulate a user typing a string of text. """
+        for key in string:
             self.press(key, delay)
             self.release(key, delay)
 
@@ -153,21 +135,11 @@ class Keyboard(object):
             fake_input(_DISPLAY, X.KeyRelease, keycode)
 
     def __perform_on_keys(self, keys, event):
-        control_key = False
         keycode = 0
         shift_mask = 0
 
-        for index in range(len(keys)):
-            key = keys[index]
-            if control_key:
-                keycode = self._lame_hardcoded_keycodes[key]
-                shift_mask = 0
-                control_key = False
-            elif index < len(keys) and key == '^' and keys[index+1] in self._lame_hardcoded_keycodes:
-                control_key = True
-                continue
-            else:
-                keycode, shift_mask = self.__char_to_keycode(key)
+        for key in keys:
+            keycode, shift_mask = self.__char_to_keycode(key)
 
             if shift_mask != 0:
                 fake_input(_DISPLAY, event, 50)
