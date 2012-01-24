@@ -110,6 +110,7 @@ if (GTEST_FOUND AND
 # The actual test executable (xless) - do not put anything that requires X in here
   add_executable(test-gtest-xless
                  test_animator.cpp
+                 test_launcher_model.cpp
                  test_glib_object.cpp
                  test_glib_object_utils.cpp
                  test_glib_object_utils.h
@@ -123,7 +124,7 @@ if (GTEST_FOUND AND
                  test_shortcut_private.cpp
                  test_introspection.cpp
                  test_main_xless.cpp
-		 test_grabhandle.cpp
+                 test_grabhandle.cpp
                  ${UNITY_SRC}/AbstractLauncherIcon.h
                  ${UNITY_SRC}/AbstractShortcutHint.h
                  ${UNITY_SRC}/Animator.cpp
@@ -136,6 +137,8 @@ if (GTEST_FOUND AND
                  ${UNITY_SRC}/FavoriteStore.h
                  ${UNITY_SRC}/FavoriteStoreGSettings.cpp
                  ${UNITY_SRC}/FavoriteStoreGSettings.h
+                 ${UNITY_SRC}/LauncherModel.cpp
+                 ${UNITY_SRC}/LauncherModel.h
                  ${UNITY_SRC}/MockLauncherIcon.h
                  ${UNITY_SRC}/MockShortcutHint.h
                  ${UNITY_SRC}/ShortcutModel.cpp
