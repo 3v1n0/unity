@@ -78,7 +78,7 @@ public:
          std::string const& shortcut,
          ModelType model_type);
 
-  ~Lens();
+  virtual ~Lens();
 
   virtual void GlobalSearch(std::string const& search_string);
   virtual void Search(std::string const& search_string);
