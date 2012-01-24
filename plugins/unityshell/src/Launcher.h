@@ -410,6 +410,7 @@ private:
   bool  _hovered;
   bool  _floating;
   bool  _hidden;
+  bool  _scroll_limit_reached;
   bool  _render_drag_window;
   bool  _check_window_over_launcher;
 
@@ -423,8 +424,7 @@ private:
   float _folded_angle;
   float _neg_folded_angle;
   float _folded_z_distance;
-  float _launcher_top_y;
-  float _launcher_bottom_y;
+  float _last_delta_y;
 
   LauncherHideMode _hidemode;
 
