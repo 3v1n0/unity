@@ -439,7 +439,7 @@ UnityMTGrabHandlesWindow::getOutputExtents(CompWindowExtents& output)
 bool
 UnityMTGrabHandlesWindow::glDraw(const GLMatrix&            transform,
 #ifdef USE_GLES
-                                 GLWindowPaintAttrib& attrib,
+                                 const GLWindowPaintAttrib& attrib,
 #else
                                  GLFragment::Attrib&      fragment,
 #endif
@@ -506,9 +506,9 @@ UnityMTGrabHandlesWindow::glDraw(const GLMatrix&            transform,
         if (gWindow->geometry().vertices)
         {
           fragment.setOpacity(mHandles->opacity());
-#endif
           /* Texture rendering set-up */
           us->gScreen->setTexEnvMode(GL_MODULATE);
+#endif
           glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
           /* Draw the dim texture with all of it's modified
            * geometry glory */
@@ -523,8 +523,8 @@ UnityMTGrabHandlesWindow::glDraw(const GLMatrix&            transform,
                                  PAINT_WINDOW_TRANSFORMED_MASK);
           /* Texture rendering tear-down */
           glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-          us->gScreen->setTexEnvMode(GL_REPLACE);
 #ifndef USE_GLES
+          us->gScreen->setTexEnvMode(GL_REPLACE);
         }
 #endif
       }
