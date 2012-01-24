@@ -1607,7 +1607,7 @@ bool UnityScreen::ShowHudTerminate(CompAction* action, CompAction::State state, 
       return false; // early exit if the switcher is open
 
     gint64 current_time = g_get_monotonic_time();
-    if (current_time - last_hud_show_time_ < 50 * 10000)
+    if (current_time - last_hud_show_time_ < 150 * 1000)
     {
       // less than 50 ms have passed, thats a tap
       hud_controller_->ShowHideHud();
