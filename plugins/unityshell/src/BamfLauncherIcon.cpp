@@ -320,11 +320,9 @@ std::string BamfLauncherIcon::NameForWindow(Window window)
   for (l = children; l; l = l->next)
   {
     view = BAMF_VIEW(l->data);
-    if (BAMF_IS_WINDOW(view) && (Window) bamf_window_get_xid(BAMF_WINDOW(view)) == window)
+    if (BAMF_IS_WINDOW(view) && bamf_window_get_xid(BAMF_WINDOW(view)) == window)
     {
-      gchar *name = bamf_view_get_name (view);
-      result = name;
-      g_free (name);
+      result = glib::String(bamf_view_get_name(view)).Str();
       break;
     }
   }
@@ -1239,7 +1237,7 @@ gboolean BamfLauncherIcon::FillSupportedTypes(gpointer data)
       return false;
     }
 
-    for (int i=0; mimes[i]; i++)
+    for (int i = 0; mimes[i]; i++)
     {
       unity::glib::String super_type(g_content_type_from_mime_type(mimes[i]));
       self->_supported_types.insert(super_type.Str());
