@@ -142,12 +142,6 @@ BamfLauncherIcon::~BamfLauncherIcon()
                      g_quark_from_static_string("unity-seen"),
                      GINT_TO_POINTER(0));
 
-  // We might not have created the menu items yet
-  for (auto it = _menu_clients.begin(); it != _menu_clients.end(); it++)
-  {
-    g_object_unref(G_OBJECT(it->second));
-  }
-
   if (_fill_supported_types_id != 0)
     g_source_remove(_fill_supported_types_id);
 
@@ -613,7 +607,7 @@ bool BamfLauncherIcon::Spread(bool current_desktop, int state, bool force)
 
       if (!current_desktop || (current_desktop && wm->IsWindowOnCurrentDesktop(xid)))
       {
-        windowList.push_back((Window) xid);
+        windowList.push_back(xid);
       }
     }
   }
@@ -747,17 +741,25 @@ void BamfLauncherIcon::UpdateMenus()
     if (_menu_clients.find(path) != _menu_clients.end())
       continue;
 
-    DbusmenuClient* client = dbusmenu_client_new(bamf_indicator_get_remote_address(indicator), path.c_str());
-    _menu_clients[path] = client;
+    std::string address = bamf_indicator_get_remote_address(indicator);
+    DbusmenuClient* client = dbusmenu_client_new(address.c_str(), path.c_str());
+    _menu_clients[path] = glib::Object<DbusmenuClient>(client);
   }
 
   g_list_free(children);
 
   // add dynamic quicklist
-  if (_menuclient_dynamic_quicklist != nullptr)
+  if (DBUSMENU_IS_CLIENT(_menuclient_dynamic_quicklist))
   {
-    auto menu_client = DBUSMENU_CLIENT(g_object_ref(_menuclient_dynamic_quicklist));
-    _menu_clients["dynamicquicklist"] = menu_client;
+    if (_menu_clients["dynamicquicklist"] != _menuclient_dynamic_quicklist)
+    {
+      _menu_clients["dynamicquicklist"] = glib::Object<DbusmenuClient>(_menuclient_dynamic_quicklist);
+    }
+  }
+  else if (_menu_clients["dynamicquicklist"])
+  {
+    _menu_clients.erase("dynamicquicklist");
+    _menuclient_dynamic_quicklist = nullptr;
   }
 
   // make a client for desktop file actions
@@ -765,7 +767,6 @@ void BamfLauncherIcon::UpdateMenus()
   {
     UpdateDesktopQuickList();
   }
-
 }
 
 void BamfLauncherIcon::Quit()
@@ -886,7 +887,7 @@ std::list<DbusmenuMenuitem*> BamfLauncherIcon::GetMenus()
   for (auto it = _menu_clients.begin(); it != _menu_clients.end(); ++it)
   {
     GList* child = nullptr;
-    DbusmenuClient* client = (*it).second;
+    DbusmenuClient* client = it->second;
     DbusmenuMenuitem* root = dbusmenu_client_get_root(client);
 
     if (!root || !dbusmenu_menuitem_property_get_bool(root, DBUSMENU_MENUITEM_PROP_VISIBLE))

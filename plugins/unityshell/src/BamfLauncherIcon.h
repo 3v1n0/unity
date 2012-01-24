@@ -120,7 +120,7 @@ private:
 
   std::string _remote_uri;
   std::set<std::string> _supported_types;
-  std::map<std::string, DbusmenuClient*> _menu_clients;
+  std::map<std::string, glib::Object<DbusmenuClient>> _menu_clients;
   std::map<std::string, glib::Object<DbusmenuMenuitem>> _menu_items;
   std::map<std::string, glib::Object<DbusmenuMenuitem>> _menu_items_extra;
   glib::Object<IndicatorDesktopShortcuts> _desktop_shortcuts;
