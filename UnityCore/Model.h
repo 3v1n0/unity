@@ -71,6 +71,7 @@ public:
   sigc::signal<void, unsigned long long, unsigned long long> end_transaction;
 
 private:
+  void Init();
   void OnRowAdded(DeeModel* model, DeeModelIter* iter);
   void OnRowChanged(DeeModel* model, DeeModelIter* iter);
   void OnRowRemoved(DeeModel* model, DeeModelIter* iter);

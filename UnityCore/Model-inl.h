@@ -36,22 +36,26 @@ template<class RowAdaptor>
 Model<RowAdaptor>::Model()
   : model_type_(ModelType::REMOTE)
 {
-  swarm_name.changed.connect(sigc::mem_fun(this, &Model<RowAdaptor>::OnSwarmNameChanged));
-  count.SetGetterFunction(sigc::mem_fun(this, &Model<RowAdaptor>::get_count));
-  seqnum.SetGetterFunction(sigc::mem_fun(this, &Model<RowAdaptor>::get_seqnum));
+  Init();
 }
 
 template<class RowAdaptor>
 Model<RowAdaptor>::Model (ModelType model_type)
   : model_type_(model_type)
 {
+  Init();
+
+  if (model_type == ModelType::LOCAL)
+    swarm_name = ":local";
+}
+
+template<class RowAdaptor>
+void Model<RowAdaptor>::Init ()
+{
   swarm_name.changed.connect(sigc::mem_fun(this, &Model<RowAdaptor>::OnSwarmNameChanged));
   count.SetGetterFunction(sigc::mem_fun(this, &Model<RowAdaptor>::get_count));
   seqnum.SetGetterFunction(sigc::mem_fun(this, &Model<RowAdaptor>::get_seqnum));
   model.SetGetterFunction(sigc::mem_fun(this, &Model<RowAdaptor>::get_model));
-
-  if (model_type == ModelType::LOCAL)
-    swarm_name = ":local";
 }
 
 template<class RowAdaptor>
