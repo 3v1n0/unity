@@ -49,7 +49,7 @@ public:
 
   const char* DesktopFile();
 
-  bool IsSticky();
+  bool IsSticky() const;
   bool IsVisible();
   bool IsActive();
   bool IsRunning();
@@ -62,8 +62,8 @@ public:
   virtual bool ShowInSwitcher();
   virtual unsigned long long SwitcherPriority();
 
-  std::vector<Window> RelatedXids();
-  std::string NameForWindow (Window window);
+  std::vector<Window> RelatedXids() const;
+  std::string NameForWindow(Window window) const;
 
 protected:
   void UpdateIconGeometries(nux::Point3 center);
@@ -81,7 +81,7 @@ protected:
   std::set<std::string> ValidateUrisForLaunch(unity::DndData& dnd_data);
 
   const gchar* GetRemoteUri();
-  std::string BamfName();
+  std::string BamfName() const;
 
   bool HandlesSpread() { return true; }
 
@@ -101,7 +101,7 @@ private:
   void OnWindowMoved(guint32 xid);
   void OnLauncherHiddenChanged();
 
-  bool OwnsWindow(Window w);
+  bool OwnsWindow(Window w) const;
 
   const std::set<std::string>& GetSupportedTypes();
 
@@ -110,15 +110,15 @@ private:
 
   glib::Object<BamfApplication> _bamf_app;
   Launcher* _launcher;
-  const gchar* _desktop_file;
   bool _dnd_hovered;
   guint _dnd_hover_timer;
 
   bool _supported_types_filled;
   guint _fill_supported_types_id;
-  guint32 _window_moved_id;
+  guint _window_moved_id;
 
   std::string _remote_uri;
+  std::string _desktop_file;
   std::set<std::string> _supported_types;
   std::map<std::string, glib::Object<DbusmenuClient>> _menu_clients;
   std::map<std::string, glib::Object<DbusmenuMenuitem>> _menu_items;

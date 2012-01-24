@@ -42,7 +42,6 @@ BamfLauncherIcon::BamfLauncherIcon(Launcher* IconManager, BamfApplication* app)
   : SimpleLauncherIcon(IconManager)
   , _bamf_app(app, glib::AddRef())
   , _launcher(IconManager)
-  , _desktop_file(nullptr)
   , _dnd_hovered(false)
   , _dnd_hover_timer(0)
   , _supported_types_filled(false)
@@ -152,7 +151,7 @@ BamfLauncherIcon::~BamfLauncherIcon()
     g_source_remove(_dnd_hover_timer);
 }
 
-bool BamfLauncherIcon::IsSticky()
+bool BamfLauncherIcon::IsSticky() const
 {
   return bamf_view_is_sticky(BAMF_VIEW(_bamf_app.RawPtr()));
 }
@@ -283,7 +282,7 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
     ubus_server_send_message(ubus_server_get_default(), UBUS_LAUNCHER_ACTION_DONE, nullptr);
 }
 
-std::vector<Window> BamfLauncherIcon::RelatedXids ()
+std::vector<Window> BamfLauncherIcon::RelatedXids () const
 {
   std::vector<Window> results;
   GList* children, *l;
@@ -309,7 +308,7 @@ std::vector<Window> BamfLauncherIcon::RelatedXids ()
   return results;
 }
 
-std::string BamfLauncherIcon::NameForWindow(Window window)
+std::string BamfLauncherIcon::NameForWindow(Window window) const
 {
   std::string result;
   GList* children, *l;
@@ -363,8 +362,7 @@ void BamfLauncherIcon::OnLauncherHiddenChanged()
 
 void BamfLauncherIcon::UpdateDesktopFile()
 {
-  char* filename = nullptr;
-  filename = (char*) bamf_application_get_desktop_file(_bamf_app);
+  const char* filename = bamf_application_get_desktop_file(_bamf_app);
 
   if (filename != nullptr && _desktop_file != filename)
   {
@@ -376,7 +374,7 @@ void BamfLauncherIcon::UpdateDesktopFile()
     if (_desktop_file_monitor)
       _gsignals.Disconnect(_desktop_file_monitor, "changed");
 
-    glib::Object<GFile> desktop_file(g_file_new_for_path(DesktopFile()));
+    glib::Object<GFile> desktop_file(g_file_new_for_path(_desktop_file.c_str()));
     _desktop_file_monitor = g_file_monitor_file(desktop_file, G_FILE_MONITOR_NONE,
                                                 nullptr, nullptr);
     g_file_monitor_set_rate_limit(_desktop_file_monitor, 1000);
@@ -402,10 +400,10 @@ void BamfLauncherIcon::UpdateDesktopFile()
 const char* BamfLauncherIcon::DesktopFile()
 {
   UpdateDesktopFile();
-  return _desktop_file;
+  return _desktop_file.c_str();
 }
 
-std::string BamfLauncherIcon::BamfName()
+std::string BamfLauncherIcon::BamfName() const
 {
   glib::String name(bamf_view_get_name(BAMF_VIEW(_bamf_app.RawPtr())));
   return name.Str();
@@ -437,7 +435,7 @@ void BamfLauncherIcon::AddProperties(GVariantBuilder* builder)
   g_variant_builder_add(builder, "{sv}", "xids", g_variant_new_array(G_VARIANT_TYPE_UINT32, xids, i));
 }
 
-bool BamfLauncherIcon::OwnsWindow(Window w)
+bool BamfLauncherIcon::OwnsWindow(Window w) const
 {
   GList* children, *l;
   BamfView* view;
@@ -1109,7 +1107,7 @@ std::set<std::string> BamfLauncherIcon::ValidateUrisForLaunch(unity::DndData& ur
 
 gboolean BamfLauncherIcon::OnDndHoveredTimeout(gpointer data)
 {
-  BamfLauncherIcon* self = static_cast <BamfLauncherIcon*> (data);
+  BamfLauncherIcon* self = static_cast<BamfLauncherIcon*>(data);
 
   // for now, let's not do this, it turns out to be quite buggy
   //if (self->_dnd_hovered && self->IsRunning())
