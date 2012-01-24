@@ -87,15 +87,15 @@ protected:
 
 private:
   void EnsureWindowState();
+  void EnsureMenuItemsReady();
   void UpdateDesktopFile();
   void UpdateMenus();
   void UpdateDesktopQuickList();
+  void FillSupportedTypes();
 
   void OpenInstanceWithUris(std::set<std::string> uris);
   void Focus(ActionArg arg);
   bool Spread(bool current_desktop, int state, bool force);
-
-  void EnsureMenuItemsReady();
 
   void OnWindowMinimized(guint32 xid);
   void OnWindowMoved(guint32 xid);
@@ -106,7 +106,6 @@ private:
   const std::set<std::string>& GetSupportedTypes();
 
   static gboolean OnDndHoveredTimeout(gpointer data);
-  static gboolean FillSupportedTypes(gpointer data);
 
 
   glib::Object<BamfApplication> _bamf_app;

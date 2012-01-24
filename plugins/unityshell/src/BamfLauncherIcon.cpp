@@ -130,7 +130,10 @@ BamfLauncherIcon::BamfLauncherIcon(Launcher* IconManager, BamfApplication* app)
   SetProgress(0.0f);
 
   // Calls when there are no higher priority events pending to the default main loop.
-  _fill_supported_types_id = g_idle_add((GSourceFunc)FillSupportedTypes, this);
+  _fill_supported_types_id = g_idle_add([] (gpointer data) -> gboolean {
+    static_cast<BamfLauncherIcon*>(data)->FillSupportedTypes();
+    return false;
+  }, this);
 }
 
 BamfLauncherIcon::~BamfLauncherIcon()
@@ -150,6 +153,9 @@ BamfLauncherIcon::~BamfLauncherIcon()
 
   if (_window_moved_id != 0)
     g_source_remove(_window_moved_id);
+
+  if (_dnd_hover_timer != 0)
+    g_source_remove(_dnd_hover_timer);
 }
 
 bool BamfLauncherIcon::IsSticky()
@@ -1179,31 +1185,28 @@ unsigned long long BamfLauncherIcon::SwitcherPriority()
 const std::set<std::string>& BamfLauncherIcon::GetSupportedTypes()
 {
   if (!_supported_types_filled)
-    FillSupportedTypes(this);
+    FillSupportedTypes();
 
   return _supported_types;
 }
 
-gboolean BamfLauncherIcon::FillSupportedTypes(gpointer data)
+void BamfLauncherIcon::FillSupportedTypes()
 {
-  BamfLauncherIcon* self = static_cast <BamfLauncherIcon*>(data);
-
-  if (self->_fill_supported_types_id)
+  if (_fill_supported_types_id)
   {
-    g_source_remove(self->_fill_supported_types_id);
-    self->_fill_supported_types_id = 0;
+    g_source_remove(_fill_supported_types_id);
+    _fill_supported_types_id = 0;
   }
 
-  if (!self->_supported_types_filled)
+  if (!_supported_types_filled)
   {
-    self->_supported_types_filled = true;
+    _supported_types_filled = true;
+    _supported_types.clear();
 
-    self->_supported_types.clear();
+    const char* desktop_file = DesktopFile();
 
-    const char* desktop_file = self->DesktopFile();
-
-    if (!desktop_file || strlen(desktop_file) <= 1)
-      return false;
+    if (!desktop_file || desktop_file[0] == '\0')
+      return;
 
     GKeyFile* key_file = g_key_file_new();
     unity::glib::Error error;
@@ -1213,27 +1216,25 @@ gboolean BamfLauncherIcon::FillSupportedTypes(gpointer data)
     if (error)
     {
       g_key_file_free(key_file);
-      return false;
+      return;
     }
 
     char** mimes = g_key_file_get_string_list(key_file, "Desktop Entry", "MimeType", nullptr, nullptr);
     if (!mimes)
     {
       g_key_file_free(key_file);
-      return false;
+      return;
     }
 
     for (int i = 0; mimes[i]; i++)
     {
       unity::glib::String super_type(g_content_type_from_mime_type(mimes[i]));
-      self->_supported_types.insert(super_type.Str());
+      _supported_types.insert(super_type.Str());
     }
 
     g_key_file_free(key_file);
     g_strfreev(mimes);
   }
-
-  return false;
 }
 
 } // namespace launcher
