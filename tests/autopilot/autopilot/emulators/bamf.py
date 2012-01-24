@@ -8,7 +8,9 @@
 "Various classes for interacting with BAMF."
 
 import dbus
+from dbus.mainloop.glib import DBusGMainLoop
 import gio
+import gobject
 from time import sleep
 from Xlib import display, X, protocol
 import time
@@ -18,8 +20,10 @@ __all__ = ["Bamf",
         "BamfWindow",
         ]
 
+#import pdb;pdb.set_trace()
 
 _BAMF_BUS_NAME = 'org.ayatana.bamf'
+DBusGMainLoop(set_as_default=True)
 _session_bus = dbus.SessionBus()
 _X_DISPLAY = display.Display()
 
@@ -45,9 +49,9 @@ class Bamf:
 
     def __init__(self):
         matcher_path = '/org/ayatana/bamf/matcher'
-        matcher_interface = 'org.ayatana.bamf.matcher'
+        self.matcher_interface_name = 'org.ayatana.bamf.matcher'
         self.matcher_proxy = _session_bus.get_object(_BAMF_BUS_NAME, matcher_path)
-        self.matcher_interface = dbus.Interface(self.matcher_proxy, matcher_interface)
+        self.matcher_interface = dbus.Interface(self.matcher_proxy, self.matcher_interface_name)
 
     def get_running_applications(self, user_visible_only=True):
         """Get a list of the currently running applications.
@@ -109,17 +113,34 @@ class Bamf:
         This method returns true once the application is found, or false 
         if the application was not found until the timeout was reached.
         """
-        # I'd love a better way to do this, but polling seems to be the 
-        # only option right now.
-        wait_forever = timeout < 0
-        while True:
-            if self.application_is_running(app_name):
-                return True
-            elif not wait_forever:
-                timeout -= 0.5
-                sleep(0.5)
-                if timeout < 0:
-                    return False
+        # maybe the app is running already?
+        found_app = [True]
+        if not self.application_is_running(app_name):
+            wait_forever = timeout < 0
+            gobject_loop = gobject.MainLoop()
+            # No, so define a callback to watch the ViewOpened signal:
+            def on_view_added(bamf_path, name):
+                if bamf_path.split('/')[-1].startswith('application'):
+                    app = BamfApplication(bamf_path)
+                    if app.name == app_name:
+                        gobject_loop.quit()
+
+            # ...and one for when the user-defined timeout has been reached:
+            def on_timeout_reached():
+                gobject_loop.quit()
+                found_app[0] = False
+                return False
+        
+            # need a timeout? if so, connect it:
+            if not wait_forever:
+                gobject.timeout_add(timeout * 1000, on_timeout_reached)
+            # connect signal handler:
+            _session_bus.add_signal_receiver(on_view_added, 'ViewOpened')
+            # pump the gobject main loop until either the correct signal is emitted, or the 
+            # timeout happens.
+            gobject_loop.run()
+        
+        return found_app[0]
 
     def launch_application(self, desktop_file, wait=True):
         """Launch an application by specifying a desktop file.
