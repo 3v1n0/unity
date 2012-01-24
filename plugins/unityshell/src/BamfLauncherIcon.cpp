@@ -670,19 +670,18 @@ void BamfLauncherIcon::EnsureWindowState()
 namespace {
 struct ShortcutData
 {
-  glib::Object<IndicatorDesktopShortcuts>* shortcuts;
+  glib::Object<IndicatorDesktopShortcuts> shortcuts;
   std::string nick;
 };
 
 static void shortcut_activated(DbusmenuMenuitem* item, guint time, ShortcutData* data)
 {
-  indicator_desktop_shortcuts_nick_exec(data->shortcuts->RawPtr(), data->nick.c_str());
+  indicator_desktop_shortcuts_nick_exec(data->shortcuts, data->nick.c_str());
 }
 }
 
 void BamfLauncherIcon::UpdateDesktopQuickList()
 {
-  IndicatorDesktopShortcuts* desktop_shortcuts;
   GKeyFile* keyfile;
   GError* error = nullptr;
   const char *desktop_file;
@@ -712,7 +711,9 @@ void BamfLauncherIcon::UpdateDesktopQuickList()
   {
     _menu_desktop_shortcuts = dbusmenu_menuitem_new();
     dbusmenu_menuitem_set_root(_menu_desktop_shortcuts, TRUE);
-    desktop_shortcuts = indicator_desktop_shortcuts_new(desktop_file, "Unity");
+
+    auto shortcuts = indicator_desktop_shortcuts_new(desktop_file, "Unity");
+    glib::Object<IndicatorDesktopShortcuts> desktop_shortcuts(shortcuts);
     const gchar** nicks = indicator_desktop_shortcuts_get_nicks(desktop_shortcuts);
 
     int index = 0;
@@ -723,7 +724,7 @@ void BamfLauncherIcon::UpdateDesktopQuickList()
         glib::String name(indicator_desktop_shortcuts_nick_get_name(desktop_shortcuts,
                                                                     nicks[index]));
         auto data = new ShortcutData();
-        data->shortcuts = new glib::Object<IndicatorDesktopShortcuts>(desktop_shortcuts, glib::AddRef());
+        data->shortcuts = glib::Object<IndicatorDesktopShortcuts>(desktop_shortcuts, glib::AddRef());
         data->nick = nicks[index];
 
         glib::Object<DbusmenuMenuitem> item(dbusmenu_menuitem_new());
@@ -733,9 +734,7 @@ void BamfLauncherIcon::UpdateDesktopQuickList()
         g_signal_connect_data(item, "item-activated",
                               (GCallback) shortcut_activated, data,
                               [] (gpointer user_data, GClosure*) {
-                                auto data = static_cast<ShortcutData*>(user_data);
-                                delete data->shortcuts;
-                                delete data;
+                                delete static_cast<ShortcutData*>(user_data);
                               }, (GConnectFlags) 0);
 
         dbusmenu_menuitem_child_append(_menu_desktop_shortcuts, item);
