@@ -107,8 +107,6 @@ void IconTexture::LoadIcon()
   if (_icon_name == NULL)
     return;
  
-  LOG_DEBUG(logger) << "Loading Icon " << _loading;
-
   if (_loading)
     return;
   _loading = true;
@@ -162,7 +160,6 @@ void IconTexture::Refresh(GdkPixbuf* pixbuf)
 void IconTexture::IconLoaded(std::string const& icon_name, unsigned size,
                              GdkPixbuf* pixbuf)
 {
-  LOG_DEBUG(logger) << "IconLoaded " << icon_name;
   if (GDK_IS_PIXBUF(pixbuf))
   {
     Refresh(pixbuf);
