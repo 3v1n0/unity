@@ -670,13 +670,13 @@ void BamfLauncherIcon::EnsureWindowState()
 namespace {
 struct ShortcutData
 {
-  IndicatorDesktopShortcuts* shortcuts;
-  gchar* nick;
+  glib::Object<IndicatorDesktopShortcuts>* shortcuts;
+  std::string nick;
 };
 
 static void shortcut_activated(DbusmenuMenuitem* item, guint time, ShortcutData* data)
 {
-  indicator_desktop_shortcuts_nick_exec(data->shortcuts, data->nick);
+  indicator_desktop_shortcuts_nick_exec(data->shortcuts->RawPtr(), data->nick.c_str());
 }
 }
 
@@ -718,13 +718,13 @@ void BamfLauncherIcon::UpdateDesktopQuickList()
     int index = 0;
     if (nicks)
     {
-      while (((gpointer*) nicks)[index])
+      while (nicks[index])
       {
         glib::String name(indicator_desktop_shortcuts_nick_get_name(desktop_shortcuts,
                                                                     nicks[index]));
         auto data = new ShortcutData();
-        data->shortcuts = INDICATOR_DESKTOP_SHORTCUTS(g_object_ref(desktop_shortcuts));
-        data->nick = g_strdup(nicks[index]);
+        data->shortcuts = new glib::Object<IndicatorDesktopShortcuts>(desktop_shortcuts, glib::AddRef());
+        data->nick = nicks[index];
 
         glib::Object<DbusmenuMenuitem> item(dbusmenu_menuitem_new());
         dbusmenu_menuitem_property_set(item, DBUSMENU_MENUITEM_PROP_LABEL, name);
@@ -734,8 +734,7 @@ void BamfLauncherIcon::UpdateDesktopQuickList()
                               (GCallback) shortcut_activated, data,
                               [] (gpointer user_data, GClosure*) {
                                 auto data = static_cast<ShortcutData*>(user_data);
-                                g_object_unref(data->shortcuts);
-                                g_free(data->nick);
+                                delete data->shortcuts;
                                 delete data;
                               }, (GConnectFlags) 0);
 
