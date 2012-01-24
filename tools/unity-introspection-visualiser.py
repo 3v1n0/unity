@@ -4,13 +4,20 @@
 # Script to generate a nice PNG file of the currently running unity introspection tree.
 from sys import argv
 import dbus
-from autopilot.emulators.unity import Unity
+
+try:
+    from autopilot.emulators.unity import Unity
+except ImportError:
+    print "Error: could not import the autopilot python module."
+    print "Make sure the autopilot module is in your $PYTHONPATH."
+    exit(1)
 
 try:
     import pydot
 except ImportError:
     print "Error: the 'pydot' module is required to run this script."
     print "Try installing the 'python-pydot' package."
+    exit(1)
 
 NEXT_NODE_ID=1
 
