@@ -1451,24 +1451,24 @@ menu_deactivated (GtkWidget *menu)
   gtk_widget_destroy (menu);
 }
 
-void
-panel_service_show_entry (PanelService *self,
-                          guint32       xid,
-                          const gchar  *entry_id,
-                          guint32       timestamp,
-                          gint32        x,
-                          gint32        y,
-                          gint32        button)
+static void
+panel_service_actually_show_entry (PanelService *self,
+                                   guint32       xid,
+                                   IndicatorObject *object,
+                                   IndicatorObjectEntry *entry,
+                                   gint32        x,
+                                   gint32        y,
+                                   gint32        button,
+                                   guint32       timestamp)
 {
-  IndicatorObject      *object;
-  IndicatorObjectEntry *entry;
-  GtkWidget            *last_menu;
-  PanelServicePrivate  *priv = self->priv;
+  PanelServicePrivate *priv;
+  GtkWidget           *last_menu;
 
-  entry = get_indicator_entry_by_id (entry_id);
-  object = get_entry_parent_indicator (entry);
-
+  g_return_if_fail (PANEL_IS_SERVICE (self));
+  g_return_if_fail (INDICATOR_IS_OBJECT (object));
   g_return_if_fail (entry);
+
+  priv = self->priv;
 
   if (priv->last_entry == entry)
     return;
@@ -1492,7 +1492,18 @@ panel_service_show_entry (PanelService *self,
 
   if (entry != NULL)
     {
+      gchar *entry_id = g_strdup_printf ("%p", entry);
       g_signal_emit (self, _service_signals[ENTRY_ACTIVATED], 0, entry_id);
+      g_free (entry_id);
+
+      if (xid > 0)
+        {
+          indicator_object_entry_activate_window (object, entry, xid, CurrentTime);
+        }
+      else
+        {
+          indicator_object_entry_activate (object, entry, CurrentTime);
+        }
 
       if (GTK_IS_MENU (entry->menu))
         {
@@ -1518,15 +1529,6 @@ panel_service_show_entry (PanelService *self,
                                              G_CALLBACK (on_active_menu_hidden), self);
       priv->last_menu_move_id = g_signal_connect_after (priv->last_menu, "move-current",
                                                         G_CALLBACK (on_active_menu_move_current), self);
-
-      if (xid > 0)
-        {
-          indicator_object_entry_activate_window (object, entry, xid, CurrentTime);
-        }
-      else
-        {
-          indicator_object_entry_activate (object, entry, CurrentTime);
-        }
 
       gtk_menu_popup (priv->last_menu, NULL, NULL, positon_menu, self, 0, CurrentTime);
       GdkWindow *gdkwin = gtk_widget_get_window (GTK_WIDGET (priv->last_menu));
@@ -1557,6 +1559,53 @@ panel_service_show_entry (PanelService *self,
    */
   if (GTK_MENU (last_menu))
     gtk_menu_popdown (GTK_MENU (last_menu));
+}
+
+void
+panel_service_show_entry (PanelService *self,
+                          guint32       xid,
+                          const gchar  *entry_id,
+                          gint32        x,
+                          gint32        y,
+                          gint32        button,
+                          guint32       timestamp)
+{
+  IndicatorObject      *object;
+  IndicatorObjectEntry *entry;
+
+  g_return_if_fail (PANEL_IS_SERVICE (self));
+
+  entry = get_indicator_entry_by_id (entry_id);
+  object = get_entry_parent_indicator (entry);
+
+  panel_service_actually_show_entry (self, xid, object, entry, x, y, button, timestamp);
+}
+
+void
+panel_service_show_app_menu (PanelService *self,
+                             guint32       xid,
+                             gint32        x,
+                             gint32        y,
+                             guint32       timestamp)
+{
+  IndicatorObject      *object;
+  IndicatorObjectEntry *entry;
+  GList                *entries;
+
+  g_return_if_fail (PANEL_IS_SERVICE (self));
+
+  object = panel_service_get_indicator (self, "libappmenu.so");
+  g_return_if_fail (INDICATOR_IS_OBJECT (object));
+
+  entries = indicator_object_get_entries (object);
+
+  if (entries)
+    {
+      entry = entries->data;
+      g_list_free (entries);
+
+      panel_service_actually_show_entry (self, xid, object, entry, x, y, 1, timestamp);
+    }
 }
 
 void

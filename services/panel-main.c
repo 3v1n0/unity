@@ -62,10 +62,17 @@ static const gchar introspection_xml[] =
   "    <method name='ShowEntry'>"
   "      <arg type='u' name='xid' direction='in'/>"
   "      <arg type='s' name='entry_id' direction='in'/>"
-  "      <arg type='u' name='timestamp' direction='in'/>"
   "      <arg type='i' name='x' direction='in'/>"
   "      <arg type='i' name='y' direction='in'/>"
   "      <arg type='i' name='button' direction='in'/>"
+  "      <arg type='u' name='timestamp' direction='in'/>"
+  "    </method>"
+  ""
+  "    <method name='ShowAppMenu'>" 
+  "      <arg type='u' name='xid' direction='in'/>"
+  "      <arg type='i' name='x' direction='in'/>"
+  "      <arg type='i' name='y' direction='in'/>"
+  "      <arg type='u' name='timestamp' direction='in'/>"
   "    </method>"
   ""
   "    <method name='SecondaryActivateEntry'>"
@@ -177,16 +184,28 @@ handle_method_call (GDBusConnection       *connection,
     {
       guint32 xid;
       gchar  *entry_id;
-      guint32 timestamp;
       gint32  x;
       gint32  y;
       gint32  button;
-      g_variant_get (parameters, "(usuiii)", &xid, &entry_id, &timestamp, &x, &y, &button, NULL);
+      guint32 timestamp;
+      g_variant_get (parameters, "(usiiiu)", &xid, &entry_id, &timestamp, &x, &y, &button, NULL);
 
-      panel_service_show_entry (service, xid, entry_id, timestamp, x, y, button);
+      panel_service_show_entry (service, xid, entry_id, x, y, button, timestamp);
 
       g_dbus_method_invocation_return_value (invocation, NULL);
       g_free (entry_id);
+    }
+  else if (g_strcmp0 (method_name, "ShowAppMenu") == 0)
+    {
+      guint32 xid;
+      gint32  x;
+      gint32  y;
+      guint32 timestamp;
+      g_variant_get (parameters, "(uiiu)", &xid, &x, &y, &timestamp, NULL);
+
+      panel_service_show_app_menu (service, xid, x, y, timestamp);
+
+      g_dbus_method_invocation_return_value (invocation, NULL);
     }
   else if (g_strcmp0 (method_name, "SecondaryActivateEntry") == 0)
     {
