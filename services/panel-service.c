@@ -27,6 +27,7 @@
 #include "panel-service.h"
 
 #include <stdlib.h>
+#include <fcntl.h>
 #include <gtk/gtk.h>
 #include <gdk/gdkx.h>
 
@@ -48,7 +49,6 @@ static PanelService *static_service = NULL;
 struct _PanelServicePrivate
 {
   GSList     *indicators;
-  GHashTable *entry2indicator_hash;
   GHashTable *panel2entries_hash;
 
   guint  initial_sync_id;
@@ -118,6 +118,7 @@ static void sort_indicators (PanelService    *self);
 
 static void notify_object (IndicatorObject *object);
 static IndicatorObjectEntry *get_entry_at (PanelService *self, gint x, gint y);
+static IndicatorObject *get_entry_parent_indicator (IndicatorObjectEntry *entry);
 
 static GdkFilterReturn event_filter (GdkXEvent    *ev,
                                      GdkEvent     *gev,
@@ -133,7 +134,6 @@ panel_service_class_dispose (GObject *object)
   PanelServicePrivate *priv = PANEL_SERVICE (object)->priv;
   gint i;
 
-  g_hash_table_destroy (priv->entry2indicator_hash);
   g_hash_table_destroy (priv->panel2entries_hash);
 
   gdk_window_remove_filter (NULL, (GdkFilterFunc)event_filter, object);
@@ -280,7 +280,7 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
             {
               /* Middle clicks over an appmenu entry are considered just like
                * all other clicks */
-              IndicatorObject *obj = g_hash_table_lookup (priv->entry2indicator_hash, entry);
+              IndicatorObject *obj = get_entry_parent_indicator (entry);
 
               if (g_strcmp0 (g_object_get_data (G_OBJECT (obj), "id"), "libappmenu.so") == 0)
                 {
@@ -371,30 +371,59 @@ get_entry_at (PanelService *self, gint x, gint y)
   return NULL;
 }
 
-static void
-panel_service_get_indicator_entry_by_id (PanelService *self, 
-                                         const gchar *entry_id,
-                                         IndicatorObjectEntry **entry,
-                                         IndicatorObject **object)
+static IndicatorObject *
+get_entry_parent_indicator (IndicatorObjectEntry *entry)
 {
-  IndicatorObject *indicator;
-  IndicatorObjectEntry *probably_entry;
-  PanelServicePrivate *priv = self->priv;
+  if (!entry || !INDICATOR_IS_OBJECT (entry->parent_object))
+    return NULL;
 
-  /* FIXME: eeek, why do we even do this? */
-  if (sscanf (entry_id, "%p", &probably_entry) == 1)
+  return INDICATOR_OBJECT (entry->parent_object);
+}
+
+IndicatorObjectEntry *
+get_indicator_entry_by_id (const gchar *entry_id)
+{
+  IndicatorObjectEntry *entry;
+  entry = NULL;
+
+  if (sscanf (entry_id, "%p", &entry) == 1)
   {
-    /* check that there really is such IndicatorObjectEntry */
-    indicator = g_hash_table_lookup (priv->entry2indicator_hash,
-                                     probably_entry);
-    if (object) *object = indicator;
-    if (entry) *entry = indicator != NULL ? probably_entry : NULL;
+    /* Checking that entry is really an IndicatorObjectEntry
+     * to do that, we use an hack that allows to check if the pointer we read is
+     * actually a valid pointer without crashing. This can be done using the
+     * low-level write function to read from the pointer to a valid fds (we use
+     * a pipe for convenience). Write will fail if we try to read from
+     * an invalid pointer without crashing, so we can be pretty sure
+     * if the pointed entry is an IndicatorObjectEntry if it has a valid
+     * parent IndicatorObject */
+
+    int fds[2];
+
+    if (pipe (fds) > -1)
+      {
+        close (fds[0]);
+        size_t data_size = sizeof (IndicatorObjectEntry);
+
+        if (write (fds[1], entry, data_size) != data_size)
+          {
+            entry = NULL;
+          }
+        else
+          {
+            data_size = sizeof (IndicatorObject*);
+
+            if (write (fds[1], entry->parent_object, data_size) != data_size ||
+                !INDICATOR_IS_OBJECT (entry->parent_object))
+            {
+              entry = NULL;
+            }
+          }
+
+        close (fds[1]);
+      }
   }
-  else
-  {
-    if (object) *object = NULL;
-    if (entry) *entry = NULL;
-  }
+
+  return entry;
 }
 
 static gboolean
@@ -416,7 +445,6 @@ panel_service_init (PanelService *self)
 
   gdk_window_add_filter (NULL, (GdkFilterFunc)event_filter, self);
 
-  priv->entry2indicator_hash = g_hash_table_new (g_direct_hash, g_direct_equal);
   priv->panel2entries_hash = g_hash_table_new_full (g_str_hash, g_str_equal,
                                                     g_free,
                                                     (GDestroyNotify) g_hash_table_destroy);
@@ -455,8 +483,6 @@ panel_service_actually_remove_indicator (PanelService *self, IndicatorObject *in
     {
       for (l = entries; l; l = l->next)
         {
-          g_hash_table_remove (self->priv->entry2indicator_hash, l->data);
-
           GHashTableIter iter;
           gpointer key, value;
           g_hash_table_iter_init (&iter, self->priv->panel2entries_hash);
@@ -669,13 +695,8 @@ on_entry_added (IndicatorObject      *object,
                 IndicatorObjectEntry *entry,
                 PanelService         *self)
 {
-  PanelServicePrivate *priv;
-
   g_return_if_fail (PANEL_IS_SERVICE (self));
   g_return_if_fail (entry != NULL);
-  priv = self->priv;
-
-  g_hash_table_insert (priv->entry2indicator_hash, entry, object);
 
   if (GTK_IS_LABEL (entry->label))
     {
@@ -722,13 +743,9 @@ on_entry_removed (IndicatorObject      *object,
                   IndicatorObjectEntry *entry,
                   PanelService         *self)
 {
-  PanelServicePrivate *priv;
   g_return_if_fail (PANEL_IS_SERVICE (self));
   g_return_if_fail (entry != NULL);
 
-  priv = self->priv;
-
-  g_hash_table_remove (priv->entry2indicator_hash, entry);
   /* Don't remove here the value from priv->panel2entries_hash, this should
    * be done in during the sync, to avoid false positive.
    * FIXME this in libappmenu.so to avoid to send an "entry-removed" signal
@@ -1197,7 +1214,7 @@ panel_service_sync_geometry (PanelService *self,
   IndicatorObjectEntry *entry;
   PanelServicePrivate  *priv = self->priv;
 
-  panel_service_get_indicator_entry_by_id (self, entry_id, &entry, &object);
+  entry = get_indicator_entry_by_id (entry_id);
 
   if (entry)
     {
@@ -1248,6 +1265,7 @@ panel_service_sync_geometry (PanelService *self,
           geo->height = height;
         }
 
+      object = get_entry_parent_indicator (entry);
       g_signal_emit (self, _service_signals[GEOMETRIES_CHANGED], 0, object, entry, x, y, width, height);
     }
 }
@@ -1402,7 +1420,7 @@ on_active_menu_move_current (GtkMenu              *menu,
     }
 
   /* Find the next/prev indicator */
-  object = g_hash_table_lookup (priv->entry2indicator_hash, priv->last_entry);
+  object = get_entry_parent_indicator(priv->last_entry);
   if (object == NULL)
     {
       g_warning ("Unable to find IndicatorObject for entry");
@@ -1432,7 +1450,8 @@ panel_service_show_entry (PanelService *self,
   GtkWidget            *last_menu;
   PanelServicePrivate  *priv = self->priv;
 
-  panel_service_get_indicator_entry_by_id (self, entry_id, &entry, &object);
+  entry = get_indicator_entry_by_id (entry_id);
+  object = get_entry_parent_indicator (entry);
 
   g_return_if_fail (entry);
 
@@ -1525,9 +1544,10 @@ panel_service_secondary_activate_entry (PanelService *self,
   IndicatorObject      *object;
   IndicatorObjectEntry *entry;
 
-  panel_service_get_indicator_entry_by_id (self, entry_id, &entry, &object);
+  entry = get_indicator_entry_by_id (entry_id);
   g_return_if_fail (entry);
 
+  object = get_entry_parent_indicator (entry);
   g_signal_emit_by_name(object, INDICATOR_OBJECT_SIGNAL_SECONDARY_ACTIVATE, entry,
                         timestamp);
 }
@@ -1540,11 +1560,12 @@ panel_service_scroll_entry (PanelService   *self,
   IndicatorObject      *object;
   IndicatorObjectEntry *entry;
 
-  panel_service_get_indicator_entry_by_id (self, entry_id, &entry, &object);
+  entry = get_indicator_entry_by_id (entry_id);
   g_return_if_fail (entry);
 
   GdkScrollDirection direction = delta < 0 ? GDK_SCROLL_DOWN : GDK_SCROLL_UP;
 
+  object = get_entry_parent_indicator (entry);
   g_signal_emit_by_name(object, INDICATOR_OBJECT_SIGNAL_ENTRY_SCROLLED, entry,
                         abs(delta/120), direction);
 }
