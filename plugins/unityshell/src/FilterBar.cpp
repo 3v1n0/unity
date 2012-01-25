@@ -104,6 +104,8 @@ void FilterBar::RemoveFilter(Filter::Ptr const& filter)
   {
     if (iter.first->id == filter->id)
     {
+      // FIXME: the correct separator needs to be removed here also
+
       nux::View* filter_view = iter.second;
       filter_map_.erase(filter_map_.find(iter.first));
       GetLayout()->RemoveChildObject(filter_view);
