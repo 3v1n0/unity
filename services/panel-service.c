@@ -380,7 +380,7 @@ get_entry_parent_indicator (IndicatorObjectEntry *entry)
   return INDICATOR_OBJECT (entry->parent_object);
 }
 
-IndicatorObjectEntry *
+static IndicatorObjectEntry *
 get_indicator_entry_by_id (const gchar *entry_id)
 {
   IndicatorObjectEntry *entry;
@@ -388,13 +388,13 @@ get_indicator_entry_by_id (const gchar *entry_id)
 
   if (sscanf (entry_id, "%p", &entry) == 1)
   {
-    /* Checking that entry is really an IndicatorObjectEntry
-     * to do that, we use an hack that allows to check if the pointer we read is
+    /* Checking that entry is really an IndicatorObjectEntry.
+     * To do that, we use an hack that allows to check if the pointer we read is
      * actually a valid pointer without crashing. This can be done using the
      * low-level write function to read from the pointer to a valid fds (we use
-     * a pipe for convenience). Write will fail if we try to read from
-     * an invalid pointer without crashing, so we can be pretty sure
-     * if the pointed entry is an IndicatorObjectEntry if it has a valid
+     * a pipe for convenience). Write will fail without crashing if we try to
+     * read from an invalid pointer, so we can finally be pretty sure if the
+     * pointed entry is an IndicatorObjectEntry by checking if it has a valid
      * parent IndicatorObject */
 
     int fds[2];
