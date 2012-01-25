@@ -45,9 +45,18 @@ include_directories (${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src)
 # We can't have convenience libs so we need to rebuild with what we need
 # Please keep actual test files alphabetically at top and then files
 # from ../${UNITY_SRC} or ../../services in alphabetically after that
+find_program(GLIB_GENMARSHAL glib-genmarshal)
+add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/panel-marshal.c
+  COMMAND ${GLIB_GENMARSHAL} ARGS ../services/panel-marshal.list --body --prefix=panel_marshal > ${CMAKE_CURRENT_BINARY_DIR}/panel-marshal.c
+  COMMAND ${GLIB_GENMARSHAL} ARGS ../services/panel-marshal.list --header --prefix=panel_marshal > ${CMAKE_CURRENT_BINARY_DIR}/panel-marshal.h
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  DEPENDS ../services/panel-marshal.list
+  COMMENT "Generating marshallers for panel-service")
+
 add_executable (test-unit
-                unit/TestQuicklistMenuitems.cpp
                 unit/TestMain.cpp
+                unit/TestQuicklistMenuitems.cpp
+                unit/TestPanelService.cpp
                 unit/TestUBus.cpp
                 unit/TestStaticCairoText.cpp
                 ${UNITY_SRC}/ubus-server.cpp
@@ -67,7 +76,9 @@ add_executable (test-unit
                 ${UNITY_SRC}/QuicklistView.h
                 ${UNITY_SRC}/StaticCairoText.cpp
                 ${UNITY_SRC}/StaticCairoText.h
-                ${UNITY_SRC}/
+                ../services/panel-service.c
+                ../services/panel-service.h
+                ${CMAKE_CURRENT_BINARY_DIR}/panel-marshal.c
                 )
 add_dependencies (test-unit unity-core-${UNITY_API_VERSION})
 add_subdirectory (test-input-remover)
