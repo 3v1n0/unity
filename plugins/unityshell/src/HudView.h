@@ -45,6 +45,7 @@ namespace hud
 class View : public nux::View
 {
   NUX_DECLARE_OBJECT_TYPE(HudView, nux::View);
+  typedef nux::ObjectPtr<View> Ptr;
 public:
   View();
   ~View();
@@ -91,18 +92,18 @@ private:
 
 private:
   UBusManager ubus;
-  nux::Layout* layout_;
-  nux::Layout* content_layout_;
-  nux::VLayout* button_views_;
-  unity::hud::SearchBar* search_bar_;
-  nux::StaticCairoText* search_hint_;
-  Icon* icon_;
+  nux::ObjectPtr<nux::Layout> layout_;
+  nux::ObjectPtr<nux::Layout> content_layout_;
+  nux::ObjectPtr<nux::VLayout> button_views_;
+  
+  //FIXME - replace with dash search bar once modifications to dash search bar land
+  SearchBar::Ptr search_bar_;
+  Icon::Ptr icon_;
   bool visible_;
 
   Hud::Queries queries_;
   nux::Geometry content_geo_;
   OverlayRenderer renderer_;
-  nux::ColorLayer* bg_layer_;
   nux::Geometry window_geometry_;
   nux::Geometry absolute_window_geometry_;
 };

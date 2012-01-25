@@ -65,7 +65,6 @@ View::View()
   rop.Blend = true;
   rop.SrcBlend = GL_ONE;
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
-  bg_layer_ = new nux::ColorLayer(nux::Color(0.0f, 0.0f, 0.0f, 1.0), false, rop);
 
   SetupViews();
   search_bar_->key_down.connect (sigc::mem_fun (this, &View::OnKeyDown));
@@ -209,23 +208,23 @@ void View::SetupViews()
   
   nux::Layout* icon_layout = new nux::VLayout();
   icon_layout->SetVerticalExternalMargin(12);
-  icon_layout->AddView(icon_, 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
+  icon_layout->AddView(icon_.GetPointer(), 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
   layout_->AddLayout(icon_layout, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_MATCHCONTENT);
 
   
   content_layout_ = new nux::VLayout();
-  layout_->AddLayout(content_layout_, 1, nux::MINOR_POSITION_TOP);
-  SetLayout(layout_);
+  layout_->AddLayout(content_layout_.GetPointer(), 1, nux::MINOR_POSITION_TOP);
+  SetLayout(layout_.GetPointer());
 
   // add the search bar to the composite
   search_bar_ = new unity::hud::SearchBar();
   search_bar_->search_hint = default_text;
   search_bar_->search_changed.connect(sigc::mem_fun(this, &View::OnSearchChanged));
-  content_layout_->AddView(search_bar_, 0, nux::MINOR_POSITION_LEFT);
+  content_layout_->AddView(search_bar_.GetPointer(), 0, nux::MINOR_POSITION_LEFT);
   
   button_views_ = new nux::VLayout();
   button_views_->SetHorizontalExternalMargin(12);
-  content_layout_->AddLayout(button_views_, 1, nux::MINOR_POSITION_LEFT);
+  content_layout_->AddLayout(button_views_.GetPointer(), 1, nux::MINOR_POSITION_LEFT);
 }
 
 void View::OnSearchChanged(std::string const& search_string)

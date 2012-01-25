@@ -17,6 +17,8 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
+/* FIXME!! - port this to the DashSearchBar and rename both to SearchBar */
+
 #include "config.h"
 
 #include <Nux/Nux.h>

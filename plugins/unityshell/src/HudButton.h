@@ -35,6 +35,7 @@ namespace unity {
 namespace hud {
 class HudButton : public nux::Button {
   typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
+  typedef nux::ObjectPtr<HudButton> Ptr;
 public:
   HudButton (nux::TextureArea *image, NUX_FILE_LINE_PROTO);
   HudButton (const std::string label, NUX_FILE_LINE_PROTO);

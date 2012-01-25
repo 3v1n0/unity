@@ -19,6 +19,9 @@
 
 #include "HudIcon.h"
 
+//FIXME - we should be using the LauncherRenderer method of rendering icons here instead of compositing ourself
+// to make sure we get the correct average background colour and running indicator
+
 namespace unity
 {
 namespace hud

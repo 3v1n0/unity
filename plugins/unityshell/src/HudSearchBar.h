@@ -46,6 +46,7 @@ using namespace unity::glib;
 class SearchBar : public nux::View
 {
   NUX_DECLARE_OBJECT_TYPE(SearchBar, nux::View);
+  typedef nux::ObjectPtr<SearchBar> Ptr;
 public:
   SearchBar(NUX_FILE_LINE_PROTO);
   ~SearchBar();

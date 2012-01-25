@@ -48,6 +48,7 @@ namespace hud
 class Icon : public unity::IconTexture
 {
 public:
+  typedef nux::ObjectPtr<IconTexture> Ptr;  
   Icon(nux::BaseTexture* texture, guint width, guint height);
   Icon(const char* icon_name, unsigned int size, bool defer_icon_loading = false);
   ~Icon();
