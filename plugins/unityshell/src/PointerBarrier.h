@@ -44,6 +44,11 @@ public:
   void DestroyBarrier();
 
 private:
+  bool HandleEvent (XEvent event);
+  static bool HandleEventWrapper(XEvent event, void* data);
+
+  int event_base_;
+  int error_base_;
   PointerBarrier barrier;
 };
 

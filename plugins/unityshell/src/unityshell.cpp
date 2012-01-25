@@ -1090,7 +1090,7 @@ void UnityScreen::damageNuxRegions()
 void UnityScreen::handleEvent(XEvent* event)
 {
   bool skip_other_plugins = false;
-  Launcher& launcher = launcher_controller_->launcher();
+  //Launcher& launcher = launcher_controller_->launcher();
   switch (event->type)
   {
     case FocusIn:
@@ -1100,8 +1100,8 @@ void UnityScreen::handleEvent(XEvent* event)
       else if (event->xfocus.mode == NotifyUngrab)
         PluginAdapter::Default()->OnScreenUngrabbed();
       cScreen->damageScreen();  // evil hack
-      if (_key_nav_mode_requested)
-        launcher.startKeyNavMode();
+      //if (_key_nav_mode_requested)
+        //launcher.startKeyNavMode();
       _key_nav_mode_requested = false;
       break;
     case KeyPress:
@@ -1118,13 +1118,13 @@ void UnityScreen::handleEvent(XEvent* event)
         if (super_keypressed_)
         {
           shortcut_controller_->Hide();
-          skip_other_plugins = launcher.CheckSuperShortcutPressed(screen->dpy(), key_sym, event->xkey.keycode, event->xkey.state, key_string);
-          if (!skip_other_plugins)
-          {
+          //skip_other_plugins = launcher.CheckSuperShortcutPressed(screen->dpy(), key_sym, event->xkey.keycode, event->xkey.state, key_string);
+          //if (!skip_other_plugins)
+          //{
             skip_other_plugins = dash_controller_->CheckShortcutActivation(key_string);
-            if (skip_other_plugins)
-              launcher.SetLatestShortcut(key_string[0]);
-          }
+            //if (skip_other_plugins)
+            //  launcher.SetLatestShortcut(key_string[0]);
+          //}
         }
       }
       break;
@@ -1231,7 +1231,7 @@ bool UnityScreen::showLauncherKeyInitiate(CompAction* action,
     action->setState(action->state() | CompAction::StateTermKey);
 
   super_keypressed_ = true;
-  launcher_controller_->launcher().StartKeyShowLauncher();
+  launcher_controller_->HandleLauncherKeyPress();
   EnsureSuperKeybindings ();
   
   if (enable_shortcut_overlay_ and !shortcut_controller_->Visible())
@@ -1268,8 +1268,8 @@ bool UnityScreen::showLauncherKeyTerminate(CompAction* action,
                                            CompOption::Vector& options)
 {
   super_keypressed_ = false;
-  launcher_controller_->launcher().EndKeyShowLauncher();
-  launcher_controller_->launcher().KeySwitcherTerminate();
+  launcher_controller_->HandleLauncherKeyRelease();
+  launcher_controller_->KeyNavTerminate();
   shortcut_controller_->Hide();
   return false;
 }
@@ -1319,7 +1319,7 @@ void UnityScreen::restartLauncherKeyNav()
   if (newFocusedWindow != NULL)
   {
     newFocusedWindow->moveInputFocusTo();
-    launcher_controller_->launcher().startKeyNavMode();
+    launcher_controller_->KeyNavActivate();
   }
 }
 
@@ -1470,24 +1470,22 @@ bool UnityScreen::altTabPrevWindowInitiate(CompAction* action, CompAction::State
 
 bool UnityScreen::launcherSwitcherForwardInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
 {
-  Launcher& launcher = launcher_controller_->launcher();
-
-  if (!launcher.KeySwitcherIsActive())
-    launcher.KeySwitcherActivate();
+  if (!launcher_controller_->KeyNavIsActive())
+    launcher_controller_->KeyNavActivate();
   else
-    launcher.KeySwitcherNext();
+    launcher_controller_->KeyNavNext();
 
   return false;
 }
 bool UnityScreen::launcherSwitcherPrevInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
 {
-  launcher_controller_->launcher().KeySwitcherPrevious();
+  launcher_controller_->KeyNavPrevious();
 
   return false;
 }
 bool UnityScreen::launcherSwitcherTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options)
 {
-  launcher_controller_->launcher().KeySwitcherTerminate();
+  launcher_controller_->KeyNavTerminate();
 
   return false;
 }

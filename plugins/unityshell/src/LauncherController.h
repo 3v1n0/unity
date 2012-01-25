@@ -66,7 +66,7 @@ public:
                               unsigned long key_state, 
                               char* key_string);
 
-  void KeyNavActivate(int monitor);
+  void KeyNavActivate();
   void KeyNavTerminate();
   void KeyNavNext();
   void KeyNavPrevious();

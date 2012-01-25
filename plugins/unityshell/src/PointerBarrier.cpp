@@ -18,6 +18,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <X11/extensions/Xfixes.h>
 
 #include "PointerBarrier.h"
 
@@ -33,8 +34,7 @@ void PointerBarrierWrapper::ConstructBarrier()
   
   Display *dpy = nux::GetGraphicsDisplay()->GetX11Display();
 
-  int event_base,error_base;
-  XFixesQueryExtension(dpy, &event_base, &error_base);
+  XFixesQueryExtension(dpy, &event_base_, &error_base_);
   
   int maj,min;
   XFixesQueryVersion(dpy, &maj, &min);
@@ -63,6 +63,31 @@ void PointerBarrierWrapper::DestroyBarrier()
   XFixesDestroyPointerBarrier(dpy, barrier);
 
   active = false;
+}
+
+bool PointerBarrierWrapper::HandleEvent(XEvent xevent)
+{
+  if(xevent.type - event_base_ == XFixesBarrierNotify)
+  {
+    XFixesBarrierNotifyEvent *notify_event = (XFixesBarrierNotifyEvent *)&xevent;
+    //int x = notify_event->x;
+    //int y = notify_event->y;
+    int velocity = notify_event->velocity;
+    int event_id = notify_event->event_id;
+
+    if (velocity > 30)
+      XFixesBarrierReleasePointer (nux::GetGraphicsDisplay()->GetX11Display(), notify_event->barrier, event_id);
+
+    return true;
+  }
+
+  return false;
+}
+
+bool PointerBarrierWrapper::HandleEventWrapper(XEvent event, void* data)
+{
+  PointerBarrierWrapper* wrapper = (PointerBarrierWrapper*)data;
+  return wrapper->HandleEvent(event);
 }
 
 }

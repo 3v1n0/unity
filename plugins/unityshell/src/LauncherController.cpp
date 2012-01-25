@@ -43,6 +43,8 @@
 #include "TrashLauncherIcon.h"
 #include "BFBLauncherIcon.h"
 #include "UScreen.h"
+#include "UBusWrapper.h"
+#include "UBusMessages.h"
 #include "TimeUtil.h"
 
 namespace unity
@@ -52,6 +54,16 @@ namespace launcher
 namespace
 {
 nux::logging::Logger logger("unity.launcher");
+}
+
+namespace local
+{
+namespace
+{
+  const int super_tap_duration = 250;
+  const int before_hide_launcher_on_super_duration = 1000;
+  const int ignore_repeat_shortcut_duration = 250;
+}
 }
 
 class Controller::Impl
@@ -82,6 +94,12 @@ public:
 
   void InsertDesktopIcon();
   void RemoveDesktopIcon();
+
+  bool TapTimeUnderLimit();
+
+  void SendHomeActivationRequest();
+
+  int GetMonitorWithMouseOver();
 
   void InsertTrash();
 
@@ -595,6 +613,24 @@ void Controller::Impl::SetupBamf()
   bamf_timer_handler_id_ = 0;
 }
 
+bool Controller::Impl::TapTimeUnderLimit()
+{
+  struct timespec current;
+  unity::TimeUtil::SetTimeStruct(&current);
+  int time_difference = unity::TimeUtil::TimeDelta(&current, &launcher_key_press_time_);
+
+  return time_difference < local::super_tap_duration;
+}
+
+void Controller::Impl::SendHomeActivationRequest()
+{
+  UBusManager().SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST, g_variant_new("(sus)", "home.lens", 0, ""));
+}
+
+int Controller::Impl::GetMonitorWithMouseOver()
+{
+  return 0;
+}
 
 Controller::Controller(Display* display)
 {
@@ -687,7 +723,10 @@ void Controller::HandleLauncherKeyPress()
 
 void Controller::HandleLauncherKeyRelease()
 {
-  
+  if (pimpl->TapTimeUnderLimit())
+  {
+    pimpl->SendHomeActivationRequest();
+  }
 }
 
 bool Controller::HandleLauncherKeyEvent(Display *display, unsigned int key_sym, unsigned long key_code, unsigned long key_state, char* key_string)
@@ -695,13 +734,13 @@ bool Controller::HandleLauncherKeyEvent(Display *display, unsigned int key_sym, 
   return false;
 }
 
-void Controller::KeyNavActivate(int monitor)
+void Controller::KeyNavActivate()
 {
   if (pimpl->keynav_launcher_.IsValid())
     return;
   
 
-  pimpl->keynav_launcher_ = pimpl->launchers[monitor];
+  pimpl->keynav_launcher_ = pimpl->launchers[0];
 }
 
 void Controller::KeyNavNext()
