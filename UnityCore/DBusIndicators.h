@@ -42,8 +42,9 @@ public:
                       EntryLocationMap const& locations);
 
   virtual void OnEntryScroll(std::string const& entry_id, int delta);
-  virtual void OnEntryShowMenu(std::string const& entry_id,
-                               int x, int y, int timestamp, int button);
+  virtual void OnEntryShowMenu(std::string const& entry_id, unsigned int xid,
+                               int x, int y, unsigned int button,
+                               unsigned int timestamp);
   virtual void OnEntrySecondaryActivate(std::string const& entry_id,
                                         unsigned int timestamp);
 

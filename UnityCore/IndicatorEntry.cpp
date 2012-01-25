@@ -205,9 +205,9 @@ bool Entry::IsUnused() const
   return id_ == UNUSED_ID;
 }
 
-void Entry::ShowMenu(int x, int y, int timestamp, int button)
+void Entry::ShowMenu(unsigned int xid, int x, int y, unsigned int button, unsigned int timestamp)
 {
-  on_show_menu.emit(id_, x, y, timestamp, button);
+  on_show_menu.emit(id_, xid, x, y, button, timestamp);
 }
 
 void Entry::SecondaryActivate(unsigned int timestamp)

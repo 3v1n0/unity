@@ -81,10 +81,11 @@ struct ShowEntryData
 {
   GDBusProxy* proxy;
   std::string entry_id;
+  guint xid;
   int x;
   int y;
+  guint button;
   guint timestamp;
-  guint32 button;
 };
 
 bool run_local_panel_service();
@@ -121,8 +122,9 @@ public:
                              GVariant* parameters);
 
   virtual void OnEntryScroll(std::string const& entry_id, int delta);
-  virtual void OnEntryShowMenu(std::string const& entry_id,
-                               int x, int y, int timestamp, int button);
+  virtual void OnEntryShowMenu(std::string const& entry_id, unsigned int xid,
+                               int x, int y, unsigned int button,
+                               unsigned int timestamp);
   virtual void OnEntrySecondaryActivate(std::string const& entry_id,
                                         unsigned int timestamp);
 
@@ -212,16 +214,19 @@ void DBusIndicators::Impl::RequestSyncIndicator(std::string const& name)
 
 
 void DBusIndicators::Impl::OnEntryShowMenu(std::string const& entry_id,
-                                           int x, int y, int timestamp, int button)
+                                           unsigned int xid, int x, int y,
+                                           unsigned int button,
+                                           unsigned int timestamp)
 {
   owner_->on_entry_show_menu.emit(entry_id, x, y, timestamp, button);
 
   // We have to do this because on certain systems X won't have time to
   // respond to our request for XUngrabPointer and this will cause the
   // menu not to show
-  ShowEntryData* data = new ShowEntryData();
+  auto data = new ShowEntryData();
   data->proxy = proxy_;
   data->entry_id = entry_id;
+  data->xid = xid;
   data->x = x;
   data->y = y;
   data->timestamp = timestamp;
@@ -516,9 +521,10 @@ void DBusIndicators::OnEntryScroll(std::string const& entry_id, int delta)
 }
 
 void DBusIndicators::OnEntryShowMenu(std::string const& entry_id,
-                                     int x, int y, int timestamp, int button)
+                                     unsigned int xid, int x, int y,
+                                     unsigned int button, unsigned int timestamp)
 {
-  pimpl->OnEntryShowMenu(entry_id, x, y, timestamp, button);
+  pimpl->OnEntryShowMenu(entry_id, xid, x, y, button, timestamp);
 }
 
 void DBusIndicators::OnEntrySecondaryActivate(std::string const& entry_id,
@@ -652,12 +658,13 @@ bool send_show_entry(ShowEntryData* data)
 
   g_dbus_proxy_call(data->proxy,
                     "ShowEntry",
-                    g_variant_new("(suiii)",
+                    g_variant_new("(suiiiu)",
                                   data->entry_id.c_str(),
-                                  0,
+                                  data->xid,
                                   data->x,
                                   data->y,
-                                  data->button),
+                                  data->button,
+                                  data->timestamp),
                     G_DBUS_CALL_FLAGS_NONE,
                     -1,
                     NULL,

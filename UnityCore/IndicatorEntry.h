@@ -85,7 +85,7 @@ public:
   void MarkUnused();
   bool IsUnused() const;
 
-  void ShowMenu(int x, int y, int timestamp, int button);
+  void ShowMenu(unsigned int xid, int x, int y, unsigned int button, unsigned int timestamp);
   void SecondaryActivate(unsigned int timestamp);
   void Scroll(int delta);
 
@@ -98,7 +98,7 @@ public:
   sigc::signal<void, bool> active_changed;
   sigc::signal<void, bool> show_now_changed;
 
-  sigc::signal<void, std::string const&, int, int, int, int> on_show_menu;
+  sigc::signal<void, std::string const&, unsigned int, int, int, unsigned int, unsigned int> on_show_menu;
   sigc::signal<void, std::string const&, unsigned int> on_secondary_activate;
   sigc::signal<void, std::string const&, int> on_scroll;
 

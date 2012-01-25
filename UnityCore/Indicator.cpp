@@ -99,11 +99,10 @@ Entry::Ptr Indicator::GetEntry(std::string const& entry_id) const
   return Entry::Ptr();
 }
 
-void Indicator::OnEntryShowMenu(std::string const& entry_id,
-                                int x, int y,
-                                int timestamp, int button)
+void Indicator::OnEntryShowMenu(std::string const& entry_id, unsigned int xid,
+                                int x, int y, unsigned int button, unsigned int timestamp)
 {
-  on_show_menu.emit(entry_id, x, y, timestamp, button);
+  on_show_menu.emit(entry_id, xid, x, y, button, timestamp);
 }
 
 void Indicator::OnEntrySecondaryActivate(std::string const& entry_id,

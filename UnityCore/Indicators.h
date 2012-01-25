@@ -58,8 +58,9 @@ public:
   /**
    * internal
    */
-  virtual void OnEntryShowMenu(std::string const& entry_id,
-                               int x, int y, int timestamp, int button) = 0;
+  virtual void OnEntryShowMenu(std::string const& entry_id, unsigned int xid,
+                               int x, int y, unsigned int button,
+                               unsigned int timestamp) = 0;
   virtual void OnEntrySecondaryActivate(std::string const& entry_id,
                                         unsigned int timestamp) = 0;
 
