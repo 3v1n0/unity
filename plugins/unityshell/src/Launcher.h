@@ -128,8 +128,6 @@ public:
     return _parent;
   };
 
-  static void SetTimeStruct(struct timespec* timer, struct timespec* sister = 0, int sister_relation = 0);
-
   virtual void RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long key_flags);
   virtual void RecvMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags);
   virtual void RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);

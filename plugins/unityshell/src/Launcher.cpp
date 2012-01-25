@@ -96,19 +96,6 @@ const float BACKLIGHT_STRENGTH = 0.9f;
 
 NUX_IMPLEMENT_OBJECT_TYPE(Launcher);
 
-void SetTimeBack(struct timespec* timeref, int remove)
-{
-  timeref->tv_sec -= remove / 1000;
-  remove = remove % 1000;
-
-  if (remove > timeref->tv_nsec / 1000000)
-  {
-    timeref->tv_sec--;
-    timeref->tv_nsec += 1000000000;
-  }
-  timeref->tv_nsec -= remove * 1000000;
-}
-
 const gchar Launcher::introspection_xml[] =
   "<node>"
   "  <interface name='com.canonical.Unity.Launcher'>"
@@ -421,7 +408,7 @@ Launcher::OnDragFinish(GeisAdapter::GeisDragData* data)
   {
     if (_drag_out_delta_x >= DRAG_OUT_PIXELS - 90.0f)
       _hide_machine->SetQuirk(LauncherHideMachine::MT_DRAG_OUT, true);
-    SetTimeStruct(&_times[TIME_DRAG_OUT], &_times[TIME_DRAG_OUT], ANIM_DURATION_SHORT);
+    TimeUtil::SetTimeStruct(&_times[TIME_DRAG_OUT], &_times[TIME_DRAG_OUT], ANIM_DURATION_SHORT);
     _drag_out_id = 0;
     EnsureAnimation();
   }
@@ -527,7 +514,7 @@ void Launcher::SetMousePosition(int x, int y)
   _mouse_position = nux::Point2(x, y);
 
   if (beyond_drag_threshold != MouseBeyondDragThreshold())
-    SetTimeStruct(&_times[TIME_DRAG_THRESHOLD], &_times[TIME_DRAG_THRESHOLD], ANIM_DURATION_SHORT);
+    TimeUtil::SetTimeStruct(&_times[TIME_DRAG_THRESHOLD], &_times[TIME_DRAG_THRESHOLD], ANIM_DURATION_SHORT);
 
   EnsureScrollTimer();
 }
@@ -717,25 +704,6 @@ bool Launcher::AnimationInProgress()
   return false;
 }
 
-void Launcher::SetTimeStruct(struct timespec* timer, struct timespec* sister, int sister_relation)
-{
-  struct timespec current;
-  clock_gettime(CLOCK_MONOTONIC, &current);
-
-  if (sister)
-  {
-    int diff = unity::TimeUtil::TimeDelta(&current, sister);
-
-    if (diff < sister_relation)
-    {
-      int remove = sister_relation - diff;
-      SetTimeBack(&current, remove);
-    }
-  }
-
-  timer->tv_sec = current.tv_sec;
-  timer->tv_nsec = current.tv_nsec;
-}
 /* Min is when you are on the trigger */
 float Launcher::GetAutohidePositionMin()
 {
@@ -1367,8 +1335,8 @@ void Launcher::StartKeyShowLauncher()
 {
   _hide_machine->SetQuirk(LauncherHideMachine::LAST_ACTION_ACTIVATE, false);
 
-  SetTimeStruct(&_times[TIME_TAP_SUPER]);
-  SetTimeStruct(&_times[TIME_SUPER_PRESSED]);
+  TimeUtil::SetTimeStruct(&_times[TIME_TAP_SUPER]);
+  TimeUtil::SetTimeStruct(&_times[TIME_SUPER_PRESSED]);
 
   if (_super_show_launcher_handle > 0)
     g_source_remove(_super_show_launcher_handle);
@@ -1548,7 +1516,7 @@ void Launcher::SetHidden(bool hidden)
   _postreveal_mousemove_delta_x = 0;
   _postreveal_mousemove_delta_y = 0;
 
-  SetTimeStruct(&_times[TIME_AUTOHIDE], &_times[TIME_AUTOHIDE], ANIM_DURATION_SHORT);
+  TimeUtil::SetTimeStruct(&_times[TIME_AUTOHIDE], &_times[TIME_AUTOHIDE], ANIM_DURATION_SHORT);
 
   _parent->EnableInputWindow(!hidden, "launcher", false, false);
 
@@ -1894,11 +1862,11 @@ void Launcher::SetHover(bool hovered)
   if (_hovered)
   {
     _enter_y = (int) _mouse_position.y;
-    SetTimeStruct(&_times[TIME_ENTER], &_times[TIME_LEAVE], ANIM_DURATION);
+    TimeUtil::SetTimeStruct(&_times[TIME_ENTER], &_times[TIME_LEAVE], ANIM_DURATION);
   }
   else
   {
-    SetTimeStruct(&_times[TIME_LEAVE], &_times[TIME_ENTER], ANIM_DURATION);
+    TimeUtil::SetTimeStruct(&_times[TIME_LEAVE], &_times[TIME_ENTER], ANIM_DURATION);
   }
 
   if (_dash_is_open && !_hide_machine->GetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE))
@@ -2369,7 +2337,7 @@ void Launcher::EndIconDrag()
   }
 
   if (MouseBeyondDragThreshold())
-    SetTimeStruct(&_times[TIME_DRAG_THRESHOLD], &_times[TIME_DRAG_THRESHOLD], ANIM_DURATION_SHORT);
+    TimeUtil::SetTimeStruct(&_times[TIME_DRAG_THRESHOLD], &_times[TIME_DRAG_THRESHOLD], ANIM_DURATION_SHORT);
 
   _render_drag_window = false;
 
@@ -2926,7 +2894,7 @@ void Launcher::MouseUpLogic(int x, int y, unsigned long button_flags, unsigned l
 
   if (GetActionState() == ACTION_DRAG_LAUNCHER)
   {
-    SetTimeStruct(&_times[TIME_DRAG_END]);
+    TimeUtil::SetTimeStruct(&_times[TIME_DRAG_END]);
   }
 
   _icon_mouse_down = 0;
@@ -3162,13 +3130,13 @@ Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
         _dnd_hovered_icon->SendDndLeave();
 
     _drag_edge_touching = true;
-    SetTimeStruct(&_times[TIME_DRAG_EDGE_TOUCH], &_times[TIME_DRAG_EDGE_TOUCH], ANIM_DURATION * 3);
+    TimeUtil::SetTimeStruct(&_times[TIME_DRAG_EDGE_TOUCH], &_times[TIME_DRAG_EDGE_TOUCH], ANIM_DURATION * 3);
     EnsureAnimation();
   }
   else if (_mouse_position.x != 0 && _drag_edge_touching)
   {
     _drag_edge_touching = false;
-    SetTimeStruct(&_times[TIME_DRAG_EDGE_TOUCH], &_times[TIME_DRAG_EDGE_TOUCH], ANIM_DURATION * 3);
+    TimeUtil::SetTimeStruct(&_times[TIME_DRAG_EDGE_TOUCH], &_times[TIME_DRAG_EDGE_TOUCH], ANIM_DURATION * 3);
     EnsureAnimation();
   }
 

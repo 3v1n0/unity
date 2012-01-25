@@ -33,6 +33,7 @@
 #include "CairoTexture.h"
 #include "LauncherIcon.h"
 #include "Launcher.h"
+#include "TimeUtil.h"
 
 #include "QuicklistManager.h"
 #include "QuicklistMenuItem.h"
@@ -781,7 +782,7 @@ LauncherIcon::SetQuirk(LauncherIcon::Quirk quirk, bool value)
   
   _quirks[quirk] = value;
   if (quirk == QUIRK_VISIBLE)
-    Launcher::SetTimeStruct(&(_quirk_times[quirk]), &(_quirk_times[quirk]), ANIM_DURATION_SHORT);
+    TimeUtil::SetTimeStruct(&(_quirk_times[quirk]), &(_quirk_times[quirk]), ANIM_DURATION_SHORT);
   else
     clock_gettime(CLOCK_MONOTONIC, &(_quirk_times[quirk]));
   needs_redraw.emit(this);

@@ -24,7 +24,6 @@
 #include <memory>
 #include <vector>
 #include <sigc++/sigc++.h>
-#include <core/core.h>
 
 #include "SoftwareCenterLauncherIcon.h"
 
@@ -58,6 +57,20 @@ public:
   void PushToFront();
 
   void SetShowDesktopIcon(bool show_desktop_icon);
+
+  void HandleLauncherKeyPress();
+  void HandleLauncherKeyRelease();
+  bool HandleLauncherKeyEvent(Display *display, 
+                              unsigned int key_sym, 
+                              unsigned long key_code, 
+                              unsigned long key_state, 
+                              char* key_string);
+
+  void KeyNavActivate(int monitor);
+  void KeyNavTerminate();
+  void KeyNavNext();
+  void KeyNavPrevious();
+  bool KeyNavIsActive();
 
 private:
   class Impl;

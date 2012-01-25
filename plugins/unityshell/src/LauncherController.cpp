@@ -20,8 +20,6 @@
 
 #include <glib/gi18n-lib.h>
 #include <libbamf/libbamf.h>
-/* Compiz */
-#include <core/core.h>
 
 #include <Nux/Nux.h>
 #include <Nux/HLayout.h>
@@ -45,6 +43,7 @@
 #include "TrashLauncherIcon.h"
 #include "BFBLauncherIcon.h"
 #include "UScreen.h"
+#include "TimeUtil.h"
 
 namespace unity
 {
@@ -106,6 +105,7 @@ public:
   glib::Object<BamfMatcher> matcher_;
   LauncherModel::Ptr     model_;
   nux::ObjectPtr<Launcher> launcher_;
+  nux::ObjectPtr<Launcher> keynav_launcher_;
   int                    sort_priority_;
   DeviceLauncherSection* device_section_;
   LauncherEntryRemoteModel remote_model_;
@@ -118,6 +118,8 @@ public:
 
   guint                  bamf_timer_handler_id_;
   guint32                on_view_opened_id_;
+
+  struct timespec        launcher_key_press_time_;
 
   LauncherList launchers;
 
@@ -176,6 +178,8 @@ Controller::Impl::Impl(Display* display, Controller* parent)
   desktop_icon_ = new DesktopLauncherIcon();
 
   uscreen->changed.connect(sigc::mem_fun(this, &Controller::Impl::OnScreenChanged));
+
+  launcher_key_press_time_ = { 0, 0 };
 }
 
 Controller::Impl::~Impl()
@@ -674,6 +678,53 @@ void Controller::SetShowDesktopIcon(bool show_desktop_icon)
     pimpl->InsertDesktopIcon();
   else
     pimpl->RemoveDesktopIcon();
+}
+
+void Controller::HandleLauncherKeyPress()
+{
+  unity::TimeUtil::SetTimeStruct(&pimpl->launcher_key_press_time_);
+}
+
+void Controller::HandleLauncherKeyRelease()
+{
+  
+}
+
+bool Controller::HandleLauncherKeyEvent(Display *display, unsigned int key_sym, unsigned long key_code, unsigned long key_state, char* key_string)
+{
+  return false;
+}
+
+void Controller::KeyNavActivate(int monitor)
+{
+  if (pimpl->keynav_launcher_.IsValid())
+    return;
+  
+
+  pimpl->keynav_launcher_ = pimpl->launchers[monitor];
+}
+
+void Controller::KeyNavNext()
+{
+  
+}
+
+void Controller::KeyNavPrevious()
+{
+  
+}
+
+void Controller::KeyNavTerminate()
+{
+  if (pimpl->keynav_launcher_.IsNull())
+    return;
+  
+  pimpl->keynav_launcher_.Release();
+}
+
+bool Controller::KeyNavIsActive()
+{
+  return pimpl->keynav_launcher_.IsValid();
 }
 
 
