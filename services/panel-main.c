@@ -68,7 +68,7 @@ static const gchar introspection_xml[] =
   "      <arg type='u' name='timestamp' direction='in'/>"
   "    </method>"
   ""
-  "    <method name='ShowAppMenu'>" 
+  "    <method name='ShowAppMenu'>"
   "      <arg type='u' name='xid' direction='in'/>"
   "      <arg type='i' name='x' direction='in'/>"
   "      <arg type='i' name='y' direction='in'/>"
