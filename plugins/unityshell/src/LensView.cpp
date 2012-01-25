@@ -34,10 +34,13 @@ namespace unity
 {
 namespace dash
 {
-
 namespace
 {
 nux::logging::Logger logger("unity.dash.lensview");
+
+const int FILTERS_LEFT_PADDING = 0;
+const int FILTERS_RIGHT_PADDING = 8;
+
 }
 
 // This is so we can access some protected members in scrollview.
@@ -144,8 +147,6 @@ LensView::~LensView()
 void LensView::SetupViews()
 {
   layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
-  
-  layout_->SetHorizontalExternalMargin(8);
 
   scroll_view_ = new LensScrollView(new PlacesVScrollBar(NUX_TRACKER_LOCATION),
                                     NUX_TRACKER_LOCATION);
@@ -164,6 +165,7 @@ void LensView::SetupViews()
   layout_->AddView(fscroll_view_, 1);
 
   fscroll_layout_ = new nux::VLayout();
+  fscroll_layout_->SetLeftAndRightPadding(FILTERS_LEFT_PADDING, FILTERS_RIGHT_PADDING);
   fscroll_view_->SetLayout(fscroll_layout_);
 
   filter_bar_ = new FilterBar();
@@ -336,8 +338,8 @@ void LensView::OnFilterAdded(Filter::Ptr filter)
   filter_bar_->AddFilter(filter);
 
   int width = dash::Style::Instance().GetTileWidth();
-  fscroll_view_->SetMinimumWidth(width*2);
-  fscroll_view_->SetMaximumWidth(width*2);
+  fscroll_view_->SetMinimumWidth(width * 2 + FILTERS_LEFT_PADDING + FILTERS_RIGHT_PADDING);
+  fscroll_view_->SetMaximumWidth(width * 2 + FILTERS_LEFT_PADDING + FILTERS_RIGHT_PADDING);
 
   can_refine_search = true;
 }
