@@ -71,7 +71,7 @@ PlacesGroup::PlacesGroup()
 
   _cached_name = NULL;
   _group_layout = new nux::VLayout("", NUX_TRACKER_LOCATION);
-  _group_layout->SetHorizontalExternalMargin(12);
+  _group_layout->SetHorizontalExternalMargin(20);
   _group_layout->SetVerticalExternalMargin(1);
 
   _group_layout->AddLayout(new nux::SpaceLayout(15,15,15,15), 0);
@@ -101,10 +101,6 @@ PlacesGroup::PlacesGroup()
   _expand_label->SetTextEllipsize(nux::StaticCairoText::NUX_ELLIPSIZE_END);
   _expand_label->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_LEFT);
   _expand_label->SetTextColor(kExpandDefaultTextColor);
-  _expand_label->SetAcceptKeyNavFocus(true);
-  _expand_label->OnKeyNavFocusActivate.connect(sigc::mem_fun(this, &PlacesGroup::OnLabelActivated));
-  _expand_label->OnKeyNavFocusChange.connect(sigc::mem_fun(this, &PlacesGroup::OnLabelFocusChanged));
-
   _expand_layout->AddView(_expand_label, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
   _expand_icon = new IconTexture(arrow, arrow->GetWidth(), arrow->GetHeight());
@@ -119,15 +115,26 @@ PlacesGroup::PlacesGroup()
   _icon->mouse_click.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseClick));
   _icon->mouse_enter.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseEnter));
   _icon->mouse_leave.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseLeave));
+  _icon->OnKeyNavFocusChange.connect(sigc::mem_fun(this, &PlacesGroup::OnLabelFocusChanged));
   _name->mouse_click.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseClick));
   _name->mouse_enter.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseEnter));
   _name->mouse_leave.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseLeave));
+  _name->OnKeyNavFocusChange.connect(sigc::mem_fun(this, &PlacesGroup::OnLabelFocusChanged));
   _expand_label->mouse_click.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseClick));
   _expand_label->mouse_enter.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseEnter));
   _expand_label->mouse_leave.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseLeave));
+  _expand_label->OnKeyNavFocusActivate.connect(sigc::mem_fun(this, &PlacesGroup::OnLabelActivated));
+  _expand_label->OnKeyNavFocusChange.connect(sigc::mem_fun(this, &PlacesGroup::OnLabelFocusChanged));
   _expand_icon->mouse_click.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseClick));
   _expand_icon->mouse_enter.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseEnter));
   _expand_icon->mouse_leave.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseLeave));
+  _expand_icon->OnKeyNavFocusChange.connect(sigc::mem_fun(this, &PlacesGroup::OnLabelFocusChanged));
+
+  nux::ROPConfig rop;
+  rop.Blend = true;
+  rop.SrcBlend = GL_ONE;
+  rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+  bkg_color_layer_ = new nux::ColorLayer(nux::Color(0.2f, 0.2f, 0.2f, 0.2f), false, rop);
 }
 
 PlacesGroup::~PlacesGroup()
@@ -137,6 +144,8 @@ PlacesGroup::~PlacesGroup()
 
   if (_cached_name != NULL)
     g_free(_cached_name);
+
+  delete bkg_color_layer_;
 }
 
 void
@@ -243,21 +252,21 @@ PlacesGroup::RefreshLabel()
 
   _expand_label->SetText(final);
   _expand_label->SetVisible(_n_visible_items_in_unexpand_mode < _n_total_items);
-  _expand_label->SetAcceptKeyNavFocus((_n_visible_items_in_unexpand_mode < _n_total_items) ? true : false);
 
-  if (_expand_label->IsVisible() == false)
-  {
-    if (_expand_icon->IsVisible())
-    {
-      _expand_icon->SetAcceptKeyNavFocus(true);
-      _expand_icon->OnKeyNavFocusChange.connect(sigc::mem_fun(this, &PlacesGroup::OnLabelFocusChanged));
-    }
-  }
+  _icon->SetAcceptKeyNavFocus(false);
+  _name->SetAcceptKeyNavFocus(false);
+  _expand_label->SetAcceptKeyNavFocus(false);
+  _expand_icon->SetAcceptKeyNavFocus(false);
 
-  if (_expand_icon->IsVisible() == false)
-  {
-    _expand_icon->SetAcceptKeyNavFocus(false);
-  }
+  if (_expand_label->IsVisible())
+    _expand_label->SetAcceptKeyNavFocus(true);
+  else if (_expand_icon->IsVisible())
+    _expand_icon->SetAcceptKeyNavFocus(true);
+  else if (_name->IsVisible())
+    _name->SetAcceptKeyNavFocus(true);
+  else if (_icon->IsVisible())
+    _icon->SetAcceptKeyNavFocus(true);
+
 
   QueueDraw();
 
@@ -297,53 +306,67 @@ PlacesGroup::OnIdleRelayout(PlacesGroup* self)
   return FALSE;
 }
 
-void PlacesGroup::Draw(nux::GraphicsEngine& GfxContext,
+void PlacesGroup::Draw(nux::GraphicsEngine& graphics_engine,
                        bool                 forceDraw)
 {
   nux::Geometry const& base = GetGeometry();
-  GfxContext.PushClippingRectangle(base);
-  
-  nux::GetPainter().PaintBackground(GfxContext, base);
+  graphics_engine.PushClippingRectangle(base);
+
+  nux::GetPainter().PaintBackground(graphics_engine, base);
+
+  graphics_engine.GetRenderStates().SetColorMask(true, true, true, false);
+  graphics_engine.GetRenderStates().SetBlend(true);
+  graphics_engine.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
 
   if (_draw_sep)
   {
     nux::Color col(0.15f, 0.15f, 0.15f, 0.15f);
 
-    GfxContext.GetRenderStates().SetColorMask(true, true, true, true);
-    GfxContext.GetRenderStates().SetBlend(true);
-    GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
-    nux::GetPainter().Draw2DLine(GfxContext,
-                                 base.x + 11, base.y + base.height - 1,
-                                 base.x + base.width - 5, base.y + base.height - 1,
+    nux::GetPainter().Draw2DLine(graphics_engine,
+                                 base.x + 16, base.y + base.height - 1,
+                                 base.x + base.width - 10, base.y + base.height - 1,
                                  col);
   }
 
-  GfxContext.PopClippingRectangle();
+  graphics_engine.GetRenderStates().SetColorMask(true, true, true, true);
+
+  if (_icon->HasKeyFocus() || _name->HasKeyFocus() ||
+      _expand_label->HasKeyFocus() || _expand_icon->HasKeyFocus())
+  {
+    nux::Geometry geo(_header_layout->GetGeometry());
+    geo.x = base.x + 11;
+    geo.width = base.width - 16;
+
+    bkg_color_layer_->SetGeometry(geo);
+    bkg_color_layer_->Renderlayer(graphics_engine);
+  }
+
+  graphics_engine.PopClippingRectangle();
 }
 
 void
-PlacesGroup::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
+PlacesGroup::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
 {
   nux::Geometry const& base = GetGeometry();
 
-  GfxContext.PushClippingRectangle(base);
-  
-  if (_expand_label->HasKeyFocus())
+  graphics_engine.PushClippingRectangle(base);
+
+  if ((_icon->HasKeyFocus() || _name->HasKeyFocus() ||
+       _expand_label->HasKeyFocus() || _expand_icon->HasKeyFocus()) && !IsFullRedraw())
   {
-    nux::Color col(0.2, 0.2, 0.2, 0.2);
     nux::Geometry geo(_header_layout->GetGeometry());
     geo.x = base.x;
     geo.width = base.width;
-    
-    nux::GetPainter().Paint2DQuadColor(GfxContext, geo, col);
+
+    nux::GetPainter().PushLayer(graphics_engine, geo, bkg_color_layer_);
   }
 
-  _group_layout->ProcessDraw(GfxContext, force_draw);
+  _group_layout->ProcessDraw(graphics_engine, force_draw);
 
-  GfxContext.PopClippingRectangle();
+  graphics_engine.PopClippingRectangle();
 }
 
-void PlacesGroup::PostDraw(nux::GraphicsEngine& GfxContext,
+void PlacesGroup::PostDraw(nux::GraphicsEngine& graphics_engine,
                            bool                 forceDraw)
 {
 }

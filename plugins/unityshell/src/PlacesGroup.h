@@ -72,9 +72,9 @@ protected:
 private:
   void Refresh();
 
-  void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
-  void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
-  void PostDraw (nux::GraphicsEngine &GfxContext, bool force_draw);
+  void Draw(nux::GraphicsEngine& graphics_engine, bool force_draw);
+  void DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw);
+  void PostDraw (nux::GraphicsEngine &graphics_engine, bool force_draw);
 
   static gboolean OnIdleRelayout(PlacesGroup* self);
 
@@ -99,6 +99,7 @@ private:
 
   guint32 _idle_id;
 
+  nux::ColorLayer* bkg_color_layer_;
   bool  _is_expanded;
   guint _n_visible_items_in_unexpand_mode;
   guint _n_total_items;
