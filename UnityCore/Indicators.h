@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010 Canonical Ltd
+ * Copyright (C) 2012 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -61,8 +61,18 @@ public:
   virtual void OnEntryShowMenu(std::string const& entry_id, unsigned int xid,
                                int x, int y, unsigned int button,
                                unsigned int timestamp) = 0;
+
+  /**
+   * internal
+   */
   virtual void OnEntrySecondaryActivate(std::string const& entry_id,
                                         unsigned int timestamp) = 0;
+
+  /**
+   * internal
+   */
+  virtual void OnShowAppMenu(unsigned int xid, int x, int y,
+                             unsigned int timestamp) = 0;
 
   // Signals
   sigc::signal<void, Indicator::Ptr const&> on_object_added;
@@ -91,12 +101,21 @@ public:
    * The service is about to show a menu.
    * @param entry_id entry id
    * @param xid window xid
-   * @param x x coordinate
-   * @param y y coordinate
+   * @param x coordinate
+   * @param y coordinate
    * @param button pressed button
    * @param timestamp current time
    */
   sigc::signal<void, std::string const&, unsigned int, int, int, unsigned int, unsigned int> on_entry_show_menu;
+
+  /**
+   * The service is about to show an appmenu.
+   * @param xid window xid
+   * @param x coordinate
+   * @param y coordinate
+   * @param timestamp current time
+   */
+  sigc::signal<void, std::string const&, unsigned int, int, int, unsigned int> on_show_appmenu;
 
 protected:
   Indicator::Ptr GetIndicator(std::string const& name);
