@@ -27,6 +27,7 @@ from Xlib.ext.xtest import fake_input
 _PRESSED_KEYS = []
 _DISPLAY = Display()
 
+
 class Keyboard(object):
     """Wrapper around xlib to make faking keyboard input possible."""
     
