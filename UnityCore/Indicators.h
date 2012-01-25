@@ -115,7 +115,7 @@ public:
    * @param y coordinate
    * @param timestamp current time
    */
-  sigc::signal<void, std::string const&, unsigned int, int, int, unsigned int> on_show_appmenu;
+  sigc::signal<void, unsigned int, int, int, unsigned int> on_show_appmenu;
 
 protected:
   Indicator::Ptr GetIndicator(std::string const& name);

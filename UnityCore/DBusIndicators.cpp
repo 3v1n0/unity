@@ -96,6 +96,7 @@ void request_sync(GDBusProxy* proxy, const char* method, GVariant* name,
 void on_sync_ready_cb(GObject* source, GAsyncResult* res, gpointer data);
 
 bool send_show_entry(ShowEntryData* data);
+bool send_show_appmenu(ShowEntryData* data);
 
 } // anonymous namespace
 
@@ -127,6 +128,8 @@ public:
                                unsigned int timestamp);
   virtual void OnEntrySecondaryActivate(std::string const& entry_id,
                                         unsigned int timestamp);
+  virtual void OnShowAppMenu(unsigned int xid, int x, int y,
+                             unsigned int timestamp);
 
   std::string name() const;
   std::string owner_name() const;
@@ -229,10 +232,28 @@ void DBusIndicators::Impl::OnEntryShowMenu(std::string const& entry_id,
   data->xid = xid;
   data->x = x;
   data->y = y;
-  data->timestamp = timestamp;
   data->button = button;
+  data->timestamp = timestamp;
 
-  g_idle_add_full (G_PRIORITY_DEFAULT, (GSourceFunc)send_show_entry, data, NULL);
+  g_idle_add_full (G_PRIORITY_DEFAULT, (GSourceFunc) send_show_entry, data, NULL);
+}
+
+void DBusIndicators::Impl::OnShowAppMenu(unsigned int xid, int x, int y,
+                                         unsigned int timestamp)
+{
+  owner_->on_show_appmenu.emit(xid, x, y, timestamp);
+
+  // We have to do this because on certain systems X won't have time to
+  // respond to our request for XUngrabPointer and this will cause the
+  // menu not to show
+  auto data = new ShowEntryData();
+  data->proxy = proxy_;
+  data->xid = xid;
+  data->x = x;
+  data->y = y;
+  data->timestamp = timestamp;
+
+  g_idle_add_full (G_PRIORITY_DEFAULT, (GSourceFunc) send_show_appmenu, data, NULL);
 }
 
 void DBusIndicators::Impl::OnEntrySecondaryActivate(std::string const& entry_id,
@@ -664,6 +685,27 @@ bool send_show_entry(ShowEntryData* data)
                                   data->x,
                                   data->y,
                                   data->button,
+                                  data->timestamp),
+                    G_DBUS_CALL_FLAGS_NONE,
+                    -1,
+                    NULL,
+                    NULL,
+                    NULL);
+  delete data;
+  return FALSE;
+}
+
+bool send_show_appmenu(ShowEntryData* data)
+{
+  g_return_val_if_fail(data != NULL, FALSE);
+  g_return_val_if_fail(G_IS_DBUS_PROXY(data->proxy), FALSE);
+
+  g_dbus_proxy_call(data->proxy,
+                    "ShowAppMenu",
+                    g_variant_new("(uiiu)",
+                                  data->xid,
+                                  data->x,
+                                  data->y,
                                   data->timestamp),
                     G_DBUS_CALL_FLAGS_NONE,
                     -1,

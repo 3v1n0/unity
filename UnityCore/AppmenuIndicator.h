@@ -42,7 +42,7 @@ public:
   void ShowAppmenu(unsigned int xid, int x, int y, unsigned int timestamp) const;
 
   sigc::signal<void, bool> integrated_changed;
-  sigc::signal<void, unsigned int, int, int, unsigned int> show_appmenu;
+  sigc::signal<void, unsigned int, int, int, unsigned int> on_show_appmenu;
 
 private:
   void CheckSettingValue();

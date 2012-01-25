@@ -47,6 +47,8 @@ public:
                                unsigned int timestamp);
   virtual void OnEntrySecondaryActivate(std::string const& entry_id,
                                         unsigned int timestamp);
+  virtual void OnShowAppMenu(unsigned int xid, int x, int y,
+                             unsigned int timestamp);
 
   std::string name() const;
   std::string owner_name() const;
