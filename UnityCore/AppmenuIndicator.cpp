@@ -63,7 +63,7 @@ void AppmenuIndicator::CheckSettingValue()
   if (integrated_menus != integrated_)
   {
     integrated_ = integrated_menus;
-    integrated_changed(integrated_);
+    integrated_changed.emit(integrated_);
   }
 }
 
