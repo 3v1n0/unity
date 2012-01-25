@@ -64,7 +64,13 @@ namespace unity
 			int                         max);
       void setTexture (GLTexture *);
 
+#ifdef USE_GLES
+      void addGeometriesAndDrawTextureForWindow (CompWindow     *w,
+						 const GLMatrix &transform,
+                                                 unsigned int    mask);
+#else
       void addGeometriesAndDrawTextureForWindow (CompWindow *, unsigned int pm);
+#endif
 
     private:
       GLTexture*         mTexture;
@@ -78,7 +84,13 @@ namespace unity
       PaintInfoCollector (CompWindow *w);
 
       void collect ();
+#ifdef USE_GLES
+      void drawGeometriesForWindow (CompWindow     *w,
+				    const GLMatrix &transform,
+				    unsigned int    pm);
+#else
       void drawGeometriesForWindow (CompWindow *w, unsigned int pm);
+#endif
 
       void processGeometry (const GLTexture::MatrixList &ml,
 			    const CompRegion            &r,
@@ -242,7 +254,12 @@ public:
 public:
 
   bool
-  glDraw(const GLMatrix&, GLFragment::Attrib&,
+  glDraw(const GLMatrix&,
+#ifdef USE_GLES
+         const GLWindowPaintAttrib&,
+#else
+         GLFragment::Attrib&,
+#endif
          const CompRegion&, unsigned int);
 
   bool
@@ -258,7 +275,12 @@ public:
 
   void
   glDrawTexture(GLTexture* texture,
+#ifdef USE_GLES
+                const GLMatrix& transform,
+                const GLWindowPaintAttrib& attrib,
+#else
                 GLFragment::Attrib& attrib,
+#endif
                 unsigned int mask);
 
 

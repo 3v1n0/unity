@@ -49,7 +49,9 @@
 #include "DebugDBusInterface.h"
 #include "SwitcherController.h"
 #include "UBusWrapper.h"
+#ifndef USE_GLES
 #include "ScreenEffectFramebufferObject.h"
+#endif
 
 #include "compizminimizedwindowhandler.h"
 #include "BGHash.h"
@@ -130,7 +132,11 @@ public:
   void nuxEpilogue();
 
   /* nux draw wrapper */
+#ifdef USE_GLES
+  void paintDisplay();
+#else
   void paintDisplay(const CompRegion& region, const GLMatrix& transform, unsigned int mask);
+#endif
   void paintPanelShadow(const GLMatrix& matrix);
 
   void preparePaint (int ms);
@@ -151,6 +157,11 @@ public:
                      const CompRegion&,
                      CompOutput*,
                      unsigned int);
+#ifdef USE_GLES
+  void glPaintCompositedOutput (const CompRegion    &region,
+                                GLFramebufferObject *fbo,
+                                unsigned int         mask);
+#endif
 
   /* paint in the special case that the output is transformed */
   void glPaintTransformedOutput(const GLScreenPaintAttrib&,
@@ -302,8 +313,12 @@ private:
 
   unity::BGHash _bghash;
 
+#ifdef USE_GLES
+  GLFramebufferObject *oldFbo;
+#else
   ScreenEffectFramebufferObject::Ptr _fbo;
   GLuint                             _active_fbo;
+#endif
 
   bool   queryForShader ();
 
@@ -314,7 +329,9 @@ private:
   bool                   painting_tray_;
   unsigned int           tray_paint_mask_;
 
+#ifndef USE_GLES
   ScreenEffectFramebufferObject::GLXGetProcAddressProc glXGetProcAddressP;
+#endif
 
   friend class UnityWindow;
 };
@@ -351,7 +368,11 @@ public:
 
   /* basic window draw function */
   bool glDraw(const GLMatrix& matrix,
+#ifndef USE_GLES
               GLFragment::Attrib& attrib,
+#else
+              const GLWindowPaintAttrib& attrib,
+#endif
               const CompRegion& region,
               unsigned intmask);
 
