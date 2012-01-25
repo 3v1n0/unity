@@ -29,7 +29,7 @@
 #include <UnityCore/FilesystemLenses.h>
 
 #include "BackgroundEffectHelper.h"
-#include "DashSearchBar.h"
+#include "SearchBar.h"
 #include "HomeView.h"
 #include "Introspectable.h"
 #include "LensBar.h"

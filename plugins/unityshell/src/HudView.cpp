@@ -169,6 +169,8 @@ nux::Geometry View::GetBestFitGeometry(nux::Geometry const& for_geo)
 
   width += 19 + 32;
 
+  width = 1024;
+
   height = search_bar_->GetGeometry().height;
   height += 6;
   height += (style.GetTextLineHeight() + (12*2)) * 6;
@@ -217,13 +219,15 @@ void View::SetupViews()
   SetLayout(layout_.GetPointer());
 
   // add the search bar to the composite
-  search_bar_ = new unity::hud::SearchBar();
+  search_bar_ = new unity::SearchBar(940, true);
   search_bar_->search_hint = default_text;
   search_bar_->search_changed.connect(sigc::mem_fun(this, &View::OnSearchChanged));
   content_layout_->AddView(search_bar_.GetPointer(), 0, nux::MINOR_POSITION_LEFT);
   
   button_views_ = new nux::VLayout();
   button_views_->SetHorizontalExternalMargin(12);
+  button_views_->SetMaximumWidth(940);
+  
   content_layout_->AddLayout(button_views_.GetPointer(), 1, nux::MINOR_POSITION_LEFT);
 }
 

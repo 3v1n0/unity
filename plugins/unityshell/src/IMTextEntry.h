@@ -29,8 +29,6 @@
 
 namespace unity
 {
-namespace dash
-{
 
 using namespace unity::glib;
 using namespace nux;
@@ -78,7 +76,6 @@ private:
   bool focused_;
 };
 
-}
 }
 
 #endif
