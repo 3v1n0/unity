@@ -1,3 +1,11 @@
+unity (5.0.0-0ubuntu3) UNRELEASED; urgency=low
+
+  * rebuild for libindicator7
+  * CMakeLists.txt
+    - build with -Wno-error=deprecated-declarations
+
+ -- Ken VanDine <ken.vandine@canonical.com>  Tue, 24 Jan 2012 16:25:36 -0500
+
 unity (5.0.0-0ubuntu2) precise; urgency=low
 
   * Rebuild with nux on glew1.6
