@@ -56,6 +56,7 @@ private:
   FilterFactory factory_;
   Filters::Ptr filters_;
   std::map<Filter::Ptr, nux::View*> filter_map_;
+  nux::Texture2D* separator_;
 };
 
 } // namespace dash
