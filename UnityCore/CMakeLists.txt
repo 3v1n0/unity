@@ -8,6 +8,7 @@ execute_process (COMMAND ${PKG_CONFIG_EXECUTABLE} unity --variable lensesdir OUT
 #
 set (CORE_HEADERS
      ApplicationPreview.h
+     AppmenuIndicator.h
      Categories.h
      Category.h
      CheckOptionFilter.h
@@ -42,6 +43,7 @@ set (CORE_HEADERS
 
 set (CORE_SOURCES
      ApplicationPreview.cpp
+     AppmenuIndicator.cpp
      Categories.cpp
      Category.cpp
      CheckOptionFilter.cpp

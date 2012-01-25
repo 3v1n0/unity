@@ -39,9 +39,11 @@ public:
   typedef std::list<Entry::Ptr> Entries;
 
   Indicator(std::string const& name);
-  ~Indicator();
+  virtual ~Indicator();
 
   std::string const& name() const;
+
+  virtual bool IsAppmenu() const { return false; }
 
   void Sync(Entries const& new_entries);
   Entry::Ptr GetEntry(std::string const& entry_id) const;
@@ -58,7 +60,7 @@ public:
   sigc::signal<void, std::string const&, unsigned int> on_secondary_activate;
   sigc::signal<void, std::string const&, int> on_scroll;
 
-private:
+protected:
   Entries entries_;
   std::string name_;
 

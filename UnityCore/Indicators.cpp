@@ -17,8 +17,9 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  *              Tim Penhey <tim.penhey@canonical.com>
  */
-#include "Indicators.h"
 
+#include "Indicators.h"
+#include "AppmenuIndicator.h"
 
 namespace unity
 {
@@ -131,7 +132,14 @@ Indicators::IndicatorsList Indicators::Impl::GetIndicators() const
 
 Indicator::Ptr Indicators::Impl::AddIndicator(std::string const& name)
 {
-  Indicator::Ptr indicator(new Indicator(name));
+  Indicator* indptr;
+
+  if (name == "libappmenu.so")
+    indptr = new Indicator(name);
+  else
+    indptr = new AppmenuIndicator(name);
+
+  Indicator::Ptr indicator(indptr);
 
   // The owner Indicators class is interested in the other events.
   indicator->on_show_menu.connect(sigc::mem_fun(owner_, &Indicators::OnEntryShowMenu));
