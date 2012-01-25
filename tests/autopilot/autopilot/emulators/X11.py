@@ -71,37 +71,48 @@ class Keyboard(object):
         '~' : "asciitilde"
         }
 
+    _keysym_translations = {
+        'Control' : 'Control_L',
+        'Ctrl' : 'Control_L',
+        'Alt' : 'Alt_L',
+        'Super' : 'Super_L',
+        'Shift' : 'Shift_L',
+        'Enter' : 'Return',
+    }
+
     def __init__(self):
         self.shifted_keys = [k[1] for k in _DISPLAY._keymap_codes if k]
 
     def press(self, keys, delay=0.2):
         """Send key press events only.
 
-        Keys must be a sequence type (string, tuple, or list)  of keys you want
-        pressed. For keys that don't have a single-character represetnation,
-        you must use the X11 keysym name. For example:
+        The 'keys' argument must be a string of keys you want
+        pressed. For example:
 
-        press(['Meta_L', 'F2'])
+        press('Alt+F2')
 
-        presses the 'Alt+F2' combination.
+        presses the 'Alt' and 'F2' keys. 
 
         """
-        self.__perform_on_keys(keys, X.KeyPress)            
+        if not isinstance(keys, basestring): 
+            raise TypeError("'keys' argument must be a string.")
+        self.__perform_on_keys(self.__translate_keys(keys), X.KeyPress)            
         sleep(delay)
 
     def release(self, keys, delay=0.2):
         """Send key release events only.
 
-        Keys must be a sequence type (string, tuple, or list)  of keys you want
-        pressed. For keys that don't have a single-character represetnation,
-        you must use the X11 keysym name. For example:
+        The 'keys' argument must be a string of keys you want
+        released. For example:
 
-        release(['Meta_L', 'F2'])
-
-        releases the 'Alt+F2' combination.
+        release('Alt+F2')
+        
+        releases the 'Alt' and 'F2' keys.
 
         """
-        self.__perform_on_keys(keys, X.KeyRelease)
+        if not isinstance(keys, basestring): 
+            raise TypeError("'keys' argument must be a string.")
+        self.__perform_on_keys(self.__translate_keys(keys), X.KeyRelease)
         sleep(delay)
         
     def press_and_release(self, keys, delay=0.2):
@@ -109,20 +120,27 @@ class Keyboard(object):
 
         This is the same as calling 'press(keys);release(keys)'.
         
-        Keys must be a sequence type (string, tuple, or list)  of keys you want
-        pressed. For keys that don't have a single-character represetnation,
-        you must use the X11 keysym name. For example:
+        The 'keys' argument must be a string of keys you want
+        pressed and released.. For example:
 
-        press_and_release(['Meta_L', 'F2'])
+        press_and_release('Alt+F2'])
 
-        presses the 'Alt+F2' combination, and then releases both keys.
+        presses both the 'Alt' and 'F2' keys, and then releases both keys.
 
         """
+
         self.press(keys, delay)
         self.release(keys, delay)
 
     def type(self, string, delay=0.1):
-        """Simulate a user typing a string of text. """
+        """Simulate a user typing a string of text. 
+
+        Only 'normal' keys can be typed with this method. Control characters 
+        (such as 'Alt' will be interpreted as an 'A', and 'l', and a 't').
+
+        """
+        if not isinstance(string, basestring): 
+            raise TypeError("'keys' argument must be a string.")
         for key in string:
             self.press(key, delay)
             self.release(key, delay)
@@ -179,6 +197,9 @@ class Keyboard(object):
         else :
             shift_mask = 0
         return keycode, shift_mask
+
+    def __translate_keys(self, key_string):
+        return [self._keysym_translations.get(k,k) for k in key_string.split('+')]
 
 
 class Mouse(object):

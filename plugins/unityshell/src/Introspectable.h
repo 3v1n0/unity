@@ -50,13 +50,8 @@ protected:
    * AddProperties should be implemented as such ...
    * void ClassFoo::AddProperties (GVariantBuilder *builder)
    * {
-   *  g_variant_builder_add (builder, "{sv}", "label", g_variant_new_string ("_File") );
-   *  g_variant_builder_add (builder, "{sv}", "image", g_variant_new_string ("") );
-   *  g_variant_builder_add (builder, "{sv}", "visible", g_variant_new_boolean (TRUE) );
-   *    g_variant_builder_add (builder, "{sv}", "sensitive", g_variant_new_boolean (TRUE) );
-   *    g_variant_builder_add (builder, "{sv}", "active", g_variant_new_boolean (FALSE) );
-   *    g_variant_builder_add (builder, "{sv}", "label", g_variant_new_int32 (34) );
-   *    g_variant_builder_add (builder, "{sv}", "label", g_variant_new_int32 (24) );
+   *  unity::variant::BuilderWrapper wrapper(builder);
+   *  wrapper.add("label", some_value);
    * }
    * That's all. Just add a bunch of key-value properties to the builder.
    */

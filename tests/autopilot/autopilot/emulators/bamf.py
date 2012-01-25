@@ -11,9 +11,7 @@ import dbus
 from dbus.mainloop.glib import DBusGMainLoop
 import gio
 import gobject
-from time import sleep
 from Xlib import display, X, protocol
-import time
 
 __all__ = ["Bamf", 
         "BamfApplication", 

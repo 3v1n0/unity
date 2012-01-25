@@ -38,8 +38,8 @@ class ShowDesktopTests(TestCase):
 
         # show desktop, verify all windows are hidden:
         kb = Keyboard()
-        kb.press_and_release(['Control_L','Meta_L','d'])
-        self.addCleanup(kb.press_and_release, keys=['Control_L','Meta_L','d'])
+        kb.press_and_release('Control+Alt+d')
+        self.addCleanup(kb.press_and_release, keys='Control+Alt+d')
         sleep(1)
         open_wins = self.bamf.get_open_windows() 
         self.assertGreaterEqual(len(open_wins), 2)
@@ -53,7 +53,7 @@ class ShowDesktopTests(TestCase):
 
         # show desktop, verify all windows are hidden:
         kb = Keyboard()
-        kb.press_and_release(['Control_L','Meta_L','d'])
+        kb.press_and_release('Control+Alt+d')
         sleep(1)
         open_wins = self.bamf.get_open_windows() 
         self.assertGreaterEqual(len(open_wins), 2)
@@ -62,7 +62,7 @@ class ShowDesktopTests(TestCase):
             self.assertTrue(win.is_hidden, "Window '%s' is not hidden after show desktop activated." % (win.title))
 
         # un-show desktop, verify all windows are shown:
-        kb.press_and_release(['Control_L','Meta_L','d'])
+        kb.press_and_release('Control+Alt+d')
         sleep(1)
         for win in self.bamf.get_open_windows():
             self.assertTrue(win.is_valid)
@@ -74,7 +74,7 @@ class ShowDesktopTests(TestCase):
 
         # show desktop, verify all windows are hidden:
         kb = Keyboard()
-        kb.press_and_release(['Control_L','Meta_L','d'])
+        kb.press_and_release('Control+Alt+d')
         sleep(1)
         open_wins = self.bamf.get_open_windows() 
         self.assertGreaterEqual(len(open_wins), 2)
@@ -102,7 +102,7 @@ class ShowDesktopTests(TestCase):
                     self.assertTrue(win.is_hidden, "Window '%s' should still be hidden." % (win.title))
 
         # hide desktop - now all windows should be visible:
-        kb.press_and_release(['Control_L','Meta_L','d'])
+        kb.press_and_release('Control+Alt+d')
         sleep(1)
         for win in self.bamf.get_open_windows():
             if win.is_valid:
@@ -128,7 +128,7 @@ class ShowDesktopTests(TestCase):
         self.assertTrue(found, "Could not find 'Show Desktop' entry in switcher.")
         switcher.terminate()
         kb = Keyboard()
-        self.addCleanup(kb.press_and_release, keys=['Control_L','Meta_L','d'])
+        self.addCleanup(kb.press_and_release, keys='Control+Alt+d')
 
         sleep(1)
         open_wins = self.bamf.get_open_windows() 

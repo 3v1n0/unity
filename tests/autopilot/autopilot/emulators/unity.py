@@ -124,25 +124,25 @@ class Switcher(Unity):
 
     def initiate(self):
         """Start the switcher with alt+tab."""
-        self._keyboard.press(['Meta_L'])
-        self._keyboard.press_and_release(['Tab'])
+        self._keyboard.press('Alt')
+        self._keyboard.press_and_release('Tab')
 
     def initiate_detail_mode(self):
         """Start detail mode with alt+`"""
-        self._keyboard.press(['Meta_L'])
+        self._keyboard.press('Alt')
         self._keyboard.press_and_release('`')
 
     def terminate(self):
         """Stop switcher."""
-        self._keyboard.release(['Meta_L'])
+        self._keyboard.release('Alt')
 
     def next_icon(self):
         """Move to the next application."""
-        self._keyboard.press_and_release(['Tab'])
+        self._keyboard.press_and_release('Tab')
 
     def previous_icon(self):
         """Move to the previous application."""
-        self._keyboard.press_and_release(['Shift_L','Tab'])
+        self._keyboard.press_and_release('Shift+Tab')
 
     def show_details(self):
         """Show detail mode."""
@@ -150,7 +150,7 @@ class Switcher(Unity):
 
     def hide_details(self):
         """Hide detail mode."""
-        self._keyboard.press_and_release(['Up'])
+        self._keyboard.press_and_release('Up')
 
     def next_detail(self):
         """Move to next detail in the switcher."""
@@ -158,7 +158,7 @@ class Switcher(Unity):
 
     def previous_detail(self):
         """Move to the previous detail in the switcher."""
-        self._keyboard.press_and_release(['Shift_L','`'])
+        self._keyboard.press_and_release('Shift+`')
 
     def __get_icon(self, index):
         return self.__get_model()['Children'][index][1][0]
@@ -203,7 +203,7 @@ class Dash(Unity):
 
     def toggle_reveal(self):
         """Reveals the dash if it's currently hidden, hides it otherwise."""
-        self._keyboard.press_and_release(['Super_L'])
+        self._keyboard.press_and_release('Super')
         sleep(1)
 
     def ensure_visible(self):
@@ -235,22 +235,22 @@ class Dash(Unity):
 
     def reveal_application_lens(self):
         """Reveal the application lense."""
-        self._keyboard.press(['Super_L'])
+        self._keyboard.press('Super')
         self._keyboard.press_and_release("a")
-        self._keyboard.release(['Super_L'])
+        self._keyboard.release('Super')
 
     def reveal_music_lens(self):
         """Reveal the music lense."""
-        self._keyboard.press(['Super_L'])
+        self._keyboard.press('Super')
         self._keyboard.press_and_release("m")
-        self._keyboard.release(['Super_L'])
+        self._keyboard.release('Super')
 
     def reveal_file_lens(self):
         """Reveal the file lense."""
-        self._keyboard.press(['Super_L'])
+        self._keyboard.press('Super')
         self._keyboard.press_and_release("f")
-        self._keyboard.release(['Super_L'])
+        self._keyboard.release('Super')
 
     def reveal_command_lens(self):
         """Reveal the 'run command' lens."""
-        self._keyboard.press_and_release(['Alt_L','F2'])
+        self._keyboard.press_and_release('Alt+F2')
