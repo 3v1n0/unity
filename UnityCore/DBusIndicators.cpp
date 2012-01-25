@@ -218,7 +218,7 @@ void DBusIndicators::Impl::OnEntryShowMenu(std::string const& entry_id,
                                            unsigned int button,
                                            unsigned int timestamp)
 {
-  owner_->on_entry_show_menu.emit(entry_id, x, y, timestamp, button);
+  owner_->on_entry_show_menu.emit(entry_id, xid, x, y, button, timestamp);
 
   // We have to do this because on certain systems X won't have time to
   // respond to our request for XUngrabPointer and this will cause the

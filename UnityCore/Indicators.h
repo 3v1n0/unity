@@ -90,12 +90,13 @@ public:
   /**
    * The service is about to show a menu.
    * @param entry_id entry id
+   * @param xid window xid
    * @param x x coordinate
    * @param y y coordinate
-   * @param timestamp current time
    * @param button pressed button
+   * @param timestamp current time
    */
-  sigc::signal<void, std::string const&, int, int, int, int> on_entry_show_menu;
+  sigc::signal<void, std::string const&, unsigned int, int, int, unsigned int, unsigned int> on_entry_show_menu;
 
 protected:
   Indicator::Ptr GetIndicator(std::string const& name);
