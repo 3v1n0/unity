@@ -582,6 +582,8 @@ bool DashView::InspectKeyEvent(unsigned int eventType,
   {
     if (search_bar_->search_string == "")
       ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
+    else
+      search_bar_->search_string = "";
 
     return true;
   }
