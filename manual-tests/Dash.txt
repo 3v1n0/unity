@@ -36,4 +36,3 @@ Outcome
   The dropped icon should not have the keyboard focus and should not remain
   enlightened.
 
-
