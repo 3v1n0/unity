@@ -34,7 +34,7 @@
 
 #include "UBusWrapper.h"
 #include "HudIcon.h"
-#include "HudSearchBar.h"
+#include "SearchBar.h"
 #include "OverlayRenderer.h"
 
 namespace unity

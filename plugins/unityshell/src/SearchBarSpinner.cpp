@@ -17,15 +17,13 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#include "DashSearchBarSpinner.h"
+#include "SearchBarSpinner.h"
 
 #include <Nux/VLayout.h>
 
 #include "DashStyle.h"
 
 namespace unity
-{
-namespace dash
 {
 
 NUX_IMPLEMENT_OBJECT_TYPE(SearchBarSpinner);
@@ -235,5 +233,4 @@ SearchBarSpinner::AcceptKeyNavFocus()
   return false;
 }
 
-}
 }

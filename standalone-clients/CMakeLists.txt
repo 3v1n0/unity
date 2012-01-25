@@ -47,10 +47,10 @@ add_executable (dash
                 ${UNITY_SRC}/BackgroundEffectHelper.h
                 ${UNITY_SRC}/BGHash.cpp
                 ${UNITY_SRC}/BGHash.h
-                ${UNITY_SRC}/DashSearchBar.cpp
-                ${UNITY_SRC}/DashSearchBar.h
-                ${UNITY_SRC}/DashSearchBarSpinner.cpp
-                ${UNITY_SRC}/DashSearchBarSpinner.h
+                ${UNITY_SRC}/SearchBar.cpp
+                ${UNITY_SRC}/SearchBar.h
+                ${UNITY_SRC}/SearchBarSpinner.cpp
+                ${UNITY_SRC}/SearchBarSpinner.h
                 ${UNITY_SRC}/DashView.cpp
                 ${UNITY_SRC}/DashView.h
                 ${UNITY_SRC}/DashViewPrivate.cpp
@@ -471,8 +471,6 @@ add_executable (hud
                 ${UNITY_SRC}/DashSettings.cpp
                 ${UNITY_SRC}/DashSettings.h
                 ${UNITY_SRC}/DashStyle.cpp
-                ${UNITY_SRC}/DashSearchBarSpinner.cpp
-                ${UNITY_SRC}/HudSearchBar.cpp
                 ${UNITY_SRC}/HudButton.cpp
                 ${UNITY_SRC}/HudIcon.cpp
                 ${UNITY_SRC}/HudIcon.h
@@ -483,6 +481,8 @@ add_executable (hud
                 ${UNITY_SRC}/IconLoader.cpp
                 ${UNITY_SRC}/JSONParser.cpp
                 ${UNITY_SRC}/OverlayRenderer.cpp
+                ${UNITY_SRC}/SearchBar.cpp
+                ${UNITY_SRC}/SearchBarSpinner.cpp
                 ${UNITY_SRC}/StaticCairoText.cpp
                 ${UNITY_SRC}/TextureCache.cpp
                 ${UNITY_SRC}/Timer.cpp
