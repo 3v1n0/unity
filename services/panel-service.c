@@ -1453,9 +1453,9 @@ menu_deactivated (GtkWidget *menu)
 
 static void
 panel_service_actually_show_entry (PanelService *self,
-                                   guint32       xid,
                                    IndicatorObject *object,
                                    IndicatorObjectEntry *entry,
+                                   guint32       xid,
                                    gint32        x,
                                    gint32        y,
                                    guint32       button,
@@ -1563,8 +1563,8 @@ panel_service_actually_show_entry (PanelService *self,
 
 void
 panel_service_show_entry (PanelService *self,
-                          guint32       xid,
                           const gchar  *entry_id,
+                          guint32       xid,
                           gint32        x,
                           gint32        y,
                           guint32       button,
@@ -1578,7 +1578,7 @@ panel_service_show_entry (PanelService *self,
   entry = get_indicator_entry_by_id (entry_id);
   object = get_entry_parent_indicator (entry);
 
-  panel_service_actually_show_entry (self, xid, object, entry, x, y, button, timestamp);
+  panel_service_actually_show_entry (self, object, entry, xid, x, y, button, timestamp);
 }
 
 void
@@ -1604,7 +1604,7 @@ panel_service_show_app_menu (PanelService *self,
       entry = entries->data;
       g_list_free (entries);
 
-      panel_service_actually_show_entry (self, xid, object, entry, x, y, 1, timestamp);
+      panel_service_actually_show_entry (self, object, entry, xid, x, y, 1, timestamp);
     }
 }
 

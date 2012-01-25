@@ -94,8 +94,8 @@ void              panel_service_sync_geometry (PanelService *self,
 					       gint          height);
 
 void              panel_service_show_entry    (PanelService *self,
-					       guint32       xid,
 					       const gchar  *entry_id,
+					       guint32       xid,
 					       gint32        x,
 					       gint32        y,
 					       guint32       button,
