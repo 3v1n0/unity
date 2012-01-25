@@ -560,8 +560,9 @@ void PanelView::OnSynced()
   _needs_geo_sync = true;
 }
 
-void PanelView::OnEntryShowMenu(std::string const& entry_id,
-                                int x, int y, int timestamp, int button)
+void PanelView::OnEntryShowMenu(std::string const& entry_id, unsigned int xid,
+                                int x, int y, unsigned int button,
+                                unsigned int timestamp)
 {
   Display* d = nux::GetGraphicsDisplay()->GetX11Display();
   XUngrabPointer(d, CurrentTime);

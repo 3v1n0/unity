@@ -106,10 +106,11 @@ void PanelIndicatorEntryView::OnActiveChanged(bool is_active)
 
 void PanelIndicatorEntryView::ShowMenu(int button)
 {
-  proxy_->ShowMenu(GetAbsoluteX(),
+  proxy_->ShowMenu(0,
+                   GetAbsoluteX(),
                    GetAbsoluteY() + PANEL_HEIGHT,
-                   time(NULL),
-                   button);
+                   button,
+                   time(NULL));
 }
 
 void PanelIndicatorEntryView::OnMouseDown(int x, int y, long button_flags, long key_flags)

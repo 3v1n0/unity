@@ -59,8 +59,8 @@ public:
   void OnEntryActivateRequest(std::string const& entry_id);
   void OnEntryActivated(std::string const& entry_id);
   void OnSynced();
-  void OnEntryShowMenu(std::string const& entry_id,
-                       int x, int y, int timestamp, int button);
+  void OnEntryShowMenu(std::string const& entry_id, unsigned int xid, int x, int y,
+                       unsigned int button, unsigned int timestamp);
 
   void SetPrimary(bool primary);
   bool GetPrimary();
