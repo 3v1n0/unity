@@ -1453,6 +1453,7 @@ menu_deactivated (GtkWidget *menu)
 
 void
 panel_service_show_entry (PanelService *self,
+                          guint32       xid,
                           const gchar  *entry_id,
                           guint32       timestamp,
                           gint32        x,
@@ -1518,7 +1519,15 @@ panel_service_show_entry (PanelService *self,
       priv->last_menu_move_id = g_signal_connect_after (priv->last_menu, "move-current",
                                                         G_CALLBACK (on_active_menu_move_current), self);
 
-      indicator_object_entry_activate (object, entry, CurrentTime);
+      if (xid > 0)
+        {
+          indicator_object_entry_activate_window (object, entry, xid, CurrentTime);
+        }
+      else
+        {
+          indicator_object_entry_activate (object, entry, CurrentTime);
+        }
+
       gtk_menu_popup (priv->last_menu, NULL, NULL, positon_menu, self, 0, CurrentTime);
       GdkWindow *gdkwin = gtk_widget_get_window (GTK_WIDGET (priv->last_menu));
       if (gdkwin != NULL)

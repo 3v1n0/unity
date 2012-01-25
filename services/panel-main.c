@@ -58,8 +58,9 @@ static const gchar introspection_xml[] =
   "    <method name='SyncGeometries'>"
   "      <arg type='a(ssiiii)' name='geometries' direction='in'/>"
   "    </method>"
-	""
+  ""
   "    <method name='ShowEntry'>"
+  "      <arg type='u' name='xid' direction='in'/>"
   "      <arg type='s' name='entry_id' direction='in'/>"
   "      <arg type='u' name='timestamp' direction='in'/>"
   "      <arg type='i' name='x' direction='in'/>"
@@ -174,14 +175,15 @@ handle_method_call (GDBusConnection       *connection,
     }
   else if (g_strcmp0 (method_name, "ShowEntry") == 0)
     {
+      guint32 xid;
       gchar  *entry_id;
       guint32 timestamp;
       gint32  x;
       gint32  y;
       gint32  button;
-      g_variant_get (parameters, "(suiii)", &entry_id, &timestamp, &x, &y, &button, NULL);
+      g_variant_get (parameters, "(usuiii)", &xid, &entry_id, &timestamp, &x, &y, &button, NULL);
 
-      panel_service_show_entry (service, entry_id, timestamp, x, y, button);
+      panel_service_show_entry (service, xid, entry_id, timestamp, x, y, button);
 
       g_dbus_method_invocation_return_value (invocation, NULL);
       g_free (entry_id);
