@@ -200,6 +200,8 @@ void Controller::Impl::OnScreenChanged(int primary_monitor, std::vector<nux::Geo
     
     launchers[i]->Resize();
   }
+
+  launchers.resize(num_monitors);
 }
 
 Launcher* Controller::Impl::CreateLauncher(int monitor)
