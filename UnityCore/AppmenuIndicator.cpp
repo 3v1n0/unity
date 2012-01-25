@@ -33,16 +33,16 @@ AppmenuIndicator::AppmenuIndicator(std::string const& name)
     integrated_(false)
 {
   setting_changed_.Connect(gsettings_, "changed", [&] (GSettings*, gchar* key) {
-    if (g_strcmp0(key, SETTING_KEY.c_str()) == 0)
+    if (std::string(key) == SETTING_KEY)
       CheckSettingValue();
   });
 
   CheckSettingValue();
 }
 
-void AppmenuIndicator::ShowAppmenu() const
+void AppmenuIndicator::ShowAppmenu(unsigned int xid, int x, int y, unsigned int timestamp) const
 {
-  g_debug("Showing menu!");
+  show_appmenu(xid, x, y, timestamp);
 }
 
 bool AppmenuIndicator::IsIntegrated() const
