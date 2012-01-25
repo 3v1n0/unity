@@ -438,7 +438,7 @@ void PanelView::OnObjectAdded(indicator::Indicator::Ptr const& proxy)
 {
   // Appmenu is treated differently as it needs to expand
   // We could do this in a more special way, but who has the time for special?
-  if (proxy->name().find("appmenu") != std::string::npos)
+  if (proxy->IsAppmenu())
   {
     _menu_view->AddIndicator(proxy);
   }
@@ -455,7 +455,7 @@ void PanelView::OnObjectAdded(indicator::Indicator::Ptr const& proxy)
 
 void PanelView::OnObjectRemoved(indicator::Indicator::Ptr const& proxy)
 {
-  if (proxy->name().find("appmenu") != std::string::npos)
+  if (proxy->IsAppmenu())
   {
     _menu_view->RemoveIndicator(proxy);
   }
