@@ -401,7 +401,6 @@ get_indicator_entry_by_id (const gchar *entry_id)
 
     if (pipe (fds) > -1)
       {
-        close (fds[0]);
         size_t data_size = sizeof (IndicatorObjectEntry);
 
         if (write (fds[1], entry, data_size) != data_size)
@@ -419,6 +418,7 @@ get_indicator_entry_by_id (const gchar *entry_id)
             }
           }
 
+        close (fds[0]);
         close (fds[1]);
       }
   }
