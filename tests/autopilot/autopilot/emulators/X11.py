@@ -70,6 +70,9 @@ class Keyboard(object):
         '~' : "asciitilde"
         }
 
+    def __init__(self):
+        self.shifted_keys = [k[1] for k in _DISPLAY._keymap_codes if k]
+
     def press(self, keys, delay=0.2):
         """Send key press events only.
 
@@ -162,11 +165,7 @@ class Keyboard(object):
         return keysym
         
     def __is_shifted(self, key) :
-        if len(key) == 1 and key.isupper():
-            return True
-        if len(key) == 1 and key in "~!@#$%^&*()_+{}|:\"<>?":
-            return True
-        return False
+        return len(key) == 1 and ord(key) in self.shifted_keys
 
     def __char_to_keycode(self, key) :
         keysym = self.__get_keysym(key)
