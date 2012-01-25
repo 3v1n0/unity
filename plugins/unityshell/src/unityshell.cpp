@@ -363,7 +363,7 @@ void UnityScreen::initAltTabNextWindow()
 {
   KeyboardUtil key_util (screen->dpy());
   guint above_tab_keycode = key_util.GetKeycodeAboveKeySymbol (XStringToKeysym("Tab"));
-  KeySym above_tab_keysym = XKeycodeToKeysym (screen->dpy(), above_tab_keycode, 0);
+  KeySym above_tab_keysym = XkbKeycodeToKeysym (screen->dpy(), above_tab_keycode, 0, 0);
 
   if (above_tab_keysym != NoSymbol)
   {
