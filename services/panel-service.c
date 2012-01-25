@@ -1458,7 +1458,7 @@ panel_service_actually_show_entry (PanelService *self,
                                    IndicatorObjectEntry *entry,
                                    gint32        x,
                                    gint32        y,
-                                   gint32        button,
+                                   guint32       button,
                                    guint32       timestamp)
 {
   PanelServicePrivate *priv;
@@ -1567,7 +1567,7 @@ panel_service_show_entry (PanelService *self,
                           const gchar  *entry_id,
                           gint32        x,
                           gint32        y,
-                          gint32        button,
+                          guint32       button,
                           guint32       timestamp)
 {
   IndicatorObject      *object;

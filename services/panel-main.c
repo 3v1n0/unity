@@ -64,7 +64,7 @@ static const gchar introspection_xml[] =
   "      <arg type='s' name='entry_id' direction='in'/>"
   "      <arg type='i' name='x' direction='in'/>"
   "      <arg type='i' name='y' direction='in'/>"
-  "      <arg type='i' name='button' direction='in'/>"
+  "      <arg type='u' name='button' direction='in'/>"
   "      <arg type='u' name='timestamp' direction='in'/>"
   "    </method>"
   ""
@@ -186,9 +186,9 @@ handle_method_call (GDBusConnection       *connection,
       gchar  *entry_id;
       gint32  x;
       gint32  y;
-      gint32  button;
+      guint32 button;
       guint32 timestamp;
-      g_variant_get (parameters, "(usiiiu)", &xid, &entry_id, &timestamp, &x, &y, &button, NULL);
+      g_variant_get (parameters, "(usiiuu)", &xid, &entry_id, &x, &y, &button, &timestamp, NULL);
 
       panel_service_show_entry (service, xid, entry_id, x, y, button, timestamp);
 
