@@ -1212,15 +1212,29 @@ panel_service_sync_geometry (PanelService *self,
 {
   IndicatorObject      *object;
   IndicatorObjectEntry *entry;
+  gboolean valid_entry = TRUE;
   PanelServicePrivate  *priv = self->priv;
 
   entry = get_indicator_entry_by_id (entry_id);
+
+  /* If the entry we read is not valid, maybe it has already been removed
+   * or unparented, so we need to make sure that the related key on the
+   * entry2geometry_hash is correctly removed and the value is free'd */
+  if (!entry)
+    {
+      IndicatorObjectEntry *invalid_entry;
+      if (sscanf (entry_id, "%p", &invalid_entry) == 1)
+        {
+          entry = invalid_entry;
+          valid_entry = FALSE;
+        }
+    }
 
   if (entry)
     {
       GHashTable *entry2geometry_hash = g_hash_table_lookup (priv->panel2entries_hash, panel_id);
 
-      if (width < 0 || height < 0)
+      if (width < 0 || height < 0 || !valid_entry)
         {
           if (entry2geometry_hash)
             {
@@ -1240,11 +1254,8 @@ panel_service_sync_geometry (PanelService *self,
 
           if (entry2geometry_hash == NULL)
           {
-            //FIXME - this leaks memory but i'm not 100% on the logic,
-            // using g_free as the keys destructor function causes all
-            // kinds of problems 
             entry2geometry_hash = g_hash_table_new_full (g_direct_hash, g_direct_equal,
-                                                        NULL, g_free);
+                                                         NULL, g_free);
             g_hash_table_insert (priv->panel2entries_hash, g_strdup (panel_id),
                                  entry2geometry_hash);
           }
@@ -1265,8 +1276,11 @@ panel_service_sync_geometry (PanelService *self,
           geo->height = height;
         }
 
-      object = get_entry_parent_indicator (entry);
-      g_signal_emit (self, _service_signals[GEOMETRIES_CHANGED], 0, object, entry, x, y, width, height);
+      if (valid_entry)
+        {
+          object = get_entry_parent_indicator (entry);
+          g_signal_emit (self, _service_signals[GEOMETRIES_CHANGED], 0, object, entry, x, y, width, height);
+        }
     }
 }
 
