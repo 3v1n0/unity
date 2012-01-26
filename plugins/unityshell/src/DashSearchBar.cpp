@@ -99,9 +99,10 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
   layered_layout_->SetMaximumWidth(search_bar_width_);
   layout_->AddView(layered_layout_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
-  std::string filter_str = _("<b>Filter results</b>");
+  std::string filter_str = _("<small><b>Filter results</b></small>");
   show_filters_ = new nux::StaticCairoText(filter_str.c_str());
   show_filters_->SetVisible(false);
+  show_filters_->SetFont("Ubuntu 10");
   show_filters_->SetTextColor(nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
   show_filters_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_LEFT);
   show_filters_->mouse_click.connect([&] (int x, int y, unsigned long b, unsigned long k) { showing_filters = !showing_filters; });
