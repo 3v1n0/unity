@@ -156,22 +156,22 @@ bool BamfLauncherIcon::IsSticky() const
   return bamf_view_is_sticky(BAMF_VIEW(_bamf_app.RawPtr()));
 }
 
-bool BamfLauncherIcon::IsVisible()
+bool BamfLauncherIcon::IsVisible() const
 {
   return GetQuirk(QUIRK_VISIBLE);
 }
 
-bool BamfLauncherIcon::IsActive()
+bool BamfLauncherIcon::IsActive() const
 {
   return GetQuirk(QUIRK_ACTIVE);
 }
 
-bool BamfLauncherIcon::IsRunning()
+bool BamfLauncherIcon::IsRunning() const
 {
   return GetQuirk(QUIRK_RUNNING);
 }
 
-bool BamfLauncherIcon::IsUrgent()
+bool BamfLauncherIcon::IsUrgent() const
 {
   return GetQuirk(QUIRK_URGENT);
 }
@@ -185,7 +185,7 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
   bool active = IsActive();
   bool user_visible = IsRunning();
 
-  if (arg.target && OwnsWindow (arg.target))
+  if (arg.target && OwnsWindow(arg.target))
   {
     WindowManager::Default()->Activate(arg.target);
     return;
@@ -1123,7 +1123,7 @@ void BamfLauncherIcon::OnAcceptDrop(unity::DndData& dnd_data)
   OpenInstanceWithUris(ValidateUrisForLaunch(dnd_data));
 }
 
-bool BamfLauncherIcon::ShowInSwitcher()
+bool BamfLauncherIcon::ShowInSwitcher() const
 {
   return IsRunning() && IsVisible();
 }

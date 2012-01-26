@@ -50,16 +50,16 @@ public:
   std::string DesktopFile();
 
   bool IsSticky() const;
-  bool IsVisible();
-  bool IsActive();
-  bool IsRunning();
-  bool IsUrgent();
+  bool IsVisible() const;
+  bool IsActive() const;
+  bool IsRunning() const;
+  bool IsUrgent() const;
 
   void Quit();
   void Stick();
   void UnStick();
 
-  virtual bool ShowInSwitcher();
+  virtual bool ShowInSwitcher() const;
   virtual unsigned long long SwitcherPriority();
 
   std::vector<Window> RelatedXids() const;
