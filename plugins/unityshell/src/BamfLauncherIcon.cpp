@@ -1123,7 +1123,7 @@ void BamfLauncherIcon::OnAcceptDrop(unity::DndData& dnd_data)
   OpenInstanceWithUris(ValidateUrisForLaunch(dnd_data));
 }
 
-bool BamfLauncherIcon::ShowInSwitcher() const
+bool BamfLauncherIcon::ShowInSwitcher()
 {
   return IsRunning() && IsVisible();
 }

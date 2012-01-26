@@ -56,7 +56,7 @@ public:
   void Stick();
   void UnStick();
 
-  virtual bool ShowInSwitcher() const;
+  virtual bool ShowInSwitcher();
   virtual unsigned long long SwitcherPriority();
 
   std::vector<Window> RelatedXids() const;
