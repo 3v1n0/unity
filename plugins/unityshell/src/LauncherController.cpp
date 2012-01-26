@@ -797,6 +797,30 @@ void Controller::HandleLauncherKeyRelease()
 bool Controller::HandleLauncherKeyEvent(Display *display, unsigned int key_sym, unsigned long key_code, unsigned long key_state, char* key_string)
 {
   printf("HandleLauncherKeyEvent\n");
+  LauncherModel::iterator it;
+
+  // Shortcut to start launcher icons. Only relies on Keycode, ignore modifier
+  for (it = pimpl->model_->begin(); it != pimpl->model_->end(); it++)
+  {
+    if ((XKeysymToKeycode(display, (*it)->GetShortcut()) == key_code) ||
+        ((gchar)((*it)->GetShortcut()) == key_string[0]))
+    {
+      //if (_latest_shortcut == (*it)->GetShortcut())
+      //  return true;
+
+      if (g_ascii_isdigit((gchar)(*it)->GetShortcut()) && (key_state & ShiftMask))
+        (*it)->OpenInstance(ActionArg(ActionArg::LAUNCHER, 0));
+      else
+        (*it)->Activate(ActionArg(ActionArg::LAUNCHER, 0));
+
+      //SetLatestShortcut((*it)->GetShortcut());
+
+      // disable the "tap on super" check
+      pimpl->launcher_key_press_time_ = { 0, 0 };
+      return true;
+    }
+  }
+
   return false;
 }
 
@@ -834,6 +858,8 @@ void Controller::KeyNavTerminate()
     return;
 
   pimpl->keyboard_launcher_->ExitKeyNavMode();  
+
+  pimpl->model_->Selection()->Activate(ActionArg(ActionArg::LAUNCHER, 0));
 
   pimpl->launcher_keynav = false;
   if (!pimpl->launcher_open)
