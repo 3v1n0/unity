@@ -215,10 +215,14 @@ UnityScreen::UnityScreen(CompScreen* screen)
      nux::NuxInitialize(0);
 #ifndef USE_GLES
      wt = nux::CreateFromForeignWindow(cScreen->output(),
+               glXGetCurrentContext(),
+               &UnityScreen::initUnity,
+               this);
+#else
      wt = nux::CreateFromForeignWindow(cScreen->output(),
-				       eglGetCurrentContext(),
-				       &UnityScreen::initUnity,
-				       this);
+               eglGetCurrentContext(),
+               &UnityScreen::initUnity,
+               this);
 #endif
 
      wt->RedrawRequested.connect(sigc::mem_fun(this, &UnityScreen::onRedrawRequested));
@@ -1776,7 +1780,7 @@ bool UnityScreen::ShowHudTerminate(CompAction* action, CompAction::State state, 
   return false;
 }
 
-void UnityScreen::OnQuicklistEndKeyNav(GVariant* data, void* value)
+void UnityScreen::OnQuicklistEndKeyNav(GVariant* data)
 {
   restartLauncherKeyNav();
 }
