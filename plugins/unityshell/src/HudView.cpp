@@ -267,7 +267,7 @@ void View::OnMouseButtonDown(int x, int y, unsigned long button, unsigned long k
 
 void View::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
 {
-  renderer_.DrawFull(gfx_context, layout_->GetGeometry(), absolute_window_geometry_, window_geometry_);
+  renderer_.DrawFull(gfx_context, layout_->GetGeometry(), absolute_window_geometry_, window_geometry_, true);
 }
 
 void View::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)

@@ -48,7 +48,7 @@ public:
   void Init();
   void OnBackgroundColorChanged(GVariant* args);
   
-  void Draw(nux::GraphicsEngine& gfx_context, nux::Geometry content_geo, nux::Geometry absolute_geo, nux::Geometry geometry);
+  void Draw(nux::GraphicsEngine& gfx_context, nux::Geometry content_geo, nux::Geometry absolute_geo, nux::Geometry geometry, bool force_draw);
   void DrawContent(nux::GraphicsEngine& gfx_context, nux::Geometry content_geo, nux::Geometry absolute_geo, nux::Geometry geometry);
   void DrawContentCleanup(nux::GraphicsEngine& gfx_context, nux::Geometry content_geo, nux::Geometry absolute_geo, nux::Geometry geometry);
   
@@ -116,12 +116,12 @@ void OverlayRendererImpl::OnBackgroundColorChanged(GVariant* args)
   parent->need_redraw.emit();
 }
 
-void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry content_geo, nux::Geometry absolute_geo, nux::Geometry geometry)
+void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry content_geo, nux::Geometry absolute_geo, nux::Geometry geometry, bool force_edges)
 {
   bool paint_blur = BackgroundEffectHelper::blur_type != BLUR_NONE;
   nux::Geometry geo = content_geo;
 
-  if (dash::Settings::Instance().GetFormFactor() != dash::FormFactor::NETBOOK)
+  if (dash::Settings::Instance().GetFormFactor() != dash::FormFactor::NETBOOK || force_edges)
   {
     // Paint the edges
     {
@@ -458,9 +458,9 @@ void OverlayRenderer::DisableBlur()
   pimpl_->bg_effect_helper_.blur_type = BLUR_NONE;
 }
 
-void OverlayRenderer::DrawFull(nux::GraphicsEngine& gfx_context, nux::Geometry content_geo, nux::Geometry absolute_geo, nux::Geometry geo)
+void OverlayRenderer::DrawFull(nux::GraphicsEngine& gfx_context, nux::Geometry content_geo, nux::Geometry absolute_geo, nux::Geometry geo, bool force_edges)
 {
-  pimpl_->Draw(gfx_context, content_geo, absolute_geo, geo);
+  pimpl_->Draw(gfx_context, content_geo, absolute_geo, geo, force_edges);
 }
 
 void OverlayRenderer::DrawInner(nux::GraphicsEngine& gfx_context, nux::Geometry content_geo, nux::Geometry absolute_geo, nux::Geometry geo)
