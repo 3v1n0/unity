@@ -182,6 +182,8 @@ add_executable (switcher
                 ${UNITY_SRC}/WindowManager.cpp
                 ${UNITY_SRC}/IconRenderer.cpp
                 ${UNITY_SRC}/IconRenderer.h
+                ${UNITY_SRC}/Introspectable.cpp
+                ${UNITY_SRC}/Introspectable.h
                 ${UNITY_SRC}/MockLauncherIcon.h
                 ${UNITY_SRC}/BackgroundEffectHelper.h
                 ${UNITY_SRC}/BackgroundEffectHelper.cpp
@@ -255,6 +257,8 @@ add_executable (launcher
                 ${UNITY_SRC}/BackgroundEffectHelper.cpp
                 ${UNITY_SRC}/StaticCairoText.cpp
                 ${UNITY_SRC}/StaticCairoText.h
+                ${UNITY_SRC}/SoftwareCenterLauncherIcon.cpp
+                ${UNITY_SRC}/SoftwareCenterLauncherIcon.h
                 ${UNITY_SRC}/Introspectable.cpp
                 ${UNITY_SRC}/Introspectable.h
                 ${UNITY_SRC}/QuicklistMenuItem.cpp
@@ -353,16 +357,18 @@ add_dependencies(filters unity-core-${UNITY_API_VERSION})
 
 add_executable (filter-bar
                 TestFilterBar.cpp
+                ${UNITY_SRC}/FilterAllButton.cpp
+                ${UNITY_SRC}/FilterBar.cpp
+                ${UNITY_SRC}/FilterBasicButton.cpp
                 ${UNITY_SRC}/FilterExpanderLabel.cpp
                 ${UNITY_SRC}/FilterFactory.cpp
-                ${UNITY_SRC}/FilterBasicButton.cpp
-                ${UNITY_SRC}/FilterRatingsButton.cpp
-                ${UNITY_SRC}/FilterRatingsWidget.cpp
                 ${UNITY_SRC}/FilterMultiRangeWidget.cpp
                 ${UNITY_SRC}/FilterMultiRangeButton.cpp
                 ${UNITY_SRC}/FilterGenreButton.cpp
                 ${UNITY_SRC}/FilterGenreWidget.cpp
-                ${UNITY_SRC}/FilterBar.cpp
+                ${UNITY_SRC}/FilterRatingsButton.cpp
+                ${UNITY_SRC}/FilterRatingsWidget.cpp
+                ${UNITY_SRC}/FilterWidget.cpp
                 ${UNITY_SRC}/DashStyle.cpp
                 ${UNITY_SRC}/JSONParser.cpp
                 )
