@@ -31,6 +31,7 @@
 #include <gdk/gdkx.h>
 
 #include <X11/extensions/XInput2.h>
+#include <X11/XKBlib.h>
 
 #include "panel-marshal.h"
 
@@ -249,7 +250,7 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
 
       if (event->evtype == XI_KeyRelease)
         {
-          if (XKeycodeToKeysym(event->display, event->detail, 0) == GDK_KEY_F10)
+          if (XkbKeycodeToKeysym(event->display, event->detail, 0, 0) == GDK_KEY_F10)
           {
             if (GTK_MENU (priv->last_menu))
               gtk_menu_popdown (GTK_MENU (priv->last_menu));

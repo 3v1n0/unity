@@ -636,12 +636,17 @@ Controller::Controller(Display* display)
 {
   options = Options::Ptr(new Options());
 
+  // defaults must match XML file
   options()->tile_size = 54;
   options()->icon_size = 48;
   options()->backlight_mode = BACKLIGHT_ALWAYS_ON;
   options()->hide_mode = LAUNCHER_HIDE_DODGE_WINDOWS;
   options()->launch_animation = LAUNCH_ANIMATION_PULSE;
   options()->urgent_animation = URGENT_ANIMATION_WIGGLE;
+  options()->edge_decay_rate = 50000;
+  options()->edge_overcome_pressure = 100000;
+  options()->edge_stop_velocity = 5000;
+  options()->edge_reveal_pressure = 50000;
   
   // options must be set before creating pimpl which loads launchers
   pimpl = new Impl(display, this);

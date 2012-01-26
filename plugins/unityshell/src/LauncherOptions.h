@@ -88,6 +88,10 @@ public:
   nux::Property<int> tile_size;
   nux::Property<bool> floating;
   nux::Property<float> background_alpha;
+  nux::Property<int> edge_decay_rate;
+  nux::Property<int> edge_overcome_pressure;
+  nux::Property<int> edge_stop_velocity;
+  nux::Property<int> edge_reveal_pressure;
 
   sigc::signal<void> option_changed;
 
@@ -98,6 +102,7 @@ private:
   void OnAutoHideAnimationChanged(AutoHideAnimation value);
   void OnBacklightModeChanged(BacklightMode value);
   void OnIconSizeChanged(int value);
+  void OnEdgeOptionChanged(int value);
   void OnTileSizeChanged(int value);
   void OnFloatingChanged(bool value);
   void OnBackgroundAlphaChanged(float value);

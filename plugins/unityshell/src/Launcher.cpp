@@ -56,6 +56,7 @@ namespace unity
 {
 using ui::RenderArg;
 using ui::PointerBarrierWrapper;
+using ui::Decaymulator;
 
 namespace launcher
 {
@@ -318,6 +319,9 @@ Launcher::Launcher(nux::BaseWindow* parent,
   }
 
   _pointer_barrier = PointerBarrierWrapper::Ptr(new PointerBarrierWrapper());
+  _pointer_barrier->barrier_event.connect(sigc::mem_fun(this, &Launcher::OnPointerBarrierEvent));
+
+  decaymulator_ = Decaymulator::Ptr(new Decaymulator());
 
   options.changed.connect (sigc::mem_fun (this, &Launcher::OnOptionsChanged));
 }
@@ -1730,6 +1734,14 @@ Launcher::UpdateOptions(Options::Ptr options)
   SetLaunchAnimation(options->launch_animation);
   SetUrgentAnimation(options->urgent_animation);
   SetIconSize(options->tile_size, options->icon_size);
+  decaymulator_->rate_of_decay = options->edge_decay_rate();
+
+  _pointer_barrier->threshold = options->edge_stop_velocity();
+  _pointer_barrier->DestroyBarrier();
+  _pointer_barrier->ConstructBarrier();
+
+  _hide_machine->reveal_pressure = options->edge_reveal_pressure();
+  _hide_machine->edge_decay_rate = options->edge_decay_rate();
 }
 
 void Launcher::SetHideMode(LauncherHideMode hidemode)
@@ -1972,7 +1984,7 @@ void Launcher::Resize()
   _pointer_barrier->x2 = new_geometry.x;
   _pointer_barrier->y1 = new_geometry.y;
   _pointer_barrier->y2 = new_geometry.y + new_geometry.height;
-  _pointer_barrier->threshold = 3000;
+  _pointer_barrier->threshold = options()->edge_stop_velocity();
 
   _pointer_barrier->ConstructBarrier();
 
@@ -2482,14 +2494,7 @@ void Launcher::RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_
 {
   SetMousePosition(x, y);
 
-  if (_hidden)
-  {
-    int velocity = nux::GetGraphicsDisplay()->GetCurrentEvent().velocity;
-    velocity = sqrt(velocity);
-    velocity = std::max<int>(velocity, 20);
-    _hide_machine->AddRevealPressure(velocity);
-  }
-  else
+  if (!_hidden)
   {
     _postreveal_mousemove_delta_x += dx;
     _postreveal_mousemove_delta_y += dy;
@@ -2526,6 +2531,23 @@ void Launcher::RecvMouseWheel(int x, int y, int wheel_delta, unsigned long butto
   EnsureAnimation();
 }
 
+void Launcher::OnPointerBarrierEvent(ui::PointerBarrierWrapper* owner, ui::BarrierEvent::Ptr event)
+{
+  nux::Geometry abs_geo = GetAbsoluteGeometry();
+  if (_hidden && event->x >= abs_geo.x && event->x <= abs_geo.x + abs_geo.width)
+  {
+    _hide_machine->AddRevealPressure(event->velocity);
+    decaymulator_->value = 0;
+  }
+  else
+  {
+    decaymulator_->value = decaymulator_->value + event->velocity;
+    if (decaymulator_->value > options()->edge_overcome_pressure)
+    {
+      _pointer_barrier->ReleaseBarrier(event->event_id);
+    }
+  }
+}
 
 gboolean
 Launcher::ResetRepeatShorcutTimeout(gpointer data)

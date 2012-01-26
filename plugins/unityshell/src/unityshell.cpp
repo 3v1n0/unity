@@ -290,6 +290,11 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetLauncherSwitcherPrevInitiate(boost::bind(&UnityScreen::launcherSwitcherPrevInitiate, this, _1, _2, _3));
      optionSetLauncherSwitcherForwardTerminate(boost::bind(&UnityScreen::launcherSwitcherTerminate, this, _1, _2, _3));
 
+     optionSetStopVelocityNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+     optionSetRevealPressureNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+     optionSetOvercomePressureNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+     optionSetDecayRateNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+
      optionSetShowMinimizedWindowsNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
 
      for (unsigned int i = 0; i < G_N_ELEMENTS(_ubus_handles); i++)
@@ -359,7 +364,7 @@ void UnityScreen::initAltTabNextWindow()
 {
   KeyboardUtil key_util (screen->dpy());
   guint above_tab_keycode = key_util.GetKeycodeAboveKeySymbol (XStringToKeysym("Tab"));
-  KeySym above_tab_keysym = XKeycodeToKeysym (screen->dpy(), above_tab_keycode, 0);
+  KeySym above_tab_keysym = XkbKeycodeToKeysym (screen->dpy(), above_tab_keycode, 0, 0);
 
   if (above_tab_keysym != NoSymbol)
   {
@@ -2160,6 +2165,18 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       break;
     case UnityshellOptions::ShowDesktopIcon:
       launcher_controller_->SetShowDesktopIcon(optionGetShowDesktopIcon());
+      break;
+    case UnityshellOptions::DecayRate:
+      launcher_options->edge_decay_rate = optionGetDecayRate() * 100;
+      break;
+    case UnityshellOptions::OvercomePressure:
+      launcher_options->edge_overcome_pressure = optionGetOvercomePressure() * 100;
+      break;
+    case UnityshellOptions::StopVelocity:
+      launcher_options->edge_stop_velocity = optionGetStopVelocity() * 100;
+      break;
+    case UnityshellOptions::RevealPressure:
+      launcher_options->edge_reveal_pressure = optionGetRevealPressure() * 100;
       break;
     default:
       break;

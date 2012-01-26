@@ -26,7 +26,21 @@ namespace unity
 {
 namespace ui
 {
-  
+
+namespace local
+{
+namespace
+{
+  bool is_selected_for = false;
+}
+}
+
+PointerBarrierWrapper::PointerBarrierWrapper()
+{
+  last_event_ = 0;
+  active = false;
+}
+
 void PointerBarrierWrapper::ConstructBarrier()
 {
   if (active)
@@ -48,21 +62,37 @@ void PointerBarrierWrapper::ConstructBarrier()
                                                0,
                                                NULL);
   
-  XFixesSelectBarrierInput(dpy, DefaultRootWindow(dpy), 0xdeadbeef);
+  if (!local::is_selected_for)
+  {
+    XFixesSelectBarrierInput(dpy, DefaultRootWindow(dpy), 0xdeadbeef);
+    local::is_selected_for = true;
+  }
 
   active = true;
+
+  nux::GraphicsDisplay::EventFilterArg event_filter;
+  event_filter.filter = &PointerBarrierWrapper::HandleEventWrapper;
+  event_filter.data = this;
+
+  nux::GetGraphicsDisplay()->AddEventFilter(event_filter);
 }
 
 void PointerBarrierWrapper::DestroyBarrier()
 {
-  return;
   if (!active)
     return;
+
+  active = false;
 
   Display *dpy = nux::GetGraphicsDisplay()->GetX11Display();
   XFixesDestroyPointerBarrier(dpy, barrier);
 
-  active = false;
+  nux::GetGraphicsDisplay()->RemoveEventFilter(this);
+}
+
+void PointerBarrierWrapper::ReleaseBarrier(int event_id)
+{
+  XFixesBarrierReleasePointer (nux::GetGraphicsDisplay()->GetX11Display(), barrier, event_id);
 }
 
 bool PointerBarrierWrapper::HandleEvent(XEvent xevent)
@@ -70,15 +100,22 @@ bool PointerBarrierWrapper::HandleEvent(XEvent xevent)
   if(xevent.type - event_base_ == XFixesBarrierNotify)
   {
     XFixesBarrierNotifyEvent *notify_event = (XFixesBarrierNotifyEvent *)&xevent;
-    //int x = notify_event->x;
-    //int y = notify_event->y;
-    int velocity = notify_event->velocity;
-    int event_id = notify_event->event_id;
 
-    if (velocity > 30)
-      XFixesBarrierReleasePointer (nux::GetGraphicsDisplay()->GetX11Display(), notify_event->barrier, event_id);
+    if (notify_event->barrier == barrier)
+    {
+      BarrierEvent::Ptr event (new BarrierEvent());
+      event->x = notify_event->x;
+      event->y = notify_event->y;
+      event->velocity = notify_event->velocity;
+      event->event_id = notify_event->event_id;
 
-    return true;
+      if (notify_event->subtype == XFixesBarrierHitNotify)
+      {
+        barrier_event.emit(this, event);
+      }
+        
+      return true;
+    }
   }
 
   return false;

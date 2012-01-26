@@ -17,14 +17,29 @@
  * Authored by: Jason Smith <jason.smith@canonical.com>
  */
 
+#ifndef UNITY_POINTERWRAPPER_H
+#define UNITY_POINTERWRAPPER_H
+
 #include <Nux/Nux.h>
 #include <X11/Xlib.h>
 #include <X11/extensions/Xfixes.h>
+#include <sigc++/sigc++.h>
 
 namespace unity
 {
 namespace ui
 {
+
+class BarrierEvent
+{
+public:
+  typedef std::shared_ptr<BarrierEvent> Ptr;
+
+  int x;
+  int y;
+  int velocity;
+  int event_id;
+};
 
 class PointerBarrierWrapper
 {
@@ -40,13 +55,19 @@ public:
 
   nux::Property<bool> active;
 
+  PointerBarrierWrapper();
+
   void ConstructBarrier();
   void DestroyBarrier();
+  void ReleaseBarrier(int event_id);
+
+  sigc::signal<void, PointerBarrierWrapper*, BarrierEvent::Ptr> barrier_event;
 
 private:
   bool HandleEvent (XEvent event);
   static bool HandleEventWrapper(XEvent event, void* data);
 
+  int last_event_;
   int event_base_;
   int error_base_;
   PointerBarrier barrier;
@@ -54,3 +75,5 @@ private:
 
 }
 }
+
+#endif

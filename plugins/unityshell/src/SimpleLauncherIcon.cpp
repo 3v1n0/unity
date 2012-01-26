@@ -17,12 +17,14 @@
  * Authored by: Jason Smith <jason.smith@canonical.com>
  */
 
+#ifndef UNITY_SIMPLELAUNCHERICON_H
+#define UNITY_SIMPLELAUNCHERICON_H
+
 #include <NuxCore/Logger.h>
 #include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
 
 #include "SimpleLauncherIcon.h"
-#include "Launcher.h"
 #include "PluginAdapter.h"
 
 #include "ubus-server.h"
@@ -142,3 +144,5 @@ void SimpleLauncherIcon::OnIconThemeChanged(GtkIconTheme* icon_theme, gpointer d
 
 } // namespace launcher
 } // namespace unity
+
+#endif

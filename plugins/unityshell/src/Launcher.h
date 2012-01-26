@@ -228,6 +228,8 @@ private:
   void OnDragUpdate(GeisAdapter::GeisDragData* data);
   void OnDragFinish(GeisAdapter::GeisDragData* data);
 
+  void OnPointerBarrierEvent(ui::PointerBarrierWrapper* owner, ui::BarrierEvent::Ptr event);
+
   void OnPluginStateChanged();
 
   void OnViewPortSwitchStarted();
@@ -405,6 +407,7 @@ private:
   nux::ObjectPtr<nux::IOpenGLBaseTexture> _offscreen_drag_texture;
 
   ui::PointerBarrierWrapper::Ptr _pointer_barrier;
+  ui::Decaymulator::Ptr decaymulator_;
 
   int _space_between_icons;
   int _icon_size;

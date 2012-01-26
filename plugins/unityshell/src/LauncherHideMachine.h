@@ -24,6 +24,8 @@
 #include <glib.h>
 #include <string>
 
+#include "Decaymulator.h"
+
 class LauncherHideMachine : public sigc::trackable
 {
 public:
@@ -60,6 +62,9 @@ public:
     LOCK_HIDE              = 1 << 21
   } HideQuirk;
 
+  nux::Property<int> reveal_pressure;
+  nux::Property<int> edge_decay_rate;
+
   LauncherHideMachine();
   virtual ~LauncherHideMachine();
 
@@ -87,12 +92,15 @@ private:
   static gboolean OnHideDelayTimeout(gpointer data);
   static gboolean EmitShouldHideChanged(gpointer data);
 
+  void OnDecayRateChanged (int value);
+
+  unity::ui::Decaymulator::Ptr decaymulator_;
+
   bool      _should_hide;
   bool      _latest_emit_should_hide;
   bool      _show_on_edge;
   HideQuirk _quirks;
   HideMode  _mode;
-  int       _reveal_pressure;
   unsigned int _hide_delay_timeout_length;
 
   guint _hide_delay_handle;

@@ -36,6 +36,15 @@ Options::Options()
   tile_size.changed.connect(sigc::mem_fun (this, &Options::OnTileSizeChanged));
   floating.changed.connect(sigc::mem_fun (this, &Options::OnFloatingChanged));
   background_alpha.changed.connect(sigc::mem_fun (this, &Options::OnBackgroundAlphaChanged));
+  edge_decay_rate.changed.connect(sigc::mem_fun (this, &Options::OnEdgeOptionChanged));
+  edge_overcome_pressure.changed.connect(sigc::mem_fun (this, &Options::OnEdgeOptionChanged));
+  edge_stop_velocity.changed.connect(sigc::mem_fun (this, &Options::OnEdgeOptionChanged));
+  edge_reveal_pressure.changed.connect(sigc::mem_fun (this, &Options::OnEdgeOptionChanged));
+}
+
+void Options::OnEdgeOptionChanged(int value)
+{
+  option_changed.emit();
 }
 
 void Options::OnHideModeChanged(LauncherHideMode value)
