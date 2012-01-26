@@ -58,9 +58,8 @@ public:
 
   int FindCategoryOffset(DeeModel* model, unsigned int source_cat_offset)
   {
-    gchar* c_id = g_strdup_printf("%u+%p", source_cat_offset, model);
+    glib::String c_id(g_strdup_printf("%u+%p", source_cat_offset, model));
     std::map<std::string,unsigned int>::iterator i = reg_by_id_.find(c_id);
-    g_free(c_id);
 
     if (i != reg_by_id_.end())
       return i->second;
@@ -84,13 +83,12 @@ public:
                                  const gchar*  display_name,
                                  unsigned int target_cat_offset)
   {
-    gchar* c_id = g_strdup_printf("%u+%p", source_cat_offset, model);
+    glib::String c_id(g_strdup_printf("%u+%p", source_cat_offset, model));
 
     std::map<std::string,unsigned int>::iterator i = reg_by_id_.find(c_id);
     if (i != reg_by_id_.end())
     {
       LOG_ERROR(logger) << "Category '" << c_id << "' already registered!";
-      g_free(c_id);
       return;
     }
 
@@ -100,7 +98,6 @@ public:
       if (i != reg_by_display_name_.end())
       {
         LOG_ERROR(logger) << "Category '" << display_name << "' already registered!";
-        g_free(c_id);
         return;
       }
     }
@@ -144,8 +141,6 @@ public:
                         << source_cat_offset << " and target offset "
                         << target_cat_offset << ". Id " << c_id;
     }
-
-    g_free(c_id);
   }
 
   /* Associate a source results model and category offset with an existing
@@ -154,19 +149,16 @@ public:
                                unsigned int source_cat_offset,
                                unsigned int target_cat_offset)
   {
-    gchar* c_id = g_strdup_printf("%u+%p", source_cat_offset, model);
+    glib::String c_id(g_strdup_printf("%u+%p", source_cat_offset, model));
 
     std::map<std::string,unsigned int>::iterator i = reg_by_id_.find(c_id);
     if (i != reg_by_id_.end())
     {
       LOG_ERROR(logger) << "Category '" << c_id << "' already registered!";
-      g_free(c_id);
       return;
     }
 
     reg_by_id_[c_id] = target_cat_offset;
-
-    g_free(c_id);
   }
 
   /**
