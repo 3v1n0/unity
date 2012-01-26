@@ -67,6 +67,7 @@ public:
                               char* key_string);
 
   void KeyNavActivate();
+  void KeyNavGrab();
   void KeyNavTerminate();
   void KeyNavNext();
   void KeyNavPrevious();

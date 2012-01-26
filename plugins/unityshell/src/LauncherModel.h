@@ -34,7 +34,7 @@ class LauncherModel : public sigc::trackable
 {
 public:
   typedef std::shared_ptr<LauncherModel> Ptr;
-  typedef std::list<AbstractLauncherIcon*> Base;
+  typedef std::vector<AbstractLauncherIcon*> Base;
   typedef Base::iterator iterator;
   typedef Base::reverse_iterator reverse_iterator;
 
@@ -54,6 +54,11 @@ public:
   void ReorderBefore(AbstractLauncherIcon* icon, AbstractLauncherIcon* other, bool save);
 
   void ReorderSmart(AbstractLauncherIcon* icon, AbstractLauncherIcon* other, bool save);
+
+  AbstractLauncherIcon* Selection ();
+  void SetSelection(int selection);
+  void SelectNext();
+  void SelectPrevious();
 
   iterator begin();
   iterator end();
@@ -80,6 +85,7 @@ private:
   Base             _inner;
   Base             _inner_shelf;
   Base             _inner_main;
+  int              selection_;
 
   bool Populate();
 

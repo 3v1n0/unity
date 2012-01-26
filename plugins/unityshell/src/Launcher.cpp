@@ -1044,15 +1044,11 @@ void Launcher::SetupRenderArg(AbstractLauncherIcon* icon, struct timespec const&
     arg.z_rotation = IconUrgentWiggleValue(icon, current);
   }
 
-  // we've to walk the list since it is a STL-list and not a STL-vector, thus
-  // we can't use the random-access operator [] :(
-  LauncherModel::iterator it;
-  int i;
-  for (it = _model->begin(), i = 0; it != _model->end(); it++, ++i)
-    if (i == _current_icon_index && *it == icon)
-    {
+  if (_hide_machine->GetQuirk(LauncherHideMachine::KEY_NAV_ACTIVE))
+  {
+    if (icon == _model->Selection())
       arg.keyboard_nav_hl = true;
-    }
+  }
 }
 
 void Launcher::FillRenderArg(AbstractLauncherIcon* icon,
@@ -2660,6 +2656,18 @@ void Launcher::SelectNextIcon()
     EnsureAnimation();
     selection_change.emit();
   }
+}
+
+void Launcher::EnterKeyNavMode()
+{
+  _hide_machine->SetQuirk(LauncherHideMachine::KEY_NAV_ACTIVE, true);
+  _hover_machine->SetQuirk(LauncherHoverMachine::KEY_NAV_ACTIVE, true);
+}
+
+void Launcher::ExitKeyNavMode()
+{
+  _hide_machine->SetQuirk(LauncherHideMachine::KEY_NAV_ACTIVE, false);
+  _hover_machine->SetQuirk(LauncherHoverMachine::KEY_NAV_ACTIVE, false);
 }
 
 void Launcher::KeySwitcherActivate()

@@ -99,7 +99,7 @@ public:
 
   void SendHomeActivationRequest();
 
-  int GetMonitorWithMouseOver();
+  int MonitorWithMouse();
 
   void InsertTrash();
 
@@ -627,11 +627,6 @@ void Controller::Impl::SendHomeActivationRequest()
   UBusManager().SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST, g_variant_new("(sus)", "home.lens", 0, ""));
 }
 
-int Controller::Impl::GetMonitorWithMouseOver()
-{
-  return 0;
-}
-
 Controller::Controller(Display* display)
 {
   options = Options::Ptr(new Options());
@@ -721,13 +716,21 @@ void Controller::SetShowDesktopIcon(bool show_desktop_icon)
     pimpl->RemoveDesktopIcon();
 }
 
+int Controller::Impl::MonitorWithMouse()
+{
+  UScreen* uscreen = UScreen::GetDefault();
+  return uscreen->GetMonitorWithMouse(); 
+}
+
 void Controller::HandleLauncherKeyPress()
 {
+  printf ("HandleLauncherKeyPress\n");
   unity::TimeUtil::SetTimeStruct(&pimpl->launcher_key_press_time_);
 }
 
 void Controller::HandleLauncherKeyRelease()
 {
+  printf("HandleLauncherKeyRelease\n");
   if (pimpl->TapTimeUnderLimit())
   {
     pimpl->SendHomeActivationRequest();
@@ -736,7 +739,14 @@ void Controller::HandleLauncherKeyRelease()
 
 bool Controller::HandleLauncherKeyEvent(Display *display, unsigned int key_sym, unsigned long key_code, unsigned long key_state, char* key_string)
 {
+  printf("HandleLauncherKeyEvent\n");
   return false;
+}
+
+void Controller::KeyNavGrab()
+{
+  
+  printf("KeyNavGrab\n");
 }
 
 void Controller::KeyNavActivate()
@@ -745,24 +755,28 @@ void Controller::KeyNavActivate()
     return;
   
 
-  pimpl->keynav_launcher_ = pimpl->launchers[0];
+  pimpl->keynav_launcher_ = pimpl->launchers[pimpl->MonitorWithMouse()];
+
+  pimpl->keynav_launcher_->EnterKeyNavMode();
+  pimpl->model_->SetSelection(0);
 }
 
 void Controller::KeyNavNext()
 {
-  
+  pimpl->model_->SelectNext();
 }
 
 void Controller::KeyNavPrevious()
 {
-  
+  pimpl->model_->SelectPrevious();
 }
 
 void Controller::KeyNavTerminate()
 {
   if (pimpl->keynav_launcher_.IsNull())
     return;
-  
+
+  pimpl->keynav_launcher_->ExitKeyNavMode();  
   pimpl->keynav_launcher_.Release();
 }
 

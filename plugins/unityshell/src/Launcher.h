@@ -179,6 +179,9 @@ public:
   void KeySwitcherNext();
   void KeySwitcherPrevious();
 
+  void EnterKeyNavMode();
+  void ExitKeyNavMode();
+
 protected:
   // Introspectable methods
   std::string GetName() const;

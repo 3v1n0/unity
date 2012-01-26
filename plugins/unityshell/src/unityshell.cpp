@@ -1105,8 +1105,8 @@ void UnityScreen::handleEvent(XEvent* event)
       else if (event->xfocus.mode == NotifyUngrab)
         PluginAdapter::Default()->OnScreenUngrabbed();
       cScreen->damageScreen();  // evil hack
-      //if (_key_nav_mode_requested)
-        //launcher.startKeyNavMode();
+      if (_key_nav_mode_requested)
+        launcher_controller_->KeyNavGrab();
       _key_nav_mode_requested = false;
       break;
     case KeyPress:
@@ -1123,8 +1123,8 @@ void UnityScreen::handleEvent(XEvent* event)
         if (super_keypressed_)
         {
           shortcut_controller_->Hide();
-          //skip_other_plugins = launcher.CheckSuperShortcutPressed(screen->dpy(), key_sym, event->xkey.keycode, event->xkey.state, key_string);
-          //if (!skip_other_plugins)
+          skip_other_plugins = launcher_controller_->HandleLauncherKeyEvent(screen->dpy(), key_sym, event->xkey.keycode, event->xkey.state, key_string);
+          if (!skip_other_plugins)
           //{
             skip_other_plugins = dash_controller_->CheckShortcutActivation(key_string);
             //if (skip_other_plugins)
@@ -1276,6 +1276,7 @@ bool UnityScreen::showLauncherKeyTerminate(CompAction* action,
   launcher_controller_->HandleLauncherKeyRelease();
   launcher_controller_->KeyNavTerminate();
   shortcut_controller_->Hide();
+  action->setState (action->state() & (unsigned)~(CompAction::StateTermKey));
   return false;
 }
 

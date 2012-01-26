@@ -33,6 +33,7 @@ typedef struct
 
 LauncherModel::LauncherModel()
 {
+  selection_ = 0;
 }
 
 LauncherModel::~LauncherModel()
@@ -81,7 +82,7 @@ LauncherModel::Populate()
     (*it)->SetSortPriority(i++);
   }
 
-  return !std::equal(begin(), end(), copy.begin());
+  return copy.size() == _inner.size() && !std::equal(begin(), end(), copy.begin());
 }
 
 void
@@ -90,9 +91,9 @@ LauncherModel::AddIcon(AbstractLauncherIcon* icon)
   icon->SinkReference();
 
   if (IconShouldShelf(icon))
-    _inner_shelf.push_front(icon);
+    _inner_shelf.push_back(icon);
   else
-    _inner_main.push_front(icon);
+    _inner_main.push_back(icon);
 
   Sort();
 
@@ -108,11 +109,11 @@ LauncherModel::RemoveIcon(AbstractLauncherIcon* icon)
 {
   size_t size;
 
-  _inner_shelf.remove(icon);
-  _inner_main.remove(icon);
+  _inner_shelf.erase(std::remove(_inner_shelf.begin(), _inner_shelf.end(), icon), _inner_shelf.end());
+  _inner_main.erase(std::remove(_inner_main.begin(), _inner_main.end(), icon), _inner_main.end());
 
   size = _inner.size();
-  _inner.remove(icon);
+  _inner.erase(std::remove(_inner.begin(), _inner.end(), icon), _inner.end());
 
   if (size != _inner.size())
   {
@@ -151,8 +152,8 @@ LauncherModel::Save()
 void
 LauncherModel::Sort()
 {
-  _inner_shelf.sort(&LauncherModel::CompareIcons);
-  _inner_main.sort(&LauncherModel::CompareIcons);
+  std::sort(_inner_shelf.begin(), _inner_shelf.end(), &LauncherModel::CompareIcons);
+  std::sort(_inner_main.begin(), _inner_main.end(), &LauncherModel::CompareIcons);
 
   if (Populate())
     order_changed.emit();
@@ -293,6 +294,49 @@ LauncherModel::Size()
 {
   return _inner.size();
 }
+
+AbstractLauncherIcon* LauncherModel::Selection ()
+{
+  return _inner[selection_];
+}
+
+void LauncherModel::SetSelection(int selection)
+{
+  selection_ = std::min<int>(Size() - 1, std::max<int> (0, selection));
+}
+
+void LauncherModel::SelectNext()
+{
+  int temp = selection_;
+
+  temp++;
+  while (temp < Size())
+  {
+    if (_inner[temp]->GetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE))
+    {
+      selection_ = temp;
+      break;
+    }
+    temp++;
+  }
+}
+
+void LauncherModel::SelectPrevious()
+{
+  int temp = selection_;
+
+  temp--;
+  while (temp >= 0)
+  {
+    if (_inner[temp]->GetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE))
+    {
+      selection_ = temp;
+      break;
+    }
+    temp--;
+  }
+}
+
 
 /* iterators */
 
