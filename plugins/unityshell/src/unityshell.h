@@ -49,7 +49,9 @@
 #include "DebugDBusInterface.h"
 #include "SwitcherController.h"
 #include "UBusWrapper.h"
+#ifndef USE_GLES
 #include "ScreenEffectFramebufferObject.h"
+#endif
 
 #include "compizminimizedwindowhandler.h"
 #include "BGHash.h"
@@ -132,7 +134,11 @@ public:
   void nuxEpilogue();
 
   /* nux draw wrapper */
+#ifdef USE_GLES
+  void paintDisplay();
+#else
   void paintDisplay(const CompRegion& region, const GLMatrix& transform, unsigned int mask);
+#endif
   void paintPanelShadow(const GLMatrix& matrix);
 
   void preparePaint (int ms);
@@ -153,6 +159,11 @@ public:
                      const CompRegion&,
                      CompOutput*,
                      unsigned int);
+#ifdef USE_GLES
+  void glPaintCompositedOutput (const CompRegion    &region,
+                                GLFramebufferObject *fbo,
+                                unsigned int         mask);
+#endif
 
   /* paint in the special case that the output is transformed */
   void glPaintTransformedOutput(const GLScreenPaintAttrib&,
@@ -250,10 +261,10 @@ private:
 
   void OnDashRealized ();
 
-  static void OnQuicklistEndKeyNav(GVariant* data, void* value);
-  static void OnLauncherStartKeyNav(GVariant* data, void* value);
-  static void OnLauncherEndKeyNav(GVariant* data, void* value);
-  
+  void OnQuicklistEndKeyNav(GVariant* data);
+  void OnLauncherStartKeyNav(GVariant* data);
+  void OnLauncherEndKeyNav(GVariant* data);
+
   void InitHints();
 
   dash::Settings dash_settings_;
@@ -283,8 +294,7 @@ private:
   guint                                 _edge_trigger_handle;
   guint32                               _redraw_handle;
   gint                                  _edge_pointerY;
-  guint                                 _ubus_handles[3];
-  
+
   typedef std::shared_ptr<CompAction> CompActionPtr;
   typedef std::vector<CompActionPtr> ShortcutActions;
   ShortcutActions _shortcut_actions;
@@ -308,8 +318,12 @@ private:
 
   unity::BGHash _bghash;
 
+#ifdef USE_GLES
+  GLFramebufferObject *oldFbo;
+#else
   ScreenEffectFramebufferObject::Ptr _fbo;
   GLuint                             _active_fbo;
+#endif
 
   bool   queryForShader ();
 
@@ -321,7 +335,9 @@ private:
   unsigned int           tray_paint_mask_;
   gint64                 last_hud_show_time_;
 
+#ifndef USE_GLES
   ScreenEffectFramebufferObject::GLXGetProcAddressProc glXGetProcAddressP;
+#endif
 
   friend class UnityWindow;
 };
@@ -358,7 +374,11 @@ public:
 
   /* basic window draw function */
   bool glDraw(const GLMatrix& matrix,
+#ifndef USE_GLES
               GLFragment::Attrib& attrib,
+#else
+              const GLWindowPaintAttrib& attrib,
+#endif
               const CompRegion& region,
               unsigned intmask);
 
@@ -383,7 +403,10 @@ public:
   void leaveShowDesktop ();
   bool handleAnimations (unsigned int ms);
 
-  compiz::MinimizedWindowHandler::Ptr mMinimizeHandler;
+  typedef compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>
+          UnityMinimizedHandler;
+  UnityMinimizedHandler *mMinimizeHandler;
+
   UnityShowdesktopHandler             *mShowdesktopHandler;
 
 private:

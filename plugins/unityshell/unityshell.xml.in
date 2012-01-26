@@ -34,6 +34,8 @@
             <requirement>
                 <plugin>opengl</plugin>
                 <plugin>compiztoolbox</plugin>
+                <plugin>scale</plugin>
+                <plugin>expo</plugin>
                 <feature>largedesktop</feature>
             </requirement>
         </deps>
@@ -123,7 +125,7 @@
                 <option name="alt_tab_bias_viewport" type="bool">
                       <_short>Bias alt-tab to prefer windows on the current viewport</_short>
                       <_long>fixme</_long>
-                      <default>false</default>
+                      <default>true</default>
                 </option>
                 <option name="alt_tab_forward" type="key">
                      <_short>Key to start the switcher</_short>

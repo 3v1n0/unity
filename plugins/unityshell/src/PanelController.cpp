@@ -83,6 +83,11 @@ Controller::Impl::Impl()
   : opacity_(1.0f)
   , opacity_maximized_toggle_(false)
   , open_menu_start_received_(false)
+  , menus_fadein_(0)
+  , menus_fadeout_(0)
+  , menus_discovery_(0)
+  , menus_discovery_fadein_(0)
+  , menus_discovery_fadeout_(0)
 {
   UScreen* screen = UScreen::GetDefault();
   screen->changed.connect(sigc::mem_fun(this, &Impl::OnScreenChanged));

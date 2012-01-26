@@ -66,19 +66,17 @@ LauncherModel::Populate()
 
   _inner.clear();
 
-  iterator it, it2;
-
   int i = 0;
-  for (it = main_begin(); it != main_end(); it++)
+  for (auto icon : _inner_main)
   {
-    _inner.push_back(*it);
-    (*it)->SetSortPriority(i++);
+    _inner.push_back(icon);
+    icon->SetSortPriority(i++);
   }
 
-  for (it = shelf_begin(); it != shelf_end(); it++)
+  for (auto icon : _inner_shelf)
   {
-    _inner.push_back(*it);
-    (*it)->SetSortPriority(i++);
+    _inner.push_back(icon);
+    icon->SetSortPriority(i++);
   }
 
   return !std::equal(begin(), end(), copy.begin());
@@ -163,7 +161,7 @@ LauncherModel::IconHasSister(LauncherIcon* icon)
 {
   iterator it;
   iterator end;
-  
+
   if (icon && icon->Type() == AbstractLauncherIcon::TYPE_DEVICE)
     return true;
 
@@ -195,35 +193,33 @@ LauncherModel::ReorderBefore(LauncherIcon* icon, LauncherIcon* other, bool save)
   if (icon == other)
     return;
 
-  LauncherModel::iterator it;
-
   int i = 0;
   int j = 0;
-  for (it = begin(); it != end(); it++)
+  for (auto icon_it : _inner)
   {
-    if ((*it) == icon)
+    if (icon_it == icon)
     {
       j++;
       continue;
     }
 
-    if ((*it) == other)
+    if (icon_it == other)
     {
       icon->SetSortPriority(i);
       if (i != j && save)
-        (*it)->SaveCenter();
+        icon_it->SaveCenter();
       i++;
 
-      (*it)->SetSortPriority(i);
+      icon_it->SetSortPriority(i);
       if (i != j && save)
-        (*it)->SaveCenter();
+        icon_it->SaveCenter();
       i++;
     }
     else
     {
-      (*it)->SetSortPriority(i);
+      icon_it->SetSortPriority(i);
       if (i != j && save)
-        (*it)->SaveCenter();
+        icon_it->SaveCenter();
       i++;
     }
     j++;
@@ -238,48 +234,46 @@ LauncherModel::ReorderSmart(LauncherIcon* icon, LauncherIcon* other, bool save)
   if (icon == other)
     return;
 
-  LauncherModel::iterator it;
-
   int i = 0;
   int j = 0;
   bool skipped = false;
-  for (it = begin(); it != end(); it++)
+  for (auto icon_it : _inner)
   {
-    if ((*it) == icon)
+    if (icon_it == icon)
     {
       skipped = true;
       j++;
       continue;
     }
 
-    if ((*it) == other)
+    if (icon_it == other)
     {
       if (!skipped)
       {
         icon->SetSortPriority(i);
         if (i != j && save)
-          (*it)->SaveCenter();
+          icon_it->SaveCenter();
         i++;
       }
 
-      (*it)->SetSortPriority(i);
+      icon_it->SetSortPriority(i);
       if (i != j && save)
-        (*it)->SaveCenter();
+        icon_it->SaveCenter();
       i++;
 
       if (skipped)
       {
         icon->SetSortPriority(i);
         if (i != j && save)
-          (*it)->SaveCenter();
+          icon_it->SaveCenter();
         i++;
       }
     }
     else
     {
-      (*it)->SetSortPriority(i);
+      icon_it->SetSortPriority(i);
       if (i != j && save)
-        (*it)->SaveCenter();
+        icon_it->SaveCenter();
       i++;
     }
     j++;
