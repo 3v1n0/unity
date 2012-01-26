@@ -80,25 +80,19 @@ IconTexture::~IconTexture()
 
 void IconTexture::SetByIconName(const char* icon_name, unsigned int size)
 {
-  if (g_strcmp0(icon_name, "") != 0)
-  {
-    g_free(_icon_name);
-    _icon_name = g_strdup(icon_name);
-    _size = size;
-    LoadIcon();
-  }
+  g_free(_icon_name);
+  _icon_name = g_strdup(icon_name);
+  _size = size;
+  LoadIcon();
 }
 
 void IconTexture::SetByFilePath(const char* file_path, unsigned int size)
 {
-  if (g_strcmp0(file_path, "") != 0)
-  {
-    g_free(_icon_name);
-    _icon_name = g_strdup(file_path);
-    _size = size;
+  g_free(_icon_name);
+  _icon_name = g_strdup(file_path);
+  _size = size;
 
-    LoadIcon();
-  }
+  LoadIcon();
 }
 
 void IconTexture::LoadIcon()

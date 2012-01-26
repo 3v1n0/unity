@@ -166,16 +166,16 @@ if (GTEST_FOUND AND
 
 # tests that require dbus, must not require X
   add_executable(test-gtest-dbus
-#                 test_categories.cpp
-#                 test_filesystem_lenses.cpp
-#                 test_filter.cpp
-#                 test_indicator_entry.cpp
-#                 test_lens.cpp
+                 test_categories.cpp
+                 test_filesystem_lenses.cpp
+                 test_filter.cpp
+                 test_indicator_entry.cpp
+                 test_lens.cpp
                  test_main_dbus.cpp
-#                 test_model.cpp
-#                 test_utils.h
-#                 test_ratings_filter.cpp
-#                 test_results.cpp
+                 test_model.cpp
+                 test_utils.h
+                 test_ratings_filter.cpp
+                 test_results.cpp
                  test_hud.cpp
                 )
   target_link_libraries(test-gtest-dbus ${GTEST_BOTH_LIBRARIES})

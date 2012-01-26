@@ -227,8 +227,9 @@ void Controller::ShowHud()
   window_->QueueDraw();
 
   view_->ResetToDefault();
+ 
+  view_->SetIcon("");
   hud_service_.RequestQuery("");
-
   need_show_ = false;
   visible_ = true;
 
