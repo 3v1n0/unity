@@ -33,14 +33,14 @@ std::vector<std::string> GetNewbies(std::list<std::string> const& old, std::list
 {
   auto sorted_old(old);
   auto sorted_fresh(fresh);
-  
+
   sorted_old.sort();
   sorted_fresh.sort();
-  
+
   std::vector<std::string> result;
   std::set_difference(sorted_fresh.begin(), sorted_fresh.end(), sorted_old.begin(), sorted_old.end(),
                       std::inserter(result, result.end()));
-                      
+
   return result;
 }
 
@@ -52,10 +52,10 @@ void GetSignalAddedInfo(std::list<std::string> const& favs, std::vector<std::str
   position = "";
 
   if (before and favs.size() > 1)
-  {    
+  {
     while (it != favs.end() && std::find(newbies.begin(), newbies.end(), *it) != newbies.end())
-      it++;
-    
+      ++it;
+
     if (it != favs.end())
       position = *it;
   }
@@ -63,21 +63,21 @@ void GetSignalAddedInfo(std::list<std::string> const& favs, std::vector<std::str
   {
     position = *(boost::prior(it));
   }
-  
+
 }
 
 std::vector<std::string> GetRemoved(std::list<std::string> const& old, std::list<std::string> const& fresh)
 {
   auto sorted_old(old);
   auto sorted_fresh(fresh);
-  
+
   sorted_old.sort();
   sorted_fresh.sort();
-  
+
   std::vector<std::string> result;
   std::set_difference(sorted_old.begin(), sorted_old.end(), sorted_fresh.begin(), sorted_fresh.end(),
                       std::inserter(result, result.end()));
-                      
+
   return result;
 }
 
@@ -86,46 +86,45 @@ bool NeedToBeReordered(std::list<std::string> const& old, std::list<std::string>
 {
   auto sorted_old(old);
   auto sorted_fresh(fresh);
-  
+
   sorted_old.sort();
   sorted_fresh.sort();
-  
+
   std::vector<std::string> ignore_old, ignore_fresh;
-  
+
   std::set_difference(sorted_old.begin(), sorted_old.end(), sorted_fresh.begin(), sorted_fresh.end(),
                       std::inserter(ignore_old, ignore_old.end()));
   std::set_difference(sorted_fresh.begin(), sorted_fresh.end(), sorted_old.begin(), sorted_old.end(),
                       std::inserter(ignore_fresh, ignore_fresh.end()));
-                      
+
   auto it_old = old.begin();
   auto it_fresh = fresh.begin();
-  
+
   while (it_old != old.end() && it_fresh != fresh.end())
   {
-    
+
     while (it_old != old.end() && std::find(ignore_old.begin(), ignore_old.end(), *it_old) != ignore_old.end())
-      it_old++;
-      
+      ++it_old;
+
     while (it_fresh != fresh.end() && std::find(ignore_fresh.begin(), ignore_fresh.end(), *it_fresh) != ignore_fresh.end())
-      it_fresh++;
-      
+      ++it_fresh;
+
     if (it_old == old.end() || it_fresh == fresh.end())
       break;
-    
+
     if (*it_old != *it_fresh)
     {
       return true;
     }
-    
-    it_old++;
-    it_fresh++;
+
+    ++it_old;
+    ++it_fresh;
   }
-                      
-  return false;                 
+
+  return false;
 }
 
 
 } // namespace impl
 } // namespace internal
 } // namespace unity
-

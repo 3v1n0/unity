@@ -194,7 +194,7 @@ LauncherModel::ReorderAfter(LauncherIcon* icon, LauncherIcon* other)
     return;
 
   int i = 0;
-  for (LauncherModel::iterator it = begin(); it != end(); it++)
+  for (LauncherModel::iterator it = begin(); it != end(); ++it)
   {
     if ((*it) == icon)
       continue;
@@ -202,15 +202,15 @@ LauncherModel::ReorderAfter(LauncherIcon* icon, LauncherIcon* other)
     if ((*it) == other)
     {
       (*it)->SetSortPriority(i);
-      i++;
+      ++i;
 
       icon->SetSortPriority(i);
-      i++;
+      ++i;
     }
     else
     {
       (*it)->SetSortPriority(i);
-      i++;
+      ++i;
     }
   }
 
