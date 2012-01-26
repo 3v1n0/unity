@@ -256,10 +256,10 @@ private:
 
   void OnDashRealized ();
 
-  static void OnQuicklistEndKeyNav(GVariant* data, void* value);
-  static void OnLauncherStartKeyNav(GVariant* data, void* value);
-  static void OnLauncherEndKeyNav(GVariant* data, void* value);
-  
+  void OnQuicklistEndKeyNav(GVariant* data);
+  void OnLauncherStartKeyNav(GVariant* data);
+  void OnLauncherEndKeyNav(GVariant* data);
+
   void InitHints();
 
   dash::Settings dash_settings_;
@@ -288,8 +288,7 @@ private:
   guint                                 _edge_trigger_handle;
   guint32                               _redraw_handle;
   gint                                  _edge_pointerY;
-  guint                                 _ubus_handles[3];
-  
+
   typedef std::shared_ptr<CompAction> CompActionPtr;
   typedef std::vector<CompActionPtr> ShortcutActions;
   ShortcutActions _shortcut_actions;

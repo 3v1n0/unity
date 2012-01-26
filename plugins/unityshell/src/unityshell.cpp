@@ -52,7 +52,6 @@
 
 #include "unitya11y.h"
 
-#include "ubus-server.h"
 #include "UBusMessages.h"
 #include "UScreen.h"
 
@@ -311,26 +310,16 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetLauncherSwitcherPrevInitiate(boost::bind(&UnityScreen::launcherSwitcherPrevInitiate, this, _1, _2, _3));
      optionSetLauncherSwitcherForwardTerminate(boost::bind(&UnityScreen::launcherSwitcherTerminate, this, _1, _2, _3));
 
-     optionSetShowMinimizedWindowsNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+     optionSetShowMinimizedWindowsNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
 
-     for (unsigned int i = 0; i < G_N_ELEMENTS(_ubus_handles); i++)
-       _ubus_handles[i] = 0;
+     ubus_manager_.RegisterInterest(UBUS_LAUNCHER_START_KEY_NAV,
+                   sigc::mem_fun(this, &UnityScreen::OnLauncherStartKeyNav));
 
-     UBusServer* ubus = ubus_server_get_default();
-     _ubus_handles[0] = ubus_server_register_interest(ubus,
-						      UBUS_LAUNCHER_START_KEY_NAV,
-						      (UBusCallback)&UnityScreen::OnLauncherStartKeyNav,
-						      this);
+     ubus_manager_.RegisterInterest(UBUS_LAUNCHER_END_KEY_NAV,
+                   sigc::mem_fun(this, &UnityScreen::OnLauncherEndKeyNav));
 
-     _ubus_handles[1] = ubus_server_register_interest(ubus,
-						      UBUS_LAUNCHER_END_KEY_NAV,
-						      (UBusCallback)&UnityScreen::OnLauncherEndKeyNav,
-						      this);
-
-     _ubus_handles[2] = ubus_server_register_interest(ubus,
-						      UBUS_QUICKLIST_END_KEY_NAV,
-						      (UBusCallback)&UnityScreen::OnQuicklistEndKeyNav,
-						      this);
+     ubus_manager_.RegisterInterest(UBUS_QUICKLIST_END_KEY_NAV,
+                   sigc::mem_fun(this, &UnityScreen::OnQuicklistEndKeyNav));
 
      g_idle_add_full (G_PRIORITY_DEFAULT, &UnityScreen::initPluginActions, this, NULL);
      super_keypressed_ = false;
@@ -359,13 +348,6 @@ UnityScreen::~UnityScreen()
   notify_uninit();
 
   unity_a11y_finalize();
-
-  UBusServer* ubus = ubus_server_get_default();
-  for (unsigned int i = 0; i < G_N_ELEMENTS(_ubus_handles); i++)
-  {
-    if (_ubus_handles[i] != 0)
-      ubus_server_unregister_interest(ubus, _ubus_handles[i]);
-  }
 
   if (relayoutSourceId != 0)
     g_source_remove(relayoutSourceId);
@@ -1302,7 +1284,16 @@ void UnityScreen::handleEvent(XEvent* event)
         key_string[result] = 0;
         if (super_keypressed_)
         {
-          shortcut_controller_->Hide();
+          g_idle_add([] (gpointer data) -> gboolean {
+            auto self = static_cast<UnityScreen*>(data);
+            if (!self->launcher_controller_->launcher().KeySwitcherIsActive())
+            {
+              self->shortcut_controller_->SetEnabled(false);
+              self->shortcut_controller_->Hide();
+            }
+            return FALSE;
+          }, this);
+
           skip_other_plugins = launcher.CheckSuperShortcutPressed(screen->dpy(), key_sym, event->xkey.keycode, event->xkey.state, key_string);
           if (!skip_other_plugins)
           {
@@ -1398,10 +1389,9 @@ void UnityScreen::handleCompizEvent(const char* plugin,
   PluginAdapter::Default()->NotifyCompizEvent(plugin, event, option);
   compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>::handleCompizEvent (plugin, event, option);
 
-  if (dash_is_open_ && 
-      strcmp(event, "start_viewport_switch") == 0)
+  if (dash_is_open_ && g_strcmp0(event, "start_viewport_switch") == 0)
   {
-    ubus_server_send_message(ubus_server_get_default(), UBUS_PLACE_VIEW_CLOSE_REQUEST, NULL);
+    ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
   }
 
   screen->handleCompizEvent(plugin, event, option);
@@ -1418,33 +1408,33 @@ bool UnityScreen::showLauncherKeyInitiate(CompAction* action,
   super_keypressed_ = true;
   launcher_controller_->launcher().StartKeyShowLauncher();
   EnsureSuperKeybindings ();
-  
-  if (enable_shortcut_overlay_ and !shortcut_controller_->Visible())
+
+  if (!shortcut_controller_->Visible() && shortcut_controller_->IsEnabled())
   {
     static nux::Geometry last_geo;
     UScreen* uscreen = UScreen::GetDefault();
     int primary_monitor = uscreen->GetPrimaryMonitor();
     auto monitor_geo = uscreen->GetMonitorGeometry(primary_monitor);
-        
+
     int width = 970;
     int height =  680;
     int launcher_width = optionGetIconSize() + 18;
     int panel_height = 24;
     int x = monitor_geo.x + launcher_width + (monitor_geo.width - launcher_width- width) / 2;
     int y = monitor_geo.y + panel_height + (monitor_geo.height - panel_height - height) / 2;
-    
+
     nux::Geometry geo (x, y, width, height);
-    
+
     if (last_geo != geo)
     {
       shortcut_controller_->SetWorkspace(geo);
       last_geo = geo;
     }
-    
+
     if (last_geo.x > monitor_geo.x and last_geo.y > monitor_geo.y)
       shortcut_controller_->Show();
    }
-  
+
   return false;
 }
 
@@ -1455,6 +1445,8 @@ bool UnityScreen::showLauncherKeyTerminate(CompAction* action,
   super_keypressed_ = false;
   launcher_controller_->launcher().EndKeyShowLauncher();
   launcher_controller_->launcher().KeySwitcherTerminate();
+
+  shortcut_controller_->SetEnabled(enable_shortcut_overlay_);
   shortcut_controller_->Hide();
   return false;
 }
@@ -1543,12 +1535,8 @@ bool UnityScreen::launcherRevealEdgeInitiate(CompAction* action,
 
 void UnityScreen::SendExecuteCommand()
 {
-  ubus_server_send_message(ubus_server_get_default(),
-                           UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
-                           g_variant_new("(sus)",
-                                         "commands.lens",
-                                         0,
-                                         ""));
+  ubus_manager_.SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
+                            g_variant_new("(sus)", "commands.lens", 0, ""));
 }
 
 bool UnityScreen::executeCommand(CompAction* action,
@@ -1736,13 +1724,12 @@ bool UnityScreen::launcherSwitcherTerminate(CompAction* action, CompAction::Stat
   return false;
 }
 
-void UnityScreen::OnLauncherStartKeyNav(GVariant* data, void* value)
+void UnityScreen::OnLauncherStartKeyNav(GVariant* data)
 {
-  UnityScreen* self = reinterpret_cast<UnityScreen*>(value);
-  self->startLauncherKeyNav();
+  startLauncherKeyNav();
 }
 
-void UnityScreen::OnLauncherEndKeyNav(GVariant* data, void* value)
+void UnityScreen::OnLauncherEndKeyNav(GVariant* data)
 {
   bool preserve_focus = false;
 
@@ -1757,10 +1744,9 @@ void UnityScreen::OnLauncherEndKeyNav(GVariant* data, void* value)
     PluginAdapter::Default ()->restoreInputFocus ();
 }
 
-void UnityScreen::OnQuicklistEndKeyNav(GVariant* data, void* value)
+void UnityScreen::OnQuicklistEndKeyNav(GVariant* data)
 {
-  UnityScreen* self = reinterpret_cast<UnityScreen*>(value);
-  self->restartLauncherKeyNav();
+  restartLauncherKeyNav();
 }
 
 gboolean UnityScreen::initPluginActions(gpointer data)
@@ -2412,6 +2398,7 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       break;
     case UnityshellOptions::ShortcutOverlay:
       enable_shortcut_overlay_ = optionGetShortcutOverlay();
+      shortcut_controller_->SetEnabled(enable_shortcut_overlay_);
       break;
     case UnityshellOptions::ShowDesktopIcon:
       launcher_controller_->SetShowDesktopIcon(optionGetShowDesktopIcon());
