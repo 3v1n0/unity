@@ -21,9 +21,6 @@
 #ifndef BAMFLAUNCHERICON_H
 #define BAMFLAUNCHERICON_H
 
-#include <Nux/BaseWindow.h>
-#include <NuxCore/Math/MathInc.h>
-
 #include <UnityCore/GLibSignal.h>
 #include <UnityCore/GLibWrapper.h>
 

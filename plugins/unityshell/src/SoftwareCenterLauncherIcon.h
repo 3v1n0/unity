@@ -17,44 +17,32 @@
  * Authored by: Bilal Akhtar <bilalakhtar@ubuntu.com>
  */
 
-#ifndef SOFTWARECENTERLAUNCHERICON_H
-#define SOFTWARECENTERLAUNCHERICON_H
+#ifndef SOFTWARE_CENTER_LAUNCHERICON_H
+#define SOFTWARE_CENTER_LAUNCHERICON_H
 
 #include "BamfLauncherIcon.h"
-#include <Nux/BaseWindow.h>
-#include <NuxCore/Math/MathInc.h>
-#include <core/core.h>
-#include <gio/gio.h>
-#include <glib.h>
-#include <glib/gvariant.h>
 #include <UnityCore/GLibDBusProxy.h>
-
 
 namespace unity
 {
 namespace launcher
 {
 
-
 class SoftwareCenterLauncherIcon : public BamfLauncherIcon
 {
 public:
-
-    SoftwareCenterLauncherIcon(Launcher* IconManager, BamfApplication* app, char* aptdaemon_trans_id, char* icon_path);
-    virtual ~SoftwareCenterLauncherIcon();
-
-    gchar* original_tooltip_text;
+  SoftwareCenterLauncherIcon(Launcher* IconManager, BamfApplication* app,
+                             std::string const& aptdaemon_trans_id,
+                             std::string const& icon_path);
 
 private:
-    char* _aptdaemon_trans_id;
-    unity::glib::DBusProxy* _aptdaemon_trans;
+  void OnFinished(GVariant* params);
+  void OnPropertyChanged(GVariant* params);
 
-    void OnFinished(GVariant* params);
-
-    void OnPropertyChanged(GVariant* params);
+  unity::glib::DBusProxy _aptdaemon_trans;
 };
 
 }
 }
 
-#endif
+#endif //SOFTWARE_CENTER_LAUNCHERICON_H

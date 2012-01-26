@@ -17,26 +17,7 @@
  * Authored by: Bilal Akhtar <bilalakhtar@ubuntu.com>
  */
 
-#include "Nux/Nux.h"
-#include "Nux/BaseWindow.h"
-
-#include "BamfLauncherIcon.h"
-#include "Launcher.h"
-#include "LauncherController.h"
-#include "PluginAdapter.h"
-#include "FavoriteStore.h"
-
-#include "ubus-server.h"
-#include "UBusMessages.h"
-
-#include <glib.h>
-#include <glib/gvariant.h>
 #include <glib/gi18n-lib.h>
-#include <gio/gio.h>
-#include <libindicator/indicator-desktop-shortcuts.h>
-#include <core/core.h>
-#include <core/atoms.h>
-
 #include "SoftwareCenterLauncherIcon.h"
 
 namespace unity
@@ -44,58 +25,51 @@ namespace unity
 namespace launcher
 {
 
-SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(Launcher* IconManager, BamfApplication* app, char* aptdaemon_trans_id, char* icon_path)
-: BamfLauncherIcon(IconManager, app)
+SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(Launcher* IconManager,
+                                                       BamfApplication* app,
+                                                       std::string const& aptdaemon_trans_id,
+                                                       std::string const& icon_path)
+: BamfLauncherIcon(IconManager, app),
+  _aptdaemon_trans("org.debian.apt",
+                   aptdaemon_trans_id,
+                   "org.debian.apt.transaction",
+                   G_BUS_TYPE_SYSTEM,
+                   G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START)
+  
 {
-    _aptdaemon_trans_id = aptdaemon_trans_id; 
-    
-    g_debug("Aptdaemon transaction ID: %s", _aptdaemon_trans_id);
+  _aptdaemon_trans.Connect("PropertyChanged", sigc::mem_fun(this, &SoftwareCenterLauncherIcon::OnPropertyChanged));
+  _aptdaemon_trans.Connect("Finished", [&] (GVariant *) {
+    tooltip_text = BamfName();
+    SetQuirk(QUIRK_PROGRESS, false);
+    SetProgress(0.0f);
+  });
 
-    _aptdaemon_trans = new unity::glib::DBusProxy("org.debian.apt",
-                                    _aptdaemon_trans_id,
-                                    "org.debian.apt.transaction",
-                                    G_BUS_TYPE_SYSTEM,
-                                    G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START);
-
-    _aptdaemon_trans->Connect("Finished", sigc::mem_fun(this, &SoftwareCenterLauncherIcon::OnFinished));
-    _aptdaemon_trans->Connect("PropertyChanged", sigc::mem_fun(this, &SoftwareCenterLauncherIcon::OnPropertyChanged));
-
-    icon_name = icon_path;
-}
-
-SoftwareCenterLauncherIcon::~SoftwareCenterLauncherIcon() {
-
+  icon_name = icon_path.c_str();
+  tooltip_text = _("Waiting to install");
+  SetProgress(0.0f);
 }
 
 void
-SoftwareCenterLauncherIcon::OnFinished(GVariant* params) {
+SoftwareCenterLauncherIcon::OnPropertyChanged(GVariant* params)
+{
+  gint32 progress;
+  glib::String property_name;
+  GVariant* property_value;
 
-   tooltip_text = BamfName();
+  g_variant_get_child (params, 0, "s", property_name.AsOutParam());
 
-   SetQuirk(LauncherIcon::QUIRK_PROGRESS, FALSE); 
-}
+  if (property_name.Str() == "Progress")
+  {
+    g_variant_get_child (params, 1, "v", &property_value);
+    g_variant_get (property_value, "i", &progress);
 
-void
-SoftwareCenterLauncherIcon::OnPropertyChanged(GVariant* params) {
+    if (progress < 100)
+      SetQuirk(QUIRK_PROGRESS, true);
 
-    gint32 progress;
-    gchar* property_name;
-    GVariant* property_value;
+    SetProgress(progress/100.0f);
+  }
 
-    g_variant_get_child (params, 0, "s", &property_name);
-    if (g_strcmp0 (property_name, "Progress") == 0) {
-        g_variant_get_child (params,1,"v",&property_value);
-        g_variant_get (property_value, "i", &progress);
-
-        if (progress < 100) {
-            SetQuirk(LauncherIcon::QUIRK_PROGRESS, TRUE);
-            tooltip_text = _("Waiting to install");
-        }
-        SetProgress(((float)progress) / ((float)100));
-    }
-    g_variant_unref(property_value);
-    g_free(property_name);
-
+  g_variant_unref(property_value);
 }
 
 }
