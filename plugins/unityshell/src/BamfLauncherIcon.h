@@ -71,6 +71,7 @@ protected:
   void AddProperties(GVariantBuilder* builder);
   void OnAcceptDrop(unity::DndData& dnd_data);
   void OnDndEnter();
+  void OnDndHovered();
   void OnDndLeave();
   void OpenInstanceLauncherIcon(ActionArg arg);
   void ToggleSticky();
@@ -104,8 +105,6 @@ private:
   bool OwnsWindow(Window w) const;
 
   const std::set<std::string>& GetSupportedTypes();
-
-  static gboolean OnDndHoveredTimeout(gpointer data);
 
 
   glib::Object<BamfApplication> _bamf_app;

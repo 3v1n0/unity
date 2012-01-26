@@ -1086,22 +1086,22 @@ std::set<std::string> BamfLauncherIcon::ValidateUrisForLaunch(unity::DndData& ur
   return result;
 }
 
-gboolean BamfLauncherIcon::OnDndHoveredTimeout(gpointer data)
+void BamfLauncherIcon::OnDndHovered()
 {
-  BamfLauncherIcon* self = static_cast<BamfLauncherIcon*>(data);
-
   // for now, let's not do this, it turns out to be quite buggy
-  //if (self->_dnd_hovered && self->IsRunning())
-  //  self->Spread(CompAction::StateInitEdgeDnd, true);
-
-  self->_dnd_hover_timer = 0;
-  return false;
+  //if (_dnd_hovered && IsRunning())
+  //  Spread(CompAction::StateInitEdgeDnd, true);
 }
 
 void BamfLauncherIcon::OnDndEnter()
 {
   _dnd_hovered = true;
-  _dnd_hover_timer = g_timeout_add(1000, &BamfLauncherIcon::OnDndHoveredTimeout, this);
+  _dnd_hover_timer = g_timeout_add(1000, [] (gpointer data) -> gboolean {
+    BamfLauncherIcon* self = static_cast<BamfLauncherIcon*>(data);
+    self->OnDndHovered();
+    self->_dnd_hover_timer = 0;
+    return false;
+  }, this);
 }
 
 void BamfLauncherIcon::OnDndLeave()
