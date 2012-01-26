@@ -39,7 +39,7 @@ public:
 private:
   void OnPropertyChanged(GVariant* params);
 
-  unity::glib::DBusProxy _aptdaemon_trans;
+  glib::DBusProxy _aptdaemon_trans;
 };
 
 }

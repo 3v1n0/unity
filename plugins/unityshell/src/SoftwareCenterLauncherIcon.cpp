@@ -36,7 +36,6 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(Launcher* IconManager,
                    "org.debian.apt.transaction",
                    G_BUS_TYPE_SYSTEM,
                    G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START)
-  
 {
   _aptdaemon_trans.Connect("PropertyChanged", sigc::mem_fun(this, &SoftwareCenterLauncherIcon::OnPropertyChanged));
   _aptdaemon_trans.Connect("Finished", [&] (GVariant *) {
