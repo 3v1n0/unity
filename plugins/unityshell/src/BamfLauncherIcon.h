@@ -59,8 +59,8 @@ public:
   virtual bool ShowInSwitcher();
   virtual unsigned long long SwitcherPriority();
 
-  std::vector<Window> RelatedXids() const;
-  std::string NameForWindow(Window window) const;
+  std::vector<Window> RelatedXids();
+  std::string NameForWindow(Window window);
 
 protected:
   void UpdateIconGeometries(nux::Point3 center);

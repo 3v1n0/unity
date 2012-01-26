@@ -285,7 +285,7 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
     ubus_server_send_message(ubus_server_get_default(), UBUS_LAUNCHER_ACTION_DONE, nullptr);
 }
 
-std::vector<Window> BamfLauncherIcon::RelatedXids () const
+std::vector<Window> BamfLauncherIcon::RelatedXids ()
 {
   std::vector<Window> results;
   GList* children, *l;
@@ -309,7 +309,7 @@ std::vector<Window> BamfLauncherIcon::RelatedXids () const
   return results;
 }
 
-std::string BamfLauncherIcon::NameForWindow(Window window) const
+std::string BamfLauncherIcon::NameForWindow(Window window)
 {
   std::string result;
   GList* children, *l;
