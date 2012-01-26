@@ -1769,8 +1769,14 @@ bool UnityScreen::ShowHudTerminate(CompAction* action, CompAction::State state, 
     gint64 current_time = g_get_monotonic_time();
     if (current_time - last_hud_show_time_ < 150 * 1000)
     {
-      // less than 50 ms have passed, thats a tap
-      hud_controller_->ShowHideHud();
+      if (hud_controller_->IsVisible())
+      {
+        ubus_manager_.SendMessage(UBUS_HUD_CLOSE_REQUEST);
+      }
+      else
+      {
+        hud_controller_->ShowHud();
+      }
       last_hud_show_time_ = 0;
     }
   }
