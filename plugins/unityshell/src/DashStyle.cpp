@@ -1602,7 +1602,9 @@ bool Style::ButtonFocusOverlay(cairo_t* cr)
   double w = cairo_image_surface_get_width(cairo_get_target(cr));
   double h = cairo_image_surface_get_height(cairo_get_target(cr));
 
-  cairo_set_line_width(cr, 0);
+  nux::Color color(nux::color::White);
+  color.alpha = 0.50f;
+  cairo_set_line_width(cr, pimpl->button_label_border_size_[nux::VISUAL_STATE_NORMAL]);
 
   RoundedRect(cr,
               1.0,
@@ -1611,9 +1613,6 @@ bool Style::ButtonFocusOverlay(cairo_t* cr)
               7.0,
               w - (double) (2 * garnish),
               h - (double) (2 * garnish));
-
-  nux::Color color(nux::color::White);
-  color.alpha = 0.50f;
   
   cairo_set_source_rgba(cr, color);
   cairo_fill_preserve(cr);

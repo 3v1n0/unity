@@ -46,9 +46,9 @@ public:
 
   const char* DesktopFile();
   bool IsSticky();
-  void Quit();
-  void Stick();
+  void Stick(bool save = true);
   void UnStick();
+  void Quit();
 
   void ActivateLauncherIcon(ActionArg arg);
 

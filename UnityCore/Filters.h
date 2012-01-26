@@ -51,6 +51,7 @@ public:
   typedef std::map<DeeModelIter*, Filter::Ptr> FilterMap;
 
   Filters();
+  Filters(ModelType model_type);
   ~Filters();
 
   Filter::Ptr FilterAtIndex(std::size_t index);
