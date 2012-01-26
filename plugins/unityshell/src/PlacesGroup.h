@@ -87,6 +87,7 @@ private:
 
 private:
   nux::VLayout* _group_layout;
+  nux::View* _header_view;
   nux::HLayout* _header_layout;
   nux::HLayout* _text_layout;
   nux::HLayout* _expand_layout;

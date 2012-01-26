@@ -54,6 +54,31 @@ const nux::Color kExpandHoverTextColor(1.0f, 1.0f, 1.0f, 1.0f);
 const float kExpandDefaultIconOpacity = 1.0f;
 const float kExpandHoverIconOpacity = 1.0f;
 
+class HeaderView : public nux::View
+{
+public:
+  HeaderView(NUX_FILE_LINE_DECL)
+   : nux::View(NUX_FILE_LINE_PARAM)
+  {
+  }
+
+protected:
+  void Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
+  {
+  };
+  
+  void DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
+  {
+    if (GetLayout())
+      GetLayout()->ProcessDraw(graphics_engine, force_draw);
+  }
+  
+  bool AcceptKeyNavFocus()
+  {
+    return false;
+  }
+};
+
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(PlacesGroup);
@@ -76,9 +101,12 @@ PlacesGroup::PlacesGroup()
 
   _group_layout->AddLayout(new nux::SpaceLayout(15,15,15,15), 0);
 
+  _header_view = new HeaderView(NUX_TRACKER_LOCATION);
+  _group_layout->AddView(_header_view, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FIX); 
+
   _header_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
   _header_layout->SetHorizontalInternalMargin(10);
-  _group_layout->AddLayout(_header_layout, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FIX);
+  _header_view->SetLayout(_header_layout);
 
   _icon = new IconTexture("", 24);
   _icon->SetMinMaxSize(24, 24);
@@ -111,7 +139,9 @@ PlacesGroup::PlacesGroup()
 
   SetLayout(_group_layout);
 
-  /* don't need to disconnect these signals as they are disconnected when this object destroys the contents */
+  // don't need to disconnect these signals as they are disconnected when this object destroys the contents 
+  _header_view->mouse_enter.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseEnter));
+  _header_view->mouse_leave.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseLeave));
   _icon->mouse_click.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseClick));
   _icon->mouse_enter.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseEnter));
   _icon->mouse_leave.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseLeave));
@@ -157,7 +187,6 @@ PlacesGroup::OnLabelActivated(nux::Area* label)
 void
 PlacesGroup::OnLabelFocusChanged(nux::Area* label)
 {
-  _expand_label->QueueDraw();
   QueueDraw();
 }
 
@@ -330,7 +359,7 @@ void PlacesGroup::Draw(nux::GraphicsEngine& graphics_engine,
 
   graphics_engine.GetRenderStates().SetColorMask(true, true, true, true);
 
-  if (_icon->HasKeyFocus() || _name->HasKeyFocus() ||
+  if (_header_view->IsMousePointerInside() || _icon->HasKeyFocus() || _name->HasKeyFocus() ||
       _expand_label->HasKeyFocus() || _expand_icon->HasKeyFocus())
   {
     nux::Geometry geo(_header_layout->GetGeometry());
@@ -351,7 +380,7 @@ PlacesGroup::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
 
   graphics_engine.PushClippingRectangle(base);
 
-  if ((_icon->HasKeyFocus() || _name->HasKeyFocus() ||
+  if ((_header_view->IsMousePointerInside() || _icon->HasKeyFocus() || _name->HasKeyFocus() ||
        _expand_label->HasKeyFocus() || _expand_icon->HasKeyFocus()) && !IsFullRedraw())
   {
     nux::Geometry geo(_header_layout->GetGeometry());
