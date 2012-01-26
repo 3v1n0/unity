@@ -807,7 +807,7 @@ LauncherIcon::Type()
 }
 
 bool
-LauncherIcon::GetQuirk(LauncherIcon::Quirk quirk)
+LauncherIcon::GetQuirk(LauncherIcon::Quirk quirk) const
 {
   return _quirks[quirk];
 }

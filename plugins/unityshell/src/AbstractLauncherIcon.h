@@ -161,7 +161,7 @@ public:
 
   virtual unsigned long long SwitcherPriority() = 0;
 
-  virtual bool GetQuirk(Quirk quirk) = 0;
+  virtual bool GetQuirk(Quirk quirk) const = 0;
 
   virtual void SetQuirk(Quirk quirk, bool value) = 0;
 
