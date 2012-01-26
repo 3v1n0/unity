@@ -142,7 +142,7 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
       {
         if (arg.source != ActionArg::SWITCHER)
         {
-          Spread(0, false);
+          Spread(true, 0, false);
         }
       }
     }
@@ -153,7 +153,7 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
         WindowManager::Default()->TerminateScale();
         Focus(arg);
         if (arg.source != ActionArg::SWITCHER)
-          Spread(0, false);
+          Spread(true, 0, false);
       }
       else // #3 above
       {
@@ -213,8 +213,8 @@ BamfLauncherIcon::BamfLauncherIcon(Launcher* IconManager, BamfApplication* app)
 
   WindowManager::Default()->window_minimized.connect(sigc::mem_fun(this, &BamfLauncherIcon::OnWindowMinimized));
   WindowManager::Default()->window_moved.connect(sigc::mem_fun(this, &BamfLauncherIcon::OnWindowMoved));
-  WindowManager::Default()->compiz_screen_viewport_switch_ended.connect(sigc::mem_fun(this, &BamfLauncherIcon::OnViewPortSwitchEnded));
-  WindowManager::Default()->terminate_expo.connect(sigc::mem_fun(this, &BamfLauncherIcon::OnViewPortSwitchEnded));
+  WindowManager::Default()->compiz_screen_viewport_switch_ended.connect(sigc::mem_fun(this, &BamfLauncherIcon::EnsureWindowState));
+  WindowManager::Default()->terminate_expo.connect(sigc::mem_fun(this, &BamfLauncherIcon::EnsureWindowState));
   IconManager->hidden_changed.connect(sigc::mem_fun(this, &BamfLauncherIcon::OnLauncherHiddenChanged));
 
   // hack
@@ -323,9 +323,7 @@ std::string BamfLauncherIcon::NameForWindow (Window window)
     view = static_cast <BamfView*> (l->data);
     if (BAMF_IS_WINDOW(view) && (Window) bamf_window_get_xid(BAMF_WINDOW(view)) == window)
     {
-      gchar *name = bamf_view_get_name (view);
-      result = name;
-      g_free (name);
+      result = glib::String(bamf_view_get_name(view)).Str();
       break;
     }
   }
@@ -348,40 +346,6 @@ void BamfLauncherIcon::OnWindowMinimized(guint32 xid)
   UpdateQuirkTimeDelayed(300, QUIRK_SHIMMER);
 }
 
-gboolean BamfLauncherIcon::OnWindowMovedTimeout(gpointer data)
-{
-  BamfLauncherIcon *self = static_cast <BamfLauncherIcon *> (data);
-  GList *children = bamf_view_get_children(BAMF_VIEW(self->m_App));
-
-  bool any_on_current = false;
-  bool found_moved = (self->_window_moved_xid != 0 ? false : true);
-
-  for (GList *l = children; l; l = l->next)
-  {
-    BamfView *view = BAMF_VIEW(l->data);
-
-    if (BAMF_IS_WINDOW(view))
-    {
-      Window xid = bamf_window_get_xid(BAMF_WINDOW(view));
-
-      if (self->_window_moved_xid == xid)
-        found_moved = true;
-      
-      if (WindowManager::Default()->IsWindowOnCurrentDesktop(xid))
-        any_on_current = true;
-
-      if (found_moved && any_on_current)
-        break;
-    }
-  }
-
-  self->SetHasWindowOnViewport(any_on_current);
-  self->_window_moved_id = 0;
-  g_list_free(children);
-
-  return FALSE;
-}
-
 void BamfLauncherIcon::OnWindowMoved(guint32 moved_win)
 {
   if (_window_moved_id != 0)
@@ -389,20 +353,13 @@ void BamfLauncherIcon::OnWindowMoved(guint32 moved_win)
 
   _window_moved_xid = moved_win;
 
-  if (_window_moved_xid == 0)
+  _window_moved_id = g_timeout_add(250, [] (gpointer data) -> gboolean
   {
-    OnWindowMovedTimeout(this);
-  }
-  else
-  {
-    _window_moved_id = g_timeout_add(250,
-                      (GSourceFunc)BamfLauncherIcon::OnWindowMovedTimeout, this);
-  }
-}
-
-void BamfLauncherIcon::OnViewPortSwitchEnded()
-{
-  OnWindowMoved(0);
+    BamfLauncherIcon* self = static_cast<BamfLauncherIcon*>(data);
+    self->EnsureWindowState();
+    self->_window_moved_id = 0;
+    return FALSE;
+  }, this);
 }
 
 bool BamfLauncherIcon::IsSticky()
@@ -652,11 +609,12 @@ void BamfLauncherIcon::Focus(ActionArg arg)
   }
 }
 
-bool BamfLauncherIcon::Spread(int state, bool force)
+bool BamfLauncherIcon::Spread(bool current_desktop, int state, bool force)
 {
   BamfView* view;
   GList* children, *l;
   children = bamf_view_get_children(BAMF_VIEW(m_App));
+  WindowManager* wm = WindowManager::Default();
 
   std::vector<Window> windowList;
   for (l = children; l; l = l->next)
@@ -666,7 +624,11 @@ bool BamfLauncherIcon::Spread(int state, bool force)
     if (BAMF_IS_WINDOW(view))
     {
       guint32 xid = bamf_window_get_xid(BAMF_WINDOW(view));
-      windowList.push_back((Window) xid);
+
+      if (!current_desktop || (current_desktop && wm->IsWindowOnCurrentDesktop(xid)))
+      {
+        windowList.push_back((Window) xid);
+      }
     }
   }
 
@@ -719,9 +681,9 @@ void BamfLauncherIcon::OnUrgentChanged(BamfView* view, gboolean urgent, gpointer
 void BamfLauncherIcon::EnsureWindowState()
 {
   GList* children, *l;
-  unsigned int children_count = 0;
+  bool has_win_on_current_vp = false;
   unsigned int user_visible_count = 0;
-  bool has_visible = false;
+  unsigned int children_count = 0;
 
   children = bamf_view_get_children(BAMF_VIEW(m_App));
   for (l = children; l; l = l->next)
@@ -729,16 +691,15 @@ void BamfLauncherIcon::EnsureWindowState()
     if (!BAMF_IS_WINDOW(l->data))
       continue;
 
-    if (!has_visible)
+    Window xid = bamf_window_get_xid(BAMF_WINDOW(l->data));
+    if (WindowManager::Default()->IsWindowOnCurrentDesktop(xid))
     {
-      Window xid = bamf_window_get_xid(BAMF_WINDOW(l->data));
-      if (WindowManager::Default()->IsWindowOnCurrentDesktop(xid))
-        has_visible = true;
-    }
+      has_win_on_current_vp = true;
 
-    if (bamf_view_user_visible (BAMF_VIEW (l->data)))
-    {
-      user_visible_count++;
+      if (bamf_view_user_visible (BAMF_VIEW (l->data)))
+      {
+        user_visible_count++;
+      }
     }
 
     children_count++;
@@ -753,7 +714,7 @@ void BamfLauncherIcon::EnsureWindowState()
     SetRelatedWindows(1);
   }
 
-  SetHasWindowOnViewport(has_visible);
+  SetHasWindowOnViewport(has_win_on_current_vp);
 
   g_list_free(children);
 }

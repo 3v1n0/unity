@@ -116,13 +116,12 @@ private:
 
   void OpenInstanceWithUris(std::set<std::string> uris);
   void Focus(ActionArg arg);
-  bool Spread(int state, bool force);
+  bool Spread(bool current_desktop, int state, bool force);
 
   void EnsureMenuItemsReady();
 
   void OnWindowMinimized(guint32 xid);
   void OnWindowMoved(guint32 xid);
-  void OnViewPortSwitchEnded();
   bool OwnsWindow(Window w);
   
   const std::set<std::string>& GetSupportedTypes();
@@ -147,7 +146,6 @@ private:
 
   static gboolean OnDndHoveredTimeout(gpointer data);
   static gboolean FillSupportedTypes(gpointer data);
-  static gboolean OnWindowMovedTimeout(gpointer data);
 };
 
 }

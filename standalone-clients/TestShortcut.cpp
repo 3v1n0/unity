@@ -42,7 +42,7 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
   hints.push_back(new shortcut::MockHint(_("Launcher"), "", "", _("Switch application via Launcher."), shortcut::HARDCODED_OPTION, "Super + Tab"));
   hints.push_back(new shortcut::MockHint(_("Launcher"), "", _(" + 1 to 9"), _("Same as clicking on a Launcher icon."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "show_launcher"));
   hints.push_back(new shortcut::MockHint(_("Launcher"), "", _(" + Shift + 1 to 9"), _("Open a new window of the app."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "show_launcher"));
-  hints.push_back(new shortcut::MockHint(_("Launcher"), "", " + T", _("Open the Rubbish Bin."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "show_launcher")); 
+  hints.push_back(new shortcut::MockHint(_("Launcher"), "", " + T", _("Open the Trash."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "show_launcher")); 
 
   // Dash...
   hints.push_back(new shortcut::MockHint(_("Dash"), "", _(" (Tap)"), _("Open the Dash Home."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "show_launcher"));

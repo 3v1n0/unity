@@ -85,6 +85,9 @@ private:
     IconLoaderCallback    slot;
     Handle                handle;
     Impl*                 self;
+    GtkIconInfo*          icon_info;
+    GdkPixbuf*            result;
+    glib::Error           error;
 
     IconLoaderTask(IconLoaderRequestType type_,
                    std::string const& data_,
@@ -95,6 +98,7 @@ private:
                    Impl* self_)
       : type(type_), data(data_), size(size_), key(key_)
       , slot(slot_), handle(handle_), self(self_)
+      , icon_info(NULL), result(NULL)
       {}
   };
 
@@ -116,17 +120,19 @@ private:
                    unsigned size,
                    IconLoaderCallback slot);
 
+  // these methods might run asynchronously
   bool ProcessTask(IconLoaderTask* task);
   bool ProcessIconNameTask(IconLoaderTask* task);
   bool ProcessGIconTask(IconLoaderTask* task);
-
-  // URI processing is async.
   bool ProcessURITask(IconLoaderTask* task);
-  void ProcessURITaskReady(IconLoaderTask* task, char* contents, gsize length);
-  static void LoadContentsReady(GObject* object, GAsyncResult* res, IconLoaderTask* task);
+
+  // Loading/rendering of pixbufs is done in a separate thread
+  static gboolean LoaderJobFunc(GIOSchedulerJob* job, GCancellable *canc,
+                                IconLoaderTask *task);
+  static gboolean LoadIconComplete(IconLoaderTask* task);
 
   // Loop calls the iteration function.
-  static bool Loop(Impl* self);
+  static gboolean Loop(Impl* self);
   bool Iteration();
 
 private:
@@ -312,26 +318,17 @@ bool IconLoader::Impl::ProcessTask(IconLoaderTask* task)
 
 bool IconLoader::Impl::ProcessIconNameTask(IconLoaderTask* task)
 {
-  GdkPixbuf* pixbuf = nullptr;
   GtkIconInfo* info = gtk_icon_theme_lookup_icon(theme_,
                                                  task->data.c_str(),
                                                  task->size,
                                                  (GtkIconLookupFlags)0);
   if (info)
   {
-    glib::Error error;
+    task->icon_info = info;
+    g_io_scheduler_push_job ((GIOSchedulerJobFunc) LoaderJobFunc,
+                             task, NULL, G_PRIORITY_HIGH_IDLE, NULL);
 
-    pixbuf = gtk_icon_info_load_icon(info, &error);
-    if (GDK_IS_PIXBUF(pixbuf))
-    {
-      cache_[task->key] = pixbuf;
-    }
-    else
-    {
-      LOG_WARNING(logger) << "Unable to load icon " << task->data
-                          << " at size " << task->size << ": " << error;
-    }
-    gtk_icon_info_free(info);
+    return false;
   }
   else
   {
@@ -339,14 +336,12 @@ bool IconLoader::Impl::ProcessIconNameTask(IconLoaderTask* task)
                         << " at size " << task->size;
   }
 
-  task->slot(task->data, task->size, pixbuf);
+  task->slot(task->data, task->size, nullptr);
   return true;
 }
 
 bool IconLoader::Impl::ProcessGIconTask(IconLoaderTask* task)
 {
-  GdkPixbuf*   pixbuf = NULL;
-
   glib::Error error;
   glib::Object<GIcon> icon(::g_icon_new_for_string(task->data.c_str(), &error));
 
@@ -368,18 +363,11 @@ bool IconLoader::Impl::ProcessGIconTask(IconLoaderTask* task)
                                                          (GtkIconLookupFlags)0);
     if (info)
     {
-      pixbuf = gtk_icon_info_load_icon(info, &error);
+      task->icon_info = info;
+      g_io_scheduler_push_job ((GIOSchedulerJobFunc) LoaderJobFunc,
+                               task, NULL, G_PRIORITY_HIGH_IDLE, NULL);
 
-      if (GDK_IS_PIXBUF(pixbuf))
-      {
-        cache_[task->key] = pixbuf;
-      }
-      else
-      {
-        LOG_WARNING(logger) << "Unable to load icon " << task->data
-                            << " at size " << task->size << ": " << error;
-      }
-      gtk_icon_info_free(info);
+      return false;
     }
     else
     {
@@ -409,58 +397,91 @@ bool IconLoader::Impl::ProcessGIconTask(IconLoaderTask* task)
                         << " at size " << task->size << ": " << error;
   }
 
-  task->slot(task->data, task->size, pixbuf);
+  task->slot(task->data, task->size, nullptr);
   return true;
 }
 
 bool IconLoader::Impl::ProcessURITask(IconLoaderTask* task)
 {
-  glib::Object<GFile> file(g_file_new_for_uri(task->data.c_str()));
-
-  g_file_load_contents_async(file,
-                             NULL,
-                             (GAsyncReadyCallback)LoadContentsReady,
-                             task);
+  g_io_scheduler_push_job ((GIOSchedulerJobFunc) LoaderJobFunc,
+                           task, NULL, G_PRIORITY_HIGH_IDLE, NULL);
 
   return false;
 }
 
-void IconLoader::Impl::ProcessURITaskReady(IconLoaderTask* task,
-                                           char* contents,
-                                           gsize length)
+gboolean IconLoader::Impl::LoaderJobFunc(GIOSchedulerJob* job,
+                                         GCancellable *canc,
+                                         IconLoaderTask *task)
 {
-  GInputStream* stream = g_memory_input_stream_new_from_data(contents, length, NULL);
-
-  glib::Error error;
-  glib::Object<GdkPixbuf> pixbuf(gdk_pixbuf_new_from_stream_at_scale(stream,
-                                                                     -1,
-                                                                     task->size,
-                                                                     true,
-                                                                     NULL,
-                                                                     &error));
-  if (error)
+  // careful here this is running in non-main thread
+  if (task->icon_info)
   {
-    LOG_WARNING(logger) << "Unable to create pixbuf from input stream for "
-                        << task->data << " at size " << task->size << ": " << error;
+    task->result = gtk_icon_info_load_icon(task->icon_info, &task->error);
+
+    gtk_icon_info_free (task->icon_info);
+    task->icon_info = NULL;
+  }
+  else if (task->type == REQUEST_TYPE_URI)
+  {
+    glib::Object<GFile> file(g_file_new_for_uri(task->data.c_str()));
+    glib::String contents;
+    gsize length = 0;
+
+    if (g_file_load_contents(file, canc, &contents, &length,
+                             NULL, &task->error))
+    {
+      glib::Object<GInputStream> stream(
+          g_memory_input_stream_new_from_data(contents.Value(), length, NULL));
+
+      task->result = gdk_pixbuf_new_from_stream_at_scale(stream,
+                                                         -1,
+                                                         task->size,
+                                                         TRUE,
+                                                         canc,
+                                                         &task->error);
+      g_input_stream_close(stream, canc, NULL);
+    }
+  }
+
+  g_io_scheduler_job_send_to_mainloop_async (job,
+                                             (GSourceFunc) LoadIconComplete,
+                                             task,
+                                             NULL);
+
+  return FALSE;
+}
+
+// this will be invoked back in the thread from which push_job was called
+gboolean IconLoader::Impl::LoadIconComplete(IconLoaderTask* task)
+{
+  if (GDK_IS_PIXBUF(task->result))
+  {
+    task->self->cache_[task->key] = task->result;
   }
   else
   {
-    cache_[task->key] = pixbuf;
+    LOG_WARNING(logger) << "Unable to load icon " << task->data
+                        << " at size " << task->size << ": " << task->error;
   }
 
-  task->slot(task->data, task->size, pixbuf);
-  g_input_stream_close(stream, NULL, NULL);
+  task->slot(task->data, task->size, task->result);
+
+  // this was all async, we need to erase ourselves from the task_map
+  task->self->task_map_.erase(task->handle);
+  delete task;
+
+  return FALSE;
 }
 
 bool IconLoader::Impl::Iteration()
 {
-  static const int MAX_MICRO_SECS = 10000;
+  static const int MAX_MICRO_SECS = 1000;
   util::Timer timer;
 
   bool queue_empty = tasks_.empty();
 
-  while (!queue_empty &&
-         (timer.ElapsedMicroSeconds() < MAX_MICRO_SECS))
+  // always do at least one iteration if the queue isn't empty
+  while (!queue_empty)
   {
     IconLoaderTask* task = tasks_.front();
 
@@ -472,6 +493,8 @@ bool IconLoader::Impl::Iteration()
 
     tasks_.pop();
     queue_empty = tasks_.empty();
+
+    if (timer.ElapsedMicroSeconds() >= MAX_MICRO_SECS) break;
   }
 
   LOG_DEBUG(logger) << "Iteration done, queue size now at " << tasks_.size();
@@ -487,33 +510,10 @@ bool IconLoader::Impl::Iteration()
 }
 
 
-bool IconLoader::Impl::Loop(IconLoader::Impl* self)
+gboolean IconLoader::Impl::Loop(IconLoader::Impl* self)
 {
-  return self->Iteration();
+  return self->Iteration() ? TRUE : FALSE;
 }
-
-void IconLoader::Impl::LoadContentsReady(GObject* obj,
-                                         GAsyncResult* res,
-                                         IconLoaderTask* task)
-{
-  glib::String contents;
-  glib::Error error;
-  gsize length = 0;
-
-  if (g_file_load_contents_finish(G_FILE(obj), res, &contents, &length, NULL, &error))
-  {
-    task->self->ProcessURITaskReady(task, contents.Value(), length);
-  }
-  else
-  {
-    LOG_WARNING(logger) << "Unable to load contents of "
-                        << task->data << ": " << error;
-    task->slot(task->data, task->size, nullptr);
-  }
-  task->self->task_map_.erase(task->handle);
-  delete task;
-}
-
 
 IconLoader::IconLoader()
   : pimpl(new Impl())
