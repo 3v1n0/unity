@@ -1381,6 +1381,17 @@ void Launcher::EndKeyShowLauncher()
   _super_hide_launcher_handle = g_timeout_add(remaining_time_before_hide, &Launcher::SuperHideLauncherTimeout, this);
 }
 
+void Launcher::ForceReveal(bool force_reveal)
+{
+  _hide_machine->SetQuirk(LauncherHideMachine::TRIGGER_BUTTON_SHOW, force_reveal);
+}
+
+void Launcher::ShowShortcuts(bool show)
+{
+  _shortcuts_shown = show;
+  _hover_machine->SetQuirk(LauncherHoverMachine::SHORTCUT_KEYS_VISIBLE, show);
+}
+
 gboolean Launcher::SuperHideLauncherTimeout(gpointer data)
 {
   Launcher* self = (Launcher*) data;

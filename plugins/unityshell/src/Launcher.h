@@ -92,6 +92,9 @@ public:
     return _hidden;
   }
 
+  void ForceReveal(bool force);
+  void ShowShortcuts(bool show);
+
   void SetModel(LauncherModel* model);
   LauncherModel* GetModel();
 

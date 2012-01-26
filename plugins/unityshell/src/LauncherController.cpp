@@ -62,6 +62,7 @@ namespace
 {
   const int super_tap_duration = 250;
   const int before_hide_launcher_on_super_duration = 1000;
+  const int shortcuts_show_delay = 750;
   const int ignore_repeat_shortcut_duration = 250;
 }
 }
@@ -139,6 +140,9 @@ public:
   guint                  launcher_key_press_handler_id_;
   guint                  launcher_label_show_handler_id_;
 
+  bool                   launcher_open;
+  bool                   launcher_keynav;
+
   struct timespec        launcher_key_press_time_;
 
   LauncherList launchers;
@@ -157,6 +161,9 @@ Controller::Impl::Impl(Display* display, Controller* parent)
 {
   UScreen* uscreen = UScreen::GetDefault();
   auto monitors = uscreen->GetMonitors();
+
+  launcher_open = false;
+  launcher_keynav = false;
 
   int i = 0;
   for (auto monitor : monitors)
@@ -732,10 +739,28 @@ void Controller::HandleLauncherKeyPress()
   auto show_launcher = [](gpointer user_data) -> gboolean
   {
     Impl* self = static_cast<Impl*>(user_data);
+    if (self->keyboard_launcher_.IsNull())
+      self->keyboard_launcher_ = self->launchers[self->MonitorWithMouse()];
+
+    self->keyboard_launcher_->ForceReveal(true);
+    self->launcher_open = true;
     self->launcher_key_press_handler_id_ = 0;
     return FALSE;
   };
   pimpl->launcher_key_press_handler_id_ = g_timeout_add(local::super_tap_duration, show_launcher, pimpl);
+
+  auto show_shortcuts = [](gpointer user_data) -> gboolean
+  {
+    Impl* self = static_cast<Impl*>(user_data);
+    if (self->keyboard_launcher_.IsNull())
+      self->keyboard_launcher_ = self->launchers[self->MonitorWithMouse()];
+
+    self->keyboard_launcher_->ShowShortcuts(true);
+    self->launcher_open = true;
+    self->launcher_label_show_handler_id_ = 0;
+    return FALSE;
+  };
+  pimpl->launcher_label_show_handler_id_ = g_timeout_add(local::shortcuts_show_delay, show_shortcuts, pimpl);
 }
 
 void Controller::HandleLauncherKeyRelease()
@@ -744,6 +769,28 @@ void Controller::HandleLauncherKeyRelease()
   if (pimpl->TapTimeUnderLimit())
   {
     pimpl->SendHomeActivationRequest();
+  }
+
+  if (pimpl->launcher_label_show_handler_id_)
+  {
+    g_source_remove(pimpl->launcher_label_show_handler_id_);
+    pimpl->launcher_label_show_handler_id_ = 0;
+  }
+
+  if (pimpl->launcher_key_press_handler_id_)
+  {
+    g_source_remove(pimpl->launcher_key_press_handler_id_);
+    pimpl->launcher_key_press_handler_id_ = 0;
+  }
+
+  if (pimpl->keyboard_launcher_.IsValid())
+  {
+    pimpl->keyboard_launcher_->ForceReveal(false);
+    pimpl->keyboard_launcher_->ShowShortcuts(false);
+    pimpl->launcher_open = false;
+
+    if (!pimpl->launcher_keynav)
+      pimpl->keyboard_launcher_.Release();
   }
 }
 
@@ -761,10 +808,10 @@ void Controller::KeyNavGrab()
 
 void Controller::KeyNavActivate()
 {
-  if (pimpl->keyboard_launcher_.IsValid())
+  if (pimpl->launcher_keynav)
     return;
   
-
+  pimpl->launcher_keynav = true;
   pimpl->keyboard_launcher_ = pimpl->launchers[pimpl->MonitorWithMouse()];
 
   pimpl->keyboard_launcher_->EnterKeyNavMode();
@@ -783,16 +830,19 @@ void Controller::KeyNavPrevious()
 
 void Controller::KeyNavTerminate()
 {
-  if (pimpl->keyboard_launcher_.IsNull())
+  if (!pimpl->launcher_keynav)
     return;
 
   pimpl->keyboard_launcher_->ExitKeyNavMode();  
-  pimpl->keyboard_launcher_.Release();
+
+  pimpl->launcher_keynav = false;
+  if (!pimpl->launcher_open)
+    pimpl->keyboard_launcher_.Release();
 }
 
 bool Controller::KeyNavIsActive()
 {
-  return pimpl->keyboard_launcher_.IsValid();
+  return pimpl->launcher_keynav;
 }
 
 
