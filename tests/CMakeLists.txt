@@ -119,6 +119,7 @@ if (GTEST_FOUND AND
                  test_glib_variant.cpp
                  ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_marshal.cpp
                  test_favorite_store_gsettings.cpp
+                 test_favorite_store_private.cpp
                  test_home_lens.cpp
                  test_shortcut_model.cpp
                  test_shortcut_private.cpp
@@ -137,6 +138,8 @@ if (GTEST_FOUND AND
                  ${UNITY_SRC}/FavoriteStore.h
                  ${UNITY_SRC}/FavoriteStoreGSettings.cpp
                  ${UNITY_SRC}/FavoriteStoreGSettings.h
+                 ${UNITY_SRC}/FavoriteStorePrivate.cpp
+                 ${UNITY_SRC}/FavoriteStorePrivate.h
                  ${UNITY_SRC}/MockLauncherIcon.h
                  ${UNITY_SRC}/MockShortcutHint.h
                  ${UNITY_SRC}/ShortcutModel.cpp

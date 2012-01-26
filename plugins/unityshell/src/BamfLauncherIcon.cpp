@@ -871,7 +871,7 @@ void BamfLauncherIcon::Quit()
   g_list_free(children);
 }
 
-void BamfLauncherIcon::Stick()
+void BamfLauncherIcon::Stick(bool save)
 {
   BamfView* view = BAMF_VIEW(m_App);
   
@@ -881,7 +881,7 @@ void BamfLauncherIcon::Stick()
   const gchar* desktop_file = DesktopFile();
   bamf_view_set_sticky(view, true);
   
-  if (desktop_file && strlen(desktop_file) > 0)
+  if (save && desktop_file && strlen(desktop_file) > 0)
     FavoriteStore::GetDefault().AddFavorite(desktop_file, -1);
 }
 
