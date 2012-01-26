@@ -46,14 +46,9 @@
 #define ANIM_DURATION       200
 #define ANIM_DURATION_LONG  350
 
-#define SUPER_TAP_DURATION  250
-#define SHORTCUTS_SHOWN_DELAY  750
-#define START_DRAGICON_DURATION 250
-#define BEFORE_HIDE_LAUNCHER_ON_SUPER_DURATION 1000
-
-#define IGNORE_REPEAT_SHORTCUT_DURATION  250
-
 #define MAX_SUPERKEY_LABELS 10
+
+#define START_DRAGICON_DURATION 250
 
 class QuicklistView;
 
@@ -119,8 +114,6 @@ public:
   void SetAutoHideAnimation(AutoHideAnimation animation);
   AutoHideAnimation GetAutoHideAnimation();
 
-  void SetLatestShortcut(guint64 shortcut);
-
   nux::BaseWindow* GetParent()
   {
     return _parent;
@@ -157,6 +150,7 @@ public:
 
   void EnterKeyNavMode();
   void ExitKeyNavMode();
+  bool IsInKeyNavMode();
 
 protected:
   // Introspectable methods
@@ -217,9 +211,6 @@ private:
   void OnViewPortSwitchEnded();
 
   static gboolean AnimationTimeout(gpointer data);
-  static gboolean SuperShowLauncherTimeout(gpointer data);
-  static gboolean SuperHideLauncherTimeout(gpointer data);
-  static gboolean SuperShowShortcutsTimeout(gpointer data);
   static gboolean StrutHack(gpointer data);
   static gboolean MoveFocusToKeyNavModeTimeout(gpointer data);
   static gboolean StartIconDragTimeout(gpointer data);
@@ -336,8 +327,6 @@ private:
   void SetOffscreenRenderTarget(nux::ObjectPtr<nux::IOpenGLBaseTexture> texture);
   void RestoreSystemRenderTarget();
 
-  gboolean TapOnSuper();
-
   void OnDisplayChanged(Display* display);
   void OnDNDDataCollected(const std::list<char*>& mimes);
   
@@ -366,9 +355,6 @@ private:
   bool  _check_window_over_launcher;
 
   bool          _shortcuts_shown;
-  bool          _keynav_activated;
-  bool          _key_switcher_activated;
-  guint64       _latest_shortcut;
 
   BacklightMode _backlight_mode;
 
@@ -411,12 +397,8 @@ private:
 
   guint _autoscroll_handle;
   guint _focus_keynav_handle;
-  guint _super_show_launcher_handle;
-  guint _super_hide_launcher_handle;
-  guint _super_show_shortcuts_handle;
   guint _start_dragicon_handle;
   guint _dnd_check_handle;
-  guint _ignore_repeat_shortcut_handle;
 
   nux::Point2   _mouse_position;
   nux::Point2   _bfb_mouse_position;

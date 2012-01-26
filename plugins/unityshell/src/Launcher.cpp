@@ -221,23 +221,16 @@ Launcher::Launcher(nux::BaseWindow* parent,
   _dnd_delta_x            = 0;
 
   _autoscroll_handle             = 0;
-  _super_show_launcher_handle    = 0;
-  _super_hide_launcher_handle    = 0;
-  _super_show_shortcuts_handle   = 0;
   _start_dragicon_handle         = 0;
   _focus_keynav_handle           = 0;
   _dnd_check_handle              = 0;
-  _ignore_repeat_shortcut_handle = 0;
 
-  _latest_shortcut        = 0;
   _shortcuts_shown        = false;
   _floating               = false;
   _hovered                = false;
   _hidden                 = false;
   _render_drag_window     = false;
   _drag_edge_touching     = false;
-  _keynav_activated       = false;
-  _key_switcher_activated = false;
   _backlight_mode         = BACKLIGHT_NORMAL;
   _last_button_press      = 0;
   _selection_atom         = 0;
@@ -334,16 +327,8 @@ Launcher::~Launcher()
     g_source_remove(_autoscroll_handle);
   if (_focus_keynav_handle)
     g_source_remove(_focus_keynav_handle);
-  if (_super_show_launcher_handle)
-    g_source_remove(_super_show_launcher_handle);
-  if (_super_show_shortcuts_handle)
-    g_source_remove(_super_show_shortcuts_handle);
   if (_start_dragicon_handle)
     g_source_remove(_start_dragicon_handle);
-  if (_ignore_repeat_shortcut_handle)
-    g_source_remove(_ignore_repeat_shortcut_handle);
-  if (_super_hide_launcher_handle)
-    g_source_remove(_super_hide_launcher_handle);
   if (_launcher_animation_timeout > 0)
     g_source_remove(_launcher_animation_timeout);
 
@@ -451,14 +436,6 @@ void Launcher::SetStateMouseOverLauncher(bool over_launcher)
   _hide_machine->SetQuirk(LauncherHideMachine::MOUSE_OVER_LAUNCHER, over_launcher);
   _hide_machine->SetQuirk(LauncherHideMachine::REVEAL_PRESSURE_PASS, false);
   _hover_machine->SetQuirk(LauncherHoverMachine::MOUSE_OVER_LAUNCHER, over_launcher);
-}
-
-void Launcher::SetStateKeyNav(bool keynav_activated)
-{
-  _hide_machine->SetQuirk(LauncherHideMachine::KEY_NAV_ACTIVE, keynav_activated);
-  _hover_machine->SetQuirk(LauncherHoverMachine::KEY_NAV_ACTIVE, keynav_activated);
-
-  _keynav_activated = keynav_activated;
 }
 
 bool Launcher::MouseBeyondDragThreshold()
@@ -967,7 +944,7 @@ void Launcher::SetupRenderArg(AbstractLauncherIcon* icon, struct timespec const&
     arg.z_rotation = IconUrgentWiggleValue(icon, current);
   }
 
-  if (_hide_machine->GetQuirk(LauncherHideMachine::KEY_NAV_ACTIVE))
+  if (IsInKeyNavMode())
   {
     if (icon == _model->Selection())
       arg.keyboard_nav_hl = true;
@@ -1244,66 +1221,6 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
 
 /* End Render Layout Logic */
 
-gboolean Launcher::TapOnSuper()
-{
-  struct timespec current;
-  clock_gettime(CLOCK_MONOTONIC, &current);
-
-  return (unity::TimeUtil::TimeDelta(&current, &_times[TIME_TAP_SUPER]) < SUPER_TAP_DURATION);
-}
-
-/* Launcher Show/Hide logic */
-
-void Launcher::StartKeyShowLauncher()
-{
-  _hide_machine->SetQuirk(LauncherHideMachine::LAST_ACTION_ACTIVATE, false);
-
-  TimeUtil::SetTimeStruct(&_times[TIME_TAP_SUPER]);
-  TimeUtil::SetTimeStruct(&_times[TIME_SUPER_PRESSED]);
-
-  if (_super_show_launcher_handle > 0)
-    g_source_remove(_super_show_launcher_handle);
-  _super_show_launcher_handle = g_timeout_add(SUPER_TAP_DURATION, &Launcher::SuperShowLauncherTimeout, this);
-
-  if (_super_show_shortcuts_handle > 0)
-    g_source_remove(_super_show_shortcuts_handle);
-  _super_show_shortcuts_handle = g_timeout_add(SHORTCUTS_SHOWN_DELAY, &Launcher::SuperShowShortcutsTimeout, this);
-
-  ubus_server_send_message(ubus_server_get_default(), UBUS_DASH_ABOUT_TO_SHOW, NULL);
-  ubus_server_force_message_pump(ubus_server_get_default());
-}
-
-void Launcher::EndKeyShowLauncher()
-{
-  int remaining_time_before_hide;
-  struct timespec current;
-  clock_gettime(CLOCK_MONOTONIC, &current);
-
-  _hover_machine->SetQuirk(LauncherHoverMachine::SHORTCUT_KEYS_VISIBLE, false);
-  _shortcuts_shown = false;
-  QueueDraw();
-
-  // remove further show launcher (which can happen when we close the dash with super)
-  if (_super_show_launcher_handle > 0)
-    g_source_remove(_super_show_launcher_handle);
-  if (_super_show_shortcuts_handle > 0)
-    g_source_remove(_super_show_shortcuts_handle);
-  _super_show_launcher_handle = 0;
-  _super_show_shortcuts_handle = 0;
-
-  // it's a tap on super and we didn't use any shortcuts
-  if (TapOnSuper() && !_latest_shortcut)
-    ubus_server_send_message(ubus_server_get_default(),
-                             UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
-                             g_variant_new("(sus)", "home.lens", 0, ""));
-
-  remaining_time_before_hide = BEFORE_HIDE_LAUNCHER_ON_SUPER_DURATION - CLAMP((int)(unity::TimeUtil::TimeDelta(&current, &_times[TIME_SUPER_PRESSED])), 0, BEFORE_HIDE_LAUNCHER_ON_SUPER_DURATION);
-
-  if (_super_hide_launcher_handle > 0)
-    g_source_remove(_super_hide_launcher_handle);
-  _super_hide_launcher_handle = g_timeout_add(remaining_time_before_hide, &Launcher::SuperHideLauncherTimeout, this);
-}
-
 void Launcher::ForceReveal(bool force_reveal)
 {
   _hide_machine->SetQuirk(LauncherHideMachine::TRIGGER_BUTTON_SHOW, force_reveal);
@@ -1313,42 +1230,6 @@ void Launcher::ShowShortcuts(bool show)
 {
   _shortcuts_shown = show;
   _hover_machine->SetQuirk(LauncherHoverMachine::SHORTCUT_KEYS_VISIBLE, show);
-}
-
-gboolean Launcher::SuperHideLauncherTimeout(gpointer data)
-{
-  Launcher* self = (Launcher*) data;
-
-  self->_hide_machine->SetQuirk(LauncherHideMachine::TRIGGER_BUTTON_SHOW, false);
-
-  self->_super_hide_launcher_handle = 0;
-  return false;
-}
-
-gboolean Launcher::SuperShowLauncherTimeout(gpointer data)
-{
-  Launcher* self = (Launcher*) data;
-
-  self->_hide_machine->SetQuirk(LauncherHideMachine::TRIGGER_BUTTON_SHOW, true);
-
-  self->_super_show_launcher_handle = 0;
-  return false;
-}
-
-gboolean Launcher::SuperShowShortcutsTimeout(gpointer data)
-{
-  Launcher* self = (Launcher*) data;
-
-  if (!self->_key_switcher_activated)
-  {
-    self->_shortcuts_shown = true;
-    self->_hover_machine->SetQuirk(LauncherHoverMachine::SHORTCUT_KEYS_VISIBLE, true);
-
-    self->QueueDraw();
-  }
-
-  self->_super_show_shortcuts_handle = 0;
-  return false;
 }
 
 void Launcher::OnBGColorChanged(GVariant *data)
@@ -1842,7 +1723,7 @@ gboolean Launcher::OnScrollTimeout(gpointer data)
   Launcher* self = (Launcher*) data;
   nux::Geometry geo = self->GetGeometry();
 
-  if (self->_keynav_activated || self->_key_switcher_activated || !self->_hovered ||
+  if (self->IsInKeyNavMode() || !self->_hovered ||
       self->GetActionState() == ACTION_DRAG_LAUNCHER)
     return TRUE;
 
@@ -2472,6 +2353,11 @@ void Launcher::OnPointerBarrierEvent(ui::PointerBarrierWrapper* owner, ui::Barri
       _pointer_barrier->ReleaseBarrier(event->event_id);
     }
   }
+}
+
+bool Launcher::IsInKeyNavMode()
+{
+  return _hide_machine->GetQuirk(LauncherHideMachine::KEY_NAV_ACTIVE);
 }
 
 void Launcher::EnterKeyNavMode()
