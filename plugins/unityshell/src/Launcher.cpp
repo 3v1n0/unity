@@ -166,6 +166,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
   //OnEndFocus.connect   (sigc::mem_fun (this, &Launcher::exitKeyNavMode));
 
   CaptureMouseDownAnyWhereElse(true);
+  SetAcceptKeyNavFocusOnMouseDown(false);
 
   QuicklistManager& ql_manager = *(QuicklistManager::Default());
   ql_manager.quicklist_opened.connect(sigc::mem_fun(this, &Launcher::RecvQuicklistOpened));
