@@ -184,10 +184,15 @@ if (GTEST_FOUND AND
                  test_dashview_impl.cpp
                  test_texture_cache.cpp
                  test_main.cpp
+                 test_icon_loader.cpp
                  ${UNITY_SRC}/DashViewPrivate.cpp
                  ${UNITY_SRC}/DashViewPrivate.h
                  ${UNITY_SRC}/TextureCache.cpp
                  ${UNITY_SRC}/TextureCache.h
+                 ${UNITY_SRC}/IconLoader.cpp
+                 ${UNITY_SRC}/IconLoader.h
+                 ${UNITY_SRC}/Timer.cpp
+                 ${UNITY_SRC}/Timer.h
                 )
   target_link_libraries(test-gtest ${GTEST_BOTH_LIBRARIES})
   add_test(UnityGTest test-gtest)

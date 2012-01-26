@@ -38,11 +38,11 @@
 #include "LauncherEntryRemote.h"
 #include "LauncherEntryRemoteModel.h"
 #include "LauncherIcon.h"
+#include "SoftwareCenterLauncherIcon.h"
 #include "LauncherModel.h"
 #include "WindowManager.h"
 #include "TrashLauncherIcon.h"
 #include "BFBLauncherIcon.h"
-
 
 namespace unity
 {
@@ -68,6 +68,7 @@ public:
   void OnIconRemoved(LauncherIcon* icon);
 
   void OnLauncherAddRequest(char* path, LauncherIcon* before);
+  void OnLauncherAddRequestSpecial(char* path, LauncherIcon* before, char* aptdaemon_trans_id, char* icon_path);
   void OnLauncherRemoveRequest(LauncherIcon* icon);
 
   void OnLauncherEntryRemoteAdded(LauncherEntryRemote* entry);
@@ -84,6 +85,8 @@ public:
   void RegisterIcon(LauncherIcon* icon);
 
   LauncherIcon* CreateFavorite(const char* file_path);
+
+  SoftwareCenterLauncherIcon* CreateSCLauncherIcon(const char* file_path, const char* aptdaemon_trans_id, char* icon_path);
 
   void SetupBamf();
 
@@ -148,6 +151,7 @@ Controller::Impl::Impl(Display* display)
 
   launcher_->SetModel(model_.get());
   launcher_->launcher_addrequest.connect(sigc::mem_fun(this, &Impl::OnLauncherAddRequest));
+  launcher_->launcher_addrequest_special.connect(sigc::mem_fun(this, &Impl::OnLauncherAddRequestSpecial));
   launcher_->launcher_removerequest.connect(sigc::mem_fun(this, &Impl::OnLauncherRemoveRequest));
 
   device_section_ = new DeviceLauncherSection(raw_launcher);
@@ -236,25 +240,47 @@ void Controller::Impl::Save()
   unity::FavoriteStore::GetDefault().SetFavorites(desktop_paths);
 }
 
+void
+Controller::Impl::OnLauncherAddRequestSpecial(char* path, LauncherIcon* before, char* aptdaemon_trans_id, char* icon_path)
+{
+  std::list<BamfLauncherIcon*> launchers;
+
+  launchers = model_->GetSublist<BamfLauncherIcon>();
+  for (auto icon : launchers)
+  {
+    if (icon->DesktopFile() == std::string(path))
+      return;
+  }
+
+  SoftwareCenterLauncherIcon* result = CreateSCLauncherIcon(path, aptdaemon_trans_id, icon_path);
+  if (result)
+  {
+    RegisterIcon(result);
+
+    if (before)
+      model_->ReorderBefore(result, before, false);
+  }
+  Save();
+}
+
 void Controller::Impl::SortAndUpdate()
 {
   gint   shortcut = 1;
-  gchar* buff;
 
   std::list<BamfLauncherIcon*> launchers = model_->GetSublist<BamfLauncherIcon> ();
-  for (auto it : launchers)
+  for (auto icon : launchers)
   {
-    if (shortcut < 11 && it->GetQuirk(LauncherIcon::QUIRK_VISIBLE))
+    if (shortcut <= 10 && icon->IsVisible())
     {
-      buff = g_strdup_printf("%d", shortcut % 10);
-      it->SetShortcut(buff[0]);
-      g_free(buff);
+      std::stringstream shortcut_string;
+      shortcut_string << (shortcut % 10);
+      icon->SetShortcut(shortcut_string.str()[0]);
       shortcut++;
     }
     // reset shortcut
     else
     {
-      it->SetShortcut(0);
+      icon->SetShortcut(0);
     }
   }
 }
@@ -443,6 +469,32 @@ LauncherIcon* Controller::Impl::CreateFavorite(const char* file_path)
 
   bamf_view_set_sticky(BAMF_VIEW(app), true);
   icon = new BamfLauncherIcon(launcher_.GetPointer(), app);
+  icon->SetIconType(LauncherIcon::TYPE_APPLICATION);
+  icon->SetSortPriority(sort_priority_++);
+
+  return icon;
+}
+
+SoftwareCenterLauncherIcon*
+Controller::Impl::CreateSCLauncherIcon(const char* file_path, const char* aptdaemon_trans_id, char* icon_path)
+{
+  BamfApplication* app;
+  SoftwareCenterLauncherIcon* icon;
+
+  app = bamf_matcher_get_application_for_desktop_file(matcher_, file_path, true);
+  if (!BAMF_IS_APPLICATION(app))
+    return NULL;
+
+  if (g_object_get_qdata(G_OBJECT(app), g_quark_from_static_string("unity-seen")))
+  {
+    bamf_view_set_sticky(BAMF_VIEW(app), true);
+    return 0;
+  }
+
+  g_object_set_qdata(G_OBJECT(app), g_quark_from_static_string("unity-seen"), GINT_TO_POINTER(1));
+
+  bamf_view_set_sticky(BAMF_VIEW(app), true);
+  icon = new SoftwareCenterLauncherIcon(launcher_.GetPointer(), app, (char*)aptdaemon_trans_id, icon_path);
   icon->SetIconType(LauncherIcon::TYPE_APPLICATION);
   icon->SetSortPriority(sort_priority_++);
 
