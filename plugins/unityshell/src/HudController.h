@@ -54,7 +54,7 @@ public:
   void ShowHideHud();
   void ShowHud();
   void HideHud(bool restore_focus = true);
-
+  bool IsVisible();
 protected:
   const gchar* GetName();
   void AddProperties(GVariantBuilder* builder);

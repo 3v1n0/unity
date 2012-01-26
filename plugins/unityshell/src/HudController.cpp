@@ -52,6 +52,17 @@ Controller::Controller()
   //!!FIXME!! - just hijacks the dash close request so we get some more requests than normal,
   ubus.RegisterInterest(UBUS_PLACE_VIEW_CLOSE_REQUEST, sigc::mem_fun(this, &Controller::OnExternalHideHud));
 
+  ubus.RegisterInterest(UBUS_OVERLAY_SHOWN, [&] (GVariant *data) {
+    gchar* overlay_identity = NULL;
+    gboolean can_maximise = FALSE;
+    g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING, &overlay_identity, &can_maximise);
+
+    if (g_strcmp0(overlay_identity, "hud"))
+    {
+      HideHud(true);
+    }
+  });
+
   PluginAdapter::Default()->compiz_screen_ungrabbed.connect(sigc::mem_fun(this, &Controller::OnScreenUngrabbed));
 
   hud_service_.queries_updated.connect(sigc::mem_fun(this, &Controller::OnQueriesFinished));
@@ -192,7 +203,12 @@ void Controller::OnExternalHideHud(GVariant* variant)
 void Controller::ShowHideHud()
 {
   EnsureHud();
-  visible_ ? HideHud() : ShowHud();
+  visible_ ? HideHud(true) : ShowHud();
+}
+
+bool Controller::IsVisible()
+{
+  return visible_;
 }
 
 void Controller::ShowHud()
