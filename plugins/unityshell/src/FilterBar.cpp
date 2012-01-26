@@ -106,7 +106,7 @@ void FilterBar::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   GfxContext.PushClippingRectangle(GetGeometry());
   GetLayout()->ProcessDraw(GfxContext, force_draw);
 
-  nux::Color col(0.15f, 0.15f, 0.15f, 0.15f);
+  nux::Color col(0.13f, 0.13f, 0.13f, 0.13f);
 
   std::list<Area *>& layout_list = GetLayout()->GetChildren();
   std::list<Area*>::iterator iter;
