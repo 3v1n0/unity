@@ -40,13 +40,13 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
   layout->AddView(view, 1, nux::eCenter, nux::eFull);
   layout->SetContentDistribution(nux::eStackCenter);
 
-  nux::GetGraphicsThread()->SetLayout(layout);
+  nux::GetWindowThread()->SetLayout(layout);
 }
 
 int main(int argc, char** argv)
 {
   g_type_init();
-  g_thread_init(NULL);
+  
   gtk_init(&argc, &argv);
 
   dbus_g_thread_init();

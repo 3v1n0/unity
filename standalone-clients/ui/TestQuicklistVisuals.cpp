@@ -237,7 +237,7 @@ main (int argc, char **argv)
   nux::WindowThread* wt = NULL;
 
   g_type_init ();
-  g_thread_init (NULL);
+  
   gtk_init (&argc, &argv);
   dbus_g_thread_init ();
   nux::NuxInitialize (0);

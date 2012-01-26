@@ -624,7 +624,7 @@ PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids, FocusVisibility 
         * or scale, so unconditionally unminimize those
         * windows when the launcher icon is activated */
        if ((focus_visibility == WindowManager::FocusVisibility::ForceUnminimizeOnCurrentDesktop &&
-            WindowManager::Default ()->IsWindowOnCurrentDesktop(win->id ())) ||
+            target_vp == m_Screen->vp()) ||
             (focus_visibility == WindowManager::FocusVisibility::ForceUnminimizeInvisible &&
              win->mapNum () == 0))
        {
@@ -640,8 +640,7 @@ PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids, FocusVisibility 
        }
        else if ((any_mapped && !win->minimized()) || !any_mapped)
        {
-         if (!forced_unminimize ||
-             WindowManager::Default ()->IsWindowOnCurrentDesktop (win->id ()))
+         if (!forced_unminimize || target_vp == m_Screen->vp())
          {
            win->raise();
            top_win = win;

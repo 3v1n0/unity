@@ -63,6 +63,7 @@ StaticCairoText::StaticCairoText(const TCHAR* text,
   _fontstring = NULL;
 
   _accept_key_nav_focus = false;
+  SetAcceptKeyNavFocusOnMouseDown(false);
 }
 
 StaticCairoText::~StaticCairoText()

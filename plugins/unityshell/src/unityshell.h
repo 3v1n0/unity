@@ -39,6 +39,8 @@
 #include "DashSettings.h"
 #include "DashStyle.h"
 #include "FontSettings.h"
+#include "ShortcutController.h"
+#include "ShortcutHint.h"
 #include "LauncherController.h"
 #include "PanelController.h"
 #include "PanelStyle.h"
@@ -47,47 +49,21 @@
 #include "DebugDBusInterface.h"
 #include "SwitcherController.h"
 #include "UBusWrapper.h"
+#ifndef USE_GLES
+#include "ScreenEffectFramebufferObject.h"
+#endif
 
 #include "compizminimizedwindowhandler.h"
 #include "BGHash.h"
 #include <compiztoolbox/compiztoolbox.h>
+#include <dlfcn.h>
 
 namespace unity
 {
 
-class UnityFBO
-{
-public:
-
-  typedef boost::shared_ptr <UnityFBO> Ptr;
-
-  UnityFBO (CompOutput *o);
-  ~UnityFBO ();
-
-public:
-
-  void bind ();
-  void unbind ();
-
-  bool status ();
-  bool bound ();
-  void paint ();
-
-  GLuint texture () { return mFBTexture; }
-
-private:
-
-  /* compiz fbo handle that goes through to nux */
-  GLuint   mFboHandle; // actual handle to the framebuffer_ext
-  bool    mFboStatus; // did the framebuffer texture bind succeed
-  GLuint   mFBTexture;
-  CompOutput *output;
-  unsigned int mBoundCnt;
-};
-
 class UnityShowdesktopHandler
 {
-public:
+ public:
 
   UnityShowdesktopHandler (CompWindow *w);
   ~UnityShowdesktopHandler ();
@@ -156,7 +132,11 @@ public:
   void nuxEpilogue();
 
   /* nux draw wrapper */
+#ifdef USE_GLES
+  void paintDisplay();
+#else
   void paintDisplay(const CompRegion& region, const GLMatrix& transform, unsigned int mask);
+#endif
   void paintPanelShadow(const GLMatrix& matrix);
 
   void preparePaint (int ms);
@@ -177,6 +157,11 @@ public:
                      const CompRegion&,
                      CompOutput*,
                      unsigned int);
+#ifdef USE_GLES
+  void glPaintCompositedOutput (const CompRegion    &region,
+                                GLFramebufferObject *fbo,
+                                unsigned int         mask);
+#endif
 
   /* paint in the special case that the output is transformed */
   void glPaintTransformedOutput(const GLScreenPaintAttrib&,
@@ -218,6 +203,10 @@ public:
   bool altTabNextWindowInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool altTabPrevWindowInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
 
+  bool launcherSwitcherForwardInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool launcherSwitcherPrevInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool launcherSwitcherTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options);
+
   /* handle option changes and change settings inside of the
    * panel and dock views */
   void optionChanged(CompOption*, Options num);
@@ -233,8 +222,6 @@ public:
   void outputChangeNotify();
   void NeedsRelayout();
   void ScheduleRelayout(guint timeout);
-
-  void setActiveFbo (GLuint fbo) { mActiveFbo = fbo; }
 
   bool forcePaintOnTop ();
 
@@ -269,9 +256,11 @@ private:
 
   void OnDashRealized ();
 
-  static void OnQuicklistEndKeyNav(GVariant* data, void* value);
-  static void OnLauncherStartKeyNav(GVariant* data, void* value);
-  static void OnLauncherEndKeyNav(GVariant* data, void* value);
+  void OnQuicklistEndKeyNav(GVariant* data);
+  void OnLauncherStartKeyNav(GVariant* data);
+  void OnLauncherEndKeyNav(GVariant* data);
+
+  void InitHints();
 
   dash::Settings dash_settings_;
   dash::Style    dash_style_;
@@ -282,6 +271,10 @@ private:
   dash::Controller::Ptr     dash_controller_;
   panel::Controller::Ptr    panel_controller_;
   switcher::Controller::Ptr switcher_controller_;
+
+  shortcut::Controller::Ptr shortcut_controller_;
+  std::list<shortcut::AbstractHint*> hints_;
+  bool enable_shortcut_overlay_;
 
   GestureEngine*                        gestureEngine;
   nux::WindowThread*                    wt;
@@ -295,7 +288,6 @@ private:
   guint                                 _edge_trigger_handle;
   guint32                               _redraw_handle;
   gint                                  _edge_pointerY;
-  guint                                 _ubus_handles[3];
 
   typedef std::shared_ptr<CompAction> CompActionPtr;
   typedef std::vector<CompActionPtr> ShortcutActions;
@@ -320,8 +312,12 @@ private:
 
   unity::BGHash _bghash;
 
-  std::map <CompOutput *, UnityFBO::Ptr> mFbos;
-  GLuint                                 mActiveFbo;
+#ifdef USE_GLES
+  GLFramebufferObject *oldFbo;
+#else
+  ScreenEffectFramebufferObject::Ptr _fbo;
+  GLuint                             _active_fbo;
+#endif
 
   bool   queryForShader ();
 
@@ -331,6 +327,10 @@ private:
   CompWindowList         fullscreen_windows_;
   bool                   painting_tray_;
   unsigned int           tray_paint_mask_;
+
+#ifndef USE_GLES
+  ScreenEffectFramebufferObject::GLXGetProcAddressProc glXGetProcAddressP;
+#endif
 
   friend class UnityWindow;
 };
@@ -367,7 +367,11 @@ public:
 
   /* basic window draw function */
   bool glDraw(const GLMatrix& matrix,
+#ifndef USE_GLES
               GLFragment::Attrib& attrib,
+#else
+              const GLWindowPaintAttrib& attrib,
+#endif
               const CompRegion& region,
               unsigned intmask);
 
@@ -392,7 +396,10 @@ public:
   void leaveShowDesktop ();
   bool handleAnimations (unsigned int ms);
 
-  compiz::MinimizedWindowHandler::Ptr mMinimizeHandler;
+  typedef compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>
+          UnityMinimizedHandler;
+  UnityMinimizedHandler *mMinimizeHandler;
+
   UnityShowdesktopHandler             *mShowdesktopHandler;
   
 private:

@@ -1,4 +1,3 @@
-// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2011 Canonical Ltd
  *
@@ -14,39 +13,37 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
+ * Authored by: Jay Taoko <jaytaoko@inalogic.com>
+ *
  */
 
-#ifndef UNITY_UTILS_H
-#define UNITY_UTILS_H
+#ifndef UNITYSHELL_ABSTRACTSEPARATOR_H
+#define UNITYSHELL_ABSTRACTSEPARATOR_H
 
-#include <map>
-#include <string>
-
-#include <glib.h>
+#include <Nux/Nux.h>
+#include <Nux/View.h>
 
 namespace unity
 {
-namespace dash
-{
-
-class Utils
+  
+class AbstractSeparator: public nux::View
 {
 public:
-  typedef std::map<std::string, GVariant*> HintsMap;
+  AbstractSeparator(NUX_FILE_LINE_PROTO);
+  AbstractSeparator(nux::Color const& color, float alpha0, float alpha1, int vorder, NUX_FILE_LINE_PROTO);
+  ~AbstractSeparator();
+  
+  void SetColor(nux::Color const& color);
+  void SetAlpha(float alpha0, float alpha1);
+  void SetBorderSize(int border);
 
-  static void ASVToHints(HintsMap& hints, GVariantIter *iter)
-  {
-    char* key = NULL;
-    GVariant* value = NULL;
-    while (g_variant_iter_loop(iter, "{sv}", &key, &value))
-    {
-      hints[key] = value;
-    }
-  }
+protected:
+  nux::Color color_;
+  float alpha0_;
+  float alpha1_;
+  int border_size_;
 };
 
-}
-}
+} // namespace unity
 
-#endif
+#endif // UNITYSHELL_ABSTRACTSEPARATOR_H
