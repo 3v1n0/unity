@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010 Canonical Ltd
+ * Copyright (C) 2012 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -15,6 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Bilal Akhtar <bilalakhtar@ubuntu.com>
+ *              Marco Trevisan (Treviño) <3v1n0@ubuntu.com>
  */
 
 #ifndef SOFTWARE_CENTER_LAUNCHERICON_H
@@ -36,7 +37,6 @@ public:
                              std::string const& icon_path);
 
 private:
-  void OnFinished(GVariant* params);
   void OnPropertyChanged(GVariant* params);
 
   unity::glib::DBusProxy _aptdaemon_trans;

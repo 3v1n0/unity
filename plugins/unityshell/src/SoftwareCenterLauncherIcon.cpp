@@ -15,6 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Bilal Akhtar <bilalakhtar@ubuntu.com>
+ *              Marco Trevisan (Treviño) <3v1n0@ubuntu.com>
  */
 
 #include <glib/gi18n-lib.h>
@@ -56,12 +57,12 @@ SoftwareCenterLauncherIcon::OnPropertyChanged(GVariant* params)
   glib::String property_name;
   GVariant* property_value;
 
-  g_variant_get_child (params, 0, "s", property_name.AsOutParam());
+  g_variant_get_child(params, 0, "s", property_name.AsOutParam());
 
   if (property_name.Str() == "Progress")
   {
-    g_variant_get_child (params, 1, "v", &property_value);
-    g_variant_get (property_value, "i", &progress);
+    g_variant_get_child(params, 1, "v", &property_value);
+    g_variant_get(property_value, "i", &progress);
 
     if (progress < 100)
       SetQuirk(QUIRK_PROGRESS, true);
