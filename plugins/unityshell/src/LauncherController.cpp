@@ -67,6 +67,13 @@ namespace
 }
 }
 
+// FIXME: key-code defines for Up/Down/Left/Right of numeric keypad - needs to
+// be moved to the correct place in NuxGraphics-headers
+#define NUX_KP_DOWN  0xFF99
+#define NUX_KP_UP    0xFF97
+#define NUX_KP_LEFT  0xFF96
+#define NUX_KP_RIGHT 0xFF98
+
 class Controller::Impl
 {
 public:
@@ -116,6 +123,12 @@ public:
 
   void OnScreenChanged(int primary_monitor, std::vector<nux::Geometry>& monitors);
 
+  void ReceiveLauncherKeyPress(unsigned long eventType, 
+                               unsigned long keysym, 
+                               unsigned long state, 
+                               const char* character, 
+                               unsigned short keyCount);
+
   /* statics */
 
   static void OnViewOpened(BamfMatcher* matcher, BamfView* view, gpointer data);
@@ -142,12 +155,14 @@ public:
 
   bool                   launcher_open;
   bool                   launcher_keynav;
+  bool                   launcher_grabbed;
 
   struct timespec        launcher_key_press_time_;
 
   LauncherList launchers;
 
   sigc::connection on_expoicon_activate_connection_;
+  sigc::connection launcher_key_press_connection_;
 };
 
 
@@ -164,6 +179,7 @@ Controller::Impl::Impl(Display* display, Controller* parent)
 
   launcher_open = false;
   launcher_keynav = false;
+  launcher_grabbed = false;
 
   int i = 0;
   for (auto monitor : monitors)
@@ -826,8 +842,11 @@ bool Controller::HandleLauncherKeyEvent(Display *display, unsigned int key_sym, 
 
 void Controller::KeyNavGrab()
 {
-  
   printf("KeyNavGrab\n");
+  KeyNavActivate();
+  pimpl->keyboard_launcher_->GrabKeyboard();
+  pimpl->launcher_grabbed = true;
+  pimpl->launcher_key_press_connection_ = pimpl->keyboard_launcher_->key_down.connect(sigc::mem_fun(pimpl, &Controller::Impl::ReceiveLauncherKeyPress));
 }
 
 void Controller::KeyNavActivate()
@@ -852,14 +871,20 @@ void Controller::KeyNavPrevious()
   pimpl->model_->SelectPrevious();
 }
 
-void Controller::KeyNavTerminate()
+void Controller::KeyNavTerminate(bool activate)
 {
   if (!pimpl->launcher_keynav)
     return;
 
-  pimpl->keyboard_launcher_->ExitKeyNavMode();  
+  pimpl->keyboard_launcher_->ExitKeyNavMode();
+  if (pimpl->launcher_grabbed)
+  {
+    pimpl->keyboard_launcher_->UnGrabKeyboard();
+    pimpl->launcher_key_press_connection_.disconnect();
+  }
 
-  pimpl->model_->Selection()->Activate(ActionArg(ActionArg::LAUNCHER, 0));
+  if (activate)
+    pimpl->model_->Selection()->Activate(ActionArg(ActionArg::LAUNCHER, 0));
 
   pimpl->launcher_keynav = false;
   if (!pimpl->launcher_open)
@@ -869,6 +894,70 @@ void Controller::KeyNavTerminate()
 bool Controller::KeyNavIsActive()
 {
   return pimpl->launcher_keynav;
+}
+
+void Controller::Impl::ReceiveLauncherKeyPress(unsigned long eventType, 
+                                               unsigned long keysym, 
+                                               unsigned long state, 
+                                               const char* character, 
+                                               unsigned short keyCount)
+{
+  /*
+   * all key events below are related to keynavigation. Make an additional
+   * check that we are in a keynav mode when we inadvertadly receive the focus
+   */
+  if (!launcher_grabbed)
+    return;
+
+  switch (keysym)
+  {
+      // up (move selection up or go to global-menu if at top-most icon)
+    case NUX_VK_UP:
+    case NUX_KP_UP:
+      parent_->KeyNavPrevious();
+      break;
+
+      // down (move selection down and unfold launcher if needed)
+    case NUX_VK_DOWN:
+    case NUX_KP_DOWN:
+      parent_->KeyNavNext();
+      break;
+
+      // esc/left (close quicklist or exit laucher key-focus)
+    case NUX_VK_LEFT:
+    case NUX_KP_LEFT:
+    case NUX_VK_ESCAPE:
+      // hide again
+      parent_->KeyNavTerminate(false);
+      break;
+
+      // right/shift-f10 (open quicklist of currently selected icon)
+    case XK_F10:
+      if (!(state & nux::NUX_STATE_SHIFT))
+        break;
+    case NUX_VK_RIGHT:
+    case NUX_KP_RIGHT:
+    case XK_Menu:
+      if (model_->Selection()->OpenQuicklist(true))
+        parent_->KeyNavTerminate(false);
+      break;
+
+      // <SPACE> (open a new instance)
+    case NUX_VK_SPACE:
+      model_->Selection()->OpenInstance(ActionArg(ActionArg::LAUNCHER, 0));
+      parent_->KeyNavTerminate(false);
+      break;
+
+      // <RETURN> (start/activate currently selected icon)
+    case NUX_VK_ENTER:
+    case NUX_KP_ENTER:
+    model_->Selection()->Activate(ActionArg(ActionArg::LAUNCHER, 0));
+    parent_->KeyNavTerminate(false);
+    break;
+
+    default:
+      break;
+  }
 }
 
 

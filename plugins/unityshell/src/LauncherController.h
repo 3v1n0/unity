@@ -68,7 +68,7 @@ public:
 
   void KeyNavActivate();
   void KeyNavGrab();
-  void KeyNavTerminate();
+  void KeyNavTerminate(bool activate = true);
   void KeyNavNext();
   void KeyNavPrevious();
   bool KeyNavIsActive();
