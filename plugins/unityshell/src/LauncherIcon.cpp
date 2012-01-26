@@ -206,6 +206,8 @@ LauncherIcon::Activate(ActionArg arg)
     WindowManager::Default()->TerminateScale();
 
   ActivateLauncherIcon(arg);
+
+  UpdateQuirkTime(QUIRK_LAST_ACTION);
 }
 
 void
@@ -215,6 +217,8 @@ LauncherIcon::OpenInstance(ActionArg arg)
     WindowManager::Default()->TerminateScale();
 
   OpenInstanceLauncherIcon(arg);
+
+  UpdateQuirkTime(QUIRK_LAST_ACTION);
 }
 
 nux::Color LauncherIcon::BackgroundColor()

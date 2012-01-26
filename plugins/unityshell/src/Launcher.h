@@ -211,6 +211,8 @@ private:
 
   void OnPluginStateChanged();
 
+  void OnSelectionChanged(AbstractLauncherIcon* selection);
+
   void OnViewPortSwitchStarted();
   void OnViewPortSwitchEnded();
 

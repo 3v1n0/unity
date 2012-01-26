@@ -81,6 +81,7 @@ public:
   sigc::signal<void, AbstractLauncherIcon*> icon_removed;
   sigc::signal<void> order_changed;
   sigc::signal<void> saved;
+  sigc::signal<void, AbstractLauncherIcon*> selection_changed;
   
 private:
   Base             _inner;

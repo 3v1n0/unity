@@ -945,15 +945,16 @@ bool Controller::HandleLauncherKeyEvent(Display *display, unsigned int key_sym, 
     if ((XKeysymToKeycode(display, (*it)->GetShortcut()) == key_code) ||
         ((gchar)((*it)->GetShortcut()) == key_string[0]))
     {
-      //if (_latest_shortcut == (*it)->GetShortcut())
-      //  return true;
-
-      if (g_ascii_isdigit((gchar)(*it)->GetShortcut()) && (key_state & ShiftMask))
-        (*it)->OpenInstance(ActionArg(ActionArg::LAUNCHER, 0));
-      else
-        (*it)->Activate(ActionArg(ActionArg::LAUNCHER, 0));
-
-      //SetLatestShortcut((*it)->GetShortcut());
+      struct timespec last_action_time = (*it)->GetQuirkTime(AbstractLauncherIcon::QUIRK_LAST_ACTION);
+      struct timespec current;
+      TimeUtil::SetTimeStruct(&current);
+      if (TimeUtil::TimeDelta(&current, &last_action_time) > local::ignore_repeat_shortcut_duration)
+      {
+        if (g_ascii_isdigit((gchar)(*it)->GetShortcut()) && (key_state & ShiftMask))
+          (*it)->OpenInstance(ActionArg(ActionArg::LAUNCHER, 0));
+        else
+          (*it)->Activate(ActionArg(ActionArg::LAUNCHER, 0));
+      }
 
       // disable the "tap on super" check
       pimpl->launcher_key_press_time_ = { 0, 0 };

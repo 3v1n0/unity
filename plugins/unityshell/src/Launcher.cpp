@@ -1963,11 +1963,17 @@ void Launcher::SetModel(LauncherModel* model)
   _model->icon_added.connect(sigc::mem_fun(this, &Launcher::OnIconAdded));
   _model->icon_removed.connect(sigc::mem_fun(this, &Launcher::OnIconRemoved));
   _model->order_changed.connect(sigc::mem_fun(this, &Launcher::OnOrderChanged));
+  _model->selection_changed.connect(sigc::mem_fun(this, &Launcher::OnSelectionChanged));
 }
 
 LauncherModel* Launcher::GetModel()
 {
   return _model;
+}
+
+void Launcher::OnSelectionChanged(AbstractLauncherIcon* selection)
+{
+  EnsureAnimation();
 }
 
 void Launcher::OnIconNeedsRedraw(AbstractLauncherIcon* icon)
