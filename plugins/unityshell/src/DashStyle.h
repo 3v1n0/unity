@@ -88,7 +88,9 @@ public:
 
   virtual bool Button(cairo_t* cr, nux::ButtonVisualState state,
                       std::string const& label,
-                      Alignment alignment = Alignment::CENTER); 
+                      Alignment alignment = Alignment::CENTER);
+
+  virtual bool ButtonFocusOverlay(cairo_t* cr);
 
   virtual bool StarEmpty(cairo_t* cr, nux::ButtonVisualState state);
 

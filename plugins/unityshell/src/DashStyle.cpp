@@ -1588,6 +1588,40 @@ bool Style::Button(cairo_t* cr, nux::ButtonVisualState state, std::string const&
   return true;
 }
 
+bool Style::ButtonFocusOverlay(cairo_t* cr)
+{
+  // sanity checks
+  if (cairo_status(cr) != CAIRO_STATUS_SUCCESS)
+    return false;
+
+  if (cairo_surface_get_type(cairo_get_target(cr)) != CAIRO_SURFACE_TYPE_IMAGE)
+    return false;
+
+  unsigned int garnish = GetButtonGarnishSize();
+  
+  double w = cairo_image_surface_get_width(cairo_get_target(cr));
+  double h = cairo_image_surface_get_height(cairo_get_target(cr));
+
+  cairo_set_line_width(cr, 0);
+
+  RoundedRect(cr,
+              1.0,
+              (double) (garnish),
+              (double) (garnish),
+              7.0,
+              w - (double) (2 * garnish),
+              h - (double) (2 * garnish));
+
+  nux::Color color(nux::color::White);
+  color.alpha = 0.50f;
+  
+  cairo_set_source_rgba(cr, color);
+  cairo_fill_preserve(cr);
+  cairo_stroke(cr);
+
+  return true;
+}
+
 bool Style::StarEmpty(cairo_t* cr, nux::ButtonVisualState state)
 {
   // sanity checks
