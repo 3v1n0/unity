@@ -91,10 +91,6 @@ public:
   {
     return _hidden;
   }
-  bool ShowOnEdge()
-  {
-    return _hide_machine->GetShowOnEdge();
-  }
 
   void SetModel(LauncherModel* model);
   LauncherModel* GetModel();

@@ -35,7 +35,6 @@ LauncherHideMachine::LauncherHideMachine()
   _mode  = HIDE_NEVER;
   _quirks = DEFAULT;
   _should_hide = false;
-  _show_on_edge = true;
 
   _latest_emit_should_hide = false;
   _hide_changed_emit_handle = 0;
@@ -255,23 +254,6 @@ bool
 LauncherHideMachine::ShouldHide()
 {
   return _should_hide;
-}
-
-void
-LauncherHideMachine::SetShowOnEdge(bool value)
-{
-  if (value == _show_on_edge)
-    return;
-
-  _show_on_edge = value;
-
-  LOG_DEBUG(logger) << "Shows on edge: " << _show_on_edge;
-}
-
-bool
-LauncherHideMachine::GetShowOnEdge()
-{
-  return _show_on_edge;
 }
 
 gboolean

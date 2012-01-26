@@ -73,9 +73,6 @@ public:
 
   void AddRevealPressure(int pressure);
 
-  void     SetShowOnEdge(bool value);
-  bool     GetShowOnEdge();
-
   void SetQuirk(HideQuirk quirk, bool active);
   bool GetQuirk(HideQuirk quirk, bool allow_partial = true);
 
@@ -98,7 +95,6 @@ private:
 
   bool      _should_hide;
   bool      _latest_emit_should_hide;
-  bool      _show_on_edge;
   HideQuirk _quirks;
   HideMode  _mode;
   unsigned int _hide_delay_timeout_length;

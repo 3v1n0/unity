@@ -1104,7 +1104,7 @@ void Launcher::FillRenderArg(AbstractLauncherIcon* icon,
   float half_size = (folded_size / 2.0f) + (_icon_size / 2.0f - folded_size / 2.0f) * (1.0f - folding_progress);
   float icon_hide_offset = autohide_offset;
 
-  icon_hide_offset *= 1.0f - (present_progress * (_hide_machine->GetShowOnEdge() ? icon->PresentUrgency() : 0.0f));
+  icon_hide_offset *= 1.0f - (present_progress * icon->PresentUrgency());
 
   // icon is crossing threshold, start folding
   center.z += folded_z_distance * folding_progress;
@@ -1434,12 +1434,10 @@ void Launcher::OnLockHideChanged(GVariant *data)
   if (enable_lock) 
   {
     _hide_machine->SetQuirk(LauncherHideMachine::LOCK_HIDE, true);
-    _hide_machine->SetShowOnEdge(false);
   }
   else
   {
     _hide_machine->SetQuirk(LauncherHideMachine::LOCK_HIDE, false);
-    _hide_machine->SetShowOnEdge(true);
   }
 }
 

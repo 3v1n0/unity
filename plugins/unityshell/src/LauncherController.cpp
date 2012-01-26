@@ -123,7 +123,7 @@ public:
   glib::Object<BamfMatcher> matcher_;
   LauncherModel::Ptr     model_;
   nux::ObjectPtr<Launcher> launcher_;
-  nux::ObjectPtr<Launcher> keynav_launcher_;
+  nux::ObjectPtr<Launcher> keyboard_launcher_;
   int                    sort_priority_;
   DeviceLauncherSection* device_section_;
   LauncherEntryRemoteModel remote_model_;
@@ -135,7 +135,9 @@ public:
   Display*               display_;
 
   guint                  bamf_timer_handler_id_;
-  guint32                on_view_opened_id_;
+  guint                  on_view_opened_id_;
+  guint                  launcher_key_press_handler_id_;
+  guint                  launcher_label_show_handler_id_;
 
   struct timespec        launcher_key_press_time_;
 
@@ -726,6 +728,14 @@ void Controller::HandleLauncherKeyPress()
 {
   printf ("HandleLauncherKeyPress\n");
   unity::TimeUtil::SetTimeStruct(&pimpl->launcher_key_press_time_);
+
+  auto show_launcher = [](gpointer user_data) -> gboolean
+  {
+    Impl* self = static_cast<Impl*>(user_data);
+    self->launcher_key_press_handler_id_ = 0;
+    return FALSE;
+  };
+  pimpl->launcher_key_press_handler_id_ = g_timeout_add(local::super_tap_duration, show_launcher, pimpl);
 }
 
 void Controller::HandleLauncherKeyRelease()
@@ -751,13 +761,13 @@ void Controller::KeyNavGrab()
 
 void Controller::KeyNavActivate()
 {
-  if (pimpl->keynav_launcher_.IsValid())
+  if (pimpl->keyboard_launcher_.IsValid())
     return;
   
 
-  pimpl->keynav_launcher_ = pimpl->launchers[pimpl->MonitorWithMouse()];
+  pimpl->keyboard_launcher_ = pimpl->launchers[pimpl->MonitorWithMouse()];
 
-  pimpl->keynav_launcher_->EnterKeyNavMode();
+  pimpl->keyboard_launcher_->EnterKeyNavMode();
   pimpl->model_->SetSelection(0);
 }
 
@@ -773,16 +783,16 @@ void Controller::KeyNavPrevious()
 
 void Controller::KeyNavTerminate()
 {
-  if (pimpl->keynav_launcher_.IsNull())
+  if (pimpl->keyboard_launcher_.IsNull())
     return;
 
-  pimpl->keynav_launcher_->ExitKeyNavMode();  
-  pimpl->keynav_launcher_.Release();
+  pimpl->keyboard_launcher_->ExitKeyNavMode();  
+  pimpl->keyboard_launcher_.Release();
 }
 
 bool Controller::KeyNavIsActive()
 {
-  return pimpl->keynav_launcher_.IsValid();
+  return pimpl->keyboard_launcher_.IsValid();
 }
 
 
