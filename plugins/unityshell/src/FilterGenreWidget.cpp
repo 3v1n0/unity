@@ -125,15 +125,6 @@ void FilterGenre::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   GfxContext.PushClippingRectangle(geo);
   nux::GetPainter().PaintBackground(GfxContext, geo);
-
-  // debug layout
-  /*nux::Color red(1.0, 0.0, 0.0, 0.5);
-  nux::Color green(0.0, 1.0, 0.0, 0.5);
-  nux::Color cyan(0.0, 1.0, 1.0, 0.5);
-  nux::GetPainter().Paint2DQuadColor(GfxContext, GetGeometry(), cyan);
-  nux::GetPainter().Paint2DQuadColor(GfxContext, genre_layout_->GetGeometry(), red);
-  nux::GetPainter().Paint2DQuadColor(GfxContext, all_button_->GetGeometry(), green);*/
-
   GfxContext.PopClippingRectangle();
 }
 
