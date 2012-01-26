@@ -1613,7 +1613,10 @@ bool UnityScreen::ShowHudTerminate(CompAction* action, CompAction::State state, 
       hud_controller_->ShowHideHud();
       last_hud_show_time_ = 0;
     }
-  } 
+  }
+
+  action->setState(action->state() & ~CompAction::StateTermKey);
+
   return false;
 }
 
