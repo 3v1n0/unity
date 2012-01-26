@@ -252,7 +252,7 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
         {
           if (XkbKeycodeToKeysym(event->display, event->detail, 0, 0) == GDK_KEY_F10)
           {
-            if (GTK_MENU (priv->last_menu))
+            if (GTK_IS_MENU (priv->last_menu))
               gtk_menu_popdown (GTK_MENU (priv->last_menu));
           }
         }
@@ -1514,7 +1514,7 @@ panel_service_show_entry (PanelService *self,
    * active application (which will make it change colour (as state changes), which
    * then looks like flickering to the user.
    */
-  if (GTK_MENU (last_menu))
+  if (GTK_IS_MENU (last_menu))
     gtk_menu_popdown (GTK_MENU (last_menu));
 }
 
