@@ -22,6 +22,12 @@
 #include "DashStyle.h"
 #include "FilterBasicButton.h"
 
+namespace
+{
+const int kMinButtonHeight = 30;
+const int kMinButtonWidth  = 48;
+}
+
 namespace unity
 {
 namespace dash
@@ -68,7 +74,8 @@ void FilterBasicButton::InitTheme()
     normal_.reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &FilterBasicButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_NORMAL)));
   }
 
-  // SetMinimumHeight(32);
+  SetMinimumHeight(kMinButtonHeight);
+  SetMinimumWidth(kMinButtonWidth);
 }
 
 void FilterBasicButton::RedrawTheme(nux::Geometry const& geom, cairo_t* cr, nux::ButtonVisualState faked_state)
@@ -79,6 +86,7 @@ void FilterBasicButton::RedrawTheme(nux::Geometry const& geom, cairo_t* cr, nux:
 long FilterBasicButton::ComputeContentSize()
 {
   long ret = nux::Button::ComputeContentSize();
+  
   nux::Geometry const& geo = GetGeometry();
 
   if (cached_geometry_ != geo)
@@ -137,4 +145,3 @@ void FilterBasicButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
 } // namespace dash
 } // namespace unity
-

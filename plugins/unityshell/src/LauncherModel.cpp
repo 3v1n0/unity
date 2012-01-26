@@ -191,40 +191,68 @@ LauncherModel::IconHasSister(AbstractLauncherIcon* icon)
 }
 
 void
+LauncherModel::ReorderAfter(AbstractLauncherIcon* icon, AbstractLauncherIcon* other)
+{
+  if (icon == other)
+    return;
+
+  int i = 0;
+  for (LauncherModel::iterator it = begin(); it != end(); ++it)
+  {
+    if ((*it) == icon)
+      continue;
+
+    if ((*it) == other)
+    {
+      (*it)->SetSortPriority(i);
+      ++i;
+
+      icon->SetSortPriority(i);
+      ++i;
+    }
+    else
+    {
+      (*it)->SetSortPriority(i);
+      ++i;
+    }
+  }
+
+  Sort();
+}
+
+void
 LauncherModel::ReorderBefore(AbstractLauncherIcon* icon, AbstractLauncherIcon* other, bool save)
 {
   if (icon == other)
     return;
 
-  LauncherModel::iterator it;
-
   int i = 0;
   int j = 0;
-  for (it = begin(); it != end(); it++)
+  for (auto icon_it : _inner)
   {
-    if ((*it) == icon)
+    if (icon_it == icon)
     {
       j++;
       continue;
     }
 
-    if ((*it) == other)
+    if (icon_it == other)
     {
       icon->SetSortPriority(i);
       if (i != j && save)
-        (*it)->SaveCenter();
+        icon_it->SaveCenter();
       i++;
 
-      (*it)->SetSortPriority(i);
+      icon_it->SetSortPriority(i);
       if (i != j && save)
-        (*it)->SaveCenter();
+        icon_it->SaveCenter();
       i++;
     }
     else
     {
-      (*it)->SetSortPriority(i);
+      icon_it->SetSortPriority(i);
       if (i != j && save)
-        (*it)->SaveCenter();
+        icon_it->SaveCenter();
       i++;
     }
     j++;
@@ -239,48 +267,46 @@ LauncherModel::ReorderSmart(AbstractLauncherIcon* icon, AbstractLauncherIcon* ot
   if (icon == other)
     return;
 
-  LauncherModel::iterator it;
-
   int i = 0;
   int j = 0;
   bool skipped = false;
-  for (it = begin(); it != end(); it++)
+  for (auto icon_it : _inner)
   {
-    if ((*it) == icon)
+    if (icon_it == icon)
     {
       skipped = true;
       j++;
       continue;
     }
 
-    if ((*it) == other)
+    if (icon_it == other)
     {
       if (!skipped)
       {
         icon->SetSortPriority(i);
         if (i != j && save)
-          (*it)->SaveCenter();
+          icon_it->SaveCenter();
         i++;
       }
 
-      (*it)->SetSortPriority(i);
+      icon_it->SetSortPriority(i);
       if (i != j && save)
-        (*it)->SaveCenter();
+        icon_it->SaveCenter();
       i++;
 
       if (skipped)
       {
         icon->SetSortPriority(i);
         if (i != j && save)
-          (*it)->SaveCenter();
+          icon_it->SaveCenter();
         i++;
       }
     }
     else
     {
-      (*it)->SetSortPriority(i);
+      icon_it->SetSortPriority(i);
       if (i != j && save)
-        (*it)->SaveCenter();
+        icon_it->SaveCenter();
       i++;
     }
     j++;

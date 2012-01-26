@@ -342,9 +342,7 @@ std::string BamfLauncherIcon::NameForWindow (Window window)
     view = static_cast <BamfView*> (l->data);
     if (BAMF_IS_WINDOW(view) && (Window) bamf_window_get_xid(BAMF_WINDOW(view)) == window)
     {
-      gchar *name = bamf_view_get_name (view);
-      result = name;
-      g_free (name);
+      result = glib::String(bamf_view_get_name(view)).Str();
       break;
     }
   }
@@ -875,7 +873,7 @@ void BamfLauncherIcon::Quit()
   g_list_free(children);
 }
 
-void BamfLauncherIcon::Stick()
+void BamfLauncherIcon::Stick(bool save)
 {
   BamfView* view = BAMF_VIEW(m_App);
   
@@ -885,7 +883,7 @@ void BamfLauncherIcon::Stick()
   const gchar* desktop_file = DesktopFile();
   bamf_view_set_sticky(view, true);
   
-  if (desktop_file && strlen(desktop_file) > 0)
+  if (save && desktop_file && strlen(desktop_file) > 0)
     FavoriteStore::GetDefault().AddFavorite(desktop_file, -1);
 }
 

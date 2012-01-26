@@ -19,7 +19,6 @@
 #include "ShortcutController.h"
 
 #include "UBusMessages.h"
-#include "ubus-server.h"
 #include "WindowManager.h"
 
 namespace unity
@@ -34,39 +33,43 @@ const unsigned int SUPER_TAP_DURATION = 650;
 Controller::Controller(std::list<AbstractHint*>& hints)
   : view_window_(0)
   , visible_(false)
+  , enabled_(true)
   , show_timer_(0)
-  , fade_in_animator_(new Animator(100))
-  , fade_out_animator_(new Animator(100))
-
+  , fade_in_animator_(100)
+  , fade_out_animator_(100)
 {
   bg_color_ = nux::Color(0.0, 0.0, 0.0, 0.5);
 
-  UBusServer *ubus = ubus_server_get_default();
-  bg_update_handle_ = ubus_server_register_interest(ubus, UBUS_BACKGROUND_COLOR_CHANGED,
-                                                    (UBusCallback)&Controller::OnBackgroundUpdate,
-                                                    this);
+  ubus_manager_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED,
+                                 sigc::mem_fun(this, &Controller::OnBackgroundUpdate));
+
+  ubus_manager_.RegisterInterest(UBUS_LAUNCHER_START_KEY_SWTICHER, [&] (GVariant*) {
+                                   enabled_ = false;
+                                 });
+
+  ubus_manager_.RegisterInterest(UBUS_LAUNCHER_END_KEY_SWTICHER, [&] (GVariant*) {
+                                   enabled_ = true;
+                                 });
+
+  ubus_manager_.RegisterInterest(UBUS_PLACE_VIEW_SHOWN, [&] (GVariant*) {
+                                   Hide();
+                                 });
+
+  ubus_manager_.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
 
   model_.reset(new Model(hints));
-  
+
   model_->Fill();
   ConstructView();
 
-  fade_in_animator_->animation_updated.connect(sigc::mem_fun(this, &Controller::OnFadeInUpdated));
-  fade_in_animator_->animation_ended.connect(sigc::mem_fun(this, &Controller::OnFadeInEnded));
-  fade_out_animator_->animation_updated.connect(sigc::mem_fun(this, &Controller::OnFadeOutUpdated));
-  fade_out_animator_->animation_ended.connect(sigc::mem_fun(this, &Controller::OnFadeOutEnded));
+  fade_in_animator_.animation_updated.connect(sigc::mem_fun(this, &Controller::OnFadeInUpdated));
+  fade_in_animator_.animation_ended.connect(sigc::mem_fun(this, &Controller::OnFadeInEnded));
+  fade_out_animator_.animation_updated.connect(sigc::mem_fun(this, &Controller::OnFadeOutUpdated));
+  fade_out_animator_.animation_ended.connect(sigc::mem_fun(this, &Controller::OnFadeOutEnded));
 }
 
 Controller::~Controller()
 {
-  ubus_server_unregister_interest(ubus_server_get_default(), bg_update_handle_);
-  
-  if (fade_in_animator_)
-    delete fade_in_animator_;
-
-  if (fade_out_animator_)
-    delete fade_out_animator_;
-  
   if (view_window_)
     view_window_->UnReference();
     
@@ -96,21 +99,23 @@ void Controller::OnFadeOutEnded()
 }
 
 
-void Controller::OnBackgroundUpdate(GVariant* data, Controller* self)
+void Controller::OnBackgroundUpdate(GVariant* data)
 {
   gdouble red, green, blue, alpha;
   g_variant_get(data, "(dddd)", &red, &green, &blue, &alpha);
-  self->bg_color_ = nux::Color(red, green, blue, alpha);
+  bg_color_ = nux::Color(red, green, blue, alpha);
 
-  if (self->view_)
-    self->view_->background_color = self->bg_color_;
+  if (view_)
+    view_->background_color = bg_color_;
 }
 
 void Controller::Show()
 {
   if (show_timer_)
     g_source_remove (show_timer_);
-  show_timer_ = g_timeout_add(SUPER_TAP_DURATION, &Controller::OnShowTimer, this);
+
+  if (enabled_)
+    show_timer_ = g_timeout_add(SUPER_TAP_DURATION, &Controller::OnShowTimer, this);
 
   model_->Fill();
   visible_ = true;
@@ -119,16 +124,19 @@ void Controller::Show()
 gboolean Controller::OnShowTimer(gpointer data)
 {
   Controller* self = static_cast<Controller*>(data);
-  
-  ubus_server_send_message(ubus_server_get_default(),
-                           UBUS_PLACE_VIEW_CLOSE_REQUEST,
-                           NULL);
+
+  if (!self->enabled_)
+  {
+    return FALSE;
+  }
+
+  self->ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
 
   if (self->visible_)
   {
     self->view_->SetupBackground(true);
-    self->fade_out_animator_->Stop();
-    self->fade_in_animator_->Start(self->view_window_->GetOpacity());
+    self->fade_out_animator_.Stop();
+    self->fade_in_animator_.Start(self->view_window_->GetOpacity());
   }
 
   self->show_timer_ = 0;
@@ -176,8 +184,8 @@ void Controller::Hide()
   if (view_window_)
   {
     view_->SetupBackground(false);
-    fade_in_animator_->Stop();
-    fade_out_animator_->Start(1.0 - view_window_->GetOpacity());
+    fade_in_animator_.Stop();
+    fade_out_animator_.Start(1.0 - view_window_->GetOpacity());
   }
 
   if (show_timer_)
@@ -188,6 +196,16 @@ void Controller::Hide()
 bool Controller::Visible()
 {
   return visible_;
+}
+
+bool Controller::IsEnabled()
+{
+  return enabled_;
+}
+
+void Controller::SetEnabled(bool enabled)
+{
+  enabled_ = enabled;
 }
 
 } // namespace shortcut

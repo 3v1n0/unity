@@ -51,6 +51,7 @@ public:
 
   bool IconHasSister(AbstractLauncherIcon* icon);
 
+  void ReorderAfter(AbstractLauncherIcon* icon, AbstractLauncherIcon* other);
   void ReorderBefore(AbstractLauncherIcon* icon, AbstractLauncherIcon* other, bool save);
 
   void ReorderSmart(AbstractLauncherIcon* icon, AbstractLauncherIcon* other, bool save);

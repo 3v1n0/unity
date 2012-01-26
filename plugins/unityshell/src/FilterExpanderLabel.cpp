@@ -24,10 +24,17 @@
 #include "FilterBasicButton.h"
 #include "FilterExpanderLabel.h"
 
+namespace
+{
+const float kExpandDefaultIconOpacity = 1.0f;
+}
+
 namespace unity
 {
 namespace dash
 {
+
+
 
 NUX_IMPLEMENT_OBJECT_TYPE(FilterExpanderLabel);
 
@@ -37,10 +44,9 @@ FilterExpanderLabel::FilterExpanderLabel(std::string const& label, NUX_FILE_LINE
   , layout_(nullptr)
   , top_bar_layout_(nullptr)
   , right_hand_contents_(nullptr)
-  , expander_graphic_(nullptr)
   , cairo_label_(nullptr)
   , raw_label_(label)
-  , label_("<span size='larger' weight='bold'>" + label + "</span>" + "  ▾")
+  , label_("<span size='larger' weight='bold'>" + label + "</span>")
 {
   expanded.changed.connect(sigc::mem_fun(this, &FilterExpanderLabel::DoExpandChange));
   BuildLayout();
@@ -57,7 +63,6 @@ void FilterExpanderLabel::SetLabel(std::string const& label)
   label_ = "<span size='larger' weight='bold'>";
   label_ += raw_label_;
   label_ += "</span>";
-  label_ += expanded ? "  ▾" : "  ▸";
   cairo_label_->SetText(label_.c_str());
 }
 
@@ -66,7 +71,7 @@ void FilterExpanderLabel::SetRightHandView(nux::View* view)
   view->SetMaximumHeight(30);
 
   right_hand_contents_ = view;
-  top_bar_layout_->AddView(right_hand_contents_, 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
+  top_bar_layout_->AddView(right_hand_contents_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 }
 
 void FilterExpanderLabel::SetContents(nux::Layout* contents)
@@ -83,6 +88,7 @@ void FilterExpanderLabel::BuildLayout()
 {
   layout_ = new nux::VLayout(NUX_TRACKER_LOCATION);
   top_bar_layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
+  top_bar_layout_->SetHorizontalInternalMargin(8);
 
   cairo_label_ = new nux::StaticText(label_.c_str(), NUX_TRACKER_LOCATION);
   cairo_label_->SetFontName("Ubuntu 10");
@@ -93,10 +99,31 @@ void FilterExpanderLabel::BuildLayout()
       expanded = !expanded;
     });
 
-  top_bar_layout_->AddView(cairo_label_, 1, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
+  nux::BaseTexture* arrow;
+  arrow = dash::Style::Instance().GetGroupUnexpandIcon();
+  expand_icon_ = new IconTexture(arrow,
+                                 arrow->GetWidth(),
+                                 arrow->GetHeight());
+  expand_icon_->SetOpacity(kExpandDefaultIconOpacity);
+  expand_icon_->SetMinimumSize(arrow->GetWidth(), arrow->GetHeight());
+  expand_icon_->SetVisible(true);
+  expand_icon_->mouse_click.connect(
+    [&] (int x, int y, unsigned long b, unsigned long k)
+    {
+      expanded = !expanded;
+    });
+  arrow_layout_  = new nux::VLayout();
+  arrow_top_space_ = new nux::SpaceLayout(2, 2, 11, 11);
+  arrow_bottom_space_ = new nux::SpaceLayout(2, 2, 9, 9);
+  arrow_layout_->AddView(arrow_top_space_, 0, nux::MINOR_POSITION_CENTER);
+  arrow_layout_->AddView(expand_icon_, 0, nux::MINOR_POSITION_CENTER);
+  arrow_layout_->AddView(arrow_bottom_space_, 0, nux::MINOR_POSITION_CENTER);
+
+  top_bar_layout_->AddView(cairo_label_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+  top_bar_layout_->AddView(arrow_layout_, 0, nux::MINOR_POSITION_CENTER);
   top_bar_layout_->AddSpace(1, 1);
 
-  top_bar_layout_->SetMaximumWidth((Style::Instance().GetTileWidth() - 12) * 2 + 10);
+  top_bar_layout_->SetMaximumWidth((Style::Instance().GetTileWidth() - 12) * 2 + 20);
 
   layout_->AddLayout(top_bar_layout_, 0, nux::MINOR_POSITION_LEFT);
   layout_->SetVerticalInternalMargin(0);
@@ -109,13 +136,11 @@ void FilterExpanderLabel::BuildLayout()
 
 void FilterExpanderLabel::DoExpandChange(bool change)
 {
-  label_ = "<span size='larger' weight='bold'>";
-  label_ += raw_label_;
-  label_ += "</span>";
-  label_ += expanded ? "  ▾" : "  ▸";
-
-  if (cairo_label_)
-    cairo_label_->SetText(label_);
+  dash::Style& style = dash::Style::Instance();
+  if (expanded)
+    expand_icon_->SetTexture(style.GetGroupUnexpandIcon());
+  else
+    expand_icon_->SetTexture(style.GetGroupExpandIcon());
 
   if (change and contents_ and !contents_->IsChildOf(layout_))
   {
