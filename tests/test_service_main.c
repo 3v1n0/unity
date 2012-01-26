@@ -33,8 +33,8 @@ static const GDBusInterfaceVTable interface_vtable =
 };
 
 static GMainLoop* loop_ = NULL;
-//static ServiceLens* lens_ = NULL;
-//static ServiceModel* model_ = NULL;
+static ServiceLens* lens_ = NULL;
+static ServiceModel* model_ = NULL;
 static ServiceHud* hud_ = NULL;
 
 gint
@@ -44,8 +44,8 @@ main(gint argc, gchar** argv)
 
   loop_ = g_main_loop_new(NULL, FALSE);
 
-  //lens_ = service_lens_new();
-  //model_ = service_model_new();
+  lens_ = service_lens_new();
+  model_ = service_model_new();
   hud_ = service_hud_new();
 
   g_bus_own_name(G_BUS_TYPE_SESSION,
