@@ -119,7 +119,6 @@ public:
   void SetAutoHideAnimation(AutoHideAnimation animation);
   AutoHideAnimation GetAutoHideAnimation();
 
-  gboolean CheckSuperShortcutPressed(Display *x_display, unsigned int key_sym, unsigned long key_code, unsigned long key_state, char* key_string);
   void SetLatestShortcut(guint64 shortcut);
 
   nux::BaseWindow* GetParent()
@@ -134,21 +133,9 @@ public:
   virtual void RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned long key_flags);
   virtual void RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
   virtual void RecvMouseWheel(int x, int y, int wheel_delta, unsigned long button_flags, unsigned long key_flags);
-  virtual void RecvMouseDownOutsideArea(int x, int y, unsigned long button_flags, unsigned long key_flags);
-
-  virtual void RecvKeyPressed(unsigned long    eventType  ,   /*event type*/
-    unsigned long    keysym     ,   /*event keysym*/
-    unsigned long    state      ,   /*event state*/
-    const char*      character  ,   /*character*/
-    unsigned short   keyCount       /*key repeat count*/);
 
   virtual void RecvQuicklistOpened(QuicklistView* quicklist);
   virtual void RecvQuicklistClosed(QuicklistView* quicklist);
-
-  void startKeyNavMode();
-  void leaveKeyNavMode(bool preserve_focus = true);
-
-  void exitKeyNavMode();    // Connected to signal OnEndFocus
 
   int GetMouseX();
   int GetMouseY();
@@ -164,19 +151,9 @@ public:
   sigc::signal<void> selection_change;
   sigc::signal<void> hidden_changed;
 
-  // Key navigation
   virtual bool InspectKeyEvent(unsigned int eventType,
                                unsigned int keysym,
                                const char* character);
-
-  void SelectPreviousIcon();
-  void SelectNextIcon();
-
-  void KeySwitcherActivate();
-  void KeySwitcherTerminate();
-  bool KeySwitcherIsActive();
-  void KeySwitcherNext();
-  void KeySwitcherPrevious();
 
   void EnterKeyNavMode();
   void ExitKeyNavMode();

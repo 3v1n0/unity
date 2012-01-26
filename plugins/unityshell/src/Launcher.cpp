@@ -153,8 +153,6 @@ Launcher::Launcher(nux::BaseWindow* parent,
   mouse_leave.connect(sigc::mem_fun(this, &Launcher::RecvMouseLeave));
   mouse_move.connect(sigc::mem_fun(this, &Launcher::RecvMouseMove));
   mouse_wheel.connect(sigc::mem_fun(this, &Launcher::RecvMouseWheel));
-  key_down.connect(sigc::mem_fun(this, &Launcher::RecvKeyPressed));
-  mouse_down_outside_pointer_grab_area.connect(sigc::mem_fun(this, &Launcher::RecvMouseDownOutsideArea));
   //OnEndFocus.connect   (sigc::mem_fun (this, &Launcher::exitKeyNavMode));
 
   CaptureMouseDownAnyWhereElse(true);
@@ -416,81 +414,6 @@ Launcher::OnDragFinish(GeisAdapter::GeisDragData* data)
     _drag_out_id = 0;
     EnsureAnimation();
   }
-}
-
-void
-Launcher::startKeyNavMode()
-{
-  SetStateKeyNav(true);
-  _hide_machine->SetQuirk(LauncherHideMachine::LAST_ACTION_ACTIVATE, false);
-
-  GrabKeyboard();
-
-  // FIXME: long term solution is to rewrite the keynav handle
-  if (_focus_keynav_handle > 0)
-    g_source_remove(_focus_keynav_handle);
-  _focus_keynav_handle = g_timeout_add(ANIM_DURATION_SHORT, &Launcher::MoveFocusToKeyNavModeTimeout, this);
-
-}
-
-gboolean
-Launcher::MoveFocusToKeyNavModeTimeout(gpointer data)
-{
-  Launcher* self = (Launcher*) data;
-
-  // move focus to key nav mode when activated
-  if (!(self->_keynav_activated))
-    return false;
-
-  if (self->_last_icon_index == -1)
-  {
-    self->_current_icon_index = 0;
-  }
-  else
-    self->_current_icon_index = self->_last_icon_index;
-  self->EnsureAnimation();
-
-  ubus_server_send_message(ubus_server_get_default(),
-                           UBUS_LAUNCHER_START_KEY_NAV,
-                           NULL);
-
-  self->selection_change.emit();
-  self->_focus_keynav_handle = 0;
-
-  return false;
-}
-
-void
-Launcher::leaveKeyNavMode(bool preserve_focus)
-{
-  _last_icon_index = _current_icon_index;
-  _current_icon_index = -1;
-  QueueDraw();
-
-  ubus_server_send_message(ubus_server_get_default(),
-                           UBUS_LAUNCHER_END_KEY_NAV,
-                           g_variant_new_boolean(preserve_focus));
-
-  selection_change.emit();
-}
-
-void
-Launcher::exitKeyNavMode()
-{
-  if (!_keynav_activated)
-    return;
-
-  UnGrabKeyboard();
-  UnGrabPointer();
-  SetStateKeyNav(false);
-
-  _current_icon_index = -1;
-  _last_icon_index = _current_icon_index;
-  QueueDraw();
-  ubus_server_send_message(ubus_server_get_default(),
-                           UBUS_LAUNCHER_END_KEY_NAV,
-                           g_variant_new_boolean(true));
-  selection_change.emit();
 }
 
 void
@@ -1857,9 +1780,6 @@ Launcher::SetActionState(LauncherActionState actionstate)
   _launcher_action_state = actionstate;
 
   _hover_machine->SetQuirk(LauncherHoverMachine::LAUNCHER_IN_ACTION, (actionstate != ACTION_NONE));
-
-  if (_keynav_activated)
-    exitKeyNavMode();
 }
 
 Launcher::LauncherActionState
@@ -2395,12 +2315,6 @@ void Launcher::RecvMouseDown(int x, int y, unsigned long button_flags, unsigned 
   EnsureAnimation();
 }
 
-void Launcher::RecvMouseDownOutsideArea(int x, int y, unsigned long button_flags, unsigned long key_flags)
-{
-  if (_keynav_activated)
-    exitKeyNavMode();
-}
-
 void Launcher::RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
   SetMousePosition(x, y);
@@ -2554,119 +2468,6 @@ void Launcher::OnPointerBarrierEvent(ui::PointerBarrierWrapper* owner, ui::Barri
   }
 }
 
-gboolean
-Launcher::ResetRepeatShorcutTimeout(gpointer data)
-{
-  Launcher* self = (Launcher*) data;
-
-  self->_latest_shortcut = 0;
-
-  self->_ignore_repeat_shortcut_handle = 0;
-  return false;
-}
-
-gboolean
-Launcher::CheckSuperShortcutPressed(Display *x_display,
-                                    unsigned int  key_sym,
-                                    unsigned long key_code,
-                                    unsigned long key_state,
-                                    char*         key_string)
-{
-  LauncherModel::iterator it;
-
-  // Shortcut to start launcher icons. Only relies on Keycode, ignore modifier
-  for (it = _model->begin(); it != _model->end(); it++)
-  {
-    if ((XKeysymToKeycode(x_display, (*it)->GetShortcut()) == key_code) ||
-        ((gchar)((*it)->GetShortcut()) == key_string[0]))
-    {
-      if (_latest_shortcut == (*it)->GetShortcut())
-        return true;
-
-      if (g_ascii_isdigit((gchar)(*it)->GetShortcut()) && (key_state & ShiftMask))
-        (*it)->OpenInstance(ActionArg(ActionArg::LAUNCHER, 0));
-      else
-        (*it)->Activate(ActionArg(ActionArg::LAUNCHER, 0));
-
-      SetLatestShortcut((*it)->GetShortcut());
-
-      // disable the "tap on super" check
-      _times[TIME_TAP_SUPER].tv_sec = 0;
-      _times[TIME_TAP_SUPER].tv_nsec = 0;
-      return true;
-    }
-  }
-
-  return false;
-}
-
-void Launcher::SetLatestShortcut(guint64 shortcut)
-{
-  _latest_shortcut = shortcut;
-  /*
-   * start a timeout while repressing the same shortcut will be ignored.
-   * This is because the keypress repeat is handled by Xorg and we have no
-   * way to know if a press is an actual press or just an automated repetition
-   * because the button is hold down. (key release events are sent in both cases)
-   */
-  if (_ignore_repeat_shortcut_handle > 0)
-    g_source_remove(_ignore_repeat_shortcut_handle);
-  _ignore_repeat_shortcut_handle = g_timeout_add(IGNORE_REPEAT_SHORTCUT_DURATION, &Launcher::ResetRepeatShorcutTimeout, this);
-}
-
-void Launcher::SelectPreviousIcon()
-{
-  if (_current_icon_index > 0)
-  {
-    LauncherModel::iterator it;
-    int temp_current_icon_index = _current_icon_index;
-    do
-    {
-      temp_current_icon_index --;
-      it = _model->at(temp_current_icon_index);
-    }
-    while (it != (LauncherModel::iterator)NULL && !(*it)->GetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE));
-
-    if (it != (LauncherModel::iterator)NULL)
-    {
-      _current_icon_index = temp_current_icon_index;
-
-      if ((*it)->GetCenter(monitor).y + - _icon_size/ 2 < GetGeometry().y)
-        _launcher_drag_delta += (_icon_size + _space_between_icons);
-    }
-    EnsureAnimation();
-    selection_change.emit();
-  }
-}
-
-void Launcher::SelectNextIcon()
-{
-  if (_current_icon_index < _model->Size() - 1)
-  {
-    LauncherModel::iterator it;
-    int temp_current_icon_index = _current_icon_index;
-
-    do
-    {
-      temp_current_icon_index ++;
-      it = _model->at(temp_current_icon_index);
-    }
-    while (it != (LauncherModel::iterator)nullptr &&
-           !(*it)->GetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE));
-
-    if (it != (LauncherModel::iterator)nullptr)
-    {
-      _current_icon_index = temp_current_icon_index;
-
-      if ((*it)->GetCenter(monitor).y + _icon_size / 2 > GetGeometry().height)
-        _launcher_drag_delta -= (_icon_size + _space_between_icons);
-    }
-
-    EnsureAnimation();
-    selection_change.emit();
-  }
-}
-
 void Launcher::EnterKeyNavMode()
 {
   _hide_machine->SetQuirk(LauncherHideMachine::KEY_NAV_ACTIVE, true);
@@ -2677,152 +2478,6 @@ void Launcher::ExitKeyNavMode()
 {
   _hide_machine->SetQuirk(LauncherHideMachine::KEY_NAV_ACTIVE, false);
   _hover_machine->SetQuirk(LauncherHoverMachine::KEY_NAV_ACTIVE, false);
-}
-
-void Launcher::KeySwitcherActivate()
-{
-  if (_key_switcher_activated)
-    return;
-
-  _hide_machine->SetQuirk(LauncherHideMachine::KEY_NAV_ACTIVE, true);
-  _hover_machine->SetQuirk(LauncherHoverMachine::KEY_NAV_ACTIVE, true);
-
-  _key_switcher_activated = true;
-
-  ubus_server_send_message(ubus_server_get_default(),
-                           UBUS_LAUNCHER_START_KEY_SWTICHER,
-                           g_variant_new_boolean(true));
-
-  KeySwitcherNext();
-}
-
-void Launcher::KeySwitcherTerminate()
-{
-  if (!_key_switcher_activated)
-    return;
-
-  LauncherModel::iterator it = _model->at(_current_icon_index);
-
-  if (it != (LauncherModel::iterator)NULL)
-    (*it)->Activate(ActionArg(ActionArg::LAUNCHER, 0));
-
-  _hide_machine->SetQuirk(LauncherHideMachine::KEY_NAV_ACTIVE, false);
-  _hover_machine->SetQuirk(LauncherHoverMachine::KEY_NAV_ACTIVE, false);
-
-  ubus_server_send_message(ubus_server_get_default(),
-                           UBUS_LAUNCHER_END_KEY_SWTICHER,
-                           g_variant_new_boolean(true));
-
-  _key_switcher_activated = false;
-  _current_icon_index = -1;
-  _last_icon_index = -1;
-  QueueDraw();
-
-  selection_change.emit();
-}
-
-bool Launcher::KeySwitcherIsActive()
-{
-  return _key_switcher_activated;
-}
-
-void Launcher::KeySwitcherNext()
-{
-  if (!_key_switcher_activated)
-    return;
-
-  SelectNextIcon();
-}
-
-void Launcher::KeySwitcherPrevious()
-{
-  if (!_key_switcher_activated)
-    return;
-
-  SelectPreviousIcon();
-}
-
-void
-Launcher::RecvKeyPressed(unsigned long    eventType,
-                         unsigned long    key_sym,
-                         unsigned long    key_state,
-                         const char*      character,
-                         unsigned short   keyCount)
-{
-
-  LauncherModel::iterator it;
-
-  /*
-   * all key events below are related to keynavigation. Make an additional
-   * check that we are in a keynav mode when we inadvertadly receive the focus
-   */
-  if (!_keynav_activated)
-    return;
-
-  switch (key_sym)
-  {
-      // up (move selection up or go to global-menu if at top-most icon)
-    case NUX_VK_UP:
-    case NUX_KP_UP:
-      SelectPreviousIcon();
-      break;
-
-      // down (move selection down and unfold launcher if needed)
-    case NUX_VK_DOWN:
-    case NUX_KP_DOWN:
-      SelectNextIcon();
-      break;
-
-      // esc/left (close quicklist or exit laucher key-focus)
-    case NUX_VK_LEFT:
-    case NUX_KP_LEFT:
-    case NUX_VK_ESCAPE:
-      // hide again
-      exitKeyNavMode();
-      break;
-
-      // right/shift-f10 (open quicklist of currently selected icon)
-    case XK_F10:
-      if (!(key_state & nux::NUX_STATE_SHIFT))
-        break;
-    case NUX_VK_RIGHT:
-    case NUX_KP_RIGHT:
-    case XK_Menu:
-      // open quicklist of currently selected icon
-      it = _model->at(_current_icon_index);
-      if (it != (LauncherModel::iterator)NULL)
-      {
-        if ((*it)->OpenQuicklist(true))
-          leaveKeyNavMode(false);
-      }
-      break;
-
-      // <SPACE> (open a new instance)
-    case NUX_VK_SPACE:
-      // start currently selected icon
-      it = _model->at(_current_icon_index);
-      if (it != (LauncherModel::iterator)NULL)
-      {
-        (*it)->OpenInstance(ActionArg(ActionArg::LAUNCHER, 0));
-      }
-      exitKeyNavMode();
-      break;
-
-      // <RETURN> (start/activate currently selected icon)
-    case NUX_VK_ENTER:
-    case NUX_KP_ENTER:
-    {
-      // start currently selected icon
-      it = _model->at(_current_icon_index);
-      if (it != (LauncherModel::iterator)NULL)
-        (*it)->Activate(ActionArg(ActionArg::LAUNCHER, 0));
-    }
-    exitKeyNavMode();
-    break;
-
-    default:
-      break;
-  }
 }
 
 void Launcher::RecvQuicklistOpened(QuicklistView* quicklist)
@@ -2897,12 +2552,6 @@ void Launcher::MouseDownLogic(int x, int y, unsigned long button_flags, unsigned
     _start_dragicon_handle = g_timeout_add(START_DRAGICON_DURATION, &Launcher::StartIconDragTimeout, this);
 
     launcher_icon->mouse_down.emit(nux::GetEventButton(button_flags), monitor);
-
-    if (_key_switcher_activated)
-    {
-      _current_icon_index = -1;
-      KeySwitcherTerminate();
-    }
   }
 }
 

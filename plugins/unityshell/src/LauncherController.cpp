@@ -61,7 +61,7 @@ namespace local
 namespace
 {
   const int super_tap_duration = 250;
-  const int before_hide_launcher_on_super_duration = 1000;
+  const int launcher_minimum_show_duration = 1250;
   const int shortcuts_show_delay = 750;
   const int ignore_repeat_shortcut_duration = 250;
 }
@@ -107,6 +107,8 @@ public:
 
   void SendHomeActivationRequest();
 
+  int TimeSinceLauncherKeyPress();
+
   int MonitorWithMouse();
 
   void InsertTrash();
@@ -122,6 +124,8 @@ public:
   void OnExpoActivated();
 
   void OnScreenChanged(int primary_monitor, std::vector<nux::Geometry>& monitors);
+
+  void ReceiveMouseDownOutsideArea(int x, int y, unsigned long button_flags, unsigned long key_flags);
 
   void ReceiveLauncherKeyPress(unsigned long eventType, 
                                unsigned long keysym, 
@@ -152,6 +156,7 @@ public:
   guint                  on_view_opened_id_;
   guint                  launcher_key_press_handler_id_;
   guint                  launcher_label_show_handler_id_;
+  guint                  launcher_hide_handler_id_;
 
   bool                   launcher_open;
   bool                   launcher_keynav;
@@ -163,6 +168,7 @@ public:
 
   sigc::connection on_expoicon_activate_connection_;
   sigc::connection launcher_key_press_connection_;
+  sigc::connection launcher_event_outside_connection_;
 };
 
 
@@ -638,12 +644,16 @@ void Controller::Impl::SetupBamf()
   bamf_timer_handler_id_ = 0;
 }
 
-bool Controller::Impl::TapTimeUnderLimit()
+int Controller::Impl::TimeSinceLauncherKeyPress()
 {
   struct timespec current;
   unity::TimeUtil::SetTimeStruct(&current);
-  int time_difference = unity::TimeUtil::TimeDelta(&current, &launcher_key_press_time_);
+  return unity::TimeUtil::TimeDelta(&current, &launcher_key_press_time_);
+}
 
+bool Controller::Impl::TapTimeUnderLimit()
+{
+  int time_difference = TimeSinceLauncherKeyPress();
   return time_difference < local::super_tap_duration;
 }
 
@@ -749,7 +759,6 @@ int Controller::Impl::MonitorWithMouse()
 
 void Controller::HandleLauncherKeyPress()
 {
-  printf ("HandleLauncherKeyPress\n");
   unity::TimeUtil::SetTimeStruct(&pimpl->launcher_key_press_time_);
 
   auto show_launcher = [](gpointer user_data) -> gboolean
@@ -757,6 +766,12 @@ void Controller::HandleLauncherKeyPress()
     Impl* self = static_cast<Impl*>(user_data);
     if (self->keyboard_launcher_.IsNull())
       self->keyboard_launcher_ = self->launchers[self->MonitorWithMouse()];
+    
+    if (self->launcher_hide_handler_id_ > 0)
+    {
+      g_source_remove(self->launcher_hide_handler_id_);
+      self->launcher_hide_handler_id_ = 0;
+    }
 
     self->keyboard_launcher_->ForceReveal(true);
     self->launcher_open = true;
@@ -781,7 +796,6 @@ void Controller::HandleLauncherKeyPress()
 
 void Controller::HandleLauncherKeyRelease()
 {
-  printf("HandleLauncherKeyRelease\n");
   if (pimpl->TapTimeUnderLimit())
   {
     pimpl->SendHomeActivationRequest();
@@ -801,18 +815,43 @@ void Controller::HandleLauncherKeyRelease()
 
   if (pimpl->keyboard_launcher_.IsValid())
   {
-    pimpl->keyboard_launcher_->ForceReveal(false);
     pimpl->keyboard_launcher_->ShowShortcuts(false);
-    pimpl->launcher_open = false;
 
-    if (!pimpl->launcher_keynav)
-      pimpl->keyboard_launcher_.Release();
+    int ms_since_show = pimpl->TimeSinceLauncherKeyPress();
+    if (ms_since_show > local::launcher_minimum_show_duration)
+    {
+      pimpl->keyboard_launcher_->ForceReveal(false);
+      pimpl->launcher_open = false;
+      
+      if (!pimpl->launcher_keynav)
+        pimpl->keyboard_launcher_.Release();
+    }
+    else
+    {
+      int time_left = local::launcher_minimum_show_duration - ms_since_show;
+      auto hide_launcher = [](gpointer user_data) -> gboolean
+      {
+        Impl *self = static_cast<Impl*>(user_data);
+        if (self->keyboard_launcher_.IsValid())
+        {
+          self->keyboard_launcher_->ForceReveal(false);
+          self->launcher_open = false;
+
+          if (!self->launcher_keynav)
+            self->keyboard_launcher_.Release();
+        }
+
+        self->launcher_hide_handler_id_ = 0;
+        return FALSE;
+      };
+
+      pimpl->launcher_hide_handler_id_ = g_timeout_add(time_left, hide_launcher, pimpl);
+    }
   }
 }
 
 bool Controller::HandleLauncherKeyEvent(Display *display, unsigned int key_sym, unsigned long key_code, unsigned long key_state, char* key_string)
 {
-  printf("HandleLauncherKeyEvent\n");
   LauncherModel::iterator it;
 
   // Shortcut to start launcher icons. Only relies on Keycode, ignore modifier
@@ -840,13 +879,22 @@ bool Controller::HandleLauncherKeyEvent(Display *display, unsigned int key_sym, 
   return false;
 }
 
+void Controller::Impl::ReceiveMouseDownOutsideArea(int x, int y, unsigned long button_flags, unsigned long key_flags)
+{
+  if (launcher_grabbed)
+    parent_->KeyNavTerminate(false);
+}
+
 void Controller::KeyNavGrab()
 {
-  printf("KeyNavGrab\n");
   KeyNavActivate();
   pimpl->keyboard_launcher_->GrabKeyboard();
   pimpl->launcher_grabbed = true;
-  pimpl->launcher_key_press_connection_ = pimpl->keyboard_launcher_->key_down.connect(sigc::mem_fun(pimpl, &Controller::Impl::ReceiveLauncherKeyPress));
+  
+  pimpl->launcher_key_press_connection_ = 
+    pimpl->keyboard_launcher_->key_down.connect(sigc::mem_fun(pimpl, &Controller::Impl::ReceiveLauncherKeyPress));
+  pimpl->launcher_event_outside_connection_ = 
+    pimpl->keyboard_launcher_->mouse_down_outside_pointer_grab_area.connect(sigc::mem_fun(pimpl, &Controller::Impl::ReceiveMouseDownOutsideArea));
 }
 
 void Controller::KeyNavActivate()
@@ -859,6 +907,8 @@ void Controller::KeyNavActivate()
 
   pimpl->keyboard_launcher_->EnterKeyNavMode();
   pimpl->model_->SetSelection(0);
+
+  UBusManager().SendMessage(UBUS_LAUNCHER_START_KEY_SWTICHER, g_variant_new_boolean(true));
 }
 
 void Controller::KeyNavNext()
@@ -881,6 +931,7 @@ void Controller::KeyNavTerminate(bool activate)
   {
     pimpl->keyboard_launcher_->UnGrabKeyboard();
     pimpl->launcher_key_press_connection_.disconnect();
+    pimpl->launcher_event_outside_connection_.disconnect();
   }
 
   if (activate)
@@ -889,6 +940,8 @@ void Controller::KeyNavTerminate(bool activate)
   pimpl->launcher_keynav = false;
   if (!pimpl->launcher_open)
     pimpl->keyboard_launcher_.Release();
+  
+  UBusManager().SendMessage(UBUS_LAUNCHER_END_KEY_SWTICHER, g_variant_new_boolean(true));
 }
 
 bool Controller::KeyNavIsActive()
