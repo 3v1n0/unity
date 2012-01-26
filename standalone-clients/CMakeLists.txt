@@ -8,7 +8,7 @@ set(UNITY_SRC ../plugins/unityshell/src)
 # Unit tests
 #
 find_package (PkgConfig)
-set (TEST_DEPS "${UNITY_PLUGIN_DEPS};unity>=4.0.0")
+set (TEST_DEPS "${UNITY_PLUGIN_DEPS};unity>=4.0.0 xtst")
 pkg_check_modules (TEST_UNIT_DEPS REQUIRED ${TEST_DEPS})
 
 set (TESTDATADIR "${CMAKE_CURRENT_SOURCE_DIR}/data")
@@ -26,7 +26,7 @@ set (CFLAGS
      )
 add_definitions (${CFLAGS})
 
-set (LIBS ${TEST_UNIT_DEPS_LIBRARIES} "-lunity-core-${UNITY_API_VERSION} -lm -lGL -lGLU")
+set (LIBS ${TEST_UNIT_DEPS_LIBRARIES} "-lunity-core-${UNITY_API_VERSION} -lm -lGL -lGLU -lXtst")
 link_libraries (${LIBS})
 
 set (LIB_PATHS ${TEST_UNIT_DEPS_LIBRARY_DIRS})
@@ -290,8 +290,10 @@ add_dependencies (keyutil unity-core-${UNITY_API_VERSION})
 
 add_executable (quicklist
                 ui/TestQuicklist.cpp
-                ui/EventFaker.cpp
-                ui/EventFaker.h
+                nux_test_framework.cpp
+                nux_test_framework.h
+                nux_automated_test_framework.cpp
+                nux_automated_test_framework.h
                 ${UNITY_SRC}/Introspectable.cpp
                 ${UNITY_SRC}/Introspectable.h
                 ${UNITY_SRC}/QuicklistMenuItem.cpp
