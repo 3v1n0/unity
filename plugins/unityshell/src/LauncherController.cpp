@@ -73,6 +73,11 @@ public:
 
   void OnLauncherEntryRemoteAdded(LauncherEntryRemote* entry);
   void OnLauncherEntryRemoteRemoved(LauncherEntryRemote* entry);
+  
+  void OnFavoriteStoreFavoriteAdded(std::string const& entry, std::string const& pos, bool before);
+  void OnFavoriteStoreFavoriteRemoved(std::string const& entry);
+  void OnFavoriteStoreReordered();
+
 
   void InsertExpoAction();
   void RemoveExpoAction();
@@ -179,6 +184,10 @@ Controller::Impl::Impl(Display* display)
 
   remote_model_.entry_added.connect(sigc::mem_fun(this, &Impl::OnLauncherEntryRemoteAdded));
   remote_model_.entry_removed.connect(sigc::mem_fun(this, &Impl::OnLauncherEntryRemoteRemoved));
+  
+  FavoriteStore::GetDefault().favorite_added.connect(sigc::mem_fun(this, &Impl::OnFavoriteStoreFavoriteAdded));
+  FavoriteStore::GetDefault().favorite_removed.connect(sigc::mem_fun(this, &Impl::OnFavoriteStoreFavoriteRemoved));
+  FavoriteStore::GetDefault().reordered.connect(sigc::mem_fun(this, &Impl::OnFavoriteStoreReordered));
 
   RegisterIcon(new BFBLauncherIcon(raw_launcher));
   desktop_icon_ = new DesktopLauncherIcon(raw_launcher);
@@ -347,6 +356,82 @@ void Controller::Impl::OnLauncherEntryRemoteRemoved(LauncherEntryRemote* entry)
   {
     icon->RemoveEntryRemote(entry);
   }
+}
+
+void Controller::Impl::OnFavoriteStoreFavoriteAdded(std::string const& entry, std::string const& pos, bool before)
+{  
+  auto bamf_list = model_->GetSublist<BamfLauncherIcon>();  
+  LauncherIcon* other = (bamf_list.size() > 0) ? *(bamf_list.begin()) : nullptr;
+  
+  if (!pos.empty())
+  {
+    for (auto it : bamf_list)
+    {
+      if (it->GetQuirk(LauncherIcon::QUIRK_VISIBLE) && pos == it->DesktopFile())
+        other = it;
+    }
+  }
+  
+  for (auto it : bamf_list)
+  {
+    if (entry == it->DesktopFile())
+    {
+      it->Stick(false);
+      if (!before)
+        model_->ReorderAfter(it, other);
+      else
+        model_->ReorderBefore(it, other, false);
+      return;
+    }
+  }
+
+  LauncherIcon* result = CreateFavorite(entry.c_str());
+  if (result)
+  {
+    RegisterIcon(result);
+    if (!before)
+      model_->ReorderAfter(result, other);
+    else
+      model_->ReorderBefore(result, other, false);
+  }
+}
+
+void Controller::Impl::OnFavoriteStoreFavoriteRemoved(std::string const& entry)
+{
+  for (auto it : model_->GetSublist<BamfLauncherIcon> ())
+  {
+    if (it->DesktopFile() == entry)
+    {
+      OnLauncherRemoveRequest(it);
+      break;
+     }
+  }
+}
+
+void Controller::Impl::OnFavoriteStoreReordered()
+{ 
+  FavoriteList const& favs = FavoriteStore::GetDefault().GetFavorites();
+  auto bamf_list = model_->GetSublist<BamfLauncherIcon>();
+  
+  int i = 0;
+  for (auto it : favs)
+  {    
+    auto icon = std::find_if(bamf_list.begin(), bamf_list.end(),
+    [&it](BamfLauncherIcon* x) { return (x->DesktopFile() == it); });
+    
+    if (icon != bamf_list.end())
+    {
+      (*icon)->SetSortPriority(i++);
+    }
+  }
+  
+  for (auto it : bamf_list)
+  {
+    if (!it->IsSticky())
+      it->SetSortPriority(i++);
+  }
+  
+  model_->Sort();
 }
 
 void Controller::Impl::OnExpoActivated()

@@ -3,7 +3,6 @@ plugins/unityshell/src/DeviceLauncherIcon.cpp
 plugins/unityshell/src/LauncherController.cpp
 plugins/unityshell/src/PanelMenuView.cpp
 plugins/unityshell/src/PlacesGroup.cpp
-plugins/unityshell/src/PlacesHomeView.cpp
 plugins/unityshell/src/SpacerLauncherIcon.cpp
 plugins/unityshell/src/TrashLauncherIcon.cpp
 plugins/unityshell/src/BFBLauncherIcon.cpp

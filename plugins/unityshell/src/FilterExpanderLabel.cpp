@@ -24,12 +24,17 @@
 #include "FilterBasicButton.h"
 #include "FilterExpanderLabel.h"
 
-static const float kExpandDefaultIconOpacity = 1.0f;
+namespace
+{
+const float kExpandDefaultIconOpacity = 1.0f;
+}
 
 namespace unity
 {
 namespace dash
 {
+
+
 
 NUX_IMPLEMENT_OBJECT_TYPE(FilterExpanderLabel);
 

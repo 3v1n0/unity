@@ -45,7 +45,10 @@
 #define LIVE_SEARCH_TIMEOUT 40
 #define SPINNER_TIMEOUT 100
 
-static const float kExpandDefaultIconOpacity = 1.0f;
+namespace
+{
+const float kExpandDefaultIconOpacity = 1.0f;
+}
 
 namespace unity
 {
@@ -470,5 +473,5 @@ void SearchBar::AddProperties(GVariantBuilder* builder)
   g_variant_builder_add (builder, "{sv}", "search_string", g_variant_new_string (pango_entry_->GetText().c_str()) );
 }
 
-}
-}
+} // namespace dash
+} // namespace unity
