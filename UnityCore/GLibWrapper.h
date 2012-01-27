@@ -115,6 +115,7 @@ public:
 
   operator bool() const;
   operator char*();
+  operator std::string();
   gchar* Value();
   std::string Str() const;
 

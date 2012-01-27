@@ -28,6 +28,9 @@ namespace
 
 nux::logging::Logger logger("unity.plugin");
 
+const int THRESHOLD_HEIGHT = 600;
+const int THRESHOLD_WIDTH = 1024;
+
 }
 
 PluginAdapter* PluginAdapter::_default = 0;
@@ -624,7 +627,7 @@ PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids, FocusVisibility 
         * or scale, so unconditionally unminimize those
         * windows when the launcher icon is activated */
        if ((focus_visibility == WindowManager::FocusVisibility::ForceUnminimizeOnCurrentDesktop &&
-            WindowManager::Default ()->IsWindowOnCurrentDesktop(win->id ())) ||
+            target_vp == m_Screen->vp()) ||
             (focus_visibility == WindowManager::FocusVisibility::ForceUnminimizeInvisible &&
              win->mapNum () == 0))
        {
@@ -640,8 +643,7 @@ PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids, FocusVisibility 
        }
        else if ((any_mapped && !win->minimized()) || !any_mapped)
        {
-         if (!forced_unminimize ||
-             WindowManager::Default ()->IsWindowOnCurrentDesktop (win->id ()))
+         if (!forced_unminimize || target_vp == m_Screen->vp())
          {
            win->raise();
            top_win = win;
@@ -924,6 +926,10 @@ bool PluginAdapter::MaximizeIfBigEnough(CompWindow* window)
 
   screen_height = o.workArea().height();
   screen_width = o.workArea().width();
+  
+  // See bug https://bugs.launchpad.net/unity/+bug/797808
+  if (screen_height * screen_width > THRESHOLD_HEIGHT * THRESHOLD_WIDTH)
+    return false;
 
   // use server<parameter> because the window won't show the real parameter as
   // not mapped yet

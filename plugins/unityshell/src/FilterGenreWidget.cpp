@@ -47,7 +47,7 @@ FilterGenre::FilterGenre(int columns, NUX_FILE_LINE_DECL)
   genre_layout_->ForceChildrenSize(true);
   genre_layout_->MatchContentSize(true);
   genre_layout_->SetSpaceBetweenChildren (9, 9);
-  genre_layout_->SetTopAndBottomPadding(12);
+  genre_layout_->SetTopAndBottomPadding(9, 12);
   genre_layout_->EnablePartialVisibility(false);
   if (columns == 3)
   {
@@ -55,7 +55,7 @@ FilterGenre::FilterGenre(int columns, NUX_FILE_LINE_DECL)
   }
   else
   {
-    genre_layout_->SetChildrenSize(Style::Instance().GetTileWidth() - 12, 33);
+    genre_layout_->SetChildrenSize(Style::Instance().GetTileWidth() - 7, 33);
   }
 
   SetRightHandView(all_button_);
@@ -122,17 +122,9 @@ void FilterGenre::InitTheme()
 void FilterGenre::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
   nux::Geometry const& geo = GetGeometry();
-  nux::Color col(0.2f, 0.2f, 0.2f, 0.2f);
 
   GfxContext.PushClippingRectangle(geo);
   nux::GetPainter().PaintBackground(GfxContext, geo);
-
-  nux::GetPainter().Draw2DLine(GfxContext,
-                               geo.x, geo.y + geo.height - 1,
-                               geo.x + geo.width, geo.y + geo.height - 1,
-                               col,
-                               col);
-
   GfxContext.PopClippingRectangle();
 }
 

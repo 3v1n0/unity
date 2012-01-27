@@ -39,6 +39,14 @@ namespace unity
 namespace ui
 {
 
+#ifdef USE_GLES
+  #define VertexShaderHeader   "#version 100\n"
+  #define FragmentShaderHeader "#version 100\n precision mediump float;\n"
+#else
+  #define VertexShaderHeader   "#version 120\n"
+  #define FragmentShaderHeader "#version 110\n"
+#endif
+
 /*
   Use this shader to pass vertices in screen coordinates in the C++ code and compute use
   the fragment shader to perform the texture perspective correct division.
@@ -60,9 +68,9 @@ namespace ui
 #define LUMIN_BLUE "0.055"
 
 nux::NString gPerspectiveCorrectShader = TEXT(
-"[Vertex Shader]                                    \n\
-#version 120                                        \n\
-uniform mat4 ViewProjectionMatrix;                  \n\
+"[Vertex Shader]                                    \n"
+VertexShaderHeader
+"uniform mat4 ViewProjectionMatrix;                 \n\
                                                     \n\
 attribute vec4 iTexCoord0;                          \n\
 attribute vec4 iVertex;                             \n\
@@ -75,9 +83,9 @@ void main()                                         \n\
     gl_Position =  ViewProjectionMatrix * iVertex;  \n\
 }                                                   \n\
                                                     \n\
-[Fragment Shader]                                   \n\
-#version 110                                        \n\
-                                                    \n\
+[Fragment Shader]                                   \n"
+FragmentShaderHeader
+"                                                   \n\
 varying vec4 varyTexCoord0;                         \n\
                                                     \n\
 uniform sampler2D TextureObject0;                   \n\
@@ -649,8 +657,13 @@ void IconRenderer::RenderElement(nux::GraphicsEngine& GfxContext,
     // Perspective correct
     v0.x, v0.y, 0.0f, 1.0f,     s0 / v0.w, t0 / v0.w, 0.0f, 1.0f / v0.w,
     v1.x, v1.y, 0.0f, 1.0f,     s1 / v1.w, t1 / v1.w, 0.0f, 1.0f / v1.w,
+#ifdef USE_GLES
+    v3.x, v3.y, 0.0f, 1.0f,     s3 / v3.w, t3 / v3.w, 0.0f, 1.0f / v3.w,
+    v2.x, v2.y, 0.0f, 1.0f,     s2 / v2.w, t2 / v2.w, 0.0f, 1.0f / v2.w,
+#else
     v2.x, v2.y, 0.0f, 1.0f,     s2 / v2.w, t2 / v2.w, 0.0f, 1.0f / v2.w,
     v3.x, v3.y, 0.0f, 1.0f,     s3 / v3.w, t3 / v3.w, 0.0f, 1.0f / v3.w,
+#endif
   };
 
   CHECKGL(glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0));
@@ -681,6 +694,7 @@ void IconRenderer::RenderElement(nux::GraphicsEngine& GfxContext,
       local::shader_program_uv_persp_correction->SetUniformLocMatrix4fv((GLint)VPMatrixLocation, 1, false, (GLfloat*) & (_stored_projection_matrix.m));
     }
   }
+#ifndef USE_GLES
   else
   {
     local::asm_shader->Begin();
@@ -698,6 +712,7 @@ void IconRenderer::RenderElement(nux::GraphicsEngine& GfxContext,
     CHECKGL(glMatrixMode(GL_PROJECTION));
     CHECKGL(glLoadMatrixf((float*) GfxContext.GetOpenGLProjectionMatrix().m));
   }
+#endif
 
   CHECKGL(glEnableVertexAttribArrayARB(VertexLocation));
   CHECKGL(glVertexAttribPointerARB((GLuint)VertexLocation, 4, GL_FLOAT, GL_FALSE, 32, VtxBuffer));
@@ -716,8 +731,13 @@ void IconRenderer::RenderElement(nux::GraphicsEngine& GfxContext,
     CHECKGL(glUniform4fARB(DesatFactor, arg.saturation, arg.saturation, arg.saturation, arg.saturation));
 
     nux::GetWindowThread()->GetGraphicsEngine().SetTexture(GL_TEXTURE0, icon);
+#ifdef USE_GLES
+    CHECKGL(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
+#else
     CHECKGL(glDrawArrays(GL_QUADS, 0, 4));
+#endif
   }
+#ifndef USE_GLES
   else
   {
     CHECKGL(glProgramLocalParameter4fARB(GL_FRAGMENT_PROGRAM_ARB, 0, bg_color.red, bg_color.green, bg_color.blue, bg_color.alpha));
@@ -726,6 +746,7 @@ void IconRenderer::RenderElement(nux::GraphicsEngine& GfxContext,
     nux::GetWindowThread()->GetGraphicsEngine().SetTexture(GL_TEXTURE0, icon);
     CHECKGL(glDrawArrays(GL_QUADS, 0, 4));
   }
+#endif
 
   if (VertexLocation != -1)
     CHECKGL(glDisableVertexAttribArrayARB(VertexLocation));
