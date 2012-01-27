@@ -56,6 +56,8 @@ struct _PanelServicePrivate
   gint32 timeouts[N_TIMEOUT_SLOTS];
 
   IndicatorObjectEntry *last_entry;
+  GtkWidget *menubar;
+  GtkWidget *offscreen_window;
   GtkMenu *last_menu;
   guint32  last_menu_id;
   guint32  last_menu_move_id;
@@ -138,6 +140,24 @@ panel_service_class_dispose (GObject *object)
   g_hash_table_destroy (priv->panel2entries_hash);
 
   gdk_window_remove_filter (NULL, (GdkFilterFunc)event_filter, object);
+
+  if (priv->menubar)
+  {
+    g_object_unref (priv->menubar);
+    priv->menubar = NULL;
+  }
+
+  if (priv->offscreen_window)
+  {
+    g_object_unref (priv->offscreen_window);
+    priv->offscreen_window = NULL;
+  }
+
+  if (priv->last_menu)
+  {
+    g_object_unref (priv->last_menu);
+    priv->last_menu = NULL;
+  }
 
   if (priv->initial_sync_id)
     {
@@ -415,7 +435,12 @@ panel_service_init (PanelService *self)
   PanelServicePrivate *priv;
   priv = self->priv = GET_PRIVATE (self);
 
-  gdk_window_add_filter (NULL, (GdkFilterFunc)event_filter, self);
+  priv->offscreen_window = gtk_offscreen_window_new ();
+  priv->menubar = gtk_menu_bar_new ();
+  gtk_container_add (GTK_CONTAINER (priv->offscreen_window), priv->menubar);
+
+  GdkWindow *filter_window = gtk_widget_get_window (priv->offscreen_window);
+  gdk_window_add_filter (filter_window, (GdkFilterFunc)event_filter, self);
 
   priv->entry2indicator_hash = g_hash_table_new (g_direct_hash, g_direct_equal);
   priv->panel2entries_hash = g_hash_table_new_full (g_str_hash, g_str_equal,
@@ -1477,6 +1502,9 @@ panel_service_show_entry (PanelService *self,
                             G_CALLBACK (gtk_widget_destroyed), &priv->last_menu);
         }
 
+      GtkWidget *menu_window = gtk_widget_get_toplevel (GTK_WIDGET (priv->last_menu));
+      gtk_window_set_attached_to (GTK_WINDOW (menu_window), priv->menubar);
+
       priv->last_entry = entry;
       priv->last_x = x;
       priv->last_y = y;
@@ -1487,6 +1515,7 @@ panel_service_show_entry (PanelService *self,
                                                         G_CALLBACK (on_active_menu_move_current), self);
 
       indicator_object_entry_activate (object, entry, CurrentTime);
+
       gtk_menu_popup (priv->last_menu, NULL, NULL, positon_menu, self, 0, CurrentTime);
       GdkWindow *gdkwin = gtk_widget_get_window (GTK_WIDGET (priv->last_menu));
       if (gdkwin != NULL)
