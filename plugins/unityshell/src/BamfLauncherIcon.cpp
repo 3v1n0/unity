@@ -320,8 +320,9 @@ std::vector<Window> BamfLauncherIcon::WindowsForMonitor (int monitor)
     if (BAMF_IS_WINDOW(view) && bamf_window_get_monitor(BAMF_WINDOW(view)) == monitor)
     {
       guint32 xid = bamf_window_get_xid(BAMF_WINDOW(view));
+      bool user_visible = bamf_view_user_visible(view);
 
-      if (wm->IsWindowMapped(xid) && wm->IsWindowOnCurrentDesktop(xid))
+      if (user_visible && wm->IsWindowMapped(xid) && wm->IsWindowOnCurrentDesktop(xid))
         results.push_back ((Window) xid);
     }
   }
