@@ -57,6 +57,7 @@ SwitcherView::SwitcherView(NUX_FILE_LINE_DECL)
   vertical_size = tile_size + 80;
   text_size = 15;
   animation_length = 250;
+  monitor = -1;
   spread_size = 3.5f;
   render_boxes = false;
 
@@ -210,7 +211,7 @@ RenderArg SwitcherView::CreateBaseArgForIcon(AbstractLauncherIcon* icon)
   // tells the renderer to render arrows by number
   arg.running_on_viewport = true;
 
-  arg.window_indicators = icon->Windows().size();
+  arg.window_indicators = icon->WindowsForMonitor(monitor).size();
   if (arg.window_indicators > 1)
     arg.running_arrow = true;
   else

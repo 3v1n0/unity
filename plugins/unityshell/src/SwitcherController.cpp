@@ -168,6 +168,7 @@ void Controller::ConstructView()
   AddChild(view_.GetPointer());
   view_->SetModel(model_);
   view_->background_color = bg_color_;
+  view_->monitor = monitor_;
 
   if (!view_window_)
   {
@@ -192,6 +193,9 @@ void Controller::SetWorkspace(nux::Geometry geo, int monitor)
 {
   monitor_ = monitor;
   workarea_ = geo;
+
+  if (view_)
+    view_->monitor = monitor_;
 }
 
 void Controller::Hide(bool accept_state)
