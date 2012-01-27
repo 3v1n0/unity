@@ -237,6 +237,7 @@ private:
 
   void EnsureSuperKeybindings ();
   void CreateSuperNewAction(char shortcut, bool use_shift=false, bool use_numpad=false);
+  void EnableCancelAction(bool enabled, int modifiers = 0);
 
   static gboolean initPluginActions(gpointer data);
   void initLauncher();
@@ -287,6 +288,7 @@ private:
   typedef std::shared_ptr<CompAction> CompActionPtr;
   typedef std::vector<CompActionPtr> ShortcutActions;
   ShortcutActions _shortcut_actions;
+  CompActionPtr   _escape_action;
   bool            super_keypressed_;
   CompActionPtr   _escape_action;
 
