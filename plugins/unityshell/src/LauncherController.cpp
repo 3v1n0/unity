@@ -868,12 +868,15 @@ void Controller::HandleLauncherKeyPress()
   auto show_shortcuts = [](gpointer user_data) -> gboolean
   {
     Impl* self = static_cast<Impl*>(user_data);
-    if (self->keyboard_launcher_.IsNull())
-      self->keyboard_launcher_ = self->launchers[self->MonitorWithMouse()];
+    if (!self->launcher_keynav)
+    {
+      if (self->keyboard_launcher_.IsNull())
+        self->keyboard_launcher_ = self->launchers[self->MonitorWithMouse()];
 
-    self->keyboard_launcher_->ShowShortcuts(true);
-    self->launcher_open = true;
-    self->launcher_label_show_handler_id_ = 0;
+      self->keyboard_launcher_->ShowShortcuts(true);
+      self->launcher_open = true;
+      self->launcher_label_show_handler_id_ = 0;
+    }
     return FALSE;
   };
   pimpl->launcher_label_show_handler_id_ = g_timeout_add(local::shortcuts_show_delay, show_shortcuts, pimpl);
