@@ -2606,9 +2606,17 @@ void Launcher::SelectPreviousIcon()
     {
       _current_icon_index = temp_current_icon_index;
 
-      if ((*it)->GetCenter().y + - _icon_size/ 2 < GetGeometry().y)
+      if ((*it)->GetCenter().y - _icon_size / 2 < GetGeometry().y)
+      {
         _launcher_drag_delta += (_icon_size + _space_between_icons);
+      }
+      else if ((*it)->GetCenter().y + _icon_size / 2 > GetGeometry().height)
+      {
+        _launcher_drag_delta -= (*it)->GetCenter().y + _icon_size/2 +
+                                _space_between_icons - GetGeometry().height;
+      }
     }
+
     EnsureAnimation();
     selection_change.emit();
   }
@@ -2634,7 +2642,13 @@ void Launcher::SelectNextIcon()
       _current_icon_index = temp_current_icon_index;
 
       if ((*it)->GetCenter().y + _icon_size / 2 > GetGeometry().height)
+      {
         _launcher_drag_delta -= (_icon_size + _space_between_icons);
+      }
+      else if ((*it)->GetCenter().y - _icon_size / 2 < GetGeometry().y)
+      {
+        _launcher_drag_delta += GetGeometry().y - ((*it)->GetCenter().y - _icon_size);
+      }
     }
 
     EnsureAnimation();
@@ -2684,6 +2698,15 @@ void Launcher::KeySwitcherTerminate()
   selection_change.emit();
 }
 
+void Launcher::KeySwitcherCancel()
+{
+  if (!_key_switcher_activated)
+    return;
+
+  _current_icon_index = -1;
+  KeySwitcherTerminate();
+}
+
 bool Launcher::KeySwitcherIsActive()
 {
   return _key_switcher_activated;
@@ -2694,6 +2717,11 @@ void Launcher::KeySwitcherNext()
   if (!_key_switcher_activated)
     return;
 
+  if (_current_icon_index == _model->Size() - 1)
+  {
+    _current_icon_index = -1;
+  }
+
   SelectNextIcon();
 }
 
@@ -2701,6 +2729,11 @@ void Launcher::KeySwitcherPrevious()
 {
   if (!_key_switcher_activated)
     return;
+
+  if (_current_icon_index == 0)
+  {
+    _current_icon_index = _model->Size();
+  }
 
   SelectPreviousIcon();
 }
@@ -2861,13 +2894,9 @@ void Launcher::MouseDownLogic(int x, int y, unsigned long button_flags, unsigned
     _start_dragicon_handle = g_timeout_add(START_DRAGICON_DURATION, &Launcher::StartIconDragTimeout, this);
 
     launcher_icon->mouse_down.emit(nux::GetEventButton(button_flags));
-
-    if (_key_switcher_activated)
-    {
-      _current_icon_index = -1;
-      KeySwitcherTerminate();
-    }
   }
+
+  KeySwitcherCancel();
 }
 
 void Launcher::MouseUpLogic(int x, int y, unsigned long button_flags, unsigned long key_flags)

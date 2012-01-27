@@ -107,6 +107,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , _edge_trigger_handle(0)
   , _redraw_handle(0)
   , _edge_pointerY(0)
+  , _escape_action(nullptr)
   , newFocusedWindow(nullptr)
   , doShellRepaint(false)
   , allowWindowPaint(false)
@@ -438,6 +439,25 @@ void UnityScreen::CreateSuperNewAction(char shortcut, bool use_shift, bool use_n
 
     screen->addAction(action.get());
     _shortcut_actions.push_back(action);
+}
+
+void UnityScreen::EnableCancelAction(bool enabled, int modifiers)
+{
+  if (enabled)
+  {
+    /* Create a new keybinding for the Escape key and the current modifiers */
+    CompAction::KeyBinding binding(9, modifiers);
+
+    _escape_action = CompActionPtr(new CompAction());
+    _escape_action->setKey(binding);
+
+    screen->addAction(_escape_action.get());
+  }
+  else if (!enabled && _escape_action.get())
+  {
+    screen->removeAction(_escape_action.get());
+    _escape_action = nullptr;
+  }
 }
 
 void UnityScreen::nuxPrologue()
@@ -1271,6 +1291,13 @@ void UnityScreen::handleEvent(XEvent* event)
         launcher.startKeyNavMode();
       _key_nav_mode_requested = false;
       break;
+    case ButtonPress:
+      if (super_keypressed_)
+      {
+        launcher.KeySwitcherCancel();
+        EnableCancelAction(false);
+      }
+      break;
     case KeyPress:
     {
       KeySym key_sym;
@@ -1282,7 +1309,7 @@ void UnityScreen::handleEvent(XEvent* event)
         // we should just say "key_string[1] = 0" because that is the only
         // thing that could possibly make sense here.
         key_string[result] = 0;
-        if (super_keypressed_)
+        if (super_keypressed_ && key_sym != XK_Escape)
         {
           g_idle_add([] (gpointer data) -> gboolean {
             auto self = static_cast<UnityScreen*>(data);
@@ -1442,9 +1469,11 @@ bool UnityScreen::showLauncherKeyTerminate(CompAction* action,
                                            CompAction::State state,
                                            CompOption::Vector& options)
 {
+  if (state & CompAction::StateCancel)
+    return false;
+
   super_keypressed_ = false;
   launcher_controller_->launcher().EndKeyShowLauncher();
-  launcher_controller_->launcher().KeySwitcherTerminate();
 
   shortcut_controller_->SetEnabled(enable_shortcut_overlay_);
   shortcut_controller_->Hide();
@@ -1705,21 +1734,43 @@ bool UnityScreen::launcherSwitcherForwardInitiate(CompAction* action, CompAction
   Launcher& launcher = launcher_controller_->launcher();
 
   if (!launcher.KeySwitcherIsActive())
+  {
+    EnableCancelAction(true, action->key().modifiers());
     launcher.KeySwitcherActivate();
+  }
   else
+  {
     launcher.KeySwitcherNext();
+  }
 
+  action->setState(action->state() | CompAction::StateTermKey);
   return false;
 }
+
 bool UnityScreen::launcherSwitcherPrevInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
 {
   launcher_controller_->launcher().KeySwitcherPrevious();
 
   return false;
 }
+
 bool UnityScreen::launcherSwitcherTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options)
 {
-  launcher_controller_->launcher().KeySwitcherTerminate();
+  Launcher& launcher = launcher_controller_->launcher();
+
+  if (launcher.KeySwitcherIsActive())
+  {
+    if (state & CompAction::StateCancel)
+    {
+      launcher.KeySwitcherCancel();
+    }
+    else
+    {
+      launcher.KeySwitcherTerminate();
+    }
+
+    EnableCancelAction(false);
+  }
 
   return false;
 }
