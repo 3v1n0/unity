@@ -10,6 +10,21 @@ using the dash. (see lp:856205)
 Outcome
   The dash disappears, and gedit is run. If nothing happens or the first
   command is run (in this case gcc), this test failed.
+ 
+
+Mouse down and search bar focus
+-------------------------------
+This test makes sure that the search bar doesn't lose the focus clicking in
+am emtpy.
+ 
+#. Open the app lens
+#. Expand the filter bar
+#. Make sure the dash has the focus
+#. The cursor should blink
+#. Click (for example) between a filter expander and the All Button (for example between Type > and All)
+
+Outcome
+The cursor is still blinking.
   
 
 Category headers focus
