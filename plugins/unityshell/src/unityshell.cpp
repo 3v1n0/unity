@@ -817,6 +817,25 @@ void UnityWindow::paintThumbnail (nux::Geometry const& bounding, float alpha)
               geo.height);
 }
 
+void UnityScreen::EnableCancelAction(bool enabled, int modifiers)
+{
+  if (enabled)
+  {
+    /* Create a new keybinding for the Escape key and the current modifiers */
+    CompAction::KeyBinding binding(9, modifiers);
+
+    _escape_action = CompActionPtr(new CompAction());
+    _escape_action->setKey(binding);
+
+    screen->addAction(_escape_action.get());
+  }
+  else if (!enabled && _escape_action.get())
+  {
+    screen->removeAction(_escape_action.get());
+    _escape_action = nullptr;
+  }
+}
+
 void UnityScreen::enterShowDesktopMode ()
 {
   for (CompWindow *w : screen->windows ())
@@ -1289,11 +1308,7 @@ void UnityScreen::handleEvent(XEvent* event)
 
           skip_other_plugins = launcher_controller_->HandleLauncherKeyEvent(screen->dpy(), key_sym, event->xkey.keycode, event->xkey.state, key_string);
           if (!skip_other_plugins)
-          //{
             skip_other_plugins = dash_controller_->CheckShortcutActivation(key_string);
-            //if (skip_other_plugins)
-            //  launcher.SetLatestShortcut(key_string[0]);
-          //}
         }
       }
       break;
@@ -1435,9 +1450,12 @@ bool UnityScreen::showLauncherKeyTerminate(CompAction* action,
                                            CompAction::State state,
                                            CompOption::Vector& options)
 {
+  bool accept_state = (state & CompAction::StateCancel) == 0;
+
   super_keypressed_ = false;
+  launcher_controller_->KeyNavTerminate(accept_state);
   launcher_controller_->HandleLauncherKeyRelease();
-  launcher_controller_->KeyNavTerminate();
+  EnableCancelAction(false);
 
   shortcut_controller_->SetEnabled(enable_shortcut_overlay_);
   shortcut_controller_->Hide();
@@ -1638,10 +1656,16 @@ bool UnityScreen::altTabPrevWindowInitiate(CompAction* action, CompAction::State
 bool UnityScreen::launcherSwitcherForwardInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
 {
   if (!launcher_controller_->KeyNavIsActive())
+  {
     launcher_controller_->KeyNavActivate();
+    EnableCancelAction(true, action->key().modifiers());
+  }
   else
+  {
     launcher_controller_->KeyNavNext();
+  }
 
+  action->setState(action->state() | CompAction::StateTermKey);
   return false;
 }
 bool UnityScreen::launcherSwitcherPrevInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
@@ -1652,8 +1676,11 @@ bool UnityScreen::launcherSwitcherPrevInitiate(CompAction* action, CompAction::S
 }
 bool UnityScreen::launcherSwitcherTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options)
 {
-  launcher_controller_->KeyNavTerminate();
+  bool accept_state = (state & CompAction::StateCancel) == 0;
+  launcher_controller_->KeyNavTerminate(accept_state);
 
+  EnableCancelAction(false);
+  action->setState (action->state() & (unsigned)~(CompAction::StateTermKey));
   return false;
 }
 

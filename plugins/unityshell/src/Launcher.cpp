@@ -2434,7 +2434,7 @@ void Launcher::EventLogic()
 
   AbstractLauncherIcon* launcher_icon = 0;
 
-  if (!_hidden)
+  if (!_hidden && !IsInKeyNavMode())
   {
     launcher_icon = MouseIconIntersection(_mouse_position.x, _mouse_position.y);
   }
