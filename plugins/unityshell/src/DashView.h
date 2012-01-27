@@ -27,10 +27,10 @@
 #include <Nux/View.h>
 #include <Nux/VLayout.h>
 #include <UnityCore/FilesystemLenses.h>
+#include <UnityCore/HomeLens.h>
 
 #include "BackgroundEffectHelper.h"
 #include "SearchBar.h"
-#include "HomeView.h"
 #include "Introspectable.h"
 #include "LensBar.h"
 #include "LensView.h"
@@ -95,6 +95,7 @@ private:
   std::string AnalyseLensURI(std::string const& uri);
   void UpdateLensFilter(std::string lens, std::string filter, std::string value);
   void UpdateLensFilterValue(Filter::Ptr filter, std::string value);
+  void EnsureLensesInitialized();
 
   bool AcceptKeyNavFocus();
   bool InspectKeyEvent(unsigned int eventType, unsigned int key_sym, const char* character);
@@ -108,6 +109,7 @@ private:
 private:
   UBusManager ubus_manager_;
   FilesystemLenses lenses_;
+  HomeLens::Ptr home_lens_;
   LensViews lens_views_;
 
 
@@ -118,7 +120,7 @@ private:
   nux::VLayout* lenses_layout_;
   LensBar* lens_bar_;
 
-  HomeView* home_view_;
+  LensView* home_view_;
   LensView* active_lens_view_;
 
   // Drawing related

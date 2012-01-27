@@ -151,11 +151,11 @@ void HudImpl::BuildQueries(GVariant* query_array)
   while (g_variant_iter_loop(&iter, "(sssssv)", 
          &formatted_text, &icon, &item_icon, &completion_text, &shortcut, &key))
   {
-    queries_.push_back(Query::Ptr(new Query(std::string(formatted_text), 
-                                            std::string(icon),
-                                            std::string(item_icon), 
-                                            std::string(completion_text),
-                                            std::string(shortcut),
+    queries_.push_back(Query::Ptr(new Query(formatted_text, 
+                                            icon,
+                                            item_icon, 
+                                            completion_text,
+                                            shortcut,
                                             key)));
   }
 }

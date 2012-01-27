@@ -40,8 +40,6 @@ IMTextEntry::IMTextEntry()
   , preedit_string("")
   , im_enabled(false)
   , im_active(false)
-  , im_context_(0)
-  , client_window_(0)
   , focused_(false)
 {
   g_setenv("IBUS_ENABLE_SYNC_MODE", "1", TRUE);
@@ -49,14 +47,6 @@ IMTextEntry::IMTextEntry()
   im_enabled ? SetupMultiIM() : SetupSimpleIM();
 
   mouse_up.connect(sigc::mem_fun(this, &IMTextEntry::OnMouseButtonUp));
-}
-
-IMTextEntry::~IMTextEntry()
-{
-  if (im_context_)
-    g_object_unref(im_context_);
-  if (client_window_)
-    g_object_unref(client_window_);
 }
 
 void IMTextEntry::CheckIMEnabled()
@@ -74,7 +64,7 @@ void IMTextEntry::CheckIMEnabled()
 void IMTextEntry::SetupSimpleIM()
 {
   im_context_ = gtk_im_context_simple_new();
-  
+
   sig_manager_.Add(new Signal<void, GtkIMContext*, char*>(im_context_, "commit", sigc::mem_fun(this, &IMTextEntry::OnCommit)));
   sig_manager_.Add(new Signal<void, GtkIMContext*>(im_context_, "preedit-changed", sigc::mem_fun(this, &IMTextEntry::OnPreeditChanged)));
   sig_manager_.Add(new Signal<void, GtkIMContext*>(im_context_, "preedit-start", sigc::mem_fun(this, &IMTextEntry::OnPreeditStart)));
@@ -84,7 +74,7 @@ void IMTextEntry::SetupSimpleIM()
 void IMTextEntry::SetupMultiIM()
 {
   im_context_ = gtk_im_multicontext_new();
-  
+
   sig_manager_.Add(new Signal<void, GtkIMContext*, char*>(im_context_, "commit", sigc::mem_fun(this, &IMTextEntry::OnCommit)));
   sig_manager_.Add(new Signal<void, GtkIMContext*>(im_context_, "preedit-changed", sigc::mem_fun(this, &IMTextEntry::OnPreeditChanged)));
   sig_manager_.Add(new Signal<void, GtkIMContext*>(im_context_, "preedit-start", sigc::mem_fun(this, &IMTextEntry::OnPreeditStart)));
@@ -98,7 +88,7 @@ bool IMTextEntry::InspectKeyEvent(unsigned int event_type,
   bool propagate_event = !(TryHandleEvent(event_type, keysym, character));
 
   LOG_DEBUG(logger) << "Input method "
-                    << (im_enabled ? gtk_im_multicontext_get_context_id(GTK_IM_MULTICONTEXT(im_context_)) : "simple")
+                    << (im_enabled ? gtk_im_multicontext_get_context_id(glib::object_cast<GtkIMMulticontext>(im_context_)) : "simple")
                     << " "
                     << (propagate_event ? "did not handle " : "handled ") 
                     << "event ("
@@ -222,17 +212,35 @@ void IMTextEntry::Copy()
   }
 }
 
-void IMTextEntry::Paste()
+void IMTextEntry::Paste(bool primary)
 {
-  GtkClipboard* clip = gtk_clipboard_get_for_display(gdk_display_get_default(),
-                                                     GDK_SELECTION_CLIPBOARD);
+  GdkAtom origin = primary ? GDK_SELECTION_PRIMARY : GDK_SELECTION_CLIPBOARD;
+  glib::Object<GtkClipboard> clip(gtk_clipboard_get_for_display(gdk_display_get_default(),
+                                                                origin));
   auto callback = [](GtkClipboard* clip, const char* text, gpointer user_data)
    {
      IMTextEntry* self = static_cast<IMTextEntry*>(user_data);
-     self->OnCommit (self->im_context_, const_cast<char*>(text));
+     if (text)
+      self->InsertTextAt(self->cursor_, std::string(text));
    };
 
   gtk_clipboard_request_text(clip, callback, this);
+}
+
+void IMTextEntry::InsertTextAt(unsigned int position, std::string const& text)
+{
+  DeleteSelection();
+
+  if (!text.empty())
+  {
+    std::string new_text(GetText());
+    new_text.insert(position, text);
+
+    int cursor = position;
+    SetText(new_text.c_str());
+    SetCursor(cursor + text.length());
+    UpdateCursorLocation();
+  }
 }
 
 void IMTextEntry::OnCommit(GtkIMContext* context, char* str)
@@ -242,13 +250,7 @@ void IMTextEntry::OnCommit(GtkIMContext* context, char* str)
 
   if (str)
   {
-    std::string new_text = GetText();
-    new_text.insert(cursor_, str);
-		
-    int cursor = cursor_;
-    SetText(new_text.c_str());
-    SetCursor(cursor + strlen(str));
-    UpdateCursorLocation();
+    InsertTextAt(cursor_, std::string(str));
   }
 }
 
@@ -263,7 +265,7 @@ void IMTextEntry::OnPreeditChanged(GtkIMContext* context)
 
   preedit_ = preedit.Str();
 
-  if (strlen(preedit.Str().c_str())) {
+  if (!preedit.Str().empty()) {
     preedit_cursor_ = preedit.Str().length();
     QueueRefresh(true, true);
     sigTextChanged.emit(this);
@@ -309,19 +311,27 @@ void IMTextEntry::UpdateCursorLocation()
   nux::Rect strong, weak;
   GetCursorRects(&strong, &weak);
   nux::Geometry geo = GetGeometry();
-  
+
   GdkRectangle area = { strong.x + geo.x, strong.y + geo.y, strong.width, strong.height };
   gtk_im_context_set_cursor_location(im_context_, &area);
 }
 
 void IMTextEntry::OnMouseButtonUp(int x, int y, unsigned long bflags, unsigned long kflags)
 {
-  if (nux::GetEventButton(bflags) == 3 && im_enabled)
+  int button = nux::GetEventButton(bflags);
+
+  if (im_enabled && button == 3)
   {
     GtkWidget* menu = gtk_menu_new();
-    gtk_im_multicontext_append_menuitems(GTK_IM_MULTICONTEXT(im_context_),
-                                          GTK_MENU_SHELL(menu));
+    gtk_im_multicontext_append_menuitems(glib::object_cast<GtkIMMulticontext>(im_context_),
+                                         GTK_MENU_SHELL(menu));
     gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL, 3, GDK_CURRENT_TIME);
+  }
+  else if (button == 2)
+  {
+    SetCursor(XYToTextIndex(x, y));
+    UpdateCursorLocation();
+    Paste(true);
   }
 }
 

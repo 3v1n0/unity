@@ -45,7 +45,10 @@
 #define LIVE_SEARCH_TIMEOUT 40
 #define SPINNER_TIMEOUT 100
 
-static const float kExpandDefaultIconOpacity = 1.0f;
+namespace
+{
+const float kExpandDefaultIconOpacity = 1.0f;
+}
 
 namespace unity
 {
@@ -131,9 +134,10 @@ void SearchBar::Init()
 
   if (show_filter_hint_)
   {
-    std::string filter_str = _("<b>Filter results</b>");
+    std::string filter_str = _("<small><b>Filter results</b></small>");
     show_filters_ = new nux::StaticCairoText(filter_str.c_str());
     show_filters_->SetVisible(false);
+    show_filters_->SetFont("Ubuntu 10");
     show_filters_->SetTextColor(nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
     show_filters_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_LEFT);
     show_filters_->mouse_click.connect([&] (int x, int y, unsigned long b, unsigned long k) { showing_filters = !showing_filters; });
@@ -166,7 +170,6 @@ void SearchBar::Init()
 
     layout_->AddView(filter_layout_, 1, nux::MINOR_POSITION_RIGHT, nux::MINOR_SIZE_FULL);
   }
-
   sig_manager_.Add(new Signal<void, GtkSettings*, GParamSpec*>
       (gtk_settings_get_default(),
        "notify::gtk-font-name",
@@ -508,4 +511,4 @@ void SearchBar::AddProperties(GVariantBuilder* builder)
   g_variant_builder_add (builder, "{sv}", "search_string", g_variant_new_string (pango_entry_->GetText().c_str()) );
 }
 
-}
+} // namespace unity

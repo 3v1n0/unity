@@ -22,6 +22,7 @@ set (CORE_HEADERS
      GLibWrapper.h
      GLibWrapper-inl.h
      Hud.h
+     HomeLens.h
      IndicatorEntry.h
      Indicator.h
      Indicators.h
@@ -55,6 +56,7 @@ set (CORE_SOURCES
      GLibSignal.cpp
      GLibWrapper.cpp
      Hud.cpp
+     HomeLens.cpp
      Indicator.cpp
      IndicatorEntry.cpp
      Indicators.cpp
