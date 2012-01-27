@@ -321,7 +321,7 @@ std::vector<Window> BamfLauncherIcon::WindowsForMonitor (int monitor)
     {
       guint32 xid = bamf_window_get_xid(BAMF_WINDOW(view));
 
-      if (wm->IsWindowMapped(xid))
+      if (wm->IsWindowMapped(xid) && wm->IsWindowOnCurrentDesktop(xid))
         results.push_back ((Window) xid);
     }
   }
@@ -707,7 +707,7 @@ void BamfLauncherIcon::EnsureWindowState()
 
     Window xid = bamf_window_get_xid(BAMF_WINDOW(l->data));
     int monitor = bamf_window_get_monitor(BAMF_WINDOW(l->data));
-    if (WindowManager::Default()->IsWindowOnCurrentDesktop(xid) && monitor >= 0)
+    if (monitor >= 0 && WindowManager::Default()->IsWindowOnCurrentDesktop(xid))
       monitors[monitor] = true;
   }
 
