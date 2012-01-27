@@ -57,6 +57,7 @@ public:
   void ReorderSmart(AbstractLauncherIcon* icon, AbstractLauncherIcon* other, bool save);
 
   AbstractLauncherIcon* Selection ();
+  int SelectionIndex();
   void SetSelection(int selection);
   void SelectNext();
   void SelectPrevious();

@@ -326,6 +326,11 @@ AbstractLauncherIcon* LauncherModel::Selection ()
   return _inner[selection_];
 }
 
+int LauncherModel::SelectionIndex()
+{
+  return selection_;
+}
+
 void LauncherModel::SetSelection(int selection)
 {
   int new_selection = std::min<int>(Size() - 1, std::max<int> (0, selection));
@@ -342,8 +347,11 @@ void LauncherModel::SelectNext()
   int temp = selection_;
 
   temp++;
-  while (temp < Size())
+  while (temp != selection_)
   {
+    if (temp >= Size())
+      temp = 0;
+
     if (_inner[temp]->GetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE))
     {
       selection_ = temp;
@@ -359,8 +367,11 @@ void LauncherModel::SelectPrevious()
   int temp = selection_;
 
   temp--;
-  while (temp >= 0)
+  while (temp != selection_)
   {
+    if (temp < 0)
+      temp = Size() - 1;
+
     if (_inner[temp]->GetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE))
     {
       selection_ = temp;

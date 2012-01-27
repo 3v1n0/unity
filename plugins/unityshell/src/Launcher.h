@@ -101,6 +101,8 @@ public:
   void StartKeyShowLauncher();
   void EndKeyShowLauncher();
 
+  void EnsureIconOnScreen(AbstractLauncherIcon* icon);
+
   void SetBacklightMode(BacklightMode mode);
   BacklightMode GetBacklightMode();
   bool IsBackLightModeToggles();

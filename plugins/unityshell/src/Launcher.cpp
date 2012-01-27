@@ -1852,9 +1852,36 @@ LauncherModel* Launcher::GetModel()
   return _model;
 }
 
+void Launcher::EnsureIconOnScreen(AbstractLauncherIcon* selection)
+{
+  nux::Point3 center = selection->GetCenter(monitor);
+  nux::Geometry geo = GetGeometry();
+
+  int natural_y = 0;
+  for (auto icon : *_model)
+  {
+    if (!icon->GetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE))
+      continue;
+    
+    if (icon == selection)
+      break;
+    
+    natural_y += _icon_size + _space_between_icons;
+  }
+
+  int max_drag_delta = geo.height - (natural_y + _icon_size + (2 * _space_between_icons));
+  int min_drag_delta = -natural_y;
+
+  _launcher_drag_delta = std::max<int>(min_drag_delta, std::min<int>(max_drag_delta, _launcher_drag_delta));
+}
+
 void Launcher::OnSelectionChanged(AbstractLauncherIcon* selection)
 {
-  EnsureAnimation();
+  if (IsInKeyNavMode())
+  {
+    EnsureIconOnScreen(selection);
+    EnsureAnimation();
+  }
 }
 
 void Launcher::OnIconNeedsRedraw(AbstractLauncherIcon* icon)
