@@ -337,6 +337,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
 
      ubus_manager_.RegisterInterest(UBUS_PLACE_VIEW_SHOWN, [&](GVariant * args) { 
        dash_is_open_ = true; 
+       dash_monitor_ = g_variant_get_int32(args);
        RaiseInputWindows(); 
      });
      ubus_manager_.RegisterInterest(UBUS_PLACE_VIEW_HIDDEN, [&](GVariant * args) { dash_is_open_ = false; });
@@ -526,7 +527,7 @@ void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
   vc[2] = y1;
   vc[3] = y2;
 
-  if (!dash_is_open_ && panel_controller_->opacity() > 0.0f)
+  if (!(dash_is_open_ && (int)output->id() == dash_monitor_) && panel_controller_->opacity() > 0.0f)
   {
     foreach(GLTexture * tex, _shadow_texture)
     {
@@ -588,7 +589,7 @@ void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
   vc[2] = y1;
   vc[3] = y2;
 
-  if (!dash_is_open_ && panel_controller_->opacity() > 0.0f)
+  if (!(dash_is_open_ && (int)output->id() == dash_monitor_) && panel_controller_->opacity() > 0.0f)
   {
     foreach(GLTexture * tex, _shadow_texture)
     {

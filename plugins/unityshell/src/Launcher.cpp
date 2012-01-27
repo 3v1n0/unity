@@ -75,6 +75,7 @@ const int STARTING_BLINK_LAMBDA = 3;
 const int PULSE_BLINK_LAMBDA = 2;
 
 const float BACKLIGHT_STRENGTH = 0.9f;
+const int panel_height = 24;
 
 }
 
@@ -1293,7 +1294,7 @@ void Launcher::OnPlaceViewHidden(GVariant* data)
 {
   if (!_dash_is_open)
     return;
-    
+
   LauncherModel::iterator it;
 
   _dash_is_open = false;
@@ -1706,7 +1707,7 @@ void Launcher::SetHover(bool hovered)
 
 bool Launcher::MouseOverTopScrollArea()
 {
-  return _mouse_position.y < 24;
+  return _mouse_position.y < panel_height;
 }
 
 bool Launcher::MouseOverTopScrollExtrema()
@@ -1716,7 +1717,7 @@ bool Launcher::MouseOverTopScrollExtrema()
 
 bool Launcher::MouseOverBottomScrollArea()
 {
-  return _mouse_position.y > GetGeometry().height - 24;
+  return _mouse_position.y > GetGeometry().height - panel_height;
 }
 
 bool Launcher::MouseOverBottomScrollExtrema()
@@ -1781,7 +1782,6 @@ void Launcher::SetIconSize(int tile_size, int icon_size)
 
 void Launcher::Resize()
 {
-  const int panel_height = 24;
   UScreen* uscreen = UScreen::GetDefault();
   auto geo = uscreen->GetMonitorGeometry(monitor());
 
@@ -1987,8 +1987,8 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     nux::TexCoordXForm texxform;
     texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
     texxform.SetWrap(nux::TEXWRAP_CLAMP, nux::TEXWRAP_CLAMP);
-    texxform.uoffset = (1.0f / launcher_sheen_->GetWidth()) * (geo_absolute.x); // TODO (gord) don't use absolute values here
-    texxform.voffset = (1.0f / launcher_sheen_->GetHeight()) * (geo_absolute.y);
+    texxform.uoffset = (1.0f / launcher_sheen_->GetWidth()); // TODO (gord) don't use absolute values here
+    texxform.voffset = (1.0f / launcher_sheen_->GetHeight()) * panel_height;
     GfxContext.QRP_1Tex(base.x, base.y, base.width, base.height,
                         launcher_sheen_->GetDeviceTexture(),
                         texxform,

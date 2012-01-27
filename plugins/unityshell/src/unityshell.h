@@ -319,6 +319,7 @@ private:
 
   UBusManager ubus_manager_;
   bool dash_is_open_;
+  int dash_monitor_;
   CompScreen::GrabHandle grab_index_;
   CompWindowList         fullscreen_windows_;
   bool                   painting_tray_;

@@ -169,6 +169,7 @@ void Controller::Relayout(GdkScreen*screen)
   nux::Geometry geo = GetIdealWindowGeometry();
   window_->SetGeometry(geo);
   view_->Relayout();
+  view_->SetMonitorOffset(launcher_width, panel_height);
 }
 
 void Controller::OnMouseDownOutsideWindow(int x, int y,
