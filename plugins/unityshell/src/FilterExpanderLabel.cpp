@@ -39,7 +39,6 @@ FilterExpanderLabel::FilterExpanderLabel(std::string const& label, NUX_FILE_LINE
   , layout_(nullptr)
   , top_bar_layout_(nullptr)
   , right_hand_contents_(nullptr)
-  , expander_graphic_(nullptr)
   , cairo_label_(nullptr)
   , raw_label_(label)
   , label_("<span size='larger' weight='bold'>" + label + "</span>")

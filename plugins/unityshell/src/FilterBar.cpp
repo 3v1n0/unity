@@ -137,6 +137,5 @@ void FilterBar::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   GfxContext.PopClippingRectangle();
 }
 
-
 } // namespace dash
 } // namespace unity

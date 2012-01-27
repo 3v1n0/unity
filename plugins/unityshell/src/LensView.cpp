@@ -367,11 +367,6 @@ void LensView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
 
   gfx_context.PushClippingRectangle(geo);
   nux::GetPainter().PaintBackground(gfx_context, geo);
-
-  // debug layout
-  /*nux::Color magenta(1.0, 0.0, 1.0, 0.5);
-  nux::GetPainter().Paint2DQuadColor(gfx_context, fscroll_layout_->GetGeometry(), magenta);*/
-
   gfx_context.PopClippingRectangle();
 }
 

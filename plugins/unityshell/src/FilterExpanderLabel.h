@@ -61,7 +61,6 @@ private:
   nux::LinearLayout* layout_;
   nux::LinearLayout* top_bar_layout_;
   nux::View* right_hand_contents_;
-  nux::View* expander_graphic_;
   nux::StaticText* cairo_label_;
   std::string raw_label_;
   std::string label_;
