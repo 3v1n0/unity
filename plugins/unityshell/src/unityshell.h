@@ -231,8 +231,6 @@ protected:
 private:
   void initAltTabNextWindow ();
 
-  void EnableCancelAction(bool enabled, int modifiers = 0);
-
   void SendExecuteCommand();
 
   void EnsureSuperKeybindings ();
@@ -288,7 +286,6 @@ private:
   typedef std::shared_ptr<CompAction> CompActionPtr;
   typedef std::vector<CompActionPtr> ShortcutActions;
   ShortcutActions _shortcut_actions;
-  CompActionPtr   _escape_action;
   bool            super_keypressed_;
   CompActionPtr   _escape_action;
 
