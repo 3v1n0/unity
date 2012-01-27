@@ -527,7 +527,22 @@ void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
   vc[2] = y1;
   vc[3] = y2;
 
-  if (!(dash_is_open_ && (int)output->id() == dash_monitor_) && panel_controller_->opacity() > 0.0f)
+  // compiz doesn't use the same method of tracking monitors as our toolkit
+  // we need to make sure we properly associate with the right monitor
+  int current_monitor = -1;
+  auto monitors = UScreen::GetDefault()->GetMonitors();
+  int i = 0;
+  for (auto monitor : monitors)
+  {
+    if (monitor.x == output->x() && monitor.y == output->y())
+    {
+      current_monitor = i;
+      break;
+    }
+    i++;
+  }
+
+  if (!(dash_is_open_ && current_monitor == dash_monitor_) && panel_controller_->opacity() > 0.0f)
   {
     foreach(GLTexture * tex, _shadow_texture)
     {
@@ -589,7 +604,22 @@ void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
   vc[2] = y1;
   vc[3] = y2;
 
-  if (!(dash_is_open_ && (int)output->id() == dash_monitor_) && panel_controller_->opacity() > 0.0f)
+  // compiz doesn't use the same method of tracking monitors as our toolkit
+  // we need to make sure we properly associate with the right monitor
+  int current_monitor = -1;
+  auto monitors = UScreen::GetDefault()->GetMonitors();
+  int i = 0;
+  for (auto monitor : monitors)
+  {
+    if (monitor.x == output->x() && monitor.y == output->y())
+    {
+      current_monitor = i;
+      break;
+    }
+    i++;
+  }
+
+  if (!(dash_is_open_ && current_monitor == dash_monitor_) && panel_controller_->opacity() > 0.0f)
   {
     foreach(GLTexture * tex, _shadow_texture)
     {
