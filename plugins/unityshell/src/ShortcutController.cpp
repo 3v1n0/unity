@@ -51,7 +51,7 @@ Controller::Controller(std::list<AbstractHint*>& hints)
                                    enabled_ = true;
                                  });
 
-  ubus_manager_.RegisterInterest(UBUS_PLACE_VIEW_SHOWN, [&] (GVariant*) {
+  ubus_manager_.RegisterInterest(UBUS_OVERLAY_SHOWN, [&] (GVariant*) {
                                    Hide();
                                  });
 
