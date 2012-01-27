@@ -1314,6 +1314,13 @@ void UnityScreen::handleEvent(XEvent* event)
         launcher_controller_->KeyNavGrab();
       _key_nav_mode_requested = false;
       break;
+    case ButtonPress:
+      if (super_keypressed_)
+      {
+        launcher_controller_->KeyNavTerminate(false);
+        EnableCancelAction(false);
+      }
+      break;
     case KeyPress:
     {
       KeySym key_sym;
@@ -1325,7 +1332,7 @@ void UnityScreen::handleEvent(XEvent* event)
         // we should just say "key_string[1] = 0" because that is the only
         // thing that could possibly make sense here.
         key_string[result] = 0;
-        if (super_keypressed_)
+        if (super_keypressed_ && key_sym != XK_Escape)
         {
           g_idle_add([] (gpointer data) -> gboolean {
             auto self = static_cast<UnityScreen*>(data);
@@ -1481,6 +1488,9 @@ bool UnityScreen::showLauncherKeyTerminate(CompAction* action,
                                            CompAction::State state,
                                            CompOption::Vector& options)
 {
+  if (state & CompAction::StateCancel)
+    return false;
+
   bool accept_state = (state & CompAction::StateCancel) == 0;
 
   super_keypressed_ = false;
