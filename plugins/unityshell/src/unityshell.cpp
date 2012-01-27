@@ -1598,7 +1598,7 @@ bool UnityScreen::altTabInitiateCommon(CompAction *action,
 
   std::vector<unity::launcher::AbstractLauncherIcon*> results = launcher_controller_->GetAltTabIcons(show_monitor);
 
-  if (!(results.size() == 1 && results[0]->Type() == AbstractLauncherIcon::IconType::TYPE_DESKTOP))
+  if (!(results.size() == 1 && results[0]->Type() == AbstractLauncherIcon::IconType::TYPE_BEGIN))
     switcher_controller_->Show(show_mode, switcher::SortMode::FOCUS_ORDER, false, results);
 
   return true;
