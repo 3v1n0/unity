@@ -608,18 +608,18 @@ void BamfLauncherIcon::Focus(ActionArg arg)
     if (any_visible)
     {
       WindowManager::Default()->FocusWindowGroup(windows,
-       WindowManager::FocusVisibility::ForceUnminimizeInvisible);
+       WindowManager::FocusVisibility::ForceUnminimizeInvisible, arg.monitor);
     }
     else
     {
       WindowManager::Default()->FocusWindowGroup(windows,
-       WindowManager::FocusVisibility::ForceUnminimizeOnCurrentDesktop);
+       WindowManager::FocusVisibility::ForceUnminimizeOnCurrentDesktop, arg.monitor);
     }
   }
   else
   {
     WindowManager::Default()->FocusWindowGroup(windows,
-      WindowManager::FocusVisibility::OnlyVisible);
+      WindowManager::FocusVisibility::OnlyVisible, arg.monitor);
   }
 }
 

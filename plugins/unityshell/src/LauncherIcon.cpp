@@ -610,6 +610,8 @@ void LauncherIcon::RecvMouseUp(int button, int monitor)
 void LauncherIcon::RecvMouseClick(int button, int monitor)
 {
   ActionArg arg(ActionArg::LAUNCHER, button);
+  arg.monitor = monitor;
+  
   if (button == 1)
     Activate(arg);
   else if (button == 2)

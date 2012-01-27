@@ -54,19 +54,22 @@ public:
     : source(OTHER)
     , button(0)
     , target(0)
+    , monitor(-1)
   {
   }
 
-  ActionArg(Source source, int button, Window target = 0)
+  ActionArg(Source source, int button, Window target = 0, int monitor = -1)
     : source(source)
     , button(button)
     , target(target)
+    , monitor(monitor)
   {
   }
 
   Source source;
   int button;
   Window target;
+  int monitor;
 };
 
 class AbstractLauncherIcon : public nux::InitiallyUnownedObject, public debug::Introspectable
