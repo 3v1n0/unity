@@ -139,25 +139,26 @@ panel_service_class_dispose (GObject *object)
   g_hash_table_destroy (priv->entry2indicator_hash);
   g_hash_table_destroy (priv->panel2entries_hash);
 
-  gdk_window_remove_filter (NULL, (GdkFilterFunc)event_filter, object);
+  GdkWindow *filter_window = gtk_widget_get_window (priv->offscreen_window);
+  gdk_window_remove_filter (filter_window, (GdkFilterFunc)event_filter, object);
 
-  if (priv->menubar)
-  {
-    g_object_unref (priv->menubar);
-    priv->menubar = NULL;
-  }
+  if (G_IS_OBJECT (priv->menubar))
+    {
+      g_object_unref (priv->menubar);
+      priv->menubar = NULL;
+    }
 
-  if (priv->offscreen_window)
-  {
-    g_object_unref (priv->offscreen_window);
-    priv->offscreen_window = NULL;
-  }
+  if (G_IS_OBJECT (priv->offscreen_window))
+    {
+      g_object_unref (priv->offscreen_window);
+      priv->offscreen_window = NULL;
+    }
 
-  if (priv->last_menu)
-  {
-    g_object_unref (priv->last_menu);
-    priv->last_menu = NULL;
-  }
+  if (G_IS_OBJECT (priv->last_menu))
+    {
+      g_object_unref (priv->last_menu);
+      priv->last_menu = NULL;
+    }
 
   if (priv->initial_sync_id)
     {
@@ -1130,6 +1131,7 @@ on_active_menu_hidden (GtkMenu *menu, PanelService *self)
 
   g_signal_handler_disconnect (priv->last_menu, priv->last_menu_id);
   g_signal_handler_disconnect (priv->last_menu, priv->last_menu_move_id);
+  gtk_menu_detach (priv->last_menu);
   priv->last_menu = NULL;
   priv->last_menu_id = 0;
   priv->last_menu_move_id = 0;
@@ -1502,8 +1504,8 @@ panel_service_show_entry (PanelService *self,
                             G_CALLBACK (gtk_widget_destroyed), &priv->last_menu);
         }
 
-      GtkWidget *menu_window = gtk_widget_get_toplevel (GTK_WIDGET (priv->last_menu));
-      gtk_window_set_attached_to (GTK_WINDOW (menu_window), priv->menubar);
+      if (gtk_menu_get_attach_widget (priv->last_menu) != priv->menubar)
+        gtk_menu_attach_to_widget (priv->last_menu, priv->menubar, NULL);
 
       priv->last_entry = entry;
       priv->last_x = x;
