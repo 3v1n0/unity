@@ -1,3 +1,10 @@
+unity (5.0.0-0ubuntu3) UNRELEASED; urgency=low
+
+  * debian/control:
+    - build-dep on latest compiz-dev and libcompizconfig0-dev for ABI break
+
+ -- Didier Roche <didrocks@ubuntu.com>  Fri, 27 Jan 2012 11:13:44 +0100
+
 unity (5.0.0-0ubuntu2) precise; urgency=low
 
   * Rebuild with nux on glew1.6
