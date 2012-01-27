@@ -140,6 +140,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
 
   _hide_machine = new LauncherHideMachine();
   _hide_machine->should_hide_changed.connect(sigc::mem_fun(this, &Launcher::SetHidden));
+
   _hover_machine = new LauncherHoverMachine();
   _hover_machine->should_hover_changed.connect(sigc::mem_fun(this, &Launcher::SetHover));
 
@@ -1095,7 +1096,9 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
 
     float autohide_progress = AutohideProgress(current) * (1.0f - DragOutProgress(current));
     if (_autohide_animation == FADE_ONLY)
+    {
       *launcher_alpha = 1.0f - autohide_progress;
+    }
     else
     {
       if (autohide_progress > 0.0f)
@@ -2407,10 +2410,14 @@ void Launcher::ExitKeyNavMode()
 
 void Launcher::RecvQuicklistOpened(QuicklistView* quicklist)
 {
-  _hide_machine->SetQuirk(LauncherHideMachine::QUICKLIST_OPEN, true);
-  _hover_machine->SetQuirk(LauncherHoverMachine::QUICKLIST_OPEN, true);
-  EventLogic();
-  EnsureAnimation();
+  UScreen* uscreen = UScreen::GetDefault();
+  if (uscreen->GetMonitorGeometry(monitor).IsInside(nux::Point(quicklist->GetGeometry().x, quicklist->GetGeometry().y)))
+  {
+    _hide_machine->SetQuirk(LauncherHideMachine::QUICKLIST_OPEN, true);
+    _hover_machine->SetQuirk(LauncherHoverMachine::QUICKLIST_OPEN, true);
+    EventLogic();
+    EnsureAnimation();
+  }
 }
 
 void Launcher::RecvQuicklistClosed(QuicklistView* quicklist)

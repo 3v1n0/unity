@@ -38,21 +38,21 @@ LauncherHideMachine::LauncherHideMachine()
 
   _latest_emit_should_hide = false;
   _hide_changed_emit_handle = 0;
+  reveal_progress = 0;
 
   _hide_delay_handle = 0;
   _hide_delay_timeout_length = 750;
 
   decaymulator_ = unity::ui::Decaymulator::Ptr(new unity::ui::Decaymulator());
-  decaymulator_->rate_of_decay = 50000;
+  decaymulator_->value.changed.connect([&](int value) -> void { reveal_progress = (float)value / (float)reveal_pressure; });
 
   edge_decay_rate.changed.connect(sigc::mem_fun (this, &LauncherHideMachine::OnDecayRateChanged));
 }
 
-void LauncherHideMachine::OnDecayRateChanged (int value)
+void LauncherHideMachine::OnDecayRateChanged(int value)
 {
   decaymulator_->rate_of_decay = value;  
 }
-
 
 LauncherHideMachine::~LauncherHideMachine()
 {

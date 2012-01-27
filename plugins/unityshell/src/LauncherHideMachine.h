@@ -65,6 +65,8 @@ public:
   nux::Property<int> reveal_pressure;
   nux::Property<int> edge_decay_rate;
 
+  nux::Property<float> reveal_progress;
+
   LauncherHideMachine();
   virtual ~LauncherHideMachine();
 
