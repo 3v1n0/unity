@@ -1421,7 +1421,7 @@ bool UnityScreen::showLauncherKeyInitiate(CompAction* action,
   {
     static nux::Geometry last_geo;
     UScreen* uscreen = UScreen::GetDefault();
-    int primary_monitor = uscreen->GetPrimaryMonitor();
+    int primary_monitor = uscreen->GetMonitorWithMouse();
     auto monitor_geo = uscreen->GetMonitorGeometry(primary_monitor);
 
     int width = 970;

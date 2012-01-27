@@ -1276,6 +1276,9 @@ void Launcher::SaturateIcons()
 
 void Launcher::OnPlaceViewShown(GVariant* data)
 {
+  if (g_variant_get_int32(data) != monitor)
+    return;
+
   LauncherModel::iterator it;
 
   _dash_is_open = true;
@@ -1288,6 +1291,9 @@ void Launcher::OnPlaceViewShown(GVariant* data)
 
 void Launcher::OnPlaceViewHidden(GVariant* data)
 {
+  if (!_dash_is_open)
+    return;
+    
   LauncherModel::iterator it;
 
   _dash_is_open = false;

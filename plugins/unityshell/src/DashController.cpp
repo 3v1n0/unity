@@ -242,7 +242,7 @@ void Controller::ShowDash()
 
   StartShowHideTimeline();
 
-  ubus_manager_.SendMessage(UBUS_PLACE_VIEW_SHOWN);
+  ubus_manager_.SendMessage(UBUS_PLACE_VIEW_SHOWN, g_variant_new_int32(UScreen::GetDefault()->GetMonitorWithMouse()));
 }
 
 void Controller::HideDash(bool restore)
