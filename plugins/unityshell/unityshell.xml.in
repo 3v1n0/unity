@@ -271,31 +271,31 @@
                 <option name="reveal_pressure" type="int">
                     <_short>Launcher Reveal Pressure</_short>
                     <_long>Amount of mouse pressure required to reveal launcher</_long>
-                    <default>500</default>
+                    <default>80</default>
                     <min>1</min>
-                    <max>10000</max>
+                    <max>1000</max>
                     <precision>1</precision>
                 </option>
                 <option name="overcome_pressure" type="int">
                     <_short>Launcher Edge Stop Overcome Pressure</_short>
                     <_long>Amount of mouse pressure required to push into the next monitor</_long>
-                    <default>1000</default>
+                    <default>75</default>
                     <min>1</min>
-                    <max>10000</max>
+                    <max>1000</max>
                     <precision>1</precision>
                 </option>
                 <option name="decay_rate" type="int">
                     <_short>Pressure Decay Rate</_short>
                     <_long>The rate at which mouse pressure decays</_long>
-                    <default>500</default>
+                    <default>75</default>
                     <min>1</min>
-                    <max>10000</max>
+                    <max>1000</max>
                     <precision>1</precision>
                 </option>
                 <option name="stop_velocity" type="int">
                     <_short>Edge Stop Velocity</_short>
                     <_long>The maximum velocity at which the mouse will still be stoped</_long>
-                    <default>50</default>
+                    <default>100</default>
                     <min>1</min>
                     <max>1000</max>
                     <precision>1</precision>

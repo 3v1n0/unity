@@ -38,7 +38,12 @@ namespace
 PointerBarrierWrapper::PointerBarrierWrapper()
 {
   last_event_ = 0;
+  last_y_ = 0;
+  last_x_ = 0;
   active = false;
+  smoothing = 100;
+  smoothing_count_ = 0;
+  smoothing_accum_ = 0;
 }
 
 void PointerBarrierWrapper::ConstructBarrier()
@@ -95,27 +100,64 @@ void PointerBarrierWrapper::ReleaseBarrier(int event_id)
   XFixesBarrierReleasePointer (nux::GetGraphicsDisplay()->GetX11Display(), barrier, event_id);
 }
 
+void PointerBarrierWrapper::EmitCurrentData()
+{
+  if (smoothing_count_ <= 0)
+    return;
+
+  BarrierEvent::Ptr event (new BarrierEvent());
+  event->x = last_x_;
+  event->y = last_y_;
+  event->velocity = smoothing_accum_ / smoothing_count_;
+  event->event_id = last_event_;
+
+  barrier_event.emit(this, event);
+
+  smoothing_accum_ = 0;
+  smoothing_count_ = 0;
+}
+
 bool PointerBarrierWrapper::HandleEvent(XEvent xevent)
 {
   if(xevent.type - event_base_ == XFixesBarrierNotify)
   {
     XFixesBarrierNotifyEvent *notify_event = (XFixesBarrierNotifyEvent *)&xevent;
 
-    if (notify_event->barrier == barrier)
+    if (notify_event->barrier == barrier && notify_event->subtype == XFixesBarrierHitNotify)
     {
-      BarrierEvent::Ptr event (new BarrierEvent());
-      event->x = notify_event->x;
-      event->y = notify_event->y;
-      event->velocity = notify_event->velocity;
-      event->event_id = notify_event->event_id;
-
-      if (notify_event->subtype == XFixesBarrierHitNotify)
+      if (notify_event->event_id != last_event_)
       {
-        barrier_event.emit(this, event);
+        EmitCurrentData();
+        if (smoothing_handle_)
+        {
+          g_source_remove(smoothing_handle_);
+          smoothing_handle_ = 0;
+        }
+      }
+
+      last_x_ = notify_event->x;
+      last_y_ = notify_event->y;
+      last_event_ = notify_event->event_id;
+      smoothing_accum_ += notify_event->velocity;
+      smoothing_count_++;
+
+      if (!smoothing_handle_)
+      {
+        auto smoothing_cb = [](gpointer user_data) -> gboolean
+        {
+          PointerBarrierWrapper* self = (PointerBarrierWrapper*)user_data;
+          self->EmitCurrentData();
+
+          self->smoothing_handle_ = 0;
+          return FALSE;
+        };
+
+        smoothing_handle_ = g_timeout_add(smoothing(), smoothing_cb, this);
       }
         
-      return true;
     }
+
+    return notify_event->barrier == barrier;
   }
 
   return false;

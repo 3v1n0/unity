@@ -55,6 +55,8 @@ public:
 
   nux::Property<bool> active;
 
+  nux::Property<int> smoothing;
+
   PointerBarrierWrapper();
 
   void ConstructBarrier();
@@ -64,13 +66,21 @@ public:
   sigc::signal<void, PointerBarrierWrapper*, BarrierEvent::Ptr> barrier_event;
 
 private:
+  void EmitCurrentData();
   bool HandleEvent (XEvent event);
   static bool HandleEventWrapper(XEvent event, void* data);
 
   int last_event_;
+  int last_x_;
+  int last_y_;
+
   int event_base_;
   int error_base_;
   PointerBarrier barrier;
+  
+  int smoothing_count_;
+  int smoothing_accum_;
+  guint smoothing_handle_;
 };
 
 }
