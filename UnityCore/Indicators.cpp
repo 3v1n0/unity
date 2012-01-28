@@ -135,9 +135,9 @@ Indicator::Ptr Indicators::Impl::AddIndicator(std::string const& name)
   Indicator* indptr;
 
   if (name == "libappmenu.so")
-    indptr = new Indicator(name);
-  else
     indptr = new AppmenuIndicator(name);
+  else
+    indptr = new Indicator(name);
 
   Indicator::Ptr indicator(indptr);
 
