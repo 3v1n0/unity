@@ -685,7 +685,7 @@ bool send_show_entry(ShowEntryData* data)
 
   g_dbus_proxy_call(data->proxy,
                     "ShowEntry",
-                    g_variant_new("(suiiiu)",
+                    g_variant_new("(suiiuu)",
                                   data->entry_id.c_str(),
                                   data->xid,
                                   data->x,
