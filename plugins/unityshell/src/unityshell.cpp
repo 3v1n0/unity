@@ -307,6 +307,11 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetLauncherSwitcherPrevInitiate(boost::bind(&UnityScreen::launcherSwitcherPrevInitiate, this, _1, _2, _3));
      optionSetLauncherSwitcherForwardTerminate(boost::bind(&UnityScreen::launcherSwitcherTerminate, this, _1, _2, _3));
 
+     optionSetWindowMaximizeInitiate(boost::bind(&UnityScreen::maximizeKeyInitate, this, _1, _2, _3));
+     optionSetWindowRestoreMinimizeInitiate(boost::bind(&UnityScreen::restoreMinimizeKeyInitiate, this, _1, _2, _3));
+     optionSetWindowRightMaximizeInitiate(boost::bind(&UnityScreen::rightMaximizeKeyInitiate, this, _1, _2, _3));
+     optionSetWindowLeftMaximizeInitiate(boost::bind(&UnityScreen::leftMaximizeKeyInitiate, this, _1, _2, _3));
+
      optionSetStopVelocityNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetRevealPressureNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetOvercomePressureNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
@@ -1712,12 +1717,14 @@ bool UnityScreen::launcherSwitcherForwardInitiate(CompAction* action, CompAction
   action->setState(action->state() | CompAction::StateTermKey);
   return false;
 }
+
 bool UnityScreen::launcherSwitcherPrevInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
 {
   launcher_controller_->KeyNavPrevious();
 
   return false;
 }
+
 bool UnityScreen::launcherSwitcherTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options)
 {
   bool accept_state = (state & CompAction::StateCancel) == 0;
@@ -1725,6 +1732,48 @@ bool UnityScreen::launcherSwitcherTerminate(CompAction* action, CompAction::Stat
 
   EnableCancelAction(false);
   action->setState (action->state() & (unsigned)~(CompAction::StateTermKey));
+  return false;
+}
+
+bool UnityScreen::maximizeKeyInitate(CompAction* action, CompAction::State state, CompOption::Vector& options)
+{
+  WindowManager* wm = PluginAdapter::Default();
+  wm->Maximize(wm->GetActiveWindow());
+
+  return false;
+}
+
+bool UnityScreen::restoreMinimizeKeyInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
+{
+  WindowManager* wm = PluginAdapter::Default();
+  guint32 focused_win = wm->GetActiveWindow();
+
+  if (wm->IsWindowVerticallyMaximized(focused_win) ||
+      wm->IsWindowHorizontallyMaximized(focused_win))
+  {
+    wm->Restore(focused_win);
+  }
+  else
+  {
+    wm->Minimize(focused_win);
+  }
+
+  return false;
+}
+
+bool UnityScreen::rightMaximizeKeyInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
+{
+  WindowManager* wm = PluginAdapter::Default();
+  wm->RightMaximize(wm->GetActiveWindow());
+
+  return false;
+}
+
+bool UnityScreen::leftMaximizeKeyInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
+{
+  WindowManager* wm = PluginAdapter::Default();
+  wm->LeftMaximize(wm->GetActiveWindow());
+
   return false;
 }
 

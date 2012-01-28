@@ -206,6 +206,11 @@ public:
   bool launcherSwitcherPrevInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool launcherSwitcherTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options);
 
+  bool maximizeKeyInitate(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool restoreMinimizeKeyInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool rightMaximizeKeyInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool leftMaximizeKeyInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
+
   /* handle option changes and change settings inside of the
    * panel and dock views */
   void optionChanged(CompOption*, Options num);
