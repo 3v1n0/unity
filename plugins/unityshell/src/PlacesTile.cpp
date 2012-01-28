@@ -48,8 +48,8 @@ PlacesTile::PlacesTile(NUX_FILE_LINE_DECL, const void* id) :
   mouse_click.connect(sigc::mem_fun(this, &PlacesTile::RecvMouseClick));
   mouse_enter.connect(sigc::mem_fun(this, &PlacesTile::RecvMouseEnter));
   mouse_leave.connect(sigc::mem_fun(this, &PlacesTile::RecvMouseLeave));
-  OnKeyNavFocusChange.connect(sigc::mem_fun(this, &PlacesTile::OnFocusChanged));
-  OnKeyNavFocusActivate.connect(sigc::mem_fun(this, &PlacesTile::OnFocusActivated));
+  key_nav_focus_change.connect(sigc::mem_fun(this, &PlacesTile::OnFocusChanged));
+  key_nav_focus_activate.connect(sigc::mem_fun(this, &PlacesTile::OnFocusActivated));
 }
 
 PlacesTile::~PlacesTile()
@@ -68,7 +68,7 @@ PlacesTile::GetId()
 }
 
 void
-PlacesTile::OnFocusChanged(nux::Area* label)
+PlacesTile::OnFocusChanged(nux::Area* label, bool has_focus, nux::KeyNavDirection direction)
 {
   QueueDraw();
 }

@@ -72,8 +72,8 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
   vertical_spacing.changed.connect(needredraw_lambda);
   padding.changed.connect(needredraw_lambda);
 
-  OnKeyNavFocusChange.connect (sigc::mem_fun (this, &ResultViewGrid::OnOnKeyNavFocusChange));
-  OnKeyNavFocusActivate.connect ([&] (nux::Area *area) { UriActivated.emit (focused_uri_); });
+  key_nav_focus_change.connect (sigc::mem_fun (this, &ResultViewGrid::OnOnKeyNavFocusChange));
+  key_nav_focus_activate.connect ([&] (nux::Area *area) { UriActivated.emit (focused_uri_); });
   key_down.connect (sigc::mem_fun (this, &ResultViewGrid::OnKeyDown));
   mouse_move.connect(sigc::mem_fun(this, &ResultViewGrid::MouseMove));
   mouse_click.connect(sigc::mem_fun(this, &ResultViewGrid::MouseClick));
@@ -489,7 +489,7 @@ nux::Area* ResultViewGrid::KeyNavIteration(nux::KeyNavDirection direction)
 }
 
 // crappy name.
-void ResultViewGrid::OnOnKeyNavFocusChange(nux::Area *area)
+void ResultViewGrid::OnOnKeyNavFocusChange(nux::Area *area, bool has_focus, nux::KeyNavDirection direction)
 {
   if (HasKeyFocus())
   {
@@ -499,9 +499,29 @@ void ResultViewGrid::OnOnKeyNavFocusChange(nux::Area *area)
         selected_index_ = 0;
     }
 
+    int focused_x = 0;
+    int focused_y = 0;
+
     int items_per_row = GetItemsPerRow();
-    int focused_x = (renderer_->width + horizontal_spacing) * (selected_index_ % items_per_row);
-    int focused_y = (renderer_->height + vertical_spacing) * (selected_index_ / items_per_row);
+
+    if (direction == nux::KEY_NAV_UP)
+    {
+      // This View just got focused through keyboard navigation and the
+      // focus is comming from the bottom. We want to focus the 
+      // first item (on the left) of the last row in this grid.
+
+      int total_rows = std::ceil(results_.size() / (double)items_per_row);
+      selected_index_ = items_per_row * (total_rows-1);
+
+      focused_x = (renderer_->width + horizontal_spacing) * (selected_index_ % items_per_row);
+      focused_y = (renderer_->height + vertical_spacing) * (selected_index_ / items_per_row);
+
+    }
+    else
+    {
+      focused_x = (renderer_->width + horizontal_spacing) * (selected_index_ % items_per_row);
+      focused_y = (renderer_->height + vertical_spacing) * (selected_index_ / items_per_row);
+    }
 
     ubus_.SendMessage(UBUS_RESULT_VIEW_KEYNAV_CHANGED,
                       g_variant_new("(iiii)", focused_x, focused_y, renderer_->width(), renderer_->height()));
@@ -706,7 +726,7 @@ uint ResultViewGrid::GetIndexAtPosition(int x, int y)
 
   int x_bound = items_per_row * column_size + padding;
 
-  if (x < padding || x > x_bound)
+  if ((x < padding) || (x >= x_bound))
     return -1;
 
   if (y < padding)
