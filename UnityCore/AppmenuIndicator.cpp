@@ -32,9 +32,8 @@ AppmenuIndicator::AppmenuIndicator(std::string const& name)
     gsettings_(g_settings_new(SETTING_NAME.c_str())),
     integrated_(false)
 {
-  setting_changed_.Connect(gsettings_, "changed", [&] (GSettings*, gchar* key) {
-    if (std::string(key) == SETTING_KEY)
-      CheckSettingValue();
+  setting_changed_.Connect(gsettings_, "changed::menu-mode", [&] (GSettings*, gchar* key) {
+    CheckSettingValue();
   });
 
   CheckSettingValue();
