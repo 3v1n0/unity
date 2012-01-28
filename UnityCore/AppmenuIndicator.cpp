@@ -25,7 +25,7 @@ namespace indicator
 {
 
 const std::string SETTING_NAME("com.canonical.indicator.appmenu");
-const std::string SETTING_KEY("locally-integrated");
+const std::string SETTING_KEY("menu-mode");
 
 AppmenuIndicator::AppmenuIndicator(std::string const& name)
   : Indicator(name),
@@ -52,10 +52,10 @@ bool AppmenuIndicator::IsIntegrated() const
 
 void AppmenuIndicator::CheckSettingValue()
 {
-  glib::String menu_mode(g_settings_get_string(gsettings_, "menu-mode"));
+  glib::String menu_mode(g_settings_get_string(gsettings_, SETTING_KEY.c_str()));
   bool integrated_menus = false;
 
-  if (menu_mode.Str() == SETTING_KEY)
+  if (menu_mode.Str() == "locally-integrated")
   {
     integrated_menus = true;
   }
