@@ -25,7 +25,7 @@ namespace indicator
 {
 
 const std::string SETTING_NAME("com.canonical.indicator.appmenu");
-const std::string SETTING_KEY("integrated");
+const std::string SETTING_KEY("locally-integrated");
 
 AppmenuIndicator::AppmenuIndicator(std::string const& name)
   : Indicator(name),
