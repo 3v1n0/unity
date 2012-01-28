@@ -55,7 +55,11 @@ public:
   static WindowManager* Default();
   static void            SetDefault(WindowManager* manager);
 
+  virtual guint32 GetActiveWindow() = 0;
+
   virtual bool IsWindowMaximized(guint32 xid) = 0;
+  virtual bool IsWindowVerticallyMaximized(guint32 xid) = 0;
+  virtual bool IsWindowHorizontallyMaximized(guint32 xid) = 0;
   virtual bool IsWindowDecorated(guint32 xid) = 0;
   virtual bool IsWindowOnCurrentDesktop(guint32 xid) = 0;
   virtual bool IsWindowObscured(guint32 xid) = 0;
@@ -64,9 +68,12 @@ public:
 
   virtual void ShowDesktop() = 0;
 
+  virtual void Maximize(guint32 xid) = 0;
   virtual void Restore(guint32 xid) = 0;
   virtual void Minimize(guint32 xid) = 0;
   virtual void Close(guint32 xid) = 0;
+  virtual void RightMaximize(guint32 xid) = 0;
+  virtual void LeftMaximize(guint32 xid) = 0;
 
   virtual void Activate(guint32 xid) = 0;
   virtual void Raise(guint32 xid) = 0;

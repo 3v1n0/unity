@@ -293,6 +293,12 @@ MultiActionList::TerminateAll(CompOption::Vector& extraArgs)
   }
 }
 
+guint32
+PluginAdapter::GetActiveWindow()
+{
+  return m_Screen->activeWindow();
+}
+
 unsigned long long 
 PluginAdapter::GetWindowActiveNumber (guint32 xid)
 {
@@ -398,6 +404,33 @@ PluginAdapter::IsWindowMaximized(guint xid)
 
   return false;
 }
+
+bool
+PluginAdapter::IsWindowVerticallyMaximized(guint32 xid)
+{
+  Window win = (Window)xid;
+  CompWindow* window;
+
+  window = m_Screen->findWindow(win);
+  if (window)
+    return (window->state() & CompWindowStateMaximizedVertMask);
+
+  return false;
+}
+
+bool
+PluginAdapter::IsWindowHorizontallyMaximized(guint32 xid)
+{
+  Window win = (Window)xid;
+  CompWindow* window;
+
+  window = m_Screen->findWindow(win);
+  if (window)
+    return (window->state() & CompWindowStateMaximizedHorzMask);
+
+  return false;
+}
+
 
 bool
 PluginAdapter::IsWindowDecorated(guint32 xid)
@@ -506,6 +539,81 @@ PluginAdapter::IsWindowVisible(guint32 xid)
 }
 
 void
+PluginAdapter::Maximize(guint32 xid)
+{
+  Window win = (Window)xid;
+  CompWindow* window;
+
+  window = m_Screen->findWindow(win);
+  if (window && ((window->type() & CompWindowTypeNormalMask) ||
+                 (window->actions() & MAXIMIZABLE)))
+  {
+    window->maximize(MAXIMIZE_STATE);
+  }
+}
+
+void
+PluginAdapter::VerticallyMaximizeWindowAt(CompWindow* window, nux::Geometry const& geo)
+{
+  if (window && ((window->type() & CompWindowTypeNormalMask) ||
+      ((window->actions() & CompWindowActionMaximizeVertMask) &&
+        window->actions() & CompWindowActionResizeMask)))
+  {
+    /* First we unmaximize the Window */
+    if (window->state() & MAXIMIZE_STATE)
+      window->maximize(0);
+
+    /* Then we vertically maximize the it so it can be unminimized correctly */
+    if (!(window->state() & CompWindowStateMaximizedVertMask))
+      window->maximize(CompWindowStateMaximizedVertMask);
+
+    /* Then we resize and move it on the requested place */
+    MoveResizeWindow(window->id(), geo);
+  }
+}
+
+
+void
+PluginAdapter::LeftMaximize(guint32 xid)
+{
+  Window win = (Window)xid;
+  CompWindow* window;
+
+  window = m_Screen->findWindow(win);
+  if (!window)
+    return;
+
+  /* Let's compute the area where the window should be put */
+  CompRect workarea = m_Screen->getWorkareaForOutput(window->outputDevice());
+  nux::Geometry win_geo(workarea.x() + window->border().left,
+                        workarea.y() + window->border().top,
+                        workarea.width() / 2 - (window->border().left + window->border().right),
+                        workarea.height() - (window->border().top + window->border().bottom));
+
+  VerticallyMaximizeWindowAt(window, win_geo);
+}
+
+void
+PluginAdapter::RightMaximize(guint32 xid)
+{
+  Window win = (Window)xid;
+  CompWindow* window;
+
+  window = m_Screen->findWindow(win);
+  if (!window)
+    return;
+
+  /* Let's compute the area where the window should be put */
+  CompRect workarea = m_Screen->getWorkareaForOutput(window->outputDevice());
+  nux::Geometry win_geo(workarea.x() + workarea.width() / 2 + window->border().left,
+                        workarea.y() + window->border().top,
+                        workarea.width() / 2 - (window->border().left + window->border().right),
+                        workarea.height() - (window->border().top + window->border().bottom));
+
+  VerticallyMaximizeWindowAt(window, win_geo);
+}
+
+void
 PluginAdapter::Restore(guint32 xid)
 {
   Window win = (Window)xid;
@@ -523,7 +631,7 @@ PluginAdapter::Minimize(guint32 xid)
   CompWindow* window;
 
   window = m_Screen->findWindow(win);
-  if (window)
+  if (window && (window->actions() & CompWindowActionMinimizeMask))
     window->minimize();
 }
 
@@ -1047,6 +1155,42 @@ PluginAdapter::restoreInputFocus()
   }
 
   return false;
+}
+
+void
+PluginAdapter::MoveResizeWindow(guint32 xid, nux::Geometry geometry)
+{
+  int w, h;
+  CompWindow* window = m_Screen->findWindow(xid);
+
+  if (!window)
+    return;
+
+  if (window->constrainNewWindowSize(geometry.width, geometry.height, &w, &h))
+  {
+    CompRect workarea = m_Screen->getWorkareaForOutput(window->outputDevice());
+    int dx = geometry.x + w - workarea.right() + window->border().right;
+    int dy = geometry.y + h - workarea.bottom() + window->border().bottom;
+
+    if (dx > 0)
+      geometry.x -= dx;
+    if (dy > 0)
+      geometry.y -= dy;
+
+    geometry.SetWidth(w);
+    geometry.SetHeight(h);
+  }
+
+  XWindowChanges xwc;
+  xwc.x = geometry.x;
+	xwc.y = geometry.y;
+	xwc.width = geometry.width;
+	xwc.height = geometry.height;
+
+	if (window->mapNum())
+    window->sendSyncRequest();
+
+  window->configureXWindow(CWX | CWY | CWWidth | CWHeight, &xwc);
 }
 
 void

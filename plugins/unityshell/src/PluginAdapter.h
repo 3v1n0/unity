@@ -108,19 +108,27 @@ public:
   void NotifyCompizEvent(const char* plugin, const char* event, CompOption::Vector& option);
   void NotifyNewDecorationState(guint32 xid);
 
+  guint32 GetActiveWindow();
+
   void Decorate(guint32 xid);
   void Undecorate(guint32 xid);
 
   // WindowManager implementation
   bool IsWindowMaximized(guint xid);
+  bool IsWindowVerticallyMaximized(guint32 xid);
+  bool IsWindowHorizontallyMaximized(guint32 xid);
   bool IsWindowDecorated(guint xid);
   bool IsWindowOnCurrentDesktop(guint xid);
   bool IsWindowObscured(guint xid);
   bool IsWindowMapped(guint xid);
   bool IsWindowVisible(guint32 xid);
+
+  void Maximize(guint32 xid);
   void Restore(guint32 xid);
   void Minimize(guint32 xid);
   void Close(guint32 xid);
+  void LeftMaximize(guint32 xid);
+  void RightMaximize(guint32 xid);
   void Activate(guint32 xid);
   void Raise(guint32 xid);
   void Lower(guint32 xid);
@@ -140,7 +148,7 @@ public:
 
   nux::Geometry GetWindowGeometry(guint32 xid);
   nux::Geometry GetScreenGeometry();
-  
+
   void CheckWindowIntersections(nux::Geometry const& region, bool &active, bool &any);
 
   int WorkspaceCount();
@@ -149,6 +157,8 @@ public:
 
   bool saveInputFocus ();
   bool restoreInputFocus ();
+
+  void MoveResizeWindow(guint32 xid, nux::Geometry geometry);
 
 protected:
   PluginAdapter(CompScreen* screen);
@@ -159,6 +169,8 @@ private:
 
   bool CheckWindowIntersection(nux::Geometry const& region, CompWindow* window);
   void SetMwmWindowHints(Window xid, MotifWmHints* new_hints);
+
+  void VerticallyMaximizeWindowAt(CompWindow* window, nux::Geometry const& geo);
 
   CompScreen* m_Screen;
   MultiActionList m_ExpoActionList;

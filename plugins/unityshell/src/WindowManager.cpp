@@ -23,6 +23,11 @@ static WindowManager* window_manager = NULL;
 
 class WindowManagerDummy : public WindowManager
 {
+  guint32 GetActiveWindow()
+  {
+    return 0;
+  }
+
   unsigned long long GetWindowActiveNumber (guint32 xid)
   {
     return 0;
@@ -44,6 +49,16 @@ class WindowManagerDummy : public WindowManager
   }
 
   bool IsWindowMaximized(guint32 xid)
+  {
+    return false;
+  }
+
+  bool IsWindowVerticallyMaximized(guint32 xid)
+  {
+    return false;
+  }
+
+  bool IsWindowHorizontallyMaximized(guint32 xid)
   {
     return false;
   }
@@ -73,6 +88,11 @@ class WindowManagerDummy : public WindowManager
     return true;
   }
 
+  void Maximize(guint32 xid)
+  {
+    g_debug("%s", G_STRFUNC);
+  }
+
   void Restore(guint32 xid)
   {
     g_debug("%s", G_STRFUNC);
@@ -84,6 +104,16 @@ class WindowManagerDummy : public WindowManager
   }
 
   void Close(guint32 xid)
+  {
+    g_debug("%s", G_STRFUNC);
+  }
+
+  void RightMaximize(guint32 xid)
+  {
+    g_debug("%s", G_STRFUNC);
+  }
+
+  void LeftMaximize(guint32 xid)
   {
     g_debug("%s", G_STRFUNC);
   }
