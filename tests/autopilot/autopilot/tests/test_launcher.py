@@ -85,8 +85,7 @@ class LauncherTests(TestCase):
         sleep(.5)
         self.assertThat(self.server.key_nav_is_active(), Equals(False))
 
-    """This test cannot be fixed until Autopilot can simulate XFixes Barrier Events"""
-    #def test_reveal_on_mouse_to_edge(self):
-    #    self.server.move_mouse_outside_of_boundry()
-    #    self.server.move_mouse_to_reveal_pos()
-    #    self.assertThat(self.server.is_showing(), Equals(True))
+    def test_reveal_on_mouse_to_edge(self):
+        self.server.move_mouse_to_right_of_launcher(0)
+        self.server.reveal_launcher(0)
+        self.assertThat(self.server.is_showing(0), Equals(True))

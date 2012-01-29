@@ -69,13 +69,15 @@ class Launcher(Unity):
         self.hide_timeout = 1
         self.grabbed = False
 
-    def move_mouse_to_reveal_pos(self):
-        self._mouse.move(self.x, self.y)
+    def move_mouse_to_right_of_launcher(self, monitor):
+        (x, y, w, h) = self.launcher_geometry(monitor)
+        self._mouse.move(x + w + 10, y + h / 2, False)
         sleep(self.show_timeout)
 
-    def move_mouse_outside_of_boundry(self):
-        self._mouse.move(self.x + (self.width *2), self._mouse.y)
-        sleep(self.hide_timeout)
+    def reveal_launcher(self, monitor):
+        (x, y, w, h) = self.launcher_geometry(monitor)
+        self._mouse.move(x - 1200, y + h / 2)
+        sleep(self.show_timeout)
     
     def grab_switcher(self):
         self._keyboard.press_and_release('^A^1')
@@ -136,6 +138,14 @@ class Launcher(Unity):
     def key_nav_selection(self):
         state = self.__get_controller_state()
         return int(state['key_nav_selection'])
+    
+    def launcher_geometry(self, monitor):
+        state = self.__get_state(monitor);
+        x = int(state['x'])
+        y = int(state['y'])
+        width = int(state['width'])
+        height = int(state['height'])
+        return (x, y, width, height)
 
     def __get_controller_state(self):
         return super(Launcher, self).get_state('/Unity/LauncherController')[0]

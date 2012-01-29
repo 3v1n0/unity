@@ -396,6 +396,8 @@ Launcher::AddProperties(GVariantBuilder* builder)
   timespec current;
   clock_gettime(CLOCK_MONOTONIC, &current);
 
+  nux::Geometry abs_geo = GetAbsoluteGeometry();
+
   unity::variant::BuilderWrapper(builder)
   .add("hover-progress", GetHoverProgress(current))
   .add("dnd-exit-progress", DnDExitProgress(current))
@@ -405,6 +407,10 @@ Launcher::AddProperties(GVariantBuilder* builder)
   .add("hovered", _hovered)
   .add("hidemode", _hidemode)
   .add("hidden", _hidden)
+  .add("x", abs_geo.x)
+  .add("y", abs_geo.y)
+  .add("width", abs_geo.width)
+  .add("height", abs_geo.height)
   .add("hide-quirks", _hide_machine->DebugHideQuirks().c_str())
   .add("hover-quirks", _hover_machine->DebugHoverQuirks().c_str());
 }
