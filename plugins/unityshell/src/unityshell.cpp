@@ -2571,6 +2571,7 @@ void UnityScreen::initLauncher()
   /* Setup panel */
   timer.Reset();
   panel_controller_.reset(new panel::Controller());
+  AddChild(panel_controller_.get());
   panel_controller_->SetMenuShowTimings(optionGetMenusFadein(),
                                         optionGetMenusFadeout(),
                                         optionGetMenusDiscoveryDuration(),
