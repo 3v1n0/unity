@@ -521,7 +521,7 @@ void LauncherIcon::RecvMouseLeave(int monitor)
   _tooltip->ShowWindow(false);
 }
 
-bool LauncherIcon::OpenQuicklist(bool default_to_first_item)
+bool LauncherIcon::OpenQuicklist(bool default_to_first_item, int monitor)
 {
   std::list<DbusmenuMenuitem*> menus = Menus();
 
@@ -566,9 +566,17 @@ bool LauncherIcon::OpenQuicklist(bool default_to_first_item)
   if (default_to_first_item)
     _quicklist->DefaultToFirstItem();
 
-  nux::Geometry geo = _parent_geo[_last_monitor];
+  if (monitor < 0)
+  {
+    if (_last_monitor >= 0)
+      monitor = _last_monitor;
+    else
+      monitor = 0;
+  }
+
+  nux::Geometry geo = _parent_geo[monitor];
   int tip_x = geo.x + geo.width + 1;
-  int tip_y = geo.y + _center[_last_monitor].y; 
+  int tip_y = geo.y + _center[monitor].y; 
 
   auto win_manager = WindowManager::Default();
 

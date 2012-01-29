@@ -48,6 +48,7 @@ public:
 
   Launcher& launcher() const;
   LauncherList& launchers() const;
+  Window LauncherWindowId(int launcher) const;
   Window KeyNavLauncherInputWindowId() const;
 
   void UpdateNumWorkspaces(int workspaces);

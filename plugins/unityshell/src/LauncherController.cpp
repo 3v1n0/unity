@@ -813,6 +813,11 @@ std::vector<AbstractLauncherIcon*> Controller::GetAltTabIcons(bool current) cons
   return results;
 }
 
+Window Controller::LauncherWindowId(int launcher) const
+{
+  return pimpl->launchers[launcher]->GetParent()->GetInputWindowId();
+}
+
 Window Controller::KeyNavLauncherInputWindowId() const
 {
   if (KeyNavIsActive())
@@ -1082,7 +1087,7 @@ void Controller::Impl::ReceiveLauncherKeyPress(unsigned long eventType,
     case NUX_VK_RIGHT:
     case NUX_KP_RIGHT:
     case XK_Menu:
-      if (model_->Selection()->OpenQuicklist(true))
+      if (model_->Selection()->OpenQuicklist(true, keyboard_launcher_->monitor()))
         parent_->KeyNavTerminate(false);
       break;
 

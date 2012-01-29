@@ -88,7 +88,7 @@ public:
 
   void ShowTooltip();
 
-  bool OpenQuicklist(bool default_to_first_item = false);
+  bool OpenQuicklist(bool default_to_first_item = false, int monitor = -1);
 
   void        SetCenter(nux::Point3 center, int parent_monitor, nux::Geometry parent_geo);
 
