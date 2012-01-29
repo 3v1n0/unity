@@ -26,12 +26,15 @@ from Xlib.ext.xtest import fake_input
 class Keyboard(object):
     '''Wrapper around xlib to make faking keyboard input possible'''
     _lame_hardcoded_keycodes = {
+        'E' : 9, # escape
         'A' : 64, 
         'C' : 37,
         'S' : 50,
         'T' : 23,
         'W' : 133,
-        'U' : 111
+        'U' : 111, # up arrow
+        'D' : 116, # down arrow
+        '1' : 67   # f1
         }
 
     _special_X_keysyms = {

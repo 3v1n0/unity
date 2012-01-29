@@ -303,6 +303,8 @@ Launcher* Controller::Impl::CreateLauncher(int monitor)
   launcher->launcher_addrequest.connect(sigc::mem_fun(this, &Impl::OnLauncherAddRequest));
   launcher->launcher_removerequest.connect(sigc::mem_fun(this, &Impl::OnLauncherRemoveRequest));
 
+  parent_->AddChild(launcher);
+
   return launcher;
 }
 
@@ -1039,6 +1041,7 @@ void Controller::KeyNavTerminate(bool activate)
     pimpl->keyboard_launcher_->UnGrabKeyboard();
     pimpl->launcher_key_press_connection_.disconnect();
     pimpl->launcher_event_outside_connection_.disconnect();
+    pimpl->launcher_grabbed = false;
   }
 
   if (activate)
@@ -1054,6 +1057,25 @@ void Controller::KeyNavTerminate(bool activate)
 bool Controller::KeyNavIsActive() const
 {
   return pimpl->launcher_keynav;
+}
+
+std::string
+Controller::GetName() const
+{
+  return "LauncherController";
+}
+
+void
+Controller::AddProperties(GVariantBuilder* builder)
+{
+  timespec current;
+  clock_gettime(CLOCK_MONOTONIC, &current);
+
+  unity::variant::BuilderWrapper(builder)
+  .add("key_nav_is_active", KeyNavIsActive())
+  .add("key_nav_launcher_monitor", pimpl->keyboard_launcher_.IsValid() ?  pimpl->keyboard_launcher_->monitor : -1)
+  .add("key_nav_selection", pimpl->model_->SelectionIndex())
+  .add("key_nav_is_grabbed", pimpl->launcher_grabbed);
 }
 
 void Controller::Impl::ReceiveLauncherKeyPress(unsigned long eventType, 

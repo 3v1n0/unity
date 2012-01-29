@@ -2502,9 +2502,7 @@ void UnityScreen::initLauncher()
 {
   Timer timer;
   launcher_controller_.reset(new launcher::Controller(screen->dpy()));
-  
-  Launcher& launcher = launcher_controller_->launcher();
-  AddChild(&launcher);
+  AddChild(launcher_controller_.get());
 
   switcher_controller_.reset(new switcher::Controller());
   AddChild(switcher_controller_.get());

@@ -35,7 +35,7 @@ class AbstractLauncherIcon;
 class Launcher;
 class LauncherModel;
 
-class Controller : public sigc::trackable
+class Controller : public unity::debug::Introspectable, public sigc::trackable
 {
 public:
   typedef std::shared_ptr<Controller> Ptr;
@@ -73,6 +73,11 @@ public:
   void KeyNavNext();
   void KeyNavPrevious();
   bool KeyNavIsActive() const;
+
+protected:
+  // Introspectable methods
+  std::string GetName() const;
+  void AddProperties(GVariantBuilder* builder);
 
 private:
   class Impl;
