@@ -214,14 +214,11 @@ private:
 
   static gboolean AnimationTimeout(gpointer data);
   static gboolean StrutHack(gpointer data);
-  static gboolean MoveFocusToKeyNavModeTimeout(gpointer data);
   static gboolean StartIconDragTimeout(gpointer data);
-  static gboolean ResetRepeatShorcutTimeout(gpointer data);
 
   void SetMousePosition(int x, int y);
 
   void SetStateMouseOverLauncher(bool over_launcher);
-  void SetStateKeyNav(bool keynav_activated);
 
   bool MouseBeyondDragThreshold();
 
@@ -336,17 +333,11 @@ private:
   void DndHoveredIconReset();
 
   nux::HLayout* m_Layout;
-  int m_ContentOffsetY;
 
   // used by keyboard/a11y-navigation
-  AbstractLauncherIcon* _current_icon;
-  AbstractLauncherIcon* m_ActiveTooltipIcon;
   AbstractLauncherIcon* _icon_under_mouse;
   AbstractLauncherIcon* _icon_mouse_down;
   AbstractLauncherIcon* _drag_icon;
-
-  int           _current_icon_index;
-  int           _last_icon_index;
 
   QuicklistView* _active_quicklist;
 
@@ -394,17 +385,11 @@ private:
   float _drag_out_delta_x;
   float _background_alpha;
 
-  int _bfb_width;
-  int _bfb_height;
-
   guint _autoscroll_handle;
-  guint _focus_keynav_handle;
   guint _start_dragicon_handle;
   guint _dnd_check_handle;
 
   nux::Point2   _mouse_position;
-  nux::Point2   _bfb_mouse_position;
-  nux::AbstractPaintLayer* m_BackgroundLayer;
   nux::BaseWindow* _parent;
   LauncherModel* _model;
   LauncherDragWindow* _drag_window;

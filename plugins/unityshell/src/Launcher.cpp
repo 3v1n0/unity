@@ -125,8 +125,6 @@ GDBusInterfaceVTable Launcher::interface_vtable =
 Launcher::Launcher(nux::BaseWindow* parent,
                    NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
-  , m_ContentOffsetY(0)
-  , m_BackgroundLayer(0)
   , _model(0)
   , _collection_window(NULL)
   , _background_color(nux::color::DimGray)
@@ -191,10 +189,6 @@ Launcher::Launcher(nux::BaseWindow* parent,
 
   display.changed.connect(sigc::mem_fun(this, &Launcher::OnDisplayChanged));
 
-  _current_icon       = NULL;
-  _current_icon_index = -1;
-  _last_icon_index    = -1;
-
   SetCompositionLayout(m_Layout);
 
   _folded_angle           = 1.0f;
@@ -224,7 +218,6 @@ Launcher::Launcher(nux::BaseWindow* parent,
 
   _autoscroll_handle             = 0;
   _start_dragicon_handle         = 0;
-  _focus_keynav_handle           = 0;
   _dnd_check_handle              = 0;
 
   _shortcuts_shown        = false;
@@ -245,10 +238,6 @@ Launcher::Launcher(nux::BaseWindow* parent,
   _check_window_over_launcher   = true;
   _postreveal_mousemove_delta_x = 0;
   _postreveal_mousemove_delta_y = 0;
-
-  // set them to 1 instead of 0 to avoid :0 in case something is racy
-  _bfb_width = 1;
-  _bfb_height = 1;
 
   _data_checked = false;
   _collection_window = new unity::DNDCollectionWindow();
@@ -327,8 +316,6 @@ Launcher::~Launcher()
     g_source_remove(_dnd_check_handle);
   if (_autoscroll_handle)
     g_source_remove(_autoscroll_handle);
-  if (_focus_keynav_handle)
-    g_source_remove(_focus_keynav_handle);
   if (_start_dragicon_handle)
     g_source_remove(_start_dragicon_handle);
   if (_launcher_animation_timeout > 0)
@@ -1828,8 +1815,6 @@ void Launcher::OnIconRemoved(AbstractLauncherIcon* icon)
   if (icon->needs_redraw_connection.connected())
     icon->needs_redraw_connection.disconnect();
 
-  if (icon == _current_icon)
-    _current_icon = 0;
   if (icon == _icon_under_mouse)
     _icon_under_mouse = 0;
   if (icon == _icon_mouse_down)
@@ -2881,17 +2866,9 @@ Launcher::ProcessDndDrop(int x, int y)
 AbstractLauncherIcon*
 Launcher::GetSelectedMenuIcon()
 {
-  LauncherModel::iterator it;
-
-  if (_current_icon_index == -1)
+  if (!IsInKeyNavMode())
     return NULL;
-
-  it = _model->at(_current_icon_index);
-
-  if (it != (LauncherModel::iterator)NULL)
-    return *it;
-  else
-    return NULL;
+  return _model->Selection();
 }
 
 /* dbus handlers */
