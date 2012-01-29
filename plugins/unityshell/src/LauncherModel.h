@@ -36,7 +36,9 @@ public:
   typedef std::shared_ptr<LauncherModel> Ptr;
   typedef std::vector<AbstractLauncherIcon*> Base;
   typedef Base::iterator iterator;
+  typedef Base::const_iterator const_iterator;
   typedef Base::reverse_iterator reverse_iterator;
+  typedef Base::reverse_iterator const_reverse_iterator;
 
   LauncherModel();
   ~LauncherModel();
@@ -45,19 +47,19 @@ public:
   void RemoveIcon(AbstractLauncherIcon* icon);
   void Save();
   void Sort();
-  int  Size();
+  int  Size() const;
 
   void OnIconRemove(AbstractLauncherIcon* icon);
 
-  bool IconHasSister(AbstractLauncherIcon* icon);
+  bool IconHasSister(AbstractLauncherIcon* icon) const;
 
   void ReorderAfter(AbstractLauncherIcon* icon, AbstractLauncherIcon* other);
   void ReorderBefore(AbstractLauncherIcon* icon, AbstractLauncherIcon* other, bool save);
 
   void ReorderSmart(AbstractLauncherIcon* icon, AbstractLauncherIcon* other, bool save);
 
-  AbstractLauncherIcon* Selection ();
-  int SelectionIndex();
+  AbstractLauncherIcon* Selection() const;
+  int SelectionIndex() const;
   void SetSelection(int selection);
   void SelectNext();
   void SelectPrevious();
@@ -92,7 +94,7 @@ private:
 
   bool Populate();
 
-  bool IconShouldShelf(AbstractLauncherIcon* icon);
+  bool IconShouldShelf(AbstractLauncherIcon* icon) const;
 
   static gboolean RemoveCallback(gpointer data);
 

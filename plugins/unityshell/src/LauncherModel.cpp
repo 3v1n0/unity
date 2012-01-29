@@ -45,7 +45,7 @@ LauncherModel::~LauncherModel()
     icon->UnReference();
 }
 
-bool LauncherModel::IconShouldShelf(AbstractLauncherIcon* icon)
+bool LauncherModel::IconShouldShelf(AbstractLauncherIcon* icon) const
 {
   return icon->Type() == AbstractLauncherIcon::TYPE_TRASH;
 }
@@ -160,23 +160,23 @@ LauncherModel::Sort()
 }
 
 bool
-LauncherModel::IconHasSister(AbstractLauncherIcon* icon)
+LauncherModel::IconHasSister(AbstractLauncherIcon* icon) const
 {
-  iterator it;
-  iterator end;
+  const_iterator it;
+  const_iterator end;
 
   if (icon && icon->Type() == AbstractLauncherIcon::TYPE_DEVICE)
     return true;
 
   if (IconShouldShelf(icon))
   {
-    it = shelf_begin();
-    end = shelf_end();
+    it = _inner_shelf.begin();
+    end = _inner_shelf.end();
   }
   else
   {
-    it = main_begin();
-    end = main_end();
+    it = _inner_main.begin();
+    end = _inner_main.end();
   }
 
   for (; it != end; ++it)
@@ -316,17 +316,17 @@ LauncherModel::ReorderSmart(AbstractLauncherIcon* icon, AbstractLauncherIcon* ot
 }
 
 int
-LauncherModel::Size()
+LauncherModel::Size() const
 {
   return _inner.size();
 }
 
-AbstractLauncherIcon* LauncherModel::Selection ()
+AbstractLauncherIcon* LauncherModel::Selection () const
 {
   return _inner[selection_];
 }
 
-int LauncherModel::SelectionIndex()
+int LauncherModel::SelectionIndex() const
 {
   return selection_;
 }
