@@ -73,13 +73,15 @@ LauncherModel::Populate()
   for (it = main_begin(); it != main_end(); it++)
   {
     _inner.push_back(*it);
-    (*it)->SetSortPriority(i++);
+    (*it)->SetSortPriority(i);
+    ++i;
   }
 
   for (it = shelf_begin(); it != shelf_end(); it++)
   {
     _inner.push_back(*it);
-    (*it)->SetSortPriority(i++);
+    (*it)->SetSortPriority(i);
+    ++i;
   }
 
   return copy.size() == _inner.size() && !std::equal(begin(), end(), copy.begin());
@@ -152,8 +154,8 @@ LauncherModel::Save()
 void
 LauncherModel::Sort()
 {
-  std::sort(_inner_shelf.begin(), _inner_shelf.end(), &LauncherModel::CompareIcons);
-  std::sort(_inner_main.begin(), _inner_main.end(), &LauncherModel::CompareIcons);
+  std::stable_sort(_inner_shelf.begin(), _inner_shelf.end(), &LauncherModel::CompareIcons);
+  std::stable_sort(_inner_main.begin(), _inner_main.end(), &LauncherModel::CompareIcons);
 
   if (Populate())
     order_changed.emit();

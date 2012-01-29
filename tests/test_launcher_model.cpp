@@ -123,18 +123,19 @@ TEST(TestLauncherModel, TestSort)
 
   LauncherModel::Ptr model(new LauncherModel());
 
-  first->SetSortPriority(0);
-  second->SetSortPriority(1);
-  third->SetSortPriority(2);
-  fourth->SetSortPriority(3);
-
+  third->SetSortPriority(0);
   model->AddIcon(third);
+
+  first->SetSortPriority(-1);
   model->AddIcon(first);
+
+  fourth->SetSortPriority(2);
   model->AddIcon(fourth);
+
+  second->SetSortPriority(0);
   model->AddIcon(second);
 
   LauncherModel::iterator it;
-
   it = model->begin();
 
   EXPECT_EQ(first, *it);
