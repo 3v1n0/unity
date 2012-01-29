@@ -67,6 +67,7 @@ class Launcher(Unity):
         self.height = 0
         self.show_timeout = 1
         self.hide_timeout = 1
+        self.grabbed = False
 
     def move_mouse_to_reveal_pos(self):
         self._mouse.move(self.x, self.y)
@@ -75,14 +76,73 @@ class Launcher(Unity):
     def move_mouse_outside_of_boundry(self):
         self._mouse.move(self.x + (self.width *2), self._mouse.y)
         sleep(self.hide_timeout)
+    
+    def grab_switcher(self):
+        self._keyboard.press_and_release('^A^1')
+        self.grabbed = True
+    
+    def switcher_enter_quicklist(self):
+        if self.grabbed:
+            self._keyboard.press_and_release('^R')
+    
+    def switcher_exit_quicklist(self):
+        if self.grabbed:
+            self._keyboard.press_and_release('^L')
 
-    def is_showing(self):
-        state = self.__get_state()
+    def start_switcher(self):
+        self._keyboard.press('^W^T')
+        self._keyboard.release('^T')
+    
+    def end_switcher(self, cancel):
+        if cancel:
+            self._keyboard.press_and_release('^E')
+            if self.grabbed != True:
+                self._keyboard.release('^W')
+        else:
+            if self.grabbed:
+                self._keyboard.press_and_release('\n')
+            else:
+                self._keyboard.release('^W')
+        self.grabbed = False
+
+    def switcher_next(self):
+        if self.grabbed:
+            self._keyboard.press_and_release('^D')
+        else:
+            self._keyboard.press_and_release('^T')
+
+    def switcher_prev(self):
+        if self.grabbed:
+            self._keyboard.press_and_release('^U')
+        else:
+            self._keyboard.press_and_release('^S^T')
+
+    def is_showing(self, monitor):
+        state = self.__get_state(monitor)
         return not bool(state['hidden'])
     
-    def __get_state(self):
+    def key_nav_is_active(self):
+        state = self.__get_controller_state()
+        return bool(state['key_nav_is_active'])
+    
+    def key_nav_monitor(self):
+        state = self.__get_controller_state()
+        return int(state['key_nav_launcher_monitor'])
+    
+    def key_nav_is_grabbed(self):
+        state = self.__get_controller_state()
+        return bool(state['key_nav_is_grabbed'])
+
+    def key_nav_selection(self):
+        state = self.__get_controller_state()
+        return int(state['key_nav_selection'])
+
+    def __get_controller_state(self):
+        return super(Launcher, self).get_state('/Unity/LauncherController')[0]
+
+    def __get_state(self, monitor):
         # get the state for the 'launcher' piece
-        return super(Launcher, self).get_state('/Unity/Launcher')[0]
+        return super(Launcher, self).get_state('/Unity/LauncherController/Launcher')[monitor]
 
 
 class UnityLauncherIconTooltip(Unity):

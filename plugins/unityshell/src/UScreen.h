@@ -33,6 +33,7 @@ public:
   static UScreen* GetDefault();
 
   int             GetPrimaryMonitor();
+  int             GetMonitorWithMouse();
   nux::Geometry&  GetMonitorGeometry(int monitor);
 
   std::vector<nux::Geometry>& GetMonitors();

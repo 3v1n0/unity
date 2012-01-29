@@ -79,6 +79,12 @@ DashView::~DashView()
     g_source_remove (searching_timeout_id_);
 }
 
+void DashView::SetMonitorOffset(int x, int y)
+{
+  renderer_.x_offset = x;
+  renderer_.y_offset = y;
+}
+
 void DashView::AboutToShow()
 {
   ubus_manager_.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);

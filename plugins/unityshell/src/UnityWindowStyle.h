@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010 Canonical Ltd
+ * Copyright (C) 2012 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -17,44 +17,38 @@
  * Authored by: Jason Smith <jason.smith@canonical.com>
  */
 
-#ifndef DESKTOPLAUNCHERICON_H
-#define DESKTOPLAUNCHERICON_H
+#ifndef UNITYWINDOWSTYLE_H
+#define UNITYWINDOWSTYLE_H
 
-#include "SimpleLauncherIcon.h"
+#include <sigc++/sigc++.h>
+#include <Nux/Nux.h>
 
-namespace unity
+namespace unity {
+namespace ui {
+
+class UnityWindowStyle
 {
-namespace launcher
-{
-
-class DesktopLauncherIcon : public SimpleLauncherIcon
-{
-
 public:
-  DesktopLauncherIcon();
-  ~DesktopLauncherIcon();
+  typedef std::shared_ptr<UnityWindowStyle> Ptr;
+  typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
 
-  virtual nux::Color BackgroundColor();
-  virtual nux::Color GlowColor();
+  UnityWindowStyle();
+  ~UnityWindowStyle();
 
-  void SetShowInSwitcher(bool show_in_switcher)
-  {
-    show_in_switcher_ = show_in_switcher;
-  }
-
-  bool ShowInSwitcher(bool current)
-  {
-    return show_in_switcher_;
-  }
-
-protected:
-  void ActivateLauncherIcon(ActionArg arg);
+  nux::BaseTexture* GetBackgroundTop() const;
+  nux::BaseTexture* GetBackgroundLeft() const;
+  nux::BaseTexture* GetBackgroundCorner() const;
+  int GetBorderSize() const;
+  int GetInternalOffset() const;
 
 private:
-  bool show_in_switcher_;
+  BaseTexturePtr background_top_;
+  BaseTexturePtr background_left_;
+  BaseTexturePtr background_corner_;
+
 };
 
 }
 }
 
-#endif // DESKTOPLAUNCHERICON_H
+#endif

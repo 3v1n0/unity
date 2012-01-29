@@ -17,44 +17,35 @@
  * Authored by: Jason Smith <jason.smith@canonical.com>
  */
 
-#ifndef DESKTOPLAUNCHERICON_H
-#define DESKTOPLAUNCHERICON_H
+#ifndef UNITY_DECAYMULATOR_H
+#define UNITY_DECAYMULATOR_H
 
-#include "SimpleLauncherIcon.h"
+#include <Nux/Nux.h>
+#include <glib.h>
 
 namespace unity
 {
-namespace launcher
+namespace ui
 {
 
-class DesktopLauncherIcon : public SimpleLauncherIcon
+class Decaymulator
 {
-
 public:
-  DesktopLauncherIcon();
-  ~DesktopLauncherIcon();
+  typedef std::shared_ptr<Decaymulator> Ptr;
 
-  virtual nux::Color BackgroundColor();
-  virtual nux::Color GlowColor();
+  nux::Property<int> rate_of_decay;
+  nux::Property<int> value;
 
-  void SetShowInSwitcher(bool show_in_switcher)
-  {
-    show_in_switcher_ = show_in_switcher;
-  }
-
-  bool ShowInSwitcher(bool current)
-  {
-    return show_in_switcher_;
-  }
-
-protected:
-  void ActivateLauncherIcon(ActionArg arg);
+  Decaymulator();
 
 private:
-  bool show_in_switcher_;
+  void OnValueChanged(int value);
+  static gboolean OnDecayTimeout (gpointer value);
+
+  guint on_decay_handle;
 };
 
 }
 }
 
-#endif // DESKTOPLAUNCHERICON_H
+#endif

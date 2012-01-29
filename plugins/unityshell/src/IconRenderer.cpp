@@ -369,7 +369,7 @@ void IconRenderer::UpdateIconSectionTransform(launcher::AbstractLauncherIcon* ic
   v3.y = -geo.height * (v3.y - 1.0f) / 2.0f - geo.height / 2.0f + yy + hh / 2.0f;
 
 
-  std::vector<nux::Vector4>& vectors = icon->GetTransform(index);
+  std::vector<nux::Vector4>& vectors = icon->GetTransform(index, monitor);
 
   vectors[0] = v0;
   vectors[1] = v1;
@@ -420,7 +420,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
     shine = local::squircle_shine;
   }
 
-  auto tile_transform = arg.icon->GetTransform(launcher::AbstractLauncherIcon::TRANSFORM_TILE);
+  auto tile_transform = arg.icon->GetTransform(launcher::AbstractLauncherIcon::TRANSFORM_TILE, monitor);
 
   // draw tile
   if (backlight_intensity > 0 && !arg.draw_edge_only)
@@ -452,7 +452,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
                 arg.icon->TextureForSize(image_size)->GetDeviceTexture(),
                 nux::color::White,
                 arg.alpha,
-                arg.icon->GetTransform(launcher::AbstractLauncherIcon::TRANSFORM_IMAGE));
+                arg.icon->GetTransform(launcher::AbstractLauncherIcon::TRANSFORM_IMAGE, monitor));
 
   // draw overlay shine
   RenderElement(GfxContext,
@@ -470,7 +470,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
                   glow->GetDeviceTexture(),
                   glow_color,
                   glow_intensity * arg.alpha,
-                  arg.icon->GetTransform(launcher::AbstractLauncherIcon::TRANSFORM_GLOW));
+                  arg.icon->GetTransform(launcher::AbstractLauncherIcon::TRANSFORM_GLOW, monitor));
   }
 
   // draw shimmer
@@ -490,7 +490,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
                   local::icon_glow[size]->GetDeviceTexture(),
                   arg.icon->GlowColor(),
                   fade_out * arg.alpha,
-                  arg.icon->GetTransform(launcher::AbstractLauncherIcon::TRANSFORM_GLOW));
+                  arg.icon->GetTransform(launcher::AbstractLauncherIcon::TRANSFORM_GLOW, monitor));
 
     GfxContext.PopClippingRectangle();
   }
@@ -521,7 +521,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
                   arg.icon->Emblem()->GetDeviceTexture(),
                   nux::color::White,
                   arg.alpha,
-                  arg.icon->GetTransform(launcher::AbstractLauncherIcon::TRANSFORM_EMBLEM));
+                  arg.icon->GetTransform(launcher::AbstractLauncherIcon::TRANSFORM_EMBLEM, monitor));
   }
 
   // draw indicators
@@ -787,7 +787,7 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
     }
     else
     {
-      auto bounds = arg.icon->GetTransform(launcher::AbstractLauncherIcon::TRANSFORM_TILE);
+      auto bounds = arg.icon->GetTransform(launcher::AbstractLauncherIcon::TRANSFORM_TILE, monitor);
       markerX = bounds[0].x + 2;
       scale = 2;
     }

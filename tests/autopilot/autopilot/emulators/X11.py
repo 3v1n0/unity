@@ -22,16 +22,22 @@ from Xlib import X
 from Xlib import XK
 from Xlib.display import Display
 from Xlib.ext.xtest import fake_input
+import gtk.gdk
 
 class Keyboard(object):
     '''Wrapper around xlib to make faking keyboard input possible'''
     _lame_hardcoded_keycodes = {
+        'E' : 9, # escape
         'A' : 64, 
         'C' : 37,
         'S' : 50,
         'T' : 23,
         'W' : 133,
-        'U' : 111
+        'U' : 111, # up arrow
+        'D' : 116, # down arrow
+        'L' : 113, # left arrow
+        'R' : 114, # right arrow
+        '1' : 67   # f1
         }
 
     _special_X_keysyms = {
@@ -238,3 +244,31 @@ class Mouse(object):
         self.move(16, 13, animate=False)
         self.click()
         self.move(800, 500, animate=False)
+
+
+class ScreenGeometry:
+    """Get details about screen geometry."""
+
+    def __init__(self):
+        self._default_screen = gtk.gdk.screen_get_default()
+
+    def get_num_monitors(self):
+        """Get the number of monitors attached to the PC."""
+        return self._default_screen.get_n_monitors()
+
+    def get_monitor_geometry(self, monitor_number):
+        """Get the geometry for a particular monitor.
+
+        Returns a tuple containing (x,y,width,height).
+
+        """
+        if monitor_number >= self.get_num_monitors():
+            raise ValueError('Specified monitor number is out of range.')
+        return tuple(self._default_screen.get_monitor_geometry(monitor_number))
+
+    def move_mouse_to_monitor(self, monitor_number):
+        """Move the mouse to the center of the specified monitor."""
+        geo = self.get_monitor_geometry(monitor_number)
+        x = geo[0] + (geo[2]/2)
+        y = geo[1] + (geo[3]/2)
+        Mouse().move(x,y)

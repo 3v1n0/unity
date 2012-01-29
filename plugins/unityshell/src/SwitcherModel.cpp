@@ -152,7 +152,7 @@ std::vector<Window>
 SwitcherModel::DetailXids()
 {
   std::vector<Window> results;
-  results = Selection()->RelatedXids ();
+  results = Selection()->Windows();
 
   if (only_detail_on_viewport)
   {
