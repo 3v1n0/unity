@@ -46,13 +46,13 @@ public:
   Controller(Display* display);
   ~Controller();
 
-  Launcher& launcher();
-  LauncherList& launchers();
-  Window launcher_input_window_id();
+  Launcher& launcher() const;
+  LauncherList& launchers() const;
+  Window KeyNavLauncherInputWindowId() const;
 
   void UpdateNumWorkspaces(int workspaces);
-  std::vector<char> GetAllShortcuts();
-  std::vector<AbstractLauncherIcon*> GetAltTabIcons(bool current);
+  std::vector<char> GetAllShortcuts() const;
+  std::vector<AbstractLauncherIcon*> GetAltTabIcons(bool current) const;
 
   void PushToFront();
 
@@ -71,7 +71,7 @@ public:
   void KeyNavTerminate(bool activate = true);
   void KeyNavNext();
   void KeyNavPrevious();
-  bool KeyNavIsActive();
+  bool KeyNavIsActive() const;
 
 private:
   class Impl;

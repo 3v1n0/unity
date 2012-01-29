@@ -777,17 +777,17 @@ void Controller::UpdateNumWorkspaces(int workspaces)
   pimpl->UpdateNumWorkspaces(workspaces);
 }
 
-Launcher& Controller::launcher()
+Launcher& Controller::launcher() const
 {
   return *(pimpl->launcher_);
 }
 
-Controller::LauncherList& Controller::launchers()
+Controller::LauncherList& Controller::launchers() const
 {
   return pimpl->launchers;
 }
 
-std::vector<char> Controller::GetAllShortcuts()
+std::vector<char> Controller::GetAllShortcuts() const
 {
   std::vector<char> shortcuts;
   for (auto icon : *(pimpl->model_))
@@ -800,7 +800,7 @@ std::vector<char> Controller::GetAllShortcuts()
   return shortcuts;
 }
 
-std::vector<AbstractLauncherIcon*> Controller::GetAltTabIcons(bool current)
+std::vector<AbstractLauncherIcon*> Controller::GetAltTabIcons(bool current) const
 {
   std::vector<AbstractLauncherIcon*> results;
 
@@ -813,9 +813,11 @@ std::vector<AbstractLauncherIcon*> Controller::GetAltTabIcons(bool current)
   return results;
 }
 
-Window Controller::launcher_input_window_id()
+Window Controller::KeyNavLauncherInputWindowId() const
 {
-  return pimpl->launcher_->GetParent()->GetInputWindowId();
+  if (KeyNavIsActive())
+    return pimpl->keyboard_launcher_->GetParent()->GetInputWindowId();
+  return 0;
 }
 
 void Controller::PushToFront()
@@ -1033,7 +1035,7 @@ void Controller::KeyNavTerminate(bool activate)
   UBusManager().SendMessage(UBUS_LAUNCHER_END_KEY_SWTICHER, g_variant_new_boolean(true));
 }
 
-bool Controller::KeyNavIsActive()
+bool Controller::KeyNavIsActive() const
 {
   return pimpl->launcher_keynav;
 }

@@ -82,7 +82,7 @@ public:
 
   LauncherHideMachine* HideMachine() { return _hide_machine; }
 
-  bool Hidden()
+  bool Hidden() const
   {
     return _hidden;
   }
@@ -91,12 +91,12 @@ public:
   void ShowShortcuts(bool show);
 
   void SetModel(LauncherModel* model);
-  LauncherModel* GetModel();
+  LauncherModel* GetModel() const;
 
   void SetFloating(bool floating);
 
   void SetHideMode(LauncherHideMode hidemode);
-  LauncherHideMode GetHideMode();
+  LauncherHideMode GetHideMode() const;
 
   void StartKeyShowLauncher();
   void EndKeyShowLauncher();
@@ -104,8 +104,8 @@ public:
   void EnsureIconOnScreen(AbstractLauncherIcon* icon);
 
   void SetBacklightMode(BacklightMode mode);
-  BacklightMode GetBacklightMode();
-  bool IsBackLightModeToggles();
+  BacklightMode GetBacklightMode() const;
+  bool IsBackLightModeToggles() const;
 
   void SetLaunchAnimation(LaunchAnimation animation);
   LaunchAnimation GetLaunchAnimation();

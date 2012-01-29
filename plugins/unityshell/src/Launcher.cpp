@@ -1497,7 +1497,7 @@ Launcher::OnViewPortSwitchEnded()
   CheckWindowOverLauncher();
 }
 
-LauncherHideMode Launcher::GetHideMode()
+LauncherHideMode Launcher::GetHideMode() const
 {
   return _hidemode;
 }
@@ -1602,12 +1602,12 @@ void Launcher::SetBacklightMode(BacklightMode mode)
   EnsureAnimation();
 }
 
-BacklightMode Launcher::GetBacklightMode()
+BacklightMode Launcher::GetBacklightMode() const
 {
   return _backlight_mode;
 }
 
-bool Launcher::IsBackLightModeToggles()
+bool Launcher::IsBackLightModeToggles() const
 {
   switch (_backlight_mode) {
     case BACKLIGHT_NORMAL:
@@ -1841,7 +1841,7 @@ void Launcher::SetModel(LauncherModel* model)
   _model->selection_changed.connect(sigc::mem_fun(this, &Launcher::OnSelectionChanged));
 }
 
-LauncherModel* Launcher::GetModel()
+LauncherModel* Launcher::GetModel() const
 {
   return _model;
 }

@@ -213,7 +213,7 @@ LauncherHideMachine::SetMode(LauncherHideMachine::HideMode mode)
 }
 
 LauncherHideMachine::HideMode
-LauncherHideMachine::GetMode()
+LauncherHideMachine::GetMode() const
 {
   return _mode;
 }
@@ -243,7 +243,7 @@ LauncherHideMachine::SetQuirk(LauncherHideMachine::HideQuirk quirk, bool active)
 }
 
 bool
-LauncherHideMachine::GetQuirk(LauncherHideMachine::HideQuirk quirk, bool allow_partial)
+LauncherHideMachine::GetQuirk(LauncherHideMachine::HideQuirk quirk, bool allow_partial) const
 {
   if (allow_partial)
     return _quirks & quirk;
@@ -251,7 +251,7 @@ LauncherHideMachine::GetQuirk(LauncherHideMachine::HideQuirk quirk, bool allow_p
 }
 
 bool
-LauncherHideMachine::ShouldHide()
+LauncherHideMachine::ShouldHide() const
 {
   return _should_hide;
 }
@@ -282,7 +282,7 @@ LauncherHideMachine::EmitShouldHideChanged(gpointer data)
 }
 
 std::string
-LauncherHideMachine::DebugHideQuirks()
+LauncherHideMachine::DebugHideQuirks() const
 {
   // Although I do wonder why we are returning a string representation
   // of the enum value as an integer anyway.

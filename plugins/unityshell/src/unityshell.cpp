@@ -1552,7 +1552,7 @@ void UnityScreen::restartLauncherKeyNav()
 void UnityScreen::startLauncherKeyNav()
 {
   // get CompWindow* of launcher-window
-  newFocusedWindow = screen->findWindow(launcher_controller_->launcher_input_window_id());
+  newFocusedWindow = screen->findWindow(launcher_controller_->KeyNavLauncherInputWindowId());
 
   // check if currently focused window isn't the launcher-window
   if (newFocusedWindow != screen->findWindow(screen->activeWindow()))
@@ -2106,19 +2106,6 @@ void UnityWindow::windowNotify(CompWindowNotify n)
   else if (mShowdesktopHandler)
   {
     mShowdesktopHandler->windowNotify (n);
-  }
-
-  // We do this after the notify to ensure input focus has actually been moved.
-  if (n == CompWindowNotifyFocusChange)
-  {
-    UnityScreen* us = UnityScreen::get(screen);
-    CompWindow *lw;
-
-    if (us->dash_is_open_)
-    {
-      lw = screen->findWindow(us->launcher_controller_->launcher_input_window_id());
-      lw->moveInputFocusTo();
-    }
   }
 }
 

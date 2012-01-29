@@ -71,18 +71,18 @@ public:
   virtual ~LauncherHideMachine();
 
   void     SetMode(HideMode mode);
-  HideMode GetMode();
+  HideMode GetMode() const;
 
   void AddRevealPressure(int pressure);
 
   void SetQuirk(HideQuirk quirk, bool active);
-  bool GetQuirk(HideQuirk quirk, bool allow_partial = true);
+  bool GetQuirk(HideQuirk quirk, bool allow_partial = true) const;
 
-  bool ShouldHide();
+  bool ShouldHide() const;
 
   sigc::signal<void, bool> should_hide_changed;
 
-  std::string DebugHideQuirks();
+  std::string DebugHideQuirks() const;
 
 private:
   void EnsureHideState(bool skip_delay);
