@@ -15,6 +15,7 @@ class LauncherTests(TestCase):
         self.server = Launcher()
 
     def test_launcher_switcher_ungrabbed(self):
+        """Tests basic key nav integration without keyboard grabs"""
         sleep(.5)
         
         self.server.start_switcher()
@@ -35,7 +36,9 @@ class LauncherTests(TestCase):
         self.server.end_switcher(True)
         sleep(.5)
         self.assertThat(self.server.key_nav_is_active(), Equals(False))
+
     def test_launcher_switcher_grabbed(self):
+        """Tests basic key nav integration via keyboard grab"""
         sleep(.5)
         
         self.server.grab_switcher()
@@ -58,6 +61,7 @@ class LauncherTests(TestCase):
         self.assertThat(self.server.key_nav_is_active(), Equals(False))
 
     def test_launcher_switcher_quicklist_interaction(self):
+        """Tests that the key nav opens and closes quicklists properly and regrabs afterwards"""
         sleep(.5)
         
         self.server.grab_switcher()
