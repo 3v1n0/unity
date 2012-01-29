@@ -276,12 +276,6 @@ void Controller::Impl::OnScreenChanged(int primary_monitor,
     std::vector<nux::BaseWindow*>::iterator sit;
     for (sit = it; sit != eit; ++sit)
     {
-      nux::Layout* layout = (*sit)->GetLayout();
-      PanelView* pv = static_cast<PanelView*>(layout->GetChildren().front());
-      if (pv)
-      {
-        iobj->RemoveChild(pv);
-      }
       (*sit)->UnReference();
       LOG_DEBUG(logger) << "Removed extra Panel";
     }

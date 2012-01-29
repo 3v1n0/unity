@@ -41,13 +41,12 @@ public:
   void RemoveChild(Introspectable* child);
   IntrospectableList const& GetIntrospectableChildren() { return _children; };
   virtual void AddProperties(GVariantBuilder* builder) = 0;
-  
+
 protected:
   /// Please don't override this unless you really need to. The only valid reason
-  /// is if you have a property that simply *must* be called 'Children'. 
-  /// See thomir if you're unsure.
+  /// is if you have a property that simply *must* be called 'Children'.
   virtual std::string GetChildsName() const;
-  
+
 
   /*
    * AddProperties should be implemented as such ...
