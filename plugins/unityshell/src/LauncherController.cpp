@@ -166,6 +166,10 @@ public:
   bool                   launcher_open;
   bool                   launcher_keynav;
   bool                   launcher_grabbed;
+  bool                   reactivate_keynav;
+  int                    reactivate_index;
+
+  UBusManager            ubus;
 
   struct timespec        launcher_key_press_time_;
 
@@ -191,6 +195,7 @@ Controller::Impl::Impl(Display* display, Controller* parent)
   launcher_open = false;
   launcher_keynav = false;
   launcher_grabbed = false;
+  reactivate_keynav = false;
 
   int i = 0;
   for (auto monitor : monitors)
@@ -238,6 +243,12 @@ Controller::Impl::Impl(Display* display, Controller* parent)
   uscreen->changed.connect(sigc::mem_fun(this, &Controller::Impl::OnScreenChanged));
 
   launcher_key_press_time_ = { 0, 0 };
+
+  ubus.RegisterInterest(UBUS_QUICKLIST_END_KEY_NAV, [&](GVariant * args) { 
+    if (reactivate_keynav)
+      parent_->KeyNavGrab();
+      model_->SetSelection(reactivate_index);
+  });
 }
 
 Controller::Impl::~Impl()
@@ -744,7 +755,7 @@ bool Controller::Impl::TapTimeUnderLimit()
 
 void Controller::Impl::SendHomeActivationRequest()
 {
-  UBusManager().SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST, g_variant_new("(sus)", "home.lens", 0, ""));
+  ubus.SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST, g_variant_new("(sus)", "home.lens", 0, ""));
 }
 
 Controller::Controller(Display* display)
@@ -1004,7 +1015,7 @@ void Controller::KeyNavActivate()
   pimpl->keyboard_launcher_->EnterKeyNavMode();
   pimpl->model_->SetSelection(0);
 
-  UBusManager().SendMessage(UBUS_LAUNCHER_START_KEY_SWTICHER, g_variant_new_boolean(true));
+  pimpl->ubus.SendMessage(UBUS_LAUNCHER_START_KEY_SWTICHER, g_variant_new_boolean(true));
 }
 
 void Controller::KeyNavNext()
@@ -1037,7 +1048,7 @@ void Controller::KeyNavTerminate(bool activate)
   if (!pimpl->launcher_open)
     pimpl->keyboard_launcher_.Release();
   
-  UBusManager().SendMessage(UBUS_LAUNCHER_END_KEY_SWTICHER, g_variant_new_boolean(true));
+  pimpl->ubus.SendMessage(UBUS_LAUNCHER_END_KEY_SWTICHER, g_variant_new_boolean(true));
 }
 
 bool Controller::KeyNavIsActive() const
@@ -1088,7 +1099,11 @@ void Controller::Impl::ReceiveLauncherKeyPress(unsigned long eventType,
     case NUX_KP_RIGHT:
     case XK_Menu:
       if (model_->Selection()->OpenQuicklist(true, keyboard_launcher_->monitor()))
+      {
+        reactivate_keynav = true;
+        reactivate_index = model_->SelectionIndex();
         parent_->KeyNavTerminate(false);
+      }
       break;
 
       // <SPACE> (open a new instance)

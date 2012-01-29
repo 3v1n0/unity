@@ -319,9 +319,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
      ubus_manager_.RegisterInterest(UBUS_LAUNCHER_END_KEY_NAV,
                    sigc::mem_fun(this, &UnityScreen::OnLauncherEndKeyNav));
 
-     ubus_manager_.RegisterInterest(UBUS_QUICKLIST_END_KEY_NAV,
-                   sigc::mem_fun(this, &UnityScreen::OnQuicklistEndKeyNav));
-
      g_idle_add_full (G_PRIORITY_DEFAULT, &UnityScreen::initPluginActions, this, NULL);
      super_keypressed_ = false;
 
@@ -1539,16 +1536,6 @@ bool UnityScreen::executeCommand(CompAction* action,
   return false;
 }
 
-void UnityScreen::restartLauncherKeyNav()
-{
-  // set input-focus on launcher-window and start key-nav mode
-  if (newFocusedWindow != NULL)
-  {
-    newFocusedWindow->moveInputFocusTo();
-    launcher_controller_->KeyNavActivate();
-  }
-}
-
 void UnityScreen::startLauncherKeyNav()
 {
   // get CompWindow* of launcher-window
@@ -1746,11 +1733,6 @@ void UnityScreen::OnLauncherEndKeyNav(GVariant* data)
   // entered)
   if (preserve_focus)
     PluginAdapter::Default ()->restoreInputFocus ();
-}
-
-void UnityScreen::OnQuicklistEndKeyNav(GVariant* data)
-{
-  restartLauncherKeyNav();
 }
 
 gboolean UnityScreen::initPluginActions(gpointer data)

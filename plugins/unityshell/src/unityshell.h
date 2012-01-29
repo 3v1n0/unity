@@ -254,7 +254,6 @@ private:
 
   void OnDashRealized ();
 
-  void OnQuicklistEndKeyNav(GVariant* data);
   void OnLauncherStartKeyNav(GVariant* data);
   void OnLauncherEndKeyNav(GVariant* data);
 
