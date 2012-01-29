@@ -75,7 +75,7 @@ public:
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw);
 
-  AbstractLauncherIcon* GetSelectedMenuIcon();
+  AbstractLauncherIcon* GetSelectedMenuIcon() const;
 
   void SetIconSize(int tile_size, int icon_size);
   void SetBackgroundAlpha(float background_alpha);
@@ -108,15 +108,15 @@ public:
   bool IsBackLightModeToggles() const;
 
   void SetLaunchAnimation(LaunchAnimation animation);
-  LaunchAnimation GetLaunchAnimation();
+  LaunchAnimation GetLaunchAnimation() const;
 
   void SetUrgentAnimation(UrgentAnimation animation);
-  UrgentAnimation GetUrgentAnimation();
+  UrgentAnimation GetUrgentAnimation() const;
 
   void SetAutoHideAnimation(AutoHideAnimation animation);
-  AutoHideAnimation GetAutoHideAnimation();
+  AutoHideAnimation GetAutoHideAnimation() const;
 
-  nux::BaseWindow* GetParent()
+  nux::BaseWindow* GetParent() const
   {
     return _parent;
   };
@@ -132,8 +132,8 @@ public:
   virtual void RecvQuicklistOpened(QuicklistView* quicklist);
   virtual void RecvQuicklistClosed(QuicklistView* quicklist);
 
-  int GetMouseX();
-  int GetMouseY();
+  int GetMouseX() const;
+  int GetMouseY() const;
 
   void Resize();
 
@@ -152,7 +152,7 @@ public:
 
   void EnterKeyNavMode();
   void ExitKeyNavMode();
-  bool IsInKeyNavMode();
+  bool IsInKeyNavMode() const;
 
 protected:
   // Introspectable methods
@@ -220,16 +220,16 @@ private:
 
   void SetStateMouseOverLauncher(bool over_launcher);
 
-  bool MouseBeyondDragThreshold();
+  bool MouseBeyondDragThreshold() const;
 
   void OnDragWindowAnimCompleted();
 
-  bool IconNeedsAnimation(AbstractLauncherIcon* icon, struct timespec const& current);
-  bool IconDrawEdgeOnly(AbstractLauncherIcon* icon);
-  bool AnimationInProgress();
+  bool IconNeedsAnimation(AbstractLauncherIcon* icon, struct timespec const& current) const;
+  bool IconDrawEdgeOnly(AbstractLauncherIcon* icon) const;
+  bool AnimationInProgress() const;
 
   void SetActionState(LauncherActionState actionstate);
-  LauncherActionState GetActionState();
+  LauncherActionState GetActionState() const;
 
   void EnsureAnimation();
   void EnsureScrollTimer();
@@ -243,26 +243,27 @@ private:
   static gboolean OnScrollTimeout(gpointer data);
   static gboolean OnUpdateDragManagerTimeout(gpointer data);
 
-  float DnDStartProgress(struct timespec const& current);
-  float DnDExitProgress(struct timespec const& current);
-  float GetHoverProgress(struct timespec const& current);
-  float AutohideProgress(struct timespec const& current);
-  float DragThresholdProgress(struct timespec const& current);
-  float DragHideProgress(struct timespec const& current);
-  float DragOutProgress(struct timespec const& current);
-  float IconDesatValue(AbstractLauncherIcon* icon, struct timespec const& current);
-  float IconPresentProgress(AbstractLauncherIcon* icon, struct timespec const& current);
-  float IconUrgentProgress(AbstractLauncherIcon* icon, struct timespec const& current);
-  float IconShimmerProgress(AbstractLauncherIcon* icon, struct timespec const& current);
-  float IconUrgentPulseValue(AbstractLauncherIcon* icon, struct timespec const& current);
-  float IconPulseOnceValue(AbstractLauncherIcon *icon, struct timespec const &current);
-  float IconUrgentWiggleValue(AbstractLauncherIcon* icon, struct timespec const& current);
-  float IconStartingBlinkValue(AbstractLauncherIcon* icon, struct timespec const& current);
-  float IconStartingPulseValue(AbstractLauncherIcon* icon, struct timespec const& current);
-  float IconBackgroundIntensity(AbstractLauncherIcon* icon, struct timespec const& current);
-  float IconProgressBias(AbstractLauncherIcon* icon, struct timespec const& current);
-  float IconDropDimValue(AbstractLauncherIcon* icon, struct timespec const& current);
-  float IconCenterTransitionProgress(AbstractLauncherIcon* icon, struct timespec const& current);
+  float DnDStartProgress(struct timespec const& current) const;
+  float DnDExitProgress(struct timespec const& current) const;
+  float GetHoverProgress(struct timespec const& current) const;
+  float AutohideProgress(struct timespec const& current) const;
+  float DragThresholdProgress(struct timespec const& current) const;
+  float DragHideProgress(struct timespec const& current) const;
+  float DragOutProgress(struct timespec const& current) const;
+  float IconDesatValue(AbstractLauncherIcon* icon, struct timespec const& current) const;
+  float IconPresentProgress(AbstractLauncherIcon* icon, struct timespec const& current) const;
+  float IconUrgentProgress(AbstractLauncherIcon* icon, struct timespec const& current) const;
+  float IconShimmerProgress(AbstractLauncherIcon* icon, struct timespec const& current) const;
+  float IconUrgentPulseValue(AbstractLauncherIcon* icon, struct timespec const& current) const;
+  float IconPulseOnceValue(AbstractLauncherIcon *icon, struct timespec const &current) const;
+  float IconUrgentWiggleValue(AbstractLauncherIcon* icon, struct timespec const& current) const;
+  float IconStartingBlinkValue(AbstractLauncherIcon* icon, struct timespec const& current) const;
+  float IconStartingPulseValue(AbstractLauncherIcon* icon, struct timespec const& current) const;
+  float IconBackgroundIntensity(AbstractLauncherIcon* icon, struct timespec const& current) const;
+  float IconProgressBias(AbstractLauncherIcon* icon, struct timespec const& current) const;
+  float IconDropDimValue(AbstractLauncherIcon* icon, struct timespec const& current) const;
+  float IconCenterTransitionProgress(AbstractLauncherIcon* icon, struct timespec const& current) const;
+  float IconVisibleProgress(AbstractLauncherIcon* icon, struct timespec const& current) const;
 
   void SetHover(bool hovered);
   void SetHidden(bool hidden);
@@ -316,8 +317,8 @@ private:
   void EndIconDrag();
   void UpdateDragWindowPosition(int x, int y);
 
-  float GetAutohidePositionMin();
-  float GetAutohidePositionMax();
+  float GetAutohidePositionMin() const;
+  float GetAutohidePositionMax() const;
 
   virtual void PreLayoutManagement();
   virtual long PostLayoutManagement(long LayoutResult);

@@ -427,7 +427,7 @@ void Launcher::SetStateMouseOverLauncher(bool over_launcher)
   _hover_machine->SetQuirk(LauncherHoverMachine::MOUSE_OVER_LAUNCHER, over_launcher);
 }
 
-bool Launcher::MouseBeyondDragThreshold()
+bool Launcher::MouseBeyondDragThreshold() const
 {
   if (GetActionState() == ACTION_DRAG_ICON)
     return _mouse_position.x > GetGeometry().width + _icon_size / 2;
@@ -435,7 +435,7 @@ bool Launcher::MouseBeyondDragThreshold()
 }
 
 /* Render Layout Logic */
-float Launcher::GetHoverProgress(struct timespec const& current)
+float Launcher::GetHoverProgress(struct timespec const& current) const
 {
   if (_hovered)
     return CLAMP((float)(unity::TimeUtil::TimeDelta(&current, &_times[TIME_ENTER])) / (float) ANIM_DURATION, 0.0f, 1.0f);
@@ -443,12 +443,12 @@ float Launcher::GetHoverProgress(struct timespec const& current)
     return 1.0f - CLAMP((float)(unity::TimeUtil::TimeDelta(&current, &_times[TIME_LEAVE])) / (float) ANIM_DURATION, 0.0f, 1.0f);
 }
 
-float Launcher::DnDExitProgress(struct timespec const& current)
+float Launcher::DnDExitProgress(struct timespec const& current) const
 {
   return pow(1.0f - CLAMP((float)(unity::TimeUtil::TimeDelta(&current, &_times[TIME_DRAG_END])) / (float) ANIM_DURATION_LONG, 0.0f, 1.0f), 2);
 }
 
-float Launcher::DragOutProgress(struct timespec const& current)
+float Launcher::DragOutProgress(struct timespec const& current) const
 {
   float timeout = CLAMP((float)(unity::TimeUtil::TimeDelta(&current, &_times[TIME_DRAG_OUT])) / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
   float progress = CLAMP(_drag_out_delta_x / DRAG_OUT_PIXELS, 0.0f, 1.0f);
@@ -458,7 +458,7 @@ float Launcher::DragOutProgress(struct timespec const& current)
   return progress * (1.0f - timeout);
 }
 
-float Launcher::AutohideProgress(struct timespec const& current)
+float Launcher::AutohideProgress(struct timespec const& current) const
 {
   // time-based progress (full scale or finish the TRIGGER_AUTOHIDE_MIN -> 0.00f on bfb)
   float animation_progress;
@@ -469,7 +469,7 @@ float Launcher::AutohideProgress(struct timespec const& current)
     return 1.0f - animation_progress;
 }
 
-float Launcher::DragHideProgress(struct timespec const& current)
+float Launcher::DragHideProgress(struct timespec const& current) const
 {
   if (_drag_edge_touching)
     return CLAMP((float)(unity::TimeUtil::TimeDelta(&current, &_times[TIME_DRAG_EDGE_TOUCH])) / (float)(ANIM_DURATION * 3), 0.0f, 1.0f);
@@ -477,7 +477,7 @@ float Launcher::DragHideProgress(struct timespec const& current)
     return 1.0f - CLAMP((float)(unity::TimeUtil::TimeDelta(&current, &_times[TIME_DRAG_EDGE_TOUCH])) / (float)(ANIM_DURATION * 3), 0.0f, 1.0f);
 }
 
-float Launcher::DragThresholdProgress(struct timespec const& current)
+float Launcher::DragThresholdProgress(struct timespec const& current) const
 {
   if (MouseBeyondDragThreshold())
     return 1.0f - CLAMP((float)(unity::TimeUtil::TimeDelta(&current, &_times[TIME_DRAG_THRESHOLD])) / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
@@ -498,7 +498,7 @@ void Launcher::EnsureAnimation()
   NeedRedraw();
 }
 
-bool Launcher::IconNeedsAnimation(AbstractLauncherIcon* icon, struct timespec const& current)
+bool Launcher::IconNeedsAnimation(AbstractLauncherIcon* icon, struct timespec const& current) const
 {
   struct timespec time = icon->GetQuirkTime(AbstractLauncherIcon::QUIRK_VISIBLE);
   if (unity::TimeUtil::TimeDelta(&current, &time) < ANIM_DURATION_SHORT)
@@ -551,7 +551,7 @@ bool Launcher::IconNeedsAnimation(AbstractLauncherIcon* icon, struct timespec co
   return false;
 }
 
-bool Launcher::AnimationInProgress()
+bool Launcher::AnimationInProgress() const
 {
   // performance here can be improved by caching the longer remaining animation found and short circuiting to that each time
   // this way extra checks may be avoided
@@ -598,7 +598,7 @@ bool Launcher::AnimationInProgress()
 }
 
 /* Min is when you are on the trigger */
-float Launcher::GetAutohidePositionMin()
+float Launcher::GetAutohidePositionMin() const
 {
   if (_autohide_animation == SLIDE_ONLY || _autohide_animation == FADE_AND_SLIDE)
     return 0.35f;
@@ -606,7 +606,7 @@ float Launcher::GetAutohidePositionMin()
     return 0.25f;
 }
 /* Max is the initial state over the bfb */
-float Launcher::GetAutohidePositionMax()
+float Launcher::GetAutohidePositionMax() const
 {
   if (_autohide_animation == SLIDE_ONLY || _autohide_animation == FADE_AND_SLIDE)
     return 1.00f;
@@ -615,7 +615,7 @@ float Launcher::GetAutohidePositionMax()
 }
 
 
-float IconVisibleProgress(AbstractLauncherIcon* icon, struct timespec const& current)
+float Launcher::IconVisibleProgress(AbstractLauncherIcon* icon, struct timespec const& current) const
 {
   if (icon->GetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE))
   {
@@ -657,7 +657,7 @@ void Launcher::SetDndDelta(float x, float y, nux::Geometry const& geo, timespec 
   }
 }
 
-float Launcher::IconPresentProgress(AbstractLauncherIcon* icon, struct timespec const& current)
+float Launcher::IconPresentProgress(AbstractLauncherIcon* icon, struct timespec const& current) const
 {
   struct timespec icon_present_time = icon->GetQuirkTime(AbstractLauncherIcon::QUIRK_PRESENTED);
   int ms = unity::TimeUtil::TimeDelta(&current, &icon_present_time);
@@ -669,7 +669,7 @@ float Launcher::IconPresentProgress(AbstractLauncherIcon* icon, struct timespec 
     return 1.0f - result;
 }
 
-float Launcher::IconUrgentProgress(AbstractLauncherIcon* icon, struct timespec const& current)
+float Launcher::IconUrgentProgress(AbstractLauncherIcon* icon, struct timespec const& current) const
 {
   struct timespec urgent_time = icon->GetQuirkTime(AbstractLauncherIcon::QUIRK_URGENT);
   int urgent_ms = unity::TimeUtil::TimeDelta(&current, &urgent_time);
@@ -686,7 +686,7 @@ float Launcher::IconUrgentProgress(AbstractLauncherIcon* icon, struct timespec c
     return 1.0f - result;
 }
 
-float Launcher::IconDropDimValue(AbstractLauncherIcon* icon, struct timespec const& current)
+float Launcher::IconDropDimValue(AbstractLauncherIcon* icon, struct timespec const& current) const
 {
   struct timespec dim_time = icon->GetQuirkTime(AbstractLauncherIcon::QUIRK_DROP_DIM);
   int dim_ms = unity::TimeUtil::TimeDelta(&current, &dim_time);
@@ -698,7 +698,7 @@ float Launcher::IconDropDimValue(AbstractLauncherIcon* icon, struct timespec con
     return result;
 }
 
-float Launcher::IconDesatValue(AbstractLauncherIcon* icon, struct timespec const& current)
+float Launcher::IconDesatValue(AbstractLauncherIcon* icon, struct timespec const& current) const
 {
   struct timespec dim_time = icon->GetQuirkTime(AbstractLauncherIcon::QUIRK_DESAT);
   int ms = unity::TimeUtil::TimeDelta(&current, &dim_time);
@@ -710,21 +710,21 @@ float Launcher::IconDesatValue(AbstractLauncherIcon* icon, struct timespec const
     return result;
 }
 
-float Launcher::IconShimmerProgress(AbstractLauncherIcon* icon, struct timespec const& current)
+float Launcher::IconShimmerProgress(AbstractLauncherIcon* icon, struct timespec const& current) const
 {
   struct timespec shimmer_time = icon->GetQuirkTime(AbstractLauncherIcon::QUIRK_SHIMMER);
   int shimmer_ms = unity::TimeUtil::TimeDelta(&current, &shimmer_time);
   return CLAMP((float) shimmer_ms / (float) ANIM_DURATION_LONG, 0.0f, 1.0f);
 }
 
-float Launcher::IconCenterTransitionProgress(AbstractLauncherIcon* icon, struct timespec const& current)
+float Launcher::IconCenterTransitionProgress(AbstractLauncherIcon* icon, struct timespec const& current) const
 {
   struct timespec save_time = icon->GetQuirkTime(AbstractLauncherIcon::QUIRK_CENTER_SAVED);
   int save_ms = unity::TimeUtil::TimeDelta(&current, &save_time);
   return CLAMP((float) save_ms / (float) ANIM_DURATION, 0.0f, 1.0f);
 }
 
-float Launcher::IconUrgentPulseValue(AbstractLauncherIcon* icon, struct timespec const& current)
+float Launcher::IconUrgentPulseValue(AbstractLauncherIcon* icon, struct timespec const& current) const
 {
   if (!icon->GetQuirk(AbstractLauncherIcon::QUIRK_URGENT))
     return 1.0f; // we are full on in a normal condition
@@ -733,7 +733,7 @@ float Launcher::IconUrgentPulseValue(AbstractLauncherIcon* icon, struct timespec
   return 0.5f + (float)(std::cos(M_PI * (float)(URGENT_BLINKS * 2) * urgent_progress)) * 0.5f;
 }
 
-float Launcher::IconPulseOnceValue(AbstractLauncherIcon *icon, struct timespec const &current)
+float Launcher::IconPulseOnceValue(AbstractLauncherIcon *icon, struct timespec const &current) const
 {
   struct timespec pulse_time = icon->GetQuirkTime(AbstractLauncherIcon::QUIRK_PULSE_ONCE);
   int pulse_ms = unity::TimeUtil::TimeDelta(&current, &pulse_time);
@@ -745,7 +745,7 @@ float Launcher::IconPulseOnceValue(AbstractLauncherIcon *icon, struct timespec c
   return 0.5f + (float) (std::cos(M_PI * 2.0 * pulse_progress)) * 0.5f;
 }
 
-float Launcher::IconUrgentWiggleValue(AbstractLauncherIcon* icon, struct timespec const& current)
+float Launcher::IconUrgentWiggleValue(AbstractLauncherIcon* icon, struct timespec const& current) const
 {
   if (!icon->GetQuirk(AbstractLauncherIcon::QUIRK_URGENT))
     return 0.0f; // we are full on in a normal condition
@@ -754,7 +754,7 @@ float Launcher::IconUrgentWiggleValue(AbstractLauncherIcon* icon, struct timespe
   return 0.3f * (float)(std::sin(M_PI * (float)(WIGGLE_CYCLES * 2) * urgent_progress)) * 0.5f;
 }
 
-float Launcher::IconStartingBlinkValue(AbstractLauncherIcon* icon, struct timespec const& current)
+float Launcher::IconStartingBlinkValue(AbstractLauncherIcon* icon, struct timespec const& current) const
 {
   struct timespec starting_time = icon->GetQuirkTime(AbstractLauncherIcon::QUIRK_STARTING);
   int starting_ms = unity::TimeUtil::TimeDelta(&current, &starting_time);
@@ -763,7 +763,7 @@ float Launcher::IconStartingBlinkValue(AbstractLauncherIcon* icon, struct timesp
   return 0.5f + (float)(std::cos(M_PI * val * starting_progress)) * 0.5f;
 }
 
-float Launcher::IconStartingPulseValue(AbstractLauncherIcon* icon, struct timespec const& current)
+float Launcher::IconStartingPulseValue(AbstractLauncherIcon* icon, struct timespec const& current) const
 {
   struct timespec starting_time = icon->GetQuirkTime(AbstractLauncherIcon::QUIRK_STARTING);
   int starting_ms = unity::TimeUtil::TimeDelta(&current, &starting_time);
@@ -778,7 +778,7 @@ float Launcher::IconStartingPulseValue(AbstractLauncherIcon* icon, struct timesp
   return 0.5f + (float)(std::cos(M_PI * (float)(MAX_STARTING_BLINKS * 2) * starting_progress)) * 0.5f;
 }
 
-float Launcher::IconBackgroundIntensity(AbstractLauncherIcon* icon, struct timespec const& current)
+float Launcher::IconBackgroundIntensity(AbstractLauncherIcon* icon, struct timespec const& current) const
 {
   float result = 0.0f;
 
@@ -845,7 +845,7 @@ float Launcher::IconBackgroundIntensity(AbstractLauncherIcon* icon, struct times
   return result;
 }
 
-float Launcher::IconProgressBias(AbstractLauncherIcon* icon, struct timespec const& current)
+float Launcher::IconProgressBias(AbstractLauncherIcon* icon, struct timespec const& current) const
 {
   struct timespec icon_progress_time = icon->GetQuirkTime(AbstractLauncherIcon::QUIRK_PROGRESS);
   int ms = unity::TimeUtil::TimeDelta(&current, &icon_progress_time);
@@ -857,7 +857,7 @@ float Launcher::IconProgressBias(AbstractLauncherIcon* icon, struct timespec con
     return result;
 }
 
-bool Launcher::IconDrawEdgeOnly(AbstractLauncherIcon* icon)
+bool Launcher::IconDrawEdgeOnly(AbstractLauncherIcon* icon) const
 {
   if (_backlight_mode == BACKLIGHT_EDGE_TOGGLE)
     return true;
@@ -1339,13 +1339,13 @@ void Launcher::SetHidden(bool hidden)
 }
 
 int
-Launcher::GetMouseX()
+Launcher::GetMouseX() const
 {
   return _mouse_position.x;
 }
 
 int
-Launcher::GetMouseY()
+Launcher::GetMouseY() const
 {
   return _mouse_position.y;
 }
@@ -1571,7 +1571,7 @@ void Launcher::SetHideMode(LauncherHideMode hidemode)
   EnsureAnimation();
 }
 
-AutoHideAnimation Launcher::GetAutoHideAnimation()
+AutoHideAnimation Launcher::GetAutoHideAnimation() const
 {
   return _autohide_animation;
 }
@@ -1629,7 +1629,7 @@ Launcher::SetLaunchAnimation(LaunchAnimation animation)
 }
 
 LaunchAnimation
-Launcher::GetLaunchAnimation()
+Launcher::GetLaunchAnimation() const
 {
   return _launch_animation;
 }
@@ -1644,7 +1644,7 @@ Launcher::SetUrgentAnimation(UrgentAnimation animation)
 }
 
 UrgentAnimation
-Launcher::GetUrgentAnimation()
+Launcher::GetUrgentAnimation() const
 {
   return _urgent_animation;
 }
@@ -1661,7 +1661,7 @@ Launcher::SetActionState(LauncherActionState actionstate)
 }
 
 Launcher::LauncherActionState
-Launcher::GetActionState()
+Launcher::GetActionState() const
 {
   return _launcher_action_state;
 }
@@ -2376,7 +2376,7 @@ void Launcher::OnPointerBarrierEvent(ui::PointerBarrierWrapper* owner, ui::Barri
   }
 }
 
-bool Launcher::IsInKeyNavMode()
+bool Launcher::IsInKeyNavMode() const
 {
   return _hide_machine->GetQuirk(LauncherHideMachine::KEY_NAV_ACTIVE);
 }
@@ -2564,14 +2564,17 @@ Launcher::SetOffscreenRenderTarget(nux::ObjectPtr<nux::IOpenGLBaseTexture> textu
   int width = texture->GetWidth();
   int height = texture->GetHeight();
 
-  nux::GetGraphicsDisplay()->GetGpuDevice()->FormatFrameBufferObject(width, height, nux::BITFMT_R8G8B8A8);
-  nux::GetGraphicsDisplay()->GetGpuDevice()->SetColorRenderTargetSurface(0, texture->GetSurfaceLevel(0));
-  nux::GetGraphicsDisplay()->GetGpuDevice()->ActivateFrameBuffer();
-
-  nux::GetGraphicsDisplay()->GetGraphicsEngine()->SetContext(0, 0, width, height);
-  nux::GetGraphicsDisplay()->GetGraphicsEngine()->SetViewport(0, 0, width, height);
-  nux::GetGraphicsDisplay()->GetGraphicsEngine()->Push2DWindow(width, height);
-  nux::GetGraphicsDisplay()->GetGraphicsEngine()->EmptyClippingRegion();
+  auto graphics_display = nux::GetGraphicsDisplay();
+  auto gpu_device = graphics_display->GetGpuDevice();
+  gpu_device->FormatFrameBufferObject(width, height, nux::BITFMT_R8G8B8A8);
+  gpu_device->SetColorRenderTargetSurface(0, texture->GetSurfaceLevel(0));
+  gpu_device->ActivateFrameBuffer();
+  
+  auto graphics_engine = graphics_display->GetGraphicsEngine();
+  graphics_engine->SetContext(0, 0, width, height);
+  graphics_engine->SetViewport(0, 0, width, height);
+  graphics_engine->Push2DWindow(width, height);
+  graphics_engine->EmptyClippingRegion();
 }
 
 void
@@ -2864,7 +2867,7 @@ Launcher::ProcessDndDrop(int x, int y)
  * It will return NULL if it is not on keynavmode
  */
 AbstractLauncherIcon*
-Launcher::GetSelectedMenuIcon()
+Launcher::GetSelectedMenuIcon() const
 {
   if (!IsInKeyNavMode())
     return NULL;
