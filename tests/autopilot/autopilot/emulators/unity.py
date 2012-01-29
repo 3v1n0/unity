@@ -2,11 +2,11 @@
 # Copyright 2011 Canonical
 # Author: Alex Launi
 #
-# This program is free software: you can redistribute it and/or modify it 
-# under the terms of the GNU General Public License version 3, as published 
+# This program is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 3, as published
 # by the Free Software Foundation.
 #
-# This script is designed to run unity in a test drive manner. It will drive 
+# This script is designed to run unity in a test drive manner. It will drive
 # X and test the GL calls that Unity makes, so that we can easily find out if
 # we are triggering graphics driver/X bugs.
 
@@ -23,7 +23,7 @@ from autopilot.globals import global_context
 class Unity(object):
     """High level class to abstract interactions with the unity shell.
 
-    This class should not be used directly. Instead, use one of the derived 
+    This class should not be used directly. Instead, use one of the derived
     classes to interact with a different piece of the Unity system.
 
     """
@@ -60,10 +60,10 @@ class Launcher(Unity):
 
         self.reveal_pos = (0, 120)
         self.hide_pos = (self.icon_width *2, 120)
-        
+
         self.show_timeout = 1
         self.hide_timeout = 1
-        
+
 
     def move_mouse_to_reveal_pos(self):
         """Move the mouse to the launcher reveal position."""
@@ -79,7 +79,7 @@ class Launcher(Unity):
         """Is the launcher showing?"""
         state = self.__get_state()
         return not bool(state['hidden'])
-    
+
     def __get_state(self):
         # get the state for the 'launcher' piece
         return super(Launcher, self).get_state('/Unity/Launcher')[0]
@@ -98,9 +98,9 @@ class Launcher(Unity):
 
 
 class LauncherIcon:
-    """Holds information about a launcher icon. 
+    """Holds information about a launcher icon.
 
-    Do not instantiate an instance of this class yourself. Instead, use the 
+    Do not instantiate an instance of this class yourself. Instead, use the
     appropriate methods in the Launcher class instead.
 
     """
@@ -225,7 +225,7 @@ class Dash(Unity):
         return unicode(self.get_state("//SearchBar")[0]['search_string'])
 
     def get_current_lens(self):
-        """Returns the id of the current lens. 
+        """Returns the id of the current lens.
 
         For example, the default lens is 'home.lens', the run-command lens is
         'commands.lens'.
