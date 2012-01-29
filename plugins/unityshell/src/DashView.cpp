@@ -47,6 +47,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(DashView);
 
 DashView::DashView()
   : nux::View(NUX_TRACKER_LOCATION)
+  , home_lens_(new HomeLens(_("Home"), _("Home screen"), _("Search")))
   , active_lens_view_(0)
   , last_activated_uri_("")
   , searching_timeout_id_(0)
@@ -67,6 +68,8 @@ DashView::DashView()
   mouse_down.connect(sigc::mem_fun(this, &DashView::OnMouseButtonDown));
 
   Relayout();
+
+  home_lens_->AddLenses(lenses_);
   lens_bar_->Activate("home.lens");
 }
 
@@ -81,6 +84,23 @@ void DashView::AboutToShow()
   ubus_manager_.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
   visible_ = true;
   search_bar_->text_entry()->SelectAll();
+
+  /* Give the lenses a chance to prep data before we map them  */
+  lens_bar_->Activate(active_lens_view_->lens()->id());
+  if (active_lens_view_->lens()->id() == "home.lens")
+  {
+    for (auto lens : lenses_.GetLenses())
+      {
+        lens->view_type = ViewType::HOME_VIEW;
+        LOG_DEBUG(logger) << "Setting ViewType " << ViewType::HOME_VIEW
+                              << " on '" << lens->id() << "'";
+      }
+
+      home_lens_->view_type = ViewType::LENS_VIEW;
+      LOG_DEBUG(logger) << "Setting ViewType " << ViewType::LENS_VIEW
+                                << " on '" << home_lens_->id() << "'";
+  }
+
   renderer_.AboutToShow();
 }
 
@@ -88,6 +108,17 @@ void DashView::AboutToHide()
 {
   visible_ = false;
   renderer_.AboutToHide();
+
+  for (auto lens : lenses_.GetLenses())
+  {
+    lens->view_type = ViewType::HIDDEN;
+    LOG_DEBUG(logger) << "Setting ViewType " << ViewType::HIDDEN
+                          << " on '" << lens->id() << "'";
+  }
+
+  home_lens_->view_type = ViewType::HIDDEN;
+  LOG_DEBUG(logger) << "Setting ViewType " << ViewType::HIDDEN
+                            << " on '" << home_lens_->id() << "'";
 }
 
 void DashView::SetupViews()
@@ -111,9 +142,9 @@ void DashView::SetupViews()
   lenses_layout_ = new nux::VLayout();
   content_layout_->AddView(lenses_layout_, 1, nux::MINOR_POSITION_LEFT);
 
-  home_view_ = new HomeView();
+  home_view_ = new LensView(home_lens_);
   active_lens_view_ = home_view_;
-  lens_views_["home.lens"] = home_view_;
+  lens_views_[home_lens_->id] = home_view_;
   lenses_layout_->AddView(home_view_);
 
   lens_bar_ = new LensBar();
@@ -240,7 +271,6 @@ void DashView::OnActivateRequest(GVariant* args)
 
   std::string id = AnalyseLensURI(uri.Str());
 
-  home_view_->search_string = "";
   lens_bar_->Activate(id);
 
   if ((id == "home.lens" && handled_type != GOTO_DASH_URI ) || !visible_)
@@ -337,7 +367,6 @@ void DashView::OnLensAdded(Lens::Ptr& lens)
 {
   std::string id = lens->id;
   lens_bar_->AddLens(lens);
-  home_view_->AddLens(lens);
 
   LensView* view = new LensView(lens);
   view->SetVisible(false);
@@ -363,15 +392,17 @@ void DashView::OnLensBarActivated(std::string const& id)
   for (auto it: lens_views_)
   {
     bool id_matches = it.first == id;
+    ViewType view_type = id_matches ? LENS_VIEW : (view == home_view_ ? HOME_VIEW : HIDDEN);
     it.second->SetVisible(id_matches);
-    it.second->view_type = id_matches ? LENS_VIEW : (view == home_view_ ? HOME_VIEW : HIDDEN);
+    it.second->view_type = view_type;
+
+    LOG_DEBUG(logger) << "Setting ViewType " << view_type
+                      << " on '" << it.first << "'";
   }
 
   search_bar_->search_string = view->search_string;
-  if (view != home_view_)
-    search_bar_->search_hint = view->lens()->search_hint;
-  else
-    search_bar_->search_hint = _("Search");
+  search_bar_->search_hint = view->lens()->search_hint;
+
   bool expanded = view->filters_expanded;
   search_bar_->showing_filters = expanded;
 
@@ -554,6 +585,7 @@ bool DashView::InspectKeyEvent(unsigned int eventType,
       ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
     else
       search_bar_->search_string = "";
+
     return true;
   }
   return false;

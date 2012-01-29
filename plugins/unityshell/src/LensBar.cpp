@@ -148,10 +148,20 @@ void LensBar::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
 
 void LensBar::SetActive(LensBarIcon* activated)
 {
-  for (auto icon: icons_)
-    icon->active = icon == activated;
+  bool state_changed = false;
 
-  lens_activated.emit(activated->id);
+  for (auto icon: icons_)
+  {
+    bool state = icon == activated;
+
+    if (icon->active != state)
+      state_changed = true;
+
+    icon->active = state;
+  }
+
+  if (state_changed)
+    lens_activated.emit(activated->id);
 }
 
 void LensBar::ActivateNext()

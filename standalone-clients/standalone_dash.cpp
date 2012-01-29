@@ -77,18 +77,8 @@ void TestRunner::InitWindowThread(nux::NThread* thread, void* InitData)
   self->Init ();
 }
 
-void
-ControlThread (nux::NThread* thread,
-               void*         data)
-{
-  // sleep for 3 seconds
-  nux::SleepForMilliseconds (3000);
-  printf ("ControlThread successfully started\n");
-}
-
 int main(int argc, char **argv)
 {
-  nux::SystemThread* st = NULL;
   nux::WindowThread* wt = NULL;
 
   gtk_init (&argc, &argv);
@@ -109,13 +99,7 @@ int main(int argc, char **argv)
                             &TestRunner::InitWindowThread,
                             test_runner);
 
-  st = nux::CreateSystemThread (NULL, ControlThread, wt);
-
-  if (st)
-    st->Start (NULL);
-
   wt->Run (NULL);
-  delete st;
   delete wt;
   return 0;
 }

@@ -42,8 +42,8 @@ namespace {
 const gchar* SCHEMA_DIRECTORY = BUILDDIR"/settings";
 const gchar* BASE_STORE_FILE = BUILDDIR"/settings/test-favorite-store-gsettings.store";
 const gchar* BASE_STORE_CONTENTS = "[desktop/unity/launcher]\n" \
-                                  "favorites=['%s', '%s', '%s']";
-                                  
+                                   "favorites=['%s', '%s', '%s']";
+
 const char* base_store_favs[] = { BUILDDIR"/tests/data/ubuntuone-installer.desktop",
                                   BUILDDIR"/tests/data/ubuntu-software-center.desktop",
                                   BUILDDIR"/tests/data/update-manager.desktop",
@@ -222,5 +222,271 @@ TEST_F(TestFavoriteStoreGSettings, TestMoveFavoriteBad)
   EXPECT_EQ(at(favs, 2), base_store_favs[2]);
 }
 
+TEST_F(TestFavoriteStoreGSettings, TestFavoriteAddedSignalFirst)
+{
+  internal::FavoriteStoreGSettings settings(backend.RawPtr());
+  bool signal_received = false;
+  std::string position;
+  bool before = false;
+  
+  settings.favorite_added.connect([&](std::string const& path, std::string const& pos, bool bef)
+  {
+    signal_received = true;
+    position = pos;
+    before = bef;
+  });
+  
+  FavoriteList favs;
+  favs.push_back(other_desktop);
+  favs.push_back(base_store_favs[0]);
+  favs.push_back(base_store_favs[1]);
+  favs.push_back(base_store_favs[2]);
+  settings.SaveFavorites(favs, false);
+                     
+  sleep(1);
+  
+  ASSERT_TRUE(signal_received);
+  EXPECT_EQ(position, base_store_favs[0]);
+  EXPECT_TRUE(before);
+}
+
+TEST_F(TestFavoriteStoreGSettings, TestFavoriteAddedSignalMiddle)
+{
+  internal::FavoriteStoreGSettings settings(backend.RawPtr());
+  bool signal_received = false;
+  std::string position;
+  bool before = true;
+  
+  settings.favorite_added.connect([&](std::string const& path, std::string const& pos, bool bef)
+  {
+    signal_received = true;
+    position = pos;
+    before = bef;
+  });
+  
+  FavoriteList favs;
+  favs.push_back(base_store_favs[0]);
+  favs.push_back(base_store_favs[1]);
+  favs.push_back(other_desktop);
+  favs.push_back(base_store_favs[2]);
+  settings.SaveFavorites(favs, false);
+                     
+  sleep(1);
+  
+  ASSERT_TRUE(signal_received);
+  EXPECT_EQ(position, base_store_favs[1]);
+  EXPECT_FALSE(before);
+}
+
+TEST_F(TestFavoriteStoreGSettings, TestFavoriteAddedSignalEnd)
+{
+  internal::FavoriteStoreGSettings settings(backend.RawPtr());
+  bool signal_received = false;
+  std::string position;
+  bool before = true;
+  
+  settings.favorite_added.connect([&](std::string const& path, std::string const& pos, bool bef)
+  {
+    signal_received = true;
+    position = pos;
+    before = bef;
+  });
+  
+  FavoriteList favs;
+  favs.push_back(base_store_favs[0]);
+  favs.push_back(base_store_favs[1]);
+  favs.push_back(base_store_favs[2]);
+  favs.push_back(other_desktop);
+  settings.SaveFavorites(favs, false);
+                     
+  sleep(1);
+  
+  ASSERT_TRUE(signal_received);
+  EXPECT_EQ(position, base_store_favs[2]);
+  EXPECT_FALSE(before);
+}
+
+TEST_F(TestFavoriteStoreGSettings, TestFavoriteAddedSignalEmpty)
+{
+  internal::FavoriteStoreGSettings settings(backend.RawPtr());
+  bool signal_received = false;
+  std::string position;
+  bool before = false;
+  
+  settings.favorite_added.connect([&](std::string const& path, std::string const& pos, bool bef)
+  {
+    signal_received = true;
+    position = pos;
+    before = bef;
+  });
+  
+  FavoriteList favs;
+  favs.push_back(other_desktop);
+  settings.SaveFavorites(favs, false);
+                     
+  sleep(1);
+  
+  ASSERT_TRUE(signal_received);
+  EXPECT_EQ(position, "");
+  EXPECT_TRUE(before);
+}
+
+TEST_F(TestFavoriteStoreGSettings, TestFavoriteRemoved)
+{
+  internal::FavoriteStoreGSettings settings(backend.RawPtr());
+  bool signal_received = false;
+  std::string path_removed;
+  
+  settings.favorite_removed.connect([&](std::string const& path)
+  {
+    signal_received = true;
+    path_removed = path;
+  });
+  
+  FavoriteList favs;
+  favs.push_back(base_store_favs[0]);
+  favs.push_back(base_store_favs[2]);
+  settings.SaveFavorites(favs, false);
+                     
+  sleep(1);
+  
+  ASSERT_TRUE(signal_received);
+  EXPECT_EQ(path_removed, base_store_favs[1]);
+}
+
+TEST_F(TestFavoriteStoreGSettings, TestFavoriteReordered)
+{
+  internal::FavoriteStoreGSettings settings(backend.RawPtr());
+  bool signal_received = false;
+  
+  settings.reordered.connect([&]()
+  {
+    signal_received = true;
+  });
+  
+  FavoriteList favs;
+  favs.push_back(base_store_favs[0]);
+  favs.push_back(base_store_favs[2]);
+  favs.push_back(base_store_favs[1]);
+  settings.SaveFavorites(favs, false);
+                     
+  sleep(1);
+  
+  ASSERT_TRUE(signal_received);
+  
+  signal_received = false;
+  favs.push_back(base_store_favs[0]);
+  favs.push_back(base_store_favs[2]);
+  favs.push_back(base_store_favs[1]);
+  settings.SaveFavorites(favs, false);
+                     
+  sleep(1);
+  
+  ASSERT_FALSE(signal_received);
+}
+
+TEST_F(TestFavoriteStoreGSettings, TestFavoriteSignalsMixed1)
+{
+  internal::FavoriteStoreGSettings settings(backend.RawPtr());
+  bool added_received = false;
+  bool removed_received = false;
+  bool reordered_received = false;
+  
+  settings.favorite_added.connect([&](std::string const& path, std::string const& pos, bool bef)
+  {
+    added_received = true;
+  });
+  
+  settings.favorite_removed.connect([&](std::string const& path)
+  {
+    removed_received = true;
+  });
+  
+  settings.reordered.connect([&]()
+  {
+    reordered_received = true;
+  });
+  
+  FavoriteList favs;
+  favs.push_back(base_store_favs[0]);
+  favs.push_back(base_store_favs[1]);
+  favs.push_back(other_desktop);
+  settings.SaveFavorites(favs, false);
+                     
+  sleep(1);
+  
+  EXPECT_TRUE(added_received);
+  EXPECT_TRUE(removed_received);
+  EXPECT_FALSE(reordered_received);
+}
+
+TEST_F(TestFavoriteStoreGSettings, TestFavoriteSignalsMixed2)
+{
+  internal::FavoriteStoreGSettings settings(backend.RawPtr());
+  bool added_received = false;
+  bool removed_received = false;
+  bool reordered_received = false;
+  
+  settings.favorite_added.connect([&](std::string const& path, std::string const& pos, bool bef)
+  {
+    added_received = true;
+  });
+  
+  settings.favorite_removed.connect([&](std::string const& path)
+  {
+    removed_received = true;
+  });
+  
+  settings.reordered.connect([&]()
+  {
+    reordered_received = true;
+  });
+  
+  FavoriteList favs;
+  favs.push_back(base_store_favs[1]);
+  favs.push_back(other_desktop);
+  favs.push_back(base_store_favs[0]);
+  settings.SaveFavorites(favs, false);
+                     
+  sleep(1);
+  
+  EXPECT_TRUE(added_received);
+  EXPECT_TRUE(removed_received);
+  EXPECT_TRUE(reordered_received);
+}
+
+TEST_F(TestFavoriteStoreGSettings, TestFavoriteSignalsMixed3)
+{
+  internal::FavoriteStoreGSettings settings(backend.RawPtr());
+  bool added_received = false;
+  bool removed_received = false;
+  bool reordered_received = false;
+  
+  settings.favorite_added.connect([&](std::string const& path, std::string const& pos, bool bef)
+  {
+    added_received = true;
+  });
+  
+  settings.favorite_removed.connect([&](std::string const& path)
+  {
+    removed_received = true;
+  });
+  
+  settings.reordered.connect([&]()
+  {
+    reordered_received = true;
+  });
+  
+  FavoriteList favs;
+  favs.push_back(base_store_favs[1]);
+  favs.push_back(base_store_favs[0]);
+  settings.SaveFavorites(favs, false);
+                     
+  sleep(1);
+  
+  EXPECT_FALSE(added_received);
+  EXPECT_TRUE(removed_received);
+  EXPECT_TRUE(reordered_received);
+}
 
 } // anonymous namespace

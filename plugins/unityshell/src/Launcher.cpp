@@ -112,8 +112,8 @@ const gchar Launcher::introspection_xml[] =
   "  <interface name='com.canonical.Unity.Launcher'>"
   ""
   "    <method name='AddLauncherItemFromPosition'>"
-  "      <arg type='s' name='icon' direction='in'/>"
   "      <arg type='s' name='title' direction='in'/>"
+  "      <arg type='s' name='icon' direction='in'/>"
   "      <arg type='i' name='icon_x' direction='in'/>"
   "      <arg type='i' name='icon_y' direction='in'/>"
   "      <arg type='i' name='icon_size' direction='in'/>"
@@ -2607,9 +2607,17 @@ void Launcher::SelectPreviousIcon()
     {
       _current_icon_index = temp_current_icon_index;
 
-      if ((*it)->GetCenter().y + - _icon_size/ 2 < GetGeometry().y)
+      if ((*it)->GetCenter().y - _icon_size / 2 < GetGeometry().y)
+      {
         _launcher_drag_delta += (_icon_size + _space_between_icons);
+      }
+      else if ((*it)->GetCenter().y + _icon_size / 2 > GetGeometry().height)
+      {
+        _launcher_drag_delta -= (*it)->GetCenter().y + _icon_size/2 +
+                                _space_between_icons - GetGeometry().height;
+      }
     }
+
     EnsureAnimation();
     selection_change.emit();
   }
@@ -2635,7 +2643,13 @@ void Launcher::SelectNextIcon()
       _current_icon_index = temp_current_icon_index;
 
       if ((*it)->GetCenter().y + _icon_size / 2 > GetGeometry().height)
+      {
         _launcher_drag_delta -= (_icon_size + _space_between_icons);
+      }
+      else if ((*it)->GetCenter().y - _icon_size / 2 < GetGeometry().y)
+      {
+        _launcher_drag_delta += GetGeometry().y - ((*it)->GetCenter().y - _icon_size);
+      }
     }
 
     EnsureAnimation();
@@ -2685,6 +2699,15 @@ void Launcher::KeySwitcherTerminate()
   selection_change.emit();
 }
 
+void Launcher::KeySwitcherCancel()
+{
+  if (!_key_switcher_activated)
+    return;
+
+  _current_icon_index = -1;
+  KeySwitcherTerminate();
+}
+
 bool Launcher::KeySwitcherIsActive()
 {
   return _key_switcher_activated;
@@ -2695,6 +2718,11 @@ void Launcher::KeySwitcherNext()
   if (!_key_switcher_activated)
     return;
 
+  if (_current_icon_index == _model->Size() - 1)
+  {
+    _current_icon_index = -1;
+  }
+
   SelectNextIcon();
 }
 
@@ -2702,6 +2730,11 @@ void Launcher::KeySwitcherPrevious()
 {
   if (!_key_switcher_activated)
     return;
+
+  if (_current_icon_index == 0)
+  {
+    _current_icon_index = _model->Size();
+  }
 
   SelectPreviousIcon();
 }
@@ -2862,13 +2895,9 @@ void Launcher::MouseDownLogic(int x, int y, unsigned long button_flags, unsigned
     _start_dragicon_handle = g_timeout_add(START_DRAGICON_DURATION, &Launcher::StartIconDragTimeout, this);
 
     launcher_icon->mouse_down.emit(nux::GetEventButton(button_flags));
-
-    if (_key_switcher_activated)
-    {
-      _current_icon_index = -1;
-      KeySwitcherTerminate();
-    }
   }
+
+  KeySwitcherCancel();
 }
 
 void Launcher::MouseUpLogic(int x, int y, unsigned long button_flags, unsigned long key_flags)
@@ -3301,10 +3330,10 @@ Launcher::handle_dbus_method_call(GDBusConnection*       connection,
     gchar*  desktop_file;
     gchar*  aptdaemon_task;
 
-    g_variant_get(parameters, "(ssiiiss)", &icon, &title, &icon_x, &icon_y, &icon_size, &desktop_file, &aptdaemon_task, NULL);
+    g_variant_get(parameters, "(ssiiiss)", &title, &icon, &icon_x, &icon_y, &icon_size, &desktop_file, &aptdaemon_task, NULL);
 
     Launcher* self = (Launcher*)user_data;
-    self->launcher_addrequest.emit(desktop_file, NULL);
+    self->launcher_addrequest_special.emit(desktop_file, NULL, aptdaemon_task, icon);
 
     g_dbus_method_invocation_return_value(invocation, NULL);
     g_free(icon);
