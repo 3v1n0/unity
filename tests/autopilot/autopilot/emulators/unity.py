@@ -80,6 +80,14 @@ class Launcher(Unity):
     def grab_switcher(self):
         self._keyboard.press_and_release('^A^1')
         self.grabbed = True
+    
+    def switcher_enter_quicklist(self):
+        if self.grabbed:
+            self._keyboard.press_and_release('^R')
+    
+    def switcher_exit_quicklist(self):
+        if self.grabbed:
+            self._keyboard.press_and_release('^L')
 
     def start_switcher(self):
         self._keyboard.press('^W^T')

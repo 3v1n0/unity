@@ -34,6 +34,8 @@ class Keyboard(object):
         'W' : 133,
         'U' : 111, # up arrow
         'D' : 116, # down arrow
+        'L' : 113, # left arrow
+        'R' : 114, # right arrow
         '1' : 67   # f1
         }
 
