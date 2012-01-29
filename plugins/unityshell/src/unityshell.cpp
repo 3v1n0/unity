@@ -1295,7 +1295,6 @@ void UnityScreen::damageNuxRegions()
 void UnityScreen::handleEvent(XEvent* event)
 {
   bool skip_other_plugins = false;
-  //Launcher& launcher = launcher_controller_->launcher();
   switch (event->type)
   {
     case FocusIn:
@@ -2146,81 +2145,51 @@ void UnityWindow::resizeNotify(int x, int y, int w, int h)
 CompPoint UnityWindow::tryNotIntersectUI(CompPoint& pos)
 {
   UnityScreen* us = UnityScreen::get(screen);
-  Launcher& launcher = us->launcher_controller_->launcher();
-  nux::Geometry geo = launcher.GetAbsoluteGeometry();
-  CompRegion allowedWorkArea (screen->workArea ());
-  CompRect launcherGeo(geo.x, geo.y, geo.width, geo.height);
-  CompRegion wRegion (window->borderRect ());
-  CompRegion intRegion;
+  auto window_geo = window->borderRect ();
+  nux::Geometry target_monitor;
+  nux::Point result(pos.x(), pos.y());
 
-  wRegion.translate (pos.x () - wRegion.boundingRect ().x (),
-                     pos.y () - wRegion.boundingRect ().y ());
-
-  /* subtract launcher and panel geometries from allowed workarea */
-  if (!launcher.Hidden())
+  // seriously why does compiz not track monitors XRandR style???
+  auto monitors = UScreen::GetDefault()->GetMonitors();
+  for (auto monitor : monitors)
   {
-    switch (launcher.GetHideMode())
+    if (monitor.IsInside(result))
     {
-      case LAUNCHER_HIDE_DODGE_WINDOWS:
-      case LAUNCHER_HIDE_DODGE_ACTIVE_WINDOW:
-        allowedWorkArea -= launcherGeo;
-        break;
-
-      default:
-        break;
+      target_monitor = monitor;
+      break;
     }
   }
 
-  for (nux::Geometry &g : us->panel_controller_->GetGeometries ())
+  auto launchers = us->launcher_controller_->launchers();
+  for (auto launcher : launchers)
   {
-    CompRect pg (g.x, g.y, g.width, g.height);
-    allowedWorkArea -= pg;
+    nux::Geometry geo = launcher->GetAbsoluteGeometry();
+    
+    if (launcher->Hidden() || launcher->GetHideMode() == LAUNCHER_HIDE_NEVER || launcher->GetHideMode() == LAUNCHER_HIDE_AUTOHIDE)
+      continue;
+    
+    if (geo.IsInside(result))
+    {
+      if (geo.x + geo.width + 1 + window_geo.width() < target_monitor.x + target_monitor.width)
+      {
+        result.x = geo.x + geo.width + 1;
+      }
+    }
   }
 
-  /* Invert allowed work area */
-  allowedWorkArea = CompRegion (screen->workArea ()) - allowedWorkArea;
-
-  /* Now intersect the window region with the allowed work area
-   * region, such that it splits up into a number of rects */
-  intRegion = wRegion.intersected (allowedWorkArea);
-
-  if (intRegion.rects ().size () > 1)
+  for (nux::Geometry &geo : us->panel_controller_->GetGeometries ())
   {
-    /* Now find the largest rect, this will be the area that we want to move to */
-    CompRect largest;
-
-    for (CompRect &r : intRegion.rects ())
+    if (geo.IsInside(result))
     {
-      if (r.area () > largest.area ())
-        largest = r;
+      if (geo.y + geo.height + window_geo.height() < target_monitor.y + target_monitor.height)
+      {
+        result.y = geo.y + geo.height;
+      }
     }
-
-    /* Now pad the largest rect with the other rectangles that
-     * were intersecting, padding the opposite side to the one
-     * that they are currently on on the large rect
-     */
-
-    intRegion -= largest;
-
-    for (CompRect &r : intRegion.rects ())
-    {
-      if (r.x1 () > largest.x2 ())
-        largest.setX (largest.x () - r.width ());
-      else if (r.x2 () < largest.x ())
-        largest.setWidth (largest.width () + r.width ());
-
-      if (r.y1 () > largest.y2 ())
-        largest.setY (largest.y () - r.height ());
-      else if (r.y2 () < largest.y ())
-        largest.setWidth (largest.height () + r.height ());
-    }
-
-    pos = largest.pos ();
   }
 
-  if (launcherGeo.contains(pos))
-    pos.setX(launcherGeo.x() + launcherGeo.width() + 1);
-
+  pos.setX(result.x);
+  pos.setY(result.y);
   return pos;
 }
 
