@@ -132,7 +132,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
 {
 
   _parent = parent;
-  _active_quicklist = 0;
+  _active_quicklist = nullptr;
 
   monitor = 0;
 
@@ -633,7 +633,7 @@ float Launcher::IconVisibleProgress(AbstractLauncherIcon* icon, struct timespec 
 
 void Launcher::SetDndDelta(float x, float y, nux::Geometry const& geo, timespec const& current)
 {
-  AbstractLauncherIcon* anchor = 0;
+  AbstractLauncherIcon* anchor = nullptr;
   LauncherModel::iterator it;
   anchor = MouseIconIntersection(x, _enter_y);
 
@@ -1816,11 +1816,11 @@ void Launcher::OnIconRemoved(AbstractLauncherIcon* icon)
     icon->needs_redraw_connection.disconnect();
 
   if (icon == _icon_under_mouse)
-    _icon_under_mouse = 0;
+    _icon_under_mouse = nullptr;
   if (icon == _icon_mouse_down)
-    _icon_mouse_down = 0;
+    _icon_mouse_down = nullptr;
   if (icon == _drag_icon)
-    _drag_icon = 0;
+    _drag_icon = nullptr;
 
   EnsureAnimation();
   RemoveChild(icon);
@@ -2088,7 +2088,7 @@ gboolean Launcher::StartIconDragTimeout(gpointer data)
     if (self->_icon_under_mouse)
     {
       self->_icon_under_mouse->mouse_leave.emit(self->monitor);
-      self->_icon_under_mouse = 0;
+      self->_icon_under_mouse = nullptr;
     }
     self->_initial_drag_animation = true;
     self->StartIconDragRequest(self->GetMouseX(), self->GetMouseY());
@@ -2267,7 +2267,7 @@ void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_
   if (_icon_under_mouse)
   {
     _icon_under_mouse->mouse_leave.emit(monitor);
-    _icon_under_mouse = 0;
+    _icon_under_mouse = nullptr;
   }
 
   if (GetActionState() == ACTION_NONE)
@@ -2430,7 +2430,7 @@ void Launcher::EventLogic()
       GetActionState() == ACTION_DRAG_LAUNCHER)
     return;
 
-  AbstractLauncherIcon* launcher_icon = 0;
+  AbstractLauncherIcon* launcher_icon = nullptr;
 
   if (!_hidden && !IsInKeyNavMode() && _hovered)
   {
@@ -2441,7 +2441,7 @@ void Launcher::EventLogic()
   if (_icon_under_mouse && (_icon_under_mouse != launcher_icon))
   {
     _icon_under_mouse->mouse_leave.emit(monitor);
-    _icon_under_mouse = 0;
+    _icon_under_mouse = nullptr;
   }
 
   if (launcher_icon && (_icon_under_mouse != launcher_icon))
@@ -2455,7 +2455,7 @@ void Launcher::EventLogic()
 
 void Launcher::MouseDownLogic(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  AbstractLauncherIcon* launcher_icon = 0;
+  AbstractLauncherIcon* launcher_icon = nullptr;
   launcher_icon = MouseIconIntersection(_mouse_position.x, _mouse_position.y);
 
   _hide_machine->SetQuirk(LauncherHideMachine::LAST_ACTION_ACTIVATE, false);
@@ -2474,7 +2474,7 @@ void Launcher::MouseDownLogic(int x, int y, unsigned long button_flags, unsigned
 
 void Launcher::MouseUpLogic(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  AbstractLauncherIcon* launcher_icon = 0;
+  AbstractLauncherIcon* launcher_icon = nullptr;
 
   launcher_icon = MouseIconIntersection(_mouse_position.x, _mouse_position.y);
 
@@ -2502,7 +2502,7 @@ void Launcher::MouseUpLogic(int x, int y, unsigned long button_flags, unsigned l
     TimeUtil::SetTimeStruct(&_times[TIME_DRAG_END]);
   }
 
-  _icon_mouse_down = 0;
+  _icon_mouse_down = nullptr;
 }
 
 AbstractLauncherIcon* Launcher::MouseIconIntersection(int x, int y)
@@ -2637,7 +2637,7 @@ Launcher::ProcessDndEnter()
   _steal_drag = false;
   _data_checked = false;
   _drag_edge_touching = false;
-  _dnd_hovered_icon = 0;
+  _dnd_hovered_icon = nullptr;
 }
 
 void
@@ -2668,11 +2668,11 @@ void Launcher::DndHoveredIconReset()
   if (!_steal_drag && _dnd_hovered_icon)
   {
     _dnd_hovered_icon->SendDndLeave();
-    _dnd_hovered_icon = 0;
+    _dnd_hovered_icon = nullptr;
   }
 
   _steal_drag = false;
-  _dnd_hovered_icon = 0;
+  _dnd_hovered_icon = nullptr;
 }
 
 void
@@ -2783,7 +2783,7 @@ Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
         {
           _dnd_hovered_icon->SetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE, false);
           _dnd_hovered_icon->remove.emit(_dnd_hovered_icon);
-          _dnd_hovered_icon = 0;
+          _dnd_hovered_icon = nullptr;
         }
       }
     }
@@ -2827,7 +2827,7 @@ Launcher::ProcessDndDrop(int x, int y)
     {
       if (g_str_has_suffix(it.c_str(), ".desktop"))
       {
-        char* path = 0;
+        char* path = nullptr;
 
         if (g_str_has_prefix(it.c_str(), "application://"))
         {
