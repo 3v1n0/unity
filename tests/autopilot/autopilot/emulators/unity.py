@@ -146,6 +146,9 @@ class Launcher(Unity):
         width = int(state['width'])
         height = int(state['height'])
         return (x, y, width, height)
+    
+    def num_launchers(self):
+        return len(super(Launcher, self).get_state('/Unity/LauncherController/Launcher'))
 
     def __get_controller_state(self):
         return super(Launcher, self).get_state('/Unity/LauncherController')[0]

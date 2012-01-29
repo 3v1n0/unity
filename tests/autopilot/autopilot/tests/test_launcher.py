@@ -86,6 +86,9 @@ class LauncherTests(TestCase):
         self.assertThat(self.server.key_nav_is_active(), Equals(False))
 
     def test_reveal_on_mouse_to_edge(self):
-        self.server.move_mouse_to_right_of_launcher(0)
-        self.server.reveal_launcher(0)
-        self.assertThat(self.server.is_showing(0), Equals(True))
+        num_launchers = self.server.num_launchers()
+
+        for x in range(0, num_launchers):
+                self.server.move_mouse_to_right_of_launcher(x)
+                self.server.reveal_launcher(x)
+                self.assertThat(self.server.is_showing(x), Equals(True))
