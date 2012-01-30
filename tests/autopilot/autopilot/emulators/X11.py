@@ -202,7 +202,7 @@ class Mouse(object):
         sleep(0.25)
         self.release(button)
         
-    def move(self, x, y, animate=True):
+    def move(self, x, y, animate=True, rate=10):
         '''Moves mouse to location (x, y)'''
         def perform_move(x, y, sync):
             fake_input(self._display, X.MotionNotify, sync, X.CurrentTime, X.NONE, x=x, y=y)
@@ -220,7 +220,7 @@ class Mouse(object):
         dx = float(curr_x - dest_x)
         slope = dy/dx if dx > 0 else 0
         yint = curr_y - (slope * curr_x)
-        xscale = 10 if dest_x > curr_x else -10
+        xscale = rate if dest_x > curr_x else -rate
 
         while (int(curr_x) != dest_x):
             target_x = min(curr_x + xscale, dest_x) if dest_x > curr_x else max(curr_x + xscale, dest_x)
@@ -228,7 +228,7 @@ class Mouse(object):
             curr_x = target_x;
             
         if (curr_y != dest_y):
-            yscale = 10 if dest_y > curr_y else -10
+            yscale = rate if dest_y > curr_y else -rate
             while (curr_y != dest_y):
                 target_y = min(curr_y + yscale, dest_y) if dest_y > curr_y else max(curr_y + yscale, dest_y)
                 perform_move(0, target_y - curr_y, True)

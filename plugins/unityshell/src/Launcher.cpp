@@ -1334,9 +1334,10 @@ void Launcher::SetHidden(bool hidden)
   _hover_machine->SetQuirk(LauncherHoverMachine::LAUNCHER_HIDDEN, hidden);
 
   _hide_machine->SetQuirk(LauncherHideMachine::LAST_ACTION_ACTIVATE, false);
-  _hide_machine->SetQuirk(LauncherHideMachine::MOUSE_MOVE_POST_REVEAL, false);
 
-  if (hidden)  {
+  if (hidden)  
+  {
+    _hide_machine->SetQuirk(LauncherHideMachine::MOUSE_MOVE_POST_REVEAL, false);
     _hide_machine->SetQuirk(LauncherHideMachine::MT_DRAG_OUT, false);
     SetStateMouseOverLauncher(false);
   }

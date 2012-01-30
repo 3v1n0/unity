@@ -89,7 +89,7 @@ class LauncherTests(TestCase):
         self.assertThat(self.server.key_nav_is_active(), Equals(False))
 
     def test_reveal_on_mouse_to_edge(self):
-        """Tests reeal of launchers by mouse pressure"""
+        """Tests reveal of launchers by mouse pressure"""
         num_launchers = self.server.num_launchers()
 
         for x in range(num_launchers):
@@ -103,8 +103,19 @@ class LauncherTests(TestCase):
         num_launchers = self.server.num_launchers()
 
         for x in range(num_launchers):
-                self.server.move_mouse_over_launcher(x)
-                self.server.keyboard_reveal_launcher()
-                self.server.keyboard_unreveal_launcher()
-                self.assertThat(self.server.is_showing(x), Equals(False))
+            self.server.move_mouse_over_launcher(x)
+            self.server.keyboard_reveal_launcher()
+            self.server.keyboard_unreveal_launcher()
+            self.assertThat(self.server.is_showing(x), Equals(False))
+    
+    def test_reveal_does_not_hide_again(self):
+        """Tests reveal of launchers by mouse pressure to ensure it doesn't automatically hide again"""
+        num_launchers = self.server.num_launchers()
+
+        for x in range(num_launchers):
+            self.server.move_mouse_to_right_of_launcher(x)
+            self.server.reveal_launcher(x)
+            sleep(2)
+            self.assertThat(self.server.is_showing(x), Equals(True))
+    
 

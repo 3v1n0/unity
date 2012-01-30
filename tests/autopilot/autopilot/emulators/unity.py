@@ -82,7 +82,7 @@ class Launcher(Unity):
 
     def reveal_launcher(self, monitor):
         (x, y, w, h) = self.launcher_geometry(monitor)
-        self._mouse.move(x - 1200, y + h / 2)
+        self._mouse.move(x - 2500, y + h / 2, True, 8)
         sleep(self.show_timeout)
 
     def keyboard_reveal_launcher(self):
