@@ -72,7 +72,7 @@ class Launcher(Unity):
 
     def move_mouse_to_right_of_launcher(self, monitor):
         (x, y, w, h) = self.launcher_geometry(monitor)
-        self._mouse.move(x + w + 10, y + h / 2, False)
+        self._mouse.move(x + w + 15, y + h / 2, False)
         sleep(self.show_timeout)
     
     def move_mouse_over_launcher(self, monitor):
@@ -82,7 +82,7 @@ class Launcher(Unity):
 
     def reveal_launcher(self, monitor):
         (x, y, w, h) = self.launcher_geometry(monitor)
-        self._mouse.move(x - 1200, y + h / 2)
+        self._mouse.move(x - 920, y + h / 2, True, 5, .002)
         sleep(self.show_timeout)
 
     def keyboard_reveal_launcher(self):
