@@ -32,7 +32,7 @@ UnityWindowView::UnityWindowView(NUX_FILE_LINE_DECL) : View(NUX_FILE_LINE_PARAM)
 
 UnityWindowView::~UnityWindowView()
 {
-  
+
 }
 
 void
@@ -59,9 +59,9 @@ void UnityWindowView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_dr
   nux::Geometry background_geo = GetBackgroundGeometry();
   int internal_offset = style()->GetInternalOffset();
 
-  nux::Geometry internal_clip(background_geo.x + internal_offset, 
-                              background_geo.y + internal_offset, 
-                              background_geo.width - internal_offset * 2, 
+  nux::Geometry internal_clip(background_geo.x + internal_offset,
+                              background_geo.y + internal_offset,
+                              background_geo.width - internal_offset * 2,
                               background_geo.height - internal_offset * 2);
   GfxContext.PushClippingRectangle(internal_clip);
 
@@ -112,7 +112,7 @@ void UnityWindowView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_dr
                                nux::eCornerBottomLeft | nux::eCornerBottomRight,
                                true,
                                rop);
-  
+
   DrawOverlay(GfxContext, force_draw, internal_clip);
 
   GfxContext.PopClippingRectangle();
@@ -138,9 +138,9 @@ void UnityWindowView::DrawBackground(nux::GraphicsEngine& GfxContext, nux::Geome
   texxform.v0 = 0;
   texxform.u1 = border;
   texxform.v1 = border;
-  GfxContext.QRP_1Tex (geo.x, geo.y, 
+  GfxContext.QRP_1Tex (geo.x, geo.y,
                        border, border, style()->GetBackgroundCorner()->GetDeviceTexture(), texxform, nux::color::White);
-  
+
   // Draw TOP-RIGHT CORNER
   texxform.u0 = 0;
   texxform.v0 = 0;
@@ -148,9 +148,9 @@ void UnityWindowView::DrawBackground(nux::GraphicsEngine& GfxContext, nux::Geome
   texxform.v1 = border;
   texxform.flip_u_coord = true;
   texxform.flip_v_coord = false;
-  GfxContext.QRP_1Tex (geo.x + geo.width - border, geo.y, 
+  GfxContext.QRP_1Tex (geo.x + geo.width - border, geo.y,
                        border, border, style()->GetBackgroundCorner()->GetDeviceTexture(), texxform, nux::color::White);
-  
+
   // Draw BOTTOM-LEFT CORNER
   texxform.u0 = 0;
   texxform.v0 = 0;
@@ -158,9 +158,9 @@ void UnityWindowView::DrawBackground(nux::GraphicsEngine& GfxContext, nux::Geome
   texxform.v1 = border;
   texxform.flip_u_coord = false;
   texxform.flip_v_coord = true;
-  GfxContext.QRP_1Tex (geo.x, geo.y + geo.height - border, 
+  GfxContext.QRP_1Tex (geo.x, geo.y + geo.height - border,
                        border, border, style()->GetBackgroundCorner()->GetDeviceTexture(), texxform, nux::color::White);
-  
+
   // Draw BOTTOM-RIGHT CORNER
   texxform.u0 = 0;
   texxform.v0 = 0;
@@ -168,9 +168,9 @@ void UnityWindowView::DrawBackground(nux::GraphicsEngine& GfxContext, nux::Geome
   texxform.v1 = border;
   texxform.flip_u_coord = true;
   texxform.flip_v_coord = true;
-  GfxContext.QRP_1Tex (geo.x + geo.width - border, geo.y + geo.height - border, 
+  GfxContext.QRP_1Tex (geo.x + geo.width - border, geo.y + geo.height - border,
                        border, border, style()->GetBackgroundCorner()->GetDeviceTexture(), texxform, nux::color::White);
-  
+
   int top_width = style()->GetBackgroundTop()->GetWidth();
   int top_height = style()->GetBackgroundTop()->GetHeight();
 
@@ -182,7 +182,7 @@ void UnityWindowView::DrawBackground(nux::GraphicsEngine& GfxContext, nux::Geome
   texxform.flip_u_coord = false;
   texxform.flip_v_coord = false;
   GfxContext.QRP_1Tex (geo.x + border, geo.y, geo.width - border - border, border, style()->GetBackgroundTop()->GetDeviceTexture(), texxform, nux::color::White);
-  
+
   // Draw BOTTOM BORDER
   texxform.u0 = 0;
   texxform.v0 = 0;
@@ -191,7 +191,7 @@ void UnityWindowView::DrawBackground(nux::GraphicsEngine& GfxContext, nux::Geome
   texxform.flip_u_coord = false;
   texxform.flip_v_coord = true;
   GfxContext.QRP_1Tex (geo.x + border, geo.y + geo.height - border, geo.width - border - border, border, style()->GetBackgroundTop()->GetDeviceTexture(), texxform, nux::color::White);
-  
+
 
   int left_width = style()->GetBackgroundLeft()->GetWidth();
   int left_height = style()->GetBackgroundLeft()->GetHeight();
@@ -204,7 +204,7 @@ void UnityWindowView::DrawBackground(nux::GraphicsEngine& GfxContext, nux::Geome
   texxform.flip_u_coord = false;
   texxform.flip_v_coord = false;
   GfxContext.QRP_1Tex (geo.x, geo.y + border, border, geo.height - border - border, style()->GetBackgroundLeft()->GetDeviceTexture(), texxform, nux::color::White);
-  
+
   // Draw RIGHT BORDER
   texxform.u0 = 0;
   texxform.v0 = 0;
@@ -217,6 +217,6 @@ void UnityWindowView::DrawBackground(nux::GraphicsEngine& GfxContext, nux::Geome
   GfxContext.GetRenderStates().SetBlend (FALSE);
 }
 
-  
-}  
+
+}
 }
