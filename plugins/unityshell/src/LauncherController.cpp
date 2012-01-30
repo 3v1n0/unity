@@ -771,10 +771,10 @@ Controller::Controller(Display* display)
   options()->hide_mode = LAUNCHER_HIDE_DODGE_WINDOWS;
   options()->launch_animation = LAUNCH_ANIMATION_PULSE;
   options()->urgent_animation = URGENT_ANIMATION_WIGGLE;
-  options()->edge_decay_rate = 2000;
+  options()->edge_reveal_pressure = 2000;
   options()->edge_overcome_pressure = 2000;
-  options()->edge_stop_velocity = 1500;
-  options()->edge_reveal_pressure = 4500;
+  options()->edge_decay_rate = 1500;
+  options()->edge_stop_velocity = 4500;
 
   // options must be set before creating pimpl which loads launchers
   pimpl = new Impl(display, this);
