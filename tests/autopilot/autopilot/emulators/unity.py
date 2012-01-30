@@ -17,7 +17,7 @@ from compizconfig import Plugin
 import dbus
 from time import sleep
 
-from autopilot.emulators.X11 import Keyboard, Mouse
+from autopilot.emulators.X11 import Keyboard, Mouse, ScreenGeometry
 from autopilot.globals import global_context
 
 class Unity(object):
@@ -37,6 +37,7 @@ class Unity(object):
         self.INTROSPECTION_IFACE = 'com.canonical.Unity.Debug.Introspection'
         self._mouse = Mouse()
         self._keyboard = Keyboard()
+        self._screen = ScreenGeometry()
 
         self._bus = dbus.SessionBus()
         self._debug_proxy_obj = self._bus.get_object(self.UNITY_BUS_NAME,
@@ -67,11 +68,24 @@ class Launcher(Unity):
         (x, y, w, h) = self.launcher_geometry(monitor)
         self._mouse.move(x + w + 10, y + h / 2, False)
         sleep(self.show_timeout)
+    
+    def move_mouse_over_launcher(self, monitor):
+        (x, y, w, h) = self.launcher_geometry(monitor)
+        self._screen.move_mouse_to_monitor(monitor);
+        self._mouse.move(x + w / 2, y + h / 2);
 
     def reveal_launcher(self, monitor):
         (x, y, w, h) = self.launcher_geometry(monitor)
         self._mouse.move(x - 1200, y + h / 2)
         sleep(self.show_timeout)
+
+    def keyboard_reveal_launcher(self):
+        self._keyboard.press('Super')
+        sleep(1)
+    
+    def keyboard_unreveal_launcher(self):
+        self._keyboard.release('Super')
+        sleep(1)
 
     def grab_switcher(self):
         self._keyboard.press_and_release('Alt+F1')
@@ -88,6 +102,7 @@ class Launcher(Unity):
     def start_switcher(self):
         self._keyboard.press('Super+Tab')
         self._keyboard.release('Tab')
+        sleep(1)
 
     def end_switcher(self, cancel):
         if cancel:
@@ -202,7 +217,6 @@ class Switcher(Unity):
         self._keyboard.press_and_release('Shift+`')
 
     def __get_icon(self, index):
-        import ipdb; ipdb.set_trace()
         return self.get_state('/Unity/SwitcherController/SwitcherModel')[0]['children-of-men'][index][1][0]
 
     def get_icon_name(self, index):

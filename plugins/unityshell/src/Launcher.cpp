@@ -883,6 +883,7 @@ void Launcher::SetupRenderArg(AbstractLauncherIcon* icon, struct timespec const&
   arg.icon                = icon;
   arg.alpha               = 0.5f + 0.5f * desat_value;
   arg.saturation          = desat_value;
+  arg.colorify            = nux::color::White;
   arg.running_arrow       = icon->GetQuirk(AbstractLauncherIcon::QUIRK_RUNNING);
   arg.running_colored     = icon->GetQuirk(AbstractLauncherIcon::QUIRK_URGENT);
   arg.running_on_viewport = icon->WindowVisibleOnMonitor(monitor);
@@ -1042,6 +1043,13 @@ float Launcher::DragLimiter(float x)
   return -result;
 }
 
+nux::Color FullySaturateColor (nux::Color color)
+{
+  float max = std::max<float>(color.red, std::max<float>(color.green, color.blue));
+  color = color * (1.0f / max);
+  return color;
+}
+
 void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
                           nux::Geometry& box_geo, float* launcher_alpha, nux::Geometry const& parent_abs_geo)
 {
@@ -1050,6 +1058,8 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
   nux::Point3 center;
   struct timespec current;
   clock_gettime(CLOCK_MONOTONIC, &current);
+
+  nux::Color colorify = FullySaturateColor(_background_color);
 
   float hover_progress = GetHoverProgress(current);
   float folded_z_distance = _folded_z_distance * (1.0f - hover_progress);
@@ -1186,7 +1196,7 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
 
     FillRenderArg(icon, arg, center, parent_abs_geo, folding_threshold, folded_size, folded_spacing,
                   autohide_offset, folded_z_distance, animation_neg_rads, current);
-
+    arg.colorify = colorify;
     launcher_args.push_back(arg);
     index++;
   }
@@ -1325,9 +1335,10 @@ void Launcher::SetHidden(bool hidden)
   _hover_machine->SetQuirk(LauncherHoverMachine::LAUNCHER_HIDDEN, hidden);
 
   _hide_machine->SetQuirk(LauncherHideMachine::LAST_ACTION_ACTIVATE, false);
-  _hide_machine->SetQuirk(LauncherHideMachine::MOUSE_MOVE_POST_REVEAL, false);
 
-  if (hidden)  {
+  if (hidden)  
+  {
+    _hide_machine->SetQuirk(LauncherHideMachine::MOUSE_MOVE_POST_REVEAL, false);
     _hide_machine->SetQuirk(LauncherHideMachine::MT_DRAG_OUT, false);
     SetStateMouseOverLauncher(false);
   }

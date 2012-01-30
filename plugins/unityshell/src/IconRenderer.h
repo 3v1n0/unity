@@ -53,6 +53,7 @@ protected:
                      RenderArg const& arg,
                      nux::ObjectPtr<nux::IOpenGLBaseTexture> icon,
                      nux::Color bkg_color,
+                     nux::Color colorify,
                      float alpha,
                      std::vector<nux::Vector4>& xform_coords);
 

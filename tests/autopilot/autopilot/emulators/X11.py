@@ -231,13 +231,13 @@ class Mouse(object):
         self.press(button)
         sleep(0.25)
         self.release(button)
-		
-    def move(self, x, y, animate=True):
-        '''Moves mouse to location (x, y)'''
+        
+    def move(self, x, y, animate=True, rate=100, time_between_events=0.001):
+        '''Moves mouse to location (x, y, pixels_per_event, time_between_event)'''
         def perform_move(x, y, sync):
             fake_input(_DISPLAY, X.MotionNotify, sync, X.CurrentTime, X.NONE, x=x, y=y)
             _DISPLAY.sync()
-            sleep(0.001)
+            sleep(time_between_events)
 
         if not animate:
             perform_move(x, y, False)
