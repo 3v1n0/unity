@@ -159,7 +159,7 @@ class Launcher(Unity):
 
     def __get_state(self, monitor):
         # get the state for the 'launcher' piece
-        return super(Launcher, self).get_state('/Unity/LauncherController/Launcher')[monitor]
+        return super(Launcher, self).get_state('/Unity/LauncherController/Launcher[monitor=%s]' % (monitor))[0]
 
 
 class UnityLauncherIconTooltip(Unity):
