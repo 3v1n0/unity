@@ -411,6 +411,7 @@ Launcher::AddProperties(GVariantBuilder* builder)
   .add("y", abs_geo.y)
   .add("width", abs_geo.width)
   .add("height", abs_geo.height)
+  .add("quicklist-open", _hide_machine->GetQuirk(LauncherHideMachine::QUICKLIST_OPEN))
   .add("hide-quirks", _hide_machine->DebugHideQuirks().c_str())
   .add("hover-quirks", _hover_machine->DebugHoverQuirks().c_str());
 }

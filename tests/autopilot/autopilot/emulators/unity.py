@@ -119,6 +119,10 @@ class Launcher(Unity):
         else:
             self._keyboard.press_and_release('^S^T')
 
+    def quicklist_open(self, monitor):
+        state = self.__get_state(monitor)
+        return bool(state['quicklist-open'])
+
     def is_showing(self, monitor):
         state = self.__get_state(monitor)
         return not bool(state['hidden'])

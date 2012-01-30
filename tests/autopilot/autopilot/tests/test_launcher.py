@@ -62,6 +62,7 @@ class LauncherTests(TestCase):
 
     def test_launcher_switcher_quicklist_interaction(self):
         """Tests that the key nav opens and closes quicklists properly and regrabs afterwards"""
+        self.server.move_mouse_to_right_of_launcher(0)
         sleep(.5)
         
         self.server.grab_switcher()
@@ -75,9 +76,11 @@ class LauncherTests(TestCase):
         
         self.server.switcher_enter_quicklist()
         sleep(.5)
+        self.assertThat(self.server.quicklist_open(0), Equals(True))
         self.server.switcher_exit_quicklist()
         sleep(.5)
-        
+
+        self.assertThat(self.server.quicklist_open(0), Equals(False))
         self.assertThat(self.server.key_nav_is_active(), Equals(True))
         self.assertThat(self.server.key_nav_is_grabbed(), Equals(True))
         
