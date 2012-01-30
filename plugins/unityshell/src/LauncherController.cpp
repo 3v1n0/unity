@@ -96,7 +96,7 @@ public:
 
   void OnLauncherEntryRemoteAdded(LauncherEntryRemote* entry);
   void OnLauncherEntryRemoteRemoved(LauncherEntryRemote* entry);
-  
+
   void OnFavoriteStoreFavoriteAdded(std::string const& entry, std::string const& pos, bool before);
   void OnFavoriteStoreFavoriteRemoved(std::string const& entry);
   void OnFavoriteStoreReordered();
@@ -132,10 +132,10 @@ public:
 
   void ReceiveMouseDownOutsideArea(int x, int y, unsigned long button_flags, unsigned long key_flags);
 
-  void ReceiveLauncherKeyPress(unsigned long eventType, 
-                               unsigned long keysym, 
-                               unsigned long state, 
-                               const char* character, 
+  void ReceiveLauncherKeyPress(unsigned long eventType,
+                               unsigned long keysym,
+                               unsigned long state,
+                               const char* character,
                                unsigned short keyCount);
 
   /* statics */
@@ -232,7 +232,7 @@ Controller::Impl::Impl(Display* display, Controller* parent)
 
   remote_model_.entry_added.connect(sigc::mem_fun(this, &Impl::OnLauncherEntryRemoteAdded));
   remote_model_.entry_removed.connect(sigc::mem_fun(this, &Impl::OnLauncherEntryRemoteRemoved));
-  
+
   FavoriteStore::GetDefault().favorite_added.connect(sigc::mem_fun(this, &Impl::OnFavoriteStoreFavoriteAdded));
   FavoriteStore::GetDefault().favorite_removed.connect(sigc::mem_fun(this, &Impl::OnFavoriteStoreFavoriteRemoved));
   FavoriteStore::GetDefault().reordered.connect(sigc::mem_fun(this, &Impl::OnFavoriteStoreReordered));
@@ -244,7 +244,7 @@ Controller::Impl::Impl(Display* display, Controller* parent)
 
   launcher_key_press_time_ = { 0, 0 };
 
-  ubus.RegisterInterest(UBUS_QUICKLIST_END_KEY_NAV, [&](GVariant * args) { 
+  ubus.RegisterInterest(UBUS_QUICKLIST_END_KEY_NAV, [&](GVariant * args) {
     if (reactivate_keynav)
       parent_->KeyNavGrab();
       model_->SetSelection(reactivate_index);
@@ -270,7 +270,7 @@ void Controller::Impl::OnScreenChanged(int primary_monitor, std::vector<nux::Geo
   {
     if (i >= launchers.size())
       launchers.push_back(nux::ObjectPtr<Launcher> (CreateLauncher(i)));
-    
+
     launchers[i]->Resize();
   }
 
@@ -462,10 +462,10 @@ void Controller::Impl::OnLauncherEntryRemoteRemoved(LauncherEntryRemote* entry)
 }
 
 void Controller::Impl::OnFavoriteStoreFavoriteAdded(std::string const& entry, std::string const& pos, bool before)
-{  
-  auto bamf_list = model_->GetSublist<BamfLauncherIcon>();  
+{
+  auto bamf_list = model_->GetSublist<BamfLauncherIcon>();
   AbstractLauncherIcon* other = (bamf_list.size() > 0) ? *(bamf_list.begin()) : nullptr;
-  
+
   if (!pos.empty())
   {
     for (auto it : bamf_list)
@@ -474,7 +474,7 @@ void Controller::Impl::OnFavoriteStoreFavoriteAdded(std::string const& entry, st
         other = it;
     }
   }
-  
+
   for (auto it : bamf_list)
   {
     if (entry == it->DesktopFile())
@@ -512,28 +512,28 @@ void Controller::Impl::OnFavoriteStoreFavoriteRemoved(std::string const& entry)
 }
 
 void Controller::Impl::OnFavoriteStoreReordered()
-{ 
+{
   FavoriteList const& favs = FavoriteStore::GetDefault().GetFavorites();
   auto bamf_list = model_->GetSublist<BamfLauncherIcon>();
-  
+
   int i = 0;
   for (auto it : favs)
-  {    
+  {
     auto icon = std::find_if(bamf_list.begin(), bamf_list.end(),
     [&it](BamfLauncherIcon* x) { return (x->DesktopFile() == it); });
-    
+
     if (icon != bamf_list.end())
     {
       (*icon)->SetSortPriority(i++);
     }
   }
-  
+
   for (auto it : bamf_list)
   {
     if (!it->IsSticky())
       it->SetSortPriority(i++);
   }
-  
+
   model_->Sort();
 }
 
@@ -775,7 +775,7 @@ Controller::Controller(Display* display)
   options()->edge_overcome_pressure = 7500;
   options()->edge_stop_velocity = 10000;
   options()->edge_reveal_pressure = 8000;
-  
+
   // options must be set before creating pimpl which loads launchers
   pimpl = new Impl(display, this);
 }
@@ -859,7 +859,7 @@ void Controller::SetShowDesktopIcon(bool show_desktop_icon)
 int Controller::Impl::MonitorWithMouse()
 {
   UScreen* uscreen = UScreen::GetDefault();
-  return uscreen->GetMonitorWithMouse(); 
+  return uscreen->GetMonitorWithMouse();
 }
 
 void Controller::HandleLauncherKeyPress()
@@ -871,7 +871,7 @@ void Controller::HandleLauncherKeyPress()
     Impl* self = static_cast<Impl*>(user_data);
     if (self->keyboard_launcher_.IsNull())
       self->keyboard_launcher_ = self->launchers[self->MonitorWithMouse()];
-    
+
     if (self->launcher_hide_handler_id_ > 0)
     {
       g_source_remove(self->launcher_hide_handler_id_);
@@ -930,7 +930,7 @@ void Controller::HandleLauncherKeyRelease()
     {
       pimpl->keyboard_launcher_->ForceReveal(false);
       pimpl->launcher_open = false;
-      
+
       if (!pimpl->launcher_keynav)
         pimpl->keyboard_launcher_.Release();
     }
@@ -999,10 +999,10 @@ void Controller::KeyNavGrab()
   KeyNavActivate();
   pimpl->keyboard_launcher_->GrabKeyboard();
   pimpl->launcher_grabbed = true;
-  
-  pimpl->launcher_key_press_connection_ = 
+
+  pimpl->launcher_key_press_connection_ =
     pimpl->keyboard_launcher_->key_down.connect(sigc::mem_fun(pimpl, &Controller::Impl::ReceiveLauncherKeyPress));
-  pimpl->launcher_event_outside_connection_ = 
+  pimpl->launcher_event_outside_connection_ =
     pimpl->keyboard_launcher_->mouse_down_outside_pointer_grab_area.connect(sigc::mem_fun(pimpl, &Controller::Impl::ReceiveMouseDownOutsideArea));
 }
 
@@ -1010,7 +1010,7 @@ void Controller::KeyNavActivate()
 {
   if (pimpl->launcher_keynav)
     return;
-  
+
   pimpl->reactivate_keynav = false;
   pimpl->launcher_keynav = true;
   pimpl->keyboard_launcher_ = pimpl->launchers[pimpl->MonitorWithMouse()];
@@ -1052,7 +1052,7 @@ void Controller::KeyNavTerminate(bool activate)
   pimpl->launcher_keynav = false;
   if (!pimpl->launcher_open)
     pimpl->keyboard_launcher_.Release();
-  
+
   pimpl->ubus.SendMessage(UBUS_LAUNCHER_END_KEY_SWTICHER, g_variant_new_boolean(true));
 }
 
@@ -1080,10 +1080,10 @@ Controller::AddProperties(GVariantBuilder* builder)
   .add("key_nav_is_grabbed", pimpl->launcher_grabbed);
 }
 
-void Controller::Impl::ReceiveLauncherKeyPress(unsigned long eventType, 
-                                               unsigned long keysym, 
-                                               unsigned long state, 
-                                               const char* character, 
+void Controller::Impl::ReceiveLauncherKeyPress(unsigned long eventType,
+                                               unsigned long keysym,
+                                               unsigned long state,
+                                               const char* character,
                                                unsigned short keyCount)
 {
   /*
