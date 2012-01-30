@@ -139,8 +139,7 @@ panel_service_class_dispose (GObject *object)
   g_hash_table_destroy (priv->entry2indicator_hash);
   g_hash_table_destroy (priv->panel2entries_hash);
 
-  GdkWindow *filter_window = gtk_widget_get_window (priv->offscreen_window);
-  gdk_window_remove_filter (filter_window, (GdkFilterFunc)event_filter, object);
+  gdk_window_remove_filter (NULL, (GdkFilterFunc)event_filter, object);
 
   if (G_IS_OBJECT (priv->menubar))
     {
@@ -440,8 +439,7 @@ panel_service_init (PanelService *self)
   priv->menubar = gtk_menu_bar_new ();
   gtk_container_add (GTK_CONTAINER (priv->offscreen_window), priv->menubar);
 
-  GdkWindow *filter_window = gtk_widget_get_window (priv->offscreen_window);
-  gdk_window_add_filter (filter_window, (GdkFilterFunc)event_filter, self);
+  gdk_window_add_filter (NULL, (GdkFilterFunc)event_filter, self);
 
   priv->entry2indicator_hash = g_hash_table_new (g_direct_hash, g_direct_equal);
   priv->panel2entries_hash = g_hash_table_new_full (g_str_hash, g_str_equal,
@@ -1131,7 +1129,11 @@ on_active_menu_hidden (GtkMenu *menu, PanelService *self)
 
   g_signal_handler_disconnect (priv->last_menu, priv->last_menu_id);
   g_signal_handler_disconnect (priv->last_menu, priv->last_menu_move_id);
-  gtk_menu_detach (priv->last_menu);
+
+  GtkWidget *top_win = gtk_widget_get_toplevel (GTK_WIDGET (priv->last_menu));
+  if (GTK_IS_WINDOW (top_win))
+    gtk_window_set_attached_to (GTK_WINDOW (top_win), NULL);
+
   priv->last_menu = NULL;
   priv->last_menu_id = 0;
   priv->last_menu_move_id = 0;
@@ -1504,8 +1506,15 @@ panel_service_show_entry (PanelService *self,
                             G_CALLBACK (gtk_widget_destroyed), &priv->last_menu);
         }
 
-      if (gtk_menu_get_attach_widget (priv->last_menu) != priv->menubar)
-        gtk_menu_attach_to_widget (priv->last_menu, priv->menubar, NULL);
+      GtkWidget *top_widget = gtk_widget_get_toplevel (GTK_WIDGET (priv->last_menu));
+
+      if (GTK_IS_WINDOW (top_widget))
+        {
+          GtkWindow *top_win = GTK_WINDOW (top_widget);
+
+          if (gtk_window_get_attached_to (top_win) != priv->menubar)
+            gtk_window_set_attached_to (top_win, priv->menubar);
+        }
 
       priv->last_entry = entry;
       priv->last_x = x;
