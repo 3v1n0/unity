@@ -41,7 +41,7 @@ PointerBarrierWrapper::PointerBarrierWrapper()
   last_y_ = 0;
   last_x_ = 0;
   active = false;
-  smoothing = 50;
+  smoothing = 75;
   smoothing_count_ = 0;
   smoothing_accum_ = 0;
 }
