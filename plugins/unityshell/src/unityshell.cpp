@@ -2576,6 +2576,7 @@ void UnityScreen::initLauncher()
 
   /* Setup Hud */
   hud_controller_.reset(new hud::Controller());
+  AddChild(hud_controller_.get());
   LOG_INFO(logger) << "initLauncher-hud " << timer.ElapsedSeconds() << "s";
   
   // Setup Shortcut Hint
