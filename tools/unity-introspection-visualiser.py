@@ -3,6 +3,7 @@
 #
 # Script to generate a nice PNG file of the currently running unity introspection tree.
 from argparse import ArgumentParser
+from os import remove
 from os.path import splitext
 import dbus
 
@@ -22,6 +23,7 @@ except ImportError:
 
 NEXT_NODE_ID=1
 
+
 def string_rep(dbus_type):
     """Get a string representation of various dbus types."""
     if type(dbus_type) == dbus.Boolean:
@@ -36,6 +38,7 @@ def string_rep(dbus_type):
         return ', '.join([string_rep(i) for i in dbus_type])
     else:
         return repr(dbus_type)
+
 
 def escape(s):
     """Escape a string so it can be use in a dot label."""
@@ -97,8 +100,8 @@ if __name__ == '__main__':
         tf = NamedTemporaryFile(suffix='.png', delete=False)
         tf.write(graph.create_png())
         tf.close()
-        print tf.name
         call(["eog", tf.name])
+        remove(tf.name)
     else:
         print 'unknown output mode!'
 
