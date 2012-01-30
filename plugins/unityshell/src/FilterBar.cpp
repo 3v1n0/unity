@@ -56,7 +56,7 @@ FilterBar::~FilterBar()
 void FilterBar::Init()
 {
   nux::LinearLayout* layout = new nux::VLayout(NUX_TRACKER_LOCATION);
-  layout->SetSpaceBetweenChildren(12);
+  layout->SetSpaceBetweenChildren(10);
   SetLayout(layout);
 }
 
@@ -105,9 +105,37 @@ void FilterBar::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
   GfxContext.PushClippingRectangle(GetGeometry());
   GetLayout()->ProcessDraw(GfxContext, force_draw);
+
+  nux::Color col(0.13f, 0.13f, 0.13f, 0.13f);
+
+  std::list<Area *>& layout_list = GetLayout()->GetChildren();
+  std::list<Area*>::iterator iter;
+  int i = 0;
+  int num_separators = layout_list.size() - 1;
+
+  for (iter = layout_list.begin(); iter != layout_list.end(); iter++)
+  {
+    if (i != num_separators)
+    {
+      nux::Area* filter_view = (*iter);
+      nux::Geometry const& geom = filter_view->GetGeometry();
+
+      unsigned int alpha = 0, src = 0, dest = 0;
+      GfxContext.GetRenderStates().GetBlend(alpha, src, dest);
+
+      GfxContext.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+      GfxContext.GetRenderStates().SetColorMask(true, true, true, false);
+      nux::GetPainter().Draw2DLine(GfxContext,
+                                   geom.x             , geom.y + geom.height - 1,
+                                   geom.x + geom.width, geom.y + geom.height - 1,
+                                   col);
+      GfxContext.GetRenderStates().SetBlend(alpha, src, dest);
+    }
+    i++;
+  }
+
   GfxContext.PopClippingRectangle();
 }
-
 
 } // namespace dash
 } // namespace unity

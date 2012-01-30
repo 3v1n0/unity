@@ -277,8 +277,8 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
   
   
   texxform_absolute_bg.flip_v_coord = false;
-  texxform_absolute_bg.uoffset = (1.0f / bg_shine_texture_->GetWidth()) * (absolute_geo.x);
-  texxform_absolute_bg.voffset = (1.0f / bg_shine_texture_->GetHeight()) * (absolute_geo.y);
+  texxform_absolute_bg.uoffset = (1.0f / bg_shine_texture_->GetWidth()) * parent->x_offset;
+  texxform_absolute_bg.voffset = (1.0f / bg_shine_texture_->GetHeight()) * parent->y_offset;
   
   gfx_context.GetRenderStates().SetColorMask(true, true, true, false);
   gfx_context.GetRenderStates().SetBlend(true, GL_DST_COLOR, GL_ONE);
@@ -384,8 +384,8 @@ void OverlayRendererImpl::DrawContent(nux::GraphicsEngine& gfx_context, nux::Geo
   rop.SrcBlend = GL_DST_COLOR;
   rop.DstBlend = GL_ONE;
   texxform_absolute_bg.flip_v_coord = false;
-  texxform_absolute_bg.uoffset = (1.0f / bg_shine_texture_->GetWidth()) * (absolute_geo.x);
-  texxform_absolute_bg.voffset = (1.0f / bg_shine_texture_->GetHeight()) * (absolute_geo.y);
+  texxform_absolute_bg.uoffset = (1.0f / bg_shine_texture_->GetWidth()) * parent->x_offset;
+  texxform_absolute_bg.voffset = (1.0f / bg_shine_texture_->GetHeight()) * parent->y_offset;
   
   nux::GetPainter().PushTextureLayer(gfx_context, bg_layer_->GetGeometry(),
                                      bg_shine_texture_,

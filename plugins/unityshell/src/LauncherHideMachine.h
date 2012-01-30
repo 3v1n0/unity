@@ -24,6 +24,8 @@
 #include <glib.h>
 #include <string>
 
+#include "Decaymulator.h"
+
 class LauncherHideMachine : public sigc::trackable
 {
 public:
@@ -55,28 +57,32 @@ public:
     SCALE_ACTIVE           = 1 << 16,
     EXPO_ACTIVE            = 1 << 17,
     MT_DRAG_OUT            = 1 << 18,
-    MOUSE_OVER_ACTIVE_EDGE = 1 << 19,
+    REVEAL_PRESSURE_PASS   = 1 << 19,
     LAUNCHER_PULSE         = 1 << 20,
     LOCK_HIDE              = 1 << 21
   } HideQuirk;
+
+  nux::Property<int> reveal_pressure;
+  nux::Property<int> edge_decay_rate;
+
+  nux::Property<float> reveal_progress;
 
   LauncherHideMachine();
   virtual ~LauncherHideMachine();
 
   void     SetMode(HideMode mode);
-  HideMode GetMode();
+  HideMode GetMode() const;
 
-  void     SetShowOnEdge(bool value);
-  bool     GetShowOnEdge();
+  void AddRevealPressure(int pressure);
 
   void SetQuirk(HideQuirk quirk, bool active);
-  bool GetQuirk(HideQuirk quirk, bool allow_partial = true);
+  bool GetQuirk(HideQuirk quirk, bool allow_partial = true) const;
 
-  bool ShouldHide();
+  bool ShouldHide() const;
 
   sigc::signal<void, bool> should_hide_changed;
 
-  std::string DebugHideQuirks();
+  std::string DebugHideQuirks() const;
 
 private:
   void EnsureHideState(bool skip_delay);
@@ -85,9 +91,12 @@ private:
   static gboolean OnHideDelayTimeout(gpointer data);
   static gboolean EmitShouldHideChanged(gpointer data);
 
+  void OnDecayRateChanged (int value);
+
+  unity::ui::Decaymulator::Ptr decaymulator_;
+
   bool      _should_hide;
   bool      _latest_emit_should_hide;
-  bool      _show_on_edge;
   HideQuirk _quirks;
   HideMode  _mode;
   unsigned int _hide_delay_timeout_length;

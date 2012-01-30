@@ -54,6 +54,7 @@ public:
             int timeout_msec = -1);
 
   void Connect(std::string const& signal_name, ReplyCallback callback);
+  bool IsConnected();
 
   sigc::signal<void> connected;
   sigc::signal<void> disconnected;

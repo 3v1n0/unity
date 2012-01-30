@@ -36,3 +36,18 @@ Outcome
   The dropped icon should not have the keyboard focus and should not remain
   enlightened.
 
+Dash SearchBar middle-click
+---------------------------
+This test shows how the middle click over the dash search bar should work
+(see lp:842462)
+
+#. Open a text editor, and write some dummy text
+#. Select some text part of the written dummy text with mouse
+#. Press Super or Alt+F2 to open the Dash
+#. Move the mouse over the dash search bar
+#. Press middle click to paste the content of your primary clipboard
+
+Outcome
+  The text previously selected is pasted on the search bar at mouse pointer
+  position, if the operation is repeated the text is inserted where
+  the mouse pointer is.

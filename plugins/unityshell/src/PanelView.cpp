@@ -182,7 +182,7 @@ void PanelView::OnDashHidden(GVariant* data, PanelView* self)
 
 void PanelView::OnDashShown(GVariant* data, PanelView* self)
 {
-  if (self->_is_primary)
+  if (self->_monitor == g_variant_get_int32(data))
   {
     self->bg_effect_helper_.enabled = true;
     self->_dash_is_open = true;
@@ -203,11 +203,6 @@ void PanelView::AddPanelView(PanelIndicatorsView* child,
 std::string PanelView::GetName() const
 {
   return "UnityPanel";
-}
-
-std::string PanelView::GetChildsName() const
-{
-  return "indicators";
 }
 
 void PanelView::AddProperties(GVariantBuilder* builder)

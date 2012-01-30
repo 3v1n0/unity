@@ -626,8 +626,19 @@ void ResultViewGrid::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
         int half_width = recorded_dash_width_ / 2;
         int half_height = recorded_dash_height_;
 
-        int offset_x = MAX(MIN((x_position - half_width) / (half_width / 10), 5), -5);
-        int offset_y = MAX(MIN(((y_position + absolute_y) - half_height) / (half_height / 10), 5), -5);
+        int offset_x, offset_y;
+
+        /* Guard against divide-by-zero. SIGFPEs are not mythological
+         * contrary to popular belief */
+        if (half_width >= 10)
+          offset_x = MAX(MIN((x_position - half_width) / (half_width / 10), 5), -5);
+        else
+          offset_x = 0;
+
+        if (half_height >= 10)
+          offset_y = MAX(MIN(((y_position + absolute_y) - half_height) / (half_height / 10), 5), -5);
+        else
+          offset_y = 0;
 
         if (recorded_dash_width_ < 1 || recorded_dash_height_ < 1)
         {
