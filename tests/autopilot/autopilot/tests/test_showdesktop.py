@@ -2,21 +2,21 @@
 # Copyright 2010 Canonical
 # Author: Thomi Richards
 #
-# This program is free software: you can redistribute it and/or modify it 
-# under the terms of the GNU General Public License version 3, as published 
+# This program is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 3, as published
 # by the Free Software Foundation.
 
-from testtools import TestCase
 from time import sleep
 from subprocess import call
 
 from autopilot.emulators.bamf import Bamf
 from autopilot.emulators.X11 import Keyboard
 from autopilot.emulators.unity import Launcher, Switcher
+from autopilot.tests import AutopilotTestCase
 from autopilot.glibrunner import GlibRunner
 
 
-class ShowDesktopTests(TestCase):
+class ShowDesktopTests(AutopilotTestCase):
     """Test the 'Show Desktop' functionality."""
     run_test_with = GlibRunner
 
@@ -41,12 +41,12 @@ class ShowDesktopTests(TestCase):
         kb.press_and_release('Control+Alt+d')
         self.addCleanup(kb.press_and_release, keys='Control+Alt+d')
         sleep(1)
-        open_wins = self.bamf.get_open_windows() 
+        open_wins = self.bamf.get_open_windows()
         self.assertGreaterEqual(len(open_wins), 2)
         for win in open_wins:
             self.assertTrue(win.is_valid)
             self.assertTrue(win.is_hidden, "Window '%s' is not hidden after show desktop activated." % (win.title))
-    
+
     def test_showdesktop_unhides_apps(self):
         """Show desktop shortcut must re-show all hidden apps."""
         self.launch_test_apps()
@@ -55,7 +55,7 @@ class ShowDesktopTests(TestCase):
         kb = Keyboard()
         kb.press_and_release('Control+Alt+d')
         sleep(1)
-        open_wins = self.bamf.get_open_windows() 
+        open_wins = self.bamf.get_open_windows()
         self.assertGreaterEqual(len(open_wins), 2)
         for win in open_wins:
             self.assertTrue(win.is_valid)
@@ -76,7 +76,7 @@ class ShowDesktopTests(TestCase):
         kb = Keyboard()
         kb.press_and_release('Control+Alt+d')
         sleep(1)
-        open_wins = self.bamf.get_open_windows() 
+        open_wins = self.bamf.get_open_windows()
         self.assertGreaterEqual(len(open_wins), 2)
         for win in open_wins:
             self.assertTrue(win.is_valid)
@@ -131,7 +131,7 @@ class ShowDesktopTests(TestCase):
         self.addCleanup(kb.press_and_release, keys='Control+Alt+d')
 
         sleep(1)
-        open_wins = self.bamf.get_open_windows() 
+        open_wins = self.bamf.get_open_windows()
         self.assertGreaterEqual(len(open_wins), 2)
         for win in open_wins:
             self.assertTrue(win.is_valid)

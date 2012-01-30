@@ -1,13 +1,14 @@
-from testtools import TestCase
 from testtools.matchers import Equals
 from testtools.matchers import LessThan
 
+from autopilot.tests import AutopilotTestCase
 from autopilot.emulators.unity import Launcher
 from autopilot.glibrunner import GlibRunner
 
 from time import sleep
 
-class LauncherTests(TestCase):
+
+class LauncherTests(AutopilotTestCase):
     """Test the launcher."""
     run_test_with = GlibRunner
 

@@ -2,22 +2,22 @@
 # Copyright 2010 Canonical
 # Author: Alex Launi
 #
-# This program is free software: you can redistribute it and/or modify it 
-# under the terms of the GNU General Public License version 3, as published 
+# This program is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 3, as published
 # by the Free Software Foundation.
 
-from testtools import TestCase
 from time import sleep
 
 from autopilot.emulators.unity import Dash
 from autopilot.emulators.X11 import Keyboard
+from autopilot.tests import AutopilotTestCase
 from autopilot.glibrunner import GlibRunner
 
 
-class DashTests(TestCase):
+class DashTests(AutopilotTestCase):
     """Test the unity Dash."""
     run_test_with = GlibRunner
-    
+
     def setUp(self):
         super(DashTests, self).setUp()
         self.dash = Dash()
@@ -60,7 +60,7 @@ class DashTests(TestCase):
         self.dash.ensure_hidden()
         self.dash.reveal_music_lens()
         self.assertEqual(self.dash.get_current_lens(), u'music.lens')
-    
+
     def test_file_lens_shortcut(self):
         """File lense must reveal when Super+f is pressed."""
         self.dash.ensure_hidden()
@@ -72,7 +72,7 @@ class DashTests(TestCase):
         self.dash.ensure_hidden()
         self.dash.reveal_command_lens()
         self.assertEqual(self.dash.get_current_lens(), u'commands.lens')
-        
 
 
-        
+
+
