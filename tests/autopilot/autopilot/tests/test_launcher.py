@@ -89,6 +89,7 @@ class LauncherTests(TestCase):
         self.assertThat(self.server.key_nav_is_active(), Equals(False))
 
     def test_reveal_on_mouse_to_edge(self):
+        """Tests reeal of launchers by mouse pressure"""
         num_launchers = self.server.num_launchers()
 
         for x in range(0, num_launchers):
