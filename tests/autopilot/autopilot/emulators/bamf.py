@@ -1,8 +1,8 @@
 # Copyright 2011 Canonical
 # Author: Thomi Richards
 #
-# This program is free software: you can redistribute it and/or modify it 
-# under the terms of the GNU General Public License version 3, as published 
+# This program is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 3, as published
 # by the Free Software Foundation.
 
 "Various classes for interacting with BAMF."
@@ -13,17 +13,17 @@ import gio
 import gobject
 from Xlib import display, X, protocol
 
-__all__ = ["Bamf", 
-        "BamfApplication", 
+__all__ = ["Bamf",
+        "BamfApplication",
         "BamfWindow",
         ]
 
-#import pdb;pdb.set_trace()
 
 _BAMF_BUS_NAME = 'org.ayatana.bamf'
 DBusGMainLoop(set_as_default=True)
 _session_bus = dbus.SessionBus()
 _X_DISPLAY = display.Display()
+
 
 def _filter_user_visible(win):
     """Filter out non-user-visible objects.
@@ -37,10 +37,11 @@ def _filter_user_visible(win):
     except dbus.DBusException:
         return False
 
+
 class Bamf:
     """High-level class for interacting with Bamf from within a test.
-    
-    Use this class to inspect the state of running applications and open 
+
+    Use this class to inspect the state of running applications and open
     windows.
 
     """
@@ -64,7 +65,7 @@ class Bamf:
         return apps
 
     def get_running_applications_by_title(self, app_title):
-        """Return a list of applications that have the title `app_title`. 
+        """Return a list of applications that have the title `app_title`.
 
         This method may return an empty list, if no applications
         are found with the specified title.
@@ -86,9 +87,9 @@ class Bamf:
         return windows
 
     def get_open_windows_by_title(self, win_title):
-        """Get a list of all open windows with a specific window title. 
+        """Get a list of all open windows with a specific window title.
 
-        This method may return an empty list if no currently open windows have 
+        This method may return an empty list if no currently open windows have
         the specified title.
 
         """
@@ -108,7 +109,7 @@ class Bamf:
         'timeout' is the maximum time to wait, in seconds. If set to
         something less than 0, this method will wait forever.
 
-        This method returns true once the application is found, or false 
+        This method returns true once the application is found, or false
         if the application was not found until the timeout was reached.
         """
         # python workaround since you can't assign to variables in the enclosing scope:
@@ -131,16 +132,16 @@ class Bamf:
                 gobject_loop.quit()
                 found_app[0] = False
                 return False
-        
+
             # need a timeout? if so, connect it:
             if not wait_forever:
                 gobject.timeout_add(timeout * 1000, on_timeout_reached)
             # connect signal handler:
             _session_bus.add_signal_receiver(on_view_added, 'ViewOpened')
-            # pump the gobject main loop until either the correct signal is emitted, or the 
+            # pump the gobject main loop until either the correct signal is emitted, or the
             # timeout happens.
             gobject_loop.run()
-        
+
         return found_app[0]
 
     def launch_application(self, desktop_file, wait=True):
@@ -158,9 +159,9 @@ class Bamf:
 
 
 class BamfApplication:
-    """Represents an application, with information as returned by Bamf. 
+    """Represents an application, with information as returned by Bamf.
 
-    Don't instantiate this class yourself. instead, use the methods as 
+    Don't instantiate this class yourself. instead, use the methods as
     provided by the Bamf class.
 
     """
@@ -172,7 +173,6 @@ class BamfApplication:
         except dbus.DBusException, e:
             e.message += 'bamf_app_path=%r' % (bamf_app_path)
             raise
-
 
     @property
     def name(self):
@@ -191,9 +191,9 @@ class BamfApplication:
 
     @property
     def user_visible(self):
-        """Is this application visible to the user? 
+        """Is this application visible to the user?
 
-        Some applications (such as the panel) are hidden to the user but will 
+        Some applications (such as the panel) are hidden to the user but will
         still be returned by bamf.
 
         """
@@ -206,10 +206,11 @@ class BamfApplication:
     def __repr__(self):
         return "<BamfApplication '%s'>" % (self.name)
 
-class BamfWindow:
-    """Represents an application window, as returned by Bamf. 
 
-    Don't instantiate this class yourself. Instead, use the appropriate methods 
+class BamfWindow:
+    """Represents an application window, as returned by Bamf.
+
+    Don't instantiate this class yourself. Instead, use the appropriate methods
     in BamfApplication.
 
     """
@@ -231,7 +232,7 @@ class BamfWindow:
 
     @property
     def title(self):
-        """Get the window title. 
+        """Get the window title.
 
         This may be different from the application name.
 
@@ -240,21 +241,21 @@ class BamfWindow:
 
     @property
     def geometry(self):
-        """Get the geometry for this window. 
+        """Get the geometry for this window.
 
         Returns a tuple containing (x, y, width, height).
 
         """
-        
+
         geometry = self._x_win.get_geometry()
         return (geometry.x, geometry.y, geometry.width, geometry.height)
 
     @property
     def is_maximized(self):
         """Is the window maximized?
-        
-        Maximized in this case means both maximized 
-        vertically and horizontally. If a window is only maximized in one 
+
+        Maximized in this case means both maximized
+        vertically and horizontally. If a window is only maximized in one
         direction it is not considered maximized.
 
         """
@@ -264,9 +265,9 @@ class BamfWindow:
 
     @property
     def application(self):
-        """Get the application that owns this window. 
+        """Get the application that owns this window.
 
-        This method may return None if the window does not have an associated 
+        This method may return None if the window does not have an associated
         application. The 'desktop' window is one such example.
 
         """
@@ -285,7 +286,7 @@ class BamfWindow:
 
     @property
     def is_hidden(self):
-        """Is this window hidden? 
+        """Is this window hidden?
 
         Windows are hidden when the 'Show Desktop' mode is activated.
 
@@ -295,9 +296,9 @@ class BamfWindow:
 
     @property
     def is_valid(self):
-        """Is this window object valid? 
+        """Is this window object valid?
 
-        Invalid windows are caused by windows closing during the construction of 
+        Invalid windows are caused by windows closing during the construction of
         this object instance.
 
         """
@@ -326,7 +327,7 @@ class BamfWindow:
         else:
             data = (data+[0]*(5-len(data)))[:5]
             dataSize = 32
-        
+
         ev = protocol.event.ClientMessage(window=self._x_win, client_type=_X_DISPLAY.get_atom(_type), data=(dataSize, data))
 
         if not mask:
