@@ -572,10 +572,11 @@ PluginAdapter::Lower(guint32 xid)
 }
 
 void 
-PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids, FocusVisibility focus_visibility)
+PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids, FocusVisibility focus_visibility, int monitor)
 {
   CompPoint target_vp = m_Screen->vp();
-  CompWindow* top_win = NULL;
+  CompWindow* top_window = NULL;
+  CompWindow* top_window_on_monitor = NULL;
   bool any_on_current = false;
   bool any_mapped = false;
   bool forced_unminimize = false;
@@ -632,7 +633,9 @@ PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids, FocusVisibility 
              win->mapNum () == 0))
        {
          bool is_mapped = win->mapNum () != 0;
-         top_win = win;
+         top_window = win;
+         if (monitor >= 0 && win->outputDevice() == monitor)
+          top_window_on_monitor = win;
          win->unminimize ();
 
          forced_unminimize = true;
@@ -646,14 +649,18 @@ PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids, FocusVisibility 
          if (!forced_unminimize || target_vp == m_Screen->vp())
          {
            win->raise();
-           top_win = win;
+           top_window = win;
+           if (monitor >= 0 && win->outputDevice() == monitor)
+            top_window_on_monitor = win;
          }
        }
     }
   }
 
-  if (top_win)
-    top_win->activate();
+  if (monitor > 0 && top_window_on_monitor)
+    top_window_on_monitor->activate();
+  else if (top_window)
+    top_window->activate();
 }
 
 bool 

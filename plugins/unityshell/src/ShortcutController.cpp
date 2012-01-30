@@ -115,10 +115,12 @@ void Controller::Show()
     g_source_remove (show_timer_);
 
   if (enabled_)
+  {
     show_timer_ = g_timeout_add(SUPER_TAP_DURATION, &Controller::OnShowTimer, this);
+    model_->Fill();
+    visible_ = true;
+  }
 
-  model_->Fill();
-  visible_ = true;
 }
 
 gboolean Controller::OnShowTimer(gpointer data)

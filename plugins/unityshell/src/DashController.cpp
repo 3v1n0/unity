@@ -151,7 +151,7 @@ void Controller::OnWindowConfigure(int window_width, int window_height,
 nux::Geometry Controller::GetIdealWindowGeometry()
 {
   UScreen *uscreen = UScreen::GetDefault();
-  int primary_monitor = uscreen->GetPrimaryMonitor();
+  int primary_monitor = uscreen->GetMonitorWithMouse();
   auto monitor_geo = uscreen->GetMonitorGeometry(primary_monitor);
 
   // We want to cover as much of the screen as possible to grab any mouse events outside
@@ -169,6 +169,7 @@ void Controller::Relayout(GdkScreen*screen)
   nux::Geometry geo = GetIdealWindowGeometry();
   window_->SetGeometry(geo);
   view_->Relayout();
+  view_->SetMonitorOffset(launcher_width, panel_height);
 }
 
 void Controller::OnMouseDownOutsideWindow(int x, int y,
@@ -242,7 +243,7 @@ void Controller::ShowDash()
 
   StartShowHideTimeline();
 
-  ubus_manager_.SendMessage(UBUS_PLACE_VIEW_SHOWN);
+  ubus_manager_.SendMessage(UBUS_PLACE_VIEW_SHOWN, g_variant_new_int32(UScreen::GetDefault()->GetMonitorWithMouse()));
 }
 
 void Controller::HideDash(bool restore)

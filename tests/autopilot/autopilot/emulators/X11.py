@@ -23,6 +23,7 @@ from Xlib import X
 from Xlib import XK
 from Xlib.display import Display
 from Xlib.ext.xtest import fake_input
+import gtk.gdk
 
 _PRESSED_KEYS = []
 _DISPLAY = Display()
@@ -232,15 +233,15 @@ class Mouse(object):
         self.release(button)
 		
     def move(self, x, y, animate=True):
-        """Moves mouse to location (x, y)."""
-        def perform_move(x, y):
-            fake_input(_DISPLAY, X.MotionNotify, x=x, y=y)
+        '''Moves mouse to location (x, y)'''
+        def perform_move(x, y, sync):
+            fake_input(_DISPLAY, X.MotionNotify, sync, X.CurrentTime, X.NONE, x=x, y=y)
             _DISPLAY.sync()
             sleep(0.001)
 
         if not animate:
-            perform_move(x, y)
-			
+            perform_move(x, y, False)
+            
         dest_x, dest_y = x, y
         curr_x, curr_y = self.position()
 		
@@ -249,20 +250,20 @@ class Mouse(object):
         dx = float(curr_x - dest_x)
         slope = dy/dx if dx > 0 else 0
         yint = curr_y - (slope * curr_x)
-        xscale = 1 if dest_x > curr_x else -1
-        
+        xscale = 10 if dest_x > curr_x else -10
+
         while (int(curr_x) != dest_x):
-            curr_x += xscale;
-            curr_y = int(slope * curr_x + yint) if curr_y > 0 else dest_y
-			
-            perform_move(curr_x, curr_y)
-			
+            target_x = min(curr_x + xscale, dest_x) if dest_x > curr_x else max(curr_x + xscale, dest_x)
+            perform_move(target_x - curr_x, 0, True)
+            curr_x = target_x;
+            
         if (curr_y != dest_y):
-            yscale = 1 if dest_y > curr_y else -1	
+            yscale = 10 if dest_y > curr_y else -10
             while (curr_y != dest_y):
-                curr_y += yscale
-                perform_move(curr_x, curr_y)
-				
+                target_y = min(curr_y + yscale, dest_y) if dest_y > curr_y else max(curr_y + yscale, dest_y)
+                perform_move(0, target_y - curr_y, True)
+                curr_y = target_y
+                
     def position(self):
         """Returns the current position of the mouse pointer."""
         coord = _DISPLAY.screen().root.query_pointer()._data
@@ -273,3 +274,31 @@ class Mouse(object):
         self.move(16, 13, animate=False)
         self.click()
         self.move(800, 500, animate=False)
+
+
+class ScreenGeometry:
+    """Get details about screen geometry."""
+
+    def __init__(self):
+        self._default_screen = gtk.gdk.screen_get_default()
+
+    def get_num_monitors(self):
+        """Get the number of monitors attached to the PC."""
+        return self._default_screen.get_n_monitors()
+
+    def get_monitor_geometry(self, monitor_number):
+        """Get the geometry for a particular monitor.
+
+        Returns a tuple containing (x,y,width,height).
+
+        """
+        if monitor_number >= self.get_num_monitors():
+            raise ValueError('Specified monitor number is out of range.')
+        return tuple(self._default_screen.get_monitor_geometry(monitor_number))
+
+    def move_mouse_to_monitor(self, monitor_number):
+        """Move the mouse to the center of the specified monitor."""
+        geo = self.get_monitor_geometry(monitor_number)
+        x = geo[0] + (geo[2]/2)
+        y = geo[1] + (geo[3]/2)
+        Mouse().move(x,y, False) #dont animate this or it might not get there due to barriers

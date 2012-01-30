@@ -44,8 +44,8 @@ namespace unity
 namespace launcher
 {
 
-SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(Launcher* IconManager, BamfApplication* app, char* aptdaemon_trans_id, char* icon_path)
-: BamfLauncherIcon(IconManager, app)
+SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(BamfApplication* app, char* aptdaemon_trans_id, char* icon_path)
+: BamfLauncherIcon(app)
 {
     _aptdaemon_trans_id = aptdaemon_trans_id; 
     

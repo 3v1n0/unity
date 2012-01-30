@@ -27,14 +27,14 @@ namespace unity
 namespace launcher
 {
 
-DesktopLauncherIcon::DesktopLauncherIcon(Launcher* IconManager)
-  :   SimpleLauncherIcon(IconManager)
+DesktopLauncherIcon::DesktopLauncherIcon()
+  :   SimpleLauncherIcon()
   ,   show_in_switcher_(true)
 {
   tooltip_text = _("Show Desktop");
   icon_name = "desktop";
   SetQuirk(QUIRK_VISIBLE, true);
-  SetQuirk(QUIRK_RUNNING, true);
+  SetQuirk(QUIRK_RUNNING, false);
   SetIconType(TYPE_BEGIN);
 }
 

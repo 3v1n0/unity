@@ -55,66 +55,107 @@ class Launcher(Unity):
     def __init__(self):
         super(Launcher, self).__init__()
         # set up base launcher vars
-        state = self.__get_state()
-        self.icon_width = int(state['icon-size'])
-
-        self.reveal_pos = (0, 120)
-        self.hide_pos = (self.icon_width *2, 120)
-
+        self.x = 0
+        self.y = 120
+        self.width = 0
+        self.height = 0
         self.show_timeout = 1
         self.hide_timeout = 1
+        self.grabbed = False
 
-
-    def move_mouse_to_reveal_pos(self):
-        """Move the mouse to the launcher reveal position."""
-        self._mouse.move(*self.reveal_pos)
+    def move_mouse_to_right_of_launcher(self, monitor):
+        (x, y, w, h) = self.launcher_geometry(monitor)
+        self._mouse.move(x + w + 10, y + h / 2, False)
         sleep(self.show_timeout)
 
-    def move_mouse_outside_of_boundry(self):
-        """Move the mouse outside the launcher."""
-        self._mouse.move(*self.hide_pos)
-        sleep(self.hide_timeout)
+    def reveal_launcher(self, monitor):
+        (x, y, w, h) = self.launcher_geometry(monitor)
+        self._mouse.move(x - 1200, y + h / 2)
+        sleep(self.show_timeout)
 
-    def is_showing(self):
-        """Is the launcher showing?"""
-        state = self.__get_state()
+    def grab_switcher(self):
+        self._keyboard.press_and_release('Alt+F1')
+        self.grabbed = True
+
+    def switcher_enter_quicklist(self):
+        if self.grabbed:
+            self._keyboard.press_and_release('Right')
+
+    def switcher_exit_quicklist(self):
+        if self.grabbed:
+            self._keyboard.press_and_release('Left')
+
+    def start_switcher(self):
+        self._keyboard.press('Super+Tab')
+        self._keyboard.release('Tab')
+
+    def end_switcher(self, cancel):
+        if cancel:
+            self._keyboard.press_and_release('Escape')
+            if self.grabbed != True:
+                self._keyboard.release('Super')
+        else:
+            if self.grabbed:
+                self._keyboard.press_and_release('\n')
+            else:
+                self._keyboard.release('Super')
+        self.grabbed = False
+
+    def switcher_next(self):
+        if self.grabbed:
+            self._keyboard.press_and_release('Down')
+        else:
+            self._keyboard.press_and_release('Tab')
+
+    def switcher_prev(self):
+        if self.grabbed:
+            self._keyboard.press_and_release('Up')
+        else:
+            self._keyboard.press_and_release('Shift+Tab')
+
+    def quicklist_open(self, monitor):
+        state = self.__get_state(monitor)
+        return bool(state['quicklist-open'])
+
+    def is_showing(self, monitor):
+        state = self.__get_state(monitor)
         return not bool(state['hidden'])
 
-    def __get_state(self):
+    def key_nav_is_active(self):
+        state = self.__get_controller_state()
+        return bool(state['key_nav_is_active'])
+
+    def key_nav_monitor(self):
+        state = self.__get_controller_state()
+        return int(state['key_nav_launcher_monitor'])
+
+    def key_nav_is_grabbed(self):
+        state = self.__get_controller_state()
+        return bool(state['key_nav_is_grabbed'])
+
+    def key_nav_selection(self):
+        state = self.__get_controller_state()
+        return int(state['key_nav_selection'])
+
+    def launcher_geometry(self, monitor):
+        state = self.__get_state(monitor);
+        x = int(state['x'])
+        y = int(state['y'])
+        width = int(state['width'])
+        height = int(state['height'])
+        return (x, y, width, height)
+
+    def num_launchers(self):
+        return len(super(Launcher, self).get_state('/Unity/LauncherController/Launcher'))
+
+    def __get_controller_state(self):
+        return super(Launcher, self).get_state('/Unity/LauncherController')[0]
+
+    def __get_state(self, monitor):
         # get the state for the 'launcher' piece
-        return super(Launcher, self).get_state('/Unity/Launcher')[0]
-
-    def get_launcher_icons(self):
-        """Get a list of launcher icons in this launcher."""
-        icons = self.get_state("//Launcher/LauncherIcon")
-        return [LauncherIcon(icon_dict) for icon_dict in icons]
-
-    def click_launcher_icon(self, icon, button=1):
-        """Move the mouse over the launcher icon, and click it."""
-        self.move_mouse_to_reveal_pos()
-        self._mouse.move(icon.x, icon.y + (self.icon_width / 2))
-        self._mouse.click(button)
-        self.move_mouse_outside_of_boundry()
+        return super(Launcher, self).get_state('/Unity/LauncherController/Launcher[monitor=%s]' % (monitor))[0]
 
 
-class LauncherIcon:
-    """Holds information about a launcher icon.
-
-    Do not instantiate an instance of this class yourself. Instead, use the
-    appropriate methods in the Launcher class instead.
-
-    """
-
-    def __init__(self, icon_dict):
-        self.tooltip_text = icon_dict['tooltip-text']
-        self.x = icon_dict['x']
-        self.y = icon_dict['y']
-        self.num_windows = icon_dict['related-windows']
-        self.visible = icon_dict['quirk-visible']
-        self.active = icon_dict['quirk-active']
-        self.running = icon_dict['quirk-running']
-        self.presented = icon_dict['quirk-presented']
-        self.urgent = icon_dict['quirk-urgent']
 
 class Switcher(Unity):
     """Interact with the Unity switcher."""
@@ -161,67 +202,71 @@ class Switcher(Unity):
         self._keyboard.press_and_release('Shift+`')
 
     def __get_icon(self, index):
-        return self.__get_model()['Children'][index][1][0]
+        import ipdb; ipdb.set_trace()
+        return self.get_state('/Unity/SwitcherController/SwitcherModel')[0]['children-of-men'][index][1][0]
 
-    @property
-    def current_icon(self):
-        """Get the currently-selected icon."""
-        if not self.get_is_visible:
-            return None
-        model = self.__get_model()
-        sel_idx = self.get_selection_index()
+    def get_icon_name(self, index):
+        return self.__get_icon(index)['tooltip-text']
+
+    def get_icon_desktop_file(self, index):
         try:
-            return LauncherIcon(model['Children'][sel_idx][1])
-        except KeyError:
+            return self.__get_icon(index)['desktop-file']
+        except:
             return None
 
     def get_model_size(self):
-        return len(self.__get_model()['Children'])
+        return len(self.get_state('/Unity/SwitcherController/SwitcherModel')[0]['children-of-men'])
 
     def get_selection_index(self):
-        return int(self.__get_model()['selection-index'])
+        return int(self.get_state('/Unity/SwitcherController/SwitcherModel')[0]['selection-index'])
 
     def get_last_selection_index(self):
-        return bool(self.__get_model()['last-selection-index'])
+        return bool(self.get_state('/Unity/SwitcherController/SwitcherModel')[0]['last-selection-index'])
 
     def get_is_visible(self):
-        return bool(self.__get_controller()['visible'])
-
-    def __get_model(self):
-        return self.get_state('/Unity/SwitcherController/SwitcherModel')[0]
-
-    def __get_controller(self):
-        return self.set_state('/unity/SwitcherController')[0]
+        return bool(self.get_state('/Unity/SwitcherController')[0]['visible'])
 
 class Dash(Unity):
-    """An emulator class that makes it easier to interact with the unity dash."""
+	"""
+	An emulator class that makes it easier to interact with the unity dash.
+	"""
 
-    def __init__(self):
-        self.plugin = Plugin(global_context, "unityshell")
-        self.setting = Setting(self.plugin, "show_launcher")
-        super(Dash, self).__init__()
+	def __init__(self):
+		self.plugin = Plugin(global_context, "unityshell")
+		self.setting = Setting(self.plugin, "show_launcher")
+		super(Dash, self).__init__()
 
-    def toggle_reveal(self):
-        """Reveals the dash if it's currently hidden, hides it otherwise."""
-        self._keyboard.press_and_release('Super')
-        sleep(1)
+	def toggle_reveal(self):
+		"""
+		Reveals the dash if it's currently hidden, hides it otherwise.
+		"""
+		self._keyboard.press_and_release("Super")
+		sleep(1)
 
-    def ensure_visible(self):
-        """Ensures the dash is visible."""
-        if not self.get_is_visible():
-            self.toggle_reveal();
+	def ensure_visible(self):
+		"""
+		Ensures the dash is visible.
+		"""
+		if not self.get_is_visible():
+			self.toggle_reveal();
 
-    def ensure_hidden(self):
-        """Ensures the dash is hidden."""
-        if self.get_is_visible():
-            self.toggle_reveal();
+	def ensure_hidden(self):
+		"""
+		Ensures the dash is hidden.
+		"""
+		if self.get_is_visible():
+			self.toggle_reveal();
 
-    def get_is_visible(self):
-        """Is the dash visible?"""
+	def get_is_visible(self):
+		"""
+		Is the dash visible?
+		"""
         return bool(self.get_state("/Unity/DashController")[0]["visible"])
 
-    def get_search_string(self):
-        """Return the current dash search bar search string."""
+	def get_search_string(self):
+		"""
+		Return the current dash search bar search string.
+		"""
         return unicode(self.get_state("//SearchBar")[0]['search_string'])
 
     def get_current_lens(self):
