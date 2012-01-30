@@ -81,6 +81,11 @@ View::View()
 
 View::~View()
 {
+  RemoveChild(search_bar_.GetPointer());
+  for (auto button = buttons_.begin(); button != buttons_.end(); button++)
+  {
+    RemoveChild((*button).GetPointer());
+  }
 }
 
 void View::ResetToDefault()
@@ -114,7 +119,14 @@ nux::View* View::default_focus() const
 
 void View::SetQueries(Hud::Queries queries)
 {
+  // remove the previous children
+  for (auto button = buttons_.begin(); button != buttons_.end(); button++)
+  {
+    RemoveChild((*button).GetPointer());
+  }
+  
   queries_ = queries_;
+  buttons_.clear();
   button_views_->Clear();
   int found_items = 0;
   for (auto query = queries.begin(); query != queries.end(); query++)
@@ -122,9 +134,10 @@ void View::SetQueries(Hud::Queries queries)
     if (found_items > 5)
       break;
 
-    HudButton *button = new HudButton();
+    HudButton::Ptr button = HudButton::Ptr(new HudButton());
+    buttons_.push_front(button);
     button->SetQuery(*query);
-    button_views_->AddView(button, 0, nux::MINOR_POSITION_LEFT);
+    button_views_->AddView(button.GetPointer(), 0, nux::MINOR_POSITION_LEFT);
 
     button->click.connect([&](nux::View* view) {
       query_activated.emit(dynamic_cast<HudButton*>(view)->GetQuery());
@@ -205,8 +218,6 @@ void View::SetupViews()
   layout_->AddLayout(new nux::SpaceLayout(8,8,8,8), 0);
   
   icon_ = new Icon("", icon_size, true);
-  //icon_->SetBaseSize(icon_size, icon_size);
-  //icon_->SetMinMaxSize(icon_size, icon_size);
   
   nux::Layout* icon_layout = new nux::VLayout();
   icon_layout->SetVerticalExternalMargin(12);
@@ -222,6 +233,7 @@ void View::SetupViews()
   search_bar_ = new unity::SearchBar(940, true);
   search_bar_->search_hint = default_text;
   search_bar_->search_changed.connect(sigc::mem_fun(this, &View::OnSearchChanged));
+  AddChild(search_bar_.GetPointer());
   content_layout_->AddView(search_bar_.GetPointer(), 0, nux::MINOR_POSITION_LEFT);
   
   button_views_ = new nux::VLayout();
@@ -295,13 +307,15 @@ bool View::AcceptKeyNavFocus()
 }
 
 // Introspectable
-const gchar* View::GetName()
+std::string View::GetName() const
 {
-  return "unity.hud.View";
+  return "HudView";
 }
 
 void View::AddProperties(GVariantBuilder* builder)
-{}
+{
+    
+}
 
 bool View::InspectKeyEvent(unsigned int eventType,
                            unsigned int key_sym,

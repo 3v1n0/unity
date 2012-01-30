@@ -31,9 +31,11 @@
 #include <glib.h>
 
 #include <UnityCore/Hud.h>
+#include "Introspectable.h"
 
 #include "UBusWrapper.h"
 #include "HudIcon.h"
+#include "HudButton.h"
 #include "SearchBar.h"
 #include "OverlayRenderer.h"
 
@@ -42,7 +44,7 @@ namespace unity
 namespace hud
 {
 
-class View : public nux::View
+class View : public nux::View, public unity::debug::Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE(HudView, nux::View);
   typedef nux::ObjectPtr<View> Ptr;
@@ -87,7 +89,7 @@ private:
   bool AcceptKeyNavFocus();
   nux::Geometry GetBestFitGeometry(nux::Geometry const& for_geo);
 
-  const gchar* GetName();
+  std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
 
 private:
@@ -95,6 +97,7 @@ private:
   nux::ObjectPtr<nux::Layout> layout_;
   nux::ObjectPtr<nux::Layout> content_layout_;
   nux::ObjectPtr<nux::VLayout> button_views_;
+  std::list<HudButton::Ptr> buttons_;
   
   //FIXME - replace with dash search bar once modifications to dash search bar land
   SearchBar::Ptr search_bar_;
