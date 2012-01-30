@@ -2,11 +2,11 @@
 # Copyright 2011 Canonical
 # Author: Alex Launi
 #
-# This program is free software: you can redistribute it and/or modify it 
-# under the terms of the GNU General Public License version 3, as published 
+# This program is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 3, as published
 # by the Free Software Foundation.
 #
-# This script is designed to run unity in a test drive manner. It will drive 
+# This script is designed to run unity in a test drive manner. It will drive
 # X and test the GL calls that Unity makes, so that we can easily find out if
 # we are triggering graphics driver/X bugs.
 
@@ -78,15 +78,15 @@ class Launcher(Unity):
         (x, y, w, h) = self.launcher_geometry(monitor)
         self._mouse.move(x - 1200, y + h / 2)
         sleep(self.show_timeout)
-    
+
     def grab_switcher(self):
         self._keyboard.press_and_release('^A^1')
         self.grabbed = True
-    
+
     def switcher_enter_quicklist(self):
         if self.grabbed:
             self._keyboard.press_and_release('^R')
-    
+
     def switcher_exit_quicklist(self):
         if self.grabbed:
             self._keyboard.press_and_release('^L')
@@ -94,7 +94,7 @@ class Launcher(Unity):
     def start_switcher(self):
         self._keyboard.press('^W^T')
         self._keyboard.release('^T')
-    
+
     def end_switcher(self, cancel):
         if cancel:
             self._keyboard.press_and_release('^E')
@@ -126,15 +126,15 @@ class Launcher(Unity):
     def is_showing(self, monitor):
         state = self.__get_state(monitor)
         return not bool(state['hidden'])
-    
+
     def key_nav_is_active(self):
         state = self.__get_controller_state()
         return bool(state['key_nav_is_active'])
-    
+
     def key_nav_monitor(self):
         state = self.__get_controller_state()
         return int(state['key_nav_launcher_monitor'])
-    
+
     def key_nav_is_grabbed(self):
         state = self.__get_controller_state()
         return bool(state['key_nav_is_grabbed'])
@@ -142,7 +142,7 @@ class Launcher(Unity):
     def key_nav_selection(self):
         state = self.__get_controller_state()
         return int(state['key_nav_selection'])
-    
+
     def launcher_geometry(self, monitor):
         state = self.__get_state(monitor);
         x = int(state['x'])
@@ -150,7 +150,7 @@ class Launcher(Unity):
         width = int(state['width'])
         height = int(state['height'])
         return (x, y, width, height)
-    
+
     def num_launchers(self):
         return len(super(Launcher, self).get_state('/Unity/LauncherController/Launcher'))
 

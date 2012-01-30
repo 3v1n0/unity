@@ -411,6 +411,7 @@ Launcher::AddProperties(GVariantBuilder* builder)
   .add("y", abs_geo.y)
   .add("width", abs_geo.width)
   .add("height", abs_geo.height)
+  .add("monitor", monitor())
   .add("quicklist-open", _hide_machine->GetQuirk(LauncherHideMachine::QUICKLIST_OPEN))
   .add("hide-quirks", _hide_machine->DebugHideQuirks().c_str())
   .add("hover-quirks", _hover_machine->DebugHoverQuirks().c_str());
@@ -1244,7 +1245,7 @@ void Launcher::OnLockHideChanged(GVariant *data)
   gboolean enable_lock = FALSE;
   g_variant_get(data, "(b)", &enable_lock);
 
-  if (enable_lock) 
+  if (enable_lock)
   {
     _hide_machine->SetQuirk(LauncherHideMachine::LOCK_HIDE, true);
   }
@@ -1534,7 +1535,7 @@ Launcher::OnOptionsChanged(Options::Ptr options)
 void
 Launcher::OnOptionChanged()
 {
-  UpdateOptions(options());  
+  UpdateOptions(options());
 }
 
 void
@@ -1863,10 +1864,10 @@ void Launcher::EnsureIconOnScreen(AbstractLauncherIcon* selection)
   {
     if (!icon->GetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE))
       continue;
-    
+
     if (icon == selection)
       break;
-    
+
     natural_y += _icon_size + _space_between_icons;
   }
 
@@ -2332,7 +2333,7 @@ void Launcher::RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_
   {
     _postreveal_mousemove_delta_x += dx;
     _postreveal_mousemove_delta_y += dy;
-    
+
     // check the state before changing it to avoid uneeded hide calls
     if (!_hide_machine->GetQuirk(LauncherHideMachine::MOUSE_MOVE_POST_REVEAL) &&
         (nux::Abs(_postreveal_mousemove_delta_x) > MOUSE_DEADZONE ||
@@ -2576,7 +2577,7 @@ Launcher::SetOffscreenRenderTarget(nux::ObjectPtr<nux::IOpenGLBaseTexture> textu
   gpu_device->FormatFrameBufferObject(width, height, nux::BITFMT_R8G8B8A8);
   gpu_device->SetColorRenderTargetSurface(0, texture->GetSurfaceLevel(0));
   gpu_device->ActivateFrameBuffer();
-  
+
   auto graphics_engine = graphics_display->GetGraphicsEngine();
   graphics_engine->SetContext(0, 0, width, height);
   graphics_engine->SetViewport(0, 0, width, height);
