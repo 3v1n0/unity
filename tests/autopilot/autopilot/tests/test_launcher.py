@@ -93,6 +93,18 @@ class LauncherTests(TestCase):
         num_launchers = self.server.num_launchers()
 
         for x in range(num_launchers):
-                self.server.move_mouse_to_right_of_launcher(x)
-                self.server.reveal_launcher(x)
-                self.assertThat(self.server.is_showing(x), Equals(True))
+            self.server.move_mouse_to_right_of_launcher(x)
+            self.server.reveal_launcher(x)
+            self.assertThat(self.server.is_showing(x), Equals(True))
+
+    def test_reveal_with_mouse_under_launcher(self):
+        """Tests that the launcher hides properly if the 
+        mouse is under the launcher when it is revealed"""
+        num_launchers = self.server.num_launchers()
+
+        for x in range(num_launchers):
+                self.server.move_mouse_over_launcher(x)
+                self.server.keyboard_reveal_launcher()
+                self.server.keyboard_unreveal_launcher()
+                self.assertThat(self.server.is_showing(x), Equals(False))
+
