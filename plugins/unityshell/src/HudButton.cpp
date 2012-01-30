@@ -178,5 +178,17 @@ Query::Ptr HudButton::GetQuery()
 {
   return query_;
 }
+
+// Introspectable
+std::string HudButton::GetName() const
+{
+  return "HudButton";
+}
+
+void HudButton::AddProperties(GVariantBuilder* builder)
+{
+  g_variant_builder_add(builder, "{sv}", "label", g_variant_new_string(label_.c_str()));
+}
+
 }
 }

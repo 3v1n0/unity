@@ -29,14 +29,15 @@
 #include <Nux/Button.h>
 #include <Nux/TextureArea.h>
 #include <UnityCore/Hud.h>
+#include "Introspectable.h"
 
 namespace unity {
-
 namespace hud {
-class HudButton : public nux::Button {
+class HudButton : public nux::Button, public unity::debug::Introspectable 
+{
   typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
-  typedef nux::ObjectPtr<HudButton> Ptr;
 public:
+  typedef nux::ObjectPtr<HudButton> Ptr;
   HudButton (nux::TextureArea *image, NUX_FILE_LINE_PROTO);
   HudButton (const std::string label, NUX_FILE_LINE_PROTO);
   HudButton (const std::string label, nux::TextureArea *image, NUX_FILE_LINE_PROTO);
@@ -50,12 +51,16 @@ public:
   nux::Property<std::string> hint;
 
 protected:
+
   virtual bool AcceptKeyNavFocus();
   virtual long ComputeContentSize();
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw);
 
+  std::string GetName() const;
+  void AddProperties(GVariantBuilder* builder);
+  
   void InitTheme ();
   void RedrawTheme(nux::Geometry const& geom, cairo_t* cr, nux::ButtonVisualState faked_state);
   typedef std::unique_ptr<nux::CairoWrapper> NuxCairoPtr;

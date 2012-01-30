@@ -368,13 +368,15 @@ void Controller::OnQueriesFinished(Hud::Queries queries)
 }
 
 // Introspectable
-const gchar* Controller::GetName()
+std::string Controller::GetName() const
 {
-  return "unity.hud.Controller";
+  return "HudController";
 }
 
 void Controller::AddProperties(GVariantBuilder* builder)
-{}
+{
+  g_variant_builder_add(builder, "{sv}", "visible", g_variant_new_boolean (visible_));
+}
 
 
 }

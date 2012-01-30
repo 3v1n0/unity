@@ -38,7 +38,7 @@ namespace unity
 namespace hud
 {
 
-class Controller
+class Controller : public unity::debug::Introspectable
 {
 public:
   typedef std::shared_ptr<Controller> Ptr;
@@ -56,7 +56,7 @@ public:
   void HideHud(bool restore_focus = true);
   bool IsVisible();
 protected:
-  const gchar* GetName();
+  std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
 
 private:
