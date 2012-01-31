@@ -1,5 +1,5 @@
 # -*- Mode: Python; coding: utf-8; indent-tabs-mode: nil; tab-width: 4 -*-
-# Copyright 2010 Canonical
+# Copyright 2012 Canonical
 # Author: Thomi Richards
 #
 # This program is free software: you can redistribute it and/or modify it
@@ -20,17 +20,18 @@ import threading
 class WindowThread(threading.Thread):
     """A separate thread of control that creates a window."""
 
-    def __init__(self, skip_tskbar=False):
+    def __init__(self, window_name, skip_taskbar=False):
         """Construct the window thread object.
 
-        if skip_taskbar is set (the default), the window will not appear in the
+        If skip_taskbar is set (the default), the window will not appear in the
         task bar or switcher.
 
         Call start() to create the window.
         """
         super(WindowThread, self).__init__()
-        self._skip_taskbar = skip_tskbar
-        self._msg = "Skip-Taskbar flag %s set" % ('' if skip_tskbar else 'not')
+        self.window_name = window_name
+        self._skip_taskbar = skip_taskbar
+        self._msg = "Skip-Taskbar flag %s set" % ('' if skip_taskbar else 'not')
         self._quit_event = threading.Event()
 
     def run(self):
@@ -53,16 +54,9 @@ class WindowThread(threading.Thread):
         # set the SKIP_TASKBAR flag maybe:
         if self._skip_taskbar:
             state = self._display.get_atom('_NET_WM_STATE_SKIP_TASKBAR', 1)
-            # first param: 0=remove,1=set,2=toggle
-            # 2nd, 3rd param: states you want to manipulate, or 0
-            data = [1, state, 0, 1]
-            data = (data+[0]*(5-len(data)))[:5]
-            dataSize = 32
-            ev = protocol.event.ClientMessage(window=self._window,
-                                            client_type=self._display.get_atom('_NET_WM_STATE'),
-                                            data=(dataSize, data)
-                                            )
-            self._screen.root.send_event(ev, event_mask=(X.SubstructureRedirectMask|X.SubstructureNotifyMask))
+            self._setProperty('_NET_WM_STATE',[1, state, 0, 1], self._window)
+
+        self._setProperty('_NET_WM_NAME', self.window_name, self._window)
 
         try:
             while not self.quit_event.wait(0.1):
@@ -78,7 +72,23 @@ class WindowThread(threading.Thread):
         self._window.unmap()
         self._display.sync()
 
+    def _setProperty(self, _type, data, win=None, mask=None):
+        """ Send a ClientMessage event to the root """
+        if not win: win = self._screen.root
+        if type(data) is str:
+            dataSize = 8
+        else:
+            data = (data+[0]*(5-len(data)))[:5]
+            dataSize = 32
+
+        ev = protocol.event.ClientMessage(window=win, client_type=self._display.get_atom(_type), data=(dataSize, data))
+
+        if not mask:
+            mask = (X.SubstructureRedirectMask|X.SubstructureNotifyMask)
+        self._screen.root.send_event(ev, event_mask=mask)
+
     def close(self):
         """Close the window."""
         self._quit_event.set()
+
 
