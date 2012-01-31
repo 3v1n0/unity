@@ -170,7 +170,24 @@ class Launcher(Unity):
         # get the state for the 'launcher' piece
         return super(Launcher, self).get_state('/Unity/LauncherController/Launcher[monitor=%s]' % (monitor))[0]
 
+class LauncherIcon:
+    """Holds information about a launcher icon.
 
+    Do not instantiate an instance of this class yourself. Instead, use the
+    appropriate methods in the Launcher class instead.
+
+    """
+
+    def __init__(self, icon_dict):
+        self.tooltip_text = icon_dict['tooltip-text']
+        self.x = icon_dict['x']
+        self.y = icon_dict['y']
+        self.num_windows = icon_dict['related-windows']
+        self.visible = icon_dict['quirk-visible']
+        self.active = icon_dict['quirk-active']
+        self.running = icon_dict['quirk-running']
+        self.presented = icon_dict['quirk-presented']
+        self.urgent = icon_dict['quirk-urgent']
 
 class Switcher(Unity):
     """Interact with the Unity switcher."""
@@ -182,6 +199,7 @@ class Switcher(Unity):
         """Start the switcher with alt+tab."""
         self._keyboard.press('Alt')
         self._keyboard.press_and_release('Tab')
+        sleep(1)
 
     def initiate_detail_mode(self):
         """Start detail mode with alt+`"""
@@ -217,7 +235,19 @@ class Switcher(Unity):
         self._keyboard.press_and_release('Shift+`')
 
     def __get_icon(self, index):
-        return self.get_state('/Unity/SwitcherController/SwitcherModel')[0]['children-of-men'][index][1][0]
+        return self.__get_model()['Children'][index][1][0]
+
+    @property
+    def current_icon(self):
+        """Get the currently-selected icon."""
+        if not self.get_is_visible:
+            return None
+        model = self.__get_model()
+        sel_idx = self.get_selection_index()
+        try:
+            return LauncherIcon(model['Children'][sel_idx][1])
+        except KeyError:
+            return None
 
     def get_icon_name(self, index):
         return self.__get_icon(index)['tooltip-text']
@@ -229,16 +259,22 @@ class Switcher(Unity):
             return None
 
     def get_model_size(self):
-        return len(self.get_state('/Unity/SwitcherController/SwitcherModel')[0]['children-of-men'])
+        return len(self.__get_model()['Children'])
 
     def get_selection_index(self):
-        return int(self.get_state('/Unity/SwitcherController/SwitcherModel')[0]['selection-index'])
+        return int(self.__get_model()['selection-index'])
 
     def get_last_selection_index(self):
-        return bool(self.get_state('/Unity/SwitcherController/SwitcherModel')[0]['last-selection-index'])
+        return bool(self.__get_model()['last-selection-index'])
 
     def get_is_visible(self):
-        return bool(self.get_state('/Unity/SwitcherController')[0]['visible'])
+        return bool(self.__get_controller()['visible'])
+
+    def __get_model(self):
+        return self.get_state('/Unity/SwitcherController/SwitcherModel')[0]
+
+    def __get_controller(self):
+        return self.set_state('/unity/SwitcherController')[0]
 
 class Dash(Unity):
     """
