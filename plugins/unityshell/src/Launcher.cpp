@@ -2386,7 +2386,7 @@ void Launcher::OnPointerBarrierEvent(ui::PointerBarrierWrapper* owner, ui::Barri
     _hide_machine->AddRevealPressure(event->velocity);
     decaymulator_->value = 0;
   }
-  else (abs_geo.x > 0)
+  else if (abs_geo.x > 0)
   {
     decaymulator_->value = decaymulator_->value + event->velocity;
     if (decaymulator_->value > options()->edge_overcome_pressure)
