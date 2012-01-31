@@ -14,14 +14,15 @@ Outcome
 
 Mouse down and search bar focus
 -------------------------------
-This test makes sure that the search bar doesn't lose the focus clicking in
-am emtpy.
+This test makes sure that the search bar doesn't lose the focus clicking into
+am emtpy area (or into a filter button).
  
 #. Open the app lens
 #. Expand the filter bar
 #. Make sure the dash has the focus
 #. The cursor should blink
-#. Click (for example) between a filter expander and the All Button (for example between Type > and All)
+#. Click between a filter expander and the All Button (for example between Type > and All)
+   or into a filter button.
 
 Outcome
 The cursor is still blinking.
