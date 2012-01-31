@@ -76,6 +76,7 @@ LauncherHideMachine::AddRevealPressure(int pressure)
   if (decaymulator_->value > reveal_pressure)
   {
     SetQuirk(REVEAL_PRESSURE_PASS, true);
+    SetQuirk(MOUSE_MOVE_POST_REVEAL, true);
     decaymulator_->value = 0;
   }
 }
