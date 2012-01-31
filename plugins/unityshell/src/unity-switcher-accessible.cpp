@@ -391,7 +391,7 @@ create_children(UnitySwitcherAccessible* self)
   SwitcherView* switcher = NULL;
   SwitcherModel::Ptr switcher_model;
   SwitcherModel::iterator it;
-  LauncherIcon* child = NULL;
+  AbstractLauncherIcon* child = NULL;
   AtkObject* child_accessible = NULL;
 
   nux_object = nux_object_accessible_get_object(NUX_OBJECT_ACCESSIBLE(self));
@@ -406,7 +406,7 @@ create_children(UnitySwitcherAccessible* self)
 
   for (it = switcher_model->begin(); it != switcher_model->end(); it++)
   {
-    child =  dynamic_cast<LauncherIcon*>(*it);
+    child =  dynamic_cast<AbstractLauncherIcon*>(*it);
     child_accessible = unity_launcher_icon_accessible_new(child);
     atk_object_set_parent(child_accessible, ATK_OBJECT(self));
     self->priv->children = g_slist_append(self->priv->children,

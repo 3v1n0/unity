@@ -17,44 +17,42 @@
  * Authored by: Jason Smith <jason.smith@canonical.com>
  */
 
-#ifndef DESKTOPLAUNCHERICON_H
-#define DESKTOPLAUNCHERICON_H
+#include "Decaymulator.h"
 
-#include "SimpleLauncherIcon.h"
-
-namespace unity
+namespace unity {
+namespace ui {
+  
+Decaymulator::Decaymulator()
 {
-namespace launcher
+  on_decay_handle = 0;
+  value.changed.connect(sigc::mem_fun(this, &Decaymulator::OnValueChanged));
+}
+
+void Decaymulator::OnValueChanged(int value)
 {
-
-class DesktopLauncherIcon : public SimpleLauncherIcon
-{
-
-public:
-  DesktopLauncherIcon();
-  ~DesktopLauncherIcon();
-
-  virtual nux::Color BackgroundColor();
-  virtual nux::Color GlowColor();
-
-  void SetShowInSwitcher(bool show_in_switcher)
+  if (!on_decay_handle && value > 0)
   {
-    show_in_switcher_ = show_in_switcher;
+    on_decay_handle = g_timeout_add(10, &Decaymulator::OnDecayTimeout, this);
+  }
+}
+
+gboolean Decaymulator::OnDecayTimeout(gpointer data)
+{
+  Decaymulator* self = (Decaymulator*) data;
+
+  int partial_decay = self->rate_of_decay / 100;
+
+  if (self->value <= partial_decay)
+  {
+    self->value = 0;
+    self->on_decay_handle = 0;
+    return FALSE;
   }
 
-  bool ShowInSwitcher(bool current)
-  {
-    return show_in_switcher_;
-  }
 
-protected:
-  void ActivateLauncherIcon(ActionArg arg);
-
-private:
-  bool show_in_switcher_;
-};
+  self->value = self->value - partial_decay;
+  return TRUE;
+}
 
 }
 }
-
-#endif // DESKTOPLAUNCHERICON_H

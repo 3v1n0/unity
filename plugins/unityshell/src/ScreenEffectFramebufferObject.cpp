@@ -33,7 +33,7 @@ void unity::ScreenEffectFramebufferObject::paint (const nux::Geometry &output)
   /* Draw the bit of the relevant framebuffer for each output */
 
   glPushAttrib (GL_VIEWPORT_BIT);
-  glViewport (0, mScreenSize.height - (output.y + output.height), mScreenSize.width, mScreenSize.height);
+  glViewport (0, 0, mScreenSize.width, mScreenSize.height);
 
   if (mFBTexture)
   {

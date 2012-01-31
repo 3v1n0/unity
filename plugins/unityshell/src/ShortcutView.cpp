@@ -42,18 +42,13 @@ namespace
 
 NUX_IMPLEMENT_OBJECT_TYPE(View);
 
-View::View(NUX_FILE_LINE_DECL)
-  : nux::View(NUX_FILE_LINE_PARAM)
+View::View()
+  : ui::UnityWindowView()
 {
   layout_ = new nux::VLayout();
   layout_->SetPadding(50, 38);
   layout_->SetSpaceBetweenChildren(20);
   SetLayout(layout_);
-
-  background_top_ = nux::CreateTexture2DFromFile(PKGDATADIR"/switcher_top.png", -1, true);
-  background_left_ = nux::CreateTexture2DFromFile(PKGDATADIR"/switcher_left.png", -1, true);
-  background_corner_ = nux::CreateTexture2DFromFile(PKGDATADIR"/switcher_corner.png", -1, true);
-  rounding_texture_ = nux::CreateTexture2DFromFile(PKGDATADIR"/switcher_round_rect.png", -1, true);
 
   std::string header = "<b>";
   header += _("Keyboard Shortcuts");
@@ -77,23 +72,10 @@ View::View(NUX_FILE_LINE_DECL)
   // Column 2...
   columns_.push_back(new nux::VLayout());
   columns_layout_->AddLayout(columns_[1], 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
-  
-  bg_effect_helper_.owner = this;
 }
 
 View::~View()
 {
-  if (background_top_ != NULL)
-    background_top_->UnReference();
-  
-  if (background_left_ != NULL)  
-    background_left_->UnReference();
-  
-  if (background_corner_ != NULL)
-    background_corner_->UnReference();
-  
-  if (rounding_texture_ != NULL)
-    rounding_texture_->UnReference();
 }
 
 void View::SetModel(Model::Ptr model)
@@ -107,11 +89,6 @@ void View::SetModel(Model::Ptr model)
 Model::Ptr View::GetModel()
 {
   return model_;
-}
-
-void View::SetupBackground(bool enabled)
-{
-  bg_effect_helper_.enabled = enabled;
 }
 
 nux::LinearLayout* View::CreateSectionLayout(const char* section_name)
@@ -197,19 +174,9 @@ nux::LinearLayout* View::CreateIntermediateLayout()
   return layout;
 }
 
-void View::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
+nux::Geometry View::GetBackgroundGeometry()
 {
-  return;
-}
-
-void View::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
-{  
   nux::Geometry base = GetGeometry();
-  GfxContext.PushClippingRectangle(base);
-
-  // clear region
-  gPainter.PaintBackground(GfxContext, base);
-
   nux::Geometry background_geo;
   
   background_geo.width = base.width;
@@ -217,165 +184,12 @@ void View::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   background_geo.x = (base.width - background_geo.width)/2;
   background_geo.y = (base.height - background_geo.height)/2;
 
-  // magic constant comes from texture contents (distance to cleared area)
-  const int internal_offset = 20;
-  nux::Geometry internal_clip(background_geo.x + internal_offset, 
-                              background_geo.y + internal_offset, 
-                              background_geo.width - internal_offset * 2, 
-                              background_geo.height - internal_offset * 2);
-  GfxContext.PushClippingRectangle(internal_clip);
-
-  nux::Geometry geo_absolute = GetAbsoluteGeometry();
-  if (BackgroundEffectHelper::blur_type != BLUR_NONE)
-  {
-    nux::Geometry blur_geo(geo_absolute.x, geo_absolute.y, base.width, base.height);
-    auto blur_texture = bg_effect_helper_.GetBlurRegion(blur_geo);
-
-    if (blur_texture.IsValid())
-    {
-      nux::TexCoordXForm texxform_blur_bg;
-      texxform_blur_bg.flip_v_coord = true;
-      texxform_blur_bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-      texxform_blur_bg.uoffset = ((float) base.x) / geo_absolute.width;
-      texxform_blur_bg.voffset = ((float) base.y) / geo_absolute.height;
-
-      nux::ROPConfig rop;
-      rop.Blend = false;
-      rop.SrcBlend = GL_ONE;
-      rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
-
-      gPainter.PushDrawTextureLayer(GfxContext, base,
-                                    blur_texture,
-                                    texxform_blur_bg,
-                                    nux::color::White,
-                                    true,
-                                    rop);
-    }
-  }
-
-  nux::ROPConfig rop;
-  rop.Blend = true;
-  rop.SrcBlend = GL_ONE;
-  rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
-  gPainter.PushDrawColorLayer(GfxContext, internal_clip, background_color, false, rop);
-
-  // Make round corners
-  rop.Blend = true;
-  rop.SrcBlend = GL_ZERO;
-  rop.DstBlend = GL_SRC_ALPHA;
-  gPainter.PaintShapeCornerROP(GfxContext,
-                               internal_clip,
-                               nux::color::White,
-                               nux::eSHAPE_CORNER_ROUND4,
-                               nux::eCornerTopLeft | nux::eCornerTopRight |
-                               nux::eCornerBottomLeft | nux::eCornerBottomRight,
-                               true,
-                               rop);
-
-  GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
-
-  GfxContext.PopClippingRectangle();
-  GfxContext.PopClippingRectangle();
-
-  DrawBackground(GfxContext, background_geo);
-
-
-  layout_->ProcessDraw(GfxContext, force_draw);
+  return background_geo;
 }
 
-
-void View::DrawBackground(nux::GraphicsEngine& GfxContext, nux::Geometry const& geo)
-{
-  int border = 30;
-
-  GfxContext.GetRenderStates().SetBlend(TRUE, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-
-  nux::TexCoordXForm texxform;
-  texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-  texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
-
-  // Draw TOP-LEFT CORNER
-  texxform.u0 = 0;
-  texxform.v0 = 0;
-  texxform.u1 = border;
-  texxform.v1 = border;
-  GfxContext.QRP_1Tex(geo.x, geo.y, 
-                      border, border, background_corner_->GetDeviceTexture(), texxform, nux::color::White);
-  
-  // Draw TOP-RIGHT CORNER
-  texxform.u0 = 0;
-  texxform.v0 = 0;
-  texxform.u1 = border;
-  texxform.v1 = border;
-  texxform.flip_u_coord = true;
-  texxform.flip_v_coord = false;
-  GfxContext.QRP_1Tex(geo.x + geo.width - border, geo.y, 
-                      border, border, background_corner_->GetDeviceTexture(), texxform, nux::color::White);
-  
-  // Draw BOTTOM-LEFT CORNER
-  texxform.u0 = 0;
-  texxform.v0 = 0;
-  texxform.u1 = border;
-  texxform.v1 = border;
-  texxform.flip_u_coord = false;
-  texxform.flip_v_coord = true;
-  GfxContext.QRP_1Tex(geo.x, geo.y + geo.height - border, 
-                      border, border, background_corner_->GetDeviceTexture(), texxform, nux::color::White);
-  
-  // Draw BOTTOM-RIGHT CORNER
-  texxform.u0 = 0;
-  texxform.v0 = 0;
-  texxform.u1 = border;
-  texxform.v1 = border;
-  texxform.flip_u_coord = true;
-  texxform.flip_v_coord = true;
-  GfxContext.QRP_1Tex(geo.x + geo.width - border, geo.y + geo.height - border, 
-                      border, border, background_corner_->GetDeviceTexture(), texxform, nux::color::White);
-  
-  int top_width = background_top_->GetWidth();
-  int top_height = background_top_->GetHeight();
-
-  // Draw TOP BORDER
-  texxform.u0 = 0;
-  texxform.v0 = 0;
-  texxform.u1 = top_width;
-  texxform.v1 = top_height;
-  texxform.flip_u_coord = false;
-  texxform.flip_v_coord = false;
-  GfxContext.QRP_1Tex(geo.x + border, geo.y, geo.width - border - border, border, background_top_->GetDeviceTexture(), texxform, nux::color::White);
-  
-  // Draw BOTTOM BORDER
-  texxform.u0 = 0;
-  texxform.v0 = 0;
-  texxform.u1 = top_width;
-  texxform.v1 = top_height;
-  texxform.flip_u_coord = false;
-  texxform.flip_v_coord = true;
-  GfxContext.QRP_1Tex(geo.x + border, geo.y + geo.height - border, geo.width - border - border, border, background_top_->GetDeviceTexture(), texxform, nux::color::White);
-  
-
-  int left_width = background_left_->GetWidth();
-  int left_height = background_left_->GetHeight();
-
-  // Draw LEFT BORDER
-  texxform.u0 = 0;
-  texxform.v0 = 0;
-  texxform.u1 = left_width;
-  texxform.v1 = left_height;
-  texxform.flip_u_coord = false;
-  texxform.flip_v_coord = false;
-  GfxContext.QRP_1Tex(geo.x, geo.y + border, border, geo.height - border - border, background_left_->GetDeviceTexture(), texxform, nux::color::White);
-  
-  // Draw RIGHT BORDER
-  texxform.u0 = 0;
-  texxform.v0 = 0;
-  texxform.u1 = left_width;
-  texxform.v1 = left_height;
-  texxform.flip_u_coord = true;
-  texxform.flip_v_coord = false;
-  GfxContext.QRP_1Tex(geo.x + geo.width - border, geo.y + border, border, geo.height - border - border, background_left_->GetDeviceTexture(), texxform, nux::color::White);
-
-  GfxContext.GetRenderStates().SetBlend(FALSE);
+void View::DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw, nux::Geometry clip)
+{  
+  layout_->ProcessDraw(GfxContext, force_draw);
 }
 
 void View::RenderColumns()
