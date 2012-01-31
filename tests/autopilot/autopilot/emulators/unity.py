@@ -64,11 +64,14 @@ class Launcher(Unity):
         self.hide_timeout = 1
         self.grabbed = False
 
+        state = self.__get_state(0)
+        self.icon_width = int(state['icon-size'])
+
     def move_mouse_to_right_of_launcher(self, monitor):
         (x, y, w, h) = self.launcher_geometry(monitor)
         self._mouse.move(x + w + 10, y + h / 2, False)
         sleep(self.show_timeout)
-    
+
     def move_mouse_over_launcher(self, monitor):
         (x, y, w, h) = self.launcher_geometry(monitor)
         self._screen.move_mouse_to_monitor(monitor);
@@ -82,7 +85,7 @@ class Launcher(Unity):
     def keyboard_reveal_launcher(self):
         self._keyboard.press('Super')
         sleep(1)
-    
+
     def keyboard_unreveal_launcher(self):
         self._keyboard.release('Super')
         sleep(1)
@@ -169,6 +172,18 @@ class Launcher(Unity):
     def __get_state(self, monitor):
         # get the state for the 'launcher' piece
         return super(Launcher, self).get_state('/Unity/LauncherController/Launcher[monitor=%s]' % (monitor))[0]
+
+    def get_launcher_icons(self):
+        """Get a list of launcher icons in this launcher."""
+        icons = self.get_state("//Launcher/LauncherIcon")
+        return [LauncherIcon(icon_dict) for icon_dict in icons]
+
+    def click_launcher_icon(self, icon, monitor=0, button=1):
+        """Move the mouse over the launcher icon, and click it."""
+        self.reveal_launcher(monitor)
+        self._mouse.move(icon.x, icon.y + (self.icon_width / 2))
+        self._mouse.click(button)
+        self.move_mouse_to_right_of_launcher(monitor)
 
 class LauncherIcon:
     """Holds information about a launcher icon.

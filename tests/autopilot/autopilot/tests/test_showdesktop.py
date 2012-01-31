@@ -106,7 +106,7 @@ class ShowDesktopTests(AutopilotTestCase):
         sleep(1)
         for win in self.bamf.get_open_windows():
             if win.is_valid:
-                self.assertFalse(win.is_hidden, "Window '%s' is shown after show desktop deactivated." % (win.title))
+                self.assertFalse(win.is_hidden, "Window '%s' is not shown after show desktop deactivated." % (win.title))
 
     def test_showdesktop_switcher(self):
         """Show desktop item in switcher should hide all hidden apps."""
