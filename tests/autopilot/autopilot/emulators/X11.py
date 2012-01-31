@@ -271,10 +271,11 @@ class Mouse(object):
         x, y = coord["root_x"], coord["root_y"]
         return x, y
 
-    def reset(self):
-        self.move(16, 13, animate=False)
-        self.click()
-        self.move(800, 500, animate=False)
+    @staticmethod
+    def cleanup():
+        """Put mouse in a known safe state."""
+        sg = ScreenGeometry()
+        sg.move_mouse_to_monitor(0)
 
 
 class ScreenGeometry:
