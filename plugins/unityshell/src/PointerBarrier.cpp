@@ -125,16 +125,6 @@ bool PointerBarrierWrapper::HandleEvent(XEvent xevent)
 
     if (notify_event->barrier == barrier && notify_event->subtype == XFixesBarrierHitNotify)
     {
-      if (notify_event->event_id != last_event_)
-      {
-        EmitCurrentData();
-        if (smoothing_handle_)
-        {
-          g_source_remove(smoothing_handle_);
-          smoothing_handle_ = 0;
-        }
-      }
-
       last_x_ = notify_event->x;
       last_y_ = notify_event->y;
       last_event_ = notify_event->event_id;
