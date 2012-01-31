@@ -44,6 +44,7 @@ PointerBarrierWrapper::PointerBarrierWrapper()
   smoothing = 75;
   smoothing_count_ = 0;
   smoothing_accum_ = 0;
+  smoothing_handle_ = 0;
 }
 
 void PointerBarrierWrapper::ConstructBarrier()
