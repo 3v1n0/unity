@@ -123,7 +123,7 @@ class ShowDesktopTests(AutopilotTestCase):
             if current_icon.tooltip_text == 'Show Desktop':
                 found = True
                 break
-            switcher.next_icon()
+            switcher.previous_icon()
             sleep(0.5)
         self.assertTrue(found, "Could not find 'Show Desktop' entry in switcher.")
         switcher.terminate()
