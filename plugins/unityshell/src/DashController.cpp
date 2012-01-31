@@ -119,9 +119,10 @@ void Controller::RegisterUBusInterests()
   ubus_manager_.RegisterInterest(UBUS_DASH_ABOUT_TO_SHOW,
                                  [&] (GVariant*) { EnsureDash(); });
   ubus_manager_.RegisterInterest(UBUS_OVERLAY_SHOWN, [&] (GVariant *data) {
-    gchar* overlay_identity = NULL;
+    unity::glib::String overlay_identity;
     gboolean can_maximise = FALSE;
-    g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING, &overlay_identity, &can_maximise);
+    gint32 overlay_monitor = 0;
+    g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING, &overlay_identity, &can_maximise, &overlay_monitor);
     
     // hide if something else is coming up
     if (g_strcmp0(overlay_identity, "dash"))
@@ -162,7 +163,7 @@ void Controller::OnWindowConfigure(int window_width, int window_height,
 nux::Geometry Controller::GetIdealWindowGeometry()
 {
   UScreen *uscreen = UScreen::GetDefault();
-  int primary_monitor = uscreen->GetPrimaryMonitor();
+  int primary_monitor = uscreen->GetMonitorWithMouse();
   auto monitor_geo = uscreen->GetMonitorGeometry(primary_monitor);
 
   // We want to cover as much of the screen as possible to grab any mouse events outside
@@ -180,6 +181,7 @@ void Controller::Relayout(GdkScreen*screen)
   nux::Geometry geo = GetIdealWindowGeometry();
   window_->SetGeometry(geo);
   view_->Relayout();
+  view_->SetMonitorOffset(launcher_width, panel_height);
 }
 
 void Controller::OnMouseDownOutsideWindow(int x, int y,
@@ -253,7 +255,7 @@ void Controller::ShowDash()
 
   StartShowHideTimeline();
 
-  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "dash", TRUE);
+  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "dash", TRUE, UScreen::GetDefault()->GetMonitorWithMouse());
   ubus_manager_.SendMessage(UBUS_OVERLAY_SHOWN, info);
 }
 
@@ -275,7 +277,7 @@ void Controller::HideDash(bool restore)
 
   StartShowHideTimeline();
   
-  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "dash", TRUE);
+  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "dash", TRUE, g_variant_new_int32(UScreen::GetDefault()->GetMonitorWithMouse()));
   ubus_manager_.SendMessage(UBUS_OVERLAY_HIDDEN, info);
 }
 

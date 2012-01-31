@@ -182,7 +182,13 @@ void PanelView::OnDashHidden(GVariant* data, PanelView* self)
 
 void PanelView::OnDashShown(GVariant* data, PanelView* self)
 {
-  if (self->_is_primary)
+  unity::glib::String overlay_identity;
+  gboolean can_maximise = FALSE;
+  gint32 overlay_monitor = 0;
+  g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING, 
+                &overlay_identity, &can_maximise, &overlay_monitor);
+
+  if (self->_monitor == overlay_monitor)
   {
     self->bg_effect_helper_.enabled = true;
     self->_dash_is_open = true;
@@ -203,11 +209,6 @@ void PanelView::AddPanelView(PanelIndicatorsView* child,
 std::string PanelView::GetName() const
 {
   return "UnityPanel";
-}
-
-std::string PanelView::GetChildsName() const
-{
-  return "indicators";
 }
 
 void PanelView::AddProperties(GVariantBuilder* builder)

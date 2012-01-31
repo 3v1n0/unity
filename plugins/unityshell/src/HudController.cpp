@@ -53,9 +53,10 @@ Controller::Controller()
   ubus.RegisterInterest(UBUS_PLACE_VIEW_CLOSE_REQUEST, sigc::mem_fun(this, &Controller::OnExternalHideHud));
 
   ubus.RegisterInterest(UBUS_OVERLAY_SHOWN, [&] (GVariant *data) {
-    gchar* overlay_identity = NULL;
+    unity::glib::String overlay_identity;
     gboolean can_maximise = FALSE;
-    g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING, &overlay_identity, &can_maximise);
+    gint32 overlay_monitor = 0;
+    g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING, &overlay_identity, &can_maximise, &overlay_monitor);
 
     if (g_strcmp0(overlay_identity, "hud"))
     {
@@ -240,7 +241,7 @@ void Controller::ShowHud()
   GVariant* message_data = g_variant_new("(b)", TRUE);
   ubus.SendMessage(UBUS_LAUNCHER_LOCK_HIDE, message_data);
 
-  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "hud", FALSE);
+  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "hud", FALSE, 0);
   ubus.SendMessage(UBUS_OVERLAY_SHOWN, info);
 }
 void Controller::HideHud(bool restore)
@@ -267,7 +268,7 @@ void Controller::HideHud(bool restore)
   GVariant* message_data = g_variant_new("(b)", FALSE);
   ubus.SendMessage(UBUS_LAUNCHER_LOCK_HIDE, message_data);
   
-  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "hud", FALSE);
+  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "hud", FALSE, 0);
   ubus.SendMessage(UBUS_OVERLAY_HIDDEN, info);
 }
 

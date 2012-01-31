@@ -32,8 +32,8 @@ namespace launcher
   
 UBusManager BFBLauncherIcon::ubus_manager_;
 
-BFBLauncherIcon::BFBLauncherIcon(Launcher* IconManager)
- : SimpleLauncherIcon(IconManager)
+BFBLauncherIcon::BFBLauncherIcon()
+ : SimpleLauncherIcon()
 {
   tooltip_text = _("Dash home");
   icon_name = PKGDATADIR"/launcher_bfb.png";
@@ -43,7 +43,7 @@ BFBLauncherIcon::BFBLauncherIcon(Launcher* IconManager)
   
   background_color_ = nux::color::White;
   
-  mouse_enter.connect([&]() { ubus_manager_.SendMessage(UBUS_DASH_ABOUT_TO_SHOW, NULL); });
+  mouse_enter.connect([&](int m) { ubus_manager_.SendMessage(UBUS_DASH_ABOUT_TO_SHOW, NULL); });
 }
 
 nux::Color BFBLauncherIcon::BackgroundColor()

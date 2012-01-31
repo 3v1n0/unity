@@ -41,6 +41,7 @@ class RenderArg
 public:
   RenderArg()
     : icon(0)
+    , colorify(nux::color::White)
     , x_rotation(0)
     , y_rotation(0)
     , z_rotation(0)
@@ -70,6 +71,7 @@ public:
   launcher::AbstractLauncherIcon* icon;
   nux::Point3   render_center;
   nux::Point3   logical_center;
+  nux::Color    colorify;
   float         x_rotation;
   float         y_rotation;
   float         z_rotation;
@@ -103,6 +105,7 @@ public:
   virtual ~AbstractIconRenderer() {}
 
   nux::Property<PipRenderStyle> pip_style;
+  nux::Property<int> monitor;
 
   // RenderArgs not const in case processor needs to modify positions to do a perspective correct.
   virtual void PreprocessIcons(std::list<RenderArg>& args, nux::Geometry const& target_window) = 0;

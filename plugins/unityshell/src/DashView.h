@@ -56,6 +56,7 @@ public:
   void Relayout();
   void DisableBlur();
   void OnActivateRequest(GVariant* args);
+  void SetMonitorOffset(int x, int y);
 
   std::string const GetIdForShortcutActivation(std::string const& shortcut) const;
   std::vector<char> GetAllShortcuts();
