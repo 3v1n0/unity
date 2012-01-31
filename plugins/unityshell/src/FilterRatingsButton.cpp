@@ -36,6 +36,7 @@ FilterRatingsButton::FilterRatingsButton(NUX_FILE_LINE_DECL)
   : nux::ToggleButton(NUX_FILE_LINE_PARAM)
 {
   InitTheme();
+  SetAcceptKeyNavFocusOnMouseDown(false);
 
   mouse_up.connect(sigc::mem_fun(this, &FilterRatingsButton::RecvMouseUp));
   mouse_drag.connect(sigc::mem_fun(this, &FilterRatingsButton::RecvMouseDrag));
