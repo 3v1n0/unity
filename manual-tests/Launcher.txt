@@ -1,3 +1,6 @@
+Note, for simplification, one pip is defined as a single filled in arrow to the 
+      left of a launcher.
+
 Test Launcher Icon with Windows in multiple workspaces
 ------------------------------------------------------
 This test shows how the launcher should draw when there are application windows
