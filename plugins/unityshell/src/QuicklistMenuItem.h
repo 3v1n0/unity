@@ -135,10 +135,8 @@ protected:
 
   bool _prelight;   //!< True when the mouse is over the item.
 
-  void DrawText(cairo_t*   cr,
-                int        width,
-                int        height,
-                nux::Color color);
+  void DrawText(nux::CairoGraphics *cairo, int width, int height, nux::Color color);
+  void DrawPrelight(nux::CairoGraphics *cairo, int width, int height, nux::Color color);
 
   // Introspection
   std::string _name;
