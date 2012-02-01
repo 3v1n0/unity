@@ -131,6 +131,7 @@ if (GTEST_FOUND AND
                  test_glib_variant.cpp
                  ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_marshal.cpp
                  test_indicator.cpp
+                 test_indicator_appmenu.cpp
                  test_indicator_entry.cpp
                  test_favorite_store_gsettings.cpp
                  test_favorite_store_private.cpp
