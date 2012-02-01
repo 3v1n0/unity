@@ -249,6 +249,8 @@ Controller::Impl::Impl(Display* display, Controller* parent)
       parent_->KeyNavGrab();
       model_->SetSelection(reactivate_index);
   });
+
+  parent_->AddChild(model_.get());
 }
 
 Controller::Impl::~Impl()

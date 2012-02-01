@@ -36,6 +36,11 @@ Introspectable::~Introspectable()
     child->_parents.remove(this);
 }
 
+Introspectable::IntrospectableList const& Introspectable::GetIntrospectableChildren()
+{
+  return _children;
+}
+
 GVariant*
 Introspectable::Introspect()
 {
@@ -49,7 +54,8 @@ Introspectable::Introspect()
 
   g_variant_builder_init(&child_builder, G_VARIANT_TYPE("a(sv)"));
 
-  for (auto it = _children.begin(); it != _children.end(); it++)
+  auto children = GetIntrospectableChildren();
+  for (auto it = children.begin(); it != children.end(); it++)
   {
     if ((*it)->GetName() != "")
     {
@@ -59,7 +65,7 @@ Introspectable::Introspect()
   }
 
   GVariant* child_results = g_variant_builder_end(&child_builder);
-  
+
   if (n_children > 0)
     g_variant_builder_add(&builder, "{sv}", GetChildsName().c_str(), child_results);
   return g_variant_builder_end(&builder);
