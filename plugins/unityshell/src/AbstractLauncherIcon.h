@@ -34,6 +34,7 @@
 #include "DndData.h"
 #include "Introspectable.h"
 #include "LauncherEntryRemote.h"
+#include "IconTextureSource.h"
 
 namespace unity
 {
@@ -72,7 +73,7 @@ public:
   int monitor;
 };
 
-class AbstractLauncherIcon : public nux::InitiallyUnownedObject, public debug::Introspectable
+class AbstractLauncherIcon : public ui::IconTextureSource, public debug::Introspectable
 {
 public:
 
@@ -113,15 +114,6 @@ public:
     QUIRK_LAST,
   } Quirk;
 
-  enum TransformIndex
-  {
-    TRANSFORM_TILE,
-    TRANSFORM_IMAGE,
-    TRANSFORM_HIT_AREA,
-    TRANSFORM_GLOW,
-    TRANSFORM_EMBLEM,
-  };
-
   virtual ~AbstractLauncherIcon() {}
 
   nux::Property<std::string> tooltip_text;
@@ -143,8 +135,6 @@ public:
   virtual nux::Point3 GetSavedCenter(int monitor) = 0;
 
   virtual void SaveCenter() = 0;
-
-  virtual std::vector<nux::Vector4> & GetTransform(TransformIndex index, int monitor) = 0;
 
   virtual void Activate(ActionArg arg) = 0;
 
@@ -180,15 +170,7 @@ public:
 
   virtual IconType Type() = 0;
 
-  virtual nux::Color BackgroundColor() = 0;
-
-  virtual nux::Color GlowColor() = 0;
-
   virtual const gchar* RemoteUri() = 0;
-
-  virtual nux::BaseTexture* TextureForSize(int size) = 0;
-
-  virtual nux::BaseTexture* Emblem() = 0;
 
   virtual std::list<DbusmenuMenuitem*> Menus() = 0;
 

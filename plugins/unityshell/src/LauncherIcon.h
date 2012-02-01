@@ -186,8 +186,6 @@ public:
 
   void SetIconType(IconType type);
 
-  std::vector<nux::Vector4> & GetTransform(TransformIndex index, int monitor);
-
 protected:
   std::vector<nux::Point3> GetCenters();
 
@@ -325,8 +323,6 @@ private:
   struct timespec  _quirk_times[QUIRK_LAST];
 
   std::list<LauncherEntryRemote*> _entry_list;
-  std::vector<std::map<TransformIndex, std::vector<nux::Vector4> > > transform_map;
-  
 };
 
 }

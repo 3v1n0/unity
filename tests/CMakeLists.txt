@@ -139,6 +139,8 @@ if (GTEST_FOUND AND
                  ${UNITY_SRC}/FavoriteStore.h
                  ${UNITY_SRC}/FavoriteStoreGSettings.cpp
                  ${UNITY_SRC}/FavoriteStoreGSettings.h
+                 ${UNITY_SRC}/IconTextureSource.h
+                 ${UNITY_SRC}/IconTextureSource.cpp
                  ${UNITY_SRC}/LauncherModel.cpp
                  ${UNITY_SRC}/LauncherModel.h
                  ${UNITY_SRC}/FavoriteStorePrivate.cpp
