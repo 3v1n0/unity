@@ -78,7 +78,6 @@ public:
   AbstractLauncherIcon* GetSelectedMenuIcon() const;
 
   void SetIconSize(int tile_size, int icon_size);
-  void SetBackgroundAlpha(float background_alpha);
 
   LauncherHideMachine* HideMachine() { return _hide_machine; }
 
