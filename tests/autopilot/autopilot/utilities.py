@@ -17,14 +17,20 @@ from Xlib import X, display, protocol
 _display = display.Display()
 
 
-def make_window_skip_taskbar(window):
+def make_window_skip_taskbar(window, set_flag=True):
     """Set the skip-taskbar kint on an X11 window.
 
     'window' should be an Xlib window object.
+    set_flag should be 'True' to set the flag, 'False' to clear it.
 
     """
     state = _display.get_atom('_NET_WM_STATE_SKIP_TASKBAR', 1)
-    _setProperty('_NET_WM_STATE',[1, state, 0, 1], window)
+    action = int(set_flag)
+    if action == 0:
+        print "Clearing flag"
+    elif action == 1:
+        print "Setting flag"
+    _setProperty('_NET_WM_STATE',[action, state, 0, 1], window)
     _display.sync()
 
 
