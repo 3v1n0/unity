@@ -1494,12 +1494,8 @@ bool UnityScreen::showLauncherKeyTerminate(CompAction* action,
   if (state & CompAction::StateCancel)
     return false;
 
-  bool accept_state = (state & CompAction::StateCancel) == 0;
-
   super_keypressed_ = false;
-  launcher_controller_->KeyNavTerminate(accept_state);
   launcher_controller_->HandleLauncherKeyRelease();
-  EnableCancelAction(false);
 
   shortcut_controller_->SetEnabled(enable_shortcut_overlay_);
   shortcut_controller_->Hide();
