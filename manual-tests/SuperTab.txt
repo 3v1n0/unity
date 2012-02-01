@@ -44,6 +44,7 @@ Outcome:
   Super+Tab switcher is initialized and the shortcut hint overlay is not shown
   even keeping only super pressed until releasing it and pressing it again.
 
+
 Super Tab switcher interaction with Launcher Icon shortcuts overlays
 --------------------------------------------------------------------
 This test shows the interaction between the launcher icons shortcuts overlays
@@ -100,4 +101,20 @@ This test shows how to escape from the Super+Tab switcher.
 
 Outcome:
   The Super Tab launcher switcher should terminate without performing any action
+  The previously selected launcher item should be deselected.
+
+
+Unity shortcuts during Super Tab switcher
+-----------------------------------------
+This test shows the interaction between the unity shortcuts and the Super+Tab
+switcher
+
+#. Start with a clean screen
+#. Press Super+Tab one or more times to make the launcher switcher to initialize
+#. Press a valid unity shortcut key (such as "1" to activate the first launcher
+   item or "s" to open the Expo)
+
+Outcome:
+  The Super Tab launcher switcher should terminate, and the requested action must
+  be performed.
   The previously selected launcher item should be deselected.
