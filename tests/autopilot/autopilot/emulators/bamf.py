@@ -231,6 +231,11 @@ class BamfWindow:
         return self._xid
 
     @property
+    def x_win(self):
+        """Get the X11 window object of the underlying window."""
+        return self._x_win
+
+    @property
     def title(self):
         """Get the window title.
 

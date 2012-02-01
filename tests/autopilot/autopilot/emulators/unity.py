@@ -285,6 +285,14 @@ class Switcher(Unity):
     def get_is_visible(self):
         return bool(self.__get_controller()['visible'])
 
+    def get_switcher_icons(self):
+        """Get all icons in the switcher model.
+
+        The switcher needs to be initiated in order to get the model.
+
+        """
+        return [LauncherIcon(i) for i in self.get_state('//SwitcherModel/LauncherIcon')]
+
     def __get_model(self):
         return self.get_state('/Unity/SwitcherController/SwitcherModel')[0]
 

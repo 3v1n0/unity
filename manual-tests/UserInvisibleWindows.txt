@@ -1,15 +1,3 @@
-Management of user-invisible windows
-------------------------------------
-This test shows how unity should manage the user-invisible windows (i.e the
-windows with the skip-taskbar flag on).
-
-#. Start on a clean screen
-#. Open a window of an unsticky application with the skip-taskbar flag set to ON
-
-Outcome
-  Unity should ignore it, not showing it both on the launcher and on the Alt+Tab.
-
-
 Pinned Application user-invisible window
 ----------------------------------------
 This test shows how unity should manage the user-invisible windows (i.e the
