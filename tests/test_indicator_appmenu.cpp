@@ -39,7 +39,7 @@ TEST(TestAppmenuIndicator, Construction)
   EXPECT_FALSE(indicator.IsIntegrated());
 }
 
-TEST(TestAppmenuIndicator, SettinChanged)
+TEST(TestAppmenuIndicator, IntegratedValue)
 {
   g_setenv("GSETTINGS_BACKEND", "memory", true);
 
@@ -71,6 +71,31 @@ TEST(TestAppmenuIndicator, SettinChanged)
   EXPECT_TRUE(integrated_changed);
   EXPECT_FALSE(integrated_value);
   EXPECT_FALSE(indicator.IsIntegrated());
+}
+
+TEST(TestAppmenuIndicator, ShowAppmenu)
+{
+  g_setenv("GSETTINGS_BACKEND", "memory", true);
+
+  AppmenuIndicator indicator("indicator-appmenu");
+
+  int show_x, show_y;
+  unsigned int show_xid, show_timestamp;
+
+  // Connecting to signals
+  indicator.on_show_appmenu.connect([&] (unsigned int xid, int x, int y,
+                                         unsigned int timestamp) {
+    show_xid = xid;
+    show_x = x;
+    show_y = y;
+    show_timestamp = timestamp;
+  });
+
+  indicator.ShowAppmenu(123456789, 50, 100, 1328063758);
+  EXPECT_EQ(show_xid, 123456789);
+  EXPECT_EQ(show_x, 50);
+  EXPECT_EQ(show_y, 100);
+  EXPECT_EQ(show_timestamp, 1328063758);
 }
 
 }
