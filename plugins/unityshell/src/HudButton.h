@@ -49,7 +49,7 @@ public:
 
   nux::Property<std::string> label;
   nux::Property<std::string> hint;
-
+  nux::Property<bool> is_rounded;
 protected:
 
   virtual bool AcceptKeyNavFocus();

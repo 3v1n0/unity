@@ -60,6 +60,7 @@ public:
   nux::Property<std::string> search_hint;
   nux::Property<bool> showing_filters;
   nux::Property<bool> can_refine_search;
+  nux::Property<bool> disable_glow;
   nux::ROProperty<bool> im_active;
 
   sigc::signal<void> activated;
@@ -79,7 +80,7 @@ private:
   void OnMouseButtonDown(int x, int y, unsigned long button_flags, unsigned long key_flags);
   void OnEndKeyFocus();
 
-  void UpdateBackground();
+  void UpdateBackground(bool force);
   void OnSearchChanged(nux::TextEntry* text_entry);
   void OnClearClicked(int x, int y, unsigned long button_flags, unsigned long key_flags);
   void OnEntryActivated();

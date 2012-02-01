@@ -47,6 +47,7 @@ namespace hud
 
 HudButton::HudButton (nux::TextureArea *image, NUX_FILE_LINE_DECL)
     : nux::Button (image, NUX_FILE_LINE_PARAM)
+    , is_rounded(false)
     , is_focused_(false)
 {
   InitTheme();
@@ -55,6 +56,7 @@ HudButton::HudButton (nux::TextureArea *image, NUX_FILE_LINE_DECL)
 
 HudButton::HudButton (const std::string label_, NUX_FILE_LINE_DECL)
     : nux::Button (NUX_FILE_LINE_PARAM)
+    , is_rounded(false)
     , is_focused_(false)
 {
   InitTheme();
@@ -62,6 +64,7 @@ HudButton::HudButton (const std::string label_, NUX_FILE_LINE_DECL)
 
 HudButton::HudButton (const std::string label_, nux::TextureArea *image, NUX_FILE_LINE_DECL)
     : nux::Button (image, NUX_FILE_LINE_PARAM)
+    , is_rounded(false)
     , is_focused_(false)
 {
   InitTheme();
@@ -69,6 +72,7 @@ HudButton::HudButton (const std::string label_, nux::TextureArea *image, NUX_FIL
 
 HudButton::HudButton (NUX_FILE_LINE_DECL)
     : nux::Button (NUX_FILE_LINE_PARAM)
+    , is_rounded(false)
     , is_focused_(false)
 {
   InitTheme();
@@ -79,6 +83,14 @@ HudButton::~HudButton() {
 
 void HudButton::InitTheme()
 {
+  is_rounded.changed.connect([&] (bool rounded)
+  {
+    nux::Geometry geo = GetGeometry();
+    prelight_->Invalidate(geo);
+    active_->Invalidate(geo);
+    normal_->Invalidate(geo);
+  });
+
   SetMinimumHeight(42);
   if (!active_)
   {
@@ -92,7 +104,9 @@ void HudButton::InitTheme()
 
 void HudButton::RedrawTheme(nux::Geometry const& geom, cairo_t* cr, nux::ButtonVisualState faked_state)
 {
-  dash::Style::Instance().Button(cr, faked_state, label_, dash::Alignment::LEFT);
+  dash::Style::Instance().SquareButton(cr, faked_state, label_, 
+                                           is_rounded, 17, 
+                                           dash::Alignment::LEFT, true);
 }
 
 bool HudButton::AcceptKeyNavFocus()

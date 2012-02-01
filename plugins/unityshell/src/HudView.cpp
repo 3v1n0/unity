@@ -150,7 +150,11 @@ void View::SetQueries(Hud::Queries queries)
     button->OnKeyNavFocusChange.connect([&](nux::Area *area){
       query_selected.emit(dynamic_cast<HudButton*>(area)->GetQuery());
     });
-    
+
+    if (query == --(queries.end()))
+    {
+      button->is_rounded = true;
+    }
     found_items++;
   }
   
@@ -170,19 +174,9 @@ void View::SetIcon(std::string icon_name)
 // look tight
 nux::Geometry View::GetBestFitGeometry(nux::Geometry const& for_geo)
 {
+  int width, height = 0;
   dash::Style& style = dash::Style::Instance();
-  int width = 0, height = 0;
-  int tile_width = style.GetTileWidth();
-  int half = for_geo.width / 2;
-
-  while ((width += tile_width) + (19 * 2) < half)
-    ;
-
-  width = MAX(width, tile_width * 6);
-
-  width += 19 + 32;
-
-  width = 1024;
+  width = 949 + 72;
 
   height = search_bar_->GetGeometry().height;
   height += 6;
@@ -215,31 +209,33 @@ void View::SetWindowGeometry(nux::Geometry const& absolute_geo, nux::Geometry co
 void View::SetupViews()
 {
   layout_ = new nux::HLayout();
-  layout_->AddLayout(new nux::SpaceLayout(8,8,8,8), 0);
   
   icon_ = new Icon("", icon_size, true);
-  
   nux::Layout* icon_layout = new nux::VLayout();
-  icon_layout->SetVerticalExternalMargin(12);
+  icon_layout->SetVerticalExternalMargin(5);
   icon_layout->AddView(icon_.GetPointer(), 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
   layout_->AddLayout(icon_layout, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_MATCHCONTENT);
-
+  layout_->AddLayout(new nux::SpaceLayout(8,8,8,8), 0);
+  
   
   content_layout_ = new nux::VLayout();
   layout_->AddLayout(content_layout_.GetPointer(), 1, nux::MINOR_POSITION_TOP);
   SetLayout(layout_.GetPointer());
 
+  // add the top spacing 
+  content_layout_->AddLayout(new nux::SpaceLayout(9,9,9,9), 0);
+
   // add the search bar to the composite
   search_bar_ = new unity::SearchBar(940, true);
+  search_bar_->disable_glow = true;
   search_bar_->search_hint = default_text;
   search_bar_->search_changed.connect(sigc::mem_fun(this, &View::OnSearchChanged));
   AddChild(search_bar_.GetPointer());
   content_layout_->AddView(search_bar_.GetPointer(), 0, nux::MINOR_POSITION_LEFT);
-  
+ 
   button_views_ = new nux::VLayout();
-  button_views_->SetHorizontalExternalMargin(12);
   button_views_->SetMaximumWidth(940);
-  
+
   content_layout_->AddLayout(button_views_.GetPointer(), 1, nux::MINOR_POSITION_LEFT);
 }
 

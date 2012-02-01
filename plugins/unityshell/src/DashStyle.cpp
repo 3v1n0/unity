@@ -119,6 +119,7 @@ public:
   void Text(cairo_t* cr,
             nux::Color const& color,
             std::string const& label,
+            int font_size = -1,
             double horizMargin = 10.0,
             Alignment alignment = Alignment::CENTER);
 
@@ -1325,6 +1326,7 @@ void Style::Impl::GetTextExtents(int& width,
 void Style::Impl::Text(cairo_t*    cr,
                        nux::Color const&  color,
                        std::string const& label,
+                       int text_size,
                        double horizMargin,
                        Alignment alignment)
 {
@@ -1357,6 +1359,11 @@ void Style::Impl::Text(cairo_t*    cr,
     desc = pango_font_description_from_string("Sans 10");
   else
     desc = pango_font_description_from_string(fontName);
+
+  if (text_size > 0)
+  {
+    pango_font_description_set_absolute_size(desc, text_size * PANGO_SCALE);
+  }
 
   PangoWeight weight;
   switch (regular_text_weight_)
@@ -1531,7 +1538,9 @@ void Style::Impl::DrawOverlay(cairo_t*  cr,
   cairo_set_operator(cr, old);
 }
 
-bool Style::Button(cairo_t* cr, nux::ButtonVisualState state, std::string const& label, Alignment alignment)
+bool Style::Button(cairo_t* cr, nux::ButtonVisualState state, 
+                   std::string const& label, int font_size,
+                   Alignment alignment, bool zeromargin)
 {
   // sanity checks
   if (cairo_status(cr) != CAIRO_STATUS_SUCCESS)
@@ -1540,8 +1549,10 @@ bool Style::Button(cairo_t* cr, nux::ButtonVisualState state, std::string const&
   if (cairo_surface_get_type(cairo_get_target(cr)) != CAIRO_SURFACE_TYPE_IMAGE)
     return false;
 
-  unsigned int garnish = GetButtonGarnishSize();
-
+  unsigned int garnish = 0;
+  if (zeromargin == false)
+   garnish = GetButtonGarnishSize();
+  
   //ButtonOutlinePath(cr, true);
   double w = cairo_image_surface_get_width(cairo_get_target(cr));
   double h = cairo_image_surface_get_height(cairo_get_target(cr));
@@ -1583,6 +1594,123 @@ bool Style::Button(cairo_t* cr, nux::ButtonVisualState state, std::string const&
   pimpl->Text(cr,
               pimpl->button_label_text_color_[state],
               label,
+              font_size,
+              10.0,
+              alignment);
+
+  return true;
+}
+
+bool Style::SquareButton(cairo_t* cr, nux::ButtonVisualState state, 
+                         std::string const& label, bool curve_bottom,
+                         int font_size, Alignment alignment, 
+                         bool zeromargin)
+{
+  // sanity checks
+  if (cairo_status(cr) != CAIRO_STATUS_SUCCESS)
+    return false;
+
+  if (cairo_surface_get_type(cairo_get_target(cr)) != CAIRO_SURFACE_TYPE_IMAGE)
+    return false;
+
+  unsigned int garnish = 0;
+  if (zeromargin == false)
+    garnish = GetButtonGarnishSize();
+  
+  //ButtonOutlinePath(cr, true);
+  double w = cairo_image_surface_get_width(cairo_get_target(cr));
+  double h = cairo_image_surface_get_height(cairo_get_target(cr));
+
+  double x = garnish;
+  double y = garnish;
+
+  double width = w - (2.0 * garnish) - 1.0;
+  double height = h - (2.0 * garnish) - 1.0;
+
+  bool odd = true;
+  double radius = 7.0;
+
+  // draw the grid background
+  {
+    cairo_set_line_width(cr, 1);
+    cairo_move_to(cr, _align(x + width, odd), _align(y, odd));
+    if (curve_bottom)
+    {
+      // line to bottom-right corner
+      cairo_line_to(cr, _align(x + width, odd), _align(y + height - radius, odd));
+
+      // line to bottom-right, left of the corner
+      cairo_arc(cr,
+                _align(x + width - radius, odd),
+                _align(y + height - radius, odd),
+                radius,
+                0.0f * G_PI / 180.0f,
+                90.0f * G_PI / 180.0f);
+
+      // line to bottom-left, right of the corner
+      cairo_line_to(cr, _align(x + radius, odd), _align(y + height, odd));
+
+      // line to bottom-left, above the corner
+      cairo_arc(cr,
+                _align(x + radius, odd),
+                _align(y + height - radius, odd),
+                radius,
+                90.0f * G_PI / 180.0f,
+                180.0f * G_PI / 180.0f);
+ 
+      // line to top
+      cairo_line_to(cr, _align(x, odd), _align(y, odd));
+    }
+    else
+    {
+      cairo_line_to(cr, _align(width, odd), _align(height, odd));
+      cairo_line_to(cr, _align(x, odd), _align(height, odd));
+      cairo_line_to(cr, _align(x, odd), _align(y, odd));
+    }
+
+    cairo_set_source_rgba(cr, pimpl->button_label_border_color_[nux::ButtonVisualState::VISUAL_STATE_NORMAL]);
+    cairo_stroke(cr);
+  } 
+
+
+  cairo_set_line_width(cr, pimpl->button_label_border_size_[state]);
+  odd = cairo_get_line_width(cr) == 2.0 ? false : true;
+  
+  if (pimpl->button_label_border_size_[state] == 2.0)
+  {
+    x += 1.0;
+    y += 1.0;
+  
+    width -= 1.0;
+    height -= 1.0;
+  }
+
+  if (state == nux::ButtonVisualState::VISUAL_STATE_PRESSED)
+  {
+    RoundedRect(cr,
+                1.0,
+                _align(x, odd), _align(y, odd),
+                7.0,
+                _align(width, odd), _align(height, odd));
+
+    if (pimpl->button_label_fill_color_[state].alpha != 0.0)
+    {
+      cairo_set_source_rgba(cr, pimpl->button_label_fill_color_[state]);
+      cairo_fill_preserve(cr);
+    }
+    cairo_set_source_rgba(cr, pimpl->button_label_border_color_[state]);
+    cairo_stroke(cr);
+  }
+
+  pimpl->DrawOverlay(cr,
+                     pimpl->button_label_overlay_opacity_[state],
+                     pimpl->button_label_overlay_mode_[state],
+                     pimpl->button_label_blur_size_[state] * 0.75);
+
+  pimpl->Text(cr,
+              pimpl->button_label_text_color_[state],
+              label,
+              font_size,
               10.0,
               alignment);
 
