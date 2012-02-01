@@ -1552,7 +1552,7 @@ Launcher::UpdateOptions(Options::Ptr options)
 
   // make the effect half as strong as specified as other values shouldn't scale
   // as quickly as the max velocity multiplier
-  float responsiveness_mult = ((options->edge_responsiveness() - 1) * .3) + 1;
+  float responsiveness_mult = ((options->edge_responsiveness() - 1) * .025) + 1;
 
   decaymulator_->rate_of_decay = options->edge_decay_rate() * responsiveness_mult;
   _edge_overcome_pressure = options->edge_overcome_pressure() * responsiveness_mult;
