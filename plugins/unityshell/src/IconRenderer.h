@@ -24,13 +24,14 @@
 #include <Nux/BaseWindow.h>
 #include <Nux/View.h>
 
-#include "IconTextureSource.h"
 #include "AbstractIconRenderer.h"
 
 namespace unity
 {
 namespace ui
 {
+
+class IconTextureSource;
 
 class IconRenderer : public AbstractIconRenderer
 {
