@@ -45,6 +45,8 @@ FilterMultiRangeButton::FilterMultiRangeButton(NUX_FILE_LINE_DECL)
   , side_(MultiRangeSide::CENTER)
 {
   InitTheme();
+  SetAcceptKeyNavFocusOnMouseDown(false);
+   
   state_change.connect(sigc::mem_fun(this, &FilterMultiRangeButton::OnActivated));
 }
 

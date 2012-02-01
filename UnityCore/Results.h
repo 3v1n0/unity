@@ -36,6 +36,7 @@ public:
   typedef std::shared_ptr<Results> Ptr;
 
   Results();
+  Results(ModelType model_type);
 
   sigc::signal<void, Result const&> result_added;
   sigc::signal<void, Result const&> result_changed;

@@ -76,8 +76,6 @@ add_executable (dash
                 ${UNITY_SRC}/FontSettings.h
                 ${UNITY_SRC}/IMTextEntry.cpp
                 ${UNITY_SRC}/IMTextEntry.h
-                ${UNITY_SRC}/PlacesHomeView.cpp
-                ${UNITY_SRC}/PlacesHomeView.h
                 ${UNITY_SRC}/PlacesGroup.cpp
                 ${UNITY_SRC}/PlacesGroup.h
                 ${UNITY_SRC}/PlacesTile.cpp
@@ -86,8 +84,6 @@ add_executable (dash
                 ${UNITY_SRC}/PlacesSimpleTile.h
                 ${UNITY_SRC}/PlacesVScrollBar.cpp
                 ${UNITY_SRC}/PlacesVScrollBar.h
-                ${UNITY_SRC}/HomeView.cpp
-                ${UNITY_SRC}/HomeView.h
                 ${UNITY_SRC}/DashStyle.cpp
                 ${UNITY_SRC}/IconLoader.cpp
                 ${UNITY_SRC}/IconLoader.h

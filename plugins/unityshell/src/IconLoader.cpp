@@ -130,6 +130,7 @@ private:
   static gboolean LoaderJobFunc(GIOSchedulerJob* job, GCancellable *canc,
                                 IconLoaderTask *task);
   static gboolean LoadIconComplete(IconLoaderTask* task);
+  static gboolean CoalesceTasksCb(IconLoader::Impl* self);
 
   // Loop calls the iteration function.
   static gboolean Loop(Impl* self);
@@ -142,8 +143,11 @@ private:
   TaskQueue tasks_;
   typedef std::map<Handle, IconLoaderTask*> TaskMap;
   TaskMap task_map_;
+  typedef std::vector<IconLoaderTask*> TaskArray;
+  TaskArray finished_tasks_;
 
   guint idle_id_;
+  guint coalesce_id_;
   bool no_load_;
   GtkIconTheme* theme_; // Not owned.
   Handle handle_counter_;
@@ -152,7 +156,8 @@ private:
 
 IconLoader::Impl::Impl()
   : idle_id_(0)
-  // Option to disable loading, if your testing performance of other things
+  , coalesce_id_(0)
+  // Option to disable loading, if you're testing performance of other things
   , no_load_(::getenv("UNITY_ICON_LOADER_DISABLE"))
   , theme_(::gtk_icon_theme_get_default())
   , handle_counter_(0)
@@ -454,21 +459,49 @@ gboolean IconLoader::Impl::LoaderJobFunc(GIOSchedulerJob* job,
 // this will be invoked back in the thread from which push_job was called
 gboolean IconLoader::Impl::LoadIconComplete(IconLoaderTask* task)
 {
-  if (GDK_IS_PIXBUF(task->result))
+  if (task->self->coalesce_id_ == 0)
   {
-    task->self->cache_[task->key] = task->result;
-  }
-  else
-  {
-    LOG_WARNING(logger) << "Unable to load icon " << task->data
-                        << " at size " << task->size << ": " << task->error;
+    // we're using lower priority than the GIOSchedulerJob uses to deliver
+    // results to the mainloop
+    task->self->coalesce_id_ =
+      g_timeout_add_full (G_PRIORITY_DEFAULT_IDLE + 10,
+                          40,
+                          (GSourceFunc) IconLoader::Impl::CoalesceTasksCb,
+                          task->self,
+                          NULL);
   }
 
-  task->slot(task->data, task->size, task->result);
+  task->self->finished_tasks_.push_back (task);
 
-  // this was all async, we need to erase ourselves from the task_map
-  task->self->task_map_.erase(task->handle);
-  delete task;
+  return FALSE;
+}
+
+gboolean IconLoader::Impl::CoalesceTasksCb(IconLoader::Impl* self)
+{
+  for (auto task : self->finished_tasks_)
+  {
+    // FIXME: we could update the cache sooner, but there are ref-counting
+    // issues on the pixbuf (and inside the slot callbacks) that prevent us
+    // from doing that.
+    if (GDK_IS_PIXBUF(task->result))
+    {
+      task->self->cache_[task->key] = task->result;
+    }
+    else
+    {
+      LOG_WARNING(logger) << "Unable to load icon " << task->data
+                          << " at size " << task->size << ": " << task->error;
+    }
+
+    task->slot(task->data, task->size, task->result);
+
+    // this was all async, we need to erase the task from the task_map
+    self->task_map_.erase(task->handle);
+    delete task;
+  }
+
+  self->finished_tasks_.clear ();
+  self->coalesce_id_ = 0;
 
   return FALSE;
 }

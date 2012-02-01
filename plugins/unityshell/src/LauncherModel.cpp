@@ -18,7 +18,7 @@
  */
 
 #include "LauncherModel.h"
-#include "LauncherIcon.h"
+#include "AbstractLauncherIcon.h"
 
 namespace unity
 {
@@ -27,12 +27,13 @@ namespace launcher
 
 typedef struct
 {
-  LauncherIcon* icon;
+  AbstractLauncherIcon* icon;
   LauncherModel* self;
 } RemoveArg;
 
 LauncherModel::LauncherModel()
 {
+  selection_ = 0;
 }
 
 LauncherModel::~LauncherModel()
@@ -44,12 +45,12 @@ LauncherModel::~LauncherModel()
     icon->UnReference();
 }
 
-bool LauncherModel::IconShouldShelf(LauncherIcon* icon)
+bool LauncherModel::IconShouldShelf(AbstractLauncherIcon* icon) const
 {
-  return icon->Type() == LauncherIcon::TYPE_TRASH;
+  return icon->Type() == AbstractLauncherIcon::TYPE_TRASH;
 }
 
-bool LauncherModel::CompareIcons(LauncherIcon* first, LauncherIcon* second)
+bool LauncherModel::CompareIcons(AbstractLauncherIcon* first, AbstractLauncherIcon* second)
 {
   if (first->Type() < second->Type())
     return true;
@@ -66,31 +67,35 @@ LauncherModel::Populate()
 
   _inner.clear();
 
+  iterator it, it2;
+
   int i = 0;
-  for (auto icon : _inner_main)
+  for (it = main_begin(); it != main_end(); it++)
   {
-    _inner.push_back(icon);
-    icon->SetSortPriority(i++);
+    _inner.push_back(*it);
+    (*it)->SetSortPriority(i);
+    ++i;
   }
 
-  for (auto icon : _inner_shelf)
+  for (it = shelf_begin(); it != shelf_end(); it++)
   {
-    _inner.push_back(icon);
-    icon->SetSortPriority(i++);
+    _inner.push_back(*it);
+    (*it)->SetSortPriority(i);
+    ++i;
   }
 
-  return !std::equal(begin(), end(), copy.begin());
+  return copy.size() == _inner.size() && !std::equal(begin(), end(), copy.begin());
 }
 
 void
-LauncherModel::AddIcon(LauncherIcon* icon)
+LauncherModel::AddIcon(AbstractLauncherIcon* icon)
 {
   icon->SinkReference();
 
   if (IconShouldShelf(icon))
-    _inner_shelf.push_front(icon);
+    _inner_shelf.push_back(icon);
   else
-    _inner_main.push_front(icon);
+    _inner_main.push_back(icon);
 
   Sort();
 
@@ -102,15 +107,15 @@ LauncherModel::AddIcon(LauncherIcon* icon)
 }
 
 void
-LauncherModel::RemoveIcon(LauncherIcon* icon)
+LauncherModel::RemoveIcon(AbstractLauncherIcon* icon)
 {
   size_t size;
 
-  _inner_shelf.remove(icon);
-  _inner_main.remove(icon);
+  _inner_shelf.erase(std::remove(_inner_shelf.begin(), _inner_shelf.end(), icon), _inner_shelf.end());
+  _inner_main.erase(std::remove(_inner_main.begin(), _inner_main.end(), icon), _inner_main.end());
 
   size = _inner.size();
-  _inner.remove(icon);
+  _inner.erase(std::remove(_inner.begin(), _inner.end(), icon), _inner.end());
 
   if (size != _inner.size())
   {
@@ -131,7 +136,7 @@ LauncherModel::RemoveCallback(gpointer data)
 }
 
 void
-LauncherModel::OnIconRemove(LauncherIcon* icon)
+LauncherModel::OnIconRemove(AbstractLauncherIcon* icon)
 {
   RemoveArg* arg = (RemoveArg*) g_malloc0(sizeof(RemoveArg));
   arg->icon = icon;
@@ -149,36 +154,36 @@ LauncherModel::Save()
 void
 LauncherModel::Sort()
 {
-  _inner_shelf.sort(&LauncherModel::CompareIcons);
-  _inner_main.sort(&LauncherModel::CompareIcons);
+  std::stable_sort(_inner_shelf.begin(), _inner_shelf.end(), &LauncherModel::CompareIcons);
+  std::stable_sort(_inner_main.begin(), _inner_main.end(), &LauncherModel::CompareIcons);
 
   if (Populate())
     order_changed.emit();
 }
 
 bool
-LauncherModel::IconHasSister(LauncherIcon* icon)
+LauncherModel::IconHasSister(AbstractLauncherIcon* icon) const
 {
-  iterator it;
-  iterator end;
+  const_iterator it;
+  const_iterator end;
 
   if (icon && icon->Type() == AbstractLauncherIcon::TYPE_DEVICE)
     return true;
 
   if (IconShouldShelf(icon))
   {
-    it = shelf_begin();
-    end = shelf_end();
+    it = _inner_shelf.begin();
+    end = _inner_shelf.end();
   }
   else
   {
-    it = main_begin();
-    end = main_end();
+    it = _inner_main.begin();
+    end = _inner_main.end();
   }
 
   for (; it != end; ++it)
   {
-    LauncherIcon* iter_icon = *it;
+    AbstractLauncherIcon* iter_icon = *it;
     if ((iter_icon  != icon)
         && iter_icon->Type() == icon->Type())
       return true;
@@ -188,7 +193,37 @@ LauncherModel::IconHasSister(LauncherIcon* icon)
 }
 
 void
-LauncherModel::ReorderBefore(LauncherIcon* icon, LauncherIcon* other, bool save)
+LauncherModel::ReorderAfter(AbstractLauncherIcon* icon, AbstractLauncherIcon* other)
+{
+  if (icon == other)
+    return;
+
+  int i = 0;
+  for (LauncherModel::iterator it = begin(); it != end(); ++it)
+  {
+    if ((*it) == icon)
+      continue;
+
+    if ((*it) == other)
+    {
+      (*it)->SetSortPriority(i);
+      ++i;
+
+      icon->SetSortPriority(i);
+      ++i;
+    }
+    else
+    {
+      (*it)->SetSortPriority(i);
+      ++i;
+    }
+  }
+
+  Sort();
+}
+
+void
+LauncherModel::ReorderBefore(AbstractLauncherIcon* icon, AbstractLauncherIcon* other, bool save)
 {
   if (icon == other)
     return;
@@ -229,7 +264,7 @@ LauncherModel::ReorderBefore(LauncherIcon* icon, LauncherIcon* other, bool save)
 }
 
 void
-LauncherModel::ReorderSmart(LauncherIcon* icon, LauncherIcon* other, bool save)
+LauncherModel::ReorderSmart(AbstractLauncherIcon* icon, AbstractLauncherIcon* other, bool save)
 {
   if (icon == other)
     return;
@@ -283,10 +318,72 @@ LauncherModel::ReorderSmart(LauncherIcon* icon, LauncherIcon* other, bool save)
 }
 
 int
-LauncherModel::Size()
+LauncherModel::Size() const
 {
   return _inner.size();
 }
+
+AbstractLauncherIcon* LauncherModel::Selection () const
+{
+  return _inner[selection_];
+}
+
+int LauncherModel::SelectionIndex() const
+{
+  return selection_;
+}
+
+void LauncherModel::SetSelection(int selection)
+{
+  int new_selection = std::min<int>(Size() - 1, std::max<int> (0, selection));
+
+  if (new_selection == selection_)
+    return;
+  
+  selection_ = new_selection;
+  selection_changed.emit(Selection());
+}
+
+void LauncherModel::SelectNext()
+{
+  int temp = selection_;
+
+  temp++;
+  while (temp != selection_)
+  {
+    if (temp >= Size())
+      temp = 0;
+
+    if (_inner[temp]->GetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE))
+    {
+      selection_ = temp;
+      selection_changed.emit(Selection());
+      break;
+    }
+    temp++;
+  }
+}
+
+void LauncherModel::SelectPrevious()
+{
+  int temp = selection_;
+
+  temp--;
+  while (temp != selection_)
+  {
+    if (temp < 0)
+      temp = Size() - 1;
+
+    if (_inner[temp]->GetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE))
+    {
+      selection_ = temp;
+      selection_changed.emit(Selection());
+      break;
+    }
+    temp--;
+  }
+}
+
 
 /* iterators */
 

@@ -187,7 +187,6 @@ public:
 
   bool executeCommand(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool setKeyboardFocusKeyInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
-  bool launcherRevealEdgeInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
 
   bool altTabInitiateCommon(CompAction* action,
                             CompAction::State state,
@@ -236,6 +235,7 @@ private:
 
   void EnsureSuperKeybindings ();
   void CreateSuperNewAction(char shortcut, bool use_shift=false, bool use_numpad=false);
+  void EnableCancelAction(bool enabled, int modifiers = 0);
 
   static gboolean initPluginActions(gpointer data);
   void initLauncher();
@@ -247,16 +247,13 @@ private:
   static void initUnity(nux::NThread* thread, void* InitData);
   static void OnStartKeyNav(GVariant* data, void* value);
   static void OnExitKeyNav(GVariant* data, void* value);
-  static gboolean OnEdgeTriggerTimeout(gpointer data);
   static gboolean OnRedrawTimeout(gpointer data);
 
   void startLauncherKeyNav();
   void restartLauncherKeyNav();
-  void OnLauncherHiddenChanged();
 
   void OnDashRealized ();
 
-  void OnQuicklistEndKeyNav(GVariant* data);
   void OnLauncherStartKeyNav(GVariant* data);
   void OnLauncherEndKeyNav(GVariant* data);
 
@@ -284,15 +281,12 @@ private:
   bool                                  needsRelayout;
   bool                                  _in_paint;
   guint32                               relayoutSourceId;
-  guint                                 _edge_timeout;
-  guint                                 _edge_trigger_handle;
   guint32                               _redraw_handle;
-  gint                                  _edge_pointerY;
-
   typedef std::shared_ptr<CompAction> CompActionPtr;
   typedef std::vector<CompActionPtr> ShortcutActions;
   ShortcutActions _shortcut_actions;
   bool            super_keypressed_;
+  CompActionPtr   _escape_action;
 
   /* keyboard-nav mode */
   CompWindow* newFocusedWindow;
@@ -323,6 +317,7 @@ private:
 
   UBusManager ubus_manager_;
   bool dash_is_open_;
+  int dash_monitor_;
   CompScreen::GrabHandle grab_index_;
   CompWindowList         fullscreen_windows_;
   bool                   painting_tray_;

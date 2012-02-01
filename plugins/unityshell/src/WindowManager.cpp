@@ -103,7 +103,7 @@ class WindowManagerDummy : public WindowManager
     g_debug("%s", G_STRFUNC);
   }
 
-  void FocusWindowGroup(std::vector<Window> windows, FocusVisibility)
+  void FocusWindowGroup(std::vector<Window> windows, FocusVisibility, int monitor)
   {
     g_debug("%s", G_STRFUNC);
   }

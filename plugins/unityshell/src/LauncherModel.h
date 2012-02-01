@@ -22,7 +22,7 @@
 
 #include <memory>
 
-#include "LauncherIcon.h"
+#include "AbstractLauncherIcon.h"
 #include <sigc++/sigc++.h>
 
 namespace unity
@@ -34,26 +34,35 @@ class LauncherModel : public sigc::trackable
 {
 public:
   typedef std::shared_ptr<LauncherModel> Ptr;
-  typedef std::list<LauncherIcon*> Base;
+  typedef std::vector<AbstractLauncherIcon*> Base;
   typedef Base::iterator iterator;
+  typedef Base::const_iterator const_iterator;
   typedef Base::reverse_iterator reverse_iterator;
+  typedef Base::reverse_iterator const_reverse_iterator;
 
   LauncherModel();
   ~LauncherModel();
 
-  void AddIcon(LauncherIcon* icon);
-  void RemoveIcon(LauncherIcon* icon);
+  void AddIcon(AbstractLauncherIcon* icon);
+  void RemoveIcon(AbstractLauncherIcon* icon);
   void Save();
   void Sort();
-  int  Size();
+  int  Size() const;
 
-  void OnIconRemove(LauncherIcon* icon);
+  void OnIconRemove(AbstractLauncherIcon* icon);
 
-  bool IconHasSister(LauncherIcon* icon);
+  bool IconHasSister(AbstractLauncherIcon* icon) const;
 
-  void ReorderBefore(LauncherIcon* icon, LauncherIcon* other, bool save);
+  void ReorderAfter(AbstractLauncherIcon* icon, AbstractLauncherIcon* other);
+  void ReorderBefore(AbstractLauncherIcon* icon, AbstractLauncherIcon* other, bool save);
 
-  void ReorderSmart(LauncherIcon* icon, LauncherIcon* other, bool save);
+  void ReorderSmart(AbstractLauncherIcon* icon, AbstractLauncherIcon* other, bool save);
+
+  AbstractLauncherIcon* Selection() const;
+  int SelectionIndex() const;
+  void SetSelection(int selection);
+  void SelectNext();
+  void SelectPrevious();
 
   iterator begin();
   iterator end();
@@ -71,28 +80,25 @@ public:
   reverse_iterator shelf_rbegin();
   reverse_iterator shelf_rend();
 
-  sigc::signal<void, LauncherIcon*> icon_added;
-  sigc::signal<void, LauncherIcon*> icon_removed;
+  sigc::signal<void, AbstractLauncherIcon*> icon_added;
+  sigc::signal<void, AbstractLauncherIcon*> icon_removed;
   sigc::signal<void> order_changed;
   sigc::signal<void> saved;
-
-  // connected to from class Launcher
-  sigc::connection on_icon_added_connection;
-  sigc::connection on_icon_removed_connection;
-  sigc::connection on_order_changed_connection;
-
+  sigc::signal<void, AbstractLauncherIcon*> selection_changed;
+  
 private:
   Base             _inner;
   Base             _inner_shelf;
   Base             _inner_main;
+  int              selection_;
 
   bool Populate();
 
-  bool IconShouldShelf(LauncherIcon* icon);
+  bool IconShouldShelf(AbstractLauncherIcon* icon) const;
 
   static gboolean RemoveCallback(gpointer data);
 
-  static bool CompareIcons(LauncherIcon* first, LauncherIcon* second);
+  static bool CompareIcons(AbstractLauncherIcon* first, AbstractLauncherIcon* second);
 
   /* Template Methods */
 public:
