@@ -130,6 +130,8 @@ if (GTEST_FOUND AND
                  test_glib_signals_utils.h
                  test_glib_variant.cpp
                  ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_marshal.cpp
+                 test_indicator.cpp
+                 test_indicator_entry.cpp
                  test_favorite_store_gsettings.cpp
                  test_favorite_store_private.cpp
                  test_home_lens.cpp
@@ -185,7 +187,6 @@ if (GTEST_FOUND AND
                  test_categories.cpp
                  test_filesystem_lenses.cpp
                  test_filter.cpp
-                 test_indicator_entry.cpp
                  test_lens.cpp
                  test_main_dbus.cpp
                  test_model.cpp
