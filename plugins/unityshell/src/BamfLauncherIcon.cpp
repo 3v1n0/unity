@@ -23,6 +23,7 @@
 #include "BamfLauncherIcon.h"
 #include "FavoriteStore.h"
 #include "Launcher.h"
+#include "MultiMonitor.h"
 #include "WindowManager.h"
 #include "UBusMessages.h"
 #include "ubus-server.h"

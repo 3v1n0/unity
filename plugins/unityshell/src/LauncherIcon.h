@@ -51,8 +51,6 @@ namespace unity
 namespace launcher
 {
 
-const int max_num_monitors = 6;
-
 class Launcher;
 
 class LauncherIcon : public AbstractLauncherIcon

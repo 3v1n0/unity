@@ -42,6 +42,7 @@
 #include "QuicklistMenuItemCheckmark.h"
 #include "QuicklistMenuItemRadio.h"
 
+#include "MultiMonitor.h"
 #include "WindowManager.h"
 
 #include "ubus-server.h"
