@@ -39,9 +39,26 @@ TEST(TestAppmenuIndicator, Construction)
   EXPECT_FALSE(indicator.IsIntegrated());
 }
 
+TEST(TestAppmenuIndicator, ConstructionIntegrated)
+{
+  g_setenv("GSETTINGS_BACKEND", "memory", true);
+
+  glib::Object<GSettings> gsettings(g_settings_new("com.canonical.indicator.appmenu"));
+  g_settings_set_string(gsettings, "menu-mode", "locally-integrated");
+
+  AppmenuIndicator indicator("indicator-appmenu-integrated");
+
+  EXPECT_EQ(indicator.name(), "indicator-appmenu-integrated");
+  EXPECT_TRUE(indicator.IsAppmenu());
+  EXPECT_TRUE(indicator.IsIntegrated());
+}
+
 TEST(TestAppmenuIndicator, IntegratedValue)
 {
   g_setenv("GSETTINGS_BACKEND", "memory", true);
+
+  glib::Object<GSettings> gsettings(g_settings_new("com.canonical.indicator.appmenu"));
+  g_settings_set_string(gsettings, "menu-mode", "global");
 
   AppmenuIndicator indicator("indicator-appmenu");
   EXPECT_FALSE(indicator.IsIntegrated());
@@ -52,8 +69,6 @@ TEST(TestAppmenuIndicator, IntegratedValue)
     integrated_changed = true;
     integrated_value = new_value;
   });
-
-  glib::Object<GSettings> gsettings(g_settings_new("com.canonical.indicator.appmenu"));
 
   g_settings_set_string(gsettings, "menu-mode", "locally-integrated");
   EXPECT_TRUE(integrated_changed);
