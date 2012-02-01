@@ -118,6 +118,16 @@
                       <_long>fixme</_long>
                       <default>&lt;Alt&gt;&lt;Shift&gt;Tab</default>
                 </option>
+                <option name="alt_tab_forward_all" type="key">
+                     <_short>Key to start the switcher for all viewports</_short>
+                     <_long>fixme</_long>
+                     <default>&lt;Control&gt;&lt;Alt&gt;Tab</default>
+                </option>
+                <option name="alt_tab_prev_all" type="key">
+                      <_short>Key to start the switcher in reverse for all viewports</_short>
+                      <_long>fixme</_long>
+                      <default>&lt;Control&gt;&lt;Alt&gt;&lt;Shift&gt;Tab</default>
+                </option>
 		<option name="alt_tab_right" type="key">
 		    <_short>Go right in the switcher</_short>
 		    <_long>fixme</_long>

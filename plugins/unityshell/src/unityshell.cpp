@@ -288,8 +288,11 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetAltTabTimeoutNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetAltTabBiasViewportNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
 
+     optionSetAltTabForwardAllInitiate(boost::bind(&UnityScreen::altTabForwardAllInitiate, this, _1, _2, _3));
      optionSetAltTabForwardInitiate(boost::bind(&UnityScreen::altTabForwardInitiate, this, _1, _2, _3));
      optionSetAltTabForwardTerminate(boost::bind(&UnityScreen::altTabTerminateCommon, this, _1, _2, _3));
+     optionSetAltTabForwardAllTerminate(boost::bind(&UnityScreen::altTabTerminateCommon, this, _1, _2, _3));
+     optionSetAltTabPrevAllInitiate(boost::bind(&UnityScreen::altTabPrevAllInitiate, this, _1, _2, _3));
      optionSetAltTabPrevInitiate(boost::bind(&UnityScreen::altTabPrevInitiate, this, _1, _2, _3));
 
      optionSetAltTabDetailStartInitiate(boost::bind(&UnityScreen::altTabDetailStartInitiate, this, _1, _2, _3));
@@ -1565,9 +1568,7 @@ bool UnityScreen::setKeyboardFocusKeyInitiate(CompAction* action,
   return false;
 }
 
-bool UnityScreen::altTabInitiateCommon(CompAction *action,
-                                      CompAction::State state,
-                                      CompOption::Vector& options)
+bool UnityScreen::altTabInitiateCommon(switcher::ShowMode show_mode)
 {
   if (!grab_index_)
     grab_index_ = screen->pushGrab (screen->invisibleCursor(), "unity-switcher");
@@ -1587,7 +1588,13 @@ bool UnityScreen::altTabInitiateCommon(CompAction *action,
                                                  screen->outputDevs()[device].width() - 200,
                                                  screen->outputDevs()[device].height() - 200), device);
 
-  switcher::ShowMode show_mode = optionGetAltTabBiasViewport() ? switcher::ShowMode::CURRENT_VIEWPORT : switcher::ShowMode::ALL;
+  if (!optionGetAltTabBiasViewport())
+  {
+    if (show_mode == switcher::ShowMode::CURRENT_VIEWPORT)
+      show_mode = switcher::ShowMode::ALL;
+    else
+      show_mode = switcher::ShowMode::CURRENT_VIEWPORT;
+  }
 
   RaiseInputWindows();
 
@@ -1631,12 +1638,32 @@ bool UnityScreen::altTabForwardInitiate(CompAction* action,
   if (switcher_controller_->Visible())
     switcher_controller_->Next();
   else
-    altTabInitiateCommon(action, state, options);
+    altTabInitiateCommon(switcher::ShowMode::CURRENT_VIEWPORT);
 
   action->setState(action->state() | CompAction::StateTermKey);
   return false;
 }
 
+bool UnityScreen::altTabForwardAllInitiate(CompAction* action,
+                                        CompAction::State state,
+                                        CompOption::Vector& options)
+{
+  if (switcher_controller_->Visible())
+    switcher_controller_->Next();
+  else
+    altTabInitiateCommon(switcher::ShowMode::ALL);
+
+  action->setState(action->state() | CompAction::StateTermKey);
+  return false;
+}
+
+bool UnityScreen::altTabPrevAllInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
+{
+  if (switcher_controller_->Visible())
+    switcher_controller_->Prev();
+
+  return false;
+}
 
 bool UnityScreen::altTabPrevInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
 {
@@ -1666,7 +1693,7 @@ bool UnityScreen::altTabNextWindowInitiate(CompAction* action, CompAction::State
 {
   if (!switcher_controller_->Visible())
   {
-    altTabInitiateCommon(action, state, options);
+    altTabInitiateCommon(switcher::ShowMode::CURRENT_VIEWPORT);
     switcher_controller_->Select(1); // always select the current application
   }
   
