@@ -447,6 +447,7 @@ void QuicklistView::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
 
   nux::GetWindowThread()->GetGraphicsEngine().GetRenderStates().SetBlend(true);
   nux::GetWindowThread()->GetGraphicsEngine().GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
+
   gfxContext.QRP_2TexMod(base.x,
                          base.y,
                          base.width,

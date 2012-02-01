@@ -83,6 +83,8 @@ Tooltip::Tooltip()
   _hlayout->AddLayout(_vlayout, 1, eCenter, eFull);
   _hlayout->AddLayout(_right_space, 0);
 
+  _compute_blur_bkg = true;
+
   SetWindowSizeMatchLayout(true);
   SetLayout(_hlayout);
 
@@ -111,6 +113,8 @@ void Tooltip::ShowTooltipWithTipAt(int anchor_tip_x, int anchor_tip_y)
   int x = _anchorX - _padding;
   int y = anchor_tip_y - _anchor_height / 2 - _top_size - _corner_radius - _padding;
 
+  _compute_blur_bkg = true;
+
   SetBaseX(x);
   SetBaseY(y);
 
@@ -125,13 +129,40 @@ void Tooltip::Draw(GraphicsEngine& gfxContext, bool forceDraw)
 {
   Geometry base = GetGeometry();
 
+  // Get the background of the QuicklistView and apply some
+  if (_compute_blur_bkg /* Refresh the blurred background*/)
+  {
+    nux::ObjectPtr<nux::IOpenGLFrameBufferObject> current_fbo = nux::GetGraphicsDisplay()->GetGpuDevice()->GetCurrentFrameBufferObject();
+    nux::GetGraphicsDisplay()->GetGpuDevice()->DeactivateFrameBuffer();
+
+    gfxContext.SetViewport(0, 0, gfxContext.GetWindowWidth(), gfxContext.GetWindowHeight());
+    gfxContext.SetScissor(0, 0, gfxContext.GetWindowWidth(), gfxContext.GetWindowHeight());
+    gfxContext.GetRenderStates().EnableScissor(false);
+
+    nux::ObjectPtr <nux::IOpenGLBaseTexture> bkg_texture = gfxContext.CreateTextureFromBackBuffer(base.x, base.y, base.width, base.height);
+
+    nux::TexCoordXForm texxform_bkg;
+    _bkg_blur_texture = gfxContext.QRP_GetBlurTexture(0, 0, base.width, base.height, bkg_texture, texxform_bkg, nux::color::White, 1.0f, 3);
+
+    if (current_fbo.IsValid())
+    {
+      current_fbo->Activate(true);
+      gfxContext.Push2DWindow(current_fbo->GetWidth(), current_fbo->GetHeight());
+    }
+    else
+    {
+      gfxContext.SetViewport(0, 0, gfxContext.GetWindowWidth(), gfxContext.GetWindowHeight());
+      gfxContext.Push2DWindow(gfxContext.GetWindowWidth(), gfxContext.GetWindowHeight());
+      gfxContext.ApplyClippingRectangle();
+    }
+    _compute_blur_bkg = false;
+  }
+
   // the elements position inside the window are referenced to top-left window
   // corner. So bring base to (0, 0).
   base.SetX(0);
   base.SetY(0);
   gfxContext.PushClippingRectangle(base);
-
-  nux::GetWindowThread()->GetGraphicsDisplay().GetGraphicsEngine()->GetRenderStates().SetBlend(false);
 
   TexCoordXForm texxform_bg;
   texxform_bg.SetWrap(TEXWRAP_CLAMP, TEXWRAP_CLAMP);
@@ -141,6 +172,25 @@ void Tooltip::Draw(GraphicsEngine& gfxContext, bool forceDraw)
   texxform_mask.SetWrap(TEXWRAP_CLAMP, TEXWRAP_CLAMP);
   texxform_mask.SetTexCoordType(TexCoordXForm::OFFSET_COORD);
 
+  if (_bkg_blur_texture.IsValid())
+  {
+    nux::TexCoordXForm texxform_blur_bkg;
+
+    gfxContext.QRP_2TexMod(
+      base.x,
+      base.y,
+      base.width,
+      base.height,
+      _bkg_blur_texture,
+      texxform_blur_bkg,
+      nux::color::White,
+      _texture_mask->GetDeviceTexture(),
+      texxform_mask,
+      nux::color::White);
+  }
+
+  nux::GetWindowThread()->GetGraphicsEngine().GetRenderStates().SetBlend(true);
+  nux::GetWindowThread()->GetGraphicsEngine().GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
 
   gfxContext.QRP_2TexMod(base.x,
                          base.y,
