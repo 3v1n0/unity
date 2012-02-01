@@ -53,7 +53,7 @@ Tooltip::Tooltip()
   _anchorY   = 0;
   _labelText = TEXT("Unity");
 
-  _anchor_width   = 10;
+  _anchor_width   = 14;
   _anchor_height  = 18;
   _corner_radius  = 4;
   _padding        = 15;
@@ -285,105 +285,46 @@ void _compute_full_mask_path(cairo_t* cr,
                              gfloat   radius,
                              guint    pad)
 {
-  //     0  1        2  3
-  //     +--+--------+--+
-  //     |              |
-  //     + 14           + 4
-  //     |              |
-  //     |              |
-  //     |              |
-  //     + 13           |
-  //    /               |
+
+  //     0            1 2
+  //     +------------+-+
+  //    /               + 3
   //   /                |
-  //  + 12              |
+  //  + 8               |
   //   \                |
-  //    \               |
-  //  11 +              |
-  //     |              |
-  //     |              |
-  //     |              |
-  //  10 +              + 5
-  //     |              |
-  //     +--+--------+--+ 6
-  //     9  8        7
+  //    \               + 4
+  //     +------------+-+
+  //     7            6 5
 
-
-  gfloat padding  = pad;
-  int ZEROPOINT5 = 0.0f;
-
-  gfloat HeightToAnchor = 0.0f;
-  HeightToAnchor = ((gfloat) height - 2.0f * radius - anchor_height - 2 * padding) / 2.0f;
-  if (HeightToAnchor < 0.0f)
-  {
-    g_warning("Anchor-height and corner-radius a higher than whole texture!");
-    return;
-  }
-
-  if (upper_size >= 0)
-  {
-    if (upper_size > height - 2.0f * radius - anchor_height - 2 * padding)
-    {
-      //g_warning ("[_compute_full_mask_path] incorrect upper_size value");
-      HeightToAnchor = 0;
-    }
-    else
-    {
-      HeightToAnchor = height - 2.0f * radius - anchor_height - 2 * padding - upper_size;
-    }
-  }
-  else
-  {
-    HeightToAnchor = (height - 2.0f * radius - anchor_height - 2 * padding) / 2.0f;
-  }
+  gfloat padding = pad;
 
   cairo_translate(cr, -0.5f, -0.5f);
 
   // create path
-  cairo_move_to(cr, padding + anchor_width + radius + ZEROPOINT5, padding + ZEROPOINT5);  // Point 1
-  cairo_line_to(cr, width - padding - radius, padding + ZEROPOINT5);    // Point 2
+  cairo_move_to(cr, padding + anchor_width, padding); // Point 0
+  cairo_line_to(cr, width - padding - radius, padding); // Point 1
   cairo_arc(cr,
-            width  - padding - radius + ZEROPOINT5,
-            padding + radius + ZEROPOINT5,
+            width  - padding - radius,
+            padding + radius,
             radius,
             -90.0f * G_PI / 180.0f,
-            0.0f * G_PI / 180.0f);   // Point 4
+            0.0f * G_PI / 180.0f); // Point 3
   cairo_line_to(cr,
-                (gdouble) width - padding + ZEROPOINT5,
-                (gdouble) height - radius - padding + ZEROPOINT5); // Point 5
+                (gdouble) width - padding,
+                (gdouble) height - radius - padding); // Point 4
   cairo_arc(cr,
-            (gdouble) width - padding - radius + ZEROPOINT5,
-            (gdouble) height - padding - radius + ZEROPOINT5,
-            radius,
-            0.0f * G_PI / 180.0f,
-            90.0f * G_PI / 180.0f);  // Point 7
-  cairo_line_to(cr,
-                anchor_width + padding + radius + ZEROPOINT5,
-                (gdouble) height - padding + ZEROPOINT5); // Point 8
-
-  cairo_arc(cr,
-            anchor_width + padding + radius + ZEROPOINT5,
+            (gdouble) width - padding - radius,
             (gdouble) height - padding - radius,
             radius,
-            90.0f * G_PI / 180.0f,
-            180.0f * G_PI / 180.0f); // Point 10
+            0.0f * G_PI / 180.0f,
+            90.0f * G_PI / 180.0f); // Point 6
+  cairo_line_to(cr,
+                anchor_width + padding,
+                (gdouble) height - padding); // Point 7
 
   cairo_line_to(cr,
-                padding + anchor_width + ZEROPOINT5,
-                (gdouble) height - padding - radius - HeightToAnchor + ZEROPOINT5);   // Point 11
-  cairo_line_to(cr,
-                padding + ZEROPOINT5,
-                (gdouble) height - padding - radius - HeightToAnchor - anchor_height / 2.0f + ZEROPOINT5); // Point 12
-  cairo_line_to(cr,
-                padding + anchor_width + ZEROPOINT5,
-                (gdouble) height - padding - radius - HeightToAnchor - anchor_height + ZEROPOINT5);  // Point 13
-
-  cairo_line_to(cr, padding + anchor_width + ZEROPOINT5, padding + radius  + ZEROPOINT5);   // Point 14
-  cairo_arc(cr,
-            padding + anchor_width + radius + ZEROPOINT5,
-            padding + radius + ZEROPOINT5,
-            radius,
-            180.0f * G_PI / 180.0f,
-            270.0f * G_PI / 180.0f);
+                padding,
+                (gdouble) height / 2.0f); // Point 8
 
   cairo_close_path(cr);
 }
@@ -501,6 +442,7 @@ compute_full_outline_shadow(
   dummy->BlurSurface(blur_coeff, surf);
   delete dummy;
   compute_mask(cr);
+  compute_outline(cr, line_width, rgba_line);
 }
 
 void compute_full_mask(
@@ -559,7 +501,7 @@ void Tooltip::UpdateTexture()
   float   hl_color[4]      = {1.0f, 1.0f, 1.0f, 0.15f};
   float   dot_color[4]     = {1.0f, 1.0f, 1.0f, 0.20f};
   float   shadow_color[4]  = {0.0f, 0.0f, 0.0f, 1.00f};
-  float   outline_color[4] = {1.0f, 1.0f, 1.0f, 0.75f};
+  float   outline_color[4] = {1.0f, 1.0f, 1.0f, 0.15f};
   float   mask_color[4]    = {1.0f, 1.0f, 1.0f, 1.00f};
 
   tint_dot_hl(cr_bg,
