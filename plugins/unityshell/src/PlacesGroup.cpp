@@ -164,7 +164,8 @@ PlacesGroup::PlacesGroup()
   rop.Blend = true;
   rop.SrcBlend = GL_ONE;
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
-  bkg_color_layer_ = new nux::ColorLayer(nux::Color(0.2f, 0.2f, 0.2f, 0.2f), false, rop);
+  bkg_color_layer_ = new nux::ShapeLayer(nux::eSHAPE_CORNER_ROUND10, nux::Color(0.2f, 0.2f, 0.2f, 0.2f),
+                                         nux::eAllCorners, false, rop);
 }
 
 PlacesGroup::~PlacesGroup()
@@ -381,13 +382,10 @@ PlacesGroup::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
   graphics_engine.PushClippingRectangle(base);
 
   if ((_header_view->IsMousePointerInside() || _icon->HasKeyFocus() || _name->HasKeyFocus() ||
-       _expand_label->HasKeyFocus() || _expand_icon->HasKeyFocus()) && !IsFullRedraw())
+       _expand_label->HasKeyFocus() || _expand_icon->HasKeyFocus()) &&
+       bkg_color_layer_ && !IsFullRedraw())
   {
-    nux::Geometry geo(_header_layout->GetGeometry());
-    geo.x = base.x;
-    geo.width = base.width;
-
-    nux::GetPainter().PushLayer(graphics_engine, geo, bkg_color_layer_);
+    nux::GetPainter().PushLayer(graphics_engine, bkg_color_layer_->GetGeometry(), bkg_color_layer_);
   }
 
   _group_layout->ProcessDraw(graphics_engine, force_draw);

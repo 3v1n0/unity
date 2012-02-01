@@ -100,7 +100,7 @@ private:
 
   guint32 _idle_id;
 
-  nux::ColorLayer* bkg_color_layer_;
+  nux::AbstractPaintLayer* bkg_color_layer_;
   bool  _is_expanded;
   guint _n_visible_items_in_unexpand_mode;
   guint _n_total_items;
