@@ -1001,7 +1001,6 @@ void Controller::KeyNavActivate()
   pimpl->reactivate_keynav = false;
   pimpl->launcher_keynav = true;
   pimpl->keyboard_launcher_ = pimpl->launchers[pimpl->MonitorWithMouse()];
-  pimpl->keyboard_launcher_->ShowShortcuts(false);
 
   pimpl->keyboard_launcher_->EnterKeyNavMode();
   pimpl->model_->SetSelection(0);
