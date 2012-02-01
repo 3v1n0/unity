@@ -2488,7 +2488,7 @@ Launcher::RenderIconToTexture(nux::GraphicsEngine& GfxContext, AbstractLauncherI
   clock_gettime(CLOCK_MONOTONIC, &current);
 
   SetupRenderArg(icon, current, arg);
-  arg.render_center = nux::Point3(_icon_size / 2.0f, _icon_size / 2.0f, 0.0f);
+  arg.render_center = nux::Point3(roundf(_icon_size / 2.0f), roundf(_icon_size / 2.0f), 0.0f);
   arg.logical_center = arg.render_center;
   arg.x_rotation = 0.0f;
   arg.running_arrow = false;
