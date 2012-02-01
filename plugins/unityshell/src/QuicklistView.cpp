@@ -905,8 +905,7 @@ QuicklistMenuItemType QuicklistView::GetNthType(int index)
 
 std::list<QuicklistMenuItem*> QuicklistView::GetChildren()
 {
-  std::list<QuicklistMenuItem*> l;
-  return l;
+  return _item_list;
 }
 
 void QuicklistView::DefaultToFirstItem()

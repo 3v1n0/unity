@@ -241,6 +241,7 @@ TestQuicklistMenuItem()
   g_assert_cmpstr(quicklist->GetNthItems(2)->GetLabel(), == , "label 1");
   g_assert_cmpstr(quicklist->GetNthItems(3)->GetLabel(), == , "check mark 0");
 
+  g_assert_cmpint(quicklist->GetChildren().size(), == , 4);
 
   quicklist->Dispose();
 }
