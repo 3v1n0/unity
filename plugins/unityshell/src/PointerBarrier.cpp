@@ -44,6 +44,8 @@ PointerBarrierWrapper::PointerBarrierWrapper()
   smoothing = 75;
   smoothing_count_ = 0;
   smoothing_accum_ = 0;
+  smoothing_handle_ = 0;
+  max_velocity_multiplier = 1.0f;
 }
 
 void PointerBarrierWrapper::ConstructBarrier()
@@ -108,7 +110,7 @@ void PointerBarrierWrapper::EmitCurrentData()
   BarrierEvent::Ptr event (new BarrierEvent());
   event->x = last_x_;
   event->y = last_y_;
-  event->velocity = std::min<int> (600, smoothing_accum_ / smoothing_count_);
+  event->velocity = std::min<int> (600 * max_velocity_multiplier, smoothing_accum_ / smoothing_count_);
   event->event_id = last_event_;
 
   barrier_event.emit(this, event);
@@ -125,16 +127,6 @@ bool PointerBarrierWrapper::HandleEvent(XEvent xevent)
 
     if (notify_event->barrier == barrier && notify_event->subtype == XFixesBarrierHitNotify)
     {
-      if (notify_event->event_id != last_event_)
-      {
-        EmitCurrentData();
-        if (smoothing_handle_)
-        {
-          g_source_remove(smoothing_handle_);
-          smoothing_handle_ = 0;
-        }
-      }
-
       last_x_ = notify_event->x;
       last_y_ = notify_event->y;
       last_event_ = notify_event->event_id;

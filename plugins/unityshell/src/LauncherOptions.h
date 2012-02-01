@@ -86,26 +86,14 @@ public:
   nux::Property<BacklightMode> backlight_mode;
   nux::Property<int> icon_size;
   nux::Property<int> tile_size;
-  nux::Property<bool> floating;
   nux::Property<float> background_alpha;
   nux::Property<int> edge_decay_rate;
   nux::Property<int> edge_overcome_pressure;
   nux::Property<int> edge_stop_velocity;
   nux::Property<int> edge_reveal_pressure;
+  nux::Property<float> edge_responsiveness;
 
   sigc::signal<void> option_changed;
-
-private:
-  void OnHideModeChanged(LauncherHideMode value);
-  void OnLaunchAnimationChanged(LaunchAnimation value);
-  void OnUrgentAnimationChanged(UrgentAnimation value);
-  void OnAutoHideAnimationChanged(AutoHideAnimation value);
-  void OnBacklightModeChanged(BacklightMode value);
-  void OnIconSizeChanged(int value);
-  void OnEdgeOptionChanged(int value);
-  void OnTileSizeChanged(int value);
-  void OnFloatingChanged(bool value);
-  void OnBackgroundAlphaChanged(float value);
 };
 
 }
