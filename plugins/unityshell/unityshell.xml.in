@@ -268,6 +268,14 @@
                     <max>64</max>
                     <precision>1</precision>
                 </option>
+                <option name="edge_responsiveness" type="float">
+                    <_short>Launcher Reveal Edge Responsiveness</_short>
+                    <_long>A conglomerate setting that modifies the overall responsiveness of the launcher reveal</_long>
+                    <default>1.0</default>
+                    <min>0.2</min>
+                    <max>8.0</max>
+                    <precision>0.1</precision>
+                </option>
                 <option name="reveal_pressure" type="int">
                     <_short>Launcher Reveal Pressure</_short>
                     <_long>Amount of mouse pressure required to reveal launcher</_long>

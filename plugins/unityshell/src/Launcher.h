@@ -93,11 +93,6 @@ public:
   void SetModel(LauncherModel* model);
   LauncherModel* GetModel() const;
 
-  void SetFloating(bool floating);
-
-  void SetHideMode(LauncherHideMode hidemode);
-  LauncherHideMode GetHideMode() const;
-
   void StartKeyShowLauncher();
   void EndKeyShowLauncher();
 
@@ -106,15 +101,6 @@ public:
   void SetBacklightMode(BacklightMode mode);
   BacklightMode GetBacklightMode() const;
   bool IsBackLightModeToggles() const;
-
-  void SetLaunchAnimation(LaunchAnimation animation);
-  LaunchAnimation GetLaunchAnimation() const;
-
-  void SetUrgentAnimation(UrgentAnimation animation);
-  UrgentAnimation GetUrgentAnimation() const;
-
-  void SetAutoHideAnimation(AutoHideAnimation animation);
-  AutoHideAnimation GetAutoHideAnimation() const;
 
   nux::BaseWindow* GetParent() const
   {
@@ -165,6 +151,9 @@ protected:
   void ProcessDndDrop(int x, int y);
 private:
   typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
+
+  LauncherHideMode GetHideMode() const;
+  void SetHideMode(LauncherHideMode hidemode);
 
   typedef enum
   {
@@ -343,7 +332,6 @@ private:
   QuicklistView* _active_quicklist;
 
   bool  _hovered;
-  bool  _floating;
   bool  _hidden;
   bool  _render_drag_window;
   bool  _check_window_over_launcher;
@@ -357,13 +345,13 @@ private:
   float _folded_z_distance;
   float _launcher_top_y;
   float _launcher_bottom_y;
+  float _edge_overcome_pressure;
 
   LauncherHideMode _hidemode;
 
   LauncherActionState _launcher_action_state;
   LaunchAnimation _launch_animation;
   UrgentAnimation _urgent_animation;
-  AutoHideAnimation _autohide_animation;
 
   nux::ObjectPtr<nux::IOpenGLBaseTexture> _offscreen_drag_texture;
 

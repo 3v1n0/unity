@@ -27,69 +27,34 @@ namespace launcher
 
 Options::Options()
 {
-  hide_mode.changed.connect(sigc::mem_fun (this, &Options::OnHideModeChanged));
-  launch_animation.changed.connect(sigc::mem_fun (this, &Options::OnLaunchAnimationChanged));
-  urgent_animation.changed.connect(sigc::mem_fun (this, &Options::OnUrgentAnimationChanged));
-  auto_hide_animation.changed.connect(sigc::mem_fun (this, &Options::OnAutoHideAnimationChanged));
-  backlight_mode.changed.connect(sigc::mem_fun (this, &Options::OnBacklightModeChanged));
-  icon_size.changed.connect(sigc::mem_fun (this, &Options::OnIconSizeChanged));
-  tile_size.changed.connect(sigc::mem_fun (this, &Options::OnTileSizeChanged));
-  floating.changed.connect(sigc::mem_fun (this, &Options::OnFloatingChanged));
-  background_alpha.changed.connect(sigc::mem_fun (this, &Options::OnBackgroundAlphaChanged));
-  edge_decay_rate.changed.connect(sigc::mem_fun (this, &Options::OnEdgeOptionChanged));
-  edge_overcome_pressure.changed.connect(sigc::mem_fun (this, &Options::OnEdgeOptionChanged));
-  edge_stop_velocity.changed.connect(sigc::mem_fun (this, &Options::OnEdgeOptionChanged));
-  edge_reveal_pressure.changed.connect(sigc::mem_fun (this, &Options::OnEdgeOptionChanged));
-}
+  // defaults from XML file
+  auto_hide_animation = FADE_AND_SLIDE;
+  background_alpha = 0.6667;
+  backlight_mode = BACKLIGHT_ALWAYS_ON;
+  edge_decay_rate = 1500;
+  edge_overcome_pressure = 2000;
+  edge_responsiveness = 1.0f;
+  edge_reveal_pressure = 2000;
+  edge_stop_velocity = 4500;
+  hide_mode = LAUNCHER_HIDE_DODGE_WINDOWS;
+  icon_size = 48;
+  launch_animation = LAUNCH_ANIMATION_PULSE;
+  tile_size = 54;
+  urgent_animation = URGENT_ANIMATION_WIGGLE;
 
-void Options::OnEdgeOptionChanged(int value)
-{
-  option_changed.emit();
-}
-
-void Options::OnHideModeChanged(LauncherHideMode value)
-{
-  option_changed.emit();
-}
-
-void Options::OnLaunchAnimationChanged(LaunchAnimation value)
-{
-  option_changed.emit();
-}
-
-void Options::OnUrgentAnimationChanged(UrgentAnimation value)
-{
-  option_changed.emit();
-}
-
-void Options::OnAutoHideAnimationChanged(AutoHideAnimation value)
-{
-  option_changed.emit();
-}
-
-void Options::OnBacklightModeChanged(BacklightMode value)
-{
-  option_changed.emit();
-}
-
-void Options::OnIconSizeChanged(int value)
-{
-  option_changed.emit();
-}
-
-void Options::OnTileSizeChanged(int value)
-{
-  option_changed.emit();
-}
-
-void Options::OnFloatingChanged(bool value)
-{
-  option_changed.emit();
-}
-
-void Options::OnBackgroundAlphaChanged(float value)
-{
-  option_changed.emit();
+  auto_hide_animation.changed.connect   ([&] (AutoHideAnimation value)-> void { option_changed.emit(); });
+  background_alpha.changed.connect      ([&] (float value)            -> void { option_changed.emit(); });
+  backlight_mode.changed.connect        ([&] (BacklightMode value)    -> void { option_changed.emit(); });
+  edge_decay_rate.changed.connect       ([&] (int value)              -> void { option_changed.emit(); });
+  edge_overcome_pressure.changed.connect([&] (int value)              -> void { option_changed.emit(); });
+  edge_responsiveness.changed.connect   ([&] (float value)            -> void { option_changed.emit(); });
+  edge_reveal_pressure.changed.connect  ([&] (int value)              -> void { option_changed.emit(); });
+  edge_stop_velocity.changed.connect    ([&] (int value)              -> void { option_changed.emit(); });
+  hide_mode.changed.connect             ([&] (LauncherHideMode value) -> void { option_changed.emit(); });
+  icon_size.changed.connect             ([&] (int value)              -> void { option_changed.emit(); });
+  launch_animation.changed.connect      ([&] (LaunchAnimation value)  -> void { option_changed.emit(); });
+  tile_size.changed.connect             ([&] (int value)              -> void { option_changed.emit(); });
+  urgent_animation.changed.connect      ([&] (UrgentAnimation value)  -> void { option_changed.emit(); });
 }
 
 
