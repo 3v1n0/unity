@@ -18,7 +18,6 @@
 
 #include <glib.h>
 #include <gtk/gtk.h>
-#include <dbus/dbus-glib.h>
 
 #include "Nux/Nux.h"
 #include "Nux/VLayout.h"
@@ -236,10 +235,7 @@ main (int argc, char **argv)
 {
   nux::WindowThread* wt = NULL;
 
-  g_type_init ();
-  
   gtk_init (&argc, &argv);
-  dbus_g_thread_init ();
   nux::NuxInitialize (0);
 
   wt = nux::CreateGUIThread (TEXT ("Unity visual Quicklist-test"),
