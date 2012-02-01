@@ -1369,10 +1369,10 @@ void QuicklistView::UpdateTexture()
   cairo_t* cr_outline = cairo_outline->GetContext();
 
   float   tint_color[4]    = {0.0f, 0.0f, 0.0f, 0.60f};
-  float   hl_color[4]      = {1.0f, 1.0f, 1.0f, 0.65f};
-  float   dot_color[4]     = {1.0f, 1.0f, 1.0f, 0.10f};
+  float   hl_color[4]      = {1.0f, 1.0f, 1.0f, 0.35f};
+  float   dot_color[4]     = {1.0f, 1.0f, 1.0f, 0.03f};
   float   shadow_color[4]  = {0.0f, 0.0f, 0.0f, 1.00f};
-  float   outline_color[4] = {1.0f, 1.0f, 1.0f, 0.65f};
+  float   outline_color[4] = {1.0f, 1.0f, 1.0f, 0.40f};
   float   mask_color[4]    = {1.0f, 1.0f, 1.0f, 1.00f};
 //   float   anchor_width      = 10;
 //   float   anchor_height     = 18;
@@ -1382,7 +1382,7 @@ void QuicklistView::UpdateTexture()
                  GetBaseHeight(),
                  GetBaseWidth() / 2.0f,
                  0,
-                 nux::Max<float>(GetBaseWidth() / 1.3f, GetBaseHeight() / 1.3f),
+                 nux::Max<float>(GetBaseWidth() / 1.6f, GetBaseHeight() / 1.6f),
                  tint_color,
                  hl_color,
                  dot_color);
