@@ -230,6 +230,8 @@ void tint_dot_hl(cairo_t* cr,
                  gfloat* rgba_hl,
                  gfloat* rgba_dot)
 {
+  cairo_pattern_t* hl_pattern = NULL;
+
   // clear normal context
   cairo_scale(cr, 1.0f, 1.0f);
   cairo_set_source_rgba(cr, 0.0f, 0.0f, 0.0f, 0.0f);
@@ -248,7 +250,25 @@ void tint_dot_hl(cairo_t* cr,
                         rgba_tint[1],
                         rgba_tint[2],
                         rgba_tint[3]);
+  cairo_fill_preserve(cr);
+
+  // draw glow
+  hl_pattern = cairo_pattern_create_radial(hl_x,
+                                           hl_y - hl_size / 1.4f,
+                                           0.0f,
+                                           hl_x,
+                                           hl_y - hl_size / 1.4f,
+                                           hl_size);
+  cairo_pattern_add_color_stop_rgba(hl_pattern,
+                                    0.0f,
+                                    rgba_hl[0],
+                                    rgba_hl[1],
+                                    rgba_hl[2],
+                                    rgba_hl[3]);
+  cairo_pattern_add_color_stop_rgba(hl_pattern, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f);
+  cairo_set_source(cr, hl_pattern);
   cairo_fill(cr);
+  cairo_pattern_destroy(hl_pattern);
 }
 
 void _setup(cairo_surface_t** surf,
@@ -498,7 +518,7 @@ void Tooltip::UpdateTexture()
   cairo_t* cr_outline = cairo_outline->GetContext();
 
   float   tint_color[4]    = {0.074f, 0.074f, 0.074f, 0.80f};
-  float   hl_color[4]      = {1.0f, 1.0f, 1.0f, 0.15f};
+  float   hl_color[4]      = {1.0f, 1.0f, 1.0f, 0.8f};
   float   dot_color[4]     = {1.0f, 1.0f, 1.0f, 0.20f};
   float   shadow_color[4]  = {0.0f, 0.0f, 0.0f, 1.00f};
   float   outline_color[4] = {1.0f, 1.0f, 1.0f, 0.15f};
