@@ -23,6 +23,7 @@
 
 #include <vector>
 #include <boost/utility.hpp>
+#include <sigc++/connection.h>
 
 #include "IndicatorEntry.h"
 
@@ -49,10 +50,6 @@ public:
   Entry::Ptr GetEntry(std::string const& entry_id) const;
   Entries GetEntries() const;
 
-  void OnEntryShowMenu(std::string const& entry_id, unsigned int xid, int x, int y, unsigned int button, unsigned int timestamp);
-  void OnEntrySecondaryActivate(std::string const& entry_id, unsigned int timestamp);
-  void OnEntryScroll(std::string const& entry_id, int delta);
-
   // Signals
   sigc::signal<void, Entry::Ptr const&> on_entry_added;
   sigc::signal<void, std::string const&> on_entry_removed;
@@ -61,8 +58,13 @@ public:
   sigc::signal<void, std::string const&, int> on_scroll;
 
 protected:
+  void OnEntryShowMenu(std::string const& entry_id, unsigned int xid, int x, int y, unsigned int button, unsigned int timestamp);
+  void OnEntrySecondaryActivate(std::string const& entry_id, unsigned int timestamp);
+  void OnEntryScroll(std::string const& entry_id, int delta);
+
   Entries entries_;
   std::string name_;
+  std::map<Entry::Ptr, std::vector<sigc::connection>> entries_connections_;
 
   friend std::ostream& operator<<(std::ostream& out, Indicator const& i);
 };
