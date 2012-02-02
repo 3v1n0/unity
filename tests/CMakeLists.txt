@@ -127,6 +127,7 @@ if (GTEST_FOUND AND
                  test_introspection.cpp
                  test_main_xless.cpp
                  test_grabhandle.cpp
+                 test_unityshell_private.cpp
                  ${UNITY_SRC}/AbstractLauncherIcon.h
                  ${UNITY_SRC}/AbstractShortcutHint.h
                  ${UNITY_SRC}/Animator.cpp
@@ -157,6 +158,8 @@ if (GTEST_FOUND AND
                  ${UNITY_SRC}/TextureCache.h
                  ${UNITY_SRC}/Timer.cpp
                  ${UNITY_SRC}/Timer.h
+                 ${UNITY_SRC}/UnityshellPrivate.cpp
+                 ${UNITY_SRC}/UnityshellPrivate.h
                  ${UNITY_SRC}/WindowManager.cpp
                  ${UNITY_SRC}/WindowManager.h
                  ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle.cpp
