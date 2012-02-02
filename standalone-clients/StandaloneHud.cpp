@@ -111,7 +111,6 @@ void TestRunner::Init ()
   hud_service_.RequestQuery("");
  
   hud_view_->SetWindowGeometry(layout->GetAbsoluteGeometry(), layout->GetGeometry());
-  hud_view_->SetIcon("/usr/share/pixmaps/firefox.png");
 
 }
 

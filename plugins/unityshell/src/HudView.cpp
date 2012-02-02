@@ -163,7 +163,7 @@ void View::SetQueries(Hud::Queries queries)
 void View::SetIcon(std::string icon_name)
 {
   LOG_DEBUG(logger) << "Setting icon to " << icon_name;
-  icon_->SetByIconName("/usr/share/pixmaps/firefox.png", icon_size);
+  icon_->SetByIconName(icon_name.c_str(), icon_size);
   QueueDraw();
 }
 
@@ -213,7 +213,7 @@ void View::SetupViews()
 {
   layout_ = new nux::HLayout();
   
-  icon_ = new Icon("/usr/share/pixmaps/firefox.png", icon_size, true);
+  icon_ = new Icon("", icon_size, true);
   nux::Layout* icon_layout = new nux::VLayout();
   icon_layout->SetVerticalExternalMargin(icon_vertical_margin);
   icon_layout->AddView(icon_.GetPointer(), 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
