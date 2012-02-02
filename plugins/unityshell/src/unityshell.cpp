@@ -1811,7 +1811,7 @@ UnityWindow::minimize ()
 
   if (!mMinimizeHandler)
   {
-    mMinimizeHandler = new UnityMinimizedHandler (window);
+    mMinimizeHandler = std::unique_ptr <UnityMinimizedHandler> (new UnityMinimizedHandler (window));
     mMinimizeHandler->minimize ();
   }
 }
@@ -1822,8 +1822,7 @@ UnityWindow::unminimize ()
   if (mMinimizeHandler)
   {
     mMinimizeHandler->unminimize ();
-    delete mMinimizeHandler;
-    mMinimizeHandler = nullptr;
+    mMinimizeHandler.release ();
   }
 }
 
@@ -1862,7 +1861,7 @@ UnityWindow::focus ()
 bool
 UnityWindow::minimized ()
 {
-  return mMinimizeHandler != nullptr;
+  return mMinimizeHandler.get () != nullptr;
 }
 
 gboolean
@@ -2442,7 +2441,7 @@ UnityWindow::UnityWindow(CompWindow* window)
   , PluginClassHandler<UnityWindow, CompWindow>(window)
   , window(window)
   , gWindow(GLWindow::get(window))
-  , mMinimizeHandler(nullptr)
+  , mMinimizeHandler()
   , mShowdesktopHandler(nullptr)
   , focusdesktop_handle_(0)
 {
@@ -2499,8 +2498,6 @@ UnityWindow::~UnityWindow()
     us->newFocusedWindow = NULL;
 
   UnityShowdesktopHandler::animating_windows.remove (window);
-
-  delete mMinimizeHandler;
 
   if (mShowdesktopHandler)
     delete mShowdesktopHandler;
