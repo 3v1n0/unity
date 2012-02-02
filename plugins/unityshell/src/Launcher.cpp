@@ -1054,6 +1054,7 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
   clock_gettime(CLOCK_MONOTONIC, &current);
 
   nux::Color colorify = FullySaturateColor(_background_color);
+  icon_renderer->background_color = colorify;
 
   float hover_progress = GetHoverProgress(current);
   float folded_z_distance = _folded_z_distance * (1.0f - hover_progress);
