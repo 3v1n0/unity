@@ -1966,7 +1966,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
                                             bkg_box.y,
                                             1,
                                             bkg_box.height),
-                              nux::Color(0x60606060));
+                              nux::color::White * 0.15);
     gPainter.Paint2DQuadColor(GfxContext,
                               nux::Geometry(bkg_box.x,
                                             bkg_box.y,
