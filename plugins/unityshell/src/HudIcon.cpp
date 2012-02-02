@@ -59,31 +59,35 @@ void Icon::Init()
   texture_updated.connect([&] (nux::BaseTexture* texture) 
   {
     icon_texture_source_ = new HudIconTextureSource(nux::ObjectPtr<nux::BaseTexture>(texture));
+    icon_texture_source_->ColorForIcon(_pixbuf_cached);
   });
 }
 
 void Icon::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
-  LOG_DEBUG(logger) << "attempting draw";
   if (texture() == nullptr)
     return;
-  
-  LOG_DEBUG(logger) << "doing draw";
-  
+
   unity::ui::RenderArg arg;
   arg.icon = icon_texture_source_.GetPointer();
   arg.colorify            = nux::color::White;
   arg.running_arrow       = true;
   arg.running_on_viewport = true;
-  arg.render_center       = nux::Point3(25, 25, 0);
-  arg.logical_center      = nux::Point3(25, 25, 0);
+  arg.render_center       = nux::Point3(32, 32, 0);
+  arg.logical_center      = nux::Point3(52, 52, 0);
+  arg.window_indicators   = true;
+  arg.backlight_intensity = 1.0f;
+  arg.alpha               = 1.0f;
   
   std::list<unity::ui::RenderArg> args;
   args.push_front(arg);
+
   
-  icon_renderer_.PreprocessIcons(args, GetGeometry());
+  auto toplevel = GetToplevel(); 
+  icon_renderer_.SetTargetSize(52, 46, 0);
+  icon_renderer_.PreprocessIcons(args, toplevel->GetGeometry());
+  icon_renderer_.RenderIcon(GfxContext, arg, toplevel->GetGeometry(), toplevel->GetGeometry());
   
-  icon_renderer_.RenderIcon(GfxContext, arg, GetGeometry(), GetGeometry());
   /*
   nux::Geometry geo = GetGeometry();
   // set up our texture mode
@@ -113,7 +117,7 @@ void Icon::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
                       texxform,
                       nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
   */
-  unity::IconTexture::Draw(GfxContext, force_draw);
+  //unity::IconTexture::Draw(GfxContext, force_draw);
   
   
 }

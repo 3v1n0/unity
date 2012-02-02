@@ -63,7 +63,8 @@ protected:
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
   virtual bool DoCanFocus();
-
+  GdkPixbuf*        _pixbuf_cached;
+  
 protected:
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
 
@@ -76,7 +77,7 @@ private:
   char* _icon_name;
   unsigned int _size;
 
-  GdkPixbuf*        _pixbuf_cached;
+
   nux::ObjectPtr<nux::BaseTexture> _texture_cached;
   // FIXME: make these two a nux::Size.
   int               _texture_width;
