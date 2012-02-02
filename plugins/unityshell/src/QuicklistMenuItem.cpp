@@ -371,7 +371,7 @@ void QuicklistMenuItem::RecvMouseLeave(int x, int y, unsigned long button_flags,
   sigMouseLeave.emit(this);
 }
 
-void QuicklistMenuItem::DrawText(nux::CairoGraphics *cairo, int width, int height, nux::Color color)
+void QuicklistMenuItem::DrawText(nux::CairoGraphics* cairo, int width, int height, nux::Color const& color)
 {
   if (_text == nullptr || cairo == nullptr)
     return;
@@ -427,7 +427,7 @@ void QuicklistMenuItem::DrawText(nux::CairoGraphics *cairo, int width, int heigh
   g_object_unref(layout);
 }
 
-void QuicklistMenuItem::DrawPrelight(nux::CairoGraphics *cairo, int width, int height, nux::Color color)
+void QuicklistMenuItem::DrawPrelight(nux::CairoGraphics* cairo, int width, int height, nux::Color const& color)
 {
   if (!cairo)
     return;
