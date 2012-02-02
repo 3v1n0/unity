@@ -141,10 +141,7 @@ void DBusProxy::Impl::OnNameAppeared(GDBusConnection* connection,
                                      gpointer impl)
 {
   DBusProxy::Impl* self = static_cast<DBusProxy::Impl*>(impl);
-
   LOG_DEBUG(logger) << self->name_ << " appeared";
-
-  self->connected_ = true;
 }
 
 void DBusProxy::Impl::OnNameVanished(GDBusConnection* connection,
