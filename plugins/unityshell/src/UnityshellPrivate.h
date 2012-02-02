@@ -36,7 +36,7 @@ enum class ActionModifiers
 };
 
 std::string CreateActionString(std::string const& modifiers, 
-                               std::string const& shortcut,
+                               char shortcut,
                                ActionModifiers flag = ActionModifiers::NONE);
 
 } // namespace impl

@@ -412,28 +412,22 @@ void UnityScreen::EnsureSuperKeybindings()
 
   for (auto shortcut : launcher_controller_->GetAllShortcuts())
   {
-    CreateSuperNewAction(shortcut);
-    CreateSuperNewAction(shortcut, true);
-    CreateSuperNewAction(shortcut, false, true);
+    CreateSuperNewAction(shortcut, impl::ActionModifiers::NONE);
+    CreateSuperNewAction(shortcut, impl::ActionModifiers::USE_NUMPAD);
+    CreateSuperNewAction(shortcut, impl::ActionModifiers::USE_SHIFT);
   }
 
   for (auto shortcut : dash_controller_->GetAllShortcuts())
-    CreateSuperNewAction(shortcut);
+    CreateSuperNewAction(shortcut, impl::ActionModifiers::NONE);
 }
 
-void UnityScreen::CreateSuperNewAction(char shortcut, bool use_shift, bool use_numpad)
+void UnityScreen::CreateSuperNewAction(char shortcut, impl::ActionModifiers flag)
 {
     CompActionPtr action(new CompAction());
     const std::string key(optionGetShowLauncher().keyToString());
 
     CompAction::KeyBinding binding;
-    std::ostringstream sout;
-    if (use_shift)
-      sout << "<Shift>" << key  << shortcut;
-    else
-      sout << key << ((use_numpad) ? "KP_" : "") << shortcut;
-
-    binding.fromString(sout.str());
+    binding.fromString(impl::CreateActionString(key, shortcut, flag));
 
     action->setKey(binding);
 

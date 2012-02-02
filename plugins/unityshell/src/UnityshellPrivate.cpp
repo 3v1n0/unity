@@ -25,7 +25,7 @@ namespace impl
 {
 
 std::string CreateActionString(std::string const& modifiers,
-                               std::string const& shortcut,
+                               char shortcut,
                                ActionModifiers flag)
 {
   std::string ret(modifiers);
