@@ -20,6 +20,9 @@
 #include "LauncherModel.h"
 #include "AbstractLauncherIcon.h"
 
+#include <UnityCore/GLibWrapper.h>
+#include <UnityCore/Variant.h>
+
 namespace unity
 {
 namespace launcher
@@ -43,6 +46,27 @@ LauncherModel::~LauncherModel()
 
   for (auto icon : _inner_main)
     icon->UnReference();
+}
+
+std::string LauncherModel::GetName() const
+{
+  return "LauncherModel";
+}
+
+void LauncherModel::AddProperties(GVariantBuilder* builder)
+{
+  unity::variant::BuilderWrapper(builder)
+  .add("selection", selection_);
+}
+
+unity::debug::Introspectable::IntrospectableList const& LauncherModel::GetIntrospectableChildren()
+{
+  introspection_results_.clear();
+  
+  for (auto icon : _inner)
+    introspection_results_.push_back(icon);
+  
+  return introspection_results_;
 }
 
 bool LauncherModel::IconShouldShelf(AbstractLauncherIcon* icon) const

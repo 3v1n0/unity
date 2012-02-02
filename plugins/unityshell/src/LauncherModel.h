@@ -23,6 +23,7 @@
 #include <memory>
 
 #include "AbstractLauncherIcon.h"
+#include "Introspectable.h"
 #include <sigc++/sigc++.h>
 
 namespace unity
@@ -30,7 +31,7 @@ namespace unity
 namespace launcher
 {
 
-class LauncherModel : public sigc::trackable
+class LauncherModel : public unity::debug::Introspectable, public sigc::trackable
 {
 public:
   typedef std::shared_ptr<LauncherModel> Ptr;
@@ -85,12 +86,19 @@ public:
   sigc::signal<void> order_changed;
   sigc::signal<void> saved;
   sigc::signal<void, AbstractLauncherIcon*> selection_changed;
-  
+
+  unity::debug::Introspectable::IntrospectableList const& GetIntrospectableChildren();
+protected:
+  // Introspectable methods
+  std::string GetName() const;
+  void AddProperties(GVariantBuilder* builder);
+
 private:
   Base             _inner;
   Base             _inner_shelf;
   Base             _inner_main;
   int              selection_;
+  std::list<unity::debug::Introspectable*> introspection_results_;
 
   bool Populate();
 

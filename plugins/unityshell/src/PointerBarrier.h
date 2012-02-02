@@ -57,6 +57,8 @@ public:
 
   nux::Property<int> smoothing;
 
+  nux::Property<float> max_velocity_multiplier;
+
   PointerBarrierWrapper();
 
   void ConstructBarrier();

@@ -39,6 +39,8 @@ LensBarIcon::LensBarIcon(std::string id_, std::string icon_hint)
   SetMaximumHeight(24);
   SetOpacity(inactive_opacity_);
 
+  SetAcceptKeyNavFocusOnMouseDown(false);
+
   active.changed.connect(sigc::mem_fun(this, &LensBarIcon::OnActiveChanged));
   mouse_enter.connect([&]
 (int, int, unsigned long, unsigned long) { QueueDraw(); });

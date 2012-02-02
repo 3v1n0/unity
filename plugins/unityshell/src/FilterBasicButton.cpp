@@ -36,31 +36,37 @@ namespace dash
 FilterBasicButton::FilterBasicButton(nux::TextureArea* image, NUX_FILE_LINE_DECL)
   : nux::ToggleButton(image, NUX_FILE_LINE_PARAM)
 {
-  InitTheme();
+  Init();
 }
 
 FilterBasicButton::FilterBasicButton(std::string const& label, NUX_FILE_LINE_DECL)
   : nux::ToggleButton(NUX_FILE_LINE_PARAM)
   , label_(label)
 {
-  InitTheme();
+  Init();
 }
 
 FilterBasicButton::FilterBasicButton(std::string const& label, nux::TextureArea* image, NUX_FILE_LINE_DECL)
   : nux::ToggleButton(image, NUX_FILE_LINE_PARAM)
   , label_(label)
 {
-  InitTheme();
+  Init();
 }
 
 FilterBasicButton::FilterBasicButton(NUX_FILE_LINE_DECL)
   : nux::ToggleButton(NUX_FILE_LINE_PARAM)
 {
-  InitTheme();
+  Init();
 }
 
 FilterBasicButton::~FilterBasicButton()
 {
+}
+
+void FilterBasicButton::Init()
+{
+  InitTheme();
+  SetAcceptKeyNavFocusOnMouseDown(false);
 }
 
 void FilterBasicButton::InitTheme()
