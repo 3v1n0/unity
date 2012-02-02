@@ -1966,11 +1966,13 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   if (!_dash_is_open)
   {
     gPainter.Paint2DQuadColor(GfxContext,
-                              nux::Geometry(bkg_box.width,
+
+                              nux::Geometry(bkg_box.x + bkg_box.width,
                                             bkg_box.y,
                                             RIGHT_LINE_WIDTH,
                                             bkg_box.height),
                               nux::Color(0xFFAAAAAA) * 0.2);
+
     gPainter.Paint2DQuadColor(GfxContext,
                               nux::Geometry(bkg_box.x,
                                             bkg_box.y,
