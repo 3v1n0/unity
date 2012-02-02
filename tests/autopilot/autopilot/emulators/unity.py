@@ -169,14 +169,17 @@ class Launcher(Unity):
     def __get_controller_state(self):
         return super(Launcher, self).get_state('/Unity/LauncherController')[0]
 
+    def __get_model_state(self):
+        return super(Launcher, self).get_state('/Unity/LauncherController/LauncherModel')[0]
+
     def __get_state(self, monitor):
         # get the state for the 'launcher' piece
         return super(Launcher, self).get_state('/Unity/LauncherController/Launcher[monitor=%s]' % (monitor))[0]
 
     def get_launcher_icons(self):
         """Get a list of launcher icons in this launcher."""
-        icons = self.get_state("//Launcher/LauncherIcon")
-        return [LauncherIcon(icon_dict) for icon_dict in icons]
+        model = self.get_state("/Unity/LauncherController/LauncherModel")[0]
+        return [LauncherIcon(icon_dict[1]) for icon_dict in model['Children'] if icon_dict[0] == 'LauncherIcon']
 
     def click_launcher_icon(self, icon, monitor=0, button=1):
         """Move the mouse over the launcher icon, and click it."""
