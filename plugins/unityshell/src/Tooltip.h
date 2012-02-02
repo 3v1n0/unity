@@ -67,7 +67,6 @@ private:
   void NotifyConfigurationChange(int width,
                                  int height);
 
-  //nux::CairoGraphics*   _cairo_graphics;
   int                   _anchorX;
   int                   _anchorY;
   nux::NString          _labelText;
