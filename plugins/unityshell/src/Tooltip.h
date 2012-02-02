@@ -27,15 +27,15 @@
 #include <Nux/HLayout.h>
 #include <Nux/VLayout.h>
 
+#include "CairoBaseWindow.h"
 #include "StaticCairoText.h"
-
 #include "Introspectable.h"
 
 namespace unity
 {
-class Tooltip : public nux::BaseWindow, public debug::Introspectable
+class Tooltip : public CairoBaseWindow, public debug::Introspectable
 {
-  NUX_DECLARE_OBJECT_TYPE(Tooltip, nux::BaseWindow);
+  NUX_DECLARE_OBJECT_TYPE(Tooltip, CairoBaseWindow);
 public:
   Tooltip();
 
@@ -72,9 +72,6 @@ private:
   nux::NString          _labelText;
 
   nux::ObjectPtr<nux::StaticCairoText> _tooltip_text;
-  nux::ObjectPtr<nux::BaseTexture> _texture_bg;
-  nux::ObjectPtr<nux::BaseTexture> _texture_mask;
-  nux::ObjectPtr<nux::BaseTexture> _texture_outline;
 
   nux::HLayout* _hlayout;
   nux::VLayout* _vlayout;
@@ -82,9 +79,6 @@ private:
   nux::SpaceLayout* _right_space; //!< Space from the right of the text to the right of the widget.
   nux::SpaceLayout* _top_space;  //!< Space from the left of the widget to the left of the text.
   nux::SpaceLayout* _bottom_space; //!< Space from the right of the text to the right of the widget.
-
-  bool _compute_blur_bkg;
-  nux::ObjectPtr<nux::IOpenGLBaseTexture> _bkg_blur_texture;
 
   bool _cairo_text_has_changed;
   void UpdateTexture();
