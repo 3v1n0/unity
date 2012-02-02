@@ -524,7 +524,7 @@ void compute_full_mask(
   _finalize(&cr, outline, line_width, rgba, negative, outline);
 }
 
-void CairoBaseWindow::UpdateTexture()
+void Tooltip::UpdateTexture()
 {
   if (_cairo_text_has_changed == false)
     return;
@@ -622,7 +622,7 @@ void Tooltip::NotifyConfigurationChange(int width,
 {
 }
 
-void Tooltip::SetText(nux::NString text)
+void Tooltip::SetText(nux::NString const& text)
 {
   if (_labelText == text)
     return;

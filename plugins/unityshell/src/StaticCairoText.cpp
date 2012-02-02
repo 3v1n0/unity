@@ -223,7 +223,7 @@ StaticCairoText::PostDraw(GraphicsEngine& gfxContext,
 }
 
 void
-StaticCairoText::SetText(NString text)
+StaticCairoText::SetText(NString const& text)
 {
   if (_text != text)
   {
@@ -244,7 +244,7 @@ StaticCairoText::GetText()
 }
 
 void
-StaticCairoText::SetTextColor(Color textColor)
+StaticCairoText::SetTextColor(Color const& textColor)
 {
   if (_textColor != textColor)
   {

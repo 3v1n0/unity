@@ -42,7 +42,7 @@ public:
   void Draw(nux::GraphicsEngine& gfxContext, bool forceDraw);
   void DrawContent(nux::GraphicsEngine& gfxContext, bool forceDraw);
 
-  void SetText(nux::NString text);
+  void SetText(nux::NString const& text);
 
   void ShowTooltipWithTipAt(int anchor_tip_x, int anchor_tip_y);
 

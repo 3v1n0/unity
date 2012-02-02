@@ -77,8 +77,8 @@ public:
                 bool             forceDraw);
 
   // public API
-  void SetText(NString text);
-  void SetTextColor(Color textColor);
+  void SetText(NString const& text);
+  void SetTextColor(Color const& textColor);
   void SetTextEllipsize(EllipsizeState state);
   void SetTextAlignment(AlignState state);
   void SetTextVerticalAlignment(AlignState state);
