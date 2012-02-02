@@ -84,6 +84,15 @@ void CairoBaseWindow::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
 
   gfxContext.PushClippingRectangle(base);
 
+  /* "Clear" out the background */
+  nux::ROPConfig rop;
+  rop.Blend = true;
+  rop.SrcBlend = GL_ONE;
+  rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+
+  nux::ColorLayer layer(nux::Color(0x00000000), true, rop);
+  nux::GetPainter().PushDrawLayer(gfxContext, base, &layer);
+
   nux::TexCoordXForm texxform_bg;
   texxform_bg.SetWrap(nux::TEXWRAP_CLAMP, nux::TEXWRAP_CLAMP);
   texxform_bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
@@ -148,7 +157,7 @@ void CairoBaseWindow::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
   }
 
   nux::GetWindowThread()->GetGraphicsDisplay().GetGraphicsEngine()->GetRenderStates().SetBlend(false);
-
+  nux::GetPainter().PopBackground();
   gfxContext.PopClippingRectangle();
 }
 

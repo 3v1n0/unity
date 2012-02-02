@@ -384,6 +384,12 @@ void QuicklistView::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
 {
   unity::CairoBaseWindow::Draw(gfxContext, forceDraw);
 
+  nux::Geometry base(GetGeometry());
+  base.x = 0;
+  base.y = 0;
+
+  gfxContext.PushClippingRectangle(base);
+
   std::list<QuicklistMenuItem*>::iterator it;
   for (it = _item_list.begin(); it != _item_list.end(); it++)
   {
@@ -396,6 +402,8 @@ void QuicklistView::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
     if ((*it)->GetVisible())
       (*it)->ProcessDraw(gfxContext, forceDraw);
   }
+
+  gfxContext.PopClippingRectangle();
 }
 
 void QuicklistView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
