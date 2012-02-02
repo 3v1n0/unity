@@ -52,7 +52,9 @@ public:
 
   void DirtyCache();
 
-  static void ProcessDamage(nux::Geometry geo);
+  static void ProcessDamage();
+  static void ProcessDamage(nux::Geometry const& geo);
+
   static bool HasDirtyHelpers();
   static bool HasEnabledHelpers();
 

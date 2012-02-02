@@ -19,19 +19,25 @@
  *
  */
 
+#ifndef UNITYSHELL_FILTERFACTORY_H
+#define UNITYSHELL_FILTERFACTORY_H
 
+#include <Nux/View.h>
+#include <UnityCore/Filter.h>
 
-#ifndef FILTERFACTORY_H
-#define FILTERFACTORY_H
-namespace unity {
+namespace unity
+{
+namespace dash
+{
 
-  class FilterFactory
-  {
-  public:
-    FilterFactory();
-    virtual ~FilterFactory();
-
-    nux::View *WidgetForFilter (dash::Filter::Ptr filter);
-  };
+class FilterFactory
+{
+public:
+  nux::View* WidgetForFilter(Filter::Ptr const& filter);
 };
-#endif // FILTERFACTORY_H
+
+} // namespace dash
+} // namespace unity
+
+#endif // UNITYSHELL_FILTERFACTORY_H
+

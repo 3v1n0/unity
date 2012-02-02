@@ -51,8 +51,17 @@ add_executable (dash
                 ${UNITY_SRC}/DashSearchBar.h
                 ${UNITY_SRC}/DashSearchBarSpinner.cpp
                 ${UNITY_SRC}/DashSearchBarSpinner.h
+                ${UNITY_SRC}/DashView.cpp
+                ${UNITY_SRC}/DashView.h
+                ${UNITY_SRC}/DashViewPrivate.cpp
+                ${UNITY_SRC}/DashViewPrivate.h
+                ${UNITY_SRC}/DashSettings.cpp
+                ${UNITY_SRC}/DashSettings.h
+                ${UNITY_SRC}/FilterAllButton.cpp
+                ${UNITY_SRC}/FilterAllButton.h
                 ${UNITY_SRC}/FilterExpanderLabel.cpp
                 ${UNITY_SRC}/FilterFactory.cpp
+                ${UNITY_SRC}/FilterAllButton.cpp
                 ${UNITY_SRC}/FilterBasicButton.cpp
                 ${UNITY_SRC}/FilterRatingsButton.cpp
                 ${UNITY_SRC}/FilterRatingsWidget.cpp
@@ -61,26 +70,20 @@ add_executable (dash
                 ${UNITY_SRC}/FilterGenreButton.cpp
                 ${UNITY_SRC}/FilterGenreWidget.cpp
                 ${UNITY_SRC}/FilterBar.cpp
+                ${UNITY_SRC}/FilterWidget.cpp
+                ${UNITY_SRC}/FilterWidget.h
                 ${UNITY_SRC}/FontSettings.cpp
                 ${UNITY_SRC}/FontSettings.h
                 ${UNITY_SRC}/IMTextEntry.cpp
                 ${UNITY_SRC}/IMTextEntry.h
-                ${UNITY_SRC}/PlacesHomeView.cpp
-                ${UNITY_SRC}/PlacesHomeView.h
                 ${UNITY_SRC}/PlacesGroup.cpp
                 ${UNITY_SRC}/PlacesGroup.h
-                ${UNITY_SRC}/DashSettings.cpp
-                ${UNITY_SRC}/DashSettings.h
                 ${UNITY_SRC}/PlacesTile.cpp
                 ${UNITY_SRC}/PlacesTile.h
                 ${UNITY_SRC}/PlacesSimpleTile.cpp
                 ${UNITY_SRC}/PlacesSimpleTile.h
                 ${UNITY_SRC}/PlacesVScrollBar.cpp
                 ${UNITY_SRC}/PlacesVScrollBar.h
-                ${UNITY_SRC}/DashView.cpp
-                ${UNITY_SRC}/DashView.h
-                ${UNITY_SRC}/HomeView.cpp
-                ${UNITY_SRC}/HomeView.h
                 ${UNITY_SRC}/DashStyle.cpp
                 ${UNITY_SRC}/IconLoader.cpp
                 ${UNITY_SRC}/IconLoader.h
@@ -95,6 +98,7 @@ add_executable (dash
                 ${UNITY_SRC}/LensBarIcon.h
                 ${UNITY_SRC}/LensView.cpp
                 ${UNITY_SRC}/LensView.h
+                ${UNITY_SRC}/OverlayRenderer.cpp
                 ${UNITY_SRC}/PreviewApplications.cpp
                 ${UNITY_SRC}/PreviewBase.cpp
                 ${UNITY_SRC}/PreviewBasicButton.cpp
@@ -452,8 +456,32 @@ add_executable (bg-hash
                )
 add_dependencies (bg-hash unity-core-${UNITY_API_VERSION})
 
-find_package (OpenGL)
+add_executable (test-shortcut
+                TestShortcut.cpp
+                ${UNITY_SRC}/AbstractSeparator.cpp
+                ${UNITY_SRC}/AbstractSeparator.h
+                ${UNITY_SRC}/AbstractShortcutHint.h
+                ${UNITY_SRC}/Animator.cpp
+                ${UNITY_SRC}/Animator.h
+                ${UNITY_SRC}/BackgroundEffectHelper.cpp
+                ${UNITY_SRC}/BackgroundEffectHelper.h
+                ${UNITY_SRC}/LineSeparator.cpp
+                ${UNITY_SRC}/LineSeparator.h
+                ${UNITY_SRC}/MockShortcutHint.h
+                ${UNITY_SRC}/ShortcutController.cpp
+                ${UNITY_SRC}/ShortcutController.h
+                ${UNITY_SRC}/ShortcutModel.cpp
+                ${UNITY_SRC}/ShortcutModel.h
+                ${UNITY_SRC}/ShortcutView.cpp
+                ${UNITY_SRC}/ShortcutView.h
+                ${UNITY_SRC}/StaticCairoText.cpp
+                ${UNITY_SRC}/StaticCairoText.h
+                ${UNITY_SRC}/UBusMessages.h
+                ${UNITY_SRC}/ubus-server.cpp
+                ${UNITY_SRC}/ubus-server.h
+                )            
 
+find_package (OpenGL)
 include_directories (${OPENGL_gl_INCDIRS})
 add_library (glfuncloader SHARED
 	     ${CMAKE_CURRENT_SOURCE_DIR}/GLFuncLoader.cpp)
@@ -467,9 +495,8 @@ add_executable (screen-effect-fbo
 target_link_libraries (screen-effect-fbo glfuncloader ${OPENGL_gl_LIBRARY})
 add_dependencies (screen-effect-fbo ${UNITY_API_VERSION})
 
-
 # Custom target to make all the other targets here, add your test to this list
-add_custom_target(standalone-clients DEPENDS dash panel launcher switcher keyutil quicklist quicklist-visuals filters filter-bar preview-applicaiton preview-generic preview-music result-view dash-style bg-hash)
+add_custom_target(standalone-clients DEPENDS dash panel launcher switcher keyutil quicklist quicklist-visuals filters filter-bar preview-applicaiton preview-generic preview-music result-view dash-style bg-hash shortcut-view)
 
 
 

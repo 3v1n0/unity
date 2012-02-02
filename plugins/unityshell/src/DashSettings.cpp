@@ -80,7 +80,7 @@ void Settings::Impl::Refresh()
   if (raw_from_factor == 0) //Automatic
   {
     UScreen *uscreen = UScreen::GetDefault();
-    int primary_monitor = uscreen->GetPrimaryMonitor();
+    int primary_monitor = uscreen->GetMonitorWithMouse();
     auto geo = uscreen->GetMonitorGeometry(primary_monitor);
 
     form_factor_ = geo.height > 799 ? FormFactor::DESKTOP : FormFactor::NETBOOK;

@@ -45,3 +45,18 @@ This test shows how the double click over the top panel should work.
 Outcome
   The maximized window should restore. If no maximized window is available on
   the current workspace, nothing should happen.
+
+
+Panel on Alt+Tab
+----------------
+This test shows react on Alt+Tab
+
+#. Start with a clear screen
+#. Open some new applications
+#. Press Alt+Tab
+
+Outcome
+  When you press Alt+Tab to switch window, the application title in the top left
+  of the panel should change inline with changes in alt-tab focus.
+  Also the menus shouldn't ever show. Even if the mouse has been left over
+  the panel when starting the Alt+Tab.

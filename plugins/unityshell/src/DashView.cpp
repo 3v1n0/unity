@@ -47,15 +47,19 @@ NUX_IMPLEMENT_OBJECT_TYPE(DashView);
 
 DashView::DashView()
   : nux::View(NUX_TRACKER_LOCATION)
+  , home_lens_(new HomeLens(_("Home"), _("Home screen"), _("Search")))
   , active_lens_view_(0)
   , last_activated_uri_("")
   , searching_timeout_id_(0)
   , search_in_progress_(false)
   , activate_on_finish_(false)
   , visible_(false)
-
 {
-  SetupBackground();
+  renderer_.SetOwner(this);
+  renderer_.need_redraw.connect([this] () { 
+    QueueDraw();
+  });
+  
   SetupViews();
   SetupUBusConnections();
 
@@ -64,50 +68,63 @@ DashView::DashView()
   mouse_down.connect(sigc::mem_fun(this, &DashView::OnMouseButtonDown));
 
   Relayout();
-  lens_bar_->Activate("home.lens");
 
-  bg_effect_helper_.owner = this;
-  bg_effect_helper_.enabled = false;
+  home_lens_->AddLenses(lenses_);
+  lens_bar_->Activate("home.lens");
 }
 
 DashView::~DashView()
 {
   if (searching_timeout_id_)
     g_source_remove (searching_timeout_id_);
-  delete bg_layer_;
-  delete bg_darken_layer_;
+}
+
+void DashView::SetMonitorOffset(int x, int y)
+{
+  renderer_.x_offset = x;
+  renderer_.y_offset = y;
 }
 
 void DashView::AboutToShow()
 {
   ubus_manager_.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
   visible_ = true;
-  bg_effect_helper_.enabled = true;
   search_bar_->text_entry()->SelectAll();
+
+  /* Give the lenses a chance to prep data before we map them  */
+  lens_bar_->Activate(active_lens_view_->lens()->id());
+  if (active_lens_view_->lens()->id() == "home.lens")
+  {
+    for (auto lens : lenses_.GetLenses())
+      {
+        lens->view_type = ViewType::HOME_VIEW;
+        LOG_DEBUG(logger) << "Setting ViewType " << ViewType::HOME_VIEW
+                              << " on '" << lens->id() << "'";
+      }
+
+      home_lens_->view_type = ViewType::LENS_VIEW;
+      LOG_DEBUG(logger) << "Setting ViewType " << ViewType::LENS_VIEW
+                                << " on '" << home_lens_->id() << "'";
+  }
+
+  renderer_.AboutToShow();
 }
 
 void DashView::AboutToHide()
 {
   visible_ = false;
-  bg_effect_helper_.enabled = false;
-}
+  renderer_.AboutToHide();
 
-void DashView::SetupBackground()
-{
-  nux::ROPConfig rop;
-  rop.Blend = true;
-  rop.SrcBlend = GL_ONE;
-  rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
-  bg_layer_ = new nux::ColorLayer(nux::Color(0.0f, 0.0f, 0.0f, 0.9), true, rop);
+  for (auto lens : lenses_.GetLenses())
+  {
+    lens->view_type = ViewType::HIDDEN;
+    LOG_DEBUG(logger) << "Setting ViewType " << ViewType::HIDDEN
+                          << " on '" << lens->id() << "'";
+  }
 
-  rop.Blend = true;
-  rop.SrcBlend = GL_ZERO;
-  rop.DstBlend = GL_SRC_COLOR;
-  bg_darken_layer_ = new nux::ColorLayer(nux::Color(0.7f, 0.7f, 0.7f, 1.0f), false, rop);
-
-  bg_shine_texture_ = dash::Style::Instance().GetDashShine()->GetDeviceTexture();
-
-  ubus_manager_.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
+  home_lens_->view_type = ViewType::HIDDEN;
+  LOG_DEBUG(logger) << "Setting ViewType " << ViewType::HIDDEN
+                            << " on '" << home_lens_->id() << "'";
 }
 
 void DashView::SetupViews()
@@ -131,9 +148,9 @@ void DashView::SetupViews()
   lenses_layout_ = new nux::VLayout();
   content_layout_->AddView(lenses_layout_, 1, nux::MINOR_POSITION_LEFT);
 
-  home_view_ = new HomeView();
+  home_view_ = new LensView(home_lens_);
   active_lens_view_ = home_view_;
-  lens_views_["home.lens"] = home_view_;
+  lens_views_[home_lens_->id] = home_view_;
   lenses_layout_->AddView(home_view_);
 
   lens_bar_ = new LensBar();
@@ -145,8 +162,6 @@ void DashView::SetupUBusConnections()
 {
   ubus_manager_.RegisterInterest(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
       sigc::mem_fun(this, &DashView::OnActivateRequest));
-  ubus_manager_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED,
-      sigc::mem_fun(this, &DashView::OnBackgroundColorChanged));
 }
 
 long DashView::PostLayoutManagement (long LayoutResult)
@@ -186,7 +201,7 @@ void DashView::Relayout()
 }
 
 // Gives us the width and height of the contents that will give us the best "fit",
-// which means that the icons/views will not have uneccessary padding, everything will
+// which means that the icons/views will not have unnecessary padding, everything will
 // look tight
 nux::Geometry DashView::GetBestFitGeometry(nux::Geometry const& for_geo)
 {
@@ -222,286 +237,13 @@ nux::Geometry DashView::GetBestFitGeometry(nux::Geometry const& for_geo)
 
 void DashView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
 {
-  bool paint_blur = BackgroundEffectHelper::blur_type != BLUR_NONE;
-  nux::Geometry geo = content_geo_;
-  nux::Geometry geo_absolute = GetAbsoluteGeometry();
-
-  if (Settings::Instance().GetFormFactor() != FormFactor::NETBOOK)
-  {
-    // Paint the edges
-    {
-      dash::Style& style = dash::Style::Instance();
-      nux::BaseTexture* bottom = style.GetDashBottomTile();
-      nux::BaseTexture* right = style.GetDashRightTile();
-      nux::BaseTexture* corner = style.GetDashCorner();
-      nux::BaseTexture* left_corner = style.GetDashLeftCorner();
-      nux::BaseTexture* left_tile = style.GetDashLeftTile();
-      nux::BaseTexture* top_corner = style.GetDashTopCorner();
-      nux::BaseTexture* top_tile = style.GetDashTopTile();
-      nux::TexCoordXForm texxform;
-
-      int left_corner_offset = 10;
-      int top_corner_offset = 10;
-
-      geo = content_geo_;
-      geo.width += corner->GetWidth() - 10;
-      geo.height += corner->GetHeight() - 10;
-      {
-        // Corner
-        texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-        texxform.SetWrap(nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
-
-        gfx_context.QRP_1Tex(geo.x + (geo.width - corner->GetWidth()),
-                            geo.y + (geo.height - corner->GetHeight()),
-                            corner->GetWidth(),
-                            corner->GetHeight(),
-                            corner->GetDeviceTexture(),
-                            texxform,
-                            nux::color::White);
-      }
-      {
-        // Bottom repeated texture
-        int real_width = geo.width - (left_corner->GetWidth() - left_corner_offset) - corner->GetWidth();
-        int offset = real_width % bottom->GetWidth();
-
-        texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-        texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
-
-        gfx_context.QRP_1Tex(left_corner->GetWidth() - left_corner_offset - offset,
-                            geo.y + (geo.height - bottom->GetHeight()),
-                            real_width + offset,
-                            bottom->GetHeight(),
-                            bottom->GetDeviceTexture(),
-                            texxform,
-                            nux::color::White);
-      }
-      {
-        // Bottom left corner
-        texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-        texxform.SetWrap(nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
-
-        gfx_context.QRP_1Tex(geo.x - left_corner_offset,
-                            geo.y + (geo.height - left_corner->GetHeight()),
-                            left_corner->GetWidth(),
-                            left_corner->GetHeight(),
-                            left_corner->GetDeviceTexture(),
-                            texxform,
-                            nux::color::White);
-      }
-      {
-        // Left repeated texture
-        nux::Geometry real_geo = GetGeometry();
-        int real_height = real_geo.height - geo.height;
-        int offset = real_height % left_tile->GetHeight();
-
-        texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-        texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
-
-        gfx_context.QRP_1Tex(geo.x - 10,
-                            geo.y + geo.height - offset,
-                            left_tile->GetWidth(),
-                            real_height + offset,
-                            left_tile->GetDeviceTexture(),
-                            texxform,
-                            nux::color::White);
-      }
-      {
-        // Right edge
-        texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-        texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
-
-        gfx_context.QRP_1Tex(geo.x + geo.width - right->GetWidth(),
-                             geo.y + top_corner->GetHeight() - top_corner_offset,
-                             right->GetWidth(),
-                             geo.height - corner->GetHeight() - (top_corner->GetHeight() - top_corner_offset),
-                             right->GetDeviceTexture(),
-                             texxform,
-                             nux::color::White);
-      }
-      {
-        // Top right corner
-        texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-        texxform.SetWrap(nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
-
-        gfx_context.QRP_1Tex(geo.x + geo.width - right->GetWidth(),
-                            geo.y - top_corner_offset,
-                            top_corner->GetWidth(),
-                            top_corner->GetHeight(),
-                            top_corner->GetDeviceTexture(),
-                            texxform,
-                            nux::color::White);
-      }
-      {
-        // Top edge
-        texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-        texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
-
-        gfx_context.QRP_1Tex(geo.x + geo.width,
-                             geo.y - 10,
-                             GetGeometry().width - (geo.x + geo.width),
-                             top_tile->GetHeight(),
-                             top_tile->GetDeviceTexture(),
-                             texxform,
-                             nux::color::White);
-      }
-    }
-  }
-
-  nux::TexCoordXForm texxform_absolute_bg;
-  texxform_absolute_bg.flip_v_coord = true;
-  texxform_absolute_bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-  texxform_absolute_bg.uoffset = ((float) content_geo_.x) / geo_absolute.width;
-  texxform_absolute_bg.voffset = ((float) content_geo_.y) / geo_absolute.height;
-  texxform_absolute_bg.SetWrap(TEXWRAP_CLAMP, TEXWRAP_CLAMP);
-
-  if (paint_blur)
-  {
-    nux::Geometry blur_geo(geo_absolute.x, geo_absolute.y, content_geo_.width, content_geo_.height);
-    bg_blur_texture_ = bg_effect_helper_.GetBlurRegion(blur_geo);
-
-    if (bg_blur_texture_.IsValid()  && paint_blur)
-    {
-      nux::Geometry bg_clip = geo;
-      gfx_context.PushClippingRectangle(bg_clip);
-
-      gfx_context.GetRenderStates().SetBlend(false);
-      gfx_context.QRP_1Tex (content_geo_.x, content_geo_.y,
-                            content_geo_.width, content_geo_.height,
-                            bg_blur_texture_, texxform_absolute_bg, color::White);
-      gPainter.PopBackground();
-
-      gfx_context.PopClippingRectangle();
-    }
-  }
-
-  bg_darken_layer_->SetGeometry(content_geo_);
-  nux::GetPainter().RenderSinglePaintLayer(gfx_context, content_geo_, bg_darken_layer_);
-
-  bg_layer_->SetGeometry(content_geo_);
-  nux::GetPainter().RenderSinglePaintLayer(gfx_context, content_geo_, bg_layer_);
-
-
-  texxform_absolute_bg.flip_v_coord = false;
-  texxform_absolute_bg.uoffset = (1.0f / bg_shine_texture_->GetWidth()) * (GetAbsoluteGeometry().x);
-  texxform_absolute_bg.voffset = (1.0f / bg_shine_texture_->GetHeight()) * (GetAbsoluteGeometry().y);
-
-  gfx_context.GetRenderStates().SetColorMask(true, true, true, false);
-  gfx_context.GetRenderStates().SetBlend(true, GL_DST_COLOR, GL_ONE);
-
-  gfx_context.QRP_1Tex (content_geo_.x, content_geo_.y,
-                        content_geo_.width, content_geo_.height,
-                        bg_shine_texture_, texxform_absolute_bg, color::White);
-
-
-  // Make round corners
-  nux::ROPConfig rop;
-  rop.Blend = true;
-  rop.SrcBlend = GL_ZERO;
-  rop.DstBlend = GL_SRC_ALPHA;
-  nux::GetPainter().PaintShapeCornerROP(gfx_context,
-                               content_geo_,
-                               nux::color::White,
-                               nux::eSHAPE_CORNER_ROUND4,
-                               nux::eCornerBottomRight,
-                               true,
-                               rop);
-
-  gfx_context.GetRenderStates().SetColorMask(true, true, true, true);
-  gfx_context.GetRenderStates().SetBlend(true);
-  gfx_context.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
-
-  geo = GetGeometry();
-  nux::GetPainter().Paint2DQuadColor(gfx_context,
-                                     nux::Geometry(geo.x,
-                                                   geo.y,
-                                                   1,
-                                                   content_geo_.height + 5),
-                                     nux::Color(0.0f, 0.0f, 0.0f, 0.0f),
-                                     nux::Color(0.15f, 0.15f, 0.15f, 0.15f),
-                                     nux::Color(0.15f, 0.15f, 0.15f, 0.15f),
-                                     nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
-  nux::GetPainter().Paint2DQuadColor(gfx_context,
-                                     nux::Geometry(geo.x,
-                                                   geo.y,
-                                                   content_geo_.width + 5,
-                                                   1),
-                                     nux::Color(0.0f, 0.0f, 0.0f, 0.0f),
-                                     nux::Color(0.0f, 0.0f, 0.0f, 0.0f),
-                                     nux::Color(0.15f, 0.15f, 0.15f, 0.15f),
-                                     nux::Color(0.15f, 0.15f, 0.15f, 0.15f));
-
-  geo = content_geo_;
-  // Fill in corners (meh)
-  for (int i = 1; i < 6; ++i)
-  {
-    nux::Geometry fill_geo (geo.x + geo.width, geo.y + i - 1, 6 - i, 1);
-    nux::GetPainter().Paint2DQuadColor(gfx_context, fill_geo, bg_color_);
-
-    nux::Color dark = bg_color_ * 0.8f;
-    dark.alpha = bg_color_.alpha;
-    fill_geo = nux::Geometry(geo.x + i - 1 , geo.y + geo.height, 1, 6 - i);
-    nux::GetPainter().Paint2DQuadColor(gfx_context, fill_geo, dark);
-  }
+  renderer_.DrawFull(gfx_context, content_geo_, GetAbsoluteGeometry(), GetGeometry());
 }
 
 void DashView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
 {
-  bool paint_blur = BackgroundEffectHelper::blur_type != BLUR_NONE;
-  nux::Geometry geo = GetGeometry();
-  int bgs = 0;
-
-  gfx_context.PushClippingRectangle(geo);
-
-  gfx_context.GetRenderStates().SetBlend(true);
-  gfx_context.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
-
-  nux::Geometry geo_absolute = GetAbsoluteGeometry ();
-  nux::TexCoordXForm texxform_absolute_bg;
-  texxform_absolute_bg.flip_v_coord = true;
-  texxform_absolute_bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-  texxform_absolute_bg.uoffset = ((float) content_geo_.x) / geo_absolute.width;
-  texxform_absolute_bg.voffset = ((float) content_geo_.y) / geo_absolute.height;
-  texxform_absolute_bg.SetWrap(TEXWRAP_CLAMP, TEXWRAP_CLAMP);
-
-  nux::ROPConfig rop;
-  rop.Blend = false;
-  rop.SrcBlend = GL_ONE;
-  rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
-
-  if (bg_blur_texture_.IsValid() && paint_blur)
-  {
-    gPainter.PushTextureLayer(gfx_context, content_geo_,
-                              bg_blur_texture_,
-                              texxform_absolute_bg,
-                              nux::color::White,
-                              true, // write alpha?
-                              rop);
-    bgs++;
-  }
-
-  // draw the darkening behind our paint
-  nux::GetPainter().PushLayer(gfx_context, bg_darken_layer_->GetGeometry(), bg_darken_layer_);
-  bgs++;
-
-  nux::GetPainter().PushLayer(gfx_context, bg_layer_->GetGeometry(), bg_layer_);
-  bgs++;
-
-  // apply the shine
-  rop.Blend = true;
-  rop.SrcBlend = GL_DST_COLOR;
-  rop.DstBlend = GL_ONE;
-  texxform_absolute_bg.flip_v_coord = false;
-  texxform_absolute_bg.uoffset = (1.0f / bg_shine_texture_->GetWidth()) * (GetAbsoluteGeometry().x);
-  texxform_absolute_bg.voffset = (1.0f / bg_shine_texture_->GetHeight()) * (GetAbsoluteGeometry().y);
-
-  nux::GetPainter().PushTextureLayer(gfx_context, bg_layer_->GetGeometry(),
-                                     bg_shine_texture_,
-                                     texxform_absolute_bg,
-                                     nux::color::White,
-                                     false,
-                                     rop);
-  bgs++;
-
+  renderer_.DrawInner(gfx_context, content_geo_, GetAbsoluteGeometry(), GetGeometry());
+  
   if (IsFullRedraw())
   {
     nux::GetPainter().PushBackgroundStack();
@@ -512,23 +254,8 @@ void DashView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
   {
     layout_->ProcessDraw(gfx_context, force_draw);
   }
-
-  nux::GetPainter().PopBackground(bgs);
-
-  gfx_context.GetRenderStates().SetBlend(false);
-  gfx_context.PopClippingRectangle();
-
-  // Make round corners
-  rop.Blend = true;
-  rop.SrcBlend = GL_ZERO;
-  rop.DstBlend = GL_SRC_ALPHA;
-  nux::GetPainter().PaintShapeCornerROP(gfx_context,
-                               content_geo_,
-                               nux::color::White,
-                               nux::eSHAPE_CORNER_ROUND4,
-                               nux::eCornerBottomRight,
-                               true,
-                               rop);
+  
+  renderer_.DrawInnerCleanup(gfx_context, content_geo_, GetAbsoluteGeometry(), GetGeometry());
 }
 
 void DashView::OnMouseButtonDown(int x, int y, unsigned long button, unsigned long key)
@@ -549,7 +276,6 @@ void DashView::OnActivateRequest(GVariant* args)
 
   std::string id = AnalyseLensURI(uri.Str());
 
-  home_view_->search_string = "";
   lens_bar_->Activate(id);
 
   if ((id == "home.lens" && handled_type != GOTO_DASH_URI ) || !visible_)
@@ -605,17 +331,6 @@ void DashView::UpdateLensFilterValue(Filter::Ptr filter, std::string value)
   }
 }
 
-void DashView::OnBackgroundColorChanged(GVariant* args)
-{
-  gdouble red, green, blue, alpha;
-  g_variant_get (args, "(dddd)", &red, &green, &blue, &alpha);
-
-  nux::Color color = nux::Color(red, green, blue, alpha);
-  bg_layer_->SetColor(color);
-  bg_color_ = color;
-  QueueDraw();
-}
-
 gboolean DashView::ResetSearchStateCb(gpointer data)
 {
   DashView *self = static_cast<DashView*>(data);
@@ -657,7 +372,6 @@ void DashView::OnLensAdded(Lens::Ptr& lens)
 {
   std::string id = lens->id;
   lens_bar_->AddLens(lens);
-  home_view_->AddLens(lens);
 
   LensView* view = new LensView(lens);
   view->SetVisible(false);
@@ -683,15 +397,17 @@ void DashView::OnLensBarActivated(std::string const& id)
   for (auto it: lens_views_)
   {
     bool id_matches = it.first == id;
+    ViewType view_type = id_matches ? LENS_VIEW : (view == home_view_ ? HOME_VIEW : HIDDEN);
     it.second->SetVisible(id_matches);
-    it.second->view_type = id_matches ? LENS_VIEW : (view == home_view_ ? HOME_VIEW : HIDDEN);
+    it.second->view_type = view_type;
+
+    LOG_DEBUG(logger) << "Setting ViewType " << view_type
+                      << " on '" << it.first << "'";
   }
 
   search_bar_->search_string = view->search_string;
-  if (view != home_view_)
-    search_bar_->search_hint = view->lens()->search_hint;
-  else
-    search_bar_->search_hint = _("Search");
+  search_bar_->search_hint = view->lens()->search_hint;
+
   bool expanded = view->filters_expanded;
   search_bar_->showing_filters = expanded;
 
@@ -705,6 +421,14 @@ void DashView::OnLensBarActivated(std::string const& id)
 
 void DashView::OnSearchFinished(Lens::Hints const& hints)
 {
+  Lens::Hints::const_iterator it;
+  it = hints.find("no-results-hint");
+  
+  if (it != hints.end())
+  {
+    LOG_DEBUG(logger) << "We have no-results-hint: " << g_variant_get_string (it->second, NULL);
+  }
+
   std::string search_string = search_bar_->search_string;
   if (active_lens_view_ && active_lens_view_->search_string == search_string)
   {
@@ -817,7 +541,7 @@ bool DashView::LaunchApp(std::string const& appname)
 
 void DashView::DisableBlur()
 {
-  bg_effect_helper_.blur_type = BLUR_NONE;
+  renderer_.DisableBlur();
 }
 void DashView::OnEntryActivated()
 {
@@ -866,6 +590,7 @@ bool DashView::InspectKeyEvent(unsigned int eventType,
       ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
     else
       search_bar_->search_string = "";
+
     return true;
   }
   return false;
