@@ -87,6 +87,12 @@ void HudImpl::ExecuteByKey(GVariant* key, unsigned int timestamp)
 
 void HudImpl::ExecuteQueryByStringCallback(GVariant* query, unsigned int timestamp)
 {
+  if (g_variant_n_children(query) < 3)
+  {
+    LOG_ERROR(logger) << "Received (" << g_variant_n_children(query) << ") children in a query, expected 3";
+    return;
+  }
+  
   queries_.clear();
   
   GVariant* query_key = g_variant_get_child_value(query, 2);
@@ -106,6 +112,11 @@ void HudImpl::ExecuteQueryByStringCallback(GVariant* query, unsigned int timesta
 
 void HudImpl::QueryCallback(GVariant* query)
 {
+  if (g_variant_n_children(query) < 3)
+  {
+    LOG_ERROR(logger) << "Received (" << g_variant_n_children(query) << ") children in a query, expected 3";
+    return;
+  }
   queries_.clear();
 
   // extract the information from the GVariants
@@ -124,8 +135,13 @@ void HudImpl::QueryCallback(GVariant* query)
 
 void HudImpl::UpdateQueryCallback(GVariant* query)
 {
+  if (g_variant_n_children(query) < 3)
+  {
+    LOG_ERROR(logger) << "Received (" << g_variant_n_children(query) << ") children in a query, expected 3";
+    return;
+  }
   // as we are expecting an update, we want to check
-  // and make sure that we are the actual recievers of
+  // and make sure that we are the actual receivers of
   // the signal
 
   GVariant* query_key = g_variant_get_child_value(query, 2);
