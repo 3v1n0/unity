@@ -44,11 +44,13 @@ Introspectable::IntrospectableList const& Introspectable::GetIntrospectableChild
 GVariant*
 Introspectable::Introspect()
 {
+  static guint64 unique_id=0;
   GVariantBuilder  builder;
   GVariantBuilder  child_builder;
   gint             n_children = 0;
 
   g_variant_builder_init(&builder, G_VARIANT_TYPE("a{sv}"));
+  g_variant_builder_add(&builder, "{sv}", "id", g_variant_new_uint64(unique_id++));
 
   AddProperties(&builder);
 
