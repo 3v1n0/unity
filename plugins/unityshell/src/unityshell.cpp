@@ -311,6 +311,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
 
      optionSetStopVelocityNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetRevealPressureNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+     optionSetEdgeResponsivenessNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetOvercomePressureNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetDecayRateNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetShowMinimizedWindowsNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
@@ -2205,7 +2206,7 @@ CompPoint UnityWindow::tryNotIntersectUI(CompPoint& pos)
   {
     nux::Geometry geo = launcher->GetAbsoluteGeometry();
     
-    if (launcher->Hidden() || launcher->GetHideMode() == LAUNCHER_HIDE_NEVER || launcher->GetHideMode() == LAUNCHER_HIDE_AUTOHIDE)
+    if (launcher->Hidden() || launcher->options()->hide_mode == LAUNCHER_HIDE_NEVER || launcher->options()->hide_mode == LAUNCHER_HIDE_AUTOHIDE)
       continue;
     
     if (geo.IsInside(result))
@@ -2409,6 +2410,8 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       break;
     case UnityshellOptions::RevealPressure:
       launcher_options->edge_reveal_pressure = optionGetRevealPressure() * 100;
+    case UnityshellOptions::EdgeResponsiveness:
+      launcher_options->edge_responsiveness = optionGetEdgeResponsiveness();
       break;
     default:
       break;

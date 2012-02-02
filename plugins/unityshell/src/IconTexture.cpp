@@ -168,6 +168,7 @@ void IconTexture::IconLoaded(std::string const& icon_name, unsigned size,
       SetByIconName(DEFAULT_ICON, _size);
   }
 
+  texture_updated.emit(_texture_cached.GetPointer());
   QueueDraw();
 }
 

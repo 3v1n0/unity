@@ -53,6 +53,8 @@ public:
 
   nux::BaseTexture* texture();
 
+  sigc::signal<void, nux::BaseTexture*> texture_updated;
+  
 protected:
   // Key navigation
   virtual bool AcceptKeyNavFocus();

@@ -470,11 +470,15 @@ add_executable (hud
                 ${UNITY_SRC}/HudButton.cpp
                 ${UNITY_SRC}/HudIcon.cpp
                 ${UNITY_SRC}/HudIcon.h
+                ${UNITY_SRC}/HudIconTextureSource.cpp
+                ${UNITY_SRC}/HudIconTextureSource.h
                 ${UNITY_SRC}/HudView.cpp
                 ${UNITY_SRC}/IMTextEntry.cpp
                 ${UNITY_SRC}/Introspectable.cpp
                 ${UNITY_SRC}/IconTexture.cpp
                 ${UNITY_SRC}/IconLoader.cpp
+                ${UNITY_SRC}/IconRenderer.cpp
+                ${UNITY_SRC}/IconTextureSource.cpp
                 ${UNITY_SRC}/JSONParser.cpp
                 ${UNITY_SRC}/OverlayRenderer.cpp
                 ${UNITY_SRC}/SearchBar.cpp

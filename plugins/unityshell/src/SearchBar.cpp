@@ -25,6 +25,7 @@
 #include <Nux/VLayout.h>
 #include <Nux/Layout.h>
 #include <Nux/WindowCompositor.h>
+#include <NuxCore/Logger.h>
 
 #include <NuxImage/CairoGraphics.h>
 #include <NuxImage/ImageSurface.h>
@@ -48,6 +49,13 @@
 namespace
 {
 const float kExpandDefaultIconOpacity = 1.0f;
+const int external_margin_vertical = 8;
+const int external_margin_horizontal = 7;
+}
+
+namespace
+{
+  nux::logging::Logger logger("unity");
 }
 
 namespace unity
@@ -60,6 +68,7 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
   , search_hint("")
   , showing_filters(false)
   , can_refine_search(false)
+  , disable_glow(false)
   , show_filter_hint_(true)
   , search_bar_width_(642)
   , live_search_timeout_(0)
@@ -73,6 +82,7 @@ SearchBar::SearchBar(int search_bar_width, bool show_filter_hint_, NUX_FILE_LINE
   , search_hint("")
   , showing_filters(false)
   , can_refine_search(false)
+  , disable_glow(false)
   , show_filter_hint_(show_filter_hint_)
   , search_bar_width_(search_bar_width)
   , live_search_timeout_(0)
@@ -86,6 +96,7 @@ SearchBar::SearchBar(int search_bar_width, NUX_FILE_LINE_DECL)
   , search_hint("")
   , showing_filters(false)
   , can_refine_search(false)
+  , disable_glow(false)
   , show_filter_hint_(true)
   , search_bar_width_(search_bar_width)
   , live_search_timeout_(0)
@@ -102,8 +113,8 @@ void SearchBar::Init()
 
   layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
   layout_->SetHorizontalInternalMargin(0);
-  layout_->SetVerticalExternalMargin(8);
-  layout_->SetHorizontalExternalMargin(7);
+  layout_->SetVerticalExternalMargin(external_margin_vertical);
+  layout_->SetHorizontalExternalMargin(external_margin_horizontal);
   SetLayout(layout_);
 
   spinner_ = new SearchBarSpinner();
@@ -189,6 +200,15 @@ void SearchBar::Init()
       expand_icon_->SetVisible(can_refine);
     }
   });
+
+  disable_glow.changed.connect([&](bool disabled) 
+  {
+    layout_->SetVerticalExternalMargin(0);
+    layout_->SetHorizontalExternalMargin(0);
+    UpdateBackground(true);
+    QueueDraw();
+  });
+
 }
 
 SearchBar::~SearchBar()
@@ -308,7 +328,7 @@ void SearchBar::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
   nux::Geometry geo = GetGeometry();
 
-  UpdateBackground();
+  UpdateBackground(false);
 
   GfxContext.PushClippingRectangle(geo);
 
@@ -382,21 +402,33 @@ SearchBar::SearchFinished()
   spinner_->SetState(is_empty ? STATE_READY : STATE_CLEAR);
 }
 
-void SearchBar::UpdateBackground()
+void SearchBar::UpdateBackground(bool force)
 {
-#define PADDING 12
-#define RADIUS  5
+  int PADDING = 12;
+  int RADIUS = 5;
   int x, y, width, height;
   nux::Geometry geo = GetGeometry();
   geo.width = layered_layout_->GetGeometry().width;
 
-  if (geo.width == last_width_ && geo.height == last_height_)
+  LOG_DEBUG(logger) << "height: " 
+  << geo.height << " - "
+  << layered_layout_->GetGeometry().height << " - " 
+  << pango_entry_->GetGeometry().height;
+
+  if (geo.width == last_width_ 
+      && geo.height == last_height_ 
+      && force == false)
     return;
 
   last_width_ = geo.width;
   last_height_ = geo.height;
 
+  if (disable_glow)
+    PADDING = 2;
+  
+  
   x = y = PADDING - 1;
+  
   width = last_width_ - (2 * PADDING);
   height = last_height_ - (2 * PADDING) + 1;
 

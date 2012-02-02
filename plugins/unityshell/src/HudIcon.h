@@ -38,6 +38,8 @@
 #include <gtk/gtk.h>
 
 #include "IconTexture.h"
+#include "HudIconTextureSource.h"
+#include "IconRenderer.h"
 #include "Introspectable.h"
 
 namespace unity
@@ -60,6 +62,8 @@ protected:
   nux::ObjectPtr<nux::BaseTexture> background_;
   nux::ObjectPtr<nux::BaseTexture> gloss_;
   nux::ObjectPtr<nux::BaseTexture> edge_;
+  nux::ObjectPtr<HudIconTextureSource> icon_texture_source_;
+  unity::ui::IconRenderer icon_renderer_;
 };
 
 }

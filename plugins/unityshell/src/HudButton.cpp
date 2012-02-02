@@ -47,6 +47,7 @@ namespace hud
 
 HudButton::HudButton (nux::TextureArea *image, NUX_FILE_LINE_DECL)
     : nux::Button (image, NUX_FILE_LINE_PARAM)
+    , is_rounded(false)
     , is_focused_(false)
 {
   InitTheme();
@@ -55,6 +56,7 @@ HudButton::HudButton (nux::TextureArea *image, NUX_FILE_LINE_DECL)
 
 HudButton::HudButton (const std::string label_, NUX_FILE_LINE_DECL)
     : nux::Button (NUX_FILE_LINE_PARAM)
+    , is_rounded(false)
     , is_focused_(false)
 {
   InitTheme();
@@ -62,6 +64,7 @@ HudButton::HudButton (const std::string label_, NUX_FILE_LINE_DECL)
 
 HudButton::HudButton (const std::string label_, nux::TextureArea *image, NUX_FILE_LINE_DECL)
     : nux::Button (image, NUX_FILE_LINE_PARAM)
+    , is_rounded(false)
     , is_focused_(false)
 {
   InitTheme();
@@ -69,6 +72,7 @@ HudButton::HudButton (const std::string label_, nux::TextureArea *image, NUX_FIL
 
 HudButton::HudButton (NUX_FILE_LINE_DECL)
     : nux::Button (NUX_FILE_LINE_PARAM)
+    , is_rounded(false)
     , is_focused_(false)
 {
   InitTheme();
@@ -79,6 +83,14 @@ HudButton::~HudButton() {
 
 void HudButton::InitTheme()
 {
+  is_rounded.changed.connect([&] (bool rounded)
+  {
+    nux::Geometry geo = GetGeometry();
+    prelight_->Invalidate(geo);
+    active_->Invalidate(geo);
+    normal_->Invalidate(geo);
+  });
+
   SetMinimumHeight(42);
   if (!active_)
   {
@@ -92,7 +104,9 @@ void HudButton::InitTheme()
 
 void HudButton::RedrawTheme(nux::Geometry const& geom, cairo_t* cr, nux::ButtonVisualState faked_state)
 {
-  dash::Style::Instance().Button(cr, faked_state, label_, dash::Alignment::LEFT);
+  dash::Style::Instance().SquareButton(cr, faked_state, label_, 
+                                           is_rounded, 17, 
+                                           dash::Alignment::LEFT, true);
 }
 
 bool HudButton::AcceptKeyNavFocus()
@@ -121,18 +135,18 @@ long HudButton::ComputeContentSize ()
 void HudButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw) 
 {
   nux::Geometry const& geo = GetGeometry();
-
   gPainter.PaintBackground(GfxContext, geo);
   // set up our texture mode
   nux::TexCoordXForm texxform;
-  texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
+  texxform.SetWrap(nux::TEXWRAP_CLAMP, nux::TEXWRAP_CLAMP);
   texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
 
   // clear what is behind us
   unsigned int alpha = 0, src = 0, dest = 0;
   GfxContext.GetRenderStates().GetBlend(alpha, src, dest);
-  GfxContext.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-
+  GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
+  GfxContext.GetRenderStates().SetBlend(true);
+  
   nux::Color col = nux::color::Black;
   col.alpha = 0;
   GfxContext.QRP_Color(geo.x,
@@ -151,8 +165,8 @@ void HudButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   GfxContext.QRP_1Tex(geo.x,
                       geo.y,
-                      geo.width,
-                      geo.height,
+                      texture->GetWidth() + 1, // FIXME !! - jay, nux has gone crazy, unless i specify +1 here, it won't render the entire texture
+                      texture->GetHeight(),
                       texture->GetDeviceTexture(),
                       texxform,
                       nux::Color(1.0f, 1.0f, 1.0f, 1.0f));

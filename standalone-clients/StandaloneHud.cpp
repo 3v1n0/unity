@@ -82,6 +82,7 @@ void TestRunner::Init ()
     {
       if (!(*query)->icon_name.empty())
       {
+        LOG_DEBUG(logger) << "Setting icon name to: " << (*query)->icon_name;
         icon_name = (*query)->icon_name;
         break;
       }
@@ -153,7 +154,7 @@ int main(int argc, char **argv)
 
   TestRunner *test_runner = new TestRunner ();
   wt = nux::CreateGUIThread(TEXT("Hud Prototype Test"),
-                            1024, 768,
+                            1200, 768,
                             0,
                             &TestRunner::InitWindowThread,
                             test_runner);
