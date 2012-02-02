@@ -647,7 +647,7 @@ LauncherIcon::SetCenter(nux::Point3 center, int monitor, nux::Geometry geo)
   if (monitor == _last_monitor)
   {
     int tip_x, tip_y;
-    tip_x = geo.x + geo.width - 3 * geo.width / 48;
+    tip_x = geo.x + geo.width - 4 * geo.width / 48;
     tip_y = geo.y + _center[monitor].y;
 
     if (_quicklist->IsVisible())
