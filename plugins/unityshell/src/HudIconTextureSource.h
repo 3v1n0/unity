@@ -38,8 +38,10 @@ public:
   virtual nux::BaseTexture* TextureForSize(int size);
   virtual nux::Color GlowColor();
   virtual nux::BaseTexture* Emblem();
+  void ColorForIcon(GdkPixbuf* pixbuf);
   
 private:
+  nux::Color bg_color;
   nux::ObjectPtr<nux::BaseTexture> icon_texture_;
 };
 

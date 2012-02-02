@@ -59,6 +59,7 @@ void Icon::Init()
   texture_updated.connect([&] (nux::BaseTexture* texture) 
   {
     icon_texture_source_ = new HudIconTextureSource(nux::ObjectPtr<nux::BaseTexture>(texture));
+    icon_texture_source_->ColorForIcon(_pixbuf_cached);
   });
 }
 
