@@ -201,16 +201,27 @@ void View::SetWindowGeometry(nux::Geometry const& absolute_geo, nux::Geometry co
   absolute_window_geometry_ = absolute_geo;
 }
 
+namespace
+{
+  const int top_spacing = 9;
+  const int content_width = 941;
+  const int icon_vertical_margin = 5;
+  const int spacing_between_icon_and_content = 8;
+}
+
 void View::SetupViews()
 {
   layout_ = new nux::HLayout();
   
   icon_ = new Icon("", icon_size, true);
   nux::Layout* icon_layout = new nux::VLayout();
-  icon_layout->SetVerticalExternalMargin(5);
+  icon_layout->SetVerticalExternalMargin(icon_vertical_margin);
   icon_layout->AddView(icon_.GetPointer(), 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
   layout_->AddLayout(icon_layout, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_MATCHCONTENT);
-  layout_->AddLayout(new nux::SpaceLayout(8,8,8,8), 0);
+  layout_->AddLayout(new nux::SpaceLayout(spacing_between_icon_and_content,
+                                          spacing_between_icon_and_content,
+                                          spacing_between_icon_and_content,
+                                          spacing_between_icon_and_content), 0);
   
   
   content_layout_ = new nux::VLayout();
@@ -218,10 +229,10 @@ void View::SetupViews()
   SetLayout(layout_.GetPointer());
 
   // add the top spacing 
-  content_layout_->AddLayout(new nux::SpaceLayout(9,9,9,9), 0);
+  content_layout_->AddLayout(new nux::SpaceLayout(top_spacing,top_spacing,top_spacing,top_spacing), 0);
 
   // add the search bar to the composite
-  search_bar_ = new unity::SearchBar(941, true);
+  search_bar_ = new unity::SearchBar(content_width, true);
   search_bar_->disable_glow = true;
   search_bar_->search_hint = default_text;
   search_bar_->search_changed.connect(sigc::mem_fun(this, &View::OnSearchChanged));
@@ -229,7 +240,7 @@ void View::SetupViews()
   content_layout_->AddView(search_bar_.GetPointer(), 0, nux::MINOR_POSITION_LEFT);
  
   button_views_ = new nux::VLayout();
-  button_views_->SetMaximumWidth(941);
+  button_views_->SetMaximumWidth(content_width);
 
   content_layout_->AddLayout(button_views_.GetPointer(), 1, nux::MINOR_POSITION_LEFT);
 }
