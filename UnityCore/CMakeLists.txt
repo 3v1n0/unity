@@ -21,6 +21,7 @@ set (CORE_HEADERS
      GLibSignal-inl.h
      GLibWrapper.h
      GLibWrapper-inl.h
+     HomeLens.h
      IndicatorEntry.h
      Indicator.h
      Indicators.h
@@ -33,7 +34,6 @@ set (CORE_HEADERS
      ModelRowAdaptor.h
      ModelRowAdaptor-inl.h
      Preview.h
-     Utils.h
      RadioOptionFilter.h
      RatingsFilter.h
      Result.h
@@ -54,6 +54,7 @@ set (CORE_SOURCES
      GLibDBusProxy.cpp
      GLibSignal.cpp
      GLibWrapper.cpp
+     HomeLens.cpp
      Indicator.cpp
      IndicatorEntry.cpp
      Indicators.cpp

@@ -39,6 +39,8 @@
 #include "DashSettings.h"
 #include "DashStyle.h"
 #include "FontSettings.h"
+#include "ShortcutController.h"
+#include "ShortcutHint.h"
 #include "LauncherController.h"
 #include "PanelController.h"
 #include "PanelStyle.h"
@@ -47,7 +49,9 @@
 #include "DebugDBusInterface.h"
 #include "SwitcherController.h"
 #include "UBusWrapper.h"
+#ifndef USE_GLES
 #include "ScreenEffectFramebufferObject.h"
+#endif
 
 #include "compizminimizedwindowhandler.h"
 #include "BGHash.h"
@@ -128,7 +132,11 @@ public:
   void nuxEpilogue();
 
   /* nux draw wrapper */
+#ifdef USE_GLES
+  void paintDisplay();
+#else
   void paintDisplay(const CompRegion& region, const GLMatrix& transform, unsigned int mask);
+#endif
   void paintPanelShadow(const GLMatrix& matrix);
 
   void preparePaint (int ms);
@@ -149,6 +157,11 @@ public:
                      const CompRegion&,
                      CompOutput*,
                      unsigned int);
+#ifdef USE_GLES
+  void glPaintCompositedOutput (const CompRegion    &region,
+                                GLFramebufferObject *fbo,
+                                unsigned int         mask);
+#endif
 
   /* paint in the special case that the output is transformed */
   void glPaintTransformedOutput(const GLScreenPaintAttrib&,
@@ -174,7 +187,6 @@ public:
 
   bool executeCommand(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool setKeyboardFocusKeyInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
-  bool launcherRevealEdgeInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
 
   bool altTabInitiateCommon(CompAction* action,
                             CompAction::State state,
@@ -189,6 +201,10 @@ public:
   bool altTabDetailStopInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool altTabNextWindowInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool altTabPrevWindowInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
+
+  bool launcherSwitcherForwardInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool launcherSwitcherPrevInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool launcherSwitcherTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options);
 
   /* handle option changes and change settings inside of the
    * panel and dock views */
@@ -219,6 +235,7 @@ private:
 
   void EnsureSuperKeybindings ();
   void CreateSuperNewAction(char shortcut, bool use_shift=false, bool use_numpad=false);
+  void EnableCancelAction(bool enabled, int modifiers = 0);
 
   static gboolean initPluginActions(gpointer data);
   void initLauncher();
@@ -230,18 +247,17 @@ private:
   static void initUnity(nux::NThread* thread, void* InitData);
   static void OnStartKeyNav(GVariant* data, void* value);
   static void OnExitKeyNav(GVariant* data, void* value);
-  static gboolean OnEdgeTriggerTimeout(gpointer data);
   static gboolean OnRedrawTimeout(gpointer data);
 
   void startLauncherKeyNav();
   void restartLauncherKeyNav();
-  void OnLauncherHiddenChanged();
 
   void OnDashRealized ();
 
-  static void OnQuicklistEndKeyNav(GVariant* data, void* value);
-  static void OnLauncherStartKeyNav(GVariant* data, void* value);
-  static void OnLauncherEndKeyNav(GVariant* data, void* value);
+  void OnLauncherStartKeyNav(GVariant* data);
+  void OnLauncherEndKeyNav(GVariant* data);
+
+  void InitHints();
 
   dash::Settings dash_settings_;
   dash::Style    dash_style_;
@@ -253,6 +269,10 @@ private:
   panel::Controller::Ptr    panel_controller_;
   switcher::Controller::Ptr switcher_controller_;
 
+  shortcut::Controller::Ptr shortcut_controller_;
+  std::list<shortcut::AbstractHint*> hints_;
+  bool enable_shortcut_overlay_;
+
   GestureEngine*                        gestureEngine;
   nux::WindowThread*                    wt;
   nux::BaseWindow*                      panelWindow;
@@ -261,16 +281,12 @@ private:
   bool                                  needsRelayout;
   bool                                  _in_paint;
   guint32                               relayoutSourceId;
-  guint                                 _edge_timeout;
-  guint                                 _edge_trigger_handle;
   guint32                               _redraw_handle;
-  gint                                  _edge_pointerY;
-  guint                                 _ubus_handles[3];
-
   typedef std::shared_ptr<CompAction> CompActionPtr;
   typedef std::vector<CompActionPtr> ShortcutActions;
   ShortcutActions _shortcut_actions;
   bool            super_keypressed_;
+  CompActionPtr   _escape_action;
 
   /* keyboard-nav mode */
   CompWindow* newFocusedWindow;
@@ -290,19 +306,26 @@ private:
 
   unity::BGHash _bghash;
 
+#ifdef USE_GLES
+  GLFramebufferObject *oldFbo;
+#else
   ScreenEffectFramebufferObject::Ptr _fbo;
   GLuint                             _active_fbo;
+#endif
 
   bool   queryForShader ();
 
   UBusManager ubus_manager_;
   bool dash_is_open_;
+  int dash_monitor_;
   CompScreen::GrabHandle grab_index_;
   CompWindowList         fullscreen_windows_;
   bool                   painting_tray_;
   unsigned int           tray_paint_mask_;
 
+#ifndef USE_GLES
   ScreenEffectFramebufferObject::GLXGetProcAddressProc glXGetProcAddressP;
+#endif
 
   friend class UnityWindow;
 };
@@ -339,7 +362,11 @@ public:
 
   /* basic window draw function */
   bool glDraw(const GLMatrix& matrix,
+#ifndef USE_GLES
               GLFragment::Attrib& attrib,
+#else
+              const GLWindowPaintAttrib& attrib,
+#endif
               const CompRegion& region,
               unsigned intmask);
 
@@ -364,7 +391,10 @@ public:
   void leaveShowDesktop ();
   bool handleAnimations (unsigned int ms);
 
-  compiz::MinimizedWindowHandler::Ptr mMinimizeHandler;
+  typedef compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>
+          UnityMinimizedHandler;
+  UnityMinimizedHandler *mMinimizeHandler;
+
   UnityShowdesktopHandler             *mShowdesktopHandler;
   
 private:

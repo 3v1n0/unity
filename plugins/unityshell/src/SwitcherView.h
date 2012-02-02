@@ -25,6 +25,7 @@
 #include "StaticCairoText.h"
 #include "LayoutSystem.h"
 #include "BackgroundEffectHelper.h"
+#include "UnityWindowView.h"
 
 #include "Introspectable.h"
 
@@ -36,6 +37,8 @@
 #include <NuxCore/Property.h>
 
 
+
+
 namespace unity
 {
 namespace launcher
@@ -45,21 +48,19 @@ class AbstractLauncherIcon;
 namespace switcher
 {
 
-class SwitcherView : public debug::Introspectable, public nux::View
+class SwitcherView : public debug::Introspectable, public ui::UnityWindowView
 {
-  NUX_DECLARE_OBJECT_TYPE(SwitcherView, nux::View);
+  NUX_DECLARE_OBJECT_TYPE(SwitcherView, ui::UnityWindowView);
 public:
   typedef nux::ObjectPtr<SwitcherView> Ptr;
 
-  SwitcherView(NUX_FILE_LINE_PROTO);
+  SwitcherView();
   virtual ~SwitcherView();
 
   ui::LayoutWindowList ExternalTargets ();
 
   void SetModel(SwitcherModel::Ptr model);
   SwitcherModel::Ptr GetModel();
-
-  void SetupBackground ();
 
   nux::Property<bool> render_boxes;
   nux::Property<int> border_size;
@@ -70,16 +71,17 @@ public:
   nux::Property<int> vertical_size;
   nux::Property<int> text_size;
   nux::Property<int> animation_length;
+  nux::Property<int> monitor;
   nux::Property<double> spread_size;
-  nux::Property<nux::Color> background_color;
 
 protected:
   // Introspectable methods
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
 
-  void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
-  void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
+  void PreDraw(nux::GraphicsEngine& GfxContext, bool force_draw);
+  void DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw, nux::Geometry clip);
+  nux::Geometry GetBackgroundGeometry();
 
   ui::RenderArg InterpolateRenderArgs(ui::RenderArg const& start, ui::RenderArg const& end, float progress);
   nux::Geometry InterpolateBackground (nux::Geometry const& start, nux::Geometry const& end, float progress);
@@ -88,8 +90,6 @@ protected:
 
   ui::RenderArg CreateBaseArgForIcon(launcher::AbstractLauncherIcon* icon);
 private:
-  void DrawBackground(nux::GraphicsEngine& GfxContext, nux::Geometry const& geo);
-
   void OnSelectionChanged(launcher::AbstractLauncherIcon* selection);
   void OnDetailSelectionChanged (bool detail);
   void OnDetailSelectionIndexChanged (unsigned int index);
@@ -121,9 +121,6 @@ private:
 
   guint redraw_handle_;
 
-  nux::BaseTexture* background_top_;
-  nux::BaseTexture* background_left_;
-  nux::BaseTexture* background_corner_;
   nux::BaseTexture* rounding_texture_;
 
   nux::StaticCairoText* text_view_;
@@ -136,11 +133,10 @@ private:
 
   ui::LayoutWindowList render_targets_;
 
+  timespec current_;
   timespec save_time_;
 
   bool animation_draw_;
-
-  BackgroundEffectHelper bg_effect_helper_;
 };
 
 }

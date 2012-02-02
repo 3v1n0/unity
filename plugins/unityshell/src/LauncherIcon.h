@@ -51,6 +51,8 @@ namespace unity
 namespace launcher
 {
 
+const int max_num_monitors = 6;
+
 class Launcher;
 
 class LauncherIcon : public AbstractLauncherIcon
@@ -60,14 +62,9 @@ class LauncherIcon : public AbstractLauncherIcon
 public:
   typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
 
-  LauncherIcon(Launcher* launcher);
+  LauncherIcon();
 
   virtual ~LauncherIcon();
-
-  Launcher* GetLauncher()
-  {
-    return _launcher;
-  };
 
   bool SetTooltipText(std::string& target, std::string const& value);
 
@@ -77,23 +74,25 @@ public:
 
   void SetSortPriority(int priority);
 
-  void RecvMouseEnter();
+  void RecvMouseEnter(int monitor);
 
-  void RecvMouseLeave();
+  void RecvMouseLeave(int monitor);
 
-  void RecvMouseDown(int button);
+  void RecvMouseDown(int button, int monitor);
 
-  void RecvMouseUp(int button);
+  void RecvMouseUp(int button, int monitor);
 
-  void RecvMouseClick(int button);
+  void RecvMouseClick(int button, int monitor);
 
   void HideTooltip();
 
-  bool OpenQuicklist(bool default_to_first_item = false);
+  void ShowTooltip();
 
-  void        SetCenter(nux::Point3 center);
+  bool OpenQuicklist(bool default_to_first_item = false, int monitor = -1);
 
-  nux::Point3 GetCenter();
+  void        SetCenter(nux::Point3 center, int parent_monitor, nux::Geometry parent_geo);
+
+  nux::Point3 GetCenter(int monitor);
 
   virtual void Activate(ActionArg arg);
 
@@ -101,15 +100,17 @@ public:
 
   void SaveCenter();
 
+  nux::Point3 GetSavedCenter(int monitor);
+
   int SortPriority();
 
-  int RelatedWindows();
+  virtual std::vector<Window> Windows () { return std::vector<Window> (); }
 
-  virtual std::vector<Window> RelatedXids () { return std::vector<Window> (); }
+  virtual std::vector<Window> WindowsForMonitor (int monitor) { return std::vector<Window> (); }
 
   virtual std::string NameForWindow (Window window) { return std::string(); }
 
-  const bool HasWindowOnViewport();
+  const bool WindowVisibleOnMonitor(int monitor);
 
   virtual bool IsSpacer()
   {
@@ -126,7 +127,7 @@ public:
 
   void DeleteEmblem();
 
-  virtual bool ShowInSwitcher()
+  virtual bool ShowInSwitcher(bool current)
   {
     return false;
   };
@@ -185,19 +186,11 @@ public:
 
   void SetIconType(IconType type);
 
-  std::vector<nux::Vector4> & GetTransform(TransformIndex index);
-
-  static void SetSkipTooltipDelay(gboolean skip_tooltip_delay);
-
-  sigc::signal<void, LauncherIcon*> remove;
-
-  sigc::connection needs_redraw_connection;
-  sigc::connection on_icon_added_connection;
-  sigc::connection on_icon_removed_connection;
-  sigc::connection on_order_changed_connection;
-  sigc::connection on_expo_terminated_connection;
+  std::vector<nux::Vector4> & GetTransform(TransformIndex index, int monitor);
 
 protected:
+  std::vector<nux::Point3> GetCenters();
+
   std::string GetName() const;
 
   void AddProperties(GVariantBuilder* builder);
@@ -208,13 +201,11 @@ protected:
 
   void ResetQuirkTime(Quirk quirk);
 
-  void SetRelatedWindows(int windows);
-
   void Remove();
 
   void SetProgress(float progress);
 
-  void SetHasWindowOnViewport(bool val);
+  void SetWindowVisibleOnMonitor(bool val, int monitor);
 
   void Present(float urgency, int length);
 
@@ -226,7 +217,7 @@ protected:
 
   virtual nux::BaseTexture* GetTextureForSize(int size) = 0;
 
-  virtual void OnCenterStabilized(nux::Point3 center) {}
+  virtual void OnCenterStabilized(std::vector<nux::Point3> center) {}
 
   virtual const gchar* GetRemoteUri()
   {
@@ -276,8 +267,6 @@ protected:
 
   void OnRemoteProgressVisibleChanged(LauncherEntryRemote* remote);
 
-  Launcher* _launcher;
-
   nux::Tooltip* _tooltip;
   QuicklistView* _quicklist;
 
@@ -304,31 +293,29 @@ private:
   static gboolean OnPresentTimeout(gpointer data);
   static gboolean OnCenterTimeout(gpointer data);
   static gboolean OnDelayedUpdateTimeout(gpointer data);
-  static gboolean OnTooltipTimeout(gpointer data);
 
   void ColorForIcon(GdkPixbuf* pixbuf, nux::Color& background, nux::Color& glow);
 
-  bool             _has_visible_window;
-  bool             _quicklist_is_initialized;
-  bool             _remote_urgent;
-  float            _present_urgency;
-  float            _progress;
-  guint            _center_stabilize_handle;
-  guint            _present_time_handle;
-  guint            _time_delay_handle;
-  guint            _tooltip_delay_handle;
-  int              _related_windows;
-  int              _sort_priority;
-  nux::Color       _background_color;
-  nux::Color       _glow_color;
-  static gboolean  _skip_tooltip_delay;
+  std::vector<bool> _has_visible_window;
+  bool              _quicklist_is_initialized;
+  bool              _remote_urgent;
+  float             _present_urgency;
+  float             _progress;
+  guint             _center_stabilize_handle;
+  guint             _present_time_handle;
+  guint             _time_delay_handle;
+  int               _sort_priority;
+  int               _last_monitor;
+  nux::Color        _background_color;
+  nux::Color        _glow_color;
+  
+  gint64            _shortcut;
 
-  gint64           _shortcut;
-
-  nux::Point3      _center;
-  nux::Point3      _last_stable;
-  nux::Point3      _saved_center;
-  IconType         _icon_type;
+  std::vector<nux::Point3> _center;
+  std::vector<nux::Point3> _last_stable;
+  std::vector<nux::Point3> _saved_center;
+  std::vector<nux::Geometry> _parent_geo;
+  IconType                 _icon_type;
 
   static GtkIconTheme* _unity_theme;
 
@@ -338,7 +325,7 @@ private:
   struct timespec  _quirk_times[QUIRK_LAST];
 
   std::list<LauncherEntryRemote*> _entry_list;
-  std::map<TransformIndex, std::vector<nux::Vector4> > transform_map;
+  std::vector<std::map<TransformIndex, std::vector<nux::Vector4> > > transform_map;
   
 };
 

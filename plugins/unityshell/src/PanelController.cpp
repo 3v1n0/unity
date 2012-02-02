@@ -36,7 +36,7 @@ namespace
 nux::logging::Logger logger("unity.panel");
 }
 
-class Controller::Impl : public sigc::trackable
+class Controller::Impl
 {
 public:
   Impl();
@@ -58,14 +58,15 @@ public:
   void SetMenuShowTimings(int fadein, int fadeout, int discovery,
                           int discovery_fadein, int discovery_fadeout);
 
+  void OnScreenChanged(int primary_monitor, std::vector<nux::Geometry>& monitors, Introspectable *iobj);
 private:
   unity::PanelView* ViewForWindow(nux::BaseWindow* window);
-  void OnScreenChanged(int primary_monitor, std::vector<nux::Geometry>& monitors);
 
   static void WindowConfigureCallback(int            window_width,
                                       int            window_height,
                                       nux::Geometry& geo,
                                       void*          user_data);
+
 private:
   std::vector<nux::BaseWindow*> windows_;
   float opacity_;
@@ -83,10 +84,12 @@ Controller::Impl::Impl()
   : opacity_(1.0f)
   , opacity_maximized_toggle_(false)
   , open_menu_start_received_(false)
+  , menus_fadein_(0)
+  , menus_fadeout_(0)
+  , menus_discovery_(0)
+  , menus_discovery_fadein_(0)
+  , menus_discovery_fadeout_(0)
 {
-  UScreen* screen = UScreen::GetDefault();
-  screen->changed.connect(sigc::mem_fun(this, &Impl::OnScreenChanged));
-  OnScreenChanged(screen->GetPrimaryMonitor(), screen->GetMonitors());
 }
 
 Controller::Impl::~Impl()
@@ -195,7 +198,8 @@ PanelView* Controller::Impl::ViewForWindow(nux::BaseWindow* window)
 
 // We need to put a panel on every monitor, and try and re-use the panels we already have
 void Controller::Impl::OnScreenChanged(int primary_monitor,
-                                       std::vector<nux::Geometry>& monitors)
+                                       std::vector<nux::Geometry>& monitors,
+                                       Introspectable *iobj)
 {
   std::vector<nux::BaseWindow*>::iterator it, eit = windows_.end();
   int n_monitors = monitors.size();
@@ -265,6 +269,9 @@ void Controller::Impl::OnScreenChanged(int primary_monitor,
 
       windows_.push_back(window);
 
+      // add to introspectable tree:
+      iobj->AddChild(view);
+
       LOG_DEBUG(logger) << "Added Panel for Monitor " << i;
     }
   }
@@ -296,10 +303,12 @@ float Controller::Impl::opacity() const
   return opacity_;
 }
 
-
 Controller::Controller()
   : pimpl(new Impl())
 {
+  UScreen* screen = UScreen::GetDefault();
+  screen->changed.connect(sigc::mem_fun(this, &Controller::OnScreenChanged));
+  OnScreenChanged(screen->GetPrimaryMonitor(), screen->GetMonitors());
 }
 
 Controller::~Controller()
@@ -353,6 +362,20 @@ float Controller::opacity() const
   return pimpl->opacity();
 }
 
+std::string Controller::GetName() const
+{
+  return "PanelController";
+}
+
+void Controller::AddProperties(GVariantBuilder* builder)
+{
+  g_variant_builder_add(builder, "{sv}", "opacity", g_variant_new_double(pimpl->opacity()));
+}
+
+void Controller::OnScreenChanged(int primary_monitor, std::vector<nux::Geometry>& monitors)
+{
+  pimpl->OnScreenChanged(primary_monitor, monitors, this);
+}
 
 } // namespace panel
 } // namespace unity

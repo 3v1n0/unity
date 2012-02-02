@@ -32,8 +32,8 @@ namespace unity
 namespace launcher
 {
 
-TrashLauncherIcon::TrashLauncherIcon(Launcher* IconManager)
-  : SimpleLauncherIcon(IconManager)
+TrashLauncherIcon::TrashLauncherIcon()
+  : SimpleLauncherIcon()
   , proxy_("org.gnome.Nautilus", "/org/gnome/Nautilus", "org.gnome.Nautilus.FileOperations")
 {
   tooltip_text = _("Trash");

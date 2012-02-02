@@ -175,6 +175,12 @@ Square::glDraw (unsigned int width, unsigned int height)
   glEnd();
 }
 
+enum class MonitorLayout
+{
+  LayoutTopBottom = 1,
+  LayoutLeftRight
+};
+
 class BaseContext
 {
   public:
@@ -187,7 +193,7 @@ class BaseContext
   protected:
 
     bool eventHandler ();
-    bool paintDispatch ();
+    bool paintDispatch (const MonitorLayout &);
 
     enum class ModifierApplication
     {
@@ -414,7 +420,6 @@ BaseContext::onNewEvents (GIOChannel   *channel,
                           gpointer     data)
 {
   BaseContext *self = static_cast <BaseContext *> (data);
-  gboolean    keep_going = TRUE;
 
   if (condition & G_IO_IN)
   {
@@ -432,7 +437,14 @@ BaseContext::onPaintTimeout (gpointer data)
 {
   BaseContext *self = static_cast <BaseContext *> (data);
 
-  if (self->paintDispatch ())
+  static MonitorLayout l = MonitorLayout::LayoutLeftRight;
+
+  if (l == MonitorLayout::LayoutLeftRight)
+    l = MonitorLayout::LayoutTopBottom;
+  else
+    l = MonitorLayout::LayoutLeftRight;
+
+  if (self->paintDispatch (l))
     return TRUE;
 
   return FALSE;
@@ -528,109 +540,131 @@ void EffectView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 }
 
 bool
-BaseContext::paintDispatch ()
+BaseContext::paintDispatch (const MonitorLayout &l)
 {
-  if (mFbo)
-  {
-    switch (mRotating)
+  std::vector <nux::Geometry> monitors (0);
+
+  switch (l)
     {
-      case ModifierApplication::Both:
-        BackgroundEffectHelper::ProcessDamage (nux::Geometry (0, 0, mWidth, mHeight));
+      case MonitorLayout::LayoutTopBottom:
+        monitors.push_back (nux::Geometry (0, 0, mWidth, mHeight / 2));
+        monitors.push_back (nux::Geometry (0, mHeight / 2, mWidth, mHeight / 2));
         break;
-      case ModifierApplication::Triangle:
-        BackgroundEffectHelper::ProcessDamage (nux::Geometry (0, 0, mWidth / 2, mHeight));
+      case MonitorLayout::LayoutLeftRight:
+        monitors.push_back (nux::Geometry (0, 0, mWidth / 2, mHeight));
+        monitors.push_back (nux::Geometry (mWidth / 2, 0, mWidth / 2, mHeight));
         break;
-      case ModifierApplication::Square:
-        BackgroundEffectHelper::ProcessDamage (nux::Geometry (mWidth / 2, 0, mWidth / 2, mHeight));
+      default:
         break;
     }
 
-    mFbo->bind (nux::Geometry (0, 0, mWidth, mHeight));
 
-    if (!mFbo->status ())
-      LOG_INFO (logger) << "FBO not ok!";
-  }
-
-  glClearColor (1, 1, 1, 1);
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  glPushMatrix ();
-  glLoadIdentity();
-  glTranslatef(-0.5f, -0.5f, -0.866025404f);
-  glScalef (1.0f / mWidth, 1.0f / mHeight, 0.0f);
-  glTranslatef(mWidth * 0.25, 0, 0);
-  glRotatef(mTriangle->rotation (), 0.0f, 1.0f, 0.0f);
-  glTranslatef(-(mWidth * 0.25), 0, 0);
-
-  mTriangle->draw (mWidth, mHeight);
-
-  glLoadIdentity();
-  glTranslatef(-0.5f, -0.5f, -0.866025404f);
-  glScalef (1.0f / mWidth, 1.0f / mHeight, 0.0f);
-  glTranslatef(mWidth * 0.75, 0, 0);
-  glRotatef(mSquare->rotation (), 0.0f, 1.0f, 0.0f);
-  glTranslatef(-(mWidth * 0.75), 0, 0);
-
-  mSquare->draw (mWidth, mHeight);
-
-  glColor4f (1.0f, 1.0f, 1.0f, 5.0f);
-  glPopMatrix ();
-
-  if (mFbo)
-    mFbo->unbind ();
-
-  if (mFbo && mFbo->status ())
+  for (const nux::Geometry &m : monitors)
   {
+    if (mFbo)
+    {
+      switch (mRotating)
+      {
+        case ModifierApplication::Both:
+          BackgroundEffectHelper::ProcessDamage (nux::Geometry (0, 0, mWidth, mHeight));
+          break;
+        case ModifierApplication::Triangle:
+          BackgroundEffectHelper::ProcessDamage (nux::Geometry (0, 0, mWidth / 2, mHeight));
+          break;
+        case ModifierApplication::Square:
+          BackgroundEffectHelper::ProcessDamage (nux::Geometry (mWidth / 2, 0, mWidth / 2, mHeight));
+          break;
+      }
+
+      mFbo->bind (nux::Geometry (0, 0, mWidth, mHeight));
+
+      if (!mFbo->status ())
+      {
+        LOG_INFO (logger) << "FBO not ok!";
+      }
+    }
+
     glClearColor (1, 1, 1, 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glPushMatrix ();
     glLoadIdentity();
-    glTranslatef(-0.5f, 0.5f, -0.866025404f);
-    glScalef (1.0f / mWidth, -(1.0f / mHeight), 0.0f);
-    mFbo->paint (nux::Geometry (0, 0, mWidth, mHeight));
+    glTranslatef(-0.5f, -0.5f, -0.866025404f);
+    glScalef (1.0f / mWidth, 1.0f / mHeight, 0.0f);
+    glTranslatef(mWidth * 0.25, 0, 0);
+    glRotatef(mTriangle->rotation (), 0.0f, 1.0f, 0.0f);
+    glTranslatef(-(mWidth * 0.25), 0, 0);
+
+    mTriangle->draw (mWidth, mHeight);
+
+    glLoadIdentity();
+    glTranslatef(-0.5f, -0.5f, -0.866025404f);
+    glScalef (1.0f / mWidth, 1.0f / mHeight, 0.0f);
+    glTranslatef(mWidth * 0.75, 0, 0);
+    glRotatef(mSquare->rotation (), 0.0f, 1.0f, 0.0f);
+    glTranslatef(-(mWidth * 0.75), 0, 0);
+
+    mSquare->draw (mWidth, mHeight);
+
+    glColor4f (1.0f, 1.0f, 1.0f, 5.0f);
     glPopMatrix ();
 
-    nux::ObjectPtr<nux::IOpenGLTexture2D> device_texture =
-        nux::GetGraphicsDisplay()->GetGpuDevice()->CreateTexture2DFromID (mFbo->texture(),
-                                                                          mWidth, mHeight, 1, nux::BITFMT_R8G8B8A8);
+    if (mFbo)
+      mFbo->unbind ();
 
-    nux::GetGraphicsDisplay()->GetGpuDevice()->backup_texture0_ = device_texture;
+    if (mFbo && mFbo->status ())
+    {
+      glClearColor (1, 1, 1, 1);
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+      glPushMatrix ();
+      glLoadIdentity();
+      glTranslatef(-0.5f, 0.5f, -0.866025404f);
+      glScalef (1.0f / mWidth, -(1.0f / mHeight), 0.0f);
+      mFbo->paint (m);
+      glPopMatrix ();
 
-    nux::Geometry geo = nux::Geometry (0, 0, mWidth, mHeight);
-    BackgroundEffectHelper::monitor_rect_ = geo;
-  }
+      nux::ObjectPtr<nux::IOpenGLTexture2D> device_texture =
+          nux::GetGraphicsDisplay()->GetGpuDevice()->CreateTexture2DFromID (mFbo->texture(),
+                                                                            mWidth, mHeight, 1, nux::BITFMT_R8G8B8A8);
 
-  glMatrixMode(GL_PROJECTION);
-  glPushMatrix();
+      nux::GetGraphicsDisplay()->GetGpuDevice()->backup_texture0_ = device_texture;
 
-  glMatrixMode(GL_MODELVIEW);
-  glPushMatrix();
-  glPushAttrib(GL_VIEWPORT_BIT | GL_ENABLE_BIT |
-               GL_TEXTURE_BIT | GL_COLOR_BUFFER_BIT | GL_SCISSOR_BIT);
-  mRootView->ProcessDraw (mWindowThread->GetGraphicsEngine (), true);
-  glMatrixMode(GL_PROJECTION);
-  glPopMatrix();
-  glMatrixMode(GL_MODELVIEW);
-  glPopMatrix();
+      nux::Geometry geo = nux::Geometry (0, 0, mWidth, mHeight);
+      BackgroundEffectHelper::monitor_rect_ = geo;
+    }
 
-  glDrawBuffer(GL_BACK);
-  glReadBuffer(GL_BACK);
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
 
-  glPopAttrib();
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glPushAttrib(GL_VIEWPORT_BIT | GL_ENABLE_BIT |
+                 GL_TEXTURE_BIT | GL_COLOR_BUFFER_BIT | GL_SCISSOR_BIT);
+    mRootView->ProcessDraw (mWindowThread->GetGraphicsEngine (), true);
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();
 
-  glXSwapBuffers (mDisplay, mGlxWindow);
+    glDrawBuffer(GL_BACK);
+    glReadBuffer(GL_BACK);
 
-  switch (mRotating)
-  {
-    case ModifierApplication::Both:
-      mTriangle->rotate ();
-      mSquare->rotate ();
-      break;
-    case ModifierApplication::Triangle:
-      mTriangle->rotate ();
-      break;
-    case ModifierApplication::Square:
-      mSquare->rotate ();
-      break;
+    glPopAttrib();
+
+    glXSwapBuffers (mDisplay, mGlxWindow);
+
+    switch (mRotating)
+    {
+      case ModifierApplication::Both:
+        mTriangle->rotate ();
+        mSquare->rotate ();
+        break;
+      case ModifierApplication::Triangle:
+        mTriangle->rotate ();
+        break;
+      case ModifierApplication::Square:
+        mSquare->rotate ();
+        break;
+    }
   }
 
   return true;

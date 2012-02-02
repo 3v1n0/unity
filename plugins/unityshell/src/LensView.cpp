@@ -219,7 +219,12 @@ void LensView::OnCategoryAdded(Category const& category)
   group->SetExpanded(false);
   group->SetVisible(false);
   group->expanded.connect(sigc::mem_fun(this, &LensView::OnGroupExpanded));
-  categories_.push_back(group);
+
+
+  /* Add the group at the correct offset into the categories vector */
+  categories_.insert(categories_.begin() + index, group);
+
+  /* Reset result count */
   counts_[group] = 0;
 
   ResultViewGrid* grid = new ResultViewGrid(NUX_TRACKER_LOCATION);
@@ -232,7 +237,11 @@ void LensView::OnCategoryAdded(Category const& category)
   grid->UriActivated.connect([&] (std::string const& uri) { uri_activated.emit(uri); lens_->Activate(uri); });
   group->SetChildView(grid);
 
-  scroll_layout_->AddView(group, 0);
+  /* We need the full range of method args so we can specify the offset
+   * of the group into the layout */
+  scroll_layout_->AddView(group, 0, nux::MinorDimensionPosition::eAbove,
+                          nux::MinorDimensionSize::eFull, 100.0f,
+                          (nux::LayoutPosition)index);
 }
 
 void LensView::OnResultAdded(Result const& result)
