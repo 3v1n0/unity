@@ -1077,7 +1077,7 @@ void Controller::KeyNavTerminate(bool activate)
 
   pimpl->ubus.SendMessage(UBUS_LAUNCHER_END_KEY_SWTICHER, g_variant_new_boolean(true));
 
-  pimpl->ubus.SendMessage(UBUS_LAUNCHER_START_KEY_NAV, g_variant_new_boolean(true));
+  pimpl->ubus.SendMessage(UBUS_LAUNCHER_END_KEY_NAV, g_variant_new_boolean(true));
 }
 
 bool Controller::KeyNavIsActive() const
