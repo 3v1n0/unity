@@ -19,11 +19,9 @@
 
 #include <glib.h>
 #include <sstream>
+#include "PluginAdapter.h"
 
 #include <NuxCore/Logger.h>
-
-#include "BackgroundEffectHelper.h"
-#include "PluginAdapter.h"
 
 namespace
 {
@@ -97,7 +95,6 @@ PluginAdapter::OnScreenGrabbed()
   if (!_expo_state && screen->grabExist("expo"))
   {
     _expo_state = true;
-    BackgroundEffectHelper::ProcessDamage();
     initiate_expo.emit();
   }
 }

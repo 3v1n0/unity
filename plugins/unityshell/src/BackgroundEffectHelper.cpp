@@ -68,21 +68,9 @@ void BackgroundEffectHelper::OnEnabledChanged(bool value)
     DirtyCache();
 }
 
-void BackgroundEffectHelper::ProcessDamage()
+void BackgroundEffectHelper::ProcessDamage(nux::Geometry geo)
 {
-  for (BackgroundEffectHelper* bg_effect_helper : registered_list_)
-  {
-    if (bg_effect_helper->cache_dirty || !bg_effect_helper->owner)
-      continue;
-
-    bg_effect_helper->DirtyCache();
-    break;
-  }
-}
-
-void BackgroundEffectHelper::ProcessDamage(nux::Geometry const& geo)
-{
-  for (BackgroundEffectHelper* bg_effect_helper : registered_list_)
+  for (BackgroundEffectHelper * bg_effect_helper : registered_list_)
   {
     if (bg_effect_helper->cache_dirty || !bg_effect_helper->owner || !bg_effect_helper->enabled)
       continue;
