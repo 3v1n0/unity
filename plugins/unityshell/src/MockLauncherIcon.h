@@ -47,7 +47,6 @@ public:
     : icon_(0)
   {
     tooltip_text = "Mock Icon";
-    transform_map.resize(10);
     sort_priority_ = 0;
     type_ = TYPE_APPLICATION;
   }
@@ -122,18 +121,6 @@ public:
   }
 
   void SaveCenter() {}
-
-  std::vector<nux::Vector4> & GetTransform(TransformIndex index, int monitor)
-  {
-    auto iter = transform_map[monitor].find(index);
-  if (iter == transform_map[monitor].end())
-  {
-    auto iter2 = transform_map[monitor].insert(std::map<TransformIndex, std::vector<nux::Vector4> >::value_type(index, std::vector<nux::Vector4>(4)));
-    return iter2.first->second;
-  }
-
-  return iter->second;
-  }
 
   void Activate(ActionArg arg) {}
 
@@ -300,8 +287,6 @@ private:
     return result;
   }
 
-
-  std::vector<std::map<TransformIndex, std::vector<nux::Vector4> > > transform_map;
   nux::BaseTexture* icon_;
   int sort_priority_;
   IconType type_;

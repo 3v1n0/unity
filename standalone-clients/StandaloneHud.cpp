@@ -82,6 +82,7 @@ void TestRunner::Init ()
     {
       if (!(*query)->icon_name.empty())
       {
+        LOG_DEBUG(logger) << "Setting icon name to: " << (*query)->icon_name;
         icon_name = (*query)->icon_name;
         break;
       }

@@ -1707,11 +1707,14 @@ bool Style::SquareButton(cairo_t* cr, nux::ButtonVisualState state,
                      pimpl->button_label_overlay_mode_[state],
                      pimpl->button_label_blur_size_[state] * 0.75);
 
+  // FIXME - magic value of 42 here for the offset in the HUD,
+  // replace with a nicer style system that lets hud override 
+  // default values when it needs to
   pimpl->Text(cr,
               pimpl->button_label_text_color_[state],
               label,
               font_size,
-              10.0,
+              42.0 + 10.0,
               alignment);
 
   return true;

@@ -174,15 +174,12 @@ void View::SetIcon(std::string icon_name)
 // look tight
 nux::Geometry View::GetBestFitGeometry(nux::Geometry const& for_geo)
 {
+  //FIXME - remove magic values, replace with scalable text depending on DPI 
+  // requires smarter font settings really...
   int width, height = 0;
-  dash::Style& style = dash::Style::Instance();
-  width = 949 + 72;
-
-  height = search_bar_->GetGeometry().height;
-  height += 6;
-  height += (style.GetTextLineHeight() + (12*2)) * 6;
-  height += 6;
-
+  width = 1024;
+  height = 276;
+  
   LOG_DEBUG (logger) << "best fit is, " << width << ", " << height;
 
   return nux::Geometry(0, 0, width, height);
@@ -226,7 +223,7 @@ void View::SetupViews()
   content_layout_->AddLayout(new nux::SpaceLayout(9,9,9,9), 0);
 
   // add the search bar to the composite
-  search_bar_ = new unity::SearchBar(940, true);
+  search_bar_ = new unity::SearchBar(941, true);
   search_bar_->disable_glow = true;
   search_bar_->search_hint = default_text;
   search_bar_->search_changed.connect(sigc::mem_fun(this, &View::OnSearchChanged));
@@ -234,7 +231,7 @@ void View::SetupViews()
   content_layout_->AddView(search_bar_.GetPointer(), 0, nux::MINOR_POSITION_LEFT);
  
   button_views_ = new nux::VLayout();
-  button_views_->SetMaximumWidth(940);
+  button_views_->SetMaximumWidth(941);
 
   content_layout_->AddLayout(button_views_.GetPointer(), 1, nux::MINOR_POSITION_LEFT);
 }
