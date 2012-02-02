@@ -87,7 +87,7 @@ public:
   sigc::signal<void> saved;
   sigc::signal<void, AbstractLauncherIcon*> selection_changed;
 
-  unity::debug::Introspectable::IntrospectableList const& GetIntrospectableChildren();
+  IntrospectableList const& GetIntrospectableChildren();
 protected:
   // Introspectable methods
   std::string GetName() const;
