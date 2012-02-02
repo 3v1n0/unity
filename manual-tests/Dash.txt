@@ -67,3 +67,15 @@ Outcome
   The text previously selected is pasted on the search bar at mouse pointer
   position, if the operation is repeated the text is inserted where
   the mouse pointer is.
+
+Dash SearchBar IMTextEntry Focus
+------------------------------
+This test shows that the IMTextEntry is getting focus when it gets keyboard focus.
+
+#. Open the Dash
+#. Press Ctrl + Space to activate ibus 
+#. Type
+
+Outcome
+  The current ibus IM engine you are using should start to work, as oppsed to just normal
+  text.
