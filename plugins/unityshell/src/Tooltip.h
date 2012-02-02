@@ -113,14 +113,14 @@ private:
   float _corner_radius;
   float _padding;
   nux::HLayout* _hlayout;
-  VLayout* _vlayout;
+  nux::VLayout* _vlayout;
   nux::SpaceLayout* _left_space;  //!< Space from the left of the widget to the left of the text.
   nux::SpaceLayout* _right_space; //!< Space from the right of the text to the right of the widget.
   nux::SpaceLayout* _top_space;  //!< Space from the left of the widget to the left of the text.
   nux::SpaceLayout* _bottom_space; //!< Space from the right of the text to the right of the widget.
 
   bool _compute_blur_bkg;
-  nux::ObjectPtr <nux::IOpenGLBaseTexture> _bkg_blur_texture;
+  nux::ObjectPtr<nux::IOpenGLBaseTexture> _bkg_blur_texture;
 
   bool _cairo_text_has_changed;
   void UpdateTexture();

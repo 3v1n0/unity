@@ -232,17 +232,12 @@ void Tooltip::DrawContent(GraphicsEngine& GfxContext, bool force_draw)
 
 void Tooltip::PreLayoutManagement()
 {
-  int MaxItemWidth = 0;
   int TotalItemHeight = 0;
-  int  textWidth  = 0;
-  int  textHeight = 0;
+  int textWidth  = 0;
+  int textHeight = 0;
 
   _tooltip_text->GetTextExtents(textWidth, textHeight);
-
-  if (textWidth > MaxItemWidth)
-    MaxItemWidth = textWidth;
   TotalItemHeight += textHeight;
-
 
   if (TotalItemHeight < _anchor_height)
   {

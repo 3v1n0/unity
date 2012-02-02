@@ -1344,6 +1344,12 @@ void UnityScreen::handleEvent(XEvent* event)
           skip_other_plugins = launcher_controller_->HandleLauncherKeyEvent(screen->dpy(), key_sym, event->xkey.keycode, event->xkey.state, key_string);
           if (!skip_other_plugins)
             skip_other_plugins = dash_controller_->CheckShortcutActivation(key_string);
+
+          if (skip_other_plugins && launcher_controller_->KeyNavIsActive())
+          {
+            launcher_controller_->KeyNavTerminate(false);
+            EnableCancelAction(false);
+          }
         }
       }
       break;
@@ -1488,12 +1494,8 @@ bool UnityScreen::showLauncherKeyTerminate(CompAction* action,
   if (state & CompAction::StateCancel)
     return false;
 
-  bool accept_state = (state & CompAction::StateCancel) == 0;
-
   super_keypressed_ = false;
-  launcher_controller_->KeyNavTerminate(accept_state);
   launcher_controller_->HandleLauncherKeyRelease();
-  EnableCancelAction(false);
 
   shortcut_controller_->SetEnabled(enable_shortcut_overlay_);
   shortcut_controller_->Hide();

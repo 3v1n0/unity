@@ -487,7 +487,20 @@ add_executable (test-shortcut
                 ${UNITY_SRC}/UBusMessages.h
                 ${UNITY_SRC}/ubus-server.cpp
                 ${UNITY_SRC}/ubus-server.h
-                )            
+                )
+
+add_executable (tooltip
+                ui/TestTooltip.cpp
+                ${UNITY_SRC}/Introspectable.cpp
+                ${UNITY_SRC}/Introspectable.h
+                ${UNITY_SRC}/StaticCairoText.cpp
+                ${UNITY_SRC}/StaticCairoText.h
+                ${UNITY_SRC}/Tooltip.cpp
+                ${UNITY_SRC}/Tooltip.h
+                ${UNITY_SRC}/ubus-server.cpp
+                ${UNITY_SRC}/ubus-server.h
+                )
+add_dependencies(quicklist unity-core-${UNITY_API_VERSION})
 
 find_package (OpenGL)
 include_directories (${OPENGL_gl_INCDIRS})
