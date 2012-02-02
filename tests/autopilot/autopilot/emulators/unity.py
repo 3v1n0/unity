@@ -131,7 +131,7 @@ class Launcher(Unity):
         else:
             self._keyboard.press_and_release('Shift+Tab')
 
-    def quicklist_open(self, monitor):
+    def is_quicklist_open(self, monitor):
         state = self.__get_state(monitor)
         return bool(state['quicklist-open'])
 
