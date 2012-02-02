@@ -221,7 +221,7 @@ void View::SetupViews()
   content_layout_->AddLayout(new nux::SpaceLayout(9,9,9,9), 0);
 
   // add the search bar to the composite
-  search_bar_ = new unity::SearchBar(942, true);
+  search_bar_ = new unity::SearchBar(941, true);
   search_bar_->disable_glow = true;
   search_bar_->search_hint = default_text;
   search_bar_->search_changed.connect(sigc::mem_fun(this, &View::OnSearchChanged));

@@ -1583,7 +1583,6 @@ bool Style::Button(cairo_t* cr, nux::ButtonVisualState state,
     cairo_fill_preserve(cr);
   }
   cairo_set_source_rgba(cr, pimpl->button_label_border_color_[state]);
-  //cairo_set_line_width(cr, pimpl->button_label_border_size_[state]);
   cairo_stroke(cr);
 
   pimpl->DrawOverlay(cr,
