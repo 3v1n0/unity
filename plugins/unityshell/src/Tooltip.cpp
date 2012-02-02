@@ -68,12 +68,12 @@ Tooltip::Tooltip() :
   _tooltip_text->sigTextChanged.connect(sigc::mem_fun(this, &Tooltip::RecvCairoTextChanged));
   _tooltip_text->sigFontChanged.connect(sigc::mem_fun(this, &Tooltip::RecvCairoTextChanged));
 
-  _vlayout->AddView(_tooltip_text.GetPointer(), 1, nux::eCenter, nux::eFull);
+  _vlayout->AddView(_tooltip_text.GetPointer(), 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
   _vlayout->AddLayout(_bottom_space, 0);
 
   _hlayout->AddLayout(_left_space, 0);
-  _hlayout->AddLayout(_vlayout, 1, nux::eCenter, nux::eFull);
+  _hlayout->AddLayout(_vlayout, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
   _hlayout->AddLayout(_right_space, 0);
 
   SetWindowSizeMatchLayout(true);
@@ -108,7 +108,7 @@ void Tooltip::ShowTooltipWithTipAt(int anchor_tip_x, int anchor_tip_y)
 
 void Tooltip::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
 {
-  nux::Geometry base = GetGeometry();
+  nux::Geometry base(GetGeometry());
 
   // Get the background of the Tooltip and apply some blur
   if (_compute_blur_bkg /* Refresh the blurred background*/)
@@ -524,24 +524,25 @@ void compute_full_mask(
   _finalize(&cr, outline, line_width, rgba, negative, outline);
 }
 
-void Tooltip::UpdateTexture()
+void CairoBaseWindow::UpdateTexture()
 {
   if (_cairo_text_has_changed == false)
     return;
 
+  int width = GetBaseWidth();
   int height = GetBaseHeight();
 
   int x = _anchorX - PADDING;
   int y = _anchorY - height / 2;
 
+  float blur_coef = 6.0f;
+
   SetBaseX(x);
   SetBaseY(y);
 
-  float blur_coef         = 6.0f;
-
-  nux::CairoGraphics cairo_bg(CAIRO_FORMAT_ARGB32, GetBaseWidth(), GetBaseHeight());
-  nux::CairoGraphics cairo_mask(CAIRO_FORMAT_ARGB32, GetBaseWidth(), GetBaseHeight());
-  nux::CairoGraphics cairo_outline(CAIRO_FORMAT_ARGB32, GetBaseWidth(), GetBaseHeight());
+  nux::CairoGraphics cairo_bg(CAIRO_FORMAT_ARGB32, width, height);
+  nux::CairoGraphics cairo_mask(CAIRO_FORMAT_ARGB32, width, height);
+  nux::CairoGraphics cairo_outline(CAIRO_FORMAT_ARGB32, width, height);
 
   cairo_t* cr_bg      = cairo_bg.GetContext();
   cairo_t* cr_mask    = cairo_mask.GetContext();
@@ -555,11 +556,11 @@ void Tooltip::UpdateTexture()
   float   mask_color[4]    = {1.0f, 1.0f, 1.0f, 1.00f};
 
   tint_dot_hl(cr_bg,
-              GetBaseWidth(),
-              GetBaseHeight(),
-              GetBaseWidth() / 2.0f,
+              width,
+              height,
+              width / 2.0f,
               0,
-              nux::Max<float>(GetBaseWidth() / 1.3f, GetBaseHeight() / 1.3f),
+              nux::Max<float>(width / 1.3f, height / 1.3f),
               tint_color,
               hl_color,
               dot_color);
@@ -568,8 +569,8 @@ void Tooltip::UpdateTexture()
   (
     cr_outline,
     cairo_outline.GetSurface(),
-    GetBaseWidth(),
-    GetBaseHeight(),
+    width,
+    height,
     ANCHOR_WIDTH,
     ANCHOR_HEIGHT,
     -1,
@@ -583,8 +584,8 @@ void Tooltip::UpdateTexture()
   compute_full_mask(
     cr_mask,
     cairo_mask.GetSurface(),
-    GetBaseWidth(),
-    GetBaseHeight(),
+    width,
+    height,
     CORNER_RADIUS, // radius,
     16,             // shadow_radius,
     ANCHOR_WIDTH,  // anchor_width,
