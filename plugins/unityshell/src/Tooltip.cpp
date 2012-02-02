@@ -46,9 +46,6 @@ Tooltip::Tooltip() :
   _anchorX(0),
   _anchorY(0),
   _labelText(TEXT("Unity")),
-  _texture_bg(nullptr),
-  _texture_mask(nullptr),
-  _texture_outline(nullptr),
   _compute_blur_bkg(true),
   _cairo_text_has_changed(true)
 {
@@ -70,9 +67,8 @@ Tooltip::Tooltip() :
 
   _tooltip_text->sigTextChanged.connect(sigc::mem_fun(this, &Tooltip::RecvCairoTextChanged));
   _tooltip_text->sigFontChanged.connect(sigc::mem_fun(this, &Tooltip::RecvCairoTextChanged));
-  _tooltip_text->Reference();
 
-  _vlayout->AddView(_tooltip_text, 1, nux::eCenter, nux::eFull);
+  _vlayout->AddView(_tooltip_text.GetPointer(), 1, nux::eCenter, nux::eFull);
 
   _vlayout->AddLayout(_bottom_space, 0);
 
@@ -82,15 +78,6 @@ Tooltip::Tooltip() :
 
   SetWindowSizeMatchLayout(true);
   SetLayout(_hlayout);
-}
-
-Tooltip::~Tooltip()
-{
-  _tooltip_text->UnReference();
-
-  if (_texture_bg) _texture_bg->UnReference();
-  if (_texture_mask) _texture_mask->UnReference();
-  if (_texture_outline) _texture_outline->UnReference();
 }
 
 nux::Area* Tooltip::FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type)
@@ -613,16 +600,8 @@ void Tooltip::UpdateTexture()
   cairo_destroy(cr_outline);
   cairo_destroy(cr_mask);
 
-  if (_texture_bg)
-    _texture_bg->UnReference();
   _texture_bg = texture_from_cairo_graphics(cairo_bg);
-
-  if (_texture_mask)
-    _texture_mask->UnReference();
   _texture_mask = texture_from_cairo_graphics(cairo_mask);
-
-  if (_texture_outline)
-    _texture_outline->UnReference();
   _texture_outline = texture_from_cairo_graphics(cairo_outline);
 
   _cairo_text_has_changed = false;

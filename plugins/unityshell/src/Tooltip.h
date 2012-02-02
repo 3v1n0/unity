@@ -38,7 +38,6 @@ class Tooltip : public nux::BaseWindow, public debug::Introspectable
   NUX_DECLARE_OBJECT_TYPE(Tooltip, nux::BaseWindow);
 public:
   Tooltip();
-  ~Tooltip();
 
   void Draw(nux::GraphicsEngine& gfxContext, bool forceDraw);
   void DrawContent(nux::GraphicsEngine& gfxContext, bool forceDraw);
@@ -73,10 +72,10 @@ private:
   int                   _anchorY;
   nux::NString          _labelText;
 
-  nux::StaticCairoText* _tooltip_text;
-  nux::BaseTexture*     _texture_bg;
-  nux::BaseTexture*     _texture_mask;
-  nux::BaseTexture*     _texture_outline;
+  nux::ObjectPtr<nux::StaticCairoText> _tooltip_text;
+  nux::ObjectPtr<nux::BaseTexture> _texture_bg;
+  nux::ObjectPtr<nux::BaseTexture> _texture_mask;
+  nux::ObjectPtr<nux::BaseTexture> _texture_outline;
 
   nux::HLayout* _hlayout;
   nux::VLayout* _vlayout;
