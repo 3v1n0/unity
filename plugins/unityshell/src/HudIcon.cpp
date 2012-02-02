@@ -64,11 +64,16 @@ void Icon::Init()
 
 void Icon::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
+  nux::BaseTexture* tex = nux::CreateTextureFromFile("/usr/share/pixmaps/firefox.png");
+  icon_texture_source_ = new HudIconTextureSource(nux::ObjectPtr<nux::BaseTexture>(tex));
+  
   LOG_DEBUG(logger) << "attempting draw";
   if (texture() == nullptr)
     return;
   
   LOG_DEBUG(logger) << "doing draw";
+  
+  
   
   unity::ui::RenderArg arg;
   arg.icon = icon_texture_source_.GetPointer();
@@ -81,9 +86,10 @@ void Icon::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   std::list<unity::ui::RenderArg> args;
   args.push_front(arg);
   
-  icon_renderer_.PreprocessIcons(args, GetGeometry());
+  auto toplevel = GetToplevel(); 
+  icon_renderer_.PreprocessIcons(args, toplevel->GetGeometry());
+  icon_renderer_.RenderIcon(GfxContext, arg, toplevel->GetGeometry(), toplevel->GetGeometry());
   
-  icon_renderer_.RenderIcon(GfxContext, arg, GetGeometry(), GetGeometry());
   /*
   nux::Geometry geo = GetGeometry();
   // set up our texture mode
