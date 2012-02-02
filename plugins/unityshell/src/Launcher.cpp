@@ -1734,7 +1734,7 @@ void Launcher::Resize()
   UScreen* uscreen = UScreen::GetDefault();
   auto geo = uscreen->GetMonitorGeometry(monitor());
 
-  int width = _icon_size + (ICON_PADDING-1)*2 + RIGHT_LINE_WIDTH;
+  int width = _icon_size + ICON_PADDING*2 + RIGHT_LINE_WIDTH - 2;
   nux::Geometry new_geometry(geo.x, geo.y + panel_height, width, geo.height - panel_height);
   SetMaximumHeight(new_geometry.height);
   _parent->SetGeometry(new_geometry);
@@ -1966,7 +1966,6 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   if (!_dash_is_open)
   {
     gPainter.Paint2DQuadColor(GfxContext,
-
                               nux::Geometry(bkg_box.x + bkg_box.width,
                                             bkg_box.y,
                                             RIGHT_LINE_WIDTH,
