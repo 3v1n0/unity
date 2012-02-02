@@ -110,7 +110,7 @@ void Tooltip::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
 {
   nux::Geometry base = GetGeometry();
 
-  // Get the background of the QuicklistView and apply some
+  // Get the background of the Tooltip and apply some blur
   if (_compute_blur_bkg /* Refresh the blurred background*/)
   {
     nux::ObjectPtr<nux::IOpenGLFrameBufferObject> current_fbo = nux::GetGraphicsDisplay()->GetGpuDevice()->GetCurrentFrameBufferObject();
