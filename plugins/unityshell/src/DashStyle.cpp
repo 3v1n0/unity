@@ -1617,7 +1617,6 @@ bool Style::SquareButton(cairo_t* cr, nux::ButtonVisualState state,
   if (zeromargin == false)
     garnish = GetButtonGarnishSize();
   
-  //ButtonOutlinePath(cr, true);
   double w = cairo_image_surface_get_width(cairo_get_target(cr));
   double h = cairo_image_surface_get_height(cairo_get_target(cr));
 
@@ -1629,13 +1628,14 @@ bool Style::SquareButton(cairo_t* cr, nux::ButtonVisualState state,
 
   bool odd = true;
   double radius = 7.0;
-
+  
   // draw the grid background
   {
     cairo_set_line_width(cr, 1);
     cairo_move_to(cr, _align(x + width, odd), _align(y, odd));
     if (curve_bottom)
     {
+      LOG_DEBUG(logger) << "curve: " << _align(x + width, odd) << " - " << _align(y + height - radius, odd);
       // line to bottom-right corner
       cairo_line_to(cr, _align(x + width, odd), _align(y + height - radius, odd));
 
@@ -1663,8 +1663,8 @@ bool Style::SquareButton(cairo_t* cr, nux::ButtonVisualState state,
     }
     else
     {
-      cairo_line_to(cr, _align(width, odd), _align(height, odd));
-      cairo_line_to(cr, _align(x, odd), _align(height, odd));
+      cairo_line_to(cr, _align(x + width, odd), _align(y + height, odd));
+      cairo_line_to(cr, _align(x, odd), _align(x + height, odd));
       cairo_line_to(cr, _align(x, odd), _align(y, odd));
     }
 
@@ -1672,15 +1672,14 @@ bool Style::SquareButton(cairo_t* cr, nux::ButtonVisualState state,
     cairo_stroke(cr);
   } 
 
-
   cairo_set_line_width(cr, pimpl->button_label_border_size_[state]);
   odd = cairo_get_line_width(cr) == 2.0 ? false : true;
+
   
   if (pimpl->button_label_border_size_[state] == 2.0)
   {
-    x += 1.0;
-    y += 1.0;
-  
+    x += 1;
+    y += 1;
     width -= 1.0;
     height -= 1.0;
   }
@@ -1717,6 +1716,8 @@ bool Style::SquareButton(cairo_t* cr, nux::ButtonVisualState state,
               42.0 + 10.0,
               alignment);
 
+  cairo_surface_write_to_png(cairo_get_target(cr), "/tmp/wut.png");
+  
   return true;
 }
 
