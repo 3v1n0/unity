@@ -75,8 +75,8 @@ void Icon::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   arg.colorify            = nux::color::White;
   arg.running_arrow       = true;
   arg.running_on_viewport = true;
-  arg.render_center       = nux::Point3(25, 25, 25);
-  arg.logical_center      = nux::Point3(25, 25, 25);
+  arg.render_center       = nux::Point3(25, 25, 0);
+  arg.logical_center      = nux::Point3(25, 25, 0);
   
   std::list<unity::ui::RenderArg> args;
   args.push_front(arg);
