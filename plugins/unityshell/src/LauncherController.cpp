@@ -170,6 +170,7 @@ public:
   bool                   launcher_grabbed;
   bool                   reactivate_keynav;
   int                    reactivate_index;
+  bool                   keynav_restore_window_;
 
   UBusManager            ubus;
 
@@ -198,6 +199,7 @@ Controller::Impl::Impl(Display* display, Controller* parent)
   launcher_keynav = false;
   launcher_grabbed = false;
   reactivate_keynav = false;
+  keynav_restore_window_ = true;
 
   int i = 0;
   for (auto monitor : monitors)
@@ -288,8 +290,9 @@ void Controller::Impl::OnWindowFocusChanged (guint32 xid)
 
   if (keynav_first_focus)
   {
-    parent_->KeyNavTerminate(false);
     keynav_first_focus = false;
+    keynav_restore_window_ = false;
+    parent_->KeyNavTerminate(false);
   }
   else if (launcher_keynav)
   {
@@ -1033,6 +1036,7 @@ void Controller::KeyNavActivate()
 
   pimpl->reactivate_keynav = false;
   pimpl->launcher_keynav = true;
+  pimpl->keynav_restore_window_ = true;
   pimpl->keyboard_launcher_ = pimpl->launchers[pimpl->MonitorWithMouse()];
   pimpl->keyboard_launcher_->ShowShortcuts(false);
 
@@ -1040,7 +1044,6 @@ void Controller::KeyNavActivate()
   pimpl->model_->SetSelection(0);
 
   pimpl->ubus.SendMessage(UBUS_LAUNCHER_START_KEY_SWTICHER, g_variant_new_boolean(true));
-
   pimpl->ubus.SendMessage(UBUS_LAUNCHER_START_KEY_NAV, NULL);
 }
 
@@ -1076,8 +1079,7 @@ void Controller::KeyNavTerminate(bool activate)
     pimpl->keyboard_launcher_.Release();
 
   pimpl->ubus.SendMessage(UBUS_LAUNCHER_END_KEY_SWTICHER, g_variant_new_boolean(true));
-
-  pimpl->ubus.SendMessage(UBUS_LAUNCHER_END_KEY_NAV, g_variant_new_boolean(true));
+  pimpl->ubus.SendMessage(UBUS_LAUNCHER_END_KEY_NAV, g_variant_new_boolean(pimpl->keynav_restore_window_));
 }
 
 bool Controller::KeyNavIsActive() const
