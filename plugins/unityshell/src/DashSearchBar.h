@@ -58,7 +58,6 @@ public:
   nux::Property<std::string> search_hint;
   nux::Property<bool> showing_filters;
   nux::Property<bool> can_refine_search;
-  nux::Property<bool> im_focus;
   nux::ROProperty<bool> im_active;
 
   sigc::signal<void> activated;

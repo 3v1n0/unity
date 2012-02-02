@@ -84,14 +84,12 @@ void DashView::AboutToShow()
   visible_ = true;
   bg_effect_helper_.enabled = true;
   search_bar_->text_entry()->SelectAll();
-  search_bar_->im_focus = true;
 }
 
 void DashView::AboutToHide()
 {
   visible_ = false;
   bg_effect_helper_.enabled = false;
-  search_bar_->im_focus = false;
 }
 
 void DashView::SetupBackground()

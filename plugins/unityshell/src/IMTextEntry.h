@@ -46,9 +46,6 @@ public:
   nux::Property<bool> im_enabled;
   nux::Property<bool> im_active;
 
-  void OnFocusIn();
-  void OnFocusOut();
-
 private:
   void CheckIMEnabled();
   void SetupSimpleIM();
@@ -67,6 +64,9 @@ private:
   void OnPreeditChanged(GtkIMContext* context);
   void OnPreeditStart(GtkIMContext* context);
   void OnPreeditEnd(GtkIMContext* context);
+
+  void OnFocusIn();
+  void OnFocusOut();
 
   void UpdateCursorLocation();
 
