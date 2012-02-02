@@ -69,4 +69,15 @@ class InvisibleWindowTests(TestCase):
         # need to pin the app to the launcher - this could be tricky.
         launcher = Launcher()
         launcher.grab_switcher()
+        found = False
+        current_icon = None
+        for i in range(launcher.num_launcher_icons()):
+            current_icon = launcher.get_currently_selected_icon()
+            if current_icon.tooltip_text == 'Calculator':
+                found = True
+                break
+            launcher.switcher_next()
+        self.assertTrue(found, "Could not find calculator in launcher.")
+        launcher.switcher_enter_quicklist()
+        
         launcher.end_switcher(cancel=True)

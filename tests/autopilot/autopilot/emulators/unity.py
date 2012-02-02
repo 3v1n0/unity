@@ -181,6 +181,14 @@ class Launcher(Unity):
         model = self.get_state("/Unity/LauncherController/LauncherModel")[0]
         return [LauncherIcon(icon_dict[1]) for icon_dict in model['Children'] if icon_dict[0] == 'LauncherIcon']
 
+    def num_launcher_icons(self):
+        """Get the number of icons in the launcher model."""
+        return len(self.get_state('/Unity/LauncherController/LauncherModel/LauncherIcon')[0])
+
+    def get_currently_selected_icon(self):
+        """Returns the currently selected launcher icon, if keynav mode is active."""
+        return self.get_launcher_icons()[self.key_nav_selection()]
+
     def click_launcher_icon(self, icon, monitor=0, button=1):
         """Move the mouse over the launcher icon, and click it."""
         self.reveal_launcher(monitor)
