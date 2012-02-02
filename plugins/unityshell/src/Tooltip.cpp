@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010 Canonical Ltd
+ * Copyright (C) 2010-2012 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -15,62 +15,61 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Jay Taoko <jay.taoko@canonical.com>
- * Authored by: Mirco Müller <mirco.mueller@canonical.com
+ *              Mirco Müller <mirco.mueller@canonical.com
+ *              Andrea Cimitan <andrea.cimitan@canonical.com>
+ *              Marco Trevisan (Treviño) <3v1n0@ubuntu.com>
  */
 
 #include <Nux/Nux.h>
-#include <Nux/VLayout.h>
-#include <Nux/HLayout.h>
-#include <Nux/WindowThread.h>
-#include <Nux/WindowCompositor.h>
-#include <Nux/BaseWindow.h>
-#include <Nux/Button.h>
-#include <NuxGraphics/GraphicsEngine.h>
-#include <Nux/TextureArea.h>
-#include <NuxImage/CairoGraphics.h>
 
 #include "CairoTexture.h"
-#include "QuicklistMenuItem.h"
 #include "ubus-server.h"
 #include "UBusMessages.h"
 
 #include "Tooltip.h"
 
-using unity::texture_from_cairo_graphics;
+using namespace nux;
 
-namespace nux
+namespace unity
 {
+namespace
+{
+  const int ANCHOR_WIDTH = 14;
+  const int ANCHOR_HEIGHT = 18;
+  const int CORNER_RADIUS = 4;
+  const int PADDING = 15;
+  const int TEXT_PADDING = 8;
+  const int MINIMUM_TEXT_WIDTH = 140;
+  const int TOP_SIZE = 0;
+}
+
 NUX_IMPLEMENT_OBJECT_TYPE(Tooltip);
-
-Tooltip::Tooltip()
+Tooltip::Tooltip() :
+  _anchorX(0),
+  _anchorY(0),
+  _labelText(TEXT("Unity")),
+  _texture_bg(nullptr),
+  _texture_mask(nullptr),
+  _texture_outline(nullptr),
+  _compute_blur_bkg(true),
+  _cairo_text_has_changed(true)
 {
-  _texture_bg = 0;
-  _texture_mask = 0;
-  _texture_outline = 0;
-  _cairo_text_has_changed = true;
+  _hlayout = new nux::HLayout(TEXT(""), NUX_TRACKER_LOCATION);
+  _vlayout = new nux::VLayout(TEXT(""), NUX_TRACKER_LOCATION);
 
-  _anchorX   = 0;
-  _anchorY   = 0;
-  _labelText = TEXT("Unity");
+  _left_space = new nux::SpaceLayout(PADDING + ANCHOR_WIDTH, PADDING + ANCHOR_WIDTH, 1, 1000);
+  _right_space = new nux::SpaceLayout(PADDING + CORNER_RADIUS, PADDING + CORNER_RADIUS, 1, 1000);
 
-  _anchor_width   = 14;
-  _anchor_height  = 18;
-  _corner_radius  = 4;
-  _padding        = 15;
-  _top_size       = 4;
-
-  _hlayout         = new nux::HLayout(TEXT(""), NUX_TRACKER_LOCATION);
-  _vlayout         = new nux::VLayout(TEXT(""), NUX_TRACKER_LOCATION);
-
-  _left_space = new nux::SpaceLayout(_padding + _anchor_width + _corner_radius, _padding + _anchor_width + _corner_radius, 1, 1000);
-  _right_space = new nux::SpaceLayout(_padding + _corner_radius, _padding + _corner_radius, 1, 1000);
-
-  _top_space = new nux::SpaceLayout(1, 1000, _padding + _corner_radius, _padding + _corner_radius);
-  _bottom_space = new nux::SpaceLayout(1, 1000, _padding + _corner_radius, _padding + _corner_radius);
+  _top_space = new nux::SpaceLayout(1, 1000, PADDING, PADDING);
+  _bottom_space = new nux::SpaceLayout(1, 1000, PADDING, PADDING);
 
   _vlayout->AddLayout(_top_space, 0);
 
   _tooltip_text = new nux::StaticCairoText(_labelText.GetTCharPtr(), NUX_TRACKER_LOCATION);
+  _tooltip_text->SetTextAlignment(StaticCairoText::AlignState::NUX_ALIGN_CENTRE);
+  _tooltip_text->SetTextVerticalAlignment(StaticCairoText::AlignState::NUX_ALIGN_CENTRE);
+  _tooltip_text->SetMinimumWidth(MINIMUM_TEXT_WIDTH);
+
   _tooltip_text->sigTextChanged.connect(sigc::mem_fun(this, &Tooltip::RecvCairoTextChanged));
   _tooltip_text->sigFontChanged.connect(sigc::mem_fun(this, &Tooltip::RecvCairoTextChanged));
   _tooltip_text->Reference();
@@ -83,11 +82,8 @@ Tooltip::Tooltip()
   _hlayout->AddLayout(_vlayout, 1, eCenter, eFull);
   _hlayout->AddLayout(_right_space, 0);
 
-  _compute_blur_bkg = true;
-
   SetWindowSizeMatchLayout(true);
   SetLayout(_hlayout);
-
 }
 
 Tooltip::~Tooltip()
@@ -110,8 +106,8 @@ void Tooltip::ShowTooltipWithTipAt(int anchor_tip_x, int anchor_tip_y)
   _anchorX = anchor_tip_x;
   _anchorY = anchor_tip_y;
 
-  int x = _anchorX - _padding;
-  int y = anchor_tip_y - _anchor_height / 2 - _top_size - _corner_radius - _padding;
+  int x = _anchorX - PADDING;
+  int y = anchor_tip_y - ANCHOR_HEIGHT / 2 - TOP_SIZE - CORNER_RADIUS - PADDING;
 
   _compute_blur_bkg = true;
 
@@ -232,17 +228,23 @@ void Tooltip::DrawContent(GraphicsEngine& GfxContext, bool force_draw)
 
 void Tooltip::PreLayoutManagement()
 {
-  int TotalItemHeight = 0;
-  int textWidth  = 0;
-  int textHeight = 0;
+  int text_width;
+  int text_height;
+  int text_min_width = MINIMUM_TEXT_WIDTH;
 
-  _tooltip_text->GetTextExtents(textWidth, textHeight);
-  TotalItemHeight += textHeight;
+  _tooltip_text->GetTextExtents(text_width, text_height);
 
-  if (TotalItemHeight < _anchor_height)
+  if (text_width >= text_min_width)
   {
-    _top_space->SetMinMaxSize(1, (_anchor_height - TotalItemHeight) / 2 + _padding + _corner_radius);
-    _bottom_space->SetMinMaxSize(1, (_anchor_height - TotalItemHeight) / 2 + 1 + _padding + _corner_radius);
+    text_min_width = text_width + TEXT_PADDING * 2;
+  }
+
+  _tooltip_text->SetMinimumWidth(text_min_width);
+
+  if (text_height < ANCHOR_HEIGHT)
+  {
+    _top_space->SetMinMaxSize(1, (ANCHOR_HEIGHT - text_height) / 2 + PADDING + CORNER_RADIUS);
+    _bottom_space->SetMinMaxSize(1, (ANCHOR_HEIGHT - text_height) / 2 + 1 + PADDING + CORNER_RADIUS);
   }
 
   BaseWindow::PreLayoutManagement();
@@ -545,8 +547,7 @@ void Tooltip::UpdateTexture()
 
   int height = GetBaseHeight();
 
-  _top_size = 0;
-  int x = _anchorX - _padding;
+  int x = _anchorX - PADDING;
   int y = _anchorY - height / 2;
 
   SetBaseX(x);
@@ -585,14 +586,14 @@ void Tooltip::UpdateTexture()
     cairo_outline->GetSurface(),
     GetBaseWidth(),
     GetBaseHeight(),
-    _anchor_width,
-    _anchor_height,
+    ANCHOR_WIDTH,
+    ANCHOR_HEIGHT,
     -1,
-    _corner_radius,
+    CORNER_RADIUS,
     blur_coef,
     shadow_color,
     1.0f,
-    _padding,
+    PADDING,
     outline_color);
 
   compute_full_mask(
@@ -600,15 +601,15 @@ void Tooltip::UpdateTexture()
     cairo_mask->GetSurface(),
     GetBaseWidth(),
     GetBaseHeight(),
-    _corner_radius, // radius,
+    CORNER_RADIUS, // radius,
     16,             // shadow_radius,
-    _anchor_width,  // anchor_width,
-    _anchor_height, // anchor_height,
+    ANCHOR_WIDTH,  // anchor_width,
+    ANCHOR_HEIGHT, // anchor_height,
     -1,             // upper_size,
     true,           // negative,
     false,          // outline,
     1.0,            // line_width,
-    _padding,       // padding_size,
+    PADDING,       // padding_size,
     mask_color);
 
   cairo_destroy(cr_bg);
@@ -654,6 +655,7 @@ void Tooltip::SetText(NString text)
 
   _labelText = text;
   _tooltip_text->SetText(_labelText);
+
   QueueRelayout();
 }
 

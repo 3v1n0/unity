@@ -267,10 +267,10 @@ protected:
 
   void OnRemoteProgressVisibleChanged(LauncherEntryRemote* remote);
 
-  nux::Tooltip* _tooltip;
+  Tooltip* _tooltip;
   QuicklistView* _quicklist;
 
-  static nux::Tooltip* _current_tooltip;
+  static Tooltip* _current_tooltip;
   static QuicklistView* _current_quicklist;
 
   // This looks like a case for boost::logical::tribool

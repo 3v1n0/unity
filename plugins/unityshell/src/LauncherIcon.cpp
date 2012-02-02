@@ -65,7 +65,7 @@ nux::logging::Logger logger("unity.launcher");
 
 NUX_IMPLEMENT_OBJECT_TYPE(LauncherIcon);
 
-nux::Tooltip* LauncherIcon::_current_tooltip = 0;
+Tooltip* LauncherIcon::_current_tooltip = 0;
 QuicklistView* LauncherIcon::_current_quicklist = 0;
 
 int LauncherIcon::_current_theme_is_mono = -1;
@@ -100,7 +100,7 @@ LauncherIcon::LauncherIcon()
     _quirk_times[i].tv_nsec = 0;
   }
 
-  _tooltip = new nux::Tooltip();
+  _tooltip = new Tooltip();
   _tooltip->SinkReference();
 
   tooltip_text.SetSetterFunction(sigc::mem_fun(this, &LauncherIcon::SetTooltipText));
