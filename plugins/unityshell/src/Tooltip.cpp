@@ -37,7 +37,7 @@ namespace
   const int CORNER_RADIUS = 4;
   const int PADDING = 15;
   const int TEXT_PADDING = 8;
-  const int MINIMUM_TEXT_WIDTH = 140;
+  const int MINIMUM_TEXT_WIDTH = 100;
   const int TOP_SIZE = 0;
 }
 
