@@ -46,9 +46,11 @@ Tooltip::Tooltip() :
   _anchorX(0),
   _anchorY(0),
   _labelText(TEXT("Unity")),
-  _compute_blur_bkg(true),
   _cairo_text_has_changed(true)
 {
+  _use_blurred_background = true;
+  _compute_blur_bkg = true;
+
   _hlayout = new nux::HLayout(TEXT(""), NUX_TRACKER_LOCATION);
   _vlayout = new nux::VLayout(TEXT(""), NUX_TRACKER_LOCATION);
 
@@ -108,98 +110,13 @@ void Tooltip::ShowTooltipWithTipAt(int anchor_tip_x, int anchor_tip_y)
 
 void Tooltip::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
 {
+  CairoBaseWindow::Draw(gfxContext, forceDraw);
+
   nux::Geometry base(GetGeometry());
+  base.x = 0;
+  base.y = 0;
 
-  // Get the background of the Tooltip and apply some blur
-  if (_compute_blur_bkg /* Refresh the blurred background*/)
-  {
-    nux::ObjectPtr<nux::IOpenGLFrameBufferObject> current_fbo = nux::GetGraphicsDisplay()->GetGpuDevice()->GetCurrentFrameBufferObject();
-    nux::GetGraphicsDisplay()->GetGpuDevice()->DeactivateFrameBuffer();
-
-    gfxContext.SetViewport(0, 0, gfxContext.GetWindowWidth(), gfxContext.GetWindowHeight());
-    gfxContext.SetScissor(0, 0, gfxContext.GetWindowWidth(), gfxContext.GetWindowHeight());
-    gfxContext.GetRenderStates().EnableScissor(false);
-
-    nux::ObjectPtr <nux::IOpenGLBaseTexture> bkg_texture = gfxContext.CreateTextureFromBackBuffer(base.x, base.y, base.width, base.height);
-
-    nux::TexCoordXForm texxform_bkg;
-    _bkg_blur_texture = gfxContext.QRP_GetBlurTexture(0, 0, base.width, base.height, bkg_texture, texxform_bkg, nux::color::White, 1.0f, 3);
-
-    if (current_fbo.IsValid())
-    {
-      current_fbo->Activate(true);
-      gfxContext.Push2DWindow(current_fbo->GetWidth(), current_fbo->GetHeight());
-    }
-    else
-    {
-      gfxContext.SetViewport(0, 0, gfxContext.GetWindowWidth(), gfxContext.GetWindowHeight());
-      gfxContext.Push2DWindow(gfxContext.GetWindowWidth(), gfxContext.GetWindowHeight());
-      gfxContext.ApplyClippingRectangle();
-    }
-    _compute_blur_bkg = false;
-  }
-
-  // the elements position inside the window are referenced to top-left window
-  // corner. So bring base to (0, 0).
-  base.SetX(0);
-  base.SetY(0);
   gfxContext.PushClippingRectangle(base);
-
-  nux::TexCoordXForm texxform_bg;
-  texxform_bg.SetWrap(nux::TEXWRAP_CLAMP, nux::TEXWRAP_CLAMP);
-  texxform_bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-
-  nux::TexCoordXForm texxform_mask;
-  texxform_mask.SetWrap(nux::TEXWRAP_CLAMP, nux::TEXWRAP_CLAMP);
-  texxform_mask.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-
-  if (_bkg_blur_texture.IsValid())
-  {
-    nux::TexCoordXForm texxform_blur_bkg;
-
-    gfxContext.QRP_2TexMod(
-      base.x,
-      base.y,
-      base.width,
-      base.height,
-      _bkg_blur_texture,
-      texxform_blur_bkg,
-      nux::color::White,
-      _texture_mask->GetDeviceTexture(),
-      texxform_mask,
-      nux::color::White);
-  }
-
-  nux::GetWindowThread()->GetGraphicsEngine().GetRenderStates().SetBlend(true);
-  nux::GetWindowThread()->GetGraphicsEngine().GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
-
-  gfxContext.QRP_2TexMod(base.x,
-                         base.y,
-                         base.width,
-                         base.height,
-                         _texture_bg->GetDeviceTexture(),
-                         texxform_bg,
-                         nux::color::White,
-                         _texture_mask->GetDeviceTexture(),
-                         texxform_mask,
-                         nux::color::White);
-
-
-  nux::TexCoordXForm texxform;
-  texxform.SetWrap(nux::TEXWRAP_CLAMP, nux::TEXWRAP_CLAMP);
-  texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-
-  nux::GetWindowThread()->GetGraphicsDisplay().GetGraphicsEngine()->GetRenderStates().SetBlend(true);
-  nux::GetWindowThread()->GetGraphicsDisplay().GetGraphicsEngine()->GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
-  gfxContext.QRP_1Tex(base.x,
-                      base.y,
-                      base.width,
-                      base.height,
-                      _texture_outline->GetDeviceTexture(),
-                      texxform,
-                      nux::color::White);
-
-  nux::GetWindowThread()->GetGraphicsDisplay().GetGraphicsEngine()->GetRenderStates().SetBlend(false);
 
   _tooltip_text->ProcessDraw(gfxContext, forceDraw);
 
@@ -207,9 +124,7 @@ void Tooltip::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
 }
 
 void Tooltip::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
-{
-
-}
+{}
 
 void Tooltip::PreLayoutManagement()
 {

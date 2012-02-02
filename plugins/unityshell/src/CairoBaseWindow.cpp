@@ -81,6 +81,7 @@ void CairoBaseWindow::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
   // corner. So bring base to (0, 0).
   base.SetX(0);
   base.SetY(0);
+
   gfxContext.PushClippingRectangle(base);
 
   nux::TexCoordXForm texxform_bg;
@@ -94,6 +95,9 @@ void CairoBaseWindow::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
   if (_bg_blur_texture.IsValid() && _texture_mask.IsValid())
   {
     nux::TexCoordXForm texxform_blur_bkg;
+
+    nux::GetWindowThread()->GetGraphicsEngine().GetRenderStates().SetBlend(true);
+    nux::GetWindowThread()->GetGraphicsEngine().GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
 
     gfxContext.QRP_2TexMod(
       base.x,

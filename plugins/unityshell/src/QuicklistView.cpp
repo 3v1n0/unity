@@ -50,6 +50,8 @@
 #define NUX_KP_LEFT  0xFF96
 #define NUX_KP_RIGHT 0xFF98
 
+#define ANCHOR_WIDTH 10.0f
+
 using unity::texture_from_cairo_graphics;
 
 NUX_IMPLEMENT_OBJECT_TYPE(QuicklistView);
@@ -61,9 +63,6 @@ QuicklistView::QuicklistView()
   , _top_size(4)
   , _mouse_down(false)
   , _enable_quicklist_for_testing(false)
-  , _texture_bg(nullptr)
-  , _texture_mask(nullptr)
-  , _texture_outline(nullptr)
   , _anchor_width(10)
   , _anchor_height(18)
   , _corner_radius(4)
@@ -73,10 +72,12 @@ QuicklistView::QuicklistView()
   , _bottom_padding_correction_single_item(-4)
   , _offset_correction(-1)
   , _cairo_text_has_changed(true)
-  , _compute_blur_bkg(true)
   , _current_item_index(0)
 {
   SetGeometry(nux::Geometry(0, 0, 1, 1));
+
+  _use_blurred_background = true;
+  _compute_blur_bkg = true;
 
   _left_space = new nux::SpaceLayout(_padding +
                                      _anchor_width +
@@ -347,7 +348,7 @@ void QuicklistView::ShowQuicklistWithTipAt(int anchor_tip_x, int anchor_tip_y)
 
 void QuicklistView::ShowWindow(bool b, bool start_modal)
 {
-  BaseWindow::ShowWindow(b, start_modal);
+  unity::CairoBaseWindow::ShowWindow(b, start_modal);
 }
 
 void QuicklistView::Show()
@@ -381,101 +382,7 @@ void QuicklistView::Hide()
 
 void QuicklistView::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
 {
-  // Get the geometry of the QuicklistView on the display
-  nux::Geometry base = GetGeometry();
-
-  // Get the background of the QuicklistView and apply some
-  if (_compute_blur_bkg /* Refresh the blurred background*/)
-  {
-    nux::ObjectPtr<nux::IOpenGLFrameBufferObject> current_fbo = nux::GetGraphicsDisplay()->GetGpuDevice()->GetCurrentFrameBufferObject();
-    nux::GetGraphicsDisplay()->GetGpuDevice()->DeactivateFrameBuffer();
-
-    gfxContext.SetViewport(0, 0, gfxContext.GetWindowWidth(), gfxContext.GetWindowHeight());
-    gfxContext.SetScissor(0, 0, gfxContext.GetWindowWidth(), gfxContext.GetWindowHeight());
-    gfxContext.GetRenderStates().EnableScissor(false);
-
-    nux::ObjectPtr <nux::IOpenGLBaseTexture> bkg_texture = gfxContext.CreateTextureFromBackBuffer(base.x, base.y, base.width, base.height);
-
-    nux::TexCoordXForm texxform_bkg;
-    bkg_blur_texture = gfxContext.QRP_GetBlurTexture(0, 0, base.width, base.height, bkg_texture, texxform_bkg, nux::color::White, 1.0f, 3);
-
-    if (current_fbo.IsValid())
-    {
-      current_fbo->Activate(true);
-      gfxContext.Push2DWindow(current_fbo->GetWidth(), current_fbo->GetHeight());
-    }
-    else
-    {
-      gfxContext.SetViewport(0, 0, gfxContext.GetWindowWidth(), gfxContext.GetWindowHeight());
-      gfxContext.Push2DWindow(gfxContext.GetWindowWidth(), gfxContext.GetWindowHeight());
-      gfxContext.ApplyClippingRectangle();
-    }
-    _compute_blur_bkg = false;
-  }
-
-  // the elements position inside the window are referenced to top-left window
-  // corner. So bring base to (0, 0).
-  base.SetX(0);
-  base.SetY(0);
-  gfxContext.PushClippingRectangle(base);
-
-  nux::TexCoordXForm texxform_blur_bkg;
-  //texxform_blur_bkg.SetWrap(nux::TEXWRAP_CLAMP, nux::TEXWRAP_CLAMP);
-  //texxform_blur_bkg.SetTexCoordType (nux::TexCoordXForm::OFFSET_COORD);
-
-  nux::TexCoordXForm texxform_bg;
-  texxform_bg.SetWrap(nux::TEXWRAP_CLAMP, nux::TEXWRAP_CLAMP);
-  texxform_bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-
-  nux::TexCoordXForm texxform_mask;
-  texxform_mask.SetWrap(nux::TEXWRAP_CLAMP, nux::TEXWRAP_CLAMP);
-  texxform_mask.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-
-  if (bkg_blur_texture.IsValid())
-  {
-    gfxContext.QRP_2TexMod(
-      base.x,
-      base.y,
-      base.width,
-      base.height,
-      bkg_blur_texture,
-      texxform_blur_bkg,
-      nux::color::White,
-      _texture_mask->GetDeviceTexture(),
-      texxform_mask,
-      nux::color::White);
-  }
-
-  nux::GetWindowThread()->GetGraphicsEngine().GetRenderStates().SetBlend(true);
-  nux::GetWindowThread()->GetGraphicsEngine().GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
-
-  gfxContext.QRP_2TexMod(base.x,
-                         base.y,
-                         base.width,
-                         base.height,
-                         _texture_bg->GetDeviceTexture(),
-                         texxform_bg,
-                         nux::Color(1.0f, 1.0f, 1.0f, 1.0f),
-                         _texture_mask->GetDeviceTexture(),
-                         texxform_mask,
-                         nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
-
-
-  nux::TexCoordXForm texxform;
-  texxform.SetWrap(nux::TEXWRAP_CLAMP, nux::TEXWRAP_CLAMP);
-  texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-
-  nux::GetWindowThread()->GetGraphicsEngine().GetRenderStates().SetBlend(true);
-  nux::GetWindowThread()->GetGraphicsEngine().GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
-  gfxContext.QRP_1Tex(base.x,
-                      base.y,
-                      base.width,
-                      base.height,
-                      _texture_outline->GetDeviceTexture(),
-                      texxform,
-                      nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
-
-  nux::GetWindowThread()->GetGraphicsEngine().GetRenderStates().SetBlend(false);
+  unity::CairoBaseWindow::Draw(gfxContext, forceDraw);
 
   std::list<QuicklistMenuItem*>::iterator it;
   for (it = _item_list.begin(); it != _item_list.end(); it++)
@@ -489,14 +396,10 @@ void QuicklistView::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
     if ((*it)->GetVisible())
       (*it)->ProcessDraw(gfxContext, forceDraw);
   }
-
-  gfxContext.PopClippingRectangle();
 }
 
 void QuicklistView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
-{
-
-}
+{}
 
 void QuicklistView::PreLayoutManagement()
 {
