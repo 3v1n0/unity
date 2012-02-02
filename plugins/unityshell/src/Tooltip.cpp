@@ -234,7 +234,7 @@ void Tooltip::PreLayoutManagement()
 
   _tooltip_text->GetTextExtents(text_width, text_height);
 
-  if (text_width >= text_min_width)
+  if (text_width + TEXT_PADDING * 2 > text_min_width)
   {
     text_min_width = text_width + TEXT_PADDING * 2;
   }
