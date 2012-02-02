@@ -167,8 +167,12 @@ StaticCairoText::Draw(GraphicsEngine& gfxContext,
 {
   Geometry base = GetGeometry();
 
-  if (_texture2D == 0)
+  if (!_texture2D || _cached_base_width != base.width || _cached_base_height != base.height)
+  {
+    _cached_base_width = base.width;
+    _cached_base_height = base.height;
     UpdateTexture();
+  }
 
   gfxContext.PushClippingRectangle(base);
 

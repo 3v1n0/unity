@@ -105,6 +105,8 @@ private:
   int            _cached_extent_width;
   int            _cached_extent_height;
   bool           _need_new_extent_cache;
+  int            _cached_base_width;
+  int            _cached_base_height;
 
   NString        _text;
   Color          _textColor;
