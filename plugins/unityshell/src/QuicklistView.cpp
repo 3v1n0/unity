@@ -51,6 +51,7 @@
 #define NUX_KP_RIGHT 0xFF98
 
 using unity::texture_from_cairo_graphics;
+using unity::debug::Introspectable;
 
 NUX_IMPLEMENT_OBJECT_TYPE(QuicklistView);
 
@@ -284,15 +285,11 @@ QuicklistView::~QuicklistView()
   std::list<QuicklistMenuItem*>::iterator it;
   for (it = _item_list.begin(); it != _item_list.end(); it++)
   {
-    // Remove from introspection
-    RemoveChild(*it);
     (*it)->UnReference();
   }
 
   for (it = _default_item_list.begin(); it != _default_item_list.end(); it++)
   {
-    // Remove from introspection
-    RemoveChild(*it);
     (*it)->UnReference();
   }
 
@@ -812,15 +809,11 @@ void QuicklistView::RemoveAllMenuItem()
   std::list<QuicklistMenuItem*>::iterator it;
   for (it = _item_list.begin(); it != _item_list.end(); it++)
   {
-    // Remove from introspection
-    RemoveChild(*it);
     (*it)->UnReference();
   }
 
   for (it = _default_item_list.begin(); it != _default_item_list.end(); it++)
   {
-    // Remove from introspection
-    RemoveChild(*it);
     (*it)->UnReference();
   }
 
@@ -848,8 +841,6 @@ void QuicklistView::AddMenuItem(QuicklistMenuItem* item)
 
   _item_list.push_back(item);
   item->Reference();
-  // Add to introspection
-  AddChild(item);
 
   _cairo_text_has_changed = true;
   nux::GetWindowThread()->QueueObjectLayout(this);
@@ -1533,4 +1524,15 @@ QuicklistMenuItem*
 QuicklistView::GetSelectedMenuItem()
 {
   return GetNthItems(_current_item_index);
+}
+
+
+Introspectable::IntrospectableList const& QuicklistView::GetIntrospectableChildren()
+{
+  _introspectable_children.clear();
+  for (auto item: _item_list)
+  {
+    _introspectable_children.push_back(item);
+  }
+  return _introspectable_children;
 }
