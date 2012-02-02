@@ -28,8 +28,6 @@
 
 #include "Tooltip.h"
 
-using namespace nux;
-
 namespace unity
 {
 namespace
@@ -66,20 +64,20 @@ Tooltip::Tooltip() :
   _vlayout->AddLayout(_top_space, 0);
 
   _tooltip_text = new nux::StaticCairoText(_labelText.GetTCharPtr(), NUX_TRACKER_LOCATION);
-  _tooltip_text->SetTextAlignment(StaticCairoText::AlignState::NUX_ALIGN_CENTRE);
-  _tooltip_text->SetTextVerticalAlignment(StaticCairoText::AlignState::NUX_ALIGN_CENTRE);
+  _tooltip_text->SetTextAlignment(nux::StaticCairoText::AlignState::NUX_ALIGN_CENTRE);
+  _tooltip_text->SetTextVerticalAlignment(nux::StaticCairoText::AlignState::NUX_ALIGN_CENTRE);
   _tooltip_text->SetMinimumWidth(MINIMUM_TEXT_WIDTH);
 
   _tooltip_text->sigTextChanged.connect(sigc::mem_fun(this, &Tooltip::RecvCairoTextChanged));
   _tooltip_text->sigFontChanged.connect(sigc::mem_fun(this, &Tooltip::RecvCairoTextChanged));
   _tooltip_text->Reference();
 
-  _vlayout->AddView(_tooltip_text, 1, eCenter, eFull);
+  _vlayout->AddView(_tooltip_text, 1, nux::eCenter, nux::eFull);
 
   _vlayout->AddLayout(_bottom_space, 0);
 
   _hlayout->AddLayout(_left_space, 0);
-  _hlayout->AddLayout(_vlayout, 1, eCenter, eFull);
+  _hlayout->AddLayout(_vlayout, 1, nux::eCenter, nux::eFull);
   _hlayout->AddLayout(_right_space, 0);
 
   SetWindowSizeMatchLayout(true);
@@ -95,10 +93,10 @@ Tooltip::~Tooltip()
   if (_texture_outline) _texture_outline->UnReference();
 }
 
-Area* Tooltip::FindAreaUnderMouse(const Point& mouse_position, NuxEventType event_type)
+nux::Area* Tooltip::FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type)
 {
   // No area under mouse to allow click through to entities below
-  return 0;
+  return nullptr;
 }
 
 void Tooltip::ShowTooltipWithTipAt(int anchor_tip_x, int anchor_tip_y)
@@ -121,9 +119,9 @@ void Tooltip::ShowTooltipWithTipAt(int anchor_tip_x, int anchor_tip_y)
   ubus_server_send_message(ubus, UBUS_TOOLTIP_SHOWN, NULL);
 }
 
-void Tooltip::Draw(GraphicsEngine& gfxContext, bool forceDraw)
+void Tooltip::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
 {
-  Geometry base = GetGeometry();
+  nux::Geometry base = GetGeometry();
 
   // Get the background of the QuicklistView and apply some
   if (_compute_blur_bkg /* Refresh the blurred background*/)
@@ -160,13 +158,13 @@ void Tooltip::Draw(GraphicsEngine& gfxContext, bool forceDraw)
   base.SetY(0);
   gfxContext.PushClippingRectangle(base);
 
-  TexCoordXForm texxform_bg;
-  texxform_bg.SetWrap(TEXWRAP_CLAMP, TEXWRAP_CLAMP);
-  texxform_bg.SetTexCoordType(TexCoordXForm::OFFSET_COORD);
+  nux::TexCoordXForm texxform_bg;
+  texxform_bg.SetWrap(nux::TEXWRAP_CLAMP, nux::TEXWRAP_CLAMP);
+  texxform_bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
 
-  TexCoordXForm texxform_mask;
-  texxform_mask.SetWrap(TEXWRAP_CLAMP, TEXWRAP_CLAMP);
-  texxform_mask.SetTexCoordType(TexCoordXForm::OFFSET_COORD);
+  nux::TexCoordXForm texxform_mask;
+  texxform_mask.SetWrap(nux::TEXWRAP_CLAMP, nux::TEXWRAP_CLAMP);
+  texxform_mask.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
 
   if (_bkg_blur_texture.IsValid())
   {
@@ -194,15 +192,15 @@ void Tooltip::Draw(GraphicsEngine& gfxContext, bool forceDraw)
                          base.height,
                          _texture_bg->GetDeviceTexture(),
                          texxform_bg,
-                         Color(1.0f, 1.0f, 1.0f, 1.0f),
+                         nux::color::White,
                          _texture_mask->GetDeviceTexture(),
                          texxform_mask,
-                         Color(1.0f, 1.0f, 1.0f, 1.0f));
+                         nux::color::White);
 
 
-  TexCoordXForm texxform;
-  texxform.SetWrap(TEXWRAP_CLAMP, TEXWRAP_CLAMP);
-  texxform.SetTexCoordType(TexCoordXForm::OFFSET_COORD);
+  nux::TexCoordXForm texxform;
+  texxform.SetWrap(nux::TEXWRAP_CLAMP, nux::TEXWRAP_CLAMP);
+  texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
 
   nux::GetWindowThread()->GetGraphicsDisplay().GetGraphicsEngine()->GetRenderStates().SetBlend(true);
   nux::GetWindowThread()->GetGraphicsDisplay().GetGraphicsEngine()->GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
@@ -212,7 +210,7 @@ void Tooltip::Draw(GraphicsEngine& gfxContext, bool forceDraw)
                       base.height,
                       _texture_outline->GetDeviceTexture(),
                       texxform,
-                      Color(1.0f, 1.0f, 1.0f, 1.0f));
+                      nux::color::White);
 
   nux::GetWindowThread()->GetGraphicsDisplay().GetGraphicsEngine()->GetRenderStates().SetBlend(false);
 
@@ -221,7 +219,7 @@ void Tooltip::Draw(GraphicsEngine& gfxContext, bool forceDraw)
   gfxContext.PopClippingRectangle();
 }
 
-void Tooltip::DrawContent(GraphicsEngine& GfxContext, bool force_draw)
+void Tooltip::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
 
 }
@@ -247,18 +245,18 @@ void Tooltip::PreLayoutManagement()
     _bottom_space->SetMinMaxSize(1, (ANCHOR_HEIGHT - text_height) / 2 + 1 + PADDING + CORNER_RADIUS);
   }
 
-  BaseWindow::PreLayoutManagement();
+  nux::BaseWindow::PreLayoutManagement();
 }
 
 long Tooltip::PostLayoutManagement(long LayoutResult)
 {
-  long result = BaseWindow::PostLayoutManagement(LayoutResult);
+  long result = nux::BaseWindow::PostLayoutManagement(LayoutResult);
   UpdateTexture();
 
   return result;
 }
 
-void Tooltip::RecvCairoTextChanged(StaticCairoText* cairo_text)
+void Tooltip::RecvCairoTextChanged(nux::StaticCairoText* cairo_text)
 {
   _cairo_text_has_changed = true;
 }
@@ -505,9 +503,8 @@ compute_full_outline_shadow(
                           padding_size);
 
   _draw(cr, TRUE, line_width, rgba_shadow, FALSE, FALSE);
-  CairoGraphics* dummy = new CairoGraphics(CAIRO_FORMAT_A1, 1, 1);
-  dummy->BlurSurface(blur_coeff, surf);
-  delete dummy;
+  nux::CairoGraphics dummy(CAIRO_FORMAT_A1, 1, 1);
+  dummy.BlurSurface(blur_coeff, surf);
   compute_mask(cr);
   compute_outline(cr, line_width, rgba_line);
 }
@@ -555,13 +552,13 @@ void Tooltip::UpdateTexture()
 
   float blur_coef         = 6.0f;
 
-  CairoGraphics* cairo_bg       = new CairoGraphics(CAIRO_FORMAT_ARGB32, GetBaseWidth(), GetBaseHeight());
-  CairoGraphics* cairo_mask     = new CairoGraphics(CAIRO_FORMAT_ARGB32, GetBaseWidth(), GetBaseHeight());
-  CairoGraphics* cairo_outline  = new CairoGraphics(CAIRO_FORMAT_ARGB32, GetBaseWidth(), GetBaseHeight());
+  nux::CairoGraphics cairo_bg(CAIRO_FORMAT_ARGB32, GetBaseWidth(), GetBaseHeight());
+  nux::CairoGraphics cairo_mask(CAIRO_FORMAT_ARGB32, GetBaseWidth(), GetBaseHeight());
+  nux::CairoGraphics cairo_outline(CAIRO_FORMAT_ARGB32, GetBaseWidth(), GetBaseHeight());
 
-  cairo_t* cr_bg      = cairo_bg->GetContext();
-  cairo_t* cr_mask    = cairo_mask->GetContext();
-  cairo_t* cr_outline = cairo_outline->GetContext();
+  cairo_t* cr_bg      = cairo_bg.GetContext();
+  cairo_t* cr_mask    = cairo_mask.GetContext();
+  cairo_t* cr_outline = cairo_outline.GetContext();
 
   float   tint_color[4]    = {0.074f, 0.074f, 0.074f, 0.80f};
   float   hl_color[4]      = {1.0f, 1.0f, 1.0f, 0.8f};
@@ -575,7 +572,7 @@ void Tooltip::UpdateTexture()
               GetBaseHeight(),
               GetBaseWidth() / 2.0f,
               0,
-              Max<float>(GetBaseWidth() / 1.3f, GetBaseHeight() / 1.3f),
+              nux::Max<float>(GetBaseWidth() / 1.3f, GetBaseHeight() / 1.3f),
               tint_color,
               hl_color,
               dot_color);
@@ -583,7 +580,7 @@ void Tooltip::UpdateTexture()
   compute_full_outline_shadow
   (
     cr_outline,
-    cairo_outline->GetSurface(),
+    cairo_outline.GetSurface(),
     GetBaseWidth(),
     GetBaseHeight(),
     ANCHOR_WIDTH,
@@ -598,7 +595,7 @@ void Tooltip::UpdateTexture()
 
   compute_full_mask(
     cr_mask,
-    cairo_mask->GetSurface(),
+    cairo_mask.GetSurface(),
     GetBaseWidth(),
     GetBaseHeight(),
     CORNER_RADIUS, // radius,
@@ -618,19 +615,16 @@ void Tooltip::UpdateTexture()
 
   if (_texture_bg)
     _texture_bg->UnReference();
-  _texture_bg = texture_from_cairo_graphics(*cairo_bg);
+  _texture_bg = texture_from_cairo_graphics(cairo_bg);
 
   if (_texture_mask)
     _texture_mask->UnReference();
-  _texture_mask = texture_from_cairo_graphics(*cairo_mask);
+  _texture_mask = texture_from_cairo_graphics(cairo_mask);
 
   if (_texture_outline)
     _texture_outline->UnReference();
-  _texture_outline = texture_from_cairo_graphics(*cairo_outline);
+  _texture_outline = texture_from_cairo_graphics(cairo_outline);
 
-  delete cairo_bg;
-  delete cairo_mask;
-  delete cairo_outline;
   _cairo_text_has_changed = false;
 }
 
@@ -648,7 +642,7 @@ void Tooltip::NotifyConfigurationChange(int width,
 {
 }
 
-void Tooltip::SetText(NString text)
+void Tooltip::SetText(nux::NString text)
 {
   if (_labelText == text)
     return;
