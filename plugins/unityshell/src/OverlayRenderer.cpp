@@ -256,7 +256,7 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
     nux::Geometry blur_geo(absolute_geo.x, absolute_geo.y, content_geo.width, content_geo.height);
     bg_blur_texture_ = bg_effect_helper_.GetBlurRegion(blur_geo);
     
-    if (bg_blur_texture_.IsValid()  && paint_blur)
+    if (bg_blur_texture_.IsValid())
     {
       nux::Geometry bg_clip = geo;
       gfx_context.PushClippingRectangle(bg_clip);
@@ -340,14 +340,14 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
     gfx_context.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
 
     // Fill in corners (meh)
-    for (int i = 1; i <= INNER_CORNER_RADIUS; ++i)
+    for (int i = 0; i < INNER_CORNER_RADIUS; ++i)
     {
-      nux::Geometry fill_geo (geo.x + geo.width, geo.y + i - 1, 6 - i, 1);
+      nux::Geometry fill_geo (geo.x + geo.width, geo.y + i, INNER_CORNER_RADIUS - i, 1);
       nux::GetPainter().Paint2DQuadColor(gfx_context, fill_geo, bg_color_);
       
       nux::Color dark = bg_color_ * 0.8f;
       dark.alpha = bg_color_.alpha;
-      fill_geo = nux::Geometry(geo.x + i - 1 , geo.y + geo.height, 1, 6 - i);
+      fill_geo = nux::Geometry(geo.x + i, geo.y + geo.height, 1, INNER_CORNER_RADIUS - i);
       nux::GetPainter().Paint2DQuadColor(gfx_context, fill_geo, dark);
     }
   }
