@@ -283,18 +283,18 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
                                                    geometry.y,
                                                    1,
                                                    content_geo.height + INNER_CORNER_RADIUS),
-                                     nux::Color(0.0f, 0.0f, 0.0f, 0.0f),
+                                     nux::color::Transparent,
                                      line_color,
                                      line_color,
-                                     nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
+                                     nux::color::Transparent);
 
   nux::GetPainter().Paint2DQuadColor(gfx_context,
                                      nux::Geometry(geometry.x,
                                                    geometry.y,
                                                    content_geo.width + INNER_CORNER_RADIUS,
                                                    1),
-                                     nux::Color(0.0f, 0.0f, 0.0f, 0.0f),
-                                     nux::Color(0.0f, 0.0f, 0.0f, 0.0f),
+                                     nux::color::Transparent,
+                                     nux::color::Transparent,
                                      line_color,
                                      line_color);
   
