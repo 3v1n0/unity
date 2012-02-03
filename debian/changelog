@@ -1,4 +1,4 @@
-unity (5.2.0-0ubuntu1) UNRELEASED; urgency=low
+unity (5.2.0-0ubuntu1) precise; urgency=low
 
   * New upstream release.
     - Unity needs a way to switch (tab) between windows on current workspace
@@ -95,7 +95,7 @@ unity (5.2.0-0ubuntu1) UNRELEASED; urgency=low
     - fix a dep on binary:Version
     - build-dep on latest libunity-dev
 
- -- Didier Roche <didrocks@ubuntu.com>  Fri, 03 Feb 2012 10:00:54 +0100
+ -- Didier Roche <didrocks@ubuntu.com>  Fri, 03 Feb 2012 11:37:52 +0100
 
 unity (5.0.0-0ubuntu3) precise; urgency=low
 
