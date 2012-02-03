@@ -21,6 +21,95 @@
 
 namespace unity
 {
+namespace glib
+{
+
+Variant::Variant()
+  : variant_(NULL)
+{}
+
+Variant::Variant(GVariant* variant)
+  : variant_(variant)
+{
+  g_variant_ref_sink(variant_);
+}
+
+Variant::Variant(GVariant* variant, StealRef const& ref)
+  : variant_(variant)
+{}
+
+Variant::Variant(Variant const& other)
+  : variant_(other.variant_)
+{
+  if (variant_) g_variant_ref_sink(variant_);
+}
+
+Variant::~Variant()
+{
+  if (variant_) g_variant_unref(variant_);
+}
+
+std::string Variant::GetString() const
+{
+  // g_variant_get_string doesn't duplicate the string
+  const gchar *result = g_variant_get_string (variant_, NULL);
+  return result != NULL ? result : "";
+}
+
+int Variant::GetInt() const
+{
+  return static_cast<int>(g_variant_get_int32 (variant_));
+}
+
+unsigned Variant::GetUInt() const
+{
+  return static_cast<unsigned>(g_variant_get_uint32 (variant_));
+}
+
+bool Variant::GetBool() const
+{
+  return (g_variant_get_boolean (variant_) != FALSE);
+}
+
+bool Variant::ASVToHints(HintsMap& hints) const
+{
+  GVariantIter* hints_iter;
+  char* key = NULL;
+  GVariant* value = NULL;
+
+  if (!g_variant_is_of_type (variant_, G_VARIANT_TYPE ("(a{sv})")) &&
+      !g_variant_is_of_type (variant_, G_VARIANT_TYPE ("a{sv}")))
+  {
+    return false;
+  }
+
+  g_variant_get(variant_, g_variant_get_type_string(variant_), &hints_iter);
+
+  while (g_variant_iter_loop(hints_iter, "{sv}", &key, &value))
+  {
+    hints[key] = value;
+  }
+
+  g_variant_iter_free (hints_iter);
+
+  return true;
+}
+
+Variant& Variant::operator=(GVariant* val)
+{
+  if (variant_) g_variant_unref (variant_);
+  variant_ = g_variant_ref_sink (val);
+
+  return *this;
+}
+
+Variant::operator GVariant* () const
+{
+  return variant_;
+}
+
+} // namespace glib
+
 namespace variant
 {
 

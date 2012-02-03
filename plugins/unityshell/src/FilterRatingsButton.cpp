@@ -19,8 +19,6 @@
  *
  */
 
-#include "config.h"
-
 #include <math.h>
 
 #include <Nux/Nux.h>
@@ -29,237 +27,219 @@
 #include "DashStyle.h"
 #include "FilterRatingsButton.h"
 
-namespace {
-  nux::logging::Logger logger("unity.dash.FilterRatingsButton");
+namespace unity
+{
+namespace dash
+{
+
+FilterRatingsButton::FilterRatingsButton(NUX_FILE_LINE_DECL)
+  : nux::ToggleButton(NUX_FILE_LINE_PARAM)
+{
+  InitTheme();
+  SetAcceptKeyNavFocusOnMouseDown(false);
+
+  mouse_up.connect(sigc::mem_fun(this, &FilterRatingsButton::RecvMouseUp));
+  mouse_drag.connect(sigc::mem_fun(this, &FilterRatingsButton::RecvMouseDrag));
 }
 
-namespace unity {
+FilterRatingsButton::~FilterRatingsButton()
+{
+}
 
-  FilterRatingsButton::FilterRatingsButton (NUX_FILE_LINE_DECL)
-      : nux::Button (NUX_FILE_LINE_PARAM)
-      , prelight_empty_ (NULL)
-      , active_empty_ (NULL)
-      , normal_empty_ (NULL)
-      , prelight_half_ (NULL)
-      , active_half_ (NULL)
-      , normal_half_ (NULL)
-      , prelight_full_ (NULL)
-      , active_full_ (NULL)
-      , normal_full_ (NULL)
+void FilterRatingsButton::SetFilter(Filter::Ptr const& filter)
+{
+  filter_ = std::static_pointer_cast<RatingsFilter>(filter);
+  filter_->rating.changed.connect(sigc::mem_fun(this, &FilterRatingsButton::OnRatingsChanged));
+  NeedRedraw();
+}
+
+std::string FilterRatingsButton::GetFilterType()
+{
+  return "FilterRatingsButton";
+}
+
+void FilterRatingsButton::InitTheme()
+{
+  if (!active_empty_)
   {
-    InitTheme();
+    nux::Geometry geometry(GetGeometry());
+    geometry.width /= 5;
 
-    mouse_up.connect (sigc::mem_fun (this, &FilterRatingsButton::RecvMouseUp) );
-    mouse_drag.connect (sigc::mem_fun (this, &FilterRatingsButton::RecvMouseDrag) );
+    active_empty_.reset(new nux::CairoWrapper(geometry, sigc::bind(sigc::mem_fun(this, &FilterRatingsButton::RedrawTheme), 0, nux::ButtonVisualState::VISUAL_STATE_PRESSED)));
+    normal_empty_.reset(new nux::CairoWrapper(geometry, sigc::bind(sigc::mem_fun(this, &FilterRatingsButton::RedrawTheme), 0, nux::ButtonVisualState::VISUAL_STATE_NORMAL)));
+    prelight_empty_.reset(new nux::CairoWrapper(geometry, sigc::bind(sigc::mem_fun(this, &FilterRatingsButton::RedrawTheme), 0, nux::ButtonVisualState::VISUAL_STATE_PRELIGHT)));
+
+    active_half_.reset(new nux::CairoWrapper(geometry, sigc::bind(sigc::mem_fun(this, &FilterRatingsButton::RedrawTheme), 1, nux::ButtonVisualState::VISUAL_STATE_PRESSED)));
+    normal_half_.reset(new nux::CairoWrapper(geometry, sigc::bind(sigc::mem_fun(this, &FilterRatingsButton::RedrawTheme), 1, nux::ButtonVisualState::VISUAL_STATE_NORMAL)));
+    prelight_half_.reset(new nux::CairoWrapper(geometry, sigc::bind(sigc::mem_fun(this, &FilterRatingsButton::RedrawTheme), 1, nux::ButtonVisualState::VISUAL_STATE_PRELIGHT)));
+
+    active_full_.reset(new nux::CairoWrapper(geometry, sigc::bind(sigc::mem_fun(this, &FilterRatingsButton::RedrawTheme), 2, nux::ButtonVisualState::VISUAL_STATE_PRESSED)));
+    normal_full_.reset(new nux::CairoWrapper(geometry, sigc::bind(sigc::mem_fun(this, &FilterRatingsButton::RedrawTheme), 2, nux::ButtonVisualState::VISUAL_STATE_NORMAL)));
+    prelight_full_.reset(new nux::CairoWrapper(geometry, sigc::bind(sigc::mem_fun(this, &FilterRatingsButton::RedrawTheme), 2, nux::ButtonVisualState::VISUAL_STATE_PRELIGHT)));
+  }
+}
+
+void FilterRatingsButton::RedrawTheme(nux::Geometry const& geom, cairo_t* cr, int type, nux::ButtonVisualState faked_state)
+{
+  Style& dash_style = Style::Instance();
+  if (type == 0)
+  {
+    // empty
+    dash_style.StarEmpty(cr, faked_state);
+  }
+  else if (type == 1)
+  {
+    // half
+    dash_style.StarHalf(cr, faked_state);
+  }
+  else
+  {
+    // full
+    dash_style.StarFull(cr, faked_state);
+  }
+}
+
+long FilterRatingsButton::ComputeContentSize()
+{
+  long ret = nux::Button::ComputeContentSize();
+  nux::Geometry geo(GetGeometry());
+
+  if (cached_geometry_ != geo)
+  {
+    geo.width = 27;
+    active_empty_->Invalidate(geo);
+    normal_empty_->Invalidate(geo);
+    prelight_empty_->Invalidate(geo);
+
+    active_half_->Invalidate(geo);
+    normal_half_->Invalidate(geo);
+    prelight_half_->Invalidate(geo);
+
+    active_full_->Invalidate(geo);
+    normal_full_->Invalidate(geo);
+    prelight_full_->Invalidate(geo);
+
+    cached_geometry_ = geo;
   }
 
-  FilterRatingsButton::~FilterRatingsButton() {
-    delete prelight_empty_;
-    delete active_empty_;
-    delete normal_empty_;
-    delete prelight_half_;
-    delete active_half_;
-    delete normal_half_;
-    delete prelight_full_;
-    delete active_full_ ;
-    delete normal_full_;
-  }
+  return ret;
+}
 
-  void FilterRatingsButton::SetFilter(dash::Filter::Ptr filter)
-  {
-    filter_ = std::static_pointer_cast<dash::RatingsFilter>(filter);
-    filter_->rating.changed.connect (sigc::mem_fun (this, &FilterRatingsButton::OnRatingsChanged));
-    NeedRedraw();
-  }
+void FilterRatingsButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
+{
+  int rating = 0;
+  if (filter_ && filter_->filtering)
+    rating = static_cast<int>(filter_->rating * 5);
+  // FIXME: 9/26/2011
+  // We should probably support an API for saying whether the ratings
+  // should or shouldn't support half stars...but our only consumer at
+  // the moment is the applications lens which according to design
+  // (Bug #839759) shouldn't. So for now just force rounding.
+  //    int total_half_stars = rating % 2;
+  //    int total_full_stars = rating / 2;
+  int total_full_stars = rating;
+  int total_half_stars = 0;
 
-  std::string FilterRatingsButton::GetFilterType ()
-  {
-    return "FilterRatingsButton";
-  }
+  nux::Geometry const& geo = GetGeometry();
+  nux::Geometry geo_star(geo);
+  geo_star.width = 27;
 
-  void FilterRatingsButton::InitTheme()
+  gPainter.PaintBackground(GfxContext, geo);
+  // set up our texture mode
+  nux::TexCoordXForm texxform;
+  texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
+  texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+
+  // clear what is behind us
+  unsigned int alpha = 0, src = 0, dest = 0;
+
+  GfxContext.GetRenderStates().GetBlend(alpha, src, dest);
+  GfxContext.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
+  nux::Color col = nux::color::Black;
+  col.alpha = 0;
+  GfxContext.QRP_Color(geo.x,
+                       geo.y,
+                       geo.width,
+                       geo.height,
+                       col);
+
+  for (int index = 0; index < 5; index++)
   {
-    if (prelight_empty_ == NULL)
+    nux::BaseTexture* texture = normal_empty_->GetTexture();
+    if (index < total_full_stars)
     {
-      nux::Geometry geometry = GetGeometry();
-      geometry.width /= 5;
-      prelight_empty_ = new nux::CairoWrapper(geometry, sigc::bind(sigc::mem_fun(this, &FilterRatingsButton::RedrawTheme), 0, nux::ButtonVisualState::VISUAL_STATE_PRELIGHT));
-      active_empty_ = new nux::CairoWrapper(geometry, sigc::bind(sigc::mem_fun(this, &FilterRatingsButton::RedrawTheme), 0, nux::ButtonVisualState::VISUAL_STATE_PRESSED));
-      normal_empty_ = new nux::CairoWrapper(geometry, sigc::bind(sigc::mem_fun(this, &FilterRatingsButton::RedrawTheme), 0, nux::ButtonVisualState::VISUAL_STATE_NORMAL));
-
-      prelight_half_ = new nux::CairoWrapper(geometry, sigc::bind(sigc::mem_fun(this, &FilterRatingsButton::RedrawTheme), 1, nux::ButtonVisualState::VISUAL_STATE_PRELIGHT));
-      active_half_ = new nux::CairoWrapper(geometry, sigc::bind(sigc::mem_fun(this, &FilterRatingsButton::RedrawTheme), 1, nux::ButtonVisualState::VISUAL_STATE_PRESSED));
-      normal_half_ = new nux::CairoWrapper(geometry, sigc::bind(sigc::mem_fun(this, &FilterRatingsButton::RedrawTheme), 1, nux::ButtonVisualState::VISUAL_STATE_NORMAL));
-
-      prelight_full_ = new nux::CairoWrapper(geometry, sigc::bind(sigc::mem_fun(this, &FilterRatingsButton::RedrawTheme), 2, nux::ButtonVisualState::VISUAL_STATE_PRELIGHT));
-      active_full_ = new nux::CairoWrapper(geometry, sigc::bind(sigc::mem_fun(this, &FilterRatingsButton::RedrawTheme), 2, nux::ButtonVisualState::VISUAL_STATE_PRESSED));
-      normal_full_ = new nux::CairoWrapper(geometry, sigc::bind(sigc::mem_fun(this, &FilterRatingsButton::RedrawTheme), 2, nux::ButtonVisualState::VISUAL_STATE_NORMAL));
+      if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_NORMAL)
+        texture = normal_full_->GetTexture();
+      else if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_PRELIGHT)
+        texture = prelight_full_->GetTexture();
+      else if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_PRESSED)
+        texture = active_full_->GetTexture();
     }
-  }
-
-  void FilterRatingsButton::RedrawTheme (nux::Geometry const& geom, cairo_t *cr, int type, nux::ButtonVisualState faked_state)
-  {
-    dash::Style& dash_style = dash::Style::Instance();
-    if (type == 0)
+    else if (index < total_full_stars + total_half_stars)
     {
-      // empty
-      dash_style.StarEmpty (cr, faked_state);
-    }
-    else if (type == 1)
-    {
-      // half
-      dash_style.StarHalf (cr, faked_state);
+      if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_NORMAL)
+        texture = normal_half_->GetTexture();
+      else if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_PRELIGHT)
+        texture = prelight_half_->GetTexture();
+      else if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_PRESSED)
+        texture = active_half_->GetTexture();
     }
     else
     {
-      // full
-      dash_style.StarFull (cr, faked_state);
-    }
-  }
-
-  long FilterRatingsButton::ComputeContentSize ()
-  {
-    long ret = nux::Button::ComputeContentSize();
-    if (cached_geometry_ != GetGeometry())
-    {
-      nux::Geometry geometry = GetGeometry();
-      //geometry.width /= 5;
-      geometry.width = 27;
-      prelight_empty_->Invalidate(geometry);
-      active_empty_->Invalidate(geometry);
-      normal_empty_->Invalidate(geometry);
-
-      prelight_half_->Invalidate(geometry);
-      active_half_->Invalidate(geometry);
-      normal_half_->Invalidate(geometry);
-
-      prelight_full_->Invalidate(geometry);
-      active_full_->Invalidate(geometry);
-      normal_full_->Invalidate(geometry);
+      if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_NORMAL)
+        texture = normal_empty_->GetTexture();
+      else if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_PRELIGHT)
+        texture = prelight_empty_->GetTexture();
+      else if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_PRESSED)
+        texture = active_empty_->GetTexture();
     }
 
-    cached_geometry_ = GetGeometry();
-    return ret;
-  }
+    GfxContext.QRP_1Tex(geo_star.x,
+                        geo_star.y,
+                        geo_star.width,
+                        geo_star.height,
+                        texture->GetDeviceTexture(),
+                        texxform,
+                        nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
 
-  void FilterRatingsButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw) {
-    int rating = 0;
-    if (filter_ != NULL && filter_->filtering)
-      rating = static_cast<int>(filter_->rating * 5);
-    // FIXME: 9/26/2011
-    // We should probably support an API for saying whether the ratings
-    // should or shouldn't support half stars...but our only consumer at
-    // the moment is the applications lens which according to design
-    // (Bug #839759) shouldn't. So for now just force rounding.
-    //    int total_half_stars = rating % 2;
-    //    int total_full_stars = rating / 2;
-    int total_full_stars = rating;
-    int total_half_stars = 0;
-    
-    nux::Geometry geometry = GetGeometry ();
-    //geometry.width = geometry.width / 5;
-    geometry.width = 27;
-
-    gPainter.PaintBackground(GfxContext, GetGeometry());
-    // set up our texture mode
-    nux::TexCoordXForm texxform;
-    texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
-    texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-
-    // clear what is behind us
-    unsigned int alpha = 0, src = 0, dest = 0;
-
-    GfxContext.GetRenderStates().GetBlend(alpha, src, dest);
-    GfxContext.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-
-    nux::Color col = nux::color::Black;
-    col.alpha = 0;
-    GfxContext.QRP_Color(GetGeometry().x,
-                         GetGeometry().y,
-                         GetGeometry().width,
-                         GetGeometry().height,
-                         col);
-
-    for (int index = 0; index < 5; index++)
-    {
-      nux::BaseTexture *texture = normal_empty_->GetTexture();
-
-      if (index < total_full_stars) {
-        if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_NORMAL)
-          texture = normal_full_->GetTexture();
-        else if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_PRELIGHT)
-          texture = prelight_full_->GetTexture();
-        else if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_PRESSED)
-          texture = active_full_->GetTexture();
-      }
-      else if (index < total_full_stars + total_half_stars) {
-        if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_NORMAL)
-          texture = normal_half_->GetTexture();
-        else if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_PRELIGHT)
-          texture = prelight_half_->GetTexture();
-        else if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_PRESSED)
-          texture = active_half_->GetTexture();
-      }
-      else {
-        if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_NORMAL)
-          texture = normal_empty_->GetTexture();
-        else if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_PRELIGHT)
-          texture = prelight_empty_->GetTexture();
-        else if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_PRESSED)
-          texture = active_empty_->GetTexture();
-      }
-
-      GfxContext.QRP_1Tex(geometry.x,
-                          geometry.y,
-                          geometry.width,
-                          geometry.height,
-                          texture->GetDeviceTexture(),
-                          texxform,
-                          nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
-
-      geometry.x += geometry.width + 10;
-
-    }
-
-    GfxContext.GetRenderStates().SetBlend(alpha, src, dest);
+    geo_star.x += geo_star.width + 10;
 
   }
 
-  void FilterRatingsButton::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw) {
-    nux::Button::DrawContent(GfxContext, force_draw);
-  }
+  GfxContext.GetRenderStates().SetBlend(alpha, src, dest);
 
-  void FilterRatingsButton::PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw) {
-    nux::Button::PostDraw(GfxContext, force_draw);
-  }
-  
-  static void _UpdateRatingToMouse (dash::RatingsFilter::Ptr filter, int x)
-  {
-    int width = 180;
-    float new_rating = (static_cast<float>(x) / width);
+}
 
-    // FIXME: change to 10 once we decide to support also half-stars
-    new_rating = ceil(5*new_rating)/5;
-    new_rating = new_rating > 1 ? 1 : (new_rating < 0 ? 0 : new_rating);
-    
-    if (filter != NULL)
-      filter->rating = new_rating;
-  }
+static void _UpdateRatingToMouse(RatingsFilter::Ptr filter, int x)
+{
+  int width = 180;
+  float new_rating = (static_cast<float>(x) / width);
 
-  void FilterRatingsButton::RecvMouseUp (int x, int y, unsigned long button_flags, unsigned long key_flags) 
-  {
-    _UpdateRatingToMouse (filter_, x);
-  }
+  // FIXME: change to 10 once we decide to support also half-stars
+  new_rating = ceil(5 * new_rating) / 5;
+  new_rating = (new_rating > 1) ? 1 : ((new_rating < 0) ? 0 : new_rating);
 
-  void FilterRatingsButton::RecvMouseDrag (int x, int y, int dx, int dy, 
-					   unsigned long button_flags, 
-					   unsigned long key_flags)
-  {
-    _UpdateRatingToMouse (filter_, x);
-  }
+  if (filter)
+    filter->rating = new_rating;
+}
 
-  void FilterRatingsButton::OnRatingsChanged (int rating) {
-    NeedRedraw();
-  }
+void FilterRatingsButton::RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long key_flags)
+{
+  _UpdateRatingToMouse(filter_, x);
+}
 
-};
+void FilterRatingsButton::RecvMouseDrag(int x, int y, int dx, int dy,
+                                        unsigned long button_flags,
+                                        unsigned long key_flags)
+{
+  _UpdateRatingToMouse(filter_, x);
+}
+
+void FilterRatingsButton::OnRatingsChanged(int rating)
+{
+  NeedRedraw();
+}
+
+} // namespace dash
+} // namespace unity

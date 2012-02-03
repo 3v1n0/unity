@@ -35,13 +35,23 @@ LauncherHideMachine::LauncherHideMachine()
   _mode  = HIDE_NEVER;
   _quirks = DEFAULT;
   _should_hide = false;
-  _show_on_edge = true;
 
   _latest_emit_should_hide = false;
   _hide_changed_emit_handle = 0;
+  reveal_progress = 0;
 
   _hide_delay_handle = 0;
   _hide_delay_timeout_length = 750;
+
+  decaymulator_ = unity::ui::Decaymulator::Ptr(new unity::ui::Decaymulator());
+  decaymulator_->value.changed.connect([&](int value) -> void { reveal_progress = (float)value / (float)reveal_pressure; });
+
+  edge_decay_rate.changed.connect(sigc::mem_fun (this, &LauncherHideMachine::OnDecayRateChanged));
+}
+
+void LauncherHideMachine::OnDecayRateChanged(int value)
+{
+  decaymulator_->rate_of_decay = value;  
 }
 
 LauncherHideMachine::~LauncherHideMachine()
@@ -55,6 +65,19 @@ LauncherHideMachine::~LauncherHideMachine()
   {
     g_source_remove(_hide_changed_emit_handle);
     _hide_changed_emit_handle = 0;
+  }
+}
+
+void
+LauncherHideMachine::AddRevealPressure(int pressure)
+{
+  decaymulator_->value = decaymulator_->value + pressure;
+
+  if (decaymulator_->value > reveal_pressure)
+  {
+    SetQuirk(REVEAL_PRESSURE_PASS, true);
+    SetQuirk(MOUSE_MOVE_POST_REVEAL, true);
+    decaymulator_->value = 0;
   }
 }
 
@@ -99,8 +122,8 @@ LauncherHideMachine::SetShouldHide(bool value, bool skip_delay)
     SCALE_ACTIVE           = 1 << 16, 64k  #VISIBLE_REQUIRED
     EXPO_ACTIVE            = 1 << 17, 128k #VISIBLE_REQUIRED
     MT_DRAG_OUT            = 1 << 18, 256k #VISIBLE_REQUIRED
-    MOUSE_OVER_ACTIVE_EDGE = 1 << 19, 512k
     LAUNCHER_PULSE         = 1 << 20, 1M   #VISIBLE_REQUIRED
+    LOCK_HIDE              = 1 << 21, 2M
 */
 
 #define VISIBLE_REQUIRED (QUICKLIST_OPEN | EXTERNAL_DND_ACTIVE | \
@@ -112,6 +135,13 @@ void
 LauncherHideMachine::EnsureHideState(bool skip_delay)
 {
   bool should_hide;
+
+  // early check to see if we are locking to hidden
+  if (GetQuirk(LOCK_HIDE))
+  {
+    SetShouldHide(true, true);
+    return;
+  }
 
   if (_mode == HIDE_NEVER)
   {
@@ -148,11 +178,7 @@ LauncherHideMachine::EnsureHideState(bool skip_delay)
     HideQuirk _should_show_quirk;
     if (GetQuirk(LAUNCHER_HIDDEN))
     {
-      _should_show_quirk = (HideQuirk)(VISIBLE_REQUIRED);
-
-      if (_show_on_edge)
-        _should_show_quirk = (HideQuirk)(_should_show_quirk | MOUSE_OVER_ACTIVE_EDGE);
-
+      _should_show_quirk = (HideQuirk) ((VISIBLE_REQUIRED) | REVEAL_PRESSURE_PASS);
     }
     else
     {
@@ -160,9 +186,6 @@ LauncherHideMachine::EnsureHideState(bool skip_delay)
       // mouse position over launcher is only taken into account if we move it after the revealing state
       if (GetQuirk(MOUSE_MOVE_POST_REVEAL))
         _should_show_quirk = (HideQuirk)(_should_show_quirk | MOUSE_OVER_LAUNCHER);
-
-      if (_show_on_edge)
-        _should_show_quirk = (HideQuirk)(_should_show_quirk | MOUSE_OVER_ACTIVE_EDGE);
     }
 
     if (GetQuirk(_should_show_quirk))
@@ -191,7 +214,7 @@ LauncherHideMachine::SetMode(LauncherHideMachine::HideMode mode)
 }
 
 LauncherHideMachine::HideMode
-LauncherHideMachine::GetMode()
+LauncherHideMachine::GetMode() const
 {
   return _mode;
 }
@@ -221,7 +244,7 @@ LauncherHideMachine::SetQuirk(LauncherHideMachine::HideQuirk quirk, bool active)
 }
 
 bool
-LauncherHideMachine::GetQuirk(LauncherHideMachine::HideQuirk quirk, bool allow_partial)
+LauncherHideMachine::GetQuirk(LauncherHideMachine::HideQuirk quirk, bool allow_partial) const
 {
   if (allow_partial)
     return _quirks & quirk;
@@ -229,26 +252,9 @@ LauncherHideMachine::GetQuirk(LauncherHideMachine::HideQuirk quirk, bool allow_p
 }
 
 bool
-LauncherHideMachine::ShouldHide()
+LauncherHideMachine::ShouldHide() const
 {
   return _should_hide;
-}
-
-void
-LauncherHideMachine::SetShowOnEdge(bool value)
-{
-  if (value == _show_on_edge)
-    return;
-
-  _show_on_edge = value;
-
-  LOG_DEBUG(logger) << "Shows on edge: " << _show_on_edge;
-}
-
-bool
-LauncherHideMachine::GetShowOnEdge()
-{
-  return _show_on_edge;
 }
 
 gboolean
@@ -277,7 +283,7 @@ LauncherHideMachine::EmitShouldHideChanged(gpointer data)
 }
 
 std::string
-LauncherHideMachine::DebugHideQuirks()
+LauncherHideMachine::DebugHideQuirks() const
 {
   // Although I do wonder why we are returning a string representation
   // of the enum value as an integer anyway.

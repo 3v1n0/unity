@@ -27,14 +27,15 @@
 #include <Nux/View.h>
 #include <Nux/VLayout.h>
 #include <UnityCore/FilesystemLenses.h>
+#include <UnityCore/HomeLens.h>
 
 #include "BackgroundEffectHelper.h"
 #include "DashSearchBar.h"
-#include "HomeView.h"
 #include "Introspectable.h"
 #include "LensBar.h"
 #include "LensView.h"
 #include "UBusWrapper.h"
+#include "OverlayRenderer.h"
 
 namespace unity
 {
@@ -55,6 +56,7 @@ public:
   void Relayout();
   void DisableBlur();
   void OnActivateRequest(GVariant* args);
+  void SetMonitorOffset(int x, int y);
 
   std::string const GetIdForShortcutActivation(std::string const& shortcut) const;
   std::vector<char> GetAllShortcuts();
@@ -69,7 +71,6 @@ protected:
     unsigned long special_keys_state);
 
 private:
-  void SetupBackground();
   void SetupViews();
   void SetupUBusConnections();
 
@@ -95,6 +96,7 @@ private:
   std::string AnalyseLensURI(std::string const& uri);
   void UpdateLensFilter(std::string lens, std::string filter, std::string value);
   void UpdateLensFilterValue(Filter::Ptr filter, std::string value);
+  void EnsureLensesInitialized();
 
   bool AcceptKeyNavFocus();
   bool InspectKeyEvent(unsigned int eventType, unsigned int key_sym, const char* character);
@@ -108,13 +110,9 @@ private:
 private:
   UBusManager ubus_manager_;
   FilesystemLenses lenses_;
-  BackgroundEffectHelper bg_effect_helper_;
+  HomeLens::Ptr home_lens_;
   LensViews lens_views_;
 
-  // Background related
-  nux::ColorLayer* bg_layer_;
-  nux::ColorLayer* bg_darken_layer_;
-  nux::Color bg_color_;
 
   // View related
   nux::VLayout* layout_;
@@ -123,13 +121,12 @@ private:
   nux::VLayout* lenses_layout_;
   LensBar* lens_bar_;
 
-  HomeView* home_view_;
+  LensView* home_view_;
   LensView* active_lens_view_;
 
   // Drawing related
   nux::Geometry content_geo_;
-  nux::ObjectPtr <nux::IOpenGLBaseTexture> bg_blur_texture_;
-  nux::ObjectPtr <nux::IOpenGLBaseTexture> bg_shine_texture_;
+  OverlayRenderer renderer_;
 
   std::string last_activated_uri_;
   // we're passing this back to g_* functions, so we'll keep the g* type

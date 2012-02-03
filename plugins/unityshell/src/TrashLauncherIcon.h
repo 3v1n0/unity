@@ -36,7 +36,7 @@ class TrashLauncherIcon : public SimpleLauncherIcon
 {
 
 public:
-  TrashLauncherIcon(Launcher* launcher);
+  TrashLauncherIcon();
   ~TrashLauncherIcon();
 
   virtual nux::Color BackgroundColor();

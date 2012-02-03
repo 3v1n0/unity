@@ -1,0 +1,43 @@
+Note, for simplification, one pip is defined as a single filled in arrow to the 
+      left of a launcher.
+
+Test Launcher Icon with Windows in multiple workspaces
+------------------------------------------------------
+This test shows how the launcher should draw when there are application windows
+in multiple workspaces.
+
+#. Start on a fresh login
+#. Run an application
+#. Run another instance of this application and keep it on the initial workspace
+#. Run another instance of this application and move it no another workspaces
+#. Go back to the initial workspace
+
+Outcome
+  The Launcher icon "pips" should reflect the number of windows in the current
+  workspace, so when showing the "initial" workspace the launcher icon should
+  have 2 "pips", when moving to the second workspace (where there's only 1 window)
+  the launcher application icon should show 1 pip.
+  When moving to a workspace where there are no windows, the launcher icon should
+  use an empty arrow as left indicator.
+
+
+Test Launcher Spread with Windows in multiple workspaces
+--------------------------------------------------------
+This test shows how the launcher should spread the windows when they are in
+multiple workspaces.
+
+#. Start on a fresh login
+#. Run an application
+#. Run another instance of this application and keep it on the initial workspace
+#. Run another instance of this application and move it no another workspaces
+#. Go back to the initial workspace and focus the application windows
+
+Outcome
+  When in the current workspace there are multiple windows of the same
+  application and one of them is focused, clicking on the launcher should spread
+  only the windows that are in the current workspace.
+  If in the current workspace there is just one window, clicking on the launcher
+  icon should only focus it and nothing else (also with multiple clicks).
+  When moving to a workspace where there are no window o the given application,
+  clicking on its launcher icon should bring to focus the last focused window
+  in the last used workspace.

@@ -24,7 +24,8 @@
 #include <memory>
 #include <vector>
 #include <sigc++/sigc++.h>
-#include <core/core.h>
+
+#include "SoftwareCenterLauncherIcon.h"
 
 namespace unity
 {
@@ -34,25 +35,49 @@ class AbstractLauncherIcon;
 class Launcher;
 class LauncherModel;
 
-class Controller : public sigc::trackable
+class Controller : public unity::debug::Introspectable, public sigc::trackable
 {
 public:
   typedef std::shared_ptr<Controller> Ptr;
+  typedef std::vector<nux::ObjectPtr<Launcher> > LauncherList;
+
+  nux::Property<Options::Ptr> options;
 
   Controller(Display* display);
   ~Controller();
 
-  Launcher& launcher();
-  Window launcher_input_window_id();
+  Launcher& launcher() const;
+  LauncherList& launchers() const;
+  Window LauncherWindowId(int launcher) const;
+  Window KeyNavLauncherInputWindowId() const;
 
   void UpdateNumWorkspaces(int workspaces);
-  std::vector<char> GetAllShortcuts();
-  std::vector<AbstractLauncherIcon*> GetAltTabIcons();
+  std::vector<char> GetAllShortcuts() const;
+  std::vector<AbstractLauncherIcon*> GetAltTabIcons(bool current) const;
 
-  void PrimaryMonitorGeometryChanged(nux::Geometry const& geo);
   void PushToFront();
 
   void SetShowDesktopIcon(bool show_desktop_icon);
+
+  void HandleLauncherKeyPress();
+  void HandleLauncherKeyRelease();
+  bool HandleLauncherKeyEvent(Display *display, 
+                              unsigned int key_sym, 
+                              unsigned long key_code, 
+                              unsigned long key_state, 
+                              char* key_string);
+
+  void KeyNavActivate();
+  void KeyNavGrab();
+  void KeyNavTerminate(bool activate = true);
+  void KeyNavNext();
+  void KeyNavPrevious();
+  bool KeyNavIsActive() const;
+
+protected:
+  // Introspectable methods
+  std::string GetName() const;
+  void AddProperties(GVariantBuilder* builder);
 
 private:
   class Impl;
