@@ -19,8 +19,6 @@
 
 #include "HudIcon.h"
 #include "NuxCore/Logger.h"
-//FIXME - we should be using the LauncherRenderer method of rendering icons here instead of compositing ourself
-// to make sure we get the correct average background colour and running indicator
 namespace
 {
   nux::logging::Logger logger("unity.hud.icon");
@@ -35,7 +33,7 @@ Icon::Icon(nux::BaseTexture* texture, guint width, guint height)
   : unity::IconTexture(texture, width, height)
 {
   Init();
-  icon_renderer_.SetTargetSize(52, 46, 0);
+  icon_renderer_.SetTargetSize(54, 46, 0);
 }
 
 Icon::Icon(const char* icon_name, unsigned int size, bool defer_icon_loading)
@@ -60,6 +58,8 @@ void Icon::Init()
   {
     icon_texture_source_ = new HudIconTextureSource(nux::ObjectPtr<nux::BaseTexture>(texture));
     icon_texture_source_->ColorForIcon(_pixbuf_cached);
+    QueueDraw();
+    LOG_DEBUG(logger) << "got our texture";
   });
 }
 
@@ -74,7 +74,7 @@ void Icon::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   arg.running_arrow       = true;
   arg.running_on_viewport = true;
   arg.render_center       = nux::Point3(32, 32, 0);
-  arg.logical_center      = nux::Point3(52, 52, 0);
+  arg.logical_center      = nux::Point3(52, 50, 0);
   arg.window_indicators   = true;
   arg.backlight_intensity = 1.0f;
   arg.alpha               = 1.0f;
@@ -84,42 +84,9 @@ void Icon::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   
   auto toplevel = GetToplevel(); 
-  icon_renderer_.SetTargetSize(52, 46, 0);
+  icon_renderer_.SetTargetSize(54, 46, 0);
   icon_renderer_.PreprocessIcons(args, toplevel->GetGeometry());
   icon_renderer_.RenderIcon(GfxContext, arg, toplevel->GetGeometry(), toplevel->GetGeometry());
-  
-  /*
-  nux::Geometry geo = GetGeometry();
-  // set up our texture mode
-  nux::TexCoordXForm texxform;
-  
-  GfxContext.QRP_1Tex(geo.x,
-                      geo.y,
-                      background_->GetWidth(),
-                      background_->GetHeight(),
-                      background_->GetDeviceTexture(),
-                      texxform,
-                      nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
-
-  GfxContext.QRP_1Tex(geo.x,
-                      geo.y,
-                      gloss_->GetWidth(),
-                      gloss_->GetHeight(),
-                      gloss_->GetDeviceTexture(),
-                      texxform,
-                      nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
-
-  GfxContext.QRP_1Tex(geo.x,
-                      geo.y,
-                      edge_->GetWidth(),
-                      edge_->GetHeight(),
-                      edge_->GetDeviceTexture(),
-                      texxform,
-                      nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
-  */
-  //unity::IconTexture::Draw(GfxContext, force_draw);
-  
-  
 }
 
 

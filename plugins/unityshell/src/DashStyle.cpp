@@ -1688,7 +1688,7 @@ bool Style::SquareButton(cairo_t* cr, nux::ButtonVisualState state,
     RoundedRect(cr,
                 1.0,
                 _align(x, odd), _align(y, odd),
-                7.0,
+                5.0,
                 _align(width, odd), _align(height, odd));
 
     if (pimpl->button_label_fill_color_[state].alpha != 0.0)

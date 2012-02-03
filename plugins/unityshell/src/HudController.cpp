@@ -365,6 +365,7 @@ void Controller::OnQueriesFinished(Hud::Queries queries)
     }
   }
   
+  LOG_DEBUG(logger) << "setting icon to - " << icon_name;
   view_->SetIcon(icon_name);
 }
 

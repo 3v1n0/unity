@@ -97,8 +97,9 @@ void IconTexture::SetByFilePath(const char* file_path, unsigned int size)
 
 void IconTexture::LoadIcon()
 {
-  static const char* const DEFAULT_GICON = ". GThemedIcon text-x-preview";
-  if (_icon_name == NULL)
+  LOG_DEBUG(logger) << "LoadIcon called (" << _icon_name << ") - loading: " << _loading;
+static const char* const DEFAULT_GICON = ". GThemedIcon text-x-preview";
+  if (!g_strcmp0(_icon_name, ""))
     return;
  
   if (_loading)
