@@ -36,6 +36,8 @@ namespace unity
 namespace
 {
 nux::logging::Logger logger("unity.overlayrenderer");
+
+const int INNER_CORNER_RADIUS = 5;
 }
 
 // Impl class
@@ -268,7 +270,31 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
       gfx_context.PopClippingRectangle();
     }
   }
+
+  // Draw the left and top lines
+  const double line_opacity = 0.22;
+  nux::Color line_color = nux::color::White * line_opacity;
+  nux::GetPainter().Paint2DQuadColor(gfx_context,
+                                     nux::Geometry(geometry.x,
+                                                   geometry.y,
+                                                   1,
+                                                   content_geo.height + INNER_CORNER_RADIUS),
+                                     nux::Color(0.0f, 0.0f, 0.0f, 0.0f),
+                                     line_color,
+                                     line_color,
+                                     nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
+
+  nux::GetPainter().Paint2DQuadColor(gfx_context,
+                                     nux::Geometry(geometry.x,
+                                                   geometry.y,
+                                                   content_geo.width + INNER_CORNER_RADIUS,
+                                                   1),
+                                     nux::Color(0.0f, 0.0f, 0.0f, 0.0f),
+                                     nux::Color(0.0f, 0.0f, 0.0f, 0.0f),
+                                     line_color,
+                                     line_color);
   
+  // Draw the background
   bg_darken_layer_->SetGeometry(content_geo);
   nux::GetPainter().RenderSinglePaintLayer(gfx_context, content_geo, bg_darken_layer_);
   
@@ -303,38 +329,22 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
   gfx_context.GetRenderStates().SetColorMask(true, true, true, true);
   gfx_context.GetRenderStates().SetBlend(true);
   gfx_context.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
-  
-  geo = geometry;
-  nux::GetPainter().Paint2DQuadColor(gfx_context,
-                                     nux::Geometry(geo.x,
-                                                   geo.y,
-                                                   1,
-                                                   content_geo.height + 5),
-                                     nux::Color(0.0f, 0.0f, 0.0f, 0.0f),
-                                     nux::Color(0.15f, 0.15f, 0.15f, 0.15f),
-                                     nux::Color(0.15f, 0.15f, 0.15f, 0.15f),
-                                     nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
-  nux::GetPainter().Paint2DQuadColor(gfx_context,
-                                     nux::Geometry(geo.x,
-                                                   geo.y,
-                                                   content_geo.width + 5,
-                                                   1),
-                                     nux::Color(0.0f, 0.0f, 0.0f, 0.0f),
-                                     nux::Color(0.0f, 0.0f, 0.0f, 0.0f),
-                                     nux::Color(0.15f, 0.15f, 0.15f, 0.15f),
-                                     nux::Color(0.15f, 0.15f, 0.15f, 0.15f));
-  
-  geo = content_geo;
-  // Fill in corners (meh)
-  for (int i = 1; i < 6; ++i)
+
+  if (dash::Settings::Instance().GetFormFactor() != dash::FormFactor::NETBOOK)
   {
-    nux::Geometry fill_geo (geo.x + geo.width, geo.y + i - 1, 6 - i, 1);
-    nux::GetPainter().Paint2DQuadColor(gfx_context, fill_geo, bg_color_);
-    
-    nux::Color dark = bg_color_ * 0.8f;
-    dark.alpha = bg_color_.alpha;
-    fill_geo = nux::Geometry(geo.x + i - 1 , geo.y + geo.height, 1, 6 - i);
-    nux::GetPainter().Paint2DQuadColor(gfx_context, fill_geo, dark);
+    geo = content_geo;
+
+    // Fill in corners (meh)
+    for (int i = 1; i <= INNER_CORNER_RADIUS; ++i)
+    {
+      nux::Geometry fill_geo (geo.x + geo.width, geo.y + i - 1, 6 - i, 1);
+      nux::GetPainter().Paint2DQuadColor(gfx_context, fill_geo, bg_color_);
+      
+      nux::Color dark = bg_color_ * 0.8f;
+      dark.alpha = bg_color_.alpha;
+      fill_geo = nux::Geometry(geo.x + i - 1 , geo.y + geo.height, 1, 6 - i);
+      nux::GetPainter().Paint2DQuadColor(gfx_context, fill_geo, dark);
+    }
   }
 }
 
