@@ -402,7 +402,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
   nux::BaseTexture* glow = local::icon_glow[size];
   nux::BaseTexture* shine = local::icon_shine[size];
 
-
+  bool force_filter = icon_size != background->GetWidth();
 
   if (arg.keyboard_nav_hl)
   {
@@ -437,6 +437,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
                   background_color,
                   arg.colorify,
                   backlight_intensity * arg.alpha,
+                  force_filter,
                   tile_transform);
   }
 
@@ -450,6 +451,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
                   edge_color,
                   arg.colorify,
                   arg.alpha,
+                  force_filter,
                   tile_transform);
   }
   // end tile draw
@@ -461,6 +463,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
                 nux::color::White,
                 arg.colorify,
                 arg.alpha,
+                false,
                 arg.icon->GetTransform(launcher::AbstractLauncherIcon::TRANSFORM_IMAGE, monitor));
 
   // draw overlay shine
@@ -470,6 +473,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
                 nux::color::White,
                 arg.colorify,
                 arg.alpha,
+                force_filter,
                 tile_transform);
 
   // draw glow
@@ -481,6 +485,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
                   glow_color,
                   nux::color::White,
                   glow_intensity * arg.alpha,
+                  force_filter,
                   arg.icon->GetTransform(launcher::AbstractLauncherIcon::TRANSFORM_GLOW, monitor));
   }
 
@@ -502,6 +507,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
                   arg.icon->GlowColor(),
                   nux::color::White,
                   fade_out * arg.alpha,
+                  force_filter,
                   arg.icon->GetTransform(launcher::AbstractLauncherIcon::TRANSFORM_GLOW, monitor));
 
     GfxContext.PopClippingRectangle();
@@ -524,6 +530,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
                   nux::color::White,
                   nux::color::White,
                   arg.alpha,
+                  force_filter,
                   tile_transform);
   }
 
@@ -535,6 +542,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
                   nux::color::White,
                   nux::color::White,
                   arg.alpha,
+                  force_filter,
                   arg.icon->GetTransform(launcher::AbstractLauncherIcon::TRANSFORM_EMBLEM, monitor));
   }
 
@@ -560,6 +568,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
                   nux::Color(0xFFFFFFFF),
                   nux::color::White,
                   arg.alpha,
+                  false,
                   tile_transform);
   }
 }
@@ -628,12 +637,16 @@ void IconRenderer::RenderElement(nux::GraphicsEngine& GfxContext,
                                  nux::Color bkg_color,
                                  nux::Color colorify,
                                  float alpha,
+                                 bool force_filter,
                                  std::vector<nux::Vector4>& xform_coords)
 {
   if (icon.IsNull())
     return;
 
-  if (nux::Abs(arg.x_rotation) < 0.01f && nux::Abs(arg.y_rotation) < 0.01f && nux::Abs(arg.z_rotation) < 0.01f)
+  if (nux::Abs(arg.x_rotation) < 0.01f &&
+      nux::Abs(arg.y_rotation) < 0.01f &&
+      nux::Abs(arg.z_rotation) < 0.01f &&
+      !force_filter)
     icon->SetFiltering(GL_NEAREST, GL_NEAREST);
   else
     icon->SetFiltering(GL_LINEAR, GL_LINEAR);

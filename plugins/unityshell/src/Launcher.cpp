@@ -199,9 +199,6 @@ Launcher::Launcher(nux::BaseWindow* parent,
   _launcher_bottom_y      = 0;
   _folded_z_distance      = 10.0f;
   _launcher_action_state  = ACTION_NONE;
-  _launch_animation       = LAUNCH_ANIMATION_NONE;
-  _urgent_animation       = URGENT_ANIMATION_NONE;
-  _autohide_animation     = FADE_AND_SLIDE;
   _hidemode               = LAUNCHER_HIDE_NEVER;
   _icon_under_mouse       = NULL;
   _icon_mouse_down        = NULL;
@@ -210,7 +207,6 @@ Launcher::Launcher(nux::BaseWindow* parent,
   _icon_glow_size         = 62;
   _icon_image_size_delta  = 6;
   _icon_size              = _icon_image_size + _icon_image_size_delta;
-  _background_alpha       = 0.6667; // about 0xAA
 
   _enter_y                = 0;
   _launcher_drag_delta    = 0;
@@ -222,16 +218,15 @@ Launcher::Launcher(nux::BaseWindow* parent,
   _dnd_check_handle              = 0;
 
   _shortcuts_shown        = false;
-  _floating               = false;
   _hovered                = false;
   _hidden                 = false;
   _render_drag_window     = false;
   _drag_edge_touching     = false;
-  _backlight_mode         = BACKLIGHT_NORMAL;
   _last_button_press      = 0;
   _selection_atom         = 0;
   _drag_out_id            = 0;
   _drag_out_delta_x       = 0.0f;
+  _edge_overcome_pressure = 0.0f;
 
   // FIXME: remove
   _initial_drag_animation = false;
@@ -257,8 +252,8 @@ Launcher::Launcher(nux::BaseWindow* parent,
   _drag_window = NULL;
   _offscreen_drag_texture = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableDeviceTexture(2, 2, 1, nux::BITFMT_R8G8B8A8);
 
-  ubus.RegisterInterest(UBUS_PLACE_VIEW_SHOWN, sigc::mem_fun(this, &Launcher::OnPlaceViewShown));
-  ubus.RegisterInterest(UBUS_PLACE_VIEW_HIDDEN, sigc::mem_fun(this, &Launcher::OnPlaceViewHidden));
+  ubus.RegisterInterest(UBUS_OVERLAY_SHOWN, sigc::mem_fun(this, &Launcher::OnOverlayShown));
+  ubus.RegisterInterest(UBUS_OVERLAY_HIDDEN, sigc::mem_fun(this, &Launcher::OnOverlayHidden));
   ubus.RegisterInterest(UBUS_LAUNCHER_ACTION_DONE, sigc::mem_fun(this, &Launcher::OnActionDone));
   ubus.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED, sigc::mem_fun(this, &Launcher::OnBGColorChanged));
   ubus.RegisterInterest(UBUS_LAUNCHER_LOCK_HIDE, sigc::mem_fun(this, &Launcher::OnLockHideChanged));
@@ -404,7 +399,6 @@ Launcher::AddProperties(GVariantBuilder* builder)
   .add("dnd-exit-progress", DnDExitProgress(current))
   .add("autohide-progress", AutohideProgress(current))
   .add("dnd-delta", _dnd_delta_y)
-  .add("floating", _floating)
   .add("hovered", _hovered)
   .add("hidemode", _hidemode)
   .add("hidden", _hidden)
@@ -609,7 +603,7 @@ bool Launcher::AnimationInProgress() const
 /* Min is when you are on the trigger */
 float Launcher::GetAutohidePositionMin() const
 {
-  if (_autohide_animation == SLIDE_ONLY || _autohide_animation == FADE_AND_SLIDE)
+  if (options()->auto_hide_animation() == SLIDE_ONLY || options()->auto_hide_animation() == FADE_AND_SLIDE)
     return 0.35f;
   else
     return 0.25f;
@@ -617,7 +611,7 @@ float Launcher::GetAutohidePositionMin() const
 /* Max is the initial state over the bfb */
 float Launcher::GetAutohidePositionMax() const
 {
-  if (_autohide_animation == SLIDE_ONLY || _autohide_animation == FADE_AND_SLIDE)
+  if (options()->auto_hide_animation() == SLIDE_ONLY || options()->auto_hide_animation() == FADE_AND_SLIDE)
     return 1.00f;
   else
     return 0.75f;
@@ -684,7 +678,7 @@ float Launcher::IconUrgentProgress(AbstractLauncherIcon* icon, struct timespec c
   int urgent_ms = unity::TimeUtil::TimeDelta(&current, &urgent_time);
   float result;
 
-  if (_urgent_animation == URGENT_ANIMATION_WIGGLE)
+  if (options()->urgent_animation() == URGENT_ANIMATION_WIGGLE)
     result = CLAMP((float) urgent_ms / (float)(ANIM_DURATION_SHORT * WIGGLE_CYCLES), 0.0f, 1.0f);
   else
     result = CLAMP((float) urgent_ms / (float)(ANIM_DURATION_LONG * URGENT_BLINKS * 2), 0.0f, 1.0f);
@@ -803,22 +797,22 @@ float Launcher::IconBackgroundIntensity(AbstractLauncherIcon* icon, struct times
     icon->SetQuirk(AbstractLauncherIcon::QUIRK_STARTING, false);
 
   float backlight_strength;
-  if (_backlight_mode == BACKLIGHT_ALWAYS_ON)
+  if (options()->backlight_mode() == BACKLIGHT_ALWAYS_ON)
     backlight_strength = BACKLIGHT_STRENGTH;
   else if (IsBackLightModeToggles())
     backlight_strength = BACKLIGHT_STRENGTH * running_progress;
   else
     backlight_strength = 0.0f;
 
-  switch (_launch_animation)
+  switch (options()->launch_animation())
   {
     case LAUNCH_ANIMATION_NONE:
       result = backlight_strength;
       break;
     case LAUNCH_ANIMATION_BLINK:
-      if (_backlight_mode == BACKLIGHT_ALWAYS_ON)
+      if (options()->backlight_mode() == BACKLIGHT_ALWAYS_ON)
         result = IconStartingBlinkValue(icon, current);
-      else if (_backlight_mode == BACKLIGHT_ALWAYS_OFF)
+      else if (options()->backlight_mode() == BACKLIGHT_ALWAYS_OFF)
         result = 1.0f - IconStartingBlinkValue(icon, current);
       else
         result = backlight_strength; // The blink concept is a failure in this case (it just doesn't work right)
@@ -828,7 +822,7 @@ float Launcher::IconBackgroundIntensity(AbstractLauncherIcon* icon, struct times
         icon->ResetQuirkTime(AbstractLauncherIcon::QUIRK_STARTING);
 
       result = backlight_strength;
-      if (_backlight_mode == BACKLIGHT_ALWAYS_ON)
+      if (options()->backlight_mode() == BACKLIGHT_ALWAYS_ON)
         result *= CLAMP(running_progress + IconStartingPulseValue(icon, current), 0.0f, 1.0f);
       else if (IsBackLightModeToggles())
         result += (BACKLIGHT_STRENGTH - result) * (1.0f - IconStartingPulseValue(icon, current));
@@ -839,16 +833,16 @@ float Launcher::IconBackgroundIntensity(AbstractLauncherIcon* icon, struct times
 
   if (icon->GetQuirk(AbstractLauncherIcon::QUIRK_PULSE_ONCE))
   {
-    if (_backlight_mode == BACKLIGHT_ALWAYS_ON)
+    if (options()->backlight_mode() == BACKLIGHT_ALWAYS_ON)
       result *= CLAMP(running_progress + IconPulseOnceValue(icon, current), 0.0f, 1.0f);
-    else if (_backlight_mode == BACKLIGHT_NORMAL)
+    else if (options()->backlight_mode() == BACKLIGHT_NORMAL)
       result += (BACKLIGHT_STRENGTH - result) * (1.0f - IconPulseOnceValue(icon, current));
     else
       result = 1.0f - CLAMP(running_progress + IconPulseOnceValue(icon, current), 0.0f, 1.0f);
   }
 
   // urgent serves to bring the total down only
-  if (icon->GetQuirk(AbstractLauncherIcon::QUIRK_URGENT) && _urgent_animation == URGENT_ANIMATION_PULSE)
+  if (icon->GetQuirk(AbstractLauncherIcon::QUIRK_URGENT) && options()->urgent_animation() == URGENT_ANIMATION_PULSE)
     result *= 0.2f + 0.8f * IconUrgentPulseValue(icon, current);
 
   return result;
@@ -868,10 +862,10 @@ float Launcher::IconProgressBias(AbstractLauncherIcon* icon, struct timespec con
 
 bool Launcher::IconDrawEdgeOnly(AbstractLauncherIcon* icon) const
 {
-  if (_backlight_mode == BACKLIGHT_EDGE_TOGGLE)
+  if (options()->backlight_mode() == BACKLIGHT_EDGE_TOGGLE)
     return true;
 
-  if (_backlight_mode == BACKLIGHT_NORMAL_EDGE_TOGGLE && !icon->WindowVisibleOnMonitor(monitor))
+  if (options()->backlight_mode() == BACKLIGHT_NORMAL_EDGE_TOGGLE && !icon->WindowVisibleOnMonitor(monitor))
     return true;
 
   return false;
@@ -938,7 +932,7 @@ void Launcher::SetupRenderArg(AbstractLauncherIcon* icon, struct timespec const&
     urgent_progress = CLAMP(urgent_progress * 3.0f - 2.0f, 0.0f, 1.0f);  // we want to go 3x faster than the urgent normal cycle
   arg.glow_intensity = urgent_progress;
 
-  if (icon->GetQuirk(AbstractLauncherIcon::QUIRK_URGENT) && _urgent_animation == URGENT_ANIMATION_WIGGLE)
+  if (icon->GetQuirk(AbstractLauncherIcon::QUIRK_URGENT) && options()->urgent_animation() == URGENT_ANIMATION_WIGGLE)
   {
     arg.z_rotation = IconUrgentWiggleValue(icon, current);
   }
@@ -1101,7 +1095,7 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
   {
 
     float autohide_progress = AutohideProgress(current) * (1.0f - DragOutProgress(current));
-    if (_autohide_animation == FADE_ONLY)
+    if (options()->auto_hide_animation() == FADE_ONLY)
     {
       *launcher_alpha = 1.0f - autohide_progress;
     }
@@ -1110,7 +1104,7 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
       if (autohide_progress > 0.0f)
       {
         autohide_offset -= geo.width * autohide_progress;
-        if (_autohide_animation == FADE_AND_SLIDE)
+        if (options()->auto_hide_animation() == FADE_AND_SLIDE)
           *launcher_alpha = 1.0f - 0.5f * autohide_progress;
       }
     }
@@ -1284,40 +1278,61 @@ void Launcher::SaturateIcons()
   }
 }
 
-void Launcher::OnPlaceViewShown(GVariant* data)
+void Launcher::OnOverlayShown(GVariant* data)
 {
-  if (g_variant_get_int32(data) != monitor)
-    return;
+  // check the type of overlay
+  unity::glib::String overlay_identity;
+  gboolean can_maximise = FALSE;
+  gint32 overlay_monitor = 0;
+  g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING, 
+                &overlay_identity, &can_maximise, &overlay_monitor);
 
-  LauncherModel::iterator it;
 
-  _dash_is_open = true;
-  bg_effect_helper_.enabled = true;
-  _hide_machine->SetQuirk(LauncherHideMachine::PLACES_VISIBLE, true);
-  _hover_machine->SetQuirk(LauncherHoverMachine::PLACES_VISIBLE, true);
+  if (!g_strcmp0(overlay_identity, "dash"))
+  {
+    if (overlay_monitor == monitor)
+    {
+      LauncherModel::iterator it;
 
-  DesaturateIcons();
+      _dash_is_open = true;
+      bg_effect_helper_.enabled = true;
+      _hide_machine->SetQuirk(LauncherHideMachine::PLACES_VISIBLE, true);
+      _hover_machine->SetQuirk(LauncherHoverMachine::PLACES_VISIBLE, true);
+
+      DesaturateIcons();
+    }
+  }
 }
 
-void Launcher::OnPlaceViewHidden(GVariant* data)
+void Launcher::OnOverlayHidden(GVariant* data)
 {
-  if (!_dash_is_open)
-    return;
+  // check the type of overlay
+  unity::glib::String overlay_identity;
+  gboolean can_maximise = FALSE;
+  gint32 overlay_monitor = 0;
+  g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING, 
+                &overlay_identity, &can_maximise, &overlay_monitor);
 
-  LauncherModel::iterator it;
+  if (!g_strcmp0(overlay_identity, "dash"))
+  {
+    if (!_dash_is_open)
+      return;
+    
+    LauncherModel::iterator it;
 
-  _dash_is_open = false;
-  bg_effect_helper_.enabled = false;
-  _hide_machine->SetQuirk(LauncherHideMachine::PLACES_VISIBLE, false);
-  _hover_machine->SetQuirk(LauncherHoverMachine::PLACES_VISIBLE, false);
+    _dash_is_open = false;
+    bg_effect_helper_.enabled = false;
+    _hide_machine->SetQuirk(LauncherHideMachine::PLACES_VISIBLE, false);
+    _hover_machine->SetQuirk(LauncherHoverMachine::PLACES_VISIBLE, false);
 
-  // as the leave event is no more received when the place is opened
-  // FIXME: remove when we change the mouse grab strategy in nux
-  nux::Point pt = nux::GetWindowCompositor().GetMousePosition();
+    // as the leave event is no more received when the place is opened
+    // FIXME: remove when we change the mouse grab strategy in nux
+    nux::Point pt = nux::GetWindowCompositor().GetMousePosition();
 
-  SetStateMouseOverLauncher(GetAbsoluteGeometry().IsInside(pt));
+    SetStateMouseOverLauncher(GetAbsoluteGeometry().IsInside(pt));
 
-  SaturateIcons();
+    SaturateIcons();
+  }
 }
 
 void Launcher::OnActionDone(GVariant* data)
@@ -1554,20 +1569,24 @@ void
 Launcher::UpdateOptions(Options::Ptr options)
 {
   SetHideMode(options->hide_mode);
-  SetAutoHideAnimation(options->auto_hide_animation);
-  SetFloating(options->floating);
-  SetBacklightMode(options->backlight_mode);
-  SetLaunchAnimation(options->launch_animation);
-  SetUrgentAnimation(options->urgent_animation);
   SetIconSize(options->tile_size, options->icon_size);
-  decaymulator_->rate_of_decay = options->edge_decay_rate();
+
+  // make the effect half as strong as specified as other values shouldn't scale
+  // as quickly as the max velocity multiplier
+  float responsiveness_mult = ((options->edge_responsiveness() - 1) * .025) + 1;
+
+  decaymulator_->rate_of_decay = options->edge_decay_rate() * responsiveness_mult;
+  _edge_overcome_pressure = options->edge_overcome_pressure() * responsiveness_mult;
 
   _pointer_barrier->threshold = options->edge_stop_velocity();
+  _pointer_barrier->max_velocity_multiplier = options->edge_responsiveness();
   _pointer_barrier->DestroyBarrier();
   _pointer_barrier->ConstructBarrier();
 
-  _hide_machine->reveal_pressure = options->edge_reveal_pressure();
-  _hide_machine->edge_decay_rate = options->edge_decay_rate();
+  _hide_machine->reveal_pressure = options->edge_reveal_pressure() * responsiveness_mult;
+  _hide_machine->edge_decay_rate = options->edge_decay_rate() * responsiveness_mult;
+
+  EnsureAnimation();
 }
 
 void Launcher::SetHideMode(LauncherHideMode hidemode)
@@ -1591,45 +1610,14 @@ void Launcher::SetHideMode(LauncherHideMode hidemode)
   EnsureAnimation();
 }
 
-AutoHideAnimation Launcher::GetAutoHideAnimation() const
-{
-  return _autohide_animation;
-}
-
-void Launcher::SetAutoHideAnimation(AutoHideAnimation animation)
-{
-  if (_autohide_animation == animation)
-    return;
-
-  _autohide_animation = animation;
-}
-
-void Launcher::SetFloating(bool floating)
-{
-  if (_floating == floating)
-    return;
-
-  _floating = floating;
-  EnsureAnimation();
-}
-
-void Launcher::SetBacklightMode(BacklightMode mode)
-{
-  if (_backlight_mode == mode)
-    return;
-
-  _backlight_mode = mode;
-  EnsureAnimation();
-}
-
 BacklightMode Launcher::GetBacklightMode() const
 {
-  return _backlight_mode;
+  return options()->backlight_mode();
 }
 
 bool Launcher::IsBackLightModeToggles() const
 {
-  switch (_backlight_mode) {
+  switch (options()->backlight_mode()) {
     case BACKLIGHT_NORMAL:
     case BACKLIGHT_EDGE_TOGGLE:
     case BACKLIGHT_NORMAL_EDGE_TOGGLE:
@@ -1637,36 +1625,6 @@ bool Launcher::IsBackLightModeToggles() const
     default:
       return false;
   }
-}
-
-void
-Launcher::SetLaunchAnimation(LaunchAnimation animation)
-{
-  if (_launch_animation == animation)
-    return;
-
-  _launch_animation = animation;
-}
-
-LaunchAnimation
-Launcher::GetLaunchAnimation() const
-{
-  return _launch_animation;
-}
-
-void
-Launcher::SetUrgentAnimation(UrgentAnimation animation)
-{
-  if (_urgent_animation == animation)
-    return;
-
-  _urgent_animation = animation;
-}
-
-UrgentAnimation
-Launcher::GetUrgentAnimation() const
-{
-  return _urgent_animation;
 }
 
 void
@@ -1810,15 +1768,6 @@ void Launcher::Resize()
 
   _pointer_barrier->ConstructBarrier();
 
-}
-
-void Launcher::SetBackgroundAlpha(float background_alpha)
-{
-  if (_background_alpha == background_alpha)
-    return;
-
-  _background_alpha = background_alpha;
-  NeedRedraw();
 }
 
 void Launcher::OnIconAdded(AbstractLauncherIcon* icon)
@@ -2008,7 +1957,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   else
   {
     nux::Color color = _background_color;
-    color.alpha = _background_alpha;
+    color.alpha = options()->background_alpha;
     gPainter.Paint2DQuadColor(GfxContext, bkg_box, color);
   }
 
@@ -2386,10 +2335,10 @@ void Launcher::OnPointerBarrierEvent(ui::PointerBarrierWrapper* owner, ui::Barri
     _hide_machine->AddRevealPressure(event->velocity);
     decaymulator_->value = 0;
   }
-  else
+  else if (abs_geo.x > 0)
   {
     decaymulator_->value = decaymulator_->value + event->velocity;
-    if (decaymulator_->value > options()->edge_overcome_pressure)
+    if (decaymulator_->value > _edge_overcome_pressure)
     {
       _pointer_barrier->ReleaseBarrier(event->event_id);
     }
@@ -2560,7 +2509,7 @@ Launcher::RenderIconToTexture(nux::GraphicsEngine& GfxContext, AbstractLauncherI
   clock_gettime(CLOCK_MONOTONIC, &current);
 
   SetupRenderArg(icon, current, arg);
-  arg.render_center = nux::Point3(_icon_size / 2.0f, _icon_size / 2.0f, 0.0f);
+  arg.render_center = nux::Point3(roundf(_icon_size / 2.0f), roundf(_icon_size / 2.0f), 0.0f);
   arg.logical_center = arg.render_center;
   arg.x_rotation = 0.0f;
   arg.running_arrow = false;
@@ -2920,9 +2869,9 @@ Launcher::handle_dbus_method_call(GDBusConnection*       connection,
     g_variant_get(parameters, "(ssiiiss)", &title, &icon, &icon_x, &icon_y, &icon_size, &desktop_file, &aptdaemon_task, NULL);
 
     Launcher* self = (Launcher*)user_data;
-    self->launcher_addrequest_special.emit(desktop_file, NULL, aptdaemon_task, icon);
+    self->launcher_addrequest_special.emit(desktop_file, nullptr, aptdaemon_task, icon);
 
-    g_dbus_method_invocation_return_value(invocation, NULL);
+    g_dbus_method_invocation_return_value(invocation, nullptr);
     g_free(icon);
     g_free(title);
     g_free(desktop_file);
