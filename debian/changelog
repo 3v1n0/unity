@@ -1,6 +1,90 @@
 unity (5.2.0-0ubuntu1) UNRELEASED; urgency=low
 
   * New upstream release.
+    - Unity needs a way to switch (tab) between windows on current workspace
+      (LP: #863399)
+    - compiz crashed with SIGSEGV in BamfLauncherIcon::NameForWindow()
+      (LP: #865840)
+    - Gradual degradation in desktop performance. (LP: #888039)
+    - compiz (unity) crashes with SIGSEGV when a window is minimized.
+      (LP: #918329)
+    - FavoriteStore external change support (LP: #681503)
+    - Launcher - Make Launcher left of screen reveal more responsive and less
+      prone to false positives (LP: #765819)
+    - Window auto-maximise functionality should be disabled on monitors with a
+      resolution above 1024 x 600  (LP: #797808)
+    - Dash: very high latency responding to input (LP: #828582)
+    - Dash - Behaviour of the 'All' button in the Dash filters broken in
+      several ways   (LP: #841864)
+    - alt-tab - The app title in the top left of the top bar should change as
+      the alt-tab focus changes (LP: #855516)
+    - Keyboard shortcut - Add keyboard shortcut hint overlay that is displayed
+      when a user presses and holds the Super key (LP: #855532)
+    - Unity crashes when started in an environment without utouch support
+      (LP: #860707)
+    - Dash - Remove Dash Home shortcut icons (LP: #885738)
+    - Dash - Most Frequently Used apps change to Recently Used, without
+      Launcher favorites (LP: #893214)
+    - Should have a launcher on every monitor (LP: #915944)
+    - Launcher autohide behaviour on multi-monitor (LP: #915946)
+    - the unity wrapper should kill compiz before restarting it (LP: #919132)
+    - Launcher - Implement workspace/launcher cross interactions (LP: #690143)
+    - Application icons should only display windows from the current workspace
+      in the window spread (LP: #689733)
+    - Notification area ("system tray") missing when using dual monitors of
+      different sizes, with their bottoms aligned (LP: #778256)
+    - Clicking Nautilus launcher icon fails to open a Nautilus file explorer
+      window when  copying a file and all other Nautilus windows are closed /
+      bamf should skip the taskbar (LP: #784804)
+    - Dash - the search box is not aligned correctly relative to the Launcher
+      BFB button (LP: #838904)
+    - Dash - A expand/collapse arrow is missing from all the filter category
+      headers (LP: #841870)
+    - Dash - the filter buttons should not have a mouse over state
+      (LP: #838901)
+    - Dash - the "Filter results" text is the wrong size, wrong font weight,
+      and aligned incorrectly in both the vertical and horizontal axis
+      (LP: #863240)
+    - Add SUPER+TAB switching mode that enables the user to switch
+      applications via the Launcher (LP: #891620)
+    - Software Centre - automatically add app icon to launcher (LP: #761851)
+    - Compiz add transparency to titlebar along with the panel (LP: #912682)
+    - The search box is too opaque and dark (LP: #913717)
+    - Dash - Make statefulness of Dash Home and Dash Lenses consistent
+      (LP: #914759)
+    - Unity 5.0: "All" button for filters render as "..." (LP: #915200)
+    - Adding an option to the Sources filter from a remote Python scope
+      doesn't work (LP: #916758)
+    - super+tab switcher shows shortcut overlay sometimes (LP: #918453)
+    - SUPER+TAB switcher should be circular (LP: #919018)
+    - launcher not hiding in one design-specified case (LP: #919162)
+    - The Unity hints overlay should refer to "Trash" instead of "Rubbish Bin"
+      (LP: #920529)
+    - middle-click pasting in run dialog [Alt]+[F2] doesn't work (LP: #842462)
+    - Dash - Genre filter category in the Music Lens should use a 3 column
+      layout (LP: #841902)
+    - Expo plugin not marked as essential for Unity plugin (in ccsm)
+      (LP: #897697)
+    - unity log messages in ~/.xsession-errors are NOT identified as coming
+      from unity (LP: #908004)
+    - Launcher icon progress overlay is drawn incorrectly when using odd icon
+      size (LP: #911553)
+    - Menus don't hide if moving cursor during alt+tab (LP: #913889)
+    - When removing icon from launcher by unselecting "Keep in launcher" in
+      the quick, it's super+number shortcut becomes unaccessible until I put
+      another icon on the launcher (LP: #914018)
+    - It should be possible to escape from SUPER+TAB with Escape key
+      (LP: #919019)
+    - Clicking on an empty areas makes the dash search bar lose focus
+      (LP: #919567)
+    - Dash - the options in the "filter results" section are the wrong size,
+      aligned incorrectly, and the button outline width is incorrect
+      (LP: #863246)
+    - clicking filter categories in lenses changes search box hint text.
+      (LP: #923988)
+    - Dash home screen contains previous search result (LP: #924649)
+    - checkbox-unity: test descriptions need an update (LP: #924669)
+    - Missing dependency on python-gconf (LP: #923288)
   * debian/control:
     - dep on python-gconf (LP: #923288)
     - add a version dep from unity to libunity-core-5.0-5 as the ABI
