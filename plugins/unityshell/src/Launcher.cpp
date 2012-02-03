@@ -252,8 +252,8 @@ Launcher::Launcher(nux::BaseWindow* parent,
   _drag_window = NULL;
   _offscreen_drag_texture = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableDeviceTexture(2, 2, 1, nux::BITFMT_R8G8B8A8);
 
-  ubus.RegisterInterest(UBUS_PLACE_VIEW_SHOWN, sigc::mem_fun(this, &Launcher::OnPlaceViewShown));
-  ubus.RegisterInterest(UBUS_PLACE_VIEW_HIDDEN, sigc::mem_fun(this, &Launcher::OnPlaceViewHidden));
+  ubus.RegisterInterest(UBUS_OVERLAY_SHOWN, sigc::mem_fun(this, &Launcher::OnOverlayShown));
+  ubus.RegisterInterest(UBUS_OVERLAY_HIDDEN, sigc::mem_fun(this, &Launcher::OnOverlayHidden));
   ubus.RegisterInterest(UBUS_LAUNCHER_ACTION_DONE, sigc::mem_fun(this, &Launcher::OnActionDone));
   ubus.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED, sigc::mem_fun(this, &Launcher::OnBGColorChanged));
   ubus.RegisterInterest(UBUS_LAUNCHER_LOCK_HIDE, sigc::mem_fun(this, &Launcher::OnLockHideChanged));
@@ -1278,40 +1278,61 @@ void Launcher::SaturateIcons()
   }
 }
 
-void Launcher::OnPlaceViewShown(GVariant* data)
+void Launcher::OnOverlayShown(GVariant* data)
 {
-  if (g_variant_get_int32(data) != monitor)
-    return;
+  // check the type of overlay
+  unity::glib::String overlay_identity;
+  gboolean can_maximise = FALSE;
+  gint32 overlay_monitor = 0;
+  g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING, 
+                &overlay_identity, &can_maximise, &overlay_monitor);
 
-  LauncherModel::iterator it;
 
-  _dash_is_open = true;
-  bg_effect_helper_.enabled = true;
-  _hide_machine->SetQuirk(LauncherHideMachine::PLACES_VISIBLE, true);
-  _hover_machine->SetQuirk(LauncherHoverMachine::PLACES_VISIBLE, true);
+  if (!g_strcmp0(overlay_identity, "dash"))
+  {
+    if (overlay_monitor == monitor)
+    {
+      LauncherModel::iterator it;
 
-  DesaturateIcons();
+      _dash_is_open = true;
+      bg_effect_helper_.enabled = true;
+      _hide_machine->SetQuirk(LauncherHideMachine::PLACES_VISIBLE, true);
+      _hover_machine->SetQuirk(LauncherHoverMachine::PLACES_VISIBLE, true);
+
+      DesaturateIcons();
+    }
+  }
 }
 
-void Launcher::OnPlaceViewHidden(GVariant* data)
+void Launcher::OnOverlayHidden(GVariant* data)
 {
-  if (!_dash_is_open)
-    return;
+  // check the type of overlay
+  unity::glib::String overlay_identity;
+  gboolean can_maximise = FALSE;
+  gint32 overlay_monitor = 0;
+  g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING, 
+                &overlay_identity, &can_maximise, &overlay_monitor);
 
-  LauncherModel::iterator it;
+  if (!g_strcmp0(overlay_identity, "dash"))
+  {
+    if (!_dash_is_open)
+      return;
+    
+    LauncherModel::iterator it;
 
-  _dash_is_open = false;
-  bg_effect_helper_.enabled = false;
-  _hide_machine->SetQuirk(LauncherHideMachine::PLACES_VISIBLE, false);
-  _hover_machine->SetQuirk(LauncherHoverMachine::PLACES_VISIBLE, false);
+    _dash_is_open = false;
+    bg_effect_helper_.enabled = false;
+    _hide_machine->SetQuirk(LauncherHideMachine::PLACES_VISIBLE, false);
+    _hover_machine->SetQuirk(LauncherHoverMachine::PLACES_VISIBLE, false);
 
-  // as the leave event is no more received when the place is opened
-  // FIXME: remove when we change the mouse grab strategy in nux
-  nux::Point pt = nux::GetWindowCompositor().GetMousePosition();
+    // as the leave event is no more received when the place is opened
+    // FIXME: remove when we change the mouse grab strategy in nux
+    nux::Point pt = nux::GetWindowCompositor().GetMousePosition();
 
-  SetStateMouseOverLauncher(GetAbsoluteGeometry().IsInside(pt));
+    SetStateMouseOverLauncher(GetAbsoluteGeometry().IsInside(pt));
 
-  SaturateIcons();
+    SaturateIcons();
+  }
 }
 
 void Launcher::OnActionDone(GVariant* data)

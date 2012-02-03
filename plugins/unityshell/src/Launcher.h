@@ -281,8 +281,8 @@ private:
 
   void OnIconNeedsRedraw(AbstractLauncherIcon* icon);
 
-  void OnPlaceViewHidden(GVariant* data);
-  void OnPlaceViewShown(GVariant* data);
+  void OnOverlayHidden(GVariant* data);
+  void OnOverlayShown(GVariant* data);
 
   void DesaturateIcons();
   void SaturateIcons();
