@@ -31,7 +31,7 @@ class DesktopLauncherIcon : public SimpleLauncherIcon
 {
 
 public:
-  DesktopLauncherIcon(Launcher* launcher);
+  DesktopLauncherIcon();
   ~DesktopLauncherIcon();
 
   virtual nux::Color BackgroundColor();
@@ -42,12 +42,7 @@ public:
     show_in_switcher_ = show_in_switcher;
   }
 
-  const bool HasWindowOnViewport()
-  {
-    return true;
-  }
-
-  bool ShowInSwitcher()
+  bool ShowInSwitcher(bool current)
   {
     return show_in_switcher_;
   }

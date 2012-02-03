@@ -17,6 +17,7 @@
  * Authored By: Sam Spilsbury <sam.spilsbury@canonical.com>
  */
 
+#ifndef USE_GLES
 #include "ScreenEffectFramebufferObject.h"
 #include "BackgroundEffectHelper.h"
 #include <NuxCore/Logger.h>
@@ -32,7 +33,7 @@ void unity::ScreenEffectFramebufferObject::paint (const nux::Geometry &output)
   /* Draw the bit of the relevant framebuffer for each output */
 
   glPushAttrib (GL_VIEWPORT_BIT);
-  glViewport (0, mScreenSize.height - (output.y + output.height), mScreenSize.width, mScreenSize.height);
+  glViewport (0, 0, mScreenSize.width, mScreenSize.height);
 
   if (mFBTexture)
   {
@@ -232,3 +233,6 @@ unity::ScreenEffectFramebufferObject::~ScreenEffectFramebufferObject ()
   if (mFBTexture)
     glDeleteTextures (1, &mFBTexture);
 }
+
+#endif // USE_GLES
+

@@ -8,7 +8,7 @@ include (cmake/Documentation.cmake)
 #
 set (PROJECT_NAME "unity")
 set (UNITY_MAJOR 5)
-set (UNITY_MINOR 0)
+set (UNITY_MINOR 2)
 set (UNITY_MICRO 0)
 set (UNITY_VERSION "${UNITY_MAJOR}.${UNITY_MINOR}.${UNITY_MICRO}")
 set (UNITY_API_VERSION "5.0")
@@ -17,6 +17,9 @@ set (CMAKE_CXX_FLAGS "-DGNOME_DESKTOP_USE_UNSTABLE_API -std=c++0x -fno-permissiv
 set (CMAKE_CXX_FLAGS_DEBUG "-g3")
 set (CMAKE_CXX_FLAGS_RELEASE "")
 
+if (BUILD_GLES)
+	SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNUX_OPENGLES_20 -DUSE_GLES")
+endif (BUILD_GLES)
 
 #
 # Niceties
@@ -135,6 +138,7 @@ add_subdirectory(tools)
 add_subdirectory(UnityCore)
 add_subdirectory(guides)
 add_subdirectory(standalone-clients EXCLUDE_FROM_ALL)
+
 
 #
 # GSettings Schema
