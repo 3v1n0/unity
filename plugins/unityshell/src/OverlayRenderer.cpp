@@ -272,6 +272,10 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
   }
 
   // Draw the left and top lines
+  gfx_context.GetRenderStates().SetColorMask(true, true, true, true);
+  gfx_context.GetRenderStates().SetBlend(true);
+  gfx_context.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
+
   const double line_opacity = 0.22;
   nux::Color line_color = nux::color::White * line_opacity;
   nux::GetPainter().Paint2DQuadColor(gfx_context,
@@ -326,13 +330,14 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
                                         true,
                                         rop);
   
-  gfx_context.GetRenderStates().SetColorMask(true, true, true, true);
-  gfx_context.GetRenderStates().SetBlend(true);
-  gfx_context.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
 
   if (dash::Settings::Instance().GetFormFactor() != dash::FormFactor::NETBOOK)
   {
     geo = content_geo;
+
+    gfx_context.GetRenderStates().SetColorMask(true, true, true, true);
+    gfx_context.GetRenderStates().SetBlend(true);
+    gfx_context.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
 
     // Fill in corners (meh)
     for (int i = 1; i <= INNER_CORNER_RADIUS; ++i)
