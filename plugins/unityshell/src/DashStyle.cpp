@@ -1742,6 +1742,53 @@ bool Style::MultiRangeSegment(cairo_t*    cr,
   return true;
 }
 
+bool Style::MultiRangeFocusOverlay(cairo_t* cr,
+                                   Arrow arrow,
+                                   Segment segment)
+{
+  // sanity checks
+  if (cairo_status(cr) != CAIRO_STATUS_SUCCESS)
+    return false;
+
+  if (cairo_surface_get_type(cairo_get_target(cr)) != CAIRO_SURFACE_TYPE_IMAGE)
+    return false;
+
+  double   x  = 0.0;
+  double   y  = 2.0;
+  double   w  = cairo_image_surface_get_width(cairo_get_target(cr));
+  double   h  = cairo_image_surface_get_height(cairo_get_target(cr)) - 4.0;
+
+  if (segment == Segment::LEFT)
+  {
+    x = 2.0;
+    w -= 2.0;
+  }
+
+  if (segment == Segment::RIGHT)
+  {
+    w -= 2.0;
+  }
+
+  cairo_set_line_width(cr, pimpl->button_label_border_size_[nux::ButtonVisualState::VISUAL_STATE_NORMAL]);
+
+  pimpl->RoundedRectSegment(cr,
+                            1.0,
+                            x,
+                            y,
+                            h / 4.0,
+                            w,
+                            h,
+                            segment,
+                            arrow,
+                            nux::ButtonVisualState::VISUAL_STATE_PRESSED);
+
+  cairo_set_source_rgba(cr, nux::Color(1.0f, 1.0f, 1.0f, 0.5f));
+  cairo_fill_preserve(cr);
+  cairo_stroke(cr);
+
+  return true;
+}
+
 bool Style::TrackViewNumber(cairo_t*    cr,
                             nux::ButtonVisualState state,
                             std::string const& trackNumber)
