@@ -317,22 +317,21 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
                         content_geo.width, content_geo.height,
                         bg_shine_texture_, texxform_absolute_bg, nux::color::White);
   
-  // Make round corners
-  nux::ROPConfig rop;
-  rop.Blend = true;
-  rop.SrcBlend = GL_ZERO;
-  rop.DstBlend = GL_SRC_ALPHA;
-  nux::GetPainter().PaintShapeCornerROP(gfx_context,
-                                        content_geo,
-                                        nux::color::White,
-                                        nux::eSHAPE_CORNER_ROUND4,
-                                        nux::eCornerBottomRight,
-                                        true,
-                                        rop);
-  
-
   if (dash::Settings::Instance().GetFormFactor() != dash::FormFactor::NETBOOK)
   {
+    // Make bottom-right corner rounded
+    nux::ROPConfig rop;
+    rop.Blend = true;
+    rop.SrcBlend = GL_ZERO;
+    rop.DstBlend = GL_SRC_ALPHA;
+    nux::GetPainter().PaintShapeCornerROP(gfx_context,
+                                          content_geo,
+                                          nux::color::White,
+                                          nux::eSHAPE_CORNER_ROUND4,
+                                          nux::eCornerBottomRight,
+                                          true,
+                                          rop);
+
     geo = content_geo;
 
     gfx_context.GetRenderStates().SetColorMask(true, true, true, true);
@@ -418,18 +417,21 @@ void OverlayRendererImpl::DrawContentCleanup(nux::GraphicsEngine& gfx_context, n
   gfx_context.GetRenderStates().SetBlend(false);
   gfx_context.PopClippingRectangle();
   
-  // Make round corners
-  nux::ROPConfig rop;
-  rop.Blend = true;
-  rop.SrcBlend = GL_ZERO;
-  rop.DstBlend = GL_SRC_ALPHA;
-  nux::GetPainter().PaintShapeCornerROP(gfx_context,
-                                        content_geo,
-                                        nux::color::White,
-                                        nux::eSHAPE_CORNER_ROUND4,
-                                        nux::eCornerBottomRight,
-                                        true,
-                                        rop);
+  if (dash::Settings::Instance().GetFormFactor() != dash::FormFactor::NETBOOK)
+  {
+    // Make bottom-right corner rounded
+    nux::ROPConfig rop;
+    rop.Blend = true;
+    rop.SrcBlend = GL_ZERO;
+    rop.DstBlend = GL_SRC_ALPHA;
+    nux::GetPainter().PaintShapeCornerROP(gfx_context,
+                                          content_geo,
+                                          nux::color::White,
+                                          nux::eSHAPE_CORNER_ROUND4,
+                                          nux::eCornerBottomRight,
+                                          true,
+                                          rop);
+  }
   
   bgs = 0;
 }
