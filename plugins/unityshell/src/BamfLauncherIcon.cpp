@@ -650,6 +650,8 @@ void BamfLauncherIcon::EnsureWindowState()
   for (int i = 0; i < max_num_monitors; i++)
     SetWindowVisibleOnMonitor(monitors[i], i);
 
+  needs_redraw.emit(this);
+
   g_list_free(children);
 }
 
