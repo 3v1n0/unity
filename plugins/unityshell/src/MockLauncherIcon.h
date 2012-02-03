@@ -183,7 +183,7 @@ public:
     return 0;
   }
 
-  bool GetQuirk(Quirk quirk)
+  bool GetQuirk(Quirk quirk) const
   {
     return false;
   }
