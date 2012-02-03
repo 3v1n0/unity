@@ -8,6 +8,8 @@ unity (5.2.0-0ubuntu1) UNRELEASED; urgency=low
       package from the ppa (especially when people downgrade)
     - build-dep on latest Nux
     - push priority to extra for the transitional package
+    - fix a dep on binary:Version
+    - build-dep on latest libunity-dev
 
  -- Didier Roche <didrocks@ubuntu.com>  Fri, 03 Feb 2012 10:00:54 +0100
 

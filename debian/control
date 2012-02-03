@@ -37,7 +37,7 @@ Build-Depends: cmake,
                libutouch-geis-dev (>= 2.0.10),
                libgnome-desktop-3-dev,
                libgdu-dev,
-               libunity-dev (>= 5.0.0),
+               libunity-dev (>= 5.2.0),
 Standards-Version: 3.9.2
 Homepage: https://launchpad.net/unity
 Vcs-Bzr: https://code.launchpad.net/~ubuntu-desktop/unity/ubuntu
@@ -46,7 +46,7 @@ Package: unity
 Architecture: any
 Depends: ${shlibs:Depends},
          ${misc:Depends},
-         libunity-core-5.0-5 (= ${source:Version}),
+         libunity-core-5.0-5 (= ${binary:Version}),
          unity-common (= ${source:Version}),
          compiz,
          compiz-core, compiz-core-abiversion-${coreabiversion},
