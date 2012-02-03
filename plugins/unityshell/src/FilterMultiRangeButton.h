@@ -40,7 +40,7 @@ enum class MultiRangeSide : unsigned int
 {
   LEFT = 0,
   RIGHT,
-  CENTER,
+  CENTER
 };
 
 enum class MultiRangeArrow : unsigned int
@@ -48,7 +48,7 @@ enum class MultiRangeArrow : unsigned int
   LEFT = 0,
   RIGHT,
   BOTH,
-  NONE,
+  NONE
 };
 
 class FilterMultiRangeButton : public nux::ToggleButton
