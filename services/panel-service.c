@@ -442,7 +442,16 @@ get_indicator_entry_by_id (const gchar *entry_id)
         close (fds[0]);
         close (fds[1]);
       }
+    else
+      {
+        entry = NULL;
+      }
   }
+
+  if (!entry)
+    {
+      g_warning("The entry id '%s' you're trying to parse is not a valid IndicatorObjectEntry!", entry_id);
+    }
 
   return entry;
 }
