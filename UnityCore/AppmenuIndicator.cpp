@@ -39,9 +39,15 @@ AppmenuIndicator::AppmenuIndicator(std::string const& name)
   CheckSettingValue();
 }
 
-void AppmenuIndicator::ShowAppmenu(unsigned int xid, int x, int y, unsigned int timestamp) const
+bool AppmenuIndicator::ShowAppmenu(unsigned int xid, int x, int y, unsigned int timestamp) const
 {
-  on_show_appmenu.emit(xid, x, y, timestamp);
+  if (integrated_)
+  {
+    on_show_appmenu.emit(xid, x, y, timestamp);
+    return true;
+  }
+
+  return false;
 }
 
 bool AppmenuIndicator::IsIntegrated() const

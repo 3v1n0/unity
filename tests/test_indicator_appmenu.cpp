@@ -92,25 +92,40 @@ TEST(TestAppmenuIndicator, ShowAppmenu)
 {
   g_setenv("GSETTINGS_BACKEND", "memory", true);
 
+  glib::Object<GSettings> gsettings(g_settings_new("com.canonical.indicator.appmenu"));
+  g_settings_set_string(gsettings, "menu-mode", "global");
+
   AppmenuIndicator indicator("indicator-appmenu");
 
+  bool ret;
+  bool signal_emitted = false;
   int show_x, show_y;
   unsigned int show_xid, show_timestamp;
 
   // Connecting to signals
   indicator.on_show_appmenu.connect([&] (unsigned int xid, int x, int y,
                                          unsigned int timestamp) {
+    signal_emitted = true;
     show_xid = xid;
     show_x = x;
     show_y = y;
     show_timestamp = timestamp;
   });
 
-  indicator.ShowAppmenu(123456789, 50, 100, 1328063758);
+  ret = indicator.ShowAppmenu(123456789, 50, 100, 1328063758);
+  EXPECT_FALSE(ret);
+  EXPECT_FALSE(signal_emitted);
+
+  g_settings_set_string(gsettings, "menu-mode", "locally-integrated");
+
+  ret = indicator.ShowAppmenu(123456789, 50, 100, 1328308554);
+  EXPECT_TRUE(ret);
+  EXPECT_TRUE(signal_emitted);
+
   EXPECT_EQ(show_xid, 123456789);
   EXPECT_EQ(show_x, 50);
   EXPECT_EQ(show_y, 100);
-  EXPECT_EQ(show_timestamp, 1328063758);
+  EXPECT_EQ(show_timestamp, 1328308554);
 }
 
 }

@@ -39,7 +39,7 @@ public:
   virtual bool IsAppmenu() const { return true; }
   bool IsIntegrated() const;
 
-  void ShowAppmenu(unsigned int xid, int x, int y, unsigned int timestamp) const;
+  bool ShowAppmenu(unsigned int xid, int x, int y, unsigned int timestamp) const;
 
   sigc::signal<void, bool> integrated_changed;
   sigc::signal<void, unsigned int, int, int, unsigned int> on_show_appmenu;
