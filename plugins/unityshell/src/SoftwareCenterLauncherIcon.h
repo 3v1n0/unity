@@ -32,7 +32,7 @@ namespace launcher
 class SoftwareCenterLauncherIcon : public BamfLauncherIcon
 {
 public:
-  SoftwareCenterLauncherIcon(Launcher* IconManager, BamfApplication* app,
+  SoftwareCenterLauncherIcon(BamfApplication* app,
                              std::string const& aptdaemon_trans_id,
                              std::string const& icon_path);
 

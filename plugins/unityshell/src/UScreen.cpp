@@ -54,6 +54,24 @@ UScreen::GetDefault()
 }
 
 int
+UScreen::GetMonitorWithMouse()
+{
+  GdkScreen* screen;
+  GdkDevice* device;
+  GdkDisplay *display;
+  int x;
+  int y;
+
+  screen = gdk_screen_get_default();
+  display = gdk_display_get_default();
+  device = gdk_device_manager_get_client_pointer(gdk_display_get_device_manager(display));
+
+  gdk_device_get_position(device, NULL, &x, &y);
+
+  return gdk_screen_get_monitor_at_point(screen, x, y);
+}
+
+int
 UScreen::GetPrimaryMonitor()
 {
   return primary_;

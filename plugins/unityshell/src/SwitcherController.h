@@ -87,7 +87,7 @@ public:
 
   void SelectFirstItem();
 
-  void SetWorkspace(nux::Geometry geo);
+  void SetWorkspace(nux::Geometry geo, int monitor);
 
   SwitcherView * GetView ();
 
@@ -120,6 +120,7 @@ private:
   nux::BaseWindow* view_window_;
   nux::HLayout* main_layout_;
 
+  int monitor_;
   bool visible_;
   guint show_timer_;
   guint detail_timer_;

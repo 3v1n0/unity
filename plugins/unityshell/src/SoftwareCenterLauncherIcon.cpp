@@ -26,11 +26,10 @@ namespace unity
 namespace launcher
 {
 
-SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(Launcher* IconManager,
-                                                       BamfApplication* app,
+SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(BamfApplication* app,
                                                        std::string const& aptdaemon_trans_id,
                                                        std::string const& icon_path)
-: BamfLauncherIcon(IconManager, app),
+: BamfLauncherIcon(app),
   _aptdaemon_trans("org.debian.apt",
                    aptdaemon_trans_id,
                    "org.debian.apt.transaction",
@@ -46,7 +45,6 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(Launcher* IconManager,
 
   icon_name = icon_path.c_str();
   tooltip_text = _("Waiting to install");
-  SetProgress(0.0f);
 }
 
 void

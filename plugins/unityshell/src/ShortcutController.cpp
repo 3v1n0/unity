@@ -60,7 +60,6 @@ Controller::Controller(std::list<AbstractHint*>& hints)
   model_.reset(new Model(hints));
 
   model_->Fill();
-  ConstructView();
 
   fade_in_animator_.animation_updated.connect(sigc::mem_fun(this, &Controller::OnFadeInUpdated));
   fade_in_animator_.animation_ended.connect(sigc::mem_fun(this, &Controller::OnFadeInEnded));
@@ -115,10 +114,12 @@ void Controller::Show()
     g_source_remove (show_timer_);
 
   if (enabled_)
+  {
     show_timer_ = g_timeout_add(SUPER_TAP_DURATION, &Controller::OnShowTimer, this);
+    model_->Fill();
+    visible_ = true;
+  }
 
-  model_->Fill();
-  visible_ = true;
 }
 
 gboolean Controller::OnShowTimer(gpointer data)
@@ -130,10 +131,14 @@ gboolean Controller::OnShowTimer(gpointer data)
     return FALSE;
   }
 
+  if (!self->view_window_)
+    self->ConstructView();
+
   self->ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
 
   if (self->visible_)
   {
+    self->view_window_->SetGeometry(self->workarea_);
     self->view_->SetupBackground(true);
     self->fade_out_animator_.Stop();
     self->fade_in_animator_.Start(self->view_window_->GetOpacity());
@@ -171,7 +176,6 @@ void Controller::ConstructView()
 void Controller::SetWorkspace(nux::Geometry const& geo)
 {
   workarea_ = geo;
-  view_window_->SetGeometry(workarea_);
 }
 
 void Controller::Hide()

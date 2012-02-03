@@ -30,6 +30,7 @@
 #include <Nux/StaticText.h>
 
 #include "FilterWidget.h"
+#include "IconTexture.h"
 
 namespace unity
 {
@@ -60,10 +61,13 @@ private:
   nux::LinearLayout* layout_;
   nux::LinearLayout* top_bar_layout_;
   nux::View* right_hand_contents_;
-  nux::View* expander_graphic_;
   nux::StaticText* cairo_label_;
   std::string raw_label_;
   std::string label_;
+  nux::VLayout* arrow_layout_;
+  nux::SpaceLayout* arrow_top_space_;
+  nux::SpaceLayout* arrow_bottom_space_;
+  IconTexture* expand_icon_;
 
   nux::ObjectPtr<nux::Layout> contents_;
 };

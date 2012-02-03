@@ -39,7 +39,7 @@ class Launcher;
 class BamfLauncherIcon : public SimpleLauncherIcon
 {
 public:
-  BamfLauncherIcon(Launcher* IconManager, BamfApplication* app);
+  BamfLauncherIcon(BamfApplication* app);
   virtual ~BamfLauncherIcon();
 
   void ActivateLauncherIcon(ActionArg arg);
@@ -53,18 +53,19 @@ public:
   bool IsUrgent() const;
 
   void Quit();
-  void Stick();
+  void Stick(bool save = true);
   void UnStick();
 
-  virtual bool ShowInSwitcher();
+  virtual bool ShowInSwitcher(bool current);
   virtual unsigned long long SwitcherPriority();
 
-  std::vector<Window> RelatedXids();
+  std::vector<Window> Windows();
+  std::vector<Window> WindowsForMonitor(int monitor);
   std::string NameForWindow(Window window);
 
 protected:
-  void UpdateIconGeometries(nux::Point3 center);
-  void OnCenterStabilized(nux::Point3 center);
+  void UpdateIconGeometries(std::vector<nux::Point3> center);
+  void OnCenterStabilized(std::vector<nux::Point3> center);
   void AddProperties(GVariantBuilder* builder);
   void OnAcceptDrop(unity::DndData& dnd_data);
   void OnDndEnter();
@@ -97,7 +98,6 @@ private:
 
   void OnWindowMinimized(guint32 xid);
   void OnWindowMoved(guint32 xid);
-  void OnLauncherHiddenChanged();
 
   bool OwnsWindow(Window w) const;
 
@@ -105,7 +105,6 @@ private:
 
 
   glib::Object<BamfApplication> _bamf_app;
-  Launcher* _launcher;
   bool _dnd_hovered;
   guint _dnd_hover_timer;
 

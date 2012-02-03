@@ -42,3 +42,36 @@ Outcome:
 Outcome:
   Super+Tab switcher is initialized and the shortcut hint overlay is not shown
   even keeping only super pressed until releasing it and pressing it again.
+
+Super Tab switcher cycling over launcher applications
+-----------------------------------------------------
+This test shows how the Super+Tab switcher should use a circular selection.
+
+#. Start with a clean screen
+#. Press Super+Tab multiple times to make the selection to reach the bottom
+   launcher icon
+#. Press Tab again
+
+Outcome:
+  The selection should go from the last launcher icon, to the first one.
+  The launcher view should be expanded/moved if needed to show the highlighted item.
+
+#. Start with a clean screen
+#. Press Super+Tab once to make the first launcher icon to highlight
+#. Press Shift+Tab while keeping Super pressed
+
+Outcome:
+  The selection should go from the first launcher icon to the last one.
+  The launcher view should be expanded/moved if needed to show the highlighted item.
+
+Escaping from Super Tab switcher
+--------------------------------
+This test shows how to escape from the Super+Tab switcher.
+
+#. Start with a clean screen
+#. Press Super+Tab one or more times to make the launcher switcher to initialize
+#. Press the Escape key when still pressing Super
+
+Outcome:
+  The Super Tab launcher switcher should terminate without performing any action
+  The previously selected launcher item should be deselected.

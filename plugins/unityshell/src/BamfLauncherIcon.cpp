@@ -38,10 +38,9 @@ namespace unity
 namespace launcher
 {
 
-BamfLauncherIcon::BamfLauncherIcon(Launcher* IconManager, BamfApplication* app)
-  : SimpleLauncherIcon(IconManager)
+BamfLauncherIcon::BamfLauncherIcon(BamfApplication* app)
+  : SimpleLauncherIcon()
   , _bamf_app(app, glib::AddRef())
-  , _launcher(IconManager)
   , _dnd_hovered(false)
   , _dnd_hover_timer(0)
   , _supported_types_filled(false)
@@ -70,7 +69,7 @@ BamfLauncherIcon::BamfLauncherIcon(Launcher* IconManager, BamfApplication* app)
                           [&] (BamfView*, BamfView*) {
                             EnsureWindowState();
                             UpdateMenus();
-                            UpdateIconGeometries(GetCenter());
+                            UpdateIconGeometries(GetCenters());
                           });
   _gsignals.Add(sig);
 
@@ -96,7 +95,7 @@ BamfLauncherIcon::BamfLauncherIcon(Launcher* IconManager, BamfApplication* app)
                             if (running)
                             {
                               EnsureWindowState();
-                              UpdateIconGeometries(GetCenter());
+                              UpdateIconGeometries(GetCenters());
                             }
                           });
   _gsignals.Add(sig);
@@ -119,7 +118,6 @@ BamfLauncherIcon::BamfLauncherIcon(Launcher* IconManager, BamfApplication* app)
   WindowManager::Default()->window_moved.connect(sigc::mem_fun(this, &BamfLauncherIcon::OnWindowMoved));
   WindowManager::Default()->compiz_screen_viewport_switch_ended.connect(sigc::mem_fun(this, &BamfLauncherIcon::EnsureWindowState));
   WindowManager::Default()->terminate_expo.connect(sigc::mem_fun(this, &BamfLauncherIcon::EnsureWindowState));
-  IconManager->hidden_changed.connect(sigc::mem_fun(this, &BamfLauncherIcon::OnLauncherHiddenChanged));
 
   EnsureWindowState();
   UpdateMenus();
@@ -285,7 +283,7 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
     ubus_server_send_message(ubus_server_get_default(), UBUS_LAUNCHER_ACTION_DONE, nullptr);
 }
 
-std::vector<Window> BamfLauncherIcon::RelatedXids ()
+std::vector<Window> BamfLauncherIcon::Windows()
 {
   std::vector<Window> results;
   GList* children, *l;
@@ -301,7 +299,34 @@ std::vector<Window> BamfLauncherIcon::RelatedXids ()
 
     if (wm->IsWindowMapped(xid))
     {
-      results.push_back (xid);
+      results.push_back(xid);
+    }
+  }
+
+  g_list_free(children);
+  return results;
+}
+
+std::vector<Window> BamfLauncherIcon::WindowsForMonitor(int monitor)
+{
+  std::vector<Window> results;
+  GList* children, *l;
+  WindowManager *wm = WindowManager::Default();
+
+  children = bamf_view_get_children(BAMF_VIEW(_bamf_app.RawPtr()));
+  for (l = children; l; l = l->next)
+  {
+    if (!BAMF_IS_WINDOW(l->data))
+      continue;
+
+    auto window = static_cast<BamfWindow*>(l->data);
+    if (bamf_window_get_monitor(window) == monitor)
+    {
+      guint32 xid = bamf_window_get_xid(window);
+      bool user_visible = bamf_view_user_visible(reinterpret_cast<BamfView*>(window));
+
+      if (user_visible && wm->IsWindowMapped(xid) && wm->IsWindowOnCurrentDesktop(xid))
+        results.push_back(xid);
     }
   }
 
@@ -356,11 +381,6 @@ void BamfLauncherIcon::OnWindowMoved(guint32 moved_win)
     self->_window_moved_id = 0;
     return FALSE;
   }, this);
-}
-
-void BamfLauncherIcon::OnLauncherHiddenChanged()
-{
-  UpdateIconGeometries(GetCenter());
 }
 
 void BamfLauncherIcon::UpdateDesktopFile()
@@ -568,18 +588,18 @@ void BamfLauncherIcon::Focus(ActionArg arg)
     if (any_visible)
     {
       WindowManager::Default()->FocusWindowGroup(windows,
-       WindowManager::FocusVisibility::ForceUnminimizeInvisible);
+       WindowManager::FocusVisibility::ForceUnminimizeInvisible, arg.monitor);
     }
     else
     {
       WindowManager::Default()->FocusWindowGroup(windows,
-       WindowManager::FocusVisibility::ForceUnminimizeOnCurrentDesktop);
+       WindowManager::FocusVisibility::ForceUnminimizeOnCurrentDesktop, arg.monitor);
     }
   }
   else
   {
     WindowManager::Default()->FocusWindowGroup(windows,
-      WindowManager::FocusVisibility::OnlyVisible);
+      WindowManager::FocusVisibility::OnlyVisible, arg.monitor);
   }
 }
 
@@ -610,9 +630,8 @@ bool BamfLauncherIcon::Spread(bool current_desktop, int state, bool force)
 void BamfLauncherIcon::EnsureWindowState()
 {
   GList* children, *l;
-  bool has_win_on_current_vp = false;
-  unsigned int user_visible_count = 0;
-  unsigned int children_count = 0;
+  std::vector<bool> monitors;
+  monitors.resize(max_num_monitors);
 
   children = bamf_view_get_children(BAMF_VIEW(_bamf_app.RawPtr()));
   for (l = children; l; l = l->next)
@@ -620,28 +639,16 @@ void BamfLauncherIcon::EnsureWindowState()
     if (!BAMF_IS_WINDOW(l->data))
       continue;
 
-    Window xid = bamf_window_get_xid(static_cast<BamfWindow*>(l->data));
-    if (WindowManager::Default()->IsWindowOnCurrentDesktop(xid))
-    {
-      has_win_on_current_vp = true;
+    auto window = static_cast<BamfWindow*>(l->data);
+    Window xid = bamf_window_get_xid(window);
+    int monitor = bamf_window_get_monitor(window);
 
-      if (bamf_view_user_visible(static_cast<BamfView*>(l->data)))
-        user_visible_count++;
-    }
-
-    children_count++;
+    if (monitor >= 0 && WindowManager::Default()->IsWindowOnCurrentDesktop(xid))
+      monitors[monitor] = true;
   }
 
-  if (user_visible_count > 0)
-  {
-    SetRelatedWindows(user_visible_count);
-  }
-  else if (children_count > 0)
-  {
-    SetRelatedWindows(1);
-  }
-
-  SetHasWindowOnViewport(has_win_on_current_vp);
+  for (int i = 0; i < max_num_monitors; i++)
+    SetWindowVisibleOnMonitor(monitors[i], i);
 
   g_list_free(children);
 }
@@ -771,7 +778,7 @@ void BamfLauncherIcon::Quit()
   g_list_free(children);
 }
 
-void BamfLauncherIcon::Stick()
+void BamfLauncherIcon::Stick(bool save)
 {
   if (IsSticky())
     return;
@@ -779,7 +786,7 @@ void BamfLauncherIcon::Stick()
   std::string const& desktop_file = DesktopFile();
   bamf_view_set_sticky(BAMF_VIEW(_bamf_app.RawPtr()), true);
 
-  if (!desktop_file.empty())
+  if (save && !desktop_file.empty())
     FavoriteStore::GetDefault().AddFavorite(desktop_file.c_str(), -1);
 }
 
@@ -807,11 +814,7 @@ void BamfLauncherIcon::ToggleSticky()
   }
   else
   {
-    bamf_view_set_sticky(BAMF_VIEW(_bamf_app.RawPtr()), true);
-    std::string const& desktop_file = DesktopFile();
-
-    if (!desktop_file.empty())
-      FavoriteStore::GetDefault().AddFavorite(desktop_file.c_str(), -1);
+    Stick();
   }
 }
 
@@ -1004,21 +1007,13 @@ std::list<DbusmenuMenuitem*> BamfLauncherIcon::GetMenus()
   return result;
 }
 
-void BamfLauncherIcon::UpdateIconGeometries(nux::Point3 center)
+void BamfLauncherIcon::UpdateIconGeometries(std::vector<nux::Point3> center)
 {
   GList* children, *l;
   nux::Geometry geo;
 
-  if (_launcher->Hidden() && !_launcher->ShowOnEdge())
-  {
-    geo.x = 0;
-    geo.y = 0;
-  }
-  else
-  {
-    geo.x = center.x - 24;
-    geo.y = center.y - 24;
-  }
+  geo.x = center[0].x - 24;
+  geo.y = center[0].y - 24;
   geo.width = 48;
   geo.height = 48;
 
@@ -1036,7 +1031,7 @@ void BamfLauncherIcon::UpdateIconGeometries(nux::Point3 center)
   g_list_free(children);
 }
 
-void BamfLauncherIcon::OnCenterStabilized(nux::Point3 center)
+void BamfLauncherIcon::OnCenterStabilized(std::vector<nux::Point3> center)
 {
   UpdateIconGeometries(center);
 }
@@ -1123,9 +1118,30 @@ void BamfLauncherIcon::OnAcceptDrop(unity::DndData& dnd_data)
   OpenInstanceWithUris(ValidateUrisForLaunch(dnd_data));
 }
 
-bool BamfLauncherIcon::ShowInSwitcher()
+bool BamfLauncherIcon::ShowInSwitcher(bool current)
 {
-  return IsRunning() && IsVisible();
+  bool result = false;
+
+  if (IsRunning() && IsVisible())
+  {
+    if (current)
+    {
+      result = true;
+    }
+    else
+    {
+      for (int i = 0; i < max_num_monitors; i++)
+      {
+        if (WindowVisibleOnMonitor(i))
+        {
+          result = true;
+          break;
+        }
+      }
+    }
+  }
+
+  return result;
 }
 
 unsigned long long BamfLauncherIcon::SwitcherPriority()
