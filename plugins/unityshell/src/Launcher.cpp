@@ -76,6 +76,8 @@ const int PULSE_BLINK_LAMBDA = 2;
 
 const float BACKLIGHT_STRENGTH = 0.9f;
 const int panel_height = 24;
+const int ICON_PADDING = 6;
+const int RIGHT_LINE_WIDTH = 1;
 
 }
 
@@ -252,8 +254,8 @@ Launcher::Launcher(nux::BaseWindow* parent,
   _drag_window = NULL;
   _offscreen_drag_texture = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableDeviceTexture(2, 2, 1, nux::BITFMT_R8G8B8A8);
 
-  ubus.RegisterInterest(UBUS_PLACE_VIEW_SHOWN, sigc::mem_fun(this, &Launcher::OnPlaceViewShown));
-  ubus.RegisterInterest(UBUS_PLACE_VIEW_HIDDEN, sigc::mem_fun(this, &Launcher::OnPlaceViewHidden));
+  ubus.RegisterInterest(UBUS_OVERLAY_SHOWN, sigc::mem_fun(this, &Launcher::OnOverlayShown));
+  ubus.RegisterInterest(UBUS_OVERLAY_HIDDEN, sigc::mem_fun(this, &Launcher::OnOverlayHidden));
   ubus.RegisterInterest(UBUS_LAUNCHER_ACTION_DONE, sigc::mem_fun(this, &Launcher::OnActionDone));
   ubus.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED, sigc::mem_fun(this, &Launcher::OnBGColorChanged));
   ubus.RegisterInterest(UBUS_LAUNCHER_LOCK_HIDE, sigc::mem_fun(this, &Launcher::OnLockHideChanged));
@@ -1278,40 +1280,61 @@ void Launcher::SaturateIcons()
   }
 }
 
-void Launcher::OnPlaceViewShown(GVariant* data)
+void Launcher::OnOverlayShown(GVariant* data)
 {
-  if (g_variant_get_int32(data) != monitor)
-    return;
+  // check the type of overlay
+  unity::glib::String overlay_identity;
+  gboolean can_maximise = FALSE;
+  gint32 overlay_monitor = 0;
+  g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING, 
+                &overlay_identity, &can_maximise, &overlay_monitor);
 
-  LauncherModel::iterator it;
 
-  _dash_is_open = true;
-  bg_effect_helper_.enabled = true;
-  _hide_machine->SetQuirk(LauncherHideMachine::PLACES_VISIBLE, true);
-  _hover_machine->SetQuirk(LauncherHoverMachine::PLACES_VISIBLE, true);
+  if (!g_strcmp0(overlay_identity, "dash"))
+  {
+    if (overlay_monitor == monitor)
+    {
+      LauncherModel::iterator it;
 
-  DesaturateIcons();
+      _dash_is_open = true;
+      bg_effect_helper_.enabled = true;
+      _hide_machine->SetQuirk(LauncherHideMachine::PLACES_VISIBLE, true);
+      _hover_machine->SetQuirk(LauncherHoverMachine::PLACES_VISIBLE, true);
+
+      DesaturateIcons();
+    }
+  }
 }
 
-void Launcher::OnPlaceViewHidden(GVariant* data)
+void Launcher::OnOverlayHidden(GVariant* data)
 {
-  if (!_dash_is_open)
-    return;
+  // check the type of overlay
+  unity::glib::String overlay_identity;
+  gboolean can_maximise = FALSE;
+  gint32 overlay_monitor = 0;
+  g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING, 
+                &overlay_identity, &can_maximise, &overlay_monitor);
 
-  LauncherModel::iterator it;
+  if (!g_strcmp0(overlay_identity, "dash"))
+  {
+    if (!_dash_is_open)
+      return;
+    
+    LauncherModel::iterator it;
 
-  _dash_is_open = false;
-  bg_effect_helper_.enabled = false;
-  _hide_machine->SetQuirk(LauncherHideMachine::PLACES_VISIBLE, false);
-  _hover_machine->SetQuirk(LauncherHoverMachine::PLACES_VISIBLE, false);
+    _dash_is_open = false;
+    bg_effect_helper_.enabled = false;
+    _hide_machine->SetQuirk(LauncherHideMachine::PLACES_VISIBLE, false);
+    _hover_machine->SetQuirk(LauncherHoverMachine::PLACES_VISIBLE, false);
 
-  // as the leave event is no more received when the place is opened
-  // FIXME: remove when we change the mouse grab strategy in nux
-  nux::Point pt = nux::GetWindowCompositor().GetMousePosition();
+    // as the leave event is no more received when the place is opened
+    // FIXME: remove when we change the mouse grab strategy in nux
+    nux::Point pt = nux::GetWindowCompositor().GetMousePosition();
 
-  SetStateMouseOverLauncher(GetAbsoluteGeometry().IsInside(pt));
+    SetStateMouseOverLauncher(GetAbsoluteGeometry().IsInside(pt));
 
-  SaturateIcons();
+    SaturateIcons();
+  }
 }
 
 void Launcher::OnActionDone(GVariant* data)
@@ -1732,7 +1755,8 @@ void Launcher::Resize()
   UScreen* uscreen = UScreen::GetDefault();
   auto geo = uscreen->GetMonitorGeometry(monitor());
 
-  nux::Geometry new_geometry(geo.x, geo.y + panel_height, _icon_size + 12, geo.height - panel_height);
+  int width = _icon_size + ICON_PADDING*2 + RIGHT_LINE_WIDTH - 2;
+  nux::Geometry new_geometry(geo.x, geo.y + panel_height, width, geo.height - panel_height);
   SetMaximumHeight(new_geometry.height);
   _parent->SetGeometry(new_geometry);
   SetGeometry(new_geometry);
@@ -1857,6 +1881,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   nux::Geometry geo_absolute = GetAbsoluteGeometry();
   RenderArgs(args, bkg_box, &launcher_alpha, geo_absolute);
+  bkg_box.width -= RIGHT_LINE_WIDTH;
 
   if (_drag_icon && _render_drag_window)
   {
@@ -1961,12 +1986,15 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   if (!_dash_is_open)
   {
+    const double right_line_opacity = 0.15f * launcher_alpha;
+
     gPainter.Paint2DQuadColor(GfxContext,
-                              nux::Geometry(bkg_box.x + bkg_box.width - 1,
+                              nux::Geometry(bkg_box.x + bkg_box.width,
                                             bkg_box.y,
-                                            1,
+                                            RIGHT_LINE_WIDTH,
                                             bkg_box.height),
-                              nux::Color(0x60606060));
+                              nux::color::White * right_line_opacity);
+
     gPainter.Paint2DQuadColor(GfxContext,
                               nux::Geometry(bkg_box.x,
                                             bkg_box.y,
@@ -2488,7 +2516,7 @@ Launcher::RenderIconToTexture(nux::GraphicsEngine& GfxContext, AbstractLauncherI
   clock_gettime(CLOCK_MONOTONIC, &current);
 
   SetupRenderArg(icon, current, arg);
-  arg.render_center = nux::Point3(_icon_size / 2.0f, _icon_size / 2.0f, 0.0f);
+  arg.render_center = nux::Point3(roundf(_icon_size / 2.0f), roundf(_icon_size / 2.0f), 0.0f);
   arg.logical_center = arg.render_center;
   arg.x_rotation = 0.0f;
   arg.running_arrow = false;
@@ -2848,9 +2876,9 @@ Launcher::handle_dbus_method_call(GDBusConnection*       connection,
     g_variant_get(parameters, "(ssiiiss)", &title, &icon, &icon_x, &icon_y, &icon_size, &desktop_file, &aptdaemon_task, NULL);
 
     Launcher* self = (Launcher*)user_data;
-    self->launcher_addrequest_special.emit(desktop_file, NULL, aptdaemon_task, icon);
+    self->launcher_addrequest_special.emit(desktop_file, nullptr, aptdaemon_task, icon);
 
-    g_dbus_method_invocation_return_value(invocation, NULL);
+    g_dbus_method_invocation_return_value(invocation, nullptr);
     g_free(icon);
     g_free(title);
     g_free(desktop_file);

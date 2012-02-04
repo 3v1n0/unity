@@ -56,6 +56,7 @@ protected:
                      nux::Color bkg_color,
                      nux::Color colorify,
                      float alpha,
+                     bool force_filter,
                      std::vector<nux::Vector4>& xform_coords);
 
   void RenderIndicators(nux::GraphicsEngine& GfxContext,

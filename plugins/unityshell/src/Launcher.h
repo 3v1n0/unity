@@ -126,7 +126,7 @@ public:
   void EnableCheckWindowOverLauncher(gboolean enabled);
 
   sigc::signal<void, char*, AbstractLauncherIcon*> launcher_addrequest;
-  sigc::signal<void, char*, AbstractLauncherIcon*, char*, char*> launcher_addrequest_special;
+  sigc::signal<void, std::string const&, AbstractLauncherIcon*, std::string const&, std::string const&> launcher_addrequest_special;
   sigc::signal<void, AbstractLauncherIcon*> launcher_removerequest;
   sigc::signal<void> selection_change;
   sigc::signal<void> hidden_changed;
@@ -281,8 +281,8 @@ private:
 
   void OnIconNeedsRedraw(AbstractLauncherIcon* icon);
 
-  void OnPlaceViewHidden(GVariant* data);
-  void OnPlaceViewShown(GVariant* data);
+  void OnOverlayHidden(GVariant* data);
+  void OnOverlayShown(GVariant* data);
 
   void DesaturateIcons();
   void SaturateIcons();

@@ -333,12 +333,12 @@ UnityScreen::UnityScreen(CompScreen* screen)
 
      BackgroundEffectHelper::updates_enabled = true;
 
-     ubus_manager_.RegisterInterest(UBUS_PLACE_VIEW_SHOWN, [&](GVariant * args) { 
+     ubus_manager_.RegisterInterest(UBUS_OVERLAY_SHOWN, [&](GVariant * args) { 
        dash_is_open_ = true; 
        dash_monitor_ = g_variant_get_int32(args);
        RaiseInputWindows(); 
      });
-     ubus_manager_.RegisterInterest(UBUS_PLACE_VIEW_HIDDEN, [&](GVariant * args) { dash_is_open_ = false; });
+     ubus_manager_.RegisterInterest(UBUS_OVERLAY_HIDDEN, [&](GVariant * args) { dash_is_open_ = false; });
       LOG_INFO(logger) << "UnityScreen constructed: " << timer.ElapsedSeconds() << "s";
   }
 }
@@ -2309,7 +2309,9 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       launcher_options->icon_size = optionGetIconSize();
       launcher_options->tile_size = optionGetIconSize() + 6;
 
-      dash_controller_->launcher_width = optionGetIconSize() + 18;
+      /* The launcher geometry includes 1px used to draw the right margin
+       * that must not be considered when drawing the dash                    */
+      dash_controller_->launcher_width = launcher_controller_->launcher().GetAbsoluteWidth() - 1;
 
       if (p)
       {

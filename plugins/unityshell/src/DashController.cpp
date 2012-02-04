@@ -37,7 +37,7 @@ nux::logging::Logger logger("unity.dash.controller");
 }
 
 Controller::Controller()
-  : launcher_width(66)
+  : launcher_width(64)
   , panel_height(24)
   , window_(0)
   , visible_(false)
@@ -243,7 +243,8 @@ void Controller::ShowDash()
 
   StartShowHideTimeline();
 
-  ubus_manager_.SendMessage(UBUS_PLACE_VIEW_SHOWN, g_variant_new_int32(UScreen::GetDefault()->GetMonitorWithMouse()));
+  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "dash", TRUE, UScreen::GetDefault()->GetMonitorWithMouse());
+  ubus_manager_.SendMessage(UBUS_OVERLAY_SHOWN, info);
 }
 
 void Controller::HideDash(bool restore)
@@ -263,8 +264,9 @@ void Controller::HideDash(bool restore)
     PluginAdapter::Default ()->restoreInputFocus ();
 
   StartShowHideTimeline();
-
-  ubus_manager_.SendMessage(UBUS_PLACE_VIEW_HIDDEN);
+  
+  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "dash", TRUE, g_variant_new_int32(UScreen::GetDefault()->GetMonitorWithMouse()));
+  ubus_manager_.SendMessage(UBUS_OVERLAY_HIDDEN, info);
 }
 
 void Controller::StartShowHideTimeline()
