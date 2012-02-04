@@ -191,7 +191,7 @@ TEST(TestIndicatorEntry, TestOnShowMenu)
   EXPECT_EQ(recorder.button, 1);
 }
 
-TEST(TestIndicatorEntry, TestInvisible)
+TEST(TestIndicatorEntry, TestVisibility)
 {
 
   indicator::Entry entry("id", "name_hint", "label", true, true,

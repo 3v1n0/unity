@@ -192,6 +192,14 @@ void PanelIndicatorEntryView::SetActiveState(bool active, int button)
 // 3. Paint something
 void PanelIndicatorEntryView::Refresh()
 {
+  if (!IsVisible())
+  {
+    SetVisible(false);
+    return;
+  }
+
+  SetVisible(true);
+
   PangoLayout*          layout = NULL;
   PangoFontDescription* desc = NULL;
   PangoAttrList*        attrs = NULL;
