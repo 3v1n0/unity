@@ -208,20 +208,29 @@ TEST(TestIndicatorEntry, TestInvisible)
   entry.setLabel("invalid-label", true, false);
   EXPECT_FALSE(entry.visible());
 
-  entry.setImage(0, "valid-image", true, true);
+  entry.setImage(1, "valid-image", true, true);
   EXPECT_TRUE(entry.visible());
 
-  entry.setImage(0, "", true, true);
+  entry.setImage(1, "", true, true);
   EXPECT_FALSE(entry.visible());
 
-  entry.setImage(0, "valid-image", true, true);
+  entry.setImage(1, "valid-image", true, true);
   EXPECT_TRUE(entry.visible());
 
-  entry.setImage(0, "invalid-image", true, false);
+  entry.setImage(0, "invalid-image-type", true, true);
   EXPECT_FALSE(entry.visible());
 
   entry.setLabel("valid-label", true, true);
-  entry.setImage(0, "valid-image", true, true);
+  EXPECT_TRUE(entry.visible());
+
+  entry.setLabel("invalid-label", true, false);
+  EXPECT_FALSE(entry.visible());
+
+  entry.setImage(1, "invalid-image", true, false);
+  EXPECT_FALSE(entry.visible());
+
+  entry.setLabel("valid-label", true, true);
+  entry.setImage(1, "valid-image", true, true);
   EXPECT_TRUE(entry.visible());
 }
 

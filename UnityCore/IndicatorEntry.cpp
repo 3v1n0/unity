@@ -104,7 +104,8 @@ int Entry::priority() const
 
 bool Entry::visible() const
 {
-  return ((label_visible_ && !label_.empty()) || (image_visible_ && !image_data_.empty()));
+  return ((label_visible_ && !label_.empty()) ||
+          (image_type_ != 0 && image_visible_ && !image_data_.empty()));
 }
 
 void Entry::set_active(bool active)
