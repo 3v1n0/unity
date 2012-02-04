@@ -2551,7 +2551,7 @@ void UnityScreen::InitHints()
   std::string const workspaces = _("Workspaces");
   hints_.push_back(new shortcut::Hint(workspaces, "", "", _("Spread workspaces."), shortcut::COMPIZ_KEY_OPTION, "expo", "expo_key"));
   hints_.push_back(new shortcut::Hint(workspaces, "", "", _("Switch workspaces."), shortcut::HARDCODED_OPTION, _("Control + Alt + Cursor Keys")));
-  hints_.push_back(new shortcut::Hint(workspaces, "", " or Right", _("Move focused window to different workspace."), shortcut::HARDCODED_OPTION, _("Control + Alt + Shift + Cursor Keys")));
+  hints_.push_back(new shortcut::Hint(workspaces, "", "", _("Move focused window to different workspace."), shortcut::HARDCODED_OPTION, _("Control + Alt + Shift + Cursor Keys")));
 
   // Windows
   std::string const windows = _("Windows");
