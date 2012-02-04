@@ -397,7 +397,6 @@ void DBusIndicators::Impl::SyncGeometries(std::string const& name,
                             rect.y,
                             rect.width,
                             rect.height);
-      g_debug("Entry %s->%s changed geometry",name.c_str(),i->first.c_str());
       found_changed_locations = true;
     }
   }
@@ -414,7 +413,6 @@ void DBusIndicators::Impl::SyncGeometries(std::string const& name,
                             0,
                             -1,
                             -1);
-      g_debug("Entry %s->%s has been removed",name.c_str(),i->first.c_str());
       found_changed_locations = true;
     }
   }
