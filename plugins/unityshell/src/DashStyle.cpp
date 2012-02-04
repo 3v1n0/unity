@@ -61,21 +61,26 @@ void cairo_set_source_rgba(cairo_t* cr, nux::Color const& color)
   ::cairo_set_source_rgba(cr, color.red, color.green, color.blue, color.alpha);
 }
 
-inline double _align(double val)
+inline double _align(double val, bool odd=true)
 {
   double fract = val - (int) val;
 
-  // for strokes with an odd line-width
-  if (fract != 0.5f)
-    return (double) ((int) val + 0.5f);
+  if (odd)
+  {
+    // for strokes with an odd line-width
+    if (fract != 0.5f)
+      return (double) ((int) val + 0.5f);
+    else
+      return val;
+  }
   else
-    return val;
-
-  // for strokes with an even line-width
-  /*if (fract != 0.0f)
-    return (double) ((int) val);
-  else
-    return val;*/
+  {
+    // for strokes with an even line-width
+    if (fract != 0.0f)
+      return (double) ((int) val);
+    else
+      return val;
+  }
 }
 
 class LazyLoadTexture
@@ -114,7 +119,8 @@ public:
   void Text(cairo_t* cr,
             nux::Color const& color,
             std::string const& label,
-            double horizMargin = 10.0);
+            double horizMargin = 10.0,
+            Alignment alignment = Alignment::CENTER);
 
   void ButtonOutlinePath(cairo_t* cr, bool align);
 
@@ -412,108 +418,62 @@ void Style::RoundedRect(cairo_t* cr,
                             double   y,
                             double   cornerRadius,
                             double   width,
-                            double   height,
-                            bool     align)
+                            double   height)
 {
   // sanity check
   if (cairo_status(cr) != CAIRO_STATUS_SUCCESS &&
       cairo_surface_get_type(cairo_get_target(cr)) != CAIRO_SURFACE_TYPE_IMAGE)
     return;
 
+  bool odd = true;
+
+  odd = cairo_get_line_width (cr) == 2.0 ? false : true;
+
   double radius = cornerRadius / aspect;
 
-  if (align)
-  {
-    // top-left, right of the corner
-    cairo_move_to(cr, _align (x + radius), _align (y));
+  // top-left, right of the corner
+  cairo_move_to(cr, _align (x + radius, odd), _align (y, odd));
 
-    // top-right, left of the corner
-    cairo_line_to(cr, _align(x + width - radius), _align(y));
+  // top-right, left of the corner
+  cairo_line_to(cr, _align(x + width - radius, odd), _align(y, odd));
 
-    // top-right, below the corner
-    cairo_arc(cr,
-              _align(x + width - radius),
-              _align(y + radius),
-              radius,
-              -90.0f * G_PI / 180.0f,
-              0.0f * G_PI / 180.0f);
+  // top-right, below the corner
+  cairo_arc(cr,
+            _align(x + width - radius, odd),
+            _align(y + radius, odd),
+            radius,
+            -90.0f * G_PI / 180.0f,
+            0.0f * G_PI / 180.0f);
 
-    // bottom-right, above the corner
-    cairo_line_to(cr, _align(x + width), _align(y + height - radius));
+  // bottom-right, above the corner
+  cairo_line_to(cr, _align(x + width, odd), _align(y + height - radius, odd));
 
-    // bottom-right, left of the corner
-    cairo_arc(cr,
-              _align(x + width - radius),
-              _align(y + height - radius),
-              radius,
-              0.0f * G_PI / 180.0f,
-              90.0f * G_PI / 180.0f);
+  // bottom-right, left of the corner
+  cairo_arc(cr,
+            _align(x + width - radius, odd),
+            _align(y + height - radius, odd),
+            radius,
+            0.0f * G_PI / 180.0f,
+            90.0f * G_PI / 180.0f);
 
-    // bottom-left, right of the corner
-    cairo_line_to(cr, _align(x + radius), _align(y + height));
+  // bottom-left, right of the corner
+  cairo_line_to(cr, _align(x + radius, odd), _align(y + height, odd));
 
-    // bottom-left, above the corner
-    cairo_arc(cr,
-              _align(x + radius),
-              _align(y + height - radius),
-              radius,
-              90.0f * G_PI / 180.0f,
-              180.0f * G_PI / 180.0f);
+  // bottom-left, above the corner
+  cairo_arc(cr,
+            _align(x + radius, odd),
+            _align(y + height - radius, odd),
+            radius,
+            90.0f * G_PI / 180.0f,
+            180.0f * G_PI / 180.0f);
 
-    // top-left, right of the corner
-    cairo_arc(cr,
-              _align(x + radius),
-              _align(y + radius),
-              radius,
-              180.0f * G_PI / 180.0f,
-              270.0f * G_PI / 180.0f);
-  }
-  else
-  {
-    // top-left, right of the corner
-    cairo_move_to(cr, x + radius, y);
-
-    // top-right, left of the corner
-    cairo_line_to(cr, x + width - radius, y);
-
-    // top-right, below the corner
-    cairo_arc(cr,
-              x + width - radius,
-              y + radius,
-              radius,
-              -90.0f * G_PI / 180.0f,
-              0.0f * G_PI / 180.0f);
-
-    // bottom-right, above the corner
-    cairo_line_to(cr, x + width, y + height - radius);
-
-    // bottom-right, left of the corner
-    cairo_arc(cr,
-              x + width - radius,
-              y + height - radius,
-              radius,
-              0.0f * G_PI / 180.0f,
-              90.0f * G_PI / 180.0f);
-
-    // bottom-left, right of the corner
-    cairo_line_to(cr, x + radius, y + height);
-
-    // bottom-left, above the corner
-    cairo_arc(cr,
-              x + radius,
-              y + height - radius,
-              radius,
-              90.0f * G_PI / 180.0f,
-              180.0f * G_PI / 180.0f);
-
-    // top-left, right of the corner
-    cairo_arc(cr,
-              x + radius,
-              y + radius,
-              radius,
-              180.0f * G_PI / 180.0f,
-              270.0f * G_PI / 180.0f);
-  }
+  // top-left, right of the corner
+  cairo_arc(cr,
+            _align(x + radius, odd),
+            _align(y + radius, odd),
+            radius,
+            180.0f * G_PI / 180.0f,
+            270.0f * G_PI / 180.0f);
 }
 
 static inline void _blurinner(guchar* pixel,
@@ -1007,48 +967,51 @@ void Style::Impl::RoundedRectSegment(cairo_t*   cr,
                                          Arrow      arrow,
                                          nux::ButtonVisualState state)
 {
-  double radius = cornerRadius / aspect;
+  double radius  = cornerRadius / aspect;
   double arrow_w = radius / 1.5;
   double arrow_h = radius / 2.0;
+  bool odd = true;
+
+  odd = cairo_get_line_width (cr) == 2.0 ? false : true;
 
   switch (segment)
   {
   case Segment::LEFT:
     // top-left, right of the corner
-    cairo_move_to(cr, x + radius, y);
+    cairo_move_to(cr, _align(x + radius, odd), _align(y, odd));
 
     // top-right
-    cairo_line_to(cr, x + width, y);
+    cairo_line_to(cr, _align(x + width, odd), _align(y, odd));
 
     if (arrow == Arrow::RIGHT && state == nux::VISUAL_STATE_PRESSED)
 		{
-      cairo_line_to(cr, x + width,           y + height / 2.0 - arrow_h);
-      cairo_line_to(cr, x + width - arrow_w, y + height / 2.0);
-      cairo_line_to(cr, x + width,           y + height / 2.0 + arrow_h);
+      cairo_line_to(cr, _align(x + width, odd),           _align(y + height / 2.0 - arrow_h, odd));
+      cairo_line_to(cr, _align(x + width - arrow_w, odd), _align(y + height / 2.0, odd));
+      cairo_line_to(cr, _align(x + width, odd),           _align(y + height / 2.0 + arrow_h, odd));
 		}
 
     // bottom-right
-    cairo_line_to(cr, x + width, y + height);
+    cairo_line_to(cr, _align(x + width, odd), _align(y + height, odd));
 
     // bottom-left, right of the corner
-    cairo_line_to(cr, x + radius, y + height);
+    cairo_line_to(cr, _align(x + radius, odd), _align(y + height, odd));
 
     // bottom-left, above the corner
     cairo_arc(cr,
-              x + radius,
-              y + height - radius,
-              radius,
+              _align(x, odd) + _align(radius, odd),
+              _align(y + height, odd) - _align(radius, odd),
+              _align(radius, odd),
               90.0f * G_PI / 180.0f,
               180.0f * G_PI / 180.0f);
 
     // left, right of the corner
-    cairo_line_to(cr, x, y + radius);
+    cairo_line_to(cr, _align(x, odd), _align(y + radius, odd));
 
     // top-left, right of the corner
     cairo_arc(cr,
-              x + radius,
-              y + radius,
-              radius,
+              _align(x, odd) + _align(radius, odd),
+              _align(y, odd) + _align(radius, odd),
+              _align(radius, odd),
               180.0f * G_PI / 180.0f,
               270.0f * G_PI / 180.0f);
 
@@ -1056,29 +1019,29 @@ void Style::Impl::RoundedRectSegment(cairo_t*   cr,
 
   case Segment::MIDDLE:
     // top-left
-    cairo_move_to(cr, x, y);
+    cairo_move_to(cr, _align(x, odd), _align(y, odd));
 
     // top-right
-    cairo_line_to(cr, x + width, y);
+    cairo_line_to(cr, _align(x + width, odd), _align(y, odd));
 
     if ((arrow == Arrow::RIGHT || arrow == Arrow::BOTH) && state == nux::VISUAL_STATE_PRESSED)
 		{
-      cairo_line_to(cr, x + width,           y + height / 2.0 - arrow_h);
-      cairo_line_to(cr, x + width - arrow_w, y + height / 2.0);
-      cairo_line_to(cr, x + width,           y + height / 2.0 + arrow_h);
+      cairo_line_to(cr, _align(x + width, odd),           _align(y + height / 2.0 - arrow_h, odd));
+      cairo_line_to(cr, _align(x + width - arrow_w, odd), _align(y + height / 2.0, odd));
+      cairo_line_to(cr, _align(x + width, odd),           _align(y + height / 2.0 + arrow_h, odd));
 		}
 
     // bottom-right
-    cairo_line_to(cr, x + width, y + height);
+    cairo_line_to(cr, _align(x + width, odd), _align(y + height, odd));
 
     // bottom-left
-    cairo_line_to(cr, x, y + height);
+    cairo_line_to(cr, _align(x, odd), _align(y + height, odd));
 
     if ((arrow == Arrow::LEFT || arrow == Arrow::BOTH) && state == nux::VISUAL_STATE_PRESSED)
 		{
-      cairo_line_to(cr, x,           y + height / 2.0 + arrow_h);
-      cairo_line_to(cr, x + arrow_w, y + height / 2.0);
-      cairo_line_to(cr, x,           y + height / 2.0 - arrow_h);
+      cairo_line_to(cr, _align(x, odd),           _align(y + height / 2.0 + arrow_h, odd));
+      cairo_line_to(cr, _align(x + arrow_w, odd), _align(y + height / 2.0, odd));
+      cairo_line_to(cr, _align(x, odd),           _align(y + height / 2.0 - arrow_h, odd));
 		}
 
     // back to top-left
@@ -1087,38 +1050,38 @@ void Style::Impl::RoundedRectSegment(cairo_t*   cr,
 
   case Segment::RIGHT:
     // top-left, right of the corner
-    cairo_move_to(cr, x, y);
+    cairo_move_to(cr, _align(x, odd), _align(y, odd));
 
     // top-right, left of the corner
-    cairo_line_to(cr, x + width - radius, y);
+    cairo_line_to(cr, _align(x + width - radius, odd), _align(y, odd));
 
     // top-right, below the corner
     cairo_arc(cr,
-              x + width - radius,
-              y + radius,
-              radius,
+              _align(x + width, odd) - _align(radius, odd),
+              _align(y, odd) + _align(radius, odd),
+              _align(radius, odd),
               -90.0f * G_PI / 180.0f,
               0.0f * G_PI / 180.0f);
 
     // bottom-right, above the corner
-    cairo_line_to(cr, x + width, y + height - radius);
+    cairo_line_to(cr, _align(x + width, odd), _align(y + height - radius, odd));
 
     // bottom-right, left of the corner
     cairo_arc(cr,
-              x + width - radius,
-              y + height - radius,
-              radius,
+              _align(x + width, odd) - _align(radius, odd),
+              _align(y + height, odd) - _align(radius, odd),
+              _align(radius, odd),
               0.0f * G_PI / 180.0f,
               90.0f * G_PI / 180.0f);
 
     // bottom-left
-    cairo_line_to(cr, x, y + height);
+    cairo_line_to(cr, _align(x, odd), _align(y + height, odd));
 
     if (arrow == Arrow::LEFT && state == nux::VISUAL_STATE_PRESSED)
 		{
-      cairo_line_to(cr, x,           y + height / 2.0 + arrow_h);
-      cairo_line_to(cr, x + arrow_w, y + height / 2.0);
-      cairo_line_to(cr, x,           y + height / 2.0 - arrow_h);
+      cairo_line_to(cr, _align(x, odd),           _align(y + height / 2.0 + arrow_h, odd));
+      cairo_line_to(cr, _align(x + arrow_w, odd), _align(y + height / 2.0, odd));
+      cairo_line_to(cr, _align(x, odd),           _align(y + height / 2.0 - arrow_h, odd));
 		}
 
     // back to top-left
@@ -1360,9 +1323,10 @@ void Style::Impl::GetTextExtents(int& width,
 }
 
 void Style::Impl::Text(cairo_t*    cr,
-                           nux::Color const&  color,
-                           std::string const& label,
-                           double horizMargin)
+                       nux::Color const&  color,
+                       std::string const& label,
+                       double horizMargin,
+                       Alignment alignment)
 {
   double                x           = 0.0;
   double                y           = 0.0;
@@ -1415,6 +1379,23 @@ void Style::Impl::Text(cairo_t*    cr,
   pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
   pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_END);
 
+  PangoAlignment pango_alignment = PANGO_ALIGN_LEFT;
+  switch (alignment)
+  {
+  case Alignment::LEFT:
+    pango_alignment = PANGO_ALIGN_LEFT;
+    break;
+  
+  case Alignment::CENTER:
+    pango_alignment = PANGO_ALIGN_CENTER;
+    break;
+
+  case Alignment::RIGHT:
+    pango_alignment = PANGO_ALIGN_RIGHT;
+    break;
+  }
+  pango_layout_set_alignment(layout, pango_alignment);
+
   pango_layout_set_markup(layout, label.c_str(), -1);
   pango_layout_set_width(layout, w * PANGO_SCALE);
 
@@ -1445,7 +1426,7 @@ void Style::Impl::Text(cairo_t*    cr,
   PangoRectangle ink = {0, 0, 0, 0};
   PangoRectangle log = {0, 0, 0, 0};
   pango_layout_get_extents(layout, &ink, &log);
-  x = ((double) w - pango_units_to_double(ink.width)) / 2.0 + horizMargin;
+  x = horizMargin; // let pango alignment handle the x position
   y = ((double) h - pango_units_to_double(log.height)) / 2.0;
   cairo_move_to(cr, x, y);
   pango_cairo_show_layout(cr, layout);
@@ -1549,7 +1530,7 @@ void Style::Impl::DrawOverlay(cairo_t*  cr,
   cairo_set_operator(cr, old);
 }
 
-bool Style::Button(cairo_t* cr, nux::ButtonVisualState state, std::string const& label)
+bool Style::Button(cairo_t* cr, nux::ButtonVisualState state, std::string const& label, Alignment alignment)
 {
   // sanity checks
   if (cairo_status(cr) != CAIRO_STATUS_SUCCESS)
@@ -1563,14 +1544,26 @@ bool Style::Button(cairo_t* cr, nux::ButtonVisualState state, std::string const&
   //ButtonOutlinePath(cr, true);
   double w = cairo_image_surface_get_width(cairo_get_target(cr));
   double h = cairo_image_surface_get_height(cairo_get_target(cr));
-  RoundedRect(cr,
-              1.0,
-              (double) (garnish),
-              (double) (garnish),
-              7.0,
-              w - (double) (2 * garnish),
-              h - (double) (2 * garnish),
-              true);
+
+  cairo_set_line_width(cr, pimpl->button_label_border_size_[state]);
+
+  if (pimpl->button_label_border_size_[state] == 2.0)
+    RoundedRect(cr,
+                1.0,
+                (double) (garnish) + 1.0,
+                (double) (garnish) + 1.0,
+                7.0,
+                w - (double) (2 * garnish) - 1.0,
+                h - (double) (2 * garnish) - 1.0);
+  else
+    RoundedRect(cr,
+                1.0,
+                (double) (garnish),
+                (double) (garnish),
+                7.0,
+                w - (double) (2 * garnish),
+                h - (double) (2 * garnish));
+
 
   if (pimpl->button_label_fill_color_[state].alpha != 0.0)
   {
@@ -1578,7 +1571,7 @@ bool Style::Button(cairo_t* cr, nux::ButtonVisualState state, std::string const&
     cairo_fill_preserve(cr);
   }
   cairo_set_source_rgba(cr, pimpl->button_label_border_color_[state]);
-  cairo_set_line_width(cr, pimpl->button_label_border_size_[state]);
+  //cairo_set_line_width(cr, pimpl->button_label_border_size_[state]);
   cairo_stroke(cr);
 
   pimpl->DrawOverlay(cr,
@@ -1588,7 +1581,9 @@ bool Style::Button(cairo_t* cr, nux::ButtonVisualState state, std::string const&
 
   pimpl->Text(cr,
               pimpl->button_label_text_color_[state],
-              label);
+              label,
+              10.0,
+              alignment);
 
   return true;
 }
@@ -1707,16 +1702,30 @@ bool Style::MultiRangeSegment(cairo_t*    cr,
     w -= 2.0;
 	}
 
-  pimpl->RoundedRectSegment(cr,
-                            1.0,
-                            x,
-                            y,
-                            h / 4.0,
-                            w,
-                            h,
-                            segment,
-                            arrow,
-                            state);
+  cairo_set_line_width(cr, pimpl->button_label_border_size_[state]);
+
+  if (pimpl->button_label_border_size_[state] == 2.0)
+    pimpl->RoundedRectSegment(cr,
+                              1.0,
+                              x+1.0,
+                              y+1.0,
+                              (h-1.0) / 4.0,
+                              w-1.0,
+                              h-1.0,
+                              segment,
+                              arrow,
+                              state);
+  else
+    pimpl->RoundedRectSegment(cr,
+                              1.0,
+                              x,
+                              y,
+                              h / 4.0,
+                              w,
+                              h,
+                              segment,
+                              arrow,
+                              state);
 
   if (pimpl->button_label_fill_color_[state].alpha != 0.0)
   {
@@ -1724,7 +1733,6 @@ bool Style::MultiRangeSegment(cairo_t*    cr,
     cairo_fill_preserve(cr);
   }
   cairo_set_source_rgba(cr, pimpl->button_label_border_color_[state]);
-  cairo_set_line_width(cr, pimpl->button_label_border_size_[state]);
   cairo_stroke(cr);
   pimpl->Text(cr,
               pimpl->button_label_text_color_[state],

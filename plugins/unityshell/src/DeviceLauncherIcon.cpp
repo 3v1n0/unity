@@ -43,8 +43,8 @@ GduDevice* get_device_for_device_file (const gchar *device_file);
 
 }
 
-DeviceLauncherIcon::DeviceLauncherIcon(Launcher* launcher, GVolume* volume)
-  : SimpleLauncherIcon(launcher)
+DeviceLauncherIcon::DeviceLauncherIcon(GVolume* volume)
+  : SimpleLauncherIcon()
   , volume_(volume)
   , device_file_(g_volume_get_identifier(volume_, G_VOLUME_IDENTIFIER_KIND_UNIX_DEVICE))
   , gdu_device_(get_device_for_device_file(device_file_))

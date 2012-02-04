@@ -103,11 +103,11 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
                                                           (UBusCallback)&PanelView::OnBackgroundUpdate,
                                                           this);
 
-   _handle_dash_hidden = ubus_server_register_interest(ubus, UBUS_PLACE_VIEW_HIDDEN,
+   _handle_dash_hidden = ubus_server_register_interest(ubus, UBUS_OVERLAY_HIDDEN,
                                                       (UBusCallback)&PanelView::OnDashHidden,
                                                       this);
 
-   _handle_dash_shown = ubus_server_register_interest(ubus, UBUS_PLACE_VIEW_SHOWN,
+   _handle_dash_shown = ubus_server_register_interest(ubus, UBUS_OVERLAY_SHOWN,
                                                      (UBusCallback)&PanelView::OnDashShown,
                                                      this);
    // request the latest colour from bghash
@@ -182,7 +182,13 @@ void PanelView::OnDashHidden(GVariant* data, PanelView* self)
 
 void PanelView::OnDashShown(GVariant* data, PanelView* self)
 {
-  if (self->_is_primary)
+  unity::glib::String overlay_identity;
+  gboolean can_maximise = FALSE;
+  gint32 overlay_monitor = 0;
+  g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING, 
+                &overlay_identity, &can_maximise, &overlay_monitor);
+
+  if (self->_monitor == overlay_monitor)
   {
     self->bg_effect_helper_.enabled = true;
     self->_dash_is_open = true;
@@ -203,11 +209,6 @@ void PanelView::AddPanelView(PanelIndicatorsView* child,
 std::string PanelView::GetName() const
 {
   return "UnityPanel";
-}
-
-std::string PanelView::GetChildsName() const
-{
-  return "indicators";
 }
 
 void PanelView::AddProperties(GVariantBuilder* builder)
@@ -372,7 +373,7 @@ PanelView::UpdateBackground()
   
   guint32 maximized_win = _menu_view->GetMaximizedWindow();
 
-  if (_dash_is_open && maximized_win == 0)
+  if (_dash_is_open)
   {
     if (_bg_layer)
       delete _bg_layer;

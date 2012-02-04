@@ -65,6 +65,7 @@ PanelMenuView::PanelMenuView(int padding)
     _last_width(0),
     _last_height(0),
     _places_showing(false),
+    _switcher_showing(false),
     _show_now_activated(false),
     _we_control_active(false),
     _new_app_menu_shown(false),
@@ -74,13 +75,12 @@ PanelMenuView::PanelMenuView(int padding)
     _update_show_now_id(0),
     _new_app_show_id(0),
     _new_app_hide_id(0),
-    _place_shown_interest(0),
-    _place_hidden_interest(0),
     _menus_fadein(100),
     _menus_fadeout(120),
     _menus_discovery(2),
     _menus_discovery_fadein(200),
     _menus_discovery_fadeout(300),
+    _panel_title(nullptr),
     _fade_in_animator(nullptr),
     _fade_out_animator(nullptr)
 {
@@ -155,12 +155,19 @@ PanelMenuView::PanelMenuView(int padding)
 
   // Register for all the interesting events
   UBusServer* ubus = ubus_server_get_default();
-  _place_shown_interest = ubus_server_register_interest(ubus, UBUS_PLACE_VIEW_SHOWN,
-                                                        (UBusCallback)PanelMenuView::OnPlaceViewShown,
-                                                        this);
-  _place_hidden_interest = ubus_server_register_interest(ubus, UBUS_PLACE_VIEW_HIDDEN,
-                                                         (UBusCallback)PanelMenuView::OnPlaceViewHidden,
-                                                         this);
+  _ubus_interests.push_back(ubus_server_register_interest(ubus, UBUS_OVERLAY_SHOWN,
+                                                          (UBusCallback)PanelMenuView::OnPlaceViewShown,
+                                                          this));
+  _ubus_interests.push_back(ubus_server_register_interest(ubus, UBUS_OVERLAY_HIDDEN,
+                                                          (UBusCallback)PanelMenuView::OnPlaceViewHidden,
+                                                          this));
+
+  _ubus_interests.push_back(ubus_server_register_interest(ubus, UBUS_SWITCHER_SHOWN,
+                                                          (UBusCallback)PanelMenuView::OnSwitcherShown,
+                                                          this));
+  _ubus_interests.push_back(ubus_server_register_interest(ubus, UBUS_SWITCHER_SELECTION_CHANGED,
+                                                          (UBusCallback)PanelMenuView::OnSwitcherSelectionChanged,
+                                                          this));
 
   _fade_in_animator = new Animator(_menus_fadein);
   _fade_out_animator = new Animator(_menus_fadeout);
@@ -202,11 +209,11 @@ PanelMenuView::~PanelMenuView()
   _panel_titlebar_grab_area->UnReference();
 
   UBusServer* ubus = ubus_server_get_default();
-  if (_place_shown_interest != 0)
-    ubus_server_unregister_interest(ubus, _place_shown_interest);
-
-  if (_place_hidden_interest != 0)
-    ubus_server_unregister_interest(ubus, _place_hidden_interest);
+  for (auto interest : _ubus_interests)
+  {
+    if (interest != 0)
+      ubus_server_unregister_interest(ubus, interest);
+  }
 }
 
 void
@@ -350,7 +357,7 @@ PanelMenuView::OnFadeOutChanged(double progress)
 bool
 PanelMenuView::DrawMenus()
 {
-  if (!_is_own_window && !_places_showing && _we_control_active)
+  if (!_is_own_window && !_places_showing && _we_control_active && !_switcher_showing)
   {
     if (_is_inside || _last_active_view || _show_now_activated || _new_application)
     {
@@ -367,7 +374,7 @@ PanelMenuView::DrawWindowButtons()
   if (_places_showing)
     return true;
 
-  if (!_is_own_window && _we_control_active && _is_maximized)
+  if (!_is_own_window && _we_control_active && _is_maximized && !_switcher_showing)
   {
     if (_is_inside || _show_now_activated || _new_application)
     {
@@ -864,8 +871,6 @@ PanelMenuView::Refresh()
   if (geo.width > _monitor_geo.width)
     return;
 
-  char*                 label = GetActiveViewName();
-
   int  x = 0;
   int  y = 0;
   int  width = geo.width;
@@ -883,8 +888,16 @@ PanelMenuView::Refresh()
   x = _padding;
   y = 0;
 
-  if (label)
-    DrawText(cr, x, y, width, height, nullptr, label);
+  if (_panel_title)
+  {
+    DrawText(cr, x, y, width, height, nullptr, _panel_title);
+  }
+  else
+  {
+    char* title = GetActiveViewName();
+    DrawText(cr, x, y, width, height, nullptr, title);
+    g_free(title);
+  }
 
   cairo_destroy(cr);
 
@@ -907,7 +920,6 @@ PanelMenuView::Refresh()
                                        true,
                                        rop);
   texture2D->UnReference();
-  g_free(label);
 }
 
 void
@@ -1014,7 +1026,7 @@ PanelMenuView::OnViewClosed(BamfMatcher *matcher, BamfView *view)
   {
     _new_apps.remove(glib::Object<BamfApplication>(app, glib::AddRef()));
 
-    if (_new_application == app)
+    if (_new_application == app || _new_apps.empty())
       _new_application = nullptr;
   }
 }
@@ -1500,17 +1512,56 @@ void PanelMenuView::AddProperties(GVariantBuilder* builder)
 {
 }
 
-void
-PanelMenuView::OnPlaceViewShown(GVariant* data, PanelMenuView* self)
+void PanelMenuView::OnPlaceViewShown(GVariant* data, PanelMenuView* self)
 {
   self->_places_showing = true;
   self->QueueDraw();
 }
 
-void
-PanelMenuView::OnPlaceViewHidden(GVariant* data, PanelMenuView* self)
+void PanelMenuView::OnPlaceViewHidden(GVariant* data, PanelMenuView* self)
 {
   self->_places_showing = false;
+  self->QueueDraw();
+}
+
+void PanelMenuView::OnSwitcherShown(GVariant* data, PanelMenuView* self)
+{
+  if (!self || !data)
+    return;
+
+  self->_switcher_showing = g_variant_get_boolean(data);
+
+  if (!self->_switcher_showing)
+  {
+    auto mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
+    self->_is_inside = self->GetAbsoluteGeometry().IsPointInside(mouse.x, mouse.y);
+
+    if (self->_panel_title)
+    {
+      g_free(self->_panel_title);
+      self->_panel_title = nullptr;
+    }
+  }
+  else
+  {
+    self->_show_now_activated = false;
+  }
+
+  self->Refresh();
+  self->QueueDraw();
+}
+
+void PanelMenuView::OnSwitcherSelectionChanged(GVariant* data, PanelMenuView* self)
+{
+  if (!self || !data)
+    return;
+
+  if (self->_panel_title)
+    g_free(self->_panel_title);
+
+  self->_panel_title = g_strdup(g_variant_get_string(data, 0));
+
+  self->Refresh();
   self->QueueDraw();
 }
 

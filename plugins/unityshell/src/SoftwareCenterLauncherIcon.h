@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2011 Canonical Ltd
+ * Copyright (C) 2012 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -14,39 +14,35 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
+ * Authored by: Bilal Akhtar <bilalakhtar@ubuntu.com>
+ *              Marco Trevisan (Treviño) <3v1n0@ubuntu.com>
  */
 
-#ifndef UNITY_UTILS_H
-#define UNITY_UTILS_H
+#ifndef SOFTWARE_CENTER_LAUNCHERICON_H
+#define SOFTWARE_CENTER_LAUNCHERICON_H
 
-#include <map>
-#include <string>
-
-#include <glib.h>
+#include "BamfLauncherIcon.h"
+#include <UnityCore/GLibDBusProxy.h>
 
 namespace unity
 {
-namespace dash
+namespace launcher
 {
 
-class Utils
+class SoftwareCenterLauncherIcon : public BamfLauncherIcon
 {
 public:
-  typedef std::map<std::string, GVariant*> HintsMap;
+  SoftwareCenterLauncherIcon(BamfApplication* app,
+                             std::string const& aptdaemon_trans_id,
+                             std::string const& icon_path);
 
-  static void ASVToHints(HintsMap& hints, GVariantIter *iter)
-  {
-    char* key = NULL;
-    GVariant* value = NULL;
-    while (g_variant_iter_loop(iter, "{sv}", &key, &value))
-    {
-      hints[key] = value;
-    }
-  }
+private:
+  void OnPropertyChanged(GVariant* params);
+
+  glib::DBusProxy _aptdaemon_trans;
 };
 
 }
 }
 
-#endif
+#endif //SOFTWARE_CENTER_LAUNCHERICON_H

@@ -25,6 +25,7 @@
 #include <NuxCore/Property.h>
 #include <sigc++/trackable.h>
 
+#include "Variant.h"
 #include "Categories.h"
 #include "Filters.h"
 #include "Preview.h"
@@ -54,7 +55,7 @@ class Lens : public sigc::trackable, boost::noncopyable
 {
 public:
   typedef std::shared_ptr<Lens> Ptr;
-  typedef std::map<std::string, GVariant*> Hints;
+  typedef std::map<std::string, unity::glib::Variant> Hints;
 
   Lens(std::string const& id,
        std::string const& dbus_name,
@@ -66,12 +67,23 @@ public:
        bool visible = true,
        std::string const& shortcut = "");
 
-  ~Lens();
+  Lens(std::string const& id,
+         std::string const& dbus_name,
+         std::string const& dbus_path,
+         std::string const& name,
+         std::string const& icon,
+         std::string const& description,
+         std::string const& search_hint,
+         bool visible,
+         std::string const& shortcut,
+         ModelType model_type);
 
-  void GlobalSearch(std::string const& search_string);
-  void Search(std::string const& search_string);
-  void Activate(std::string const& uri);
-  void Preview(std::string const& uri);
+  virtual ~Lens();
+
+  virtual void GlobalSearch(std::string const& search_string);
+  virtual void Search(std::string const& search_string);
+  virtual void Activate(std::string const& uri);
+  virtual void Preview(std::string const& uri);
 
   nux::RWProperty<std::string> id;
   nux::RWProperty<std::string> dbus_name;

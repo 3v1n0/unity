@@ -26,7 +26,6 @@
 #include "config.h"
 #include "GLibDBusProxy.h"
 #include "GLibWrapper.h"
-#include "Utils.h"
 
 namespace unity
 {
@@ -52,11 +51,12 @@ public:
        string const& description,
        string const& search_hint,
        bool visible,
-       string const& shortcut);
+       string const& shortcut,
+       ModelType model_type);
 
   ~Impl();
 
-  void OnProxyConnected();
+  void OnProxyConnectionChanged();
   void OnProxyDisconnected();
 
   void ResultsModelUpdated(unsigned long long begin_seqnum, 
@@ -95,6 +95,7 @@ public:
   string const& search_hint() const;
   bool visible() const;
   bool search_in_global() const;
+  bool set_search_in_global(bool val);
   string const& shortcut() const;
   Results::Ptr const& results() const;
   Results::Ptr const& global_results() const;
@@ -122,7 +123,7 @@ public:
 
   string private_connection_name_;
 
-  glib::DBusProxy proxy_;
+  glib::DBusProxy* proxy_;
   glib::Object<GCancellable> search_cancellable_;
   glib::Object<GCancellable> global_search_cancellable_;
 
@@ -139,7 +140,8 @@ Lens::Impl::Impl(Lens* owner,
                  string const& description,
                  string const& search_hint,
                  bool visible,
-                 string const& shortcut)
+                 string const& shortcut,
+                 ModelType model_type)
   : owner_(owner)
   , id_(id)
   , dbus_name_(dbus_name)
@@ -151,20 +153,46 @@ Lens::Impl::Impl(Lens* owner,
   , visible_(visible)
   , search_in_global_(false)
   , shortcut_(shortcut)
-  , results_(new Results())
-  , global_results_(new Results())
-  , categories_(new Categories())
-  , filters_(new Filters())
+  , results_(new Results(model_type))
+  , global_results_(new Results(model_type))
+  , categories_(new Categories(model_type))
+  , filters_(new Filters(model_type))
   , connected_(false)
-  , proxy_(dbus_name, dbus_path, "com.canonical.Unity.Lens")
+  , proxy_(NULL)
   , results_variant_(NULL)
   , global_results_variant_(NULL)
 {
-  proxy_.connected.connect(sigc::mem_fun(this, &Lens::Impl::OnProxyConnected));
-  proxy_.disconnected.connect(sigc::mem_fun(this, &Lens::Impl::OnProxyDisconnected));
-  proxy_.Connect("Changed", sigc::mem_fun(this, &Lens::Impl::OnChanged));
+  if (model_type == ModelType::REMOTE)
+  {
+    proxy_ = new glib::DBusProxy(dbus_name, dbus_path, "com.canonical.Unity.Lens");
+    proxy_->connected.connect(sigc::mem_fun(this, &Lens::Impl::OnProxyConnectionChanged));
+    proxy_->disconnected.connect(sigc::mem_fun(this, &Lens::Impl::OnProxyDisconnected));
+    proxy_->Connect("Changed", sigc::mem_fun(this, &Lens::Impl::OnChanged));
+  }
+
+  /* Technically these signals will only be fired by remote models, but we
+   * connect them no matter the ModelType. Dee may grow support in the future.
+   */
   results_->end_transaction.connect(sigc::mem_fun(this, &Lens::Impl::ResultsModelUpdated));
   global_results_->end_transaction.connect(sigc::mem_fun(this, &Lens::Impl::GlobalResultsModelUpdated));
+
+  owner_->id.SetGetterFunction(sigc::mem_fun(this, &Lens::Impl::id));
+  owner_->dbus_name.SetGetterFunction(sigc::mem_fun(this, &Lens::Impl::dbus_name));
+  owner_->dbus_path.SetGetterFunction(sigc::mem_fun(this, &Lens::Impl::dbus_path));
+  owner_->name.SetGetterFunction(sigc::mem_fun(this, &Lens::Impl::name));
+  owner_->icon_hint.SetGetterFunction(sigc::mem_fun(this, &Lens::Impl::icon_hint));
+  owner_->description.SetGetterFunction(sigc::mem_fun(this, &Lens::Impl::description));
+  owner_->search_hint.SetGetterFunction(sigc::mem_fun(this, &Lens::Impl::search_hint));
+  owner_->visible.SetGetterFunction(sigc::mem_fun(this, &Lens::Impl::visible));
+  owner_->search_in_global.SetGetterFunction(sigc::mem_fun(this, &Lens::Impl::search_in_global));
+  owner_->search_in_global.SetSetterFunction(sigc::mem_fun(this, &Lens::Impl::set_search_in_global));
+  owner_->shortcut.SetGetterFunction(sigc::mem_fun(this, &Lens::Impl::shortcut));
+  owner_->results.SetGetterFunction(sigc::mem_fun(this, &Lens::Impl::results));
+  owner_->global_results.SetGetterFunction(sigc::mem_fun(this, &Lens::Impl::global_results));
+  owner_->categories.SetGetterFunction(sigc::mem_fun(this, &Lens::Impl::categories));
+  owner_->filters.SetGetterFunction(sigc::mem_fun(this, &Lens::Impl::filters));
+  owner_->connected.SetGetterFunction(sigc::mem_fun(this, &Lens::Impl::connected));
+  owner_->view_type.changed.connect(sigc::mem_fun(this, &Lens::Impl::OnViewTypeChanged));
 }
 
 Lens::Impl::~Impl()
@@ -177,13 +205,19 @@ Lens::Impl::~Impl()
   {
     g_cancellable_cancel (global_search_cancellable_);
   }
+
+  if (proxy_)
+    delete proxy_;
 }
 
-void Lens::Impl::OnProxyConnected()
+void Lens::Impl::OnProxyConnectionChanged()
 {
-  proxy_.Call("InfoRequest");
-  ViewType current_view_type = owner_->view_type;
-  proxy_.Call("SetViewType", g_variant_new("(u)", current_view_type));
+  if (proxy_->IsConnected())
+  {
+    proxy_->Call("InfoRequest");
+    ViewType current_view_type = owner_->view_type;
+    proxy_->Call("SetViewType", g_variant_new("(u)", current_view_type));
+  }
 }
 
 void Lens::Impl::OnProxyDisconnected()
@@ -198,18 +232,13 @@ void Lens::Impl::ResultsModelUpdated(unsigned long long begin_seqnum,
   if (results_variant_ != NULL &&
       end_seqnum >= ExtractModelSeqnum (results_variant_))
   {
-    GVariantIter* hints_iter;
+    glib::Variant dict(results_variant_, glib::StealRef());
     Hints hints;
 
-    g_variant_get(results_variant_, "(a{sv})", &hints_iter);
-    
-    Utils::ASVToHints(hints, hints_iter);
+    dict.ASVToHints(hints);
 
     owner_->search_finished.emit(hints);
 
-    g_variant_iter_free(hints_iter);
-    
-    g_variant_unref(results_variant_);
     results_variant_ = NULL;
   }
 }
@@ -220,18 +249,13 @@ void Lens::Impl::GlobalResultsModelUpdated(unsigned long long begin_seqnum,
   if (global_results_variant_ != NULL &&
       end_seqnum >= ExtractModelSeqnum (global_results_variant_))
   {
-    GVariantIter* hints_iter;
+    glib::Variant dict(global_results_variant_, glib::StealRef());
     Hints hints;
 
-    g_variant_get(global_results_variant_, "(a{sv})", &hints_iter);
-    
-    Utils::ASVToHints(hints, hints_iter);
+    dict.ASVToHints(hints);
 
     owner_->global_search_finished.emit(hints);
 
-    g_variant_iter_free(hints_iter);
-
-    g_variant_unref(global_results_variant_);
     global_results_variant_ = NULL;
   }
 }
@@ -258,7 +282,6 @@ unsigned long long Lens::Impl::ExtractModelSeqnum(GVariant *parameters)
 
 void Lens::Impl::OnSearchFinished(GVariant* parameters)
 {
-  GVariantIter* hints_iter;
   Hints hints;
   unsigned long long reply_seqnum;
 
@@ -273,18 +296,14 @@ void Lens::Impl::OnSearchFinished(GVariant* parameters)
     return;
   }
 
-  g_variant_get(parameters, "(a{sv})", &hints_iter);
-  
-  Utils::ASVToHints(hints, hints_iter);
+  glib::Variant dict (parameters);
+  dict.ASVToHints(hints);
 
   owner_->search_finished.emit(hints);
-
-  g_variant_iter_free(hints_iter);
 }
 
 void Lens::Impl::OnGlobalSearchFinished(GVariant* parameters)
 {
-  GVariantIter* hints_iter;
   Hints hints;
   unsigned long long reply_seqnum;
   
@@ -299,13 +318,10 @@ void Lens::Impl::OnGlobalSearchFinished(GVariant* parameters)
     return;
   }
 
-  g_variant_get(parameters, "(a{sv})", &hints_iter);
-  
-  Utils::ASVToHints(hints, hints_iter);
+  glib::Variant dict (parameters);
+  dict.ASVToHints(hints);
 
   owner_->global_search_finished.emit(hints);
-
-  g_variant_iter_free(hints_iter);
 }
 
 void Lens::Impl::OnChanged(GVariant* parameters)
@@ -406,12 +422,13 @@ void Lens::Impl::UpdateProperties(bool search_in_global,
 
 void Lens::Impl::OnViewTypeChanged(ViewType view_type)
 {
-  proxy_.Call("SetViewType", g_variant_new("(u)", view_type));
+  if (proxy_ && proxy_->IsConnected())
+    proxy_->Call("SetViewType", g_variant_new("(u)", view_type));
 }
 
 void Lens::Impl::GlobalSearch(std::string const& search_string)
 {
-  LOG_DEBUG(logger) << "Global Searching " << id_ << " for " << search_string;
+  LOG_DEBUG(logger) << "Global Searching '" << id_ << "' for '" << search_string << "'";
 
   GVariantBuilder b;
   g_variant_builder_init(&b, G_VARIANT_TYPE("a{sv}"));
@@ -426,7 +443,7 @@ void Lens::Impl::GlobalSearch(std::string const& search_string)
     global_results_variant_ = NULL;
   }
 
-  proxy_.Call("GlobalSearch",
+  proxy_->Call("GlobalSearch",
               g_variant_new("(sa{sv})",
                             search_string.c_str(),
                             &b),
@@ -437,7 +454,13 @@ void Lens::Impl::GlobalSearch(std::string const& search_string)
 
 void Lens::Impl::Search(std::string const& search_string)
 {
-  LOG_DEBUG(logger) << "Searching " << id_ << " for " << search_string;
+  LOG_DEBUG(logger) << "Searching '" << id_ << "' for '" << search_string << "'";
+
+  if (!proxy_->IsConnected())
+  {
+    LOG_DEBUG(logger) << "Skipping search. Proxy not connected. ('" << id_ << "')";
+    return;
+  }
 
   GVariantBuilder b;
   g_variant_builder_init(&b, G_VARIANT_TYPE("a{sv}"));
@@ -451,64 +474,75 @@ void Lens::Impl::Search(std::string const& search_string)
     results_variant_ = NULL;
   }
 
-  proxy_.Call("Search",
-              g_variant_new("(sa{sv})",
-                            search_string.c_str(),
-                            &b),
-              sigc::mem_fun(this, &Lens::Impl::OnSearchFinished),
-              search_cancellable_);
+  proxy_->Call("Search",
+               g_variant_new("(sa{sv})",
+                             search_string.c_str(),
+                             &b),
+               sigc::mem_fun(this, &Lens::Impl::OnSearchFinished),
+               search_cancellable_);
 
   g_variant_builder_clear(&b);
 }
 
 void Lens::Impl::Activate(std::string const& uri)
 {
-  LOG_DEBUG(logger) << "Activating " << uri << " on  " << id_;
+  LOG_DEBUG(logger) << "Activating '" << uri << "' on  '" << id_ << "'";
 
-  proxy_.Call("Activate",
-              g_variant_new("(su)", uri.c_str(), 0),
-              sigc::mem_fun(this, &Lens::Impl::ActivationReply));
+  if (!proxy_->IsConnected())
+    {
+      LOG_DEBUG(logger) << "Skipping activation. Proxy not connected. ('" << id_ << "')";
+      return;
+    }
+
+  proxy_->Call("Activate",
+               g_variant_new("(su)", uri.c_str(), 0),
+               sigc::mem_fun(this, &Lens::Impl::ActivationReply));
 }
 
 void Lens::Impl::ActivationReply(GVariant* parameters)
 {
   glib::String uri;
   guint32 handled;
-  GVariantIter* hints_iter;
+  GVariant* hints_variant;
   Hints hints;
   
-  g_variant_get(parameters, "((sua{sv}))", &uri, &handled, &hints_iter);
-  
-  Utils::ASVToHints(hints, hints_iter);
+  g_variant_get(parameters, "((su@a{sv}))", &uri, &handled, &hints_variant);
+
+  glib::Variant dict (hints_variant, glib::StealRef());
+  dict.ASVToHints(hints);
 
   owner_->activated.emit(uri.Str(), static_cast<HandledType>(handled), hints);
-
-  g_variant_iter_free(hints_iter);
 }
 
 void Lens::Impl::Preview(std::string const& uri)
 {
-  LOG_DEBUG(logger) << "Previewing " << uri << " on  " << id_;
+  LOG_DEBUG(logger) << "Previewing '" << uri << "' on  '" << id_ << "'";
 
-  proxy_.Call("Preview",
-              g_variant_new("(s)", uri.c_str()),
-              sigc::mem_fun(this, &Lens::Impl::PreviewReply));
+  if (!proxy_->IsConnected())
+    {
+      LOG_DEBUG(logger) << "Skipping preview. Proxy not connected. ('" << id_ << "')";
+      return;
+    }
+
+  proxy_->Call("Preview",
+               g_variant_new("(s)", uri.c_str()),
+               sigc::mem_fun(this, &Lens::Impl::PreviewReply));
 }
 
 void Lens::Impl::PreviewReply(GVariant* parameters)
 {
   glib::String uri;
   glib::String renderer_name;
-  GVariantIter* hints_iter;
+  GVariant* hints_variant;
   Hints hints;
   
-  g_variant_get(parameters, "((ssa{sv}))", &uri, &renderer_name, &hints_iter);
-  Utils::ASVToHints(hints, hints_iter);
+  g_variant_get(parameters, "((ss@a{sv}))", &uri, &renderer_name, &hints_variant);
+
+  glib::Variant dict (hints_variant, glib::StealRef());
+  dict.ASVToHints(hints);
 
   Preview::Ptr preview = Preview::PreviewForProperties(renderer_name.Str(), hints);
   owner_->preview_ready.emit(uri.Str(), preview);
-
-  g_variant_iter_free(hints_iter);
 }
 string const& Lens::Impl::id() const
 {
@@ -552,6 +586,17 @@ bool Lens::Impl::visible() const
 
 bool Lens::Impl::search_in_global() const
 {
+  return search_in_global_;
+}
+
+bool Lens::Impl::set_search_in_global(bool val)
+{
+  if (search_in_global_ != val)
+  {
+    search_in_global_ = val;
+    owner_->search_in_global.EmitChanged(val);
+  }
+
   return search_in_global_;
 }
 
@@ -604,25 +649,33 @@ Lens::Lens(string const& id_,
                    description_,
                    search_hint_,
                    visible_,
-                   shortcut_))
-{
-  id.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::id));
-  dbus_name.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::dbus_name));
-  dbus_path.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::dbus_path));
-  name.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::name));
-  icon_hint.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::icon_hint));
-  description.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::description));
-  search_hint.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::search_hint));
-  visible.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::visible));
-  search_in_global.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::search_in_global));
-  shortcut.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::shortcut));
-  results.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::results));
-  global_results.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::global_results));
-  categories.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::categories));
-  filters.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::filters));
-  connected.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::connected));
-  view_type.changed.connect(sigc::mem_fun(pimpl, &Lens::Impl::OnViewTypeChanged));
-}
+                   shortcut_,
+                   ModelType::REMOTE))
+{}
+
+Lens::Lens(string const& id_,
+            string const& dbus_name_,
+            string const& dbus_path_,
+            string const& name_,
+            string const& icon_hint_,
+            string const& description_,
+            string const& search_hint_,
+            bool visible_,
+            string const& shortcut_,
+            ModelType model_type)
+
+  : pimpl(new Impl(this,
+                   id_,
+                   dbus_name_,
+                   dbus_path_,
+                   name_,
+                   icon_hint_,
+                   description_,
+                   search_hint_,
+                   visible_,
+                   shortcut_,
+                   model_type))
+{}
 
 Lens::~Lens()
 {

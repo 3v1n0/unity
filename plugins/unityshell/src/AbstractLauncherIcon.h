@@ -33,6 +33,8 @@
 
 #include "DndData.h"
 #include "Introspectable.h"
+#include "LauncherEntryRemote.h"
+#include "IconTextureSource.h"
 
 namespace unity
 {
@@ -53,22 +55,25 @@ public:
     : source(OTHER)
     , button(0)
     , target(0)
+    , monitor(-1)
   {
   }
 
-  ActionArg(Source source, int button, Window target = 0)
+  ActionArg(Source source, int button, Window target = 0, int monitor = -1)
     : source(source)
     , button(button)
     , target(target)
+    , monitor(monitor)
   {
   }
 
   Source source;
   int button;
   Window target;
+  int monitor;
 };
 
-class AbstractLauncherIcon : public nux::InitiallyUnownedObject, public debug::Introspectable
+class AbstractLauncherIcon : public ui::IconTextureSource, public debug::Introspectable
 {
 public:
 
@@ -104,18 +109,10 @@ public:
     QUIRK_DROP_DIM,
     QUIRK_DESAT,
     QUIRK_PULSE_ONCE,
+    QUIRK_LAST_ACTION,
 
     QUIRK_LAST,
   } Quirk;
-
-  enum TransformIndex
-  {
-    TRANSFORM_TILE,
-    TRANSFORM_IMAGE,
-    TRANSFORM_HIT_AREA,
-    TRANSFORM_GLOW,
-    TRANSFORM_EMBLEM,
-  };
 
   virtual ~AbstractLauncherIcon() {}
 
@@ -129,13 +126,15 @@ public:
 
   virtual void SetSortPriority(int priority) = 0;
 
-  virtual bool OpenQuicklist(bool default_to_first_item = false) = 0;
+  virtual bool OpenQuicklist(bool default_to_first_item = false, int monitor = -1) = 0;
 
-  virtual void        SetCenter(nux::Point3 center) = 0;
+  virtual void        SetCenter(nux::Point3 center, int monitor, nux::Geometry parent_geo) = 0;
 
-  virtual nux::Point3 GetCenter() = 0;
+  virtual nux::Point3 GetCenter(int monitor) = 0;
 
-  virtual std::vector<nux::Vector4> & GetTransform(TransformIndex index) = 0;
+  virtual nux::Point3 GetSavedCenter(int monitor) = 0;
+
+  virtual void SaveCenter() = 0;
 
   virtual void Activate(ActionArg arg) = 0;
 
@@ -143,13 +142,13 @@ public:
 
   virtual int SortPriority() = 0;
 
-  virtual int RelatedWindows() = 0;
+  virtual std::vector<Window> Windows() = 0;
 
-  virtual std::vector<Window> RelatedXids () = 0;
+  virtual std::vector<Window> WindowsForMonitor(int monitor) = 0;
 
   virtual std::string NameForWindow (Window window) = 0;
 
-  virtual const bool HasWindowOnViewport() = 0;
+  virtual const bool WindowVisibleOnMonitor(int monitor) = 0;
 
   virtual bool IsSpacer() = 0;
 
@@ -157,27 +156,21 @@ public:
 
   virtual float GetProgress() = 0;
 
-  virtual bool ShowInSwitcher() = 0;
+  virtual bool ShowInSwitcher(bool current) = 0;
 
   virtual unsigned long long SwitcherPriority() = 0;
 
-  virtual bool GetQuirk(Quirk quirk) = 0;
+  virtual bool GetQuirk(Quirk quirk) const = 0;
 
   virtual void SetQuirk(Quirk quirk, bool value) = 0;
 
   virtual struct timespec GetQuirkTime(Quirk quirk) = 0;
 
+  virtual void ResetQuirkTime(Quirk quirk) = 0;
+
   virtual IconType Type() = 0;
 
-  virtual nux::Color BackgroundColor() = 0;
-
-  virtual nux::Color GlowColor() = 0;
-
   virtual const gchar* RemoteUri() = 0;
-
-  virtual nux::BaseTexture* TextureForSize(int size) = 0;
-
-  virtual nux::BaseTexture* Emblem() = 0;
 
   virtual std::list<DbusmenuMenuitem*> Menus() = 0;
 
@@ -189,16 +182,26 @@ public:
 
   virtual void SendDndLeave() = 0;
 
-  sigc::signal<void, int> mouse_down;
-  sigc::signal<void, int> mouse_up;
-  sigc::signal<void, int> mouse_click;
-  sigc::signal<void>      mouse_enter;
-  sigc::signal<void>      mouse_leave;
+  virtual void InsertEntryRemote(LauncherEntryRemote* remote) = 0;
+
+  virtual void RemoveEntryRemote(LauncherEntryRemote* remote) = 0;
+
+  sigc::signal<void, int, int> mouse_down;
+  sigc::signal<void, int, int> mouse_up;
+  sigc::signal<void, int, int> mouse_click;
+  sigc::signal<void, int>      mouse_enter;
+  sigc::signal<void, int>      mouse_leave;
 
   sigc::signal<void, AbstractLauncherIcon*> show;
   sigc::signal<void, AbstractLauncherIcon*> hide;
   sigc::signal<void, AbstractLauncherIcon*> needs_redraw;
+  sigc::signal<void, AbstractLauncherIcon*> remove;
 
+  sigc::connection needs_redraw_connection;
+  sigc::connection on_icon_added_connection;
+  sigc::connection on_icon_removed_connection;
+  sigc::connection on_order_changed_connection;
+  sigc::connection on_expo_terminated_connection;
 };
 
 }

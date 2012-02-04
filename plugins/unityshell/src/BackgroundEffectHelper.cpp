@@ -72,7 +72,7 @@ void BackgroundEffectHelper::ProcessDamage(nux::Geometry geo)
 {
   for (BackgroundEffectHelper * bg_effect_helper : registered_list_)
   {
-    if (bg_effect_helper->cache_dirty || !bg_effect_helper->owner)
+    if (bg_effect_helper->cache_dirty || !bg_effect_helper->owner || !bg_effect_helper->enabled)
       continue;
 
     if (!geo.Intersect (bg_effect_helper->blur_geometry_).IsNull())

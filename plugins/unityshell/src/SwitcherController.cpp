@@ -45,6 +45,7 @@ Controller::Controller()
   timeout_length = 150;
   detail_on_timeout = true;
   detail_timeout_length = 1500;
+  monitor_ = 0;
 
   bg_color_ = nux::Color(0.0, 0.0, 0.0, 0.5);
 
@@ -72,11 +73,6 @@ void Controller::OnBackgroundUpdate(GVariant* data, Controller* self)
     self->view_->background_color = self->bg_color_;
 }
 
-bool IsOnOtherViewport (AbstractLauncherIcon* icon)
-{
-  return !icon->HasWindowOnViewport();
-}
-
 void Controller::Show(ShowMode show, SortMode sort, bool reverse,
                       std::vector<AbstractLauncherIcon*> results)
 {
@@ -85,11 +81,6 @@ void Controller::Show(ShowMode show, SortMode sort, bool reverse,
     std::sort(results.begin(), results.end(), CompareSwitcherItemsPriority);
   }
   
-  if (show == ShowMode::CURRENT_VIEWPORT)
-  {
-    results.erase(std::remove_if(results.begin(), results.end(), IsOnOtherViewport), results.end());
-  }
-
   model_.reset(new SwitcherModel(results));
   AddChild(model_.get());
   model_->selection_changed.connect(sigc::mem_fun(this, &Controller::OnModelSelectionChanged));
@@ -120,6 +111,9 @@ void Controller::Show(ShowMode show, SortMode sort, bool reverse,
   ubus_server_send_message(ubus_server_get_default(),
                            UBUS_PLACE_VIEW_CLOSE_REQUEST,
                            NULL);
+
+  ubus_server_send_message(ubus_server_get_default(),
+                           UBUS_SWITCHER_SHOWN, g_variant_new_boolean(true));
 }
 
 void Controller::Select(int index)
@@ -162,6 +156,10 @@ void Controller::OnModelSelectionChanged(AbstractLauncherIcon *icon)
 
     detail_timer_ = g_timeout_add(detail_timeout_length, &Controller::OnDetailTimer, this);
   }
+
+  ubus_server_send_message(ubus_server_get_default(),
+                           UBUS_SWITCHER_SELECTION_CHANGED,
+                           g_variant_new_string(icon->tooltip_text().c_str()));
 }
 
 void Controller::ConstructView()
@@ -170,6 +168,7 @@ void Controller::ConstructView()
   AddChild(view_.GetPointer());
   view_->SetModel(model_);
   view_->background_color = bg_color_;
+  view_->monitor = monitor_;
 
   if (!view_window_)
   {
@@ -190,9 +189,13 @@ void Controller::ConstructView()
   view_window_->ShowWindow(true);
 }
 
-void Controller::SetWorkspace(nux::Geometry geo)
+void Controller::SetWorkspace(nux::Geometry geo, int monitor)
 {
+  monitor_ = monitor;
   workarea_ = geo;
+
+  if (view_)
+    view_->monitor = monitor_;
 }
 
 void Controller::Hide(bool accept_state)
@@ -241,6 +244,9 @@ void Controller::Hide(bool accept_state)
     g_source_remove(detail_timer_);
   detail_timer_ = 0;
 
+  ubus_server_send_message(ubus_server_get_default(),
+                           UBUS_SWITCHER_SHOWN, g_variant_new_boolean(false));
+
   view_.Release();
 }
 
@@ -259,7 +265,7 @@ void Controller::Next()
     switch (detail_mode_)
     {
       case TAB_NEXT_WINDOW:
-        if (model_->detail_selection_index < model_->Selection()->RelatedXids ().size () - 1)
+        if (model_->detail_selection_index < model_->Selection()->Windows().size () - 1)
           model_->NextDetail();
         else
           model_->Next();
@@ -314,7 +320,7 @@ SwitcherView* Controller::GetView()
 
 void Controller::SetDetail(bool value, unsigned int min_windows)
 {
-  if (value && model_->Selection()->RelatedXids().size () >= min_windows)
+  if (value && model_->Selection()->Windows().size () >= min_windows)
   {
     model_->detail_selection = true;
     detail_mode_ = TAB_NEXT_WINDOW_LOOP;
@@ -399,7 +405,7 @@ void Controller::SelectFirstItem()
   unsigned int first_second = 0; // first icons second highest active
   unsigned int second_first = 0; // second icons first highest active
 
-  for (guint32 xid : first->RelatedXids())
+  for (guint32 xid : first->Windows())
   {
     unsigned int num = WindowManager::Default()->GetWindowActiveNumber(xid);
 
@@ -414,7 +420,7 @@ void Controller::SelectFirstItem()
     }
   }
 
-  for (guint32 xid : second->RelatedXids())
+  for (guint32 xid : second->Windows())
   {
     second_first = MAX (WindowManager::Default()->GetWindowActiveNumber(xid), second_first);
   }

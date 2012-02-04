@@ -44,10 +44,13 @@
 
 #include "DashStyle.h"
 
-static const nux::Color kExpandDefaultTextColor(1.0f, 1.0f, 1.0f, 0.5f);
-static const nux::Color kExpandHoverTextColor(1.0f, 1.0f, 1.0f, 1.0f);
-static const float kExpandDefaultIconOpacity = 0.5f;
-static const float kExpandHoverIconOpacity = 1.0f;
+namespace
+{
+const nux::Color kExpandDefaultTextColor(1.0f, 1.0f, 1.0f, 0.5f);
+const nux::Color kExpandHoverTextColor(1.0f, 1.0f, 1.0f, 1.0f);
+const float kExpandDefaultIconOpacity = 0.5f;
+const float kExpandHoverIconOpacity = 1.0f;
+}
 
 namespace unity
 {
@@ -97,8 +100,8 @@ PlacesGroup::PlacesGroup()
   _expand_label->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_LEFT);
   _expand_label->SetTextColor(kExpandDefaultTextColor);
   _expand_label->SetAcceptKeyNavFocus(true);
-  _expand_label->OnKeyNavFocusActivate.connect(sigc::mem_fun(this, &PlacesGroup::OnLabelActivated));
-  _expand_label->OnKeyNavFocusChange.connect(sigc::mem_fun(this, &PlacesGroup::OnLabelFocusChanged));
+  _expand_label->key_nav_focus_activate.connect(sigc::mem_fun(this, &PlacesGroup::OnLabelActivated));
+  _expand_label->key_nav_focus_change.connect(sigc::mem_fun(this, &PlacesGroup::OnLabelFocusChanged));
 
   _expand_layout->AddView(_expand_label, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
@@ -141,7 +144,7 @@ PlacesGroup::OnLabelActivated(nux::Area* label)
 }
 
 void
-PlacesGroup::OnLabelFocusChanged(nux::Area* label)
+PlacesGroup::OnLabelFocusChanged(nux::Area* label, bool has_focus, nux::KeyNavDirection direction)
 {
   if (_expand_label->HasKeyFocus() || _expand_icon->HasKeyFocus())
   {
@@ -252,7 +255,7 @@ PlacesGroup::RefreshLabel()
     if (_expand_icon->IsVisible())
     {
       _expand_icon->SetAcceptKeyNavFocus(true);
-      _expand_icon->OnKeyNavFocusChange.connect(sigc::mem_fun(this, &PlacesGroup::OnLabelFocusChanged));
+      _expand_icon->key_nav_focus_change.connect(sigc::mem_fun(this, &PlacesGroup::OnLabelFocusChanged));
     }
   }
 

@@ -20,8 +20,6 @@
  *
  */
 
-#include "config.h"
-
 #include <Nux/Nux.h>
 #include <glib.h>
 #include <glib/gi18n-lib.h>
@@ -32,92 +30,64 @@
 #include "FilterRatingsButton.h"
 #include "FilterRatingsWidget.h"
 
-
-namespace unity {
+namespace unity
+{
+namespace dash
+{
 
 NUX_IMPLEMENT_OBJECT_TYPE(FilterRatingsWidget);
 
-  FilterRatingsWidget::FilterRatingsWidget (NUX_FILE_LINE_DECL)
-      : FilterExpanderLabel (_("Rating"), NUX_FILE_LINE_PARAM),
-        last_rating_ (0.0f)
-  {
-    any_button_ = new FilterBasicButton(_("All"), NUX_TRACKER_LOCATION);
-    any_button_->state_change.connect(sigc::mem_fun(this, &FilterRatingsWidget::OnAnyButtonActivated));
-    any_button_->SetLabel(_("All"));
+FilterRatingsWidget::FilterRatingsWidget(NUX_FILE_LINE_DECL)
+  : FilterExpanderLabel(_("Rating"), NUX_FILE_LINE_PARAM)
+{
+  all_button_ = new FilterAllButton(NUX_TRACKER_LOCATION);
 
-    SetRightHandView(any_button_);
+  nux::VLayout* layout = new nux::VLayout(NUX_TRACKER_LOCATION);
+  layout->SetTopAndBottomPadding(11, 12);
+  ratings_ = new FilterRatingsButton(NUX_TRACKER_LOCATION);
 
-    nux::VLayout* layout = new nux::VLayout (NUX_TRACKER_LOCATION);
-    ratings_ = new FilterRatingsButton (NUX_TRACKER_LOCATION);
+  layout->AddView(ratings_);
 
-    layout->AddView(ratings_);
-    SetContents(layout);
-  }
+  SetRightHandView(all_button_);
+  SetContents(layout);
+}
 
-  FilterRatingsWidget::~FilterRatingsWidget()
-  {
-  }
+FilterRatingsWidget::~FilterRatingsWidget()
+{
+}
 
-  void FilterRatingsWidget::OnAnyButtonActivated(nux::View *view)
-  {
-    if (any_button_->Active())
-    {
-      last_rating_ = filter_->rating;
-      // we need to make sure the property changes, otherwise there'll be no
-      // signals, so we'll set it to 0.0f
-      filter_->rating = 0.0f;
-      filter_->Clear();
-    }
-    else
-    {
-      filter_->rating = last_rating_;
-    }
-  }
+void FilterRatingsWidget::SetFilter(Filter::Ptr const& filter)
+{
+  filter_ = std::static_pointer_cast<RatingsFilter>(filter);
 
-  void FilterRatingsWidget::OnFilterRatingChanged(float new_rating)
-  {
-    if (new_rating <= 0.0f)
-    {
-      any_button_->SetActive(true);
-    }
-    else
-    {
-      any_button_->SetActive(false);
-    }
-  }
+  all_button_->SetFilter(filter_);
+  expanded = !filter_->collapsed();
+  ratings_->SetFilter(filter_);
 
-  void FilterRatingsWidget::SetFilter (dash::Filter::Ptr filter)
-  {
-    filter_ = std::static_pointer_cast<dash::RatingsFilter>(filter);
-    filter_->rating.changed.connect (sigc::mem_fun (this, &FilterRatingsWidget::OnFilterRatingChanged));
-    ratings_->SetFilter(filter);
-    SetLabel(filter_->name);
-    NeedRedraw();
-  }
+  SetLabel(filter_->name);
+  NeedRedraw();
+}
 
-  std::string FilterRatingsWidget::GetFilterType ()
-  {
-    return "FilterRatingsWidget";
-  }
+std::string FilterRatingsWidget::GetFilterType()
+{
+  return "FilterRatingsWidget";
+}
 
-  void FilterRatingsWidget::Draw(nux::GraphicsEngine& GfxContext, bool force_draw) {
-    nux::Geometry geo = GetGeometry();
+void FilterRatingsWidget::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
+{
+  nux::Geometry const& geo = GetGeometry();
 
-    GfxContext.PushClippingRectangle(geo);
-    nux::GetPainter().PaintBackground(GfxContext, geo);
-    GfxContext.PopClippingRectangle();
-  }
+  GfxContext.PushClippingRectangle(geo);
+  nux::GetPainter().PaintBackground(GfxContext, geo);
+  GfxContext.PopClippingRectangle();
+}
 
-  void FilterRatingsWidget::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw) {
-    GfxContext.PushClippingRectangle(GetGeometry());
+void FilterRatingsWidget::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
+{
+  GfxContext.PushClippingRectangle(GetGeometry());
+  GetLayout()->ProcessDraw(GfxContext, force_draw);
+  GfxContext.PopClippingRectangle();
+}
 
-    GetLayout()->ProcessDraw(GfxContext, force_draw);
-
-    GfxContext.PopClippingRectangle();
-  }
-
-  void FilterRatingsWidget::PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw) {
-    nux::View::PostDraw(GfxContext, force_draw);
-  }
-
-};
+} // namespace dash
+} // namespace unity

@@ -70,7 +70,6 @@ add_executable (test-unit
                 ${UNITY_SRC}/
                 )
 add_dependencies (test-unit unity-core-${UNITY_API_VERSION})
-
 add_subdirectory (test-input-remover)
 add_subdirectory (test-minimize-window-handler)
 add_subdirectory (test-get-transients)
@@ -107,21 +106,29 @@ if (GTEST_FOUND AND
                  test_service_model.h)
   add_dependencies (test-gtest-service unity-core-${UNITY_API_VERSION})
 
+
 # The actual test executable (xless) - do not put anything that requires X in here
   add_executable(test-gtest-xless
                  test_animator.cpp
+                 test_launcher_model.cpp
                  test_glib_object.cpp
                  test_glib_object_utils.cpp
                  test_glib_object_utils.h
                  test_glib_signals.cpp
                  test_glib_signals_utils.cpp
                  test_glib_signals_utils.h
+                 test_glib_variant.cpp
                  ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_marshal.cpp
                  test_favorite_store_gsettings.cpp
+                 test_favorite_store_private.cpp
+                 test_home_lens.cpp
+                 test_shortcut_model.cpp
+                 test_shortcut_private.cpp
                  test_introspection.cpp
                  test_main_xless.cpp
-		 test_grabhandle.cpp
+                 test_grabhandle.cpp
                  ${UNITY_SRC}/AbstractLauncherIcon.h
+                 ${UNITY_SRC}/AbstractShortcutHint.h
                  ${UNITY_SRC}/Animator.cpp
                  ${UNITY_SRC}/Animator.h
                  ${UNITY_SRC}/DebugDBusInterface.h
@@ -132,7 +139,18 @@ if (GTEST_FOUND AND
                  ${UNITY_SRC}/FavoriteStore.h
                  ${UNITY_SRC}/FavoriteStoreGSettings.cpp
                  ${UNITY_SRC}/FavoriteStoreGSettings.h
+                 ${UNITY_SRC}/IconTextureSource.h
+                 ${UNITY_SRC}/IconTextureSource.cpp
+                 ${UNITY_SRC}/LauncherModel.cpp
+                 ${UNITY_SRC}/LauncherModel.h
+                 ${UNITY_SRC}/FavoriteStorePrivate.cpp
+                 ${UNITY_SRC}/FavoriteStorePrivate.h
                  ${UNITY_SRC}/MockLauncherIcon.h
+                 ${UNITY_SRC}/MockShortcutHint.h
+                 ${UNITY_SRC}/ShortcutModel.cpp
+                 ${UNITY_SRC}/ShortcutModel.h
+                 ${UNITY_SRC}/ShortcutHintPrivate.cpp
+                 ${UNITY_SRC}/ShortcutHintPrivate.h
                  ${UNITY_SRC}/SwitcherModel.cpp
                  ${UNITY_SRC}/SwitcherModel.h
                  ${UNITY_SRC}/Introspectable.cpp
@@ -143,11 +161,11 @@ if (GTEST_FOUND AND
                  ${UNITY_SRC}/Timer.h
                  ${UNITY_SRC}/WindowManager.cpp
                  ${UNITY_SRC}/WindowManager.h
-		 ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle.cpp
-		 ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle-group.cpp
-		 ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle-impl-factory.cpp
-		 ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle-layout.cpp
-		 ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-texture.cpp
+                 ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle.cpp
+                 ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle-group.cpp
+                 ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle-impl-factory.cpp
+                 ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle-layout.cpp
+                 ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-texture.cpp
                  )
   target_link_libraries(test-gtest-xless ${GTEST_BOTH_LIBRARIES} ${GMOCK_LIB} ${GMOCK_MAIN_LIB})
   add_test(UnityGTestXless test-gtest-xless)
@@ -175,10 +193,15 @@ if (GTEST_FOUND AND
                  test_dashview_impl.cpp
                  test_texture_cache.cpp
                  test_main.cpp
+                 test_icon_loader.cpp
                  ${UNITY_SRC}/DashViewPrivate.cpp
                  ${UNITY_SRC}/DashViewPrivate.h
                  ${UNITY_SRC}/TextureCache.cpp
                  ${UNITY_SRC}/TextureCache.h
+                 ${UNITY_SRC}/IconLoader.cpp
+                 ${UNITY_SRC}/IconLoader.h
+                 ${UNITY_SRC}/Timer.cpp
+                 ${UNITY_SRC}/Timer.h
                 )
   target_link_libraries(test-gtest ${GTEST_BOTH_LIBRARIES})
   add_test(UnityGTest test-gtest)
