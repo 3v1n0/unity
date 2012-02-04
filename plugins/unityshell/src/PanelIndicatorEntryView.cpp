@@ -50,7 +50,6 @@ PanelIndicatorEntryView::PanelIndicatorEntryView(
   : TextureArea(NUX_TRACKER_LOCATION)
   , proxy_(proxy)
   , type_(type)
-  , util_cg_(CAIRO_FORMAT_ARGB32, 1, 1)
   , texture_layer_(nullptr)
   , padding_(padding < 0 ? 0 : padding)
   , opacity_(1.0f)
@@ -80,6 +79,7 @@ PanelIndicatorEntryView::~PanelIndicatorEntryView()
   on_indicator_updated_connection_.disconnect();
   on_panelstyle_changed_connection_.disconnect();
   g_signal_handler_disconnect(gtk_settings_get_default(), on_font_changed_connection_);
+
   if (texture_layer_)
     delete texture_layer_;
 }
@@ -358,17 +358,21 @@ void PanelIndicatorEntryView::Refresh()
   if (!IsVisible())
   {
     SetVisible(false);
+
+    if (texture_layer_)
+    {
+      texture_layer_ = nullptr;
+      delete texture_layer_;
+    }
+
+    QueueDraw();
+    refreshed.emit(this);
+
     return;
   }
 
   glib::Object<PangoLayout> layout;
-  PangoFontDescription* desc = nullptr;
-  PangoAttrList*        attrs = nullptr;
-  GtkSettings*          settings = gtk_settings_get_default();
-  cairo_t*              cr;
-  char*                 font_description = nullptr;
-  GdkScreen*            screen = gdk_screen_get_default();
-  int                   dpi = 0;
+  cairo_t* cr;
 
   std::string label = proxy_->label();
   glib::Object<GdkPixbuf> pixbuf = MakePixbuf();
@@ -377,15 +381,6 @@ void PanelIndicatorEntryView::Refresh()
   unsigned int icon_width = 0;
   unsigned int height = PANEL_HEIGHT;
   unsigned int text_width = 0;
-
-  if (proxy_->show_now())
-  {
-    if (!pango_parse_markup(label.c_str(), -1, '_', &attrs, nullptr, nullptr, nullptr))
-    {
-      g_debug("pango_parse_markup failed");
-    }
-  }
-  boost::erase_all(label, "_");
 
   // First lets figure out our size
   if (pixbuf && proxy_->image_visible())
@@ -397,16 +392,32 @@ void PanelIndicatorEntryView::Refresh()
   if (!label.empty() && proxy_->label_visible())
   {
     PangoContext* cxt;
+    PangoAttrList* attrs = nullptr;
     PangoRectangle log_rect;
+    GdkScreen* screen = gdk_screen_get_default();
+    GtkSettings* settings = gtk_settings_get_default();
+    PangoFontDescription* desc = nullptr;
+    glib::String font_description;
+    int dpi;
 
-    cr = util_cg_.GetContext();
+    if (proxy_->show_now())
+    {
+      if (!pango_parse_markup(label.c_str(), -1, '_', &attrs, nullptr, nullptr, nullptr))
+      {
+        g_debug("pango_parse_markup failed");
+      }
+    }
+    boost::erase_all(label, "_");
 
     g_object_get(settings,
-                 "gtk-font-name", &font_description,
+                 "gtk-font-name", font_description.AsOutParam(),
                  "gtk-xft-dpi", &dpi,
                  nullptr);
     desc = pango_font_description_from_string(font_description);
     pango_font_description_set_weight(desc, PANGO_WEIGHT_NORMAL);
+
+    nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, 1, 1);
+    cr = cairo_graphics.GetContext();
 
     layout = pango_cairo_create_layout(cr);
     if (attrs)
@@ -431,7 +442,6 @@ void PanelIndicatorEntryView::Refresh()
     width += text_width;
 
     pango_font_description_free(desc);
-    g_free(font_description);
     cairo_destroy(cr);
   }
 
@@ -440,17 +450,16 @@ void PanelIndicatorEntryView::Refresh()
 
   SetMinimumWidth(width);
 
-  nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, width, height);
-  cr = cairo_graphics.GetContext();
+  nux::CairoGraphics cg(CAIRO_FORMAT_ARGB32, width, height);
+  cr = cg.GetContext();
   cairo_set_line_width(cr, 1);
-
   cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
   cairo_paint(cr);  
 
   cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
   DrawEntryContent(cr, width, height, pixbuf, layout);
 
-  nux::BaseTexture* texture2D = texture_from_cairo_graphics(cairo_graphics);
+  nux::BaseTexture* texture2D = texture_from_cairo_graphics(cg);
   cairo_destroy(cr);
 
   nux::TexCoordXForm texxform;
@@ -472,7 +481,7 @@ void PanelIndicatorEntryView::Refresh()
   texture2D->UnReference();
 
   SetVisible(true);
-  NeedRedraw();
+  QueueDraw();
   refreshed.emit(this);
 }
 

@@ -82,7 +82,6 @@ public:
 private:
   unity::indicator::Entry::Ptr proxy_;
   IndicatorEntryType type_;
-  nux::CairoGraphics util_cg_;
   nux::TextureLayer* texture_layer_;
   int padding_;
   double opacity_;
