@@ -37,7 +37,7 @@ nux::logging::Logger logger("unity.dash.controller");
 }
 
 Controller::Controller()
-  : launcher_width(66)
+  : launcher_width(64)
   , panel_height(24)
   , window_(0)
   , visible_(false)

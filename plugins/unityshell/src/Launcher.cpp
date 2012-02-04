@@ -76,6 +76,8 @@ const int PULSE_BLINK_LAMBDA = 2;
 
 const float BACKLIGHT_STRENGTH = 0.9f;
 const int panel_height = 24;
+const int ICON_PADDING = 6;
+const int RIGHT_LINE_WIDTH = 1;
 
 }
 
@@ -1753,7 +1755,8 @@ void Launcher::Resize()
   UScreen* uscreen = UScreen::GetDefault();
   auto geo = uscreen->GetMonitorGeometry(monitor());
 
-  nux::Geometry new_geometry(geo.x, geo.y + panel_height, _icon_size + 12, geo.height - panel_height);
+  int width = _icon_size + ICON_PADDING*2 + RIGHT_LINE_WIDTH - 2;
+  nux::Geometry new_geometry(geo.x, geo.y + panel_height, width, geo.height - panel_height);
   SetMaximumHeight(new_geometry.height);
   _parent->SetGeometry(new_geometry);
   SetGeometry(new_geometry);
@@ -1878,6 +1881,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   nux::Geometry geo_absolute = GetAbsoluteGeometry();
   RenderArgs(args, bkg_box, &launcher_alpha, geo_absolute);
+  bkg_box.width -= RIGHT_LINE_WIDTH;
 
   if (_drag_icon && _render_drag_window)
   {
@@ -1982,12 +1986,15 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   if (!_dash_is_open)
   {
+    const double right_line_opacity = 0.15f * launcher_alpha;
+
     gPainter.Paint2DQuadColor(GfxContext,
-                              nux::Geometry(bkg_box.x + bkg_box.width - 1,
+                              nux::Geometry(bkg_box.x + bkg_box.width,
                                             bkg_box.y,
-                                            1,
+                                            RIGHT_LINE_WIDTH,
                                             bkg_box.height),
-                              nux::Color(0x60606060));
+                              nux::color::White * right_line_opacity);
+
     gPainter.Paint2DQuadColor(GfxContext,
                               nux::Geometry(bkg_box.x,
                                             bkg_box.y,
