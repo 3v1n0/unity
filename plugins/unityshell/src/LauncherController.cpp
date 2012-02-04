@@ -130,6 +130,8 @@ public:
 
   void OnScreenChanged(int primary_monitor, std::vector<nux::Geometry>& monitors);
 
+  void OnWindowFocusChanged (guint32 xid);
+
   void ReceiveMouseDownOutsideArea(int x, int y, unsigned long button_flags, unsigned long key_flags);
 
   void ReceiveLauncherKeyPress(unsigned long eventType,
@@ -168,6 +170,7 @@ public:
   bool                   launcher_grabbed;
   bool                   reactivate_keynav;
   int                    reactivate_index;
+  bool                   keynav_restore_window_;
 
   UBusManager            ubus;
 
@@ -196,6 +199,7 @@ Controller::Impl::Impl(Display* display, Controller* parent)
   launcher_keynav = false;
   launcher_grabbed = false;
   reactivate_keynav = false;
+  keynav_restore_window_ = true;
 
   int i = 0;
   for (auto monitor : monitors)
@@ -242,6 +246,9 @@ Controller::Impl::Impl(Display* display, Controller* parent)
 
   uscreen->changed.connect(sigc::mem_fun(this, &Controller::Impl::OnScreenChanged));
 
+  WindowManager& plugin_adapter = *(WindowManager::Default()); 
+  plugin_adapter.window_focus_changed.connect (sigc::mem_fun (this, &Controller::Impl::OnWindowFocusChanged));
+
   launcher_key_press_time_ = { 0, 0 };
 
   ubus.RegisterInterest(UBUS_QUICKLIST_END_KEY_NAV, [&](GVariant * args) {
@@ -275,6 +282,22 @@ void Controller::Impl::OnScreenChanged(int primary_monitor, std::vector<nux::Geo
   }
 
   launchers.resize(num_monitors);
+}
+
+void Controller::Impl::OnWindowFocusChanged (guint32 xid)
+{
+  static bool keynav_first_focus = false;
+
+  if (keynav_first_focus)
+  {
+    keynav_first_focus = false;
+    keynav_restore_window_ = false;
+    parent_->KeyNavTerminate(false);
+  }
+  else if (launcher_keynav)
+  {
+    keynav_first_focus = true;
+  } 
 }
 
 Launcher* Controller::Impl::CreateLauncher(int monitor)
@@ -1002,6 +1025,7 @@ void Controller::KeyNavActivate()
 
   pimpl->reactivate_keynav = false;
   pimpl->launcher_keynav = true;
+  pimpl->keynav_restore_window_ = true;
   pimpl->keyboard_launcher_ = pimpl->launchers[pimpl->MonitorWithMouse()];
   pimpl->keyboard_launcher_->ShowShortcuts(false);
 
@@ -1009,6 +1033,7 @@ void Controller::KeyNavActivate()
   pimpl->model_->SetSelection(0);
 
   pimpl->ubus.SendMessage(UBUS_LAUNCHER_START_KEY_SWTICHER, g_variant_new_boolean(true));
+  pimpl->ubus.SendMessage(UBUS_LAUNCHER_START_KEY_NAV, NULL);
 }
 
 void Controller::KeyNavNext()
@@ -1043,6 +1068,7 @@ void Controller::KeyNavTerminate(bool activate)
     pimpl->keyboard_launcher_.Release();
 
   pimpl->ubus.SendMessage(UBUS_LAUNCHER_END_KEY_SWTICHER, g_variant_new_boolean(true));
+  pimpl->ubus.SendMessage(UBUS_LAUNCHER_END_KEY_NAV, g_variant_new_boolean(pimpl->keynav_restore_window_));
 }
 
 bool Controller::KeyNavIsActive() const
@@ -1096,7 +1122,11 @@ void Controller::Impl::ReceiveLauncherKeyPress(unsigned long eventType,
       parent_->KeyNavNext();
       break;
 
-      // esc/left (close quicklist or exit laucher key-focus)
+      // super/control/alt/esc/left (close quicklist or exit laucher key-focus)
+    case NUX_VK_LWIN:
+    case NUX_VK_RWIN:
+    case NUX_VK_CONTROL:
+    case NUX_VK_MENU:
     case NUX_VK_LEFT:
     case NUX_KP_LEFT:
     case NUX_VK_ESCAPE:
