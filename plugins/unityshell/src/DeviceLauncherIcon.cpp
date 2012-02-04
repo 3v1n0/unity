@@ -130,6 +130,7 @@ std::list<DbusmenuMenuitem*> DeviceLauncherIcon::GetMenus()
   {
     menu_item = dbusmenu_menuitem_new();
 
+    // TRANSLATORS: This refers to the action of formatting a device
     dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Format..."));
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
