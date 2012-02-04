@@ -24,7 +24,7 @@ TEST(TestIndicatorEntry, TestConstruction)
   EXPECT_TRUE(entry.image_visible());
   EXPECT_FALSE(entry.active());
   EXPECT_FALSE(entry.show_now());
-  EXPECT_FALSE(entry.IsUnused());
+  EXPECT_TRUE(entry.visible());
   EXPECT_EQ(entry.image_type(), 1);
   EXPECT_EQ(entry.image_data(), "some icon");
   EXPECT_EQ(entry.priority(), -1);
@@ -75,21 +75,6 @@ TEST(TestIndicatorEntry, TestAssignment)
   EXPECT_FALSE(entry.image_visible());
   EXPECT_EQ(counter.count, 1);
   EXPECT_EQ(entry.priority(), 5);
-}
-
-TEST(TestIndicatorEntry, TestUnused)
-{
-
-  indicator::Entry entry("id", "name_hint", "label", true, true,
-                         0, "some icon", false, true, -1);
-
-  Counter counter;
-  entry.updated.connect(sigc::mem_fun(counter, &Counter::increment));
-
-  entry.MarkUnused();
-  EXPECT_TRUE(entry.IsUnused());
-  // Setting unused emits updated.
-  EXPECT_EQ(counter.count, 1);
 }
 
 TEST(TestIndicatorEntry, TestShowNowEvents)
@@ -206,5 +191,38 @@ TEST(TestIndicatorEntry, TestOnShowMenu)
   EXPECT_EQ(recorder.button, 1);
 }
 
+TEST(TestIndicatorEntry, TestInvisible)
+{
+
+  indicator::Entry entry("id", "name_hint", "label", true, true,
+                         0, "some icon", false, false, -1);
+
+  EXPECT_TRUE(entry.visible());
+
+  entry.setLabel("", true, true);
+  EXPECT_FALSE(entry.visible());
+
+  entry.setLabel("valid-label", true, true);
+  EXPECT_TRUE(entry.visible());
+
+  entry.setLabel("invalid-label", true, false);
+  EXPECT_FALSE(entry.visible());
+
+  entry.setImage(0, "valid-image", true, true);
+  EXPECT_TRUE(entry.visible());
+
+  entry.setImage(0, "", true, true);
+  EXPECT_FALSE(entry.visible());
+
+  entry.setImage(0, "valid-image", true, true);
+  EXPECT_TRUE(entry.visible());
+
+  entry.setImage(0, "invalid-image", true, false);
+  EXPECT_FALSE(entry.visible());
+
+  entry.setLabel("valid-label", true, true);
+  entry.setImage(0, "valid-image", true, true);
+  EXPECT_TRUE(entry.visible());
+}
 
 }

@@ -27,8 +27,6 @@ namespace unity
 namespace indicator
 {
 
-std::string const Entry::UNUSED_ID("|");
-
 Entry::Entry(std::string const& id,
              std::string const &name_hint,
              std::string const& label,
@@ -102,6 +100,11 @@ std::string const& Entry::image_data() const
 int Entry::priority() const
 {
   return priority_;
+}
+
+bool Entry::visible() const
+{
+  return ((label_visible_ && !label_.empty()) || (image_visible_ && !image_data_.empty()));
 }
 
 void Entry::set_active(bool active)
@@ -184,25 +187,6 @@ void Entry::set_show_now(bool show_now)
   show_now_ = show_now;
   show_now_changed.emit(show_now);
   updated.emit();
-}
-
-void Entry::MarkUnused()
-{
-  id_ = UNUSED_ID;
-  name_hint_ = "";
-  label_ = "";
-  label_sensitive_ = false;
-  label_visible_ = false;
-  image_type_ = 0;
-  image_data_ = "";
-  image_sensitive_ = false;
-  image_visible_ = false;
-  updated.emit();
-}
-
-bool Entry::IsUnused() const
-{
-  return id_ == UNUSED_ID;
 }
 
 void Entry::ShowMenu(unsigned int xid, int x, int y, unsigned int button, unsigned int timestamp)

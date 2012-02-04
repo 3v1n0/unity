@@ -43,7 +43,6 @@ class Entry
 {
 public:
   typedef boost::shared_ptr<Entry> Ptr;
-  static std::string const UNUSED_ID;
 
   Entry(std::string const& id,
         std::string const& name_hint,
@@ -74,6 +73,8 @@ public:
 
   int priority() const;
 
+  bool visible() const;
+
   /**
    * Whether this entry should be shown to the user.
    * Example uses: Application menubar items are only shown when the user
@@ -81,9 +82,6 @@ public:
    */
   bool show_now() const;
   void set_show_now(bool show_now);
-
-  void MarkUnused();
-  bool IsUnused() const;
 
   void ShowMenu(unsigned int xid, int x, int y, unsigned int button, unsigned int timestamp);
   void SecondaryActivate(unsigned int timestamp);

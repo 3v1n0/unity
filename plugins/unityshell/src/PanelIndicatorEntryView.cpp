@@ -471,10 +471,7 @@ double PanelIndicatorEntryView::GetOpacity()
 
 std::string PanelIndicatorEntryView::GetName() const
 {
-  if (proxy_->IsUnused())
-    return "";
-  else
-    return proxy_->id().c_str();
+  return proxy_->id().c_str();
 }
 
 void PanelIndicatorEntryView::AddProperties(GVariantBuilder* builder)
@@ -497,7 +494,7 @@ bool PanelIndicatorEntryView::GetShowNow()
 
 void PanelIndicatorEntryView::GetGeometryForSync(indicator::EntryLocationMap& locations)
 {
-  if (proxy_->IsUnused())
+  if (!IsVisible())
     return;
 
   locations[proxy_->id()] = GetAbsoluteGeometry();
@@ -543,6 +540,15 @@ void PanelIndicatorEntryView::SetDisabled(bool disabled)
 bool PanelIndicatorEntryView::IsDisabled()
 {
   return (disabled_ || !proxy_.get() || !IsSensitive());
+}
+
+bool PanelIndicatorEntryView::IsVisible()
+{
+  if (proxy_.get())
+  {
+    return proxy_->visible();
+  }
+  return false;
 }
 
 void PanelIndicatorEntryView::OnFontChanged(GObject* gobject, GParamSpec* pspec,

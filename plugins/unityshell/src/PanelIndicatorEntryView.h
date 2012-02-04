@@ -62,6 +62,7 @@ public:
   bool IsEntryValid() const;
   bool IsSensitive() const;
   bool IsActive() const;
+  bool IsVisible();
   int  GetEntryPriority() const;
 
   void DashShown();
