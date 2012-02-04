@@ -402,7 +402,7 @@ get_entry_parent_indicator (IndicatorObjectEntry *entry)
 }
 
 static IndicatorObjectEntry *
-get_indicator_entry_by_id (const gchar *entry_id)
+get_indicator_entry_by_id (PanelService *self, const gchar *entry_id)
 {
   IndicatorObjectEntry *entry;
   entry = NULL;
@@ -430,13 +430,15 @@ get_indicator_entry_by_id (const gchar *entry_id)
           }
         else
           {
-            data_size = sizeof (IndicatorObject*);
-
-            if (write (fds[1], entry->parent_object, data_size) != data_size ||
-                !INDICATOR_IS_OBJECT (entry->parent_object))
-            {
-              entry = NULL;
-            }
+            if (g_slist_find (self->priv->indicators, entry->parent_object))
+              {
+                if (!INDICATOR_IS_OBJECT (entry->parent_object))
+                  entry = NULL;
+              }
+            else
+              {
+                entry = NULL;
+              }
           }
 
         close (fds[0]);
@@ -1254,7 +1256,7 @@ panel_service_sync_geometry (PanelService *self,
   gboolean valid_entry = TRUE;
   PanelServicePrivate  *priv = self->priv;
 
-  entry = get_indicator_entry_by_id (entry_id);
+  entry = get_indicator_entry_by_id (self, entry_id);
 
   /* If the entry we read is not valid, maybe it has already been removed
    * or unparented, so we need to make sure that the related key on the
@@ -1624,7 +1626,7 @@ panel_service_show_entry (PanelService *self,
 
   g_return_if_fail (PANEL_IS_SERVICE (self));
 
-  entry = get_indicator_entry_by_id (entry_id);
+  entry = get_indicator_entry_by_id (self, entry_id);
   object = get_entry_parent_indicator (entry);
 
   panel_service_actually_show_entry (self, object, entry, xid, x, y, button, timestamp);
@@ -1665,7 +1667,7 @@ panel_service_secondary_activate_entry (PanelService *self,
   IndicatorObject      *object;
   IndicatorObjectEntry *entry;
 
-  entry = get_indicator_entry_by_id (entry_id);
+  entry = get_indicator_entry_by_id (self, entry_id);
   g_return_if_fail (entry);
 
   object = get_entry_parent_indicator (entry);
@@ -1681,7 +1683,7 @@ panel_service_scroll_entry (PanelService   *self,
   IndicatorObject      *object;
   IndicatorObjectEntry *entry;
 
-  entry = get_indicator_entry_by_id (entry_id);
+  entry = get_indicator_entry_by_id (self, entry_id);
   g_return_if_fail (entry);
 
   GdkScrollDirection direction = delta < 0 ? GDK_SCROLL_DOWN : GDK_SCROLL_UP;
