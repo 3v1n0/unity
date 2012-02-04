@@ -67,3 +67,16 @@ Outcome
   The text previously selected is pasted on the search bar at mouse pointer
   position, if the operation is repeated the text is inserted where
   the mouse pointer is.
+
+Search No Results Hint
+----------------------
+This test show that when you search in any lens and find nothing a message appears.
+
+#. Open the Dash.
+#. Go to any Lens (Leave the Home View)
+#. Type a nonsense string like "lkasdjfl"
+
+Outcome
+  A message simillar to "Sorry, there is nothing that matches your search" will appear
+  in the middle of the dash.
+
