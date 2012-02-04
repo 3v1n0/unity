@@ -644,11 +644,11 @@ PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   GfxContext.PopClippingRectangle();
 }
 
-gchar*
+std::string
 PanelMenuView::GetActiveViewName()
 {
-  gchar*         label = nullptr;
-  BamfWindow*    window;
+  std::string label;
+  BamfWindow* window;
 
   _is_own_window = false;
 
@@ -661,43 +661,40 @@ PanelMenuView::GetActiveViewName()
     if (std::find(our_xids.begin(), our_xids.end(), window_xid) != our_xids.end())
     {
       _is_own_window = true;
-      return g_strdup("");
+      return "";
     }
 
     if (BAMF_IS_WINDOW(window) &&
         bamf_window_get_window_type(window) == BAMF_WINDOW_DESKTOP)
     {
-      label = g_strdup(_("Ubuntu Desktop"));
+      label = _("Ubuntu Desktop");
     }
     else if (!WindowManager::Default()->IsWindowOnCurrentDesktop(window_xid) ||
         WindowManager::Default()->IsWindowObscured(window_xid))
     {
-       return g_strdup("");
+       return "";
     }
 
     if (_is_maximized)
-      label = bamf_view_get_name(BAMF_VIEW(window));
+      label = glib::String(bamf_view_get_name(BAMF_VIEW(window))).Str();
   }
 
-  if (!label)
+  if (label.empty())
   {
     BamfApplication* app = bamf_matcher_get_active_application(_matcher);
     if (BAMF_IS_APPLICATION(app))
     {
-      const gchar*     filename;
+      const gchar* desktop_file = bamf_application_get_desktop_file(app);
+      std::string filename(desktop_file ? desktop_file : "");
 
-      filename = bamf_application_get_desktop_file(app);
-
-      if (filename && g_strcmp0(filename, "") != 0)
+      if (!filename.empty())
       {
-        GDesktopAppInfo* info;
-
-        info = g_desktop_app_info_new_from_filename(bamf_application_get_desktop_file(app));
+        glib::Object<GDesktopAppInfo> info(g_desktop_app_info_new_from_filename(filename.c_str()));
 
         if (info)
         {
-          label = g_strdup(g_app_info_get_display_name(G_APP_INFO(info)));
-          g_object_unref(info);
+          const gchar* name = g_app_info_get_display_name(glib::object_cast<GAppInfo>(info));
+          label = (name ? name : "");
         }
         else
         {
@@ -706,35 +703,33 @@ PanelMenuView::GetActiveViewName()
         }
       }
 
-      if (label == nullptr)
+      if (label.empty())
       {
-        BamfView* active_view;
+        BamfWindow* active_win = bamf_matcher_get_active_window(_matcher);
 
-        active_view = (BamfView*)bamf_matcher_get_active_window(_matcher);
-        if (BAMF_IS_VIEW(active_view))
-          label = bamf_view_get_name(active_view);
-        else
-          label = g_strdup("");
+        if (BAMF_IS_VIEW(active_win))
+        {
+          auto view = reinterpret_cast<BamfView*>(active_win);
+          label = glib::String(bamf_view_get_name(view)).Str();
+        }
       }
     }
     else
     {
-      label = g_strdup(" ");
+      label = "";
     }
   }
 
-  char *escaped = g_markup_escape_text(label, -1);
-  g_free(label);
-  label = g_strdup_printf("<b>%s</b>", escaped);
-  g_free(escaped);
+  glib::String escaped(g_markup_escape_text(label.c_str(), -1));
 
-  return label;
+  std::ostringstream bold_label;
+  bold_label << "<b>" << escaped.Str() << "</b>";
+
+  return bold_label.str();
 }
 
-void PanelMenuView::DrawText(cairo_t *cr_real,
-                             int &x, int y, int width, int height,
-                             const char* font_desc,
-                             const char* label,
+void PanelMenuView::DrawText(cairo_t *cr_real, int x, int y, int width, int height,
+                             std::string const& font_desc, std::string const& label,
                              int increase_size)
 {
   PangoLayout*          layout = nullptr;
@@ -745,7 +740,7 @@ void PanelMenuView::DrawText(cairo_t *cr_real,
   GdkScreen*            screen = gdk_screen_get_default();
   int                   dpi = 0;
   const int             fading_pixels = 35;
-  char                 *font_description = g_strdup(font_desc);
+  char                 *font_description = g_strdup(font_desc.c_str());
 
   int  text_width = 0;
   int  text_height = 0;
@@ -764,7 +759,7 @@ void PanelMenuView::DrawText(cairo_t *cr_real,
     font_description = gconf_client_get_string(client, WINDOW_TITLE_FONT_KEY, nullptr);
     desc = pango_font_description_from_string(font_description);
 
-    if (font_desc)
+    if (!font_desc.empty())
     {
       int size = pango_font_description_get_size(desc);
       size /= pango_font_description_get_size_is_absolute(desc) ? 1 : PANGO_SCALE;
@@ -774,7 +769,7 @@ void PanelMenuView::DrawText(cairo_t *cr_real,
 
       size += increase_size;
       
-      char* description = g_strdup_printf("%s %d", font_desc, size);
+      char* description = g_strdup_printf("%s %d", font_desc.c_str(), size);
       pango_font_description_free(desc);
       desc = pango_font_description_from_string(description);
       g_free(description);
@@ -782,7 +777,7 @@ void PanelMenuView::DrawText(cairo_t *cr_real,
 
     layout = pango_cairo_create_layout(cr);
     pango_layout_set_font_description(layout, desc);
-    pango_layout_set_markup(layout, label, -1);
+    pango_layout_set_markup(layout, label.c_str(), -1);
 
     cxt = pango_layout_get_context(layout);
     pango_cairo_context_set_font_options(cxt, gdk_screen_get_font_options(screen));
@@ -874,17 +869,15 @@ PanelMenuView::Refresh()
 
   cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
 
-  x = _padding;
-  y = 0;
+  x += _padding;
 
   if (!_panel_title.empty())
   {
-    DrawText(cr, x, y, width, height, nullptr, _panel_title.c_str());
+    DrawText(cr, x, y, width, height, "", _panel_title);
   }
   else
   {
-    glib::String title(GetActiveViewName());
-    DrawText(cr, x, y, width, height, nullptr, title);
+    DrawText(cr, x, y, width, height, "", GetActiveViewName());
   }
 
   cairo_destroy(cr);
@@ -1543,7 +1536,8 @@ void PanelMenuView::OnSwitcherSelectionChanged(GVariant* data, PanelMenuView* se
   if (!self || !data)
     return;
 
-  self->_panel_title = g_variant_get_string(data, 0);
+  const gchar *title = g_variant_get_string(data, 0);
+  self->_panel_title = (title ? title : "");
 
   self->Refresh();
   self->QueueDraw();

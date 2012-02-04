@@ -117,7 +117,7 @@ protected:
   virtual void OnEntryAdded(unity::indicator::Entry::Ptr const& entry);
 
 private:
-  gchar* GetActiveViewName();
+  std::string GetActiveViewName();
   static void OnPlaceViewShown(GVariant* data, PanelMenuView* self);
   static void OnPlaceViewHidden(GVariant* data, PanelMenuView* self);
   static void OnSwitcherShown(GVariant* data, PanelMenuView* self);
@@ -130,12 +130,9 @@ private:
   static gboolean OnNewAppShow(PanelMenuView* self);
   static gboolean OnNewAppHide(PanelMenuView* self);
 
-  void DrawText(cairo_t *cr_real,
-                int &x, int y, int width, int height,
-                const char* font_desc,
-                const char* label,
-                int increase_size=0
-                );
+  void DrawText(cairo_t *cr_real, int x, int y, int width, int height,
+                std::string const& font_desc, std::string const& label,
+                int increase_size=0);
 
   bool DrawMenus();
   bool DrawWindowButtons();
