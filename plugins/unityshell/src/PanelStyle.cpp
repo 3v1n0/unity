@@ -52,8 +52,8 @@ nux::Color ColorFromGdkRGBA(GdkRGBA const& color)
 
 }
 
-Style::Style()
-  : _theme_name(NULL)
+Style::Style() :
+  _style_context(gtk_style_context_new())
 {
   if (style_instance)
   {
@@ -63,8 +63,6 @@ Style::Style()
   {
     style_instance = this;
   }
-
-  _style_context = gtk_style_context_new();
 
   GtkWidgetPath* widget_path = gtk_widget_path_new();
   gint pos = gtk_widget_path_append_type(widget_path, GTK_TYPE_WINDOW);
@@ -76,21 +74,17 @@ Style::Style()
 
   gtk_widget_path_free(widget_path);
 
-  _gtk_theme_changed_id = g_signal_connect(gtk_settings_get_default(), "notify::gtk-theme-name",
-                                           G_CALLBACK(Style::OnGtkThemeChanged), this);
+  GtkSettings* settings = gtk_settings_get_default();
+  _style_changed_signal.Connect(G_OBJECT(settings), "notify::gtk-theme-name",
+  [&] (GObject*, GParamSpec*) {
+    Refresh();
+  });
 
   Refresh();
 }
 
 Style::~Style()
 {
-  if (_gtk_theme_changed_id)
-    g_signal_handler_disconnect(gtk_settings_get_default(),
-                                _gtk_theme_changed_id);
-
-  g_object_unref(_style_context);
-  g_free(_theme_name);
-
   if (style_instance == this)
     style_instance = nullptr;
 }
@@ -105,38 +99,38 @@ Style& Style::Instance()
   return *style_instance;
 }
 
-
 void Style::Refresh()
 {
-  GdkRGBA rgba_text;
+  GdkRGBA rgba_text_color;
+  glib::String theme_name;
+  bool updated = false;
+  
+  GtkSettings* settings = gtk_settings_get_default();
+  g_object_get(settings, "gtk-theme-name", theme_name.AsOutParam(), nullptr);
 
-  if (_theme_name)
-    g_free(_theme_name);
-
-  _theme_name = NULL;
-  g_object_get(gtk_settings_get_default(), "gtk-theme-name", &_theme_name, NULL);
+  if (_theme_name != theme_name.Str())
+  {
+    _theme_name = theme_name.Str();
+    updated = true;
+  }
 
   gtk_style_context_invalidate(_style_context);
+  gtk_style_context_get_color(_style_context, GTK_STATE_FLAG_NORMAL, &rgba_text_color);
+  nux::Color const& new_text_color = ColorFromGdkRGBA(rgba_text_color);
 
-  gtk_style_context_get_color(_style_context, GTK_STATE_FLAG_NORMAL, &rgba_text);
+  if (_text_color != new_text_color)
+  {
+    _text_color = new_text_color;
+    updated = true;
+  }
 
-  _text = ColorFromGdkRGBA(rgba_text);
-
-  changed.emit();
+  if (updated)
+    changed.emit();
 }
 
 GtkStyleContext* Style::GetStyleContext()
 {
   return _style_context;
-}
-
-void Style::OnGtkThemeChanged(GObject*    gobject,
-                              GParamSpec* pspec,
-                              gpointer    data)
-{
-  Style* self = (Style*) data;
-
-  self->Refresh();
 }
 
 nux::NBitmapData* Style::GetBackground(int width, int height, float opacity)
@@ -168,7 +162,7 @@ nux::BaseTexture* Style::GetWindowButton(WindowButtonType type, WindowState stat
   const char* home_dir = g_get_home_dir();
   if (home_dir)
   {
-    glib::String filename(g_build_filename(home_dir, ".themes", _theme_name, subpath.str().c_str(), NULL));
+    glib::String filename(g_build_filename(home_dir, ".themes", _theme_name.c_str(), subpath.str().c_str(), NULL));
 
     if (g_file_test(filename.Value(), G_FILE_TEST_EXISTS))
     {
@@ -190,7 +184,7 @@ nux::BaseTexture* Style::GetWindowButton(WindowButtonType type, WindowState stat
     if (!var)
       var = "/usr";
 
-    glib::String filename(g_build_filename(var, "share", "themes", _theme_name, subpath.str().c_str(), NULL));
+    glib::String filename(g_build_filename(var, "share", "themes", _theme_name.c_str(), subpath.str().c_str(), NULL));
 
     if (g_file_test(filename.Value(), G_FILE_TEST_EXISTS))
     {
@@ -219,7 +213,7 @@ nux::BaseTexture* Style::GetWindowButtonForTheme(WindowButtonType type,
   float h = height / 3.0f;
   nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, 22, 22);
   cairo_t* cr;
-  nux::Color main = _text;
+  nux::Color main = _text_color;
 
   if (type == WindowButtonType::CLOSE)
   {
@@ -267,7 +261,6 @@ nux::BaseTexture* Style::GetWindowButtonForTheme(WindowButtonType type,
   }
 
   cairo_stroke(cr);
-
   cairo_destroy(cr);
 
   return texture_from_cairo_graphics(cairo_graphics);

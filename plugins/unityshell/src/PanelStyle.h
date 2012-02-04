@@ -24,6 +24,8 @@
 #include <Nux/Nux.h>
 
 #include <gtk/gtk.h>
+#include <UnityCore/GLibWrapper.h>
+#include <UnityCore/GLibSignal.h>
 
 namespace unity
 {
@@ -62,23 +64,16 @@ public:
 
   sigc::signal<void> changed;
 
-  bool IsAmbianceOrRadiance();
-
 private:
   void Refresh();
-
-  static void OnGtkThemeChanged(GObject*    gobject,
-                                GParamSpec* pspec,
-                                gpointer    data);
 
   nux::BaseTexture* GetWindowButtonForTheme(WindowButtonType type,
                                             WindowState state);
 private:
-  GtkStyleContext*   _style_context;
-  char*              _theme_name;
-  nux::Color         _text;
-
-  gulong            _gtk_theme_changed_id;
+  glib::Object<GtkStyleContext> _style_context;
+  glib::Signal<void, GObject*, GParamSpec*> _style_changed_signal;
+  std::string _theme_name;
+  nux::Color _text_color;
 };
 
 }
