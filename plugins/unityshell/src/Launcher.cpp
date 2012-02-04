@@ -1965,7 +1965,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   if (!_dash_is_open)
   {
-    const double right_line_opacity = 0.22f;
+    const double right_line_opacity = 0.15f * launcher_alpha;
 
     gPainter.Paint2DQuadColor(GfxContext,
                               nux::Geometry(bkg_box.x + bkg_box.width,
