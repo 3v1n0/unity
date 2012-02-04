@@ -100,10 +100,12 @@ private:
   void SetActiveState(bool active, int button);
   void ShowMenu(int button);
 
-  void DrawEntryContent(cairo_t *cr, unsigned int width, unsigned int height, glib::Object<GdkPixbuf> const& pixbuf, glib::Object<PangoLayout> const& layout);
-
   glib::Object<GdkPixbuf> MakePixbuf();
+
   void DrawEntryBackground(cairo_t*, unsigned int w, unsigned int h);
+  void DrawEntryContent(cairo_t *cr, unsigned int width, unsigned int height,
+                        glib::Object<GdkPixbuf> const& pixbuf,
+                        glib::Object<PangoLayout> const& layout);
 
   sigc::connection on_indicator_activate_changed_connection_;
   sigc::connection on_indicator_updated_connection_;

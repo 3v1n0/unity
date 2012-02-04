@@ -446,14 +446,8 @@ void PanelIndicatorEntryView::Refresh()
 
   cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
   cairo_paint(cr);  
+
   cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
-
-  if (dash_showing_)
-  {
-    DrawEntryContent(cr, width, height, pixbuf, layout);
-    cairo_graphics.BlurSurface(SPACING);
-  }
-
   DrawEntryContent(cr, width, height, pixbuf, layout);
 
   nux::BaseTexture* texture2D = texture_from_cairo_graphics(cairo_graphics);
