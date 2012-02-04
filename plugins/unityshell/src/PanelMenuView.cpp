@@ -55,7 +55,6 @@ namespace unity
 PanelMenuView::PanelMenuView(int padding)
   : _matcher(bamf_matcher_get_default()),
     _title_layer(nullptr),
-    _util_cg(CAIRO_FORMAT_ARGB32, 1, 1),
     _gradient_texture(nullptr),
     _is_inside(false),
     _is_maximized(false),
@@ -80,9 +79,8 @@ PanelMenuView::PanelMenuView(int padding)
     _menus_discovery(2),
     _menus_discovery_fadein(200),
     _menus_discovery_fadeout(300),
-    _panel_title(nullptr),
-    _fade_in_animator(nullptr),
-    _fade_out_animator(nullptr)
+    _fade_in_animator(_menus_fadein),
+    _fade_out_animator(_menus_fadeout)
 {
   WindowManager* win_manager;
 
@@ -169,13 +167,10 @@ PanelMenuView::PanelMenuView(int padding)
                                                           (UBusCallback)PanelMenuView::OnSwitcherSelectionChanged,
                                                           this));
 
-  _fade_in_animator = new Animator(_menus_fadein);
-  _fade_out_animator = new Animator(_menus_fadeout);
-
-  _fade_in_animator->animation_updated.connect(sigc::mem_fun(this, &PanelMenuView::OnFadeInChanged));
-  _fade_in_animator->animation_ended.connect(sigc::mem_fun(this, &PanelMenuView::FullRedraw));
-  _fade_out_animator->animation_updated.connect(sigc::mem_fun(this, &PanelMenuView::OnFadeOutChanged));
-  _fade_out_animator->animation_ended.connect(sigc::mem_fun(this, &PanelMenuView::FullRedraw));
+  _fade_in_animator.animation_updated.connect(sigc::mem_fun(this, &PanelMenuView::OnFadeInChanged));
+  _fade_in_animator.animation_ended.connect(sigc::mem_fun(this, &PanelMenuView::FullRedraw));
+  _fade_out_animator.animation_updated.connect(sigc::mem_fun(this, &PanelMenuView::OnFadeOutChanged));
+  _fade_out_animator.animation_ended.connect(sigc::mem_fun(this, &PanelMenuView::FullRedraw));
 
   SetOpacity(0.0f);
   _window_buttons->SetOpacity(0.0f);
@@ -198,12 +193,6 @@ PanelMenuView::~PanelMenuView()
   if (_title_layer)
     delete _title_layer;
 
-  if (_fade_in_animator)
-    delete _fade_in_animator;
-
-  if (_fade_out_animator)
-    delete _fade_out_animator;
-
   _menu_layout->UnReference();
   _window_buttons->UnReference();
   _panel_titlebar_grab_area->UnReference();
@@ -223,13 +212,13 @@ PanelMenuView::SetMenuShowTimings(int fadein, int fadeout, int discovery,
   if (fadein > -1)
   {
     _menus_fadein = fadein;
-    _fade_in_animator->SetDuration(_menus_fadein);
+    _fade_in_animator.SetDuration(_menus_fadein);
   }
 
   if (fadeout > -1)
   {
     _menus_fadeout = fadeout;
-    _fade_out_animator->SetDuration(_menus_fadeout);
+    _fade_out_animator.SetDuration(_menus_fadeout);
   }
 
   if (discovery > -1)
@@ -598,15 +587,15 @@ PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
     _menu_layout->ProcessDraw(GfxContext, true);
 
-    _fade_out_animator->Stop();
+    _fade_out_animator.Stop();
 
     if (_new_application && !_is_inside)
     {
-      _fade_in_animator->Start(_menus_discovery_fadein, GetOpacity());
+      _fade_in_animator.Start(_menus_discovery_fadein, GetOpacity());
     }
     else
     {
-      _fade_in_animator->Start(GetOpacity());
+      _fade_in_animator.Start(GetOpacity());
       _new_app_menu_shown = false;
     }
   }
@@ -620,15 +609,15 @@ PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   {
     _menu_layout->ProcessDraw(GfxContext, true);
 
-    _fade_in_animator->Stop();
+    _fade_in_animator.Stop();
 
     if (!_new_app_menu_shown)
     {
-      _fade_out_animator->Start(1.0f - GetOpacity());
+      _fade_out_animator.Start(1.0f - GetOpacity());
     }
     else
     {
-      _fade_out_animator->Start(_menus_discovery_fadeout, 1.0f - GetOpacity());
+      _fade_out_animator.Start(_menus_discovery_fadeout, 1.0f - GetOpacity());
     }
   }
 
@@ -636,19 +625,19 @@ PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   {
     _window_buttons->ProcessDraw(GfxContext, true);
 
-    _fade_out_animator->Stop();
-    _fade_in_animator->Start(_window_buttons->GetOpacity());
+    _fade_out_animator.Stop();
+    _fade_in_animator.Start(_window_buttons->GetOpacity());
   }
 
   if (_window_buttons->GetOpacity() != 0.0f && !draw_buttons)
   {
     _window_buttons->ProcessDraw(GfxContext, true);
-    _fade_in_animator->Stop();
+    _fade_in_animator.Stop();
 
     /* If we try to hide only the buttons, then use a faster fadeout */
-    if (!_fade_out_animator->IsRunning())
+    if (!_fade_out_animator.IsRunning())
     {
-      _fade_out_animator->Start(_menus_fadeout/3, 1.0f - _window_buttons->GetOpacity());
+      _fade_out_animator.Start(_menus_fadeout/3, 1.0f - _window_buttons->GetOpacity());
     }
   }
 
@@ -746,8 +735,7 @@ void PanelMenuView::DrawText(cairo_t *cr_real,
                              int &x, int y, int width, int height,
                              const char* font_desc,
                              const char* label,
-                             int increase_size
-                             )
+                             int increase_size)
 {
   PangoLayout*          layout = nullptr;
   PangoFontDescription* desc = nullptr;
@@ -768,7 +756,8 @@ void PanelMenuView::DrawText(cairo_t *cr_real,
     PangoContext* cxt;
     PangoRectangle log_rect;
 
-    cr = _util_cg.GetContext();
+    nux::CairoGraphics util_cg(CAIRO_FORMAT_ARGB32, 1, 1);
+    cr = util_cg.GetContext();
 
     g_object_get(settings, "gtk-xft-dpi", &dpi, nullptr);
 
@@ -888,15 +877,14 @@ PanelMenuView::Refresh()
   x = _padding;
   y = 0;
 
-  if (_panel_title)
+  if (!_panel_title.empty())
   {
-    DrawText(cr, x, y, width, height, nullptr, _panel_title);
+    DrawText(cr, x, y, width, height, nullptr, _panel_title.c_str());
   }
   else
   {
-    char* title = GetActiveViewName();
+    glib::String title(GetActiveViewName());
     DrawText(cr, x, y, width, height, nullptr, title);
-    g_free(title);
   }
 
   cairo_destroy(cr);
@@ -1536,10 +1524,9 @@ void PanelMenuView::OnSwitcherShown(GVariant* data, PanelMenuView* self)
     auto mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
     self->_is_inside = self->GetAbsoluteGeometry().IsPointInside(mouse.x, mouse.y);
 
-    if (self->_panel_title)
+    if (!self->_panel_title.empty())
     {
-      g_free(self->_panel_title);
-      self->_panel_title = nullptr;
+      self->_panel_title = "";
     }
   }
   else
@@ -1556,10 +1543,7 @@ void PanelMenuView::OnSwitcherSelectionChanged(GVariant* data, PanelMenuView* se
   if (!self || !data)
     return;
 
-  if (self->_panel_title)
-    g_free(self->_panel_title);
-
-  self->_panel_title = g_strdup(g_variant_get_string(data, 0));
+  self->_panel_title = g_variant_get_string(data, 0);
 
   self->Refresh();
   self->QueueDraw();

@@ -148,7 +148,6 @@ private:
 
   nux::TextureLayer*       _title_layer;
   nux::HLayout*            _menu_layout;
-  nux::CairoGraphics       _util_cg;
   nux::ObjectPtr<nux::IOpenGLBaseTexture> _gradient_texture;
 
   bool _is_inside;
@@ -164,6 +163,7 @@ private:
   std::map<guint32, bool> _decor_map;
   std::set<guint32> _maximized_set;
   std::list<glib::Object<BamfApplication>> _new_apps;
+  std::string _panel_title;
 
   int _padding;
   int _last_width;
@@ -197,10 +197,8 @@ private:
   int _menus_discovery_fadein;
   int _menus_discovery_fadeout;
 
-  gchar* _panel_title;
-
-  Animator* _fade_in_animator;
-  Animator* _fade_out_animator;
+  Animator _fade_in_animator;
+  Animator _fade_out_animator;
 };
 
 }
