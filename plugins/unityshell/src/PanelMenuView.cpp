@@ -423,7 +423,7 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
     for (auto entry : entries_)
     {
-      if (entry.second->IsEntryValid())
+      if (entry.second->IsVisible())
       {
         has_menu = true;
         break;

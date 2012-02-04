@@ -28,7 +28,6 @@
 #include <boost/algorithm/string.hpp>
 
 #include <glib.h>
-#include <pango/pangocairo.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <gtk/gtk.h>
 #include <time.h>
@@ -38,19 +37,11 @@
 #include "PanelIndicatorEntryView.h"
 
 #include "PanelStyle.h"
-#include <UnityCore/GLibWrapper.h>
 #include <UnityCore/Variant.h>
 
 
 namespace unity
 {
-
-namespace
-{
-void draw_menu_bg(cairo_t* cr, int width, int height);
-GdkPixbuf* make_pixbuf(int image_type, std::string const& image_data, bool dash_showing);
-}
-
 
 PanelIndicatorEntryView::PanelIndicatorEntryView(
   indicator::Entry::Ptr const& proxy,
@@ -60,7 +51,7 @@ PanelIndicatorEntryView::PanelIndicatorEntryView(
   , proxy_(proxy)
   , type_(type)
   , util_cg_(CAIRO_FORMAT_ARGB32, 1, 1)
-  , texture_layer_(NULL)
+  , texture_layer_(nullptr)
   , padding_(padding < 0 ? 0 : padding)
   , opacity_(1.0f)
   , draw_active_(false)
@@ -110,7 +101,7 @@ void PanelIndicatorEntryView::ShowMenu(int button)
                    GetAbsoluteX(),
                    GetAbsoluteY() + PANEL_HEIGHT,
                    button,
-                   time(NULL));
+                   time(nullptr));
 }
 
 void PanelIndicatorEntryView::OnMouseDown(int x, int y, long button_flags, long key_flags)
@@ -148,7 +139,7 @@ void PanelIndicatorEntryView::OnMouseUp(int x, int y, long button_flags, long ke
        button == 2 && type_ == INDICATOR)
   {
     if (geo.IsPointInside(px, py))
-      proxy_->SecondaryActivate(time(NULL));
+      proxy_->SecondaryActivate(time(nullptr));
 
     SetOpacity(1.0f);
   }
@@ -186,128 +177,83 @@ void PanelIndicatorEntryView::SetActiveState(bool active, int button)
   }
 }
 
-// We need to do a couple of things here:
-// 1. Figure out our width
-// 2. Figure out if we're active
-// 3. Paint something
-void PanelIndicatorEntryView::Refresh()
+glib::Object<GdkPixbuf> PanelIndicatorEntryView::MakePixbuf()
 {
-  if (!IsVisible())
+  glib::Object<GdkPixbuf> pixbuf;
+  GtkIconTheme* theme = gtk_icon_theme_get_default();
+  int image_type = proxy_->image_type();
+
+  if (image_type == GTK_IMAGE_PIXBUF)
   {
-    SetVisible(false);
-    return;
+    gsize len = 0;
+    guchar* decoded = g_base64_decode(proxy_->image_data().c_str(), &len);
+
+    glib::Object<GInputStream> stream(g_memory_input_stream_new_from_data(decoded,
+                                                                          len,
+                                                                          nullptr));
+
+    pixbuf = gdk_pixbuf_new_from_stream(stream, nullptr, nullptr);
+
+    g_free(decoded);
+    g_input_stream_close(stream, nullptr, nullptr);
   }
-
-  SetVisible(true);
-
-  PangoLayout*          layout = NULL;
-  PangoFontDescription* desc = NULL;
-  PangoAttrList*        attrs = NULL;
-  GtkSettings*          settings = gtk_settings_get_default();
-  cairo_t*              cr;
-  char*                 font_description = NULL;
-  GdkScreen*            screen = gdk_screen_get_default();
-  int                   dpi = 0;
-
-  std::string label = proxy_->label();
-  glib::Object<GdkPixbuf> pixbuf(make_pixbuf(proxy_->image_type(),
-                                             proxy_->image_data(),
-                                             dash_showing_));
-
-
-  int  x = 0;
-  int  width = 0;
-  int  height = PANEL_HEIGHT;
-  int  icon_width = 0;
-  int  text_width = 0;
-  int  text_height = 0;
-
-  if (proxy_->show_now())
+  else if (image_type == GTK_IMAGE_STOCK ||
+           image_type == GTK_IMAGE_ICON_NAME)
   {
-    if (!pango_parse_markup(label.c_str(),
-                            -1,
-                            '_',
-                            &attrs,
-                            NULL,
-                            NULL,
-                            NULL))
+    pixbuf = gtk_icon_theme_load_icon(theme, proxy_->image_data().c_str(), 22,
+                                      (GtkIconLookupFlags)0, nullptr);
+  }
+  else if (image_type == GTK_IMAGE_GICON)
+  {
+    glib::Object<GIcon> icon(g_icon_new_for_string(proxy_->image_data().c_str(), nullptr));
+
+    GtkIconInfo* info = gtk_icon_theme_lookup_by_gicon(theme, icon, 22,
+                                                       (GtkIconLookupFlags)0);
+    if (info)
     {
-      g_debug("pango_parse_markup failed");
+      pixbuf = gtk_icon_info_load_icon(info, nullptr);
+      gtk_icon_info_free(info);
     }
   }
-  boost::erase_all(label, "_");
 
-  // First lets figure out our size
-  if (pixbuf && proxy_->image_visible())
-  {
-    width = gdk_pixbuf_get_width(pixbuf);
-    icon_width = width;
-  }
+  return pixbuf;
+}
 
-  if (!label.empty() && proxy_->label_visible())
-  {
-    PangoContext* cxt;
-    PangoRectangle log_rect;
+void PanelIndicatorEntryView::DrawEntryBackground(cairo_t* cr, unsigned int width, unsigned int height)
+{
+  GtkStyleContext* style_context = panel::Style::Instance().GetStyleContext();
 
-    cr = util_cg_.GetContext();
+  gtk_style_context_save(style_context);
 
-    g_object_get(settings,
-                 "gtk-font-name", &font_description,
-                 "gtk-xft-dpi", &dpi,
-                 NULL);
-    desc = pango_font_description_from_string(font_description);
-    pango_font_description_set_weight(desc, PANGO_WEIGHT_NORMAL);
+  GtkWidgetPath* widget_path = gtk_widget_path_new();
+  gtk_widget_path_iter_set_name(widget_path, -1 , "UnityPanelWidget");
+  gtk_widget_path_append_type(widget_path, GTK_TYPE_MENU_BAR);
+  gtk_widget_path_append_type(widget_path, GTK_TYPE_MENU_ITEM);
 
-    layout = pango_cairo_create_layout(cr);
-    if (attrs)
-    {
-      pango_layout_set_attributes(layout, attrs);
-      pango_attr_list_unref(attrs);
-    }
+  gtk_style_context_set_path(style_context, widget_path);
+  gtk_style_context_add_class(style_context, GTK_STYLE_CLASS_MENUBAR);
+  gtk_style_context_add_class(style_context, GTK_STYLE_CLASS_MENUITEM);
+  gtk_style_context_set_state(style_context, GTK_STATE_FLAG_PRELIGHT);
 
-    pango_layout_set_font_description(layout, desc);
-    pango_layout_set_text(layout, label.c_str(), -1);
+  gtk_render_background(style_context, cr, 0, 0, width, height);
+  gtk_render_frame(style_context, cr, 0, 0, width, height);
 
-    cxt = pango_layout_get_context(layout);
-    pango_cairo_context_set_font_options(cxt, gdk_screen_get_font_options(screen));
-    pango_cairo_context_set_resolution(cxt, (float)dpi / (float)PANGO_SCALE);
-    pango_layout_context_changed(layout);
+  gtk_widget_path_free(widget_path);
 
-    pango_layout_get_extents(layout, NULL, &log_rect);
-    text_width = log_rect.width / PANGO_SCALE;
-    text_height = log_rect.height / PANGO_SCALE;
+  gtk_style_context_restore(style_context);
+}
 
-    if (icon_width)
-      width += SPACING;
-    width += text_width;
-
-    pango_font_description_free(desc);
-    g_free(font_description);
-    cairo_destroy(cr);
-  }
-
-  if (width)
-    width += padding_ * 2;
-
-  SetMinimumWidth(width);
-
-  nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, width, height);
-  cr = cairo_graphics.GetContext();
-  cairo_set_line_width(cr, 1);
-
-  cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
-  cairo_paint(cr);
-
-  cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
+void PanelIndicatorEntryView::DrawEntryContent(cairo_t *cr, unsigned int width, unsigned int height, glib::Object<GdkPixbuf> const& pixbuf, glib::Object<PangoLayout> const& layout)
+{
+  int x = padding_;
 
   if (IsActive())
-    draw_menu_bg(cr, width, height);
-
-  x = padding_;
+    DrawEntryBackground(cr, width, height);
 
   if (pixbuf && proxy_->image_visible())
   {
     GtkStyleContext* style_context = panel::Style::Instance().GetStyleContext();
+    unsigned int icon_width = gdk_pixbuf_get_width(pixbuf);
 
     gtk_style_context_save(style_context);
 
@@ -361,8 +307,12 @@ void PanelIndicatorEntryView::Refresh()
     x += icon_width + SPACING;
   }
 
-  if (!label.empty() && proxy_->label_visible())
+  if (layout)
   {
+    PangoRectangle log_rect;
+    pango_layout_get_extents(layout, nullptr, &log_rect);
+    unsigned int text_height = log_rect.height / PANGO_SCALE;
+
     pango_cairo_update_layout(cr, layout);
 
     GtkStyleContext* style_context = panel::Style::Instance().GetStyleContext();
@@ -397,12 +347,117 @@ void PanelIndicatorEntryView::Refresh()
 
     gtk_style_context_restore(style_context);
   }
+}
 
-  cairo_destroy(cr);
-  if (layout)
-    g_object_unref(layout);
+// We need to do a couple of things here:
+// 1. Figure out our width
+// 2. Figure out if we're active
+// 3. Paint something
+void PanelIndicatorEntryView::Refresh()
+{
+  if (!IsVisible())
+  {
+    SetVisible(false);
+    return;
+  }
+
+  glib::Object<PangoLayout> layout;
+  PangoFontDescription* desc = nullptr;
+  PangoAttrList*        attrs = nullptr;
+  GtkSettings*          settings = gtk_settings_get_default();
+  cairo_t*              cr;
+  char*                 font_description = nullptr;
+  GdkScreen*            screen = gdk_screen_get_default();
+  int                   dpi = 0;
+
+  std::string label = proxy_->label();
+  glib::Object<GdkPixbuf> pixbuf = MakePixbuf();
+
+  unsigned int width = 0;
+  unsigned int icon_width = 0;
+  unsigned int height = PANEL_HEIGHT;
+  unsigned int text_width = 0;
+
+  if (proxy_->show_now())
+  {
+    if (!pango_parse_markup(label.c_str(), -1, '_', &attrs, nullptr, nullptr, nullptr))
+    {
+      g_debug("pango_parse_markup failed");
+    }
+  }
+  boost::erase_all(label, "_");
+
+  // First lets figure out our size
+  if (pixbuf && proxy_->image_visible())
+  {
+    width = gdk_pixbuf_get_width(pixbuf);
+    icon_width = width;
+  }
+
+  if (!label.empty() && proxy_->label_visible())
+  {
+    PangoContext* cxt;
+    PangoRectangle log_rect;
+
+    cr = util_cg_.GetContext();
+
+    g_object_get(settings,
+                 "gtk-font-name", &font_description,
+                 "gtk-xft-dpi", &dpi,
+                 nullptr);
+    desc = pango_font_description_from_string(font_description);
+    pango_font_description_set_weight(desc, PANGO_WEIGHT_NORMAL);
+
+    layout = pango_cairo_create_layout(cr);
+    if (attrs)
+    {
+      pango_layout_set_attributes(layout, attrs);
+      pango_attr_list_unref(attrs);
+    }
+
+    pango_layout_set_font_description(layout, desc);
+    pango_layout_set_text(layout, label.c_str(), -1);
+
+    cxt = pango_layout_get_context(layout);
+    pango_cairo_context_set_font_options(cxt, gdk_screen_get_font_options(screen));
+    pango_cairo_context_set_resolution(cxt, (float)dpi / (float)PANGO_SCALE);
+    pango_layout_context_changed(layout);
+
+    pango_layout_get_extents(layout, nullptr, &log_rect);
+    text_width = log_rect.width / PANGO_SCALE;
+
+    if (icon_width)
+      width += SPACING;
+    width += text_width;
+
+    pango_font_description_free(desc);
+    g_free(font_description);
+    cairo_destroy(cr);
+  }
+
+  if (width)
+    width += padding_ * 2;
+
+  SetMinimumWidth(width);
+
+  nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, width, height);
+  cr = cairo_graphics.GetContext();
+  cairo_set_line_width(cr, 1);
+
+  cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
+  cairo_paint(cr);  
+  cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
+
+  if (dash_showing_)
+  {
+    DrawEntryContent(cr, width, height, pixbuf, layout);
+    cairo_graphics.BlurSurface(SPACING);
+  }
+
+  DrawEntryContent(cr, width, height, pixbuf, layout);
 
   nux::BaseTexture* texture2D = texture_from_cairo_graphics(cairo_graphics);
+  cairo_destroy(cr);
 
   nux::TexCoordXForm texxform;
   texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
@@ -422,8 +477,8 @@ void PanelIndicatorEntryView::Refresh()
 
   texture2D->UnReference();
 
+  SetVisible(true);
   NeedRedraw();
-
   refreshed.emit(this);
 }
 
@@ -508,20 +563,20 @@ void PanelIndicatorEntryView::GetGeometryForSync(indicator::EntryLocationMap& lo
   locations[proxy_->id()] = GetAbsoluteGeometry();
 }
 
-bool PanelIndicatorEntryView::IsEntryValid() const
-{
-  if (proxy_.get())
-  {
-    return proxy_->image_visible() || proxy_->label_visible();
-  }
-  return false;
-}
-
 bool PanelIndicatorEntryView::IsSensitive() const
 {
   if (proxy_.get())
   {
     return proxy_->image_sensitive() || proxy_->label_sensitive();
+  }
+  return false;
+}
+
+bool PanelIndicatorEntryView::IsVisible() const
+{
+  if (proxy_.get())
+  {
+    return proxy_->visible();
   }
   return false;
 }
@@ -550,94 +605,11 @@ bool PanelIndicatorEntryView::IsDisabled()
   return (disabled_ || !proxy_.get() || !IsSensitive());
 }
 
-bool PanelIndicatorEntryView::IsVisible()
-{
-  if (proxy_.get())
-  {
-    return proxy_->visible();
-  }
-  return false;
-}
-
 void PanelIndicatorEntryView::OnFontChanged(GObject* gobject, GParamSpec* pspec,
                                             gpointer data)
 {
   PanelIndicatorEntryView* self = reinterpret_cast<PanelIndicatorEntryView*>(data);
   self->Refresh();
 }
-
-namespace
-{
-
-void draw_menu_bg(cairo_t* cr, int width, int height)
-{
-  GtkStyleContext* style_context = panel::Style::Instance().GetStyleContext();
-
-  gtk_style_context_save(style_context);
-
-  GtkWidgetPath* widget_path = gtk_widget_path_new();
-  gtk_widget_path_iter_set_name(widget_path, -1 , "UnityPanelWidget");
-  gtk_widget_path_append_type(widget_path, GTK_TYPE_MENU_BAR);
-  gtk_widget_path_append_type(widget_path, GTK_TYPE_MENU_ITEM);
-
-  gtk_style_context_set_path(style_context, widget_path);
-  gtk_style_context_add_class(style_context, GTK_STYLE_CLASS_MENUBAR);
-  gtk_style_context_add_class(style_context, GTK_STYLE_CLASS_MENUITEM);
-  gtk_style_context_set_state(style_context, GTK_STATE_FLAG_PRELIGHT);
-
-  gtk_render_background(style_context, cr, 0, 0, width, height);
-  gtk_render_frame(style_context, cr, 0, 0, width, height);
-
-  gtk_widget_path_free(widget_path);
-
-  gtk_style_context_restore(style_context);
-}
-
-GdkPixbuf* make_pixbuf(int image_type, std::string const& image_data, bool dash_showing)
-{
-  GdkPixbuf* ret = NULL;
-  GtkIconTheme* theme = gtk_icon_theme_get_default();
-
-  if (image_type == GTK_IMAGE_PIXBUF)
-  {
-    gsize len = 0;
-    guchar* decoded = g_base64_decode(image_data.c_str(), &len);
-
-    GInputStream* stream = g_memory_input_stream_new_from_data(decoded,
-                                                               len, NULL);
-
-    ret = gdk_pixbuf_new_from_stream(stream, NULL, NULL);
-
-    g_free(decoded);
-    g_input_stream_close(stream, NULL, NULL);
-    g_object_unref(stream);
-  }
-  else if (image_type == GTK_IMAGE_STOCK ||
-           image_type == GTK_IMAGE_ICON_NAME)
-  {
-    ret = gtk_icon_theme_load_icon(theme,
-                                   image_data.c_str(),
-                                   22,
-                                   (GtkIconLookupFlags)0,
-                                   NULL);
-  }
-  else if (image_type == GTK_IMAGE_GICON)
-  {
-    glib::Object<GIcon> icon(g_icon_new_for_string(image_data.c_str(), NULL));
-
-    GtkIconInfo* info = gtk_icon_theme_lookup_by_gicon(
-                          theme, icon, 22, (GtkIconLookupFlags)0);
-    if (info)
-    {
-      ret = gtk_icon_info_load_icon(info, NULL);
-      gtk_icon_info_free(info);
-    }
-  }
-
-  return ret;
-}
-
-} // anon namespace
-
 
 } // namespace unity

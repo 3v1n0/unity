@@ -126,7 +126,7 @@ PanelIndicatorsView::ActivateEntry(std::string const& entry_id)
 {
   auto entry = entries_.find(entry_id);
 
-  if (entry != entries_.end() && entry->second->IsEntryValid())
+  if (entry != entries_.end() && entry->second->IsVisible())
   {
     PanelIndicatorEntryView* view = entry->second;
     LOG_DEBUG(logger) << "Activating: " << entry_id;
