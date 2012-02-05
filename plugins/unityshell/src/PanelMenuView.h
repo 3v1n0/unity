@@ -108,7 +108,7 @@ public:
 
 protected:
   std::string GetName() const;
-  void          AddProperties(GVariantBuilder* builder);
+  void AddProperties(GVariantBuilder* builder);
 
   virtual nux::Area* FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type);
   void OnPanelViewMouseEnter(int x, int y, unsigned long mouse_button_state, unsigned long special_keys_state);
@@ -131,8 +131,7 @@ private:
   static gboolean OnNewAppHide(PanelMenuView* self);
 
   void DrawText(cairo_t *cr_real, int x, int y, int width, int height,
-                std::string const& font_desc, std::string const& label,
-                int increase_size=0);
+                std::string const& label);
 
   bool DrawMenus();
   bool DrawWindowButtons();

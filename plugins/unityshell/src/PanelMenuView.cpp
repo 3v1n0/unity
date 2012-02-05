@@ -729,120 +729,95 @@ PanelMenuView::GetActiveViewName()
 }
 
 void PanelMenuView::DrawText(cairo_t *cr_real, int x, int y, int width, int height,
-                             std::string const& font_desc, std::string const& label,
-                             int increase_size)
+                             std::string const& label)
 {
-  PangoLayout*          layout = nullptr;
-  PangoFontDescription* desc = nullptr;
-  GtkSettings*          settings = gtk_settings_get_default();
-  cairo_t*              cr;
-  cairo_pattern_t*      linpat;
-  GdkScreen*            screen = gdk_screen_get_default();
-  int                   dpi = 0;
-  const int             fading_pixels = 35;
-  char                 *font_description = g_strdup(font_desc.c_str());
+  cairo_t* cr;
+  cairo_pattern_t* linpat;
+  const int fading_pixels = 35;
 
   int  text_width = 0;
   int  text_height = 0;
   int  text_space = 0;
 
-  {  // Find out dimensions first
-    GConfClient* client = gconf_client_get_default();
-    PangoContext* cxt;
-    PangoRectangle log_rect;
+  // Find out dimensions first
+  GdkScreen* screen = gdk_screen_get_default();
+  GtkSettings* settings = gtk_settings_get_default();
+  glib::Object<GConfClient> client(gconf_client_get_default());
+  PangoContext* cxt;
+  PangoRectangle log_rect;
+  PangoFontDescription* desc;
+  gint dpi;
 
-    nux::CairoGraphics util_cg(CAIRO_FORMAT_ARGB32, 1, 1);
-    cr = util_cg.GetContext();
+  nux::CairoGraphics util_cg(CAIRO_FORMAT_ARGB32, 1, 1);
+  cr = util_cg.GetContext();
 
-    g_object_get(settings, "gtk-xft-dpi", &dpi, nullptr);
+  g_object_get(settings, "gtk-xft-dpi", &dpi, nullptr);
 
-    font_description = gconf_client_get_string(client, WINDOW_TITLE_FONT_KEY, nullptr);
-    desc = pango_font_description_from_string(font_description);
+  glib::String font_description(gconf_client_get_string(client, WINDOW_TITLE_FONT_KEY, nullptr));
+  desc = pango_font_description_from_string(font_description);
 
-    if (!font_desc.empty())
-    {
-      int size = pango_font_description_get_size(desc);
-      size /= pango_font_description_get_size_is_absolute(desc) ? 1 : PANGO_SCALE;
+  glib::Object<PangoLayout> layout(pango_cairo_create_layout(cr));
+  pango_layout_set_font_description(layout, desc);
+  pango_layout_set_markup(layout, label.c_str(), -1);
 
-      // Adjust y depending on size of the font
-      y -= ((unsigned int)(size - 9)) / 2;
+  cxt = pango_layout_get_context(layout);
+  pango_cairo_context_set_font_options(cxt, gdk_screen_get_font_options(screen));
+  pango_cairo_context_set_resolution(cxt, (float)dpi / (float)PANGO_SCALE);
+  pango_layout_context_changed(layout);
 
-      size += increase_size;
-      
-      char* description = g_strdup_printf("%s %d", font_desc.c_str(), size);
-      pango_font_description_free(desc);
-      desc = pango_font_description_from_string(description);
-      g_free(description);
-    }
+  pango_layout_get_extents(layout, nullptr, &log_rect);
+  text_width = log_rect.width / PANGO_SCALE;
+  text_height = log_rect.height / PANGO_SCALE;
 
-    layout = pango_cairo_create_layout(cr);
-    pango_layout_set_font_description(layout, desc);
-    pango_layout_set_markup(layout, label.c_str(), -1);
+  pango_font_description_free(desc);
+  cairo_destroy(cr);
 
-    cxt = pango_layout_get_context(layout);
-    pango_cairo_context_set_font_options(cxt, gdk_screen_get_font_options(screen));
-    pango_cairo_context_set_resolution(cxt, (float)dpi / (float)PANGO_SCALE);
-    pango_layout_context_changed(layout);
 
-    pango_layout_get_extents(layout, nullptr, &log_rect);
-    text_width = log_rect.width / PANGO_SCALE;
-    text_height = log_rect.height / PANGO_SCALE;
+ // Draw the text
+  GtkStyleContext* style_context = panel::Style::Instance().GetStyleContext();
+  text_space = width - x;
+  cr = cr_real;
 
-    pango_font_description_free(desc);
-    g_free(font_description);
-    cairo_destroy(cr);
-    g_object_unref(client);
+  gtk_style_context_save(style_context);
+
+  GtkWidgetPath* widget_path = gtk_widget_path_new();
+  gtk_widget_path_iter_set_name(widget_path, -1 , "UnityPanelWidget");
+  gtk_widget_path_append_type(widget_path, GTK_TYPE_MENU_BAR);
+  gtk_widget_path_append_type(widget_path, GTK_TYPE_MENU_ITEM);
+
+  gtk_style_context_set_path(style_context, widget_path);
+  gtk_style_context_add_class(style_context, GTK_STYLE_CLASS_MENUBAR);
+  gtk_style_context_add_class(style_context, GTK_STYLE_CLASS_MENUITEM);
+
+  y += (height - text_height) / 2;
+
+  pango_cairo_update_layout(cr, layout);
+
+  if (text_width > text_space)
+  {
+    int out_pixels = text_width - text_space;
+    int fading_width = out_pixels < fading_pixels ? out_pixels : fading_pixels;
+
+    cairo_push_group(cr);
+    gtk_render_layout(style_context, cr, x, y, layout);
+    cairo_pop_group_to_source(cr);
+
+    linpat = cairo_pattern_create_linear(width - fading_width, y, width, y);
+    cairo_pattern_add_color_stop_rgba(linpat, 0, 0, 0, 0, 1);
+    cairo_pattern_add_color_stop_rgba(linpat, 1, 0, 0, 0, 0);
+    cairo_mask(cr, linpat);
+
+    cairo_pattern_destroy(linpat);
+  }
+  else
+  {
+    gtk_render_layout(style_context, cr, x, y, layout);
   }
 
-  { // Draw the text
-    GtkStyleContext* style_context = panel::Style::Instance().GetStyleContext();
-    text_space = width - x;
-    cr = cr_real;
+  x += text_width;
 
-    gtk_style_context_save(style_context);
-
-    GtkWidgetPath* widget_path = gtk_widget_path_new();
-    gtk_widget_path_iter_set_name(widget_path, -1 , "UnityPanelWidget");
-    gtk_widget_path_append_type(widget_path, GTK_TYPE_MENU_BAR);
-    gtk_widget_path_append_type(widget_path, GTK_TYPE_MENU_ITEM);
-
-    gtk_style_context_set_path(style_context, widget_path);
-    gtk_style_context_add_class(style_context, GTK_STYLE_CLASS_MENUBAR);
-    gtk_style_context_add_class(style_context, GTK_STYLE_CLASS_MENUITEM);
-
-    y += (height - text_height) / 2;
-
-    pango_cairo_update_layout(cr, layout);
-
-    if (text_width > text_space)
-    {
-      int out_pixels = text_width - text_space;
-      int fading_width = out_pixels < fading_pixels ? out_pixels : fading_pixels;
-
-      cairo_push_group(cr);
-      gtk_render_layout(style_context, cr, x, y, layout);
-      cairo_pop_group_to_source(cr);
-
-      linpat = cairo_pattern_create_linear(width - fading_width, y, width, y);
-      cairo_pattern_add_color_stop_rgba(linpat, 0, 0, 0, 0, 1);
-      cairo_pattern_add_color_stop_rgba(linpat, 1, 0, 0, 0, 0);
-      cairo_mask(cr, linpat);
-
-      cairo_pattern_destroy(linpat);
-    }
-    else
-    {
-      gtk_render_layout(style_context, cr, x, y, layout);
-    }
-
-    x += text_width;
-
-    gtk_widget_path_free(widget_path);
-    gtk_style_context_restore(style_context);
-  }
-
-  if (layout)
-    g_object_unref(layout);
+  gtk_widget_path_free(widget_path);
+  gtk_style_context_restore(style_context);
 }
 
 void
@@ -873,11 +848,11 @@ PanelMenuView::Refresh()
 
   if (!_panel_title.empty())
   {
-    DrawText(cr, x, y, width, height, "", _panel_title);
+    DrawText(cr, x, y, width, height, _panel_title);
   }
   else
   {
-    DrawText(cr, x, y, width, height, "", GetActiveViewName());
+    DrawText(cr, x, y, width, height, GetActiveViewName());
   }
 
   cairo_destroy(cr);

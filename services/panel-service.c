@@ -622,7 +622,7 @@ panel_service_remove_indicator (PanelService *self, IndicatorObject *indicator)
   gpointer timeout = g_object_get_data (G_OBJECT (indicator), "remove-timeout");
 
   if (timeout)
-      g_source_remove (GPOINTER_TO_UINT (timeout));
+    g_source_remove (GPOINTER_TO_UINT (timeout));
 
   g_object_set_data (G_OBJECT (indicator), "remove", GINT_TO_POINTER (TRUE));
   notify_object (indicator);
