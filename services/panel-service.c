@@ -1294,16 +1294,16 @@ panel_service_sync_geometry (PanelService *self,
           GdkRectangle *geo = NULL;
 
           if (entry2geometry_hash == NULL)
-          {
-            entry2geometry_hash = g_hash_table_new_full (g_direct_hash, g_direct_equal,
-                                                         NULL, g_free);
-            g_hash_table_insert (priv->panel2entries_hash, g_strdup (panel_id),
-                                 entry2geometry_hash);
-          }
+            {
+              entry2geometry_hash = g_hash_table_new_full (g_direct_hash, g_direct_equal,
+                                                           NULL, g_free);
+              g_hash_table_insert (priv->panel2entries_hash, g_strdup (panel_id),
+                                   entry2geometry_hash);
+            }
           else
-          {
-            geo = g_hash_table_lookup (entry2geometry_hash, entry);
-          }
+            {
+              geo = g_hash_table_lookup (entry2geometry_hash, entry);
+            }
 
           if (geo == NULL)
             {
@@ -1315,7 +1315,7 @@ panel_service_sync_geometry (PanelService *self,
            * accordingly to the change we recorded! */
           if (GTK_IS_MENU (priv->last_menu) && priv->last_menu == entry->menu)
             {
-               GtkWidget *top_widget = gtk_widget_get_toplevel (GTK_WIDGET (priv->last_menu));
+              GtkWidget *top_widget = gtk_widget_get_toplevel (GTK_WIDGET (priv->last_menu));
 
               if (GTK_IS_WINDOW (top_widget))
                 {
