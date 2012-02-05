@@ -50,7 +50,7 @@ PanelIndicatorEntryView::PanelIndicatorEntryView(
   : TextureArea(NUX_TRACKER_LOCATION)
   , proxy_(proxy)
   , type_(type)
-  , texture_layer_(nullptr)
+  , entry_texture_(nullptr)
   , padding_(padding < 0 ? 0 : padding)
   , opacity_(1.0f)
   , draw_active_(false)
@@ -60,7 +60,8 @@ PanelIndicatorEntryView::PanelIndicatorEntryView(
   on_indicator_activate_changed_connection_ = proxy_->active_changed.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::OnActiveChanged));
   on_indicator_updated_connection_ = proxy_->updated.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::Refresh));
 
-  on_font_changed_connection_ = g_signal_connect(gtk_settings_get_default(), "notify::gtk-font-name", (GCallback) &PanelIndicatorEntryView::OnFontChanged, this);
+  font_changed_signal_.Connect(gtk_settings_get_default(), "notify::gtk-font-name", [&]
+    (GtkSettings*, GParamSpec*) { Refresh(); });
 
   InputArea::mouse_down.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::OnMouseDown));
   InputArea::mouse_up.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::OnMouseUp));
@@ -78,10 +79,6 @@ PanelIndicatorEntryView::~PanelIndicatorEntryView()
   on_indicator_activate_changed_connection_.disconnect();
   on_indicator_updated_connection_.disconnect();
   on_panelstyle_changed_connection_.disconnect();
-  g_signal_handler_disconnect(gtk_settings_get_default(), on_font_changed_connection_);
-
-  if (texture_layer_)
-    delete texture_layer_;
 }
 
 void PanelIndicatorEntryView::OnActiveChanged(bool is_active)
@@ -358,12 +355,8 @@ void PanelIndicatorEntryView::Refresh()
   if (!IsVisible())
   {
     SetVisible(false);
-
-    if (texture_layer_)
-    {
-      texture_layer_ = nullptr;
-      delete texture_layer_;
-    }
+    entry_texture_ = nullptr;
+    SetColor(nux::color::Transparent);
 
     QueueDraw();
     refreshed.emit(this);
@@ -459,26 +452,9 @@ void PanelIndicatorEntryView::Refresh()
   cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
   DrawEntryContent(cr, width, height, pixbuf, layout);
 
-  nux::BaseTexture* texture2D = texture_from_cairo_graphics(cg);
+  entry_texture_ = texture_from_cairo_graphics(cg);
+  SetTexture(entry_texture_);
   cairo_destroy(cr);
-
-  nux::TexCoordXForm texxform;
-  texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-  texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
-
-  nux::ROPConfig rop;
-  rop.Blend = true;
-  rop.SrcBlend = GL_ONE;
-  rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
-
-  if (texture_layer_)
-    delete texture_layer_;
-
-  texture_layer_ = new nux::TextureLayer(texture2D->GetDeviceTexture(), texxform,
-                                         nux::color::White, true, rop);
-  SetPaintLayer(texture_layer_);
-
-  texture2D->UnReference();
 
   SetVisible(true);
   QueueDraw();
@@ -487,20 +463,23 @@ void PanelIndicatorEntryView::Refresh()
 
 void PanelIndicatorEntryView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
-  if (opacity_ == 1.0f)
-  {
-    TextureArea::Draw(GfxContext, force_draw);
-    return;
-  }
-
-  auto geo = GetGeometry();
+  nux::Geometry const& geo = GetGeometry();
   GfxContext.PushClippingRectangle(geo);
 
-  if (texture_layer_)
+  if (entry_texture_ && opacity_ > 0.0f)
   {
+    /* "Clear" out the background */
+    nux::ROPConfig rop;
+    rop.Blend = true;
+    rop.SrcBlend = GL_ONE;
+    rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+
+    nux::ColorLayer layer(nux::color::Transparent, true, rop);
+    nux::GetPainter().PushDrawLayer(GfxContext, geo, &layer);
+
     nux::TexCoordXForm texxform;
     GfxContext.QRP_1Tex(geo.x, geo.y, geo.width, geo.height,
-                        texture_layer_->GetDeviceTexture(), texxform,
+                        entry_texture_->GetDeviceTexture(), texxform,
                         nux::color::White * opacity_);
   }
 
@@ -606,13 +585,6 @@ void PanelIndicatorEntryView::SetDisabled(bool disabled)
 bool PanelIndicatorEntryView::IsDisabled()
 {
   return (disabled_ || !proxy_.get() || !IsSensitive());
-}
-
-void PanelIndicatorEntryView::OnFontChanged(GObject* gobject, GParamSpec* pspec,
-                                            gpointer data)
-{
-  PanelIndicatorEntryView* self = reinterpret_cast<PanelIndicatorEntryView*>(data);
-  self->Refresh();
 }
 
 } // namespace unity

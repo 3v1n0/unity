@@ -28,8 +28,9 @@
 
 #include <UnityCore/IndicatorEntry.h>
 #include <UnityCore/GLibWrapper.h>
+#include <UnityCore/GLibSignal.h>
 
-#include <pango/pangocairo.h>
+#include <gtk/gtk.h>
 
 #include "Introspectable.h"
 
@@ -42,11 +43,11 @@ namespace unity
 class PanelIndicatorEntryView : public nux::TextureArea, public unity::debug::Introspectable
 {
 public:
-  typedef enum {
+  enum IndicatorEntryType {
     INDICATOR,
     MENU,
     OTHER
-  } IndicatorEntryType;
+  };
 
   PanelIndicatorEntryView(indicator::Entry::Ptr const& proxy, int padding = 5,
                           IndicatorEntryType type = INDICATOR);
@@ -82,15 +83,14 @@ public:
 private:
   unity::indicator::Entry::Ptr proxy_;
   IndicatorEntryType type_;
-  nux::TextureLayer* texture_layer_;
+  nux::BaseTexture* entry_texture_;
   int padding_;
   double opacity_;
   bool draw_active_;
   bool dash_showing_;
   bool disabled_;
-  gulong on_font_changed_connection_;
+  glib::Signal<void, GtkSettings*, GParamSpec*> font_changed_signal_;
 
-  static void OnFontChanged(GObject* gobject, GParamSpec* pspec, gpointer data);
   void OnMouseDown(int x, int y, long button_flags, long key_flags);
   void OnMouseUp(int x, int y, long button_flags, long key_flags);
   void OnMouseWheel(int x, int y, int delta, unsigned long mouse_state, unsigned long key_state);
@@ -101,8 +101,8 @@ private:
 
   glib::Object<GdkPixbuf> MakePixbuf();
 
-  void DrawEntryBackground(cairo_t*, unsigned int w, unsigned int h);
-  void DrawEntryContent(cairo_t *cr, unsigned int width, unsigned int height,
+  void DrawEntryBackground(cairo_t* cr, unsigned int w, unsigned int h);
+  void DrawEntryContent(cairo_t* cr, unsigned int width, unsigned int height,
                         glib::Object<GdkPixbuf> const& pixbuf,
                         glib::Object<PangoLayout> const& layout);
 

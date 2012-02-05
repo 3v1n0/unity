@@ -75,8 +75,8 @@ Style::Style() :
   gtk_widget_path_free(widget_path);
 
   GtkSettings* settings = gtk_settings_get_default();
-  _style_changed_signal.Connect(G_OBJECT(settings), "notify::gtk-theme-name",
-  [&] (GObject*, GParamSpec*) {
+  _style_changed_signal.Connect(settings, "notify::gtk-theme-name",
+  [&] (GtkSettings*, GParamSpec*) {
     Refresh();
   });
 
