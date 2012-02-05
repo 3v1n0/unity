@@ -142,8 +142,9 @@ private:
 private:
   glib::Object<BamfMatcher> _matcher;
 
-  nux::TextureLayer*       _title_layer;
-  nux::HLayout*            _menu_layout;
+  nux::TextureLayer* _title_layer;
+  nux::HLayout* _menu_layout;
+  nux::ObjectPtr<nux::BaseTexture> _title_texture;
   nux::ObjectPtr<nux::IOpenGLBaseTexture> _gradient_texture;
 
   bool _is_inside;

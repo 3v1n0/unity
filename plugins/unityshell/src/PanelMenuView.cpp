@@ -54,8 +54,6 @@ namespace unity
 
 PanelMenuView::PanelMenuView(int padding)
   : _matcher(bamf_matcher_get_default()),
-    _title_layer(nullptr),
-    _gradient_texture(nullptr),
     _is_inside(false),
     _is_maximized(false),
     _is_own_window(false),
@@ -189,9 +187,6 @@ PanelMenuView::~PanelMenuView()
 
   if (_new_app_hide_id)
     g_source_remove(_new_app_hide_id);
-
-  if (_title_layer)
-    delete _title_layer;
 
   _menu_layout->UnReference();
   _window_buttons->UnReference();
@@ -400,7 +395,7 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   nux::ColorLayer layer(nux::Color(0x00000000), true, rop);
   nux::GetPainter().PushDrawLayer(GfxContext, GetGeometry(), &layer);
 
-  if (_title_layer && !_is_own_window)
+  if (_title_texture && !_is_own_window)
   {
     guint blend_alpha = 0, blend_src = 0, blend_dest = 0;
     bool draw_menus = DrawMenus();
@@ -525,7 +520,7 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
                              geo.width, geo.height,
                              _gradient_texture, texxform0,
                              nux::color::White,
-                             _title_layer->GetDeviceTexture(),
+                             _title_texture->GetDeviceTexture(),
                              texxform1,
                              nux::color::White);
     }
@@ -534,7 +529,10 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
       if (_we_control_active && _window_buttons->GetOpacity() == 0.0 &&
           (!has_menu || (has_menu && GetOpacity() == 0.0)))
       {
-        nux::GetPainter().PushDrawLayer(GfxContext, geo, _title_layer);
+        nux::TexCoordXForm texxform;
+        GfxContext.QRP_1Tex(geo.x, geo.y, geo.width, geo.height,
+                            _title_texture->GetDeviceTexture(), texxform,
+                            nux::color::White);
       }
       else
       {
@@ -556,10 +554,13 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
           title_opacity = CLAMP(title_opacity - 0.2f, 0.0f, 1.0f);
         }
 
-        nux::TexCoordXForm texxform;
-        GfxContext.QRP_1Tex(geo.x, geo.y, geo.width, geo.height,
-                            _title_layer->GetDeviceTexture(), texxform,
-                            nux::color::White * title_opacity);
+        if (title_opacity > 0.0f)
+        {
+          nux::TexCoordXForm texxform;
+          GfxContext.QRP_1Tex(geo.x, geo.y, geo.width, geo.height,
+                              _title_texture->GetDeviceTexture(), texxform,
+                              nux::color::White * title_opacity);
+        }
       }
     }
 
@@ -773,7 +774,7 @@ void PanelMenuView::DrawText(cairo_t *cr_real, int x, int y, int width, int heig
   cairo_destroy(cr);
 
 
- // Draw the text
+  // Draw the text
   GtkStyleContext* style_context = panel::Style::Instance().GetStyleContext();
   text_space = width - x;
   cr = cr_real;
@@ -823,7 +824,7 @@ void PanelMenuView::DrawText(cairo_t *cr_real, int x, int y, int width, int heig
 void
 PanelMenuView::Refresh()
 {
-  nux::Geometry         geo = GetGeometry();
+  nux::Geometry geo(GetGeometry());
 
   // We can get into a race that causes the geometry to be wrong as there hasn't been a
   // layout cycle before the first callback. This is to protect from that.
@@ -857,25 +858,7 @@ PanelMenuView::Refresh()
 
   cairo_destroy(cr);
 
-  nux::BaseTexture* texture2D = texture_from_cairo_graphics(cairo_graphics);
-
-  if (_title_layer)
-    delete _title_layer;
-
-  nux::TexCoordXForm texxform;
-  texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-  texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
-
-  nux::ROPConfig rop;
-  rop.Blend = true;
-  rop.SrcBlend = GL_ONE;
-  rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
-  _title_layer = new nux::TextureLayer(texture2D->GetDeviceTexture(),
-                                       texxform,
-                                       nux::color::White,
-                                       true,
-                                       rop);
-  texture2D->UnReference();
+  _title_texture = texture_from_cairo_graphics(cairo_graphics);
 }
 
 void
