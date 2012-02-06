@@ -379,6 +379,9 @@ PanelMenuView::OnFadeOutChanged(double progress)
 bool
 PanelMenuView::DrawMenus()
 {
+  if (_is_integrated)
+    return true;
+
   if (!_is_own_window && !_dash_showing && _we_control_active && !_switcher_showing)
   {
     if (_is_inside || _last_active_view || _show_now_activated || _new_application)
@@ -393,7 +396,7 @@ PanelMenuView::DrawMenus()
 bool
 PanelMenuView::DrawWindowButtons()
 {
-  if (_dash_showing)
+  if (_dash_showing || _is_integrated)
     return true;
 
   if (!_is_own_window && _we_control_active && _is_maximized && !_switcher_showing)
@@ -412,7 +415,7 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
   nux::Geometry geo = GetGeometry();
   int button_width = _padding + _window_buttons->GetContentWidth() + _padding;
-  float factor = 4;
+  const float factor = 4;
   button_width /= factor;
 
   if (geo.width != _last_width || geo.height != _last_height)
@@ -1087,7 +1090,7 @@ PanelMenuView::OnActiveWindowChanged(BamfMatcher *matcher,
     if (bamf_window_get_window_type(window) == BAMF_WINDOW_DESKTOP)
       _we_control_active = true;
     else
-      _we_control_active = UScreen::GetDefault()->GetMonitorGeometry(_monitor).IsPointInside(geo.x + (geo.width / 2), geo.y);
+      _we_control_active = _monitor_geo.IsPointInside(geo.x + (geo.width / 2), geo.y);
 
     if (_decor_map.find(xid) == _decor_map.end())
     {
@@ -1251,9 +1254,9 @@ PanelMenuView::OnWindowRestored(guint xid)
 gboolean
 PanelMenuView::UpdateActiveWindowPosition(PanelMenuView* self)
 {
-  auto window_geo = WindowManager::Default()->GetWindowGeometry(self->_active_xid);
-  auto monitor_geo = UScreen::GetDefault()->GetMonitorGeometry(self->_monitor);
-  auto intersect = monitor_geo.Intersect(window_geo);
+  auto wm = WindowManager::Default();
+  nux::Geometry const& window_geo = wm->GetWindowGeometry(self->_active_xid);
+  nux::Geometry const& intersect = self->_monitor_geo.Intersect(window_geo);
 
   self->_we_control_active = (intersect.width > window_geo.width/4 &&
                               intersect.height > window_geo.height/4);
@@ -1347,23 +1350,24 @@ Window
 PanelMenuView::GetMaximizedWindow()
 {
   Window window_xid = 0;
-  nux::Geometry monitor =  UScreen::GetDefault()->GetMonitorGeometry(_monitor);
+  auto wm = WindowManager::Default();
 
   // Find the front-most of the maximized windows we are controlling
   for (auto xid : _maximized_set)
   {
     // We can safely assume only the front-most is visible
-    if (WindowManager::Default()->IsWindowOnCurrentDesktop(xid)
-        && !WindowManager::Default()->IsWindowObscured(xid))
+    if (wm->IsWindowOnCurrentDesktop(xid) && !wm->IsWindowObscured(xid))
     {
-      nux::Geometry geo = WindowManager::Default()->GetWindowGeometry(xid);
-      if (monitor.IsPointInside(geo.x + (geo.width / 2), geo.y))
+      nux::Geometry const& geo = wm->GetWindowGeometry(xid);
+
+      if (_monitor_geo.IsPointInside(geo.x + (geo.width / 2), geo.y))
       {
         window_xid = xid;
         break;
       }
     }
   }
+
   return window_xid;
 }
 
@@ -1595,6 +1599,25 @@ PanelMenuView::SetMonitor(int monitor)
 {
   _monitor = monitor;
   _monitor_geo = UScreen::GetDefault()->GetMonitorGeometry(_monitor);
+
+  _maximized_set.clear();
+  GList* windows = bamf_matcher_get_window_stack_for_monitor(_matcher, _monitor);
+
+  for (GList* l = windows; l; l = l->next)
+  {
+    if (!BAMF_IS_WINDOW(l->data))
+      continue;
+
+    auto window = static_cast<BamfWindow*>(l->data);
+
+    if (bamf_window_maximized(window) == BAMF_WINDOW_MAXIMIZED)
+    {
+      Window xid = bamf_window_get_xid(window);
+      _maximized_set.insert(xid);
+    }
+  }
+
+  g_list_free(windows);
 }
 
 bool
