@@ -17,6 +17,7 @@ from time import sleep
 from autopilot.utilities import make_window_skip_taskbar
 from autopilot.emulators.unity import Launcher, Switcher
 from autopilot.emulators.bamf import Bamf
+from autopilot.emulators.X11 import Mouse
 
 class InvisibleWindowTests(TestCase):
     """Test unity's handling of windows with the Skip-Tasklist flag set."""
@@ -68,16 +69,21 @@ class InvisibleWindowTests(TestCase):
         self.addCleanup(call, ["killall", "gcalctool"])
         # need to pin the app to the launcher - this could be tricky.
         launcher = Launcher()
-        launcher.grab_switcher()
+        launcher.reveal_launcher(0)
+        icons = launcher.get_launcher_icons()
+        # launcher.grab_switcher()
         found = False
-        current_icon = None
-        for i in range(launcher.num_launcher_icons()):
-            current_icon = launcher.get_currently_selected_icon()
-            if current_icon.tooltip_text == 'Calculator':
+        # current_icon = None
+        for icon in icons:
+            if icon.tooltip_text == 'Calculator':
                 found = True
+                launcher.lock_to_launcher(icon)
+                self.addCleanup(launcher.unlock_from_launcher, icon)
                 break
-            launcher.switcher_next()
+
         self.assertTrue(found, "Could not find calculator in launcher.")
-        launcher.switcher_enter_quicklist()
-        
-        launcher.end_switcher(cancel=True)
+        # launcher.switcher_enter_quicklist()
+        # quicklist = current_icon.get_quicklist()
+        # self.assertTrue(quicklist.active)
+
+        # launcher.end_switcher(cancel=True)

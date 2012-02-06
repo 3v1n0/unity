@@ -308,7 +308,7 @@ private:
   int               _last_monitor;
   nux::Color        _background_color;
   nux::Color        _glow_color;
-  
+
   gint64            _shortcut;
 
   std::vector<nux::Point3> _center;
@@ -326,7 +326,7 @@ private:
 
   std::list<LauncherEntryRemote*> _entry_list;
   std::vector<std::map<TransformIndex, std::vector<nux::Vector4> > > transform_map;
-  
+
 };
 
 }

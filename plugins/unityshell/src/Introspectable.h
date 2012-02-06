@@ -41,6 +41,7 @@ public:
   void RemoveChild(Introspectable* child);
   virtual void AddProperties(GVariantBuilder* builder) = 0;
   virtual IntrospectableList const& GetIntrospectableChildren();
+  guint64 GetIntrospectionId() const;
 
 protected:
   /// Please don't override this unless you really need to. The only valid reason
@@ -60,6 +61,7 @@ protected:
 private:
   std::list<Introspectable*> _children;
   std::list<Introspectable*> _parents;
+  guint64 _id;
 };
 }
 }

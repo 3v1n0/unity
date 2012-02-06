@@ -576,7 +576,7 @@ bool LauncherIcon::OpenQuicklist(bool default_to_first_item, int monitor)
 
   nux::Geometry geo = _parent_geo[monitor];
   int tip_x = geo.x + geo.width + 1;
-  int tip_y = geo.y + _center[monitor].y; 
+  int tip_y = geo.y + _center[monitor].y;
 
   auto win_manager = WindowManager::Default();
 
@@ -619,7 +619,7 @@ void LauncherIcon::RecvMouseClick(int button, int monitor)
 {
   ActionArg arg(ActionArg::LAUNCHER, button);
   arg.monitor = monitor;
-  
+
   if (button == 1)
     Activate(arg);
   else if (button == 2)
@@ -793,7 +793,7 @@ LauncherIcon::SetQuirk(LauncherIcon::Quirk quirk, bool value)
 {
   if (_quirks[quirk] == value)
     return;
-  
+
   _quirks[quirk] = value;
   if (quirk == QUIRK_VISIBLE)
     TimeUtil::SetTimeStruct(&(_quirk_times[quirk]), &(_quirk_times[quirk]), ANIM_DURATION_SHORT);

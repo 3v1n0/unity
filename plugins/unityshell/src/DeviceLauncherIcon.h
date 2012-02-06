@@ -48,6 +48,7 @@ public:
 protected:
   std::list<DbusmenuMenuitem*> GetMenus();
   void UpdateDeviceIcon();
+  std::string GetName() const;
 
 private:
   void ActivateLauncherIcon(ActionArg arg);

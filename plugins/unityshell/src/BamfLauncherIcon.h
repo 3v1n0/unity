@@ -59,8 +59,8 @@ public:
   std::vector<Window> WindowsForMonitor(int monitor);
 
   std::string NameForWindow (Window window);
-
 protected:
+  std::string GetName() const;
   std::list<DbusmenuMenuitem*> GetMenus();
 
   void UpdateIconGeometries(std::vector<nux::Point3> center);
@@ -123,7 +123,7 @@ private:
   void OnWindowMinimized(guint32 xid);
   void OnWindowMoved(guint32 xid);
   bool OwnsWindow(Window w);
-  
+
   const std::set<std::string>& GetSupportedTypes();
 
   static void OnClosed(BamfView* view, gpointer data);
