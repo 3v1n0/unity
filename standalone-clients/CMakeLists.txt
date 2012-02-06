@@ -47,10 +47,10 @@ add_executable (dash
                 ${UNITY_SRC}/BackgroundEffectHelper.h
                 ${UNITY_SRC}/BGHash.cpp
                 ${UNITY_SRC}/BGHash.h
-                ${UNITY_SRC}/DashSearchBar.cpp
-                ${UNITY_SRC}/DashSearchBar.h
-                ${UNITY_SRC}/DashSearchBarSpinner.cpp
-                ${UNITY_SRC}/DashSearchBarSpinner.h
+                ${UNITY_SRC}/SearchBar.cpp
+                ${UNITY_SRC}/SearchBar.h
+                ${UNITY_SRC}/SearchBarSpinner.cpp
+                ${UNITY_SRC}/SearchBarSpinner.h
                 ${UNITY_SRC}/DashView.cpp
                 ${UNITY_SRC}/DashView.h
                 ${UNITY_SRC}/DashViewPrivate.cpp
@@ -84,6 +84,10 @@ add_executable (dash
                 ${UNITY_SRC}/PlacesSimpleTile.h
                 ${UNITY_SRC}/PlacesVScrollBar.cpp
                 ${UNITY_SRC}/PlacesVScrollBar.h
+                ${UNITY_SRC}/DashView.cpp
+                ${UNITY_SRC}/DashView.h
+                ${UNITY_SRC}/DashViewPrivate.cpp
+                ${UNITY_SRC}/DashViewPrivate.h
                 ${UNITY_SRC}/DashStyle.cpp
                 ${UNITY_SRC}/IconLoader.cpp
                 ${UNITY_SRC}/IconLoader.h
@@ -455,6 +459,39 @@ add_executable (bg-hash
                 ${UNITY_SRC}/ubus-server.h
                )
 add_dependencies (bg-hash unity-core-${UNITY_API_VERSION})
+
+add_executable (hud
+                StandaloneHud.cpp
+                ${UNITY_SRC}/BackgroundEffectHelper.cpp
+                ${UNITY_SRC}/BackgroundEffectHelper.h
+                ${UNITY_SRC}/DashSettings.cpp
+                ${UNITY_SRC}/DashSettings.h
+                ${UNITY_SRC}/DashStyle.cpp
+                ${UNITY_SRC}/HudButton.cpp
+                ${UNITY_SRC}/HudIcon.cpp
+                ${UNITY_SRC}/HudIcon.h
+                ${UNITY_SRC}/HudIconTextureSource.cpp
+                ${UNITY_SRC}/HudIconTextureSource.h
+                ${UNITY_SRC}/HudView.cpp
+                ${UNITY_SRC}/IMTextEntry.cpp
+                ${UNITY_SRC}/Introspectable.cpp
+                ${UNITY_SRC}/IconTexture.cpp
+                ${UNITY_SRC}/IconLoader.cpp
+                ${UNITY_SRC}/IconRenderer.cpp
+                ${UNITY_SRC}/IconTextureSource.cpp
+                ${UNITY_SRC}/JSONParser.cpp
+                ${UNITY_SRC}/OverlayRenderer.cpp
+                ${UNITY_SRC}/SearchBar.cpp
+                ${UNITY_SRC}/SearchBarSpinner.cpp
+                ${UNITY_SRC}/StaticCairoText.cpp
+                ${UNITY_SRC}/TextureCache.cpp
+                ${UNITY_SRC}/Timer.cpp
+                ${UNITY_SRC}/UBusWrapper.cpp
+                ${UNITY_SRC}/ubus-server.cpp
+                ${UNITY_SRC}/UScreen.cpp
+                ${UNITY_SRC}/UScreen.h
+               )
+add_dependencies (hud unity-core-${UNITY_API_VERSION})
 
 add_executable (test-shortcut
                 TestShortcut.cpp
