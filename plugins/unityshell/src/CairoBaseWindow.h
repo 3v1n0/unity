@@ -31,16 +31,18 @@ class CairoBaseWindow : public nux::BaseWindow
 public:
   CairoBaseWindow();
 
+protected:
   void Draw(nux::GraphicsEngine& gfxContext, bool forceDraw);
 
-protected:
-  nux::ObjectPtr<nux::BaseTexture> _texture_bg;
-  nux::ObjectPtr<nux::BaseTexture> _texture_mask;
-  nux::ObjectPtr<nux::BaseTexture> _texture_outline;
-  nux::ObjectPtr<nux::IOpenGLBaseTexture> _bg_blur_texture;
+  nux::ObjectPtr<nux::BaseTexture> texture_bg_;
+  nux::ObjectPtr<nux::BaseTexture> texture_mask_;
+  nux::ObjectPtr<nux::BaseTexture> texture_outline_;
 
   bool _use_blurred_background;
   bool _compute_blur_bkg;
+
+private:
+  nux::ObjectPtr<nux::IOpenGLBaseTexture> bg_blur_texture_;
 };
 }
 

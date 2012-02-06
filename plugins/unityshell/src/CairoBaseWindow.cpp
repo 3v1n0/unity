@@ -61,7 +61,7 @@ void CairoBaseWindow::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
     nux::ObjectPtr <nux::IOpenGLBaseTexture> bkg_texture = gfxContext.CreateTextureFromBackBuffer(base.x, base.y, base.width, base.height);
 
     nux::TexCoordXForm texxform_bkg;
-    _bg_blur_texture = gfxContext.QRP_GetBlurTexture(0, 0, base.width, base.height, bkg_texture, texxform_bkg, nux::color::White, 1.0f, 3);
+    bg_blur_texture_ = gfxContext.QRP_GetBlurTexture(0, 0, base.width, base.height, bkg_texture, texxform_bkg, nux::color::White, 1.0f, 3);
 
     if (current_fbo.IsValid())
     {
@@ -101,7 +101,7 @@ void CairoBaseWindow::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
   texxform_mask.SetWrap(nux::TEXWRAP_CLAMP, nux::TEXWRAP_CLAMP);
   texxform_mask.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
 
-  if (_bg_blur_texture.IsValid() && _texture_mask.IsValid())
+  if (bg_blur_texture_.IsValid() && texture_mask_.IsValid())
   {
     nux::TexCoordXForm texxform_blur_bkg;
 
@@ -113,15 +113,15 @@ void CairoBaseWindow::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
       base.y,
       base.width,
       base.height,
-      _bg_blur_texture,
+      bg_blur_texture_,
       texxform_blur_bkg,
       nux::color::White,
-      _texture_mask->GetDeviceTexture(),
+      texture_mask_->GetDeviceTexture(),
       texxform_mask,
       nux::color::White);
   }
 
-  if (_texture_bg.IsValid() && _texture_mask.IsValid())
+  if (texture_bg_.IsValid() && texture_mask_.IsValid())
   {
     nux::GetWindowThread()->GetGraphicsEngine().GetRenderStates().SetBlend(true);
     nux::GetWindowThread()->GetGraphicsEngine().GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
@@ -130,15 +130,15 @@ void CairoBaseWindow::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
                            base.y,
                            base.width,
                            base.height,
-                           _texture_bg->GetDeviceTexture(),
+                           texture_bg_->GetDeviceTexture(),
                            texxform_bg,
                            nux::color::White,
-                           _texture_mask->GetDeviceTexture(),
+                           texture_mask_->GetDeviceTexture(),
                            texxform_mask,
                            nux::color::White);
   }
 
-  if (_texture_outline.IsValid())
+  if (texture_outline_.IsValid())
   {
     nux::TexCoordXForm texxform;
     texxform.SetWrap(nux::TEXWRAP_CLAMP, nux::TEXWRAP_CLAMP);
@@ -151,7 +151,7 @@ void CairoBaseWindow::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
                         base.y,
                         base.width,
                         base.height,
-                        _texture_outline->GetDeviceTexture(),
+                        texture_outline_->GetDeviceTexture(),
                         texxform,
                         nux::color::White);
   }

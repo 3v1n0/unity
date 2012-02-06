@@ -274,15 +274,6 @@ QuicklistView::RecvKeyPressed(unsigned long    eventType,
 
 QuicklistView::~QuicklistView()
 {
-  if (_texture_bg)
-    _texture_bg->UnReference();
-
-  if (_texture_outline)
-    _texture_outline->UnReference();
-
-  if (_texture_mask)
-    _texture_mask->UnReference();
-
   std::list<QuicklistMenuItem*>::iterator it;
   for (it = _item_list.begin(); it != _item_list.end(); it++)
   {
@@ -382,7 +373,7 @@ void QuicklistView::Hide()
 
 void QuicklistView::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
 {
-  unity::CairoBaseWindow::Draw(gfxContext, forceDraw);
+  CairoBaseWindow::Draw(gfxContext, forceDraw);
 
   nux::Geometry base(GetGeometry());
   base.x = 0;
@@ -1335,21 +1326,10 @@ void QuicklistView::UpdateTexture()
   cairo_destroy(cr_outline);
   cairo_destroy(cr_mask);
 
-  if (_texture_bg)
-    _texture_bg->UnReference();
-  _texture_bg = texture_from_cairo_graphics(*cairo_bg);
+  texture_bg_ = texture_from_cairo_graphics(*cairo_bg);
+  texture_mask_ = texture_from_cairo_graphics(*cairo_mask);
+  texture_outline_ = texture_from_cairo_graphics(*cairo_outline);
 
-  if (_texture_mask)
-    _texture_mask->UnReference();
-  _texture_mask = texture_from_cairo_graphics(*cairo_mask);
-
-  if (_texture_outline)
-    _texture_outline->UnReference();
-  _texture_outline = texture_from_cairo_graphics(*cairo_outline);
-
-  delete cairo_bg;
-  delete cairo_mask;
-  delete cairo_outline;
   _cairo_text_has_changed = false;
 
   // Request a redraw, so this area will be added to Compiz list of dirty areas.
