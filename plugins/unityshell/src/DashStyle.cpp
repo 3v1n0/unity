@@ -1437,7 +1437,7 @@ void Style::Impl::Text(cairo_t*    cr,
   pango_layout_get_extents(layout, &ink, &log);
   x = horizMargin; // let pango alignment handle the x position
   y = ((double) h - pango_units_to_double(log.height)) / 2.0;
-  
+
   cairo_move_to(cr, x, y);
   pango_cairo_show_layout(cr, layout);
 
@@ -1540,7 +1540,7 @@ void Style::Impl::DrawOverlay(cairo_t*  cr,
   cairo_set_operator(cr, old);
 }
 
-bool Style::Button(cairo_t* cr, nux::ButtonVisualState state, 
+bool Style::Button(cairo_t* cr, nux::ButtonVisualState state,
                    std::string const& label, int font_size,
                    Alignment alignment, bool zeromargin)
 {
@@ -1554,7 +1554,7 @@ bool Style::Button(cairo_t* cr, nux::ButtonVisualState state,
   unsigned int garnish = 0;
   if (zeromargin == false)
    garnish = GetButtonGarnishSize();
-  
+
   //ButtonOutlinePath(cr, true);
   double w = cairo_image_surface_get_width(cairo_get_target(cr));
   double h = cairo_image_surface_get_height(cairo_get_target(cr));
@@ -1632,12 +1632,12 @@ nux::AbstractPaintLayer* Style::FocusOverlay(int width, int height)
                                 false,
                                 rop));
 }
-                              
-bool Style::SquareButton(cairo_t* cr, nux::ButtonVisualState state, 
+
+bool Style::SquareButton(cairo_t* cr, nux::ButtonVisualState state,
                          std::string const& label, bool curve_bottom,
-                         int font_size, Alignment alignment, 
+                         int font_size, Alignment alignment,
                          bool zeromargin)
-{                         
+{
   // sanity checks
   if (cairo_status(cr) != CAIRO_STATUS_SUCCESS)
     return false;
@@ -1648,7 +1648,7 @@ bool Style::SquareButton(cairo_t* cr, nux::ButtonVisualState state,
   unsigned int garnish = 0;
   if (zeromargin == false)
     garnish = GetButtonGarnishSize();
-  
+
   double w = cairo_image_surface_get_width(cairo_get_target(cr));
   double h = cairo_image_surface_get_height(cairo_get_target(cr));
 
@@ -1660,7 +1660,7 @@ bool Style::SquareButton(cairo_t* cr, nux::ButtonVisualState state,
 
   bool odd = true;
   double radius = 7.0;
-  
+
   // draw the grid background
   {
     cairo_set_line_width(cr, 1);
@@ -1689,7 +1689,7 @@ bool Style::SquareButton(cairo_t* cr, nux::ButtonVisualState state,
                 radius,
                 90.0f * G_PI / 180.0f,
                 180.0f * G_PI / 180.0f);
- 
+
       // line to top
       cairo_line_to(cr, _align(x, odd), _align(y, odd));
     }
@@ -1702,12 +1702,12 @@ bool Style::SquareButton(cairo_t* cr, nux::ButtonVisualState state,
 
     cairo_set_source_rgba(cr, pimpl->button_label_border_color_[nux::ButtonVisualState::VISUAL_STATE_NORMAL]);
     cairo_stroke(cr);
-  } 
+  }
 
   cairo_set_line_width(cr, pimpl->button_label_border_size_[state]);
   odd = cairo_get_line_width(cr) == 2.0 ? false : true;
 
-  
+
   if (pimpl->button_label_border_size_[state] == 2.0)
   {
     x += 1;
@@ -1739,7 +1739,7 @@ bool Style::SquareButton(cairo_t* cr, nux::ButtonVisualState state,
                      pimpl->button_label_blur_size_[state] * 0.75);
 
   // FIXME - magic value of 42 here for the offset in the HUD,
-  // replace with a nicer style system that lets hud override 
+  // replace with a nicer style system that lets hud override
   // default values when it needs to
   pimpl->Text(cr,
               pimpl->button_label_text_color_[state],
@@ -1749,7 +1749,7 @@ bool Style::SquareButton(cairo_t* cr, nux::ButtonVisualState state,
               alignment);
 
   cairo_surface_write_to_png(cairo_get_target(cr), "/tmp/wut.png");
-  
+
   return true;
 }
 
