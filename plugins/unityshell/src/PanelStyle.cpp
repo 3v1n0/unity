@@ -86,6 +86,11 @@ Style::Style() :
     changed.emit();
   });
 
+  _dpi_changed_signal.Connect(settings, "notify::gtk-xft-dpi",
+  [&] (GtkSettings*, GParamSpec*) {
+    changed.emit();
+  });
+
   Refresh();
 }
 
