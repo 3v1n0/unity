@@ -40,7 +40,7 @@ namespace
 {
 Style* style_instance = nullptr;
 
-nux::logging::Logger logger("unity.panel");
+nux::logging::Logger logger("unity.panel.style");
 
 nux::Color ColorFromGdkRGBA(GdkRGBA const& color)
 {

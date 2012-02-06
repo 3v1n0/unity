@@ -25,6 +25,7 @@
 #include <Nux/HLayout.h>
 #include <Nux/VLayout.h>
 #include <Nux/TextureArea.h>
+#include <NuxCore/Logger.h>
 
 #include <NuxGraphics/GLThread.h>
 #include <NuxGraphics/XInputWindow.h>
@@ -46,6 +47,10 @@
 #include <glib/gi18n-lib.h>
 
 #define WINDOW_TITLE_FONT_KEY "/apps/metacity/general/titlebar_font"
+
+namespace {
+  nux::logging::Logger logger("unity.panel.menu");
+}
 
 namespace unity
 {
@@ -192,6 +197,45 @@ PanelMenuView::~PanelMenuView()
   _panel_titlebar_grab_area->UnReference();
 
   _style_changed_connection.disconnect();
+  _mode_changed_connection.disconnect();
+}
+
+void
+PanelMenuView::AddIndicator(indicator::Indicator::Ptr const& indicator)
+{
+  if (!GetIndicators().empty())
+  {
+    LOG_ERROR(logger) << "PanelMenuView has already an indicator!";
+    return;
+  }
+
+  PanelIndicatorsView::AddIndicator(indicator);
+
+  if (indicator->IsAppmenu())
+  {
+    auto appmenuindicator = dynamic_cast<indicator::AppmenuIndicator*>(indicator.get());
+    if (appmenuindicator)
+    {
+      _is_integrated = appmenuindicator->IsIntegrated();
+
+      auto conn = appmenuindicator->integrated_changed.connect([&] (bool integrated) {
+        _is_integrated = integrated;
+
+        Refresh();
+        FullRedraw();
+      });
+      _mode_changed_connection = conn;
+    }
+  }
+}
+
+void
+PanelMenuView::RemoveIndicator(indicator::Indicator::Ptr const& indicator)
+{
+  PanelIndicatorsView::RemoveIndicator(indicator);
+
+  if (indicator->IsAppmenu())
+    _mode_changed_connection.disconnect();
 }
 
 void

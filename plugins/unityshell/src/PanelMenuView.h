@@ -72,7 +72,8 @@ public:
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
 
-  //virtual void AddIndicator(indicator::Indicator::Ptr const& indicator);
+  virtual void AddIndicator(indicator::Indicator::Ptr const& indicator);
+  virtual void RemoveIndicator(indicator::Indicator::Ptr const& indicator);
 
 protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
@@ -147,6 +148,7 @@ private:
   nux::ObjectPtr<nux::BaseTexture> _title_texture;
   nux::ObjectPtr<nux::IOpenGLBaseTexture> _gradient_texture;
 
+  bool _is_integrated;
   bool _is_inside;
   bool _is_grabbed;
   bool _is_maximized;
@@ -186,6 +188,7 @@ private:
   glib::Signal<void, BamfMatcher*, BamfApplication*, BamfApplication*> _active_app_changed_signal;
   glib::Signal<void, BamfView*, gchar*, gchar*> _view_name_changed_signal;
   sigc::connection _style_changed_connection;
+  sigc::connection _mode_changed_connection;
 
   UBusManager _ubus_manager;
 
