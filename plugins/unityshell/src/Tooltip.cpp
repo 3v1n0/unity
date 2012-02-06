@@ -112,7 +112,7 @@ void Tooltip::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
 {
   CairoBaseWindow::Draw(gfxContext, forceDraw);
 
-  nux::Geometry base(GetGeometry());
+  nux::Geometry const& base = GetGeometry();
   gfxContext.PushClippingRectangle(base);
 
   _tooltip_text->ProcessDraw(gfxContext, forceDraw);
