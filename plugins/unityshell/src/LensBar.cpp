@@ -253,7 +253,15 @@ std::string LensBar::GetName() const
 }
 
 void LensBar::AddProperties(GVariantBuilder* builder)
-{}
+{
+  unity::variant::BuilderWrapper wrapper(builder);
+  for( auto icon : icons_)
+  {
+    if (icon->active)
+      wrapper.add("active-lens", icon->id.Get()); 
+  }
+  
+}
 
 }
 }
