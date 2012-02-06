@@ -44,6 +44,11 @@ CairoBaseWindow::CairoBaseWindow() :
   SetWindowSizeMatchLayout(true);
 }
 
+CairoBaseWindow::~CairoBaseWindow()
+{
+  // nothing to do
+}
+
 void CairoBaseWindow::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
 {
   nux::Geometry base(GetGeometry());

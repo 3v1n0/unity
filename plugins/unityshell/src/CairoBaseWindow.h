@@ -30,6 +30,7 @@ class CairoBaseWindow : public nux::BaseWindow
   NUX_DECLARE_OBJECT_TYPE(CairoBaseWindow, nux::BaseWindow);
 public:
   CairoBaseWindow();
+  virtual ~CairoBaseWindow();
 
 protected:
   void Draw(nux::GraphicsEngine& gfxContext, bool forceDraw);
