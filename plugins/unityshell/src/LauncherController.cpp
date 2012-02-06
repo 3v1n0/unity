@@ -273,7 +273,8 @@ void Controller::Impl::OnScreenChanged(int primary_monitor, std::vector<nux::Geo
 {
   unsigned int num_monitors = monitors.size();
 
-  for (unsigned int i = 0; i < num_monitors; i++)
+  unsigned int i;
+  for (i = 0; i < num_monitors; i++)
   {
     if (i >= launchers.size())
       launchers.push_back(nux::ObjectPtr<Launcher> (CreateLauncher(i)));
@@ -281,6 +282,12 @@ void Controller::Impl::OnScreenChanged(int primary_monitor, std::vector<nux::Geo
     launchers[i]->Resize();
   }
 
+  for (; i < launchers.size(); ++i)
+  {
+    auto launcher = launchers[i];
+    if (launcher.IsValid())
+      launcher->GetParent()->UnReference();
+  }
   launchers.resize(num_monitors);
 }
 
