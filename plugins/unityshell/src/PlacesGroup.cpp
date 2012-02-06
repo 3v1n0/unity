@@ -53,6 +53,7 @@ const nux::Color kExpandDefaultTextColor(1.0f, 1.0f, 1.0f, 1.0f);
 const nux::Color kExpandHoverTextColor(1.0f, 1.0f, 1.0f, 1.0f);
 const float kExpandDefaultIconOpacity = 1.0f;
 const float kExpandHoverIconOpacity = 1.0f;
+const int kFocusHighlightHeight = 24;
 
 class HeaderView : public nux::View
 {
@@ -66,13 +67,13 @@ protected:
   void Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
   {
   };
-  
+
   void DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
   {
     if (GetLayout())
       GetLayout()->ProcessDraw(graphics_engine, force_draw);
   }
-  
+
   bool AcceptKeyNavFocus()
   {
     return false;
@@ -85,7 +86,8 @@ NUX_IMPLEMENT_OBJECT_TYPE(PlacesGroup);
 
 PlacesGroup::PlacesGroup()
   : View(NUX_TRACKER_LOCATION),
-    _child_view(NULL),
+    _child_view(nullptr),
+    _focus_layer(nullptr),
     _idle_id(0),
     _is_expanded(true),
     _n_visible_items_in_unexpand_mode(0),
@@ -102,7 +104,7 @@ PlacesGroup::PlacesGroup()
   _group_layout->AddLayout(new nux::SpaceLayout(15,15,15,15), 0);
 
   _header_view = new HeaderView(NUX_TRACKER_LOCATION);
-  _group_layout->AddView(_header_view, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FIX); 
+  _group_layout->AddView(_header_view, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FIX);
 
   _header_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
   _header_layout->SetHorizontalInternalMargin(10);
@@ -140,7 +142,7 @@ PlacesGroup::PlacesGroup()
 
   SetLayout(_group_layout);
 
-  // don't need to disconnect these signals as they are disconnected when this object destroys the contents 
+  // don't need to disconnect these signals as they are disconnected when this object destroys the contents
   _header_view->mouse_enter.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseEnter));
   _header_view->mouse_leave.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseLeave));
   _icon->mouse_click.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseClick));
@@ -160,13 +162,6 @@ PlacesGroup::PlacesGroup()
   _expand_icon->mouse_enter.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseEnter));
   _expand_icon->mouse_leave.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseLeave));
   _expand_icon->key_nav_focus_change.connect(sigc::mem_fun(this, &PlacesGroup::OnLabelFocusChanged));
-
-  nux::ROPConfig rop;
-  rop.Blend = true;
-  rop.SrcBlend = GL_ONE;
-  rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
-  bkg_color_layer_ = new nux::ShapeLayer(nux::eSHAPE_CORNER_ROUND10, nux::Color(0.2f, 0.2f, 0.2f, 0.2f),
-                                         nux::eAllCorners, false, rop);
 }
 
 PlacesGroup::~PlacesGroup()
@@ -177,7 +172,7 @@ PlacesGroup::~PlacesGroup()
   if (_cached_name != NULL)
     g_free(_cached_name);
 
-  delete bkg_color_layer_;
+  delete _focus_layer;
 }
 
 void
@@ -336,6 +331,25 @@ PlacesGroup::OnIdleRelayout(PlacesGroup* self)
   return FALSE;
 }
 
+long PlacesGroup::ComputeContentSize()
+{
+  long ret = nux::View::ComputeContentSize();
+
+  nux::Geometry const& geo = GetGeometry();
+
+  if (_cached_geometry != geo)
+  {
+    if (_focus_layer)
+      delete _focus_layer;
+
+    _focus_layer = dash::Style::Instance().FocusOverlay(geo.width - 16, kFocusHighlightHeight);
+
+    _cached_geometry = geo;
+  }
+
+  return ret;
+}
+
 void PlacesGroup::Draw(nux::GraphicsEngine& graphics_engine,
                        bool                 forceDraw)
 {
@@ -367,8 +381,8 @@ void PlacesGroup::Draw(nux::GraphicsEngine& graphics_engine,
     geo.x = base.x + 11;
     geo.width = base.width - 16;
 
-    bkg_color_layer_->SetGeometry(geo);
-    bkg_color_layer_->Renderlayer(graphics_engine);
+    _focus_layer->SetGeometry(geo);
+    _focus_layer->Renderlayer(graphics_engine);
   }
 
   graphics_engine.PopClippingRectangle();
@@ -383,9 +397,9 @@ PlacesGroup::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
 
   if ((_header_view->IsMousePointerInside() || _icon->HasKeyFocus() || _name->HasKeyFocus() ||
        _expand_label->HasKeyFocus() || _expand_icon->HasKeyFocus()) &&
-       bkg_color_layer_ && !IsFullRedraw())
+       _focus_layer && !IsFullRedraw())
   {
-    nux::GetPainter().PushLayer(graphics_engine, bkg_color_layer_->GetGeometry(), bkg_color_layer_);
+    nux::GetPainter().PushLayer(graphics_engine, _focus_layer->GetGeometry(), _focus_layer);
   }
 
   _group_layout->ProcessDraw(graphics_engine, force_draw);

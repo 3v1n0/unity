@@ -17,8 +17,8 @@
  * Authored by: Gordon Allott <gord.allott@canonical.com>
  */
 
-#ifndef PLACES_GROUP_H
-#define PLACES_GROUP_H
+#ifndef UNITYSHELL_PLACES_GROUP_H
+#define UNITYSHELL_PLACES_GROUP_H
 
 #include <Nux/Nux.h>
 #include <Nux/VLayout.h>
@@ -29,6 +29,11 @@
 
 #include "IconTexture.h"
 #include "StaticCairoText.h"
+
+namespace nux
+{
+class AbstractPaintLayer;
+}
 
 namespace unity
 {
@@ -47,7 +52,7 @@ public:
   nux::StaticCairoText* GetLabel();
   nux::StaticCairoText* GetExpandLabel();
 
-  void       SetChildView(nux::View* view);
+  void SetChildView(nux::View* view);
   nux::View* GetChildView();
 
   void SetChildLayout(nux::Layout* layout);
@@ -66,16 +71,16 @@ public:
   sigc::signal<void, PlacesGroup*> expanded;
 
 protected:
+  long ComputeContentSize();
+  void Draw(nux::GraphicsEngine& graphics_engine, bool force_draw);
+  void DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw);
+  void PostDraw (nux::GraphicsEngine &graphics_engine, bool force_draw);
+
   // Key navigation
   virtual bool AcceptKeyNavFocus();
 
 private:
   void Refresh();
-
-  void Draw(nux::GraphicsEngine& graphics_engine, bool force_draw);
-  void DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw);
-  void PostDraw (nux::GraphicsEngine &graphics_engine, bool force_draw);
-
   static gboolean OnIdleRelayout(PlacesGroup* self);
 
   void RecvMouseClick(int x, int y, unsigned long button_flags, unsigned long key_flags);
@@ -92,6 +97,7 @@ private:
   nux::HLayout* _text_layout;
   nux::HLayout* _expand_layout;
   nux::View*  _child_view;
+  nux::AbstractPaintLayer* _focus_layer;
 
   IconTexture*          _icon;
   nux::StaticCairoText* _name;
@@ -100,13 +106,12 @@ private:
 
   guint32 _idle_id;
 
-  nux::AbstractPaintLayer* bkg_color_layer_;
   bool  _is_expanded;
   guint _n_visible_items_in_unexpand_mode;
   guint _n_total_items;
   char* _cached_name;
   bool  _draw_sep;
-
+  nux::Geometry _cached_geometry;
 };
 
 }

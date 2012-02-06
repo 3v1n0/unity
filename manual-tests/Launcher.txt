@@ -1,6 +1,3 @@
-Note, for simplification, one pip is defined as a single filled in arrow to the 
-      left of a launcher.
-
 Test Launcher Icon with Windows in multiple workspaces
 ------------------------------------------------------
 This test shows how the launcher should draw when there are application windows
@@ -8,17 +5,17 @@ in multiple workspaces.
 
 #. Start on a fresh login
 #. Run an application
-#. Run another instance (window) of this application and keep it on the initial workspace
-#. Run another instance (window) of this application and move it to another workspace
+#. Run another instance of this application and keep it on the initial workspace
+#. Run another instance of this application and move it no another workspaces
 #. Go back to the initial workspace
 
 Outcome
-  The Launcher icon "pips" (indicators) should reflect the number of windows in the
-  current workspace, so when showing the "initial" workspace the launcher icon should
+  The Launcher icon "pips" should reflect the number of windows in the current
+  workspace, so when showing the "initial" workspace the launcher icon should
   have 2 "pips", when moving to the second workspace (where there's only 1 window)
-  the launcher application icon should have a left filled arrow.
+  the launcher application icon should show 1 pip.
   When moving to a workspace where there are no windows, the launcher icon should
-  use an empty (non filled) arrow as left indicator (despite the number of opened windows).
+  use an empty arrow as left indicator.
 
 
 Test Launcher Spread with Windows in multiple workspaces
@@ -41,46 +38,4 @@ Outcome
   When moving to a workspace where there are no window o the given application,
   clicking on its launcher icon should bring to focus the last focused window
   in the last used workspace.
-
-Test Alt+F1 KeyNavMode Mouse Works
--------------------------------
-This test shows that the mouse still works normally while keynav mode is active.
-
-#. Press Alt+F1 to enter keynav mode
-#. Using the mouse perform a normal action (such as dragging a window)
-
-Outcome
-  The keynav mode exits, along with the mouse performing the normal action 
-  the user expects. Such as highlighting text, moving a window, clicking out
-  of keynav mode, or clicking on a launcher icon. All these actions should 
-  also exit the keynav mode.
-
-Test Alt+F1 KeyNavMode Shortcuts
------------------------------
-This test shows that all the shortcuts work and also exits from keynav mode.
-
-#. Press Alt+F1 to enter keynav mode
-#. Press Super + a 
-#. Press Esc
-#. Press Alt+F1
-#. Press Alt + Tab
-#. Press Alt+F1
-#. Press Ctrl + Alt + t
-
-Outcome
-  The first shortcut opens the dash app lens, which it should open it and quit the
-  nav mode. The second shortcut switches between applications. The last one will open
-  a new terminal. This is to show all SUPER, ALT, and CTRL shortcuts work; while
-  closing the keynav mode.
-
-Test Alt+F1 NavMode Quicklist Click Exit 
-----------------------------------------
-This Test shows that clicking on a quicklist option quits keynav mode.
-
-#. Press Alt+F1 to enter keynav mode
-#. Press Right arrow
-#. Click on any option
-
-Outcome
-  No matter what option you click will exit keynav mode.
 
