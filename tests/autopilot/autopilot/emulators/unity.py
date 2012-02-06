@@ -484,7 +484,13 @@ class Switcher(Unity):
         The switcher needs to be initiated in order to get the model.
 
         """
-        return [LauncherIcon(i) for i in self.get_state('//SwitcherModel/LauncherIcon')]
+        icons = []
+        model = self.get_state('//SwitcherModel')[0]
+        for child in model['Children']:
+            icon = make_launcher_icon(child)
+            if icon:
+                icons.append(icon)
+        return icons
 
     def __get_model(self):
         return self.get_state('/Unity/SwitcherController/SwitcherModel')[0]

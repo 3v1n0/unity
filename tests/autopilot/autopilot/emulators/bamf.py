@@ -100,7 +100,10 @@ class Bamf:
 
         'app_name' is the name of the application you are looking for.
         """
-        return app_name in [a.name for a in self.get_running_applications()]
+        try:
+            return app_name in [a.name for a in self.get_running_applications()]
+        except dbus.DBusException:
+            return False
 
     def wait_until_application_is_running(self, app_name, timeout):
         """Wait until a given application is running.
