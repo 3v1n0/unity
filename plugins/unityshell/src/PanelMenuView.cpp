@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
- *              Marco Trevisan <mail@3v1n0.net>
+ *              Marco Trevisan <3v1n0@ubuntu.com>
  */
 #include <glib.h>
 #include <pango/pangocairo.h>
@@ -42,7 +42,6 @@
 #include <glib/gi18n-lib.h>
 
 #include "DashSettings.h"
-#include "ubus-server.h"
 #include "UBusMessages.h"
 
 #include "UScreen.h"
@@ -61,7 +60,7 @@ PanelMenuView::PanelMenuView(int padding)
     _new_application(nullptr),
     _last_width(0),
     _last_height(0),
-    _places_showing(false),
+    _dash_showing(false),
     _switcher_showing(false),
     _show_now_activated(false),
     _we_control_active(false),
@@ -153,20 +152,18 @@ PanelMenuView::PanelMenuView(int padding)
   _panel_titlebar_grab_area->mouse_leave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
 
   // Register for all the interesting events
-  UBusServer* ubus = ubus_server_get_default();
-  _ubus_interests.push_back(ubus_server_register_interest(ubus, UBUS_OVERLAY_SHOWN,
-                                                          (UBusCallback)PanelMenuView::OnPlaceViewShown,
-                                                          this));
-  _ubus_interests.push_back(ubus_server_register_interest(ubus, UBUS_OVERLAY_HIDDEN,
-                                                          (UBusCallback)PanelMenuView::OnPlaceViewHidden,
-                                                          this));
+  _ubus_manager.RegisterInterest(UBUS_OVERLAY_SHOWN, [&] (GVariant*) {
+    _dash_showing = true;
+    QueueDraw();
+  });
 
-  _ubus_interests.push_back(ubus_server_register_interest(ubus, UBUS_SWITCHER_SHOWN,
-                                                          (UBusCallback)PanelMenuView::OnSwitcherShown,
-                                                          this));
-  _ubus_interests.push_back(ubus_server_register_interest(ubus, UBUS_SWITCHER_SELECTION_CHANGED,
-                                                          (UBusCallback)PanelMenuView::OnSwitcherSelectionChanged,
-                                                          this));
+  _ubus_manager.RegisterInterest(UBUS_OVERLAY_HIDDEN, [&] (GVariant*) {
+    _dash_showing = false;
+    QueueDraw();
+  });
+
+  _ubus_manager.RegisterInterest(UBUS_SWITCHER_SHOWN, sigc::mem_fun(this, &PanelMenuView::OnSwitcherShown));
+  _ubus_manager.RegisterInterest(UBUS_SWITCHER_SELECTION_CHANGED, sigc::mem_fun(this, &PanelMenuView::OnSwitcherSelectionChanged));
 
   _fade_in_animator.animation_updated.connect(sigc::mem_fun(this, &PanelMenuView::OnFadeInChanged));
   _fade_in_animator.animation_ended.connect(sigc::mem_fun(this, &PanelMenuView::FullRedraw));
@@ -194,13 +191,6 @@ PanelMenuView::~PanelMenuView()
   _menu_layout->UnReference();
   _window_buttons->UnReference();
   _panel_titlebar_grab_area->UnReference();
-
-  UBusServer* ubus = ubus_server_get_default();
-  for (auto interest : _ubus_interests)
-  {
-    if (interest != 0)
-      ubus_server_unregister_interest(ubus, interest);
-  }
 
   _style_changed_connection.disconnect();
 }
@@ -254,7 +244,7 @@ PanelMenuView::FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEven
     NUX_RETURN_VALUE_IF_NOTNULL(found_area, found_area);
   }
 
-  if (_is_maximized || _places_showing)
+  if (_is_maximized || _dash_showing)
   {
     if (_window_buttons)
     {
@@ -346,7 +336,7 @@ PanelMenuView::OnFadeOutChanged(double progress)
 bool
 PanelMenuView::DrawMenus()
 {
-  if (!_is_own_window && !_places_showing && _we_control_active && !_switcher_showing)
+  if (!_is_own_window && !_dash_showing && _we_control_active && !_switcher_showing)
   {
     if (_is_inside || _last_active_view || _show_now_activated || _new_application)
     {
@@ -360,7 +350,7 @@ PanelMenuView::DrawMenus()
 bool
 PanelMenuView::DrawWindowButtons()
 {
-  if (_places_showing)
+  if (_dash_showing)
     return true;
 
   if (!_is_own_window && _we_control_active && _is_maximized && !_switcher_showing)
@@ -529,7 +519,7 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
                              texxform1,
                              nux::color::White);
     }
-    else if (!_places_showing)
+    else if (!_dash_showing)
     {
       if (_we_control_active && _window_buttons->GetOpacity() == 0.0 &&
           (!has_menu || (has_menu && GetOpacity() == 0.0)))
@@ -1249,7 +1239,7 @@ PanelMenuView::OnWindowMoved(guint xid)
 void
 PanelMenuView::OnCloseClicked()
 {
-  if (_places_showing)
+  if (_dash_showing)
   {
     ubus_server_send_message(ubus_server_get_default(), UBUS_PLACE_VIEW_CLOSE_REQUEST, nullptr);
   }
@@ -1269,7 +1259,7 @@ PanelMenuView::OnCloseClicked()
 void
 PanelMenuView::OnMinimizeClicked()
 {
-  if (_places_showing)
+  if (_dash_showing)
   {
     // no action when dash is opened, LP bug #838875
     return;
@@ -1290,7 +1280,7 @@ PanelMenuView::OnMinimizeClicked()
 void
 PanelMenuView::OnRestoreClicked()
 {
-  if (_places_showing)
+  if (_dash_showing)
   {
     if (dash::Settings::Instance().GetFormFactor() == dash::FormFactor::DESKTOP)
       dash::Settings::Instance().SetFormFactor(dash::FormFactor::NETBOOK);
@@ -1338,7 +1328,7 @@ void
 PanelMenuView::OnMaximizedGrabStart(int x, int y, unsigned long button_flags, unsigned long)
 {
   Window maximized_win;
-  if (nux::GetEventButton(button_flags) != 1 || _places_showing)
+  if (nux::GetEventButton(button_flags) != 1 || _dash_showing)
     return;
 
   // When Start dragging the panelmenu of a maximized window, change cursor
@@ -1414,7 +1404,7 @@ PanelMenuView::OnMaximizedGrabEnd(int x, int y, unsigned long, unsigned long)
 void
 PanelMenuView::OnMouseDoubleClicked(int x, int y, unsigned long button_flags, unsigned long)
 {
-  if (nux::GetEventButton(button_flags) != 1 || _places_showing)
+  if (nux::GetEventButton(button_flags) != 1 || _dash_showing)
     return;
 
   guint32 window_xid = GetMaximizedWindow();
@@ -1429,7 +1419,7 @@ PanelMenuView::OnMouseDoubleClicked(int x, int y, unsigned long button_flags, un
 void
 PanelMenuView::OnMouseClicked(int x, int y, unsigned long button_flags, unsigned long)
 {
-  if (nux::GetEventButton(button_flags) != 1 || _places_showing)
+  if (nux::GetEventButton(button_flags) != 1 || _dash_showing)
     return;
 
   guint32 window_xid = GetMaximizedWindow();
@@ -1443,7 +1433,7 @@ PanelMenuView::OnMouseClicked(int x, int y, unsigned long button_flags, unsigned
 void
 PanelMenuView::OnMouseMiddleClicked(int x, int y, unsigned long button_flags, unsigned long)
 {
-  if (nux::GetEventButton(button_flags) != 2 || _places_showing)
+  if (nux::GetEventButton(button_flags) != 2 || _dash_showing)
     return;
 
   guint32 window_xid = GetMaximizedWindow();
@@ -1465,54 +1455,42 @@ void PanelMenuView::AddProperties(GVariantBuilder* builder)
 {
 }
 
-void PanelMenuView::OnPlaceViewShown(GVariant* data, PanelMenuView* self)
+void PanelMenuView::OnSwitcherShown(GVariant* data)
 {
-  self->_places_showing = true;
-  self->QueueDraw();
-}
-
-void PanelMenuView::OnPlaceViewHidden(GVariant* data, PanelMenuView* self)
-{
-  self->_places_showing = false;
-  self->QueueDraw();
-}
-
-void PanelMenuView::OnSwitcherShown(GVariant* data, PanelMenuView* self)
-{
-  if (!self || !data)
+  if (!data)
     return;
 
-  self->_switcher_showing = g_variant_get_boolean(data);
+  _switcher_showing = g_variant_get_boolean(data);
 
-  if (!self->_switcher_showing)
+  if (!_switcher_showing)
   {
     auto mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
-    self->_is_inside = self->GetAbsoluteGeometry().IsPointInside(mouse.x, mouse.y);
+    _is_inside = GetAbsoluteGeometry().IsPointInside(mouse.x, mouse.y);
 
-    if (!self->_panel_title.empty())
+    if (!_panel_title.empty())
     {
-      self->_panel_title = "";
+      _panel_title = "";
     }
   }
   else
   {
-    self->_show_now_activated = false;
+    _show_now_activated = false;
   }
 
-  self->Refresh();
-  self->QueueDraw();
+  Refresh();
+  QueueDraw();
 }
 
-void PanelMenuView::OnSwitcherSelectionChanged(GVariant* data, PanelMenuView* self)
+void PanelMenuView::OnSwitcherSelectionChanged(GVariant* data)
 {
-  if (!self || !data)
+  if (!data)
     return;
 
   const gchar *title = g_variant_get_string(data, 0);
-  self->_panel_title = (title ? title : "");
+  _panel_title = (title ? title : "");
 
-  self->Refresh();
-  self->QueueDraw();
+  Refresh();
+  QueueDraw();
 }
 
 gboolean

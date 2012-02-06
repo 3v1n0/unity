@@ -15,6 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
+ *              Marco Trevisan <3v1n0@ubuntu.com>
  */
 
 #ifndef PANEL_MENU_VIEW_H
@@ -24,16 +25,17 @@
 #include <map>
 #include <set>
 
+#include <UnityCore/GLibWrapper.h>
+#include <UnityCore/GLibSignal.h>
+#include <libbamf/libbamf.h>
+
 #include "PanelIndicatorsView.h"
 #include "StaticCairoText.h"
 #include "WindowButtons.h"
 #include "PanelTitlebarGrabAreaView.h"
 #include "PluginAdapter.h"
 #include "Animator.h"
-
-#include <UnityCore/GLibWrapper.h>
-#include <UnityCore/GLibSignal.h>
-#include <libbamf/libbamf.h>
+#include "UBusWrapper.h"
 
 namespace unity
 {
@@ -118,10 +120,9 @@ protected:
 
 private:
   std::string GetActiveViewName();
-  static void OnPlaceViewShown(GVariant* data, PanelMenuView* self);
-  static void OnPlaceViewHidden(GVariant* data, PanelMenuView* self);
-  static void OnSwitcherShown(GVariant* data, PanelMenuView* self);
-  static void OnSwitcherSelectionChanged(GVariant* data, PanelMenuView* self);
+
+  void OnSwitcherShown(GVariant* data);
+  void OnSwitcherSelectionChanged(GVariant* data);
 
   void UpdateShowNow(bool ignore);
 
@@ -161,13 +162,12 @@ private:
   std::set<guint32> _maximized_set;
   std::list<glib::Object<BamfApplication>> _new_apps;
   std::string _panel_title;
-  sigc::connection _style_changed_connection;
 
   int _padding;
   int _last_width;
   int _last_height;
 
-  bool _places_showing;
+  bool _dash_showing;
   bool _switcher_showing;
   bool _show_now_activated;
   bool _we_control_active;
@@ -186,8 +186,9 @@ private:
   glib::Signal<void, BamfMatcher*, BamfView*, BamfView*> _active_win_changed_signal;
   glib::Signal<void, BamfMatcher*, BamfApplication*, BamfApplication*> _active_app_changed_signal;
   glib::Signal<void, BamfView*, gchar*, gchar*> _view_name_changed_signal;
+  sigc::connection _style_changed_connection;
 
-  std::vector<unsigned int> _ubus_interests;
+  UBusManager _ubus_manager;
 
   int _menus_fadein;
   int _menus_fadeout;
