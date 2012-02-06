@@ -343,6 +343,10 @@ class Dash(Unity):
         """
         return unicode(self.get_state("//DashController/DashView/LensBar")[0]['active-lens'])
 
+    def get_focused_len_icon(self):
+        """Returns the id of the current focused icon."""
+        return unicode(self.get_state("//DashController/DashView/LensBar")[0]['focused-lens-icon'])
+
     def reveal_application_lens(self):
         """Reveal the application lense."""
         self._keyboard.press('Super')

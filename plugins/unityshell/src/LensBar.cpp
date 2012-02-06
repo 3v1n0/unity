@@ -255,12 +255,17 @@ std::string LensBar::GetName() const
 void LensBar::AddProperties(GVariantBuilder* builder)
 {
   unity::variant::BuilderWrapper wrapper(builder);
+
+  wrapper.add("focused-lens-icon", "");
+
   for( auto icon : icons_)
   {
     if (icon->active)
-      wrapper.add("active-lens", icon->id.Get()); 
+      wrapper.add("active-lens", icon->id.Get());
+
+    if (icon->HasKeyFocus())
+      wrapper.add("focused-lens-icon", icon->id.Get());
   }
-  
 }
 
 }

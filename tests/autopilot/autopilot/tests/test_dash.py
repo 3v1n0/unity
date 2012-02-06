@@ -72,6 +72,22 @@ class DashTests(AutopilotTestCase):
         self.dash.ensure_hidden()
         self.dash.reveal_command_lens()
         self.assertEqual(self.dash.get_current_lens(), u'commands.lens')
+  
+    def test_lensbar_keyfocus(self):
+        """Test that the lensbar keynavigation works well."""
+        self.dash.ensure_hidden()
+        self.dash.toggle_reveal()
+        kb = Keyboard()
+        i = 0
+        while self.dash.get_focused_len_icon() == "" and i < 100:
+          kb.press_and_release("Down")
+          i = i + 1
+        self.assertIsNot(self.dash.get_focused_len_icon(), '')
+        temp = self.dash.get_focused_len_icon()
+        kb.press_and_release("Right");
+        self.assertIsNot(self.dash.get_focused_len_icon(), temp)
+        kb.press_and_release("Left")
+        self.assertEqual(self.dash.get_focused_len_icon(), temp)
 
 
 
