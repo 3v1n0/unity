@@ -51,7 +51,6 @@ public:
 
   PanelIndicatorEntryView(indicator::Entry::Ptr const& proxy, int padding = 5,
                           IndicatorEntryType type = INDICATOR);
-  ~PanelIndicatorEntryView();
 
   void Refresh();
 
@@ -89,7 +88,6 @@ private:
   bool draw_active_;
   bool dash_showing_;
   bool disabled_;
-  glib::Signal<void, GtkSettings*, GParamSpec*> font_changed_signal_;
 
   void OnMouseDown(int x, int y, long button_flags, long key_flags);
   void OnMouseUp(int x, int y, long button_flags, long key_flags);
@@ -105,10 +103,6 @@ private:
   void DrawEntryContent(cairo_t* cr, unsigned int width, unsigned int height,
                         glib::Object<GdkPixbuf> const& pixbuf,
                         glib::Object<PangoLayout> const& layout);
-
-  sigc::connection on_indicator_activate_changed_connection_;
-  sigc::connection on_indicator_updated_connection_;
-  sigc::connection on_panelstyle_changed_connection_;
 };
 
 }

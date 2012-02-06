@@ -57,11 +57,8 @@ PanelIndicatorEntryView::PanelIndicatorEntryView(
   , dash_showing_(false)
   , disabled_(false)
 {
-  on_indicator_activate_changed_connection_ = proxy_->active_changed.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::OnActiveChanged));
-  on_indicator_updated_connection_ = proxy_->updated.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::Refresh));
-
-  font_changed_signal_.Connect(gtk_settings_get_default(), "notify::gtk-font-name", [&]
-    (GtkSettings*, GParamSpec*) { Refresh(); });
+  proxy_->active_changed.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::OnActiveChanged));
+  proxy_->updated.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::Refresh));
 
   InputArea::mouse_down.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::OnMouseDown));
   InputArea::mouse_up.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::OnMouseUp));
@@ -70,15 +67,9 @@ PanelIndicatorEntryView::PanelIndicatorEntryView(
   if (type_ != MENU)
     InputArea::mouse_wheel.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::OnMouseWheel));
 
-  on_panelstyle_changed_connection_ = panel::Style::Instance().changed.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::Refresh));
-  Refresh();
-}
+  panel::Style::Instance().changed.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::Refresh));
 
-PanelIndicatorEntryView::~PanelIndicatorEntryView()
-{
-  on_indicator_activate_changed_connection_.disconnect();
-  on_indicator_updated_connection_.disconnect();
-  on_panelstyle_changed_connection_.disconnect();
+  Refresh();
 }
 
 void PanelIndicatorEntryView::OnActiveChanged(bool is_active)
