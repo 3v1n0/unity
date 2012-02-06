@@ -42,11 +42,11 @@ public:
   void AddIndicator(indicator::Indicator::Ptr const& indicator);
   void RemoveIndicator(indicator::Indicator::Ptr const& indicator);
 
-  typedef enum {
+  enum IndicatorEntryPosition {
     AUTO = -1,
     START = nux::NUX_LAYOUT_BEGIN,
     END = nux::NUX_LAYOUT_END,
-  } IndicatorEntryPosition;
+  };
 
   typedef PanelIndicatorEntryView::IndicatorEntryType IndicatorEntryType;
 
@@ -61,32 +61,37 @@ public:
   bool ActivateIfSensitive();
   void GetGeometryForSync(indicator::EntryLocationMap& locations);
 
-  virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
-  virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
-  virtual void QueueDraw();
-
-  virtual void OnEntryAdded(indicator::Entry::Ptr const& entry);
-  virtual void OnEntryRefreshed(PanelIndicatorEntryView* view);
-  virtual void OnEntryRemoved(std::string const& entry_id);
-
   void DashShown();
   void DashHidden();
 
   void SetOpacity(double opacity);
   double GetOpacity();
 
+  bool IsAppmenu();
+
   sigc::signal<void, PanelIndicatorEntryView*> on_indicator_updated;
 
+  std::string GetName() const;
+  void AddProperties(GVariantBuilder* builder);
+
+  virtual void QueueDraw();
+
 protected:
+  typedef std::vector<indicator::Indicator::Ptr> Indicators;
+  Indicators GetIndicators();
+
+  virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
+  virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
+
+  virtual void OnEntryAdded(indicator::Entry::Ptr const& entry);
+  virtual void OnEntryRefreshed(PanelIndicatorEntryView* view);
+  virtual void OnEntryRemoved(std::string const& entry_id);
+
   nux::HLayout* layout_;
   typedef std::map<std::string, PanelIndicatorEntryView*> Entries;
   Entries entries_;
 
-  std::string GetName() const;
-  void        AddProperties(GVariantBuilder* builder);
-
 private:
-  typedef std::vector<indicator::Indicator::Ptr> Indicators;
   Indicators indicators_;
   double opacity_;
 

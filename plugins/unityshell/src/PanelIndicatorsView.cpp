@@ -102,6 +102,23 @@ PanelIndicatorsView::RemoveIndicator(indicator::Indicator::Ptr const& indicator)
   LOG_DEBUG(logger) << "IndicatorRemoved: " << indicator->name();
 }
 
+PanelIndicatorsView::Indicators
+PanelIndicatorsView::GetIndicators()
+{
+  return indicators_;
+}
+
+bool
+PanelIndicatorsView::IsAppmenu()
+{
+  if (indicators_.size() == 1 && indicators_[0]->IsAppmenu())
+  {
+    return true;
+  }
+
+  return false;
+}
+
 void
 PanelIndicatorsView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
