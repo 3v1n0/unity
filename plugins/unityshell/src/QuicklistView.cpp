@@ -1187,9 +1187,8 @@ ql_compute_full_outline_shadow(
                             padding_size);
 
   ql_draw(cr, TRUE, line_width, rgba_shadow, FALSE, FALSE);
-  nux::CairoGraphics* dummy = new nux::CairoGraphics(CAIRO_FORMAT_A1, 1, 1);
-  dummy->BlurSurface(blur_coeff, surf);
-  delete dummy;
+  nux::CairoGraphics dummy(CAIRO_FORMAT_A1, 1, 1);
+  dummy.BlurSurface(blur_coeff, surf);
   ql_compute_mask(cr);
   ql_compute_outline(cr, line_width, rgba_line, width);
 }
@@ -1228,13 +1227,15 @@ void QuicklistView::UpdateTexture()
     return;
 
   int size_above_anchor = -1; // equal to size below
+  int width = GetBaseWidth();
+  int height = GetBaseHeight();
 
   if (!_enable_quicklist_for_testing)
   {
     if (!_item_list.empty() || !_default_item_list.empty())
     {
       int offscreen_size = GetBaseY() +
-                           GetBaseHeight() -
+                           height -
                            nux::GetWindowThread()->GetGraphicsDisplay().GetWindowHeight();
 
       if (offscreen_size > 0)
@@ -1263,13 +1264,13 @@ void QuicklistView::UpdateTexture()
 
   float blur_coef         = 6.0f;
 
-  nux::CairoGraphics* cairo_bg       = new nux::CairoGraphics(CAIRO_FORMAT_ARGB32, GetBaseWidth(), GetBaseHeight());
-  nux::CairoGraphics* cairo_mask     = new nux::CairoGraphics(CAIRO_FORMAT_ARGB32, GetBaseWidth(), GetBaseHeight());
-  nux::CairoGraphics* cairo_outline  = new nux::CairoGraphics(CAIRO_FORMAT_ARGB32, GetBaseWidth(), GetBaseHeight());
+  nux::CairoGraphics cairo_bg(CAIRO_FORMAT_ARGB32, width, height);
+  nux::CairoGraphics cairo_mask(CAIRO_FORMAT_ARGB32, width, height);
+  nux::CairoGraphics cairo_outline(CAIRO_FORMAT_ARGB32, width, height);
 
-  cairo_t* cr_bg      = cairo_bg->GetContext();
-  cairo_t* cr_mask    = cairo_mask->GetContext();
-  cairo_t* cr_outline = cairo_outline->GetContext();
+  cairo_t* cr_bg      = cairo_bg.GetContext();
+  cairo_t* cr_mask    = cairo_mask.GetContext();
+  cairo_t* cr_outline = cairo_outline.GetContext();
 
   float   tint_color[4]    = {0.0f, 0.0f, 0.0f, 0.60f};
   float   hl_color[4]      = {1.0f, 1.0f, 1.0f, 0.35f};
@@ -1281,11 +1282,11 @@ void QuicklistView::UpdateTexture()
 //   float   anchor_height     = 18;
 
   ql_tint_dot_hl(cr_bg,
-                 GetBaseWidth(),
-                 GetBaseHeight(),
-                 GetBaseWidth() / 2.0f,
+                 width,
+                 height,
+                 width / 2.0f,
                  0,
-                 nux::Max<float>(GetBaseWidth() / 1.6f, GetBaseHeight() / 1.6f),
+                 nux::Max<float>(width / 1.6f, height / 1.6f),
                  tint_color,
                  hl_color,
                  dot_color);
@@ -1293,9 +1294,9 @@ void QuicklistView::UpdateTexture()
   ql_compute_full_outline_shadow
   (
     cr_outline,
-    cairo_outline->GetSurface(),
-    GetBaseWidth(),
-    GetBaseHeight(),
+    cairo_outline.GetSurface(),
+    width,
+    height,
     _anchor_width,
     _anchor_height,
     size_above_anchor,
@@ -1308,9 +1309,9 @@ void QuicklistView::UpdateTexture()
 
   ql_compute_full_mask(
     cr_mask,
-    cairo_mask->GetSurface(),
-    GetBaseWidth(),
-    GetBaseHeight(),
+    cairo_mask.GetSurface(),
+    width,
+    height,
     _corner_radius,  // radius,
     16,             // shadow_radius,
     _anchor_width,   // anchor_width,
@@ -1326,9 +1327,9 @@ void QuicklistView::UpdateTexture()
   cairo_destroy(cr_outline);
   cairo_destroy(cr_mask);
 
-  texture_bg_ = texture_from_cairo_graphics(*cairo_bg);
-  texture_mask_ = texture_from_cairo_graphics(*cairo_mask);
-  texture_outline_ = texture_from_cairo_graphics(*cairo_outline);
+  texture_bg_ = texture_from_cairo_graphics(cairo_bg);
+  texture_mask_ = texture_from_cairo_graphics(cairo_mask);
+  texture_outline_ = texture_from_cairo_graphics(cairo_outline);
 
   _cairo_text_has_changed = false;
 
