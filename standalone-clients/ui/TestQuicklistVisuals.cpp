@@ -18,7 +18,6 @@
 
 #include <glib.h>
 #include <gtk/gtk.h>
-#include <dbus/dbus-glib.h>
 
 #include "Nux/Nux.h"
 #include "Nux/VLayout.h"
@@ -60,14 +59,12 @@ createRadioItem (const gchar* label,
                                        DBUSMENU_MENUITEM_PROP_ENABLED,
                                        enabled);
 
-  if (checked)
-    dbusmenu_menuitem_property_set_int (item,
-                                        DBUSMENU_MENUITEM_PROP_TOGGLE_STATE,
-                                        DBUSMENU_MENUITEM_TOGGLE_STATE_UNCHECKED);
-  else
-    dbusmenu_menuitem_property_set_int (item,
-                                        DBUSMENU_MENUITEM_PROP_TOGGLE_STATE,
-                                        DBUSMENU_MENUITEM_TOGGLE_STATE_CHECKED);
+  dbusmenu_menuitem_property_set_int (item,
+                                      DBUSMENU_MENUITEM_PROP_TOGGLE_STATE,
+                                      (checked ?
+                                        DBUSMENU_MENUITEM_TOGGLE_STATE_CHECKED :
+                                        DBUSMENU_MENUITEM_TOGGLE_STATE_UNCHECKED
+                                      ));
 
   radio = new QuicklistMenuItemRadio (item, true);
     
@@ -96,14 +93,12 @@ createCheckmarkItem (const gchar* label,
                                        DBUSMENU_MENUITEM_PROP_ENABLED,
                                        enabled);
 
-  if (checked)
-    dbusmenu_menuitem_property_set_int (item,
-                                        DBUSMENU_MENUITEM_PROP_TOGGLE_STATE,
-                                        DBUSMENU_MENUITEM_TOGGLE_STATE_UNCHECKED);
-  else
-    dbusmenu_menuitem_property_set_int (item,
-                                        DBUSMENU_MENUITEM_PROP_TOGGLE_STATE,
-                                        DBUSMENU_MENUITEM_TOGGLE_STATE_CHECKED);
+  dbusmenu_menuitem_property_set_int (item,
+                                      DBUSMENU_MENUITEM_PROP_TOGGLE_STATE,
+                                      (checked ?
+                                        DBUSMENU_MENUITEM_TOGGLE_STATE_CHECKED :
+                                        DBUSMENU_MENUITEM_TOGGLE_STATE_UNCHECKED
+                                      ));
 
   checkmark = new QuicklistMenuItemCheckmark (item, true);
     
@@ -111,7 +106,7 @@ createCheckmarkItem (const gchar* label,
 }
 
 QuicklistMenuItemLabel*
-createLabelItem (const gchar* string)
+createLabelItem (const gchar* string, bool enabled = true)
 {
   DbusmenuMenuitem*       item  = NULL;
   QuicklistMenuItemLabel* label = NULL;
@@ -124,7 +119,7 @@ createLabelItem (const gchar* string)
 
   dbusmenu_menuitem_property_set_bool (item,
                                        DBUSMENU_MENUITEM_PROP_ENABLED,
-                                       true);
+                                       enabled);
 
   label = new QuicklistMenuItemLabel (item, true);
 
@@ -170,7 +165,8 @@ ThreadWidgetInit (nux::NThread* thread,
   gQuicklists[0]->AddMenuItem (radio);
   separator = createSeparatorItem ();
   gQuicklists[0]->AddMenuItem (separator);
-  label = createLabelItem ("Application Name");
+  label = createLabelItem ("<b>Application Name</b>");
+  label->EnableLabelMarkup(true);
   gQuicklists[0]->AddMenuItem (label);
   separator = createSeparatorItem ();
   gQuicklists[0]->AddMenuItem (separator);
@@ -193,7 +189,8 @@ ThreadWidgetInit (nux::NThread* thread,
   gQuicklists[1]->AddMenuItem (checkmark);
   separator = createSeparatorItem ();
   gQuicklists[1]->AddMenuItem (separator);
-  label = createLabelItem ("Application Name");
+  label = createLabelItem ("<b>Application Name</b>");
+  label->EnableLabelMarkup(true);
   gQuicklists[1]->AddMenuItem (label);
   separator = createSeparatorItem ();
   gQuicklists[1]->AddMenuItem (separator);
@@ -214,11 +211,12 @@ ThreadWidgetInit (nux::NThread* thread,
   gQuicklists[2]->AddMenuItem (separator);
   checkmark = createCheckmarkItem ("Option 03", false, true);
   gQuicklists[2]->AddMenuItem (checkmark);
-  checkmark = createCheckmarkItem ("Option 04", false, true);
-  gQuicklists[2]->AddMenuItem (checkmark);
+  label = createLabelItem ("Option 04", false);
+  gQuicklists[2]->AddMenuItem (label);
   separator = createSeparatorItem ();
   gQuicklists[2]->AddMenuItem (separator);
-  label = createLabelItem ("Application Name");
+  label = createLabelItem ("<b>Application Name</b>");
+  label->EnableLabelMarkup(true);
   gQuicklists[2]->AddMenuItem (label);
   separator = createSeparatorItem ();
   gQuicklists[2]->AddMenuItem (separator);
@@ -227,6 +225,9 @@ ThreadWidgetInit (nux::NThread* thread,
   gQuicklists[2]->EnableQuicklistForTesting (true);
   gQuicklists[2]->SetBaseXY (45, 290);
   gQuicklists[2]->ShowWindow (true);
+
+  nux::ColorLayer background (nux::Color (0x772953));
+  static_cast<nux::WindowThread*>(thread)->SetWindowBackgroundPaintLayer(&background);
 }
 
 int
@@ -234,10 +235,7 @@ main (int argc, char **argv)
 {
   nux::WindowThread* wt = NULL;
 
-  g_type_init ();
-  
   gtk_init (&argc, &argv);
-  dbus_g_thread_init ();
   nux::NuxInitialize (0);
 
   wt = nux::CreateGUIThread (TEXT ("Unity visual Quicklist-test"),
