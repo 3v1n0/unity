@@ -411,6 +411,8 @@ void DashView::OnLensBarActivated(std::string const& id)
   bool expanded = view->filters_expanded;
   search_bar_->showing_filters = expanded;
 
+  nux::GetWindowCompositor().SetKeyFocusArea(default_focus());
+
   search_bar_->text_entry()->SelectAll();
 
   search_bar_->can_refine_search = view->can_refine_search();
