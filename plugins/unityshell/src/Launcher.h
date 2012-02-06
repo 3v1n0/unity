@@ -78,7 +78,6 @@ public:
   AbstractLauncherIcon* GetSelectedMenuIcon() const;
 
   void SetIconSize(int tile_size, int icon_size);
-  void SetBackgroundAlpha(float background_alpha);
 
   LauncherHideMachine* HideMachine() { return _hide_machine; }
 
@@ -93,11 +92,6 @@ public:
   void SetModel(LauncherModel* model);
   LauncherModel* GetModel() const;
 
-  void SetFloating(bool floating);
-
-  void SetHideMode(LauncherHideMode hidemode);
-  LauncherHideMode GetHideMode() const;
-
   void StartKeyShowLauncher();
   void EndKeyShowLauncher();
 
@@ -106,15 +100,6 @@ public:
   void SetBacklightMode(BacklightMode mode);
   BacklightMode GetBacklightMode() const;
   bool IsBackLightModeToggles() const;
-
-  void SetLaunchAnimation(LaunchAnimation animation);
-  LaunchAnimation GetLaunchAnimation() const;
-
-  void SetUrgentAnimation(UrgentAnimation animation);
-  UrgentAnimation GetUrgentAnimation() const;
-
-  void SetAutoHideAnimation(AutoHideAnimation animation);
-  AutoHideAnimation GetAutoHideAnimation() const;
 
   nux::BaseWindow* GetParent() const
   {
@@ -141,7 +126,7 @@ public:
   void EnableCheckWindowOverLauncher(gboolean enabled);
 
   sigc::signal<void, char*, AbstractLauncherIcon*> launcher_addrequest;
-  sigc::signal<void, char*, AbstractLauncherIcon*, char*, char*> launcher_addrequest_special;
+  sigc::signal<void, std::string const&, AbstractLauncherIcon*, std::string const&, std::string const&> launcher_addrequest_special;
   sigc::signal<void, AbstractLauncherIcon*> launcher_removerequest;
   sigc::signal<void> selection_change;
   sigc::signal<void> hidden_changed;
@@ -165,6 +150,9 @@ protected:
   void ProcessDndDrop(int x, int y);
 private:
   typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
+
+  LauncherHideMode GetHideMode() const;
+  void SetHideMode(LauncherHideMode hidemode);
 
   typedef enum
   {
@@ -293,8 +281,8 @@ private:
 
   void OnIconNeedsRedraw(AbstractLauncherIcon* icon);
 
-  void OnPlaceViewHidden(GVariant* data);
-  void OnPlaceViewShown(GVariant* data);
+  void OnOverlayHidden(GVariant* data);
+  void OnOverlayShown(GVariant* data);
 
   void DesaturateIcons();
   void SaturateIcons();
@@ -343,7 +331,6 @@ private:
   QuicklistView* _active_quicklist;
 
   bool  _hovered;
-  bool  _floating;
   bool  _hidden;
   bool  _render_drag_window;
   bool  _check_window_over_launcher;
@@ -357,13 +344,13 @@ private:
   float _folded_z_distance;
   float _launcher_top_y;
   float _launcher_bottom_y;
+  float _edge_overcome_pressure;
 
   LauncherHideMode _hidemode;
 
   LauncherActionState _launcher_action_state;
   LaunchAnimation _launch_animation;
   UrgentAnimation _urgent_animation;
-  AutoHideAnimation _autohide_animation;
 
   nux::ObjectPtr<nux::IOpenGLBaseTexture> _offscreen_drag_texture;
 
