@@ -33,10 +33,12 @@
 #include <NuxCore/Color.h>
 #include <NuxCore/Logger.h>
 #include <NuxImage/CairoGraphics.h>
+#include <Nux/PaintLayer.h>
 
 #include <UnityCore/GLibSignal.h>
 #include <UnityCore/GLibWrapper.h>
 
+#include "CairoTexture.h"
 #include "JSONParser.h"
 #include "config.h"
 
@@ -1385,7 +1387,7 @@ void Style::Impl::Text(cairo_t*    cr,
   case Alignment::LEFT:
     pango_alignment = PANGO_ALIGN_LEFT;
     break;
-  
+
   case Alignment::CENTER:
     pango_alignment = PANGO_ALIGN_CENTER;
     break;
@@ -1586,6 +1588,38 @@ bool Style::Button(cairo_t* cr, nux::ButtonVisualState state, std::string const&
               alignment);
 
   return true;
+}
+
+
+nux::AbstractPaintLayer* Style::FocusOverlay(int width, int height)
+{
+  nux::CairoGraphics cg(CAIRO_FORMAT_ARGB32, width, height);
+  cairo_t* cr = cg.GetInternalContext();
+
+  RoundedRect(cr,
+              1.0f,
+              0.0f,
+              0.0f,
+              2.0f, // radius
+              width,
+              height);
+
+  cairo_set_source_rgba(cr, nux::color::White * 0.50f);
+  cairo_fill(cr);
+
+  // Create the texture layer
+  nux::TexCoordXForm texxform;
+
+  nux::ROPConfig rop;
+  rop.Blend = true;
+  rop.SrcBlend = GL_ONE;
+  rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+
+  return (new nux::TextureLayer(texture_ptr_from_cairo_graphics(cg)->GetDeviceTexture(),
+                                texxform,
+                                nux::color::White,
+                                false,
+                                rop));
 }
 
 bool Style::StarEmpty(cairo_t* cr, nux::ButtonVisualState state)

@@ -26,6 +26,11 @@
 
 #include <cairo.h>
 
+namespace nux
+{
+class AbstractPaintLayer;
+}
+
 namespace unity
 {
 namespace dash
@@ -88,7 +93,9 @@ public:
 
   virtual bool Button(cairo_t* cr, nux::ButtonVisualState state,
                       std::string const& label,
-                      Alignment alignment = Alignment::CENTER); 
+                      Alignment alignment = Alignment::CENTER);
+
+  nux::AbstractPaintLayer* FocusOverlay(int width, int height);
 
   virtual bool StarEmpty(cairo_t* cr, nux::ButtonVisualState state);
 
