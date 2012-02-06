@@ -33,18 +33,17 @@
 #include "CairoTexture.h"
 #include "PanelMenuView.h"
 #include "PanelStyle.h"
+#include "DashSettings.h"
+#include "UBusMessages.h"
+#include "UScreen.h"
+
 #include <UnityCore/Variant.h>
+#include <UnityCore/AppmenuIndicator.h>
 
 #include <gio/gdesktopappinfo.h>
 #include <gconf/gconf-client.h>
 
-#include <glib.h>
 #include <glib/gi18n-lib.h>
-
-#include "DashSettings.h"
-#include "UBusMessages.h"
-
-#include "UScreen.h"
 
 #define WINDOW_TITLE_FONT_KEY "/apps/metacity/general/titlebar_font"
 
@@ -1300,10 +1299,10 @@ PanelMenuView::OnRestoreClicked()
   }
 }
 
-guint32
+Window
 PanelMenuView::GetMaximizedWindow()
 {
-  guint32 window_xid = 0;
+  Window window_xid = 0;
   nux::Geometry monitor =  UScreen::GetDefault()->GetMonitorGeometry(_monitor);
 
   // Find the front-most of the maximized windows we are controlling
@@ -1366,7 +1365,7 @@ PanelMenuView::OnMaximizedGrabMove(int x, int y, int, int, unsigned long button_
   x += _panel_titlebar_grab_area->GetAbsoluteX();
   y += _panel_titlebar_grab_area->GetAbsoluteY();
 
-  guint32 window_xid = GetMaximizedWindow();
+  Window window_xid = GetMaximizedWindow();
 
   // When the drag goes out from the Panel, start the real movement.
   //
@@ -1407,7 +1406,7 @@ PanelMenuView::OnMouseDoubleClicked(int x, int y, unsigned long button_flags, un
   if (nux::GetEventButton(button_flags) != 1 || _dash_showing)
     return;
 
-  guint32 window_xid = GetMaximizedWindow();
+  Window window_xid = GetMaximizedWindow();
 
   if (window_xid != 0)
   {
@@ -1422,7 +1421,7 @@ PanelMenuView::OnMouseClicked(int x, int y, unsigned long button_flags, unsigned
   if (nux::GetEventButton(button_flags) != 1 || _dash_showing)
     return;
 
-  guint32 window_xid = GetMaximizedWindow();
+  Window window_xid = GetMaximizedWindow();
 
   if (window_xid != 0)
   {
@@ -1436,7 +1435,7 @@ PanelMenuView::OnMouseMiddleClicked(int x, int y, unsigned long button_flags, un
   if (nux::GetEventButton(button_flags) != 2 || _dash_showing)
     return;
 
-  guint32 window_xid = GetMaximizedWindow();
+  Window window_xid = GetMaximizedWindow();
 
   if (window_xid != 0)
   {

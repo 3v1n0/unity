@@ -61,13 +61,23 @@ public:
   void SetMenuShowTimings(int fadein, int fadeout, int discovery,
                           int discovery_fadein, int discovery_fadeout);
 
-  void FullRedraw();
+  void SetMousePosition(int x, int y);
+  void AllMenusClosed();
+  void SetMonitor(int monitor);
 
+  Window GetMaximizedWindow();
+  bool GetControlsActive();
+  bool HasOurWindowFocused();
+
+  std::string GetName() const;
+  void AddProperties(GVariantBuilder* builder);
+
+  //virtual void AddIndicator(indicator::Indicator::Ptr const& indicator);
+
+protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual long PostLayoutManagement(long LayoutResult);
-
-  void SetMousePosition(int x, int y);
 
   void OnActiveChanged(PanelIndicatorEntryView* view, bool is_active);
   void OnViewOpened(BamfMatcher* matcher, BamfView* view);
@@ -88,8 +98,6 @@ public:
   void OnWindowDecorated(guint32 xid);
   void OnWindowUndecorated(guint32 xid);
 
-  guint32 GetMaximizedWindow();
-
   void OnMaximizedGrabStart(int, int, unsigned long, unsigned long);
   void OnMaximizedGrabMove(int, int, int, int, unsigned long, unsigned long);
   void OnMaximizedGrabEnd(int, int, unsigned long, unsigned long);
@@ -97,20 +105,12 @@ public:
   void OnMouseClicked(int, int, unsigned long, unsigned long);
   void OnMouseMiddleClicked(int, int, unsigned long, unsigned long);
 
+  void FullRedraw();
   void Refresh();
-  void AllMenusClosed();
 
   void OnCloseClicked();
   void OnMinimizeClicked();
   void OnRestoreClicked();
-  void SetMonitor(int monitor);
-  bool GetControlsActive();
-
-  bool HasOurWindowFocused();
-
-protected:
-  std::string GetName() const;
-  void AddProperties(GVariantBuilder* builder);
 
   virtual nux::Area* FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type);
   void OnPanelViewMouseEnter(int x, int y, unsigned long mouse_button_state, unsigned long special_keys_state);
@@ -140,7 +140,6 @@ private:
   void OnFadeInChanged(double);
   void OnFadeOutChanged(double);
 
-private:
   glib::Object<BamfMatcher> _matcher;
 
   nux::TextureLayer* _title_layer;
