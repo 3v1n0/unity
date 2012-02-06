@@ -72,6 +72,7 @@ private:
 private:
   glib::Object<GtkStyleContext> _style_context;
   glib::Signal<void, GtkSettings*, GParamSpec*> _style_changed_signal;
+  glib::Signal<void, GtkSettings*, GParamSpec*> _font_changed_signal;
   std::string _theme_name;
   nux::Color _text_color;
 };

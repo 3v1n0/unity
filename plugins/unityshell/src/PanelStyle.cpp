@@ -75,9 +75,15 @@ Style::Style() :
   gtk_widget_path_free(widget_path);
 
   GtkSettings* settings = gtk_settings_get_default();
+
   _style_changed_signal.Connect(settings, "notify::gtk-theme-name",
   [&] (GtkSettings*, GParamSpec*) {
     Refresh();
+  });
+
+  _font_changed_signal.Connect(settings, "notify::gtk-font-name",
+  [&] (GtkSettings*, GParamSpec*) {
+    changed.emit();
   });
 
   Refresh();
