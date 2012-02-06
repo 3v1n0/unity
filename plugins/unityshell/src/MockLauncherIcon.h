@@ -27,6 +27,8 @@
 #include <Nux/BaseWindow.h>
 #include <Nux/View.h>
 
+#include <gtk/gtk.h>
+
 #include <sigc++/sigc++.h>
 
 #include <libdbusmenu-glib/menuitem.h>
@@ -45,6 +47,8 @@ public:
     : icon_(0)
   {
     tooltip_text = "Mock Icon";
+    sort_priority_ = 0;
+    type_ = TYPE_APPLICATION;
   }
 
   std::string GetName() const { return "MockLauncherIcon"; }
@@ -60,7 +64,23 @@ public:
     return 0;
   }
 
-  std::vector<Window> RelatedXids ()
+  std::vector<Window> Windows ()
+  {
+    std::vector<Window> result;
+
+    result.push_back ((100 << 16) + 200);
+    result.push_back ((500 << 16) + 200);
+    result.push_back ((300 << 16) + 200);
+    result.push_back ((200 << 16) + 200);
+    result.push_back ((300 << 16) + 200);
+    result.push_back ((100 << 16) + 200);
+    result.push_back ((300 << 16) + 200);
+    result.push_back ((600 << 16) + 200);
+
+    return result;
+  }
+
+  std::vector<Window> WindowsForMonitor (int monitor)
   {
     std::vector<Window> result;
 
@@ -81,27 +101,26 @@ public:
     return std::string();
   }
 
-  void SetSortPriority(int priority) {}
+  void SetSortPriority(int priority) { sort_priority_ = priority; }
 
-  bool OpenQuicklist(bool default_to_first_item = false)
+  bool OpenQuicklist(bool default_to_first_item = false, int monitor = -1)
   {
     return false;
   }
 
-  void        SetCenter(nux::Point3 center) {}
+  void        SetCenter(nux::Point3 center, int monitor, nux::Geometry geo) {}
 
-  nux::Point3 GetCenter()
+  nux::Point3 GetCenter(int monitor)
   {
     return nux::Point3();
   }
 
-  std::vector<nux::Vector4> & GetTransform(TransformIndex index)
+  nux::Point3 GetSavedCenter(int monitor)
   {
-    if (transform_map.find(index) == transform_map.end())
-      transform_map[index] = std::vector<nux::Vector4> (4);
-
-    return transform_map[index];
+    return nux::Point3();
   }
+
+  void SaveCenter() {}
 
   void Activate(ActionArg arg) {}
 
@@ -109,7 +128,7 @@ public:
 
   int SortPriority()
   {
-    return 0;
+    return sort_priority_;
   }
 
   int RelatedWindows()
@@ -117,7 +136,7 @@ public:
     return 7;
   }
 
-  const bool HasWindowOnViewport()
+  const bool WindowVisibleOnMonitor(int monitor)
   {
     return false;
   }
@@ -137,22 +156,28 @@ public:
     return 0.0f;
   }
 
-  bool ShowInSwitcher()
+  bool ShowInSwitcher(bool current)
   {
     return true;
   }
+
+  void InsertEntryRemote(LauncherEntryRemote* remote) {}
+
+  void RemoveEntryRemote(LauncherEntryRemote* remote) {}
 
   unsigned long long SwitcherPriority()
   {
     return 0;
   }
 
-  bool GetQuirk(Quirk quirk)
+  bool GetQuirk(Quirk quirk) const
   {
     return false;
   }
 
   void SetQuirk(Quirk quirk, bool value) {}
+
+  void ResetQuirkTime(Quirk quirk) {};
 
   struct timespec GetQuirkTime(Quirk quirk)
   {
@@ -162,7 +187,7 @@ public:
 
   IconType Type()
   {
-    return TYPE_APPLICATION;
+    return type_;
   }
 
   nux::Color BackgroundColor()
@@ -262,10 +287,9 @@ private:
     return result;
   }
 
-
-  std::map<TransformIndex, std::vector<nux::Vector4> > transform_map;
   nux::BaseTexture* icon_;
-
+  int sort_priority_;
+  IconType type_;
 };
 
 }

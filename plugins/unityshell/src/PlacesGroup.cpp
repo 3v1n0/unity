@@ -129,6 +129,7 @@ PlacesGroup::PlacesGroup()
   _expand_label->SetTextEllipsize(nux::StaticCairoText::NUX_ELLIPSIZE_END);
   _expand_label->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_LEFT);
   _expand_label->SetTextColor(kExpandDefaultTextColor);
+
   _expand_layout->AddView(_expand_label, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
   _expand_icon = new IconTexture(arrow, arrow->GetWidth(), arrow->GetHeight());
@@ -145,20 +146,20 @@ PlacesGroup::PlacesGroup()
   _icon->mouse_click.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseClick));
   _icon->mouse_enter.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseEnter));
   _icon->mouse_leave.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseLeave));
-  _icon->OnKeyNavFocusChange.connect(sigc::mem_fun(this, &PlacesGroup::OnLabelFocusChanged));
+  _icon->key_nav_focus_change.connect(sigc::mem_fun(this, &PlacesGroup::OnLabelFocusChanged));
   _name->mouse_click.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseClick));
   _name->mouse_enter.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseEnter));
   _name->mouse_leave.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseLeave));
-  _name->OnKeyNavFocusChange.connect(sigc::mem_fun(this, &PlacesGroup::OnLabelFocusChanged));
+  _name->key_nav_focus_change.connect(sigc::mem_fun(this, &PlacesGroup::OnLabelFocusChanged));
   _expand_label->mouse_click.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseClick));
   _expand_label->mouse_enter.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseEnter));
   _expand_label->mouse_leave.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseLeave));
-  _expand_label->OnKeyNavFocusActivate.connect(sigc::mem_fun(this, &PlacesGroup::OnLabelActivated));
-  _expand_label->OnKeyNavFocusChange.connect(sigc::mem_fun(this, &PlacesGroup::OnLabelFocusChanged));
+  _expand_label->key_nav_focus_activate.connect(sigc::mem_fun(this, &PlacesGroup::OnLabelActivated));
+  _expand_label->key_nav_focus_change.connect(sigc::mem_fun(this, &PlacesGroup::OnLabelFocusChanged));
   _expand_icon->mouse_click.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseClick));
   _expand_icon->mouse_enter.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseEnter));
   _expand_icon->mouse_leave.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseLeave));
-  _expand_icon->OnKeyNavFocusChange.connect(sigc::mem_fun(this, &PlacesGroup::OnLabelFocusChanged));
+  _expand_icon->key_nav_focus_change.connect(sigc::mem_fun(this, &PlacesGroup::OnLabelFocusChanged));
 
   nux::ROPConfig rop;
   rop.Blend = true;
@@ -186,7 +187,7 @@ PlacesGroup::OnLabelActivated(nux::Area* label)
 }
 
 void
-PlacesGroup::OnLabelFocusChanged(nux::Area* label)
+PlacesGroup::OnLabelFocusChanged(nux::Area* label, bool has_focus, nux::KeyNavDirection direction)
 {
   QueueDraw();
 }
@@ -296,7 +297,6 @@ PlacesGroup::RefreshLabel()
     _name->SetAcceptKeyNavFocus(true);
   else if (_icon->IsVisible())
     _icon->SetAcceptKeyNavFocus(true);
-
 
   QueueDraw();
 

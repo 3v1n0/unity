@@ -30,7 +30,7 @@ namespace launcher
 class SpacerLauncherIcon : public SimpleLauncherIcon
 {
 public:
-  SpacerLauncherIcon(Launcher* launcher);
+  SpacerLauncherIcon();
 
   bool IsSpacer()
   {

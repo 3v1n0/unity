@@ -36,6 +36,8 @@ namespace unity
 namespace
 {
 nux::logging::Logger logger("unity.overlayrenderer");
+
+const int INNER_CORNER_RADIUS = 5;
 }
 
 // Impl class
@@ -48,7 +50,7 @@ public:
   void Init();
   void OnBackgroundColorChanged(GVariant* args);
   
-  void Draw(nux::GraphicsEngine& gfx_context, nux::Geometry content_geo, nux::Geometry absolute_geo, nux::Geometry geometry);
+  void Draw(nux::GraphicsEngine& gfx_context, nux::Geometry content_geo, nux::Geometry absolute_geo, nux::Geometry geometry, bool force_draw);
   void DrawContent(nux::GraphicsEngine& gfx_context, nux::Geometry content_geo, nux::Geometry absolute_geo, nux::Geometry geometry);
   void DrawContentCleanup(nux::GraphicsEngine& gfx_context, nux::Geometry content_geo, nux::Geometry absolute_geo, nux::Geometry geometry);
   
@@ -116,12 +118,12 @@ void OverlayRendererImpl::OnBackgroundColorChanged(GVariant* args)
   parent->need_redraw.emit();
 }
 
-void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry content_geo, nux::Geometry absolute_geo, nux::Geometry geometry)
+void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry content_geo, nux::Geometry absolute_geo, nux::Geometry geometry, bool force_edges)
 {
   bool paint_blur = BackgroundEffectHelper::blur_type != BLUR_NONE;
   nux::Geometry geo = content_geo;
 
-  if (dash::Settings::Instance().GetFormFactor() != dash::FormFactor::NETBOOK)
+  if (dash::Settings::Instance().GetFormFactor() != dash::FormFactor::NETBOOK || force_edges)
   {
     // Paint the edges
     {
@@ -254,7 +256,7 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
     nux::Geometry blur_geo(absolute_geo.x, absolute_geo.y, content_geo.width, content_geo.height);
     bg_blur_texture_ = bg_effect_helper_.GetBlurRegion(blur_geo);
     
-    if (bg_blur_texture_.IsValid()  && paint_blur)
+    if (bg_blur_texture_.IsValid())
     {
       nux::Geometry bg_clip = geo;
       gfx_context.PushClippingRectangle(bg_clip);
@@ -268,7 +270,35 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
       gfx_context.PopClippingRectangle();
     }
   }
+
+  // Draw the left and top lines
+  gfx_context.GetRenderStates().SetColorMask(true, true, true, true);
+  gfx_context.GetRenderStates().SetBlend(true);
+  gfx_context.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
+
+  const double line_opacity = 0.22;
+  nux::Color line_color = nux::color::White * line_opacity;
+  nux::GetPainter().Paint2DQuadColor(gfx_context,
+                                     nux::Geometry(geometry.x,
+                                                   geometry.y,
+                                                   1,
+                                                   content_geo.height + INNER_CORNER_RADIUS),
+                                     nux::color::Transparent,
+                                     line_color,
+                                     line_color,
+                                     nux::color::Transparent);
+
+  nux::GetPainter().Paint2DQuadColor(gfx_context,
+                                     nux::Geometry(geometry.x,
+                                                   geometry.y,
+                                                   content_geo.width + INNER_CORNER_RADIUS,
+                                                   1),
+                                     nux::color::Transparent,
+                                     nux::color::Transparent,
+                                     line_color,
+                                     line_color);
   
+  // Draw the background
   bg_darken_layer_->SetGeometry(content_geo);
   nux::GetPainter().RenderSinglePaintLayer(gfx_context, content_geo, bg_darken_layer_);
   
@@ -277,8 +307,8 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
   
   
   texxform_absolute_bg.flip_v_coord = false;
-  texxform_absolute_bg.uoffset = (1.0f / bg_shine_texture_->GetWidth()) * (absolute_geo.x);
-  texxform_absolute_bg.voffset = (1.0f / bg_shine_texture_->GetHeight()) * (absolute_geo.y);
+  texxform_absolute_bg.uoffset = (1.0f / bg_shine_texture_->GetWidth()) * parent->x_offset;
+  texxform_absolute_bg.voffset = (1.0f / bg_shine_texture_->GetHeight()) * parent->y_offset;
   
   gfx_context.GetRenderStates().SetColorMask(true, true, true, false);
   gfx_context.GetRenderStates().SetBlend(true, GL_DST_COLOR, GL_ONE);
@@ -287,54 +317,38 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
                         content_geo.width, content_geo.height,
                         bg_shine_texture_, texxform_absolute_bg, nux::color::White);
   
-  // Make round corners
-  nux::ROPConfig rop;
-  rop.Blend = true;
-  rop.SrcBlend = GL_ZERO;
-  rop.DstBlend = GL_SRC_ALPHA;
-  nux::GetPainter().PaintShapeCornerROP(gfx_context,
-                                        content_geo,
-                                        nux::color::White,
-                                        nux::eSHAPE_CORNER_ROUND4,
-                                        nux::eCornerBottomRight,
-                                        true,
-                                        rop);
-  
-  gfx_context.GetRenderStates().SetColorMask(true, true, true, true);
-  gfx_context.GetRenderStates().SetBlend(true);
-  gfx_context.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
-  
-  geo = geometry;
-  nux::GetPainter().Paint2DQuadColor(gfx_context,
-                                     nux::Geometry(geo.x,
-                                                   geo.y,
-                                                   1,
-                                                   content_geo.height + 5),
-                                     nux::Color(0.0f, 0.0f, 0.0f, 0.0f),
-                                     nux::Color(0.15f, 0.15f, 0.15f, 0.15f),
-                                     nux::Color(0.15f, 0.15f, 0.15f, 0.15f),
-                                     nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
-  nux::GetPainter().Paint2DQuadColor(gfx_context,
-                                     nux::Geometry(geo.x,
-                                                   geo.y,
-                                                   content_geo.width + 5,
-                                                   1),
-                                     nux::Color(0.0f, 0.0f, 0.0f, 0.0f),
-                                     nux::Color(0.0f, 0.0f, 0.0f, 0.0f),
-                                     nux::Color(0.15f, 0.15f, 0.15f, 0.15f),
-                                     nux::Color(0.15f, 0.15f, 0.15f, 0.15f));
-  
-  geo = content_geo;
-  // Fill in corners (meh)
-  for (int i = 1; i < 6; ++i)
+  if (dash::Settings::Instance().GetFormFactor() != dash::FormFactor::NETBOOK)
   {
-    nux::Geometry fill_geo (geo.x + geo.width, geo.y + i - 1, 6 - i, 1);
-    nux::GetPainter().Paint2DQuadColor(gfx_context, fill_geo, bg_color_);
-    
-    nux::Color dark = bg_color_ * 0.8f;
-    dark.alpha = bg_color_.alpha;
-    fill_geo = nux::Geometry(geo.x + i - 1 , geo.y + geo.height, 1, 6 - i);
-    nux::GetPainter().Paint2DQuadColor(gfx_context, fill_geo, dark);
+    // Make bottom-right corner rounded
+    nux::ROPConfig rop;
+    rop.Blend = true;
+    rop.SrcBlend = GL_ZERO;
+    rop.DstBlend = GL_SRC_ALPHA;
+    nux::GetPainter().PaintShapeCornerROP(gfx_context,
+                                          content_geo,
+                                          nux::color::White,
+                                          nux::eSHAPE_CORNER_ROUND4,
+                                          nux::eCornerBottomRight,
+                                          true,
+                                          rop);
+
+    geo = content_geo;
+
+    gfx_context.GetRenderStates().SetColorMask(true, true, true, true);
+    gfx_context.GetRenderStates().SetBlend(true);
+    gfx_context.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
+
+    // Fill in corners (meh)
+    for (int i = 0; i < INNER_CORNER_RADIUS; ++i)
+    {
+      nux::Geometry fill_geo (geo.x + geo.width, geo.y + i, INNER_CORNER_RADIUS - i, 1);
+      nux::GetPainter().Paint2DQuadColor(gfx_context, fill_geo, bg_color_);
+      
+      nux::Color dark = bg_color_ * 0.8f;
+      dark.alpha = bg_color_.alpha;
+      fill_geo = nux::Geometry(geo.x + i, geo.y + geo.height, 1, INNER_CORNER_RADIUS - i);
+      nux::GetPainter().Paint2DQuadColor(gfx_context, fill_geo, dark);
+    }
   }
 }
 
@@ -384,8 +398,8 @@ void OverlayRendererImpl::DrawContent(nux::GraphicsEngine& gfx_context, nux::Geo
   rop.SrcBlend = GL_DST_COLOR;
   rop.DstBlend = GL_ONE;
   texxform_absolute_bg.flip_v_coord = false;
-  texxform_absolute_bg.uoffset = (1.0f / bg_shine_texture_->GetWidth()) * (absolute_geo.x);
-  texxform_absolute_bg.voffset = (1.0f / bg_shine_texture_->GetHeight()) * (absolute_geo.y);
+  texxform_absolute_bg.uoffset = (1.0f / bg_shine_texture_->GetWidth()) * parent->x_offset;
+  texxform_absolute_bg.voffset = (1.0f / bg_shine_texture_->GetHeight()) * parent->y_offset;
   
   nux::GetPainter().PushTextureLayer(gfx_context, bg_layer_->GetGeometry(),
                                      bg_shine_texture_,
@@ -403,18 +417,21 @@ void OverlayRendererImpl::DrawContentCleanup(nux::GraphicsEngine& gfx_context, n
   gfx_context.GetRenderStates().SetBlend(false);
   gfx_context.PopClippingRectangle();
   
-  // Make round corners
-  nux::ROPConfig rop;
-  rop.Blend = true;
-  rop.SrcBlend = GL_ZERO;
-  rop.DstBlend = GL_SRC_ALPHA;
-  nux::GetPainter().PaintShapeCornerROP(gfx_context,
-                                        content_geo,
-                                        nux::color::White,
-                                        nux::eSHAPE_CORNER_ROUND4,
-                                        nux::eCornerBottomRight,
-                                        true,
-                                        rop);
+  if (dash::Settings::Instance().GetFormFactor() != dash::FormFactor::NETBOOK)
+  {
+    // Make bottom-right corner rounded
+    nux::ROPConfig rop;
+    rop.Blend = true;
+    rop.SrcBlend = GL_ZERO;
+    rop.DstBlend = GL_SRC_ALPHA;
+    nux::GetPainter().PaintShapeCornerROP(gfx_context,
+                                          content_geo,
+                                          nux::color::White,
+                                          nux::eSHAPE_CORNER_ROUND4,
+                                          nux::eCornerBottomRight,
+                                          true,
+                                          rop);
+  }
   
   bgs = 0;
 }
@@ -458,9 +475,9 @@ void OverlayRenderer::DisableBlur()
   pimpl_->bg_effect_helper_.blur_type = BLUR_NONE;
 }
 
-void OverlayRenderer::DrawFull(nux::GraphicsEngine& gfx_context, nux::Geometry content_geo, nux::Geometry absolute_geo, nux::Geometry geo)
+void OverlayRenderer::DrawFull(nux::GraphicsEngine& gfx_context, nux::Geometry content_geo, nux::Geometry absolute_geo, nux::Geometry geo, bool force_edges)
 {
-  pimpl_->Draw(gfx_context, content_geo, absolute_geo, geo);
+  pimpl_->Draw(gfx_context, content_geo, absolute_geo, geo, force_edges);
 }
 
 void OverlayRenderer::DrawInner(nux::GraphicsEngine& gfx_context, nux::Geometry content_geo, nux::Geometry absolute_geo, nux::Geometry geo)

@@ -99,6 +99,8 @@ if (GTEST_FOUND AND
 
 # The service that provides DBus services to test against
   add_executable(test-gtest-service
+                 test_service_hud.c
+                 test_service_hud.h
                  test_service_lens.c
                  test_service_lens.h
                  test_service_main.c
@@ -110,6 +112,7 @@ if (GTEST_FOUND AND
 # The actual test executable (xless) - do not put anything that requires X in here
   add_executable(test-gtest-xless
                  test_animator.cpp
+                 test_launcher_model.cpp
                  test_glib_object.cpp
                  test_glib_object_utils.cpp
                  test_glib_object_utils.h
@@ -138,6 +141,10 @@ if (GTEST_FOUND AND
                  ${UNITY_SRC}/FavoriteStore.h
                  ${UNITY_SRC}/FavoriteStoreGSettings.cpp
                  ${UNITY_SRC}/FavoriteStoreGSettings.h
+                 ${UNITY_SRC}/IconTextureSource.h
+                 ${UNITY_SRC}/IconTextureSource.cpp
+                 ${UNITY_SRC}/LauncherModel.cpp
+                 ${UNITY_SRC}/LauncherModel.h
                  ${UNITY_SRC}/FavoriteStorePrivate.cpp
                  ${UNITY_SRC}/FavoriteStorePrivate.h
                  ${UNITY_SRC}/MockLauncherIcon.h
@@ -178,7 +185,8 @@ if (GTEST_FOUND AND
                  test_utils.h
                  test_ratings_filter.cpp
                  test_results.cpp
-                 )
+                 test_hud.cpp
+                )
   target_link_libraries(test-gtest-dbus ${GTEST_BOTH_LIBRARIES})
   add_test(UnityGTestDBus test-gtest-dbus)
   add_dependencies(test-gtest-dbus unity-core-${UNITY_API_VERSION} test-gtest-service)

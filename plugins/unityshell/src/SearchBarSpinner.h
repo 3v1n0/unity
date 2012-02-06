@@ -17,8 +17,8 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#ifndef DASH_SEARCH_BAR_SPINNER_H
-#define DASH_SEARCH_BAR_SPINNER_H
+#ifndef SEARCH_BAR_SPINNER_H
+#define SEARCH_BAR_SPINNER_H
 
 #include <Nux/Nux.h>
 #include <Nux/View.h>
@@ -28,8 +28,6 @@
 #include "Introspectable.h"
 
 namespace unity
-{
-namespace dash
 {
 
 enum SpinnerState
@@ -79,7 +77,6 @@ private:
   guint32 _frame_timeout;
 };
 
-}
 }
 
 #endif

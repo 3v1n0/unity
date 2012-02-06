@@ -30,7 +30,7 @@
 #include <UnityCore/HomeLens.h>
 
 #include "BackgroundEffectHelper.h"
-#include "DashSearchBar.h"
+#include "SearchBar.h"
 #include "Introspectable.h"
 #include "LensBar.h"
 #include "LensView.h"
@@ -56,6 +56,7 @@ public:
   void Relayout();
   void DisableBlur();
   void OnActivateRequest(GVariant* args);
+  void SetMonitorOffset(int x, int y);
 
   std::string const GetIdForShortcutActivation(std::string const& shortcut) const;
   std::vector<char> GetAllShortcuts();
