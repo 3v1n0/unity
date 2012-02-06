@@ -143,12 +143,13 @@ void View::SetQueries(Hud::Queries queries)
       query_activated.emit(dynamic_cast<HudButton*>(view)->GetQuery());
     });
     
-    button->OnKeyNavFocusActivate.connect([&](nux::Area *area) {
+    button->key_nav_focus_activate.connect([&](nux::Area *area) {
       query_activated.emit(dynamic_cast<HudButton*>(area)->GetQuery());
     });
 
-    button->OnKeyNavFocusChange.connect([&](nux::Area *area){
-      query_selected.emit(dynamic_cast<HudButton*>(area)->GetQuery());
+    button->key_nav_focus_change.connect([&](nux::Area *area, bool recieving, KeyNavDirection direction){
+      if (recieving)
+        query_selected.emit(dynamic_cast<HudButton*>(area)->GetQuery());
     });
 
     button->is_rounded = (query == --(queries.end())) ? true : false;

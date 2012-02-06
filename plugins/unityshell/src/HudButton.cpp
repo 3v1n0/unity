@@ -51,7 +51,7 @@ HudButton::HudButton (nux::TextureArea *image, NUX_FILE_LINE_DECL)
     , is_focused_(false)
 {
   InitTheme();
-  OnKeyNavFocusChange.connect([this](nux::Area *area){ QueueDraw(); });
+  key_nav_focus_change.connect([this](nux::Area *area, bool recieving, nux::KeyNavDirection direction){ QueueDraw(); });
 }
 
 HudButton::HudButton (const std::string label_, NUX_FILE_LINE_DECL)
