@@ -161,6 +161,7 @@ private:
   std::set<guint32> _maximized_set;
   std::list<glib::Object<BamfApplication>> _new_apps;
   std::string _panel_title;
+  sigc::connection _style_changed_connection;
 
   int _padding;
   int _last_width;

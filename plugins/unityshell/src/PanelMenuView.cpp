@@ -140,7 +140,10 @@ PanelMenuView::PanelMenuView(int padding)
   win_manager->window_decorated.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowDecorated));
   win_manager->window_undecorated.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowUndecorated));
 
-  panel::Style::Instance().changed.connect(sigc::mem_fun(this, &PanelMenuView::Refresh));
+  _style_changed_connection = panel::Style::Instance().changed.connect([&] {
+    _title_texture = nullptr;
+    Refresh();
+  });
 
   mouse_enter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
   mouse_leave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
@@ -198,6 +201,8 @@ PanelMenuView::~PanelMenuView()
     if (interest != 0)
       ubus_server_unregister_interest(ubus, interest);
   }
+
+  _style_changed_connection.disconnect();
 }
 
 void
@@ -824,12 +829,27 @@ void PanelMenuView::DrawText(cairo_t *cr_real, int x, int y, int width, int heig
 void
 PanelMenuView::Refresh()
 {
-  nux::Geometry geo(GetGeometry());
+  nux::Geometry const& geo = GetGeometry();
+  static nux::Geometry old_geo;
 
   // We can get into a race that causes the geometry to be wrong as there hasn't been a
   // layout cycle before the first callback. This is to protect from that.
   if (geo.width > _monitor_geo.width)
     return;
+
+  if (!_switcher_showing)
+  {
+    std::string const& new_title = GetActiveViewName();
+
+    if (_panel_title != new_title)
+    {
+      _panel_title = new_title;
+    }
+    else if (old_geo == geo && _title_texture)
+    {
+      return;
+    }
+  }
 
   int  x = 0;
   int  y = 0;
@@ -846,19 +866,13 @@ PanelMenuView::Refresh()
   cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
 
   x += _padding;
-
-  if (!_panel_title.empty())
-  {
-    DrawText(cr, x, y, width, height, _panel_title);
-  }
-  else
-  {
-    DrawText(cr, x, y, width, height, GetActiveViewName());
-  }
+  DrawText(cr, x, y, width, height, _panel_title);
 
   cairo_destroy(cr);
 
   _title_texture = texture_from_cairo_graphics(cairo_graphics);
+
+  old_geo = geo;
 }
 
 void
