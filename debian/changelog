@@ -1,3 +1,9 @@
+unity (5.2.0-0ubuntu2) UNRELEASED; urgency=low
+
+  * Cheery-pick a fix for a 5.0 crasher (LP: #916228)
+
+ -- Didier Roche <didrocks@ubuntu.com>  Mon, 06 Feb 2012 10:02:00 +0100
+
 unity (5.2.0-0ubuntu1) precise; urgency=low
 
   * New upstream release.
