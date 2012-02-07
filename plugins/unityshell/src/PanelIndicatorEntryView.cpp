@@ -64,12 +64,18 @@ PanelIndicatorEntryView::PanelIndicatorEntryView(
   InputArea::mouse_up.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::OnMouseUp));
 
   InputArea::SetAcceptMouseWheelEvent(true);
-  if (type_ != MENU)
+
+  if (type_ != MENU && type_ != APPMENU)
     InputArea::mouse_wheel.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::OnMouseWheel));
 
   panel::Style::Instance().changed.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::Refresh));
 
   Refresh();
+}
+
+PanelIndicatorEntryView::~PanelIndicatorEntryView()
+{
+  // Nothing to do...
 }
 
 void PanelIndicatorEntryView::OnActiveChanged(bool is_active)
@@ -97,7 +103,7 @@ void PanelIndicatorEntryView::OnMouseDown(int x, int y, long button_flags, long 
   if (proxy_->active() || IsDisabled())
     return;
 
-  if (((proxy_->label_visible() && proxy_->label_sensitive()) ||
+  if (((IsLabelVisible() && proxy_->label_sensitive()) ||
        (proxy_->image_visible() && proxy_->image_sensitive())))
   {
     int button = nux::GetEventButton(button_flags);
@@ -122,7 +128,7 @@ void PanelIndicatorEntryView::OnMouseUp(int x, int y, long button_flags, long ke
   int px = geo.x + x;
   int py = geo.y + y;
 
-  if (((proxy_->label_visible() && proxy_->label_sensitive()) ||
+  if (((IsLabelVisible() && proxy_->label_sensitive()) ||
        (proxy_->image_visible() && proxy_->image_sensitive())) &&
        button == 2 && type_ == INDICATOR)
   {
@@ -358,8 +364,8 @@ void PanelIndicatorEntryView::Refresh()
   glib::Object<PangoLayout> layout;
   cairo_t* cr;
 
-  std::string label = proxy_->label();
-  glib::Object<GdkPixbuf> pixbuf = MakePixbuf();
+  std::string label = GetLabel();
+  glib::Object<GdkPixbuf> const& pixbuf = MakePixbuf();
 
   unsigned int width = 0;
   unsigned int icon_width = 0;
@@ -373,7 +379,7 @@ void PanelIndicatorEntryView::Refresh()
     icon_width = width;
   }
 
-  if (!label.empty() && proxy_->label_visible())
+  if (!label.empty() && IsLabelVisible())
   {
     PangoContext* cxt;
     PangoAttrList* attrs = nullptr;
@@ -394,7 +400,7 @@ void PanelIndicatorEntryView::Refresh()
     boost::erase_all(label, "_");
 
     g_object_get(settings,
-                 "gtk-font-name", font_description.AsOutParam(),
+                 "gtk-font-name", &font_description,
                  "gtk-xft-dpi", &dpi,
                  nullptr);
     desc = pango_font_description_from_string(font_description);
@@ -415,7 +421,7 @@ void PanelIndicatorEntryView::Refresh()
 
     cxt = pango_layout_get_context(layout);
     pango_cairo_context_set_font_options(cxt, gdk_screen_get_font_options(screen));
-    pango_cairo_context_set_resolution(cxt, (float)dpi / (float)PANGO_SCALE);
+    pango_cairo_context_set_resolution(cxt, dpi / (float)PANGO_SCALE);
     pango_layout_context_changed(layout);
 
     pango_layout_get_extents(layout, nullptr, &log_rect);
@@ -505,20 +511,47 @@ double PanelIndicatorEntryView::GetOpacity()
   return opacity_;
 }
 
+PanelIndicatorEntryView::IndicatorEntryType PanelIndicatorEntryView::GetType() const
+{
+  return type_;
+}
+
+std::string PanelIndicatorEntryView::GetLabel()
+{
+  if (proxy_.get())
+  {
+    return proxy_->label();
+  }
+
+  return "";
+}
+
+bool PanelIndicatorEntryView::IsLabelVisible()
+{
+  if (proxy_.get())
+  {
+    return proxy_->label_visible();
+  }
+
+  return false;
+}
+
 std::string PanelIndicatorEntryView::GetName() const
 {
-  return proxy_->id().c_str();
+  return GetEntryID();
 }
 
 void PanelIndicatorEntryView::AddProperties(GVariantBuilder* builder)
 {
   variant::BuilderWrapper(builder)
   .add(GetGeometry())
-  .add("label", proxy_->label())
+  .add("type", GetType())
+  .add("label", GetLabel())
   .add("label_sensitive", proxy_->label_sensitive())
-  .add("label_visible", proxy_->label_visible())
+  .add("label_visible", IsLabelVisible())
   .add("icon_sensitive", proxy_->image_sensitive())
   .add("icon_visible", proxy_->image_visible())
+  .add("entry_visible", proxy_->visible())
   .add("active", proxy_->active())
   .add("priority", proxy_->priority());
 }
@@ -557,6 +590,16 @@ bool PanelIndicatorEntryView::IsVisible() const
 bool PanelIndicatorEntryView::IsActive() const
 {
   return draw_active_;
+}
+
+std::string PanelIndicatorEntryView::GetEntryID() const
+{
+  if (proxy_.get())
+  {
+    return proxy_->id();
+  }
+
+  return "";
 }
 
 int PanelIndicatorEntryView::GetEntryPriority() const

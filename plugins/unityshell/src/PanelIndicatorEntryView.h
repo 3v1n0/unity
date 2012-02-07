@@ -44,13 +44,18 @@ public:
   enum IndicatorEntryType {
     INDICATOR,
     MENU,
+    APPMENU,
     OTHER
   };
 
   PanelIndicatorEntryView(Entry::Ptr const& proxy, int padding = 5,
                           IndicatorEntryType type = INDICATOR);
 
-  void Refresh();
+  virtual ~PanelIndicatorEntryView();
+
+  IndicatorEntryType GetType() const;
+  virtual std::string GetLabel();
+  virtual bool IsLabelVisible();
 
   void Activate(int button = 1);
   void Unactivate();
@@ -64,7 +69,9 @@ public:
   bool IsSensitive() const;
   bool IsActive() const;
   bool IsVisible() const;
-  int  GetEntryPriority() const;
+
+  int GetEntryPriority() const;
+  std::string GetEntryID() const;
 
   void DashShown();
   void DashHidden();
@@ -72,16 +79,34 @@ public:
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
 
-  virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
-
   sigc::signal<void, PanelIndicatorEntryView*, bool> active_changed;
   sigc::signal<void, PanelIndicatorEntryView*> refreshed;
 
-private:
+protected:
+  virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
+  virtual void DrawEntryBackground(cairo_t* cr, unsigned int w, unsigned int h);
+  virtual void DrawEntryContent(cairo_t* cr, unsigned int width, unsigned int height,
+                                glib::Object<GdkPixbuf> const& pixbuf,
+                                glib::Object<PangoLayout> const& layout);
+
+  void Refresh();
+  virtual void ShowMenu(int button = 1);
+
   static const int PANEL_HEIGHT = 24;
   static const int SPACING = 3;
 
   Entry::Ptr proxy_;
+
+private:
+  void OnMouseDown(int x, int y, long button_flags, long key_flags);
+  void OnMouseUp(int x, int y, long button_flags, long key_flags);
+  void OnMouseWheel(int x, int y, int delta, unsigned long mouse_state, unsigned long key_state);
+  void OnActiveChanged(bool is_active);
+
+  void SetActiveState(bool active, int button);
+
+  glib::Object<GdkPixbuf> MakePixbuf();
+
   IndicatorEntryType type_;
   nux::BaseTexture* entry_texture_;
   int padding_;
@@ -89,21 +114,6 @@ private:
   bool draw_active_;
   bool dash_showing_;
   bool disabled_;
-
-  void OnMouseDown(int x, int y, long button_flags, long key_flags);
-  void OnMouseUp(int x, int y, long button_flags, long key_flags);
-  void OnMouseWheel(int x, int y, int delta, unsigned long mouse_state, unsigned long key_state);
-  void OnActiveChanged(bool is_active);
-
-  void SetActiveState(bool active, int button);
-  void ShowMenu(int button);
-
-  glib::Object<GdkPixbuf> MakePixbuf();
-
-  void DrawEntryBackground(cairo_t* cr, unsigned int w, unsigned int h);
-  void DrawEntryContent(cairo_t* cr, unsigned int width, unsigned int height,
-                        glib::Object<GdkPixbuf> const& pixbuf,
-                        glib::Object<PangoLayout> const& layout);
 };
 
 }
