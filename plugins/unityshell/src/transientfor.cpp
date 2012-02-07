@@ -51,7 +51,7 @@ compiz::X11TransientForReader::getAncestor ()
   {
     if (actualType == XA_WINDOW && actualFormat == 32 && nLeft == 0 && nItems == 1)
     {
-      Window *data = (Window *) prop;
+      Window *data = static_cast <Window *> (prop);
 
       serverAncestor = *data;
     }
@@ -92,7 +92,7 @@ compiz::X11TransientForReader::isGroupTransientFor (unsigned int clientLeader)
   {
     if (actualType == XA_WINDOW && actualFormat == 32 && nLeft == 0 && nItems == 1)
     {
-      Window *data = (Window *) prop;
+      Window *data = static_cast <Window *> (prop);
 
       serverClientLeader = *data;
     }
@@ -130,7 +130,7 @@ compiz::X11TransientForReader::isGroupTransientFor (unsigned int clientLeader)
       {
         if (actualType == XA_ATOM && actualFormat == 32 && nLeft == 0 && nItems)
         {
-          Atom *data = (Atom *) prop;
+          Atom *data = static_cast <Atom *> (prop);
 
           while (nItems--)
           {
@@ -167,7 +167,7 @@ compiz::X11TransientForReader::getTransients ()
   {
     if (actualType == XA_WINDOW && actualFormat == 32 && nItems && !nLeft)
     {
-      Window *data = (Window *) prop;
+      Window *data = static_cast <Window *> (prop);
 
       while (nItems--)
       {

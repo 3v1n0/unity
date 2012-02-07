@@ -1822,7 +1822,7 @@ UnityWindow::unminimize ()
   if (mMinimizeHandler)
   {
     mMinimizeHandler->unminimize ();
-    mMinimizeHandler.release ();
+    mMinimizeHandler.reset ();
   }
 }
 
@@ -1861,7 +1861,7 @@ UnityWindow::focus ()
 bool
 UnityWindow::minimized ()
 {
-  return mMinimizeHandler.get () != nullptr;
+  return mMinimizeHandler;
 }
 
 gboolean
