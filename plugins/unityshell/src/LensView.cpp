@@ -216,6 +216,7 @@ void LensView::OnCategoryAdded(Category const& category)
                     << ", " << boost::lexical_cast<int>(index) << ")";
 
   PlacesGroup* group = new PlacesGroup();
+  AddChild(group);
   group->SetName(name.c_str());
   group->SetIcon(icon_hint.c_str());
   group->SetExpanded(false);

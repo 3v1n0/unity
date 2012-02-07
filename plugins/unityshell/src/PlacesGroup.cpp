@@ -29,8 +29,6 @@
 
 #include "StaticCairoText.h"
 
-#include "Introspectable.h"
-
 #include <sigc++/trackable.h>
 #include <sigc++/signal.h>
 #include <sigc++/functors/ptr_fun.h>
@@ -41,7 +39,7 @@
 #include <glib/gi18n-lib.h>
 
 #include <Nux/Utils.h>
-
+#include <UnityCore/Variant.h>
 #include "DashStyle.h"
 
 namespace unity
@@ -375,8 +373,7 @@ void PlacesGroup::Draw(nux::GraphicsEngine& graphics_engine,
 
   graphics_engine.GetRenderStates().SetColorMask(true, true, true, true);
 
-  if (_header_view->IsMousePointerInside() || _icon->HasKeyFocus() || _name->HasKeyFocus() ||
-      _expand_label->HasKeyFocus() || _expand_icon->HasKeyFocus())
+  if (ShouldBeHighlighted())
   {
     nux::Geometry geo(_header_layout->GetGeometry());
     geo.x = base.x + 11;
@@ -396,9 +393,7 @@ PlacesGroup::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
 
   graphics_engine.PushClippingRectangle(base);
 
-  if ((_header_view->IsMousePointerInside() || _icon->HasKeyFocus() || _name->HasKeyFocus() ||
-       _expand_label->HasKeyFocus() || _expand_icon->HasKeyFocus()) &&
-       _focus_layer && !IsFullRedraw())
+  if (ShouldBeHighlighted() && !IsFullRedraw())
   {
     nux::GetPainter().PushLayer(graphics_engine, _focus_layer->GetGeometry(), _focus_layer);
   }
@@ -482,6 +477,20 @@ PlacesGroup::SetDrawSeparator(bool draw_it)
   QueueDraw();
 }
 
+bool PlacesGroup::HeaderHasKeyFocus()
+{
+  return (_icon && _icon->HasKeyFocus()) || 
+         (_name && _name->HasKeyFocus()) ||
+         (_expand_label && _expand_label->HasKeyFocus()) || 
+         (_expand_icon && _expand_icon->HasKeyFocus());
+}
+
+bool PlacesGroup::ShouldBeHighlighted()
+{
+  return (_header_view && _header_view->IsMousePointerInside()) ||
+          HeaderHasKeyFocus();
+}
+
 //
 // Key navigation
 //
@@ -489,6 +498,25 @@ bool
 PlacesGroup::AcceptKeyNavFocus()
 {
   return false;
+}
+
+//
+// Introspection
+//
+std::string PlacesGroup::GetName() const
+{
+  return "PlacesGroup";
+}
+
+void PlacesGroup::AddProperties(GVariantBuilder* builder)
+{
+  unity::variant::BuilderWrapper wrapper(builder);
+
+  wrapper.add("header-x", _header_view->GetAbsoluteX());
+  wrapper.add("header-y", _header_view->GetAbsoluteY());
+  wrapper.add("header-width", _header_view->GetAbsoluteWidth());
+  wrapper.add("header-height", _header_view->GetAbsoluteHeight());
+  wrapper.add("header-has-keyfocus", HeaderHasKeyFocus());
 }
 
 } // namespace unity

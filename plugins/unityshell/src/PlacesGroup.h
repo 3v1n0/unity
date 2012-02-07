@@ -28,6 +28,7 @@
 #include <sigc++/sigc++.h>
 
 #include "IconTexture.h"
+#include "Introspectable.h"
 #include "StaticCairoText.h"
 
 namespace nux
@@ -38,7 +39,7 @@ class AbstractPaintLayer;
 namespace unity
 {
 
-class PlacesGroup : public nux::View
+class PlacesGroup : public nux::View , public debug::Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE(PlacesGroup, nux::View);
 public:
@@ -79,6 +80,10 @@ protected:
   // Key navigation
   virtual bool AcceptKeyNavFocus();
 
+  // Introspection
+  virtual std::string GetName() const;
+  virtual void AddProperties(GVariantBuilder* builder);
+
 private:
   void Refresh();
   static gboolean OnIdleRelayout(PlacesGroup* self);
@@ -91,6 +96,9 @@ private:
   void RefreshLabel();
 
 private:
+  bool HeaderHasKeyFocus();
+  bool ShouldBeHighlighted();
+
   nux::VLayout* _group_layout;
   nux::View* _header_view;
   nux::HLayout* _header_layout;
