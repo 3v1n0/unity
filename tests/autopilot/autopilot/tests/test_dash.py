@@ -102,6 +102,11 @@ class DashTests(AutopilotTestCase):
         self.assertEqual(self.dash.get_focused_lens_icon(), "")
 
     def test_category_header_keynav(self):
+          """ This test makes sure that:
+          1. A category header can get the focus.
+          2. A category header stays highlight when it loses the focus
+             and mouse is close to it (but not inside).
+          """
           self.dash.ensure_hidden()
           self.dash.reveal_application_lens()
 
