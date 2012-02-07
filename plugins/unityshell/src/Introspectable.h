@@ -18,7 +18,7 @@
  */
 
 #ifndef _INTROSPECTABLE_H
-#define _INTROSPECTABLE_H 1
+#define _INTROSPECTABLE_H
 
 #include <glib.h>
 #include <list>

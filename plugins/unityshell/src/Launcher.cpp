@@ -78,6 +78,10 @@ const float BACKLIGHT_STRENGTH = 0.9f;
 const int panel_height = 24;
 const int ICON_PADDING = 6;
 const int RIGHT_LINE_WIDTH = 1;
+const int ANIM_DURATION_SHORT_SHORT = 100;
+const int ANIM_DURATION = 200;
+const int ANIM_DURATION_LONG = 350;
+const int START_DRAGICON_DURATION = 250;
 
 }
 
@@ -1287,7 +1291,7 @@ void Launcher::OnOverlayShown(GVariant* data)
   unity::glib::String overlay_identity;
   gboolean can_maximise = FALSE;
   gint32 overlay_monitor = 0;
-  g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING, 
+  g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING,
                 &overlay_identity, &can_maximise, &overlay_monitor);
 
 
@@ -1313,14 +1317,14 @@ void Launcher::OnOverlayHidden(GVariant* data)
   unity::glib::String overlay_identity;
   gboolean can_maximise = FALSE;
   gint32 overlay_monitor = 0;
-  g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING, 
+  g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING,
                 &overlay_identity, &can_maximise, &overlay_monitor);
 
   if (!g_strcmp0(overlay_identity, "dash"))
   {
     if (!_dash_is_open)
       return;
-    
+
     LauncherModel::iterator it;
 
     _dash_is_open = false;
@@ -1354,7 +1358,7 @@ void Launcher::SetHidden(bool hidden)
 
   _hide_machine->SetQuirk(LauncherHideMachine::LAST_ACTION_ACTIVATE, false);
 
-  if (hidden)  
+  if (hidden)
   {
     _hide_machine->SetQuirk(LauncherHideMachine::MOUSE_MOVE_POST_REVEAL, false);
     _hide_machine->SetQuirk(LauncherHideMachine::MT_DRAG_OUT, false);
