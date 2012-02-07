@@ -15,6 +15,7 @@ class LauncherTests(AutopilotTestCase):
     def setUp(self):
         super(LauncherTests, self).setUp()
         self.server = Launcher()
+        sleep(1)
 
     def test_launcher_switcher_ungrabbed(self):
         """Tests basic key nav integration without keyboard grabs."""
