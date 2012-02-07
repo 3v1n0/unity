@@ -412,6 +412,8 @@ void DashView::OnLensBarActivated(std::string const& id)
   bool expanded = view->filters_expanded;
   search_bar_->showing_filters = expanded;
 
+  nux::GetWindowCompositor().SetKeyFocusArea(default_focus());
+
   search_bar_->text_entry()->SelectAll();
 
   search_bar_->can_refine_search = view->can_refine_search();
@@ -609,7 +611,15 @@ std::string DashView::GetName() const
 }
 
 void DashView::AddProperties(GVariantBuilder* builder)
-{}
+{
+  int num_rows = 1; // The search bar
+
+  if (active_lens_view_)
+    num_rows += active_lens_view_->GetNumRows();
+
+  unity::variant::BuilderWrapper wrapper(builder);
+  wrapper.add("num-rows", num_rows);
+}
 
 nux::Area * DashView::KeyNavIteration(nux::KeyNavDirection direction)
 {

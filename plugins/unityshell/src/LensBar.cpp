@@ -16,20 +16,24 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#include "LensBar.h"
-
 #include <NuxCore/Logger.h>
 
-#include "config.h"
+#include "CairoTexture.h"
+#include "DashStyle.h"
+#include "LensBar.h"
 
 namespace unity
 {
 namespace dash
 {
-
 namespace
 {
+
 nux::logging::Logger logger("unity.dash.lensbar");
+
+const int FOCUS_OVERLAY_WIDTH = 56;
+const int FOCUS_OVERLAY_HEIGHT = 40;
+
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(LensBar);
@@ -37,14 +41,19 @@ NUX_IMPLEMENT_OBJECT_TYPE(LensBar);
 LensBar::LensBar()
   : nux::View(NUX_TRACKER_LOCATION)
 {
+  InitTheme();
   SetupBackground();
   SetupLayout();
   SetupHomeLens();
 }
 
-LensBar::~LensBar()
+void LensBar::InitTheme()
 {
-  delete bg_layer_;
+  if (!focus_layer_)
+  {
+    focus_layer_.reset(Style::Instance().FocusOverlay(FOCUS_OVERLAY_WIDTH, FOCUS_OVERLAY_HEIGHT));
+    over_layer_.reset(Style::Instance().FocusOverlay(FOCUS_OVERLAY_WIDTH, FOCUS_OVERLAY_HEIGHT));
+  }
 }
 
 void LensBar::SetupBackground()
@@ -53,14 +62,14 @@ void LensBar::SetupBackground()
   rop.Blend = true;
   rop.SrcBlend = GL_ONE;
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
-  bg_layer_ = new nux::ColorLayer(nux::Color(0.0f, 0.0f, 0.0f, 0.2f), true, rop);
+  bg_layer_.reset(new nux::ColorLayer(nux::Color(0.0f, 0.0f, 0.0f, 0.2f), true, rop));
 }
 
 void LensBar::SetupLayout()
 {
   layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
   layout_->SetContentDistribution(nux::MAJOR_POSITION_CENTER);
-  layout_->SetHorizontalInternalMargin(40);
+  layout_->SetSpaceBetweenChildren(40);
   SetLayout(layout_);
 
   SetMinimumHeight(46);
@@ -76,6 +85,11 @@ void LensBar::SetupHomeLens()
   layout_->AddView(icon, 0, nux::eCenter, nux::MINOR_SIZE_FULL);
 
   icon->mouse_click.connect([&, icon] (int x, int y, unsigned long button, unsigned long keyboard) { SetActive(icon); });
+  icon->mouse_enter.connect([&] (int x, int y, unsigned long button, unsigned long keyboard) {  QueueDraw(); });
+  icon->mouse_leave.connect([&] (int x, int y, unsigned long button, unsigned long keyboard) {  QueueDraw(); });
+  icon->mouse_down.connect([&] (int x, int y, unsigned long button, unsigned long keyboard) {  QueueDraw(); });
+  icon->key_nav_focus_change.connect([&](nux::Area*, bool, nux::KeyNavDirection){ QueueDraw(); });
+  icon->key_nav_focus_activate.connect([&, icon](nux::Area*){ SetActive(icon); });
 }
 
 void LensBar::AddLens(Lens::Ptr& lens)
@@ -87,6 +101,11 @@ void LensBar::AddLens(Lens::Ptr& lens)
   layout_->AddView(icon, 0, nux::eCenter, nux::eFix);
 
   icon->mouse_click.connect([&, icon] (int x, int y, unsigned long button, unsigned long keyboard) { SetActive(icon); });
+  icon->mouse_enter.connect([&] (int x, int y, unsigned long button, unsigned long keyboard) {  QueueDraw(); });
+  icon->mouse_leave.connect([&] (int x, int y, unsigned long button, unsigned long keyboard) {  QueueDraw(); });
+  icon->mouse_down.connect([&] (int x, int y, unsigned long button, unsigned long keyboard) {  QueueDraw(); });
+  icon->key_nav_focus_change.connect([&](nux::Area*, bool, nux::KeyNavDirection){ QueueDraw(); });
+  icon->key_nav_focus_activate.connect([&, icon](nux::Area*){ SetActive(icon); });
 }
 
 void LensBar::Activate(std::string id)
@@ -103,45 +122,59 @@ void LensBar::Activate(std::string id)
 
 void LensBar::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
 {
-  nux::Geometry geo = GetGeometry();
+  nux::Geometry const& base = GetGeometry();
 
-  gfx_context.PushClippingRectangle(geo);
-  nux::GetPainter().PaintBackground(gfx_context, geo);
+  gfx_context.PushClippingRectangle(base);
+  nux::GetPainter().PaintBackground(gfx_context, base);
 
-  bg_layer_->SetGeometry(geo);
-  nux::GetPainter().RenderSinglePaintLayer(gfx_context, geo, bg_layer_);
+  bg_layer_->SetGeometry(base);
+  nux::GetPainter().RenderSinglePaintLayer(gfx_context, base, bg_layer_.get());
 
-	
+  for (auto icon : icons_)
+  {
+    if ((icon->HasKeyFocus() || icon->IsMouseInside()) && 
+        focus_layer_ && over_layer_)
+    {
+      nux::Geometry geo(icon->GetGeometry());
+
+      // Center it
+      geo.x -= (FOCUS_OVERLAY_WIDTH - geo.width) / 2;
+      geo.y -= (FOCUS_OVERLAY_HEIGHT - geo.height) / 2;
+      geo.width = FOCUS_OVERLAY_WIDTH;
+      geo.height = FOCUS_OVERLAY_HEIGHT;
+
+      nux::AbstractPaintLayer* layer = icon->HasKeyFocus() ? focus_layer_.get() : over_layer_.get();
+
+      layer->SetGeometry(geo);
+      layer->Renderlayer(gfx_context);
+    }
+  }
+
   gfx_context.PopClippingRectangle();
 }
 
 void LensBar::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
 {
   gfx_context.PushClippingRectangle(GetGeometry());
-  
+
   if (!IsFullRedraw())
-    nux::GetPainter().PushLayer(gfx_context, bg_layer_->GetGeometry(), bg_layer_);
-  
+    nux::GetPainter().PushLayer(gfx_context, bg_layer_->GetGeometry(), bg_layer_.get());
+
+  for (auto icon: icons_)
+  {
+    if ((icon->HasKeyFocus() || icon->IsMouseInside()) && !IsFullRedraw()
+        && focus_layer_ && over_layer_)
+    {
+      nux::AbstractPaintLayer* layer = icon->HasKeyFocus() ? focus_layer_.get() : over_layer_.get();
+      
+      nux::GetPainter().PushLayer(gfx_context, focus_layer_->GetGeometry(), layer);
+    }
+  }
+
   layout_->ProcessDraw(gfx_context, force_draw);
 
   if (!IsFullRedraw())
     nux::GetPainter().PopBackground();
-
-  for (auto icon: icons_)
-    if (icon->active)
-	{
-      nux::Geometry geo = icon->GetGeometry();
-      int middle = geo.x + geo.width/2;
-      int size = 5;
-      int y = geo.y - 11;
-
-      nux::GetPainter().Draw2DTriangleColor(gfx_context,
-                                            middle - size, y,
-                                            middle, y + size,
-                                            middle + size, y,
-                                            nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
-
-	}
 
   gfx_context.PopClippingRectangle();
 }
@@ -166,13 +199,13 @@ void LensBar::SetActive(LensBarIcon* activated)
 
 void LensBar::ActivateNext()
 {
-  bool activate_next = false; 
+  bool activate_next = false;
   for (auto it = icons_.begin();
        it < icons_.end();
        it++)
   {
     LensBarIcon *icon = *it;
-    
+
     if (activate_next && icon->IsVisible())
     {
       SetActive(icon);
@@ -188,13 +221,13 @@ void LensBar::ActivateNext()
 void LensBar::ActivatePrevious()
 {
   bool activate_previous = false;
-  
+
   for (auto it = icons_.rbegin();
        it < icons_.rend();
        ++it)
   {
     LensBarIcon *icon = *it;
-    
+
     if (activate_previous && icon->IsVisible())
     {
 	SetActive(icon);
@@ -204,7 +237,7 @@ void LensBar::ActivatePrevious()
       activate_previous = true;
   }
   SetActive(icons_.back());
-  
+
 }
 
 // Keyboard navigation
@@ -222,12 +255,17 @@ std::string LensBar::GetName() const
 void LensBar::AddProperties(GVariantBuilder* builder)
 {
   unity::variant::BuilderWrapper wrapper(builder);
+
+  wrapper.add("focused-lens-icon", "");
+
   for( auto icon : icons_)
   {
     if (icon->active)
-      wrapper.add("active-lens", icon->id.Get()); 
+      wrapper.add("active-lens", icon->id.Get());
+
+    if (icon->HasKeyFocus())
+      wrapper.add("focused-lens-icon", icon->id.Get());
   }
-  
 }
 
 }

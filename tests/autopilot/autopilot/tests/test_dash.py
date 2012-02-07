@@ -72,6 +72,33 @@ class DashTests(AutopilotTestCase):
         self.dash.ensure_hidden()
         self.dash.reveal_command_lens()
         self.assertEqual(self.dash.get_current_lens(), u'commands.lens')
+  
+    def test_lensbar_keyfocus(self):
+        """Test that the lensbar keynavigation works well."""
+        self.dash.ensure_hidden()
+        self.dash.toggle_reveal()
+        kb = Keyboard()
+
+        # Make sure that the lens bar can get the focus 
+        for i in range(self.dash.get_num_rows()):
+          kb.press_and_release("Down")
+        self.assertIsNot(self.dash.get_focused_lens_icon(), '')
+
+        # Make sure that left - right work well
+        temp = self.dash.get_focused_lens_icon()
+        kb.press_and_release("Right");
+        self.assertIsNot(self.dash.get_focused_lens_icon(), temp)
+        kb.press_and_release("Left")
+        self.assertEqual(self.dash.get_focused_lens_icon(), temp)
+
+        # Make sure that pressing 'Enter' we can change the lens...
+        kb.press_and_release("Right");
+        temp = self.dash.get_focused_lens_icon();
+        kb.press_and_release("Enter");
+        self.assertEqual(self.dash.get_current_lens(), temp)
+
+        # ... the lens bar should lose the key focus
+        self.assertEqual(self.dash.get_focused_lens_icon(), "")
 
 
 
