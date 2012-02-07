@@ -70,7 +70,7 @@ public:
    * absolute_geo: your views GetAbsoluteGeometry()
    * geo: your views GetGeometry()
    */
-  void DrawFull(nux::GraphicsEngine& gfx_context, nux::Geometry content_geo, nux::Geometry absolute_geo, nux::Geometry geo);
+  void DrawFull(nux::GraphicsEngine& gfx_context, nux::Geometry content_geo, nux::Geometry absolute_geo, nux::Geometry geo, bool force_edges=false);
   
   /*
    * Draws just the stack that is overlay behind the inner_geometry using push/pop layers, call in DrawContent() before drawing your content

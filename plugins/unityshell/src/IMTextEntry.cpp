@@ -27,12 +27,10 @@
 
 namespace unity
 {
-namespace dash
-{
 
 namespace
 {
-nux::logging::Logger logger("unity.dash.imtextentry");
+nux::logging::Logger logger("unity.imtextentry");
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(IMTextEntry);
@@ -337,5 +335,4 @@ void IMTextEntry::OnMouseButtonUp(int x, int y, unsigned long bflags, unsigned l
   }
 }
 
-}
 }

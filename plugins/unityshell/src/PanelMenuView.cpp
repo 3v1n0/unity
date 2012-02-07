@@ -155,10 +155,10 @@ PanelMenuView::PanelMenuView(int padding)
 
   // Register for all the interesting events
   UBusServer* ubus = ubus_server_get_default();
-  _ubus_interests.push_back(ubus_server_register_interest(ubus, UBUS_PLACE_VIEW_SHOWN,
+  _ubus_interests.push_back(ubus_server_register_interest(ubus, UBUS_OVERLAY_SHOWN,
                                                           (UBusCallback)PanelMenuView::OnPlaceViewShown,
                                                           this));
-  _ubus_interests.push_back(ubus_server_register_interest(ubus, UBUS_PLACE_VIEW_HIDDEN,
+  _ubus_interests.push_back(ubus_server_register_interest(ubus, UBUS_OVERLAY_HIDDEN,
                                                           (UBusCallback)PanelMenuView::OnPlaceViewHidden,
                                                           this));
 

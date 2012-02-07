@@ -48,6 +48,11 @@ PointerBarrierWrapper::PointerBarrierWrapper()
   max_velocity_multiplier = 1.0f;
 }
 
+PointerBarrierWrapper::~PointerBarrierWrapper()
+{
+  DestroyBarrier();
+}
+
 void PointerBarrierWrapper::ConstructBarrier()
 {
   if (active)
