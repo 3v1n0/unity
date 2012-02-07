@@ -70,6 +70,21 @@
                         <_name>Dodge Active Window</_name>
                     </desc>
                 </option>
+                <option name="reveal_trigger" type="int">
+                    <_short>Reveal Trigger</_short>
+                    <_long></_long>
+                    <min>0</min>
+                    <max>1</max>
+                    <default>0</default>
+                    <desc>
+                        <value>0</value>
+                        <_name>Left Edge</_name>
+                    </desc>
+                    <desc>
+                        <value>1</value>
+                        <_name>Top Left Corner</_name>
+                    </desc>
+                </option>
                 <option name="show_launcher" type="key">
                     <_short>Key to show the launcher</_short>
                     <_long>Make the launcher appear with that key</_long>

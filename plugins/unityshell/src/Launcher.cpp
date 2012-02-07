@@ -1766,7 +1766,7 @@ void Launcher::Resize()
 
   _pointer_barrier->x1 = new_geometry.x;
   _pointer_barrier->x2 = new_geometry.x;
-  _pointer_barrier->y1 = new_geometry.y;
+  _pointer_barrier->y1 = new_geometry.y - panel_height;
   _pointer_barrier->y2 = new_geometry.y + new_geometry.height;
   _pointer_barrier->threshold = options()->edge_stop_velocity();
 
@@ -2338,7 +2338,23 @@ void Launcher::RecvMouseWheel(int x, int y, int wheel_delta, unsigned long butto
 void Launcher::OnPointerBarrierEvent(ui::PointerBarrierWrapper* owner, ui::BarrierEvent::Ptr event)
 {
   nux::Geometry abs_geo = GetAbsoluteGeometry();
+
+  bool apply_to_reveal = false;
   if (_hidden && event->x >= abs_geo.x && event->x <= abs_geo.x + abs_geo.width)
+  {
+    if (options()->reveal_trigger == RevealTrigger::EDGE)
+    {
+      if (event->y >= abs_geo.y)
+        apply_to_reveal = true;
+    }
+    else if (options()->reveal_trigger == RevealTrigger::CORNER)
+    {
+      if (event->y < abs_geo.y)
+        apply_to_reveal = true;
+    }
+  }
+
+  if (apply_to_reveal)
   {
     _hide_machine->AddRevealPressure(event->velocity);
     decaymulator_->value = 0;
