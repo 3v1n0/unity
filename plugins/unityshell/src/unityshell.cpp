@@ -112,7 +112,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , damaged(false)
   , _key_nav_mode_requested(false)
   , _last_output(nullptr)
-  , _bghash (NULL)
 #ifndef USE_GLES
   , _active_fbo (0)
 #endif
@@ -129,22 +128,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
   LOG_DEBUG(logger) << __PRETTY_FUNCTION__;
   int (*old_handler)(Display*, XErrorEvent*);
   old_handler = XSetErrorHandler(NULL);
-
-  /*
-   * GTK needs to be initialized or else unity's gdk/gtk calls will crash.
-   * This is already done in compiz' main() if using ubuntu packages, but not
-   * if you're using the regular (upstream) compiz.
-   * Admittedly this is the same as what the "gtkloader" plugin does. But it
-   * is faster, more efficient (one less plugin in memory), and more reliable
-   * to do the init here where its needed. And yes, init'ing multiple times is
-   * safe, and does nothing after the first init.
-   */
-  if (!gtk_init_check(&programArgc, &programArgv))
-  {
-    compLogMessage("unityshell", CompLogLevelError, "GTK init failed\n");
-    setFailed ();
-    failed = true;
-  }
 
 #ifndef USE_GLES
   /* Ensure OpenGL version is 1.4+. */
@@ -206,9 +189,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
 
   if (!failed)
   {
-     /* BGHash calls gdk/gtk functions. So construct only after gtk_init */
-     _bghash = new unity::BGHash;
-
      notify_init("unityshell");
 
      dbus_g_thread_init();
@@ -378,8 +358,6 @@ UnityScreen::~UnityScreen()
   QuicklistManager::Destroy();
 
   delete wt;
-  if (_bghash)
-    delete _bghash;
 }
 
 void UnityScreen::initAltTabNextWindow()
@@ -2733,6 +2711,21 @@ bool UnityPluginVTable::init()
     return false;
   if (!CompPlugin::checkPluginABI("opengl", COMPIZ_OPENGL_ABI))
     return false;
+
+  /*
+   * GTK needs to be initialized or else unity's gdk/gtk calls will crash.
+   * This is already done in compiz' main() if using ubuntu packages, but not
+   * if you're using the regular (upstream) compiz.
+   * Admittedly this is the same as what the "gtkloader" plugin does. But it
+   * is faster, more efficient (one less plugin in memory), and more reliable
+   * to do the init here where its needed. And yes, init'ing multiple times is
+   * safe, and does nothing after the first init.
+   */
+  if (!gtk_init_check(&programArgc, &programArgv))
+  {
+    compLogMessage("unityshell", CompLogLevelError, "GTK init failed\n");
+    return false;
+  }
 
   return true;
 }
