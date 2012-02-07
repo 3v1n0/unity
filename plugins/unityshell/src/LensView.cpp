@@ -158,9 +158,9 @@ void LensView::SetupViews()
   scroll_layout_ = new nux::VLayout(NUX_TRACKER_LOCATION);
   scroll_view_->SetLayout(scroll_layout_);
 
-  no_results_ = new nux::StaticCairoText ("", NUX_TRACKER_LOCATION);
-  no_results_->SetTextColor (nux::Color(1.0f,1.0f,1.0f,1.0f));
-  scroll_layout_->AddView (no_results_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
+  no_results_ = new nux::StaticCairoText("", NUX_TRACKER_LOCATION);
+  no_results_->SetTextColor(nux::color::White);
+  scroll_layout_->AddView(no_results_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
 
   fscroll_view_ = new LensScrollView(new PlacesVScrollBar(NUX_TRACKER_LOCATION),
                                      NUX_TRACKER_LOCATION);
@@ -336,12 +336,12 @@ void LensView::CheckNoResults(Lens::Hints const& hints)
     std::stringstream markup;
     Lens::Hints::const_iterator it;
 
-    it = hints.find ("no-results-hint");
+    it = hints.find("no-results-hint");
     markup << "<span size='larger' weight='bold'>";
 
     if (it != hints.end())
     {
-      markup << g_variant_get_string (it->second, NULL);
+      markup << g_variant_get_string(it->second, NULL);
     }
     else
     {
@@ -351,17 +351,17 @@ void LensView::CheckNoResults(Lens::Hints const& hints)
 
     LOG_DEBUG(logger) << "The no-result-hint is: " << markup.str();
 
-    scroll_layout_->SetContentDistribution (nux::MAJOR_POSITION_CENTER);  
+    scroll_layout_->SetContentDistribution(nux::MAJOR_POSITION_CENTER); 
 
     no_results_active_ = true;
-    no_results_->SetText (markup.str());
+    no_results_->SetText(markup.str());
   }
   else if (count && no_results_active_)
   {
-    scroll_layout_->SetContentDistribution (nux::MAJOR_POSITION_START);  
+    scroll_layout_->SetContentDistribution(nux::MAJOR_POSITION_START);  
 
     no_results_active_ = false;
-    no_results_->SetText ("");
+    no_results_->SetText("");
   }
 }
 

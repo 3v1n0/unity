@@ -421,10 +421,7 @@ void DashView::OnLensBarActivated(std::string const& id)
 
 void DashView::OnSearchFinished(Lens::Hints const& hints)
 {
-  if (active_lens_view_->lens())
-  {
-    active_lens_view_->CheckNoResults (hints);
-  }
+  active_lens_view_->CheckNoResults(hints);
 
   std::string search_string = search_bar_->search_string;
   if (active_lens_view_ && active_lens_view_->search_string == search_string)
