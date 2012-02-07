@@ -20,6 +20,7 @@ from time import sleep
 from autopilot.emulators.X11 import Keyboard, Mouse, ScreenGeometry
 from autopilot.globals import global_context
 
+
 class Unity(object):
     """High level class to abstract interactions with the unity shell.
 
@@ -74,12 +75,12 @@ class Launcher(Unity):
 
     def move_mouse_over_launcher(self, monitor):
         (x, y, w, h) = self.launcher_geometry(monitor)
-        self._screen.move_mouse_to_monitor(monitor);
-        self._mouse.move(x + w / 2, y + h / 2);
+        self._screen.move_mouse_to_monitor(monitor)
+        self._mouse.move(x + w / 2, y + h / 2)
 
     def reveal_launcher(self, monitor):
         (x, y, w, h) = self.launcher_geometry(monitor)
-        self._mouse.move(x - 1200, y + h / 2)
+        self._mouse.move(x - 1200, y + h / 2, True, 10, .002)
         sleep(self.show_timeout)
 
     def keyboard_reveal_launcher(self):
@@ -156,7 +157,7 @@ class Launcher(Unity):
         return int(state['key_nav_selection'])
 
     def launcher_geometry(self, monitor):
-        state = self.__get_state(monitor);
+        state = self.__get_state(monitor)
         x = int(state['x'])
         y = int(state['y'])
         width = int(state['width'])
@@ -185,6 +186,7 @@ class Launcher(Unity):
         self._mouse.click(button)
         self.move_mouse_to_right_of_launcher(monitor)
 
+
 class LauncherIcon:
     """Holds information about a launcher icon.
 
@@ -203,6 +205,7 @@ class LauncherIcon:
         self.running = icon_dict['quirk-running']
         self.presented = icon_dict['quirk-presented']
         self.urgent = icon_dict['quirk-urgent']
+
 
 class Switcher(Unity):
     """Interact with the Unity switcher."""
@@ -291,6 +294,7 @@ class Switcher(Unity):
     def __get_controller(self):
         return self.set_state('/unity/SwitcherController')[0]
 
+
 class Dash(Unity):
     """
     An emulator class that makes it easier to interact with the unity dash.
@@ -313,14 +317,14 @@ class Dash(Unity):
         Ensures the dash is visible.
         """
         if not self.get_is_visible():
-            self.toggle_reveal();
+            self.toggle_reveal()
 
     def ensure_hidden(self):
         """
         Ensures the dash is hidden.
         """
         if self.get_is_visible():
-            self.toggle_reveal();
+            self.toggle_reveal()
 
     def get_is_visible(self):
         """

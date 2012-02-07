@@ -93,7 +93,7 @@ class LauncherTests(AutopilotTestCase):
     def test_reveal_on_mouse_to_edge(self):
         """Tests reveal of launchers by mouse pressure."""
         # XXX: re-enable test when launcher reeal behavior is no longer resolution-dependant.
-        self.skipTest("Launcher reveal behavior is resolution dependant.")
+        # self.skipTest("Launcher reveal behavior is resolution dependant.")
 
         num_launchers = self.server.num_launchers()
 
@@ -106,7 +106,7 @@ class LauncherTests(AutopilotTestCase):
         """Tests that the launcher hides properly if the
         mouse is under the launcher when it is revealed."""
         # XXX: re-enable test when launcher reeal behavior is no longer resolution-dependant.
-        self.skipTest("Launcher reveal behavior is resolution dependant.")
+        # self.skipTest("Launcher reveal behavior is resolution dependant.")
 
         num_launchers = self.server.num_launchers()
 
@@ -119,7 +119,7 @@ class LauncherTests(AutopilotTestCase):
     def test_reveal_does_not_hide_again(self):
         """Tests reveal of launchers by mouse pressure to ensure it doesn't automatically hide again."""
         # XXX: re-enable test when launcher reeal behavior is no longer resolution-dependant.
-        self.skipTest("Launcher reveal behavior is resolution dependant.")
+        # self.skipTest("Launcher reveal behavior is resolution dependant.")
 
         num_launchers = self.server.num_launchers()
 
