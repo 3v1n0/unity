@@ -156,8 +156,8 @@ QuicklistMenuItemSeparator::UpdateTexture()
   cairo_paint(cr);
   cairo_set_source_rgba(cr, _color.red, _color.green, _color.blue, _color.alpha);
   cairo_set_line_width(cr, 1.0f);
-  cairo_move_to(cr, 0.5f, 2.5f);
-  cairo_line_to(cr, width - 0.5f, 2.5f);
+  cairo_move_to(cr, 0.0f, 2.5f);
+  cairo_line_to(cr, width, 2.5f);
   cairo_stroke(cr);
 
   if (_normalTexture[0])
