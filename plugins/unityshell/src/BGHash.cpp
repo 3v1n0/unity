@@ -381,7 +381,7 @@ namespace unity {
                            (guint16) (_current_color.green * 65535.0 * 0.7f),
                            (guint16) (_current_color.blue * 65535.0 * 0.7f)};
 
-    settings = g_settings_new (UNITY_SCHEMA);
+    settings = g_settings_new (UNITY_SCHEMA.c_str());
     if (settings)
     {
       unity::glib::String color_string(gdk_color_to_string(&color));
