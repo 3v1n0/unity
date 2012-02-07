@@ -26,6 +26,7 @@
 #include <core/core.h>
 #include "minimizedwindowhandler.h"
 #include "comptransientfor.h"
+#include <memory>
 
 // Will be merged back into compiz
 namespace compiz {
@@ -67,7 +68,7 @@ public:
   typedef std::list <Type *> List;
 protected:
 
-  virtual std::vector<unsigned int> getTransients ();
+  std::vector<unsigned int> getTransients ();
 
 private:
 
@@ -103,6 +104,15 @@ compiz::CompizMinimizedWindowHandler<Screen, Window>::CompizMinimizedWindowHandl
 template <typename Screen, typename Window>
 compiz::CompizMinimizedWindowHandler<Screen, Window>::~CompizMinimizedWindowHandler ()
 {
+  if (!priv->mWindow->destroyed ())
+  {
+    priv->mWindow->unminimize ();
+    priv->mWindow->focusSetEnabled (Window::get (priv->mWindow), false);
+    priv->mWindow->minimizeSetEnabled (Window::get (priv->mWindow), false);
+    priv->mWindow->unminimizeSetEnabled (Window::get (priv->mWindow), false);
+    priv->mWindow->minimize ();
+  }
+
   minimizedWindows.remove (this);
 }
 
@@ -158,7 +168,7 @@ compiz::CompizMinimizedWindowHandler<Screen, Window>::minimize ()
     {
       Window *w = Window::get (win);
       if (!w->mMinimizeHandler)
-        w->mMinimizeHandler = new Type (win);
+	w->mMinimizeHandler = std::unique_ptr <Type> (new Type (win));
       w->mMinimizeHandler->minimize ();
     }
   }
@@ -241,8 +251,7 @@ compiz::CompizMinimizedWindowHandler<Screen, Window>::unminimize ()
       if (w && w->mMinimizeHandler)
       {
         w->mMinimizeHandler->unminimize ();
-        delete w->mMinimizeHandler;
-        w->mMinimizeHandler = NULL;
+	w->mMinimizeHandler.release ();
       }
     }
   }
@@ -324,7 +333,7 @@ compiz::CompizMinimizedWindowHandler<Screen, Window>::handleEvent (XEvent *event
     if (w)
     {
       Window *pw = Window::get (w);
-      Type *compizMinimizeHandler = pw->mMinimizeHandler;
+      Type *compizMinimizeHandler = pw->mMinimizeHandler.get ();
 
       /* Restore and re-save input shape and remove */
       if (compizMinimizeHandler)

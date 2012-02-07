@@ -55,13 +55,18 @@ compiz::CompTransientForReader::getAncestor ()
 bool
 compiz::CompTransientForReader::isTransientFor (unsigned int ancestor)
 {
+  if (!ancestor ||
+      !priv->mWindow->id ())
+      return false;
+
   return priv->mWindow->transientFor () == ancestor;
 }
 
 bool
 compiz::CompTransientForReader::isGroupTransientFor (unsigned int clientLeader)
 {
-  if (!clientLeader)
+  if (!clientLeader ||
+      !priv->mWindow->id ())
     return false;
 
   if (priv->mWindow->transientFor () == None || priv->mWindow->transientFor () == screen->root ())
