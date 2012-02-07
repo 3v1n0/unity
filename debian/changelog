@@ -1,8 +1,12 @@
-unity (5.2.0-0ubuntu2) UNRELEASED; urgency=low
+unity (5.2.0-0ubuntu3~ppa1) precise; urgency=low
 
   * Cheery-pick a fix for a 5.0 crasher (LP: #916228)
+  * debian/control:
+    - build-dep on latest compiz-dev and libcompizconfig0-dev for ABI break
+  * debian/rules:
+    - pick new abiversion file
 
- -- Didier Roche <didrocks@ubuntu.com>  Mon, 06 Feb 2012 10:02:00 +0100
+ -- Didier Roche <didrocks@ubuntu.com>  Tue, 07 Feb 2012 13:38:12 +0100
 
 unity (5.2.0-0ubuntu1) precise; urgency=low
 
