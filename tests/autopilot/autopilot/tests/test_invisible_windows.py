@@ -40,7 +40,6 @@ class InvisibleWindowTests(TestCase):
         self.assertIn('Calculator', icon_names)
 
         switcher.initiate()
-        sleep(1)
         icon_names = [i.tooltip_text for i in switcher.get_switcher_icons() if i.visible]
         switcher.terminate()
         self.assertIn('Calculator', icon_names)

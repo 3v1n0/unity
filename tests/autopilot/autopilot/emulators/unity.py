@@ -135,11 +135,11 @@ def make_launcher_icon(dbus_tuple):
     name,state = dbus_tuple
     try:
         class_type = _icon_type_registry[name]
-        return class_type(state)
     except KeyError:
-        import pdb; pdb.set_trace()
         print name, "is not a valid icon type!"
         return None
+    return class_type(state)
+
 
 class Launcher(Unity):
     """Interact with the unity Launcher."""
@@ -368,8 +368,6 @@ class Quicklist(Unity):
         self._mouse.click()
 
 
-
-
 class QuicklistMenuItem(Unity):
     """Represents a single item in a quicklist."""
     def __init__(self, state_dict):
@@ -393,10 +391,11 @@ class QuicklistMenuItemLabel(QuicklistMenuItem):
     def _set_properties(self, state_dict):
         super(QuicklistMenuItemLabel, self)._set_properties(state_dict)
         self.text = state_dict['text']
-        print "text = ", self.text
+
 
 class QuicklistMenuItemSeparator(QuicklistMenuItem):
     """Represents a separator in a quicklist."""
+
 
 class Switcher(Unity):
     """Interact with the Unity switcher."""
@@ -498,6 +497,7 @@ class Switcher(Unity):
 
     def __get_controller(self):
         return self.set_state('/unity/SwitcherController')[0]
+
 
 class Dash(Unity):
     """
