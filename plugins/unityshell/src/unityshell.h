@@ -310,6 +310,8 @@ private:
 
   nux::Property<nux::Geometry> primary_monitor_;
 
+  unity::BGHash _bghash;
+
 #ifdef USE_GLES
   GLFramebufferObject *oldFbo;
 #else
