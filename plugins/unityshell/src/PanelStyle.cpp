@@ -164,7 +164,7 @@ nux::BaseTexture* Style::GetWindowButton(WindowButtonType type, WindowState stat
   nux::BaseTexture* texture = NULL;
   std::string names[] = { "close", "minimize", "unmaximize" };
   std::string states[] = { "", "_focused_prelight", "_focused_pressed",
-                           "unfocused", "_unfocused_prelight", "_unfocused_pressed"};
+                           "_unfocused", "_unfocused_prelight", "_unfocused_pressed"};
 
   std::ostringstream subpath;
   subpath << "unity/" << names[static_cast<int>(type)]
