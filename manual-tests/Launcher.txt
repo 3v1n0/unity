@@ -41,3 +41,46 @@ Outcome
   When moving to a workspace where there are no window o the given application,
   clicking on its launcher icon should bring to focus the last focused window
   in the last used workspace.
+
+Test Alt+F1 KeyNavMode Mouse Works
+-------------------------------
+This test shows that the mouse still works normally while keynav mode is active.
+
+#. Press Alt+F1 to enter keynav mode
+#. Using the mouse perform a normal action (such as dragging a window)
+
+Outcome
+  The keynav mode exits, along with the mouse performing the normal action 
+  the user expects. Such as highlighting text, moving a window, clicking out
+  of keynav mode, or clicking on a launcher icon. All these actions should 
+  also exit the keynav mode.
+
+Test Alt+F1 KeyNavMode Shortcuts
+-----------------------------
+This test shows that all the shortcuts work and also exits from keynav mode.
+
+#. Press Alt+F1 to enter keynav mode
+#. Press Super + a 
+#. Press Esc
+#. Press Alt+F1
+#. Press Alt + Tab
+#. Press Alt+F1
+#. Press Ctrl + Alt + t
+
+Outcome
+  The first shortcut opens the dash app lens, which it should open it and quit the
+  nav mode. The second shortcut switches between applications. The last one will open
+  a new terminal. This is to show all SUPER, ALT, and CTRL shortcuts work; while
+  closing the keynav mode.
+
+Test Alt+F1 NavMode Quicklist Click Exit 
+----------------------------------------
+This Test shows that clicking on a quicklist option quits keynav mode.
+
+#. Press Alt+F1 to enter keynav mode
+#. Press Right arrow
+#. Click on any option
+
+Outcome
+  No matter what option you click will exit keynav mode.
+

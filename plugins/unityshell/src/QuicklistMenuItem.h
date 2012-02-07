@@ -33,20 +33,19 @@
 
 #include "Introspectable.h"
 
-#define ITEM_INDENT_ABS        16
-#define ITEM_CORNER_RADIUS_ABS 3
-#define ITEM_MARGIN            4
-
-typedef enum
+namespace unity
 {
-  MENUITEM_TYPE_UNKNOWN    = 0,
+
+enum QuicklistMenuItemType
+{
+  MENUITEM_TYPE_UNKNOWN = 0,
   MENUITEM_TYPE_LABEL,
   MENUITEM_TYPE_SEPARATOR,
   MENUITEM_TYPE_CHECK,
   MENUITEM_TYPE_RADIO,
-} QuicklistMenuItemType;
+};
 
-class QuicklistMenuItem : public nux::View, public unity::debug::Introspectable
+class QuicklistMenuItem : public nux::View, public debug::Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE(QuicklistMenuItem, nux::View);
 public:
@@ -91,6 +90,9 @@ public:
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
 protected:
+  static const int ITEM_INDENT_ABS = 16;
+  static const int ITEM_CORNER_RADIUS_ABS = 3;
+  static const int ITEM_MARGIN = 4;
 
   gchar*                _text;
   nux::Color            _textColor;
@@ -135,15 +137,15 @@ protected:
 
   bool _prelight;   //!< True when the mouse is over the item.
 
-  void DrawText(cairo_t*   cr,
-                int        width,
-                int        height,
-                nux::Color color);
+  void DrawText(nux::CairoGraphics* cairo, int width, int height, nux::Color const& color);
+  void DrawPrelight(nux::CairoGraphics* cairo, int width, int height, nux::Color const& color);
 
   // Introspection
   std::string _name;
 
   friend class QuicklistView;
 };
+
+} // NAMESPACE
 
 #endif // QUICKLISTMENUITEM_H

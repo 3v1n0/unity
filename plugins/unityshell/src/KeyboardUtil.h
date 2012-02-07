@@ -40,11 +40,11 @@ public:
   virtual ~KeyboardUtil();
 
   guint GetKeycodeAboveKeySymbol(KeySym key_symbol);
-  
+
 private:
   bool CompareOffsets (int current_x, int current_y, int best_x, int best_y);
   guint ConvertKeyToKeycode (XkbKeyPtr key);
-  
+
   bool FindKeyInGeometry(XkbGeometryPtr geo, char *key_name, int& res_section, XkbBoundsRec& res_bounds);
   bool FindKeyInSectionAboveBounds (XkbGeometryPtr geo, int section, XkbBoundsRec const& target_bounds, guint &keycode);
 

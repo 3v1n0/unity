@@ -23,7 +23,7 @@
 #include <Nux/Nux.h>
 #include <boost/shared_ptr.hpp>
 
-#include "AbstractLauncherIcon.h"
+#include "IconTextureSource.h"
 
 namespace unity
 {
@@ -68,7 +68,7 @@ public:
   {
   }
 
-  launcher::AbstractLauncherIcon* icon;
+  IconTextureSource* icon;
   nux::Point3   render_center;
   nux::Point3   logical_center;
   nux::Color    colorify;
