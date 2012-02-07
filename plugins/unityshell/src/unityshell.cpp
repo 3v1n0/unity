@@ -2712,6 +2712,21 @@ bool UnityPluginVTable::init()
   if (!CompPlugin::checkPluginABI("opengl", COMPIZ_OPENGL_ABI))
     return false;
 
+  /*
+   * GTK needs to be initialized or else unity's gdk/gtk calls will crash.
+   * This is already done in compiz' main() if using ubuntu packages, but not
+   * if you're using the regular (upstream) compiz.
+   * Admittedly this is the same as what the "gtkloader" plugin does. But it
+   * is faster, more efficient (one less plugin in memory), and more reliable
+   * to do the init here where its needed. And yes, init'ing multiple times is
+   * safe, and does nothing after the first init.
+   */
+  if (!gtk_init_check(&programArgc, &programArgv))
+  {
+    compLogMessage("unityshell", CompLogLevelError, "GTK init failed\n");
+    return false;
+  }
+
   return true;
 }
 
