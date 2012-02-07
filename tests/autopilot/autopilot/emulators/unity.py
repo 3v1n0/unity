@@ -348,7 +348,7 @@ class Dash(Unity):
         return unicode(self.get_state("//DashController/DashView/LensBar")[0]['focused-lens-icon'])
 
     def get_num_rows(self):
-        """Returns the id of the current focused icon."""
+        """Returns the number of displayed rows in the dash."""
         return self.get_state("//DashController/DashView")[0]['num-rows']
 
     def reveal_application_lens(self):

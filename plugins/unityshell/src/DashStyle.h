@@ -118,6 +118,10 @@ public:
                                  Arrow       arrow,
                                  Segment     segment);
 
+  virtual bool MultiRangeFocusOverlay(cairo_t* cr,
+                                      Arrow arrow,
+                                      Segment segment);
+
   virtual bool TrackViewNumber(cairo_t*    cr,
                                nux::ButtonVisualState  state,
                                std::string const& trackNumber);

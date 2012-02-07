@@ -263,6 +263,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetBackgroundColorNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetLauncherHideModeNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetBacklightModeNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+     optionSetRevealTriggerNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetLaunchAnimationNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetUrgentAnimationNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetPanelOpacityNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
@@ -2310,6 +2311,9 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       break;
     case UnityshellOptions::BacklightMode:
       launcher_options->backlight_mode = (unity::launcher::BacklightMode) optionGetBacklightMode();
+      break;
+    case UnityshellOptions::RevealTrigger:
+      launcher_options->reveal_trigger = (unity::launcher::RevealTrigger) optionGetRevealTrigger();
       break;
     case UnityshellOptions::LaunchAnimation:
       launcher_options->launch_animation = (unity::launcher::LaunchAnimation) optionGetLaunchAnimation();
