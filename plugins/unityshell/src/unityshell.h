@@ -49,6 +49,7 @@
 #include "DebugDBusInterface.h"
 #include "SwitcherController.h"
 #include "UBusWrapper.h"
+#include "UnityshellPrivate.h"
 #ifndef USE_GLES
 #include "ScreenEffectFramebufferObject.h"
 #endif
@@ -238,8 +239,8 @@ private:
 
   void SendExecuteCommand();
 
-  void EnsureSuperKeybindings ();
-  void CreateSuperNewAction(char shortcut, bool use_shift=false, bool use_numpad=false);
+  void EnsureSuperKeybindings();
+  void CreateSuperNewAction(char shortcut, impl::ActionModifiers flag);
   void EnableCancelAction(bool enabled, int modifiers = 0);
 
   static gboolean initPluginActions(gpointer data);

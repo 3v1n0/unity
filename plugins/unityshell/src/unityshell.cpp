@@ -362,7 +362,7 @@ UnityScreen::~UnityScreen()
 
 void UnityScreen::initAltTabNextWindow()
 {
-  KeyboardUtil key_util (screen->dpy());
+  KeyboardUtil key_util(screen->dpy());
   guint above_tab_keycode = key_util.GetKeycodeAboveKeySymbol (XStringToKeysym("Tab"));
   KeySym above_tab_keysym = XkbKeycodeToKeysym (screen->dpy(), above_tab_keycode, 0, 0);
 
@@ -414,27 +414,22 @@ void UnityScreen::EnsureSuperKeybindings()
 
   for (auto shortcut : launcher_controller_->GetAllShortcuts())
   {
-    CreateSuperNewAction(shortcut);
-    CreateSuperNewAction(shortcut, true);
-    CreateSuperNewAction(shortcut, false, true);
+    CreateSuperNewAction(shortcut, impl::ActionModifiers::NONE);
+    CreateSuperNewAction(shortcut, impl::ActionModifiers::USE_NUMPAD);
+    CreateSuperNewAction(shortcut, impl::ActionModifiers::USE_SHIFT);
   }
 
   for (auto shortcut : dash_controller_->GetAllShortcuts())
-    CreateSuperNewAction(shortcut);
+    CreateSuperNewAction(shortcut, impl::ActionModifiers::NONE);
 }
 
-void UnityScreen::CreateSuperNewAction(char shortcut, bool use_shift, bool use_numpad)
+void UnityScreen::CreateSuperNewAction(char shortcut, impl::ActionModifiers flag)
 {
     CompActionPtr action(new CompAction());
+    const std::string key(optionGetShowLauncher().keyToString());
 
     CompAction::KeyBinding binding;
-    std::ostringstream sout;
-    if (use_shift)
-      sout << "<Shift><Super>"  << shortcut;
-    else
-      sout << "<Super>" << ((use_numpad) ? "KP_" : "") << shortcut;
-
-    binding.fromString(sout.str());
+    binding.fromString(impl::CreateActionString(key, shortcut, flag));
 
     action->setKey(binding);
 
@@ -2711,6 +2706,21 @@ bool UnityPluginVTable::init()
     return false;
   if (!CompPlugin::checkPluginABI("opengl", COMPIZ_OPENGL_ABI))
     return false;
+
+  /*
+   * GTK needs to be initialized or else unity's gdk/gtk calls will crash.
+   * This is already done in compiz' main() if using ubuntu packages, but not
+   * if you're using the regular (upstream) compiz.
+   * Admittedly this is the same as what the "gtkloader" plugin does. But it
+   * is faster, more efficient (one less plugin in memory), and more reliable
+   * to do the init here where its needed. And yes, init'ing multiple times is
+   * safe, and does nothing after the first init.
+   */
+  if (!gtk_init_check(&programArgc, &programArgv))
+  {
+    compLogMessage("unityshell", CompLogLevelError, "GTK init failed\n");
+    return false;
+  }
 
   return true;
 }
