@@ -57,13 +57,13 @@ TestRunner::~TestRunner ()
 
 void TestRunner::Init ()
 {
-  unity::FilterBasicButton *button = new unity::FilterBasicButton ("hello world", NUX_TRACKER_LOCATION);
-  unity::FilterRatingsWidget *ratings = new unity::FilterRatingsWidget (NUX_TRACKER_LOCATION);
-  unity::FilterGenreButton *genre_button = new unity::FilterGenreButton ("genre button", NUX_TRACKER_LOCATION);
+  auto *button = new unity::dash::FilterBasicButton ("hello world", NUX_TRACKER_LOCATION);
+  auto *ratings = new unity::dash::FilterRatingsWidget (NUX_TRACKER_LOCATION);
+  auto *genre_button = new unity::dash::FilterGenreButton ("genre button", NUX_TRACKER_LOCATION);
 
-  unity::FilterGenre *genre = new unity::FilterGenre(NUX_TRACKER_LOCATION);
+  auto *genre = new unity::dash::FilterGenre(3, NUX_TRACKER_LOCATION);
 
-  unity::FilterMultiRange *multi_range = new unity::FilterMultiRange (NUX_TRACKER_LOCATION);
+  auto *multi_range = new unity::dash::FilterMultiRange (NUX_TRACKER_LOCATION);
 
   layout = new nux::VLayout(NUX_TRACKER_LOCATION);
 

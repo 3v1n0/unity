@@ -393,6 +393,28 @@ Lens::Ptr LensView::lens() const
   return lens_;
 }
 
+int LensView::GetNumRows()
+{  
+  unsigned int columns = dash::Style::Instance().GetDefaultNColumns();
+  columns -= filters_expanded ? 2 : 0;
+
+  int num_rows = 0;
+  for (auto group: categories_)
+  {
+    if (group->IsVisible())
+    {
+      num_rows += 1; // The category header
+
+      if (group->GetExpanded() && columns)
+        num_rows += ceil(counts_[group] / static_cast<double>(columns));
+      else
+        num_rows += 1;
+    }
+  }
+
+  return num_rows;
+}
+
 void LensView::ActivateFirst()
 {
   Results::Ptr results = lens_->results;
