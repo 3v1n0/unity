@@ -121,6 +121,7 @@ protected:
 
 private:
   std::string GetActiveViewName();
+  std::string GetMaximizedViewName();
 
   void OnSwitcherShown(GVariant* data);
   void OnSwitcherSelectionChanged(GVariant* data);

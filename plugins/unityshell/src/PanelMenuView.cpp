@@ -57,6 +57,7 @@ namespace unity
 
 PanelMenuView::PanelMenuView(int padding)
   : _matcher(bamf_matcher_get_default()),
+    _is_integrated(false),
     _is_inside(false),
     _is_maximized(false),
     _is_own_window(false),
@@ -94,6 +95,10 @@ PanelMenuView::PanelMenuView(int padding)
    * shouldn't touch this again
    */
   layout_ = _menu_layout;
+
+  BamfWindow* active_win = bamf_matcher_get_active_window(_matcher);
+  if (BAMF_IS_WINDOW(active_win))
+    _active_xid = bamf_window_get_xid(active_win);
 
   _view_opened_signal.Connect(_matcher, "view-opened",
                               sigc::mem_fun(this, &PanelMenuView::OnViewOpened));
@@ -214,16 +219,22 @@ PanelMenuView::AddIndicator(indicator::Indicator::Ptr const& indicator)
   if (indicator->IsAppmenu())
   {
     auto appmenuindicator = dynamic_cast<indicator::AppmenuIndicator*>(indicator.get());
+
     if (appmenuindicator)
     {
       _is_integrated = appmenuindicator->IsIntegrated();
+      _window_buttons->SetFocusedState(!_is_integrated ||
+                                       GetMaximizedWindow() == _active_xid);
 
       auto conn = appmenuindicator->integrated_changed.connect([&] (bool integrated) {
         _is_integrated = integrated;
+        _window_buttons->SetFocusedState(!_is_integrated ||
+                                         GetMaximizedWindow() == _active_xid);
 
         Refresh();
         FullRedraw();
       });
+
       _mode_changed_connection = conn;
     }
   }
@@ -287,17 +298,11 @@ PanelMenuView::FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEven
     NUX_RETURN_VALUE_IF_NOTNULL(found_area, found_area);
   }
 
-  if (_is_maximized || _dash_showing)
+  if (_is_maximized || _dash_showing || (_is_integrated && GetMaximizedWindow()))
   {
     if (_window_buttons)
     {
       found_area = _window_buttons->FindAreaUnderMouse(mouse_position, event_type);
-      NUX_RETURN_VALUE_IF_NOTNULL(found_area, found_area);
-    }
-
-    if (_panel_titlebar_grab_area)
-    {
-      found_area = _panel_titlebar_grab_area->FindAreaUnderMouse(mouse_position, event_type);
       NUX_RETURN_VALUE_IF_NOTNULL(found_area, found_area);
     }
   }
@@ -380,7 +385,9 @@ bool
 PanelMenuView::DrawMenus()
 {
   if (_is_integrated)
-    return true;
+  {
+    return (GetMaximizedWindow() != 0);
+  }
 
   if (!_is_own_window && !_dash_showing && _we_control_active && !_switcher_showing)
   {
@@ -396,7 +403,7 @@ PanelMenuView::DrawMenus()
 bool
 PanelMenuView::DrawWindowButtons()
 {
-  if (_dash_showing || _is_integrated)
+  if (_dash_showing || (_is_integrated && GetMaximizedWindow() != 0))
     return true;
 
   if (!_is_own_window && _we_control_active && _is_maximized && !_switcher_showing)
@@ -695,6 +702,7 @@ PanelMenuView::GetActiveViewName()
   _is_own_window = false;
 
   window = bamf_matcher_get_active_window(_matcher);
+
   if (BAMF_IS_WINDOW(window))
   {
     std::vector<Window> const& our_xids = nux::XInputWindow::NativeHandleList();
@@ -768,6 +776,48 @@ PanelMenuView::GetActiveViewName()
   bold_label << "<b>" << escaped.Str() << "</b>";
 
   return bold_label.str();
+}
+
+std::string
+PanelMenuView::GetMaximizedViewName()
+{
+  Window maximized = GetMaximizedWindow();
+  BamfWindow* window = nullptr;
+  std::string label(_("Ubuntu Desktop"));
+
+  if (maximized != 0)
+  {
+    GList* windows = bamf_matcher_get_window_stack_for_monitor(_matcher, _monitor);
+
+    for (GList* l = windows; l; l = l->next)
+    {
+      if (!BAMF_IS_WINDOW(l->data))
+        continue;
+
+      auto win = static_cast<BamfWindow*>(l->data);
+
+      if (bamf_window_get_xid(win) == maximized)
+      {
+        window = win;
+        break;
+      }
+    }
+
+    g_list_free(windows);
+  }
+
+  if (BAMF_IS_WINDOW(window))
+  {
+    BamfView* view = reinterpret_cast<BamfView*>(window);
+    BamfApplication* app = bamf_matcher_get_application_for_window(_matcher, window);
+
+    if (BAMF_IS_APPLICATION(app))
+      view = reinterpret_cast<BamfView*>(app);
+
+    label = glib::String(bamf_view_get_name(view)).Str();
+  }
+
+  return label;
 }
 
 void PanelMenuView::DrawText(cairo_t *cr_real, int x, int y, int width, int height,
@@ -875,7 +925,16 @@ PanelMenuView::Refresh()
 
   if (!_switcher_showing)
   {
-    std::string const& new_title = GetActiveViewName();
+    std::string new_title;
+
+    if (_is_integrated)
+    {
+      new_title = GetMaximizedViewName();
+    }
+    else
+    {
+      new_title = GetActiveViewName();
+    }
 
     if (_panel_title != new_title)
     {
@@ -1083,7 +1142,8 @@ PanelMenuView::OnActiveWindowChanged(BamfMatcher *matcher,
   if (BAMF_IS_WINDOW(new_view))
   {
     BamfWindow* window = BAMF_WINDOW(new_view);
-    guint32 xid = _active_xid = bamf_window_get_xid(window);
+    guint32 xid = bamf_window_get_xid(window);
+    _active_xid = xid;
     _is_maximized = WindowManager::Default()->IsWindowMaximized(xid);
     nux::Geometry geo = WindowManager::Default()->GetWindowGeometry(xid);
 
@@ -1112,6 +1172,9 @@ PanelMenuView::OnActiveWindowChanged(BamfMatcher *matcher,
     // register callback for new view
     _view_name_changed_signal.Connect(new_view, "name-changed",
                                       sigc::mem_fun(this, &PanelMenuView::OnNameChanged));
+
+    if (_is_integrated)
+      _window_buttons->SetFocusedState(GetMaximizedWindow() == _active_xid);
   }
 
   Refresh();
@@ -1198,19 +1261,21 @@ PanelMenuView::OnWindowUndecorated(guint32 xid)
 void
 PanelMenuView::OnWindowMaximized(guint xid)
 {
-  BamfWindow* window;
   bool updated = false;
 
-  window = bamf_matcher_get_active_window(_matcher);
-  if (BAMF_IS_WINDOW(window) && bamf_window_get_xid(window) == xid)
+  if (_active_xid == xid)
   {
     _is_maximized = true;
 
     // We need to update the _is_inside state in the case of maximization by grab
     auto mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
     _is_inside = GetAbsoluteGeometry().IsPointInside(mouse.x, mouse.y);
+
     updated = true;
   }
+
+  if (_is_integrated)
+    _window_buttons->SetFocusedState(xid == _active_xid);
 
   // update the state of the window in the _decor_map
   _decor_map[xid] = WindowManager::Default()->IsWindowDecorated(xid);
@@ -1230,17 +1295,17 @@ PanelMenuView::OnWindowMaximized(guint xid)
 void
 PanelMenuView::OnWindowRestored(guint xid)
 {
-  BamfWindow* window;
-
   if (_maximized_set.find(xid) == _maximized_set.end())
     return;
 
-  window = bamf_matcher_get_active_window(_matcher);
-  if (BAMF_IS_WINDOW(window) && bamf_window_get_xid(window) == xid)
+  if (_active_xid == xid)
   {
     _is_maximized = false;
     _is_grabbed = false;
   }
+
+  if (_is_integrated)
+    _window_buttons->SetFocusedState(GetMaximizedWindow() == _active_xid);
 
   if (_decor_map[xid])
     WindowManager::Default()->Decorate(xid);
@@ -1287,16 +1352,20 @@ PanelMenuView::OnCloseClicked()
 {
   if (_dash_showing)
   {
-    ubus_server_send_message(ubus_server_get_default(), UBUS_PLACE_VIEW_CLOSE_REQUEST, nullptr);
+    _ubus_manager.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
   }
   else
   {
-    BamfWindow* window;
+    Window target_win = _active_xid;
 
-    window = bamf_matcher_get_active_window(_matcher);
-    if (BAMF_IS_WINDOW(window))
+    if (_is_integrated)
     {
-      WindowManager::Default()->Close(bamf_window_get_xid(window));
+      target_win = GetMaximizedWindow();
+    }
+
+    if (target_win != 0)
+    {
+      WindowManager::Default()->Close(target_win);
       NeedRedraw();
     }
   }
@@ -1312,12 +1381,16 @@ PanelMenuView::OnMinimizeClicked()
   }
   else
   {
-    BamfWindow* window;
+    Window target_win = _active_xid;
 
-    window = bamf_matcher_get_active_window(_matcher);
-    if (BAMF_IS_WINDOW(window))
+    if (_is_integrated)
     {
-      WindowManager::Default()->Minimize(bamf_window_get_xid(window));
+      target_win = GetMaximizedWindow();
+    }
+
+    if (target_win != 0)
+    {
+      WindowManager::Default()->Minimize(target_win);
       NeedRedraw();
     }
   }
@@ -1335,12 +1408,16 @@ PanelMenuView::OnRestoreClicked()
   }
   else
   {
-    BamfWindow* window;
+    Window target_win = _active_xid;
 
-    window = bamf_matcher_get_active_window(_matcher);
-    if (BAMF_IS_WINDOW(window))
+    if (_is_integrated)
     {
-      WindowManager::Default()->Restore(bamf_window_get_xid(window));
+      target_win = GetMaximizedWindow();
+    }
+
+    if (target_win != 0)
+    {
+      WindowManager::Default()->Restore(target_win);
       NeedRedraw();
     }
   }
@@ -1384,7 +1461,7 @@ PanelMenuView::OnMaximizedGrabStart(int x, int y, unsigned long button_flags, un
   // This is a workaround to avoid that the grid plugin would be fired
   // showing the window shape preview effect. See bug #838923
 
-  maximized_win = GetMaximizedWindow ();
+  maximized_win = GetMaximizedWindow();
 
   if (maximized_win != 0)
   {
