@@ -97,6 +97,8 @@ private:
   void UpdateLensFilter(std::string lens, std::string filter, std::string value);
   void UpdateLensFilterValue(Filter::Ptr filter, std::string value);
   void EnsureLensesInitialized();
+  
+  void ProcessGrowShrink();
 
   bool AcceptKeyNavFocus();
   bool InspectKeyEvent(unsigned int eventType, unsigned int key_sym, const char* character);
@@ -135,6 +137,12 @@ private:
   bool activate_on_finish_;
 
   bool visible_;
+  
+  guint timeline_id_;
+  gint64 start_time_;
+  int last_known_height_;
+  int current_height_;
+  bool timeline_need_more_draw_;
 };
 
 

@@ -88,6 +88,7 @@ View::~View()
   }
 }
 
+
 void View::ResetToDefault()
 {
   search_bar_->search_string = "";

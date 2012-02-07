@@ -86,6 +86,7 @@ LensView::LensView()
   , filters_expanded(false)
   , can_refine_search(false)
   , fix_renderering_id_(0)
+  , ensure_size_id_(0)
 {}
 
 LensView::LensView(Lens::Ptr lens)
@@ -96,6 +97,7 @@ LensView::LensView(Lens::Ptr lens)
   , lens_(lens)
   , initial_activation_(true)
   , fix_renderering_id_(0)
+  , ensure_size_id_(0)
 {
   SetupViews();
   SetupCategories();
@@ -208,7 +210,8 @@ void LensView::OnCategoryAdded(Category const& category)
   std::string renderer_name = category.renderer_name;
   int index = category.index;
 
-  LOG_DEBUG(logger) << "Category added: " << name
+  LOG_DEBUG(logger) << "(" << this << " - " << lens_->name() << ")"
+                    << "Category added: " << name
                     << "(" << icon_hint
                     << ", " << renderer_name
                     << ", " << boost::lexical_cast<int>(index) << ")";
@@ -242,6 +245,7 @@ void LensView::OnCategoryAdded(Category const& category)
   scroll_layout_->AddView(group, 0, nux::MinorDimensionPosition::eAbove,
                           nux::MinorDimensionSize::eFull, 100.0f,
                           (nux::LayoutPosition)index);
+  EnsureSize();
 }
 
 void LensView::OnResultAdded(Result const& result)
@@ -261,6 +265,8 @@ void LensView::OnResultAdded(Result const& result)
                      << boost::lexical_cast<unsigned int>(result.category_index)
                      << ". Is out of range.";
   }
+  
+  EnsureSize();
 }
 
 void LensView::OnResultRemoved(Result const& result)
@@ -280,6 +286,43 @@ void LensView::OnResultRemoved(Result const& result)
                      << boost::lexical_cast<unsigned int>(result.category_index)
                      << ". Is out of range.";
   }
+
+  EnsureSize();
+}
+
+void LensView::EnsureSize()
+{
+  // actually queue this method
+  if (ensure_size_id_)
+    return;
+  
+  auto queued_lambda = [] (gpointer data) -> gboolean
+  {
+    LensView* self = static_cast<LensView*>(data);
+    int height = 0;
+    
+    for (auto category = self->categories_.begin(); category != self->categories_.end(); category++)
+    {
+      PlacesGroup* group = (*category);
+      if (group->IsVisible())
+      {
+        height += group->GetMinimumHeight();
+        height += group->GetChildView()->GetMinimumHeight();
+        height += 24;
+        LOG_DEBUG(logger) << "got category ("  << group->GetMinimumHeight() + group->GetChildView()->GetMinimumHeight()<< ")";
+      }
+       
+    }
+    self->SetMinimumHeight(height);
+
+    LOG_DEBUG(logger) << "Maximum height for lens: " 
+                      << self->lens_->name() 
+                      << " (" << height << ")"; 
+    self->ensure_size_id_ = 0;
+    return FALSE;
+  };
+  
+  ensure_size_id_ = g_idle_add_full (G_PRIORITY_DEFAULT, queued_lambda, this, NULL);
 }
 
 void LensView::UpdateCounts(PlacesGroup* group)
@@ -325,6 +368,7 @@ void LensView::OnGroupExpanded(PlacesGroup* group)
 {
   ResultViewGrid* grid = static_cast<ResultViewGrid*>(group->GetChildView());
   grid->expanded = group->GetExpanded();
+  EnsureSize();
   ubus_manager_.SendMessage(UBUS_PLACE_VIEW_QUEUE_DRAW);
 }
 

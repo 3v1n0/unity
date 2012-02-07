@@ -214,8 +214,13 @@ bool Controller::IsVisible()
 
 void Controller::ShowHud()
 {
+  PluginAdapter* adaptor = PluginAdapter::Default();
   LOG_DEBUG(logger) << "Showing the hud";
   EnsureHud();
+  
+  if (visible_ || adaptor->IsExpoActive() || adaptor->IsScaleActive())
+   return;
+  
   view_->AboutToShow();
 
   window_->ShowWindow(true);
