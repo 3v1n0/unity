@@ -36,7 +36,7 @@ Options::Options()
   edge_responsiveness = 1.0f;
   edge_reveal_pressure = 2000;
   edge_stop_velocity = 4500;
-  hide_mode = LAUNCHER_HIDE_DODGE_WINDOWS;
+  hide_mode = LAUNCHER_HIDE_NEVER;
   icon_size = 48;
   launch_animation = LAUNCH_ANIMATION_PULSE;
   tile_size = 54;
