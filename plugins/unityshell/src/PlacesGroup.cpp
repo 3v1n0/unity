@@ -418,7 +418,7 @@ PlacesGroup::SetCounts(guint n_visible_items_in_unexpand_mode, guint n_total_ite
 }
 
 bool
-PlacesGroup::GetExpanded()
+PlacesGroup::GetExpanded() const
 {
   return _is_expanded;
 }
@@ -464,7 +464,7 @@ PlacesGroup::RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned l
 }
 
 int
-PlacesGroup::GetHeaderHeight()
+PlacesGroup::GetHeaderHeight() const
 {
   return _header_layout->GetGeometry().height;
 }
@@ -477,7 +477,7 @@ PlacesGroup::SetDrawSeparator(bool draw_it)
   QueueDraw();
 }
 
-bool PlacesGroup::HeaderHasKeyFocus()
+bool PlacesGroup::HeaderHasKeyFocus() const
 {
   return (_icon && _icon->HasKeyFocus()) || 
          (_name && _name->HasKeyFocus()) ||
@@ -485,7 +485,7 @@ bool PlacesGroup::HeaderHasKeyFocus()
          (_expand_icon && _expand_icon->HasKeyFocus());
 }
 
-bool PlacesGroup::ShouldBeHighlighted()
+bool PlacesGroup::ShouldBeHighlighted() const
 {
   return (_header_view && _header_view->IsMousePointerInside()) ||
           HeaderHasKeyFocus();

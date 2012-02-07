@@ -63,9 +63,9 @@ public:
   void SetCounts(guint n_visible_items_in_unexpand_mode, guint n_total_items);
 
   void SetExpanded(bool is_expanded);
-  bool GetExpanded();
+  bool GetExpanded() const;
 
-  int  GetHeaderHeight();
+  int  GetHeaderHeight() const;
 
   void SetDrawSeparator(bool draw_it);
 
@@ -88,6 +88,9 @@ private:
   void Refresh();
   static gboolean OnIdleRelayout(PlacesGroup* self);
 
+  bool HeaderHasKeyFocus() const;
+  bool ShouldBeHighlighted() const;
+
   void RecvMouseClick(int x, int y, unsigned long button_flags, unsigned long key_flags);
   void RecvMouseEnter(int x, int y, unsigned long button_flags, unsigned long key_flags);
   void RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned long key_flags);
@@ -96,9 +99,6 @@ private:
   void RefreshLabel();
 
 private:
-  bool HeaderHasKeyFocus();
-  bool ShouldBeHighlighted();
-
   nux::VLayout* _group_layout;
   nux::View* _header_view;
   nux::HLayout* _header_layout;
