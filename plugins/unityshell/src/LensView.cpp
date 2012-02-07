@@ -333,28 +333,28 @@ void LensView::CheckNoResults(Lens::Hints const& hints)
 
   if (!count && !no_results_active_)
   {
-    std::string markup;
+    std::stringstream markup;
     Lens::Hints::const_iterator it;
 
     it = hints.find ("no-results-hint");
-    markup = "<span size='larger' weight='bold'>";
+    markup << "<span size='larger' weight='bold'>";
 
     if (it != hints.end())
     {
-      markup += g_variant_get_string (it->second, NULL);
+      markup << g_variant_get_string (it->second, NULL);
     }
     else
     {
-      markup += "Sorry, there is nothing that matches your search.";
+      markup << "Sorry, there is nothing that matches your search.";
     }
-    markup += "</span>";
+    markup << "</span>";
 
-    LOG_DEBUG(logger) << "The no-result-hint is: " << markup;
+    LOG_DEBUG(logger) << "The no-result-hint is: " << markup.str();
 
     scroll_layout_->SetContentDistribution (nux::MAJOR_POSITION_CENTER);  
 
     no_results_active_ = true;
-    no_results_->SetText (markup);
+    no_results_->SetText (markup.str());
   }
   else if (count && no_results_active_)
   {
