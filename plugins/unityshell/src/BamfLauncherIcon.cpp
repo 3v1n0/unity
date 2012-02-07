@@ -33,7 +33,6 @@
 #include <gio/gdesktopappinfo.h>
 
 #include <UnityCore/GLibWrapper.h>
-#include <UnityCore/Variant.h>
 
 namespace unity
 {
