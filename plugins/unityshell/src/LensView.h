@@ -64,6 +64,9 @@ public:
 
   sigc::signal<void, std::string const&> uri_activated;
 
+protected:
+  virtual long PostLayoutManagement(long LayoutResult);
+  
 private:
   void SetupViews();
   void SetupCategories();

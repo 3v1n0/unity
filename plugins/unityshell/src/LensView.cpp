@@ -290,6 +290,12 @@ void LensView::OnResultRemoved(Result const& result)
   EnsureSize();
 }
 
+long LensView::PostLayoutManagement (long LayoutResult)
+{
+  EnsureSize();
+  return View::PostLayoutManagement(LayoutResult);
+}
+
 void LensView::EnsureSize()
 {
   // actually queue this method
@@ -313,11 +319,15 @@ void LensView::EnsureSize()
       }
        
     }
-    self->SetMinimumHeight(height);
-
-    LOG_DEBUG(logger) << "Maximum height for lens: " 
-                      << self->lens_->name() 
-                      << " (" << height << ")"; 
+    
+    if (self->GetMinimumHeight() != height)
+    {
+      self->SetMinimumHeight(height);
+      LOG_DEBUG(logger) << "Maximum height for lens: " 
+                        << self->lens_->name() 
+                        << " (" << height << ")"; 
+    }
+    
     self->ensure_size_id_ = 0;
     return FALSE;
   };
