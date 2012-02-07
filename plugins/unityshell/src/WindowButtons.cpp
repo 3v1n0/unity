@@ -50,7 +50,8 @@ public:
       _type(type),
       _overlay_is_open(false),
       _mouse_is_down(false),
-      _opacity(1.0f)
+      _opacity(1.0f),
+      _focused(true)
   {
     LoadImages();
     UpdateDashUnmaximize();
@@ -87,6 +88,16 @@ public:
       else
         tex = _normal_dash_tex.GetPointer();
     }
+    else if (!_focused)
+    {
+      //FIXME should use HasMouseFocus()
+      if (_mouse_is_down && IsMouseInside())
+        tex = _unfocused_pressed_tex.GetPointer();
+      else if (IsMouseInside())
+        tex = _unfocused_prelight_tex.GetPointer();
+      else
+        tex = _unfocused_tex.GetPointer();
+    }
     else
     {
       //FIXME should use HasMouseFocus()
@@ -117,6 +128,9 @@ public:
     _normal_tex = style.GetWindowButton(_type, panel::WindowState::NORMAL);
     _prelight_tex = style.GetWindowButton(_type, panel::WindowState::PRELIGHT);
     _pressed_tex = style.GetWindowButton(_type, panel::WindowState::PRESSED);
+    _unfocused_tex = style.GetWindowButton(_type, panel::WindowState::UNFOCUSED);
+    _unfocused_prelight_tex = style.GetWindowButton(_type, panel::WindowState::UNFOCUSED_PRELIGHT);
+    _unfocused_pressed_tex = style.GetWindowButton(_type, panel::WindowState::UNFOCUSED_PRESSED);
     _normal_dash_tex = GetDashWindowButton(_type, panel::WindowState::NORMAL);
     _prelight_dash_tex = GetDashWindowButton(_type, panel::WindowState::PRELIGHT);
     _pressed_dash_tex = GetDashWindowButton(_type, panel::WindowState::PRESSED);
@@ -183,6 +197,15 @@ public:
     return _opacity;
   }
 
+  void SetFocusedState(bool focused)
+  {
+    if (_focused != focused)
+    {
+      _focused = focused;
+      NeedRedraw();
+    }
+  }
+
 private:
   panel::WindowButtonType _type;
   bool _overlay_is_open;
@@ -191,10 +214,14 @@ private:
   guint32 _place_shown_interest;
   guint32 _place_hidden_interest;
   double _opacity;
+  bool _focused;
 
   nux::ObjectPtr<nux::BaseTexture> _normal_tex;
   nux::ObjectPtr<nux::BaseTexture> _prelight_tex;
   nux::ObjectPtr<nux::BaseTexture> _pressed_tex;
+  nux::ObjectPtr<nux::BaseTexture> _unfocused_tex;
+  nux::ObjectPtr<nux::BaseTexture> _unfocused_prelight_tex;
+  nux::ObjectPtr<nux::BaseTexture> _unfocused_pressed_tex;
   nux::ObjectPtr<nux::BaseTexture> _normal_dash_tex;
   nux::ObjectPtr<nux::BaseTexture> _prelight_dash_tex;
   nux::ObjectPtr<nux::BaseTexture> _pressed_dash_tex;
@@ -266,7 +293,7 @@ private:
 
 WindowButtons::WindowButtons()
   : HLayout("", NUX_TRACKER_LOCATION)
-  , _opacity(1.0f)
+  , opacity_(1.0f)
 {
   WindowButton* but;
 
@@ -351,9 +378,9 @@ WindowButtons::SetOpacity(double opacity)
       but->SetOpacity(opacity);
   }
 
-  if (_opacity != opacity)
+  if (opacity_ != opacity)
   {
-    _opacity = opacity;
+    opacity_ = opacity;
     NeedRedraw();
   }
 }
@@ -361,7 +388,31 @@ WindowButtons::SetOpacity(double opacity)
 double
 WindowButtons::GetOpacity()
 {
-  return _opacity;
+  return opacity_;
+}
+
+void
+WindowButtons::SetFocusedState(bool focused)
+{
+  for (auto area : GetChildren())
+  {
+    auto but = dynamic_cast<WindowButton*>(area);
+
+    if (but)
+      but->SetFocusedState(focused);
+  }
+
+  if (focused_ != focused)
+  {
+    focused_ = focused;
+    NeedRedraw();
+  }
+}
+
+bool
+WindowButtons::GetFocusedState()
+{
+  return focused_;
 }
 
 std::string

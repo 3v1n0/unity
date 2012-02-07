@@ -39,6 +39,9 @@ public:
   void SetOpacity(double opacity);
   double GetOpacity();
 
+  void SetFocusedState(bool focused);
+  bool GetFocusedState();
+
   sigc::signal<void> close_clicked;
   sigc::signal<void> minimize_clicked;
   sigc::signal<void> restore_clicked;
@@ -50,14 +53,15 @@ public:
 
 protected:
   std::string GetName() const;
-  void          AddProperties(GVariantBuilder* builder);
+  void AddProperties(GVariantBuilder* builder);
 
 private:
   void OnCloseClicked(nux::View *view);
   void OnMinimizeClicked(nux::View *view);
   void OnRestoreClicked(nux::View *view);
 
-  double _opacity;
+  double opacity_;
+  bool focused_;
 };
 }
 #endif
