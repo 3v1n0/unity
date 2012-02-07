@@ -42,7 +42,7 @@
 #include "UBusWrapper.h"
 
 
-#define ANIM_DURATION_SHORT 125
+
 
 
 
@@ -132,6 +132,8 @@ public:
   void EnterKeyNavMode();
   void ExitKeyNavMode();
   bool IsInKeyNavMode() const;
+
+  static const int ANIM_DURATION_SHORT;
 
 protected:
   // Introspectable methods

@@ -128,6 +128,8 @@ GDBusInterfaceVTable Launcher::interface_vtable =
   NULL
 };
 
+const int Launcher::Launcher::ANIM_DURATION_SHORT = 125;
+
 Launcher::Launcher(nux::BaseWindow* parent,
                    NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
