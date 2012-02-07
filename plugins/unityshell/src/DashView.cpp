@@ -149,6 +149,7 @@ void DashView::SetupViews()
   content_layout_->AddView(lenses_layout_, 1, nux::MINOR_POSITION_LEFT);
 
   home_view_ = new LensView(home_lens_);
+  AddChild(home_view_);
   active_lens_view_ = home_view_;
   lens_views_[home_lens_->id] = home_view_;
   lenses_layout_->AddView(home_view_);
@@ -219,7 +220,7 @@ nux::Geometry DashView::GetBestFitGeometry(nux::Geometry const& for_geo)
 
   width = MAX(width, tile_width * 6);
 
-  width += 19 + 32; // add the left padding and the group plugin padding
+  width += 19 + 32 + dash::Style::FILTERS_LEFT_PADDING + dash::Style::FILTERS_RIGHT_PADDING; // add the left padding and the group plugin padding
 
   height = search_bar_->GetGeometry().height;
   height += tile_height * 3;
@@ -375,6 +376,7 @@ void DashView::OnLensAdded(Lens::Ptr& lens)
   lens_bar_->AddLens(lens);
 
   LensView* view = new LensView(lens);
+  AddChild(view);
   view->SetVisible(false);
   view->uri_activated.connect(sigc::mem_fun(this, &DashView::OnUriActivated));
   lenses_layout_->AddView(view, 1);

@@ -1615,7 +1615,7 @@ nux::AbstractPaintLayer* Style::FocusOverlay(int width, int height)
               width,
               height);
 
-  cairo_set_source_rgba(cr, nux::color::White * 0.50f);
+  cairo_set_source_rgba(cr, nux::Color(1.0f, 1.0f, 1.0f, 0.2f));
   cairo_fill(cr);
 
   // Create the texture layer

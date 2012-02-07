@@ -38,6 +38,7 @@ namespace dash
 namespace
 {
 nux::logging::Logger logger("unity.dash.lensview");
+
 }
 
 // This is so we can access some protected members in scrollview.
@@ -144,8 +145,6 @@ LensView::~LensView()
 void LensView::SetupViews()
 {
   layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
-  
-  layout_->SetHorizontalExternalMargin(8);
 
   scroll_view_ = new LensScrollView(new PlacesVScrollBar(NUX_TRACKER_LOCATION),
                                     NUX_TRACKER_LOCATION);
@@ -164,6 +163,7 @@ void LensView::SetupViews()
   layout_->AddView(fscroll_view_, 1);
 
   fscroll_layout_ = new nux::VLayout();
+  fscroll_layout_->SetLeftAndRightPadding(dash::Style::FILTERS_LEFT_PADDING, dash::Style::FILTERS_RIGHT_PADDING);
   fscroll_view_->SetLayout(fscroll_layout_);
 
   filter_bar_ = new FilterBar();
@@ -214,6 +214,7 @@ void LensView::OnCategoryAdded(Category const& category)
                     << ", " << boost::lexical_cast<int>(index) << ")";
 
   PlacesGroup* group = new PlacesGroup();
+  AddChild(group);
   group->SetName(name.c_str());
   group->SetIcon(icon_hint.c_str());
   group->SetExpanded(false);
@@ -345,8 +346,8 @@ void LensView::OnFilterAdded(Filter::Ptr filter)
   filter_bar_->AddFilter(filter);
 
   int width = dash::Style::Instance().GetTileWidth();
-  fscroll_view_->SetMinimumWidth(width*2);
-  fscroll_view_->SetMaximumWidth(width*2);
+  fscroll_view_->SetMinimumWidth(width * 2 + dash::Style::FILTERS_LEFT_PADDING + dash::Style::FILTERS_RIGHT_PADDING);
+  fscroll_view_->SetMaximumWidth(width * 2 + dash::Style::FILTERS_LEFT_PADDING + dash::Style::FILTERS_RIGHT_PADDING);
 
   can_refine_search = true;
 }

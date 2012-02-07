@@ -372,3 +372,13 @@ class Dash(Unity):
     def reveal_command_lens(self):
         """Reveal the 'run command' lens."""
         self._keyboard.press_and_release('Alt+F2')
+
+    def get_focused_category(self):
+        """Returns the current focused category. """
+        groups = self.get_state("//PlacesGroup[header-has-keyfocus=True]")
+
+        if len(groups) >= 1:
+          return groups[0]
+        else:
+          return None
+        

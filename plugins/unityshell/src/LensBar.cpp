@@ -84,7 +84,7 @@ void LensBar::SetupHomeLens()
   icons_.push_back(icon);
   layout_->AddView(icon, 0, nux::eCenter, nux::MINOR_SIZE_FULL);
 
-  icon->mouse_click.connect([&, icon] (int x, int y, unsigned long button, unsigned long keyboard) { SetActive(icon); });
+  icon->mouse_click.connect([&, icon] (int x, int y, unsigned long button, unsigned long keyboard) { SetActive(icon); QueueDraw(); });
   icon->mouse_enter.connect([&] (int x, int y, unsigned long button, unsigned long keyboard) {  QueueDraw(); });
   icon->mouse_leave.connect([&] (int x, int y, unsigned long button, unsigned long keyboard) {  QueueDraw(); });
   icon->mouse_down.connect([&] (int x, int y, unsigned long button, unsigned long keyboard) {  QueueDraw(); });
@@ -100,7 +100,7 @@ void LensBar::AddLens(Lens::Ptr& lens)
   icons_.push_back(icon);
   layout_->AddView(icon, 0, nux::eCenter, nux::eFix);
 
-  icon->mouse_click.connect([&, icon] (int x, int y, unsigned long button, unsigned long keyboard) { SetActive(icon); });
+  icon->mouse_click.connect([&, icon] (int x, int y, unsigned long button, unsigned long keyboard) { SetActive(icon); QueueDraw(); });
   icon->mouse_enter.connect([&] (int x, int y, unsigned long button, unsigned long keyboard) {  QueueDraw(); });
   icon->mouse_leave.connect([&] (int x, int y, unsigned long button, unsigned long keyboard) {  QueueDraw(); });
   icon->mouse_down.connect([&] (int x, int y, unsigned long button, unsigned long keyboard) {  QueueDraw(); });
