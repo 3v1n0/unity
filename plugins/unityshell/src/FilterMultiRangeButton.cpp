@@ -35,8 +35,7 @@ FilterMultiRangeButton::FilterMultiRangeButton(std::string const& label, NUX_FIL
   , has_arrow_(MultiRangeArrow::NONE)
   , side_(MultiRangeSide::CENTER)
 {
-  InitTheme();
-  state_change.connect(sigc::mem_fun(this, &FilterMultiRangeButton::OnActivated));
+  Init();
 }
 
 FilterMultiRangeButton::FilterMultiRangeButton(NUX_FILE_LINE_DECL)
@@ -44,14 +43,20 @@ FilterMultiRangeButton::FilterMultiRangeButton(NUX_FILE_LINE_DECL)
   , has_arrow_(MultiRangeArrow::NONE)
   , side_(MultiRangeSide::CENTER)
 {
-  InitTheme();
-  SetAcceptKeyNavFocusOnMouseDown(false);
-   
-  state_change.connect(sigc::mem_fun(this, &FilterMultiRangeButton::OnActivated));
+  Init();
 }
 
 FilterMultiRangeButton::~FilterMultiRangeButton()
 {
+}
+
+void FilterMultiRangeButton::Init()
+{
+  InitTheme();
+  SetAcceptKeyNavFocusOnMouseDown(false);
+
+  state_change.connect(sigc::mem_fun(this, &FilterMultiRangeButton::OnActivated));
+  key_nav_focus_change.connect([&](nux::Area*, bool, nux::KeyNavDirection) { QueueDraw(); });
 }
 
 void FilterMultiRangeButton::OnActivated(nux::Area* area)
@@ -78,35 +83,43 @@ FilterOption::Ptr FilterMultiRangeButton::GetFilter()
 
 void FilterMultiRangeButton::SetVisualSide(MultiRangeSide side)
 {
-  nux::Geometry const& geo = GetGeometry();
-
+  if (side_ == side)
+    return;
   side_ = side;
-  prelight_->Invalidate(geo);
-  active_->Invalidate(geo);
-  normal_->Invalidate(geo);
+
+  QueueDraw();
 }
 
 void FilterMultiRangeButton::SetHasArrow(MultiRangeArrow value)
 {
+  if (has_arrow_ == value)
+    return;
   has_arrow_ = value;
-  active_->Invalidate(GetGeometry());
-  NeedRedraw();
+
+  QueueDraw();
 }
 
 long FilterMultiRangeButton::ComputeContentSize()
 {
-  if (!active_)
-  {
-    InitTheme();
-  }
   long ret = nux::ToggleButton::ComputeContentSize();
   nux::Geometry const& geo = GetGeometry();
   if (cached_geometry_ != geo)
   {
-    prelight_->Invalidate(geo);
-    active_->Invalidate(geo);
-    normal_->Invalidate(geo);
     cached_geometry_ = geo;
+
+    std::vector<MultiRangeSide> sides = {MultiRangeSide::LEFT, MultiRangeSide::RIGHT, MultiRangeSide::CENTER};
+    std::vector<MultiRangeArrow> arrows = {MultiRangeArrow::LEFT, MultiRangeArrow::RIGHT, MultiRangeArrow::BOTH, MultiRangeArrow::NONE};
+
+    for (auto arrow : arrows)
+    {
+      for (auto side : sides)
+      {
+        prelight_[MapKey(arrow, side)]->Invalidate(geo);
+        active_[MapKey(arrow, side)]->Invalidate(geo);
+        normal_[MapKey(arrow, side)]->Invalidate(geo);
+        focus_[MapKey(arrow, side)]->Invalidate(geo);
+      }
+    }
   }
 
   return ret;
@@ -114,18 +127,33 @@ long FilterMultiRangeButton::ComputeContentSize()
 
 void FilterMultiRangeButton::InitTheme()
 {
-  if (!active_)
+  if (!active_[MapKey(MultiRangeArrow::LEFT, MultiRangeSide::LEFT)])
   {
     nux::Geometry const& geo = GetGeometry();
-    active_.reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &FilterMultiRangeButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_PRESSED)));
-    normal_.reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &FilterMultiRangeButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_NORMAL)));
-    prelight_.reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &FilterMultiRangeButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_PRELIGHT)));
+
+    std::vector<MultiRangeSide> sides = {MultiRangeSide::LEFT, MultiRangeSide::RIGHT, MultiRangeSide::CENTER};
+    std::vector<MultiRangeArrow> arrows = {MultiRangeArrow::LEFT, MultiRangeArrow::RIGHT, MultiRangeArrow::BOTH, MultiRangeArrow::NONE};
+
+    for (auto arrow : arrows)
+    {
+      for (auto side : sides)
+      {
+        active_[MapKey(arrow, side)].reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &FilterMultiRangeButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_PRESSED, arrow, side)));
+        normal_[MapKey(arrow, side)].reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &FilterMultiRangeButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_NORMAL, arrow, side)));
+        prelight_[MapKey(arrow, side)].reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &FilterMultiRangeButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_PRELIGHT, arrow, side)));
+        focus_[MapKey(arrow, side)].reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &FilterMultiRangeButton::RedrawFocusOverlay), arrow, side)));
+      }
+    }
   }
 
   SetMinimumHeight(32);
 }
 
-void FilterMultiRangeButton::RedrawTheme(nux::Geometry const& geom, cairo_t* cr, nux::ButtonVisualState faked_state)
+void FilterMultiRangeButton::RedrawTheme(nux::Geometry const& geom,
+                                         cairo_t* cr,
+                                         nux::ButtonVisualState faked_state,
+                                         MultiRangeArrow faked_arrow,
+                                         MultiRangeSide faked_side)
 {
   std::string name("10");
   std::stringstream final;
@@ -137,25 +165,52 @@ void FilterMultiRangeButton::RedrawTheme(nux::Geometry const& geom, cairo_t* cr,
   }
 
   Arrow arrow;
-  if (has_arrow_ == MultiRangeArrow::NONE)
+  if (faked_arrow == MultiRangeArrow::NONE)
     arrow = Arrow::NONE;
-  else if (has_arrow_ == MultiRangeArrow::LEFT)
+  else if (faked_arrow == MultiRangeArrow::LEFT)
     arrow = Arrow::LEFT;
-  else if (has_arrow_ == MultiRangeArrow::BOTH)
+  else if (faked_arrow == MultiRangeArrow::BOTH)
     arrow = Arrow::BOTH;
   else
     arrow = Arrow::RIGHT;
 
   Segment segment;
-  if (side_ == MultiRangeSide::LEFT)
+  if (faked_side == MultiRangeSide::LEFT)
     segment = Segment::LEFT;
-  else if (side_ == MultiRangeSide::CENTER)
+  else if (faked_side == MultiRangeSide::CENTER)
     segment = Segment::MIDDLE;
   else
     segment = Segment::RIGHT;
 
   Style::Instance().MultiRangeSegment(cr, faked_state, final.str(), arrow, segment);
   NeedRedraw();
+}
+
+void FilterMultiRangeButton::RedrawFocusOverlay(nux::Geometry const& geom,
+                                                cairo_t* cr,
+                                                MultiRangeArrow faked_arrow,
+                                                MultiRangeSide faked_side)
+{  
+  Arrow arrow;
+  if (faked_arrow == MultiRangeArrow::NONE)
+    arrow = Arrow::NONE;
+  else if (faked_arrow == MultiRangeArrow::LEFT)
+    arrow = Arrow::LEFT;
+  else if (faked_arrow == MultiRangeArrow::BOTH)
+    arrow = Arrow::BOTH;
+  else
+    arrow = Arrow::RIGHT;
+
+  Segment segment;
+  if (faked_side == MultiRangeSide::LEFT)
+    segment = Segment::LEFT;
+  else if (faked_side == MultiRangeSide::CENTER)
+    segment = Segment::MIDDLE;
+  else
+    segment = Segment::RIGHT;
+
+  Style::Instance().MultiRangeFocusOverlay(cr, arrow, segment);
+  QueueDraw();
 }
 
 void FilterMultiRangeButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
@@ -181,16 +236,27 @@ void FilterMultiRangeButton::Draw(nux::GraphicsEngine& GfxContext, bool force_dr
                        geo.height,
                        col);
 
-  nux::BaseTexture* texture = normal_->GetTexture();
+  nux::BaseTexture* texture = normal_[MapKey(has_arrow_, side_)]->GetTexture();
   //FIXME - dashstyle does not give us a focused state yet, so ignore
   if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_PRELIGHT)
   {
-    texture = prelight_->GetTexture();
+    texture = prelight_[MapKey(has_arrow_, side_)]->GetTexture();
   }
 
   if (Active())
   {
-    texture = active_->GetTexture();
+    texture = active_[MapKey(has_arrow_, side_)]->GetTexture();
+  }
+
+  if (HasKeyFocus())
+  {
+    GfxContext.QRP_1Tex(geo.x,
+                        geo.y,
+                        geo.width,
+                        geo.height,
+                        focus_[MapKey(has_arrow_, side_)]->GetTexture()->GetDeviceTexture(),
+                        texxform,
+                        nux::color::White);
   }
 
   GfxContext.QRP_1Tex(geo.x,
