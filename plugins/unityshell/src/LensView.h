@@ -54,6 +54,7 @@ public:
   virtual ~LensView();
 
   Lens::Ptr lens() const;
+  int GetNumRows();
 
   virtual void ActivateFirst();
 
