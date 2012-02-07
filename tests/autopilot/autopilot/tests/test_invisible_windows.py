@@ -17,7 +17,6 @@ from time import sleep
 from autopilot.utilities import make_window_skip_taskbar
 from autopilot.emulators.unity import Launcher, Switcher
 from autopilot.emulators.bamf import Bamf
-from autopilot.emulators.X11 import Mouse
 
 class InvisibleWindowTests(TestCase):
     """Test unity's handling of windows with the Skip-Tasklist flag set."""
@@ -72,18 +71,29 @@ class InvisibleWindowTests(TestCase):
         launcher.reveal_launcher(0)
         icons = launcher.get_launcher_icons()
         # launcher.grab_switcher()
-        found = False
-        # current_icon = None
+        calc_icon = None
         for icon in icons:
             if icon.tooltip_text == 'Calculator':
-                found = True
-                launcher.lock_to_launcher(icon)
-                self.addCleanup(launcher.unlock_from_launcher, icon)
+                calc_icon = icon
                 break
 
-        self.assertTrue(found, "Could not find calculator in launcher.")
-        # launcher.switcher_enter_quicklist()
-        # quicklist = current_icon.get_quicklist()
-        # self.assertTrue(quicklist.active)
+        self.assertIsNotNone(calc_icon, "Could not find calculator in launcher.")
+        launcher.lock_to_launcher(calc_icon)
+        self.addCleanup(launcher.unlock_from_launcher, calc_icon)
 
-        # launcher.end_switcher(cancel=True)
+        # make calc window skip the taskbar:
+        apps = b.get_running_applications_by_title('Calculator')
+        self.assertEqual(1, len(apps))
+        windows = apps[0].get_windows()
+        self.assertEqual(1, len(windows))
+        make_window_skip_taskbar(windows[0].x_win)
+
+        # clicking on launcher icon should start a new instance:
+        launcher.click_launcher_icon(calc_icon)
+        sleep(1)
+
+        # should now be one app with two windows:
+        apps = b.get_running_applications_by_title('Calculator')
+        self.assertEqual(1, len(apps))
+        windows = apps[0].get_windows()
+        self.assertEqual(2, len(windows))
