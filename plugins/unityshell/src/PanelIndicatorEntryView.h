@@ -34,13 +34,11 @@
 
 #include "Introspectable.h"
 
-#define PANEL_HEIGHT 24
-#define SPACING 3
-
 namespace unity
 {
+using namespace indicator;
 
-class PanelIndicatorEntryView : public nux::TextureArea, public unity::debug::Introspectable
+class PanelIndicatorEntryView : public nux::TextureArea, public debug::Introspectable
 {
 public:
   enum IndicatorEntryType {
@@ -49,7 +47,7 @@ public:
     OTHER
   };
 
-  PanelIndicatorEntryView(indicator::Entry::Ptr const& proxy, int padding = 5,
+  PanelIndicatorEntryView(Entry::Ptr const& proxy, int padding = 5,
                           IndicatorEntryType type = INDICATOR);
 
   void Refresh();
@@ -62,7 +60,7 @@ public:
   void SetOpacity(double alpha);
   double GetOpacity();
 
-  void GetGeometryForSync(indicator::EntryLocationMap& locations);
+  void GetGeometryForSync(EntryLocationMap& locations);
   bool IsSensitive() const;
   bool IsActive() const;
   bool IsVisible() const;
@@ -80,7 +78,10 @@ public:
   sigc::signal<void, PanelIndicatorEntryView*> refreshed;
 
 private:
-  unity::indicator::Entry::Ptr proxy_;
+  static const int PANEL_HEIGHT = 24;
+  static const int SPACING = 3;
+
+  Entry::Ptr proxy_;
   IndicatorEntryType type_;
   nux::BaseTexture* entry_texture_;
   int padding_;
