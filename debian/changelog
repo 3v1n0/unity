@@ -1,6 +1,8 @@
 unity (5.2.0-0ubuntu2) UNRELEASED; urgency=low
 
-  * Cheery-pick a fix for a 5.0 crasher (LP: #916228)
+  * Cherry-pick upstream:
+    - a fix for a 5.0 crasher (LP: #916228)
+    - default configuration now to "always lock"
   * debian/profile_upgrade/com.canonical.unity.unity.03.upgrade,
     debian/unity-common.install:
     - enabling user profile upgrade installation
