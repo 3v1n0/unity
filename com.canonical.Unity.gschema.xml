@@ -20,6 +20,11 @@
       <summary>Whether the home screen should be expanded.</summary>
       <description>Whether the home screen should be expanded.</description>
     </key>
+    <key type="s" name="average-bg-color">
+      <default>'#757550507B7BFFFF'</default>
+      <summary>Average background color</summary>
+      <description>The average color derived from the currently set desktop-wallpaper. This is written/updated by the Unity-process and read by NotifyOSD-process for example.</description>
+    </key>
   </schema>
   <schema path="/desktop/unity/launcher/" id="com.canonical.Unity.Launcher" gettext-domain="unity">
     <key type="as" name="favorites">
