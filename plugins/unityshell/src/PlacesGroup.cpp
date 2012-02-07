@@ -51,7 +51,15 @@ const nux::Color kExpandDefaultTextColor(1.0f, 1.0f, 1.0f, 1.0f);
 const nux::Color kExpandHoverTextColor(1.0f, 1.0f, 1.0f, 1.0f);
 const float kExpandDefaultIconOpacity = 1.0f;
 const float kExpandHoverIconOpacity = 1.0f;
-const int kFocusHighlightHeight = 24;
+
+// Category header highlight
+const int kHighlightHeight = 24;
+const int kHighlightWidthSubtractor = 16;
+const int kHighlightLeftPadding = 11;
+
+// Line Separator
+const int kSeparatorLeftPadding = 16;
+const int kSeparatorWidthSubtractor = 10;
 
 class HeaderView : public nux::View
 {
@@ -341,7 +349,7 @@ long PlacesGroup::ComputeContentSize()
     if (_focus_layer)
       delete _focus_layer;
 
-    _focus_layer = dash::Style::Instance().FocusOverlay(geo.width - 16, kFocusHighlightHeight);
+    _focus_layer = dash::Style::Instance().FocusOverlay(geo.width - kHighlightWidthSubtractor, kHighlightHeight);
 
     _cached_geometry = geo;
   }
@@ -366,8 +374,8 @@ void PlacesGroup::Draw(nux::GraphicsEngine& graphics_engine,
     nux::Color col(0.15f, 0.15f, 0.15f, 0.15f);
 
     nux::GetPainter().Draw2DLine(graphics_engine,
-                                 base.x + 16, base.y + base.height - 1,
-                                 base.x + base.width - 10, base.y + base.height - 1,
+                                 base.x + kSeparatorLeftPadding, base.y + base.height - 1,
+                                 base.x + base.width - kSeparatorWidthSubtractor, base.y + base.height - 1,
                                  col);
   }
 
@@ -376,8 +384,8 @@ void PlacesGroup::Draw(nux::GraphicsEngine& graphics_engine,
   if (ShouldBeHighlighted())
   {
     nux::Geometry geo(_header_layout->GetGeometry());
-    geo.x = base.x + 11;
-    geo.width = base.width - 16;
+    geo.x = base.x + kHighlightLeftPadding;
+    geo.width = base.width - kHighlightWidthSubtractor;
 
     _focus_layer->SetGeometry(geo);
     _focus_layer->Renderlayer(graphics_engine);

@@ -192,6 +192,10 @@ public:
   nux::BaseTexture* GetGroupUnexpandIcon();
   nux::BaseTexture* GetGroupExpandIcon();
 
+  // Paddings
+  static const int FILTERS_LEFT_PADDING = 0;
+  static const int FILTERS_RIGHT_PADDING = 8;
+
   sigc::signal<void> changed;
 
 private:
