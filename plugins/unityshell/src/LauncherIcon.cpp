@@ -42,6 +42,7 @@
 #include "QuicklistMenuItemCheckmark.h"
 #include "QuicklistMenuItemRadio.h"
 
+#include "MultiMonitor.h"
 #include "WindowManager.h"
 
 #include "ubus-server.h"
@@ -91,7 +92,6 @@ LauncherIcon::LauncherIcon()
   _saved_center.resize(max_num_monitors);
   _last_stable.resize(max_num_monitors);
   _parent_geo.resize(max_num_monitors);
-  transform_map.resize(max_num_monitors);
 
   for (int i = 0; i < QUIRK_LAST; i++)
   {
@@ -783,7 +783,7 @@ LauncherIcon::Type()
 }
 
 bool
-LauncherIcon::GetQuirk(LauncherIcon::Quirk quirk)
+LauncherIcon::GetQuirk(LauncherIcon::Quirk quirk) const
 {
   return _quirks[quirk];
 }
@@ -913,19 +913,6 @@ LauncherIcon::SetEmblemIconName(const char* name)
   SetEmblem(emblem);
   // Ownership isn't taken, but shared, so we need to unref here.
   emblem->UnReference();
-}
-
-std::vector<nux::Vector4> &
-LauncherIcon::GetTransform(TransformIndex index, int monitor)
-{
-  auto iter = transform_map[monitor].find(index);
-  if (iter == transform_map[monitor].end())
-  {
-    auto iter2 = transform_map[monitor].insert(std::map<TransformIndex, std::vector<nux::Vector4> >::value_type(index, std::vector<nux::Vector4>(4)));
-    return iter2.first->second;
-  }
-
-  return iter->second;
 }
 
 void

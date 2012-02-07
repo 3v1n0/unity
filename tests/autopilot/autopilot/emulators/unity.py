@@ -81,7 +81,7 @@ class SimpleLauncherIcon(Unity):
         self.x = state_from_unity['x']
         self.z = state_from_unity['z']
         self.id = state_from_unity['id']
-        self.tooltip_text = state_from_unity['tooltip-text']
+        self.tooltip_text = unicode(state_from_unity['tooltip-text'])
 
     def get_quicklist(self):
         """Get the quicklist for this launcher icon.
@@ -137,6 +137,7 @@ def make_launcher_icon(dbus_tuple):
         class_type = _icon_type_registry[name]
         return class_type(state)
     except KeyError:
+        import pdb; pdb.set_trace()
         print name, "is not a valid icon type!"
         return None
 

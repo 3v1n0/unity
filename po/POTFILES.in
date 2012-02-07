@@ -6,7 +6,7 @@ plugins/unityshell/src/PlacesGroup.cpp
 plugins/unityshell/src/SpacerLauncherIcon.cpp
 plugins/unityshell/src/TrashLauncherIcon.cpp
 plugins/unityshell/src/BFBLauncherIcon.cpp
-plugins/unityshell/src/DashSearchBar.cpp
+plugins/unityshell/src/SearchBar.cpp
 plugins/unityshell/src/DashView.cpp
 plugins/unityshell/src/DesktopLauncherIcon.cpp
 plugins/unityshell/src/FilterExpanderLabel.cpp

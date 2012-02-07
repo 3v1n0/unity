@@ -51,8 +51,6 @@ namespace unity
 namespace launcher
 {
 
-const int max_num_monitors = 6;
-
 class Launcher;
 
 class LauncherIcon : public AbstractLauncherIcon
@@ -137,7 +135,7 @@ public:
     return 0;
   }
 
-  bool GetQuirk(Quirk quirk);
+  bool GetQuirk(Quirk quirk) const;
 
   void SetQuirk(Quirk quirk, bool value);
 
@@ -185,8 +183,6 @@ public:
   }
 
   void SetIconType(IconType type);
-
-  std::vector<nux::Vector4> & GetTransform(TransformIndex index, int monitor);
 
 protected:
   std::vector<nux::Point3> GetCenters();
@@ -308,7 +304,7 @@ private:
   int               _last_monitor;
   nux::Color        _background_color;
   nux::Color        _glow_color;
-
+  
   gint64            _shortcut;
 
   std::vector<nux::Point3> _center;
@@ -325,8 +321,6 @@ private:
   struct timespec  _quirk_times[QUIRK_LAST];
 
   std::list<LauncherEntryRemote*> _entry_list;
-  std::vector<std::map<TransformIndex, std::vector<nux::Vector4> > > transform_map;
-
 };
 
 }

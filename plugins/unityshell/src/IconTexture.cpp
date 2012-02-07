@@ -24,6 +24,7 @@
 #include <pango/pangocairo.h>
 
 #include <Nux/Nux.h>
+#include <NuxCore/Logger.h>
 #include <NuxGraphics/GLThread.h>
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/Variant.h>
@@ -37,6 +38,7 @@ namespace unity
 namespace
 {
 const char* const DEFAULT_ICON = "text-x-preview";
+nux::logging::Logger logger("unity.icontexture");
 }
 
 using namespace unity;
@@ -67,7 +69,7 @@ IconTexture::IconTexture(const char* icon_name, unsigned int size, bool defer_ic
 {
   _icon_name = g_strdup(icon_name ? icon_name : DEFAULT_ICON);
 
-  if (!g_strcmp0(_icon_name, "") == 0 && !defer_icon_loading)
+  if (g_strcmp0(_icon_name, "") != 0 && !defer_icon_loading)
     LoadIcon();
 }
 
@@ -95,8 +97,11 @@ void IconTexture::SetByFilePath(const char* file_path, unsigned int size)
 
 void IconTexture::LoadIcon()
 {
-  static const char* const DEFAULT_GICON = ". GThemedIcon text-x-preview";
-
+  LOG_DEBUG(logger) << "LoadIcon called (" << _icon_name << ") - loading: " << _loading;
+static const char* const DEFAULT_GICON = ". GThemedIcon text-x-preview";
+  if (!g_strcmp0(_icon_name, ""))
+    return;
+ 
   if (_loading)
     return;
   _loading = true;
@@ -144,6 +149,7 @@ void IconTexture::Refresh(GdkPixbuf* pixbuf)
                                       _texture_height,
                                       sigc::mem_fun(this, &IconTexture::CreateTextureCallback));
   QueueDraw();
+  _loading = false;
 }
 
 void IconTexture::IconLoaded(std::string const& icon_name, unsigned size,
@@ -162,6 +168,9 @@ void IconTexture::IconLoaded(std::string const& icon_name, unsigned size,
     if (icon_name != DEFAULT_ICON)
       SetByIconName(DEFAULT_ICON, _size);
   }
+
+  texture_updated.emit(_texture_cached.GetPointer());
+  QueueDraw();
 }
 
 void IconTexture::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
