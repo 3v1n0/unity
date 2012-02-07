@@ -25,7 +25,8 @@
 #include "CairoTexture.h"
 #include "QuicklistMenuItemRadio.h"
 
-using unity::texture_from_cairo_graphics;
+namespace unity
+{
 
 static double
 _align(double val)
@@ -109,14 +110,13 @@ QuicklistMenuItemRadio::PostLayoutManagement(long layoutResult)
 }
 
 void
-QuicklistMenuItemRadio::Draw(nux::GraphicsEngine& gfxContext,
-                             bool                 forceDraw)
+QuicklistMenuItemRadio::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
 {
-  // Check if the texture have been computed. If they haven't, exit the function.
-  if (!_normalTexture[0])
-    return;
-
   nux::ObjectPtr<nux::IOpenGLBaseTexture> texture;
+
+  // Check if the texture have been computed. If they haven't, exit the function.
+  if (!_normalTexture[0] || !_prelightTexture[0])
+    return;
 
   nux::Geometry base = GetGeometry();
 
@@ -129,41 +129,18 @@ QuicklistMenuItemRadio::Draw(nux::GraphicsEngine& gfxContext,
   gfxContext.GetRenderStates().SetBlend(true);
   gfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
 
-  if (GetEnabled())
+  unsigned int texture_idx = GetActive() ? 1 : 0;
+
+  if (!_prelight || !GetEnabled())
   {
-    if (GetActive() && _prelight)
-    {
-      texture = _prelightTexture[0]->GetDeviceTexture();
-    }
-    else if (GetActive())
-    {
-      texture = _normalTexture[0]->GetDeviceTexture();
-    }
-
-    if ((!GetActive()) && _prelight)
-    {
-      texture = _prelightTexture[1]->GetDeviceTexture();
-    }
-    else if (!GetActive())
-    {
-      texture = _normalTexture[1]->GetDeviceTexture();
-    }
-
-    _color = nux::color::White;
+    texture = _normalTexture[texture_idx]->GetDeviceTexture();
   }
   else
   {
-    if (GetActive())
-    {
-      texture = _prelightTexture[0]->GetDeviceTexture();
-    }
-    else
-    {
-      texture = _normalTexture[0]->GetDeviceTexture();
-    }
-
-    _color = nux::Color(0.8f, 0.8f, 0.8f, 1.0f);
+    texture = _prelightTexture[texture_idx]->GetDeviceTexture();
   }
+
+  _color = GetEnabled() ? nux::color::White : nux::color::White * 0.35;
 
   gfxContext.QRP_1Tex(base.x,
                       base.y,
@@ -193,7 +170,6 @@ QuicklistMenuItemRadio::PostDraw(nux::GraphicsEngine& gfxContext,
 void
 QuicklistMenuItemRadio::UpdateTexture()
 {
-  nux::Color transparent = nux::Color(0.0f, 0.0f, 0.0f, 0.0f);
   int        width       = GetBaseWidth();
   int        height      = GetBaseHeight();
 
@@ -204,12 +180,7 @@ QuicklistMenuItemRadio::UpdateTexture()
   cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
   cairo_paint(cr);
 
-  cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
-  cairo_scale(cr, 1.0f, 1.0f);
-  cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 1.0f);
-  cairo_set_line_width(cr, 1.0f);
-
-  DrawText(cr, width, height, nux::color::White);
+  DrawText(_cairoGraphics, width, height, nux::color::White);
 
   if (_normalTexture[0])
     _normalTexture[0]->UnReference();
@@ -233,8 +204,7 @@ QuicklistMenuItemRadio::UpdateTexture()
   cairo_arc(cr, x, y, radius, 0.0f * (G_PI / 180.0f), 360.0f * (G_PI / 180.0f));
   cairo_fill(cr);
 
-  cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 1.0f);
-  DrawText(cr, width, height, nux::color::White);
+  DrawText(_cairoGraphics, width, height, nux::color::White);
 
   if (_normalTexture[1])
     _normalTexture[1]->UnReference();
@@ -245,23 +215,8 @@ QuicklistMenuItemRadio::UpdateTexture()
   cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
   cairo_paint(cr);
 
-  cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
-  cairo_scale(cr, 1.0f, 1.0f);
-  cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 1.0f);
-  cairo_set_line_width(cr, 1.0f);
-
-  _cairoGraphics->DrawRoundedRectangle(cr,
-                                       1.0f,
-                                       0.5f,
-                                       0.5f,
-                                       ITEM_CORNER_RADIUS_ABS,
-                                       width - 1.0f,
-                                       height - 1.0f);
-  cairo_fill(cr);
-
-  cairo_set_source_rgba(cr, 0.0f, 0.0f, 0.0f, 0.0f);
-
-  DrawText(cr, width, height, transparent);
+  DrawPrelight(_cairoGraphics, width, height, nux::color::White);
+  DrawText(_cairoGraphics, width, height, nux::color::White * 0.0f);
 
   if (_prelightTexture[0])
     _prelightTexture[0]->UnReference();
@@ -272,26 +227,14 @@ QuicklistMenuItemRadio::UpdateTexture()
   cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
   cairo_paint(cr);
 
-  cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
-  cairo_scale(cr, 1.0f, 1.0f);
-  cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 1.0f);
-  cairo_set_line_width(cr, 1.0f);
-
-  _cairoGraphics->DrawRoundedRectangle(cr,
-                                       1.0f,
-                                       0.5f,
-                                       0.5f,
-                                       ITEM_CORNER_RADIUS_ABS,
-                                       width - 1.0f,
-                                       height - 1.0f);
-  cairo_fill(cr);
+  DrawPrelight(_cairoGraphics, width, height, nux::color::White);
 
   cairo_set_source_rgba(cr, 0.0f, 0.0f, 0.0f, 0.0f);
 
   cairo_arc(cr, x, y, radius, 0.0f * (G_PI / 180.0f), 360.0f * (G_PI / 180.0f));
   cairo_fill(cr);
 
-  DrawText(cr, width, height, transparent);
+  DrawText(_cairoGraphics, width, height, nux::color::White * 0.0f);
 
   if (_prelightTexture[1])
     _prelightTexture[1]->UnReference();
@@ -299,6 +242,7 @@ QuicklistMenuItemRadio::UpdateTexture()
   _prelightTexture[1] = texture_from_cairo_graphics(*_cairoGraphics);
 
   // finally clean up
+  cairo_destroy(cr);
   delete _cairoGraphics;
 }
 
@@ -310,3 +254,4 @@ int QuicklistMenuItemRadio::CairoSurfaceWidth()
   return 0;
 }
 
+} // NAMESPACE
