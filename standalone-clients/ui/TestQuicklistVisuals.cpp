@@ -35,6 +35,8 @@
 #define WIN_WIDTH  1024
 #define WIN_HEIGHT  600
 
+using namespace unity;
+
 QuicklistView* gQuicklists[3] = {NULL, NULL, NULL};
 
 QuicklistMenuItemRadio*

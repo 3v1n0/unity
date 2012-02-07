@@ -28,6 +28,9 @@
 
 #include <X11/Xlib.h>
 
+namespace unity
+{
+
 class QuicklistMenuItemRadio : public QuicklistMenuItem
 {
 public:
@@ -59,5 +62,7 @@ protected:
   virtual void UpdateTexture();
   virtual int CairoSurfaceWidth();
 };
+
+} //NAMESPACE
 
 #endif // QUICKLISTMENUITEMRADIO_H

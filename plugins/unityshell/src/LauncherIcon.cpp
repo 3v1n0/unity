@@ -66,9 +66,6 @@ nux::logging::Logger logger("unity.launcher");
 
 NUX_IMPLEMENT_OBJECT_TYPE(LauncherIcon);
 
-nux::Tooltip* LauncherIcon::_current_tooltip = 0;
-QuicklistView* LauncherIcon::_current_quicklist = 0;
-
 int LauncherIcon::_current_theme_is_mono = -1;
 GtkIconTheme* LauncherIcon::_unity_theme = NULL;
 
@@ -100,22 +97,20 @@ LauncherIcon::LauncherIcon()
     _quirk_times[i].tv_nsec = 0;
   }
 
-  _tooltip = new nux::Tooltip();
-  _tooltip->SinkReference();
+  _tooltip = new Tooltip();
 
   tooltip_text.SetSetterFunction(sigc::mem_fun(this, &LauncherIcon::SetTooltipText));
   tooltip_text = "blank";
 
   _quicklist = new QuicklistView();
-  _quicklist->SinkReference();
 
   // FIXME: the abstraction is already broken, should be fixed for O
   // right now, hooking the dynamic quicklist the less ugly possible way
-  QuicklistManager::Default()->RegisterQuicklist(_quicklist);
+  QuicklistManager::Default()->RegisterQuicklist(_quicklist.GetPointer());
 
   // Add to introspection
-  AddChild(_quicklist);
-  AddChild(_tooltip);
+  AddChild(_quicklist.GetPointer());
+  AddChild(_tooltip.GetPointer());
 
   mouse_enter.connect(sigc::mem_fun(this, &LauncherIcon::RecvMouseEnter));
   mouse_leave.connect(sigc::mem_fun(this, &LauncherIcon::RecvMouseLeave));
@@ -129,8 +124,8 @@ LauncherIcon::~LauncherIcon()
   SetQuirk(QUIRK_URGENT, false);
 
   // Remove from introspection
-  RemoveChild(_quicklist);
-  RemoveChild(_tooltip);
+  RemoveChild(_quicklist.GetPointer());
+  RemoveChild(_tooltip.GetPointer());
 
   if (_present_time_handle)
     g_source_remove(_present_time_handle);
@@ -156,9 +151,6 @@ LauncherIcon::~LauncherIcon()
 
   if (on_order_changed_connection.connected())
     on_order_changed_connection.disconnect();
-
-  _quicklist->UnReference();
-  _tooltip->UnReference();
 
   if (_unity_theme)
   {
@@ -493,7 +485,7 @@ LauncherIcon::ShowTooltip()
   if (_last_monitor >= 0)
   {
     nux::Geometry geo = _parent_geo[_last_monitor];
-    tip_x = geo.x + geo.width + 1;
+    tip_x = geo.x + geo.width - 4 * geo.width / 48;
     tip_y = geo.y + _center[_last_monitor].y;
   }
 
@@ -575,7 +567,7 @@ bool LauncherIcon::OpenQuicklist(bool default_to_first_item, int monitor)
   }
 
   nux::Geometry geo = _parent_geo[monitor];
-  int tip_x = geo.x + geo.width + 1;
+  int tip_x = geo.x + geo.width - 4 * geo.width / 48;
   int tip_y = geo.y + _center[monitor].y; 
 
   auto win_manager = WindowManager::Default();
@@ -588,13 +580,13 @@ bool LauncherIcon::OpenQuicklist(bool default_to_first_item, int monitor)
   if (win_manager->IsExpoActive())
   {
     on_expo_terminated_connection = win_manager->terminate_expo.connect([&, tip_x, tip_y]() {
-        QuicklistManager::Default()->ShowQuicklist(_quicklist, tip_x, tip_y);
+        QuicklistManager::Default()->ShowQuicklist(_quicklist.GetPointer(), tip_x, tip_y);
         on_expo_terminated_connection.disconnect();
     });
   }
   else
   {
-    QuicklistManager::Default()->ShowQuicklist(_quicklist, tip_x, tip_y);
+    QuicklistManager::Default()->ShowQuicklist(_quicklist.GetPointer(), tip_x, tip_y);
   }
 
   return true;
@@ -655,11 +647,11 @@ LauncherIcon::SetCenter(nux::Point3 center, int monitor, nux::Geometry geo)
   if (monitor == _last_monitor)
   {
     int tip_x, tip_y;
-    tip_x = geo.x + geo.width + 1;
+    tip_x = geo.x + geo.width - 4 * geo.width / 48;
     tip_y = geo.y + _center[monitor].y;
 
     if (_quicklist->IsVisible())
-      QuicklistManager::Default()->ShowQuicklist(_quicklist, tip_x, tip_y);
+      QuicklistManager::Default()->ShowQuicklist(_quicklist.GetPointer(), tip_x, tip_y);
     else if (_tooltip->IsVisible())
       _tooltip->ShowTooltipWithTipAt(tip_x, tip_y);
   }
