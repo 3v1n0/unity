@@ -295,6 +295,12 @@ nux::Geometry DashView::GetBestFitGeometry(nux::Geometry const& for_geo)
 
 void DashView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
 {
+  if (timeline_need_more_draw_)
+  {
+   // process our animation
+   ProcessGrowShrink();
+  }
+ 
   nux::Geometry draw_content_geo = content_geo_;
   draw_content_geo.height = current_height_;
   renderer_.DrawFull(gfx_context, draw_content_geo, GetAbsoluteGeometry(), GetGeometry());
@@ -302,12 +308,6 @@ void DashView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
 
 void DashView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
 {
-  if (timeline_need_more_draw_)
-  {
-    // process our animation
-    ProcessGrowShrink();
-  }
- 
   nux::Geometry draw_content_geo = content_geo_;
   draw_content_geo.height = current_height_;
   renderer_.DrawInner(gfx_context, draw_content_geo, GetAbsoluteGeometry(), GetGeometry());
