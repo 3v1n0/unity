@@ -224,6 +224,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
   _hidden                 = false;
   _render_drag_window     = false;
   _drag_edge_touching     = false;
+  _steal_drag             = false;
   _last_button_press      = 0;
   _selection_atom         = 0;
   _drag_out_id            = 0;
@@ -2643,10 +2644,7 @@ void Launcher::DndHoveredIconReset()
   }
 
   if (!_steal_drag && _dnd_hovered_icon)
-  {
     _dnd_hovered_icon->SendDndLeave();
-    _dnd_hovered_icon = nullptr;
-  }
 
   _steal_drag = false;
   _dnd_hovered_icon = nullptr;
