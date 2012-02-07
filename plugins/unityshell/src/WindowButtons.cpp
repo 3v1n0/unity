@@ -31,7 +31,7 @@
 #include <UnityCore/Variant.h>
 #include "WindowButtons.h"
 
-#include "ubus-server.h"
+#include "UBusWrapper.h"
 #include "UBusMessages.h"
 
 #include "DashSettings.h"
@@ -48,16 +48,8 @@ public:
   WindowButton(panel::WindowButtonType type)
     : nux::Button("", NUX_TRACKER_LOCATION),
       _type(type),
-      _normal_tex(NULL),
-      _prelight_tex(NULL),
-      _pressed_tex(NULL),
-      _normal_dash_tex(NULL),
-      _prelight_dash_tex(NULL),
-      _pressed_dash_tex(NULL),
       _overlay_is_open(false),
       _mouse_is_down(false),
-      _place_shown_interest(0),
-      _place_hidden_interest(0),
       _opacity(1.0f)
   {
     LoadImages();
@@ -65,13 +57,8 @@ public:
     panel::Style::Instance().changed.connect(sigc::mem_fun(this, &WindowButton::LoadImages));
     dash::Settings::Instance().changed.connect(sigc::mem_fun(this, &WindowButton::UpdateDashUnmaximize));
 
-    UBusServer* ubus = ubus_server_get_default();
-    _place_shown_interest = ubus_server_register_interest(ubus, UBUS_OVERLAY_SHOWN,
-                                                          (UBusCallback)&WindowButton::OnOverlayShown,
-                                                          this);
-    _place_hidden_interest = ubus_server_register_interest(ubus, UBUS_OVERLAY_HIDDEN,
-                                                           (UBusCallback)&WindowButton::OnOverlayHidden,
-                                                           this);
+    _ubus_manager.RegisterInterest(UBUS_OVERLAY_SHOWN, sigc::mem_fun(this, &WindowButton::OnOverlayShown));
+    _ubus_manager.RegisterInterest(UBUS_OVERLAY_HIDDEN, sigc::mem_fun(this, &WindowButton::OnOverlayHidden));
 
     /* FIXME HasMouseFocus() doesn't seem to work correctly, so we use this workaround */
     mouse_down.connect([&_mouse_is_down](int, int, unsigned long, unsigned long) {
@@ -80,22 +67,6 @@ public:
     mouse_up.connect([&_mouse_is_down](int, int, unsigned long, unsigned long) {
       _mouse_is_down = false;
     });
-  }
-
-  ~WindowButton()
-  {
-    _normal_tex->UnReference();
-    _prelight_tex->UnReference();
-    _pressed_tex->UnReference();
-    _normal_dash_tex->UnReference();
-    _prelight_dash_tex->UnReference();
-    _pressed_dash_tex->UnReference();
-
-    UBusServer* ubus = ubus_server_get_default();
-    if (_place_shown_interest != 0)
-      ubus_server_unregister_interest(ubus, _place_shown_interest);
-    if (_place_hidden_interest != 0)
-      ubus_server_unregister_interest(ubus, _place_hidden_interest);
   }
 
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
@@ -110,21 +81,21 @@ public:
     {
       //FIXME should use HasMouseFocus()
       if (_mouse_is_down && IsMouseInside())
-        tex = _pressed_dash_tex;
+        tex = _pressed_dash_tex.GetPointer();
       else if (IsMouseInside())
-        tex = _prelight_dash_tex;
+        tex = _prelight_dash_tex.GetPointer();
       else
-        tex = _normal_dash_tex;
+        tex = _normal_dash_tex.GetPointer();
     }
     else
     {
       //FIXME should use HasMouseFocus()
       if (_mouse_is_down && IsMouseInside())
-        tex = _pressed_tex;
+        tex = _pressed_tex.GetPointer();
       else if (IsMouseInside())
-        tex = _prelight_tex;
+        tex = _prelight_tex.GetPointer();
       else
-        tex = _normal_tex;
+        tex = _normal_tex.GetPointer();
     }
 
     if (tex)
@@ -142,19 +113,6 @@ public:
   void LoadImages()
   {
     panel::Style& style = panel::Style::Instance();
-
-    if (_normal_tex)
-      _normal_tex->UnReference();
-    if (_prelight_tex)
-      _prelight_tex->UnReference();
-    if (_pressed_tex)
-      _pressed_tex->UnReference();
-    if (_normal_dash_tex)
-      _normal_dash_tex->UnReference();
-    if (_prelight_dash_tex)
-      _prelight_dash_tex->UnReference();
-    if (_pressed_dash_tex)
-      _pressed_dash_tex->UnReference();
 
     _normal_tex = style.GetWindowButton(_type, panel::WindowState::NORMAL);
     _prelight_tex = style.GetWindowButton(_type, panel::WindowState::PRELIGHT);
@@ -182,13 +140,6 @@ public:
     // only update the unmaximize button
     if (_type != panel::WindowButtonType::UNMAXIMIZE)
       return;
-
-    if (_normal_dash_tex)
-      _normal_dash_tex->UnReference();
-    if (_prelight_dash_tex)
-      _prelight_dash_tex->UnReference();
-    if (_pressed_dash_tex)
-      _pressed_dash_tex->UnReference();
 
     //!!FIXME!! - don't have disabled instances of the (un)maximize buttons
     if (dash::Settings::Instance().GetFormFactor() == dash::FormFactor::DESKTOP)
@@ -234,12 +185,6 @@ public:
 
 private:
   panel::WindowButtonType _type;
-  nux::BaseTexture* _normal_tex;
-  nux::BaseTexture* _prelight_tex;
-  nux::BaseTexture* _pressed_tex;
-  nux::BaseTexture* _normal_dash_tex;
-  nux::BaseTexture* _prelight_dash_tex;
-  nux::BaseTexture* _pressed_dash_tex;
   bool _overlay_is_open;
   bool _overlay_can_maximize;
   bool _mouse_is_down;
@@ -247,7 +192,15 @@ private:
   guint32 _place_hidden_interest;
   double _opacity;
 
-  static void OnOverlayShown(GVariant* data, void* val)
+  nux::ObjectPtr<nux::BaseTexture> _normal_tex;
+  nux::ObjectPtr<nux::BaseTexture> _prelight_tex;
+  nux::ObjectPtr<nux::BaseTexture> _pressed_tex;
+  nux::ObjectPtr<nux::BaseTexture> _normal_dash_tex;
+  nux::ObjectPtr<nux::BaseTexture> _prelight_dash_tex;
+  nux::ObjectPtr<nux::BaseTexture> _pressed_dash_tex;
+  UBusManager _ubus_manager;
+
+  void OnOverlayShown(GVariant* data)
   {
     unity::glib::String overlay_identity;
     gboolean can_maximise = FALSE;
@@ -255,26 +208,23 @@ private:
     g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING, 
                   &overlay_identity, &can_maximise, &overlay_monitor);
 
-    WindowButton* self = (WindowButton*)val;
+    _overlay_is_open = true;
+    if (_normal_dash_tex)
+      SetMinMaxSize(_normal_dash_tex->GetWidth(), _normal_dash_tex->GetHeight());
 
-    self->_overlay_is_open = true;
-    if (self->_normal_dash_tex)
-      self->SetMinMaxSize(self->_normal_dash_tex->GetWidth(), self->_normal_dash_tex->GetHeight());
+    _overlay_can_maximize = (can_maximise) ? true : false;
 
-    self->_overlay_can_maximize = (can_maximise) ? true : false;
-
-    self->QueueDraw();
+    QueueDraw();
   }
 
-  static void OnOverlayHidden(GVariant* data, void* val)
+  void OnOverlayHidden(GVariant* data)
   {
-    WindowButton* self = (WindowButton*)val;
+    _overlay_is_open = false;
 
-    self->_overlay_is_open = false;
-    if (self->_normal_tex)
-      self->SetMinMaxSize(self->_normal_tex->GetWidth(), self->_normal_tex->GetHeight());
+    if (_normal_tex)
+      SetMinMaxSize(_normal_tex->GetWidth(), _normal_tex->GetHeight());
 
-    self->QueueDraw();
+    QueueDraw();
   }
 
   nux::BaseTexture* GetDashWindowButton(panel::WindowButtonType type,
