@@ -145,6 +145,7 @@ PlacesGroup::PlacesGroup()
   // don't need to disconnect these signals as they are disconnected when this object destroys the contents
   _header_view->mouse_enter.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseEnter));
   _header_view->mouse_leave.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseLeave));
+  _header_view->mouse_click.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseClick));
   _icon->mouse_click.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseClick));
   _icon->mouse_enter.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseEnter));
   _icon->mouse_leave.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseLeave));
