@@ -32,6 +32,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(FilterWidget);
 FilterWidget::FilterWidget( NUX_FILE_LINE_DECL)
   : nux::View(NUX_FILE_LINE_PARAM)
 {
+  SetAcceptKeyNavFocusOnMouseDown(false);
 }
 
 } // namespace dash

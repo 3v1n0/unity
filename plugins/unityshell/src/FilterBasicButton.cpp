@@ -65,8 +65,9 @@ FilterBasicButton::~FilterBasicButton()
 
 void FilterBasicButton::Init()
 {
-  SetAcceptKeyNavFocusOnMouseDown(false);
+
   InitTheme();
+  SetAcceptKeyNavFocusOnMouseDown(false);
 }
 
 void FilterBasicButton::InitTheme()

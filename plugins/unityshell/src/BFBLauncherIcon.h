@@ -35,7 +35,7 @@ class BFBLauncherIcon : public SimpleLauncherIcon
 {
 
 public:
-  BFBLauncherIcon(Launcher* launcher);
+  BFBLauncherIcon();
 
   virtual nux::Color BackgroundColor();
   virtual nux::Color GlowColor();

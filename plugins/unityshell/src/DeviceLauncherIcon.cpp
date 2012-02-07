@@ -43,8 +43,8 @@ GduDevice* get_device_for_device_file (const gchar *device_file);
 
 }
 
-DeviceLauncherIcon::DeviceLauncherIcon(Launcher* launcher, GVolume* volume)
-  : SimpleLauncherIcon(launcher)
+DeviceLauncherIcon::DeviceLauncherIcon(GVolume* volume)
+  : SimpleLauncherIcon()
   , volume_(volume)
   , device_file_(g_volume_get_identifier(volume_, G_VOLUME_IDENTIFIER_KIND_UNIX_DEVICE))
   , gdu_device_(get_device_for_device_file(device_file_))
@@ -130,6 +130,7 @@ std::list<DbusmenuMenuitem*> DeviceLauncherIcon::GetMenus()
   {
     menu_item = dbusmenu_menuitem_new();
 
+    // TRANSLATORS: This refers to the action of formatting a device
     dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Format..."));
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);

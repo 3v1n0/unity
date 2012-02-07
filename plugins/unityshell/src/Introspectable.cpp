@@ -32,6 +32,8 @@ Introspectable::~Introspectable()
 {
   for (auto parent : _parents)
     parent->_children.remove(this);
+  for (auto child : _children)
+    child->_parents.remove(this);
 }
 
 GVariant*

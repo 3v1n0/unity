@@ -87,8 +87,15 @@ public:
   static Style& Instance();
 
   virtual bool Button(cairo_t* cr, nux::ButtonVisualState state,
-                      std::string const& label,
-                      Alignment alignment = Alignment::CENTER);
+                      std::string const& label, int font_size=-1,
+                      Alignment alignment = Alignment::CENTER,
+                      bool zeromargin=false); 
+  
+  virtual bool SquareButton(cairo_t* cr, nux::ButtonVisualState state,
+                            std::string const& label, bool curve_bottom, 
+                            int font_size=-1,
+                            Alignment alignment = Alignment::CENTER,
+                            bool zeromargin=false);
 
   virtual bool ButtonFocusOverlay(cairo_t* cr);
 
