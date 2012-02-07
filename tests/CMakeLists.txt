@@ -50,24 +50,16 @@ add_executable (test-unit
                 unit/TestMain.cpp
                 unit/TestUBus.cpp
                 unit/TestStaticCairoText.cpp
-                ${UNITY_SRC}/ubus-server.cpp
-                ${UNITY_SRC}/ubus-server.h
+                ${UNITY_SRC}/CairoBaseWindow.cpp
                 ${UNITY_SRC}/Introspectable.cpp
                 ${UNITY_SRC}/QuicklistMenuItem.cpp
-                ${UNITY_SRC}/QuicklistMenuItem.h
                 ${UNITY_SRC}/QuicklistMenuItemCheckmark.cpp
-                ${UNITY_SRC}/QuicklistMenuItemCheckmark.h
                 ${UNITY_SRC}/QuicklistMenuItemLabel.cpp
-                ${UNITY_SRC}/QuicklistMenuItemLabel.h
                 ${UNITY_SRC}/QuicklistMenuItemRadio.cpp
-                ${UNITY_SRC}/QuicklistMenuItemRadio.h
                 ${UNITY_SRC}/QuicklistMenuItemSeparator.cpp
-                ${UNITY_SRC}/QuicklistMenuItemSeparator.h
                 ${UNITY_SRC}/QuicklistView.cpp
-                ${UNITY_SRC}/QuicklistView.h
                 ${UNITY_SRC}/StaticCairoText.cpp
-                ${UNITY_SRC}/StaticCairoText.h
-                ${UNITY_SRC}/
+                ${UNITY_SRC}/ubus-server.cpp
                 )
 add_dependencies (test-unit unity-core-${UNITY_API_VERSION})
 add_subdirectory (test-input-remover)
