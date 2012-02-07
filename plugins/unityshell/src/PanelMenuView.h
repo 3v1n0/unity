@@ -32,6 +32,7 @@
 #include "PanelIndicatorsView.h"
 #include "StaticCairoText.h"
 #include "WindowButtons.h"
+#include "PanelIndicatorAppmenuView.h"
 #include "PanelTitlebarGrabAreaView.h"
 #include "PluginAdapter.h"
 #include "Animator.h"
@@ -79,7 +80,11 @@ protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual long PostLayoutManagement(long LayoutResult);
+  virtual nux::Area* FindAreaUnderMouse(const nux::Point& mouse_position,
+                                        nux::NuxEventType event_type);
+  virtual void OnEntryAdded(indicator::Entry::Ptr const& entry);
 
+private:
   void OnActiveChanged(PanelIndicatorEntryView* view, bool is_active);
   void OnViewOpened(BamfMatcher* matcher, BamfView* view);
   void OnViewClosed(BamfMatcher* matcher, BamfView* view);
@@ -113,13 +118,10 @@ protected:
   void OnMinimizeClicked();
   void OnRestoreClicked();
 
-  virtual nux::Area* FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type);
   void OnPanelViewMouseEnter(int x, int y, unsigned long mouse_button_state, unsigned long special_keys_state);
   void OnPanelViewMouseLeave(int x, int y, unsigned long mouse_button_state, unsigned long special_keys_state);
   void OnPanelViewMouseMove(int x, int y, int dx, int dy, unsigned long mouse_button_state, unsigned long special_keys_state);
-  virtual void OnEntryAdded(unity::indicator::Entry::Ptr const& entry);
 
-private:
   std::string GetActiveViewName();
   std::string GetMaximizedViewName();
 
@@ -154,6 +156,7 @@ private:
   bool _is_grabbed;
   bool _is_maximized;
   bool _is_own_window;
+  PanelIndicatorAppmenuView* _integrated_menu;
   PanelIndicatorEntryView* _last_active_view;
   glib::Object<BamfApplication> _new_application;
 

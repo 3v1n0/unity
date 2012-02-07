@@ -50,6 +50,7 @@
 
 namespace {
   nux::logging::Logger logger("unity.panel.menu");
+  const int MENUS_PADDING = 6;
 }
 
 namespace unity
@@ -61,6 +62,7 @@ PanelMenuView::PanelMenuView(int padding)
     _is_inside(false),
     _is_maximized(false),
     _is_own_window(false),
+    _integrated_menu(nullptr),
     _last_active_view(nullptr),
     _new_application(nullptr),
     _last_width(0),
@@ -226,10 +228,16 @@ PanelMenuView::AddIndicator(indicator::Indicator::Ptr const& indicator)
       _window_buttons->SetFocusedState(!_is_integrated ||
                                        GetMaximizedWindow() == _active_xid);
 
+      if (!_is_integrated)
+        _integrated_menu = nullptr;
+
       auto conn = appmenuindicator->integrated_changed.connect([&] (bool integrated) {
         _is_integrated = integrated;
         _window_buttons->SetFocusedState(!_is_integrated ||
                                          GetMaximizedWindow() == _active_xid);
+
+        if (!_is_integrated)
+          _integrated_menu = nullptr;
 
         Refresh();
         FullRedraw();
@@ -817,7 +825,12 @@ PanelMenuView::GetMaximizedViewName()
     label = glib::String(bamf_view_get_name(view)).Str();
   }
 
-  return label;
+  glib::String escaped(g_markup_escape_text(label.c_str(), -1));
+
+  std::ostringstream bold_label;
+  bold_label << "<b>" << escaped.Str() << "</b>";
+
+  return bold_label.str();
 }
 
 void PanelMenuView::DrawText(cairo_t *cr_real, int x, int y, int width, int height,
@@ -930,6 +943,9 @@ PanelMenuView::Refresh()
     if (_is_integrated)
     {
       new_title = GetMaximizedViewName();
+
+      if (_integrated_menu)
+        _integrated_menu->SetLabel(new_title);
     }
     else
     {
@@ -989,15 +1005,28 @@ PanelMenuView::OnActiveChanged(PanelIndicatorEntryView* view,
 }
 
 void
-PanelMenuView::OnEntryAdded(unity::indicator::Entry::Ptr const& entry)
+PanelMenuView::OnEntryAdded(indicator::Entry::Ptr const& entry)
 {
-  auto view = AddEntry(entry, 6, IndicatorEntryPosition::END, IndicatorEntryType::MENU);
+  PanelIndicatorEntryView* view;
+
+  if (!_is_integrated)
+  {
+    view = new PanelIndicatorEntryView(entry, MENUS_PADDING, IndicatorEntryType::MENU);
+    view->mouse_enter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
+    view->mouse_leave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
+  }
+  else
+  {
+    _integrated_menu = new PanelIndicatorAppmenuView(entry);
+    _integrated_menu->SetControlledWindowXid(GetMaximizedWindow());
+    _integrated_menu->SetLabel(GetMaximizedViewName());
+    view = _integrated_menu;
+  }
 
   entry->show_now_changed.connect(sigc::mem_fun(this, &PanelMenuView::UpdateShowNow));
-
   view->active_changed.connect(sigc::mem_fun(this, &PanelMenuView::OnActiveChanged));
-  view->mouse_enter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
-  view->mouse_leave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
+
+  AddEntryView(view, IndicatorEntryPosition::END);
 }
 
 void
@@ -1144,7 +1173,7 @@ PanelMenuView::OnActiveWindowChanged(BamfMatcher *matcher,
     BamfWindow* window = BAMF_WINDOW(new_view);
     guint32 xid = bamf_window_get_xid(window);
     _active_xid = xid;
-    _is_maximized = WindowManager::Default()->IsWindowMaximized(xid);
+    _is_maximized = bamf_window_maximized(window) == BAMF_WINDOW_MAXIMIZED;
     nux::Geometry geo = WindowManager::Default()->GetWindowGeometry(xid);
 
     if (bamf_window_get_window_type(window) == BAMF_WINDOW_DESKTOP)
@@ -1174,7 +1203,12 @@ PanelMenuView::OnActiveWindowChanged(BamfMatcher *matcher,
                                       sigc::mem_fun(this, &PanelMenuView::OnNameChanged));
 
     if (_is_integrated)
+    {
       _window_buttons->SetFocusedState(GetMaximizedWindow() == _active_xid);
+
+      if (_integrated_menu && _is_maximized)
+        _integrated_menu->SetControlledWindowXid(_active_xid);
+    } 
   }
 
   Refresh();
@@ -1275,7 +1309,12 @@ PanelMenuView::OnWindowMaximized(guint xid)
   }
 
   if (_is_integrated)
+  {
     _window_buttons->SetFocusedState(xid == _active_xid);
+
+    if (_integrated_menu && xid == _active_xid)
+      _integrated_menu->SetControlledWindowXid(_active_xid);
+  }
 
   // update the state of the window in the _decor_map
   _decor_map[xid] = WindowManager::Default()->IsWindowDecorated(xid);
@@ -1305,7 +1344,13 @@ PanelMenuView::OnWindowRestored(guint xid)
   }
 
   if (_is_integrated)
-    _window_buttons->SetFocusedState(GetMaximizedWindow() == _active_xid);
+  {
+    Window maximized = GetMaximizedWindow();
+    _window_buttons->SetFocusedState(maximized == _active_xid);
+
+    if (_integrated_menu)
+      _integrated_menu->SetControlledWindowXid(maximized);
+  }
 
   if (_decor_map[xid])
     WindowManager::Default()->Decorate(xid);
