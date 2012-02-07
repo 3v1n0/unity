@@ -43,7 +43,10 @@ enum class WindowState
 {
   NORMAL,
   PRELIGHT,
-  PRESSED
+  PRESSED,
+  UNFOCUSED,
+  UNFOCUSED_PRELIGHT,
+  UNFOCUSED_PRESSED
 };
 
 class Style

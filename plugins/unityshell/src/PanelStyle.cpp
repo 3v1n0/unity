@@ -162,8 +162,9 @@ nux::NBitmapData* Style::GetBackground(int width, int height, float opacity)
 nux::BaseTexture* Style::GetWindowButton(WindowButtonType type, WindowState state)
 {
   nux::BaseTexture* texture = NULL;
-  const char* names[] = { "close", "minimize", "unmaximize" };
-  const char* states[] = { "", "_focused_prelight", "_focused_pressed" };
+  std::string names[] = { "close", "minimize", "unmaximize" };
+  std::string states[] = { "", "_focused_prelight", "_focused_pressed",
+                           "unfocused", "_unfocused_prelight", "_unfocused_pressed"};
 
   std::ostringstream subpath;
   subpath << "unity/" << names[static_cast<int>(type)]
