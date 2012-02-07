@@ -49,6 +49,7 @@
 #include "DebugDBusInterface.h"
 #include "SwitcherController.h"
 #include "UBusWrapper.h"
+#include "UnityshellPrivate.h"
 #ifndef USE_GLES
 #include "ScreenEffectFramebufferObject.h"
 #endif
@@ -57,6 +58,8 @@
 #include "BGHash.h"
 #include <compiztoolbox/compiztoolbox.h>
 #include <dlfcn.h>
+
+#include "HudController.h"
 
 namespace unity
 {
@@ -202,6 +205,9 @@ public:
   bool altTabNextWindowInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool altTabPrevWindowInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
 
+  /* handle hud key activations */
+  bool ShowHudInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool ShowHudTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool launcherSwitcherForwardInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool launcherSwitcherPrevInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool launcherSwitcherTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options);
@@ -233,8 +239,8 @@ private:
 
   void SendExecuteCommand();
 
-  void EnsureSuperKeybindings ();
-  void CreateSuperNewAction(char shortcut, bool use_shift=false, bool use_numpad=false);
+  void EnsureSuperKeybindings();
+  void CreateSuperNewAction(char shortcut, impl::ActionModifiers flag);
   void EnableCancelAction(bool enabled, int modifiers = 0);
 
   static gboolean initPluginActions(gpointer data);
@@ -268,6 +274,7 @@ private:
   dash::Controller::Ptr     dash_controller_;
   panel::Controller::Ptr    panel_controller_;
   switcher::Controller::Ptr switcher_controller_;
+  hud::Controller::Ptr      hud_controller_;
 
   shortcut::Controller::Ptr shortcut_controller_;
   std::list<shortcut::AbstractHint*> hints_;
@@ -322,6 +329,7 @@ private:
   CompWindowList         fullscreen_windows_;
   bool                   painting_tray_;
   unsigned int           tray_paint_mask_;
+  gint64                 last_hud_show_time_;
 
 #ifndef USE_GLES
   ScreenEffectFramebufferObject::GLXGetProcAddressProc glXGetProcAddressP;
@@ -396,7 +404,7 @@ public:
   UnityMinimizedHandler *mMinimizeHandler;
 
   UnityShowdesktopHandler             *mShowdesktopHandler;
-  
+
 private:
 
   guint  focusdesktop_handle_;

@@ -52,7 +52,6 @@
 
 #include "unitya11y.h"
 
-#include "ubus-server.h"
 #include "UBusMessages.h"
 #include "UScreen.h"
 
@@ -119,6 +118,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , dash_is_open_ (false)
   , grab_index_ (0)
   , painting_tray_ (false)
+  , last_hud_show_time_(0)
 {
   Timer timer;
   gfloat version;
@@ -258,6 +258,8 @@ UnityScreen::UnityScreen(CompScreen* screen)
      }
 #endif
 
+     optionSetShowHudInitiate(boost::bind(&UnityScreen::ShowHudInitiate, this, _1, _2, _3));
+     optionSetShowHudTerminate(boost::bind(&UnityScreen::ShowHudTerminate, this, _1, _2, _3));
      optionSetBackgroundColorNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetLauncherHideModeNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetBacklightModeNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
@@ -360,7 +362,7 @@ UnityScreen::~UnityScreen()
 
 void UnityScreen::initAltTabNextWindow()
 {
-  KeyboardUtil key_util (screen->dpy());
+  KeyboardUtil key_util(screen->dpy());
   guint above_tab_keycode = key_util.GetKeycodeAboveKeySymbol (XStringToKeysym("Tab"));
   KeySym above_tab_keysym = XkbKeycodeToKeysym (screen->dpy(), above_tab_keycode, 0, 0);
 
@@ -371,7 +373,7 @@ void UnityScreen::initAltTabNextWindow()
       sout << "<Alt>" << XKeysymToString(above_tab_keysym);
 
       screen->removeAction(&optionGetAltTabNextWindow());
-      
+
       CompAction action = CompAction();
       action.keyFromString(sout.str());
       action.setState (CompAction::StateInitKey | CompAction::StateAutoGrab);
@@ -386,7 +388,7 @@ void UnityScreen::initAltTabNextWindow()
       sout << "<Alt><Shift>" << XKeysymToString(above_tab_keysym);
 
       screen->removeAction(&optionGetAltTabPrevWindow());
-      
+
       CompAction action = CompAction();
       action.keyFromString(sout.str());
       action.setState (CompAction::StateInitKey | CompAction::StateAutoGrab);
@@ -412,27 +414,22 @@ void UnityScreen::EnsureSuperKeybindings()
 
   for (auto shortcut : launcher_controller_->GetAllShortcuts())
   {
-    CreateSuperNewAction(shortcut);
-    CreateSuperNewAction(shortcut, true);
-    CreateSuperNewAction(shortcut, false, true);
+    CreateSuperNewAction(shortcut, impl::ActionModifiers::NONE);
+    CreateSuperNewAction(shortcut, impl::ActionModifiers::USE_NUMPAD);
+    CreateSuperNewAction(shortcut, impl::ActionModifiers::USE_SHIFT);
   }
 
   for (auto shortcut : dash_controller_->GetAllShortcuts())
-    CreateSuperNewAction(shortcut);
+    CreateSuperNewAction(shortcut, impl::ActionModifiers::NONE);
 }
 
-void UnityScreen::CreateSuperNewAction(char shortcut, bool use_shift, bool use_numpad)
+void UnityScreen::CreateSuperNewAction(char shortcut, impl::ActionModifiers flag)
 {
     CompActionPtr action(new CompAction());
+    const std::string key(optionGetShowLauncher().keyToString());
 
     CompAction::KeyBinding binding;
-    std::ostringstream sout;
-    if (use_shift)
-      sout << "<Shift><Super>"  << shortcut;
-    else
-      sout << "<Super>" << ((use_numpad) ? "KP_" : "") << shortcut;
-
-    binding.fromString(sout.str());
+    binding.fromString(impl::CreateActionString(key, shortcut, flag));
 
     action->setKey(binding);
 
@@ -820,8 +817,8 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
 bool UnityScreen::forcePaintOnTop ()
 {
     return !allowWindowPaint ||
-	    ((switcher_controller_->Visible() ||
-	      dash_is_open_) && !fullscreen_windows_.empty () && (!(screen->grabbed () && !screen->otherGrabExist (NULL))));
+      ((switcher_controller_->Visible() ||
+        dash_is_open_) && !fullscreen_windows_.empty () && (!(screen->grabbed () && !screen->otherGrabExist (NULL))));
 }
 
 void UnityWindow::paintThumbnail (nux::Geometry const& bounding, float alpha)
@@ -967,7 +964,7 @@ bool UnityWindow::handleAnimations (unsigned int ms)
 {
   if (mShowdesktopHandler)
     if (mShowdesktopHandler->animate (ms))
-    { 
+    {
       delete mShowdesktopHandler;
       mShowdesktopHandler = NULL;
       return true;
@@ -996,7 +993,7 @@ bool UnityShowdesktopHandler::shouldHide (CompWindow *w)
    return false;
 
   if (w->state () & (CompWindowStateSkipPagerMask |
-		     CompWindowStateSkipTaskbarMask))
+         CompWindowStateSkipTaskbarMask))
     return false;
 
   if ((w->state () & CompWindowStateHiddenMask))
@@ -1669,7 +1666,7 @@ bool UnityScreen::altTabNextWindowInitiate(CompAction* action, CompAction::State
     altTabInitiateCommon(action, state, options);
     switcher_controller_->Select(1); // always select the current application
   }
-  
+
   switcher_controller_->NextDetail();
 
   action->setState(action->state() | CompAction::StateTermKey);
@@ -1680,7 +1677,7 @@ bool UnityScreen::altTabPrevWindowInitiate(CompAction* action, CompAction::State
 {
   if (switcher_controller_->Visible())
     switcher_controller_->PrevDetail();
-  
+
   return false;
 }
 
@@ -1733,6 +1730,44 @@ void UnityScreen::OnLauncherEndKeyNav(GVariant* data)
   // entered)
   if (preserve_focus)
     PluginAdapter::Default ()->restoreInputFocus ();
+}
+
+bool UnityScreen::ShowHudInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
+{
+  // to receive the Terminate event
+  if (state & CompAction::StateInitKey)
+    action->setState(action->state() | CompAction::StateTermKey);  
+
+  last_hud_show_time_ = g_get_monotonic_time();
+
+  return false;
+}
+
+bool UnityScreen::ShowHudTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options)
+{
+  if (optionGetShowHud().key().toString() == action->key().toString())
+  {
+    if (switcher_controller_->Visible())
+      return false; // early exit if the switcher is open
+
+    gint64 current_time = g_get_monotonic_time();
+    if (current_time - last_hud_show_time_ < 150 * 1000)
+    {
+      if (hud_controller_->IsVisible())
+      {
+        ubus_manager_.SendMessage(UBUS_HUD_CLOSE_REQUEST);
+      }
+      else
+      {
+        hud_controller_->ShowHud();
+      }
+      last_hud_show_time_ = 0;
+    }
+  }
+
+  action->setState(action->state() & ~CompAction::StateTermKey);
+
+  return false;
 }
 
 gboolean UnityScreen::initPluginActions(gpointer data)
@@ -1821,7 +1856,7 @@ bool UnityScreen::initPluginForScreen(CompPlugin* p)
   bool result = screen->initPluginForScreen(p);
   if (p->vTable->name() == "unityshell")
     initAltTabNextWindow();
-    
+
   return result;
 }
 
@@ -1834,8 +1869,8 @@ std::string UnityScreen::GetName() const
   return "Unity";
 }
 
-bool isNuxWindow (CompWindow* value) 
-{ 
+bool isNuxWindow (CompWindow* value)
+{
   std::vector<Window> const& xwns = nux::XInputWindow::NativeHandleList();
   auto id = value->id();
 
@@ -1862,7 +1897,7 @@ const CompWindowList& UnityScreen::getWindowPaintList()
 void UnityScreen::RaiseInputWindows()
 {
   std::vector<Window> const& xwns = nux::XInputWindow::NativeHandleList();
-  
+
   for (auto window : xwns)
   {
     CompWindow* cwin = screen->findWindow(window);
@@ -1995,7 +2030,7 @@ UnityWindow::focus ()
   if (!window->onCurrentDesktop ())
     return false;
 
-  /* Only withdrawn windows 
+  /* Only withdrawn windows
    * which are marked hidden
    * are excluded */
   if (!window->shaded () &&
@@ -2003,8 +2038,8 @@ UnityWindow::focus ()
       (window->state () & CompWindowStateHiddenMask))
     return false;
 
-  if (window->geometry ().x () + window->geometry ().width ()  <= 0	||
-      window->geometry ().y () + window->geometry ().height () <= 0	||
+  if (window->geometry ().x () + window->geometry ().width ()  <= 0 ||
+      window->geometry ().y () + window->geometry ().height () <= 0 ||
       window->geometry ().x () >= (int) screen->width ()||
       window->geometry ().y () >= (int) screen->height ())
     return false;
@@ -2110,7 +2145,7 @@ void UnityWindow::stateChangeNotify(unsigned int lastState)
       !(lastState & CompWindowStateFullscreenMask))
     UnityScreen::get (screen)->fullscreen_windows_.push_back(window);
   else if (lastState & CompWindowStateFullscreenMask &&
-	   !(window->state () & CompWindowStateFullscreenMask))
+     !(window->state () & CompWindowStateFullscreenMask))
     UnityScreen::get (screen)->fullscreen_windows_.remove(window);
 
   PluginAdapter::Default()->NotifyStateChange(window, window->state(), lastState);
@@ -2259,9 +2294,9 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
   {
     case UnityshellOptions::BackgroundColor:
     {
-      nux::Color override_color (optionGetBackgroundColorRed() / 65535.0f, 
-                                 optionGetBackgroundColorGreen() / 65535.0f, 
-                                 optionGetBackgroundColorBlue() / 65535.0f, 
+      nux::Color override_color (optionGetBackgroundColorRed() / 65535.0f,
+                                 optionGetBackgroundColorGreen() / 65535.0f,
+                                 optionGetBackgroundColorBlue() / 65535.0f,
                                  optionGetBackgroundColorAlpha() / 65535.0f);
 
       override_color.red = override_color.red / override_color.alpha;
@@ -2309,7 +2344,10 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       launcher_options->icon_size = optionGetIconSize();
       launcher_options->tile_size = optionGetIconSize() + 6;
 
-      dash_controller_->launcher_width = optionGetIconSize() + 18;
+      hud_controller_->launcher_width = launcher_controller_->launcher().GetAbsoluteWidth() - 1;
+      /* The launcher geometry includes 1px used to draw the right margin
+       * that must not be considered when drawing the dash                    */
+      dash_controller_->launcher_width = launcher_controller_->launcher().GetAbsoluteWidth() - 1;
 
       if (p)
       {
@@ -2495,6 +2533,11 @@ void UnityScreen::initLauncher()
   /* Setup Places */
   dash_controller_.reset(new dash::Controller());
   dash_controller_->on_realize.connect(sigc::mem_fun(this, &UnityScreen::OnDashRealized));
+
+  /* Setup Hud */
+  hud_controller_.reset(new hud::Controller());
+  AddChild(hud_controller_.get());
+  LOG_INFO(logger) << "initLauncher-hud " << timer.ElapsedSeconds() << "s";
   
   // Setup Shortcut Hint
   InitHints();
@@ -2644,7 +2687,7 @@ UnityWindow::~UnityWindow()
 
   if (mShowdesktopHandler)
     delete mShowdesktopHandler;
-    
+
   if (focusdesktop_handle_)
     g_source_remove(focusdesktop_handle_);
 
@@ -2663,6 +2706,21 @@ bool UnityPluginVTable::init()
     return false;
   if (!CompPlugin::checkPluginABI("opengl", COMPIZ_OPENGL_ABI))
     return false;
+
+  /*
+   * GTK needs to be initialized or else unity's gdk/gtk calls will crash.
+   * This is already done in compiz' main() if using ubuntu packages, but not
+   * if you're using the regular (upstream) compiz.
+   * Admittedly this is the same as what the "gtkloader" plugin does. But it
+   * is faster, more efficient (one less plugin in memory), and more reliable
+   * to do the init here where its needed. And yes, init'ing multiple times is
+   * safe, and does nothing after the first init.
+   */
+  if (!gtk_init_check(&programArgc, &programArgv))
+  {
+    compLogMessage("unityshell", CompLogLevelError, "GTK init failed\n");
+    return false;
+  }
 
   return true;
 }

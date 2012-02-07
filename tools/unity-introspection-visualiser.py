@@ -2,7 +2,9 @@
 
 #
 # Script to generate a nice PNG file of the currently running unity introspection tree.
-from sys import argv
+from argparse import ArgumentParser
+from os import remove
+from os.path import splitext
 import dbus
 
 try:
@@ -20,6 +22,7 @@ except ImportError:
     exit(1)
 
 NEXT_NODE_ID=1
+
 
 def string_rep(dbus_type):
     """Get a string representation of various dbus types."""
@@ -60,16 +63,17 @@ def traverse_tree(state, parent, graph):
             graph.add_edge(pydot.Edge(parent, child))
 
             traverse_tree(child_state, child, graph)
-        
+
 
 if __name__ == '__main__':
-    if len(argv) != 2:
-        print """Usage: %s output_file.png.
+    parser = ArgumentParser()
+    mg = parser.add_mutually_exclusive_group(required=True)
+    mg.add_argument('-o', '--output', nargs=1,
+        help='Store output in specified file on disk.')
+    mg.add_argument('-d','--display', action='store_true',
+        help='Display output in image viewer.')
 
-This script queries the currently running Unity process and dumps the entire
-introspection tree into a graph, and renders this to a PNG file.
-""" % (argv[0])
-        exit(1)
+    args = parser.parse_args()
 
     u = Unity()
     introspection_tree = u.get_state()
@@ -78,10 +82,27 @@ introspection tree into a graph, and renders this to a PNG file.
     graph.set_node_defaults(shape='Mrecord')
     graph.set_fontname('Ubuntu')
     graph.set_fontsize('10')
-    
+
     gnode_unity = pydot.Node("Unity")
     gnode_unity.set_comment("Unity")
     traverse_tree(introspection_tree[0], gnode_unity, graph)
 
-    graph.write(argv[1], format='png')
+    if args.output:
+        base, extension = splitext(args.output[0])
+        write_method_name = 'write_' + extension[1:]
+        if hasattr(graph, write_method_name):
+            getattr(graph, write_method_name)(args.output[0])
+        else:
+            print "Error: unsupported format: '%s'" % (extension)
+    elif args.display:
+        from tempfile import NamedTemporaryFile
+        from subprocess import call
+        tf = NamedTemporaryFile(suffix='.png', delete=False)
+        tf.write(graph.create_png())
+        tf.close()
+        call(["eog", tf.name])
+        remove(tf.name)
+    else:
+        print 'unknown output mode!'
+
 
