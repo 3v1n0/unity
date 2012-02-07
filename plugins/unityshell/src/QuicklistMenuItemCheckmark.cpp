@@ -26,7 +26,8 @@
 #include "CairoTexture.h"
 #include "QuicklistMenuItemCheckmark.h"
 
-using unity::texture_from_cairo_graphics;
+namespace unity
+{
 
 static double
 _align(double val)
@@ -285,4 +286,6 @@ int QuicklistMenuItemCheckmark::CairoSurfaceWidth()
     return _normalTexture[0]->GetWidth();
 
   return 0;
+}
+
 }

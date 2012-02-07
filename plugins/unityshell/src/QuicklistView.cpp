@@ -50,9 +50,12 @@
 #define NUX_KP_LEFT  0xFF96
 #define NUX_KP_RIGHT 0xFF98
 
-#define ANCHOR_WIDTH 10.0f
-
-using unity::texture_from_cairo_graphics;
+namespace unity
+{
+namespace
+{
+  const int ANCHOR_WIDTH = 10.0f;
+}
 
 NUX_IMPLEMENT_OBJECT_TYPE(QuicklistView);
 
@@ -1427,3 +1430,5 @@ QuicklistView::GetSelectedMenuItem()
 {
   return GetNthItems(_current_item_index);
 }
+
+} // NAMESPACE

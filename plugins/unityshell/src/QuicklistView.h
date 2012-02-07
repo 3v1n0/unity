@@ -35,22 +35,15 @@
 
 #include "Introspectable.h"
 
-class QuicklistMenuItem;
-class QuicklistMenuItemLabel;
+namespace unity
+{
 
-class QuicklistView : public unity::CairoBaseWindow, public unity::debug::Introspectable
+class QuicklistView : public CairoBaseWindow, public debug::Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE(QuicklistView, unity::CairoBaseWindow);
 public:
   QuicklistView();
-
   ~QuicklistView();
-
-  void Draw(nux::GraphicsEngine& gfxContext,
-            bool             forceDraw);
-
-  void DrawContent(nux::GraphicsEngine& gfxContext,
-                   bool             forceDraw);
 
   void SetText(nux::NString text);
 
@@ -88,6 +81,10 @@ public:
   //Required for a11y
   QuicklistMenuItem* GetSelectedMenuItem();
   sigc::signal<void> selection_change;
+
+protected:
+  void Draw(nux::GraphicsEngine& gfxContext, bool forceDraw);
+  void DrawContent(nux::GraphicsEngine& gfxContext, bool forceDraw);
 
 private:
   void RecvCairoTextChanged(QuicklistMenuItem* item);
@@ -172,5 +169,5 @@ private:
   int _current_item_index;
 };
 
+} // NAMESPACE
 #endif // QUICKLISTVIEW_H
-

@@ -29,6 +29,9 @@
 
 #include <X11/Xlib.h>
 
+namespace unity
+{
+
 NUX_IMPLEMENT_OBJECT_TYPE(QuicklistMenuItem);
 
 static void
@@ -489,3 +492,5 @@ void QuicklistMenuItem::AddProperties(GVariantBuilder* builder)
   .add("active", GetActive())
   .add("visible", GetVisible());
 }
+
+} //NAMESPACE

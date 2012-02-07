@@ -67,6 +67,9 @@ struct _UnityQuicklistMenuItemAccessiblePrivate
   guint on_parent_change_id;
 };
 
+using unity::QuicklistMenuItem;
+using unity::QuicklistMenuItemLabel;
+using unity::QuicklistMenuItemSeparator;
 
 static void
 unity_quicklist_menu_item_accessible_class_init(UnityQuicklistMenuItemAccessibleClass* klass)

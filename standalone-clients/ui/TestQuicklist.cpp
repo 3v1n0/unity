@@ -37,6 +37,8 @@
 #define WIN_WIDTH  400
 #define WIN_HEIGHT 400
 
+using namespace unity;
+
 class TestQuicklist: public NuxTestFramework
 {
 public:

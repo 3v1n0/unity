@@ -22,7 +22,8 @@
 #include "CairoTexture.h"
 #include "QuicklistMenuItemSeparator.h"
 
-using unity::texture_from_cairo_graphics;
+namespace unity
+{
 
 QuicklistMenuItemSeparator::QuicklistMenuItemSeparator(DbusmenuMenuitem* item,
                                                        NUX_FILE_LINE_DECL) :
@@ -174,4 +175,6 @@ int QuicklistMenuItemSeparator::CairoSurfaceWidth()
     return _normalTexture[0]->GetWidth();
 
   return 0;
+}
+
 }

@@ -26,7 +26,8 @@
 #include "CairoTexture.h"
 #include "QuicklistMenuItemLabel.h"
 
-using unity::texture_from_cairo_graphics;
+namespace unity
+{
 
 QuicklistMenuItemLabel::QuicklistMenuItemLabel(DbusmenuMenuitem* item,
                                                NUX_FILE_LINE_DECL) :
@@ -206,3 +207,5 @@ int QuicklistMenuItemLabel::CairoSurfaceWidth()
 
   return 0;
 }
+
+} // NAMESPACE

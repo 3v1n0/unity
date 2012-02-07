@@ -25,7 +25,8 @@
 #include "CairoTexture.h"
 #include "QuicklistMenuItemRadio.h"
 
-using unity::texture_from_cairo_graphics;
+namespace unity
+{
 
 static double
 _align(double val)
@@ -253,3 +254,4 @@ int QuicklistMenuItemRadio::CairoSurfaceWidth()
   return 0;
 }
 
+} // NAMESPACE
