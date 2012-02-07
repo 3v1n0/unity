@@ -50,10 +50,6 @@
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/Variant.h>
 
-#define DEFAULT_ICON "application-default-icon"
-#define MONO_TEST_ICON "gnome-home"
-#define UNITY_THEME_NAME "unity-icon-theme"
-
 namespace unity
 {
 namespace launcher
@@ -62,6 +58,9 @@ namespace launcher
 namespace
 {
 nux::logging::Logger logger("unity.launcher");
+const std::string DEFAULT_ICON = "application-default-icon";
+const std::string MONO_TEST_ICON = "gnome-home";
+const std::string UNITY_THEME_NAME = "unity-icon-theme";
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(LauncherIcon);
@@ -295,7 +294,7 @@ bool LauncherIcon::IsMonoDefaultTheme()
   default_theme = gtk_icon_theme_get_default();
 
   _current_theme_is_mono = (int)false;
-  info = gtk_icon_theme_lookup_icon(default_theme, MONO_TEST_ICON, size, (GtkIconLookupFlags)0);
+  info = gtk_icon_theme_lookup_icon(default_theme, MONO_TEST_ICON.c_str(), size, (GtkIconLookupFlags)0);
 
   if (!info)
     return (bool)_current_theme_is_mono;
@@ -317,7 +316,7 @@ GtkIconTheme* LauncherIcon::GetUnityTheme()
   {
     g_object_unref(_unity_theme);
     _unity_theme =  gtk_icon_theme_new();
-    gtk_icon_theme_set_custom_theme(_unity_theme, UNITY_THEME_NAME);
+    gtk_icon_theme_set_custom_theme(_unity_theme, UNITY_THEME_NAME.c_str());
   }
   return _unity_theme;
 }
@@ -331,7 +330,7 @@ nux::BaseTexture* LauncherIcon::TextureFromGtkTheme(const char* icon_name, int s
   {
     // This leaks, so log if we do this.
     LOG_WARN(logger) << "Leaking... no icon_name passed in.";
-    icon_name = g_strdup(DEFAULT_ICON);
+    icon_name = g_strdup(DEFAULT_ICON.c_str());
   }
 
   default_theme = gtk_icon_theme_get_default();
@@ -384,13 +383,13 @@ nux::BaseTexture* LauncherIcon::TextureFromSpecificGtkTheme(GtkIconTheme* theme,
 
   if (!info)
   {
-    info = gtk_icon_theme_lookup_icon(theme, DEFAULT_ICON, size, flags);
+    info = gtk_icon_theme_lookup_icon(theme, DEFAULT_ICON.c_str(), size, flags);
   }
 
   if (gtk_icon_info_get_filename(info) == NULL)
   {
     gtk_icon_info_free(info);
-    info = gtk_icon_theme_lookup_icon(theme, DEFAULT_ICON, size, flags);
+    info = gtk_icon_theme_lookup_icon(theme, DEFAULT_ICON.c_str(), size, flags);
   }
 
   glib::Error error;
@@ -418,7 +417,7 @@ nux::BaseTexture* LauncherIcon::TextureFromPath(const char* icon_name, int size,
   nux::BaseTexture* result;
 
   if (!icon_name)
-    return TextureFromGtkTheme(DEFAULT_ICON, size, update_glow_colors);
+    return TextureFromGtkTheme(DEFAULT_ICON.c_str(), size, update_glow_colors);
 
   glib::Error error;
   glib::Object<GdkPixbuf> pbuf(gdk_pixbuf_new_from_file_at_size(icon_name, size, size, &error));
@@ -435,7 +434,7 @@ nux::BaseTexture* LauncherIcon::TextureFromPath(const char* icon_name, int size,
     LOG_WARN(logger) << "Unable to load '" << icon_name
                      <<  "' icon: " << error;
 
-    result = TextureFromGtkTheme(DEFAULT_ICON, size, update_glow_colors);
+    result = TextureFromGtkTheme(DEFAULT_ICON.c_str(), size, update_glow_colors);
   }
 
   return result;
