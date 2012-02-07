@@ -97,6 +97,8 @@ public:
                             Alignment alignment = Alignment::CENTER,
                             bool zeromargin=false);
 
+  virtual bool ButtonFocusOverlay(cairo_t* cr);
+
   virtual bool StarEmpty(cairo_t* cr, nux::ButtonVisualState state);
 
   virtual bool StarHalf(cairo_t* cr, nux::ButtonVisualState state);
