@@ -331,23 +331,23 @@ void LensView::CheckNoResults(Lens::Hints const& hints)
 {
   gint count = lens_->results()->count();
 
-  if (count == 0 && !no_results_active_)
+  if (!count && !no_results_active_)
   {
-    gchar *markup;
+    std::string markup;
     Lens::Hints::const_iterator it;
+
     it = hints.find ("no-results-hint");
+    markup = "<span size='larger' weight='bold'>";
 
     if (it != hints.end())
     {
-      markup = g_strdup_printf (
-        "<span font_size='large'> %s </span>",
-        g_variant_get_string (it->second, NULL));
+      markup += g_variant_get_string (it->second, NULL);
     }
     else
     {
-      markup = g_strdup_printf (
-        "<span font_size='large'> Sorry, there is nothing that matches your search. </span>");
+      markup += "Sorry, there is nothing that matches your search.";
     }
+    markup += "</span>";
 
     LOG_DEBUG(logger) << "The no-result-hint is: " << markup;
 
