@@ -141,19 +141,22 @@ panel_service_class_dispose (GObject *object)
 
   gdk_window_remove_filter (NULL, (GdkFilterFunc)event_filter, object);
 
-  if (G_IS_OBJECT (priv->menubar))
+  if (GTK_IS_WIDGET (priv->menubar) &&
+      gtk_widget_get_realized (GTK_WIDGET (priv->menubar)))
     {
       g_object_unref (priv->menubar);
       priv->menubar = NULL;
     }
 
-  if (G_IS_OBJECT (priv->offscreen_window))
+  if (GTK_IS_WIDGET (priv->offscreen_window) &&
+      gtk_widget_get_realized (GTK_WIDGET (priv->offscreen_window)))
     {
       g_object_unref (priv->offscreen_window);
       priv->offscreen_window = NULL;
     }
 
-  if (G_IS_OBJECT (priv->last_menu))
+  if (GTK_IS_WIDGET (priv->last_menu) &&
+      gtk_widget_get_realized (GTK_WIDGET (priv->last_menu)))
     {
       g_object_unref (priv->last_menu);
       priv->last_menu = NULL;
