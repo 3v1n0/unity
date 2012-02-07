@@ -1982,12 +1982,19 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
     }
   }
 
-  if (window->id() == screen->activeWindow())
+  Window active_window = screen->activeWindow();
+  if (window->id() == active_window && window->type() != CompWindowTypeDesktopMask)
   {
     uScreen->paintPanelShadow(matrix);
   }
 
   bool ret = gWindow->glDraw(matrix, attrib, region, mask);
+
+  if (active_window == 0 || active_window == window->id() && window->type() == CompWindowTypeDesktopMask)
+  {
+    uScreen->paintPanelShadow(matrix);
+  }
+
 
   return ret;
 }
