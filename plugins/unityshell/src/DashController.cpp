@@ -123,13 +123,13 @@ void Controller::RegisterUBusInterests()
     gboolean can_maximise = FALSE;
     gint32 overlay_monitor = 0;
     g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING, &overlay_identity, &can_maximise, &overlay_monitor);
-    
+
     // hide if something else is coming up
     if (g_strcmp0(overlay_identity, "dash"))
     {
       HideDash(true);
     }
-  }); 
+  });
 }
 
 void Controller::EnsureDash()
@@ -208,7 +208,7 @@ void Controller::OnExternalShowDash(GVariant* variant)
 void Controller::OnExternalHideDash(GVariant* variant)
 {
   EnsureDash();
-  
+
   if (variant)
   {
     HideDash(g_variant_get_boolean(variant));
@@ -247,7 +247,7 @@ void Controller::ShowDash()
   window_->SetInputFocus();
   window_->CaptureMouseDownAnyWhereElse(true);
   window_->QueueDraw();
- 
+
   nux::GetWindowCompositor().SetKeyFocusArea(view_->default_focus());
 
   need_show_ = false;
@@ -263,7 +263,7 @@ void Controller::HideDash(bool restore)
 {
   if (!visible_)
    return;
- 
+
   EnsureDash();
 
   view_->AboutToHide();
@@ -276,7 +276,7 @@ void Controller::HideDash(bool restore)
     PluginAdapter::Default ()->restoreInputFocus ();
 
   StartShowHideTimeline();
-  
+
   GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "dash", TRUE, g_variant_new_int32(UScreen::GetDefault()->GetMonitorWithMouse()));
   ubus_manager_.SendMessage(UBUS_OVERLAY_HIDDEN, info);
 }
@@ -296,9 +296,9 @@ void Controller::StartShowHideTimeline()
 
 gboolean Controller::OnViewShowHideFrame(Controller* self)
 {
-#define _LENGTH_ 90000
+  const float LENGTH = 90000.0f;
   float diff = g_get_monotonic_time() - self->start_time_;
-  float progress = diff / (float)_LENGTH_;
+  float progress = diff / LENGTH;
   float last_opacity = self->last_opacity_;
 
   if (self->visible_)
@@ -310,7 +310,7 @@ gboolean Controller::OnViewShowHideFrame(Controller* self)
     self->window_->SetOpacity(last_opacity - (last_opacity * progress));
   }
 
-  if (diff > _LENGTH_)
+  if (diff > LENGTH)
   {
     self->timeline_id_ = 0;
 

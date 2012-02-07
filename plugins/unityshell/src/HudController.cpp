@@ -228,7 +228,7 @@ void Controller::ShowHud()
   window_->QueueDraw();
 
   view_->ResetToDefault();
- 
+
   view_->SetIcon("");
   hud_service_.RequestQuery("");
   need_show_ = false;
@@ -267,7 +267,7 @@ void Controller::HideHud(bool restore)
   //unhide the launcher
   GVariant* message_data = g_variant_new("(b)", FALSE);
   ubus.SendMessage(UBUS_LAUNCHER_LOCK_HIDE, message_data);
-  
+
   GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "hud", FALSE, 0);
   ubus.SendMessage(UBUS_OVERLAY_HIDDEN, info);
 }
@@ -287,9 +287,9 @@ void Controller::StartShowHideTimeline()
 
 gboolean Controller::OnViewShowHideFrame(Controller* self)
 {
-#define _LENGTH_ 90000
+  const float LENGTH = 90000.0f;
   float diff = g_get_monotonic_time() - self->start_time_;
-  float progress = diff / (float)_LENGTH_;
+  float progress = diff / LENGTH;
   float last_opacity = self->last_opacity_;
 
   if (self->visible_)
@@ -301,7 +301,7 @@ gboolean Controller::OnViewShowHideFrame(Controller* self)
     self->window_->SetOpacity(last_opacity - (last_opacity * progress));
   }
 
-  if (diff > _LENGTH_)
+  if (diff > LENGTH)
   {
     self->timeline_id_ = 0;
 
@@ -341,7 +341,7 @@ void Controller::OnQueryActivated(Query::Ptr query)
 {
   LOG_DEBUG(logger) << "Activating query, " << query->formatted_text;
   unsigned int timestamp = nux::GetWindowThread()->GetGraphicsDisplay().GetCurrentEvent().x11_timestamp;
-  hud_service_.ExecuteQuery(query, timestamp); 
+  hud_service_.ExecuteQuery(query, timestamp);
   HideHud();
 }
 
@@ -364,7 +364,7 @@ void Controller::OnQueriesFinished(Hud::Queries queries)
       break;
     }
   }
-  
+
   LOG_DEBUG(logger) << "setting icon to - " << icon_name;
   view_->SetIcon(icon_name);
 }
