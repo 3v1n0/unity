@@ -77,8 +77,8 @@ public:
                 bool             forceDraw);
 
   // public API
-  void SetText(NString text);
-  void SetTextColor(Color textColor);
+  void SetText(NString const& text);
+  void SetTextColor(Color const& textColor);
   void SetTextEllipsize(EllipsizeState state);
   void SetTextAlignment(AlignState state);
   void SetTextVerticalAlignment(AlignState state);
@@ -105,6 +105,8 @@ private:
   int            _cached_extent_width;
   int            _cached_extent_height;
   bool           _need_new_extent_cache;
+  int            _cached_base_width;
+  int            _cached_base_height;
 
   NString        _text;
   Color          _textColor;

@@ -26,7 +26,8 @@
 #include "CairoTexture.h"
 #include "QuicklistMenuItemCheckmark.h"
 
-using unity::texture_from_cairo_graphics;
+namespace unity
+{
 
 static double
 _align(double val)
@@ -140,7 +141,7 @@ QuicklistMenuItemCheckmark::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw
     texture = _prelightTexture[texture_idx]->GetDeviceTexture();
   }
 
-  _color = GetEnabled() ? nux::color::White : nux::Color(0.8f, 0.8f, 0.8f, 1.0f);
+  _color = GetEnabled() ? nux::color::White : nux::color::White * 0.35;
 
   gfxContext.QRP_1Tex(base.x,
                       base.y,
@@ -168,7 +169,6 @@ void QuicklistMenuItemCheckmark::PostDraw(nux::GraphicsEngine& gfxContext,
 void
 QuicklistMenuItemCheckmark::UpdateTexture()
 {
-  nux::Color transparent = nux::Color(0.0f, 0.0f, 0.0f, 0.0f);
   int        width       = GetBaseWidth();
   int        height      = GetBaseHeight();
 
@@ -184,7 +184,7 @@ QuicklistMenuItemCheckmark::UpdateTexture()
   cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 1.0f);
   cairo_set_line_width(cr, 1.0f);
 
-  DrawText(cr, width, height, nux::color::White);
+  DrawText(_cairoGraphics, width, height, nux::color::White);
 
   if (_normalTexture[0])
     _normalTexture[0]->UnReference();
@@ -221,7 +221,7 @@ QuicklistMenuItemCheckmark::UpdateTexture()
 
   cairo_restore(cr);
 
-  DrawText(cr, width, height, nux::color::White);
+  DrawText(_cairoGraphics, width, height, nux::color::White);
 
   if (_normalTexture[1])
     _normalTexture[1]->UnReference();
@@ -232,23 +232,8 @@ QuicklistMenuItemCheckmark::UpdateTexture()
   cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
   cairo_paint(cr);
 
-  cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
-  cairo_scale(cr, 1.0f, 1.0f);
-  cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 1.0f);
-  cairo_set_line_width(cr, 1.0f);
-
-  _cairoGraphics->DrawRoundedRectangle(cr,
-                                       1.0f,
-                                       0.5f,
-                                       0.5f,
-                                       ITEM_CORNER_RADIUS_ABS,
-                                       width - 1.0f,
-                                       height - 1.0f);
-  cairo_fill(cr);
-
-  cairo_set_source_rgba(cr, 0.0f, 0.0f, 0.0f, 0.0f);
-
-  DrawText(cr, width, height, transparent);
+  DrawPrelight(_cairoGraphics, width, height, nux::color::White);
+  DrawText(_cairoGraphics, width, height, nux::color::White * 0.0f);
 
   if (_prelightTexture[0])
     _prelightTexture[0]->UnReference();
@@ -259,19 +244,7 @@ QuicklistMenuItemCheckmark::UpdateTexture()
   cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
   cairo_paint(cr);
 
-  cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
-  cairo_scale(cr, 1.0f, 1.0f);
-  cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 1.0f);
-  cairo_set_line_width(cr, 1.0f);
-
-  _cairoGraphics->DrawRoundedRectangle(cr,
-                                       1.0f,
-                                       0.5f,
-                                       0.5f,
-                                       ITEM_CORNER_RADIUS_ABS,
-                                       width - 1.0f,
-                                       height - 1.0f);
-  cairo_fill(cr);
+  DrawPrelight(_cairoGraphics, width, height, nux::color::White);
 
   cairo_set_source_rgba(cr, 0.0f, 0.0f, 0.0f, 0.0f);
 
@@ -295,7 +268,7 @@ QuicklistMenuItemCheckmark::UpdateTexture()
 
   cairo_restore(cr);
 
-  DrawText(cr, width, height, transparent);
+  DrawText(_cairoGraphics, width, height, nux::color::White * 0.0f);
 
   if (_prelightTexture[1])
     _prelightTexture[1]->UnReference();
@@ -303,6 +276,7 @@ QuicklistMenuItemCheckmark::UpdateTexture()
   _prelightTexture[1] = texture_from_cairo_graphics(*_cairoGraphics);
 
   // finally clean up
+  cairo_destroy(cr);
   delete _cairoGraphics;
 }
 
@@ -312,4 +286,6 @@ int QuicklistMenuItemCheckmark::CairoSurfaceWidth()
     return _normalTexture[0]->GetWidth();
 
   return 0;
+}
+
 }

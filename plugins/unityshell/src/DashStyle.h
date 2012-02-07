@@ -104,6 +104,8 @@ public:
                           
   virtual nux::AbstractPaintLayer* FocusOverlay(int width, int height);
 
+  virtual bool ButtonFocusOverlay(cairo_t* cr);
+
   virtual bool StarEmpty(cairo_t* cr, nux::ButtonVisualState state);
 
   virtual bool StarHalf(cairo_t* cr, nux::ButtonVisualState state);

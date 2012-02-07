@@ -197,6 +197,7 @@ add_dependencies (switcher unity-core-${UNITY_API_VERSION})
 
 add_executable (launcher
                 TestLauncher.cpp
+                ${UNITY_SRC}/CairoBaseWindow.cpp
                 ${UNITY_SRC}/AbstractLauncherIcon.h
                 ${UNITY_SRC}/AbstractIconRenderer.h
                 ${UNITY_SRC}/LauncherIcon.cpp
@@ -298,22 +299,15 @@ add_executable (quicklist
                 nux_test_framework.h
                 nux_automated_test_framework.cpp
                 nux_automated_test_framework.h
+                ${UNITY_SRC}/CairoBaseWindow.cpp
                 ${UNITY_SRC}/Introspectable.cpp
-                ${UNITY_SRC}/Introspectable.h
                 ${UNITY_SRC}/QuicklistMenuItem.cpp
-                ${UNITY_SRC}/QuicklistMenuItem.h
                 ${UNITY_SRC}/QuicklistMenuItemCheckmark.cpp
-                ${UNITY_SRC}/QuicklistMenuItemCheckmark.h
                 ${UNITY_SRC}/QuicklistMenuItemLabel.cpp
-                ${UNITY_SRC}/QuicklistMenuItemLabel.h
                 ${UNITY_SRC}/QuicklistMenuItemRadio.cpp
-                ${UNITY_SRC}/QuicklistMenuItemRadio.h
                 ${UNITY_SRC}/QuicklistMenuItemSeparator.cpp
-                ${UNITY_SRC}/QuicklistMenuItemSeparator.h
                 ${UNITY_SRC}/QuicklistView.cpp
-                ${UNITY_SRC}/QuicklistView.h
                 ${UNITY_SRC}/ubus-server.cpp
-                ${UNITY_SRC}/ubus-server.h
                 )
 add_dependencies(quicklist unity-core-${UNITY_API_VERSION})
 
@@ -321,22 +315,15 @@ add_executable (quicklist-visuals
                 ui/TestQuicklistVisuals.cpp
                 ui/EventFaker.cpp
                 ui/EventFaker.h
+                ${UNITY_SRC}/CairoBaseWindow.cpp
                 ${UNITY_SRC}/Introspectable.cpp
-                ${UNITY_SRC}/Introspectable.h
                 ${UNITY_SRC}/QuicklistMenuItem.cpp
-                ${UNITY_SRC}/QuicklistMenuItem.h
                 ${UNITY_SRC}/QuicklistMenuItemCheckmark.cpp
-                ${UNITY_SRC}/QuicklistMenuItemCheckmark.h
                 ${UNITY_SRC}/QuicklistMenuItemLabel.cpp
-                ${UNITY_SRC}/QuicklistMenuItemLabel.h
                 ${UNITY_SRC}/QuicklistMenuItemRadio.cpp
-                ${UNITY_SRC}/QuicklistMenuItemRadio.h
                 ${UNITY_SRC}/QuicklistMenuItemSeparator.cpp
-                ${UNITY_SRC}/QuicklistMenuItemSeparator.h
                 ${UNITY_SRC}/QuicklistView.cpp
-                ${UNITY_SRC}/QuicklistView.h
                 ${UNITY_SRC}/ubus-server.cpp
-                ${UNITY_SRC}/ubus-server.h
                 )
 add_dependencies(quicklist-visuals unity-core-${UNITY_API_VERSION})
 
@@ -524,7 +511,17 @@ add_executable (test-shortcut
                 ${UNITY_SRC}/UBusMessages.h
                 ${UNITY_SRC}/ubus-server.cpp
                 ${UNITY_SRC}/ubus-server.h
-                )            
+                )
+
+add_executable (tooltip
+                ui/TestTooltip.cpp
+                ${UNITY_SRC}/Introspectable.cpp
+                ${UNITY_SRC}/CairoBaseWindow.cpp
+                ${UNITY_SRC}/StaticCairoText.cpp
+                ${UNITY_SRC}/Tooltip.cpp
+                ${UNITY_SRC}/ubus-server.cpp
+                )
+add_dependencies(quicklist unity-core-${UNITY_API_VERSION})
 
 find_package (OpenGL)
 include_directories (${OPENGL_gl_INCDIRS})
@@ -541,7 +538,7 @@ target_link_libraries (screen-effect-fbo glfuncloader ${OPENGL_gl_LIBRARY})
 add_dependencies (screen-effect-fbo ${UNITY_API_VERSION})
 
 # Custom target to make all the other targets here, add your test to this list
-add_custom_target(standalone-clients DEPENDS dash panel launcher switcher keyutil quicklist quicklist-visuals filters filter-bar preview-applicaiton preview-generic preview-music result-view dash-style bg-hash shortcut-view)
+add_custom_target(standalone-clients DEPENDS dash panel launcher switcher keyutil quicklist quicklist-visuals filters filter-bar preview-applicaiton preview-generic preview-music result-view dash-style bg-hash shortcut-view tooltip)
 
 
 

@@ -50,8 +50,6 @@
 
 #define START_DRAGICON_DURATION 250
 
-class QuicklistView;
-
 namespace unity
 {
 namespace launcher
