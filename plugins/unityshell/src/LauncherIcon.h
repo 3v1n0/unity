@@ -271,8 +271,6 @@ protected:
 
   DbusmenuClient* _menuclient_dynamic_quicklist;
 
-  friend class LauncherModel;
-
 private:
   typedef struct
   {
