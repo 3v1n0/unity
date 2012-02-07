@@ -236,11 +236,13 @@ PanelIndicatorsView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_dra
   GfxContext.PopClippingRectangle();
 }
 
-PanelIndicatorEntryView *
-PanelIndicatorsView::AddEntry(indicator::Entry::Ptr const& entry, int padding,
-                              IndicatorEntryPosition pos, IndicatorEntryType type)
+void
+PanelIndicatorsView::AddEntryView(PanelIndicatorEntryView* view,
+                                  IndicatorEntryPosition pos)
 {
-  auto view = new PanelIndicatorEntryView(entry, padding, type);
+  if (!view)
+    return;
+
   int entry_pos = pos;
 
   view->SetOpacity(opacity_);
@@ -250,7 +252,7 @@ PanelIndicatorsView::AddEntry(indicator::Entry::Ptr const& entry, int padding,
   {
     entry_pos = nux::NUX_LAYOUT_BEGIN;
 
-    if (entry->priority() > -1)
+    if (view->GetEntryPriority() > -1)
     {
       for (auto area : layout_->GetChildren())
       {
@@ -258,7 +260,7 @@ PanelIndicatorsView::AddEntry(indicator::Entry::Ptr const& entry, int padding,
 
         if (en)
         {
-          if (en && entry->priority() <= en->GetEntryPriority())
+          if (en && view->GetEntryPriority() <= en->GetEntryPriority())
             break;
 
           entry_pos++;
@@ -269,13 +271,21 @@ PanelIndicatorsView::AddEntry(indicator::Entry::Ptr const& entry, int padding,
 
   layout_->AddView(view, 0, nux::eCenter, nux::eFull, 1.0, (nux::LayoutPosition) entry_pos);
   layout_->SetContentDistribution(nux::eStackRight);
-  entries_[entry->id()] = view;
+  entries_[view->GetEntryID()] = view;
 
   AddChild(view);
   QueueRelayout();
   QueueDraw();
 
   on_indicator_updated.emit(view);
+}
+
+PanelIndicatorEntryView *
+PanelIndicatorsView::AddEntry(indicator::Entry::Ptr const& entry, int padding,
+                              IndicatorEntryPosition pos, IndicatorEntryType type)
+{
+  auto view = new PanelIndicatorEntryView(entry, padding, type);
+  AddEntryView(view, pos);
 
   return view;
 }
@@ -296,19 +306,24 @@ PanelIndicatorsView::OnEntryRefreshed(PanelIndicatorEntryView* view)
 }
 
 void
+PanelIndicatorsView::RemoveEntryView(PanelIndicatorEntryView* view)
+{
+  if (!view)
+    return;
+
+  std::string const& entry_id = view->GetEntryID();
+  layout_->RemoveChildObject(view);
+  entries_.erase(entry_id);
+  on_indicator_updated.emit(view);
+
+  QueueRelayout();
+  QueueDraw();
+}
+
+void
 PanelIndicatorsView::RemoveEntry(std::string const& entry_id)
 {
-  PanelIndicatorEntryView* view = entries_[entry_id];
-
-  if (view)
-  {
-    layout_->RemoveChildObject(view);
-    entries_.erase(entry_id);
-    on_indicator_updated.emit(view);
-
-    QueueRelayout();
-    QueueDraw();
-  }
+  RemoveEntryView(entries_[entry_id]);
 }
 
 void

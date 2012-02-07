@@ -32,6 +32,8 @@
 namespace unity
 {
 
+using namespace indicator;
+
 class PanelIndicatorsView : public nux::View, public unity::debug::Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE(PanelIndicatorsView, nux::View);
@@ -39,8 +41,8 @@ public:
   PanelIndicatorsView();
   ~PanelIndicatorsView();
 
-  void AddIndicator(indicator::Indicator::Ptr const& indicator);
-  void RemoveIndicator(indicator::Indicator::Ptr const& indicator);
+  void AddIndicator(Indicator::Ptr const& indicator);
+  void RemoveIndicator(Indicator::Ptr const& indicator);
 
   enum IndicatorEntryPosition {
     AUTO = -1,
@@ -50,7 +52,7 @@ public:
 
   typedef PanelIndicatorEntryView::IndicatorEntryType IndicatorEntryType;
 
-  PanelIndicatorEntryView* AddEntry(indicator::Entry::Ptr const& entry,
+  PanelIndicatorEntryView* AddEntry(Entry::Ptr const& entry,
                                     int padding = 5,
                                     IndicatorEntryPosition pos = AUTO,
                                     IndicatorEntryType type = IndicatorEntryType::INDICATOR);
@@ -59,7 +61,7 @@ public:
   PanelIndicatorEntryView* ActivateEntryAt(int x, int y);
   PanelIndicatorEntryView* ActivateEntry(std::string const& entry_id);
   bool ActivateIfSensitive();
-  void GetGeometryForSync(indicator::EntryLocationMap& locations);
+  void GetGeometryForSync(EntryLocationMap& locations);
 
   void DashShown();
   void DashHidden();
@@ -77,15 +79,19 @@ public:
   virtual void QueueDraw();
 
 protected:
-  typedef std::vector<indicator::Indicator::Ptr> Indicators;
+  typedef std::vector<Indicator::Ptr> Indicators;
   Indicators GetIndicators();
 
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
 
-  virtual void OnEntryAdded(indicator::Entry::Ptr const& entry);
+  virtual void OnEntryAdded(Entry::Ptr const& entry);
   virtual void OnEntryRefreshed(PanelIndicatorEntryView* view);
   virtual void OnEntryRemoved(std::string const& entry_id);
+
+  virtual void AddEntryView(PanelIndicatorEntryView* view,
+                            IndicatorEntryPosition pos = AUTO);
+  virtual void RemoveEntryView(PanelIndicatorEntryView* view);
 
   nux::HLayout* layout_;
   typedef std::map<std::string, PanelIndicatorEntryView*> Entries;
@@ -95,7 +101,7 @@ private:
   Indicators indicators_;
   double opacity_;
 
-  std::map<indicator::Indicator::Ptr, std::vector<sigc::connection>> indicators_connections_;
+  std::map<Indicator::Ptr, std::vector<sigc::connection>> indicators_connections_;
 };
 
 }
