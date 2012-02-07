@@ -110,13 +110,12 @@ QuicklistMenuItemCheckmark::PostLayoutManagement(long layoutResult)
 }
 
 void
-QuicklistMenuItemCheckmark::Draw(nux::GraphicsEngine& gfxContext,
-                                 bool                 forceDraw)
+QuicklistMenuItemCheckmark::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
 {
   nux::ObjectPtr<nux::IOpenGLBaseTexture> texture;
 
   // Check if the texture have been computed. If they haven't, exit the function.
-  if (!_normalTexture[0])
+  if (!_normalTexture[0] || !_prelightTexture[0])
     return;
 
   nux::Geometry base = GetGeometry();
@@ -130,41 +129,18 @@ QuicklistMenuItemCheckmark::Draw(nux::GraphicsEngine& gfxContext,
   gfxContext.GetRenderStates().SetBlend(true);
   gfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
 
-  if (GetEnabled())
+  unsigned int texture_idx = GetActive() ? 1 : 0;
+
+  if (!_prelight || !GetEnabled())
   {
-    if (GetActive() && _prelight)
-    {
-      texture = _prelightTexture[0]->GetDeviceTexture();
-    }
-    else if (GetActive())
-    {
-      texture = _normalTexture[0]->GetDeviceTexture();
-    }
-
-    if ((!GetActive()) && _prelight)
-    {
-      texture = _prelightTexture[1]->GetDeviceTexture();
-    }
-    else if (!GetActive())
-    {
-      texture = _normalTexture[1]->GetDeviceTexture();
-    }
-
-    _color = nux::color::White;
+    texture = _normalTexture[texture_idx]->GetDeviceTexture();
   }
   else
   {
-    if (GetActive())
-    {
-      texture = _prelightTexture[0]->GetDeviceTexture();
-    }
-    else
-    {
-      texture = _normalTexture[0]->GetDeviceTexture();
-    }
-
-    _color = nux::Color(0.8f, 0.8f, 0.8f, 1.0f);
+    texture = _prelightTexture[texture_idx]->GetDeviceTexture();
   }
+
+  _color = GetEnabled() ? nux::color::White : nux::Color(0.8f, 0.8f, 0.8f, 1.0f);
 
   gfxContext.QRP_1Tex(base.x,
                       base.y,
