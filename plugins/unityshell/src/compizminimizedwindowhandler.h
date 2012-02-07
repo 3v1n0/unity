@@ -168,7 +168,7 @@ compiz::CompizMinimizedWindowHandler<Screen, Window>::minimize ()
     {
       Window *w = Window::get (win);
       if (!w->mMinimizeHandler)
-	w->mMinimizeHandler = std::unique_ptr <Type> (new Type (win));
+        w->mMinimizeHandle.reset (new Type (win));
       w->mMinimizeHandler->minimize ();
     }
   }
@@ -251,7 +251,7 @@ compiz::CompizMinimizedWindowHandler<Screen, Window>::unminimize ()
       if (w && w->mMinimizeHandler)
       {
         w->mMinimizeHandler->unminimize ();
-	w->mMinimizeHandler.release ();
+        w->mMinimizeHandler.release ();
       }
     }
   }
