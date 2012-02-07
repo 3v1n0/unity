@@ -37,6 +37,7 @@ namespace
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(CairoBaseWindow);
+
 CairoBaseWindow::CairoBaseWindow() :
   _use_blurred_background(false),
   _compute_blur_bkg(false)

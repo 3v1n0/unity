@@ -99,6 +99,8 @@ if (GTEST_FOUND AND
 
 # The service that provides DBus services to test against
   add_executable(test-gtest-service
+                 test_service_hud.c
+                 test_service_hud.h
                  test_service_lens.c
                  test_service_lens.h
                  test_service_main.c
@@ -127,6 +129,7 @@ if (GTEST_FOUND AND
                  test_introspection.cpp
                  test_main_xless.cpp
                  test_grabhandle.cpp
+                 test_unityshell_private.cpp
                  ${UNITY_SRC}/AbstractLauncherIcon.h
                  ${UNITY_SRC}/AbstractShortcutHint.h
                  ${UNITY_SRC}/Animator.cpp
@@ -139,6 +142,8 @@ if (GTEST_FOUND AND
                  ${UNITY_SRC}/FavoriteStore.h
                  ${UNITY_SRC}/FavoriteStoreGSettings.cpp
                  ${UNITY_SRC}/FavoriteStoreGSettings.h
+                 ${UNITY_SRC}/IconTextureSource.h
+                 ${UNITY_SRC}/IconTextureSource.cpp
                  ${UNITY_SRC}/LauncherModel.cpp
                  ${UNITY_SRC}/LauncherModel.h
                  ${UNITY_SRC}/FavoriteStorePrivate.cpp
@@ -157,6 +162,8 @@ if (GTEST_FOUND AND
                  ${UNITY_SRC}/TextureCache.h
                  ${UNITY_SRC}/Timer.cpp
                  ${UNITY_SRC}/Timer.h
+                 ${UNITY_SRC}/UnityshellPrivate.cpp
+                 ${UNITY_SRC}/UnityshellPrivate.h
                  ${UNITY_SRC}/WindowManager.cpp
                  ${UNITY_SRC}/WindowManager.h
                  ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle.cpp
@@ -181,7 +188,8 @@ if (GTEST_FOUND AND
                  test_utils.h
                  test_ratings_filter.cpp
                  test_results.cpp
-                 )
+                 test_hud.cpp
+                )
   target_link_libraries(test-gtest-dbus ${GTEST_BOTH_LIBRARIES})
   add_test(UnityGTestDBus test-gtest-dbus)
   add_dependencies(test-gtest-dbus unity-core-${UNITY_API_VERSION} test-gtest-service)

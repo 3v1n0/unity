@@ -17,8 +17,8 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#ifndef DASH_SEARCH_BAR_H
-#define DASH_SEARCH_BAR_H
+#ifndef SEARCH_BAR_H
+#define SEARCH_BAR_H
 
 #include <gtk/gtk.h>
 
@@ -32,15 +32,13 @@
 #include <Nux/TextEntry.h>
 #include <UnityCore/GLibSignal.h>
 
-#include "DashSearchBarSpinner.h"
+#include "SearchBarSpinner.h"
 #include "IconTexture.h"
 #include "IMTextEntry.h"
 #include "Introspectable.h"
 #include "StaticCairoText.h"
 
 namespace unity
-{
-namespace dash
 {
 
 using namespace unity::glib;
@@ -49,7 +47,10 @@ class SearchBar : public unity::debug::Introspectable, public nux::View
 {
   NUX_DECLARE_OBJECT_TYPE(SearchBar, nux::View);
 public:
+  typedef nux::ObjectPtr<SearchBar> Ptr;
   SearchBar(NUX_FILE_LINE_PROTO);
+  SearchBar(int search_width, bool show_filter_hint, NUX_FILE_LINE_PROTO);
+  SearchBar(int search_width, NUX_FILE_LINE_PROTO);
   ~SearchBar();
 
   void SearchFinished();
@@ -59,6 +60,7 @@ public:
   nux::Property<std::string> search_hint;
   nux::Property<bool> showing_filters;
   nux::Property<bool> can_refine_search;
+  nux::Property<bool> disable_glow;
   nux::ROProperty<bool> im_active;
 
   sigc::signal<void> activated;
@@ -66,6 +68,8 @@ public:
   sigc::signal<void, std::string const&> live_search_reached;
 
 private:
+
+  void Init();
 
   void OnFontChanged(GtkSettings* settings, GParamSpec* pspec=NULL);
   void OnSearchHintChanged();
@@ -76,7 +80,7 @@ private:
   void OnMouseButtonDown(int x, int y, unsigned long button_flags, unsigned long key_flags);
   void OnEndKeyFocus();
 
-  void UpdateBackground();
+  void UpdateBackground(bool force);
   void OnSearchChanged(nux::TextEntry* text_entry);
   void OnClearClicked(int x, int y, unsigned long button_flags, unsigned long key_flags);
   void OnEntryActivated();
@@ -85,6 +89,7 @@ private:
   std::string get_search_string() const;
   bool set_search_string(std::string const& string);
   bool get_im_active() const;
+  bool show_filter_hint_;
 
   static gboolean OnLiveSearchTimeout(SearchBar* self);
   static gboolean OnSpinnerStartCb(SearchBar* self);
@@ -110,7 +115,6 @@ private:
   IconTexture* expand_icon_;
   int search_bar_width_;
 
-
   int last_width_;
   int last_height_;
   
@@ -120,7 +124,6 @@ private:
   SearchBarSpinner* spinner_;
 };
 
-}
 }
 
 #endif

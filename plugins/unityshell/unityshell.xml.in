@@ -40,9 +40,14 @@
             </requirement>
         </deps>
         <options>
-	          <group>
+            <group>
                 <_short>Behaviour</_short>
-	         <option name="launcher_hide_mode" type="int">
+                <option name="show_hud" type="key">
+                    <_short>Key to show the HUD</_short>
+                    <_long>Make the HUD appear with this key</_long>
+                    <default>&lt;Alt&gt;</default>
+                  </option>
+	              <option name="launcher_hide_mode" type="int">
                     <_short>Hide Launcher</_short>
                     <_long>Make the launcher hide automatically after some time of inactivity: always or just when the focussed window is not over the launcher</_long>
                     <min>0</min>
@@ -64,16 +69,16 @@
                         <value>3</value>
                         <_name>Dodge Active Window</_name>
                     </desc>
-	              </option>
-	              <option name="show_launcher" type="key">
+                </option>
+                <option name="show_launcher" type="key">
                     <_short>Key to show the launcher</_short>
                     <_long>Make the launcher appear with that key</_long>
                     <default>&lt;Super&gt;</default>
                   </option>
                   <option name="keyboard_focus" type="key">
-            		    <_short>Key to put keyboard-focus on launcher</_short>
-            		    <_long>Set the keyboard-focus on the launcher so it can be navigated with the cursor-keys</_long>
-            		    <default>&lt;Alt&gt;F1</default>
+                    <_short>Key to put keyboard-focus on launcher</_short>
+                    <_long>Set the keyboard-focus on the launcher so it can be navigated with the cursor-keys</_long>
+                    <default>&lt;Alt&gt;F1</default>
                   </option>
                   <option name="execute_command" type="key">
                         <_short>Key to execute a command</_short>
@@ -118,37 +123,37 @@
                       <_long>fixme</_long>
                       <default>&lt;Alt&gt;&lt;Shift&gt;Tab</default>
                 </option>
-		<option name="alt_tab_right" type="key">
-		    <_short>Go right in the switcher</_short>
-		    <_long>fixme</_long>
-		    <default>&lt;Alt&gt;Right</default>
-		    <passive_grab>false</passive_grab>
-		    <internal/>
-		</option>
-		<option name="alt_tab_left" type="key">
-		    <_short>Go left in the switcher</_short>
-		    <_long>fixme</_long>
-		    <default>&lt;Alt&gt;Left</default>
-		    <passive_grab>false</passive_grab>
-		    <internal/>
-		</option>
+    <option name="alt_tab_right" type="key">
+        <_short>Go right in the switcher</_short>
+        <_long>fixme</_long>
+        <default>&lt;Alt&gt;Right</default>
+        <passive_grab>false</passive_grab>
+        <internal/>
+    </option>
+    <option name="alt_tab_left" type="key">
+        <_short>Go left in the switcher</_short>
+        <_long>fixme</_long>
+        <default>&lt;Alt&gt;Left</default>
+        <passive_grab>false</passive_grab>
+        <internal/>
+    </option>
                 <option name="alt_tab_detail_start" type="key">
-		    <_short>Key to expose the windows in the switcher</_short>
-		    <_long>fixme</_long>
-		    <default>&lt;Alt&gt;Down</default>
-		    <passive_grab>false</passive_grab>
-		    <internal/>
+        <_short>Key to expose the windows in the switcher</_short>
+        <_long>fixme</_long>
+        <default>&lt;Alt&gt;Down</default>
+        <passive_grab>false</passive_grab>
+        <internal/>
                 </option>
-		<option name="alt_tab_detail_stop" type="key">
-		    <_short>Key to collapse windows in the switcher</_short>
-		    <_long>fixme</_long>
-		    <default>&lt;Alt&gt;Up</default>
-		    <passive_grab>false</passive_grab>
-		    <internal/>
-		</option>
+    <option name="alt_tab_detail_stop" type="key">
+        <_short>Key to collapse windows in the switcher</_short>
+        <_long>fixme</_long>
+        <default>&lt;Alt&gt;Up</default>
+        <passive_grab>false</passive_grab>
+        <internal/>
+    </option>
         <option name="alt_tab_next_window" type="key">
-		    <_short>Key to flip through windows in the switcher</_short>
-		    <_long>fixme</_long>
+        <_short>Key to flip through windows in the switcher</_short>
+        <_long>fixme</_long>
             <passive_grab>false</passive_grab>
         </option>
         <option name="alt_tab_prev_window" type="key">
@@ -156,11 +161,11 @@
             <_long>fixme</_long>
             <passive_grab>false</passive_grab>
         </option>
-		<option name="show_minimized_windows" type="bool">
-		    <_short>Show minimized windows in switcher</_short>
-		    <_long>Hack to enable minimized windows in switcher. Disable and report bugs if problems are caused</_long>
-		    <default>true</default>
-		</option>
+    <option name="show_minimized_windows" type="bool">
+        <_short>Show minimized windows in switcher</_short>
+        <_long>Hack to enable minimized windows in switcher. Disable and report bugs if problems are caused</_long>
+        <default>true</default>
+    </option>
               </group>
               <group>
                 <_short>Experimental</_short>
@@ -359,7 +364,7 @@
                     <max>100</max>
                     <default>75</default>
                 </option>
-                
+
                 <option name="devices_option" type="int">
                     <_short>Show Devices</_short>
                     <_long>Show devices in the launcher</_long>
