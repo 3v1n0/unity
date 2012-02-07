@@ -142,6 +142,24 @@ BuilderWrapper& BuilderWrapper::add(char const* name, int value)
   return *this;
 }
 
+BuilderWrapper& BuilderWrapper::add(char const* name, long int value)
+{
+  g_variant_builder_add(builder_, "{sv}", name, g_variant_new_int64(value));
+  return *this;
+}
+
+BuilderWrapper& BuilderWrapper::add(char const* name, unsigned int value)
+{
+  g_variant_builder_add(builder_, "{sv}", name, g_variant_new_uint32(value));
+  return *this;
+}
+
+BuilderWrapper& BuilderWrapper::add(char const* name, long unsigned int value)
+{
+  g_variant_builder_add(builder_, "{sv}", name, g_variant_new_uint64(value));
+  return *this;
+}
+
 BuilderWrapper& BuilderWrapper::add(char const* name, float value)
 {
   // floats get promoted to doubles automatically
