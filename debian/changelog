@@ -1,4 +1,4 @@
-unity (5.2.0-0ubuntu2) UNRELEASED; urgency=low
+unity (5.2.0-0ubuntu2) precise; urgency=low
 
   * Cherry-pick upstream:
     - a fix for a 5.0 crasher (LP: #916228)
@@ -9,7 +9,7 @@ unity (5.2.0-0ubuntu2) UNRELEASED; urgency=low
     - switcher per workspace is now the default on upgrade
     - launcher is always locked by default, even on upgrade (LP: #928153)
 
- -- Didier Roche <didrocks@ubuntu.com>  Mon, 06 Feb 2012 10:02:00 +0100
+ -- Didier Roche <didrocks@ubuntu.com>  Tue, 07 Feb 2012 17:53:27 +0100
 
 unity (5.2.0-0ubuntu1) precise; urgency=low
 
