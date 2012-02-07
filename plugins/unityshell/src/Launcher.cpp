@@ -92,7 +92,6 @@ const std::string S_DBUS_PATH = "/com/canonical/Unity/Launcher";
 }
 
 
-
 // FIXME: key-code defines for Up/Down/Left/Right of numeric keypad - needs to
 // be moved to the correct place in NuxGraphics-headers
 #define NUX_KP_DOWN  0xFF99

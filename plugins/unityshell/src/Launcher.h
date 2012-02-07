@@ -42,10 +42,6 @@
 #include "UBusWrapper.h"
 
 
-
-
-
-
 namespace unity
 {
 namespace launcher
