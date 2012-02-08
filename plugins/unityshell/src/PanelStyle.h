@@ -49,6 +49,13 @@ enum class WindowState
   UNFOCUSED_PRESSED
 };
 
+enum class PanelItem
+{
+  INDICATOR,
+  MENU,
+  TITLE
+};
+
 class Style
 {
 public:
@@ -60,10 +67,11 @@ public:
   GtkStyleContext* GetStyleContext();
 
   nux::NBitmapData* GetBackground(int width, int height, float opacity);
-
   nux::BaseTexture* GetWindowButton(WindowButtonType type, WindowState state);
-
   GdkPixbuf* GetHomeButton();
+
+  std::string GetFontDescription(PanelItem item);
+  int GetTextDPI();
 
   sigc::signal<void> changed;
 
@@ -77,6 +85,7 @@ private:
   glib::Signal<void, GtkSettings*, GParamSpec*> _style_changed_signal;
   glib::Signal<void, GtkSettings*, GParamSpec*> _font_changed_signal;
   glib::Signal<void, GtkSettings*, GParamSpec*> _dpi_changed_signal;
+  guint _gconf_notify_id;
   std::string _theme_name;
   nux::Color _text_color;
 };

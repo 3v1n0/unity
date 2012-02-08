@@ -21,6 +21,7 @@
 
 #include <math.h>
 #include <gtk/gtk.h>
+#include <gconf/gconf-client.h>
 
 #include <Nux/Nux.h>
 #include <NuxGraphics/GraphicsEngine.h>
@@ -41,6 +42,8 @@ namespace
 Style* style_instance = nullptr;
 
 nux::logging::Logger logger("unity.panel.style");
+
+const std::string PANEL_TITLE_FONT_KEY("/apps/metacity/general/titlebar_font");
 
 nux::Color ColorFromGdkRGBA(GdkRGBA const& color)
 {
@@ -91,6 +94,14 @@ Style::Style() :
     changed.emit();
   });
 
+  GConfClient* client = gconf_client_get_default();
+  _gconf_notify_id = gconf_client_notify_add(client, PANEL_TITLE_FONT_KEY.c_str(),
+    [] (GConfClient*,guint,GConfEntry*, gpointer data)
+    {
+      auto self = static_cast<Style*>(data);
+      self->changed.emit();
+    }, this, nullptr, nullptr);
+
   Refresh();
 }
 
@@ -98,6 +109,9 @@ Style::~Style()
 {
   if (style_instance == this)
     style_instance = nullptr;
+
+  if (_gconf_notify_id)
+    gconf_client_notify_remove (gconf_client_get_default(), _gconf_notify_id);
 }
 
 Style& Style::Instance()
@@ -294,6 +308,36 @@ GdkPixbuf* Style::GetHomeButton()
                                       (GtkIconLookupFlags)0,
                                       NULL);
   return pixbuf;
+}
+
+std::string Style::GetFontDescription(PanelItem item)
+{
+  switch (item)
+  {
+    case PanelItem::INDICATOR:
+    case PanelItem::MENU:
+    {
+      glib::String font_name;
+      g_object_get(gtk_settings_get_default(), "gtk-font-name", &font_name, nullptr);
+      return font_name.Str();
+    }
+    case PanelItem::TITLE:
+    {
+      GConfClient* client = gconf_client_get_default();
+      glib::String font_name(gconf_client_get_string(client, PANEL_TITLE_FONT_KEY.c_str(), nullptr));
+      return font_name.Str();
+    }
+  }
+
+  return "";
+}
+
+int Style::GetTextDPI()
+{
+  int dpi = 0;
+  g_object_get(gtk_settings_get_default(), "gtk-xft-dpi", &dpi, nullptr);
+
+  return dpi;
 }
 
 } // namespace panel
