@@ -49,7 +49,6 @@ public:
   nux::BaseWindow* window() const;
 
   nux::Property<int> launcher_width;
-  nux::Property<int> panel_height;
 
   void ShowHideHud();
   void ShowHud();

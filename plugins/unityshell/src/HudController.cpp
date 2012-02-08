@@ -21,6 +21,7 @@
 #include <NuxCore/Logger.h>
 #include <Nux/HLayout.h>
 #include "PluginAdapter.h"
+#include "PanelStyle.h"
 #include "UBusMessages.h"
 #include "UScreen.h"
 namespace unity
@@ -35,7 +36,6 @@ nux::logging::Logger logger("unity.hud.controller");
 
 Controller::Controller()
   : launcher_width(66)
-  , panel_height(24)
   , hud_service_("com.canonical.hud", "/com/canonical/hud")
   , window_(0)
   , visible_(false)
@@ -153,10 +153,11 @@ nux::Geometry Controller::GetIdealWindowGeometry()
 
    // We want to cover as much of the screen as possible to grab any mouse events outside
    // of our window
+   panel::Style &panel_style = panel::Style::Instance();
    return nux::Geometry (monitor_geo.x,
-                         monitor_geo.y + panel_height,
+                         monitor_geo.y + panel_style.panel_height,
                          monitor_geo.width,
-                         monitor_geo.height - panel_height);
+                         monitor_geo.height - panel_style.panel_height);
 }
 
 void Controller::Relayout(GdkScreen*screen)
