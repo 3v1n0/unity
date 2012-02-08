@@ -119,7 +119,7 @@ bool SimpleLauncherIcon::SetIconName(std::string& target, std::string const& val
 
   target = value;
   ReloadIcon();
-  
+
   return true;
 }
 
@@ -140,6 +140,11 @@ void SimpleLauncherIcon::OnIconThemeChanged(GtkIconTheme* icon_theme, gpointer d
   // invalidate the current cache
   self->_current_theme_is_mono = -1;
   self->ReloadIcon();
+}
+
+std::string SimpleLauncherIcon::GetName() const
+{
+  return "SimpleLauncherIcon";
 }
 
 } // namespace launcher

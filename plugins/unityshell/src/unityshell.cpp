@@ -1990,7 +1990,7 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
 
   bool ret = gWindow->glDraw(matrix, attrib, region, mask);
 
-  if (active_window == 0 || active_window == window->id() && window->type() == CompWindowTypeDesktopMask)
+  if ((active_window == 0 || active_window == window->id()) && (window->type() == CompWindowTypeDesktopMask))
   {
     uScreen->paintPanelShadow(matrix);
   }
@@ -2602,8 +2602,8 @@ void UnityScreen::InitHints()
   // Workspaces
   std::string const workspaces = _("Workspaces");
   hints_.push_back(new shortcut::Hint(workspaces, "", "", _("Spread workspaces."), shortcut::COMPIZ_KEY_OPTION, "expo", "expo_key"));
-  hints_.push_back(new shortcut::Hint(workspaces, "", "", _("Switch workspaces."), shortcut::HARDCODED_OPTION, _("Super + Cursor Keys")));
-  hints_.push_back(new shortcut::Hint(workspaces, "", " or Right", _("Move focused window to different workspace."), shortcut::HARDCODED_OPTION, _("Super + Alt + Cursor Keys")));
+  hints_.push_back(new shortcut::Hint(workspaces, "", "", _("Switch workspaces."), shortcut::HARDCODED_OPTION, _("Control + Alt + Cursor Keys")));
+  hints_.push_back(new shortcut::Hint(workspaces, "", "", _("Move focused window to different workspace."), shortcut::HARDCODED_OPTION, _("Control + Alt + Shift + Cursor Keys")));
 
   // Windows
   std::string const windows = _("Windows");

@@ -78,11 +78,11 @@ class LauncherTests(AutopilotTestCase):
 
         self.server.switcher_enter_quicklist()
         sleep(.5)
-        self.assertThat(self.server.quicklist_open(0), Equals(True))
+        self.assertThat(self.server.is_quicklist_open(0), Equals(True))
         self.server.switcher_exit_quicklist()
         sleep(.5)
 
-        self.assertThat(self.server.quicklist_open(0), Equals(False))
+        self.assertThat(self.server.is_quicklist_open(0), Equals(False))
         self.assertThat(self.server.key_nav_is_active(), Equals(True))
         self.assertThat(self.server.key_nav_is_grabbed(), Equals(True))
 

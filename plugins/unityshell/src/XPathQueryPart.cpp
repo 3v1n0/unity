@@ -77,6 +77,7 @@ bool XPathQueryPart::Matches(Introspectable* node) const
   {
     GVariantBuilder  child_builder;
     g_variant_builder_init(&child_builder, G_VARIANT_TYPE("a{sv}"));
+    g_variant_builder_add(&child_builder, "{sv}", "id", g_variant_new_uint64(node->GetIntrospectionId()));
     node->AddProperties(&child_builder);
     GVariant* prop_dict = g_variant_builder_end(&child_builder);
     GVariant *prop_value = g_variant_lookup_value(prop_dict, param_name_.c_str(), NULL);

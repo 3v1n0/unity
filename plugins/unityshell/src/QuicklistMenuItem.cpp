@@ -490,7 +490,8 @@ void QuicklistMenuItem::AddProperties(GVariantBuilder* builder)
   .add("height", GetBaseHeight())
   .add("enabled", GetEnabled())
   .add("active", GetActive())
-  .add("visible", GetVisible());
+  .add("visible", GetVisible())
+  .add("lit", _prelight);
 }
 
 } //NAMESPACE

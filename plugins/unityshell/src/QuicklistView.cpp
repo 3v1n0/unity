@@ -43,13 +43,6 @@
 #include "ubus-server.h"
 #include "UBusMessages.h"
 
-// FIXME: key-code defines for Up/Down/Left/Right of numeric keypad - needs to
-// be moved to the correct place in NuxGraphics-headers
-#define NUX_KP_DOWN  0xFF99
-#define NUX_KP_UP    0xFF97
-#define NUX_KP_LEFT  0xFF96
-#define NUX_KP_RIGHT 0xFF98
-
 namespace unity
 {
 namespace
@@ -1429,6 +1422,16 @@ QuicklistMenuItem*
 QuicklistView::GetSelectedMenuItem()
 {
   return GetNthItems(_current_item_index);
+}
+
+debug::Introspectable::IntrospectableList const& QuicklistView::GetIntrospectableChildren()
+{
+  _introspectable_children.clear();
+  for (auto item: _item_list)
+  {
+    _introspectable_children.push_back(item);
+  }
+  return _introspectable_children;
 }
 
 } // NAMESPACE

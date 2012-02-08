@@ -61,5 +61,10 @@ DesktopLauncherIcon::ActivateLauncherIcon(ActionArg arg)
   WindowManager::Default()->ShowDesktop();
 }
 
+std::string DesktopLauncherIcon::GetName() const
+{
+  return "DesktopLauncherIcon";
+}
+
 } // namespace launcher
 } // namespace unity
