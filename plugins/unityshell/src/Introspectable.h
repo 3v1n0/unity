@@ -30,23 +30,23 @@ namespace debug
 {
 class Introspectable
 {
-typedef std::list<Introspectable*> IntrospectableList;
-
 public:
+  typedef std::list<Introspectable*> IntrospectableList;
+  
   Introspectable();
   virtual ~Introspectable();
   GVariant* Introspect();
   virtual std::string GetName() const = 0;
   void AddChild(Introspectable* child);
   void RemoveChild(Introspectable* child);
-  IntrospectableList const& GetIntrospectableChildren() { return _children; };
   virtual void AddProperties(GVariantBuilder* builder) = 0;
+  virtual IntrospectableList const& GetIntrospectableChildren();
+  guint64 GetIntrospectionId() const;
 
 protected:
   /// Please don't override this unless you really need to. The only valid reason
   /// is if you have a property that simply *must* be called 'Children'.
   virtual std::string GetChildsName() const;
-
 
   /*
    * AddProperties should be implemented as such ...
@@ -61,6 +61,7 @@ protected:
 private:
   std::list<Introspectable*> _children;
   std::list<Introspectable*> _parents;
+  guint64 _id;
 };
 }
 }

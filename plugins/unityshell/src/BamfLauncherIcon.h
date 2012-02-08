@@ -83,6 +83,7 @@ protected:
   std::string BamfName() const;
 
   bool HandlesSpread() { return true; }
+  std::string GetName() const;
 
 private:
   void EnsureWindowState();

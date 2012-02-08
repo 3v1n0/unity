@@ -70,6 +70,7 @@ public:
   // Introspection
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
+  IntrospectableList const& GetIntrospectableChildren();
 
   void EnableQuicklistForTesting(bool enable_testing);
 
@@ -167,6 +168,9 @@ private:
 
   // used by keyboard/a11y-navigation
   int _current_item_index;
+
+  // list of introspectable children, used to return children in the correct order:
+  IntrospectableList _introspectable_children;
 };
 
 } // NAMESPACE

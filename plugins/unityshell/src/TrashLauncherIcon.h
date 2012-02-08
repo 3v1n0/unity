@@ -47,6 +47,7 @@ protected:
 
   nux::DndAction OnQueryAcceptDrop(unity::DndData& dnd_data);
   void OnAcceptDrop(unity::DndData& dnd_data);
+  std::string GetName() const;
 
 private:
   gulong on_trash_changed_handler_id_;

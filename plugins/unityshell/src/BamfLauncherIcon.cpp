@@ -455,6 +455,7 @@ void BamfLauncherIcon::AddProperties(GVariantBuilder* builder)
   }
   g_list_free(children);
   g_variant_builder_add(builder, "{sv}", "xids", g_variant_new_array(G_VARIANT_TYPE_UINT32, xids, i));
+  g_variant_builder_add(builder, "{sv}", "sticky", g_variant_new_boolean(IsSticky()));
 }
 
 bool BamfLauncherIcon::OwnsWindow(Window xid) const
@@ -1221,6 +1222,11 @@ void BamfLauncherIcon::FillSupportedTypes()
     g_key_file_free(key_file);
     g_strfreev(mimes);
   }
+}
+
+std::string BamfLauncherIcon::GetName() const
+{
+  return "BamfLauncherIcon";
 }
 
 } // namespace launcher

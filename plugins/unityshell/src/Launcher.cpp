@@ -1798,8 +1798,6 @@ void Launcher::OnIconAdded(AbstractLauncherIcon* icon)
   EnsureAnimation();
 
   icon->needs_redraw.connect(sigc::mem_fun(this, &Launcher::OnIconNeedsRedraw));
-
-  AddChild(icon);
 }
 
 void Launcher::OnIconRemoved(AbstractLauncherIcon* icon)
@@ -1815,7 +1813,6 @@ void Launcher::OnIconRemoved(AbstractLauncherIcon* icon)
     _drag_icon = nullptr;
 
   EnsureAnimation();
-  RemoveChild(icon);
 }
 
 void Launcher::OnOrderChanged()
