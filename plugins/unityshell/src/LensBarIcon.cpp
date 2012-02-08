@@ -39,12 +39,10 @@ LensBarIcon::LensBarIcon(std::string id_, std::string icon_hint)
   SetMaximumHeight(24);
   SetOpacity(inactive_opacity_);
 
+  SetAcceptKeyNavFocus(true);
   SetAcceptKeyNavFocusOnMouseDown(false);
 
   active.changed.connect(sigc::mem_fun(this, &LensBarIcon::OnActiveChanged));
-  mouse_enter.connect([&]
-(int, int, unsigned long, unsigned long) { QueueDraw(); });
-  mouse_leave.connect([&](int, int, unsigned long, unsigned long) { QueueDraw(); });
 }
 
 LensBarIcon::~LensBarIcon()
@@ -52,7 +50,7 @@ LensBarIcon::~LensBarIcon()
 
 void LensBarIcon::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
 {
-  nux::Geometry geo = GetGeometry();
+  nux::Geometry const& geo = GetGeometry();
 
   gfx_context.PushClippingRectangle(geo);
 
@@ -64,7 +62,7 @@ void LensBarIcon::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
     return;
   }
 
-  float opacity = active || IsMouseInside() ? 1.0f : inactive_opacity_;
+  float opacity = active ? 1.0f : inactive_opacity_;
   int width = 0, height = 0;
   GetTextureSize(&width, &height);
 
@@ -74,12 +72,12 @@ void LensBarIcon::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
   texxform.SetWrap(nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
 
   gfx_context.QRP_1Tex(geo.x + ((geo.width - width) / 2),
-                      geo.y + ((geo.height - height) / 2),
-                      width,
-                      height,
-                      texture()->GetDeviceTexture(),
-                      texxform,
-                      col);
+                       geo.y + ((geo.height - height) / 2),
+                       width,
+                       height,
+                       texture()->GetDeviceTexture(),
+                       texxform,
+                       col);
 
   gfx_context.PopClippingRectangle();
 }

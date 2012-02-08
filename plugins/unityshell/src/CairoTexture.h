@@ -23,6 +23,7 @@
 #ifndef UNITY_CAIROTEXTURE_H
 #define UNITY_CAIROTEXTURE_H
 
+#include <Nux/Nux.h>
 #include <NuxImage/CairoGraphics.h>
 #include <NuxGraphics/NuxGraphics.h>
 #include <NuxGraphics/GLTextureResourceManager.h>

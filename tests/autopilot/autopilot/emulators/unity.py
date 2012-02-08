@@ -551,6 +551,14 @@ class Dash(Unity):
         """
         return unicode(self.get_state("//DashController/DashView/LensBar")[0]['active-lens'])
 
+    def get_focused_lens_icon(self):
+        """Returns the id of the current focused icon."""
+        return unicode(self.get_state("//DashController/DashView/LensBar")[0]['focused-lens-icon'])
+
+    def get_num_rows(self):
+        """Returns the number of displayed rows in the dash."""
+        return self.get_state("//DashController/DashView")[0]['num-rows']
+
     def reveal_application_lens(self):
         """Reveal the application lense."""
         self._keyboard.press('Super')
@@ -572,3 +580,13 @@ class Dash(Unity):
     def reveal_command_lens(self):
         """Reveal the 'run command' lens."""
         self._keyboard.press_and_release('Alt+F2')
+
+    def get_focused_category(self):
+        """Returns the current focused category. """
+        groups = self.get_state("//PlacesGroup[header-has-keyfocus=True]")
+
+        if len(groups) >= 1:
+          return groups[0]
+        else:
+          return None
+        

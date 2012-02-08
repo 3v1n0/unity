@@ -50,8 +50,12 @@
 #define NUX_KP_LEFT  0xFF96
 #define NUX_KP_RIGHT 0xFF98
 
-using unity::texture_from_cairo_graphics;
-using unity::debug::Introspectable;
+namespace unity
+{
+namespace
+{
+  const int ANCHOR_WIDTH = 10.0f;
+}
 
 NUX_IMPLEMENT_OBJECT_TYPE(QuicklistView);
 
@@ -62,9 +66,6 @@ QuicklistView::QuicklistView()
   , _top_size(4)
   , _mouse_down(false)
   , _enable_quicklist_for_testing(false)
-  , _texture_bg(nullptr)
-  , _texture_mask(nullptr)
-  , _texture_outline(nullptr)
   , _anchor_width(10)
   , _anchor_height(18)
   , _corner_radius(4)
@@ -74,10 +75,12 @@ QuicklistView::QuicklistView()
   , _bottom_padding_correction_single_item(-4)
   , _offset_correction(-1)
   , _cairo_text_has_changed(true)
-  , _compute_blur_bkg(true)
   , _current_item_index(0)
 {
   SetGeometry(nux::Geometry(0, 0, 1, 1));
+
+  _use_blurred_background = true;
+  _compute_blur_bkg = true;
 
   _left_space = new nux::SpaceLayout(_padding +
                                      _anchor_width +
@@ -107,6 +110,7 @@ QuicklistView::QuicklistView()
   _default_item_layout = new nux::VLayout(TEXT(""), NUX_TRACKER_LOCATION);
   _vlayout->AddLayout(_default_item_layout, 0);
   _vlayout->AddLayout(_bottom_space, 0);
+  _vlayout->SetMinimumWidth(140);
 
   _hlayout = new nux::HLayout(TEXT(""), NUX_TRACKER_LOCATION);
   _hlayout->AddLayout(_left_space, 0);
@@ -273,23 +277,18 @@ QuicklistView::RecvKeyPressed(unsigned long    eventType,
 
 QuicklistView::~QuicklistView()
 {
-  if (_texture_bg)
-    _texture_bg->UnReference();
-
-  if (_texture_outline)
-    _texture_outline->UnReference();
-
-  if (_texture_mask)
-    _texture_mask->UnReference();
-
   std::list<QuicklistMenuItem*>::iterator it;
   for (it = _item_list.begin(); it != _item_list.end(); it++)
   {
+    // Remove from introspection
+    RemoveChild(*it);
     (*it)->UnReference();
   }
 
   for (it = _default_item_list.begin(); it != _default_item_list.end(); it++)
   {
+    // Remove from introspection
+    RemoveChild(*it);
     (*it)->UnReference();
   }
 
@@ -343,7 +342,7 @@ void QuicklistView::ShowQuicklistWithTipAt(int anchor_tip_x, int anchor_tip_y)
 
 void QuicklistView::ShowWindow(bool b, bool start_modal)
 {
-  BaseWindow::ShowWindow(b, start_modal);
+  unity::CairoBaseWindow::ShowWindow(b, start_modal);
 }
 
 void QuicklistView::Show()
@@ -377,100 +376,13 @@ void QuicklistView::Hide()
 
 void QuicklistView::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
 {
-  // Get the geometry of the QuicklistView on the display
-  nux::Geometry base = GetGeometry();
+  CairoBaseWindow::Draw(gfxContext, forceDraw);
 
-  // Get the background of the QuicklistView and apply some
-  if (_compute_blur_bkg /* Refresh the blurred background*/)
-  {
-    nux::ObjectPtr<nux::IOpenGLFrameBufferObject> current_fbo = nux::GetGraphicsDisplay()->GetGpuDevice()->GetCurrentFrameBufferObject();
-    nux::GetGraphicsDisplay()->GetGpuDevice()->DeactivateFrameBuffer();
+  nux::Geometry base(GetGeometry());
+  base.x = 0;
+  base.y = 0;
 
-    gfxContext.SetViewport(0, 0, gfxContext.GetWindowWidth(), gfxContext.GetWindowHeight());
-    gfxContext.SetScissor(0, 0, gfxContext.GetWindowWidth(), gfxContext.GetWindowHeight());
-    gfxContext.GetRenderStates().EnableScissor(false);
-
-    nux::ObjectPtr <nux::IOpenGLBaseTexture> bkg_texture = gfxContext.CreateTextureFromBackBuffer(base.x, base.y, base.width, base.height);
-
-    nux::TexCoordXForm texxform_bkg;
-    bkg_blur_texture = gfxContext.QRP_GetBlurTexture(0, 0, base.width, base.height, bkg_texture, texxform_bkg, nux::color::White, 1.0f, 3);
-
-    if (current_fbo.IsValid())
-    {
-      current_fbo->Activate(true);
-      gfxContext.Push2DWindow(current_fbo->GetWidth(), current_fbo->GetHeight());
-    }
-    else
-    {
-      gfxContext.SetViewport(0, 0, gfxContext.GetWindowWidth(), gfxContext.GetWindowHeight());
-      gfxContext.Push2DWindow(gfxContext.GetWindowWidth(), gfxContext.GetWindowHeight());
-      gfxContext.ApplyClippingRectangle();
-    }
-    _compute_blur_bkg = false;
-  }
-
-  // the elements position inside the window are referenced to top-left window
-  // corner. So bring base to (0, 0).
-  base.SetX(0);
-  base.SetY(0);
   gfxContext.PushClippingRectangle(base);
-
-  nux::TexCoordXForm texxform_blur_bkg;
-  //texxform_blur_bkg.SetWrap(nux::TEXWRAP_CLAMP, nux::TEXWRAP_CLAMP);
-  //texxform_blur_bkg.SetTexCoordType (nux::TexCoordXForm::OFFSET_COORD);
-
-  nux::TexCoordXForm texxform_bg;
-  texxform_bg.SetWrap(nux::TEXWRAP_CLAMP, nux::TEXWRAP_CLAMP);
-  texxform_bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-
-  nux::TexCoordXForm texxform_mask;
-  texxform_mask.SetWrap(nux::TEXWRAP_CLAMP, nux::TEXWRAP_CLAMP);
-  texxform_mask.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-
-  if (bkg_blur_texture.IsValid())
-  {
-    gfxContext.QRP_2TexMod(
-      base.x,
-      base.y,
-      base.width,
-      base.height,
-      bkg_blur_texture,
-      texxform_blur_bkg,
-      nux::color::White,
-      _texture_mask->GetDeviceTexture(),
-      texxform_mask,
-      nux::color::White);
-  }
-
-  nux::GetWindowThread()->GetGraphicsEngine().GetRenderStates().SetBlend(true);
-  nux::GetWindowThread()->GetGraphicsEngine().GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
-  gfxContext.QRP_2TexMod(base.x,
-                         base.y,
-                         base.width,
-                         base.height,
-                         _texture_bg->GetDeviceTexture(),
-                         texxform_bg,
-                         nux::Color(1.0f, 1.0f, 1.0f, 1.0f),
-                         _texture_mask->GetDeviceTexture(),
-                         texxform_mask,
-                         nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
-
-
-  nux::TexCoordXForm texxform;
-  texxform.SetWrap(nux::TEXWRAP_CLAMP, nux::TEXWRAP_CLAMP);
-  texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-
-  nux::GetWindowThread()->GetGraphicsEngine().GetRenderStates().SetBlend(true);
-  nux::GetWindowThread()->GetGraphicsEngine().GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
-  gfxContext.QRP_1Tex(base.x,
-                      base.y,
-                      base.width,
-                      base.height,
-                      _texture_outline->GetDeviceTexture(),
-                      texxform,
-                      nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
-
-  nux::GetWindowThread()->GetGraphicsEngine().GetRenderStates().SetBlend(false);
 
   std::list<QuicklistMenuItem*>::iterator it;
   for (it = _item_list.begin(); it != _item_list.end(); it++)
@@ -489,9 +401,7 @@ void QuicklistView::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
 }
 
 void QuicklistView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
-{
-
-}
+{}
 
 void QuicklistView::PreLayoutManagement()
 {
@@ -809,11 +719,15 @@ void QuicklistView::RemoveAllMenuItem()
   std::list<QuicklistMenuItem*>::iterator it;
   for (it = _item_list.begin(); it != _item_list.end(); it++)
   {
+    // Remove from introspection
+    RemoveChild(*it);
     (*it)->UnReference();
   }
 
   for (it = _default_item_list.begin(); it != _default_item_list.end(); it++)
   {
+    // Remove from introspection
+    RemoveChild(*it);
     (*it)->UnReference();
   }
 
@@ -841,6 +755,8 @@ void QuicklistView::AddMenuItem(QuicklistMenuItem* item)
 
   _item_list.push_back(item);
   item->Reference();
+  // Add to introspection
+  AddChild(item);
 
   _cairo_text_has_changed = true;
   nux::GetWindowThread()->QueueObjectLayout(this);
@@ -1274,9 +1190,8 @@ ql_compute_full_outline_shadow(
                             padding_size);
 
   ql_draw(cr, TRUE, line_width, rgba_shadow, FALSE, FALSE);
-  nux::CairoGraphics* dummy = new nux::CairoGraphics(CAIRO_FORMAT_A1, 1, 1);
-  dummy->BlurSurface(blur_coeff, surf);
-  delete dummy;
+  nux::CairoGraphics dummy(CAIRO_FORMAT_A1, 1, 1);
+  dummy.BlurSurface(blur_coeff, surf);
   ql_compute_mask(cr);
   ql_compute_outline(cr, line_width, rgba_line, width);
 }
@@ -1315,13 +1230,15 @@ void QuicklistView::UpdateTexture()
     return;
 
   int size_above_anchor = -1; // equal to size below
+  int width = GetBaseWidth();
+  int height = GetBaseHeight();
 
   if (!_enable_quicklist_for_testing)
   {
     if (!_item_list.empty() || !_default_item_list.empty())
     {
       int offscreen_size = GetBaseY() +
-                           GetBaseHeight() -
+                           height -
                            nux::GetWindowThread()->GetGraphicsDisplay().GetWindowHeight();
 
       if (offscreen_size > 0)
@@ -1350,29 +1267,29 @@ void QuicklistView::UpdateTexture()
 
   float blur_coef         = 6.0f;
 
-  nux::CairoGraphics* cairo_bg       = new nux::CairoGraphics(CAIRO_FORMAT_ARGB32, GetBaseWidth(), GetBaseHeight());
-  nux::CairoGraphics* cairo_mask     = new nux::CairoGraphics(CAIRO_FORMAT_ARGB32, GetBaseWidth(), GetBaseHeight());
-  nux::CairoGraphics* cairo_outline  = new nux::CairoGraphics(CAIRO_FORMAT_ARGB32, GetBaseWidth(), GetBaseHeight());
+  nux::CairoGraphics cairo_bg(CAIRO_FORMAT_ARGB32, width, height);
+  nux::CairoGraphics cairo_mask(CAIRO_FORMAT_ARGB32, width, height);
+  nux::CairoGraphics cairo_outline(CAIRO_FORMAT_ARGB32, width, height);
 
-  cairo_t* cr_bg      = cairo_bg->GetContext();
-  cairo_t* cr_mask    = cairo_mask->GetContext();
-  cairo_t* cr_outline = cairo_outline->GetContext();
+  cairo_t* cr_bg      = cairo_bg.GetContext();
+  cairo_t* cr_mask    = cairo_mask.GetContext();
+  cairo_t* cr_outline = cairo_outline.GetContext();
 
   float   tint_color[4]    = {0.0f, 0.0f, 0.0f, 0.60f};
-  float   hl_color[4]      = {1.0f, 1.0f, 1.0f, 0.65f};
-  float   dot_color[4]     = {1.0f, 1.0f, 1.0f, 0.10f};
+  float   hl_color[4]      = {1.0f, 1.0f, 1.0f, 0.35f};
+  float   dot_color[4]     = {1.0f, 1.0f, 1.0f, 0.03f};
   float   shadow_color[4]  = {0.0f, 0.0f, 0.0f, 1.00f};
-  float   outline_color[4] = {1.0f, 1.0f, 1.0f, 0.65f};
+  float   outline_color[4] = {1.0f, 1.0f, 1.0f, 0.40f};
   float   mask_color[4]    = {1.0f, 1.0f, 1.0f, 1.00f};
 //   float   anchor_width      = 10;
 //   float   anchor_height     = 18;
 
   ql_tint_dot_hl(cr_bg,
-                 GetBaseWidth(),
-                 GetBaseHeight(),
-                 GetBaseWidth() / 2.0f,
+                 width,
+                 height,
+                 width / 2.0f,
                  0,
-                 nux::Max<float>(GetBaseWidth() / 1.3f, GetBaseHeight() / 1.3f),
+                 nux::Max<float>(width / 1.6f, height / 1.6f),
                  tint_color,
                  hl_color,
                  dot_color);
@@ -1380,9 +1297,9 @@ void QuicklistView::UpdateTexture()
   ql_compute_full_outline_shadow
   (
     cr_outline,
-    cairo_outline->GetSurface(),
-    GetBaseWidth(),
-    GetBaseHeight(),
+    cairo_outline.GetSurface(),
+    width,
+    height,
     _anchor_width,
     _anchor_height,
     size_above_anchor,
@@ -1395,9 +1312,9 @@ void QuicklistView::UpdateTexture()
 
   ql_compute_full_mask(
     cr_mask,
-    cairo_mask->GetSurface(),
-    GetBaseWidth(),
-    GetBaseHeight(),
+    cairo_mask.GetSurface(),
+    width,
+    height,
     _corner_radius,  // radius,
     16,             // shadow_radius,
     _anchor_width,   // anchor_width,
@@ -1413,21 +1330,10 @@ void QuicklistView::UpdateTexture()
   cairo_destroy(cr_outline);
   cairo_destroy(cr_mask);
 
-  if (_texture_bg)
-    _texture_bg->UnReference();
-  _texture_bg = texture_from_cairo_graphics(*cairo_bg);
+  texture_bg_ = texture_from_cairo_graphics(cairo_bg);
+  texture_mask_ = texture_from_cairo_graphics(cairo_mask);
+  texture_outline_ = texture_from_cairo_graphics(cairo_outline);
 
-  if (_texture_mask)
-    _texture_mask->UnReference();
-  _texture_mask = texture_from_cairo_graphics(*cairo_mask);
-
-  if (_texture_outline)
-    _texture_outline->UnReference();
-  _texture_outline = texture_from_cairo_graphics(*cairo_outline);
-
-  delete cairo_bg;
-  delete cairo_mask;
-  delete cairo_outline;
   _cairo_text_has_changed = false;
 
   // Request a redraw, so this area will be added to Compiz list of dirty areas.
@@ -1525,8 +1431,7 @@ QuicklistView::GetSelectedMenuItem()
   return GetNthItems(_current_item_index);
 }
 
-
-Introspectable::IntrospectableList const& QuicklistView::GetIntrospectableChildren()
+debug::Introspectable::IntrospectableList const& QuicklistView::GetIntrospectableChildren()
 {
   _introspectable_children.clear();
   for (auto item: _item_list)
@@ -1535,3 +1440,5 @@ Introspectable::IntrospectableList const& QuicklistView::GetIntrospectableChildr
   }
   return _introspectable_children;
 }
+
+} // NAMESPACE

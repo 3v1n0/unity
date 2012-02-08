@@ -33,10 +33,12 @@
 #include <NuxCore/Color.h>
 #include <NuxCore/Logger.h>
 #include <NuxImage/CairoGraphics.h>
+#include <Nux/PaintLayer.h>
 
 #include <UnityCore/GLibSignal.h>
 #include <UnityCore/GLibWrapper.h>
 
+#include "CairoTexture.h"
 #include "JSONParser.h"
 #include "config.h"
 
@@ -1392,7 +1394,7 @@ void Style::Impl::Text(cairo_t*    cr,
   case Alignment::LEFT:
     pango_alignment = PANGO_ALIGN_LEFT;
     break;
-  
+
   case Alignment::CENTER:
     pango_alignment = PANGO_ALIGN_CENTER;
     break;
@@ -1435,7 +1437,7 @@ void Style::Impl::Text(cairo_t*    cr,
   pango_layout_get_extents(layout, &ink, &log);
   x = horizMargin; // let pango alignment handle the x position
   y = ((double) h - pango_units_to_double(log.height)) / 2.0;
-  
+
   cairo_move_to(cr, x, y);
   pango_cairo_show_layout(cr, layout);
 
@@ -1538,7 +1540,7 @@ void Style::Impl::DrawOverlay(cairo_t*  cr,
   cairo_set_operator(cr, old);
 }
 
-bool Style::Button(cairo_t* cr, nux::ButtonVisualState state, 
+bool Style::Button(cairo_t* cr, nux::ButtonVisualState state,
                    std::string const& label, int font_size,
                    Alignment alignment, bool zeromargin)
 {
@@ -1552,7 +1554,7 @@ bool Style::Button(cairo_t* cr, nux::ButtonVisualState state,
   unsigned int garnish = 0;
   if (zeromargin == false)
    garnish = GetButtonGarnishSize();
-  
+
   //ButtonOutlinePath(cr, true);
   double w = cairo_image_surface_get_width(cairo_get_target(cr));
   double h = cairo_image_surface_get_height(cairo_get_target(cr));
@@ -1600,9 +1602,40 @@ bool Style::Button(cairo_t* cr, nux::ButtonVisualState state,
   return true;
 }
 
-bool Style::SquareButton(cairo_t* cr, nux::ButtonVisualState state, 
+nux::AbstractPaintLayer* Style::FocusOverlay(int width, int height)
+{
+  nux::CairoGraphics cg(CAIRO_FORMAT_ARGB32, width, height);
+  cairo_t* cr = cg.GetInternalContext();
+
+  RoundedRect(cr,
+              1.0f,
+              0.0f,
+              0.0f,
+              2.0f, // radius
+              width,
+              height);
+
+  cairo_set_source_rgba(cr, nux::Color(1.0f, 1.0f, 1.0f, 0.2f));
+  cairo_fill(cr);
+
+  // Create the texture layer
+  nux::TexCoordXForm texxform;
+
+  nux::ROPConfig rop;
+  rop.Blend = true;
+  rop.SrcBlend = GL_ONE;
+  rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+
+  return (new nux::TextureLayer(texture_ptr_from_cairo_graphics(cg)->GetDeviceTexture(),
+                                texxform,
+                                nux::color::White,
+                                false,
+                                rop));
+}
+
+bool Style::SquareButton(cairo_t* cr, nux::ButtonVisualState state,
                          std::string const& label, bool curve_bottom,
-                         int font_size, Alignment alignment, 
+                         int font_size, Alignment alignment,
                          bool zeromargin)
 {
   // sanity checks
@@ -1615,7 +1648,7 @@ bool Style::SquareButton(cairo_t* cr, nux::ButtonVisualState state,
   unsigned int garnish = 0;
   if (zeromargin == false)
     garnish = GetButtonGarnishSize();
-  
+
   double w = cairo_image_surface_get_width(cairo_get_target(cr));
   double h = cairo_image_surface_get_height(cairo_get_target(cr));
 
@@ -1627,7 +1660,7 @@ bool Style::SquareButton(cairo_t* cr, nux::ButtonVisualState state,
 
   bool odd = true;
   double radius = 7.0;
-  
+
   // draw the grid background
   {
     cairo_set_line_width(cr, 1);
@@ -1656,7 +1689,7 @@ bool Style::SquareButton(cairo_t* cr, nux::ButtonVisualState state,
                 radius,
                 90.0f * G_PI / 180.0f,
                 180.0f * G_PI / 180.0f);
- 
+
       // line to top
       cairo_line_to(cr, _align(x, odd), _align(y, odd));
     }
@@ -1669,12 +1702,12 @@ bool Style::SquareButton(cairo_t* cr, nux::ButtonVisualState state,
 
     cairo_set_source_rgba(cr, pimpl->button_label_border_color_[nux::ButtonVisualState::VISUAL_STATE_NORMAL]);
     cairo_stroke(cr);
-  } 
+  }
 
   cairo_set_line_width(cr, pimpl->button_label_border_size_[state]);
   odd = cairo_get_line_width(cr) == 2.0 ? false : true;
 
-  
+
   if (pimpl->button_label_border_size_[state] == 2.0)
   {
     x += 1;
@@ -1706,7 +1739,7 @@ bool Style::SquareButton(cairo_t* cr, nux::ButtonVisualState state,
                      pimpl->button_label_blur_size_[state] * 0.75);
 
   // FIXME - magic value of 42 here for the offset in the HUD,
-  // replace with a nicer style system that lets hud override 
+  // replace with a nicer style system that lets hud override
   // default values when it needs to
   pimpl->Text(cr,
               pimpl->button_label_text_color_[state],
@@ -1716,7 +1749,40 @@ bool Style::SquareButton(cairo_t* cr, nux::ButtonVisualState state,
               alignment);
 
   cairo_surface_write_to_png(cairo_get_target(cr), "/tmp/wut.png");
+
+  return true;
+}
+
+bool Style::ButtonFocusOverlay(cairo_t* cr)
+{
+  // sanity checks
+  if (cairo_status(cr) != CAIRO_STATUS_SUCCESS)
+    return false;
+
+  if (cairo_surface_get_type(cairo_get_target(cr)) != CAIRO_SURFACE_TYPE_IMAGE)
+    return false;
+
+  unsigned int garnish = GetButtonGarnishSize();
   
+  double w = cairo_image_surface_get_width(cairo_get_target(cr));
+  double h = cairo_image_surface_get_height(cairo_get_target(cr));
+
+  nux::Color color(nux::color::White);
+  color.alpha = 0.50f;
+  cairo_set_line_width(cr, pimpl->button_label_border_size_[nux::VISUAL_STATE_NORMAL]);
+
+  RoundedRect(cr,
+              1.0,
+              (double) (garnish),
+              (double) (garnish),
+              7.0,
+              w - (double) (2 * garnish),
+              h - (double) (2 * garnish));
+  
+  cairo_set_source_rgba(cr, color);
+  cairo_fill_preserve(cr);
+  cairo_stroke(cr);
+
   return true;
 }
 
@@ -1870,6 +1936,53 @@ bool Style::MultiRangeSegment(cairo_t*    cr,
               pimpl->button_label_text_color_[state],
               label,
               1.0);
+
+  return true;
+}
+
+bool Style::MultiRangeFocusOverlay(cairo_t* cr,
+                                   Arrow arrow,
+                                   Segment segment)
+{
+  // sanity checks
+  if (cairo_status(cr) != CAIRO_STATUS_SUCCESS)
+    return false;
+
+  if (cairo_surface_get_type(cairo_get_target(cr)) != CAIRO_SURFACE_TYPE_IMAGE)
+    return false;
+
+  double   x  = 0.0;
+  double   y  = 2.0;
+  double   w  = cairo_image_surface_get_width(cairo_get_target(cr));
+  double   h  = cairo_image_surface_get_height(cairo_get_target(cr)) - 4.0;
+
+  if (segment == Segment::LEFT)
+  {
+    x = 2.0;
+    w -= 2.0;
+  }
+
+  if (segment == Segment::RIGHT)
+  {
+    w -= 2.0;
+  }
+
+  cairo_set_line_width(cr, pimpl->button_label_border_size_[nux::ButtonVisualState::VISUAL_STATE_NORMAL]);
+
+  pimpl->RoundedRectSegment(cr,
+                            1.0,
+                            x,
+                            y,
+                            h / 4.0,
+                            w,
+                            h,
+                            segment,
+                            arrow,
+                            nux::ButtonVisualState::VISUAL_STATE_PRESSED);
+
+  cairo_set_source_rgba(cr, nux::Color(1.0f, 1.0f, 1.0f, 0.5f));
+  cairo_fill_preserve(cr);
+  cairo_stroke(cr);
 
   return true;
 }

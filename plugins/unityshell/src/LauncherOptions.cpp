@@ -39,6 +39,7 @@ Options::Options()
   hide_mode = LAUNCHER_HIDE_DODGE_WINDOWS;
   icon_size = 48;
   launch_animation = LAUNCH_ANIMATION_PULSE;
+  reveal_trigger = RevealTrigger::EDGE;
   tile_size = 54;
   urgent_animation = URGENT_ANIMATION_WIGGLE;
 
@@ -53,6 +54,7 @@ Options::Options()
   hide_mode.changed.connect             ([&] (LauncherHideMode value) -> void { option_changed.emit(); });
   icon_size.changed.connect             ([&] (int value)              -> void { option_changed.emit(); });
   launch_animation.changed.connect      ([&] (LaunchAnimation value)  -> void { option_changed.emit(); });
+  reveal_trigger.changed.connect        ([&] (RevealTrigger vallue)   -> void { option_changed.emit(); });
   tile_size.changed.connect             ([&] (int value)              -> void { option_changed.emit(); });
   urgent_animation.changed.connect      ([&] (UrgentAnimation value)  -> void { option_changed.emit(); });
 }

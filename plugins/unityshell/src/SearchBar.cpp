@@ -166,7 +166,7 @@ void SearchBar::Init()
     filter_layout_ = new nux::HLayout();
     filter_layout_->SetHorizontalInternalMargin(8);
     filter_layout_->SetHorizontalExternalMargin(6);
-    filter_space_ = new nux::SpaceLayout(100, 10000, 0, 1);
+    filter_space_ = new nux::SpaceLayout(1, 10000, 0, 1);
     filter_layout_->AddLayout(filter_space_, 1);
     filter_layout_->AddView(show_filters_, 0, nux::MINOR_POSITION_CENTER);
 
@@ -181,6 +181,7 @@ void SearchBar::Init()
 
     layout_->AddView(filter_layout_, 1, nux::MINOR_POSITION_RIGHT, nux::MINOR_SIZE_FULL);
   }
+
   sig_manager_.Add(new Signal<void, GtkSettings*, GParamSpec*>
       (gtk_settings_get_default(),
        "notify::gtk-font-name",

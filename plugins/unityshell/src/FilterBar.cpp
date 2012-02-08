@@ -139,4 +139,3 @@ void FilterBar::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
 } // namespace dash
 } // namespace unity
-

@@ -50,24 +50,16 @@ add_executable (test-unit
                 unit/TestMain.cpp
                 unit/TestUBus.cpp
                 unit/TestStaticCairoText.cpp
-                ${UNITY_SRC}/ubus-server.cpp
-                ${UNITY_SRC}/ubus-server.h
+                ${UNITY_SRC}/CairoBaseWindow.cpp
                 ${UNITY_SRC}/Introspectable.cpp
                 ${UNITY_SRC}/QuicklistMenuItem.cpp
-                ${UNITY_SRC}/QuicklistMenuItem.h
                 ${UNITY_SRC}/QuicklistMenuItemCheckmark.cpp
-                ${UNITY_SRC}/QuicklistMenuItemCheckmark.h
                 ${UNITY_SRC}/QuicklistMenuItemLabel.cpp
-                ${UNITY_SRC}/QuicklistMenuItemLabel.h
                 ${UNITY_SRC}/QuicklistMenuItemRadio.cpp
-                ${UNITY_SRC}/QuicklistMenuItemRadio.h
                 ${UNITY_SRC}/QuicklistMenuItemSeparator.cpp
-                ${UNITY_SRC}/QuicklistMenuItemSeparator.h
                 ${UNITY_SRC}/QuicklistView.cpp
-                ${UNITY_SRC}/QuicklistView.h
                 ${UNITY_SRC}/StaticCairoText.cpp
-                ${UNITY_SRC}/StaticCairoText.h
-                ${UNITY_SRC}/
+                ${UNITY_SRC}/ubus-server.cpp
                 )
 add_dependencies (test-unit unity-core-${UNITY_API_VERSION})
 add_subdirectory (test-input-remover)
@@ -129,6 +121,7 @@ if (GTEST_FOUND AND
                  test_introspection.cpp
                  test_main_xless.cpp
                  test_grabhandle.cpp
+                 test_unityshell_private.cpp
                  ${UNITY_SRC}/AbstractLauncherIcon.h
                  ${UNITY_SRC}/AbstractShortcutHint.h
                  ${UNITY_SRC}/Animator.cpp
@@ -161,6 +154,8 @@ if (GTEST_FOUND AND
                  ${UNITY_SRC}/TextureCache.h
                  ${UNITY_SRC}/Timer.cpp
                  ${UNITY_SRC}/Timer.h
+                 ${UNITY_SRC}/UnityshellPrivate.cpp
+                 ${UNITY_SRC}/UnityshellPrivate.h
                  ${UNITY_SRC}/WindowManager.cpp
                  ${UNITY_SRC}/WindowManager.h
                  ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle.cpp

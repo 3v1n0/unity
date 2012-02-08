@@ -36,16 +36,16 @@ namespace unity
 namespace dash
 {
 
-enum class MultiRangeSide
+enum class MultiRangeSide : unsigned int
 {
-  LEFT,
+  LEFT = 0,
   RIGHT,
   CENTER
 };
 
-enum class MultiRangeArrow
+enum class MultiRangeArrow : unsigned int
 {
-  LEFT,
+  LEFT = 0,
   RIGHT,
   BOTH,
   NONE
@@ -70,17 +70,32 @@ protected:
 
 private:
   void InitTheme();
-  void RedrawTheme(nux::Geometry const& geom, cairo_t* cr, nux::ButtonVisualState faked_state);
+  void Init();
+
+  void RedrawTheme(nux::Geometry const& geom,
+                   cairo_t* cr,
+                   nux::ButtonVisualState faked_state,
+                   MultiRangeArrow faked_arrow,
+                   MultiRangeSide faked_side);
+
+  void RedrawFocusOverlay(nux::Geometry const& geom,
+                          cairo_t* cr,
+                          MultiRangeArrow faked_arrow,
+                          MultiRangeSide faked_side);
+ 
   void OnActivated(nux::Area* area);
   void OnActiveChanged(bool value);
 
   FilterOption::Ptr filter_;
 
   typedef std::unique_ptr<nux::CairoWrapper> NuxCairoPtr;
+  typedef std::pair<MultiRangeArrow, MultiRangeSide> MapKey;
 
-  NuxCairoPtr active_;
-  NuxCairoPtr normal_;
-  NuxCairoPtr prelight_;
+  std::map<MapKey, NuxCairoPtr> active_;
+  std::map<MapKey, NuxCairoPtr> focus_;
+  std::map<MapKey, NuxCairoPtr> normal_;
+  std::map<MapKey, NuxCairoPtr> prelight_;
+
   nux::Geometry cached_geometry_;
   MultiRangeArrow has_arrow_;
   MultiRangeSide side_;

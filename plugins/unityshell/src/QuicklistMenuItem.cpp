@@ -15,7 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Mirco Müller <mirco.mueller@canonical.com>
- * Authored by: Jay Taoko <jay.taoko@canonical.com>
+ *              Jay Taoko <jay.taoko@canonical.com>
+ *              Marco Trevisan (Treviño) <3v1n0@ubuntu.com>
  */
 
 #include <gdk/gdk.h>
@@ -27,6 +28,9 @@
 #include <UnityCore/Variant.h>
 
 #include <X11/Xlib.h>
+
+namespace unity
+{
 
 NUX_IMPLEMENT_OBJECT_TYPE(QuicklistMenuItem);
 
@@ -370,15 +374,12 @@ void QuicklistMenuItem::RecvMouseLeave(int x, int y, unsigned long button_flags,
   sigMouseLeave.emit(this);
 }
 
-void
-QuicklistMenuItem::DrawText(cairo_t*   cr,
-                            int        width,
-                            int        height,
-                            nux::Color color)
+void QuicklistMenuItem::DrawText(nux::CairoGraphics* cairo, int width, int height, nux::Color const& color)
 {
-  if (_text == NULL)
+  if (_text == nullptr || cairo == nullptr)
     return;
 
+  cairo_t*              cr         = cairo->GetContext();
   int                   textWidth  = 0;
   int                   textHeight = 0;
   PangoLayout*          layout     = NULL;
@@ -392,6 +393,8 @@ QuicklistMenuItem::DrawText(cairo_t*   cr,
   g_object_get(settings, "gtk-font-name", &fontName, NULL);
   GetTextExtents(fontName, textWidth, textHeight);
 
+  cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
+  cairo_set_source_rgba(cr, color.red, color.blue, color.green, color.alpha);
   cairo_set_font_options(cr, gdk_screen_get_font_options(screen));
   layout = pango_cairo_create_layout(cr);
   desc = pango_font_description_from_string(fontName);
@@ -425,6 +428,20 @@ QuicklistMenuItem::DrawText(cairo_t*   cr,
   pango_font_description_free(desc);
   g_free(fontName);
   g_object_unref(layout);
+}
+
+void QuicklistMenuItem::DrawPrelight(nux::CairoGraphics* cairo, int width, int height, nux::Color const& color)
+{
+  if (!cairo)
+    return;
+
+  cairo_t* cr = cairo->GetContext();
+
+  cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
+  cairo_set_source_rgba(cr, color.red, color.blue, color.green, color.alpha);
+  cairo->DrawRoundedRectangle(cr, 1.0f, 0.0f, 0.0f, ITEM_CORNER_RADIUS_ABS,
+                              width, height);
+  cairo_fill(cr);
 }
 
 void
@@ -476,3 +493,5 @@ void QuicklistMenuItem::AddProperties(GVariantBuilder* builder)
   .add("visible", GetVisible())
   .add("lit", _prelight);
 }
+
+} //NAMESPACE

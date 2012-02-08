@@ -263,11 +263,8 @@ protected:
 
   void OnRemoteProgressVisibleChanged(LauncherEntryRemote* remote);
 
-  nux::Tooltip* _tooltip;
-  QuicklistView* _quicklist;
-
-  static nux::Tooltip* _current_tooltip;
-  static QuicklistView* _current_quicklist;
+  nux::ObjectPtr<Tooltip> _tooltip;
+  nux::ObjectPtr<QuicklistView> _quicklist;
 
   // This looks like a case for boost::logical::tribool
   static int _current_theme_is_mono;
