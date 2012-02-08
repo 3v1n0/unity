@@ -205,7 +205,6 @@ Launcher::Launcher(nux::BaseWindow* parent,
   _launcher_bottom_y      = 0;
   _folded_z_distance      = 10.0f;
   _launcher_action_state  = ACTION_NONE;
-  _hidemode               = LAUNCHER_HIDE_NEVER;
   _icon_under_mouse       = NULL;
   _icon_mouse_down        = NULL;
   _drag_icon              = NULL;
@@ -422,7 +421,7 @@ Launcher::AddProperties(GVariantBuilder* builder)
   .add("autohide-progress", AutohideProgress(current))
   .add("dnd-delta", _dnd_delta_y)
   .add("hovered", _hovered)
-  .add("hidemode", _hidemode)
+  .add("hidemode", options()->hide_mode)
   .add("hidden", _hidden)
   .add("x", abs_geo.x)
   .add("y", abs_geo.y)
@@ -1117,7 +1116,7 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
 
   float autohide_offset = 0.0f;
   *launcher_alpha = 1.0f;
-  if (_hidemode != LAUNCHER_HIDE_NEVER || _hide_machine->GetQuirk(LauncherHideMachine::LOCK_HIDE))
+  if (options()->hide_mode != LAUNCHER_HIDE_NEVER || _hide_machine->GetQuirk(LauncherHideMachine::LOCK_HIDE))
   {
 
     float autohide_progress = AutohideProgress(current) * (1.0f - DragOutProgress(current));
@@ -1137,7 +1136,7 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
   }
 
   float drag_hide_progress = DragHideProgress(current);
-  if (_hidemode != LAUNCHER_HIDE_NEVER && drag_hide_progress > 0.0f)
+  if (options()->hide_mode != LAUNCHER_HIDE_NEVER && drag_hide_progress > 0.0f)
   {
     autohide_offset -= geo.width * 0.25f * drag_hide_progress;
 
@@ -1148,7 +1147,7 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
   // Inform the painter where to paint the box
   box_geo = geo;
 
-  if (_hidemode != LAUNCHER_HIDE_NEVER || _hide_machine->GetQuirk(LauncherHideMachine::LOCK_HIDE))
+  if (options()->hide_mode != LAUNCHER_HIDE_NEVER || _hide_machine->GetQuirk(LauncherHideMachine::LOCK_HIDE))
     box_geo.x += autohide_offset;
 
   /* Why we need last_geo? It stores the last box_geo (note: as it is a static variable,
@@ -1504,7 +1503,7 @@ Launcher::OnWindowUnmapped(guint32 xid)
 void
 Launcher::OnWindowMaybeIntellihide(guint32 xid)
 {
-  if (_hidemode != LAUNCHER_HIDE_NEVER)
+  if (options()->hide_mode != LAUNCHER_HIDE_NEVER)
     CheckWindowOverLauncher();
 }
 
@@ -1515,7 +1514,7 @@ Launcher::OnWindowMaybeIntellihideDelayed(guint32 xid)
    * Delay to let the other window taking the focus first (otherwise focuschanged
    * is emmited with the root window focus
    */
-  if (_hidemode != LAUNCHER_HIDE_NEVER)
+  if (options()->hide_mode != LAUNCHER_HIDE_NEVER)
     g_idle_add((GSourceFunc)CheckWindowOverLauncherSync, this);
 }
 
@@ -1532,7 +1531,7 @@ Launcher::OnPluginStateChanged()
   _hide_machine->SetQuirk (LauncherHideMachine::EXPO_ACTIVE, WindowManager::Default ()->IsExpoActive ());
   _hide_machine->SetQuirk (LauncherHideMachine::SCALE_ACTIVE, WindowManager::Default ()->IsScaleActive ());
 
-  if (_hidemode == LAUNCHER_HIDE_NEVER)
+  if (options()->hide_mode == LAUNCHER_HIDE_NEVER)
     return;
 }
 
@@ -1560,7 +1559,7 @@ Launcher::OnViewPortSwitchEnded()
 
 LauncherHideMode Launcher::GetHideMode() const
 {
-  return _hidemode;
+  return options()->hide_mode;
 }
 
 /* End Launcher Show/Hide logic */
@@ -1571,7 +1570,7 @@ gboolean Launcher::StrutHack(gpointer data)
   Launcher* self = (Launcher*) data;
   self->_parent->InputWindowEnableStruts(false);
 
-  if (self->_hidemode == LAUNCHER_HIDE_NEVER)
+  if (self->options()->hide_mode == LAUNCHER_HIDE_NEVER)
     self->_parent->InputWindowEnableStruts(true);
 
   return false;
@@ -1617,9 +1616,6 @@ Launcher::UpdateOptions(Options::Ptr options)
 
 void Launcher::SetHideMode(LauncherHideMode hidemode)
 {
-  if (_hidemode == hidemode)
-    return;
-
   if (hidemode != LAUNCHER_HIDE_NEVER)
   {
     _parent->InputWindowEnableStruts(false);
@@ -1631,7 +1627,6 @@ void Launcher::SetHideMode(LauncherHideMode hidemode)
     _parent->InputWindowEnableStruts(true);
   }
 
-  _hidemode = hidemode;
   _hide_machine->SetMode((LauncherHideMachine::HideMode) hidemode);
   EnsureAnimation();
 }

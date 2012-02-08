@@ -338,8 +338,6 @@ private:
   float _launcher_bottom_y;
   float _edge_overcome_pressure;
 
-  LauncherHideMode _hidemode;
-
   LauncherActionState _launcher_action_state;
   LaunchAnimation _launch_animation;
   UrgentAnimation _urgent_animation;
