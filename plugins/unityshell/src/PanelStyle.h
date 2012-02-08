@@ -65,7 +65,7 @@ public:
 
   bool IsAmbianceOrRadiance();
 
-  nux::ROProperty<int> panel_height;
+  nux::Property<int> panel_height;
 
 private:
   void Refresh();
@@ -76,7 +76,6 @@ private:
 
   nux::BaseTexture* GetWindowButtonForTheme(WindowButtonType type,
                                             WindowState state);
-  int getPanelHeight() const;
 private:
   GtkStyleContext*   _style_context;
   char*              _theme_name;

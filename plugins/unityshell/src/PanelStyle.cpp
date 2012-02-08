@@ -53,7 +53,7 @@ nux::Color ColorFromGdkRGBA(GdkRGBA const& color)
 }
 
 Style::Style()
-  : panel_height(sigc::mem_fun(this, &Style::getPanelHeight))
+  : panel_height(24)
   , _theme_name(NULL)
 {
   if (style_instance)
@@ -290,11 +290,6 @@ GdkPixbuf* Style::GetHomeButton()
                                       (GtkIconLookupFlags)0,
                                       NULL);
   return pixbuf;
-}
-
-int Style::getPanelHeight() const
-{
-  return 24;
 }
 
 } // namespace panel
