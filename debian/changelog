@@ -1,9 +1,9 @@
-unity (5.2.0-0ubuntu3) UNRELEASED; urgency=low
+unity (5.2.0-0ubuntu3) precise; urgency=low
 
   * Cherry-pick:
-    - additional fix for setting the right strut at startup
+    - additional fix for setting the right strut on startup
 
- -- Didier Roche <didrocks@ubuntu.com>  Wed, 08 Feb 2012 07:56:58 +0100
+ -- Didier Roche <didrocks@ubuntu.com>  Wed, 08 Feb 2012 08:09:31 +0100
 
 unity (5.2.0-0ubuntu2) precise; urgency=low
 
