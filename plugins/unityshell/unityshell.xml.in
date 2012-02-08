@@ -186,16 +186,6 @@
                         <alpha>0x00</alpha>
                     </default>
                 </option>
-                <option name="pressure_color" type="color">
-                    <_short>Pressure Color</_short>
-                    <_long></_long>
-                    <default>
-                        <red>0x00</red>
-                        <green>0x00</green>
-                        <blue>0x00</blue>
-                        <alpha>0x00</alpha>
-                    </default>
-                </option>
                 <option name="backlight_mode" type="int">
                     <_short>Backlight Mode</_short>
                     <_long>Change how the icons are backlit</_long>

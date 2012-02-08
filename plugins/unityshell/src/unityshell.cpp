@@ -261,7 +261,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetShowHudInitiate(boost::bind(&UnityScreen::ShowHudInitiate, this, _1, _2, _3));
      optionSetShowHudTerminate(boost::bind(&UnityScreen::ShowHudTerminate, this, _1, _2, _3));
      optionSetBackgroundColorNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
-     optionSetPressureColorNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetLauncherHideModeNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetBacklightModeNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetRevealTriggerNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
@@ -2312,19 +2311,6 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       override_color.green = override_color.green / override_color.alpha;
       override_color.blue = override_color.blue / override_color.alpha;
       _bghash.OverrideColor(override_color);
-      break;
-    }
-    case UnityshellOptions::PressureColor:
-    {
-      nux::Color pressure_color (optionGetPressureColorRed() / 65535.0f,
-                                 optionGetPressureColorGreen() / 65535.0f,
-                                 optionGetPressureColorBlue() / 65535.0f,
-                                 optionGetPressureColorAlpha() / 65535.0f);
-
-      pressure_color.red = pressure_color.red / pressure_color.alpha;
-      pressure_color.green = pressure_color.green / pressure_color.alpha;
-      pressure_color.blue = pressure_color.blue / pressure_color.alpha;
-      launcher_options->pressure_color = pressure_color;
       break;
     }
     case UnityshellOptions::LauncherHideMode:

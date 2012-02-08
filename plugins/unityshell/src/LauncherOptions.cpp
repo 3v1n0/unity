@@ -42,7 +42,6 @@ Options::Options()
   reveal_trigger = RevealTrigger::EDGE;
   tile_size = 54;
   urgent_animation = URGENT_ANIMATION_WIGGLE;
-  pressure_color = nux::color::Transparent;
 
   auto_hide_animation.changed.connect   ([&] (AutoHideAnimation value)-> void { option_changed.emit(); });
   background_alpha.changed.connect      ([&] (float value)            -> void { option_changed.emit(); });
@@ -58,7 +57,6 @@ Options::Options()
   reveal_trigger.changed.connect        ([&] (RevealTrigger vallue)   -> void { option_changed.emit(); });
   tile_size.changed.connect             ([&] (int value)              -> void { option_changed.emit(); });
   urgent_animation.changed.connect      ([&] (UrgentAnimation value)  -> void { option_changed.emit(); });
-  pressure_color.changed.connect        ([&] (nux::Color color)       -> void { option_changed.emit(); });
 }
 
 
