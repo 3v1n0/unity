@@ -1010,6 +1010,7 @@ void Controller::Impl::ReceiveMouseDownOutsideArea(int x, int y, unsigned long b
 
 void Controller::KeyNavGrab()
 {
+  pimpl->ubus.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
   KeyNavActivate();
   pimpl->keyboard_launcher_->GrabKeyboard();
   pimpl->launcher_grabbed = true;
