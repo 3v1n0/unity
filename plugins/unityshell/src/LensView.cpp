@@ -292,6 +292,10 @@ void LensView::OnResultRemoved(Result const& result)
 long LensView::PostLayoutManagement (long LayoutResult)
 {
   EnsureSize();
+
+  LOG_DEBUG(logger) << "lens: " << lens_->name()
+                    << " - size: " << scroll_view_->GetGeometry().height;
+
   return View::PostLayoutManagement(LayoutResult);
 }
 
