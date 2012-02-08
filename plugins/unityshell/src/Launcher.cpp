@@ -1923,7 +1923,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   if (_hidden && _hide_machine->reveal_progress > 0 && launcher_pressure_effect_.IsValid())
   {
-    nux::Color pressure_color = nux::color::Cyan * _hide_machine->reveal_progress;
+    nux::Color pressure_color = options()->pressure_color * _hide_machine->reveal_progress;
     nux::TexCoordXForm texxform_pressure;
     GfxContext.QRP_1Tex(base.x, base.y, base.width, base.height,
                         launcher_pressure_effect_->GetDeviceTexture(),
