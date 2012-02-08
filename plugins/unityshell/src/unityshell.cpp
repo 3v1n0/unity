@@ -2054,7 +2054,7 @@ UnityWindow::focus ()
 bool
 UnityWindow::minimized ()
 {
-  return mMinimizeHandler;
+  return mMinimizeHandler.get () != nullptr;
 }
 
 gboolean

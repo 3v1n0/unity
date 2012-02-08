@@ -168,7 +168,7 @@ compiz::CompizMinimizedWindowHandler<Screen, Window>::minimize ()
     {
       Window *w = Window::get (win);
       if (!w->mMinimizeHandler)
-        w->mMinimizeHandle.reset (new Type (win));
+        w->mMinimizeHandler.reset (new Type (win));
       w->mMinimizeHandler->minimize ();
     }
   }
