@@ -112,9 +112,6 @@ public:
 
   void Resize();
 
-  void CheckWindowOverLauncher();
-  void EnableCheckWindowOverLauncher(gboolean enabled);
-
   sigc::signal<void, char*, AbstractLauncherIcon*> launcher_addrequest;
   sigc::signal<void, std::string const&, AbstractLauncherIcon*, std::string const&, std::string const&> launcher_addrequest_special;
   sigc::signal<void, AbstractLauncherIcon*> launcher_removerequest;
@@ -173,9 +170,6 @@ private:
   void OnOptionChanged();
   void UpdateOptions(Options::Ptr options);
 
-  void OnWindowMaybeIntellihide(guint32 xid);
-  void OnWindowMaybeIntellihideDelayed(guint32 xid);
-  static gboolean CheckWindowOverLauncherSync(Launcher* self);
   void OnWindowMapped(guint32 xid);
   void OnWindowUnmapped(guint32 xid);
 
@@ -188,9 +182,6 @@ private:
   void OnPluginStateChanged();
 
   void OnSelectionChanged(AbstractLauncherIcon* selection);
-
-  void OnViewPortSwitchStarted();
-  void OnViewPortSwitchEnded();
 
   static gboolean AnimationTimeout(gpointer data);
   static gboolean StrutHack(gpointer data);
@@ -325,7 +316,6 @@ private:
   bool  _hovered;
   bool  _hidden;
   bool  _render_drag_window;
-  bool  _check_window_over_launcher;
 
   bool          _shortcuts_shown;
 

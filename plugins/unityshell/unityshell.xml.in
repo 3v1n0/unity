@@ -51,7 +51,7 @@
                     <_short>Hide Launcher</_short>
                     <_long>Make the launcher hide automatically after some time of inactivity: always or just when the focussed window is not over the launcher</_long>
                     <min>0</min>
-                    <max>3</max>
+                    <max>1</max>
                     <default>0</default>
                     <desc>
                         <value>0</value>
@@ -60,14 +60,6 @@
                     <desc>
                         <value>1</value>
                         <_name>Autohide</_name>
-                    </desc>
-                    <desc>
-                        <value>2</value>
-                        <_name>Dodge Windows</_name>
-                    </desc>
-                    <desc>
-                        <value>3</value>
-                        <_name>Dodge Active Window</_name>
                     </desc>
                 </option>
                 <option name="reveal_trigger" type="int">
