@@ -20,12 +20,11 @@
 
 #include <NuxCore/Logger.h>
 
-#define SETTINGS_NAME "com.canonical.Unity.Panel"
-#define PADDING 3
-
 namespace
 {
 nux::logging::Logger logger("unity.panel");
+const std::string SETTINGS_NAME = "com.canonical.Unity.Panel";
+const int PADDING = 3;
 }
 
 namespace unity
@@ -39,7 +38,7 @@ PanelTray::PanelTray()
     _last_y(0),
     _tray_icon_added_id(0)
 {
-  _settings = g_settings_new(SETTINGS_NAME);
+  _settings = g_settings_new(SETTINGS_NAME.c_str());
   _whitelist = g_settings_get_strv(_settings, "systray-whitelist");
 
   RealInit();

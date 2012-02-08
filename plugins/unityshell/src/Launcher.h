@@ -41,14 +41,6 @@
 #include "LauncherHoverMachine.h"
 #include "UBusWrapper.h"
 
-#define ANIM_DURATION_SHORT_SHORT 100
-#define ANIM_DURATION_SHORT 125
-#define ANIM_DURATION       200
-#define ANIM_DURATION_LONG  350
-
-#define MAX_SUPERKEY_LABELS 10
-
-#define START_DRAGICON_DURATION 250
 
 namespace unity
 {
@@ -136,6 +128,8 @@ public:
   void EnterKeyNavMode();
   void ExitKeyNavMode();
   bool IsInKeyNavMode() const;
+
+  static const int ANIM_DURATION_SHORT;
 
 protected:
   // Introspectable methods
@@ -315,7 +309,7 @@ private:
 
   void OnDisplayChanged(Display* display);
   void OnDNDDataCollected(const std::list<char*>& mimes);
-  
+
   void DndReset();
   void DndHoveredIconReset();
 

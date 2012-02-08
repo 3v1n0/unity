@@ -79,17 +79,18 @@ const int panel_height = 24;
 const int ICON_PADDING = 6;
 const int RIGHT_LINE_WIDTH = 1;
 
+const int ANIM_DURATION_SHORT_SHORT = 100;
+const int ANIM_DURATION = 200;
+const int ANIM_DURATION_LONG = 350;
+const int START_DRAGICON_DURATION = 250;
+
+const int MOUSE_DEADZONE = 15;
+const float DRAG_OUT_PIXELS = 300.0f;
+
+const std::string S_DBUS_NAME = "com.canonical.Unity.Launcher";
+const std::string S_DBUS_PATH = "/com/canonical/Unity/Launcher";
 }
 
-#define TRIGGER_SQR_RADIUS 25
-
-#define MOUSE_DEADZONE 15
-
-#define DRAG_OUT_PIXELS 300.0f
-
-#define S_DBUS_NAME  "com.canonical.Unity.Launcher"
-#define S_DBUS_PATH  "/com/canonical/Unity/Launcher"
-#define S_DBUS_IFACE "com.canonical.Unity.Launcher"
 
 // FIXME: key-code defines for Up/Down/Left/Right of numeric keypad - needs to
 // be moved to the correct place in NuxGraphics-headers
@@ -123,6 +124,8 @@ GDBusInterfaceVTable Launcher::interface_vtable =
   NULL,
   NULL
 };
+
+const int Launcher::Launcher::ANIM_DURATION_SHORT = 125;
 
 Launcher::Launcher(nux::BaseWindow* parent,
                    NUX_FILE_LINE_DECL)
@@ -262,7 +265,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
   ubus.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED, sigc::mem_fun(this, &Launcher::OnBGColorChanged));
   ubus.RegisterInterest(UBUS_LAUNCHER_LOCK_HIDE, sigc::mem_fun(this, &Launcher::OnLockHideChanged));
   _dbus_owner = g_bus_own_name(G_BUS_TYPE_SESSION,
-                               S_DBUS_NAME,
+                               S_DBUS_NAME.c_str(),
                                (GBusNameOwnerFlags)(G_BUS_NAME_OWNER_FLAGS_REPLACE | G_BUS_NAME_OWNER_FLAGS_ALLOW_REPLACEMENT),
                                OnBusAcquired,
                                OnNameAcquired,
@@ -1303,7 +1306,7 @@ void Launcher::OnOverlayShown(GVariant* data)
   unity::glib::String overlay_identity;
   gboolean can_maximise = FALSE;
   gint32 overlay_monitor = 0;
-  g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING, 
+  g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING,
                 &overlay_identity, &can_maximise, &overlay_monitor);
 
 
@@ -1329,14 +1332,14 @@ void Launcher::OnOverlayHidden(GVariant* data)
   unity::glib::String overlay_identity;
   gboolean can_maximise = FALSE;
   gint32 overlay_monitor = 0;
-  g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING, 
+  g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING,
                 &overlay_identity, &can_maximise, &overlay_monitor);
 
   if (!g_strcmp0(overlay_identity, "dash"))
   {
     if (!_dash_is_open)
       return;
-    
+
     LauncherModel::iterator it;
 
     _dash_is_open = false;
@@ -1370,7 +1373,7 @@ void Launcher::SetHidden(bool hidden)
 
   _hide_machine->SetQuirk(LauncherHideMachine::LAST_ACTION_ACTIVATE, false);
 
-  if (hidden)  
+  if (hidden)
   {
     _hide_machine->SetQuirk(LauncherHideMachine::MOUSE_MOVE_POST_REVEAL, false);
     _hide_machine->SetQuirk(LauncherHideMachine::MT_DRAG_OUT, false);
@@ -2944,7 +2947,7 @@ Launcher::OnBusAcquired(GDBusConnection* connection,
 
 
   registration_id = g_dbus_connection_register_object(connection,
-                                                      S_DBUS_PATH,
+                                                      S_DBUS_PATH.c_str(),
                                                       introspection_data->interfaces[0],
                                                       &interface_vtable,
                                                       user_data,

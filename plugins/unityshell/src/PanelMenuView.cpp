@@ -47,10 +47,13 @@
 
 #include "UScreen.h"
 
-#define WINDOW_TITLE_FONT_KEY "/apps/metacity/general/titlebar_font"
-
 namespace unity
 {
+
+namespace
+{
+  const std::string WINDOW_TITLE_FONT_KEY = "/apps/metacity/general/titlebar_font";
+}
 
 PanelMenuView::PanelMenuView(int padding)
   : _matcher(bamf_matcher_get_default()),
@@ -772,7 +775,7 @@ void PanelMenuView::DrawText(cairo_t *cr_real,
 
     g_object_get(settings, "gtk-xft-dpi", &dpi, nullptr);
 
-    font_description = gconf_client_get_string(client, WINDOW_TITLE_FONT_KEY, nullptr);
+    font_description = gconf_client_get_string(client, WINDOW_TITLE_FONT_KEY.c_str(), nullptr);
     desc = pango_font_description_from_string(font_description);
 
     if (font_desc)
@@ -784,7 +787,7 @@ void PanelMenuView::DrawText(cairo_t *cr_real,
       y -= ((unsigned int)(size - 9)) / 2;
 
       size += increase_size;
-      
+
       char* description = g_strdup_printf("%s %d", font_desc, size);
       pango_font_description_free(desc);
       desc = pango_font_description_from_string(description);
