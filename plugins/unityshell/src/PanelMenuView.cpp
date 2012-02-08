@@ -390,9 +390,9 @@ PanelMenuView::OnFadeOutChanged(double progress)
 bool
 PanelMenuView::DrawMenus()
 {
-  if (!_dash_showing && _is_integrated)
+  if (_is_integrated)
   {
-    return (GetMaximizedWindow() != 0);
+    return (GetMaximizedWindow() != 0 && !_dash_showing);
   }
 
   if (!_is_own_window && !_dash_showing && _we_control_active && !_switcher_showing)
@@ -789,7 +789,7 @@ PanelMenuView::GetActiveViewName()
 }
 
 std::string
-PanelMenuView::GetMaximizedViewName()
+PanelMenuView::GetMaximizedViewName(bool use_appname)
 {
   Window maximized = GetMaximizedWindow();
   BamfWindow* window = nullptr;
@@ -819,12 +819,17 @@ PanelMenuView::GetMaximizedViewName()
   if (BAMF_IS_WINDOW(window))
   {
     BamfView* view = reinterpret_cast<BamfView*>(window);
-    BamfApplication* app = bamf_matcher_get_application_for_window(_matcher, window);
-
-    if (BAMF_IS_APPLICATION(app))
-      view = reinterpret_cast<BamfView*>(app);
-
     label = glib::String(bamf_view_get_name(view)).Str();
+
+    if (use_appname || label.empty())
+    {
+      BamfApplication* app = bamf_matcher_get_application_for_window(_matcher, window);
+
+      if (BAMF_IS_APPLICATION(app))
+        view = reinterpret_cast<BamfView*>(app);
+
+      label = glib::String(bamf_view_get_name(view)).Str();
+    }
   }
 
   glib::String escaped(g_markup_escape_text(label.c_str(), -1));

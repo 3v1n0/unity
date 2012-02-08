@@ -124,7 +124,7 @@ private:
   void OnPanelViewMouseMove(int x, int y, int dx, int dy, unsigned long mouse_button_state, unsigned long special_keys_state);
 
   std::string GetActiveViewName();
-  std::string GetMaximizedViewName();
+  std::string GetMaximizedViewName(bool use_appname = false);
 
   void OnSwitcherShown(GVariant* data);
   void OnSwitcherSelectionChanged(GVariant* data);
