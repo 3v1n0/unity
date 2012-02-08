@@ -1926,7 +1926,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   GfxContext.PushClippingRectangle(nux::Geometry(base.x, bkg_box.y, base.width, bkg_box.height));
 
   float reveal_progress = _hide_machine->reveal_progress;
-  if (_hidden && reveal_progress > 0 && launcher_pressure_effect_.IsValid())
+  if ((reveal_progress > 0 || _last_reveal_progress > 0) && launcher_pressure_effect_.IsValid())
   {
     if (std::abs(_last_reveal_progress - reveal_progress) <= .1f)
     {
@@ -1945,10 +1945,6 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
                         launcher_pressure_effect_->GetDeviceTexture(),
                         texxform_pressure,
                         pressure_color);
-  }
-  else
-  {
-    _last_reveal_progress = 0;
   }
 
   if (_dash_is_open)
