@@ -419,7 +419,8 @@ private:
   UBusManager ubus;
 
   nux::Color _background_color;
-  BaseTexturePtr   launcher_sheen_;
+  BaseTexturePtr launcher_sheen_;
+  BaseTexturePtr launcher_pressure_effect_;
   bool _dash_is_open;
 
   ui::AbstractIconRenderer::Ptr icon_renderer;
