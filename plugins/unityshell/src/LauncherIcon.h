@@ -271,9 +271,6 @@ protected:
 
   DbusmenuClient* _menuclient_dynamic_quicklist;
 
-  friend class Launcher;
-  friend class LauncherModel;
-
 private:
   typedef struct
   {
@@ -301,7 +298,7 @@ private:
   int               _last_monitor;
   nux::Color        _background_color;
   nux::Color        _glow_color;
-  
+
   gint64            _shortcut;
 
   std::vector<nux::Point3> _center;
