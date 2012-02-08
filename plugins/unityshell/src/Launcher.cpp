@@ -1505,18 +1505,20 @@ Launcher::UpdateOptions(Options::Ptr options)
 
   // make the effect half as strong as specified as other values shouldn't scale
   // as quickly as the max velocity multiplier
-  float responsiveness_mult = ((options->edge_responsiveness() - 1) * .025) + 1;
+  float decay_responsiveness_mult = ((options->edge_responsiveness() - 1) * .3f) + 1;
+  float reveal_responsiveness_mult = ((options->edge_responsiveness() - 1) * .025f) + 1;
+  float overcome_responsiveness_mult = ((options->edge_responsiveness() - 1) * 1.0f) + 1;
 
-  decaymulator_->rate_of_decay = options->edge_decay_rate() * responsiveness_mult;
-  _edge_overcome_pressure = options->edge_overcome_pressure() * responsiveness_mult;
+  decaymulator_->rate_of_decay = options->edge_decay_rate() * decay_responsiveness_mult;
+  _edge_overcome_pressure = options->edge_overcome_pressure() * overcome_responsiveness_mult;
 
   _pointer_barrier->threshold = options->edge_stop_velocity();
   _pointer_barrier->max_velocity_multiplier = options->edge_responsiveness();
   _pointer_barrier->DestroyBarrier();
   _pointer_barrier->ConstructBarrier();
 
-  _hide_machine->reveal_pressure = options->edge_reveal_pressure() * responsiveness_mult;
-  _hide_machine->edge_decay_rate = options->edge_decay_rate() * responsiveness_mult;
+  _hide_machine->reveal_pressure = options->edge_reveal_pressure() * reveal_responsiveness_mult;
+  _hide_machine->edge_decay_rate = options->edge_decay_rate() * decay_responsiveness_mult;
 
   EnsureAnimation();
 }

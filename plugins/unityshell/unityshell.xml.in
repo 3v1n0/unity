@@ -283,7 +283,7 @@
                 <option name="edge_responsiveness" type="float">
                     <_short>Launcher Reveal Edge Responsiveness</_short>
                     <_long>A conglomerate setting that modifies the overall responsiveness of the launcher reveal</_long>
-                    <default>1.0</default>
+                    <default>2.0</default>
                     <min>0.2</min>
                     <max>8.0</max>
                     <precision>0.1</precision>
@@ -315,7 +315,7 @@
                 <option name="stop_velocity" type="int">
                     <_short>Edge Stop Velocity</_short>
                     <_long>The maximum velocity at which the mouse will still be stoped</_long>
-                    <default>45</default>
+                    <default>65</default>
                     <min>1</min>
                     <max>1000</max>
                     <precision>1</precision>
