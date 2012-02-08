@@ -370,6 +370,7 @@ private:
   int _drag_out_id;
   float _drag_out_delta_x;
   float _background_alpha;
+  float _last_reveal_progress;
 
   guint _autoscroll_handle;
   guint _start_dragicon_handle;

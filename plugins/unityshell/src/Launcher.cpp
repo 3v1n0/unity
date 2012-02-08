@@ -216,9 +216,10 @@ Launcher::Launcher(nux::BaseWindow* parent,
   _dnd_delta_y            = 0;
   _dnd_delta_x            = 0;
 
-  _autoscroll_handle             = 0;
-  _start_dragicon_handle         = 0;
-  _dnd_check_handle              = 0;
+  _autoscroll_handle      = 0;
+  _start_dragicon_handle  = 0;
+  _dnd_check_handle       = 0;
+  _last_reveal_progress   = 0;
 
   _shortcuts_shown        = false;
   _hovered                = false;
@@ -577,6 +578,9 @@ bool Launcher::AnimationInProgress() const
 {
   // performance here can be improved by caching the longer remaining animation found and short circuiting to that each time
   // this way extra checks may be avoided
+
+  if (_last_reveal_progress != _hide_machine->reveal_progress)
+    return true;
 
   // short circuit to avoid unneeded calculations
   struct timespec current;
@@ -1921,14 +1925,30 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   // clip vertically but not horizontally
   GfxContext.PushClippingRectangle(nux::Geometry(base.x, bkg_box.y, base.width, bkg_box.height));
 
-  if (_hidden && _hide_machine->reveal_progress > 0 && launcher_pressure_effect_.IsValid())
+  float reveal_progress = _hide_machine->reveal_progress;
+  if (_hidden && reveal_progress > 0 && launcher_pressure_effect_.IsValid())
   {
-    nux::Color pressure_color = options()->pressure_color * _hide_machine->reveal_progress;
+    if (std::abs(_last_reveal_progress - reveal_progress) <= .1f)
+    {
+      _last_reveal_progress = reveal_progress;
+    }
+    else
+    {
+      if (_last_reveal_progress > reveal_progress)
+        _last_reveal_progress -= .1f;
+      else
+        _last_reveal_progress += .1f;
+    }
+    nux::Color pressure_color = options()->pressure_color * _last_reveal_progress;
     nux::TexCoordXForm texxform_pressure;
     GfxContext.QRP_1Tex(base.x, base.y, base.width, base.height,
                         launcher_pressure_effect_->GetDeviceTexture(),
                         texxform_pressure,
                         pressure_color);
+  }
+  else
+  {
+    _last_reveal_progress = 0;
   }
 
   if (_dash_is_open)
