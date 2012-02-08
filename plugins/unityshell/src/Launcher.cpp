@@ -140,6 +140,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
 
   _hide_machine = new LauncherHideMachine();
   _hide_machine->should_hide_changed.connect(sigc::mem_fun(this, &Launcher::SetHidden));
+  _hide_machine->reveal_progress.changed.connect([&](float value) -> void { EnsureAnimation(); });
 
   _hover_machine = new LauncherHoverMachine();
   _hover_machine->should_hover_changed.connect(sigc::mem_fun(this, &Launcher::SetHover));
@@ -297,6 +298,20 @@ Launcher::Launcher(nux::BaseWindow* parent,
     // ownership without adding a reference, we can remove the unref here.  By
     // unreferencing, the object is solely owned by the smart pointer.
     launcher_sheen_->UnReference();
+  }
+
+  pixbuf = gdk_pixbuf_new_from_file(PKGDATADIR"/launcher_pressure_effect.png", &error);
+  if (error)
+  {
+    LOG_WARN(logger) << "Unable to texture " << PKGDATADIR << "/launcher_pressure_effect.png" << ": " << error;
+  }
+  else
+  {
+    launcher_pressure_effect_ = nux::CreateTexture2DFromPixbuf(pixbuf, true);
+    // TODO: when nux has the ability to create a smart pointer that takes
+    // ownership without adding a reference, we can remove the unref here.  By
+    // unreferencing, the object is solely owned by the smart pointer.
+    launcher_pressure_effect_->UnReference();
   }
 
   _pointer_barrier = PointerBarrierWrapper::Ptr(new PointerBarrierWrapper());
@@ -1905,6 +1920,16 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   // clip vertically but not horizontally
   GfxContext.PushClippingRectangle(nux::Geometry(base.x, bkg_box.y, base.width, bkg_box.height));
+
+  if (_hidden && _hide_machine->reveal_progress > 0 && launcher_pressure_effect_.IsValid())
+  {
+    nux::Color pressure_color = nux::color::Cyan * _hide_machine->reveal_progress;
+    nux::TexCoordXForm texxform_pressure;
+    GfxContext.QRP_1Tex(base.x, base.y, base.width, base.height,
+                        launcher_pressure_effect_->GetDeviceTexture(),
+                        texxform_pressure,
+                        pressure_color);
+  }
 
   if (_dash_is_open)
   {
