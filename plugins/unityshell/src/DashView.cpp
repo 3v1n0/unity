@@ -115,7 +115,6 @@ void DashView::ProcessGrowShrink()
    }
    
    LOG_DEBUG(logger) << "resizing to " << target_height << " (" << new_height << ")";
-   
    current_height_ = new_height;
   }
   
@@ -218,22 +217,21 @@ void DashView::SetupUBusConnections()
 
 long DashView::PostLayoutManagement (long LayoutResult)
 {
+  LOG_DEBUG(logger) << "got post layout management " << content_layout_->GetGeometry().height;
   Relayout();
-  if (content_layout_->GetGeometry().height != last_known_height_)
-  {
+  //if (content_layout_->GetGeometry().height != last_known_height_)
+  //{
     // Start the timeline of drawing the dash resize
     if (timeline_need_more_draw_)
     {
       // already started, just reset the last known height
       last_known_height_ = current_height_;
     }
-    else
-    {
-      timeline_need_more_draw_ = true;
-      QueueDraw();
-    }
+    
+    timeline_need_more_draw_ = true;
     start_time_ = g_get_monotonic_time();
-  }
+    QueueDraw();
+  //}
   
   return LayoutResult;
 }
@@ -248,7 +246,6 @@ void DashView::Relayout()
     if (geo.width >= content_geo_.width && geo.height > content_geo_.height)
       content_geo_ = geo;
   }
-
   // kinda hacky, but it makes sure the content isn't so big that it throws
   // the bottom of the dash off the screen
   // not hugely happy with this, so FIXME
@@ -256,6 +253,7 @@ void DashView::Relayout()
   lenses_layout_->SetMinimumWidth(content_geo_.width);
   lenses_layout_->SetMaximumWidth(content_geo_.width);
   layout_->SetMaximumWidth(content_geo_.width);
+  
   //lenses_layout_->SetMinimumHeight (content_geo_.height - search_bar_->GetGeometry().height - lens_bar_->GetGeometry().height);
 
   //layout_->SetMinMaxSize(content_geo_.width, content_geo_.height);
@@ -269,6 +267,10 @@ void DashView::Relayout()
   ubus_manager_.SendMessage(UBUS_DASH_SIZE_CHANGED, g_variant_new("(ii)", content_geo_.width, content_geo_.height));
 
   QueueDraw();
+
+  //LOG_DEBUG(logger) << "Layout size: " << layout_->GetGeometry().height;
+  //LOG_DEBUG(logger) << "lenses_layout size: " << layout_->GetGeometry().height;
+  
 }
 
 // Gives us the width and height of the contents that will give us the best "fit",
@@ -522,6 +524,9 @@ void DashView::OnSearchFinished(Lens::Hints const& hints)
   if (it != hints.end())
   {
     LOG_DEBUG(logger) << "We have no-results-hint: " << g_variant_get_string (it->second, NULL);
+    // force relayout
+    QueueRelayout();
+    
   }
 
   std::string search_string = search_bar_->search_string;

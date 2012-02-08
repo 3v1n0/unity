@@ -265,7 +265,6 @@ void LensView::OnResultAdded(Result const& result)
                      << boost::lexical_cast<unsigned int>(result.category_index)
                      << ". Is out of range.";
   }
-  
   EnsureSize();
 }
 
@@ -286,7 +285,7 @@ void LensView::OnResultRemoved(Result const& result)
                      << boost::lexical_cast<unsigned int>(result.category_index)
                      << ". Is out of range.";
   }
-
+  
   EnsureSize();
 }
 
@@ -315,17 +314,15 @@ void LensView::EnsureSize()
         height += group->GetMinimumHeight();
         height += group->GetChildView()->GetMinimumHeight();
         height += 24;
-        LOG_DEBUG(logger) << "got category ("  << group->GetMinimumHeight() + group->GetChildView()->GetMinimumHeight()<< ")";
       }
        
     }
-    
+   
+    height = std::max(height, 1); // hack because nux does not like heights < 1
+
     if (self->GetMinimumHeight() != height)
     {
       self->SetMinimumHeight(height);
-      LOG_DEBUG(logger) << "Maximum height for lens: " 
-                        << self->lens_->name() 
-                        << " (" << height << ")"; 
     }
     
     self->ensure_size_id_ = 0;
