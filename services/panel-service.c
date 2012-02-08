@@ -1425,7 +1425,7 @@ activate_next_prev_menu (PanelService         *self,
 
   if (new_entry)
     {
-      id = get_indicator_entry_id_by_entry (entry);
+      id = get_indicator_entry_id_by_entry (new_entry);
       g_signal_emit (self, _service_signals[ENTRY_ACTIVATE_REQUEST], 0, id);
       g_free (id);
     }
