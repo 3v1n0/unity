@@ -31,8 +31,9 @@ namespace
 
 nux::logging::Logger logger("unity.dash.lensbar");
 
-const int FOCUS_OVERLAY_WIDTH = 56;
-const int FOCUS_OVERLAY_HEIGHT = 40;
+const int FOCUS_OVERLAY_WIDTH = 60;
+const int FOCUS_OVERLAY_HEIGHT = 44;
+const int LENSBAR_HEIGHT = 44;
 
 }
 
@@ -72,8 +73,8 @@ void LensBar::SetupLayout()
   layout_->SetSpaceBetweenChildren(40);
   SetLayout(layout_);
 
-  SetMinimumHeight(46);
-  SetMaximumHeight(46);
+  SetMinimumHeight(LENSBAR_HEIGHT);
+  SetMaximumHeight(LENSBAR_HEIGHT);
 }
 
 void LensBar::SetupHomeLens()
@@ -175,6 +176,26 @@ void LensBar::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
 
   if (!IsFullRedraw())
     nux::GetPainter().PopBackground();
+
+  for (auto icon: icons_)
+  {
+    if (icon->active)
+    {
+      nux::Geometry const& geo = icon->GetGeometry();
+      int middle = geo.x + geo.width/2;
+      int size = 5;
+      int y = geo.y - 11;
+
+      nux::GetPainter().Draw2DTriangleColor(gfx_context,
+                                            middle - size, y,
+                                            middle, y + size,
+                                            middle + size, y,
+                                            nux::color::White);
+
+      break;
+
+    }
+  }
 
   gfx_context.PopClippingRectangle();
 }
