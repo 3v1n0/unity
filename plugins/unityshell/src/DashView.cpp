@@ -42,6 +42,7 @@ namespace
 {
 nux::logging::Logger logger("unity.dash.view");
 const int grow_anim_length = 90 * 1000;
+const int pause_before_grow_length = 32 * 1000;
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(DashView);
@@ -94,28 +95,33 @@ void DashView::SetMonitorOffset(int x, int y)
 void DashView::ProcessGrowShrink()
 {
   float diff = g_get_monotonic_time() - start_time_;
-  float progress = diff / grow_anim_length;
-  int last_height = last_known_height_;
-  int new_height = 0;
   int target_height = content_layout_->GetGeometry().height;
-  
-  if (last_height < target_height)
+  // only animate if we are after our defined pause time
+  if (diff > pause_before_grow_length)
   {
-    // grow
-    new_height = last_height + ((target_height - last_height) * progress);
-  }
-  else 
-  {
-    //shrink
-    new_height = last_height - ((last_height - target_height) * progress);
+   float progress = (diff - pause_before_grow_length) / grow_anim_length;
+   int last_height = last_known_height_;
+   int new_height = 0;
+   
+   if (last_height < target_height)
+   {
+     // grow
+     new_height = last_height + ((target_height - last_height) * progress);
+   }
+   else 
+   {
+     //shrink
+     new_height = last_height - ((last_height - target_height) * progress);
+   }
+   
+   LOG_DEBUG(logger) << "resizing to " << target_height << " (" << new_height << ")";
+   
+   current_height_ = new_height;
   }
   
-  LOG_DEBUG(logger) << "resizing to " << target_height << " (" << new_height << ")";
-  
-  current_height_ = new_height;
   QueueDraw();  
   
-  if (diff > grow_anim_length)
+  if (diff > grow_anim_length + pause_before_grow_length)
   {
     // ensure we are at our final location and update last known height
     current_height_ = target_height;
@@ -170,31 +176,38 @@ void DashView::SetupViews()
 {
   layout_ = new nux::VLayout();
   SetLayout(layout_);
-
+  
   content_layout_ = new nux::VLayout();
   content_layout_->SetHorizontalExternalMargin(0);
   content_layout_->SetVerticalExternalMargin(0);
+  
+  {
+    // Add layouts/views to content_layout_
+    search_bar_ = new SearchBar();
+    AddChild(search_bar_);
+    search_bar_->activated.connect(sigc::mem_fun(this, &DashView::OnEntryActivated));
+    search_bar_->search_changed.connect(sigc::mem_fun(this, &DashView::OnSearchChanged));
+    search_bar_->live_search_reached.connect(sigc::mem_fun(this, &DashView::OnLiveSearchReached));
+    search_bar_->showing_filters.changed.connect([&] (bool showing) { if (active_lens_view_) active_lens_view_->filters_expanded = showing; QueueDraw(); });
+    content_layout_->AddView(search_bar_, 0, nux::MINOR_POSITION_LEFT);
 
+    lenses_layout_ = new nux::VLayout();
+    {
+      // Add layouts/views to lenses_layout_
+      home_view_ = new LensView(home_lens_);
+      active_lens_view_ = home_view_;
+      lens_views_[home_lens_->id] = home_view_;
+      lenses_layout_->AddView(home_view_);
+    }
+    
+    content_layout_->AddView(lenses_layout_, 0, nux::MINOR_POSITION_LEFT);
+
+    lens_bar_ = new LensBar();
+    lens_bar_->lens_activated.connect(sigc::mem_fun(this, &DashView::OnLensBarActivated));
+    content_layout_->AddView(lens_bar_, 0, nux::MINOR_POSITION_CENTER);
+  }
+  
   layout_->AddLayout(content_layout_, 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
-  search_bar_ = new SearchBar();
-  AddChild(search_bar_);
-  search_bar_->activated.connect(sigc::mem_fun(this, &DashView::OnEntryActivated));
-  search_bar_->search_changed.connect(sigc::mem_fun(this, &DashView::OnSearchChanged));
-  search_bar_->live_search_reached.connect(sigc::mem_fun(this, &DashView::OnLiveSearchReached));
-  search_bar_->showing_filters.changed.connect([&] (bool showing) { if (active_lens_view_) active_lens_view_->filters_expanded = showing; QueueDraw(); });
-  content_layout_->AddView(search_bar_, 0, nux::MINOR_POSITION_LEFT);
-
-  lenses_layout_ = new nux::VLayout();
-  content_layout_->AddView(lenses_layout_, 0, nux::MINOR_POSITION_LEFT);
-
-  home_view_ = new LensView(home_lens_);
-  active_lens_view_ = home_view_;
-  lens_views_[home_lens_->id] = home_view_;
-  lenses_layout_->AddView(home_view_);
-
-  lens_bar_ = new LensBar();
-  lens_bar_->lens_activated.connect(sigc::mem_fun(this, &DashView::OnLensBarActivated));
-  content_layout_->AddView(lens_bar_, 0, nux::MINOR_POSITION_CENTER);
 }
 
 void DashView::SetupUBusConnections()
