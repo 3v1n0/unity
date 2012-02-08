@@ -1841,9 +1841,9 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
       else
         _last_reveal_progress += .1f;
     }
-    nux::Color pressure_color = options()->pressure_color * _last_reveal_progress;
+    nux::Color pressure_color = nux::color::White * _last_reveal_progress;
     nux::TexCoordXForm texxform_pressure;
-    GfxContext.QRP_1Tex(base.x, base.y, base.width, base.height,
+    GfxContext.QRP_1Tex(base.x, base.y, launcher_pressure_effect_->GetWidth(), base.height,
                         launcher_pressure_effect_->GetDeviceTexture(),
                         texxform_pressure,
                         pressure_color);
