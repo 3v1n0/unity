@@ -265,7 +265,7 @@ void PanelIndicatorEntryView::DrawEntryContent(cairo_t *cr, unsigned int width, 
     {
       gtk_style_context_set_state(style_context, GTK_STATE_FLAG_BACKDROP);
     }
-    else if (IsActive())
+    else if (IsActive() && type_ != APPMENU)
     {
       gtk_style_context_set_state(style_context, GTK_STATE_FLAG_PRELIGHT);
     }
@@ -333,7 +333,7 @@ void PanelIndicatorEntryView::DrawEntryContent(cairo_t *cr, unsigned int width, 
     {
       gtk_style_context_set_state(style_context, GTK_STATE_FLAG_BACKDROP);
     }
-    else if (IsActive())
+    else if (IsActive() && type_ != APPMENU)
     {
       gtk_style_context_set_state(style_context, GTK_STATE_FLAG_PRELIGHT);
     }
