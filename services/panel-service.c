@@ -808,7 +808,8 @@ on_indicator_menu_show (IndicatorObject      *object,
                         PanelService         *self)
 {
   gchar *entry_id;
-  
+  g_print("Asked to show menu with entry IIIIIIII %p",entry);
+g_debug("Asked to show menu with entry %p",entry);
   g_return_if_fail (PANEL_IS_SERVICE (self));
   if (entry == NULL)
     {
