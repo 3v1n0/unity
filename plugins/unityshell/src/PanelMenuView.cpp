@@ -42,7 +42,6 @@
 #include <UnityCore/AppmenuIndicator.h>
 
 #include <gio/gdesktopappinfo.h>
-#include <gconf/gconf-client.h>
 
 #include <glib/gi18n-lib.h>
 
@@ -65,8 +64,6 @@ PanelMenuView::PanelMenuView(int padding)
     _integrated_menu(nullptr),
     _last_active_view(nullptr),
     _new_application(nullptr),
-    _last_width(0),
-    _last_height(0),
     _dash_showing(false),
     _switcher_showing(false),
     _show_now_activated(false),
@@ -318,6 +315,7 @@ PanelMenuView::FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEven
   if (_panel_titlebar_grab_area)
   {
     found_area = _panel_titlebar_grab_area->FindAreaUnderMouse(mouse_position, event_type);
+
     NUX_RETURN_VALUE_IF_NOTNULL(found_area, found_area);
   }
 
@@ -392,7 +390,7 @@ PanelMenuView::OnFadeOutChanged(double progress)
 bool
 PanelMenuView::DrawMenus()
 {
-  if (_is_integrated)
+  if (!_dash_showing && _is_integrated)
   {
     return (GetMaximizedWindow() != 0);
   }
@@ -428,16 +426,15 @@ PanelMenuView::DrawWindowButtons()
 void
 PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
-  nux::Geometry geo = GetGeometry();
+  nux::Geometry const& geo = GetGeometry();
   int button_width = _padding + _window_buttons->GetContentWidth() + _padding;
   const float factor = 4;
   button_width /= factor;
 
-  if (geo.width != _last_width || geo.height != _last_height)
+  if (geo != _last_geo)
   {
-    _last_width = geo.width;
-    _last_height = geo.height;
-    Refresh();
+    _last_geo = geo;
+    Refresh(true);
   }
 
   GfxContext.PushClippingRectangle(geo);
@@ -778,12 +775,17 @@ PanelMenuView::GetActiveViewName()
     }
   }
 
-  glib::String escaped(g_markup_escape_text(label.c_str(), -1));
+  if (!label.empty())
+  {
+    glib::String escaped(g_markup_escape_text(label.c_str(), -1));
 
-  std::ostringstream bold_label;
-  bold_label << "<b>" << escaped.Str() << "</b>";
+    std::ostringstream bold_label;
+    bold_label << "<b>" << escaped.Str() << "</b>";
 
-  return bold_label.str();
+    return bold_label.str();
+  }
+
+  return label;
 }
 
 std::string
@@ -836,6 +838,7 @@ PanelMenuView::GetMaximizedViewName()
 void PanelMenuView::DrawText(cairo_t *cr_real, int x, int y, int width, int height,
                              std::string const& label)
 {
+  using namespace panel;
   cairo_t* cr;
   cairo_pattern_t* linpat;
   const int fading_pixels = 35;
@@ -846,20 +849,17 @@ void PanelMenuView::DrawText(cairo_t *cr_real, int x, int y, int width, int heig
 
   // Find out dimensions first
   GdkScreen* screen = gdk_screen_get_default();
-  GtkSettings* settings = gtk_settings_get_default();
-  glib::Object<GConfClient> client(gconf_client_get_default());
   PangoContext* cxt;
   PangoRectangle log_rect;
   PangoFontDescription* desc;
-  gint dpi;
 
   nux::CairoGraphics util_cg(CAIRO_FORMAT_ARGB32, 1, 1);
   cr = util_cg.GetContext();
 
-  g_object_get(settings, "gtk-xft-dpi", &dpi, nullptr);
+  int dpi = Style::Instance().GetTextDPI();
 
-  glib::String font_description(gconf_client_get_string(client, WINDOW_TITLE_FONT_KEY, nullptr));
-  desc = pango_font_description_from_string(font_description);
+  std::string font_description(Style::Instance().GetFontDescription(PanelItem::TITLE));
+  desc = pango_font_description_from_string(font_description.c_str());
 
   glib::Object<PangoLayout> layout(pango_cairo_create_layout(cr));
   pango_layout_set_font_description(layout, desc);
@@ -867,7 +867,7 @@ void PanelMenuView::DrawText(cairo_t *cr_real, int x, int y, int width, int heig
 
   cxt = pango_layout_get_context(layout);
   pango_cairo_context_set_font_options(cxt, gdk_screen_get_font_options(screen));
-  pango_cairo_context_set_resolution(cxt, (float)dpi / (float)PANGO_SCALE);
+  pango_cairo_context_set_resolution(cxt, dpi / (float)PANGO_SCALE);
   pango_layout_context_changed(layout);
 
   pango_layout_get_extents(layout, nullptr, &log_rect);
@@ -877,9 +877,8 @@ void PanelMenuView::DrawText(cairo_t *cr_real, int x, int y, int width, int heig
   pango_font_description_free(desc);
   cairo_destroy(cr);
 
-
   // Draw the text
-  GtkStyleContext* style_context = panel::Style::Instance().GetStyleContext();
+  GtkStyleContext* style_context = Style::Instance().GetStyleContext();
   text_space = width - x;
   cr = cr_real;
 
@@ -926,10 +925,9 @@ void PanelMenuView::DrawText(cairo_t *cr_real, int x, int y, int width, int heig
 }
 
 void
-PanelMenuView::Refresh()
+PanelMenuView::Refresh(bool force)
 {
   nux::Geometry const& geo = GetGeometry();
-  static nux::Geometry old_geo;
 
   // We can get into a race that causes the geometry to be wrong as there hasn't been a
   // layout cycle before the first callback. This is to protect from that.
@@ -944,8 +942,11 @@ PanelMenuView::Refresh()
     {
       new_title = GetMaximizedViewName();
 
-      if (_integrated_menu)
+      if (_integrated_menu && GetMaximizedWindow() != 0)
+      {
         _integrated_menu->SetLabel(new_title);
+        return;
+      }
     }
     else
     {
@@ -956,7 +957,7 @@ PanelMenuView::Refresh()
     {
       _panel_title = new_title;
     }
-    else if (old_geo == geo && _title_texture)
+    else if (!force && _last_geo == geo && _title_texture)
     {
       return;
     }
@@ -982,8 +983,6 @@ PanelMenuView::Refresh()
   cairo_destroy(cr);
 
   _title_texture = texture_from_cairo_graphics(cairo_graphics);
-
-  old_geo = geo;
 }
 
 void
@@ -1027,6 +1026,15 @@ PanelMenuView::OnEntryAdded(indicator::Entry::Ptr const& entry)
   view->active_changed.connect(sigc::mem_fun(this, &PanelMenuView::OnActiveChanged));
 
   AddEntryView(view, IndicatorEntryPosition::END);
+}
+
+void
+PanelMenuView::OnEntryRemoved(std::string const& entry_id)
+{
+  if (_integrated_menu && _integrated_menu->GetEntryID() == entry_id)
+    _integrated_menu = nullptr;
+
+  RemoveEntry(entry_id);
 }
 
 void

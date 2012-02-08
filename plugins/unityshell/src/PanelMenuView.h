@@ -83,6 +83,7 @@ protected:
   virtual nux::Area* FindAreaUnderMouse(const nux::Point& mouse_position,
                                         nux::NuxEventType event_type);
   virtual void OnEntryAdded(indicator::Entry::Ptr const& entry);
+  virtual void OnEntryRemoved(std::string const& entry_id);
 
 private:
   void OnActiveChanged(PanelIndicatorEntryView* view, bool is_active);
@@ -112,7 +113,7 @@ private:
   void OnMouseMiddleClicked(int, int, unsigned long, unsigned long);
 
   void FullRedraw();
-  void Refresh();
+  void Refresh(bool force = false);
 
   void OnCloseClicked();
   void OnMinimizeClicked();
@@ -169,8 +170,7 @@ private:
   std::string _panel_title;
 
   int _padding;
-  int _last_width;
-  int _last_height;
+  nux::Geometry _last_geo;
 
   bool _dash_showing;
   bool _switcher_showing;
