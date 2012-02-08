@@ -1289,21 +1289,37 @@ panel_service_sync_geometry (PanelService *self,
           GdkRectangle *geo = NULL;
 
           if (entry2geometry_hash == NULL)
-          {
-            entry2geometry_hash = g_hash_table_new_full (g_direct_hash, g_direct_equal,
-                                                         NULL, g_free);
-            g_hash_table_insert (priv->panel2entries_hash, g_strdup (panel_id),
-                                 entry2geometry_hash);
-          }
+            {
+              entry2geometry_hash = g_hash_table_new_full (g_direct_hash, g_direct_equal,
+                                                           NULL, g_free);
+              g_hash_table_insert (priv->panel2entries_hash, g_strdup (panel_id),
+                                   entry2geometry_hash);
+            }
           else
-          {
-            geo = g_hash_table_lookup (entry2geometry_hash, entry);
-          }
+            {
+              geo = g_hash_table_lookup (entry2geometry_hash, entry);
+            }
 
           if (geo == NULL)
             {
-              geo = g_new (GdkRectangle, 1);
+              geo = g_new0 (GdkRectangle, 1);
               g_hash_table_insert (entry2geometry_hash, entry, geo);
+            }
+
+          /* If the current entry geometry has changed, we need to move the menu
+           * accordingly to the change we recorded! */
+          if (GTK_IS_MENU (priv->last_menu) && priv->last_menu == entry->menu)
+            {
+              GtkWidget *top_widget = gtk_widget_get_toplevel (GTK_WIDGET (priv->last_menu));
+
+              if (GTK_IS_WINDOW (top_widget))
+                {
+                  GtkWindow *top_win = GTK_WINDOW (top_widget);
+                  gint old_x, old_y;
+
+                  gtk_window_get_position (top_win, &old_x, &old_y);
+                  gtk_window_move (top_win, old_x - (geo->x - x), old_y - (geo->y - y));
+                }
             }
 
           geo->x = x;
@@ -1578,25 +1594,26 @@ panel_service_actually_show_entry (PanelService *self,
 
       gtk_menu_popup (priv->last_menu, NULL, NULL, positon_menu, self, 0, CurrentTime);
       GdkWindow *gdkwin = gtk_widget_get_window (GTK_WIDGET (priv->last_menu));
+
       if (gdkwin != NULL)
-      {
-        gint left=0, top=0, width=0, height=0;
+        {
+          gint left=0, top=0, width=0, height=0;
 
-        gdk_window_get_geometry (gdkwin, NULL, NULL, &width, &height);
-        gdk_window_get_origin (gdkwin, &left, &top);
+          gdk_window_get_geometry (gdkwin, NULL, NULL, &width, &height);
+          gdk_window_get_origin (gdkwin, &left, &top);
 
-        priv->last_left = left;
-        priv->last_right = left + width -1;
-        priv->last_top = top;
-        priv->last_bottom = top + height -1;
-      }
+          priv->last_left = left;
+          priv->last_right = left + width -1;
+          priv->last_top = top;
+          priv->last_bottom = top + height -1;
+        }
       else
-      {
-        priv->last_left = 0;
-        priv->last_right = 0;
-        priv->last_top = 0;
-        priv->last_bottom = 0;
-      }
+        {
+          priv->last_left = 0;
+          priv->last_right = 0;
+          priv->last_top = 0;
+          priv->last_bottom = 0;
+        }
     }
 
   /* We popdown the old one last so we don't accidently send key focus back to the
