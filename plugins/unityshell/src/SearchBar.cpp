@@ -444,11 +444,13 @@ void SearchBar::UpdateBackground(bool force)
                                       height,
                                       true);
 
-  cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 1.0f);
-  cairo_set_line_width(cr, 1.0);
-  cairo_stroke_preserve(cr);
-  cairo_graphics.BlurSurface (3, cairo_get_target (cr));
+  // Disable glow effect #929183
+  //cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 1.0f);
+  //cairo_set_line_width(cr, 1.0);
+  //cairo_stroke_preserve(cr);
+  //cairo_graphics.BlurSurface (3, cairo_get_target (cr));
 
+  // XXX: Not sure this code is 100% correct.
   cairo_operator_t op = CAIRO_OPERATOR_OVER;
   op = cairo_get_operator (cr);
   cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
@@ -458,6 +460,7 @@ void SearchBar::UpdateBackground(bool force)
   cairo_set_source_rgba(cr, 0.0f, 0.0f, 0.0f, 0.35f);
   cairo_fill_preserve(cr);
   cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 0.8f);
+  cairo_set_line_width(cr, 1.0);
   cairo_stroke(cr);
 
   cairo_destroy(cr);
