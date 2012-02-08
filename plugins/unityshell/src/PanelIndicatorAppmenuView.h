@@ -26,7 +26,7 @@
 #include "PanelIndicatorEntryView.h"
 
 namespace unity
-{  
+{
 using indicator::Entry;
 
 class PanelIndicatorAppmenuView : public PanelIndicatorEntryView
@@ -35,10 +35,10 @@ public:
   PanelIndicatorAppmenuView(Entry::Ptr const& proxy);
 
   std::string GetLabel();
-  bool IsLabelVisible();
+  void SetLabel(std::string const& label);
+  bool IsLabelVisible() const;
 
   void SetControlledWindowXid(Window xid);
-  void SetLabel(std::string const& label);
 
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);

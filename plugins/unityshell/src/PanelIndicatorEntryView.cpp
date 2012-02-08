@@ -33,7 +33,7 @@
 #include <time.h>
 
 #include "CairoTexture.h"
-// TODO: this include should be at the top, but it fails :(
+
 #include "PanelIndicatorEntryView.h"
 
 #include "PanelStyle.h"
@@ -56,6 +56,7 @@ PanelIndicatorEntryView::PanelIndicatorEntryView(
   , draw_active_(false)
   , dash_showing_(false)
   , disabled_(false)
+  , focused_(true)
 {
   proxy_->active_changed.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::OnActiveChanged));
   proxy_->updated.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::Refresh));
@@ -260,8 +261,14 @@ void PanelIndicatorEntryView::DrawEntryContent(cairo_t *cr, unsigned int width, 
     gtk_style_context_add_class(style_context, GTK_STYLE_CLASS_MENUBAR);
     gtk_style_context_add_class(style_context, GTK_STYLE_CLASS_MENUITEM);
 
-    if (IsActive())
+    if (!IsFocused())
+    {
+      gtk_style_context_set_state(style_context, GTK_STATE_FLAG_BACKDROP);
+    }
+    else if (IsActive())
+    {
       gtk_style_context_set_state(style_context, GTK_STATE_FLAG_PRELIGHT);
+    }
 
     int y = (int)((height - gdk_pixbuf_get_height(pixbuf)) / 2);
     if (dash_showing_ && !IsActive())
@@ -322,8 +329,14 @@ void PanelIndicatorEntryView::DrawEntryContent(cairo_t *cr, unsigned int width, 
     gtk_style_context_add_class(style_context, GTK_STYLE_CLASS_MENUBAR);
     gtk_style_context_add_class(style_context, GTK_STYLE_CLASS_MENUITEM);
 
-    if (IsActive())
+    if (!IsFocused())
+    {
+      gtk_style_context_set_state(style_context, GTK_STATE_FLAG_BACKDROP);
+    }
+    else if (IsActive())
+    {
       gtk_style_context_set_state(style_context, GTK_STATE_FLAG_PRELIGHT);
+    }
 
     int y = (int)((height - text_height) / 2);
     if (dash_showing_)
@@ -352,6 +365,7 @@ void PanelIndicatorEntryView::Refresh()
   if (!IsVisible())
   {
     SetVisible(false);
+    // This will destroy the object texture. No need to manually delete the pointer
     entry_texture_ = nullptr;
     SetColor(nux::color::Transparent);
 
@@ -542,7 +556,7 @@ std::string PanelIndicatorEntryView::GetLabel()
   return "";
 }
 
-bool PanelIndicatorEntryView::IsLabelVisible()
+bool PanelIndicatorEntryView::IsLabelVisible() const
 {
   if (proxy_.get())
   {
@@ -569,10 +583,11 @@ void PanelIndicatorEntryView::AddProperties(GVariantBuilder* builder)
   .add("icon_visible", proxy_->image_visible())
   .add("entry_visible", proxy_->visible())
   .add("active", proxy_->active())
-  .add("priority", proxy_->priority());
+  .add("priority", proxy_->priority())
+  .add("focused", IsFocused());
 }
 
-bool PanelIndicatorEntryView::GetShowNow()
+bool PanelIndicatorEntryView::GetShowNow() const
 {
   return proxy_.get() ? proxy_->show_now() : false;
 }
@@ -594,7 +609,7 @@ bool PanelIndicatorEntryView::IsSensitive() const
   return false;
 }
 
-bool PanelIndicatorEntryView::IsVisible()
+bool PanelIndicatorEntryView::IsVisible() const
 {
   if (proxy_.get())
   {
@@ -638,6 +653,20 @@ void PanelIndicatorEntryView::SetDisabled(bool disabled)
 bool PanelIndicatorEntryView::IsDisabled()
 {
   return (disabled_ || !proxy_.get() || !IsSensitive());
+}
+
+void PanelIndicatorEntryView::SetFocusedState(bool focused)
+{
+  if (focused_ != focused)
+  {
+    focused_ = focused;
+    Refresh();
+  }
+}
+
+bool PanelIndicatorEntryView::IsFocused() const
+{
+  return focused_;
 }
 
 } // namespace unity

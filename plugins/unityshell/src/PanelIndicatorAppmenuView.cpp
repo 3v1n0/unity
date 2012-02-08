@@ -46,7 +46,7 @@ std::string PanelIndicatorAppmenuView::GetLabel()
   return label_;
 }
 
-bool PanelIndicatorAppmenuView::IsLabelVisible()
+bool PanelIndicatorAppmenuView::IsLabelVisible() const
 {
   return !label_.empty();
 }

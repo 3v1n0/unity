@@ -54,24 +54,30 @@ public:
   virtual ~PanelIndicatorEntryView();
 
   IndicatorEntryType GetType() const;
+  std::string GetEntryID() const;
+  int GetEntryPriority() const;
+
   virtual std::string GetLabel();
-  virtual bool IsLabelVisible();
+  virtual bool IsLabelVisible() const;
 
   void Activate(int button = 1);
   void Unactivate();
-  bool GetShowNow();
+  
+  bool GetShowNow() const;
+  bool IsSensitive() const;
+  bool IsActive() const;
+  bool IsVisible() const;
+
   void SetDisabled(bool disabled);
   bool IsDisabled();
+
   void SetOpacity(double alpha);
   double GetOpacity();
 
-  void GetGeometryForSync(EntryLocationMap& locations);
-  bool IsSensitive() const;
-  bool IsActive() const;
-  bool IsVisible();
+  void SetFocusedState(bool focused);
+  bool IsFocused() const;
 
-  int GetEntryPriority() const;
-  std::string GetEntryID() const;
+  void GetGeometryForSync(EntryLocationMap& locations);
 
   void DashShown();
   void DashHidden();
@@ -114,7 +120,7 @@ private:
   bool draw_active_;
   bool dash_showing_;
   bool disabled_;
-  bool markup_enabled_;
+  bool focused_;
 };
 
 }
