@@ -68,7 +68,7 @@ public:
   void GetGeometryForSync(EntryLocationMap& locations);
   bool IsSensitive() const;
   bool IsActive() const;
-  bool IsVisible() const;
+  bool IsVisible();
 
   int GetEntryPriority() const;
   std::string GetEntryID() const;
@@ -114,6 +114,7 @@ private:
   bool draw_active_;
   bool dash_showing_;
   bool disabled_;
+  bool markup_enabled_;
 };
 
 }

@@ -381,14 +381,26 @@ void PanelIndicatorEntryView::Refresh()
 
   if (!label.empty() && IsLabelVisible())
   {
+    using namespace panel;
     PangoContext* cxt;
     PangoAttrList* attrs = nullptr;
     PangoRectangle log_rect;
     GdkScreen* screen = gdk_screen_get_default();
-    GtkSettings* settings = gtk_settings_get_default();
     PangoFontDescription* desc = nullptr;
-    glib::String font_description;
-    int dpi;
+    PanelItem panel_item = PanelItem::INDICATOR;
+
+    if (type_ == MENU)
+    {
+      panel_item = PanelItem::INDICATOR;
+    }
+    else if (type_ == APPMENU)
+    {
+      panel_item = PanelItem::TITLE;
+    }
+
+    Style& panel_style = Style::Instance();
+    std::string const& font_description = panel_style.GetFontDescription(panel_item);
+    int dpi = panel_style.GetTextDPI();
 
     if (proxy_->show_now())
     {
@@ -397,13 +409,8 @@ void PanelIndicatorEntryView::Refresh()
         g_debug("pango_parse_markup failed");
       }
     }
-    boost::erase_all(label, "_");
 
-    g_object_get(settings,
-                 "gtk-font-name", &font_description,
-                 "gtk-xft-dpi", &dpi,
-                 nullptr);
-    desc = pango_font_description_from_string(font_description);
+    desc = pango_font_description_from_string(font_description.c_str());
     pango_font_description_set_weight(desc, PANGO_WEIGHT_NORMAL);
 
     nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, 1, 1);
@@ -417,7 +424,16 @@ void PanelIndicatorEntryView::Refresh()
     }
 
     pango_layout_set_font_description(layout, desc);
-    pango_layout_set_text(layout, label.c_str(), -1);
+
+    if (type_ == APPMENU)
+    {
+      pango_layout_set_markup(layout, label.c_str(), -1);
+    }
+    else
+    {
+      boost::erase_all(label, "_");
+      pango_layout_set_text(layout, label.c_str(), -1);
+    }
 
     cxt = pango_layout_get_context(layout);
     pango_cairo_context_set_font_options(cxt, gdk_screen_get_font_options(screen));
@@ -578,11 +594,14 @@ bool PanelIndicatorEntryView::IsSensitive() const
   return false;
 }
 
-bool PanelIndicatorEntryView::IsVisible() const
+bool PanelIndicatorEntryView::IsVisible()
 {
   if (proxy_.get())
   {
-    return proxy_->visible();
+    if (type_ != APPMENU)
+      return proxy_->visible();
+    else
+      return IsLabelVisible();
   }
   return false;
 }
