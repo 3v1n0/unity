@@ -162,16 +162,6 @@ Launcher::Launcher(nux::BaseWindow* parent,
   ql_manager.quicklist_closed.connect(sigc::mem_fun(this, &Launcher::RecvQuicklistClosed));
 
   WindowManager& plugin_adapter = *(WindowManager::Default());
-  plugin_adapter.window_maximized.connect(sigc::mem_fun(this, &Launcher::OnWindowMaybeIntellihide));
-  plugin_adapter.window_restored.connect(sigc::mem_fun(this, &Launcher::OnWindowMaybeIntellihide));
-  plugin_adapter.window_unminimized.connect(sigc::mem_fun(this, &Launcher::OnWindowMaybeIntellihide));
-  plugin_adapter.window_mapped.connect(sigc::mem_fun(this, &Launcher::OnWindowMaybeIntellihide));
-  plugin_adapter.window_unmapped.connect(sigc::mem_fun(this, &Launcher::OnWindowMaybeIntellihide));
-  plugin_adapter.window_shown.connect(sigc::mem_fun(this, &Launcher::OnWindowMaybeIntellihide));
-  plugin_adapter.window_hidden.connect(sigc::mem_fun(this, &Launcher::OnWindowMaybeIntellihide));
-  plugin_adapter.window_resized.connect(sigc::mem_fun(this, &Launcher::OnWindowMaybeIntellihide));
-  plugin_adapter.window_moved.connect(sigc::mem_fun(this, &Launcher::OnWindowMaybeIntellihide));
-  plugin_adapter.window_focus_changed.connect(sigc::mem_fun(this, &Launcher::OnWindowMaybeIntellihideDelayed));
   plugin_adapter.window_mapped.connect(sigc::mem_fun(this, &Launcher::OnWindowMapped));
   plugin_adapter.window_unmapped.connect(sigc::mem_fun(this, &Launcher::OnWindowUnmapped));
 
@@ -179,8 +169,6 @@ Launcher::Launcher(nux::BaseWindow* parent,
   plugin_adapter.initiate_expo.connect(sigc::mem_fun(this, &Launcher::OnPluginStateChanged));
   plugin_adapter.terminate_spread.connect(sigc::mem_fun(this, &Launcher::OnPluginStateChanged));
   plugin_adapter.terminate_expo.connect(sigc::mem_fun(this, &Launcher::OnPluginStateChanged));
-  plugin_adapter.compiz_screen_viewport_switch_started.connect(sigc::mem_fun(this, &Launcher::OnViewPortSwitchStarted));
-  plugin_adapter.compiz_screen_viewport_switch_ended.connect(sigc::mem_fun(this, &Launcher::OnViewPortSwitchEnded));
 
   GeisAdapter& adapter = *(GeisAdapter::Default());
   adapter.drag_start.connect(sigc::mem_fun(this, &Launcher::OnDragStart));
@@ -231,7 +219,6 @@ Launcher::Launcher(nux::BaseWindow* parent,
   // FIXME: remove
   _initial_drag_animation = false;
 
-  _check_window_over_launcher   = true;
   _postreveal_mousemove_delta_x = 0;
   _postreveal_mousemove_delta_y = 0;
 
@@ -1403,28 +1390,6 @@ Launcher::GetMouseY() const
   return _mouse_position.y;
 }
 
-void
-Launcher::EnableCheckWindowOverLauncher(gboolean enabled)
-{
-  _check_window_over_launcher = enabled;
-}
-
-void
-Launcher::CheckWindowOverLauncher()
-{
-  bool any = false;
-  bool active = false;
-
-  // state has no mean right now, the check will be done again later
-  if (!_check_window_over_launcher)
-    return;
-
-  WindowManager::Default()->CheckWindowIntersections(GetAbsoluteGeometry(), active, any);
-
-  _hide_machine->SetQuirk(LauncherHideMachine::ANY_WINDOW_UNDER, any);
-  _hide_machine->SetQuirk(LauncherHideMachine::ACTIVE_WINDOW_UNDER, active);
-}
-
 gboolean
 Launcher::OnUpdateDragManagerTimeout(gpointer data)
 {
@@ -1492,62 +1457,11 @@ Launcher::OnWindowUnmapped(guint32 xid)
   //}
 }
 
-// FIXME: remove those 2 for Oneiric
-void
-Launcher::OnWindowMaybeIntellihide(guint32 xid)
-{
-  if (options()->hide_mode != LAUNCHER_HIDE_NEVER)
-    CheckWindowOverLauncher();
-}
-
-void
-Launcher::OnWindowMaybeIntellihideDelayed(guint32 xid)
-{
-  /*
-   * Delay to let the other window taking the focus first (otherwise focuschanged
-   * is emmited with the root window focus
-   */
-  if (options()->hide_mode != LAUNCHER_HIDE_NEVER)
-    g_idle_add((GSourceFunc)CheckWindowOverLauncherSync, this);
-}
-
-gboolean
-Launcher::CheckWindowOverLauncherSync(Launcher* self)
-{
-  self->CheckWindowOverLauncher();
-  return FALSE;
-}
-
 void
 Launcher::OnPluginStateChanged()
 {
   _hide_machine->SetQuirk (LauncherHideMachine::EXPO_ACTIVE, WindowManager::Default ()->IsExpoActive ());
   _hide_machine->SetQuirk (LauncherHideMachine::SCALE_ACTIVE, WindowManager::Default ()->IsScaleActive ());
-
-  if (options()->hide_mode == LAUNCHER_HIDE_NEVER)
-    return;
-}
-
-void
-Launcher::OnViewPortSwitchStarted()
-{
-  /*
-   *  don't take into account window over launcher state during
-   *  the viewport switch as we can get false positives
-   *  (like switching to an empty viewport while grabbing a fullscreen window)
-   */
-  _check_window_over_launcher = false;
-}
-
-void
-Launcher::OnViewPortSwitchEnded()
-{
-  /*
-   * compute again the list of all window on the new viewport
-   * to decide if we should or not hide the launcher
-   */
-  _check_window_over_launcher = true;
-  CheckWindowOverLauncher();
 }
 
 LauncherHideMode Launcher::GetHideMode() const
