@@ -1272,17 +1272,15 @@ void UnityScreen::damageNuxRegions()
        it != end; ++it)
   {
     nux::Geometry const& geo = *it;
-    nux_damage = CompRegion(geo.x, geo.y, geo.width, geo.height);
-    cScreen->damageRegion(nux_damage);
+    nux_damage += CompRegion(geo.x, geo.y, geo.width, geo.height);
   }
 
   nux::Geometry geo = wt->GetWindowCompositor().GetTooltipMainWindowGeometry();
-  nux_damage = CompRegion(geo.x, geo.y, geo.width, geo.height);
-  cScreen->damageRegion(nux_damage);
+  nux_damage += CompRegion(geo.x, geo.y, geo.width, geo.height);
 
   geo = lastTooltipArea;
-  nux_damage = CompRegion(lastTooltipArea.x, lastTooltipArea.y,
-                          lastTooltipArea.width, lastTooltipArea.height);
+  nux_damage += CompRegion(lastTooltipArea.x, lastTooltipArea.y,
+                         lastTooltipArea.width, lastTooltipArea.height);
   cScreen->damageRegion(nux_damage);
 
   wt->ClearDrawList();
