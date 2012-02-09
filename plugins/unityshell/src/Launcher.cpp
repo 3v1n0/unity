@@ -1965,15 +1965,6 @@ void Launcher::PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
 }
 
-void Launcher::PreLayoutManagement()
-{
-  View::PreLayoutManagement();
-  if (view_layout_)
-  {
-    view_layout_->SetGeometry(GetGeometry());
-  }
-}
-
 long Launcher::PostLayoutManagement(long LayoutResult)
 {
   View::PostLayoutManagement(LayoutResult);
@@ -1981,10 +1972,6 @@ long Launcher::PostLayoutManagement(long LayoutResult)
   SetMousePosition(0, 0);
 
   return nux::eCompliantHeight | nux::eCompliantWidth;
-}
-
-void Launcher::PositionChildLayout(float offsetX, float offsetY)
-{
 }
 
 void Launcher::OnDragWindowAnimCompleted()
