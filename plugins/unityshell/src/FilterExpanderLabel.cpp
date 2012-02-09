@@ -102,7 +102,8 @@ void FilterExpanderLabel::SetRightHandView(nux::View* view)
 
 void FilterExpanderLabel::SetContents(nux::Layout* contents)
 {
-  contents_.Adopt(contents);
+  // Since the contents is initially unowned, we don't want to Adopt it, just assign.
+  contents_ = contents;
 
   layout_->AddLayout(contents_.GetPointer(), 1, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
   top_bar_layout_->SetTopAndBottomPadding(0);

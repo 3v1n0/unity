@@ -513,9 +513,9 @@ void Tooltip::UpdateTexture()
   cairo_destroy(cr_outline);
   cairo_destroy(cr_mask);
 
-  texture_bg_ = texture_from_cairo_graphics(cairo_bg);
-  texture_mask_ = texture_from_cairo_graphics(cairo_mask);
-  texture_outline_ = texture_from_cairo_graphics(cairo_outline);
+  texture_bg_ = texture_ptr_from_cairo_graphics(cairo_bg);
+  texture_mask_ = texture_ptr_from_cairo_graphics(cairo_mask);
+  texture_outline_ = texture_ptr_from_cairo_graphics(cairo_outline);
 
   _cairo_text_has_changed = false;
 }
