@@ -95,6 +95,8 @@ private:
 
   void OnSpreadInitiate();
   void OnSpreadTerminate();
+  void OnExpoInitiate();
+  void OnExpoTerminate();
   void OnWindowMinimized(guint32 xid);
   void OnWindowUnminimized(guint32 xid);
   void OnWindowUnmapped(guint32 xid);
@@ -123,7 +125,7 @@ private:
   void OnPanelViewMouseLeave(int x, int y, unsigned long mouse_button_state, unsigned long special_keys_state);
   void OnPanelViewMouseMove(int x, int y, int dx, int dy, unsigned long mouse_button_state, unsigned long special_keys_state);
 
-  std::string GetActiveViewName();
+  std::string GetActiveViewName(bool use_appname = false);
   std::string GetMaximizedViewName(bool use_appname = false);
 
   void OnSwitcherShown(GVariant* data);
@@ -157,12 +159,12 @@ private:
   bool _is_grabbed;
   bool _is_maximized;
   bool _is_own_window;
+
   PanelIndicatorAppmenuView* _integrated_menu;
   PanelIndicatorEntryView* _last_active_view;
-  glib::Object<BamfApplication> _new_application;
-
   WindowButtons* _window_buttons;
   PanelTitlebarGrabArea* _panel_titlebar_grab_area;
+  glib::Object<BamfApplication> _new_application;
 
   std::map<guint32, bool> _decor_map;
   std::set<guint32> _maximized_set;
@@ -178,8 +180,9 @@ private:
   bool _we_control_active;
   bool _new_app_menu_shown;
 
-  int  _monitor;
-  guint32 _active_xid;
+  int _monitor;
+  Window _active_xid;
+
   guint32 _active_moved_id;
   guint32 _update_show_now_id;
   guint32 _new_app_show_id;

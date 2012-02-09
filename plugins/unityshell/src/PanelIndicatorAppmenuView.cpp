@@ -43,7 +43,12 @@ void PanelIndicatorAppmenuView::ShowMenu(int button)
 
 std::string PanelIndicatorAppmenuView::GetLabel()
 {
-  return label_;
+  glib::String escaped(g_markup_escape_text(label_.c_str(), -1));
+
+  std::ostringstream bold_label;
+  bold_label << "<b>" << escaped.Str() << "</b>";
+
+  return bold_label.str();
 }
 
 bool PanelIndicatorAppmenuView::IsLabelVisible() const

@@ -50,6 +50,7 @@
 namespace {
   nux::logging::Logger logger("unity.panel.menu");
   const int MENUS_PADDING = 6;
+  const std::string DESKTOP_NAME(_("Ubuntu Desktop"));
 }
 
 namespace unity
@@ -135,8 +136,10 @@ PanelMenuView::PanelMenuView(int padding)
 
   win_manager->window_minimized.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowMinimized));
   win_manager->window_unminimized.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowUnminimized));
-  //win_manager->initiate_spread.connect(sigc::mem_fun(this, &PanelMenuView::OnSpreadInitiate));
-  //win_manager->terminate_spread.connect(sigc::mem_fun(this, &PanelMenuView::OnSpreadTerminate));
+  win_manager->initiate_spread.connect(sigc::mem_fun(this, &PanelMenuView::OnSpreadInitiate));
+  win_manager->terminate_spread.connect(sigc::mem_fun(this, &PanelMenuView::OnSpreadTerminate));
+  win_manager->initiate_expo.connect(sigc::mem_fun(this, &PanelMenuView::OnExpoInitiate));
+  win_manager->terminate_expo.connect(sigc::mem_fun(this, &PanelMenuView::OnExpoTerminate));
 
   win_manager->window_maximized.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowMaximized));
   win_manager->window_restored.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowRestored));
@@ -390,12 +393,21 @@ PanelMenuView::OnFadeOutChanged(double progress)
 bool
 PanelMenuView::DrawMenus()
 {
+  auto wm = WindowManager::Default();
+  bool screen_grabbed = (wm->IsExpoActive() || wm->IsScaleActive());
+
   if (_is_integrated)
   {
-    return (GetMaximizedWindow() != 0 && !_dash_showing);
+    if (!_dash_showing && !screen_grabbed)
+    {
+      return (GetMaximizedWindow() != 0);
+    }
+
+    return false;
   }
 
-  if (!_is_own_window && !_dash_showing && _we_control_active && !_switcher_showing)
+  if (!_is_own_window && !_dash_showing && _we_control_active &&
+      !_switcher_showing && !screen_grabbed)
   {
     if (_is_inside || _last_active_view || _show_now_activated || _new_application)
     {
@@ -409,10 +421,24 @@ PanelMenuView::DrawMenus()
 bool
 PanelMenuView::DrawWindowButtons()
 {
-  if (_dash_showing || (_is_integrated && GetMaximizedWindow() != 0))
+  auto wm = WindowManager::Default();
+  bool screen_grabbed = (wm->IsExpoActive() || wm->IsScaleActive());
+
+  if (_dash_showing)
     return true;
 
-  if (!_is_own_window && _we_control_active && _is_maximized && !_switcher_showing)
+  if (_is_integrated)
+  {
+    if (!screen_grabbed)
+    {
+      return (GetMaximizedWindow() != 0);
+    }
+
+    return false;
+  }
+
+  if (!_is_own_window && _we_control_active && _is_maximized &&
+      !_switcher_showing && !screen_grabbed)
   {
     if (_is_inside || _show_now_activated || _new_application)
     {
@@ -659,13 +685,13 @@ PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
       entry.second->SetDisabled(true);
   }
 
-  if (GetOpacity() != 0.0f && !draw_menus)
+  if (GetOpacity() != 0.0f && !draw_menus && !_dash_showing)
   {
     _menu_layout->ProcessDraw(GfxContext, true);
 
     _fade_in_animator.Stop();
 
-    if (!_new_app_menu_shown)
+    if (_is_integrated || !_new_app_menu_shown)
     {
       _fade_out_animator.Start(1.0f - GetOpacity());
     }
@@ -679,8 +705,11 @@ PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   {
     _window_buttons->ProcessDraw(GfxContext, true);
 
-    _fade_out_animator.Stop();
-    _fade_in_animator.Start(_window_buttons->GetOpacity());
+    if (_window_buttons->GetOpacity() != 1.0f)
+    {
+      _fade_out_animator.Stop();
+      _fade_in_animator.Start(_window_buttons->GetOpacity());
+    }
   }
 
   if (_window_buttons->GetOpacity() != 0.0f && !draw_buttons)
@@ -699,19 +728,19 @@ PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 }
 
 std::string
-PanelMenuView::GetActiveViewName()
+PanelMenuView::GetActiveViewName(bool use_appname)
 {
   std::string label;
   BamfWindow* window;
 
   _is_own_window = false;
-
   window = bamf_matcher_get_active_window(_matcher);
 
   if (BAMF_IS_WINDOW(window))
   {
+    BamfView *view = reinterpret_cast<BamfView*>(window);
     std::vector<Window> const& our_xids = nux::XInputWindow::NativeHandleList();
-    guint32 window_xid = bamf_window_get_xid(BAMF_WINDOW(window));
+    guint32 window_xid = bamf_window_get_xid(window);
 
     if (std::find(our_xids.begin(), our_xids.end(), window_xid) != our_xids.end())
     {
@@ -719,70 +748,38 @@ PanelMenuView::GetActiveViewName()
       return "";
     }
 
-    if (BAMF_IS_WINDOW(window) &&
-        bamf_window_get_window_type(window) == BAMF_WINDOW_DESKTOP)
+    if (bamf_window_get_window_type(window) == BAMF_WINDOW_DESKTOP)
     {
-      label = _("Ubuntu Desktop");
+      label = DESKTOP_NAME;
     }
     else if (!WindowManager::Default()->IsWindowOnCurrentDesktop(window_xid) ||
-        WindowManager::Default()->IsWindowObscured(window_xid))
+             WindowManager::Default()->IsWindowObscured(window_xid))
     {
        return "";
     }
 
-    if (_is_maximized)
-      label = glib::String(bamf_view_get_name(BAMF_VIEW(window))).Str();
-  }
-
-  if (label.empty())
-  {
-    BamfApplication* app = bamf_matcher_get_active_application(_matcher);
-    if (BAMF_IS_APPLICATION(app))
+    if (WindowManager::Default ()->IsWindowMaximized(window_xid) && !use_appname)
     {
-      const gchar* desktop_file = bamf_application_get_desktop_file(app);
-      std::string filename(desktop_file ? desktop_file : "");
+      label = glib::String(bamf_view_get_name(view)).Str();
+    }
 
-      if (!filename.empty())
+    if (label.empty())
+    {
+      BamfApplication* app;
+      app = bamf_matcher_get_application_for_window(_matcher, window);
+
+      if (BAMF_IS_APPLICATION(app))
       {
-        glib::Object<GDesktopAppInfo> info(g_desktop_app_info_new_from_filename(filename.c_str()));
-
-        if (info)
-        {
-          const gchar* name = g_app_info_get_display_name(glib::object_cast<GAppInfo>(info));
-          label = (name ? name : "");
-        }
-        else
-        {
-          g_warning("Unable to get GDesktopAppInfo for %s",
-                    bamf_application_get_desktop_file(app));
-        }
-      }
-
-      if (label.empty())
-      {
-        BamfWindow* active_win = bamf_matcher_get_active_window(_matcher);
-
-        if (BAMF_IS_VIEW(active_win))
-        {
-          auto view = reinterpret_cast<BamfView*>(active_win);
-          label = glib::String(bamf_view_get_name(view)).Str();
-        }
+        view = reinterpret_cast<BamfView*>(app);
+        label = glib::String(bamf_view_get_name(view)).Str();
       }
     }
-    else
+
+    if (label.empty())
     {
-      label = "";
+      view = reinterpret_cast<BamfView*>(window);
+      label = glib::String(bamf_view_get_name(view)).Str();
     }
-  }
-
-  if (!label.empty())
-  {
-    glib::String escaped(g_markup_escape_text(label.c_str(), -1));
-
-    std::ostringstream bold_label;
-    bold_label << "<b>" << escaped.Str() << "</b>";
-
-    return bold_label.str();
   }
 
   return label;
@@ -793,11 +790,11 @@ PanelMenuView::GetMaximizedViewName(bool use_appname)
 {
   Window maximized = GetMaximizedWindow();
   BamfWindow* window = nullptr;
-  std::string label(_("Ubuntu Desktop"));
+  std::string label(DESKTOP_NAME);
 
   if (maximized != 0)
   {
-    GList* windows = bamf_matcher_get_window_stack_for_monitor(_matcher, _monitor);
+    GList* windows = bamf_matcher_get_windows(_matcher);
 
     for (GList* l = windows; l; l = l->next)
     {
@@ -832,12 +829,7 @@ PanelMenuView::GetMaximizedViewName(bool use_appname)
     }
   }
 
-  glib::String escaped(g_markup_escape_text(label.c_str(), -1));
-
-  std::ostringstream bold_label;
-  bold_label << "<b>" << escaped.Str() << "</b>";
-
-  return bold_label.str();
+  return label;
 }
 
 void PanelMenuView::DrawText(cairo_t *cr_real, int x, int y, int width, int height,
@@ -939,31 +931,41 @@ PanelMenuView::Refresh(bool force)
   if (geo.width > _monitor_geo.width)
     return;
 
-  if (!_switcher_showing)
+  auto win_manager = WindowManager::Default();
+  std::string new_title;
+
+  if (win_manager->IsScaleActive())
   {
-    std::string new_title;
+    new_title = GetActiveViewName(true);
+  }
+  else if (win_manager->IsExpoActive())
+  {
+    new_title = DESKTOP_NAME;
+  }
+  else if (_is_integrated)
+  {
+    new_title = GetMaximizedViewName();
 
-    if (_is_integrated)
+    if (_integrated_menu && GetMaximizedWindow() != 0)
     {
-      new_title = GetMaximizedViewName();
-
-      if (_integrated_menu && GetMaximizedWindow() != 0)
-      {
-        _integrated_menu->SetLabel(new_title);
-        return;
-      }
+      _integrated_menu->SetLabel(new_title);
+      return;
     }
-    else
-    {
-      new_title = GetActiveViewName();
-    }
+  }
+  else if (!_switcher_showing)
+  {
+    new_title = GetActiveViewName();
+  }
 
+  if (!_switcher_showing || _is_integrated)
+  {
     if (_panel_title != new_title)
     {
       _panel_title = new_title;
     }
     else if (!force && _last_geo == geo && _title_texture)
     {
+      // No need to redraw the title, let's save some CPU time!
       return;
     }
   }
@@ -983,11 +985,20 @@ PanelMenuView::Refresh(bool force)
   cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
 
   x += _padding;
-  DrawText(cr, x, y, width, height, _panel_title);
+
+  if (!_panel_title.empty())
+  {
+    glib::String escaped(g_markup_escape_text(_panel_title.c_str(), -1));
+
+    std::ostringstream bold_label;
+    bold_label << "<b>" << escaped.Str() << "</b>";
+
+    DrawText(cr, x, y, width, height, bold_label.str());
+  }
 
   cairo_destroy(cr);
 
-  _title_texture = texture_from_cairo_graphics(cairo_graphics);
+  _title_texture = texture_ptr_from_cairo_graphics(cairo_graphics);
 }
 
 void
@@ -1249,6 +1260,9 @@ PanelMenuView::OnSpreadInitiate()
     if (WindowManager::Default ()->IsWindowMaximized (xid))
       WindowManager::Default ()->Decorate (xid);
   }*/
+
+  Refresh();
+  QueueDraw();
 }
 
 void
@@ -1259,6 +1273,23 @@ PanelMenuView::OnSpreadTerminate()
     if (WindowManager::Default ()->IsWindowMaximized (xid))
       WindowManager::Default ()->Undecorate (xid);
   }*/
+
+  Refresh();
+  QueueDraw();
+}
+
+void
+PanelMenuView::OnExpoInitiate()
+{
+  Refresh();
+  QueueDraw();
+}
+
+void
+PanelMenuView::OnExpoTerminate()
+{
+  Refresh();
+  QueueDraw();
 }
 
 void
@@ -1654,11 +1685,25 @@ PanelMenuView::OnMouseMiddleClicked(int x, int y, unsigned long button_flags, un
 std::string
 PanelMenuView::GetName() const
 {
-  return "";
+  return "panel.menu.view";
 }
 
 void PanelMenuView::AddProperties(GVariantBuilder* builder)
 {
+  variant::BuilderWrapper(builder)
+  .add(GetGeometry())
+  .add("integrated", _is_integrated)
+  .add("inside", _is_inside)
+  .add("grabbed", _is_grabbed)
+  .add("maximized", _is_maximized)
+  .add("own_window", _is_own_window)
+  .add("panel_title", _panel_title)
+  .add("integrated_panel_title", _integrated_menu ? _integrated_menu->GetLabel() : "")
+  .add("entries", entries_.size())
+  .add("monitor", _monitor)
+  .add("active_xid", _active_xid)
+  .add("draw_menus", DrawMenus())
+  .add("draw_window_buttons", DrawWindowButtons());
 }
 
 void PanelMenuView::OnSwitcherShown(GVariant* data)
@@ -1672,11 +1717,7 @@ void PanelMenuView::OnSwitcherShown(GVariant* data)
   {
     auto mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
     _is_inside = GetAbsoluteGeometry().IsPointInside(mouse.x, mouse.y);
-
-    if (!_panel_title.empty())
-    {
-      _panel_title = "";
-    }
+    _panel_title = "";
   }
   else
   {
@@ -1691,6 +1732,9 @@ void PanelMenuView::OnSwitcherSelectionChanged(GVariant* data)
 {
   if (!data)
     return;
+
+  _show_now_activated = false;
+  _switcher_showing = true;
 
   const gchar *title = g_variant_get_string(data, 0);
   _panel_title = (title ? title : "");
