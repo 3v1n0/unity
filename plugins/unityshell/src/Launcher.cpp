@@ -285,18 +285,8 @@ Launcher::Launcher(nux::BaseWindow* parent,
   bg_effect_helper_.enabled = false;
 
   TextureCache& cache = TextureCache::GetDefault();
-  TextureCache::CreateTextureCallback cb = [&](std::string const& name, int width, int height) -> nux::BaseTexture* 
-  {
-    unity::glib::Object<GdkPixbuf> pixbuf;
-    unity::glib::Error error;
-
-    pixbuf = gdk_pixbuf_new_from_file((PKGDATADIR"/" + name + ".png").c_str(), &error);
-    if (error)
-      LOG_WARN(logger) << "Unable to load texture " << PKGDATADIR"/" << name << ": " << error;
-    else
-      return nux::CreateTexture2DFromPixbuf(pixbuf, true);
-
-    return nullptr;
+  TextureCache::CreateTextureCallback cb = [&](std::string const& name, int width, int height) -> nux::BaseTexture* { 
+    return nux::CreateTexture2DFromFile((PKGDATADIR"/" + name + ".png").c_str(), -1, true);
   };
 
   launcher_sheen_ = cache.FindTexture("dash_sheen", 0, 0, cb);
