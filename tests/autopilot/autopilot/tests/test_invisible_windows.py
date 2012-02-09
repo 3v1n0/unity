@@ -35,11 +35,11 @@ class InvisibleWindowTests(TestCase):
         switcher = Switcher()
         launcher = Launcher()
         # calculator should be in both launcher AND switcher:
-        icon_names = [i.tooltip_text for i in launcher.get_launcher_icons() if i.visible]
+        icon_names = [i.tooltip_text for i in launcher.get_launcher_icons()]
         self.assertIn('Calculator', icon_names)
 
         switcher.initiate()
-        icon_names = [i.tooltip_text for i in switcher.get_switcher_icons() if i.visible]
+        icon_names = [i.tooltip_text for i in switcher.get_switcher_icons()]
         switcher.terminate()
         self.assertIn('Calculator', icon_names)
         # now set skip_tasklist:
@@ -49,14 +49,14 @@ class InvisibleWindowTests(TestCase):
         self.assertEqual(1, len(windows))
         make_window_skip_taskbar(windows[0].x_win)
         self.addCleanup(make_window_skip_taskbar, windows[0].x_win, False)
-        sleep(1)
+        sleep(2)
 
         # calculator should now NOT be in both launcher AND switcher:
-        icon_names = [i.tooltip_text for i in launcher.get_launcher_icons() if i.visible]
+        icon_names = [i.tooltip_text for i in launcher.get_launcher_icons()]
         self.assertNotIn('Calculator', icon_names)
 
         switcher.initiate()
-        icon_names = [i.tooltip_text for i in switcher.get_switcher_icons() if i.visible]
+        icon_names = [i.tooltip_text for i in switcher.get_switcher_icons()]
         switcher.terminate()
         self.assertNotIn('Calculator', icon_names)
 
