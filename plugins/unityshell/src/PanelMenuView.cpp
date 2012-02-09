@@ -758,7 +758,7 @@ PanelMenuView::GetActiveViewName(bool use_appname)
        return "";
     }
 
-    if (WindowManager::Default ()->IsWindowMaximized(window_xid) && !use_appname)
+    if (WindowManager::Default()->IsWindowMaximized(window_xid) && !use_appname)
     {
       label = glib::String(bamf_view_get_name(view)).Str();
     }
@@ -1220,7 +1220,7 @@ PanelMenuView::OnActiveWindowChanged(BamfMatcher *matcher,
       // if we've just started tracking this window and it is maximized, let's
       // make sure it's undecorated just in case it slipped by us earlier
       // (I'm looking at you, Chromium!)
-      if (_is_maximized && WindowManager::Default ()->IsWindowDecorated(xid))
+      if (_is_maximized && WindowManager::Default()->IsWindowDecorated(xid))
       {
         WindowManager::Default()->Undecorate(xid);
         _maximized_set.insert(xid);
@@ -1257,8 +1257,8 @@ PanelMenuView::OnSpreadInitiate()
 {
   /*foreach (guint32 &xid, windows)
   {
-    if (WindowManager::Default ()->IsWindowMaximized (xid))
-      WindowManager::Default ()->Decorate (xid);
+    if (WindowManager::Default()->IsWindowMaximized (xid))
+      WindowManager::Default()->Decorate (xid);
   }*/
 
   Refresh();
@@ -1270,8 +1270,8 @@ PanelMenuView::OnSpreadTerminate()
 {
   /*foreach (guint32 &xid, windows)
   {
-    if (WindowManager::Default ()->IsWindowMaximized (xid))
-      WindowManager::Default ()->Undecorate (xid);
+    if (WindowManager::Default()->IsWindowMaximized (xid))
+      WindowManager::Default()->Undecorate (xid);
   }*/
 
   Refresh();
@@ -1339,7 +1339,7 @@ PanelMenuView::OnWindowDecorated(guint32 xid)
 
   if (_maximized_set.find(xid) != _maximized_set.end ())
   {
-    WindowManager::Default ()->Undecorate(xid);
+    WindowManager::Default()->Undecorate(xid);
   }
 }
 
@@ -1526,6 +1526,7 @@ PanelMenuView::OnRestoreClicked()
     if (_is_integrated)
     {
       target_win = GetMaximizedWindow();
+      WindowManager::Default()->Activate(target_win);
     }
 
     if (target_win != 0)
@@ -1579,7 +1580,7 @@ PanelMenuView::OnMaximizedGrabStart(int x, int y, unsigned long button_flags, un
   if (maximized_win != 0)
   {
     /* Always activate the window in case it is on another monitor */
-    WindowManager::Default ()->Activate (maximized_win);
+    WindowManager::Default()->Activate(maximized_win);
     _panel_titlebar_grab_area->SetGrabbed(true);
   }
 }
@@ -1816,6 +1817,12 @@ PanelMenuView::SetMonitor(int monitor)
     if (bamf_window_maximized(window) == BAMF_WINDOW_MAXIMIZED)
     {
       Window xid = bamf_window_get_xid(window);
+
+      _decor_map[xid] = WindowManager::Default()->IsWindowDecorated(xid);
+
+      if (_decor_map[xid])
+        WindowManager::Default()->Undecorate(xid);
+
       _maximized_set.insert(xid);
     }
   }
