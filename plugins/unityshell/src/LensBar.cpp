@@ -156,7 +156,9 @@ void LensBar::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
 
 void LensBar::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
 {
-  gfx_context.PushClippingRectangle(GetGeometry());
+  nux::Geometry const& base = GetGeometry();
+
+  gfx_context.PushClippingRectangle(base);
 
   if (!IsFullRedraw())
     nux::GetPainter().PushLayer(gfx_context, bg_layer_->GetGeometry(), bg_layer_.get());
@@ -184,7 +186,9 @@ void LensBar::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
       nux::Geometry const& geo = icon->GetGeometry();
       int middle = geo.x + geo.width/2;
       int size = 5;
-      int y = geo.y - 11;
+      // Nux doesn't draw too well the small triangles, so let's draw a
+      // bigger one and clip part of them using the "-1".
+      int y = base.y - 1;
 
       nux::GetPainter().Draw2DTriangleColor(gfx_context,
                                             middle - size, y,
