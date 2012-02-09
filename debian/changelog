@@ -1,3 +1,12 @@
+unity (5.2.0-0ubuntu4~ppa1) precise; urgency=low
+
+  * debian/control:
+    - build-dep on latest compiz-dev and libcompizconfig0-dev for ABI break
+  * debian/rules:
+    - pick new abiversion file
+
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 09 Feb 2012 18:15:04 +0100
+
 unity (5.2.0-0ubuntu3) precise; urgency=low
 
   * Cherry-pick:
