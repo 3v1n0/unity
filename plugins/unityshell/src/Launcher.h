@@ -291,9 +291,7 @@ private:
   float GetAutohidePositionMin() const;
   float GetAutohidePositionMax() const;
 
-  virtual void PreLayoutManagement();
   virtual long PostLayoutManagement(long LayoutResult);
-  virtual void PositionChildLayout(float offsetX, float offsetY);
 
   void SetOffscreenRenderTarget(nux::ObjectPtr<nux::IOpenGLBaseTexture> texture);
   void RestoreSystemRenderTarget();
