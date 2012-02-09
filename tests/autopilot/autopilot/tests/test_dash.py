@@ -8,9 +8,8 @@
 
 from time import sleep
 
-from autopilot.emulators.unity import Dash
-from autopilot.emulators.X11 import Keyboard
-from autopilot.emulators.X11 import Mouse
+from autopilot.emulators.unity.dash import Dash
+from autopilot.emulators.X11 import Keyboard, Mouse
 from autopilot.tests import AutopilotTestCase
 from autopilot.glibrunner import GlibRunner
 

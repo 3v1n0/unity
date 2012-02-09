@@ -10,10 +10,11 @@ from time import sleep
 from subprocess import call
 
 from autopilot.emulators.bamf import Bamf
+from autopilot.emulators.unity.launcher import Launcher
+from autopilot.emulators.unity.switcher import Switcher
 from autopilot.emulators.X11 import Keyboard
-from autopilot.emulators.unity import Launcher, Switcher
-from autopilot.tests import AutopilotTestCase
 from autopilot.glibrunner import GlibRunner
+from autopilot.tests import AutopilotTestCase
 
 
 class ShowDesktopTests(AutopilotTestCase):

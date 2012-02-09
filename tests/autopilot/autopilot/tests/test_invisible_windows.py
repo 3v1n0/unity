@@ -15,7 +15,8 @@ from testtools import TestCase
 from time import sleep
 
 from autopilot.utilities import make_window_skip_taskbar
-from autopilot.emulators.unity import Launcher, Switcher
+from autopilot.emulators.unity.launcher import Launcher
+from autopilot.emulators.unity.switcher import Switcher
 from autopilot.emulators.bamf import Bamf
 
 class InvisibleWindowTests(TestCase):

@@ -2,7 +2,7 @@ from testtools.matchers import Equals
 from testtools.matchers import LessThan
 
 from autopilot.tests import AutopilotTestCase
-from autopilot.emulators.unity import Launcher
+from autopilot.emulators.unity.launcher import Launcher
 from autopilot.glibrunner import GlibRunner
 
 from time import sleep

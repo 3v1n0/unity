@@ -87,12 +87,3 @@ def make_launcher_icon(dbus_tuple):
         print name, "is not a valid icon type!"
         return None
     return class_type(state)
-
-
-# TODO: remove these - tests should specify what they want properly:
-
-from autopilot.emulators.unity.dash import *
-from autopilot.emulators.unity.switcher import *
-from autopilot.emulators.unity.launcher import *
-from autopilot.emulators.unity.icons import *
-from autopilot.emulators.unity.quicklist import *
