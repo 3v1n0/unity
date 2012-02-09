@@ -8,22 +8,20 @@
 "Various classes for interacting with BAMF."
 
 import dbus
-from dbus.mainloop.glib import DBusGMainLoop
+import dbus.glib
 import gio
 import gobject
 from Xlib import display, X, protocol
+
+from autopilot.emulators.dbus_handler import session_bus
 
 __all__ = ["Bamf",
         "BamfApplication",
         "BamfWindow",
         ]
 
-
 _BAMF_BUS_NAME = 'org.ayatana.bamf'
-DBusGMainLoop(set_as_default=True)
-_session_bus = dbus.SessionBus()
 _X_DISPLAY = display.Display()
-
 
 def _filter_user_visible(win):
     """Filter out non-user-visible objects.
@@ -49,7 +47,7 @@ class Bamf:
     def __init__(self):
         matcher_path = '/org/ayatana/bamf/matcher'
         self.matcher_interface_name = 'org.ayatana.bamf.matcher'
-        self.matcher_proxy = _session_bus.get_object(_BAMF_BUS_NAME, matcher_path)
+        self.matcher_proxy = session_bus.get_object(_BAMF_BUS_NAME, matcher_path)
         self.matcher_interface = dbus.Interface(self.matcher_proxy, self.matcher_interface_name)
 
     def get_running_applications(self, user_visible_only=True):
@@ -140,7 +138,7 @@ class Bamf:
             if not wait_forever:
                 gobject.timeout_add(timeout * 1000, on_timeout_reached)
             # connect signal handler:
-            _session_bus.add_signal_receiver(on_view_added, 'ViewOpened')
+            session_bus.add_signal_receiver(on_view_added, 'ViewOpened')
             # pump the gobject main loop until either the correct signal is emitted, or the
             # timeout happens.
             gobject_loop.run()
@@ -171,7 +169,7 @@ class BamfApplication:
     def __init__(self, bamf_app_path):
         self.bamf_app_path = bamf_app_path
         try:
-            self._app_proxy = _session_bus.get_object(_BAMF_BUS_NAME, bamf_app_path)
+            self._app_proxy = session_bus.get_object(_BAMF_BUS_NAME, bamf_app_path)
             self._view_iface = dbus.Interface(self._app_proxy, 'org.ayatana.bamf.view')
         except dbus.DBusException, e:
             e.message += 'bamf_app_path=%r' % (bamf_app_path)
@@ -219,7 +217,7 @@ class BamfWindow:
     """
     def __init__(self, window_path):
         self._bamf_win_path = window_path
-        self._app_proxy = _session_bus.get_object(_BAMF_BUS_NAME, window_path)
+        self._app_proxy = session_bus.get_object(_BAMF_BUS_NAME, window_path)
         self._window_iface = dbus.Interface(self._app_proxy, 'org.ayatana.bamf.window')
         self._view_iface = dbus.Interface(self._app_proxy, 'org.ayatana.bamf.view')
 

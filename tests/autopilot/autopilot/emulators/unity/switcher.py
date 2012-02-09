@@ -31,7 +31,12 @@ class Switcher(object):
         self._keyboard.press_and_release('`')
 
     def terminate(self):
-        """Stop switcher."""
+        """Stop switcher without activating the selected icon."""
+        self._keyboard.press_and_release('Escape')
+        self._keyboard.release('Alt')
+
+    def stop(self):
+        """Stop switcher and activate the selected icon."""
         self._keyboard.release('Alt')
 
     def next_icon(self):
@@ -101,7 +106,7 @@ class Switcher(object):
 
         """
         icons = []
-        model = self.get_state_by_path('//SwitcherModel')[0]
+        model = get_state_by_path('//SwitcherModel')[0]
         for child in model['Children']:
             icon = make_launcher_icon(child)
             if icon:

@@ -7,8 +7,10 @@
 # by the Free Software Foundation.
 #
 
-from autopilot.emulators.unity import get_state_by_path
 from time import sleep
+
+from autopilot.emulators.unity import get_state_by_path
+from autopilot.emulators.X11 import Mouse
 
 
 class Quicklist(object):
@@ -56,10 +58,11 @@ class Quicklist(object):
         """Click one of the quicklist items."""
         if not isinstance(item, QuicklistMenuItem):
             raise TypeError("Item must be a subclass of QuicklistMenuItem")
-        self._mouse.move(self.x + item.x + (item.width /2),
+        mouse = Mouse()
+        mouse.move(self.x + item.x + (item.width /2),
                         self.y + item.y + (item.height /2))
         sleep(0.25)
-        self._mouse.click()
+        mouse.click()
 
 
 

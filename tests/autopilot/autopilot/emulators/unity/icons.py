@@ -21,29 +21,12 @@ class SimpleLauncherIcon(ObjectCreatableFromStateDict):
     """
 
     def __init__(self, icon_dict):
-        UnityIntrospectableObject.__init__()
-        self._set_properties(icon_dict)
+        super(SimpleLauncherIcon, self).__init__(icon_dict)
 
     def refresh_state(self):
         """Re-get the LauncherIcon's state from unity, updating it's public properties."""
         state = self.get_state_by_path('//LauncherIcon[id=%d]' % (self.id))
-        self._set_properties(state[0])
-
-    def _set_properties(self, state_from_unity):
-        # please keep these in the same order as they are in unity:
-        self.urgent = state_from_unity['quirk-urgent']
-        self.presented = state_from_unity['quirk-presented']
-        self.visible = state_from_unity['quirk-visible']
-        self.sort_priority = state_from_unity['sort-priority']
-        self.running = state_from_unity['quirk-running']
-        self.active = state_from_unity['quirk-active']
-        self.icon_type = state_from_unity['icon-type']
-        self.related_windows = state_from_unity['related-windows']
-        self.y = state_from_unity['y']
-        self.x = state_from_unity['x']
-        self.z = state_from_unity['z']
-        self.id = state_from_unity['id']
-        self.tooltip_text = unicode(state_from_unity['tooltip-text'])
+        super(SimpleLauncherIcon, self).set_properties(state[0])
 
     def get_quicklist(self):
         """Get the quicklist for this launcher icon.
@@ -63,11 +46,6 @@ class BFBLauncherIcon(SimpleLauncherIcon):
 
 class BamfLauncherIcon(SimpleLauncherIcon):
     """Represents a launcher icon with BAMF integration."""
-
-    def _set_properties(self, state_from_unity):
-        super(BamfLauncherIcon, self)._set_properties(state_from_unity)
-        self.desktop_file = state_from_unity['desktop-file']
-        self.sticky = bool(state_from_unity['sticky'])
 
 
 class TrashLauncherIcon(SimpleLauncherIcon):

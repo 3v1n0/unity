@@ -139,22 +139,23 @@ class Launcher(object):
         return get_state_by_path('/Unity/LauncherController/LauncherModel')[0]
 
     def __get_state(self, monitor):
-        # get the state for the 'launcher' piece
         return get_state_by_path('/Unity/LauncherController/Launcher[monitor=%s]' % (monitor))[0]
 
-    def get_launcher_icons(self):
+    def get_launcher_icons(self, visible_only=True):
         """Get a list of launcher icons in this launcher."""
         model = self.__get_model_state()
         icons = []
         for child in model['Children']:
             icon = make_launcher_icon(child)
             if icon:
+                if visible_only and not getattr(icon, 'quirk_visible', False):
+                    continue
                 icons.append(icon)
         return icons
 
     def num_launcher_icons(self):
         """Get the number of icons in the launcher model."""
-        return len(get_state_by_path('/Unity/LauncherController/LauncherModel/LauncherIcon')[0])
+        return len(self.get_launcher_icons())
 
     def get_currently_selected_icon(self):
         """Returns the currently selected launcher icon, if keynav mode is active."""
@@ -162,6 +163,8 @@ class Launcher(object):
 
     def click_launcher_icon(self, icon, monitor=0, button=1):
         """Move the mouse over the launcher icon, and click it."""
+        if not isinstance(icon, SimpleLauncherIcon):
+            raise TypeError("icon must be a LauncherIcon")
         self.reveal_launcher(monitor)
         self._mouse.move(icon.x, icon.y + (self.icon_width / 2))
         self._mouse.click(button)

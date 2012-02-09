@@ -7,8 +7,8 @@
 # by the Free Software Foundation.
 #
 
-
-import dbus
+from autopilot.emulators.dbus_handler import session_bus
+from dbus import Interface
 
 
 _object_registry = {}
@@ -37,10 +37,8 @@ DEBUG_PATH = '/com/canonical/Unity/Debug'
 INTROSPECTION_IFACE = 'com.canonical.Unity.Debug.Introspection'
 
 
-_bus = dbus.SessionBus()
-_debug_proxy_obj = _bus.get_object(UNITY_BUS_NAME, DEBUG_PATH)
-_introspection_iface = dbus.Interface(_debug_proxy_obj,
-                                      INTROSPECTION_IFACE)
+_debug_proxy_obj = session_bus.get_object(UNITY_BUS_NAME, DEBUG_PATH)
+_introspection_iface = Interface(_debug_proxy_obj, INTROSPECTION_IFACE)
 
 def get_state_by_path(piece='/Unity'):
     """Returns a full dump of unity's state."""
@@ -68,8 +66,16 @@ class ObjectCreatableFromStateDict(object):
     __metaclass__ = IntrospectableObjectMetaclass
 
     def __init__(self, state_dict):
+        self.set_properties(state_dict)
+
+    def set_properties(self, state_dict):
+        """Creates and set attributes of `self` based on contents of `state_dict`.
+
+        Translates '-' to '_', so a key of 'icon-type' for example becomes 'icon_type'.
+
+        """
         for key in state_dict.keys():
-            setattr(self, key, state_dict[key])
+            setattr(self, key.replace('-','_'), state_dict[key])
 
 
 def make_launcher_icon(dbus_tuple):
@@ -84,6 +90,7 @@ def make_launcher_icon(dbus_tuple):
 
 
 # TODO: remove these - tests should specify what they want properly:
+
 from autopilot.emulators.unity.dash import *
 from autopilot.emulators.unity.switcher import *
 from autopilot.emulators.unity.launcher import *
