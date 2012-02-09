@@ -346,8 +346,8 @@ void LensView::OnFilterAdded(Filter::Ptr filter)
   filter_bar_->AddFilter(filter);
 
   int width = dash::Style::Instance().GetTileWidth();
-  fscroll_view_->SetMinimumWidth(width * 2 + dash::Style::FILTERS_LEFT_PADDING + dash::Style::FILTERS_RIGHT_PADDING);
-  fscroll_view_->SetMaximumWidth(width * 2 + dash::Style::FILTERS_LEFT_PADDING + dash::Style::FILTERS_RIGHT_PADDING);
+  fscroll_view_->SetMinimumWidth(width * 2 + dash::Style::FILTERS_LEFT_PADDING + dash::Style::FILTERS_RIGHT_PADDING + 3 + 8);
+  fscroll_view_->SetMaximumWidth(width * 2 + dash::Style::FILTERS_LEFT_PADDING + dash::Style::FILTERS_RIGHT_PADDING + 3 + 8);
 
   can_refine_search = true;
 }
@@ -371,7 +371,7 @@ void LensView::OnViewTypeChanged(ViewType view_type)
 
 void LensView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
 {
-  nux::Geometry geo = GetGeometry();
+  nux::Geometry const& geo = GetGeometry();
 
   gfx_context.PushClippingRectangle(geo);
   nux::GetPainter().PaintBackground(gfx_context, geo);
@@ -393,7 +393,7 @@ Lens::Ptr LensView::lens() const
 }
 
 int LensView::GetNumRows()
-{  
+{
   unsigned int columns = dash::Style::Instance().GetDefaultNColumns();
   columns -= filters_expanded ? 2 : 0;
 

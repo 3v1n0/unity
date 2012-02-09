@@ -194,7 +194,7 @@ public:
 
   // Paddings
   static const int FILTERS_LEFT_PADDING = 0;
-  static const int FILTERS_RIGHT_PADDING = 8;
+  static const int FILTERS_RIGHT_PADDING = 0;
 
   sigc::signal<void> changed;
 

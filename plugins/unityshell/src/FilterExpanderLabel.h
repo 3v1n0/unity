@@ -23,6 +23,8 @@
 #ifndef UNITYSHELL_FILTEREXPANDERLABEL_H
 #define UNITYSHELL_FILTEREXPANDERLABEL_H
 
+#include <memory>
+
 #include <Nux/Nux.h>
 #include <Nux/GridHLayout.h>
 #include <Nux/HLayout.h>
@@ -31,6 +33,11 @@
 
 #include "FilterWidget.h"
 #include "IconTexture.h"
+
+namespace nux
+{
+class AbstractPaintLayer;
+}
 
 namespace unity
 {
@@ -57,9 +64,12 @@ protected:
 private:
   void BuildLayout();
   void DoExpandChange(bool change);
+  bool ShouldBeHighlighted();
 
   nux::LinearLayout* layout_;
   nux::LinearLayout* top_bar_layout_;
+  nux::View* expander_view_;
+  nux::LinearLayout* expander_layout_;
   nux::View* right_hand_contents_;
   nux::StaticText* cairo_label_;
   std::string raw_label_;
@@ -70,6 +80,7 @@ private:
   IconTexture* expand_icon_;
 
   nux::ObjectPtr<nux::Layout> contents_;
+  std::unique_ptr<nux::AbstractPaintLayer> highlight_layer_;
 };
 
 } // namespace dash

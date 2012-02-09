@@ -126,8 +126,8 @@ void FilterBar::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
       GfxContext.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
       GfxContext.GetRenderStates().SetColorMask(true, true, true, false);
       nux::GetPainter().Draw2DLine(GfxContext,
-                                   geom.x             , geom.y + geom.height - 1,
-                                   geom.x + geom.width, geom.y + geom.height - 1,
+                                   geom.x + 5, geom.y + geom.height - 1,
+                                   geom.x + geom.width - 9, geom.y + geom.height - 1,
                                    col);
       GfxContext.GetRenderStates().SetBlend(alpha, src, dest);
     }

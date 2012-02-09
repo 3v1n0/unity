@@ -44,6 +44,7 @@ FilterMultiRange::FilterMultiRange(NUX_FILE_LINE_DECL)
   all_button_ = new FilterAllButton(NUX_TRACKER_LOCATION);
 
   layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
+  layout_->SetLeftAndRightPadding(0, 8);
   layout_->SetTopAndBottomPadding(9, 12);
 
   SetRightHandView(all_button_);
@@ -153,22 +154,6 @@ std::string FilterMultiRange::GetFilterType()
 void FilterMultiRange::InitTheme()
 {
   //FIXME - build theme here - store images, cache them, fun fun fun
-}
-
-void FilterMultiRange::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
-{
-  nux::Geometry const& geo = GetGeometry();
-
-  GfxContext.PushClippingRectangle(geo);
-  nux::GetPainter().PaintBackground(GfxContext, geo);
-  GfxContext.PopClippingRectangle();
-}
-
-void FilterMultiRange::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
-{
-  GfxContext.PushClippingRectangle(GetGeometry());
-  GetLayout()->ProcessDraw(GfxContext, force_draw);
-  GfxContext.PopClippingRectangle();
 }
 
 } // namespace dash
