@@ -113,13 +113,6 @@ LauncherIcon::~LauncherIcon()
 {
   SetQuirk(QUIRK_URGENT, false);
 
-  // Remove from introspection
-
-  if (_quicklist)
-    RemoveChild(_quicklist.GetPointer());
-  if (_tooltip)
-    RemoveChild(_tooltip.GetPointer());
-
   if (_present_time_handle)
     g_source_remove(_present_time_handle);
   _present_time_handle = 0;
