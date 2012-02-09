@@ -181,11 +181,18 @@ panel_service_class_dispose (GObject *object)
 }
 
 static void
+panel_service_class_finalize (GObject *object)
+{
+  static_service = NULL;
+}
+
+static void
 panel_service_class_init (PanelServiceClass *klass)
 {
   GObjectClass *obj_class = G_OBJECT_CLASS (klass);
 
   obj_class->dispose = panel_service_class_dispose;
+  obj_class->finalize = panel_service_class_finalize;
 
   /* Signals */
   _service_signals[ENTRY_ACTIVATED] =
