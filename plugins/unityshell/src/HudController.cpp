@@ -97,7 +97,7 @@ void Controller::SetupHudView()
   view_ = new View();
 
   layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
-  layout_->AddView(view_, 1);
+  layout_->AddView(view_, 0);
   window_->SetLayout(layout_);
 
   view_->mouse_down_outside_pointer_grab_area.connect(sigc::mem_fun(this, &Controller::OnMouseDownOutsideWindow));
