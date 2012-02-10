@@ -9,17 +9,12 @@
 
 from time import sleep
 
-from autopilot.emulators.unity import get_state_by_path, ObjectCreatableFromStateDict
+from autopilot.emulators.unity import ObjectCreatableFromStateDict
 from autopilot.emulators.X11 import Mouse
 
 
 class Quicklist(ObjectCreatableFromStateDict):
     """Represents a quicklist."""
-
-
-    def refresh_state(self):
-        state = get_state_by_path('//Quicklist[id=%d]' % (self.id))
-        self.set_properties(state[0])
 
     @property
     def items(self):
