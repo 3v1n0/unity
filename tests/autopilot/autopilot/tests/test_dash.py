@@ -7,6 +7,8 @@
 # by the Free Software Foundation.
 
 from time import sleep
+import logging
+logger = logging.getLogger(__name__)
 
 from autopilot.emulators.unity.dash import Dash
 from autopilot.emulators.X11 import Keyboard, Mouse
@@ -133,6 +135,3 @@ class DashTests(AutopilotTestCase):
 
         category = self.dash.get_focused_category()
         self.assertEqual(category, None)
-
-
-
