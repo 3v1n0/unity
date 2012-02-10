@@ -309,23 +309,55 @@ get_indicator_entry_by_id (PanelService *self, const gchar *entry_id)
 
   entry = g_hash_table_lookup (self->priv->id2entry_hash, entry_id);
 
-  if (entry)
-  {
-    if (g_slist_find (self->priv->indicators, entry->parent_object))
-      {
-        if (!INDICATOR_IS_OBJECT (entry->parent_object))
-          entry = NULL;
-      }
-    else
-      {
-        entry = NULL;
-      }
-
-    if (!entry)
+  if (!entry)
     {
-      g_warning("The entry id '%s' you're trying to lookup is not a valid IndicatorObjectEntry!", entry_id);
+      /* This is a workaround to avoid false negatives, FIXME
+       * there's an issue in indicator-appmenu that causes entry-removed to
+       * be not properly emitted */
+
+      IndicatorObjectEntry *invalid_entry;
+      if (sscanf (entry_id, "%p", &invalid_entry) == 1)
+        {
+          GSList *sl;
+          for (sl = self->priv->indicators; sl; sl = sl->next)
+            {
+              IndicatorObject *object = INDICATOR_OBJECT (sl->data);
+              GList *entries, *l;
+
+              entries = indicator_object_get_entries (object);
+
+              for (l = entries; l; l = l->next)
+                {
+                  if (l->data == invalid_entry)
+                    {
+                      entry = invalid_entry;
+                      g_warning ("Entry %p has been wrongly removed!", entry);
+                      break;
+                    }
+                }
+
+              g_list_free (entries);
+            }
+        }
     }
-  }
+
+  if (entry)
+    {
+      if (g_slist_find (self->priv->indicators, entry->parent_object))
+        {
+          if (!INDICATOR_IS_OBJECT (entry->parent_object))
+            entry = NULL;
+        }
+      else
+        {
+          entry = NULL;
+        }
+
+      if (!entry)
+        {
+          g_warning("The entry id '%s' you're trying to lookup is not a valid IndicatorObjectEntry!", entry_id);
+        }
+    }
 
   return entry;
 }
@@ -790,6 +822,10 @@ on_entry_removed (IndicatorObject      *object,
    * this should be done in during the sync, to avoid false positive.
    * FIXME this in libappmenu.so to avoid to send an "entry-removed" signal
    * when switching the focus from a window to one of its dialog children */
+
+  gchar *entry_id = get_indicator_entry_id_by_entry (entry);
+  g_hash_table_remove (self->priv->id2entry_hash, entry_id);
+  g_free (entry_id);
 
   notify_object (object);
 }
@@ -1288,8 +1324,6 @@ panel_service_sync_geometry (PanelService *self,
                   g_hash_table_remove (priv->panel2entries_hash, panel_id);
                 }
             }
-
-            g_hash_table_remove (priv->id2entry_hash, entry_id);
         }
       else
         {
