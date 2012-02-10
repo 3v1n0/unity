@@ -4,6 +4,7 @@ unity (5.2.0-0ubuntu4~ppa1) precise; urgency=low
     - build-dep on latest compiz-dev and libcompizconfig0-dev for ABI break
   * debian/rules:
     - pick new abiversion file
+  * Cherry-pick new gtk_init initialization in unity (not anymore in compiz)
 
  -- Didier Roche <didrocks@ubuntu.com>  Thu, 09 Feb 2012 18:15:04 +0100
 
