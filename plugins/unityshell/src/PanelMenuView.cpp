@@ -1406,6 +1406,11 @@ PanelMenuView::OnWindowRestored(guint xid)
     _is_grabbed = false;
   }
 
+  if (_decor_map[xid])
+    WindowManager::Default()->Decorate(xid);
+
+  _maximized_set.erase(xid);
+
   if (_is_integrated)
   {
     Window maximized = GetMaximizedWindow();
@@ -1419,11 +1424,6 @@ PanelMenuView::OnWindowRestored(guint xid)
       _integrated_menu->SetControlledWindowXid(maximized);
     }
   }
-
-  if (_decor_map[xid])
-    WindowManager::Default()->Decorate(xid);
-
-  _maximized_set.erase(xid);
 
   Refresh();
   FullRedraw();
