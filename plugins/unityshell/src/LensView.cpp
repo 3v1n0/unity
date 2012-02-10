@@ -324,10 +324,9 @@ void LensView::EnsureSize()
    
     height = std::max(height, 1); // hack because nux does not like heights < 1
 
-    LOG_DEBUG(logger) << "wuh: " << self->GetBaseHeight() << " - " << height;
-    if (self->GetBaseHeight() != height)
+    if (self->GetMinimumHeight() != height)
     {
-      self->SetBaseHeight(height);
+      self->SetMinimumHeight(height);
     }
     
     self->ensure_size_id_ = 0;
