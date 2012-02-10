@@ -387,7 +387,7 @@ void View::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
   }
   else
   {
-    layout_->ProcessDraw(gfx_context, force_draw);
+    GetLayout()->ProcessDraw(gfx_context, force_draw);
   }
   gfx_context.PopClippingRectangle();
 
