@@ -7,9 +7,7 @@
 # by the Free Software Foundation.
 #
 
-from autopilot.emulators.unity import (get_state_by_path,
-                                        ObjectCreatableFromStateDict,
-                                        )
+from autopilot.emulators.unity import ObjectCreatableFromStateDict
 from autopilot.emulators.unity.quicklist import Quicklist
 
 class SimpleLauncherIcon(ObjectCreatableFromStateDict):
@@ -20,14 +18,6 @@ class SimpleLauncherIcon(ObjectCreatableFromStateDict):
 
     """
 
-    def __init__(self, icon_dict):
-        super(SimpleLauncherIcon, self).__init__(icon_dict)
-
-    def refresh_state(self):
-        """Re-get the LauncherIcon's state from unity, updating it's public properties."""
-        state = self.get_state_by_path('//LauncherIcon[id=%d]' % (self.id))
-        super(SimpleLauncherIcon, self).set_properties(state[0])
-
     def get_quicklist(self):
         """Get the quicklist for this launcher icon.
 
@@ -35,9 +25,10 @@ class SimpleLauncherIcon(ObjectCreatableFromStateDict):
         launcher icon.
 
         """
-        ql_state = get_state_by_path('//LauncherIcon[id=%d]/Quicklist' % (self.id))
-        if len(ql_state) > 0:
-            return Quicklist(ql_state[0])
+        # quicklist is created dynamically, so refresh our state:
+        self.refresh_state()
+        matches = self.get_children_by_type(Quicklist)
+        return matches[0] if matches else None
 
 
 class BFBLauncherIcon(SimpleLauncherIcon):
