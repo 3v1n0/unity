@@ -427,7 +427,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
 
   if (arg.system_item)
   {
-    backlight_intensity = (arg.keyboard_nav_hl) ? 0.85f : 0.6f ;
+    backlight_intensity = (arg.keyboard_nav_hl) ? 0.95f : 0.8f ;
     glow_intensity = (arg.keyboard_nav_hl) ? 1.0f : 0.0f ;
 
     background = local::squircle_base_selected;
