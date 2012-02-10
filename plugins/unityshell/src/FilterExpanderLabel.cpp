@@ -26,7 +26,28 @@
 
 namespace
 {
-const float kExpandDefaultIconOpacity = 1.0f;
+
+const float EXPAND_DEFAULT_ICON_OPACITY = 1.0f;
+
+// right_hand_contents_
+const int RIGHT_HAND_CONTENTS_HEIGHT = 33;
+
+// layout_
+const int LAYOUT_LEFT_PADDING = 3;
+const int LAYOUT_RIGHT_PADDING = 1;
+
+// top_bar_layout_
+const int TOP_BAR_LAYOUT_LEFT_PADDING = 2;
+const int TOP_BAR_LAYOUT_RIGHT_PADDING = 0;
+const int TOP_BAR_LAYOUT_WIDTH_ADDER = 19;
+
+// expander_layout_
+const int EXPANDER_LAYOUT_SPACE_BETWEEN_CHILDREN = 8;
+
+// highlight
+const int HIGHLIGHT_HEIGHT = 34;
+const int HIGHLIGHT_WIDTH_SUBTRACTOR = 5;
+
 }
 
 namespace unity
@@ -94,7 +115,8 @@ void FilterExpanderLabel::SetLabel(std::string const& label)
 
 void FilterExpanderLabel::SetRightHandView(nux::View* view)
 {
-  view->SetMinimumHeight(33);
+  view->SetMinimumHeight(RIGHT_HAND_CONTENTS_HEIGHT);
+  view->SetMaximumHeight(RIGHT_HAND_CONTENTS_HEIGHT);
 
   right_hand_contents_ = view;
   top_bar_layout_->AddView(right_hand_contents_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
@@ -114,14 +136,13 @@ void FilterExpanderLabel::SetContents(nux::Layout* contents)
 void FilterExpanderLabel::BuildLayout()
 {
   layout_ = new nux::VLayout(NUX_TRACKER_LOCATION);
-  layout_->SetLeftAndRightPadding(3, 1);
+  layout_->SetLeftAndRightPadding(LAYOUT_LEFT_PADDING, LAYOUT_RIGHT_PADDING);
 
   top_bar_layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
-  top_bar_layout_->SetLeftAndRightPadding(2, 0);
+  top_bar_layout_->SetLeftAndRightPadding(TOP_BAR_LAYOUT_LEFT_PADDING, TOP_BAR_LAYOUT_RIGHT_PADDING);
 
   expander_layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
-  expander_layout_->SetSpaceBetweenChildren(8);
-
+  expander_layout_->SetSpaceBetweenChildren(EXPANDER_LAYOUT_SPACE_BETWEEN_CHILDREN);
 
   expander_view_ = new ExpanderView(NUX_TRACKER_LOCATION);
   expander_view_->SetLayout(expander_layout_);
@@ -129,7 +150,7 @@ void FilterExpanderLabel::BuildLayout()
 
   cairo_label_ = new nux::StaticText(label_.c_str(), NUX_TRACKER_LOCATION);
   cairo_label_->SetFontName("Ubuntu 10");
-  cairo_label_->SetTextColor(nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
+  cairo_label_->SetTextColor(nux::color::White);
   cairo_label_->SetAcceptKeyNavFocusOnMouseDown(false);
 
   nux::BaseTexture* arrow;
@@ -137,7 +158,7 @@ void FilterExpanderLabel::BuildLayout()
   expand_icon_ = new IconTexture(arrow,
                                  arrow->GetWidth(),
                                  arrow->GetHeight());
-  expand_icon_->SetOpacity(kExpandDefaultIconOpacity);
+  expand_icon_->SetOpacity(EXPAND_DEFAULT_ICON_OPACITY);
   expand_icon_->SetMinimumSize(arrow->GetWidth(), arrow->GetHeight());
   expand_icon_->SetVisible(true);
   arrow_layout_  = new nux::VLayout();
@@ -151,7 +172,7 @@ void FilterExpanderLabel::BuildLayout()
   expander_layout_->AddView(arrow_layout_, 0, nux::MINOR_POSITION_CENTER);
   top_bar_layout_->AddSpace(1, 1);
 
-  top_bar_layout_->SetMaximumWidth((Style::Instance().GetTileWidth() - 12) * 2 + 19);
+  top_bar_layout_->SetMaximumWidth((Style::Instance().GetTileWidth() - 12) * 2 + TOP_BAR_LAYOUT_WIDTH_ADDER);
 
   layout_->AddLayout(top_bar_layout_, 0, nux::MINOR_POSITION_LEFT);
   layout_->SetVerticalInternalMargin(0);
@@ -225,8 +246,8 @@ void FilterExpanderLabel::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   {
     nux::Geometry geo(top_bar_layout_->GetGeometry());
     geo.x = base.x;
-    geo.height = 34;
-    geo.width = base.width - 5;
+    geo.height = HIGHLIGHT_HEIGHT;
+    geo.width = base.width - HIGHLIGHT_WIDTH_SUBTRACTOR;;
 
     if (!highlight_layer_)
       highlight_layer_.reset(dash::Style::Instance().FocusOverlay(geo.width, geo.height));

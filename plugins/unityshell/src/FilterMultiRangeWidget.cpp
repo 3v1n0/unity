@@ -33,6 +33,15 @@ namespace unity
 {
 namespace dash
 {
+namespace
+{
+
+const int TOP_PADDING = 9;
+const int RIGHT_PADDING = 8;
+const int BOTTOM_PADDING = 12;
+const int LEFT_PADDING = 0;
+
+}
 
 NUX_IMPLEMENT_OBJECT_TYPE(FilterMultiRange);
 
@@ -44,8 +53,8 @@ FilterMultiRange::FilterMultiRange(NUX_FILE_LINE_DECL)
   all_button_ = new FilterAllButton(NUX_TRACKER_LOCATION);
 
   layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
-  layout_->SetLeftAndRightPadding(0, 8);
-  layout_->SetTopAndBottomPadding(9, 12);
+  layout_->SetLeftAndRightPadding(LEFT_PADDING, RIGHT_PADDING);
+  layout_->SetTopAndBottomPadding(TOP_PADDING, BOTTOM_PADDING);
 
   SetRightHandView(all_button_);
   SetContents(layout_);
