@@ -213,6 +213,7 @@ void SearchBar::Init()
     layout_->AddLayout(new nux::SpaceLayout(1, 10000, 0, 1), 1);
 
     expander_view_ = new ExpanderView(NUX_TRACKER_LOCATION);
+    expander_view_->SetVisible(false);
     expander_view_->SetLayout(filter_layout_);
     layout_->AddView(expander_view_, 0, nux::MINOR_POSITION_RIGHT, nux::MINOR_SIZE_FULL);
 
@@ -254,6 +255,7 @@ void SearchBar::Init()
   {
     if (show_filter_hint_)
     {
+      expander_view_->SetVisible(can_refine);
       show_filters_->SetVisible(can_refine);
       expand_icon_->SetVisible(can_refine);
     }
@@ -610,9 +612,9 @@ bool SearchBar::get_im_active() const
 //
 bool SearchBar::ShouldBeHighlighted()
 {
-  return ((expander_view_ && expander_view_->IsMouseInside()) ||
-          (show_filters_ && show_filters_->IsMouseInside()) ||
-          (expand_icon_ && expand_icon_->IsMouseInside()));
+  return ((expander_view_ && expander_view_->IsVisible() && expander_view_->IsMouseInside()) ||
+          (show_filters_ && show_filters_->IsVisible() && show_filters_->IsMouseInside()) ||
+          (expand_icon_ && expand_icon_->IsVisible() && expand_icon_->IsMouseInside()));
 }
 
 //
