@@ -9,7 +9,7 @@
 
 from time import sleep
 
-from autopilot.emulators.unity import get_state_by_path, make_launcher_icon
+from autopilot.emulators.unity import get_state_by_path, make_introspection_object
 from autopilot.emulators.X11 import Keyboard
 
 class Switcher(object):
@@ -74,7 +74,7 @@ class Switcher(object):
         model = self.__get_model()
         sel_idx = self.get_selection_index()
         try:
-            return make_launcher_icon(model['Children'][sel_idx])
+            return make_introspection_object(model['Children'][sel_idx])
         except KeyError:
             return None
 
@@ -108,7 +108,7 @@ class Switcher(object):
         icons = []
         model = get_state_by_path('//SwitcherModel')[0]
         for child in model['Children']:
-            icon = make_launcher_icon(child)
+            icon = make_introspection_object(child)
             if icon:
                 icons.append(icon)
         return icons

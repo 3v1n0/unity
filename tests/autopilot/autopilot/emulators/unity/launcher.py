@@ -9,7 +9,7 @@
 
 from time import sleep
 
-from autopilot.emulators.unity import get_state_by_path, make_launcher_icon
+from autopilot.emulators.unity import get_state_by_path, make_introspection_object
 from autopilot.emulators.unity.icons import BamfLauncherIcon, SimpleLauncherIcon
 from autopilot.emulators.X11 import Keyboard, Mouse
 
@@ -146,7 +146,7 @@ class Launcher(object):
         model = self.__get_model_state()
         icons = []
         for child in model['Children']:
-            icon = make_launcher_icon(child)
+            icon = make_introspection_object(child)
             if icon:
                 if visible_only and not getattr(icon, 'quirk_visible', False):
                     continue

@@ -78,8 +78,11 @@ class ObjectCreatableFromStateDict(object):
             setattr(self, key.replace('-','_'), state_dict[key])
 
 
-def make_launcher_icon(dbus_tuple):
-    """Make a launcher icon instance of the appropriate type given the DBus child tuple."""
+def make_introspection_object(dbus_tuple):
+    """Make an introspection object given a DBus tuple of (name, state_dict).
+
+    This only works for classes that derive from ObjectCreatableFromStateDict.
+    """
     name,state = dbus_tuple
     try:
         class_type = _object_registry[name]
