@@ -790,7 +790,7 @@ PanelMenuView::GetMaximizedViewName(bool use_appname)
 {
   Window maximized = GetMaximizedWindow();
   BamfWindow* window = nullptr;
-  std::string label(DESKTOP_NAME);
+  std::string label;
 
   if (maximized != 0)
   {
@@ -828,6 +828,9 @@ PanelMenuView::GetMaximizedViewName(bool use_appname)
       label = glib::String(bamf_view_get_name(view)).Str();
     }
   }
+
+  if (label.empty() && _is_integrated && !DrawMenus())
+    label = DESKTOP_NAME;
 
   return label;
 }
@@ -1126,17 +1129,28 @@ PanelMenuView::OnViewOpened(BamfMatcher *matcher, BamfView *view)
 void
 PanelMenuView::OnViewClosed(BamfMatcher *matcher, BamfView *view)
 {
-  if (!BAMF_IS_APPLICATION(view))
-    return;
-
-  BamfApplication* app = BAMF_APPLICATION(view);
-
-  if (std::find(_new_apps.begin(), _new_apps.end(), app) != _new_apps.end())
+  if (BAMF_IS_APPLICATION(view))
   {
-    _new_apps.remove(glib::Object<BamfApplication>(app, glib::AddRef()));
+    auto app = reinterpret_cast<BamfApplication*>(view);
 
-    if (_new_application == app || _new_apps.empty())
+    if (std::find(_new_apps.begin(), _new_apps.end(), app) != _new_apps.end())
+    {
+      _new_apps.remove(glib::Object<BamfApplication>(app, glib::AddRef()));
+
+      if (_new_application == app)
+        _new_application = nullptr;
+    }
+    else if (_new_apps.empty())
+    {
       _new_application = nullptr;
+    }
+  }
+  else if (BAMF_IS_WINDOW(view))
+  {
+    /* FIXME, this can be removed when window_unmapped WindowManager signal
+     * will emit the proper xid */
+    Window xid = bamf_window_get_xid(reinterpret_cast<BamfWindow*>(view));
+    OnWindowUnmapped(xid);
   }
 }
 
@@ -1206,7 +1220,7 @@ PanelMenuView::OnActiveWindowChanged(BamfMatcher *matcher,
     guint32 xid = bamf_window_get_xid(window);
     _active_xid = xid;
     _is_maximized = (bamf_window_maximized(window) == BAMF_WINDOW_MAXIMIZED);
-    nux::Geometry geo = WindowManager::Default()->GetWindowGeometry(xid);
+    nux::Geometry const& geo = WindowManager::Default()->GetWindowGeometry(xid);
 
     if (bamf_window_get_window_type(window) == BAMF_WINDOW_DESKTOP)
       _we_control_active = true;
@@ -1257,8 +1271,8 @@ PanelMenuView::OnSpreadInitiate()
 {
   /*foreach (guint32 &xid, windows)
   {
-    if (WindowManager::Default()->IsWindowMaximized (xid))
-      WindowManager::Default()->Decorate (xid);
+    if (WindowManager::Default()->IsWindowMaximized(xid))
+      WindowManager::Default()->Decorate(xid);
   }*/
 
   Refresh();
@@ -1270,8 +1284,8 @@ PanelMenuView::OnSpreadTerminate()
 {
   /*foreach (guint32 &xid, windows)
   {
-    if (WindowManager::Default()->IsWindowMaximized (xid))
-      WindowManager::Default()->Undecorate (xid);
+    if (WindowManager::Default()->IsWindowMaximized(xid))
+      WindowManager::Default()->Undecorate(xid);
   }*/
 
   Refresh();
@@ -1299,6 +1313,9 @@ PanelMenuView::OnWindowMinimized(guint32 xid)
   {
     WindowManager::Default()->Decorate(xid);
     _maximized_set.erase(xid);
+
+    Refresh();
+    QueueDraw();
   }
 }
 
@@ -1309,16 +1326,25 @@ PanelMenuView::OnWindowUnminimized(guint32 xid)
   {
     WindowManager::Default()->Undecorate(xid);
     _maximized_set.insert(xid);
+
+    Refresh();
+    QueueDraw();
   }
 }
 
 void
 PanelMenuView::OnWindowUnmapped(guint32 xid)
 {
-  if (WindowManager::Default()->IsWindowMaximized(xid))
+  // FIXME: compiz doesn't give us a valid xid (is always 0 on unmap)
+  // we need to do this again on BamfView closed signal.
+  if (_maximized_set.find(xid) != _maximized_set.end())
   {
     WindowManager::Default()->Decorate(xid);
     _maximized_set.erase(xid);
+    _decor_map.erase(xid);
+
+    Refresh();
+    QueueDraw();
   }
 }
 
@@ -1329,6 +1355,9 @@ PanelMenuView::OnWindowMapped(guint32 xid)
   {
     WindowManager::Default()->Undecorate(xid);
     _maximized_set.insert(xid);
+
+    Refresh();
+    QueueDraw();
   }
 }
 
@@ -1479,7 +1508,8 @@ PanelMenuView::OnCloseClicked()
     if (target_win != 0)
     {
       WindowManager::Default()->Close(target_win);
-      NeedRedraw();
+      Refresh();
+      QueueDraw();
     }
   }
 }
@@ -1504,7 +1534,8 @@ PanelMenuView::OnMinimizeClicked()
     if (target_win != 0)
     {
       WindowManager::Default()->Minimize(target_win);
-      NeedRedraw();
+      Refresh();
+      QueueDraw();
     }
   }
 }
