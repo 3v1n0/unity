@@ -50,11 +50,44 @@ const int external_margin_vertical = 8;
 const int external_margin_horizontal = 7;
 const int LIVE_SEARCH_TIMEOUT = 40;
 const int SPINNER_TIMEOUT = 100;
+
+// Highlight
+const int HIGHLIGHT_HEIGHT = 24;
+const int HIGHLIGHT_WIDTH = 292;
+const int HIGHLIGHT_LEFT_PADDING = 5;
+const int HIGHLIGHT_RIGHT_PADDING = 4;
 }
 
 namespace
 {
-  nux::logging::Logger logger("unity");
+
+nux::logging::Logger logger("unity");
+  
+class ExpanderView : public nux::View
+{
+public:
+  ExpanderView(NUX_FILE_LINE_DECL)
+   : nux::View(NUX_FILE_LINE_PARAM)
+  {
+  }
+
+protected:
+  void Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
+  {
+  };
+
+  void DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
+  {
+    if (GetLayout())
+      GetLayout()->ProcessDraw(graphics_engine, force_draw);
+  }
+
+  bool AcceptKeyNavFocus()
+  {
+    return false;
+  }
+};
+
 }
 
 namespace unity
@@ -69,6 +102,7 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
   , can_refine_search(false)
   , disable_glow(false)
   , show_filter_hint_(true)
+  , expander_view_(nullptr)
   , search_bar_width_(642)
   , live_search_timeout_(0)
   , start_spinner_timeout_(0)
@@ -83,6 +117,7 @@ SearchBar::SearchBar(int search_bar_width, bool show_filter_hint_, NUX_FILE_LINE
   , can_refine_search(false)
   , disable_glow(false)
   , show_filter_hint_(show_filter_hint_)
+  , expander_view_(nullptr)
   , search_bar_width_(search_bar_width)
   , live_search_timeout_(0)
   , start_spinner_timeout_(0)
@@ -97,6 +132,7 @@ SearchBar::SearchBar(int search_bar_width, NUX_FILE_LINE_DECL)
   , can_refine_search(false)
   , disable_glow(false)
   , show_filter_hint_(true)
+  , expander_view_(nullptr)
   , search_bar_width_(search_bar_width)
   , live_search_timeout_(0)
   , start_spinner_timeout_(0)
@@ -144,13 +180,12 @@ void SearchBar::Init()
 
   if (show_filter_hint_)
   {
-    std::string filter_str = _("<small><b>Filter results</b></small>");
+    std::string filter_str(_("<small><b>Filter results</b></small>"));
     show_filters_ = new nux::StaticCairoText(filter_str.c_str());
     show_filters_->SetVisible(false);
     show_filters_->SetFont("Ubuntu 10");
     show_filters_->SetTextColor(nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
     show_filters_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_LEFT);
-    show_filters_->mouse_click.connect([&] (int x, int y, unsigned long b, unsigned long k) { showing_filters = !showing_filters; });
 
     nux::BaseTexture* arrow;
     arrow = dash::Style::Instance().GetGroupExpandIcon();
@@ -160,13 +195,10 @@ void SearchBar::Init()
     expand_icon_->SetOpacity(kExpandDefaultIconOpacity);
     expand_icon_->SetMinimumSize(arrow->GetWidth(), arrow->GetHeight());
     expand_icon_->SetVisible(false);
-    expand_icon_->mouse_click.connect([&] (int x, int y, unsigned long b, unsigned long k) { showing_filters = !showing_filters; });
 
     filter_layout_ = new nux::HLayout();
     filter_layout_->SetHorizontalInternalMargin(8);
     filter_layout_->SetHorizontalExternalMargin(6);
-    filter_space_ = new nux::SpaceLayout(1, 10000, 0, 1);
-    filter_layout_->AddLayout(filter_space_, 1);
     filter_layout_->AddView(show_filters_, 0, nux::MINOR_POSITION_CENTER);
 
     arrow_layout_  = new nux::VLayout();
@@ -178,8 +210,34 @@ void SearchBar::Init()
 
     filter_layout_->AddView(arrow_layout_, 0, nux::MINOR_POSITION_CENTER);
 
-    layout_->AddView(filter_layout_, 1, nux::MINOR_POSITION_RIGHT, nux::MINOR_SIZE_FULL);
-  }
+    layout_->AddLayout(new nux::SpaceLayout(1, 10000, 0, 1), 1);
+
+    expander_view_ = new ExpanderView(NUX_TRACKER_LOCATION);
+    expander_view_->SetLayout(filter_layout_);
+    layout_->AddView(expander_view_, 0, nux::MINOR_POSITION_RIGHT, nux::MINOR_SIZE_FULL);
+
+    // Lambda functions
+    auto mouse_redraw = [&](int x, int y, unsigned long b, unsigned long k)
+    {
+      QueueDraw();
+    };
+
+    auto mouse_expand = [&](int x, int y, unsigned long b, unsigned long k)
+    {
+      showing_filters = !showing_filters;
+    };
+
+    // Signals
+    expander_view_->mouse_click.connect(mouse_expand);
+    expander_view_->mouse_enter.connect(mouse_redraw);
+    expander_view_->mouse_leave.connect(mouse_redraw);
+    show_filters_->mouse_click.connect(mouse_expand);
+    show_filters_->mouse_enter.connect(mouse_redraw);
+    show_filters_->mouse_leave.connect(mouse_redraw);
+    expand_icon_->mouse_click.connect(mouse_expand);
+    expand_icon_->mouse_enter.connect(mouse_redraw);
+    expand_icon_->mouse_leave.connect(mouse_redraw);
+    }
 
   sig_manager_.Add(new Signal<void, GtkSettings*, GParamSpec*>
       (gtk_settings_get_default(),
@@ -326,27 +384,49 @@ void SearchBar::OnShowingFiltersChanged(bool is_showing)
 
 void SearchBar::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
-  nux::Geometry geo = GetGeometry();
+  nux::Geometry const& base = GetGeometry();
 
   UpdateBackground(false);
 
-  GfxContext.PushClippingRectangle(geo);
+  GfxContext.PushClippingRectangle(base);
+  nux::GetPainter().PaintBackground(GfxContext, base);
 
-  nux::GetPainter().PaintBackground(GfxContext, geo);
-
-  bg_layer_->SetGeometry(nux::Geometry(geo.x, geo.y, last_width_, geo.height));
+  bg_layer_->SetGeometry(nux::Geometry(base.x, base.y, last_width_, base.height));
   nux::GetPainter().RenderSinglePaintLayer(GfxContext,
                                            bg_layer_->GetGeometry(),
                                            bg_layer_);
+
+  if (ShouldBeHighlighted())
+  {
+    nux::Geometry geo(show_filters_->GetGeometry());
+    nux::Geometry const& geo_arrow = arrow_layout_->GetGeometry();
+
+    geo.y -= (HIGHLIGHT_HEIGHT- geo.height) / 2;
+    geo.height = HIGHLIGHT_HEIGHT;
+    geo.width = HIGHLIGHT_WIDTH + HIGHLIGHT_LEFT_PADDING + HIGHLIGHT_RIGHT_PADDING;
+    geo.x = geo_arrow.x + (geo_arrow.width - 1) - geo.width + HIGHLIGHT_RIGHT_PADDING; 
+
+    if (!highlight_layer_)
+      highlight_layer_.reset(dash::Style::Instance().FocusOverlay(geo.width, geo.height));
+
+    highlight_layer_->SetGeometry(geo);
+    highlight_layer_->Renderlayer(GfxContext);
+  }
 
   GfxContext.PopClippingRectangle();
 }
 
 void SearchBar::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
-  nux::Geometry geo = GetGeometry();
+  nux::Geometry const& geo = GetGeometry();
 
   GfxContext.PushClippingRectangle(geo);
+
+  if (highlight_layer_ && !IsFullRedraw())
+  {
+    nux::GetPainter().PushLayer(GfxContext, highlight_layer_->GetGeometry(), highlight_layer_.get());
+  }
+
 
   if (!IsFullRedraw())
   {
@@ -407,7 +487,7 @@ void SearchBar::UpdateBackground(bool force)
   int PADDING = 12;
   int RADIUS = 5;
   int x, y, width, height;
-  nux::Geometry geo = GetGeometry();
+  nux::Geometry geo(GetGeometry());
   geo.width = layered_layout_->GetGeometry().width;
 
   LOG_DEBUG(logger) << "height: "
@@ -425,7 +505,6 @@ void SearchBar::UpdateBackground(bool force)
 
   if (disable_glow)
     PADDING = 2;
-
 
   x = y = PADDING - 1;
 
@@ -527,14 +606,26 @@ bool SearchBar::get_im_active() const
 }
 
 //
+// Highlight
+//
+bool SearchBar::ShouldBeHighlighted()
+{
+  return ((expander_view_ && expander_view_->IsMouseInside()) ||
+          (show_filters_ && show_filters_->IsMouseInside()) ||
+          (expand_icon_ && expand_icon_->IsMouseInside()));
+}
+
+//
 // Key navigation
 //
-bool
-SearchBar::AcceptKeyNavFocus()
+bool SearchBar::AcceptKeyNavFocus()
 {
   return false;
 }
 
+//
+// Introspection
+//
 std::string SearchBar::GetName() const
 {
   return "SearchBar";

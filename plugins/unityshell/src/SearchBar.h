@@ -20,6 +20,8 @@
 #ifndef SEARCH_BAR_H
 #define SEARCH_BAR_H
 
+#include <memory>
+
 #include <gtk/gtk.h>
 
 #include <NuxCore/Property.h>
@@ -37,6 +39,12 @@
 #include "IMTextEntry.h"
 #include "Introspectable.h"
 #include "StaticCairoText.h"
+
+namespace nux
+{
+class AbstractPaintLayer;
+class LinearLayout;
+}
 
 namespace unity
 {
@@ -99,15 +107,19 @@ private:
   bool AcceptKeyNavFocus();
 
 private:
+  bool ShouldBeHighlighted();
+
   glib::SignalManager sig_manager_;
   
   nux::AbstractPaintLayer* bg_layer_;
+  std::unique_ptr<nux::AbstractPaintLayer> highlight_layer_;
   nux::HLayout* layout_;
   nux::LayeredLayout* layered_layout_;
   nux::StaticCairoText* hint_;
+  nux::LinearLayout* expander_layout_;
   IMTextEntry* pango_entry_;
+  nux::View* expander_view_;
   nux::HLayout* filter_layout_;
-  nux::SpaceLayout* filter_space_;
   nux::StaticCairoText* show_filters_;
   nux::VLayout* arrow_layout_;
   nux::SpaceLayout* arrow_top_space_;
