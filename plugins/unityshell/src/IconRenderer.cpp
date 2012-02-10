@@ -191,6 +191,7 @@ nux::BaseTexture* arrow_empty_rtl = 0;
 
 nux::BaseTexture* squircle_base = 0;
 nux::BaseTexture* squircle_base_selected = 0;
+nux::BaseTexture* squircle_edge = 0;
 nux::BaseTexture* squircle_glow = 0;
 nux::BaseTexture* squircle_shine = 0;
 
@@ -400,6 +401,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
   float glow_intensity = arg.glow_intensity;
 
   nux::BaseTexture* background = local::icon_background[size];
+  nux::BaseTexture* edge = local::icon_edge[size];
   nux::BaseTexture* glow = local::icon_glow[size];
   nux::BaseTexture* shine = local::icon_shine[size];
 
@@ -431,6 +433,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
     glow_intensity = (arg.keyboard_nav_hl) ? 1.0f : 0.0f ;
 
     background = local::squircle_base_selected;
+    edge = local::squircle_edge;
     glow = local::squircle_glow;
     shine = local::squircle_shine;
   }
@@ -438,7 +441,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
   if (arg.colorify_background && !arg.keyboard_nav_hl)
   {
     background_tile_colorify = arg.colorify;
-    background_tile_colorify = background_tile_colorify * 0.65f;
+    background_tile_colorify = background_tile_colorify * 0.6f;
   }
 
   auto tile_transform = arg.icon->GetTransform(ui::IconTextureSource::TRANSFORM_TILE, monitor);
@@ -457,18 +460,27 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
   }
 
   edge_color = edge_color + ((background_tile_color - edge_color) * arg.backlight_intensity);
+  nux::Color edge_tile_colorify = background_tile_colorify;
 
-  if (!arg.system_item)
+  if (arg.colorify_background && !arg.keyboard_nav_hl)
   {
-    RenderElement(GfxContext,
-                  arg,
-                  local::icon_edge[size]->GetDeviceTexture(),
-                  edge_color,
-                  background_tile_colorify,
-                  arg.alpha,
-                  force_filter,
-                  tile_transform);
+    // Mix edge_tile_colorify with plain white (1.0f).
+    // Would be nicer to tweak value from HSV colorspace, instead.
+    float mix_factor = 0.2f;
+
+    edge_tile_colorify.red =   edge_tile_colorify.red   * (1.0f - mix_factor) + 1.0f * mix_factor;
+    edge_tile_colorify.green = edge_tile_colorify.green * (1.0f - mix_factor) + 1.0f * mix_factor;
+    edge_tile_colorify.blue =  edge_tile_colorify.blue  * (1.0f - mix_factor) + 1.0f * mix_factor;
   }
+
+  RenderElement(GfxContext,
+                arg,
+                edge->GetDeviceTexture(),
+                edge_color,
+                edge_tile_colorify,
+                arg.alpha,
+                force_filter,
+                tile_transform);
   // end tile draw
 
   // draw icon
@@ -1164,6 +1176,7 @@ void generate_textures()
 
   squircle_base = load_texture(PKGDATADIR"/squircle_base_54.png");
   squircle_base_selected = load_texture(PKGDATADIR"/squircle_base_selected_54.png");
+  squircle_edge = load_texture(PKGDATADIR"/squircle_edge_54.png");
   squircle_glow = load_texture(PKGDATADIR"/squircle_glow_54.png");
   squircle_shine = load_texture(PKGDATADIR"/squircle_shine_54.png");
 
