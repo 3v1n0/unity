@@ -35,6 +35,9 @@ namespace
 
 nux::logging::Logger logger("unity.dash.filterbar");
 
+const int SEPARATOR_LEFT_PADDING = 5;
+const int SEPARATOR_WIDTH_SOTTRACTOR = 9;
+
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(FilterBar);
@@ -126,8 +129,8 @@ void FilterBar::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
       GfxContext.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
       GfxContext.GetRenderStates().SetColorMask(true, true, true, false);
       nux::GetPainter().Draw2DLine(GfxContext,
-                                   geom.x + 5, geom.y + geom.height - 1,
-                                   geom.x + geom.width - 9, geom.y + geom.height - 1,
+                                   geom.x + SEPARATOR_LEFT_PADDING, geom.y + geom.height - 1,
+                                   geom.x + geom.width - SEPARATOR_WIDTH_SOTTRACTOR, geom.y + geom.height - 1,
                                    col);
       GfxContext.GetRenderStates().SetBlend(alpha, src, dest);
     }
