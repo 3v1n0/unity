@@ -65,16 +65,6 @@ TrashLauncherIcon::~TrashLauncherIcon()
                                 on_trash_changed_handler_id_);
 }
 
-nux::Color TrashLauncherIcon::BackgroundColor()
-{
-  return nux::Color(0xFF333333);
-}
-
-nux::Color TrashLauncherIcon::GlowColor()
-{
-  return nux::Color(0xFF333333);
-}
-
 std::list<DbusmenuMenuitem*> TrashLauncherIcon::GetMenus()
 {
   std::list<DbusmenuMenuitem*> result;

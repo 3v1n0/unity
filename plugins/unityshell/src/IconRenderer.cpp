@@ -433,12 +433,12 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
     background = local::squircle_base_selected;
     glow = local::squircle_glow;
     shine = local::squircle_shine;
+  }
 
-    if (!arg.keyboard_nav_hl)
-    {
-      background_tile_colorify = arg.colorify;
-      background_tile_colorify = background_tile_colorify * 0.5f;
-    }
+  if (arg.colorify_background && !arg.keyboard_nav_hl)
+  {
+    background_tile_colorify = arg.colorify;
+    background_tile_colorify = background_tile_colorify * 0.5f;
   }
 
   auto tile_transform = arg.icon->GetTransform(ui::IconTextureSource::TRANSFORM_TILE, monitor);
@@ -463,17 +463,6 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
     RenderElement(GfxContext,
                   arg,
                   local::icon_edge[size]->GetDeviceTexture(),
-                  edge_color,
-                  colorify,
-                  arg.alpha,
-                  force_filter,
-                  tile_transform);
-  }
-  else
-  {
-    RenderElement(GfxContext,
-                  arg,
-                  local::squircle_base->GetDeviceTexture(),
                   edge_color,
                   background_tile_colorify,
                   arg.alpha,
