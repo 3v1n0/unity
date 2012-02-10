@@ -101,36 +101,38 @@ class DashTests(AutopilotTestCase):
         self.assertEqual(self.dash.get_focused_lens_icon(), "")
 
     def test_category_header_keynav(self):
-          """ This test makes sure that:
-          1. A category header can get the focus.
-          2. A category header stays highlight when it loses the focus
-             and mouse is close to it (but not inside).
-          """
-          self.dash.ensure_hidden()
-          self.dash.reveal_application_lens()
+        """ This test makes sure that:
+        1. A category header can get the focus.
+        2. A category header stays highlight when it loses the focus
+           and mouse is close to it (but not inside).
+        """
+        self.dash.ensure_hidden()
+        self.dash.reveal_application_lens()
 
-          kb = Keyboard()
-          mouse = Mouse()
+        kb = Keyboard()
+        mouse = Mouse()
 
-          # Make sure that a category have the focus.
-          kb.press_and_release("Down")
-          category = self.dash.get_focused_category()
-          self.assertIsNot(category, None)
+        # Make sure that a category have the focus.
+        kb.press_and_release("Down")
+        category = self.dash.get_focused_category()
+        self.assertIsNot(category, None)
 
-          # Make sure that the category is highlighted.
-          self.assertTrue(category['header-is-highlighted'], True)
+        # Make sure that the category is highlighted.
+        self.assertTrue(category['header-is-highlighted'], True)
 
-          # Get the geometry of that category header.
-          x = category['header-x']
-          y = category['header-y']
-          w = category['header-width']
-          h = category['header-height']
+        # Get the geometry of that category header.
+        x = category['header-x']
+        y = category['header-y']
+        w = category['header-width']
+        h = category['header-height']
 
-          # Move the mouse close the view, and press down.
-          mouse.move(x+w+10, y+h/2, True)
-          sleep(1)
-          kb.press_and_release("Down")
+        # Move the mouse close the view, and press down.
+        mouse.move(x+w+10, y+h/2, True)
+        sleep(1)
+        kb.press_and_release("Down")
 
-          category = self.dash.get_focused_category()
-          self.assertEqual(category, None)
+        category = self.dash.get_focused_category()
+        self.assertEqual(category, None)
+
+
 
