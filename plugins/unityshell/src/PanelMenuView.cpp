@@ -1005,8 +1005,7 @@ PanelMenuView::Refresh(bool force)
 }
 
 void
-PanelMenuView::OnActiveChanged(PanelIndicatorEntryView* view,
-                               bool                           is_active)
+PanelMenuView::OnActiveChanged(PanelIndicatorEntryView* view, bool is_active)
 {
   if (is_active)
     _last_active_view = view;
@@ -1067,11 +1066,14 @@ PanelMenuView::OnEntryRemoved(std::string const& entry_id)
 void
 PanelMenuView::AllMenusClosed()
 {
-  auto mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
-  _is_inside = GetAbsoluteGeometry().IsPointInside(mouse.x, mouse.y);
   _last_active_view = nullptr;
 
-  FullRedraw();
+  if (!_is_integrated)
+  {
+    auto mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
+    _is_inside = GetAbsoluteGeometry().IsPointInside(mouse.x, mouse.y);
+    FullRedraw();
+  }
 }
 
 void
@@ -1159,7 +1161,7 @@ PanelMenuView::OnActiveAppChanged(BamfMatcher *matcher,
                                   BamfApplication* old_app,
                                   BamfApplication* new_app)
 {
-  if (BAMF_IS_APPLICATION(new_app))
+  if (BAMF_IS_APPLICATION(new_app) && !_is_integrated)
   {
     if (std::find(_new_apps.begin(), _new_apps.end(), new_app) != _new_apps.end())
     {
@@ -1386,12 +1388,14 @@ PanelMenuView::OnWindowMaximized(guint xid)
 
   if (is_active)
   {
+    if (!_is_integrated)
+    {
+      // We need to update the _is_inside state in the case of maximization by grab
+      auto mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
+      _is_inside = GetAbsoluteGeometry().IsPointInside(mouse.x, mouse.y);
+    }
+
     _is_maximized = true;
-
-    // We need to update the _is_inside state in the case of maximization by grab
-    auto mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
-    _is_inside = GetAbsoluteGeometry().IsPointInside(mouse.x, mouse.y);
-
     updated = true;
   }
 
@@ -1745,7 +1749,7 @@ void PanelMenuView::OnSwitcherShown(GVariant* data)
 
   _switcher_showing = g_variant_get_boolean(data);
 
-  if (!_switcher_showing)
+  if (!_switcher_showing && !_is_integrated)
   {
     auto mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
     _is_inside = GetAbsoluteGeometry().IsPointInside(mouse.x, mouse.y);
@@ -1809,10 +1813,14 @@ PanelMenuView::UpdateShowNow(bool status)
    * If the status is false, we just check that the menus entries are hidden
    * and we remove any eventual delayed request */
 
+  if (_is_integrated)
+    return;
+
   if (!status && _show_now_activated)
   {
     _show_now_activated = false;
     QueueDraw();
+    return;
   }
 
   if (_update_show_now_id != 0)
