@@ -42,7 +42,7 @@ namespace
 {
 nux::logging::Logger logger("unity.dash.view");
 const int grow_anim_length = 90 * 1000;
-const int pause_before_grow_length = 32 * 1000;
+const int pause_before_grow_length = 50 * 1000;
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(DashView);
@@ -219,8 +219,8 @@ long DashView::PostLayoutManagement (long LayoutResult)
 {
   LOG_DEBUG(logger) << "got post layout management " << content_layout_->GetGeometry().height;
   Relayout();
-  //if (content_layout_->GetGeometry().height != last_known_height_)
-  //{
+  if (content_layout_->GetGeometry().height != last_known_height_)
+  {
     // Start the timeline of drawing the dash resize
     if (timeline_need_more_draw_)
     {
@@ -231,7 +231,7 @@ long DashView::PostLayoutManagement (long LayoutResult)
     timeline_need_more_draw_ = true;
     start_time_ = g_get_monotonic_time();
     QueueDraw();
-  //}
+  }
   
   return LayoutResult;
 }
