@@ -1221,7 +1221,7 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
 
     FillRenderArg(icon, arg, center, parent_abs_geo, folding_threshold, folded_size, folded_spacing,
                   autohide_offset, folded_z_distance, animation_neg_rads, current);
-
+    arg.colorify = colorify;
     launcher_args.push_back(arg);
   }
 }
