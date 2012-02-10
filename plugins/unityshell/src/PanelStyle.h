@@ -22,6 +22,7 @@
 #define PANEL_STYLE_H
 
 #include <Nux/Nux.h>
+#include <NuxCore/Property.h>
 
 #include <gtk/gtk.h>
 
@@ -63,6 +64,8 @@ public:
   sigc::signal<void> changed;
 
   bool IsAmbianceOrRadiance();
+
+  nux::Property<int> panel_height;
 
 private:
   void Refresh();

@@ -37,6 +37,7 @@
 
 #include "Launcher.h"
 #include "AbstractLauncherIcon.h"
+#include "PanelStyle.h"
 #include "SpacerLauncherIcon.h"
 #include "LauncherModel.h"
 #include "QuicklistManager.h"
@@ -93,7 +94,6 @@ const int STARTING_BLINK_LAMBDA = 3;
 const int PULSE_BLINK_LAMBDA = 2;
 
 const float BACKLIGHT_STRENGTH = 0.9f;
-const int panel_height = 24;
 const int ICON_PADDING = 6;
 const int RIGHT_LINE_WIDTH = 1;
 
@@ -1603,7 +1603,7 @@ void Launcher::SetHover(bool hovered)
 
 bool Launcher::MouseOverTopScrollArea()
 {
-  return _mouse_position.y < panel_height;
+  return _mouse_position.y < panel::Style::Instance().panel_height;
 }
 
 bool Launcher::MouseOverTopScrollExtrema()
@@ -1613,7 +1613,7 @@ bool Launcher::MouseOverTopScrollExtrema()
 
 bool Launcher::MouseOverBottomScrollArea()
 {
-  return _mouse_position.y > GetGeometry().height - panel_height;
+  return _mouse_position.y > GetGeometry().height - panel::Style::Instance().panel_height;
 }
 
 bool Launcher::MouseOverBottomScrollExtrema()
@@ -1680,9 +1680,9 @@ void Launcher::Resize()
 {
   UScreen* uscreen = UScreen::GetDefault();
   auto geo = uscreen->GetMonitorGeometry(monitor());
-
+  unity::panel::Style &panel_style = panel::Style::Instance();
   int width = _icon_size + ICON_PADDING*2 + RIGHT_LINE_WIDTH - 2;
-  nux::Geometry new_geometry(geo.x, geo.y + panel_height, width, geo.height - panel_height);
+  nux::Geometry new_geometry(geo.x, geo.y + panel_style.panel_height, width, geo.height - panel_style.panel_height);
   SetMaximumHeight(new_geometry.height);
   _parent->SetGeometry(new_geometry);
   SetGeometry(new_geometry);
@@ -1691,7 +1691,7 @@ void Launcher::Resize()
 
   _pointer_barrier->x1 = new_geometry.x;
   _pointer_barrier->x2 = new_geometry.x;
-  _pointer_barrier->y1 = new_geometry.y - panel_height;
+  _pointer_barrier->y1 = new_geometry.y - panel_style.panel_height;
   _pointer_barrier->y2 = new_geometry.y + new_geometry.height;
   _pointer_barrier->threshold = options()->edge_stop_velocity();
 
@@ -1894,7 +1894,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
     texxform.SetWrap(nux::TEXWRAP_CLAMP, nux::TEXWRAP_CLAMP);
     texxform.uoffset = (1.0f / launcher_sheen_->GetWidth()); // TODO (gord) don't use absolute values here
-    texxform.voffset = (1.0f / launcher_sheen_->GetHeight()) * panel_height;
+    texxform.voffset = (1.0f / launcher_sheen_->GetHeight()) * panel::Style::Instance().panel_height;
     GfxContext.QRP_1Tex(base.x, base.y, base.width, base.height,
                         launcher_sheen_->GetDeviceTexture(),
                         texxform,
