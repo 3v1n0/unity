@@ -61,6 +61,20 @@ def get_state_by_name_and_id(class_name, unique_id):
         raise StateNotFoundError(class_name, unique_id)
 
 
+def make_introspection_object(dbus_tuple):
+    """Make an introspection object given a DBus tuple of (name, state_dict).
+
+    This only works for classes that derive from ObjectCreatableFromStateDict.
+    """
+    name,state = dbus_tuple
+    try:
+        class_type = _object_registry[name]
+    except KeyError:
+        print name, "is not a valid introspection type!"
+        return None
+    return class_type(state)
+
+
 class ObjectCreatableFromStateDict(object):
     """A class that can be created using a dictionary of state from Unity."""
     __metaclass__ = IntrospectableObjectMetaclass
@@ -77,16 +91,49 @@ class ObjectCreatableFromStateDict(object):
         for key in state_dict.keys():
             setattr(self, key.replace('-','_'), state_dict[key])
 
+    def _get_child_tuples_by_type(self, desired_type):
+        """Get a list of (name,dict) pairs from children of the specified type.
 
-def make_introspection_object(dbus_tuple):
-    """Make an introspection object given a DBus tuple of (name, state_dict).
+        desired_type must be a subclass of ObjectCreatableFromStateDict.
 
-    This only works for classes that derive from ObjectCreatableFromStateDict.
-    """
-    name,state = dbus_tuple
-    try:
-        class_type = _object_registry[name]
-    except KeyError:
-        print name, "is not a valid icon type!"
-        return None
-    return class_type(state)
+        """
+        if not issubclass(desired_type, ObjectCreatableFromStateDict):
+            raise TypeError("%r must be a subclass of %r" % (desired_type,
+                ObjectCreatableFromStateDict))
+
+        children = getattr(self, 'Children', [])
+        results = []
+        # loop through all children, and try find one that matches the type the
+        # user wants.
+        for child_type, child_state in children:
+            try:
+                if _object_registry[child_type] == desired_type:
+                    results.append((child_type, child_state))
+            except KeyError:
+                pass
+        return results
+
+    def get_children_by_type(self, desired_type):
+        """Get a list of children of the specified type.
+
+        desired_type must be a subclass of ObjectCreatableFromStateDict.
+
+        """
+        result = []
+        for child in self._get_child_tuples_by_type(desired_type):
+            result.append(make_introspection_object(child))
+        return result
+
+    def refresh_state(self):
+        """Refreshes the object's state from unity.
+
+        raises StateNotFound if the object in unity has been destroyed.
+
+        """
+        # need to get name from class object.
+
+        for class_name,class_obj in _object_registry.iteritems():
+            if class_obj == self.__class__:
+                new_state = get_state_by_name_and_id(class_name, self.id)
+                self.set_properties(new_state)
+                return
