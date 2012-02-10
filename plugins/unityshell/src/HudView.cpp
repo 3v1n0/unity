@@ -382,7 +382,7 @@ void View::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
   if (IsFullRedraw())
   {
     nux::GetPainter().PushBackgroundStack();
-    layout_->ProcessDraw(gfx_context, force_draw);
+    GetLayout()->ProcessDraw(gfx_context, force_draw);
     nux::GetPainter().PopBackgroundStack();
   }
   else
