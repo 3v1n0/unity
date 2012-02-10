@@ -105,7 +105,6 @@ public:
   virtual ~AbstractIconRenderer() {}
 
   nux::Property<PipRenderStyle> pip_style;
-  nux::Property<nux::Color> background_color;
   nux::Property<int> monitor;
 
   // RenderArgs not const in case processor needs to modify positions to do a perspective correct.

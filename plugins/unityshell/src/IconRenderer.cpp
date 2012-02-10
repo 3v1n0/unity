@@ -418,22 +418,27 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
     background = local::icon_selected_background[size];
   }
 
-  colorify.red += (0.5f + 0.5f * arg.saturation) * (nux::color::White.red - colorify.red);
-  colorify.blue += (0.5f + 0.5f * arg.saturation) * (nux::color::White.blue - colorify.blue);
-  colorify.green += (0.5f + 0.5f * arg.saturation) * (nux::color::White.green - colorify.green);
-  background_tile_colorify.red += (0.5f + 0.5f * arg.saturation) * (nux::color::White.red - background_tile_colorify.red);
-  background_tile_colorify.green += (0.5f + 0.5f * arg.saturation) * (nux::color::White.green - background_tile_colorify.green);
-  background_tile_colorify.blue += (0.5f + 0.5f * arg.saturation) * (nux::color::White.blue - background_tile_colorify.blue);
+  colorify.red +=                   (0.5f + 0.5f * arg.saturation) * (1.0f - colorify.red);
+  colorify.blue +=                  (0.5f + 0.5f * arg.saturation) * (1.0f - colorify.blue);
+  colorify.green +=                 (0.5f + 0.5f * arg.saturation) * (1.0f - colorify.green);
+  background_tile_colorify.red +=   (0.5f + 0.5f * arg.saturation) * (1.0f - background_tile_colorify.red);
+  background_tile_colorify.green += (0.5f + 0.5f * arg.saturation) * (1.0f - background_tile_colorify.green);
+  background_tile_colorify.blue +=  (0.5f + 0.5f * arg.saturation) * (1.0f - background_tile_colorify.blue);
 
   if (arg.system_item)
   {
-    //backlight_intensity = (arg.keyboard_nav_hl) ? 0.85f : 0.3f ;
+    backlight_intensity = (arg.keyboard_nav_hl) ? 0.85f : 0.6f ;
     glow_intensity = (arg.keyboard_nav_hl) ? 1.0f : 0.0f ;
 
     background = local::squircle_base_selected;
     glow = local::squircle_glow;
     shine = local::squircle_shine;
-    background_tile_colorify = background_color;
+
+    if (!arg.keyboard_nav_hl)
+    {
+      background_tile_colorify = arg.colorify;
+      background_tile_colorify = background_tile_colorify * 0.5f;
+    }
   }
 
   auto tile_transform = arg.icon->GetTransform(ui::IconTextureSource::TRANSFORM_TILE, monitor);
