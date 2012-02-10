@@ -41,8 +41,6 @@ namespace dash
 namespace
 {
 nux::logging::Logger logger("unity.dash.view");
-const int grow_anim_length = 90 * 1000;
-const int pause_before_grow_length = 50 * 1000;
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(DashView);
@@ -56,11 +54,6 @@ DashView::DashView()
   , search_in_progress_(false)
   , activate_on_finish_(false)
   , visible_(false)
-  , timeline_id_(0)
-  , start_time_(0)
-  , last_known_height_(0)
-  , current_height_(0)
-  , timeline_need_more_draw_(false)
 {
   renderer_.SetOwner(this);
   renderer_.need_redraw.connect([this] () { 
@@ -90,43 +83,6 @@ void DashView::SetMonitorOffset(int x, int y)
 {
   renderer_.x_offset = x;
   renderer_.y_offset = y;
-}
-
-void DashView::ProcessGrowShrink()
-{
-  float diff = g_get_monotonic_time() - start_time_;
-  int target_height = content_layout_->GetGeometry().height;
-  // only animate if we are after our defined pause time
-  if (diff > pause_before_grow_length)
-  {
-   float progress = (diff - pause_before_grow_length) / grow_anim_length;
-   int last_height = last_known_height_;
-   int new_height = 0;
-   
-   if (last_height < target_height)
-   {
-     // grow
-     new_height = last_height + ((target_height - last_height) * progress);
-   }
-   else 
-   {
-     //shrink
-     new_height = last_height - ((last_height - target_height) * progress);
-   }
-   
-   LOG_DEBUG(logger) << "resizing to " << target_height << " (" << new_height << ")";
-   current_height_ = new_height;
-  }
-  
-  QueueDraw();  
-  
-  if (diff > grow_anim_length + pause_before_grow_length)
-  {
-    // ensure we are at our final location and update last known height
-    current_height_ = target_height;
-    last_known_height_ = target_height;
-    timeline_need_more_draw_ = false;
-  }
 }
 
 void DashView::AboutToShow()
@@ -175,38 +131,31 @@ void DashView::SetupViews()
 {
   layout_ = new nux::VLayout();
   SetLayout(layout_);
-  
+
   content_layout_ = new nux::VLayout();
   content_layout_->SetHorizontalExternalMargin(0);
   content_layout_->SetVerticalExternalMargin(0);
-  
-  {
-    // Add layouts/views to content_layout_
-    search_bar_ = new SearchBar();
-    AddChild(search_bar_);
-    search_bar_->activated.connect(sigc::mem_fun(this, &DashView::OnEntryActivated));
-    search_bar_->search_changed.connect(sigc::mem_fun(this, &DashView::OnSearchChanged));
-    search_bar_->live_search_reached.connect(sigc::mem_fun(this, &DashView::OnLiveSearchReached));
-    search_bar_->showing_filters.changed.connect([&] (bool showing) { if (active_lens_view_) active_lens_view_->filters_expanded = showing; QueueDraw(); });
-    content_layout_->AddView(search_bar_, 0, nux::MINOR_POSITION_LEFT);
 
-    lenses_layout_ = new nux::VLayout();
-    {
-      // Add layouts/views to lenses_layout_
-      home_view_ = new LensView(home_lens_);
-      active_lens_view_ = home_view_;
-      lens_views_[home_lens_->id] = home_view_;
-      lenses_layout_->AddView(home_view_);
-    }
-    
-    content_layout_->AddView(lenses_layout_, 0, nux::MINOR_POSITION_LEFT);
+  layout_->AddLayout(content_layout_, 1, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
+  search_bar_ = new SearchBar();
+  AddChild(search_bar_);
+  search_bar_->activated.connect(sigc::mem_fun(this, &DashView::OnEntryActivated));
+  search_bar_->search_changed.connect(sigc::mem_fun(this, &DashView::OnSearchChanged));
+  search_bar_->live_search_reached.connect(sigc::mem_fun(this, &DashView::OnLiveSearchReached));
+  search_bar_->showing_filters.changed.connect([&] (bool showing) { if (active_lens_view_) active_lens_view_->filters_expanded = showing; QueueDraw(); });
+  content_layout_->AddView(search_bar_, 0, nux::MINOR_POSITION_LEFT);
 
-    lens_bar_ = new LensBar();
-    lens_bar_->lens_activated.connect(sigc::mem_fun(this, &DashView::OnLensBarActivated));
-    content_layout_->AddView(lens_bar_, 0, nux::MINOR_POSITION_CENTER);
-  }
-  
-  layout_->AddLayout(content_layout_, 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
+  lenses_layout_ = new nux::VLayout();
+  content_layout_->AddView(lenses_layout_, 1, nux::MINOR_POSITION_LEFT);
+
+  home_view_ = new LensView(home_lens_);
+  active_lens_view_ = home_view_;
+  lens_views_[home_lens_->id] = home_view_;
+  lenses_layout_->AddView(home_view_);
+
+  lens_bar_ = new LensBar();
+  lens_bar_->lens_activated.connect(sigc::mem_fun(this, &DashView::OnLensBarActivated));
+  content_layout_->AddView(lens_bar_, 0, nux::MINOR_POSITION_CENTER);
 }
 
 void DashView::SetupUBusConnections()
@@ -217,22 +166,7 @@ void DashView::SetupUBusConnections()
 
 long DashView::PostLayoutManagement (long LayoutResult)
 {
-  LOG_DEBUG(logger) << "got post layout management " << content_layout_->GetGeometry().height;
   Relayout();
-  if (content_layout_->GetGeometry().height != last_known_height_)
-  {
-    // Start the timeline of drawing the dash resize
-    if (timeline_need_more_draw_)
-    {
-      // already started, just reset the last known height
-      last_known_height_ = current_height_;
-    }
-    
-    timeline_need_more_draw_ = true;
-    start_time_ = g_get_monotonic_time();
-    QueueDraw();
-  }
-  
   return LayoutResult;
 }
 
@@ -246,17 +180,14 @@ void DashView::Relayout()
     if (geo.width >= content_geo_.width && geo.height > content_geo_.height)
       content_geo_ = geo;
   }
+
   // kinda hacky, but it makes sure the content isn't so big that it throws
   // the bottom of the dash off the screen
   // not hugely happy with this, so FIXME
-  lenses_layout_->SetMaximumHeight(content_geo_.height - search_bar_->GetGeometry().height - lens_bar_->GetGeometry().height);
-  lenses_layout_->SetMinimumWidth(content_geo_.width);
-  lenses_layout_->SetMaximumWidth(content_geo_.width);
-  layout_->SetMaximumWidth(content_geo_.width);
-  
-  //lenses_layout_->SetMinimumHeight (content_geo_.height - search_bar_->GetGeometry().height - lens_bar_->GetGeometry().height);
+  lenses_layout_->SetMaximumHeight (content_geo_.height - search_bar_->GetGeometry().height - lens_bar_->GetGeometry().height);
+  lenses_layout_->SetMinimumHeight (content_geo_.height - search_bar_->GetGeometry().height - lens_bar_->GetGeometry().height);
 
-  //layout_->SetMinMaxSize(content_geo_.width, content_geo_.height);
+  layout_->SetMinMaxSize(content_geo_.width, content_geo_.height);
 
   dash::Style& style = dash::Style::Instance();
 
@@ -267,10 +198,6 @@ void DashView::Relayout()
   ubus_manager_.SendMessage(UBUS_DASH_SIZE_CHANGED, g_variant_new("(ii)", content_geo_.width, content_geo_.height));
 
   QueueDraw();
-
-  //LOG_DEBUG(logger) << "Layout size: " << layout_->GetGeometry().height;
-  //LOG_DEBUG(logger) << "lenses_layout size: " << layout_->GetGeometry().height;
-  
 }
 
 // Gives us the width and height of the contents that will give us the best "fit",
@@ -310,24 +237,13 @@ nux::Geometry DashView::GetBestFitGeometry(nux::Geometry const& for_geo)
 
 void DashView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
 {
-  if (timeline_need_more_draw_)
-  {
-   // process our animation
-   ProcessGrowShrink();
-  }
- 
-  nux::Geometry draw_content_geo = content_geo_;
-  draw_content_geo.height = current_height_;
-  renderer_.DrawFull(gfx_context, draw_content_geo, GetAbsoluteGeometry(), GetGeometry());
+  renderer_.DrawFull(gfx_context, content_geo_, GetAbsoluteGeometry(), GetGeometry());
 }
 
 void DashView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
 {
-  nux::Geometry draw_content_geo = content_geo_;
-  draw_content_geo.height = current_height_;
-  renderer_.DrawInner(gfx_context, draw_content_geo, GetAbsoluteGeometry(), GetGeometry());
+  renderer_.DrawInner(gfx_context, content_geo_, GetAbsoluteGeometry(), GetGeometry());
   
-  gfx_context.PushClippingRectangle(draw_content_geo);
   if (IsFullRedraw())
   {
     nux::GetPainter().PushBackgroundStack();
@@ -338,21 +254,8 @@ void DashView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
   {
     layout_->ProcessDraw(gfx_context, force_draw);
   }
-  gfx_context.PopClippingRectangle();
   
-  renderer_.DrawInnerCleanup(gfx_context, draw_content_geo, GetAbsoluteGeometry(), GetGeometry());
-
- 
-  if (timeline_need_more_draw_ && !timeline_id_)
-  {
-    // timeline is still running, queue up another draw 
-    timeline_id_ =  g_timeout_add(0, [] (gpointer data) -> gboolean {
-      DashView* self = static_cast<DashView*>(data);
-      self->QueueDraw();
-      self->timeline_id_ = 0;
-      return FALSE;
-    }, this);
-  }
+  renderer_.DrawInnerCleanup(gfx_context, content_geo_, GetAbsoluteGeometry(), GetGeometry());
 }
 
 void DashView::OnMouseButtonDown(int x, int y, unsigned long button, unsigned long key)
@@ -524,9 +427,6 @@ void DashView::OnSearchFinished(Lens::Hints const& hints)
   if (it != hints.end())
   {
     LOG_DEBUG(logger) << "We have no-results-hint: " << g_variant_get_string (it->second, NULL);
-    // force relayout
-    QueueRelayout();
-    
   }
 
   std::string search_string = search_bar_->search_string;

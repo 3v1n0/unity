@@ -64,9 +64,6 @@ public:
 
   sigc::signal<void, std::string const&> uri_activated;
 
-protected:
-  virtual long PostLayoutManagement(long LayoutResult);
-  
 private:
   void SetupViews();
   void SetupCategories();
@@ -82,7 +79,6 @@ private:
   void OnFilterAdded(Filter::Ptr filter);
   void OnFilterRemoved(Filter::Ptr filter);
   void OnViewTypeChanged(ViewType view_type);
-  void EnsureSize();
   void QueueFixRenderering();
 
   static gboolean FixRenderering(LensView* self);
@@ -109,7 +105,6 @@ private:
   FilterBar* filter_bar_;
 
   guint fix_renderering_id_;
-  guint ensure_size_id_;
 
   UBusManager ubus_;
 };
