@@ -893,6 +893,9 @@ void Launcher::SetupRenderArg(AbstractLauncherIcon* icon, struct timespec const&
   arg.progress            = CLAMP(icon->GetProgress(), 0.0f, 1.0f);
   arg.draw_shortcut       = _shortcuts_shown && !_hide_machine->GetQuirk(LauncherHideMachine::PLACES_VISIBLE);
   arg.system_item         = icon->Type() == AbstractLauncherIcon::TYPE_HOME;
+  arg.colorify_background = icon->Type() == AbstractLauncherIcon::TYPE_HOME  ||
+                            icon->Type() == AbstractLauncherIcon::TYPE_TRASH ||
+                            icon->Type() == AbstractLauncherIcon::TYPE_EXPO;
 
   if (_dash_is_open)
     arg.active_arrow = icon->Type() == AbstractLauncherIcon::TYPE_HOME;
@@ -1218,7 +1221,7 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
 
     FillRenderArg(icon, arg, center, parent_abs_geo, folding_threshold, folded_size, folded_spacing,
                   autohide_offset, folded_z_distance, animation_neg_rads, current);
-
+    arg.colorify = colorify;
     launcher_args.push_back(arg);
   }
 }

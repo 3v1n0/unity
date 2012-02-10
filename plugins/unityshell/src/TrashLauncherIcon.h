@@ -39,9 +39,6 @@ public:
   TrashLauncherIcon();
   ~TrashLauncherIcon();
 
-  virtual nux::Color BackgroundColor();
-  virtual nux::Color GlowColor();
-
 protected:
   void UpdateTrashIcon();
 
