@@ -276,6 +276,7 @@ namespace
 
 void View::SetupViews()
 {
+  nux::VLayout* super_layout = new nux::VLayout(); 
   layout_ = new nux::HLayout();
   { 
     // fill icon layout with icon
@@ -316,10 +317,12 @@ void View::SetupViews()
                                                       bottom_padding,
                                                       bottom_padding), 0);
     }
+
     layout_->AddLayout(content_layout_.GetPointer(), 1, nux::MINOR_POSITION_TOP);
   }
   
-  SetLayout(layout_.GetPointer());
+  super_layout->AddLayout(layout_.GetPointer(), 0);
+  SetLayout(super_layout);
 }
 
 void View::OnSearchChanged(std::string const& search_string)
