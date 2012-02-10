@@ -263,8 +263,6 @@ protected:
 
   void OnRemoteProgressVisibleChanged(LauncherEntryRemote* remote);
 
-  nux::ObjectPtr<Tooltip> _tooltip;
-  nux::ObjectPtr<QuicklistView> _quicklist;
 
   // This looks like a case for boost::logical::tribool
   static int _current_theme_is_mono;
@@ -278,6 +276,9 @@ private:
     Quirk quirk;
   } DelayedUpdateArg;
 
+  nux::ObjectPtr<Tooltip> _tooltip;
+  nux::ObjectPtr<QuicklistView> _quicklist;
+
   static void ChildRealized(DbusmenuMenuitem* newitem, QuicklistView* quicklist);
   static void RootChanged(DbusmenuClient* client, DbusmenuMenuitem* newroot, QuicklistView* quicklist);
   static gboolean OnPresentTimeout(gpointer data);
@@ -286,8 +287,10 @@ private:
 
   void ColorForIcon(GdkPixbuf* pixbuf, nux::Color& background, nux::Color& glow);
 
+  void LoadTooltip();
+  void LoadQuicklist();
+
   std::vector<bool> _has_visible_window;
-  bool              _quicklist_is_initialized;
   bool              _remote_urgent;
   float             _present_urgency;
   float             _progress;

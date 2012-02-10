@@ -43,6 +43,8 @@
 #include "QuicklistView.h"
 #include "IconRenderer.h"
 #include "TimeUtil.h"
+#include "TextureCache.h"
+#include "IconLoader.h"
 #include "WindowManager.h"
 #include "UScreen.h"
 
@@ -51,6 +53,22 @@
 
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/Variant.h>
+
+#include <type_traits>
+#include <sigc++/sigc++.h>
+
+namespace sigc
+{
+template <typename Functor>
+struct functor_trait<Functor, false>
+{
+typedef decltype (::sigc::mem_fun (std::declval<Functor&> (),
+&Functor::operator())) _intermediate;
+
+typedef typename _intermediate::result_type result_type;
+typedef Functor functor_type;
+};
+}
 
 namespace unity
 {
@@ -266,36 +284,13 @@ Launcher::Launcher(nux::BaseWindow* parent,
   bg_effect_helper_.owner = this;
   bg_effect_helper_.enabled = false;
 
-  //FIXME (gord)- replace with async loading
-  unity::glib::Object<GdkPixbuf> pixbuf;
-  unity::glib::Error error;
-  pixbuf = gdk_pixbuf_new_from_file(PKGDATADIR"/dash_sheen.png", &error);
-  if (error)
-  {
-    LOG_WARN(logger) << "Unable to texture " << PKGDATADIR << "/dash_sheen.png" << ": " << error;
-  }
-  else
-  {
-    launcher_sheen_ = nux::CreateTexture2DFromPixbuf(pixbuf, true);
-    // TODO: when nux has the ability to create a smart pointer that takes
-    // ownership without adding a reference, we can remove the unref here.  By
-    // unreferencing, the object is solely owned by the smart pointer.
-    launcher_sheen_->UnReference();
-  }
+  TextureCache& cache = TextureCache::GetDefault();
+  TextureCache::CreateTextureCallback cb = [&](std::string const& name, int width, int height) -> nux::BaseTexture* { 
+    return nux::CreateTexture2DFromFile((PKGDATADIR"/" + name + ".png").c_str(), -1, true);
+  };
 
-  pixbuf = gdk_pixbuf_new_from_file(PKGDATADIR"/launcher_pressure_effect.png", &error);
-  if (error)
-  {
-    LOG_WARN(logger) << "Unable to texture " << PKGDATADIR << "/launcher_pressure_effect.png" << ": " << error;
-  }
-  else
-  {
-    launcher_pressure_effect_ = nux::CreateTexture2DFromPixbuf(pixbuf, true);
-    // TODO: when nux has the ability to create a smart pointer that takes
-    // ownership without adding a reference, we can remove the unref here.  By
-    // unreferencing, the object is solely owned by the smart pointer.
-    launcher_pressure_effect_->UnReference();
-  }
+  launcher_sheen_ = cache.FindTexture("dash_sheen", 0, 0, cb);
+  launcher_pressure_effect_ = cache.FindTexture("launcher_pressure_effect", 0, 0, cb);
 
   _pointer_barrier = PointerBarrierWrapper::Ptr(new PointerBarrierWrapper());
   _pointer_barrier->barrier_event.connect(sigc::mem_fun(this, &Launcher::OnPointerBarrierEvent));
@@ -1970,15 +1965,6 @@ void Launcher::PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
 }
 
-void Launcher::PreLayoutManagement()
-{
-  View::PreLayoutManagement();
-  if (view_layout_)
-  {
-    view_layout_->SetGeometry(GetGeometry());
-  }
-}
-
 long Launcher::PostLayoutManagement(long LayoutResult)
 {
   View::PostLayoutManagement(LayoutResult);
@@ -1986,10 +1972,6 @@ long Launcher::PostLayoutManagement(long LayoutResult)
   SetMousePosition(0, 0);
 
   return nux::eCompliantHeight | nux::eCompliantWidth;
-}
-
-void Launcher::PositionChildLayout(float offsetX, float offsetY)
-{
 }
 
 void Launcher::OnDragWindowAnimCompleted()
