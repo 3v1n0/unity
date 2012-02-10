@@ -438,7 +438,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
   if (arg.colorify_background && !arg.keyboard_nav_hl)
   {
     background_tile_colorify = arg.colorify;
-    background_tile_colorify = background_tile_colorify * 0.5f;
+    background_tile_colorify = background_tile_colorify * 0.65f;
   }
 
   auto tile_transform = arg.icon->GetTransform(ui::IconTextureSource::TRANSFORM_TILE, monitor);
