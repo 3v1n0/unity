@@ -77,6 +77,7 @@ public:
   void AddProperties(GVariantBuilder* builder);
 
   virtual void QueueDraw();
+  void SetMaximumEntriesWidth(int max_width);
 
 protected:
   typedef std::vector<Indicator::Ptr> Indicators;

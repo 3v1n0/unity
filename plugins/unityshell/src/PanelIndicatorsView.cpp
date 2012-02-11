@@ -139,6 +139,24 @@ PanelIndicatorsView::QueueDraw()
     entry.second->QueueDraw();
 }
 
+void
+PanelIndicatorsView::SetMaximumEntriesWidth(int max_width)
+{
+  int n_entries = 0;
+
+  for (auto entry : entries_)
+    if (entry.second->IsVisible())
+      n_entries++;
+
+  if (n_entries > 0)
+  {
+    int max_entry_width = max_width / n_entries;
+
+    for (auto entry : entries_)
+      entry.second->SetMaximumWidth(max_entry_width);
+  }
+}
+
 PanelIndicatorEntryView*
 PanelIndicatorsView::ActivateEntry(std::string const& entry_id)
 {
