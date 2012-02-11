@@ -87,6 +87,7 @@ static const gchar introspection_xml[] =
   ""
   "    <signal name='EntryActivated'>"
   "     <arg type='s' name='entry_id' />"
+  "     <arg type='(iiuu)' name='entry_id' />"
   "    </signal>"
   ""
   "    <signal name='ReSync'>"
@@ -250,6 +251,7 @@ on_service_resync (PanelService *service, const gchar *indicator_id, GDBusConnec
 static void
 on_service_entry_activated (PanelService    *service,
                             const gchar     *entry_id,
+                            gint x, gint y, guint w, guint h,
                             GDBusConnection *connection)
 {
   GError *error = NULL;
@@ -258,7 +260,7 @@ on_service_entry_activated (PanelService    *service,
                                  S_PATH,
                                  S_IFACE,
                                  "EntryActivated",
-                                 g_variant_new ("(s)", entry_id),
+                                 g_variant_new ("(s(iiuu))", entry_id, x, y, w, h),
                                  &error);
 
   if (error)
