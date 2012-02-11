@@ -118,6 +118,16 @@ void Entry::set_active(bool active)
   updated.emit();
 }
 
+void Entry::set_geometry(nux::Rect const& geometry)
+{
+  if (geometry_ == geometry)
+    return;
+
+  geometry_ = geometry;
+  geometry_changed.emit(geometry);
+  updated.emit();
+}
+
 void Entry::setLabel(std::string const& label, bool sensitive, bool visible)
 {
   if (label_ == label && sensitive == label_sensitive_ && visible == label_visible_)
@@ -156,6 +166,11 @@ void Entry::setPriority(int priority)
 bool Entry::active() const
 {
   return active_;
+}
+
+nux::Rect const& Entry::geometry() const
+{
+  return geometry_;
 }
 
 Entry& Entry::operator=(Entry const& rhs)

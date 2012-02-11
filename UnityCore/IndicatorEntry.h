@@ -28,7 +28,7 @@
 #include <sigc++/signal.h>
 #include <boost/shared_ptr.hpp>
 
-#include "NuxCore/Rect.h"
+#include <NuxCore/Rect.h>
 
 namespace unity
 {
@@ -71,6 +71,9 @@ public:
   void set_active(bool active);
   bool active() const;
 
+  void set_geometry(nux::Rect const& geometry);
+  nux::Rect const& geometry() const;
+
   int priority() const;
 
   bool visible() const;
@@ -94,6 +97,7 @@ public:
   // Signals
   sigc::signal<void> updated;
   sigc::signal<void, bool> active_changed;
+  sigc::signal<void, nux::Rect const&> geometry_changed;
   sigc::signal<void, bool> show_now_changed;
 
   sigc::signal<void, std::string const&, unsigned int, int, int, unsigned int, unsigned int> on_show_menu;
@@ -116,6 +120,8 @@ private:
 
   bool show_now_;
   bool active_;
+
+  nux::Rect geometry_;
 };
 
 std::ostream& operator<<(std::ostream& out, Entry const& e);

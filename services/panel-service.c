@@ -201,8 +201,9 @@ panel_service_class_init (PanelServiceClass *klass)
                   G_SIGNAL_RUN_LAST,
                   0,
                   NULL, NULL,
-                  g_cclosure_marshal_VOID__STRING,
-                  G_TYPE_NONE, 1, G_TYPE_STRING);
+                  panel_marshal_VOID__STRING_INT_INT_UINT_UINT,
+                  G_TYPE_NONE, 5, G_TYPE_STRING, G_TYPE_INT, G_TYPE_INT,
+                  G_TYPE_UINT, G_TYPE_UINT);
 
   _service_signals[RE_SYNC] =
     g_signal_new ("re-sync",
@@ -1216,7 +1217,7 @@ on_active_menu_hidden (GtkMenu *menu, PanelService *self)
   priv->use_event = FALSE;
   priv->pressed_entry = NULL;
 
-  g_signal_emit (self, _service_signals[ENTRY_ACTIVATED], 0, "");
+  g_signal_emit (self, _service_signals[ENTRY_ACTIVATED], 0, "", 0, 0, 0, 0);
 }
 
 /*
@@ -1591,10 +1592,6 @@ panel_service_actually_show_entry (PanelService *self,
 
   if (entry != NULL)
     {
-      gchar *entry_id = get_indicator_entry_id_by_entry (entry);
-      g_signal_emit (self, _service_signals[ENTRY_ACTIVATED], 0, entry_id);
-      g_free (entry_id);
-
       if (xid > 0)
         {
           indicator_object_entry_activate_window (object, entry, xid, CurrentTime);
@@ -1648,6 +1645,11 @@ panel_service_actually_show_entry (PanelService *self,
 
           gdk_window_get_geometry (gdkwin, NULL, NULL, &width, &height);
           gdk_window_get_origin (gdkwin, &left, &top);
+
+          gchar *entry_id = get_indicator_entry_id_by_entry (entry);
+          g_signal_emit (self, _service_signals[ENTRY_ACTIVATED], 0, entry_id,
+                         left, top, width, height);
+          g_free (entry_id);
 
           priv->last_left = left;
           priv->last_right = left + width -1;
