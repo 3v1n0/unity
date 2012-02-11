@@ -17,8 +17,10 @@
  * Authored by: Marco Trevisan (Treviño) <3v1n0@ubuntu.com>
  */
 
-#include "PanelIndicatorAppmenuView.h"
 #include <UnityCore/Variant.h>
+
+#include "PanelIndicatorAppmenuView.h"
+#include "WindowManager.h"
 
 namespace unity
 {  
@@ -33,6 +35,8 @@ void PanelIndicatorAppmenuView::ShowMenu(int button)
 {
   if (xid_)
   {
+    WindowManager::Default()->Activate(xid_);
+
     proxy_->ShowMenu(xid_,
                      GetAbsoluteX(),
                      GetAbsoluteY() + PANEL_HEIGHT,

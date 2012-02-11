@@ -344,8 +344,6 @@ void PanelIndicatorEntryView::DrawEntryContent(cairo_t *cr, unsigned int width, 
 
     int y = (height - text_height) / 2;
 
-    nux::Geometry const& geo = GetGeometry();
-
 
     unsigned int text_space = GetMaximumWidth() - x - padding_;
 
