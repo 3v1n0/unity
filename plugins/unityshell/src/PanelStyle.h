@@ -22,6 +22,7 @@
 #define PANEL_STYLE_H
 
 #include <Nux/Nux.h>
+#include <NuxCore/Property.h>
 
 #include <gtk/gtk.h>
 #include <UnityCore/GLibWrapper.h>
@@ -73,14 +74,16 @@ public:
   std::string GetFontDescription(PanelItem item);
   int GetTextDPI();
 
+  nux::BaseTexture* GetWindowButtonForTheme(WindowButtonType type,
+                                            WindowState state);
+
+  nux::Property<int> panel_height;
+
   sigc::signal<void> changed;
 
 private:
   void Refresh();
 
-  nux::BaseTexture* GetWindowButtonForTheme(WindowButtonType type,
-                                            WindowState state);
-private:
   glib::Object<GtkStyleContext> _style_context;
   glib::Signal<void, GtkSettings*, GParamSpec*> _style_changed_signal;
   glib::Signal<void, GtkSettings*, GParamSpec*> _font_changed_signal;
