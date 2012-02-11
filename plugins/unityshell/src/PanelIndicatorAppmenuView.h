@@ -45,7 +45,7 @@ public:
 
 protected:
   void ShowMenu(int button);
-  void DrawEntryBackground(cairo_t* cr, unsigned int w, unsigned int h);
+  void DrawEntryPrelight(cairo_t* cr, unsigned int w, unsigned int h);
 
 private:
   Window xid_;

@@ -91,7 +91,7 @@ public:
 
 protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
-  virtual void DrawEntryBackground(cairo_t* cr, unsigned int w, unsigned int h);
+  virtual void DrawEntryPrelight(cairo_t* cr, unsigned int w, unsigned int h);
   virtual void DrawEntryContent(cairo_t* cr, unsigned int width, unsigned int height,
                                 glib::Object<GdkPixbuf> const& pixbuf,
                                 glib::Object<PangoLayout> const& layout);

@@ -222,7 +222,7 @@ glib::Object<GdkPixbuf> PanelIndicatorEntryView::MakePixbuf()
   return pixbuf;
 }
 
-void PanelIndicatorEntryView::DrawEntryBackground(cairo_t* cr, unsigned int width, unsigned int height)
+void PanelIndicatorEntryView::DrawEntryPrelight(cairo_t* cr, unsigned int width, unsigned int height)
 {
   GtkStyleContext* style_context = panel::Style::Instance().GetStyleContext();
 
@@ -251,7 +251,7 @@ void PanelIndicatorEntryView::DrawEntryContent(cairo_t *cr, unsigned int width, 
   int x = padding_;
 
   if (IsActive())
-    DrawEntryBackground(cr, width, height);
+    DrawEntryPrelight(cr, width, height);
 
   if (pixbuf && proxy_->image_visible())
   {
