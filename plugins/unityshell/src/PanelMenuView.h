@@ -65,10 +65,12 @@ public:
   void SetMousePosition(int x, int y);
   void AllMenusClosed();
   void SetMonitor(int monitor);
+  void SetIntegrated(bool integrated);
 
   Window GetMaximizedWindow();
   bool GetControlsActive();
   bool HasOurWindowFocused();
+  bool IsIntegrated();
 
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
