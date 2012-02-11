@@ -148,7 +148,7 @@ void Controller::OnWindowConfigure(int window_width, int window_height,
 nux::Geometry Controller::GetIdealWindowGeometry()
 {
    UScreen *uscreen = UScreen::GetDefault();
-   int primary_monitor = uscreen->GetPrimaryMonitor();
+   int primary_monitor = uscreen->GetMonitorWithMouse();
    auto monitor_geo = uscreen->GetMonitorGeometry(primary_monitor);
 
    // We want to cover as much of the screen as possible to grab any mouse events outside
@@ -242,7 +242,7 @@ void Controller::ShowHud()
   GVariant* message_data = g_variant_new("(b)", TRUE);
   ubus.SendMessage(UBUS_LAUNCHER_LOCK_HIDE, message_data);
 
-  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "hud", FALSE, 0);
+  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "hud", FALSE, UScreen::GetDefault()->GetMonitorWithMouse());
   ubus.SendMessage(UBUS_OVERLAY_SHOWN, info);
 }
 void Controller::HideHud(bool restore)
