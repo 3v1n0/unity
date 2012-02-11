@@ -24,20 +24,18 @@
 #include <NuxGraphics/GLThread.h>
 #include <Nux/BaseWindow.h>
 #include <Nux/WindowCompositor.h>
-
-#include <boost/algorithm/string.hpp>
+#include <UnityCore/Variant.h>
 
 #include <glib.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <gtk/gtk.h>
 #include <time.h>
+#include <boost/algorithm/string.hpp>
 
 #include "CairoTexture.h"
-
 #include "PanelIndicatorEntryView.h"
-
 #include "PanelStyle.h"
-#include <UnityCore/Variant.h>
+#include "WindowManager.h"
 
 
 namespace unity
@@ -92,11 +90,16 @@ void PanelIndicatorEntryView::OnActiveChanged(bool is_active)
 
 void PanelIndicatorEntryView::ShowMenu(int button)
 {
-  proxy_->ShowMenu(0,
-                   GetAbsoluteX(),
-                   GetAbsoluteY() + PANEL_HEIGHT,
-                   button,
-                   time(nullptr));
+  auto wm = WindowManager::Default();
+
+  if (!wm->IsExpoActive() && !wm->IsScaleActive())
+  {
+    proxy_->ShowMenu(0,
+                     GetAbsoluteX(),
+                     GetAbsoluteY() + PANEL_HEIGHT,
+                     button,
+                     time(nullptr));
+  }
 }
 
 void PanelIndicatorEntryView::OnMouseDown(int x, int y, long button_flags, long key_flags)
@@ -313,6 +316,7 @@ void PanelIndicatorEntryView::DrawEntryContent(cairo_t *cr, unsigned int width, 
     PangoRectangle log_rect;
     pango_layout_get_extents(layout, nullptr, &log_rect);
     unsigned int text_height = log_rect.height / PANGO_SCALE;
+    unsigned int text_width =log_rect.width / PANGO_SCALE;
 
     pango_cairo_update_layout(cr, layout);
 
@@ -338,20 +342,59 @@ void PanelIndicatorEntryView::DrawEntryContent(cairo_t *cr, unsigned int width, 
       gtk_style_context_set_state(style_context, GTK_STATE_FLAG_PRELIGHT);
     }
 
-    int y = (int)((height - text_height) / 2);
-    if (dash_showing_)
+    int y = (height - text_height) / 2;
+
+    nux::Geometry const& geo = GetGeometry();
+
+
+    unsigned int text_space = GetMaximumWidth() - x - padding_;
+
+    if (text_width > text_space)
     {
-      cairo_move_to(cr, x, y);
-      cairo_set_source_rgb(cr, 1.0f, 1.0f, 1.0f);
-      pango_cairo_show_layout(cr, layout);
+      cairo_pattern_t* linpat;
+      int out_pixels = text_width - text_space;
+      int fading_pixels = 20;
+
+      if (type_ == APPMENU)
+        fading_pixels = 35;
+
+      int fading_width = out_pixels < fading_pixels ? out_pixels : fading_pixels;
+
+      cairo_push_group(cr);
+      if (dash_showing_)
+      {
+        cairo_move_to(cr, x, y);
+        cairo_set_source_rgb(cr, 1.0f, 1.0f, 1.0f);
+        pango_cairo_show_layout(cr, layout);
+      }
+      else
+      {
+        gtk_render_layout(style_context, cr, x, y, layout);
+      }
+      cairo_pop_group_to_source(cr);
+
+      linpat = cairo_pattern_create_linear(width - fading_width, y, width, y);
+      cairo_pattern_add_color_stop_rgba(linpat, 0, 0, 0, 0, 1);
+      cairo_pattern_add_color_stop_rgba(linpat, 1, 0, 0, 0, 0);
+      cairo_mask(cr, linpat);
+
+      cairo_pattern_destroy(linpat);
     }
     else
     {
-      gtk_render_layout(style_context, cr, x, y, layout);
+      if (dash_showing_)
+      {
+        cairo_move_to(cr, x, y);
+        cairo_set_source_rgb(cr, 1.0f, 1.0f, 1.0f);
+        pango_cairo_show_layout(cr, layout);
+      }
+      else
+      {
+        gtk_render_layout(style_context, cr, x, y, layout);
+      }
     }
 
     gtk_widget_path_free(widget_path);
-
     gtk_style_context_restore(style_context);
   }
 }
@@ -468,13 +511,14 @@ void PanelIndicatorEntryView::Refresh()
   if (width)
     width += padding_ * 2;
 
+  width = std::min<int>(width, GetMaximumWidth());
   SetMinimumWidth(width);
 
   nux::CairoGraphics cg(CAIRO_FORMAT_ARGB32, width, height);
   cr = cg.GetContext();
   cairo_set_line_width(cr, 1);
   cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
-  cairo_paint(cr);  
+  cairo_paint(cr);
 
   cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
   DrawEntryContent(cr, width, height, pixbuf, layout);
@@ -492,6 +536,12 @@ void PanelIndicatorEntryView::Draw(nux::GraphicsEngine& GfxContext, bool force_d
 {
   nux::Geometry const& geo = GetGeometry();
   GfxContext.PushClippingRectangle(geo);
+
+  if (cached_geo_ != geo)
+  {
+    Refresh();
+    cached_geo_ = geo;
+  }
 
   if (entry_texture_ && opacity_ > 0.0f)
   {

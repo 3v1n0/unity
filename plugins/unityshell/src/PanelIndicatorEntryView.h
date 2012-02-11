@@ -115,6 +115,7 @@ private:
 
   IndicatorEntryType type_;
   nux::BaseTexture* entry_texture_;
+  nux::Geometry cached_geo_;
   int padding_;
   double opacity_;
   bool draw_active_;
