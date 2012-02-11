@@ -78,6 +78,7 @@ public:
                                             WindowState state);
 
   nux::Property<int> panel_height;
+  nux::Property<bool> integrated_menus;
 
   sigc::signal<void> changed;
 

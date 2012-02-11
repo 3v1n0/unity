@@ -214,6 +214,7 @@ void PanelMenuView::SetIntegrated(bool integrated)
     return;
 
   _is_integrated = integrated;
+  panel::Style::Instance().integrated_menus = _is_integrated;
 
   if (!_is_integrated)
   {
@@ -392,7 +393,7 @@ bool PanelMenuView::DrawMenus()
   auto wm = WindowManager::Default();
   bool screen_grabbed = (wm->IsExpoActive() || wm->IsScaleActive());
 
-  if (_is_integrated)
+  if (_is_integrated && _integrated_menu)
   {
     if (!_dash_showing && !screen_grabbed)
     {
@@ -820,7 +821,7 @@ std::string PanelMenuView::GetMaximizedViewName(bool use_appname)
     }
   }
 
-  if (label.empty() && _is_integrated && !DrawMenus())
+  if (label.empty() && _is_integrated && !DrawMenus() && _integrated_menu)
     label = DESKTOP_NAME;
 
   return label;
