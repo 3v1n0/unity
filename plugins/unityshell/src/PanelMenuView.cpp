@@ -86,15 +86,12 @@ PanelMenuView::PanelMenuView(int padding)
 {
   WindowManager* win_manager;
 
-  // TODO: kill _menu_layout - should just use the _layout defined
-  // in the base class.
-  _menu_layout = new nux::HLayout("", NUX_TRACKER_LOCATION);
-  _menu_layout->SetParentObject(this);
+  layout_->SetContentDistribution(nux::eStackLeft);
 
-  /* This is for our parent and for PanelView to read indicator entries, we
-   * shouldn't touch this again
-   */
-  layout_ = _menu_layout;
+  /* Removing the layout from the base view, otherwise it will take all the
+   * space it needs and we don't want this. */
+  layout_->Reference();
+  RemoveLayout();
 
   BamfWindow* active_win = bamf_matcher_get_active_window(_matcher);
   if (BAMF_IS_WINDOW(active_win))
@@ -113,7 +110,9 @@ PanelMenuView::PanelMenuView(int padding)
 
   _window_buttons = new WindowButtons();
   _window_buttons->SetParentObject(this);
-  _window_buttons->NeedRedraw();
+  _window_buttons->SetBaseX(_padding);
+  _window_buttons->SetBaseHeight(24);
+  _window_buttons->ComputeContentSize();
 
   _window_buttons->close_clicked.connect(sigc::mem_fun(this, &PanelMenuView::OnCloseClicked));
   _window_buttons->minimize_clicked.connect(sigc::mem_fun(this, &PanelMenuView::OnMinimizeClicked));
@@ -121,6 +120,9 @@ PanelMenuView::PanelMenuView(int padding)
   _window_buttons->mouse_enter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
   _window_buttons->mouse_leave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
   //_window_buttons->mouse_move.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseMove));
+
+  layout_->SetLeftAndRightPadding(_padding*2 + _window_buttons->GetContentWidth(), 0);
+  layout_->SetBaseHeight(24);
 
   _panel_titlebar_grab_area = new PanelTitlebarGrabArea();
   _panel_titlebar_grab_area->SetParentObject(this);
@@ -199,7 +201,7 @@ PanelMenuView::~PanelMenuView()
   if (_new_app_hide_id)
     g_source_remove(_new_app_hide_id);
 
-  _menu_layout->UnReference();
+  layout_->UnReference();
   _window_buttons->UnReference();
   _panel_titlebar_grab_area->UnReference();
 
@@ -284,11 +286,20 @@ PanelMenuView::SetMenuShowTimings(int fadein, int fadeout, int discovery,
 }
 
 void
+PanelMenuView::QueueDraw()
+{
+  PanelIndicatorsView::QueueDraw();
+
+  layout_->QueueDraw();
+}
+
+void
 PanelMenuView::FullRedraw()
 {
-  _menu_layout->NeedRedraw();
-  _window_buttons->NeedRedraw();
-  NeedRedraw();
+  PanelIndicatorsView::QueueDraw();
+
+  layout_->QueueDraw();
+  _window_buttons->QueueDraw();
 }
 
 nux::Area*
@@ -324,44 +335,23 @@ PanelMenuView::FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEven
 
   if (!_is_own_window)
   {
-    found_area = _menu_layout->FindAreaUnderMouse(mouse_position, event_type);
+    found_area = layout_->FindAreaUnderMouse(mouse_position, event_type);
     NUX_RETURN_VALUE_IF_NOTNULL(found_area, found_area);
   }
 
   return View::FindAreaUnderMouse(mouse_position, event_type);
 }
 
-long PanelMenuView::PostLayoutManagement(long LayoutResult)
+void PanelMenuView::PreLayoutManagement()
 {
-  long res = View::PostLayoutManagement(LayoutResult);
-  int old_window_buttons_w, new_window_buttons_w;
-  int old_menu_area_w, new_menu_area_w;
+  View::PreLayoutManagement();
 
-  nux::Geometry geo = GetGeometry();
+  nux::Geometry const& geo = GetGeometry();
 
-  old_window_buttons_w = _window_buttons->GetContentWidth();
-  _window_buttons->SetGeometry(geo.x + _padding, geo.y, old_window_buttons_w, geo.height);
-  _window_buttons->ComputeContentSize();
-  new_window_buttons_w = _window_buttons->GetContentWidth();
-
-  /* Explicitly set the size and position of the widgets */
-  geo.x += _padding + new_window_buttons_w + _padding;
-  geo.width -= _padding + new_window_buttons_w + _padding;
-
-  old_menu_area_w = _menu_layout->GetContentWidth();
-  _menu_layout->SetGeometry(geo.x, geo.y, old_menu_area_w, geo.height);
-  _menu_layout->ComputeContentSize();
-  new_menu_area_w = _menu_layout->GetContentWidth();
-
-  geo.x += new_menu_area_w;
-  geo.width -= new_menu_area_w;
-
-  _panel_titlebar_grab_area->SetGeometry(geo.x, geo.y, geo.width, geo.height);
-
-  if (_is_inside)
-    NeedRedraw();
-
-  return res;
+  int x = layout_->GetContentWidth();
+  _panel_titlebar_grab_area->SetBaseX(x);
+  _panel_titlebar_grab_area->SetBaseHeight(geo.height);
+  _panel_titlebar_grab_area->SetMinimumWidth(geo.width - x);
 }
 
 void
@@ -665,7 +655,7 @@ PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     for (auto entry : entries_)
       entry.second->SetDisabled(false);
 
-    _menu_layout->ProcessDraw(GfxContext, true);
+    layout_->ProcessDraw(GfxContext, true);
 
     _fade_out_animator.Stop();
 
@@ -687,7 +677,7 @@ PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   if (GetOpacity() != 0.0f && !draw_menus && !_dash_showing)
   {
-    _menu_layout->ProcessDraw(GfxContext, true);
+    layout_->ProcessDraw(GfxContext, true);
 
     _fade_in_animator.Stop();
 
@@ -952,6 +942,7 @@ PanelMenuView::Refresh(bool force)
     if (_integrated_menu && GetMaximizedWindow() != 0)
     {
       _integrated_menu->SetLabel(new_title);
+      //_integrated_menu->SetMaximumWidth(geo.width);
       return;
     }
   }
@@ -1008,7 +999,9 @@ void
 PanelMenuView::OnActiveChanged(PanelIndicatorEntryView* view, bool is_active)
 {
   if (is_active)
+  {
     _last_active_view = view;
+  }
   else
   {
     if (_last_active_view == view)

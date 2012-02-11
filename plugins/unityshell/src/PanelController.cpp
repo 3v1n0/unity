@@ -217,6 +217,7 @@ void Controller::Impl::OnScreenChanged(int primary_monitor,
       nux::Geometry geo = monitors[i];
       geo.height = 24;
       (*it)->SetGeometry(geo);
+      (*it)->SetMinMaxSize(geo.width, geo.height);
 
       view = ViewForWindow(*it);
       view->SetPrimary(i == primary_monitor);
@@ -266,6 +267,7 @@ void Controller::Impl::OnScreenChanged(int primary_monitor,
       nux::Geometry geo = monitors[i];
       geo.height = 24;
       window->SetGeometry(geo);
+      window->SetMinMaxSize(geo.width, geo.height);
 
       windows_.push_back(window);
 

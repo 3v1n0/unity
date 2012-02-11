@@ -76,10 +76,12 @@ public:
   virtual void AddIndicator(indicator::Indicator::Ptr const& indicator);
   virtual void RemoveIndicator(indicator::Indicator::Ptr const& indicator);
 
+  virtual void QueueDraw();
+
 protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
-  virtual long PostLayoutManagement(long LayoutResult);
+  virtual void PreLayoutManagement();
   virtual nux::Area* FindAreaUnderMouse(const nux::Point& mouse_position,
                                         nux::NuxEventType event_type);
   virtual void OnEntryAdded(indicator::Entry::Ptr const& entry);

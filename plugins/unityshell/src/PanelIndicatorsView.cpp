@@ -45,8 +45,9 @@ PanelIndicatorsView::PanelIndicatorsView()
 {
   LOG_DEBUG(logger) << "Indicators View Added: ";
   layout_ = new nux::HLayout("", NUX_TRACKER_LOCATION);
+  layout_->SetContentDistribution(nux::eStackRight);
 
-  SetCompositionLayout(layout_);
+  SetLayout(layout_);
 }
 
 PanelIndicatorsView::~PanelIndicatorsView()
@@ -270,7 +271,8 @@ PanelIndicatorsView::AddEntryView(PanelIndicatorEntryView* view,
   }
 
   layout_->AddView(view, 0, nux::eCenter, nux::eFull, 1.0, (nux::LayoutPosition) entry_pos);
-  layout_->SetContentDistribution(nux::eStackRight);
+  layout_->QueueRelayout();
+
   entries_[view->GetEntryID()] = view;
 
   AddChild(view);
