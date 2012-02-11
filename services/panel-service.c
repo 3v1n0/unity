@@ -50,6 +50,7 @@ static PanelService *static_service = NULL;
 struct _PanelServicePrivate
 {
   GSList     *indicators;
+  GHashTable *id2entry_hash;
   GHashTable *panel2entries_hash;
 
   guint  initial_sync_id;
@@ -120,8 +121,6 @@ static void load_indicators (PanelService    *self);
 static void sort_indicators (PanelService    *self);
 
 static void notify_object (IndicatorObject *object);
-static IndicatorObjectEntry *get_entry_at (PanelService *self, gint x, gint y);
-static IndicatorObject *get_entry_parent_indicator (IndicatorObjectEntry *entry);
 
 static GdkFilterReturn event_filter (GdkXEvent    *ev,
                                      GdkEvent     *gev,
@@ -137,6 +136,7 @@ panel_service_class_dispose (GObject *object)
   PanelServicePrivate *priv = PANEL_SERVICE (object)->priv;
   gint i;
 
+  g_hash_table_destroy (priv->id2entry_hash);
   g_hash_table_destroy (priv->panel2entries_hash);
 
   gdk_window_remove_filter (NULL, (GdkFilterFunc)event_filter, object);
@@ -181,11 +181,18 @@ panel_service_class_dispose (GObject *object)
 }
 
 static void
+panel_service_class_finalize (GObject *object)
+{
+  static_service = NULL;
+}
+
+static void
 panel_service_class_init (PanelServiceClass *klass)
 {
   GObjectClass *obj_class = G_OBJECT_CLASS (klass);
 
   obj_class->dispose = panel_service_class_dispose;
+  obj_class->finalize = panel_service_class_finalize;
 
   /* Signals */
   _service_signals[ENTRY_ACTIVATED] =
@@ -245,6 +252,119 @@ panel_service_class_init (PanelServiceClass *klass)
 
 
   g_type_class_add_private (obj_class, sizeof (PanelServicePrivate));
+}
+
+static IndicatorObjectEntry *
+get_entry_at (PanelService *self, gint x, gint y)
+{
+  GHashTableIter panel_iter, entries_iter;
+  gpointer key, value, k, v;
+
+  g_hash_table_iter_init (&panel_iter, self->priv->panel2entries_hash);
+  while (g_hash_table_iter_next (&panel_iter, &key, &value))
+    {
+      GHashTable *entry2geometry_hash = value;
+      g_hash_table_iter_init (&entries_iter, entry2geometry_hash);
+
+      while (g_hash_table_iter_next (&entries_iter, &k, &v))
+        {
+          IndicatorObjectEntry *entry = k;
+          GdkRectangle *geo = v;
+
+          if (x >= geo->x && x <= (geo->x + geo->width) &&
+              y >= geo->y && y <= (geo->y + geo->height))
+            {
+              return entry;
+            }
+        }
+    }
+
+  return NULL;
+}
+
+static IndicatorObject *
+get_entry_parent_indicator (IndicatorObjectEntry *entry)
+{
+  if (!entry || !INDICATOR_IS_OBJECT (entry->parent_object))
+    return NULL;
+
+  return INDICATOR_OBJECT (entry->parent_object);
+}
+
+static gchar *
+get_indicator_entry_id_by_entry (IndicatorObjectEntry *entry)
+{
+  gchar *entry_id = NULL;
+
+  if (entry)
+    entry_id = g_strdup_printf ("%p", entry);
+
+  return entry_id;
+}
+
+static IndicatorObjectEntry *
+get_indicator_entry_by_id (PanelService *self, const gchar *entry_id)
+{
+  IndicatorObjectEntry *entry;
+
+  entry = g_hash_table_lookup (self->priv->id2entry_hash, entry_id);
+
+  if (!entry)
+    {
+      /* This is a workaround to avoid false negatives, FIXME
+       * there's an issue in indicator-appmenu that causes entry-removed to
+       * be not properly emitted */
+
+      IndicatorObjectEntry *invalid_entry;
+      if (sscanf (entry_id, "%p", &invalid_entry) == 1)
+        {
+          gboolean entry_found = FALSE;
+          GSList *sl;
+          for (sl = self->priv->indicators; sl; sl = sl->next)
+            {
+              IndicatorObject *object = INDICATOR_OBJECT (sl->data);
+              GList *entries, *l;
+
+              entries = indicator_object_get_entries (object);
+
+              for (l = entries; l; l = l->next)
+                {
+                  if (l->data == invalid_entry)
+                    {
+                      entry = invalid_entry;
+                      entry_found = TRUE;
+                      g_warning ("Entry %p has been wrongly removed!", entry);
+                      break;
+                    }
+                }
+
+              g_list_free (entries);
+
+              if (entry_found)
+                break;
+            }
+        }
+    }
+
+  if (entry)
+    {
+      if (g_slist_find (self->priv->indicators, entry->parent_object))
+        {
+          if (!INDICATOR_IS_OBJECT (entry->parent_object))
+            entry = NULL;
+        }
+      else
+        {
+          entry = NULL;
+        }
+
+      if (!entry)
+        {
+          g_warning("The entry id '%s' you're trying to lookup is not a valid IndicatorObjectEntry!", entry_id);
+        }
+    }
+
+  return entry;
 }
 
 static GdkFilterReturn
@@ -332,7 +452,7 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
                           /* If we were navigating over indicators using the keyboard
                            * and now we click over the indicator under the mouse, we
                            * must force it to show back again, not make it close */
-                          gchar *entry_id = g_strdup_printf ("%p", entry);
+                          gchar *entry_id = get_indicator_entry_id_by_entry (entry);
                           g_signal_emit (self, _service_signals[ENTRY_ACTIVATE_REQUEST], 0, entry_id);
                           g_free (entry_id);
                         }
@@ -346,7 +466,7 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
               /* If we're scrolling or middle-clicking over an indicator
                * (which is not an appmenu entry) then we need to send the
                * event to the indicator itself, and avoid it to close */
-              gchar *entry_id = g_strdup_printf ("%p", entry);
+              gchar *entry_id = get_indicator_entry_id_by_entry (entry);
 
               if (XIMaskIsSet (event->buttons.mask, 4) || XIMaskIsSet (event->buttons.mask, 5))
                 {
@@ -365,100 +485,6 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
     }
 
   return ret;
-}
-
-static IndicatorObjectEntry *
-get_entry_at (PanelService *self, gint x, gint y)
-{
-  GHashTableIter panel_iter, entries_iter;
-  gpointer key, value, k, v;
-
-  g_hash_table_iter_init (&panel_iter, self->priv->panel2entries_hash);
-  while (g_hash_table_iter_next (&panel_iter, &key, &value))
-    {
-      GHashTable *entry2geometry_hash = value;
-      g_hash_table_iter_init (&entries_iter, entry2geometry_hash);
-
-      while (g_hash_table_iter_next (&entries_iter, &k, &v))
-        {
-          IndicatorObjectEntry *entry = k;
-          GdkRectangle *geo = v;
-
-          if (x >= geo->x && x <= (geo->x + geo->width) &&
-              y >= geo->y && y <= (geo->y + geo->height))
-            {
-              return entry;
-            }
-        }
-    }
-
-  return NULL;
-}
-
-static IndicatorObject *
-get_entry_parent_indicator (IndicatorObjectEntry *entry)
-{
-  if (!entry || !INDICATOR_IS_OBJECT (entry->parent_object))
-    return NULL;
-
-  return INDICATOR_OBJECT (entry->parent_object);
-}
-
-static IndicatorObjectEntry *
-get_indicator_entry_by_id (PanelService *self, const gchar *entry_id)
-{
-  IndicatorObjectEntry *entry;
-  entry = NULL;
-
-  if (sscanf (entry_id, "%p", &entry) == 1)
-  {
-    /* Checking that entry is really an IndicatorObjectEntry.
-     * To do that, we use an hack that allows to check if the pointer we read is
-     * actually a valid pointer without crashing. This can be done using the
-     * low-level write function to read from the pointer to a valid fds (we use
-     * a pipe for convenience). Write will fail without crashing if we try to
-     * read from an invalid pointer, so we can finally be pretty sure if the
-     * pointed entry is an IndicatorObjectEntry by checking if it has a valid
-     * parent IndicatorObject */
-
-    int fds[2];
-
-    if (pipe (fds) > -1)
-      {
-        size_t data_size = sizeof (IndicatorObjectEntry);
-
-        if (write (fds[1], entry, data_size) != data_size)
-          {
-            entry = NULL;
-          }
-        else
-          {
-            if (g_slist_find (self->priv->indicators, entry->parent_object))
-              {
-                if (!INDICATOR_IS_OBJECT (entry->parent_object))
-                  entry = NULL;
-              }
-            else
-              {
-                entry = NULL;
-              }
-          }
-
-        close (fds[0]);
-        close (fds[1]);
-      }
-    else
-      {
-        entry = NULL;
-      }
-  }
-
-  if (!entry)
-    {
-      g_warning("The entry id '%s' you're trying to parse is not a valid IndicatorObjectEntry!", entry_id);
-    }
-
-  return entry;
 }
 
 static gboolean
@@ -484,6 +510,7 @@ panel_service_init (PanelService *self)
 
   gdk_window_add_filter (NULL, (GdkFilterFunc)event_filter, self);
 
+  priv->id2entry_hash = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
   priv->panel2entries_hash = g_hash_table_new_full (g_str_hash, g_str_equal,
                                                     g_free,
                                                     (GDestroyNotify) g_hash_table_destroy);
@@ -522,15 +549,23 @@ panel_service_actually_remove_indicator (PanelService *self, IndicatorObject *in
     {
       for (l = entries; l; l = l->next)
         {
+          IndicatorObjectEntry *entry;
+          gchar *entry_id;
           GHashTableIter iter;
           gpointer key, value;
+
+          entry = l->data;
+          entry_id = get_indicator_entry_id_by_entry (entry);
+          g_hash_table_remove (self->priv->id2entry_hash, entry_id);
+          g_free (entry_id);
+
           g_hash_table_iter_init (&iter, self->priv->panel2entries_hash);
           while (g_hash_table_iter_next (&iter, &key, &value))
             {
               GHashTable *entry2geometry_hash = value;
 
               if (g_hash_table_size (entry2geometry_hash) > 1)
-                g_hash_table_remove (entry2geometry_hash, l->data);
+                g_hash_table_remove (entry2geometry_hash, entry);
               else
                 g_hash_table_iter_remove (&iter);
             }
@@ -737,6 +772,9 @@ on_entry_added (IndicatorObject      *object,
   g_return_if_fail (PANEL_IS_SERVICE (self));
   g_return_if_fail (entry != NULL);
 
+  gchar *entry_id = get_indicator_entry_id_by_entry (entry);
+  g_hash_table_insert (self->priv->id2entry_hash, entry_id, entry);
+
   if (GTK_IS_LABEL (entry->label))
     {
       g_signal_connect (entry->label, "notify::label",
@@ -785,10 +823,14 @@ on_entry_removed (IndicatorObject      *object,
   g_return_if_fail (PANEL_IS_SERVICE (self));
   g_return_if_fail (entry != NULL);
 
-  /* Don't remove here the value from priv->panel2entries_hash, this should
-   * be done in during the sync, to avoid false positive.
+  /* Don't remove here the value from id2entry_hash or panel2entries_hash,
+   * this should be done in during the sync, to avoid false positive.
    * FIXME this in libappmenu.so to avoid to send an "entry-removed" signal
    * when switching the focus from a window to one of its dialog children */
+
+  gchar *entry_id = get_indicator_entry_id_by_entry (entry);
+  g_hash_table_remove (self->priv->id2entry_hash, entry_id);
+  g_free (entry_id);
 
   notify_object (object);
 }
@@ -817,10 +859,8 @@ g_debug("Asked to show menu with entry %p",entry);
       return;
     }
 
-  entry_id = g_strdup_printf ("%p", entry);
-
+  entry_id = get_indicator_entry_id_by_entry (entry);
   g_signal_emit (self, _service_signals[ENTRY_ACTIVATE_REQUEST], 0, entry_id);
-
   g_free (entry_id);
 }
 
@@ -839,10 +879,8 @@ on_indicator_menu_show_now_changed (IndicatorObject      *object,
       return;
     }
 
-  entry_id = g_strdup_printf ("%p", entry);
-
+  entry_id = get_indicator_entry_id_by_entry (entry);
   g_signal_emit (self, _service_signals[ENTRY_SHOW_NOW_CHANGED], 0, entry_id, show_now_changed);
-
   g_free (entry_id);
 }
 
@@ -1110,7 +1148,7 @@ indicator_object_to_variant (IndicatorObject *object, const gchar *indicator_id,
         {
           gint prio = -1;
           IndicatorObjectEntry *entry = e->data;
-          gchar *id = g_strdup_printf ("%p", entry);
+          gchar *id = get_indicator_entry_id_by_entry (entry);
 
           if (entry->name_hint)
             {
@@ -1450,7 +1488,7 @@ activate_next_prev_menu (PanelService         *self,
 
   if (new_entry)
     {
-      id = g_strdup_printf ("%p", new_entry);
+      id = get_indicator_entry_id_by_entry (new_entry);
       g_signal_emit (self, _service_signals[ENTRY_ACTIVATE_REQUEST], 0, id);
       g_free (id);
     }
@@ -1553,7 +1591,7 @@ panel_service_actually_show_entry (PanelService *self,
 
   if (entry != NULL)
     {
-      gchar *entry_id = g_strdup_printf ("%p", entry);
+      gchar *entry_id = get_indicator_entry_id_by_entry (entry);
       g_signal_emit (self, _service_signals[ENTRY_ACTIVATED], 0, entry_id);
       g_free (entry_id);
 
