@@ -100,11 +100,17 @@ void Indicators::RemoveIndicator(std::string const& name)
 void Indicators::Impl::ActivateEntry(std::string const& entry_id, nux::Rect const& geometry)
 {
   if (active_entry_)
+  {
     active_entry_->set_active(false);
+    active_entry_->set_geometry(nux::Rect());
+  }
+
   active_entry_ = GetEntry(entry_id);
+
   if (active_entry_)
   {
     active_entry_->set_active(true);
+    active_entry_->set_geometry(geometry);
   }
 }
 

@@ -234,4 +234,33 @@ TEST(TestIndicatorEntry, TestVisibility)
   EXPECT_TRUE(entry.visible());
 }
 
+TEST(TestIndicatorEntry, TestGeometry)
+{
+
+  indicator::Entry entry("id", "name_hint", "label", true, true,
+                         0, "some icon", false, true, -1);
+
+  Counter counter;
+  entry.updated.connect(sigc::mem_fun(counter, &Counter::increment));
+  bool geo_changed = false;
+  nux::Rect new_geo;
+
+  entry.geometry_changed.connect([&] (nux::Rect const& geo) {
+    geo_changed = true;
+    new_geo = geo;
+  });
+
+  // Setting to the same value doesn't emit any events.
+  entry.set_geometry(nux::Rect());
+  EXPECT_EQ(entry.geometry(), nux::Rect());
+  EXPECT_EQ(counter.count, 0);
+
+  // Setting to a different value does emit the events.
+  entry.set_geometry(nux::Rect(1, 2, 3, 4));
+  EXPECT_EQ(entry.geometry(), nux::Rect(1, 2, 3, 4));
+  EXPECT_TRUE(geo_changed);
+  EXPECT_EQ(new_geo, nux::Rect(1, 2, 3, 4));
+  EXPECT_EQ(counter.count, 1);
+}
+
 }
