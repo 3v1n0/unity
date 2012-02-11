@@ -489,7 +489,7 @@ LauncherIcon::ShowTooltip()
   {
     nux::Geometry geo = _parent_geo[_last_monitor];
     tip_x = geo.x + geo.width - 4 * geo.width / 48;
-    tip_y = geo.y + _center[_last_monitor].y;
+    tip_y = _center[_last_monitor].y;
   }
 
   if (!_tooltip)
@@ -578,7 +578,7 @@ bool LauncherIcon::OpenQuicklist(bool default_to_first_item, int monitor)
 
   nux::Geometry geo = _parent_geo[monitor];
   int tip_x = geo.x + geo.width - 4 * geo.width / 48;
-  int tip_y = geo.y + _center[monitor].y;
+  int tip_y = _center[monitor].y;
 
   auto win_manager = WindowManager::Default();
 
@@ -652,6 +652,8 @@ LauncherIcon::OnCenterTimeout(gpointer data)
 void
 LauncherIcon::SetCenter(nux::Point3 center, int monitor, nux::Geometry geo)
 {
+  center.x += geo.x;
+  center.y += geo.y;
   _center[monitor] = center;
   _parent_geo[monitor] = geo;
 
@@ -659,7 +661,7 @@ LauncherIcon::SetCenter(nux::Point3 center, int monitor, nux::Geometry geo)
   {
     int tip_x, tip_y;
     tip_x = geo.x + geo.width - 4 * geo.width / 48;
-    tip_y = geo.y + _center[monitor].y;
+    tip_y = _center[monitor].y;
 
     if (_quicklist && _quicklist->IsVisible())
       QuicklistManager::Default()->ShowQuicklist(_quicklist.GetPointer(), tip_x, tip_y);

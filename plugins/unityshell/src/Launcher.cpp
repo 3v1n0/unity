@@ -1026,8 +1026,8 @@ void Launcher::FillRenderArg(AbstractLauncherIcon* icon,
   // FIXME: this is a hack, we should have a look why SetAnimationTarget is necessary in SetAnimationTarget
   // we should ideally just need it at start to set the target
   if (!_initial_drag_animation && icon == _drag_icon && _drag_window && _drag_window->Animating())
-    _drag_window->SetAnimationTarget((int)(_drag_icon->GetCenter(monitor).x) + parent_abs_geo.x, 
-                                     (int)(_drag_icon->GetCenter(monitor).y) + parent_abs_geo.y);
+    _drag_window->SetAnimationTarget((int)(_drag_icon->GetCenter(monitor).x), 
+                                     (int)(_drag_icon->GetCenter(monitor).y));
 
   center.y += (half_size * size_modifier) + spacing;   // move to end
 }
@@ -1744,7 +1744,6 @@ LauncherModel* Launcher::GetModel() const
 
 void Launcher::EnsureIconOnScreen(AbstractLauncherIcon* selection)
 {
-  nux::Point3 center = selection->GetCenter(monitor);
   nux::Geometry geo = GetGeometry();
 
   int natural_y = 0;
@@ -2082,8 +2081,8 @@ void Launcher::EndIconDrag()
       auto abs_geo = GetAbsoluteGeometry();
       _model->Save();
 
-      _drag_window->SetAnimationTarget((int)(_drag_icon->GetCenter(monitor).x) + abs_geo.x, 
-                                       (int)(_drag_icon->GetCenter(monitor).y) + abs_geo.y);
+      _drag_window->SetAnimationTarget((int)(_drag_icon->GetCenter(monitor).x), 
+                                       (int)(_drag_icon->GetCenter(monitor).y));
       _drag_window->StartAnimation();
 
       if (_drag_window->on_anim_completed.connected())
