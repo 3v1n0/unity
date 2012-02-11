@@ -439,8 +439,8 @@ void QuicklistMenuItem::DrawPrelight(nux::CairoGraphics* cairo, int width, int h
 
   cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
   cairo_set_source_rgba(cr, color.red, color.blue, color.green, color.alpha);
-  cairo->DrawRoundedRectangle(cr, 1.0f, 0.5f, 0.5f, ITEM_CORNER_RADIUS_ABS,
-                              width - 1.0f, height - 1.0f);
+  cairo->DrawRoundedRectangle(cr, 1.0f, 0.0f, 0.0f, ITEM_CORNER_RADIUS_ABS,
+                              width, height);
   cairo_fill(cr);
 }
 

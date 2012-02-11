@@ -263,6 +263,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetBackgroundColorNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetLauncherHideModeNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetBacklightModeNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+     optionSetRevealTriggerNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetLaunchAnimationNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetUrgentAnimationNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetPanelOpacityNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
@@ -1981,12 +1982,19 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
     }
   }
 
-  bool ret = gWindow->glDraw(matrix, attrib, region, mask);
-
-  if (window->type() == CompWindowTypeDesktopMask)
+  Window active_window = screen->activeWindow();
+  if (window->id() == active_window && window->type() != CompWindowTypeDesktopMask)
   {
     uScreen->paintPanelShadow(matrix);
   }
+
+  bool ret = gWindow->glDraw(matrix, attrib, region, mask);
+
+  if (active_window == 0 || active_window == window->id() && window->type() == CompWindowTypeDesktopMask)
+  {
+    uScreen->paintPanelShadow(matrix);
+  }
+
 
   return ret;
 }
@@ -2310,6 +2318,9 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       break;
     case UnityshellOptions::BacklightMode:
       launcher_options->backlight_mode = (unity::launcher::BacklightMode) optionGetBacklightMode();
+      break;
+    case UnityshellOptions::RevealTrigger:
+      launcher_options->reveal_trigger = (unity::launcher::RevealTrigger) optionGetRevealTrigger();
       break;
     case UnityshellOptions::LaunchAnimation:
       launcher_options->launch_animation = (unity::launcher::LaunchAnimation) optionGetLaunchAnimation();

@@ -45,16 +45,15 @@
 
 #include <glib/gi18n-lib.h>
 
-#define WINDOW_TITLE_FONT_KEY "/apps/metacity/general/titlebar_font"
+namespace unity
+{
 
-namespace {
+namespace
+{
   nux::logging::Logger logger("unity.panel.menu");
   const int MENUS_PADDING = 6;
   const std::string DESKTOP_NAME(_("Ubuntu Desktop"));
 }
-
-namespace unity
-{
 
 PanelMenuView::PanelMenuView(int padding)
   : _matcher(bamf_matcher_get_default()),

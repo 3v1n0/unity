@@ -43,14 +43,13 @@
 #include "CairoTexture.h"
 #include "DashStyle.h"
 
-#define LIVE_SEARCH_TIMEOUT 40
-#define SPINNER_TIMEOUT 100
-
 namespace
 {
 const float kExpandDefaultIconOpacity = 1.0f;
 const int external_margin_vertical = 8;
 const int external_margin_horizontal = 7;
+const int LIVE_SEARCH_TIMEOUT = 40;
+const int SPINNER_TIMEOUT = 100;
 }
 
 namespace
@@ -166,7 +165,7 @@ void SearchBar::Init()
     filter_layout_ = new nux::HLayout();
     filter_layout_->SetHorizontalInternalMargin(8);
     filter_layout_->SetHorizontalExternalMargin(6);
-    filter_space_ = new nux::SpaceLayout(100, 10000, 0, 1);
+    filter_space_ = new nux::SpaceLayout(1, 10000, 0, 1);
     filter_layout_->AddLayout(filter_space_, 1);
     filter_layout_->AddView(show_filters_, 0, nux::MINOR_POSITION_CENTER);
 
@@ -181,6 +180,7 @@ void SearchBar::Init()
 
     layout_->AddView(filter_layout_, 1, nux::MINOR_POSITION_RIGHT, nux::MINOR_SIZE_FULL);
   }
+
   sig_manager_.Add(new Signal<void, GtkSettings*, GParamSpec*>
       (gtk_settings_get_default(),
        "notify::gtk-font-name",
@@ -201,7 +201,7 @@ void SearchBar::Init()
     }
   });
 
-  disable_glow.changed.connect([&](bool disabled) 
+  disable_glow.changed.connect([&](bool disabled)
   {
     layout_->SetVerticalExternalMargin(0);
     layout_->SetHorizontalExternalMargin(0);
@@ -285,8 +285,8 @@ void SearchBar::OnSearchChanged(nux::TextEntry* text_entry)
   start_spinner_timeout_ = g_timeout_add(SPINNER_TIMEOUT,
                                          (GSourceFunc)&OnSpinnerStartCb,
                                          this);
- 
-  bool is_empty = pango_entry_->im_active() ? false : pango_entry_->GetText() == ""; 
+
+  bool is_empty = pango_entry_->im_active() ? false : pango_entry_->GetText() == "";
   hint_->SetVisible(is_empty);
 
   pango_entry_->QueueDraw();
@@ -355,7 +355,7 @@ void SearchBar::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   else
   {
     nux::GetPainter().PushPaintLayerStack();
-  }  
+  }
 
   layout_->ProcessDraw(GfxContext, force_draw);
 
@@ -398,7 +398,7 @@ SearchBar::SearchFinished()
   }
 
   bool is_empty = pango_entry_->im_active() ?
-    false : pango_entry_->GetText() == ""; 
+    false : pango_entry_->GetText() == "";
   spinner_->SetState(is_empty ? STATE_READY : STATE_CLEAR);
 }
 
@@ -410,13 +410,13 @@ void SearchBar::UpdateBackground(bool force)
   nux::Geometry geo = GetGeometry();
   geo.width = layered_layout_->GetGeometry().width;
 
-  LOG_DEBUG(logger) << "height: " 
+  LOG_DEBUG(logger) << "height: "
   << geo.height << " - "
-  << layered_layout_->GetGeometry().height << " - " 
+  << layered_layout_->GetGeometry().height << " - "
   << pango_entry_->GetGeometry().height;
 
-  if (geo.width == last_width_ 
-      && geo.height == last_height_ 
+  if (geo.width == last_width_
+      && geo.height == last_height_
       && force == false)
     return;
 
@@ -425,10 +425,10 @@ void SearchBar::UpdateBackground(bool force)
 
   if (disable_glow)
     PADDING = 2;
-  
-  
+
+
   x = y = PADDING - 1;
-  
+
   width = last_width_ - (2 * PADDING);
   height = last_height_ - (2 * PADDING) + 1;
 

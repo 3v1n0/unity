@@ -41,6 +41,11 @@
 namespace unity
 {
 
+namespace
+{
+const int SPACING = 3;
+}
+
 PanelIndicatorEntryView::PanelIndicatorEntryView(
   indicator::Entry::Ptr const& proxy,
   int padding,

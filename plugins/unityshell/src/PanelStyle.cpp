@@ -55,8 +55,8 @@ nux::Color ColorFromGdkRGBA(GdkRGBA const& color)
 
 }
 
-Style::Style() :
-  _style_context(gtk_style_context_new())
+Style::Style()
+  : _style_context(gtk_style_context_new())
 {
   if (style_instance)
   {

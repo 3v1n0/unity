@@ -34,6 +34,7 @@
 
 #include "Introspectable.h"
 
+
 namespace unity
 {
 using namespace indicator;
@@ -99,7 +100,6 @@ protected:
   virtual void ShowMenu(int button = 1);
 
   static const int PANEL_HEIGHT = 24;
-  static const int SPACING = 3;
 
   Entry::Ptr proxy_;
 

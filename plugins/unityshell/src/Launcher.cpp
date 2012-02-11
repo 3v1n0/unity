@@ -79,17 +79,18 @@ const int panel_height = 24;
 const int ICON_PADDING = 6;
 const int RIGHT_LINE_WIDTH = 1;
 
+const int ANIM_DURATION_SHORT_SHORT = 100;
+const int ANIM_DURATION = 200;
+const int ANIM_DURATION_LONG = 350;
+const int START_DRAGICON_DURATION = 250;
+
+const int MOUSE_DEADZONE = 15;
+const float DRAG_OUT_PIXELS = 300.0f;
+
+const std::string S_DBUS_NAME = "com.canonical.Unity.Launcher";
+const std::string S_DBUS_PATH = "/com/canonical/Unity/Launcher";
 }
 
-#define TRIGGER_SQR_RADIUS 25
-
-#define MOUSE_DEADZONE 15
-
-#define DRAG_OUT_PIXELS 300.0f
-
-#define S_DBUS_NAME  "com.canonical.Unity.Launcher"
-#define S_DBUS_PATH  "/com/canonical/Unity/Launcher"
-#define S_DBUS_IFACE "com.canonical.Unity.Launcher"
 
 // FIXME: key-code defines for Up/Down/Left/Right of numeric keypad - needs to
 // be moved to the correct place in NuxGraphics-headers
@@ -124,6 +125,8 @@ GDBusInterfaceVTable Launcher::interface_vtable =
   NULL
 };
 
+const int Launcher::Launcher::ANIM_DURATION_SHORT = 125;
+
 Launcher::Launcher(nux::BaseWindow* parent,
                    NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
@@ -140,6 +143,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
 
   _hide_machine = new LauncherHideMachine();
   _hide_machine->should_hide_changed.connect(sigc::mem_fun(this, &Launcher::SetHidden));
+  _hide_machine->reveal_progress.changed.connect([&](float value) -> void { EnsureAnimation(); });
 
   _hover_machine = new LauncherHoverMachine();
   _hover_machine->should_hover_changed.connect(sigc::mem_fun(this, &Launcher::SetHover));
@@ -224,6 +228,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
   _hidden                 = false;
   _render_drag_window     = false;
   _drag_edge_touching     = false;
+  _steal_drag             = false;
   _last_button_press      = 0;
   _selection_atom         = 0;
   _drag_out_id            = 0;
@@ -260,7 +265,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
   ubus.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED, sigc::mem_fun(this, &Launcher::OnBGColorChanged));
   ubus.RegisterInterest(UBUS_LAUNCHER_LOCK_HIDE, sigc::mem_fun(this, &Launcher::OnLockHideChanged));
   _dbus_owner = g_bus_own_name(G_BUS_TYPE_SESSION,
-                               S_DBUS_NAME,
+                               S_DBUS_NAME.c_str(),
                                (GBusNameOwnerFlags)(G_BUS_NAME_OWNER_FLAGS_REPLACE | G_BUS_NAME_OWNER_FLAGS_ALLOW_REPLACEMENT),
                                OnBusAcquired,
                                OnNameAcquired,
@@ -296,6 +301,20 @@ Launcher::Launcher(nux::BaseWindow* parent,
     // ownership without adding a reference, we can remove the unref here.  By
     // unreferencing, the object is solely owned by the smart pointer.
     launcher_sheen_->UnReference();
+  }
+
+  pixbuf = gdk_pixbuf_new_from_file(PKGDATADIR"/launcher_pressure_effect.png", &error);
+  if (error)
+  {
+    LOG_WARN(logger) << "Unable to texture " << PKGDATADIR << "/launcher_pressure_effect.png" << ": " << error;
+  }
+  else
+  {
+    launcher_pressure_effect_ = nux::CreateTexture2DFromPixbuf(pixbuf, true);
+    // TODO: when nux has the ability to create a smart pointer that takes
+    // ownership without adding a reference, we can remove the unref here.  By
+    // unreferencing, the object is solely owned by the smart pointer.
+    launcher_pressure_effect_->UnReference();
   }
 
   _pointer_barrier = PointerBarrierWrapper::Ptr(new PointerBarrierWrapper());
@@ -1287,7 +1306,7 @@ void Launcher::OnOverlayShown(GVariant* data)
   unity::glib::String overlay_identity;
   gboolean can_maximise = FALSE;
   gint32 overlay_monitor = 0;
-  g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING, 
+  g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING,
                 &overlay_identity, &can_maximise, &overlay_monitor);
 
 
@@ -1313,14 +1332,14 @@ void Launcher::OnOverlayHidden(GVariant* data)
   unity::glib::String overlay_identity;
   gboolean can_maximise = FALSE;
   gint32 overlay_monitor = 0;
-  g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING, 
+  g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING,
                 &overlay_identity, &can_maximise, &overlay_monitor);
 
   if (!g_strcmp0(overlay_identity, "dash"))
   {
     if (!_dash_is_open)
       return;
-    
+
     LauncherModel::iterator it;
 
     _dash_is_open = false;
@@ -1354,7 +1373,7 @@ void Launcher::SetHidden(bool hidden)
 
   _hide_machine->SetQuirk(LauncherHideMachine::LAST_ACTION_ACTIVATE, false);
 
-  if (hidden)  
+  if (hidden)
   {
     _hide_machine->SetQuirk(LauncherHideMachine::MOUSE_MOVE_POST_REVEAL, false);
     _hide_machine->SetQuirk(LauncherHideMachine::MT_DRAG_OUT, false);
@@ -1766,7 +1785,7 @@ void Launcher::Resize()
 
   _pointer_barrier->x1 = new_geometry.x;
   _pointer_barrier->x2 = new_geometry.x;
-  _pointer_barrier->y1 = new_geometry.y;
+  _pointer_barrier->y1 = new_geometry.y - panel_height;
   _pointer_barrier->y2 = new_geometry.y + new_geometry.height;
   _pointer_barrier->threshold = options()->edge_stop_velocity();
 
@@ -1904,6 +1923,16 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   // clip vertically but not horizontally
   GfxContext.PushClippingRectangle(nux::Geometry(base.x, bkg_box.y, base.width, bkg_box.height));
+
+  if (_hidden && _hide_machine->reveal_progress > 0 && launcher_pressure_effect_.IsValid())
+  {
+    nux::Color pressure_color = nux::color::Cyan * _hide_machine->reveal_progress;
+    nux::TexCoordXForm texxform_pressure;
+    GfxContext.QRP_1Tex(base.x, base.y, base.width, base.height,
+                        launcher_pressure_effect_->GetDeviceTexture(),
+                        texxform_pressure,
+                        pressure_color);
+  }
 
   if (_dash_is_open)
   {
@@ -2338,7 +2367,23 @@ void Launcher::RecvMouseWheel(int x, int y, int wheel_delta, unsigned long butto
 void Launcher::OnPointerBarrierEvent(ui::PointerBarrierWrapper* owner, ui::BarrierEvent::Ptr event)
 {
   nux::Geometry abs_geo = GetAbsoluteGeometry();
+
+  bool apply_to_reveal = false;
   if (_hidden && event->x >= abs_geo.x && event->x <= abs_geo.x + abs_geo.width)
+  {
+    if (options()->reveal_trigger == RevealTrigger::EDGE)
+    {
+      if (event->y >= abs_geo.y)
+        apply_to_reveal = true;
+    }
+    else if (options()->reveal_trigger == RevealTrigger::CORNER)
+    {
+      if (event->y < abs_geo.y)
+        apply_to_reveal = true;
+    }
+  }
+
+  if (apply_to_reveal)
   {
     _hide_machine->AddRevealPressure(event->velocity);
     decaymulator_->value = 0;
@@ -2643,10 +2688,7 @@ void Launcher::DndHoveredIconReset()
   }
 
   if (!_steal_drag && _dnd_hovered_icon)
-  {
     _dnd_hovered_icon->SendDndLeave();
-    _dnd_hovered_icon = nullptr;
-  }
 
   _steal_drag = false;
   _dnd_hovered_icon = nullptr;
@@ -2905,7 +2947,7 @@ Launcher::OnBusAcquired(GDBusConnection* connection,
 
 
   registration_id = g_dbus_connection_register_object(connection,
-                                                      S_DBUS_PATH,
+                                                      S_DBUS_PATH.c_str(),
                                                       introspection_data->interfaces[0],
                                                       &interface_vtable,
                                                       user_data,
