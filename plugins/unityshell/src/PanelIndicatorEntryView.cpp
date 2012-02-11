@@ -101,7 +101,7 @@ void PanelIndicatorEntryView::ShowMenu(int button)
   {
     proxy_->ShowMenu(0,
                      GetAbsoluteX(),
-                     GetAbsoluteY() + PANEL_HEIGHT,
+                     GetAbsoluteY() + panel::Style::Instance().panel_height,
                      button,
                      time(nullptr));
   }
@@ -429,7 +429,7 @@ void PanelIndicatorEntryView::Refresh()
 
   unsigned int width = 0;
   unsigned int icon_width = 0;
-  unsigned int height = PANEL_HEIGHT;
+  unsigned int height = panel::Style::Instance().panel_height;
   unsigned int text_width = 0;
 
   // First lets figure out our size

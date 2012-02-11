@@ -299,13 +299,13 @@ GdkPixbuf* Style::GetHomeButton()
 
   pixbuf = gtk_icon_theme_load_icon(gtk_icon_theme_get_default(),
                                     "start-here",
-                                    24,
+                                    panel_height,
                                     (GtkIconLookupFlags)0,
                                     NULL);
   if (pixbuf == NULL)
     pixbuf = gtk_icon_theme_load_icon(gtk_icon_theme_get_default(),
                                       "distributor-logo",
-                                      24,
+                                      panel_height,
                                       (GtkIconLookupFlags)0,
                                       NULL);
   return pixbuf;

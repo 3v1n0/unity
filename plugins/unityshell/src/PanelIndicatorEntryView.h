@@ -99,8 +99,6 @@ protected:
   void Refresh();
   virtual void ShowMenu(int button = 1);
 
-  static const int PANEL_HEIGHT = 24;
-
   Entry::Ptr proxy_;
 
 private:

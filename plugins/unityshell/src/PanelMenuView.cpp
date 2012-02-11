@@ -110,7 +110,7 @@ PanelMenuView::PanelMenuView(int padding)
   _window_buttons = new WindowButtons();
   _window_buttons->SetParentObject(this);
   _window_buttons->SetBaseX(_padding);
-  _window_buttons->SetBaseHeight(24);
+  _window_buttons->SetBaseHeight(panel::Style::Instance().panel_height);
   _window_buttons->ComputeContentSize();
 
   _window_buttons->close_clicked.connect(sigc::mem_fun(this, &PanelMenuView::OnCloseClicked));
@@ -121,7 +121,7 @@ PanelMenuView::PanelMenuView(int padding)
   //_window_buttons->mouse_move.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseMove));
 
   layout_->SetLeftAndRightPadding(_padding*2 + _window_buttons->GetContentWidth(), _padding);
-  layout_->SetBaseHeight(24);
+  layout_->SetBaseHeight(panel::Style::Instance().panel_height);
 
   _panel_titlebar_grab_area = new PanelTitlebarGrabArea();
   _panel_titlebar_grab_area->SetParentObject(this);

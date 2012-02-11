@@ -21,6 +21,7 @@
 
 #include "PanelIndicatorAppmenuView.h"
 #include "WindowManager.h"
+#include "PanelStyle.h"
 
 namespace unity
 {  
@@ -39,7 +40,7 @@ void PanelIndicatorAppmenuView::ShowMenu(int button)
 
     proxy_->ShowMenu(xid_,
                      GetAbsoluteX(),
-                     GetAbsoluteY() + PANEL_HEIGHT,
+                     GetAbsoluteY() + panel::Style::Instance().panel_height,
                      1,
                      time(nullptr));
   }

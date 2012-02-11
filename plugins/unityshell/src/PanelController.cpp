@@ -25,6 +25,7 @@
 
 #include "UScreen.h"
 #include "PanelView.h"
+#include "PanelStyle.h"
 
 namespace unity
 {
@@ -215,7 +216,7 @@ void Controller::Impl::OnScreenChanged(int primary_monitor,
       (*it)->InputWindowEnableStruts(false);
 
       nux::Geometry geo = monitors[i];
-      geo.height = 24;
+      geo.height = panel::Style::Instance().panel_height;
       (*it)->SetGeometry(geo);
       (*it)->SetMinMaxSize(geo.width, geo.height);
 
@@ -242,7 +243,7 @@ void Controller::Impl::OnScreenChanged(int primary_monitor,
       nux::HLayout* layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
       PanelView* view = new PanelView();
-      view->SetMaximumHeight(24);
+      view->SetMaximumHeight(panel::Style::Instance().panel_height);
       view->SetOpacity(opacity_);
       view->SetOpacityMaximizedToggle(opacity_maximized_toggle_);
       view->SetMenuShowTimings(menus_fadein_, menus_fadeout_, menus_discovery_,
@@ -265,7 +266,7 @@ void Controller::Impl::OnScreenChanged(int primary_monitor,
       window->InputWindowEnableStruts(true);
 
       nux::Geometry geo = monitors[i];
-      geo.height = 24;
+      geo.height = panel::Style::Instance().panel_height;
       window->SetGeometry(geo);
       window->SetMinMaxSize(geo.width, geo.height);
 

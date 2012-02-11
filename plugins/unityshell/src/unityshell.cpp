@@ -508,7 +508,7 @@ void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
   float vc[4];
   float h = 20.0f;
   float w = 1.0f;
-  float panel_h = 24.0f;
+  float panel_h = panel_style_.panel_height;
 
   float x1 = output->x();
   float y1 = output->y() + panel_h;
@@ -1460,7 +1460,7 @@ bool UnityScreen::showLauncherKeyInitiate(CompAction* action,
     int width = 970;
     int height =  680;
     int launcher_width = optionGetIconSize() + 18;
-    int panel_height = 24;
+    int panel_height = panel_style_.panel_height;
     int x = monitor_geo.x + launcher_width + (monitor_geo.width - launcher_width- width) / 2;
     int y = monitor_geo.y + panel_height + (monitor_geo.height - panel_height - height) / 2;
 
