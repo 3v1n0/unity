@@ -480,10 +480,13 @@ void DBusIndicators::Impl::OnProxySignalReceived(GDBusProxy* proxy,
   std::string signal_name(signal_name_);
   if (signal_name == "EntryActivated")
   {
-    const char* entry_name = g_variant_get_string(g_variant_get_child_value(parameters, 0), NULL);
+    glib::String entry_name;
+    nux::Rect geo;
+    g_variant_get (parameters, "(s(iiuu))", &entry_name, &geo.x, &geo.y, &geo.width, &geo.height);
+
     if (entry_name)
     {
-      owner_->ActivateEntry(entry_name);
+      owner_->ActivateEntry(entry_name.Str(), geo);
     }
   }
   else if (signal_name == "EntryActivateRequest")

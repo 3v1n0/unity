@@ -36,7 +36,7 @@ public:
     : owner_(owner)
   {}
 
-  void ActivateEntry(std::string const& entry_id);
+  void ActivateEntry(std::string const& entry_id, nux::Rect const& geometry);
   void SetEntryShowNow(std::string const& entry_id, bool show_now);
 
   IndicatorsList GetIndicators() const;
@@ -66,10 +66,10 @@ Indicators::~Indicators()
   delete pimpl;
 }
 
-void Indicators::ActivateEntry(std::string const& entry_id)
+void Indicators::ActivateEntry(std::string const& entry_id, nux::Rect const& geometry)
 {
-  pimpl->ActivateEntry(entry_id);
-  on_entry_activated.emit(entry_id);
+  pimpl->ActivateEntry(entry_id, geometry);
+  on_entry_activated.emit(entry_id, geometry);
 }
 
 void Indicators::SetEntryShowNow(std::string const& entry_id, bool show_now)
@@ -97,7 +97,7 @@ void Indicators::RemoveIndicator(std::string const& name)
   return pimpl->RemoveIndicator(name);
 }
 
-void Indicators::Impl::ActivateEntry(std::string const& entry_id)
+void Indicators::Impl::ActivateEntry(std::string const& entry_id, nux::Rect const& geometry)
 {
   if (active_entry_)
     active_entry_->set_active(false);

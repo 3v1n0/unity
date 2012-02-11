@@ -525,7 +525,7 @@ static gboolean track_menu_pointer(PanelView *self)
   return TRUE;
 }
 
-void PanelView::OnEntryActivated(std::string const& entry_id)
+void PanelView::OnEntryActivated(std::string const& entry_id, nux::Rect const& geo)
 {
   bool active = (entry_id.size() > 0);
   if (active && !_track_menu_pointer_id)

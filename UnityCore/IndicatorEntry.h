@@ -28,7 +28,7 @@
 #include <sigc++/signal.h>
 #include <boost/shared_ptr.hpp>
 
-#include "NuxCore/Rect.h"
+#include <NuxCore/Rect.h>
 
 namespace unity
 {

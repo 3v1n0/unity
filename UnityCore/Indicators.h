@@ -21,6 +21,7 @@
 #define UNITY_INDICATORS_H
 
 #include <sigc++/trackable.h>
+#include <NuxCore/Rect.h>
 
 #include "Indicator.h"
 
@@ -43,7 +44,7 @@ public:
   /**
    * internal
    */
-  void ActivateEntry(std::string const& entry_id);
+  void ActivateEntry(std::string const& entry_id, nux::Rect const& geometry);
 
   /**
    * internal
@@ -90,7 +91,7 @@ public:
    * An entry just got activated. View needs to repaint it.
    * @param entry_id entry id
    */
-  sigc::signal<void, std::string const&> on_entry_activated;
+  sigc::signal<void, std::string const&, nux::Rect const&> on_entry_activated;
 
   /**
    * internal
