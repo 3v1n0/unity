@@ -2078,7 +2078,6 @@ void Launcher::EndIconDrag()
     }
     else
     {
-      auto abs_geo = GetAbsoluteGeometry();
       _model->Save();
 
       _drag_window->SetAnimationTarget((int)(_drag_icon->GetCenter(monitor).x), 
