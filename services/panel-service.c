@@ -318,6 +318,7 @@ get_indicator_entry_by_id (PanelService *self, const gchar *entry_id)
       IndicatorObjectEntry *invalid_entry;
       if (sscanf (entry_id, "%p", &invalid_entry) == 1)
         {
+          gboolean entry_found = FALSE;
           GSList *sl;
           for (sl = self->priv->indicators; sl; sl = sl->next)
             {
@@ -331,12 +332,16 @@ get_indicator_entry_by_id (PanelService *self, const gchar *entry_id)
                   if (l->data == invalid_entry)
                     {
                       entry = invalid_entry;
+                      entry_found = TRUE;
                       g_warning ("Entry %p has been wrongly removed!", entry);
                       break;
                     }
                 }
 
               g_list_free (entries);
+
+              if (entry_found)
+                break;
             }
         }
     }
