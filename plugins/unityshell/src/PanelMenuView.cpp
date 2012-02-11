@@ -360,6 +360,8 @@ void PanelMenuView::PreLayoutManagement()
   _panel_titlebar_grab_area->SetBaseX(x);
   _panel_titlebar_grab_area->SetBaseHeight(geo.height);
   _panel_titlebar_grab_area->SetMinimumWidth(geo.width - x);
+
+  SetMaximumEntriesWidth(geo.width - _padding*2 - _window_buttons->GetContentWidth());
 }
 
 void PanelMenuView::OnFadeInChanged(double opacity)
@@ -646,7 +648,7 @@ void PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
 void PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
-  nux::Geometry geo = GetGeometry();
+  nux::Geometry const& geo = GetGeometry();
   bool draw_menus = DrawMenus();
   bool draw_buttons = DrawWindowButtons();
 
@@ -941,7 +943,6 @@ void PanelMenuView::Refresh(bool force)
     if (_integrated_menu && GetMaximizedWindow() != 0)
     {
       _integrated_menu->SetLabel(new_title);
-      //_integrated_menu->SetMaximumWidth(geo.width);
       return;
     }
   }
@@ -1032,8 +1033,9 @@ void PanelMenuView::OnEntryAdded(indicator::Entry::Ptr const& entry)
     Window maximized = GetMaximizedWindow();
     _integrated_menu = new PanelIndicatorAppmenuView(entry);
     _integrated_menu->SetControlledWindowXid(maximized);
-    _integrated_menu->SetLabel(GetMaximizedViewName());
     _integrated_menu->SetFocusedState(_active_xid == maximized);
+
+    Refresh();
 
     view = _integrated_menu;
   }
@@ -1042,6 +1044,7 @@ void PanelMenuView::OnEntryAdded(indicator::Entry::Ptr const& entry)
   view->active_changed.connect(sigc::mem_fun(this, &PanelMenuView::OnActiveChanged));
 
   AddEntryView(view, IndicatorEntryPosition::END);
+  SetMaximumEntriesWidth(GetAbsoluteWidth() - _padding*2 - _window_buttons->GetContentWidth());
 }
 
 void PanelMenuView::OnEntryRemoved(std::string const& entry_id)
