@@ -424,7 +424,7 @@ void SearchBar::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   GfxContext.PushClippingRectangle(geo);
 
-  if (highlight_layer_ && !IsFullRedraw())
+  if (highlight_layer_ && ShouldBeHighlighted() && !IsFullRedraw())
   {
     nux::GetPainter().PushLayer(GfxContext, highlight_layer_->GetGeometry(), highlight_layer_.get());
   }
