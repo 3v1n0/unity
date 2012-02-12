@@ -120,12 +120,12 @@ LensView::LensView(Lens::Ptr lens)
     nux::Geometry focused_pos;
     g_variant_get (data, "(iiii)", &focused_pos.x, &focused_pos.y, &focused_pos.width, &focused_pos.height);
 
-    for (auto it : categories_)
+    for (auto category : categories_)
     {
-      if (it->GetLayout() != nullptr)
+      if (category->GetLayout() != nullptr)
       {
-        auto expand_label = it->GetExpandLabel();
-        auto child = it->GetChildView();
+        auto expand_label = category->GetExpandLabel();
+        auto child = category->GetChildView();
 
         if ((child && child->HasKeyFocus()) || 
             (expand_label && expand_label->HasKeyFocus()))
