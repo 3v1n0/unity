@@ -495,6 +495,11 @@ void UnityScreen::nuxEpilogue()
   glDisable(GL_SCISSOR_TEST);
 }
 
+void UnityScreen::setPanelShadowMatrix(const GLMatrix& matrix)
+{
+  panel_shadow_matrix_ = matrix;
+}
+
 void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
 {
 #ifndef USE_GLES
@@ -514,9 +519,9 @@ void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
   float y1 = output->y() + panel_h;
   float x2 = x1 + output->width();
   float y2 = y1 + h;
-  GLMatrix sTransform = GLMatrix ();
 
-  sTransform.toScreenSpace(output, -DEFAULT_Z_CAMERA);
+  glPushMatrix ();
+  glLoadMatrixf (panel_shadow_matrix_.getMatrix ());
 
   vc[0] = x1;
   vc[1] = x2;
@@ -572,6 +577,7 @@ void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
       glDisable(GL_BLEND);
     }
   }
+  glPopMatrix();
 #else
 #warning Panel shadow not properly implemented for GLES2
   return;
@@ -1979,6 +1985,9 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
       }
     }
   }
+
+  if (window->type() == CompWindowTypeDesktopMask)
+    uScreen->setPanelShadowMatrix(matrix);
 
   Window active_window = screen->activeWindow();
   if (window->id() == active_window && window->type() != CompWindowTypeDesktopMask)
