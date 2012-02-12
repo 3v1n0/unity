@@ -43,16 +43,16 @@ class Launcher(object):
         target_y = y + h / 2
 
         logger.debug("Moving mouse away from launcher.")
-        self._mouse.move(target_x,target_y, False)
+        self._mouse.move(target_x, target_y, False)
         sleep(self.show_timeout)
 
     def move_mouse_over_launcher(self, monitor):
         (x, y, w, h) = self.launcher_geometry(monitor)
-        self._screen.move_mouse_to_monitor(monitor);
+        self._screen.move_mouse_to_monitor(monitor)
         target_x = x + w / 2
-        target_y =  y + h / 2
+        target_y = y + h / 2
         logger.debug("Moving mouse to center of launcher.")
-        self._mouse.move(target_x, target_y);
+        self._mouse.move(target_x, target_y)
 
     def reveal_launcher(self, monitor):
         (x, y, w, h) = self.launcher_geometry(monitor)
@@ -144,7 +144,7 @@ class Launcher(object):
         return int(state['key_nav_selection'])
 
     def launcher_geometry(self, monitor):
-        state = self.__get_state(monitor);
+        state = self.__get_state(monitor)
         x = int(state['x'])
         y = int(state['y'])
         width = int(state['width'])
@@ -199,10 +199,11 @@ class Launcher(object):
         if not isinstance(icon, BamfLauncherIcon):
             raise TypeError("Can only lock instances of BamfLauncherIcon")
         if icon.sticky:
-            return # nothing to do.
+            # Nothing to do.
+            return
 
         logger.debug("Locking icon %r to launcher.", icon)
-        self.click_launcher_icon(icon, button=3) # right click
+        self.click_launcher_icon(icon, button=3)
         quicklist = icon.get_quicklist()
         pin_item = quicklist.get_quicklist_item_by_text('Lock to launcher')
         quicklist.click_item(pin_item)
@@ -211,11 +212,12 @@ class Launcher(object):
         """lock 'icon' to the launcher, if it's not already."""
         if not isinstance(icon, SimpleLauncherIcon):
             raise TypeError("icon must be a LauncherIcon")
-        if icon.sticky:
-            return # nothing to do.
+        if not icon.sticky:
+            # nothing to do.
+            return
 
         logger.debug("Unlocking icon %r from launcher.")
-        self.click_launcher_icon(icon, button=3) # right click
+        self.click_launcher_icon(icon, button=3)
         quicklist = icon.get_quicklist()
         pin_item = quicklist.get_quicklist_item_by_text('Unlock from launcher')
         quicklist.click_item(pin_item)

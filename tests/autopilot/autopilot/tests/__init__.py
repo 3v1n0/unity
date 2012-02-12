@@ -3,11 +3,12 @@ Autopilot tests for Unity.
 """
 
 from testtools import TestCase
-from testtools.content import content_from_stream, text_content
+from testtools.content import text_content
 import logging
 from StringIO import StringIO
 
 from autopilot.emulators.X11 import Keyboard, Mouse
+
 
 class AutopilotTestCase(TestCase):
     """Wrapper around testtools.TestCase that takes care of some cleaning."""
@@ -34,4 +35,3 @@ class AutopilotTestCase(TestCase):
         #self._log_buffer.close()
         del self._log_buffer
         super(AutopilotTestCase, self).tearDown()
-

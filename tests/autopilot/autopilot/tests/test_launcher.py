@@ -128,5 +128,3 @@ class LauncherTests(AutopilotTestCase):
             self.server.reveal_launcher(x)
             sleep(2)
             self.assertThat(self.server.is_showing(x), Equals(True))
-
-

@@ -16,13 +16,14 @@ from autopilot.emulators.X11 import Mouse
 
 logger = logging.getLogger(__name__)
 
+
 class Quicklist(ObjectCreatableFromStateDict):
     """Represents a quicklist."""
 
     @property
     def items(self):
         """Individual items in the quicklist."""
-        return [self.__make_quicklist_from_data(ctype, cdata) for ctype,cdata in self._children]
+        return [self.__make_quicklist_from_data(ctype, cdata) for ctype, cdata in self._children]
 
     def get_quicklist_item_by_text(self, text):
         """Returns a QuicklistMenuItemLabel object with the given text, or None."""
@@ -44,8 +45,8 @@ class Quicklist(ObjectCreatableFromStateDict):
 
         logger.debug("Clicking on quicklist item %r", item)
         mouse = Mouse()
-        mouse.move(self.x + item.x + (item.width /2),
-                        self.y + item.y + (item.height /2))
+        mouse.move(self.x + item.x + (item.width / 2),
+                    self.y + item.y + (item.height / 2))
         sleep(0.25)
         mouse.click()
 

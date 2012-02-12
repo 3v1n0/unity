@@ -63,7 +63,7 @@ class SwitcherTests(AutopilotTestCase):
         self.server.terminate()
 
         self.assertThat(start, NotEquals(0))
-        self.assertThat(end, Equals(start+1))
+        self.assertThat(end, Equals(start + 1))
         self.set_timeout_setting(True)
 
     def test_switcher_move_prev(self):
@@ -81,5 +81,5 @@ class SwitcherTests(AutopilotTestCase):
         self.server.terminate()
 
         self.assertThat(start, NotEquals(0))
-        self.assertThat(end, Equals(start-1))
+        self.assertThat(end, Equals(start - 1))
         self.set_timeout_setting(True)

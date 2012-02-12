@@ -20,8 +20,9 @@ class StateNotFoundError(RuntimeError):
     """Raised when a piece of state information from unity is not found."""
 
     message = "State not found for class with name '{}' and id '{}'."
+
     def __init__(self, class_name, class_id):
-        super(StateNotFoundError, self).__init__( self.message.format(class_name, class_id))
+        super(StateNotFoundError, self).__init__(self.message.format(class_name, class_id))
 
 
 class IntrospectableObjectMetaclass(type):
@@ -42,10 +43,12 @@ INTROSPECTION_IFACE = 'com.canonical.Unity.Debug.Introspection'
 _debug_proxy_obj = session_bus.get_object(UNITY_BUS_NAME, DEBUG_PATH)
 _introspection_iface = Interface(_debug_proxy_obj, INTROSPECTION_IFACE)
 
+
 def get_state_by_path(piece='/Unity'):
     """Returns a full dump of unity's state."""
     logger.debug("Querying unity for state piece: %r", piece)
     return _introspection_iface.GetState(piece)
+
 
 def get_state_by_name_and_id(class_name, unique_id):
     """Get a state dictionary from unity given a class name and id.
@@ -70,7 +73,7 @@ def make_introspection_object(dbus_tuple):
 
     This only works for classes that derive from ObjectCreatableFromStateDict.
     """
-    name,state = dbus_tuple
+    name, state = dbus_tuple
     try:
         class_type = _object_registry[name]
     except KeyError:
@@ -93,7 +96,7 @@ class ObjectCreatableFromStateDict(object):
 
         """
         for key in state_dict.keys():
-            setattr(self, key.replace('-','_'), state_dict[key])
+            setattr(self, key.replace('-', '_'), state_dict[key])
 
     def _get_child_tuples_by_type(self, desired_type):
         """Get a list of (name,dict) pairs from children of the specified type.

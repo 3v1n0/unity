@@ -23,6 +23,7 @@ __all__ = ["Bamf",
 _BAMF_BUS_NAME = 'org.ayatana.bamf'
 _X_DISPLAY = display.Display()
 
+
 def _filter_user_visible(win):
     """Filter out non-user-visible objects.
 
@@ -121,6 +122,7 @@ class Bamf:
         if not self.application_is_running(app_name):
             wait_forever = timeout < 0
             gobject_loop = gobject.MainLoop()
+
             # No, so define a callback to watch the ViewOpened signal:
             def on_view_added(bamf_path, name):
                 if bamf_path.split('/')[-1].startswith('application'):
@@ -225,7 +227,6 @@ class BamfWindow:
         self._x_root_win = _X_DISPLAY.screen().root
         self._x_win = _X_DISPLAY.create_resource_object('window', self._xid)
 
-
     @property
     def x_id(self):
         """Get the X11 Window Id."""
@@ -325,19 +326,20 @@ class BamfWindow:
 
         """
         atom = self._x_win.get_full_property(_X_DISPLAY.get_atom(_type), X.AnyPropertyType)
-        if atom: return atom.value
+        if atom:
+            return atom.value
 
     def _setProperty(self, _type, data, mask=None):
         if type(data) is str:
             dataSize = 8
         else:
-            data = (data+[0]*(5-len(data)))[:5]
+            data = (data + [0] * (5 - len(data)))[:5]
             dataSize = 32
 
         ev = protocol.event.ClientMessage(window=self._x_win, client_type=_X_DISPLAY.get_atom(_type), data=(dataSize, data))
 
         if not mask:
-            mask = (X.SubstructureRedirectMask|X.SubstructureNotifyMask)
+            mask = (X.SubstructureRedirectMask | X.SubstructureNotifyMask)
         self._x_root_win.send_event(ev, event_mask=mask)
         _X_DISPLAY.sync()
 

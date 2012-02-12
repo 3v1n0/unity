@@ -19,6 +19,7 @@ from autopilot.emulators.unity.launcher import Launcher
 from autopilot.emulators.unity.switcher import Switcher
 from autopilot.emulators.bamf import Bamf
 
+
 class InvisibleWindowTests(TestCase):
     """Test unity's handling of windows with the Skip-Tasklist flag set."""
 

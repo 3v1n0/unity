@@ -43,14 +43,14 @@ class Dash(object):
         Ensures the dash is visible.
         """
         if not self.get_is_visible():
-            self.toggle_reveal();
+            self.toggle_reveal()
 
     def ensure_hidden(self):
         """
         Ensures the dash is hidden.
         """
         if self.get_is_visible():
-            self.toggle_reveal();
+            self.toggle_reveal()
 
     def get_is_visible(self):
         """
@@ -112,7 +112,6 @@ class Dash(object):
         groups = get_state_by_path("//PlacesGroup[header-has-keyfocus=True]")
 
         if len(groups) >= 1:
-          return groups[0]
+            return groups[0]
         else:
-          return None
-
+            return None

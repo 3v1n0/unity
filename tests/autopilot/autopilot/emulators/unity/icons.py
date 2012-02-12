@@ -10,6 +10,7 @@
 from autopilot.emulators.unity import ObjectCreatableFromStateDict
 from autopilot.emulators.unity.quicklist import Quicklist
 
+
 class SimpleLauncherIcon(ObjectCreatableFromStateDict):
     """Holds information about a simple launcher icon.
 
@@ -49,5 +50,3 @@ class DeviceLauncherIcon(SimpleLauncherIcon):
 
 class DesktopLauncherIcon(SimpleLauncherIcon):
     """Represents an icon that may appear in the switcher."""
-
-
