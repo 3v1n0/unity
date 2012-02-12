@@ -3,7 +3,7 @@ Autopilot tests for Unity.
 """
 
 from testtools import TestCase
-from testtools.content import content_from_stream
+from testtools.content import content_from_stream, text_content
 import logging
 from StringIO import StringIO
 
@@ -14,16 +14,24 @@ class AutopilotTestCase(TestCase):
 
     def setUp(self):
         self._log_buffer = StringIO()
-        logging.basicConfig(level=logging.DEBUG, stream=self._log_buffer)
+        root_logger = logging.getLogger()
+        root_logger.setLevel(logging.DEBUG)
+        handler = logging.StreamHandler(stream=self._log_buffer)
+        root_logger.addHandler(handler)
+
         super(AutopilotTestCase, self).setUp()
 
     def tearDown(self):
-        super(AutopilotTestCase, self).tearDown()
         Keyboard.cleanup()
         Mouse.cleanup()
+
         logger = logging.getLogger()
         for handler in logger.handlers:
             handler.flush()
-        self._log_buffer.seek(0)
-        self.addDetail('test-log', content_from_stream(self._log_buffer))
+            self._log_buffer.seek(0)
+            self.addDetail('test-log', text_content(self._log_buffer.getvalue()))
+            logger.removeHandler(handler)
+        #self._log_buffer.close()
+        del self._log_buffer
+        super(AutopilotTestCase, self).tearDown()
 

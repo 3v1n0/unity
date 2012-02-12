@@ -14,6 +14,11 @@ from autopilot.globals import global_context
 from autopilot.emulators.unity import get_state_by_path
 from autopilot.emulators.X11 import Keyboard
 
+
+import logging
+logger = logging.getLogger(__name__)
+
+
 class Dash(object):
     """
     An emulator class that makes it easier to interact with the unity dash.
@@ -29,6 +34,7 @@ class Dash(object):
         """
         Reveals the dash if it's currently hidden, hides it otherwise.
         """
+        logger.debug("Toggling dash visibility with Super key.")
         self._keyboard.press_and_release("Super")
         sleep(1)
 
@@ -77,24 +83,28 @@ class Dash(object):
 
     def reveal_application_lens(self):
         """Reveal the application lense."""
+        logger.debug("Revealing application lens with Super+a.")
         self._keyboard.press('Super')
         self._keyboard.press_and_release("a")
         self._keyboard.release('Super')
 
     def reveal_music_lens(self):
         """Reveal the music lense."""
+        logger.debug("Revealing music lens with Super+m.")
         self._keyboard.press('Super')
         self._keyboard.press_and_release("m")
         self._keyboard.release('Super')
 
     def reveal_file_lens(self):
         """Reveal the file lense."""
+        logger.debug("Revealing file lens with Super+f.")
         self._keyboard.press('Super')
         self._keyboard.press_and_release("f")
         self._keyboard.release('Super')
 
     def reveal_command_lens(self):
         """Reveal the 'run command' lens."""
+        logger.debug("Revealing command lens with Alt+F2.")
         self._keyboard.press_and_release('Alt+F2')
 
     def get_focused_category(self):

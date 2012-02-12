@@ -1,4 +1,4 @@
- # -*- Mode: Python; coding: utf-8; indent-tabs-mode: nil; tab-width: 4 -*-
+# -*- Mode: Python; coding: utf-8; indent-tabs-mode: nil; tab-width: 4 -*-
 # Copyright 2012 Canonical
 # Author: Thomi Richards
 #
@@ -7,11 +7,15 @@
 # by the Free Software Foundation.
 #
 
+import logging
 from time import sleep
 
 from autopilot.emulators.unity import get_state_by_path, make_introspection_object
 from autopilot.emulators.unity.icons import BamfLauncherIcon, SimpleLauncherIcon
 from autopilot.emulators.X11 import Keyboard, Mouse
+
+
+logger = logging.getLogger(__name__)
 
 
 class Launcher(object):
@@ -35,50 +39,66 @@ class Launcher(object):
 
     def move_mouse_to_right_of_launcher(self, monitor):
         (x, y, w, h) = self.launcher_geometry(monitor)
-        self._mouse.move(x + w + 10, y + h / 2, False)
+        target_x = x + w + 10
+        target_y = y + h / 2
+
+        logger.debug("Moving mouse away from launcher.")
+        self._mouse.move(target_x,target_y, False)
         sleep(self.show_timeout)
 
     def move_mouse_over_launcher(self, monitor):
         (x, y, w, h) = self.launcher_geometry(monitor)
         self._screen.move_mouse_to_monitor(monitor);
-        self._mouse.move(x + w / 2, y + h / 2);
+        target_x = x + w / 2
+        target_y =  y + h / 2
+        logger.debug("Moving mouse to center of launcher.")
+        self._mouse.move(target_x, target_y);
 
     def reveal_launcher(self, monitor):
         (x, y, w, h) = self.launcher_geometry(monitor)
+        logger.debug("Revealing launcher on monitor %d with mouse.", monitor)
         self._mouse.move(x - 920, y + h / 2, True, 5, .002)
         sleep(self.show_timeout)
 
     def keyboard_reveal_launcher(self):
+        logger.debug("Revealing launcher with keyboard.")
         self._keyboard.press('Super')
         sleep(1)
 
     def keyboard_unreveal_launcher(self):
+        logger.debug("Un-revealing launcher with keyboard.")
         self._keyboard.release('Super')
         sleep(1)
 
     def grab_switcher(self):
+        logger.debug("Initiating launcher keyboard navigation with Alt+F1.")
         self._keyboard.press_and_release('Alt+F1')
         self.grabbed = True
 
     def switcher_enter_quicklist(self):
         if self.grabbed:
+            logger.debug("Opening quicklist for currently selected icon.")
             self._keyboard.press_and_release('Right')
 
     def switcher_exit_quicklist(self):
         if self.grabbed:
+            logger.debug("Closing quicklist for currently selected icon.")
             self._keyboard.press_and_release('Left')
 
     def start_switcher(self):
+        logger.debug("Starting Super+Tab switcher.")
         self._keyboard.press('Super+Tab')
         self._keyboard.release('Tab')
         sleep(1)
 
     def end_switcher(self, cancel):
         if cancel:
+            logger.debug("Cancelling keyboard navigation mode.")
             self._keyboard.press_and_release('Escape')
             if self.grabbed != True:
                 self._keyboard.release('Super')
         else:
+            logger.debug("Ending keyboard navigation mode.")
             if self.grabbed:
                 self._keyboard.press_and_release('\n')
             else:
@@ -86,12 +106,14 @@ class Launcher(object):
         self.grabbed = False
 
     def switcher_next(self):
+        logger.debug("Selecting next item in keyboard navigation mode.")
         if self.grabbed:
             self._keyboard.press_and_release('Down')
         else:
             self._keyboard.press_and_release('Tab')
 
     def switcher_prev(self):
+        logger.debug("Selecting previous item in keyboard navigation mode.")
         if self.grabbed:
             self._keyboard.press_and_release('Up')
         else:
@@ -165,6 +187,8 @@ class Launcher(object):
         """Move the mouse over the launcher icon, and click it."""
         if not isinstance(icon, SimpleLauncherIcon):
             raise TypeError("icon must be a LauncherIcon")
+        logger.debug("Clicking launcher icon %r on monitor %d with mouse button %d",
+            icon, monitor, button)
         self.reveal_launcher(monitor)
         self._mouse.move(icon.x, icon.y + (self.icon_width / 2))
         self._mouse.click(button)
@@ -177,6 +201,7 @@ class Launcher(object):
         if icon.sticky:
             return # nothing to do.
 
+        logger.debug("Locking icon %r to launcher.", icon)
         self.click_launcher_icon(icon, button=3) # right click
         quicklist = icon.get_quicklist()
         pin_item = quicklist.get_quicklist_item_by_text('Lock to launcher')
@@ -189,6 +214,7 @@ class Launcher(object):
         if icon.sticky:
             return # nothing to do.
 
+        logger.debug("Unlocking icon %r from launcher.")
         self.click_launcher_icon(icon, button=3) # right click
         quicklist = icon.get_quicklist()
         pin_item = quicklist.get_quicklist_item_by_text('Unlock from launcher')

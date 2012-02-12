@@ -7,11 +7,13 @@
 # by the Free Software Foundation.
 #
 
-from autopilot.emulators.dbus_handler import session_bus
 from dbus import Interface
+import logging
 
+from autopilot.emulators.dbus_handler import session_bus
 
 _object_registry = {}
+logger = logging.getLogger(__name__)
 
 
 class StateNotFoundError(RuntimeError):
@@ -42,6 +44,7 @@ _introspection_iface = Interface(_debug_proxy_obj, INTROSPECTION_IFACE)
 
 def get_state_by_path(piece='/Unity'):
     """Returns a full dump of unity's state."""
+    logger.debug("Querying unity for state piece: %r", piece)
     return _introspection_iface.GetState(piece)
 
 def get_state_by_name_and_id(class_name, unique_id):
@@ -52,6 +55,7 @@ def get_state_by_name_and_id(class_name, unique_id):
     Returns a dictionary of information. Unlike get_state_by_path, this
     method can never return state for more than one object.
     """
+    logger.debug("Getting state for object %s with id %d", class_name, unique_id)
     try:
         query = "//%(class_name)s[id=%(unique_id)d]" % (dict(
                                                     class_name=class_name,
@@ -131,6 +135,7 @@ class ObjectCreatableFromStateDict(object):
 
         """
         # need to get name from class object.
+        logger.debug("Refreshing state for %r", self)
 
         for class_name,class_obj in _object_registry.iteritems():
             if class_obj == self.__class__:

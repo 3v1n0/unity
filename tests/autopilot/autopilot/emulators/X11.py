@@ -16,7 +16,7 @@ In the future we may also need other devices.
 
 """
 
-
+import logging
 from time import sleep
 
 from Xlib import X
@@ -27,7 +27,7 @@ import gtk.gdk
 
 _PRESSED_KEYS = []
 _DISPLAY = Display()
-
+logger = logging.getLogger(__name__)
 
 class Keyboard(object):
     """Wrapper around xlib to make faking keyboard input possible."""
@@ -97,6 +97,7 @@ class Keyboard(object):
         """
         if not isinstance(keys, basestring):
             raise TypeError("'keys' argument must be a string.")
+        logger.debug("Pressing keys %r with delay %f", keys, delay)
         self.__perform_on_keys(self.__translate_keys(keys), X.KeyPress)
         sleep(delay)
 
@@ -113,6 +114,7 @@ class Keyboard(object):
         """
         if not isinstance(keys, basestring):
             raise TypeError("'keys' argument must be a string.")
+        logger.debug("Releasing keys %r with delay %f", keys, delay)
         self.__perform_on_keys(self.__translate_keys(keys), X.KeyRelease)
         sleep(delay)
 
@@ -142,6 +144,7 @@ class Keyboard(object):
         """
         if not isinstance(string, basestring):
             raise TypeError("'keys' argument must be a string.")
+        logger.debug("Typing text %r", string)
         for key in string:
             self.press(key, delay)
             self.release(key, delay)
@@ -155,7 +158,7 @@ class Keyboard(object):
 
         """
         for keycode in _PRESSED_KEYS:
-            print "Releasing key: %r" % (keycode)
+            logger.warning("Releasing key %r as part of cleanup call.", keycode)
             fake_input(_DISPLAY, X.KeyRelease, keycode)
 
     def __perform_on_keys(self, keys, event):
@@ -219,11 +222,13 @@ class Mouse(object):
 
     def press(self, button=1):
         """Press mouse button at current mouse location."""
+        logger.debug("Pressing moouse button %d", button)
         fake_input(_DISPLAY, X.ButtonPress, button)
         _DISPLAY.sync()
 
     def release(self, button=1):
         """Releases mouse button at current mouse location."""
+        logger.debug("Releasing moouse button %d", button)
         fake_input(_DISPLAY, X.ButtonRelease, button)
         _DISPLAY.sync()
 
@@ -235,6 +240,8 @@ class Mouse(object):
 
     def move(self, x, y, animate=True, rate=100, time_between_events=0.001):
         '''Moves mouse to location (x, y, pixels_per_event, time_between_event)'''
+        logger.debug("Moving mouse to position %d,%d %s animation.", x, y,
+            "with" if animate else "false")
         def perform_move(x, y, sync):
             fake_input(_DISPLAY, X.MotionNotify, sync, X.CurrentTime, X.NONE, x=x, y=y)
             _DISPLAY.sync()

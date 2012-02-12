@@ -7,11 +7,14 @@
 # by the Free Software Foundation.
 #
 
+import logging
 from time import sleep
 
 from autopilot.emulators.unity import ObjectCreatableFromStateDict
 from autopilot.emulators.X11 import Mouse
 
+
+logger = logging.getLogger(__name__)
 
 class Quicklist(ObjectCreatableFromStateDict):
     """Represents a quicklist."""
@@ -39,6 +42,7 @@ class Quicklist(ObjectCreatableFromStateDict):
         if not isinstance(item, QuicklistMenuItem):
             raise TypeError("Item must be a subclass of QuicklistMenuItem")
 
+        logger.debug("Clicking on quicklist item %r", item)
         mouse = Mouse()
         mouse.move(self.x + item.x + (item.width /2),
                         self.y + item.y + (item.height /2))
