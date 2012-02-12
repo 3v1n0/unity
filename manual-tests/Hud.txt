@@ -10,6 +10,7 @@ and the panel changes
 Outcome
   The hud interface presents itself with no other interface such as the dash present.
   The Launcher hides, the panel becomes transparent with a colour tint matching the hud
+  The HUD search bar is focused and typing text enters text into it
 
 Hud Search
 -----------
