@@ -72,9 +72,9 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
   vertical_spacing.changed.connect(needredraw_lambda);
   padding.changed.connect(needredraw_lambda);
 
-  key_nav_focus_change.connect (sigc::mem_fun (this, &ResultViewGrid::OnKeyNavFocusChange));
-  key_nav_focus_activate.connect ([&] (nux::Area *area) { UriActivated.emit (focused_uri_); });
-  key_down.connect (sigc::mem_fun (this, &ResultViewGrid::OnKeyDown));
+  key_nav_focus_change.connect(sigc::mem_fun(this, &ResultViewGrid::OnKeyNavFocusChange));
+  key_nav_focus_activate.connect([&] (nux::Area *area) { UriActivated.emit (focused_uri_); });
+  key_down.connect(sigc::mem_fun(this, &ResultViewGrid::OnKeyDown));
   mouse_move.connect(sigc::mem_fun(this, &ResultViewGrid::MouseMove));
   mouse_click.connect(sigc::mem_fun(this, &ResultViewGrid::MouseClick));
 

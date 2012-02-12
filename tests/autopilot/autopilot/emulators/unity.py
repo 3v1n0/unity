@@ -544,7 +544,8 @@ class Dash(Unity):
 
     def searchbar_has_focus(self):
         """
-        Returns True if the search bar has the key focus, False otherwise."""
+        Returns True if the search bar has the key focus, False otherwise.
+        """
         return self.get_state("//SearchBar")[0]['has_focus']
 
     def get_current_lens(self):
