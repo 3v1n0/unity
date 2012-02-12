@@ -32,6 +32,7 @@ namespace ui
 
 class IconTextureSource : public nux::InitiallyUnownedObject
 {
+  NUX_DECLARE_OBJECT_TYPE(IconTextureSource, nux::InitiallyUnownedObject);
 public:
   typedef nux::ObjectPtr<IconTextureSource> Ptr;
 

@@ -43,6 +43,7 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(BamfApplication* app,
     SetProgress(0.0f);
   });
 
+  SetIconType(TYPE_APPLICATION);
   icon_name = icon_path.c_str();
   tooltip_text = _("Waiting to install");
 }
