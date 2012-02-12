@@ -366,14 +366,14 @@ void View::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
     ProcessGrowShrink();
   }
 
-  nux::Geometry draw_content_geo = layout_->GetGeometry();
+  nux::Geometry draw_content_geo(layout_->GetGeometry());
   draw_content_geo.height = current_height_;
   renderer_.DrawFull(gfx_context, draw_content_geo, absolute_window_geometry_, window_geometry_, true);
 }
 
 void View::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
 {
-  nux::Geometry draw_content_geo = layout_->GetGeometry();
+  nux::Geometry draw_content_geo(layout_->GetGeometry());
   draw_content_geo.height = current_height_;
 
   renderer_.DrawInner(gfx_context, draw_content_geo, absolute_window_geometry_, window_geometry_);
