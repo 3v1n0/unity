@@ -69,8 +69,30 @@ View::View()
   SetupViews();
   search_bar_->key_down.connect (sigc::mem_fun (this, &View::OnKeyDown));
 
-  search_bar_->activated.connect ([&]() {
+  search_bar_->activated.connect ([&]() 
+  {
     search_activated.emit(search_bar_->search_string);
+  });
+
+  search_bar_->text_entry()->key_nav_focus_change.connect([&](nux::Area *area, bool receiving, nux::KeyNavDirection direction)
+  {
+    // early exit if we have no buttons yet
+    if (buttons_.empty())
+      return;
+
+    if (receiving)
+    {
+      // if the search_bar gets focus, fake focus the first button if it exists
+      if (!buttons_.empty())
+      {
+        buttons_.back()->fake_focused = true;
+      }
+    }
+    else
+    {
+      // we are losing focus, so remove the fake focused entry
+      buttons_.back()->fake_focused = false;
+    }
   });
 
   mouse_down.connect(sigc::mem_fun(this, &View::OnMouseButtonDown));
@@ -153,6 +175,8 @@ void View::SetQueries(Hud::Queries queries)
     });
 
     button->is_rounded = (query == --(queries.end())) ? true : false;
+    button->fake_focused = (query == (queries.begin())) ? true : false;
+    
     button->SetMinimumWidth(941);
     found_items++;
   }
