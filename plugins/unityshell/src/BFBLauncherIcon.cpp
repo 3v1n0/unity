@@ -35,7 +35,7 @@ UBusManager BFBLauncherIcon::ubus_manager_;
 BFBLauncherIcon::BFBLauncherIcon()
  : SimpleLauncherIcon()
 {
-  tooltip_text = _("Dash home");
+  tooltip_text = _("Dash Home");
   icon_name = PKGDATADIR"/launcher_bfb.png";
   SetQuirk(QUIRK_VISIBLE, true);
   SetQuirk(QUIRK_RUNNING, false);
