@@ -24,6 +24,9 @@
 #include "PanelStyle.h"
 #include "UBusMessages.h"
 #include "UScreen.h"
+
+#include <libbamf/libbamf.h>
+
 namespace unity
 {
 namespace hud
@@ -219,6 +222,14 @@ void Controller::ShowHud()
   EnsureHud();
   view_->AboutToShow();
 
+  // we first want to grab the currently active window, luckly we can just ask the jason interface(bamf)
+  BamfMatcher* matcher = bamf_matcher_get_default();
+  glib::Object<BamfView> bamf_app((BamfView*)(bamf_matcher_get_active_application(matcher)));
+  focused_app_icon_ = bamf_view_get_icon(bamf_app);
+
+  LOG_DEBUG(logger) << "Taking application icon: " << focused_app_icon_;
+  view_->SetIcon(focused_app_icon_);
+
   window_->ShowWindow(true);
   window_->PushToFront();
   window_->EnableInputWindow(true, "Hud", true, false);
@@ -229,9 +240,6 @@ void Controller::ShowHud()
   window_->QueueDraw();
 
   view_->ResetToDefault();
-
-  view_->SetIcon("");
-  hud_service_.RequestQuery("");
   need_show_ = false;
   visible_ = true;
 
@@ -356,7 +364,7 @@ void Controller::OnQuerySelected(Query::Ptr query)
 void Controller::OnQueriesFinished(Hud::Queries queries)
 {
   view_->SetQueries(queries);
-  std::string icon_name = "";
+  std::string icon_name = focused_app_icon_;
   for (auto query = queries.begin(); query != queries.end(); query++)
   {
     if (!(*query)->icon_name.empty())
