@@ -137,8 +137,19 @@ class ObjectCreatableFromStateDict(object):
         # need to get name from class object.
         logger.debug("Refreshing state for %r", self)
 
-        for class_name,class_obj in _object_registry.iteritems():
-            if class_obj == self.__class__:
-                new_state = get_state_by_name_and_id(class_name, self.id)
-                self.set_properties(new_state)
-                return
+        new_state = get_state_by_name_and_id(self.__class__.__name__, self.id)
+        self.set_properties(new_state)
+
+    @classmethod
+    def get_all_instances(cls):
+        """Get all instances of this class that exist within the Unity state tree.
+
+        For example, to get all the BamfLauncherIcons:
+
+        icons = BamfLauncherIcons.get_all_instances()
+
+        The return value is a list (possibly empty) of class instances.
+
+        """
+        instances = get_state_by_path("//%s" % (cls.__name__))
+        return [make_introspection_object(i) for i in instances]
