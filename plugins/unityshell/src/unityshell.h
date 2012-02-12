@@ -141,6 +141,7 @@ public:
   void paintDisplay(const CompRegion& region, const GLMatrix& transform, unsigned int mask);
 #endif
   void paintPanelShadow(const GLMatrix& matrix);
+  void setPanelShadowMatrix(const GLMatrix& matrix);
 
   void preparePaint (int ms);
   void paintFboForOutput (CompOutput *output);
@@ -330,6 +331,8 @@ private:
   bool                   painting_tray_;
   unsigned int           tray_paint_mask_;
   gint64                 last_hud_show_time_;
+
+  GLMatrix panel_shadow_matrix_;
 
 #ifndef USE_GLES
   ScreenEffectFramebufferObject::GLXGetProcAddressProc glXGetProcAddressP;
