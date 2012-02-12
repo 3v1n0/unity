@@ -2860,6 +2860,8 @@ Launcher::OnBusAcquired(GDBusConnection* connection,
   {
     LOG_WARNING(logger) << "Object registration failed. Won't get dynamic launcher addition.";
   }
+
+  g_dbus_node_info_unref(introspection_data);
 }
 
 void
