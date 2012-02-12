@@ -223,7 +223,6 @@ void Controller::ShowHud()
   window_->PushToFront();
   window_->EnableInputWindow(true, "Hud", true, false);
   window_->SetInputFocus();
-  nux::GetWindowCompositor().SetKeyFocusArea(view_->default_focus());
   window_->CaptureMouseDownAnyWhereElse(true);
   view_->CaptureMouseDownAnyWhereElse(true);
   window_->QueueDraw();
@@ -244,6 +243,8 @@ void Controller::ShowHud()
 
   GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "hud", FALSE, UScreen::GetDefault()->GetMonitorWithMouse());
   ubus.SendMessage(UBUS_OVERLAY_SHOWN, info);
+  
+  nux::GetWindowCompositor().SetKeyFocusArea(view_->default_focus());
 }
 void Controller::HideHud(bool restore)
 {
@@ -312,7 +313,11 @@ gboolean Controller::OnViewShowHideFrame(Controller* self)
     {
       self->window_->ShowWindow(false);
     }
-
+    else
+    {
+      // ensure the text entry is focused
+      nux::GetWindowCompositor().SetKeyFocusArea(self->view_->default_focus());
+    }
     return FALSE;
   }
 
