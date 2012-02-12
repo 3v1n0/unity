@@ -1137,15 +1137,13 @@ LauncherIcon::OnRemoteProgressVisibleChanged(LauncherEntryRemote* remote)
 
 void LauncherIcon::EmitNeedsRedraw()
 {
-  auto slots = needs_redraw.slots();
-  if (slots.begin() != slots.end())
+  if (OwnsTheReference())
     needs_redraw.emit(AbstractLauncherIcon::Ptr(this));
 }
 
 void LauncherIcon::EmitRemove()
 {
-  auto slots = remove.slots();
-  if (slots.begin() != slots.end())
+  if (OwnsTheReference())
     remove.emit(AbstractLauncherIcon::Ptr(this));
 }
 
