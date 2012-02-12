@@ -52,13 +52,15 @@ public:
     SetVScrollBar(scroll_bar);
   }
 
-  void ScrollToPosition(nux::Geometry & position)
+  void ScrollToPosition(nux::Geometry const& position)
   {
     // much of this code is copied from Nux/ScrollView.cpp
-    int child_y = position.y - GetGeometry ().y;
+    nux::Geometry const& geo = GetGeometry();
+
+    int child_y = position.y - geo.y;
     int child_y_diff = child_y - abs (_delta_y);
 
-    if (child_y_diff + position.height < GetGeometry ().height && child_y_diff >= 0)
+    if (child_y_diff + position.height < geo.height && child_y_diff >= 0)
     {
       return;
     }
@@ -69,7 +71,7 @@ public:
     }
     else
     {
-      int size = child_y_diff - GetGeometry ().height;
+      int size = child_y_diff - geo.height;
 
       // always keeps the top of a view on the screen
       size += position.height;

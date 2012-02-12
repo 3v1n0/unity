@@ -542,7 +542,7 @@ std::string SearchBar::GetName() const
 
 void SearchBar::AddProperties(GVariantBuilder* builder)
 {
-  unity::variant::BuilderWrapper(builder).add(GetGeometry());
+  unity::variant::BuilderWrapper(builder).add(GetAbsoluteGeometry());
   g_variant_builder_add (builder, "{sv}", "search_string", g_variant_new_string (pango_entry_->GetText().c_str()) );
 }
 
