@@ -35,7 +35,7 @@ DesktopLauncherIcon::DesktopLauncherIcon()
   icon_name = "desktop";
   SetQuirk(QUIRK_VISIBLE, true);
   SetQuirk(QUIRK_RUNNING, false);
-  SetIconType(TYPE_DESKTOP);
+  SetIconType(TYPE_BEGIN);
   SetShowInSwitcher(false);
 }
 
