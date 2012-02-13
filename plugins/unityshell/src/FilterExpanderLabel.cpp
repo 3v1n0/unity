@@ -211,6 +211,11 @@ void FilterExpanderLabel::BuildLayout()
   expand_icon_->mouse_click.connect(mouse_expand);
   expand_icon_->mouse_enter.connect(mouse_redraw);
   expand_icon_->mouse_leave.connect(mouse_redraw);
+  key_nav_focus_change.connect([&](nux::Area* area, bool has_focus, nux::KeyNavDirection direction)
+  {
+    if(has_focus)
+      nux::GetWindowCompositor().SetKeyFocusArea(expander_view_);
+  });
 
   QueueRelayout();
   NeedRedraw();
@@ -283,9 +288,12 @@ void FilterExpanderLabel::DrawContent(nux::GraphicsEngine& GfxContext, bool forc
   GfxContext.PopClippingRectangle();
 }
 
+//
+// Key navigation
+//
 bool FilterExpanderLabel::AcceptKeyNavFocus()
 {
-  return false;
+  return true;
 }
 
 } // namespace dash

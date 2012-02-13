@@ -112,15 +112,14 @@ void FilterBar::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   nux::Color col(0.13f, 0.13f, 0.13f, 0.13f);
 
   std::list<Area *>& layout_list = GetLayout()->GetChildren();
-  std::list<Area*>::iterator iter;
   int i = 0;
   int num_separators = layout_list.size() - 1;
 
-  for (iter = layout_list.begin(); iter != layout_list.end(); iter++)
+  for (auto iter : layout_list)
   {
     if (i != num_separators)
     {
-      nux::Area* filter_view = (*iter);
+      nux::Area* filter_view = iter;
       nux::Geometry const& geom = filter_view->GetGeometry();
 
       unsigned int alpha = 0, src = 0, dest = 0;
@@ -134,7 +133,7 @@ void FilterBar::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
                                    col);
       GfxContext.GetRenderStates().SetBlend(alpha, src, dest);
     }
-    i++;
+    ++i;
   }
 
   GfxContext.PopClippingRectangle();

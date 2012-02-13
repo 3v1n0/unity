@@ -498,6 +498,28 @@ bool PlacesGroup::HeaderHasKeyFocus() const
          (_expand_icon && _expand_icon->HasKeyFocus());
 }
 
+bool PlacesGroup::HeaderIsFocusable() const
+{
+  return (_icon && _icon->IsVisible()) || 
+         (_name && _name->IsVisible()) ||
+         (_expand_label && _expand_label->IsVisible()) || 
+         (_expand_icon && _expand_icon->IsVisible());
+}
+
+nux::Area* PlacesGroup::GetHeaderFocusableArea() const
+{
+  if (_expand_label && _expand_label->IsVisible())
+    return _expand_label;
+  else if (_expand_icon && _expand_icon->IsVisible())
+    return _expand_icon;
+  else if (_name && _name->IsVisible())
+    return _name;
+  else if (_icon && _icon->IsVisible())
+    return _icon;
+
+  return nullptr;
+}
+
 bool PlacesGroup::ShouldBeHighlighted() const
 {
   return (_header_view && _header_view->IsMousePointerInside()) ||
