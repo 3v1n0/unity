@@ -404,7 +404,7 @@ public:
 
   typedef compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>
           UnityMinimizedHandler;
-  UnityMinimizedHandler *mMinimizeHandler;
+  std::unique_ptr <UnityMinimizedHandler> mMinimizeHandler;
 
   UnityShowdesktopHandler             *mShowdesktopHandler;
 

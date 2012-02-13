@@ -195,8 +195,6 @@ PlacesGroup::OnLabelFocusChanged(nux::Area* label, bool has_focus, nux::KeyNavDi
 {
   if (HeaderHasKeyFocus())
   {
-      std::cout << "Scroll me!" << std::endl;
-
     _ubus.SendMessage(UBUS_RESULT_VIEW_KEYNAV_CHANGED,
                       g_variant_new("(iiii)", 0, 0, 0, 0));
   }
