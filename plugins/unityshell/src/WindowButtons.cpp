@@ -132,15 +132,15 @@ public:
   {
     panel::Style& style = panel::Style::Instance();
 
-    _normal_tex = style.GetWindowButton(_type, panel::WindowState::NORMAL);
-    _prelight_tex = style.GetWindowButton(_type, panel::WindowState::PRELIGHT);
-    _pressed_tex = style.GetWindowButton(_type, panel::WindowState::PRESSED);
-    _unfocused_tex = style.GetWindowButton(_type, panel::WindowState::UNFOCUSED);
-    _unfocused_prelight_tex = style.GetWindowButton(_type, panel::WindowState::UNFOCUSED_PRELIGHT);
-    _unfocused_pressed_tex = style.GetWindowButton(_type, panel::WindowState::UNFOCUSED_PRESSED);
-    _normal_dash_tex = GetDashWindowButton(_type, panel::WindowState::NORMAL);
-    _prelight_dash_tex = GetDashWindowButton(_type, panel::WindowState::PRELIGHT);
-    _pressed_dash_tex = GetDashWindowButton(_type, panel::WindowState::PRESSED);
+    _normal_tex.Adopt(style.GetWindowButton(_type, panel::WindowState::NORMAL));
+    _prelight_tex.Adopt(style.GetWindowButton(_type, panel::WindowState::PRELIGHT));
+    _pressed_tex.Adopt(style.GetWindowButton(_type, panel::WindowState::PRESSED));
+    _unfocused_tex.Adopt(style.GetWindowButton(_type, panel::WindowState::UNFOCUSED));
+    _unfocused_prelight_tex.Adopt(style.GetWindowButton(_type, panel::WindowState::UNFOCUSED_PRELIGHT));
+    _unfocused_pressed_tex.Adopt(style.GetWindowButton(_type, panel::WindowState::UNFOCUSED_PRESSED));
+    _normal_dash_tex.Adopt(GetDashWindowButton(_type, panel::WindowState::NORMAL));
+    _prelight_dash_tex.Adopt(GetDashWindowButton(_type, panel::WindowState::PRELIGHT));
+    _pressed_dash_tex.Adopt(GetDashWindowButton(_type, panel::WindowState::PRESSED));
 
     if (_overlay_is_open)
     {
@@ -166,18 +166,18 @@ public:
     if (dash::Settings::Instance().GetFormFactor() == dash::FormFactor::DESKTOP)
     {
       // get maximize buttons
-      _normal_dash_tex = GetDashMaximizeWindowButton(panel::WindowState::NORMAL);
-      _prelight_dash_tex = GetDashMaximizeWindowButton(panel::WindowState::PRELIGHT);
-      _pressed_dash_tex = GetDashMaximizeWindowButton(panel::WindowState::PRESSED);
-      _disabled_dash_tex = GetDashMaximizeWindowButton(panel::WindowState::DISABLED); 
+      _normal_dash_tex.Adopt(GetDashMaximizeWindowButton(panel::WindowState::NORMAL));
+      _prelight_dash_tex.Adopt(GetDashMaximizeWindowButton(panel::WindowState::PRELIGHT));
+      _pressed_dash_tex.Adopt(GetDashMaximizeWindowButton(panel::WindowState::PRESSED));
+      _disabled_dash_tex.Adopt(GetDashMaximizeWindowButton(panel::WindowState::DISABLED));
     }
     else
     {
       // get unmaximize buttons
-      _normal_dash_tex = GetDashWindowButton(_type, panel::WindowState::NORMAL);
-      _prelight_dash_tex = GetDashWindowButton(_type, panel::WindowState::PRELIGHT);
-      _pressed_dash_tex = GetDashWindowButton(_type, panel::WindowState::PRESSED);
-      _disabled_dash_tex = GetDashWindowButton(_type, panel::WindowState::DISABLED);
+      _normal_dash_tex.Adopt(GetDashWindowButton(_type, panel::WindowState::NORMAL));
+      _prelight_dash_tex.Adopt(GetDashWindowButton(_type, panel::WindowState::PRELIGHT));
+      _pressed_dash_tex.Adopt(GetDashWindowButton(_type, panel::WindowState::PRESSED));
+      _disabled_dash_tex.Adopt(GetDashWindowButton(_type, panel::WindowState::DISABLED));
     }
 
     // still check if the dash is really opened,
