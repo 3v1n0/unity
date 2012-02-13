@@ -55,7 +55,8 @@ PanelIndicatorEntryView::PanelIndicatorEntryView(Entry::Ptr const& proxy, int pa
   , spacing_(DEFAULT_SPACING)
   , type_(type)
   , entry_texture_(nullptr)
-  , padding_(padding < 0 ? 0 : padding)
+  , left_padding_(padding < 0 ? 0 : padding)
+  , right_padding_(left_padding_)
   , opacity_(1.0f)
   , draw_active_(false)
   , dash_showing_(false)
@@ -249,7 +250,7 @@ void PanelIndicatorEntryView::DrawEntryPrelight(cairo_t* cr, unsigned int width,
 
 void PanelIndicatorEntryView::DrawEntryContent(cairo_t *cr, unsigned int width, unsigned int height, glib::Object<GdkPixbuf> const& pixbuf, glib::Object<PangoLayout> const& layout)
 {
-  int x = padding_;
+  int x = left_padding_;
 
   if (IsActive())
     DrawEntryPrelight(cr, width, height);
@@ -351,7 +352,7 @@ void PanelIndicatorEntryView::DrawEntryContent(cairo_t *cr, unsigned int width, 
     int y = (height - text_height) / 2;
 
 
-    unsigned int text_space = GetMaximumWidth() - x - padding_;
+    unsigned int text_space = GetMaximumWidth() - x - left_padding_;
 
     if (text_width > text_space)
     {
@@ -513,7 +514,7 @@ void PanelIndicatorEntryView::Refresh()
   }
 
   if (width)
-    width += padding_ * 2;
+    width += left_padding_ + right_padding_;
 
   width = std::min<int>(width, GetMaximumWidth());
   SetMinimumWidth(width);

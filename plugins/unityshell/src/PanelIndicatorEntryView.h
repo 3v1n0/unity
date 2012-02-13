@@ -105,6 +105,8 @@ protected:
 
   Entry::Ptr proxy_;
   unsigned int spacing_;
+  unsigned int left_padding_;
+  unsigned int right_padding_;
 
 private:
   void OnMouseDown(int x, int y, long button_flags, long key_flags);
@@ -119,7 +121,6 @@ private:
   IndicatorEntryType type_;
   nux::BaseTexture* entry_texture_;
   nux::Geometry cached_geo_;
-  int padding_;
   double opacity_;
   bool draw_active_;
   bool dash_showing_;
