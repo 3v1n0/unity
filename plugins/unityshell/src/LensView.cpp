@@ -155,7 +155,7 @@ LensView::LensView(Lens::Ptr lens, nux::Area* show_filters)
     {
       if (category->GetLayout() != nullptr)
       {
-        auto expand_label = category->GetExpandLabel();
+        auto expand_label = category->GetHeaderFocusableArea();
         auto child = category->GetChildView();
 
         if ((child && child->HasKeyFocus()) || 

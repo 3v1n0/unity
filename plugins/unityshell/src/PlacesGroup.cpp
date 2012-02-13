@@ -193,8 +193,13 @@ PlacesGroup::OnLabelActivated(nux::Area* label)
 void
 PlacesGroup::OnLabelFocusChanged(nux::Area* label, bool has_focus, nux::KeyNavDirection direction)
 {
-  _ubus.SendMessage(UBUS_RESULT_VIEW_KEYNAV_CHANGED,
-                    g_variant_new("(iiii)", 0, -30, 0, -30));
+  if (HeaderHasKeyFocus())
+  {
+      std::cout << "Scroll me!" << std::endl;
+
+    _ubus.SendMessage(UBUS_RESULT_VIEW_KEYNAV_CHANGED,
+                      g_variant_new("(iiii)", 0, 0, 0, 0));
+  }
 
   QueueDraw();
 }
