@@ -43,6 +43,8 @@ public:
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
 
+  void Activate();
+
 protected:
   void ShowMenu(int button);
   void DrawEntryPrelight(cairo_t* cr, unsigned int w, unsigned int h);

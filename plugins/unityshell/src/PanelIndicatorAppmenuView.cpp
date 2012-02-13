@@ -32,6 +32,11 @@ PanelIndicatorAppmenuView::PanelIndicatorAppmenuView(Entry::Ptr const& proxy)
   , xid_(0)
 {}
 
+void PanelIndicatorAppmenuView::Activate()
+{
+  ShowMenu(1);
+}
+
 void PanelIndicatorAppmenuView::ShowMenu(int button)
 {
   if (xid_)
