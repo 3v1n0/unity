@@ -348,6 +348,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
 
 UnityScreen::~UnityScreen()
 {
+  LOG_DEBUG(logger) << "UnityScreen Destructor";
   notify_uninit();
 
   unity_a11y_finalize();

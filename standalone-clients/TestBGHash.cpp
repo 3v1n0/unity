@@ -26,6 +26,11 @@
 #include "ubus-server.h"
 #include "UBusMessages.h"
 
+namespace
+{
+  nux::logging::Logger logger("unity.BGHash");
+}
+
 class TestRunner
 {
 public:
@@ -52,7 +57,10 @@ void TestRunner::Init ()
 {
   nux::Color hash = bghash.CurrentColor ();
 
-  g_debug ("hashed color: %f - %f - %f", hash.red, hash.green, hash.blue);
+  LOG_DEBUG(logger) << "hashed color: " 
+                    << hash.red << ", "
+                    << hash.green << ", " 
+                    << hash.blue;
 
 }
 
@@ -79,7 +87,10 @@ test_handler_color_change (GVariant *data, gpointer val)
   gdouble red, green, blue, alpha;
   g_variant_get (data, "(dddd)", &red, &green, &blue, &alpha);
 
-  //g_debug ("new color: %f, %f, %f", red, green, blue);
+  LOG_TRACE(logger) << "hashed color: " 
+                    << red << ", "
+                    << green << ", " 
+                    << blue;
 }
 
 int main(int argc, char **argv)
@@ -98,6 +109,9 @@ int main(int argc, char **argv)
   gtk_init (&argc, &argv);
 
   nux::NuxInitialize(0);
+  // Slightly higher as we're more likely to test things we know will fail
+  nux::logging::configure_logging("unity.BGHash=debug");
+
   nux::logging::configure_logging(::getenv("UNITY_LOG_SEVERITY"));
 
   unity::BGHash bg_hash;
