@@ -41,6 +41,7 @@ def _setProperty(_type, data, win=None, mask=None):
     if type(data) is str:
         dataSize = 8
     else:
+        # data length must be 5 - pad with 0's if it's short, truncate otherwise.
         data = (data + [0] * (5 - len(data)))[:5]
         dataSize = 32
 
