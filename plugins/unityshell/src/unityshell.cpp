@@ -2004,7 +2004,7 @@ UnityWindow::minimize ()
 
   if (!mMinimizeHandler)
   {
-    mMinimizeHandler = std::unique_ptr <UnityMinimizedHandler> (new UnityMinimizedHandler (window));
+    mMinimizeHandler.reset (new UnityMinimizedHandler (window));
     mMinimizeHandler->minimize ();
   }
 }
