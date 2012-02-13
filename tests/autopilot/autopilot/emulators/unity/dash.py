@@ -60,7 +60,7 @@ class Dash(object):
 
     def get_searchbar_geometry(self):
         """Returns the searchbar geometry"""
-        search_bar = self.get_state("//SearchBar")[0]
+        search_bar = get_state_by_path("//SearchBar")[0]
         return search_bar['x'], search_bar['y'], search_bar['width'], search_bar['height']
 
     def get_search_string(self):
@@ -69,11 +69,11 @@ class Dash(object):
         """
         return unicode(get_state_by_path("//SearchBar")[0]['search_string'])
 
-   def searchbar_has_focus(self):
+    def searchbar_has_focus(self):
         """
         Returns True if the search bar has the key focus, False otherwise.
         """
-        return self.get_state("//SearchBar")[0]['has_focus']
+        return get_state_by_path("//SearchBar")[0]['has_focus']
 
     def get_current_lens(self):
         """Returns the id of the current lens.
