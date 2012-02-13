@@ -47,6 +47,7 @@ public:
   void RemoveFilter(Filter::Ptr const& filter);
 
 protected:
+  virtual bool AcceptKeyNavFocus();
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
 

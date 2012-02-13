@@ -68,6 +68,17 @@ void FilterBasicButton::Init()
 
   InitTheme();
   SetAcceptKeyNavFocusOnMouseDown(false);
+
+  key_nav_focus_change.connect([&] (nux::Area*, bool, nux::KeyNavDirection)
+  {
+    QueueDraw();
+  });
+
+  key_nav_focus_activate.connect([&](nux::Area*)
+  {
+    if (GetInputEventSensitivity())
+      Active() ? Deactivate() : Activate();
+  });
 }
 
 void FilterBasicButton::InitTheme()

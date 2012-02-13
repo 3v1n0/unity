@@ -37,12 +37,40 @@ namespace unity
 {
 namespace dash
 {
-
 namespace
 {
+
 nux::logging::Logger logger("unity.dash.view");
 
 }
+
+// This is so we can access some protected members in nux::VLayout and
+// break the natural key navigation path.
+class DashLayout: public nux::VLayout
+{
+public:
+  DashLayout(NUX_FILE_LINE_DECL)
+    : nux::VLayout(NUX_FILE_LINE_PARAM)
+    , area_(nullptr)
+  {}
+
+  void SetSpecialArea(nux::Area* area)
+  {
+    area_ = area;
+  }
+
+protected:
+  nux::Area* KeyNavIteration(nux::KeyNavDirection direction)
+  {
+    if (direction == nux::KEY_NAV_DOWN && area_ &&  area_->HasKeyFocus())
+      return nullptr;
+    else
+      return nux::VLayout::KeyNavIteration(direction);
+  }
+
+private:
+  nux::Area* area_;
+};
 
 NUX_IMPLEMENT_OBJECT_TYPE(DashView);
 
@@ -133,7 +161,7 @@ void DashView::SetupViews()
   layout_ = new nux::VLayout();
   SetLayout(layout_);
 
-  content_layout_ = new nux::VLayout();
+  content_layout_ = new DashLayout(NUX_TRACKER_LOCATION);
   content_layout_->SetHorizontalExternalMargin(0);
   content_layout_->SetVerticalExternalMargin(0);
 
@@ -145,6 +173,7 @@ void DashView::SetupViews()
   search_bar_->live_search_reached.connect(sigc::mem_fun(this, &DashView::OnLiveSearchReached));
   search_bar_->showing_filters.changed.connect([&] (bool showing) { if (active_lens_view_) active_lens_view_->filters_expanded = showing; QueueDraw(); });
   content_layout_->AddView(search_bar_, 0, nux::MINOR_POSITION_LEFT);
+  content_layout_->SetSpecialArea(search_bar_->show_filters());
 
   lenses_layout_ = new nux::VLayout();
   content_layout_->AddView(lenses_layout_, 1, nux::MINOR_POSITION_LEFT);
@@ -624,15 +653,20 @@ void DashView::AddProperties(GVariantBuilder* builder)
   wrapper.add("num-rows", num_rows);
 }
 
-nux::Area * DashView::KeyNavIteration(nux::KeyNavDirection direction)
+nux::Area* DashView::KeyNavIteration(nux::KeyNavDirection direction)
 {
-  // We don't want to eat the tab as it's used for IM stuff
-  if (!search_bar_->im_active())
+  if (direction == nux::KEY_NAV_DOWN && search_bar_ && active_lens_view_)
   {
-    if (direction == KEY_NAV_TAB_NEXT)
-      lens_bar_->ActivateNext();
-    else if (direction == KEY_NAV_TAB_PREVIOUS)
-      lens_bar_->ActivatePrevious();
+    auto show_filters = search_bar_->show_filters();
+    auto fscroll_view = active_lens_view_->fscroll_view();
+    
+    if (show_filters && show_filters->HasKeyFocus())
+    {
+      if (fscroll_view->IsVisible() && fscroll_view)
+        return fscroll_view->KeyNavIteration(direction);
+      else
+        return active_lens_view_->KeyNavIteration(direction);
+    } 
   }
   return this;
 }

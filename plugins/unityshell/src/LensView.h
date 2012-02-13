@@ -54,6 +54,7 @@ public:
   ~LensView();
 
   Lens::Ptr lens() const;
+  nux::Area* fscroll_view() const;
   int GetNumRows();
 
   virtual void ActivateFirst();

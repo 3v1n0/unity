@@ -54,12 +54,12 @@ public:
   ExpanderView(NUX_FILE_LINE_DECL)
    : nux::View(NUX_FILE_LINE_PARAM)
   {
+    SetAcceptKeyNavFocusOnMouseDown(false);
   }
 
 protected:
   void Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
-  {
-  };
+  {};
 
   void DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
   {
@@ -69,7 +69,7 @@ protected:
 
   bool AcceptKeyNavFocus()
   {
-    return false;
+    return true;
   }
 };
 
@@ -189,10 +189,22 @@ void FilterExpanderLabel::BuildLayout()
     expanded = !expanded;
   };
 
+  auto key_redraw = [&](nux::Area*, bool, nux::KeyNavDirection)
+  {
+    QueueDraw();
+  };
+
+  auto key_expand = [&](nux::Area*)
+  {
+    expanded = !expanded;
+  };
+
   // Signals
   expander_view_->mouse_click.connect(mouse_expand);
   expander_view_->mouse_enter.connect(mouse_redraw);
   expander_view_->mouse_leave.connect(mouse_redraw);
+  expander_view_->key_nav_focus_change.connect(key_redraw);
+  expander_view_->key_nav_focus_activate.connect(key_expand);
   cairo_label_->mouse_click.connect(mouse_expand);
   cairo_label_->mouse_enter.connect(mouse_redraw);
   cairo_label_->mouse_leave.connect(mouse_redraw);
@@ -229,7 +241,7 @@ void FilterExpanderLabel::DoExpandChange(bool change)
 
 bool FilterExpanderLabel::ShouldBeHighlighted()
 {
-  return ((expander_view_ && expander_view_->IsMouseInside()) ||
+  return ((expander_view_ && (expander_view_->IsMouseInside() || expander_view_->HasKeyFocus())) ||
           (cairo_label_ && cairo_label_->IsMouseInside()) ||
           (expand_icon_ && expand_icon_->IsMouseInside()));
 }
@@ -269,6 +281,11 @@ void FilterExpanderLabel::DrawContent(nux::GraphicsEngine& GfxContext, bool forc
 
   GetLayout()->ProcessDraw(GfxContext, force_draw);
   GfxContext.PopClippingRectangle();
+}
+
+bool FilterExpanderLabel::AcceptKeyNavFocus()
+{
+  return false;
 }
 
 } // namespace dash

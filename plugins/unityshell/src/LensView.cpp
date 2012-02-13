@@ -425,6 +425,11 @@ Lens::Ptr LensView::lens() const
   return lens_;
 }
 
+nux::Area* LensView::fscroll_view() const
+{
+  return fscroll_view_;
+}
+
 int LensView::GetNumRows()
 {
   unsigned int columns = dash::Style::Instance().GetDefaultNColumns();

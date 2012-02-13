@@ -140,5 +140,10 @@ void FilterBar::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   GfxContext.PopClippingRectangle();
 }
 
+bool FilterBar::AcceptKeyNavFocus()
+{
+  return false;
+}
+
 } // namespace dash
 } // namespace unity

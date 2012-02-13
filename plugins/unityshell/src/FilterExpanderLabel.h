@@ -58,6 +58,7 @@ public:
   nux::Property<bool> expanded;
 
 protected:
+  virtual bool AcceptKeyNavFocus();
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
 

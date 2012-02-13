@@ -57,6 +57,7 @@ void FilterMultiRangeButton::Init()
 
   state_change.connect(sigc::mem_fun(this, &FilterMultiRangeButton::OnActivated));
   key_nav_focus_change.connect([&](nux::Area*, bool, nux::KeyNavDirection) { QueueDraw(); });
+  key_nav_focus_activate.connect([&](nux::Area* area) { Active() ? Deactivate() : Activate(); });
 }
 
 void FilterMultiRangeButton::OnActivated(nux::Area* area)
@@ -237,7 +238,6 @@ void FilterMultiRangeButton::Draw(nux::GraphicsEngine& GfxContext, bool force_dr
                        col);
 
   nux::BaseTexture* texture = normal_[MapKey(has_arrow_, side_)]->GetTexture();
-  //FIXME - dashstyle does not give us a focused state yet, so ignore
   if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_PRELIGHT)
   {
     texture = prelight_[MapKey(has_arrow_, side_)]->GetTexture();
