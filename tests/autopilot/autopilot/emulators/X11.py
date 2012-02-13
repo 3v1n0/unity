@@ -223,13 +223,13 @@ class Mouse(object):
 
     def press(self, button=1):
         """Press mouse button at current mouse location."""
-        logger.debug("Pressing moouse button %d", button)
+        logger.debug("Pressing mouse button %d", button)
         fake_input(_DISPLAY, X.ButtonPress, button)
         _DISPLAY.sync()
 
     def release(self, button=1):
         """Releases mouse button at current mouse location."""
-        logger.debug("Releasing moouse button %d", button)
+        logger.debug("Releasing mouse button %d", button)
         fake_input(_DISPLAY, X.ButtonRelease, button)
         _DISPLAY.sync()
 
