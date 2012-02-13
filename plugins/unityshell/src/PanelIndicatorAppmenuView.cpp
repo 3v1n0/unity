@@ -40,6 +40,7 @@ PanelIndicatorAppmenuView::PanelIndicatorAppmenuView(Entry::Ptr const& proxy)
   , has_menu_(false)
 {
   spacing_ = 2;
+  right_padding_ = 7; 
 }
 
 void PanelIndicatorAppmenuView::Activate()
@@ -156,6 +157,7 @@ void PanelIndicatorAppmenuView::DrawEntryPrelight(cairo_t* cr, unsigned int widt
   int center_w = std::min(geo.width, GetMinimumWidth()) - left_w - right_w;
 
   cairo_save(cr);
+  cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
   cairo_translate(cr, geo.x - GetAbsoluteX(), geo.y - center_h);
 
   cairo_set_source_surface(cr, left, x, y);
