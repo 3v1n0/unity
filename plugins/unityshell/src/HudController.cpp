@@ -230,7 +230,10 @@ void Controller::ShowHud()
   // we first want to grab the currently active window, luckly we can just ask the jason interface(bamf)
   BamfMatcher* matcher = bamf_matcher_get_default();
   glib::Object<BamfView> bamf_app((BamfView*)(bamf_matcher_get_active_application(matcher)));
-  focused_app_icon_ = bamf_view_get_icon(bamf_app);
+  if (G_LIKELY(bamf_view_get_icon(bamf_app)))
+    focused_app_icon_ = bamf_view_get_icon(bamf_app);
+  else
+    focused_app_icon_.clear();
 
   LOG_DEBUG(logger) << "Taking application icon: " << focused_app_icon_;
   view_->SetIcon(focused_app_icon_);
