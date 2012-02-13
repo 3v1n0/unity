@@ -38,7 +38,9 @@ PanelIndicatorAppmenuView::PanelIndicatorAppmenuView(Entry::Ptr const& proxy)
   : PanelIndicatorEntryView(proxy, 0, APPMENU)
   , xid_(0)
   , has_menu_(false)
-{}
+{
+  spacing_ = 2;
+}
 
 void PanelIndicatorAppmenuView::Activate()
 {
