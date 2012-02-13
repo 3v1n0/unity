@@ -171,6 +171,11 @@ PlacesGroup::PlacesGroup()
   _expand_icon->mouse_enter.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseEnter));
   _expand_icon->mouse_leave.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseLeave));
   _expand_icon->key_nav_focus_change.connect(sigc::mem_fun(this, &PlacesGroup::OnLabelFocusChanged));
+  key_nav_focus_change.connect([&](nux::Area* area, bool has_focus, nux::KeyNavDirection direction)
+  {
+    if(has_focus)
+      nux::GetWindowCompositor().SetKeyFocusArea(GetHeaderFocusableView());
+  });
 }
 
 PlacesGroup::~PlacesGroup()
@@ -509,7 +514,7 @@ bool PlacesGroup::HeaderIsFocusable() const
          (_expand_icon && _expand_icon->IsVisible());
 }
 
-nux::Area* PlacesGroup::GetHeaderFocusableArea() const
+nux::View* PlacesGroup::GetHeaderFocusableView() const
 {
   if (_expand_label && _expand_label->IsVisible())
     return _expand_label;
@@ -535,7 +540,7 @@ bool PlacesGroup::ShouldBeHighlighted() const
 bool
 PlacesGroup::AcceptKeyNavFocus()
 {
-  return false;
+  return true;
 }
 
 //

@@ -728,11 +728,8 @@ Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
     std::list<nux::Area*> tabs;
     for (auto category : active_lens_view_->categories())
     {
-      if (!category->IsVisible())
-        continue;
-
-      if (category->HeaderIsFocusable())
-        tabs.push_back(category->GetHeaderFocusableArea());
+      if (category->IsVisible())
+        tabs.push_back(category);
     }
 
     if (search_bar_ && search_bar_->show_filters() &&
