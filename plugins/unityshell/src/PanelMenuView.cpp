@@ -59,10 +59,10 @@ PanelMenuView::PanelMenuView(int padding)
   : _matcher(bamf_matcher_get_default()),
     _is_integrated(false),
     _is_inside(false),
+    _is_grabbed(false),
     _is_maximized(false),
     _is_own_window(false),
     _integrated_menu(nullptr),
-    _is_grabbed(false),
     _last_active_view(nullptr),
     _new_application(nullptr),
     _dash_showing(false),
@@ -121,7 +121,7 @@ PanelMenuView::PanelMenuView(int padding)
   _window_buttons->mouse_leave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
   //_window_buttons->mouse_move.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseMove));
 
-  layout_->SetLeftAndRightPadding(_padding*2 + _window_buttons->GetContentWidth(), _padding);
+  layout_->SetLeftAndRightPadding(_padding*2 + _window_buttons->GetContentWidth(), 0);
   layout_->SetBaseHeight(panel::Style::Instance().panel_height);
 
   _titlebar_grab_area = new PanelTitlebarGrabArea();
