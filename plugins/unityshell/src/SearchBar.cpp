@@ -82,7 +82,7 @@ protected:
 
   bool AcceptKeyNavFocus()
   {
-    return true;
+    return false;
   }
 };
 
@@ -187,7 +187,6 @@ void SearchBar::Init()
     show_filters_->SetAcceptKeyNavFocus(true);
     show_filters_->SetAcceptKeyNavFocusOnMouseDown(false);
 
-
     nux::BaseTexture* arrow;
     arrow = dash::Style::Instance().GetGroupExpandIcon();
     expand_icon_ = new IconTexture(arrow,
@@ -251,7 +250,7 @@ void SearchBar::Init()
     expand_icon_->mouse_click.connect(mouse_expand);
     expand_icon_->mouse_enter.connect(mouse_redraw);
     expand_icon_->mouse_leave.connect(mouse_redraw);
-    }
+  }
 
   sig_manager_.Add(new Signal<void, GtkSettings*, GParamSpec*>
       (gtk_settings_get_default(),
@@ -654,8 +653,11 @@ std::string SearchBar::GetName() const
 
 void SearchBar::AddProperties(GVariantBuilder* builder)
 {
-  unity::variant::BuilderWrapper(builder).add(GetGeometry());
-  g_variant_builder_add (builder, "{sv}", "search_string", g_variant_new_string (pango_entry_->GetText().c_str()) );
+  unity::variant::BuilderWrapper wrapper(builder);
+
+  wrapper.add(GetGeometry());
+  wrapper.add("has_focus", pango_entry_->HasKeyFocus());
+  wrapper.add("search_string", pango_entry_->GetText());
 }
 
 } // namespace unity

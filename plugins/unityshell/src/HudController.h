@@ -102,7 +102,7 @@ private:
 
   View* view_;
   guint ensure_id_;
-
+  std::string focused_app_icon_;
   nux::Layout* layout_;
 };
 

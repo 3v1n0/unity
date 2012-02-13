@@ -72,9 +72,9 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
   vertical_spacing.changed.connect(needredraw_lambda);
   padding.changed.connect(needredraw_lambda);
 
-  key_nav_focus_change.connect (sigc::mem_fun (this, &ResultViewGrid::OnOnKeyNavFocusChange));
-  key_nav_focus_activate.connect ([&] (nux::Area *area) { UriActivated.emit (focused_uri_); });
-  key_down.connect (sigc::mem_fun (this, &ResultViewGrid::OnKeyDown));
+  key_nav_focus_change.connect(sigc::mem_fun(this, &ResultViewGrid::OnKeyNavFocusChange));
+  key_nav_focus_activate.connect([&] (nux::Area *area) { UriActivated.emit (focused_uri_); });
+  key_down.connect(sigc::mem_fun(this, &ResultViewGrid::OnKeyDown));
   mouse_move.connect(sigc::mem_fun(this, &ResultViewGrid::MouseMove));
   mouse_click.connect(sigc::mem_fun(this, &ResultViewGrid::MouseClick));
 
@@ -492,8 +492,7 @@ nux::Area* ResultViewGrid::KeyNavIteration(nux::KeyNavDirection direction)
   return this;
 }
 
-// crappy name.
-void ResultViewGrid::OnOnKeyNavFocusChange(nux::Area *area, bool has_focus, nux::KeyNavDirection direction)
+void ResultViewGrid::OnKeyNavFocusChange(nux::Area *area, bool has_focus, nux::KeyNavDirection direction)
 {
   if (HasKeyFocus())
   {
@@ -508,7 +507,7 @@ void ResultViewGrid::OnOnKeyNavFocusChange(nux::Area *area, bool has_focus, nux:
 
     int items_per_row = GetItemsPerRow();
 
-    if (direction == nux::KEY_NAV_UP)
+    if (direction == nux::KEY_NAV_UP && expanded)
     {
       // This View just got focused through keyboard navigation and the
       // focus is comming from the bottom. We want to focus the 
