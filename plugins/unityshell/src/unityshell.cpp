@@ -1998,7 +1998,8 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
 
   bool ret = gWindow->glDraw(matrix, attrib, region, mask);
 
-  if ((active_window == 0 || active_window == window->id()) && (window->type() == CompWindowTypeDesktopMask))
+  if ((active_window == 0 || active_window == window->id() || integrated_menus) &&
+      (window->type() == CompWindowTypeDesktopMask))
   {
     uScreen->paintPanelShadow(matrix);
   }
