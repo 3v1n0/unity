@@ -84,8 +84,6 @@ PanelMenuView::PanelMenuView(int padding)
     _fade_in_animator(_menus_fadein),
     _fade_out_animator(_menus_fadeout)
 {
-  WindowManager* win_manager;
-
   layout_->SetContentDistribution(nux::eStackLeft);
 
   /* Removing the layout from the base view, otherwise it will take all the
@@ -111,7 +109,7 @@ PanelMenuView::PanelMenuView(int padding)
   _window_buttons = new WindowButtons();
   _window_buttons->SetParentObject(this);
   _window_buttons->SetBaseX(_padding);
-  _window_buttons->SetBaseHeight(panel::Style::Instance().panel_height);
+  _window_buttons->SetMaximumHeight(panel::Style::Instance().panel_height);
   _window_buttons->ComputeContentSize();
 
   _window_buttons->close_clicked.connect(sigc::mem_fun(this, &PanelMenuView::OnCloseClicked));
@@ -134,15 +132,9 @@ PanelMenuView::PanelMenuView(int padding)
   _titlebar_grab_area->grab_move.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedGrabMove));
   _titlebar_grab_area->grab_end.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedGrabEnd));
 
-  win_manager = WindowManager::Default();
-
+  WindowManager* win_manager = WindowManager::Default();
   win_manager->window_minimized.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowMinimized));
   win_manager->window_unminimized.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowUnminimized));
-  win_manager->initiate_spread.connect(sigc::mem_fun(this, &PanelMenuView::OnSpreadInitiate));
-  win_manager->terminate_spread.connect(sigc::mem_fun(this, &PanelMenuView::OnSpreadTerminate));
-  win_manager->initiate_expo.connect(sigc::mem_fun(this, &PanelMenuView::OnExpoInitiate));
-  win_manager->terminate_expo.connect(sigc::mem_fun(this, &PanelMenuView::OnExpoTerminate));
-
   win_manager->window_maximized.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowMaximized));
   win_manager->window_restored.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowRestored));
   win_manager->window_unmapped.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowUnmapped));
@@ -151,6 +143,11 @@ PanelMenuView::PanelMenuView(int padding)
   win_manager->window_resized.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowMoved));
   win_manager->window_decorated.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowDecorated));
   win_manager->window_undecorated.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowUndecorated));
+  win_manager->initiate_spread.connect(sigc::mem_fun(this, &PanelMenuView::OnSpreadInitiate));
+  win_manager->terminate_spread.connect(sigc::mem_fun(this, &PanelMenuView::OnSpreadTerminate));
+  win_manager->initiate_expo.connect(sigc::mem_fun(this, &PanelMenuView::OnExpoInitiate));
+  win_manager->terminate_expo.connect(sigc::mem_fun(this, &PanelMenuView::OnExpoTerminate));
+
 
   _style_changed_connection = panel::Style::Instance().changed.connect([&] {
     _title_texture = nullptr;
@@ -367,11 +364,16 @@ void PanelMenuView::PreLayoutManagement()
   View::PreLayoutManagement();
 
   nux::Geometry const& geo = GetGeometry();
+  int panel_height = panel::Style::Instance().panel_height;
 
-  int x = layout_->GetContentWidth();
-  _titlebar_grab_area->SetBaseX(x);
+  _window_buttons->ComputeContentSize();
+  int buttons_diff = panel_height - _window_buttons->GetContentHeight();
+  _window_buttons->SetBaseY(buttons_diff > 0 ? std::ceil(buttons_diff/2.0f) : 0);
+
+  int layout_width = layout_->GetContentWidth();
+  _titlebar_grab_area->SetBaseX(layout_width);
   _titlebar_grab_area->SetBaseHeight(geo.height);
-  _titlebar_grab_area->SetMinimumWidth(geo.width - x);
+  _titlebar_grab_area->SetMinimumWidth(geo.width - layout_width);
 
   SetMaximumEntriesWidth(geo.width - _padding*2 - _window_buttons->GetContentWidth());
 }

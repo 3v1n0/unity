@@ -117,13 +117,15 @@ public:
     }
 
     if (tex)
+    {
       GfxContext.QRP_1Tex(geo.x,
                           geo.y,
-                          (float)geo.width,
-                          (float)geo.height,
+                          geo.width,
+                          geo.height,
                           tex->GetDeviceTexture(),
                           texxform,
                           nux::color::White * _opacity);
+    }
 
     GfxContext.PopClippingRectangle();
   }
