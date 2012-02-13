@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010-2011 Canonical Ltd
+ * Copyright (C) 2010-2012 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -27,6 +27,9 @@
 
 #include "Introspectable.h"
 
+namespace unity
+{
+
 class PanelTitlebarGrabArea : public nux::InputArea, public unity::debug::Introspectable
 {
   /* This acts a bit like a titlebar, it can be grabbed (such that we can pull
@@ -39,11 +42,25 @@ public:
   void SetGrabbed(bool enabled);
   bool IsGrabbed();
 
-private:
   std::string GetName() const;
-  void         AddProperties(GVariantBuilder* builder);
+  void AddProperties(GVariantBuilder* builder);
 
-  Cursor _grab_cursor;
+  sigc::signal<void, int, int> lower_request;
+  sigc::signal<void, int, int> activate_request;
+  sigc::signal<void, int, int> grab_started;
+  sigc::signal<void, int, int> grab_move;
+  sigc::signal<void, int, int> grab_end;
+
+private:
+  void OnMouseDown(int x, int y, unsigned long button_flags, unsigned long);
+  void OnMouseUp(int x, int y, unsigned long button_flags, unsigned long);
+  void OnGrabMove(int x, int y, int, int, unsigned long button_flags, unsigned long);
+
+  Cursor grab_cursor_;
+  guint mouse_down_timer_;
+  bool grab_started_;
 };
+
+} // NAMESPACE
 
 #endif
