@@ -141,7 +141,7 @@ public:
 
   struct timespec GetQuirkTime(Quirk quirk);
 
-  IconType Type();
+  IconType GetIconType();
 
   virtual nux::Color BackgroundColor();
 
@@ -183,6 +183,18 @@ public:
   }
 
   void SetIconType(IconType type);
+
+  virtual std::string DesktopFile() { return std::string(""); }
+
+  virtual bool IsSticky() const { return false; }
+
+  virtual bool IsVisible() const { return false; }
+
+  virtual void AboutToRemove() {}
+  
+  virtual void Stick(bool save = true) {}
+  
+  virtual void UnStick() {}
 
 protected:
   std::vector<nux::Point3> GetCenters();
@@ -263,6 +275,9 @@ protected:
 
   void OnRemoteProgressVisibleChanged(LauncherEntryRemote* remote);
 
+  void EmitNeedsRedraw();
+
+  void EmitRemove();
 
   // This looks like a case for boost::logical::tribool
   static int _current_theme_is_mono;

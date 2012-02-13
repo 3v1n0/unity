@@ -42,6 +42,7 @@ namespace launcher
 
 class MockLauncherIcon : public AbstractLauncherIcon
 {
+  NUX_DECLARE_OBJECT_TYPE(MockLauncherIcon, AbstractLauncherIcon);
 public:
   MockLauncherIcon()
     : icon_(0)
@@ -185,7 +186,7 @@ public:
     return tv;
   }
 
-  IconType Type()
+  IconType GetIconType()
   {
     return type_;
   }
@@ -239,6 +240,18 @@ public:
 
   void SendDndLeave() {}
 
+  std::string DesktopFile() { return std::string(""); }
+
+  bool IsSticky() const { return false; }
+
+  bool IsVisible() const { return false; }
+
+  void AboutToRemove() {}
+  
+  void Stick(bool save = true) {}
+  
+  void UnStick() {}
+
 private:
   nux::BaseTexture* TextureFromGtkTheme(const char* icon_name, int size)
   {
@@ -291,6 +304,8 @@ private:
   int sort_priority_;
   IconType type_;
 };
+
+NUX_IMPLEMENT_OBJECT_TYPE(MockLauncherIcon);
 
 }
 }

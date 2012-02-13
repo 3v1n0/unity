@@ -30,6 +30,7 @@
 #include "IconTexture.h"
 #include "Introspectable.h"
 #include "StaticCairoText.h"
+#include "UBusWrapper.h"
 
 namespace nux
 {
@@ -120,6 +121,8 @@ private:
   char* _cached_name;
   bool  _draw_sep;
   nux::Geometry _cached_geometry;
+
+  UBusManager _ubus;
 };
 
 }

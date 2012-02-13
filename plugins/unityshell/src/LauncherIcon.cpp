@@ -489,7 +489,7 @@ LauncherIcon::ShowTooltip()
   {
     nux::Geometry geo = _parent_geo[_last_monitor];
     tip_x = geo.x + geo.width - 4 * geo.width / 48;
-    tip_y = geo.y + _center[_last_monitor].y;
+    tip_y = _center[_last_monitor].y;
   }
 
   if (!_tooltip)
@@ -578,7 +578,7 @@ bool LauncherIcon::OpenQuicklist(bool default_to_first_item, int monitor)
 
   nux::Geometry geo = _parent_geo[monitor];
   int tip_x = geo.x + geo.width - 4 * geo.width / 48;
-  int tip_y = geo.y + _center[monitor].y;
+  int tip_y = _center[monitor].y;
 
   auto win_manager = WindowManager::Default();
 
@@ -652,6 +652,8 @@ LauncherIcon::OnCenterTimeout(gpointer data)
 void
 LauncherIcon::SetCenter(nux::Point3 center, int monitor, nux::Geometry geo)
 {
+  center.x += geo.x;
+  center.y += geo.y;
   _center[monitor] = center;
   _parent_geo[monitor] = geo;
 
@@ -659,7 +661,7 @@ LauncherIcon::SetCenter(nux::Point3 center, int monitor, nux::Geometry geo)
   {
     int tip_x, tip_y;
     tip_x = geo.x + geo.width - 4 * geo.width / 48;
-    tip_y = geo.y + _center[monitor].y;
+    tip_y = _center[monitor].y;
 
     if (_quicklist && _quicklist->IsVisible())
       QuicklistManager::Default()->ShowQuicklist(_quicklist.GetPointer(), tip_x, tip_y);
@@ -704,7 +706,7 @@ LauncherIcon::SetWindowVisibleOnMonitor(bool val, int monitor)
     return;
 
   _has_visible_window[monitor] = val;
-  needs_redraw.emit(this);
+  EmitNeedsRedraw();
 }
 
 gboolean
@@ -758,7 +760,7 @@ LauncherIcon::Remove()
       _quicklist->Hide();
 
   SetQuirk(QUIRK_VISIBLE, false);
-  remove.emit(this);
+  EmitRemove();
 }
 
 void
@@ -780,7 +782,7 @@ LauncherIcon::SortPriority()
 }
 
 LauncherIcon::IconType
-LauncherIcon::Type()
+LauncherIcon::GetIconType()
 {
   return _icon_type;
 }
@@ -802,7 +804,7 @@ LauncherIcon::SetQuirk(LauncherIcon::Quirk quirk, bool value)
     TimeUtil::SetTimeStruct(&(_quirk_times[quirk]), &(_quirk_times[quirk]), Launcher::ANIM_DURATION_SHORT);
   else
     clock_gettime(CLOCK_MONOTONIC, &(_quirk_times[quirk]));
-  needs_redraw.emit(this);
+  EmitNeedsRedraw();
 
   // Present on urgent as a general policy
   if (quirk == QUIRK_VISIBLE && value)
@@ -826,7 +828,7 @@ LauncherIcon::OnDelayedUpdateTimeout(gpointer data)
   LauncherIcon* self = arg->self;
 
   clock_gettime(CLOCK_MONOTONIC, &(self->_quirk_times[arg->quirk]));
-  self->needs_redraw.emit(self);
+  self->EmitNeedsRedraw();
 
   self->_time_delay_handle = 0;
 
@@ -847,7 +849,7 @@ void
 LauncherIcon::UpdateQuirkTime(LauncherIcon::Quirk quirk)
 {
   clock_gettime(CLOCK_MONOTONIC, &(_quirk_times[quirk]));
-  needs_redraw.emit(this);
+  EmitNeedsRedraw();
 }
 
 void
@@ -870,7 +872,7 @@ LauncherIcon::SetProgress(float progress)
     return;
 
   _progress = progress;
-  needs_redraw.emit(this);
+  EmitNeedsRedraw();
 }
 
 float
@@ -900,7 +902,7 @@ void
 LauncherIcon::SetEmblem(LauncherIcon::BaseTexturePtr const& emblem)
 {
   _emblem = emblem;
-  needs_redraw.emit(this);
+  EmitNeedsRedraw();
 }
 
 void
@@ -1132,6 +1134,19 @@ LauncherIcon::OnRemoteProgressVisibleChanged(LauncherEntryRemote* remote)
   if (remote->ProgressVisible())
     SetProgress((float) remote->Progress());
 }
+
+void LauncherIcon::EmitNeedsRedraw()
+{
+  if (OwnsTheReference())
+    needs_redraw.emit(AbstractLauncherIcon::Ptr(this));
+}
+
+void LauncherIcon::EmitRemove()
+{
+  if (OwnsTheReference())
+    remove.emit(AbstractLauncherIcon::Ptr(this));
+}
+
 
 } // namespace launcher
 } // namespace unity

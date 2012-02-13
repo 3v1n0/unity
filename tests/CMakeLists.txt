@@ -123,6 +123,7 @@ if (GTEST_FOUND AND
                  test_grabhandle.cpp
                  test_unityshell_private.cpp
                  ${UNITY_SRC}/AbstractLauncherIcon.h
+                 ${UNITY_SRC}/AbstractLauncherIcon.cpp
                  ${UNITY_SRC}/AbstractShortcutHint.h
                  ${UNITY_SRC}/Animator.cpp
                  ${UNITY_SRC}/Animator.h

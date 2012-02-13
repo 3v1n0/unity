@@ -74,7 +74,7 @@ void Controller::OnBackgroundUpdate(GVariant* data, Controller* self)
 }
 
 void Controller::Show(ShowMode show, SortMode sort, bool reverse,
-                      std::vector<AbstractLauncherIcon*> results)
+                      std::vector<AbstractLauncherIcon::Ptr> results)
 {
   if (sort == SortMode::FOCUS_ORDER)
   {
@@ -147,7 +147,7 @@ gboolean Controller::OnDetailTimer(gpointer data)
   return FALSE;
 }
 
-void Controller::OnModelSelectionChanged(AbstractLauncherIcon *icon)
+void Controller::OnModelSelectionChanged(AbstractLauncherIcon::Ptr icon)
 {
   if (detail_on_timeout)
   {
@@ -205,7 +205,7 @@ void Controller::Hide(bool accept_state)
 
   if (accept_state)
   {
-    AbstractLauncherIcon* selection = model_->Selection();
+    AbstractLauncherIcon::Ptr selection = model_->Selection();
     if (selection)
     {
       if (model_->detail_selection)
@@ -374,12 +374,12 @@ LayoutWindowList Controller::ExternalRenderTargets()
   return view_->ExternalTargets();
 }
 
-bool Controller::CompareSwitcherItemsPriority(AbstractLauncherIcon* first,
-                                              AbstractLauncherIcon* second)
+bool Controller::CompareSwitcherItemsPriority(AbstractLauncherIcon::Ptr first,
+                                              AbstractLauncherIcon::Ptr second)
 {
-  if (first->Type() == second->Type())
+  if (first->GetIconType() == second->GetIconType())
     return first->SwitcherPriority() > second->SwitcherPriority();
-  return first->Type() < second->Type();
+  return first->GetIconType() < second->GetIconType();
 }
 
 void Controller::SelectFirstItem()
@@ -387,8 +387,8 @@ void Controller::SelectFirstItem()
   if (!model_)
     return;
 
-  AbstractLauncherIcon* first  = model_->at(1);
-  AbstractLauncherIcon* second = model_->at(2);
+  AbstractLauncherIcon::Ptr first  = model_->at(1);
+  AbstractLauncherIcon::Ptr second = model_->at(2);
 
   if (!first)
   {

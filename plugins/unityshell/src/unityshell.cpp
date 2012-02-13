@@ -495,6 +495,11 @@ void UnityScreen::nuxEpilogue()
   glDisable(GL_SCISSOR_TEST);
 }
 
+void UnityScreen::setPanelShadowMatrix(const GLMatrix& matrix)
+{
+  panel_shadow_matrix_ = matrix;
+}
+
 void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
 {
 #ifndef USE_GLES
@@ -514,9 +519,9 @@ void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
   float y1 = output->y() + panel_h;
   float x2 = x1 + output->width();
   float y2 = y1 + h;
-  GLMatrix sTransform = GLMatrix ();
 
-  sTransform.toScreenSpace(output, -DEFAULT_Z_CAMERA);
+  glPushMatrix ();
+  glLoadMatrixf (panel_shadow_matrix_.getMatrix ());
 
   vc[0] = x1;
   vc[1] = x2;
@@ -572,6 +577,7 @@ void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
       glDisable(GL_BLEND);
     }
   }
+  glPopMatrix();
 #else
 #warning Panel shadow not properly implemented for GLES2
   return;
@@ -1589,9 +1595,9 @@ bool UnityScreen::altTabInitiateCommon(CompAction *action,
 
   int show_monitor = (show_mode == switcher::ShowMode::CURRENT_VIEWPORT) ? device : -1;
 
-  std::vector<unity::launcher::AbstractLauncherIcon*> results = launcher_controller_->GetAltTabIcons(show_monitor);
+  auto results = launcher_controller_->GetAltTabIcons(show_monitor);
 
-  if (!(results.size() == 1 && results[0]->Type() == AbstractLauncherIcon::IconType::TYPE_BEGIN))
+  if (!(results.size() == 1 && results[0]->GetIconType() == AbstractLauncherIcon::IconType::TYPE_BEGIN))
     switcher_controller_->Show(show_mode, switcher::SortMode::FOCUS_ORDER, false, results);
 
   return true;
@@ -1980,6 +1986,9 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
     }
   }
 
+  if (window->type() == CompWindowTypeDesktopMask)
+    uScreen->setPanelShadowMatrix(matrix);
+
   Window active_window = screen->activeWindow();
   if (window->id() == active_window && window->type() != CompWindowTypeDesktopMask)
   {
@@ -2005,7 +2014,7 @@ UnityWindow::minimize ()
 
   if (!mMinimizeHandler)
   {
-    mMinimizeHandler = new UnityMinimizedHandler (window);
+    mMinimizeHandler.reset (new UnityMinimizedHandler (window));
     mMinimizeHandler->minimize ();
   }
 }
@@ -2016,8 +2025,7 @@ UnityWindow::unminimize ()
   if (mMinimizeHandler)
   {
     mMinimizeHandler->unminimize ();
-    delete mMinimizeHandler;
-    mMinimizeHandler = nullptr;
+    mMinimizeHandler.reset ();
   }
 }
 
@@ -2056,7 +2064,7 @@ UnityWindow::focus ()
 bool
 UnityWindow::minimized ()
 {
-  return mMinimizeHandler != nullptr;
+  return mMinimizeHandler.get () != nullptr;
 }
 
 gboolean
@@ -2623,7 +2631,7 @@ UnityWindow::UnityWindow(CompWindow* window)
   , PluginClassHandler<UnityWindow, CompWindow>(window)
   , window(window)
   , gWindow(GLWindow::get(window))
-  , mMinimizeHandler(nullptr)
+  , mMinimizeHandler()
   , mShowdesktopHandler(nullptr)
   , focusdesktop_handle_(0)
 {
@@ -2680,19 +2688,6 @@ UnityWindow::~UnityWindow()
     us->newFocusedWindow = NULL;
 
   UnityShowdesktopHandler::animating_windows.remove (window);
-
-  if (mMinimizeHandler)
-  {
-    unminimize ();
-    window->focusSetEnabled (this, false);
-    window->minimizeSetEnabled (this, false);
-    window->unminimizeSetEnabled (this, false);
-    window->minimizedSetEnabled (this, false);
-    window->minimize ();
-
-    delete mMinimizeHandler;
-    mMinimizeHandler = nullptr;
-  }
 
   if (mShowdesktopHandler)
     delete mShowdesktopHandler;

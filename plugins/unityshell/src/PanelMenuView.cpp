@@ -63,6 +63,7 @@ PanelMenuView::PanelMenuView(int padding)
     _is_inside(false),
     _is_maximized(false),
     _is_own_window(false),
+    _is_grabbed(false),
     _last_active_view(nullptr),
     _new_application(nullptr),
     _last_width(0),
@@ -258,7 +259,7 @@ PanelMenuView::FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEven
 {
   bool mouse_inside = TestMousePointerInclusionFilterMouseWheel(mouse_position, event_type);
 
-  if (mouse_inside == false)
+  if (!mouse_inside)
     return nullptr;
 
   Area* found_area = nullptr;
@@ -1644,7 +1645,7 @@ PanelMenuView::HasOurWindowFocused()
 void
 PanelMenuView::OnPanelViewMouseEnter(int x, int y, unsigned long mouse_button_state, unsigned long special_keys_state)
 {
-  if (_is_inside != true)
+  if (!_is_inside)
   {
     if (_is_grabbed)
       _is_grabbed = false;
@@ -1658,7 +1659,7 @@ PanelMenuView::OnPanelViewMouseEnter(int x, int y, unsigned long mouse_button_st
 void
 PanelMenuView::OnPanelViewMouseLeave(int x, int y, unsigned long mouse_button_state, unsigned long special_keys_state)
 {
-  if (_is_inside != false)
+  if (_is_inside)
   {
     _is_inside = false;
     FullRedraw();

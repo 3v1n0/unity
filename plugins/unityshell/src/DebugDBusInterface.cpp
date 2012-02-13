@@ -117,6 +117,7 @@ DebugDBusInterface::OnBusAcquired(GDBusConnection* connection, const gchar* name
     }
     i++;
   }
+  g_dbus_node_info_unref(introspection_data);
 }
 
 void

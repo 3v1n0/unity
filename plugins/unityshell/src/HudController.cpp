@@ -24,6 +24,9 @@
 #include "PanelStyle.h"
 #include "UBusMessages.h"
 #include "UScreen.h"
+
+#include <libbamf/libbamf.h>
+
 namespace unity
 {
 namespace hud
@@ -96,8 +99,8 @@ void Controller::SetupHudView()
   LOG_DEBUG(logger) << "SetupHudView called";
   view_ = new View();
 
-  layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
-  layout_->AddView(view_, 1);
+  layout_ = new nux::VLayout(NUX_TRACKER_LOCATION);
+  layout_->AddView(view_, 1, nux::MINOR_POSITION_TOP);
   window_->SetLayout(layout_);
 
   view_->mouse_down_outside_pointer_grab_area.connect(sigc::mem_fun(this, &Controller::OnMouseDownOutsideWindow));
@@ -148,7 +151,7 @@ void Controller::OnWindowConfigure(int window_width, int window_height,
 nux::Geometry Controller::GetIdealWindowGeometry()
 {
    UScreen *uscreen = UScreen::GetDefault();
-   int primary_monitor = uscreen->GetPrimaryMonitor();
+   int primary_monitor = uscreen->GetMonitorWithMouse();
    auto monitor_geo = uscreen->GetMonitorGeometry(primary_monitor);
 
    // We want to cover as much of the screen as possible to grab any mouse events outside
@@ -215,23 +218,32 @@ bool Controller::IsVisible()
 
 void Controller::ShowHud()
 {
+  PluginAdapter* adaptor = PluginAdapter::Default();
   LOG_DEBUG(logger) << "Showing the hud";
   EnsureHud();
+  
+  if (visible_ || adaptor->IsExpoActive() || adaptor->IsScaleActive())
+   return;
+  
   view_->AboutToShow();
+
+  // we first want to grab the currently active window, luckly we can just ask the jason interface(bamf)
+  BamfMatcher* matcher = bamf_matcher_get_default();
+  glib::Object<BamfView> bamf_app((BamfView*)(bamf_matcher_get_active_application(matcher)));
+  focused_app_icon_ = bamf_view_get_icon(bamf_app);
+
+  LOG_DEBUG(logger) << "Taking application icon: " << focused_app_icon_;
+  view_->SetIcon(focused_app_icon_);
 
   window_->ShowWindow(true);
   window_->PushToFront();
   window_->EnableInputWindow(true, "Hud", true, false);
   window_->SetInputFocus();
-  nux::GetWindowCompositor().SetKeyFocusArea(view_->default_focus());
   window_->CaptureMouseDownAnyWhereElse(true);
   view_->CaptureMouseDownAnyWhereElse(true);
   window_->QueueDraw();
 
   view_->ResetToDefault();
-
-  view_->SetIcon("");
-  hud_service_.RequestQuery("");
   need_show_ = false;
   visible_ = true;
 
@@ -242,8 +254,10 @@ void Controller::ShowHud()
   GVariant* message_data = g_variant_new("(b)", TRUE);
   ubus.SendMessage(UBUS_LAUNCHER_LOCK_HIDE, message_data);
 
-  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "hud", FALSE, 0);
+  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "hud", FALSE, UScreen::GetDefault()->GetMonitorWithMouse());
   ubus.SendMessage(UBUS_OVERLAY_SHOWN, info);
+  
+  nux::GetWindowCompositor().SetKeyFocusArea(view_->default_focus());
 }
 void Controller::HideHud(bool restore)
 {
@@ -312,7 +326,11 @@ gboolean Controller::OnViewShowHideFrame(Controller* self)
     {
       self->window_->ShowWindow(false);
     }
-
+    else
+    {
+      // ensure the text entry is focused
+      nux::GetWindowCompositor().SetKeyFocusArea(self->view_->default_focus());
+    }
     return FALSE;
   }
 
@@ -356,7 +374,7 @@ void Controller::OnQuerySelected(Query::Ptr query)
 void Controller::OnQueriesFinished(Hud::Queries queries)
 {
   view_->SetQueries(queries);
-  std::string icon_name = "";
+  std::string icon_name = focused_app_icon_;
   for (auto query = queries.begin(); query != queries.end(); query++)
   {
     if (!(*query)->icon_name.empty())
