@@ -148,13 +148,15 @@ void PanelIndicatorAppmenuView::DrawEntryPrelight(cairo_t* cr, unsigned int widt
   cairo_surface_t *center = cairo_image_surface_create_from_png(PKGDATADIR "/lim_flair_center.png");
   cairo_surface_t *right = cairo_image_surface_create_from_png(PKGDATADIR "/lim_flair_right.png");
 
+  int x = 0;
+  int y = 0;
   int left_w = cairo_image_surface_get_width(left);
   int right_w = cairo_image_surface_get_width(right);
   int center_h = cairo_image_surface_get_height(center);
-  int center_w = geo.width - left_w - right_w;
+  int center_w = std::min(geo.width, GetMinimumWidth()) - left_w - right_w;
 
-  int x = geo.x - GetAbsoluteX();
-  int y = geo.y - center_h;
+  cairo_save(cr);
+  cairo_translate(cr, geo.x - GetAbsoluteX(), geo.y - center_h);
 
   cairo_set_source_surface(cr, left, x, y);
   cairo_paint(cr);
@@ -170,6 +172,7 @@ void PanelIndicatorAppmenuView::DrawEntryPrelight(cairo_t* cr, unsigned int widt
   x += center_w;
   cairo_set_source_surface(cr, right, x, y);
   cairo_paint(cr);
+  cairo_restore(cr);
 
   cairo_surface_destroy(left);
   cairo_surface_destroy(center);
