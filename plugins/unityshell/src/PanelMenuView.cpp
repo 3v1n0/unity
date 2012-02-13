@@ -1565,12 +1565,15 @@ PanelMenuView::GetMaximizedWindow()
 {
   Window window_xid = 0;
   auto wm = WindowManager::Default();
+  std::vector<Window> const& our_xids = nux::XInputWindow::NativeHandleList();
 
   // Find the front-most of the maximized windows we are controlling
   for (auto xid : _maximized_set)
   {
     // We can safely assume only the front-most is visible
-    if (wm->IsWindowOnCurrentDesktop(xid) && !wm->IsWindowObscured(xid))
+    if (wm->IsWindowOnCurrentDesktop(xid) && !wm->IsWindowObscured(xid) &&
+        wm->IsWindowVisible(xid) &&
+        std::find(our_xids.begin(), our_xids.end(), xid) == our_xids.end())
     {
       nux::Geometry const& geo = wm->GetWindowGeometry(xid);
 
