@@ -18,6 +18,8 @@
  */
 
 #include <UnityCore/Variant.h>
+#include <UnityCore/GLibWrapper.h>
+#include <libbamf/libbamf.h>
 
 #include "PanelIndicatorAppmenuView.h"
 #include "WindowManager.h"
@@ -25,11 +27,17 @@
 
 namespace unity
 {
+namespace
+{
+  const std::string MENU_ATOM = "_UBUNTU_APPMENU_UNIQUE_NAME";
+}
+
 using indicator::Entry;
 
 PanelIndicatorAppmenuView::PanelIndicatorAppmenuView(Entry::Ptr const& proxy)
   : PanelIndicatorEntryView(proxy, 0, APPMENU)
   , xid_(0)
+  , has_menu_(false)
 {}
 
 void PanelIndicatorAppmenuView::Activate()
@@ -39,7 +47,7 @@ void PanelIndicatorAppmenuView::Activate()
 
 void PanelIndicatorAppmenuView::ShowMenu(int button)
 {
-  if (xid_)
+  if (xid_ && has_menu_)
   {
     WindowManager::Default()->Activate(xid_);
 
@@ -63,18 +71,22 @@ std::string PanelIndicatorAppmenuView::GetLabel()
 
 bool PanelIndicatorAppmenuView::IsLabelSensitive() const
 {
-  return !label_.empty();
-}
-
-bool PanelIndicatorAppmenuView::IsIconSensitive() const
-{
-  //TODO set non-sensitive when the window has no menu!
-  return true;
+  return (!label_.empty() && has_menu_);
 }
 
 bool PanelIndicatorAppmenuView::IsLabelVisible() const
 {
   return !label_.empty();
+}
+
+bool PanelIndicatorAppmenuView::IsIconSensitive() const
+{
+  return has_menu_;
+}
+
+bool PanelIndicatorAppmenuView::IsIconVisible() const
+{
+  return has_menu_;
 }
 
 void PanelIndicatorAppmenuView::SetLabel(std::string const& label)
@@ -88,7 +100,42 @@ void PanelIndicatorAppmenuView::SetLabel(std::string const& label)
 
 void PanelIndicatorAppmenuView::SetControlledWindowXid(Window xid)
 {
-  xid_ = xid;
+  if (xid_ != xid)
+  {
+    xid_ = xid;
+    CheckWindowMenu();
+  }
+}
+
+bool PanelIndicatorAppmenuView::CheckWindowMenu()
+{
+  has_menu_ = false;
+
+  if (!xid_)
+    return false;
+
+  glib::Object<BamfMatcher> matcher(bamf_matcher_get_default());
+
+  GList* windows = bamf_matcher_get_windows(matcher);
+
+  for (GList* l = windows; l; l = l->next)
+  {
+    if (BAMF_IS_WINDOW(l->data))
+    {
+      auto window = static_cast<BamfWindow*>(l->data);
+
+      if (bamf_window_get_xid(window) == xid_)
+      {
+        glib::String property(bamf_window_get_utf8_prop(window, MENU_ATOM.c_str()));
+        has_menu_ = bool(property);
+        break;
+      }
+    }
+  }
+
+  g_list_free(windows);
+
+  return has_menu_;
 }
 
 void PanelIndicatorAppmenuView::DrawEntryPrelight(cairo_t* cr, unsigned int width, unsigned int height)

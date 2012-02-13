@@ -951,7 +951,7 @@ void PanelMenuView::Refresh(bool force)
   {
     new_title = GetMaximizedViewName();
 
-    if (_integrated_menu && GetMaximizedWindow() != 0)
+    if (_integrated_menu && DrawMenus())
     {
       _integrated_menu->SetLabel(new_title);
       return;

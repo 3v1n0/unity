@@ -39,6 +39,7 @@ public:
   bool IsLabelVisible() const;
   bool IsLabelSensitive() const;
 
+  bool IsIconVisible() const;
   bool IsIconSensitive() const;
 
   void SetControlledWindowXid(Window xid);
@@ -53,7 +54,10 @@ protected:
   void DrawEntryPrelight(cairo_t* cr, unsigned int w, unsigned int h);
 
 private:
+  bool CheckWindowMenu();
+
   Window xid_;
+  bool has_menu_;
   std::string label_;
 };
 
