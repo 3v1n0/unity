@@ -60,10 +60,14 @@ public:
 
   virtual std::string GetLabel();
   virtual bool IsLabelVisible() const;
+  virtual bool IsLabelSensitive() const;
+
+  virtual bool IsIconVisible() const;
+  virtual bool IsIconSensitive() const;
 
   void Activate(int button = 1);
   void Unactivate();
-  
+
   bool GetShowNow() const;
   bool IsSensitive() const;
   bool IsActive() const;

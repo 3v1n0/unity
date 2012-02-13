@@ -112,8 +112,8 @@ void PanelIndicatorEntryView::OnMouseDown(int x, int y, long button_flags, long 
   if (proxy_->active() || IsDisabled())
     return;
 
-  if (((IsLabelVisible() && proxy_->label_sensitive()) ||
-       (proxy_->image_visible() && proxy_->image_sensitive())))
+  if (((IsLabelVisible() && IsLabelSensitive()) ||
+       (IsIconVisible() && IsIconSensitive())))
   {
     int button = nux::GetEventButton(button_flags);
 
@@ -137,9 +137,9 @@ void PanelIndicatorEntryView::OnMouseUp(int x, int y, long button_flags, long ke
   int px = geo.x + x;
   int py = geo.y + y;
 
-  if (((IsLabelVisible() && proxy_->label_sensitive()) ||
-       (proxy_->image_visible() && proxy_->image_sensitive())) &&
-       button == 2 && type_ == INDICATOR)
+  if (((IsLabelVisible() && IsLabelSensitive()) ||
+       (IsIconVisible() && IsIconSensitive())) &&
+      button == 2 && type_ == INDICATOR)
   {
     if (geo.IsPointInside(px, py))
       proxy_->SecondaryActivate(time(nullptr));
@@ -253,7 +253,7 @@ void PanelIndicatorEntryView::DrawEntryContent(cairo_t *cr, unsigned int width, 
   if (IsActive())
     DrawEntryPrelight(cr, width, height);
 
-  if (pixbuf && proxy_->image_visible())
+  if (pixbuf && IsIconVisible())
   {
     GtkStyleContext* style_context = panel::Style::Instance().GetStyleContext();
     unsigned int icon_width = gdk_pixbuf_get_width(pixbuf);
@@ -290,7 +290,7 @@ void PanelIndicatorEntryView::DrawEntryContent(cairo_t *cr, unsigned int width, 
 
       cairo_push_group(cr);
       gdk_cairo_set_source_pixbuf(cr, pixbuf, x, y);
-      cairo_paint_with_alpha(cr, proxy_->image_sensitive() ? 1.0 : 0.5);
+      cairo_paint_with_alpha(cr, (IsIconSensitive() && IsFocused()) ? 1.0 : 0.5);
 
       cairo_pattern_t* pat = cairo_pop_group(cr);
 
@@ -306,7 +306,7 @@ void PanelIndicatorEntryView::DrawEntryContent(cairo_t *cr, unsigned int width, 
       cairo_push_group(cr);
       gtk_render_icon(style_context, cr, pixbuf, x, y);
       cairo_pop_group_to_source(cr);
-      cairo_paint_with_alpha(cr, proxy_->image_sensitive() ? 1.0 : 0.5);
+      cairo_paint_with_alpha(cr, (IsIconSensitive() && IsFocused()) ? 1.0 : 0.5);
     }
 
     gtk_widget_path_free(widget_path);
@@ -433,7 +433,7 @@ void PanelIndicatorEntryView::Refresh()
   unsigned int text_width = 0;
 
   // First lets figure out our size
-  if (pixbuf && proxy_->image_visible())
+  if (pixbuf && IsIconVisible())
   {
     width = gdk_pixbuf_get_width(pixbuf);
     icon_width = width;
@@ -619,6 +619,36 @@ bool PanelIndicatorEntryView::IsLabelVisible() const
   return false;
 }
 
+bool PanelIndicatorEntryView::IsLabelSensitive() const
+{
+  if (proxy_.get())
+  {
+    return proxy_->label_sensitive();
+  }
+
+  return false;
+}
+
+bool PanelIndicatorEntryView::IsIconVisible() const
+{
+  if (proxy_.get())
+  {
+    return proxy_->image_visible();
+  }
+
+  return false;
+}
+
+bool PanelIndicatorEntryView::IsIconSensitive() const
+{
+  if (proxy_.get())
+  {
+    return proxy_->image_sensitive();
+  }
+
+  return false;
+}
+
 std::string PanelIndicatorEntryView::GetName() const
 {
   return GetEntryID();
@@ -630,11 +660,11 @@ void PanelIndicatorEntryView::AddProperties(GVariantBuilder* builder)
   .add(GetGeometry())
   .add("type", GetType())
   .add("label", GetLabel())
-  .add("label_sensitive", proxy_->label_sensitive())
+  .add("label_sensitive", IsLabelSensitive())
   .add("label_visible", IsLabelVisible())
-  .add("icon_sensitive", proxy_->image_sensitive())
-  .add("icon_visible", proxy_->image_visible())
-  .add("entry_visible", proxy_->visible())
+  .add("icon_sensitive", IsIconSensitive())
+  .add("icon_visible", IsIconVisible())
+  .add("entry_visible", IsVisible())
   .add("active", proxy_->active())
   .add("priority", proxy_->priority())
   .add("focused", IsFocused());
@@ -657,7 +687,7 @@ bool PanelIndicatorEntryView::IsSensitive() const
 {
   if (proxy_.get())
   {
-    return proxy_->image_sensitive() || proxy_->label_sensitive();
+    return IsIconSensitive() || IsLabelSensitive();
   }
   return false;
 }
