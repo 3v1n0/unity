@@ -39,6 +39,7 @@ namespace
 {
 nux::logging::Logger logger("unity.dash.lensview");
 
+const int FSCROLL_VIEW_WIDTH_ADDER = 11;
 }
 
 // This is so we can access some protected members in scrollview.
@@ -51,13 +52,15 @@ public:
     SetVScrollBar(scroll_bar);
   }
 
-  void ScrollToPosition(nux::Geometry & position)
+  void ScrollToPosition(nux::Geometry const& position)
   {
     // much of this code is copied from Nux/ScrollView.cpp
-    int child_y = position.y - GetGeometry ().y;
+    nux::Geometry const& geo = GetGeometry();
+
+    int child_y = position.y - geo.y;
     int child_y_diff = child_y - abs (_delta_y);
 
-    if (child_y_diff + position.height < GetGeometry ().height && child_y_diff >= 0)
+    if (child_y_diff + position.height < geo.height && child_y_diff >= 0)
     {
       return;
     }
@@ -68,7 +71,7 @@ public:
     }
     else
     {
-      int size = child_y_diff - GetGeometry ().height;
+      int size = child_y_diff - geo.height;
 
       // always keeps the top of a view on the screen
       size += position.height;
@@ -117,13 +120,17 @@ LensView::LensView(Lens::Ptr lens)
     nux::Geometry focused_pos;
     g_variant_get (data, "(iiii)", &focused_pos.x, &focused_pos.y, &focused_pos.width, &focused_pos.height);
 
-    for (auto it = categories_.begin(); it != categories_.end(); it++)
+    for (auto category : categories_)
     {
-      if ((*it)->GetLayout() != nullptr)
+      if (category->GetLayout() != nullptr)
       {
-        nux::View *child = (*it)->GetChildView();
-        if (child->HasKeyFocus())
+        auto expand_label = category->GetExpandLabel();
+        auto child = category->GetChildView();
+
+        if ((child && child->HasKeyFocus()) || 
+            (expand_label && expand_label->HasKeyFocus()))
         {
+
           focused_pos.x += child->GetGeometry().x;
           focused_pos.y += child->GetGeometry().y - 30;
           focused_pos.height += 30;
@@ -163,7 +170,6 @@ void LensView::SetupViews()
   layout_->AddView(fscroll_view_, 1);
 
   fscroll_layout_ = new nux::VLayout();
-  fscroll_layout_->SetLeftAndRightPadding(dash::Style::FILTERS_LEFT_PADDING, dash::Style::FILTERS_RIGHT_PADDING);
   fscroll_view_->SetLayout(fscroll_layout_);
 
   filter_bar_ = new FilterBar();
@@ -346,8 +352,8 @@ void LensView::OnFilterAdded(Filter::Ptr filter)
   filter_bar_->AddFilter(filter);
 
   int width = dash::Style::Instance().GetTileWidth();
-  fscroll_view_->SetMinimumWidth(width * 2 + dash::Style::FILTERS_LEFT_PADDING + dash::Style::FILTERS_RIGHT_PADDING);
-  fscroll_view_->SetMaximumWidth(width * 2 + dash::Style::FILTERS_LEFT_PADDING + dash::Style::FILTERS_RIGHT_PADDING);
+  fscroll_view_->SetMinimumWidth(width * 2 + FSCROLL_VIEW_WIDTH_ADDER);
+  fscroll_view_->SetMaximumWidth(width * 2 + FSCROLL_VIEW_WIDTH_ADDER);
 
   can_refine_search = true;
 }
@@ -371,7 +377,7 @@ void LensView::OnViewTypeChanged(ViewType view_type)
 
 void LensView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
 {
-  nux::Geometry geo = GetGeometry();
+  nux::Geometry const& geo = GetGeometry();
 
   gfx_context.PushClippingRectangle(geo);
   nux::GetPainter().PaintBackground(gfx_context, geo);
@@ -393,7 +399,7 @@ Lens::Ptr LensView::lens() const
 }
 
 int LensView::GetNumRows()
-{  
+{
   unsigned int columns = dash::Style::Instance().GetDefaultNColumns();
   columns -= filters_expanded ? 2 : 0;
 

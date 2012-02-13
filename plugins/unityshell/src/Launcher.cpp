@@ -44,6 +44,8 @@
 #include "QuicklistView.h"
 #include "IconRenderer.h"
 #include "TimeUtil.h"
+#include "TextureCache.h"
+#include "IconLoader.h"
 #include "WindowManager.h"
 #include "UScreen.h"
 
@@ -52,6 +54,22 @@
 
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/Variant.h>
+
+#include <type_traits>
+#include <sigc++/sigc++.h>
+
+namespace sigc
+{
+template <typename Functor>
+struct functor_trait<Functor, false>
+{
+typedef decltype (::sigc::mem_fun (std::declval<Functor&> (),
+&Functor::operator())) _intermediate;
+
+typedef typename _intermediate::result_type result_type;
+typedef Functor functor_type;
+};
+}
 
 namespace unity
 {
@@ -91,13 +109,6 @@ const std::string S_DBUS_NAME = "com.canonical.Unity.Launcher";
 const std::string S_DBUS_PATH = "/com/canonical/Unity/Launcher";
 }
 
-
-// FIXME: key-code defines for Up/Down/Left/Right of numeric keypad - needs to
-// be moved to the correct place in NuxGraphics-headers
-#define NUX_KP_DOWN  0xFF99
-#define NUX_KP_UP    0xFF97
-#define NUX_KP_LEFT  0xFF96
-#define NUX_KP_RIGHT 0xFF98
 
 NUX_IMPLEMENT_OBJECT_TYPE(Launcher);
 
@@ -169,16 +180,6 @@ Launcher::Launcher(nux::BaseWindow* parent,
   ql_manager.quicklist_closed.connect(sigc::mem_fun(this, &Launcher::RecvQuicklistClosed));
 
   WindowManager& plugin_adapter = *(WindowManager::Default());
-  plugin_adapter.window_maximized.connect(sigc::mem_fun(this, &Launcher::OnWindowMaybeIntellihide));
-  plugin_adapter.window_restored.connect(sigc::mem_fun(this, &Launcher::OnWindowMaybeIntellihide));
-  plugin_adapter.window_unminimized.connect(sigc::mem_fun(this, &Launcher::OnWindowMaybeIntellihide));
-  plugin_adapter.window_mapped.connect(sigc::mem_fun(this, &Launcher::OnWindowMaybeIntellihide));
-  plugin_adapter.window_unmapped.connect(sigc::mem_fun(this, &Launcher::OnWindowMaybeIntellihide));
-  plugin_adapter.window_shown.connect(sigc::mem_fun(this, &Launcher::OnWindowMaybeIntellihide));
-  plugin_adapter.window_hidden.connect(sigc::mem_fun(this, &Launcher::OnWindowMaybeIntellihide));
-  plugin_adapter.window_resized.connect(sigc::mem_fun(this, &Launcher::OnWindowMaybeIntellihide));
-  plugin_adapter.window_moved.connect(sigc::mem_fun(this, &Launcher::OnWindowMaybeIntellihide));
-  plugin_adapter.window_focus_changed.connect(sigc::mem_fun(this, &Launcher::OnWindowMaybeIntellihideDelayed));
   plugin_adapter.window_mapped.connect(sigc::mem_fun(this, &Launcher::OnWindowMapped));
   plugin_adapter.window_unmapped.connect(sigc::mem_fun(this, &Launcher::OnWindowUnmapped));
 
@@ -186,8 +187,6 @@ Launcher::Launcher(nux::BaseWindow* parent,
   plugin_adapter.initiate_expo.connect(sigc::mem_fun(this, &Launcher::OnPluginStateChanged));
   plugin_adapter.terminate_spread.connect(sigc::mem_fun(this, &Launcher::OnPluginStateChanged));
   plugin_adapter.terminate_expo.connect(sigc::mem_fun(this, &Launcher::OnPluginStateChanged));
-  plugin_adapter.compiz_screen_viewport_switch_started.connect(sigc::mem_fun(this, &Launcher::OnViewPortSwitchStarted));
-  plugin_adapter.compiz_screen_viewport_switch_ended.connect(sigc::mem_fun(this, &Launcher::OnViewPortSwitchEnded));
 
   GeisAdapter& adapter = *(GeisAdapter::Default());
   adapter.drag_start.connect(sigc::mem_fun(this, &Launcher::OnDragStart));
@@ -205,7 +204,6 @@ Launcher::Launcher(nux::BaseWindow* parent,
   _launcher_bottom_y      = 0;
   _folded_z_distance      = 10.0f;
   _launcher_action_state  = ACTION_NONE;
-  _hidemode               = LAUNCHER_HIDE_NEVER;
   _icon_under_mouse       = NULL;
   _icon_mouse_down        = NULL;
   _drag_icon              = NULL;
@@ -219,9 +217,10 @@ Launcher::Launcher(nux::BaseWindow* parent,
   _dnd_delta_y            = 0;
   _dnd_delta_x            = 0;
 
-  _autoscroll_handle             = 0;
-  _start_dragicon_handle         = 0;
-  _dnd_check_handle              = 0;
+  _autoscroll_handle      = 0;
+  _start_dragicon_handle  = 0;
+  _dnd_check_handle       = 0;
+  _last_reveal_progress   = 0;
 
   _shortcuts_shown        = false;
   _hovered                = false;
@@ -238,7 +237,6 @@ Launcher::Launcher(nux::BaseWindow* parent,
   // FIXME: remove
   _initial_drag_animation = false;
 
-  _check_window_over_launcher   = true;
   _postreveal_mousemove_delta_x = 0;
   _postreveal_mousemove_delta_y = 0;
 
@@ -286,36 +284,13 @@ Launcher::Launcher(nux::BaseWindow* parent,
   bg_effect_helper_.owner = this;
   bg_effect_helper_.enabled = false;
 
-  //FIXME (gord)- replace with async loading
-  unity::glib::Object<GdkPixbuf> pixbuf;
-  unity::glib::Error error;
-  pixbuf = gdk_pixbuf_new_from_file(PKGDATADIR"/dash_sheen.png", &error);
-  if (error)
-  {
-    LOG_WARN(logger) << "Unable to texture " << PKGDATADIR << "/dash_sheen.png" << ": " << error;
-  }
-  else
-  {
-    launcher_sheen_ = nux::CreateTexture2DFromPixbuf(pixbuf, true);
-    // TODO: when nux has the ability to create a smart pointer that takes
-    // ownership without adding a reference, we can remove the unref here.  By
-    // unreferencing, the object is solely owned by the smart pointer.
-    launcher_sheen_->UnReference();
-  }
+  TextureCache& cache = TextureCache::GetDefault();
+  TextureCache::CreateTextureCallback cb = [&](std::string const& name, int width, int height) -> nux::BaseTexture* { 
+    return nux::CreateTexture2DFromFile((PKGDATADIR"/" + name + ".png").c_str(), -1, true);
+  };
 
-  pixbuf = gdk_pixbuf_new_from_file(PKGDATADIR"/launcher_pressure_effect.png", &error);
-  if (error)
-  {
-    LOG_WARN(logger) << "Unable to texture " << PKGDATADIR << "/launcher_pressure_effect.png" << ": " << error;
-  }
-  else
-  {
-    launcher_pressure_effect_ = nux::CreateTexture2DFromPixbuf(pixbuf, true);
-    // TODO: when nux has the ability to create a smart pointer that takes
-    // ownership without adding a reference, we can remove the unref here.  By
-    // unreferencing, the object is solely owned by the smart pointer.
-    launcher_pressure_effect_->UnReference();
-  }
+  launcher_sheen_ = cache.FindTexture("dash_sheen", 0, 0, cb);
+  launcher_pressure_effect_ = cache.FindTexture("launcher_pressure_effect", 0, 0, cb);
 
   _pointer_barrier = PointerBarrierWrapper::Ptr(new PointerBarrierWrapper());
   _pointer_barrier->barrier_event.connect(sigc::mem_fun(this, &Launcher::OnPointerBarrierEvent));
@@ -421,7 +396,7 @@ Launcher::AddProperties(GVariantBuilder* builder)
   .add("autohide-progress", AutohideProgress(current))
   .add("dnd-delta", _dnd_delta_y)
   .add("hovered", _hovered)
-  .add("hidemode", _hidemode)
+  .add("hidemode", options()->hide_mode)
   .add("hidden", _hidden)
   .add("x", abs_geo.x)
   .add("y", abs_geo.y)
@@ -580,6 +555,9 @@ bool Launcher::AnimationInProgress() const
 {
   // performance here can be improved by caching the longer remaining animation found and short circuiting to that each time
   // this way extra checks may be avoided
+
+  if (_last_reveal_progress != _hide_machine->reveal_progress)
+    return true;
 
   // short circuit to avoid unneeded calculations
   struct timespec current;
@@ -915,6 +893,9 @@ void Launcher::SetupRenderArg(AbstractLauncherIcon* icon, struct timespec const&
   arg.progress            = CLAMP(icon->GetProgress(), 0.0f, 1.0f);
   arg.draw_shortcut       = _shortcuts_shown && !_hide_machine->GetQuirk(LauncherHideMachine::PLACES_VISIBLE);
   arg.system_item         = icon->Type() == AbstractLauncherIcon::TYPE_HOME;
+  arg.colorify_background = icon->Type() == AbstractLauncherIcon::TYPE_HOME  ||
+                            icon->Type() == AbstractLauncherIcon::TYPE_TRASH ||
+                            icon->Type() == AbstractLauncherIcon::TYPE_EXPO;
 
   if (_dash_is_open)
     arg.active_arrow = icon->Type() == AbstractLauncherIcon::TYPE_HOME;
@@ -1045,7 +1026,8 @@ void Launcher::FillRenderArg(AbstractLauncherIcon* icon,
   // FIXME: this is a hack, we should have a look why SetAnimationTarget is necessary in SetAnimationTarget
   // we should ideally just need it at start to set the target
   if (!_initial_drag_animation && icon == _drag_icon && _drag_window && _drag_window->Animating())
-    _drag_window->SetAnimationTarget((int) center.x, (int) center.y + _parent->GetGeometry().y);
+    _drag_window->SetAnimationTarget((int)(_drag_icon->GetCenter(monitor).x), 
+                                     (int)(_drag_icon->GetCenter(monitor).y));
 
   center.y += (half_size * size_modifier) + spacing;   // move to end
 }
@@ -1113,7 +1095,7 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
 
   float autohide_offset = 0.0f;
   *launcher_alpha = 1.0f;
-  if (_hidemode != LAUNCHER_HIDE_NEVER || _hide_machine->GetQuirk(LauncherHideMachine::LOCK_HIDE))
+  if (options()->hide_mode != LAUNCHER_HIDE_NEVER || _hide_machine->GetQuirk(LauncherHideMachine::LOCK_HIDE))
   {
 
     float autohide_progress = AutohideProgress(current) * (1.0f - DragOutProgress(current));
@@ -1133,7 +1115,7 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
   }
 
   float drag_hide_progress = DragHideProgress(current);
-  if (_hidemode != LAUNCHER_HIDE_NEVER && drag_hide_progress > 0.0f)
+  if (options()->hide_mode != LAUNCHER_HIDE_NEVER && drag_hide_progress > 0.0f)
   {
     autohide_offset -= geo.width * 0.25f * drag_hide_progress;
 
@@ -1144,7 +1126,7 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
   // Inform the painter where to paint the box
   box_geo = geo;
 
-  if (_hidemode != LAUNCHER_HIDE_NEVER || _hide_machine->GetQuirk(LauncherHideMachine::LOCK_HIDE))
+  if (options()->hide_mode != LAUNCHER_HIDE_NEVER || _hide_machine->GetQuirk(LauncherHideMachine::LOCK_HIDE))
     box_geo.x += autohide_offset;
 
   /* Why we need last_geo? It stores the last box_geo (note: as it is a static variable,
@@ -1240,7 +1222,7 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
 
     FillRenderArg(icon, arg, center, parent_abs_geo, folding_threshold, folded_size, folded_spacing,
                   autohide_offset, folded_z_distance, animation_neg_rads, current);
-
+    arg.colorify = colorify;
     launcher_args.push_back(arg);
   }
 }
@@ -1407,28 +1389,6 @@ Launcher::GetMouseY() const
   return _mouse_position.y;
 }
 
-void
-Launcher::EnableCheckWindowOverLauncher(gboolean enabled)
-{
-  _check_window_over_launcher = enabled;
-}
-
-void
-Launcher::CheckWindowOverLauncher()
-{
-  bool any = false;
-  bool active = false;
-
-  // state has no mean right now, the check will be done again later
-  if (!_check_window_over_launcher)
-    return;
-
-  WindowManager::Default()->CheckWindowIntersections(GetAbsoluteGeometry(), active, any);
-
-  _hide_machine->SetQuirk(LauncherHideMachine::ANY_WINDOW_UNDER, any);
-  _hide_machine->SetQuirk(LauncherHideMachine::ACTIVE_WINDOW_UNDER, active);
-}
-
 gboolean
 Launcher::OnUpdateDragManagerTimeout(gpointer data)
 {
@@ -1496,67 +1456,16 @@ Launcher::OnWindowUnmapped(guint32 xid)
   //}
 }
 
-// FIXME: remove those 2 for Oneiric
-void
-Launcher::OnWindowMaybeIntellihide(guint32 xid)
-{
-  if (_hidemode != LAUNCHER_HIDE_NEVER)
-    CheckWindowOverLauncher();
-}
-
-void
-Launcher::OnWindowMaybeIntellihideDelayed(guint32 xid)
-{
-  /*
-   * Delay to let the other window taking the focus first (otherwise focuschanged
-   * is emmited with the root window focus
-   */
-  if (_hidemode != LAUNCHER_HIDE_NEVER)
-    g_idle_add((GSourceFunc)CheckWindowOverLauncherSync, this);
-}
-
-gboolean
-Launcher::CheckWindowOverLauncherSync(Launcher* self)
-{
-  self->CheckWindowOverLauncher();
-  return FALSE;
-}
-
 void
 Launcher::OnPluginStateChanged()
 {
   _hide_machine->SetQuirk (LauncherHideMachine::EXPO_ACTIVE, WindowManager::Default ()->IsExpoActive ());
   _hide_machine->SetQuirk (LauncherHideMachine::SCALE_ACTIVE, WindowManager::Default ()->IsScaleActive ());
-
-  if (_hidemode == LAUNCHER_HIDE_NEVER)
-    return;
-}
-
-void
-Launcher::OnViewPortSwitchStarted()
-{
-  /*
-   *  don't take into account window over launcher state during
-   *  the viewport switch as we can get false positives
-   *  (like switching to an empty viewport while grabbing a fullscreen window)
-   */
-  _check_window_over_launcher = false;
-}
-
-void
-Launcher::OnViewPortSwitchEnded()
-{
-  /*
-   * compute again the list of all window on the new viewport
-   * to decide if we should or not hide the launcher
-   */
-  _check_window_over_launcher = true;
-  CheckWindowOverLauncher();
 }
 
 LauncherHideMode Launcher::GetHideMode() const
 {
-  return _hidemode;
+  return options()->hide_mode;
 }
 
 /* End Launcher Show/Hide logic */
@@ -1567,7 +1476,7 @@ gboolean Launcher::StrutHack(gpointer data)
   Launcher* self = (Launcher*) data;
   self->_parent->InputWindowEnableStruts(false);
 
-  if (self->_hidemode == LAUNCHER_HIDE_NEVER)
+  if (self->options()->hide_mode == LAUNCHER_HIDE_NEVER)
     self->_parent->InputWindowEnableStruts(true);
 
   return false;
@@ -1595,27 +1504,26 @@ Launcher::UpdateOptions(Options::Ptr options)
 
   // make the effect half as strong as specified as other values shouldn't scale
   // as quickly as the max velocity multiplier
-  float responsiveness_mult = ((options->edge_responsiveness() - 1) * .025) + 1;
+  float decay_responsiveness_mult = ((options->edge_responsiveness() - 1) * .3f) + 1;
+  float reveal_responsiveness_mult = ((options->edge_responsiveness() - 1) * .025f) + 1;
+  float overcome_responsiveness_mult = ((options->edge_responsiveness() - 1) * 1.0f) + 1;
 
-  decaymulator_->rate_of_decay = options->edge_decay_rate() * responsiveness_mult;
-  _edge_overcome_pressure = options->edge_overcome_pressure() * responsiveness_mult;
+  decaymulator_->rate_of_decay = options->edge_decay_rate() * decay_responsiveness_mult;
+  _edge_overcome_pressure = options->edge_overcome_pressure() * overcome_responsiveness_mult;
 
   _pointer_barrier->threshold = options->edge_stop_velocity();
   _pointer_barrier->max_velocity_multiplier = options->edge_responsiveness();
   _pointer_barrier->DestroyBarrier();
   _pointer_barrier->ConstructBarrier();
 
-  _hide_machine->reveal_pressure = options->edge_reveal_pressure() * responsiveness_mult;
-  _hide_machine->edge_decay_rate = options->edge_decay_rate() * responsiveness_mult;
+  _hide_machine->reveal_pressure = options->edge_reveal_pressure() * reveal_responsiveness_mult;
+  _hide_machine->edge_decay_rate = options->edge_decay_rate() * decay_responsiveness_mult;
 
   EnsureAnimation();
 }
 
 void Launcher::SetHideMode(LauncherHideMode hidemode)
 {
-  if (_hidemode == hidemode)
-    return;
-
   if (hidemode != LAUNCHER_HIDE_NEVER)
   {
     _parent->InputWindowEnableStruts(false);
@@ -1627,7 +1535,6 @@ void Launcher::SetHideMode(LauncherHideMode hidemode)
     _parent->InputWindowEnableStruts(true);
   }
 
-  _hidemode = hidemode;
   _hide_machine->SetMode((LauncherHideMachine::HideMode) hidemode);
   EnsureAnimation();
 }
@@ -1798,8 +1705,6 @@ void Launcher::OnIconAdded(AbstractLauncherIcon* icon)
   EnsureAnimation();
 
   icon->needs_redraw.connect(sigc::mem_fun(this, &Launcher::OnIconNeedsRedraw));
-
-  AddChild(icon);
 }
 
 void Launcher::OnIconRemoved(AbstractLauncherIcon* icon)
@@ -1815,7 +1720,6 @@ void Launcher::OnIconRemoved(AbstractLauncherIcon* icon)
     _drag_icon = nullptr;
 
   EnsureAnimation();
-  RemoveChild(icon);
 }
 
 void Launcher::OnOrderChanged()
@@ -1840,7 +1744,6 @@ LauncherModel* Launcher::GetModel() const
 
 void Launcher::EnsureIconOnScreen(AbstractLauncherIcon* selection)
 {
-  nux::Point3 center = selection->GetCenter(monitor);
   nux::Geometry geo = GetGeometry();
 
   int natural_y = 0;
@@ -1924,11 +1827,23 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   // clip vertically but not horizontally
   GfxContext.PushClippingRectangle(nux::Geometry(base.x, bkg_box.y, base.width, bkg_box.height));
 
-  if (_hidden && _hide_machine->reveal_progress > 0 && launcher_pressure_effect_.IsValid())
+  float reveal_progress = _hide_machine->reveal_progress;
+  if ((reveal_progress > 0 || _last_reveal_progress > 0) && launcher_pressure_effect_.IsValid())
   {
-    nux::Color pressure_color = nux::color::Cyan * _hide_machine->reveal_progress;
+    if (std::abs(_last_reveal_progress - reveal_progress) <= .1f)
+    {
+      _last_reveal_progress = reveal_progress;
+    }
+    else
+    {
+      if (_last_reveal_progress > reveal_progress)
+        _last_reveal_progress -= .1f;
+      else
+        _last_reveal_progress += .1f;
+    }
+    nux::Color pressure_color = nux::color::White * _last_reveal_progress;
     nux::TexCoordXForm texxform_pressure;
-    GfxContext.QRP_1Tex(base.x, base.y, base.width, base.height,
+    GfxContext.QRP_1Tex(base.x, base.y, launcher_pressure_effect_->GetWidth(), base.height,
                         launcher_pressure_effect_->GetDeviceTexture(),
                         texxform_pressure,
                         pressure_color);
@@ -2053,15 +1968,6 @@ void Launcher::PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
 }
 
-void Launcher::PreLayoutManagement()
-{
-  View::PreLayoutManagement();
-  if (view_layout_)
-  {
-    view_layout_->SetGeometry(GetGeometry());
-  }
-}
-
 long Launcher::PostLayoutManagement(long LayoutResult)
 {
   View::PostLayoutManagement(LayoutResult);
@@ -2069,10 +1975,6 @@ long Launcher::PostLayoutManagement(long LayoutResult)
   SetMousePosition(0, 0);
 
   return nux::eCompliantHeight | nux::eCompliantWidth;
-}
-
-void Launcher::PositionChildLayout(float offsetX, float offsetY)
-{
 }
 
 void Launcher::OnDragWindowAnimCompleted()
@@ -2178,7 +2080,8 @@ void Launcher::EndIconDrag()
     {
       _model->Save();
 
-      _drag_window->SetAnimationTarget((int)(_drag_icon->GetCenter(monitor).x), (int)(_drag_icon->GetCenter(monitor).y));
+      _drag_window->SetAnimationTarget((int)(_drag_icon->GetCenter(monitor).x), 
+                                       (int)(_drag_icon->GetCenter(monitor).y));
       _drag_window->StartAnimation();
 
       if (_drag_window->on_anim_completed.connected())
@@ -2957,6 +2860,8 @@ Launcher::OnBusAcquired(GDBusConnection* connection,
   {
     LOG_WARNING(logger) << "Object registration failed. Won't get dynamic launcher addition.";
   }
+
+  g_dbus_node_info_unref(introspection_data);
 }
 
 void

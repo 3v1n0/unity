@@ -495,6 +495,11 @@ void UnityScreen::nuxEpilogue()
   glDisable(GL_SCISSOR_TEST);
 }
 
+void UnityScreen::setPanelShadowMatrix(const GLMatrix& matrix)
+{
+  panel_shadow_matrix_ = matrix;
+}
+
 void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
 {
 #ifndef USE_GLES
@@ -514,9 +519,9 @@ void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
   float y1 = output->y() + panel_h;
   float x2 = x1 + output->width();
   float y2 = y1 + h;
-  GLMatrix sTransform = GLMatrix ();
 
-  sTransform.toScreenSpace(output, -DEFAULT_Z_CAMERA);
+  glPushMatrix ();
+  glLoadMatrixf (panel_shadow_matrix_.getMatrix ());
 
   vc[0] = x1;
   vc[1] = x2;
@@ -572,6 +577,7 @@ void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
       glDisable(GL_BLEND);
     }
   }
+  glPopMatrix();
 #else
 #warning Panel shadow not properly implemented for GLES2
   return;
@@ -1272,17 +1278,15 @@ void UnityScreen::damageNuxRegions()
        it != end; ++it)
   {
     nux::Geometry const& geo = *it;
-    nux_damage = CompRegion(geo.x, geo.y, geo.width, geo.height);
-    cScreen->damageRegion(nux_damage);
+    nux_damage += CompRegion(geo.x, geo.y, geo.width, geo.height);
   }
 
   nux::Geometry geo = wt->GetWindowCompositor().GetTooltipMainWindowGeometry();
-  nux_damage = CompRegion(geo.x, geo.y, geo.width, geo.height);
-  cScreen->damageRegion(nux_damage);
+  nux_damage += CompRegion(geo.x, geo.y, geo.width, geo.height);
 
   geo = lastTooltipArea;
-  nux_damage = CompRegion(lastTooltipArea.x, lastTooltipArea.y,
-                          lastTooltipArea.width, lastTooltipArea.height);
+  nux_damage += CompRegion(lastTooltipArea.x, lastTooltipArea.y,
+                         lastTooltipArea.width, lastTooltipArea.height);
   cScreen->damageRegion(nux_damage);
 
   wt->ClearDrawList();
@@ -1982,6 +1986,9 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
     }
   }
 
+  if (window->type() == CompWindowTypeDesktopMask)
+    uScreen->setPanelShadowMatrix(matrix);
+
   Window active_window = screen->activeWindow();
   bool integrated_menus = panel::Style::Instance().integrated_menus;
   if (window->id() == active_window && window->type() != CompWindowTypeDesktopMask && !integrated_menus)
@@ -1991,7 +1998,7 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
 
   bool ret = gWindow->glDraw(matrix, attrib, region, mask);
 
-  if (active_window == 0 || (active_window == window->id() && window->type() == CompWindowTypeDesktopMask))
+  if ((active_window == 0 || active_window == window->id()) && (window->type() == CompWindowTypeDesktopMask))
   {
     uScreen->paintPanelShadow(matrix);
   }
@@ -2008,7 +2015,7 @@ UnityWindow::minimize ()
 
   if (!mMinimizeHandler)
   {
-    mMinimizeHandler = new UnityMinimizedHandler (window);
+    mMinimizeHandler.reset (new UnityMinimizedHandler (window));
     mMinimizeHandler->minimize ();
   }
 }
@@ -2019,8 +2026,7 @@ UnityWindow::unminimize ()
   if (mMinimizeHandler)
   {
     mMinimizeHandler->unminimize ();
-    delete mMinimizeHandler;
-    mMinimizeHandler = nullptr;
+    mMinimizeHandler.reset ();
   }
 }
 
@@ -2059,7 +2065,7 @@ UnityWindow::focus ()
 bool
 UnityWindow::minimized ()
 {
-  return mMinimizeHandler != nullptr;
+  return mMinimizeHandler.get () != nullptr;
 }
 
 gboolean
@@ -2603,8 +2609,8 @@ void UnityScreen::InitHints()
   // Workspaces
   std::string const workspaces = _("Workspaces");
   hints_.push_back(new shortcut::Hint(workspaces, "", "", _("Spread workspaces."), shortcut::COMPIZ_KEY_OPTION, "expo", "expo_key"));
-  hints_.push_back(new shortcut::Hint(workspaces, "", "", _("Switch workspaces."), shortcut::HARDCODED_OPTION, _("Super + Cursor Keys")));
-  hints_.push_back(new shortcut::Hint(workspaces, "", " or Right", _("Move focused window to different workspace."), shortcut::HARDCODED_OPTION, _("Super + Alt + Cursor Keys")));
+  hints_.push_back(new shortcut::Hint(workspaces, "", "", _("Switch workspaces."), shortcut::HARDCODED_OPTION, _("Control + Alt + Cursor Keys")));
+  hints_.push_back(new shortcut::Hint(workspaces, "", "", _("Move focused window to different workspace."), shortcut::HARDCODED_OPTION, _("Control + Alt + Shift + Cursor Keys")));
 
   // Windows
   std::string const windows = _("Windows");
@@ -2626,7 +2632,7 @@ UnityWindow::UnityWindow(CompWindow* window)
   , PluginClassHandler<UnityWindow, CompWindow>(window)
   , window(window)
   , gWindow(GLWindow::get(window))
-  , mMinimizeHandler(nullptr)
+  , mMinimizeHandler()
   , mShowdesktopHandler(nullptr)
   , focusdesktop_handle_(0)
 {
@@ -2683,19 +2689,6 @@ UnityWindow::~UnityWindow()
     us->newFocusedWindow = NULL;
 
   UnityShowdesktopHandler::animating_windows.remove (window);
-
-  if (mMinimizeHandler)
-  {
-    unminimize ();
-    window->focusSetEnabled (this, false);
-    window->minimizeSetEnabled (this, false);
-    window->unminimizeSetEnabled (this, false);
-    window->minimizedSetEnabled (this, false);
-    window->minimize ();
-
-    delete mMinimizeHandler;
-    mMinimizeHandler = nullptr;
-  }
 
   if (mShowdesktopHandler)
     delete mShowdesktopHandler;

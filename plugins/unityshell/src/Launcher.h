@@ -112,9 +112,6 @@ public:
 
   void Resize();
 
-  void CheckWindowOverLauncher();
-  void EnableCheckWindowOverLauncher(gboolean enabled);
-
   sigc::signal<void, char*, AbstractLauncherIcon*> launcher_addrequest;
   sigc::signal<void, std::string const&, AbstractLauncherIcon*, std::string const&, std::string const&> launcher_addrequest_special;
   sigc::signal<void, AbstractLauncherIcon*> launcher_removerequest;
@@ -173,9 +170,6 @@ private:
   void OnOptionChanged();
   void UpdateOptions(Options::Ptr options);
 
-  void OnWindowMaybeIntellihide(guint32 xid);
-  void OnWindowMaybeIntellihideDelayed(guint32 xid);
-  static gboolean CheckWindowOverLauncherSync(Launcher* self);
   void OnWindowMapped(guint32 xid);
   void OnWindowUnmapped(guint32 xid);
 
@@ -188,9 +182,6 @@ private:
   void OnPluginStateChanged();
 
   void OnSelectionChanged(AbstractLauncherIcon* selection);
-
-  void OnViewPortSwitchStarted();
-  void OnViewPortSwitchEnded();
 
   static gboolean AnimationTimeout(gpointer data);
   static gboolean StrutHack(gpointer data);
@@ -300,9 +291,7 @@ private:
   float GetAutohidePositionMin() const;
   float GetAutohidePositionMax() const;
 
-  virtual void PreLayoutManagement();
   virtual long PostLayoutManagement(long LayoutResult);
-  virtual void PositionChildLayout(float offsetX, float offsetY);
 
   void SetOffscreenRenderTarget(nux::ObjectPtr<nux::IOpenGLBaseTexture> texture);
   void RestoreSystemRenderTarget();
@@ -325,7 +314,6 @@ private:
   bool  _hovered;
   bool  _hidden;
   bool  _render_drag_window;
-  bool  _check_window_over_launcher;
 
   bool          _shortcuts_shown;
 
@@ -337,8 +325,6 @@ private:
   float _launcher_top_y;
   float _launcher_bottom_y;
   float _edge_overcome_pressure;
-
-  LauncherHideMode _hidemode;
 
   LauncherActionState _launcher_action_state;
   LaunchAnimation _launch_animation;
@@ -364,6 +350,7 @@ private:
   int _drag_out_id;
   float _drag_out_delta_x;
   float _background_alpha;
+  float _last_reveal_progress;
 
   guint _autoscroll_handle;
   guint _start_dragicon_handle;

@@ -40,11 +40,12 @@ public:
 
   // Properties
   nux::Property<std::string> icon_name;
-  
+
   // Signals
   sigc::signal<void> activate;
 
 protected:
+  std::string GetName() const;
   virtual void OnMouseDown(int button, int monitor);
   virtual void OnMouseUp(int button, int monitor);
   virtual void OnMouseClick(int button, int monitor);

@@ -50,10 +50,7 @@ public:
   void SetFilter(Filter::Ptr const& filter);
   std::string GetFilterType();
 
-protected:
-  virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
-  virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
-
+private:
   FilterAllButton* all_button_;
   FilterRatingsButton* ratings_;
   RatingsFilter::Ptr filter_;

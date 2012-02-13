@@ -67,13 +67,6 @@ namespace
 }
 }
 
-// FIXME: key-code defines for Up/Down/Left/Right of numeric keypad - needs to
-// be moved to the correct place in NuxGraphics-headers
-#define NUX_KP_DOWN  0xFF99
-#define NUX_KP_UP    0xFF97
-#define NUX_KP_LEFT  0xFF96
-#define NUX_KP_RIGHT 0xFF98
-
 class Controller::Impl
 {
 public:
@@ -256,6 +249,8 @@ Controller::Impl::Impl(Display* display, Controller* parent)
       parent_->KeyNavGrab();
       model_->SetSelection(reactivate_index);
   });
+
+  parent_->AddChild(model_.get());
 }
 
 Controller::Impl::~Impl()
@@ -1015,6 +1010,7 @@ void Controller::Impl::ReceiveMouseDownOutsideArea(int x, int y, unsigned long b
 
 void Controller::KeyNavGrab()
 {
+  pimpl->ubus.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
   KeyNavActivate();
   pimpl->keyboard_launcher_->GrabKeyboard();
   pimpl->launcher_grabbed = true;

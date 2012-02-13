@@ -72,21 +72,28 @@ public:
 
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   {
-    nux::Geometry      geo = GetGeometry();
-    nux::BaseTexture*  tex;
+    nux::Geometry const& geo = GetGeometry();
+    nux::BaseTexture* tex;
     nux::TexCoordXForm texxform;
 
     GfxContext.PushClippingRectangle(geo);
 
     if (_overlay_is_open)
     {
-      //FIXME should use HasMouseFocus()
-      if (_mouse_is_down && IsMouseInside())
-        tex = _pressed_dash_tex.GetPointer();
-      else if (IsMouseInside())
-        tex = _prelight_dash_tex.GetPointer();
+      if (_type == panel::WindowButtonType::UNMAXIMIZE && !_overlay_can_maximize)
+      {
+        tex = _disabled_dash_tex.GetPointer();
+      }
       else
-        tex = _normal_dash_tex.GetPointer();
+      {
+        //FIXME should use HasMouseFocus()
+        if (_mouse_is_down && IsMouseInside())
+          tex = _pressed_dash_tex.GetPointer();
+        else if (IsMouseInside())
+          tex = _prelight_dash_tex.GetPointer();
+        else
+          tex = _normal_dash_tex.GetPointer();
+      }
     }
     else if (!_focused)
     {
@@ -162,6 +169,7 @@ public:
       _normal_dash_tex = GetDashMaximizeWindowButton(panel::WindowState::NORMAL);
       _prelight_dash_tex = GetDashMaximizeWindowButton(panel::WindowState::PRELIGHT);
       _pressed_dash_tex = GetDashMaximizeWindowButton(panel::WindowState::PRESSED);
+      _disabled_dash_tex = GetDashMaximizeWindowButton(panel::WindowState::DISABLED); 
     }
     else
     {
@@ -169,6 +177,7 @@ public:
       _normal_dash_tex = GetDashWindowButton(_type, panel::WindowState::NORMAL);
       _prelight_dash_tex = GetDashWindowButton(_type, panel::WindowState::PRELIGHT);
       _pressed_dash_tex = GetDashWindowButton(_type, panel::WindowState::PRESSED);
+      _disabled_dash_tex = GetDashWindowButton(_type, panel::WindowState::DISABLED);
     }
 
     // still check if the dash is really opened,
@@ -225,6 +234,7 @@ private:
   nux::ObjectPtr<nux::BaseTexture> _normal_dash_tex;
   nux::ObjectPtr<nux::BaseTexture> _prelight_dash_tex;
   nux::ObjectPtr<nux::BaseTexture> _pressed_dash_tex;
+  nux::ObjectPtr<nux::BaseTexture> _disabled_dash_tex;
   UBusManager _ubus_manager;
 
   void OnOverlayShown(GVariant* data)
@@ -258,7 +268,7 @@ private:
                                         panel::WindowState state)
   {
     const char* names[] = { "close_dash", "minimize_dash", "unmaximize_dash" };
-    const char* states[] = { "", "_prelight", "_pressed" };
+    const char* states[] = { "", "_prelight", "_pressed", "_disabled" };
 
     std::ostringstream subpath;
     subpath << names[static_cast<int>(type)]
@@ -275,7 +285,7 @@ private:
 
   nux::BaseTexture* GetDashMaximizeWindowButton(panel::WindowState state)
   {
-    const char* states[] = { "", "_prelight", "_pressed" };
+    const char* states[] = { "", "_prelight", "_pressed", "_disabled" };
 
     std::ostringstream subpath;
     subpath << "maximize_dash" << states[static_cast<int>(state)] << ".png";

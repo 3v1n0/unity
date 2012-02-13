@@ -418,7 +418,10 @@ void DBusIndicators::Impl::SyncGeometries(std::string const& name,
   }
 
   if (!found_changed_locations)
+  {
+    g_variant_builder_clear(&b);
     return;
+  }
 
   g_variant_builder_close(&b);
   g_dbus_proxy_call(proxy_, "SyncGeometries",

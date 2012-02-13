@@ -41,6 +41,8 @@
 #include <Nux/Utils.h>
 #include <UnityCore/Variant.h>
 #include "DashStyle.h"
+#include "ubus-server.h"
+#include "UBusMessages.h"
 
 namespace unity
 {
@@ -52,7 +54,7 @@ const nux::Color kExpandHoverTextColor(1.0f, 1.0f, 1.0f, 1.0f);
 const float kExpandDefaultIconOpacity = 1.0f;
 const float kExpandHoverIconOpacity = 1.0f;
 
-// Category header highlight
+// Category  highlight
 const int kHighlightHeight = 24;
 const int kHighlightWidthSubtractor = 16;
 const int kHighlightLeftPadding = 11;
@@ -191,6 +193,9 @@ PlacesGroup::OnLabelActivated(nux::Area* label)
 void
 PlacesGroup::OnLabelFocusChanged(nux::Area* label, bool has_focus, nux::KeyNavDirection direction)
 {
+  _ubus.SendMessage(UBUS_RESULT_VIEW_KEYNAV_CHANGED,
+                    g_variant_new("(iiii)", 0, -30, 0, -30));
+
   QueueDraw();
 }
 
@@ -525,6 +530,7 @@ void PlacesGroup::AddProperties(GVariantBuilder* builder)
   wrapper.add("header-width", _header_view->GetAbsoluteWidth());
   wrapper.add("header-height", _header_view->GetAbsoluteHeight());
   wrapper.add("header-has-keyfocus", HeaderHasKeyFocus());
+  wrapper.add("header-is-highlighted", ShouldBeHighlighted());
 }
 
 } // namespace unity

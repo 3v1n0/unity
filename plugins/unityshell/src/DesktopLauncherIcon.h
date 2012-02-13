@@ -49,6 +49,7 @@ public:
 
 protected:
   void ActivateLauncherIcon(ActionArg arg);
+  std::string GetName() const;
 
 private:
   bool show_in_switcher_;

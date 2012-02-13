@@ -54,8 +54,6 @@ QuicklistManager::QuicklistManager()
 
 QuicklistManager::~QuicklistManager()
 {
-  if (_default == this)
-    Destroy();
 }
 
 QuicklistView* QuicklistManager::Current()

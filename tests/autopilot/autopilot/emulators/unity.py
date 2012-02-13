@@ -50,6 +50,97 @@ class Unity(object):
         return self._introspection_iface.GetState(piece)
 
 
+class SimpleLauncherIcon(Unity):
+    """Holds information about a simple launcher icon.
+
+    Do not instantiate an instance of this class yourself. Instead, use the
+    appropriate methods in the Launcher class instead.
+
+    """
+
+    def __init__(self, icon_dict):
+        super(SimpleLauncherIcon, self).__init__()
+        self._set_properties(icon_dict)
+
+    def refresh_state(self):
+        """Re-get the LauncherIcon's state from unity, updating it's public properties."""
+        state = self.get_state('//LauncherIcon[id=%d]' % (self.id))
+        self._set_properties(state[0])
+
+    def _set_properties(self, state_from_unity):
+        # please keep these in the same order as they are in unity:
+        self.urgent = state_from_unity['quirk-urgent']
+        self.presented = state_from_unity['quirk-presented']
+        self.visible = state_from_unity['quirk-visible']
+        self.sort_priority = state_from_unity['sort-priority']
+        self.running = state_from_unity['quirk-running']
+        self.active = state_from_unity['quirk-active']
+        self.icon_type = state_from_unity['icon-type']
+        self.related_windows = state_from_unity['related-windows']
+        self.y = state_from_unity['y']
+        self.x = state_from_unity['x']
+        self.z = state_from_unity['z']
+        self.id = state_from_unity['id']
+        self.tooltip_text = unicode(state_from_unity['tooltip-text'])
+
+    def get_quicklist(self):
+        """Get the quicklist for this launcher icon.
+
+        This may return None, if there is no quicklist associated with this
+        launcher icon.
+
+        """
+        ql_state = self.get_state('//LauncherIcon[id=%d]/Quicklist' % (self.id))
+        if len(ql_state) > 0:
+            return Quicklist(ql_state[0])
+
+
+class BFBLauncherIcon(SimpleLauncherIcon):
+    """Represents the BFB button in the launcher."""
+
+
+class BamfLauncherIcon(SimpleLauncherIcon):
+    """Represents a launcher icon with BAMF integration."""
+
+    def _set_properties(self, state_from_unity):
+        super(BamfLauncherIcon, self)._set_properties(state_from_unity)
+        self.desktop_file = state_from_unity['desktop-file']
+        self.sticky = bool(state_from_unity['sticky'])
+
+
+class TrashLauncherIcon(SimpleLauncherIcon):
+    """Represents the trash launcher icon."""
+
+
+class DeviceLauncherIcon(SimpleLauncherIcon):
+    """Represents a device icon in the launcher."""
+
+
+class DesktopLauncherIcon(SimpleLauncherIcon):
+    """Represents an icon that may appear in the switcher."""
+
+
+_icon_type_registry = {
+    'BamfLauncherIcon' : BamfLauncherIcon,
+    'BFBLauncherIcon' : BFBLauncherIcon,
+    'DesktopLauncherIcon' : DesktopLauncherIcon,
+    'DeviceLauncherIcon' : DeviceLauncherIcon,
+    'SimpleLauncherIcon' : SimpleLauncherIcon,
+    'TrashLauncherIcon' : TrashLauncherIcon,
+    }
+
+
+def make_launcher_icon(dbus_tuple):
+    """Make a launcher icon instance of the appropriate type given the DBus child tuple."""
+    name,state = dbus_tuple
+    try:
+        class_type = _icon_type_registry[name]
+    except KeyError:
+        print name, "is not a valid icon type!"
+        return None
+    return class_type(state)
+
+
 class Launcher(Unity):
     """Interact with the unity Launcher."""
 
@@ -79,7 +170,7 @@ class Launcher(Unity):
 
     def reveal_launcher(self, monitor):
         (x, y, w, h) = self.launcher_geometry(monitor)
-        self._mouse.move(x - 1200, y + h / 2)
+        self._mouse.move(x - 920, y + h / 2, True, 5, .002)
         sleep(self.show_timeout)
 
     def keyboard_reveal_launcher(self):
@@ -131,7 +222,7 @@ class Launcher(Unity):
         else:
             self._keyboard.press_and_release('Shift+Tab')
 
-    def quicklist_open(self, monitor):
+    def is_quicklist_open(self, monitor):
         state = self.__get_state(monitor)
         return bool(state['quicklist-open'])
 
@@ -169,14 +260,30 @@ class Launcher(Unity):
     def __get_controller_state(self):
         return super(Launcher, self).get_state('/Unity/LauncherController')[0]
 
+    def __get_model_state(self):
+        return super(Launcher, self).get_state('/Unity/LauncherController/LauncherModel')[0]
+
     def __get_state(self, monitor):
         # get the state for the 'launcher' piece
         return super(Launcher, self).get_state('/Unity/LauncherController/Launcher[monitor=%s]' % (monitor))[0]
 
     def get_launcher_icons(self):
         """Get a list of launcher icons in this launcher."""
-        icons = self.get_state("//Launcher/LauncherIcon")
-        return [LauncherIcon(icon_dict) for icon_dict in icons]
+        model = self.get_state("/Unity/LauncherController/LauncherModel")[0]
+        icons = []
+        for child in model['Children']:
+            icon = make_launcher_icon(child)
+            if icon:
+                icons.append(icon)
+        return icons
+
+    def num_launcher_icons(self):
+        """Get the number of icons in the launcher model."""
+        return len(self.get_state('/Unity/LauncherController/LauncherModel/LauncherIcon')[0])
+
+    def get_currently_selected_icon(self):
+        """Returns the currently selected launcher icon, if keynav mode is active."""
+        return self.get_launcher_icons()[self.key_nav_selection()]
 
     def click_launcher_icon(self, icon, monitor=0, button=1):
         """Move the mouse over the launcher icon, and click it."""
@@ -185,24 +292,110 @@ class Launcher(Unity):
         self._mouse.click(button)
         self.move_mouse_to_right_of_launcher(monitor)
 
-class LauncherIcon:
-    """Holds information about a launcher icon.
+    def lock_to_launcher(self, icon):
+        """lock 'icon' to the launcher, if it's not already."""
+        if not isinstance(icon, BamfLauncherIcon):
+            raise TypeError("Can only lock instances of BamfLauncherIcon")
+        if icon.sticky:
+            return # nothing to do.
 
-    Do not instantiate an instance of this class yourself. Instead, use the
-    appropriate methods in the Launcher class instead.
+        self.click_launcher_icon(icon, button=3) # right click
+        quicklist = icon.get_quicklist()
+        pin_item = quicklist.get_quicklist_item_by_text('Lock to launcher')
+        quicklist.click_item(pin_item)
 
-    """
+    def unlock_from_launcher(self, icon):
+        """lock 'icon' to the launcher, if it's not already."""
+        if not isinstance(icon, SimpleLauncherIcon):
+            raise TypeError("icon must be a LauncherIcon")
+        if icon.sticky:
+            return # nothing to do.
 
-    def __init__(self, icon_dict):
-        self.tooltip_text = icon_dict['tooltip-text']
-        self.x = icon_dict['x']
-        self.y = icon_dict['y']
-        self.num_windows = icon_dict['related-windows']
-        self.visible = icon_dict['quirk-visible']
-        self.active = icon_dict['quirk-active']
-        self.running = icon_dict['quirk-running']
-        self.presented = icon_dict['quirk-presented']
-        self.urgent = icon_dict['quirk-urgent']
+        self.click_launcher_icon(icon, button=3) # right click
+        quicklist = icon.get_quicklist()
+        pin_item = quicklist.get_quicklist_item_by_text('Unlock from launcher')
+        quicklist.click_item(pin_item)
+
+
+class Quicklist(Unity):
+    """Represents a quicklist."""
+    def __init__(self, state_dict):
+        super(Quicklist, self).__init__()
+        self._set_properties(state_dict)
+
+    def _set_properties(self, state_dict):
+        self.id = state_dict['id']
+        self.x = state_dict['x']
+        self.y = state_dict['y']
+        self.width = state_dict['width']
+        self.height = state_dict['height']
+        self.active = state_dict['active']
+        self._children = state_dict['Children']
+
+    def refresh_state(self):
+        state = self.get_state('//Quicklist[id=%d]' % (self.id))
+        self._set_properties(state[0])
+
+    @property
+    def items(self):
+        """Individual items in the quicklist."""
+        return [self.__make_quicklist_from_data(ctype, cdata) for ctype,cdata in self._children]
+
+    def get_quicklist_item_by_text(self, text):
+        """Returns a QuicklistMenuItemLabel object with the given text, or None."""
+        matches = []
+        for item in self.items:
+            if type(item) is QuicklistMenuItemLabel and item.text == text:
+                matches.append(item)
+        if len(matches) > 0:
+            return matches[0]
+
+    def __make_quicklist_from_data(self, quicklist_type, quicklist_data):
+        if quicklist_type == 'QuicklistMenuItemLabel':
+            return QuicklistMenuItemLabel(quicklist_data)
+        elif quicklist_type == 'QuicklistMenuItemSeparator':
+            return QuicklistMenuItemSeparator(quicklist_data)
+        else:
+            raise ValueError('Unknown quicklist item type "%s"' % (quicklist_type))
+
+    def click_item(self, item):
+        """Click one of the quicklist items."""
+        if not isinstance(item, QuicklistMenuItem):
+            raise TypeError("Item must be a subclass of QuicklistMenuItem")
+        self._mouse.move(self.x + item.x + (item.width /2),
+                        self.y + item.y + (item.height /2))
+        sleep(0.25)
+        self._mouse.click()
+
+
+class QuicklistMenuItem(Unity):
+    """Represents a single item in a quicklist."""
+    def __init__(self, state_dict):
+        super(QuicklistMenuItem, self).__init__()
+        self._set_properties(state_dict)
+
+    def _set_properties(self, state_dict):
+        self.visible = state_dict['visible']
+        self.enabled = state_dict['enabled']
+        self.width = state_dict['width']
+        self.height = state_dict['height']
+        self.x = state_dict['x']
+        self.y = state_dict['y']
+        self.id = state_dict['id']
+        self.lit = state_dict['lit']
+
+
+class QuicklistMenuItemLabel(QuicklistMenuItem):
+    """Represents a text label inside a quicklist."""
+
+    def _set_properties(self, state_dict):
+        super(QuicklistMenuItemLabel, self)._set_properties(state_dict)
+        self.text = state_dict['text']
+
+
+class QuicklistMenuItemSeparator(QuicklistMenuItem):
+    """Represents a separator in a quicklist."""
+
 
 class Switcher(Unity):
     """Interact with the Unity switcher."""
@@ -260,7 +453,7 @@ class Switcher(Unity):
         model = self.__get_model()
         sel_idx = self.get_selection_index()
         try:
-            return LauncherIcon(model['Children'][sel_idx][1])
+            return make_launcher_icon(model['Children'][sel_idx])
         except KeyError:
             return None
 
@@ -285,11 +478,26 @@ class Switcher(Unity):
     def get_is_visible(self):
         return bool(self.__get_controller()['visible'])
 
+    def get_switcher_icons(self):
+        """Get all icons in the switcher model.
+
+        The switcher needs to be initiated in order to get the model.
+
+        """
+        icons = []
+        model = self.get_state('//SwitcherModel')[0]
+        for child in model['Children']:
+            icon = make_launcher_icon(child)
+            if icon:
+                icons.append(icon)
+        return icons
+
     def __get_model(self):
         return self.get_state('/Unity/SwitcherController/SwitcherModel')[0]
 
     def __get_controller(self):
         return self.set_state('/unity/SwitcherController')[0]
+
 
 class Dash(Unity):
     """
@@ -328,11 +536,22 @@ class Dash(Unity):
         """
         return bool(self.get_state("/Unity/DashController")[0]["visible"])
 
+    def get_searchbar_geometry(self):
+        """Returns the searchbar geometry"""
+        search_bar = self.get_state("//SearchBar")[0]
+        return search_bar['x'], search_bar['y'], search_bar['width'], search_bar['height']
+
     def get_search_string(self):
         """
         Return the current dash search bar search string.
         """
         return unicode(self.get_state("//SearchBar")[0]['search_string'])
+
+    def searchbar_has_focus(self):
+        """
+        Returns True if the search bar has the key focus, False otherwise.
+        """
+        return self.get_state("//SearchBar")[0]['has_focus']
 
     def get_current_lens(self):
         """Returns the id of the current lens.

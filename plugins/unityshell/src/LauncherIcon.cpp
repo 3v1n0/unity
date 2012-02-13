@@ -70,7 +70,6 @@ GtkIconTheme* LauncherIcon::_unity_theme = NULL;
 
 LauncherIcon::LauncherIcon()
   : _menuclient_dynamic_quicklist(nullptr)
-  , _quicklist_is_initialized(false)
   , _remote_urgent(false)
   , _present_urgency(0)
   , _progress(0)
@@ -96,20 +95,12 @@ LauncherIcon::LauncherIcon()
     _quirk_times[i].tv_nsec = 0;
   }
 
-  _tooltip = new Tooltip();
-
   tooltip_text.SetSetterFunction(sigc::mem_fun(this, &LauncherIcon::SetTooltipText));
   tooltip_text = "blank";
 
-  _quicklist = new QuicklistView();
-
   // FIXME: the abstraction is already broken, should be fixed for O
   // right now, hooking the dynamic quicklist the less ugly possible way
-  QuicklistManager::Default()->RegisterQuicklist(_quicklist.GetPointer());
-
-  // Add to introspection
-  AddChild(_quicklist.GetPointer());
-  AddChild(_tooltip.GetPointer());
+  
 
   mouse_enter.connect(sigc::mem_fun(this, &LauncherIcon::RecvMouseEnter));
   mouse_leave.connect(sigc::mem_fun(this, &LauncherIcon::RecvMouseLeave));
@@ -121,10 +112,6 @@ LauncherIcon::LauncherIcon()
 LauncherIcon::~LauncherIcon()
 {
   SetQuirk(QUIRK_URGENT, false);
-
-  // Remove from introspection
-  RemoveChild(_quicklist.GetPointer());
-  RemoveChild(_tooltip.GetPointer());
 
   if (_present_time_handle)
     g_source_remove(_present_time_handle);
@@ -156,6 +143,22 @@ LauncherIcon::~LauncherIcon()
     g_object_unref(_unity_theme);
     _unity_theme = NULL;
   }
+}
+
+void LauncherIcon::LoadTooltip()
+{
+  _tooltip = new Tooltip();
+  AddChild(_tooltip.GetPointer());
+
+  _tooltip->SetText(nux::NString(tooltip_text().c_str()));
+}
+
+void LauncherIcon::LoadQuicklist()
+{
+  _quicklist = new QuicklistView();
+  AddChild(_quicklist.GetPointer());
+
+  QuicklistManager::Default()->RegisterQuicklist(_quicklist.GetPointer());
 }
 
 const bool
@@ -451,7 +454,8 @@ bool LauncherIcon::SetTooltipText(std::string& target, std::string const& value)
   if (escaped != target)
   {
     target = escaped;
-    _tooltip->SetText(nux::NString(target.c_str()));
+    if (_tooltip)
+      _tooltip->SetText(nux::NString(target.c_str()));
     result = true;
   }
 
@@ -476,7 +480,7 @@ LauncherIcon::GetShortcut()
 void
 LauncherIcon::ShowTooltip()
 {
-  if (_quicklist->IsVisible())
+  if (_quicklist && _quicklist->IsVisible())
     return;
 
   int tip_x = 100;
@@ -485,9 +489,11 @@ LauncherIcon::ShowTooltip()
   {
     nux::Geometry geo = _parent_geo[_last_monitor];
     tip_x = geo.x + geo.width - 4 * geo.width / 48;
-    tip_y = geo.y + _center[_last_monitor].y;
+    tip_y = _center[_last_monitor].y;
   }
 
+  if (!_tooltip)
+    LoadTooltip();
   _tooltip->ShowTooltipWithTipAt(tip_x, tip_y);
   _tooltip->ShowWindow(!tooltip_text().empty());
 }
@@ -509,17 +515,22 @@ void LauncherIcon::RecvMouseLeave(int monitor)
 {
   _last_monitor = -1;
 
-  _tooltip->ShowWindow(false);
+  if (_tooltip)
+    _tooltip->ShowWindow(false);
 }
 
 bool LauncherIcon::OpenQuicklist(bool default_to_first_item, int monitor)
 {
   std::list<DbusmenuMenuitem*> menus = Menus();
 
+  if (!_quicklist)
+    LoadQuicklist();
+
   if (menus.empty())
     return false;
 
-  _tooltip->ShowWindow(false);
+  if (_tooltip)
+    _tooltip->ShowWindow(false);
   _quicklist->RemoveAllMenuItem();
 
   for (auto menu_item : menus)
@@ -567,7 +578,7 @@ bool LauncherIcon::OpenQuicklist(bool default_to_first_item, int monitor)
 
   nux::Geometry geo = _parent_geo[monitor];
   int tip_x = geo.x + geo.width - 4 * geo.width / 48;
-  int tip_y = geo.y + _center[monitor].y;
+  int tip_y = _center[monitor].y;
 
   auto win_manager = WindowManager::Default();
 
@@ -601,7 +612,7 @@ void LauncherIcon::RecvMouseUp(int button, int monitor)
 {
   if (button == 3)
   {
-    if (_quicklist->IsVisible())
+    if (_quicklist && _quicklist->IsVisible())
       _quicklist->CaptureMouseDownAnyWhereElse(true);
   }
 }
@@ -619,7 +630,8 @@ void LauncherIcon::RecvMouseClick(int button, int monitor)
 
 void LauncherIcon::HideTooltip()
 {
-  _tooltip->ShowWindow(false);
+  if (_tooltip)
+    _tooltip->ShowWindow(false);
 }
 
 gboolean
@@ -640,6 +652,8 @@ LauncherIcon::OnCenterTimeout(gpointer data)
 void
 LauncherIcon::SetCenter(nux::Point3 center, int monitor, nux::Geometry geo)
 {
+  center.x += geo.x;
+  center.y += geo.y;
   _center[monitor] = center;
   _parent_geo[monitor] = geo;
 
@@ -647,11 +661,11 @@ LauncherIcon::SetCenter(nux::Point3 center, int monitor, nux::Geometry geo)
   {
     int tip_x, tip_y;
     tip_x = geo.x + geo.width - 4 * geo.width / 48;
-    tip_y = geo.y + _center[monitor].y;
+    tip_y = _center[monitor].y;
 
-    if (_quicklist->IsVisible())
+    if (_quicklist && _quicklist->IsVisible())
       QuicklistManager::Default()->ShowQuicklist(_quicklist.GetPointer(), tip_x, tip_y);
-    else if (_tooltip->IsVisible())
+    else if (_tooltip && _tooltip->IsVisible())
       _tooltip->ShowTooltipWithTipAt(tip_x, tip_y);
   }
 
@@ -742,7 +756,7 @@ LauncherIcon::Unpresent()
 void
 LauncherIcon::Remove()
 {
-  if (_quicklist->IsVisible())
+  if (_quicklist && _quicklist->IsVisible())
       _quicklist->Hide();
 
   SetQuirk(QUIRK_VISIBLE, false);
