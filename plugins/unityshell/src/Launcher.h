@@ -41,16 +41,6 @@
 #include "LauncherHoverMachine.h"
 #include "UBusWrapper.h"
 
-#define ANIM_DURATION_SHORT_SHORT 100
-#define ANIM_DURATION_SHORT 125
-#define ANIM_DURATION       200
-#define ANIM_DURATION_LONG  350
-
-#define MAX_SUPERKEY_LABELS 10
-
-#define START_DRAGICON_DURATION 250
-
-class QuicklistView;
 
 namespace unity
 {
@@ -122,11 +112,8 @@ public:
 
   void Resize();
 
-  void CheckWindowOverLauncher();
-  void EnableCheckWindowOverLauncher(gboolean enabled);
-
   sigc::signal<void, char*, AbstractLauncherIcon*> launcher_addrequest;
-  sigc::signal<void, char*, AbstractLauncherIcon*, char*, char*> launcher_addrequest_special;
+  sigc::signal<void, std::string const&, AbstractLauncherIcon*, std::string const&, std::string const&> launcher_addrequest_special;
   sigc::signal<void, AbstractLauncherIcon*> launcher_removerequest;
   sigc::signal<void> selection_change;
   sigc::signal<void> hidden_changed;
@@ -138,6 +125,8 @@ public:
   void EnterKeyNavMode();
   void ExitKeyNavMode();
   bool IsInKeyNavMode() const;
+
+  static const int ANIM_DURATION_SHORT;
 
 protected:
   // Introspectable methods
@@ -181,9 +170,6 @@ private:
   void OnOptionChanged();
   void UpdateOptions(Options::Ptr options);
 
-  void OnWindowMaybeIntellihide(guint32 xid);
-  void OnWindowMaybeIntellihideDelayed(guint32 xid);
-  static gboolean CheckWindowOverLauncherSync(Launcher* self);
   void OnWindowMapped(guint32 xid);
   void OnWindowUnmapped(guint32 xid);
 
@@ -196,9 +182,6 @@ private:
   void OnPluginStateChanged();
 
   void OnSelectionChanged(AbstractLauncherIcon* selection);
-
-  void OnViewPortSwitchStarted();
-  void OnViewPortSwitchEnded();
 
   static gboolean AnimationTimeout(gpointer data);
   static gboolean StrutHack(gpointer data);
@@ -281,8 +264,8 @@ private:
 
   void OnIconNeedsRedraw(AbstractLauncherIcon* icon);
 
-  void OnPlaceViewHidden(GVariant* data);
-  void OnPlaceViewShown(GVariant* data);
+  void OnOverlayHidden(GVariant* data);
+  void OnOverlayShown(GVariant* data);
 
   void DesaturateIcons();
   void SaturateIcons();
@@ -308,16 +291,14 @@ private:
   float GetAutohidePositionMin() const;
   float GetAutohidePositionMax() const;
 
-  virtual void PreLayoutManagement();
   virtual long PostLayoutManagement(long LayoutResult);
-  virtual void PositionChildLayout(float offsetX, float offsetY);
 
   void SetOffscreenRenderTarget(nux::ObjectPtr<nux::IOpenGLBaseTexture> texture);
   void RestoreSystemRenderTarget();
 
   void OnDisplayChanged(Display* display);
   void OnDNDDataCollected(const std::list<char*>& mimes);
-  
+
   void DndReset();
   void DndHoveredIconReset();
 
@@ -333,7 +314,6 @@ private:
   bool  _hovered;
   bool  _hidden;
   bool  _render_drag_window;
-  bool  _check_window_over_launcher;
 
   bool          _shortcuts_shown;
 
@@ -345,8 +325,6 @@ private:
   float _launcher_top_y;
   float _launcher_bottom_y;
   float _edge_overcome_pressure;
-
-  LauncherHideMode _hidemode;
 
   LauncherActionState _launcher_action_state;
   LaunchAnimation _launch_animation;
@@ -372,6 +350,7 @@ private:
   int _drag_out_id;
   float _drag_out_delta_x;
   float _background_alpha;
+  float _last_reveal_progress;
 
   guint _autoscroll_handle;
   guint _start_dragicon_handle;
@@ -421,7 +400,8 @@ private:
   UBusManager ubus;
 
   nux::Color _background_color;
-  BaseTexturePtr   launcher_sheen_;
+  BaseTexturePtr launcher_sheen_;
+  BaseTexturePtr launcher_pressure_effect_;
   bool _dash_is_open;
 
   ui::AbstractIconRenderer::Ptr icon_renderer;

@@ -22,6 +22,7 @@
 #include <Nux/HLayout.h>
 
 #include "DashSettings.h"
+#include "PanelStyle.h"
 #include "PluginAdapter.h"
 #include "UBusMessages.h"
 #include "UScreen.h"
@@ -37,8 +38,7 @@ nux::logging::Logger logger("unity.dash.controller");
 }
 
 Controller::Controller()
-  : launcher_width(66)
-  , panel_height(24)
+  : launcher_width(64)
   , window_(0)
   , visible_(false)
   , need_show_(false)
@@ -118,6 +118,18 @@ void Controller::RegisterUBusInterests()
                                  sigc::mem_fun(this, &Controller::OnActivateRequest));
   ubus_manager_.RegisterInterest(UBUS_DASH_ABOUT_TO_SHOW,
                                  [&] (GVariant*) { EnsureDash(); });
+  ubus_manager_.RegisterInterest(UBUS_OVERLAY_SHOWN, [&] (GVariant *data) {
+    unity::glib::String overlay_identity;
+    gboolean can_maximise = FALSE;
+    gint32 overlay_monitor = 0;
+    g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING, &overlay_identity, &can_maximise, &overlay_monitor);
+
+    // hide if something else is coming up
+    if (g_strcmp0(overlay_identity, "dash"))
+    {
+      HideDash(true);
+    }
+  });
 }
 
 void Controller::EnsureDash()
@@ -156,10 +168,11 @@ nux::Geometry Controller::GetIdealWindowGeometry()
 
   // We want to cover as much of the screen as possible to grab any mouse events outside
   // of our window
+  panel::Style &panel_style = panel::Style::Instance();
   return nux::Geometry (monitor_geo.x + launcher_width,
-                        monitor_geo.y + panel_height,
+                        monitor_geo.y + panel_style.panel_height,
                         monitor_geo.width - launcher_width,
-                        monitor_geo.height - panel_height);
+                        monitor_geo.height - panel_style.panel_height);
 }
 
 void Controller::Relayout(GdkScreen*screen)
@@ -169,7 +182,8 @@ void Controller::Relayout(GdkScreen*screen)
   nux::Geometry geo = GetIdealWindowGeometry();
   window_->SetGeometry(geo);
   view_->Relayout();
-  view_->SetMonitorOffset(launcher_width, panel_height);
+  panel::Style &panel_style = panel::Style::Instance();
+  view_->SetMonitorOffset(launcher_width, panel_style.panel_height);
 }
 
 void Controller::OnMouseDownOutsideWindow(int x, int y,
@@ -196,7 +210,7 @@ void Controller::OnExternalShowDash(GVariant* variant)
 void Controller::OnExternalHideDash(GVariant* variant)
 {
   EnsureDash();
-  
+
   if (variant)
   {
     HideDash(g_variant_get_boolean(variant));
@@ -235,7 +249,7 @@ void Controller::ShowDash()
   window_->SetInputFocus();
   window_->CaptureMouseDownAnyWhereElse(true);
   window_->QueueDraw();
- 
+
   nux::GetWindowCompositor().SetKeyFocusArea(view_->default_focus());
 
   need_show_ = false;
@@ -243,14 +257,15 @@ void Controller::ShowDash()
 
   StartShowHideTimeline();
 
-  ubus_manager_.SendMessage(UBUS_PLACE_VIEW_SHOWN, g_variant_new_int32(UScreen::GetDefault()->GetMonitorWithMouse()));
+  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "dash", TRUE, UScreen::GetDefault()->GetMonitorWithMouse());
+  ubus_manager_.SendMessage(UBUS_OVERLAY_SHOWN, info);
 }
 
 void Controller::HideDash(bool restore)
 {
   if (!visible_)
    return;
- 
+
   EnsureDash();
 
   view_->AboutToHide();
@@ -264,7 +279,8 @@ void Controller::HideDash(bool restore)
 
   StartShowHideTimeline();
 
-  ubus_manager_.SendMessage(UBUS_PLACE_VIEW_HIDDEN);
+  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "dash", TRUE, g_variant_new_int32(UScreen::GetDefault()->GetMonitorWithMouse()));
+  ubus_manager_.SendMessage(UBUS_OVERLAY_HIDDEN, info);
 }
 
 void Controller::StartShowHideTimeline()
@@ -282,9 +298,9 @@ void Controller::StartShowHideTimeline()
 
 gboolean Controller::OnViewShowHideFrame(Controller* self)
 {
-#define _LENGTH_ 90000
+  const float LENGTH = 90000.0f;
   float diff = g_get_monotonic_time() - self->start_time_;
-  float progress = diff / (float)_LENGTH_;
+  float progress = diff / LENGTH;
   float last_opacity = self->last_opacity_;
 
   if (self->visible_)
@@ -296,7 +312,7 @@ gboolean Controller::OnViewShowHideFrame(Controller* self)
     self->window_->SetOpacity(last_opacity - (last_opacity * progress));
   }
 
-  if (diff > _LENGTH_)
+  if (diff > LENGTH)
   {
     self->timeline_id_ = 0;
 

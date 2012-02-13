@@ -1,13 +1,15 @@
-from testtools import TestCase
 from testtools.matchers import Equals
 from testtools.matchers import LessThan
 
+from autopilot.tests import AutopilotTestCase
 from autopilot.emulators.unity import Launcher
 from autopilot.glibrunner import GlibRunner
 
 from time import sleep
 
-class LauncherTests(TestCase):
+
+class LauncherTests(AutopilotTestCase):
+    """Test the launcher."""
     run_test_with = GlibRunner
 
     def setUp(self):
@@ -76,11 +78,11 @@ class LauncherTests(TestCase):
 
         self.server.switcher_enter_quicklist()
         sleep(.5)
-        self.assertThat(self.server.quicklist_open(0), Equals(True))
+        self.assertThat(self.server.is_quicklist_open(0), Equals(True))
         self.server.switcher_exit_quicklist()
         sleep(.5)
 
-        self.assertThat(self.server.quicklist_open(0), Equals(False))
+        self.assertThat(self.server.is_quicklist_open(0), Equals(False))
         self.assertThat(self.server.key_nav_is_active(), Equals(True))
         self.assertThat(self.server.key_nav_is_grabbed(), Equals(True))
 
@@ -90,6 +92,9 @@ class LauncherTests(TestCase):
 
     def test_reveal_on_mouse_to_edge(self):
         """Tests reveal of launchers by mouse pressure."""
+        # XXX: re-enable test when launcher reeal behavior is no longer resolution-dependant.
+        self.skipTest("Launcher reveal behavior is resolution dependant.")
+
         num_launchers = self.server.num_launchers()
 
         for x in range(num_launchers):
@@ -98,8 +103,11 @@ class LauncherTests(TestCase):
             self.assertThat(self.server.is_showing(x), Equals(True))
 
     def test_reveal_with_mouse_under_launcher(self):
-        """Tests that the launcher hides properly if the 
+        """Tests that the launcher hides properly if the
         mouse is under the launcher when it is revealed."""
+        # XXX: re-enable test when launcher reeal behavior is no longer resolution-dependant.
+        self.skipTest("Launcher reveal behavior is resolution dependant.")
+
         num_launchers = self.server.num_launchers()
 
         for x in range(num_launchers):
@@ -107,9 +115,12 @@ class LauncherTests(TestCase):
             self.server.keyboard_reveal_launcher()
             self.server.keyboard_unreveal_launcher()
             self.assertThat(self.server.is_showing(x), Equals(False))
-    
+
     def test_reveal_does_not_hide_again(self):
         """Tests reveal of launchers by mouse pressure to ensure it doesn't automatically hide again."""
+        # XXX: re-enable test when launcher reeal behavior is no longer resolution-dependant.
+        self.skipTest("Launcher reveal behavior is resolution dependant.")
+
         num_launchers = self.server.num_launchers()
 
         for x in range(num_launchers):
@@ -117,5 +128,5 @@ class LauncherTests(TestCase):
             self.server.reveal_launcher(x)
             sleep(2)
             self.assertThat(self.server.is_showing(x), Equals(True))
-    
+
 

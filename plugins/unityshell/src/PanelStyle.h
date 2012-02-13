@@ -22,6 +22,7 @@
 #define PANEL_STYLE_H
 
 #include <Nux/Nux.h>
+#include <NuxCore/Property.h>
 
 #include <gtk/gtk.h>
 
@@ -41,7 +42,8 @@ enum class WindowState
 {
   NORMAL,
   PRELIGHT,
-  PRESSED
+  PRESSED,
+  DISABLED
 };
 
 class Style
@@ -63,6 +65,8 @@ public:
   sigc::signal<void> changed;
 
   bool IsAmbianceOrRadiance();
+
+  nux::Property<int> panel_height;
 
 private:
   void Refresh();
