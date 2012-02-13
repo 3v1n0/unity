@@ -187,7 +187,8 @@ void PanelIndicatorAppmenuView::AddProperties(GVariantBuilder* builder)
   PanelIndicatorEntryView::AddProperties(builder);
 
   variant::BuilderWrapper(builder)
-  .add("controlled-window", xid_);
+  .add("controlled-window", xid_)
+  .add("has_menu", has_menu_);
 }
 
 } // NAMESPACE
