@@ -51,11 +51,13 @@ namespace unity
 namespace
 {
   nux::logging::Logger logger("unity.panel.menu");
-  const int MENUS_PADDING = 6;
+  const int MAIN_LEFT_PADDING = 6;
+  const int MENUBAR_PADDING = 4;
+  const int MENU_ENTRIES_PADDING = 6;
   const std::string DESKTOP_NAME(_("Ubuntu Desktop"));
 }
 
-PanelMenuView::PanelMenuView(int padding)
+PanelMenuView::PanelMenuView()
   : _matcher(bamf_matcher_get_default()),
     _is_integrated(false),
     _is_inside(false),
@@ -65,6 +67,7 @@ PanelMenuView::PanelMenuView(int padding)
     _integrated_menu(nullptr),
     _last_active_view(nullptr),
     _new_application(nullptr),
+    _padding(MAIN_LEFT_PADDING),
     _dash_showing(false),
     _switcher_showing(false),
     _show_now_activated(false),
@@ -104,11 +107,9 @@ PanelMenuView::PanelMenuView(int padding)
   _active_app_changed_signal.Connect(_matcher, "active-application-changed",
                                      sigc::mem_fun(this, &PanelMenuView::OnActiveAppChanged));
 
-  _padding = padding;
-
   _window_buttons = new WindowButtons();
   _window_buttons->SetParentObject(this);
-  _window_buttons->SetBaseX(_padding);
+  _window_buttons->SetLeftAndRightPadding(MAIN_LEFT_PADDING, MENUBAR_PADDING);
   _window_buttons->SetMaximumHeight(panel::Style::Instance().panel_height);
   _window_buttons->ComputeContentSize();
 
@@ -119,7 +120,7 @@ PanelMenuView::PanelMenuView(int padding)
   _window_buttons->mouse_leave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
   //_window_buttons->mouse_move.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseMove));
 
-  layout_->SetLeftAndRightPadding(_padding*2 + _window_buttons->GetContentWidth(), 0);
+  layout_->SetLeftAndRightPadding(_window_buttons->GetContentWidth(), 0);
   layout_->SetBaseHeight(panel::Style::Instance().panel_height);
 
   _titlebar_grab_area = new PanelTitlebarGrabArea();
@@ -368,14 +369,14 @@ void PanelMenuView::PreLayoutManagement()
 
   _window_buttons->ComputeContentSize();
   int buttons_diff = panel_height - _window_buttons->GetContentHeight();
-  _window_buttons->SetBaseY(buttons_diff > 0 ? std::ceil(buttons_diff/2.0f) : 0);
+  _window_buttons->SetBaseY(buttons_diff > 0 ? buttons_diff/2 : 0);
 
   int layout_width = layout_->GetContentWidth();
   _titlebar_grab_area->SetBaseX(layout_width);
   _titlebar_grab_area->SetBaseHeight(geo.height);
   _titlebar_grab_area->SetMinimumWidth(geo.width - layout_width);
 
-  SetMaximumEntriesWidth(geo.width - _padding*2 - _window_buttons->GetContentWidth());
+  SetMaximumEntriesWidth(geo.width - _window_buttons->GetContentWidth());
 }
 
 void PanelMenuView::OnFadeInChanged(double opacity)
@@ -462,7 +463,7 @@ bool PanelMenuView::DrawWindowButtons()
 void PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
   nux::Geometry const& geo = GetGeometry();
-  int button_width = _padding + _window_buttons->GetContentWidth() + _padding;
+  int button_width = _window_buttons->GetContentWidth();
   const float factor = 4;
   button_width /= factor;
 
@@ -1033,7 +1034,7 @@ void PanelMenuView::OnEntryAdded(indicator::Entry::Ptr const& entry)
 
   if (!_is_integrated)
   {
-    view = new PanelIndicatorEntryView(entry, MENUS_PADDING, IndicatorEntryType::MENU);
+    view = new PanelIndicatorEntryView(entry, MENU_ENTRIES_PADDING, IndicatorEntryType::MENU);
     view->mouse_enter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
     view->mouse_leave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
   }
@@ -1058,7 +1059,7 @@ void PanelMenuView::OnEntryAdded(indicator::Entry::Ptr const& entry)
   view->active_changed.connect(sigc::mem_fun(this, &PanelMenuView::OnActiveChanged));
 
   AddEntryView(view, IndicatorEntryPosition::END);
-  SetMaximumEntriesWidth(GetAbsoluteWidth() - _padding*2 - _window_buttons->GetContentWidth());
+  SetMaximumEntriesWidth(GetAbsoluteWidth() - _window_buttons->GetContentWidth());
 }
 
 void PanelMenuView::OnEntryRemoved(std::string const& entry_id)

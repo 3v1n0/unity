@@ -56,7 +56,7 @@ public:
   // It also deals with undecorating maximized windows (and redecorating them
   // on unmaximize)
 
-  PanelMenuView(int padding = 6);
+  PanelMenuView();
   ~PanelMenuView();
 
   void SetMenuShowTimings(int fadein, int fadeout, int discovery,
