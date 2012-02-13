@@ -104,6 +104,7 @@ protected:
   virtual void ShowMenu(int button = 1);
 
   Entry::Ptr proxy_;
+  unsigned int spacing_;
 
 private:
   void OnMouseDown(int x, int y, long button_flags, long key_flags);

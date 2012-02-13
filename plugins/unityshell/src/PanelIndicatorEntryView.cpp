@@ -43,15 +43,16 @@ namespace unity
 
 namespace
 {
-const int SPACING = 3;
+const int DEFAULT_SPACING = 3;
 }
 
-PanelIndicatorEntryView::PanelIndicatorEntryView(
-  indicator::Entry::Ptr const& proxy,
-  int padding,
-  IndicatorEntryType type)
+using indicator::Entry;
+
+PanelIndicatorEntryView::PanelIndicatorEntryView(Entry::Ptr const& proxy, int padding,
+                                                 IndicatorEntryType type)
   : TextureArea(NUX_TRACKER_LOCATION)
   , proxy_(proxy)
+  , spacing_(DEFAULT_SPACING)
   , type_(type)
   , entry_texture_(nullptr)
   , padding_(padding < 0 ? 0 : padding)
@@ -313,7 +314,7 @@ void PanelIndicatorEntryView::DrawEntryContent(cairo_t *cr, unsigned int width, 
 
     gtk_style_context_restore(style_context);
 
-    x += icon_width + SPACING;
+    x += icon_width + spacing_;
   }
 
   if (layout)
@@ -504,7 +505,7 @@ void PanelIndicatorEntryView::Refresh()
     text_width = log_rect.width / PANGO_SCALE;
 
     if (icon_width)
-      width += SPACING;
+      width += spacing_;
     width += text_width;
 
     pango_font_description_free(desc);
