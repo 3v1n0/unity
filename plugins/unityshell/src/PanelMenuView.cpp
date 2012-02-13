@@ -123,15 +123,15 @@ PanelMenuView::PanelMenuView(int padding)
   layout_->SetLeftAndRightPadding(_padding*2 + _window_buttons->GetContentWidth(), _padding);
   layout_->SetBaseHeight(panel::Style::Instance().panel_height);
 
-  _panel_titlebar_grab_area = new PanelTitlebarGrabArea();
-  _panel_titlebar_grab_area->SetParentObject(this);
-  _panel_titlebar_grab_area->SinkReference();
-  _panel_titlebar_grab_area->mouse_down.connect(sigc::mem_fun(this, &PanelMenuView::OnMouseClicked));
-  _panel_titlebar_grab_area->mouse_down.connect(sigc::mem_fun(this, &PanelMenuView::OnMouseMiddleClicked));
-  _panel_titlebar_grab_area->mouse_down.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedGrabStart));
-  _panel_titlebar_grab_area->mouse_drag.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedGrabMove));
-  _panel_titlebar_grab_area->mouse_up.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedGrabEnd));
-  _panel_titlebar_grab_area->mouse_double_click.connect(sigc::mem_fun(this, &PanelMenuView::OnMouseDoubleClicked));
+  _titlebar_grab_area = new PanelTitlebarGrabArea();
+  _titlebar_grab_area->SetParentObject(this);
+  _titlebar_grab_area->SinkReference();
+  _titlebar_grab_area->activate_request.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedActivate));
+  _titlebar_grab_area->restore_request.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedRestore));
+  _titlebar_grab_area->lower_request.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedLower));
+  _titlebar_grab_area->grab_started.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedGrabStart));
+  _titlebar_grab_area->grab_move.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedGrabMove));
+  _titlebar_grab_area->grab_end.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedGrabEnd));
 
   win_manager = WindowManager::Default();
 
@@ -160,8 +160,8 @@ PanelMenuView::PanelMenuView(int padding)
   mouse_leave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
   //mouse_move.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseMove));
 
-  _panel_titlebar_grab_area->mouse_enter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
-  _panel_titlebar_grab_area->mouse_leave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
+  _titlebar_grab_area->mouse_enter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
+  _titlebar_grab_area->mouse_leave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
 
   // Register for all the interesting events
   _ubus_manager.RegisterInterest(UBUS_OVERLAY_SHOWN, [&] (GVariant*) {
@@ -202,7 +202,7 @@ PanelMenuView::~PanelMenuView()
 
   layout_->UnReference();
   _window_buttons->UnReference();
-  _panel_titlebar_grab_area->UnReference();
+  _titlebar_grab_area->UnReference();
 
   _style_changed_connection.disconnect();
   _mode_changed_connection.disconnect();
@@ -321,7 +321,7 @@ nux::Area* PanelMenuView::FindAreaUnderMouse(const nux::Point& mouse_position, n
   Area* found_area = nullptr;
   if (!_we_control_active)
   {
-    found_area = _panel_titlebar_grab_area->FindAreaUnderMouse(mouse_position, event_type);
+    found_area = _titlebar_grab_area->FindAreaUnderMouse(mouse_position, event_type);
     NUX_RETURN_VALUE_IF_NOTNULL(found_area, found_area);
   }
 
@@ -334,10 +334,9 @@ nux::Area* PanelMenuView::FindAreaUnderMouse(const nux::Point& mouse_position, n
     }
   }
 
-  if (_panel_titlebar_grab_area)
+  if (_titlebar_grab_area)
   {
-    found_area = _panel_titlebar_grab_area->FindAreaUnderMouse(mouse_position, event_type);
-
+    found_area = _titlebar_grab_area->FindAreaUnderMouse(mouse_position, event_type);
     NUX_RETURN_VALUE_IF_NOTNULL(found_area, found_area);
   }
 
@@ -357,9 +356,9 @@ void PanelMenuView::PreLayoutManagement()
   nux::Geometry const& geo = GetGeometry();
 
   int x = layout_->GetContentWidth();
-  _panel_titlebar_grab_area->SetBaseX(x);
-  _panel_titlebar_grab_area->SetBaseHeight(geo.height);
-  _panel_titlebar_grab_area->SetMinimumWidth(geo.width - x);
+  _titlebar_grab_area->SetBaseX(x);
+  _titlebar_grab_area->SetBaseHeight(geo.height);
+  _titlebar_grab_area->SetMinimumWidth(geo.width - x);
 
   SetMaximumEntriesWidth(geo.width - _padding*2 - _window_buttons->GetContentWidth());
 }
@@ -1570,11 +1569,50 @@ PanelMenuView::GetMaximizedWindow()
   return window_xid;
 }
 
-void
-PanelMenuView::OnMaximizedGrabStart(int x, int y, unsigned long button_flags, unsigned long)
+void PanelMenuView::OnMaximizedActivate(int x, int y)
 {
-  Window maximized_win;
-  if (nux::GetEventButton(button_flags) != 1 || _dash_showing)
+  if (_dash_showing)
+    return;
+
+  Window maximized = GetMaximizedWindow();
+
+  if (maximized != 0)
+  {
+    WindowManager::Default()->Raise(maximized);
+  }
+}
+
+void
+PanelMenuView::OnMaximizedRestore(int x, int y)
+{
+  if (_dash_showing)
+    return;
+
+  Window maximized = GetMaximizedWindow();
+
+  if (maximized != 0)
+  {
+    WindowManager::Default()->Restore(maximized);
+    _is_inside = true;
+  }
+}
+
+void PanelMenuView::OnMaximizedLower(int x, int y)
+{
+  if (_dash_showing)
+    return;
+
+  Window maximized = GetMaximizedWindow();
+
+  if (maximized != 0)
+  {
+    WindowManager::Default()->Lower(maximized);
+  }
+}
+
+void PanelMenuView::OnMaximizedGrabStart(int x, int y)
+{
+  if (_dash_showing)
     return;
 
   // When Start dragging the panelmenu of a maximized window, change cursor
@@ -1583,61 +1621,51 @@ PanelMenuView::OnMaximizedGrabStart(int x, int y, unsigned long button_flags, un
   // This is a workaround to avoid that the grid plugin would be fired
   // showing the window shape preview effect. See bug #838923
 
-  maximized_win = GetMaximizedWindow();
+  Window maximized = GetMaximizedWindow();
 
-  if (maximized_win != 0)
+  if (maximized != 0)
   {
     /* Always activate the window in case it is on another monitor */
-    WindowManager::Default()->Activate(maximized_win);
-    _panel_titlebar_grab_area->SetGrabbed(true);
+    WindowManager::Default()->Activate(maximized);
+    _titlebar_grab_area->SetGrabbed(true);
   }
 }
 
-void
-PanelMenuView::OnMaximizedGrabMove(int x, int y, int, int, unsigned long button_flags, unsigned long)
+void PanelMenuView::OnMaximizedGrabMove(int x, int y)
 {
-//  FIXME nux doesn't export it with drag event.
-//  if (nux::GetEventButton(button_flags) != 1)
-//    return;
-
-  // We use this, due to the problem above
-  if (!_panel_titlebar_grab_area->IsGrabbed())
-    return;
-
   auto panel = static_cast<nux::BaseWindow*>(GetTopLevelViewWindow());
 
   if (!panel)
     return;
 
-  x += _panel_titlebar_grab_area->GetAbsoluteX();
-  y += _panel_titlebar_grab_area->GetAbsoluteY();
+  x += _titlebar_grab_area->GetAbsoluteX();
+  y += _titlebar_grab_area->GetAbsoluteY();
 
-  Window window_xid = GetMaximizedWindow();
+  Window maximized = GetMaximizedWindow();
 
   // When the drag goes out from the Panel, start the real movement.
   //
   // This is a workaround to avoid that the grid plugin would be fired
   // showing the window shape preview effect. See bug #838923
-  if (window_xid != 0 && panel && !panel->GetAbsoluteGeometry().IsPointInside(x, y))
+  if (maximized != 0 && panel && !panel->GetAbsoluteGeometry().IsPointInside(x, y))
   {
-    _panel_titlebar_grab_area->SetGrabbed(false);
+    _titlebar_grab_area->SetGrabbed(false);
 
-    WindowManager::Default()->Activate(window_xid);
+    WindowManager::Default()->Activate(maximized);
     _is_inside = true;
     _is_grabbed = true;
     Refresh();
     FullRedraw();
-    WindowManager::Default()->StartMove(window_xid, x, y);
+    WindowManager::Default()->StartMove(maximized, x, y);
   }
 }
 
-void
-PanelMenuView::OnMaximizedGrabEnd(int x, int y, unsigned long, unsigned long)
+void PanelMenuView::OnMaximizedGrabEnd(int x, int y)
 {
-  _panel_titlebar_grab_area->SetGrabbed(false);
+  _titlebar_grab_area->SetGrabbed(false);
 
-  x += _panel_titlebar_grab_area->GetAbsoluteX();
-  y += _panel_titlebar_grab_area->GetAbsoluteY();
+  x += _titlebar_grab_area->GetAbsoluteX();
+  y += _titlebar_grab_area->GetAbsoluteY();
   _is_inside = GetAbsoluteGeometry().IsPointInside(x, y);
 
   if (!_is_inside)
@@ -1645,49 +1673,6 @@ PanelMenuView::OnMaximizedGrabEnd(int x, int y, unsigned long, unsigned long)
 
   Refresh();
   FullRedraw();
-}
-
-void
-PanelMenuView::OnMouseDoubleClicked(int x, int y, unsigned long button_flags, unsigned long)
-{
-  if (nux::GetEventButton(button_flags) != 1 || _dash_showing)
-    return;
-
-  Window window_xid = GetMaximizedWindow();
-
-  if (window_xid != 0)
-  {
-    WindowManager::Default()->Restore(window_xid);
-    _is_inside = true;
-  }
-}
-
-void
-PanelMenuView::OnMouseClicked(int x, int y, unsigned long button_flags, unsigned long)
-{
-  if (nux::GetEventButton(button_flags) != 1 || _dash_showing)
-    return;
-
-  Window window_xid = GetMaximizedWindow();
-
-  if (window_xid != 0)
-  {
-    WindowManager::Default()->Raise(window_xid);
-  }
-}
-
-void
-PanelMenuView::OnMouseMiddleClicked(int x, int y, unsigned long button_flags, unsigned long)
-{
-  if (nux::GetEventButton(button_flags) != 2 || _dash_showing)
-    return;
-
-  Window window_xid = GetMaximizedWindow();
-
-  if (window_xid != 0)
-  {
-    WindowManager::Default()->Lower(window_xid);
-  }
 }
 
 // Introspectable

@@ -111,12 +111,12 @@ private:
   void OnWindowDecorated(guint32 xid);
   void OnWindowUndecorated(guint32 xid);
 
-  void OnMaximizedGrabStart(int, int, unsigned long, unsigned long);
-  void OnMaximizedGrabMove(int, int, int, int, unsigned long, unsigned long);
-  void OnMaximizedGrabEnd(int, int, unsigned long, unsigned long);
-  void OnMouseDoubleClicked(int, int, unsigned long, unsigned long);
-  void OnMouseClicked(int, int, unsigned long, unsigned long);
-  void OnMouseMiddleClicked(int, int, unsigned long, unsigned long);
+  void OnMaximizedActivate(int x, int y);
+  void OnMaximizedRestore(int x, int y);
+  void OnMaximizedLower(int x, int y);
+  void OnMaximizedGrabStart(int x, int y);
+  void OnMaximizedGrabMove(int x, int y);
+  void OnMaximizedGrabEnd(int x, int y);
 
   void FullRedraw();
   void Refresh(bool force = false);
@@ -167,7 +167,7 @@ private:
   PanelIndicatorAppmenuView* _integrated_menu;
   PanelIndicatorEntryView* _last_active_view;
   WindowButtons* _window_buttons;
-  PanelTitlebarGrabArea* _panel_titlebar_grab_area;
+  PanelTitlebarGrabArea* _titlebar_grab_area;
   glib::Object<BamfApplication> _new_application;
 
   std::map<guint32, bool> _decor_map;
