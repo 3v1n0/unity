@@ -54,13 +54,15 @@ public:
     SetVScrollBar(scroll_bar);
   }
 
-  void ScrollToPosition(nux::Geometry & position)
+  void ScrollToPosition(nux::Geometry const& position)
   {
     // much of this code is copied from Nux/ScrollView.cpp
-    int child_y = position.y - GetGeometry ().y;
+    nux::Geometry const& geo = GetGeometry();
+
+    int child_y = position.y - geo.y;
     int child_y_diff = child_y - abs (_delta_y);
 
-    if (child_y_diff + position.height < GetGeometry ().height && child_y_diff >= 0)
+    if (child_y_diff + position.height < geo.height && child_y_diff >= 0)
     {
       return;
     }
@@ -71,7 +73,7 @@ public:
     }
     else
     {
-      int size = child_y_diff - GetGeometry ().height;
+      int size = child_y_diff - geo.height;
 
       // always keeps the top of a view on the screen
       size += position.height;
@@ -149,13 +151,17 @@ LensView::LensView(Lens::Ptr lens, nux::Area* show_filters)
     nux::Geometry focused_pos;
     g_variant_get (data, "(iiii)", &focused_pos.x, &focused_pos.y, &focused_pos.width, &focused_pos.height);
 
-    for (auto it = categories_.begin(); it != categories_.end(); it++)
+    for (auto category : categories_)
     {
-      if ((*it)->GetLayout() != nullptr)
+      if (category->GetLayout() != nullptr)
       {
-        nux::View *child = (*it)->GetChildView();
-        if (child->HasKeyFocus())
+        auto expand_label = category->GetExpandLabel();
+        auto child = category->GetChildView();
+
+        if ((child && child->HasKeyFocus()) || 
+            (expand_label && expand_label->HasKeyFocus()))
         {
+
           focused_pos.x += child->GetGeometry().x;
           focused_pos.y += child->GetGeometry().y - 30;
           focused_pos.height += 30;
