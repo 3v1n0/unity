@@ -361,15 +361,19 @@ bool ResultViewGrid::InspectKeyEvent(unsigned int eventType, unsigned int keysym
   int total_rows = std::ceil(results_.size() / static_cast<float>(items_per_row)); // items per row is always at least 1
   total_rows = (expanded) ? total_rows : 1; // restrict to one row if not expanded
 
-  // check for edge cases where we want the keynav to bubble up
-  if (direction == nux::KEY_NAV_UP && selected_index_ < items_per_row)
+   // check for edge cases where we want the keynav to bubble up
+  if (direction == nux::KEY_NAV_LEFT && (selected_index_ % items_per_row == 0))
+    return false; // pressed left on the first item, no diiice
+  else if (direction == nux::KEY_NAV_RIGHT && (selected_index_ == static_cast<int>(results_.size() - 1)))
+    return false; // pressed right on the last item, nope. nothing for you
+  else if (direction == nux::KEY_NAV_RIGHT  && (selected_index_ % items_per_row) == (items_per_row - 1))
+    return false; // pressed right on the last item in the first row in non expanded mode. nothing doing.
+  else if (direction == nux::KEY_NAV_UP && selected_index_ < items_per_row)
     return false; // key nav up when already on top row
   else if (direction == nux::KEY_NAV_DOWN && selected_index_ >= (total_rows-1) * items_per_row)
     return false; // key nav down when on bottom row
-  else
-    return true;
 
-  return false;
+  return true;
 }
 
 bool ResultViewGrid::AcceptKeyNavFocus()

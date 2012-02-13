@@ -50,8 +50,7 @@ HudButton::HudButton (nux::TextureArea *image, NUX_FILE_LINE_DECL)
     , is_rounded(false)
     , is_focused_(false)
 {
-  InitTheme();
-  key_nav_focus_change.connect([this](nux::Area *area, bool recieving, nux::KeyNavDirection direction){ QueueDraw(); });
+  Init();
 }
 
 HudButton::HudButton (const std::string label_, NUX_FILE_LINE_DECL)
@@ -59,7 +58,7 @@ HudButton::HudButton (const std::string label_, NUX_FILE_LINE_DECL)
     , is_rounded(false)
     , is_focused_(false)
 {
-  InitTheme();
+  Init();
 }
 
 HudButton::HudButton (const std::string label_, nux::TextureArea *image, NUX_FILE_LINE_DECL)
@@ -67,7 +66,7 @@ HudButton::HudButton (const std::string label_, nux::TextureArea *image, NUX_FIL
     , is_rounded(false)
     , is_focused_(false)
 {
-  InitTheme();
+  Init();
 }
 
 HudButton::HudButton (NUX_FILE_LINE_DECL)
@@ -75,10 +74,24 @@ HudButton::HudButton (NUX_FILE_LINE_DECL)
     , is_rounded(false)
     , is_focused_(false)
 {
-  InitTheme();
+  Init();
 }
 
 HudButton::~HudButton() {
+}
+
+void HudButton::Init()
+{
+  InitTheme();
+  key_nav_focus_change.connect([this](nux::Area *area, bool recieving, nux::KeyNavDirection direction) 
+  { 
+    QueueDraw(); 
+  });
+
+  fake_focused.changed.connect([this](bool change)
+  {
+    QueueDraw();
+  });
 }
 
 void HudButton::InitTheme()
@@ -111,7 +124,8 @@ void HudButton::RedrawTheme(nux::Geometry const& geom, cairo_t* cr, nux::ButtonV
 
 bool HudButton::AcceptKeyNavFocus()
 {
-  return true;
+  // say we can't be focused if we have fake focus on
+  return !fake_focused;
 }
 
 
@@ -156,7 +170,7 @@ void HudButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
                        col);
 
   nux::BaseTexture* texture = normal_->GetTexture();
-  if (HasKeyFocus())
+  if (HasKeyFocus() || fake_focused())
     texture = active_->GetTexture();
   else if (HasKeyFocus())
     texture = prelight_->GetTexture();

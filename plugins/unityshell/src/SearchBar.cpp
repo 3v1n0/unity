@@ -68,13 +68,11 @@ class ExpanderView : public nux::View
 public:
   ExpanderView(NUX_FILE_LINE_DECL)
    : nux::View(NUX_FILE_LINE_PARAM)
-  {
-  }
+  {}
 
 protected:
   void Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
-  {
-  };
+  {}
 
   void DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
   {
@@ -84,7 +82,7 @@ protected:
 
   bool AcceptKeyNavFocus()
   {
-    return false;
+    return true;
   }
 };
 
@@ -186,6 +184,9 @@ void SearchBar::Init()
     show_filters_->SetFont("Ubuntu 10");
     show_filters_->SetTextColor(nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
     show_filters_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_LEFT);
+    show_filters_->SetAcceptKeyNavFocus(true);
+    show_filters_->SetAcceptKeyNavFocusOnMouseDown(false);
+
 
     nux::BaseTexture* arrow;
     arrow = dash::Style::Instance().GetGroupExpandIcon();
@@ -218,12 +219,22 @@ void SearchBar::Init()
     layout_->AddView(expander_view_, 0, nux::MINOR_POSITION_RIGHT, nux::MINOR_SIZE_FULL);
 
     // Lambda functions
-    auto mouse_redraw = [&](int x, int y, unsigned long b, unsigned long k)
+    auto mouse_redraw = [&](int, int, unsigned long, unsigned long)
     {
       QueueDraw();
     };
 
-    auto mouse_expand = [&](int x, int y, unsigned long b, unsigned long k)
+    auto mouse_expand = [&](int, int, unsigned long, unsigned long)
+    {
+      showing_filters = !showing_filters;
+    };
+
+    auto key_redraw = [&](nux::Area*, bool, nux::KeyNavDirection)
+    {
+      QueueDraw();
+    };
+
+    auto key_expand = [&](nux::Area*)
     {
       showing_filters = !showing_filters;
     };
@@ -235,6 +246,8 @@ void SearchBar::Init()
     show_filters_->mouse_click.connect(mouse_expand);
     show_filters_->mouse_enter.connect(mouse_redraw);
     show_filters_->mouse_leave.connect(mouse_redraw);
+    show_filters_->key_nav_focus_change.connect(key_redraw);
+    show_filters_->key_nav_focus_activate.connect(key_expand);
     expand_icon_->mouse_click.connect(mouse_expand);
     expand_icon_->mouse_enter.connect(mouse_redraw);
     expand_icon_->mouse_leave.connect(mouse_redraw);
@@ -582,6 +595,11 @@ nux::TextEntry* SearchBar::text_entry() const
   return pango_entry_;
 }
 
+nux::StaticCairoText* SearchBar::show_filters() const
+{
+  return show_filters_;
+}
+
 std::string SearchBar::get_search_string() const
 {
   return pango_entry_->GetText();
@@ -613,7 +631,8 @@ bool SearchBar::get_im_active() const
 bool SearchBar::ShouldBeHighlighted()
 {
   return ((expander_view_ && expander_view_->IsVisible() && expander_view_->IsMouseInside()) ||
-          (show_filters_ && show_filters_->IsVisible() && show_filters_->IsMouseInside()) ||
+          (show_filters_ && show_filters_->IsVisible() &&
+           (show_filters_->IsMouseInside() || show_filters_->HasKeyFocus())) ||
           (expand_icon_ && expand_icon_->IsVisible() && expand_icon_->IsMouseInside()));
 }
 

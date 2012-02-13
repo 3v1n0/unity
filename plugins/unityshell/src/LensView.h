@@ -50,8 +50,8 @@ class LensView : public nux::View, public unity::debug::Introspectable
 
 public:
   LensView();
-  LensView(Lens::Ptr lens);
-  virtual ~LensView();
+  LensView(Lens::Ptr lens, nux::Area* show_filters);
+  ~LensView();
 
   Lens::Ptr lens() const;
   int GetNumRows();
@@ -66,7 +66,7 @@ public:
   sigc::signal<void, std::string const&> uri_activated;
 
 private:
-  void SetupViews();
+  void SetupViews(nux::Area* show_filters);
   void SetupCategories();
   void SetupResults();
   void SetupFilters();

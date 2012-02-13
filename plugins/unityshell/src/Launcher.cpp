@@ -1026,7 +1026,8 @@ void Launcher::FillRenderArg(AbstractLauncherIcon* icon,
   // FIXME: this is a hack, we should have a look why SetAnimationTarget is necessary in SetAnimationTarget
   // we should ideally just need it at start to set the target
   if (!_initial_drag_animation && icon == _drag_icon && _drag_window && _drag_window->Animating())
-    _drag_window->SetAnimationTarget((int) center.x, (int) center.y + _parent->GetGeometry().y);
+    _drag_window->SetAnimationTarget((int)(_drag_icon->GetCenter(monitor).x), 
+                                     (int)(_drag_icon->GetCenter(monitor).y));
 
   center.y += (half_size * size_modifier) + spacing;   // move to end
 }
@@ -1743,7 +1744,6 @@ LauncherModel* Launcher::GetModel() const
 
 void Launcher::EnsureIconOnScreen(AbstractLauncherIcon* selection)
 {
-  nux::Point3 center = selection->GetCenter(monitor);
   nux::Geometry geo = GetGeometry();
 
   int natural_y = 0;
@@ -2080,7 +2080,8 @@ void Launcher::EndIconDrag()
     {
       _model->Save();
 
-      _drag_window->SetAnimationTarget((int)(_drag_icon->GetCenter(monitor).x), (int)(_drag_icon->GetCenter(monitor).y));
+      _drag_window->SetAnimationTarget((int)(_drag_icon->GetCenter(monitor).x), 
+                                       (int)(_drag_icon->GetCenter(monitor).y));
       _drag_window->StartAnimation();
 
       if (_drag_window->on_anim_completed.connected())
@@ -2859,6 +2860,8 @@ Launcher::OnBusAcquired(GDBusConnection* connection,
   {
     LOG_WARNING(logger) << "Object registration failed. Won't get dynamic launcher addition.";
   }
+
+  g_dbus_node_info_unref(introspection_data);
 }
 
 void

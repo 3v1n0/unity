@@ -149,7 +149,7 @@ void DashView::SetupViews()
   lenses_layout_ = new nux::VLayout();
   content_layout_->AddView(lenses_layout_, 1, nux::MINOR_POSITION_LEFT);
 
-  home_view_ = new LensView(home_lens_);
+  home_view_ = new LensView(home_lens_, nullptr);
   AddChild(home_view_);
   active_lens_view_ = home_view_;
   lens_views_[home_lens_->id] = home_view_;
@@ -376,7 +376,7 @@ void DashView::OnLensAdded(Lens::Ptr& lens)
   std::string id = lens->id;
   lens_bar_->AddLens(lens);
 
-  LensView* view = new LensView(lens);
+  LensView* view = new LensView(lens, search_bar_->show_filters());
   AddChild(view);
   view->SetVisible(false);
   view->uri_activated.connect(sigc::mem_fun(this, &DashView::OnUriActivated));
