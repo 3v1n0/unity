@@ -76,6 +76,9 @@ private:
     REQUEST_TYPE_URI,
   };
 
+  struct IconLoaderTask;
+  typedef std::list<IconLoaderTask*> TaskList;
+
   struct IconLoaderTask
   {
     IconLoaderRequestType type;
@@ -88,6 +91,7 @@ private:
     GtkIconInfo*          icon_info;
     GdkPixbuf*            result;
     glib::Error           error;
+    TaskList              shadow_tasks;
 
     IconLoaderTask(IconLoaderRequestType type_,
                    std::string const& data_,
@@ -100,6 +104,22 @@ private:
       , slot(slot_), handle(handle_), self(self_)
       , icon_info(NULL), result(NULL)
       {}
+
+    void InvokeSlot(GdkPixbuf* pixbuf)
+    {
+      slot(data, size, pixbuf);
+
+      // notify shadow tasks
+      for (auto shadow_task : shadow_tasks)
+      {
+        shadow_task->slot(shadow_task->data, shadow_task->size, pixbuf);
+
+        self->task_map_.erase(shadow_task->handle);
+        delete shadow_task;
+      }
+
+      shadow_tasks.clear();
+    }
   };
 
   Handle ReturnCachedOrQueue(std::string const& data,
@@ -139,6 +159,8 @@ private:
 private:
   typedef std::map<std::string, glib::Object<GdkPixbuf>> ImageCache;
   ImageCache cache_;
+  typedef std::map<std::string, IconLoaderTask*> CacheQueue;
+  CacheQueue queued_tasks_;
   typedef std::queue<IconLoaderTask*> TaskQueue;
   TaskQueue tasks_;
   typedef std::map<Handle, IconLoaderTask*> TaskMap;
@@ -260,6 +282,28 @@ int IconLoader::Impl::QueueTask(std::string const& key,
 {
   IconLoaderTask* task = new IconLoaderTask(type, data, size, key,
                                             slot, ++handle_counter_, this);
+
+  auto iter = queued_tasks_.find(key);
+  bool already_queued = iter != queued_tasks_.end();
+  IconLoaderTask* running_task = already_queued ? iter->second : NULL;
+
+  if (running_task != NULL)
+  {
+    running_task->shadow_tasks.push_back(task);
+    // do NOT push the task into the tasks queue,
+    // the parent task (which is in the queue) will handle it
+    task_map_[task->handle] = task;
+
+    LOG_DEBUG(logger) << "Appending shadow task  " << data
+                      << ", queue size now at " << tasks_.size();
+
+    return task->handle;
+  }
+  else
+  {
+    queued_tasks_[key] = task;
+  }
+
   tasks_.push(task);
   task_map_[task->handle] = task;
 
@@ -317,7 +361,7 @@ bool IconLoader::Impl::ProcessTask(IconLoaderTask* task)
   LOG_WARNING(logger) << "Request type " << task->type
                       << " is not supported (" << task->data
                       << " " << task->size << ")";
-  task->slot(task->data, task->size, nullptr);
+  task->InvokeSlot(nullptr);
   return true;
 }
 
@@ -341,7 +385,7 @@ bool IconLoader::Impl::ProcessIconNameTask(IconLoaderTask* task)
                         << " at size " << task->size;
   }
 
-  task->slot(task->data, task->size, nullptr);
+  task->InvokeSlot(nullptr);
   return true;
 }
 
@@ -402,7 +446,7 @@ bool IconLoader::Impl::ProcessGIconTask(IconLoaderTask* task)
                         << " at size " << task->size << ": " << error;
   }
 
-  task->slot(task->data, task->size, nullptr);
+  task->InvokeSlot(nullptr);
   return true;
 }
 
@@ -493,10 +537,11 @@ gboolean IconLoader::Impl::CoalesceTasksCb(IconLoader::Impl* self)
                           << " at size " << task->size << ": " << task->error;
     }
 
-    task->slot(task->data, task->size, task->result);
+    task->InvokeSlot(task->result);
 
     // this was all async, we need to erase the task from the task_map
     self->task_map_.erase(task->handle);
+    self->queued_tasks_.erase(task->key);
     delete task;
   }
 
@@ -521,6 +566,7 @@ bool IconLoader::Impl::Iteration()
     if (ProcessTask(task))
     {
       task_map_.erase(task->handle);
+      queued_tasks_.erase(task->key);
       delete task;
     }
 
