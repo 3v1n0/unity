@@ -709,7 +709,7 @@ namespace unity {
     }
     else
     {
-      LOG_DEBUG (logger) << "got a colour image wut";
+      LOG_DEBUG (logger) << "got a colour image";
       // full colour image
       for (int i = 0; i < 11; i++)
       {
