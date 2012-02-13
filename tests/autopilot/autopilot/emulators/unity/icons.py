@@ -7,11 +7,11 @@
 # by the Free Software Foundation.
 #
 
-from autopilot.emulators.unity import ObjectCreatableFromStateDict
+from autopilot.emulators.unity import UnityIntrospectionObject
 from autopilot.emulators.unity.quicklist import Quicklist
 
 
-class SimpleLauncherIcon(ObjectCreatableFromStateDict):
+class SimpleLauncherIcon(UnityIntrospectionObject):
     """Holds information about a simple launcher icon.
 
     Do not instantiate an instance of this class yourself. Instead, use the

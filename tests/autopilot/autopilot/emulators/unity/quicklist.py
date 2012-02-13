@@ -10,14 +10,14 @@
 import logging
 from time import sleep
 
-from autopilot.emulators.unity import ObjectCreatableFromStateDict
+from autopilot.emulators.unity import UnityIntrospectionObject
 from autopilot.emulators.X11 import Mouse
 
 
 logger = logging.getLogger(__name__)
 
 
-class Quicklist(ObjectCreatableFromStateDict):
+class Quicklist(UnityIntrospectionObject):
     """Represents a quicklist."""
 
     @property
@@ -51,7 +51,7 @@ class Quicklist(ObjectCreatableFromStateDict):
         mouse.click()
 
 
-class QuicklistMenuItem(ObjectCreatableFromStateDict):
+class QuicklistMenuItem(UnityIntrospectionObject):
     """Represents a single item in a quicklist."""
 
 

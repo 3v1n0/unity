@@ -71,7 +71,7 @@ def get_state_by_name_and_id(class_name, unique_id):
 def make_introspection_object(dbus_tuple):
     """Make an introspection object given a DBus tuple of (name, state_dict).
 
-    This only works for classes that derive from ObjectCreatableFromStateDict.
+    This only works for classes that derive from UnityIntrospectionObject.
     """
     name, state = dbus_tuple
     try:
@@ -82,7 +82,7 @@ def make_introspection_object(dbus_tuple):
     return class_type(state)
 
 
-class ObjectCreatableFromStateDict(object):
+class UnityIntrospectionObject(object):
     """A class that can be created using a dictionary of state from Unity."""
     __metaclass__ = IntrospectableObjectMetaclass
 
@@ -101,12 +101,12 @@ class ObjectCreatableFromStateDict(object):
     def _get_child_tuples_by_type(self, desired_type):
         """Get a list of (name,dict) pairs from children of the specified type.
 
-        desired_type must be a subclass of ObjectCreatableFromStateDict.
+        desired_type must be a subclass of UnityIntrospectionObject.
 
         """
-        if not issubclass(desired_type, ObjectCreatableFromStateDict):
+        if not issubclass(desired_type, UnityIntrospectionObject):
             raise TypeError("%r must be a subclass of %r" % (desired_type,
-                ObjectCreatableFromStateDict))
+                UnityIntrospectionObject))
 
         children = getattr(self, 'Children', [])
         results = []
@@ -123,7 +123,7 @@ class ObjectCreatableFromStateDict(object):
     def get_children_by_type(self, desired_type):
         """Get a list of children of the specified type.
 
-        desired_type must be a subclass of ObjectCreatableFromStateDict.
+        desired_type must be a subclass of UnityIntrospectionObject.
 
         """
         result = []
