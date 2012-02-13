@@ -30,8 +30,6 @@
 
 namespace unity
 {
-namespace dash
-{
 
 using namespace unity::glib;
 using namespace nux;
@@ -68,6 +66,7 @@ private:
 
   void OnFocusIn();
   void OnFocusOut();
+
   void UpdateCursorLocation();
 
   void OnMouseButtonUp(int x, int y, unsigned long bflags, unsigned long kflags);
@@ -79,7 +78,6 @@ private:
   bool focused_;
 };
 
-}
 }
 
 #endif

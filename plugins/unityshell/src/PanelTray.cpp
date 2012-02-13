@@ -20,12 +20,11 @@
 
 #include <NuxCore/Logger.h>
 
-#define SETTINGS_NAME "com.canonical.Unity.Panel"
-#define PADDING 3
-
 namespace
 {
 nux::logging::Logger logger("unity.panel");
+const std::string SETTINGS_NAME = "com.canonical.Unity.Panel";
+const int PADDING = 3;
 }
 
 namespace unity
@@ -39,7 +38,7 @@ PanelTray::PanelTray()
     _last_y(0),
     _tray_icon_added_id(0)
 {
-  _settings = g_settings_new(SETTINGS_NAME);
+  _settings = g_settings_new(SETTINGS_NAME.c_str());
   _whitelist = g_settings_get_strv(_settings, "systray-whitelist");
 
   RealInit();
@@ -95,7 +94,6 @@ PanelTray::~PanelTray()
   if (_tray)
   {
     g_signal_handler_disconnect(na_tray_get_manager(_tray), _tray_icon_added_id);
-    g_object_unref (_tray);
     _tray = NULL;
   }
 
@@ -104,9 +102,7 @@ PanelTray::~PanelTray()
   if (_tray_expose_id)
     g_signal_handler_disconnect(_window, _tray_expose_id);
 
-  // DISABLED to see if we can get compiz to cleanly exit.
-  // This currently blocks on X.
-  // gtk_widget_destroy(_window);
+  gtk_widget_destroy(_window);
   g_strfreev(_whitelist);
   g_object_unref(_settings);
 }

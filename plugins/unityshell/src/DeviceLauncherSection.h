@@ -42,7 +42,7 @@ public:
   DeviceLauncherSection();
   ~DeviceLauncherSection();
 
-  sigc::signal<void, LauncherIcon*> IconAdded;
+  sigc::signal<void, AbstractLauncherIcon::Ptr> IconAdded;
 
 private:
   static bool PopulateEntries(DeviceLauncherSection* self);

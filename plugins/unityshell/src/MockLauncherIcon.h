@@ -42,12 +42,12 @@ namespace launcher
 
 class MockLauncherIcon : public AbstractLauncherIcon
 {
+  NUX_DECLARE_OBJECT_TYPE(MockLauncherIcon, AbstractLauncherIcon);
 public:
   MockLauncherIcon()
     : icon_(0)
   {
     tooltip_text = "Mock Icon";
-    transform_map.resize(10);
     sort_priority_ = 0;
     type_ = TYPE_APPLICATION;
   }
@@ -104,7 +104,7 @@ public:
 
   void SetSortPriority(int priority) { sort_priority_ = priority; }
 
-  bool OpenQuicklist(bool default_to_first_item = false)
+  bool OpenQuicklist(bool default_to_first_item = false, int monitor = -1)
   {
     return false;
   }
@@ -122,18 +122,6 @@ public:
   }
 
   void SaveCenter() {}
-
-  std::vector<nux::Vector4> & GetTransform(TransformIndex index, int monitor)
-  {
-    auto iter = transform_map[monitor].find(index);
-  if (iter == transform_map[monitor].end())
-  {
-    auto iter2 = transform_map[monitor].insert(std::map<TransformIndex, std::vector<nux::Vector4> >::value_type(index, std::vector<nux::Vector4>(4)));
-    return iter2.first->second;
-  }
-
-  return iter->second;
-  }
 
   void Activate(ActionArg arg) {}
 
@@ -183,7 +171,7 @@ public:
     return 0;
   }
 
-  bool GetQuirk(Quirk quirk)
+  bool GetQuirk(Quirk quirk) const
   {
     return false;
   }
@@ -198,7 +186,7 @@ public:
     return tv;
   }
 
-  IconType Type()
+  IconType GetIconType()
   {
     return type_;
   }
@@ -252,6 +240,18 @@ public:
 
   void SendDndLeave() {}
 
+  std::string DesktopFile() { return std::string(""); }
+
+  bool IsSticky() const { return false; }
+
+  bool IsVisible() const { return false; }
+
+  void AboutToRemove() {}
+  
+  void Stick(bool save = true) {}
+  
+  void UnStick() {}
+
 private:
   nux::BaseTexture* TextureFromGtkTheme(const char* icon_name, int size)
   {
@@ -300,12 +300,12 @@ private:
     return result;
   }
 
-
-  std::vector<std::map<TransformIndex, std::vector<nux::Vector4> > > transform_map;
   nux::BaseTexture* icon_;
   int sort_priority_;
   IconType type_;
 };
+
+NUX_IMPLEMENT_OBJECT_TYPE(MockLauncherIcon);
 
 }
 }

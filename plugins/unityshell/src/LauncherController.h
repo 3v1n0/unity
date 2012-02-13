@@ -35,7 +35,7 @@ class AbstractLauncherIcon;
 class Launcher;
 class LauncherModel;
 
-class Controller : public sigc::trackable
+class Controller : public unity::debug::Introspectable, public sigc::trackable
 {
 public:
   typedef std::shared_ptr<Controller> Ptr;
@@ -46,13 +46,14 @@ public:
   Controller(Display* display);
   ~Controller();
 
-  Launcher& launcher();
-  LauncherList& launchers();
-  Window launcher_input_window_id();
+  Launcher& launcher() const;
+  LauncherList& launchers() const;
+  Window LauncherWindowId(int launcher) const;
+  Window KeyNavLauncherInputWindowId() const;
 
   void UpdateNumWorkspaces(int workspaces);
-  std::vector<char> GetAllShortcuts();
-  std::vector<AbstractLauncherIcon*> GetAltTabIcons(bool current);
+  std::vector<char> GetAllShortcuts() const;
+  std::vector<AbstractLauncherIcon::Ptr> GetAltTabIcons(bool current) const;
 
   void PushToFront();
 
@@ -71,7 +72,12 @@ public:
   void KeyNavTerminate(bool activate = true);
   void KeyNavNext();
   void KeyNavPrevious();
-  bool KeyNavIsActive();
+  bool KeyNavIsActive() const;
+
+protected:
+  // Introspectable methods
+  std::string GetName() const;
+  void AddProperties(GVariantBuilder* builder);
 
 private:
   class Impl;

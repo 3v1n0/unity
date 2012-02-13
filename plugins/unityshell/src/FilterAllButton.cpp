@@ -59,6 +59,7 @@ void FilterAllButton::OnStateChanged(nux::View* view)
 {
   if (filter_ and Active())
     filter_->Clear();
+  QueueDraw();
 }
 
 void FilterAllButton::OnFilteringChanged(bool filtering)

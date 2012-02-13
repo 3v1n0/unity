@@ -36,6 +36,8 @@ public:
   {
     return true;
   }
+protected:
+    std::string GetName() const;
 };
 
 }

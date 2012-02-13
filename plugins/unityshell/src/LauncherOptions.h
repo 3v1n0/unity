@@ -37,8 +37,6 @@ typedef enum
 {
   LAUNCHER_HIDE_NEVER,
   LAUNCHER_HIDE_AUTOHIDE,
-  LAUNCHER_HIDE_DODGE_WINDOWS,
-  LAUNCHER_HIDE_DODGE_ACTIVE_WINDOW,
 } LauncherHideMode;
 
 typedef enum
@@ -72,6 +70,12 @@ typedef enum
   BACKLIGHT_NORMAL_EDGE_TOGGLE
 } BacklightMode;
 
+enum RevealTrigger
+{
+  EDGE,
+  CORNER,
+};
+
 class Options : public sigc::trackable
 {
 public:
@@ -84,28 +88,17 @@ public:
   nux::Property<UrgentAnimation> urgent_animation;
   nux::Property<AutoHideAnimation> auto_hide_animation;
   nux::Property<BacklightMode> backlight_mode;
+  nux::Property<RevealTrigger> reveal_trigger;
   nux::Property<int> icon_size;
   nux::Property<int> tile_size;
-  nux::Property<bool> floating;
   nux::Property<float> background_alpha;
   nux::Property<int> edge_decay_rate;
   nux::Property<int> edge_overcome_pressure;
   nux::Property<int> edge_stop_velocity;
   nux::Property<int> edge_reveal_pressure;
+  nux::Property<float> edge_responsiveness;
 
   sigc::signal<void> option_changed;
-
-private:
-  void OnHideModeChanged(LauncherHideMode value);
-  void OnLaunchAnimationChanged(LaunchAnimation value);
-  void OnUrgentAnimationChanged(UrgentAnimation value);
-  void OnAutoHideAnimationChanged(AutoHideAnimation value);
-  void OnBacklightModeChanged(BacklightMode value);
-  void OnIconSizeChanged(int value);
-  void OnEdgeOptionChanged(int value);
-  void OnTileSizeChanged(int value);
-  void OnFloatingChanged(bool value);
-  void OnBackgroundAlphaChanged(float value);
 };
 
 }

@@ -36,6 +36,7 @@ DesktopLauncherIcon::DesktopLauncherIcon()
   SetQuirk(QUIRK_VISIBLE, true);
   SetQuirk(QUIRK_RUNNING, false);
   SetIconType(TYPE_BEGIN);
+  SetShowInSwitcher(false);
 }
 
 DesktopLauncherIcon::~DesktopLauncherIcon()
@@ -59,6 +60,11 @@ DesktopLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 {
   SimpleLauncherIcon::ActivateLauncherIcon(arg);
   WindowManager::Default()->ShowDesktop();
+}
+
+std::string DesktopLauncherIcon::GetName() const
+{
+  return "DesktopLauncherIcon";
 }
 
 } // namespace launcher

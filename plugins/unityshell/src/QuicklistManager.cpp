@@ -28,6 +28,9 @@
 #include "ubus-server.h"
 #include "UBusMessages.h"
 
+namespace unity
+{
+
 QuicklistManager* QuicklistManager::_default = 0;
 
 /* static */
@@ -122,3 +125,4 @@ void QuicklistManager::RecvHideQuicklist(nux::BaseWindow* window)
   quicklist_closed.emit(quicklist);
 }
 
+} // NAMESPACE

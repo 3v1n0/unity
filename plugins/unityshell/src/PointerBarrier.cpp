@@ -41,20 +41,27 @@ PointerBarrierWrapper::PointerBarrierWrapper()
   last_y_ = 0;
   last_x_ = 0;
   active = false;
-  smoothing = 100;
+  smoothing = 75;
   smoothing_count_ = 0;
   smoothing_accum_ = 0;
+  smoothing_handle_ = 0;
+  max_velocity_multiplier = 1.0f;
+}
+
+PointerBarrierWrapper::~PointerBarrierWrapper()
+{
+  DestroyBarrier();
 }
 
 void PointerBarrierWrapper::ConstructBarrier()
 {
   if (active)
     return;
-  
+
   Display *dpy = nux::GetGraphicsDisplay()->GetX11Display();
 
   XFixesQueryExtension(dpy, &event_base_, &error_base_);
-  
+
   int maj,min;
   XFixesQueryVersion(dpy, &maj, &min);
 
@@ -66,7 +73,7 @@ void PointerBarrierWrapper::ConstructBarrier()
                                                threshold,
                                                0,
                                                NULL);
-  
+
   if (!local::is_selected_for)
   {
     XFixesSelectBarrierInput(dpy, DefaultRootWindow(dpy), 0xdeadbeef);
@@ -108,7 +115,7 @@ void PointerBarrierWrapper::EmitCurrentData()
   BarrierEvent::Ptr event (new BarrierEvent());
   event->x = last_x_;
   event->y = last_y_;
-  event->velocity = smoothing_accum_ / smoothing_count_;
+  event->velocity = std::min<int> (600 * max_velocity_multiplier, smoothing_accum_ / smoothing_count_);
   event->event_id = last_event_;
 
   barrier_event.emit(this, event);
@@ -125,16 +132,6 @@ bool PointerBarrierWrapper::HandleEvent(XEvent xevent)
 
     if (notify_event->barrier == barrier && notify_event->subtype == XFixesBarrierHitNotify)
     {
-      if (notify_event->event_id != last_event_)
-      {
-        EmitCurrentData();
-        if (smoothing_handle_)
-        {
-          g_source_remove(smoothing_handle_);
-          smoothing_handle_ = 0;
-        }
-      }
-
       last_x_ = notify_event->x;
       last_y_ = notify_event->y;
       last_event_ = notify_event->event_id;
@@ -154,7 +151,7 @@ bool PointerBarrierWrapper::HandleEvent(XEvent xevent)
 
         smoothing_handle_ = g_timeout_add(smoothing(), smoothing_cb, this);
       }
-        
+
     }
 
     return notify_event->barrier == barrier;
