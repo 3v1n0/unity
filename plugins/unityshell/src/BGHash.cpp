@@ -19,8 +19,6 @@
 #include "BGHash.h"
 #include <Nux/Nux.h>
 #include <NuxCore/Logger.h>
-#include <boost/tokenizer.hpp>
-#include <boost/foreach.hpp>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <libgnome-desktop/gnome-bg.h>
 #include <unity-misc/gnome-bg-slideshow.h>
