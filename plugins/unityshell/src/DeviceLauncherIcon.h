@@ -38,8 +38,6 @@ class DeviceLauncherIcon : public SimpleLauncherIcon
 public:
   DeviceLauncherIcon(GVolume* volume);
 
-  virtual nux::Color BackgroundColor();
-  virtual nux::Color GlowColor();
   void UpdateVisibility(int visibility = -1);
   void OnRemoved();
   bool CanEject();
