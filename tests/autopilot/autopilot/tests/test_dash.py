@@ -101,6 +101,51 @@ class DashTests(AutopilotTestCase):
         # ... the lens bar should lose the key focus
         self.assertEqual(self.dash.get_focused_lens_icon(), "")
 
+    def test_category_header_keynav_autoscroll(self):
+          """Test that the dash autoscroll when a category header gets
+          the focus.
+          """
+          self.dash.ensure_hidden()
+          self.dash.reveal_application_lens()
+
+          kb = Keyboard()
+          mouse = Mouse()
+
+          # Expand the first category
+          kb.press_and_release("Down")
+          kb.press_and_release("Enter")
+          category = self.dash.get_focused_category()
+
+          # Get the geometry of that category header.
+          x = category['header-x']
+          y = category['header-y']
+
+          # Manually scroll the dash.
+          mouse.move(x, y, True)
+          mouse.click(5)
+          mouse.click(5)
+          mouse.click(5)
+
+          cached_x = x
+          cached_y = y
+
+          # Focus the search bar with the mouse
+          x, y, w, h = self.dash.get_searchbar_geometry()
+          mouse.move(x+100, y+h/2, True)
+          mouse.click()
+          sleep(2)
+
+          # Then focus again the first category header
+          kb.press_and_release("Down")
+          kb.press_and_release("Enter")
+          category = self.dash.get_focused_category()
+          x = category['header-x']
+          y = category['header-y']
+
+          # Make sure the dash autoscroll
+          self.assertEqual(x, cached_x)
+          self.assertEqual(y, cached_y)
+
     def test_category_header_keynav(self):
           """ This test makes sure that:
           1. A category header can get the focus.

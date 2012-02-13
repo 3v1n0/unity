@@ -637,7 +637,7 @@ void SearchBar::AddProperties(GVariantBuilder* builder)
 {
   unity::variant::BuilderWrapper wrapper(builder);
 
-  wrapper.add(GetGeometry());
+  wrapper.add(GetAbsoluteGeometry());
   wrapper.add("has_focus", pango_entry_->HasKeyFocus());
   wrapper.add("search_string", pango_entry_->GetText());
 }

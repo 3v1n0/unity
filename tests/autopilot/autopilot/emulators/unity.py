@@ -536,6 +536,11 @@ class Dash(Unity):
         """
         return bool(self.get_state("/Unity/DashController")[0]["visible"])
 
+    def get_searchbar_geometry(self):
+        """Returns the searchbar geometry"""
+        search_bar = self.get_state("//SearchBar")[0]
+        return search_bar['x'], search_bar['y'], search_bar['width'], search_bar['height']
+
     def get_search_string(self):
         """
         Return the current dash search bar search string.
