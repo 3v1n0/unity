@@ -48,13 +48,6 @@ const int EXPANDER_LAYOUT_SPACE_BETWEEN_CHILDREN = 8;
 const int HIGHLIGHT_HEIGHT = 34;
 const int HIGHLIGHT_WIDTH_SUBTRACTOR = 5;
 
-}
-
-namespace unity
-{
-namespace dash
-{
-
 class ExpanderView : public nux::View
 {
 public:
@@ -80,6 +73,12 @@ protected:
   }
 };
 
+}
+
+namespace unity
+{
+namespace dash
+{
 
 NUX_IMPLEMENT_OBJECT_TYPE(FilterExpanderLabel);
 
