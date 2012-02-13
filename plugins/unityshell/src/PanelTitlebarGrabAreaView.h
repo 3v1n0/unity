@@ -47,6 +47,7 @@ public:
 
   sigc::signal<void, int, int> lower_request;
   sigc::signal<void, int, int> activate_request;
+  sigc::signal<void, int, int> restore_request;
   sigc::signal<void, int, int> grab_started;
   sigc::signal<void, int, int> grab_move;
   sigc::signal<void, int, int> grab_end;
@@ -57,8 +58,9 @@ private:
   void OnGrabMove(int x, int y, int, int, unsigned long button_flags, unsigned long);
 
   Cursor grab_cursor_;
-  guint mouse_down_timer_;
   bool grab_started_;
+  guint mouse_down_timer_;
+  unsigned int mouse_down_button_;
 };
 
 } // NAMESPACE

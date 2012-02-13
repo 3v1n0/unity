@@ -37,14 +37,21 @@ namespace
 PanelTitlebarGrabArea::PanelTitlebarGrabArea()
   : InputArea(NUX_TRACKER_LOCATION)
   , grab_cursor_(None)
+  , grab_started_(false)
   , mouse_down_timer_(0)
+  , mouse_down_button_(0)
 {
   EnableDoubleClick(true);
 
   mouse_down.connect(sigc::mem_fun(this, &PanelTitlebarGrabArea::OnMouseDown));
   mouse_up.connect(sigc::mem_fun(this, &PanelTitlebarGrabArea::OnMouseUp));
-
   mouse_drag.connect(sigc::mem_fun(this, &PanelTitlebarGrabArea::OnGrabMove));
+
+  mouse_double_click.connect([&] (int x, int y, unsigned long button_flags, unsigned long)
+  {
+    if (nux::GetEventButton(button_flags) == 1)
+      restore_request.emit(x, y);
+  });
 }
 
 PanelTitlebarGrabArea::~PanelTitlebarGrabArea()
@@ -84,13 +91,13 @@ bool PanelTitlebarGrabArea::IsGrabbed()
 
 void PanelTitlebarGrabArea::OnMouseDown(int x, int y, unsigned long button_flags, unsigned long)
 {
-  int button = nux::GetEventButton(button_flags);
+  mouse_down_button_ = nux::GetEventButton(button_flags);
 
-  if (button == 2)
+  if (mouse_down_button_ == 2)
   {
     lower_request.emit(x, y);
   }
-  else if (button == 1)
+  else if (mouse_down_button_ == 1)
   {
     mouse_down_timer_ =
       g_timeout_add(MOUSE_DOWN_TIMEOUT, [] (gpointer data) -> gboolean {
@@ -129,10 +136,15 @@ void PanelTitlebarGrabArea::OnMouseUp(int x, int y, unsigned long button_flags, 
       grab_started_ = false;
     }
   }
+
+  mouse_down_button_ = 0;
 }
 
 void PanelTitlebarGrabArea::OnGrabMove(int x, int y, int, int, unsigned long button_flags, unsigned long)
 {
+  if (mouse_down_button_ != 1)
+    return;
+
   if (mouse_down_timer_)
   {
     g_source_remove(mouse_down_timer_);
