@@ -462,8 +462,12 @@ PluginAdapter::IsWindowObscured(guint32 xid)
   CompWindow* window;
 
   window = m_Screen->findWindow(win);
+
   if (window)
   {
+    if (window->inShowDesktopMode())
+      return true;
+
     CompPoint window_vp = window->defaultViewport();
     // Check if any windows above this one are blocking it
     for (CompWindow* sibling = window->next; sibling != NULL; sibling = sibling->next)
@@ -500,9 +504,9 @@ PluginAdapter::IsWindowVisible(guint32 xid)
 
   window = m_Screen->findWindow(win);
   if (window)
-    return !(window->state () & CompWindowStateHiddenMask);
+    return !(window->state() & CompWindowStateHiddenMask) && !window->inShowDesktopMode();
 
-  return true;
+  return false;
 }
 
 void
