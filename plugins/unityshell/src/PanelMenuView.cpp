@@ -334,10 +334,22 @@ nux::Area* PanelMenuView::FindAreaUnderMouse(const nux::Point& mouse_position, n
     }
   }
 
-  if (_titlebar_grab_area)
+  if (_titlebar_grab_area && !_dash_showing)
   {
     found_area = _titlebar_grab_area->FindAreaUnderMouse(mouse_position, event_type);
     NUX_RETURN_VALUE_IF_NOTNULL(found_area, found_area);
+
+    /* When the integrated menus are enabled, that area must act both like an
+     * indicator-entry view and like a panel-grab-area, so not to re-implement
+     * what we have done into PanelTitleGrabAreaView inside PanelIndicatorAppmenuView
+     * we can just redirect the input events directed to the integrated menus
+     * to the grab_area, then we just have to use few tricks when we get the
+     * signals back from the grab-area to check where we really are */
+    if (_is_integrated && _integrated_menu)
+    {
+      if (_integrated_menu->GetAbsoluteGeometry().IsPointInside(mouse_position.x, mouse_position.y))
+        return _titlebar_grab_area;
+    }
   }
 
   if (!_is_own_window)
@@ -1571,14 +1583,28 @@ PanelMenuView::GetMaximizedWindow()
 
 void PanelMenuView::OnMaximizedActivate(int x, int y)
 {
-  if (_dash_showing)
-    return;
-
   Window maximized = GetMaximizedWindow();
 
   if (maximized != 0)
   {
     WindowManager::Default()->Raise(maximized);
+  }
+
+  /* If the user clicked over the integrated_menu we need to adjust
+   * the coordinates we got, because they're relative to the grab area,
+   * but due to the workaround we used, the point clicked could be
+   * also in the integrated-menu geometry, so we can easiliy set them
+   * correctly to check where we are and to eventually activate the
+   * integrated menu */
+  if (_is_integrated && _integrated_menu)
+  {
+    x += _titlebar_grab_area->GetAbsoluteX();
+    y += _titlebar_grab_area->GetAbsoluteY();
+
+    if (_integrated_menu->GetAbsoluteGeometry().IsPointInside(x, y))
+    {
+      _integrated_menu->Activate();
+    }
   }
 }
 
@@ -1612,14 +1638,11 @@ void PanelMenuView::OnMaximizedLower(int x, int y)
 
 void PanelMenuView::OnMaximizedGrabStart(int x, int y)
 {
-  if (_dash_showing)
-    return;
-
-  // When Start dragging the panelmenu of a maximized window, change cursor
-  // to simulate the dragging, waiting to go out of the panel area.
-  //
-  // This is a workaround to avoid that the grid plugin would be fired
-  // showing the window shape preview effect. See bug #838923
+  /* When Start dragging the panelmenu of a maximized window, change cursor
+   * to simulate the dragging, waiting to go out of the panel area.
+   *
+   * This is a workaround to avoid that the grid plugin would be fired
+   * showing the window shape preview effect. See bug #838923 */
 
   Window maximized = GetMaximizedWindow();
 
@@ -1638,15 +1661,27 @@ void PanelMenuView::OnMaximizedGrabMove(int x, int y)
   if (!panel)
     return;
 
+  /* Adjusting the x, y coordinates to get the absolute values */
   x += _titlebar_grab_area->GetAbsoluteX();
   y += _titlebar_grab_area->GetAbsoluteY();
 
+  /* If the user clicked over the integrated_menu we need to adjust
+   * the coordinates again, because they are still relative to the grab area */
+  if (_is_integrated && _integrated_menu)
+  {
+    if (_integrated_menu->GetAbsoluteGeometry().IsPointInside(x, y))
+    {
+      x += _integrated_menu->GetAbsoluteX();
+      y += _integrated_menu->GetAbsoluteY();
+    }
+  }
+
   Window maximized = GetMaximizedWindow();
 
-  // When the drag goes out from the Panel, start the real movement.
-  //
-  // This is a workaround to avoid that the grid plugin would be fired
-  // showing the window shape preview effect. See bug #838923
+  /* When the drag goes out from the Panel, start the real movement.
+   *
+   * This is a workaround to avoid that the grid plugin would be fired
+   * showing the window shape preview effect. See bug #838923 */
   if (maximized != 0 && panel && !panel->GetAbsoluteGeometry().IsPointInside(x, y))
   {
     _titlebar_grab_area->SetGrabbed(false);
