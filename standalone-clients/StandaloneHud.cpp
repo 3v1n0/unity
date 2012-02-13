@@ -69,7 +69,7 @@ void TestRunner::Init ()
 
   hud_view_ = new unity::hud::View();
 
-  layout->AddView (hud_view_, 1, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FULL);
+  layout->AddView (hud_view_, 0, nux::MINOR_POSITION_TOP);
   nux::GetWindowCompositor().SetKeyFocusArea(hud_view_->default_focus());
 
   nux::GetWindowThread()->SetLayout (layout);

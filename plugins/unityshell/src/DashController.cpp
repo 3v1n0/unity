@@ -22,6 +22,7 @@
 #include <Nux/HLayout.h>
 
 #include "DashSettings.h"
+#include "PanelStyle.h"
 #include "PluginAdapter.h"
 #include "UBusMessages.h"
 #include "UScreen.h"
@@ -38,7 +39,6 @@ nux::logging::Logger logger("unity.dash.controller");
 
 Controller::Controller()
   : launcher_width(64)
-  , panel_height(24)
   , window_(0)
   , visible_(false)
   , need_show_(false)
@@ -168,10 +168,11 @@ nux::Geometry Controller::GetIdealWindowGeometry()
 
   // We want to cover as much of the screen as possible to grab any mouse events outside
   // of our window
+  panel::Style &panel_style = panel::Style::Instance();
   return nux::Geometry (monitor_geo.x + launcher_width,
-                        monitor_geo.y + panel_height,
+                        monitor_geo.y + panel_style.panel_height,
                         monitor_geo.width - launcher_width,
-                        monitor_geo.height - panel_height);
+                        monitor_geo.height - panel_style.panel_height);
 }
 
 void Controller::Relayout(GdkScreen*screen)
@@ -181,7 +182,8 @@ void Controller::Relayout(GdkScreen*screen)
   nux::Geometry geo = GetIdealWindowGeometry();
   window_->SetGeometry(geo);
   view_->Relayout();
-  view_->SetMonitorOffset(launcher_width, panel_height);
+  panel::Style &panel_style = panel::Style::Instance();
+  view_->SetMonitorOffset(launcher_width, panel_style.panel_height);
 }
 
 void Controller::OnMouseDownOutsideWindow(int x, int y,

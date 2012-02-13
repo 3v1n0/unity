@@ -37,6 +37,7 @@
 
 #include "Launcher.h"
 #include "AbstractLauncherIcon.h"
+#include "PanelStyle.h"
 #include "SpacerLauncherIcon.h"
 #include "LauncherModel.h"
 #include "QuicklistManager.h"
@@ -93,7 +94,6 @@ const int STARTING_BLINK_LAMBDA = 3;
 const int PULSE_BLINK_LAMBDA = 2;
 
 const float BACKLIGHT_STRENGTH = 0.9f;
-const int panel_height = 24;
 const int ICON_PADDING = 6;
 const int RIGHT_LINE_WIDTH = 1;
 
@@ -893,6 +893,9 @@ void Launcher::SetupRenderArg(AbstractLauncherIcon* icon, struct timespec const&
   arg.progress            = CLAMP(icon->GetProgress(), 0.0f, 1.0f);
   arg.draw_shortcut       = _shortcuts_shown && !_hide_machine->GetQuirk(LauncherHideMachine::PLACES_VISIBLE);
   arg.system_item         = icon->Type() == AbstractLauncherIcon::TYPE_HOME;
+  arg.colorify_background = icon->Type() == AbstractLauncherIcon::TYPE_HOME  ||
+                            icon->Type() == AbstractLauncherIcon::TYPE_TRASH ||
+                            icon->Type() == AbstractLauncherIcon::TYPE_EXPO;
 
   if (_dash_is_open)
     arg.active_arrow = icon->Type() == AbstractLauncherIcon::TYPE_HOME;
@@ -1023,7 +1026,8 @@ void Launcher::FillRenderArg(AbstractLauncherIcon* icon,
   // FIXME: this is a hack, we should have a look why SetAnimationTarget is necessary in SetAnimationTarget
   // we should ideally just need it at start to set the target
   if (!_initial_drag_animation && icon == _drag_icon && _drag_window && _drag_window->Animating())
-    _drag_window->SetAnimationTarget((int) center.x, (int) center.y + _parent->GetGeometry().y);
+    _drag_window->SetAnimationTarget((int)(_drag_icon->GetCenter(monitor).x), 
+                                     (int)(_drag_icon->GetCenter(monitor).y));
 
   center.y += (half_size * size_modifier) + spacing;   // move to end
 }
@@ -1218,7 +1222,7 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
 
     FillRenderArg(icon, arg, center, parent_abs_geo, folding_threshold, folded_size, folded_spacing,
                   autohide_offset, folded_z_distance, animation_neg_rads, current);
-
+    arg.colorify = colorify;
     launcher_args.push_back(arg);
   }
 }
@@ -1600,7 +1604,7 @@ void Launcher::SetHover(bool hovered)
 
 bool Launcher::MouseOverTopScrollArea()
 {
-  return _mouse_position.y < panel_height;
+  return _mouse_position.y < panel::Style::Instance().panel_height;
 }
 
 bool Launcher::MouseOverTopScrollExtrema()
@@ -1610,7 +1614,7 @@ bool Launcher::MouseOverTopScrollExtrema()
 
 bool Launcher::MouseOverBottomScrollArea()
 {
-  return _mouse_position.y > GetGeometry().height - panel_height;
+  return _mouse_position.y > GetGeometry().height - panel::Style::Instance().panel_height;
 }
 
 bool Launcher::MouseOverBottomScrollExtrema()
@@ -1677,9 +1681,9 @@ void Launcher::Resize()
 {
   UScreen* uscreen = UScreen::GetDefault();
   auto geo = uscreen->GetMonitorGeometry(monitor());
-
+  unity::panel::Style &panel_style = panel::Style::Instance();
   int width = _icon_size + ICON_PADDING*2 + RIGHT_LINE_WIDTH - 2;
-  nux::Geometry new_geometry(geo.x, geo.y + panel_height, width, geo.height - panel_height);
+  nux::Geometry new_geometry(geo.x, geo.y + panel_style.panel_height, width, geo.height - panel_style.panel_height);
   SetMaximumHeight(new_geometry.height);
   _parent->SetGeometry(new_geometry);
   SetGeometry(new_geometry);
@@ -1688,7 +1692,7 @@ void Launcher::Resize()
 
   _pointer_barrier->x1 = new_geometry.x;
   _pointer_barrier->x2 = new_geometry.x;
-  _pointer_barrier->y1 = new_geometry.y - panel_height;
+  _pointer_barrier->y1 = new_geometry.y - panel_style.panel_height;
   _pointer_barrier->y2 = new_geometry.y + new_geometry.height;
   _pointer_barrier->threshold = options()->edge_stop_velocity();
 
@@ -1740,7 +1744,6 @@ LauncherModel* Launcher::GetModel() const
 
 void Launcher::EnsureIconOnScreen(AbstractLauncherIcon* selection)
 {
-  nux::Point3 center = selection->GetCenter(monitor);
   nux::Geometry geo = GetGeometry();
 
   int natural_y = 0;
@@ -1891,7 +1894,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
     texxform.SetWrap(nux::TEXWRAP_CLAMP, nux::TEXWRAP_CLAMP);
     texxform.uoffset = (1.0f / launcher_sheen_->GetWidth()); // TODO (gord) don't use absolute values here
-    texxform.voffset = (1.0f / launcher_sheen_->GetHeight()) * panel_height;
+    texxform.voffset = (1.0f / launcher_sheen_->GetHeight()) * panel::Style::Instance().panel_height;
     GfxContext.QRP_1Tex(base.x, base.y, base.width, base.height,
                         launcher_sheen_->GetDeviceTexture(),
                         texxform,
@@ -2077,7 +2080,8 @@ void Launcher::EndIconDrag()
     {
       _model->Save();
 
-      _drag_window->SetAnimationTarget((int)(_drag_icon->GetCenter(monitor).x), (int)(_drag_icon->GetCenter(monitor).y));
+      _drag_window->SetAnimationTarget((int)(_drag_icon->GetCenter(monitor).x), 
+                                       (int)(_drag_icon->GetCenter(monitor).y));
       _drag_window->StartAnimation();
 
       if (_drag_window->on_anim_completed.connected())
@@ -2856,6 +2860,8 @@ Launcher::OnBusAcquired(GDBusConnection* connection,
   {
     LOG_WARNING(logger) << "Object registration failed. Won't get dynamic launcher addition.";
   }
+
+  g_dbus_node_info_unref(introspection_data);
 }
 
 void

@@ -379,6 +379,7 @@ void BamfLauncherIcon::OnWindowMoved(guint32 moved_win)
   {
     BamfLauncherIcon* self = static_cast<BamfLauncherIcon*>(data);
     self->EnsureWindowState();
+    self->UpdateIconGeometries(self->GetCenters());
     self->_window_moved_id = 0;
     return FALSE;
   }, this);
@@ -1016,8 +1017,6 @@ void BamfLauncherIcon::UpdateIconGeometries(std::vector<nux::Point3> center)
   GList* children, *l;
   nux::Geometry geo;
 
-  geo.x = center[0].x - 24;
-  geo.y = center[0].y - 24;
   geo.width = 48;
   geo.height = 48;
 
@@ -1029,6 +1028,11 @@ void BamfLauncherIcon::UpdateIconGeometries(std::vector<nux::Point3> center)
       continue;
 
     Window xid = bamf_window_get_xid(static_cast<BamfWindow*>(l->data));
+    int monitor = bamf_window_get_monitor(static_cast<BamfWindow*>(l->data));
+    monitor = std::max<int>(0, std::min<int>(center.size() - 1, monitor));
+
+    geo.x = center[monitor].x - 24;
+    geo.y = center[monitor].y - 24;
     WindowManager::Default()->SetWindowIconGeometry(xid, geo);
   }
 

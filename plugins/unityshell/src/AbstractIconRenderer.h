@@ -63,6 +63,7 @@ public:
     , keyboard_nav_hl(false)
     , draw_shortcut(false)
     , system_item(false)
+    , colorify_background(false)
     , window_indicators(0)
     , shortcut_label(0)
   {
@@ -93,6 +94,7 @@ public:
   bool          keyboard_nav_hl;
   bool          draw_shortcut;
   bool          system_item;
+  bool          colorify_background;
   int           window_indicators;
   char          shortcut_label;
 };
