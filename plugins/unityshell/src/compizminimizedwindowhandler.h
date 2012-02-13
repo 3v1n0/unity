@@ -251,7 +251,7 @@ compiz::CompizMinimizedWindowHandler<Screen, Window>::unminimize ()
       if (w && w->mMinimizeHandler)
       {
         w->mMinimizeHandler->unminimize ();
-        w->mMinimizeHandler.release ();
+        w->mMinimizeHandler.reset ();
       }
     }
   }
