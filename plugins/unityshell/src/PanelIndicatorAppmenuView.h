@@ -37,6 +37,9 @@ public:
   std::string GetLabel();
   void SetLabel(std::string const& label);
   bool IsLabelVisible() const;
+  bool IsLabelSensitive() const;
+
+  bool IsIconSensitive() const;
 
   void SetControlledWindowXid(Window xid);
 

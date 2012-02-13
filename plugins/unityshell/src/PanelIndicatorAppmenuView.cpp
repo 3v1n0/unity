@@ -24,7 +24,7 @@
 #include "PanelStyle.h"
 
 namespace unity
-{  
+{
 using indicator::Entry;
 
 PanelIndicatorAppmenuView::PanelIndicatorAppmenuView(Entry::Ptr const& proxy)
@@ -59,6 +59,17 @@ std::string PanelIndicatorAppmenuView::GetLabel()
   bold_label << "<b>" << escaped.Str() << "</b>";
 
   return bold_label.str();
+}
+
+bool PanelIndicatorAppmenuView::IsLabelSensitive() const
+{
+  return !label_.empty();
+}
+
+bool PanelIndicatorAppmenuView::IsIconSensitive() const
+{
+  //TODO set non-sensitive when the window has no menu!
+  return true;
 }
 
 bool PanelIndicatorAppmenuView::IsLabelVisible() const
