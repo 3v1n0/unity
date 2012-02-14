@@ -1,6 +1,17 @@
 import apport.packaging
 
 def add_info(report, ui):
+
+    # for install from the ppa
+    if not apport.packaging.is_distro_package(report['Package'].split()[0]):
+        report['CrashDB'] = 'unity'
+        try:
+            version = packaging.get_version('unity')
+        except ValueError:
+            version = 'N/A'
+        if version is None:
+            version = 'N/A'
+        report['Tags'] += " rc-%s" % version
     
     # the crash is not in the unity code so reassign
     if report.has_key("Stacktrace") and "/usr/lib/indicators" in report["Stacktrace"]:
@@ -12,7 +23,7 @@ def add_info(report, ui):
     # only reports all compiz infos if a graphical bug
     compiz_bug = False
     if ui and report['SourcePackage'] == "unity":
-        if ui.yesno("Thanks for reporting this bug on unity.  Is the issue you are reporting graphical (will report more information about your graphic configuration)?"):
+        if ui.yesno("Thanks for reporting this bug on unity.  Is the issue you are reporting purely graphical (will report more information about your graphic configuration and will report the bug against compiz)?"):
             compiz_bug = True
     if compiz_bug:
         report.add_hooks_info(ui, srcpackage='compiz')

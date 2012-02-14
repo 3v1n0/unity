@@ -3,5 +3,6 @@ usr/share/ccsm
 usr/share/glib-2.0
 usr/share/gconf
 usr/share/unity
+debian/unity-crashdb.conf etc/apport/crashdb.conf.d/
 debian/source_unity.py usr/share/apport/package-hooks
 debian/profile_upgrade/* etc/compizconfig/upgrades/

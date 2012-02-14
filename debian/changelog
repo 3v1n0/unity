@@ -1,3 +1,11 @@
+unity (5.2.0-0ubuntu5) UNRELEASED; urgency=low
+
+  * debian/unity-crashdb.conf, debian/source_unity.py,
+    debian/unity-common.install:
+    - enabling installing + tag from a ppa
+
+ -- Didier Roche <didrocks@ubuntu.com>  Tue, 14 Feb 2012 13:13:56 +0100
+
 unity (5.2.0-0ubuntu4) precise; urgency=low
 
   * debian/control:
