@@ -191,13 +191,16 @@ nux::BaseTexture* arrow_empty_rtl = 0;
 
 nux::BaseTexture* squircle_base = 0;
 nux::BaseTexture* squircle_base_selected = 0;
+nux::BaseTexture* squircle_edge = 0;
 nux::BaseTexture* squircle_glow = 0;
+nux::BaseTexture* squircle_shadow = 0;
 nux::BaseTexture* squircle_shine = 0;
 
 std::vector<nux::BaseTexture*> icon_background;
 std::vector<nux::BaseTexture*> icon_selected_background;
 std::vector<nux::BaseTexture*> icon_edge;
 std::vector<nux::BaseTexture*> icon_glow;
+std::vector<nux::BaseTexture*> icon_shadow;
 std::vector<nux::BaseTexture*> icon_shine;
 nux::ObjectPtr<nux::IOpenGLBaseTexture> offscreen_progress_texture;
 nux::ObjectPtr<nux::IOpenGLShaderProgram> shader_program_uv_persp_correction;
@@ -398,10 +401,13 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
   nux::Color background_tile_colorify = arg.colorify;
   float backlight_intensity = arg.backlight_intensity;
   float glow_intensity = arg.glow_intensity;
+  float shadow_intensity = 0.6f;
 
   nux::BaseTexture* background = local::icon_background[size];
+  nux::BaseTexture* edge = local::icon_edge[size];
   nux::BaseTexture* glow = local::icon_glow[size];
   nux::BaseTexture* shine = local::icon_shine[size];
+  nux::BaseTexture* shadow = local::icon_shadow[size];
 
   bool force_filter = icon_size != background->GetWidth();
 
@@ -412,33 +418,58 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
     edge_color = nux::color::White;
     colorify = nux::color::White;
     background_tile_colorify = nux::color::White;
-    backlight_intensity = 0.95;
+    backlight_intensity = 0.95f;
     glow_intensity = 1.0f;
+    shadow_intensity = 0.0f;
 
     background = local::icon_selected_background[size];
   }
+  else
+  {
+    colorify.red +=   (0.5f + 0.5f * arg.saturation) * (1.0f - colorify.red);
+    colorify.blue +=  (0.5f + 0.5f * arg.saturation) * (1.0f - colorify.blue);
+    colorify.green += (0.5f + 0.5f * arg.saturation) * (1.0f - colorify.green);
 
-  colorify.red +=                   (0.5f + 0.5f * arg.saturation) * (1.0f - colorify.red);
-  colorify.blue +=                  (0.5f + 0.5f * arg.saturation) * (1.0f - colorify.blue);
-  colorify.green +=                 (0.5f + 0.5f * arg.saturation) * (1.0f - colorify.green);
-  background_tile_colorify.red +=   (0.5f + 0.5f * arg.saturation) * (1.0f - background_tile_colorify.red);
-  background_tile_colorify.green += (0.5f + 0.5f * arg.saturation) * (1.0f - background_tile_colorify.green);
-  background_tile_colorify.blue +=  (0.5f + 0.5f * arg.saturation) * (1.0f - background_tile_colorify.blue);
+    if (arg.colorify_background)
+    {
+      background_tile_colorify = background_tile_colorify * 0.7f;
+    }
+    else
+    {
+      background_tile_colorify.red +=   (0.5f + 0.5f * arg.saturation) * (1.0f - background_tile_colorify.red);
+      background_tile_colorify.green += (0.5f + 0.5f * arg.saturation) * (1.0f - background_tile_colorify.green);
+      background_tile_colorify.blue +=  (0.5f + 0.5f * arg.saturation) * (1.0f - background_tile_colorify.blue);
+    }
+  }
 
   if (arg.system_item)
   {
-    backlight_intensity = (arg.keyboard_nav_hl) ? 0.95f : 0.8f ;
+    // 0.9f is BACKLIGHT_STRENGTH in Launcher.cpp
+    backlight_intensity = (arg.keyboard_nav_hl) ? 0.95f : 0.9f;
     glow_intensity = (arg.keyboard_nav_hl) ? 1.0f : 0.0f ;
 
     background = local::squircle_base_selected;
+    edge = local::squircle_edge;
     glow = local::squircle_glow;
     shine = local::squircle_shine;
+    shadow = local::squircle_shadow;
   }
 
-  if (arg.colorify_background && !arg.keyboard_nav_hl)
+  // draw shadow
+  if (shadow_intensity > 0)
   {
-    background_tile_colorify = arg.colorify;
-    background_tile_colorify = background_tile_colorify * 0.65f;
+    nux::Color shadow_color = background_tile_colorify * 0.3f;
+
+    // FIXME it is using the same transformation of the glow,
+    // should have its own transformation.
+    RenderElement(GfxContext,
+                  arg,
+                  shadow->GetDeviceTexture(),
+                  nux::color::White,
+                  shadow_color,
+                  shadow_intensity * arg.alpha,
+                  force_filter,
+                  arg.icon->GetTransform(ui::IconTextureSource::TRANSFORM_GLOW, monitor));
   }
 
   auto tile_transform = arg.icon->GetTransform(ui::IconTextureSource::TRANSFORM_TILE, monitor);
@@ -456,19 +487,28 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
                   tile_transform);
   }
 
-  edge_color = edge_color + ((background_tile_color - edge_color) * arg.backlight_intensity);
+  edge_color = edge_color + ((background_tile_color - edge_color) * backlight_intensity);
+  nux::Color edge_tile_colorify = background_tile_colorify;
 
-  if (!arg.system_item)
+  if (arg.colorify_background && !arg.keyboard_nav_hl)
   {
-    RenderElement(GfxContext,
-                  arg,
-                  local::icon_edge[size]->GetDeviceTexture(),
-                  edge_color,
-                  background_tile_colorify,
-                  arg.alpha,
-                  force_filter,
-                  tile_transform);
+    // Mix edge_tile_colorify with plain white (1.0f).
+    // Would be nicer to tweak value from HSV colorspace, instead.
+    float mix_factor = (arg.system_item) ? 0.2f : 0.16f;
+
+    edge_tile_colorify.red =   edge_tile_colorify.red   * (1.0f - mix_factor) + 1.0f * mix_factor;
+    edge_tile_colorify.green = edge_tile_colorify.green * (1.0f - mix_factor) + 1.0f * mix_factor;
+    edge_tile_colorify.blue =  edge_tile_colorify.blue  * (1.0f - mix_factor) + 1.0f * mix_factor;
   }
+
+  RenderElement(GfxContext,
+                arg,
+                edge->GetDeviceTexture(),
+                edge_color,
+                edge_tile_colorify,
+                arg.alpha,
+                force_filter,
+                tile_transform);
   // end tile draw
 
   // draw icon
@@ -1158,13 +1198,18 @@ void generate_textures()
   generate_textures(icon_glow,
                     PKGDATADIR"/launcher_icon_glow_200.png",
                     PKGDATADIR"/launcher_icon_glow_62.png");
+  generate_textures(icon_shadow,
+                    PKGDATADIR"/launcher_icon_shadow_200.png",
+                    PKGDATADIR"/launcher_icon_shadow_62.png");
   generate_textures(icon_shine,
                     PKGDATADIR"/launcher_icon_shine_150.png",
                     PKGDATADIR"/launcher_icon_shine_54.png");
 
   squircle_base = load_texture(PKGDATADIR"/squircle_base_54.png");
   squircle_base_selected = load_texture(PKGDATADIR"/squircle_base_selected_54.png");
-  squircle_glow = load_texture(PKGDATADIR"/squircle_glow_54.png");
+  squircle_edge = load_texture(PKGDATADIR"/squircle_edge_54.png");
+  squircle_glow = load_texture(PKGDATADIR"/squircle_glow_62.png");
+  squircle_shadow = load_texture(PKGDATADIR"/squircle_shadow_62.png");
   squircle_shine = load_texture(PKGDATADIR"/squircle_shine_54.png");
 
   pip_ltr = load_texture(PKGDATADIR"/launcher_pip_ltr.png");

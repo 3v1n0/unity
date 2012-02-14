@@ -75,8 +75,9 @@ public:
 
 class AbstractLauncherIcon : public ui::IconTextureSource, public debug::Introspectable
 {
+  NUX_DECLARE_OBJECT_TYPE(AbstractLauncherIcon, ui::IconTextureSource);
 public:
-
+  typedef nux::ObjectPtr<AbstractLauncherIcon> Ptr;
   typedef std::vector<nux::Vector4> TransformVector;
 
   typedef enum
@@ -168,7 +169,7 @@ public:
 
   virtual void ResetQuirkTime(Quirk quirk) = 0;
 
-  virtual IconType Type() = 0;
+  virtual IconType GetIconType() = 0;
 
   virtual const gchar* RemoteUri() = 0;
 
@@ -186,16 +187,26 @@ public:
 
   virtual void RemoveEntryRemote(LauncherEntryRemote* remote) = 0;
 
+  virtual std::string DesktopFile() = 0;
+
+  virtual bool IsSticky() const = 0;
+
+  virtual bool IsVisible() const = 0;
+
+  virtual void AboutToRemove() = 0;
+  
+  virtual void Stick(bool save = true) = 0;
+  
+  virtual void UnStick() = 0;
+
   sigc::signal<void, int, int> mouse_down;
   sigc::signal<void, int, int> mouse_up;
   sigc::signal<void, int, int> mouse_click;
   sigc::signal<void, int>      mouse_enter;
   sigc::signal<void, int>      mouse_leave;
 
-  sigc::signal<void, AbstractLauncherIcon*> show;
-  sigc::signal<void, AbstractLauncherIcon*> hide;
-  sigc::signal<void, AbstractLauncherIcon*> needs_redraw;
-  sigc::signal<void, AbstractLauncherIcon*> remove;
+  sigc::signal<void, AbstractLauncherIcon::Ptr> needs_redraw;
+  sigc::signal<void, AbstractLauncherIcon::Ptr> remove;
 
   sigc::connection needs_redraw_connection;
   sigc::connection on_icon_added_connection;

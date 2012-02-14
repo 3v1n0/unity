@@ -34,9 +34,6 @@ public:
   DesktopLauncherIcon();
   ~DesktopLauncherIcon();
 
-  virtual nux::Color BackgroundColor();
-  virtual nux::Color GlowColor();
-
   void SetShowInSwitcher(bool show_in_switcher)
   {
     show_in_switcher_ = show_in_switcher;

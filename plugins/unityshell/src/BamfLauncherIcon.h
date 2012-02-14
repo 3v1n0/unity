@@ -38,6 +38,7 @@ class Launcher;
 
 class BamfLauncherIcon : public SimpleLauncherIcon
 {
+  NUX_DECLARE_OBJECT_TYPE(BamfLauncherIcon, SimpleLauncherIcon);
 public:
   BamfLauncherIcon(BamfApplication* app);
   virtual ~BamfLauncherIcon();

@@ -46,6 +46,10 @@ IMTextEntry::IMTextEntry()
   CheckIMEnabled();
   im_enabled ? SetupMultiIM() : SetupSimpleIM();
 
+  key_nav_focus_change.connect([&](nux::Area* area, bool focus, nux::KeyNavDirection dir) 
+  { 
+    focus ? OnFocusIn() : OnFocusOut();
+  }); 
   mouse_up.connect(sigc::mem_fun(this, &IMTextEntry::OnMouseButtonUp));
 }
 
