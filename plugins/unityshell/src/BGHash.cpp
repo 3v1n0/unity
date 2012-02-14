@@ -494,6 +494,7 @@ namespace unity {
     glib::Error error;
     glib::String cachedir(g_strdup(g_get_user_cache_dir()));
     std::string fullpath(cachedir.Str() + cachefilename);
+    g_mkdir_with_parents((cachedir.Str() + std::string("/unity")).c_str(), 0744);
     glib::Object<GFile> cachefile(g_file_new_for_path(fullpath.c_str()));
     glib::Object<GOutputStream> output_stream(G_OUTPUT_STREAM(g_file_replace(cachefile, 
                                                                           NULL, FALSE, G_FILE_CREATE_NONE, 
