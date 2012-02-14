@@ -28,11 +28,15 @@ namespace unity
 namespace launcher
 {
 
-typedef struct
+struct RemoveArg
 {
+  RemoveArg(AbstractLauncherIcon::Ptr const& icon_, LauncherModel* model)
+    : icon(icon_), self(model)
+  {}
+
   AbstractLauncherIcon::Ptr icon;
   LauncherModel* self;
-} RemoveArg;
+};
 
 LauncherModel::LauncherModel()
 {
@@ -143,10 +147,13 @@ LauncherModel::RemoveIcon(AbstractLauncherIcon::Ptr icon)
 gboolean
 LauncherModel::RemoveCallback(gpointer data)
 {
-  RemoveArg* arg = (RemoveArg*) data;
+  RemoveArg* arg = static_cast<RemoveArg*>(data);
 
-  arg->self->RemoveIcon(arg->icon);
-  g_free(arg);
+  if (arg)
+  {
+    arg->self->RemoveIcon(arg->icon);
+    delete arg;
+  }
 
   return false;
 }
@@ -154,10 +161,7 @@ LauncherModel::RemoveCallback(gpointer data)
 void
 LauncherModel::OnIconRemove(AbstractLauncherIcon::Ptr icon)
 {
-  RemoveArg* arg = (RemoveArg*) g_malloc0(sizeof(RemoveArg));
-  arg->icon = icon;
-  arg->self = this;
-
+  RemoveArg* arg = new RemoveArg(icon, this);
   g_timeout_add(1000, &LauncherModel::RemoveCallback, arg);
 }
 
