@@ -6,20 +6,18 @@
 # under the terms of the GNU General Public License version 3, as published
 # by the Free Software Foundation.
 
-from subprocess import call
-from time import sleep
-
-from testtools.matchers import Equals
-from testtools.matchers import NotEquals
-
 from compizconfig import Setting
 from compizconfig import Plugin
+from subprocess import call
+from testtools.matchers import Equals
+from testtools.matchers import NotEquals
+from time import sleep
 
-from autopilot.globals import global_context
-from autopilot.emulators.unity import Switcher
 from autopilot.emulators.bamf import Bamf
-from autopilot.tests import AutopilotTestCase
+from autopilot.emulators.unity.switcher import Switcher
 from autopilot.glibrunner import GlibRunner
+from autopilot.globals import global_context
+from autopilot.tests import AutopilotTestCase
 
 
 class SwitcherTests(AutopilotTestCase):
@@ -65,7 +63,7 @@ class SwitcherTests(AutopilotTestCase):
         self.server.terminate()
 
         self.assertThat(start, NotEquals(0))
-        self.assertThat(end, Equals(start+1))
+        self.assertThat(end, Equals(start + 1))
         self.set_timeout_setting(True)
 
     def test_switcher_move_prev(self):
@@ -83,5 +81,5 @@ class SwitcherTests(AutopilotTestCase):
         self.server.terminate()
 
         self.assertThat(start, NotEquals(0))
-        self.assertThat(end, Equals(start-1))
+        self.assertThat(end, Equals(start - 1))
         self.set_timeout_setting(True)

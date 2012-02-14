@@ -8,9 +8,8 @@
 
 from time import sleep
 
-from autopilot.emulators.unity import Dash
-from autopilot.emulators.X11 import Keyboard
-from autopilot.emulators.X11 import Mouse
+from autopilot.emulators.unity.dash import Dash
+from autopilot.emulators.X11 import Keyboard, Mouse
 from autopilot.tests import AutopilotTestCase
 from autopilot.glibrunner import GlibRunner
 
@@ -73,14 +72,14 @@ class DashTests(AutopilotTestCase):
         self.dash.ensure_hidden()
         self.dash.reveal_command_lens()
         self.assertEqual(self.dash.get_current_lens(), u'commands.lens')
-  
+
     def test_lensbar_keyfocus(self):
         """Test that the lensbar keynavigation works well."""
         self.dash.ensure_hidden()
         self.dash.toggle_reveal()
         kb = Keyboard()
 
-        # Make sure that the lens bar can get the focus 
+        # Make sure that the lens bar can get the focus
         for i in range(self.dash.get_num_rows()):
           kb.press_and_release("Down")
         self.assertIsNot(self.dash.get_focused_lens_icon(), '')
@@ -180,21 +179,7 @@ class DashTests(AutopilotTestCase):
           category = self.dash.get_focused_category()
           self.assertEqual(category, None)
 
-    def test_backward_keynav(self):
-        """Test that the backward keyboard navigation works well."""
-        self.dash.ensure_hidden()
-        self.dash.reveal_application_lens()
-        kb = Keyboard()
 
-        # Moves the key focus to the lensbar
-        for i in range(self.dash.get_num_rows()):
-          kb.press_and_release("Down")
-        self.assertIsNot(self.dash.get_focused_lens_icon(), '')
-
-        # backward key navigation...
-        for i in range(self.dash.get_num_rows()):
-          kb.press_and_release("Up")
-        self.assertTrue(self.dash.searchbar_has_focus())
 
 
 

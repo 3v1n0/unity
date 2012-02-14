@@ -81,16 +81,6 @@ DeviceLauncherIcon::CanEject()
   return g_volume_can_eject(volume_);
 }
 
-nux::Color DeviceLauncherIcon::BackgroundColor()
-{
-  return nux::Color(0xFF333333);
-}
-
-nux::Color DeviceLauncherIcon::GlowColor()
-{
-  return nux::Color(0xFF333333);
-}
-
 std::list<DbusmenuMenuitem*> DeviceLauncherIcon::GetMenus()
 {
   std::list<DbusmenuMenuitem*> result;
