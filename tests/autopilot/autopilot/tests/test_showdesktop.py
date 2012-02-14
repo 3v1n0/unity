@@ -10,10 +10,11 @@ from time import sleep
 from subprocess import call
 
 from autopilot.emulators.bamf import Bamf
+from autopilot.emulators.unity.launcher import Launcher
+from autopilot.emulators.unity.switcher import Switcher
 from autopilot.emulators.X11 import Keyboard
-from autopilot.emulators.unity import Launcher, Switcher
-from autopilot.tests import AutopilotTestCase
 from autopilot.glibrunner import GlibRunner
+from autopilot.tests import AutopilotTestCase
 
 
 class ShowDesktopTests(AutopilotTestCase):
@@ -24,6 +25,9 @@ class ShowDesktopTests(AutopilotTestCase):
         super(ShowDesktopTests, self).setUp()
         self.addCleanup(Keyboard.cleanup)
         self.bamf = Bamf()
+        # we need this to let the unity models update after we shutdown apps
+        # before we start the next test.
+        sleep(5)
 
     def launch_test_apps(self):
         """Launch character map and calculator apps."""
@@ -126,7 +130,7 @@ class ShowDesktopTests(AutopilotTestCase):
             switcher.previous_icon()
             sleep(0.5)
         self.assertTrue(found, "Could not find 'Show Desktop' entry in switcher.")
-        switcher.terminate()
+        switcher.stop()
         kb = Keyboard()
         self.addCleanup(kb.press_and_release, keys='Control+Alt+d')
 

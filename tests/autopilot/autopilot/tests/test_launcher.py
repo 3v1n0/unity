@@ -2,7 +2,7 @@ from testtools.matchers import Equals
 from testtools.matchers import LessThan
 
 from autopilot.tests import AutopilotTestCase
-from autopilot.emulators.unity import Launcher
+from autopilot.emulators.unity.launcher import Launcher
 from autopilot.glibrunner import GlibRunner
 
 from time import sleep
@@ -128,5 +128,3 @@ class LauncherTests(AutopilotTestCase):
             self.server.reveal_launcher(x)
             sleep(2)
             self.assertThat(self.server.is_showing(x), Equals(True))
-
-
