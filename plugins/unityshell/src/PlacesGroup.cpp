@@ -173,7 +173,12 @@ PlacesGroup::PlacesGroup()
   _expand_icon->key_nav_focus_change.connect(sigc::mem_fun(this, &PlacesGroup::OnLabelFocusChanged));
   key_nav_focus_change.connect([&](nux::Area* area, bool has_focus, nux::KeyNavDirection direction)
   {
-    if(has_focus)
+    if (!has_focus)
+      return;
+
+    if(direction == nux::KEY_NAV_UP)
+      nux::GetWindowCompositor().SetKeyFocusArea(_child_view);
+    else
       nux::GetWindowCompositor().SetKeyFocusArea(GetHeaderFocusableView());
   });
 }
