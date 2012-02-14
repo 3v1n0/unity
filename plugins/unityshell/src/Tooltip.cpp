@@ -111,13 +111,7 @@ void Tooltip::ShowTooltipWithTipAt(int anchor_tip_x, int anchor_tip_y)
 void Tooltip::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
 {
   CairoBaseWindow::Draw(gfxContext, forceDraw);
-
-  nux::Geometry const& base = GetGeometry();
-  gfxContext.PushClippingRectangle(base);
-
   _tooltip_text->ProcessDraw(gfxContext, forceDraw);
-
-  gfxContext.PopClippingRectangle();
 }
 
 void Tooltip::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
@@ -144,12 +138,12 @@ void Tooltip::PreLayoutManagement()
     _bottom_space->SetMinMaxSize(1, (ANCHOR_HEIGHT - text_height) / 2 + 1 + PADDING + CORNER_RADIUS);
   }
 
-  nux::BaseWindow::PreLayoutManagement();
+  CairoBaseWindow::PreLayoutManagement();
 }
 
 long Tooltip::PostLayoutManagement(long LayoutResult)
 {
-  long result = nux::BaseWindow::PostLayoutManagement(LayoutResult);
+  long result = CairoBaseWindow::PostLayoutManagement(LayoutResult);
   UpdateTexture();
 
   return result;
