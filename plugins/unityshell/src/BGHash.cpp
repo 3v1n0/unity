@@ -486,16 +486,17 @@ namespace unity {
 
   namespace
   {
-    const std::string cachefilename = "/unity/bgcachefile";
+    const std::string cachedirectory("/unity/");
+    const std::string cachefilename("bgcachefile");
   }
 
   void BGHash::SerializeCache()
   {
     glib::Error error;
-    glib::String cachedir(g_strdup(g_get_user_cache_dir()));
-    std::string fullpath(cachedir.Str() + cachefilename);
-    g_mkdir_with_parents((cachedir.Str() + std::string("/unity")).c_str(), 0744);
-    glib::Object<GFile> cachefile(g_file_new_for_path(fullpath.c_str()));
+    glib::String cachedir(g_build_filename(g_get_user_cache_dir(), cachedirectory.c_str(), NULL));
+    glib::String fullpath(g_build_filename(cachedir, cachefilename.c_str(), NULL));
+    g_mkdir_with_parents(cachedir, 0744);
+    glib::Object<GFile> cachefile(g_file_new_for_path(fullpath));
     glib::Object<GOutputStream> output_stream(G_OUTPUT_STREAM(g_file_replace(cachefile, 
                                                                           NULL, FALSE, G_FILE_CREATE_NONE, 
                                                                           NULL, &error)));
@@ -541,11 +542,12 @@ namespace unity {
   void BGHash::UnSerializeCache()
   {
     glib::Error error;
-    glib::String cachedir(g_strdup(g_get_user_cache_dir()));
-    std::string fullpath(cachedir.Str() + cachefilename);
+    glib::String cachedir(g_build_filename(g_get_user_cache_dir(), cachedirectory.c_str(), NULL));
+    glib::String fullpath(g_build_filename(cachedir, cachefilename.c_str(), NULL));
+    glib::Object<GFile> cachefile(g_file_new_for_path(fullpath));
     glib::String contents;
     gsize length;
-    g_file_get_contents(fullpath.c_str(), &contents, &length, &error);
+    g_file_get_contents(fullpath, &contents, &length, &error);
 
     if (G_UNLIKELY(error))
     {
