@@ -146,7 +146,7 @@ LauncherModel::RemoveCallback(gpointer data)
   RemoveArg* arg = (RemoveArg*) data;
 
   arg->self->RemoveIcon(arg->icon);
-  arg->icon = AbstractLauncherIcon::Ptr();
+  arg->icon.Release();
   g_free(arg);
 
   return false;
