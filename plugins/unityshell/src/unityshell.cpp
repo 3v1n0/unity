@@ -2687,6 +2687,18 @@ UnityWindow::~UnityWindow()
   if (us->newFocusedWindow && (UnityWindow::get(us->newFocusedWindow) == this))
     us->newFocusedWindow = NULL;
 
+  if (!window->destroyed ())
+  {
+    bool wasMinimized = window->minimized ();
+    if (wasMinimized)
+      window->unminimize ();
+    window->focusSetEnabled (this, false);
+    window->minimizeSetEnabled (this, false);
+    window->unminimizeSetEnabled (this, false);
+    if (wasMinimized)
+      window->minimize ();
+  }
+
   UnityShowdesktopHandler::animating_windows.remove (window);
 
   if (mShowdesktopHandler)
