@@ -892,8 +892,10 @@ void Launcher::SetupRenderArg(AbstractLauncherIcon::Ptr icon, struct timespec co
   arg.progress            = CLAMP(icon->GetProgress(), 0.0f, 1.0f);
   arg.draw_shortcut       = _shortcuts_shown && !_hide_machine->GetQuirk(LauncherHideMachine::PLACES_VISIBLE);
   arg.system_item         = icon->GetIconType() == AbstractLauncherIcon::TYPE_HOME;
-  arg.colorify_background = icon->GetIconType() == AbstractLauncherIcon::TYPE_HOME  ||
-                            icon->GetIconType() == AbstractLauncherIcon::TYPE_TRASH ||
+  arg.colorify_background = icon->GetIconType() == AbstractLauncherIcon::TYPE_HOME    ||
+                            icon->GetIconType() == AbstractLauncherIcon::TYPE_TRASH   ||
+                            icon->GetIconType() == AbstractLauncherIcon::TYPE_DESKTOP ||
+                            icon->GetIconType() == AbstractLauncherIcon::TYPE_DEVICE  ||
                             icon->GetIconType() == AbstractLauncherIcon::TYPE_EXPO;
 
   if (_dash_is_open)
