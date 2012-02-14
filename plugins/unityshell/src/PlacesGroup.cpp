@@ -177,9 +177,9 @@ PlacesGroup::PlacesGroup()
       return;
 
     if(direction == nux::KEY_NAV_UP)
-      nux::GetWindowCompositor().SetKeyFocusArea(_child_view);
+      nux::GetWindowCompositor().SetKeyFocusArea(_child_view, direction);
     else
-      nux::GetWindowCompositor().SetKeyFocusArea(GetHeaderFocusableView());
+      nux::GetWindowCompositor().SetKeyFocusArea(GetHeaderFocusableView(), direction);
   });
 }
 
