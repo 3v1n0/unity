@@ -318,12 +318,13 @@ private:
 
   gint64            _shortcut;
 
+  IconType                 _icon_type;
+  
   std::vector<nux::Point3> _center;
   std::vector<bool> _has_visible_window;
   std::vector<nux::Point3> _last_stable;
   std::vector<nux::Geometry> _parent_geo;
   std::vector<nux::Point3> _saved_center;
-  IconType                 _icon_type;
 
   static GtkIconTheme* _unity_theme;
 
