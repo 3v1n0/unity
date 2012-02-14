@@ -154,5 +154,6 @@ class UnityIntrospectionObject(object):
         The return value is a list (possibly empty) of class instances.
 
         """
-        instances = get_state_by_path("//%s" % (cls.__name__))
-        return [make_introspection_object(i) for i in instances]
+        cls_name = cls.__name__
+        instances = get_state_by_path("//%s" % (cls_name))
+        return [make_introspection_object((cls_name,i)) for i in instances]

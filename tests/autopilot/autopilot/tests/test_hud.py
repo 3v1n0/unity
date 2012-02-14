@@ -27,7 +27,16 @@ class HudTests(AutopilotTestCase):
         self.assertFalse(controller.visible)
         kb = Keyboard()
         kb.press_and_release("Ctrl+Alt+d")
+        self.addCleanup(kb.press_and_release, "Ctrl+Alt+d")
         sleep(1)
 
-        kb.press_and_release("Alt")
+        # we need a *fast* keypress to reveal the hud:
+        kb.press_and_release("Alt", delay=0.1)
+        sleep(1)
+        controller.refresh_state()
         self.assertTrue(controller.visible)
+
+        kb.press_and_release("Alt", delay=0.1)
+        sleep(1)
+        controller.refresh_state()
+        self.assertFalse(controller.visible)
