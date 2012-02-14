@@ -102,6 +102,8 @@ PlacesGroup::PlacesGroup()
     _n_total_items(0),
     _draw_sep(true)
 {
+  SetAcceptKeyNavFocusOnMouseDown(false);
+
   nux::BaseTexture* arrow = dash::Style::Instance().GetGroupUnexpandIcon();
 
   _cached_name = NULL;
