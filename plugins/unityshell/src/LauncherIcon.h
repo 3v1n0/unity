@@ -305,7 +305,6 @@ private:
   void LoadTooltip();
   void LoadQuicklist();
 
-  std::vector<bool> _has_visible_window;
   bool              _remote_urgent;
   float             _present_urgency;
   float             _progress;
@@ -320,9 +319,10 @@ private:
   gint64            _shortcut;
 
   std::vector<nux::Point3> _center;
+  std::vector<bool> _has_visible_window;
   std::vector<nux::Point3> _last_stable;
-  std::vector<nux::Point3> _saved_center;
   std::vector<nux::Geometry> _parent_geo;
+  std::vector<nux::Point3> _saved_center;
   IconType                 _icon_type;
 
   static GtkIconTheme* _unity_theme;

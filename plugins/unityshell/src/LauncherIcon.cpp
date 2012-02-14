@@ -81,11 +81,11 @@ LauncherIcon::LauncherIcon()
   , _glow_color(nux::color::White)
   , _shortcut(0)
   , _icon_type(TYPE_NONE)
-  , _has_visible_window(max_num_monitors)
   , _center(max_num_monitors)
-  , _saved_center(max_num_monitors)
+  , _has_visible_window(max_num_monitors)
   , _last_stable(max_num_monitors)
   , _parent_geo(max_num_monitors)
+  , _saved_center(max_num_monitors)
 {
   for (int i = 0; i < QUIRK_LAST; i++)
   {
