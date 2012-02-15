@@ -81,13 +81,12 @@ LauncherIcon::LauncherIcon()
   , _glow_color(nux::color::White)
   , _shortcut(0)
   , _icon_type(TYPE_NONE)
+  , _center(max_num_monitors)
+  , _has_visible_window(max_num_monitors)
+  , _last_stable(max_num_monitors)
+  , _parent_geo(max_num_monitors)
+  , _saved_center(max_num_monitors)
 {
-  _has_visible_window.resize(max_num_monitors);
-  _center.resize(max_num_monitors);
-  _saved_center.resize(max_num_monitors);
-  _last_stable.resize(max_num_monitors);
-  _parent_geo.resize(max_num_monitors);
-
   for (int i = 0; i < QUIRK_LAST; i++)
   {
     _quirks[i] = false;
@@ -1137,13 +1136,13 @@ LauncherIcon::OnRemoteProgressVisibleChanged(LauncherEntryRemote* remote)
 
 void LauncherIcon::EmitNeedsRedraw()
 {
-  if (OwnsTheReference())
+  if (OwnsTheReference() && GetReferenceCount() > 0)
     needs_redraw.emit(AbstractLauncherIcon::Ptr(this));
 }
 
 void LauncherIcon::EmitRemove()
 {
-  if (OwnsTheReference())
+  if (OwnsTheReference() && GetReferenceCount() > 0)
     remove.emit(AbstractLauncherIcon::Ptr(this));
 }
 
