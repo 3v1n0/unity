@@ -898,6 +898,13 @@ void Launcher::SetupRenderArg(AbstractLauncherIcon::Ptr icon, struct timespec co
                             icon->GetIconType() == AbstractLauncherIcon::TYPE_DEVICE  ||
                             icon->GetIconType() == AbstractLauncherIcon::TYPE_EXPO;
 
+  // trying to protect against flickering when icon is dragged from dash LP: #863230
+  if (arg.alpha < 0.5)
+  {
+    arg.alpha = 0.5;
+    arg.saturation = 0.0;
+  }
+
   if (_dash_is_open)
     arg.active_arrow = icon->GetIconType() == AbstractLauncherIcon::TYPE_HOME;
   else
@@ -976,6 +983,13 @@ void Launcher::FillRenderArg(AbstractLauncherIcon::Ptr icon,
 
   if (drop_dim_value < 1.0f)
     arg.alpha *= drop_dim_value;
+
+  // trying to protect against flickering when icon is dragged from dash LP: #863230
+  if (arg.alpha < 0.5)
+  {
+    arg.alpha = 0.5;
+    arg.saturation = 0.0;
+  }
 
   if (icon == _drag_icon)
   {
