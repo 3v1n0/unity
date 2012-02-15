@@ -1,3 +1,3 @@
 
 check:
-	run_autopilot
+	run_autopilot --format text
