@@ -342,17 +342,7 @@ gboolean Controller::OnViewShowHideFrame(Controller* self)
     else
     {
       // ensure the text entry is focused
-      g_timeout_add(500, [] (gpointer data) -> gboolean 
-      {
-        //THIS IS BAD - VERY VERY BAD
-        LOG_DEBUG(logger) << "Last attempt, forcing window focus";
-        Controller* self = static_cast<Controller*>(data);
-        nux::GetWindowCompositor().SetKeyFocusArea(self->view_->default_focus());
-    
-        self->window_->PushToFront();
-        self->window_->SetInputFocus();
-        return FALSE;
-      }, self);
+      nux::GetWindowCompositor().SetKeyFocusArea(self->view_->default_focus());
     }
     return FALSE;
   }
