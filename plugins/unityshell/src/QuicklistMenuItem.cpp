@@ -428,6 +428,7 @@ void QuicklistMenuItem::DrawText(nux::CairoGraphics* cairo, int width, int heigh
   pango_font_description_free(desc);
   g_free(fontName);
   g_object_unref(layout);
+  cairo_destroy(cr);
 }
 
 void QuicklistMenuItem::DrawPrelight(nux::CairoGraphics* cairo, int width, int height, nux::Color const& color)
@@ -442,6 +443,7 @@ void QuicklistMenuItem::DrawPrelight(nux::CairoGraphics* cairo, int width, int h
   cairo->DrawRoundedRectangle(cr, 1.0f, 0.0f, 0.0f, ITEM_CORNER_RADIUS_ABS,
                               width, height);
   cairo_fill(cr);
+  cairo_destroy(cr);
 }
 
 void
