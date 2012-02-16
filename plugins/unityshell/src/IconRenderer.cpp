@@ -133,6 +133,7 @@ nux::NString PerspectiveCorrectTexFrg = TEXT(
 "!!ARBfp1.0                                                   \n\
 PARAM color0 = program.local[0];                              \n\
 PARAM factor = program.local[1];                              \n\
+PARAM colorify_color = program.local[2];                      \n\
 PARAM luma = {"LUMIN_RED", "LUMIN_GREEN", "LUMIN_BLUE", 0.0}; \n\
 TEMP temp;                                                    \n\
 TEMP pcoord;                                                  \n\
@@ -145,7 +146,8 @@ MUL pcoord.xy, fragment.texcoord[0], temp;                    \n\
 TEX tex0, pcoord, texture[0], 2D;                             \n\
 MUL color, color0, tex0;                                      \n\
 DP4 desat, luma, color;                                       \n\
-LRP result.color.rgb, factor.x, color, desat;                 \n\
+LRP temp, factor.x, color, desat;                             \n\
+MUL result.color.rgb, temp, colorify_color;                   \n\
 MOV result.color.a, color;                                    \n\
 END");
 
@@ -153,6 +155,7 @@ nux::NString PerspectiveCorrectTexRectFrg = TEXT(
 "!!ARBfp1.0                                                   \n\
 PARAM color0 = program.local[0];                              \n\
 PARAM factor = program.local[1];                              \n\
+PARAM colorify_color = program.local[2];                      \n\
 PARAM luma = {"LUMIN_RED", "LUMIN_GREEN", "LUMIN_BLUE", 0.0}; \n\
 TEMP temp;                                                    \n\
 TEMP pcoord;                                                  \n\
@@ -163,7 +166,8 @@ MUL pcoord.xy, fragment.texcoord[0], temp;                    \n\
 TEX tex0, pcoord, texture[0], RECT;                           \n\
 MUL color, color0, tex0;                                      \n\
 DP4 desat, luma, color;                                       \n\
-LRP result.color.rgb, factor.x, color, desat;                 \n\
+LRP temp, factor.x, color, desat;                             \n\
+MUL result.color.rgb, temp, colorify_color;                   \n\
 MOV result.color.a, color;                                    \n\
 END");
 
@@ -829,6 +833,7 @@ void IconRenderer::RenderElement(nux::GraphicsEngine& GfxContext,
   {
     CHECKGL(glProgramLocalParameter4fARB(GL_FRAGMENT_PROGRAM_ARB, 0, bg_color.red, bg_color.green, bg_color.blue, bg_color.alpha));
     CHECKGL(glProgramLocalParameter4fARB(GL_FRAGMENT_PROGRAM_ARB, 1, arg.saturation, arg.saturation, arg.saturation, arg.saturation));
+    CHECKGL(glProgramLocalParameter4fARB(GL_FRAGMENT_PROGRAM_ARB, 2, colorify.red, colorify.green, colorify.blue, colorify.alpha));
 
     nux::GetWindowThread()->GetGraphicsEngine().SetTexture(GL_TEXTURE0, icon);
     CHECKGL(glDrawArrays(GL_QUADS, 0, 4));
