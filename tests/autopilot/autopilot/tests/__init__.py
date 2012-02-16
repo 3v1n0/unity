@@ -18,6 +18,8 @@ class AutopilotTestCase(TestCase):
         root_logger = logging.getLogger()
         root_logger.setLevel(logging.DEBUG)
         handler = logging.StreamHandler(stream=self._log_buffer)
+        log_format = "%(asctime)s %(levelname)s %(module)s:%(lineno)d - %(message)s"
+        handler.setFormatter(logging.Formatter(log_format))
         root_logger.addHandler(handler)
 
         super(AutopilotTestCase, self).setUp()
