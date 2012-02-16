@@ -485,7 +485,7 @@ void DBusIndicators::Impl::OnProxySignalReceived(GDBusProxy* proxy,
   {
     glib::String entry_name;
     nux::Rect geo;
-    g_variant_get (parameters, "(s(iiuu))", &entry_name, &geo.x, &geo.y, &geo.width, &geo.height);
+    g_variant_get(parameters, "(s(iiuu))", &entry_name, &geo.x, &geo.y, &geo.width, &geo.height);
 
     if (entry_name)
     {

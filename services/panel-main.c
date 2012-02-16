@@ -87,7 +87,7 @@ static const gchar introspection_xml[] =
   ""
   "    <signal name='EntryActivated'>"
   "     <arg type='s' name='entry_id' />"
-  "     <arg type='(iiuu)' name='entry_id' />"
+  "     <arg type='(iiuu)' name='entry_geometry' />"
   "    </signal>"
   ""
   "    <signal name='ReSync'>"

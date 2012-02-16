@@ -24,15 +24,18 @@ namespace unity
 namespace indicator
 {
 
+namespace 
+{
 const std::string SETTING_NAME("com.canonical.indicator.appmenu");
 const std::string SETTING_KEY("menu-mode");
+}
 
 AppmenuIndicator::AppmenuIndicator(std::string const& name)
-  : Indicator(name),
-    gsettings_(g_settings_new(SETTING_NAME.c_str())),
-    integrated_(false)
+  : Indicator(name)
+  , gsettings_(g_settings_new(SETTING_NAME.c_str()))
+  , integrated_(false)
 {
-  setting_changed_.Connect(gsettings_, "changed::menu-mode", [&] (GSettings*, gchar* key) {
+  setting_changed_.Connect(gsettings_, "changed::menu-mode", [&] (GSettings*, gchar*) {
     CheckSettingValue();
   });
 
