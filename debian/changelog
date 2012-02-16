@@ -1,3 +1,10 @@
+unity (5.2.0-0ubuntu6) UNRELEASED; urgency=low
+
+  * debian/control:
+    - recommends indicator-printers
+
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 16 Feb 2012 17:06:55 +0100
+
 unity (5.2.0-0ubuntu5) precise; urgency=low
 
   * debian/unity-crashdb.conf, debian/source_unity.py,
