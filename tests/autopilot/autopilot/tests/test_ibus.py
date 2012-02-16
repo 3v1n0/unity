@@ -28,7 +28,6 @@ class IBusTests(AutopilotTestCase):
         """Entering 'abc1' in the dash with ibus enabled should result in u'\u963f\u5e03\u4ece'."""
         dash = Dash()
         kb = Keyboard()
-        kb.press_and_release('Ctrl+Space')
 
         dash.ensure_visible()
         kb.type('abc1')
@@ -36,7 +35,5 @@ class IBusTests(AutopilotTestCase):
         dash_search_string = dash.get_search_string()
         dash.ensure_hidden()
         sleep(1)
-
         kb.press_and_release('Ctrl+Space')
-
         self.assertEqual(u'\u963f\u5e03\u4ece', dash_search_string)
