@@ -24,7 +24,7 @@
 #include <gdk/gdkx.h>
 
 #include <Nux/Nux.h>
-#include <Nux/TextEntry.h>
+#include <Nux/TextEntryIM.h>
 #include <UnityCore/GLibSignal.h>
 #include <UnityCore/GLibWrapper.h>
 
@@ -34,48 +34,19 @@ namespace unity
 using namespace unity::glib;
 using namespace nux;
 
-class IMTextEntry : public nux::TextEntry
+class IMTextEntry : public nux::TextEntryIM
 {
-  NUX_DECLARE_OBJECT_TYPE(IMTextEntry, nux::TextEntry);
+  NUX_DECLARE_OBJECT_TYPE(IMTextEntry, nux::TextEntryIM);
 public:
   IMTextEntry();
 
-  nux::Property<std::string> preedit_string;
-  nux::Property<bool> im_enabled;
-  nux::Property<bool> im_active;
-
 private:
-  void CheckIMEnabled();
-  void SetupSimpleIM();
-  void SetupMultiIM();
-
   bool InspectKeyEvent(unsigned int eventType, unsigned int keysym, const char* character);
-  bool TryHandleEvent(unsigned int eventType, unsigned int keysym, const char* character);
-  void KeyEventToGdkEventKey(Event& event, GdkEventKey& gdk_event);
-  inline void CheckValidClientWindow(Window window);
   bool TryHandleSpecial(unsigned int eventType, unsigned int keysym, const char* character);
-  void InsertTextAt(unsigned int position, std::string const& text);
+  void InsertText(std::string const& text);
   void Cut();
   void Copy();
   void Paste(bool primary = false);
-
-  void OnCommit(GtkIMContext* context, char* str);
-  void OnPreeditChanged(GtkIMContext* context);
-  void OnPreeditStart(GtkIMContext* context);
-  void OnPreeditEnd(GtkIMContext* context);
-
-  void OnFocusIn();
-  void OnFocusOut();
-
-  void UpdateCursorLocation();
-
-  void OnMouseButtonUp(int x, int y, unsigned long bflags, unsigned long kflags);
-
- private:
-  glib::SignalManager sig_manager_;
-  glib::Object<GtkIMContext> im_context_;
-  glib::Object<GdkWindow> client_window_;
-  bool focused_;
 };
 
 }

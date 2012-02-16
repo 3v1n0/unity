@@ -31,7 +31,7 @@
 #include <Nux/TextureArea.h>
 #include <NuxGraphics/GraphicsEngine.h>
 #include <Nux/EditTextBox.h>
-#include <Nux/TextEntry.h>
+#include <Nux/TextEntryIM.h>
 #include <UnityCore/GLibSignal.h>
 
 #include "SearchBarSpinner.h"
@@ -62,7 +62,7 @@ public:
   ~SearchBar();
 
   void SearchFinished();
-  nux::TextEntry* text_entry() const;
+  nux::TextEntryIM* text_entry() const;
 
   nux::RWProperty<std::string> search_string;
   nux::Property<std::string> search_hint;
@@ -89,7 +89,7 @@ private:
   void OnEndKeyFocus();
 
   void UpdateBackground(bool force);
-  void OnSearchChanged(nux::TextEntry* text_entry);
+  void OnSearchChanged(nux::TextEntryIM* text_entry);
   void OnClearClicked(int x, int y, unsigned long button_flags, unsigned long key_flags);
   void OnEntryActivated();
   void OnShowingFiltersChanged(bool is_showing);

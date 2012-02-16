@@ -306,7 +306,7 @@ unity_a11y_create_accessible(nux::Object* object)
     return unity_switcher_accessible_new(object);
 
   /* NUX classes  */
-  if (object->Type().IsDerivedFromType(nux::TextEntry::StaticObjectType))
+  if (object->Type().IsDerivedFromType(nux::TextEntryIM::StaticObjectType))
     return nux_text_entry_accessible_new(object);
 
   if (object->Type().IsDerivedFromType(nux::BaseWindow::StaticObjectType))
