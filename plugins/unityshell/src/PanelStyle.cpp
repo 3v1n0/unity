@@ -228,12 +228,12 @@ nux::BaseTexture* Style::GetWindowButton(WindowButtonType type, WindowState stat
   }
 
   if (!texture)
-    texture = GetWindowButtonForTheme(type, state);
+    texture = GetFallbackWindowButton(type, state);
 
   return texture;
 }
 
-nux::BaseTexture* Style::GetWindowButtonForTheme(WindowButtonType type,
+nux::BaseTexture* Style::GetFallbackWindowButton(WindowButtonType type,
                                                  WindowState state)
 {
   int width = 18, height = 18;

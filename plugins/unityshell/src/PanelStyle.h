@@ -70,13 +70,11 @@ public:
 
   nux::NBitmapData* GetBackground(int width, int height, float opacity);
   nux::BaseTexture* GetWindowButton(WindowButtonType type, WindowState state);
+  nux::BaseTexture* GetFallbackWindowButton(WindowButtonType type, WindowState state);
   GdkPixbuf* GetHomeButton();
 
   std::string GetFontDescription(PanelItem item);
   int GetTextDPI();
-
-  nux::BaseTexture* GetWindowButtonForTheme(WindowButtonType type,
-                                            WindowState state);
 
   nux::Property<int> panel_height;
   nux::Property<bool> integrated_menus;
