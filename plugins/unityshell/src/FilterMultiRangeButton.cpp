@@ -54,6 +54,7 @@ void FilterMultiRangeButton::Init()
 {
   InitTheme();
   SetAcceptKeyNavFocusOnMouseDown(false);
+  SetAcceptKeyNavFocusOnMouseEnter(true);
 
   state_change.connect(sigc::mem_fun(this, &FilterMultiRangeButton::OnActivated));
   key_nav_focus_change.connect([&](nux::Area*, bool, nux::KeyNavDirection) { QueueDraw(); });

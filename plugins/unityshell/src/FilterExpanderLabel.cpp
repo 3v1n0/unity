@@ -55,6 +55,7 @@ public:
    : nux::View(NUX_FILE_LINE_PARAM)
   {
     SetAcceptKeyNavFocusOnMouseDown(false);
+    SetAcceptKeyNavFocusOnMouseEnter(true);
   }
 
 protected:
@@ -179,11 +180,6 @@ void FilterExpanderLabel::BuildLayout()
   SetLayout(layout_);
 
   // Lambda functions
-  auto mouse_redraw = [&](int x, int y, unsigned long b, unsigned long k)
-  {
-    QueueDraw();
-  };
-
   auto mouse_expand = [&](int x, int y, unsigned long b, unsigned long k)
   {
     expanded = !expanded;
@@ -201,16 +197,10 @@ void FilterExpanderLabel::BuildLayout()
 
   // Signals
   expander_view_->mouse_click.connect(mouse_expand);
-  expander_view_->mouse_enter.connect(mouse_redraw);
-  expander_view_->mouse_leave.connect(mouse_redraw);
   expander_view_->key_nav_focus_change.connect(key_redraw);
   expander_view_->key_nav_focus_activate.connect(key_expand);
   cairo_label_->mouse_click.connect(mouse_expand);
-  cairo_label_->mouse_enter.connect(mouse_redraw);
-  cairo_label_->mouse_leave.connect(mouse_redraw);
   expand_icon_->mouse_click.connect(mouse_expand);
-  expand_icon_->mouse_enter.connect(mouse_redraw);
-  expand_icon_->mouse_leave.connect(mouse_redraw);
   key_nav_focus_change.connect([&](nux::Area* area, bool has_focus, nux::KeyNavDirection direction)
   {
     if(has_focus)
@@ -246,9 +236,7 @@ void FilterExpanderLabel::DoExpandChange(bool change)
 
 bool FilterExpanderLabel::ShouldBeHighlighted()
 {
-  return ((expander_view_ && (expander_view_->IsMouseInside() || expander_view_->HasKeyFocus())) ||
-          (cairo_label_ && cairo_label_->IsMouseInside()) ||
-          (expand_icon_ && expand_icon_->IsMouseInside()));
+  return ((expander_view_ && expander_view_->HasKeyFocus()));
 }
 
 void FilterExpanderLabel::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)

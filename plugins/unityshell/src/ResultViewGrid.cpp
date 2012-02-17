@@ -526,9 +526,14 @@ void ResultViewGrid::OnKeyNavFocusChange(nux::Area *area, bool has_focus, nux::K
       focused_y = (renderer_->height + vertical_spacing) * (selected_index_ / items_per_row);
     }
 
-    ubus_.SendMessage(UBUS_RESULT_VIEW_KEYNAV_CHANGED,
-                      g_variant_new("(iiii)", focused_x, focused_y, renderer_->width(), renderer_->height()));
+    if (direction != nux::KEY_NAV_NONE)
+    {
+      ubus_.SendMessage(UBUS_RESULT_VIEW_KEYNAV_CHANGED,
+                        g_variant_new("(iiii)", focused_x, focused_y, renderer_->width(), renderer_->height()));
+    }
+
     selection_change.emit();
+
   }
   else
   {
@@ -633,11 +638,7 @@ void ResultViewGrid::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
           break;
 
         ResultRenderer::ResultRendererState state = ResultRenderer::RESULT_RENDERER_NORMAL;
-        if ((int)(index) == mouse_over_index_)
-        {
-          state = ResultRenderer::RESULT_RENDERER_PRELIGHT;
-        }
-        else if ((int)(index) == selected_index_)
+        if ((int)(index) == selected_index_)
         {
           state = ResultRenderer::RESULT_RENDERER_SELECTED;
         }
@@ -703,8 +704,12 @@ void ResultViewGrid::DrawContent(nux::GraphicsEngine& GfxContent, bool force_dra
 void ResultViewGrid::MouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
 {
   uint index = GetIndexAtPosition(x, y);
-  mouse_over_index_ = index;
 
+  if (mouse_over_index_ != index)
+  {
+    selected_index_ = mouse_over_index_ = index;
+    nux::GetWindowCompositor().SetKeyFocusArea(this);
+  }
   mouse_last_x_ = x;
   mouse_last_y_ = y;
 

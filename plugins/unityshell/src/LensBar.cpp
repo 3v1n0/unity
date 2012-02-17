@@ -52,7 +52,6 @@ void LensBar::InitTheme()
   if (!focus_layer_)
   {
     focus_layer_.reset(Style::Instance().FocusOverlay(FOCUS_OVERLAY_WIDTH, FOCUS_OVERLAY_HEIGHT));
-    over_layer_.reset(Style::Instance().FocusOverlay(FOCUS_OVERLAY_WIDTH, FOCUS_OVERLAY_HEIGHT));
   }
 }
 
@@ -85,8 +84,6 @@ void LensBar::SetupHomeLens()
   layout_->AddView(icon, 0, nux::eCenter, nux::MINOR_SIZE_FULL);
 
   icon->mouse_click.connect([&, icon] (int x, int y, unsigned long button, unsigned long keyboard) { SetActive(icon); QueueDraw(); });
-  icon->mouse_enter.connect([&] (int x, int y, unsigned long button, unsigned long keyboard) {  QueueDraw(); });
-  icon->mouse_leave.connect([&] (int x, int y, unsigned long button, unsigned long keyboard) {  QueueDraw(); });
   icon->mouse_down.connect([&] (int x, int y, unsigned long button, unsigned long keyboard) {  QueueDraw(); });
   icon->key_nav_focus_change.connect([&](nux::Area*, bool, nux::KeyNavDirection){ QueueDraw(); });
   icon->key_nav_focus_activate.connect([&, icon](nux::Area*){ SetActive(icon); });
@@ -101,8 +98,6 @@ void LensBar::AddLens(Lens::Ptr& lens)
   layout_->AddView(icon, 0, nux::eCenter, nux::eFix);
 
   icon->mouse_click.connect([&, icon] (int x, int y, unsigned long button, unsigned long keyboard) { SetActive(icon); QueueDraw(); });
-  icon->mouse_enter.connect([&] (int x, int y, unsigned long button, unsigned long keyboard) {  QueueDraw(); });
-  icon->mouse_leave.connect([&] (int x, int y, unsigned long button, unsigned long keyboard) {  QueueDraw(); });
   icon->mouse_down.connect([&] (int x, int y, unsigned long button, unsigned long keyboard) {  QueueDraw(); });
   icon->key_nav_focus_change.connect([&](nux::Area*, bool, nux::KeyNavDirection){ QueueDraw(); });
   icon->key_nav_focus_activate.connect([&, icon](nux::Area*){ SetActive(icon); });
@@ -132,8 +127,7 @@ void LensBar::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
 
   for (auto icon : icons_)
   {
-    if ((icon->HasKeyFocus() || icon->IsMouseInside()) && 
-        focus_layer_ && over_layer_)
+    if (icon->HasKeyFocus() && focus_layer_)
     {
       nux::Geometry geo(icon->GetGeometry());
 
@@ -143,7 +137,7 @@ void LensBar::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
       geo.width = FOCUS_OVERLAY_WIDTH;
       geo.height = FOCUS_OVERLAY_HEIGHT;
 
-      nux::AbstractPaintLayer* layer = icon->HasKeyFocus() ? focus_layer_.get() : over_layer_.get();
+      nux::AbstractPaintLayer* layer = focus_layer_.get();
 
       layer->SetGeometry(geo);
       layer->Renderlayer(gfx_context);
@@ -162,10 +156,9 @@ void LensBar::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
 
   for (auto icon: icons_)
   {
-    if ((icon->HasKeyFocus() || icon->IsMouseInside()) && !IsFullRedraw()
-        && focus_layer_ && over_layer_)
+    if (icon->HasKeyFocus() && !IsFullRedraw() && focus_layer_)
     {
-      nux::AbstractPaintLayer* layer = icon->HasKeyFocus() ? focus_layer_.get() : over_layer_.get();
+      nux::AbstractPaintLayer* layer = focus_layer_.get();
       
       nux::GetPainter().PushLayer(gfx_context, focus_layer_->GetGeometry(), layer);
     }

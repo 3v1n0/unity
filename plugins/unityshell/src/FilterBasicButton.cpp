@@ -68,6 +68,7 @@ void FilterBasicButton::Init()
 
   InitTheme();
   SetAcceptKeyNavFocusOnMouseDown(false);
+  SetAcceptKeyNavFocusOnMouseEnter(true);
 
   key_nav_focus_change.connect([&] (nux::Area*, bool, nux::KeyNavDirection)
   {
