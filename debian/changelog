@@ -1,4 +1,4 @@
-unity (5.4.0-0ubuntu1) UNRELEASED; urgency=low
+unity (5.4.0-0ubuntu1) precise; urgency=low
 
   * New upstream release.
     - Unity needs a way to switch (tab) between windows on current workspace
@@ -90,7 +90,7 @@ unity (5.4.0-0ubuntu1) UNRELEASED; urgency=low
     - recommends new unity-lens-video
     - build-dep on latest nux (ABI break)
 
- -- Didier Roche <didrocks@ubuntu.com>  Fri, 17 Feb 2012 11:57:06 +0100
+ -- Didier Roche <didrocks@ubuntu.com>  Fri, 17 Feb 2012 13:37:09 +0100
 
 unity (5.2.0-0ubuntu5) precise; urgency=low
 
