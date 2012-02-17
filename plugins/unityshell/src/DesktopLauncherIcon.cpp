@@ -36,22 +36,11 @@ DesktopLauncherIcon::DesktopLauncherIcon()
   SetQuirk(QUIRK_VISIBLE, true);
   SetQuirk(QUIRK_RUNNING, false);
   SetIconType(TYPE_BEGIN);
+  SetShowInSwitcher(false);
 }
 
 DesktopLauncherIcon::~DesktopLauncherIcon()
 {
-}
-
-nux::Color
-DesktopLauncherIcon::BackgroundColor()
-{
-  return nux::Color(0xFF333333);
-}
-
-nux::Color
-DesktopLauncherIcon::GlowColor()
-{
-  return nux::Color(0xFF333333);
 }
 
 void
@@ -59,6 +48,11 @@ DesktopLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 {
   SimpleLauncherIcon::ActivateLauncherIcon(arg);
   WindowManager::Default()->ShowDesktop();
+}
+
+std::string DesktopLauncherIcon::GetName() const
+{
+  return "DesktopLauncherIcon";
 }
 
 } // namespace launcher

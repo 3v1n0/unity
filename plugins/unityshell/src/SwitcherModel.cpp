@@ -30,7 +30,7 @@ using launcher::AbstractLauncherIcon;
 namespace switcher
 {
 
-SwitcherModel::SwitcherModel(std::vector<AbstractLauncherIcon*> icons)
+SwitcherModel::SwitcherModel(std::vector<AbstractLauncherIcon::Ptr> icons)
   : _inner(icons)
   , _index(0)
   , _last_index(0)
@@ -40,13 +40,17 @@ SwitcherModel::SwitcherModel(std::vector<AbstractLauncherIcon*> icons)
   only_detail_on_viewport = false;
 
   for (auto icon : _inner)
-    icon->Reference();
+  {
+    AddChild(icon.GetPointer());
+  }
 }
 
 SwitcherModel::~SwitcherModel()
 {
   for (auto icon : _inner)
-    icon->UnReference();
+  {
+    RemoveChild(icon.GetPointer());
+  }
 }
 
 std::string SwitcherModel::GetName() const
@@ -56,22 +60,12 @@ std::string SwitcherModel::GetName() const
 
 void SwitcherModel::AddProperties(GVariantBuilder* builder)
 {
-  GVariantBuilder children_builder;
-  g_variant_builder_init(&children_builder, G_VARIANT_TYPE("a(sv)"));
-
-  for (auto icon : _inner)
-  {
-    if (icon->GetName() != "")
-      g_variant_builder_add(&children_builder, "(sv)", icon->GetName().c_str(), icon->Introspect());
-  }
-
   unity::variant::BuilderWrapper(builder)
   .add("detail-selection", detail_selection)
   .add("detail-selection-index", (int)detail_selection_index)
   .add("only-detail-on-viewport", only_detail_on_viewport)
   .add("selection-index", SelectionIndex())
-  .add("last-selection-index", LastSelectionIndex())
-  .add("children-of-men", g_variant_builder_end(&children_builder));
+  .add("last-selection-index", LastSelectionIndex());
 }
 
 SwitcherModel::iterator
@@ -98,11 +92,11 @@ SwitcherModel::rend()
   return _inner.rend();
 }
 
-AbstractLauncherIcon*
+AbstractLauncherIcon::Ptr
 SwitcherModel::at(unsigned int index)
 {
   if ((int) index >= Size ())
-    return 0;
+    return AbstractLauncherIcon::Ptr();
   return _inner[index];
 }
 
@@ -112,7 +106,7 @@ SwitcherModel::Size()
   return _inner.size();
 }
 
-AbstractLauncherIcon*
+AbstractLauncherIcon::Ptr
 SwitcherModel::Selection()
 {
   return _inner.at(_index);
@@ -124,7 +118,7 @@ SwitcherModel::SelectionIndex()
   return _index;
 }
 
-AbstractLauncherIcon*
+AbstractLauncherIcon::Ptr
 SwitcherModel::LastSelection()
 {
   return _inner.at(_last_index);
@@ -233,7 +227,7 @@ void SwitcherModel::PrevDetail ()
 }
 
 void
-SwitcherModel::Select(AbstractLauncherIcon* selection)
+SwitcherModel::Select(AbstractLauncherIcon::Ptr selection)
 {
   int i = 0;
   for (iterator it = begin(), e = end(); it != e; ++it)

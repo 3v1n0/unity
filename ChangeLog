@@ -1,3 +1,2830 @@
+2012-02-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Fix crash on missing dash WindowButton files
+	
+	Improved the PanelStyle code to support the Maximize window button and to draw the cairo fallback version.
+	WindowButtons now uses less code duplication.
+	
+	Testcase
+	1) remove your $prefix/share/unity/5/unmaximize_dash* $prefix/share/unity/5/maximize_dash* and so
+	2) restart unity, but it will always crash.. Fixes: https://bugs.launchpad.net/bugs/921130. Approved by Tim Penhey.
+
+2012-02-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	WindowButtonType: use fallback buttons if no one is valid, fix crash.
+	
+	Fixes LP: #921130, code improved to avoid duplication.
+
+2012-02-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelStyle: add MAXIMIZE state and draw an unmaximized version as well
+
+2012-02-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelStyle: move to GetFallbackWindowButton and support disabled status
+
+2012-02-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Fix crash on viewport switch, caused by http://is.gd/nOfPl5
+	
+	UNBLOCK. Fixes: https://bugs.launchpad.net/bugs/933456. Approved by Tim Penhey.
+
+2012-02-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Fix crash that can happen on viewport switch after deleting a Launcher
+
+2012-02-16  Thomi Richards  <thomi.richards@canonical.com>
+
+	Autopilot test log messages now include file and line number, date, time and severity information.. Fixes: . Approved by Marco Trevisan (Treviño).
+
+2012-02-17  Thomi Richards  <thomi.richards@canonical.com>
+
+	Make a custom LogFormatter to get better log message formats.
+
+2012-02-17  Thomi Richards  <thomi.richards@canonical.com>
+
+	AP tests now use a more helpful log format.
+
+2012-02-16  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Fixed icon colorization issue when using ARB shaders. Bug #932138. Fixes: . Approved by Jason Smith.
+
+2012-02-16  Jay Taoko  <jay.taoko@canonical.com>
+
+	
+	* Fixed icon colorization issue when using ARB shaders. Bug #932138
+
+2012-02-16  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fix a memory leak in QuicklistMenuItem.. Fixes: . Approved by Tim Penhey.
+
+2012-02-15  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fix memory leak in QuickListMenuItem.
+
+2012-02-16  Gord Allott  <gord.allott@canonical.com>
+
+	Makes sure we take a reference because glib::object does not work how you expect. Approved by THE Michal Hruby ;)
+
+2012-02-16  Gord Allott  <gord.allott@canonical.com>
+
+	take reference in hud bamf object
+
+2012-02-15  Thomi Richards  <thomi.richards@canonical.com>
+
+	Autopilot tests are now always run using run_autopilot script. setup.py script now automatically finds new python packages in the autopilot module.. Fixes: . Approved by Tim Penhey, Jason Smith.
+
+2012-02-16  Thomi Richards  <thomi.richards@canonical.com>
+
+	Makefile now explicitly requests text format.
+
+2012-02-16  Thomi Richards  <thomi.richards@canonical.com>
+
+	Added --format option to run_autopilot script.
+
+2012-02-16  Thomi Richards  <thomi.richards@canonical.com>
+
+	Makefile now uses 'run_autopilot' script to run autopilot tests.
+
+2012-02-16  Thomi Richards  <thomi.richards@canonical.com>
+
+	python setup script will now automatically detect new python packages.
+
+2012-02-15  Gord Allott  <gord.allott@canonical.com>
+
+	UNBLOCK 
+	
+	does everything i can think of to ensure the hud is forced, something else is stealing focus 
+	or at the very least removing focus from the hud input window on alt press, needs further investigation. Fixes: https://bugs.launchpad.net/bugs/932072. Approved by Michal Hruby.
+
+2012-02-15  Gord Allott  <gord.allott@canonical.com>
+
+	things
+
+2012-02-14  Gord Allott  <gord.allott@canonical.com>
+
+	fix keyfocus issue with hud
+
+2012-02-14  Jason Smith  <jason.smith@canonical.com>
+
+	Redraw pips, UNBLOCK. Fixes: https://bugs.launchpad.net/bugs/931483. Approved by Tim Penhey.
+
+2012-02-14  Jason Smith  <jason.smith@canonical.com>
+
+	Make sure pips redraw on viewport switch
+
+2012-02-14  Jason Smith  <jason.smith@canonical.com>
+
+	Fixes issue where LauncherIcon would wrap itself into a smart pointer after it was dead. Zombie smart pointers are evil.
+	
+	UNBLOCK. Fixes: https://bugs.launchpad.net/bugs/932318. Approved by Tim Penhey.
+
+2012-02-14  Jason Smith  <jason.smith@canonical.com>
+
+	really fix it
+
+2012-02-14  Jason Smith  <jason.smith@canonical.com>
+
+	fix ordering
+
+2012-02-14  Jason Smith  <jason.smith@canonical.com>
+
+	Make sure we dont wrap ourselves into a smart pointer when we are dying
+
+2012-02-14  Gord Allott  <gord.allott@canonical.com>
+
+	makes sure bghash cache directory exists before caching. Fixes: . Approved by Michal Hruby.
+
+2012-02-14  Gord Allott  <gord.allott@canonical.com>
+
+	mh3r happification, also used g_build_filename, its safer and nicer
+
+2012-02-14  Gord Allott  <gord.allott@canonical.com>
+
+	mkdir before writing the cache
+
+2012-02-14  smspillaz  <sam.spilsbury@canonical.com>
+
+	LP #871801
+	
+	Also inhibit leaving showdesktop mode on MapRequest. Fixes: https://bugs.launchpad.net/bugs/871801. Approved by Gord Allott.
+
+2012-02-14  smspillaz  <sam.spilsbury@canonical.com>
+
+	Fixes LP #871801
+	
+	Also inhibit showdesktop mode when a window is opened.
+
+2012-02-13  smspillaz  <sam.spilsbury@canonical.com>
+
+	Fix bug 931409
+	
+	Don't unset the handlers until the window is destroyed.. Fixes: https://bugs.launchpad.net/bugs/931409. Approved by Tim Penhey.
+
+2012-02-14  smspillaz  <sam.spilsbury@canonical.com>
+
+	Fix LP#931409
+	
+	Don't unset the minimize and unminimize callbacks when mMinimizeHandler gets destroyed,
+	we really only wanted to do that when the window was destroyed.
+
+2012-02-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Correctly draw the tooltip tex to fix bug #930043. Fixes: https://bugs.launchpad.net/bugs/930043. Approved by Tim Penhey.
+
+2012-02-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Tooltip: make the tooltip text draw correctly.
+
+2012-02-13  Thomi Richards  <thomi.richards@canonical.com>
+
+	Added a Hud controller class, and a simple unit test to test a hud bug.. Fixes: https://bugs.launchpad.net/bugs/931405. Approved by Tim Penhey.
+
+2012-02-14  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged trunk.
+
+2012-02-14  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed hud test.
+
+2012-02-14  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged trunk
+
+2012-02-14  Thomi Richards  <thomi.richards@canonical.com>
+
+	Added Hud autopilot tests.
+
+2012-02-13  Jason Smith  <jason.smith@canonical.com>
+
+	Fixes leak caused by freeing memory before we release its contents. Fixes: . Approved by Tim Penhey.
+
+2012-02-13  Jason Smith  <jason.smith@canonical.com>
+
+	C++ification of C code
+
+2012-02-13  Jason Smith  <jason.smith@canonical.com>
+
+	use Release
+
+2012-02-13  Jason Smith  <jason.smith@canonical.com>
+
+	fix memory leak in glib callback
+
+2012-02-13  Thomi Richards  <thomi.richards@canonical.com>
+
+	Refactor autopilot emulators into separate namespaces. Make it easier to create autopilot emulators for new Unity state objects.. Fixes: . Approved by Tim Penhey, Alex Launi.
+
+2012-02-14  Thomi Richards  <thomi.richards@canonical.com>
+
+	Added comment explaining XLib data sizes.
+
+2012-02-14  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed typo.
+
+2012-02-14  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed tests merged from trunk.
+
+2012-02-14  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged trunk to resolve conflicts.
+
+2012-02-14  Thomi Richards  <thomi.richards@canonical.com>
+
+	Renamed base class for new-style emulators.
+
+2012-02-13  Thomi Richards  <thomi.richards@canonical.com>
+
+	PEP8 fixes.
+
+2012-02-13  Thomi Richards  <thomi.richards@canonical.com>
+
+	Can now easily create all instances of a particular class in python code.
+
+2012-02-13  Thomi Richards  <thomi.richards@canonical.com>
+
+	Tests now add a log detail when they fail.
+
+2012-02-10  Thomi Richards  <thomi.richards@canonical.com>
+
+	Quicklist now uses refresh_state() method from parent class.
+
+2012-02-10  Thomi Richards  <thomi.richards@canonical.com>
+
+	Infrastructure for logging finished.
+
+2012-02-10  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed indentation.
+
+2012-02-10  Thomi Richards  <thomi.richards@canonical.com>
+
+	Many classes use new automatic dbus-to-python code path.
+
+2012-02-10  Thomi Richards  <thomi.richards@canonical.com>
+
+	make_introspection_object creates a python class instance from a dbus child tuple. Added get_children_by_type and refresh_state to ObjectCreatableFromStateDict class.
+
+2012-02-10  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged trunk.
+
+2012-02-10  Thomi Richards  <thomi.richards@canonical.com>
+
+	make_launcher_function now generalised to any unity state object.
+
+2012-02-10  Thomi Richards  <thomi.richards@canonical.com>
+
+	Tests now use fully qualified paths to emulator classes.
+
+2012-02-10  Thomi Richards  <thomi.richards@canonical.com>
+
+	More refactoring. DBus now initialised once, with correct mainloop set.
+
+2012-02-10  Thomi Richards  <thomi.richards@canonical.com>
+
+	SHow Desktop tests now pase before each test. Also updated to use the new switcher API.
+
+2012-02-10  Thomi Richards  <thomi.richards@canonical.com>
+
+	Invisiable window tests no longer assume all icons have a 'visible' property.
+
+2012-02-09  Thomi Richards  <thomi.richards@canonical.com>
+
+	Moved bits around, everything still passes.
+
+2012-02-13  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	- Added shadows on launcher icons and alt-tab icons
+	- Tweaked BFB edges
+	- Tweaked background tile color for wallpaper-colorized launcher icons (including BFB)
+	- Added device and show-desktop launcher icons to the list of wallpaper-colorized launcher icons. Fixes: . Approved by Marco Trevisan (Treviño), Andrea Cimitan.
+
+2012-02-13  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Merge trunk and fix conflict
+
+2012-02-13  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Added shadows on launcher icons and alt-tab icons, tweaked BFB edges, tweaked background tile color for wallpaper-colorized launcher icons (including BFB), added device and show-desktop launcher icons to the list of wallpaper-colorized launcher icons 
+
+2012-02-10  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Further tweaks to BFB and colorized icons
+
+2012-02-13  Tim Penhey  <tim.penhey@canonical.com>
+
+	Fixes the hud crashing when you open hud on an empty desktop. Fixes: https://bugs.launchpad.net/bugs/931405. Approved by Marco Trevisan (Treviño).
+
+2012-02-14  Tim Penhey  <tim.penhey@canonical.com>
+
+	Use the wrapper.
+
+2012-02-13  Gord Allott  <gord.allott@canonical.com>
+
+	fixes crash when putting a null string into a std::string
+
+2012-02-13  Jason Smith  <jason.smith@canonical.com>
+
+	Makes unity use nux::ObjectPtr for AbstractLauncherIcon's rather than doing manual memory management.. Fixes: . Approved by Gord Allott.
+
+2012-02-12  Jason Smith  <jason.smith@canonical.com>
+
+	merge el trunko
+
+2012-02-12  Jason Smith  <jason.smith@canonical.com>
+
+	dont emit signals in object if reference is not owned to avoid self deletion
+
+2012-02-12  Jason Smith  <jason.smith@canonical.com>
+
+	make sure desktop icon ends up at start of switcher
+
+2012-02-12  Jason Smith  <jason.smith@canonical.com>
+
+	port to AbstractLauncherIcon::Ptr from AbstractLauncherIcon*
+
+2012-02-13  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	Fixes the gtk-im-context not getting focused when the dash is opened. A signal from nux was removed causing this; couldn't find one to replace it. So using a property bool when the dash is about to show to call OnFocusIn(); when it is hiding OnFocusOut().
+	
+	Not sure if I should have exposed those two functions in IMTextEntry.h, if that is not wanted I can add another property bool in IMTextEntry.cpp and use that focus in and out.. Fixes: https://bugs.launchpad.net/bugs/915828, https://bugs.launchpad.net/bugs/928154. Approved by Tim Penhey, Sam Spilsbury.
+
+2012-02-13  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	OnKeyNavFocusChange is now key_nav_focus_change. Fixed
+	Merge with Trunk.
+
+2012-02-02  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	Fixed test agian
+
+2012-02-02  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	Test fixed
+
+2012-02-02  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	Added test
+
+2012-02-02  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	Test added
+
+2012-02-01  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	merged
+
+2012-02-01  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	Changed to use a signal.
+
+2012-01-12  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	Couldn't find a signal in nux to handle this anymore, so using a property bool instead
+
+2012-02-13  Gord Allott  <gord.allott@canonical.com>
+
+	BGHash gets a cache, serializes the cache to ~/.config/unity/ - reads on startup instead of loading the wallpaper and
+	averaging out the colour - should make second boot faster. Fixes: . Approved by Jason Smith.
+
+2012-02-13  Gord Allott  <gord.allott@canonical.com>
+
+	removed debugs
+
+2012-02-13  Gord Allott  <gord.allott@canonical.com>
+
+	remove useless depends
+
+2012-02-13  Gord Allott  <gord.allott@canonical.com>
+
+	reverted out stupid po changes
+
+2012-02-13  Gord Allott  <gord.allott@canonical.com>
+
+	modifes BGHash to cache its background colours, stores cache in a cache file, should speed up startup time somewhat
+
+2012-02-13  Michal Hruby  <michal.mhr@gmail.com>
+
+	Make sure we don't waste resources by loading the same icon multiple times.. Fixes: https://bugs.launchpad.net/bugs/922074. Approved by Gord Allott, Thomi Richards.
+
+2012-02-02  Michal Hruby  <michal.mhr@gmail.com>
+
+	Make sure we don't load the same icon multiple times
+
+2012-02-12  smspillaz  <sam.spilsbury@canonical.com>
+
+	Fix LP #881190 #871801
+	
+	The transient for reader would report every window as a "transient" if it
+	matched the w->transientFor () definition on the window - at destruction time
+	this will be zero, so it will match every single window. That would cause
+	all windows to be unminimized.
+	
+	However, it makes no sense to do the unminimize/minimize normally dance when
+	the window has been destroyed.
+	
+	Covered by tests/minimized-window-handler. Fixes: . Approved by Tim Penhey.
+
+2012-02-13  smspillaz  <sam.spilsbury@canonical.com>
+
+	Use reset
+
+2012-02-13  smspillaz  <sam.spilsbury@canonical.com>
+
+	Use .reset ()
+
+2012-02-08  smspillaz  <sam.spilsbury@canonical.com>
+
+	Fix typo
+
+2012-02-07  smspillaz  <sam.spilsbury@canonical.com>
+
+	Merged
+
+2012-02-07  smspillaz  <sam.spilsbury@canonical.com>
+
+	Cleanup
+
+2012-02-07  smspillaz  <sam.spilsbury@canonical.com>
+
+	Merge lp:~smspillaz/unity/unity.fix_881190v2
+	
+	Fix LP #881190 #871801
+	
+	The transient for reader would report every window as a "transient" if it
+	matched the w->transientFor () definition on the window - at destruction time
+	this will be zero, so it will match every single window. That would cause
+	all windows to be unminimized.
+	
+	However, it makes no sense to do the unminimize/minimize normally dance when
+	the window has been destroyed.
+
+2012-02-02  smspillaz  <sam.spilsbury@canonical.com>
+
+	Use std::unique_ptr, nullptr
+
+2012-01-20  smspillaz  <sam.spilsbury@canonical.com>
+
+	Move the unminimize / minimize dance to the minimize window handler destructor,
+	don't care about transients on windows that are destroyed. Fixes LP #881190
+
+2012-01-20  smspillaz  <sam.spilsbury@canonical.com>
+
+	Remove virtual function
+
+2012-01-20  Daniel van Vugt  <vanvugt@gmail.com>
+
+	Merge lp:~vanvugt/unity/fix-918329-trunk
+
+2012-02-12  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Autoscroll the dash when a category header gets the focus. Add an AP test too.. Fixes: https://bugs.launchpad.net/bugs/919563. Approved by Tim Penhey.
+
+2012-02-13  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk.
+
+2012-02-13  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix.
+
+2012-02-12  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add an AP test.
+
+2012-02-12  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Auto Scroll the dash when a category header gets the focus.
+
+2012-02-12  Sven Baars  <svenb.linux@gmail.com>
+
+	Initialize _is_grabbed before use. Also remove some comparisons to true and false.
+	
+	Fixes https://bugs.launchpad.net/unity/+bug/919328. Fixes: https://bugs.launchpad.net/bugs/919328. Approved by Thomi Richards.
+
+2012-02-08  Sven Baars  <svenb.linux@gmail.com>
+
+	Initialize _is_grabbed before use
+	
+	Also remove some comparisons to true and false
+
+2012-02-12  Andrea Azzarone  <azzaronea@gmail.com>
+
+	This branch implements the "Filter results" highlight. For the moment it's used just for the mouse over state, but it will be used for the focus state too.
+	
+	http://ubuntuone.com/73zJg1acYWuyk72MlHnHxr. Fixes: . Approved by Tim Penhey, Andrea Cimitan.
+
+2012-02-11  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix.
+
+2012-02-10  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix.
+
+2012-02-10  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Implements "Filter results" highlight.
+
+2012-02-12  Gord Allott  <gord.allott@canonical.com>
+
+	uses the focused application for the first icon shown in HUD as ted doesn't seem to want to give it to me on empty
+	search query ;). Fixes: https://bugs.launchpad.net/bugs/929452. Approved by Gord Allott, Jason Smith.
+
+2012-02-12  Gord Allott  <gord.allott@canonical.com>
+
+	grabs the active windows icon for displaying when first showing hud
+
+2012-02-12  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix a bug in the backward key navigation (bug. 931025). Fixes: https://bugs.launchpad.net/bugs/931025. Approved by Tim Penhey.
+
+2012-02-12  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Style fixes.
+
+2012-02-12  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix backward key navigation.
+
+2012-02-12  Sven Baars  <svenb.linux@gmail.com>
+
+	. Fixes: . Approved by Thomi Richards.
+
+2012-02-09  Sven Baars  <svenb.linux@gmail.com>
+
+	Release introspection_data upon return (Valgrind)
+
+2012-02-12  Gord Allott  <gord.allott@canonical.com>
+
+	Adds the resource for disabled dash window buttons. Fixes: https://bugs.launchpad.net/bugs/929453. Approved by Jason Smith.
+
+2012-02-12  Gord Allott  <gord.allott@canonical.com>
+
+	updates the panel window buttons to support disabled case for hud
+
+2012-02-12  Gord Allott  <gord.allott@canonical.com>
+
+	Ensures the hud gets key focus on invocation. Fixes: https://bugs.launchpad.net/bugs/930048. Approved by Jason Smith.
+
+2012-02-12  Gord Allott  <gord.allott@canonical.com>
+
+	slight change to test
+
+2012-02-12  Gord Allott  <gord.allott@canonical.com>
+
+	ensures the hud gets focus when its invocated
+
+2012-02-12  Gord Allott  <gord.allott@canonical.com>
+
+	Updates hud for a design request, the first item should always be focused when searching, only when the user keynavs
+	should other items get focused. Fixes: https://bugs.launchpad.net/bugs/929455. Approved by Andrea Azzarone.
+
+2012-02-12  Gord Allott  <gord.allott@canonical.com>
+
+	fixes the design request, first item in hud should always be focused unless another item takes focus
+
+2012-02-12  Gord Allott  <gord.allott@canonical.com>
+
+	Allows the hud to resize dynamically. Fixes: https://bugs.launchpad.net/bugs/839485. Approved by Andrea Azzarone, Gord Allott.
+
+2012-02-12  Gord Allott  <gord.allott@canonical.com>
+
+	made slight change for mp
+
+2012-02-10  Gord Allott  <gord.allott@canonical.com>
+
+	reverted out dash changes so its just a hud branch
+
+2012-02-10  Gord Allott  <gord.allott@canonical.com>
+
+	dash optimization
+
+2012-02-10  Gord Allott  <gord.allott@canonical.com>
+
+	fixed weird redrawing issue
+
+2012-02-10  Gord Allott  <gord.allott@canonical.com>
+
+	fixed weird redrawing issue
+
+2012-02-10  Gord Allott  <gord.allott@canonical.com>
+
+	working hud resize but strange redrawing
+
+2012-02-10  Gord Allott  <gord.allott@canonical.com>
+
+	reverted out lensview change, it was programmer error
+
+2012-02-09  Gord Allott  <gord.allott@canonical.com>
+
+	reverted out po being annoying
+
+2012-02-09  Gord Allott  <gord.allott@canonical.com>
+
+	resizing hud
+
+2012-02-08  Gord Allott  <gord.allott@canonical.com>
+
+	fixed a stupid bug that caused the dash to constantly relayout whenever there were 0 results
+
+2012-02-08  Gord Allott  <gord.allott@canonical.com>
+
+	fixed a stupid bug that caused the dash to constantly relayout whenever there were 0 results
+
+2012-02-08  Gord Allott  <gord.allott@canonical.com>
+
+	implimented a pause before resizing
+
+2012-02-07  Gord Allott  <gord.allott@canonical.com>
+
+	fixed a few sizing issues, redraw issues
+
+2012-02-07  Gord Allott  <gord.allott@canonical.com>
+
+	dash resizing active
+
+2012-02-07  Gord Allott  <gord.allott@canonical.com>
+
+	dash resizing active
+
+2012-02-12  Jason Smith  <jason.smith@canonical.com>
+
+	Fixes corruption when unminizing windows. Fixes: . Approved by Jay Taoko.
+
+2012-02-12  Jason Smith  <jason.smith@canonical.com>
+
+	fix panel shadow corruption
+
+2012-02-11  Jason Smith  <jason.smith@canonical.com>
+
+	- Fixes issue where windows minimized to the wrong monitor
+	- Fixes issue where icons dragged off a launcher always returned to the first monitors launcher
+	- Makes hud respect multiple monitors. Fixes: . Approved by Jay Taoko.
+
+2012-02-11  Jason Smith  <jason.smith@canonical.com>
+
+	remove stray call
+
+2012-02-11  Jason Smith  <jason.smith@canonical.com>
+
+	ensure that windows minimize to the correct launcher
+
+2012-02-11  Jason Smith  <jason.smith@canonical.com>
+
+	make HUD popup on correct monitor
+	make Icon drag out animation return to the correct monitor
+
+2012-02-10  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Implements the highlight for the filter expanders.. Fixes: . Approved by Marco Trevisan (Treviño), John Lea, Andrea Cimitan.
+
+2012-02-10  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Removes magic numbers.
+
+2012-02-10  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Removes magic numbers.
+
+2012-02-09  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk.
+
+2012-02-09  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Update the design of the mouse over state for the filters expander. This design will be used for the focus state too.
+
+2012-02-09  Thomi Richards  <thomi.richards@canonical.com>
+
+	Make the panel-height a property of the panel::Style class, instead of redefining it everywhere we need it.. Fixes: https://bugs.launchpad.net/bugs/928544. Approved by Jason Smith.
+
+2012-02-09  Thomi Richards  <thomi.richards@canonical.com>
+
+	use nux::Property instead.
+
+2012-02-09  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged trunk.
+
+2012-02-08  Thomi Richards  <thomi.richards@canonical.com>
+
+	Trying to replace various panel-height definitions with one nux::ROProperty.
+
+2012-02-09  Jason Smith  <jason.smith@canonical.com>
+
+	. Fixes: . Approved by Andrea Cimitan.
+
+2012-02-09  Jason Smith  <jason.smith@canonical.com>
+
+	hack resource to work
+
+2012-02-09  Jason Smith  <jason.smith@canonical.com>
+
+	increase tile colorify
+
+2012-02-09  Jason Smith  <jason.smith@canonical.com>
+
+	minor tweaks
+
+2012-02-09  Jason Smith  <jason.smith@canonical.com>
+
+	make trash change colors too
+
+2012-02-09  Jason Smith  <jason.smith@canonical.com>
+
+	start colorifying trash/expo
+
+2012-02-09  Jason Smith  <jason.smith@canonical.com>
+
+	improve rendering to more closely match design
+
+2012-02-09  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Merged trunk
+
+2012-02-09  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Some tweaks to BFB colorization and border
+
+2012-02-02  Jason Smith  <jason.smith@canonical.com>
+
+	colorify BFB all the time
+
+2012-02-02  Jason Smith  <jason.smith@canonical.com>
+
+	fix bfb size
+
+2012-02-09  Jason Smith  <jason.smith@canonical.com>
+
+	. Fixes: . Approved by Andrea Azzarone.
+
+2012-02-09  Jason Smith  <jason.smith@canonical.com>
+
+	remove unused stuff from Launcher
+
+2012-02-09  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fixes the category header AP test.. Fixes: . Approved by Thomi Richards.
+
+2012-02-09  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fixes category header ap test.
+
+2012-02-09  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Removing glow, new assets. Fixes: . Approved by Marco Trevisan (Treviño), Andrea Cimitan.
+
+2012-02-09  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	New launcher triangles assets
+
+2012-02-09  Sven Baars  <svenb.linux@gmail.com>
+
+	Always free the created GVariantBuilder before return of DBusIndicators::Impl::SyncGeometries
+	
+	This should fix the biggest leak reported in the original valgrind log of https://bugs.launchpad.net/unity/+bug/886467. Fixes: https://bugs.launchpad.net/bugs/886467. Approved by Mikkel Kamstrup Erlandsen.
+
+2012-02-09  Sven Baars  <svenb.linux@gmail.com>
+
+	Always free the created GVariantBuilder before return
+
+2012-02-09  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Removes the dash search bar glow.. Fixes: https://bugs.launchpad.net/bugs/929183. Approved by Andrea Cimitan.
+
+2012-02-09  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Removes search bar glow.
+
+2012-02-09  Jason Smith  <jason.smith@canonical.com>
+
+	. Fixes: . Approved by Thomi Richards.
+
+2012-02-09  Jason Smith  <jason.smith@canonical.com>
+
+	remove manual child removal as this is handled on object deletion
+
+2012-02-08  Jason Smith  <jason.smith@canonical.com>
+
+	remove code that doesn't do anything useful
+
+2012-02-08  Jason Smith  <jason.smith@canonical.com>
+
+	lazy load quicklist and tooltips when they are needed
+
+2012-02-08  Jason Smith  <jason.smith@canonical.com>
+
+	. Fixes: . Approved by Tim Penhey.
+
+2012-02-08  Jason Smith  <jason.smith@canonical.com>
+
+	use texture cache to prevent multiple texture loading
+
+2012-02-08  Jason Smith  <jason.smith@canonical.com>
+
+	only make a single damage call rather than many
+
+2012-02-08  Tim Penhey  <tim.penhey@canonical.com>
+
+	Fix some leaking textures.. Fixes: . Approved by Marco Trevisan (Treviño).
+
+2012-02-09  Tim Penhey  <tim.penhey@canonical.com>
+
+	We don't want to adopt, just assign as the layout is not initially owned.
+
+2012-02-09  Tim Penhey  <tim.penhey@canonical.com>
+
+	Use Adopt not assignment for taking textures as they are initially owned.
+
+2012-02-09  Tim Penhey  <tim.penhey@canonical.com>
+
+	whitespace
+
+2012-02-09  Tim Penhey  <tim.penhey@canonical.com>
+
+	Use the texture_ptr_from_cairo_graphics when assigning to a smart pointer.
+
+2012-02-09  Tim Penhey  <tim.penhey@canonical.com>
+
+	Use Adopt not assignment for taking textures as they are initially owned.
+
+2012-02-08  Jason Smith  <jason.smith@canonical.com>
+
+	Makes responsiveness value 2.0f and adjusts scaling slightly. At request of design team.. Fixes: . Approved by Thomi Richards.
+
+2012-02-08  Jason Smith  <jason.smith@canonical.com>
+
+	change default responsiveness to 2.0f
+	make decay rate increase slightly faster with responsiveness
+	make overcome pressure scale with responsiveness
+
+2012-02-08  Jason Smith  <jason.smith@canonical.com>
+
+	. Fixes: . Approved by Gord Allott.
+
+2012-02-08  Jason Smith  <jason.smith@canonical.com>
+
+	Make pressure effect (more or less) match design mockup, using design asset
+
+2012-02-08  Jason Smith  <jason.smith@canonical.com>
+
+	Does what commit description says. Fixes: . Approved by Gord Allott.
+
+2012-02-08  Jason Smith  <jason.smith@canonical.com>
+
+	remove all traces of intellihide, die a little inside
+
+2012-02-08  Jason Smith  <jason.smith@canonical.com>
+
+	. Fixes: https://bugs.launchpad.net/bugs/919209. Approved by .
+
+2012-02-08  Jason Smith  <jason.smith@canonical.com>
+
+	Close dash when entering alt+f1
+
+2012-02-08  Thomi Richards  <thomi.richards@canonical.com>
+
+	Removed keybinding #defines that are now in nux, where they belong.. Fixes: . Approved by Jason Smith.
+
+2012-02-08  Thomi Richards  <thomi.richards@canonical.com>
+
+	Removed NUX_KP_* #defines, since these are now in nux trunk.
+
+2012-02-08  Jason Smith  <jason.smith@canonical.com>
+
+	. Fixes: . Approved by .
+
+2012-02-08  Jason Smith  <jason.smith@canonical.com>
+
+	fix struts not being set on startup
+
+2012-02-08  Didier Roche  <didier.roche@canonical.com>
+
+	Add initialization for default value. Fixes: https://bugs.launchpad.net/bugs/928153. Approved by Thomi Richards.
+
+2012-02-07  Didier Roche  <didier.roche@canonical.com>
+
+	add initialization variable
+
+2012-02-07  Martin Albisetti  <argentina@gmail.com>
+
+	This updates the shortcut descriptions to reflect how they actually work  :). Fixes: https://bugs.launchpad.net/bugs/926441. Approved by Andrea Azzarone.
+
+2012-02-04  Martin Albisetti  <argentina@gmail.com>
+
+	Remove extra string
+
+2012-02-04  Martin Albisetti  <argentina@gmail.com>
+
+	Fix shortcuts descriptions
+
+2012-02-07  Jason Smith  <jason.smith@canonical.com>
+
+	Improves animation and disables effect until approved by design. Fixes: . Approved by Thomi Richards.
+
+2012-02-07  Jason Smith  <jason.smith@canonical.com>
+
+	use nux::color::Transparent
+
+2012-02-07  Jason Smith  <jason.smith@canonical.com>
+
+	get rid of jerky animation when launcher unhides
+
+2012-02-07  Jason Smith  <jason.smith@canonical.com>
+
+	smooth animation a bit
+
+2012-02-07  Jason Smith  <jason.smith@canonical.com>
+
+	make pressure color configurable
+
+2012-02-07  Tim Penhey  <tim.penhey@canonical.com>
+
+	Fix a crash on shutdown due to an infinite loop.. Fixes: . Approved by Jason Smith.
+
+2012-02-08  Tim Penhey  <tim.penhey@canonical.com>
+
+	Stop the infinite delete loop.
+
+2012-02-07  Thomi Richards  <thomi.richards@canonical.com>
+
+	Adds two tests to verify unity's behavior when dealing with windows that have the 'skip-tasklist' window flag set.. Fixes: . Approved by Jason Smith.
+
+2012-02-08  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged trunk to resolve conflicts.
+
+2012-02-07  Thomi Richards  <thomi.richards@canonical.com>
+
+	Removed unused include.
+
+2012-02-07  Thomi Richards  <thomi.richards@canonical.com>
+
+	Removed test spec from manual test file.
+
+2012-02-07  Thomi Richards  <thomi.richards@canonical.com>
+
+	completed tests.
+
+2012-02-07  Thomi Richards  <thomi.richards@canonical.com>
+
+	PEP8 fixed, removed debuging code.
+
+2012-02-07  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged trunk.
+
+2012-02-07  Thomi Richards  <thomi.richards@canonical.com>
+
+	Switcher emulator now returns icons correctly, and bamf emulator no longer throws exceptions if the bamf view interface has not yet been registered.
+
+2012-02-07  Thomi Richards  <thomi.richards@canonical.com>
+
+	Refactor of launcher icon classes.
+
+2012-02-03  Thomi Richards  <thomi.richards@canonical.com>
+
+	Introspectable objects now have a unique ID.
+
+2012-02-02  Thomi Richards  <thomi.richards@canonical.com>
+
+	Test for invisible windows started. Need unique Id for LauncherIcons.
+
+2012-02-02  Thomi Richards  <thomi.richards@canonical.com>
+
+	QuickListView now explicitly orders introspectable children.
+
+2012-02-02  Thomi Richards  <thomi.richards@canonical.com>
+
+	Quicklist menu items now export their lit state over DBus.
+
+2012-02-02  Thomi Richards  <thomi.richards@canonical.com>
+
+	No need to fully qualify type name.
+
+2012-02-02  Thomi Richards  <thomi.richards@canonical.com>
+
+	Can now get all launcher icons in the correct order.
+
+2012-02-02  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged change to the introspection code such that children can be explicitly ordered by parents during an introspection call.
+
+2012-01-31  Jason Smith  <jason.smith@canonical.com>
+
+	let Introspectable's override children getter
+
+2012-02-02  Thomi Richards  <thomi.richards@canonical.com>
+
+	fixed tests after change to launcher API
+
+2012-02-01  Thomi Richards  <thomi.richards@canonical.com>
+
+	Clear the flag when the test finishes.
+
+2012-02-01  Thomi Richards  <thomi.richards@canonical.com>
+
+	Basic test of user-invisible windows added.
+
+2012-01-31  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged AP improvments, since they're not in trunk yet.
+
+2012-01-31  Thomi Richards  <thomi.richards@canonical.com>
+
+	Commit since I need to merge AP improvment branch.
+
+2012-01-31  Thomi Richards  <thomi.richards@canonical.com>
+
+	First version of the debug window class.
+
+2012-02-07  Thomi Richards  <thomi.richards@canonical.com>
+
+	Removes several instances of 'friend' classes in unity where they're not strictly required.. Fixes: . Approved by Jason Smith.
+
+2012-02-08  Thomi Richards  <thomi.richards@canonical.com>
+
+	LauncherIcon and LauncherModel are no longer friends.
+
+2012-02-08  Thomi Richards  <thomi.richards@canonical.com>
+
+	LauncherIcon and Launcher are no longer friends.
+
+2012-02-08  Thomi Richards  <thomi.richards@canonical.com>
+
+	Removed friend class in LauncherEntryRemote.
+
+2012-02-07  Thomi Richards  <thomi.richards@canonical.com>
+
+	Removed several instances where the preprocessor was being used to define constants. These are now defined using 'const int' or 'const std::string'.. Fixes: . Approved by Jason Smith.
+
+2012-02-08  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed several other trivial cases.
+
+2012-02-08  Thomi Richards  <thomi.richards@canonical.com>
+
+	Removed #define in PanelMenuView.
+
+2012-02-08  Thomi Richards  <thomi.richards@canonical.com>
+
+	Whitespace fixes.
+
+2012-02-08  Thomi Richards  <thomi.richards@canonical.com>
+
+	LauncherIcon constants are no longer #defines.
+
+2012-02-08  Thomi Richards  <thomi.richards@canonical.com>
+
+	Got rid of several #defines in the controllers.
+
+2012-02-08  Thomi Richards  <thomi.richards@canonical.com>
+
+	Got rid of many more #defines in launcher.cpp.
+
+2012-02-08  Thomi Richards  <thomi.richards@canonical.com>
+
+	Removed another #define that's used in both LauncherIcon and Launcher.
+
+2012-02-08  Thomi Richards  <thomi.richards@canonical.com>
+
+	Removed several #defines in Launcher.h
+
+2012-02-07  Jason Smith  <jason.smith@canonical.com>
+
+	Implements a pressure effect to help train users. Fixes: . Approved by Thomi Richards.
+
+2012-02-07  Jason Smith  <jason.smith@canonical.com>
+
+	implement glowing pressure effect
+
+2012-02-07  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Implements the new design for the focus/over state for the category headers. Fixes bug #843026 and #919559 too.. Fixes: https://bugs.launchpad.net/bugs/843026, https://bugs.launchpad.net/bugs/893966, https://bugs.launchpad.net/bugs/919559. Approved by Thomi Richards.
+
+2012-02-07  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Don't use magic numbers.
+
+2012-02-07  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add a docstring for the AP test.
+
+2012-02-07  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Uses const whenever possible.
+
+2012-02-07  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Puts   _accept_key_nav_focus = false; in the init list.
+
+2012-02-07  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk.
+
+2012-02-07  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Adds an AP test.
+
+2012-02-07  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk.
+
+2012-02-07  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk.
+
+2012-02-07  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix.
+
+2012-02-06  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk. Merge prerequisite branch. Use 2px radious border.
+
+2012-02-06  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk.
+
+2012-02-02  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Use rounded corners.
+
+2012-01-27  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk.
+
+2012-01-27  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk.
+
+2012-01-26  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Uses the prelight for the over state too.
+
+2012-01-25  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Considers the 8px right padding in GetBestFitGeometry.
+
+2012-01-25  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix.
+
+2012-01-25  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix padding.
+
+2012-01-24  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Fix
+
+2012-01-24  Jay Taoko  <jay.taoko@canonical.com>
+
+	* PlaceGroup header background
+
+2012-01-24  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge Mirco's work. First draft of the header prelight.
+
+2012-01-24  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Remove fix.
+
+2012-01-24  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fixes "Filter Results >" padding.
+
+2012-02-07  Jason Smith  <jason.smith@canonical.com>
+
+	Makes the panel shadow paint directly below the active window. Fixes: https://bugs.launchpad.net/bugs/871760. Approved by Thomi Richards.
+
+2012-02-07  Jason Smith  <jason.smith@canonical.com>
+
+	make sure we draw a shadow over the desktop still
+
+2012-02-07  Sven Baars  <svenb.linux@gmail.com>
+
+	This should fix
+	
+	==1994== Conditional jump or move depends on uninitialised value(s)
+	==1994==    at 0x19F439E9: unity::launcher::Launcher::DndHoveredIconReset() (in /usr/lib/compiz/libunityshell.so)
+	==1994==    by 0x19F44025: unity::launcher::Launcher::OnUpdateDragManagerTimeout(void*) (in /usr/lib/compiz/libunityshell.so)
+	==1994==    by 0x670876A: ??? (in /lib/x86_64-linux-gnu/libglib-2.0.so.0.3116.0)
+	==1994==    by 0x6707B29: g_main_context_dispatch (in /lib/x86_64-linux-gnu/libglib-2.0.so.0.3116.0)
+	==1994==    by 0x6707EEF: ??? (in /lib/x86_64-linux-gnu/libglib-2.0.so.0.3116.0)
+	==1994==    by 0x67082E9: g_main_loop_run (in /lib/x86_64-linux-gnu/libglib-2.0.so.0.3116.0)
+	==1994==    by 0x42E855: CompScreen::eventLoop() (in /usr/bin/compiz)
+	==1994==    by 0x422219: main (in /usr/bin/compiz)
+	
+	This is my first commit to unity, so I thought I'd just pick something easy to get used to bzr/launchpad. If you guys would like some more fixes of valgrind warnings, and prefer fixes for other specific warnings, or like to get more fixes in one commit (instead of one per commit), then just tell me so I know this next time.. Fixes: . Approved by Thomi Richards.
+
+2012-02-07  Sven Baars  <svenb.linux@gmail.com>
+
+	Don't access an uninitialized variable (Valgrind)
+
+2012-02-07  Sven Baars  <svenb.linux@gmail.com>
+
+	This should fix
+	
+	==1994== 1,415 bytes in 180 blocks are definitely lost in loss record 23,444 of 25,065
+	==1994==    at 0x4C296CD: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+	==1994==    by 0x670D918: g_malloc (in /lib/x86_64-linux-gnu/libglib-2.0.so.0.3116.0)
+	==1994==    by 0x6721DED: g_strdup (in /lib/x86_64-linux-gnu/libglib-2.0.so.0.3116.0)
+	==1994==    by 0x6738D92: ??? (in /lib/x86_64-linux-gnu/libglib-2.0.so.0.3116.0)
+	==1994==    by 0x6738C19: ??? (in /lib/x86_64-linux-gnu/libglib-2.0.so.0.3116.0)
+	==1994==    by 0x6739A78: g_variant_get_va (in /lib/x86_64-linux-gnu/libglib-2.0.so.0.3116.0)
+	==1994==    by 0x6739BC4: g_variant_get (in /lib/x86_64-linux-gnu/libglib-2.0.so.0.3116.0)
+	==1994==    by 0x19E6090D: LauncherEntryRemoteModel::on_dbus_name_owner_changed_signal_received(_GDBusConnection*, char const*, char const*, char const*, char const*, _GVariant*, void*) (in /usr/lib/compiz/libunityshell.so)
+	==1994==    by 0x93B8B24: ??? (in /usr/lib/x86_64-linux-gnu/libgio-2.0.so.0.3116.0)
+	==1994==    by 0x6707B29: g_main_context_dispatch (in /lib/x86_64-linux-gnu/libglib-2.0.so.0.3116.0)
+	==1994==    by 0x6707EEF: ??? (in /lib/x86_64-linux-gnu/libglib-2.0.so.0.3116.0)
+	==1994==    by 0x67082E9: g_main_loop_run (in /lib/x86_64-linux-gnu/libglib-2.0.so.0.3116.0). Fixes: . Approved by Thomi Richards.
+
+2012-02-07  Sven Baars  <svenb.linux@gmail.com>
+
+	Don't allocate memory for strings by calling g_variant_get (Valgrind)
+
+2012-02-07  Jason Smith  <jason.smith@canonical.com>
+
+	Makes the panel shadow paint directly below the active window. Fixes: https://bugs.launchpad.net/bugs/871760. Approved by Thomi Richards.
+
+2012-02-07  Jason Smith  <jason.smith@canonical.com>
+
+	make panel shadow paint below active window as per design
+
+2012-02-07  Andrea Azzarone  <azzaronea@gmail.com>
+
+	1. Implement the lens bar key navigation
+	2. Removes the white triangle that indicates the active lens
+	3. Changes the over state for a lens bar icon
+	4. Adds an AP test too
+	
+	Branch: http://ubuntuone.com/4I4brmXv3imw0j7XU48rIc
+	Mockup: http://ubuntuone.com/47pmdV2B8ardvcXphjFkeT
+	
+	P.S: sometimes backward navigation doesn't work. Not my fault. Someone broke it in trunk.. Fixes: https://bugs.launchpad.net/bugs/881872. Approved by Thomi Richards, Andrea Cimitan.
+
+2012-02-07  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix the docstring for get_num_rows.
+
+2012-02-07  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk.
+
+2012-02-07  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fixes.
+
+2012-02-06  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fixes.
+
+2012-02-06  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Improves the AP test.
+
+2012-02-06  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Adds a simple autopilot test for the lensbar key navigation.
+
+2012-02-06  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge thomi's branch.
+
+2012-02-06  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk.
+
+2012-02-06  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Focus the search bar when a lens bar is activated.
+
+2012-02-06  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Len bar key navigation.
+
+2012-02-07  Jason Smith  <jason.smith@canonical.com>
+
+	Cant be tested due to difficulties with xtest and pointer barriers.. Fixes: . Approved by Thomi Richards.
+
+2012-02-06  Jason Smith  <jason.smith@canonical.com>
+
+	implement reveal trigger modes
+
+2012-02-07  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Fixes a couple of pixel misalignments, and enlarge menuitem separators by 2px. Fixes: . Approved by Marco Trevisan (Treviño), Andrea Cimitan.
+
+2012-02-07  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Enlarge quicklist menuitem separators to 7px
+
+2012-02-07  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Few cairo alignment fixes to quicklist items
+
+2012-02-07  Andrea Azzarone  <azzaronea@gmail.com>
+
+	http://ubuntuone.com/5pgybrVmIYDaYE2TTxQLS0
+	http://ubuntuone.com/0pAK3iTjw8wsckhGeI4PAs
+	http://ubuntuone.com/3DrWrSvWZ3ryiA32OnDecs
+	
+	For the designers: I'm just applying a white (0.50 alpha) overlay to the focused segment... If you find other visual bugs in the mulirange filter widget please don't report them here :) Open a new bug, etc. etc.
+	
+	P.S. You cannot test it, because the filter key navigation doesn't work in trunk.. Fixes: . Approved by Marco Trevisan (Treviño), Andrea Cimitan.
+
+2012-02-07  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix.
+
+2012-02-07  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk. 
+
+2012-02-03  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Remove un-needed commas.
+
+2012-02-03  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Implement multirange filter focus state.
+
+2012-02-07  Mirco Müller  <mirco.mueller@canonical.com>
+
+	The updated Unity-part of fixing LP: #810325. This makes sure the average color - computed after a change of wallpaper -  is exposed via Unity's GSettings schema. That in turn can get picked up by other applications... notify-osd in this case.. Fixes: https://bugs.launchpad.net/bugs/810325. Approved by Gord Allott.
+
+2012-02-07  Mirco Müller  <mirco.mueller@canonical.com>
+
+	doh
+
+2012-02-07  Mirco Müller  <mirco.mueller@canonical.com>
+
+	Gord gets no beer from me :)
+
+2012-02-07  Mirco Müller  <mirco.mueller@canonical.com>
+
+	Use client member-variable, be more C++-ish
+
+2012-02-07  Mirco Müller  <mirco.mueller@canonical.com>
+
+	Make fix for LP: #810325 work again with latest trunk
+
+2012-02-07  Didier Roche  <didier.roche@canonical.com>
+
+	Lock launcher by default as per design request (LP: #928153). Fixes: https://bugs.launchpad.net/bugs/928153. Approved by Gord Allott.
+
+2012-02-07  Didier Roche  <didier.roche@canonical.com>
+
+	new default on design request: launcher never hides (LP: #928153)
+
+2012-02-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Some updates to tooltips and quicklist... New visuals, positioning (Cimi, already signed-off by design), padding, some code refactoring by Marco including a standalone test program and fixes to StaticCairoText that now can use a pango_layout with a size different of the text extents (this allows to both draw cut text and to position it as requested).
+	
+	Also added CairoBaseWindow class that is used by both tooltip and quicklists to draw their cairo items avoiding code duplication.. Fixes: . Approved by Andrea Azzarone, Andrea Cimitan.
+
+2012-02-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Quicklist: adding quicklists to unity namespace
+	
+	Plus fix tests build issues.
+
+2012-02-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with upstream
+
+2012-02-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	CairoBaseWindow: added a virtual destructor.
+
+2012-02-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Tooltip: use const& to get geometry.
+
+2012-02-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	QuicklistView: some more cleanup, removing unneeded pointers
+
+2012-02-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	CairoBaseWindow: use post-fixed member variables.
+	
+	Updating the depending code.
+
+2012-02-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	CairoBaseWindow: added new class to create a nux base window with cairo elements
+	
+	Used to factorize the code of QuicklistView and TooltipView.
+	
+	Code merged from lp:~3v1n0/unity/cairo-base-window
+
+2012-02-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	CairoBaseWindow: make sure that we clear the background when drawing.
+
+2012-02-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherIcon: move the quicklist 1px to the left
+
+2012-02-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Tooltip, Quicklist: use the CairoBaseWindow as parent, so we can factorize lot of drawing code
+
+2012-02-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	CairoBaseWindow: added new class to create nux base windows with cairo elements
+
+2012-02-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherIcon: again, move the quicklist 1 px more to the left
+
+2012-02-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherIcon: move also the quicklist on to the left
+
+2012-02-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherIcon: move the tooltip position one more pixel left.
+	
+	As requested by Cimi, it's mostly need the after the merge with this branch:
+	lp:~unity-team/unity/launcher-design-fixes
+
+2012-02-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	StaticCairoText, Tooltip: using const& parameters...
+
+2012-02-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Tooltip: even more cleanup, and move to new nux layout values
+
+2012-02-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	QuicklistMenuItem: use const& to pass colors
+
+2012-02-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherIcon: remove unneeded members, and use ObjectPtr to handle tooltip and quicklist
+
+2012-02-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Tooltip, removing comments
+
+2012-02-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	QuicklistView: setting a minimum width for the item vertical layout.
+
+2012-02-02  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Revert previous commit
+
+2012-02-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Launcher: Set launcher right-line transparency at 0.15%
+
+2012-02-02  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Shifted tooltips and quicklist position, set minimum dimension to 100px
+
+2012-02-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Uncommit some unwanted changes...
+
+2012-02-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Tooltip fixed comments.
+
+2012-02-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Tooltip: always use nux::ObjectPtr when possible.
+
+2012-02-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Tooltip: no need to use the nux namespace, plus more cleanup.
+
+2012-02-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Tooltip: consider the padding when checking the minimum width.
+
+2012-02-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Tooltip: Moved into the unity namespace, and using a Text padding and a fixed minimum width
+	
+	Plus some code cleanup.
+
+2012-02-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	standalone-clients, added the TestTooltip code!
+	
+	It allows to easily check how an unity tooltip is drawn
+
+2012-02-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	StaticCairoText: update the cached texture if the base geometry has changed
+	
+	This makes sure that the cairo text is redrawn when the Base size has changed, and the pango
+	layout is updated against the new values.
+
+2012-02-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	StaticCairoText: make the pango_layout to use all the available space when requested
+	
+	Updating the pango layout size using the requested size.
+	Now, the alignment values are properly used.
+
+2012-02-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Tooltip: added standalone client.
+
+2012-02-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Tooltip: Blur the tooltip background.
+
+2012-02-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	QuicklistMenuItem*: add a shared function to Draw the Prelight that applies a blurred glow
+	
+	All the kinds of QuicklistMenuitems now uses the shared DrawText and DrawPrelight functions
+	to draw the content, these functions are also aware of the padding that the quicklist item
+	should use.
+	
+	Plus, now the disabled quicklist are using a semi-transparent white color, computed comaparing
+	the results with the design mokups.
+	
+	Patch imported from lp:~3v1n0/unity/quicklist-item-glow-selection r:1803
+
+2012-02-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged with lp:~3v1n0/unity/fixed-bad-quicklist-items-drawing
+	
+	USE IT AS PREREQUSITE WHEN MERGING!
+
+2012-02-01  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Few tweaks to the quicklist
+
+2012-02-01  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Add a slight glow
+
+2012-02-01  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	New shape for tooltips
+
+2012-02-07  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Implement the focus state for the filters label buttons.
+	
+	For the momement you cannot directly test because in trunk the filter bar is not key navigable. You can test it changing:
+	
+	139	+  if (HasKeyboardFocus())
+	
+	with
+	
+	139	+  if (IsMouseInside())
+	
+	I've a branch for filters key navigation too, but the visual design is not ready...
+	
+	Mockup - https://chinstrap.canonical.com/~sabdfl/12_04/desktop_and_netbook/dash/video_lens_v1.2_2.png
+	
+	Branch - http://ubuntuone.com/4CwCQGcAuejfjQAY4Ky7Ry
+	http://ubuntuone.com/3vHehMXz1KoBWKQ2uugZzL. Fixes: . Approved by Marco Trevisan (Treviño), Andrea Cimitan.
+
+2012-02-07  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk.
+
+2012-01-26  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk.
+
+2012-01-26  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Implement the design for the focus state of the filters label buttons.
+
+2012-02-07  Andrea Azzarone  <azzaronea@gmail.com>
+
+	. Fixes: . Approved by Sam Spilsbury, Marco Trevisan (Treviño).
+
+2012-02-02  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Uses CreateActionString in unityshell.
+
+2012-02-02  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Ops.
+
+2012-02-02  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Adds UnityShellPrivate. Makes CreateActionSting testable. Tests it.
+
+2012-02-02  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk.
+
+2012-01-12  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Makes super key configurable.
+
+2012-02-07  Daniel van Vugt  <vanvugt@gmail.com>
+
+	Avoid crashing due to uninitialized GTK/GDK libraries when using upstream compiz (LP: #915819)
+	. Fixes: https://bugs.launchpad.net/bugs/915819. Approved by .
+
+2012-02-07  Daniel van Vugt  <vanvugt@gmail.com>
+
+	Fix hand-porting mistake.
+
+2012-02-07  Daniel van Vugt  <vanvugt@gmail.com>
+
+	Simplified gtk_init, required to avoid crashing with regular compiz
+	(LP: #915819)
+
+2012-02-07  Daniel van Vugt  <vanvugt@gmail.com>
+
+	Rebase.
+
+2012-02-04  Daniel van Vugt  <vanvugt@gmail.com>
+
+	Rebased and resolved conflicts.
+
+2012-01-13  Daniel van Vugt  <vanvugt@gmail.com>
+
+	Avoid crashing due to uninitialized GTK/GDK libraries when using
+	upstream compiz (LP: #915819)
+
+2012-02-06  Luke Yelavich  <luke.yelavich@canonical.com>
+
+	. Fixes: . Approved by Luke Yelavich, Neil J. Patel.
+
+2012-01-20  Luke Yelavich  <luke.yelavich@canonical.com>
+
+	Remove the FIXME comment. After further reading of the code, I don't see any
+	other way of getting a pointer to the launcher window, as the launcher
+	accessible is likely not created yet, and we would need to iterate through
+	all children of the root accessible to find it anyway. We also can't get
+	a pointer to the launcher controller.
+
+2012-01-11  Luke Yelavich  <luke.yelavich@canonical.com>
+
+	Search for the window named LauncherWindow, allowing Orca to read the launcher
+	again, also add a FIXME note so that we know to fetch the launcher window
+	name properly from the launcher object at a later date.
+
+2012-02-06  Jason Smith  <jason.smith@canonical.com>
+
+	Fix duplicate launchers. Fixes: https://bugs.launchpad.net/bugs/916228. Approved by Jay Taoko, Tim Penhey.
+
+2012-02-06  Jason Smith  <jason.smith@canonical.com>
+
+	make sure we destroy launchers when we intend to
+
+2012-02-06  Jason Smith  <jason.smith@canonical.com>
+
+	. Fixes: https://bugs.launchpad.net/bugs/916228. Approved by Jay Taoko, Sam Spilsbury.
+
+2012-02-06  Jason Smith  <jason.smith@canonical.com>
+
+	Fix issue where unity would crash when a tray was open when closing a monitor
+
+2012-02-06  Thomi Richards  <thomi.richards@canonical.com>
+
+	Adds tests for the 'Show Desktop' feature.
+	
+	Also adds various classes to autopilot that are required by these tests (specifically: BAMF emulators). Updates keyboard emulator to make keyboard interaction easier.. Fixes: . Approved by Alex Launi, Tim Penhey.
+
+2012-02-07  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged trunk to resolve conflicts.
+
+2012-01-31  Thomi Richards  <thomi.richards@canonical.com>
+
+	Mouse is now centered on the first monitor after every test.
+
+2012-01-31  Thomi Richards  <thomi.richards@canonical.com>
+
+	Disabled tests that currently don't work (waiting on a fix elsewhere).
+
+2012-01-31  Thomi Richards  <thomi.richards@canonical.com>
+
+	Removed trailing whitespace.
+
+2012-01-31  Thomi Richards  <thomi.richards@canonical.com>
+
+	Showing desktop via switcher is now faster.
+
+2012-01-31  Thomi Richards  <thomi.richards@canonical.com>
+
+	Test 'ShowDesktopTests.test_unhide_single_app' now works.
+
+2012-01-31  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed ShowDesktopTests.test_showdesktop_switcher test.
+
+2012-01-31  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged trunk.
+
+2012-01-31  Thomi Richards  <thomi.richards@canonical.com>
+
+	Test cases now all automatically releas pushed keys. Whitespace fixes also.
+
+2012-01-30  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged trunk. Lots of test failures.
+
+2012-01-30  Thomi Richards  <thomi.richards@canonical.com>
+
+	PEP8 fixes, and removed a commented import.
+
+2012-01-30  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged trunk to resolve conflicts.
+
+2012-01-30  Thomi Richards  <thomi.richards@canonical.com>
+
+	Removed trailing whitespace in unity.py.
+
+2012-01-25  Thomi Richards  <thomi.richards@canonical.com>
+
+	Keyboard emulator now uses strings to represent multiple keys.
+
+2012-01-25  Thomi Richards  <thomi.richards@canonical.com>
+
+	Removed extra blank line in Dash.txt.
+
+2012-01-25  Thomi Richards  <thomi.richards@canonical.com>
+
+	PEP8 fix - extra blank line between module-level items.
+
+2012-01-25  Thomi Richards  <thomi.richards@canonical.com>
+
+	Keyboard emulator now uses current keyboard mapping to determine which keys are shifted.
+
+2012-01-25  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed docstrings on keyboard emulator.
+
+2012-01-25  Thomi Richards  <thomi.richards@canonical.com>
+
+	Keyboard emulator refactored to remove ugly control key hack.
+
+2012-01-25  Thomi Richards  <thomi.richards@canonical.com>
+
+	Bamf emulator now waits on DBus signal when waiting on app launch instead of polling. Closing windows now works as expected from within AP test.
+
+2012-01-24  Thomi Richards  <thomi.richards@canonical.com>
+
+	Launcher AddProperties now uses builder helper.
+
+2012-01-24  Thomi Richards  <thomi.richards@canonical.com>
+
+	Bamf emulator now waits for Dbus signal instead of polling for applications opened.
+
+2012-01-24  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed logic bug in bamf emulator.
+
+2012-01-23  Thomi Richards  <thomi.richards@canonical.com>
+
+	Removed old debugging code.
+
+2012-01-20  Thomi Richards  <thomir@gmail.com>
+
+	Merged trunk, resolved conflict.
+
+2012-01-20  Thomi Richards  <thomir@gmail.com>
+
+	Split single large switcher test into several smaller ones.
+
+2012-01-20  Thomi Richards  <thomir@gmail.com>
+
+	Removed unused import.
+
+2012-01-20  Thomi Richards  <thomir@gmail.com>
+
+	Switcher emulator now uses same launcher icon abstraction as launcher emulator. Removed cruft.
+
+2012-01-20  Thomi Richards  <thomir@gmail.com>
+
+	Bamf emulator now filters non-visible windows and applications more safely.
+
+2012-01-20  Thomi Richards  <thomir@gmail.com>
+
+	X11 emulators now share a single display. Added method to Keyboard class to reset all pressed keys to an un-pressed state. Increased key_press delay to 0.2, since smaller values break the switcher tests.
+
+2012-01-20  Thomi Richards  <thomir@gmail.com>
+
+	SwitcherModel now stores Launcher icons as children in a sane way.
+
+2012-01-20  Thomi Richards  <thomir@gmail.com>
+
+	Removed manual test spec since it's automated.
+
+2012-01-18  Thomi Richards  <thomir@gmail.com>
+
+	Various python cleanups.
+
+2012-01-18  Thomi Richards  <thomir@gmail.com>
+
+	Replaces wnck with pure Xlib calls, removed debug info from test.
+
+2012-01-12  Thomi Richards  <thomir@gmail.com>
+
+	Added methods to wait for a particular application to be started.
+
+2012-01-12  Thomi Richards  <thomir@gmail.com>
+
+	PEP257 compliance.
+
+2012-01-12  Thomi Richards  <thomir@gmail.com>
+
+	Whitespace fixes.
+
+2012-01-12  Thomi Richards  <thomir@gmail.com>
+
+	Dash tests are now in the correct file, removed (now empty) launcher test file.
+
+2012-01-12  Thomi Richards  <thomir@gmail.com>
+
+	Added show desktop tests, removed manual test specification file.
+
+2012-01-12  Thomi Richards  <thomir@gmail.com>
+
+	Show desktop test completed.
+
+2012-01-12  Thomi Richards  <thomir@gmail.com>
+
+	Almost finished show desktop test.
+
+2012-01-12  Thomi Richards  <thomir@gmail.com>
+
+	Can now detect hidden windows.
+
+2012-01-12  Thomi Richards  <thomir@gmail.com>
+
+	Bamf applications and windows now have a nicer __repr__ method, and the bamf utility class now filters out user-invisible applications and windows by default.
+
+2012-01-12  Thomi Richards  <thomir@gmail.com>
+
+	Launcher tests now move mouse out of the way when tests complete.
+
+2012-01-12  Thomi Richards  <thomir@gmail.com>
+
+	Now tests command lens shortcut.
+
+2012-01-12  Thomi Richards  <thomir@gmail.com>
+
+	Keyboard emulator modified to support function keys.
+
+2012-01-11  Thomi Richards  <thomir@gmail.com>
+
+	Can't write test for command lense until i overhaul the keyboard input emulator.
+
+2012-01-11  Thomi Richards  <thomir@gmail.com>
+
+	Added autopilot tests that ensure the various dash shortcuts work as expected.
+
+2012-01-11  Thomi Richards  <thomir@gmail.com>
+
+	Merged trunk.
+
+2012-01-11  Thomi Richards  <thomir@gmail.com>
+
+	Added active-lens property to LensBar.
+
+2012-01-11  Thomi Richards  <thomir@gmail.com>
+
+	Whitespace fixes
+
+2012-01-11  Thomi Richards  <thomir@gmail.com>
+
+	Added some utility functions to Bamf class.
+
+2012-01-11  Thomi Richards  <thomir@gmail.com>
+
+	Better app introspection.
+
+2012-01-11  Thomi Richards  <thomir@gmail.com>
+
+	Application and window introspection now work.
+
+2012-01-10  Thomi Richards  <thomir@gmail.com>
+
+	Slight code refactor in bamf access code.
+
+2012-01-10  Thomi Richards  <thomir@gmail.com>
+
+	DBus interface to BAMF works.
+
+2012-02-06  Thomi Richards  <thomi.richards@canonical.com>
+
+	Unity introspection tree debug script now has option to display image instead of saving it to disk, and can handle any file format supported by dot.. Fixes: . Approved by Jason Smith.
+
+2012-01-30  Thomi Richards  <thomi.richards@canonical.com>
+
+	Temnp files now cleaned up.
+
+2012-01-30  Thomi Richards  <thomi.richards@canonical.com>
+
+	unity introspection tree debugging script now can write output to any format supported by dot, and has the option to display the image with the 'eog' app.
+
+2012-02-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Fixed the drawing of the radios or checkmarks quicklist menu items
+	
+	When using quicklist menu-items containing radios or checkmarks, unity draws them incorrectly.
+	First of all, the Active logic is inverted (unactive items were marked, while active were not), then the disabled status was causing an incorrect drawing.
+	
+	This is an example code that underlines the issue: http://paste.ubuntu.com/788515/
+	You can see the issue in this screenshot: http://go.3v1n0.net/vhgofi
+	
+	This branch fixes these issues, and this is the expected result: http://ubuntuone.com/5avZ10Lrd8MFxnBmRIOJfQ
+	(of course now it works well also when an item is prelighted)
+	
+	I've not added a manual test since for the graphic nature of the issue, I guess it's hard to automatically test it (and autopilot doesn't help at all, clearly). So, let me know if this is ok.. Fixes: https://bugs.launchpad.net/bugs/910286. Approved by Andrea Azzarone.
+
+2012-02-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestQuicklistVisuals: fix compilation issues
+
+2012-02-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with upstream
+
+2012-01-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Fixed the compilation of /some/ other standalone clients.
+
+2012-01-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestQuicklist: rewritten using the nux test framework to check the events.
+
+2012-01-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Including the nux test framework into the standalone-clients.
+
+2012-01-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	tests, TestQuicklistMenuitems: added check for GetChildren()
+
+2012-01-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	QuicklistView: GetChildren should return the list of children.
+
+2012-01-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with upstream.
+
+2012-01-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestQuicklist: readded the item-activated tests
+
+2012-01-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestQuicklist: fixed a typo.
+
+2012-01-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestQuicklist: added more visual tests for all the quicklist possible cases
+
+2012-01-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestQuicklistVisuals: the application name now should be bold.
+	
+	Updating the visual test.
+
+2012-01-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestQuicklistVisuals: allow to create disabled label items, and use it
+
+2012-01-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestQuicklistVisuals: the checked/unchecked status shouldn't be inverted.
+
+2012-01-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestQuicklist: fix the test using the expected checked/unchecked state
+
+2012-01-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	StandaloneClients: use aubergine background color for quicklist tests.
+	
+	It makes them a little bit more real ;)
+
+2011-12-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	QuicklistMenuItemRadio: fix the rendering of the active/unactive and disabled states
+	
+	Fixing bug #910286 caused the menuitem to be drawn incorrectly
+
+2011-12-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	QuicklistMenuItemCheckmark: fix the rendering of the active/unactive and disabled states
+	
+	Fixing bug #910286 caused the menuitem to be drawn incorrectly
+
+2012-02-06  Gord Allott  <gord.allott@canonical.com>
+
+	. Fixes: https://bugs.launchpad.net/bugs/921112, https://bugs.launchpad.net/bugs/921249, https://bugs.launchpad.net/bugs/921270, https://bugs.launchpad.net/bugs/921329. Approved by Gord Allott, John Lea.
+
+2012-02-06  Gord Allott  <gord.allott@canonical.com>
+
+	updated to trunk to fix conflicts
+
+2012-02-03  Gord Allott  <gord.allott@canonical.com>
+
+	more visual refinements
+
+2012-02-02  Gord Allott  <gord.allott@canonical.com>
+
+	working launcher icons
+
+2012-02-02  Gord Allott  <gord.allott@canonical.com>
+
+	colours working for launcher icon
+
+2012-02-02  Gord Allott  <gord.allott@canonical.com>
+
+	working launcher icon
+
+2012-02-02  Gord Allott  <gord.allott@canonical.com>
+
+	allways renders firefox.png
+
+2012-02-02  Gord Allott  <gord.allott@canonical.com>
+
+	add missing files
+
+2012-02-02  Gord Allott  <gord.allott@canonical.com>
+
+	added missing files
+
+2012-02-02  Gord Allott  <gord.allott@canonical.com>
+
+	more checks in UnityCore/Hud
+
+2012-02-02  Gord Allott  <gord.allott@canonical.com>
+
+	additional checks in unity core
+
+2012-02-02  Gord Allott  <gord.allott@canonical.com>
+
+	merge in branch to remove magic numbers
+
+2012-02-02  Gord Allott  <gord.allott@canonical.com>
+
+	namespace up magic numbers
+
+2012-02-02  Gord Allott  <gord.allott@canonical.com>
+
+	merged in alignment branch
+
+2012-02-02  Gord Allott  <gord.allott@canonical.com>
+
+	reduced search box one pixel
+
+2012-02-02  Gord Allott  <gord.allott@canonical.com>
+
+	More alignment
+
+2012-02-02  Gord Allott  <gord.allott@canonical.com>
+
+	first stab at launcher icon, did not go well, more alignments
+
+2012-02-01  Gord Allott  <gord.allott@canonical.com>
+
+	more visual tweaking
+
+2012-02-02  Gord Allott  <gord.allott@canonical.com>
+
+	stop tricking applications into thinking GDbus is connected when it is not
+
+2012-01-31  Gord Allott  <gord.allott@canonical.com>
+
+	merge with trunk again, fix even more conflicts
+
+2012-01-31  Gord Allott  <gord.allott@canonical.com>
+
+	fix about a million conflicts with trunk, updated to trunk (5.2)
+
+2012-01-30  Gord Allott  <gord.allott@canonical.com>
+
+	adds introspection to hud
+
+2012-01-30  Gord Allott  <gord.allott@canonical.com>
+
+	add more introspection
+
+2012-01-30  Gord Allott  <gord.allott@canonical.com>
+
+	added introspection
+
+2012-01-27  Gord Allott  <gord.allott@canonical.com>
+
+	changed potfiles
+
+2012-01-27  Gord Allott  <gord.allott@canonical.com>
+
+	merged with trunk
+
+2012-01-26  Gord Allott  <gord.allott@canonical.com>
+
+	enables tests that were disabled
+
+2012-01-26  Gord Allott  <gord.allott@canonical.com>
+
+	re-enable tests that were disabled
+
+2012-01-26  Gord Allott  <gord.allott@canonical.com>
+
+	fixes the interactions with the dash
+
+2012-01-26  Gord Allott  <gord.allott@canonical.com>
+
+	Fixed the drawing in netbook mode
+
+2012-01-26  Gord Allott  <gord.allott@canonical.com>
+
+	fix issues with dash and hud interaction, refocuses the last window on alt
+
+2012-01-26  Gord Allott  <gord.allott@canonical.com>
+
+	fixed conflicts
+
+2012-01-26  Gord Allott  <gord.allott@canonical.com>
+
+	updated to latest unity trunk
+
+2012-01-26  Gord Allott  <gord.allott@canonical.com>
+
+	removes the callback on alt release
+
+2012-01-25  Gord Allott  <gord.allott@canonical.com>
+
+	merges in a branch to fix the seperation between DashSearchBar and HudSearchBar
+
+2012-01-25  Gord Allott  <gord.allott@canonical.com>
+
+	removed HudSearchBar, moved the code into DashSearchBar, renamed DashSearhBar to SearchBar
+
+2012-01-25  Gord Allott  <gord.allott@canonical.com>
+
+	clean up ptrs
+
+2012-01-24  Gord Allott  <gord.allott@canonical.com>
+
+	removed typo, no longer is the hud timeout 500ms, but now 150ms
+
+2012-01-24  Gord Allott  <gord.allott@canonical.com>
+
+	remove debugs
+
+2012-01-24  Gord Allott  <gord.allott@canonical.com>
+
+	fixed icon loading issue
+
+2012-01-23  Gord Allott  <gord.allott@canonical.com>
+
+	fix manual tests to refer to tapping Alt not pressing SuperH
+
+2012-01-23  Gord Allott  <gord.allott@canonical.com>
+
+	merge in the use alt and tap branch
+
+2012-01-23  Gord Allott  <gord.allott@canonical.com>
+
+	move over to tap and alt by default
+
+2012-01-23  Gord Allott  <gord.allott@canonical.com>
+
+	pushed up the minor version
+
+2012-01-21  Gord Allott  <gord.allott@canonical.com>
+
+	merge in icon view code
+
+2012-01-21  Gord Allott  <gord.allott@canonical.com>
+
+	modified the icon renderer
+
+2012-01-21  Gord Allott  <gord.allott@canonical.com>
+
+	change icon on keynav
+
+2012-01-21  Gord Allott  <gord.allott@canonical.com>
+
+	merge in default text branch
+
+2012-01-20  Gord Allott  <gord.allott@canonical.com>
+
+	more robust icon loading code, standalone client working again
+
+2012-01-21  Gord Allott  <gord.allott@canonical.com>
+
+	added manual tests for hud
+
+2012-01-20  Gord Allott  <gord.allott@canonical.com>
+
+	merge in branch to make the hud go away on click off or escape
+
+2012-01-20  Gord Allott  <gord.allott@canonical.com>
+
+	dash goes away on escape and mouse click off
+
+2012-01-19  Gord Allott  <gord.allott@canonical.com>
+
+	use left aligned button api
+
+2012-01-19  Gord Allott  <gord.allott@canonical.com>
+
+	emit the OVERLAY_SHOWN/HIDDEN messages
+
+2012-01-19  Gord Allott  <gord.allott@canonical.com>
+
+	Merged in the ubus refactor message branch
+
+2012-01-19  Gord Allott  <gord.allott@canonical.com>
+
+	removed hack for dash style
+
+2012-01-19  Gord Allott  <gord.allott@canonical.com>
+
+	Merged in left align dashstyle button branch
+
+2012-01-19  Gord Allott  <gord.allott@canonical.com>
+
+	latest unity trunk
+
+2012-01-18  Gord Allott  <gord.allott@canonical.com>
+
+	Button logic working
+
+2012-01-18  Gord Allott  <gord.allott@canonical.com>
+
+	better size requisition code
+
+2012-01-18  Gord Allott  <gord.allott@canonical.com>
+
+	moved hud to 0 pixels on the side
+
+2012-01-18  Gord Allott  <gord.allott@canonical.com>
+
+	fixes for the auto hide with ALWAYS SHOW enabled
+
+2012-01-18  Gord Allott  <gord.allott@canonical.com>
+
+	add locking the launcher to the hud code
+
+2012-01-17  Gord Allott  <gord.allott@canonical.com>
+
+	Merge in the hide launcher branch
+
+2012-01-17  Gord Allott  <gord.allott@canonical.com>
+
+	small cleanup
+
+2012-01-17  Gord Allott  <gord.allott@canonical.com>
+
+	working dash visuals on the hud
+
+2012-01-16  Gord Allott  <gord.allott@canonical.com>
+
+	Merged in dash view refactor branch
+
+2012-01-16  Gord Allott  <gord.allott@canonical.com>
+
+	upgrade to latest hud base
+
+2012-01-16  Gord Allott  <gord.allott@canonical.com>
+
+	upgraded to latest trunk and fix all the conflicts again
+
+2012-01-16  Gord Allott  <gord.allott@canonical.com>
+
+	add in icon support
+
+2012-01-12  Gord Allott  <gord.allott@canonical.com>
+
+	Build in execute by Search
+
+2012-01-12  Gord Allott  <gord.allott@canonical.com>
+
+	fixed up tests
+
+2012-01-12  Gord Allott  <gord.allott@canonical.com>
+
+	updated hudButton to new api, merged in unity update branch
+
+2012-01-10  Gord Allott  <gord.allott@canonical.com>
+
+	merged in latest unity trunk
+
+2012-01-12  Gord Allott  <gord.allott@canonical.com>
+
+	updated hud api
+
+2012-01-11  Gord Allott  <gord.allott@canonical.com>
+
+	Add close hint API to HudCore api
+
+2012-01-10  Gord Allott  <gord.allott@canonical.com>
+
+	Add shortcut keys to the UnityCore/Hud.h api
+
+2012-01-10  Gord Allott  <gord.allott@canonical.com>
+
+	Enable activation by keynav
+
+2012-01-10  Gord Allott  <gord.allott@canonical.com>
+
+	Support activating by return on button
+
+2012-01-10  Gord Allott  <gord.allott@canonical.com>
+
+	semi working button activating
+
+2012-01-10  Gord Allott  <gord.allott@canonical.com>
+
+	Coverted refererence to a hud::Suggestion to hud::Suggestion::Ptr
+
+2012-01-09  Gord Allott  <gord.allott@canonical.com>
+
+	added tests for hud core
+
+2012-01-06  Gord Allott  <gord.allott@canonical.com>
+
+	added tests
+
+2012-01-06  Gord Allott  <gord.allott@canonical.com>
+
+	removal of icon api, stored in suggestions now
+
+2012-01-06  Gord Allott  <gord.allott@canonical.com>
+
+	Better Hud classes for UnityCore, much more C++ like
+
+2012-01-04  Gord Allott  <gord.allott@canonical.com>
+
+	Moved the Hud class to UnityCore
+
+2011-12-09  Gord Allott  <gord.allott@canonical.com>
+
+	few changes to the icon size and positioning
+
+2011-12-08  Gord Allott  <gord.allott@canonical.com>
+
+	better rendering, fixed transparency bug
+
+2011-12-07  Gord Allott  <gord.allott@canonical.com>
+
+	Merge in fix for kdevelop
+
+2011-12-07  Gord Allott  <gord.allott@canonical.com>
+
+	merged latest unity trunk
+
+2011-12-05  Gord Allott  <gord.allott@canonical.com>
+
+	use pango text from service
+
+2011-12-02  Gord Allott  <gord.allott@canonical.com>
+
+	fix crasher with wrong hud service api, show icon on hud show, clear hud search box on show
+
+2011-12-02  Gord Allott  <gord.allott@canonical.com>
+
+	change the key binding for hud to <Super>H
+
+2011-12-01  Gord Allott  <gord.allott@canonical.com>
+
+	Adds icon support and moves a lot of code from the view into the controller
+
+2011-11-18  Gord Allott  <gord.allott@canonical.com>
+
+	updated to latest API
+
+2011-11-16  Gord Allott  <gord.allott@canonical.com>
+
+	fixed drawing issues, hud goes away after a search and returns focus to where it should be
+
+2011-11-15  Gord Allott  <gord.allott@canonical.com>
+
+	plus tests
+
+2011-11-15  Gord Allott  <gord.allott@canonical.com>
+
+	current wip prototype
+
+2012-02-05  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	New visual assets for dash buttons. Fixes: . Approved by Marco Trevisan (Treviño).
+
+2012-01-30  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	New dash window buttons, new assets from designers
+
+2012-02-05  David Planella  <david.planella@ubuntu.com>
+
+	Adding a simple comment for translators to disambiguate the meaning of the 'Format...' message. This comment will be automatically extracted by the build system, put into the translation template (.pot file) and be visible to translators in Launchpad, providing them more context (bug 926339).
+	
+	I would suggest following this practice for any translatable string that might be prone to confusion, or if anything needs clarifying to translators. It's just a matter of adding a comment above the line where the translatable string appears - the gettext machinery takes care of all the rest.. Fixes: https://bugs.launchpad.net/bugs/926339. Approved by Marco Trevisan (Treviño), Marco Biscaro.
+
+2012-02-04  David Planella  <david.planella@ubuntu.com>
+
+	Added a translators comment to appear in Launchpad to clarify the meaning of the 'Format...' message (bug 926339)
+
+2012-02-03  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	Clicking now quits the KeyNav mode from the launcher and if the quicklist is open. Shortcuts while in KeyNav mode now work and quit KeyNav mode.. Fixes: https://bugs.launchpad.net/bugs/869122. Approved by Jason Smith.
+
+2012-02-01  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	Noticed from the last fix that when a window as getting restored it would always restore to the window that was active when key nav mode first started. Now the correct window gets focus when you leave key nav mode.
+
+2012-02-01  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	Fixed error on ubus call. Used START instead of END.
+
+2012-01-31  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	test added
+
+2012-01-31  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	Fixes the KeyNav issues, such as click outside of the launcher to quit,
+	using shortcut while in KeyNav, and Quicklist quiting correctly while
+	in KeyNav mode.
+
+2012-02-03  Jason Smith  <jason.smith@canonical.com>
+
+	. Fixes: . Approved by .
+
+2012-02-03  Jason Smith  <jason.smith@canonical.com>
+
+	merge trunkle
+
+2012-02-01  Jason Smith  <jason.smith@canonical.com>
+
+	forward declare class in IconRenderer
+
+2012-02-01  Jason Smith  <jason.smith@canonical.com>
+
+	add multi-monitor header and import it where needed
+
+2012-01-31  Jason Smith  <jason.smith@canonical.com>
+
+	Make AbstractIconRenderer inherit from IconTextureSource
+	Make IconRenderer use IconTextureSource to limit coupling with Launcher types
+
+2012-02-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	As shown in the design mockups and as requested by Cimi, I've fixed some visual issues of the launcher and dash:
+	
+	1) The right launcher border line should use more transparency and
+	should be outside the launcher background
+	2) The launcher should use on both sides a padding of 6 pixels,
+	and without the right border, it should be 64px wide.
+	3) Adjusted the dash position, to make it use the launcher real geometry
+	
+	Launcher screenshot: http://ubuntuone.com/6atOJPagikJTGoMELnKWXu
+	Lancher + Dash screenshot: http://ubuntuone.com/5XxXY6pp8vEFN0p4JdK684. Fixes: https://bugs.launchpad.net/bugs/921465. Approved by Andrea Cimitan.
+
+2012-02-04  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Launcher right line opacity 0.15f
+
+2012-02-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	unityshell: explain the -1 magic number.
+
+2012-02-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	OverlayRenderer: Draw inner rounded corner only if needed.
+
+2012-02-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	OverlayRenderer: use transparent color for our lines...
+
+2012-02-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	OverlayRenderer: some math cleanup...
+
+2012-02-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	OverlayRenderer: enable blending when drawing the top and right lines
+
+2012-02-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	OverlayRenderer: make the dash to use the top and right lines that matches the launcher
+	
+	Also, these lines are now drawn under the background, to get them properly masked.
+
+2012-02-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Launcher: make the right-line using a 22% opaque white.
+
+2012-02-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DashController / Unity: adjust the dash position using the launcher geometry.
+
+2012-02-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Launcher: put the right-line to a position relative to the one of the launcher
+	
+	Fixes the "always-showing" line issue.
+
+2012-02-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Launcher: be aware of the right-line and don't consider it as part of the launcher.
+
+2012-02-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Launcher: changing right-line color opacity
+
+2012-02-03  Jay Taoko  <jay.taoko@canonical.com>
+
+	* This branch follows the changes made in https://code.launchpad.net/~unity-team/nux/nux.key-nav-improvements/+merge/90566
+	
+	* This branch fixes bug #863405
+	. Fixes: . Approved by Jason Smith.
+
+2012-02-03  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Merged with Unity trunk
+
+2012-01-28  Jay Taoko  <jay.taoko@canonical.com>
+
+	* This branch follows the changes made in https://code.launchpad.net/~unity-team/nux/nux.key-nav-improvements/+merge/90566
+	
+	* This branch fixes bug  #863405
+
+2012-01-27  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Fix #863405
+
+2012-01-16  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Fixing key nav
+
+2012-02-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: a lot of code cleanup using more C++ friendly members to fix memory leaks and improve our work.
+	
+	After holding this branch to wait the jason one to merge lp:~unity-team/unity/unity.multi-launcher, I've updated it including his changes.
+	
+	I've also included some cleanups for the new SoftwareCenterLauncherIcon that depends on BamfLauncherIcon
+	
+	Plus fixed the bug #921102 that was caused by the fact that the remote dbusmenu was unreferenced by the icon, and bug #925839 that was caused by the fact that after the multi-monitor branch, an icon was not redrawn on EnsureWindowState until there was a monitor / vp change, now we force the redraw.. Fixes: https://bugs.launchpad.net/bugs/921102, https://bugs.launchpad.net/bugs/925839. Approved by Jason Smith.
+
+2012-02-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	MockLauncherIcon: make GetQuirk const to match the parent.
+	
+	Fixes tests
+
+2012-02-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: always make the icon redraw when children are added, removed and so on!.
+
+2012-02-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk changes.
+
+2012-01-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SoftwareCenterLauncherIcon: small cleanup...
+
+2012-01-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: remove some const methods to avoid weird results...
+
+2012-01-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: don't make ShowInSwitcher() const or it won't work!
+
+2012-01-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SoftwareCenterLauncherIcon: more cleanup...
+
+2012-01-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SoftwareCenterLauncherIcon: cleaning-up the whole patch... Using std::string and fixing indentation.
+
+2012-01-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with upstream, optimize a little LauncherController
+
+2012-01-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: removing the last static method, adding OnDndHovered() that is called by timeout lambda.
+
+2012-01-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: GetQuirk dependent methods can be const now, making them constant!
+
+2012-01-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherIcon: making GetQuirk const
+
+2012-01-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: no need to duplicate the checks... 
+
+2012-01-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: don't use C casts, check for type and use static_cast
+	
+	Fixes also a leak... Every click the children list were not free'd.
+
+2012-01-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: making DesktopFile to return a std::string.
+
+2012-01-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: Using std::string for _desktop_file, plus add more const members.
+
+2012-01-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: using glib:Object for _menu_clients too
+	
+	Also fixing bug #921102
+
+2012-01-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: More glib::Object and glib::Error usage
+
+2012-01-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: FillSupportedTypes can be a member function, using a lambda to call it.
+
+2012-01-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: removing the evil ShortcutData struct, we can do the same without it.
+
+2012-01-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: use glib::Object instead of a pointer on ShortcutData, plus fix a memory leak.
+	
+	The desktop_shortcuts value was unreferenced too few times, so it wasn't ever destroyed.
+	Using a glib::Object for it, fixes the issue.
+
+2012-01-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: Desktop shortcuts, using more C++ facilities
+
+2012-01-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: Use glib::String when getting the window name.
+
+2012-01-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: use a lambda function to free the temporary struct.
+
+2012-01-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: make ShortcutData a little more C++ friendly
+
+2012-01-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: no need to add a new ref, when saving the menuitems
+
+2012-01-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: use glib::Object to store local dbusmenuitems
+
+2012-01-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: using glib::Signal to handle the default quicklist item callbacks
+
+2012-01-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: use std::string to handle _remote_uri, it also fixes a leak.
+
+2012-01-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: add more getter functions and avoid to use too much bamf calls when we have cached values
+	
+	Plus more usage of glib::String
+
+2012-01-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: no need to cache the name as well...
+
+2012-01-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: putting the constructor at the top of the file, as expected.
+
+2012-01-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: no need to cache the desktop file, libbamf owns and caches it
+
+2012-01-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: use glib::Object and glib::Signal for handling the desktop file changes
+
+2012-01-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: moving to glib::SignalManager and using lamba function callbacks.
+
+2012-01-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: more cleanup, fixed a crash.
+
+2012-01-21  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Use glib::Object<DbusmenuMenuitem> for handling the menu desktop shortcuts
+
+2012-01-21  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncher: rerganizing the header file to improve readability.
+
+2012-01-21  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: stripping tralinig spaces
+
+2012-01-21  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: use glib::Object to handle _bamf_app
+
+2012-01-21  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: s/m_App/_bamf_app/g
+
+2012-01-21  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: use an initialization list
+
+2012-01-21  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: s/NULL/nullptr/g
+
+2012-01-21  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: removed unneeded member, update only the application whose window has been moved!
+	
+	Plus unref the created menuitem, since it's reff'ed when appended to root
+
+2012-02-03  Gord Allott  <gord.allott@canonical.com>
+
+	Small spring cleaning of the ubus message UBUS_PLACE_VIEW_SHOWN/HIDDEN 
+	Replaces it with UBUS_OVERLAY_SHOWN/HIDDEN - also sends along a gvariant that ID's the overlay and sends whether it can
+	be maximised or not. Fixes: . Approved by Mirco Müller.
+
+2012-01-31  Gord Allott  <gord.allott@canonical.com>
+
+	merge with trunk, fix lots of conflicts, sad day
+
+2012-01-27  Gord Allott  <gord.allott@canonical.com>
+
+	fix shortcut controller
+
+2012-01-27  Gord Allott  <gord.allott@canonical.com>
+
+	merged latest trunk and fixed conflicts
+
+2012-01-19  Gord Allott  <gord.allott@canonical.com>
+
+	Renames PLACE_VIEW to OVERLAY, also includes a gvariant along with the ubus message
+
+2012-02-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Fixed the wording the Launcher manual-test. Fixes: https://bugs.launchpad.net/bugs/923996. Approved by Thomi Richards.
+
+2012-01-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	manual-test: fixed the Launcher manual test wording
+
+2012-02-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Due to wrong syntax in cmake pkgconfig settings unity configuration gave these warnings.
+	
+	MAKE_CXX_FLAGS_DEBUG="-g" -DCMAKE_C_FLAGS_DEBUG="-g"
+	-- Found Gettext: /usr/bin/msgmerge (found version "5.0.0")
+	-- checking for module '>='
+	--   package '>=' not found
+	-- checking for module '2.0.0'
+	--   package '2.0.0' not found
+	
+	Fixed removing the unwanted spaces. Fixes: https://bugs.launchpad.net/bugs/919248. Approved by Andrea Azzarone.
+
+2012-02-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	CMake: pkg_config check needs doesn't support spaces between package and version.
+	
+	This caused some configuration warning / errors
+
+2012-02-03  Didier Roche  <didier.roche@canonical.com>
+
+	Release\ 5.2.0
+
 2012-02-03  Didier Roche  <didier.roche@canonical.com>
 
 	welcome unity 5.2

@@ -172,7 +172,7 @@ void SwitcherView::OnDetailSelectionChanged (bool detail)
   QueueDraw ();
 }
 
-void SwitcherView::OnSelectionChanged(AbstractLauncherIcon* selection)
+void SwitcherView::OnSelectionChanged(AbstractLauncherIcon::Ptr selection)
 {
   if (selection)
     text_view_->SetText(selection->tooltip_text().c_str());
@@ -185,10 +185,10 @@ SwitcherModel::Ptr SwitcherView::GetModel()
   return model_;
 }
 
-RenderArg SwitcherView::CreateBaseArgForIcon(AbstractLauncherIcon* icon)
+RenderArg SwitcherView::CreateBaseArgForIcon(AbstractLauncherIcon::Ptr icon)
 {
   RenderArg arg;
-  arg.icon = icon;
+  arg.icon = icon.GetPointer();
   arg.alpha = 0.95f;
 
   // tells the renderer to render arrows by number
@@ -569,7 +569,7 @@ void SwitcherView::DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw,
   std::list<RenderArg>::iterator it;
   for (it = last_args_.begin(); it != last_args_.end(); ++it)
   {
-    if (it->icon == model_->Selection())
+    if (model_->Selection() == it->icon)
     {
       int view_width = text_view_->GetBaseWidth();
       int start_x = it->render_center.x - view_width / 2;
