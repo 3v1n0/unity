@@ -144,42 +144,46 @@ bool PanelIndicatorAppmenuView::CheckWindowMenu()
 void PanelIndicatorAppmenuView::DrawEntryPrelight(cairo_t* cr, unsigned int width, unsigned int height)
 {
   nux::Rect const& geo = proxy_->geometry();
+  GtkStyleContext* style_context = panel::Style::Instance().GetStyleContext();
+  int flair_width = std::min(geo.width, GetMinimumWidth());
 
-  cairo_surface_t *left = cairo_image_surface_create_from_png(PKGDATADIR "/lim_flair_left.png");
-  cairo_surface_t *center = cairo_image_surface_create_from_png(PKGDATADIR "/lim_flair_center.png");
-  cairo_surface_t *right = cairo_image_surface_create_from_png(PKGDATADIR "/lim_flair_right.png");
+  cairo_translate (cr, geo.x - GetAbsoluteX(), geo.y - height);
 
-  int x = 0;
-  int y = 0;
-  int left_w = cairo_image_surface_get_width(left);
-  int right_w = cairo_image_surface_get_width(right);
-  int center_h = cairo_image_surface_get_height(center);
-  int center_w = std::min(geo.width, GetMinimumWidth()) - left_w - right_w;
+  gtk_style_context_save(style_context);
+
+  GtkWidgetPath* widget_path = gtk_widget_path_new();
+  gtk_widget_path_iter_set_name(widget_path, -1 , "UnityPanelWidget");
+  gtk_widget_path_append_type(widget_path, GTK_TYPE_MENU_BAR);
+  gtk_widget_path_append_type(widget_path, GTK_TYPE_MENU_ITEM);
+
+  gtk_style_context_set_path(style_context, widget_path);
+  gtk_style_context_add_class(style_context, GTK_STYLE_CLASS_MENUBAR);
+  gtk_style_context_add_class(style_context, GTK_STYLE_CLASS_MENUITEM);
+  gtk_style_context_set_state(style_context, GTK_STATE_FLAG_PRELIGHT);
 
   cairo_save(cr);
-  cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
-  cairo_translate(cr, geo.x - GetAbsoluteX(), geo.y - center_h);
+  cairo_push_group(cr);
 
-  cairo_set_source_surface(cr, left, x, y);
-  cairo_paint(cr);
+  gtk_render_background(style_context, cr, 0, 0, flair_width, height);
+  gtk_render_frame(style_context, cr, 0, 0, flair_width, height);
 
-  cairo_pattern_t* repeat_bg = cairo_pattern_create_for_surface(center);
-  cairo_pattern_set_extend(repeat_bg, CAIRO_EXTEND_REPEAT);
-  cairo_set_source(cr, repeat_bg);
+  cairo_pattern_t* pat = cairo_pop_group(cr);
+  cairo_pattern_t* mask = cairo_pattern_create_linear(0, 0, 0, height);
+  cairo_pattern_add_color_stop_rgba(mask, 0.0f, 0, 0, 0, 0.0f);
+  cairo_pattern_add_color_stop_rgba(mask, 0.6f, 0, 0, 0, 0.0f);
+  cairo_pattern_add_color_stop_rgba(mask, 1.0f, 0, 0, 0, 1.0f);
 
-  x += left_w;
-  cairo_rectangle(cr, x, y, center_w, center_h);
-  cairo_fill(cr);
+  cairo_rectangle(cr, 0, 0, flair_width, height);
+  cairo_set_source(cr, pat);
+  cairo_mask(cr, mask);
 
-  x += center_w;
-  cairo_set_source_surface(cr, right, x, y);
-  cairo_paint(cr);
+  cairo_pattern_destroy(pat);
+  cairo_pattern_destroy(mask);
   cairo_restore(cr);
 
-  cairo_surface_destroy(left);
-  cairo_surface_destroy(center);
-  cairo_surface_destroy(right);
-  cairo_pattern_destroy(repeat_bg);
+  gtk_widget_path_free(widget_path);
+
+  gtk_style_context_restore(style_context);
 }
 
 std::string PanelIndicatorAppmenuView::GetName() const
