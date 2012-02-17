@@ -247,11 +247,17 @@ nux::BaseTexture* Style::GetWindowButtonForTheme(WindowButtonType type,
   {
     main = nux::Color(1.0f, 0.3f, 0.3f, 0.8f);
   }
+  else if (state == WindowState::UNFOCUSED)
+  {
+    main = nux::color::Gray;
+  }
 
-  if (state == WindowState::PRELIGHT)
+  if (state == WindowState::PRELIGHT || state == WindowState::UNFOCUSED_PRELIGHT)
     main = main * 1.2f;
-  else if (state == WindowState::PRESSED)
+  else if (state == WindowState::PRESSED || state == WindowState::UNFOCUSED_PRESSED)
     main = main * 0.8f;
+  else if (state == WindowState::DISABLED)
+    main = main * 0.5f;
 
   cr  = cairo_graphics.GetContext();
   cairo_translate(cr, 0.5, 0.5);
