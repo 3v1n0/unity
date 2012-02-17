@@ -4,8 +4,9 @@ unity (5.4.0-0ubuntu1) UNRELEASED; urgency=low
   * debian/control:
     - recommends indicator-printers
     - recommends new unity-lens-video
+    - build-dep on latest nux (ABI break)
 
- -- Didier Roche <didrocks@ubuntu.com>  Fri, 17 Feb 2012 11:10:01 +0100
+ -- Didier Roche <didrocks@ubuntu.com>  Fri, 17 Feb 2012 11:57:06 +0100
 
 unity (5.2.0-0ubuntu5) precise; urgency=low
 
