@@ -84,9 +84,16 @@ View::View()
 
   search_bar_->text_entry()->key_nav_focus_change.connect([&](nux::Area *area, bool receiving, nux::KeyNavDirection direction)
   {
-    // early exit if we have no buttons yet
+    if (buttons_.empty() && !receiving)
+    {
+      // we lost focus in the keynav and there are no buttons, we need to steal
+      // focus back
+      LOG_ERROR(logger) << "hud search bar lost keynav with no where else to keynav to";
+      nux::GetWindowCompositor().SetKeyFocusArea(search_bar_->text_entry());
+    }
+
     if (buttons_.empty())
-      return;
+      return;// early return on empty button list
 
     if (receiving)
     {

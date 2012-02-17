@@ -1350,6 +1350,9 @@ void UnityScreen::handleEvent(XEvent* event)
       }
       break;
     }
+    case MapRequest:
+      UnityShowdesktopHandler::inhibitLeaveShowdesktopMode (event->xmaprequest.window);
+      break;
     default:
         if (screen->shapeEvent () + ShapeNotify == event->type)
         {
@@ -1373,12 +1376,17 @@ void UnityScreen::handleEvent(XEvent* event)
   if (!skip_other_plugins)
     screen->handleEvent(event);
 
-  if (event->type == PropertyNotify)
+  switch (event->type)
   {
-    if (event->xproperty.atom == Atoms::mwmHints)
-    {
-      PluginAdapter::Default ()->NotifyNewDecorationState(event->xproperty.window);
-    }
+    case PropertyNotify:
+      if (event->xproperty.atom == Atoms::mwmHints)
+      {
+        PluginAdapter::Default ()->NotifyNewDecorationState(event->xproperty.window);
+      }
+      break;
+    case MapRequest:
+      UnityShowdesktopHandler::allowLeaveShowdesktopMode (event->xmaprequest.window);
+      break;
   }
 
   if (!skip_other_plugins &&
