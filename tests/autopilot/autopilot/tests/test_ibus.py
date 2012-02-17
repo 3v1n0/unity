@@ -1,6 +1,6 @@
 # -*- Mode: Python; coding: utf-8; indent-tabs-mode: nil; tab-width: 4 -*-
 # Copyright 2012 Canonical
-# Author: Thomi Richards
+# Author: Thomi Richards, Martin Mrazik
 #
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License version 3, as published
@@ -19,21 +19,70 @@ class IBusTests(AutopilotTestCase):
     def setUp(self):
         super(IBusTests, self).setUp()
         set_global_input_engine("pinyin")
+        self.kb = Keyboard()
+        self.dash = Dash()
 
     def tearDown(self):
-        super(IBusTests, self).tearDown()
+        self.kb.press_and_release('Ctrl+Space')
         set_global_input_engine(None)
+        super(IBusTests, self).tearDown()
 
     def test_simple_dash(self):
         """Entering 'abc1' in the dash with ibus enabled should result in u'\u963f\u5e03\u4ece'."""
-        dash = Dash()
-        kb = Keyboard()
-
-        dash.ensure_visible()
-        kb.type('abc1')
+        self.dash.ensure_visible()
+        self.kb.type('abc1')
         sleep(1)
-        dash_search_string = dash.get_search_string()
-        dash.ensure_hidden()
+        dash_search_string = self.dash.get_search_string()
+        self.dash.ensure_hidden()
         sleep(1)
-        kb.press_and_release('Ctrl+Space')
         self.assertEqual(u'\u963f\u5e03\u4ece', dash_search_string)
+
+    def test_photo(self):
+        """Enter 照片 (Photo) to dash and check the search result"""
+        self.dash.ensure_hidden()
+        self.assertFalse(self.dash.get_is_visible())
+
+        self.dash.toggle_reveal()
+        self.kb.type("zhaopian ")
+        self.assertEqual(self.dash.get_search_string(), u'照片')
+
+        self.dash.toggle_reveal()
+        self.assertFalse(self.dash.get_is_visible())
+
+
+    def test_internet(self):
+        """Enter 互联网 (internet) to dash and check the search result"""
+        self.dash.ensure_hidden()
+        self.assertFalse(self.dash.get_is_visible())
+
+        self.dash.toggle_reveal()
+        self.kb.type("hulianwang ")
+        self.assertEqual(self.dash.get_search_string(), u'互联网')
+
+        self.dash.toggle_reveal()
+        self.assertFalse(self.dash.get_is_visible())
+
+    def test_disk(self):
+        """Enter 磁盘 (disk) to dash and check the search result"""
+        self.dash.ensure_hidden()
+        self.assertFalse(self.dash.get_is_visible())
+
+        self.dash.toggle_reveal()
+        self.kb.type("cipan ")
+        self.assertEqual(self.dash.get_search_string(), u'磁盘')
+
+        self.dash.toggle_reveal()
+        self.assertFalse(self.dash.get_is_visible())
+
+    def test_disk_management(self):
+        """Enter 磁盘管理 (disk management) to dash and check the search result"""
+        self.dash.ensure_hidden()
+        self.assertFalse(self.dash.get_is_visible())
+
+        self.dash.toggle_reveal()
+        self.kb.type(u"cipan guanli ")
+        self.assertEqual(self.dash.get_search_string(), u'磁盘管理')
+
+        self.dash.toggle_reveal()
+        self.assertFalse(self.dash.get_is_visible())
+
