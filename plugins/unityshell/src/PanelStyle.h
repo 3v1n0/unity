@@ -16,6 +16,7 @@
  *
  * Authored by: Mirco Müller <mirco.mueller@canonical.com>
  *              Neil Jagdish Patel <neil.patel@canonical.com>
+ *              Marco Trevisan <3v1n0@ubuntu.com>
  */
 
 #ifndef PANEL_STYLE_H
