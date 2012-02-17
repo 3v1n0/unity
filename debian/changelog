@@ -1,8 +1,9 @@
 unity (5.4.0-0ubuntu1) UNRELEASED; urgency=low
 
+  * New upstream release.
   * debian/control:
     - recommends indicator-printers
-  * New upstream release.
+    - recommends new unity-lens-video
 
  -- Didier Roche <didrocks@ubuntu.com>  Fri, 17 Feb 2012 11:10:01 +0100
 
