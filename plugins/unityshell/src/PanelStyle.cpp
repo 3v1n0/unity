@@ -207,12 +207,12 @@ nux::BaseTexture* Style::GetWindowButton(WindowButtonType type, WindowState stat
   }
 
   if (!texture)
-    texture = GetWindowButtonForTheme(type, state);
+    texture = GetFallbackWindowButton(type, state);
 
   return texture;
 }
 
-nux::BaseTexture* Style::GetWindowButtonForTheme(WindowButtonType type,
+nux::BaseTexture* Style::GetFallbackWindowButton(WindowButtonType type,
                                                  WindowState state)
 {
   int width = 18, height = 18;
@@ -231,6 +231,8 @@ nux::BaseTexture* Style::GetWindowButtonForTheme(WindowButtonType type,
     main = main * 1.2f;
   else if (state == WindowState::PRESSED)
     main = main * 0.8f;
+  else if (state == WindowState::DISABLED)
+    main = main * 0.5f;
 
   cr  = cairo_graphics.GetContext();
   cairo_translate(cr, 0.5, 0.5);
