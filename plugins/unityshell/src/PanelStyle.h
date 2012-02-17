@@ -35,7 +35,8 @@ enum class WindowButtonType
 {
   CLOSE,
   MINIMIZE,
-  UNMAXIMIZE
+  UNMAXIMIZE,
+  MAXIMIZE
 };
 
 enum class WindowState
