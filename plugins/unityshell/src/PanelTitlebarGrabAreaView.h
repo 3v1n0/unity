@@ -60,6 +60,7 @@ private:
   Cursor grab_cursor_;
   bool grab_started_;
   guint mouse_down_timer_;
+  nux::Point mouse_down_point_;
   unsigned int mouse_down_button_;
 };
 

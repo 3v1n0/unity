@@ -32,6 +32,7 @@ namespace unity
 namespace
 {
   unsigned int MOUSE_DOWN_TIMEOUT = 120;
+  unsigned int MOUSE_MOVEMENT_TOLERANCE = 4;
 }
 
 PanelTitlebarGrabArea::PanelTitlebarGrabArea()
@@ -99,6 +100,9 @@ void PanelTitlebarGrabArea::OnMouseDown(int x, int y, unsigned long button_flags
   }
   else if (mouse_down_button_ == 1)
   {
+    mouse_down_point_.x = x;
+    mouse_down_point_.y = y;
+
     mouse_down_timer_ =
       g_timeout_add(MOUSE_DOWN_TIMEOUT, [] (gpointer data) -> gboolean {
         auto self = static_cast<PanelTitlebarGrabArea*>(data);
@@ -138,6 +142,8 @@ void PanelTitlebarGrabArea::OnMouseUp(int x, int y, unsigned long button_flags, 
   }
 
   mouse_down_button_ = 0;
+  mouse_down_point_.x = 0;
+  mouse_down_point_.y = 0;
 }
 
 void PanelTitlebarGrabArea::OnGrabMove(int x, int y, int, int, unsigned long button_flags, unsigned long)
@@ -147,6 +153,12 @@ void PanelTitlebarGrabArea::OnGrabMove(int x, int y, int, int, unsigned long but
 
   if (mouse_down_timer_)
   {
+    if (abs(mouse_down_point_.x - x) <= MOUSE_MOVEMENT_TOLERANCE &&
+        abs(mouse_down_point_.y - y) <= MOUSE_MOVEMENT_TOLERANCE)
+    {
+      return;
+    }
+
     g_source_remove(mouse_down_timer_);
     mouse_down_timer_ = 0;
   }
