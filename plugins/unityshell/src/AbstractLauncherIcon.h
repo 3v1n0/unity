@@ -34,6 +34,7 @@
 #include "DndData.h"
 #include "Introspectable.h"
 #include "LauncherEntryRemote.h"
+#include "IconTextureSource.h"
 
 namespace unity
 {
@@ -72,10 +73,11 @@ public:
   int monitor;
 };
 
-class AbstractLauncherIcon : public nux::InitiallyUnownedObject, public debug::Introspectable
+class AbstractLauncherIcon : public ui::IconTextureSource, public debug::Introspectable
 {
+  NUX_DECLARE_OBJECT_TYPE(AbstractLauncherIcon, ui::IconTextureSource);
 public:
-
+  typedef nux::ObjectPtr<AbstractLauncherIcon> Ptr;
   typedef std::vector<nux::Vector4> TransformVector;
 
   typedef enum
@@ -113,15 +115,6 @@ public:
     QUIRK_LAST,
   } Quirk;
 
-  enum TransformIndex
-  {
-    TRANSFORM_TILE,
-    TRANSFORM_IMAGE,
-    TRANSFORM_HIT_AREA,
-    TRANSFORM_GLOW,
-    TRANSFORM_EMBLEM,
-  };
-
   virtual ~AbstractLauncherIcon() {}
 
   nux::Property<std::string> tooltip_text;
@@ -143,8 +136,6 @@ public:
   virtual nux::Point3 GetSavedCenter(int monitor) = 0;
 
   virtual void SaveCenter() = 0;
-
-  virtual std::vector<nux::Vector4> & GetTransform(TransformIndex index, int monitor) = 0;
 
   virtual void Activate(ActionArg arg) = 0;
 
@@ -170,7 +161,7 @@ public:
 
   virtual unsigned long long SwitcherPriority() = 0;
 
-  virtual bool GetQuirk(Quirk quirk) = 0;
+  virtual bool GetQuirk(Quirk quirk) const = 0;
 
   virtual void SetQuirk(Quirk quirk, bool value) = 0;
 
@@ -178,17 +169,9 @@ public:
 
   virtual void ResetQuirkTime(Quirk quirk) = 0;
 
-  virtual IconType Type() = 0;
-
-  virtual nux::Color BackgroundColor() = 0;
-
-  virtual nux::Color GlowColor() = 0;
+  virtual IconType GetIconType() = 0;
 
   virtual const gchar* RemoteUri() = 0;
-
-  virtual nux::BaseTexture* TextureForSize(int size) = 0;
-
-  virtual nux::BaseTexture* Emblem() = 0;
 
   virtual std::list<DbusmenuMenuitem*> Menus() = 0;
 
@@ -204,16 +187,26 @@ public:
 
   virtual void RemoveEntryRemote(LauncherEntryRemote* remote) = 0;
 
+  virtual std::string DesktopFile() = 0;
+
+  virtual bool IsSticky() const = 0;
+
+  virtual bool IsVisible() const = 0;
+
+  virtual void AboutToRemove() = 0;
+  
+  virtual void Stick(bool save = true) = 0;
+  
+  virtual void UnStick() = 0;
+
   sigc::signal<void, int, int> mouse_down;
   sigc::signal<void, int, int> mouse_up;
   sigc::signal<void, int, int> mouse_click;
   sigc::signal<void, int>      mouse_enter;
   sigc::signal<void, int>      mouse_leave;
 
-  sigc::signal<void, AbstractLauncherIcon*> show;
-  sigc::signal<void, AbstractLauncherIcon*> hide;
-  sigc::signal<void, AbstractLauncherIcon*> needs_redraw;
-  sigc::signal<void, AbstractLauncherIcon*> remove;
+  sigc::signal<void, AbstractLauncherIcon::Ptr> needs_redraw;
+  sigc::signal<void, AbstractLauncherIcon::Ptr> remove;
 
   sigc::connection needs_redraw_connection;
   sigc::connection on_icon_added_connection;

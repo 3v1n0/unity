@@ -52,6 +52,12 @@ public:
   gboolean CountVisible();
   gboolean ProgressVisible();
   gboolean Urgent();
+  /// Update this instance using details from another:
+  void Update(LauncherEntryRemote* other);
+  /// Update this instance from a GVariant property iterator.
+  void Update(GVariantIter* prop_iter);
+  /// Set a new DBus name. This destroys the current quicklist.
+  void SetDBusName(const gchar* dbus_name);
 
   sigc::signal<void, LauncherEntryRemote*, const gchar* > dbus_name_changed;   // gives the old name as arg
   sigc::signal<void, LauncherEntryRemote*> emblem_changed;
@@ -81,23 +87,15 @@ private:
   gboolean _progress_visible;
   gboolean _urgent;
 
-  void SetDBusName(const gchar* dbus_name);
   void SetEmblem(const gchar* emblem);
   void SetCount(gint64 count);
   void SetProgress(gdouble progress);
   void SetQuicklistPath(const gchar* dbus_path);
   void SetQuicklist(DbusmenuClient* quicklist);
-
   void SetEmblemVisible(gboolean visible);
   void SetCountVisible(gboolean visible);
   void SetProgressVisible(gboolean visible);
-
   void SetUrgent(gboolean urgent);
-
-  void Update(LauncherEntryRemote* other);
-  void Update(GVariantIter* prop_iter);
-
-  friend class LauncherEntryRemoteModel;
 };
 
 #endif // LAUNCHER_ENTRY_REMOTE_H

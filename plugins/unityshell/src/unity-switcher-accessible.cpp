@@ -64,7 +64,7 @@ static gboolean   unity_switcher_accessible_is_child_selected(AtkSelection* sele
 static gboolean   unity_switcher_accessible_check_pending_notification(NuxAreaAccessible* self);
 
 /* private */
-static void       on_selection_changed_cb(AbstractLauncherIcon* icon,
+static void       on_selection_changed_cb(AbstractLauncherIcon::Ptr icon,
                                           UnitySwitcherAccessible* switcher_accessible);
 static void       create_children(UnitySwitcherAccessible* self);
 
@@ -311,7 +311,7 @@ unity_switcher_accessible_get_selection_count(AtkSelection* selection)
 {
   SwitcherView* switcher = NULL;
   SwitcherModel::Ptr switcher_model;
-  AbstractLauncherIcon* selected_icon = NULL;
+  AbstractLauncherIcon::Ptr selected_icon;
   nux::Object* nux_object = NULL;
 
   g_return_val_if_fail(UNITY_IS_SWITCHER_ACCESSIBLE(selection), 0);
@@ -325,7 +325,7 @@ unity_switcher_accessible_get_selection_count(AtkSelection* selection)
 
   selected_icon = switcher_model->Selection();
 
-  if (selected_icon == 0)
+  if (!selected_icon)
     return 0;
   else
     return 1;
@@ -377,7 +377,7 @@ unity_switcher_accessible_check_pending_notification(NuxAreaAccessible* self)
 
 /* private */
 static void
-on_selection_changed_cb(AbstractLauncherIcon* icon,
+on_selection_changed_cb(AbstractLauncherIcon::Ptr icon,
                         UnitySwitcherAccessible* switcher_accessible)
 {
   g_signal_emit_by_name(ATK_OBJECT(switcher_accessible), "selection-changed");
@@ -391,7 +391,7 @@ create_children(UnitySwitcherAccessible* self)
   SwitcherView* switcher = NULL;
   SwitcherModel::Ptr switcher_model;
   SwitcherModel::iterator it;
-  AbstractLauncherIcon* child = NULL;
+  AbstractLauncherIcon::Ptr child;
   AtkObject* child_accessible = NULL;
 
   nux_object = nux_object_accessible_get_object(NUX_OBJECT_ACCESSIBLE(self));
@@ -406,8 +406,8 @@ create_children(UnitySwitcherAccessible* self)
 
   for (it = switcher_model->begin(); it != switcher_model->end(); it++)
   {
-    child =  dynamic_cast<AbstractLauncherIcon*>(*it);
-    child_accessible = unity_launcher_icon_accessible_new(child);
+    child = *it;
+    child_accessible = unity_launcher_icon_accessible_new(child.GetPointer());
     atk_object_set_parent(child_accessible, ATK_OBJECT(self));
     self->priv->children = g_slist_append(self->priv->children,
                                           child_accessible);

@@ -60,6 +60,7 @@ public:
   nux::Property<float> max_velocity_multiplier;
 
   PointerBarrierWrapper();
+  ~PointerBarrierWrapper();
 
   void ConstructBarrier();
   void DestroyBarrier();

@@ -167,8 +167,12 @@ StaticCairoText::Draw(GraphicsEngine& gfxContext,
 {
   Geometry base = GetGeometry();
 
-  if (_texture2D == 0)
+  if (!_texture2D || _cached_base_width != base.width || _cached_base_height != base.height)
+  {
+    _cached_base_width = base.width;
+    _cached_base_height = base.height;
     UpdateTexture();
+  }
 
   gfxContext.PushClippingRectangle(base);
 
@@ -219,7 +223,7 @@ StaticCairoText::PostDraw(GraphicsEngine& gfxContext,
 }
 
 void
-StaticCairoText::SetText(NString text)
+StaticCairoText::SetText(NString const& text)
 {
   if (_text != text)
   {
@@ -240,7 +244,7 @@ StaticCairoText::GetText()
 }
 
 void
-StaticCairoText::SetTextColor(Color textColor)
+StaticCairoText::SetTextColor(Color const& textColor)
 {
   if (_textColor != textColor)
   {
@@ -380,8 +384,6 @@ void StaticCairoText::DrawText(cairo_t*   cr,
                                int        height,
                                Color color)
 {
-  int                   textWidth  = 0;
-  int                   textHeight = 0;
   PangoLayout*          layout     = NULL;
   PangoFontDescription* desc       = NULL;
   PangoContext*         pangoCtx   = NULL;
@@ -394,8 +396,6 @@ void StaticCairoText::DrawText(cairo_t*   cr,
     g_object_get(settings, "gtk-font-name", &fontName, NULL);
   else
     fontName = g_strdup(_fontstring);
-
-  GetTextExtents(fontName, textWidth, textHeight);
 
   cairo_set_font_options(cr, gdk_screen_get_font_options(screen));
   layout = pango_cairo_create_layout(cr);
@@ -421,7 +421,8 @@ void StaticCairoText::DrawText(cairo_t*   cr,
     pango_layout_set_alignment(layout, PANGO_ALIGN_RIGHT);
 
   pango_layout_set_markup(layout, _text.GetTCharPtr(), -1);
-  pango_layout_set_width(layout, textWidth * PANGO_SCALE);
+  pango_layout_set_width(layout, width * PANGO_SCALE);
+  pango_layout_set_height(layout, height * PANGO_SCALE);
 
   pango_layout_set_height(layout, _lines);
   pangoCtx = pango_layout_get_context(layout);  // is not ref'ed
@@ -463,7 +464,6 @@ void StaticCairoText::UpdateTexture()
   int width = 0;
   int height = 0;
   GetTextExtents(width, height);
-
   SetBaseSize(width, height);
 
   _cairoGraphics = new CairoGraphics(CAIRO_FORMAT_ARGB32,

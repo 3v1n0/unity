@@ -41,6 +41,7 @@ namespace dash
 namespace
 {
 nux::logging::Logger logger("unity.dash.view");
+
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(DashView);
@@ -149,11 +150,13 @@ void DashView::SetupViews()
   content_layout_->AddView(lenses_layout_, 1, nux::MINOR_POSITION_LEFT);
 
   home_view_ = new LensView(home_lens_);
+  AddChild(home_view_);
   active_lens_view_ = home_view_;
   lens_views_[home_lens_->id] = home_view_;
   lenses_layout_->AddView(home_view_);
 
   lens_bar_ = new LensBar();
+  AddChild(lens_bar_);
   lens_bar_->lens_activated.connect(sigc::mem_fun(this, &DashView::OnLensBarActivated));
   content_layout_->AddView(lens_bar_, 0, nux::MINOR_POSITION_CENTER);
 }
@@ -218,7 +221,7 @@ nux::Geometry DashView::GetBestFitGeometry(nux::Geometry const& for_geo)
 
   width = MAX(width, tile_width * 6);
 
-  width += 19 + 32; // add the left padding and the group plugin padding
+  width += 19 + 40; // add the left padding and the group plugin padding
 
   height = search_bar_->GetGeometry().height;
   height += tile_height * 3;
@@ -374,6 +377,7 @@ void DashView::OnLensAdded(Lens::Ptr& lens)
   lens_bar_->AddLens(lens);
 
   LensView* view = new LensView(lens);
+  AddChild(view);
   view->SetVisible(false);
   view->uri_activated.connect(sigc::mem_fun(this, &DashView::OnUriActivated));
   lenses_layout_->AddView(view, 1);
@@ -410,6 +414,8 @@ void DashView::OnLensBarActivated(std::string const& id)
 
   bool expanded = view->filters_expanded;
   search_bar_->showing_filters = expanded;
+
+  nux::GetWindowCompositor().SetKeyFocusArea(default_focus());
 
   search_bar_->text_entry()->SelectAll();
 
@@ -608,7 +614,15 @@ std::string DashView::GetName() const
 }
 
 void DashView::AddProperties(GVariantBuilder* builder)
-{}
+{
+  int num_rows = 1; // The search bar
+
+  if (active_lens_view_)
+    num_rows += active_lens_view_->GetNumRows();
+
+  unity::variant::BuilderWrapper wrapper(builder);
+  wrapper.add("num-rows", num_rows);
+}
 
 nux::Area * DashView::KeyNavIteration(nux::KeyNavDirection direction)
 {

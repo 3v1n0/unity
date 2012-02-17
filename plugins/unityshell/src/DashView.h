@@ -30,7 +30,7 @@
 #include <UnityCore/HomeLens.h>
 
 #include "BackgroundEffectHelper.h"
-#include "DashSearchBar.h"
+#include "SearchBar.h"
 #include "Introspectable.h"
 #include "LensBar.h"
 #include "LensView.h"

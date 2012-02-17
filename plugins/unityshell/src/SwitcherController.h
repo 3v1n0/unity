@@ -70,7 +70,7 @@ public:
   nux::Property<bool> detail_on_timeout;
   nux::Property<int>  detail_timeout_length;
 
-  void Show(ShowMode show, SortMode sort, bool reverse, std::vector<launcher::AbstractLauncherIcon*> results);
+  void Show(ShowMode show, SortMode sort, bool reverse, std::vector<launcher::AbstractLauncherIcon::Ptr> results);
   void Hide(bool accept_state=true);
 
   bool Visible();
@@ -108,7 +108,7 @@ private:
 
   void ConstructView();
 
-  void OnModelSelectionChanged(launcher::AbstractLauncherIcon *icon);
+  void OnModelSelectionChanged(launcher::AbstractLauncherIcon::Ptr icon);
 
   static void OnBackgroundUpdate(GVariant* data, Controller* self);
 
@@ -131,7 +131,7 @@ private:
   static gboolean OnShowTimer(gpointer data);
   static gboolean OnDetailTimer(gpointer data);
 
-  static bool CompareSwitcherItemsPriority(launcher::AbstractLauncherIcon* first, launcher::AbstractLauncherIcon* second);
+  static bool CompareSwitcherItemsPriority(launcher::AbstractLauncherIcon::Ptr first, launcher::AbstractLauncherIcon::Ptr second);
 };
 
 }

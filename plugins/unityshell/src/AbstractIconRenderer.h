@@ -23,7 +23,7 @@
 #include <Nux/Nux.h>
 #include <boost/shared_ptr.hpp>
 
-#include "AbstractLauncherIcon.h"
+#include "IconTextureSource.h"
 
 namespace unity
 {
@@ -63,12 +63,13 @@ public:
     , keyboard_nav_hl(false)
     , draw_shortcut(false)
     , system_item(false)
+    , colorify_background(false)
     , window_indicators(0)
     , shortcut_label(0)
   {
   }
 
-  launcher::AbstractLauncherIcon* icon;
+  IconTextureSource* icon;
   nux::Point3   render_center;
   nux::Point3   logical_center;
   nux::Color    colorify;
@@ -93,6 +94,7 @@ public:
   bool          keyboard_nav_hl;
   bool          draw_shortcut;
   bool          system_item;
+  bool          colorify_background;
   int           window_indicators;
   char          shortcut_label;
 };
