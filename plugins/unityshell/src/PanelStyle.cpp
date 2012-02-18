@@ -23,6 +23,7 @@
 #include <math.h>
 #include <gtk/gtk.h>
 #include <gconf/gconf-client.h>
+#include <boost/algorithm/string/predicate.hpp>
 
 #include <Nux/Nux.h>
 #include <NuxGraphics/GraphicsEngine.h>
@@ -45,6 +46,7 @@ Style* style_instance = nullptr;
 nux::logging::Logger logger("unity.panel.style");
 
 const std::string PANEL_TITLE_FONT_KEY("/apps/metacity/general/titlebar_font");
+const std::string HIGH_CONTRAST_THEME_PREFIX("HighContrast");
 
 nux::Color ColorFromGdkRGBA(GdkRGBA const& color)
 {
@@ -237,12 +239,20 @@ nux::BaseTexture* Style::GetWindowButton(WindowButtonType type, WindowState stat
 nux::BaseTexture* Style::GetFallbackWindowButton(WindowButtonType type,
                                                  WindowState state)
 {
-  int width = 18, height = 18;
+  int width = 17, height = 17;
+  int canvas_w = 19, canvas_h = 19;
+
+  if (boost::starts_with(_theme_name, HIGH_CONTRAST_THEME_PREFIX))
+  {
+    width = 20, height = 20;
+    canvas_w = 22, canvas_h = 22;
+  }
+
   float w = width / 3.0f;
   float h = height / 3.0f;
-  nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, 22, 22);
-  cairo_t* cr;
+  nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, canvas_w, canvas_h);
   nux::Color main = (state != WindowState::UNFOCUSED) ? _text_color : nux::color::Gray;
+  cairo_t* cr = cairo_graphics.GetContext();
 
   if (type == WindowButtonType::CLOSE)
   {
@@ -271,7 +281,6 @@ nux::BaseTexture* Style::GetFallbackWindowButton(WindowButtonType type,
       break;
   }
 
-  cr  = cairo_graphics.GetContext();
   cairo_translate(cr, 0.5, 0.5);
   cairo_set_line_width(cr, 1.5f);
 
