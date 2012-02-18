@@ -242,23 +242,34 @@ nux::BaseTexture* Style::GetFallbackWindowButton(WindowButtonType type,
   float h = height / 3.0f;
   nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, 22, 22);
   cairo_t* cr;
-  nux::Color main = _text_color;
+  nux::Color main = (state != WindowState::UNFOCUSED) ? _text_color : nux::color::Gray;
 
   if (type == WindowButtonType::CLOSE)
   {
-    main = nux::Color(1.0f, 0.3f, 0.3f, 0.8f);
-  }
-  else if (state == WindowState::UNFOCUSED)
-  {
-    main = nux::color::Gray;
+    double alpha = (state != WindowState::UNFOCUSED) ? 0.8f : 0.5;
+    main = nux::Color(1.0f, 0.3f, 0.3f, alpha);
   }
 
-  if (state == WindowState::PRELIGHT || state == WindowState::UNFOCUSED_PRELIGHT)
-    main = main * 1.2f;
-  else if (state == WindowState::PRESSED || state == WindowState::UNFOCUSED_PRESSED)
-    main = main * 0.8f;
-  else if (state == WindowState::DISABLED)
-    main = main * 0.5f;
+  switch (state)
+  {
+    case WindowState::PRELIGHT:
+      main = main * 1.2f;
+      break;
+    case WindowState::UNFOCUSED_PRELIGHT:
+      main = main * 0.9f;
+      break;
+    case WindowState::PRESSED:
+      main = main * 0.8f;
+      break;
+    case WindowState::UNFOCUSED_PRESSED:
+      main = main * 0.7f;
+      break;
+    case WindowState::DISABLED:
+      main = main * 0.5f;
+      break;
+    default:
+      break;
+  }
 
   cr  = cairo_graphics.GetContext();
   cairo_translate(cr, 0.5, 0.5);
