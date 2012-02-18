@@ -148,6 +148,7 @@ PanelMenuView::PanelMenuView()
   win_manager->terminate_spread.connect(sigc::mem_fun(this, &PanelMenuView::OnSpreadTerminate));
   win_manager->initiate_expo.connect(sigc::mem_fun(this, &PanelMenuView::OnExpoInitiate));
   win_manager->terminate_expo.connect(sigc::mem_fun(this, &PanelMenuView::OnExpoTerminate));
+  win_manager->compiz_screen_viewport_switch_ended.connect(sigc::mem_fun(this, &PanelMenuView::OnExpoTerminate));
 
 
   _style_changed_connection = panel::Style::Instance().changed.connect([&] {
@@ -271,7 +272,7 @@ void PanelMenuView::RemoveIndicator(indicator::Indicator::Ptr const& indicator)
 }
 
 void PanelMenuView::SetMenuShowTimings(int fadein, int fadeout, int discovery,
-                                  int discovery_fadein, int discovery_fadeout)
+                                       int discovery_fadein, int discovery_fadeout)
 {
   if (fadein > -1)
   {
@@ -343,7 +344,7 @@ nux::Area* PanelMenuView::FindAreaUnderMouse(const nux::Point& mouse_position, n
      * what we have done into PanelTitleGrabAreaView inside PanelIndicatorAppmenuView
      * we can just redirect the input events directed to the integrated menus
      * to the grab_area, then we just have to use few tricks when we get the
-     * signals back from the grab-area to check where we really are */
+     * signals back from the grab-area to check where they really were */
     if (_is_integrated && _integrated_menu)
     {
       if (_integrated_menu->GetAbsoluteGeometry().IsPointInside(mouse_position.x, mouse_position.y))
@@ -371,10 +372,13 @@ void PanelMenuView::PreLayoutManagement()
   int buttons_diff = panel_height - _window_buttons->GetContentHeight();
   _window_buttons->SetBaseY(buttons_diff > 0 ? buttons_diff/2 : 0);
 
+  layout_->ComputeContentSize();
   int layout_width = layout_->GetContentWidth();
+
   _titlebar_grab_area->SetBaseX(layout_width);
   _titlebar_grab_area->SetBaseHeight(geo.height);
   _titlebar_grab_area->SetMinimumWidth(geo.width - layout_width);
+  _titlebar_grab_area->SetMaximumWidth(geo.width - layout_width);
 
   SetMaximumEntriesWidth(geo.width - _window_buttons->GetContentWidth());
 }
@@ -387,7 +391,7 @@ void PanelMenuView::OnFadeInChanged(double opacity)
   if (DrawWindowButtons() && _window_buttons->GetOpacity() != 1.0f)
     _window_buttons->SetOpacity(opacity);
 
-  NeedRedraw();
+  QueueDraw();
 }
 
 void PanelMenuView::OnFadeOutChanged(double progress)
@@ -400,7 +404,7 @@ void PanelMenuView::OnFadeOutChanged(double progress)
   if (!DrawWindowButtons() && _window_buttons->GetOpacity() != 0.0f)
     _window_buttons->SetOpacity(opacity);
 
-  NeedRedraw();
+  QueueDraw();
 }
 
 bool PanelMenuView::DrawMenus()
@@ -470,6 +474,7 @@ void PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   if (geo != _last_geo)
   {
     _last_geo = geo;
+    layout_->QueueDraw();
     Refresh(true);
   }
 
@@ -1555,7 +1560,7 @@ PanelMenuView::OnRestoreClicked()
     if (target_win != 0)
     {
       WindowManager::Default()->Restore(target_win);
-      NeedRedraw();
+      QueueDraw();
     }
   }
 }
@@ -1594,7 +1599,7 @@ void PanelMenuView::OnMaximizedActivate(int x, int y)
 
   if (maximized != 0)
   {
-    WindowManager::Default()->Raise(maximized);
+    WindowManager::Default()->Activate(maximized);
   }
 
   /* If the user clicked over the integrated_menu we need to adjust
@@ -1693,12 +1698,46 @@ void PanelMenuView::OnMaximizedGrabMove(int x, int y)
   {
     _titlebar_grab_area->SetGrabbed(false);
 
-    WindowManager::Default()->Activate(maximized);
+    auto wm = WindowManager::Default();
+    nux::Geometry const& restored_geo = wm->GetWindowSavedGeometry(maximized);
+    nux::Geometry const& workarea_geo = wm->GetWorkAreaGeometry(maximized);
+
+    /* By default try to restore the window horizontally-centered respect to the
+     * pointer position, if it doesn't fit on that area try to keep it into the
+     * current workarea as much as possible, but giving priority to the left border
+     * that shouldn't be never put out of the workarea */
+    int restore_x_adjustment = restored_geo.width / 2;
+
+    if (_is_integrated)
+    {
+      /* When using integrated menus, we use an adjustment proportional to the grab area size */
+      int grab_area_width = _titlebar_grab_area->GetAbsoluteWidth() + _titlebar_grab_area->GetAbsoluteX();
+      restore_x_adjustment = restored_geo.width * x / grab_area_width;
+    }
+
+    int restore_x = x - restore_x_adjustment;
+    int restore_y = y;
+
+    if (restore_x + restored_geo.width > workarea_geo.width)
+    {
+      restore_x = workarea_geo.x + workarea_geo.width - restored_geo.width;
+    }
+
+    if (restore_x < workarea_geo.x)
+    {
+      restore_x = workarea_geo.x;
+    }
+
+    wm->Activate(maximized);
+    wm->RestoreAt(maximized, restore_x, restore_y);
+
     _is_inside = true;
     _is_grabbed = true;
     Refresh();
     FullRedraw();
-    WindowManager::Default()->StartMove(maximized, x, y);
+
+    /* Ungrab the pointer and start the X move, to make the decorator handle it */
+    wm->StartMove(maximized, x, y);
   }
 }
 
