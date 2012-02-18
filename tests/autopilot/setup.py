@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 from distutils.core import setup
+from setuptools import find_packages
 
 setup(
     name='autopilot',
@@ -10,6 +11,6 @@ setup(
     author_email='alex.launi@canonical.com',
     url='https://launchpad.net/unity',
     license='GPLv3',
-    packages=['autopilot', 'autopilot.emulators', 'autopilot.tests'],
+    packages=find_packages(),
     scripts=['bin/run_autopilot'],
 )

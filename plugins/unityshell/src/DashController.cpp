@@ -49,7 +49,6 @@ Controller::Controller()
   SetupRelayoutCallbacks();
   RegisterUBusInterests();
 
-  PluginAdapter::Default()->compiz_screen_ungrabbed.connect(sigc::mem_fun(this, &Controller::OnScreenUngrabbed));
 
   ensure_id_ = g_timeout_add_seconds(60, [] (gpointer data) -> gboolean { static_cast<Controller*>(data)->EnsureDash(); return FALSE; }, this);
 
@@ -194,6 +193,7 @@ void Controller::OnMouseDownOutsideWindow(int x, int y,
 
 void Controller::OnScreenUngrabbed()
 {
+  LOG_DEBUG(logger) << "On Screen Ungrabbed called";
   if (need_show_)
   {
     EnsureDash();
@@ -235,6 +235,8 @@ void Controller::ShowDash()
   // for the screen to be available again before honouring the request.
   if (adaptor->IsScreenGrabbed())
   {
+    screen_ungrabbed_slot_.disconnect();
+    screen_ungrabbed_slot_ = PluginAdapter::Default()->compiz_screen_ungrabbed.connect(sigc::mem_fun(this, &Controller::OnScreenUngrabbed));
     need_show_ = true;
     return;
   }
@@ -265,6 +267,8 @@ void Controller::HideDash(bool restore)
 {
   if (!visible_)
    return;
+
+  screen_ungrabbed_slot_.disconnect();
 
   EnsureDash();
 

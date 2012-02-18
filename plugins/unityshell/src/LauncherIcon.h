@@ -141,7 +141,7 @@ public:
 
   struct timespec GetQuirkTime(Quirk quirk);
 
-  IconType Type();
+  IconType GetIconType();
 
   virtual nux::Color BackgroundColor();
 
@@ -183,6 +183,18 @@ public:
   }
 
   void SetIconType(IconType type);
+
+  virtual std::string DesktopFile() { return std::string(""); }
+
+  virtual bool IsSticky() const { return false; }
+
+  virtual bool IsVisible() const { return false; }
+
+  virtual void AboutToRemove() {}
+  
+  virtual void Stick(bool save = true) {}
+  
+  virtual void UnStick() {}
 
 protected:
   std::vector<nux::Point3> GetCenters();
@@ -263,6 +275,9 @@ protected:
 
   void OnRemoteProgressVisibleChanged(LauncherEntryRemote* remote);
 
+  void EmitNeedsRedraw();
+
+  void EmitRemove();
 
   // This looks like a case for boost::logical::tribool
   static int _current_theme_is_mono;
@@ -290,7 +305,6 @@ private:
   void LoadTooltip();
   void LoadQuicklist();
 
-  std::vector<bool> _has_visible_window;
   bool              _remote_urgent;
   float             _present_urgency;
   float             _progress;
@@ -304,11 +318,13 @@ private:
 
   gint64            _shortcut;
 
-  std::vector<nux::Point3> _center;
-  std::vector<nux::Point3> _last_stable;
-  std::vector<nux::Point3> _saved_center;
-  std::vector<nux::Geometry> _parent_geo;
   IconType                 _icon_type;
+  
+  std::vector<nux::Point3> _center;
+  std::vector<bool> _has_visible_window;
+  std::vector<nux::Point3> _last_stable;
+  std::vector<nux::Geometry> _parent_geo;
+  std::vector<nux::Point3> _saved_center;
 
   static GtkIconTheme* _unity_theme;
 

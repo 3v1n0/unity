@@ -39,6 +39,8 @@ namespace unity
 namespace launcher
 {
 
+NUX_IMPLEMENT_OBJECT_TYPE(BamfLauncherIcon);
+
 BamfLauncherIcon::BamfLauncherIcon(BamfApplication* app)
   : SimpleLauncherIcon()
   , _bamf_app(app, glib::AddRef())
@@ -120,7 +122,7 @@ BamfLauncherIcon::BamfLauncherIcon(BamfApplication* app)
   WindowManager::Default()->compiz_screen_viewport_switch_ended.connect(sigc::mem_fun(this, &BamfLauncherIcon::EnsureWindowState));
   WindowManager::Default()->terminate_expo.connect(sigc::mem_fun(this, &BamfLauncherIcon::EnsureWindowState));
 
-  EnsureWindowState();
+  //EnsureWindowState();
   UpdateMenus();
   UpdateDesktopFile();
 
@@ -653,7 +655,7 @@ void BamfLauncherIcon::EnsureWindowState()
   for (int i = 0; i < max_num_monitors; i++)
     SetWindowVisibleOnMonitor(monitors[i], i);
 
-  needs_redraw.emit(this);
+  EmitNeedsRedraw();
 
   g_list_free(children);
 }

@@ -85,6 +85,72 @@ TEST(TestIconLoader, TestGetOneIcon)
   g_source_remove (tid);
 }
 
+TEST(TestIconLoader, TestGetOneIconManyTimes)
+{
+  std::vector<LoadResult> results;
+  std::vector<int> handles;
+  IconLoader& icon_loader = IconLoader::GetDefault();
+  volatile bool timeout_reached = false;
+  int i, load_count;
+
+  // 100 times should be good
+  load_count = 100;
+  results.resize (load_count);
+  handles.resize (load_count);
+
+  // careful, don't use the same icon as in previous tests, otherwise it'll
+  // be cached already!
+  for (int i = 0; i < load_count; i++)
+  {
+    handles[i] = icon_loader.LoadFromIconName("web-browser", 48,
+        sigc::mem_fun(results[i], &LoadResult::IconLoaded));
+  }
+
+  // disconnect every other handler (and especially the first one)
+  for (i = 0; i < load_count; i += 2)
+  {
+    icon_loader.DisconnectHandle(handles[i]);
+  }
+
+  guint tid = g_timeout_add (10000, TimeoutReached, (gpointer)(&timeout_reached));
+  int iterations = 0;
+  while (!timeout_reached)
+  {
+    g_main_context_iteration (NULL, TRUE);
+    bool all_loaded = true;
+    bool any_loaded = false;
+    for (i = 1; i < load_count; i += 2)
+    {
+      all_loaded &= results[i].got_callback;
+      any_loaded |= results[i].got_callback;
+      if (!all_loaded) break;
+    }
+    // count the number of iterations where we got some results
+    if (any_loaded) iterations++;
+    if (all_loaded) break;
+  }
+
+  EXPECT_FALSE(timeout_reached);
+  // it's all loading the same icon, the results had to come in the same
+  // main loop iteration (that's the desired behaviour)
+  EXPECT_EQ(iterations, 1);
+
+  for (i = 0; i < load_count; i++)
+  {
+    if (i % 2)
+    {
+      EXPECT_TRUE(results[i].got_callback);
+      EXPECT_TRUE(IsValidPixbuf(results[i].pixbuf));
+    }
+    else
+    {
+      EXPECT_FALSE(results[i].got_callback);
+    }
+  }
+
+  g_source_remove (tid);
+}
+
 TEST(TestIconLoader, TestGetManyIcons)
 {
   std::vector<LoadResult> results;

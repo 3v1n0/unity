@@ -41,12 +41,12 @@ class EventListener
       icon_removed = false;
     }
 
-    void OnIconAdded (AbstractLauncherIcon* icon)
+    void OnIconAdded (AbstractLauncherIcon::Ptr icon)
     {
       icon_added = true;
     }
 
-    void OnIconRemoved (AbstractLauncherIcon* icon)
+    void OnIconRemoved (AbstractLauncherIcon::Ptr icon)
     {
       icon_removed = true;
     }
@@ -64,7 +64,7 @@ TEST(TestLauncherModel, TestConstructor)
 
 TEST(TestLauncherModel, TestAdd)
 {
-  AbstractLauncherIcon* first  = new MockLauncherIcon();
+  AbstractLauncherIcon::Ptr first(new MockLauncherIcon());
   LauncherModel::Ptr model(new LauncherModel());
 
   EXPECT_EQ(model->Size(), 0);
@@ -74,7 +74,7 @@ TEST(TestLauncherModel, TestAdd)
 
 TEST(TestLauncherModel, TestRemove)
 {
-  AbstractLauncherIcon* first  = new MockLauncherIcon();
+  AbstractLauncherIcon::Ptr first(new MockLauncherIcon());
   LauncherModel::Ptr model(new LauncherModel());
 
   EXPECT_EQ(model->Size(), 0);
@@ -86,7 +86,7 @@ TEST(TestLauncherModel, TestRemove)
 
 TEST(TestLauncherModel, TestAddSignal)
 {
-  AbstractLauncherIcon* first  = new MockLauncherIcon();
+  AbstractLauncherIcon::Ptr first(new MockLauncherIcon());
   LauncherModel::Ptr model(new LauncherModel());
 
   EventListener *listener = new EventListener();
@@ -100,7 +100,7 @@ TEST(TestLauncherModel, TestAddSignal)
 
 TEST(TestLauncherModel, TestRemoveSignal)
 {
-  AbstractLauncherIcon* first  = new MockLauncherIcon();
+  AbstractLauncherIcon::Ptr first(new MockLauncherIcon());
   LauncherModel::Ptr model(new LauncherModel());
 
   EventListener *listener = new EventListener();
@@ -116,10 +116,10 @@ TEST(TestLauncherModel, TestRemoveSignal)
 
 TEST(TestLauncherModel, TestSort)
 {
-  AbstractLauncherIcon* first = new MockLauncherIcon();
-  AbstractLauncherIcon* second = new MockLauncherIcon();
-  AbstractLauncherIcon* third = new MockLauncherIcon();
-  AbstractLauncherIcon* fourth = new MockLauncherIcon();
+  AbstractLauncherIcon::Ptr first(new MockLauncherIcon());
+  AbstractLauncherIcon::Ptr second(new MockLauncherIcon());
+  AbstractLauncherIcon::Ptr third(new MockLauncherIcon());
+  AbstractLauncherIcon::Ptr fourth(new MockLauncherIcon());
 
   LauncherModel::Ptr model(new LauncherModel());
 
@@ -149,10 +149,10 @@ TEST(TestLauncherModel, TestSort)
 
 TEST(TestLauncherModel, TestReorderBefore)
 {
-  AbstractLauncherIcon* first = new MockLauncherIcon();
-  AbstractLauncherIcon* second = new MockLauncherIcon();
-  AbstractLauncherIcon* third = new MockLauncherIcon();
-  AbstractLauncherIcon* fourth = new MockLauncherIcon();
+  AbstractLauncherIcon::Ptr first(new MockLauncherIcon());
+  AbstractLauncherIcon::Ptr second(new MockLauncherIcon());
+  AbstractLauncherIcon::Ptr third(new MockLauncherIcon());
+  AbstractLauncherIcon::Ptr fourth(new MockLauncherIcon());
 
   LauncherModel::Ptr model(new LauncherModel());
 
@@ -182,10 +182,10 @@ TEST(TestLauncherModel, TestReorderBefore)
 
 TEST(TestLauncherModel, TestReorderSmart)
 {
-  AbstractLauncherIcon* first = new MockLauncherIcon();
-  AbstractLauncherIcon* second = new MockLauncherIcon();
-  AbstractLauncherIcon* third = new MockLauncherIcon();
-  AbstractLauncherIcon* fourth = new MockLauncherIcon();
+  AbstractLauncherIcon::Ptr first(new MockLauncherIcon());
+  AbstractLauncherIcon::Ptr second(new MockLauncherIcon());
+  AbstractLauncherIcon::Ptr third(new MockLauncherIcon());
+  AbstractLauncherIcon::Ptr fourth(new MockLauncherIcon());
 
   LauncherModel::Ptr model(new LauncherModel());
 

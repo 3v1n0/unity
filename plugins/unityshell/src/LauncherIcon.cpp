@@ -81,13 +81,12 @@ LauncherIcon::LauncherIcon()
   , _glow_color(nux::color::White)
   , _shortcut(0)
   , _icon_type(TYPE_NONE)
+  , _center(max_num_monitors)
+  , _has_visible_window(max_num_monitors)
+  , _last_stable(max_num_monitors)
+  , _parent_geo(max_num_monitors)
+  , _saved_center(max_num_monitors)
 {
-  _has_visible_window.resize(max_num_monitors);
-  _center.resize(max_num_monitors);
-  _saved_center.resize(max_num_monitors);
-  _last_stable.resize(max_num_monitors);
-  _parent_geo.resize(max_num_monitors);
-
   for (int i = 0; i < QUIRK_LAST; i++)
   {
     _quirks[i] = false;
@@ -706,7 +705,7 @@ LauncherIcon::SetWindowVisibleOnMonitor(bool val, int monitor)
     return;
 
   _has_visible_window[monitor] = val;
-  needs_redraw.emit(this);
+  EmitNeedsRedraw();
 }
 
 gboolean
@@ -760,7 +759,7 @@ LauncherIcon::Remove()
       _quicklist->Hide();
 
   SetQuirk(QUIRK_VISIBLE, false);
-  remove.emit(this);
+  EmitRemove();
 }
 
 void
@@ -782,7 +781,7 @@ LauncherIcon::SortPriority()
 }
 
 LauncherIcon::IconType
-LauncherIcon::Type()
+LauncherIcon::GetIconType()
 {
   return _icon_type;
 }
@@ -804,7 +803,7 @@ LauncherIcon::SetQuirk(LauncherIcon::Quirk quirk, bool value)
     TimeUtil::SetTimeStruct(&(_quirk_times[quirk]), &(_quirk_times[quirk]), Launcher::ANIM_DURATION_SHORT);
   else
     clock_gettime(CLOCK_MONOTONIC, &(_quirk_times[quirk]));
-  needs_redraw.emit(this);
+  EmitNeedsRedraw();
 
   // Present on urgent as a general policy
   if (quirk == QUIRK_VISIBLE && value)
@@ -828,7 +827,7 @@ LauncherIcon::OnDelayedUpdateTimeout(gpointer data)
   LauncherIcon* self = arg->self;
 
   clock_gettime(CLOCK_MONOTONIC, &(self->_quirk_times[arg->quirk]));
-  self->needs_redraw.emit(self);
+  self->EmitNeedsRedraw();
 
   self->_time_delay_handle = 0;
 
@@ -849,7 +848,7 @@ void
 LauncherIcon::UpdateQuirkTime(LauncherIcon::Quirk quirk)
 {
   clock_gettime(CLOCK_MONOTONIC, &(_quirk_times[quirk]));
-  needs_redraw.emit(this);
+  EmitNeedsRedraw();
 }
 
 void
@@ -872,7 +871,7 @@ LauncherIcon::SetProgress(float progress)
     return;
 
   _progress = progress;
-  needs_redraw.emit(this);
+  EmitNeedsRedraw();
 }
 
 float
@@ -902,7 +901,7 @@ void
 LauncherIcon::SetEmblem(LauncherIcon::BaseTexturePtr const& emblem)
 {
   _emblem = emblem;
-  needs_redraw.emit(this);
+  EmitNeedsRedraw();
 }
 
 void
@@ -1134,6 +1133,19 @@ LauncherIcon::OnRemoteProgressVisibleChanged(LauncherEntryRemote* remote)
   if (remote->ProgressVisible())
     SetProgress((float) remote->Progress());
 }
+
+void LauncherIcon::EmitNeedsRedraw()
+{
+  if (OwnsTheReference() && GetReferenceCount() > 0)
+    needs_redraw.emit(AbstractLauncherIcon::Ptr(this));
+}
+
+void LauncherIcon::EmitRemove()
+{
+  if (OwnsTheReference() && GetReferenceCount() > 0)
+    remove.emit(AbstractLauncherIcon::Ptr(this));
+}
+
 
 } // namespace launcher
 } // namespace unity

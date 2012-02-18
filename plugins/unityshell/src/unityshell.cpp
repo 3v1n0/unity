@@ -1350,6 +1350,9 @@ void UnityScreen::handleEvent(XEvent* event)
       }
       break;
     }
+    case MapRequest:
+      UnityShowdesktopHandler::inhibitLeaveShowdesktopMode (event->xmaprequest.window);
+      break;
     default:
         if (screen->shapeEvent () + ShapeNotify == event->type)
         {
@@ -1373,12 +1376,17 @@ void UnityScreen::handleEvent(XEvent* event)
   if (!skip_other_plugins)
     screen->handleEvent(event);
 
-  if (event->type == PropertyNotify)
+  switch (event->type)
   {
-    if (event->xproperty.atom == Atoms::mwmHints)
-    {
-      PluginAdapter::Default ()->NotifyNewDecorationState(event->xproperty.window);
-    }
+    case PropertyNotify:
+      if (event->xproperty.atom == Atoms::mwmHints)
+      {
+        PluginAdapter::Default ()->NotifyNewDecorationState(event->xproperty.window);
+      }
+      break;
+    case MapRequest:
+      UnityShowdesktopHandler::allowLeaveShowdesktopMode (event->xmaprequest.window);
+      break;
   }
 
   if (!skip_other_plugins &&
@@ -1595,9 +1603,9 @@ bool UnityScreen::altTabInitiateCommon(CompAction *action,
 
   int show_monitor = (show_mode == switcher::ShowMode::CURRENT_VIEWPORT) ? device : -1;
 
-  std::vector<unity::launcher::AbstractLauncherIcon*> results = launcher_controller_->GetAltTabIcons(show_monitor);
+  auto results = launcher_controller_->GetAltTabIcons(show_monitor);
 
-  if (!(results.size() == 1 && results[0]->Type() == AbstractLauncherIcon::IconType::TYPE_BEGIN))
+  if (!(results.size() == 1 && results[0]->GetIconType() == AbstractLauncherIcon::IconType::TYPE_BEGIN))
     switcher_controller_->Show(show_mode, switcher::SortMode::FOCUS_ORDER, false, results);
 
   return true;
@@ -2688,6 +2696,18 @@ UnityWindow::~UnityWindow()
   UnityScreen* us = UnityScreen::get(screen);
   if (us->newFocusedWindow && (UnityWindow::get(us->newFocusedWindow) == this))
     us->newFocusedWindow = NULL;
+
+  if (!window->destroyed ())
+  {
+    bool wasMinimized = window->minimized ();
+    if (wasMinimized)
+      window->unminimize ();
+    window->focusSetEnabled (this, false);
+    window->minimizeSetEnabled (this, false);
+    window->unminimizeSetEnabled (this, false);
+    if (wasMinimized)
+      window->minimize ();
+  }
 
   UnityShowdesktopHandler::animating_windows.remove (window);
 

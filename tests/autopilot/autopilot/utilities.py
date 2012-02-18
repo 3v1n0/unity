@@ -30,21 +30,25 @@ def make_window_skip_taskbar(window, set_flag=True):
         print "Clearing flag"
     elif action == 1:
         print "Setting flag"
-    _setProperty('_NET_WM_STATE',[action, state, 0, 1], window)
+    _setProperty('_NET_WM_STATE', [action, state, 0, 1], window)
     _display.sync()
 
 
 def _setProperty(_type, data, win=None, mask=None):
     """ Send a ClientMessage event to a window"""
-    if not win: win = _display.screen().root
+    if not win:
+        win = _display.screen().root
     if type(data) is str:
         dataSize = 8
     else:
-        data = (data+[0]*(5-len(data)))[:5]
+        # data length must be 5 - pad with 0's if it's short, truncate otherwise.
+        data = (data + [0] * (5 - len(data)))[:5]
         dataSize = 32
 
-    ev = protocol.event.ClientMessage(window=win, client_type=_display.get_atom(_type), data=(dataSize, data))
+    ev = protocol.event.ClientMessage(window=win,
+        client_type=_display.get_atom(_type),
+        data=(dataSize, data))
 
     if not mask:
-        mask = (X.SubstructureRedirectMask|X.SubstructureNotifyMask)
+        mask = (X.SubstructureRedirectMask | X.SubstructureNotifyMask)
     _display.screen().root.send_event(ev, event_mask=mask)

@@ -97,6 +97,7 @@ private:
 
   DashView* view_;
   guint ensure_id_;
+  sigc::connection screen_ungrabbed_slot_;
 };
 
 

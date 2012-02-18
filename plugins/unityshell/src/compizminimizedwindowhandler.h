@@ -104,15 +104,6 @@ compiz::CompizMinimizedWindowHandler<Screen, Window>::CompizMinimizedWindowHandl
 template <typename Screen, typename Window>
 compiz::CompizMinimizedWindowHandler<Screen, Window>::~CompizMinimizedWindowHandler ()
 {
-  if (!priv->mWindow->destroyed ())
-  {
-    priv->mWindow->unminimize ();
-    priv->mWindow->focusSetEnabled (Window::get (priv->mWindow), false);
-    priv->mWindow->minimizeSetEnabled (Window::get (priv->mWindow), false);
-    priv->mWindow->unminimizeSetEnabled (Window::get (priv->mWindow), false);
-    priv->mWindow->minimize ();
-  }
-
   minimizedWindows.remove (this);
 }
 

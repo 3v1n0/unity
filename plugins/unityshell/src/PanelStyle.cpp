@@ -286,7 +286,15 @@ nux::BaseTexture* Style::GetFallbackWindowButton(WindowButtonType type,
     cairo_move_to(cr, w, height / 2.0f);
     cairo_line_to(cr, width - w, height / 2.0f);
   }
-  else
+  else if (type == WindowButtonType::UNMAXIMIZE)
+  {
+    cairo_move_to(cr, w, h + h/5.0f);
+    cairo_line_to(cr, width - w, h + h/5.0f);
+    cairo_line_to(cr, width - w, height - h - h/5.0f);
+    cairo_line_to(cr, w, height - h - h/5.0f);
+    cairo_close_path(cr);
+  }
+  else // if (type == WindowButtonType::MAXIMIZE)
   {
     cairo_move_to(cr, w, h);
     cairo_line_to(cr, width - w, h);
