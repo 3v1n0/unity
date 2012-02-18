@@ -63,6 +63,9 @@ bool IMTextEntry::TryHandleSpecial(unsigned int eventType, unsigned int keysym, 
   if (!preedit_.empty())
     return true;
 
+  if (eventType != NUX_KEYDOWN)
+    return false;
+
   if (((keyval == NUX_VK_x) && ctrl && !shift) ||
       ((keyval == NUX_VK_DELETE) && shift && !ctrl))
   {
