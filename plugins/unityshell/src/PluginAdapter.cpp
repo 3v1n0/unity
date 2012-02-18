@@ -521,13 +521,30 @@ PluginAdapter::Restore(guint32 xid)
 }
 
 void
+PluginAdapter::RestoreAt(guint32 xid, int x, int y)
+{
+  Window win = (Window)xid;
+  CompWindow* window;
+
+  window = m_Screen->findWindow(win);
+  if (window && (window->state() & MAXIMIZE_STATE))
+  {
+    nux::Geometry new_geo(GetWindowSavedGeometry(xid));
+    new_geo.x = x;
+    new_geo.y = y;
+    window->maximize(0);
+    MoveResizeWindow(xid, new_geo);
+  }
+}
+
+void
 PluginAdapter::Minimize(guint32 xid)
 {
   Window win = (Window)xid;
   CompWindow* window;
 
   window = m_Screen->findWindow(win);
-  if (window)
+  if (window && (window->actions() & CompWindowActionMinimizeMask))
     window->minimize();
 }
 
@@ -718,7 +735,7 @@ PluginAdapter::OnLeaveDesktop()
 nux::Geometry
 PluginAdapter::GetWindowGeometry(guint32 xid)
 {
-  Window win = (Window)xid;
+  Window win = xid;
   CompWindow* window;
   nux::Geometry geo(0, 0, 1, 1);
 
@@ -733,6 +750,26 @@ PluginAdapter::GetWindowGeometry(guint32 xid)
   return geo;
 }
 
+nux::Geometry
+PluginAdapter::GetWindowSavedGeometry(guint32 xid)
+{
+  Window win = xid;
+  nux::Geometry geo(0, 0, 1, 1);
+  CompWindow* window;
+
+  window = m_Screen->findWindow(win);
+  if (window)
+  {
+    XWindowChanges &wc = window->saveWc();
+    geo.x = wc.x;
+    geo.y = wc.y;
+    geo.width = wc.width;
+    geo.height = wc.height;
+  }
+
+  return geo;
+}
+
 nux::Geometry 
 PluginAdapter::GetScreenGeometry()
 {
@@ -744,6 +781,33 @@ PluginAdapter::GetScreenGeometry()
   geo.height = m_Screen->height();
   
   return geo;  
+}
+
+nux::Geometry 
+PluginAdapter::GetWorkAreaGeometry(guint32 xid)
+{
+  CompWindow* window = nullptr;
+  unsigned int output = 0;
+
+  if (xid != 0)
+  {
+    Window win = xid;
+
+    window = m_Screen->findWindow(win);
+    if (window)
+    {
+      output = window->outputDevice();
+    }
+  }
+
+  if (xid == 0 || !window)
+  {
+    output = m_Screen->currentOutputDev().id();
+  }
+
+  CompRect workarea = m_Screen->getWorkareaForOutput(output);
+
+  return nux::Geometry(workarea.x(), workarea.y(), workarea.width(), workarea.height());
 }
 
 bool
@@ -1051,6 +1115,42 @@ PluginAdapter::restoreInputFocus()
   }
 
   return false;
+}
+
+void
+PluginAdapter::MoveResizeWindow(guint32 xid, nux::Geometry geometry)
+{
+  int w, h;
+  CompWindow* window = m_Screen->findWindow(xid);
+
+  if (!window)
+    return;
+
+  if (window->constrainNewWindowSize(geometry.width, geometry.height, &w, &h))
+  {
+    CompRect workarea = m_Screen->getWorkareaForOutput(window->outputDevice());
+    int dx = geometry.x + w - workarea.right() + window->border().right;
+    int dy = geometry.y + h - workarea.bottom() + window->border().bottom;
+
+    if (dx > 0)
+      geometry.x -= dx;
+    if (dy > 0)
+      geometry.y -= dy;
+
+    geometry.SetWidth(w);
+    geometry.SetHeight(h);
+  }
+
+  XWindowChanges xwc;
+  xwc.x = geometry.x;
+  xwc.y = geometry.y;
+  xwc.width = geometry.width;
+  xwc.height = geometry.height;
+
+  if (window->mapNum())
+    window->sendSyncRequest();
+
+  window->configureXWindow(CWX | CWY | CWWidth | CWHeight, &xwc);
 }
 
 void

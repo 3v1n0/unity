@@ -118,7 +118,9 @@ public:
   bool IsWindowObscured(guint xid);
   bool IsWindowMapped(guint xid);
   bool IsWindowVisible(guint32 xid);
+
   void Restore(guint32 xid);
+  void RestoreAt(guint32 xid, int x, int y);
   void Minimize(guint32 xid);
   void Close(guint32 xid);
   void Activate(guint32 xid);
@@ -139,8 +141,10 @@ public:
   bool MaximizeIfBigEnough(CompWindow* window);
 
   nux::Geometry GetWindowGeometry(guint32 xid);
+  nux::Geometry GetWindowSavedGeometry(guint32 xid);
   nux::Geometry GetScreenGeometry();
-  
+  nux::Geometry GetWorkAreaGeometry(guint32 xid = 0);
+
   void CheckWindowIntersections(nux::Geometry const& region, bool &active, bool &any);
 
   int WorkspaceCount();
@@ -149,6 +153,8 @@ public:
 
   bool saveInputFocus ();
   bool restoreInputFocus ();
+
+  void MoveResizeWindow(guint32 xid, nux::Geometry geometry);
 
 protected:
   PluginAdapter(CompScreen* screen);
