@@ -152,6 +152,9 @@ PanelMenuView::PanelMenuView()
 
 
   _style_changed_connection = panel::Style::Instance().changed.connect([&] {
+    _window_buttons->ComputeContentSize();
+    layout_->SetLeftAndRightPadding(_window_buttons->GetContentWidth(), 0);
+
     _title_texture = nullptr;
     Refresh();
   });
