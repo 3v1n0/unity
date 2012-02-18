@@ -72,15 +72,15 @@ public:
   bool HasOurWindowFocused();
   bool IsIntegrated();
 
-  std::string GetName() const;
-  void AddProperties(GVariantBuilder* builder);
-
   virtual void AddIndicator(indicator::Indicator::Ptr const& indicator);
   virtual void RemoveIndicator(indicator::Indicator::Ptr const& indicator);
 
   virtual void QueueDraw();
 
 protected:
+  std::string GetName() const;
+  void AddProperties(GVariantBuilder* builder);
+
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void PreLayoutManagement();

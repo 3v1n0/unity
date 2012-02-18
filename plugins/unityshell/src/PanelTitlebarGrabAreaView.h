@@ -32,8 +32,8 @@ namespace unity
 
 class PanelTitlebarGrabArea : public nux::InputArea, public unity::debug::Introspectable
 {
-  /* This acts a bit like a titlebar, it can be grabbed (such that we can pull
-   * the window down)                                                         */
+  /* This acts a bit like a decorator, it can be clicked or grabbed (such that
+   * we can pullthe window down) */
 
 public:
   PanelTitlebarGrabArea();
@@ -42,15 +42,16 @@ public:
   void SetGrabbed(bool enabled);
   bool IsGrabbed();
 
-  std::string GetName() const;
-  void AddProperties(GVariantBuilder* builder);
-
   sigc::signal<void, int, int> lower_request;
   sigc::signal<void, int, int> activate_request;
   sigc::signal<void, int, int> restore_request;
   sigc::signal<void, int, int> grab_started;
   sigc::signal<void, int, int> grab_move;
   sigc::signal<void, int, int> grab_end;
+
+protected:
+  std::string GetName() const;
+  void AddProperties(GVariantBuilder* builder);
 
 private:
   void OnMouseDown(int x, int y, unsigned long button_flags, unsigned long);

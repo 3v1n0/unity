@@ -44,12 +44,12 @@ public:
 
   void SetControlledWindowXid(Window xid);
 
-  std::string GetName() const;
-  void AddProperties(GVariantBuilder* builder);
-
   void Activate();
 
 protected:
+  std::string GetName() const;
+  void AddProperties(GVariantBuilder* builder);
+
   void ShowMenu(int button);
   void DrawEntryPrelight(cairo_t* cr, unsigned int w, unsigned int h);
 

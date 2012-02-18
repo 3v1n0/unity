@@ -73,13 +73,13 @@ public:
 
   sigc::signal<void, PanelIndicatorEntryView*> on_indicator_updated;
 
-  std::string GetName() const;
-  void AddProperties(GVariantBuilder* builder);
-
   virtual void QueueDraw();
   void SetMaximumEntriesWidth(int max_width);
 
 protected:
+  std::string GetName() const;
+  void AddProperties(GVariantBuilder* builder);
+
   typedef std::vector<Indicator::Ptr> Indicators;
   Indicators GetIndicators();
 

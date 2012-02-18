@@ -87,13 +87,13 @@ public:
   void DashShown();
   void DashHidden();
 
-  std::string GetName() const;
-  void AddProperties(GVariantBuilder* builder);
-
   sigc::signal<void, PanelIndicatorEntryView*, bool> active_changed;
   sigc::signal<void, PanelIndicatorEntryView*> refreshed;
 
 protected:
+  std::string GetName() const;
+  void AddProperties(GVariantBuilder* builder);
+
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawEntryPrelight(cairo_t* cr, unsigned int w, unsigned int h);
   virtual void DrawEntryContent(cairo_t* cr, unsigned int width, unsigned int height,
