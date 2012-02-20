@@ -179,6 +179,27 @@ class DashTests(AutopilotTestCase):
           category = self.dash.get_focused_category()
           self.assertEqual(category, None)
 
+    def test_cltr_tab(self):
+          """ This test makes sure that ctlr + tab works well."""
+          self.dash.ensure_hidden()
+          self.dash.toggle_reveal()
+
+          kb = Keyboard()
+
+          kb.press('Control')
+          kb.press_and_release('Tab')
+          kb.release('Control')
+
+          self.assertEqual(self.dash.get_current_lens(), u'applications.lens')
+
+          kb.press('Control')
+          kb.press('Shift')
+          kb.press_and_release('Tab')
+          kb.release('Control')
+          kb.release('Shift')
+
+          self.assertEqual(self.dash.get_current_lens(), u'home.lens')
+
 
 
 
