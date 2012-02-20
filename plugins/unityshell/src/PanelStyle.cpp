@@ -181,7 +181,7 @@ nux::NBitmapData* Style::GetBackground(int width, int height, float opacity)
 nux::BaseTexture* Style::GetWindowButton(WindowButtonType type, WindowState state)
 {
   nux::BaseTexture* texture = NULL;
-  std::string names[] = { "close", "minimize", "unmaximize" };
+  std::string names[] = { "close", "minimize", "unmaximize", "maximize" };
   std::string states[] = { "", "_focused_prelight", "_focused_pressed", "_unfocused",
                            "_unfocused", "_unfocused_prelight", "_unfocused_pressed"};
 
@@ -329,16 +329,16 @@ nux::BaseTexture* Style::GetFallbackWindowButton(WindowButtonType type,
   return texture_from_cairo_graphics(cairo_graphics);
 }
 
-GdkPixbuf* Style::GetHomeButton()
+glib::Object<GdkPixbuf> Style::GetHomeButton()
 {
-  GdkPixbuf* pixbuf = NULL;
+  glib::Object<GdkPixbuf> pixbuf;
 
   pixbuf = gtk_icon_theme_load_icon(gtk_icon_theme_get_default(),
                                     "start-here",
                                     panel_height,
                                     (GtkIconLookupFlags)0,
                                     NULL);
-  if (pixbuf == NULL)
+  if (!pixbuf)
     pixbuf = gtk_icon_theme_load_icon(gtk_icon_theme_get_default(),
                                       "distributor-logo",
                                       panel_height,

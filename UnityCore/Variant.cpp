@@ -174,7 +174,12 @@ BuilderWrapper& BuilderWrapper::add(char const* name, long long unsigned int val
 
 BuilderWrapper& BuilderWrapper::add(char const* name, float value)
 {
-  // floats get promoted to doubles automatically
+  g_variant_builder_add(builder_, "{sv}", name, g_variant_new_double(value));
+  return *this;
+}
+
+BuilderWrapper& BuilderWrapper::add(char const* name, double value)
+{
   g_variant_builder_add(builder_, "{sv}", name, g_variant_new_double(value));
   return *this;
 }

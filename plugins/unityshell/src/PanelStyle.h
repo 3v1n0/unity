@@ -72,7 +72,7 @@ public:
   nux::NBitmapData* GetBackground(int width, int height, float opacity);
   nux::BaseTexture* GetWindowButton(WindowButtonType type, WindowState state);
   nux::BaseTexture* GetFallbackWindowButton(WindowButtonType type, WindowState state);
-  GdkPixbuf* GetHomeButton();
+  glib::Object<GdkPixbuf> GetHomeButton();
   std::string GetFontDescription(PanelItem item);
   int GetTextDPI();
 

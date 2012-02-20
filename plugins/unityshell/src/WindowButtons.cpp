@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010 Canonical Ltd
+ * Copyright (C) 2010-2012 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -15,29 +15,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
+ *              Marco Trevisan (Treviño) <3v1n0@ubuntu.com>
  */
 
 #include "config.h"
 
 #include <Nux/Nux.h>
-#include <Nux/HLayout.h>
-#include <Nux/VLayout.h>
-#include <Nux/Button.h>
-
-#include <NuxGraphics/GLThread.h>
-#include <Nux/BaseWindow.h>
-#include <Nux/WindowCompositor.h>
-
-#include <UnityCore/Variant.h>
-#include "WindowButtons.h"
-
-#include "UBusWrapper.h"
-#include "UBusMessages.h"
-
-#include "DashSettings.h"
-#include "PanelStyle.h"
 
 #include <UnityCore/GLibWrapper.h>
+#include <UnityCore/Variant.h>
+
+#include "WindowButtons.h"
+
+#include "UBusMessages.h"
+#include "DashSettings.h"
+#include "PanelStyle.h"
 
 using namespace unity;
 
@@ -46,28 +38,15 @@ class WindowButton : public nux::Button
   // A single window button
 public:
   WindowButton(panel::WindowButtonType type)
-    : nux::Button("", NUX_TRACKER_LOCATION),
-      _type(type),
-      _overlay_is_open(false),
-      _mouse_is_down(false),
-      _opacity(1.0f),
-      _focused(true)
+    : nux::Button("", NUX_TRACKER_LOCATION)
+    , _type(type)
+    , _enabled(true)
+    , _focused(true)
+    , _overlay_is_open(false)
+    , _opacity(1.0f)
   {
     LoadImages();
-    UpdateDashUnmaximize();
     panel::Style::Instance().changed.connect(sigc::mem_fun(this, &WindowButton::LoadImages));
-    dash::Settings::Instance().changed.connect(sigc::mem_fun(this, &WindowButton::UpdateDashUnmaximize));
-
-    _ubus_manager.RegisterInterest(UBUS_OVERLAY_SHOWN, sigc::mem_fun(this, &WindowButton::OnOverlayShown));
-    _ubus_manager.RegisterInterest(UBUS_OVERLAY_HIDDEN, sigc::mem_fun(this, &WindowButton::OnOverlayHidden));
-
-    /* FIXME HasMouseFocus() doesn't seem to work correctly, so we use this workaround */
-    mouse_down.connect([&_mouse_is_down](int, int, unsigned long, unsigned long) {
-      _mouse_is_down = true;
-    });
-    mouse_up.connect([&_mouse_is_down](int, int, unsigned long, unsigned long) {
-      _mouse_is_down = false;
-    });
   }
 
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
@@ -80,40 +59,56 @@ public:
 
     if (_overlay_is_open)
     {
-      if (_type == panel::WindowButtonType::UNMAXIMIZE && !_overlay_can_maximize)
+      if (!_enabled)
       {
         tex = _disabled_dash_tex.GetPointer();
       }
       else
       {
-        //FIXME should use HasMouseFocus()
-        if (_mouse_is_down && IsMouseInside())
-          tex = _pressed_dash_tex.GetPointer();
-        else if (IsMouseInside())
-          tex = _prelight_dash_tex.GetPointer();
-        else
-          tex = _normal_dash_tex.GetPointer();
+        switch (visual_state_)
+        {
+          case nux::VISUAL_STATE_PRESSED:
+            tex = _pressed_dash_tex.GetPointer();
+            break;
+          case nux::VISUAL_STATE_PRELIGHT:
+            tex = _prelight_dash_tex.GetPointer();
+            break;
+          default:
+            tex = _normal_dash_tex.GetPointer();
+        }
       }
+    }
+    else if (!_enabled)
+    {
+      tex = _disabled_tex.GetPointer();
     }
     else if (!_focused)
     {
-      //FIXME should use HasMouseFocus()
-      if (_mouse_is_down && IsMouseInside())
-        tex = _unfocused_pressed_tex.GetPointer();
-      else if (IsMouseInside())
-        tex = _unfocused_prelight_tex.GetPointer();
-      else
-        tex = _unfocused_tex.GetPointer();
+      switch (visual_state_)
+      {
+        case nux::VISUAL_STATE_PRESSED:
+          tex = _unfocused_pressed_tex.GetPointer();
+          break;
+        case nux::VISUAL_STATE_PRELIGHT:
+          tex = _unfocused_prelight_tex.GetPointer();
+          break;
+        default:
+          tex = _unfocused_tex.GetPointer();
+      }
     }
     else
     {
-      //FIXME should use HasMouseFocus()
-      if (_mouse_is_down && IsMouseInside())
-        tex = _pressed_tex.GetPointer();
-      else if (IsMouseInside())
-        tex = _prelight_tex.GetPointer();
-      else
-        tex = _normal_tex.GetPointer();
+      switch (visual_state_)
+      {
+        case nux::VISUAL_STATE_PRESSED:
+          tex = _pressed_tex.GetPointer();
+          break;
+        case nux::VISUAL_STATE_PRELIGHT:
+          tex = _prelight_tex.GetPointer();
+          break;
+        default:
+          tex = _normal_tex.GetPointer();
+      }
     }
 
     if (tex)
@@ -138,11 +133,13 @@ public:
     _prelight_tex.Adopt(style.GetWindowButton(_type, panel::WindowState::PRELIGHT));
     _pressed_tex.Adopt(style.GetWindowButton(_type, panel::WindowState::PRESSED));
     _unfocused_tex.Adopt(style.GetWindowButton(_type, panel::WindowState::UNFOCUSED));
+    _disabled_tex.Adopt(style.GetWindowButton(_type, panel::WindowState::DISABLED));
     _unfocused_prelight_tex.Adopt(style.GetWindowButton(_type, panel::WindowState::UNFOCUSED_PRELIGHT));
     _unfocused_pressed_tex.Adopt(style.GetWindowButton(_type, panel::WindowState::UNFOCUSED_PRESSED));
     _normal_dash_tex.Adopt(GetDashWindowButton(_type, panel::WindowState::NORMAL));
     _prelight_dash_tex.Adopt(GetDashWindowButton(_type, panel::WindowState::PRELIGHT));
     _pressed_dash_tex.Adopt(GetDashWindowButton(_type, panel::WindowState::PRESSED));
+    _disabled_dash_tex.Adopt(GetDashWindowButton(_type, panel::WindowState::DISABLED));
 
     if (_overlay_is_open)
     {
@@ -158,54 +155,16 @@ public:
     QueueDraw();
   }
 
-  void UpdateDashUnmaximize()
-  {
-    // only update the unmaximize button
-    if (_type != panel::WindowButtonType::UNMAXIMIZE)
-      return;
-
-    panel::WindowButtonType real_type = panel::WindowButtonType::UNMAXIMIZE;
-
-    if (dash::Settings::Instance().GetFormFactor() == dash::FormFactor::DESKTOP)
-    {
-      real_type = panel::WindowButtonType::MAXIMIZE;
-    }
-
-    if (_normal_dash_tex)
-      _normal_dash_tex->UnReference();
-    if (_prelight_dash_tex)
-      _prelight_dash_tex->UnReference();
-    if (_pressed_dash_tex)
-      _pressed_dash_tex->UnReference();
-
-    // get (un)maximize buttons
-    _normal_dash_tex = GetDashWindowButton(real_type, panel::WindowState::NORMAL);
-    _prelight_dash_tex = GetDashWindowButton(real_type, panel::WindowState::PRELIGHT);
-    _pressed_dash_tex = GetDashWindowButton(real_type, panel::WindowState::PRESSED);
-    _disabled_dash_tex = GetDashWindowButton(real_type, panel::WindowState::DISABLED);
-
-    // still check if the dash is really opened,
-    // someone could change the form factor through dconf
-    // when the dash is closed
-    if (_overlay_is_open)
-    {
-      if (_normal_dash_tex)
-        SetMinMaxSize(_normal_dash_tex->GetWidth(), _normal_dash_tex->GetHeight());
-    }
-
-    QueueDraw();
-  }
-
   void SetOpacity(double opacity)
   {
     if (_opacity != opacity)
     {
       _opacity = opacity;
-      NeedRedraw();
+      QueueDraw();
     }
   }
 
-  double GetOpacity()
+  double GetOpacity() const
   {
     return _opacity;
   }
@@ -215,19 +174,70 @@ public:
     if (_focused != focused)
     {
       _focused = focused;
-      NeedRedraw();
+      QueueDraw();
     }
+  }
+
+  void SetOverlayOpen(bool open)
+  {
+    if (_overlay_is_open == open)
+      return;
+
+    _overlay_is_open = open;
+
+    if (_overlay_is_open)
+    {
+      if (_normal_dash_tex)
+        SetMinMaxSize(_normal_dash_tex->GetWidth(), _normal_dash_tex->GetHeight());
+    }
+    else
+    {
+      if (_normal_tex)
+        SetMinMaxSize(_normal_tex->GetWidth(), _normal_tex->GetHeight());
+    }
+
+    QueueDraw();
+  }
+
+  bool IsOverlayOpen()
+  {
+    return _overlay_is_open;
+  }
+
+  panel::WindowButtonType GetType() const
+  {
+    return _type;
+  }
+
+  void ChangeType(panel::WindowButtonType new_type)
+  {
+    if (_type != new_type)
+    {
+      _type = new_type;
+      LoadImages();
+    }
+  }
+
+  void SetEnabled(bool enabled)
+  {
+    if (enabled == _enabled)
+      return;
+
+    _enabled = enabled;
+    QueueDraw();
+  }  
+
+  bool IsEnabled()
+  {
+    return _enabled;
   }
 
 private:
   panel::WindowButtonType _type;
-  bool _overlay_is_open;
-  bool _overlay_can_maximize;
-  bool _mouse_is_down;
-  guint32 _place_shown_interest;
-  guint32 _place_hidden_interest;
-  double _opacity;
+  bool _enabled;
   bool _focused;
+  bool _overlay_is_open;
+  double _opacity;
 
   nux::ObjectPtr<nux::BaseTexture> _normal_tex;
   nux::ObjectPtr<nux::BaseTexture> _prelight_tex;
@@ -235,38 +245,11 @@ private:
   nux::ObjectPtr<nux::BaseTexture> _unfocused_tex;
   nux::ObjectPtr<nux::BaseTexture> _unfocused_prelight_tex;
   nux::ObjectPtr<nux::BaseTexture> _unfocused_pressed_tex;
+  nux::ObjectPtr<nux::BaseTexture> _disabled_tex;
   nux::ObjectPtr<nux::BaseTexture> _normal_dash_tex;
   nux::ObjectPtr<nux::BaseTexture> _prelight_dash_tex;
   nux::ObjectPtr<nux::BaseTexture> _pressed_dash_tex;
   nux::ObjectPtr<nux::BaseTexture> _disabled_dash_tex;
-  UBusManager _ubus_manager;
-
-  void OnOverlayShown(GVariant* data)
-  {
-    unity::glib::String overlay_identity;
-    gboolean can_maximise = FALSE;
-    gint32 overlay_monitor = 0;
-    g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING, 
-                  &overlay_identity, &can_maximise, &overlay_monitor);
-
-    _overlay_is_open = true;
-    if (_normal_dash_tex)
-      SetMinMaxSize(_normal_dash_tex->GetWidth(), _normal_dash_tex->GetHeight());
-
-    _overlay_can_maximize = (can_maximise) ? true : false;
-
-    QueueDraw();
-  }
-
-  void OnOverlayHidden(GVariant* data)
-  {
-    _overlay_is_open = false;
-
-    if (_normal_tex)
-      SetMinMaxSize(_normal_tex->GetWidth(), _normal_tex->GetHeight());
-
-    QueueDraw();
-  }
 
   nux::BaseTexture* GetDashWindowButton(panel::WindowButtonType type,
                                         panel::WindowState state)
@@ -298,6 +281,8 @@ private:
 WindowButtons::WindowButtons()
   : HLayout("", NUX_TRACKER_LOCATION)
   , opacity_(1.0f)
+  , focused_(true)
+  , window_xid_(0)
 {
   WindowButton* but;
 
@@ -318,68 +303,152 @@ WindowButtons::WindowButtons()
 
   but = new WindowButton(panel::WindowButtonType::CLOSE);
   AddView(but, 0, nux::eCenter, nux::eFix);
-  but->state_change.connect(sigc::mem_fun(this, &WindowButtons::OnCloseClicked));
+  but->click.connect(sigc::mem_fun(this, &WindowButtons::OnCloseClicked));
   but->mouse_enter.connect(lambda_enter);
   but->mouse_leave.connect(lambda_leave);
   but->mouse_move.connect(lambda_moved);
 
   but = new WindowButton(panel::WindowButtonType::MINIMIZE);
   AddView(but, 0, nux::eCenter, nux::eFix);
-  but->state_change.connect(sigc::mem_fun(this, &WindowButtons::OnMinimizeClicked));
+  but->click.connect(sigc::mem_fun(this, &WindowButtons::OnMinimizeClicked));
   but->mouse_enter.connect(lambda_enter);
   but->mouse_leave.connect(lambda_leave);
   but->mouse_move.connect(lambda_moved);
 
   but = new WindowButton(panel::WindowButtonType::UNMAXIMIZE);
   AddView(but, 0, nux::eCenter, nux::eFix);
-  but->state_change.connect(sigc::mem_fun(this, &WindowButtons::OnRestoreClicked));
+  but->click.connect(sigc::mem_fun(this, &WindowButtons::OnRestoreClicked));
   but->mouse_enter.connect(lambda_enter);
   but->mouse_leave.connect(lambda_leave);
   but->mouse_move.connect(lambda_moved);
 
   SetContentDistribution(nux::eStackLeft);
+
+  _ubus_manager.RegisterInterest(UBUS_OVERLAY_SHOWN, sigc::mem_fun(this, &WindowButtons::OnOverlayShown));
+  _ubus_manager.RegisterInterest(UBUS_OVERLAY_HIDDEN, sigc::mem_fun(this, &WindowButtons::OnOverlayHidden));
+  dash::Settings::Instance().changed.connect(sigc::mem_fun(this, &WindowButtons::OnDashSettingsUpdated));
 }
 
 
-WindowButtons::~WindowButtons()
+void WindowButtons::OnCloseClicked(nux::Button *button)
 {
-}
+  auto win_button = dynamic_cast<WindowButton*>(button);
 
-void
-WindowButtons::OnCloseClicked(nux::View* view)
-{
+  if (!win_button || !win_button->IsEnabled())
+    return;
+
   close_clicked.emit();
 }
 
-void
-WindowButtons::OnMinimizeClicked(nux::View* view)
+void WindowButtons::OnMinimizeClicked(nux::Button *button)
 {
+  auto win_button = dynamic_cast<WindowButton*>(button);
+
+  if (!win_button || !win_button->IsEnabled())
+    return;
+
   minimize_clicked.emit();
 }
 
-void
-WindowButtons::OnRestoreClicked(nux::View* view)
+void WindowButtons::OnRestoreClicked(nux::Button *button)
 {
+  auto win_button = dynamic_cast<WindowButton*>(button);
+
+  if (!win_button || !win_button->IsEnabled())
+    return;
+
   restore_clicked.emit();
 }
 
-nux::Area*
-WindowButtons::FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type)
+void WindowButtons::OnOverlayShown(GVariant* data)
+{
+  unity::glib::String overlay_identity;
+  gboolean can_maximise = FALSE;
+  gint32 overlay_monitor = 0;
+  g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING, 
+                &overlay_identity, &can_maximise, &overlay_monitor);
+
+  for (auto area : GetChildren())
+  {
+    auto button = dynamic_cast<WindowButton*>(area);
+
+    if (button)
+    {
+      if (button->GetType() == panel::WindowButtonType::MAXIMIZE ||
+          button->GetType() == panel::WindowButtonType::UNMAXIMIZE)
+      {
+        panel::WindowButtonType new_type = panel::WindowButtonType::UNMAXIMIZE;
+
+        if (dash::Settings::Instance().GetFormFactor() == dash::FormFactor::DESKTOP)
+          new_type = panel::WindowButtonType::MAXIMIZE;
+
+        button->ChangeType(new_type);
+        button->SetEnabled((can_maximise) ? true : false);
+      }
+
+      button->SetOverlayOpen(true);
+    }
+  }
+}
+
+void WindowButtons::OnOverlayHidden(GVariant* data)
+{
+  for (auto area : GetChildren())
+  {
+    auto button = dynamic_cast<WindowButton*>(area);
+
+    if (button)
+    {
+      if (button->GetType() == panel::WindowButtonType::MAXIMIZE ||
+          button->GetType() == panel::WindowButtonType::UNMAXIMIZE)
+      {
+        button->ChangeType(panel::WindowButtonType::UNMAXIMIZE);
+        button->SetEnabled(true);
+      }
+
+      button->SetOverlayOpen(false);
+    }
+  }
+}
+
+void WindowButtons::OnDashSettingsUpdated()
+{
+  for (auto area : GetChildren())
+  {
+    auto button = dynamic_cast<WindowButton*>(area);
+
+    if (button)
+    {
+      if (button->IsOverlayOpen() &&
+          (button->GetType() == panel::WindowButtonType::UNMAXIMIZE ||
+           button->GetType() == panel::WindowButtonType::MAXIMIZE))
+      {
+        panel::WindowButtonType new_type = panel::WindowButtonType::UNMAXIMIZE;
+
+        if (dash::Settings::Instance().GetFormFactor() == dash::FormFactor::DESKTOP)
+          new_type = panel::WindowButtonType::MAXIMIZE;
+
+        button->ChangeType(new_type);
+      }
+    }
+  }
+}
+
+nux::Area* WindowButtons::FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type)
 {
   return nux::HLayout::FindAreaUnderMouse(mouse_position, event_type);
 }
 
-void
-WindowButtons::SetOpacity(double opacity)
+void WindowButtons::SetOpacity(double opacity)
 {
   opacity = CLAMP(opacity, 0.0f, 1.0f);
 
   for (auto area : GetChildren())
   {
-    auto but = dynamic_cast<WindowButton*>(area);
+    auto button = dynamic_cast<WindowButton*>(area);
 
-    if (but)
-      but->SetOpacity(opacity);
+    if (button)
+      button->SetOpacity(opacity);
   }
 
   if (opacity_ != opacity)
@@ -389,44 +458,52 @@ WindowButtons::SetOpacity(double opacity)
   }
 }
 
-double
-WindowButtons::GetOpacity()
+double WindowButtons::GetOpacity()
 {
   return opacity_;
 }
 
-void
-WindowButtons::SetFocusedState(bool focused)
+void WindowButtons::SetFocusedState(bool focused)
 {
   for (auto area : GetChildren())
   {
-    auto but = dynamic_cast<WindowButton*>(area);
+    auto button = dynamic_cast<WindowButton*>(area);
 
-    if (but)
-      but->SetFocusedState(focused);
+    if (button)
+      button->SetFocusedState(focused);
   }
 
   if (focused_ != focused)
   {
     focused_ = focused;
-    NeedRedraw();
+    QueueDraw();
   }
 }
 
-bool
-WindowButtons::GetFocusedState()
+bool WindowButtons::GetFocusedState()
 {
   return focused_;
 }
 
-std::string
-WindowButtons::GetName() const
+void WindowButtons::SetControlledWindow(Window xid)
+{
+  window_xid_ = xid;
+}
+
+Window WindowButtons::GetControlledWindow()
+{
+  return window_xid_;
+}
+
+std::string WindowButtons::GetName() const
 {
   return "window-buttons";
 }
 
-void
-WindowButtons::AddProperties(GVariantBuilder* builder)
+void WindowButtons::AddProperties(GVariantBuilder* builder)
 {
-  unity::variant::BuilderWrapper(builder).add(GetGeometry());
+  unity::variant::BuilderWrapper(builder).add(GetGeometry())
+                                         .add("opacity", opacity_)
+                                         .add("focused", focused_)
+                                         .add("window", window_xid_);
 }
