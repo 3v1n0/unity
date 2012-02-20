@@ -46,6 +46,30 @@ def get_active_input_engines():
     bus = get_ibus_bus()
     return [e.name for e in bus.list_active_engines()]
 
+def set_active_engines(engine_list):
+    """Installs the engines in 'engine_list' into the list of active iBus engines.
+
+    The specified engines must appear in the return list from
+    get_available_input_engines(). This function removes all other engines.
+
+    This function returns the list of engines installed before this function was
+    called. The caller should pass this list to set_active_engines to restore
+    ibus to it's old state once the test has finished.
+    """
+    if type(engine_list) is not list:
+        raise TypeError("engine_list must be a list of valid engine names.")
+    available_engines = get_available_input_engines()
+    for engine in engine_list:
+        if not isinstance(engine, basestring):
+            raise TypeError("Engines in engine_list must all be strings.")
+        if engine not in available_engines:
+            raise ValueError("engine_list contains invalid engine name: '%s'", engine)
+
+    bus = get_ibus_bus()
+    config = bus.get_config()
+    old_engines = get_active_input_engines()
+    config.set_list("general", "preload_engines", engine_list, "s")
+    return old_engines
 
 def set_global_input_engine(engine_name):
     """Set the global iBus input engine by name.

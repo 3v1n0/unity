@@ -8,7 +8,7 @@
 
 "Tests to ensure unity is compatible with ibus input method."
 
-from autopilot.emulators.ibus import set_global_input_engine
+from autopilot.emulators.ibus import set_active_engines
 from autopilot.emulators.unity.dash import Dash
 from autopilot.emulators.X11 import Keyboard
 from autopilot.tests import AutopilotTestCase
@@ -18,13 +18,14 @@ class IBusTests(AutopilotTestCase):
 
     def setUp(self):
         super(IBusTests, self).setUp()
-        set_global_input_engine("pinyin")
+        self.old_engines = set_active_engines(["pinyin"])
         self.kb = Keyboard()
+        self.kb.press_and_release('Ctrl+Space')
         self.dash = Dash()
 
     def tearDown(self):
         self.kb.press_and_release('Ctrl+Space')
-        set_global_input_engine(None)
+        set_active_engines(self.old_engines)
         super(IBusTests, self).tearDown()
 
     def test_simple_dash(self):
