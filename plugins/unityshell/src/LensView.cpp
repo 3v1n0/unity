@@ -461,7 +461,11 @@ std::string LensView::GetName() const
 }
 
 void LensView::AddProperties(GVariantBuilder* builder)
-{}
+{
+  unity::variant::BuilderWrapper(builder)
+    .add("lens-id", lens_->id)
+    .add("lens-name", lens_->name);
+}
 
 
 }
