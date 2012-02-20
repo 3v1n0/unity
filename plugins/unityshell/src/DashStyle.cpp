@@ -110,8 +110,6 @@ public:
 
   void SetDefaultValues();
 
-  void Star(cairo_t* cr, double size);
-
   void GetTextExtents(int& width,
                       int& height,
                       int  maxWidth,
@@ -215,6 +213,9 @@ public:
   LazyLoadTexture group_unexpand_texture_;
   LazyLoadTexture group_expand_texture_;
 
+  LazyLoadTexture star_deselected_texture_;
+  LazyLoadTexture star_selected_texture_;
+  LazyLoadTexture star_highlight_texture_;
 };
 
 Style::Impl::Impl(Style* owner)
@@ -247,6 +248,9 @@ Style::Impl::Impl(Style* owner)
   , search_spin_glow_texture_("/search_spin_glow.png")
   , group_unexpand_texture_("/dash_group_unexpand.png")
   , group_expand_texture_("/dash_group_expand.png")
+  , star_deselected_texture_("/star_deselected.png")
+  , star_selected_texture_("/star_selected.png")
+  , star_highlight_texture_("/star_highlight.png")
 {
   signal_manager_.Add(new glib::Signal<void, GtkSettings*, GParamSpec*>
                       (gtk_settings_get_default(),
@@ -667,43 +671,6 @@ void Style::Impl::Blur(cairo_t* cr, int size)
 
   // inform cairo we altered the surfaces contents
   cairo_surface_mark_dirty(surface);
-}
-
-void Style::Impl::Star(cairo_t* cr, double size)
-{
-  double outter[5][2] = {{0.0, 0.0},
-                         {0.0, 0.0},
-                         {0.0, 0.0},
-                         {0.0, 0.0},
-                         {0.0, 0.0}};
-  double inner[5][2]  = {{0.0, 0.0},
-                         {0.0, 0.0},
-                         {0.0, 0.0},
-                         {0.0, 0.0},
-                         {0.0, 0.0}};
-  double angle[5]     = {-90.0, -18.0, 54.0, 126.0, 198.0};
-  double outterRadius = size;
-  double innerRadius  = size/1.75;
-
-  for (int i = 0; i < 5; i++)
-  {
-    outter[i][0] = outterRadius * cos(angle[i] * M_PI / 180.0);
-    outter[i][1] = outterRadius * sin(angle[i] * M_PI / 180.0);
-    inner[i][0]  = innerRadius * cos((angle[i] + 36.0) * M_PI / 180.0);
-    inner[i][1]  = innerRadius * sin((angle[i] + 36.0) * M_PI / 180.0);
-  }
-
-  cairo_move_to(cr, outter[0][0], outter[0][1]);
-  cairo_line_to(cr, inner[0][0], inner[0][1]);
-  cairo_line_to(cr, outter[1][0], outter[1][1]);
-  cairo_line_to(cr, inner[1][0], inner[1][1]);
-  cairo_line_to(cr, outter[2][0], outter[2][1]);
-  cairo_line_to(cr, inner[2][0], inner[2][1]);
-  cairo_line_to(cr, outter[3][0], outter[3][1]);
-  cairo_line_to(cr, inner[3][0], inner[3][1]);
-  cairo_line_to(cr, outter[4][0], outter[4][1]);
-  cairo_line_to(cr, inner[4][0], inner[4][1]);
-  cairo_close_path(cr);
 }
 
 void Style::Impl::SetDefaultValues()
@@ -1786,90 +1753,6 @@ bool Style::ButtonFocusOverlay(cairo_t* cr)
   return true;
 }
 
-bool Style::StarEmpty(cairo_t* cr, nux::ButtonVisualState state)
-{
-  // sanity checks
-  if (cairo_status(cr) != CAIRO_STATUS_SUCCESS)
-    return false;
-
-  if (cairo_surface_get_type(cairo_get_target(cr)) != CAIRO_SURFACE_TYPE_IMAGE)
-    return false;
-
-  double w = cairo_image_surface_get_width(cairo_get_target(cr));
-  double h = cairo_image_surface_get_height(cairo_get_target(cr));
-  double radius = .85 * h / 2.0;
-
-  cairo_save(cr);
-  cairo_translate(cr, w / 2.0, h / 2.0);
-  pimpl->Star(cr, radius);
-  cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 0.2);
-  cairo_fill_preserve(cr);
-  cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 0.5);
-	cairo_set_line_width(cr, 0.75);
-  cairo_stroke(cr);
-  cairo_restore(cr);
-
-  return true;
-}
-
-bool Style::StarHalf(cairo_t* cr, nux::ButtonVisualState state)
-{
-  // sanity checks
-  if (cairo_status(cr) != CAIRO_STATUS_SUCCESS)
-    return false;
-
-  if (cairo_surface_get_type(cairo_get_target(cr)) != CAIRO_SURFACE_TYPE_IMAGE)
-    return false;
-
-  double w = cairo_image_surface_get_width(cairo_get_target(cr));
-  double h = cairo_image_surface_get_height(cairo_get_target(cr));
-  double radius = .85 * h / 2.0;
-
-  cairo_pattern_t* pattern = NULL;
-  pattern = cairo_pattern_create_linear(0.0, 0.0, w, 0.0);
-  cairo_pattern_add_color_stop_rgba(pattern, 0.0,        1.0, 1.0, 1.0, 1.0);
-  cairo_pattern_add_color_stop_rgba(pattern,  .5,        1.0, 1.0, 1.0, 1.0);
-  cairo_pattern_add_color_stop_rgba(pattern,  .5 + 0.01, 1.0, 1.0, 1.0, 0.2);
-  cairo_pattern_add_color_stop_rgba(pattern, 1.0,        1.0, 1.0, 1.0, 0.2);
-  cairo_set_source(cr, pattern);
-
-  cairo_save(cr);
-  cairo_translate(cr, w / 2.0, h / 2.0);
-  pimpl->Star(cr, radius);
-  cairo_fill_preserve(cr);
-  cairo_pattern_destroy(pattern);
-  cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 0.5);
-	cairo_set_line_width(cr, 0.75);
-  cairo_stroke(cr);
-  cairo_restore(cr);
-
-  return true;
-}
-
-bool Style::StarFull(cairo_t* cr, nux::ButtonVisualState state)
-{
-  // sanity checks
-  if (cairo_status(cr) != CAIRO_STATUS_SUCCESS)
-    return false;
-
-  if (cairo_surface_get_type(cairo_get_target(cr)) != CAIRO_SURFACE_TYPE_IMAGE)
-    return false;
-
-  double w = cairo_image_surface_get_width(cairo_get_target(cr));
-  double h = cairo_image_surface_get_height(cairo_get_target(cr));
-  double radius = .85 * h / 2.0;
-
-  cairo_save(cr);
-  cairo_translate(cr, w / 2.0, h / 2.0);
-  pimpl->Star(cr, radius);
-  cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 1.0);
-  cairo_fill_preserve(cr);
-  cairo_stroke(cr); // to make sure it's as "large" as the empty and half ones
-  cairo_restore(cr);
-
-  return true;
-}
-
 bool Style::MultiRangeSegment(cairo_t*    cr,
                               nux::ButtonVisualState  state,
                               std::string const& label,
@@ -2254,6 +2137,21 @@ nux::BaseTexture* Style::GetGroupUnexpandIcon()
 nux::BaseTexture* Style::GetGroupExpandIcon()
 {
   return pimpl->group_expand_texture_.texture();
+}
+
+nux::BaseTexture* Style::GetStarDeselectedIcon()
+{
+  return pimpl->star_deselected_texture_.texture();
+}
+
+nux::BaseTexture* Style::GetStarSelectedIcon()
+{
+  return pimpl->star_selected_texture_.texture();
+}
+
+nux::BaseTexture* Style::GetStarHighlightIcon()
+{
+  return pimpl->star_highlight_texture_.texture();
 }
 
 nux::BaseTexture* Style::GetDashShine()
