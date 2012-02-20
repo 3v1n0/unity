@@ -38,6 +38,7 @@ set (CORE_HEADERS
      RadioOptionFilter.h
      RatingsFilter.h
      Result.h
+     ResultIterator.h
      Results.h
      Variant.h
     )
@@ -68,6 +69,7 @@ set (CORE_SOURCES
      RatingsFilter.cpp
      RadioOptionFilter.cpp
      Result.cpp
+     ResultIterator.cpp
      Results.cpp
      Variant.cpp
     )

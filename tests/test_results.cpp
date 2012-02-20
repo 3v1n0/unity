@@ -3,6 +3,7 @@
 
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/Results.h>
+#include <UnityCore/ResultIterator.h>
 
 #include "test_utils.h"
 
@@ -41,20 +42,25 @@ TEST(TestResults, TestRowsValid)
   model.swarm_name = swarm_name;
 
   WaitForSynchronize(model);
-
-  for (unsigned int i = 0; i < n_rows; i++)
+ 
+  ResultIterator iter(model.model);
+  unsigned int i = 0;
+  for (ResultIterator iter(model.model); iter.IsLast() == false; ++iter)
   {
-    Result adaptor = model.RowAtIndex(i);
+    if (i > n_rows)
+      break;
 
+    Result adaptor = *iter;
     unity::glib::String tmp(g_strdup_printf("Result%d", i));
     string value = tmp.Str();
-    EXPECT_EQ(adaptor.uri, value);
-    EXPECT_EQ(adaptor.icon_hint, value);
-    EXPECT_EQ(adaptor.category_index, i);
-    EXPECT_EQ(adaptor.mimetype, value);
-    EXPECT_EQ(adaptor.name, value);
-    EXPECT_EQ(adaptor.comment, value);
-    EXPECT_EQ(adaptor.dnd_uri, value);
+    EXPECT_EQ(adaptor.uri(), value);
+    EXPECT_EQ(adaptor.icon_hint(), value);
+    EXPECT_EQ(adaptor.category_index(), i);
+    EXPECT_EQ(adaptor.mimetype(), value);
+    EXPECT_EQ(adaptor.name(), value);
+    EXPECT_EQ(adaptor.comment(), value);
+    EXPECT_EQ(adaptor.dnd_uri(), value);
+    i++;
   }
 }
 
