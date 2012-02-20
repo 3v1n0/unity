@@ -8,8 +8,8 @@ from os.path import splitext
 import dbus
 
 try:
-    from autopilot.emulators.unity import Unity
-except ImportError:
+    from autopilot.emulators.unity import get_state_by_path
+except ImportError, e:
     print "Error: could not import the autopilot python module."
     print "Make sure the autopilot module is in your $PYTHONPATH."
     exit(1)
@@ -75,8 +75,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    u = Unity()
-    introspection_tree = u.get_state()
+    introspection_tree = get_state_by_path('/')
     graph = pydot.Dot()
     graph.set_simplify(False)
     graph.set_node_defaults(shape='Mrecord')
