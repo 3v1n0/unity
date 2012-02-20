@@ -239,6 +239,11 @@ PlacesGroup::SetIcon(const char* path_to_emblem)
 void
 PlacesGroup::SetChildView(nux::View* view)
 {
+  debug::Introspectable *i = dynamic_cast<debug::Introspectable*>(view);
+  if (i)
+  {
+    AddChild(i);
+  }
   _child_view = view;
   _group_layout->AddView(_child_view, 1);
   QueueDraw();
@@ -492,9 +497,9 @@ PlacesGroup::SetDrawSeparator(bool draw_it)
 
 bool PlacesGroup::HeaderHasKeyFocus() const
 {
-  return (_icon && _icon->HasKeyFocus()) || 
+  return (_icon && _icon->HasKeyFocus()) ||
          (_name && _name->HasKeyFocus()) ||
-         (_expand_label && _expand_label->HasKeyFocus()) || 
+         (_expand_label && _expand_label->HasKeyFocus()) ||
          (_expand_icon && _expand_icon->HasKeyFocus());
 }
 

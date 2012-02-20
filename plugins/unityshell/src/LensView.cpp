@@ -127,7 +127,7 @@ LensView::LensView(Lens::Ptr lens)
         auto expand_label = category->GetExpandLabel();
         auto child = category->GetChildView();
 
-        if ((child && child->HasKeyFocus()) || 
+        if ((child && child->HasKeyFocus()) ||
             (expand_label && expand_label->HasKeyFocus()))
         {
 
