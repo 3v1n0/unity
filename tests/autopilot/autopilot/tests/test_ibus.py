@@ -40,50 +40,29 @@ class IBusTests(AutopilotTestCase):
 
     def test_photo(self):
         """Enter 照片 (Photo) to dash and check the search result"""
-        self.dash.ensure_hidden()
-        self.assertFalse(self.dash.get_is_visible())
-
-        self.dash.toggle_reveal()
+        self.dash.ensure_visible()
         self.kb.type("zhaopian ")
         self.assertEqual(self.dash.get_search_string(), u'照片')
-
-        self.dash.toggle_reveal()
-        self.assertFalse(self.dash.get_is_visible())
-
+        self.dash.ensure_hidden()
 
     def test_internet(self):
         """Enter 互联网 (internet) to dash and check the search result"""
-        self.dash.ensure_hidden()
-        self.assertFalse(self.dash.get_is_visible())
-
-        self.dash.toggle_reveal()
+        self.dash.ensure_visible()
         self.kb.type("hulianwang ")
         self.assertEqual(self.dash.get_search_string(), u'互联网')
-
-        self.dash.toggle_reveal()
-        self.assertFalse(self.dash.get_is_visible())
+        self.dash.ensure_hidden()
 
     def test_disk(self):
         """Enter 磁盘 (disk) to dash and check the search result"""
-        self.dash.ensure_hidden()
-        self.assertFalse(self.dash.get_is_visible())
-
-        self.dash.toggle_reveal()
+        self.dash.ensure_visible()
         self.kb.type("cipan ")
         self.assertEqual(self.dash.get_search_string(), u'磁盘')
-
-        self.dash.toggle_reveal()
-        self.assertFalse(self.dash.get_is_visible())
+        self.dash.ensure_hidden()
 
     def test_disk_management(self):
         """Enter 磁盘管理 (disk management) to dash and check the search result"""
-        self.dash.ensure_hidden()
-        self.assertFalse(self.dash.get_is_visible())
-
-        self.dash.toggle_reveal()
+        self.dash.ensure_visible()
         self.kb.type(u"cipan guanli ")
         self.assertEqual(self.dash.get_search_string(), u'磁盘管理')
-
-        self.dash.toggle_reveal()
-        self.assertFalse(self.dash.get_is_visible())
+        self.dash.ensure_hidden()
 
