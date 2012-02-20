@@ -27,15 +27,19 @@
 #include "DashStyle.h"
 #include "FilterRatingsButton.h"
 
+namespace
+{
+const int star_size = 28;
+const int star_gap  = 10;
+}
+
 namespace unity
 {
 namespace dash
 {
-
 FilterRatingsButton::FilterRatingsButton(NUX_FILE_LINE_DECL)
   : nux::ToggleButton(NUX_FILE_LINE_PARAM)
 {
-  InitTheme();
   SetAcceptKeyNavFocusOnMouseDown(false);
 
   mouse_up.connect(sigc::mem_fun(this, &FilterRatingsButton::RecvMouseUp));
@@ -58,73 +62,6 @@ std::string FilterRatingsButton::GetFilterType()
   return "FilterRatingsButton";
 }
 
-void FilterRatingsButton::InitTheme()
-{
-  if (!active_empty_)
-  {
-    nux::Geometry geometry(GetGeometry());
-    geometry.width /= 5;
-
-    active_empty_.reset(new nux::CairoWrapper(geometry, sigc::bind(sigc::mem_fun(this, &FilterRatingsButton::RedrawTheme), 0, nux::ButtonVisualState::VISUAL_STATE_PRESSED)));
-    normal_empty_.reset(new nux::CairoWrapper(geometry, sigc::bind(sigc::mem_fun(this, &FilterRatingsButton::RedrawTheme), 0, nux::ButtonVisualState::VISUAL_STATE_NORMAL)));
-    prelight_empty_.reset(new nux::CairoWrapper(geometry, sigc::bind(sigc::mem_fun(this, &FilterRatingsButton::RedrawTheme), 0, nux::ButtonVisualState::VISUAL_STATE_PRELIGHT)));
-
-    active_half_.reset(new nux::CairoWrapper(geometry, sigc::bind(sigc::mem_fun(this, &FilterRatingsButton::RedrawTheme), 1, nux::ButtonVisualState::VISUAL_STATE_PRESSED)));
-    normal_half_.reset(new nux::CairoWrapper(geometry, sigc::bind(sigc::mem_fun(this, &FilterRatingsButton::RedrawTheme), 1, nux::ButtonVisualState::VISUAL_STATE_NORMAL)));
-    prelight_half_.reset(new nux::CairoWrapper(geometry, sigc::bind(sigc::mem_fun(this, &FilterRatingsButton::RedrawTheme), 1, nux::ButtonVisualState::VISUAL_STATE_PRELIGHT)));
-
-    active_full_.reset(new nux::CairoWrapper(geometry, sigc::bind(sigc::mem_fun(this, &FilterRatingsButton::RedrawTheme), 2, nux::ButtonVisualState::VISUAL_STATE_PRESSED)));
-    normal_full_.reset(new nux::CairoWrapper(geometry, sigc::bind(sigc::mem_fun(this, &FilterRatingsButton::RedrawTheme), 2, nux::ButtonVisualState::VISUAL_STATE_NORMAL)));
-    prelight_full_.reset(new nux::CairoWrapper(geometry, sigc::bind(sigc::mem_fun(this, &FilterRatingsButton::RedrawTheme), 2, nux::ButtonVisualState::VISUAL_STATE_PRELIGHT)));
-  }
-}
-
-void FilterRatingsButton::RedrawTheme(nux::Geometry const& geom, cairo_t* cr, int type, nux::ButtonVisualState faked_state)
-{
-  Style& dash_style = Style::Instance();
-  if (type == 0)
-  {
-    // empty
-    dash_style.StarEmpty(cr, faked_state);
-  }
-  else if (type == 1)
-  {
-    // half
-    dash_style.StarHalf(cr, faked_state);
-  }
-  else
-  {
-    // full
-    dash_style.StarFull(cr, faked_state);
-  }
-}
-
-long FilterRatingsButton::ComputeContentSize()
-{
-  long ret = nux::Button::ComputeContentSize();
-  nux::Geometry geo(GetGeometry());
-
-  if (cached_geometry_ != geo)
-  {
-    geo.width = 27;
-    active_empty_->Invalidate(geo);
-    normal_empty_->Invalidate(geo);
-    prelight_empty_->Invalidate(geo);
-
-    active_half_->Invalidate(geo);
-    normal_half_->Invalidate(geo);
-    prelight_half_->Invalidate(geo);
-
-    active_full_->Invalidate(geo);
-    normal_full_->Invalidate(geo);
-    prelight_full_->Invalidate(geo);
-
-    cached_geometry_ = geo;
-  }
-
-  return ret;
-}
-
 void FilterRatingsButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
   int rating = 0;
@@ -138,12 +75,11 @@ void FilterRatingsButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   //    int total_half_stars = rating % 2;
   //    int total_full_stars = rating / 2;
   int total_full_stars = rating;
-  int total_half_stars = 0;
 
   nux::Geometry const& geo = GetGeometry();
   nux::Geometry geo_star(geo);
-  geo_star.width = 27;
-
+  geo_star.width = star_size;
+	
   gPainter.PaintBackground(GfxContext, geo);
   // set up our texture mode
   nux::TexCoordXForm texxform;
@@ -166,33 +102,25 @@ void FilterRatingsButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   for (int index = 0; index < 5; index++)
   {
-    nux::BaseTexture* texture = normal_empty_->GetTexture();
+	Style& style = Style::Instance();
+    nux::BaseTexture* texture = style.GetStarSelectedIcon();	  
     if (index < total_full_stars)
     {
       if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_NORMAL)
-        texture = normal_full_->GetTexture();
+        texture = style.GetStarSelectedIcon();
       else if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_PRELIGHT)
-        texture = prelight_full_->GetTexture();
+        texture = style.GetStarSelectedIcon();
       else if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_PRESSED)
-        texture = active_full_->GetTexture();
-    }
-    else if (index < total_full_stars + total_half_stars)
-    {
-      if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_NORMAL)
-        texture = normal_half_->GetTexture();
-      else if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_PRELIGHT)
-        texture = prelight_half_->GetTexture();
-      else if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_PRESSED)
-        texture = active_half_->GetTexture();
+        texture = style.GetStarSelectedIcon();
     }
     else
     {
       if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_NORMAL)
-        texture = normal_empty_->GetTexture();
+        texture = style.GetStarDeselectedIcon();
       else if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_PRELIGHT)
-        texture = prelight_empty_->GetTexture();
+        texture = style.GetStarDeselectedIcon();
       else if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_PRESSED)
-        texture = active_empty_->GetTexture();
+        texture = style.GetStarDeselectedIcon();
     }
 
     GfxContext.QRP_1Tex(geo_star.x,
@@ -203,7 +131,23 @@ void FilterRatingsButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
                         texxform,
                         nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
 
-    geo_star.x += geo_star.width + 10;
+    // FIXME: A small hint for the keyboard-navigation highlight... you can use
+	// the method...
+	//
+    //   style.GetStarHighlightIcon()
+	//
+	// ... to get the correct texture from the style/theme and use an opacity of
+	// .5 for blending it over the regular star-textures.
+	//
+    //GfxContext.QRP_1Tex(geo_star.x,
+    //                    geo_star.y,
+    //                    geo_star.width,
+    //                    geo_star.height,
+    //                    style.GetStarHighlightIcon()->GetDeviceTexture(),
+    //                    texxform,
+    //                    nux::Color(1.0f, 1.0f, 1.0f, 0.5f));
+
+    geo_star.x += geo_star.width + star_gap;
 
   }
 
