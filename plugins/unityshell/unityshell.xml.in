@@ -36,7 +36,6 @@
                 <plugin>compiztoolbox</plugin>
                 <plugin>scale</plugin>
                 <plugin>expo</plugin>
-                <feature>largedesktop</feature>
             </requirement>
         </deps>
         <options>
