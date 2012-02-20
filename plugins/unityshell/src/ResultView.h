@@ -30,6 +30,7 @@
 #include <UnityCore/GLibSignal.h>
 #include <UnityCore/Results.h>
 
+#include "Introspectable.h"
 #include "PreviewBase.h"
 #include "ResultRenderer.h"
 
@@ -37,7 +38,7 @@ namespace unity
 {
 namespace dash
 {
-class ResultView : public nux::View
+class ResultView : public nux::View, public unity::debug::Introspectable
 {
 public:
   NUX_DECLARE_OBJECT_TYPE(ResultView, nux::View);
@@ -59,6 +60,9 @@ public:
   nux::Property<bool> expanded;
   sigc::signal<void, std::string const&> UriActivated;
   sigc::signal<void, std::string const&> ChangePreview; // request a new preview, string is the uri
+
+  std::string GetName() const;
+  void AddProperties(GVariantBuilder* builder);
 
 protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);

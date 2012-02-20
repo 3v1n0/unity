@@ -221,5 +221,16 @@ void ResultView::DrawContent(nux::GraphicsEngine& GfxContent, bool force_draw)
   GfxContent.PopClippingRectangle();
 }
 
+std::string ResultView::GetName() const
+{
+  return "ResultView";
+}
+
+void ResultView::AddProperties(GVariantBuilder* builder)
+{
+  unity::variant::BuilderWrapper(builder)
+    .add("expanded", expanded);
+}
+
 }
 }
