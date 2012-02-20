@@ -157,6 +157,7 @@ PanelMenuView::PanelMenuView()
 
     _title_texture = nullptr;
     Refresh();
+    FullRedraw();
   });
 
   mouse_enter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
@@ -1697,50 +1698,45 @@ void PanelMenuView::OnMaximizedGrabMove(int x, int y)
    *
    * This is a workaround to avoid that the grid plugin would be fired
    * showing the window shape preview effect. See bug #838923 */
-  if (maximized != 0 && panel && !panel->GetAbsoluteGeometry().IsPointInside(x, y))
+  if (maximized != 0 && panel)
   {
-    _titlebar_grab_area->SetGrabbed(false);
+    nux::Geometry const& panel_geo = panel->GetAbsoluteGeometry();
 
-    auto wm = WindowManager::Default();
-    nux::Geometry const& restored_geo = wm->GetWindowSavedGeometry(maximized);
-    nux::Geometry const& workarea_geo = wm->GetWorkAreaGeometry(maximized);
-
-    /* By default try to restore the window horizontally-centered respect to the
-     * pointer position, if it doesn't fit on that area try to keep it into the
-     * current workarea as much as possible, but giving priority to the left border
-     * that shouldn't be never put out of the workarea */
-    int restore_x_adjustment = restored_geo.width / 2;
-
-    if (_is_integrated)
+    if (!panel_geo.IsPointInside(x, y))
     {
-      /* When using integrated menus, we use an adjustment proportional to the grab area size */
-      int grab_area_width = _titlebar_grab_area->GetAbsoluteWidth() + _titlebar_grab_area->GetAbsoluteX();
-      restore_x_adjustment = restored_geo.width * x / grab_area_width;
+      auto wm = WindowManager::Default();
+      nux::Geometry const& restored_geo = wm->GetWindowSavedGeometry(maximized);
+      nux::Geometry const& workarea_geo = wm->GetWorkAreaGeometry(maximized);
+
+      /* By default try to restore the window horizontally-centered respect to the
+       * pointer position, if it doesn't fit on that area try to keep it into the
+       * current workarea as much as possible, but giving priority to the left border
+       * that shouldn't be never put out of the workarea */
+      int restore_x = x - (restored_geo.width * x / panel_geo.width);
+      int restore_y = y;
+
+      if (restore_x + restored_geo.width > workarea_geo.width)
+      {
+        restore_x = workarea_geo.x + workarea_geo.width - restored_geo.width;
+      }
+
+      if (restore_x < workarea_geo.x)
+      {
+        restore_x = workarea_geo.x;
+      }
+
+      wm->Activate(maximized);
+      wm->RestoreAt(maximized, restore_x, restore_y);
+
+      _is_inside = true;
+      _is_grabbed = true;
+      Refresh();
+      FullRedraw();
+
+      /* Ungrab the pointer and start the X move, to make the decorator handle it */
+      _titlebar_grab_area->SetGrabbed(false);
+      wm->StartMove(maximized, x, y);
     }
-
-    int restore_x = x - restore_x_adjustment;
-    int restore_y = y;
-
-    if (restore_x + restored_geo.width > workarea_geo.width)
-    {
-      restore_x = workarea_geo.x + workarea_geo.width - restored_geo.width;
-    }
-
-    if (restore_x < workarea_geo.x)
-    {
-      restore_x = workarea_geo.x;
-    }
-
-    wm->Activate(maximized);
-    wm->RestoreAt(maximized, restore_x, restore_y);
-
-    _is_inside = true;
-    _is_grabbed = true;
-    Refresh();
-    FullRedraw();
-
-    /* Ungrab the pointer and start the X move, to make the decorator handle it */
-    wm->StartMove(maximized, x, y);
   }
 }
 
