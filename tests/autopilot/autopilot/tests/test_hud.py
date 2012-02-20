@@ -11,7 +11,6 @@ from time import sleep
 
 from autopilot.emulators.bamf import Bamf
 from autopilot.emulators.unity.hud import HudController
-from autopilot.emulators.unity.icons import BamfLauncherIcon
 from autopilot.emulators.unity.launcher import Launcher
 from autopilot.emulators.X11 import Keyboard
 from autopilot.tests import AutopilotTestCase
