@@ -175,6 +175,16 @@ class Launcher(object):
                 icons.append(icon)
         return icons
 
+    def get_icon_by_tooltip_text(self, tooltip_text):
+        """Get a launcher icon given it's tooltip text.
+
+        Returns None if there is no icon with the specified text.
+        """
+        for icon in self.get_launcher_icons():
+            if icon.tooltip_text == tooltip_text:
+                return icon
+        return None
+
     def num_launcher_icons(self):
         """Get the number of icons in the launcher model."""
         return len(self.get_launcher_icons())
