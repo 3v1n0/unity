@@ -180,7 +180,7 @@ class DashTests(AutopilotTestCase):
           self.assertEqual(category, None)
 
     def test_cltr_tab(self):
-          """ This test makes sure that ctlr + tab works well."""
+          """ This test makes sure that Ctlr + Tab works well."""
           self.dash.ensure_hidden()
           self.dash.toggle_reveal()
 
@@ -200,7 +200,17 @@ class DashTests(AutopilotTestCase):
 
           self.assertEqual(self.dash.get_current_lens(), u'home.lens')
 
+    def test_tab(self):
+          """ This test makes sure that Tab works well."""
+          self.dash.ensure_hidden()
+          self.dash.reveal_application_lens()
 
+          kb = Keyboard()
+
+          for i in range(self.dash.get_num_categories(u'applications.lens')):
+              kb.press_and_release('Tab')
+              category = self.dash.get_focused_category()
+              self.assertIsNot(category, None)
 
 
 

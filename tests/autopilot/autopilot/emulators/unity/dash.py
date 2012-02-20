@@ -126,3 +126,9 @@ class Dash(object):
             return groups[0]
         else:
             return None
+
+    def get_num_categories(self, lens):
+        """Returns the number of visible categories for the given lens."""
+        groups = get_state_by_path("//LensView[id=" + lens + "]/PlacesGroup[is-visible=True]")
+
+        return len(groups)
