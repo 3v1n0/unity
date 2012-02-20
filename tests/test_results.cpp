@@ -45,21 +45,22 @@ TEST(TestResults, TestRowsValid)
  
   ResultIterator iter(model.model);
   unsigned int i = 0;
-  for (ResultIterator iter(model.model); iter.IsLast() == false; ++iter)
+  for (Result result : model)
+  //for (auto iter = model.begin(); iter != model.end(); iter++)
   {
     if (i > n_rows)
       break;
 
-    Result adaptor = *iter;
+    //Result adaptor = *iter;
     unity::glib::String tmp(g_strdup_printf("Result%d", i));
     string value = tmp.Str();
-    EXPECT_EQ(adaptor.uri(), value);
-    EXPECT_EQ(adaptor.icon_hint(), value);
-    EXPECT_EQ(adaptor.category_index(), i);
-    EXPECT_EQ(adaptor.mimetype(), value);
-    EXPECT_EQ(adaptor.name(), value);
-    EXPECT_EQ(adaptor.comment(), value);
-    EXPECT_EQ(adaptor.dnd_uri(), value);
+    EXPECT_EQ(result.uri(), value);
+    EXPECT_EQ(result.icon_hint(), value);
+    EXPECT_EQ(result.category_index(), i);
+    EXPECT_EQ(result.mimetype(), value);
+    EXPECT_EQ(result.name(), value);
+    EXPECT_EQ(result.comment(), value);
+    EXPECT_EQ(result.dnd_uri(), value);
     i++;
   }
 }

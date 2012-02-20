@@ -20,10 +20,9 @@
 #define UNITY_RESULT_ITERATOR_H
 
 #include <dee.h>
-#include <memory>
 #include <iterator>
 #include "Result.h"
-#include "Results.h"
+#include "GLibWrapper.h"
 
 namespace unity
 {
@@ -37,19 +36,29 @@ class ResultIterator : public std::iterator<std::input_iterator_tag, Result>
 {
 public:
   ResultIterator(glib::Object<DeeModel> model);
+  ResultIterator(glib::Object<DeeModel> model, DeeModelIter* iter_);
   ResultIterator(ResultIterator const& copy) : model_(copy.model_), iter_(copy.iter_), iter_result_(copy.iter_result_), cache_invalidated_(false){};
+
+  ResultIterator& operator=(ResultIterator const& rhs);
+
   //Iterator methods
   ResultIterator& operator++();
-  ResultIterator& operator+(int value);
+  ResultIterator  operator++(int);
+  ResultIterator& operator+=(int value);
+  ResultIterator  operator+(int value);
+
   ResultIterator& operator--();
-  ResultIterator& operator-(int value);
-  bool operator==(const ResultIterator& rhs);
-  bool operator!=(const ResultIterator& rhs);
+  ResultIterator  operator--(int);
+  ResultIterator& operator-=(int value);
+  ResultIterator  operator-(int value);
+
+  bool const operator==(const ResultIterator& rhs);
+  bool const operator!=(const ResultIterator& rhs);
   Result const& operator*();
 
   /* convenience methods */
-  bool IsLast();
-  bool IsFirst();
+  bool const IsLast();
+  bool const IsFirst();
 
 private:
   glib::Object<DeeModel> model_;

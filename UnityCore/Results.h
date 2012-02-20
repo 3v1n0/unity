@@ -24,6 +24,7 @@
 
 #include "Model.h"
 #include "Result.h"
+#include "ResultIterator.h"
 
 namespace unity
 {
@@ -37,6 +38,9 @@ public:
 
   Results();
   Results(ModelType model_type);
+
+  ResultIterator begin();
+  ResultIterator end();
 
   sigc::signal<void, Result const&> result_added;
   sigc::signal<void, Result const&> result_changed;

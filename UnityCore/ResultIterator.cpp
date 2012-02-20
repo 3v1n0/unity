@@ -37,6 +37,24 @@ ResultIterator::ResultIterator(glib::Object<DeeModel> model)
 {
 }
 
+ResultIterator::ResultIterator(glib::Object<DeeModel> model, DeeModelIter* iter_)
+  : model_(model, glib::AddRef())
+  , iter_(iter_)
+  , iter_result_(model_, iter_, NULL)
+  , cache_invalidated_(false)
+{
+}
+
+ResultIterator& ResultIterator::operator=(ResultIterator const& rhs)
+{
+  model_ = rhs.model_;
+  iter_ = rhs.iter_;
+  iter_result_ = Result(model_, iter_, NULL);
+  cache_invalidated_ = false;
+
+  return *this;
+}
+
 ResultIterator& ResultIterator::operator++()
 {
   iter_ = dee_model_next(model_, iter_);
@@ -44,7 +62,7 @@ ResultIterator& ResultIterator::operator++()
   return *this;
 }
 
-ResultIterator& ResultIterator::operator+(int count)
+ResultIterator& ResultIterator::operator+=(int count)
 {
   if (dee_model_is_last(model_, iter_))
     return *this;
@@ -56,6 +74,20 @@ ResultIterator& ResultIterator::operator+(int count)
   return *this;
 }
 
+ResultIterator ResultIterator::operator++(int)
+{
+  ResultIterator tmp(*this);
+  operator++();
+  return tmp;
+}
+
+ResultIterator ResultIterator::operator+(int count)
+{
+  ResultIterator tmp(*this);
+  tmp += count;
+  return tmp;
+}
+
 ResultIterator& ResultIterator::operator--()
 {
   iter_ = dee_model_prev(model_, iter_);
@@ -63,7 +95,7 @@ ResultIterator& ResultIterator::operator--()
   return *this;
 }
 
-ResultIterator& ResultIterator::operator-(int count)
+ResultIterator& ResultIterator::operator-=(int count)
 {
   if (dee_model_is_first(model_, iter_))
     return *this;
@@ -75,39 +107,43 @@ ResultIterator& ResultIterator::operator-(int count)
   return *this;
 }
 
-bool ResultIterator::operator==(const ResultIterator& rhs)
+ResultIterator ResultIterator::operator--(int)
 {
-  GVariant* lhsv = dee_model_get_value(model_, iter_, 0);
-  GVariant* rhsv = dee_model_get_value(rhs.model_, rhs.iter_, 0);
-  bool equality = g_variant_equal(lhsv, rhsv);
-  g_variant_unref(lhsv);
-  g_variant_unref(rhsv);
-  return equality;
+  ResultIterator tmp(*this);
+  operator--();
+  return tmp;
 }
 
-bool ResultIterator::operator!=(const ResultIterator& rhs)
+ResultIterator ResultIterator::operator-(int count)
 {
-  GVariant* lhsv = dee_model_get_value(model_, iter_, 0);
-  GVariant* rhsv = dee_model_get_value(rhs.model_, rhs.iter_, 0);
-  bool equality = g_variant_equal(lhsv, rhsv);
-  g_variant_unref(lhsv);
-  g_variant_unref(rhsv);
-  return !equality;
+  ResultIterator tmp(*this);
+  tmp -= count;
+  return tmp;
+}
+
+bool const ResultIterator::operator==(const ResultIterator& rhs)
+{
+  return (iter_ == rhs.iter_);
+}
+
+bool const ResultIterator::operator!=(const ResultIterator& rhs)
+{
+  return (iter_ != rhs.iter_);
 }
 
 Result const& ResultIterator::operator*()
 {
-  //if (cache_invalidated_)
+  if (cache_invalidated_)
     iter_result_ = Result(model_, iter_, NULL);
   return iter_result_;
 }
 
-bool ResultIterator::IsLast()
+bool const ResultIterator::IsLast()
 {
   return (dee_model_is_last(model_, iter_));
 }
 
-bool ResultIterator::IsFirst()
+bool const ResultIterator::IsFirst()
 {
   return (dee_model_is_first(model_, iter_));
 }
