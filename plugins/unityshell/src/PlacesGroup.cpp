@@ -69,6 +69,8 @@ public:
   HeaderView(NUX_FILE_LINE_DECL)
    : nux::View(NUX_FILE_LINE_PARAM)
   {
+    SetAcceptKeyNavFocusOnMouseDown(false);
+    SetAcceptKeyNavFocusOnMouseEnter(true);
   }
 
 protected:
@@ -84,7 +86,17 @@ protected:
 
   bool AcceptKeyNavFocus()
   {
-    return false;
+    return true;
+  }
+
+  nux::Area* FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type)
+  {
+    bool mouse_inside = TestMousePointerInclusionFilterMouseWheel(mouse_position, event_type);
+
+    if (mouse_inside == false)
+      return nullptr;
+
+    return this;
   }
 };
 
@@ -102,6 +114,9 @@ PlacesGroup::PlacesGroup()
     _n_total_items(0),
     _draw_sep(true)
 {
+  SetAcceptKeyNavFocusOnMouseDown(false);
+  SetAcceptKeyNavFocusOnMouseEnter(false);
+
   nux::BaseTexture* arrow = dash::Style::Instance().GetGroupUnexpandIcon();
 
   _cached_name = NULL;
@@ -151,26 +166,24 @@ PlacesGroup::PlacesGroup()
   SetLayout(_group_layout);
 
   // don't need to disconnect these signals as they are disconnected when this object destroys the contents
-  _header_view->mouse_enter.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseEnter));
-  _header_view->mouse_leave.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseLeave));
   _header_view->mouse_click.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseClick));
+  _header_view->key_nav_focus_change.connect(sigc::mem_fun(this, &PlacesGroup::OnLabelFocusChanged));
+  _header_view->key_nav_focus_activate.connect(sigc::mem_fun(this, &PlacesGroup::OnLabelActivated));
   _icon->mouse_click.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseClick));
-  _icon->mouse_enter.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseEnter));
-  _icon->mouse_leave.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseLeave));
-  _icon->key_nav_focus_change.connect(sigc::mem_fun(this, &PlacesGroup::OnLabelFocusChanged));
   _name->mouse_click.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseClick));
-  _name->mouse_enter.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseEnter));
-  _name->mouse_leave.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseLeave));
-  _name->key_nav_focus_change.connect(sigc::mem_fun(this, &PlacesGroup::OnLabelFocusChanged));
   _expand_label->mouse_click.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseClick));
-  _expand_label->mouse_enter.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseEnter));
-  _expand_label->mouse_leave.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseLeave));
-  _expand_label->key_nav_focus_activate.connect(sigc::mem_fun(this, &PlacesGroup::OnLabelActivated));
-  _expand_label->key_nav_focus_change.connect(sigc::mem_fun(this, &PlacesGroup::OnLabelFocusChanged));
   _expand_icon->mouse_click.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseClick));
-  _expand_icon->mouse_enter.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseEnter));
-  _expand_icon->mouse_leave.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseLeave));
-  _expand_icon->key_nav_focus_change.connect(sigc::mem_fun(this, &PlacesGroup::OnLabelFocusChanged));
+
+  key_nav_focus_change.connect([&](nux::Area* area, bool has_focus, nux::KeyNavDirection direction)
+  {
+    if (!has_focus)
+      return;
+
+    if(direction == nux::KEY_NAV_UP)
+      nux::GetWindowCompositor().SetKeyFocusArea(_child_view, direction);
+    else
+      nux::GetWindowCompositor().SetKeyFocusArea(GetHeaderFocusableView(), direction);
+  });
 }
 
 PlacesGroup::~PlacesGroup()
@@ -193,8 +206,11 @@ PlacesGroup::OnLabelActivated(nux::Area* label)
 void
 PlacesGroup::OnLabelFocusChanged(nux::Area* label, bool has_focus, nux::KeyNavDirection direction)
 {
-  _ubus.SendMessage(UBUS_RESULT_VIEW_KEYNAV_CHANGED,
-                    g_variant_new("(iiii)", 0, -30, 0, -30));
+  if (HeaderHasKeyFocus())
+  {
+    _ubus.SendMessage(UBUS_RESULT_VIEW_KEYNAV_CHANGED,
+                      g_variant_new("(iiii)", 0, 0, 0, 0));
+  }
 
   QueueDraw();
 }
@@ -290,20 +306,6 @@ PlacesGroup::RefreshLabel()
 
   _expand_label->SetText(final);
   _expand_label->SetVisible(_n_visible_items_in_unexpand_mode < _n_total_items);
-
-  _icon->SetAcceptKeyNavFocus(false);
-  _name->SetAcceptKeyNavFocus(false);
-  _expand_label->SetAcceptKeyNavFocus(false);
-  _expand_icon->SetAcceptKeyNavFocus(false);
-
-  if (_expand_label->IsVisible())
-    _expand_label->SetAcceptKeyNavFocus(true);
-  else if (_expand_icon->IsVisible())
-    _expand_icon->SetAcceptKeyNavFocus(true);
-  else if (_name->IsVisible())
-    _name->SetAcceptKeyNavFocus(true);
-  else if (_icon->IsVisible())
-    _icon->SetAcceptKeyNavFocus(true);
 
   QueueDraw();
 
@@ -492,16 +494,22 @@ PlacesGroup::SetDrawSeparator(bool draw_it)
 
 bool PlacesGroup::HeaderHasKeyFocus() const
 {
-  return (_icon && _icon->HasKeyFocus()) || 
-         (_name && _name->HasKeyFocus()) ||
-         (_expand_label && _expand_label->HasKeyFocus()) || 
-         (_expand_icon && _expand_icon->HasKeyFocus());
+  return (_header_view && _header_view->HasKeyFocus());
+}
+
+bool PlacesGroup::HeaderIsFocusable() const
+{
+  return (_header_view != nullptr);
+}
+
+nux::View* PlacesGroup::GetHeaderFocusableView() const
+{
+  return _header_view;
 }
 
 bool PlacesGroup::ShouldBeHighlighted() const
 {
-  return (_header_view && _header_view->IsMousePointerInside()) ||
-          HeaderHasKeyFocus();
+  return HeaderHasKeyFocus();
 }
 
 //
@@ -510,7 +518,7 @@ bool PlacesGroup::ShouldBeHighlighted() const
 bool
 PlacesGroup::AcceptKeyNavFocus()
 {
-  return false;
+  return true;
 }
 
 //
@@ -531,6 +539,7 @@ void PlacesGroup::AddProperties(GVariantBuilder* builder)
   wrapper.add("header-height", _header_view->GetAbsoluteHeight());
   wrapper.add("header-has-keyfocus", HeaderHasKeyFocus());
   wrapper.add("header-is-highlighted", ShouldBeHighlighted());
+  wrapper.add("is-visible", IsVisible());
 }
 
 } // namespace unity
