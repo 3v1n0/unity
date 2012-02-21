@@ -45,18 +45,21 @@ void WaitForLensesToLoad(FilesystemLenses& lenses)
 TEST(TestFilesystemLenses, TestConstruction)
 {
   FilesystemLenses lenses0;
-  FilesystemLenses lenses1(TESTDATADIR"/lenses");
+  LensDirectoryReader::Ptr test_reader(new LensDirectoryReader(TESTDATADIR"/lenses"));
+  FilesystemLenses lenses1(test_reader);
 }
 
 TEST(TestFilesystemLenses, TestFileLoading)
 {
-  FilesystemLenses lenses(TESTDATADIR"/lenses");
+  LensDirectoryReader::Ptr test_reader(new LensDirectoryReader(TESTDATADIR"/lenses"));
+  FilesystemLenses lenses(test_reader);
   WaitForLensesToLoad(lenses);
 }
 
 TEST(TestFilesystemLenses, TestLensesAdded)
 {
-  FilesystemLenses lenses(TESTDATADIR"/lenses");
+  LensDirectoryReader::Ptr test_reader(new LensDirectoryReader(TESTDATADIR"/lenses"));
+  FilesystemLenses lenses(test_reader);
   unsigned int n_lenses = 0;
 
   auto lens_added_cb = [&n_lenses](Lens::Ptr & p)
@@ -72,7 +75,8 @@ TEST(TestFilesystemLenses, TestLensesAdded)
 
 TEST(TestFilesystemLenses, TestLensContent)
 {
-  FilesystemLenses lenses(TESTDATADIR"/lenses");
+  LensDirectoryReader::Ptr test_reader(new LensDirectoryReader(TESTDATADIR"/lenses"));
+  FilesystemLenses lenses(test_reader);
   WaitForLensesToLoad(lenses);
 
   // Test that the lenses have loaded correctly
