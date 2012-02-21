@@ -21,7 +21,6 @@
  */
 
 #include "DashStyle.h"
-#include "FilterBasicButton.h"
 #include "FilterExpanderLabel.h"
 
 namespace
@@ -94,7 +93,7 @@ namespace dash
 NUX_IMPLEMENT_OBJECT_TYPE(FilterExpanderLabel);
 
 FilterExpanderLabel::FilterExpanderLabel(std::string const& label, NUX_FILE_LINE_DECL)
-  : FilterWidget(NUX_FILE_LINE_PARAM)
+  : nux::View(NUX_FILE_LINE_PARAM)
   , expanded(true)
   , layout_(nullptr)
   , top_bar_layout_(nullptr)
@@ -292,6 +291,21 @@ void FilterExpanderLabel::DrawContent(nux::GraphicsEngine& GfxContext, bool forc
 bool FilterExpanderLabel::AcceptKeyNavFocus()
 {
   return true;
+}
+
+//
+// Introspection
+//
+std::string FilterExpanderLabel::GetName() const
+{
+  return "FilterExpanderLabel";
+}
+
+void FilterExpanderLabel::AddProperties(GVariantBuilder* builder)
+{
+  unity::variant::BuilderWrapper wrapper(builder);
+
+  wrapper.add("expander-has-focus", expander_view_->HasKeyFocus());
 }
 
 } // namespace dash

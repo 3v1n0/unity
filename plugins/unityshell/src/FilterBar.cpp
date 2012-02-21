@@ -24,6 +24,7 @@
 #include <NuxCore/Logger.h>
 
 #include "FilterBar.h"
+#include "FilterExpanderLabel.h"
 #include "FilterFactory.h"
 
 namespace unity
@@ -76,7 +77,8 @@ void FilterBar::AddFilter(Filter::Ptr const& filter)
     return;
   }
 
-  nux::View* filter_view = factory_.WidgetForFilter(filter);
+  FilterExpanderLabel* filter_view = factory_.WidgetForFilter(filter);
+  AddChild(filter_view);
   filter_map_[filter] = filter_view;
   GetLayout()->AddView(filter_view, 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
 }
@@ -87,7 +89,8 @@ void FilterBar::RemoveFilter(Filter::Ptr const& filter)
   {
     if (iter.first->id == filter->id)
     {
-      nux::View* filter_view = iter.second;
+      FilterExpanderLabel* filter_view = iter.second;
+      RemoveChild(filter_view);
       filter_map_.erase(filter_map_.find(iter.first));
       GetLayout()->RemoveChildObject(filter_view);
       break;
@@ -142,6 +145,18 @@ void FilterBar::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 bool FilterBar::AcceptKeyNavFocus()
 {
   return false;
+}
+
+//
+// Introspection
+//
+std::string FilterBar::GetName() const
+{
+  return "FilterBar";
+}
+
+void FilterBar::AddProperties(GVariantBuilder* builder)
+{
 }
 
 } // namespace dash

@@ -206,6 +206,7 @@ void LensView::SetupViews(nux::Area* show_filters)
   fscroll_view_->SetLayout(fscroll_layout_);
 
   filter_bar_ = new FilterBar();
+  AddChild(filter_bar_);
   fscroll_layout_->AddView(filter_bar_);
 
   SetLayout(layout_);
@@ -502,7 +503,7 @@ void LensView::AddProperties(GVariantBuilder* builder)
 {
   unity::variant::BuilderWrapper wrapper(builder);
 
-  wrapper.add("id", lens_->id());
+  wrapper.add("name", lens_->id());
 }
 
 

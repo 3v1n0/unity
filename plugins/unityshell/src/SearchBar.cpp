@@ -657,6 +657,8 @@ void SearchBar::AddProperties(GVariantBuilder* builder)
   wrapper.add(GetAbsoluteGeometry());
   wrapper.add("has_focus", pango_entry_->HasKeyFocus());
   wrapper.add("search_string", pango_entry_->GetText());
+  wrapper.add("expander-has-focus", expander_view_->HasKeyFocus());
+  wrapper.add("showing-filters", showing_filters);
 }
 
 } // namespace unity

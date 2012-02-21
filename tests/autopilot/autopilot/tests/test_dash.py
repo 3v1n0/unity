@@ -207,10 +207,27 @@ class DashTests(AutopilotTestCase):
 
           kb = Keyboard()
 
-          for i in range(self.dash.get_num_categories(u'applications.lens')):
+          for i in range(self.dash.get_num_categories('applications.lens')):
               kb.press_and_release('Tab')
               category = self.dash.get_focused_category()
               self.assertIsNot(category, None)
 
+          kb.press_and_release('Tab')
+          self.assertTrue(self.dash.filter_expander_has_focus())
+
+          if not self.dash.get_showing_filters():
+              kb.press_and_release('Enter')
+              self.assertTrue(self.dash.get_showing_filters())
+
+          last_focused_filter = None
+          for i in range(self.dash.get_num_filters('applications.lens')):
+              kb.press_and_release('Tab')
+              new_focused_filter = self.dash.get_focused_filter()
+              self.assertIsNot(new_focused_filter, last_focused_filter)
+
+          kb.press_and_release('Tab')
+          category = self.dash.get_focused_category()
+          self.assertIsNot(category, None)
+              
 
 
