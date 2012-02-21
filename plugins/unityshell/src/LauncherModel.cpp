@@ -215,7 +215,10 @@ LauncherModel::IconHasSister(AbstractLauncherIcon::Ptr icon) const
 void
 LauncherModel::ReorderAfter(AbstractLauncherIcon::Ptr icon, AbstractLauncherIcon::Ptr other)
 {
-  if (icon == other)
+  if (icon == other || icon.IsNull() || other.IsNull())
+    return;
+
+  if (icon->GetIconType() != other->GetIconType())
     return;
 
   int i = 0;
@@ -245,7 +248,10 @@ LauncherModel::ReorderAfter(AbstractLauncherIcon::Ptr icon, AbstractLauncherIcon
 void
 LauncherModel::ReorderBefore(AbstractLauncherIcon::Ptr icon, AbstractLauncherIcon::Ptr other, bool save)
 {
-  if (icon == other)
+  if (icon == other || icon.IsNull() || other.IsNull())
+    return;
+
+  if (icon->GetIconType() != other->GetIconType())
     return;
 
   int i = 0;
@@ -286,7 +292,10 @@ LauncherModel::ReorderBefore(AbstractLauncherIcon::Ptr icon, AbstractLauncherIco
 void
 LauncherModel::ReorderSmart(AbstractLauncherIcon::Ptr icon, AbstractLauncherIcon::Ptr other, bool save)
 {
-  if (icon == other)
+  if (icon == other || icon.IsNull() || other.IsNull())
+    return;
+
+  if (icon->GetIconType() != other->GetIconType())
     return;
 
   int i = 0;
