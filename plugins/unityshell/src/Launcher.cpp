@@ -2010,10 +2010,11 @@ gboolean Launcher::StartIconDragTimeout(gpointer data)
 void Launcher::StartIconDragRequest(int x, int y)
 {
   nux::Geometry geo = GetAbsoluteGeometry();
+  AbstractLauncherIcon::Ptr drag_icon = MouseIconIntersection((int)(GetGeometry().width / 2.0f), y);
+  
   x += geo.x;
   y += geo.y;
 
-  AbstractLauncherIcon::Ptr drag_icon = MouseIconIntersection((int)(GetGeometry().x / 2.0f), y);
 
   // FIXME: nux doesn't give nux::GetEventButton (button_flags) there, relying
   // on an internal Launcher property then
@@ -2113,7 +2114,7 @@ void Launcher::UpdateDragWindowPosition(int x, int y)
     nux::Geometry geo = _drag_window->GetGeometry();
     _drag_window->SetBaseXY(x - geo.width / 2, y - geo.height / 2);
 
-    AbstractLauncherIcon::Ptr hovered_icon = MouseIconIntersection((int)((GetGeometry().x + GetGeometry().width) / 2.0f), y);
+    AbstractLauncherIcon::Ptr hovered_icon = MouseIconIntersection((int)((GetGeometry().x + GetGeometry().width) / 2.0f), y - GetAbsoluteGeometry().y);
 
     struct timespec current;
     clock_gettime(CLOCK_MONOTONIC, &current);
