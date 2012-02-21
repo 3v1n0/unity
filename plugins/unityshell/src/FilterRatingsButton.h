@@ -58,6 +58,7 @@ private:
 
   void RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long key_flags);
   void RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
+  void RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
   void OnRatingsChanged(int rating);
 
   dash::RatingsFilter::Ptr filter_;

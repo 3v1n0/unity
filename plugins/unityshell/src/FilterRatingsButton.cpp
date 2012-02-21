@@ -43,12 +43,21 @@ FilterRatingsButton::FilterRatingsButton(NUX_FILE_LINE_DECL)
   , focused_star_(-1)
 {
   SetAcceptKeyNavFocusOnMouseDown(false);
-  SetAcceptKeyNavFocusOnMouseEnter(false);
+  SetAcceptKeyNavFocusOnMouseEnter(true);
 
   mouse_up.connect(sigc::mem_fun(this, &FilterRatingsButton::RecvMouseUp));
+  mouse_move.connect(sigc::mem_fun(this, &FilterRatingsButton::RecvMouseMove));
   mouse_drag.connect(sigc::mem_fun(this, &FilterRatingsButton::RecvMouseDrag));
 
-  key_nav_focus_change.connect([&](nux::Area*, bool, nux::KeyNavDirection) { focused_star_ = HasKeyFocus() ? 0 : -1; });
+  key_nav_focus_change.connect([&](nux::Area* area, bool has_focus, nux::KeyNavDirection direction)
+  {
+    if (has_focus && direction != nux::KEY_NAV_NONE)
+      focused_star_ = 0;
+    else if (!has_focus)
+      focused_star_ = -1;
+
+    QueueDraw();
+  });
   key_nav_focus_activate.connect([&](nux::Area*) { filter_->rating = static_cast<float>(focused_star_+1)/num_stars; });
   key_down.connect(sigc::mem_fun(this, &FilterRatingsButton::OnKeyDown));
 }
@@ -185,6 +194,19 @@ void FilterRatingsButton::RecvMouseDrag(int x, int y, int dx, int dy,
 void FilterRatingsButton::OnRatingsChanged(int rating)
 {
   NeedRedraw();
+}
+
+void FilterRatingsButton::RecvMouseMove(int x, int y, int dx, int dy,
+                                        unsigned long button_flags,
+                                        unsigned long key_flags)
+{
+  int width = 180;
+  focused_star_ = std::max(0, std::min(static_cast<int>(ceil((static_cast<float>(x) / width) * num_stars) - 1), num_stars - 1));
+
+  if (!HasKeyFocus())
+    nux::GetWindowCompositor().SetKeyFocusArea(this);
+
+  QueueDraw();
 }
 
 
