@@ -31,26 +31,26 @@ namespace unity
 namespace dash
 {
 
-struct LensFileData
-{
-  LensFileData(GKeyFile* file, const gchar *lens_id);
-  static bool IsValid(GKeyFile* file, glib::Error& error);
-
-  glib::String id;
-  glib::String domain;
-  glib::String dbus_name;
-  glib::String dbus_path;
-  glib::String name;
-  glib::String icon;
-  glib::String description;
-  glib::String search_hint;
-  bool         visible;
-  glib::String shortcut;
-};
-
 class LensDirectoryReader : public sigc::trackable
 {
 public:
+  struct LensFileData
+  {
+    LensFileData(GKeyFile* file, const gchar *lens_id);
+    static bool IsValid(GKeyFile* file, glib::Error& error);
+
+    glib::String id;
+    glib::String domain;
+    glib::String dbus_name;
+    glib::String dbus_path;
+    glib::String name;
+    glib::String icon;
+    glib::String description;
+    glib::String search_hint;
+    bool         visible;
+    glib::String shortcut;
+  };
+
   typedef std::shared_ptr<LensDirectoryReader> Ptr;
   typedef std::vector<LensFileData*> DataList;
 

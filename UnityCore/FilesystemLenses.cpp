@@ -46,7 +46,8 @@ const char* GROUP = "Lens";
 }
 
 // Loads data from a Lens key-file in a usable form
-LensFileData::LensFileData(GKeyFile* file, const gchar *lens_id)
+LensDirectoryReader::LensFileData::LensFileData(GKeyFile* file, 
+                                                const gchar *lens_id)
   : id(g_strdup(lens_id))
   , domain(g_key_file_get_string(file, G_KEY_FILE_DESKTOP_GROUP, "X-Ubuntu-Gettext-Domain", NULL))
   , dbus_name(g_key_file_get_string(file, GROUP, "DBusName", NULL))
@@ -64,7 +65,7 @@ LensFileData::LensFileData(GKeyFile* file, const gchar *lens_id)
   }
 }
 
-bool LensFileData::IsValid(GKeyFile* file, glib::Error& error)
+bool LensDirectoryReader::LensFileData::IsValid(GKeyFile* file, glib::Error& error)
 {
   return (g_key_file_has_group(file, GROUP) &&
           g_key_file_has_key(file, GROUP, "DBusName", &error) &&
@@ -132,6 +133,7 @@ public:
   void EnumerateLensesDirectoryChildren(GFileEnumerator* enumerator);
   void LoadLensFile(std::string const& lensfile_path);
   void GetLensDataFromKeyFile(GFile* path, const char* data, gsize length);
+  DataList GetLensData() const;
   void SortLensList();
   
   static void OnDirectoryEnumerated(GFile* source, GAsyncResult* res, Impl* self);
@@ -291,6 +293,11 @@ void LensDirectoryReader::Impl::GetLensDataFromKeyFile(GFile* file,
   g_key_file_free(key_file);
 }
 
+LensDirectoryReader::DataList LensDirectoryReader::Impl::GetLensData() const
+{
+  return lenses_data_;
+}
+
 void LensDirectoryReader::Impl::SortLensList()
 {
   //FIXME: We don't have a strict order, but alphabetical serves us well.
@@ -333,7 +340,7 @@ bool LensDirectoryReader::IsDataLoaded() const
 
 LensDirectoryReader::DataList LensDirectoryReader::GetLensData() const
 {
-  return pimpl->lenses_data_;
+  return pimpl->GetLensData();
 }
 
 class FilesystemLenses::Impl
