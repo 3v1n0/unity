@@ -118,14 +118,15 @@ class DashTests(AutopilotTestCase):
           # Get the geometry of that category header.
           x = category['header-x']
           y = category['header-y']
+          w = category['header-width']
+          h = category['header-height']
 
           # Manually scroll the dash.
-          mouse.move(x, y, True)
+          mouse.move(x+w+10, y+w+10, True)
           mouse.click(5)
           mouse.click(5)
           mouse.click(5)
 
-          cached_x = x
           cached_y = y
 
           # Focus the search bar with the mouse
@@ -138,12 +139,10 @@ class DashTests(AutopilotTestCase):
           kb.press_and_release("Down")
           kb.press_and_release("Enter")
           category = self.dash.get_focused_category()
-          x = category['header-x']
           y = category['header-y']
 
           # Make sure the dash autoscroll
-          self.assertEqual(x, cached_x)
-          self.assertEqual(y, cached_y)
+          self.assertTrue(abs(y-cached_y) < 30)
 
     def test_category_header_keynav(self):
           """ This test makes sure that:
@@ -179,7 +178,55 @@ class DashTests(AutopilotTestCase):
           category = self.dash.get_focused_category()
           self.assertEqual(category, None)
 
+    def test_cltr_tab(self):
+          """ This test makes sure that Ctlr + Tab works well."""
+          self.dash.ensure_hidden()
+          self.dash.toggle_reveal()
 
+          kb = Keyboard()
 
+          kb.press('Control')
+          kb.press_and_release('Tab')
+          kb.release('Control')
+
+          self.assertEqual(self.dash.get_current_lens(), u'applications.lens')
+
+          kb.press('Control')
+          kb.press('Shift')
+          kb.press_and_release('Tab')
+          kb.release('Control')
+          kb.release('Shift')
+
+          self.assertEqual(self.dash.get_current_lens(), u'home.lens')
+
+    def test_tab(self):
+          """ This test makes sure that Tab works well."""
+          self.dash.ensure_hidden()
+          self.dash.reveal_application_lens()
+
+          kb = Keyboard()
+
+          for i in range(self.dash.get_num_categories('applications.lens')):
+              kb.press_and_release('Tab')
+              category = self.dash.get_focused_category()
+              self.assertIsNot(category, None)
+
+          kb.press_and_release('Tab')
+          self.assertTrue(self.dash.filter_expander_has_focus())
+
+          if not self.dash.get_showing_filters():
+              kb.press_and_release('Enter')
+              self.assertTrue(self.dash.get_showing_filters())
+
+          last_focused_filter = None
+          for i in range(self.dash.get_num_filters('applications.lens')):
+              kb.press_and_release('Tab')
+              new_focused_filter = self.dash.get_focused_filter()
+              self.assertIsNot(new_focused_filter, last_focused_filter)
+
+          kb.press_and_release('Tab')
+          category = self.dash.get_focused_category()
+          self.assertIsNot(category, None)
+              
 
 

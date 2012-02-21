@@ -28,8 +28,7 @@
 #include <Nux/CairoWrapper.h>
 #include <Nux/ToggleButton.h>
 #include <Nux/View.h>
-
-#include "FilterWidget.h"
+#include <UnityCore/Filter.h>
 
 namespace unity
 {

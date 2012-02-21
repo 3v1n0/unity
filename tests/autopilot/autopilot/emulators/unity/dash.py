@@ -126,3 +126,29 @@ class Dash(object):
             return groups[0]
         else:
             return None
+
+    def get_num_categories(self, lens):
+        """Returns the number of visible categories for the given lens."""
+        groups = get_state_by_path("//LensView[name=" + lens + "]/PlacesGroup[is-visible=True]")
+        return len(groups)
+
+    def filter_expander_has_focus(self):
+        """Returns True if the filter expander has the key focus."""
+        return get_state_by_path("//SearchBar")[0]['expander-has-focus']
+
+    def get_showing_filters(self):
+        """Returns True if we're showing the filters."""
+        return get_state_by_path("//SearchBar")[0]['showing-filters']
+
+    def get_num_filters(self, lens):
+        """Returns the number of filter widget for the given lens."""
+        filters = get_state_by_path("//LensView[name=" + lens + "]/FilterBar/FilterExpanderLabel")
+        return len(filters)
+
+    def get_focused_filter(self):
+        """Returns the id of the focused filter widget."""
+        filters = get_state_by_path("//FilterBar/FilterExpanderLabel[expander-has-focus=True]")
+        if len(filters) == 0:
+          return None
+        else:
+          return filters[0]['id']

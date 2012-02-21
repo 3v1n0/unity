@@ -28,6 +28,7 @@
 #include <NuxGraphics/GraphicsEngine.h>
 #include <Nux/TextureArea.h>
 #include <NuxImage/CairoGraphics.h>
+#include <UnityCore/Variant.h>
 
 #include "CairoTexture.h"
 
@@ -1399,11 +1400,12 @@ std::string QuicklistView::GetName() const
 
 void QuicklistView::AddProperties(GVariantBuilder* builder)
 {
-  g_variant_builder_add(builder, "{sv}", "x", g_variant_new_int32(GetBaseX()));
-  g_variant_builder_add(builder, "{sv}", "y", g_variant_new_int32(GetBaseY()));
-  g_variant_builder_add(builder, "{sv}", "width", g_variant_new_int32(GetBaseWidth()));
-  g_variant_builder_add(builder, "{sv}", "height", g_variant_new_int32(GetBaseHeight()));
-  g_variant_builder_add(builder, "{sv}", "active", g_variant_new_boolean(IsVisible()));
+  variant::BuilderWrapper(builder)
+    .add("x", GetBaseX())
+    .add("y", GetBaseY())
+    .add("width", GetBaseWidth())
+    .add("height", GetBaseHeight())
+    .add("active", IsVisible());
 }
 
 //
