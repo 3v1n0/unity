@@ -99,7 +99,7 @@ LauncherIcon::LauncherIcon()
 
   // FIXME: the abstraction is already broken, should be fixed for O
   // right now, hooking the dynamic quicklist the less ugly possible way
-  
+
 
   mouse_enter.connect(sigc::mem_fun(this, &LauncherIcon::RecvMouseEnter));
   mouse_leave.connect(sigc::mem_fun(this, &LauncherIcon::RecvMouseLeave));
@@ -149,7 +149,7 @@ void LauncherIcon::LoadTooltip()
   _tooltip = new Tooltip();
   AddChild(_tooltip.GetPointer());
 
-  _tooltip->SetText(nux::NString(tooltip_text().c_str()));
+  _tooltip->SetText(tooltip_text());
 }
 
 void LauncherIcon::LoadQuicklist()
@@ -454,7 +454,7 @@ bool LauncherIcon::SetTooltipText(std::string& target, std::string const& value)
   {
     target = escaped;
     if (_tooltip)
-      _tooltip->SetText(nux::NString(target.c_str()));
+      _tooltip->SetText(target);
     result = true;
   }
 
