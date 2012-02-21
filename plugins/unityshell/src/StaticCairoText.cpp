@@ -39,7 +39,7 @@ namespace nux
 {
   NUX_IMPLEMENT_OBJECT_TYPE (StaticCairoText);
 
-StaticCairoText::StaticCairoText(const TCHAR* text,
+StaticCairoText::StaticCairoText(const std::string& text,
                                  NUX_FILE_LINE_DECL) :
   View(NUX_FILE_LINE_PARAM),
   _fontstring(NULL),
@@ -50,7 +50,7 @@ StaticCairoText::StaticCairoText(const TCHAR* text,
 
 {
   _textColor  = Color(1.0f, 1.0f, 1.0f, 1.0f);
-  _text       = TEXT(text);
+  _text       = text;
   _texture2D  = 0;
   _need_new_extent_cache = true;
   _pre_layout_width = 0;

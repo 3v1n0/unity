@@ -59,7 +59,7 @@ public:
     NUX_ALIGN_BOTTOM = NUX_ALIGN_RIGHT
   } AlignState;
 
-  StaticCairoText(const TCHAR* text, NUX_FILE_LINE_PROTO);
+  StaticCairoText(const std::string& text, NUX_FILE_LINE_PROTO);
 
   ~StaticCairoText();
 
