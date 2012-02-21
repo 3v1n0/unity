@@ -99,7 +99,7 @@ TEST(TestFilesystemLenses, TestLensContent)
   EXPECT_EQ(lens->icon_hint, "/usr/share/unity-lens-files/files.png");
   EXPECT_EQ(lens->description, "Search for Files & Folders");
   EXPECT_EQ(lens->search_hint, "Search Files & Folders");
-  EXPECT_EQ(lens->visible, true);
+  EXPECT_EQ(lens->visible, false);
   EXPECT_EQ(lens->shortcut, "f");
 
   lens = lenses.GetLens("social.lens");
@@ -110,7 +110,7 @@ TEST(TestFilesystemLenses, TestLensContent)
   EXPECT_EQ(lens->icon_hint, "/usr/share/unity-lens-social/social.png");
   EXPECT_EQ(lens->description, "");
   EXPECT_EQ(lens->search_hint, "");
-  EXPECT_EQ(lens->visible, false);
+  EXPECT_EQ(lens->visible, true);
   EXPECT_EQ(lens->shortcut, "");
 }
 
