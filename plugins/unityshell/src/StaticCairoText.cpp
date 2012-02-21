@@ -39,7 +39,7 @@ namespace nux
 {
   NUX_IMPLEMENT_OBJECT_TYPE (StaticCairoText);
 
-StaticCairoText::StaticCairoText(const std::string& text,
+StaticCairoText::StaticCairoText(std::string const& text,
                                  NUX_FILE_LINE_DECL) :
   View(NUX_FILE_LINE_PARAM),
   _fontstring(NULL),
