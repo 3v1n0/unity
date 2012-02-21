@@ -56,7 +56,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(QuicklistView);
 QuicklistView::QuicklistView()
   : _anchorX(0)
   , _anchorY(0)
-  , _labelText(TEXT("QuicklistView 1234567890"))
+  , _labelText("QuicklistView 1234567890")
   , _top_size(4)
   , _mouse_down(false)
   , _enable_quicklist_for_testing(false)
@@ -1346,7 +1346,7 @@ void QuicklistView::NotifyConfigurationChange(int width, int height)
 {
 }
 
-void QuicklistView::SetText(nux::NString text)
+void QuicklistView::SetText(std::string const& text)
 {
   if (_labelText == text)
     return;

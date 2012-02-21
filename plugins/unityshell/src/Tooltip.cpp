@@ -62,7 +62,7 @@ Tooltip::Tooltip() :
 
   _vlayout->AddLayout(_top_space, 0);
 
-  _tooltip_text = new nux::StaticCairoText(_labelText.GetTCharPtr(), NUX_TRACKER_LOCATION);
+  _tooltip_text = new nux::StaticCairoText(_labelText, NUX_TRACKER_LOCATION);
   _tooltip_text->SetTextAlignment(nux::StaticCairoText::AlignState::NUX_ALIGN_CENTRE);
   _tooltip_text->SetTextVerticalAlignment(nux::StaticCairoText::AlignState::NUX_ALIGN_CENTRE);
   _tooltip_text->SetMinimumWidth(MINIMUM_TEXT_WIDTH);
@@ -528,7 +528,7 @@ void Tooltip::NotifyConfigurationChange(int width,
 {
 }
 
-void Tooltip::SetText(nux::NString const& text)
+void Tooltip::SetText(std::string const& text)
 {
   if (_labelText == text)
     return;
@@ -548,12 +548,13 @@ std::string Tooltip::GetName() const
 
 void Tooltip::AddProperties(GVariantBuilder* builder)
 {
-  g_variant_builder_add(builder, "{sv}", "text", g_variant_new_string(_labelText.GetTCharPtr()));
-  g_variant_builder_add(builder, "{sv}", "x", g_variant_new_int32(GetBaseX()));
-  g_variant_builder_add(builder, "{sv}", "y", g_variant_new_int32(GetBaseY()));
-  g_variant_builder_add(builder, "{sv}", "width", g_variant_new_int32(GetBaseWidth()));
-  g_variant_builder_add(builder, "{sv}", "height", g_variant_new_int32(GetBaseHeight()));
-  g_variant_builder_add(builder, "{sv}", "active", g_variant_new_boolean(IsVisible()));
+  variant::BuilderWrapper(builder)
+    .add("text", _labelText)
+    .add("x", GetBaseX())
+    .add("y", GetBaseY())
+    .add("width", GetBaseWidth())
+    .add("height", GetBaseHeight())
+    .add("active", IsVisible());
 }
 
 } // namespace nux
