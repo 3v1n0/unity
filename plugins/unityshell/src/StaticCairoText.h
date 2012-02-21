@@ -77,7 +77,7 @@ public:
                 bool             forceDraw);
 
   // public API
-  void SetText(NString const& text);
+  void SetText(std::string const& text);
   void SetTextColor(Color const& textColor);
   void SetTextEllipsize(EllipsizeState state);
   void SetTextAlignment(AlignState state);
@@ -85,7 +85,7 @@ public:
   void SetFont(const char* fontstring);
   void SetLines(int maximum_lines);
 
-  NString GetText();
+  std::string GetText() const;
 
   int  GetLineCount();
 
@@ -108,7 +108,7 @@ private:
   int            _cached_base_width;
   int            _cached_base_height;
 
-  NString        _text;
+  std::string    _text;
   Color          _textColor;
   EllipsizeState _ellipsize;
   AlignState     _align;

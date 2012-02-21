@@ -223,7 +223,7 @@ StaticCairoText::PostDraw(GraphicsEngine& gfxContext,
 }
 
 void
-StaticCairoText::SetText(NString const& text)
+StaticCairoText::SetText(std::string const& text)
 {
   if (_text != text)
   {
@@ -237,8 +237,8 @@ StaticCairoText::SetText(NString const& text)
   }
 }
 
-NString
-StaticCairoText::GetText()
+std::string
+StaticCairoText::GetText() const
 {
   return _text;
 }
@@ -324,7 +324,7 @@ void StaticCairoText::GetTextExtents(const TCHAR* font,
   surface = cairo_image_surface_create(CAIRO_FORMAT_A1, 1, 1);
   cr = cairo_create(surface);
   cairo_set_font_options(cr, gdk_screen_get_font_options(screen));
-  
+
   layout = pango_cairo_create_layout(cr);
   desc = pango_font_description_from_string(font);
   pango_layout_set_font_description(layout, desc);
@@ -346,7 +346,7 @@ void StaticCairoText::GetTextExtents(const TCHAR* font,
   else
     pango_layout_set_alignment(layout, PANGO_ALIGN_RIGHT);
 
-  pango_layout_set_markup(layout, _text.GetTCharPtr(), -1);
+  pango_layout_set_markup(layout, _text.c_str(), -1);
   pango_layout_set_height(layout, _lines);
   pango_layout_set_width(layout, maxwidth * PANGO_SCALE);
 
@@ -420,7 +420,7 @@ void StaticCairoText::DrawText(cairo_t*   cr,
   else
     pango_layout_set_alignment(layout, PANGO_ALIGN_RIGHT);
 
-  pango_layout_set_markup(layout, _text.GetTCharPtr(), -1);
+  pango_layout_set_markup(layout, _text.c_str(), -1);
   pango_layout_set_width(layout, width * PANGO_SCALE);
   pango_layout_set_height(layout, height * PANGO_SCALE);
 
