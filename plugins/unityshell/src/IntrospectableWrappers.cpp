@@ -28,7 +28,6 @@ namespace debug
   ResultWrapper::ResultWrapper(const dash::Result& result)
   : uri_(result.uri),
   name_(result.name),
-  comment_(result.comment),
   icon_hint_(result.icon_hint),
   mime_type_(result.mimetype)
   {
@@ -46,7 +45,6 @@ namespace debug
       .add("name", name_)
       .add("icon_hint", icon_hint_)
       .add("mimetype", mime_type_);
-      //.add("comment", comment_);
   }
 }
 }

@@ -41,7 +41,6 @@ public:
 private:
   std::string uri_;
   std::string name_;
-  std::string comment_;
   std::string icon_hint_;
   std::string mime_type_;
 };
