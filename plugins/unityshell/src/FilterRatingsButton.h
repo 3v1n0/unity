@@ -47,11 +47,21 @@ public:
 protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
 
+  // Key-nav
+  virtual bool AcceptKeyNavFocus();
+  virtual bool InspectKeyEvent(unsigned int eventType, unsigned int keysym, const char* character);
+
+private:
+  void OnKeyDown(unsigned long event_type, unsigned long event_keysym,
+                 unsigned long event_state, const TCHAR* character,
+                 unsigned short key_repeat_count);
+
   void RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long key_flags);
   void RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
   void OnRatingsChanged(int rating);
 
   dash::RatingsFilter::Ptr filter_;
+  int focused_star_;
 
 };
 

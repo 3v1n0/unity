@@ -106,6 +106,8 @@ FilterExpanderLabel::FilterExpanderLabel(std::string const& label, NUX_FILE_LINE
 {
   expanded.changed.connect(sigc::mem_fun(this, &FilterExpanderLabel::DoExpandChange));
   BuildLayout();
+
+  SetAcceptKeyNavFocusOnMouseDown(false);
 }
 
 FilterExpanderLabel::~FilterExpanderLabel()

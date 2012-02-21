@@ -31,6 +31,7 @@ namespace
 {
 const int star_size = 28;
 const int star_gap  = 10;
+const int num_stars = 5;
 }
 
 namespace unity
@@ -39,11 +40,17 @@ namespace dash
 {
 FilterRatingsButton::FilterRatingsButton(NUX_FILE_LINE_DECL)
   : nux::ToggleButton(NUX_FILE_LINE_PARAM)
+  , focused_star_(-1)
 {
   SetAcceptKeyNavFocusOnMouseDown(false);
+  SetAcceptKeyNavFocusOnMouseEnter(false);
 
   mouse_up.connect(sigc::mem_fun(this, &FilterRatingsButton::RecvMouseUp));
   mouse_drag.connect(sigc::mem_fun(this, &FilterRatingsButton::RecvMouseDrag));
+
+  key_nav_focus_change.connect([&](nux::Area*, bool, nux::KeyNavDirection) { focused_star_ = HasKeyFocus() ? 0 : -1; });
+  key_nav_focus_activate.connect([&](nux::Area*) { filter_->rating = static_cast<float>(focused_star_+1)/num_stars; });
+  key_down.connect(sigc::mem_fun(this, &FilterRatingsButton::OnKeyDown));
 }
 
 FilterRatingsButton::~FilterRatingsButton()
@@ -66,7 +73,7 @@ void FilterRatingsButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
   int rating = 0;
   if (filter_ && filter_->filtering)
-    rating = static_cast<int>(filter_->rating * 5);
+    rating = static_cast<int>(filter_->rating * num_stars);
   // FIXME: 9/26/2011
   // We should probably support an API for saying whether the ratings
   // should or shouldn't support half stars...but our only consumer at
@@ -79,7 +86,7 @@ void FilterRatingsButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   nux::Geometry const& geo = GetGeometry();
   nux::Geometry geo_star(geo);
   geo_star.width = star_size;
-	
+
   gPainter.PaintBackground(GfxContext, geo);
   // set up our texture mode
   nux::TexCoordXForm texxform;
@@ -100,10 +107,10 @@ void FilterRatingsButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
                        geo.height,
                        col);
 
-  for (int index = 0; index < 5; index++)
+  for (int index = 0; index < num_stars; ++index)
   {
 	Style& style = Style::Instance();
-    nux::BaseTexture* texture = style.GetStarSelectedIcon();	  
+    nux::BaseTexture* texture = style.GetStarSelectedIcon();
     if (index < total_full_stars)
     {
       if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_NORMAL)
@@ -131,21 +138,16 @@ void FilterRatingsButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
                         texxform,
                         nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
 
-    // FIXME: A small hint for the keyboard-navigation highlight... you can use
-	// the method...
-	//
-    //   style.GetStarHighlightIcon()
-	//
-	// ... to get the correct texture from the style/theme and use an opacity of
-	// .5 for blending it over the regular star-textures.
-	//
-    //GfxContext.QRP_1Tex(geo_star.x,
-    //                    geo_star.y,
-    //                    geo_star.width,
-    //                    geo_star.height,
-    //                    style.GetStarHighlightIcon()->GetDeviceTexture(),
-    //                    texxform,
-    //                    nux::Color(1.0f, 1.0f, 1.0f, 0.5f));
+    if (focused_star_ == index)
+    {
+      GfxContext.QRP_1Tex(geo_star.x,
+                          geo_star.y,
+                          geo_star.width,
+                          geo_star.height,
+                          style.GetStarHighlightIcon()->GetDeviceTexture(),
+                          texxform,
+                          nux::Color(1.0f, 1.0f, 1.0f, 0.5f));
+    }
 
     geo_star.x += geo_star.width + star_gap;
 
@@ -160,8 +162,8 @@ static void _UpdateRatingToMouse(RatingsFilter::Ptr filter, int x)
   int width = 180;
   float new_rating = (static_cast<float>(x) / width);
 
-  // FIXME: change to 10 once we decide to support also half-stars
-  new_rating = ceil(5 * new_rating) / 5;
+  // FIXME: change to * 2 once we decide to support also half-stars
+  new_rating = ceil((num_stars * 1) * new_rating) / (num_stars * 1);
   new_rating = (new_rating > 1) ? 1 : ((new_rating < 0) ? 0 : new_rating);
 
   if (filter)
@@ -183,6 +185,59 @@ void FilterRatingsButton::RecvMouseDrag(int x, int y, int dx, int dy,
 void FilterRatingsButton::OnRatingsChanged(int rating)
 {
   NeedRedraw();
+}
+
+
+bool FilterRatingsButton::InspectKeyEvent(unsigned int eventType, unsigned int keysym, const char* character)
+{
+  nux::KeyNavDirection direction = nux::KEY_NAV_NONE;
+
+  switch (keysym)
+  {
+    case NUX_VK_LEFT:
+      direction = nux::KeyNavDirection::KEY_NAV_LEFT;
+      break;
+    case NUX_VK_RIGHT:
+      direction = nux::KeyNavDirection::KEY_NAV_RIGHT;
+      break;
+    default:
+      direction = nux::KeyNavDirection::KEY_NAV_NONE;
+      break;
+  }
+
+  if (direction == nux::KeyNavDirection::KEY_NAV_NONE)
+    return false;
+  else if (direction == nux::KEY_NAV_LEFT && (focused_star_ <= 0))
+    return false;
+  else if (direction == nux::KEY_NAV_RIGHT && (focused_star_ >= num_stars - 1))
+    return false;
+  else
+   return true;
+}
+
+
+void FilterRatingsButton::OnKeyDown(unsigned long event_type, unsigned long event_keysym,
+                                    unsigned long event_state, const TCHAR* character,
+                                    unsigned short key_repeat_count)
+{
+  switch (event_keysym)
+  {
+    case NUX_VK_LEFT:
+      --focused_star_;
+      break;
+    case NUX_VK_RIGHT:
+      ++focused_star_;
+      break;
+    default:
+      return;
+  }
+
+  QueueDraw();
+}
+
+bool FilterRatingsButton::AcceptKeyNavFocus()
+{
+  return true;
 }
 
 } // namespace dash
