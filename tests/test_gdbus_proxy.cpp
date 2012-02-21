@@ -112,7 +112,7 @@ TEST_F(TestGDBusProxy, TestMethodReturn)
     return FALSE;
   };
    
-  g_timeout_add_seconds(10, timeout_bailout, this);
+  guint bailout_source = g_timeout_add_seconds(10, timeout_bailout, this);
 
   EXPECT_EQ(proxy->IsConnected(), true); // fail if we are not connected
   proxy->Connect("TestSignal", signal_connection);
@@ -127,6 +127,7 @@ TEST_F(TestGDBusProxy, TestMethodReturn)
 
   g_free(returned_result);
   g_free(returned_signal);
+  g_source_remove(bailout_source);
 }
 
 
