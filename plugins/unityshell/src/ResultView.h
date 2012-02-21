@@ -63,6 +63,7 @@ public:
 
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
+  IntrospectableList const& GetIntrospectableChildren();
 
 protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
@@ -75,6 +76,7 @@ protected:
   std::string preview_result_uri_;
   ResultRenderer* renderer_;
   ResultList results_;
+  IntrospectableList introspectable_children_;
 };
 
 }
