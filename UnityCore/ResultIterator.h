@@ -52,8 +52,15 @@ public:
   ResultIterator& operator-=(int value);
   ResultIterator  operator-(int value);
 
-  bool const operator==(const ResultIterator& rhs);
-  bool const operator!=(const ResultIterator& rhs);
+  friend inline bool const operator==(const ResultIterator& lhs, const ResultIterator& rhs)
+  {
+    return (lhs.iter_ == rhs.iter_);
+  }
+
+  friend inline bool operator!=(const ResultIterator& lhs, const ResultIterator& rhs)
+  {
+    return !(lhs == rhs);
+  }
   Result const& operator*();
 
   /* convenience methods */

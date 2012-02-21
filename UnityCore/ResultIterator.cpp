@@ -121,16 +121,6 @@ ResultIterator ResultIterator::operator-(int count)
   return tmp;
 }
 
-bool const ResultIterator::operator==(const ResultIterator& rhs)
-{
-  return (iter_ == rhs.iter_);
-}
-
-bool const ResultIterator::operator!=(const ResultIterator& rhs)
-{
-  return (iter_ != rhs.iter_);
-}
-
 Result const& ResultIterator::operator*()
 {
   if (cache_invalidated_)
