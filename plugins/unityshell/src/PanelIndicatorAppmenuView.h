@@ -42,7 +42,7 @@ public:
   bool IsIconVisible() const;
   bool IsIconSensitive() const;
 
-  void SetControlledWindowXid(Window xid);
+  void SetControlledWindow(Window xid);
 
   void Activate();
 

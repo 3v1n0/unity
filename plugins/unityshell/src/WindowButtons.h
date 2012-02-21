@@ -49,11 +49,10 @@ public:
   sigc::signal<void> close_clicked;
   sigc::signal<void> minimize_clicked;
   sigc::signal<void> restore_clicked;
+  sigc::signal<void> maximize_clicked;
   sigc::signal<void, int, int, int, int, unsigned long, unsigned long> mouse_move;
   sigc::signal<void, int, int, unsigned long, unsigned long> mouse_enter;
   sigc::signal<void, int, int, unsigned long, unsigned long> mouse_leave;
-
-  virtual nux::Area* FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type);
 
 protected:
   std::string GetName() const;
@@ -63,6 +62,7 @@ private:
   void OnCloseClicked(nux::Button *button);
   void OnMinimizeClicked(nux::Button *button);
   void OnRestoreClicked(nux::Button *button);
+  void OnMaximizeClicked(nux::Button *button);
   void OnOverlayShown(GVariant* data);
   void OnOverlayHidden(GVariant* data);
   void OnDashSettingsUpdated();
@@ -71,7 +71,7 @@ private:
   bool focused_;
   Window window_xid_;
 
-  UBusManager _ubus_manager;
+  UBusManager ubus_manager_;
 };
 }
 #endif

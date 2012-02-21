@@ -49,6 +49,15 @@ public:
     panel::Style::Instance().changed.connect(sigc::mem_fun(this, &WindowButton::LoadImages));
   }
 
+  void SetVisualState(nux::ButtonVisualState new_state)
+  {
+    if (new_state != visual_state_)
+    {
+      visual_state_ = new_state;
+      QueueDraw();
+    }
+  }
+
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   {
     nux::Geometry const& geo = GetGeometry();
@@ -322,10 +331,18 @@ WindowButtons::WindowButtons()
   but->mouse_leave.connect(lambda_leave);
   but->mouse_move.connect(lambda_moved);
 
+  but = new WindowButton(panel::WindowButtonType::MAXIMIZE);
+  AddView(but, 0, nux::eCenter, nux::eFix);
+  but->click.connect(sigc::mem_fun(this, &WindowButtons::OnMaximizeClicked));
+  but->mouse_enter.connect(lambda_enter);
+  but->mouse_leave.connect(lambda_leave);
+  but->mouse_move.connect(lambda_moved);
+  but->SetVisible(false);
+
   SetContentDistribution(nux::eStackLeft);
 
-  _ubus_manager.RegisterInterest(UBUS_OVERLAY_SHOWN, sigc::mem_fun(this, &WindowButtons::OnOverlayShown));
-  _ubus_manager.RegisterInterest(UBUS_OVERLAY_HIDDEN, sigc::mem_fun(this, &WindowButtons::OnOverlayHidden));
+  ubus_manager_.RegisterInterest(UBUS_OVERLAY_SHOWN, sigc::mem_fun(this, &WindowButtons::OnOverlayShown));
+  ubus_manager_.RegisterInterest(UBUS_OVERLAY_HIDDEN, sigc::mem_fun(this, &WindowButtons::OnOverlayHidden));
   dash::Settings::Instance().changed.connect(sigc::mem_fun(this, &WindowButtons::OnDashSettingsUpdated));
 }
 
@@ -357,11 +374,33 @@ void WindowButtons::OnRestoreClicked(nux::Button *button)
   if (!win_button || !win_button->IsEnabled())
     return;
 
+  if (win_button->IsOverlayOpen())
+  {
+    dash::Settings::Instance().SetFormFactor(dash::FormFactor::DESKTOP);
+  }
+
   restore_clicked.emit();
+}
+
+void WindowButtons::OnMaximizeClicked(nux::Button *button)
+{
+  auto win_button = dynamic_cast<WindowButton*>(button);
+
+  if (!win_button || !win_button->IsEnabled())
+    return;
+
+  if (win_button->IsOverlayOpen())
+  {
+    dash::Settings::Instance().SetFormFactor(dash::FormFactor::NETBOOK);
+  }
+
+  maximize_clicked.emit();
 }
 
 void WindowButtons::OnOverlayShown(GVariant* data)
 {
+  WindowButton* maximize_button = nullptr;
+  WindowButton* restore_button = nullptr;
   unity::glib::String overlay_identity;
   gboolean can_maximise = FALSE;
   gint32 overlay_monitor = 0;
@@ -374,69 +413,120 @@ void WindowButtons::OnOverlayShown(GVariant* data)
 
     if (button)
     {
-      if (button->GetType() == panel::WindowButtonType::MAXIMIZE ||
-          button->GetType() == panel::WindowButtonType::UNMAXIMIZE)
-      {
-        panel::WindowButtonType new_type = panel::WindowButtonType::UNMAXIMIZE;
+      if (button->GetType() == panel::WindowButtonType::UNMAXIMIZE)
+        restore_button = button;
 
-        if (dash::Settings::Instance().GetFormFactor() == dash::FormFactor::DESKTOP)
-          new_type = panel::WindowButtonType::MAXIMIZE;
-
-        button->ChangeType(new_type);
-        button->SetEnabled((can_maximise) ? true : false);
-      }
+      if (button->GetType() == panel::WindowButtonType::MAXIMIZE)
+        maximize_button = button;
 
       button->SetOverlayOpen(true);
+    }
+  }
+
+  if (restore_button && maximize_button)
+  {
+    dash::Settings &dash_settings = dash::Settings::Instance();
+    bool maximizable = (dash_settings.GetFormFactor() == dash::FormFactor::DESKTOP);
+
+    restore_button->SetEnabled((can_maximise) ? true : false);
+    maximize_button->SetEnabled((can_maximise) ? true : false);
+
+    if (maximizable != maximize_button->IsVisible())
+    {
+      if (maximize_button->IsVisible())
+        restore_button->SetVisualState(maximize_button->GetVisualState());
+      else if (restore_button->IsVisible())
+        maximize_button->SetVisualState(restore_button->GetVisualState());
+
+      restore_button->SetVisible(!maximizable);
+      maximize_button->SetVisible(maximizable);
+
+      QueueDraw();
     }
   }
 }
 
 void WindowButtons::OnOverlayHidden(GVariant* data)
 {
+  WindowButton* maximize_button = nullptr;
+  WindowButton* restore_button = nullptr;
+
   for (auto area : GetChildren())
   {
     auto button = dynamic_cast<WindowButton*>(area);
 
     if (button)
     {
-      if (button->GetType() == panel::WindowButtonType::MAXIMIZE ||
-          button->GetType() == panel::WindowButtonType::UNMAXIMIZE)
-      {
-        button->ChangeType(panel::WindowButtonType::UNMAXIMIZE);
-        button->SetEnabled(true);
-      }
+      if (button->GetType() == panel::WindowButtonType::UNMAXIMIZE)
+        restore_button = button;
+
+      if (button->GetType() == panel::WindowButtonType::MAXIMIZE)
+        maximize_button = button;
 
       button->SetOverlayOpen(false);
+    }
+  }
+
+  if (restore_button && maximize_button)
+  {
+    restore_button->SetEnabled(true);
+    maximize_button->SetEnabled(true);
+
+    if (!restore_button->IsVisible())
+    {
+      restore_button->SetVisualState(maximize_button->GetVisualState());
+
+      restore_button->SetVisible(true);
+      maximize_button->SetVisible(false);
+
+      QueueDraw();
     }
   }
 }
 
 void WindowButtons::OnDashSettingsUpdated()
 {
+  WindowButton* maximize_button = nullptr;
+  WindowButton* restore_button = nullptr;
+
   for (auto area : GetChildren())
   {
     auto button = dynamic_cast<WindowButton*>(area);
 
     if (button)
     {
-      if (button->IsOverlayOpen() &&
-          (button->GetType() == panel::WindowButtonType::UNMAXIMIZE ||
-           button->GetType() == panel::WindowButtonType::MAXIMIZE))
-      {
-        panel::WindowButtonType new_type = panel::WindowButtonType::UNMAXIMIZE;
+      if (!button->IsOverlayOpen())
+        break;
 
-        if (dash::Settings::Instance().GetFormFactor() == dash::FormFactor::DESKTOP)
-          new_type = panel::WindowButtonType::MAXIMIZE;
+      if (button->GetType() == panel::WindowButtonType::UNMAXIMIZE)
+        restore_button = button;
 
-        button->ChangeType(new_type);
-      }
+      if (button->GetType() == panel::WindowButtonType::MAXIMIZE)
+        maximize_button = button;
+
+      if (restore_button && maximize_button)
+        break;
     }
   }
-}
 
-nux::Area* WindowButtons::FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type)
-{
-  return nux::HLayout::FindAreaUnderMouse(mouse_position, event_type);
+  if (restore_button && restore_button->IsOverlayOpen() && maximize_button)
+  {
+    dash::Settings &dash_settings = dash::Settings::Instance();
+    bool maximizable = (dash_settings.GetFormFactor() == dash::FormFactor::DESKTOP);
+
+    if (maximizable != maximize_button->IsVisible())
+    {
+      if (maximize_button->IsVisible())
+        restore_button->SetVisualState(maximize_button->GetVisualState());
+      else if (restore_button->IsVisible())
+        maximize_button->SetVisualState(restore_button->GetVisualState());
+
+      restore_button->SetVisible(!maximizable);
+      maximize_button->SetVisible(maximizable);
+
+      QueueDraw();
+    }
+  }
 }
 
 void WindowButtons::SetOpacity(double opacity)
@@ -454,7 +544,7 @@ void WindowButtons::SetOpacity(double opacity)
   if (opacity_ != opacity)
   {
     opacity_ = opacity;
-    NeedRedraw();
+    QueueDraw();
   }
 }
 

@@ -1056,7 +1056,7 @@ void PanelMenuView::OnEntryAdded(indicator::Entry::Ptr const& entry)
 
     Window maximized = GetMaximizedWindow();
     _integrated_menu = new PanelIndicatorAppmenuView(entry);
-    _integrated_menu->SetControlledWindowXid(maximized);
+    _integrated_menu->SetControlledWindow(maximized);
     _integrated_menu->SetFocusedState(_active_xid == maximized);
 
     Refresh();
@@ -1267,7 +1267,7 @@ void PanelMenuView::OnActiveWindowChanged(BamfMatcher *matcher,
         _integrated_menu->SetFocusedState(_is_maximized);
 
         if (_is_maximized)
-          _integrated_menu->SetControlledWindowXid(_active_xid);
+          _integrated_menu->SetControlledWindow(_active_xid);
       }
     } 
   }
@@ -1405,7 +1405,7 @@ void PanelMenuView::OnWindowMaximized(guint xid)
       _integrated_menu->SetFocusedState(xid == _active_xid);
 
       if (is_active)
-        _integrated_menu->SetControlledWindowXid(_active_xid);
+        _integrated_menu->SetControlledWindow(_active_xid);
     }
   }
 
@@ -1451,7 +1451,7 @@ PanelMenuView::OnWindowRestored(guint xid)
     if (_integrated_menu)
     {
       _integrated_menu->SetFocusedState(maximized_is_active);
-      _integrated_menu->SetControlledWindowXid(maximized);
+      _integrated_menu->SetControlledWindow(maximized);
     }
   }
 
@@ -1544,14 +1544,7 @@ PanelMenuView::OnMinimizeClicked()
 void
 PanelMenuView::OnRestoreClicked()
 {
-  if (_dash_showing)
-  {
-    if (dash::Settings::Instance().GetFormFactor() == dash::FormFactor::DESKTOP)
-      dash::Settings::Instance().SetFormFactor(dash::FormFactor::NETBOOK);
-    else
-      dash::Settings::Instance().SetFormFactor(dash::FormFactor::DESKTOP);
-  }
-  else
+  if (!_dash_showing)
   {
     Window target_win = _active_xid;
 

@@ -101,7 +101,7 @@ void PanelIndicatorAppmenuView::SetLabel(std::string const& label)
   }
 }
 
-void PanelIndicatorAppmenuView::SetControlledWindowXid(Window xid)
+void PanelIndicatorAppmenuView::SetControlledWindow(Window xid)
 {
   if (xid_ != xid)
   {
