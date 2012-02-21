@@ -21,6 +21,7 @@
  */
 
 #include <Nux/Nux.h>
+#include <UnityCore/Variant.h>
 
 #include "CairoTexture.h"
 #include "ubus-server.h"
