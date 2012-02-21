@@ -2296,6 +2296,21 @@ void Launcher::OnPointerBarrierEvent(ui::PointerBarrierWrapper* owner, ui::Barri
 
   if (apply_to_reveal)
   {
+    int root_x_return, root_y_return, win_x_return, win_y_return;
+    unsigned int mask_return;
+    Window root_return, child_return;
+    Display *dpy = nux::GetGraphicsDisplay()->GetX11Display();
+
+    if (XQueryPointer (dpy, DefaultRootWindow(dpy), &root_return, &child_return, &root_x_return, 
+                       &root_y_return, &win_x_return, &win_y_return, &mask_return))
+    {
+      if (mask_return & (Button1Mask | Button3Mask))
+        apply_to_reveal = false;
+    }
+  }
+
+  if (apply_to_reveal)
+  {
     _hide_machine->AddRevealPressure(event->velocity);
     decaymulator_->value = 0;
   }
