@@ -1345,7 +1345,7 @@ void QuicklistView::NotifyConfigurationChange(int width, int height)
 {
 }
 
-void QuicklistView::SetText(const std::string& text)
+void QuicklistView::SetText(std::string const& text)
 {
   if (_labelText == text)
     return;

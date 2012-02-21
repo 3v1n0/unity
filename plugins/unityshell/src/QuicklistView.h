@@ -45,7 +45,7 @@ public:
   QuicklistView();
   ~QuicklistView();
 
-  void SetText(const std::string& text);
+  void SetText(std::string const& text);
 
   void RemoveAllMenuItem();
 
