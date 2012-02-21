@@ -131,9 +131,12 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
       nux::BaseTexture* bottom = style.GetDashBottomTile();
       nux::BaseTexture* right = style.GetDashRightTile();
       nux::BaseTexture* corner = style.GetDashCorner();
+      //nux::BaseTexture* corner_mask = style.GetDashCornerMask();
       nux::BaseTexture* left_corner = style.GetDashLeftCorner();
+      //nux::BaseTexture* left_corner_mask = style.GetDashLeftCornerMask();
       nux::BaseTexture* left_tile = style.GetDashLeftTile();
       nux::BaseTexture* top_corner = style.GetDashTopCorner();
+      //nux::BaseTexture* top_corner_mask = style.GetDashTopCornerMask();
       nux::BaseTexture* top_tile = style.GetDashTopTile();
       nux::TexCoordXForm texxform;
 
@@ -339,7 +342,7 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
     gfx_context.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
 
     // Fill in corners (meh)
-    for (int i = 0; i < INNER_CORNER_RADIUS; ++i)
+    /*for (int i = 0; i < INNER_CORNER_RADIUS; ++i)
     {
       nux::Geometry fill_geo (geo.x + geo.width, geo.y + i, INNER_CORNER_RADIUS - i, 1);
       nux::GetPainter().Paint2DQuadColor(gfx_context, fill_geo, bg_color_);
@@ -348,7 +351,7 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
       dark.alpha = bg_color_.alpha;
       fill_geo = nux::Geometry(geo.x + i, geo.y + geo.height, 1, INNER_CORNER_RADIUS - i);
       nux::GetPainter().Paint2DQuadColor(gfx_context, fill_geo, dark);
-    }
+    }*/
   }
 }
 
