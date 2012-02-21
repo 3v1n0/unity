@@ -34,7 +34,6 @@ UBusManager BFBLauncherIcon::ubus_manager_;
 
 BFBLauncherIcon::BFBLauncherIcon()
  : SimpleLauncherIcon()
- , reader_(dash::LensDirectoryReader::GetDefault())
 {
   tooltip_text = _("Dash home");
   icon_name = PKGDATADIR"/launcher_bfb.png";
@@ -95,21 +94,21 @@ std::list<DbusmenuMenuitem*> BFBLauncherIcon::GetMenus()
   result.push_back(menu_item);
 
   // Other lenses..
-  for (auto lens : reader_->GetLensData())
+  for (auto lens : lenses_.GetLenses())
   {
-    if (!lens->visible)
+    if (!lens->visible())
       continue;
 
     menu_item = dbusmenu_menuitem_new();
 
-    dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, lens->name);
+    dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, lens->name().c_str());
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
 
     g_signal_connect(menu_item,
                      DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
                      (GCallback)&BFBLauncherIcon::OnMenuitemActivated,
-                     g_strdup(lens->id));
+                     g_strdup(lens->id().c_str()));
 
     result.push_back(menu_item);
   }
