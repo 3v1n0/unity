@@ -536,7 +536,7 @@ void PlacesGroup::AddProperties(GVariantBuilder* builder)
   wrapper.add("header-height", _header_view->GetAbsoluteHeight());
   wrapper.add("header-has-keyfocus", HeaderHasKeyFocus());
   wrapper.add("header-is-highlighted", ShouldBeHighlighted());
-  wrapper.add("name", _name->GetText().c_str());
+  wrapper.add("name", _name->GetText());
 }
 
 } // namespace unity
