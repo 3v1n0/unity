@@ -37,12 +37,40 @@ namespace unity
 {
 namespace dash
 {
-
 namespace
 {
+
 nux::logging::Logger logger("unity.dash.view");
 
 }
+
+// This is so we can access some protected members in nux::VLayout and
+// break the natural key navigation path.
+class DashLayout: public nux::VLayout
+{
+public:
+  DashLayout(NUX_FILE_LINE_DECL)
+    : nux::VLayout(NUX_FILE_LINE_PARAM)
+    , area_(nullptr)
+  {}
+
+  void SetSpecialArea(nux::Area* area)
+  {
+    area_ = area;
+  }
+
+protected:
+  nux::Area* KeyNavIteration(nux::KeyNavDirection direction)
+  {
+    if (direction == nux::KEY_NAV_DOWN && area_ &&  area_->HasKeyFocus())
+      return nullptr;
+    else
+      return nux::VLayout::KeyNavIteration(direction);
+  }
+
+private:
+  nux::Area* area_;
+};
 
 NUX_IMPLEMENT_OBJECT_TYPE(DashView);
 
@@ -133,7 +161,7 @@ void DashView::SetupViews()
   layout_ = new nux::VLayout();
   SetLayout(layout_);
 
-  content_layout_ = new nux::VLayout();
+  content_layout_ = new DashLayout(NUX_TRACKER_LOCATION);
   content_layout_->SetHorizontalExternalMargin(0);
   content_layout_->SetVerticalExternalMargin(0);
 
@@ -145,11 +173,12 @@ void DashView::SetupViews()
   search_bar_->live_search_reached.connect(sigc::mem_fun(this, &DashView::OnLiveSearchReached));
   search_bar_->showing_filters.changed.connect([&] (bool showing) { if (active_lens_view_) active_lens_view_->filters_expanded = showing; QueueDraw(); });
   content_layout_->AddView(search_bar_, 0, nux::MINOR_POSITION_LEFT);
+  content_layout_->SetSpecialArea(search_bar_->show_filters());
 
   lenses_layout_ = new nux::VLayout();
   content_layout_->AddView(lenses_layout_, 1, nux::MINOR_POSITION_LEFT);
 
-  home_view_ = new LensView(home_lens_);
+  home_view_ = new LensView(home_lens_, nullptr);
   AddChild(home_view_);
   active_lens_view_ = home_view_;
   lens_views_[home_lens_->id] = home_view_;
@@ -376,7 +405,7 @@ void DashView::OnLensAdded(Lens::Ptr& lens)
   std::string id = lens->id;
   lens_bar_->AddLens(lens);
 
-  LensView* view = new LensView(lens);
+  LensView* view = new LensView(lens, search_bar_->show_filters());
   AddChild(view);
   view->SetVisible(false);
   view->uri_activated.connect(sigc::mem_fun(this, &DashView::OnUriActivated));
@@ -624,15 +653,20 @@ void DashView::AddProperties(GVariantBuilder* builder)
   wrapper.add("num-rows", num_rows);
 }
 
-nux::Area * DashView::KeyNavIteration(nux::KeyNavDirection direction)
+nux::Area* DashView::KeyNavIteration(nux::KeyNavDirection direction)
 {
-  // We don't want to eat the tab as it's used for IM stuff
-  if (!search_bar_->im_active())
+  if (direction == nux::KEY_NAV_DOWN && search_bar_ && active_lens_view_)
   {
-    if (direction == KEY_NAV_TAB_NEXT)
-      lens_bar_->ActivateNext();
-    else if (direction == KEY_NAV_TAB_PREVIOUS)
-      lens_bar_->ActivatePrevious();
+    auto show_filters = search_bar_->show_filters();
+    auto fscroll_view = active_lens_view_->fscroll_view();
+    
+    if (show_filters && show_filters->HasKeyFocus())
+    {
+      if (fscroll_view->IsVisible() && fscroll_view)
+        return fscroll_view->KeyNavIteration(direction);
+      else
+        return active_lens_view_->KeyNavIteration(direction);
+    } 
   }
   return this;
 }
@@ -648,6 +682,8 @@ Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
 {
   // Do what nux::View does, but if the event isn't a key navigation,
   // designate the text entry to process it.
+
+  bool ctrl = (special_keys_state & NUX_STATE_CTRL);
 
   nux::KeyNavDirection direction = KEY_NAV_NONE;
   switch (x11_key_code)
@@ -665,9 +701,11 @@ Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
     direction = KEY_NAV_RIGHT;
     break;
   case NUX_VK_LEFT_TAB:
+  case NUX_VK_PAGE_UP:
     direction = KEY_NAV_TAB_PREVIOUS;
     break;
   case NUX_VK_TAB:
+  case NUX_VK_PAGE_DOWN:
     direction = KEY_NAV_TAB_NEXT;
     break;
   case NUX_VK_ENTER:
@@ -680,11 +718,87 @@ Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
     break;
   }
 
-  if (has_key_focus_)
+  // We should not do it here, but I really don't want to make DashView 
+  // focusable and I'm not able to know if ctrl is pressed in
+  // DashView::KeyNavIteration.
+   nux::InputArea* focus_area = nux::GetWindowCompositor().GetKeyFocusArea();
+
+  if (key_symbol == nux::NUX_KEYDOWN)
   {
-    return this;
+    std::list<nux::Area*> tabs;
+    for (auto category : active_lens_view_->categories())
+    {
+      if (category->IsVisible())
+        tabs.push_back(category);
+    }
+
+    if (search_bar_ && search_bar_->show_filters() &&
+        search_bar_->show_filters()->IsVisible())
+    {
+      tabs.push_back(search_bar_->show_filters());
+    }
+
+    if (active_lens_view_->filter_bar() && active_lens_view_->fscroll_view() &&
+        active_lens_view_->fscroll_view()->IsVisible())
+    {
+      for (auto filter : active_lens_view_->filter_bar()->GetLayout()->GetChildren())
+      {
+        tabs.push_back(filter);
+      }
+    }
+
+    if (direction == KEY_NAV_TAB_PREVIOUS)
+    {
+      if (ctrl)
+      {
+        lens_bar_->ActivatePrevious();
+      }
+      else
+      {
+        auto rbegin = tabs.rbegin();
+        auto rend = tabs.rend();
+
+        bool use_the_prev = false;
+        for (auto tab = rbegin; tab != rend; ++tab)
+        {
+          const auto& tab_ptr = *tab;
+           
+          if (use_the_prev)
+            return tab_ptr;
+          
+          if (focus_area)
+            use_the_prev = focus_area->IsChildOf(tab_ptr);
+        }
+
+        for (auto tab = rbegin; tab != rend; ++tab)
+          return *tab;
+      }
+    }
+    else if (direction == KEY_NAV_TAB_NEXT)
+    {
+      if (ctrl)
+      {
+        lens_bar_->ActivateNext();
+      }
+      else
+      {
+        bool use_the_next = false;
+        for (auto tab : tabs)
+        {
+          if (use_the_next)
+            return tab;
+          
+          if (focus_area)
+            use_the_next = focus_area->IsChildOf(tab);
+        }
+
+        for (auto tab : tabs)
+          return tab;
+      }
+    }
   }
-  else if (direction == KEY_NAV_NONE || search_bar_->im_active)
+
+  if (direction == KEY_NAV_NONE || search_bar_->im_active)
   {
     // then send the event to the search entry
     return search_bar_->text_entry();

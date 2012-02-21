@@ -48,6 +48,8 @@ class LensScrollView: public nux::ScrollView
 public:
   LensScrollView(nux::VScrollBar* scroll_bar, NUX_FILE_LINE_DECL)
     : nux::ScrollView(NUX_FILE_LINE_PARAM)
+    , right_area_(nullptr)
+    , up_area_(nullptr)
   {
     SetVScrollBar(scroll_bar);
   }
@@ -79,6 +81,35 @@ public:
       ScrollDown (1, size);
     }
   }
+  
+  void SetRightArea(nux::Area* area)
+  {
+    right_area_ = area;
+  }
+
+  void SetUpArea(nux::Area* area)
+  {
+    up_area_ = area;
+  }
+  
+protected:
+
+  // This is so we can break the natural key navigation path.
+  nux::Area* KeyNavIteration(nux::KeyNavDirection direction)
+  {
+    nux::Area* focus_area = nux::GetWindowCompositor().GetKeyFocusArea();
+
+    if (direction == nux::KEY_NAV_RIGHT && focus_area && focus_area->IsChildOf(this))
+      return right_area_;
+    else if (direction == nux::KEY_NAV_UP && focus_area && focus_area->IsChildOf(this))
+      return up_area_;
+    else
+      return nux::ScrollView::KeyNavIteration(direction);
+  }
+
+private:
+  nux::Area* right_area_;
+  nux::Area* up_area_;
 };
 
 
@@ -92,7 +123,7 @@ LensView::LensView()
   , fix_renderering_id_(0)
 {}
 
-LensView::LensView(Lens::Ptr lens)
+LensView::LensView(Lens::Ptr lens, nux::Area* show_filters)
   : nux::View(NUX_TRACKER_LOCATION)
   , search_string("")
   , filters_expanded(false)
@@ -101,7 +132,7 @@ LensView::LensView(Lens::Ptr lens)
   , initial_activation_(true)
   , fix_renderering_id_(0)
 {
-  SetupViews();
+  SetupViews(show_filters);
   SetupCategories();
   SetupResults();
   SetupFilters();
@@ -124,7 +155,7 @@ LensView::LensView(Lens::Ptr lens)
     {
       if (category->GetLayout() != nullptr)
       {
-        auto expand_label = category->GetExpandLabel();
+        auto expand_label = category->GetHeaderFocusableView();
         auto child = category->GetChildView();
 
         if ((child && child->HasKeyFocus()) || 
@@ -149,7 +180,7 @@ LensView::~LensView()
     g_source_remove(fix_renderering_id_);
 }
 
-void LensView::SetupViews()
+void LensView::SetupViews(nux::Area* show_filters)
 {
   layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
 
@@ -161,18 +192,21 @@ void LensView::SetupViews()
 
   scroll_layout_ = new nux::VLayout(NUX_TRACKER_LOCATION);
   scroll_view_->SetLayout(scroll_layout_);
+  scroll_view_->SetRightArea(show_filters);
 
   fscroll_view_ = new LensScrollView(new PlacesVScrollBar(NUX_TRACKER_LOCATION),
                                      NUX_TRACKER_LOCATION);
   fscroll_view_->EnableVerticalScrollBar(true);
   fscroll_view_->EnableHorizontalScrollBar(false);
   fscroll_view_->SetVisible(false);
+  fscroll_view_->SetUpArea(show_filters);
   layout_->AddView(fscroll_view_, 1);
 
   fscroll_layout_ = new nux::VLayout();
   fscroll_view_->SetLayout(fscroll_layout_);
 
   filter_bar_ = new FilterBar();
+  AddChild(filter_bar_);
   fscroll_layout_->AddView(filter_bar_);
 
   SetLayout(layout_);
@@ -398,6 +432,11 @@ Lens::Ptr LensView::lens() const
   return lens_;
 }
 
+nux::Area* LensView::fscroll_view() const
+{
+  return fscroll_view_;
+}
+
 int LensView::GetNumRows()
 {
   unsigned int columns = dash::Style::Instance().GetDefaultNColumns();
@@ -461,7 +500,11 @@ std::string LensView::GetName() const
 }
 
 void LensView::AddProperties(GVariantBuilder* builder)
-{}
+{
+  unity::variant::BuilderWrapper wrapper(builder);
+
+  wrapper.add("name", lens_->id());
+}
 
 
 }

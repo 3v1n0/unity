@@ -28,13 +28,16 @@
 #include <UnityCore/Filters.h>
 
 #include "FilterFactory.h"
+#include "Introspectable.h"
 
 namespace unity
 {
 namespace dash
 {
 
-class FilterBar : public nux::View
+class FilterExpanderLabel;
+
+class FilterBar : public nux::View, public debug::Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE(FilterBar, nux::View);
 public:
@@ -47,15 +50,20 @@ public:
   void RemoveFilter(Filter::Ptr const& filter);
 
 protected:
+  virtual bool AcceptKeyNavFocus();
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
+
+  // Introspection
+  virtual std::string GetName() const;
+  virtual void AddProperties(GVariantBuilder* builder);
 
 private:
   void Init();
 
   FilterFactory factory_;
   Filters::Ptr filters_;
-  std::map<Filter::Ptr, nux::View*> filter_map_;
+  std::map<Filter::Ptr, FilterExpanderLabel*> filter_map_;
 };
 
 } // namespace dash
