@@ -118,14 +118,15 @@ class DashTests(AutopilotTestCase):
           # Get the geometry of that category header.
           x = category['header-x']
           y = category['header-y']
+          w = category['header-width']
+          h = category['header-height']
 
           # Manually scroll the dash.
-          mouse.move(x, y, True)
+          mouse.move(x+w+10, y+w+10, True)
           mouse.click(5)
           mouse.click(5)
           mouse.click(5)
 
-          cached_x = x
           cached_y = y
 
           # Focus the search bar with the mouse
@@ -138,12 +139,10 @@ class DashTests(AutopilotTestCase):
           kb.press_and_release("Down")
           kb.press_and_release("Enter")
           category = self.dash.get_focused_category()
-          x = category['header-x']
           y = category['header-y']
 
           # Make sure the dash autoscroll
-          self.assertEqual(x, cached_x)
-          self.assertEqual(y, cached_y)
+          self.assertTrue(abs(y-cached_y) < 30)
 
     def test_category_header_keynav(self):
           """ This test makes sure that:
