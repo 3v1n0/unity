@@ -46,33 +46,39 @@ const char* GROUP = "Lens";
 }
 
 // Loads data from a Lens key-file in a usable form
-LensDirectoryReader::LensFileData::LensFileData(GKeyFile* file, 
-                                                const gchar *lens_id)
-  : id(g_strdup(lens_id))
-  , domain(g_key_file_get_string(file, G_KEY_FILE_DESKTOP_GROUP, "X-Ubuntu-Gettext-Domain", NULL))
-  , dbus_name(g_key_file_get_string(file, GROUP, "DBusName", NULL))
-  , dbus_path(g_key_file_get_string(file, GROUP, "DBusPath", NULL))
-  , name(g_strdup(g_dgettext(domain.Value(), g_key_file_get_string(file, GROUP, "Name", NULL))))
-  , icon(g_key_file_get_string(file, GROUP, "Icon", NULL))
-  , description(g_key_file_get_locale_string(file, GROUP, "Description", NULL, NULL))
-  , search_hint(g_key_file_get_locale_string(file, GROUP, "SearchHint", NULL, NULL))
-  , visible(true)
-  , shortcut(g_key_file_get_string(file, GROUP, "Shortcut", NULL))
+struct LensFileData
 {
-  if (g_key_file_has_key(file, GROUP, "Visible", NULL))
-  {
-    visible = g_key_file_get_boolean(file, GROUP, "Visible", NULL) != FALSE;
-  }
-}
+  LensFileData(GKeyFile* file)
+    : domain(g_key_file_get_string(file, G_KEY_FILE_DESKTOP_GROUP, "X-Ubuntu-Gettext-Domain", NULL))
+    , dbus_name(g_key_file_get_string(file, GROUP, "DBusName", NULL))
+    , dbus_path(g_key_file_get_string(file, GROUP, "DBusPath", NULL))
+    , name(g_strdup(g_dgettext(domain.Value(), g_key_file_get_string(file, GROUP, "Name", NULL))))
+    , icon(g_key_file_get_string(file, GROUP, "Icon", NULL))
+    , description(g_key_file_get_locale_string(file, GROUP, "Description", NULL, NULL))
+    , search_hint(g_key_file_get_locale_string(file, GROUP, "SearchHint", NULL, NULL))
+    , visible(g_key_file_get_boolean(file, GROUP, "Visible", NULL))
+    , shortcut(g_key_file_get_string(file, GROUP, "Shortcut", NULL))
+  {}
 
-bool LensDirectoryReader::LensFileData::IsValid(GKeyFile* file, glib::Error& error)
-{
-  return (g_key_file_has_group(file, GROUP) &&
-          g_key_file_has_key(file, GROUP, "DBusName", &error) &&
-          g_key_file_has_key(file, GROUP, "DBusPath", &error) &&
-          g_key_file_has_key(file, GROUP, "Name", &error) &&
-          g_key_file_has_key(file, GROUP, "Icon", &error));
-}
+  static bool IsValid(GKeyFile* file, glib::Error& error)
+  {
+    return (g_key_file_has_group(file, GROUP) &&
+            g_key_file_has_key(file, GROUP, "DBusName", &error) &&
+            g_key_file_has_key(file, GROUP, "DBusPath", &error) &&
+            g_key_file_has_key(file, GROUP, "Name", &error) &&
+            g_key_file_has_key(file, GROUP, "Icon", &error));
+  }
+
+  glib::String domain;
+  glib::String dbus_name;
+  glib::String dbus_path;
+  glib::String name;
+  glib::String icon;
+  glib::String description;
+  glib::String search_hint;
+  bool         visible;
+  glib::String shortcut;
+};
 
 /* A quick guide to finding Lens files
  *
@@ -97,57 +103,92 @@ bool LensDirectoryReader::LensFileData::IsValid(GKeyFile* file, glib::Error& err
  * override those found system-wide. This is to ease development of Lenses.
  *
  */
-
-class LensDirectoryReader::Impl
+class FilesystemLenses::Impl
 {
 public:
   typedef std::map<GFile*, glib::Object<GCancellable>> CancellableMap;
 
-  Impl(LensDirectoryReader *owner, std::string const& directory)
-    : owner_(owner)
-    , directory_(g_file_new_for_path(directory.c_str()))
-    , children_waiting_to_load_(0)
-    , enumeration_done_(false)
-  {
-    LOG_DEBUG(logger) << "Initialising lens reader for: " << directory;
+  Impl(FilesystemLenses* owner);
+  Impl(FilesystemLenses* owner, std::string const& lens_directory);
 
-    glib::Object<GCancellable> cancellable(g_cancellable_new());
-    g_file_enumerate_children_async(directory_,
-                                    G_FILE_ATTRIBUTE_STANDARD_NAME,
-                                    G_FILE_QUERY_INFO_NONE,
-                                    G_PRIORITY_DEFAULT,
-                                    cancellable,
-                                    (GAsyncReadyCallback)OnDirectoryEnumerated,
-                                    this);
-    cancel_map_[directory_] = cancellable;
-  }
+  ~Impl();
 
-  ~Impl()
-  {
-    for (auto pair: cancel_map_)
-    {
-      g_cancellable_cancel(pair.second);
-    }
-  }
+  LensList GetLenses() const;
+  Lens::Ptr GetLens(std::string const& lens_id) const;
+  Lens::Ptr GetLensAtIndex(std::size_t index) const;
+  Lens::Ptr GetLensForShortcut(std::string const& lens_shortcut) const;
+  std::size_t count() const;
 
+  void Init();
+  glib::Object<GFile> BuildLensPathFile(std::string const& directory);
   void EnumerateLensesDirectoryChildren(GFileEnumerator* enumerator);
   void LoadLensFile(std::string const& lensfile_path);
-  void GetLensDataFromKeyFile(GFile* path, const char* data, gsize length);
-  DataList GetLensData() const;
-  void SortLensList();
+  void CreateLensFromKeyFileData(GFile* path, const char* data, gsize length);
+  void DecrementAndCheckChildrenWaiting();
   
   static void OnDirectoryEnumerated(GFile* source, GAsyncResult* res, Impl* self);
   static void LoadFileContentCallback(GObject* source, GAsyncResult* res, gpointer user_data);
 
-  LensDirectoryReader *owner_;
+  FilesystemLenses* owner_;
   glib::Object<GFile> directory_;
-  DataList lenses_data_;
   std::size_t children_waiting_to_load_;
-  bool enumeration_done_;
   CancellableMap cancel_map_;
+  LensList lenses_;
 };
 
-void LensDirectoryReader::Impl::OnDirectoryEnumerated(GFile* source, GAsyncResult* res, Impl* self)
+FilesystemLenses::Impl::Impl(FilesystemLenses* owner)
+  : owner_(owner)
+  , children_waiting_to_load_(0)
+{
+  LOG_DEBUG(logger) << "Initialising in standard lens directory mode: " << LENSES_DIR;
+
+  directory_ = BuildLensPathFile(LENSES_DIR);
+
+  Init();
+}
+
+FilesystemLenses::Impl::Impl(FilesystemLenses* owner, std::string const& lens_directory)
+  : owner_(owner)
+  , children_waiting_to_load_(0)
+{
+  LOG_DEBUG(logger) << "Initialising in override lens directory mode";
+
+  directory_ = g_file_new_for_path(lens_directory.c_str());
+
+  Init();
+}
+
+FilesystemLenses::Impl::~Impl()
+{
+  for (auto pair: cancel_map_)
+  {
+    g_cancellable_cancel(pair.second);
+  }
+}
+
+void FilesystemLenses::Impl::Init()
+{
+  glib::String path(g_file_get_path(directory_));
+  LOG_DEBUG(logger) << "Searching for Lenses in: " << path;
+
+  glib::Object<GCancellable> cancellable(g_cancellable_new());
+  g_file_enumerate_children_async(directory_,
+                                  G_FILE_ATTRIBUTE_STANDARD_NAME,
+                                  G_FILE_QUERY_INFO_NONE,
+                                  G_PRIORITY_DEFAULT,
+                                  cancellable,
+                                  (GAsyncReadyCallback)OnDirectoryEnumerated,
+                                  this);
+  cancel_map_[directory_] = cancellable;
+}
+
+glib::Object<GFile> FilesystemLenses::Impl::BuildLensPathFile(std::string const& directory)
+{
+  glib::Object<GFile> file(g_file_new_for_path(directory.c_str()));
+  return file;
+}
+
+void FilesystemLenses::Impl::OnDirectoryEnumerated(GFile* source, GAsyncResult* res, Impl* self)
 {
   glib::Error error;
   glib::Object<GFileEnumerator> enumerator(g_file_enumerate_children_finish(source, res, error.AsOutParam()));
@@ -155,59 +196,43 @@ void LensDirectoryReader::Impl::OnDirectoryEnumerated(GFile* source, GAsyncResul
   if (error || !enumerator)
   {
     glib::String path(g_file_get_path(source));
-    LOG_WARN(logger) << "Unable to enumerate children of directory "
+    LOG_WARN(logger) << "Unabled to enumerate children of directory "
                      << path << " "
                      << error;
     return;
   }
-  self->cancel_map_.erase(source);
   self->EnumerateLensesDirectoryChildren(enumerator);
+  self->cancel_map_.erase(source);
 }
 
-void LensDirectoryReader::Impl::EnumerateLensesDirectoryChildren(GFileEnumerator* in_enumerator)
+void FilesystemLenses::Impl::EnumerateLensesDirectoryChildren(GFileEnumerator* enumerator)
 {
-  glib::Object<GCancellable> cancellable(g_cancellable_new());
+  glib::Error error;
+  glib::Object<GFileInfo> info;
 
-  cancel_map_[g_file_enumerator_get_container(in_enumerator)] = cancellable;
-  g_file_enumerator_next_files_async (in_enumerator, 64, G_PRIORITY_DEFAULT,
-                                      cancellable,
-                                      [] (GObject *src, GAsyncResult *res,
-                                          gpointer data) -> void {
-    // async callback
-    glib::Error error;
-    GFileEnumerator *enumerator = G_FILE_ENUMERATOR (src);
-    // FIXME: won't this kill the enumerator?
-    GList *files = g_file_enumerator_next_files_finish (enumerator, res, error.AsOutParam());
-    if (!error)
+  while (info = g_file_enumerator_next_file(enumerator, NULL, error.AsOutParam()))
+  {
+    if (info && !error)
     {
-      Impl *self = (Impl*) data;
-      self->cancel_map_.erase(g_file_enumerator_get_container(enumerator));
-      for (GList *iter = files; iter; iter = iter->next)
-      {
-        glib::Object<GFileInfo> info((GFileInfo*) iter->data);
+      std::string name(g_file_info_get_name(info));
+      glib::String dir_path(g_file_get_path(g_file_enumerator_get_container(enumerator)));
+      std::string lensfile_name = name + ".lens";
 
-        std::string name(g_file_info_get_name(info));
-        glib::String dir_path(g_file_get_path(g_file_enumerator_get_container(enumerator)));
-        std::string lensfile_name = name + ".lens";
-
-        glib::String lensfile_path(g_build_filename(dir_path.Value(),
-                                                    name.c_str(),
-                                                    lensfile_name.c_str(),
-                                                    NULL));
-        self->LoadLensFile(lensfile_path.Str());
-      }
-      // the GFileInfos got already freed during the iteration
-      g_list_free (files);
-      self->enumeration_done_ = true;
+      glib::String lensfile_path(g_build_filename(dir_path.Value(),
+                                                  name.c_str(),
+                                                  lensfile_name.c_str(),
+                                                  NULL));
+      LoadLensFile(lensfile_path.Str());
     }
     else
     {
       LOG_WARN(logger) << "Cannot enumerate over directory: " << error;
+      continue;
     }
-  }, this);
+  }
 }
 
-void LensDirectoryReader::Impl::LoadLensFile(std::string const& lensfile_path)
+void FilesystemLenses::Impl::LoadLensFile(std::string const& lensfile_path)
 {
   glib::Object<GFile> file(g_file_new_for_path(lensfile_path.c_str()));
   glib::Object<GCancellable> cancellable(g_cancellable_new());
@@ -217,14 +242,14 @@ void LensDirectoryReader::Impl::LoadLensFile(std::string const& lensfile_path)
 
   g_file_load_contents_async(file,
                              cancellable,
-                             (GAsyncReadyCallback)(LensDirectoryReader::Impl::LoadFileContentCallback),
+                             (GAsyncReadyCallback)(FilesystemLenses::Impl::LoadFileContentCallback),
                              this);
   cancel_map_[file] = cancellable;
 }
 
-void LensDirectoryReader::Impl::LoadFileContentCallback(GObject* source,
-                                                        GAsyncResult* res,
-                                                        gpointer user_data)
+void FilesystemLenses::Impl::LoadFileContentCallback(GObject* source,
+                                                     GAsyncResult* res,
+                                                     gpointer user_data)
 {
   Impl* self = static_cast<Impl*>(user_data);
   glib::Error error;
@@ -238,8 +263,7 @@ void LensDirectoryReader::Impl::LoadFileContentCallback(GObject* source,
                                                 NULL, error.AsOutParam());
   if (result && !error)
   {
-    self->GetLensDataFromKeyFile(file, contents.Value(), length);
-    self->SortLensList();
+    self->CreateLensFromKeyFileData(file, contents.Value(), length);
   }
   else
   {
@@ -248,18 +272,41 @@ void LensDirectoryReader::Impl::LoadFileContentCallback(GObject* source,
                      << error;
   }
   
+  self->DecrementAndCheckChildrenWaiting();
   self->cancel_map_.erase(file);
+}
 
+void FilesystemLenses::Impl::DecrementAndCheckChildrenWaiting()
+{
   // If we're not waiting for any more children to load, signal that we're
   // done reading the directory
-  self->children_waiting_to_load_--;
-  if (self->children_waiting_to_load_ == 0)
+  children_waiting_to_load_--;
+  if (!children_waiting_to_load_)
   {
-    self->owner_->load_finished.emit();
+    //FIXME: This should be it's own function, but we're trying not to break ABI
+    // right now.
+    //FIXME: We don't have a strict order, but alphabetical serves us wonderfully for
+    // Oneiric. When we have an order/policy, please replace this.
+    auto sort_cb = [] (Lens::Ptr a, Lens::Ptr b) -> bool
+      {
+        if (a->id == "applications.lens")
+          return true;
+        else if (b->id == "applications.lens")
+          return false;
+        else
+          return g_strcmp0(a->id().c_str(), b->id().c_str()) < 0; 
+      };
+    std::sort(lenses_.begin(),
+              lenses_.end(),
+              sort_cb);
+    for (Lens::Ptr& lens: lenses_)
+      owner_->lens_added.emit(lens);
+
+    owner_->lenses_loaded.emit();
   }
 }
 
-void LensDirectoryReader::Impl::GetLensDataFromKeyFile(GFile* file,
+void FilesystemLenses::Impl::CreateLensFromKeyFileData(GFile* file,
                                                        const char* data,
                                                        gsize length)
 {
@@ -271,9 +318,19 @@ void LensDirectoryReader::Impl::GetLensDataFromKeyFile(GFile* file,
   {
     if (LensFileData::IsValid(key_file, error))
     {
+      LensFileData data(key_file);
       glib::String id(g_path_get_basename(path.Value()));
 
-      lenses_data_.push_back(new LensFileData(key_file, id));
+      Lens::Ptr lens(new Lens(id.Str(),
+                              data.dbus_name.Str(),
+                              data.dbus_path.Str(),
+                              data.name.Str(),
+                              data.icon.Str(),
+                              data.description.Str(),
+                              data.search_hint.Str(),
+                              data.visible,
+                              data.shortcut.Str()));
+      lenses_.push_back(lens);
 
       LOG_DEBUG(logger) << "Sucessfully loaded lens file " << path;
     }
@@ -291,122 +348,6 @@ void LensDirectoryReader::Impl::GetLensDataFromKeyFile(GFile* file,
                      << error;
   }
   g_key_file_free(key_file);
-}
-
-LensDirectoryReader::DataList LensDirectoryReader::Impl::GetLensData() const
-{
-  return lenses_data_;
-}
-
-void LensDirectoryReader::Impl::SortLensList()
-{
-  //FIXME: We don't have a strict order, but alphabetical serves us well.
-  // When we have an order/policy, please replace this.
-  auto sort_cb = [] (LensFileData* a, LensFileData* b) -> bool
-  {
-    if (a->id.Str() == "applications.lens")
-      return true;
-    else if (b->id.Str() == "applications.lens")
-      return false;
-    else
-      return g_strcmp0(a->id.Value(), b->id.Value()) < 0;
-  };
-  std::sort(lenses_data_.begin(),
-            lenses_data_.end(),
-            sort_cb);
-}
-
-LensDirectoryReader::LensDirectoryReader(std::string const& directory)
-  : pimpl(new Impl(this, directory))
-{
-}
-
-LensDirectoryReader::~LensDirectoryReader()
-{
-  delete pimpl;
-}
-
-LensDirectoryReader::Ptr LensDirectoryReader::GetDefault()
-{
-  static LensDirectoryReader::Ptr main_reader(new LensDirectoryReader(LENSES_DIR));
-
-  return main_reader;
-}
-
-bool LensDirectoryReader::IsDataLoaded() const
-{
-  return pimpl->children_waiting_to_load_ == 0 && pimpl->enumeration_done_;
-}
-
-LensDirectoryReader::DataList LensDirectoryReader::GetLensData() const
-{
-  return pimpl->GetLensData();
-}
-
-class FilesystemLenses::Impl
-{
-public:
-  Impl(FilesystemLenses* owner, LensDirectoryReader::Ptr const& reader);
-  ~Impl()
-  {
-    if (timeout_id != 0) g_source_remove (timeout_id);
-  }
-
-  void OnLoadingFinished();
-
-  LensList GetLenses() const;
-  Lens::Ptr GetLens(std::string const& lens_id) const;
-  Lens::Ptr GetLensAtIndex(std::size_t index) const;
-  Lens::Ptr GetLensForShortcut(std::string const& lens_shortcut) const;
-  std::size_t count() const;
-
-  FilesystemLenses* owner_;
-  LensDirectoryReader::Ptr reader_;
-  LensList lenses_;
-  guint timeout_id;
-};
-
-FilesystemLenses::Impl::Impl(FilesystemLenses* owner, LensDirectoryReader::Ptr const& reader)
-  : owner_(owner)
-  , reader_(reader)
-  , timeout_id(0)
-{
-  reader_->load_finished.connect(sigc::mem_fun(this, &Impl::OnLoadingFinished));
-  if (reader_->IsDataLoaded())
-  {
-    // we won't get any signal, so let's just emit our signals after construction
-    timeout_id = g_idle_add_full (G_PRIORITY_DEFAULT,
-                                  [] (gpointer data) -> gboolean {
-                                    Impl *self = (Impl*) data;
-                                    self->timeout_id = 0;
-                                    self->OnLoadingFinished();
-                                    return FALSE;
-                                  },
-                                  this, NULL);
-  }
-}
-
-void FilesystemLenses::Impl::OnLoadingFinished()
-{
-  // FIXME: clear lenses_ first?
-  for (auto lens_data : reader_->GetLensData())
-  {
-    Lens::Ptr lens(new Lens(lens_data->id,
-                            lens_data->dbus_name,
-                            lens_data->dbus_path,
-                            lens_data->name,
-                            lens_data->icon,
-                            lens_data->description,
-                            lens_data->search_hint,
-                            lens_data->visible,
-                            lens_data->shortcut));
-    lenses_.push_back (lens);
-  }
-
-  for (Lens::Ptr& lens: lenses_)
-    owner_->lens_added.emit(lens);
-
-  owner_->lenses_loaded.emit();
 }
 
 Lenses::LensList FilesystemLenses::Impl::GetLenses() const
@@ -460,13 +401,13 @@ std::size_t FilesystemLenses::Impl::count() const
 
 
 FilesystemLenses::FilesystemLenses()
-  : pimpl(new Impl(this, LensDirectoryReader::GetDefault()))
+  : pimpl(new Impl(this))
 {
   Init();
 }
 
-FilesystemLenses::FilesystemLenses(LensDirectoryReader::Ptr const& reader)
-  : pimpl(new Impl(this, reader))
+FilesystemLenses::FilesystemLenses(std::string const& lens_directory)
+  : pimpl(new Impl(this, lens_directory))
 {
   Init();
 }
