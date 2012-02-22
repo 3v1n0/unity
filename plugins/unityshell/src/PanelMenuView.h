@@ -44,18 +44,6 @@ namespace unity
 class PanelMenuView : public PanelIndicatorsView
 {
 public:
-  // This contains all the menubar logic for the Panel. Mainly it contains
-  // the following states:
-  // 1. Unmaximized window + no mouse hover
-  // 2. Unmaximized window + mouse hover
-  // 3. Unmaximized window + active menu (Alt+F/arrow key nav)
-  // 4. Maximized window + no mouse hover
-  // 5. Maximized window + mouse hover
-  // 6. Maximized window + active menu
-  //
-  // It also deals with undecorating maximized windows (and redecorating them
-  // on unmaximize)
-
   PanelMenuView();
   ~PanelMenuView();
 
@@ -141,8 +129,7 @@ private:
   static gboolean OnNewAppShow(PanelMenuView* self);
   static gboolean OnNewAppHide(PanelMenuView* self);
 
-  void DrawText(cairo_t *cr_real, int x, int y, int width, int height,
-                std::string const& label);
+  void DrawText(cairo_t *cr_real, nux::Geometry const& geo, std::string const& label);
 
   bool DrawMenus();
   bool DrawWindowButtons();

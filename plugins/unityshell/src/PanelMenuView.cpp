@@ -853,17 +853,18 @@ std::string PanelMenuView::GetMaximizedViewName(bool use_appname)
   return label;
 }
 
-void PanelMenuView::DrawText(cairo_t *cr_real, int x, int y, int width, int height,
-                             std::string const& label)
+void PanelMenuView::DrawText(cairo_t *cr_real, nux::Geometry const& geo, std::string const& label)
 {
   using namespace panel;
   cairo_t* cr;
   cairo_pattern_t* linpat;
   const int fading_pixels = 35;
+  int x = _padding + geo.x;
+  int y = geo.y;
 
-  int  text_width = 0;
-  int  text_height = 0;
-  int  text_space = 0;
+  int text_width = 0;
+  int text_height = 0;
+  int text_space = 0;
 
   // Find out dimensions first
   GdkScreen* screen = gdk_screen_get_default();
@@ -885,7 +886,7 @@ void PanelMenuView::DrawText(cairo_t *cr_real, int x, int y, int width, int heig
 
   cxt = pango_layout_get_context(layout);
   pango_cairo_context_set_font_options(cxt, gdk_screen_get_font_options(screen));
-  pango_cairo_context_set_resolution(cxt, dpi / (float)PANGO_SCALE);
+  pango_cairo_context_set_resolution(cxt, dpi / static_cast<float>(PANGO_SCALE));
   pango_layout_context_changed(layout);
 
   pango_layout_get_extents(layout, nullptr, &log_rect);
@@ -897,8 +898,9 @@ void PanelMenuView::DrawText(cairo_t *cr_real, int x, int y, int width, int heig
 
   // Draw the text
   GtkStyleContext* style_context = Style::Instance().GetStyleContext();
-  text_space = width - x;
+  text_space = geo.width - x;
   cr = cr_real;
+  cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
 
   gtk_style_context_save(style_context);
 
@@ -911,7 +913,7 @@ void PanelMenuView::DrawText(cairo_t *cr_real, int x, int y, int width, int heig
   gtk_style_context_add_class(style_context, GTK_STYLE_CLASS_MENUBAR);
   gtk_style_context_add_class(style_context, GTK_STYLE_CLASS_MENUITEM);
 
-  y += (height - text_height) / 2;
+  y += (geo.height - text_height) / 2;
 
   pango_cairo_update_layout(cr, layout);
 
@@ -924,7 +926,7 @@ void PanelMenuView::DrawText(cairo_t *cr_real, int x, int y, int width, int heig
     gtk_render_layout(style_context, cr, x, y, layout);
     cairo_pop_group_to_source(cr);
 
-    linpat = cairo_pattern_create_linear(width - fading_width, y, width, y);
+    linpat = cairo_pattern_create_linear(geo.width - fading_width, y, geo.width, y);
     cairo_pattern_add_color_stop_rgba(linpat, 0, 0, 0, 0, 1);
     cairo_pattern_add_color_stop_rgba(linpat, 1, 0, 0, 0, 0);
     cairo_mask(cr, linpat);
@@ -998,21 +1000,11 @@ void PanelMenuView::Refresh(bool force)
     }
   }
 
-  int  x = 0;
-  int  y = 0;
-  int  width = geo.width;
-  int  height = geo.height;
-
-  nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, width, height);
+  nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, geo.width, geo.height);
   cairo_t* cr = cairo_graphics.GetContext();
-  cairo_set_line_width(cr, 1);
 
   cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
   cairo_paint(cr);
-
-  cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
-
-  x += _padding;
 
   if (!_panel_title.empty())
   {
@@ -1021,7 +1013,7 @@ void PanelMenuView::Refresh(bool force)
     std::ostringstream bold_label;
     bold_label << "<b>" << escaped.Str() << "</b>";
 
-    DrawText(cr, x, y, width, height, bold_label.str());
+    DrawText(cr, geo, bold_label.str());
   }
 
   cairo_destroy(cr);
