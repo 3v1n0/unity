@@ -59,7 +59,7 @@ class IBusTestsPinyin(IBusTests):
     ]
 
     def test_pinyin(self):
-        self.activate_input_engine("pinyin")
+        self.activate_input_engine_or_skip("pinyin")
         self.dash.ensure_visible()
         sleep(0.5)
         self.activate_ibus()
