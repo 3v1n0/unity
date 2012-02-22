@@ -96,7 +96,7 @@ class IBusTestsHangul(IBusTests):
 
 
 class IBusTestsAnthi(IBusTests):
-    """Tests for the Anthi(Japanese) input engine."""
+    """Tests for the Anthy(Japanese) input engine."""
 
     scenarios = [
         ('system', {'input': 'shisutemu ', 'result': u'\u30b7\u30b9\u30c6\u30e0 '}),
@@ -105,7 +105,7 @@ class IBusTestsAnthi(IBusTests):
         ]
 
     def test_simple_input(self):
-        self.activate_input_engine_or_skip("anthi")
+        self.activate_input_engine_or_skip("anthy")
         self.dash.ensure_visible()
         sleep(0.5)
         self.activate_ibus()
