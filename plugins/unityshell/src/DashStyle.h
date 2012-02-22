@@ -26,6 +26,11 @@
 
 #include <cairo.h>
 
+namespace nux
+{
+class AbstractPaintLayer;
+}
+
 namespace unity
 {
 namespace dash
@@ -89,21 +94,17 @@ public:
   virtual bool Button(cairo_t* cr, nux::ButtonVisualState state,
                       std::string const& label, int font_size=-1,
                       Alignment alignment = Alignment::CENTER,
-                      bool zeromargin=false); 
-  
+                      bool zeromargin=false);
+
   virtual bool SquareButton(cairo_t* cr, nux::ButtonVisualState state,
-                            std::string const& label, bool curve_bottom, 
+                            std::string const& label, bool curve_bottom,
                             int font_size=-1,
                             Alignment alignment = Alignment::CENTER,
                             bool zeromargin=false);
 
+  virtual nux::AbstractPaintLayer* FocusOverlay(int width, int height);
+
   virtual bool ButtonFocusOverlay(cairo_t* cr);
-
-  virtual bool StarEmpty(cairo_t* cr, nux::ButtonVisualState state);
-
-  virtual bool StarHalf(cairo_t* cr, nux::ButtonVisualState state);
-
-  virtual bool StarFull(cairo_t* cr, nux::ButtonVisualState state);
 
   virtual bool MultiRangeSegment(cairo_t*    cr,
                                  nux::ButtonVisualState  state,
@@ -184,6 +185,10 @@ public:
 
   nux::BaseTexture* GetGroupUnexpandIcon();
   nux::BaseTexture* GetGroupExpandIcon();
+
+  nux::BaseTexture* GetStarDeselectedIcon();
+  nux::BaseTexture* GetStarSelectedIcon();
+  nux::BaseTexture* GetStarHighlightIcon();
 
   sigc::signal<void> changed;
 

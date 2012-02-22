@@ -89,6 +89,8 @@ private:
   bool AcceptKeyNavFocus();
   nux::Geometry GetBestFitGeometry(nux::Geometry const& for_geo);
 
+  void ProcessGrowShrink();
+
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
 
@@ -109,6 +111,12 @@ private:
   OverlayRenderer renderer_;
   nux::Geometry window_geometry_;
   nux::Geometry absolute_window_geometry_;
+
+  guint timeline_id_;
+  guint64 start_time_;
+  int last_known_height_;
+  int current_height_;
+  bool timeline_need_more_draw_;
 };
 
 

@@ -66,6 +66,7 @@ private:
 
   void OnFocusIn();
   void OnFocusOut();
+
   void UpdateCursorLocation();
 
   void OnMouseButtonUp(int x, int y, unsigned long bflags, unsigned long kflags);

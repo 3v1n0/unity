@@ -8,20 +8,19 @@
 "Various classes for interacting with BAMF."
 
 import dbus
-from dbus.mainloop.glib import DBusGMainLoop
+import dbus.glib
 import gio
 import gobject
 from Xlib import display, X, protocol
+
+from autopilot.emulators.dbus_handler import session_bus
 
 __all__ = ["Bamf",
         "BamfApplication",
         "BamfWindow",
         ]
 
-
 _BAMF_BUS_NAME = 'org.ayatana.bamf'
-DBusGMainLoop(set_as_default=True)
-_session_bus = dbus.SessionBus()
 _X_DISPLAY = display.Display()
 
 
@@ -49,7 +48,7 @@ class Bamf:
     def __init__(self):
         matcher_path = '/org/ayatana/bamf/matcher'
         self.matcher_interface_name = 'org.ayatana.bamf.matcher'
-        self.matcher_proxy = _session_bus.get_object(_BAMF_BUS_NAME, matcher_path)
+        self.matcher_proxy = session_bus.get_object(_BAMF_BUS_NAME, matcher_path)
         self.matcher_interface = dbus.Interface(self.matcher_proxy, self.matcher_interface_name)
 
     def get_running_applications(self, user_visible_only=True):
@@ -100,7 +99,10 @@ class Bamf:
 
         'app_name' is the name of the application you are looking for.
         """
-        return app_name in [a.name for a in self.get_running_applications()]
+        try:
+            return app_name in [a.name for a in self.get_running_applications()]
+        except dbus.DBusException:
+            return False
 
     def wait_until_application_is_running(self, app_name, timeout):
         """Wait until a given application is running.
@@ -120,6 +122,7 @@ class Bamf:
         if not self.application_is_running(app_name):
             wait_forever = timeout < 0
             gobject_loop = gobject.MainLoop()
+
             # No, so define a callback to watch the ViewOpened signal:
             def on_view_added(bamf_path, name):
                 if bamf_path.split('/')[-1].startswith('application'):
@@ -137,7 +140,7 @@ class Bamf:
             if not wait_forever:
                 gobject.timeout_add(timeout * 1000, on_timeout_reached)
             # connect signal handler:
-            _session_bus.add_signal_receiver(on_view_added, 'ViewOpened')
+            session_bus.add_signal_receiver(on_view_added, 'ViewOpened')
             # pump the gobject main loop until either the correct signal is emitted, or the
             # timeout happens.
             gobject_loop.run()
@@ -168,7 +171,7 @@ class BamfApplication:
     def __init__(self, bamf_app_path):
         self.bamf_app_path = bamf_app_path
         try:
-            self._app_proxy = _session_bus.get_object(_BAMF_BUS_NAME, bamf_app_path)
+            self._app_proxy = session_bus.get_object(_BAMF_BUS_NAME, bamf_app_path)
             self._view_iface = dbus.Interface(self._app_proxy, 'org.ayatana.bamf.view')
         except dbus.DBusException, e:
             e.message += 'bamf_app_path=%r' % (bamf_app_path)
@@ -216,7 +219,7 @@ class BamfWindow:
     """
     def __init__(self, window_path):
         self._bamf_win_path = window_path
-        self._app_proxy = _session_bus.get_object(_BAMF_BUS_NAME, window_path)
+        self._app_proxy = session_bus.get_object(_BAMF_BUS_NAME, window_path)
         self._window_iface = dbus.Interface(self._app_proxy, 'org.ayatana.bamf.window')
         self._view_iface = dbus.Interface(self._app_proxy, 'org.ayatana.bamf.view')
 
@@ -224,11 +227,15 @@ class BamfWindow:
         self._x_root_win = _X_DISPLAY.screen().root
         self._x_win = _X_DISPLAY.create_resource_object('window', self._xid)
 
-
     @property
     def x_id(self):
         """Get the X11 Window Id."""
         return self._xid
+
+    @property
+    def x_win(self):
+        """Get the X11 window object of the underlying window."""
+        return self._x_win
 
     @property
     def title(self):
@@ -319,19 +326,21 @@ class BamfWindow:
 
         """
         atom = self._x_win.get_full_property(_X_DISPLAY.get_atom(_type), X.AnyPropertyType)
-        if atom: return atom.value
+        if atom:
+            return atom.value
 
     def _setProperty(self, _type, data, mask=None):
         if type(data) is str:
             dataSize = 8
         else:
-            data = (data+[0]*(5-len(data)))[:5]
+            # data length must be 5 - pad with 0's if it's short, truncate otherwise.
+            data = (data + [0] * (5 - len(data)))[:5]
             dataSize = 32
 
         ev = protocol.event.ClientMessage(window=self._x_win, client_type=_X_DISPLAY.get_atom(_type), data=(dataSize, data))
 
         if not mask:
-            mask = (X.SubstructureRedirectMask|X.SubstructureNotifyMask)
+            mask = (X.SubstructureRedirectMask | X.SubstructureNotifyMask)
         self._x_root_win.send_event(ev, event_mask=mask)
         _X_DISPLAY.sync()
 

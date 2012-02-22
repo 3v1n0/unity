@@ -45,7 +45,7 @@ public:
   QuicklistView();
   ~QuicklistView();
 
-  void SetText(nux::NString text);
+  void SetText(std::string const& text);
 
   void RemoveAllMenuItem();
 
@@ -70,6 +70,7 @@ public:
   // Introspection
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
+  IntrospectableList const& GetIntrospectableChildren();
 
   void EnableQuicklistForTesting(bool enable_testing);
 
@@ -134,7 +135,7 @@ private:
   //nux::CairoGraphics*   _cairo_graphics;
   int                   _anchorX;
   int                   _anchorY;
-  nux::NString          _labelText;
+  std::string           _labelText;
   int                   _top_size; // size of the segment from point 13 to 14. See figure in ql_compute_full_mask_path.
 
   bool                  _mouse_down;
@@ -167,6 +168,9 @@ private:
 
   // used by keyboard/a11y-navigation
   int _current_item_index;
+
+  // list of introspectable children, used to return children in the correct order:
+  IntrospectableList _introspectable_children;
 };
 
 } // NAMESPACE

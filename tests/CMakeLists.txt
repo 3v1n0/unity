@@ -102,6 +102,8 @@ if (GTEST_FOUND AND
 
 # The service that provides DBus services to test against
   add_executable(test-gtest-service
+                 test_service_gdbus_wrapper.c
+                 test_service_gdbus_wrapper.h
                  test_service_hud.c
                  test_service_hud.h
                  test_service_lens.c
@@ -137,6 +139,7 @@ if (GTEST_FOUND AND
                  test_grabhandle.cpp
                  test_unityshell_private.cpp
                  ${UNITY_SRC}/AbstractLauncherIcon.h
+                 ${UNITY_SRC}/AbstractLauncherIcon.cpp
                  ${UNITY_SRC}/AbstractShortcutHint.h
                  ${UNITY_SRC}/Animator.cpp
                  ${UNITY_SRC}/Animator.h
@@ -187,13 +190,14 @@ if (GTEST_FOUND AND
                  test_categories.cpp
                  test_filesystem_lenses.cpp
                  test_filter.cpp
+                 test_gdbus_proxy.cpp
+                 test_hud.cpp
                  test_lens.cpp
                  test_main_dbus.cpp
                  test_model.cpp
                  test_utils.h
                  test_ratings_filter.cpp
                  test_results.cpp
-                 test_hud.cpp
                 )
   target_link_libraries(test-gtest-dbus ${GTEST_BOTH_LIBRARIES})
   add_test(UnityGTestDBus test-gtest-dbus)

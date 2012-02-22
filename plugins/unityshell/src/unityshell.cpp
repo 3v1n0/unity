@@ -263,6 +263,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetBackgroundColorNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetLauncherHideModeNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetBacklightModeNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+     optionSetRevealTriggerNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetLaunchAnimationNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetUrgentAnimationNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetPanelOpacityNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
@@ -494,6 +495,11 @@ void UnityScreen::nuxEpilogue()
   glDisable(GL_SCISSOR_TEST);
 }
 
+void UnityScreen::setPanelShadowMatrix(const GLMatrix& matrix)
+{
+  panel_shadow_matrix_ = matrix;
+}
+
 void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
 {
 #ifndef USE_GLES
@@ -513,9 +519,9 @@ void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
   float y1 = output->y() + panel_h;
   float x2 = x1 + output->width();
   float y2 = y1 + h;
-  GLMatrix sTransform = GLMatrix ();
 
-  sTransform.toScreenSpace(output, -DEFAULT_Z_CAMERA);
+  glPushMatrix ();
+  glLoadMatrixf (panel_shadow_matrix_.getMatrix ());
 
   vc[0] = x1;
   vc[1] = x2;
@@ -571,6 +577,7 @@ void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
       glDisable(GL_BLEND);
     }
   }
+  glPopMatrix();
 #else
 #warning Panel shadow not properly implemented for GLES2
   return;
@@ -1271,17 +1278,15 @@ void UnityScreen::damageNuxRegions()
        it != end; ++it)
   {
     nux::Geometry const& geo = *it;
-    nux_damage = CompRegion(geo.x, geo.y, geo.width, geo.height);
-    cScreen->damageRegion(nux_damage);
+    nux_damage += CompRegion(geo.x, geo.y, geo.width, geo.height);
   }
 
   nux::Geometry geo = wt->GetWindowCompositor().GetTooltipMainWindowGeometry();
-  nux_damage = CompRegion(geo.x, geo.y, geo.width, geo.height);
-  cScreen->damageRegion(nux_damage);
+  nux_damage += CompRegion(geo.x, geo.y, geo.width, geo.height);
 
   geo = lastTooltipArea;
-  nux_damage = CompRegion(lastTooltipArea.x, lastTooltipArea.y,
-                          lastTooltipArea.width, lastTooltipArea.height);
+  nux_damage += CompRegion(lastTooltipArea.x, lastTooltipArea.y,
+                         lastTooltipArea.width, lastTooltipArea.height);
   cScreen->damageRegion(nux_damage);
 
   wt->ClearDrawList();
@@ -1345,6 +1350,9 @@ void UnityScreen::handleEvent(XEvent* event)
       }
       break;
     }
+    case MapRequest:
+      UnityShowdesktopHandler::inhibitLeaveShowdesktopMode (event->xmaprequest.window);
+      break;
     default:
         if (screen->shapeEvent () + ShapeNotify == event->type)
         {
@@ -1368,12 +1376,17 @@ void UnityScreen::handleEvent(XEvent* event)
   if (!skip_other_plugins)
     screen->handleEvent(event);
 
-  if (event->type == PropertyNotify)
+  switch (event->type)
   {
-    if (event->xproperty.atom == Atoms::mwmHints)
-    {
-      PluginAdapter::Default ()->NotifyNewDecorationState(event->xproperty.window);
-    }
+    case PropertyNotify:
+      if (event->xproperty.atom == Atoms::mwmHints)
+      {
+        PluginAdapter::Default ()->NotifyNewDecorationState(event->xproperty.window);
+      }
+      break;
+    case MapRequest:
+      UnityShowdesktopHandler::allowLeaveShowdesktopMode (event->xmaprequest.window);
+      break;
   }
 
   if (!skip_other_plugins &&
@@ -1590,9 +1603,9 @@ bool UnityScreen::altTabInitiateCommon(CompAction *action,
 
   int show_monitor = (show_mode == switcher::ShowMode::CURRENT_VIEWPORT) ? device : -1;
 
-  std::vector<unity::launcher::AbstractLauncherIcon*> results = launcher_controller_->GetAltTabIcons(show_monitor);
+  auto results = launcher_controller_->GetAltTabIcons(show_monitor);
 
-  if (!(results.size() == 1 && results[0]->Type() == AbstractLauncherIcon::IconType::TYPE_BEGIN))
+  if (!(results.size() == 1 && results[0]->GetIconType() == AbstractLauncherIcon::IconType::TYPE_BEGIN))
     switcher_controller_->Show(show_mode, switcher::SortMode::FOCUS_ORDER, false, results);
 
   return true;
@@ -1981,12 +1994,22 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
     }
   }
 
-  bool ret = gWindow->glDraw(matrix, attrib, region, mask);
-
   if (window->type() == CompWindowTypeDesktopMask)
+    uScreen->setPanelShadowMatrix(matrix);
+
+  Window active_window = screen->activeWindow();
+  if (window->id() == active_window && window->type() != CompWindowTypeDesktopMask)
   {
     uScreen->paintPanelShadow(matrix);
   }
+
+  bool ret = gWindow->glDraw(matrix, attrib, region, mask);
+
+  if ((active_window == 0 || active_window == window->id()) && (window->type() == CompWindowTypeDesktopMask))
+  {
+    uScreen->paintPanelShadow(matrix);
+  }
+
 
   return ret;
 }
@@ -1999,7 +2022,7 @@ UnityWindow::minimize ()
 
   if (!mMinimizeHandler)
   {
-    mMinimizeHandler = new UnityMinimizedHandler (window);
+    mMinimizeHandler.reset (new UnityMinimizedHandler (window));
     mMinimizeHandler->minimize ();
   }
 }
@@ -2010,8 +2033,7 @@ UnityWindow::unminimize ()
   if (mMinimizeHandler)
   {
     mMinimizeHandler->unminimize ();
-    delete mMinimizeHandler;
-    mMinimizeHandler = nullptr;
+    mMinimizeHandler.reset ();
   }
 }
 
@@ -2050,7 +2072,7 @@ UnityWindow::focus ()
 bool
 UnityWindow::minimized ()
 {
-  return mMinimizeHandler != nullptr;
+  return mMinimizeHandler.get () != nullptr;
 }
 
 gboolean
@@ -2311,6 +2333,9 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
     case UnityshellOptions::BacklightMode:
       launcher_options->backlight_mode = (unity::launcher::BacklightMode) optionGetBacklightMode();
       break;
+    case UnityshellOptions::RevealTrigger:
+      launcher_options->reveal_trigger = (unity::launcher::RevealTrigger) optionGetRevealTrigger();
+      break;
     case UnityshellOptions::LaunchAnimation:
       launcher_options->launch_animation = (unity::launcher::LaunchAnimation) optionGetLaunchAnimation();
       break;
@@ -2557,7 +2582,7 @@ void UnityScreen::InitHints()
   
   hints_.push_back(new shortcut::Hint(launcher, "", _(" (Press)"), _("Open Launcher, displays shortcuts."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "show_launcher" ));
   hints_.push_back(new shortcut::Hint(launcher, "", "", _("Open Launcher keyboard navigation mode."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "keyboard_focus"));
-  hints_.push_back(new shortcut::Hint(launcher, "", "", _("Switch applications via Launcher."), shortcut::HARDCODED_OPTION, "Super + Tab"));
+  hints_.push_back(new shortcut::Hint(launcher, "", "", _("Switch applications via Launcher."), shortcut::HARDCODED_OPTION, _("Super + Tab")));
   hints_.push_back(new shortcut::Hint(launcher, "", _(" + 1 to 9"), _("Same as clicking on a Launcher icon."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "show_launcher"));
   hints_.push_back(new shortcut::Hint(launcher, "", _(" + Shift + 1 to 9"), _("Open new window of the app."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "show_launcher"));
   hints_.push_back(new shortcut::Hint(launcher, "", " + T", _("Open the Trash."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "show_launcher")); 
@@ -2569,7 +2594,7 @@ void UnityScreen::InitHints()
   hints_.push_back(new shortcut::Hint(dash, "", " + A", _("Open the Dash App Lens."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "show_launcher"));
   hints_.push_back(new shortcut::Hint(dash, "", " + F", _("Open the Dash Files Lens."), shortcut::COMPIZ_KEY_OPTION,"unityshell", "show_launcher"));
   hints_.push_back(new shortcut::Hint(dash, "", " + M", _("Open the Dash Music Lens."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "show_launcher"));
-  hints_.push_back(new shortcut::Hint(dash, "", "", _("Switches between Lenses."), shortcut::HARDCODED_OPTION, "Ctrl + Tab"));
+  hints_.push_back(new shortcut::Hint(dash, "", "", _("Switches between Lenses."), shortcut::HARDCODED_OPTION, _("Ctrl + Tab")));
   hints_.push_back(new shortcut::Hint(dash, "", "", _("Moves the focus."), shortcut::HARDCODED_OPTION, _("Cursor Keys")));
   hints_.push_back(new shortcut::Hint(dash, "", "", _("Open currently focused item."), shortcut::HARDCODED_OPTION, _("Enter & Return")));
   hints_.push_back(new shortcut::Hint(dash, "", "", _("'Run Command' mode."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "execute_command"));
@@ -2591,8 +2616,8 @@ void UnityScreen::InitHints()
   // Workspaces
   std::string const workspaces = _("Workspaces");
   hints_.push_back(new shortcut::Hint(workspaces, "", "", _("Spread workspaces."), shortcut::COMPIZ_KEY_OPTION, "expo", "expo_key"));
-  hints_.push_back(new shortcut::Hint(workspaces, "", "", _("Switch workspaces."), shortcut::HARDCODED_OPTION, _("Super + Cursor Keys")));
-  hints_.push_back(new shortcut::Hint(workspaces, "", " or Right", _("Move focused window to different workspace."), shortcut::HARDCODED_OPTION, _("Super + Alt + Cursor Keys")));
+  hints_.push_back(new shortcut::Hint(workspaces, "", "", _("Switch workspaces."), shortcut::HARDCODED_OPTION, _("Control + Alt + Cursor Keys")));
+  hints_.push_back(new shortcut::Hint(workspaces, "", "", _("Move focused window to different workspace."), shortcut::HARDCODED_OPTION, _("Control + Alt + Shift + Cursor Keys")));
 
   // Windows
   std::string const windows = _("Windows");
@@ -2600,12 +2625,12 @@ void UnityScreen::InitHints()
   hints_.push_back(new shortcut::Hint(windows, "", "", _("Minimises all windows."), shortcut::COMPIZ_KEY_OPTION, "core", "show_desktop_key"));
   hints_.push_back(new shortcut::Hint(windows, "", "", _("Maximises the current window."), shortcut::COMPIZ_KEY_OPTION, "core", "maximize_window_key"));
   hints_.push_back(new shortcut::Hint(windows, "", "", _("Restores or minimises current window."), shortcut::COMPIZ_KEY_OPTION, "core", "unmaximize_window_key"));
-  hints_.push_back(new shortcut::Hint(windows, "", " or Right", _("Semi-maximises current window."), shortcut::COMPIZ_KEY_OPTION, "grid", "put_left_key"));
+  hints_.push_back(new shortcut::Hint(windows, "", _(" or Right"), _("Semi-maximises current window."), shortcut::COMPIZ_KEY_OPTION, "grid", "put_left_key"));
   hints_.push_back(new shortcut::Hint(windows, "", "", _("Closes current window."), shortcut::COMPIZ_KEY_OPTION, "core", "close_window_key"));
-  hints_.push_back(new shortcut::Hint(windows, "", "", _("Opens window accessibility menu."), shortcut::HARDCODED_OPTION, "Alt + Space"));
-  hints_.push_back(new shortcut::Hint(windows, "", "", _("Places window in corresponding positions."), shortcut::HARDCODED_OPTION, "Ctrl + Alt + Num"));
-  hints_.push_back(new shortcut::Hint(windows, "", " Drag", _("Move window."), shortcut::COMPIZ_MOUSE_OPTION, "move", "initiate_button"));
-  hints_.push_back(new shortcut::Hint(windows, "", " Drag", _("Resize window."), shortcut::COMPIZ_MOUSE_OPTION, "resize", "initiate_button"));
+  hints_.push_back(new shortcut::Hint(windows, "", "", _("Opens window accessibility menu."), shortcut::HARDCODED_OPTION, _("Alt + Space")));
+  hints_.push_back(new shortcut::Hint(windows, "", "", _("Places window in corresponding positions."), shortcut::HARDCODED_OPTION, _("Ctrl + Alt + Num")));
+  hints_.push_back(new shortcut::Hint(windows, "", _(" Drag"), _("Move window."), shortcut::COMPIZ_MOUSE_OPTION, "move", "initiate_button"));
+  hints_.push_back(new shortcut::Hint(windows, "", _(" Drag"), _("Resize window."), shortcut::COMPIZ_MOUSE_OPTION, "resize", "initiate_button"));
 }
 
 /* Window init */
@@ -2614,7 +2639,7 @@ UnityWindow::UnityWindow(CompWindow* window)
   , PluginClassHandler<UnityWindow, CompWindow>(window)
   , window(window)
   , gWindow(GLWindow::get(window))
-  , mMinimizeHandler(nullptr)
+  , mMinimizeHandler()
   , mShowdesktopHandler(nullptr)
   , focusdesktop_handle_(0)
 {
@@ -2670,20 +2695,19 @@ UnityWindow::~UnityWindow()
   if (us->newFocusedWindow && (UnityWindow::get(us->newFocusedWindow) == this))
     us->newFocusedWindow = NULL;
 
-  UnityShowdesktopHandler::animating_windows.remove (window);
-
-  if (mMinimizeHandler)
+  if (!window->destroyed ())
   {
-    unminimize ();
+    bool wasMinimized = window->minimized ();
+    if (wasMinimized)
+      window->unminimize ();
     window->focusSetEnabled (this, false);
     window->minimizeSetEnabled (this, false);
     window->unminimizeSetEnabled (this, false);
-    window->minimizedSetEnabled (this, false);
-    window->minimize ();
-
-    delete mMinimizeHandler;
-    mMinimizeHandler = nullptr;
+    if (wasMinimized)
+      window->minimize ();
   }
+
+  UnityShowdesktopHandler::animating_windows.remove (window);
 
   if (mShowdesktopHandler)
     delete mShowdesktopHandler;

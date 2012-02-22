@@ -20,9 +20,14 @@
 
 #include <NuxCore/Logger.h>
 #include <Nux/HLayout.h>
+#include <UnityCore/Variant.h>
 #include "PluginAdapter.h"
+#include "PanelStyle.h"
 #include "UBusMessages.h"
 #include "UScreen.h"
+
+#include <libbamf/libbamf.h>
+
 namespace unity
 {
 namespace hud
@@ -35,7 +40,6 @@ nux::logging::Logger logger("unity.hud.controller");
 
 Controller::Controller()
   : launcher_width(66)
-  , panel_height(24)
   , hud_service_("com.canonical.hud", "/com/canonical/hud")
   , window_(0)
   , visible_(false)
@@ -96,8 +100,8 @@ void Controller::SetupHudView()
   LOG_DEBUG(logger) << "SetupHudView called";
   view_ = new View();
 
-  layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
-  layout_->AddView(view_, 1);
+  layout_ = new nux::VLayout(NUX_TRACKER_LOCATION);
+  layout_->AddView(view_, 1, nux::MINOR_POSITION_TOP);
   window_->SetLayout(layout_);
 
   view_->mouse_down_outside_pointer_grab_area.connect(sigc::mem_fun(this, &Controller::OnMouseDownOutsideWindow));
@@ -148,15 +152,16 @@ void Controller::OnWindowConfigure(int window_width, int window_height,
 nux::Geometry Controller::GetIdealWindowGeometry()
 {
    UScreen *uscreen = UScreen::GetDefault();
-   int primary_monitor = uscreen->GetPrimaryMonitor();
+   int primary_monitor = uscreen->GetMonitorWithMouse();
    auto monitor_geo = uscreen->GetMonitorGeometry(primary_monitor);
 
    // We want to cover as much of the screen as possible to grab any mouse events outside
    // of our window
+   panel::Style &panel_style = panel::Style::Instance();
    return nux::Geometry (monitor_geo.x,
-                         monitor_geo.y + panel_height,
+                         monitor_geo.y + panel_style.panel_height,
                          monitor_geo.width,
-                         monitor_geo.height - panel_height);
+                         monitor_geo.height - panel_style.panel_height);
 }
 
 void Controller::Relayout(GdkScreen*screen)
@@ -183,6 +188,10 @@ void Controller::OnScreenUngrabbed()
   LOG_DEBUG(logger) << "OnScreenUngrabbed called";
   if (need_show_)
   {
+    nux::GetWindowCompositor().SetKeyFocusArea(view_->default_focus());
+
+    window_->PushToFront();
+    window_->SetInputFocus();
     EnsureHud();
     ShowHud();
   }
@@ -214,24 +223,40 @@ bool Controller::IsVisible()
 
 void Controller::ShowHud()
 {
+  PluginAdapter* adaptor = PluginAdapter::Default();
   LOG_DEBUG(logger) << "Showing the hud";
   EnsureHud();
+
+  if (visible_ || adaptor->IsExpoActive() || adaptor->IsScaleActive())
+   return;
+
+  if (adaptor->IsScreenGrabbed())
+  {
+    need_show_ = true;
+    return;
+  }
+
   view_->AboutToShow();
+
+  // we first want to grab the currently active window, luckly we can just ask the jason interface(bamf)
+  BamfMatcher* matcher = bamf_matcher_get_default();
+  glib::Object<BamfView> bamf_app((BamfView*)(bamf_matcher_get_active_application(matcher)), glib::AddRef());
+  glib::String view_icon(bamf_view_get_icon(bamf_app));
+  focused_app_icon_ = view_icon.Str();
+
+  LOG_DEBUG(logger) << "Taking application icon: " << focused_app_icon_;
+  view_->SetIcon(focused_app_icon_);
 
   window_->ShowWindow(true);
   window_->PushToFront();
   window_->EnableInputWindow(true, "Hud", true, false);
   window_->SetInputFocus();
-  nux::GetWindowCompositor().SetKeyFocusArea(view_->default_focus());
   window_->CaptureMouseDownAnyWhereElse(true);
   view_->CaptureMouseDownAnyWhereElse(true);
   window_->QueueDraw();
 
   view_->ResetToDefault();
- 
-  view_->SetIcon("");
-  hud_service_.RequestQuery("");
-  need_show_ = false;
+  need_show_ = true;
   visible_ = true;
 
   StartShowHideTimeline();
@@ -241,8 +266,11 @@ void Controller::ShowHud()
   GVariant* message_data = g_variant_new("(b)", TRUE);
   ubus.SendMessage(UBUS_LAUNCHER_LOCK_HIDE, message_data);
 
-  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "hud", FALSE, 0);
+  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "hud", FALSE, UScreen::GetDefault()->GetMonitorWithMouse());
   ubus.SendMessage(UBUS_OVERLAY_SHOWN, info);
+
+  nux::GetWindowCompositor().SetKeyFocusArea(view_->default_focus());
+  window_->SetEnterFocusInputArea(view_->default_focus());
 }
 void Controller::HideHud(bool restore)
 {
@@ -250,6 +278,7 @@ void Controller::HideHud(bool restore)
   if (visible_ == false)
     return;
 
+  need_show_ = false;
   EnsureHud();
   view_->AboutToHide();
   window_->CaptureMouseDownAnyWhereElse(false);
@@ -267,7 +296,7 @@ void Controller::HideHud(bool restore)
   //unhide the launcher
   GVariant* message_data = g_variant_new("(b)", FALSE);
   ubus.SendMessage(UBUS_LAUNCHER_LOCK_HIDE, message_data);
-  
+
   GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "hud", FALSE, 0);
   ubus.SendMessage(UBUS_OVERLAY_HIDDEN, info);
 }
@@ -287,9 +316,9 @@ void Controller::StartShowHideTimeline()
 
 gboolean Controller::OnViewShowHideFrame(Controller* self)
 {
-#define _LENGTH_ 90000
+  const float LENGTH = 90000.0f;
   float diff = g_get_monotonic_time() - self->start_time_;
-  float progress = diff / (float)_LENGTH_;
+  float progress = diff / LENGTH;
   float last_opacity = self->last_opacity_;
 
   if (self->visible_)
@@ -301,7 +330,7 @@ gboolean Controller::OnViewShowHideFrame(Controller* self)
     self->window_->SetOpacity(last_opacity - (last_opacity * progress));
   }
 
-  if (diff > _LENGTH_)
+  if (diff > LENGTH)
   {
     self->timeline_id_ = 0;
 
@@ -311,7 +340,21 @@ gboolean Controller::OnViewShowHideFrame(Controller* self)
     {
       self->window_->ShowWindow(false);
     }
+    else
+    {
+      // ensure the text entry is focused
+      g_timeout_add(500, [] (gpointer data) -> gboolean
+      {
+        //THIS IS BAD - VERY VERY BAD
+        LOG_DEBUG(logger) << "Last attempt, forcing window focus";
+        Controller* self = static_cast<Controller*>(data);
+        nux::GetWindowCompositor().SetKeyFocusArea(self->view_->default_focus());
 
+        self->window_->PushToFront();
+        self->window_->SetInputFocus();
+        return FALSE;
+      }, self);
+    }
     return FALSE;
   }
 
@@ -341,7 +384,7 @@ void Controller::OnQueryActivated(Query::Ptr query)
 {
   LOG_DEBUG(logger) << "Activating query, " << query->formatted_text;
   unsigned int timestamp = nux::GetWindowThread()->GetGraphicsDisplay().GetCurrentEvent().x11_timestamp;
-  hud_service_.ExecuteQuery(query, timestamp); 
+  hud_service_.ExecuteQuery(query, timestamp);
   HideHud();
 }
 
@@ -355,7 +398,7 @@ void Controller::OnQuerySelected(Query::Ptr query)
 void Controller::OnQueriesFinished(Hud::Queries queries)
 {
   view_->SetQueries(queries);
-  std::string icon_name = "";
+  std::string icon_name = focused_app_icon_;
   for (auto query = queries.begin(); query != queries.end(); query++)
   {
     if (!(*query)->icon_name.empty())
@@ -364,7 +407,7 @@ void Controller::OnQueriesFinished(Hud::Queries queries)
       break;
     }
   }
-  
+
   LOG_DEBUG(logger) << "setting icon to - " << icon_name;
   view_->SetIcon(icon_name);
 }
@@ -377,7 +420,8 @@ std::string Controller::GetName() const
 
 void Controller::AddProperties(GVariantBuilder* builder)
 {
-  g_variant_builder_add(builder, "{sv}", "visible", g_variant_new_boolean (visible_));
+  variant::BuilderWrapper(builder)
+    .add("visible", visible_);
 }
 
 

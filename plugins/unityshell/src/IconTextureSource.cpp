@@ -24,6 +24,7 @@ namespace unity
 {
 namespace ui
 {
+NUX_IMPLEMENT_OBJECT_TYPE(IconTextureSource);
 
 IconTextureSource::IconTextureSource()
 {

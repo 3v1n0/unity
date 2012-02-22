@@ -2,7 +2,7 @@ from testtools.matchers import Equals
 from testtools.matchers import LessThan
 
 from autopilot.tests import AutopilotTestCase
-from autopilot.emulators.unity import Launcher
+from autopilot.emulators.unity.launcher import Launcher
 from autopilot.glibrunner import GlibRunner
 
 from time import sleep
@@ -78,11 +78,11 @@ class LauncherTests(AutopilotTestCase):
 
         self.server.switcher_enter_quicklist()
         sleep(.5)
-        self.assertThat(self.server.quicklist_open(0), Equals(True))
+        self.assertThat(self.server.is_quicklist_open(0), Equals(True))
         self.server.switcher_exit_quicklist()
         sleep(.5)
 
-        self.assertThat(self.server.quicklist_open(0), Equals(False))
+        self.assertThat(self.server.is_quicklist_open(0), Equals(False))
         self.assertThat(self.server.key_nav_is_active(), Equals(True))
         self.assertThat(self.server.key_nav_is_grabbed(), Equals(True))
 
@@ -128,5 +128,3 @@ class LauncherTests(AutopilotTestCase):
             self.server.reveal_launcher(x)
             sleep(2)
             self.assertThat(self.server.is_showing(x), Equals(True))
-
-

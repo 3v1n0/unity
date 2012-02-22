@@ -24,9 +24,9 @@ namespace ui {
 
 UnityWindowStyle::UnityWindowStyle()
 {
-  background_top_ = BaseTexturePtr(nux::CreateTexture2DFromFile(PKGDATADIR"/switcher_top.png", -1, true));
-  background_left_ = BaseTexturePtr(nux::CreateTexture2DFromFile(PKGDATADIR"/switcher_left.png", -1, true));
-  background_corner_ = BaseTexturePtr(nux::CreateTexture2DFromFile(PKGDATADIR"/switcher_corner.png", -1, true));
+  background_top_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/switcher_top.png", -1, true));
+  background_left_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/switcher_left.png", -1, true));
+  background_corner_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/switcher_corner.png", -1, true));
 }
 
 UnityWindowStyle::~UnityWindowStyle()

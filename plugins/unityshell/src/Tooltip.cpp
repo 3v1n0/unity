@@ -21,6 +21,7 @@
  */
 
 #include <Nux/Nux.h>
+#include <UnityCore/Variant.h>
 
 #include "CairoTexture.h"
 #include "ubus-server.h"
@@ -62,7 +63,7 @@ Tooltip::Tooltip() :
 
   _vlayout->AddLayout(_top_space, 0);
 
-  _tooltip_text = new nux::StaticCairoText(_labelText.GetTCharPtr(), NUX_TRACKER_LOCATION);
+  _tooltip_text = new nux::StaticCairoText(_labelText, NUX_TRACKER_LOCATION);
   _tooltip_text->SetTextAlignment(nux::StaticCairoText::AlignState::NUX_ALIGN_CENTRE);
   _tooltip_text->SetTextVerticalAlignment(nux::StaticCairoText::AlignState::NUX_ALIGN_CENTRE);
   _tooltip_text->SetMinimumWidth(MINIMUM_TEXT_WIDTH);
@@ -111,13 +112,7 @@ void Tooltip::ShowTooltipWithTipAt(int anchor_tip_x, int anchor_tip_y)
 void Tooltip::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
 {
   CairoBaseWindow::Draw(gfxContext, forceDraw);
-
-  nux::Geometry const& base = GetGeometry();
-  gfxContext.PushClippingRectangle(base);
-
   _tooltip_text->ProcessDraw(gfxContext, forceDraw);
-
-  gfxContext.PopClippingRectangle();
 }
 
 void Tooltip::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
@@ -144,12 +139,12 @@ void Tooltip::PreLayoutManagement()
     _bottom_space->SetMinMaxSize(1, (ANCHOR_HEIGHT - text_height) / 2 + 1 + PADDING + CORNER_RADIUS);
   }
 
-  nux::BaseWindow::PreLayoutManagement();
+  CairoBaseWindow::PreLayoutManagement();
 }
 
 long Tooltip::PostLayoutManagement(long LayoutResult)
 {
-  long result = nux::BaseWindow::PostLayoutManagement(LayoutResult);
+  long result = CairoBaseWindow::PostLayoutManagement(LayoutResult);
   UpdateTexture();
 
   return result;
@@ -513,9 +508,9 @@ void Tooltip::UpdateTexture()
   cairo_destroy(cr_outline);
   cairo_destroy(cr_mask);
 
-  texture_bg_ = texture_from_cairo_graphics(cairo_bg);
-  texture_mask_ = texture_from_cairo_graphics(cairo_mask);
-  texture_outline_ = texture_from_cairo_graphics(cairo_outline);
+  texture_bg_ = texture_ptr_from_cairo_graphics(cairo_bg);
+  texture_mask_ = texture_ptr_from_cairo_graphics(cairo_mask);
+  texture_outline_ = texture_ptr_from_cairo_graphics(cairo_outline);
 
   _cairo_text_has_changed = false;
 }
@@ -534,7 +529,7 @@ void Tooltip::NotifyConfigurationChange(int width,
 {
 }
 
-void Tooltip::SetText(nux::NString const& text)
+void Tooltip::SetText(std::string const& text)
 {
   if (_labelText == text)
     return;
@@ -554,12 +549,13 @@ std::string Tooltip::GetName() const
 
 void Tooltip::AddProperties(GVariantBuilder* builder)
 {
-  g_variant_builder_add(builder, "{sv}", "text", g_variant_new_string(_labelText.GetTCharPtr()));
-  g_variant_builder_add(builder, "{sv}", "x", g_variant_new_int32(GetBaseX()));
-  g_variant_builder_add(builder, "{sv}", "y", g_variant_new_int32(GetBaseY()));
-  g_variant_builder_add(builder, "{sv}", "width", g_variant_new_int32(GetBaseWidth()));
-  g_variant_builder_add(builder, "{sv}", "height", g_variant_new_int32(GetBaseHeight()));
-  g_variant_builder_add(builder, "{sv}", "active", g_variant_new_boolean(IsVisible()));
+  variant::BuilderWrapper(builder)
+    .add("text", _labelText)
+    .add("x", GetBaseX())
+    .add("y", GetBaseY())
+    .add("width", GetBaseWidth())
+    .add("height", GetBaseHeight())
+    .add("active", IsVisible());
 }
 
 } // namespace nux

@@ -28,6 +28,7 @@
 #include <NuxGraphics/GraphicsEngine.h>
 #include <Nux/TextureArea.h>
 #include <NuxImage/CairoGraphics.h>
+#include <UnityCore/Variant.h>
 
 #include "CairoTexture.h"
 
@@ -43,13 +44,6 @@
 #include "ubus-server.h"
 #include "UBusMessages.h"
 
-// FIXME: key-code defines for Up/Down/Left/Right of numeric keypad - needs to
-// be moved to the correct place in NuxGraphics-headers
-#define NUX_KP_DOWN  0xFF99
-#define NUX_KP_UP    0xFF97
-#define NUX_KP_LEFT  0xFF96
-#define NUX_KP_RIGHT 0xFF98
-
 namespace unity
 {
 namespace
@@ -62,7 +56,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(QuicklistView);
 QuicklistView::QuicklistView()
   : _anchorX(0)
   , _anchorY(0)
-  , _labelText(TEXT("QuicklistView 1234567890"))
+  , _labelText("QuicklistView 1234567890")
   , _top_size(4)
   , _mouse_down(false)
   , _enable_quicklist_for_testing(false)
@@ -1330,9 +1324,9 @@ void QuicklistView::UpdateTexture()
   cairo_destroy(cr_outline);
   cairo_destroy(cr_mask);
 
-  texture_bg_ = texture_from_cairo_graphics(cairo_bg);
-  texture_mask_ = texture_from_cairo_graphics(cairo_mask);
-  texture_outline_ = texture_from_cairo_graphics(cairo_outline);
+  texture_bg_ = texture_ptr_from_cairo_graphics(cairo_bg);
+  texture_mask_ = texture_ptr_from_cairo_graphics(cairo_mask);
+  texture_outline_ = texture_ptr_from_cairo_graphics(cairo_outline);
 
   _cairo_text_has_changed = false;
 
@@ -1352,7 +1346,7 @@ void QuicklistView::NotifyConfigurationChange(int width, int height)
 {
 }
 
-void QuicklistView::SetText(nux::NString text)
+void QuicklistView::SetText(std::string const& text)
 {
   if (_labelText == text)
     return;
@@ -1406,11 +1400,12 @@ std::string QuicklistView::GetName() const
 
 void QuicklistView::AddProperties(GVariantBuilder* builder)
 {
-  g_variant_builder_add(builder, "{sv}", "x", g_variant_new_int32(GetBaseX()));
-  g_variant_builder_add(builder, "{sv}", "y", g_variant_new_int32(GetBaseY()));
-  g_variant_builder_add(builder, "{sv}", "width", g_variant_new_int32(GetBaseWidth()));
-  g_variant_builder_add(builder, "{sv}", "height", g_variant_new_int32(GetBaseHeight()));
-  g_variant_builder_add(builder, "{sv}", "active", g_variant_new_boolean(IsVisible()));
+  variant::BuilderWrapper(builder)
+    .add("x", GetBaseX())
+    .add("y", GetBaseY())
+    .add("width", GetBaseWidth())
+    .add("height", GetBaseHeight())
+    .add("active", IsVisible());
 }
 
 //
@@ -1429,6 +1424,16 @@ QuicklistMenuItem*
 QuicklistView::GetSelectedMenuItem()
 {
   return GetNthItems(_current_item_index);
+}
+
+debug::Introspectable::IntrospectableList const& QuicklistView::GetIntrospectableChildren()
+{
+  _introspectable_children.clear();
+  for (auto item: _item_list)
+  {
+    _introspectable_children.push_back(item);
+  }
+  return _introspectable_children;
 }
 
 } // NAMESPACE

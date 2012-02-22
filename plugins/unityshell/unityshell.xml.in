@@ -36,7 +36,6 @@
                 <plugin>compiztoolbox</plugin>
                 <plugin>scale</plugin>
                 <plugin>expo</plugin>
-                <feature>largedesktop</feature>
             </requirement>
         </deps>
         <options>
@@ -51,7 +50,7 @@
                     <_short>Hide Launcher</_short>
                     <_long>Make the launcher hide automatically after some time of inactivity: always or just when the focussed window is not over the launcher</_long>
                     <min>0</min>
-                    <max>3</max>
+                    <max>1</max>
                     <default>0</default>
                     <desc>
                         <value>0</value>
@@ -61,13 +60,20 @@
                         <value>1</value>
                         <_name>Autohide</_name>
                     </desc>
+                </option>
+                <option name="reveal_trigger" type="int">
+                    <_short>Reveal Trigger</_short>
+                    <_long></_long>
+                    <min>0</min>
+                    <max>1</max>
+                    <default>0</default>
                     <desc>
-                        <value>2</value>
-                        <_name>Dodge Windows</_name>
+                        <value>0</value>
+                        <_name>Left Edge</_name>
                     </desc>
                     <desc>
-                        <value>3</value>
-                        <_name>Dodge Active Window</_name>
+                        <value>1</value>
+                        <_name>Top Left Corner</_name>
                     </desc>
                 </option>
                 <option name="show_launcher" type="key">
@@ -276,7 +282,7 @@
                 <option name="edge_responsiveness" type="float">
                     <_short>Launcher Reveal Edge Responsiveness</_short>
                     <_long>A conglomerate setting that modifies the overall responsiveness of the launcher reveal</_long>
-                    <default>1.0</default>
+                    <default>2.0</default>
                     <min>0.2</min>
                     <max>8.0</max>
                     <precision>0.1</precision>
@@ -308,7 +314,7 @@
                 <option name="stop_velocity" type="int">
                     <_short>Edge Stop Velocity</_short>
                     <_long>The maximum velocity at which the mouse will still be stoped</_long>
-                    <default>45</default>
+                    <default>65</default>
                     <min>1</min>
                     <max>1000</max>
                     <precision>1</precision>

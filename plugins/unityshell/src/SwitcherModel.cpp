@@ -30,7 +30,7 @@ using launcher::AbstractLauncherIcon;
 namespace switcher
 {
 
-SwitcherModel::SwitcherModel(std::vector<AbstractLauncherIcon*> icons)
+SwitcherModel::SwitcherModel(std::vector<AbstractLauncherIcon::Ptr> icons)
   : _inner(icons)
   , _index(0)
   , _last_index(0)
@@ -41,8 +41,7 @@ SwitcherModel::SwitcherModel(std::vector<AbstractLauncherIcon*> icons)
 
   for (auto icon : _inner)
   {
-    AddChild(icon);
-    icon->Reference();
+    AddChild(icon.GetPointer());
   }
 }
 
@@ -50,8 +49,7 @@ SwitcherModel::~SwitcherModel()
 {
   for (auto icon : _inner)
   {
-    RemoveChild(icon);
-    icon->UnReference();
+    RemoveChild(icon.GetPointer());
   }
 }
 
@@ -94,11 +92,11 @@ SwitcherModel::rend()
   return _inner.rend();
 }
 
-AbstractLauncherIcon*
+AbstractLauncherIcon::Ptr
 SwitcherModel::at(unsigned int index)
 {
   if ((int) index >= Size ())
-    return 0;
+    return AbstractLauncherIcon::Ptr();
   return _inner[index];
 }
 
@@ -108,7 +106,7 @@ SwitcherModel::Size()
   return _inner.size();
 }
 
-AbstractLauncherIcon*
+AbstractLauncherIcon::Ptr
 SwitcherModel::Selection()
 {
   return _inner.at(_index);
@@ -120,7 +118,7 @@ SwitcherModel::SelectionIndex()
   return _index;
 }
 
-AbstractLauncherIcon*
+AbstractLauncherIcon::Ptr
 SwitcherModel::LastSelection()
 {
   return _inner.at(_last_index);
@@ -229,7 +227,7 @@ void SwitcherModel::PrevDetail ()
 }
 
 void
-SwitcherModel::Select(AbstractLauncherIcon* selection)
+SwitcherModel::Select(AbstractLauncherIcon::Ptr selection)
 {
   int i = 0;
   for (iterator it = begin(), e = end(); it != e; ++it)
