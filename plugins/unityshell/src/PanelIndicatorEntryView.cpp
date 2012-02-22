@@ -679,7 +679,7 @@ bool PanelIndicatorEntryView::GetShowNow() const
 
 void PanelIndicatorEntryView::GetGeometryForSync(indicator::EntryLocationMap& locations)
 {
-  if (!IsVisible() || !IsFocused())
+  if (!IsVisible())
     return;
 
   locations[GetEntryID()] = GetAbsoluteGeometry();
