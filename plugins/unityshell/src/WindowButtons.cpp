@@ -41,7 +41,6 @@ public:
   WindowButton(panel::WindowButtonType type)
     : nux::Button("", NUX_TRACKER_LOCATION)
     , _type(type)
-    , _enabled(true)
     , _focused(true)
     , _overlay_is_open(false)
     , _opacity(1.0f)
@@ -69,7 +68,7 @@ public:
 
     if (_overlay_is_open)
     {
-      if (!_enabled)
+      if (!IsEnabled())
       {
         tex = _disabled_dash_tex.GetPointer();
       }
@@ -88,7 +87,7 @@ public:
         }
       }
     }
-    else if (!_enabled)
+    else if (!IsEnabled())
     {
       tex = _disabled_tex.GetPointer();
     }
@@ -230,21 +229,20 @@ public:
 
   void SetEnabled(bool enabled)
   {
-    if (enabled == _enabled)
+    if (enabled == IsEnabled())
       return;
 
-    _enabled = enabled;
+    SetEnableView(enabled);
     QueueDraw();
-  }  
+  }
 
   bool IsEnabled()
   {
-    return _enabled;
+    return IsViewEnabled();
   }
 
 private:
   panel::WindowButtonType _type;
-  bool _enabled;
   bool _focused;
   bool _overlay_is_open;
   double _opacity;
@@ -352,7 +350,7 @@ void WindowButtons::OnCloseClicked(nux::Button *button)
 {
   auto win_button = dynamic_cast<WindowButton*>(button);
 
-  if (!win_button || !win_button->IsEnabled())
+  if (!win_button)
     return;
 
   if (win_button->IsOverlayOpen())
@@ -371,7 +369,7 @@ void WindowButtons::OnMinimizeClicked(nux::Button *button)
 {
   auto win_button = dynamic_cast<WindowButton*>(button);
 
-  if (!win_button || !win_button->IsEnabled())
+  if (!win_button)
     return;
 
   if (!win_button->IsOverlayOpen())
@@ -384,7 +382,7 @@ void WindowButtons::OnRestoreClicked(nux::Button *button)
 {
   auto win_button = dynamic_cast<WindowButton*>(button);
 
-  if (!win_button || !win_button->IsEnabled())
+  if (!win_button)
     return;
 
   if (win_button->IsOverlayOpen())
@@ -408,7 +406,7 @@ void WindowButtons::OnMaximizeClicked(nux::Button *button)
 {
   auto win_button = dynamic_cast<WindowButton*>(button);
 
-  if (!win_button || !win_button->IsEnabled())
+  if (!win_button)
     return;
 
   if (win_button->IsOverlayOpen())
@@ -450,8 +448,8 @@ void WindowButtons::OnOverlayShown(GVariant* data)
     dash::Settings &dash_settings = dash::Settings::Instance();
     bool maximizable = (dash_settings.GetFormFactor() == dash::FormFactor::DESKTOP);
 
-    restore_button->SetEnabled((can_maximise) ? true : false);
-    maximize_button->SetEnabled((can_maximise) ? true : false);
+    restore_button->SetEnabled(can_maximise);
+    maximize_button->SetEnabled(can_maximise);
 
     if (maximizable != maximize_button->IsVisible())
     {
