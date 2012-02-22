@@ -94,7 +94,6 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
   _remote->on_object_removed.connect(sigc::mem_fun(this, &PanelView::OnObjectRemoved));
   _remote->on_entry_activate_request.connect(sigc::mem_fun(this, &PanelView::OnEntryActivateRequest));
   _remote->on_entry_activated.connect(sigc::mem_fun(this, &PanelView::OnEntryActivated));
-  _remote->on_synced.connect(sigc::mem_fun(this, &PanelView::OnSynced));
   _remote->on_entry_show_menu.connect(sigc::mem_fun(this, &PanelView::OnEntryShowMenu));
 
    UBusServer *ubus = ubus_server_get_default();
@@ -550,11 +549,6 @@ void PanelView::OnEntryActivated(std::string const& entry_id, nux::Rect const& g
   }
 
   ubus_server_send_message(ubus_server_get_default(), UBUS_PLACE_VIEW_CLOSE_REQUEST, NULL);
-}
-
-void PanelView::OnSynced()
-{
-  _needs_geo_sync = true;
 }
 
 void PanelView::OnEntryShowMenu(std::string const& entry_id, unsigned int xid,

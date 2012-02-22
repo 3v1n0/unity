@@ -77,7 +77,6 @@ protected:
   void OnMenuPointerMoved(int x, int y);
   void OnEntryActivateRequest(std::string const& entry_id);
   void OnEntryActivated(std::string const& entry_id, nux::Rect const& geo);
-  void OnSynced();
   void OnEntryShowMenu(std::string const& entry_id, unsigned int xid, int x, int y,
                        unsigned int button, unsigned int timestamp);
 
