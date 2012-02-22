@@ -58,7 +58,7 @@ class IBusTestsPinyin(IBusTests):
         ('disk_management', {'input': 'cipan guanli ', 'result': u'磁盘管理'}),
     ]
 
-    def test_pinyin(self):
+    def test_simple_input(self):
         self.activate_input_engine_or_skip("pinyin")
         self.dash.ensure_visible()
         sleep(0.5)
@@ -71,3 +71,25 @@ class IBusTestsPinyin(IBusTests):
 
         self.assertEqual(self.result, dash_search_string)
 
+
+class IBusTestsHangul(IBusTests):
+    """Tests for the Hangul input engine."""
+
+    scenarios = [
+        ('transmission', {'input': 'xmfostmaltus ', 'result': u'\ud2b8\ub79c\uc2a4\ubbf8\uc158'}),
+        ('social', {'input': 'httuf ', 'result': u'\uc18c\uc15c'}),
+        ('document', {'input': 'anstj ', 'result': u'\ubb38\uc11c'}),
+        ]
+
+    def test_simple_input(self):
+        self.activate_input_engine_or_skip("hangul")
+        self.dash.ensure_visible()
+        sleep(0.5)
+        self.activate_ibus()
+        sleep(0.5)
+        self.kb.type(self.input)
+        dash_search_string = self.dash.get_search_string()
+        self.deactivate_ibus()
+        self.dash.ensure_hidden()
+
+        self.assertEqual(self.result, dash_search_string)
