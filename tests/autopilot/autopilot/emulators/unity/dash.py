@@ -185,5 +185,6 @@ class FilterBar(UnityIntrospectionObject):
                 return filter_label
         return None
 
+
 class FilterExpanderLabel(UnityIntrospectionObject):
     """A label that expands into a filter within a filter bar."""

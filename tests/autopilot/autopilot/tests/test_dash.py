@@ -14,16 +14,16 @@ from autopilot.tests import AutopilotTestCase
 from autopilot.glibrunner import GlibRunner
 
 
-class DashTests(AutopilotTestCase):
-    """Test the unity Dash."""
+class DashRevealTests(AutopilotTestCase):
+    """Test the unity Dash Reveal."""
     run_test_with = GlibRunner
 
     def setUp(self):
-        super(DashTests, self).setUp()
+        super(DashRevealTests, self).setUp()
         self.dash = Dash()
 
     def tearDown(self):
-        super(DashTests, self).tearDown()
+        super(DashRevealTests, self).tearDown()
         self.dash.ensure_hidden()
 
     def test_dash_reveal(self):
@@ -72,6 +72,19 @@ class DashTests(AutopilotTestCase):
         self.dash.reveal_command_lens()
         lensbar = self.dash.view.get_lensbar()
         self.assertEqual(lensbar.active_lens, u'commands.lens')
+
+
+class DashKeyNavTests(AutopilotTestCase):
+    """Test the unity Dash keyboard navigation."""
+    run_test_with = GlibRunner
+
+    def setUp(self):
+        super(DashKeyNavTests, self).setUp()
+        self.dash = Dash()
+
+    def tearDown(self):
+        super(DashKeyNavTests, self).tearDown()
+        self.dash.ensure_hidden()
 
     def test_lensbar_keyfocus(self):
         """Test that the lensbar keynavigation works well."""
@@ -243,6 +256,3 @@ class DashTests(AutopilotTestCase):
         kb.press_and_release('Tab')
         category = app_lens.get_focused_category()
         self.assertIsNot(category, None)
-
-
-
