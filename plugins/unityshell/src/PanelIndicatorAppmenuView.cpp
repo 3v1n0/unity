@@ -43,9 +43,14 @@ PanelIndicatorAppmenuView::PanelIndicatorAppmenuView(Entry::Ptr const& proxy)
   right_padding_ = 7; 
 }
 
-void PanelIndicatorAppmenuView::Activate()
+void PanelIndicatorAppmenuView::Activate(int button)
 {
-  ShowMenu(1);
+  /* If the button is 0, the entry is activated using a keyboard shortcut,
+   * so we need to check the fucus status of the entry */
+  if (button != 0 || (button == 0 && IsFocused()))
+  {
+    ShowMenu(1);
+  }
 }
 
 void PanelIndicatorAppmenuView::ShowMenu(int button)

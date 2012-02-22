@@ -65,8 +65,8 @@ public:
   virtual bool IsIconVisible() const;
   virtual bool IsIconSensitive() const;
 
-  void Activate(int button = 1);
-  void Unactivate();
+  virtual void Activate(int button = 1);
+  virtual void Unactivate();
 
   bool GetShowNow() const;
   bool IsSensitive() const;

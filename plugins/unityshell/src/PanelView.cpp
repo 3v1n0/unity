@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010 Canonical Ltd
+ * Copyright (C) 2010-2012 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -15,6 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
+ *              Marco Trevisan (Treviño) <3v1n0@ubuntu.com>
  */
 
 #include <Nux/Nux.h>
@@ -484,8 +485,8 @@ void PanelView::OnEntryActivateRequest(std::string const& entry_id)
 
   bool ret;
 
-  ret = _menu_view->ActivateEntry(entry_id);
-  if (!ret) _indicators->ActivateEntry(entry_id);
+  ret = _menu_view->ActivateEntry(entry_id, 0);
+  if (!ret) _indicators->ActivateEntry(entry_id, 0);
 }
 
 void PanelView::TrackMenuPointer()

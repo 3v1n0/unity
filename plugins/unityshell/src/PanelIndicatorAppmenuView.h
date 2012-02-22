@@ -44,7 +44,7 @@ public:
 
   void SetControlledWindow(Window xid);
 
-  void Activate();
+  void Activate(int button = 1);
 
 protected:
   std::string GetName() const;

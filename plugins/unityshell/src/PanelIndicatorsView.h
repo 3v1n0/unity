@@ -58,8 +58,8 @@ public:
                                     IndicatorEntryType type = IndicatorEntryType::INDICATOR);
   void RemoveEntry(std::string const& entry_id);
 
-  PanelIndicatorEntryView* ActivateEntryAt(int x, int y);
-  PanelIndicatorEntryView* ActivateEntry(std::string const& entry_id);
+  PanelIndicatorEntryView* ActivateEntryAt(int x, int y, int button = 1);
+  PanelIndicatorEntryView* ActivateEntry(std::string const& entry_id, int button = 1);
   bool ActivateIfSensitive();
 
   virtual void DashShown();

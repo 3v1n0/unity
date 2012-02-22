@@ -499,7 +499,7 @@ void PanelIndicatorEntryView::Refresh()
 
     cxt = pango_layout_get_context(layout);
     pango_cairo_context_set_font_options(cxt, gdk_screen_get_font_options(screen));
-    pango_cairo_context_set_resolution(cxt, dpi / (float)PANGO_SCALE);
+    pango_cairo_context_set_resolution(cxt, dpi / static_cast<float>(PANGO_SCALE));
     pango_layout_context_changed(layout);
 
     pango_layout_get_extents(layout, nullptr, &log_rect);

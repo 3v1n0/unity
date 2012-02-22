@@ -158,15 +158,15 @@ PanelIndicatorsView::SetMaximumEntriesWidth(int max_width)
 }
 
 PanelIndicatorEntryView*
-PanelIndicatorsView::ActivateEntry(std::string const& entry_id)
+PanelIndicatorsView::ActivateEntry(std::string const& entry_id, int button)
 {
   auto entry = entries_.find(entry_id);
 
   if (entry != entries_.end() && entry->second->IsVisible())
   {
     PanelIndicatorEntryView* view = entry->second;
-    LOG_DEBUG(logger) << "Activating: " << entry_id;
-    view->Activate();
+
+    view->Activate(button);
     return view;
   }
 
@@ -201,7 +201,7 @@ PanelIndicatorsView::GetGeometryForSync(indicator::EntryLocationMap& locations)
 }
 
 PanelIndicatorEntryView*
-PanelIndicatorsView::ActivateEntryAt(int x, int y)
+PanelIndicatorsView::ActivateEntryAt(int x, int y, int button)
 {
   PanelIndicatorEntryView* target = nullptr;
   bool found_old_active = false;
@@ -219,7 +219,7 @@ PanelIndicatorsView::ActivateEntryAt(int x, int y)
     if (!target && view->IsVisible() && view->IsFocused() &&
         view->GetAbsoluteGeometry().IsPointInside(x, y))
     {
-      view->Activate(0);
+      view->Activate(button);
       target = view;
       break;
     }
