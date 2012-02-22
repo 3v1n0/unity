@@ -51,7 +51,7 @@ private:
 
   static unity::UBusManager ubus_manager_;
   nux::Color background_color_;
-  dash::FilesystemLenses lenses_;
+  dash::LensDirectoryReader::Ptr reader_;
 };
 
 }
