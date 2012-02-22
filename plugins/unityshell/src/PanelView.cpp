@@ -52,16 +52,14 @@ namespace unity
 NUX_IMPLEMENT_OBJECT_TYPE(PanelView);
 
 PanelView::PanelView(NUX_FILE_LINE_DECL)
-  :   View(NUX_FILE_LINE_PARAM),
-      _last_width(0),
-      _last_height(0),
-      _is_dirty(true),
-      _opacity(1.0f),
-      _opacity_maximized_toggle(false),
-      _needs_geo_sync(false),
-      _is_primary(false),
-      _monitor(0),
-      _dash_is_open(false)
+  : View(NUX_FILE_LINE_PARAM)
+  , _is_dirty(true)
+  , _opacity_maximized_toggle(false)
+  , _needs_geo_sync(false)
+  , _is_primary(false)
+  , _dash_is_open(false)
+  , _opacity(1.0f)
+  , _monitor(0)
 {
   panel::Style::Instance().changed.connect(sigc::mem_fun(this, &PanelView::ForceUpdateBackground));
 
@@ -71,7 +69,7 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
   rop.Blend = true;
   rop.SrcBlend = GL_ZERO;
   rop.DstBlend = GL_SRC_COLOR;
-  _bg_darken_layer_ = new nux::ColorLayer(nux::Color(0.7f, 0.7f, 0.7f, 1.0f), false, rop);
+  _bg_darken_layer = new nux::ColorLayer(nux::Color(0.7f, 0.7f, 0.7f, 1.0f), false, rop);
 
   _layout = new nux::HLayout("", NUX_TRACKER_LOCATION);
 
@@ -103,23 +101,19 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
   _ubus_manager.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
 
   _track_menu_pointer_id = 0;
-  bg_effect_helper_.owner = this;
+  _bg_effect_helper.owner = this;
 
   //FIXME (gord)- replace with async loading
   glib::Object<GdkPixbuf> pixbuf;
   glib::Error error;
-  pixbuf = gdk_pixbuf_new_from_file(PKGDATADIR"/dash_sheen.png", &error);
+  pixbuf = gdk_pixbuf_new_from_file(PKGDATADIR "/dash_sheen.png", &error);
   if (error)
   {
     LOG_WARN(logger) << "Unable to texture " << PKGDATADIR << "/dash_sheen.png" << ": " << error;
   }
   else
   {
-    _panel_sheen = nux::CreateTexture2DFromPixbuf(pixbuf, true);
-    // TODO: when nux has the ability to create a smart pointer that takes
-    // ownership without adding a reference, we can remove the unref here.  By
-    // unreferencing, the object is solely owned by the smart pointer.
-    _panel_sheen->UnReference();
+    _panel_sheen.Adopt(nux::CreateTexture2DFromPixbuf(pixbuf, true));
   }
 }
 
@@ -145,7 +139,7 @@ unsigned int PanelView::GetTrayXid ()
   if (!_tray)
     return 0;
 
-  return _tray->xid ();
+  return _tray->xid();
 }
 
 void PanelView::OnBackgroundUpdate (GVariant *data)
@@ -158,7 +152,7 @@ void PanelView::OnBackgroundUpdate (GVariant *data)
 void PanelView::OnDashHidden(GVariant* data)
 {
   if (_opacity >= 1.0f)
-    bg_effect_helper_.enabled = false;
+    _bg_effect_helper.enabled = false;
 
   _dash_is_open = false;
   _indicators->DashHidden();
@@ -175,7 +169,7 @@ void PanelView::OnDashShown(GVariant* data)
 
   if (_monitor == overlay_monitor)
   {
-    bg_effect_helper_.enabled = true;
+    _bg_effect_helper.enabled = true;
     _dash_is_open = true;
     _indicators->DashShown();
     ForceUpdateBackground();
@@ -218,9 +212,9 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   if (BackgroundEffectHelper::blur_type != BLUR_NONE && (_dash_is_open || (_opacity != 1.0f && _opacity != 0.0f)))
   {
     nux::Geometry blur_geo(geo_absolute.x, geo_absolute.y, geo.width, geo.height);
-    bg_blur_texture_ = bg_effect_helper_.GetBlurRegion(blur_geo);
+    _bg_blur_texture = _bg_effect_helper.GetBlurRegion(blur_geo);
 
-    if (bg_blur_texture_.IsValid() && BackgroundEffectHelper::blur_type != BLUR_NONE && (_dash_is_open || _opacity != 1.0f))
+    if (_bg_blur_texture.IsValid() && BackgroundEffectHelper::blur_type != BLUR_NONE && (_dash_is_open || _opacity != 1.0f))
     {
       nux::TexCoordXForm texxform_blur_bg;
       texxform_blur_bg.flip_v_coord = true;
@@ -237,7 +231,7 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
       GfxContext.PushClippingRectangle(bg_clip);
 
       gPainter.PushDrawTextureLayer(GfxContext, geo,
-                                    bg_blur_texture_,
+                                    _bg_blur_texture,
                                     texxform_blur_bg,
                                     nux::color::White,
                                     true,
@@ -248,7 +242,7 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
     if (_dash_is_open)
     {
-      nux::GetPainter().RenderSinglePaintLayer(GfxContext, GetGeometry(), _bg_darken_layer_);
+      nux::GetPainter().RenderSinglePaintLayer(GfxContext, GetGeometry(), _bg_darken_layer);
     }
   }
 
@@ -266,7 +260,7 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 void
 PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
-  nux::Geometry geo = GetGeometry();
+  nux::Geometry const& geo = GetGeometry();
   int bgs = 1;
 
   GfxContext.PushClippingRectangle(GetGeometry());
@@ -274,14 +268,15 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   GfxContext.GetRenderStates().SetBlend(true);
   GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
 
-  if (bg_blur_texture_.IsValid() && BackgroundEffectHelper::blur_type != BLUR_NONE && (_dash_is_open || (_opacity != 1.0f && _opacity != 0.0f)))
+  if (_bg_blur_texture.IsValid() && BackgroundEffectHelper::blur_type != BLUR_NONE &&
+      (_dash_is_open || (_opacity != 1.0f && _opacity != 0.0f)))
   {
     nux::Geometry geo_absolute = GetAbsoluteGeometry ();
     nux::TexCoordXForm texxform_blur_bg;
     texxform_blur_bg.flip_v_coord = true;
     texxform_blur_bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-    texxform_blur_bg.uoffset = ((float) geo.x) / geo_absolute.width;
-    texxform_blur_bg.voffset = ((float) geo.y) / geo_absolute.height;
+    texxform_blur_bg.uoffset = geo.x / static_cast<float>(geo_absolute.width);
+    texxform_blur_bg.voffset = geo.y / static_cast<float>(geo_absolute.height);
 
     nux::ROPConfig rop;
     rop.Blend = false;
@@ -289,7 +284,7 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
     gPainter.PushTextureLayer(GfxContext, geo,
-                              bg_blur_texture_,
+                              _bg_blur_texture,
                               texxform_blur_bg,
                               nux::color::White,
                               true,
@@ -298,7 +293,7 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
     if (_dash_is_open)
     {
-      nux::GetPainter().PushLayer(GfxContext, GetGeometry(), _bg_darken_layer_);
+      nux::GetPainter().PushLayer(GfxContext, GetGeometry(), _bg_darken_layer);
     }
   }
 
@@ -345,13 +340,12 @@ PanelView::PostLayoutManagement(long LayoutResult)
 void
 PanelView::UpdateBackground()
 {
-  nux::Geometry geo = GetGeometry();
+  nux::Geometry const& geo = GetGeometry();
 
-  if (!_is_dirty && geo.width == _last_width && geo.height == _last_height)
+  if (!_is_dirty && geo == _last_geo)
     return;
 
-  _last_width = geo.width;
-  _last_height = geo.height;
+  _last_geo = geo;
   _is_dirty = false;
   
   guint32 maximized_win = _menu_view->GetMaximizedWindow();
@@ -594,7 +588,7 @@ PanelView::SetOpacity(float opacity)
 
   _opacity = opacity;
 
-  bg_effect_helper_.enabled = (_opacity < 1.0f || _dash_is_open);
+  _bg_effect_helper.enabled = (_opacity < 1.0f || _dash_is_open);
 
   ForceUpdateBackground();
 }

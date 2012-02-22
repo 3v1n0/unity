@@ -92,20 +92,19 @@ private:
   void SyncGeometries();
   void AddPanelView(PanelIndicatorsView* child, unsigned int stretchFactor);
 
-  typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
   indicator::DBusIndicators::Ptr _remote;
+
   // No ownership is taken for these views, that is done by the AddChild method.
+  PanelMenuView* _menu_view;
+  PanelTray* _tray;
+  PanelIndicatorsView* _indicators;
 
-  PanelMenuView*           _menu_view;
-  PanelTray*               _tray;
-  PanelIndicatorsView*     _indicators;
   nux::AbstractPaintLayer* _bg_layer;
-  nux::ColorLayer*         _bg_darken_layer_;
-  BaseTexturePtr           _panel_sheen;
-  nux::HLayout*            _layout;
+  nux::ColorLayer* _bg_darken_layer;
+  nux::ObjectPtr<nux::BaseTexture> _panel_sheen;
+  nux::HLayout* _layout;
 
-  int _last_width;
-  int _last_height;
+  nux::Geometry _last_geo;
 
   nux::Color  _bg_color;
   bool        _is_dirty;
@@ -121,8 +120,8 @@ private:
 
   std::vector<sigc::connection> _on_indicator_updated_connections;
   std::vector<sigc::connection> _maximized_opacity_toggle_connections;
-  BackgroundEffectHelper bg_effect_helper_;
-  nux::ObjectPtr <nux::IOpenGLBaseTexture> bg_blur_texture_;
+  BackgroundEffectHelper _bg_effect_helper;
+  nux::ObjectPtr<nux::IOpenGLBaseTexture> _bg_blur_texture;
   UBusManager _ubus_manager;
 };
 
