@@ -99,9 +99,9 @@ class IBusTestsAnthi(IBusTests):
     """Tests for the Anthy(Japanese) input engine."""
 
     scenarios = [
-        ('system', {'input': 'shisutemu ', 'result': u'\u30b7\u30b9\u30c6\u30e0 '}),
-        ('system', {'input': 'ge-mu ', 'result': u'\u30b2\u30fc\u30e0 '}),
-        ('system', {'input': 'yu-za- ', 'result': u'\u30e6\u30fc\u30b6\u30fc '}),
+        ('system', {'input': 'shisutemu ', 'result': u'\u30b7\u30b9\u30c6\u30e0'}),
+        ('system', {'input': 'ge-mu ', 'result': u'\u30b2\u30fc\u30e0'}),
+        ('system', {'input': 'yu-za- ', 'result': u'\u30e6\u30fc\u30b6\u30fc'}),
         ]
 
     def test_simple_input(self):
