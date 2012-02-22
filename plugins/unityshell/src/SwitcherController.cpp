@@ -323,7 +323,7 @@ void Controller::SetDetail(bool value, unsigned int min_windows)
   if (value && model_->DetailXids().size () >= min_windows)
   {
     model_->detail_selection = true;
-    detail_mode_ = TAB_NEXT_WINDOW_LOOP;
+    detail_mode_ = TAB_NEXT_WINDOW;
   }
   else
   {
