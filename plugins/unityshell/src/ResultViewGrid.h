@@ -87,7 +87,7 @@ private:
   void PositionPreview();
   uint GetIndexAtPosition(int x, int y);
 
-  int mouse_over_index_;
+  uint mouse_over_index_;
   int active_index_;
   int selected_index_;
   uint preview_row_;
