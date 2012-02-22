@@ -73,6 +73,7 @@ def set_active_engines(engine_list):
     # see bug report here:
     # http://code.google.com/p/ibus/issues/detail?id=1418&thanks=1418&ts=1329885137
     bus.exit(restart=True)
+    sleep(1)
     return old_engines
 
 def set_global_input_engine(engine_name):
