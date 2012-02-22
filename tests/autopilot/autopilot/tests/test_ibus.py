@@ -94,3 +94,26 @@ class IBusTestsHangul(IBusTests):
 
         self.assertEqual(self.result, dash_search_string)
 
+
+class IBusTestsAnthi(IBusTests):
+    """Tests for the Anthi(Japanese) input engine."""
+
+    scenarios = [
+        ('system', {'input': 'shisutemu ', 'result': u'\u30b7\u30b9\u30c6\u30e0 '}),
+        ('system', {'input': 'ge-mu ', 'result': u'\u30b2\u30fc\u30e0 '}),
+        ('system', {'input': 'yu-za- ', 'result': u'\u30e6\u30fc\u30b6\u30fc '}),
+        ]
+
+    def test_simple_input(self):
+        self.activate_input_engine_or_skip("anthi")
+        self.dash.ensure_visible()
+        sleep(0.5)
+        self.activate_ibus()
+        sleep(0.5)
+        self.kb.type(self.input)
+        self.kb.press_and_release("Ctrl+j")
+        dash_search_string = self.dash.get_search_string()
+        self.deactivate_ibus()
+        self.dash.ensure_hidden()
+
+        self.assertEqual(self.result, dash_search_string)
