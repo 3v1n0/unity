@@ -76,9 +76,9 @@ class IBusTestsHangul(IBusTests):
     """Tests for the Hangul(Korean) input engine."""
 
     scenarios = [
-        ('transmission', {'input': 'xmfostmaltus ', 'result': u'\ud2b8\ub79c\uc2a4\ubbf8\uc158'}),
-        ('social', {'input': 'httuf ', 'result': u'\uc18c\uc15c'}),
-        ('document', {'input': 'anstj ', 'result': u'\ubb38\uc11c'}),
+        ('transmission', {'input': 'xmfostmaltus ', 'result': u'\ud2b8\ub79c\uc2a4\ubbf8\uc158 '}),
+        ('social', {'input': 'httuf ', 'result': u'\uc18c\uc15c '}),
+        ('document', {'input': 'anstj ', 'result': u'\ubb38\uc11c '}),
         ]
 
     def test_simple_input(self):
