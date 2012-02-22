@@ -35,6 +35,7 @@
 #include "PanelMenuView.h"
 #include "PanelTray.h"
 #include "PanelIndicatorsView.h"
+#include "UBusWrapper.h"
 
 namespace unity
 {
@@ -81,9 +82,9 @@ protected:
                        unsigned int button, unsigned int timestamp);
 
 private:
-  static void OnBackgroundUpdate  (GVariant *data, PanelView *self);
-  static void OnDashShown         (GVariant *data, PanelView *self);
-  static void OnDashHidden        (GVariant *data, PanelView *self);
+  void OnBackgroundUpdate(GVariant *data);
+  void OnDashShown(GVariant *data);
+  void OnDashHidden(GVariant *data);
 
   void UpdateBackground();
   void ForceUpdateBackground();
@@ -108,16 +109,13 @@ private:
 
   nux::Color  _bg_color;
   bool        _is_dirty;
-  float       _opacity;
   bool        _opacity_maximized_toggle;
   bool        _needs_geo_sync;
   bool        _is_primary;
+  bool        _dash_is_open;
+  float       _opacity;
   int         _monitor;
 
-  bool        _dash_is_open;
-  guint       _handle_dash_hidden;
-  guint       _handle_dash_shown;
-  guint       _handle_bg_color_update;
   guint       _track_menu_pointer_id;
   nux::Point  _tracked_pointer_pos;
 
@@ -125,6 +123,7 @@ private:
   std::vector<sigc::connection> _maximized_opacity_toggle_connections;
   BackgroundEffectHelper bg_effect_helper_;
   nux::ObjectPtr <nux::IOpenGLBaseTexture> bg_blur_texture_;
+  UBusManager _ubus_manager;
 };
 
 }

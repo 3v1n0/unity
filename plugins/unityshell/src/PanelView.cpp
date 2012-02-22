@@ -37,7 +37,6 @@
 #include "PanelIndicatorsView.h"
 #include <UnityCore/Variant.h>
 
-#include "ubus-server.h"
 #include "UBusMessages.h"
 
 #include "PanelView.h"
@@ -96,21 +95,12 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
   _remote->on_entry_activated.connect(sigc::mem_fun(this, &PanelView::OnEntryActivated));
   _remote->on_entry_show_menu.connect(sigc::mem_fun(this, &PanelView::OnEntryShowMenu));
 
-   UBusServer *ubus = ubus_server_get_default();
+  _ubus_manager.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED, sigc::mem_fun(this, &PanelView::OnBackgroundUpdate));
+  _ubus_manager.RegisterInterest(UBUS_OVERLAY_HIDDEN, sigc::mem_fun(this, &PanelView::OnDashHidden));
+  _ubus_manager.RegisterInterest(UBUS_OVERLAY_SHOWN, sigc::mem_fun(this, &PanelView::OnDashShown));
 
-   _handle_bg_color_update = ubus_server_register_interest(ubus, UBUS_BACKGROUND_COLOR_CHANGED,
-                                                          (UBusCallback)&PanelView::OnBackgroundUpdate,
-                                                          this);
-
-   _handle_dash_hidden = ubus_server_register_interest(ubus, UBUS_OVERLAY_HIDDEN,
-                                                      (UBusCallback)&PanelView::OnDashHidden,
-                                                      this);
-
-   _handle_dash_shown = ubus_server_register_interest(ubus, UBUS_OVERLAY_SHOWN,
-                                                     (UBusCallback)&PanelView::OnDashShown,
-                                                     this);
-   // request the latest colour from bghash
-   ubus_server_send_message (ubus, UBUS_BACKGROUND_REQUEST_COLOUR_EMIT, NULL);
+  // request the latest colour from bghash
+  _ubus_manager.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
 
   _track_menu_pointer_id = 0;
   bg_effect_helper_.owner = this;
@@ -137,10 +127,6 @@ PanelView::~PanelView()
 {
   if (_track_menu_pointer_id)
     g_source_remove(_track_menu_pointer_id);
-  UBusServer *ubus = ubus_server_get_default();
-  ubus_server_unregister_interest(ubus, _handle_bg_color_update);
-  ubus_server_unregister_interest(ubus, _handle_dash_hidden);
-  ubus_server_unregister_interest(ubus, _handle_dash_shown);
 
   for (auto conn : _on_indicator_updated_connections)
     conn.disconnect();
@@ -162,24 +148,24 @@ unsigned int PanelView::GetTrayXid ()
   return _tray->xid ();
 }
 
-void PanelView::OnBackgroundUpdate (GVariant *data, PanelView *self)
+void PanelView::OnBackgroundUpdate (GVariant *data)
 {
-  gdouble red, green, blue, alpha;
-  g_variant_get(data, "(dddd)", &red, &green, &blue, &alpha);
-  self->_bg_color = nux::Color (red, green, blue, alpha);
-  self->ForceUpdateBackground();
+  g_variant_get(data, "(dddd)", &_bg_color.red, &_bg_color.green,
+                                &_bg_color.blue, &_bg_color.alpha);
+  ForceUpdateBackground();
 }
 
-void PanelView::OnDashHidden(GVariant* data, PanelView* self)
+void PanelView::OnDashHidden(GVariant* data)
 {
-  if (self->_opacity >= 1.0f)
-    self->bg_effect_helper_.enabled = false;
-  self->_dash_is_open = false;
-  self->_indicators->DashHidden();
-  self->ForceUpdateBackground();
+  if (_opacity >= 1.0f)
+    bg_effect_helper_.enabled = false;
+
+  _dash_is_open = false;
+  _indicators->DashHidden();
+  ForceUpdateBackground();
 }
 
-void PanelView::OnDashShown(GVariant* data, PanelView* self)
+void PanelView::OnDashShown(GVariant* data)
 {
   unity::glib::String overlay_identity;
   gboolean can_maximise = FALSE;
@@ -187,12 +173,12 @@ void PanelView::OnDashShown(GVariant* data, PanelView* self)
   g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING, 
                 &overlay_identity, &can_maximise, &overlay_monitor);
 
-  if (self->_monitor == overlay_monitor)
+  if (_monitor == overlay_monitor)
   {
-    self->bg_effect_helper_.enabled = true;
-    self->_dash_is_open = true;
-    self->_indicators->DashShown();
-    self->ForceUpdateBackground();
+    bg_effect_helper_.enabled = true;
+    _dash_is_open = true;
+    _indicators->DashShown();
+    ForceUpdateBackground();
   }
 }
 
@@ -548,7 +534,7 @@ void PanelView::OnEntryActivated(std::string const& entry_id, nux::Rect const& g
     _tracked_pointer_pos = {-1, -1};
   }
 
-  ubus_server_send_message(ubus_server_get_default(), UBUS_PLACE_VIEW_CLOSE_REQUEST, NULL);
+  _ubus_manager.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
 }
 
 void PanelView::OnEntryShowMenu(std::string const& entry_id, unsigned int xid,
