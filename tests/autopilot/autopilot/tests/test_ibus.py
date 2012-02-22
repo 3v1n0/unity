@@ -95,7 +95,7 @@ class IBusTestsHangul(IBusTests):
         self.assertEqual(self.result, dash_search_string)
 
 
-class IBusTestsAnthi(IBusTests):
+class IBusTestsAnthy(IBusTests):
     """Tests for the Anthy(Japanese) input engine."""
 
     scenarios = [
