@@ -602,6 +602,18 @@ void WindowButtons::SetControlledWindow(Window xid)
   if (xid != window_xid_)
   {
     window_xid_ = xid;
+
+    for (auto area : GetChildren())
+    {
+      auto button = dynamic_cast<WindowButton*>(area);
+
+      if (button->GetType() == panel::WindowButtonType::MINIMIZE)
+      {
+        bool minimizable = WindowManager::Default()->IsWindowMinimizable(xid);
+        button->SetEnabled(minimizable);
+        break;
+      }
+    }
   }
 }
 
