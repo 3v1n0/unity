@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010 Canonical Ltd
+ * Copyright (C) 2010-2012 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -20,10 +20,6 @@
 
 #ifndef PANEL_MENU_VIEW_H
 #define PANEL_MENU_VIEW_H
-
-#include <Nux/View.h>
-#include <map>
-#include <set>
 
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/GLibSignal.h>

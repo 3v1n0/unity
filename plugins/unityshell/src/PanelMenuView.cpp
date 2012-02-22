@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010 Canonical Ltd
+ * Copyright (C) 2010-2012 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -17,19 +17,9 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  *              Marco Trevisan <3v1n0@ubuntu.com>
  */
-#include <glib.h>
-#include <pango/pangocairo.h>
-#include <gtk/gtk.h>
 
 #include <Nux/Nux.h>
-#include <Nux/HLayout.h>
-#include <Nux/VLayout.h>
-#include <Nux/TextureArea.h>
 #include <NuxCore/Logger.h>
-
-#include <NuxGraphics/GLThread.h>
-#include <NuxGraphics/XInputWindow.h>
-#include <Nux/BaseWindow.h>
 
 #include "CairoTexture.h"
 #include "PanelMenuView.h"
@@ -40,8 +30,6 @@
 
 #include <UnityCore/Variant.h>
 #include <UnityCore/AppmenuIndicator.h>
-
-#include <gio/gdesktopappinfo.h>
 
 #include <glib/gi18n-lib.h>
 
