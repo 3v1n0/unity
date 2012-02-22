@@ -68,6 +68,8 @@ ResultView::ResultView(NUX_FILE_LINE_DECL)
 
 ResultView::~ResultView()
 {
+  ClearIntrospectableWrappers();
+
   for (auto result : results_)
   {
     renderer_->Unload(result);
@@ -235,18 +237,23 @@ void ResultView::AddProperties(GVariantBuilder* builder)
 
 debug::Introspectable::IntrospectableList const& ResultView::GetIntrospectableChildren()
 {
-  // delete old results, then add new results
-  for (auto old_result: introspectable_children_)
-  {
-    delete old_result;
-  }
-  introspectable_children_.clear();
+  ClearIntrospectableWrappers();
 
   for (auto result: results_)
   {
     introspectable_children_.push_back(new debug::ResultWrapper(result));
   }
   return introspectable_children_;
+}
+
+void ResultView::ClearIntrospectableWrappers()
+{
+  // delete old results, then add new results
+  for (auto old_result: introspectable_children_)
+  {
+    delete old_result;
+  }
+  introspectable_children_.clear();
 }
 
 }

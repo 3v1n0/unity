@@ -77,6 +77,9 @@ protected:
   ResultRenderer* renderer_;
   ResultList results_;
   IntrospectableList introspectable_children_;
+
+private:
+  void ClearIntrospectableWrappers();
 };
 
 }
