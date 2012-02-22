@@ -165,17 +165,6 @@ PanelMenuView::PanelMenuView()
   _titlebar_grab_area->mouse_enter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
   _titlebar_grab_area->mouse_leave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
 
-  // Register for all the interesting events
-  _ubus_manager.RegisterInterest(UBUS_OVERLAY_SHOWN, [&] (GVariant*) {
-    _dash_showing = true;
-    QueueDraw();
-  });
-
-  _ubus_manager.RegisterInterest(UBUS_OVERLAY_HIDDEN, [&] (GVariant*) {
-    _dash_showing = false;
-    QueueDraw();
-  });
-
   _ubus_manager.RegisterInterest(UBUS_SWITCHER_SHOWN, sigc::mem_fun(this, &PanelMenuView::OnSwitcherShown));
   _ubus_manager.RegisterInterest(UBUS_SWITCHER_SELECTION_CHANGED, sigc::mem_fun(this, &PanelMenuView::OnSwitcherSelectionChanged));
 
@@ -208,6 +197,18 @@ PanelMenuView::~PanelMenuView()
 
   _style_changed_connection.disconnect();
   _mode_changed_connection.disconnect();
+}
+
+void PanelMenuView::DashShown()
+{
+  _dash_showing = true;
+  QueueDraw();
+}
+
+void PanelMenuView::DashHidden()
+{
+  _dash_showing = false;
+  QueueDraw();
 }
 
 void PanelMenuView::SetIntegrated(bool integrated)

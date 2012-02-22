@@ -61,20 +61,21 @@ public:
   PanelIndicatorEntryView* ActivateEntryAt(int x, int y);
   PanelIndicatorEntryView* ActivateEntry(std::string const& entry_id);
   bool ActivateIfSensitive();
-  void GetGeometryForSync(EntryLocationMap& locations);
 
-  void DashShown();
-  void DashHidden();
+  virtual void DashShown();
+  virtual void DashHidden();
 
   void SetOpacity(double opacity);
   double GetOpacity();
 
   bool IsAppmenu();
 
-  sigc::signal<void, PanelIndicatorEntryView*> on_indicator_updated;
+  void SetMaximumEntriesWidth(int max_width);
+  void GetGeometryForSync(EntryLocationMap& locations);
 
   virtual void QueueDraw();
-  void SetMaximumEntriesWidth(int max_width);
+
+  sigc::signal<void, PanelIndicatorEntryView*> on_indicator_updated;
 
 protected:
   std::string GetName() const;

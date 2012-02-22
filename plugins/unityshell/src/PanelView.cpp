@@ -156,6 +156,7 @@ void PanelView::OnDashHidden(GVariant* data)
 
   _dash_is_open = false;
   _indicators->DashHidden();
+  _menu_view->DashHidden();
   ForceUpdateBackground();
 }
 
@@ -172,6 +173,7 @@ void PanelView::OnDashShown(GVariant* data)
     _bg_effect_helper.enabled = true;
     _dash_is_open = true;
     _indicators->DashShown();
+    _menu_view->DashShown();
     ForceUpdateBackground();
   }
 }

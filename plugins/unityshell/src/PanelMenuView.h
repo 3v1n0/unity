@@ -75,6 +75,9 @@ public:
   virtual void AddIndicator(indicator::Indicator::Ptr const& indicator);
   virtual void RemoveIndicator(indicator::Indicator::Ptr const& indicator);
 
+  virtual void DashShown();
+  virtual void DashHidden();
+
   virtual void QueueDraw();
 
 protected:
