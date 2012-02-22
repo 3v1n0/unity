@@ -67,6 +67,8 @@ public:
   bool GetExpanded() const;
 
   int  GetHeaderHeight() const;
+  bool HeaderIsFocusable() const;
+  nux::View* GetHeaderFocusableView() const;
 
   void SetDrawSeparator(bool draw_it);
 

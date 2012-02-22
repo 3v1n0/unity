@@ -148,7 +148,6 @@ PanelMenuView::PanelMenuView()
   win_manager->terminate_expo.connect(sigc::mem_fun(this, &PanelMenuView::OnExpoTerminate));
   win_manager->compiz_screen_viewport_switch_ended.connect(sigc::mem_fun(this, &PanelMenuView::OnExpoTerminate));
 
-
   _style_changed_connection = panel::Style::Instance().changed.connect([&] {
     _window_buttons->ComputeContentSize();
     layout_->SetLeftAndRightPadding(_window_buttons->GetContentWidth(), 0);
