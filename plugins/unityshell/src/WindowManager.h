@@ -61,6 +61,7 @@ public:
   virtual bool IsWindowObscured(guint32 xid) = 0;
   virtual bool IsWindowMapped(guint32 xid) = 0;
   virtual bool IsWindowVisible(guint32 xid) = 0;
+  virtual bool IsWindowMinimizable(guint32 xid) = 0;
 
   virtual void ShowDesktop() = 0;
 

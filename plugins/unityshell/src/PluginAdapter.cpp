@@ -509,6 +509,19 @@ PluginAdapter::IsWindowVisible(guint32 xid)
   return false;
 }
 
+bool
+PluginAdapter::IsWindowMinimizable(guint32 xid)
+{
+  Window win = xid;
+  CompWindow* window;
+
+  window = m_Screen->findWindow(win);
+  if (window)
+    return (window->actions() & CompWindowActionMinimizeMask);
+
+  return false;
+}
+
 void
 PluginAdapter::Restore(guint32 xid)
 {
