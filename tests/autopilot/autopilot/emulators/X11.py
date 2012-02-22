@@ -16,7 +16,7 @@ In the future we may also need other devices.
 
 """
 
-
+import logging
 from time import sleep
 
 from Xlib import X
@@ -27,6 +27,7 @@ import gtk.gdk
 
 _PRESSED_KEYS = []
 _DISPLAY = Display()
+logger = logging.getLogger(__name__)
 
 
 class Keyboard(object):
@@ -97,6 +98,7 @@ class Keyboard(object):
         """
         if not isinstance(keys, basestring):
             raise TypeError("'keys' argument must be a string.")
+        logger.debug("Pressing keys %r with delay %f", keys, delay)
         self.__perform_on_keys(self.__translate_keys(keys), X.KeyPress)
         sleep(delay)
 
@@ -113,6 +115,7 @@ class Keyboard(object):
         """
         if not isinstance(keys, basestring):
             raise TypeError("'keys' argument must be a string.")
+        logger.debug("Releasing keys %r with delay %f", keys, delay)
         self.__perform_on_keys(self.__translate_keys(keys), X.KeyRelease)
         sleep(delay)
 
@@ -142,6 +145,7 @@ class Keyboard(object):
         """
         if not isinstance(string, basestring):
             raise TypeError("'keys' argument must be a string.")
+        logger.debug("Typing text %r", string)
         for key in string:
             self.press(key, delay)
             self.release(key, delay)
@@ -155,7 +159,7 @@ class Keyboard(object):
 
         """
         for keycode in _PRESSED_KEYS:
-            print "Releasing key: %r" % (keycode)
+            logger.warning("Releasing key %r as part of cleanup call.", keycode)
             fake_input(_DISPLAY, X.KeyRelease, keycode)
 
     def __perform_on_keys(self, keys, event):
@@ -201,7 +205,7 @@ class Keyboard(object):
         return keycode, shift_mask
 
     def __translate_keys(self, key_string):
-        return [self._keysym_translations.get(k,k) for k in key_string.split('+')]
+        return [self._keysym_translations.get(k, k) for k in key_string.split('+')]
 
 
 class Mouse(object):
@@ -219,11 +223,13 @@ class Mouse(object):
 
     def press(self, button=1):
         """Press mouse button at current mouse location."""
+        logger.debug("Pressing mouse button %d", button)
         fake_input(_DISPLAY, X.ButtonPress, button)
         _DISPLAY.sync()
 
     def release(self, button=1):
         """Releases mouse button at current mouse location."""
+        logger.debug("Releasing mouse button %d", button)
         fake_input(_DISPLAY, X.ButtonRelease, button)
         _DISPLAY.sync()
 
@@ -235,6 +241,9 @@ class Mouse(object):
 
     def move(self, x, y, animate=True, rate=100, time_between_events=0.001):
         '''Moves mouse to location (x, y, pixels_per_event, time_between_event)'''
+        logger.debug("Moving mouse to position %d,%d %s animation.", x, y,
+            "with" if animate else "false")
+
         def perform_move(x, y, sync):
             fake_input(_DISPLAY, X.MotionNotify, sync, X.CurrentTime, X.NONE, x=x, y=y)
             _DISPLAY.sync()
@@ -249,14 +258,14 @@ class Mouse(object):
         # calculate a path from our current position to our destination
         dy = float(curr_y - dest_y)
         dx = float(curr_x - dest_x)
-        slope = dy/dx if dx > 0 else 0
+        slope = dy / dx if dx > 0 else 0
         yint = curr_y - (slope * curr_x)
         xscale = rate if dest_x > curr_x else -rate
 
         while (int(curr_x) != dest_x):
             target_x = min(curr_x + xscale, dest_x) if dest_x > curr_x else max(curr_x + xscale, dest_x)
             perform_move(target_x - curr_x, 0, True)
-            curr_x = target_x;
+            curr_x = target_x
 
         if (curr_y != dest_y):
             yscale = rate if dest_y > curr_y else -rate
@@ -307,6 +316,7 @@ class ScreenGeometry:
     def move_mouse_to_monitor(self, monitor_number):
         """Move the mouse to the center of the specified monitor."""
         geo = self.get_monitor_geometry(monitor_number)
-        x = geo[0] + (geo[2]/2)
-        y = geo[1] + (geo[3]/2)
-        Mouse().move(x,y, False) #dont animate this or it might not get there due to barriers
+        x = geo[0] + (geo[2] / 2)
+        y = geo[1] + (geo[3] / 2)
+        #dont animate this or it might not get there due to barriers
+        Mouse().move(x, y, False)

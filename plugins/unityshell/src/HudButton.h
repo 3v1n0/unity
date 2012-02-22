@@ -43,13 +43,14 @@ public:
   HudButton (const std::string label, nux::TextureArea *image, NUX_FILE_LINE_PROTO);
   HudButton (NUX_FILE_LINE_PROTO);
   virtual ~HudButton();
-
+  
   void SetQuery(Query::Ptr query);
   std::shared_ptr<Query> GetQuery();
 
   nux::Property<std::string> label;
   nux::Property<std::string> hint;
   nux::Property<bool> is_rounded;
+  nux::Property<bool> fake_focused;
 protected:
 
   virtual bool AcceptKeyNavFocus();
@@ -60,7 +61,8 @@ protected:
 
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
-  
+ 
+  void Init();
   void InitTheme ();
   void RedrawTheme(nux::Geometry const& geom, cairo_t* cr, nux::ButtonVisualState faked_state);
   typedef std::unique_ptr<nux::CairoWrapper> NuxCairoPtr;

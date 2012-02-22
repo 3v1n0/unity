@@ -81,7 +81,7 @@ bool DeviceLauncherSection::PopulateEntries(DeviceLauncherSection* self)
     DeviceLauncherIcon* icon = new DeviceLauncherIcon(volume);
 
     self->map_[volume] = icon;
-    self->IconAdded.emit(icon);
+    self->IconAdded.emit(AbstractLauncherIcon::Ptr(icon));
   }
 
   g_list_free(volumes);
@@ -102,7 +102,7 @@ void DeviceLauncherSection::OnVolumeAdded(GVolumeMonitor* monitor,
   DeviceLauncherIcon* icon = new DeviceLauncherIcon(volume);
   
   self->map_[volume] = icon;
-  self->IconAdded.emit(icon);
+  self->IconAdded.emit(AbstractLauncherIcon::Ptr(icon));
 }
 
 void DeviceLauncherSection::OnVolumeRemoved(GVolumeMonitor* monitor,

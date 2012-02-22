@@ -49,7 +49,6 @@ public:
   nux::BaseWindow* window() const;
 
   nux::Property<int> launcher_width;
-  nux::Property<int> panel_height;
 
   void ShowHideHud();
   void ShowHud();
@@ -103,7 +102,7 @@ private:
 
   View* view_;
   guint ensure_id_;
-
+  std::string focused_app_icon_;
   nux::Layout* layout_;
 };
 

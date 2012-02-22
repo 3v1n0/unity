@@ -45,6 +45,7 @@ using namespace unity;
 
 IconTexture::IconTexture(nux::BaseTexture* texture, guint width, guint height)
   : TextureArea(NUX_TRACKER_LOCATION),
+    _accept_key_nav_focus(false),
     _icon_name(NULL),
     _size(height),
     _texture_cached(texture),
@@ -54,12 +55,11 @@ IconTexture::IconTexture(nux::BaseTexture* texture, guint width, guint height)
     _opacity(1.0f)
 {
   SetMinMaxSize(width, height);
-
-  _accept_key_nav_focus = false;
 }
 
 IconTexture::IconTexture(const char* icon_name, unsigned int size, bool defer_icon_loading)
   : TextureArea(NUX_TRACKER_LOCATION),
+    _accept_key_nav_focus(false),
     _icon_name(NULL),
     _size(size),
     _texture_width(0),

@@ -42,6 +42,8 @@ namespace unity
 namespace dash
 {
 
+class DashLayout;
+
 class DashView : public nux::View, public unity::debug::Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE(DashView, nux::View);
@@ -116,7 +118,7 @@ private:
 
   // View related
   nux::VLayout* layout_;
-  nux::VLayout* content_layout_;
+  DashLayout* content_layout_;
   SearchBar* search_bar_;
   nux::VLayout* lenses_layout_;
   LensBar* lens_bar_;

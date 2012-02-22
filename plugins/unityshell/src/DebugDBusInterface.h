@@ -20,7 +20,7 @@
 #include <gio/gio.h>
 
 #ifndef _DEBUG_DBUS_INTERFACE_H
-#define _DEBUG_DBUS_INTERFACE_H 1
+#define _DEBUG_DBUS_INTERFACE_H
 
 class CompScreen;
 
@@ -44,13 +44,13 @@ private:
   static void OnBusAcquired(GDBusConnection* connection, const gchar* name, gpointer data);
   static void OnNameAcquired(GDBusConnection* connection, const gchar* name, gpointer data);
   static void OnNameLost(GDBusConnection* connection, const gchar* name, gpointer data);
-  static void HandleDBusMethodCall(GDBusConnection* connection, 
-                                   const gchar* sender, 
+  static void HandleDBusMethodCall(GDBusConnection* connection,
+                                   const gchar* sender,
                                    const gchar* object_path,
-                                   const gchar* interface_name, 
-                                   const gchar* method_name, 
+                                   const gchar* interface_name,
+                                   const gchar* method_name,
                                    GVariant* parameters,
-                                   GDBusMethodInvocation* invocation, 
+                                   GDBusMethodInvocation* invocation,
                                    gpointer user_data);
   static const char* DBUS_DEBUG_OBJECT_PATH;
   static const gchar introspection_xml[];

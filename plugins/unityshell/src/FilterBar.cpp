@@ -24,6 +24,7 @@
 #include <NuxCore/Logger.h>
 
 #include "FilterBar.h"
+#include "FilterExpanderLabel.h"
 #include "FilterFactory.h"
 
 namespace unity
@@ -34,6 +35,9 @@ namespace
 {
 
 nux::logging::Logger logger("unity.dash.filterbar");
+
+const int SEPARATOR_LEFT_PADDING = 5;
+const int SEPARATOR_WIDTH_SOTTRACTOR = 9;
 
 }
 
@@ -73,7 +77,8 @@ void FilterBar::AddFilter(Filter::Ptr const& filter)
     return;
   }
 
-  nux::View* filter_view = factory_.WidgetForFilter(filter);
+  FilterExpanderLabel* filter_view = factory_.WidgetForFilter(filter);
+  AddChild(filter_view);
   filter_map_[filter] = filter_view;
   GetLayout()->AddView(filter_view, 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
 }
@@ -84,7 +89,8 @@ void FilterBar::RemoveFilter(Filter::Ptr const& filter)
   {
     if (iter.first->id == filter->id)
     {
-      nux::View* filter_view = iter.second;
+      FilterExpanderLabel* filter_view = iter.second;
+      RemoveChild(filter_view);
       filter_map_.erase(filter_map_.find(iter.first));
       GetLayout()->RemoveChildObject(filter_view);
       break;
@@ -109,15 +115,14 @@ void FilterBar::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   nux::Color col(0.13f, 0.13f, 0.13f, 0.13f);
 
   std::list<Area *>& layout_list = GetLayout()->GetChildren();
-  std::list<Area*>::iterator iter;
   int i = 0;
   int num_separators = layout_list.size() - 1;
 
-  for (iter = layout_list.begin(); iter != layout_list.end(); iter++)
+  for (auto iter : layout_list)
   {
     if (i != num_separators)
     {
-      nux::Area* filter_view = (*iter);
+      nux::Area* filter_view = iter;
       nux::Geometry const& geom = filter_view->GetGeometry();
 
       unsigned int alpha = 0, src = 0, dest = 0;
@@ -126,17 +131,33 @@ void FilterBar::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
       GfxContext.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
       GfxContext.GetRenderStates().SetColorMask(true, true, true, false);
       nux::GetPainter().Draw2DLine(GfxContext,
-                                   geom.x             , geom.y + geom.height - 1,
-                                   geom.x + geom.width, geom.y + geom.height - 1,
+                                   geom.x + SEPARATOR_LEFT_PADDING, geom.y + geom.height - 1,
+                                   geom.x + geom.width - SEPARATOR_WIDTH_SOTTRACTOR, geom.y + geom.height - 1,
                                    col);
       GfxContext.GetRenderStates().SetBlend(alpha, src, dest);
     }
-    i++;
+    ++i;
   }
 
   GfxContext.PopClippingRectangle();
 }
 
+bool FilterBar::AcceptKeyNavFocus()
+{
+  return false;
+}
+
+//
+// Introspection
+//
+std::string FilterBar::GetName() const
+{
+  return "FilterBar";
+}
+
+void FilterBar::AddProperties(GVariantBuilder* builder)
+{
+}
+
 } // namespace dash
 } // namespace unity
-

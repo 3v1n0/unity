@@ -38,6 +38,7 @@ class Launcher;
 
 class BamfLauncherIcon : public SimpleLauncherIcon
 {
+  NUX_DECLARE_OBJECT_TYPE(BamfLauncherIcon, SimpleLauncherIcon);
 public:
   BamfLauncherIcon(BamfApplication* app);
   virtual ~BamfLauncherIcon();
@@ -83,6 +84,7 @@ protected:
   std::string BamfName() const;
 
   bool HandlesSpread() { return true; }
+  std::string GetName() const;
 
 private:
   void EnsureWindowState();

@@ -49,6 +49,7 @@
 #include "DebugDBusInterface.h"
 #include "SwitcherController.h"
 #include "UBusWrapper.h"
+#include "UnityshellPrivate.h"
 #ifndef USE_GLES
 #include "ScreenEffectFramebufferObject.h"
 #endif
@@ -140,6 +141,7 @@ public:
   void paintDisplay(const CompRegion& region, const GLMatrix& transform, unsigned int mask);
 #endif
   void paintPanelShadow(const GLMatrix& matrix);
+  void setPanelShadowMatrix(const GLMatrix& matrix);
 
   void preparePaint (int ms);
   void paintFboForOutput (CompOutput *output);
@@ -238,8 +240,8 @@ private:
 
   void SendExecuteCommand();
 
-  void EnsureSuperKeybindings ();
-  void CreateSuperNewAction(char shortcut, bool use_shift=false, bool use_numpad=false);
+  void EnsureSuperKeybindings();
+  void CreateSuperNewAction(char shortcut, impl::ActionModifiers flag);
   void EnableCancelAction(bool enabled, int modifiers = 0);
 
   static gboolean initPluginActions(gpointer data);
@@ -330,6 +332,8 @@ private:
   unsigned int           tray_paint_mask_;
   gint64                 last_hud_show_time_;
 
+  GLMatrix panel_shadow_matrix_;
+
 #ifndef USE_GLES
   ScreenEffectFramebufferObject::GLXGetProcAddressProc glXGetProcAddressP;
 #endif
@@ -400,7 +404,7 @@ public:
 
   typedef compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>
           UnityMinimizedHandler;
-  UnityMinimizedHandler *mMinimizeHandler;
+  std::unique_ptr <UnityMinimizedHandler> mMinimizeHandler;
 
   UnityShowdesktopHandler             *mShowdesktopHandler;
 

@@ -88,9 +88,9 @@ protected:
 
   std::list<ui::RenderArg> RenderArgsFlat(nux::Geometry& background_geo, int selection, timespec const& current);
 
-  ui::RenderArg CreateBaseArgForIcon(launcher::AbstractLauncherIcon* icon);
+  ui::RenderArg CreateBaseArgForIcon(launcher::AbstractLauncherIcon::Ptr icon);
 private:
-  void OnSelectionChanged(launcher::AbstractLauncherIcon* selection);
+  void OnSelectionChanged(launcher::AbstractLauncherIcon::Ptr selection);
   void OnDetailSelectionChanged (bool detail);
   void OnDetailSelectionIndexChanged (unsigned int index);
 

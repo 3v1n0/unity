@@ -47,10 +47,13 @@
 
 #include "UScreen.h"
 
-#define WINDOW_TITLE_FONT_KEY "/apps/metacity/general/titlebar_font"
-
 namespace unity
 {
+
+namespace
+{
+  const std::string WINDOW_TITLE_FONT_KEY = "/apps/metacity/general/titlebar_font";
+}
 
 PanelMenuView::PanelMenuView(int padding)
   : _matcher(bamf_matcher_get_default()),
@@ -58,6 +61,7 @@ PanelMenuView::PanelMenuView(int padding)
     _util_cg(CAIRO_FORMAT_ARGB32, 1, 1),
     _gradient_texture(nullptr),
     _is_inside(false),
+    _is_grabbed(false),
     _is_maximized(false),
     _is_own_window(false),
     _last_active_view(nullptr),
@@ -255,7 +259,7 @@ PanelMenuView::FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEven
 {
   bool mouse_inside = TestMousePointerInclusionFilterMouseWheel(mouse_position, event_type);
 
-  if (mouse_inside == false)
+  if (!mouse_inside)
     return nullptr;
 
   Area* found_area = nullptr;
@@ -772,7 +776,7 @@ void PanelMenuView::DrawText(cairo_t *cr_real,
 
     g_object_get(settings, "gtk-xft-dpi", &dpi, nullptr);
 
-    font_description = gconf_client_get_string(client, WINDOW_TITLE_FONT_KEY, nullptr);
+    font_description = gconf_client_get_string(client, WINDOW_TITLE_FONT_KEY.c_str(), nullptr);
     desc = pango_font_description_from_string(font_description);
 
     if (font_desc)
@@ -784,7 +788,7 @@ void PanelMenuView::DrawText(cairo_t *cr_real,
       y -= ((unsigned int)(size - 9)) / 2;
 
       size += increase_size;
-      
+
       char* description = g_strdup_printf("%s %d", font_desc, size);
       pango_font_description_free(desc);
       desc = pango_font_description_from_string(description);
@@ -1641,7 +1645,7 @@ PanelMenuView::HasOurWindowFocused()
 void
 PanelMenuView::OnPanelViewMouseEnter(int x, int y, unsigned long mouse_button_state, unsigned long special_keys_state)
 {
-  if (_is_inside != true)
+  if (!_is_inside)
   {
     if (_is_grabbed)
       _is_grabbed = false;
@@ -1655,7 +1659,7 @@ PanelMenuView::OnPanelViewMouseEnter(int x, int y, unsigned long mouse_button_st
 void
 PanelMenuView::OnPanelViewMouseLeave(int x, int y, unsigned long mouse_button_state, unsigned long special_keys_state)
 {
-  if (_is_inside != false)
+  if (_is_inside)
   {
     _is_inside = false;
     FullRedraw();

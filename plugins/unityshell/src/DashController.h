@@ -52,7 +52,6 @@ public:
   std::vector<char> GetAllShortcuts();
 
   nux::Property<int> launcher_width;
-  nux::Property<int> panel_height;
 
   sigc::signal<void> on_realize;
 
@@ -98,6 +97,7 @@ private:
 
   DashView* view_;
   guint ensure_id_;
+  sigc::connection screen_ungrabbed_slot_;
 };
 
 
