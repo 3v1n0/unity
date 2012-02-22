@@ -48,14 +48,14 @@ class IBusTests(AutopilotTestCase):
 
 
 class IBusTestsPinyin(IBusTests):
-    """Tests for the Pinyin input engine."""
+    """Tests for the Pinyin(Chinese) input engine."""
 
     scenarios = [
         ('basic', {'input': 'abc1', 'result': u'\u963f\u5e03\u4ece'}),
-        ('photo', {'input': 'zhaopian ', 'result': u'照片'}),
-        ('internet', {'input': 'hulianwang ', 'result': u'互联网'}),
-        ('disk', {'input': 'cipan ', 'result': u'磁盘'}),
-        ('disk_management', {'input': 'cipan guanli ', 'result': u'磁盘管理'}),
+        ('photo', {'input': 'zhaopian ', 'result': u'\u7167\u7247'}),
+        ('internet', {'input': 'hulianwang ', 'result': u'\u4e92\u8054\u7f51'}),
+        ('disk', {'input': 'cipan ', 'result': u'\u78c1\u76d8'}),
+        ('disk_management', {'input': 'cipan guanli ', 'result': u'\u78c1\u76d8\u7ba1\u7406'}),
     ]
 
     def test_simple_input(self):
@@ -73,7 +73,7 @@ class IBusTestsPinyin(IBusTests):
 
 
 class IBusTestsHangul(IBusTests):
-    """Tests for the Hangul input engine."""
+    """Tests for the Hangul(Korean) input engine."""
 
     scenarios = [
         ('transmission', {'input': 'xmfostmaltus ', 'result': u'\ud2b8\ub79c\uc2a4\ubbf8\uc158'}),
@@ -93,3 +93,4 @@ class IBusTestsHangul(IBusTests):
         self.dash.ensure_hidden()
 
         self.assertEqual(self.result, dash_search_string)
+
