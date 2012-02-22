@@ -49,7 +49,7 @@ void PanelIndicatorAppmenuView::Activate(int button)
    * so we need to check the fucus status of the entry */
   if (button != 0 || (button == 0 && IsFocused()))
   {
-    ShowMenu(1);
+    SetActiveState(true, 1);
   }
 }
 
@@ -63,7 +63,7 @@ void PanelIndicatorAppmenuView::ShowMenu(int button)
     proxy_->ShowMenu(xid_,
                      GetAbsoluteX(),
                      GetAbsoluteY() + panel::Style::Instance().panel_height,
-                     1,
+                     button,
                      time(nullptr));
   }
 }
@@ -150,6 +150,10 @@ bool PanelIndicatorAppmenuView::CheckWindowMenu()
 void PanelIndicatorAppmenuView::DrawEntryPrelight(cairo_t* cr, unsigned int width, unsigned int height)
 {
   nux::Rect const& geo = proxy_->geometry();
+
+  if (geo == nux::Geometry())
+    return;
+
   GtkStyleContext* style_context = panel::Style::Instance().GetStyleContext();
   int flair_width = std::min(geo.width, GetMinimumWidth());
 

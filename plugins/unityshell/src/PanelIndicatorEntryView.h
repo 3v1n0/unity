@@ -101,6 +101,7 @@ protected:
                                 glib::Object<PangoLayout> const& layout);
 
   void Refresh();
+  void SetActiveState(bool active, int button);
   virtual void ShowMenu(int button = 1);
 
   Entry::Ptr proxy_;
@@ -113,8 +114,6 @@ private:
   void OnMouseUp(int x, int y, long button_flags, long key_flags);
   void OnMouseWheel(int x, int y, int delta, unsigned long mouse_state, unsigned long key_state);
   void OnActiveChanged(bool is_active);
-
-  void SetActiveState(bool active, int button);
 
   glib::Object<GdkPixbuf> MakePixbuf();
 
