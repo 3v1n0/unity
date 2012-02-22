@@ -27,9 +27,10 @@
 
 #include "WindowButtons.h"
 
-#include "UBusMessages.h"
 #include "DashSettings.h"
 #include "PanelStyle.h"
+#include "UBusMessages.h"
+#include "WindowManager.h"
 
 using namespace unity;
 
@@ -354,6 +355,15 @@ void WindowButtons::OnCloseClicked(nux::Button *button)
   if (!win_button || !win_button->IsEnabled())
     return;
 
+  if (win_button->IsOverlayOpen())
+  {
+    ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
+  }
+  else
+  {
+    WindowManager::Default()->Close(window_xid_);
+  }
+
   close_clicked.emit();
 }
 
@@ -363,6 +373,9 @@ void WindowButtons::OnMinimizeClicked(nux::Button *button)
 
   if (!win_button || !win_button->IsEnabled())
     return;
+
+  if (!win_button->IsOverlayOpen())
+    WindowManager::Default()->Minimize(window_xid_);
 
   minimize_clicked.emit();
 }
@@ -377,6 +390,15 @@ void WindowButtons::OnRestoreClicked(nux::Button *button)
   if (win_button->IsOverlayOpen())
   {
     dash::Settings::Instance().SetFormFactor(dash::FormFactor::DESKTOP);
+  }
+  else
+  {
+    WindowManager* wm = WindowManager::Default();
+    Window to_restore = window_xid_;
+
+    wm->Raise(to_restore);
+    wm->Activate(to_restore);
+    wm->Restore(to_restore);
   }
 
   restore_clicked.emit();
@@ -577,7 +599,10 @@ bool WindowButtons::GetFocusedState()
 
 void WindowButtons::SetControlledWindow(Window xid)
 {
-  window_xid_ = xid;
+  if (xid != window_xid_)
+  {
+    window_xid_ = xid;
+  }
 }
 
 Window WindowButtons::GetControlledWindow()

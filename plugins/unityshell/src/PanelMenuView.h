@@ -121,10 +121,6 @@ private:
   void FullRedraw();
   void Refresh(bool force = false);
 
-  void OnCloseClicked();
-  void OnMinimizeClicked();
-  void OnRestoreClicked();
-
   void OnPanelViewMouseEnter(int x, int y, unsigned long mouse_button_state, unsigned long special_keys_state);
   void OnPanelViewMouseLeave(int x, int y, unsigned long mouse_button_state, unsigned long special_keys_state);
   void OnPanelViewMouseMove(int x, int y, int dx, int dy, unsigned long mouse_button_state, unsigned long special_keys_state);

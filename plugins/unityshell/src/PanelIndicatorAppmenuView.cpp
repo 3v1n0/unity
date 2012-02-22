@@ -52,6 +52,7 @@ void PanelIndicatorAppmenuView::ShowMenu(int button)
 {
   if (xid_ && has_menu_)
   {
+    WindowManager::Default()->Raise(xid_);
     WindowManager::Default()->Activate(xid_);
 
     proxy_->ShowMenu(xid_,
