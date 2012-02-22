@@ -45,18 +45,21 @@ void WaitForLensesToLoad(FilesystemLenses& lenses)
 TEST(TestFilesystemLenses, TestConstruction)
 {
   FilesystemLenses lenses0;
-  FilesystemLenses lenses1(TESTDATADIR"/lenses");
+  LensDirectoryReader::Ptr test_reader(new LensDirectoryReader(TESTDATADIR"/lenses"));
+  FilesystemLenses lenses1(test_reader);
 }
 
 TEST(TestFilesystemLenses, TestFileLoading)
 {
-  FilesystemLenses lenses(TESTDATADIR"/lenses");
+  LensDirectoryReader::Ptr test_reader(new LensDirectoryReader(TESTDATADIR"/lenses"));
+  FilesystemLenses lenses(test_reader);
   WaitForLensesToLoad(lenses);
 }
 
 TEST(TestFilesystemLenses, TestLensesAdded)
 {
-  FilesystemLenses lenses(TESTDATADIR"/lenses");
+  LensDirectoryReader::Ptr test_reader(new LensDirectoryReader(TESTDATADIR"/lenses"));
+  FilesystemLenses lenses(test_reader);
   unsigned int n_lenses = 0;
 
   auto lens_added_cb = [&n_lenses](Lens::Ptr & p)
@@ -72,7 +75,8 @@ TEST(TestFilesystemLenses, TestLensesAdded)
 
 TEST(TestFilesystemLenses, TestLensContent)
 {
-  FilesystemLenses lenses(TESTDATADIR"/lenses");
+  LensDirectoryReader::Ptr test_reader(new LensDirectoryReader(TESTDATADIR"/lenses"));
+  FilesystemLenses lenses(test_reader);
   WaitForLensesToLoad(lenses);
 
   // Test that the lenses have loaded correctly
@@ -95,7 +99,7 @@ TEST(TestFilesystemLenses, TestLensContent)
   EXPECT_EQ(lens->icon_hint, "/usr/share/unity-lens-files/files.png");
   EXPECT_EQ(lens->description, "Search for Files & Folders");
   EXPECT_EQ(lens->search_hint, "Search Files & Folders");
-  EXPECT_EQ(lens->visible, true);
+  EXPECT_EQ(lens->visible, false);
   EXPECT_EQ(lens->shortcut, "f");
 
   lens = lenses.GetLens("social.lens");
@@ -106,7 +110,7 @@ TEST(TestFilesystemLenses, TestLensContent)
   EXPECT_EQ(lens->icon_hint, "/usr/share/unity-lens-social/social.png");
   EXPECT_EQ(lens->description, "");
   EXPECT_EQ(lens->search_hint, "");
-  EXPECT_EQ(lens->visible, false);
+  EXPECT_EQ(lens->visible, true);
   EXPECT_EQ(lens->shortcut, "");
 }
 
