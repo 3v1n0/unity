@@ -46,22 +46,6 @@ public:
   PanelView(NUX_FILE_LINE_PROTO);
   ~PanelView();
 
-  void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
-  void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
-
-  void PreLayoutManagement();
-  long PostLayoutManagement(long LayoutResult);
-
-  void OnObjectAdded(indicator::Indicator::Ptr const& proxy);
-  void OnObjectRemoved(indicator::Indicator::Ptr const& proxy);
-  void OnIndicatorViewUpdated(PanelIndicatorEntryView* view);
-  void OnMenuPointerMoved(int x, int y);
-  void OnEntryActivateRequest(std::string const& entry_id);
-  void OnEntryActivated(std::string const& entry_id, nux::Rect const& geo);
-  void OnSynced();
-  void OnEntryShowMenu(std::string const& entry_id, unsigned int xid, int x, int y,
-                       unsigned int button, unsigned int timestamp);
-
   void SetPrimary(bool primary);
   bool GetPrimary();
   void SetMonitor(int monitor);
@@ -74,14 +58,28 @@ public:
   void SetMenuShowTimings(int fadein, int fadeout, int discovery,
                           int discovery_fadein, int discovery_fadeout);
 
-  void TrackMenuPointer();
-
-  unsigned int GetTrayXid ();
+  unsigned int GetTrayXid();
 
 protected:
+  void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
+  void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
+
+  void PreLayoutManagement();
+  long PostLayoutManagement(long LayoutResult);
+
   // Introspectable methods
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
+
+  void OnObjectAdded(indicator::Indicator::Ptr const& proxy);
+  void OnObjectRemoved(indicator::Indicator::Ptr const& proxy);
+  void OnIndicatorViewUpdated(PanelIndicatorEntryView* view);
+  void OnMenuPointerMoved(int x, int y);
+  void OnEntryActivateRequest(std::string const& entry_id);
+  void OnEntryActivated(std::string const& entry_id, nux::Rect const& geo);
+  void OnSynced();
+  void OnEntryShowMenu(std::string const& entry_id, unsigned int xid, int x, int y,
+                       unsigned int button, unsigned int timestamp);
 
 private:
   static void OnBackgroundUpdate  (GVariant *data, PanelView *self);
@@ -90,10 +88,10 @@ private:
 
   void UpdateBackground();
   void ForceUpdateBackground();
+  void TrackMenuPointer();
   void SyncGeometries();
   void AddPanelView(PanelIndicatorsView* child, unsigned int stretchFactor);
 
-private:
   typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
   indicator::DBusIndicators::Ptr _remote;
   // No ownership is taken for these views, that is done by the AddChild method.
