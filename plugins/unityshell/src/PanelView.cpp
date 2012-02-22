@@ -59,11 +59,11 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
       _is_dirty(true),
       _opacity(1.0f),
       _opacity_maximized_toggle(false),
+      _needs_geo_sync(false),
       _is_primary(false),
       _monitor(0),
       _dash_is_open(false)
 {
-  _needs_geo_sync = false;
   panel::Style::Instance().changed.connect(sigc::mem_fun(this, &PanelView::ForceUpdateBackground));
 
   _bg_layer = new nux::ColorLayer(nux::Color(0xff595853), true);
@@ -266,8 +266,6 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
       nux::GetPainter().RenderSinglePaintLayer(GfxContext, GetGeometry(), _bg_darken_layer_);
     }
   }
-
-
 
   nux::GetPainter().RenderSinglePaintLayer(GfxContext, GetGeometry(), _bg_layer);
 

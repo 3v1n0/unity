@@ -533,8 +533,8 @@ void PanelIndicatorEntryView::Refresh()
   cairo_destroy(cr);
 
   SetVisible(true);
-  QueueDraw();
   refreshed.emit(this);
+  QueueDraw();
 }
 
 void PanelIndicatorEntryView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
@@ -679,10 +679,10 @@ bool PanelIndicatorEntryView::GetShowNow() const
 
 void PanelIndicatorEntryView::GetGeometryForSync(indicator::EntryLocationMap& locations)
 {
-  if (!IsVisible())
+  if (!IsVisible() || !IsFocused())
     return;
 
-  locations[proxy_->id()] = GetAbsoluteGeometry();
+  locations[GetEntryID()] = GetAbsoluteGeometry();
 }
 
 bool PanelIndicatorEntryView::IsSensitive() const
