@@ -123,7 +123,7 @@ BamfLauncherIcon::BamfLauncherIcon(BamfApplication* app)
   WindowManager::Default()->compiz_screen_viewport_switch_ended.connect(sigc::mem_fun(this, &BamfLauncherIcon::EnsureWindowState));
   WindowManager::Default()->terminate_expo.connect(sigc::mem_fun(this, &BamfLauncherIcon::EnsureWindowState));
 
-  //EnsureWindowState();
+  EnsureWindowState();
   UpdateMenus();
   UpdateDesktopFile();
 
