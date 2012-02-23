@@ -45,12 +45,12 @@ public:
   ResultIterator& operator++();
   ResultIterator  operator++(int);
   ResultIterator& operator+=(int value);
-  ResultIterator  operator+(int value);
+  ResultIterator  operator+(int value) const;
 
   ResultIterator& operator--();
   ResultIterator  operator--(int);
   ResultIterator& operator-=(int value);
-  ResultIterator  operator-(int value);
+  ResultIterator  operator-(int value) const;
 
   friend inline bool const operator==(const ResultIterator& lhs, const ResultIterator& rhs)
   {

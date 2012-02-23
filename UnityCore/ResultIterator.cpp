@@ -81,7 +81,7 @@ ResultIterator ResultIterator::operator++(int)
   return tmp;
 }
 
-ResultIterator ResultIterator::operator+(int count)
+ResultIterator ResultIterator::operator+(int count) const
 {
   ResultIterator tmp(*this);
   tmp += count;
@@ -114,7 +114,7 @@ ResultIterator ResultIterator::operator--(int)
   return tmp;
 }
 
-ResultIterator ResultIterator::operator-(int count)
+ResultIterator ResultIterator::operator-(int count) const
 {
   ResultIterator tmp(*this);
   tmp -= count;
