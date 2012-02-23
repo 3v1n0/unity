@@ -67,6 +67,8 @@ void UnityWindowView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_dr
 
 
   nux::Geometry geo_absolute = GetAbsoluteGeometry ();
+  
+
   if (BackgroundEffectHelper::blur_type != BLUR_NONE)
   {
     nux::Geometry blur_geo(geo_absolute.x, geo_absolute.y, base.width, base.height);
@@ -85,20 +87,46 @@ void UnityWindowView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_dr
       rop.SrcBlend = GL_ONE;
       rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
-      gPainter.PushDrawTextureLayer(GfxContext, base,
-                                    blur_texture,
-                                    texxform_blur_bg,
-                                    nux::color::White,
-                                    true,
-                                    rop);
+#ifndef NUX_OPENGLES_20
+      if (GfxContext.UsingGLSLCodePath())
+        gPainter.PushDrawColorizeTextureLayer(GfxContext, base,
+                                              blur_texture,
+                                              texxform_blur_bg,
+                                              nux::color::White,
+                                              true,
+                                              rop,
+                                              background_color. nux::GraphicsEngine::BLEND_MODE_OVERLAY);
+      else
+        gPainter.PushDrawTextureLayer(GfxContext, base,
+                                      blur_texture,
+                                      texxform_blur_bg,
+                                      nux::color::White,
+                                      true,
+                                      rop);
+#else
+        gPainter.PushDrawColorizeTextureLayer(GfxContext, base,
+                                              blur_texture,
+                                              texxform_blur_bg,
+                                              nux::color::White,
+                                              true,
+                                              rop,
+                                              background_color. nux::GraphicsEngine::BLEND_MODE_OVERLAY);
+#endif
+                                     
     }
   }
 
   nux::ROPConfig rop;
   rop.Blend = true;
-  rop.SrcBlend = GL_ONE;
-  rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
-  gPainter.PushDrawColorLayer (GfxContext, internal_clip, background_color, false, rop);
+
+#ifndef NUX_OPENGLES_20
+  if (GfxContext.UsingGLSLCodePath() == FALSE)
+  {
+    rop.SrcBlend = GL_ONE;
+    rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+    gPainter.PushDrawColorLayer (GfxContext, internal_clip, background_color, false, rop);
+  }
+#endif
 
   // Make round corners
   rop.Blend = true;
