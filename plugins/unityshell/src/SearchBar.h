@@ -63,6 +63,7 @@ public:
 
   void SearchFinished();
   nux::TextEntryIM* text_entry() const;
+  nux::View* show_filters() const;
 
   nux::RWProperty<std::string> search_string;
   nux::Property<std::string> search_hint;
