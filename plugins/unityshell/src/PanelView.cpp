@@ -664,8 +664,17 @@ PanelView::SyncGeometries()
 void
 PanelView::SetMonitor(int monitor)
 {
-  _monitor = monitor;
-  _menu_view->SetMonitor(monitor);
+  if (_monitor != monitor)
+  {
+    _monitor = monitor;
+    _menu_view->SetMonitor(monitor);
+  }
+}
+
+int
+PanelView::GetMonitor()
+{
+  return _monitor;
 }
 
 } // namespace unity

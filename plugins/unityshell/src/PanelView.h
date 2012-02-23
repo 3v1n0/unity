@@ -49,7 +49,9 @@ public:
 
   void SetPrimary(bool primary);
   bool GetPrimary();
+
   void SetMonitor(int monitor);
+  int GetMonitor();
 
   void StartFirstMenuShow();
   void EndFirstMenuShow();
