@@ -265,3 +265,34 @@ class DashKeyNavTests(AutopilotTestCase):
         kb.press_and_release('Tab')
         category = app_lens.get_focused_category()
         self.assertIsNot(category, None)
+
+
+class DashKeyboardFocusTests(AutopilotTestCase):
+    """Tests that keyboard focus works."""
+
+    run_test_with = GlibRunner
+
+    def setUp(self):
+        super(DashKeyboardFocusTests, self).setUp()
+        self.dash = Dash()
+
+    def tearDown(self):
+        super(DashKeyboardFocusTests, self).tearDown()
+        self.dash.ensure_hidden()
+
+    def test_filterbar_expansion_leaves_kb_focus(self):
+        """Expanding or collapsing the filterbar must keave keyboard focus in the
+        search bar.
+        """
+        self.dash.reveal_application_lens()
+        filter_bar = self.dash.get_current_lens().get_filterbar()
+        filter_bar.ensure_collapsed()
+
+        kb = Keyboard()
+        kb.type("hello")
+        filter_bar.ensure_expanded()
+        kb.type(" world")
+
+        searchbar = self.dash.get_searchbar()
+        self.assertEqual("hello world", searchbar.search_string)
+

@@ -12,7 +12,7 @@ from time import sleep
 
 from autopilot.globals import global_context
 from autopilot.emulators.unity import UnityIntrospectionObject
-from autopilot.emulators.X11 import Keyboard
+from autopilot.emulators.X11 import Keyboard, Mouse
 
 
 import logging
@@ -205,6 +205,33 @@ class FilterBar(UnityIntrospectionObject):
             if filter_label.expander_has_focus:
                 return filter_label
         return None
+
+    def is_expanded(self):
+        """Return True if the filterbar on this lens is expanded, False otherwise.
+        """
+
+        searchbar = SearchBar.get_all_instances()[0]
+        return searchbar.showing_filters
+
+    def ensure_expanded(self):
+        """Expand the filter bar, if it's not already."""
+        if not self.is_expanded():
+            searchbar = SearchBar.get_all_instances()[0]
+            tx = searchbar.filter_label_x + (searchbar.filter_label_width / 2)
+            ty = searchbar.filter_label_y + (searchbar.filter_label_height / 2)
+            m = Mouse()
+            m.move(tx, ty)
+            m.click()
+
+    def ensure_collapsed(self):
+        """Collapse the filter bar, if it's not already."""
+        if self.is_expanded():
+            searchbar = SearchBar.get_all_instances()[0]
+            tx = searchbar.filter_label_x + (searchbar.filter_label_width / 2)
+            ty = searchbar.filter_label_y + (searchbar.filter_label_height / 2)
+            m = Mouse()
+            m.move(tx, ty)
+            m.click()
 
 
 class FilterExpanderLabel(UnityIntrospectionObject):
