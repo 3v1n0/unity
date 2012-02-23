@@ -11,7 +11,7 @@ from compizconfig import Setting, Plugin
 from time import sleep
 
 from autopilot.globals import global_context
-from autopilot.emulators.unity import get_state_by_path, UnityIntrospectionObject
+from autopilot.emulators.unity import UnityIntrospectionObject
 from autopilot.emulators.X11 import Keyboard
 
 
