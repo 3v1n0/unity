@@ -11,7 +11,7 @@ from time import sleep
 
 from autopilot.emulators.bamf import Bamf
 from autopilot.emulators.unity.dash import Dash
-from autopilot.emulators.X11 import Keyboard, Mouse
+from autopilot.emulators.X11 import Keyboard
 from autopilot.tests import AutopilotTestCase
 from autopilot.glibrunner import GlibRunner
 
