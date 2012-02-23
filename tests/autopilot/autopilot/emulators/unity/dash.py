@@ -153,6 +153,14 @@ class LensView(UnityIntrospectionObject):
             return matches[0]
         return None
 
+    def get_category_by_name(self, category_name):
+        """Return a PlacesGroup instance with the given name, or None."""
+        categories = self.get_children_by_type(PlacesGroup)
+        matches = [m for m in categories if m.name == category_name]
+        if matches:
+            return matches[0]
+        return None
+
     def get_num_visible_categories(self):
         """Get the number of visible categories in this lens."""
         return len([c for c in self.get_children_by_type(PlacesGroup) if c.is_visible])
