@@ -1231,7 +1231,7 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
 
 #ifdef USE_GLES
 void UnityScreen::glPaintCompositedOutput (const CompRegion &region,
-                                           GLFramebufferObject *fbo,
+                                           ::GLFramebufferObject *fbo,
                                            unsigned int        mask)
 {
   bool useFbo = false;
@@ -1242,11 +1242,11 @@ void UnityScreen::glPaintCompositedOutput (const CompRegion &region,
     useFbo = fbo->checkStatus () && fbo->tex ();
     if (!useFbo) {
 	printf ("bailing from UnityScreen::glPaintCompositedOutput");
-	GLFramebufferObject::rebind (oldFbo);
+	::GLFramebufferObject::rebind (oldFbo);
 	return;
     }
     paintDisplay();
-    GLFramebufferObject::rebind (oldFbo);
+    ::GLFramebufferObject::rebind (oldFbo);
   }
 
   gScreen->glPaintCompositedOutput(region, fbo, mask);
