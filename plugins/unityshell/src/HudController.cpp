@@ -348,10 +348,13 @@ gboolean Controller::OnViewShowHideFrame(Controller* self)
         //THIS IS BAD - VERY VERY BAD
         LOG_DEBUG(logger) << "Last attempt, forcing window focus";
         Controller* self = static_cast<Controller*>(data);
-        nux::GetWindowCompositor().SetKeyFocusArea(self->view_->default_focus());
+        if (self->visible_)
+        {
+          nux::GetWindowCompositor().SetKeyFocusArea(self->view_->default_focus());
 
-        self->window_->PushToFront();
-        self->window_->SetInputFocus();
+          self->window_->PushToFront();
+          self->window_->SetInputFocus();
+        }
         return FALSE;
       }, self);
     }
