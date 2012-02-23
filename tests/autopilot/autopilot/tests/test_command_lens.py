@@ -6,8 +6,10 @@
 # under the terms of the GNU General Public License version 3, as published
 # by the Free Software Foundation.
 
+from subprocess import call
 from time import sleep
 
+from autopilot.emulators.bamf import Bamf
 from autopilot.emulators.unity.dash import Dash
 from autopilot.emulators.X11 import Keyboard, Mouse
 from autopilot.tests import AutopilotTestCase
@@ -51,6 +53,7 @@ class CommandLensSearchTests(AutopilotTestCase):
         self.assertTrue(results_category.is_visible)
 
     def test_result_category_actually_contains_results(self):
+        """With a search string of 'a', the results category must contain some results."""
         kb = Keyboard()
         self.dash.reveal_command_lens()
         command_lens = self.dash.get_current_lens()
@@ -60,3 +63,20 @@ class CommandLensSearchTests(AutopilotTestCase):
         results_category = command_lens.get_category_by_name("Results")
         results = results_category.get_results()
         self.assertTrue(results)
+
+    def test_run_before_refresh(self):
+        """Hitting enter before view has updated results must run the correct command."""
+        b = Bamf()
+        if b.application_is_running("Text Editor"):
+            call("killall gedit".split())
+            sleep(1)
+
+        kb = Keyboard()
+        self.dash.reveal_command_lens()
+        kb.type("g")
+        sleep(1)
+        kb.type("edit", 0.1)
+        kb.press_and_release("Enter", 0.1)
+        self.addCleanup(call, "killall gedit".split())
+        app_found = b.wait_until_application_is_running("Text Editor", 5)
+        self.assertTrue(app_found)
