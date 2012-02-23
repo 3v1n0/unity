@@ -344,6 +344,7 @@ namespace unity {
     _hires_time_end = 500 * 1000; // 500 milliseconds
     _transition_handler = g_timeout_add (1000/60, (GSourceFunc)BGHash::OnTransitionCallback, this);
 
+    // FIXME (Cimi) shall we remove the 0.7f?
     // export to gsettings
     GSettings* settings = NULL;
     GdkColor   color    = {0,
@@ -395,9 +396,9 @@ namespace unity {
     ubus_server_send_message(ubus_server_get_default(),
                              UBUS_BACKGROUND_COLOR_CHANGED,
                              g_variant_new ("(dddd)",
-                                            _current_color.red * 0.7f,
-                                            _current_color.green * 0.7f,
-                                            _current_color.blue * 0.7f,
+                                            _current_color.red,
+                                            _current_color.green,
+                                            _current_color.blue,
                                             0.5)
                             );
   }
