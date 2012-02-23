@@ -344,7 +344,6 @@ namespace unity {
     _hires_time_end = 500 * 1000; // 500 milliseconds
     _transition_handler = g_timeout_add (1000/60, (GSourceFunc)BGHash::OnTransitionCallback, this);
 
-    // FIXME (Cimi) shall we remove the 0.7f?
     // export to gsettings
     GSettings* settings = NULL;
     GdkColor   color    = {0,
