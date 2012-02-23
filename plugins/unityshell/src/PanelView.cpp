@@ -569,18 +569,18 @@ void PanelView::OnEntryShowMenu(std::string const& entry_id, unsigned int xid,
 //
 // Useful Public Methods
 //
-void PanelView::StartFirstMenuShow()
+bool
+PanelView::FirstMenuShow()
 {
-}
+  bool ret = false;
 
-void PanelView::EndFirstMenuShow()
-{
   if (!_menu_view->GetControlsActive())
-    return;
+    return ret;
 
-  bool ret;
   ret = _menu_view->ActivateIfSensitive();
   if (!ret) _indicators->ActivateIfSensitive();
+
+  return ret;
 }
 
 void

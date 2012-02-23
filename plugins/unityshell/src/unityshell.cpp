@@ -285,8 +285,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetKeyboardFocusInitiate(boost::bind(&UnityScreen::setKeyboardFocusKeyInitiate, this, _1, _2, _3));
      //optionSetKeyboardFocusTerminate (boost::bind (&UnityScreen::setKeyboardFocusKeyTerminate, this, _1, _2, _3));
      optionSetExecuteCommandInitiate(boost::bind(&UnityScreen::executeCommand, this, _1, _2, _3));
-     optionSetPanelFirstMenuInitiate(boost::bind(&UnityScreen::showPanelFirstMenuKeyInitiate, this, _1, _2, _3));
-     optionSetPanelFirstMenuTerminate(boost::bind(&UnityScreen::showPanelFirstMenuKeyTerminate, this, _1, _2, _3));
+     optionSetPanelFirstMenuInitiate(boost::bind(&UnityScreen::showPanelFirstMenuKey, this, _1, _2, _3));
      optionSetAutomaximizeValueNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetAltTabTimeoutNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetAltTabBiasViewportNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
@@ -1511,24 +1510,11 @@ bool UnityScreen::showLauncherKeyTerminate(CompAction* action,
   return false;
 }
 
-bool UnityScreen::showPanelFirstMenuKeyInitiate(CompAction* action,
-                                                CompAction::State state,
-                                                CompOption::Vector& options)
+bool UnityScreen::showPanelFirstMenuKey(CompAction* action,
+                                        CompAction::State state,
+                                        CompOption::Vector& options)
 {
-  grab_index_ = screen->pushGrab (None, "unityshell");
-  // to receive the Terminate event
-  action->setState(action->state() | CompAction::StateTermKey);
-  panel_controller_->StartFirstMenuShow();
-  return false;
-}
-
-bool UnityScreen::showPanelFirstMenuKeyTerminate(CompAction* action,
-                                                 CompAction::State state,
-                                                 CompOption::Vector& options)
-{
-  screen->removeGrab(grab_index_, NULL);
-  action->setState (action->state() & (unsigned)~(CompAction::StateTermKey));
-  panel_controller_->EndFirstMenuShow();
+  panel_controller_->FirstMenuShow();
   return false;
 }
 

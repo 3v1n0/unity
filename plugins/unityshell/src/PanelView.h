@@ -53,8 +53,7 @@ public:
   void SetMonitor(int monitor);
   int GetMonitor();
 
-  void StartFirstMenuShow();
-  void EndFirstMenuShow();
+  bool FirstMenuShow();
 
   void SetOpacity(float opacity);
   void SetOpacityMaximizedToggle(bool enabled);
