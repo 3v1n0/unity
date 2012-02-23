@@ -265,3 +265,43 @@ class DashKeyNavTests(AutopilotTestCase):
         kb.press_and_release('Tab')
         category = app_lens.get_focused_category()
         self.assertIsNot(category, None)
+
+    def test_paste_crash(self):
+      """ This test is for this bug:926793 """
+      self.dash.ensure_hidden()
+      self.dash.toggle_reveal()
+
+      kb = Keyboard();
+      kb.type("SegFault")
+      sleep(1)
+
+      kb.press_and_release("Ctrl+a")
+      kb.press_and_release("Ctrl+c")
+      kb.press_and_release("Ctrl+v")
+
+      searchbar = self.dash.get_searchbar()
+      self.assertEqual(searchbar.search_string, u'SegFault')
+
+    def test_middle_mouse_paste(self):
+      """ This test makes sure the middle mouse button pastes """ 
+      self.dash.ensure_hidden()
+      self.dash.toggle_reveal()
+
+      kb = Keyboard();
+      mouse = Mouse()
+
+      kb.type("Middle")
+      sleep(1)
+
+      kb.press_and_release("Ctrl+a")
+      kb.press_and_release("Ctrl+x")
+
+      searchbar = self.dash.get_searchbar()
+      mouse.move(searchbar.x + 100,
+                searchbar.y + searchbar.height / 2,
+               True)
+      mouse.click(2)
+      sleep(1)
+
+      searchbar = self.dash.get_searchbar()
+      self.assertEqual(searchbar.search_string, u'Middle')

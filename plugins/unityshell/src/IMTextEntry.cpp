@@ -151,7 +151,7 @@ void IMTextEntry::OnMouseButtonUp(int x, int y, unsigned long bflags, unsigned l
   if (button == 2)
   { 
     SetCursor(XYToTextIndex(x,y));
-    Paste(true);
+    Paste();
   } 
 }
 }
