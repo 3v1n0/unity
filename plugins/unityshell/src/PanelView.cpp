@@ -257,8 +257,9 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
                                               bg_blur_texture_,
                                               texxform_blur_bg,
                                               nux::color::White,
-                                              true, rop,
-                                              _bg_color,  nux::GraphicsEngine::BLEND_MODE_OVERLAY);
+                                              true,
+                                              rop, _bg_color,
+                                              nux::GraphicsEngine::BLEND_MODE_OVERLAY);
       else
         gPainter.PushDrawTextureLayer(GfxContext, geo,
                                       bg_blur_texture_,
@@ -267,12 +268,13 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
                                       true,
                                       rop);
 #else
-        gPainter.PushDrawColorizeTextureLayer(GfxContext, geo,
-                                              bg_blur_texture_,
-                                              texxform_blur_bg,
-                                              nux::color::White,
-                                              true, rop,
-                                              _bg_color,  nux::GraphicsEngine::BLEND_MODE_OVERLAY);
+      gPainter.PushDrawColorizeTextureLayer(GfxContext, geo,
+                                            bg_blur_texture_,
+                                            texxform_blur_bg,
+                                            nux::color::White,
+                                            true,
+                                            rop, _bg_color,
+                                            nux::GraphicsEngine::BLEND_MODE_OVERLAY);
 #endif
 
       GfxContext.PopClippingRectangle();
@@ -286,15 +288,9 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
 
 
-#ifndef NUX_OPENGLES_20
-  if ((GfxContext.UsingGLSLCodePath() == false) || (_dash_is_open == true))
-    nux::GetPainter().RenderSinglePaintLayer(GfxContext, GetGeometry(), _bg_layer);
-#else
   if (_dash_is_open == false)
     nux::GetPainter().RenderSinglePaintLayer(GfxContext, GetGeometry(), _bg_layer);
-#endif
 
-        
   GfxContext.PopClippingRectangle();
 
   if (_needs_geo_sync)
@@ -337,7 +333,8 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
                                         nux::color::White,
                                         true,
                                         rop,
-                                        _bg_color, nux::GraphicsEngine::BLEND_MODE_OVERLAY);
+                                        _bg_color,
+                                        nux::GraphicsEngine::BLEND_MODE_OVERLAY);
     else
       gPainter.PushTextureLayer(GfxContext, geo,
                                 bg_blur_texture_,
@@ -345,6 +342,7 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
                                 nux::color::White,
                                 true,
                                 rop);
+                                
 #else
       gPainter.PushColorizeTextureLayer(GfxContext, geo,
                                         bg_blur_texture_,
@@ -352,7 +350,8 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
                                         nux::color::White,
                                         true,
                                         rop,
-                                        _bg_color, nux::GraphicsEngine::BLEND_MODE_OVERLAY);
+                                        _bg_color,
+                                        nux::GraphicsEngine::BLEND_MODE_OVERLAY);
 #endif
     bgs++;
 
@@ -363,13 +362,8 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     }
   }
 
-#ifndef NUX_OPENGLES_20
-  if ((GfxContext.UsingGLSLCodePath() == false) || (_dash_is_open == true))
+  if (_dash_is_open == FALSE)
     gPainter.PushLayer(GfxContext, GetGeometry(), _bg_layer);
-#else
-  if (_dash_is_open == false)
-    gPainter.PushLayer(GfxContext, GetGeometry(), _bg_layer);
-#endif
 
   if (_dash_is_open)
   {

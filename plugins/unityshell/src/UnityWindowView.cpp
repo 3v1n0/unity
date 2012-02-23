@@ -95,7 +95,7 @@ void UnityWindowView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_dr
                                               nux::color::White,
                                               true,
                                               rop,
-                                              background_color. nux::GraphicsEngine::BLEND_MODE_OVERLAY);
+                                              background_color, nux::GraphicsEngine::BLEND_MODE_OVERLAY);
       else
         gPainter.PushDrawTextureLayer(GfxContext, base,
                                       blur_texture,
@@ -110,7 +110,7 @@ void UnityWindowView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_dr
                                               nux::color::White,
                                               true,
                                               rop,
-                                              background_color. nux::GraphicsEngine::BLEND_MODE_OVERLAY);
+                                              background_color, nux::GraphicsEngine::BLEND_MODE_OVERLAY);
 #endif
                                      
     }

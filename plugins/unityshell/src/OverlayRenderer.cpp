@@ -264,17 +264,17 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
       gfx_context.GetRenderStates().SetBlend(false);
 #ifndef NUX_OPENGLES_20
       if (gfx_context.UsingGLSLCodePath())
-        gfx_context.QRP_1TexBlendColor (content_geo.x, content_geo.y,
-                                        content_geo.width, content_geo.height,
-                                        bg_blur_texture_, texxform_absolute_bg, nux::color::White,
-                                        bg_color_, nux::GraphicsEngine::BLEND_MODE_OVERLAY);
+        gfx_context.QRP_GLSL_1TexBlendColor (content_geo.x, content_geo.y,
+                                             content_geo.width, content_geo.height,
+                                             bg_blur_texture_, texxform_absolute_bg, nux::color::White,
+                                             bg_color_, nux::GraphicsEngine::BLEND_MODE_OVERLAY);
 
       else
         gfx_context.QRP_1Tex (content_geo.x, content_geo.y,
                               content_geo.width, content_geo.height,
                               bg_blur_texture_, texxform_absolute_bg, nux::color::White);
 #else
-        gfx_context.QRP_1TexBlendColor (content_geo.x, content_geo.y,
+        gfx_context.QRP_GLSL_1TexBlendColor (content_geo.x, content_geo.y,
                                         content_geo.width, content_geo.height,
                                         bg_blur_texture_, texxform_absolute_bg, nux::color::White,
                                         bg_color_, nux::GraphicsEngine::BLEND_MODE_OVERLAY);

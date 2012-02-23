@@ -399,7 +399,7 @@ namespace unity {
                                             _current_color.red,
                                             _current_color.green,
                                             _current_color.blue,
-                                            0.5)
+                                            _current_color.alpha)
                             );
   }
 
