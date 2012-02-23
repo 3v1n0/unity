@@ -94,7 +94,7 @@
                   <option name="panel_first_menu" type="key">
                         <_short>Key to open the first panel menu</_short>
                         <_long>Open the first menu on the panel, allowing keyboard navigation thereafter.</_long>
-                        <default>F10</default>
+                        <default>&lt;Alt&gt;F10</default>
                   </option> 
                   <option name="launcher_switcher_forward" type="key">
                     <_short>Key to start the launcher application switcher</_short>
