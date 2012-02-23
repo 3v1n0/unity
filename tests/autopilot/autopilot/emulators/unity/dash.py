@@ -176,6 +176,19 @@ class LensView(UnityIntrospectionObject):
 class PlacesGroup(UnityIntrospectionObject):
     """A category in the lense view."""
 
+    def get_results(self):
+        """Get a list of all results within this category. May return an empty list."""
+        result_view = self.get_children_by_type(ResultView)[0]
+        return result_view.get_children_by_type(Result)
+
+
+class ResultView(UnityIntrospectionObject):
+    """Contains a list of Result objects."""
+
+
+class Result(UnityIntrospectionObject):
+    """A single result in the dash."""
+
 
 class FilterBar(UnityIntrospectionObject):
     """A filterbar, as shown inside a lens."""
