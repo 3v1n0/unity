@@ -45,6 +45,11 @@ ResultIterator::ResultIterator(glib::Object<DeeModel> model, DeeModelIter* iter_
 {
 }
 
+ResultIterator ResultIterator::operator[](int value)
+{
+  return ResultIterator(model_, dee_model_get_iter_at_row(model_, value));
+}
+
 ResultIterator& ResultIterator::operator=(ResultIterator const& rhs)
 {
   model_ = rhs.model_;

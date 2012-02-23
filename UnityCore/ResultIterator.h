@@ -32,7 +32,7 @@ namespace dash
 // Provides an iterator that will iterate a DeeModel from a Results object
 // based on the category you give it
 
-class ResultIterator : public std::iterator<std::input_iterator_tag, Result>
+class ResultIterator : public std::iterator<std::random_access_iterator_tag, Result>
 {
 public:
   ResultIterator(glib::Object<DeeModel> model);
@@ -52,6 +52,27 @@ public:
   ResultIterator& operator-=(int value);
   ResultIterator  operator-(int value) const;
 
+  ResultIterator operator[](int value);
+  friend inline bool const operator<(const ResultIterator& lhs, const ResultIterator& rhs)
+  {
+    return (dee_model_get_position(lhs.model_, lhs.iter_) < dee_model_get_position(rhs.model_, rhs.iter_));
+  }
+
+  friend inline bool const operator>(const ResultIterator& lhs, const ResultIterator& rhs)
+  {
+    return (dee_model_get_position(lhs.model_, lhs.iter_) > dee_model_get_position(rhs.model_, rhs.iter_));
+  }
+
+  friend inline bool const operator<=(const ResultIterator& lhs, const ResultIterator& rhs)
+  {
+    return (dee_model_get_position(lhs.model_, lhs.iter_) <= dee_model_get_position(rhs.model_, rhs.iter_));
+  }
+
+  friend inline bool const operator>=(const ResultIterator& lhs, const ResultIterator& rhs)
+  {
+    return (dee_model_get_position(lhs.model_, lhs.iter_) >= dee_model_get_position(rhs.model_, rhs.iter_));
+  }
+  
   friend inline bool const operator==(const ResultIterator& lhs, const ResultIterator& rhs)
   {
     return (lhs.iter_ == rhs.iter_);
