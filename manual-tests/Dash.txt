@@ -5,8 +5,6 @@ am emtpy area (or into a filter button).
 
 #. Open the app lens
 #. Expand the filter bar
-#. Make sure the dash has the focus
-#. The cursor should blink
 #. Click between a filter expander and the All Button (for example between Type > and All)
    or into a filter button.
 
@@ -53,15 +51,3 @@ Outcome
   The text previously selected is pasted on the search bar at mouse pointer
   position, if the operation is repeated the text is inserted where
   the mouse pointer is.
-
-Dash SearchBar IBus Focus
-------------------------------
-This test shows that the IBus is getting focus when it gets keyboard focus.
-
-#. Open the Dash
-#. Press Ctrl + Space to activate ibus
-#. Type "abc1"
-
-Outcome
-  Typing "abc1" while ibus is focused will produce 阿布从 . If the ibus is not focused
-  then "abc1" will be the outcome (This is incorrect behavior).
