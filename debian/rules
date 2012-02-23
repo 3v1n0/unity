@@ -35,4 +35,4 @@ override_dh_auto_test:
 	echo "not working right now"
 
 %:
-	dh $@ --with translations
+	dh $@ --with translations,quilt

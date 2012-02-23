@@ -1,3 +1,15 @@
+unity (5.4.0-0ubuntu2) UNRELEASED; urgency=low
+
+  * 01_hardcode_new_default_in_hardcoded_values.patch:
+    - hardcode the new default value for switching between workspaces and
+      moving a window between workspaces. Unfortunatly, this is still a
+      harcoding. Opened an upstream bug so that the real values are read
+      instead with some guidance.
+  * debian/control, debian/rules:
+    - add quilt patch handling
+
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 23 Feb 2012 15:14:56 +0100
+
 unity (5.4.0-0ubuntu1) precise; urgency=low
 
   * New upstream release.
