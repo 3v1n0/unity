@@ -162,11 +162,13 @@ PanelIndicatorsView::ActivateEntry(std::string const& entry_id, int button)
 {
   auto entry = entries_.find(entry_id);
 
-  if (entry != entries_.end() && entry->second->IsVisible())
+  if (entry != entries_.end())
   {
     PanelIndicatorEntryView* view = entry->second;
 
-    view->Activate(button);
+    if (view->IsSensitive() && view->IsVisible())
+      view->Activate(button);
+
     return view;
   }
 
@@ -184,12 +186,14 @@ PanelIndicatorsView::ActivateIfSensitive()
   for (auto entry : sorted_entries)
   {
     PanelIndicatorEntryView* view = entry.second;
-    if (view->IsSensitive())
+
+    if (view->IsSensitive() && view->IsVisible() && view->IsFocused())
     {
       view->Activate();
       return true;
     }
   }
+
   return false;
 }
 
