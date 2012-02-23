@@ -1868,12 +1868,32 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
         texxform_blur_bg.voffset = ((float) base.y) / geo_absolute.height;
 
         GfxContext.PushClippingRectangle(bkg_box);
-        gPainter.PushDrawTextureLayer(GfxContext, base,
-                                      blur_texture,
-                                      texxform_blur_bg,
-                                      nux::color::White,
-                                      true,
-                                      ROP);
+
+#ifndef NUX_OPENGLES_20
+        if (GfxContext.UsingGLSLCodePath())
+          gPainter.PushDrawColorizeTextureLayer(GfxContext, base,
+                                                blur_texture,
+                                                texxform_blur_bg,
+                                                nux::color::White,
+                                                true,
+                                                ROP,
+                                                _background_color, nux::GraphicsEngine::BLEND_MODE_OVERLAY);
+        else
+          gPainter.PushDrawTextureLayer(GfxContext, base,
+                                        blur_texture,
+                                        texxform_blur_bg,
+                                        nux::color::White,
+                                        true,
+                                        ROP);
+#else
+          gPainter.PushDrawColorizeTextureLayer(GfxContext, base,
+                                                blur_texture,
+                                                texxform_blur_bg,
+                                                nux::color::White,
+                                                true,
+                                                ROP,
+                                                _background_color, nux::GraphicsEngine::BLEND_MODE_OVERLAY);
+#endif
         GfxContext.PopClippingRectangle();
 
         push_count++;
@@ -1885,11 +1905,14 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
     // apply the darkening
     GfxContext.GetRenderStates().SetBlend(true, GL_ZERO, GL_SRC_COLOR);
-    gPainter.Paint2DQuadColor(GfxContext, bkg_box, nux::Color(0.7f, 0.7f, 0.7f, 1.0f));
+    gPainter.Paint2DQuadColor(GfxContext, bkg_box, nux::Color(0.9f, 0.9f, 0.9f, 1.0f));
     GfxContext.GetRenderStates().SetBlend (alpha, src, dest);
 
     // apply the bg colour
-    gPainter.Paint2DQuadColor(GfxContext, bkg_box, _background_color);
+#ifndef NUX_OPENGLES_20
+    if (UsingGLSLCodePath() == FALSE)
+      gPainter.Paint2DQuadColor(GfxContext, bkg_box, _background_color);
+#endif
 
     // apply the shine
     GfxContext.GetRenderStates().SetBlend(true, GL_DST_COLOR, GL_ONE);
