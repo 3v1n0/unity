@@ -97,7 +97,7 @@ void OverlayRendererImpl::Init()
   rop.Blend = true;
   rop.SrcBlend = GL_ZERO;
   rop.DstBlend = GL_SRC_COLOR;
-  bg_darken_layer_ = new nux::ColorLayer(nux::Color(0.7f, 0.7f, 0.7f, 1.0f), false, rop);
+  bg_darken_layer_ = new nux::ColorLayer(nux::Color(0.9f, 0.9f, 0.9f, 1.0f), false, rop);
   bg_shine_texture_ = unity::dash::Style::Instance().GetDashShine()->GetDeviceTexture();
   
   ubus_manager_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED,
@@ -262,9 +262,24 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
       gfx_context.PushClippingRectangle(bg_clip);
       
       gfx_context.GetRenderStates().SetBlend(false);
-      gfx_context.QRP_1Tex (content_geo.x, content_geo.y,
-                            content_geo.width, content_geo.height,
-                            bg_blur_texture_, texxform_absolute_bg, nux::color::White);
+#ifndef NUX_OPENGLES_20
+      if (gfx_context.UsingGLSLCodePath())
+        gfx_context.QRP_1TexBlendColor (content_geo.x, content_geo.y,
+                                        content_geo.width, content_geo.height,
+                                        bg_blur_texture_, texxform_absolute_bg, nux::color::White,
+                                        bg_color_, nux::GraphicsEngine::BLEND_MODE_OVERLAY);
+
+      else
+        gfx_context.QRP_1Tex (content_geo.x, content_geo.y,
+                              content_geo.width, content_geo.height,
+                              bg_blur_texture_, texxform_absolute_bg, nux::color::White);
+#else
+        gfx_context.QRP_1TexBlendColor (content_geo.x, content_geo.y,
+                                        content_geo.width, content_geo.height,
+                                        bg_blur_texture_, texxform_absolute_bg, nux::color::White,
+                                        bg_color_, nux::GraphicsEngine::BLEND_MODE_OVERLAY);
+
+#endif
       gPainter.PopBackground();
       
       gfx_context.PopClippingRectangle();
@@ -301,9 +316,14 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
   // Draw the background
   bg_darken_layer_->SetGeometry(content_geo);
   nux::GetPainter().RenderSinglePaintLayer(gfx_context, content_geo, bg_darken_layer_);
-  
-  bg_layer_->SetGeometry(content_geo);
-  nux::GetPainter().RenderSinglePaintLayer(gfx_context, content_geo, bg_layer_);
+
+#ifndef NUX_OPENGLES_20
+  if (gfx_context.UsingGLSLCodePath() == FALSE)
+  {
+    bg_layer_->SetGeometry(content_geo);
+    nux::GetPainter().RenderSinglePaintLayer(gfx_context, content_geo, bg_layer_);
+  }
+#endif
   
   
   texxform_absolute_bg.flip_v_coord = false;
@@ -377,12 +397,31 @@ void OverlayRendererImpl::DrawContent(nux::GraphicsEngine& gfx_context, nux::Geo
   
   if (bg_blur_texture_.IsValid() && paint_blur)
   {
-    gPainter.PushTextureLayer(gfx_context, content_geo,
-                              bg_blur_texture_,
-                              texxform_absolute_bg,
-                              nux::color::White,
-                              true, // write alpha?
-                              rop);
+#ifndef NUX_OPENGLES_20
+    if (gfx_context.UsingGLSLCodePath())
+      gPainter.PushColorizeTextureLayer(gfx_context, content_geo,
+                                bg_blur_texture_,
+                                texxform_absolute_bg,
+                                nux::color::White,
+                                true, // write alpha?
+                                        rop, bg_color_,
+                                        nux::GraphicsEngine::BLEND_MODE_OVERLAY);
+    else
+      gPainter.PushTextureLayer(gfx_context, content_geo,
+                                bg_blur_texture_,
+                                texxform_absolute_bg,
+                                nux::color::White,
+                                true, // write alpha?
+                                rop);
+#else
+      gPainter.PushColorizeTextureLayer(gfx_context, content_geo,
+                                bg_blur_texture_,
+                                texxform_absolute_bg,
+                                nux::color::White,
+                                true, // write alpha?
+                                        rop, bg_color_,
+                                        nux::GraphicsEngine::BLEND_MODE_OVERLAY);
+#endif
     bgs++;
   }
   
@@ -390,8 +429,13 @@ void OverlayRendererImpl::DrawContent(nux::GraphicsEngine& gfx_context, nux::Geo
   nux::GetPainter().PushLayer(gfx_context, bg_darken_layer_->GetGeometry(), bg_darken_layer_);
   bgs++;
   
-  nux::GetPainter().PushLayer(gfx_context, bg_layer_->GetGeometry(), bg_layer_);
-  bgs++;
+#ifndef NUX_OPENGLES_20
+  if (gfx_context.UsingGLSLCodePath() == FALSE)
+  {
+    nux::GetPainter().PushLayer(gfx_context, bg_layer_->GetGeometry(), bg_layer_);
+    bgs++;
+  }
+#endif
   
   // apply the shine
   rop.Blend = true;
@@ -401,7 +445,7 @@ void OverlayRendererImpl::DrawContent(nux::GraphicsEngine& gfx_context, nux::Geo
   texxform_absolute_bg.uoffset = (1.0f / bg_shine_texture_->GetWidth()) * parent->x_offset;
   texxform_absolute_bg.voffset = (1.0f / bg_shine_texture_->GetHeight()) * parent->y_offset;
   
-  nux::GetPainter().PushTextureLayer(gfx_context, bg_layer_->GetGeometry(),
+  nux::GetPainter().PushTextureLayer(gfx_context, content_geo,
                                      bg_shine_texture_,
                                      texxform_absolute_bg,
                                      nux::color::White,
