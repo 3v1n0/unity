@@ -484,7 +484,11 @@ std::string QuicklistMenuItem::GetName() const
 
 void QuicklistMenuItem::AddProperties(GVariantBuilder* builder)
 {
+  nux::Geometry abs_geo = GetAbsoluteGeometry();
+  
   unity::variant::BuilderWrapper(builder)
+  .add("absolute_x", abs_geo.x)
+  .add("absolute_y", abs_geo.y)
   .add("text", _text)
   .add("x", GetBaseX())
   .add("y", GetBaseY())
