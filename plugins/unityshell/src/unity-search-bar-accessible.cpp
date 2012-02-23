@@ -106,7 +106,7 @@ static void
 on_search_hint_change_cb(std::string const& s, UnitySearchBarAccessible* self)
 {
   SearchBar* search_bar = NULL;
-  nux::TextEntryIM* text_entry = NULL;
+  nux::TextEntry* text_entry = NULL;
   AtkObject* text_entry_accessible = NULL;
   nux::Object* nux_object = NULL;
 

@@ -339,7 +339,7 @@ void SearchBar::OnSearchHintChanged()
   g_free(tmp);
 }
 
-void SearchBar::OnSearchChanged(nux::TextEntryIM* text_entry)
+void SearchBar::OnSearchChanged(nux::TextEntry* text_entry)
 {
   // We don't want to set a new search string on every new character, so we add a sma
   // timeout to see if the user is typing a sentence. If more characters are added, we
@@ -591,7 +591,7 @@ void SearchBar::OnEndKeyFocus()
   search_hint = _("Search");
 }
 
-nux::TextEntryIM* SearchBar::text_entry() const
+nux::TextEntry* SearchBar::text_entry() const
 {
   return pango_entry_;
 }

@@ -35,7 +35,7 @@ nux::logging::Logger logger("unity.imtextentry");
 NUX_IMPLEMENT_OBJECT_TYPE(IMTextEntry);
 
 IMTextEntry::IMTextEntry()
-  : TextEntryIM("", NUX_TRACKER_LOCATION)
+  : TextEntry("", NUX_TRACKER_LOCATION)
 {
 }
 
@@ -46,7 +46,7 @@ bool IMTextEntry::InspectKeyEvent(unsigned int event_type,
   bool need_to_filter_event = TryHandleSpecial(event_type, keysym, character);
 
   if (need_to_filter_event)
-    need_to_filter_event = TextEntryIM::InspectKeyEvent(event_type, keysym, character);
+    need_to_filter_event = TextEntry::InspectKeyEvent(event_type, keysym, character);
 
   return need_to_filter_event;
 }

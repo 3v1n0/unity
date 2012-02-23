@@ -24,7 +24,7 @@
 #include <gdk/gdkx.h>
 
 #include <Nux/Nux.h>
-#include <Nux/TextEntryIM.h>
+#include <Nux/TextEntry.h>
 #include <UnityCore/GLibSignal.h>
 #include <UnityCore/GLibWrapper.h>
 
@@ -34,9 +34,9 @@ namespace unity
 using namespace unity::glib;
 using namespace nux;
 
-class IMTextEntry : public nux::TextEntryIM
+class IMTextEntry : public nux::TextEntry
 {
-  NUX_DECLARE_OBJECT_TYPE(IMTextEntry, nux::TextEntryIM);
+  NUX_DECLARE_OBJECT_TYPE(IMTextEntry, nux::TextEntry);
 public:
   IMTextEntry();
 
