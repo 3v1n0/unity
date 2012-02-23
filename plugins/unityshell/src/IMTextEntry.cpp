@@ -139,7 +139,7 @@ void IMTextEntry::InsertText(std::string const& text)
     SetText(new_text.c_str());
     SetCursor(cursor + text.length());
     QueueRefresh (true, true);
-    sigTextChanged.emit(this);
+    text_changed.emit(this);
   }
 }
 }
