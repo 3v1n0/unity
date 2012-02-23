@@ -175,7 +175,7 @@ void SearchBar::Init()
   hint_->SetMaximumWidth(search_bar_width_ - icon->GetWidth());
 
   pango_entry_ = new IMTextEntry();
-  pango_entry_->sigTextChanged.connect(sigc::mem_fun(this, &SearchBar::OnSearchChanged));
+  pango_entry_->text_changed.connect(sigc::mem_fun(this, &SearchBar::OnSearchChanged));
   pango_entry_->activated.connect([&]() { activated.emit(); });
   pango_entry_->cursor_moved.connect([&](int i) { QueueDraw(); });
   pango_entry_->mouse_down.connect(sigc::mem_fun(this, &SearchBar::OnMouseButtonDown));

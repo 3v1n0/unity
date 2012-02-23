@@ -1015,7 +1015,8 @@ void Launcher::FillRenderArg(AbstractLauncherIcon::Ptr icon,
   float center_transit_progress = IconCenterTransitionProgress(icon, current);
   if (center_transit_progress <= 1.0f)
   {
-    centerOffset.y = (icon->GetSavedCenter(monitor).y - (center.y + (half_size * size_modifier))) * (1.0f - center_transit_progress);
+    int saved_center = icon->GetSavedCenter(monitor).y - parent_abs_geo.y;
+    centerOffset.y = (saved_center - (center.y + (half_size * size_modifier))) * (1.0f - center_transit_progress);
   }
 
   center.y += half_size * size_modifier;   // move to center
