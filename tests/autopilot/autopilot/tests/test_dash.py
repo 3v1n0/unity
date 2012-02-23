@@ -86,37 +86,46 @@ class DashKeyNavTests(AutopilotTestCase):
         super(DashKeyNavTests, self).tearDown()
         self.dash.ensure_hidden()
 
-    def test_lensbar_keyfocus(self):
-        """Test that the lensbar keynavigation works well."""
-        # TODO: split this test into three separate tests. This is the first:
-        self.dash.ensure_hidden()
-        self.dash.toggle_reveal()
+    def test_lensbar_gets_keyfocus(self):
+        """Test that the lensbar gets key focus after using Down keypresses."""
+        self.dash.ensure_visible()
         kb = Keyboard()
-        lensbar = self.dash.view.get_lensbar()
         # Make sure that the lens bar can get the focus
         for i in range(self.dash.get_num_rows()):
-          kb.press_and_release("Down")
+            kb.press_and_release("Down")
+        lensbar = self.dash.view.get_lensbar()
         self.assertIsNot(lensbar.focused_lens_icon, '')
 
-        # TODO: THis is the second test
-        # Make sure that left - right work well
-        lensbar.refresh_state()
-        temp = lensbar.focused_lens_icon
+    def test_lensbar_focus_changes(self):
+        """Lensbar focused icon should change with Left and Right keypresses."""
+        self.dash.ensure_visible()
+        kb = Keyboard()
+        #put KB focus on lensbar again:
+        for i in range(self.dash.get_num_rows()):
+            kb.press_and_release("Down")
+
+        lensbar = self.dash.view.get_lensbar()
+        current_focused_icon = lensbar.focused_lens_icon
         kb.press_and_release("Right");
         lensbar.refresh_state()
-        self.assertNotEqual(lensbar.focused_lens_icon, temp)
+        self.assertNotEqual(lensbar.focused_lens_icon, current_focused_icon)
         kb.press_and_release("Left")
         lensbar.refresh_state()
-        self.assertEqual(lensbar.focused_lens_icon, temp)
+        self.assertEqual(lensbar.focused_lens_icon, current_focused_icon)
 
-        # TODO: this is the third test:
-        # Make sure that pressing 'Enter' we can change the lens...
+    def test_lensbar_enter_activation(self):
+        """Must be able to activate LensBar icons that have focus with an Enter keypress."""
+        self.dash.ensure_visible()
+        kb = Keyboard()
+        #put KB focus on lensbar again:
+        for i in range(self.dash.get_num_rows()):
+            kb.press_and_release("Down")
         kb.press_and_release("Right");
-        lensbar.refresh_state()
-        temp = lensbar.focused_lens_icon
+        lensbar = self.dash.view.get_lensbar()
+        focused_icon = lensbar.focused_lens_icon
         kb.press_and_release("Enter");
         lensbar.refresh_state()
-        self.assertEqual(lensbar.active_lens, temp)
+        self.assertEqual(lensbar.active_lens, focused_icon)
         self.assertEqual(lensbar.focused_lens_icon, "")
 
     def test_category_header_keynav_autoscroll(self):
@@ -173,13 +182,13 @@ class DashKeyNavTests(AutopilotTestCase):
         """
         self.dash.ensure_hidden()
         self.dash.reveal_application_lens()
-        app_lens = self.dash.get_current_lens()
 
         kb = Keyboard()
         mouse = Mouse()
 
         # Make sure that a category have the focus.
         kb.press_and_release("Down")
+        app_lens = self.dash.get_current_lens()
         category = app_lens.get_focused_category()
         self.assertIsNot(category, None)
 
