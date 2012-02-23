@@ -11,7 +11,7 @@ from compizconfig import Setting, Plugin
 from time import sleep
 
 from autopilot.globals import global_context
-from autopilot.emulators.unity import get_state_by_path
+from autopilot.emulators.unity import UnityIntrospectionObject
 from autopilot.emulators.X11 import Keyboard
 
 
@@ -25,6 +25,9 @@ class Dash(object):
     """
 
     def __init__(self):
+        self.controller = DashController.get_all_instances()[0]
+        self.view = self.controller.get_dash_view()
+
         self.plugin = Plugin(global_context, "unityshell")
         self.setting = Setting(self.plugin, "show_launcher")
         self._keyboard = Keyboard()
@@ -56,41 +59,17 @@ class Dash(object):
         """
         Is the dash visible?
         """
-        return bool(get_state_by_path("/Unity/DashController")[0]["visible"])
+        self.controller.refresh_state()
+        return self.controller.visible
 
-    def get_searchbar_geometry(self):
-        """Returns the searchbar geometry"""
-        search_bar = get_state_by_path("//SearchBar")[0]
-        return search_bar['x'], search_bar['y'], search_bar['width'], search_bar['height']
-
-    def get_search_string(self):
-        """
-        Return the current dash search bar search string.
-        """
-        return unicode(get_state_by_path("//SearchBar")[0]['search_string'])
-
-    def searchbar_has_focus(self):
-        """
-        Returns True if the search bar has the key focus, False otherwise.
-        """
-        return get_state_by_path("//SearchBar")[0]['has_focus']
-
-    def get_current_lens(self):
-        """Returns the id of the current lens.
-
-        For example, the default lens is 'home.lens', the run-command lens is
-        'commands.lens'.
-
-        """
-        return unicode(get_state_by_path("//DashController/DashView/LensBar")[0]['active-lens'])
-
-    def get_focused_lens_icon(self):
-        """Returns the id of the current focused icon."""
-        return unicode(get_state_by_path("//DashController/DashView/LensBar")[0]['focused-lens-icon'])
+    def get_searchbar(self):
+        """Returns the searchbar attached to the dash."""
+        return self.view.get_searchbar()
 
     def get_num_rows(self):
         """Returns the number of displayed rows in the dash."""
-        return get_state_by_path("//DashController/DashView")[0]['num-rows']
+        self.view.refresh_state()
+        return self.view.num_rows
 
     def reveal_application_lens(self):
         """Reveal the application lense."""
@@ -118,11 +97,94 @@ class Dash(object):
         logger.debug("Revealing command lens with Alt+F2.")
         self._keyboard.press_and_release('Alt+F2')
 
-    def get_focused_category(self):
-        """Returns the current focused category. """
-        groups = get_state_by_path("//PlacesGroup[header-has-keyfocus=True]")
+    def get_current_lens(self):
+        """Get the currently-active LensView object."""
+        active_lens_name = self.view.get_lensbar().active_lens
+        return self.view.get_lensview_by_name(active_lens_name)
 
-        if len(groups) >= 1:
-            return groups[0]
-        else:
-            return None
+
+class DashController(UnityIntrospectionObject):
+    """The main dash controller object."""
+
+    def get_dash_view(self):
+        """Get the dash view that's attached to this controller."""
+        return self.get_children_by_type(DashView)[0]
+
+
+class DashView(UnityIntrospectionObject):
+    """The dash view."""
+
+    def get_searchbar(self):
+        """Get the search bar attached to this dash view."""
+        return self.get_children_by_type(SearchBar)[0]
+
+    def get_lensbar(self):
+        """Get the lensbar attached to this dash view."""
+        return self.get_children_by_type(LensBar)[0]
+
+    def get_lensview_by_name(self, lens_name):
+        """Get a LensView child object by it's name. For example, "home.lens"."""
+        lenses = self.get_children_by_type(LensView)
+        for lens in lenses:
+            if lens.name == lens_name:
+                return lens
+
+
+class SearchBar(UnityIntrospectionObject):
+    """The search bar for the dash view."""
+
+
+class LensBar(UnityIntrospectionObject):
+    """The bar of lens icons at the bottom of the dash."""
+
+
+class LensView(UnityIntrospectionObject):
+    """A Lens View."""
+
+    def get_focused_category(self):
+        """Return a PlacesGroup instance for the category whose header has keyboard focus.
+
+        Returns None if no category headers have keyboard focus.
+
+        """
+        categories = self.get_children_by_type(PlacesGroup)
+        matches = [m for m in categories if m.header_has_keyfocus]
+        if matches:
+            return matches[0]
+        return None
+
+    def get_num_visible_categories(self):
+        """Get the number of visible categories in this lens."""
+        return len([c for c in self.get_children_by_type(PlacesGroup) if c.is_visible])
+
+    def get_filterbar(self):
+        """Get the filter bar for the current lense, or None if it doesn't have one."""
+        bars = self.get_children_by_type(FilterBar)
+        if bars:
+            return bars[0]
+        return None
+
+
+class PlacesGroup(UnityIntrospectionObject):
+    """A category in the lense view."""
+
+
+class FilterBar(UnityIntrospectionObject):
+    """A filterbar, as shown inside a lens."""
+
+    def get_num_filters(self):
+        """Get the number of filters in this filter bar."""
+        filters = self.get_children_by_type(FilterExpanderLabel)
+        return len(filters)
+
+    def get_focused_filter(self):
+        """Returns the id of the focused filter widget."""
+        filters = self.get_children_by_type(FilterExpanderLabel)
+        for filter_label in filters:
+            if filter_label.expander_has_focus:
+                return filter_label
+        return None
+
+
+class FilterExpanderLabel(UnityIntrospectionObject):
+    """A label that expands into a filter within a filter bar."""

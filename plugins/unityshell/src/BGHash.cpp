@@ -344,6 +344,22 @@ namespace unity {
     _hires_time_end = 500 * 1000; // 500 milliseconds
     _transition_handler = g_timeout_add (1000/60, (GSourceFunc)BGHash::OnTransitionCallback, this);
 
+    // export to gsettings
+    GSettings* settings = NULL;
+    GdkColor   color    = {0,
+                           (guint16) (_new_color.red * 65535.0 * 0.7f),
+                           (guint16) (_new_color.green * 65535.0 * 0.7f),
+                           (guint16) (_new_color.blue * 65535.0 * 0.7f)};
+
+    settings = g_settings_new (UNITY_SCHEMA.c_str());
+    if (settings)
+    {
+      unity::glib::String color_string(gdk_color_to_string(&color));
+      LOG_DEBUG(logger) << "Setting gsettings key to: " << color_string;
+      g_settings_set_string(settings, AVG_BG_COLOR.c_str(), color_string);
+      g_object_unref (settings);
+    }
+
   }
 
   gboolean BGHash::OnTransitionCallback(BGHash *self)
@@ -384,19 +400,6 @@ namespace unity {
                                             _current_color.blue * 0.7f,
                                             0.5)
                             );
-    GSettings* settings = NULL;
-    GdkColor   color    = {0,
-                           (guint16) (_current_color.red * 65535.0 * 0.7f),
-                           (guint16) (_current_color.green * 65535.0 * 0.7f),
-                           (guint16) (_current_color.blue * 65535.0 * 0.7f)};
-
-    settings = g_settings_new (UNITY_SCHEMA.c_str());
-    if (settings)
-    {
-      unity::glib::String color_string(gdk_color_to_string(&color));
-      g_settings_set_string(settings, AVG_BG_COLOR.c_str(), color_string);
-      g_object_unref (settings);
-    }
   }
 
   GdkPixbuf *BGHash::GetPixbufFromBG ()

@@ -272,7 +272,7 @@ void IMTextEntry::OnPreeditChanged(GtkIMContext* context)
   if (!preedit.Str().empty()) {
     preedit_cursor_ = preedit.Str().length();
     QueueRefresh(true, true);
-    sigTextChanged.emit(this);
+    text_changed.emit(this);
     UpdateCursorLocation();
   }
 }
@@ -291,8 +291,8 @@ void IMTextEntry::OnPreeditEnd(GtkIMContext* context)
   gtk_im_context_reset(im_context_);
 
   QueueRefresh(true, true);
-  sigTextChanged.emit(this);
-  
+  text_changed.emit(this);
+
   LOG_DEBUG(logger) << "Preedit ended";
 }
 

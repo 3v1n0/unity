@@ -35,7 +35,8 @@ enum class WindowButtonType
 {
   CLOSE,
   MINIMIZE,
-  UNMAXIMIZE
+  UNMAXIMIZE,
+  MAXIMIZE
 };
 
 enum class WindowState
@@ -59,6 +60,7 @@ public:
   nux::NBitmapData* GetBackground(int width, int height, float opacity);
 
   nux::BaseTexture* GetWindowButton(WindowButtonType type, WindowState state);
+  nux::BaseTexture* GetFallbackWindowButton(WindowButtonType type, WindowState state);
 
   GdkPixbuf* GetHomeButton();
 
@@ -74,9 +76,6 @@ private:
   static void OnGtkThemeChanged(GObject*    gobject,
                                 GParamSpec* pspec,
                                 gpointer    data);
-
-  nux::BaseTexture* GetWindowButtonForTheme(WindowButtonType type,
-                                            WindowState state);
 private:
   GtkStyleContext*   _style_context;
   char*              _theme_name;

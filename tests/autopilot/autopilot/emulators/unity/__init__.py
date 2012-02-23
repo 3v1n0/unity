@@ -126,6 +126,7 @@ class UnityIntrospectionObject(object):
         desired_type must be a subclass of UnityIntrospectionObject.
 
         """
+        self.refresh_state()
         result = []
         for child in self._get_child_tuples_by_type(desired_type):
             result.append(make_introspection_object(child))

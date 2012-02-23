@@ -20,6 +20,7 @@
 #include "SearchBarSpinner.h"
 
 #include <Nux/VLayout.h>
+#include <UnityCore/Variant.h>
 
 #include "DashStyle.h"
 
@@ -196,7 +197,7 @@ SearchBarSpinner::SetState(SpinnerState state)
   if (_spinner_timeout)
     g_source_remove(_spinner_timeout);
   _spinner_timeout = 0;
-  
+
   _2d_rotate.Rotate_z(0.0f);
   _rotation = 0.0f;
 
@@ -218,10 +219,11 @@ void SearchBarSpinner::AddProperties(GVariantBuilder* builder)
 {
   nux::Geometry geo = GetGeometry();
 
-  g_variant_builder_add(builder, "{sv}", "x", g_variant_new_int32(geo.x));
-  g_variant_builder_add(builder, "{sv}", "y", g_variant_new_int32(geo.y));
-  g_variant_builder_add(builder, "{sv}", "width", g_variant_new_int32(geo.width));
-  g_variant_builder_add(builder, "{sv}", "height", g_variant_new_int32(geo.height));
+  variant::BuilderWrapper(builder)
+    .add("x", geo.x)
+    .add("y", geo.y)
+    .add("width", geo.width)
+    .add("height", geo.height);
 }
 
 //
