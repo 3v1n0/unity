@@ -35,7 +35,7 @@ nux::logging::Logger logger("unity.imtextentry");
 NUX_IMPLEMENT_OBJECT_TYPE(IMTextEntry);
 
 IMTextEntry::IMTextEntry()
-  : TextEntryIM("", "", 80085)
+  : TextEntryIM("", NUX_TRACKER_LOCATION)
 {
 }
 
