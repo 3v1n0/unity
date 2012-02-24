@@ -69,12 +69,13 @@ public:
   ExpanderView(NUX_FILE_LINE_DECL)
    : nux::View(NUX_FILE_LINE_PARAM)
   {
+    SetAcceptKeyNavFocusOnMouseDown(false);
+    SetAcceptKeyNavFocusOnMouseEnter(true);
   }
 
 protected:
   void Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
-  {
-  };
+  {}
 
   void DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
   {
@@ -84,7 +85,17 @@ protected:
 
   bool AcceptKeyNavFocus()
   {
-    return false;
+    return true;
+  }
+
+  nux::Area* FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type)
+  {
+    bool mouse_inside = TestMousePointerInclusionFilterMouseWheel(mouse_position, event_type);
+
+    if (mouse_inside == false)
+      return nullptr;
+
+    return this;
   }
 };
 
@@ -103,6 +114,7 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
   , disable_glow(false)
   , show_filter_hint_(true)
   , expander_view_(nullptr)
+  , show_filters_(nullptr)
   , search_bar_width_(642)
   , live_search_timeout_(0)
   , start_spinner_timeout_(0)
@@ -118,6 +130,7 @@ SearchBar::SearchBar(int search_bar_width, bool show_filter_hint_, NUX_FILE_LINE
   , disable_glow(false)
   , show_filter_hint_(show_filter_hint_)
   , expander_view_(nullptr)
+  , show_filters_(nullptr)
   , search_bar_width_(search_bar_width)
   , live_search_timeout_(0)
   , start_spinner_timeout_(0)
@@ -162,7 +175,7 @@ void SearchBar::Init()
   hint_->SetMaximumWidth(search_bar_width_ - icon->GetWidth());
 
   pango_entry_ = new IMTextEntry();
-  pango_entry_->sigTextChanged.connect(sigc::mem_fun(this, &SearchBar::OnSearchChanged));
+  pango_entry_->text_changed.connect(sigc::mem_fun(this, &SearchBar::OnSearchChanged));
   pango_entry_->activated.connect([&]() { activated.emit(); });
   pango_entry_->cursor_moved.connect([&](int i) { QueueDraw(); });
   pango_entry_->mouse_down.connect(sigc::mem_fun(this, &SearchBar::OnMouseButtonDown));
@@ -218,27 +231,28 @@ void SearchBar::Init()
     layout_->AddView(expander_view_, 0, nux::MINOR_POSITION_RIGHT, nux::MINOR_SIZE_FULL);
 
     // Lambda functions
-    auto mouse_redraw = [&](int x, int y, unsigned long b, unsigned long k)
+    auto mouse_expand = [&](int, int, unsigned long, unsigned long)
+    {
+      showing_filters = !showing_filters;
+    };
+
+    auto key_redraw = [&](nux::Area*, bool, nux::KeyNavDirection)
     {
       QueueDraw();
     };
 
-    auto mouse_expand = [&](int x, int y, unsigned long b, unsigned long k)
+    auto key_expand = [&](nux::Area*)
     {
       showing_filters = !showing_filters;
     };
 
     // Signals
     expander_view_->mouse_click.connect(mouse_expand);
-    expander_view_->mouse_enter.connect(mouse_redraw);
-    expander_view_->mouse_leave.connect(mouse_redraw);
+    expander_view_->key_nav_focus_change.connect(key_redraw);
+    expander_view_->key_nav_focus_activate.connect(key_expand);
     show_filters_->mouse_click.connect(mouse_expand);
-    show_filters_->mouse_enter.connect(mouse_redraw);
-    show_filters_->mouse_leave.connect(mouse_redraw);
     expand_icon_->mouse_click.connect(mouse_expand);
-    expand_icon_->mouse_enter.connect(mouse_redraw);
-    expand_icon_->mouse_leave.connect(mouse_redraw);
-    }
+  }
 
   sig_manager_.Add(new Signal<void, GtkSettings*, GParamSpec*>
       (gtk_settings_get_default(),
@@ -582,6 +596,11 @@ nux::TextEntry* SearchBar::text_entry() const
   return pango_entry_;
 }
 
+nux::View* SearchBar::show_filters() const
+{
+  return expander_view_;
+}
+
 std::string SearchBar::get_search_string() const
 {
   return pango_entry_->GetText();
@@ -612,9 +631,7 @@ bool SearchBar::get_im_active() const
 //
 bool SearchBar::ShouldBeHighlighted()
 {
-  return ((expander_view_ && expander_view_->IsVisible() && expander_view_->IsMouseInside()) ||
-          (show_filters_ && show_filters_->IsVisible() && show_filters_->IsMouseInside()) ||
-          (expand_icon_ && expand_icon_->IsVisible() && expand_icon_->IsMouseInside()));
+  return ((expander_view_ && expander_view_->IsVisible() && expander_view_->HasKeyFocus()));
 }
 
 //
@@ -640,6 +657,8 @@ void SearchBar::AddProperties(GVariantBuilder* builder)
   wrapper.add(GetAbsoluteGeometry());
   wrapper.add("has_focus", pango_entry_->HasKeyFocus());
   wrapper.add("search_string", pango_entry_->GetText());
+  wrapper.add("expander-has-focus", expander_view_->HasKeyFocus());
+  wrapper.add("showing-filters", showing_filters);
 }
 
 } // namespace unity

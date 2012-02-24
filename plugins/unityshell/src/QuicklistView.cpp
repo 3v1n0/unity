@@ -28,6 +28,7 @@
 #include <NuxGraphics/GraphicsEngine.h>
 #include <Nux/TextureArea.h>
 #include <NuxImage/CairoGraphics.h>
+#include <UnityCore/Variant.h>
 
 #include "CairoTexture.h"
 
@@ -55,7 +56,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(QuicklistView);
 QuicklistView::QuicklistView()
   : _anchorX(0)
   , _anchorY(0)
-  , _labelText(TEXT("QuicklistView 1234567890"))
+  , _labelText("QuicklistView 1234567890")
   , _top_size(4)
   , _mouse_down(false)
   , _enable_quicklist_for_testing(false)
@@ -1345,7 +1346,7 @@ void QuicklistView::NotifyConfigurationChange(int width, int height)
 {
 }
 
-void QuicklistView::SetText(nux::NString text)
+void QuicklistView::SetText(std::string const& text)
 {
   if (_labelText == text)
     return;
@@ -1399,11 +1400,12 @@ std::string QuicklistView::GetName() const
 
 void QuicklistView::AddProperties(GVariantBuilder* builder)
 {
-  g_variant_builder_add(builder, "{sv}", "x", g_variant_new_int32(GetBaseX()));
-  g_variant_builder_add(builder, "{sv}", "y", g_variant_new_int32(GetBaseY()));
-  g_variant_builder_add(builder, "{sv}", "width", g_variant_new_int32(GetBaseWidth()));
-  g_variant_builder_add(builder, "{sv}", "height", g_variant_new_int32(GetBaseHeight()));
-  g_variant_builder_add(builder, "{sv}", "active", g_variant_new_boolean(IsVisible()));
+  variant::BuilderWrapper(builder)
+    .add("x", GetBaseX())
+    .add("y", GetBaseY())
+    .add("width", GetBaseWidth())
+    .add("height", GetBaseHeight())
+    .add("active", IsVisible());
 }
 
 //
