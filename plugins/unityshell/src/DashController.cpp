@@ -278,6 +278,8 @@ void Controller::HideDash(bool restore)
   window_->EnableInputWindow(false, "Dash", true, false);
   visible_ = false;
 
+  nux::GetWindowCompositor().SetKeyFocusArea(NULL,nux::KEY_NAV_NONE);
+
   if (restore)
     PluginAdapter::Default ()->restoreInputFocus ();
 
