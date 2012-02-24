@@ -135,7 +135,7 @@ PanelView::~PanelView()
   delete _bg_layer;
 }
 
-unsigned int PanelView::GetTrayXid ()
+unsigned int PanelView::GetTrayXid()
 {
   if (!_tray)
     return 0;
@@ -143,10 +143,16 @@ unsigned int PanelView::GetTrayXid ()
   return _tray->xid();
 }
 
-void PanelView::OnBackgroundUpdate (GVariant *data)
+void PanelView::OnBackgroundUpdate(GVariant *data)
 {
-  g_variant_get(data, "(dddd)", &_bg_color.red, &_bg_color.green,
-                                &_bg_color.blue, &_bg_color.alpha);
+  gdouble red, green, blue, alpha;
+  g_variant_get(data, "(dddd)", &red, &green, &blue, &alpha);
+
+  _bg_color.red = red;
+  _bg_color.green = green;
+  _bg_color.blue = blue;
+  _bg_color.alpha = alpha;
+
   ForceUpdateBackground();
 }
 
