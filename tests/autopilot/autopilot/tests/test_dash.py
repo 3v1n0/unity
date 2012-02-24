@@ -13,6 +13,8 @@ from autopilot.emulators.X11 import Keyboard, Mouse
 from autopilot.tests import AutopilotTestCase
 from autopilot.glibrunner import GlibRunner
 
+from gtk import Clipboard
+
 
 class DashRevealTests(AutopilotTestCase):
     """Test the unity Dash Reveal."""
@@ -266,42 +268,120 @@ class DashKeyNavTests(AutopilotTestCase):
         category = app_lens.get_focused_category()
         self.assertIsNot(category, None)
 
-    def test_paste_crash(self):
-      """ This test is for this bug:926793 """
+class DashClipboardTests(AutopilotTestCase):
+    """Test the Unity clipboard""" 
+    run_test_with = GlibRunner
+
+    def setUp(self):
+        super(DashClipboardTests, self).setUp()
+        self.dash = Dash()
+
+    def tearDown(self):
+        super(DashClipboardTests, self).tearDown()
+        self.dash.ensure_hidden()
+         
+    def test_ctrl_a(self):
+      """ This test if ctrl+a selects all text """
       self.dash.ensure_hidden()
       self.dash.toggle_reveal()
 
       kb = Keyboard();
-      kb.type("SegFault")
+      kb.type("SelectAll")
+      sleep(1)
+
+      kb.press_and_release("Ctrl+a")
+      kb.press_and_release("Delete")
+      
+      searchbar = self.dash.get_searchbar()
+      self.assertEqual(searchbar.search_string, u'')
+
+    def test_ctrl_c(self):
+      """ This test if ctrl+c copies text into the clipboard """
+      self.dash.ensure_hidden()
+      self.dash.toggle_reveal()
+
+      kb = Keyboard();
+      kb.type("Copy")
+      sleep(1)
+
+      kb.press_and_release("Ctrl+a")
+      kb.press_and_release("Ctrl+c")
+
+      cb = Clipboard(selection="CLIPBOARD")
+
+      searchbar = self.dash.get_searchbar()
+      self.assertEqual(searchbar.search_string, cb.wait_for_text())
+
+    def test_ctrl_x(self):
+      """ This test if ctrl+x deletes all text and copys it """
+      self.dash.ensure_hidden()
+      self.dash.toggle_reveal()
+
+      kb = Keyboard();
+      kb.type("Cut")
+      sleep(1)
+
+      kb.press_and_release("Ctrl+a")
+      kb.press_and_release("Ctrl+x")
+      sleep(1)
+
+      searchbar = self.dash.get_searchbar()
+      self.assertEqual(searchbar.search_string, u'')
+
+      cb = Clipboard(selection="CLIPBOARD")
+      self.assertEqual(cb.wait_for_text(), u'Cut')
+
+    def test_ctrl_c_v(self):
+      """ This test if ctrl+c and ctrl+v copies and pastes text"""
+      self.dash.ensure_hidden()
+      self.dash.toggle_reveal()
+
+      kb = Keyboard();
+      kb.type("CopyPaste")
       sleep(1)
 
       kb.press_and_release("Ctrl+a")
       kb.press_and_release("Ctrl+c")
       kb.press_and_release("Ctrl+v")
-
+      kb.press_and_release("Ctrl+v")
+      
       searchbar = self.dash.get_searchbar()
-      self.assertEqual(searchbar.search_string, u'SegFault')
+      self.assertEqual(searchbar.search_string, u'CopyPasteCopyPaste')
+
+    def test_ctrl_x_v(self):
+      """ This test if ctrl+x and ctrl+v cuts and pastes text"""
+      self.dash.ensure_hidden()
+      self.dash.toggle_reveal()
+
+      kb = Keyboard();
+      kb.type("CutPaste")
+      sleep(1)
+
+      kb.press_and_release("Ctrl+a")
+      kb.press_and_release("Ctrl+x")
+      kb.press_and_release("Ctrl+v")
+      kb.press_and_release("Ctrl+v")
+      
+      searchbar = self.dash.get_searchbar()
+      self.assertEqual(searchbar.search_string, u'CutPasteCutPaste')
 
     def test_middle_mouse_paste(self):
       """ This test makes sure the middle mouse button pastes """ 
       self.dash.ensure_hidden()
       self.dash.toggle_reveal()
 
-      kb = Keyboard();
-      mouse = Mouse()
+      cb = Clipboard(selection="PRIMARY")
+      cb.set_text("PrimaryPaste")
 
-      kb.type("Middle")
-      sleep(1)
-
-      kb.press_and_release("Ctrl+a")
-      kb.press_and_release("Ctrl+x")
+      wait = cb.wait_for_text()
 
       searchbar = self.dash.get_searchbar()
+      mouse = Mouse()
+
       mouse.move(searchbar.x + 100,
                 searchbar.y + searchbar.height / 2,
-               True)
+                True)
       mouse.click(2)
       sleep(1)
 
-      searchbar = self.dash.get_searchbar()
-      self.assertEqual(searchbar.search_string, u'Middle')
+      self.assertEqual(searchbar.search_string, u'PrimaryPaste')
