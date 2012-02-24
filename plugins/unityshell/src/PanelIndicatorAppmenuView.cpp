@@ -118,6 +118,20 @@ void PanelIndicatorAppmenuView::SetControlledWindow(Window xid)
 
 bool PanelIndicatorAppmenuView::CheckWindowMenu()
 {
+  /* FIXME this is a temporary workaround */
+  has_menu_ = true;
+  glib::Object<BamfMatcher> matcher(bamf_matcher_get_default());
+  BamfWindow *win = bamf_matcher_get_active_window(matcher);
+
+  if (BAMF_IS_WINDOW(win))
+  {
+    if (xid_ == bamf_window_get_xid(win))
+    {
+      has_menu_ = proxy_->image_sensitive();
+    }
+  }
+
+  /* FIXME re-enable this when all the clients will support the APPMENU atom.
   has_menu_ = false;
 
   if (!xid_)
@@ -142,7 +156,7 @@ bool PanelIndicatorAppmenuView::CheckWindowMenu()
     }
   }
 
-  g_list_free(windows);
+  g_list_free(windows);*/
 
   return has_menu_;
 }
