@@ -113,7 +113,8 @@ public:
   void Resize();
 
   sigc::signal<void, char*, AbstractLauncherIcon::Ptr> launcher_addrequest;
-  sigc::signal<void, std::string const&, AbstractLauncherIcon::Ptr, std::string const&, std::string const&> launcher_addrequest_special;
+  sigc::signal<void, std::string const&, AbstractLauncherIcon::Ptr, std::string const&, std::string const&,
+               gint32, gint32, gint32> launcher_addrequest_special;
   sigc::signal<void, AbstractLauncherIcon::Ptr> launcher_removerequest;
   sigc::signal<void> selection_change;
   sigc::signal<void> hidden_changed;

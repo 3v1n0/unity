@@ -34,7 +34,10 @@ class SoftwareCenterLauncherIcon : public BamfLauncherIcon
 public:
   SoftwareCenterLauncherIcon(BamfApplication* app,
                              std::string const& aptdaemon_trans_id,
-                             std::string const& icon_path);
+                             std::string const& icon_path,
+                             gint32 icon_x,
+                             gint32 icon_y,
+                             gint32 icon_size);
 
 private:
   void OnPropertyChanged(GVariant* params);
