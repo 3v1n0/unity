@@ -28,7 +28,10 @@ namespace launcher
 
 SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(BamfApplication* app,
                                                        std::string const& aptdaemon_trans_id,
-                                                       std::string const& icon_path)
+                                                       std::string const& icon_path,
+                                                       gint32 icon_x,
+                                                       gint32 icon_y,
+                                                       gint32 icon_size)
 : BamfLauncherIcon(app),
   _aptdaemon_trans("org.debian.apt",
                    aptdaemon_trans_id,
@@ -46,6 +49,14 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(BamfApplication* app,
   SetIconType(TYPE_APPLICATION);
   icon_name = icon_path.c_str();
   tooltip_text = _("Waiting to install");
+  
+  AnimateIcon(icon_x,icon_y,icon_size);
+}
+
+void
+SoftwareCenterLauncherIcon::AnimateIcon(gint32 icon_x, gint32 icon_y, gint32 icon_size)
+{
+    g_debug ("Get launcher icon from: %d, %d, size: %d", icon_x, icon_y, icon_size);
 }
 
 void

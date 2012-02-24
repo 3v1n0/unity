@@ -41,6 +41,7 @@ public:
 
 private:
   void OnPropertyChanged(GVariant* params);
+  void AnimateIcon(gint32 icon_x, gint32 icon_y, gint32 icon_size);
 
   glib::DBusProxy _aptdaemon_trans;
 };

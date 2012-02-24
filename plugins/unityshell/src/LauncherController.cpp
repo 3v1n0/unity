@@ -84,7 +84,8 @@ public:
   void OnIconRemoved(AbstractLauncherIcon::Ptr icon);
 
   void OnLauncherAddRequest(char* path, AbstractLauncherIcon::Ptr before);
-  void OnLauncherAddRequestSpecial(std::string const& path, AbstractLauncherIcon::Ptr before, std::string const& aptdaemon_trans_id, std::string const& icon_path);
+  void OnLauncherAddRequestSpecial(std::string const& path, AbstractLauncherIcon::Ptr before, std::string const& aptdaemon_trans_id, std::string const& icon_path,
+                                   gint32 icon_x, gint32 icon_y, gint32 icon_size);
   void OnLauncherRemoveRequest(AbstractLauncherIcon::Ptr icon);
 
   void OnLauncherEntryRemoteAdded(LauncherEntryRemote* entry);
@@ -115,7 +116,8 @@ public:
 
   AbstractLauncherIcon::Ptr CreateFavorite(const char* file_path);
 
-  AbstractLauncherIcon::Ptr CreateSCLauncherIcon(std::string const& file_path, std::string const& aptdaemon_trans_id, std::string const& icon_path);
+  AbstractLauncherIcon::Ptr CreateSCLauncherIcon(std::string const& file_path, std::string const& aptdaemon_trans_id, std::string const& icon_path,
+                                                 gint32 icon_x, gint32 icon_y, gint32 icon_size);
 
   void SetupBamf();
 
