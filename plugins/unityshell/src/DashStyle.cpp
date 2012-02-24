@@ -206,9 +206,7 @@ public:
 
   LazyLoadTexture search_magnify_texture_;
   LazyLoadTexture search_close_texture_;
-  LazyLoadTexture search_close_glow_texture_;
   LazyLoadTexture search_spin_texture_;
-  LazyLoadTexture search_spin_glow_texture_;
 
   LazyLoadTexture group_unexpand_texture_;
   LazyLoadTexture group_expand_texture_;
@@ -243,9 +241,7 @@ Style::Impl::Impl(Style* owner)
   , dash_shine_("/dash_sheen.png")
   , search_magnify_texture_("/search_magnify.png")
   , search_close_texture_("/search_close.png")
-  , search_close_glow_texture_("/search_close_glow.png")
   , search_spin_texture_("/search_spin.png")
-  , search_spin_glow_texture_("/search_spin_glow.png")
   , group_unexpand_texture_("/dash_group_unexpand.png")
   , group_expand_texture_("/dash_group_expand.png")
   , star_deselected_texture_("/star_deselected.png")
@@ -2114,19 +2110,9 @@ nux::BaseTexture* Style::GetSearchCloseIcon()
   return pimpl->search_close_texture_.texture();
 }
 
-nux::BaseTexture* Style::GetSearchCloseGlowIcon()
-{
-  return pimpl->search_close_glow_texture_.texture();
-}
-
 nux::BaseTexture* Style::GetSearchSpinIcon()
 {
   return pimpl->search_spin_texture_.texture();
-}
-
-nux::BaseTexture* Style::GetSearchSpinGlowIcon()
-{
-  return pimpl->search_spin_glow_texture_.texture();
 }
 
 nux::BaseTexture* Style::GetGroupUnexpandIcon()
