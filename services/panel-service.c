@@ -1,6 +1,6 @@
 // -*- Mode: C; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010 Canonical Ltd
+ * Copyright (C) 2010-2012 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -662,7 +662,7 @@ panel_service_remove_indicator (PanelService *self, IndicatorObject *indicator)
   gpointer timeout = g_object_get_data (G_OBJECT (indicator), "remove-timeout");
 
   if (timeout)
-    g_source_remove (GPOINTER_TO_UINT (timeout));
+      g_source_remove (GPOINTER_TO_UINT (timeout));
 
   g_object_set_data (G_OBJECT (indicator), "remove", GINT_TO_POINTER (TRUE));
   notify_object (indicator);
@@ -825,8 +825,8 @@ on_entry_removed (IndicatorObject      *object,
   g_return_if_fail (PANEL_IS_SERVICE (self));
   g_return_if_fail (entry != NULL);
 
-  /* Don't remove here the value from id2entry_hash or panel2entries_hash,
-   * this should be done in during the sync, to avoid false positive.
+  /* Don't remove here the value from panel2entries_hash, this should be
+   * done during the geometries sync, to avoid false positive.
    * FIXME this in libappmenu.so to avoid to send an "entry-removed" signal
    * when switching the focus from a window to one of its dialog children */
 
@@ -852,8 +852,7 @@ on_indicator_menu_show (IndicatorObject      *object,
                         PanelService         *self)
 {
   gchar *entry_id;
-  g_print("Asked to show menu with entry IIIIIIII %p",entry);
-g_debug("Asked to show menu with entry %p",entry);
+  
   g_return_if_fail (PANEL_IS_SERVICE (self));
   if (entry == NULL)
     {

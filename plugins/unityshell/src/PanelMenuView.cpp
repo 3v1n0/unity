@@ -1040,7 +1040,7 @@ void PanelMenuView::OnEntryAdded(indicator::Entry::Ptr const& entry)
   {
     if (_integrated_menu)
     {
-      LOG_ERROR(logger) << "Anohter integrated menu has already been defined, this shouldn't happen!";
+      LOG_ERROR(logger) << "Another integrated menu has already been defined, this shouldn't happen!";
     }
 
     _integrated_menu = new PanelIndicatorAppmenuView(entry);
