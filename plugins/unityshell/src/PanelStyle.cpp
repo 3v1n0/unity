@@ -45,6 +45,7 @@ Style* style_instance = nullptr;
 
 nux::logging::Logger logger("unity.panel.style");
 
+const std::string METACITY_SETTINGS_PATH("/apps/metacity/general/");
 const std::string PANEL_TITLE_FONT_KEY("/apps/metacity/general/titlebar_font");
 const std::string HIGH_CONTRAST_THEME_PREFIX("HighContrast");
 
@@ -100,6 +101,7 @@ Style::Style()
   });
 
   GConfClient* client = gconf_client_get_default();
+  gconf_client_add_dir(client, METACITY_SETTINGS_PATH.c_str(), GCONF_CLIENT_PRELOAD_NONE, nullptr);
   _gconf_notify_id = gconf_client_notify_add(client, PANEL_TITLE_FONT_KEY.c_str(),
     [] (GConfClient*,guint,GConfEntry*, gpointer data)
     {
@@ -116,7 +118,7 @@ Style::~Style()
     style_instance = nullptr;
 
   if (_gconf_notify_id)
-    gconf_client_notify_remove (gconf_client_get_default(), _gconf_notify_id);
+    gconf_client_notify_remove(gconf_client_get_default(), _gconf_notify_id);
 }
 
 Style& Style::Instance()
