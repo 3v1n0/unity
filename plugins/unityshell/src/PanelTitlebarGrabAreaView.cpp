@@ -115,7 +115,7 @@ void PanelTitlebarGrabArea::OnMouseDown(int x, int y, unsigned long button_flags
         }
 
         self->mouse_down_timer_ = 0;
-        return false;
+        return FALSE;
       }, this);
   }
 }
