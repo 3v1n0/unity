@@ -241,7 +241,7 @@ debug::Introspectable::IntrospectableList const& ResultView::GetIntrospectableCh
 
   for (auto result: results_)
   {
-    introspectable_children_.push_back(new debug::ResultWrapper(result));
+    AddChild(new debug::ResultWrapper(result));
   }
   return introspectable_children_;
 }
@@ -251,9 +251,19 @@ void ResultView::ClearIntrospectableWrappers()
   // delete old results, then add new results
   for (auto old_result: introspectable_children_)
   {
-    delete old_result;
+    RemoveChild(old_result);
   }
-  introspectable_children_.clear();
+}
+
+void ResultView::AddChild(unity::debug::Introspectable* child)
+{
+  introspectable_children_.push_back(child);
+}
+
+void ResultView::RemoveChild(unity::debug::Introspectable* child)
+{
+  introspectable_children_.remove(child);
+  delete child; 
 }
 
 }
