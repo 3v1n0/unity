@@ -134,16 +134,16 @@ panel_root_accessible_initialize (AtkObject *accessible, gpointer data)
       if (INDICATOR_IS_OBJECT (indicator))
         {
           AtkObject *child;
-          gpointer *data;
+          gpointer *weak_data;
 
           child = panel_indicator_accessible_new (indicator);
           /* FIXME: use proper signals once we support dynamic adding/removing
            * of indicators */
-          data = g_new0 (gpointer, 2);
-          data[0] = root;
-          data[1] = child;
+          weak_data = g_new0 (gpointer, 2);
+          weak_data[0] = root;
+          weak_data[1] = child;
           g_object_weak_ref (G_OBJECT (indicator), 
-              (GWeakNotify) on_indicator_removed, data);
+              (GWeakNotify) on_indicator_removed, weak_data);
 
           atk_object_set_parent (child, accessible);
           root->priv->a11y_children = g_slist_append (root->priv->a11y_children, child);
