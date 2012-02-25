@@ -17,6 +17,7 @@
  */
 
 #include "PanelTray.h"
+#include "PanelStyle.h"
 
 #include <NuxCore/Logger.h>
 
@@ -55,14 +56,15 @@ PanelTray::xid ()
 
 void PanelTray::RealInit()
 {
+  int panel_height = panel::Style::Instance().panel_height;
   _window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   gtk_window_set_type_hint(GTK_WINDOW(_window), GDK_WINDOW_TYPE_HINT_DOCK);
   gtk_window_set_has_resize_grip(GTK_WINDOW(_window), FALSE);
   gtk_window_set_keep_above(GTK_WINDOW(_window), TRUE);
   gtk_window_set_skip_pager_hint(GTK_WINDOW(_window), TRUE);
   gtk_window_set_skip_taskbar_hint(GTK_WINDOW(_window), TRUE);
-  gtk_window_resize(GTK_WINDOW(_window), 1, 24);
-  gtk_window_move(GTK_WINDOW(_window), -24,-24);
+  gtk_window_resize(GTK_WINDOW(_window), 1, panel_height);
+  gtk_window_move(GTK_WINDOW(_window), -panel_height,-panel_height);
   gtk_widget_set_name(_window, "UnityPanelApplet");
 
   gtk_widget_set_visual(_window, gdk_screen_get_rgba_visual(gdk_screen_get_default()));
@@ -76,7 +78,7 @@ void PanelTray::RealInit()
                                    GTK_ORIENTATION_HORIZONTAL,
                                    (NaTrayFilterCallback)FilterTrayCallback,
                                    this);
-    na_tray_set_icon_size(_tray, 24);
+    na_tray_set_icon_size(_tray, panel_height);
 
     _tray_icon_added_id = g_signal_connect(na_tray_get_manager(_tray), "tray_icon_removed",
                                            G_CALLBACK(PanelTray::OnTrayIconRemoved), this);
@@ -85,8 +87,7 @@ void PanelTray::RealInit()
     gtk_widget_show(GTK_WIDGET(_tray));
   }
 
-  SetMinMaxSize(1, 24);
-
+  SetMinMaxSize(1, panel_height);
 }
 
 PanelTray::~PanelTray()
@@ -130,7 +131,7 @@ PanelTray::Sync()
 {
   if (_tray)
   {
-    SetMinMaxSize(WidthOfTray() + (PADDING * 2), 24);
+    SetMinMaxSize(WidthOfTray() + (PADDING * 2), panel::Style::Instance().panel_height);
     QueueRelayout();
     QueueDraw();
 
@@ -216,7 +217,7 @@ gboolean
 PanelTray::IdleSync(PanelTray* self)
 {
   int width = self->WidthOfTray();
-  gtk_window_resize(GTK_WINDOW(self->_window), width, 24);
+  gtk_window_resize(GTK_WINDOW(self->_window), width, panel::Style::Instance().panel_height);
   self->Sync();
   return FALSE;
 }

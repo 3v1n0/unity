@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010 Canonical Ltd
+ * Copyright (C) 2010-2012 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -15,6 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
+ *              Marco Trevisan (Treviño) <3v1n0@ubuntu.com>
  */
 
 #include <Nux/Nux.h>
@@ -37,7 +38,6 @@
 #include "PanelIndicatorsView.h"
 #include <UnityCore/Variant.h>
 
-#include "ubus-server.h"
 #include "UBusMessages.h"
 
 #include "PanelView.h"
@@ -53,17 +53,15 @@ namespace unity
 NUX_IMPLEMENT_OBJECT_TYPE(PanelView);
 
 PanelView::PanelView(NUX_FILE_LINE_DECL)
-  :   View(NUX_FILE_LINE_PARAM),
-      _last_width(0),
-      _last_height(0),
-      _is_dirty(true),
-      _opacity(1.0f),
-      _opacity_maximized_toggle(false),
-      _is_primary(false),
-      _monitor(0),
-      _dash_is_open(false)
+  : View(NUX_FILE_LINE_PARAM)
+  , _is_dirty(true)
+  , _opacity_maximized_toggle(false)
+  , _needs_geo_sync(false)
+  , _is_primary(false)
+  , _dash_is_open(false)
+  , _opacity(1.0f)
+  , _monitor(0)
 {
-  _needs_geo_sync = false;
   panel::Style::Instance().changed.connect(sigc::mem_fun(this, &PanelView::ForceUpdateBackground));
 
   _bg_layer = new nux::ColorLayer(nux::Color(0xff595853), true);
@@ -72,7 +70,7 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
   rop.Blend = true;
   rop.SrcBlend = GL_ZERO;
   rop.DstBlend = GL_SRC_COLOR;
-  _bg_darken_layer_ = new nux::ColorLayer(nux::Color(0.7f, 0.7f, 0.7f, 1.0f), false, rop);
+  _bg_darken_layer = new nux::ColorLayer(nux::Color(0.7f, 0.7f, 0.7f, 1.0f), false, rop);
 
   _layout = new nux::HLayout("", NUX_TRACKER_LOCATION);
 
@@ -94,43 +92,29 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
   _remote->on_object_removed.connect(sigc::mem_fun(this, &PanelView::OnObjectRemoved));
   _remote->on_entry_activate_request.connect(sigc::mem_fun(this, &PanelView::OnEntryActivateRequest));
   _remote->on_entry_activated.connect(sigc::mem_fun(this, &PanelView::OnEntryActivated));
-  _remote->on_synced.connect(sigc::mem_fun(this, &PanelView::OnSynced));
   _remote->on_entry_show_menu.connect(sigc::mem_fun(this, &PanelView::OnEntryShowMenu));
 
-   UBusServer *ubus = ubus_server_get_default();
+  _ubus_manager.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED, sigc::mem_fun(this, &PanelView::OnBackgroundUpdate));
+  _ubus_manager.RegisterInterest(UBUS_OVERLAY_HIDDEN, sigc::mem_fun(this, &PanelView::OnDashHidden));
+  _ubus_manager.RegisterInterest(UBUS_OVERLAY_SHOWN, sigc::mem_fun(this, &PanelView::OnDashShown));
 
-   _handle_bg_color_update = ubus_server_register_interest(ubus, UBUS_BACKGROUND_COLOR_CHANGED,
-                                                          (UBusCallback)&PanelView::OnBackgroundUpdate,
-                                                          this);
-
-   _handle_dash_hidden = ubus_server_register_interest(ubus, UBUS_OVERLAY_HIDDEN,
-                                                      (UBusCallback)&PanelView::OnDashHidden,
-                                                      this);
-
-   _handle_dash_shown = ubus_server_register_interest(ubus, UBUS_OVERLAY_SHOWN,
-                                                     (UBusCallback)&PanelView::OnDashShown,
-                                                     this);
-   // request the latest colour from bghash
-   ubus_server_send_message (ubus, UBUS_BACKGROUND_REQUEST_COLOUR_EMIT, NULL);
+  // request the latest colour from bghash
+  _ubus_manager.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
 
   _track_menu_pointer_id = 0;
-  bg_effect_helper_.owner = this;
+  _bg_effect_helper.owner = this;
 
   //FIXME (gord)- replace with async loading
   glib::Object<GdkPixbuf> pixbuf;
   glib::Error error;
-  pixbuf = gdk_pixbuf_new_from_file(PKGDATADIR"/dash_sheen.png", &error);
+  pixbuf = gdk_pixbuf_new_from_file(PKGDATADIR "/dash_sheen.png", &error);
   if (error)
   {
     LOG_WARN(logger) << "Unable to texture " << PKGDATADIR << "/dash_sheen.png" << ": " << error;
   }
   else
   {
-    _panel_sheen = nux::CreateTexture2DFromPixbuf(pixbuf, true);
-    // TODO: when nux has the ability to create a smart pointer that takes
-    // ownership without adding a reference, we can remove the unref here.  By
-    // unreferencing, the object is solely owned by the smart pointer.
-    _panel_sheen->UnReference();
+    _panel_sheen.Adopt(nux::CreateTexture2DFromPixbuf(pixbuf, true));
   }
 }
 
@@ -138,10 +122,6 @@ PanelView::~PanelView()
 {
   if (_track_menu_pointer_id)
     g_source_remove(_track_menu_pointer_id);
-  UBusServer *ubus = ubus_server_get_default();
-  ubus_server_unregister_interest(ubus, _handle_bg_color_update);
-  ubus_server_unregister_interest(ubus, _handle_dash_hidden);
-  ubus_server_unregister_interest(ubus, _handle_dash_shown);
 
   for (auto conn : _on_indicator_updated_connections)
     conn.disconnect();
@@ -155,32 +135,39 @@ PanelView::~PanelView()
   delete _bg_layer;
 }
 
-unsigned int PanelView::GetTrayXid ()
+unsigned int PanelView::GetTrayXid()
 {
   if (!_tray)
     return 0;
 
-  return _tray->xid ();
+  return _tray->xid();
 }
 
-void PanelView::OnBackgroundUpdate (GVariant *data, PanelView *self)
+void PanelView::OnBackgroundUpdate(GVariant *data)
 {
   gdouble red, green, blue, alpha;
   g_variant_get(data, "(dddd)", &red, &green, &blue, &alpha);
-  self->_bg_color = nux::Color (red, green, blue, alpha);
-  self->ForceUpdateBackground();
+
+  _bg_color.red = red;
+  _bg_color.green = green;
+  _bg_color.blue = blue;
+  _bg_color.alpha = alpha;
+
+  ForceUpdateBackground();
 }
 
-void PanelView::OnDashHidden(GVariant* data, PanelView* self)
+void PanelView::OnDashHidden(GVariant* data)
 {
-  if (self->_opacity >= 1.0f)
-    self->bg_effect_helper_.enabled = false;
-  self->_dash_is_open = false;
-  self->_indicators->DashHidden();
-  self->ForceUpdateBackground();
+  if (_opacity >= 1.0f)
+    _bg_effect_helper.enabled = false;
+
+  _dash_is_open = false;
+  _indicators->DashHidden();
+  _menu_view->DashHidden();
+  ForceUpdateBackground();
 }
 
-void PanelView::OnDashShown(GVariant* data, PanelView* self)
+void PanelView::OnDashShown(GVariant* data)
 {
   unity::glib::String overlay_identity;
   gboolean can_maximise = FALSE;
@@ -188,12 +175,13 @@ void PanelView::OnDashShown(GVariant* data, PanelView* self)
   g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING, 
                 &overlay_identity, &can_maximise, &overlay_monitor);
 
-  if (self->_monitor == overlay_monitor)
+  if (_monitor == overlay_monitor)
   {
-    self->bg_effect_helper_.enabled = true;
-    self->_dash_is_open = true;
-    self->_indicators->DashShown();
-    self->ForceUpdateBackground();
+    _bg_effect_helper.enabled = true;
+    _dash_is_open = true;
+    _indicators->DashShown();
+    _menu_view->DashShown();
+    ForceUpdateBackground();
   }
 }
 
@@ -233,15 +221,15 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   if (BackgroundEffectHelper::blur_type != BLUR_NONE && (_dash_is_open || (_opacity != 1.0f && _opacity != 0.0f)))
   {
     nux::Geometry blur_geo(geo_absolute.x, geo_absolute.y, geo.width, geo.height);
-    bg_blur_texture_ = bg_effect_helper_.GetBlurRegion(blur_geo);
+    _bg_blur_texture = _bg_effect_helper.GetBlurRegion(blur_geo);
 
-    if (bg_blur_texture_.IsValid() && BackgroundEffectHelper::blur_type != BLUR_NONE && (_dash_is_open || _opacity != 1.0f))
+    if (_bg_blur_texture.IsValid() && BackgroundEffectHelper::blur_type != BLUR_NONE && (_dash_is_open || _opacity != 1.0f))
     {
       nux::TexCoordXForm texxform_blur_bg;
       texxform_blur_bg.flip_v_coord = true;
       texxform_blur_bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-      texxform_blur_bg.uoffset = ((float) geo.x) / geo_absolute.width;
-      texxform_blur_bg.voffset = ((float) geo.y) / geo_absolute.height;
+      texxform_blur_bg.uoffset = geo.x / static_cast<float>(geo_absolute.width);
+      texxform_blur_bg.voffset = geo.y / static_cast<float>(geo_absolute.height);
 
       nux::ROPConfig rop;
       rop.Blend = false;
@@ -252,7 +240,7 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
       GfxContext.PushClippingRectangle(bg_clip);
 
       gPainter.PushDrawTextureLayer(GfxContext, geo,
-                                    bg_blur_texture_,
+                                    _bg_blur_texture,
                                     texxform_blur_bg,
                                     nux::color::White,
                                     true,
@@ -263,11 +251,9 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
     if (_dash_is_open)
     {
-      nux::GetPainter().RenderSinglePaintLayer(GfxContext, GetGeometry(), _bg_darken_layer_);
+      nux::GetPainter().RenderSinglePaintLayer(GfxContext, GetGeometry(), _bg_darken_layer);
     }
   }
-
-
 
   nux::GetPainter().RenderSinglePaintLayer(GfxContext, GetGeometry(), _bg_layer);
 
@@ -283,7 +269,7 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 void
 PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
-  nux::Geometry geo = GetGeometry();
+  nux::Geometry const& geo = GetGeometry();
   int bgs = 1;
 
   GfxContext.PushClippingRectangle(GetGeometry());
@@ -291,14 +277,15 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   GfxContext.GetRenderStates().SetBlend(true);
   GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
 
-  if (bg_blur_texture_.IsValid() && BackgroundEffectHelper::blur_type != BLUR_NONE && (_dash_is_open || (_opacity != 1.0f && _opacity != 0.0f)))
+  if (_bg_blur_texture.IsValid() && BackgroundEffectHelper::blur_type != BLUR_NONE &&
+      (_dash_is_open || (_opacity != 1.0f && _opacity != 0.0f)))
   {
     nux::Geometry geo_absolute = GetAbsoluteGeometry ();
     nux::TexCoordXForm texxform_blur_bg;
     texxform_blur_bg.flip_v_coord = true;
     texxform_blur_bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-    texxform_blur_bg.uoffset = ((float) geo.x) / geo_absolute.width;
-    texxform_blur_bg.voffset = ((float) geo.y) / geo_absolute.height;
+    texxform_blur_bg.uoffset = geo.x / static_cast<float>(geo_absolute.width);
+    texxform_blur_bg.voffset = geo.y / static_cast<float>(geo_absolute.height);
 
     nux::ROPConfig rop;
     rop.Blend = false;
@@ -306,7 +293,7 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
     gPainter.PushTextureLayer(GfxContext, geo,
-                              bg_blur_texture_,
+                              _bg_blur_texture,
                               texxform_blur_bg,
                               nux::color::White,
                               true,
@@ -315,7 +302,7 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
     if (_dash_is_open)
     {
-      nux::GetPainter().PushLayer(GfxContext, GetGeometry(), _bg_darken_layer_);
+      nux::GetPainter().PushLayer(GfxContext, GetGeometry(), _bg_darken_layer);
     }
   }
 
@@ -362,13 +349,12 @@ PanelView::PostLayoutManagement(long LayoutResult)
 void
 PanelView::UpdateBackground()
 {
-  nux::Geometry geo = GetGeometry();
+  nux::Geometry const& geo = GetGeometry();
 
-  if (!_is_dirty && geo.width == _last_width && geo.height == _last_height)
+  if (!_is_dirty && geo == _last_geo)
     return;
 
-  _last_width = geo.width;
-  _last_height = geo.height;
+  _last_geo = geo;
   _is_dirty = false;
   
   guint32 maximized_win = _menu_view->GetMaximizedWindow();
@@ -385,9 +371,11 @@ PanelView::UpdateBackground()
   }
   else
   {
+    WindowManager* wm = WindowManager::Default();
     double opacity = _opacity;
-    if (_opacity_maximized_toggle && maximized_win != 0 &&
-        !WindowManager::Default()->IsWindowObscured(maximized_win))
+
+    if (_opacity_maximized_toggle && (wm->IsExpoActive() ||
+        (maximized_win != 0 && !wm->IsWindowObscured(maximized_win))))
     {
       opacity = 1.0f;
     }
@@ -505,8 +493,8 @@ void PanelView::OnEntryActivateRequest(std::string const& entry_id)
 
   bool ret;
 
-  ret = _menu_view->ActivateEntry(entry_id);
-  if (!ret) _indicators->ActivateEntry(entry_id);
+  ret = _menu_view->ActivateEntry(entry_id, 0);
+  if (!ret) _indicators->ActivateEntry(entry_id, 0);
 }
 
 void PanelView::TrackMenuPointer()
@@ -517,12 +505,6 @@ void PanelView::TrackMenuPointer()
     OnMenuPointerMoved(mouse.x, mouse.y);
     _tracked_pointer_pos = mouse;
   }
-}
-
-static gboolean track_menu_pointer(PanelView *self)
-{
-  self->TrackMenuPointer();
-  return TRUE;
 }
 
 void PanelView::OnEntryActivated(std::string const& entry_id, nux::Rect const& geo)
@@ -540,7 +522,11 @@ void PanelView::OnEntryActivated(std::string const& entry_id, nux::Rect const& g
     // process. All the motion events will go to unity-panel-service while
     // scrubbing because the active panel menu has (needs) the pointer grab.
     //
-    _track_menu_pointer_id = g_timeout_add(16, (GSourceFunc) track_menu_pointer, this);
+    _track_menu_pointer_id = g_timeout_add(16, [] (gpointer data) -> gboolean {
+                                            auto self = static_cast<PanelView*>(data);
+                                            self->TrackMenuPointer();
+                                            return TRUE;
+                                          }, this);
   }
   else if (!active)
   {
@@ -553,12 +539,7 @@ void PanelView::OnEntryActivated(std::string const& entry_id, nux::Rect const& g
     _tracked_pointer_pos = {-1, -1};
   }
 
-  ubus_server_send_message(ubus_server_get_default(), UBUS_PLACE_VIEW_CLOSE_REQUEST, NULL);
-}
-
-void PanelView::OnSynced()
-{
-  _needs_geo_sync = true;
+  _ubus_manager.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
 }
 
 void PanelView::OnEntryShowMenu(std::string const& entry_id, unsigned int xid,
@@ -596,18 +577,18 @@ void PanelView::OnEntryShowMenu(std::string const& entry_id, unsigned int xid,
 //
 // Useful Public Methods
 //
-void PanelView::StartFirstMenuShow()
+bool
+PanelView::FirstMenuShow()
 {
-}
+  bool ret = false;
 
-void PanelView::EndFirstMenuShow()
-{
   if (!_menu_view->GetControlsActive())
-    return;
+    return ret;
 
-  bool ret;
   ret = _menu_view->ActivateIfSensitive();
   if (!ret) _indicators->ActivateIfSensitive();
+
+  return ret;
 }
 
 void
@@ -618,7 +599,7 @@ PanelView::SetOpacity(float opacity)
 
   _opacity = opacity;
 
-  bg_effect_helper_.enabled = (_opacity < 1.0f || _dash_is_open);
+  _bg_effect_helper.enabled = (_opacity < 1.0f || _dash_is_open);
 
   ForceUpdateBackground();
 }
@@ -647,6 +628,10 @@ PanelView::SetOpacityMaximizedToggle(bool enabled)
       conn->push_back(win_manager->window_restored.connect(update_bg_lambda));
       conn->push_back(win_manager->window_mapped.connect(update_bg_lambda));
       conn->push_back(win_manager->window_unmapped.connect(update_bg_lambda));
+      conn->push_back(win_manager->initiate_expo.connect(
+        sigc::mem_fun(this, &PanelView::ForceUpdateBackground)));
+      conn->push_back(win_manager->terminate_expo.connect(
+        sigc::mem_fun(this, &PanelView::ForceUpdateBackground)));
       conn->push_back(win_manager->compiz_screen_viewport_switch_ended.connect(
         sigc::mem_fun(this, &PanelView::ForceUpdateBackground)));
     }
@@ -693,6 +678,12 @@ PanelView::SetMonitor(int monitor)
 {
   _monitor = monitor;
   _menu_view->SetMonitor(monitor);
+}
+
+int
+PanelView::GetMonitor()
+{
+  return _monitor;
 }
 
 } // namespace unity

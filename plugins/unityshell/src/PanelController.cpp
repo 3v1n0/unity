@@ -26,6 +26,7 @@
 
 #include "UScreen.h"
 #include "PanelView.h"
+#include "PanelStyle.h"
 
 namespace unity
 {
@@ -43,8 +44,7 @@ public:
   Impl();
   ~Impl();
 
-  void StartFirstMenuShow();
-  void EndFirstMenuShow();
+  void FirstMenuShow();
   void QueueRedraw();
 
   unsigned int GetTrayXid();
@@ -121,27 +121,12 @@ std::list<nux::Geometry> Controller::Impl::GetGeometries()
   return geometries;
 }
 
-void Controller::Impl::StartFirstMenuShow()
+void Controller::Impl::FirstMenuShow()
 {
   for (auto window: windows_)
   {
-    PanelView* view = ViewForWindow(window);
-    view->StartFirstMenuShow();
-  }
-
-  open_menu_start_received_ = true;
-}
-
-void Controller::Impl::EndFirstMenuShow()
-{
-  if (!open_menu_start_received_)
-    return;
-  open_menu_start_received_ = false;
-
-  for (auto window: windows_)
-  {
-    PanelView* view = ViewForWindow(window);
-    view->EndFirstMenuShow();
+    if (ViewForWindow(window)->FirstMenuShow())
+      break;
   }
 }
 
@@ -216,8 +201,9 @@ void Controller::Impl::OnScreenChanged(int primary_monitor,
       (*it)->InputWindowEnableStruts(false);
 
       nux::Geometry geo = monitors[i];
-      geo.height = 24;
+      geo.height = panel::Style::Instance().panel_height;
       (*it)->SetGeometry(geo);
+      (*it)->SetMinMaxSize(geo.width, geo.height);
 
       view = ViewForWindow(*it);
       view->SetPrimary(i == primary_monitor);
@@ -242,7 +228,7 @@ void Controller::Impl::OnScreenChanged(int primary_monitor,
       nux::HLayout* layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
       PanelView* view = new PanelView();
-      view->SetMaximumHeight(24);
+      view->SetMaximumHeight(panel::Style::Instance().panel_height);
       view->SetOpacity(opacity_);
       view->SetOpacityMaximizedToggle(opacity_maximized_toggle_);
       view->SetMenuShowTimings(menus_fadein_, menus_fadeout_, menus_discovery_,
@@ -265,8 +251,9 @@ void Controller::Impl::OnScreenChanged(int primary_monitor,
       window->InputWindowEnableStruts(true);
 
       nux::Geometry geo = monitors[i];
-      geo.height = 24;
+      geo.height = panel::Style::Instance().panel_height;
       window->SetGeometry(geo);
+      window->SetMinMaxSize(geo.width, geo.height);
 
       windows_.push_back(window);
 
@@ -317,14 +304,9 @@ Controller::~Controller()
   delete pimpl;
 }
 
-void Controller::StartFirstMenuShow()
+void Controller::FirstMenuShow()
 {
-  pimpl->StartFirstMenuShow();
-}
-
-void Controller::EndFirstMenuShow()
-{
-  pimpl->EndFirstMenuShow();
+  pimpl->FirstMenuShow();
 }
 
 void Controller::SetOpacity(float opacity)
