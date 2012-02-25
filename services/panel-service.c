@@ -27,9 +27,11 @@
 #include "panel-service.h"
 
 #include <stdlib.h>
+#include <string.h>
 #include <fcntl.h>
 #include <gtk/gtk.h>
 #include <gdk/gdkx.h>
+#include <gconf/gconf-client.h>
 
 #include <X11/extensions/XInput2.h>
 #include <X11/XKBlib.h>
@@ -44,6 +46,9 @@ G_DEFINE_TYPE (PanelService, panel_service, G_TYPE_OBJECT);
 #define NOTIFY_TIMEOUT 80
 #define N_TIMEOUT_SLOTS 50
 #define MAX_INDICATOR_ENTRIES 50
+
+#define COMPIZ_OPTIONS_PATH "/apps/compiz-1/plugins/unityshell/screen0/options"
+#define MENU_TOGGLE_KEYBINDING_PATH COMPIZ_OPTIONS_PATH"/panel_first_menu"
 
 static PanelService *static_service = NULL;
 
@@ -69,6 +74,10 @@ struct _PanelServicePrivate
   gint     last_right;
   gint     last_bottom;
   guint32  last_menu_button;
+
+  KeySym  toggle_key;
+  guint32 toggle_modifiers;
+  guint32 key_monitor_id;
 
   IndicatorObjectEntry *pressed_entry;
   gboolean use_event;
@@ -176,6 +185,12 @@ panel_service_class_dispose (GObject *object)
           g_source_remove (priv->timeouts[i]);
           priv->timeouts[i] = 0;
         }
+    }
+
+  if (priv->key_monitor_id)
+    {
+      gconf_client_notify_remove (gconf_client_get_default(), priv->key_monitor_id);
+      priv->key_monitor_id = 0;
     }
 
   G_OBJECT_CLASS (panel_service_parent_class)->dispose (object);
@@ -393,9 +408,10 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
       if (!event)
         return ret;
 
-      if (event->evtype == XI_KeyRelease)
+      if (event->evtype == XI_KeyPress)
         {
-          if (XkbKeycodeToKeysym(event->display, event->detail, 0, 0) == GDK_KEY_F10)
+          if (event->mods.base == priv->toggle_modifiers &&
+              XkbKeycodeToKeysym(event->display, event->detail, 0, 0) == priv->toggle_key)
           {
             if (GTK_IS_MENU (priv->last_menu))
               gtk_menu_popdown (GTK_MENU (priv->last_menu));
@@ -417,12 +433,12 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
           gboolean event_is_a_click = FALSE;
           entry = get_entry_at (self, event->root_x, event->root_y);
 
-          if (XIMaskIsSet (event->buttons.mask, 1) || XIMaskIsSet (event->buttons.mask, 3))
+          if (event->detail == 1 || event->detail == 3)
             {
               /* Consider only right and left clicks over the indicators entries */
               event_is_a_click = TRUE;
             }
-          else if (XIMaskIsSet (event->buttons.mask, 2) && entry)
+          else if (entry && event->detail == 2)
             {
               /* Middle clicks over an appmenu entry are considered just like
                * all other clicks */
@@ -461,18 +477,16 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
                     }
                 }
             }
-          else if ((XIMaskIsSet (event->buttons.mask, 2) ||
-                    XIMaskIsSet (event->buttons.mask, 4) ||
-                    XIMaskIsSet (event->buttons.mask, 5)) && entry)
+          else if (entry && (event->detail == 2 || event->detail == 4 || event->detail == 5))
             {
               /* If we're scrolling or middle-clicking over an indicator
                * (which is not an appmenu entry) then we need to send the
                * event to the indicator itself, and avoid it to close */
               gchar *entry_id = get_indicator_entry_id_by_entry (entry);
 
-              if (XIMaskIsSet (event->buttons.mask, 4) || XIMaskIsSet (event->buttons.mask, 5))
+              if (event->detail == 4 || event->detail == 5)
                 {
-                  gint32 delta = XIMaskIsSet (event->buttons.mask, 4) ? 120 : -120;
+                  gint32 delta = (event->detail == 4) ? 120 : -120;
                   panel_service_scroll_entry (self, entry_id, delta);
                 }
               else if (entry == priv->pressed_entry)
@@ -501,6 +515,69 @@ initial_resync (PanelService *self)
 }
 
 static void
+panel_service_update_menu_keybinding (PanelService *self)
+{
+  GConfClient *client = gconf_client_get_default ();
+  gchar *binding = gconf_client_get_string (client, MENU_TOGGLE_KEYBINDING_PATH, NULL);
+
+  KeySym key = 0;
+  guint32 modifiers = 0;
+
+  gchar *keystart = (binding) ? strrchr(binding, '>') : NULL;
+
+  if (!keystart)
+    keystart = binding;
+
+  while (keystart && !g_ascii_isalnum (*keystart))
+    keystart++;
+
+  gchar *keyend = keystart;
+
+  while (keyend && g_ascii_isalnum (*keyend))
+    keyend++;
+
+  if (keystart != keyend)
+  {
+    gchar *keystr = g_strndup (keystart, keyend-keystart);
+    key = XStringToKeysym (keystr);
+  }
+
+  if (key)
+    {
+      if (g_strrstr (binding, "<Shift>"))
+        {
+          modifiers |= GDK_SHIFT_MASK;
+        }
+      if (g_strrstr (binding, "<Control>"))
+        {
+          modifiers |= GDK_CONTROL_MASK;
+        }
+      if (g_strrstr (binding, "<Alt>") || g_strrstr (binding, "<Mod1>"))
+        {
+          modifiers |= GDK_MOD1_MASK;
+        }
+      if (g_strrstr (binding, "<Super>"))
+        {
+          modifiers |= GDK_SUPER_MASK;
+        }
+    }
+
+  self->priv->toggle_key = key;
+  self->priv->toggle_modifiers = modifiers;
+
+  g_free (binding);
+}
+
+void
+on_keybinding_changed (GConfClient* client, guint id, GConfEntry* entry, gpointer data)
+{
+  PanelService *self = data;
+  g_return_if_fail (PANEL_IS_SERVICE (data));
+
+  panel_service_update_menu_keybinding (self);
+}
+
+static void
 panel_service_init (PanelService *self)
 {
   PanelServicePrivate *priv;
@@ -521,6 +598,14 @@ panel_service_init (PanelService *self)
   load_indicators (self);
   sort_indicators (self);
   suppress_signals = FALSE;
+
+  panel_service_update_menu_keybinding (self);
+
+  GConfClient *client = gconf_client_get_default ();
+  gconf_client_add_dir (client, COMPIZ_OPTIONS_PATH, GCONF_CLIENT_PRELOAD_NONE, NULL);
+  priv->key_monitor_id = gconf_client_notify_add (client, MENU_TOGGLE_KEYBINDING_PATH,
+                                                  on_keybinding_changed, self,
+                                                  NULL, NULL);
 
   priv->initial_sync_id = g_idle_add ((GSourceFunc)initial_resync, self);
 }
@@ -662,7 +747,7 @@ panel_service_remove_indicator (PanelService *self, IndicatorObject *indicator)
   gpointer timeout = g_object_get_data (G_OBJECT (indicator), "remove-timeout");
 
   if (timeout)
-      g_source_remove (GPOINTER_TO_UINT (timeout));
+    g_source_remove (GPOINTER_TO_UINT (timeout));
 
   g_object_set_data (G_OBJECT (indicator), "remove", GINT_TO_POINTER (TRUE));
   notify_object (indicator);
@@ -899,7 +984,7 @@ load_indicator (PanelService *self, IndicatorObject *object, const gchar *_name)
   gchar *name;
   GList *entries, *entry;
 
-  indicator_object_set_environment(object, (const GStrv)indicator_environment);
+  indicator_object_set_environment(object, (GStrv)indicator_environment);
 
   if (_name != NULL)
     name = g_strdup (_name);
