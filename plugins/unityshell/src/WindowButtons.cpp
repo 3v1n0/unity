@@ -123,12 +123,12 @@ public:
 
     if (tex)
     {
-      GfxContext.QRP_1Tex(geo.x,
-                          geo.y,
-                          geo.width,
-                          geo.height,
-                          tex->GetDeviceTexture(),
-                          texxform,
+      // Put the texture in the middle of the area
+      _tex_geo.x = geo.x + (geo.width - _tex_geo.width) / 2;
+      _tex_geo.y = geo.y + (geo.height - _tex_geo.height) / 2,
+
+      GfxContext.QRP_1Tex(_tex_geo.x, _tex_geo.y, _tex_geo.width, _tex_geo.height,
+                          tex->GetDeviceTexture(), texxform,
                           nux::color::White * _opacity);
     }
 
@@ -138,30 +138,20 @@ public:
   void UpdateSize()
   {
     int panel_height = panel::Style::Instance().panel_height;
-    int width = 0;
-    int height = 0;
+    nux::BaseTexture* tex;
 
-    if (_overlay_is_open)
+    tex = (_overlay_is_open) ? _normal_dash_tex.GetPointer() : _normal_tex.GetPointer();
+    _tex_geo.width = 0;
+    _tex_geo.height = 0;
+
+    if (tex)
     {
-      if (_normal_dash_tex)
-      {
-        width = _normal_dash_tex->GetWidth();
-        height = _normal_dash_tex->GetHeight();
-      }
-    }
-    else
-    {
-      if (_normal_tex)
-      {
-        width = _normal_tex->GetWidth();
-        height = _normal_tex->GetHeight();
-      }
-    }
+      _tex_geo.width = std::min(panel_height, tex->GetWidth());
+      _tex_geo.height = std::min(panel_height, tex->GetHeight());
 
-    width = std::min(panel_height, width);
-    height = std::min(panel_height, height);
-
-    SetMinMaxSize(width, height);
+      // Use all the vertical space, to be more Fitt's friendly
+      SetMinMaxSize(_tex_geo.width, panel_height);
+    }
   }
 
   void LoadImages()
@@ -257,6 +247,7 @@ private:
   bool _overlay_is_open;
   double _opacity;
 
+  nux::Geometry _tex_geo;
   nux::ObjectPtr<nux::BaseTexture> _normal_tex;
   nux::ObjectPtr<nux::BaseTexture> _prelight_tex;
   nux::ObjectPtr<nux::BaseTexture> _pressed_tex;
@@ -357,7 +348,22 @@ WindowButtons::WindowButtons()
 
 nux::Area* WindowButtons::FindAreaUnderMouse(const nux::Point& mouse_pos, nux::NuxEventType event_type)
 {
-  g_debug("Mouse position is %dx%d",mouse_pos.x,mouse_pos.y);
+  /* The first button should be clickable on the left space too, to
+   * make Fitts happy. See bug #839690 */
+
+  for (auto area : GetChildren())
+  {
+    if (area->IsVisible() && area->GetInputEventSensitivity())
+    {
+      nux::Geometry const& first_geo = area->GetAbsoluteGeometry();
+
+      if (mouse_pos.x < first_geo.x)
+        return area;
+
+      break;
+    }
+  }
+
   return HLayout::FindAreaUnderMouse(mouse_pos, event_type);
 }
 
