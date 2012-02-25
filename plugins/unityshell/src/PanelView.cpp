@@ -228,8 +228,8 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
       nux::TexCoordXForm texxform_blur_bg;
       texxform_blur_bg.flip_v_coord = true;
       texxform_blur_bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-      texxform_blur_bg.uoffset = ((float) geo.x) / geo_absolute.width;
-      texxform_blur_bg.voffset = ((float) geo.y) / geo_absolute.height;
+      texxform_blur_bg.uoffset = geo.x / static_cast<float>(geo_absolute.width);
+      texxform_blur_bg.voffset = geo.y / static_cast<float>(geo_absolute.height);
 
       nux::ROPConfig rop;
       rop.Blend = false;
@@ -371,9 +371,11 @@ PanelView::UpdateBackground()
   }
   else
   {
+    WindowManager* wm = WindowManager::Default();
     double opacity = _opacity;
-    if (_opacity_maximized_toggle && maximized_win != 0 &&
-        !WindowManager::Default()->IsWindowObscured(maximized_win))
+
+    if (_opacity_maximized_toggle && (wm->IsExpoActive() ||
+        (maximized_win != 0 && !wm->IsWindowObscured(maximized_win))))
     {
       opacity = 1.0f;
     }
@@ -626,6 +628,10 @@ PanelView::SetOpacityMaximizedToggle(bool enabled)
       conn->push_back(win_manager->window_restored.connect(update_bg_lambda));
       conn->push_back(win_manager->window_mapped.connect(update_bg_lambda));
       conn->push_back(win_manager->window_unmapped.connect(update_bg_lambda));
+      conn->push_back(win_manager->initiate_expo.connect(
+        sigc::mem_fun(this, &PanelView::ForceUpdateBackground)));
+      conn->push_back(win_manager->terminate_expo.connect(
+        sigc::mem_fun(this, &PanelView::ForceUpdateBackground)));
       conn->push_back(win_manager->compiz_screen_viewport_switch_ended.connect(
         sigc::mem_fun(this, &PanelView::ForceUpdateBackground)));
     }
