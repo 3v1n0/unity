@@ -108,6 +108,7 @@ private:
 
   void ConstructWindow();
   void ConstructView();
+  void ShowView();
 
   void OnModelSelectionChanged(launcher::AbstractLauncherIcon::Ptr icon);
 
@@ -126,11 +127,11 @@ private:
   guint show_timer_;
   guint detail_timer_;
   guint lazy_timer_;
+  guint view_idle_timer_;
   nux::Color bg_color_;
   DetailMode detail_mode_;
   guint bg_update_handle_;
 
-  static gboolean OnShowTimer(gpointer data);
   static gboolean OnDetailTimer(gpointer data);
 
   static bool CompareSwitcherItemsPriority(launcher::AbstractLauncherIcon::Ptr first, launcher::AbstractLauncherIcon::Ptr second);

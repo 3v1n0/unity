@@ -42,6 +42,7 @@ Controller::Controller()
   ,  show_timer_(0)
   ,  detail_timer_(0)
   ,  lazy_timer_(0)
+  ,  view_idle_timer_(0)
 {
   timeout_length = 75;
   detail_on_timeout = true;
@@ -73,6 +74,9 @@ Controller::~Controller()
 
   if (lazy_timer_)
     g_source_remove(lazy_timer_);
+
+  if (view_idle_timer_)
+    g_source_remove(view_idle_timer_);
 }
 
 void Controller::OnBackgroundUpdate(GVariant* data, Controller* self)
@@ -104,13 +108,29 @@ void Controller::Show(ShowMode show, SortMode sort, bool reverse,
 
   if (timeout_length > 0)
   {
+    if (view_idle_timer_)
+      g_source_remove(view_idle_timer_);
+
+    view_idle_timer_ = g_idle_add_full(G_PRIORITY_LOW, [] (gpointer data) -> gboolean {
+      auto self = static_cast<Controller*>(data);
+      self->ConstructView();
+      self->view_idle_timer_ = 0;
+      return FALSE;
+    }, this, NULL);
+
     if (show_timer_)
       g_source_remove (show_timer_);
-    show_timer_ = g_timeout_add(timeout_length, &Controller::OnShowTimer, this);
+
+    show_timer_ = g_timeout_add(timeout_length, [] (gpointer data) -> gboolean {
+      auto self = static_cast<Controller*>(data);
+      self->ShowView();
+      self->show_timer_ = 0;
+      return FALSE;
+    }, this);
   }
   else
   {
-    ConstructView();
+    ShowView();
   }
 
   if (detail_on_timeout)
@@ -132,17 +152,6 @@ void Controller::Select(int index)
 {
   if (visible_)
     model_->Select(index);
-}
-
-gboolean Controller::OnShowTimer(gpointer data)
-{
-  Controller* self = static_cast<Controller*>(data);
-
-  if (self->visible_)
-    self->ConstructView();
-
-  self->show_timer_ = 0;
-  return FALSE;
 }
 
 gboolean Controller::OnDetailTimer(gpointer data)
@@ -174,6 +183,17 @@ void Controller::OnModelSelectionChanged(AbstractLauncherIcon::Ptr icon)
                            g_variant_new_string(icon->tooltip_text().c_str()));
 }
 
+void Controller::ShowView()
+{
+  if (!visible_)
+    return;
+  
+  ConstructView();
+
+  if (view_window_)
+    view_window_->SetVisible(true);
+}
+
 void Controller::ConstructWindow()
 {
   if (lazy_timer_)
@@ -198,6 +218,15 @@ void Controller::ConstructWindow()
 
 void Controller::ConstructView()
 {
+  if (view_ || !model_)
+    return;
+
+  if (view_idle_timer_)
+  {
+    g_source_remove(view_idle_timer_);
+    view_idle_timer_ = 0;
+  }
+
   view_ = SwitcherView::Ptr(new SwitcherView());
   AddChild(view_.GetPointer());
   view_->SetModel(model_);
@@ -208,6 +237,7 @@ void Controller::ConstructView()
   ConstructWindow();
   main_layout_->AddView(view_.GetPointer(), 1);
   view_window_->SetGeometry(workarea_);
+  view_window_->SetVisible(false);
   view_window_->ShowWindow(true);
 }
 
@@ -249,6 +279,12 @@ void Controller::Hide(bool accept_state)
     }
   }
 
+  if (view_idle_timer_)
+  {
+    g_source_remove(view_idle_timer_);
+    view_idle_timer_ = 0;
+  }
+
   model_.reset();
   visible_ = false;
 
@@ -256,7 +292,10 @@ void Controller::Hide(bool accept_state)
     main_layout_->RemoveChildObject(view_.GetPointer());
 
   if (view_window_)
+  {
+    view_window_->SetVisible(false);
     view_window_->ShowWindow(false);
+  }
 
   if (show_timer_)
     g_source_remove(show_timer_);
