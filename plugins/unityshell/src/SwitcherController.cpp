@@ -41,6 +41,7 @@ Controller::Controller()
   ,  visible_(false)
   ,  show_timer_(0)
   ,  detail_timer_(0)
+  ,  lazy_timer_(0)
 {
   timeout_length = 75;
   detail_on_timeout = true;
@@ -54,6 +55,14 @@ Controller::Controller()
   ubus_server_register_interest(ubus, UBUS_BACKGROUND_COLOR_CHANGED,
                                 (UBusCallback)&Controller::OnBackgroundUpdate,
                                 this);
+
+  /* Construct the view after a prefixed timeout, to improve the startup time */
+  lazy_timer_ = g_timeout_add_seconds_full(G_PRIORITY_LOW, 10, [] (gpointer data) -> gboolean {
+    auto self = static_cast<Controller*>(data);
+    self->lazy_timer_ = 0;
+    self->ConstructWindow();
+    return FALSE;
+  }, this, nullptr);
 }
 
 Controller::~Controller()
@@ -61,6 +70,9 @@ Controller::~Controller()
   ubus_server_unregister_interest(ubus_server_get_default(), bg_update_handle_);
   if (view_window_)
     view_window_->UnReference();
+
+  if (lazy_timer_)
+    g_source_remove(lazy_timer_);
 }
 
 void Controller::OnBackgroundUpdate(GVariant* data, Controller* self)
@@ -162,13 +174,13 @@ void Controller::OnModelSelectionChanged(AbstractLauncherIcon::Ptr icon)
                            g_variant_new_string(icon->tooltip_text().c_str()));
 }
 
-void Controller::ConstructView()
+void Controller::ConstructWindow()
 {
-  view_ = SwitcherView::Ptr(new SwitcherView());
-  AddChild(view_.GetPointer());
-  view_->SetModel(model_);
-  view_->background_color = bg_color_;
-  view_->monitor = monitor_;
+  if (lazy_timer_)
+  {
+    g_source_remove(lazy_timer_);
+    lazy_timer_ = 0;
+  }
 
   if (!view_window_)
   {
@@ -180,12 +192,22 @@ void Controller::ConstructView()
     view_window_->SinkReference();
     view_window_->SetLayout(main_layout_);
     view_window_->SetBackgroundColor(nux::Color(0x00000000));
+    view_window_->SetGeometry(workarea_);
   }
+}
 
-  main_layout_->AddView(view_.GetPointer(), 1);
-
-  view_window_->SetGeometry(workarea_);
+void Controller::ConstructView()
+{
+  view_ = SwitcherView::Ptr(new SwitcherView());
+  AddChild(view_.GetPointer());
+  view_->SetModel(model_);
+  view_->background_color = bg_color_;
+  view_->monitor = monitor_;
   view_->SetupBackground();
+
+  ConstructWindow();
+  main_layout_->AddView(view_.GetPointer(), 1);
+  view_window_->SetGeometry(workarea_);
   view_window_->ShowWindow(true);
 }
 

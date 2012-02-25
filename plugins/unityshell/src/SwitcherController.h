@@ -106,6 +106,7 @@ private:
     TAB_NEXT_TILE,
   };
 
+  void ConstructWindow();
   void ConstructView();
 
   void OnModelSelectionChanged(launcher::AbstractLauncherIcon::Ptr icon);
@@ -124,6 +125,7 @@ private:
   bool visible_;
   guint show_timer_;
   guint detail_timer_;
+  guint lazy_timer_;
   nux::Color bg_color_;
   DetailMode detail_mode_;
   guint bg_update_handle_;
