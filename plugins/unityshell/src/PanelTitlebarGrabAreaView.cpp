@@ -31,7 +31,7 @@ namespace unity
 {
 namespace
 {
-  unsigned int MOUSE_DOWN_TIMEOUT = 120;
+  unsigned int MOUSE_DOWN_TIMEOUT = 150;
   unsigned int MOUSE_MOVEMENT_TOLERANCE = 4;
 }
 
