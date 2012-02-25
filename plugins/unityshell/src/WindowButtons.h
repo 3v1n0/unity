@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010-2012 Canonical Ltd
+ * Copyright (C) 2010 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -15,16 +15,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
- *              Marco Trevisan (Treviño) <3v1n0@ubuntu.com>
  */
 
 #ifndef WINDOW_BUTTONS_H
 #define WINDOW_BUTTONS_H
 
 #include <Nux/HLayout.h>
-#include <Nux/Button.h>
+#include <Nux/View.h>
 
-#include "UBusWrapper.h"
 #include "Introspectable.h"
 
 namespace unity
@@ -36,42 +34,30 @@ class WindowButtons : public nux::HLayout, public unity::debug::Introspectable
 
 public:
   WindowButtons();
+  ~WindowButtons();
 
   void SetOpacity(double opacity);
   double GetOpacity();
 
-  void SetFocusedState(bool focused);
-  bool GetFocusedState();
-
-  void SetControlledWindow(Window xid);
-  Window GetControlledWindow();
-
   sigc::signal<void> close_clicked;
   sigc::signal<void> minimize_clicked;
   sigc::signal<void> restore_clicked;
-  sigc::signal<void> maximize_clicked;
   sigc::signal<void, int, int, int, int, unsigned long, unsigned long> mouse_move;
   sigc::signal<void, int, int, unsigned long, unsigned long> mouse_enter;
   sigc::signal<void, int, int, unsigned long, unsigned long> mouse_leave;
 
+  virtual nux::Area* FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type);
+
 protected:
   std::string GetName() const;
-  void AddProperties(GVariantBuilder* builder);
+  void          AddProperties(GVariantBuilder* builder);
 
 private:
-  void OnCloseClicked(nux::Button *button);
-  void OnMinimizeClicked(nux::Button *button);
-  void OnRestoreClicked(nux::Button *button);
-  void OnMaximizeClicked(nux::Button *button);
-  void OnOverlayShown(GVariant* data);
-  void OnOverlayHidden(GVariant* data);
-  void OnDashSettingsUpdated();
+  void OnCloseClicked(nux::View *view);
+  void OnMinimizeClicked(nux::View *view);
+  void OnRestoreClicked(nux::View *view);
 
-  double opacity_;
-  bool focused_;
-  Window window_xid_;
-
-  UBusManager ubus_manager_;
+  double _opacity;
 };
 }
 #endif

@@ -16,7 +16,6 @@
  *
  * Authored by: Mirco Müller <mirco.mueller@canonical.com>
  *              Neil Jagdish Patel <neil.patel@canonical.com>
- *              Marco Trevisan <3v1n0@ubuntu.com>
  */
 
 #ifndef PANEL_STYLE_H
@@ -26,8 +25,6 @@
 #include <NuxCore/Property.h>
 
 #include <gtk/gtk.h>
-#include <UnityCore/GLibWrapper.h>
-#include <UnityCore/GLibSignal.h>
 
 namespace unity
 {
@@ -47,17 +44,7 @@ enum class WindowState
   NORMAL,
   PRELIGHT,
   PRESSED,
-  DISABLED,
-  UNFOCUSED,
-  UNFOCUSED_PRELIGHT,
-  UNFOCUSED_PRESSED
-};
-
-enum class PanelItem
-{
-  INDICATOR,
-  MENU,
-  TITLE
+  DISABLED
 };
 
 class Style
@@ -69,28 +56,32 @@ public:
   static Style& Instance();
 
   GtkStyleContext* GetStyleContext();
+
   nux::NBitmapData* GetBackground(int width, int height, float opacity);
+
   nux::BaseTexture* GetWindowButton(WindowButtonType type, WindowState state);
   nux::BaseTexture* GetFallbackWindowButton(WindowButtonType type, WindowState state);
-  glib::Object<GdkPixbuf> GetHomeButton();
-  std::string GetFontDescription(PanelItem item);
-  int GetTextDPI();
 
-  nux::Property<int> panel_height;
-  nux::Property<bool> integrated_menus;
+  GdkPixbuf* GetHomeButton();
 
   sigc::signal<void> changed;
+
+  bool IsAmbianceOrRadiance();
+
+  nux::Property<int> panel_height;
 
 private:
   void Refresh();
 
-  glib::Object<GtkStyleContext> _style_context;
-  glib::Signal<void, GtkSettings*, GParamSpec*> _style_changed_signal;
-  glib::Signal<void, GtkSettings*, GParamSpec*> _font_changed_signal;
-  glib::Signal<void, GtkSettings*, GParamSpec*> _dpi_changed_signal;
-  guint _gconf_notify_id;
-  std::string _theme_name;
-  nux::Color _text_color;
+  static void OnGtkThemeChanged(GObject*    gobject,
+                                GParamSpec* pspec,
+                                gpointer    data);
+private:
+  GtkStyleContext*   _style_context;
+  char*              _theme_name;
+  nux::Color         _text;
+
+  gulong            _gtk_theme_changed_id;
 };
 
 }

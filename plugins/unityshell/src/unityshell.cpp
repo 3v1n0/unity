@@ -285,7 +285,8 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetKeyboardFocusInitiate(boost::bind(&UnityScreen::setKeyboardFocusKeyInitiate, this, _1, _2, _3));
      //optionSetKeyboardFocusTerminate (boost::bind (&UnityScreen::setKeyboardFocusKeyTerminate, this, _1, _2, _3));
      optionSetExecuteCommandInitiate(boost::bind(&UnityScreen::executeCommand, this, _1, _2, _3));
-     optionSetPanelFirstMenuInitiate(boost::bind(&UnityScreen::showPanelFirstMenuKey, this, _1, _2, _3));
+     optionSetPanelFirstMenuInitiate(boost::bind(&UnityScreen::showPanelFirstMenuKeyInitiate, this, _1, _2, _3));
+     optionSetPanelFirstMenuTerminate(boost::bind(&UnityScreen::showPanelFirstMenuKeyTerminate, this, _1, _2, _3));
      optionSetAutomaximizeValueNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetAltTabTimeoutNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetAltTabBiasViewportNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
@@ -512,7 +513,7 @@ void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
   float vc[4];
   float h = 20.0f;
   float w = 1.0f;
-  float panel_h = panel_style_.panel_height;
+  float panel_h = 24.0f;
 
   float x1 = output->x();
   float y1 = output->y() + panel_h;
@@ -1471,7 +1472,7 @@ bool UnityScreen::showLauncherKeyInitiate(CompAction* action,
     int width = 970;
     int height =  680;
     int launcher_width = optionGetIconSize() + 18;
-    int panel_height = panel_style_.panel_height;
+    int panel_height = 24;
     int x = monitor_geo.x + launcher_width + (monitor_geo.width - launcher_width- width) / 2;
     int y = monitor_geo.y + panel_height + (monitor_geo.height - panel_height - height) / 2;
 
@@ -1510,11 +1511,24 @@ bool UnityScreen::showLauncherKeyTerminate(CompAction* action,
   return false;
 }
 
-bool UnityScreen::showPanelFirstMenuKey(CompAction* action,
-                                        CompAction::State state,
-                                        CompOption::Vector& options)
+bool UnityScreen::showPanelFirstMenuKeyInitiate(CompAction* action,
+                                                CompAction::State state,
+                                                CompOption::Vector& options)
 {
-  panel_controller_->FirstMenuShow();
+  grab_index_ = screen->pushGrab (None, "unityshell");
+  // to receive the Terminate event
+  action->setState(action->state() | CompAction::StateTermKey);
+  panel_controller_->StartFirstMenuShow();
+  return false;
+}
+
+bool UnityScreen::showPanelFirstMenuKeyTerminate(CompAction* action,
+                                                 CompAction::State state,
+                                                 CompOption::Vector& options)
+{
+  screen->removeGrab(grab_index_, NULL);
+  action->setState (action->state() & (unsigned)~(CompAction::StateTermKey));
+  panel_controller_->EndFirstMenuShow();
   return false;
 }
 
@@ -1984,16 +1998,14 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
     uScreen->setPanelShadowMatrix(matrix);
 
   Window active_window = screen->activeWindow();
-  bool integrated_menus = panel::Style::Instance().integrated_menus;
-  if (window->id() == active_window && window->type() != CompWindowTypeDesktopMask && !integrated_menus)
+  if (window->id() == active_window && window->type() != CompWindowTypeDesktopMask)
   {
     uScreen->paintPanelShadow(matrix);
   }
 
   bool ret = gWindow->glDraw(matrix, attrib, region, mask);
 
-  if ((active_window == 0 || active_window == window->id() || integrated_menus) &&
-      (window->type() == CompWindowTypeDesktopMask))
+  if ((active_window == 0 || active_window == window->id()) && (window->type() == CompWindowTypeDesktopMask))
   {
     uScreen->paintPanelShadow(matrix);
   }
