@@ -180,7 +180,7 @@ void Controller::ShowView()
   ConstructView();
 
   if (view_window_)
-    view_window_->SetVisible(true);
+    view_window_->SetOpacity(1.0f);
 }
 
 void Controller::ConstructWindow()
@@ -226,7 +226,7 @@ void Controller::ConstructView()
   ConstructWindow();
   main_layout_->AddView(view_.GetPointer(), 1);
   view_window_->SetGeometry(workarea_);
-  view_window_->SetVisible(false);
+  view_window_->SetOpacity(0.0f);
   view_window_->ShowWindow(true);
 }
 
@@ -282,7 +282,7 @@ void Controller::Hide(bool accept_state)
 
   if (view_window_)
   {
-    view_window_->SetVisible(false);
+    view_window_->SetOpacity(0.0f);
     view_window_->ShowWindow(false);
   }
 
