@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010-2012 Canonical Ltd
+ * Copyright (C) 2010-2011 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -27,13 +27,10 @@
 
 #include "Introspectable.h"
 
-namespace unity
-{
-
 class PanelTitlebarGrabArea : public nux::InputArea, public unity::debug::Introspectable
 {
-  /* This acts a bit like a decorator, it can be clicked or grabbed (such that
-   * we can pullthe window down) */
+  /* This acts a bit like a titlebar, it can be grabbed (such that we can pull
+   * the window down)                                                         */
 
 public:
   PanelTitlebarGrabArea();
@@ -42,29 +39,11 @@ public:
   void SetGrabbed(bool enabled);
   bool IsGrabbed();
 
-  sigc::signal<void, int, int> lower_request;
-  sigc::signal<void, int, int> activate_request;
-  sigc::signal<void, int, int> restore_request;
-  sigc::signal<void, int, int> grab_started;
-  sigc::signal<void, int, int> grab_move;
-  sigc::signal<void, int, int> grab_end;
-
-protected:
-  std::string GetName() const;
-  void AddProperties(GVariantBuilder* builder);
-
 private:
-  void OnMouseDown(int x, int y, unsigned long button_flags, unsigned long);
-  void OnMouseUp(int x, int y, unsigned long button_flags, unsigned long);
-  void OnGrabMove(int x, int y, int, int, unsigned long button_flags, unsigned long);
+  std::string GetName() const;
+  void         AddProperties(GVariantBuilder* builder);
 
-  Cursor grab_cursor_;
-  bool grab_started_;
-  guint mouse_down_timer_;
-  nux::Point mouse_down_point_;
-  unsigned int mouse_down_button_;
+  Cursor _grab_cursor;
 };
-
-} // NAMESPACE
 
 #endif

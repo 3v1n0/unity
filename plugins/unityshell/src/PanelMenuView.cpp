@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010-2012 Canonical Ltd
+ * Copyright (C) 2010 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -15,48 +15,60 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
- *              Marco Trevisan <3v1n0@ubuntu.com>
+ *              Marco Trevisan <mail@3v1n0.net>
  */
+#include <glib.h>
+#include <pango/pangocairo.h>
+#include <gtk/gtk.h>
 
 #include <Nux/Nux.h>
-#include <NuxCore/Logger.h>
+#include <Nux/HLayout.h>
+#include <Nux/VLayout.h>
+#include <Nux/TextureArea.h>
+
+#include <NuxGraphics/GLThread.h>
+#include <NuxGraphics/XInputWindow.h>
+#include <Nux/BaseWindow.h>
 
 #include "CairoTexture.h"
 #include "PanelMenuView.h"
 #include "PanelStyle.h"
-#include "DashSettings.h"
-#include "UBusMessages.h"
-#include "UScreen.h"
-
 #include <UnityCore/Variant.h>
-#include <UnityCore/AppmenuIndicator.h>
 
+#include <gio/gdesktopappinfo.h>
+#include <gconf/gconf-client.h>
+
+#include <glib.h>
 #include <glib/gi18n-lib.h>
+
+#include "DashSettings.h"
+#include "ubus-server.h"
+#include "UBusMessages.h"
+
+#include "UScreen.h"
 
 namespace unity
 {
 
 namespace
 {
-  nux::logging::Logger logger("unity.panel.menu");
-  const int MAIN_LEFT_PADDING = 6;
-  const int MENUBAR_PADDING = 4;
-  const int MENU_ENTRIES_PADDING = 6;
-  const std::string DESKTOP_NAME(_("Ubuntu Desktop"));
+  const std::string WINDOW_TITLE_FONT_KEY = "/apps/metacity/general/titlebar_font";
 }
 
-PanelMenuView::PanelMenuView()
+PanelMenuView::PanelMenuView(int padding)
   : _matcher(bamf_matcher_get_default()),
-    _is_integrated(false),
+    _title_layer(nullptr),
+    _util_cg(CAIRO_FORMAT_ARGB32, 1, 1),
+    _gradient_texture(nullptr),
     _is_inside(false),
     _is_grabbed(false),
     _is_maximized(false),
     _is_own_window(false),
-    _integrated_menu(nullptr),
     _last_active_view(nullptr),
     _new_application(nullptr),
-    _padding(MAIN_LEFT_PADDING),
-    _dash_showing(false),
+    _last_width(0),
+    _last_height(0),
+    _places_showing(false),
     _switcher_showing(false),
     _show_now_activated(false),
     _we_control_active(false),
@@ -72,19 +84,21 @@ PanelMenuView::PanelMenuView()
     _menus_discovery(2),
     _menus_discovery_fadein(200),
     _menus_discovery_fadeout(300),
-    _fade_in_animator(_menus_fadein),
-    _fade_out_animator(_menus_fadeout)
+    _panel_title(nullptr),
+    _fade_in_animator(nullptr),
+    _fade_out_animator(nullptr)
 {
-  layout_->SetContentDistribution(nux::eStackLeft);
+  WindowManager* win_manager;
 
-  /* Removing the layout from the base view, otherwise it will take all the
-   * space it needs and we don't want this. */
-  layout_->Reference();
-  RemoveLayout();
+  // TODO: kill _menu_layout - should just use the _layout defined
+  // in the base class.
+  _menu_layout = new nux::HLayout("", NUX_TRACKER_LOCATION);
+  _menu_layout->SetParentObject(this);
 
-  BamfWindow* active_win = bamf_matcher_get_active_window(_matcher);
-  if (BAMF_IS_WINDOW(active_win))
-    _active_xid = bamf_window_get_xid(active_win);
+  /* This is for our parent and for PanelView to read indicator entries, we
+   * shouldn't touch this again
+   */
+  layout_ = _menu_layout;
 
   _view_opened_signal.Connect(_matcher, "view-opened",
                               sigc::mem_fun(this, &PanelMenuView::OnViewOpened));
@@ -95,33 +109,36 @@ PanelMenuView::PanelMenuView()
   _active_app_changed_signal.Connect(_matcher, "active-application-changed",
                                      sigc::mem_fun(this, &PanelMenuView::OnActiveAppChanged));
 
-  _window_buttons = new WindowButtons();
-  _window_buttons->SetControlledWindow(_active_xid);
-  _window_buttons->SetParentObject(this);
-  _window_buttons->SetLeftAndRightPadding(MAIN_LEFT_PADDING, MENUBAR_PADDING);
-  _window_buttons->SetMaximumHeight(panel::Style::Instance().panel_height);
-  _window_buttons->ComputeContentSize();
+  _padding = padding;
 
+  _window_buttons = new WindowButtons();
+  _window_buttons->SetParentObject(this);
+  _window_buttons->NeedRedraw();
+
+  _window_buttons->close_clicked.connect(sigc::mem_fun(this, &PanelMenuView::OnCloseClicked));
+  _window_buttons->minimize_clicked.connect(sigc::mem_fun(this, &PanelMenuView::OnMinimizeClicked));
+  _window_buttons->restore_clicked.connect(sigc::mem_fun(this, &PanelMenuView::OnRestoreClicked));
   _window_buttons->mouse_enter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
   _window_buttons->mouse_leave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
   //_window_buttons->mouse_move.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseMove));
 
-  layout_->SetLeftAndRightPadding(_window_buttons->GetContentWidth(), 0);
-  layout_->SetBaseHeight(panel::Style::Instance().panel_height);
+  _panel_titlebar_grab_area = new PanelTitlebarGrabArea();
+  _panel_titlebar_grab_area->SetParentObject(this);
+  _panel_titlebar_grab_area->SinkReference();
+  _panel_titlebar_grab_area->mouse_down.connect(sigc::mem_fun(this, &PanelMenuView::OnMouseClicked));
+  _panel_titlebar_grab_area->mouse_down.connect(sigc::mem_fun(this, &PanelMenuView::OnMouseMiddleClicked));
+  _panel_titlebar_grab_area->mouse_down.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedGrabStart));
+  _panel_titlebar_grab_area->mouse_drag.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedGrabMove));
+  _panel_titlebar_grab_area->mouse_up.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedGrabEnd));
+  _panel_titlebar_grab_area->mouse_double_click.connect(sigc::mem_fun(this, &PanelMenuView::OnMouseDoubleClicked));
 
-  _titlebar_grab_area = new PanelTitlebarGrabArea();
-  _titlebar_grab_area->SetParentObject(this);
-  _titlebar_grab_area->SinkReference();
-  _titlebar_grab_area->activate_request.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedActivate));
-  _titlebar_grab_area->restore_request.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedRestore));
-  _titlebar_grab_area->lower_request.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedLower));
-  _titlebar_grab_area->grab_started.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedGrabStart));
-  _titlebar_grab_area->grab_move.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedGrabMove));
-  _titlebar_grab_area->grab_end.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedGrabEnd));
+  win_manager = WindowManager::Default();
 
-  WindowManager* win_manager = WindowManager::Default();
   win_manager->window_minimized.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowMinimized));
   win_manager->window_unminimized.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowUnminimized));
+  //win_manager->initiate_spread.connect(sigc::mem_fun(this, &PanelMenuView::OnSpreadInitiate));
+  //win_manager->terminate_spread.connect(sigc::mem_fun(this, &PanelMenuView::OnSpreadTerminate));
+
   win_manager->window_maximized.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowMaximized));
   win_manager->window_restored.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowRestored));
   win_manager->window_unmapped.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowUnmapped));
@@ -130,35 +147,39 @@ PanelMenuView::PanelMenuView()
   win_manager->window_resized.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowMoved));
   win_manager->window_decorated.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowDecorated));
   win_manager->window_undecorated.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowUndecorated));
-  win_manager->initiate_spread.connect(sigc::mem_fun(this, &PanelMenuView::OnSpreadInitiate));
-  win_manager->terminate_spread.connect(sigc::mem_fun(this, &PanelMenuView::OnSpreadTerminate));
-  win_manager->initiate_expo.connect(sigc::mem_fun(this, &PanelMenuView::OnExpoInitiate));
-  win_manager->terminate_expo.connect(sigc::mem_fun(this, &PanelMenuView::OnExpoTerminate));
-  win_manager->compiz_screen_viewport_switch_ended.connect(sigc::mem_fun(this, &PanelMenuView::OnExpoTerminate));
 
-  _style_changed_connection = panel::Style::Instance().changed.connect([&] {
-    _window_buttons->ComputeContentSize();
-    layout_->SetLeftAndRightPadding(_window_buttons->GetContentWidth(), 0);
-
-    _title_texture = nullptr;
-    Refresh();
-    FullRedraw();
-  });
+  panel::Style::Instance().changed.connect(sigc::mem_fun(this, &PanelMenuView::Refresh));
 
   mouse_enter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
   mouse_leave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
   //mouse_move.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseMove));
 
-  _titlebar_grab_area->mouse_enter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
-  _titlebar_grab_area->mouse_leave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
+  _panel_titlebar_grab_area->mouse_enter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
+  _panel_titlebar_grab_area->mouse_leave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
 
-  _ubus_manager.RegisterInterest(UBUS_SWITCHER_SHOWN, sigc::mem_fun(this, &PanelMenuView::OnSwitcherShown));
-  _ubus_manager.RegisterInterest(UBUS_SWITCHER_SELECTION_CHANGED, sigc::mem_fun(this, &PanelMenuView::OnSwitcherSelectionChanged));
+  // Register for all the interesting events
+  UBusServer* ubus = ubus_server_get_default();
+  _ubus_interests.push_back(ubus_server_register_interest(ubus, UBUS_OVERLAY_SHOWN,
+                                                          (UBusCallback)PanelMenuView::OnPlaceViewShown,
+                                                          this));
+  _ubus_interests.push_back(ubus_server_register_interest(ubus, UBUS_OVERLAY_HIDDEN,
+                                                          (UBusCallback)PanelMenuView::OnPlaceViewHidden,
+                                                          this));
 
-  _fade_in_animator.animation_updated.connect(sigc::mem_fun(this, &PanelMenuView::OnFadeInChanged));
-  _fade_in_animator.animation_ended.connect(sigc::mem_fun(this, &PanelMenuView::FullRedraw));
-  _fade_out_animator.animation_updated.connect(sigc::mem_fun(this, &PanelMenuView::OnFadeOutChanged));
-  _fade_out_animator.animation_ended.connect(sigc::mem_fun(this, &PanelMenuView::FullRedraw));
+  _ubus_interests.push_back(ubus_server_register_interest(ubus, UBUS_SWITCHER_SHOWN,
+                                                          (UBusCallback)PanelMenuView::OnSwitcherShown,
+                                                          this));
+  _ubus_interests.push_back(ubus_server_register_interest(ubus, UBUS_SWITCHER_SELECTION_CHANGED,
+                                                          (UBusCallback)PanelMenuView::OnSwitcherSelectionChanged,
+                                                          this));
+
+  _fade_in_animator = new Animator(_menus_fadein);
+  _fade_out_animator = new Animator(_menus_fadeout);
+
+  _fade_in_animator->animation_updated.connect(sigc::mem_fun(this, &PanelMenuView::OnFadeInChanged));
+  _fade_in_animator->animation_ended.connect(sigc::mem_fun(this, &PanelMenuView::FullRedraw));
+  _fade_out_animator->animation_updated.connect(sigc::mem_fun(this, &PanelMenuView::OnFadeOutChanged));
+  _fade_out_animator->animation_ended.connect(sigc::mem_fun(this, &PanelMenuView::FullRedraw));
 
   SetOpacity(0.0f);
   _window_buttons->SetOpacity(0.0f);
@@ -178,105 +199,41 @@ PanelMenuView::~PanelMenuView()
   if (_new_app_hide_id)
     g_source_remove(_new_app_hide_id);
 
-  layout_->UnReference();
+  if (_title_layer)
+    delete _title_layer;
+
+  if (_fade_in_animator)
+    delete _fade_in_animator;
+
+  if (_fade_out_animator)
+    delete _fade_out_animator;
+
+  _menu_layout->UnReference();
   _window_buttons->UnReference();
-  _titlebar_grab_area->UnReference();
+  _panel_titlebar_grab_area->UnReference();
 
-  _style_changed_connection.disconnect();
-  _mode_changed_connection.disconnect();
-}
-
-void PanelMenuView::DashShown()
-{
-  _dash_showing = true;
-  QueueDraw();
-}
-
-void PanelMenuView::DashHidden()
-{
-  _dash_showing = false;
-  QueueDraw();
-}
-
-void PanelMenuView::SetIntegrated(bool integrated)
-{
-  if (_is_integrated == integrated)
-    return;
-
-  _is_integrated = integrated;
-  panel::Style::Instance().integrated_menus = _is_integrated;
-
-  if (!_is_integrated)
+  UBusServer* ubus = ubus_server_get_default();
+  for (auto interest : _ubus_interests)
   {
-    auto mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
-    _is_inside = GetAbsoluteGeometry().IsPointInside(mouse.x, mouse.y);
-
-    _window_buttons->SetFocusedState(true);
-    _window_buttons->SetControlledWindow(_is_maximized ? _active_xid : 0);
-
-    _integrated_menu = nullptr;
-  }
-  else
-  {
-    Window maximized = GetMaximizedWindow();
-    _window_buttons->SetFocusedState(maximized == _active_xid);
-    _window_buttons->SetControlledWindow(maximized);
-  }
-
-  Refresh(true);
-  FullRedraw();
-}
-
-bool PanelMenuView::IsIntegrated()
-{
-  return _is_integrated;
-}
-
-void PanelMenuView::AddIndicator(indicator::Indicator::Ptr const& indicator)
-{
-  if (!GetIndicators().empty())
-  {
-    LOG_ERROR(logger) << "PanelMenuView has already an indicator!";
-    return;
-  }
-
-  PanelIndicatorsView::AddIndicator(indicator);
-
-  if (indicator->IsAppmenu())
-  {
-    auto appmenuindicator = dynamic_cast<indicator::AppmenuIndicator*>(indicator.get());
-
-    if (appmenuindicator)
-    {
-      SetIntegrated(appmenuindicator->IsIntegrated());
-
-      _mode_changed_connection =
-        appmenuindicator->integrated_changed.connect(sigc::mem_fun(this, &PanelMenuView::SetIntegrated));
-    }
+    if (interest != 0)
+      ubus_server_unregister_interest(ubus, interest);
   }
 }
 
-void PanelMenuView::RemoveIndicator(indicator::Indicator::Ptr const& indicator)
-{
-  PanelIndicatorsView::RemoveIndicator(indicator);
-
-  if (indicator->IsAppmenu())
-    _mode_changed_connection.disconnect();
-}
-
-void PanelMenuView::SetMenuShowTimings(int fadein, int fadeout, int discovery,
-                                       int discovery_fadein, int discovery_fadeout)
+void
+PanelMenuView::SetMenuShowTimings(int fadein, int fadeout, int discovery,
+                                  int discovery_fadein, int discovery_fadeout)
 {
   if (fadein > -1)
   {
     _menus_fadein = fadein;
-    _fade_in_animator.SetDuration(_menus_fadein);
+    _fade_in_animator->SetDuration(_menus_fadein);
   }
 
   if (fadeout > -1)
   {
     _menus_fadeout = fadeout;
-    _fade_out_animator.SetDuration(_menus_fadeout);
+    _fade_out_animator->SetDuration(_menus_fadeout);
   }
 
   if (discovery > -1)
@@ -289,22 +246,16 @@ void PanelMenuView::SetMenuShowTimings(int fadein, int fadeout, int discovery,
     _menus_discovery_fadeout = discovery_fadeout;
 }
 
-void PanelMenuView::QueueDraw()
+void
+PanelMenuView::FullRedraw()
 {
-  PanelIndicatorsView::QueueDraw();
-
-  layout_->QueueDraw();
+  _menu_layout->NeedRedraw();
+  _window_buttons->NeedRedraw();
+  NeedRedraw();
 }
 
-void PanelMenuView::FullRedraw()
-{
-  PanelIndicatorsView::QueueDraw();
-
-  layout_->QueueDraw();
-  _window_buttons->QueueDraw();
-}
-
-nux::Area* PanelMenuView::FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type)
+nux::Area*
+PanelMenuView::FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type)
 {
   bool mouse_inside = TestMousePointerInclusionFilterMouseWheel(mouse_position, event_type);
 
@@ -314,69 +265,75 @@ nux::Area* PanelMenuView::FindAreaUnderMouse(const nux::Point& mouse_position, n
   Area* found_area = nullptr;
   if (!_we_control_active)
   {
-    found_area = _titlebar_grab_area->FindAreaUnderMouse(mouse_position, event_type);
+    found_area = _panel_titlebar_grab_area->FindAreaUnderMouse(mouse_position, event_type);
     NUX_RETURN_VALUE_IF_NOTNULL(found_area, found_area);
   }
 
-  if (_is_maximized || _dash_showing || (_is_integrated && GetMaximizedWindow()))
+  if (_is_maximized || _places_showing)
   {
     if (_window_buttons)
     {
       found_area = _window_buttons->FindAreaUnderMouse(mouse_position, event_type);
       NUX_RETURN_VALUE_IF_NOTNULL(found_area, found_area);
     }
+
+    if (_panel_titlebar_grab_area)
+    {
+      found_area = _panel_titlebar_grab_area->FindAreaUnderMouse(mouse_position, event_type);
+      NUX_RETURN_VALUE_IF_NOTNULL(found_area, found_area);
+    }
   }
 
-  if (_titlebar_grab_area && !_dash_showing)
+  if (_panel_titlebar_grab_area)
   {
-    found_area = _titlebar_grab_area->FindAreaUnderMouse(mouse_position, event_type);
+    found_area = _panel_titlebar_grab_area->FindAreaUnderMouse(mouse_position, event_type);
     NUX_RETURN_VALUE_IF_NOTNULL(found_area, found_area);
-
-    /* When the integrated menus are enabled, that area must act both like an
-     * indicator-entry view and like a panel-grab-area, so not to re-implement
-     * what we have done into PanelTitleGrabAreaView inside PanelIndicatorAppmenuView
-     * we can just redirect the input events directed to the integrated menus
-     * to the grab_area, then we just have to use few tricks when we get the
-     * signals back from the grab-area to check where they really were */
-    if (_is_integrated && _integrated_menu)
-    {
-      if (_integrated_menu->GetAbsoluteGeometry().IsPointInside(mouse_position.x, mouse_position.y))
-        return _titlebar_grab_area;
-    }
   }
 
   if (!_is_own_window)
   {
-    found_area = layout_->FindAreaUnderMouse(mouse_position, event_type);
+    found_area = _menu_layout->FindAreaUnderMouse(mouse_position, event_type);
     NUX_RETURN_VALUE_IF_NOTNULL(found_area, found_area);
   }
 
   return View::FindAreaUnderMouse(mouse_position, event_type);
 }
 
-void PanelMenuView::PreLayoutManagement()
+long PanelMenuView::PostLayoutManagement(long LayoutResult)
 {
-  View::PreLayoutManagement();
+  long res = View::PostLayoutManagement(LayoutResult);
+  int old_window_buttons_w, new_window_buttons_w;
+  int old_menu_area_w, new_menu_area_w;
 
-  nux::Geometry const& geo = GetGeometry();
-  int panel_height = panel::Style::Instance().panel_height;
+  nux::Geometry geo = GetGeometry();
 
+  old_window_buttons_w = _window_buttons->GetContentWidth();
+  _window_buttons->SetGeometry(geo.x + _padding, geo.y, old_window_buttons_w, geo.height);
   _window_buttons->ComputeContentSize();
-  int buttons_diff = panel_height - _window_buttons->GetContentHeight();
-  _window_buttons->SetBaseY(buttons_diff > 0 ? buttons_diff/2 : 0);
+  new_window_buttons_w = _window_buttons->GetContentWidth();
 
-  layout_->ComputeContentSize();
-  int layout_width = layout_->GetContentWidth();
+  /* Explicitly set the size and position of the widgets */
+  geo.x += _padding + new_window_buttons_w + _padding;
+  geo.width -= _padding + new_window_buttons_w + _padding;
 
-  _titlebar_grab_area->SetBaseX(layout_width);
-  _titlebar_grab_area->SetBaseHeight(geo.height);
-  _titlebar_grab_area->SetMinimumWidth(geo.width - layout_width);
-  _titlebar_grab_area->SetMaximumWidth(geo.width - layout_width);
+  old_menu_area_w = _menu_layout->GetContentWidth();
+  _menu_layout->SetGeometry(geo.x, geo.y, old_menu_area_w, geo.height);
+  _menu_layout->ComputeContentSize();
+  new_menu_area_w = _menu_layout->GetContentWidth();
 
-  SetMaximumEntriesWidth(geo.width - _window_buttons->GetContentWidth());
+  geo.x += new_menu_area_w;
+  geo.width -= new_menu_area_w;
+
+  _panel_titlebar_grab_area->SetGeometry(geo.x, geo.y, geo.width, geo.height);
+
+  if (_is_inside)
+    NeedRedraw();
+
+  return res;
 }
 
-void PanelMenuView::OnFadeInChanged(double opacity)
+void
+PanelMenuView::OnFadeInChanged(double opacity)
 {
   if (DrawMenus() && GetOpacity() != 1.0f)
     SetOpacity(opacity);
@@ -384,10 +341,11 @@ void PanelMenuView::OnFadeInChanged(double opacity)
   if (DrawWindowButtons() && _window_buttons->GetOpacity() != 1.0f)
     _window_buttons->SetOpacity(opacity);
 
-  QueueDraw();
+  NeedRedraw();
 }
 
-void PanelMenuView::OnFadeOutChanged(double progress)
+void
+PanelMenuView::OnFadeOutChanged(double progress)
 {
   double opacity = CLAMP(1.0f - progress, 0.0f, 1.0f);
 
@@ -397,26 +355,13 @@ void PanelMenuView::OnFadeOutChanged(double progress)
   if (!DrawWindowButtons() && _window_buttons->GetOpacity() != 0.0f)
     _window_buttons->SetOpacity(opacity);
 
-  QueueDraw();
+  NeedRedraw();
 }
 
-bool PanelMenuView::DrawMenus()
+bool
+PanelMenuView::DrawMenus()
 {
-  auto wm = WindowManager::Default();
-  bool screen_grabbed = (wm->IsExpoActive() || wm->IsScaleActive());
-
-  if (_is_integrated && _integrated_menu)
-  {
-    if (!_dash_showing && !screen_grabbed)
-    {
-      return (GetMaximizedWindow() != 0);
-    }
-
-    return false;
-  }
-
-  if (!_is_own_window && !_dash_showing && _we_control_active &&
-      !_switcher_showing && !screen_grabbed)
+  if (!_is_own_window && !_places_showing && _we_control_active && !_switcher_showing)
   {
     if (_is_inside || _last_active_view || _show_now_activated || _new_application)
     {
@@ -427,26 +372,13 @@ bool PanelMenuView::DrawMenus()
   return false;
 }
 
-bool PanelMenuView::DrawWindowButtons()
+bool
+PanelMenuView::DrawWindowButtons()
 {
-  auto wm = WindowManager::Default();
-  bool screen_grabbed = (wm->IsExpoActive() || wm->IsScaleActive());
-
-  if (_dash_showing)
+  if (_places_showing)
     return true;
 
-  if (_is_integrated)
-  {
-    if (!screen_grabbed)
-    {
-      return (GetMaximizedWindow() != 0);
-    }
-
-    return false;
-  }
-
-  if (!_is_own_window && _we_control_active && _is_maximized &&
-      !_switcher_showing && !screen_grabbed)
+  if (!_is_own_window && _we_control_active && _is_maximized && !_switcher_showing)
   {
     if (_is_inside || _show_now_activated || _new_application)
     {
@@ -457,18 +389,19 @@ bool PanelMenuView::DrawWindowButtons()
   return false;
 }
 
-void PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
+void
+PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
-  nux::Geometry const& geo = GetGeometry();
-  int button_width = _window_buttons->GetContentWidth();
-  const float factor = 4;
+  nux::Geometry geo = GetGeometry();
+  int button_width = _padding + _window_buttons->GetContentWidth() + _padding;
+  float factor = 4;
   button_width /= factor;
 
-  if (geo != _last_geo)
+  if (geo.width != _last_width || geo.height != _last_height)
   {
-    _last_geo = geo;
-    layout_->QueueDraw();
-    Refresh(true);
+    _last_width = geo.width;
+    _last_height = geo.height;
+    Refresh();
   }
 
   GfxContext.PushClippingRectangle(geo);
@@ -482,7 +415,7 @@ void PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   nux::ColorLayer layer(nux::Color(0x00000000), true, rop);
   nux::GetPainter().PushDrawLayer(GfxContext, GetGeometry(), &layer);
 
-  if (_title_texture && !_is_own_window)
+  if (_title_layer && !_is_own_window)
   {
     guint blend_alpha = 0, blend_src = 0, blend_dest = 0;
     bool draw_menus = DrawMenus();
@@ -494,7 +427,7 @@ void PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
     for (auto entry : entries_)
     {
-      if (entry.second->IsVisible())
+      if (entry.second->IsEntryValid())
       {
         has_menu = true;
         break;
@@ -607,19 +540,16 @@ void PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
                              geo.width, geo.height,
                              _gradient_texture, texxform0,
                              nux::color::White,
-                             _title_texture->GetDeviceTexture(),
+                             _title_layer->GetDeviceTexture(),
                              texxform1,
                              nux::color::White);
     }
-    else if (!_dash_showing)
+    else if (!_places_showing)
     {
       if (_we_control_active && _window_buttons->GetOpacity() == 0.0 &&
           (!has_menu || (has_menu && GetOpacity() == 0.0)))
       {
-        nux::TexCoordXForm texxform;
-        GfxContext.QRP_1Tex(geo.x, geo.y, geo.width, geo.height,
-                            _title_texture->GetDeviceTexture(), texxform,
-                            nux::color::White);
+        nux::GetPainter().PushDrawLayer(GfxContext, geo, _title_layer);
       }
       else
       {
@@ -641,13 +571,10 @@ void PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
           title_opacity = CLAMP(title_opacity - 0.2f, 0.0f, 1.0f);
         }
 
-        if (title_opacity > 0.0f)
-        {
-          nux::TexCoordXForm texxform;
-          GfxContext.QRP_1Tex(geo.x, geo.y, geo.width, geo.height,
-                              _title_texture->GetDeviceTexture(), texxform,
-                              nux::color::White * title_opacity);
-        }
+        nux::TexCoordXForm texxform;
+        GfxContext.QRP_1Tex(geo.x, geo.y, geo.width, geo.height,
+                            _title_layer->GetDeviceTexture(), texxform,
+                            nux::color::White * title_opacity);
       }
     }
 
@@ -659,9 +586,10 @@ void PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   GfxContext.PopClippingRectangle();
 }
 
-void PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
+void
+PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
-  nux::Geometry const& geo = GetGeometry();
+  nux::Geometry geo = GetGeometry();
   bool draw_menus = DrawMenus();
   bool draw_buttons = DrawWindowButtons();
 
@@ -672,17 +600,17 @@ void PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw
     for (auto entry : entries_)
       entry.second->SetDisabled(false);
 
-    layout_->ProcessDraw(GfxContext, true);
+    _menu_layout->ProcessDraw(GfxContext, true);
 
-    _fade_out_animator.Stop();
+    _fade_out_animator->Stop();
 
     if (_new_application && !_is_inside)
     {
-      _fade_in_animator.Start(_menus_discovery_fadein, GetOpacity());
+      _fade_in_animator->Start(_menus_discovery_fadein, GetOpacity());
     }
     else
     {
-      _fade_in_animator.Start(GetOpacity());
+      _fade_in_animator->Start(GetOpacity());
       _new_app_menu_shown = false;
     }
   }
@@ -692,19 +620,19 @@ void PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw
       entry.second->SetDisabled(true);
   }
 
-  if (GetOpacity() != 0.0f && !draw_menus && !_dash_showing)
+  if (GetOpacity() != 0.0f && !draw_menus)
   {
-    layout_->ProcessDraw(GfxContext, true);
+    _menu_layout->ProcessDraw(GfxContext, true);
 
-    _fade_in_animator.Stop();
+    _fade_in_animator->Stop();
 
-    if (_is_integrated || !_new_app_menu_shown)
+    if (!_new_app_menu_shown)
     {
-      _fade_out_animator.Start(1.0f - GetOpacity());
+      _fade_out_animator->Start(1.0f - GetOpacity());
     }
     else
     {
-      _fade_out_animator.Start(_menus_discovery_fadeout, 1.0f - GetOpacity());
+      _fade_out_animator->Start(_menus_discovery_fadeout, 1.0f - GetOpacity());
     }
   }
 
@@ -712,308 +640,298 @@ void PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw
   {
     _window_buttons->ProcessDraw(GfxContext, true);
 
-    if (_window_buttons->GetOpacity() != 1.0f)
-    {
-      _fade_out_animator.Stop();
-      _fade_in_animator.Start(_window_buttons->GetOpacity());
-    }
+    _fade_out_animator->Stop();
+    _fade_in_animator->Start(_window_buttons->GetOpacity());
   }
 
   if (_window_buttons->GetOpacity() != 0.0f && !draw_buttons)
   {
     _window_buttons->ProcessDraw(GfxContext, true);
-    _fade_in_animator.Stop();
+    _fade_in_animator->Stop();
 
     /* If we try to hide only the buttons, then use a faster fadeout */
-    if (!_fade_out_animator.IsRunning())
+    if (!_fade_out_animator->IsRunning())
     {
-      _fade_out_animator.Start(_menus_fadeout/3, 1.0f - _window_buttons->GetOpacity());
+      _fade_out_animator->Start(_menus_fadeout/3, 1.0f - _window_buttons->GetOpacity());
     }
   }
 
   GfxContext.PopClippingRectangle();
 }
 
-std::string PanelMenuView::GetActiveViewName(bool use_appname)
+gchar*
+PanelMenuView::GetActiveViewName()
 {
-  std::string label;
-  BamfWindow* window;
+  gchar*         label = nullptr;
+  BamfWindow*    window;
 
   _is_own_window = false;
-  window = bamf_matcher_get_active_window(_matcher);
 
+  window = bamf_matcher_get_active_window(_matcher);
   if (BAMF_IS_WINDOW(window))
   {
-    BamfView *view = reinterpret_cast<BamfView*>(window);
     std::vector<Window> const& our_xids = nux::XInputWindow::NativeHandleList();
-    guint32 window_xid = bamf_window_get_xid(window);
+    guint32 window_xid = bamf_window_get_xid(BAMF_WINDOW(window));
 
     if (std::find(our_xids.begin(), our_xids.end(), window_xid) != our_xids.end())
     {
       _is_own_window = true;
-      return "";
+      return g_strdup("");
     }
 
-    if (bamf_window_get_window_type(window) == BAMF_WINDOW_DESKTOP)
+    if (BAMF_IS_WINDOW(window) &&
+        bamf_window_get_window_type(window) == BAMF_WINDOW_DESKTOP)
     {
-      label = DESKTOP_NAME;
+      label = g_strdup(_("Ubuntu Desktop"));
     }
     else if (!WindowManager::Default()->IsWindowOnCurrentDesktop(window_xid) ||
-             WindowManager::Default()->IsWindowObscured(window_xid))
+        WindowManager::Default()->IsWindowObscured(window_xid))
     {
-       return "";
+       return g_strdup("");
     }
 
-    if (WindowManager::Default()->IsWindowMaximized(window_xid) && !use_appname)
-    {
-      label = glib::String(bamf_view_get_name(view)).Str();
-    }
+    if (_is_maximized)
+      label = bamf_view_get_name(BAMF_VIEW(window));
+  }
 
-    if (label.empty())
+  if (!label)
+  {
+    BamfApplication* app = bamf_matcher_get_active_application(_matcher);
+    if (BAMF_IS_APPLICATION(app))
     {
-      BamfApplication* app;
-      app = bamf_matcher_get_application_for_window(_matcher, window);
+      const gchar*     filename;
 
-      if (BAMF_IS_APPLICATION(app))
+      filename = bamf_application_get_desktop_file(app);
+
+      if (filename && g_strcmp0(filename, "") != 0)
       {
-        view = reinterpret_cast<BamfView*>(app);
-        label = glib::String(bamf_view_get_name(view)).Str();
+        GDesktopAppInfo* info;
+
+        info = g_desktop_app_info_new_from_filename(bamf_application_get_desktop_file(app));
+
+        if (info)
+        {
+          label = g_strdup(g_app_info_get_display_name(G_APP_INFO(info)));
+          g_object_unref(info);
+        }
+        else
+        {
+          g_warning("Unable to get GDesktopAppInfo for %s",
+                    bamf_application_get_desktop_file(app));
+        }
+      }
+
+      if (label == nullptr)
+      {
+        BamfView* active_view;
+
+        active_view = (BamfView*)bamf_matcher_get_active_window(_matcher);
+        if (BAMF_IS_VIEW(active_view))
+          label = bamf_view_get_name(active_view);
+        else
+          label = g_strdup("");
       }
     }
-
-    if (label.empty())
+    else
     {
-      view = reinterpret_cast<BamfView*>(window);
-      label = glib::String(bamf_view_get_name(view)).Str();
+      label = g_strdup(" ");
     }
   }
+
+  char *escaped = g_markup_escape_text(label, -1);
+  g_free(label);
+  label = g_strdup_printf("<b>%s</b>", escaped);
+  g_free(escaped);
 
   return label;
 }
 
-std::string PanelMenuView::GetMaximizedViewName(bool use_appname)
+void PanelMenuView::DrawText(cairo_t *cr_real,
+                             int &x, int y, int width, int height,
+                             const char* font_desc,
+                             const char* label,
+                             int increase_size
+                             )
 {
-  Window maximized = GetMaximizedWindow();
-  BamfWindow* window = nullptr;
-  std::string label;
+  PangoLayout*          layout = nullptr;
+  PangoFontDescription* desc = nullptr;
+  GtkSettings*          settings = gtk_settings_get_default();
+  cairo_t*              cr;
+  cairo_pattern_t*      linpat;
+  GdkScreen*            screen = gdk_screen_get_default();
+  int                   dpi = 0;
+  const int             fading_pixels = 35;
+  char                 *font_description = g_strdup(font_desc);
 
-  if (maximized != 0)
-  {
-    GList* windows = bamf_matcher_get_windows(_matcher);
+  int  text_width = 0;
+  int  text_height = 0;
+  int  text_space = 0;
 
-    for (GList* l = windows; l; l = l->next)
+  {  // Find out dimensions first
+    GConfClient* client = gconf_client_get_default();
+    PangoContext* cxt;
+    PangoRectangle log_rect;
+
+    cr = _util_cg.GetContext();
+
+    g_object_get(settings, "gtk-xft-dpi", &dpi, nullptr);
+
+    font_description = gconf_client_get_string(client, WINDOW_TITLE_FONT_KEY.c_str(), nullptr);
+    desc = pango_font_description_from_string(font_description);
+
+    if (font_desc)
     {
-      if (!BAMF_IS_WINDOW(l->data))
-        continue;
+      int size = pango_font_description_get_size(desc);
+      size /= pango_font_description_get_size_is_absolute(desc) ? 1 : PANGO_SCALE;
 
-      auto win = static_cast<BamfWindow*>(l->data);
+      // Adjust y depending on size of the font
+      y -= ((unsigned int)(size - 9)) / 2;
 
-      if (bamf_window_get_xid(win) == maximized)
-      {
-        window = win;
-        break;
-      }
+      size += increase_size;
+
+      char* description = g_strdup_printf("%s %d", font_desc, size);
+      pango_font_description_free(desc);
+      desc = pango_font_description_from_string(description);
+      g_free(description);
     }
 
-    g_list_free(windows);
+    layout = pango_cairo_create_layout(cr);
+    pango_layout_set_font_description(layout, desc);
+    pango_layout_set_markup(layout, label, -1);
+
+    cxt = pango_layout_get_context(layout);
+    pango_cairo_context_set_font_options(cxt, gdk_screen_get_font_options(screen));
+    pango_cairo_context_set_resolution(cxt, (float)dpi / (float)PANGO_SCALE);
+    pango_layout_context_changed(layout);
+
+    pango_layout_get_extents(layout, nullptr, &log_rect);
+    text_width = log_rect.width / PANGO_SCALE;
+    text_height = log_rect.height / PANGO_SCALE;
+
+    pango_font_description_free(desc);
+    g_free(font_description);
+    cairo_destroy(cr);
+    g_object_unref(client);
   }
 
-  if (BAMF_IS_WINDOW(window))
-  {
-    BamfView* view = reinterpret_cast<BamfView*>(window);
-    label = glib::String(bamf_view_get_name(view)).Str();
+  { // Draw the text
+    GtkStyleContext* style_context = panel::Style::Instance().GetStyleContext();
+    text_space = width - x;
+    cr = cr_real;
 
-    if (use_appname || label.empty())
+    gtk_style_context_save(style_context);
+
+    GtkWidgetPath* widget_path = gtk_widget_path_new();
+    gtk_widget_path_iter_set_name(widget_path, -1 , "UnityPanelWidget");
+    gtk_widget_path_append_type(widget_path, GTK_TYPE_MENU_BAR);
+    gtk_widget_path_append_type(widget_path, GTK_TYPE_MENU_ITEM);
+
+    gtk_style_context_set_path(style_context, widget_path);
+    gtk_style_context_add_class(style_context, GTK_STYLE_CLASS_MENUBAR);
+    gtk_style_context_add_class(style_context, GTK_STYLE_CLASS_MENUITEM);
+
+    y += (height - text_height) / 2;
+
+    pango_cairo_update_layout(cr, layout);
+
+    if (text_width > text_space)
     {
-      BamfApplication* app = bamf_matcher_get_application_for_window(_matcher, window);
+      int out_pixels = text_width - text_space;
+      int fading_width = out_pixels < fading_pixels ? out_pixels : fading_pixels;
 
-      if (BAMF_IS_APPLICATION(app))
-        view = reinterpret_cast<BamfView*>(app);
+      cairo_push_group(cr);
+      gtk_render_layout(style_context, cr, x, y, layout);
+      cairo_pop_group_to_source(cr);
 
-      label = glib::String(bamf_view_get_name(view)).Str();
+      linpat = cairo_pattern_create_linear(width - fading_width, y, width, y);
+      cairo_pattern_add_color_stop_rgba(linpat, 0, 0, 0, 0, 1);
+      cairo_pattern_add_color_stop_rgba(linpat, 1, 0, 0, 0, 0);
+      cairo_mask(cr, linpat);
+
+      cairo_pattern_destroy(linpat);
     }
+    else
+    {
+      gtk_render_layout(style_context, cr, x, y, layout);
+    }
+
+    x += text_width;
+
+    gtk_widget_path_free(widget_path);
+    gtk_style_context_restore(style_context);
   }
 
-  if (label.empty() && _is_integrated && !DrawMenus() && _integrated_menu)
-    label = DESKTOP_NAME;
-
-  return label;
+  if (layout)
+    g_object_unref(layout);
 }
 
-void PanelMenuView::DrawText(cairo_t *cr_real, nux::Geometry const& geo, std::string const& label)
+void
+PanelMenuView::Refresh()
 {
-  using namespace panel;
-  cairo_t* cr;
-  cairo_pattern_t* linpat;
-  const int fading_pixels = 35;
-  int x = _padding + geo.x;
-  int y = geo.y;
-
-  int text_width = 0;
-  int text_height = 0;
-  int text_space = 0;
-
-  // Find out dimensions first
-  GdkScreen* screen = gdk_screen_get_default();
-  PangoContext* cxt;
-  PangoRectangle log_rect;
-  PangoFontDescription* desc;
-
-  nux::CairoGraphics util_cg(CAIRO_FORMAT_ARGB32, 1, 1);
-  cr = util_cg.GetContext();
-
-  int dpi = Style::Instance().GetTextDPI();
-
-  std::string font_description(Style::Instance().GetFontDescription(PanelItem::TITLE));
-  desc = pango_font_description_from_string(font_description.c_str());
-
-  glib::Object<PangoLayout> layout(pango_cairo_create_layout(cr));
-  pango_layout_set_font_description(layout, desc);
-  pango_layout_set_markup(layout, label.c_str(), -1);
-
-  cxt = pango_layout_get_context(layout);
-  pango_cairo_context_set_font_options(cxt, gdk_screen_get_font_options(screen));
-  pango_cairo_context_set_resolution(cxt, dpi / static_cast<float>(PANGO_SCALE));
-  pango_layout_context_changed(layout);
-
-  pango_layout_get_extents(layout, nullptr, &log_rect);
-  text_width = log_rect.width / PANGO_SCALE;
-  text_height = log_rect.height / PANGO_SCALE;
-
-  pango_font_description_free(desc);
-  cairo_destroy(cr);
-
-  // Draw the text
-  GtkStyleContext* style_context = Style::Instance().GetStyleContext();
-  text_space = geo.width - x;
-  cr = cr_real;
-  cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
-
-  gtk_style_context_save(style_context);
-
-  GtkWidgetPath* widget_path = gtk_widget_path_new();
-  gtk_widget_path_iter_set_name(widget_path, -1 , "UnityPanelWidget");
-  gtk_widget_path_append_type(widget_path, GTK_TYPE_MENU_BAR);
-  gtk_widget_path_append_type(widget_path, GTK_TYPE_MENU_ITEM);
-
-  gtk_style_context_set_path(style_context, widget_path);
-  gtk_style_context_add_class(style_context, GTK_STYLE_CLASS_MENUBAR);
-  gtk_style_context_add_class(style_context, GTK_STYLE_CLASS_MENUITEM);
-
-  y += (geo.height - text_height) / 2;
-
-  pango_cairo_update_layout(cr, layout);
-
-  if (text_width > text_space)
-  {
-    int out_pixels = text_width - text_space;
-    int fading_width = out_pixels < fading_pixels ? out_pixels : fading_pixels;
-
-    cairo_push_group(cr);
-    gtk_render_layout(style_context, cr, x, y, layout);
-    cairo_pop_group_to_source(cr);
-
-    linpat = cairo_pattern_create_linear(geo.width - fading_width, y, geo.width, y);
-    cairo_pattern_add_color_stop_rgba(linpat, 0, 0, 0, 0, 1);
-    cairo_pattern_add_color_stop_rgba(linpat, 1, 0, 0, 0, 0);
-    cairo_mask(cr, linpat);
-
-    cairo_pattern_destroy(linpat);
-  }
-  else
-  {
-    gtk_render_layout(style_context, cr, x, y, layout);
-  }
-
-  x += text_width;
-
-  gtk_widget_path_free(widget_path);
-  gtk_style_context_restore(style_context);
-}
-
-void PanelMenuView::Refresh(bool force)
-{
-  nux::Geometry const& geo = GetGeometry();
+  nux::Geometry         geo = GetGeometry();
 
   // We can get into a race that causes the geometry to be wrong as there hasn't been a
   // layout cycle before the first callback. This is to protect from that.
   if (geo.width > _monitor_geo.width)
     return;
 
-  auto win_manager = WindowManager::Default();
-  std::string new_title;
+  int  x = 0;
+  int  y = 0;
+  int  width = geo.width;
+  int  height = geo.height;
 
-  if (win_manager->IsScaleActive())
-  {
-    new_title = GetActiveViewName(true);
-  }
-  else if (win_manager->IsExpoActive())
-  {
-    new_title = DESKTOP_NAME;
-  }
-  else if (_is_integrated)
-  {
-    Window maximized = GetMaximizedWindow();
-    new_title = GetMaximizedViewName();
-
-    _window_buttons->SetControlledWindow(maximized);
-    _window_buttons->SetFocusedState(_active_xid == maximized);
-
-    if (_integrated_menu && DrawMenus())
-    {
-      _integrated_menu->SetLabel(new_title);
-      _integrated_menu->SetControlledWindow(maximized);
-      _integrated_menu->SetFocusedState(_active_xid == maximized);
-
-      return;
-    }
-  }
-  else if (!_switcher_showing)
-  {
-    new_title = GetActiveViewName();
-    _window_buttons->SetControlledWindow(_active_xid);
-  }
-
-  if (!_switcher_showing || _is_integrated)
-  {
-    if (_panel_title != new_title)
-    {
-      _panel_title = new_title;
-    }
-    else if (!force && _last_geo == geo && _title_texture)
-    {
-      // No need to redraw the title, let's save some CPU time!
-      return;
-    }
-  }
-
-  nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, geo.width, geo.height);
+  nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, width, height);
   cairo_t* cr = cairo_graphics.GetContext();
+  cairo_set_line_width(cr, 1);
 
   cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
   cairo_paint(cr);
 
-  if (!_panel_title.empty())
+  cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
+
+  x = _padding;
+  y = 0;
+
+  if (_panel_title)
   {
-    glib::String escaped(g_markup_escape_text(_panel_title.c_str(), -1));
-
-    std::ostringstream bold_label;
-    bold_label << "<b>" << escaped.Str() << "</b>";
-
-    DrawText(cr, geo, bold_label.str());
+    DrawText(cr, x, y, width, height, nullptr, _panel_title);
+  }
+  else
+  {
+    char* title = GetActiveViewName();
+    DrawText(cr, x, y, width, height, nullptr, title);
+    g_free(title);
   }
 
   cairo_destroy(cr);
 
-  _title_texture = texture_ptr_from_cairo_graphics(cairo_graphics);
+  nux::BaseTexture* texture2D = texture_from_cairo_graphics(cairo_graphics);
+
+  if (_title_layer)
+    delete _title_layer;
+
+  nux::TexCoordXForm texxform;
+  texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+  texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
+
+  nux::ROPConfig rop;
+  rop.Blend = true;
+  rop.SrcBlend = GL_ONE;
+  rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+  _title_layer = new nux::TextureLayer(texture2D->GetDeviceTexture(),
+                                       texxform,
+                                       nux::color::White,
+                                       true,
+                                       rop);
+  texture2D->UnReference();
 }
 
-void PanelMenuView::OnActiveChanged(PanelIndicatorEntryView* view, bool is_active)
+void
+PanelMenuView::OnActiveChanged(PanelIndicatorEntryView* view,
+                               bool                           is_active)
 {
   if (is_active)
-  {
     _last_active_view = view;
-  }
   else
   {
     if (_last_active_view == view)
@@ -1026,62 +944,37 @@ void PanelMenuView::OnActiveChanged(PanelIndicatorEntryView* view, bool is_activ
   FullRedraw();
 }
 
-void PanelMenuView::OnEntryAdded(indicator::Entry::Ptr const& entry)
+void
+PanelMenuView::OnEntryAdded(unity::indicator::Entry::Ptr const& entry)
 {
-  PanelIndicatorEntryView* view;
-
-  if (!_is_integrated)
-  {
-    view = new PanelIndicatorEntryView(entry, MENU_ENTRIES_PADDING, IndicatorEntryType::MENU);
-    view->mouse_enter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
-    view->mouse_leave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
-  }
-  else
-  {
-    if (_integrated_menu)
-    {
-      LOG_ERROR(logger) << "Another integrated menu has already been defined, this shouldn't happen!";
-    }
-
-    _integrated_menu = new PanelIndicatorAppmenuView(entry);
-    view = _integrated_menu;
-    Refresh();
-  }
+  auto view = AddEntry(entry, 6, IndicatorEntryPosition::END, IndicatorEntryType::MENU);
 
   entry->show_now_changed.connect(sigc::mem_fun(this, &PanelMenuView::UpdateShowNow));
+
   view->active_changed.connect(sigc::mem_fun(this, &PanelMenuView::OnActiveChanged));
-
-  AddEntryView(view, IndicatorEntryPosition::END);
-  SetMaximumEntriesWidth(GetAbsoluteWidth() - _window_buttons->GetContentWidth());
+  view->mouse_enter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
+  view->mouse_leave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
 }
 
-void PanelMenuView::OnEntryRemoved(std::string const& entry_id)
+void
+PanelMenuView::AllMenusClosed()
 {
-  if (_integrated_menu && _integrated_menu->GetEntryID() == entry_id)
-    _integrated_menu = nullptr;
-
-  RemoveEntry(entry_id);
-}
-
-void PanelMenuView::AllMenusClosed()
-{
+  auto mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
+  _is_inside = GetAbsoluteGeometry().IsPointInside(mouse.x, mouse.y);
   _last_active_view = nullptr;
 
-  if (!_is_integrated)
-  {
-    auto mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
-    _is_inside = GetAbsoluteGeometry().IsPointInside(mouse.x, mouse.y);
-    FullRedraw();
-  }
+  FullRedraw();
 }
 
-void PanelMenuView::OnNameChanged(BamfView* bamf_view, gchar* new_name, gchar* old_name)
+void
+PanelMenuView::OnNameChanged(BamfView* bamf_view, gchar* new_name, gchar* old_name)
 {
   Refresh();
   FullRedraw();
 }
 
-gboolean PanelMenuView::OnNewAppShow(PanelMenuView* self)
+gboolean
+PanelMenuView::OnNewAppShow(PanelMenuView* self)
 {
   BamfApplication* active_app = bamf_matcher_get_active_application(self->_matcher);
   self->_new_application = glib::Object<BamfApplication>(active_app, glib::AddRef());
@@ -1102,7 +995,8 @@ gboolean PanelMenuView::OnNewAppShow(PanelMenuView* self)
   return FALSE;
 }
 
-gboolean PanelMenuView::OnNewAppHide(PanelMenuView* self)
+gboolean
+PanelMenuView::OnNewAppHide(PanelMenuView* self)
 {
   self->OnViewClosed(self->_matcher, BAMF_VIEW(self->_new_application.RawPtr()));
   self->_new_app_hide_id = 0;
@@ -1112,7 +1006,8 @@ gboolean PanelMenuView::OnNewAppHide(PanelMenuView* self)
   return FALSE;
 }
 
-void PanelMenuView::OnViewOpened(BamfMatcher *matcher, BamfView *view)
+void
+PanelMenuView::OnViewOpened(BamfMatcher *matcher, BamfView *view)
 {
   /* FIXME: here we should also check for if the view is also user_visible
    * but it seems that BAMF doesn't handle this correctly after some
@@ -1123,38 +1018,29 @@ void PanelMenuView::OnViewOpened(BamfMatcher *matcher, BamfView *view)
   _new_apps.push_front(glib::Object<BamfApplication>(BAMF_APPLICATION(view), glib::AddRef()));
 }
 
-void PanelMenuView::OnViewClosed(BamfMatcher *matcher, BamfView *view)
+void
+PanelMenuView::OnViewClosed(BamfMatcher *matcher, BamfView *view)
 {
-  if (BAMF_IS_APPLICATION(view))
+  if (!BAMF_IS_APPLICATION(view))
+    return;
+
+  BamfApplication* app = BAMF_APPLICATION(view);
+
+  if (std::find(_new_apps.begin(), _new_apps.end(), app) != _new_apps.end())
   {
-    auto app = reinterpret_cast<BamfApplication*>(view);
+    _new_apps.remove(glib::Object<BamfApplication>(app, glib::AddRef()));
 
-    if (std::find(_new_apps.begin(), _new_apps.end(), app) != _new_apps.end())
-    {
-      _new_apps.remove(glib::Object<BamfApplication>(app, glib::AddRef()));
-
-      if (_new_application == app)
-        _new_application = nullptr;
-    }
-    else if (_new_apps.empty())
-    {
+    if (_new_application == app || _new_apps.empty())
       _new_application = nullptr;
-    }
-  }
-  else if (BAMF_IS_WINDOW(view))
-  {
-    /* FIXME, this can be removed when window_unmapped WindowManager signal
-     * will emit the proper xid */
-    Window xid = bamf_window_get_xid(reinterpret_cast<BamfWindow*>(view));
-    OnWindowUnmapped(xid);
   }
 }
 
-void PanelMenuView::OnActiveAppChanged(BamfMatcher *matcher,
-                                       BamfApplication* old_app,
-                                       BamfApplication* new_app)
+void
+PanelMenuView::OnActiveAppChanged(BamfMatcher *matcher,
+                                  BamfApplication* old_app,
+                                  BamfApplication* new_app)
 {
-  if (BAMF_IS_APPLICATION(new_app) && !_is_integrated)
+  if (BAMF_IS_APPLICATION(new_app))
   {
     if (std::find(_new_apps.begin(), _new_apps.end(), new_app) != _new_apps.end())
     {
@@ -1194,9 +1080,10 @@ void PanelMenuView::OnActiveAppChanged(BamfMatcher *matcher,
   }
 }
 
-void PanelMenuView::OnActiveWindowChanged(BamfMatcher *matcher,
-                                          BamfView* old_view,
-                                          BamfView* new_view)
+void
+PanelMenuView::OnActiveWindowChanged(BamfMatcher *matcher,
+                                     BamfView* old_view,
+                                     BamfView* new_view)
 {
   _show_now_activated = false;
   _is_maximized = false;
@@ -1210,17 +1097,15 @@ void PanelMenuView::OnActiveWindowChanged(BamfMatcher *matcher,
 
   if (BAMF_IS_WINDOW(new_view))
   {
-    WindowManager *wm = WindowManager::Default();
     BamfWindow* window = BAMF_WINDOW(new_view);
-    guint32 xid = bamf_window_get_xid(window);
-    _active_xid = xid;
-    _is_maximized = wm->IsWindowMaximized(xid);
-    nux::Geometry const& geo = wm->GetWindowGeometry(xid);
+    guint32 xid = _active_xid = bamf_window_get_xid(window);
+    _is_maximized = WindowManager::Default()->IsWindowMaximized(xid);
+    nux::Geometry geo = WindowManager::Default()->GetWindowGeometry(xid);
 
     if (bamf_window_get_window_type(window) == BAMF_WINDOW_DESKTOP)
       _we_control_active = true;
     else
-      _we_control_active = _monitor_geo.IsPointInside(geo.x + (geo.width / 2), geo.y);
+      _we_control_active = UScreen::GetDefault()->GetMonitorGeometry(_monitor).IsPointInside(geo.x + (geo.width / 2), geo.y);
 
     if (_decor_map.find(xid) == _decor_map.end())
     {
@@ -1229,9 +1114,9 @@ void PanelMenuView::OnActiveWindowChanged(BamfMatcher *matcher,
       // if we've just started tracking this window and it is maximized, let's
       // make sure it's undecorated just in case it slipped by us earlier
       // (I'm looking at you, Chromium!)
-      if (_is_maximized && wm->IsWindowDecorated(xid))
+      if (_is_maximized && WindowManager::Default ()->IsWindowDecorated(xid))
       {
-        wm->Undecorate(xid);
+        WindowManager::Default()->Undecorate(xid);
         _maximized_set.insert(xid);
       }
     }
@@ -1242,134 +1127,103 @@ void PanelMenuView::OnActiveWindowChanged(BamfMatcher *matcher,
     // register callback for new view
     _view_name_changed_signal.Connect(new_view, "name-changed",
                                       sigc::mem_fun(this, &PanelMenuView::OnNameChanged));
-
-    if (!_is_integrated)
-    {
-      _window_buttons->SetControlledWindow(_is_maximized ? _active_xid : 0);
-    }
   }
 
   Refresh();
   FullRedraw();
 }
 
-void PanelMenuView::OnSpreadInitiate()
+void
+PanelMenuView::OnSpreadInitiate()
 {
   /*foreach (guint32 &xid, windows)
   {
-    if (WindowManager::Default()->IsWindowMaximized(xid))
-      WindowManager::Default()->Decorate(xid);
+    if (WindowManager::Default ()->IsWindowMaximized (xid))
+      WindowManager::Default ()->Decorate (xid);
   }*/
-
-  Refresh();
-  QueueDraw();
 }
 
-void PanelMenuView::OnSpreadTerminate()
+void
+PanelMenuView::OnSpreadTerminate()
 {
   /*foreach (guint32 &xid, windows)
   {
-    if (WindowManager::Default()->IsWindowMaximized(xid))
-      WindowManager::Default()->Undecorate(xid);
+    if (WindowManager::Default ()->IsWindowMaximized (xid))
+      WindowManager::Default ()->Undecorate (xid);
   }*/
-
-  Refresh();
-  QueueDraw();
 }
 
-void PanelMenuView::OnExpoInitiate()
-{
-  Refresh();
-  QueueDraw();
-}
-
-void PanelMenuView::OnExpoTerminate()
-{
-  Refresh();
-  QueueDraw();
-}
-
-void PanelMenuView::OnWindowMinimized(guint32 xid)
+void
+PanelMenuView::OnWindowMinimized(guint32 xid)
 {
   if (WindowManager::Default()->IsWindowMaximized(xid))
   {
     WindowManager::Default()->Decorate(xid);
     _maximized_set.erase(xid);
-
-    Refresh();
-    QueueDraw();
   }
 }
 
-void PanelMenuView::OnWindowUnminimized(guint32 xid)
+void
+PanelMenuView::OnWindowUnminimized(guint32 xid)
 {
   if (WindowManager::Default()->IsWindowMaximized(xid))
   {
     WindowManager::Default()->Undecorate(xid);
     _maximized_set.insert(xid);
-
-    Refresh();
-    QueueDraw();
   }
 }
 
-void PanelMenuView::OnWindowUnmapped(guint32 xid)
+void
+PanelMenuView::OnWindowUnmapped(guint32 xid)
 {
-  // FIXME: compiz doesn't give us a valid xid (is always 0 on unmap)
-  // we need to do this again on BamfView closed signal.
-  if (_maximized_set.find(xid) != _maximized_set.end())
+  if (WindowManager::Default()->IsWindowMaximized(xid))
   {
     WindowManager::Default()->Decorate(xid);
     _maximized_set.erase(xid);
-    _decor_map.erase(xid);
-
-    Refresh();
-    QueueDraw();
   }
 }
 
-void PanelMenuView::OnWindowMapped(guint32 xid)
+void
+PanelMenuView::OnWindowMapped(guint32 xid)
 {
   if (WindowManager::Default()->IsWindowMaximized(xid))
   {
     WindowManager::Default()->Undecorate(xid);
     _maximized_set.insert(xid);
-
-    Refresh();
-    QueueDraw();
   }
 }
 
-void PanelMenuView::OnWindowDecorated(guint32 xid)
+void
+PanelMenuView::OnWindowDecorated(guint32 xid)
 {
   _decor_map[xid] = true;
 
   if (_maximized_set.find(xid) != _maximized_set.end ())
   {
-    WindowManager::Default()->Undecorate(xid);
+    WindowManager::Default ()->Undecorate(xid);
   }
 }
 
-void PanelMenuView::OnWindowUndecorated(guint32 xid)
+void
+PanelMenuView::OnWindowUndecorated(guint32 xid)
 {
   _decor_map[xid] = false;
 }
 
-void PanelMenuView::OnWindowMaximized(guint xid)
+void
+PanelMenuView::OnWindowMaximized(guint xid)
 {
+  BamfWindow* window;
   bool updated = false;
-  bool is_active = (_active_xid == xid);
 
-  if (is_active)
+  window = bamf_matcher_get_active_window(_matcher);
+  if (BAMF_IS_WINDOW(window) && bamf_window_get_xid(window) == xid)
   {
-    if (!_is_integrated)
-    {
-      // We need to update the _is_inside state in the case of maximization by grab
-      auto mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
-      _is_inside = GetAbsoluteGeometry().IsPointInside(mouse.x, mouse.y);
-    }
-
     _is_maximized = true;
+
+    // We need to update the _is_inside state in the case of maximization by grab
+    auto mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
+    _is_inside = GetAbsoluteGeometry().IsPointInside(mouse.x, mouse.y);
     updated = true;
   }
 
@@ -1381,7 +1235,7 @@ void PanelMenuView::OnWindowMaximized(guint xid)
 
   _maximized_set.insert(xid);
 
-  if (updated || _is_integrated)
+  if (updated)
   {
     Refresh();
     FullRedraw();
@@ -1391,10 +1245,13 @@ void PanelMenuView::OnWindowMaximized(guint xid)
 void
 PanelMenuView::OnWindowRestored(guint xid)
 {
+  BamfWindow* window;
+
   if (_maximized_set.find(xid) == _maximized_set.end())
     return;
 
-  if (_active_xid == xid)
+  window = bamf_matcher_get_active_window(_matcher);
+  if (BAMF_IS_WINDOW(window) && bamf_window_get_xid(window) == xid)
   {
     _is_maximized = false;
     _is_grabbed = false;
@@ -1412,9 +1269,9 @@ PanelMenuView::OnWindowRestored(guint xid)
 gboolean
 PanelMenuView::UpdateActiveWindowPosition(PanelMenuView* self)
 {
-  auto wm = WindowManager::Default();
-  nux::Geometry const& window_geo = wm->GetWindowGeometry(self->_active_xid);
-  nux::Geometry const& intersect = self->_monitor_geo.Intersect(window_geo);
+  auto window_geo = WindowManager::Default()->GetWindowGeometry(self->_active_xid);
+  auto monitor_geo = UScreen::GetDefault()->GetMonitorGeometry(self->_monitor);
+  auto intersect = monitor_geo.Intersect(window_geo);
 
   self->_we_control_active = (intersect.width > window_geo.width/4 &&
                               intersect.height > window_geo.height/4);
@@ -1440,183 +1297,162 @@ PanelMenuView::OnWindowMoved(guint xid)
   }
 }
 
-Window
+void
+PanelMenuView::OnCloseClicked()
+{
+  if (_places_showing)
+  {
+    ubus_server_send_message(ubus_server_get_default(), UBUS_PLACE_VIEW_CLOSE_REQUEST, nullptr);
+  }
+  else
+  {
+    BamfWindow* window;
+
+    window = bamf_matcher_get_active_window(_matcher);
+    if (BAMF_IS_WINDOW(window))
+    {
+      WindowManager::Default()->Close(bamf_window_get_xid(window));
+      NeedRedraw();
+    }
+  }
+}
+
+void
+PanelMenuView::OnMinimizeClicked()
+{
+  if (_places_showing)
+  {
+    // no action when dash is opened, LP bug #838875
+    return;
+  }
+  else
+  {
+    BamfWindow* window;
+
+    window = bamf_matcher_get_active_window(_matcher);
+    if (BAMF_IS_WINDOW(window))
+    {
+      WindowManager::Default()->Minimize(bamf_window_get_xid(window));
+      NeedRedraw();
+    }
+  }
+}
+
+void
+PanelMenuView::OnRestoreClicked()
+{
+  if (_places_showing)
+  {
+    if (dash::Settings::Instance().GetFormFactor() == dash::FormFactor::DESKTOP)
+      dash::Settings::Instance().SetFormFactor(dash::FormFactor::NETBOOK);
+    else
+      dash::Settings::Instance().SetFormFactor(dash::FormFactor::DESKTOP);
+  }
+  else
+  {
+    BamfWindow* window;
+
+    window = bamf_matcher_get_active_window(_matcher);
+    if (BAMF_IS_WINDOW(window))
+    {
+      WindowManager::Default()->Restore(bamf_window_get_xid(window));
+      NeedRedraw();
+    }
+  }
+}
+
+guint32
 PanelMenuView::GetMaximizedWindow()
 {
-  Window window_xid = 0;
-  auto wm = WindowManager::Default();
-  std::vector<Window> const& our_xids = nux::XInputWindow::NativeHandleList();
+  guint32 window_xid = 0;
+  nux::Geometry monitor =  UScreen::GetDefault()->GetMonitorGeometry(_monitor);
 
   // Find the front-most of the maximized windows we are controlling
   for (auto xid : _maximized_set)
   {
     // We can safely assume only the front-most is visible
-    if (wm->IsWindowOnCurrentDesktop(xid) && !wm->IsWindowObscured(xid) &&
-        wm->IsWindowVisible(xid) &&
-        std::find(our_xids.begin(), our_xids.end(), xid) == our_xids.end())
+    if (WindowManager::Default()->IsWindowOnCurrentDesktop(xid)
+        && !WindowManager::Default()->IsWindowObscured(xid))
     {
-      nux::Geometry const& geo = wm->GetWindowGeometry(xid);
-
-      if (_monitor_geo.IsPointInside(geo.x + (geo.width / 2), geo.y))
+      nux::Geometry geo = WindowManager::Default()->GetWindowGeometry(xid);
+      if (monitor.IsPointInside(geo.x + (geo.width / 2), geo.y))
       {
         window_xid = xid;
         break;
       }
     }
   }
-
   return window_xid;
 }
 
-void PanelMenuView::OnMaximizedActivate(int x, int y)
+void
+PanelMenuView::OnMaximizedGrabStart(int x, int y, unsigned long button_flags, unsigned long)
 {
-  Window maximized = GetMaximizedWindow();
+  Window maximized_win;
+  if (nux::GetEventButton(button_flags) != 1 || _places_showing)
+    return;
 
-  if (maximized != 0)
+  // When Start dragging the panelmenu of a maximized window, change cursor
+  // to simulate the dragging, waiting to go out of the panel area.
+  //
+  // This is a workaround to avoid that the grid plugin would be fired
+  // showing the window shape preview effect. See bug #838923
+
+  maximized_win = GetMaximizedWindow ();
+
+  if (maximized_win != 0)
   {
-    WindowManager::Default()->Activate(maximized);
-  }
-
-  /* If the user clicked over the integrated_menu we need to adjust
-   * the coordinates we got, because they're relative to the grab area,
-   * but due to the workaround we used, the point clicked could be
-   * also in the integrated-menu geometry, so we can easiliy set them
-   * correctly to check where we are and to eventually activate the
-   * integrated menu */
-  if (_is_integrated && _integrated_menu)
-  {
-    x += _titlebar_grab_area->GetAbsoluteX();
-    y += _titlebar_grab_area->GetAbsoluteY();
-
-    if (_integrated_menu->GetAbsoluteGeometry().IsPointInside(x, y))
-    {
-      _integrated_menu->Activate();
-    }
+    /* Always activate the window in case it is on another monitor */
+    WindowManager::Default ()->Activate (maximized_win);
+    _panel_titlebar_grab_area->SetGrabbed(true);
   }
 }
 
 void
-PanelMenuView::OnMaximizedRestore(int x, int y)
+PanelMenuView::OnMaximizedGrabMove(int x, int y, int, int, unsigned long button_flags, unsigned long)
 {
-  if (_dash_showing)
+//  FIXME nux doesn't export it with drag event.
+//  if (nux::GetEventButton(button_flags) != 1)
+//    return;
+
+  // We use this, due to the problem above
+  if (!_panel_titlebar_grab_area->IsGrabbed())
     return;
 
-  Window maximized = GetMaximizedWindow();
-
-  if (maximized != 0)
-  {
-    WindowManager::Default()->Restore(maximized);
-    _is_inside = true;
-  }
-}
-
-void PanelMenuView::OnMaximizedLower(int x, int y)
-{
-  if (_dash_showing)
-    return;
-
-  Window maximized = GetMaximizedWindow();
-
-  if (maximized != 0)
-  {
-    WindowManager::Default()->Lower(maximized);
-  }
-}
-
-void PanelMenuView::OnMaximizedGrabStart(int x, int y)
-{
-  /* When Start dragging the panelmenu of a maximized window, change cursor
-   * to simulate the dragging, waiting to go out of the panel area.
-   *
-   * This is a workaround to avoid that the grid plugin would be fired
-   * showing the window shape preview effect. See bug #838923 */
-
-  Window maximized = GetMaximizedWindow();
-
-  if (maximized != 0)
-  {
-    /* Always activate the window in case it is on another monitor */
-    WindowManager::Default()->Activate(maximized);
-    _titlebar_grab_area->SetGrabbed(true);
-  }
-}
-
-void PanelMenuView::OnMaximizedGrabMove(int x, int y)
-{
   auto panel = static_cast<nux::BaseWindow*>(GetTopLevelViewWindow());
 
   if (!panel)
     return;
 
-  /* Adjusting the x, y coordinates to get the absolute values */
-  x += _titlebar_grab_area->GetAbsoluteX();
-  y += _titlebar_grab_area->GetAbsoluteY();
+  x += _panel_titlebar_grab_area->GetAbsoluteX();
+  y += _panel_titlebar_grab_area->GetAbsoluteY();
 
-  /* If the user clicked over the integrated_menu we need to adjust
-   * the coordinates again, because they are still relative to the grab area */
-  if (_is_integrated && _integrated_menu)
+  guint32 window_xid = GetMaximizedWindow();
+
+  // When the drag goes out from the Panel, start the real movement.
+  //
+  // This is a workaround to avoid that the grid plugin would be fired
+  // showing the window shape preview effect. See bug #838923
+  if (window_xid != 0 && panel && !panel->GetAbsoluteGeometry().IsPointInside(x, y))
   {
-    if (_integrated_menu->GetAbsoluteGeometry().IsPointInside(x, y))
-    {
-      x += _integrated_menu->GetAbsoluteX();
-      y += _integrated_menu->GetAbsoluteY();
-    }
-  }
+    _panel_titlebar_grab_area->SetGrabbed(false);
 
-  Window maximized = GetMaximizedWindow();
-
-  /* When the drag goes out from the Panel, start the real movement.
-   *
-   * This is a workaround to avoid that the grid plugin would be fired
-   * showing the window shape preview effect. See bug #838923 */
-  if (maximized != 0 && panel)
-  {
-    nux::Geometry const& panel_geo = panel->GetAbsoluteGeometry();
-
-    if (!panel_geo.IsPointInside(x, y))
-    {
-      auto wm = WindowManager::Default();
-      nux::Geometry const& restored_geo = wm->GetWindowSavedGeometry(maximized);
-      nux::Geometry const& workarea_geo = wm->GetWorkAreaGeometry(maximized);
-
-      /* By default try to restore the window horizontally-centered respect to the
-       * pointer position, if it doesn't fit on that area try to keep it into the
-       * current workarea as much as possible, but giving priority to the left border
-       * that shouldn't be never put out of the workarea */
-      int restore_x = x - (restored_geo.width * x / panel_geo.width);
-      int restore_y = y;
-
-      if (restore_x + restored_geo.width > workarea_geo.width)
-      {
-        restore_x = workarea_geo.x + workarea_geo.width - restored_geo.width;
-      }
-
-      if (restore_x < workarea_geo.x)
-      {
-        restore_x = workarea_geo.x;
-      }
-
-      wm->Activate(maximized);
-      wm->RestoreAt(maximized, restore_x, restore_y);
-
-      _is_inside = true;
-      _is_grabbed = true;
-      Refresh();
-      FullRedraw();
-
-      /* Ungrab the pointer and start the X move, to make the decorator handle it */
-      _titlebar_grab_area->SetGrabbed(false);
-      wm->StartMove(maximized, x, y);
-    }
+    WindowManager::Default()->Activate(window_xid);
+    _is_inside = true;
+    _is_grabbed = true;
+    Refresh();
+    FullRedraw();
+    WindowManager::Default()->StartMove(window_xid, x, y);
   }
 }
 
-void PanelMenuView::OnMaximizedGrabEnd(int x, int y)
+void
+PanelMenuView::OnMaximizedGrabEnd(int x, int y, unsigned long, unsigned long)
 {
-  _titlebar_grab_area->SetGrabbed(false);
+  _panel_titlebar_grab_area->SetGrabbed(false);
 
-  x += _titlebar_grab_area->GetAbsoluteX();
-  y += _titlebar_grab_area->GetAbsoluteY();
+  x += _panel_titlebar_grab_area->GetAbsoluteX();
+  y += _panel_titlebar_grab_area->GetAbsoluteY();
   _is_inside = GetAbsoluteGeometry().IsPointInside(x, y);
 
   if (!_is_inside)
@@ -1626,69 +1462,115 @@ void PanelMenuView::OnMaximizedGrabEnd(int x, int y)
   FullRedraw();
 }
 
+void
+PanelMenuView::OnMouseDoubleClicked(int x, int y, unsigned long button_flags, unsigned long)
+{
+  if (nux::GetEventButton(button_flags) != 1 || _places_showing)
+    return;
+
+  guint32 window_xid = GetMaximizedWindow();
+
+  if (window_xid != 0)
+  {
+    WindowManager::Default()->Restore(window_xid);
+    _is_inside = true;
+  }
+}
+
+void
+PanelMenuView::OnMouseClicked(int x, int y, unsigned long button_flags, unsigned long)
+{
+  if (nux::GetEventButton(button_flags) != 1 || _places_showing)
+    return;
+
+  guint32 window_xid = GetMaximizedWindow();
+
+  if (window_xid != 0)
+  {
+    WindowManager::Default()->Raise(window_xid);
+  }
+}
+
+void
+PanelMenuView::OnMouseMiddleClicked(int x, int y, unsigned long button_flags, unsigned long)
+{
+  if (nux::GetEventButton(button_flags) != 2 || _places_showing)
+    return;
+
+  guint32 window_xid = GetMaximizedWindow();
+
+  if (window_xid != 0)
+  {
+    WindowManager::Default()->Lower(window_xid);
+  }
+}
+
 // Introspectable
 std::string
 PanelMenuView::GetName() const
 {
-  return "panel.menu.view";
+  return "";
 }
 
 void PanelMenuView::AddProperties(GVariantBuilder* builder)
 {
-  variant::BuilderWrapper(builder)
-  .add(GetGeometry())
-  .add("integrated", _is_integrated)
-  .add("inside", _is_inside)
-  .add("grabbed", _is_grabbed)
-  .add("maximized", _is_maximized)
-  .add("own_window", _is_own_window)
-  .add("panel_title", _panel_title)
-  .add("integrated_panel_title", _integrated_menu ? _integrated_menu->GetLabel() : "")
-  .add("entries", entries_.size())
-  .add("monitor", _monitor)
-  .add("active_xid", _active_xid)
-  .add("draw_menus", DrawMenus())
-  .add("draw_window_buttons", DrawWindowButtons());
 }
 
-void PanelMenuView::OnSwitcherShown(GVariant* data)
+void PanelMenuView::OnPlaceViewShown(GVariant* data, PanelMenuView* self)
 {
-  if (!data)
+  self->_places_showing = true;
+  self->QueueDraw();
+}
+
+void PanelMenuView::OnPlaceViewHidden(GVariant* data, PanelMenuView* self)
+{
+  self->_places_showing = false;
+  self->QueueDraw();
+}
+
+void PanelMenuView::OnSwitcherShown(GVariant* data, PanelMenuView* self)
+{
+  if (!self || !data)
     return;
 
-  _switcher_showing = g_variant_get_boolean(data);
+  self->_switcher_showing = g_variant_get_boolean(data);
 
-  if (!_switcher_showing && !_is_integrated)
+  if (!self->_switcher_showing)
   {
     auto mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
-    _is_inside = GetAbsoluteGeometry().IsPointInside(mouse.x, mouse.y);
-    _panel_title = "";
+    self->_is_inside = self->GetAbsoluteGeometry().IsPointInside(mouse.x, mouse.y);
+
+    if (self->_panel_title)
+    {
+      g_free(self->_panel_title);
+      self->_panel_title = nullptr;
+    }
   }
   else
   {
-    _show_now_activated = false;
+    self->_show_now_activated = false;
   }
 
-  Refresh();
-  QueueDraw();
+  self->Refresh();
+  self->QueueDraw();
 }
 
-void PanelMenuView::OnSwitcherSelectionChanged(GVariant* data)
+void PanelMenuView::OnSwitcherSelectionChanged(GVariant* data, PanelMenuView* self)
 {
-  if (!data)
+  if (!self || !data)
     return;
 
-  _show_now_activated = false;
-  _switcher_showing = true;
+  if (self->_panel_title)
+    g_free(self->_panel_title);
 
-  const gchar *title = g_variant_get_string(data, 0);
-  _panel_title = (title ? title : "");
+  self->_panel_title = g_strdup(g_variant_get_string(data, 0));
 
-  Refresh();
-  QueueDraw();
+  self->Refresh();
+  self->QueueDraw();
 }
 
-gboolean PanelMenuView::UpdateShowNowWithDelay(PanelMenuView *self)
+gboolean
+PanelMenuView::UpdateShowNowWithDelay(PanelMenuView *self)
 {
   bool active = false;
 
@@ -1712,7 +1594,8 @@ gboolean PanelMenuView::UpdateShowNowWithDelay(PanelMenuView *self)
   return FALSE;
 }
 
-void PanelMenuView::UpdateShowNow(bool status)
+void
+PanelMenuView::UpdateShowNow(bool status)
 {
   /* When we get a show now event, if we are requested to show the menus,
    * we take the last incoming event and we wait for small delay (to avoid the
@@ -1720,14 +1603,10 @@ void PanelMenuView::UpdateShowNow(bool status)
    * If the status is false, we just check that the menus entries are hidden
    * and we remove any eventual delayed request */
 
-  if (_is_integrated)
-    return;
-
   if (!status && _show_now_activated)
   {
     _show_now_activated = false;
     QueueDraw();
-    return;
   }
 
   if (_update_show_now_id != 0)
@@ -1744,67 +1623,27 @@ void PanelMenuView::UpdateShowNow(bool status)
   }
 }
 
-void PanelMenuView::SetMonitor(int monitor)
+void
+PanelMenuView::SetMonitor(int monitor)
 {
   _monitor = monitor;
   _monitor_geo = UScreen::GetDefault()->GetMonitorGeometry(_monitor);
-
-  _maximized_set.clear();
-  GList* windows = bamf_matcher_get_window_stack_for_monitor(_matcher, _monitor);
-
-  for (GList* l = windows; l; l = l->next)
-  {
-    if (!BAMF_IS_WINDOW(l->data))
-      continue;
-
-    auto window = static_cast<BamfWindow*>(l->data);
-    auto view = static_cast<BamfView*>(l->data);
-
-    if (bamf_view_is_active(view))
-    {
-      _active_xid = bamf_window_get_xid(window);
-    }
-
-    if (bamf_window_maximized(window) == BAMF_WINDOW_MAXIMIZED)
-    {
-      Window xid = bamf_window_get_xid(window);
-
-      _decor_map[xid] = WindowManager::Default()->IsWindowDecorated(xid);
-
-      if (_decor_map[xid])
-        WindowManager::Default()->Undecorate(xid);
-
-      _maximized_set.insert(xid);
-    }
-  }
-
-  Window maximized = GetMaximizedWindow();
-
-  if (_is_integrated)
-  {
-    _window_buttons->SetControlledWindow(maximized);
-    _window_buttons->SetFocusedState(maximized == _active_xid);
-  }
-  else
-  {
-    Window buttons_win = (maximized == _active_xid) ? maximized : 0;
-    _window_buttons->SetControlledWindow(buttons_win);
-  }
-
-  g_list_free(windows);
 }
 
-bool PanelMenuView::GetControlsActive()
+bool
+PanelMenuView::GetControlsActive()
 {
   return _we_control_active;
 }
 
-bool PanelMenuView::HasOurWindowFocused()
+bool
+PanelMenuView::HasOurWindowFocused()
 {
   return _is_own_window;
 }
 
-void PanelMenuView::OnPanelViewMouseEnter(int x, int y, unsigned long mouse_button_state, unsigned long special_keys_state)
+void
+PanelMenuView::OnPanelViewMouseEnter(int x, int y, unsigned long mouse_button_state, unsigned long special_keys_state)
 {
   if (!_is_inside)
   {
@@ -1817,7 +1656,8 @@ void PanelMenuView::OnPanelViewMouseEnter(int x, int y, unsigned long mouse_butt
   }
 }
 
-void PanelMenuView::OnPanelViewMouseLeave(int x, int y, unsigned long mouse_button_state, unsigned long special_keys_state)
+void
+PanelMenuView::OnPanelViewMouseLeave(int x, int y, unsigned long mouse_button_state, unsigned long special_keys_state)
 {
   if (_is_inside)
   {

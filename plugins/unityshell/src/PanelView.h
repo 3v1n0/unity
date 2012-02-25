@@ -35,7 +35,6 @@
 #include "PanelMenuView.h"
 #include "PanelTray.h"
 #include "PanelIndicatorsView.h"
-#include "UBusWrapper.h"
 
 namespace unity
 {
@@ -47,31 +46,11 @@ public:
   PanelView(NUX_FILE_LINE_PROTO);
   ~PanelView();
 
-  void SetPrimary(bool primary);
-  bool GetPrimary();
-
-  void SetMonitor(int monitor);
-  int GetMonitor();
-
-  bool FirstMenuShow();
-
-  void SetOpacity(float opacity);
-  void SetOpacityMaximizedToggle(bool enabled);
-  void SetMenuShowTimings(int fadein, int fadeout, int discovery,
-                          int discovery_fadein, int discovery_fadeout);
-
-  unsigned int GetTrayXid();
-
-protected:
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
 
   void PreLayoutManagement();
   long PostLayoutManagement(long LayoutResult);
-
-  // Introspectable methods
-  std::string GetName() const;
-  void AddProperties(GVariantBuilder* builder);
 
   void OnObjectAdded(indicator::Indicator::Ptr const& proxy);
   void OnObjectRemoved(indicator::Indicator::Ptr const& proxy);
@@ -79,51 +58,76 @@ protected:
   void OnMenuPointerMoved(int x, int y);
   void OnEntryActivateRequest(std::string const& entry_id);
   void OnEntryActivated(std::string const& entry_id, nux::Rect const& geo);
+  void OnSynced();
   void OnEntryShowMenu(std::string const& entry_id, unsigned int xid, int x, int y,
                        unsigned int button, unsigned int timestamp);
 
+  void SetPrimary(bool primary);
+  bool GetPrimary();
+  void SetMonitor(int monitor);
+
+  void StartFirstMenuShow();
+  void EndFirstMenuShow();
+
+  void SetOpacity(float opacity);
+  void SetOpacityMaximizedToggle(bool enabled);
+  void SetMenuShowTimings(int fadein, int fadeout, int discovery,
+                          int discovery_fadein, int discovery_fadeout);
+
+  void TrackMenuPointer();
+
+  unsigned int GetTrayXid ();
+
+protected:
+  // Introspectable methods
+  std::string GetName() const;
+  void AddProperties(GVariantBuilder* builder);
+
 private:
-  void OnBackgroundUpdate(GVariant *data);
-  void OnDashShown(GVariant *data);
-  void OnDashHidden(GVariant *data);
+  static void OnBackgroundUpdate  (GVariant *data, PanelView *self);
+  static void OnDashShown         (GVariant *data, PanelView *self);
+  static void OnDashHidden        (GVariant *data, PanelView *self);
 
   void UpdateBackground();
   void ForceUpdateBackground();
-  void TrackMenuPointer();
   void SyncGeometries();
   void AddPanelView(PanelIndicatorsView* child, unsigned int stretchFactor);
 
+private:
+  typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
   indicator::DBusIndicators::Ptr _remote;
-
   // No ownership is taken for these views, that is done by the AddChild method.
-  PanelMenuView* _menu_view;
-  PanelTray* _tray;
-  PanelIndicatorsView* _indicators;
 
+  PanelMenuView*           _menu_view;
+  PanelTray*               _tray;
+  PanelIndicatorsView*     _indicators;
   nux::AbstractPaintLayer* _bg_layer;
-  nux::ColorLayer* _bg_darken_layer;
-  nux::ObjectPtr<nux::BaseTexture> _panel_sheen;
-  nux::HLayout* _layout;
+  nux::ColorLayer*         _bg_darken_layer_;
+  BaseTexturePtr           _panel_sheen;
+  nux::HLayout*            _layout;
 
-  nux::Geometry _last_geo;
+  int _last_width;
+  int _last_height;
 
   nux::Color  _bg_color;
   bool        _is_dirty;
+  float       _opacity;
   bool        _opacity_maximized_toggle;
   bool        _needs_geo_sync;
   bool        _is_primary;
-  bool        _dash_is_open;
-  float       _opacity;
   int         _monitor;
 
+  bool        _dash_is_open;
+  guint       _handle_dash_hidden;
+  guint       _handle_dash_shown;
+  guint       _handle_bg_color_update;
   guint       _track_menu_pointer_id;
   nux::Point  _tracked_pointer_pos;
 
   std::vector<sigc::connection> _on_indicator_updated_connections;
   std::vector<sigc::connection> _maximized_opacity_toggle_connections;
-  BackgroundEffectHelper _bg_effect_helper;
-  nux::ObjectPtr<nux::IOpenGLBaseTexture> _bg_blur_texture;
-  UBusManager _ubus_manager;
+  BackgroundEffectHelper bg_effect_helper_;
+  nux::ObjectPtr <nux::IOpenGLBaseTexture> bg_blur_texture_;
 };
 
 }

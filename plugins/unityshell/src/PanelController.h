@@ -39,7 +39,8 @@ public:
   Controller();
   ~Controller();
 
-  void FirstMenuShow();
+  void StartFirstMenuShow();
+  void EndFirstMenuShow();
   void QueueRedraw();
 
   unsigned int GetTrayXid ();

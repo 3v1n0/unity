@@ -61,12 +61,10 @@ public:
   virtual bool IsWindowObscured(guint32 xid) = 0;
   virtual bool IsWindowMapped(guint32 xid) = 0;
   virtual bool IsWindowVisible(guint32 xid) = 0;
-  virtual bool IsWindowMinimizable(guint32 xid) = 0;
 
   virtual void ShowDesktop() = 0;
 
   virtual void Restore(guint32 xid) = 0;
-  virtual void RestoreAt(guint32 xid, int x, int y) = 0;
   virtual void Minimize(guint32 xid) = 0;
   virtual void Close(guint32 xid) = 0;
 
@@ -89,15 +87,12 @@ public:
   virtual bool IsScreenGrabbed() = 0;
   virtual bool IsViewPortSwitchStarted() = 0;
 
-  virtual void MoveResizeWindow(guint32 xid, nux::Geometry geometry) = 0;
-  void StartMove(guint32 xid, int, int);
+  void StartMove(guint32 id, int, int);
 
   virtual nux::Geometry GetWindowGeometry(guint32 xid) = 0;
-  virtual nux::Geometry GetWindowSavedGeometry(guint32 xid) = 0;
   virtual nux::Geometry GetScreenGeometry() = 0;
-  virtual nux::Geometry GetWorkAreaGeometry(guint32 xid = 0) = 0;
 
-  virtual unsigned long long GetWindowActiveNumber(guint32 xid) = 0;
+  virtual unsigned long long GetWindowActiveNumber (guint32 xid) = 0;
 
   virtual void SetWindowIconGeometry(Window window, nux::Geometry const& geo) = 0;
 

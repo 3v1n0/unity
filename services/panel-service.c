@@ -75,7 +75,7 @@ struct _PanelServicePrivate
   gint     last_bottom;
   guint32  last_menu_button;
 
-  KeySym  toggle_key;
+  KeyCode toggle_key;
   guint32 toggle_modifiers;
   guint32 key_monitor_id;
 
@@ -410,8 +410,7 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
 
       if (event->evtype == XI_KeyPress)
         {
-          if (event->mods.base == priv->toggle_modifiers &&
-              XkbKeycodeToKeysym(event->display, event->detail, 0, 0) == priv->toggle_key)
+          if (event->mods.base == priv->toggle_modifiers && event->detail == priv->toggle_key)
           {
             if (GTK_IS_MENU (priv->last_menu))
               gtk_menu_popdown (GTK_MENU (priv->last_menu));
@@ -520,7 +519,8 @@ panel_service_update_menu_keybinding (PanelService *self)
   GConfClient *client = gconf_client_get_default ();
   gchar *binding = gconf_client_get_string (client, MENU_TOGGLE_KEYBINDING_PATH, NULL);
 
-  KeySym key = 0;
+  KeyCode keycode = 0;
+  KeySym keysym = NoSymbol;
   guint32 modifiers = 0;
 
   gchar *keystart = (binding) ? strrchr(binding, '>') : NULL;
@@ -539,11 +539,14 @@ panel_service_update_menu_keybinding (PanelService *self)
   if (keystart != keyend)
   {
     gchar *keystr = g_strndup (keystart, keyend-keystart);
-    key = XStringToKeysym (keystr);
+    keysym = XStringToKeysym (keystr);
   }
 
-  if (key)
+  if (keysym != NoSymbol)
     {
+      Display *dpy = GDK_DISPLAY_XDISPLAY (gdk_display_get_default ());
+      keycode = XKeysymToKeycode(dpy, keysym);
+
       if (g_strrstr (binding, "<Shift>"))
         {
           modifiers |= GDK_SHIFT_MASK;
@@ -562,7 +565,7 @@ panel_service_update_menu_keybinding (PanelService *self)
         }
     }
 
-  self->priv->toggle_key = key;
+  self->priv->toggle_key = keycode;
   self->priv->toggle_modifiers = modifiers;
 
   g_free (binding);
