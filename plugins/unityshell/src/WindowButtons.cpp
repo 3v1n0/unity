@@ -46,8 +46,8 @@ public:
     , _overlay_is_open(false)
     , _opacity(1.0f)
   {
-    LoadImages();
     panel::Style::Instance().changed.connect(sigc::mem_fun(this, &WindowButton::LoadImages));
+    LoadImages();
   }
 
   void SetVisualState(nux::ButtonVisualState new_state)
@@ -135,6 +135,35 @@ public:
     GfxContext.PopClippingRectangle();
   }
 
+  void UpdateSize()
+  {
+    int panel_height = panel::Style::Instance().panel_height;
+    int width = 0;
+    int height = 0;
+
+    if (_overlay_is_open)
+    {
+      if (_normal_dash_tex)
+      {
+        width = _normal_dash_tex->GetWidth();
+        height = _normal_dash_tex->GetHeight();
+      }
+    }
+    else
+    {
+      if (_normal_tex)
+      {
+        width = _normal_tex->GetWidth();
+        height = _normal_tex->GetHeight();
+      }
+    }
+
+    width = std::min(panel_height, width);
+    height = std::min(panel_height, height);
+
+    SetMinMaxSize(width, height);
+  }
+
   void LoadImages()
   {
     panel::Style& style = panel::Style::Instance();
@@ -151,17 +180,7 @@ public:
     _pressed_dash_tex.Adopt(GetDashWindowButton(_type, panel::WindowState::PRESSED));
     _disabled_dash_tex.Adopt(GetDashWindowButton(_type, panel::WindowState::DISABLED));
 
-    if (_overlay_is_open)
-    {
-      if (_normal_dash_tex)
-        SetMinMaxSize(_normal_dash_tex->GetWidth(), _normal_dash_tex->GetHeight());
-    }
-    else
-    {
-      if (_normal_tex)
-        SetMinMaxSize(_normal_tex->GetWidth(), _normal_tex->GetHeight());
-    }
-
+    UpdateSize();
     QueueDraw();
   }
 
@@ -195,17 +214,7 @@ public:
 
     _overlay_is_open = open;
 
-    if (_overlay_is_open)
-    {
-      if (_normal_dash_tex)
-        SetMinMaxSize(_normal_dash_tex->GetWidth(), _normal_dash_tex->GetHeight());
-    }
-    else
-    {
-      if (_normal_tex)
-        SetMinMaxSize(_normal_tex->GetWidth(), _normal_tex->GetHeight());
-    }
-
+    UpdateSize();
     QueueDraw();
   }
 
@@ -344,6 +353,12 @@ WindowButtons::WindowButtons()
   ubus_manager_.RegisterInterest(UBUS_OVERLAY_SHOWN, sigc::mem_fun(this, &WindowButtons::OnOverlayShown));
   ubus_manager_.RegisterInterest(UBUS_OVERLAY_HIDDEN, sigc::mem_fun(this, &WindowButtons::OnOverlayHidden));
   dash::Settings::Instance().changed.connect(sigc::mem_fun(this, &WindowButtons::OnDashSettingsUpdated));
+}
+
+nux::Area* WindowButtons::FindAreaUnderMouse(const nux::Point& mouse_pos, nux::NuxEventType event_type)
+{
+  g_debug("Mouse position is %dx%d",mouse_pos.x,mouse_pos.y);
+  return HLayout::FindAreaUnderMouse(mouse_pos, event_type);
 }
 
 void WindowButtons::OnCloseClicked(nux::Button *button)

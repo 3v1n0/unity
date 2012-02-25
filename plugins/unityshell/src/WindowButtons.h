@@ -46,6 +46,8 @@ public:
   void SetControlledWindow(Window xid);
   Window GetControlledWindow();
 
+  virtual nux::Area* FindAreaUnderMouse(const nux::Point& mouse_pos, nux::NuxEventType event_type);
+
   sigc::signal<void> close_clicked;
   sigc::signal<void> minimize_clicked;
   sigc::signal<void> restore_clicked;
