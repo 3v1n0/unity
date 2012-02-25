@@ -32,7 +32,8 @@
 #include "UBusMessages.h"
 #include "WindowManager.h"
 
-using namespace unity;
+namespace unity
+{
 
 class WindowButton : public nux::Button
 {
@@ -345,7 +346,6 @@ WindowButtons::WindowButtons()
   dash::Settings::Instance().changed.connect(sigc::mem_fun(this, &WindowButtons::OnDashSettingsUpdated));
 }
 
-
 void WindowButtons::OnCloseClicked(nux::Button *button)
 {
   auto win_button = dynamic_cast<WindowButton*>(button);
@@ -632,3 +632,5 @@ void WindowButtons::AddProperties(GVariantBuilder* builder)
                                          .add("focused", focused_)
                                          .add("window", window_xid_);
 }
+
+} // unity namespace
