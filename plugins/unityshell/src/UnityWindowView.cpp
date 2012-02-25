@@ -89,13 +89,12 @@ void UnityWindowView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_dr
 
 #ifndef NUX_OPENGLES_20
       if (GfxContext.UsingGLSLCodePath())
-        gPainter.PushDrawColorizeTextureLayer(GfxContext, base,
-                                              blur_texture,
-                                              texxform_blur_bg,
-                                              nux::color::White,
-                                              true,
-                                              rop,
-                                              background_color, nux::GraphicsEngine::BLEND_MODE_OVERLAY);
+        gPainter.PushDrawCompositionLayer(GfxContext, base,
+                                          blur_texture,
+                                          texxform_blur_bg,
+                                          nux::color::White,
+                                          background_color, nux::GraphicsEngine::BLEND_MODE_OVERLAY,
+                                          true, rop);
       else
         gPainter.PushDrawTextureLayer(GfxContext, base,
                                       blur_texture,
@@ -104,13 +103,12 @@ void UnityWindowView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_dr
                                       true,
                                       rop);
 #else
-        gPainter.PushDrawColorizeTextureLayer(GfxContext, base,
-                                              blur_texture,
-                                              texxform_blur_bg,
-                                              nux::color::White,
-                                              true,
-                                              rop,
-                                              background_color, nux::GraphicsEngine::BLEND_MODE_OVERLAY);
+        gPainter.PushDrawCompositionLayer(GfxContext, base,
+                                          blur_texture,
+                                          texxform_blur_bg,
+                                          nux::color::White,
+                                          background_color, nux::GraphicsEngine::BLEND_MODE_OVERLAY,
+                                          true, rop);
 #endif
                                      
     }

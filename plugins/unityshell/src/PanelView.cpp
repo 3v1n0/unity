@@ -253,13 +253,13 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
 #ifndef NUX_OPENGLES_20
       if (GfxContext.UsingGLSLCodePath())
-        gPainter.PushDrawColorizeTextureLayer(GfxContext, geo,
-                                              bg_blur_texture_,
-                                              texxform_blur_bg,
-                                              nux::color::White,
-                                              true,
-                                              rop, _bg_color,
-                                              nux::GraphicsEngine::BLEND_MODE_OVERLAY);
+        gPainter.PushDrawCompositionLayer(GfxContext, geo,
+                                          bg_blur_texture_,
+                                          texxform_blur_bg,
+                                          nux::color::White,
+                                          _bg_color,
+                                          nux::GraphicsEngine::BLEND_MODE_OVERLAY,
+                                          true, rop);
       else
         gPainter.PushDrawTextureLayer(GfxContext, geo,
                                       bg_blur_texture_,
@@ -268,13 +268,13 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
                                       true,
                                       rop);
 #else
-      gPainter.PushDrawColorizeTextureLayer(GfxContext, geo,
-                                            bg_blur_texture_,
-                                            texxform_blur_bg,
-                                            nux::color::White,
-                                            true,
-                                            rop, _bg_color,
-                                            nux::GraphicsEngine::BLEND_MODE_OVERLAY);
+        gPainter.PushDrawCompositionLayer(GfxContext, geo,
+                                          bg_blur_texture_,
+                                          texxform_blur_bg,
+                                          nux::color::White,
+                                          _bg_color,
+                                          nux::GraphicsEngine::BLEND_MODE_OVERLAY,
+                                          true, rop);
 #endif
 
       GfxContext.PopClippingRectangle();
@@ -327,14 +327,14 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
 #ifndef NUX_OPENGLES_20
     if (GfxContext.UsingGLSLCodePath())
-      gPainter.PushColorizeTextureLayer(GfxContext, geo,
-                                        bg_blur_texture_,
-                                        texxform_blur_bg,
-                                        nux::color::White,
-                                        true,
-                                        rop,
-                                        _bg_color,
-                                        nux::GraphicsEngine::BLEND_MODE_OVERLAY);
+      gPainter.PushCompositionLayer(GfxContext, geo,
+                                    bg_blur_texture_,
+                                    texxform_blur_bg,
+                                    nux::color::White,
+                                    _bg_color,
+                                    nux::GraphicsEngine::BLEND_MODE_OVERLAY,
+                                    true,
+                                    rop);
     else
       gPainter.PushTextureLayer(GfxContext, geo,
                                 bg_blur_texture_,
@@ -344,14 +344,14 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
                                 rop);
                                 
 #else
-      gPainter.PushColorizeTextureLayer(GfxContext, geo,
-                                        bg_blur_texture_,
-                                        texxform_blur_bg,
-                                        nux::color::White,
-                                        true,
-                                        rop,
-                                        _bg_color,
-                                        nux::GraphicsEngine::BLEND_MODE_OVERLAY);
+      gPainter.PushCompositionLayer(GfxContext, geo,
+                                    bg_blur_texture_,
+                                    texxform_blur_bg,
+                                    nux::color::White,
+                                    _bg_color,
+                                    nux::GraphicsEngine::BLEND_MODE_OVERLAY,
+                                    true,
+                                    rop);
 #endif
     bgs++;
 

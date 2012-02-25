@@ -1871,13 +1871,12 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
 #ifndef NUX_OPENGLES_20
         if (GfxContext.UsingGLSLCodePath())
-          gPainter.PushDrawColorizeTextureLayer(GfxContext, base,
-                                                blur_texture,
-                                                texxform_blur_bg,
-                                                nux::color::White,
-                                                true,
-                                                ROP,
-                                                _background_color, nux::GraphicsEngine::BLEND_MODE_OVERLAY);
+          gPainter.PushDrawCompositionLayer(GfxContext, base,
+                                            blur_texture,
+                                            texxform_blur_bg,
+                                            nux::color::White,
+                                            _background_color, nux::GraphicsEngine::BLEND_MODE_OVERLAY,
+                                            true, ROP);
         else
           gPainter.PushDrawTextureLayer(GfxContext, base,
                                         blur_texture,
@@ -1886,13 +1885,12 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
                                         true,
                                         ROP);
 #else
-          gPainter.PushDrawColorizeTextureLayer(GfxContext, base,
-                                                blur_texture,
-                                                texxform_blur_bg,
-                                                nux::color::White,
-                                                true,
-                                                ROP,
-                                                _background_color, nux::GraphicsEngine::BLEND_MODE_OVERLAY);
+          gPainter.PushDrawCompositionLayer(GfxContext, base,
+                                            blur_texture,
+                                            texxform_blur_bg,
+                                            nux::color::White,
+                                            _background_color, nux::GraphicsEngine::BLEND_MODE_OVERLAY,
+                                            true, ROP);
 #endif
         GfxContext.PopClippingRectangle();
 

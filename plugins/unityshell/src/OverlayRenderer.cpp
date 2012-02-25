@@ -399,13 +399,12 @@ void OverlayRendererImpl::DrawContent(nux::GraphicsEngine& gfx_context, nux::Geo
   {
 #ifndef NUX_OPENGLES_20
     if (gfx_context.UsingGLSLCodePath())
-      gPainter.PushColorizeTextureLayer(gfx_context, content_geo,
-                                bg_blur_texture_,
-                                texxform_absolute_bg,
-                                nux::color::White,
-                                true, // write alpha?
-                                        rop, bg_color_,
-                                        nux::GraphicsEngine::BLEND_MODE_OVERLAY);
+      gPainter.PushCompositionLayer(gfx_context, content_geo,
+                                    bg_blur_texture_,
+                                    texxform_absolute_bg,
+                                    nux::color::White,
+                                    bg_color_, nux::GraphicsEngine::BLEND_MODE_OVERLAY,
+                                    true, rop);
     else
       gPainter.PushTextureLayer(gfx_context, content_geo,
                                 bg_blur_texture_,
@@ -414,13 +413,12 @@ void OverlayRendererImpl::DrawContent(nux::GraphicsEngine& gfx_context, nux::Geo
                                 true, // write alpha?
                                 rop);
 #else
-      gPainter.PushColorizeTextureLayer(gfx_context, content_geo,
-                                bg_blur_texture_,
-                                texxform_absolute_bg,
-                                nux::color::White,
-                                true, // write alpha?
-                                        rop, bg_color_,
-                                        nux::GraphicsEngine::BLEND_MODE_OVERLAY);
+      gPainter.PushCompositionLayer(gfx_context, content_geo,
+                                    bg_blur_texture_,
+                                    texxform_absolute_bg,
+                                    nux::color::White,
+                                    bg_color_, nux::GraphicsEngine::BLEND_MODE_OVERLAY,
+                                    true, rop);
 #endif
     bgs++;
   }
