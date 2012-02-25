@@ -27,6 +27,7 @@
 
 #include "SwitcherModel.h"
 #include "SwitcherView.h"
+#include "UBusWrapper.h"
 
 #include <boost/shared_ptr.hpp>
 #include <sigc++/sigc++.h>
@@ -111,12 +112,12 @@ private:
   void ShowView();
 
   void OnModelSelectionChanged(launcher::AbstractLauncherIcon::Ptr icon);
-
-  static void OnBackgroundUpdate(GVariant* data, Controller* self);
+  void OnBackgroundUpdate(GVariant* data);
 
   SwitcherModel::Ptr model_;
   SwitcherView::Ptr view_;
 
+  UBusManager ubus_manager_;
   nux::Geometry workarea_;
 
   nux::BaseWindow* view_window_;
@@ -130,7 +131,6 @@ private:
   guint view_idle_timer_;
   nux::Color bg_color_;
   DetailMode detail_mode_;
-  guint bg_update_handle_;
 
   static gboolean OnDetailTimer(gpointer data);
 

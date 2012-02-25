@@ -22,7 +22,6 @@
 #include <Nux/HLayout.h>
 
 #include "UBusMessages.h"
-#include "ubus-server.h"
 #include "WindowManager.h"
 
 #include "SwitcherController.h"
@@ -51,11 +50,7 @@ Controller::Controller()
 
   bg_color_ = nux::Color(0.0, 0.0, 0.0, 0.5);
 
-  UBusServer *ubus = ubus_server_get_default();
-  bg_update_handle_ =
-  ubus_server_register_interest(ubus, UBUS_BACKGROUND_COLOR_CHANGED,
-                                (UBusCallback)&Controller::OnBackgroundUpdate,
-                                this);
+  ubus_manager_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED, sigc::mem_fun(this, &Controller::OnBackgroundUpdate));
 
   /* Construct the view after a prefixed timeout, to improve the startup time */
   lazy_timer_ = g_timeout_add_seconds_full(G_PRIORITY_LOW, 10, [] (gpointer data) -> gboolean {
@@ -68,7 +63,6 @@ Controller::Controller()
 
 Controller::~Controller()
 {
-  ubus_server_unregister_interest(ubus_server_get_default(), bg_update_handle_);
   if (view_window_)
     view_window_->UnReference();
 
@@ -79,14 +73,14 @@ Controller::~Controller()
     g_source_remove(view_idle_timer_);
 }
 
-void Controller::OnBackgroundUpdate(GVariant* data, Controller* self)
+void Controller::OnBackgroundUpdate(GVariant* data)
 {
   gdouble red, green, blue, alpha;
   g_variant_get(data, "(dddd)", &red, &green, &blue, &alpha);
-  self->bg_color_ = nux::Color(red, green, blue, alpha);
+  bg_color_ = nux::Color(red, green, blue, alpha);
 
-  if (self->view_)
-    self->view_->background_color = self->bg_color_;
+  if (view_)
+    view_->background_color = bg_color_;
 }
 
 void Controller::Show(ShowMode show, SortMode sort, bool reverse,
@@ -140,12 +134,8 @@ void Controller::Show(ShowMode show, SortMode sort, bool reverse,
     detail_timer_ = g_timeout_add(detail_timeout_length, &Controller::OnDetailTimer, this);
   }
 
-  ubus_server_send_message(ubus_server_get_default(),
-                           UBUS_PLACE_VIEW_CLOSE_REQUEST,
-                           NULL);
-
-  ubus_server_send_message(ubus_server_get_default(),
-                           UBUS_SWITCHER_SHOWN, g_variant_new_boolean(true));
+  ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
+  ubus_manager_.SendMessage(UBUS_SWITCHER_SHOWN, g_variant_new_boolean(true));
 }
 
 void Controller::Select(int index)
@@ -178,9 +168,8 @@ void Controller::OnModelSelectionChanged(AbstractLauncherIcon::Ptr icon)
     detail_timer_ = g_timeout_add(detail_timeout_length, &Controller::OnDetailTimer, this);
   }
 
-  ubus_server_send_message(ubus_server_get_default(),
-                           UBUS_SWITCHER_SELECTION_CHANGED,
-                           g_variant_new_string(icon->tooltip_text().c_str()));
+  ubus_manager_.SendMessage(UBUS_SWITCHER_SELECTION_CHANGED,
+                            g_variant_new_string(icon->tooltip_text().c_str()));
 }
 
 void Controller::ShowView()
@@ -305,8 +294,7 @@ void Controller::Hide(bool accept_state)
     g_source_remove(detail_timer_);
   detail_timer_ = 0;
 
-  ubus_server_send_message(ubus_server_get_default(),
-                           UBUS_SWITCHER_SHOWN, g_variant_new_boolean(false));
+  ubus_manager_.SendMessage(UBUS_SWITCHER_SHOWN, g_variant_new_boolean(false));
 
   view_.Release();
 }
