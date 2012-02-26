@@ -9,12 +9,12 @@
 from compizconfig import Setting
 from compizconfig import Plugin
 from subprocess import call
-from testtools.matchers import Equals
-from testtools.matchers import NotEquals
+from testtools.matchers import Equals, NotEquals
 from time import sleep
 
 from autopilot.emulators.bamf import Bamf
 from autopilot.emulators.unity.switcher import Switcher
+from autopilot.emulators.X11 import Keyboard
 from autopilot.glibrunner import GlibRunner
 from autopilot.globals import global_context
 from autopilot.tests import AutopilotTestCase
@@ -83,3 +83,13 @@ class SwitcherTests(AutopilotTestCase):
         self.assertThat(start, NotEquals(0))
         self.assertThat(end, Equals(start - 1))
         self.set_timeout_setting(True)
+
+    def test_down_arrow_starts_details_mode(self):
+        """Pressing 'Down' while not in details mode must start details mode."""
+        self.server.initiate()
+        while self.server.get_selection_index() != self.server.get_model_size() -1:
+            self.server.next_icon()
+        kb = Keyboard()
+        kb.press_and_release('Down')
+        self.assertThat(self.server.get_is_in_details_mode(), Equals(True))
+
