@@ -84,12 +84,22 @@ class SwitcherTests(AutopilotTestCase):
         self.assertThat(end, Equals(start - 1))
         self.set_timeout_setting(True)
 
+    def test_switcher_starts_in_normal_mode(self):
+        """Switcher must start in normal (i.e.- not details) mode."""
+        self.server.initiate()
+        self.assertThat(self.server.get_is_in_details_mode(), Equals(False))
+
     def test_down_arrow_starts_details_mode(self):
         """Pressing 'Down' while not in details mode must start details mode."""
         self.server.initiate()
-        while self.server.get_selection_index() != self.server.get_model_size() -1:
-            self.server.next_icon()
         kb = Keyboard()
         kb.press_and_release('Down')
+        self.assertThat(self.server.get_is_in_details_mode(), Equals(True))
+
+    def test_grave_starts_details_mode(self):
+        """Pressing '`' while not in details mode must start detils mode."""
+        self.server.initiate()
+        kb = Keyboard()
+        kb.press_and_release('`')
         self.assertThat(self.server.get_is_in_details_mode(), Equals(True))
 
