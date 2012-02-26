@@ -66,7 +66,7 @@ class IBusTestsPinyin(IBusTests):
         self.activate_ibus()
         sleep(0.5)
         self.kb.type(self.input)
-        dash_search_string = self.dash.get_search_string()
+        dash_search_string = self.dash.get_searchbar().search_string
         self.deactivate_ibus()
         self.dash.ensure_hidden()
 
@@ -89,7 +89,7 @@ class IBusTestsHangul(IBusTests):
         self.activate_ibus()
         sleep(0.5)
         self.kb.type(self.input)
-        dash_search_string = self.dash.get_search_string()
+        dash_search_string = self.dash.get_searchbar().search_string
         self.deactivate_ibus()
         self.dash.ensure_hidden()
 
@@ -113,7 +113,7 @@ class IBusTestsAnthy(IBusTests):
         sleep(0.5)
         self.kb.type(self.input)
         self.kb.press_and_release("Ctrl+j")
-        dash_search_string = self.dash.get_search_string()
+        dash_search_string = self.dash.get_searchbar().search_string
         self.deactivate_ibus()
         self.dash.ensure_hidden()
 
