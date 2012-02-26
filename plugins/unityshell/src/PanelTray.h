@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 Canonical Ltd
+ * Copyright (C) 2010-2012 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -14,18 +14,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
+ *              Marco Trevisan (Treviño) <3v1n0@ubuntu.com>
  */
 
 #ifndef PANEL_TRAY_H
 #define PANEL_TRAY_H
 
 #include <Nux/Nux.h>
+#include <Nux/View.h>
 #include <gtk/gtk.h>
-
 #include <gdk/gdkx.h>
 
-#include <Nux/View.h>
 #include "Introspectable.h"
+#include <UnityCore/GLibWrapper.h>
+#include <UnityCore/GLibSignal.h>
 
 #include <unity-misc/na-tray.h>
 #include <unity-misc/na-tray-child.h>
@@ -37,40 +39,33 @@ namespace unity
 class PanelTray : public nux::View, public unity::debug::Introspectable
 {
 public:
-  typedef std::vector<NaTrayChild*> TrayChildren;
   PanelTray();
   ~PanelTray();
 
-  void Draw(nux::GraphicsEngine& gfx_content, bool force_draw);
   void Sync();
+  unsigned int xid();
 
-  unsigned int xid ();
-
-public:
-  char**     _whitelist;
 protected:
+  void Draw(nux::GraphicsEngine& gfx_content, bool force_draw);
   std::string GetName() const;
-  void          AddProperties(GVariantBuilder* builder);
+  void AddProperties(GVariantBuilder* builder);
 
 private:
   static gboolean FilterTrayCallback(NaTray* tray, NaTrayChild* child, PanelTray* self);
-  static void     OnTrayIconRemoved(NaTrayManager* manager, NaTrayChild* child, PanelTray* self);
   static gboolean IdleSync(PanelTray* tray);
-  static gboolean OnTrayDraw(GtkWidget* widget, cairo_t* cr, PanelTray* tray);
-  
-  void RealInit();
+  void OnTrayIconRemoved(NaTrayManager* manager, NaTrayChild* child);
+  gboolean OnTrayDraw(GtkWidget* widget, cairo_t* cr);
+
   int WidthOfTray();
 
-private:
-  GSettings* _settings;
-  GtkWidget* _window;
-  NaTray*    _tray;
-  TrayChildren _children;
-  int        _last_x;
-  int        _last_y;
-
-  gulong  _tray_expose_id;
-  gulong  _tray_icon_added_id;
+  glib::Object<GSettings> settings_;
+  glib::Object<GtkWidget> window_;
+  glib::Object<NaTray> tray_;
+  char** whitelist_;
+  std::list<NaTrayChild*> children_;
+  nux::Geometry last_geo_;
+  glib::Signal<gboolean, GtkWidget*, cairo_t*> draw_signal_;
+  glib::Signal<void, NaTrayManager*, NaTrayChild*> icon_removed_signal_;
 };
 
 }
