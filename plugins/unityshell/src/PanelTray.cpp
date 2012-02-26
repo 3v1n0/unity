@@ -40,6 +40,11 @@ PanelTray::PanelTray()
 {
   int panel_height = panel::Style::Instance().panel_height;
 
+  whitelist_changed_.Connect(settings_, "changed::systray-whitelist", [&] (GSettings*, gchar*) {
+    g_strfreev(whitelist_);
+    whitelist_ = g_settings_get_strv(settings_, "systray-whitelist");
+  });
+
   auto gtkwindow = glib::object_cast<GtkWindow>(window_);
   gtk_window_set_type_hint(gtkwindow, GDK_WINDOW_TYPE_HINT_DOCK);
   gtk_window_set_has_resize_grip(gtkwindow, FALSE);

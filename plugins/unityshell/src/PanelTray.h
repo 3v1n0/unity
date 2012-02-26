@@ -62,10 +62,12 @@ private:
   glib::Object<GtkWidget> window_;
   glib::Object<NaTray> tray_;
   char** whitelist_;
-  std::list<NaTrayChild*> children_;
-  nux::Geometry last_geo_;
+
+  glib::Signal<void, GSettings*, gchar*> whitelist_changed_;
   glib::Signal<gboolean, GtkWidget*, cairo_t*> draw_signal_;
   glib::Signal<void, NaTrayManager*, NaTrayChild*> icon_removed_signal_;
+  std::list<NaTrayChild*> children_;
+  nux::Geometry last_geo_;
 };
 
 }
