@@ -1319,6 +1319,19 @@ void UnityScreen::handleEvent(XEvent* event)
         launcher_controller_->KeyNavTerminate(false);
         EnableCancelAction(false);
       }
+      if (switcher_controller_ && switcher_controller_->Visible())
+      {
+        XButtonEvent *bev = reinterpret_cast<XButtonEvent*>(event);
+
+        if (bev->button == 6)
+        {
+          switcher_controller_->Prev();
+        }
+        else if (bev->button == 7)
+        {
+          switcher_controller_->Next();
+        }
+      }
       break;
     case KeyPress:
     {
