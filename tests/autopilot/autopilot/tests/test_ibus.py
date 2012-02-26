@@ -25,9 +25,10 @@ class IBusTests(AutopilotTestCase):
         super(IBusTests, self).setUp()
         self.kb = Keyboard()
         self.dash = Dash()
+        self._old_engines = None
 
     def tearDown(self):
-        if self._old_engines:
+        if self._old_engines is not None:
             set_active_engines(self._old_engines)
         super(IBusTests, self).tearDown()
 
