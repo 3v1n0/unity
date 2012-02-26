@@ -1323,11 +1323,11 @@ void UnityScreen::handleEvent(XEvent* event)
       {
         XButtonEvent *bev = reinterpret_cast<XButtonEvent*>(event);
 
-        if (bev->button == 6)
+        if (bev->button == 7)
         {
           switcher_controller_->Prev();
         }
-        else if (bev->button == 7)
+        else if (bev->button == 6)
         {
           switcher_controller_->Next();
         }
