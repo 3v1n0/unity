@@ -87,19 +87,52 @@ class SwitcherTests(AutopilotTestCase):
     def test_switcher_starts_in_normal_mode(self):
         """Switcher must start in normal (i.e.- not details) mode."""
         self.server.initiate()
+        self.addCleanup(self.server.terminate)
         self.assertThat(self.server.get_is_in_details_mode(), Equals(False))
 
-    def test_down_arrow_starts_details_mode(self):
-        """Pressing 'Down' while not in details mode must start details mode."""
+
+class SwitcherDetailsModeTests(AutopilotTestCase):
+    """Tests for the details mode of the switcher.
+
+    Tests for initiation with both grave (`) and Down arrow.
+
+    """
+
+    scenarios = [
+        ('initiate_with_grave', {'initiate_keycode': '`'}),
+        ('initiate_with_down', {'initiate_keycode': 'Down'}),
+    ]
+
+    def setUp(self):
+        self.bamf = Bamf()
+        self.bamf.launch_application("gucharmap.desktop")
+        self.server = Switcher()
+        super(SwitcherDetailsModeTests, self).setUp()
+
+    def tearDown(self):
+        call(["killall", "gcalctool"])
+        super(SwitcherDetailsModeTests, self).tearDown()
+        sleep(1)
+
+    def test_can_start_details_mode(self):
+        """Must be able to initiate details mode using selected scenario keycode."""
         self.server.initiate()
+        self.addCleanup(self.server.terminate)
         kb = Keyboard()
-        kb.press_and_release('Down')
+        kb.press_and_release(self.initiate_keycode)
         self.assertThat(self.server.get_is_in_details_mode(), Equals(True))
 
-    def test_grave_starts_details_mode(self):
-        """Pressing '`' while not in details mode must start detils mode."""
-        self.server.initiate()
-        kb = Keyboard()
-        kb.press_and_release('`')
-        self.assertThat(self.server.get_is_in_details_mode(), Equals(True))
+    def test_tab_from_last_detail_works(self):
+        """Pressing tab while showing last switcher item in details mode
+        must select first item in the model in non-details mode.
 
+        """
+        self.server.initiate()
+        self.addCleanup(self.server.terminate)
+        while self.server.get_selection_index() < self.server.get_model_size() -1:
+            self.server.next_icon()
+        kb = Keyboard()
+        kb.press_and_release(self.initiate_keycode)
+        sleep(0.5)
+        self.server.next_icon()
+        self.assertThat(self.server.get_selection_index(), Equals(0))
