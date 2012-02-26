@@ -110,7 +110,7 @@ class SwitcherDetailsModeTests(AutopilotTestCase):
         super(SwitcherDetailsModeTests, self).setUp()
 
     def tearDown(self):
-        call(["killall", "gcalctool"])
+        call(["killall", "gucharmap"])
         super(SwitcherDetailsModeTests, self).tearDown()
         sleep(1)
 
