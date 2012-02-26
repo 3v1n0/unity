@@ -29,6 +29,22 @@ namespace unity
 namespace launcher
 {
 
+class SCLauncherMoveWindow : public nux::BaseWindow
+{
+  NUX_DECLARE_OBJECT_TYPE(LauncherDragWindow, nux::BaseWindow);
+public:
+  SCLauncherMoveWindow(nux::ObjectPtr<nux::IOpenGLBaseTexture> icon);
+
+  ~SCLauncherMoveWindow();
+
+  void AnimateIcon(gint32 icon_x, gint32 icon_y, gint32 icon_size);
+
+private:
+  nux::ObjectPtr<nux::IOpenGLBaseTexture> _icon;
+  guint32 _anim_handle;
+
+};
+
 class SoftwareCenterLauncherIcon : public BamfLauncherIcon
 {
 public:
@@ -44,6 +60,7 @@ private:
   void AnimateIcon(gint32 icon_x, gint32 icon_y, gint32 icon_size);
 
   glib::DBusProxy _aptdaemon_trans;
+  SCLauncherMoveWindow launcher_mw;
 };
 
 }
