@@ -103,41 +103,49 @@ class LauncherTests(AutopilotTestCase):
         sleep(.5)
         self.assertThat(self.server.key_nav_is_active(), Equals(False))
 
+
+class LauncherRevealTests(AutopilotTestCase):
+    """Test the launcher reveal bahavior when in autohide mode."""
+    run_test_with = GlibRunner
+
+    def setUp(self):
+        super(LauncherRevealTests, self).setUp()
+        self.launcher = Launcher()
+        self.set_unity_option('launcher_hide_mode', True)
+        sleep(1)
+
     def test_reveal_on_mouse_to_edge(self):
         """Tests reveal of launchers by mouse pressure."""
-        self.set_unity_option('launcher_hide_mode', True)
-        num_launchers = self.server.num_launchers()
+        num_launchers = self.launcher.num_launchers()
 
         for x in range(num_launchers):
-            self.server.move_mouse_to_right_of_launcher(x)
-            self.server.reveal_launcher(x)
-            self.assertThat(self.server.is_showing(x), Equals(True))
+            self.launcher.move_mouse_to_right_of_launcher(x)
+            self.launcher.reveal_launcher(x)
+            self.assertThat(self.launcher.is_showing(x), Equals(True))
 
     def test_reveal_with_mouse_under_launcher(self):
         """Tests that the launcher hides properly if the
         mouse is under the launcher when it is revealed.
 
         """
-        self.set_unity_option('launcher_hide_mode', True)
-        num_launchers = self.server.num_launchers()
+        num_launchers = self.launcher.num_launchers()
 
         for x in range(num_launchers):
-            self.server.move_mouse_over_launcher(x)
-            self.server.keyboard_reveal_launcher()
-            self.server.keyboard_unreveal_launcher()
+            self.launcher.move_mouse_over_launcher(x)
+            self.launcher.keyboard_reveal_launcher()
+            self.launcher.keyboard_unreveal_launcher()
             sleep(1)
-            self.assertThat(self.server.is_showing(x), Equals(False))
+            self.assertThat(self.launcher.is_showing(x), Equals(False))
 
     def test_reveal_does_not_hide_again(self):
         """Tests reveal of launchers by mouse pressure to ensure it doesn't
         automatically hide again.
 
         """
-        self.set_unity_option('launcher_hide_mode', True)
-        num_launchers = self.server.num_launchers()
+        num_launchers = self.launcher.num_launchers()
 
         for x in range(num_launchers):
-            self.server.move_mouse_to_right_of_launcher(x)
-            self.server.reveal_launcher(x)
+            self.launcher.move_mouse_to_right_of_launcher(x)
+            self.launcher.reveal_launcher(x)
             sleep(2)
-            self.assertThat(self.server.is_showing(x), Equals(True))
+            self.assertThat(self.launcher.is_showing(x), Equals(True))
