@@ -184,9 +184,19 @@ class KeybindingsHelper(object):
     """A helper class that makes it easier to use unity keybindings."""
     _keyboard = Keyboard()
 
-    def keybinding(self, binding_name):
-        """Press and release the keybinding with the given name."""
-        self._keyboard.press_and_release(get(binding_name))
+    def keybinding(self, binding_name, delay=None):
+        """Press and release the keybinding with the given name.
+
+        If set, the delay parameter will override the default delay set by the
+        keyboard emulator.
+
+        """
+        if type(delay) is not float:
+            raise TypeError("delay parameter must be a float.")
+        if delay:
+            self._keyboard.press_and_release(get(binding_name), delay)
+        else:
+            self._keyboard.press_and_release(get(binding_name))
 
     def keybinding_hold(self, binding_name):
         """Hold down the hold-part of a keybinding."""
