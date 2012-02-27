@@ -66,7 +66,8 @@ def translate_compiz_keystroke_string(keystroke_string):
         raise TypeError("keystroke string must be a string.")
 
     translations = {
-        'Control': 'Ctrl'
+        'Control': 'Ctrl',
+        'Primary': 'Ctrl',
     }
     regex = re.compile('[<>]')
     parts = regex.split(keystroke_string)

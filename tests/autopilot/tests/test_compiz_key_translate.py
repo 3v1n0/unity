@@ -36,6 +36,23 @@ class TranslationTests(TestWithScenarios, TestCase):
         ('trailing space', dict(input='d   ', expected='d')),
         ('only whitespace', dict(input='\t\n   ', expected='')),
         ('special key: Ctrl', dict(input='<Control>', expected='Ctrl')),
+        ('special key: Primary', dict(input='<Primary>', expected='Ctrl')),
+        ('special key: Alt', dict(input='<Alt>', expected='Alt')),
+        ('special key: Shift', dict(input='<Shift>', expected='Shift')),
+        ('direction key up', dict(input='Up', expected='Up')),
+        ('direction key down', dict(input='Down', expected='Down')),
+        ('direction key left', dict(input='Left', expected='Left')),
+        ('direction key right', dict(input='Right', expected='Right')),
+        ('Ctrl+a', dict(input='<Control>a', expected='Ctrl+a')),
+        ('Primary+a', dict(input='<Control>a', expected='Ctrl+a')),
+        ('Shift+s', dict(input='<Shift>s', expected='Shift+s')),
+        ('Alt+d', dict(input='<Alt>d', expected='Alt+d')),
+        ('Super+w', dict(input='<Super>w', expected='Super+w')),
+        ('Ctrl+Up', dict(input='<Control>Up', expected='Ctrl+Up')),
+        ('Primary+Down', dict(input='<Control>Down', expected='Ctrl+Down')),
+        ('Alt+Left', dict(input='<Alt>Left', expected='Alt+Left')),
+        ('Shift+F3', dict(input='<Shift>F3', expected='Shift+F3')),
+        ('duplicate keys', dict(input='<Control><Control>', expected='Ctrl')),
     ]
 
     def test_translation(self):
