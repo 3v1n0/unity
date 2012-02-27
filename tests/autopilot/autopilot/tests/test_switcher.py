@@ -70,3 +70,54 @@ class SwitcherTests(AutopilotTestCase):
         self.assertThat(start, NotEquals(0))
         self.assertThat(end, Equals(start - 1))
         self.set_timeout_setting(True)
+
+    def test_switcher_starts_in_normal_mode(self):
+        """Switcher must start in normal (i.e.- not details) mode."""
+        self.server.initiate()
+        self.addCleanup(self.server.terminate)
+        self.assertThat(self.server.get_is_in_details_mode(), Equals(False))
+
+
+class SwitcherDetailsModeTests(AutopilotTestCase):
+    """Tests for the details mode of the switcher.
+
+    Tests for initiation with both grave (`) and Down arrow.
+
+    """
+
+    scenarios = [
+        ('initiate_with_grave', {'initiate_keycode': '`'}),
+        ('initiate_with_down', {'initiate_keycode': 'Down'}),
+    ]
+
+    def setUp(self):
+        self.bamf = Bamf()
+        self.bamf.launch_application("gucharmap.desktop")
+        self.server = Switcher()
+        super(SwitcherDetailsModeTests, self).setUp()
+
+    def tearDown(self):
+        call(["killall", "gucharmap"])
+        super(SwitcherDetailsModeTests, self).tearDown()
+        sleep(1)
+
+    def test_can_start_details_mode(self):
+        """Must be able to initiate details mode using selected scenario keycode."""
+        self.server.initiate()
+        self.addCleanup(self.server.terminate)
+        self.keyboard.press_and_release(self.initiate_keycode)
+        self.assertThat(self.server.get_is_in_details_mode(), Equals(True))
+
+    def test_tab_from_last_detail_works(self):
+        """Pressing tab while showing last switcher item in details mode
+        must select first item in the model in non-details mode.
+
+        """
+        self.server.initiate()
+        self.addCleanup(self.server.terminate)
+        while self.server.get_selection_index() < self.server.get_model_size() -1:
+            self.server.next_icon()
+        self.keyboard.press_and_release(self.initiate_keycode)
+        sleep(0.5)
+        self.server.next_icon()
+        self.assertThat(self.server.get_selection_index(), Equals(0))
