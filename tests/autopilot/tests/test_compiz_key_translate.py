@@ -10,7 +10,7 @@ from testscenarios import TestWithScenarios
 from testtools import TestCase
 from testtools.matchers import raises, Equals
 
-from autopilot.keybindings import translate_compiz_keystroke_string
+from autopilot.keybindings import _translate_compiz_keystroke_string as translate_func
 
 class KeyTranslateArgumentTests(TestWithScenarios, TestCase):
     """Tests that the compizconfig keycode translation routes work as advertised."""
@@ -24,7 +24,7 @@ class KeyTranslateArgumentTests(TestWithScenarios, TestCase):
 
     def test_requires_string_instance(self):
         """Function must raise TypeError unless given an instance of basestring."""
-        self.assertThat(lambda: translate_compiz_keystroke_string(self.input), raises(TypeError))
+        self.assertThat(lambda: translate_func(self.input), raises(TypeError))
 
 
 class TranslationTests(TestWithScenarios, TestCase):
@@ -62,6 +62,6 @@ class TranslationTests(TestWithScenarios, TestCase):
     ]
 
     def test_translation(self):
-        self.assertThat(translate_compiz_keystroke_string(self.input), Equals(self.expected))
+        self.assertThat(translate_func(self.input), Equals(self.expected))
 
 
