@@ -103,7 +103,6 @@ class ShowDesktopTests(AutopilotTestCase):
         sleep(1)
         for win in self.bamf.get_open_windows():
             if win.is_valid:
-                import pdb; pdb.set_trace()
                 self.assertFalse(win.is_hidden, "Window '%s' is not shown after show desktop deactivated." % (win.title))
 
     def test_showdesktop_switcher(self):
