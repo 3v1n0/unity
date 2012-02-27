@@ -209,7 +209,6 @@ class FilterBar(UnityIntrospectionObject):
     def is_expanded(self):
         """Return True if the filterbar on this lens is expanded, False otherwise.
         """
-
         searchbar = SearchBar.get_all_instances()[0]
         return searchbar.showing_filters
 
