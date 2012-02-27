@@ -10,7 +10,7 @@ from testscenarios import TestWithScenarios
 from testtools import TestCase
 from testtools.matchers import raises, Equals
 
-from autopilot.utilities import translate_compiz_keystroke_string
+from autopilot.keybindings import translate_compiz_keystroke_string
 
 class KeyTranslateArgumentTests(TestWithScenarios, TestCase):
     """Tests that the compizconfig keycode translation routes work as advertised."""

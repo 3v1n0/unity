@@ -12,8 +12,7 @@
 
 """Various utility classes and functions that are useful when running tests."""
 
-from compizconfig import Setting
-import re
+
 from Xlib import X, display, protocol
 
 _display = display.Display()
@@ -56,27 +55,3 @@ def _setProperty(_type, data, win=None, mask=None):
     _display.screen().root.send_event(ev, event_mask=mask)
 
 
-def translate_compiz_keystroke_string(keystroke_string):
-    """Get a string representing the keystroke stored in `keystroke_string`.
-
-    The returned value is suitable for passing into the Keyboard emulator.
-
-    """
-    if not isinstance(keystroke_string, basestring):
-        raise TypeError("keystroke string must be a string.")
-
-    translations = {
-        'Control': 'Ctrl',
-        'Primary': 'Ctrl',
-    }
-    regex = re.compile('[<>]')
-    parts = regex.split(keystroke_string)
-    result = []
-    for part in parts:
-        part = part.strip()
-        if part != "" and not part.isspace():
-            translated = translations.get(part, part)
-            if translated not in result:
-                result.append(translated)
-
-    return '+'.join(result)
