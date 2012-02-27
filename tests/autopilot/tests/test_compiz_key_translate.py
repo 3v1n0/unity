@@ -8,7 +8,7 @@
 
 from testscenarios import TestWithScenarios
 from testtools import TestCase
-from testtools.matchers import raises
+from testtools.matchers import raises, Equals
 
 from autopilot.utilities import translate_compiz_keystroke_string
 
@@ -25,4 +25,17 @@ class KeyTranslateArgumentTests(TestWithScenarios, TestCase):
     def test_requires_string_instance(self):
         """Function must raise TypeError unless given an instance of basestring."""
         self.assertThat(lambda: translate_compiz_keystroke_string(self.input), raises(TypeError))
+
+
+class TranslationTests(TestWithScenarios, TestCase):
+    """Test that we get the result we expect, with the given input."""
+
+    scenarios = [
+        ('empty string', dict(input='', expected='')),
+        ('single simpe letter', dict(input='a', expected='a')),
+    ]
+
+    def test_translation(self):
+        self.assertThat(translate_compiz_keystroke_string(self.input), Equals(self.expected))
+
 
