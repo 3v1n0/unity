@@ -7,8 +7,7 @@
 # by the Free Software Foundation.
 
 from subprocess import call
-from testtools.matchers import Equals
-from testtools.matchers import NotEquals
+from testtools.matchers import Equals, NotEquals
 from time import sleep
 
 from autopilot.emulators.bamf import Bamf
@@ -26,17 +25,15 @@ class SwitcherTests(AutopilotTestCase):
 
     def setUp(self):
         super(SwitcherTests, self).setUp()
-        self.bamf = Bamf()
-        self.bamf.launch_application("gucharmap.desktop")
-        self.bamf.launch_application("gcalctool.desktop")
-        self.bamf.launch_application("mahjongg.desktop")
+
+        self.start_app('Character Map')
+        self.start_app('Calculator')
+        self.start_app('Mahjongg')
+
         self.server = Switcher()
 
     def tearDown(self):
         super(SwitcherTests, self).tearDown()
-        call(["killall", "gcalctool"])
-        call(["killall", "gucharmap"])
-        call(["killall", "mahjongg"])
         sleep(1)
 
     def test_switcher_move_next(self):

@@ -114,6 +114,10 @@ class Switcher(object):
     def get_is_visible(self):
         return bool(self.__get_controller()['visible'])
 
+    def get_is_in_details_mode(self):
+        """Return True if the SwitcherView is in details mode."""
+        return bool(self.__get_model()['detail-selection'])
+
     def get_switcher_icons(self):
         """Get all icons in the switcher model.
 
