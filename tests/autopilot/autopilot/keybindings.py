@@ -25,6 +25,7 @@ from compizconfig import Plugin, Setting
 import logging
 import re
 
+from autopilot.emulators.X11 import Keyboard
 from autopilot.globals import global_context
 
 
@@ -177,3 +178,25 @@ def _translate_compiz_keystroke_string(keystroke_string):
                 result.append(translated)
 
     return '+'.join(result)
+
+
+class KeybindingsHelper(object):
+    """A helper class that makes it easier to use unity keybindings."""
+    _keyboard = Keyboard()
+
+    def keybinding(self, binding_name):
+        """Press and release the keybinding with the given name."""
+        self._keyboard.press_and_release(get(binding_name))
+
+    def keybinding_hold(self, binding_name):
+        """Hold down the hold-part of a keybinding."""
+        self._keyboard.press(get_hold_part(binding_name))
+
+    def keybinding_release(self, binding_name):
+        """Release the hold-part of a keybinding."""
+        self._keyboard.release(get_hold_part(binding_name))
+
+    def keybinding_tap(self, binding_name):
+        """Tap the tap-part of a keybinding."""
+        self._keyboard.press_and_release(get_tap_part(binding_name))
+
