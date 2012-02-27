@@ -52,3 +52,13 @@ def _setProperty(_type, data, win=None, mask=None):
     if not mask:
         mask = (X.SubstructureRedirectMask | X.SubstructureNotifyMask)
     _display.screen().root.send_event(ev, event_mask=mask)
+
+
+def get_keystroke_string_from_compiz_setting(setting_object):
+    """Get a string representing the keystroke stored in `setting_object`.
+
+    `setting_object` must be an instance of compizconfig.Setting, or a TypeError
+    will be raised.
+
+    """
+    return ""
