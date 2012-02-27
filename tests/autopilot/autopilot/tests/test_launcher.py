@@ -151,8 +151,8 @@ class LauncherRevealTests(AutopilotTestCase):
             sleep(2)
             self.assertThat(self.launcher.is_showing(x), Equals(True))
 
-    def test_launcher_does_not_reveal_when_dragging_window(self):
-        """Launcher must not reveal if we're dragging a window."""
+    def test_launcher_does_not_reveal_with_mouse_down(self):
+        """Launcher must not reveal if have mouse button 1 down."""
         num_launchers = self.launcher.num_launchers()
         screens = ScreenGeometry()
 
