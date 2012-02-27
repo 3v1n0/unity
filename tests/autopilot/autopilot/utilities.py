@@ -12,6 +12,7 @@
 
 """Various utility classes and functions that are useful when running tests."""
 
+from compizconfig import Setting
 from Xlib import X, display, protocol
 
 _display = display.Display()
@@ -61,4 +62,6 @@ def get_keystroke_string_from_compiz_setting(setting_object):
     will be raised.
 
     """
+    if not isinstance(setting_object, Setting):
+        raise TypeError("Setting object must be an instance of compizconfig.Setting.")
     return ""
