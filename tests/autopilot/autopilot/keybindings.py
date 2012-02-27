@@ -59,7 +59,19 @@ _keys = {
     "lens_reveal/files": "Super+f",
     "lens_reveal/music": "Super+m",
     # Hud
-    "hud/reveal": ("unityshell", "show_hud")
+    "hud/reveal": ("unityshell", "show_hud"),
+    # Switcher:
+    "switcher/reveal_normal": ("unityshell", "alt_tab_forward"),
+    "switcher/reveal_details": "Alt+`",
+    "switcher/cancel": "Escape",
+    # These are in compiz as 'Alt+Right' and 'Alt+Left', but the fact that it
+    # lists the Alt key won't work for us, so I'm defining them manually.
+    "switcher/next": "Tab",
+    "switcher/prev": "Shift+Tab",
+    "switcher/detail_start": "Down",
+    "switcher/detail_stop": "Up",
+    "switcher/detail_next": "`",
+    "switcher/detail_prev": "`",
 }
 
 

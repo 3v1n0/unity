@@ -10,6 +10,7 @@
 import logging
 from time import sleep
 
+from autopilot import keybindings
 from autopilot.emulators.unity import get_state_by_path, make_introspection_object
 from autopilot.emulators.X11 import Keyboard
 
@@ -27,56 +28,61 @@ class Switcher(object):
     def initiate(self):
         """Start the switcher with alt+tab."""
         logger.debug("Initiating switcher with Alt+Tab")
-        self._keyboard.press('Alt')
-        self._keyboard.press_and_release('Tab')
+        hold = keybindings.get_hold_part("switcher/reveal_normal")
+        tap = keybindings.get_tap_part("switcher/reveal_normal")
+        self._keyboard.press(hold)
+        self._keyboard.press_and_release(tap)
         sleep(1)
 
     def initiate_detail_mode(self):
         """Start detail mode with alt+`"""
         logger.debug("Initiating switcher detail mode with Alt+`")
-        self._keyboard.press('Alt')
-        self._keyboard.press_and_release('`')
+        hold = keybindings.get_hold_part("switcher/reveal_details")
+        tap = keybindings.get_tap_part("switcher/reveal_details")
+        self._keyboard.press(hold)
+        self._keyboard.press_and_release(tap)
+        sleep(1)
 
     def terminate(self):
         """Stop switcher without activating the selected icon."""
         logger.debug("Terminating switcher.")
-        self._keyboard.press_and_release('Escape')
-        self._keyboard.release('Alt')
+        self._keyboard.press_and_release(keybindings.get("switcher/cancel"))
+        self._keyboard.release(keybindings.get_hold_part("switcher/reveal_normal"))
 
     def stop(self):
         """Stop switcher and activate the selected icon."""
         logger.debug("Stopping switcher")
-        self._keyboard.release('Alt')
+        self._keyboard.release(keybindings.get_hold_part("switcher/reveal_normal"))
 
     def next_icon(self):
         """Move to the next application."""
         logger.debug("Selecting next item in switcher.")
-        self._keyboard.press_and_release('Tab')
+        self._keyboard.press_and_release(keybindings.get("switcher/next"))
 
     def previous_icon(self):
         """Move to the previous application."""
         logger.debug("Selecting previous item in switcher.")
-        self._keyboard.press_and_release('Shift+Tab')
+        self._keyboard.press_and_release(keybindings.get("switcher/prev"))
 
     def show_details(self):
         """Show detail mode."""
         logger.debug("Showing details view.")
-        self._keyboard.press_and_release('`')
+        self._keyboard.press_and_release(keybindings.get("switcher/detail_start"))
 
     def hide_details(self):
         """Hide detail mode."""
         logger.debug("Hiding details view.")
-        self._keyboard.press_and_release('Up')
+        self._keyboard.press_and_release(keybindings.get("switcher/detail_stop"))
 
     def next_detail(self):
         """Move to next detail in the switcher."""
         logger.debug("Selecting next item in details mode.")
-        self._keyboard.press_and_release('`')
+        self._keyboard.press_and_release(keybindings.get("switcher/detail_next"))
 
     def previous_detail(self):
         """Move to the previous detail in the switcher."""
         logger.debug("Selecting previous item in details mode.")
-        self._keyboard.press_and_release('Shift+`')
+        self._keyboard.press_and_release(keybindings.get("switcher/detail_prev"))
 
     def __get_icon(self, index):
         return self.__get_model()['Children'][index][1][0]
