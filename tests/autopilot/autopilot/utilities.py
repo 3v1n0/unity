@@ -55,15 +55,12 @@ def _setProperty(_type, data, win=None, mask=None):
     _display.screen().root.send_event(ev, event_mask=mask)
 
 
-def get_keystroke_string_from_compiz_setting(setting_object):
-    """Get a string representing the keystroke stored in `setting_object`.
+def translate_compiz_keystroke_string(keystroke_string):
+    """Get a string representing the keystroke stored in `keystroke_string`.
 
-    `setting_object` must be an instance of compizconfig.Setting, or a TypeError
-    will be raised.
+    The returned value is suitable for passing into the Keyboard emulator.
 
     """
-    if not isinstance(setting_object, Setting):
-        raise TypeError("Setting object must be an instance of compizconfig.Setting.")
-    if setting_object.Type != 'Key':
-        raise ValueError("Setting object must have 'Type' attribute set to 'Key'")
+    if not isinstance(keystroke_string, basestring):
+        raise TypeError("keystroke string must be a string.")
     return ""
