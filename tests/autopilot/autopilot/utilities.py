@@ -64,4 +64,4 @@ def translate_compiz_keystroke_string(keystroke_string):
     if not isinstance(keystroke_string, basestring):
         raise TypeError("keystroke string must be a string.")
 
-    return keystroke_string
+    return keystroke_string.strip()
