@@ -33,6 +33,7 @@ class TranslationTests(TestWithScenarios, TestCase):
     scenarios = [
         ('empty string', dict(input='', expected='')),
         ('single simpe letter', dict(input='a', expected='a')),
+        ('trailing space', dict(input='d   ', expected='d')),
     ]
 
     def test_translation(self):
