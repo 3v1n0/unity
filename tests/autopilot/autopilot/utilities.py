@@ -13,6 +13,7 @@
 """Various utility classes and functions that are useful when running tests."""
 
 from compizconfig import Setting
+import re
 from Xlib import X, display, protocol
 
 _display = display.Display()
@@ -64,4 +65,16 @@ def translate_compiz_keystroke_string(keystroke_string):
     if not isinstance(keystroke_string, basestring):
         raise TypeError("keystroke string must be a string.")
 
-    return keystroke_string.strip()
+    translations = {
+        'Control': 'Ctrl'
+    }
+    regex = re.compile('[<>]')
+    parts = regex.split(keystroke_string)
+    result = []
+    for part in parts:
+        part = part.strip()
+        if part != "" and not part.isspace():
+            result.append(translations.get(part, part))
+
+
+    return '+'.join(result)
