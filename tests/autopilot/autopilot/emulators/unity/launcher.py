@@ -10,6 +10,7 @@
 import logging
 from time import sleep
 
+from autopilot import keybindings
 from autopilot.emulators.unity import get_state_by_path, make_introspection_object
 from autopilot.emulators.unity.icons import BamfLauncherIcon, SimpleLauncherIcon
 from autopilot.emulators.X11 import Keyboard, Mouse
@@ -62,12 +63,12 @@ class Launcher(object):
 
     def keyboard_reveal_launcher(self):
         logger.debug("Revealing launcher with keyboard.")
-        self._keyboard.press('Super')
+        self._keyboard.press(keybindings.get("launcher/reveal"))
         sleep(1)
 
     def keyboard_unreveal_launcher(self):
         logger.debug("Un-revealing launcher with keyboard.")
-        self._keyboard.release('Super')
+        self._keyboard.press(keybindings.get("launcher/reveal"))
         sleep(1)
 
     def grab_switcher(self):
