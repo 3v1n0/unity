@@ -11,6 +11,7 @@ from testtools.matchers import LessThan
 
 from autopilot.tests import AutopilotTestCase
 from autopilot.emulators.unity.launcher import Launcher
+from autopilot.emulators.X11 import ScreenGeometry
 from autopilot.glibrunner import GlibRunner
 
 from time import sleep
@@ -149,3 +150,16 @@ class LauncherRevealTests(AutopilotTestCase):
             self.launcher.reveal_launcher(x)
             sleep(2)
             self.assertThat(self.launcher.is_showing(x), Equals(True))
+
+    def test_launcher_does_not_reveal_when_dragging_window(self):
+        """Launcher must not reveal if we're dragging a window."""
+        num_launchers = self.launcher.num_launchers()
+        screens = ScreenGeometry()
+
+        for x in range(num_launchers):
+            screens.move_mouse_to_monitor(x)
+            self.mouse.press(1)
+            self.launcher.reveal_launcher(x)
+            self.assertThat(self.launcher.is_showing(x), Equals(False))
+            self.mouse.release(1)
+

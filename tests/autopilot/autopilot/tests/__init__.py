@@ -81,6 +81,7 @@ class AutopilotTestCase(LoggedTestCase):
         super(AutopilotTestCase, self).setUp()
         self.bamf = Bamf()
         self.keyboard = Keyboard()
+        self.mouse = Mouse()
 
     def tearDown(self):
         Keyboard.cleanup()
