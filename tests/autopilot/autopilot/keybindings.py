@@ -39,6 +39,7 @@ logger = logging.getLogger(__name__)
 #
 # If keybindings are elsewhere, just store the keybinding string.
 _keys = {
+    # Launcher:
     "launcher/reveal": ('unityshell', 'show_launcher'),
     "launcher/keynav": ('unityshell', 'keyboard_focus'),
     "launcher/keynav/next": "Down",
@@ -50,7 +51,13 @@ _keys = {
     "launcher/switcher/prev": "Shift+Tab",
     "launcher/keynav/open-quicklist": "Right",
     "launcher/keynav/close-quicklist": "Left",
+    # Dash:
+    "dash/reveal": "Super",
+    # Lenses
     "lens_reveal/command": "Alt+F2",
+    "lens_reveal/apps": "Super+a",
+    "lens_reveal/files": "Super+f",
+    "lens_reveal/music": "Super+m",
 }
 
 
