@@ -54,10 +54,12 @@ _keys = {
     # Dash:
     "dash/reveal": "Super",
     # Lenses
-    "lens_reveal/command": "Alt+F2",
+    "lens_reveal/command": ("unityshell", "execute_command"),
     "lens_reveal/apps": "Super+a",
     "lens_reveal/files": "Super+f",
     "lens_reveal/music": "Super+m",
+    # Hud
+    "hud/reveal": ("unityshell", "show_hud")
 }
 
 

@@ -7,6 +7,7 @@
 # by the Free Software Foundation.
 #
 
+from autopilot import keybindings
 from autopilot.emulators.unity import UnityIntrospectionObject
 from autopilot.emulators.X11 import Keyboard
 
@@ -31,4 +32,4 @@ class HudController(UnityIntrospectionObject):
     def toggle_reveal(self):
         """Tap the 'Alt' key to toggle the hud visibility."""
         kb = Keyboard()
-        kb.press_and_release('Alt', 0.1)
+        kb.press_and_release(keybindings.get("hud/reveal"), 0.1)
