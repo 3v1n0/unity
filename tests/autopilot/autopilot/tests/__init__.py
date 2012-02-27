@@ -3,6 +3,8 @@ Autopilot tests for Unity.
 """
 
 from subprocess import call
+from compizconfig import Setting, Plugin
+from autopilot.globals import global_context
 from testtools import TestCase
 from testscenarios import TestWithScenarios
 from testtools.content import text_content
@@ -42,6 +44,9 @@ class LoggedTestCase(TestWithScenarios, TestCase):
         super(LoggedTestCase, self).setUp()
 
     def tearDown(self):
+        Keyboard.cleanup()
+        Mouse.cleanup()
+
         logger = logging.getLogger()
         for handler in logger.handlers:
             handler.flush()
@@ -92,3 +97,21 @@ class AutopilotTestCase(LoggedTestCase):
         """Close all instances of the app_name."""
         app = self.KNOWN_APPS[app_name]
         call(["killall", app['process-name']])
+        super(LoggedTestCase, self).tearDown()
+
+    def set_unity_option(self, option_name, option_value):
+        """Set an option in the unity compiz plugin options.
+
+        The value will be set for the current test only.
+
+        """
+        old_value = self._set_unity_option(option_name, option_value)
+        self.addCleanup(self._set_unity_option, option_name, old_value)
+
+    def _set_unity_option(self, option_name, option_value):
+        plugin = Plugin(global_context, "unityshell")
+        setting = Setting(plugin, option_name)
+        old_value = setting.Value
+        setting.Value = option_value
+        global_context.Write()
+        return old_value
