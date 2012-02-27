@@ -52,7 +52,12 @@ class TranslationTests(TestWithScenarios, TestCase):
         ('Primary+Down', dict(input='<Control>Down', expected='Ctrl+Down')),
         ('Alt+Left', dict(input='<Alt>Left', expected='Alt+Left')),
         ('Shift+F3', dict(input='<Shift>F3', expected='Shift+F3')),
-        ('duplicate keys', dict(input='<Control><Control>', expected='Ctrl')),
+        ('duplicate keys Ctrl+Ctrl', dict(input='<Control><Control>', expected='Ctrl')),
+        ('duplicate keys Ctrl+Primary', dict(input='<Control><Primary>', expected='Ctrl')),
+        ('duplicate keys Ctrl+Primary', dict(input='<Primary><Control>', expected='Ctrl')),
+        ('duplicate keys Alt+Alt', dict(input='<Alt><Alt>', expected='Alt')),
+        ('duplicate keys Ctrl+Primary+left', dict(input='<Control><Primary>Left', expected='Ctrl+Left')),
+        ('first key wins', dict(input='<Control><Alt>Down<Alt>', expected='Ctrl+Alt+Down')),
     ]
 
     def test_translation(self):
