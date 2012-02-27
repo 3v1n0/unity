@@ -7,10 +7,9 @@
 # by the Free Software Foundation.
 #
 
-from compizconfig import Setting, Plugin
 from time import sleep
 
-from autopilot.globals import global_context
+from autopilot.keybindings import KeybindingsHelper
 from autopilot.emulators.unity import UnityIntrospectionObject
 from autopilot.emulators.X11 import Keyboard, Mouse
 
@@ -19,7 +18,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class Dash(object):
+class Dash(KeybindingsHelper):
     """
     An emulator class that makes it easier to interact with the unity dash.
     """
@@ -28,8 +27,6 @@ class Dash(object):
         self.controller = DashController.get_all_instances()[0]
         self.view = self.controller.get_dash_view()
 
-        self.plugin = Plugin(global_context, "unityshell")
-        self.setting = Setting(self.plugin, "show_launcher")
         self._keyboard = Keyboard()
         super(Dash, self).__init__()
 
@@ -38,7 +35,7 @@ class Dash(object):
         Reveals the dash if it's currently hidden, hides it otherwise.
         """
         logger.debug("Toggling dash visibility with Super key.")
-        self._keyboard.press_and_release("Super")
+        self.keybinding("dash/reveal")
         sleep(1)
 
     def ensure_visible(self):
@@ -74,28 +71,27 @@ class Dash(object):
     def reveal_application_lens(self):
         """Reveal the application lense."""
         logger.debug("Revealing application lens with Super+a.")
-        self._keyboard.press('Super')
-        self._keyboard.press_and_release("a")
-        self._keyboard.release('Super')
+        self._reveal_lens("lens_reveal/apps")
 
     def reveal_music_lens(self):
         """Reveal the music lense."""
         logger.debug("Revealing music lens with Super+m.")
-        self._keyboard.press('Super')
-        self._keyboard.press_and_release("m")
-        self._keyboard.release('Super')
+        self._reveal_lens("lens_reveal/music")
 
     def reveal_file_lens(self):
         """Reveal the file lense."""
         logger.debug("Revealing file lens with Super+f.")
-        self._keyboard.press('Super')
-        self._keyboard.press_and_release("f")
-        self._keyboard.release('Super')
+        self._reveal_lens("lens_reveal/files")
 
     def reveal_command_lens(self):
         """Reveal the 'run command' lens."""
         logger.debug("Revealing command lens with Alt+F2.")
-        self._keyboard.press_and_release('Alt+F2')
+        self._reveal_lens("lens_reveal/command")
+
+    def _reveal_lens(self, binding_name):
+        self.keybinding_hold(binding_name)
+        self.keybinding_tap(binding_name)
+        self.keybinding_release(binding_name)
 
     def get_current_lens(self):
         """Get the currently-active LensView object."""
