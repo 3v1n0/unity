@@ -2,6 +2,8 @@
 Autopilot tests for Unity.
 """
 
+from compizconfig import Setting, Plugin
+from autopilot.globals import global_context
 from testtools import TestCase
 from testscenarios import TestWithScenarios
 from testtools.content import text_content
@@ -51,3 +53,20 @@ class AutopilotTestCase(TestWithScenarios, TestCase):
         #self._log_buffer.close()
         del self._log_buffer
         super(AutopilotTestCase, self).tearDown()
+
+    def set_unity_option(self, option_name, option_value):
+        """Set an option in the unity compiz plugin options.
+
+        The value will be set for the current test only.
+
+        """
+        old_value = self._set_unity_option(option_name, option_value)
+        self.addCleanup(self._set_unity_option, option_name, old_value)
+
+    def _set_unity_option(self, option_name, option_value):
+        plugin = Plugin(global_context, "unityshell")
+        setting = Setting(plugin, option_name)
+        old_value = setting.Value
+        setting.Value = option_value
+        global_context.Write()
+        return old_value

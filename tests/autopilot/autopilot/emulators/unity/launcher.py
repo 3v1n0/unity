@@ -12,7 +12,7 @@ from time import sleep
 
 from autopilot.emulators.unity import get_state_by_path, make_introspection_object
 from autopilot.emulators.unity.icons import BamfLauncherIcon, SimpleLauncherIcon
-from autopilot.emulators.X11 import Keyboard, Mouse
+from autopilot.emulators.X11 import Keyboard, Mouse, ScreenGeometry
 
 
 logger = logging.getLogger(__name__)
@@ -33,6 +33,7 @@ class Launcher(object):
         self.grabbed = False
         self._keyboard = Keyboard()
         self._mouse = Mouse()
+        self._screen = ScreenGeometry()
 
         state = self.__get_state(0)
         self.icon_width = int(state['icon-size'])
