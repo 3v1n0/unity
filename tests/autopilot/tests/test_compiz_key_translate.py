@@ -58,6 +58,7 @@ class TranslationTests(TestWithScenarios, TestCase):
         ('duplicate keys Alt+Alt', dict(input='<Alt><Alt>', expected='Alt')),
         ('duplicate keys Ctrl+Primary+left', dict(input='<Control><Primary>Left', expected='Ctrl+Left')),
         ('first key wins', dict(input='<Control><Alt>Down<Alt>', expected='Ctrl+Alt+Down')),
+        ('Getting silly now', dict(input='<Control><Primary><Shift><Shift><Alt>Left', expected='Ctrl+Shift+Alt+Left')),
     ]
 
     def test_translation(self):

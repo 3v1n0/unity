@@ -79,5 +79,4 @@ def translate_compiz_keystroke_string(keystroke_string):
             if translated not in result:
                 result.append(translated)
 
-
     return '+'.join(result)
