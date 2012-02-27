@@ -38,7 +38,7 @@ namespace unity
 {
 namespace dash
 {
-class ResultView : public nux::View, public unity::debug::Introspectable
+class ResultView : public nux::View, public debug::Introspectable
 {
 public:
   NUX_DECLARE_OBJECT_TYPE(ResultView, nux::View);
@@ -63,6 +63,8 @@ public:
 
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
+  void AddChild(unity::debug::Introspectable* child);
+  void RemoveChild(unity::debug::Introspectable* child);
   IntrospectableList const& GetIntrospectableChildren();
 
 protected:

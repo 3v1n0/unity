@@ -80,6 +80,7 @@ class Keyboard(object):
         'Super' : 'Super_L',
         'Shift' : 'Shift_L',
         'Enter' : 'Return',
+        'Space' : ' ',
     }
 
     def __init__(self):
