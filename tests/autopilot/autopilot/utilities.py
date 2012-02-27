@@ -64,4 +64,6 @@ def get_keystroke_string_from_compiz_setting(setting_object):
     """
     if not isinstance(setting_object, Setting):
         raise TypeError("Setting object must be an instance of compizconfig.Setting.")
+    if setting_object.Type != 'Key':
+        raise ValueError("Setting object must have 'Type' attribute set to 'Key'")
     return ""
