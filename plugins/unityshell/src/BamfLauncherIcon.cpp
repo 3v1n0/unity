@@ -663,8 +663,6 @@ void BamfLauncherIcon::EnsureWindowState()
 
 void BamfLauncherIcon::UpdateDesktopQuickList()
 {
-  GKeyFile* keyfile;
-  glib::Error error;
   std::string const& desktop_file = DesktopFile();
 
   if (desktop_file.empty())
