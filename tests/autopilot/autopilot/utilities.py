@@ -75,7 +75,9 @@ def translate_compiz_keystroke_string(keystroke_string):
     for part in parts:
         part = part.strip()
         if part != "" and not part.isspace():
-            result.append(translations.get(part, part))
+            translated = translations.get(part, part)
+            if translated not in result:
+                result.append(translated)
 
 
     return '+'.join(result)
