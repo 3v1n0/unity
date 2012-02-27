@@ -12,6 +12,7 @@
 
 """Various utility classes and functions that are useful when running tests."""
 
+
 from Xlib import X, display, protocol
 
 _display = display.Display()
@@ -52,3 +53,5 @@ def _setProperty(_type, data, win=None, mask=None):
     if not mask:
         mask = (X.SubstructureRedirectMask | X.SubstructureNotifyMask)
     _display.screen().root.send_event(ev, event_mask=mask)
+
+
