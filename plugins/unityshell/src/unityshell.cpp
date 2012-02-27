@@ -118,6 +118,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , dash_is_open_ (false)
   , grab_index_ (0)
   , painting_tray_ (false)
+  , last_scroll_event_(0)
   , last_hud_show_time_(0)
 {
   Timer timer;
@@ -329,7 +330,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
      GeisAdapter::Default()->Run();
      gestureEngine = new GestureEngine(screen);
 
-     CompString name(PKGDATADIR"/panel-shadow.png");
+     CompString name(PKGDATADIR "/panel-shadow.png");
      CompString pname("unityshell");
      CompSize size(1, 20);
      _shadow_texture = GLTexture::readImageToTexture(name, pname, size);
@@ -1319,17 +1320,23 @@ void UnityScreen::handleEvent(XEvent* event)
         launcher_controller_->KeyNavTerminate(false);
         EnableCancelAction(false);
       }
+      break;
+    case ButtonRelease:
       if (switcher_controller_ && switcher_controller_->Visible())
       {
         XButtonEvent *bev = reinterpret_cast<XButtonEvent*>(event);
+        if (bev->time - last_scroll_event_ > 150)
+        {
+          if (bev->button == 7)
+          {
+            switcher_controller_->Prev();
+          }
+          else if (bev->button == 6)
+          {
+            switcher_controller_->Next();
+          }
 
-        if (bev->button == 7)
-        {
-          switcher_controller_->Prev();
-        }
-        else if (bev->button == 6)
-        {
-          switcher_controller_->Next();
+          last_scroll_event_ = bev->time;
         }
       }
       break;
