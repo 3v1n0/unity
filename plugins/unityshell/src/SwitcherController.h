@@ -67,7 +67,6 @@ public:
   virtual ~Controller();
 
   nux::Property<int> timeout_length;
-
   nux::Property<bool> detail_on_timeout;
   nux::Property<int>  detail_timeout_length;
 

@@ -53,7 +53,7 @@ Controller::Controller()
   ubus_manager_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED, sigc::mem_fun(this, &Controller::OnBackgroundUpdate));
 
   /* Construct the view after a prefixed timeout, to improve the startup time */
-  lazy_timer_ = g_timeout_add_seconds_full(G_PRIORITY_LOW, 10, [] (gpointer data) -> gboolean {
+  lazy_timer_ = g_timeout_add_seconds_full(G_PRIORITY_LOW, 20, [] (gpointer data) -> gboolean {
     auto self = static_cast<Controller*>(data);
     self->lazy_timer_ = 0;
     self->ConstructWindow();
