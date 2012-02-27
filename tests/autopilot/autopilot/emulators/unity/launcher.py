@@ -31,7 +31,7 @@ class Launcher(object):
         self.height = 0
         self.show_timeout = 1
         self.hide_timeout = 1
-        self.grabbed = False
+        self.in_keynav_mode = False
         self._keyboard = Keyboard()
         self._mouse = Mouse()
 
@@ -73,52 +73,54 @@ class Launcher(object):
 
     def grab_switcher(self):
         logger.debug("Initiating launcher keyboard navigation with Alt+F1.")
-        self._keyboard.press_and_release('Alt+F1')
-        self.grabbed = True
+        self._keyboard.press_and_release(keybindings.get("launcher/keynav"))
+        self.in_keynav_mode = True
 
     def switcher_enter_quicklist(self):
-        if self.grabbed:
-            logger.debug("Opening quicklist for currently selected icon.")
-            self._keyboard.press_and_release('Right')
+        if not self.in_keynav_mode:
+            raise RuntimeError("Cannot open switcher quicklist while not in keynav mode.")
+        logger.debug("Opening quicklist for currently selected icon.")
+        self._keyboard.press_and_release(keybindings.get("launcher/keynav/open-quicklist"))
 
     def switcher_exit_quicklist(self):
-        if self.grabbed:
-            logger.debug("Closing quicklist for currently selected icon.")
-            self._keyboard.press_and_release('Left')
+        if not self.in_keynav_mode:
+            raise RuntimeError("Cannot close switcher quicklist while not in keynav mode.")
+        logger.debug("Closing quicklist for currently selected icon.")
+        self._keyboard.press_and_release(keybindings.get("launcher/keynav/close-quicklist"))
 
     def start_switcher(self):
         logger.debug("Starting Super+Tab switcher.")
-        self._keyboard.press('Super+Tab')
-        self._keyboard.release('Tab')
+        self._keyboard.press(keybindings.get_hold_part("launcher/switcher"))
+        self._keyboard.press_and_release(keybindings.get_tap_part("launcher/switcher"))
         sleep(1)
 
     def end_switcher(self, cancel):
         if cancel:
             logger.debug("Cancelling keyboard navigation mode.")
-            self._keyboard.press_and_release('Escape')
-            if self.grabbed != True:
-                self._keyboard.release('Super')
+            self._keyboard.press_and_release(keybindings.get("launcher/keynav/exit"))
+            if not self.in_keynav_mode:
+                self._keyboard.release(keybindings.get_hold_part("launcher/switcher"))
         else:
             logger.debug("Ending keyboard navigation mode.")
-            if self.grabbed:
-                self._keyboard.press_and_release('\n')
+            if self.in_keynav_mode:
+                self._keyboard.press_and_release(keybindings.get("launcher/keynav/activate"))
             else:
-                self._keyboard.release('Super')
-        self.grabbed = False
+                self._keyboard.release(keybindings.get_hold_part("launcher/switcher"))
+        self.in_keynav_mode = False
 
     def switcher_next(self):
         logger.debug("Selecting next item in keyboard navigation mode.")
-        if self.grabbed:
-            self._keyboard.press_and_release('Down')
+        if self.in_keynav_mode:
+            self._keyboard.press_and_release(keybindings.get("launcher/keynav/next"))
         else:
-            self._keyboard.press_and_release('Tab')
+            self._keyboard.press_and_release(keybindings.get("launcher/switcher/next"))
 
     def switcher_prev(self):
         logger.debug("Selecting previous item in keyboard navigation mode.")
-        if self.grabbed:
-            self._keyboard.press_and_release('Up')
+        if self.in_keynav_mode:
+            self._keyboard.press_and_release(keybindings.get("launcher/keynav/prev"))
         else:
-            self._keyboard.press_and_release('Shift+Tab')
+            self._keyboard.press_and_release(keybindings.get("launcher/switcher/prev"))
 
     def is_quicklist_open(self, monitor):
         state = self.__get_state(monitor)

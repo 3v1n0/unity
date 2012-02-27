@@ -31,20 +31,28 @@ from autopilot.globals import global_context
 logger = logging.getLogger(__name__)
 
 
-# Fill this dictionary for all keybindings stored in compizconfig. The key is the
-# name used in emulators & tests. The value is a tuple of:
-# (compiz plugin name, setting_name)
-# The plugin name is probably either 'unityshell', or 'core' (for options that
-# appear under "General Options" in CCSM).
-_compiz_keys = {
+#
+# Fill this dictionary with keybindings we want to store.
+#
+# If keybindings are from compizconfig, the value should be a 2-value tuple
+# containging (plugin_name, setting_name).
+#
+# If keybindings are elsewhere, just store the keybinding string.
+_keys = {
     "launcher/reveal": ('unityshell', 'show_launcher'),
-}
-
-
-# For key bindings that aren't stored in compizconfig, fill this dictionary.
-_other_keys = {
+    "launcher/keynav": ('unityshell', 'keyboard_focus'),
+    "launcher/keynav/next": "Down",
+    "launcher/keynav/prev": "Up",
+    "launcher/keynav/activate": "Enter",
+    "launcher/keynav/exit": "Escape",
+    "launcher/switcher": ('unityshell', 'launcher_switcher_forward'),
+    "launcher/switcher/next": "Tab",
+    "launcher/switcher/prev": "Shift+Tab",
+    "launcher/keynav/open-quicklist": "Right",
+    "launcher/keynav/close-quicklist": "Left",
     "lens_reveal/command": "Alt+F2",
 }
+
 
 
 def get(binding_name):
@@ -58,26 +66,59 @@ def get(binding_name):
     """
     if not isinstance(binding_name, basestring):
         raise TypeError("binding_name must be a string.")
-    if _compiz_keys.has_key(binding_name):
-        return _get_compiz_keybinding(binding_name)
-    elif _other_keys.has_key(binding_name):
-        return _other_keys[binding_name]
-    else:
+    if binding_name not in _keys:
         raise ValueError("Unknown binding name '%s'." % (binding_name))
+    v = _keys[binding_name]
+    if isinstance(v, basestring):
+        return v
+    else:
+        return _get_compiz_keybinding(v)
 
 
-def _get_compiz_keybinding(binding_name):
+def get_hold_part(binding_name):
+    """Returns the part of a keybinding that must be held permenantly.
+
+    Use this function to split bindings like "Alt+Tab" into the part that must be
+    held down. See get_tap_part for the part that must be tapped.
+
+    Raises a ValueError if the binding specified does not have multiple parts.
+
+    """
+    binding = get(binding_name)
+    parts = binding.split('+')
+    if len(parts) == 1:
+        raise ValueError("Key binding '%s' does not have a hold part." % binding_name)
+    return '+'.join(parts[:-1])
+
+
+def get_tap_part(binding_name):
+    """Returns the part of a keybinding that must be tapped.
+
+    Use this function to split bindings like "Alt+Tab" into the part that must be
+    held tapped. See get_hold_part for the part that must be held down.
+
+    Raises a ValueError if the binding specified does not have multiple parts.
+
+    """
+    binding = get(binding_name)
+    parts = binding.split('+')
+    if len(parts) == 1:
+        raise ValueError("Key binding '%s' does not have a tap part." % binding_name)
+    return parts[-1]
+
+
+def _get_compiz_keybinding(compiz_tuple):
     """Given a keybinding name, get the keybinding string from the compiz option.
 
     Raises ValueError if the compiz setting described does not hold a keybinding.
     Raises RuntimeError if the compiz keybinding has been disabled.
 
     """
-    plugin_name, setting_name = _compiz_keys[binding_name]
+    plugin_name, setting_name = compiz_tuple
     plugin = Plugin(global_context, plugin_name)
     setting = Setting(plugin, setting_name)
     if setting.Type != 'Key':
-        raise ValueError("Key binding '%s' maps to a compiz option that does not hold a keybinding." % (binding_name))
+        raise ValueError("Key binding maps to a compiz option that does not hold a keybinding.")
     if not plugin.Enabled:
         logger.warning("Returning keybinding for '%s' which is in un-enabled plugin '%s'",
             setting.ShortDesc,
