@@ -9,7 +9,7 @@
 
 from time import sleep
 
-from autopilot import keybindings
+from autopilot.keybindings import KeybindingsHelper
 from autopilot.emulators.unity import UnityIntrospectionObject
 from autopilot.emulators.X11 import Keyboard
 
@@ -18,7 +18,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class Dash(object):
+class Dash(KeybindingsHelper):
     """
     An emulator class that makes it easier to interact with the unity dash.
     """
@@ -35,7 +35,7 @@ class Dash(object):
         Reveals the dash if it's currently hidden, hides it otherwise.
         """
         logger.debug("Toggling dash visibility with Super key.")
-        self._keyboard.press_and_release(keybindings.get("dash/reveal"))
+        self.keybinding("dash/reveal")
         sleep(1)
 
     def ensure_visible(self):
@@ -89,11 +89,9 @@ class Dash(object):
         self._reveal_lens("lens_reveal/command")
 
     def _reveal_lens(self, binding_name):
-        hold = keybindings.get_hold_part(binding_name)
-        tap = keybindings.get_tap_part(binding_name)
-        self._keyboard.press(hold)
-        self._keyboard.press_and_release(tap)
-        self._keyboard.release(hold)
+        self.keybinding_hold(binding_name)
+        self.keybinding_tap(binding_name)
+        self.keybinding_release(binding_name)
 
     def get_current_lens(self):
         """Get the currently-active LensView object."""
