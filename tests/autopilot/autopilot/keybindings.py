@@ -23,6 +23,7 @@ Keybindings come from two different places:
 
 from compizconfig import Plugin, Setting
 import logging
+from types import NoneType
 import re
 
 from autopilot.emulators.X11 import Keyboard
@@ -191,8 +192,8 @@ class KeybindingsHelper(object):
         keyboard emulator.
 
         """
-        if type(delay) is not float:
-            raise TypeError("delay parameter must be a float.")
+        if type(delay) not in (float, NoneType):
+            raise TypeError("delay parameter must be a float if it is defined.")
         if delay:
             self._keyboard.press_and_release(get(binding_name), delay)
         else:
