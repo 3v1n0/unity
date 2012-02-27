@@ -10,7 +10,7 @@
 import logging
 from time import sleep
 
-from autopilot import keybindings
+from autopilot.keybindings import KeybindingsHelper
 from autopilot.emulators.unity import get_state_by_path, make_introspection_object
 from autopilot.emulators.unity.icons import BamfLauncherIcon, SimpleLauncherIcon
 from autopilot.emulators.X11 import Keyboard, Mouse
@@ -19,7 +19,7 @@ from autopilot.emulators.X11 import Keyboard, Mouse
 logger = logging.getLogger(__name__)
 
 
-class Launcher(object):
+class Launcher(KeybindingsHelper):
     """Interact with the unity Launcher."""
 
     def __init__(self):
@@ -63,64 +63,64 @@ class Launcher(object):
 
     def keyboard_reveal_launcher(self):
         logger.debug("Revealing launcher with keyboard.")
-        self._keyboard.press(keybindings.get("launcher/reveal"))
+        self.keybinding_hold("launcher/reveal")
         sleep(1)
 
     def keyboard_unreveal_launcher(self):
         logger.debug("Un-revealing launcher with keyboard.")
-        self._keyboard.press(keybindings.get("launcher/reveal"))
+        self.keybinding_release("launcher/reveal")
         sleep(1)
 
     def grab_switcher(self):
         logger.debug("Initiating launcher keyboard navigation with Alt+F1.")
-        self._keyboard.press_and_release(keybindings.get("launcher/keynav"))
+        self.keybinding("launcher/keynav")
         self.in_keynav_mode = True
 
     def switcher_enter_quicklist(self):
         if not self.in_keynav_mode:
             raise RuntimeError("Cannot open switcher quicklist while not in keynav mode.")
         logger.debug("Opening quicklist for currently selected icon.")
-        self._keyboard.press_and_release(keybindings.get("launcher/keynav/open-quicklist"))
+        self.keybinding("launcher/keynav/open-quicklist")
 
     def switcher_exit_quicklist(self):
         if not self.in_keynav_mode:
             raise RuntimeError("Cannot close switcher quicklist while not in keynav mode.")
         logger.debug("Closing quicklist for currently selected icon.")
-        self._keyboard.press_and_release(keybindings.get("launcher/keynav/close-quicklist"))
+        self.keybinding("launcher/keynav/close-quicklist")
 
     def start_switcher(self):
         logger.debug("Starting Super+Tab switcher.")
-        self._keyboard.press(keybindings.get_hold_part("launcher/switcher"))
-        self._keyboard.press_and_release(keybindings.get_tap_part("launcher/switcher"))
+        self.keybinding_hold("launcher/switcher")
+        self.keybinding_tap("launcher/switcher")
         sleep(1)
 
     def end_switcher(self, cancel):
         if cancel:
             logger.debug("Cancelling keyboard navigation mode.")
-            self._keyboard.press_and_release(keybindings.get("launcher/keynav/exit"))
+            self.keybinding("launcher/keynav/exit")
             if not self.in_keynav_mode:
-                self._keyboard.release(keybindings.get_hold_part("launcher/switcher"))
+                self.keybinding_release("launcher/switcher")
         else:
             logger.debug("Ending keyboard navigation mode.")
             if self.in_keynav_mode:
-                self._keyboard.press_and_release(keybindings.get("launcher/keynav/activate"))
+                self.keybinding("launcher/keynav/activate")
             else:
-                self._keyboard.release(keybindings.get_hold_part("launcher/switcher"))
+                self.keybinding_release("launcher/switcher")
         self.in_keynav_mode = False
 
     def switcher_next(self):
         logger.debug("Selecting next item in keyboard navigation mode.")
         if self.in_keynav_mode:
-            self._keyboard.press_and_release(keybindings.get("launcher/keynav/next"))
+            self.keybinding("launcher/keynav/next")
         else:
-            self._keyboard.press_and_release(keybindings.get("launcher/switcher/next"))
+            self.keybinding("launcher/switcher/next")
 
     def switcher_prev(self):
         logger.debug("Selecting previous item in keyboard navigation mode.")
         if self.in_keynav_mode:
-            self._keyboard.press_and_release(keybindings.get("launcher/keynav/prev"))
+            self.keybinding("launcher/keynav/prev")
         else:
-            self._keyboard.press_and_release(keybindings.get("launcher/switcher/prev"))
+            self.keybinding("launcher/switcher/prev")
 
     def is_quicklist_open(self, monitor):
         state = self.__get_state(monitor)
