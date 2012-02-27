@@ -29,22 +29,18 @@ class SwitcherTests(AutopilotTestCase):
         global_context.Write()
 
     def setUp(self):
+        super(SwitcherTests, self).setUp()
+
         self.plugin = Plugin(global_context, "unityshell")
         self.setting = Setting(self.plugin, "alt_tab_timeout")
-        self.bamf = Bamf()
 
-        self.bamf.launch_application("gucharmap.desktop")
-        self.bamf.launch_application("gcalctool.desktop")
-        self.bamf.launch_application("mahjongg.desktop")
-
-        super(SwitcherTests, self).setUp()
+        self.start_app('Character Map')
+        self.start_app('Calculator')
+        self.start_app('Mahjongg')
 
         self.server = Switcher()
 
     def tearDown(self):
-        call(["killall", "gcalctool"])
-        call(["killall", "gucharmap"])
-        call(["killall", "mahjongg"])
         super(SwitcherTests, self).tearDown()
         sleep(1)
 

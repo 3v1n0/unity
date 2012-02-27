@@ -2,6 +2,7 @@
 Autopilot tests for Unity.
 """
 
+from subprocess import call
 from testtools import TestCase
 from testscenarios import TestWithScenarios
 from testtools.content import text_content
@@ -56,10 +57,38 @@ class LoggedTestCase(TestWithScenarios, TestCase):
 class AutopilotTestCase(LoggedTestCase):
     """Wrapper around testtools.TestCase that takes care of some cleaning."""
 
+    KNOWN_APPS = {
+        'Character Map' : {
+            'desktop-file': 'gucharmap.desktop',
+            'process-name': 'gucharmap',
+            },
+        'Calculator' : {
+            'desktop-file': 'gcalctool.desktop',
+            'process-name': 'gcalctool',
+            },
+        'Mahjongg' : {
+            'desktop-file': 'mahjongg.desktop',
+            'process-name': 'mahjongg',
+            },
+        }
+
     def setUp(self):
         super(AutopilotTestCase, self).setUp()
+        self.bamf = Bamf()
+        self.keyboard = Keyboard()
 
     def tearDown(self):
         Keyboard.cleanup()
         Mouse.cleanup()
         super(AutopilotTestCase, self).tearDown()
+
+    def start_app(self, app_name):
+        """Start one of the known apps, and kill it on tear down."""
+        app = self.KNOWN_APPS[app_name]
+        self.bamf.launch_application(app['desktop-file'])
+        self.addCleanup(call, ["killall", app['process-name']])
+
+    def close_all_app(self, app_name):
+        """Close all instances of the app_name."""
+        app = self.KNOWN_APPS[app_name]
+        call(["killall", app['process-name']])
