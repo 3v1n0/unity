@@ -65,6 +65,7 @@ _keys = {
     # Switcher:
     "switcher/reveal_normal": ("unityshell", "alt_tab_forward"),
     "switcher/reveal_details": "Alt+`",
+    "switcher/reveal_all": ("unityshell", "alt_tab_forward_all"),
     "switcher/cancel": "Escape",
     # These are in compiz as 'Alt+Right' and 'Alt+Left', but the fact that it
     # lists the Alt key won't work for us, so I'm defining them manually.
@@ -74,6 +75,11 @@ _keys = {
     "switcher/detail_stop": "Up",
     "switcher/detail_next": "`",
     "switcher/detail_prev": "`",
+    # Workspace switcher (wall):
+    "workspace/move_left": ("wall", "left_key"),
+    "workspace/move_right": ("wall", "right_key"),
+    "workspace/move_up": ("wall", "up_key"),
+    "workspace/move_down": ("wall", "down_key"),
 }
 
 
@@ -110,7 +116,7 @@ def get_hold_part(binding_name):
     binding = get(binding_name)
     parts = binding.split('+')
     if len(parts) == 1:
-        raise ValueError("Key binding '%s' does not have a hold part." % binding_name)
+        logger.warning("Key binding '%s' does not have a hold part.", binding_name)
     return '+'.join(parts[:-1])
 
 
@@ -126,7 +132,7 @@ def get_tap_part(binding_name):
     binding = get(binding_name)
     parts = binding.split('+')
     if len(parts) == 1:
-        raise ValueError("Key binding '%s' does not have a tap part." % binding_name)
+        logger.warning("Key binding '%s' does not have a tap part.", binding_name)
     return parts[-1]
 
 

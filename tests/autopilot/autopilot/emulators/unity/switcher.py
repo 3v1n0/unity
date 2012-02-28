@@ -14,6 +14,9 @@ from autopilot.keybindings import KeybindingsHelper
 from autopilot.emulators.unity import get_state_by_path, make_introspection_object
 from autopilot.emulators.X11 import Keyboard
 
+# even though we don't use these directly, we need to make sure they've been
+# imported so the classes contained are registered with the introspection API.
+from autopilot.emulators.unity.icons import *
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +40,16 @@ class Switcher(KeybindingsHelper):
         logger.debug("Initiating switcher detail mode with Alt+`")
         self.keybinding_hold("switcher/reveal_details")
         self.keybinding_tap("switcher/reveal_details")
+        sleep(1)
+
+    def initiate_all_mode(self):
+        """Start switcher in 'all workspaces' mode.
+
+        Shows apps from all workspaces, instead of just the current workspace.
+        """
+        logger.debug("Initiating switcher in 'all workspaces' mode.")
+        self.keybinding_hold("switcher/reveal_all")
+        self.keybinding_tap("switcher/reveal_all")
         sleep(1)
 
     def terminate(self):
