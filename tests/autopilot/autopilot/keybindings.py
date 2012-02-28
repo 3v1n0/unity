@@ -65,6 +65,7 @@ _keys = {
     # Switcher:
     "switcher/reveal_normal": ("unityshell", "alt_tab_forward"),
     "switcher/reveal_details": "Alt+`",
+    "switcher/reveal_all": ("unityshell", "alt_tab_forward_all"),
     "switcher/cancel": "Escape",
     # These are in compiz as 'Alt+Right' and 'Alt+Left', but the fact that it
     # lists the Alt key won't work for us, so I'm defining them manually.

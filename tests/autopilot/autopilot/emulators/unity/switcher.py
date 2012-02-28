@@ -48,8 +48,8 @@ class Switcher(KeybindingsHelper):
         Shows apps from all workspaces, instead of just the current workspace.
         """
         logger.debug("Initiating switcher in 'all workspaces' mode.")
-        self.keybinding_hold("switcher/reveal_normal")
-        self.keybinding_tap("switcher/reveal_normal")
+        self.keybinding_hold("switcher/reveal_all")
+        self.keybinding_tap("switcher/reveal_all")
         sleep(1)
 
     def terminate(self):
