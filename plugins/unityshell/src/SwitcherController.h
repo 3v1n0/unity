@@ -98,6 +98,10 @@ protected:
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
 
+  virtual void ConstructWindow();
+  virtual void ConstructView();
+  virtual void ShowView();
+
 private:
   enum DetailMode
   {
@@ -105,10 +109,6 @@ private:
     TAB_NEXT_WINDOW_LOOP,
     TAB_NEXT_TILE,
   };
-
-  void ConstructWindow();
-  void ConstructView();
-  void ShowView();
 
   void OnModelSelectionChanged(launcher::AbstractLauncherIcon::Ptr icon);
   void OnBackgroundUpdate(GVariant* data);

@@ -194,6 +194,7 @@ if (GTEST_FOUND AND
                  test_texture_cache.cpp
                  test_main.cpp
                  test_icon_loader.cpp
+                 test_switcher_controller.cpp
                  test_switcher_model.cpp
                  ${UNITY_SRC}/AbstractLauncherIcon.cpp
                  ${UNITY_SRC}/BackgroundEffectHelper.cpp
