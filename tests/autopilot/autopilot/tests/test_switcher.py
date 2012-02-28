@@ -167,3 +167,42 @@ class SwitcherWorkspaceTests(AutopilotTestCase):
         self.switcher.terminate()
         self.assertThat(icon_names, Contains("Character Map"))
         self.assertThat(icon_names, Contains("Calculator"))
+
+    def test_switcher_can_switch_to_minimised_window(self):
+        """Switcher must be able to switch to a minimised window when there's
+        another instance of the same application on a different workspace."""
+        # disable automatic gridding of the switcher after a timeout, since it makes
+        # it harder to write the tests.
+        self.set_unity_option("alt_tab_timeout", False)
+        self.close_all_app("Calculator")
+        self.close_all_app("Mahjongg")
+
+        self.workspace.switch_to(1)
+        self.start_app("Mahjongg")
+
+        self.workspace.switch_to(3)
+        self.start_app("Mahjongg")
+        sleep(1)
+        # TODO: When the 'minimise window' keybinding works we can replace this hack:
+        self.keyboard.press_and_release("Alt+Space")
+        sleep(1)
+        self.keyboard.press_and_release("n")
+        self.start_app("Calculator")
+        sleep(1)
+
+        self.switcher.initiate()
+        sleep(1)
+        while self.switcher.current_icon.tooltip_text != 'Mahjongg':
+            self.switcher.next_icon()
+            sleep(1)
+        self.switcher.stop()
+        sleep(1)
+
+        #get calculator windows - there should be only one:
+        mahjongg_apps = self.bamf.get_running_applications_by_title("Mahjongg")
+        self.assertThat(len(mahjongg_apps), Equals(1))
+        wins = mahjongg_apps[0].get_windows()
+        self.assertThat(len(wins), Equals(2))
+        self.assertThat(wins[0].is_focused, Equals(True))
+        self.assertThat(wins[1].is_focused, Equals(True))
+
