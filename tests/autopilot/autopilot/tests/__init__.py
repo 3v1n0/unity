@@ -82,6 +82,7 @@ class AutopilotTestCase(LoggedTestCase):
         super(AutopilotTestCase, self).setUp()
         self.bamf = Bamf()
         self.keyboard = Keyboard()
+        self.mouse = Mouse()
         self.workspace = WorkspaceManager()
         self.addCleanup(self.workspace.switch_to, self.workspace.current_workspace)
 
