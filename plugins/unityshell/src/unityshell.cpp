@@ -2599,12 +2599,12 @@ void UnityScreen::InitHints()
   hints_.push_back(new shortcut::Hint(dash, "", "", _("Open currently focused item."), shortcut::HARDCODED_OPTION, _("Enter & Return")));
   hints_.push_back(new shortcut::Hint(dash, "", "", _("'Run Command' mode."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "execute_command"));
  
-  // Top Bar
-  std::string const topbar = _("Top Bar");
+  // Menu Bar
+  std::string const menubar = _("Menu Bar");
   
-  hints_.push_back(new shortcut::Hint(topbar, "", "", _("Reveals application menu."), shortcut::HARDCODED_OPTION, "Alt"));
-  hints_.push_back(new shortcut::Hint(topbar, "", "", _("Opens the indicator menu."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "panel_first_menu"));
-  hints_.push_back(new shortcut::Hint(topbar, "", "", _("Moves focus between indicators."), shortcut::HARDCODED_OPTION, _("Cursor Left or Right")));
+  hints_.push_back(new shortcut::Hint(menubar, "", "", _("Reveals application menu."), shortcut::HARDCODED_OPTION, "Alt"));
+  hints_.push_back(new shortcut::Hint(menubar, "", "", _("Opens the indicator menu."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "panel_first_menu"));
+  hints_.push_back(new shortcut::Hint(menubar, "", "", _("Moves focus between indicators."), shortcut::HARDCODED_OPTION, _("Cursor Left or Right")));
 
   // Switching
   std::string const switching = _("Switching");

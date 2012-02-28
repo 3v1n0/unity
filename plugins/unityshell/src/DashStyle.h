@@ -179,9 +179,7 @@ public:
 
   nux::BaseTexture* GetSearchMagnifyIcon();
   nux::BaseTexture* GetSearchCloseIcon();
-  nux::BaseTexture* GetSearchCloseGlowIcon();
   nux::BaseTexture* GetSearchSpinIcon();
-  nux::BaseTexture* GetSearchSpinGlowIcon();
 
   nux::BaseTexture* GetGroupUnexpandIcon();
   nux::BaseTexture* GetGroupExpandIcon();

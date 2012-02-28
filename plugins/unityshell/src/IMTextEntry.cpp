@@ -37,6 +37,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(IMTextEntry);
 IMTextEntry::IMTextEntry()
   : TextEntry("", NUX_TRACKER_LOCATION)
 {
+  mouse_up.connect(sigc::mem_fun(this, &IMTextEntry::OnMouseButtonUp));
 }
 
 bool IMTextEntry::InspectKeyEvent(unsigned int event_type,
@@ -104,8 +105,7 @@ void IMTextEntry::Copy()
   int start=0, end=0;
   if (GetSelectionBounds(&start, &end))
   {
-    GtkClipboard* clip = gtk_clipboard_get_for_display(gdk_display_get_default(),
-                                                       GDK_SELECTION_CLIPBOARD);
+    GtkClipboard* clip = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
     gtk_clipboard_set_text(clip, text_.c_str() + start, end - start);
   }
 }
@@ -113,8 +113,7 @@ void IMTextEntry::Copy()
 void IMTextEntry::Paste(bool primary)
 {
   GdkAtom origin = primary ? GDK_SELECTION_PRIMARY : GDK_SELECTION_CLIPBOARD;
-  glib::Object<GtkClipboard> clip(gtk_clipboard_get_for_display(gdk_display_get_default(),
-                                                                origin));
+  GtkClipboard* clip = gtk_clipboard_get(origin);
 
   auto callback = [](GtkClipboard* clip, const char* text, gpointer user_data)
    {
@@ -141,5 +140,16 @@ void IMTextEntry::InsertText(std::string const& text)
     QueueRefresh (true, true);
     text_changed.emit(this);
   }
+}
+
+void IMTextEntry::OnMouseButtonUp(int x, int y, unsigned long bflags, unsigned long kflags)
+{
+  int button = nux::GetEventButton(bflags);
+
+  if (button == 2)
+  { 
+    SetCursor(XYToTextIndex(x,y));
+    Paste(true);
+  } 
 }
 }

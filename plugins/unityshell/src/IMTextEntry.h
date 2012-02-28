@@ -47,6 +47,8 @@ private:
   void Cut();
   void Copy();
   void Paste(bool primary = false);
+
+  void OnMouseButtonUp(int x, int y, unsigned long bflags, unsigned long kflags);
 };
 
 }

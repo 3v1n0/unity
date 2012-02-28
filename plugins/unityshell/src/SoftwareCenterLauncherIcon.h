@@ -35,8 +35,6 @@ class SCLauncherMoveWindow : public nux::BaseWindow
 public:
   SCLauncherMoveWindow(nux::ObjectPtr<nux::IOpenGLBaseTexture> icon);
 
-  ~SCLauncherMoveWindow();
-
   void AnimateIcon(gint32 icon_x, gint32 icon_y, gint32 icon_size);
 
 private:
