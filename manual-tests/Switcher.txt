@@ -7,10 +7,12 @@ App names here are an example, any apps will do.
 #. Start terminal on workspace 1
 #. Start firefox on workspace 2
 #. Move to workspace 2
-#. Hold Alt, and press Tab
-#. Firefox should appear in the tab list, and terminal should not
+
+Now do the following on both monitors
+
+#. Hold Alt, and press Tab, hold and observe
 #. Release Alt.
-#. Move the cursor over to the second monitor
-#. Hold Alt, and press Tab
-#. Firefox should appear in the tab list, and terminal should not
-#. Release Alt.
+
+Outcomes
+  While alt is held, Firefox should appear in the tab list, and
+  terminal should not
