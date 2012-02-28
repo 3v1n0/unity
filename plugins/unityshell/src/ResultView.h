@@ -63,8 +63,6 @@ public:
 
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
-  void AddChild(unity::debug::Introspectable* child);
-  void RemoveChild(unity::debug::Introspectable* child);
   IntrospectableList const& GetIntrospectableChildren();
 
 protected:
