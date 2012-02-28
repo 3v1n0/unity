@@ -43,6 +43,7 @@
 #include "DashStyle.h"
 #include "ubus-server.h"
 #include "UBusMessages.h"
+ #include "Introspectable.h"
 
 namespace unity
 {
@@ -255,6 +256,9 @@ PlacesGroup::SetIcon(const char* path_to_emblem)
 void
 PlacesGroup::SetChildView(nux::View* view)
 {
+  debug::Introspectable *i = dynamic_cast<debug::Introspectable*>(view);
+  if (i)
+    AddChild(i);
   _child_view = view;
   _group_layout->AddView(_child_view, 1);
   QueueDraw();
@@ -541,6 +545,7 @@ void PlacesGroup::AddProperties(GVariantBuilder* builder)
   wrapper.add("header-is-highlighted", ShouldBeHighlighted());
   wrapper.add("name", _name->GetText());
   wrapper.add("is-visible", IsVisible());
+  wrapper.add("is-expanded", GetExpanded());
 }
 
 } // namespace unity

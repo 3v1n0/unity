@@ -9,7 +9,6 @@
 from time import sleep
 from subprocess import call
 
-from autopilot.emulators.bamf import Bamf
 from autopilot.emulators.unity.launcher import Launcher
 from autopilot.emulators.unity.switcher import Switcher
 from autopilot.emulators.X11 import Keyboard
@@ -23,27 +22,23 @@ class ShowDesktopTests(AutopilotTestCase):
 
     def setUp(self):
         super(ShowDesktopTests, self).setUp()
-        self.addCleanup(Keyboard.cleanup)
-        self.bamf = Bamf()
         # we need this to let the unity models update after we shutdown apps
         # before we start the next test.
-        sleep(5)
+        sleep(2)
 
     def launch_test_apps(self):
         """Launch character map and calculator apps."""
-        self.bamf.launch_application("gucharmap.desktop")
-        self.addCleanup(call, ["killall", "gucharmap"])
-        self.bamf.launch_application("gcalctool.desktop")
-        self.addCleanup(call, ["killall", "gcalctool"])
+        self.start_app('Character Map')
+        self.start_app('Calculator')
+        sleep(1)
 
     def test_showdesktop_hides_apps(self):
         """Show Desktop keyboard shortcut must hide applications."""
         self.launch_test_apps()
 
         # show desktop, verify all windows are hidden:
-        kb = Keyboard()
-        kb.press_and_release('Control+Alt+d')
-        self.addCleanup(kb.press_and_release, keys='Control+Alt+d')
+        self.keyboard.press_and_release('Control+Alt+d')
+        self.addCleanup(self.keyboard.press_and_release, keys='Control+Alt+d')
         sleep(1)
         open_wins = self.bamf.get_open_windows()
         self.assertGreaterEqual(len(open_wins), 2)
@@ -56,8 +51,7 @@ class ShowDesktopTests(AutopilotTestCase):
         self.launch_test_apps()
 
         # show desktop, verify all windows are hidden:
-        kb = Keyboard()
-        kb.press_and_release('Control+Alt+d')
+        self.keyboard.press_and_release('Control+Alt+d')
         sleep(1)
         open_wins = self.bamf.get_open_windows()
         self.assertGreaterEqual(len(open_wins), 2)
@@ -66,7 +60,7 @@ class ShowDesktopTests(AutopilotTestCase):
             self.assertTrue(win.is_hidden, "Window '%s' is not hidden after show desktop activated." % (win.title))
 
         # un-show desktop, verify all windows are shown:
-        kb.press_and_release('Control+Alt+d')
+        self.keyboard.press_and_release('Control+Alt+d')
         sleep(1)
         for win in self.bamf.get_open_windows():
             self.assertTrue(win.is_valid)
@@ -77,8 +71,7 @@ class ShowDesktopTests(AutopilotTestCase):
         self.launch_test_apps()
 
         # show desktop, verify all windows are hidden:
-        kb = Keyboard()
-        kb.press_and_release('Control+Alt+d')
+        self.keyboard.press_and_release('Control+Alt+d')
         sleep(1)
         open_wins = self.bamf.get_open_windows()
         self.assertGreaterEqual(len(open_wins), 2)
@@ -106,7 +99,7 @@ class ShowDesktopTests(AutopilotTestCase):
                     self.assertTrue(win.is_hidden, "Window '%s' should still be hidden." % (win.title))
 
         # hide desktop - now all windows should be visible:
-        kb.press_and_release('Control+Alt+d')
+        self.keyboard.press_and_release('Control+Alt+d')
         sleep(1)
         for win in self.bamf.get_open_windows():
             if win.is_valid:
@@ -131,8 +124,7 @@ class ShowDesktopTests(AutopilotTestCase):
             sleep(0.5)
         self.assertTrue(found, "Could not find 'Show Desktop' entry in switcher.")
         switcher.stop()
-        kb = Keyboard()
-        self.addCleanup(kb.press_and_release, keys='Control+Alt+d')
+        self.addCleanup(self.keyboard.press_and_release, keys='Control+Alt+d')
 
         sleep(1)
         open_wins = self.bamf.get_open_windows()
