@@ -190,10 +190,19 @@ class SwitcherWorkspaceTests(AutopilotTestCase):
         self.start_app("Calculator")
         sleep(1)
 
+        self.switcher.initiate()
+        sleep(1)
+        while self.switcher.current_icon.tooltip_text != 'Mahjongg':
+            self.switcher.next_icon()
+            sleep(1)
+        self.switcher.stop()
+        sleep(1)
+
         #get calculator windows - there should be only one:
         mahjongg_apps = self.bamf.get_running_applications_by_title("Mahjongg")
         self.assertThat(len(mahjongg_apps), Equals(1))
         wins = mahjongg_apps[0].get_windows()
-        self.assertThat(len(wins), Equals(0))
+        self.assertThat(len(wins), Equals(2))
         self.assertThat(wins[0].is_focused, Equals(True))
+        self.assertThat(wins[1].is_focused, Equals(True))
 
