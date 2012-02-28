@@ -158,6 +158,7 @@ class Bamf(object):
         proc = gio.unix.DesktopAppInfo(desktop_file)
         proc.launch()
         if wait:
+            print proc.get_name()
             self.wait_until_application_is_running(proc.get_name(), -1)
         return proc
 
