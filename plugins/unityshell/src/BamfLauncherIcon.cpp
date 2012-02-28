@@ -683,8 +683,8 @@ void BamfLauncherIcon::UpdateDesktopQuickList()
   const gchar** nicks = indicator_desktop_shortcuts_get_nicks(_desktop_shortcuts);
 
   int index = 0;
-  while (nicks[index])
-  {
+  while (nicks[index]) {
+  
     // Build a dbusmenu item for each nick that is the desktop 
     // file that is built from it's name and includes a callback
     // to the desktop shortcuts object to execute the nick
@@ -707,8 +707,6 @@ void BamfLauncherIcon::UpdateDesktopQuickList()
     dbusmenu_menuitem_child_append(_menu_desktop_shortcuts, item);
     index++;
   }
-
-  g_key_file_free(keyfile);
 }
 
 void BamfLauncherIcon::UpdateMenus()
