@@ -74,6 +74,11 @@ _keys = {
     "switcher/detail_stop": "Up",
     "switcher/detail_next": "`",
     "switcher/detail_prev": "`",
+    # Workspace switcher (wall):
+    "workspace/move_left": ("wall", "left_key"),
+    "workspace/move_right": ("wall", "right_key"),
+    "workspace/move_up": ("wall", "up_key"),
+    "workspace/move_down": ("wall", "down_key"),
 }
 
 
