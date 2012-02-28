@@ -75,6 +75,10 @@ class AutopilotTestCase(LoggedTestCase):
             'desktop-file': 'mahjongg.desktop',
             'process-name': 'mahjongg',
             },
+        'Text Editor' : {
+            'desktop-file': 'gedit.desktop',
+            'process-name': 'gedit'
+            }
         }
 
     def setUp(self):

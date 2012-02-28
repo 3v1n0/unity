@@ -303,6 +303,12 @@ class BamfWindow(object):
         return '_NET_WM_STATE_HIDDEN' in win_state
 
     @property
+    def is_focused(self):
+        """Is this window focused?"""
+        win_state = self._get_window_states()
+        return '_NET_WM_STATE_FOCUSED' in win_state
+
+    @property
     def is_valid(self):
         """Is this window object valid?
 
