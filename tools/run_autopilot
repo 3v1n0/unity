@@ -5,10 +5,7 @@ import os
 import os.path
 import sys
 from textwrap import dedent
-import junitxml
 from argparse import ArgumentParser
-from unittest.loader import TestLoader
-from unittest.runner import TextTestRunner
 
 
 # list autopilot depends here, with the form:
@@ -19,6 +16,7 @@ DEPENDS = [
     ('gobject', 'python-gobject'),
     ('gtk', 'python-gtk2'),
     ('ibus', 'python-ibus'),
+    ('junitxml', 'python-junitxml'),
     ('testscenarios', 'python-testscenarios'),
     ('testtools', 'python-testtools'),
     ('Xlib', 'python-xlib'),
@@ -65,41 +63,66 @@ def ensure_autopilot_is_importable():
         print "Patching sys.path to include local autopilot folder '%s'" % ap_dir
 
 
-def main():
-    parser = ArgumentParser()
-    parser.add_argument('-o', "--output", required=False,
+def parse_arguments():
+    """Parse command-line arguments, and return an argparse arguments object."""
+    parser = ArgumentParser(description="Autopilot test-runner")
+    subparsers = parser.add_subparsers(help='Run modes', dest="mode")
+
+    parser_run = subparsers.add_parser('run', help="Run autopilot tests")
+    parser_run.add_argument('-o', "--output", required=False,
         help='Write test result report to file. Defaults to stdout')
-    parser.add_argument('-f', "--format", choices=['text', 'xml'], default='text',
+    parser_run.add_argument('-f', "--format", choices=['text', 'xml'], default='text',
         required=False, help='Specify desired output format. Default is "text".')
+
+    parser_list = subparsers.add_parser('list', help="List autopilot tests")
     args = parser.parse_args()
 
-    if args.output == None:
-        results_stream = sys.stdout
-    else:
-        try:
-            path = os.path.dirname(args.output)
-            if path != '' and not os.path.exists(path):
-                os.makedirs(path)
-            results_stream = open(args.output, 'w')
-        except:
-            results_stream = sys.stdout
+    return args
+
+
+def main():
+    # These are here so we can print a nice error message if they're not found,
+    # rather than getting an ImportError. THey're guaranteed to be installed by
+    # the time main() is called.
+    import junitxml
+    from testtools import iterate_tests
+    from unittest.loader import TestLoader
+    from unittest.runner import TextTestRunner
+
+    args = parse_arguments()
 
     loader = TestLoader()
     test_suite = loader.discover('autopilot.tests')
 
-    if args.format == "xml":
-        result = junitxml.JUnitXmlResult(results_stream)
-        result.startTestRun()
-        test_suite.run(result)
-        result.stopTestRun()
-        results_stream.close()
-        if not result.wasSuccessful:
-            exit(1)
-    elif args.format == "text":
-        runner = TextTestRunner(stream=results_stream)
-        success = runner.run(test_suite).wasSuccessful()
-        if not success:
-            exit(1)
+    if args.mode == 'list':
+        print "Listing all autopilot tests:"
+        print
+        for test in iterate_tests(test_suite):
+            print "\t" + test.id()
+    elif args.mode == 'run':
+        if args.output == None:
+            results_stream = sys.stdout
+        else:
+            try:
+                path = os.path.dirname(args.output)
+                if path != '' and not os.path.exists(path):
+                    os.makedirs(path)
+                results_stream = open(args.output, 'w')
+            except:
+                results_stream = sys.stdout
+        if args.format == "xml":
+            result = junitxml.JUnitXmlResult(results_stream)
+            result.startTestRun()
+            test_suite.run(result)
+            result.stopTestRun()
+            results_stream.close()
+            if not result.wasSuccessful:
+                exit(1)
+        elif args.format == "text":
+            runner = TextTestRunner(stream=results_stream)
+            success = runner.run(test_suite).wasSuccessful()
+            if not success:
+                exit(1)
 
 if __name__ == "__main__":
     if not check_depends():
