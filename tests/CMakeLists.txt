@@ -149,8 +149,6 @@ if (GTEST_FOUND AND
                  ${UNITY_SRC}/ShortcutModel.h
                  ${UNITY_SRC}/ShortcutHintPrivate.cpp
                  ${UNITY_SRC}/ShortcutHintPrivate.h
-                 ${UNITY_SRC}/SwitcherModel.cpp
-                 ${UNITY_SRC}/SwitcherModel.h
                  ${UNITY_SRC}/Introspectable.cpp
                  ${UNITY_SRC}/Introspectable.h
                  ${UNITY_SRC}/TextureCache.cpp
@@ -196,14 +194,26 @@ if (GTEST_FOUND AND
                  test_texture_cache.cpp
                  test_main.cpp
                  test_icon_loader.cpp
+                 test_switcher_model.cpp
+                 ${UNITY_SRC}/AbstractLauncherIcon.cpp
+                 ${UNITY_SRC}/BackgroundEffectHelper.cpp
                  ${UNITY_SRC}/DashViewPrivate.cpp
-                 ${UNITY_SRC}/DashViewPrivate.h
                  ${UNITY_SRC}/TextureCache.cpp
-                 ${UNITY_SRC}/TextureCache.h
                  ${UNITY_SRC}/IconLoader.cpp
-                 ${UNITY_SRC}/IconLoader.h
+                 ${UNITY_SRC}/IconRenderer.cpp
+                 ${UNITY_SRC}/IconTextureSource.cpp
+                 ${UNITY_SRC}/Introspectable.cpp
+                 ${UNITY_SRC}/LayoutSystem.cpp
+                 ${UNITY_SRC}/StaticCairoText.cpp
+                 ${UNITY_SRC}/SwitcherController.cpp
+                 ${UNITY_SRC}/SwitcherModel.cpp
+                 ${UNITY_SRC}/SwitcherView.cpp
                  ${UNITY_SRC}/Timer.cpp
-                 ${UNITY_SRC}/Timer.h
+                 ${UNITY_SRC}/UBusWrapper.cpp
+                 ${UNITY_SRC}/UnityWindowStyle.cpp
+                 ${UNITY_SRC}/UnityWindowView.cpp
+                 ${UNITY_SRC}/ubus-server.cpp
+                 ${UNITY_SRC}/WindowManager.cpp
                 )
   target_link_libraries(test-gtest ${GTEST_BOTH_LIBRARIES})
   add_test(UnityGTest test-gtest)

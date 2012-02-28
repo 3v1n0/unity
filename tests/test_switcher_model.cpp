@@ -22,20 +22,23 @@
 
 #include "SwitcherModel.h"
 #include "MockLauncherIcon.h"
+#include "AbstractLauncherIcon.h"
 
 #include <vector>
 
 
 using namespace unity::switcher;
+using unity::launcher::AbstractLauncherIcon;
+using unity::launcher::MockLauncherIcon;
 
 namespace
 {
 
-TEST(TestSwitcher, TestConstructor)
+TEST(TestSwitcherModel, TestConstructor)
 {
-  AbstractLauncherIcon* first  = new MockLauncherIcon();
-  AbstractLauncherIcon* second = new MockLauncherIcon();
-  std::vector<AbstractLauncherIcon*> icons;
+  AbstractLauncherIcon::Ptr first(new MockLauncherIcon());
+  AbstractLauncherIcon::Ptr second(new MockLauncherIcon());
+  std::vector<AbstractLauncherIcon::Ptr> icons;
   icons.push_back(first);
   icons.push_back(second);
 
@@ -46,18 +49,15 @@ TEST(TestSwitcher, TestConstructor)
   EXPECT_EQ(model->LastSelection(), first);
   EXPECT_EQ(model->SelectionIndex(), 0);
   EXPECT_EQ(model->LastSelectionIndex(), 0);
-
-  delete first;
-  delete second;
 }
 
-TEST(TestSwitcher, TestSelection)
+TEST(TestSwitcherModel, TestSelection)
 {
-  std::vector<AbstractLauncherIcon*> icons;
-  AbstractLauncherIcon* first  = new MockLauncherIcon();
-  AbstractLauncherIcon* second = new MockLauncherIcon();
-  AbstractLauncherIcon* third  = new MockLauncherIcon();
-  AbstractLauncherIcon* fourth = new MockLauncherIcon();
+  std::vector<AbstractLauncherIcon::Ptr> icons;
+  AbstractLauncherIcon::Ptr first(new MockLauncherIcon());
+  AbstractLauncherIcon::Ptr second(new MockLauncherIcon());
+  AbstractLauncherIcon::Ptr third(new MockLauncherIcon());
+  AbstractLauncherIcon::Ptr fourth(new MockLauncherIcon());
 
   icons.push_back(first);
   icons.push_back(second);
@@ -98,11 +98,6 @@ TEST(TestSwitcher, TestSelection)
   model->Select(first);
   EXPECT_EQ(model->Selection(), first);
   EXPECT_EQ(model->LastSelection(), third);
-
-  delete first;
-  delete second;
-  delete third;
-  delete fourth;
 }
 
 }
