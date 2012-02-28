@@ -83,10 +83,8 @@ class SwitcherWorkspaceTests(AutopilotTestCase):
         """Switcher must show apps from the current workspace only."""
         self.close_all_app('Calculator')
         self.close_all_app('Character Map')
-        # If the default number of workspaces ever changes, this test will
-        # continue to work:
-        #self.set_compiz_option('core','hsize', 2)
-        #self.set_compiz_option('core','vsize', 2)
+
+        self.workspace.switch_to(1)
         self.start_app("Calculator")
         sleep(1)
         self.workspace.switch_to(2)
@@ -100,4 +98,22 @@ class SwitcherWorkspaceTests(AutopilotTestCase):
         self.assertThat(icon_names, Contains("Character Map"))
         self.assertThat(icon_names, Not(Contains("Calculator")))
 
+    def test_switcher_all_mode_shows_all_apps(self):
+        """Test switcher 'show_all' mode shows apps from all workspaces."""
+        self.close_all_app('Calculator')
+        self.close_all_app('Character Map')
+
+        self.workspace.switch_to(1)
+        self.start_app("Calculator")
+        sleep(1)
+        self.workspace.switch_to(2)
+        self.start_app("Character Map")
+        sleep(1)
+
+        self.switcher.initiate_all_mode()
+        sleep(1)
+        icon_names = [i.tooltip_text for i in self.switcher.get_switcher_icons()]
+        self.switcher.terminate()
+        self.assertThat(icon_names, Contains("Character Map"))
+        self.assertThat(icon_names, Contains("Calculator"))
 

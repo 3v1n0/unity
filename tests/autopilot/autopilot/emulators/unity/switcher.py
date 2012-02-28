@@ -42,6 +42,16 @@ class Switcher(KeybindingsHelper):
         self.keybinding_tap("switcher/reveal_details")
         sleep(1)
 
+    def initiate_all_mode(self):
+        """Start switcher in 'all workspaces' mode.
+
+        Shows apps from all workspaces, instead of just the current workspace.
+        """
+        logger.debug("Initiating switcher in 'all workspaces' mode.")
+        self.keybinding_hold("switcher/reveal_normal")
+        self.keybinding_tap("switcher/reveal_normal")
+        sleep(1)
+
     def terminate(self):
         """Stop switcher without activating the selected icon."""
         logger.debug("Terminating switcher.")
