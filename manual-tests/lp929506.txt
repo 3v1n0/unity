@@ -1,0 +1,31 @@
+Regression testcase for
+https://bugs.launchpad.net/unity/+bug/929506
+----------------------------------------------------
+Setup: restart your computer to get a clean unity instance
+
+Steps to perform:
+1. Login to your Unity-3D shell but don't start or do anything (e.g. don't
+press the super key and/or show the dash)
+2. Verify the lensees are not running using the following command:
+$ ps axf|grep [u]nity-lens
+Output of this command should be empty
+3. invoke dash (e.g. by pressing the Super key)
+4. Verify the lenses were started by using the following command:
+$ ps axf|grep [u]nity-lens
+
+
+Expected Outcome:
+Step #2 should produce an empty output.
+Step #4 should produce something like this:
+$ ps axf|grep [u]nity-lens
+ 2754 ?        Sl     0:00 /usr/lib/unity-lens-applications/unity-applications-daemon
+ 2756 ?        Sl     0:00 /usr/lib/unity-lens-files/unity-files-daemon
+ 2758 ?        Sl     0:00 /usr/lib/unity-lens-music/unity-music-daemon
+ 2760 ?        Sl     0:00 /usr/bin/python /usr/lib/unity-lens-video/unity-lens-video
+ 2816 ?        Sl     0:00 /usr/lib/unity-lens-music/unity-musicstore-daemon
+
+
+Wrong Outcome:
+#2 and #4 both produce non-empty result which means the lenses were not
+lazy-loaded but they were running before the first dash use.
+
