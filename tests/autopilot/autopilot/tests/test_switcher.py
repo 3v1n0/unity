@@ -7,7 +7,7 @@
 # by the Free Software Foundation.
 
 from subprocess import call
-from testtools.matchers import Equals, NotEquals
+from testtools.matchers import Equals, NotEquals, Contains, Not
 from time import sleep
 
 from autopilot.emulators.bamf import Bamf
@@ -30,7 +30,7 @@ class SwitcherTests(AutopilotTestCase):
         self.start_app('Calculator')
         self.start_app('Mahjongg')
 
-        self.server = Switcher()
+        self.switcher = Switcher()
 
     def tearDown(self):
         super(SwitcherTests, self).tearDown()
@@ -40,15 +40,15 @@ class SwitcherTests(AutopilotTestCase):
         self.set_timeout_setting(False)
         sleep(1)
 
-        self.server.initiate()
+        self.switcher.initiate()
         sleep(.2)
 
-        start = self.server.get_selection_index()
-        self.server.next_icon()
+        start = self.switcher.get_selection_index()
+        self.switcher.next_icon()
         sleep(.2)
 
-        end = self.server.get_selection_index()
-        self.server.terminate()
+        end = self.switcher.get_selection_index()
+        self.switcher.terminate()
 
         self.assertThat(start, NotEquals(0))
         self.assertThat(end, Equals(start + 1))
@@ -57,15 +57,15 @@ class SwitcherTests(AutopilotTestCase):
         self.set_timeout_setting(False)
         sleep(1)
 
-        self.server.initiate()
+        self.switcher.initiate()
         sleep(.2)
 
-        start = self.server.get_selection_index()
-        self.server.previous_icon()
+        start = self.switcher.get_selection_index()
+        self.switcher.previous_icon()
         sleep(.2)
 
-        end = self.server.get_selection_index()
-        self.server.terminate()
+        end = self.switcher.get_selection_index()
+        self.switcher.terminate()
 
         self.assertThat(start, NotEquals(0))
         self.assertThat(end, Equals(start - 1))
@@ -73,9 +73,9 @@ class SwitcherTests(AutopilotTestCase):
 
     def test_switcher_starts_in_normal_mode(self):
         """Switcher must start in normal (i.e.- not details) mode."""
-        self.server.initiate()
-        self.addCleanup(self.server.terminate)
-        self.assertThat(self.server.get_is_in_details_mode(), Equals(False))
+        self.switcher.initiate()
+        self.addCleanup(self.switcher.terminate)
+        self.assertThat(self.switcher.get_is_in_details_mode(), Equals(False))
 
 
 class SwitcherDetailsModeTests(AutopilotTestCase):
@@ -93,7 +93,7 @@ class SwitcherDetailsModeTests(AutopilotTestCase):
     def setUp(self):
         self.bamf = Bamf()
         self.bamf.launch_application("gucharmap.desktop")
-        self.server = Switcher()
+        self.switcher = Switcher()
         super(SwitcherDetailsModeTests, self).setUp()
 
     def tearDown(self):
@@ -103,21 +103,67 @@ class SwitcherDetailsModeTests(AutopilotTestCase):
 
     def test_can_start_details_mode(self):
         """Must be able to initiate details mode using selected scenario keycode."""
-        self.server.initiate()
-        self.addCleanup(self.server.terminate)
+        self.switcher.initiate()
+        self.addCleanup(self.switcher.terminate)
         self.keyboard.press_and_release(self.initiate_keycode)
-        self.assertThat(self.server.get_is_in_details_mode(), Equals(True))
+        self.assertThat(self.switcher.get_is_in_details_mode(), Equals(True))
 
     def test_tab_from_last_detail_works(self):
         """Pressing tab while showing last switcher item in details mode
         must select first item in the model in non-details mode.
 
         """
-        self.server.initiate()
-        self.addCleanup(self.server.terminate)
-        while self.server.get_selection_index() < self.server.get_model_size() -1:
-            self.server.next_icon()
+        self.switcher.initiate()
+        self.addCleanup(self.switcher.terminate)
+        while self.switcher.get_selection_index() < self.switcher.get_model_size() -1:
+            self.switcher.next_icon()
         self.keyboard.press_and_release(self.initiate_keycode)
         sleep(0.5)
-        self.server.next_icon()
-        self.assertThat(self.server.get_selection_index(), Equals(0))
+        self.switcher.next_icon()
+        self.assertThat(self.switcher.get_selection_index(), Equals(0))
+
+
+class SwitcherWorkspaceTests(AutopilotTestCase):
+    """Test Switcher behavior with respect to multiple workspaces."""
+
+    def setUp(self):
+        super(SwitcherWorkspaceTests, self).setUp()
+        self.switcher = Switcher()
+
+    def test_switcher_shows_current_workspace_only(self):
+        """Switcher must show apps from the current workspace only."""
+        self.close_all_app('Calculator')
+        self.close_all_app('Character Map')
+
+        self.workspace.switch_to(1)
+        self.start_app("Calculator")
+        sleep(1)
+        self.workspace.switch_to(2)
+        self.start_app("Character Map")
+        sleep(1)
+
+        self.switcher.initiate()
+        sleep(1)
+        icon_names = [i.tooltip_text for i in self.switcher.get_switcher_icons()]
+        self.switcher.terminate()
+        self.assertThat(icon_names, Contains("Character Map"))
+        self.assertThat(icon_names, Not(Contains("Calculator")))
+
+    def test_switcher_all_mode_shows_all_apps(self):
+        """Test switcher 'show_all' mode shows apps from all workspaces."""
+        self.close_all_app('Calculator')
+        self.close_all_app('Character Map')
+
+        self.workspace.switch_to(1)
+        self.start_app("Calculator")
+        sleep(1)
+        self.workspace.switch_to(2)
+        self.start_app("Character Map")
+        sleep(1)
+
+        self.switcher.initiate_all_mode()
+        sleep(1)
+        icon_names = [i.tooltip_text for i in self.switcher.get_switcher_icons()]
+        self.switcher.terminate()
+        self.assertThat(icon_names, Contains("Character Map"))
+        self.assertThat(icon_names, Contains("Calculator"))

@@ -14,6 +14,7 @@ from StringIO import StringIO
 
 from autopilot.emulators.X11 import Keyboard, Mouse
 from autopilot.emulators.bamf import Bamf
+from autopilot.emulators.unity.workspace import WorkspaceManager
 
 
 class LoggedTestCase(TestWithScenarios, TestCase):
@@ -86,6 +87,8 @@ class AutopilotTestCase(LoggedTestCase):
         self.bamf = Bamf()
         self.keyboard = Keyboard()
         self.mouse = Mouse()
+        self.workspace = WorkspaceManager()
+        self.addCleanup(self.workspace.switch_to, self.workspace.current_workspace)
 
     def tearDown(self):
         Keyboard.cleanup()
@@ -110,11 +113,18 @@ class AutopilotTestCase(LoggedTestCase):
         The value will be set for the current test only.
 
         """
-        old_value = self._set_unity_option(option_name, option_value)
-        self.addCleanup(self._set_unity_option, option_name, old_value)
+        old_value = self._set_compiz_option("unityshell", option_name, option_value)
+        self.addCleanup(self._set_compiz_option, "unityshell", option_name, old_value)
 
-    def _set_unity_option(self, option_name, option_value):
-        plugin = Plugin(global_context, "unityshell")
+    def set_compiz_option(self, plugin_name, setting_name, setting_value):
+        """Set setting `setting_name` in compiz plugin `plugin_name` to value `setting_value`
+        for one test only.
+        """
+        old_value = self._set_compiz_option(plugin_name, setting_name, setting_value)
+        self.addCleanup(self._set_compiz_option, plugin_name, setting_name, old_value)
+
+    def _set_compiz_option(self, plugin_name, option_name, option_value):
+        plugin = Plugin(global_context, plugin_name)
         setting = Setting(plugin, option_name)
         old_value = setting.Value
         setting.Value = option_value
