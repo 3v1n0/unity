@@ -6,6 +6,8 @@ import os.path
 import sys
 from textwrap import dedent
 from argparse import ArgumentParser
+from unittest.loader import TestLoader
+from unittest.runner import TextTestRunner
 
 
 # list autopilot depends here, with the form:
@@ -60,7 +62,7 @@ def ensure_autopilot_is_importable():
             "../tests/autopilot")
         ap_dir = os.path.realpath(ap_dir)
         sys.path.append(ap_dir)
-        print "Patching sys.path to include local autopilot folder '%s'" % ap_dir
+        print "Patching sys.path to include local autopilot folder '%s'\n" % ap_dir
 
 
 def parse_arguments():
@@ -73,6 +75,7 @@ def parse_arguments():
         help='Write test result report to file. Defaults to stdout')
     parser_run.add_argument('-f', "--format", choices=['text', 'xml'], default='text',
         required=False, help='Specify desired output format. Default is "text".')
+    parser_run.add_argument("test", nargs="*", help="Specify tests to run, as listed by the 'list' command")
 
     parser_list = subparsers.add_parser('list', help="List autopilot tests")
     args = parser.parse_args()
@@ -80,49 +83,60 @@ def parse_arguments():
     return args
 
 
-def main():
-    # These are here so we can print a nice error message if they're not found,
-    # rather than getting an ImportError. THey're guaranteed to be installed by
-    # the time main() is called.
-    import junitxml
+def list_tests():
+    """Print a list of tests we find inside autopilot.tests."""
     from testtools import iterate_tests
-    from unittest.loader import TestLoader
-    from unittest.runner import TextTestRunner
-
-    args = parse_arguments()
-
     loader = TestLoader()
     test_suite = loader.discover('autopilot.tests')
-
-    if args.mode == 'list':
-        print "Listing all autopilot tests:"
-        print
-        for test in iterate_tests(test_suite):
-            print "\t" + test.id()
-    elif args.mode == 'run':
-        if args.output == None:
-            results_stream = sys.stdout
+    print "Listing all autopilot tests:"
+    print
+    for test in iterate_tests(test_suite):
+        has_scenarios = hasattr(test, "scenarios")
+        if has_scenarios:
+            print " * " + test.id()
         else:
-            try:
-                path = os.path.dirname(args.output)
-                if path != '' and not os.path.exists(path):
-                    os.makedirs(path)
-                results_stream = open(args.output, 'w')
-            except:
-                results_stream = sys.stdout
-        if args.format == "xml":
-            result = junitxml.JUnitXmlResult(results_stream)
-            result.startTestRun()
-            test_suite.run(result)
-            result.stopTestRun()
-            results_stream.close()
-            if not result.wasSuccessful:
-                exit(1)
-        elif args.format == "text":
-            runner = TextTestRunner(stream=results_stream)
-            success = runner.run(test_suite).wasSuccessful()
-            if not success:
-                exit(1)
+            print test.id()
+
+
+def run_tests(args):
+    """Run tests, using input from `args`."""
+    import junitxml
+    loader = TestLoader()
+    if args.test:
+        test_suite = loader.loadTestsFromNames(args.test)
+    else:
+        test_suite = loader.discover('autopilot.tests')
+
+    if args.output == None:
+        results_stream = sys.stdout
+    else:
+        try:
+            path = os.path.dirname(args.output)
+            if path != '' and not os.path.exists(path):
+                os.makedirs(path)
+            results_stream = open(args.output, 'w')
+        except:
+            results_stream = sys.stdout
+    if args.format == "xml":
+        result = junitxml.JUnitXmlResult(results_stream)
+        result.startTestRun()
+        test_suite.run(result)
+        result.stopTestRun()
+        results_stream.close()
+        if not result.wasSuccessful:
+            exit(1)
+    elif args.format == "text":
+        runner = TextTestRunner(stream=results_stream)
+        success = runner.run(test_suite).wasSuccessful()
+        if not success:
+            exit(1)
+
+def main():
+    args = parse_arguments()
+    if args.mode == 'list':
+        list_tests()
+    elif args.mode == 'run':
+        run_tests(args)
 
 if __name__ == "__main__":
     if not check_depends():
