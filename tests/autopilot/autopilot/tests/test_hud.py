@@ -24,7 +24,7 @@ class HudTests(AutopilotTestCase):
 
     def tearDown(self):
         super(HudTests, self).tearDown()
-        self.hud_controller.ensure_visible()
+        self.hud_controller.ensure_hidden()
 
     def get_hud_controller(self):
         controllers = HudController.get_all_instances()
