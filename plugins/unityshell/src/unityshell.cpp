@@ -89,6 +89,13 @@ void capture_g_log_calls(const gchar* log_domain,
 gboolean is_extension_supported(const gchar* extensions, const gchar* extension);
 gfloat get_opengl_version_f32(const gchar* version_string);
 
+namespace local
+{
+// Tap duration in milliseconds.
+const int ALT_TAP_DURATION = 250;
+}
+}
+
 }
 
 UnityScreen::UnityScreen(CompScreen* screen)
@@ -1501,11 +1508,11 @@ bool UnityScreen::showLauncherKeyTerminate(CompAction* action,
   if (state & CompAction::StateCancel)
     return false;
 
-  bool accept_state = (state & CompAction::StateCancel) == 0;
+  bool was_tap = state & CompAction::StateTermTapped;
 
   super_keypressed_ = false;
-  launcher_controller_->KeyNavTerminate(accept_state);
-  launcher_controller_->HandleLauncherKeyRelease();
+  launcher_controller_->KeyNavTerminate(true);
+  launcher_controller_->HandleLauncherKeyRelease(was_tap);
   EnableCancelAction(false);
 
   shortcut_controller_->SetEnabled(enable_shortcut_overlay_);
@@ -1786,8 +1793,6 @@ bool UnityScreen::ShowHudTerminate(CompAction* action,
                                    CompAction::State state,
                                    CompOption::Vector& options)
 {
-  LOG_INFO(logger) << "ShowHudTerminate: state = " << state;
-
   // Remember StateCancel and StateCommit will be broadcast to all actions
   // so we need to verify that we are actually being toggled...
   if (!(state & CompAction::StateTermKey))
@@ -1800,9 +1805,9 @@ bool UnityScreen::ShowHudTerminate(CompAction* action,
     return false;
 
   gint64 current_time = g_get_monotonic_time();
-  if (current_time - last_hud_show_time_ > (250 * 1000))
+  if (current_time - last_hud_show_time_ > (local::ALT_TAP_DURATION * 1000))
   {
-    LOG_INFO(logger) << "Tap too long";
+    LOG_DEBUG(logger) << "Tap too long";
     return false;
   }
 

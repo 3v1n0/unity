@@ -60,7 +60,7 @@ public:
   void SetShowDesktopIcon(bool show_desktop_icon);
 
   void HandleLauncherKeyPress();
-  void HandleLauncherKeyRelease();
+  void HandleLauncherKeyRelease(bool was_tap);
   bool HandleLauncherKeyEvent(Display *display, 
                               unsigned int key_sym, 
                               unsigned long key_code, 
