@@ -555,6 +555,7 @@ void PlacesGroup::AddProperties(GVariantBuilder* builder)
   wrapper.add("name", _name->GetText());
   wrapper.add("is-visible", IsVisible());
   wrapper.add("is-expanded", GetExpanded());
+  wrapper.add("baseline-alignment-is-correct", (_expand_label->GetAbsoluteY() + _expand_label->GetBaseline()) ==  (_name->GetAbsoluteY() + _name->GetBaseline()));
 }
 
 } // namespace unity

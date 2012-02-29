@@ -395,3 +395,22 @@ class DashKeyboardFocusTests(AutopilotTestCase):
         searchbar = self.dash.get_searchbar()
         self.assertEqual("hello world", searchbar.search_string)
 
+class DashVisualTests(AutopilotTestCase):
+    """Tests that the dash visual is correct."""
+
+    run_test_with = GlibRunner
+
+    def setUp(self):
+        super(DashVisualTests, self).setUp()
+        self.dash = Dash()
+
+    def tearDown(self):
+        super(DashVisualTests, self).tearDown()
+        self.dash.ensure_hidden()
+
+    def test_see_more_result_alignment(self):
+        """The see more results label should be baseline aligned
+        with the category name label.
+        """
+        self.dash.reveal_application_lens()
+
