@@ -78,10 +78,6 @@ class AutopilotTestCase(LoggedTestCase, KeybindingsHelper):
             'desktop-file': 'mahjongg.desktop',
             'process-name': 'mahjongg',
             },
-        'Text Editor' : {
-            'desktop-file': 'gedit.desktop',
-            'process-name': 'gedit'
-            }
         }
 
     def setUp(self):
@@ -94,9 +90,12 @@ class AutopilotTestCase(LoggedTestCase, KeybindingsHelper):
         self.addCleanup(self.workspace.switch_to, self.workspace.current_workspace)
 
     def tearDown(self):
+        super(AutopilotTestCase, self).tearDown()
+        # these need to be run AFTER the tearDown is called, since parent class tearDown
+        # is where the "addCleanup" methods are called. We want to cleanup keyboard and
+        # mouse AFTER those have been called.
         Keyboard.cleanup()
         Mouse.cleanup()
-        super(AutopilotTestCase, self).tearDown()
 
     def start_app(self, app_name):
         """Start one of the known apps, and kill it on tear down."""
