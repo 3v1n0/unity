@@ -84,3 +84,19 @@ This Test shows that clicking on a quicklist option quits keynav mode.
 Outcome
   No matter what option you click will exit keynav mode.
 
+Drag Icons to Trash
+-------------------
+
+This test verifies that dragging icons to the trash removes them from the 
+launcher, and that the animation is smooth.
+
+#. Move mouse pointer over an application or device icon (not BFB, Workspace switcher or trash)
+#. Hold mouse button down until icon attached to moue pointer (1 Second or so)
+#. With the mouse button held down, drag the icon over the trash icon.
+#. Release the mouse pointer.
+
+Outcome:
+  * The icon should be removed from the launcher.
+  * The trash can icon should remain stationary during the entire operation.
+  * The operation should NOT LOOK LIKE THIS: https://bugs.launchpad.net/unity/+bug/932365/+attachment/2739868/+files/out-2.ogv
+

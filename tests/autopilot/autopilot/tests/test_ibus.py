@@ -25,9 +25,10 @@ class IBusTests(AutopilotTestCase):
         super(IBusTests, self).setUp()
         self.kb = Keyboard()
         self.dash = Dash()
+        self._old_engines = None
 
     def tearDown(self):
-        if self._old_engines:
+        if self._old_engines is not None:
             set_active_engines(self._old_engines)
         super(IBusTests, self).tearDown()
 
@@ -65,7 +66,7 @@ class IBusTestsPinyin(IBusTests):
         self.activate_ibus()
         sleep(0.5)
         self.kb.type(self.input)
-        dash_search_string = self.dash.get_search_string()
+        dash_search_string = self.dash.get_searchbar().search_string
         self.deactivate_ibus()
         self.dash.ensure_hidden()
 
@@ -88,7 +89,7 @@ class IBusTestsHangul(IBusTests):
         self.activate_ibus()
         sleep(0.5)
         self.kb.type(self.input)
-        dash_search_string = self.dash.get_search_string()
+        dash_search_string = self.dash.get_searchbar().search_string
         self.deactivate_ibus()
         self.dash.ensure_hidden()
 
@@ -100,8 +101,8 @@ class IBusTestsAnthy(IBusTests):
 
     scenarios = [
         ('system', {'input': 'shisutemu ', 'result': u'\u30b7\u30b9\u30c6\u30e0'}),
-        ('system', {'input': 'ge-mu ', 'result': u'\u30b2\u30fc\u30e0'}),
-        ('system', {'input': 'yu-za- ', 'result': u'\u30e6\u30fc\u30b6\u30fc'}),
+        ('game', {'input': 'ge-mu ', 'result': u'\u30b2\u30fc\u30e0'}),
+        ('user', {'input': 'yu-za- ', 'result': u'\u30e6\u30fc\u30b6\u30fc'}),
         ]
 
     def test_simple_input(self):
@@ -112,7 +113,7 @@ class IBusTestsAnthy(IBusTests):
         sleep(0.5)
         self.kb.type(self.input)
         self.kb.press_and_release("Ctrl+j")
-        dash_search_string = self.dash.get_search_string()
+        dash_search_string = self.dash.get_searchbar().search_string
         self.deactivate_ibus()
         self.dash.ensure_hidden()
 

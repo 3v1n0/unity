@@ -1,32 +1,16 @@
-Dash search
------------
-This test makes sure that the right command is run when you search
-using the dash. (see lp:856205)
-
-#. Press Alt+F2
-#. Press 'g'. Make sure you see some command name (like gcc)
-#. Quickly type 'edit<Enter>' - so you'd run 'gedit'.
-
-Outcome
-  The dash disappears, and gedit is run. If nothing happens or the first
-  command is run (in this case gcc), this test failed.
- 
-
 Mouse down and search bar focus
 -------------------------------
 This test makes sure that the search bar doesn't lose the focus clicking into
 am emtpy area (or into a filter button).
- 
+
 #. Open the app lens
 #. Expand the filter bar
-#. Make sure the dash has the focus
-#. The cursor should blink
 #. Click between a filter expander and the All Button (for example between Type > and All)
    or into a filter button.
 
 Outcome
 The cursor is still blinking.
-  
+
 
 Category headers focus
 ----------------------
@@ -38,8 +22,8 @@ This test makes sure that clicking on a category headers doesn't focus it.
 
 Outcome
   The category should expand/collaspe and the search bar still has the focus.
-  
-  
+
+
 Drag and drop dash icons
 ----------------------------
 This test makes sure that.
@@ -67,15 +51,3 @@ Outcome
   The text previously selected is pasted on the search bar at mouse pointer
   position, if the operation is repeated the text is inserted where
   the mouse pointer is.
-
-Dash SearchBar IBus Focus
-------------------------------
-This test shows that the IBus is getting focus when it gets keyboard focus.
-
-#. Open the Dash
-#. Press Ctrl + Space to activate ibus
-#. Type "abc1"
-
-Outcome
-  Typing "abc1" while ibus is focused will produce 阿布从 . If the ibus is not focused
-  then "abc1" will be the outcome (This is incorrect behavior).
