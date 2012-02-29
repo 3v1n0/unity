@@ -18,6 +18,7 @@ from autopilot.emulators.unity.switcher import Switcher
 from autopilot.emulators.unity.workspace import WorkspaceManager
 from autopilot.keybindings import KeybindingsHelper
 
+logger = logging.getLogger(__name__)
 
 class LoggedTestCase(TestWithScenarios, TestCase):
     """Initialize the logging for the test case."""
@@ -99,6 +100,7 @@ class AutopilotTestCase(LoggedTestCase, KeybindingsHelper):
 
     def start_app(self, app_name):
         """Start one of the known apps, and kill it on tear down."""
+        logger.info("Starting application '%s'", app_name)
         app = self.KNOWN_APPS[app_name]
         self.bamf.launch_application(app['desktop-file'])
         self.addCleanup(call, ["killall", app['process-name']])
