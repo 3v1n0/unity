@@ -71,6 +71,59 @@ class SwitcherTests(AutopilotTestCase):
         self.assertThat(end, Equals(start - 1))
         self.set_timeout_setting(True)
 
+    def test_switcher_scroll_next(self):
+        self.set_timeout_setting(False)
+        sleep(1)
+
+        self.switcher.initiate()
+        sleep(.2)
+
+        start = self.switcher.get_selection_index()
+        self.switcher.next_icon_mouse()
+        sleep(.2)
+
+        end = self.switcher.get_selection_index()
+        self.assertThat(start, NotEquals(0))
+        self.assertThat(end, Equals(start + 1))
+
+        # Quickly repeatead events should be ignored (except the first)
+        start = self.switcher.get_selection_index()
+        self.switcher.next_icon_mouse()
+        self.switcher.next_icon_mouse()
+        sleep(.2)
+
+        end = self.switcher.get_selection_index()
+        self.assertThat(end, Equals(start + 1))
+
+        self.switcher.terminate()
+
+    def test_switcher_scroll_prev(self):
+        self.set_timeout_setting(False)
+        sleep(1)
+
+        self.switcher.initiate()
+        sleep(.2)
+
+        start = self.switcher.get_selection_index()
+        self.switcher.previous_icon_mouse()
+        sleep(.2)
+
+        end = self.switcher.get_selection_index()
+        self.assertThat(start, NotEquals(0))
+        self.assertThat(end, Equals(start - 1))
+
+        # Quickly repeatead events should be ignored (except the first)
+        start = self.switcher.get_selection_index()
+        self.switcher.previous_icon_mouse()
+        self.switcher.previous_icon_mouse()
+        sleep(.2)
+
+        end = self.switcher.get_selection_index()
+        self.assertThat(end, Equals(start - 1))
+
+        self.switcher.terminate()
+        self.set_timeout_setting(True)
+
     def test_switcher_starts_in_normal_mode(self):
         """Switcher must start in normal (i.e.- not details) mode."""
         self.switcher.initiate()
