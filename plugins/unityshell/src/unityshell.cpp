@@ -258,6 +258,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
      }
 #endif
 
+     optionSetShowHudInitiate(boost::bind(&UnityScreen::ShowHudInitiate, this, _1, _2, _3));
      optionSetShowHudTerminate(boost::bind(&UnityScreen::ShowHudTerminate, this, _1, _2, _3));
      optionSetBackgroundColorNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetLauncherHideModeNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
@@ -1769,17 +1770,41 @@ void UnityScreen::OnLauncherEndKeyNav(GVariant* data)
     PluginAdapter::Default ()->restoreInputFocus ();
 }
 
+bool UnityScreen::ShowHudInitiate(CompAction* action,
+                                  CompAction::State state,
+                                  CompOption::Vector& options)
+{
+  // to receive the Terminate event
+  if (state & CompAction::StateInitKey)
+    action->setState(action->state() | CompAction::StateTermKey);
+  last_hud_show_time_ = g_get_monotonic_time();
+
+  return false;
+}
+
 bool UnityScreen::ShowHudTerminate(CompAction* action,
                                    CompAction::State state,
                                    CompOption::Vector& options)
 {
+  LOG_INFO(logger) << "ShowHudTerminate: state = " << state;
+
   // Remember StateCancel and StateCommit will be broadcast to all actions
   // so we need to verify that we are actually being toggled...
   if (!(state & CompAction::StateTermKey))
     return false;
+
+  action->setState(action->state() & ~CompAction::StateTermKey);
+
   // And only respond to key taps
   if (!(state & CompAction::StateTermTapped))
     return false;
+
+  gint64 current_time = g_get_monotonic_time();
+  if (current_time - last_hud_show_time_ > (250 * 1000))
+  {
+    LOG_INFO(logger) << "Tap too long";
+    return false;
+  }
 
   if (switcher_controller_->Visible())
   {
