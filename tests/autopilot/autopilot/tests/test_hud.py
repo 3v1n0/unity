@@ -33,6 +33,16 @@ class HudTests(AutopilotTestCase):
                 num_active += 1
         return num_active
 
+    def test_initially_hidden(self):
+        hud = self.get_hud_controller()
+        self.assertFalse(hud.visible)
+
+    def test_reveal_hud(self):
+        hud = self.get_hud_controller()
+        self.keybinding('hud/reveal', 0.1)
+        self.addCleanup(self.keybinding, 'hud/reveal', 0.1)
+        self.assertTrue(hud.visible)
+
     def test_reveal_hud_with_no_apps(self):
         """Hud must show even with no visible applications."""
         controller = self.get_hud_controller()
