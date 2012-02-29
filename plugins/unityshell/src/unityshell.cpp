@@ -93,10 +93,8 @@ namespace local
 {
 // Tap duration in milliseconds.
 const int ALT_TAP_DURATION = 250;
-}
-}
-
-}
+} // namespace local
+} // anon namespace
 
 UnityScreen::UnityScreen(CompScreen* screen)
   : BaseSwitchScreen (screen)
