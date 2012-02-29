@@ -65,23 +65,23 @@ class Switcher(KeybindingsHelper):
         self.keybinding_release("switcher/reveal_normal")
 
     def next_icon(self):
-        """Move to the next application."""
+        """Move to the next icon."""
         logger.debug("Selecting next item in switcher.")
         self.keybinding("switcher/next")
 
     def previous_icon(self):
-        """Move to the previous application."""
+        """Move to the previous icon."""
         logger.debug("Selecting previous item in switcher.")
         self.keybinding("switcher/prev")
 
     def next_icon_mouse(self):
-        """Move to the next application using the mouse scroll wheel"""
+        """Move to the next icon using the mouse scroll wheel"""
         logger.debug("Selecting next item in switcher with mouse scroll wheel.")
         self._mouse.press(6)
         self._mouse.release(6)
 
     def previous_icon_mouse(self):
-        """Move to the previous application using the mouse scroll wheel"""
+        """Move to the previous icon using the mouse scroll wheel"""
         logger.debug("Selecting previous item in switcher with mouse scroll wheel.")
         self._mouse.press(7)
         self._mouse.release(7)
