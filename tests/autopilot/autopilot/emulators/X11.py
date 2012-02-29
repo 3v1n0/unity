@@ -241,7 +241,7 @@ class Mouse(object):
         if button in _PRESSED_MOUSE_BUTTONS:
             _PRESSED_MOUSE_BUTTONS.remove(button)
         else:
-            logger.warning("Generating button release evenf or button %d that was not pressed.", button)
+            logger.warning("Generating button release event or button %d that was not pressed.", button)
         fake_input(_DISPLAY, X.ButtonRelease, button)
         _DISPLAY.sync()
 
