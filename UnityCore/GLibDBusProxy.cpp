@@ -142,6 +142,12 @@ void DBusProxy::Impl::OnNameAppeared(GDBusConnection* connection,
 {
   DBusProxy::Impl* self = static_cast<DBusProxy::Impl*>(impl);
   LOG_DEBUG(logger) << self->name_ << " appeared";
+
+  if (self->proxy_)
+  {
+    self->connected_ = true;
+    self->owner_->connected.emit();
+  }
 }
 
 void DBusProxy::Impl::OnNameVanished(GDBusConnection* connection,

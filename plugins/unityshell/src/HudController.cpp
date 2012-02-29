@@ -20,6 +20,7 @@
 
 #include <NuxCore/Logger.h>
 #include <Nux/HLayout.h>
+#include <UnityCore/Variant.h>
 #include "PluginAdapter.h"
 #include "PanelStyle.h"
 #include "UBusMessages.h"
@@ -186,7 +187,7 @@ void Controller::OnScreenUngrabbed()
 {
   LOG_DEBUG(logger) << "OnScreenUngrabbed called";
   if (need_show_)
-  { 
+  {
     nux::GetWindowCompositor().SetKeyFocusArea(view_->default_focus());
 
     window_->PushToFront();
@@ -225,10 +226,10 @@ void Controller::ShowHud()
   PluginAdapter* adaptor = PluginAdapter::Default();
   LOG_DEBUG(logger) << "Showing the hud";
   EnsureHud();
-  
+
   if (visible_ || adaptor->IsExpoActive() || adaptor->IsScaleActive())
    return;
- 
+
   if (adaptor->IsScreenGrabbed())
   {
     need_show_ = true;
@@ -239,7 +240,7 @@ void Controller::ShowHud()
 
   // we first want to grab the currently active window, luckly we can just ask the jason interface(bamf)
   BamfMatcher* matcher = bamf_matcher_get_default();
-  glib::Object<BamfView> bamf_app((BamfView*)(bamf_matcher_get_active_application(matcher)));
+  glib::Object<BamfView> bamf_app((BamfView*)(bamf_matcher_get_active_application(matcher)), glib::AddRef());
   glib::String view_icon(bamf_view_get_icon(bamf_app));
   focused_app_icon_ = view_icon.Str();
 
@@ -267,7 +268,7 @@ void Controller::ShowHud()
 
   GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "hud", FALSE, UScreen::GetDefault()->GetMonitorWithMouse());
   ubus.SendMessage(UBUS_OVERLAY_SHOWN, info);
-  
+
   nux::GetWindowCompositor().SetKeyFocusArea(view_->default_focus());
   window_->SetEnterFocusInputArea(view_->default_focus());
 }
@@ -342,13 +343,13 @@ gboolean Controller::OnViewShowHideFrame(Controller* self)
     else
     {
       // ensure the text entry is focused
-      g_timeout_add(500, [] (gpointer data) -> gboolean 
+      g_timeout_add(500, [] (gpointer data) -> gboolean
       {
         //THIS IS BAD - VERY VERY BAD
         LOG_DEBUG(logger) << "Last attempt, forcing window focus";
         Controller* self = static_cast<Controller*>(data);
         nux::GetWindowCompositor().SetKeyFocusArea(self->view_->default_focus());
-    
+
         self->window_->PushToFront();
         self->window_->SetInputFocus();
         return FALSE;
@@ -419,7 +420,8 @@ std::string Controller::GetName() const
 
 void Controller::AddProperties(GVariantBuilder* builder)
 {
-  g_variant_builder_add(builder, "{sv}", "visible", g_variant_new_boolean (visible_));
+  variant::BuilderWrapper(builder)
+    .add("visible", visible_);
 }
 
 

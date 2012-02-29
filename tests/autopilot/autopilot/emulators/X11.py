@@ -80,6 +80,7 @@ class Keyboard(object):
         'Super' : 'Super_L',
         'Shift' : 'Shift_L',
         'Enter' : 'Return',
+        'Space' : ' ',
     }
 
     def __init__(self):
@@ -296,6 +297,12 @@ class ScreenGeometry:
     def get_num_monitors(self):
         """Get the number of monitors attached to the PC."""
         return self._default_screen.get_n_monitors()
+
+    def get_screen_width(self):
+        return self._default_screen.get_width()
+
+    def get_screen_height(self):
+        return self._default_screen.get_height()
 
     def get_monitor_geometry(self, monitor_number):
         """Get the geometry for a particular monitor.

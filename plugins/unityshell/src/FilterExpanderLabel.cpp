@@ -21,7 +21,6 @@
  */
 
 #include "DashStyle.h"
-#include "FilterBasicButton.h"
 #include "FilterExpanderLabel.h"
 
 namespace
@@ -54,12 +53,13 @@ public:
   ExpanderView(NUX_FILE_LINE_DECL)
    : nux::View(NUX_FILE_LINE_PARAM)
   {
+    SetAcceptKeyNavFocusOnMouseDown(false);
+    SetAcceptKeyNavFocusOnMouseEnter(true);
   }
 
 protected:
   void Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
-  {
-  };
+  {};
 
   void DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
   {
@@ -69,7 +69,17 @@ protected:
 
   bool AcceptKeyNavFocus()
   {
-    return false;
+    return true;
+  }
+
+  nux::Area* FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type)
+  {
+    bool mouse_inside = TestMousePointerInclusionFilterMouseWheel(mouse_position, event_type);
+
+    if (mouse_inside == false)
+      return nullptr;
+
+    return this;
   }
 };
 
@@ -83,7 +93,7 @@ namespace dash
 NUX_IMPLEMENT_OBJECT_TYPE(FilterExpanderLabel);
 
 FilterExpanderLabel::FilterExpanderLabel(std::string const& label, NUX_FILE_LINE_DECL)
-  : FilterWidget(NUX_FILE_LINE_PARAM)
+  : nux::View(NUX_FILE_LINE_PARAM)
   , expanded(true)
   , layout_(nullptr)
   , top_bar_layout_(nullptr)
@@ -96,6 +106,8 @@ FilterExpanderLabel::FilterExpanderLabel(std::string const& label, NUX_FILE_LINE
 {
   expanded.changed.connect(sigc::mem_fun(this, &FilterExpanderLabel::DoExpandChange));
   BuildLayout();
+
+  SetAcceptKeyNavFocusOnMouseDown(false);
 }
 
 FilterExpanderLabel::~FilterExpanderLabel()
@@ -179,26 +191,32 @@ void FilterExpanderLabel::BuildLayout()
   SetLayout(layout_);
 
   // Lambda functions
-  auto mouse_redraw = [&](int x, int y, unsigned long b, unsigned long k)
+  auto mouse_expand = [&](int x, int y, unsigned long b, unsigned long k)
+  {
+    expanded = !expanded;
+  };
+
+  auto key_redraw = [&](nux::Area*, bool, nux::KeyNavDirection)
   {
     QueueDraw();
   };
 
-  auto mouse_expand = [&](int x, int y, unsigned long b, unsigned long k)
+  auto key_expand = [&](nux::Area*)
   {
     expanded = !expanded;
   };
 
   // Signals
   expander_view_->mouse_click.connect(mouse_expand);
-  expander_view_->mouse_enter.connect(mouse_redraw);
-  expander_view_->mouse_leave.connect(mouse_redraw);
+  expander_view_->key_nav_focus_change.connect(key_redraw);
+  expander_view_->key_nav_focus_activate.connect(key_expand);
   cairo_label_->mouse_click.connect(mouse_expand);
-  cairo_label_->mouse_enter.connect(mouse_redraw);
-  cairo_label_->mouse_leave.connect(mouse_redraw);
   expand_icon_->mouse_click.connect(mouse_expand);
-  expand_icon_->mouse_enter.connect(mouse_redraw);
-  expand_icon_->mouse_leave.connect(mouse_redraw);
+  key_nav_focus_change.connect([&](nux::Area* area, bool has_focus, nux::KeyNavDirection direction)
+  {
+    if(has_focus)
+      nux::GetWindowCompositor().SetKeyFocusArea(expander_view_);
+  });
 
   QueueRelayout();
   NeedRedraw();
@@ -229,9 +247,7 @@ void FilterExpanderLabel::DoExpandChange(bool change)
 
 bool FilterExpanderLabel::ShouldBeHighlighted()
 {
-  return ((expander_view_ && expander_view_->IsMouseInside()) ||
-          (cairo_label_ && cairo_label_->IsMouseInside()) ||
-          (expand_icon_ && expand_icon_->IsMouseInside()));
+  return ((expander_view_ && expander_view_->HasKeyFocus()));
 }
 
 void FilterExpanderLabel::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
@@ -269,6 +285,29 @@ void FilterExpanderLabel::DrawContent(nux::GraphicsEngine& GfxContext, bool forc
 
   GetLayout()->ProcessDraw(GfxContext, force_draw);
   GfxContext.PopClippingRectangle();
+}
+
+//
+// Key navigation
+//
+bool FilterExpanderLabel::AcceptKeyNavFocus()
+{
+  return true;
+}
+
+//
+// Introspection
+//
+std::string FilterExpanderLabel::GetName() const
+{
+  return "FilterExpanderLabel";
+}
+
+void FilterExpanderLabel::AddProperties(GVariantBuilder* builder)
+{
+  unity::variant::BuilderWrapper wrapper(builder);
+
+  wrapper.add("expander-has-focus", expander_view_->HasKeyFocus());
 }
 
 } // namespace dash

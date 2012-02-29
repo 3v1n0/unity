@@ -42,7 +42,7 @@ Controller::Controller()
   ,  show_timer_(0)
   ,  detail_timer_(0)
 {
-  timeout_length = 150;
+  timeout_length = 75;
   detail_on_timeout = true;
   detail_timeout_length = 1500;
   monitor_ = 0;
@@ -323,7 +323,7 @@ void Controller::SetDetail(bool value, unsigned int min_windows)
   if (value && model_->Selection()->Windows().size () >= min_windows)
   {
     model_->detail_selection = true;
-    detail_mode_ = TAB_NEXT_WINDOW_LOOP;
+    detail_mode_ = TAB_NEXT_WINDOW;
   }
   else
   {
