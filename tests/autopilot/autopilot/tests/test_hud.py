@@ -33,26 +33,44 @@ class HudTests(AutopilotTestCase):
                 num_active += 1
         return num_active
 
+    def test_initially_hidden(self):
+        hud = self.get_hud_controller()
+        self.assertFalse(hud.is_visible())
+
+    def test_reveal_hud(self):
+        hud = self.get_hud_controller()
+        hud.toggle_reveal()
+        self.addCleanup(hud.toggle_reveal)
+        self.assertTrue(hud.is_visible())
+
+    def test_slow_tap_not_reveal_hud(self):
+        hud = self.get_hud_controller()
+        hud.toggle_reveal(tap_delay=0.3)
+        self.assertFalse(hud.is_visible())
+
+    def test_alt_f4_doesnt_show_hud(self):
+        hud = self.get_hud_controller()
+        self.start_app('Calculator')
+        sleep(1)
+        # Do a very fast Alt+F4
+        self.keyboard.press_and_release("Alt+F4", 0.05)
+        self.assertFalse(hud.is_visible())
+
     def test_reveal_hud_with_no_apps(self):
         """Hud must show even with no visible applications."""
-        controller = self.get_hud_controller()
+        hud = self.get_hud_controller()
 
-        self.assertFalse(controller.visible)
-        kb = Keyboard()
-        kb.press_and_release("Ctrl+Alt+d")
-        self.addCleanup(kb.press_and_release, "Ctrl+Alt+d")
+        self.keyboard.press_and_release("Ctrl+Alt+d")
+        self.addCleanup(self.keyboard.press_and_release, "Ctrl+Alt+d")
         sleep(1)
 
-        # we need a *fast* keypress to reveal the hud:
-        kb.press_and_release("Alt", delay=0.1)
+        hud.toggle_reveal()
         sleep(1)
-        controller.refresh_state()
-        self.assertTrue(controller.visible)
+        self.assertTrue(hud.is_visible())
 
-        kb.press_and_release("Alt", delay=0.1)
+        hud.toggle_reveal()
         sleep(1)
-        controller.refresh_state()
-        self.assertFalse(controller.visible)
+        self.assertFalse(hud.is_visible())
 
     def test_multiple_hud_reveal_does_not_break_launcher(self):
         """Multiple Hud reveals must not cause the launcher to set multiple
@@ -61,15 +79,12 @@ class HudTests(AutopilotTestCase):
         """
         hud_controller = self.get_hud_controller()
         launcher = Launcher()
-        bamf = Bamf()
 
         # We need an app to switch to:
-        bamf.launch_application("gucharmap.desktop")
-        self.addCleanup(call, ["killall", "gucharmap"])
-
+        self.start_app('Character Map')
         # We need an application to play with - I'll use the calculator.
-        bamf.launch_application("gcalctool.desktop")
-        self.addCleanup(call, ["killall", "gcalctool"])
+        self.start_app('Calculator')
+        sleep(1)
 
         # before we start, make sure there's only one active icon:
         num_active = self.get_num_active_launcher_icons(launcher)
