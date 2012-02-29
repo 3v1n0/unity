@@ -14,7 +14,9 @@ from StringIO import StringIO
 
 from autopilot.emulators.X11 import Keyboard, Mouse
 from autopilot.emulators.bamf import Bamf
+from autopilot.emulators.unity.switcher import Switcher
 from autopilot.emulators.unity.workspace import WorkspaceManager
+from autopilot.keybindings import KeybindingsHelper
 
 
 class LoggedTestCase(TestWithScenarios, TestCase):
@@ -60,7 +62,7 @@ class LoggedTestCase(TestWithScenarios, TestCase):
         super(LoggedTestCase, self).tearDown()
 
 
-class AutopilotTestCase(LoggedTestCase):
+class AutopilotTestCase(LoggedTestCase, KeybindingsHelper):
     """Wrapper around testtools.TestCase that takes care of some cleaning."""
 
     KNOWN_APPS = {
@@ -76,6 +78,10 @@ class AutopilotTestCase(LoggedTestCase):
             'desktop-file': 'mahjongg.desktop',
             'process-name': 'mahjongg',
             },
+        'Text Editor' : {
+            'desktop-file': 'gedit.desktop',
+            'process-name': 'gedit'
+            }
         }
 
     def setUp(self):
@@ -83,6 +89,7 @@ class AutopilotTestCase(LoggedTestCase):
         self.bamf = Bamf()
         self.keyboard = Keyboard()
         self.mouse = Mouse()
+        self.switcher = Switcher()
         self.workspace = WorkspaceManager()
         self.addCleanup(self.workspace.switch_to, self.workspace.current_workspace)
 
