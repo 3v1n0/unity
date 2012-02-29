@@ -613,6 +613,7 @@ PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids, FocusVisibility 
   CompWindow* top_window_on_monitor = NULL;
   bool any_on_current = false;
   bool any_mapped = false;
+  bool any_mapped_on_current = false;
   bool forced_unminimize = false;
 
   /* sort the list */
@@ -630,6 +631,11 @@ PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids, FocusVisibility 
     if (win->defaultViewport() == m_Screen->vp())
     {
       any_on_current = true;
+
+      if (!win->minimized())
+      {
+        any_mapped_on_current = true;
+      }
     }
 
     if (!win->minimized())
@@ -678,7 +684,7 @@ PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids, FocusVisibility 
          if (!is_mapped)
            win->raise ();
        }
-       else if ((any_mapped && !win->minimized()) || !any_mapped)
+       else if ((any_mapped_on_current && !win->minimized()) || !any_mapped_on_current)
        {
          if (!forced_unminimize || target_vp == m_Screen->vp())
          {

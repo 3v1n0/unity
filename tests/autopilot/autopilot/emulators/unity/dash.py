@@ -7,19 +7,18 @@
 # by the Free Software Foundation.
 #
 
-from compizconfig import Setting, Plugin
 from time import sleep
 
-from autopilot.globals import global_context
+from autopilot.keybindings import KeybindingsHelper
 from autopilot.emulators.unity import UnityIntrospectionObject
-from autopilot.emulators.X11 import Keyboard
+from autopilot.emulators.X11 import Keyboard, Mouse
 
 
 import logging
 logger = logging.getLogger(__name__)
 
 
-class Dash(object):
+class Dash(KeybindingsHelper):
     """
     An emulator class that makes it easier to interact with the unity dash.
     """
@@ -28,8 +27,6 @@ class Dash(object):
         self.controller = DashController.get_all_instances()[0]
         self.view = self.controller.get_dash_view()
 
-        self.plugin = Plugin(global_context, "unityshell")
-        self.setting = Setting(self.plugin, "show_launcher")
         self._keyboard = Keyboard()
         super(Dash, self).__init__()
 
@@ -38,7 +35,7 @@ class Dash(object):
         Reveals the dash if it's currently hidden, hides it otherwise.
         """
         logger.debug("Toggling dash visibility with Super key.")
-        self._keyboard.press_and_release("Super")
+        self.keybinding("dash/reveal")
         sleep(1)
 
     def ensure_visible(self):
@@ -74,28 +71,27 @@ class Dash(object):
     def reveal_application_lens(self):
         """Reveal the application lense."""
         logger.debug("Revealing application lens with Super+a.")
-        self._keyboard.press('Super')
-        self._keyboard.press_and_release("a")
-        self._keyboard.release('Super')
+        self._reveal_lens("lens_reveal/apps")
 
     def reveal_music_lens(self):
         """Reveal the music lense."""
         logger.debug("Revealing music lens with Super+m.")
-        self._keyboard.press('Super')
-        self._keyboard.press_and_release("m")
-        self._keyboard.release('Super')
+        self._reveal_lens("lens_reveal/music")
 
     def reveal_file_lens(self):
         """Reveal the file lense."""
         logger.debug("Revealing file lens with Super+f.")
-        self._keyboard.press('Super')
-        self._keyboard.press_and_release("f")
-        self._keyboard.release('Super')
+        self._reveal_lens("lens_reveal/files")
 
     def reveal_command_lens(self):
         """Reveal the 'run command' lens."""
         logger.debug("Revealing command lens with Alt+F2.")
-        self._keyboard.press_and_release('Alt+F2')
+        self._reveal_lens("lens_reveal/command")
+
+    def _reveal_lens(self, binding_name):
+        self.keybinding_hold(binding_name)
+        self.keybinding_tap(binding_name)
+        self.keybinding_release(binding_name)
 
     def get_current_lens(self):
         """Get the currently-active LensView object."""
@@ -153,6 +149,14 @@ class LensView(UnityIntrospectionObject):
             return matches[0]
         return None
 
+    def get_category_by_name(self, category_name):
+        """Return a PlacesGroup instance with the given name, or None."""
+        categories = self.get_children_by_type(PlacesGroup)
+        matches = [m for m in categories if m.name == category_name]
+        if matches:
+            return matches[0]
+        return None
+
     def get_num_visible_categories(self):
         """Get the number of visible categories in this lens."""
         return len([c for c in self.get_children_by_type(PlacesGroup) if c.is_visible])
@@ -167,6 +171,19 @@ class LensView(UnityIntrospectionObject):
 
 class PlacesGroup(UnityIntrospectionObject):
     """A category in the lense view."""
+
+    def get_results(self):
+        """Get a list of all results within this category. May return an empty list."""
+        result_view = self.get_children_by_type(ResultView)[0]
+        return result_view.get_children_by_type(Result)
+
+
+class ResultView(UnityIntrospectionObject):
+    """Contains a list of Result objects."""
+
+
+class Result(UnityIntrospectionObject):
+    """A single result in the dash."""
 
 
 class FilterBar(UnityIntrospectionObject):
@@ -184,6 +201,32 @@ class FilterBar(UnityIntrospectionObject):
             if filter_label.expander_has_focus:
                 return filter_label
         return None
+
+    def is_expanded(self):
+        """Return True if the filterbar on this lens is expanded, False otherwise.
+        """
+        searchbar = SearchBar.get_all_instances()[0]
+        return searchbar.showing_filters
+
+    def ensure_expanded(self):
+        """Expand the filter bar, if it's not already."""
+        if not self.is_expanded():
+            searchbar = SearchBar.get_all_instances()[0]
+            tx = searchbar.filter_label_x + (searchbar.filter_label_width / 2)
+            ty = searchbar.filter_label_y + (searchbar.filter_label_height / 2)
+            m = Mouse()
+            m.move(tx, ty)
+            m.click()
+
+    def ensure_collapsed(self):
+        """Collapse the filter bar, if it's not already."""
+        if self.is_expanded():
+            searchbar = SearchBar.get_all_instances()[0]
+            tx = searchbar.filter_label_x + (searchbar.filter_label_width / 2)
+            ty = searchbar.filter_label_y + (searchbar.filter_label_height / 2)
+            m = Mouse()
+            m.move(tx, ty)
+            m.click()
 
 
 class FilterExpanderLabel(UnityIntrospectionObject):
