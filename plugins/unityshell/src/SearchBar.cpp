@@ -62,7 +62,7 @@ namespace
 {
 
 nux::logging::Logger logger("unity");
-  
+
 class ExpanderView : public nux::View
 {
 public:
@@ -175,7 +175,7 @@ void SearchBar::Init()
   hint_->SetMaximumWidth(search_bar_width_ - icon->GetWidth());
 
   pango_entry_ = new IMTextEntry();
-  pango_entry_->sigTextChanged.connect(sigc::mem_fun(this, &SearchBar::OnSearchChanged));
+  pango_entry_->text_changed.connect(sigc::mem_fun(this, &SearchBar::OnSearchChanged));
   pango_entry_->activated.connect([&]() { activated.emit(); });
   pango_entry_->cursor_moved.connect([&](int i) { QueueDraw(); });
   pango_entry_->mouse_down.connect(sigc::mem_fun(this, &SearchBar::OnMouseButtonDown));
@@ -420,7 +420,7 @@ void SearchBar::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
     geo.y -= (HIGHLIGHT_HEIGHT- geo.height) / 2;
     geo.height = HIGHLIGHT_HEIGHT;
     geo.width = HIGHLIGHT_WIDTH + HIGHLIGHT_LEFT_PADDING + HIGHLIGHT_RIGHT_PADDING;
-    geo.x = geo_arrow.x + (geo_arrow.width - 1) - geo.width + HIGHLIGHT_RIGHT_PADDING; 
+    geo.x = geo_arrow.x + (geo_arrow.width - 1) - geo.width + HIGHLIGHT_RIGHT_PADDING;
 
     if (!highlight_layer_)
       highlight_layer_.reset(dash::Style::Instance().FocusOverlay(geo.width, geo.height));
@@ -652,13 +652,16 @@ std::string SearchBar::GetName() const
 
 void SearchBar::AddProperties(GVariantBuilder* builder)
 {
-  unity::variant::BuilderWrapper wrapper(builder);
-
-  wrapper.add(GetAbsoluteGeometry());
-  wrapper.add("has_focus", pango_entry_->HasKeyFocus());
-  wrapper.add("search_string", pango_entry_->GetText());
-  wrapper.add("expander-has-focus", expander_view_->HasKeyFocus());
-  wrapper.add("showing-filters", showing_filters);
+  unity::variant::BuilderWrapper(builder)
+  .add(GetAbsoluteGeometry())
+  .add("has_focus", pango_entry_->HasKeyFocus())
+  .add("search_string", pango_entry_->GetText())
+  .add("expander-has-focus", expander_view_->HasKeyFocus())
+  .add("showing-filters", showing_filters)
+  .add("filter-label-x", show_filters_->GetAbsoluteX())
+  .add("filter-label-y", show_filters_->GetAbsoluteY())
+  .add("filter-label-width", show_filters_->GetAbsoluteWidth())
+  .add("filter-label-height", show_filters_->GetAbsoluteHeight());
 }
 
 } // namespace unity

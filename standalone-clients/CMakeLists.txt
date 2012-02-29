@@ -74,6 +74,7 @@ add_executable (dash
                 ${UNITY_SRC}/FontSettings.h
                 ${UNITY_SRC}/IMTextEntry.cpp
                 ${UNITY_SRC}/IMTextEntry.h
+		${UNITY_SRC}/IntrospectableWrappers.cpp
                 ${UNITY_SRC}/PlacesGroup.cpp
                 ${UNITY_SRC}/PlacesGroup.h
                 ${UNITY_SRC}/PlacesTile.cpp

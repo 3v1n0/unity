@@ -1135,7 +1135,8 @@ bool BamfLauncherIcon::ShowInSwitcher(bool current)
 
   if (IsRunning() && IsVisible())
   {
-    if (current)
+    // If current is true, we only want to show the current workspace.
+    if (!current)
     {
       result = true;
     }

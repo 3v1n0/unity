@@ -42,7 +42,7 @@ Controller::Controller()
   ,  show_timer_(0)
   ,  detail_timer_(0)
 {
-  timeout_length = 150;
+  timeout_length = 75;
   detail_on_timeout = true;
   detail_timeout_length = 1500;
   monitor_ = 0;
