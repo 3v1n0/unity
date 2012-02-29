@@ -88,6 +88,7 @@ public:
   std::string GetText() const;
 
   int  GetLineCount();
+  int GetBaseline() const;
 
   void GetTextExtents(int& width, int& height);
 
@@ -107,6 +108,7 @@ private:
   bool           _need_new_extent_cache;
   int            _cached_base_width;
   int            _cached_base_height;
+  int            _baseline;
 
   std::string    _text;
   Color          _textColor;
