@@ -80,6 +80,8 @@ _keys = {
     "workspace/move_right": ("wall", "right_key"),
     "workspace/move_up": ("wall", "up_key"),
     "workspace/move_down": ("wall", "down_key"),
+    # Window management
+    "window/minimize": ("core", "minimize_window_key"),
 }
 
 
