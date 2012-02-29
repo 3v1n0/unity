@@ -6,6 +6,7 @@
 # under the terms of the GNU General Public License version 3, as published
 # by the Free Software Foundation.
 
+from testtools.matchers import LessThan
 from time import sleep
 
 from autopilot.emulators.unity.hud import HudController
@@ -84,9 +85,9 @@ class HudTests(AutopilotTestCase):
         self.start_app('Calculator')
         sleep(1)
 
-        # before we start, make sure there's only one active icon:
+        # before we start, make sure there's zero or one active icon:
         num_active = self.get_num_active_launcher_icons(launcher)
-        self.assertEqual(num_active, 1, "Invalid number of launcher icons active before test has run!")
+        self.assertThat(num_active, LessThan(2), "Invalid number of launcher icons active before test has run!")
 
         # reveal and hide hud several times over:
         for i in range(3):
