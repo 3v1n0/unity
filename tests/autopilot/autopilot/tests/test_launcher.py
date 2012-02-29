@@ -11,7 +11,7 @@ from testtools.matchers import Equals, LessThan, GreaterThan
 
 from autopilot.tests import AutopilotTestCase
 from autopilot.emulators.unity.launcher import Launcher
-from autopilot.emulators.X11 import ScreenGeometry, Keyboard
+from autopilot.emulators.X11 import ScreenGeometry
 from autopilot.glibrunner import GlibRunner
 
 from time import sleep
@@ -95,7 +95,9 @@ class LauncherTests(AutopilotTestCase):
 
     def test_launcher_switcher_ungrabbed_showing_shorcuts(self):
         """Tests basic key nav integration without keyboard grabs but making
-        the launcher show the icon shortcuts."""
+        the launcher show the icon shortcuts.
+
+        """
         sleep(.5)
 
         launcher = self.server.get_keyboard_controlled_launcher();
@@ -130,7 +132,9 @@ class LauncherTests(AutopilotTestCase):
 
     def test_launcher_switcher_ungrabbed_using_shorcuts(self):
         """Tests basic key nav integration without keyboard grabs but making
-        the launcher show the icon shortcuts, and using them to disable the switcher."""
+        the launcher show the icon shortcuts, and using them to disable the switcher.
+
+        """
         sleep(.5)
 
         launcher = self.server.get_keyboard_controlled_launcher();
@@ -149,10 +153,10 @@ class LauncherTests(AutopilotTestCase):
         self.assertThat(self.server.key_nav_selection(), Equals(0))
         self.assertThat(self.server.are_shortcuts_showing(launcher), Equals(True))
 
-        kb = Keyboard()
-        kb.press_and_release("s")
+        # Launch the workspace switcher, it should also terminate the key navigation
+        self.keyboard.press_and_release("s")
         sleep(.25)
-        kb.press_and_release("Escape")
+        self.keyboard.press_and_release("Escape")
         sleep(.25)
 
         self.assertThat(self.server.key_nav_is_active(), Equals(False))
@@ -183,7 +187,9 @@ class LauncherTests(AutopilotTestCase):
 
     def test_launcher_switcher_quicklist_interaction(self):
         """Tests that the key nav opens and closes quicklists properly and
-        regrabs afterwards. """
+        regrabs afterwards.
+
+        """
         launcher = self.server.get_keyboard_controlled_launcher();
         self.server.move_mouse_to_right_of_launcher(launcher)
         sleep(.5)
@@ -213,7 +219,9 @@ class LauncherTests(AutopilotTestCase):
 
     def test_launcher_keyboard_shortcuts_showing(self):
         """Test if the key to reveal the launcher if pressed enough makes
-        the keyboard-controlled launcher to show the shortcuts"""
+        the keyboard-controlled launcher to show the shortcuts.
+
+        """
         sleep(.5)
         launcher = self.server.get_keyboard_controlled_launcher();
         self.server.move_mouse_to_right_of_launcher(launcher)
