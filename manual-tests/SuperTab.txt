@@ -45,52 +45,6 @@ Outcome:
   even keeping only super pressed until releasing it and pressing it again.
 
 
-Super Tab switcher interaction with Launcher Icon shortcuts overlays
---------------------------------------------------------------------
-This test shows the interaction between the launcher icons shortcuts overlays
-and the Super+Tab switcher.
-
-#. Start with a clean screen
-#. Press Super to make the launcher icons shortcuts to show
-#. Then press Tab to initiate the Super+Tab launcher switcher
-
-Outcome:
-  The Super+Tab switcher is initialized, and the icons overlays are still
-  showing. Pressing also Shift to reverse the switcher direction doesn't hide
-  the overlay, that will be hidden once Super is released.
-
-#. Start with a clean screen
-#. Press Super+Tab quickly to make the launcher switcher to initialize without
-   making the launcher to show the icons shortcuts.
-
-Outcome:
-  Super+Tab switcher is initialized and the launcher icons shortcuts are not
-  shown even keeping only the Super key pressed, this will continue until
-  Super won't be released and pressed again.
-
-
-Super Tab switcher cycling over launcher applications
------------------------------------------------------
-This test shows how the Super+Tab switcher should use a circular selection.
-
-#. Start with a clean screen
-#. Press Super+Tab multiple times to make the selection to reach the bottom
-   launcher icon
-#. Press Tab again
-
-Outcome:
-  The selection should go from the last launcher icon, to the first one.
-  The launcher view should be expanded/moved if needed to show the highlighted item.
-
-#. Start with a clean screen
-#. Press Super+Tab once to make the first launcher icon to highlight
-#. Press Shift+Tab while keeping Super pressed
-
-Outcome:
-  The selection should go from the first launcher icon to the last one.
-  The launcher view should be expanded/moved if needed to show the highlighted item.
-
-
 Escaping from Super Tab switcher
 --------------------------------
 This test shows how to escape from the Super+Tab switcher.
@@ -101,20 +55,4 @@ This test shows how to escape from the Super+Tab switcher.
 
 Outcome:
   The Super Tab launcher switcher should terminate without performing any action
-  The previously selected launcher item should be deselected.
-
-
-Unity shortcuts during Super Tab switcher
------------------------------------------
-This test shows the interaction between the unity shortcuts and the Super+Tab
-switcher
-
-#. Start with a clean screen
-#. Press Super+Tab one or more times to make the launcher switcher to initialize
-#. Press a valid unity shortcut key (such as "1" to activate the first launcher
-   item or "s" to open the Expo)
-
-Outcome:
-  The Super Tab launcher switcher should terminate, and the requested action must
-  be performed.
   The previously selected launcher item should be deselected.
