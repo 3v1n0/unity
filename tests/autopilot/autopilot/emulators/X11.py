@@ -179,7 +179,10 @@ class Keyboard(object):
             if event == X.KeyPress:
                 _PRESSED_KEYS.append(keycode)
             elif event == X.KeyRelease:
-                _PRESSED_KEYS.remove(keycode)
+                if keycode in _PRESSED_KEYS:
+                    _PRESSED_KEYS.remove(keycode)
+                else:
+                    logger.warning("Generating release event for keycode %d that was not pressed.", keycode)
 
             fake_input(_DISPLAY, event, keycode)
         _DISPLAY.sync()
@@ -235,7 +238,10 @@ class Mouse(object):
     def release(self, button=1):
         """Releases mouse button at current mouse location."""
         logger.debug("Releasing mouse button %d", button)
-        _PRESSED_MOUSE_BUTTONS.remove(button)
+        if button in _PRESSED_MOUSE_BUTTONS:
+            _PRESSED_MOUSE_BUTTONS.remove(button)
+        else:
+            logger.warning("Generating button release evenf or button %d that was not pressed.", button)
         fake_input(_DISPLAY, X.ButtonRelease, button)
         _DISPLAY.sync()
 
