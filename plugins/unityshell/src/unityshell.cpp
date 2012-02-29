@@ -333,7 +333,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
      GeisAdapter::Default()->Run();
      gestureEngine = new GestureEngine(screen);
 
-     CompString name(PKGDATADIR "/panel-shadow.png");
+     CompString name(PKGDATADIR"/panel-shadow.png");
      CompString pname("unityshell");
      CompSize size(1, 20);
      _shadow_texture = GLTexture::readImageToTexture(name, pname, size);
