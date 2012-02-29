@@ -14,6 +14,7 @@ from StringIO import StringIO
 
 from autopilot.emulators.X11 import Keyboard, Mouse
 from autopilot.emulators.bamf import Bamf
+from autopilot.emulators.unity.switcher import Switcher
 from autopilot.emulators.unity.workspace import WorkspaceManager
 from autopilot.keybindings import KeybindingsHelper
 
@@ -88,6 +89,7 @@ class AutopilotTestCase(LoggedTestCase, KeybindingsHelper):
         self.bamf = Bamf()
         self.keyboard = Keyboard()
         self.mouse = Mouse()
+        self.switcher = Switcher()
         self.workspace = WorkspaceManager()
         self.addCleanup(self.workspace.switch_to, self.workspace.current_workspace)
 
