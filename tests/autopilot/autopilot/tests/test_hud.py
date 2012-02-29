@@ -34,7 +34,7 @@ class HudTests(AutopilotTestCase):
     def get_num_active_launcher_icons(self, launcher):
         num_active = 0
         for icon in launcher.get_launcher_icons():
-            if icon.quirk_active:
+            if icon.quirk_active and icon.quirk_visible:
                 num_active += 1
         return num_active
 
