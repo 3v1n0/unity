@@ -419,5 +419,5 @@ class DashVisualTests(AutopilotTestCase):
 
         for group in groups:
             if (group.is_visible):
-                self.assertTrue(group.baseline_alignment_is_correct)
-
+                self.assertTrue(not group.expand_label_is_visible or
+                                (group.expand_label_y + group.expand_label_baseline == group.name_label_y + group.name_label_baseline))
