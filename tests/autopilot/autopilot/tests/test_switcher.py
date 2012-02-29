@@ -135,19 +135,9 @@ class SwitcherDetailsModeTests(AutopilotTestCase):
         ('initiate_with_down', {'initiate_keycode': 'Down'}),
     ]
 
-    def setUp(self):
-        self.bamf = Bamf()
-        self.bamf.launch_application("gucharmap.desktop")
-        self.switcher = Switcher()
-        super(SwitcherDetailsModeTests, self).setUp()
-
-    def tearDown(self):
-        call(["killall", "gucharmap"])
-        super(SwitcherDetailsModeTests, self).tearDown()
-        sleep(1)
-
     def test_can_start_details_mode(self):
         """Must be able to initiate details mode using selected scenario keycode."""
+        self.start_app("Character Map")
         self.switcher.initiate()
         self.addCleanup(self.switcher.terminate)
         self.keyboard.press_and_release(self.initiate_keycode)
@@ -158,6 +148,7 @@ class SwitcherDetailsModeTests(AutopilotTestCase):
         must select first item in the model in non-details mode.
 
         """
+        self.start_app("Character Map")
         self.switcher.initiate()
         self.addCleanup(self.switcher.terminate)
         while self.switcher.get_selection_index() < self.switcher.get_model_size() -1:
@@ -170,10 +161,6 @@ class SwitcherDetailsModeTests(AutopilotTestCase):
 
 class SwitcherWorkspaceTests(AutopilotTestCase):
     """Test Switcher behavior with respect to multiple workspaces."""
-
-    def setUp(self):
-        super(SwitcherWorkspaceTests, self).setUp()
-        self.switcher = Switcher()
 
     def test_switcher_shows_current_workspace_only(self):
         """Switcher must show apps from the current workspace only."""
