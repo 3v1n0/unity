@@ -26,6 +26,21 @@ class LauncherTests(AutopilotTestCase):
         self.server = Launcher()
         sleep(1)
 
+    def test_launcher_switcher_ungrabbed_starts_on_zero(self):
+        """Tests basic key nav integration without keyboard grabs."""
+        sleep(.25)
+
+        self.server.start_switcher()
+        sleep(.25)
+
+        self.assertThat(self.server.key_nav_is_active(), Equals(True))
+        self.assertThat(self.server.key_nav_is_grabbed(), Equals(False))
+        self.assertThat(self.server.key_nav_selection(), Equals(0))
+
+        self.server.end_switcher(True)
+        sleep(.25)
+        self.assertThat(self.server.key_nav_is_active(), Equals(False))
+
     def test_launcher_switcher_ungrabbed(self):
         """Tests basic key nav integration without keyboard grabs."""
         sleep(.5)
