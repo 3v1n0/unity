@@ -236,13 +236,19 @@ protected:
   void AddProperties(GVariantBuilder* builder);
 
 private:
+  enum CancelActionTarget
+  {
+    LAUNCHER_SWITCHER,
+    SHORTCUT_HINT
+  };
+
   void initAltTabNextWindow ();
 
   void SendExecuteCommand();
 
   void EnsureSuperKeybindings();
   void CreateSuperNewAction(char shortcut, impl::ActionModifiers flag);
-  void EnableCancelAction(bool enabled, int modifiers = 0);
+  void EnableCancelAction(CancelActionTarget target, bool enabled, int modifiers = 0);
 
   static gboolean initPluginActions(gpointer data);
   void initLauncher();
@@ -294,7 +300,7 @@ private:
   typedef std::vector<CompActionPtr> ShortcutActions;
   ShortcutActions _shortcut_actions;
   bool            super_keypressed_;
-  CompActionPtr   _escape_action;
+  std::map<CancelActionTarget, CompActionPtr> _escape_actions;
 
   /* keyboard-nav mode */
   CompWindow* newFocusedWindow;

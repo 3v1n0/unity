@@ -858,22 +858,24 @@ void UnityWindow::paintThumbnail (nux::Geometry const& bounding, float alpha)
               geo.height);
 }
 
-void UnityScreen::EnableCancelAction(bool enabled, int modifiers)
+void UnityScreen::EnableCancelAction(CancelActionTarget target, bool enabled, int modifiers)
 {
   if (enabled)
   {
-    /* Create a new keybinding for the Escape key and the current modifiers */
+    /* Create a new keybinding for the Escape key and the current modifiers,
+     * compiz will take of the ref-counting of the repeated actions */
     CompAction::KeyBinding binding(9, modifiers);
 
-    _escape_action = CompActionPtr(new CompAction());
-    _escape_action->setKey(binding);
+    CompActionPtr &escape_action = _escape_actions[target];
+    escape_action = CompActionPtr(new CompAction());
+    escape_action->setKey(binding);
 
-    screen->addAction(_escape_action.get());
+    screen->addAction(escape_action.get());
   }
-  else if (!enabled && _escape_action.get())
+  else if (!enabled && _escape_actions[target].get())
   {
-    screen->removeAction(_escape_action.get());
-    _escape_action = nullptr;
+    screen->removeAction(_escape_actions[target].get());
+    _escape_actions.erase(target);
   }
 }
 
@@ -1325,7 +1327,7 @@ void UnityScreen::handleEvent(XEvent* event)
       if (super_keypressed_)
       {
         launcher_controller_->KeyNavTerminate(false);
-        EnableCancelAction(false);
+        EnableCancelAction(CancelActionTarget::LAUNCHER_SWITCHER, false);
       }
       break;
     case KeyPress:
@@ -1339,17 +1341,23 @@ void UnityScreen::handleEvent(XEvent* event)
         // we should just say "key_string[1] = 0" because that is the only
         // thing that could possibly make sense here.
         key_string[result] = 0;
-        if (super_keypressed_ && key_sym != XK_Escape)
+        if (super_keypressed_)
         {
-          g_idle_add([] (gpointer data) -> gboolean {
-            auto self = static_cast<UnityScreen*>(data);
-            if (!self->launcher_controller_->KeyNavIsActive())
-            {
-              self->shortcut_controller_->SetEnabled(false);
-              self->shortcut_controller_->Hide();
-            }
-            return FALSE;
-          }, this);
+          if (key_sym != XK_Escape || (key_sym == XK_Escape && !launcher_controller_->KeyNavIsActive()))
+          {
+            /* We need an idle to postpone this action, after the current event
+             * has been processed */
+            g_idle_add([] (gpointer data) -> gboolean {
+              auto self = static_cast<UnityScreen*>(data);
+              if (!self->launcher_controller_->KeyNavIsActive())
+              {
+                self->shortcut_controller_->SetEnabled(false);
+                self->shortcut_controller_->Hide();
+                self->EnableCancelAction(CancelActionTarget::SHORTCUT_HINT, false);
+              }
+              return FALSE;
+            }, this);
+          }
 
           skip_other_plugins = launcher_controller_->HandleLauncherKeyEvent(screen->dpy(), key_sym, event->xkey.keycode, event->xkey.state, key_string);
           if (!skip_other_plugins)
@@ -1358,7 +1366,7 @@ void UnityScreen::handleEvent(XEvent* event)
           if (skip_other_plugins && launcher_controller_->KeyNavIsActive())
           {
             launcher_controller_->KeyNavTerminate(false);
-            EnableCancelAction(false);
+            EnableCancelAction(CancelActionTarget::LAUNCHER_SWITCHER, false);
           }
         }
       }
@@ -1499,7 +1507,10 @@ bool UnityScreen::showLauncherKeyInitiate(CompAction* action,
     }
 
     if (last_geo.x > monitor_geo.x and last_geo.y > monitor_geo.y)
+    {
+      EnableCancelAction(CancelActionTarget::SHORTCUT_HINT, true, action->key().modifiers());
       shortcut_controller_->Show();
+    }
    }
 
   return false;
@@ -1513,14 +1524,15 @@ bool UnityScreen::showLauncherKeyTerminate(CompAction* action,
     return false;
 
   bool was_tap = state & CompAction::StateTermTapped;
-
   super_keypressed_ = false;
   launcher_controller_->KeyNavTerminate(true);
   launcher_controller_->HandleLauncherKeyRelease(was_tap);
-  EnableCancelAction(false);
+  EnableCancelAction(CancelActionTarget::LAUNCHER_SWITCHER, false);
 
   shortcut_controller_->SetEnabled(enable_shortcut_overlay_);
   shortcut_controller_->Hide();
+  EnableCancelAction(CancelActionTarget::SHORTCUT_HINT, false);
+
   action->setState (action->state() & (unsigned)~(CompAction::StateTermKey));
   return false;
 }
@@ -1735,7 +1747,7 @@ bool UnityScreen::launcherSwitcherForwardInitiate(CompAction* action, CompAction
   if (!launcher_controller_->KeyNavIsActive())
   {
     launcher_controller_->KeyNavActivate();
-    EnableCancelAction(true, action->key().modifiers());
+    EnableCancelAction(CancelActionTarget::LAUNCHER_SWITCHER, true, action->key().modifiers());
   }
   else
   {
@@ -1756,7 +1768,7 @@ bool UnityScreen::launcherSwitcherTerminate(CompAction* action, CompAction::Stat
   bool accept_state = (state & CompAction::StateCancel) == 0;
   launcher_controller_->KeyNavTerminate(accept_state);
 
-  EnableCancelAction(false);
+  EnableCancelAction(CancelActionTarget::LAUNCHER_SWITCHER, false);
   action->setState (action->state() & (unsigned)~(CompAction::StateTermKey));
   return false;
 }
