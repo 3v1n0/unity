@@ -48,9 +48,6 @@ class LoggedTestCase(TestWithScenarios, TestCase):
         super(LoggedTestCase, self).setUp()
 
     def tearDown(self):
-        Keyboard.cleanup()
-        Mouse.cleanup()
-
         logger = logging.getLogger()
         for handler in logger.handlers:
             handler.flush()
