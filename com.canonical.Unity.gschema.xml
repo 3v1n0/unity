@@ -20,6 +20,11 @@
       <summary>Whether the home screen should be expanded.</summary>
       <description>Whether the home screen should be expanded.</description>
     </key>
+    <key type="s" name="average-bg-color">
+      <default>'#757550507B7BFFFF'</default>
+      <summary>Average background color</summary>
+      <description>The average color derived from the currently set desktop-wallpaper. This is written/updated by the Unity-process and read by NotifyOSD-process for example.</description>
+    </key>
   </schema>
   <schema path="/desktop/unity/launcher/" id="com.canonical.Unity.Launcher" gettext-domain="unity">
     <key type="as" name="favorites">
@@ -35,7 +40,7 @@
   </schema>
   <schema path="/desktop/unity/panel/" id="com.canonical.Unity.Panel" gettext-domain="unity">
     <key type="as" name="systray-whitelist">
-      <default>[ 'JavaEmbeddedFrame', 'Wine', 'scp-dbus-service', 'Update-notifier' ]</default>
+      <default>[ 'JavaEmbeddedFrame', 'Wine', 'Update-notifier' ]</default>
       <summary>List of client names, resource classes or wm classes to allow in the Panel's systray implementation.</summary>
       <description>"" (empty) will not allow any tray icons, "all" will allow all tray icons, otherwise there will be an attempt to match each icon to a value here.</description>
     </key>

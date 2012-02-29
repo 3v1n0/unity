@@ -6,7 +6,7 @@ plugins/unityshell/src/PlacesGroup.cpp
 plugins/unityshell/src/SpacerLauncherIcon.cpp
 plugins/unityshell/src/TrashLauncherIcon.cpp
 plugins/unityshell/src/BFBLauncherIcon.cpp
-plugins/unityshell/src/DashSearchBar.cpp
+plugins/unityshell/src/SearchBar.cpp
 plugins/unityshell/src/DashView.cpp
 plugins/unityshell/src/DesktopLauncherIcon.cpp
 plugins/unityshell/src/FilterExpanderLabel.cpp
@@ -15,6 +15,7 @@ plugins/unityshell/src/FilterMultiRangeWidget.cpp
 plugins/unityshell/src/FilterRatingsWidget.cpp
 plugins/unityshell/src/PreviewMusic.cpp
 plugins/unityshell/src/PreviewMusicTrack.cpp
+plugins/unityshell/src/ShortcutHintPrivate.cpp
 plugins/unityshell/src/unity-launcher-accessible.cpp
 plugins/unityshell/src/unity-search-bar-accessible.cpp
 plugins/unityshell/src/unityshell.cpp

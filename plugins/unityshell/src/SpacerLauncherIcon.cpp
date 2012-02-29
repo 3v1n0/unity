@@ -37,6 +37,10 @@ SpacerLauncherIcon::SpacerLauncherIcon()
   tooltip_text = _("Drop To Add Application");
 }
 
+std::string SpacerLauncherIcon::GetName() const
+{
+    return "SpacerLauncherIcon";
+}
 
 } // namespace launcher
 } // namespace unity

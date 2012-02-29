@@ -51,8 +51,6 @@ namespace unity
 namespace launcher
 {
 
-const int max_num_monitors = 6;
-
 class Launcher;
 
 class LauncherIcon : public AbstractLauncherIcon
@@ -137,13 +135,13 @@ public:
     return 0;
   }
 
-  bool GetQuirk(Quirk quirk);
+  bool GetQuirk(Quirk quirk) const;
 
   void SetQuirk(Quirk quirk, bool value);
 
   struct timespec GetQuirkTime(Quirk quirk);
 
-  IconType Type();
+  IconType GetIconType();
 
   virtual nux::Color BackgroundColor();
 
@@ -186,7 +184,17 @@ public:
 
   void SetIconType(IconType type);
 
-  std::vector<nux::Vector4> & GetTransform(TransformIndex index, int monitor);
+  virtual std::string DesktopFile() { return std::string(""); }
+
+  virtual bool IsSticky() const { return false; }
+
+  virtual bool IsVisible() const { return false; }
+
+  virtual void AboutToRemove() {}
+  
+  virtual void Stick(bool save = true) {}
+  
+  virtual void UnStick() {}
 
 protected:
   std::vector<nux::Point3> GetCenters();
@@ -267,19 +275,14 @@ protected:
 
   void OnRemoteProgressVisibleChanged(LauncherEntryRemote* remote);
 
-  nux::Tooltip* _tooltip;
-  QuicklistView* _quicklist;
+  void EmitNeedsRedraw();
 
-  static nux::Tooltip* _current_tooltip;
-  static QuicklistView* _current_quicklist;
+  void EmitRemove();
 
   // This looks like a case for boost::logical::tribool
   static int _current_theme_is_mono;
 
   DbusmenuClient* _menuclient_dynamic_quicklist;
-
-  friend class Launcher;
-  friend class LauncherModel;
 
 private:
   typedef struct
@@ -287,6 +290,9 @@ private:
     LauncherIcon* self;
     Quirk quirk;
   } DelayedUpdateArg;
+
+  nux::ObjectPtr<Tooltip> _tooltip;
+  nux::ObjectPtr<QuicklistView> _quicklist;
 
   static void ChildRealized(DbusmenuMenuitem* newitem, QuicklistView* quicklist);
   static void RootChanged(DbusmenuClient* client, DbusmenuMenuitem* newroot, QuicklistView* quicklist);
@@ -296,8 +302,9 @@ private:
 
   void ColorForIcon(GdkPixbuf* pixbuf, nux::Color& background, nux::Color& glow);
 
-  std::vector<bool> _has_visible_window;
-  bool              _quicklist_is_initialized;
+  void LoadTooltip();
+  void LoadQuicklist();
+
   bool              _remote_urgent;
   float             _present_urgency;
   float             _progress;
@@ -308,14 +315,16 @@ private:
   int               _last_monitor;
   nux::Color        _background_color;
   nux::Color        _glow_color;
-  
+
   gint64            _shortcut;
 
-  std::vector<nux::Point3> _center;
-  std::vector<nux::Point3> _last_stable;
-  std::vector<nux::Point3> _saved_center;
-  std::vector<nux::Geometry> _parent_geo;
   IconType                 _icon_type;
+  
+  std::vector<nux::Point3> _center;
+  std::vector<bool> _has_visible_window;
+  std::vector<nux::Point3> _last_stable;
+  std::vector<nux::Geometry> _parent_geo;
+  std::vector<nux::Point3> _saved_center;
 
   static GtkIconTheme* _unity_theme;
 
@@ -325,8 +334,6 @@ private:
   struct timespec  _quirk_times[QUIRK_LAST];
 
   std::list<LauncherEntryRemote*> _entry_list;
-  std::vector<std::map<TransformIndex, std::vector<nux::Vector4> > > transform_map;
-  
 };
 
 }

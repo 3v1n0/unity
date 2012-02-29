@@ -33,6 +33,15 @@ namespace unity
 {
 namespace dash
 {
+namespace
+{
+
+const int TOP_PADDING = 9;
+const int RIGHT_PADDING = 8;
+const int BOTTOM_PADDING = 12;
+const int LEFT_PADDING = 0;
+
+}
 
 NUX_IMPLEMENT_OBJECT_TYPE(FilterMultiRange);
 
@@ -44,7 +53,8 @@ FilterMultiRange::FilterMultiRange(NUX_FILE_LINE_DECL)
   all_button_ = new FilterAllButton(NUX_TRACKER_LOCATION);
 
   layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
-  layout_->SetTopAndBottomPadding(9, 12);
+  layout_->SetLeftAndRightPadding(LEFT_PADDING, RIGHT_PADDING);
+  layout_->SetTopAndBottomPadding(TOP_PADDING, BOTTOM_PADDING);
 
   SetRightHandView(all_button_);
   SetContents(layout_);
@@ -103,7 +113,7 @@ void FilterMultiRange::OnActiveChanged(bool value)
       button->SetHasArrow(MultiRangeArrow::BOTH);
     else if (index == start)
       button->SetHasArrow(MultiRangeArrow::LEFT);
-    else if (index == end)
+    else if (index == end && index != 0)
       button->SetHasArrow(MultiRangeArrow::RIGHT);
     else
       button->SetHasArrow(MultiRangeArrow::NONE);
@@ -153,22 +163,6 @@ std::string FilterMultiRange::GetFilterType()
 void FilterMultiRange::InitTheme()
 {
   //FIXME - build theme here - store images, cache them, fun fun fun
-}
-
-void FilterMultiRange::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
-{
-  nux::Geometry const& geo = GetGeometry();
-
-  GfxContext.PushClippingRectangle(geo);
-  nux::GetPainter().PaintBackground(GfxContext, geo);
-  GfxContext.PopClippingRectangle();
-}
-
-void FilterMultiRange::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
-{
-  GfxContext.PushClippingRectangle(GetGeometry());
-  GetLayout()->ProcessDraw(GfxContext, force_draw);
-  GfxContext.PopClippingRectangle();
 }
 
 } // namespace dash

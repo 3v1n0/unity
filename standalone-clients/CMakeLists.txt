@@ -8,7 +8,7 @@ set(UNITY_SRC ../plugins/unityshell/src)
 # Unit tests
 #
 find_package (PkgConfig)
-set (TEST_DEPS "${UNITY_PLUGIN_DEPS};unity>=4.0.0")
+set (TEST_DEPS "${UNITY_PLUGIN_DEPS};unity>=4.0.0 xtst")
 pkg_check_modules (TEST_UNIT_DEPS REQUIRED ${TEST_DEPS})
 
 set (TESTDATADIR "${CMAKE_CURRENT_SOURCE_DIR}/data")
@@ -26,7 +26,7 @@ set (CFLAGS
      )
 add_definitions (${CFLAGS})
 
-set (LIBS ${TEST_UNIT_DEPS_LIBRARIES} "-lunity-core-${UNITY_API_VERSION} -lm -lGL -lGLU")
+set (LIBS ${TEST_UNIT_DEPS_LIBRARIES} "-lunity-core-${UNITY_API_VERSION} -lm -lGL -lGLU -lXtst")
 link_libraries (${LIBS})
 
 set (LIB_PATHS ${TEST_UNIT_DEPS_LIBRARY_DIRS})
@@ -47,10 +47,10 @@ add_executable (dash
                 ${UNITY_SRC}/BackgroundEffectHelper.h
                 ${UNITY_SRC}/BGHash.cpp
                 ${UNITY_SRC}/BGHash.h
-                ${UNITY_SRC}/DashSearchBar.cpp
-                ${UNITY_SRC}/DashSearchBar.h
-                ${UNITY_SRC}/DashSearchBarSpinner.cpp
-                ${UNITY_SRC}/DashSearchBarSpinner.h
+                ${UNITY_SRC}/SearchBar.cpp
+                ${UNITY_SRC}/SearchBar.h
+                ${UNITY_SRC}/SearchBarSpinner.cpp
+                ${UNITY_SRC}/SearchBarSpinner.h
                 ${UNITY_SRC}/DashView.cpp
                 ${UNITY_SRC}/DashView.h
                 ${UNITY_SRC}/DashViewPrivate.cpp
@@ -70,12 +70,11 @@ add_executable (dash
                 ${UNITY_SRC}/FilterGenreButton.cpp
                 ${UNITY_SRC}/FilterGenreWidget.cpp
                 ${UNITY_SRC}/FilterBar.cpp
-                ${UNITY_SRC}/FilterWidget.cpp
-                ${UNITY_SRC}/FilterWidget.h
                 ${UNITY_SRC}/FontSettings.cpp
                 ${UNITY_SRC}/FontSettings.h
                 ${UNITY_SRC}/IMTextEntry.cpp
                 ${UNITY_SRC}/IMTextEntry.h
+		${UNITY_SRC}/IntrospectableWrappers.cpp
                 ${UNITY_SRC}/PlacesGroup.cpp
                 ${UNITY_SRC}/PlacesGroup.h
                 ${UNITY_SRC}/PlacesTile.cpp
@@ -84,6 +83,10 @@ add_executable (dash
                 ${UNITY_SRC}/PlacesSimpleTile.h
                 ${UNITY_SRC}/PlacesVScrollBar.cpp
                 ${UNITY_SRC}/PlacesVScrollBar.h
+                ${UNITY_SRC}/DashView.cpp
+                ${UNITY_SRC}/DashView.h
+                ${UNITY_SRC}/DashViewPrivate.cpp
+                ${UNITY_SRC}/DashViewPrivate.h
                 ${UNITY_SRC}/DashStyle.cpp
                 ${UNITY_SRC}/IconLoader.cpp
                 ${UNITY_SRC}/IconLoader.h
@@ -178,6 +181,8 @@ add_executable (switcher
                 ${UNITY_SRC}/WindowManager.cpp
                 ${UNITY_SRC}/IconRenderer.cpp
                 ${UNITY_SRC}/IconRenderer.h
+                ${UNITY_SRC}/Introspectable.cpp
+                ${UNITY_SRC}/Introspectable.h
                 ${UNITY_SRC}/MockLauncherIcon.h
                 ${UNITY_SRC}/BackgroundEffectHelper.h
                 ${UNITY_SRC}/BackgroundEffectHelper.cpp
@@ -191,6 +196,7 @@ add_dependencies (switcher unity-core-${UNITY_API_VERSION})
 
 add_executable (launcher
                 TestLauncher.cpp
+                ${UNITY_SRC}/CairoBaseWindow.cpp
                 ${UNITY_SRC}/AbstractLauncherIcon.h
                 ${UNITY_SRC}/AbstractIconRenderer.h
                 ${UNITY_SRC}/LauncherIcon.cpp
@@ -251,6 +257,8 @@ add_executable (launcher
                 ${UNITY_SRC}/BackgroundEffectHelper.cpp
                 ${UNITY_SRC}/StaticCairoText.cpp
                 ${UNITY_SRC}/StaticCairoText.h
+                ${UNITY_SRC}/SoftwareCenterLauncherIcon.cpp
+                ${UNITY_SRC}/SoftwareCenterLauncherIcon.h
                 ${UNITY_SRC}/Introspectable.cpp
                 ${UNITY_SRC}/Introspectable.h
                 ${UNITY_SRC}/QuicklistMenuItem.cpp
@@ -286,24 +294,19 @@ add_dependencies (keyutil unity-core-${UNITY_API_VERSION})
 
 add_executable (quicklist
                 ui/TestQuicklist.cpp
-                ui/EventFaker.cpp
-                ui/EventFaker.h
+                nux_test_framework.cpp
+                nux_test_framework.h
+                nux_automated_test_framework.cpp
+                nux_automated_test_framework.h
+                ${UNITY_SRC}/CairoBaseWindow.cpp
                 ${UNITY_SRC}/Introspectable.cpp
-                ${UNITY_SRC}/Introspectable.h
                 ${UNITY_SRC}/QuicklistMenuItem.cpp
-                ${UNITY_SRC}/QuicklistMenuItem.h
                 ${UNITY_SRC}/QuicklistMenuItemCheckmark.cpp
-                ${UNITY_SRC}/QuicklistMenuItemCheckmark.h
                 ${UNITY_SRC}/QuicklistMenuItemLabel.cpp
-                ${UNITY_SRC}/QuicklistMenuItemLabel.h
                 ${UNITY_SRC}/QuicklistMenuItemRadio.cpp
-                ${UNITY_SRC}/QuicklistMenuItemRadio.h
                 ${UNITY_SRC}/QuicklistMenuItemSeparator.cpp
-                ${UNITY_SRC}/QuicklistMenuItemSeparator.h
                 ${UNITY_SRC}/QuicklistView.cpp
-                ${UNITY_SRC}/QuicklistView.h
                 ${UNITY_SRC}/ubus-server.cpp
-                ${UNITY_SRC}/ubus-server.h
                 )
 add_dependencies(quicklist unity-core-${UNITY_API_VERSION})
 
@@ -311,22 +314,15 @@ add_executable (quicklist-visuals
                 ui/TestQuicklistVisuals.cpp
                 ui/EventFaker.cpp
                 ui/EventFaker.h
+                ${UNITY_SRC}/CairoBaseWindow.cpp
                 ${UNITY_SRC}/Introspectable.cpp
-                ${UNITY_SRC}/Introspectable.h
                 ${UNITY_SRC}/QuicklistMenuItem.cpp
-                ${UNITY_SRC}/QuicklistMenuItem.h
                 ${UNITY_SRC}/QuicklistMenuItemCheckmark.cpp
-                ${UNITY_SRC}/QuicklistMenuItemCheckmark.h
                 ${UNITY_SRC}/QuicklistMenuItemLabel.cpp
-                ${UNITY_SRC}/QuicklistMenuItemLabel.h
                 ${UNITY_SRC}/QuicklistMenuItemRadio.cpp
-                ${UNITY_SRC}/QuicklistMenuItemRadio.h
                 ${UNITY_SRC}/QuicklistMenuItemSeparator.cpp
-                ${UNITY_SRC}/QuicklistMenuItemSeparator.h
                 ${UNITY_SRC}/QuicklistView.cpp
-                ${UNITY_SRC}/QuicklistView.h
                 ${UNITY_SRC}/ubus-server.cpp
-                ${UNITY_SRC}/ubus-server.h
                 )
 add_dependencies(quicklist-visuals unity-core-${UNITY_API_VERSION})
 
@@ -347,16 +343,17 @@ add_dependencies(filters unity-core-${UNITY_API_VERSION})
 
 add_executable (filter-bar
                 TestFilterBar.cpp
+                ${UNITY_SRC}/FilterAllButton.cpp
+                ${UNITY_SRC}/FilterBar.cpp
+                ${UNITY_SRC}/FilterBasicButton.cpp
                 ${UNITY_SRC}/FilterExpanderLabel.cpp
                 ${UNITY_SRC}/FilterFactory.cpp
-                ${UNITY_SRC}/FilterBasicButton.cpp
-                ${UNITY_SRC}/FilterRatingsButton.cpp
-                ${UNITY_SRC}/FilterRatingsWidget.cpp
                 ${UNITY_SRC}/FilterMultiRangeWidget.cpp
                 ${UNITY_SRC}/FilterMultiRangeButton.cpp
                 ${UNITY_SRC}/FilterGenreButton.cpp
                 ${UNITY_SRC}/FilterGenreWidget.cpp
-                ${UNITY_SRC}/FilterBar.cpp
+                ${UNITY_SRC}/FilterRatingsButton.cpp
+                ${UNITY_SRC}/FilterRatingsWidget.cpp
                 ${UNITY_SRC}/DashStyle.cpp
                 ${UNITY_SRC}/JSONParser.cpp
                 )
@@ -456,6 +453,39 @@ add_executable (bg-hash
                )
 add_dependencies (bg-hash unity-core-${UNITY_API_VERSION})
 
+add_executable (hud
+                StandaloneHud.cpp
+                ${UNITY_SRC}/BackgroundEffectHelper.cpp
+                ${UNITY_SRC}/BackgroundEffectHelper.h
+                ${UNITY_SRC}/DashSettings.cpp
+                ${UNITY_SRC}/DashSettings.h
+                ${UNITY_SRC}/DashStyle.cpp
+                ${UNITY_SRC}/HudButton.cpp
+                ${UNITY_SRC}/HudIcon.cpp
+                ${UNITY_SRC}/HudIcon.h
+                ${UNITY_SRC}/HudIconTextureSource.cpp
+                ${UNITY_SRC}/HudIconTextureSource.h
+                ${UNITY_SRC}/HudView.cpp
+                ${UNITY_SRC}/IMTextEntry.cpp
+                ${UNITY_SRC}/Introspectable.cpp
+                ${UNITY_SRC}/IconTexture.cpp
+                ${UNITY_SRC}/IconLoader.cpp
+                ${UNITY_SRC}/IconRenderer.cpp
+                ${UNITY_SRC}/IconTextureSource.cpp
+                ${UNITY_SRC}/JSONParser.cpp
+                ${UNITY_SRC}/OverlayRenderer.cpp
+                ${UNITY_SRC}/SearchBar.cpp
+                ${UNITY_SRC}/SearchBarSpinner.cpp
+                ${UNITY_SRC}/StaticCairoText.cpp
+                ${UNITY_SRC}/TextureCache.cpp
+                ${UNITY_SRC}/Timer.cpp
+                ${UNITY_SRC}/UBusWrapper.cpp
+                ${UNITY_SRC}/ubus-server.cpp
+                ${UNITY_SRC}/UScreen.cpp
+                ${UNITY_SRC}/UScreen.h
+               )
+add_dependencies (hud unity-core-${UNITY_API_VERSION})
+
 add_executable (test-shortcut
                 TestShortcut.cpp
                 ${UNITY_SRC}/AbstractSeparator.cpp
@@ -479,7 +509,17 @@ add_executable (test-shortcut
                 ${UNITY_SRC}/UBusMessages.h
                 ${UNITY_SRC}/ubus-server.cpp
                 ${UNITY_SRC}/ubus-server.h
-                )            
+                )
+
+add_executable (tooltip
+                ui/TestTooltip.cpp
+                ${UNITY_SRC}/Introspectable.cpp
+                ${UNITY_SRC}/CairoBaseWindow.cpp
+                ${UNITY_SRC}/StaticCairoText.cpp
+                ${UNITY_SRC}/Tooltip.cpp
+                ${UNITY_SRC}/ubus-server.cpp
+                )
+add_dependencies(quicklist unity-core-${UNITY_API_VERSION})
 
 find_package (OpenGL)
 include_directories (${OPENGL_gl_INCDIRS})
@@ -496,7 +536,7 @@ target_link_libraries (screen-effect-fbo glfuncloader ${OPENGL_gl_LIBRARY})
 add_dependencies (screen-effect-fbo ${UNITY_API_VERSION})
 
 # Custom target to make all the other targets here, add your test to this list
-add_custom_target(standalone-clients DEPENDS dash panel launcher switcher keyutil quicklist quicklist-visuals filters filter-bar preview-applicaiton preview-generic preview-music result-view dash-style bg-hash shortcut-view)
+add_custom_target(standalone-clients DEPENDS dash panel launcher switcher keyutil quicklist quicklist-visuals filters filter-bar preview-applicaiton preview-generic preview-music result-view dash-style bg-hash shortcut-view tooltip)
 
 
 

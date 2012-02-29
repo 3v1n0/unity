@@ -20,10 +20,8 @@
  *
  */
 
-
-
-#ifndef RESULTVIEWGRID_H
-#define RESULTVIEWGRID_H
+#ifndef UNITYSHELL_RESULTVIEWGRID_H
+#define UNITYSHELL_RESULTVIEWGRID_H
 
 #include <UnityCore/Categories.h>
 #include "ResultView.h"
@@ -69,7 +67,7 @@ protected:
   virtual bool InspectKeyEvent(unsigned int eventType, unsigned int keysym, const char* character);
   virtual bool AcceptKeyNavFocus();
   virtual nux::Area* KeyNavIteration(nux::KeyNavDirection direction);
-  virtual void OnOnKeyNavFocusChange(nux::Area *);
+  virtual void OnKeyNavFocusChange(nux::Area* area, bool has_focus, nux::KeyNavDirection direction);
   void OnKeyDown(unsigned long event_type, unsigned long event_keysym, unsigned long event_state, const TCHAR* character, unsigned short key_repeat_count);
 
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);;
@@ -89,7 +87,7 @@ private:
   void PositionPreview();
   uint GetIndexAtPosition(int x, int y);
 
-  int mouse_over_index_;
+  uint mouse_over_index_;
   int active_index_;
   int selected_index_;
   uint preview_row_;
@@ -112,6 +110,7 @@ private:
 
 };
 
-}
-}
-#endif // RESULTVIEWGRID_H
+} // namespace dash
+} // namespace unity
+
+#endif // UNITYSHELL_RESULTVIEWGRID_H

@@ -65,8 +65,21 @@ FilterBasicButton::~FilterBasicButton()
 
 void FilterBasicButton::Init()
 {
+
   InitTheme();
   SetAcceptKeyNavFocusOnMouseDown(false);
+  SetAcceptKeyNavFocusOnMouseEnter(true);
+
+  key_nav_focus_change.connect([&] (nux::Area*, bool, nux::KeyNavDirection)
+  {
+    QueueDraw();
+  });
+
+  key_nav_focus_activate.connect([&](nux::Area*)
+  {
+    if (GetInputEventSensitivity())
+      Active() ? Deactivate() : Activate();
+  });
 }
 
 void FilterBasicButton::InitTheme()
@@ -78,6 +91,7 @@ void FilterBasicButton::InitTheme()
     prelight_.reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &FilterBasicButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_PRELIGHT)));
     active_.reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &FilterBasicButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_PRESSED)));
     normal_.reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &FilterBasicButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_NORMAL)));
+    focus_.reset(new nux::CairoWrapper(geo, sigc::mem_fun(this, &FilterBasicButton::RedrawFocusOverlay)));
   }
 
   SetMinimumHeight(kMinButtonHeight);
@@ -87,6 +101,11 @@ void FilterBasicButton::InitTheme()
 void FilterBasicButton::RedrawTheme(nux::Geometry const& geom, cairo_t* cr, nux::ButtonVisualState faked_state)
 {
   Style::Instance().Button(cr, faked_state, label_);
+}
+
+void FilterBasicButton::RedrawFocusOverlay(nux::Geometry const& geom, cairo_t* cr)
+{
+  Style::Instance().ButtonFocusOverlay(cr);
 }
 
 long FilterBasicButton::ComputeContentSize()
@@ -100,6 +119,7 @@ long FilterBasicButton::ComputeContentSize()
     prelight_->Invalidate(geo);
     active_->Invalidate(geo);
     normal_->Invalidate(geo);
+    focus_->Invalidate(geo);
 
     cached_geometry_ = geo;
   }
@@ -145,6 +165,17 @@ void FilterBasicButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
                       texture->GetDeviceTexture(),
                       texxform,
                       nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
+
+  if (HasKeyboardFocus())
+  {
+    GfxContext.QRP_1Tex(geo.x,
+                        geo.y,
+                        geo.width,
+                        geo.height,
+                        focus_->GetTexture()->GetDeviceTexture(),
+                        texxform,
+                        nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
+  }
 
   GfxContext.GetRenderStates().SetBlend(alpha, src, dest);
 }

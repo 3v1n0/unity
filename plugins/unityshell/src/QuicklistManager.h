@@ -20,13 +20,13 @@
 #ifndef QUICKLISTMANAGER_H
 #define QUICKLISTMANAGER_H
 
+namespace unity {
+
 class QuicklistManager : public sigc::trackable
 {
 public:
   static QuicklistManager* Default();
   static void Destroy();
-
-  QuicklistManager();
 
   ~QuicklistManager();
 
@@ -43,6 +43,7 @@ public:
   sigc::signal<void, QuicklistView*> quicklist_closed;
 
 private:
+  QuicklistManager();
   static QuicklistManager* _default;
 
   std::list<QuicklistView*> _quicklist_list;
@@ -50,5 +51,6 @@ private:
 
 };
 
+} // NAMESPACE
 #endif
 
