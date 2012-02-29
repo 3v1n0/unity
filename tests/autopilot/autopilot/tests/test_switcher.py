@@ -183,8 +183,9 @@ class SwitcherWorkspaceTests(AutopilotTestCase):
         self.workspace.switch_to(3)
         self.start_app("Mahjongg")
         sleep(1)
-        # TODO: When the 'minimise window' keybinding works we can replace this hack:
-        self.keyboard.press_and_release("Alt+F9")
+        self.keybinding("window/minimize")
+        sleep(1)
+
         self.start_app("Calculator")
         sleep(1)
 
