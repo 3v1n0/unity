@@ -15,6 +15,7 @@ from StringIO import StringIO
 from autopilot.emulators.X11 import Keyboard, Mouse
 from autopilot.emulators.bamf import Bamf
 from autopilot.emulators.unity.workspace import WorkspaceManager
+from autopilot.keybindings import KeybindingsHelper
 
 
 class LoggedTestCase(TestWithScenarios, TestCase):
@@ -60,7 +61,7 @@ class LoggedTestCase(TestWithScenarios, TestCase):
         super(LoggedTestCase, self).tearDown()
 
 
-class AutopilotTestCase(LoggedTestCase):
+class AutopilotTestCase(LoggedTestCase, KeybindingsHelper):
     """Wrapper around testtools.TestCase that takes care of some cleaning."""
 
     KNOWN_APPS = {

@@ -183,10 +183,9 @@ class SwitcherWorkspaceTests(AutopilotTestCase):
         self.workspace.switch_to(3)
         self.start_app("Mahjongg")
         sleep(1)
-        # TODO: When the 'minimise window' keybinding works we can replace this hack:
-        self.keyboard.press_and_release("Alt+Space")
+        self.keybinding("window/minimize")
         sleep(1)
-        self.keyboard.press_and_release("n")
+
         self.start_app("Calculator")
         sleep(1)
 
@@ -203,6 +202,8 @@ class SwitcherWorkspaceTests(AutopilotTestCase):
         self.assertThat(len(mahjongg_apps), Equals(1))
         wins = mahjongg_apps[0].get_windows()
         self.assertThat(len(wins), Equals(2))
-        self.assertThat(wins[0].is_focused, Equals(True))
-        self.assertThat(wins[1].is_focused, Equals(True))
+        # Ideally we should be able to find the instance that is on the
+        # current workspace and ask that one if it is hidden.
+        self.assertFalse(wins[0].is_hidden)
+        self.assertFalse(wins[1].is_hidden)
 
