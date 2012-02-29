@@ -1330,16 +1330,16 @@ void UnityScreen::handleEvent(XEvent* event)
         XButtonEvent *bev = reinterpret_cast<XButtonEvent*>(event);
         if (bev->time - last_scroll_event_ > 150)
         {
-          if (bev->button == 7)
+          if (bev->button == Button4 || bev->button == 7)
           {
             switcher_controller_->Prev();
+            last_scroll_event_ = bev->time;
           }
-          else if (bev->button == 6)
+          else if (bev->button == Button5 || bev->button == 6)
           {
             switcher_controller_->Next();
+            last_scroll_event_ = bev->time;
           }
-
-          last_scroll_event_ = bev->time;
         }
       }
       break;
