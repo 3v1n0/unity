@@ -1,13 +1,13 @@
 # -*- Mode: Python; coding: utf-8; indent-tabs-mode: nil; tab-width: 4 -*-
 # Copyright 2012 Canonical
-# Author: Thomi Richards
+# Authors: Thomi Richards,
+#          Marco Trevisan (Treviño)
 #
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License version 3, as published
 # by the Free Software Foundation.
 
-from testtools.matchers import Equals
-from testtools.matchers import LessThan
+from testtools.matchers import Equals, LessThan, GreaterThan
 
 from autopilot.tests import AutopilotTestCase
 from autopilot.emulators.unity.launcher import Launcher
@@ -52,6 +52,46 @@ class LauncherTests(AutopilotTestCase):
         self.server.end_switcher(True)
         sleep(.5)
         self.assertThat(self.server.key_nav_is_active(), Equals(False))
+
+    def test_launcher_switcher_ungrabbed_cycling_forward(self):
+        """Tests basic key nav without keyboard grabs, cycling over items."""
+        sleep(.5)
+
+        self.server.start_switcher()
+        sleep(.25)
+
+        self.assertThat(self.server.key_nav_is_active(), Equals(True))
+        self.assertThat(self.server.key_nav_is_grabbed(), Equals(False))
+        self.assertThat(self.server.key_nav_selection(), Equals(0))
+
+        prev_icon = 0
+        for icon in range(1, self.server.num_launcher_icons()):
+            self.server.switcher_next()
+            sleep(.25)
+            self.assertThat(prev_icon, LessThan(self.server.key_nav_selection()))
+            prev_icon = self.server.key_nav_selection()
+
+        sleep(.5)
+        self.server.switcher_next()
+        self.assertThat(self.server.key_nav_selection(), Equals(0))
+
+        self.server.end_switcher(True)
+
+    def test_launcher_switcher_ungrabbed_cycling_backward(self):
+        """Tests basic key nav without keyboard grabs, cycling over items."""
+        sleep(.5)
+
+        self.server.start_switcher()
+        sleep(.25)
+
+        self.assertThat(self.server.key_nav_is_active(), Equals(True))
+        self.assertThat(self.server.key_nav_is_grabbed(), Equals(False))
+        self.assertThat(self.server.key_nav_selection(), Equals(0))
+
+        self.server.switcher_prev()
+        self.assertThat(self.server.key_nav_selection(), GreaterThan(0))
+
+        self.server.end_switcher(True)
 
     def test_launcher_switcher_ungrabbed_showing_shorcuts(self):
         """Tests basic key nav integration without keyboard grabs but making
