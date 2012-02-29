@@ -908,9 +908,9 @@ void Controller::HandleLauncherKeyPress()
   pimpl->launcher_label_show_handler_id_ = g_timeout_add(local::shortcuts_show_delay, show_shortcuts, pimpl);
 }
 
-void Controller::HandleLauncherKeyRelease()
+void Controller::HandleLauncherKeyRelease(bool was_tap)
 {
-  if (pimpl->TapTimeUnderLimit())
+  if (pimpl->TapTimeUnderLimit() && was_tap)
   {
     pimpl->SendHomeActivationRequest();
   }
