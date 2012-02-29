@@ -414,3 +414,10 @@ class DashVisualTests(AutopilotTestCase):
         """
         self.dash.reveal_application_lens()
 
+        lens = self.dash.get_current_lens()
+        groups = lens.get_groups()
+
+        for group in groups:
+            if (group.is_visible):
+                self.assertTrue(group.baseline_alignment_is_correct)
+

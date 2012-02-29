@@ -137,6 +137,11 @@ class LensBar(UnityIntrospectionObject):
 class LensView(UnityIntrospectionObject):
     """A Lens View."""
 
+    def get_groups(self):
+        """Get a list of all groups within this lensview. May return an empty list."""
+        groups = self.get_children_by_type(PlacesGroup)
+        return groups
+
     def get_focused_category(self):
         """Return a PlacesGroup instance for the category whose header has keyboard focus.
 
