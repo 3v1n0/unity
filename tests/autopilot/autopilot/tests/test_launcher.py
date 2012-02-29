@@ -11,7 +11,7 @@ from testtools.matchers import LessThan
 
 from autopilot.tests import AutopilotTestCase
 from autopilot.emulators.unity.launcher import Launcher
-from autopilot.emulators.X11 import ScreenGeometry
+from autopilot.emulators.X11 import ScreenGeometry, Keyboard
 from autopilot.glibrunner import GlibRunner
 
 from time import sleep
@@ -41,6 +41,10 @@ class LauncherTests(AutopilotTestCase):
         sleep(.5)
         self.assertThat(0, LessThan(self.server.key_nav_selection()))
 
+        sleep(2)
+        launcher = self.server.key_nav_monitor()
+        self.assertThat(self.server.are_shortcuts_showing(launcher), Equals(False))
+
         self.server.switcher_prev()
         sleep(.5)
         self.assertThat(self.server.key_nav_selection(), Equals(0))
@@ -48,6 +52,71 @@ class LauncherTests(AutopilotTestCase):
         self.server.end_switcher(True)
         sleep(.5)
         self.assertThat(self.server.key_nav_is_active(), Equals(False))
+
+    def test_launcher_switcher_ungrabbed_showing_shorcuts(self):
+        """Tests basic key nav integration without keyboard grabs but making
+        the launcher show the icon shortcuts."""
+        sleep(.5)
+
+        launcher = self.server.get_keyboard_controlled_launcher();
+        self.server.move_mouse_to_right_of_launcher(launcher)
+        self.server.keyboard_reveal_launcher()
+        sleep(1)
+
+        self.assertThat(self.server.is_showing(launcher), Equals(True))
+        self.assertThat(self.server.are_shortcuts_showing(launcher), Equals(True))
+
+        self.server.start_switcher()
+        sleep(.5)
+
+        self.assertThat(self.server.key_nav_is_active(), Equals(True))
+        self.assertThat(self.server.key_nav_is_grabbed(), Equals(False))
+        self.assertThat(self.server.key_nav_selection(), Equals(0))
+        self.assertThat(self.server.are_shortcuts_showing(launcher), Equals(True))
+
+        self.server.switcher_next()
+        sleep(.5)
+        self.assertThat(0, LessThan(self.server.key_nav_selection()))
+        self.assertThat(self.server.are_shortcuts_showing(launcher), Equals(True))
+
+        self.server.switcher_prev()
+        sleep(.5)
+        self.assertThat(self.server.key_nav_selection(), Equals(0))
+
+        self.server.end_switcher(True)
+        sleep(.5)
+        self.assertThat(self.server.key_nav_is_active(), Equals(False))
+        self.assertThat(self.server.are_shortcuts_showing(launcher), Equals(False))
+
+    def test_launcher_switcher_ungrabbed_using_shorcuts(self):
+        """Tests basic key nav integration without keyboard grabs but making
+        the launcher show the icon shortcuts, and using them to disable the switcher."""
+        sleep(.5)
+
+        launcher = self.server.get_keyboard_controlled_launcher();
+        self.server.move_mouse_to_right_of_launcher(launcher)
+        self.server.keyboard_reveal_launcher()
+        sleep(1)
+
+        self.assertThat(self.server.is_showing(launcher), Equals(True))
+        self.assertThat(self.server.are_shortcuts_showing(launcher), Equals(True))
+
+        self.server.start_switcher()
+        sleep(.5)
+
+        self.assertThat(self.server.key_nav_is_active(), Equals(True))
+        self.assertThat(self.server.key_nav_is_grabbed(), Equals(False))
+        self.assertThat(self.server.key_nav_selection(), Equals(0))
+        self.assertThat(self.server.are_shortcuts_showing(launcher), Equals(True))
+
+        kb = Keyboard()
+        kb.press_and_release("s")
+        sleep(.25)
+        kb.press_and_release("Escape")
+        sleep(.25)
+
+        self.assertThat(self.server.key_nav_is_active(), Equals(False))
+        self.server.keyboard_unreveal_launcher()
 
     def test_launcher_switcher_grabbed(self):
         """Tests basic key nav integration via keyboard grab."""
@@ -74,11 +143,9 @@ class LauncherTests(AutopilotTestCase):
 
     def test_launcher_switcher_quicklist_interaction(self):
         """Tests that the key nav opens and closes quicklists properly and
-        regrabs afterwards.
-
-        """
-
-        self.server.move_mouse_to_right_of_launcher(0)
+        regrabs afterwards. """
+        launcher = self.server.get_keyboard_controlled_launcher();
+        self.server.move_mouse_to_right_of_launcher(launcher)
         sleep(.5)
 
         self.server.grab_switcher()
@@ -92,17 +159,32 @@ class LauncherTests(AutopilotTestCase):
 
         self.server.switcher_enter_quicklist()
         sleep(.5)
-        self.assertThat(self.server.is_quicklist_open(0), Equals(True))
+        self.assertThat(self.server.is_quicklist_open(launcher), Equals(True))
         self.server.switcher_exit_quicklist()
         sleep(.5)
 
-        self.assertThat(self.server.is_quicklist_open(0), Equals(False))
+        self.assertThat(self.server.is_quicklist_open(launcher), Equals(False))
         self.assertThat(self.server.key_nav_is_active(), Equals(True))
         self.assertThat(self.server.key_nav_is_grabbed(), Equals(True))
 
         self.server.end_switcher(True)
         sleep(.5)
         self.assertThat(self.server.key_nav_is_active(), Equals(False))
+
+    def test_launcher_keyboard_shortcuts_showing(self):
+        """Test if the key to reveal the launcher if pressed enough makes
+        the keyboard-controlled launcher to show the shortcuts"""
+        sleep(.5)
+        launcher = self.server.get_keyboard_controlled_launcher();
+        self.server.move_mouse_to_right_of_launcher(launcher)
+        self.server.keyboard_reveal_launcher()
+        sleep(1)
+
+        self.assertThat(self.server.is_showing(launcher), Equals(True))
+        self.assertThat(self.server.are_shortcuts_showing(launcher), Equals(True))
+
+        self.server.keyboard_unreveal_launcher()
+        self.assertThat(self.server.are_shortcuts_showing(launcher), Equals(False))
 
 
 class LauncherRevealTests(AutopilotTestCase):
