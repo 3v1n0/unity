@@ -44,7 +44,6 @@ class HudTests(AutopilotTestCase):
 
     def test_reveal_hud(self):
         self.hud_controller.toggle_reveal()
-        self.addCleanup(self.hud_controller.toggle_reveal)
         self.assertTrue(self.hud_controller.is_visible())
 
     def test_slow_tap_not_reveal_hud(self):

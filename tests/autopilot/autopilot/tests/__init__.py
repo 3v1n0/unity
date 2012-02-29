@@ -89,14 +89,8 @@ class AutopilotTestCase(LoggedTestCase, KeybindingsHelper):
         self.switcher = Switcher()
         self.workspace = WorkspaceManager()
         self.addCleanup(self.workspace.switch_to, self.workspace.current_workspace)
-
-    def tearDown(self):
-        super(AutopilotTestCase, self).tearDown()
-        # these need to be run AFTER the tearDown is called, since parent class tearDown
-        # is where the "addCleanup" methods are called. We want to cleanup keyboard and
-        # mouse AFTER those have been called.
-        Keyboard.cleanup()
-        Mouse.cleanup()
+        self.addCleanup(Keyboard.cleanup)
+        self.addCleanup(Mouse.cleanup)
 
     def start_app(self, app_name):
         """Start one of the known apps, and kill it on tear down."""
