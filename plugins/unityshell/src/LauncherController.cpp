@@ -716,7 +716,7 @@ Controller::Impl::CreateSCLauncherIcon(std::string const& file_path,
 
   bamf_view_set_sticky(BAMF_VIEW(app), true);
   AbstractLauncherIcon::Ptr icon(new SoftwareCenterLauncherIcon(app, aptdaemon_trans_id, icon_path,
-                                                                icon_x, icon_y, icon_size));
+                                                                icon_x, icon_y, icon_size, launcher_));
   icon->SetSortPriority(sort_priority_++);
 
   result = icon;

@@ -20,6 +20,7 @@
 
 #include <glib/gi18n-lib.h>
 #include "SoftwareCenterLauncherIcon.h"
+#include "Launcher.h"
 
 namespace unity
 {
@@ -31,15 +32,16 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(BamfApplication* app,
                                                        std::string const& icon_path,
                                                        gint32 icon_x,
                                                        gint32 icon_y,
-                                                       gint32 icon_size)
+                                                       gint32 icon_size,
+                                                       nux::ObjectPtr<Launcher> launcher)
 : BamfLauncherIcon(app),
   _aptdaemon_trans("org.debian.apt",
                    aptdaemon_trans_id,
                    "org.debian.apt.transaction",
                    G_BUS_TYPE_SYSTEM,
                    G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START),
-  launcher_mw(nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableDeviceTexture(
-                                    icon_size, icon_size, 1, nux::BITFMT_R8G8B8A8))
+  _icon_texture(nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableDeviceTexture(icon_size, icon_size, 1, nux::BITFMT_R8G8B8A8)),
+  _drag_window(_icon_texture)
 {
   _aptdaemon_trans.Connect("PropertyChanged", sigc::mem_fun(this, &SoftwareCenterLauncherIcon::OnPropertyChanged));
   _aptdaemon_trans.Connect("Finished", [&] (GVariant *) {
@@ -52,6 +54,10 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(BamfApplication* app,
   icon_name = icon_path.c_str();
   tooltip_text = _("Waiting to install");
   
+  launcher->RenderIconToTexture(nux::GetWindowThread()->GetGraphicsEngine(), AbstractLauncherIcon::Ptr(this), _icon_texture);
+  _drag_window.ShowWindow(true);
+  _drag_window.SinkReference();
+  //_drag_window.SetBaseXY(icon_x,icon_y);
   AnimateIcon(icon_x,icon_y,icon_size);
 }
 
@@ -61,8 +67,6 @@ SoftwareCenterLauncherIcon::AnimateIcon(gint32 icon_x, gint32 icon_y, gint32 ico
     g_debug ("Get launcher icon from: %d, %d, size: %d", icon_x, icon_y, icon_size);
 
     //this->SetBaseXY(icon_x, icon_y);
-
-    launcher_mw.AnimateIcon(icon_x, icon_y, icon_size);
 }
 
 void
@@ -86,18 +90,6 @@ SoftwareCenterLauncherIcon::OnPropertyChanged(GVariant* params)
   }
 
   g_variant_unref(property_value);
-}
-
-SCLauncherMoveWindow::SCLauncherMoveWindow(nux::ObjectPtr<nux::IOpenGLBaseTexture> icon)
-: nux::BaseWindow("")
-{
-   _icon = icon; 
-}
-
-void
-SCLauncherMoveWindow::AnimateIcon(gint32 icon_x, gint32 icon_y, gint32 icon_size)
-{
-    SetBaseXY(icon_x, icon_y);
 }
 
 }

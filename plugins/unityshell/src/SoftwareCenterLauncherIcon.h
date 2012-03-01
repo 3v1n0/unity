@@ -22,26 +22,14 @@
 #define SOFTWARE_CENTER_LAUNCHERICON_H
 
 #include "BamfLauncherIcon.h"
+#include "LauncherDragWindow.h"
+#include "Launcher.h"
 #include <UnityCore/GLibDBusProxy.h>
 
 namespace unity
 {
 namespace launcher
 {
-
-class SCLauncherMoveWindow : public nux::BaseWindow
-{
-  NUX_DECLARE_OBJECT_TYPE(LauncherDragWindow, nux::BaseWindow);
-public:
-  SCLauncherMoveWindow(nux::ObjectPtr<nux::IOpenGLBaseTexture> icon);
-
-  void AnimateIcon(gint32 icon_x, gint32 icon_y, gint32 icon_size);
-
-private:
-  nux::ObjectPtr<nux::IOpenGLBaseTexture> _icon;
-  guint32 _anim_handle;
-
-};
 
 class SoftwareCenterLauncherIcon : public BamfLauncherIcon
 {
@@ -51,14 +39,17 @@ public:
                              std::string const& icon_path,
                              gint32 icon_x,
                              gint32 icon_y,
-                             gint32 icon_size);
+                             gint32 icon_size,
+                             nux::ObjectPtr<Launcher> launcher);
 
 private:
   void OnPropertyChanged(GVariant* params);
   void AnimateIcon(gint32 icon_x, gint32 icon_y, gint32 icon_size);
 
   glib::DBusProxy _aptdaemon_trans;
-  SCLauncherMoveWindow launcher_mw;
+
+  nux::ObjectPtr<nux::IOpenGLBaseTexture> _icon_texture;
+  LauncherDragWindow _drag_window;
 };
 
 }

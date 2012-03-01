@@ -129,6 +129,8 @@ public:
 
   static const int ANIM_DURATION_SHORT;
 
+  void RenderIconToTexture(nux::GraphicsEngine& GfxContext, AbstractLauncherIcon::Ptr icon, nux::ObjectPtr<nux::IOpenGLBaseTexture> texture);
+
 protected:
   // Introspectable methods
   std::string GetName() const;
@@ -276,8 +278,6 @@ private:
   void OnLockHideChanged(GVariant *data);
 
   void OnActionDone(GVariant* data);
-
-  void RenderIconToTexture(nux::GraphicsEngine& GfxContext, AbstractLauncherIcon::Ptr icon, nux::ObjectPtr<nux::IOpenGLBaseTexture> texture);
 
   AbstractLauncherIcon::Ptr MouseIconIntersection(int x, int y);
   void EventLogic();
