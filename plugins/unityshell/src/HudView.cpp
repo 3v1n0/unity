@@ -87,19 +87,14 @@ View::View()
 
   search_bar_->text_entry()->key_nav_focus_change.connect([&](nux::Area *area, bool receiving, nux::KeyNavDirection direction)
   {
-    // (jaytaoko): The TextEntry should always have the keyboard focus as long as the hud is open!
-    // Even when we are navigating through the button with the up/down arrow keys, the TextEntry should not loose the keyboard focus.
+    // We get here when the Hud closes.
+    // The TextEntry should always have the keyboard focus as long as the hud is open.
 
     if (buttons_.empty() && !receiving)
     {
-      // (jaytaoko): When can this happen?
-
-      // we lost focus in the keynav and there are no buttons, we need to steal
-      // focus back
-      LOG_ERROR(logger) << "hud search bar lost keynav with no where else to keynav to";
-
-      // (jaytaoko): we shouldn't have to steal the key focus back because we never loose it in the first place!
-      //nux::GetWindowCompositor().SetKeyFocusArea(search_bar_->text_entry());
+      // This happens when the Hud closes and there are no HUD buttons
+      // The following should not be an error.
+      //LOG_ERROR(logger) << "hud search bar lost keynav with no where else to keynav to";
     }
 
     if (buttons_.empty())
@@ -107,16 +102,26 @@ View::View()
 
     if (receiving)
     {
-      // if the search_bar gets focus, fake focus the first button if it exists
+      // Can this happen? When the text entry gets the keyboard focus the first time, its text should be empty.
+      // Therefore, there should not be any HudButtons.
       if (!buttons_.empty())
       {
+        // If the search_bar gets focus, fake focus the first button if it exists
         buttons_.back()->fake_focused = true;
       }
     }
     else
     {
-      // we are losing focus, so remove the fake focused entry
-      buttons_.back()->fake_focused = false;
+      // The hud is closing and there are HudButtons visible. Remove the fake_focus.
+      // There should be only one HudButton with the fake_focus set to true.
+      std::list<HudButton::Ptr>::iterator it;
+      for(it = buttons_.begin(); it != buttons_.end(); ++it)
+      {
+        if ((*it)->fake_focused)
+        {
+          (*it)->fake_focused = false;
+        }
+      }      
     }
   });
 
@@ -239,13 +244,6 @@ void View::SetQueries(Hud::Queries queries)
     HudButton::Ptr button = HudButton::Ptr(new HudButton());
     buttons_.push_front(button);
     button->SetQuery(*query);
-
-    std::ostringstream oss;
-    oss << "HudButton" << found_items;
-    std::string button_name = oss.str();
-
-    // Set a debug name for the button.
-    button.GetPointer()->SetBaseString(button_name.c_str());
 
     button_views_->AddView(button.GetPointer(), 0, nux::MINOR_POSITION_LEFT);
 
@@ -495,10 +493,6 @@ nux::Area* View::FindKeyFocusArea(unsigned int event_type,
       unsigned long x11_key_code,
       unsigned long special_keys_state)
 {
-  // Do what nux::View does, but if the event isn't a key navigation,
-  // designate the text entry to process it.
-
-
   nux::KeyNavDirection direction = nux::KEY_NAV_NONE;
   switch (x11_key_code)
   {
@@ -530,17 +524,12 @@ nux::Area* View::FindKeyFocusArea(unsigned int event_type,
     break;
   }
 
-  if (HasKeyFocus())
-  {
-    // (jaytoako) Can the Hud view itself have the key focus?
-    //return this;
-  }
 
   if ((event_type == nux::NUX_KEYDOWN) && (x11_key_code == NUX_VK_ESCAPE))
   {
-    // (jaytaoko) Escape key! This is how it works:
+    // Escape key! This is how it works:
     //    -If there is text, clear it and give the focus to the text entry view.
-    //    -If there is no text text, then exit.
+    //    -If there is no text text, then close the hud.
 
     if (search_bar_->search_string == "")
     {
@@ -616,6 +605,8 @@ nux::Area* View::FindKeyFocusArea(unsigned int event_type,
 
     if (direction == nux::KEY_NAV_ENTER)
     {
+      // The "Enter" key has been received and the text entry has the key focus.
+      // If one of the button has the fake_focus, we get it to emit the query_activated signal.
       if (!buttons_.empty())
       {
         std::list<HudButton::Ptr>::iterator it;
@@ -628,16 +619,19 @@ nux::Area* View::FindKeyFocusArea(unsigned int event_type,
         }
       }
 
+      // We still choose the text_entry as the receiver of the key focus.
       return search_bar_->text_entry();
     }
   }
   else if (direction == nux::KEY_NAV_NONE)
   {
-    // then send the event to the search entry
+    // We get here if the text entry does not have the key focus and a character key is pressed.
+    // Is this possible?
     return search_bar_->text_entry();
   }
   else if (next_object_to_key_focus_area_)
   {
+    // Is this possible?
     return next_object_to_key_focus_area_->FindKeyFocusArea(event_type, x11_key_code, special_keys_state);
   }
   return NULL;
