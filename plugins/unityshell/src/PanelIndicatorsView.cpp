@@ -142,7 +142,7 @@ PanelIndicatorsView::QueueDraw()
 void
 PanelIndicatorsView::SetMaximumEntriesWidth(int max_width)
 {
-  int n_entries = 0;
+  unsigned int n_entries = 0;
 
   for (auto entry : entries_)
     if (entry.second->IsVisible())
@@ -150,10 +150,19 @@ PanelIndicatorsView::SetMaximumEntriesWidth(int max_width)
 
   if (n_entries > 0)
   {
-    int max_entry_width = max_width / n_entries;
-
     for (auto entry : entries_)
-      entry.second->SetMaximumWidth(max_entry_width);
+    {
+      if (entry.second->IsVisible() && n_entries > 0)
+      {
+        int max_entry_width = max_width / n_entries;
+
+        if (entry.second->GetBaseWidth() > max_entry_width)
+          entry.second->SetMaximumWidth(max_entry_width);
+
+        max_width -= entry.second->GetBaseWidth();
+        --n_entries;
+      }
+    }
   }
 }
 
