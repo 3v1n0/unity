@@ -406,6 +406,13 @@ void LensView::CheckNoResults(Lens::Hints const& hints)
   }
 }
 
+void LensView::HideResultsMessage()
+{
+  scroll_layout_->SetContentDistribution(nux::MAJOR_POSITION_START);  
+  no_results_active_ = false;
+  no_results_->SetText("");
+}
+
 void LensView::OnGroupExpanded(PlacesGroup* group)
 {
   ResultViewGrid* grid = static_cast<ResultViewGrid*>(group->GetChildView());

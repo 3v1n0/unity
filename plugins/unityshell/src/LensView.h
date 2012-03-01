@@ -70,6 +70,7 @@ public:
   sigc::signal<void, std::string const&> uri_activated;
 
   void CheckNoResults(Lens::Hints const& hints);
+  void HideResultsMessage();
 
 private:
   void SetupViews(nux::Area* show_filters);
