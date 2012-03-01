@@ -314,6 +314,9 @@ class ScreenGeometry:
         """Get the number of monitors attached to the PC."""
         return self._default_screen.get_n_monitors()
 
+    def get_primary_monitor(self):
+        return self._default_screen.get_primary_monitor()
+
     def get_screen_width(self):
         return self._default_screen.get_width()
 
