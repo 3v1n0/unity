@@ -71,7 +71,7 @@ public:
   sigc::signal<void, Query::Ptr> query_selected;
   
 protected:
-  virtual Area* FindKeyFocusArea(unsigned int key_symbol,
+  virtual Area* FindKeyFocusArea(unsigned int event_type,
   unsigned long x11_key_code,
   unsigned long special_keys_state);
 
