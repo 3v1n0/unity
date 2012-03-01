@@ -2629,6 +2629,7 @@ void UnityScreen::initLauncher()
   // Setup Shortcut Hint
   InitHints();
   shortcut_controller_.reset(new shortcut::Controller(hints_));
+  AddChild(shortcut_controller_.get());
 
   AddChild(dash_controller_.get());
 
