@@ -1022,7 +1022,6 @@ void Controller::KeyNavActivate()
   pimpl->launcher_keynav = true;
   pimpl->keynav_restore_window_ = true;
   pimpl->keyboard_launcher_ = pimpl->launchers[pimpl->MonitorWithMouse()];
-  pimpl->keyboard_launcher_->ShowShortcuts(false);
 
   pimpl->keyboard_launcher_->EnterKeyNavMode();
   pimpl->model_->SetSelection(0);
@@ -1087,7 +1086,8 @@ Controller::AddProperties(GVariantBuilder* builder)
   .add("key_nav_is_active", KeyNavIsActive())
   .add("key_nav_launcher_monitor", pimpl->keyboard_launcher_.IsValid() ?  pimpl->keyboard_launcher_->monitor : -1)
   .add("key_nav_selection", pimpl->model_->SelectionIndex())
-  .add("key_nav_is_grabbed", pimpl->launcher_grabbed);
+  .add("key_nav_is_grabbed", pimpl->launcher_grabbed)
+  .add("keyboard_launcher", pimpl->launchers[pimpl->MonitorWithMouse()]->monitor);
 }
 
 void Controller::Impl::ReceiveLauncherKeyPress(unsigned long eventType,
