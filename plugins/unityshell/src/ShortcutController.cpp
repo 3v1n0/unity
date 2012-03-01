@@ -212,5 +212,19 @@ void Controller::SetEnabled(bool enabled)
   enabled_ = enabled;
 }
 
+std::string Controller::GetName() const
+{
+  return "ShortcutController";
+}
+
+void Controller::AddProperties(GVariantBuilder* builder)
+{
+  unity::variant::BuilderWrapper(builder)
+  .add(workarea_)
+  .add("timeout_duration", SUPER_TAP_DURATION)
+  .add("enabled", IsEnabled())
+  .add("visible", Visible());
+}
+
 } // namespace shortcut
 } // namespace unity
