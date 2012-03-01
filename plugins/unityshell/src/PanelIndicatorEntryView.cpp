@@ -352,7 +352,7 @@ void PanelIndicatorEntryView::DrawEntryContent(cairo_t *cr, unsigned int width, 
     int y = (height - text_height) / 2;
 
 
-    unsigned int text_space = GetMaximumWidth() - x - left_padding_;
+    unsigned int text_space = GetMaximumWidth() - x - right_padding_;
 
     if (text_width > text_space)
     {
@@ -378,11 +378,11 @@ void PanelIndicatorEntryView::DrawEntryContent(cairo_t *cr, unsigned int width, 
       }
       cairo_pop_group_to_source(cr);
 
-      linpat = cairo_pattern_create_linear(width - fading_width, y, width, y);
+      int right_margin = width - right_padding_;
+      linpat = cairo_pattern_create_linear(right_margin - fading_width, y, right_margin, y);
       cairo_pattern_add_color_stop_rgba(linpat, 0, 0, 0, 0, 1);
       cairo_pattern_add_color_stop_rgba(linpat, 1, 0, 0, 0, 0);
       cairo_mask(cr, linpat);
-
       cairo_pattern_destroy(linpat);
     }
     else
