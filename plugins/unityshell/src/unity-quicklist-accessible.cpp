@@ -78,6 +78,7 @@ struct _UnityQuicklistAccessiblePrivate
   AtkObject* menu_accessible;
 };
 
+using unity::QuicklistView;
 
 static void
 unity_quicklist_accessible_class_init(UnityQuicklistAccessibleClass* klass)

@@ -42,7 +42,7 @@ TrashLauncherIcon::TrashLauncherIcon()
   SetQuirk(QUIRK_RUNNING, false);
   SetIconType(TYPE_TRASH);
   SetShortcut('t');
-  
+
   glib::Object<GFile> location(g_file_new_for_uri("trash:///"));
 
   trash_monitor_ = g_file_monitor_directory(location,
@@ -63,16 +63,6 @@ TrashLauncherIcon::~TrashLauncherIcon()
   if (on_trash_changed_handler_id_ != 0)
     g_signal_handler_disconnect((gpointer) trash_monitor_,
                                 on_trash_changed_handler_id_);
-}
-
-nux::Color TrashLauncherIcon::BackgroundColor()
-{
-  return nux::Color(0xFF333333);
-}
-
-nux::Color TrashLauncherIcon::GlowColor()
-{
-  return nux::Color(0xFF333333);
 }
 
 std::list<DbusmenuMenuitem*> TrashLauncherIcon::GetMenus()
@@ -133,10 +123,10 @@ void TrashLauncherIcon::UpdateTrashIconCb(GObject* source,
   glib::Object<GFileInfo> info(g_file_query_info_finish(G_FILE(source), res, NULL));
 
   if (info)
-  {    
+  {
     glib::Object<GIcon> icon(g_file_info_get_icon(info));
     glib::String icon_string(g_icon_to_string(icon));
-    
+
     self->icon_name = icon_string.Str();
 
     self->empty_ = (self->icon_name == "user-trash");
@@ -166,8 +156,13 @@ void TrashLauncherIcon::OnAcceptDrop(unity::DndData& dnd_data)
     glib::Object<GFile> file(g_file_new_for_uri(it.c_str()));
     g_file_trash(file, NULL, NULL);
   }
-  
+
   SetQuirk(LauncherIcon::QUIRK_PULSE_ONCE, true);
+}
+
+std::string TrashLauncherIcon::GetName() const
+{
+  return "TrashLauncherIcon";
 }
 
 } // namespace launcher

@@ -30,6 +30,13 @@
 #include "FilterRatingsButton.h"
 #include "FilterRatingsWidget.h"
 
+namespace
+{
+const int top_padding    = 11;
+const int bottom_padding = 12;
+const int star_size      = 28;
+}
+
 namespace unity
 {
 namespace dash
@@ -43,8 +50,9 @@ FilterRatingsWidget::FilterRatingsWidget(NUX_FILE_LINE_DECL)
   all_button_ = new FilterAllButton(NUX_TRACKER_LOCATION);
 
   nux::VLayout* layout = new nux::VLayout(NUX_TRACKER_LOCATION);
-  layout->SetTopAndBottomPadding(11, 12);
+  layout->SetTopAndBottomPadding(top_padding, bottom_padding);
   ratings_ = new FilterRatingsButton(NUX_TRACKER_LOCATION);
+  ratings_->SetMinimumHeight(star_size);
 
   layout->AddView(ratings_);
 
@@ -71,22 +79,6 @@ void FilterRatingsWidget::SetFilter(Filter::Ptr const& filter)
 std::string FilterRatingsWidget::GetFilterType()
 {
   return "FilterRatingsWidget";
-}
-
-void FilterRatingsWidget::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
-{
-  nux::Geometry const& geo = GetGeometry();
-
-  GfxContext.PushClippingRectangle(geo);
-  nux::GetPainter().PaintBackground(GfxContext, geo);
-  GfxContext.PopClippingRectangle();
-}
-
-void FilterRatingsWidget::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
-{
-  GfxContext.PushClippingRectangle(GetGeometry());
-  GetLayout()->ProcessDraw(GfxContext, force_draw);
-  GfxContext.PopClippingRectangle();
 }
 
 } // namespace dash

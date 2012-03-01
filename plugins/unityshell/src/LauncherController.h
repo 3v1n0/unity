@@ -53,14 +53,14 @@ public:
 
   void UpdateNumWorkspaces(int workspaces);
   std::vector<char> GetAllShortcuts() const;
-  std::vector<AbstractLauncherIcon*> GetAltTabIcons(bool current) const;
+  std::vector<AbstractLauncherIcon::Ptr> GetAltTabIcons(bool current) const;
 
   void PushToFront();
 
   void SetShowDesktopIcon(bool show_desktop_icon);
 
   void HandleLauncherKeyPress();
-  void HandleLauncherKeyRelease();
+  void HandleLauncherKeyRelease(bool was_tap);
   bool HandleLauncherKeyEvent(Display *display, 
                               unsigned int key_sym, 
                               unsigned long key_code, 

@@ -39,7 +39,7 @@ namespace nux
 {
   NUX_IMPLEMENT_OBJECT_TYPE (StaticCairoText);
 
-StaticCairoText::StaticCairoText(const TCHAR* text,
+StaticCairoText::StaticCairoText(std::string const& text,
                                  NUX_FILE_LINE_DECL) :
   View(NUX_FILE_LINE_PARAM),
   _fontstring(NULL),
@@ -50,7 +50,7 @@ StaticCairoText::StaticCairoText(const TCHAR* text,
 
 {
   _textColor  = Color(1.0f, 1.0f, 1.0f, 1.0f);
-  _text       = TEXT(text);
+  _text       = text;
   _texture2D  = 0;
   _need_new_extent_cache = true;
   _pre_layout_width = 0;
@@ -167,8 +167,12 @@ StaticCairoText::Draw(GraphicsEngine& gfxContext,
 {
   Geometry base = GetGeometry();
 
-  if (_texture2D == 0)
+  if (!_texture2D || _cached_base_width != base.width || _cached_base_height != base.height)
+  {
+    _cached_base_width = base.width;
+    _cached_base_height = base.height;
     UpdateTexture();
+  }
 
   gfxContext.PushClippingRectangle(base);
 
@@ -219,7 +223,7 @@ StaticCairoText::PostDraw(GraphicsEngine& gfxContext,
 }
 
 void
-StaticCairoText::SetText(NString text)
+StaticCairoText::SetText(std::string const& text)
 {
   if (_text != text)
   {
@@ -233,14 +237,14 @@ StaticCairoText::SetText(NString text)
   }
 }
 
-NString
-StaticCairoText::GetText()
+std::string
+StaticCairoText::GetText() const
 {
   return _text;
 }
 
 void
-StaticCairoText::SetTextColor(Color textColor)
+StaticCairoText::SetTextColor(Color const& textColor)
 {
   if (_textColor != textColor)
   {
@@ -320,7 +324,7 @@ void StaticCairoText::GetTextExtents(const TCHAR* font,
   surface = cairo_image_surface_create(CAIRO_FORMAT_A1, 1, 1);
   cr = cairo_create(surface);
   cairo_set_font_options(cr, gdk_screen_get_font_options(screen));
-  
+
   layout = pango_cairo_create_layout(cr);
   desc = pango_font_description_from_string(font);
   pango_layout_set_font_description(layout, desc);
@@ -342,7 +346,7 @@ void StaticCairoText::GetTextExtents(const TCHAR* font,
   else
     pango_layout_set_alignment(layout, PANGO_ALIGN_RIGHT);
 
-  pango_layout_set_markup(layout, _text.GetTCharPtr(), -1);
+  pango_layout_set_markup(layout, _text.c_str(), -1);
   pango_layout_set_height(layout, _lines);
   pango_layout_set_width(layout, maxwidth * PANGO_SCALE);
 
@@ -380,8 +384,6 @@ void StaticCairoText::DrawText(cairo_t*   cr,
                                int        height,
                                Color color)
 {
-  int                   textWidth  = 0;
-  int                   textHeight = 0;
   PangoLayout*          layout     = NULL;
   PangoFontDescription* desc       = NULL;
   PangoContext*         pangoCtx   = NULL;
@@ -394,8 +396,6 @@ void StaticCairoText::DrawText(cairo_t*   cr,
     g_object_get(settings, "gtk-font-name", &fontName, NULL);
   else
     fontName = g_strdup(_fontstring);
-
-  GetTextExtents(fontName, textWidth, textHeight);
 
   cairo_set_font_options(cr, gdk_screen_get_font_options(screen));
   layout = pango_cairo_create_layout(cr);
@@ -420,8 +420,9 @@ void StaticCairoText::DrawText(cairo_t*   cr,
   else
     pango_layout_set_alignment(layout, PANGO_ALIGN_RIGHT);
 
-  pango_layout_set_markup(layout, _text.GetTCharPtr(), -1);
-  pango_layout_set_width(layout, textWidth * PANGO_SCALE);
+  pango_layout_set_markup(layout, _text.c_str(), -1);
+  pango_layout_set_width(layout, width * PANGO_SCALE);
+  pango_layout_set_height(layout, height * PANGO_SCALE);
 
   pango_layout_set_height(layout, _lines);
   pangoCtx = pango_layout_get_context(layout);  // is not ref'ed
@@ -463,7 +464,6 @@ void StaticCairoText::UpdateTexture()
   int width = 0;
   int height = 0;
   GetTextExtents(width, height);
-
   SetBaseSize(width, height);
 
   _cairoGraphics = new CairoGraphics(CAIRO_FORMAT_ARGB32,

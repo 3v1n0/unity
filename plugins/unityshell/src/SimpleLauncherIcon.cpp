@@ -40,9 +40,10 @@ namespace
   nux::logging::Logger logger("unity.dash.CategoryViewGrid");
 }
 
+NUX_IMPLEMENT_OBJECT_TYPE(SimpleLauncherIcon);
+
 SimpleLauncherIcon::SimpleLauncherIcon()
-  : LauncherIcon()
-  , icon_name("", sigc::mem_fun(this, &SimpleLauncherIcon::SetIconName))
+  : icon_name("", sigc::mem_fun(this, &SimpleLauncherIcon::SetIconName))
   , theme_changed_id_(0)
 {
   LauncherIcon::mouse_down.connect(sigc::mem_fun(this, &SimpleLauncherIcon::OnMouseDown));
@@ -119,7 +120,7 @@ bool SimpleLauncherIcon::SetIconName(std::string& target, std::string const& val
 
   target = value;
   ReloadIcon();
-  
+
   return true;
 }
 
@@ -130,7 +131,7 @@ void SimpleLauncherIcon::ReloadIcon()
       element.second->UnReference();
 
   texture_map.clear ();
-  needs_redraw.emit(this);
+  EmitNeedsRedraw();
 }
 
 void SimpleLauncherIcon::OnIconThemeChanged(GtkIconTheme* icon_theme, gpointer data)
@@ -140,6 +141,11 @@ void SimpleLauncherIcon::OnIconThemeChanged(GtkIconTheme* icon_theme, gpointer d
   // invalidate the current cache
   self->_current_theme_is_mono = -1;
   self->ReloadIcon();
+}
+
+std::string SimpleLauncherIcon::GetName() const
+{
+  return "SimpleLauncherIcon";
 }
 
 } // namespace launcher

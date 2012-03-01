@@ -119,21 +119,5 @@ void FilterGenre::InitTheme()
   //FIXME - build theme here - store images, cache them, fun fun fun
 }
 
-void FilterGenre::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
-{
-  nux::Geometry const& geo = GetGeometry();
-
-  GfxContext.PushClippingRectangle(geo);
-  nux::GetPainter().PaintBackground(GfxContext, geo);
-  GfxContext.PopClippingRectangle();
-}
-
-void FilterGenre::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
-{
-  GfxContext.PushClippingRectangle(GetGeometry());
-  GetLayout()->ProcessDraw(GfxContext, force_draw);
-  GfxContext.PopClippingRectangle();
-}
-
 } // namespace dash
 } // namespace unity

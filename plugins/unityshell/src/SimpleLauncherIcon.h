@@ -31,6 +31,7 @@ class Launcher;
 
 class SimpleLauncherIcon : public LauncherIcon
 {
+  NUX_DECLARE_OBJECT_TYPE(SimpleLauncherIcon, LauncherIcon);
 public:
   SimpleLauncherIcon();
   virtual ~SimpleLauncherIcon();
@@ -40,11 +41,12 @@ public:
 
   // Properties
   nux::Property<std::string> icon_name;
-  
+
   // Signals
   sigc::signal<void> activate;
 
 protected:
+  std::string GetName() const;
   virtual void OnMouseDown(int button, int monitor);
   virtual void OnMouseUp(int button, int monitor);
   virtual void OnMouseClick(int button, int monitor);

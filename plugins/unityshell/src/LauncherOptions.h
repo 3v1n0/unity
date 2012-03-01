@@ -37,8 +37,6 @@ typedef enum
 {
   LAUNCHER_HIDE_NEVER,
   LAUNCHER_HIDE_AUTOHIDE,
-  LAUNCHER_HIDE_DODGE_WINDOWS,
-  LAUNCHER_HIDE_DODGE_ACTIVE_WINDOW,
 } LauncherHideMode;
 
 typedef enum
@@ -72,6 +70,12 @@ typedef enum
   BACKLIGHT_NORMAL_EDGE_TOGGLE
 } BacklightMode;
 
+enum RevealTrigger
+{
+  EDGE,
+  CORNER,
+};
+
 class Options : public sigc::trackable
 {
 public:
@@ -84,6 +88,7 @@ public:
   nux::Property<UrgentAnimation> urgent_animation;
   nux::Property<AutoHideAnimation> auto_hide_animation;
   nux::Property<BacklightMode> backlight_mode;
+  nux::Property<RevealTrigger> reveal_trigger;
   nux::Property<int> icon_size;
   nux::Property<int> tile_size;
   nux::Property<float> background_alpha;

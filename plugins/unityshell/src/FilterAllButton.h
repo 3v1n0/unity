@@ -24,6 +24,7 @@
 #define UNITYSHELL_FILTERALLBUTTON_H
 
 #include <sigc++/connection.h>
+#include <UnityCore/Filter.h>
 
 #include "FilterBasicButton.h"
 

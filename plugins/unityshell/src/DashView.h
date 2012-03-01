@@ -30,7 +30,7 @@
 #include <UnityCore/HomeLens.h>
 
 #include "BackgroundEffectHelper.h"
-#include "DashSearchBar.h"
+#include "SearchBar.h"
 #include "Introspectable.h"
 #include "LensBar.h"
 #include "LensView.h"
@@ -41,6 +41,8 @@ namespace unity
 {
 namespace dash
 {
+
+class DashLayout;
 
 class DashView : public nux::View, public unity::debug::Introspectable
 {
@@ -116,7 +118,7 @@ private:
 
   // View related
   nux::VLayout* layout_;
-  nux::VLayout* content_layout_;
+  DashLayout* content_layout_;
   SearchBar* search_bar_;
   nux::VLayout* lenses_layout_;
   LensBar* lens_bar_;

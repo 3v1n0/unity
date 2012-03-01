@@ -17,8 +17,8 @@
  * Authored by: Gordon Allott <gord.allott@canonical.com>
  */
 
-#ifndef PLACES_GROUP_H
-#define PLACES_GROUP_H
+#ifndef UNITYSHELL_PLACES_GROUP_H
+#define UNITYSHELL_PLACES_GROUP_H
 
 #include <Nux/Nux.h>
 #include <Nux/VLayout.h>
@@ -28,12 +28,19 @@
 #include <sigc++/sigc++.h>
 
 #include "IconTexture.h"
+#include "Introspectable.h"
 #include "StaticCairoText.h"
+#include "UBusWrapper.h"
+
+namespace nux
+{
+class AbstractPaintLayer;
+}
 
 namespace unity
 {
 
-class PlacesGroup : public nux::View
+class PlacesGroup : public nux::View , public debug::Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE(PlacesGroup, nux::View);
 public:
@@ -47,7 +54,7 @@ public:
   nux::StaticCairoText* GetLabel();
   nux::StaticCairoText* GetExpandLabel();
 
-  void       SetChildView(nux::View* view);
+  void SetChildView(nux::View* view);
   nux::View* GetChildView();
 
   void SetChildLayout(nux::Layout* layout);
@@ -57,26 +64,35 @@ public:
   void SetCounts(guint n_visible_items_in_unexpand_mode, guint n_total_items);
 
   void SetExpanded(bool is_expanded);
-  bool GetExpanded();
+  bool GetExpanded() const;
 
-  int  GetHeaderHeight();
+  int  GetHeaderHeight() const;
+  bool HeaderIsFocusable() const;
+  nux::View* GetHeaderFocusableView() const;
 
   void SetDrawSeparator(bool draw_it);
 
   sigc::signal<void, PlacesGroup*> expanded;
 
 protected:
+  long ComputeContentSize();
+  void Draw(nux::GraphicsEngine& graphics_engine, bool force_draw);
+  void DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw);
+  void PostDraw (nux::GraphicsEngine &graphics_engine, bool force_draw);
+
   // Key navigation
   virtual bool AcceptKeyNavFocus();
 
+  // Introspection
+  virtual std::string GetName() const;
+  virtual void AddProperties(GVariantBuilder* builder);
+
 private:
   void Refresh();
-
-  void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
-  void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
-  void PostDraw (nux::GraphicsEngine &GfxContext, bool force_draw);
-
   static gboolean OnIdleRelayout(PlacesGroup* self);
+
+  bool HeaderHasKeyFocus() const;
+  bool ShouldBeHighlighted() const;
 
   void RecvMouseClick(int x, int y, unsigned long button_flags, unsigned long key_flags);
   void RecvMouseEnter(int x, int y, unsigned long button_flags, unsigned long key_flags);
@@ -87,10 +103,12 @@ private:
 
 private:
   nux::VLayout* _group_layout;
+  nux::View* _header_view;
   nux::HLayout* _header_layout;
   nux::HLayout* _text_layout;
   nux::HLayout* _expand_layout;
   nux::View*  _child_view;
+  nux::AbstractPaintLayer* _focus_layer;
 
   IconTexture*          _icon;
   nux::StaticCairoText* _name;
@@ -104,7 +122,9 @@ private:
   guint _n_total_items;
   char* _cached_name;
   bool  _draw_sep;
+  nux::Geometry _cached_geometry;
 
+  UBusManager _ubus;
 };
 
 }

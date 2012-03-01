@@ -29,20 +29,21 @@ namespace unity
 {
 namespace launcher
 {
-  
+
 UBusManager BFBLauncherIcon::ubus_manager_;
 
 BFBLauncherIcon::BFBLauncherIcon()
  : SimpleLauncherIcon()
+ , reader_(dash::LensDirectoryReader::GetDefault())
 {
   tooltip_text = _("Dash home");
   icon_name = PKGDATADIR"/launcher_bfb.png";
   SetQuirk(QUIRK_VISIBLE, true);
   SetQuirk(QUIRK_RUNNING, false);
   SetIconType(TYPE_HOME);
-  
+
   background_color_ = nux::color::White;
-  
+
   mouse_enter.connect([&](int m) { ubus_manager_.SendMessage(UBUS_DASH_ABOUT_TO_SHOW, NULL); });
 }
 
@@ -75,45 +76,50 @@ void BFBLauncherIcon::OnMenuitemActivated(DbusmenuMenuitem* item,
 }
 
 std::list<DbusmenuMenuitem*> BFBLauncherIcon::GetMenus()
-{  
+{
   std::list<DbusmenuMenuitem*> result;
   DbusmenuMenuitem* menu_item;
-  
+
   // Home dash
   menu_item = dbusmenu_menuitem_new();
-  
+
   dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Dash Home"));
   dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
   dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
-  
+
   g_signal_connect(menu_item,
                    DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
                    (GCallback)&BFBLauncherIcon::OnMenuitemActivated,
                    g_strdup("home.lens"));
-  
+
   result.push_back(menu_item);
-  
+
   // Other lenses..
-  for (auto lens : lenses_.GetLenses())
+  for (auto lens : reader_->GetLensData())
   {
-    if (!lens->visible())
+    if (!lens->visible)
       continue;
-    
+
     menu_item = dbusmenu_menuitem_new();
 
-    dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, lens->name().c_str());
+    dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, lens->name);
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
 
     g_signal_connect(menu_item,
                      DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
                      (GCallback)&BFBLauncherIcon::OnMenuitemActivated,
-                     g_strdup(lens->id().c_str()));
-                     
+                     g_strdup(lens->id));
+
     result.push_back(menu_item);
   }
-  
+
   return result;
+}
+
+std::string BFBLauncherIcon::GetName() const
+{
+  return "BFBLauncherIcon";
 }
 
 } // namespace launcher

@@ -72,9 +72,9 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
   vertical_spacing.changed.connect(needredraw_lambda);
   padding.changed.connect(needredraw_lambda);
 
-  key_nav_focus_change.connect (sigc::mem_fun (this, &ResultViewGrid::OnOnKeyNavFocusChange));
-  key_nav_focus_activate.connect ([&] (nux::Area *area) { UriActivated.emit (focused_uri_); });
-  key_down.connect (sigc::mem_fun (this, &ResultViewGrid::OnKeyDown));
+  key_nav_focus_change.connect(sigc::mem_fun(this, &ResultViewGrid::OnKeyNavFocusChange));
+  key_nav_focus_activate.connect([&] (nux::Area *area) { UriActivated.emit (focused_uri_); });
+  key_down.connect(sigc::mem_fun(this, &ResultViewGrid::OnKeyDown));
   mouse_move.connect(sigc::mem_fun(this, &ResultViewGrid::MouseMove));
   mouse_click.connect(sigc::mem_fun(this, &ResultViewGrid::MouseClick));
 
@@ -361,15 +361,19 @@ bool ResultViewGrid::InspectKeyEvent(unsigned int eventType, unsigned int keysym
   int total_rows = std::ceil(results_.size() / static_cast<float>(items_per_row)); // items per row is always at least 1
   total_rows = (expanded) ? total_rows : 1; // restrict to one row if not expanded
 
-  // check for edge cases where we want the keynav to bubble up
-  if (direction == nux::KEY_NAV_UP && selected_index_ < items_per_row)
+   // check for edge cases where we want the keynav to bubble up
+  if (direction == nux::KEY_NAV_LEFT && (selected_index_ % items_per_row == 0))
+    return false; // pressed left on the first item, no diiice
+  else if (direction == nux::KEY_NAV_RIGHT && (selected_index_ == static_cast<int>(results_.size() - 1)))
+    return false; // pressed right on the last item, nope. nothing for you
+  else if (direction == nux::KEY_NAV_RIGHT  && (selected_index_ % items_per_row) == (items_per_row - 1))
+    return false; // pressed right on the last item in the first row in non expanded mode. nothing doing.
+  else if (direction == nux::KEY_NAV_UP && selected_index_ < items_per_row)
     return false; // key nav up when already on top row
   else if (direction == nux::KEY_NAV_DOWN && selected_index_ >= (total_rows-1) * items_per_row)
     return false; // key nav down when on bottom row
-  else
-    return true;
 
-  return false;
+  return true;
 }
 
 bool ResultViewGrid::AcceptKeyNavFocus()
@@ -488,8 +492,7 @@ nux::Area* ResultViewGrid::KeyNavIteration(nux::KeyNavDirection direction)
   return this;
 }
 
-// crappy name.
-void ResultViewGrid::OnOnKeyNavFocusChange(nux::Area *area, bool has_focus, nux::KeyNavDirection direction)
+void ResultViewGrid::OnKeyNavFocusChange(nux::Area *area, bool has_focus, nux::KeyNavDirection direction)
 {
   if (HasKeyFocus())
   {
@@ -504,7 +507,7 @@ void ResultViewGrid::OnOnKeyNavFocusChange(nux::Area *area, bool has_focus, nux:
 
     int items_per_row = GetItemsPerRow();
 
-    if (direction == nux::KEY_NAV_UP)
+    if (direction == nux::KEY_NAV_UP && expanded)
     {
       // This View just got focused through keyboard navigation and the
       // focus is comming from the bottom. We want to focus the 
@@ -523,9 +526,14 @@ void ResultViewGrid::OnOnKeyNavFocusChange(nux::Area *area, bool has_focus, nux:
       focused_y = (renderer_->height + vertical_spacing) * (selected_index_ / items_per_row);
     }
 
-    ubus_.SendMessage(UBUS_RESULT_VIEW_KEYNAV_CHANGED,
-                      g_variant_new("(iiii)", focused_x, focused_y, renderer_->width(), renderer_->height()));
+    if (direction != nux::KEY_NAV_NONE)
+    {
+      ubus_.SendMessage(UBUS_RESULT_VIEW_KEYNAV_CHANGED,
+                        g_variant_new("(iiii)", focused_x, focused_y, renderer_->width(), renderer_->height()));
+    }
+
     selection_change.emit();
+
   }
   else
   {
@@ -630,11 +638,7 @@ void ResultViewGrid::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
           break;
 
         ResultRenderer::ResultRendererState state = ResultRenderer::RESULT_RENDERER_NORMAL;
-        if ((int)(index) == mouse_over_index_)
-        {
-          state = ResultRenderer::RESULT_RENDERER_PRELIGHT;
-        }
-        else if ((int)(index) == selected_index_)
+        if ((int)(index) == selected_index_)
         {
           state = ResultRenderer::RESULT_RENDERER_SELECTED;
         }
@@ -700,8 +704,12 @@ void ResultViewGrid::DrawContent(nux::GraphicsEngine& GfxContent, bool force_dra
 void ResultViewGrid::MouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
 {
   uint index = GetIndexAtPosition(x, y);
-  mouse_over_index_ = index;
 
+  if (mouse_over_index_ != index)
+  {
+    selected_index_ = mouse_over_index_ = index;
+    nux::GetWindowCompositor().SetKeyFocusArea(this);
+  }
   mouse_last_x_ = x;
   mouse_last_y_ = y;
 

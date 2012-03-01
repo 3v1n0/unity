@@ -50,10 +50,15 @@ class LensView : public nux::View, public unity::debug::Introspectable
 
 public:
   LensView();
-  LensView(Lens::Ptr lens);
-  virtual ~LensView();
+  LensView(Lens::Ptr lens, nux::Area* show_filters);
+  ~LensView();
 
+  CategoryGroups& categories() { return categories_; }
+  FilterBar* filter_bar() const { return filter_bar_; }
   Lens::Ptr lens() const;
+  nux::Area* fscroll_view() const;
+
+  int GetNumRows();
 
   virtual void ActivateFirst();
 
@@ -67,7 +72,7 @@ public:
   void CheckNoResults(Lens::Hints const& hints);
 
 private:
-  void SetupViews();
+  void SetupViews(nux::Area* show_filters);
   void SetupCategories();
   void SetupResults();
   void SetupFilters();

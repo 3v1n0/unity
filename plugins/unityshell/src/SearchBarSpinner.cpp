@@ -17,15 +17,14 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#include "DashSearchBarSpinner.h"
+#include "SearchBarSpinner.h"
 
 #include <Nux/VLayout.h>
+#include <UnityCore/Variant.h>
 
 #include "DashStyle.h"
 
 namespace unity
-{
-namespace dash
 {
 
 NUX_IMPLEMENT_OBJECT_TYPE(SearchBarSpinner);
@@ -41,9 +40,7 @@ SearchBarSpinner::SearchBarSpinner()
 
   _magnify = style.GetSearchMagnifyIcon();
   _close = style.GetSearchCloseIcon();
-  _close_glow = style.GetSearchCloseGlowIcon();
   _spin = style.GetSearchSpinIcon();
-  _spin_glow = style.GetSearchSpinGlowIcon();
 
   _2d_rotate.Identity();
   _2d_rotate.Rotate_z(0.0);
@@ -72,14 +69,6 @@ SearchBarSpinner::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
   texxform.min_filter = nux::TEXFILTER_LINEAR;
   texxform.mag_filter = nux::TEXFILTER_LINEAR;
-
-  GfxContext.QRP_1Tex(geo.x + ((geo.width - _spin_glow->GetWidth()) / 2),
-                      geo.y + ((geo.height - _spin_glow->GetHeight()) / 2),
-                      _spin_glow->GetWidth(),
-                      _spin_glow->GetHeight(),
-                      _spin_glow->GetDeviceTexture(),
-                      texxform,
-                      nux::color::White);
 
   if (_state == STATE_READY)
   {
@@ -139,14 +128,6 @@ SearchBarSpinner::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
                         nux::color::White);
 
 
-    GfxContext.QRP_1Tex(geo.x + ((geo.width - _close_glow->GetWidth()) / 2),
-                        geo.y + ((geo.height - _close_glow->GetHeight()) / 2),
-                        _close_glow->GetWidth(),
-                        _close_glow->GetHeight(),
-                        _close_glow->GetDeviceTexture(),
-                        texxform,
-                        nux::color::White);
-
     GfxContext.QRP_1Tex(geo.x + ((geo.width - _close->GetWidth()) / 2),
                         geo.y + ((geo.height - _close->GetHeight()) / 2),
                         _close->GetWidth(),
@@ -198,7 +179,7 @@ SearchBarSpinner::SetState(SpinnerState state)
   if (_spinner_timeout)
     g_source_remove(_spinner_timeout);
   _spinner_timeout = 0;
-  
+
   _2d_rotate.Rotate_z(0.0f);
   _rotation = 0.0f;
 
@@ -220,10 +201,11 @@ void SearchBarSpinner::AddProperties(GVariantBuilder* builder)
 {
   nux::Geometry geo = GetGeometry();
 
-  g_variant_builder_add(builder, "{sv}", "x", g_variant_new_int32(geo.x));
-  g_variant_builder_add(builder, "{sv}", "y", g_variant_new_int32(geo.y));
-  g_variant_builder_add(builder, "{sv}", "width", g_variant_new_int32(geo.width));
-  g_variant_builder_add(builder, "{sv}", "height", g_variant_new_int32(geo.height));
+  variant::BuilderWrapper(builder)
+    .add("x", geo.x)
+    .add("y", geo.y)
+    .add("width", geo.width)
+    .add("height", geo.height);
 }
 
 //
@@ -235,5 +217,4 @@ SearchBarSpinner::AcceptKeyNavFocus()
   return false;
 }
 
-}
 }
