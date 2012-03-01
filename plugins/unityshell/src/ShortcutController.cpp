@@ -28,6 +28,7 @@ namespace shortcut
 namespace
 {
 const unsigned int SUPER_TAP_DURATION = 650;
+const unsigned int FADE_DURATION = 100;
 } // anonymouse namespace;
   
 Controller::Controller(std::list<AbstractHint*>& hints)
@@ -35,8 +36,8 @@ Controller::Controller(std::list<AbstractHint*>& hints)
   , visible_(false)
   , enabled_(true)
   , show_timer_(0)
-  , fade_in_animator_(100)
-  , fade_out_animator_(100)
+  , fade_in_animator_(FADE_DURATION)
+  , fade_out_animator_(FADE_DURATION)
 {
   bg_color_ = nux::Color(0.0, 0.0, 0.0, 0.5);
 
@@ -185,16 +186,18 @@ void Controller::Hide()
     
   visible_ = false;
 
+  if (show_timer_)
+  {
+    g_source_remove(show_timer_);
+    show_timer_ = 0;
+  }
+
   if (view_window_)
   {
     view_->SetupBackground(false);
     fade_in_animator_.Stop();
     fade_out_animator_.Start(1.0 - view_window_->GetOpacity());
   }
-
-  if (show_timer_)
-    g_source_remove(show_timer_);
-  show_timer_ = 0;
 }
 
 bool Controller::Visible()
@@ -221,9 +224,11 @@ void Controller::AddProperties(GVariantBuilder* builder)
 {
   unity::variant::BuilderWrapper(builder)
   .add(workarea_)
-  .add("timeout_duration", SUPER_TAP_DURATION)
+  .add("timeout_duration", SUPER_TAP_DURATION + FADE_DURATION)
   .add("enabled", IsEnabled())
-  .add("visible", Visible());
+  .add("about_to_show", (Visible() && !fade_out_animator_.IsRunning() && view_window_->GetOpacity() != 1.0f))
+  .add("about_to_hide", (Visible() && !fade_in_animator_.IsRunning() && view_window_->GetOpacity() != 1.0f))
+  .add("visible", (Visible() && view_window_ && view_window_->GetOpacity() == 1.0f));
 }
 
 } // namespace shortcut
