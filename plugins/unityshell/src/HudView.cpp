@@ -90,20 +90,11 @@ View::View()
     // We get here when the Hud closes.
     // The TextEntry should always have the keyboard focus as long as the hud is open.
 
-    if (buttons_.empty() && !receiving)
-    {
-      // This happens when the Hud closes and there are no HUD buttons
-      // The following should not be an error.
-      //LOG_ERROR(logger) << "hud search bar lost keynav with no where else to keynav to";
-    }
-
     if (buttons_.empty())
       return;// early return on empty button list
 
     if (receiving)
     {
-      // Can this happen? When the text entry gets the keyboard focus the first time, its text should be empty.
-      // Therefore, there should not be any HudButtons.
       if (!buttons_.empty())
       {
         // If the search_bar gets focus, fake focus the first button if it exists
@@ -549,7 +540,9 @@ nux::Area* View::FindKeyFocusArea(unsigned int event_type,
   {
     if (direction == nux::KEY_NAV_NONE ||
         direction == nux::KEY_NAV_UP ||
-        direction == nux::KEY_NAV_DOWN)
+        direction == nux::KEY_NAV_DOWN ||
+        direction == nux::KEY_NAV_LEFT ||
+        direction == nux::KEY_NAV_RIGHT)
     {
       // We have received a key character or a keyboard arrow Up or Down (navigation keys).
       // Because we have called "SetLoseKeyFocusOnKeyNavDirectionUp(false);" and "SetLoseKeyFocusOnKeyNavDirectionDown(false);"
@@ -573,6 +566,7 @@ nux::Area* View::FindKeyFocusArea(unsigned int event_type,
                 (*it)->fake_focused = false;
                 // The next button gets the fake_focus
                 (*next)->fake_focused = true;
+                query_selected.emit((*next)->GetQuery());
               }
               break;
             }
@@ -594,6 +588,7 @@ nux::Area* View::FindKeyFocusArea(unsigned int event_type,
                 (*rit)->fake_focused = false;
                 // The next button bellow gets the fake_focus.
                 (*next)->fake_focused = true;
+                query_selected.emit((*next)->GetQuery());
               }
               break;
             }
@@ -625,13 +620,10 @@ nux::Area* View::FindKeyFocusArea(unsigned int event_type,
   }
   else if (direction == nux::KEY_NAV_NONE)
   {
-    // We get here if the text entry does not have the key focus and a character key is pressed.
-    // Is this possible?
     return search_bar_->text_entry();
   }
   else if (next_object_to_key_focus_area_)
   {
-    // Is this possible?
     return next_object_to_key_focus_area_->FindKeyFocusArea(event_type, x11_key_code, special_keys_state);
   }
   return NULL;
