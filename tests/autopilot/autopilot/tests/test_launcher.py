@@ -11,7 +11,7 @@ from testtools.matchers import Equals, LessThan, GreaterThan
 
 from autopilot.tests import AutopilotTestCase
 from autopilot.emulators.unity.launcher import Launcher
-from autopilot.emulators.X11 import ScreenGeometry, Keyboard
+from autopilot.emulators.X11 import ScreenGeometry
 from autopilot.glibrunner import GlibRunner
 
 from time import sleep
