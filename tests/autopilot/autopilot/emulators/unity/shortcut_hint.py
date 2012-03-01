@@ -25,20 +25,20 @@ class ShortcutHint(KeybindingsHelper):
         super(ShortcutHint, self).__init__()
         self._keyboard = Keyboard()
 
-    def show_shorcut_hint(self):
+    def show(self):
         logger.debug("Revealing shortcut hint with keyboard.")
         self.keybinding_hold("shortcuthint/reveal")
 
-    def hide_shorcut_hint(self):
+    def hide(self):
         logger.debug("Un-revealing shortcut hint with keyboard.")
         self.keybinding_release("shortcuthint/reveal")
 
-    def cancel_shortcut_hint(self):
+    def cancel(self):
         logger.debug("Hide the shortcut hint with keyboard, without releasing the reveal key.")
         self.keybinding("shortcuthint/cancel")
 
     def get_geometry(self):
-        state = self.__get_controller_state(monitor)
+        state = self.__get_controller_state()
         x = int(state['x'])
         y = int(state['y'])
         width = int(state['width'])
@@ -47,7 +47,7 @@ class ShortcutHint(KeybindingsHelper):
 
     def get_show_timeout(self):
         state = self.__get_controller_state()
-        return bool(state['timeout_duration'])
+        return float(state['timeout_duration'] / 1000.0)
 
     def is_enabled(self):
         state = self.__get_controller_state()
@@ -58,4 +58,4 @@ class ShortcutHint(KeybindingsHelper):
         return bool(state['visible'])
 
     def __get_controller_state(self):
-        return get_state_by_path('/Unity/SwitcherController')[0]
+        return get_state_by_path('/Unity/ShortcutController')[0]
