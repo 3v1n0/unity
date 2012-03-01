@@ -26,6 +26,7 @@ from Xlib.ext.xtest import fake_input
 import gtk.gdk
 
 _PRESSED_KEYS = []
+_PRESSED_MOUSE_BUTTONS = []
 _DISPLAY = Display()
 logger = logging.getLogger(__name__)
 
@@ -159,9 +160,11 @@ class Keyboard(object):
         any keys that were pressed and not released.
 
         """
+        global _PRESSED_KEYS
         for keycode in _PRESSED_KEYS:
             logger.warning("Releasing key %r as part of cleanup call.", keycode)
             fake_input(_DISPLAY, X.KeyRelease, keycode)
+        _PRESSED_KEYS = []
 
     def __perform_on_keys(self, keys, event):
         keycode = 0
@@ -176,7 +179,10 @@ class Keyboard(object):
             if event == X.KeyPress:
                 _PRESSED_KEYS.append(keycode)
             elif event == X.KeyRelease:
-                _PRESSED_KEYS.remove(keycode)
+                if keycode in _PRESSED_KEYS:
+                    _PRESSED_KEYS.remove(keycode)
+                else:
+                    logger.warning("Generating release event for keycode %d that was not pressed.", keycode)
 
             fake_input(_DISPLAY, event, keycode)
         _DISPLAY.sync()
@@ -225,12 +231,17 @@ class Mouse(object):
     def press(self, button=1):
         """Press mouse button at current mouse location."""
         logger.debug("Pressing mouse button %d", button)
+        _PRESSED_MOUSE_BUTTONS.append(button)
         fake_input(_DISPLAY, X.ButtonPress, button)
         _DISPLAY.sync()
 
     def release(self, button=1):
         """Releases mouse button at current mouse location."""
         logger.debug("Releasing mouse button %d", button)
+        if button in _PRESSED_MOUSE_BUTTONS:
+            _PRESSED_MOUSE_BUTTONS.remove(button)
+        else:
+            logger.warning("Generating button release evenf or button %d that was not pressed.", button)
         fake_input(_DISPLAY, X.ButtonRelease, button)
         _DISPLAY.sync()
 
@@ -284,6 +295,11 @@ class Mouse(object):
     @staticmethod
     def cleanup():
         """Put mouse in a known safe state."""
+        global _PRESSED_MOUSE_BUTTONS
+        for btn in _PRESSED_MOUSE_BUTTONS:
+            logger.debug("Releasing mouse button %d as part of cleanup", btn)
+            fake_input(_DISPLAY, X.ButtonRelease, btn)
+        _PRESSED_MOUSE_BUTTONS = []
         sg = ScreenGeometry()
         sg.move_mouse_to_monitor(0)
 
