@@ -50,10 +50,8 @@ namespace unity
 namespace
 {
 
-const nux::Color kExpandDefaultTextColor(1.0f, 1.0f, 1.0f, 1.0f);
-const nux::Color kExpandHoverTextColor(1.0f, 1.0f, 1.0f, 1.0f);
-const float kExpandDefaultIconOpacity = 1.0f;
-const float kExpandHoverIconOpacity = 1.0f;
+const nux::Color kExpandDefaultTextColor(1.0f, 1.0f, 1.0f, 0.5f);
+const float kExpandDefaultIconOpacity = 0.5f;
 
 // Category  highlight
 const int kHighlightHeight = 24;
@@ -143,6 +141,7 @@ PlacesGroup::PlacesGroup()
   _header_layout->AddLayout(_text_layout, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
 
   _name = new nux::StaticCairoText("", NUX_TRACKER_LOCATION);
+  _name->SetFont("Ubuntu 13"); // 17px = 13
   _name->SetTextEllipsize(nux::StaticCairoText::NUX_ELLIPSIZE_END);
   _name->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_LEFT);
   _text_layout->AddView(_name, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
@@ -151,12 +150,15 @@ PlacesGroup::PlacesGroup()
   _expand_layout->SetHorizontalInternalMargin(8);
   _text_layout->AddLayout(_expand_layout, 0, nux::MINOR_POSITION_END, nux::MINOR_SIZE_MATCHCONTENT);
 
+  _expand_label_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
+  _expand_layout->AddLayout(_expand_label_layout, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
+
   _expand_label = new nux::StaticCairoText("", NUX_TRACKER_LOCATION);
+  _expand_label->SetFont("Ubuntu 10"); // 13px = 10
   _expand_label->SetTextEllipsize(nux::StaticCairoText::NUX_ELLIPSIZE_END);
   _expand_label->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_LEFT);
   _expand_label->SetTextColor(kExpandDefaultTextColor);
-
-  _expand_layout->AddView(_expand_label, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
+  _expand_label_layout->AddView(_expand_label, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
   _expand_icon = new IconTexture(arrow, arrow->GetWidth(), arrow->GetHeight());
   _expand_icon->SetOpacity(kExpandDefaultIconOpacity);
@@ -279,9 +281,7 @@ void PlacesGroup::SetChildLayout(nux::Layout* layout)
 void
 PlacesGroup::RefreshLabel()
 {
-  const char* temp = "<span size='small'>%s</span>";
   char*       result_string;
-  char*       final;
 
   if (_n_visible_items_in_unexpand_mode >= _n_total_items)
   {
@@ -306,9 +306,8 @@ PlacesGroup::RefreshLabel()
   SetName(tmpname);
   g_free(tmpname);
 
-  final = g_strdup_printf(temp, result_string);
 
-  _expand_label->SetText(final);
+  _expand_label->SetText(result_string);
   _expand_label->SetVisible(_n_visible_items_in_unexpand_mode < _n_total_items);
 
   // See bug #748101 ("Dash - "See more..." line should be base-aligned with section header")
@@ -318,12 +317,11 @@ PlacesGroup::RefreshLabel()
   int bottom_padding = _name->GetBaseHeight() - _name->GetBaseline() -
                        (_expand_label->GetBaseHeight() - _expand_label->GetBaseline());
 
-  _expand_layout->SetTopAndBottomPadding(0, bottom_padding);
+  _expand_label_layout->SetTopAndBottomPadding(0, bottom_padding);
 
   QueueDraw();
 
-  g_free((result_string));
-  g_free(final);
+  g_free(result_string);
 }
 
 void
@@ -426,7 +424,13 @@ PlacesGroup::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
     nux::GetPainter().PushLayer(graphics_engine, _focus_layer->GetGeometry(), _focus_layer);
   }
 
+  //nux::GetPainter().Paint2DQuadColor(graphics_engine, _expand_layout->GetGeometry(), nux::color::Orange * 0.50);
+
   _group_layout->ProcessDraw(graphics_engine, force_draw);
+
+    // Debug rects
+  //nux::GetPainter().Paint2DQuadColor(GfxContext, hint_->GetGeometry(), nux::color::Violet * 0.50);
+  //nux::GetPainter().Paint2DQuadColor(GfxContext, pango_entry_->GetGeometry(), nux::color::Green * 0.50);
 
   graphics_engine.PopClippingRectangle();
 }

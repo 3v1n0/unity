@@ -423,7 +423,7 @@ void ResultRendererTile::LoadText(Result& row)
   cairo_set_font_options(cr, gdk_screen_get_font_options(screen));
   layout = pango_cairo_create_layout(cr);
   desc = pango_font_description_from_string(font.Value());
-  pango_font_description_set_size (desc, 9 * PANGO_SCALE);
+  pango_font_description_set_size (desc, 10 * PANGO_SCALE);
 
   pango_layout_set_font_description(layout, desc);
   pango_layout_set_alignment(layout, PANGO_ALIGN_CENTER);

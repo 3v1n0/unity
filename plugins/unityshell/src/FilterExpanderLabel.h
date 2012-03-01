@@ -30,11 +30,11 @@
 #include <Nux/HLayout.h>
 #include <Nux/View.h>
 #include <Nux/VLayout.h>
-#include <Nux/StaticText.h>
 #include <UnityCore/Filter.h>
 
 #include "IconTexture.h"
 #include "Introspectable.h"
+#include "StaticCairoText.h"
 
 namespace nux
 {
@@ -81,7 +81,7 @@ private:
   nux::View* expander_view_;
   nux::LinearLayout* expander_layout_;
   nux::View* right_hand_contents_;
-  nux::StaticText* cairo_label_;
+  nux::StaticCairoText* cairo_label_;
   std::string raw_label_;
   std::string label_;
   nux::VLayout* arrow_layout_;

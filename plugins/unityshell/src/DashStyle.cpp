@@ -120,7 +120,7 @@ public:
             nux::Color const& color,
             std::string const& label,
             int font_size = -1,
-            double horizMargin = 10.0,
+            double horizMargin = 4.0,
             Alignment alignment = Alignment::CENTER);
 
   void ButtonOutlinePath(cairo_t* cr, bool align);
@@ -1559,7 +1559,7 @@ bool Style::Button(cairo_t* cr, nux::ButtonVisualState state,
               pimpl->button_label_text_color_[state],
               label,
               font_size,
-              10.0,
+              11.0, // 15px = 11pt
               alignment);
 
   return true;
@@ -1814,7 +1814,7 @@ bool Style::MultiRangeSegment(cairo_t*    cr,
   pimpl->Text(cr,
               pimpl->button_label_text_color_[state],
               label,
-              1.0);
+              10); // 13px = 10pt
 
   return true;
 }

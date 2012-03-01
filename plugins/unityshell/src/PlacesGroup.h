@@ -106,6 +106,7 @@ private:
   nux::View* _header_view;
   nux::HLayout* _header_layout;
   nux::HLayout* _text_layout;
+  nux::HLayout* _expand_label_layout;
   nux::HLayout* _expand_layout;
   nux::View*  _child_view;
   nux::AbstractPaintLayer* _focus_layer;

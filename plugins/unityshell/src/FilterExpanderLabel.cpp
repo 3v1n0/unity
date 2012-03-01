@@ -102,7 +102,7 @@ FilterExpanderLabel::FilterExpanderLabel(std::string const& label, NUX_FILE_LINE
   , right_hand_contents_(nullptr)
   , cairo_label_(nullptr)
   , raw_label_(label)
-  , label_("<span size='larger' weight='bold'>" + label + "</span>")
+  , label_("label")
 {
   expanded.changed.connect(sigc::mem_fun(this, &FilterExpanderLabel::DoExpandChange));
   BuildLayout();
@@ -118,10 +118,7 @@ void FilterExpanderLabel::SetLabel(std::string const& label)
 {
   raw_label_ = label;
 
-  label_ = "<span size='larger' weight='bold'>";
-  label_ += raw_label_;
-  label_ += "</span>";
-  cairo_label_->SetText(label_.c_str());
+  cairo_label_->SetText(label.c_str());
 }
 
 void FilterExpanderLabel::SetRightHandView(nux::View* view)
@@ -159,10 +156,10 @@ void FilterExpanderLabel::BuildLayout()
   expander_view_->SetLayout(expander_layout_);
   top_bar_layout_->AddView(expander_view_, 0);
 
-  cairo_label_ = new nux::StaticText(label_.c_str(), NUX_TRACKER_LOCATION);
-  cairo_label_->SetFontName("Ubuntu 10");
+  cairo_label_ = new nux::StaticCairoText(label_.c_str(), NUX_TRACKER_LOCATION);
+  cairo_label_->SetFont("Ubuntu Bold 13"); // 17px = 13
   cairo_label_->SetTextColor(nux::color::White);
-  cairo_label_->SetAcceptKeyNavFocusOnMouseDown(false);
+  cairo_label_->SetAcceptKeyboardEvent(false);
 
   nux::BaseTexture* arrow;
   arrow = dash::Style::Instance().GetGroupUnexpandIcon();
