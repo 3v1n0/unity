@@ -9,17 +9,16 @@
 from subprocess import call
 from time import sleep
 
+from testtools.matchers import Equals
+
 from autopilot.emulators.bamf import Bamf
 from autopilot.emulators.unity.hud import HudController
 from autopilot.emulators.unity.launcher import Launcher
 from autopilot.emulators.X11 import Keyboard
 from autopilot.tests import AutopilotTestCase
-from autopilot.glibrunner import GlibRunner
 
 
 class HudTests(AutopilotTestCase):
-
-    run_test_with = GlibRunner
 
     def get_hud_controller(self):
         controllers = HudController.get_all_instances()
@@ -42,6 +41,49 @@ class HudTests(AutopilotTestCase):
         hud.toggle_reveal()
         self.addCleanup(hud.toggle_reveal)
         self.assertTrue(hud.is_visible())
+
+    def test_no_initial_values(self):
+        hud = self.get_hud_controller()
+        hud.toggle_reveal()
+        self.addCleanup(hud.toggle_reveal)
+        self.assertThat(hud.num_buttons, Equals(0))
+        self.assertThat(hud.selected_button, Equals(0))
+
+    def test_check_a_values(self):
+        hud = self.get_hud_controller()
+        hud.toggle_reveal()
+        self.addCleanup(hud.toggle_reveal)
+        self.keyboard.type('a')
+        self.assertThat(hud.num_buttons, Equals(5))
+        self.assertThat(hud.selected_button, Equals(1))
+
+    def test_up_down_arrows(self):
+        hud = self.get_hud_controller()
+        hud.toggle_reveal()
+        self.addCleanup(hud.toggle_reveal)
+        self.keyboard.type('a')
+        self.keyboard.press_and_release('Down')
+        self.assertThat(hud.selected_button, Equals(2))
+        self.keyboard.press_and_release('Down')
+        self.assertThat(hud.selected_button, Equals(3))
+        self.keyboard.press_and_release('Down')
+        self.assertThat(hud.selected_button, Equals(4))
+        self.keyboard.press_and_release('Down')
+        self.assertThat(hud.selected_button, Equals(5))
+        # Down again stays on 5.
+        self.keyboard.press_and_release('Down')
+        self.assertThat(hud.selected_button, Equals(5))
+        self.keyboard.press_and_release('Up')
+        self.assertThat(hud.selected_button, Equals(4))
+        self.keyboard.press_and_release('Up')
+        self.assertThat(hud.selected_button, Equals(3))
+        self.keyboard.press_and_release('Up')
+        self.assertThat(hud.selected_button, Equals(2))
+        self.keyboard.press_and_release('Up')
+        self.assertThat(hud.selected_button, Equals(1))
+        # Up again stays on 1.
+        self.keyboard.press_and_release('Up')
+        self.assertThat(hud.selected_button, Equals(1))
 
     def test_slow_tap_not_reveal_hud(self):
         hud = self.get_hud_controller()
@@ -104,3 +146,4 @@ class HudTests(AutopilotTestCase):
         # see how many apps are marked as being active:
         num_active = self.get_num_active_launcher_icons(launcher)
         self.assertLessEqual(num_active, 1, "More than one launcher icon active after test has run!")
+

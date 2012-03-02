@@ -12,14 +12,12 @@ from testtools.matchers import LessThan
 from autopilot.tests import AutopilotTestCase
 from autopilot.emulators.unity.launcher import Launcher
 from autopilot.emulators.X11 import ScreenGeometry
-from autopilot.glibrunner import GlibRunner
 
 from time import sleep
 
 
 class LauncherTests(AutopilotTestCase):
     """Test the launcher."""
-    run_test_with = GlibRunner
 
     def setUp(self):
         super(LauncherTests, self).setUp()
@@ -107,7 +105,6 @@ class LauncherTests(AutopilotTestCase):
 
 class LauncherRevealTests(AutopilotTestCase):
     """Test the launcher reveal bahavior when in autohide mode."""
-    run_test_with = GlibRunner
 
     def setUp(self):
         super(LauncherRevealTests, self).setUp()
