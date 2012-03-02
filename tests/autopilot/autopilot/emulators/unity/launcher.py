@@ -135,6 +135,10 @@ class Launcher(KeybindingsHelper):
         state = self.__get_controller_state()
         return bool(state['key_nav_is_active'])
 
+    def are_shortcuts_showing(self, monitor):
+        state = self.__get_state(monitor)
+        return bool(state['shortcuts_shown'])
+
     def key_nav_monitor(self):
         state = self.__get_controller_state()
         return int(state['key_nav_launcher_monitor'])
@@ -146,6 +150,10 @@ class Launcher(KeybindingsHelper):
     def key_nav_selection(self):
         state = self.__get_controller_state()
         return int(state['key_nav_selection'])
+
+    def get_keyboard_controlled_launcher(self):
+        state = self.__get_controller_state()
+        return int(state['keyboard_launcher'])
 
     def launcher_geometry(self, monitor):
         state = self.__get_state(monitor)

@@ -407,7 +407,8 @@ Launcher::AddProperties(GVariantBuilder* builder)
   .add("quicklist-open", _hide_machine->GetQuirk(LauncherHideMachine::QUICKLIST_OPEN))
   .add("hide-quirks", _hide_machine->DebugHideQuirks().c_str())
   .add("hover-quirks", _hover_machine->DebugHoverQuirks().c_str())
-  .add("icon-size", _icon_size);
+  .add("icon-size", _icon_size)
+  .add("shortcuts_shown", _shortcuts_shown);
 }
 
 void Launcher::SetMousePosition(int x, int y)
