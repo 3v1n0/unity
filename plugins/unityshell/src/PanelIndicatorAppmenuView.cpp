@@ -40,7 +40,8 @@ PanelIndicatorAppmenuView::PanelIndicatorAppmenuView(Entry::Ptr const& proxy)
   , has_menu_(false)
 {
   spacing_ = 2;
-  right_padding_ = 7; 
+  right_padding_ = 7;
+  SetVisible(false);
 }
 
 void PanelIndicatorAppmenuView::Activate(int button)
