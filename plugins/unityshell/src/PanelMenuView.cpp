@@ -1592,7 +1592,7 @@ void PanelMenuView::OnMaximizedGrabMove(int x, int y)
       int restore_x = x - (restored_geo.width * x / panel_geo.width);
       int restore_y = y;
 
-      if (restore_x + restored_geo.width > workarea_geo.width)
+      if (restore_x + restored_geo.width > workarea_geo.x + workarea_geo.width)
       {
         restore_x = workarea_geo.x + workarea_geo.width - restored_geo.width;
       }
