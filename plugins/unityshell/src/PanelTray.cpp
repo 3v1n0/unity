@@ -21,6 +21,7 @@
 #include "PanelStyle.h"
 
 #include <NuxCore/Logger.h>
+#include <UnityCore/Variant.h>
 
 namespace
 {
@@ -237,13 +238,15 @@ PanelTray::OnTrayDraw(GtkWidget* widget, cairo_t* cr)
 std::string
 PanelTray::GetName() const
 {
-  return "PanelTray";
+  return "Tray";
 }
 
 void
 PanelTray::AddProperties(GVariantBuilder* builder)
 {
-
+  variant::BuilderWrapper(builder)
+  .add(GetGeometry())
+  .add("children_count", children_.size());
 }
 
 } // namespace unity

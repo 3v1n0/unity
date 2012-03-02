@@ -105,6 +105,7 @@ PanelMenuView::PanelMenuView()
   _window_buttons->mouse_enter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
   _window_buttons->mouse_leave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
   //_window_buttons->mouse_move.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseMove));
+  AddChild(_window_buttons);
 
   layout_->SetLeftAndRightPadding(_window_buttons->GetContentWidth(), 0);
   layout_->SetBaseHeight(panel::Style::Instance().panel_height);
@@ -118,6 +119,7 @@ PanelMenuView::PanelMenuView()
   _titlebar_grab_area->grab_started.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedGrabStart));
   _titlebar_grab_area->grab_move.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedGrabMove));
   _titlebar_grab_area->grab_end.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedGrabEnd));
+  AddChild(_titlebar_grab_area);
 
   WindowManager* win_manager = WindowManager::Default();
   win_manager->window_minimized.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowMinimized));
@@ -1630,7 +1632,7 @@ void PanelMenuView::OnMaximizedGrabEnd(int x, int y)
 std::string
 PanelMenuView::GetName() const
 {
-  return "panel.menu.view";
+  return "MenuView";
 }
 
 void PanelMenuView::AddProperties(GVariantBuilder* builder)
@@ -1643,7 +1645,6 @@ void PanelMenuView::AddProperties(GVariantBuilder* builder)
   .add("maximized", _is_maximized)
   .add("own_window", _is_own_window)
   .add("panel_title", _panel_title)
-  .add("integrated_panel_title", _integrated_menu ? _integrated_menu->GetLabel() : "")
   .add("entries", entries_.size())
   .add("monitor", _monitor)
   .add("active_xid", _active_xid)

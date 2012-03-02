@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2011 Canonical Ltd
+ * Copyright (C) 2011-2012 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Marco Trevisan (Treviño) <mail@3v1n0.net>
+ * Authored by: Marco Trevisan (Treviño) <3v1n0@ubuntu.com>
  *              Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
@@ -89,7 +89,7 @@ PanelIndicatorsView::RemoveIndicator(indicator::Indicator::Ptr const& indicator)
   }
 
   for (auto entry : indicator->GetEntries())
-    OnEntryRemoved (entry->id());
+    OnEntryRemoved(entry->id());
 
   for (auto i = indicators_.begin(); i != indicators_.end(); i++)
   {
@@ -346,9 +346,10 @@ PanelIndicatorsView::RemoveEntryView(PanelIndicatorEntryView* view)
     return;
 
   std::string const& entry_id = view->GetEntryID();
-  layout_->RemoveChildObject(view);
-  entries_.erase(entry_id);
+  RemoveChild(view);
   on_indicator_updated.emit(view);
+  entries_.erase(entry_id);
+  layout_->RemoveChildObject(view);
 
   QueueRelayout();
   QueueDraw();

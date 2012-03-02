@@ -212,7 +212,7 @@ void PanelIndicatorAppmenuView::DrawEntryPrelight(cairo_t* cr, unsigned int widt
 
 std::string PanelIndicatorAppmenuView::GetName() const
 {
-  return "appmenu";
+  return "Appmenu";
 }
 
 void PanelIndicatorAppmenuView::AddProperties(GVariantBuilder* builder)

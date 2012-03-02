@@ -653,13 +653,15 @@ bool PanelIndicatorEntryView::IsIconSensitive() const
 
 std::string PanelIndicatorEntryView::GetName() const
 {
-  return GetEntryID();
+  return "IndicatorEntry";
 }
 
 void PanelIndicatorEntryView::AddProperties(GVariantBuilder* builder)
 {
   variant::BuilderWrapper(builder)
   .add(GetGeometry())
+  .add("id", GetEntryID())
+  .add("name_hint", proxy_->name_hint())
   .add("type", GetType())
   .add("label", GetLabel())
   .add("label_sensitive", IsLabelSensitive())

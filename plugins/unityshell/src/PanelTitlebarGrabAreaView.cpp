@@ -177,7 +177,7 @@ void PanelTitlebarGrabArea::OnGrabMove(int x, int y, int, int, unsigned long but
 std::string
 PanelTitlebarGrabArea::GetName() const
 {
-  return "panel-titlebar-grab-area";
+  return "GrabArea";
 }
 
 void

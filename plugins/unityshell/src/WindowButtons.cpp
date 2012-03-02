@@ -35,7 +35,7 @@
 namespace unity
 {
 
-class WindowButton : public nux::Button
+class WindowButton : public nux::Button, public debug::Introspectable
 {
   // A single window button
 public:
@@ -235,6 +235,56 @@ public:
     return IsViewEnabled();
   }
 
+protected:
+  std::string GetName() const
+  {
+    return "Button";
+  }
+
+  void AddProperties(GVariantBuilder* builder)
+  {
+    std::string type_name;
+    std::string state_name;
+
+    switch (_type)
+    {
+      case panel::WindowButtonType::CLOSE:
+        type_name = "Close";
+        break;
+      case panel::WindowButtonType::MINIMIZE:
+        type_name = "Minimize";
+        break;
+      case panel::WindowButtonType::MAXIMIZE:
+        type_name = "Maximize";
+        break;
+      case panel::WindowButtonType::UNMAXIMIZE:
+        type_name = "Unmaximize";
+        break;
+    }
+
+    switch (visual_state_)
+    {
+      case nux::VISUAL_STATE_PRESSED:
+        state_name = "pressed";
+        break;
+      case nux::VISUAL_STATE_PRELIGHT:
+        state_name = "prelight";
+        break;
+      default:
+        state_name = "normal";
+    }
+
+    variant::BuilderWrapper(builder).add(GetGeometry())
+                                    .add("type", type_name)
+                                    .add("visible", IsVisible())
+                                    .add("enabled", IsEnabled())
+                                    .add("visual_state", state_name)
+                                    .add("opacity", _opacity)
+                                    .add("focused", _focused)
+                                    .add("overlay_mode", _overlay_is_open);
+  }
+
+
 private:
   panel::WindowButtonType _type;
   bool _focused;
@@ -305,6 +355,7 @@ WindowButtons::WindowButtons()
 
   but = new WindowButton(panel::WindowButtonType::CLOSE);
   AddView(but, 0, nux::eCenter, nux::eFix);
+  AddChild(but);
   but->click.connect(sigc::mem_fun(this, &WindowButtons::OnCloseClicked));
   but->mouse_enter.connect(lambda_enter);
   but->mouse_leave.connect(lambda_leave);
@@ -312,6 +363,7 @@ WindowButtons::WindowButtons()
 
   but = new WindowButton(panel::WindowButtonType::MINIMIZE);
   AddView(but, 0, nux::eCenter, nux::eFix);
+  AddChild(but);
   but->click.connect(sigc::mem_fun(this, &WindowButtons::OnMinimizeClicked));
   but->mouse_enter.connect(lambda_enter);
   but->mouse_leave.connect(lambda_leave);
@@ -319,6 +371,7 @@ WindowButtons::WindowButtons()
 
   but = new WindowButton(panel::WindowButtonType::UNMAXIMIZE);
   AddView(but, 0, nux::eCenter, nux::eFix);
+  AddChild(but);
   but->click.connect(sigc::mem_fun(this, &WindowButtons::OnRestoreClicked));
   but->mouse_enter.connect(lambda_enter);
   but->mouse_leave.connect(lambda_leave);
@@ -326,6 +379,7 @@ WindowButtons::WindowButtons()
 
   but = new WindowButton(panel::WindowButtonType::MAXIMIZE);
   AddView(but, 0, nux::eCenter, nux::eFix);
+  AddChild(but);
   but->click.connect(sigc::mem_fun(this, &WindowButtons::OnMaximizeClicked));
   but->mouse_enter.connect(lambda_enter);
   but->mouse_leave.connect(lambda_leave);
@@ -646,7 +700,7 @@ Window WindowButtons::GetControlledWindow()
 
 std::string WindowButtons::GetName() const
 {
-  return "window-buttons";
+  return "WindowButtons";
 }
 
 void WindowButtons::AddProperties(GVariantBuilder* builder)
@@ -654,7 +708,7 @@ void WindowButtons::AddProperties(GVariantBuilder* builder)
   unity::variant::BuilderWrapper(builder).add(GetGeometry())
                                          .add("opacity", opacity_)
                                          .add("focused", focused_)
-                                         .add("window", window_xid_);
+                                         .add("controlled_window", window_xid_);
 }
 
 } // unity namespace
