@@ -30,6 +30,7 @@
 #include <NuxCore/Logger.h>
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/RadioOptionFilter.h>
+#include <UnityCore/Variant.h>
 #include <Nux/HLayout.h>
 #include <Nux/LayeredLayout.h>
 
@@ -62,7 +63,7 @@ View::View()
   , last_known_height_(0)
   , current_height_(0)
   , timeline_need_more_draw_(false)
-
+  , selected_button_(0)
 {
   renderer_.SetOwner(this);
   renderer_.need_redraw.connect([this] () { 
@@ -218,11 +219,12 @@ nux::View* View::default_focus() const
 void View::SetQueries(Hud::Queries queries)
 {
   // remove the previous children
-  for (auto button = buttons_.begin(); button != buttons_.end(); button++)
+  for (auto button : buttons_)
   {
-    RemoveChild((*button).GetPointer());
+    RemoveChild(button.GetPointer());
   }
-  
+
+  selected_button_ = 0;
   queries_ = queries_;
   buttons_.clear();
   button_views_->Clear();
@@ -232,7 +234,7 @@ void View::SetQueries(Hud::Queries queries)
     if (found_items > 5)
       break;
 
-    HudButton::Ptr button = HudButton::Ptr(new HudButton());
+    HudButton::Ptr button(new HudButton());
     buttons_.push_front(button);
     button->SetQuery(*query);
 
@@ -241,7 +243,7 @@ void View::SetQueries(Hud::Queries queries)
     button->click.connect([&](nux::View* view) {
       query_activated.emit(dynamic_cast<HudButton*>(view)->GetQuery());
     });
-    
+
     button->key_nav_focus_activate.connect([&](nux::Area *area) {
       query_activated.emit(dynamic_cast<HudButton*>(area)->GetQuery());
     });
@@ -251,13 +253,16 @@ void View::SetQueries(Hud::Queries queries)
         query_selected.emit(dynamic_cast<HudButton*>(area)->GetQuery());
     });
 
+    // You should never decrement end().  We should fix this loop.
     button->is_rounded = (query == --(queries.end())) ? true : false;
     button->fake_focused = (query == (queries.begin())) ? true : false;
-    
+
     button->SetMinimumWidth(941);
     found_items++;
   }
-  
+  if (found_items)
+    selected_button_ = 1;
+
   QueueRelayout();
   QueueDraw();
 }
@@ -457,7 +462,10 @@ std::string View::GetName() const
 
 void View::AddProperties(GVariantBuilder* builder)
 {
-    
+  unsigned num_buttons = buttons_.size();
+  variant::BuilderWrapper(builder)
+    .add("selected_button", selected_button_)
+    .add("num_buttons", num_buttons);
 }
 
 bool View::InspectKeyEvent(unsigned int eventType,
@@ -567,6 +575,7 @@ nux::Area* View::FindKeyFocusArea(unsigned int event_type,
                 // The next button gets the fake_focus
                 (*next)->fake_focused = true;
                 query_selected.emit((*next)->GetQuery());
+                --selected_button_;
               }
               break;
             }
@@ -589,6 +598,7 @@ nux::Area* View::FindKeyFocusArea(unsigned int event_type,
                 // The next button bellow gets the fake_focus.
                 (*next)->fake_focused = true;
                 query_selected.emit((*next)->GetQuery());
+                ++selected_button_;
               }
               break;
             }

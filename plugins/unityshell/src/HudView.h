@@ -117,6 +117,7 @@ private:
   int last_known_height_;
   int current_height_;
   bool timeline_need_more_draw_;
+  int selected_button_;
 };
 
 
