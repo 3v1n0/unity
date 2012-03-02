@@ -126,8 +126,9 @@ void HudButton::RedrawTheme(nux::Geometry const& geom, cairo_t* cr, nux::ButtonV
 
 bool HudButton::AcceptKeyNavFocus()
 {
-  // say we can't be focused if we have fake focus on
-  return !fake_focused;
+  // The button will not receive the keyboard focus. The keyboard focus is always to remain with the 
+  // text entry in the hud.
+  return false;
 }
 
 

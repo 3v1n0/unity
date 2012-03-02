@@ -12,12 +12,10 @@ from time import sleep
 from autopilot.emulators.unity.dash import Dash
 from autopilot.emulators.X11 import Keyboard, Mouse
 from autopilot.tests import AutopilotTestCase
-from autopilot.glibrunner import GlibRunner
 
 
 class DashRevealTests(AutopilotTestCase):
     """Test the unity Dash Reveal."""
-    run_test_with = GlibRunner
 
     def setUp(self):
         super(DashRevealTests, self).setUp()
@@ -77,7 +75,6 @@ class DashRevealTests(AutopilotTestCase):
 
 class DashKeyNavTests(AutopilotTestCase):
     """Test the unity Dash keyboard navigation."""
-    run_test_with = GlibRunner
 
     def setUp(self):
         super(DashKeyNavTests, self).setUp()
@@ -270,7 +267,6 @@ class DashKeyNavTests(AutopilotTestCase):
 
 class DashClipboardTests(AutopilotTestCase):
     """Test the Unity clipboard""" 
-    run_test_with = GlibRunner
 
     def setUp(self):
         super(DashClipboardTests, self).setUp()
@@ -368,8 +364,6 @@ class DashClipboardTests(AutopilotTestCase):
 
 class DashKeyboardFocusTests(AutopilotTestCase):
     """Tests that keyboard focus works."""
-
-    run_test_with = GlibRunner
 
     def setUp(self):
         super(DashKeyboardFocusTests, self).setUp()

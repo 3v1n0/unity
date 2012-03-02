@@ -12,13 +12,11 @@ from subprocess import call
 from autopilot.emulators.unity.launcher import Launcher
 from autopilot.emulators.unity.switcher import Switcher
 from autopilot.emulators.X11 import Keyboard
-from autopilot.glibrunner import GlibRunner
 from autopilot.tests import AutopilotTestCase
 
 
 class ShowDesktopTests(AutopilotTestCase):
     """Test the 'Show Desktop' functionality."""
-    run_test_with = GlibRunner
 
     def setUp(self):
         super(ShowDesktopTests, self).setUp()

@@ -17,8 +17,11 @@ from autopilot.emulators.bamf import Bamf
 from autopilot.emulators.unity.switcher import Switcher
 from autopilot.emulators.unity.workspace import WorkspaceManager
 from autopilot.keybindings import KeybindingsHelper
+from autopilot.glibrunner import GlibRunner
+
 
 logger = logging.getLogger(__name__)
+
 
 class LoggedTestCase(TestWithScenarios, TestCase):
     """Initialize the logging for the test case."""
@@ -62,6 +65,8 @@ class LoggedTestCase(TestWithScenarios, TestCase):
 
 class AutopilotTestCase(LoggedTestCase, KeybindingsHelper):
     """Wrapper around testtools.TestCase that takes care of some cleaning."""
+
+    run_test_with = GlibRunner
 
     KNOWN_APPS = {
         'Character Map' : {
