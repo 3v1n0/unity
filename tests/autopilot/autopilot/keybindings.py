@@ -80,6 +80,8 @@ _keys = {
     "workspace/move_right": ("wall", "right_key"),
     "workspace/move_up": ("wall", "up_key"),
     "workspace/move_down": ("wall", "down_key"),
+    # Window management
+    "window/minimize": ("core", "minimize_window_key"),
 }
 
 
@@ -117,6 +119,7 @@ def get_hold_part(binding_name):
     parts = binding.split('+')
     if len(parts) == 1:
         logger.warning("Key binding '%s' does not have a hold part.", binding_name)
+        return parts[0]
     return '+'.join(parts[:-1])
 
 
@@ -133,6 +136,7 @@ def get_tap_part(binding_name):
     parts = binding.split('+')
     if len(parts) == 1:
         logger.warning("Key binding '%s' does not have a tap part.", binding_name)
+        return parts[0]
     return parts[-1]
 
 
