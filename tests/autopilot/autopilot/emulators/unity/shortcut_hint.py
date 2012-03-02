@@ -8,22 +8,16 @@
 #
 
 import logging
-from time import sleep
 
 from autopilot.keybindings import KeybindingsHelper
-from autopilot.emulators.unity import get_state_by_path, make_introspection_object
-from autopilot.emulators.X11 import Keyboard
+from autopilot.emulators.unity import UnityIntrospectionObject
 
 
 logger = logging.getLogger(__name__)
 
 
-class ShortcutHint(KeybindingsHelper):
-    """Interact with the unity Launcher."""
-
-    def __init__(self):
-        super(ShortcutHint, self).__init__()
-        self._keyboard = Keyboard()
+class ShortcutController(UnityIntrospectionObject, KeybindingsHelper):
+    """ShortcutController proxy class."""
 
     def show(self):
         logger.debug("Revealing shortcut hint with keyboard.")
@@ -38,24 +32,17 @@ class ShortcutHint(KeybindingsHelper):
         self.keybinding("shortcuthint/cancel")
 
     def get_geometry(self):
-        state = self.__get_controller_state()
-        x = int(state['x'])
-        y = int(state['y'])
-        width = int(state['width'])
-        height = int(state['height'])
-        return (x, y, width, height)
+        self.refresh_state()
+        return (self.x, self.y, self.width, self.height)
 
     def get_show_timeout(self):
-        state = self.__get_controller_state()
-        return float(state['timeout_duration'] / 1000.0)
+        self.redresh_state()
+        return self.timeout_duration / 1000.0
 
     def is_enabled(self):
-        state = self.__get_controller_state()
-        return bool(state['enabled'])
+        self.refresh_state()
+        return bool(self.enabled)
 
     def is_visible(self):
-        state = self.__get_controller_state()
-        return bool(state['visible'])
-
-    def __get_controller_state(self):
-        return get_state_by_path('/Unity/ShortcutController')[0]
+        self.refresh_state()
+        return bool(self.visible)
