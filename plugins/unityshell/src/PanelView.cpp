@@ -473,7 +473,7 @@ void PanelView::OnMenuPointerMoved(int x, int y)
   {
     PanelIndicatorEntryView* view = nullptr;
 
-    if (!_menu_view->HasOurWindowFocused())
+    if (!_menu_view->HasOurWindowFocused() && _menu_view->GetControlsActive())
       view = _menu_view->ActivateEntryAt(x, y);
 
     if (!view) _indicators->ActivateEntryAt(x, y);
