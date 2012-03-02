@@ -11,6 +11,10 @@ from autopilot.keybindings import KeybindingsHelper
 from autopilot.emulators.unity import UnityIntrospectionObject
 
 
+class HudView(UnityIntrospectionObject):
+    """Proxy object for the hud view child of the controller."""
+
+
 class HudController(UnityIntrospectionObject, KeybindingsHelper):
     """Proxy object for the Unity Hud Controller."""
 
@@ -31,3 +35,25 @@ class HudController(UnityIntrospectionObject, KeybindingsHelper):
     def toggle_reveal(self, tap_delay=0.1):
         """Tap the 'Alt' key to toggle the hud visibility."""
         self.keybinding("hud/reveal", tap_delay)
+
+    def _get_view(self):
+        views = self.get_children_by_type(HudView)
+        return views[0] if views else None
+
+    @property
+    def selected_button(self):
+        self.refresh_state()
+        view = self._get_view()
+        if view:
+            return view.selected_button
+        else:
+            return 0
+
+    @property
+    def num_buttons(self):
+        self.refresh_state()
+        view = self._get_view()
+        if view:
+            return view.num_buttons
+        else:
+            return 0
