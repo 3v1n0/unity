@@ -404,13 +404,16 @@ PanelIndicatorsView::SetOpacity(double opacity)
 
 std::string PanelIndicatorsView::GetName() const
 {
-  return "IndicatorsView";
+  return "Indicators";
 }
 
 void
 PanelIndicatorsView::AddProperties(GVariantBuilder* builder)
 {
-  variant::BuilderWrapper(builder).add(GetGeometry());
+  variant::BuilderWrapper(builder)
+  .add(GetGeometry())
+  .add("entries", entries_.size())
+  .add("opacity", opacity_);
 }
 
 } // namespace unity

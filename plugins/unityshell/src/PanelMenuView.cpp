@@ -1637,15 +1637,15 @@ PanelMenuView::GetName() const
 
 void PanelMenuView::AddProperties(GVariantBuilder* builder)
 {
+  PanelIndicatorsView::AddProperties(builder);
+
   variant::BuilderWrapper(builder)
-  .add(GetGeometry())
   .add("integrated", _is_integrated)
   .add("inside", _is_inside)
   .add("grabbed", _is_grabbed)
   .add("maximized", _is_maximized)
   .add("own_window", _is_own_window)
   .add("panel_title", _panel_title)
-  .add("entries", entries_.size())
   .add("monitor", _monitor)
   .add("active_xid", _active_xid)
   .add("draw_menus", DrawMenus())
