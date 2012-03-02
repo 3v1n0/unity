@@ -1680,6 +1680,11 @@ void Launcher::SetIconSize(int tile_size, int icon_size)
   Resize();
 }
 
+int Launcher::GetIconSize()
+{
+    return _icon_size;
+}
+
 void Launcher::Resize()
 {
   UScreen* uscreen = UScreen::GetDefault();

@@ -68,6 +68,7 @@ public:
   AbstractLauncherIcon::Ptr GetSelectedMenuIcon() const;
 
   void SetIconSize(int tile_size, int icon_size);
+  int GetIconSize();
 
   LauncherHideMachine* HideMachine() { return _hide_machine; }
 
