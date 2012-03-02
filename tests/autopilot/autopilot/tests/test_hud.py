@@ -146,10 +146,11 @@ class HudTests(AutopilotTestCase):
         that was focused before hud invocation is refocused
         """
         b = Bamf();
-        b.launch_application('gcalctool.desktop')
+        app_desktop_file = 'gcalctool.desktop'
+        b.launch_application(app_desktop_file)
 
         # first ensure that the application has started and is focused
-        self.assertEqual(b.application_is_focused('Calculator'), True)
+        self.assertEqual(b.application_is_focused(app_desktop_file), True)
 
         self.hud.toggle_reveal()
         sleep(1)
@@ -157,5 +158,5 @@ class HudTests(AutopilotTestCase):
         sleep(1)
 
         # again ensure that the application we started is focused
-        self.assertEqual(b.application_is_focused('Calculator'), True)
+        self.assertEqual(b.application_is_focused(app_desktop_file), True)
 
