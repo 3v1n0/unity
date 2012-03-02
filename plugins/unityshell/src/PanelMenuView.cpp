@@ -615,17 +615,17 @@ void PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
     }
     else if (!_dash_showing)
     {
-      if (_we_control_active && _window_buttons->GetOpacity() == 0.0 &&
+      double title_opacity = 0.0f;
+
+      if ((_we_control_active || (_is_integrated && !draw_menus)) &&
+          _window_buttons->GetOpacity() == 0.0 &&
           (!has_menu || (has_menu && GetOpacity() == 0.0)))
       {
-        nux::TexCoordXForm texxform;
-        GfxContext.QRP_1Tex(geo.x, geo.y, geo.width, geo.height,
-                            _title_texture->GetDeviceTexture(), texxform,
-                            nux::color::White);
+        title_opacity = 1.0f;
       }
       else
       {
-        double title_opacity = 1.0f;
+        title_opacity = 1.0f;
 
         if (has_menu)
           title_opacity -= MAX(GetOpacity(), _window_buttons->GetOpacity());
@@ -642,14 +642,14 @@ void PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
           // If we're fading-in the buttons/menus, let's fade-out quickly the title
           title_opacity = CLAMP(title_opacity - 0.2f, 0.0f, 1.0f);
         }
+      }
 
-        if (title_opacity > 0.0f)
-        {
-          nux::TexCoordXForm texxform;
-          GfxContext.QRP_1Tex(geo.x, geo.y, geo.width, geo.height,
-                              _title_texture->GetDeviceTexture(), texxform,
-                              nux::color::White * title_opacity);
-        }
+      if (title_opacity > 0.0f)
+      {
+        nux::TexCoordXForm texxform;
+        GfxContext.QRP_1Tex(geo.x, geo.y, geo.width, geo.height,
+                            _title_texture->GetDeviceTexture(), texxform,
+                            nux::color::White * title_opacity);
       }
     }
 
@@ -961,13 +961,17 @@ void PanelMenuView::Refresh(bool force)
     _window_buttons->SetControlledWindow(maximized);
     _window_buttons->SetFocusedState(_active_xid == maximized);
 
-    if (_integrated_menu && DrawMenus())
+    if (_integrated_menu)
     {
-      _integrated_menu->SetLabel(new_title);
       _integrated_menu->SetControlledWindow(maximized);
-      _integrated_menu->SetFocusedState(_active_xid == maximized);
 
-      return;
+      if (DrawMenus())
+      {
+        _integrated_menu->SetLabel(new_title);
+        _integrated_menu->SetFocusedState(_active_xid == maximized);
+
+        return;
+      }
     }
   }
   else if (!_switcher_showing)
