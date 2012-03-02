@@ -1781,6 +1781,15 @@ void UnityScreen::OnLauncherEndKeyNav(GVariant* data)
     PluginAdapter::Default ()->restoreInputFocus ();
 }
 
+namespace
+{
+gboolean forceKeyboardUngrab (gpointer data)
+{
+    XUngrabKeyboard (::screen->dpy (), CurrentTime);
+    return FALSE;
+}
+}
+
 bool UnityScreen::ShowHudInitiate(CompAction* action,
                                   CompAction::State state,
                                   CompOption::Vector& options)
@@ -1790,7 +1799,10 @@ bool UnityScreen::ShowHudInitiate(CompAction* action,
     action->setState(action->state() | CompAction::StateTermKey);
   last_hud_show_time_ = g_get_monotonic_time();
 
-  return true;
+  g_timeout_add(local::ALT_TAP_DURATION, forceKeyboardUngrab, (gpointer) this);
+
+  // pass key through
+  return false;
 }
 
 bool UnityScreen::ShowHudTerminate(CompAction* action,
