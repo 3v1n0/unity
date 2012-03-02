@@ -35,8 +35,13 @@ nux::logging::Logger logger("unity.imtextentry");
 NUX_IMPLEMENT_OBJECT_TYPE(IMTextEntry);
 
 IMTextEntry::IMTextEntry()
-  : TextEntry("", NUX_TRACKER_LOCATION)
+: TextEntry("", NUX_TRACKER_LOCATION)
+, im_context_(0)
+, client_window_(0)
+, focused_(false)
 {
+  SetupSimpleIM();
+
   mouse_up.connect(sigc::mem_fun(this, &IMTextEntry::OnMouseButtonUp));
 }
 
@@ -44,12 +49,20 @@ bool IMTextEntry::InspectKeyEvent(unsigned int event_type,
                                   unsigned int keysym,
                                   const char* character)
 {
-  bool need_to_filter_event = TryHandleSpecial(event_type, keysym, character);
+  if(!im_active() && TryHandleEvent(event_type, keysym, character))
+  {
+    printf("[IMTextEntry::InspectKeyEvent] 0\n");
+    return true;
+  }
+  else
+  {
+    bool need_to_filter_event = TryHandleSpecial(event_type, keysym, character);
 
-  if (need_to_filter_event)
-    need_to_filter_event = TextEntry::InspectKeyEvent(event_type, keysym, character);
+    if (need_to_filter_event)
+      need_to_filter_event = TextEntry::InspectKeyEvent(event_type, keysym, character);
 
-  return need_to_filter_event;
+    return need_to_filter_event;    
+  }
 }
 
 bool IMTextEntry::TryHandleSpecial(unsigned int eventType, unsigned int keysym, const char* character)
@@ -152,4 +165,78 @@ void IMTextEntry::OnMouseButtonUp(int x, int y, unsigned long bflags, unsigned l
     Paste(true);
   } 
 }
+
+void IMTextEntry::KeyEventToGdkEventKey(Event& event, GdkEventKey& gdk_event)
+{
+  gdk_event.type = event.type == nux::NUX_KEYDOWN ? GDK_KEY_PRESS : GDK_KEY_RELEASE;
+  gdk_event.window = client_window_;
+  gdk_event.send_event = FALSE;
+  gdk_event.time = event.x11_timestamp;
+  gdk_event.state = event.x11_key_state;
+  gdk_event.keyval = event.x11_keysym;
+
+  gchar* txt = const_cast<gchar*>(event.GetText());
+  gdk_event.length = strlen(txt);
+  gdk_event.string = txt;
+
+  gdk_event.hardware_keycode = event.x11_keycode;
+  gdk_event.group = 0;
+  gdk_event.is_modifier = 0;
+}
+
+inline void IMTextEntry::CheckValidClientWindow(Window window)
+{
+  if (!client_window_)
+  {
+    client_window_ = gdk_x11_window_foreign_new_for_display(gdk_display_get_default(), window);
+    gtk_im_context_set_client_window(im_context_, client_window_);
+
+    if (1/*focused_*/)
+    {
+      gtk_im_context_focus_in(im_context_);
+    }
+  }
+}
+
+bool IMTextEntry::TryHandleEvent(unsigned int eventType,
+                                 unsigned int keysym,
+                                 const char* character)
+{
+  nux::Event event = nux::GetWindowThread()->GetGraphicsDisplay().GetCurrentEvent();
+  
+  CheckValidClientWindow(event.x11_window);
+  
+  GdkEventKey ev;
+  KeyEventToGdkEventKey(event, ev);
+
+  return gtk_im_context_filter_keypress(im_context_, &ev);
+}
+
+void IMTextEntry::OnCommit(GtkIMContext* context, char* str)
+{
+  LOG_DEBUG(logger) << "Commit: " << str;
+  DeleteSelection();
+
+  if (str)
+  {
+    std::string new_text = GetText();
+    new_text.insert(cursor_, str);
+    
+    int cursor = cursor_;
+    SetText(new_text.c_str());
+    SetCursor(cursor + strlen(str));
+    //UpdateCursorLocation();
+  }
+}
+
+void IMTextEntry::SetupSimpleIM()
+{
+  im_context_ = gtk_im_context_simple_new();
+  
+  sig_manager_.Add(new Signal<void, GtkIMContext*, char*>(im_context_, "commit", sigc::mem_fun(this, &IMTextEntry::OnCommit)));
+  // sig_manager_.Add(new Signal<void, GtkIMContext*>(im_context_, "preedit-changed", sigc::mem_fun(this, &IMTextEntry::OnPreeditChanged)));
+  // sig_manager_.Add(new Signal<void, GtkIMContext*>(im_context_, "preedit-start", sigc::mem_fun(this, &IMTextEntry::OnPreeditStart)));
+  // sig_manager_.Add(new Signal<void, GtkIMContext*>(im_context_, "preedit-end", sigc::mem_fun(this, &IMTextEntry::OnPreeditEnd)));
+}
+
 }

@@ -49,6 +49,19 @@ private:
   void Paste(bool primary = false);
 
   void OnMouseButtonUp(int x, int y, unsigned long bflags, unsigned long kflags);
+  
+  void KeyEventToGdkEventKey(Event& event, GdkEventKey& gdk_event);
+  inline void CheckValidClientWindow(Window window);
+  bool TryHandleEvent(unsigned int eventType,
+                      unsigned int keysym,
+                      const char* character);
+  void SetupSimpleIM();
+  void OnCommit(GtkIMContext* context, char* str);
+
+  GtkIMContext* im_context_;
+  GdkWindow* client_window_;
+  glib::SignalManager sig_manager_;
+  bool focused_;
 };
 
 }
