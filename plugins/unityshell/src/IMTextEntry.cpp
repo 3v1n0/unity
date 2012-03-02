@@ -49,20 +49,20 @@ bool IMTextEntry::InspectKeyEvent(unsigned int event_type,
                                   unsigned int keysym,
                                   const char* character)
 {
-  if(!im_active() && TryHandleEvent(event_type, keysym, character))
-  {
-    printf("[IMTextEntry::InspectKeyEvent] 0\n");
-    return true;
-  }
-  else
-  {
-    bool need_to_filter_event = TryHandleSpecial(event_type, keysym, character);
 
-    if (need_to_filter_event)
-      need_to_filter_event = TextEntry::InspectKeyEvent(event_type, keysym, character);
+  bool propagate_event = !(TryHandleEvent(event_type, keysym, character));
 
-    return need_to_filter_event;    
+  if (propagate_event)
+  {
+    propagate_event = TryHandleSpecial(event_type, keysym, character);
   }
+
+  if (propagate_event)
+  {
+    propagate_event = TextEntry::InspectKeyEvent(event_type, keysym, character);
+  }
+
+  return propagate_event;
 }
 
 bool IMTextEntry::TryHandleSpecial(unsigned int eventType, unsigned int keysym, const char* character)
@@ -225,7 +225,8 @@ void IMTextEntry::OnCommit(GtkIMContext* context, char* str)
     int cursor = cursor_;
     SetText(new_text.c_str());
     SetCursor(cursor + strlen(str));
-    //UpdateCursorLocation();
+    QueueRefresh (true, true);
+    text_changed.emit(this);
   }
 }
 
