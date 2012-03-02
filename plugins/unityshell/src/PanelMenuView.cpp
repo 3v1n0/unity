@@ -1645,15 +1645,16 @@ void PanelMenuView::AddProperties(GVariantBuilder* builder)
 
   variant::BuilderWrapper(builder)
   .add("integrated", _is_integrated)
-  .add("inside", _is_inside)
+  .add("mose_inside", _is_inside)
   .add("grabbed", _is_grabbed)
-  .add("maximized", _is_maximized)
-  .add("own_window", _is_own_window)
+  .add("active_win_maximized", _is_maximized)
+  .add("controlling_own_window", _is_own_window)
   .add("panel_title", _panel_title)
   .add("monitor", _monitor)
-  .add("active_xid", _active_xid)
+  .add("active_window", _active_xid)
   .add("draw_menus", DrawMenus())
-  .add("draw_window_buttons", DrawWindowButtons());
+  .add("draw_window_buttons", DrawWindowButtons())
+  .add("controls_active_window", _we_control_active);
 }
 
 void PanelMenuView::OnSwitcherShown(GVariant* data)
