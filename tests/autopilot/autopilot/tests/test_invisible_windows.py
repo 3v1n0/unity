@@ -28,6 +28,8 @@ class InvisibleWindowTests(TestCase):
         in the launcher or the switcher.
 
         """
+        self.skipTest("This test needs to be rewritten. We don't support changing window states after they've been mapped.")
+
         b = Bamf()
         self.assertFalse(b.application_is_running('Calculator'))
         b.launch_application("gcalctool.desktop")
@@ -64,6 +66,9 @@ class InvisibleWindowTests(TestCase):
 
     def test_pinned_invisible_window(self):
         """Test behavior of an app with an invisible window that's pinned to the launher."""
+
+        self.skipTest("This test needs to be rewritten. We don't support changing window states after they've been mapped.")
+
         b = Bamf()
         self.assertFalse(b.application_is_running('Calculator'))
         b.launch_application("gcalctool.desktop")

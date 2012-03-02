@@ -30,6 +30,7 @@
 #include <NuxCore/Logger.h>
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/RadioOptionFilter.h>
+#include <UnityCore/Variant.h>
 #include <Nux/HLayout.h>
 #include <Nux/LayeredLayout.h>
 
@@ -62,7 +63,7 @@ View::View()
   , last_known_height_(0)
   , current_height_(0)
   , timeline_need_more_draw_(false)
-
+  , selected_button_(0)
 {
   renderer_.SetOwner(this);
   renderer_.need_redraw.connect([this] () { 
@@ -82,31 +83,37 @@ View::View()
     search_activated.emit(search_bar_->search_string);
   });
 
+  search_bar_->text_entry()->SetLoseKeyFocusOnKeyNavDirectionUp(false);
+  search_bar_->text_entry()->SetLoseKeyFocusOnKeyNavDirectionDown(false);
+
   search_bar_->text_entry()->key_nav_focus_change.connect([&](nux::Area *area, bool receiving, nux::KeyNavDirection direction)
   {
-    if (buttons_.empty() && !receiving)
-    {
-      // we lost focus in the keynav and there are no buttons, we need to steal
-      // focus back
-      LOG_ERROR(logger) << "hud search bar lost keynav with no where else to keynav to";
-      nux::GetWindowCompositor().SetKeyFocusArea(search_bar_->text_entry());
-    }
+    // We get here when the Hud closes.
+    // The TextEntry should always have the keyboard focus as long as the hud is open.
 
     if (buttons_.empty())
       return;// early return on empty button list
 
     if (receiving)
     {
-      // if the search_bar gets focus, fake focus the first button if it exists
       if (!buttons_.empty())
       {
+        // If the search_bar gets focus, fake focus the first button if it exists
         buttons_.back()->fake_focused = true;
       }
     }
     else
     {
-      // we are losing focus, so remove the fake focused entry
-      buttons_.back()->fake_focused = false;
+      // The hud is closing and there are HudButtons visible. Remove the fake_focus.
+      // There should be only one HudButton with the fake_focus set to true.
+      std::list<HudButton::Ptr>::iterator it;
+      for(it = buttons_.begin(); it != buttons_.end(); ++it)
+      {
+        if ((*it)->fake_focused)
+        {
+          (*it)->fake_focused = false;
+        }
+      }      
     }
   });
 
@@ -212,11 +219,12 @@ nux::View* View::default_focus() const
 void View::SetQueries(Hud::Queries queries)
 {
   // remove the previous children
-  for (auto button = buttons_.begin(); button != buttons_.end(); button++)
+  for (auto button : buttons_)
   {
-    RemoveChild((*button).GetPointer());
+    RemoveChild(button.GetPointer());
   }
-  
+
+  selected_button_ = 0;
   queries_ = queries_;
   buttons_.clear();
   button_views_->Clear();
@@ -226,15 +234,16 @@ void View::SetQueries(Hud::Queries queries)
     if (found_items > 5)
       break;
 
-    HudButton::Ptr button = HudButton::Ptr(new HudButton());
+    HudButton::Ptr button(new HudButton());
     buttons_.push_front(button);
     button->SetQuery(*query);
+
     button_views_->AddView(button.GetPointer(), 0, nux::MINOR_POSITION_LEFT);
 
     button->click.connect([&](nux::View* view) {
       query_activated.emit(dynamic_cast<HudButton*>(view)->GetQuery());
     });
-    
+
     button->key_nav_focus_activate.connect([&](nux::Area *area) {
       query_activated.emit(dynamic_cast<HudButton*>(area)->GetQuery());
     });
@@ -244,13 +253,16 @@ void View::SetQueries(Hud::Queries queries)
         query_selected.emit(dynamic_cast<HudButton*>(area)->GetQuery());
     });
 
+    // You should never decrement end().  We should fix this loop.
     button->is_rounded = (query == --(queries.end())) ? true : false;
     button->fake_focused = (query == (queries.begin())) ? true : false;
-    
+
     button->SetMinimumWidth(941);
     found_items++;
   }
-  
+  if (found_items)
+    selected_button_ = 1;
+
   QueueRelayout();
   QueueDraw();
 }
@@ -450,7 +462,10 @@ std::string View::GetName() const
 
 void View::AddProperties(GVariantBuilder* builder)
 {
-    
+  unsigned num_buttons = buttons_.size();
+  variant::BuilderWrapper(builder)
+    .add("selected_button", selected_button_)
+    .add("num_buttons", num_buttons);
 }
 
 bool View::InspectKeyEvent(unsigned int eventType,
@@ -473,13 +488,10 @@ bool View::InspectKeyEvent(unsigned int eventType,
   return false;
 }
 
-nux::Area* View::FindKeyFocusArea(unsigned int key_symbol,
+nux::Area* View::FindKeyFocusArea(unsigned int event_type,
       unsigned long x11_key_code,
       unsigned long special_keys_state)
 {
-  // Do what nux::View does, but if the event isn't a key navigation,
-  // designate the text entry to process it.
-
   nux::KeyNavDirection direction = nux::KEY_NAV_NONE;
   switch (x11_key_code)
   {
@@ -511,18 +523,118 @@ nux::Area* View::FindKeyFocusArea(unsigned int key_symbol,
     break;
   }
 
-  if (has_key_focus_)
+
+  if ((event_type == nux::NUX_KEYDOWN) && (x11_key_code == NUX_VK_ESCAPE))
   {
-    return this;
+    // Escape key! This is how it works:
+    //    -If there is text, clear it and give the focus to the text entry view.
+    //    -If there is no text text, then close the hud.
+
+    if (search_bar_->search_string == "")
+    {
+      search_bar_->search_hint = default_text;
+      ubus.SendMessage(UBUS_HUD_CLOSE_REQUEST);
+    }
+    else
+    {
+      search_bar_->search_string = "";
+      search_bar_->search_hint = default_text;
+      return search_bar_->text_entry();
+    }
+    return NULL;
+  }
+
+  if (search_bar_->text_entry()->HasKeyFocus())
+  {
+    if (direction == nux::KEY_NAV_NONE ||
+        direction == nux::KEY_NAV_UP ||
+        direction == nux::KEY_NAV_DOWN ||
+        direction == nux::KEY_NAV_LEFT ||
+        direction == nux::KEY_NAV_RIGHT)
+    {
+      // We have received a key character or a keyboard arrow Up or Down (navigation keys).
+      // Because we have called "SetLoseKeyFocusOnKeyNavDirectionUp(false);" and "SetLoseKeyFocusOnKeyNavDirectionDown(false);"
+      // on the text entry, the text entry will not loose the keyboard focus.
+      // All that we need to do here is set the fake_focused value on the HudButton.
+
+      if (!buttons_.empty())
+      {
+        if (event_type == nux::NUX_KEYDOWN && direction == nux::KEY_NAV_UP)
+        {
+          std::list<HudButton::Ptr>::iterator it;
+          for(it = buttons_.begin(); it != buttons_.end(); ++it)
+          {
+            if ((*it)->fake_focused)
+            {
+              std::list<HudButton::Ptr>::iterator next = it;
+              ++next;
+              if (next != buttons_.end())
+              {
+                // The button with the current fake_focus looses it.
+                (*it)->fake_focused = false;
+                // The next button gets the fake_focus
+                (*next)->fake_focused = true;
+                query_selected.emit((*next)->GetQuery());
+                --selected_button_;
+              }
+              break;
+            }
+          }
+        }
+
+        if (event_type == nux::NUX_KEYDOWN && direction == nux::KEY_NAV_DOWN)
+        {
+          std::list<HudButton::Ptr>::reverse_iterator rit;
+          for(rit = buttons_.rbegin(); rit != buttons_.rend(); ++rit)
+          {
+            if ((*rit)->fake_focused)
+            {
+              std::list<HudButton::Ptr>::reverse_iterator next = rit;
+              ++next;
+              if(next != buttons_.rend())
+              {
+                // The button with the current fake_focus looses it.
+                (*rit)->fake_focused = false;
+                // The next button bellow gets the fake_focus.
+                (*next)->fake_focused = true;
+                query_selected.emit((*next)->GetQuery());
+                ++selected_button_;
+              }
+              break;
+            }
+          }
+        }
+      }
+      return search_bar_->text_entry();
+    }
+
+    if (direction == nux::KEY_NAV_ENTER)
+    {
+      // The "Enter" key has been received and the text entry has the key focus.
+      // If one of the button has the fake_focus, we get it to emit the query_activated signal.
+      if (!buttons_.empty())
+      {
+        std::list<HudButton::Ptr>::iterator it;
+        for(it = buttons_.begin(); it != buttons_.end(); ++it)
+        {
+          if ((*it)->fake_focused)
+          {
+            query_activated.emit((*it)->GetQuery());
+          }
+        }
+      }
+
+      // We still choose the text_entry as the receiver of the key focus.
+      return search_bar_->text_entry();
+    }
   }
   else if (direction == nux::KEY_NAV_NONE)
   {
-    // then send the event to the search entry
     return search_bar_->text_entry();
   }
   else if (next_object_to_key_focus_area_)
   {
-    return next_object_to_key_focus_area_->FindKeyFocusArea(key_symbol, x11_key_code, special_keys_state);
+    return next_object_to_key_focus_area_->FindKeyFocusArea(event_type, x11_key_code, special_keys_state);
   }
   return NULL;
 }

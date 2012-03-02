@@ -15,10 +15,11 @@ from Xlib import display, X, protocol
 
 from autopilot.emulators.dbus_handler import session_bus
 
-__all__ = ["Bamf",
-        "BamfApplication",
-        "BamfWindow",
-        ]
+__all__ = [
+    "Bamf",
+    "BamfApplication",
+    "BamfWindow",
+    ]
 
 _BAMF_BUS_NAME = 'org.ayatana.bamf'
 _X_DISPLAY = display.Display()
@@ -37,7 +38,7 @@ def _filter_user_visible(win):
         return False
 
 
-class Bamf:
+class Bamf(object):
     """High-level class for interacting with Bamf from within a test.
 
     Use this class to inspect the state of running applications and open
@@ -103,6 +104,21 @@ class Bamf:
             return app_name in [a.name for a in self.get_running_applications()]
         except dbus.DBusException:
             return False
+    
+    def application_is_focused(self, app_name):
+        """Detect if an application with given name is currently focused.
+
+        'app_name' is the name of the application you are looking for.
+        """
+        try:
+            found_focused = False
+            for app in self.get_running_applications_by_title(app_name):
+                if app.is_active:
+                    found_focused = True
+
+            return found_focused
+        except dbus.DBusException:
+            return False
 
     def wait_until_application_is_running(self, app_name, timeout):
         """Wait until a given application is running.
@@ -161,7 +177,7 @@ class Bamf:
         return proc
 
 
-class BamfApplication:
+class BamfApplication(object):
     """Represents an application, with information as returned by Bamf.
 
     Don't instantiate this class yourself. instead, use the methods as
@@ -210,7 +226,7 @@ class BamfApplication:
         return "<BamfApplication '%s'>" % (self.name)
 
 
-class BamfWindow:
+class BamfWindow(object):
     """Represents an application window, as returned by Bamf.
 
     Don't instantiate this class yourself. Instead, use the appropriate methods
@@ -302,6 +318,12 @@ class BamfWindow:
         return '_NET_WM_STATE_HIDDEN' in win_state
 
     @property
+    def is_focused(self):
+        """Is this window focused?"""
+        win_state = self._get_window_states()
+        return '_NET_WM_STATE_FOCUSED' in win_state
+
+    @property
     def is_valid(self):
         """Is this window object valid?
 
@@ -347,4 +369,5 @@ class BamfWindow:
     def _get_window_states(self):
         """Return a list of strings representing the current window state."""
 
+        _X_DISPLAY.sync()
         return map(_X_DISPLAY.get_atom_name, self._getProperty('_NET_WM_STATE'))

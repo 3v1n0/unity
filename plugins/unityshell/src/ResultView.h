@@ -38,7 +38,7 @@ namespace unity
 {
 namespace dash
 {
-class ResultView : public nux::View, public unity::debug::Introspectable
+class ResultView : public nux::View, public debug::Introspectable
 {
 public:
   NUX_DECLARE_OBJECT_TYPE(ResultView, nux::View);

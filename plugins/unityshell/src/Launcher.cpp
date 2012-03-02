@@ -407,7 +407,8 @@ Launcher::AddProperties(GVariantBuilder* builder)
   .add("quicklist-open", _hide_machine->GetQuirk(LauncherHideMachine::QUICKLIST_OPEN))
   .add("hide-quirks", _hide_machine->DebugHideQuirks().c_str())
   .add("hover-quirks", _hover_machine->DebugHoverQuirks().c_str())
-  .add("icon-size", _icon_size);
+  .add("icon-size", _icon_size)
+  .add("shortcuts_shown", _shortcuts_shown);
 }
 
 void Launcher::SetMousePosition(int x, int y)
@@ -1015,7 +1016,8 @@ void Launcher::FillRenderArg(AbstractLauncherIcon::Ptr icon,
   float center_transit_progress = IconCenterTransitionProgress(icon, current);
   if (center_transit_progress <= 1.0f)
   {
-    centerOffset.y = (icon->GetSavedCenter(monitor).y - (center.y + (half_size * size_modifier))) * (1.0f - center_transit_progress);
+    int saved_center = icon->GetSavedCenter(monitor).y - parent_abs_geo.y;
+    centerOffset.y = (saved_center - (center.y + (half_size * size_modifier))) * (1.0f - center_transit_progress);
   }
 
   center.y += half_size * size_modifier;   // move to center
@@ -2291,6 +2293,21 @@ void Launcher::OnPointerBarrierEvent(ui::PointerBarrierWrapper* owner, ui::Barri
     {
       if (event->y < abs_geo.y)
         apply_to_reveal = true;
+    }
+  }
+
+  if (apply_to_reveal)
+  {
+    int root_x_return, root_y_return, win_x_return, win_y_return;
+    unsigned int mask_return;
+    Window root_return, child_return;
+    Display *dpy = nux::GetGraphicsDisplay()->GetX11Display();
+
+    if (XQueryPointer (dpy, DefaultRootWindow(dpy), &root_return, &child_return, &root_x_return, 
+                       &root_y_return, &win_x_return, &win_y_return, &mask_return))
+    {
+      if (mask_return & (Button1Mask | Button3Mask))
+        apply_to_reveal = false;
     }
   }
 
