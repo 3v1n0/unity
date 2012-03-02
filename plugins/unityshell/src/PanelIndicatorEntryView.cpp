@@ -410,7 +410,7 @@ void PanelIndicatorEntryView::DrawEntryContent(cairo_t *cr, unsigned int width, 
 // 3. Paint something
 void PanelIndicatorEntryView::Refresh()
 {
-  if (!IsVisible())
+  if (!proxy_->visible())
   {
     SetVisible(false);
     // This will destroy the object texture. No need to manually delete the pointer
@@ -696,16 +696,14 @@ bool PanelIndicatorEntryView::IsSensitive() const
   return false;
 }
 
-bool PanelIndicatorEntryView::IsVisible() const
+bool PanelIndicatorEntryView::IsVisible()
 {
   if (proxy_.get())
   {
-    if (type_ != APPMENU)
-      return proxy_->visible();
-    else
-      return IsLabelVisible();
+    return TextureArea::IsVisible() && proxy_->visible();
   }
-  return false;
+
+  return TextureArea::IsVisible();
 }
 
 bool PanelIndicatorEntryView::IsActive() const

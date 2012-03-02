@@ -103,6 +103,7 @@ void PanelIndicatorAppmenuView::SetLabel(std::string const& label)
   if (label_ != label)
   {
     label_ = label;
+    SetVisible(!label_.empty());
     Refresh();
   }
 }
@@ -112,6 +113,7 @@ void PanelIndicatorAppmenuView::SetControlledWindow(Window xid)
   if (xid_ != xid)
   {
     xid_ = xid;
+    SetVisible(xid_ != 0);
     CheckWindowMenu();
   }
 }

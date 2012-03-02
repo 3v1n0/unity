@@ -71,7 +71,7 @@ public:
   bool GetShowNow() const;
   bool IsSensitive() const;
   bool IsActive() const;
-  bool IsVisible() const;
+  bool IsVisible();
 
   void SetDisabled(bool disabled);
   bool IsDisabled();
