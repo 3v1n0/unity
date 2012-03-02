@@ -22,29 +22,6 @@ Outcome:
   neeeded.
 
 
-Super Tab switcher interaction with Shortcut Hint
--------------------------------------------------
-This test shows the interaction between the shortcut hint overlay and the
-Super+Tab switcher.
-
-#. Start with a clean screen
-#. Press Super to make the shortcuts-overlay to show
-#. Then press Tab to initiate the Super+Tab launcher switcher
-
-Outcome:
-  The Super+Tab switcher is initialized, and the shortcut hint overlay is still
-  showing. Pressing also Shift to reverse the switcher direction doesn't hide
-  the overlay, that will be hidden once Super is released.
-
-#. Start with a clean screen
-#. Press Super+Tab quickly to make the launcher switcher to initialize without
-   making the shortcut overlay to show.
-
-Outcome:
-  Super+Tab switcher is initialized and the shortcut hint overlay is not shown
-  even keeping only super pressed until releasing it and pressing it again.
-
-
 Escaping from Super Tab switcher
 --------------------------------
 This test shows how to escape from the Super+Tab switcher.
