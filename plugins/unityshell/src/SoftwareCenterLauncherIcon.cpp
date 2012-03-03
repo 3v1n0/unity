@@ -63,10 +63,15 @@ SoftwareCenterLauncherIcon::Animate(nux::ObjectPtr<Launcher> launcher,
 
   launcher->RenderIconToTexture(nux::GetWindowThread()->GetGraphicsEngine(), AbstractLauncherIcon::Ptr(this), _icon_texture);
   nux::Geometry geo = _drag_window->GetGeometry();
-  _drag_window->SetBaseXY(geo.width / 2, geo.height / 2);
+  //_drag_window->SetBaseXY(geo.width / 2, geo.height / 2);
+  _drag_window->SetBaseXY(icon_x, icon_y);
   _drag_window->ShowWindow(true);
   _drag_window->SinkReference();
 
+  g_debug("Co-ordinates are: %f, %f", GetCenter(0).x, GetCenter(0).y);
+
+  _drag_window->SetAnimationTarget(icon_x+60,icon_x+60);
+  _drag_window->StartAnimation();
 }
 
 void
