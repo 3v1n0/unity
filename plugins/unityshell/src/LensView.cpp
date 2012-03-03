@@ -30,6 +30,8 @@
 #include "UBusWrapper.h"
 #include "PlacesVScrollBar.h"
 
+#include <glib/gi18n-lib.h>
+
 namespace unity
 {
 namespace dash
@@ -382,11 +384,11 @@ void LensView::CheckNoResults(Lens::Hints const& hints)
 
     if (it != hints.end())
     {
-      markup << g_variant_get_string(it->second, NULL);
+      markup << it->second.GetString();
     }
     else
     {
-      markup << "Sorry, there is nothing that matches your search.";
+      markup << _("Sorry, there is nothing that matches your search.");
     }
     markup << "</span>";
 
@@ -557,7 +559,8 @@ void LensView::AddProperties(GVariantBuilder* builder)
 {
   unity::variant::BuilderWrapper(builder)
     .add("name", lens_->id)
-    .add("lens-name", lens_->name);
+    .add("lens-name", lens_->name)
+    .add("no-results-active", no_results_active_);
 }
 
 

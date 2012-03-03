@@ -396,14 +396,20 @@ void DashView::OnSearchChanged(std::string const& search_string)
     // it isn't guaranteed that we get a SearchFinished signal, so we need
     // to make sure this isn't set even though we aren't doing any search
     if (searching_timeout_id_)
+    {
       g_source_remove (searching_timeout_id_);
+      searching_timeout_id_ = 0;
+    }
 
     // 250ms for the Search method call, rest for the actual search
     searching_timeout_id_ = g_timeout_add (500, &DashView::ResetSearchStateCb, this);
     
     
     if (hide_message_delay_id_)
+    {
       g_source_remove(hide_message_delay_id_);
+      hide_message_delay_id_ = 0;
+    }
 
     // 150ms to hide the no reults message if its take a while to return results
     hide_message_delay_id_ = g_timeout_add (150, &DashView::HideResultMessageCb, this);
@@ -470,7 +476,10 @@ void DashView::OnLensBarActivated(std::string const& id)
   search_bar_->can_refine_search = view->can_refine_search();
 
   if (hide_message_delay_id_)
+  {
     g_source_remove(hide_message_delay_id_);
+    hide_message_delay_id_ = 0;
+  }
 
   view->QueueDraw();
   QueueDraw();
