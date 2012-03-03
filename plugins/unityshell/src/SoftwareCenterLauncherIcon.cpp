@@ -42,12 +42,19 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(BamfApplication* app,
   _aptdaemon_trans.Connect("Finished", [&] (GVariant *) {
     tooltip_text = BamfName();
     SetQuirk(QUIRK_PROGRESS, false);
+    SetQuirk(QUIRK_URGENT, true);
     SetProgress(0.0f);
+    finished = true;
+    finished_just_now = true;
   });
 
   SetIconType(TYPE_APPLICATION);
   icon_name = icon_path.c_str();
   tooltip_text = _("Waiting to install");
+
+  // Since the transaction COULD have completed by now, assume true for now
+  finished = true;
+  finished_just_now = false;
   
 }
 
@@ -74,6 +81,22 @@ SoftwareCenterLauncherIcon::Animate(nux::ObjectPtr<Launcher> launcher,
   _drag_window->StartAnimation();
 }
 
+void SoftwareCenterLauncherIcon::ActivateLauncherIcon(ActionArg arg)
+{
+    if (finished)
+    {
+        if (finished_just_now)
+        {
+            SetQuirk(QUIRK_URGENT, false);
+            finished_just_now = false;
+        }
+        BamfLauncherIcon::ActivateLauncherIcon(arg);
+    }
+    else
+        SetQuirk(QUIRK_STARTING, false);
+}
+
+
 void
 SoftwareCenterLauncherIcon::OnPropertyChanged(GVariant* params)
 {
@@ -89,7 +112,10 @@ SoftwareCenterLauncherIcon::OnPropertyChanged(GVariant* params)
     g_variant_get(property_value, "i", &progress);
 
     if (progress < 100)
+    {
       SetQuirk(QUIRK_PROGRESS, true);
+      finished = false;
+    }
 
     SetProgress(progress/100.0f);
   }

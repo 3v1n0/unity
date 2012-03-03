@@ -40,6 +40,8 @@ public:
 
   void Animate(nux::ObjectPtr<Launcher> launcher, gint32 icon_x, gint32 icon_y, gint32 icon_size);
 
+  void ActivateLauncherIcon(ActionArg arg);
+
 private:
   void OnPropertyChanged(GVariant* params);
 
@@ -47,6 +49,8 @@ private:
 
   nux::ObjectPtr<nux::IOpenGLBaseTexture> _icon_texture;
   LauncherDragWindow* _drag_window;
+  bool finished;
+  bool finished_just_now;
 };
 
 }
