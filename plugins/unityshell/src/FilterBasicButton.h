@@ -26,8 +26,6 @@
 #include <Nux/CairoWrapper.h>
 #include <Nux/ToggleButton.h>
 
-#include "FilterWidget.h"
-
 namespace unity
 {
 namespace dash

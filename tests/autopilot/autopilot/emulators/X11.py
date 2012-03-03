@@ -26,6 +26,7 @@ from Xlib.ext.xtest import fake_input
 import gtk.gdk
 
 _PRESSED_KEYS = []
+_PRESSED_MOUSE_BUTTONS = []
 _DISPLAY = Display()
 logger = logging.getLogger(__name__)
 
@@ -80,6 +81,7 @@ class Keyboard(object):
         'Super' : 'Super_L',
         'Shift' : 'Shift_L',
         'Enter' : 'Return',
+        'Space' : ' ',
     }
 
     def __init__(self):
@@ -99,8 +101,9 @@ class Keyboard(object):
         if not isinstance(keys, basestring):
             raise TypeError("'keys' argument must be a string.")
         logger.debug("Pressing keys %r with delay %f", keys, delay)
-        self.__perform_on_keys(self.__translate_keys(keys), X.KeyPress)
-        sleep(delay)
+        for key in self.__translate_keys(keys):
+            self.__perform_on_key(key, X.KeyPress)
+            sleep(delay)
 
     def release(self, keys, delay=0.2):
         """Send key release events only.
@@ -116,8 +119,12 @@ class Keyboard(object):
         if not isinstance(keys, basestring):
             raise TypeError("'keys' argument must be a string.")
         logger.debug("Releasing keys %r with delay %f", keys, delay)
-        self.__perform_on_keys(self.__translate_keys(keys), X.KeyRelease)
-        sleep(delay)
+        # release keys in the reverse order they were pressed in.
+        keys = self.__translate_keys(keys)
+        keys.reverse()
+        for key in keys:
+            self.__perform_on_key(key, X.KeyRelease)
+            sleep(delay)
 
     def press_and_release(self, keys, delay=0.2):
         """Press and release all items in 'keys'.
@@ -158,26 +165,35 @@ class Keyboard(object):
         any keys that were pressed and not released.
 
         """
+        global _PRESSED_KEYS
         for keycode in _PRESSED_KEYS:
             logger.warning("Releasing key %r as part of cleanup call.", keycode)
             fake_input(_DISPLAY, X.KeyRelease, keycode)
+        _PRESSED_KEYS = []
 
-    def __perform_on_keys(self, keys, event):
+    def __perform_on_key(self, key, event):
+        if not isinstance(key, basestring):
+            raise TypeError("Key parameter must be a string")
+
         keycode = 0
         shift_mask = 0
 
-        for key in keys:
-            keycode, shift_mask = self.__char_to_keycode(key)
+        keycode, shift_mask = self.__char_to_keycode(key)
 
-            if shift_mask != 0:
-                fake_input(_DISPLAY, event, 50)
+        if shift_mask != 0:
+            fake_input(_DISPLAY, event, 50)
 
-            if event == X.KeyPress:
-                _PRESSED_KEYS.append(keycode)
-            elif event == X.KeyRelease:
+        if event == X.KeyPress:
+            logger.debug("Sending press event for key: %s", key)
+            _PRESSED_KEYS.append(keycode)
+        elif event == X.KeyRelease:
+            logger.debug("Sending release event for key: %s", key)
+            if keycode in _PRESSED_KEYS:
                 _PRESSED_KEYS.remove(keycode)
+            else:
+                logger.warning("Generating release event for keycode %d that was not pressed.", keycode)
 
-            fake_input(_DISPLAY, event, keycode)
+        fake_input(_DISPLAY, event, keycode)
         _DISPLAY.sync()
 
     def __get_keysym(self, key) :
@@ -224,12 +240,17 @@ class Mouse(object):
     def press(self, button=1):
         """Press mouse button at current mouse location."""
         logger.debug("Pressing mouse button %d", button)
+        _PRESSED_MOUSE_BUTTONS.append(button)
         fake_input(_DISPLAY, X.ButtonPress, button)
         _DISPLAY.sync()
 
     def release(self, button=1):
         """Releases mouse button at current mouse location."""
         logger.debug("Releasing mouse button %d", button)
+        if button in _PRESSED_MOUSE_BUTTONS:
+            _PRESSED_MOUSE_BUTTONS.remove(button)
+        else:
+            logger.warning("Generating button release event or button %d that was not pressed.", button)
         fake_input(_DISPLAY, X.ButtonRelease, button)
         _DISPLAY.sync()
 
@@ -283,6 +304,11 @@ class Mouse(object):
     @staticmethod
     def cleanup():
         """Put mouse in a known safe state."""
+        global _PRESSED_MOUSE_BUTTONS
+        for btn in _PRESSED_MOUSE_BUTTONS:
+            logger.debug("Releasing mouse button %d as part of cleanup", btn)
+            fake_input(_DISPLAY, X.ButtonRelease, btn)
+        _PRESSED_MOUSE_BUTTONS = []
         sg = ScreenGeometry()
         sg.move_mouse_to_monitor(0)
 
@@ -296,6 +322,12 @@ class ScreenGeometry:
     def get_num_monitors(self):
         """Get the number of monitors attached to the PC."""
         return self._default_screen.get_n_monitors()
+
+    def get_screen_width(self):
+        return self._default_screen.get_width()
+
+    def get_screen_height(self):
+        return self._default_screen.get_height()
 
     def get_monitor_geometry(self, monitor_number):
         """Get the geometry for a particular monitor.

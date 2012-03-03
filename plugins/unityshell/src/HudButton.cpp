@@ -30,6 +30,8 @@
 #include <NuxImage/CairoGraphics.h>
 #include <NuxGraphics/NuxGraphics.h>
 #include <UnityCore/GLibWrapper.h>
+#include <UnityCore/Variant.h>
+
 #include "DashStyle.h"
 
 #include "HudButton.h"
@@ -39,9 +41,9 @@ namespace
 nux::logging::Logger logger("unity.hud.HudButton");
 }
 
-namespace unity 
+namespace unity
 {
-namespace hud 
+namespace hud
 {
 
 
@@ -83,9 +85,9 @@ HudButton::~HudButton() {
 void HudButton::Init()
 {
   InitTheme();
-  key_nav_focus_change.connect([this](nux::Area *area, bool recieving, nux::KeyNavDirection direction) 
-  { 
-    QueueDraw(); 
+  key_nav_focus_change.connect([this](nux::Area *area, bool recieving, nux::KeyNavDirection direction)
+  {
+    QueueDraw();
   });
 
   fake_focused.changed.connect([this](bool change)
@@ -117,15 +119,16 @@ void HudButton::InitTheme()
 
 void HudButton::RedrawTheme(nux::Geometry const& geom, cairo_t* cr, nux::ButtonVisualState faked_state)
 {
-  dash::Style::Instance().SquareButton(cr, faked_state, label_, 
-                                           is_rounded, 17, 
+  dash::Style::Instance().SquareButton(cr, faked_state, label_,
+                                           is_rounded, 17,
                                            dash::Alignment::LEFT, true);
 }
 
 bool HudButton::AcceptKeyNavFocus()
 {
-  // say we can't be focused if we have fake focus on
-  return !fake_focused;
+  // The button will not receive the keyboard focus. The keyboard focus is always to remain with the 
+  // text entry in the hud.
+  return false;
 }
 
 
@@ -142,11 +145,11 @@ long HudButton::ComputeContentSize ()
 
     cached_geometry_ = geo;
   }
-  
-  return ret;
-} 
 
-void HudButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw) 
+  return ret;
+}
+
+void HudButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
   nux::Geometry const& geo = GetGeometry();
   gPainter.PaintBackground(GfxContext, geo);
@@ -160,7 +163,7 @@ void HudButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   GfxContext.GetRenderStates().GetBlend(alpha, src, dest);
   GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
   GfxContext.GetRenderStates().SetBlend(true);
-  
+
   nux::Color col = nux::color::Black;
   col.alpha = 0;
   GfxContext.QRP_Color(geo.x,
@@ -215,7 +218,8 @@ std::string HudButton::GetName() const
 
 void HudButton::AddProperties(GVariantBuilder* builder)
 {
-  g_variant_builder_add(builder, "{sv}", "label", g_variant_new_string(label_.c_str()));
+  variant::BuilderWrapper(builder)
+    .add("label", label_);
 }
 
 }

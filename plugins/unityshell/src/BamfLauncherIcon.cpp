@@ -20,6 +20,7 @@
 
 #include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
+#include <UnityCore/Variant.h>
 
 #include "BamfLauncherIcon.h"
 #include "FavoriteStore.h"
@@ -122,7 +123,7 @@ BamfLauncherIcon::BamfLauncherIcon(BamfApplication* app)
   WindowManager::Default()->compiz_screen_viewport_switch_ended.connect(sigc::mem_fun(this, &BamfLauncherIcon::EnsureWindowState));
   WindowManager::Default()->terminate_expo.connect(sigc::mem_fun(this, &BamfLauncherIcon::EnsureWindowState));
 
-  //EnsureWindowState();
+  EnsureWindowState();
   UpdateMenus();
   UpdateDesktopFile();
 
@@ -440,10 +441,7 @@ void BamfLauncherIcon::AddProperties(GVariantBuilder* builder)
 {
   LauncherIcon::AddProperties(builder);
 
-  g_variant_builder_add(builder, "{sv}", "desktop-file", g_variant_new_string(DesktopFile().c_str()));
-
   GList* children, *l;
-
   children = bamf_view_get_children(BAMF_VIEW(_bamf_app.RawPtr()));
   GVariant* xids[(int) g_list_length(children)];
 
@@ -457,8 +455,11 @@ void BamfLauncherIcon::AddProperties(GVariantBuilder* builder)
     xids[i++] = g_variant_new_uint32(xid);
   }
   g_list_free(children);
-  g_variant_builder_add(builder, "{sv}", "xids", g_variant_new_array(G_VARIANT_TYPE_UINT32, xids, i));
-  g_variant_builder_add(builder, "{sv}", "sticky", g_variant_new_boolean(IsSticky()));
+
+  variant::BuilderWrapper(builder)
+    .add("desktop-file", DesktopFile())
+    .add("xids", g_variant_new_array(G_VARIANT_TYPE_UINT32, xids, i))
+    .add("sticky", IsSticky());
 }
 
 bool BamfLauncherIcon::OwnsWindow(Window xid) const
@@ -1134,7 +1135,8 @@ bool BamfLauncherIcon::ShowInSwitcher(bool current)
 
   if (IsRunning() && IsVisible())
   {
-    if (current)
+    // If current is true, we only want to show the current workspace.
+    if (!current)
     {
       result = true;
     }

@@ -20,6 +20,7 @@
 
 #include <NuxCore/Logger.h>
 #include <Nux/HLayout.h>
+#include <UnityCore/Variant.h>
 #include "PluginAdapter.h"
 #include "PanelStyle.h"
 #include "UBusMessages.h"
@@ -40,12 +41,13 @@ nux::logging::Logger logger("unity.hud.controller");
 Controller::Controller()
   : launcher_width(66)
   , hud_service_("com.canonical.hud", "/com/canonical/hud")
-  , window_(0)
+  , window_(nullptr)
   , visible_(false)
   , need_show_(false)
   , timeline_id_(0)
   , last_opacity_(0.0f)
   , start_time_(0)
+  , view_(nullptr)
 {
   LOG_DEBUG(logger) << "hud startup";
   SetupRelayoutCallbacks();
@@ -110,6 +112,8 @@ void Controller::SetupHudView()
   view_->search_activated.connect(sigc::mem_fun(this, &Controller::OnSearchActivated));
   view_->query_activated.connect(sigc::mem_fun(this, &Controller::OnQueryActivated));
   view_->query_selected.connect(sigc::mem_fun(this, &Controller::OnQuerySelected));
+  // Add to the debug introspection.
+  AddChild(view_);
 }
 
 void Controller::SetupRelayoutCallbacks()
@@ -186,7 +190,7 @@ void Controller::OnScreenUngrabbed()
 {
   LOG_DEBUG(logger) << "OnScreenUngrabbed called";
   if (need_show_)
-  { 
+  {
     nux::GetWindowCompositor().SetKeyFocusArea(view_->default_focus());
 
     window_->PushToFront();
@@ -225,10 +229,10 @@ void Controller::ShowHud()
   PluginAdapter* adaptor = PluginAdapter::Default();
   LOG_DEBUG(logger) << "Showing the hud";
   EnsureHud();
-  
+
   if (visible_ || adaptor->IsExpoActive() || adaptor->IsScaleActive())
    return;
- 
+
   if (adaptor->IsScreenGrabbed())
   {
     need_show_ = true;
@@ -267,7 +271,7 @@ void Controller::ShowHud()
 
   GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "hud", FALSE, UScreen::GetDefault()->GetMonitorWithMouse());
   ubus.SendMessage(UBUS_OVERLAY_SHOWN, info);
-  
+
   nux::GetWindowCompositor().SetKeyFocusArea(view_->default_focus());
   window_->SetEnterFocusInputArea(view_->default_focus());
 }
@@ -342,13 +346,13 @@ gboolean Controller::OnViewShowHideFrame(Controller* self)
     else
     {
       // ensure the text entry is focused
-      g_timeout_add(500, [] (gpointer data) -> gboolean 
+      g_timeout_add(500, [] (gpointer data) -> gboolean
       {
         //THIS IS BAD - VERY VERY BAD
         LOG_DEBUG(logger) << "Last attempt, forcing window focus";
         Controller* self = static_cast<Controller*>(data);
         nux::GetWindowCompositor().SetKeyFocusArea(self->view_->default_focus());
-    
+
         self->window_->PushToFront();
         self->window_->SetInputFocus();
         return FALSE;
@@ -419,7 +423,8 @@ std::string Controller::GetName() const
 
 void Controller::AddProperties(GVariantBuilder* builder)
 {
-  g_variant_builder_add(builder, "{sv}", "visible", g_variant_new_boolean (visible_));
+  variant::BuilderWrapper(builder)
+    .add("visible", visible_);
 }
 
 

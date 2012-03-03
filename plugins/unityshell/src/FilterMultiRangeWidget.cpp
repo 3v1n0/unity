@@ -113,7 +113,7 @@ void FilterMultiRange::OnActiveChanged(bool value)
       button->SetHasArrow(MultiRangeArrow::BOTH);
     else if (index == start)
       button->SetHasArrow(MultiRangeArrow::LEFT);
-    else if (index == end)
+    else if (index == end && index != 0)
       button->SetHasArrow(MultiRangeArrow::RIGHT);
     else
       button->SetHasArrow(MultiRangeArrow::NONE);
