@@ -406,6 +406,8 @@ Controller::Impl::OnLauncherAddRequestSpecial(std::string const& path,
       model_->ReorderBefore(result, before, false);
   }
   Save();
+
+  ((SoftwareCenterLauncherIcon*)result.GetPointer())->Animate(launcher_);
 }
 
 void Controller::Impl::SortAndUpdate()
@@ -716,7 +718,7 @@ Controller::Impl::CreateSCLauncherIcon(std::string const& file_path,
 
   bamf_view_set_sticky(BAMF_VIEW(app), true);
   AbstractLauncherIcon::Ptr icon(new SoftwareCenterLauncherIcon(app, aptdaemon_trans_id, icon_path,
-                                                                icon_x, icon_y, icon_size, launcher_));
+                                                                icon_x, icon_y, icon_size));
   icon->SetSortPriority(sort_priority_++);
 
   result = icon;

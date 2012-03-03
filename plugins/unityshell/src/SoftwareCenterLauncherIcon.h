@@ -39,8 +39,9 @@ public:
                              std::string const& icon_path,
                              gint32 icon_x,
                              gint32 icon_y,
-                             gint32 icon_size,
-                             nux::ObjectPtr<Launcher> launcher);
+                             gint32 icon_size);
+
+  void Animate(nux::ObjectPtr<Launcher> launcher);
 
 private:
   void OnPropertyChanged(GVariant* params);
@@ -49,7 +50,7 @@ private:
   glib::DBusProxy _aptdaemon_trans;
 
   nux::ObjectPtr<nux::IOpenGLBaseTexture> _icon_texture;
-  LauncherDragWindow _drag_window;
+  LauncherDragWindow* _drag_window;
 };
 
 }

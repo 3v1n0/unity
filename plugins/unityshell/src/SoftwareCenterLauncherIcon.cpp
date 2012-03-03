@@ -32,17 +32,15 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(BamfApplication* app,
                                                        std::string const& icon_path,
                                                        gint32 icon_x,
                                                        gint32 icon_y,
-                                                       gint32 icon_size,
-                                                       nux::ObjectPtr<Launcher> launcher)
+                                                       gint32 icon_size)
 : BamfLauncherIcon(app),
   _aptdaemon_trans("org.debian.apt",
                    aptdaemon_trans_id,
                    "org.debian.apt.transaction",
                    G_BUS_TYPE_SYSTEM,
-                   G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START),
-  _icon_texture(nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableDeviceTexture(icon_size, icon_size, 1, nux::BITFMT_R8G8B8A8)),
-  _drag_window(_icon_texture)
+                   G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START)
 {
+
   _aptdaemon_trans.Connect("PropertyChanged", sigc::mem_fun(this, &SoftwareCenterLauncherIcon::OnPropertyChanged));
   _aptdaemon_trans.Connect("Finished", [&] (GVariant *) {
     tooltip_text = BamfName();
@@ -54,11 +52,6 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(BamfApplication* app,
   icon_name = icon_path.c_str();
   tooltip_text = _("Waiting to install");
   
-  launcher->RenderIconToTexture(nux::GetWindowThread()->GetGraphicsEngine(), AbstractLauncherIcon::Ptr(this), _icon_texture);
-  _drag_window.ShowWindow(true);
-  _drag_window.SinkReference();
-  //_drag_window.SetBaseXY(icon_x,icon_y);
-  AnimateIcon(icon_x,icon_y,icon_size);
 }
 
 void
@@ -67,6 +60,23 @@ SoftwareCenterLauncherIcon::AnimateIcon(gint32 icon_x, gint32 icon_y, gint32 ico
     g_debug ("Get launcher icon from: %d, %d, size: %d", icon_x, icon_y, icon_size);
 
     //this->SetBaseXY(icon_x, icon_y);
+}
+
+void
+SoftwareCenterLauncherIcon::Animate(nux::ObjectPtr<Launcher> launcher)
+{
+    
+  _icon_texture = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableDeviceTexture(launcher->GetIconSize(), launcher->GetIconSize(), 1, nux::BITFMT_R8G8B8A8);
+  _drag_window = new LauncherDragWindow(_icon_texture);
+
+  launcher->RenderIconToTexture(nux::GetWindowThread()->GetGraphicsEngine(), AbstractLauncherIcon::Ptr(this), _icon_texture);
+  nux::Geometry geo = _drag_window->GetGeometry();
+  _drag_window->SetBaseXY(geo.width / 2, geo.height / 2);
+  _drag_window->ShowWindow(true);
+  _drag_window->SinkReference();
+  //_drag_window.SetBaseXY(icon_x,icon_y);
+  //AnimateIcon(icon_x,icon_y,icon_size);
+
 }
 
 void
