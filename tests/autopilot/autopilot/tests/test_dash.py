@@ -400,7 +400,7 @@ class DashLensResultsTests(AutopilotTestCase):
         super(DashLensResultsTests, self).tearDown()
         self.dash.ensure_hidden()
 
-    def test_no_message_results(self): 
+    def test_no_results_message(self): 
         """ This test whether a message gets shown for the lens or not""" 
         self.dash.ensure_hidden()
         self.dash.reveal_application_lens()
@@ -414,5 +414,7 @@ class DashLensResultsTests(AutopilotTestCase):
         self.assertFalse(lens.no_results_active)
 
         kb.type("zxyxz")
+        sleep(1)
+
         lens.refresh_state() 
         self.assertTrue(lens.no_results_active)
