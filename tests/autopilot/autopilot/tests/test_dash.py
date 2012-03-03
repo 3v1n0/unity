@@ -400,7 +400,7 @@ class DashLensResultsTests(AutopilotTestCase):
         super(DashLensResultsTests, self).tearDown()
         self.dash.ensure_hidden()
     
-    def test_no_results_message_empty(self): 
+    def test_results_message_empty_search(self): 
         """ This tests a message is not shown when there is no text""" 
         self.dash.ensure_hidden()
         self.dash.reveal_application_lens()
@@ -409,7 +409,7 @@ class DashLensResultsTests(AutopilotTestCase):
         lens.refresh_state() 
         self.assertFalse(lens.no_results_active)
 
-    def test_no_results_message(self): 
+    def test_results_message(self): 
         """ This test no mesage will be shown when results are there""" 
         self.dash.ensure_hidden()
         self.dash.reveal_application_lens()
@@ -422,7 +422,7 @@ class DashLensResultsTests(AutopilotTestCase):
         lens.refresh_state() 
         self.assertFalse(lens.no_results_active)
 
-    def test_results_message(self): 
+    def test_no_results_message(self): 
         """ This test shows a message will appear in the lens""" 
         self.dash.ensure_hidden()
         self.dash.reveal_application_lens()
