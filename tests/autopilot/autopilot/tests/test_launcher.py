@@ -7,19 +7,17 @@
 # under the terms of the GNU General Public License version 3, as published
 # by the Free Software Foundation.
 
+from time import sleep
+
 from testtools.matchers import Equals, LessThan, GreaterThan
 
 from autopilot.tests import AutopilotTestCase
 from autopilot.emulators.unity.launcher import Launcher
 from autopilot.emulators.X11 import ScreenGeometry, Keyboard
-from autopilot.glibrunner import GlibRunner
-
-from time import sleep
 
 
 class LauncherTests(AutopilotTestCase):
     """Test the launcher."""
-    run_test_with = GlibRunner
 
     def setUp(self):
         super(LauncherTests, self).setUp()
@@ -314,7 +312,6 @@ class LauncherTests(AutopilotTestCase):
 
 class LauncherRevealTests(AutopilotTestCase):
     """Test the launcher reveal bahavior when in autohide mode."""
-    run_test_with = GlibRunner
 
     def setUp(self):
         super(LauncherRevealTests, self).setUp()
