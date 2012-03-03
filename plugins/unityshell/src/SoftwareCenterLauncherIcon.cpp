@@ -21,6 +21,7 @@
 #include <glib/gi18n-lib.h>
 #include "SoftwareCenterLauncherIcon.h"
 #include "Launcher.h"
+#include "LauncherModel.h"
 
 namespace unity
 {
@@ -64,20 +65,34 @@ SoftwareCenterLauncherIcon::Animate(nux::ObjectPtr<Launcher> launcher,
                                     gint32 icon_y,
                                     gint32 icon_size)
 {
+  int target_x = 0;
+  int target_y = 0;
     
   _icon_texture = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableDeviceTexture(launcher->GetIconSize(), launcher->GetIconSize(), 1, nux::BITFMT_R8G8B8A8);
   _drag_window = new LauncherDragWindow(_icon_texture);
 
   launcher->RenderIconToTexture(nux::GetWindowThread()->GetGraphicsEngine(), AbstractLauncherIcon::Ptr(this), _icon_texture);
   nux::Geometry geo = _drag_window->GetGeometry();
-  //_drag_window->SetBaseXY(geo.width / 2, geo.height / 2);
   _drag_window->SetBaseXY(icon_x, icon_y);
   _drag_window->ShowWindow(true);
   _drag_window->SinkReference();
 
-  g_debug("Co-ordinates are: %f, %f", GetCenter(0).x, GetCenter(0).y);
+  // Find out the center of last BamfLauncherIcon
+  auto launchers = launcher->GetModel()->GetSublist<BamfLauncherIcon>();
+  for (auto current_bamf_icon : launchers)
+  {
+    g_debug("Co-ordinates are: %d, %d", ((int)current_bamf_icon->GetCenter(launcher->monitor).x),
+                                        ((int)current_bamf_icon->GetCenter(launcher->monitor).y));
+    if (((int)current_bamf_icon->GetCenter(launcher->monitor).x) != 0 &&
+        ((int)current_bamf_icon->GetCenter(launcher->monitor).y) != 0)
+    {
+       target_x = (int)current_bamf_icon->GetCenter(launcher->monitor).x;
+       target_y = (int)current_bamf_icon->GetCenter(launcher->monitor).y;
+    }
+  }
 
-  _drag_window->SetAnimationTarget(icon_x+60,icon_x+60);
+  target_y = target_y + (launcher->GetIconSize() / 2);
+  _drag_window->SetAnimationTarget(target_x,target_y);
   _drag_window->StartAnimation();
 }
 
