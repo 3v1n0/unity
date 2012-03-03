@@ -488,7 +488,10 @@ void DashView::OnLensBarActivated(std::string const& id)
 void DashView::OnSearchFinished(Lens::Hints const& hints)
 {
   if (hide_message_delay_id_)
+  {
     g_source_remove(hide_message_delay_id_);
+    hide_message_delay_id_ = 0;
+  }
 
   active_lens_view_->CheckNoResults(hints);
 
