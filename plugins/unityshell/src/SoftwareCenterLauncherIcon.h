@@ -36,16 +36,12 @@ class SoftwareCenterLauncherIcon : public BamfLauncherIcon
 public:
   SoftwareCenterLauncherIcon(BamfApplication* app,
                              std::string const& aptdaemon_trans_id,
-                             std::string const& icon_path,
-                             gint32 icon_x,
-                             gint32 icon_y,
-                             gint32 icon_size);
+                             std::string const& icon_path);
 
-  void Animate(nux::ObjectPtr<Launcher> launcher);
+  void Animate(nux::ObjectPtr<Launcher> launcher, gint32 icon_x, gint32 icon_y, gint32 icon_size);
 
 private:
   void OnPropertyChanged(GVariant* params);
-  void AnimateIcon(gint32 icon_x, gint32 icon_y, gint32 icon_size);
 
   glib::DBusProxy _aptdaemon_trans;
 

@@ -29,10 +29,7 @@ namespace launcher
 
 SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(BamfApplication* app,
                                                        std::string const& aptdaemon_trans_id,
-                                                       std::string const& icon_path,
-                                                       gint32 icon_x,
-                                                       gint32 icon_y,
-                                                       gint32 icon_size)
+                                                       std::string const& icon_path)
 : BamfLauncherIcon(app),
   _aptdaemon_trans("org.debian.apt",
                    aptdaemon_trans_id,
@@ -55,15 +52,10 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(BamfApplication* app,
 }
 
 void
-SoftwareCenterLauncherIcon::AnimateIcon(gint32 icon_x, gint32 icon_y, gint32 icon_size)
-{
-    g_debug ("Get launcher icon from: %d, %d, size: %d", icon_x, icon_y, icon_size);
-
-    //this->SetBaseXY(icon_x, icon_y);
-}
-
-void
-SoftwareCenterLauncherIcon::Animate(nux::ObjectPtr<Launcher> launcher)
+SoftwareCenterLauncherIcon::Animate(nux::ObjectPtr<Launcher> launcher,
+                                    gint32 icon_x,
+                                    gint32 icon_y,
+                                    gint32 icon_size)
 {
     
   _icon_texture = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableDeviceTexture(launcher->GetIconSize(), launcher->GetIconSize(), 1, nux::BITFMT_R8G8B8A8);
@@ -74,8 +66,6 @@ SoftwareCenterLauncherIcon::Animate(nux::ObjectPtr<Launcher> launcher)
   _drag_window->SetBaseXY(geo.width / 2, geo.height / 2);
   _drag_window->ShowWindow(true);
   _drag_window->SinkReference();
-  //_drag_window.SetBaseXY(icon_x,icon_y);
-  //AnimateIcon(icon_x,icon_y,icon_size);
 
 }
 

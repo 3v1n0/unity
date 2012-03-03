@@ -116,8 +116,7 @@ public:
 
   AbstractLauncherIcon::Ptr CreateFavorite(const char* file_path);
 
-  AbstractLauncherIcon::Ptr CreateSCLauncherIcon(std::string const& file_path, std::string const& aptdaemon_trans_id, std::string const& icon_path,
-                                                 gint32 icon_x, gint32 icon_y, gint32 icon_size);
+  AbstractLauncherIcon::Ptr CreateSCLauncherIcon(std::string const& file_path, std::string const& aptdaemon_trans_id, std::string const& icon_path);
 
   void SetupBamf();
 
@@ -396,8 +395,7 @@ Controller::Impl::OnLauncherAddRequestSpecial(std::string const& path,
       return;
   }
 
-  AbstractLauncherIcon::Ptr result = CreateSCLauncherIcon(path, aptdaemon_trans_id, icon_path,
-                                                          icon_x,icon_y,icon_size);
+  AbstractLauncherIcon::Ptr result = CreateSCLauncherIcon(path, aptdaemon_trans_id, icon_path);
   if (result)
   {
     RegisterIcon(result);
@@ -407,7 +405,7 @@ Controller::Impl::OnLauncherAddRequestSpecial(std::string const& path,
   }
   Save();
 
-  ((SoftwareCenterLauncherIcon*)result.GetPointer())->Animate(launcher_);
+  ((SoftwareCenterLauncherIcon*)result.GetPointer())->Animate(launcher_, icon_x, icon_y, icon_size);
 }
 
 void Controller::Impl::SortAndUpdate()
@@ -696,10 +694,7 @@ AbstractLauncherIcon::Ptr Controller::Impl::CreateFavorite(const char* file_path
 AbstractLauncherIcon::Ptr
 Controller::Impl::CreateSCLauncherIcon(std::string const& file_path,
                                        std::string const& aptdaemon_trans_id,
-                                       std::string const& icon_path,
-                                       gint32 icon_x,
-                                       gint32 icon_y,
-                                       gint32 icon_size)
+                                       std::string const& icon_path)
 {
   BamfApplication* app;
   AbstractLauncherIcon::Ptr result;
@@ -717,8 +712,7 @@ Controller::Impl::CreateSCLauncherIcon(std::string const& file_path,
   g_object_set_qdata(G_OBJECT(app), g_quark_from_static_string("unity-seen"), GINT_TO_POINTER(1));
 
   bamf_view_set_sticky(BAMF_VIEW(app), true);
-  AbstractLauncherIcon::Ptr icon(new SoftwareCenterLauncherIcon(app, aptdaemon_trans_id, icon_path,
-                                                                icon_x, icon_y, icon_size));
+  AbstractLauncherIcon::Ptr icon(new SoftwareCenterLauncherIcon(app, aptdaemon_trans_id, icon_path));
   icon->SetSortPriority(sort_priority_++);
 
   result = icon;
