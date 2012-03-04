@@ -18,6 +18,7 @@
  *              Tim Penhey <tim.penhey@canonical.com>
  */
 
+#include <gio/gio.h>
 #include <glib/gi18n-lib.h>
 #include <libbamf/libbamf.h>
 
@@ -171,6 +172,9 @@ public:
 
   LauncherList launchers;
 
+  GDBusConnection*       dbus_connection_;
+  guint                  resume_signal_id_;
+
   sigc::connection on_expoicon_activate_connection_;
   sigc::connection launcher_key_press_connection_;
   sigc::connection launcher_event_outside_connection_;
@@ -251,6 +255,32 @@ Controller::Impl::Impl(Display* display, Controller* parent)
   });
 
   parent_->AddChild(model_.get());
+
+  dbus_connection_ = g_bus_get_sync(G_BUS_TYPE_SYSTEM, NULL, NULL);
+  if (dbus_connection_)
+  {
+    auto handler = [](GDBusConnection* connection,
+                      const gchar*     sender_name,
+                      const gchar*     object_path,
+                      const gchar*     interface_name,
+                      const gchar*     signal_name,
+                      GVariant*        parameters,
+                      gpointer         user_data) {
+      Controller::Impl* self = static_cast<Controller::Impl*>(user_data);
+      for (auto launcher : self->launchers)
+        launcher->QueueDraw();
+    };
+    resume_signal_id_ = g_dbus_connection_signal_subscribe(dbus_connection_,
+                                                           "org.freedesktop.UPower",     // sender
+                                                           "org.freedesktop.UPower",     // interface
+                                                           "Resuming",                   // member
+                                                           "/org/freedesktop/UPower",    // path
+                                                           NULL,                         // arg0
+                                                           G_DBUS_SIGNAL_FLAGS_NONE,
+                                                           handler,
+                                                           this,
+                                                           NULL);
+  }
 }
 
 Controller::Impl::~Impl()
@@ -260,6 +290,16 @@ Controller::Impl::~Impl()
 
   if (matcher_ != nullptr && on_view_opened_id_ != 0)
     g_signal_handler_disconnect((gpointer) matcher_, on_view_opened_id_);
+
+  if (dbus_connection_)
+  {
+    if (resume_signal_id_)
+      g_dbus_connection_signal_unsubscribe(dbus_connection_, resume_signal_id_);
+
+    g_object_unref(dbus_connection_);
+    dbus_connection_ = nullptr;
+    resume_signal_id_ = 0;
+  }
 
   delete device_section_;
 }
