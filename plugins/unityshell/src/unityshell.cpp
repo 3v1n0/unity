@@ -312,7 +312,15 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetAltTabPrevWindowInitiate(boost::bind(&UnityScreen::altTabPrevWindowInitiate, this, _1, _2, _3));
 
      optionSetAltTabLeftInitiate(boost::bind (&UnityScreen::altTabPrevInitiate, this, _1, _2, _3));
-     optionSetAltTabRightInitiate(boost::bind (&UnityScreen::altTabForwardInitiate, this, _1, _2, _3));
+     optionSetAltTabRightInitiate([&](CompAction* action, CompAction::State state, CompOption::Vector& options) -> bool
+     {
+      if (switcher_controller_->Visible())
+      {
+        switcher_controller_->Next();
+        return true;
+      }
+      return false;
+     });
 
      optionSetLauncherSwitcherForwardInitiate(boost::bind(&UnityScreen::launcherSwitcherForwardInitiate, this, _1, _2, _3));
      optionSetLauncherSwitcherPrevInitiate(boost::bind(&UnityScreen::launcherSwitcherPrevInitiate, this, _1, _2, _3));
