@@ -6,6 +6,7 @@ from subprocess import call
 from compizconfig import Setting, Plugin
 from autopilot.globals import global_context
 from testtools import TestCase
+from testtools.matchers import Equals
 from testscenarios import TestWithScenarios
 from testtools.content import text_content
 import time
@@ -16,6 +17,7 @@ from autopilot.emulators.X11 import Keyboard, Mouse
 from autopilot.emulators.bamf import Bamf
 from autopilot.emulators.unity.switcher import Switcher
 from autopilot.emulators.unity.workspace import WorkspaceManager
+from autopilot.emulators.unity.launcher import LauncherController
 from autopilot.keybindings import KeybindingsHelper
 from autopilot.glibrunner import GlibRunner
 
@@ -90,6 +92,7 @@ class AutopilotTestCase(LoggedTestCase, KeybindingsHelper):
         self.mouse = Mouse()
         self.switcher = Switcher()
         self.workspace = WorkspaceManager()
+        self.launcher = self._get_launcher_controller()
         self.addCleanup(self.workspace.switch_to, self.workspace.current_workspace)
         self.addCleanup(Keyboard.cleanup)
         self.addCleanup(Mouse.cleanup)
@@ -130,3 +133,8 @@ class AutopilotTestCase(LoggedTestCase, KeybindingsHelper):
         setting.Value = option_value
         global_context.Write()
         return old_value
+
+    def _get_launcher_controller(self):
+        controllers = LauncherController.get_all_instances()
+        self.assertThat(len(controllers), Equals(1))
+        return controllers[0]

@@ -87,6 +87,7 @@ class UnityIntrospectionObject(object):
     __metaclass__ = IntrospectableObjectMetaclass
 
     def __init__(self, state_dict):
+        self.__state = {}
         self.set_properties(state_dict)
 
     def set_properties(self, state_dict):
@@ -95,8 +96,12 @@ class UnityIntrospectionObject(object):
         Translates '-' to '_', so a key of 'icon-type' for example becomes 'icon_type'.
 
         """
-        for key in state_dict.keys():
-            setattr(self, key.replace('-', '_'), state_dict[key])
+        self.__state = {}
+        for key, value in state_dict.iteritems():
+            # don't store id in state dictionary -make it a proper instance attribute
+            if key == 'id':
+                self.id = value
+            self.__state[key.replace('-', '_')] = value
 
     def _get_child_tuples_by_type(self, desired_type):
         """Get a list of (name,dict) pairs from children of the specified type.
@@ -114,7 +119,7 @@ class UnityIntrospectionObject(object):
         # user wants.
         for child_type, child_state in children:
             try:
-                if _object_registry[child_type] == desired_type:
+                if issubclass(_object_registry[child_type], desired_type):
                     results.append((child_type, child_state))
             except KeyError:
                 pass
@@ -171,3 +176,15 @@ class UnityIntrospectionObject(object):
         cls_name = cls.__name__
         instances = get_state_by_path("//%s" % (cls_name))
         return [make_introspection_object((cls_name,i)) for i in instances]
+
+    def __getattr__(self, name):
+        # avoid recursion if for some reason we have no state set (should never)
+        # happen.
+        if name == '__state':
+            raise AttributeError()
+
+        if name in self.__state:
+            self.refresh_state()
+            return self.__state[name]
+        # attribute not found.
+        raise AttributeError("Attribute '%s' not found." % (name))
