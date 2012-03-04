@@ -75,7 +75,6 @@ gboolean SoftwareCenterLauncherIcon::OnDragWindowAnimComplete(gpointer data)
         return false;
     }
     return true;
-    //_launcher.GetPointer()->icon_animation_complete.emit(AbstractLauncherIcon::Ptr(this));
 }
 
 void
@@ -102,8 +101,6 @@ SoftwareCenterLauncherIcon::Animate(nux::ObjectPtr<Launcher> launcher,
   auto launchers = launcher->GetModel()->GetSublist<BamfLauncherIcon>();
   for (auto current_bamf_icon : launchers)
   {
-    g_debug("Co-ordinates are: %d, %d", ((int)current_bamf_icon->GetCenter(launcher->monitor).x),
-                                        ((int)current_bamf_icon->GetCenter(launcher->monitor).y));
     if (((int)current_bamf_icon->GetCenter(launcher->monitor).x) != 0 &&
         ((int)current_bamf_icon->GetCenter(launcher->monitor).y) != 0)
     {
@@ -117,12 +114,8 @@ SoftwareCenterLauncherIcon::Animate(nux::ObjectPtr<Launcher> launcher,
 
   _drag_window->StartAnimation();
 
-  /*if (_drag_window->on_anim_completed.connected())
-     _drag_window->on_anim_completed.disconnect();
-  _drag_window->on_anim_completed = _drag_window->anim_completed.connect(sigc::mem_fun(this, &SoftwareCenterLauncherIcon::OnDragWindowAnimComplete));
-
-  g_debug("Heck: %d", _drag_window->Animating());*/
-
+  // This is to check if the animation has completed, since the anim_completed signal
+  // in the drag window doesn't work (mysteriously)
   g_timeout_add(30, &SoftwareCenterLauncherIcon::OnDragWindowAnimComplete, this);
 
 }
