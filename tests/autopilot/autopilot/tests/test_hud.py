@@ -129,7 +129,7 @@ class HudTests(AutopilotTestCase):
 
         # click application icons for running apps in the launcher:
         icon = self.launcher.model.get_icon_by_tooltip_text("Character Map")
-        self.launcherget_launcher_for_monitor(0).click_launcher_icon(icon)
+        self.launcher.get_launcher_for_monitor(0).click_launcher_icon(icon)
 
         # see how many apps are marked as being active:
         num_active = self.get_num_active_launcher_icons()

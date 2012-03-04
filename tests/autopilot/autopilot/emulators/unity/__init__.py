@@ -147,7 +147,7 @@ class UnityIntrospectionObject(object):
                     # Either attribute is not present, or is present but with
                     # the wrong value - don't add this instance to the results list.
                     continue
-                result.append(instance)
+            result.append(instance)
         return result
 
     def refresh_state(self):
