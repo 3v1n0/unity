@@ -401,6 +401,8 @@ Controller::Impl::OnLauncherAddRequestSpecial(std::string const& path,
 
   AbstractLauncherIcon::Ptr result = CreateSCLauncherIcon(path, aptdaemon_trans_id, icon_path);
   
+  launcher_->ForceReveal(true);
+
   ((SoftwareCenterLauncherIcon*)result.GetPointer())->Animate(launcher_, icon_x, icon_y, icon_size);
 }
 
@@ -412,6 +414,8 @@ void Controller::Impl::OnSCIconAnimationComplete(AbstractLauncherIcon::Ptr icon)
     RegisterIcon(icon);
   }
   Save();
+
+  launcher_->ForceReveal(false);
   
 }
 
