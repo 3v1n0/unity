@@ -11,13 +11,11 @@ from time import sleep
 from testtools.matchers import Equals, LessThan
 
 from autopilot.emulators.unity.hud import HudController
-from autopilot.emulators.unity.launcher import Launcher
+from autopilot.emulators.unity.launcher import LauncherHelper
 from autopilot.tests import AutopilotTestCase
 
 
 class HudTests(AutopilotTestCase):
-
-    run_test_with = GlibRunner
 
     def setUp(self):
         super(HudTests, self).setUp()
@@ -113,7 +111,7 @@ class HudTests(AutopilotTestCase):
         apps as active.
 
         """
-        launcher = Launcher()
+        launcher = LauncherHelper()
 
         # We need an app to switch to:
         self.start_app('Character Map')

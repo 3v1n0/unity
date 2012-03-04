@@ -120,16 +120,29 @@ class UnityIntrospectionObject(object):
                 pass
         return results
 
-    def get_children_by_type(self, desired_type):
+    def get_children_by_type(self, desired_type, **kwargs):
         """Get a list of children of the specified type.
 
         desired_type must be a subclass of UnityIntrospectionObject.
+
+        Keyword arguments can be used to restrict returned instances. For example:
+
+        >>> get_children_by_type(Launcher, monitor=1)
+
+        ... will return only LauncherInstances that have an attribute 'monitor'
+            that is equal to 1.
 
         """
         self.refresh_state()
         result = []
         for child in self._get_child_tuples_by_type(desired_type):
-            result.append(make_introspection_object(child))
+            instance = make_introspection_object(child)
+            for attr, val in kwargs.iteritems():
+                if not hasattr(instance, attr) or getattr(instance, attr) != val:
+                    # Either attribute is not present, or is present but with
+                    # the wrong value - don't add this instance to the results list.
+                    continue
+                result.append(instance)
         return result
 
     def refresh_state(self):

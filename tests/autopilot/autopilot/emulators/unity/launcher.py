@@ -11,7 +11,7 @@ import logging
 from time import sleep
 
 from autopilot.keybindings import KeybindingsHelper
-from autopilot.emulators.unity import get_state_by_path, make_introspection_object
+from autopilot.emulators.unity import get_state_by_path, make_introspection_object, UnityIntrospectionObject
 from autopilot.emulators.unity.icons import BamfLauncherIcon, SimpleLauncherIcon
 from autopilot.emulators.X11 import Keyboard, Mouse, ScreenGeometry
 
@@ -19,11 +19,13 @@ from autopilot.emulators.X11 import Keyboard, Mouse, ScreenGeometry
 logger = logging.getLogger(__name__)
 
 
-class Launcher(KeybindingsHelper):
-    """Interact with the unity Launcher."""
+class LauncherHelper(KeybindingsHelper):
+    """Class that allows easy access to launcher classes."""
 
     def __init__(self):
-        super(Launcher, self).__init__()
+        super(LauncherHelper, self).__init__()
+
+        self.controller = self._get_controller()
         # set up base launcher vars
         self.x = 0
         self.y = 120
@@ -38,6 +40,11 @@ class Launcher(KeybindingsHelper):
 
         state = self.__get_state(0)
         self.icon_width = int(state['icon-size'])
+
+    def _get_controller(self):
+        controllers = LauncherController.get_all_instances()
+        assert(len(controllers) == 1)
+        return controllers[0]
 
     def move_mouse_to_right_of_launcher(self, monitor):
         (x, y, w, h) = self.launcher_geometry(monitor)
@@ -243,3 +250,20 @@ class Launcher(KeybindingsHelper):
         quicklist = icon.get_quicklist()
         pin_item = quicklist.get_quicklist_item_by_text('Unlock from launcher')
         quicklist.click_item(pin_item)
+
+
+class LauncherController(UnityIntrospectionObject):
+    """The LauncherController class."""
+
+    def get_launcher_for_monitor(self, monitor_num):
+        """Return an instnace of Launcher for the specified monitor, or None."""
+        launchers = self.get_children_by_type(Launcher, monitor=monitor_num)
+        return launchers[0] if launchers else None
+
+
+class Launcher(UnityIntrospectionObject):
+    """An individual launcher for a monitor."""
+
+
+class LauncherModel(UnityIntrospectionObject):
+    """THe launcher model. Contains all launcher icons as children."""

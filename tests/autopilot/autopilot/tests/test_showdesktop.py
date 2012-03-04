@@ -7,11 +7,9 @@
 # by the Free Software Foundation.
 
 from time import sleep
-from subprocess import call
 
-from autopilot.emulators.unity.launcher import Launcher
+from autopilot.emulators.unity.launcher import LauncherHelper
 from autopilot.emulators.unity.switcher import Switcher
-from autopilot.emulators.X11 import Keyboard
 from autopilot.tests import AutopilotTestCase
 
 
@@ -78,7 +76,7 @@ class ShowDesktopTests(AutopilotTestCase):
             self.assertTrue(win.is_hidden, "Window '%s' is not hidden after show desktop activated." % (win.title))
 
         # We'll un-minimise the character map - find it's launcherIcon in the launcher:
-        l = Launcher()
+        l = LauncherHelper()
 
         launcher_icons = l.get_launcher_icons()
         found = False

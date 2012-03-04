@@ -12,8 +12,8 @@ from time import sleep
 from testtools.matchers import Equals, LessThan, GreaterThan
 
 from autopilot.tests import AutopilotTestCase
-from autopilot.emulators.unity.launcher import Launcher
-from autopilot.emulators.X11 import ScreenGeometry, Keyboard
+from autopilot.emulators.unity.launcher import LauncherHelper
+from autopilot.emulators.X11 import ScreenGeometry
 
 
 class LauncherTests(AutopilotTestCase):
@@ -21,7 +21,7 @@ class LauncherTests(AutopilotTestCase):
 
     def setUp(self):
         super(LauncherTests, self).setUp()
-        self.server = Launcher()
+        self.server = LauncherHelper()
         sleep(1)
 
     def test_launcher_switcher_starts_at_index_zero(self):
@@ -315,7 +315,7 @@ class LauncherRevealTests(AutopilotTestCase):
 
     def setUp(self):
         super(LauncherRevealTests, self).setUp()
-        self.launcher = Launcher()
+        self.launcher = LauncherHelper()
         self.set_unity_option('launcher_hide_mode', True)
         sleep(1)
 

@@ -15,7 +15,7 @@ from testtools import TestCase
 from time import sleep
 
 from autopilot.utilities import make_window_skip_taskbar
-from autopilot.emulators.unity.launcher import Launcher
+from autopilot.emulators.unity.launcher import LauncherHelper
 from autopilot.emulators.unity.switcher import Switcher
 from autopilot.emulators.bamf import Bamf
 
@@ -37,7 +37,7 @@ class InvisibleWindowTests(TestCase):
         sleep(1)
 
         switcher = Switcher()
-        launcher = Launcher()
+        launcher = LauncherHelper()
         # calculator should be in both launcher AND switcher:
         icon_names = [i.tooltip_text for i in launcher.get_launcher_icons()]
         self.assertIn('Calculator', icon_names)
@@ -74,7 +74,7 @@ class InvisibleWindowTests(TestCase):
         b.launch_application("gcalctool.desktop")
         self.addCleanup(call, ["killall", "gcalctool"])
         # need to pin the app to the launcher - this could be tricky.
-        launcher = Launcher()
+        launcher = LauncherHelper()
         launcher.reveal_launcher(0)
         icons = launcher.get_launcher_icons()
         # launcher.grab_switcher()
