@@ -56,7 +56,26 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(BamfApplication* app,
   // Since the transaction COULD have completed by now, assume true for now
   finished = true;
   finished_just_now = false;
+
+  self_abstract = AbstractLauncherIcon::Ptr(this);
   
+}
+
+void SoftwareCenterLauncherIcon::AddSelfToLauncher()
+{
+    _launcher->icon_animation_complete.emit(self_abstract);
+}
+
+gboolean SoftwareCenterLauncherIcon::OnDragWindowAnimComplete(gpointer data)
+{
+    SoftwareCenterLauncherIcon* self = (SoftwareCenterLauncherIcon*) data;
+    if (!self->_drag_window->Animating()) {
+        self->_drag_window->ShowWindow(false);
+        self->AddSelfToLauncher();
+        return false;
+    }
+    return true;
+    //_launcher.GetPointer()->icon_animation_complete.emit(AbstractLauncherIcon::Ptr(this));
 }
 
 void
@@ -67,17 +86,19 @@ SoftwareCenterLauncherIcon::Animate(nux::ObjectPtr<Launcher> launcher,
 {
   int target_x = 0;
   int target_y = 0;
+
+  _launcher = launcher.GetPointer();
     
   _icon_texture = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableDeviceTexture(launcher->GetIconSize(), launcher->GetIconSize(), 1, nux::BITFMT_R8G8B8A8);
   _drag_window = new LauncherDragWindow(_icon_texture);
 
-  launcher->RenderIconToTexture(nux::GetWindowThread()->GetGraphicsEngine(), AbstractLauncherIcon::Ptr(this), _icon_texture);
+  launcher->RenderIconToTexture(nux::GetWindowThread()->GetGraphicsEngine(), self_abstract, _icon_texture);
   nux::Geometry geo = _drag_window->GetGeometry();
   _drag_window->SetBaseXY(icon_x, icon_y);
   _drag_window->ShowWindow(true);
   _drag_window->SinkReference();
 
-  // Find out the center of last BamfLauncherIcon
+  // Find out the center of last BamfLauncherIcon with non-zero co-ordinates
   auto launchers = launcher->GetModel()->GetSublist<BamfLauncherIcon>();
   for (auto current_bamf_icon : launchers)
   {
@@ -92,8 +113,18 @@ SoftwareCenterLauncherIcon::Animate(nux::ObjectPtr<Launcher> launcher,
   }
 
   target_y = target_y + (launcher->GetIconSize() / 2);
-  _drag_window->SetAnimationTarget(target_x,target_y);
+  _drag_window->SetAnimationTarget(target_x, target_y);
+
   _drag_window->StartAnimation();
+
+  /*if (_drag_window->on_anim_completed.connected())
+     _drag_window->on_anim_completed.disconnect();
+  _drag_window->on_anim_completed = _drag_window->anim_completed.connect(sigc::mem_fun(this, &SoftwareCenterLauncherIcon::OnDragWindowAnimComplete));
+
+  g_debug("Heck: %d", _drag_window->Animating());*/
+
+  g_timeout_add(30, &SoftwareCenterLauncherIcon::OnDragWindowAnimComplete, this);
+
 }
 
 void SoftwareCenterLauncherIcon::ActivateLauncherIcon(ActionArg arg)

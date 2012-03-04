@@ -90,6 +90,7 @@ LauncherDragWindow::OnAnimationTimeout(gpointer data)
   if (geo.x == target_x && geo.y == target_y)
   {
     self->anim_completed.emit();
+    g_debug("Emitting!");
     self->_anim_handle = 0;
     return false;
   }

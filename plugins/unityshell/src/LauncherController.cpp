@@ -88,6 +88,8 @@ public:
                                    gint32 icon_x, gint32 icon_y, gint32 icon_size);
   void OnLauncherRemoveRequest(AbstractLauncherIcon::Ptr icon);
 
+  void OnSCIconAnimationComplete(AbstractLauncherIcon::Ptr icon);
+
   void OnLauncherEntryRemoteAdded(LauncherEntryRemote* entry);
   void OnLauncherEntryRemoteRemoved(LauncherEntryRemote* entry);
 
@@ -330,6 +332,8 @@ Launcher* Controller::Impl::CreateLauncher(int monitor)
   launcher->launcher_addrequest_special.connect(sigc::mem_fun(this, &Impl::OnLauncherAddRequestSpecial));
   launcher->launcher_removerequest.connect(sigc::mem_fun(this, &Impl::OnLauncherRemoveRequest));
 
+  launcher->icon_animation_complete.connect(sigc::mem_fun(this, &Impl::OnSCIconAnimationComplete));
+
   parent_->AddChild(launcher);
 
   return launcher;
@@ -396,16 +400,19 @@ Controller::Impl::OnLauncherAddRequestSpecial(std::string const& path,
   }
 
   AbstractLauncherIcon::Ptr result = CreateSCLauncherIcon(path, aptdaemon_trans_id, icon_path);
-  if (result)
-  {
-    RegisterIcon(result);
+  
+  ((SoftwareCenterLauncherIcon*)result.GetPointer())->Animate(launcher_, icon_x, icon_y, icon_size);
+}
 
-    if (before)
-      model_->ReorderBefore(result, before, false);
+void Controller::Impl::OnSCIconAnimationComplete(AbstractLauncherIcon::Ptr icon)
+{
+
+  if (icon)
+  {
+    RegisterIcon(icon);
   }
   Save();
-
-  ((SoftwareCenterLauncherIcon*)result.GetPointer())->Animate(launcher_, icon_x, icon_y, icon_size);
+  
 }
 
 void Controller::Impl::SortAndUpdate()

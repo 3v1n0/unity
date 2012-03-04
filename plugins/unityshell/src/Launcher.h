@@ -40,6 +40,7 @@
 #include "LauncherHideMachine.h"
 #include "LauncherHoverMachine.h"
 #include "UBusWrapper.h"
+#include "SoftwareCenterLauncherIcon.h"
 
 
 namespace unity
@@ -117,6 +118,7 @@ public:
   sigc::signal<void, std::string const&, AbstractLauncherIcon::Ptr, std::string const&, std::string const&,
                gint32, gint32, gint32> launcher_addrequest_special;
   sigc::signal<void, AbstractLauncherIcon::Ptr> launcher_removerequest;
+  sigc::signal<void, AbstractLauncherIcon::Ptr> icon_animation_complete;
   sigc::signal<void> selection_change;
   sigc::signal<void> hidden_changed;
 

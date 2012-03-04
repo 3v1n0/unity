@@ -38,6 +38,10 @@ public:
                              std::string const& aptdaemon_trans_id,
                              std::string const& icon_path);
 
+  void AddSelfToLauncher();
+
+  static gboolean OnDragWindowAnimComplete(gpointer data);
+
   void Animate(nux::ObjectPtr<Launcher> launcher, gint32 icon_x, gint32 icon_y, gint32 icon_size);
 
   void ActivateLauncherIcon(ActionArg arg);
@@ -49,6 +53,8 @@ private:
 
   nux::ObjectPtr<nux::IOpenGLBaseTexture> _icon_texture;
   LauncherDragWindow* _drag_window;
+  Launcher* _launcher;
+  AbstractLauncherIcon::Ptr self_abstract;
   bool finished;
   bool finished_just_now;
 };
