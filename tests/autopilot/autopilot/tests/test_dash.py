@@ -416,7 +416,7 @@ class DashLensResultsTests(AutopilotTestCase):
         lens = self.dash.get_current_lens()
 
         kb = Keyboard();
-        kb.type("a")
+        kb.type("Terminal")
         sleep(1)
       
         lens.refresh_state() 
