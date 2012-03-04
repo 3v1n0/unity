@@ -67,6 +67,17 @@ class SwitcherTests(AutopilotTestCase):
         self.assertThat(end, Equals(start - 1))
         self.set_timeout_setting(True)
 
+    def test_switcher_arrow_key_does_not_init(self):
+        self.set_timeout_setting(False)
+        sleep(1)
+
+        self.switcher.initiate_right_arrow()
+        sleep(.2)
+
+        self.assertThat(self.switcher.get_is_visible(), Equals(False))
+        self.switcher.terminate()
+        self.set_timeout_setting(True)
+
 
 class SwitcherDetailsTests(AutopilotTestCase):
     """Test the details mode for the switcher."""
