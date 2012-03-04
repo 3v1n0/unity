@@ -2,24 +2,25 @@
 Autopilot tests for Unity.
 """
 
-from subprocess import call
+
 from compizconfig import Setting, Plugin
-from autopilot.globals import global_context
-from testtools import TestCase
-from testtools.matchers import Equals
-from testscenarios import TestWithScenarios
-from testtools.content import text_content
-import time
 import logging
 from StringIO import StringIO
+from subprocess import call
+from testscenarios import TestWithScenarios
+from testtools import TestCase
+from testtools.content import text_content
+from testtools.matchers import Equals
+import time
 
-from autopilot.emulators.X11 import Keyboard, Mouse
 from autopilot.emulators.bamf import Bamf
+from autopilot.emulators.unity.launcher import LauncherController
 from autopilot.emulators.unity.switcher import Switcher
 from autopilot.emulators.unity.workspace import WorkspaceManager
-from autopilot.emulators.unity.launcher import LauncherController
-from autopilot.keybindings import KeybindingsHelper
+from autopilot.emulators.X11 import Keyboard, Mouse
 from autopilot.glibrunner import GlibRunner
+from autopilot.globals import global_context
+from autopilot.keybindings import KeybindingsHelper
 
 
 logger = logging.getLogger(__name__)
