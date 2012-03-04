@@ -52,6 +52,13 @@ class Switcher(KeybindingsHelper):
         self.keybinding_tap("switcher/reveal_all")
         sleep(1)
 
+    def initiate_right_arrow(self):
+        """Impropperly attempt to start switcher."""
+        logger.debug("Initiating switcher with Alt+Right (should not work)")
+        self.keybinding_hold("switcher/reveal_impropper")
+        self.keybinding_tap("switcher/right")
+        sleep(1)
+
     def terminate(self):
         """Stop switcher without activating the selected icon."""
         logger.debug("Terminating switcher.")
@@ -151,4 +158,4 @@ class Switcher(KeybindingsHelper):
         return get_state_by_path('/Unity/SwitcherController/SwitcherModel')[0]
 
     def __get_controller(self):
-        return get_state_by_path('/unity/SwitcherController')[0]
+        return get_state_by_path('/Unity/SwitcherController')[0]
