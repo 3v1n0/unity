@@ -167,7 +167,7 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
             icon, self.monitor, button)
         self.reveal_launcher()
         target_x = icon.x + self.x
-        target_y = icon.y + self.y + (self.icon_size / 2)
+        target_y = icon.y + (self.icon_size / 2)
         self._mouse.move(target_x, target_y )
         self._mouse.click(button)
         self.move_mouse_to_right_of_launcher()

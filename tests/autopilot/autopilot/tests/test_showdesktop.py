@@ -8,7 +8,6 @@
 
 from time import sleep
 
-from autopilot.emulators.unity.launcher import LauncherHelper
 from autopilot.emulators.unity.switcher import Switcher
 from autopilot.tests import AutopilotTestCase
 
@@ -76,14 +75,12 @@ class ShowDesktopTests(AutopilotTestCase):
             self.assertTrue(win.is_hidden, "Window '%s' is not hidden after show desktop activated." % (win.title))
 
         # We'll un-minimise the character map - find it's launcherIcon in the launcher:
-        l = LauncherHelper()
-
-        launcher_icons = l.get_launcher_icons()
+        launcher_icons = self.launcher.model.get_launcher_icons()
         found = False
         for icon in launcher_icons:
             if icon.tooltip_text == 'Character Map':
                 found = True
-                l.click_launcher_icon(icon)
+                self.launcher.get_launcher_for_monitor(0).click_launcher_icon(icon)
         self.assertTrue(found, "Could not find launcher icon in launcher.")
 
         sleep(1)

@@ -46,7 +46,6 @@ _introspection_iface = Interface(_debug_proxy_obj, INTROSPECTION_IFACE)
 
 def get_state_by_path(piece='/Unity'):
     """Returns a full dump of unity's state."""
-    logger.debug("Querying unity for state piece: %r", piece)
     return _introspection_iface.GetState(piece)
 
 
@@ -58,7 +57,6 @@ def get_state_by_name_and_id(class_name, unique_id):
     Returns a dictionary of information. Unlike get_state_by_path, this
     method can never return state for more than one object.
     """
-    logger.debug("Getting state for object %s with id %d", class_name, unique_id)
     try:
         query = "//%(class_name)s[id=%(unique_id)d]" % (dict(
                                                     class_name=class_name,
@@ -157,8 +155,6 @@ class UnityIntrospectionObject(object):
 
         """
         # need to get name from class object.
-        logger.debug("Refreshing state for %r", self)
-
         new_state = get_state_by_name_and_id(self.__class__.__name__, self.id)
         self.set_properties(new_state)
 
