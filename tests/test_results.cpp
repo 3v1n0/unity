@@ -46,7 +46,6 @@ TEST(TestResults, TestRowsValid)
   ResultIterator iter(model.model);
   unsigned int i = 0;
   for (Result result : model)
-  //for (auto iter = model.begin(); iter != model.end(); iter++)
   {
     if (i > n_rows)
       break;
@@ -63,6 +62,59 @@ TEST(TestResults, TestRowsValid)
     EXPECT_EQ(result.dnd_uri(), value);
     i++;
   }
+
+  //test reading a subset
+  i = 20;
+  for (auto iter = model.begin() + i; iter != model.end(); ++iter)
+  {
+    if (i > 50)
+      break;
+
+    Result result = (*iter);
+    unity::glib::String tmp(g_strdup_printf("Result%d", i));
+    string value = tmp.Str();
+    EXPECT_EQ(result.uri(), value);
+    i++;
+  }
+
+  // test post incrementor
+  i = 20;
+  for (auto iter = model.begin() + i; iter != model.end(); iter++)
+  {
+    if (i > 50)
+      break;
+
+    Result result = (*iter);
+    unity::glib::String tmp(g_strdup_printf("Result%d", i));
+    string value = tmp.Str();
+    EXPECT_EQ(result.uri(), value);
+    i++;
+  }
+
+  // test equality
+  EXPECT_TRUE(model.begin() == model.begin());
+  EXPECT_TRUE(model.begin() != model.end());
+
+  EXPECT_FALSE(model.begin().IsLast());
+  EXPECT_FALSE(model.end().IsFirst());
+  EXPECT_TRUE(model.begin().IsFirst());
+  EXPECT_TRUE(model.end().IsLast());
+
+  EXPECT_TRUE(model.begin() < model.end());
+  EXPECT_FALSE(model.end() < model.begin());
+  EXPECT_TRUE(model.end() > model.begin());
+  EXPECT_FALSE(model.begin() > model.end());
+  EXPECT_TRUE(model.begin() <= model.end());
+  EXPECT_FALSE(model.end() <= model.begin());
+  EXPECT_TRUE(model.end() >= model.begin());
+  EXPECT_FALSE(model.begin() >= model.end());
+
+
+  EXPECT_TRUE(model.begin() + 20 > model.begin());
+  EXPECT_TRUE(model.begin() + 20 > model.begin() + 19);
+  EXPECT_TRUE(model.end() - 20 < model.end());
+  EXPECT_TRUE(model.end() - 20 < model.end() - 19);
+
 }
 
 // We're testing the model's ability to store and retrieve random pointers
