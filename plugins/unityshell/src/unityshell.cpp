@@ -2624,7 +2624,7 @@ void UnityScreen::InitHints()
   hints_.push_back(new shortcut::Hint(dash, "", "", _("Open currently focused item."), shortcut::HARDCODED_OPTION, _("Enter & Return")));
  
   // Menu Bar
-  std::string const menubar(_("HUD & Top Bar"));
+  std::string const menubar(_("HUD & Menu Bar"));
 
   hints_.push_back(new shortcut::Hint(menubar, "", " (Tap)", _("Open the HUD."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "show_hud"));
   hints_.push_back(new shortcut::Hint(menubar, "", " (Press)", _("Reveals application menu."), shortcut::HARDCODED_OPTION, "Alt"));
