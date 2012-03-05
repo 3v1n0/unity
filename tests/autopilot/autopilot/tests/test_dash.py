@@ -266,7 +266,7 @@ class DashKeyNavTests(AutopilotTestCase):
 
 
 class DashClipboardTests(AutopilotTestCase):
-    """Test the Unity clipboard""" 
+    """Test the Unity clipboard"""
 
     def setUp(self):
         super(DashClipboardTests, self).setUp()
@@ -275,7 +275,7 @@ class DashClipboardTests(AutopilotTestCase):
     def tearDown(self):
         super(DashClipboardTests, self).tearDown()
         self.dash.ensure_hidden()
-         
+
     def test_ctrl_a(self):
         """ This test if ctrl+a selects all text """
         self.dash.ensure_hidden()
@@ -287,7 +287,7 @@ class DashClipboardTests(AutopilotTestCase):
 
         kb.press_and_release("Ctrl+a")
         kb.press_and_release("Delete")
-        
+
         searchbar = self.dash.get_searchbar()
         self.assertEqual(searchbar.search_string, u'')
 
@@ -340,7 +340,7 @@ class DashClipboardTests(AutopilotTestCase):
         kb.press_and_release("Ctrl+c")
         kb.press_and_release("Ctrl+v")
         kb.press_and_release("Ctrl+v")
-        
+
         searchbar = self.dash.get_searchbar()
         self.assertEqual(searchbar.search_string, u'CopyPasteCopyPaste')
 
@@ -357,7 +357,7 @@ class DashClipboardTests(AutopilotTestCase):
         kb.press_and_release("Ctrl+x")
         kb.press_and_release("Ctrl+v")
         kb.press_and_release("Ctrl+v")
-        
+
         searchbar = self.dash.get_searchbar()
         self.assertEqual(searchbar.search_string, u'CutPasteCutPaste')
 

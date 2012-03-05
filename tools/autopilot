@@ -85,6 +85,7 @@ def parse_arguments():
 
 def list_tests():
     """Print a list of tests we find inside autopilot.tests."""
+    num_tests = 0
     from testtools import iterate_tests
     loader = TestLoader()
     test_suite = loader.discover('autopilot.tests')
@@ -93,9 +94,12 @@ def list_tests():
     for test in iterate_tests(test_suite):
         has_scenarios = hasattr(test, "scenarios")
         if has_scenarios:
-            print " * " + test.id()
+            num_tests += len(test.scenarios)
+            print " *%d %s" % (len(test.scenarios), test.id())
         else:
+            num_tests += 1
             print test.id()
+    print "\n %d total tests." % (num_tests)
 
 
 def run_tests(args):
