@@ -82,6 +82,7 @@ class Keyboard(object):
         'Shift' : 'Shift_L',
         'Enter' : 'Return',
         'Space' : ' ',
+        'Alt_R' : 'Alt_R',
     }
 
     def __init__(self):
