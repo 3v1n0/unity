@@ -276,7 +276,7 @@ class ShortcutHintInteractionsTests(BaseShortcutHintTests):
 
         self.launcher.switcher_next()
         sleep(.25)
-        self.launcher.end_switcher(cancel=True)
+        self.keyboard.press_and_release("Escape")
         sleep(.25)
 
         self.assertThat(self.launcher.key_nav_is_active(), Equals(False))

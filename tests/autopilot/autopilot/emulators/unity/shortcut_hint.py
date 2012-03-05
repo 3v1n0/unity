@@ -32,17 +32,13 @@ class ShortcutController(UnityIntrospectionObject, KeybindingsHelper):
         self.keybinding("shortcuthint/cancel")
 
     def get_geometry(self):
-        self.refresh_state()
         return (self.x, self.y, self.width, self.height)
 
     def get_show_timeout(self):
-        self.redresh_state()
         return self.timeout_duration / 1000.0
 
     def is_enabled(self):
-        self.refresh_state()
         return bool(self.enabled)
 
     def is_visible(self):
-        self.refresh_state()
         return bool(self.visible)
