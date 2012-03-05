@@ -169,10 +169,6 @@ class Bamf(object):
             def on_view_added(bamf_path, name):
                 if bamf_path.split('/')[-1].startswith('application'):
                     app = BamfApplication(bamf_path)
-                    print app.desktop_file
-                    print app.name
-                    print app_name
-                    print app_name in app.desktop_file
                     if ((is_desktop_file and app_name == app.desktop_file)
                         or (not is_desktop_file and app.name == app_name)):
                         gobject_loop.quit()
