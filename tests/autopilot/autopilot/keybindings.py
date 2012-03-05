@@ -87,7 +87,7 @@ _keys = {
     "window/minimize": ("core", "minimize_window_key"),
     # expo plugin:
     "expo/start": ("expo", "expo_key"),
-    "expo/cencel": "Escape",
+    "expo/cancel": "Escape",
 }
 
 
