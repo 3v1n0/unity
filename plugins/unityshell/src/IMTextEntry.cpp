@@ -151,7 +151,6 @@ void IMTextEntry::InsertText(std::string const& text)
     SetText(new_text.c_str());
     SetCursor(cursor + text.length());
     QueueRefresh (true, true);
-    text_changed.emit(this);
   }
 }
 
@@ -191,10 +190,7 @@ inline void IMTextEntry::CheckValidClientWindow(Window window)
     client_window_ = gdk_x11_window_foreign_new_for_display(gdk_display_get_default(), window);
     gtk_im_context_set_client_window(im_context_, client_window_);
 
-    if (1/*focused_*/)
-    {
-      gtk_im_context_focus_in(im_context_);
-    }
+    gtk_im_context_focus_in(im_context_);
   }
 }
 
