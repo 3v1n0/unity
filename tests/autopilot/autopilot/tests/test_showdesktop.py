@@ -7,11 +7,8 @@
 # by the Free Software Foundation.
 
 from time import sleep
-from subprocess import call
 
-from autopilot.emulators.unity.launcher import Launcher
 from autopilot.emulators.unity.switcher import Switcher
-from autopilot.emulators.X11 import Keyboard
 from autopilot.tests import AutopilotTestCase
 
 
@@ -78,15 +75,11 @@ class ShowDesktopTests(AutopilotTestCase):
             self.assertTrue(win.is_hidden, "Window '%s' is not hidden after show desktop activated." % (win.title))
 
         # We'll un-minimise the character map - find it's launcherIcon in the launcher:
-        l = Launcher()
-
-        launcher_icons = l.get_launcher_icons()
-        found = False
-        for icon in launcher_icons:
-            if icon.tooltip_text == 'Character Map':
-                found = True
-                l.click_launcher_icon(icon)
-        self.assertTrue(found, "Could not find launcher icon in launcher.")
+        charmap_icon = self.launcher.get_icon_by_tooltip_text('Character Map')
+        if charmap_icon:
+            self.launcher.get_launcher_for_monitor(0).click_launcher_icon(charmap_icon)
+        else:
+            self.fail("Could not find launcher icon in launcher.")
 
         sleep(1)
         for win in self.bamf.get_open_windows():

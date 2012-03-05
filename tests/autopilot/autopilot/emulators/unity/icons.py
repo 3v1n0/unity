@@ -26,8 +26,6 @@ class SimpleLauncherIcon(UnityIntrospectionObject):
         launcher icon.
 
         """
-        # quicklist is created dynamically, so refresh our state:
-        self.refresh_state()
         matches = self.get_children_by_type(Quicklist)
         return matches[0] if matches else None
 
