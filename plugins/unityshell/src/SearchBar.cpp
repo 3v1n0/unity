@@ -56,6 +56,19 @@ const int HIGHLIGHT_HEIGHT = 24;
 const int HIGHLIGHT_WIDTH = 292;
 const int HIGHLIGHT_LEFT_PADDING = 5;
 const int HIGHLIGHT_RIGHT_PADDING = 4;
+
+// Fonts
+const std::string HINT_LABEL_FONT_SIZE = "20px";
+const std::string HINT_LABEL_FONT_STYLE = "Italic";
+const std::string HINT_LABEL_DEFAULT_FONT = "Ubuntu " + HINT_LABEL_FONT_STYLE + " " + HINT_LABEL_FONT_SIZE;
+
+const std::string PANGO_ENTRY_DEFAULT_FONT_FAMILY = "Ubuntu";
+const int PANGO_ENTRY_FONT_SIZE = 22;
+
+const std::string SHOW_FILTERS_LABEL_FONT_SIZE = "13";
+const std::string SHOW_FILTERS_LABEL_FONT_STYLE = "Bold";
+const std::string SHOW_FILTERS_LABEL_DEFAULT_FONT = "Ubuntu " + SHOW_FILTERS_LABEL_FONT_STYLE + " " + SHOW_FILTERS_LABEL_FONT_SIZE;
+
 }
 
 namespace
@@ -175,12 +188,12 @@ void SearchBar::Init()
   hint_ = new nux::StaticCairoText(" ");
   hint_->SetTextColor(nux::Color(1.0f, 1.0f, 1.0f, 0.5f));
   hint_->SetMaximumWidth(search_bar_width_ - icon->GetWidth());
-  hint_->SetFont("Ubuntu Italic 20px");
+  hint_->SetFont(HINT_LABEL_DEFAULT_FONT.c_str());
   hint_layout->AddView(hint_,  0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
   pango_entry_ = new IMTextEntry();
-  pango_entry_->SetFontFamily("Ubuntu");
-  pango_entry_->SetFontSize(22);
+  pango_entry_->SetFontFamily(PANGO_ENTRY_DEFAULT_FONT_FAMILY.c_str());
+  pango_entry_->SetFontSize(PANGO_ENTRY_FONT_SIZE);
   pango_entry_->text_changed.connect(sigc::mem_fun(this, &SearchBar::OnSearchChanged));
   pango_entry_->activated.connect([&]() { activated.emit(); });
   pango_entry_->cursor_moved.connect([&](int i) { QueueDraw(); });
@@ -202,8 +215,8 @@ void SearchBar::Init()
     std::string filter_str(_("Filter results"));
     show_filters_ = new nux::StaticCairoText(filter_str.c_str());
     show_filters_->SetVisible(false);
-    show_filters_->SetFont("Ubuntu Bold 13"); // 17px = 13
-    show_filters_->SetTextColor(nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
+    show_filters_->SetFont(SHOW_FILTERS_LABEL_DEFAULT_FONT.c_str());
+    show_filters_->SetTextColor(nux::color::White);
     show_filters_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_LEFT);
 
     nux::BaseTexture* arrow;
@@ -306,25 +319,25 @@ void SearchBar::OnFontChanged(GtkSettings* settings, GParamSpec* pspec)
 {
   gchar* font_name = NULL;
   PangoFontDescription* desc;
-  gchar* font_desc;
+  std::ostringstream font_desc;
 
   g_object_get(settings, "gtk-font-name", &font_name, NULL);
 
   desc = pango_font_description_from_string(font_name);
   pango_entry_->SetFontFamily(pango_font_description_get_family(desc));
-  pango_entry_->SetFontSize(22);
+  pango_entry_->SetFontSize(PANGO_ENTRY_FONT_SIZE);
   pango_entry_->SetFontOptions(gdk_screen_get_font_options(gdk_screen_get_default()));
 
-  font_desc = g_strdup_printf("%s Italic %dpx", pango_font_description_get_family(desc), 20);
-  hint_->SetFont(font_desc);
+  font_desc << pango_font_description_get_family(desc) << " " << HINT_LABEL_FONT_STYLE << " " << HINT_LABEL_FONT_SIZE;
+  hint_->SetFont(font_desc.str().c_str());
 
-  g_free(font_desc);
-  font_desc = g_strdup_printf("%s Bold %d", pango_font_description_get_family(desc), 13); // 17px = 13pt
-  show_filters_->SetFont(font_desc);
+  font_desc.str("");
+  font_desc.clear();
+  font_desc << pango_font_description_get_family(desc) << " " << SHOW_FILTERS_LABEL_FONT_STYLE << " " << SHOW_FILTERS_LABEL_FONT_SIZE;
+  show_filters_->SetFont(font_desc.str().c_str());
 
   pango_font_description_free(desc);
   g_free(font_name);
-  g_free(font_desc);
 }
 
 void SearchBar::OnSearchHintChanged()

@@ -62,6 +62,10 @@ const int kHighlightLeftPadding = 11;
 const int kSeparatorLeftPadding = 16;
 const int kSeparatorWidthSubtractor = 10;
 
+// Font
+const char* const NAME_LABEL_FONT = "Ubuntu 13"; // 17px = 13
+const char* const EXPANDER_LABEL_FONT = "Ubuntu 10"; // 13px = 10
+
 class HeaderView : public nux::View
 {
 public:
@@ -141,7 +145,7 @@ PlacesGroup::PlacesGroup()
   _header_layout->AddLayout(_text_layout, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
 
   _name = new nux::StaticCairoText("", NUX_TRACKER_LOCATION);
-  _name->SetFont("Ubuntu 13"); // 17px = 13
+  _name->SetFont(NAME_LABEL_FONT);
   _name->SetTextEllipsize(nux::StaticCairoText::NUX_ELLIPSIZE_END);
   _name->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_LEFT);
   _text_layout->AddView(_name, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
@@ -154,7 +158,7 @@ PlacesGroup::PlacesGroup()
   _expand_layout->AddLayout(_expand_label_layout, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
 
   _expand_label = new nux::StaticCairoText("", NUX_TRACKER_LOCATION);
-  _expand_label->SetFont("Ubuntu 10"); // 13px = 10
+  _expand_label->SetFont(EXPANDER_LABEL_FONT);
   _expand_label->SetTextEllipsize(nux::StaticCairoText::NUX_ELLIPSIZE_END);
   _expand_label->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_LEFT);
   _expand_label->SetTextColor(kExpandDefaultTextColor);
@@ -424,13 +428,7 @@ PlacesGroup::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
     nux::GetPainter().PushLayer(graphics_engine, _focus_layer->GetGeometry(), _focus_layer);
   }
 
-  //nux::GetPainter().Paint2DQuadColor(graphics_engine, _expand_layout->GetGeometry(), nux::color::Orange * 0.50);
-
   _group_layout->ProcessDraw(graphics_engine, force_draw);
-
-    // Debug rects
-  //nux::GetPainter().Paint2DQuadColor(GfxContext, hint_->GetGeometry(), nux::color::Violet * 0.50);
-  //nux::GetPainter().Paint2DQuadColor(GfxContext, pango_entry_->GetGeometry(), nux::color::Green * 0.50);
 
   graphics_engine.PopClippingRectangle();
 }

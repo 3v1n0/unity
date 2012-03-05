@@ -47,6 +47,9 @@ const int EXPANDER_LAYOUT_SPACE_BETWEEN_CHILDREN = 8;
 const int HIGHLIGHT_HEIGHT = 34;
 const int HIGHLIGHT_WIDTH_SUBTRACTOR = 5;
 
+// font
+const char* const FONT_EXPANDER_LABEL = "Ubuntu Bold 13"; // 17px = 13
+
 class ExpanderView : public nux::View
 {
 public:
@@ -157,7 +160,7 @@ void FilterExpanderLabel::BuildLayout()
   top_bar_layout_->AddView(expander_view_, 0);
 
   cairo_label_ = new nux::StaticCairoText(label_.c_str(), NUX_TRACKER_LOCATION);
-  cairo_label_->SetFont("Ubuntu Bold 13"); // 17px = 13
+  cairo_label_->SetFont(FONT_EXPANDER_LABEL);
   cairo_label_->SetTextColor(nux::color::White);
   cairo_label_->SetAcceptKeyboardEvent(false);
 
