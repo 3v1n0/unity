@@ -29,7 +29,6 @@ class HudController(UnityIntrospectionObject, KeybindingsHelper):
             self.toggle_reveal()
 
     def is_visible(self):
-        self.refresh_state()
         return self.visible
 
     def toggle_reveal(self, tap_delay=0.1):
@@ -42,7 +41,6 @@ class HudController(UnityIntrospectionObject, KeybindingsHelper):
 
     @property
     def selected_button(self):
-        self.refresh_state()
         view = self._get_view()
         if view:
             return view.selected_button
@@ -51,7 +49,6 @@ class HudController(UnityIntrospectionObject, KeybindingsHelper):
 
     @property
     def num_buttons(self):
-        self.refresh_state()
         view = self._get_view()
         if view:
             return view.num_buttons

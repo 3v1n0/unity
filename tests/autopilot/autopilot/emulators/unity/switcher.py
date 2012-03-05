@@ -21,6 +21,8 @@ from autopilot.emulators.unity.icons import *
 logger = logging.getLogger(__name__)
 
 
+# TODO: THis class needs to be ported to the new-style emulator classes.
+# See launcher.py or dash.py for reference.
 class Switcher(KeybindingsHelper):
     """Interact with the Unity switcher."""
 
@@ -50,6 +52,13 @@ class Switcher(KeybindingsHelper):
         logger.debug("Initiating switcher in 'all workspaces' mode.")
         self.keybinding_hold("switcher/reveal_all")
         self.keybinding_tap("switcher/reveal_all")
+        sleep(1)
+
+    def initiate_right_arrow(self):
+        """Impropperly attempt to start switcher."""
+        logger.debug("Initiating switcher with Alt+Right (should not work)")
+        self.keybinding_hold("switcher/reveal_impropper")
+        self.keybinding_tap("switcher/right")
         sleep(1)
 
     def terminate(self):
@@ -151,4 +160,4 @@ class Switcher(KeybindingsHelper):
         return get_state_by_path('/Unity/SwitcherController/SwitcherModel')[0]
 
     def __get_controller(self):
-        return get_state_by_path('/unity/SwitcherController')[0]
+        return get_state_by_path('/Unity/SwitcherController')[0]
