@@ -236,7 +236,7 @@ void LensDirectoryReader::Impl::LoadFileContentCallback(GObject* source,
   gboolean result = g_file_load_contents_finish(file, res,
                                                 &contents, &length,
                                                 NULL, error.AsOutParam());
-  if (result && !error)
+  if (result)
   {
     self->GetLensDataFromKeyFile(file, contents.Value(), length);
     self->SortLensList();
@@ -246,6 +246,8 @@ void LensDirectoryReader::Impl::LoadFileContentCallback(GObject* source,
     LOG_WARN(logger) << "Unable to read lens file "
                      << path.Str() << ": "
                      << error;
+    if (g_error_matches (error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
+      return; // self is invalid now
   }
   
   self->cancel_map_.erase(file);
@@ -350,6 +352,7 @@ public:
   ~Impl()
   {
     if (timeout_id != 0) g_source_remove (timeout_id);
+    finished_slot_.disconnect();
   }
 
   void OnLoadingFinished();
@@ -363,6 +366,7 @@ public:
   FilesystemLenses* owner_;
   LensDirectoryReader::Ptr reader_;
   LensList lenses_;
+  sigc::connection finished_slot_;
   guint timeout_id;
 };
 
@@ -371,7 +375,7 @@ FilesystemLenses::Impl::Impl(FilesystemLenses* owner, LensDirectoryReader::Ptr c
   , reader_(reader)
   , timeout_id(0)
 {
-  reader_->load_finished.connect(sigc::mem_fun(this, &Impl::OnLoadingFinished));
+  finished_slot_ = reader_->load_finished.connect(sigc::mem_fun(this, &Impl::OnLoadingFinished));
   if (reader_->IsDataLoaded())
   {
     // we won't get any signal, so let's just emit our signals after construction
