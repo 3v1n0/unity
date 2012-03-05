@@ -23,7 +23,7 @@ class LauncherController(UnityIntrospectionObject):
     """The LauncherController class."""
 
     def get_launcher_for_monitor(self, monitor_num):
-        """Return an instnace of Launcher for the specified monitor, or None."""
+        """Return an instance of Launcher for the specified monitor, or None."""
         launchers = self.get_children_by_type(Launcher, monitor=monitor_num)
         return launchers[0] if launchers else None
 
