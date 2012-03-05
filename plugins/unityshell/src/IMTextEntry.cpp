@@ -183,24 +183,11 @@ void IMTextEntry::KeyEventToGdkEventKey(Event& event, GdkEventKey& gdk_event)
   gdk_event.is_modifier = 0;
 }
 
-inline void IMTextEntry::CheckValidClientWindow(Window window)
-{
-  if (!client_window_)
-  {
-    client_window_ = gdk_x11_window_foreign_new_for_display(gdk_display_get_default(), window);
-    gtk_im_context_set_client_window(im_context_, client_window_);
-
-    gtk_im_context_focus_in(im_context_);
-  }
-}
-
 bool IMTextEntry::TryHandleEvent(unsigned int eventType,
                                  unsigned int keysym,
                                  const char* character)
 {
   nux::Event event = nux::GetWindowThread()->GetGraphicsDisplay().GetCurrentEvent();
-  
-  CheckValidClientWindow(event.x11_window);
   
   GdkEventKey ev;
   KeyEventToGdkEventKey(event, ev);

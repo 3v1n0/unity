@@ -49,9 +49,8 @@ private:
   void Paste(bool primary = false);
 
   void OnMouseButtonUp(int x, int y, unsigned long bflags, unsigned long kflags);
-  
+
   void KeyEventToGdkEventKey(Event& event, GdkEventKey& gdk_event);
-  inline void CheckValidClientWindow(Window window);
   bool TryHandleEvent(unsigned int eventType,
                       unsigned int keysym,
                       const char* character);
