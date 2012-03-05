@@ -387,17 +387,18 @@ class DashKeyboardFocusTests(AutopilotTestCase):
         kb.type(" world")
 
         searchbar = self.dash.get_searchbar()
-        self.assertEqual("hello world", searchbar.search_string
+        self.assertEqual("hello world", searchbar.search_string)
 
 class DashCompositionCharactersTests(AutopilotTestCase):
     """Tests that composition characters works."""
 
     def setUp(self):
-        super(DashCompositionCharacters, self).setUp()
+        super(DashCompositionCharactersTests, self).setUp()
         self.dash = Dash()
+        self.addCleanup(self.dash.ensure_hidden)
 
     def tearDown(self):
-        super(DashCompositionCharacters, self).tearDown()
+        super(DashCompositionCharactersTests, self).tearDown()
         self.dash.ensure_hidden()
 
     def test_composition_characters(self):
@@ -408,12 +409,11 @@ class DashCompositionCharactersTests(AutopilotTestCase):
         filter_bar = self.dash.get_current_lens().get_filterbar()
         filter_bar.ensure_collapsed()
 
-        kb = Keyboard()
-        kb.press('Shift')
-        kb.press_and_release(Alt_R)
-        kb.press_and_release("^")
-        kb.release('Shift')
-        kb.type("o")
+        self.keyboard.press('Shift')
+        self.keyboard.press_and_release('AltR')
+        self.keyboard.press_and_release('^')
+        self.keyboard.release('Shift')
+        self.keyboard.type('o')
 
         searchbar = self.dash.get_searchbar()
         self.assertEqual("ô", searchbar.search_string)        
