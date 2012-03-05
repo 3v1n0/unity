@@ -49,11 +49,14 @@ class LoggedTestCase(TestWithScenarios, TestCase):
         log_format = "%(asctime)s %(levelname)s %(pathname)s:%(lineno)d - %(message)s"
         handler.setFormatter(MyFormatter(log_format))
         root_logger.addHandler(handler)
+        #Tear down logging in a cleanUp handler, so it's done after all other
+        # tearDown() calls and cleanup handlers.
+        self.addCleanup(self.tearDownLogging)
         # The reason that the super setup is done here is due to making sure
         # that the logging is properly set up prior to calling it.
         super(LoggedTestCase, self).setUp()
 
-    def tearDown(self):
+    def tearDownLogging(self):
         logger = logging.getLogger()
         for handler in logger.handlers:
             handler.flush()
@@ -63,7 +66,6 @@ class LoggedTestCase(TestWithScenarios, TestCase):
         # Calling del to remove the handler and flush the buffer.  We are
         # abusing the log handlers here a little.
         del self._log_buffer
-        super(LoggedTestCase, self).tearDown()
 
 
 class AutopilotTestCase(LoggedTestCase, KeybindingsHelper):

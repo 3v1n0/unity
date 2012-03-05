@@ -140,12 +140,15 @@ class UnityIntrospectionObject(object):
         result = []
         for child in self._get_child_tuples_by_type(desired_type):
             instance = make_introspection_object(child)
+            filters_passed = True
             for attr, val in kwargs.iteritems():
                 if not hasattr(instance, attr) or getattr(instance, attr) != val:
                     # Either attribute is not present, or is present but with
                     # the wrong value - don't add this instance to the results list.
-                    continue
-            result.append(instance)
+                    filters_passed = False
+                    break
+            if filters_passed:
+                result.append(instance)
         return result
 
     def refresh_state(self):
