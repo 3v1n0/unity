@@ -40,14 +40,15 @@ public:
 
   void AddSelfToLauncher();
 
-  static gboolean OnDragWindowAnimComplete(gpointer data);
+  void Animate(nux::ObjectPtr<Launcher> launcher, int icon_x, int icon_y, int icon_size);
 
-  void Animate(nux::ObjectPtr<Launcher> launcher, gint32 icon_x, gint32 icon_y, gint32 icon_size);
-
+protected:
   void ActivateLauncherIcon(ActionArg arg);
 
 private:
   void OnPropertyChanged(GVariant* params);
+
+  static gboolean OnDragWindowAnimComplete(gpointer data);
 
   glib::DBusProxy _aptdaemon_trans;
 
@@ -55,8 +56,8 @@ private:
   LauncherDragWindow* _drag_window;
   Launcher* _launcher;
   AbstractLauncherIcon::Ptr self_abstract;
-  bool finished;
-  bool finished_just_now;
+  bool _finished;
+  bool _finished_just_now;
 };
 
 }

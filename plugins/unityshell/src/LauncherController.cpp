@@ -85,7 +85,7 @@ public:
 
   void OnLauncherAddRequest(char* path, AbstractLauncherIcon::Ptr before);
   void OnLauncherAddRequestSpecial(std::string const& path, AbstractLauncherIcon::Ptr before, std::string const& aptdaemon_trans_id, std::string const& icon_path,
-                                   gint32 icon_x, gint32 icon_y, gint32 icon_size);
+                                   int icon_x, int icon_y, int icon_size);
   void OnLauncherRemoveRequest(AbstractLauncherIcon::Ptr icon);
 
   void OnSCIconAnimationComplete(AbstractLauncherIcon::Ptr icon);
@@ -388,9 +388,9 @@ Controller::Impl::OnLauncherAddRequestSpecial(std::string const& path,
                                               AbstractLauncherIcon::Ptr before,
                                               std::string const& aptdaemon_trans_id,
                                               std::string const& icon_path,
-                                              gint32 icon_x,
-                                              gint32 icon_y,
-                                              gint32 icon_size)
+                                              int icon_x,
+                                              int icon_y,
+                                              int icon_size)
 {
   auto launchers = model_->GetSublist<BamfLauncherIcon>();
   for (auto icon : launchers)
@@ -403,7 +403,7 @@ Controller::Impl::OnLauncherAddRequestSpecial(std::string const& path,
   
   launcher_->ForceReveal(true);
 
-  ((SoftwareCenterLauncherIcon*)result.GetPointer())->Animate(launcher_, icon_x, icon_y, icon_size);
+  static_cast<SoftwareCenterLauncherIcon*>(result.GetPointer())->Animate(launcher_, icon_x, icon_y, icon_size);
 }
 
 void Controller::Impl::OnSCIconAnimationComplete(AbstractLauncherIcon::Ptr icon)

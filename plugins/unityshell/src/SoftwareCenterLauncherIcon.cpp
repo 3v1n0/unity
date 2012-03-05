@@ -36,7 +36,9 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(BamfApplication* app,
                    aptdaemon_trans_id,
                    "org.debian.apt.transaction",
                    G_BUS_TYPE_SYSTEM,
-                   G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START)
+                   G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START),
+  _finished (true),
+  _finished_just_now (false)
 {
 
   _aptdaemon_trans.Connect("PropertyChanged", sigc::mem_fun(this, &SoftwareCenterLauncherIcon::OnPropertyChanged));
@@ -45,18 +47,16 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(BamfApplication* app,
     SetQuirk(QUIRK_PROGRESS, false);
     SetQuirk(QUIRK_URGENT, true);
     SetProgress(0.0f);
-    finished = true;
-    finished_just_now = true;
+    _finished = true;
+    _finished_just_now = true;
   });
 
   SetIconType(TYPE_APPLICATION);
   icon_name = icon_path.c_str();
   tooltip_text = _("Waiting to install");
 
-  // Since the transaction COULD have completed by now, assume true for now
-  finished = true;
-  finished_just_now = false;
-
+  // For no clear reason, Unity segfaults if we try to generate a pointer of "this" twice.
+  // Hence, just generate it once and store it.
   self_abstract = AbstractLauncherIcon::Ptr(this);
   
 }
@@ -71,6 +71,9 @@ gboolean SoftwareCenterLauncherIcon::OnDragWindowAnimComplete(gpointer data)
     SoftwareCenterLauncherIcon* self = (SoftwareCenterLauncherIcon*) data;
     if (!self->_drag_window->Animating()) {
         self->_drag_window->ShowWindow(false);
+
+        // I had to create a new function because for some reason, when trying to access
+        // self->_launcher from this function, I got segfaults.
         self->AddSelfToLauncher();
         return false;
     }
@@ -79,9 +82,9 @@ gboolean SoftwareCenterLauncherIcon::OnDragWindowAnimComplete(gpointer data)
 
 void
 SoftwareCenterLauncherIcon::Animate(nux::ObjectPtr<Launcher> launcher,
-                                    gint32 icon_x,
-                                    gint32 icon_y,
-                                    gint32 icon_size)
+                                    int icon_x,
+                                    int icon_y,
+                                    int icon_size)
 {
   int target_x = 0;
   int target_y = 0;
@@ -104,8 +107,8 @@ SoftwareCenterLauncherIcon::Animate(nux::ObjectPtr<Launcher> launcher,
     if (((int)current_bamf_icon->GetCenter(launcher->monitor).x) != 0 &&
         ((int)current_bamf_icon->GetCenter(launcher->monitor).y) != 0)
     {
-       target_x = (int)current_bamf_icon->GetCenter(launcher->monitor).x;
-       target_y = (int)current_bamf_icon->GetCenter(launcher->monitor).y;
+       target_x = static_cast<int>(current_bamf_icon->GetCenter(launcher->monitor).x);
+       target_y = static_cast<int>(current_bamf_icon->GetCenter(launcher->monitor).y);
     }
   }
 
@@ -122,12 +125,12 @@ SoftwareCenterLauncherIcon::Animate(nux::ObjectPtr<Launcher> launcher,
 
 void SoftwareCenterLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 {
-    if (finished)
+    if (_finished)
     {
-        if (finished_just_now)
+        if (_finished_just_now)
         {
             SetQuirk(QUIRK_URGENT, false);
-            finished_just_now = false;
+            _finished_just_now = false;
         }
         BamfLauncherIcon::ActivateLauncherIcon(arg);
     }
@@ -153,7 +156,7 @@ SoftwareCenterLauncherIcon::OnPropertyChanged(GVariant* params)
     if (progress < 100)
     {
       SetQuirk(QUIRK_PROGRESS, true);
-      finished = false;
+      _finished = false;
     }
 
     SetProgress(progress/100.0f);
