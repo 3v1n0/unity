@@ -215,12 +215,10 @@ void IMTextEntry::OnCommit(GtkIMContext* context, char* str)
 
 void IMTextEntry::SetupSimpleIM()
 {
-  im_context_ = gtk_im_context_simple_new();
+  LOG_DEBUG(logger) << "Using Simple IM.";
+  im_context_ = static_cast<GtkIMContext*>(gtk_im_context_simple_new());
   
   sig_manager_.Add(new Signal<void, GtkIMContext*, char*>(im_context_, "commit", sigc::mem_fun(this, &IMTextEntry::OnCommit)));
-  // sig_manager_.Add(new Signal<void, GtkIMContext*>(im_context_, "preedit-changed", sigc::mem_fun(this, &IMTextEntry::OnPreeditChanged)));
-  // sig_manager_.Add(new Signal<void, GtkIMContext*>(im_context_, "preedit-start", sigc::mem_fun(this, &IMTextEntry::OnPreeditStart)));
-  // sig_manager_.Add(new Signal<void, GtkIMContext*>(im_context_, "preedit-end", sigc::mem_fun(this, &IMTextEntry::OnPreeditEnd)));
 }
 
 }

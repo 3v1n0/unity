@@ -57,7 +57,7 @@ private:
   void SetupSimpleIM();
   void OnCommit(GtkIMContext* context, char* str);
 
-  GtkIMContext* im_context_;
+  glib::Object<GtkIMContext> im_context_;
   GdkWindow* client_window_;
   glib::SignalManager sig_manager_;
   bool focused_;
