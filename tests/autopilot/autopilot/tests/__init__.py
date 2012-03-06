@@ -102,12 +102,15 @@ class VideoCapturedTestCase(LoggedTestCase):
 
     def _stop_video_capture(self):
         """Stop the video capture. If the test failed, save the resulting file."""
-        self._capture_process.terminate()
-        self._capture_process.wait()
 
         if self._test_passed:
-            os.remove(self._capture_file)
+            # We use kill here because we don't want the recording app to start
+            # encoding the video file (since we're removing it anyway.)
+            self._capture_process.kill()
+            self._capture_process.wait()
         else:
+            self._capture_process.terminate()
+            self._capture_process.wait()
             self.addDetail('video capture log', text_content(self._capture_process.stdout.read()))
         self._capture_process = None
 

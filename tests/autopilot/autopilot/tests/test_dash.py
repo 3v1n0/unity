@@ -388,8 +388,3 @@ class DashKeyboardFocusTests(AutopilotTestCase):
 
         searchbar = self.dash.get_searchbar()
         self.assertEqual("hello world", searchbar.search_string)
-
-    def test_fail(self):
-        sleep(10)
-        self.fail("BOOYAH!")
-
