@@ -409,9 +409,10 @@ class DashCompositionCharactersTests(AutopilotTestCase):
         filter_bar = self.dash.get_current_lens().get_filterbar()
         filter_bar.ensure_collapsed()
 
+        sleep(1)
         self.keyboard.press('Shift')
-        self.keyboard.press_and_release('AltR')
-        self.keyboard.press_and_release('^')
+        self.keyboard.press_and_release('Multi_key')
+        self.keyboard.press_and_release('6')
         self.keyboard.release('Shift')
         self.keyboard.type('o')
 
