@@ -51,3 +51,16 @@ Outcome
   The text previously selected is pasted on the search bar at mouse pointer
   position, if the operation is repeated the text is inserted where
   the mouse pointer is.
+
+
+Dash correct number of "see more" results with horizontal renderer
+---------------------------
+This test ensures a correct number of "see more" results in the dash when using a horizontal renderer
+(see lp:934944)
+
+#. Open the dash, navigate to a lens that uses a horizontal renderer
+#. Ensure that a category in the results has a "See x more results" label
+#. Expand category that has "See x more results" label
+
+Outcome
+  The category will expand to show all the results, user should ensure that the X in "See x more categories" was valid. 

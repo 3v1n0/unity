@@ -273,6 +273,7 @@ void ResultViewGrid::SizeReallocate()
   PositionPreview();
 
   mouse_over_index_ = GetIndexAtPosition(mouse_last_x_, mouse_last_y_);
+  results_per_row = items_per_row;
 }
 
 void ResultViewGrid::PositionPreview()

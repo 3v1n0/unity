@@ -254,13 +254,20 @@ PlacesGroup::SetIcon(const char* path_to_emblem)
 }
 
 void
-PlacesGroup::SetChildView(nux::View* view)
+PlacesGroup::SetChildView(dash::ResultView* view)
 {
   debug::Introspectable *i = dynamic_cast<debug::Introspectable*>(view);
   if (i)
     AddChild(i);
   _child_view = view;
   _group_layout->AddView(_child_view, 1);
+
+  view->results_per_row.changed.connect([&] (int results_per_row) 
+  {
+    _n_visible_items_in_unexpand_mode = results_per_row;  
+    RefreshLabel();
+  });
+
   QueueDraw();
 }
 
