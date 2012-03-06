@@ -78,6 +78,8 @@ def parse_arguments():
     parser_run.add_argument('-r', '--record', action='store_true', default=False,
         required=False, help="Record failing tests. Required 'recordmydesktop' app to be installed. Videos \
         are stored in /tmp/autopilot.")
+    parser_run.add_argument("-rd", "--record-directory", required=False,
+        default="/tmp/autopilot", type=str, help="Directory to put recorded tests (only if -r) specified.")
     parser_run.add_argument("test", nargs="*", help="Specify tests to run, as listed by the 'list' command")
 
 
@@ -113,6 +115,7 @@ def run_tests(args):
 
     if args.record:
         autopilot.globals.video_recording_enabled = True
+        autopilot.globals.video_record_directory = args.record_directory
 
     loader = TestLoader()
     if args.test:

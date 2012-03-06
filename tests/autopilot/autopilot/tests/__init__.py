@@ -20,7 +20,10 @@ from autopilot.emulators.unity.switcher import Switcher
 from autopilot.emulators.unity.workspace import WorkspaceManager
 from autopilot.emulators.X11 import Keyboard, Mouse
 from autopilot.glibrunner import GlibRunner
-from autopilot.globals import global_context, video_recording_enabled
+from autopilot.globals import (global_context,
+    video_recording_enabled,
+    video_record_directory,
+    )
 from autopilot.keybindings import KeybindingsHelper
 
 
@@ -117,7 +120,7 @@ class VideoCapturedTestCase(LoggedTestCase):
         return [self._recording_app] + self._recording_opts
 
     def _get_capture_output_file(self):
-        return '/tmp/autopilot/%s.ogv' % (self.shortDescription())
+        return os.path.join(video_record_directory, '%s.ogv' % (self.shortDescription()))
 
     def _ensure_directory_exists_but_not_file(self, file_path):
         dirpath = os.path.dirname(file_path)
