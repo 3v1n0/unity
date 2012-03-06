@@ -64,6 +64,7 @@ _keys = {
     "hud/reveal": ("unityshell", "show_hud"),
     # Switcher:
     "switcher/reveal_normal": ("unityshell", "alt_tab_forward"),
+    "switcher/reveal_impropper": "Alt+Right",
     "switcher/reveal_details": "Alt+`",
     "switcher/reveal_all": ("unityshell", "alt_tab_forward_all"),
     "switcher/cancel": "Escape",
@@ -71,6 +72,8 @@ _keys = {
     # lists the Alt key won't work for us, so I'm defining them manually.
     "switcher/next": "Tab",
     "switcher/prev": "Shift+Tab",
+    "switcher/right": "Right",
+    "switcher/left": "Left",
     "switcher/detail_start": "Down",
     "switcher/detail_stop": "Up",
     "switcher/detail_next": "`",
@@ -119,6 +122,7 @@ def get_hold_part(binding_name):
     parts = binding.split('+')
     if len(parts) == 1:
         logger.warning("Key binding '%s' does not have a hold part.", binding_name)
+        return parts[0]
     return '+'.join(parts[:-1])
 
 
@@ -135,6 +139,7 @@ def get_tap_part(binding_name):
     parts = binding.split('+')
     if len(parts) == 1:
         logger.warning("Key binding '%s' does not have a tap part.", binding_name)
+        return parts[0]
     return parts[-1]
 
 

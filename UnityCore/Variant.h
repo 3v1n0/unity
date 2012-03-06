@@ -73,6 +73,7 @@ public:
   BuilderWrapper& add(char const* name, char const* value);
   BuilderWrapper& add(char const* name, std::string const& value);
   BuilderWrapper& add(char const* name, int value);
+  BuilderWrapper& add(char const* name, unsigned value);
   BuilderWrapper& add(char const* name, float value);
   BuilderWrapper& add(char const* name, GVariant* value);
   BuilderWrapper& add(nux::Rect const& value);
