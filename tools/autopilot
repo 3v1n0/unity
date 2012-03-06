@@ -77,7 +77,7 @@ def parse_arguments():
         required=False, help='Specify desired output format. Default is "text".')
     parser_run.add_argument('-r', '--record', action='store_true', default=False,
         required=False, help="Record failing tests. Required 'recordmydesktop' app to be installed. Videos \
-        are stored in /tmp.")
+        are stored in /tmp/autopilot.")
     parser_run.add_argument("test", nargs="*", help="Specify tests to run, as listed by the 'list' command")
 
 

@@ -72,13 +72,24 @@ class LoggedTestCase(TestWithScenarios, TestCase):
 class VideoCapturedTestCase(LoggedTestCase):
     """Video capture autopilot tests, saving the results if the test failed."""
 
+    _recording_app = '/usr/bin/recordmydesktop'
+    _recording_opts = ['--no-sound', '--no-frame', '-o',]
+
     def setUp(self):
         super(VideoCapturedTestCase, self).setUp()
+        global video_recording_enabled
+        if video_recording_enabled and not self._have_recording_app():
+            video_recording_enabled = False
+            logger.warning("Disabling video capture since '%s' is not present", self._recording_app)
+
         if video_recording_enabled:
             self._test_passed = True
             self.addOnException(self._on_test_failed)
             self.addCleanup(self._stop_video_capture)
             self._start_video_capture()
+
+    def _have_recording_app(self):
+        return os.path.exists(self._recording_app)
 
     def _start_video_capture(self):
         """Start capturing video."""
@@ -102,11 +113,7 @@ class VideoCapturedTestCase(LoggedTestCase):
 
 
     def _get_capture_command_line(self):
-        return ['/usr/bin/recordmydesktop',
-            '--no-sound',
-            '--no-frame',
-            '-o',
-            ]
+        return [self._recording_app] + self._recording_opts
 
     def _get_capture_output_file(self):
         return '/tmp/autopilot/%s.ogv' % (self.shortDescription())
