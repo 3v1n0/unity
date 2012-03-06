@@ -63,7 +63,7 @@ class Controller : public debug::Introspectable, public sigc::trackable
 public:
   typedef std::shared_ptr<Controller> Ptr;
 
-  Controller();
+  Controller(unsigned int load_timeout = 20);
   virtual ~Controller();
 
   nux::Property<int> timeout_length;
@@ -101,6 +101,8 @@ protected:
   virtual void ConstructWindow();
   virtual void ConstructView();
   virtual void ShowView();
+
+  unsigned int construct_timeout_;
 
 private:
   enum DetailMode

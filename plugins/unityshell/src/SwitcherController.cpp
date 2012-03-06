@@ -35,25 +35,26 @@ using ui::LayoutWindowList;
 namespace switcher
 {
 
-Controller::Controller()
-  :  view_window_(0)
+Controller::Controller(unsigned int load_timeout)
+  :  construct_timeout_(load_timeout)
+  ,  view_window_(nullptr)
+  ,  main_layout_(nullptr)
+  ,  monitor_(0)
   ,  visible_(false)
   ,  show_timer_(0)
   ,  detail_timer_(0)
   ,  lazy_timer_(0)
   ,  view_idle_timer_(0)
+  ,  bg_color_(0, 0, 0, 0.5)
 {
   timeout_length = 75;
   detail_on_timeout = true;
   detail_timeout_length = 1500;
-  monitor_ = 0;
-
-  bg_color_ = nux::Color(0.0, 0.0, 0.0, 0.5);
 
   ubus_manager_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED, sigc::mem_fun(this, &Controller::OnBackgroundUpdate));
 
   /* Construct the view after a prefixed timeout, to improve the startup time */
-  lazy_timer_ = g_timeout_add_seconds_full(G_PRIORITY_LOW, 20, [] (gpointer data) -> gboolean {
+  lazy_timer_ = g_timeout_add_seconds_full(G_PRIORITY_LOW, construct_timeout_, [] (gpointer data) -> gboolean {
     auto self = static_cast<Controller*>(data);
     self->lazy_timer_ = 0;
     self->ConstructWindow();
