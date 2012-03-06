@@ -19,15 +19,16 @@ class BaseShortcutHintTests(AutopilotTestCase):
 
     def setUp(self):
         super(BaseShortcutHintTests, self).setUp()
+
+        self.DEFAULT_WIDTH = 970;
+        self.DEFAULT_HEIGHT = 680;
+
         self.shortcut_hint = self.get_shortcut_controller()
         self.set_unity_option('shortcut_overlay', True)
         self.skip_if_monitor_too_small()
         sleep(1)
 
     def skip_if_monitor_too_small(self):
-        self.DEFAULT_WIDTH = 970;
-        self.DEFAULT_HEIGHT = 680;
-
         screen = ScreenGeometry();
         monitor = screen.get_primary_monitor()
         monitor_geo = screen.get_monitor_geometry(monitor);
