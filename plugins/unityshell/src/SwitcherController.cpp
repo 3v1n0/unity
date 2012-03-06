@@ -35,8 +35,8 @@ using ui::LayoutWindowList;
 namespace switcher
 {
 
-Controller::Controller()
-  :  construct_timeout_(20)
+Controller::Controller(unsigned int load_timeout)
+  :  construct_timeout_(load_timeout)
   ,  view_window_(nullptr)
   ,  main_layout_(nullptr)
   ,  monitor_(0)
