@@ -192,7 +192,7 @@ public:
   bool executeCommand(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool setKeyboardFocusKeyInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
 
-  bool altTabInitiateCommon(switcher::ShowMode mode);
+  bool altTabInitiateCommon(CompAction* action, switcher::ShowMode mode);
   bool altTabTerminateCommon(CompAction* action,
                              CompAction::State state,
                              CompOption::Vector& options);
