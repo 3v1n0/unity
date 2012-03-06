@@ -190,7 +190,7 @@ class ShortcutHintInteractionsTests(BaseShortcutHintTests):
         sleep(show_timeout)
         self.assertThat(self.shortcut_hint.is_visible(), Equals(True))
 
-        launcher = self.get_launcher()
+        launcher = self.g()
         launcher.start_switcher()
         self.addCleanup(launcher.end_switcher, True)
         sleep(.25)
@@ -277,7 +277,7 @@ class ShortcutHintInteractionsTests(BaseShortcutHintTests):
         launcher.start_switcher()
         self.addCleanup(launcher.end_switcher, True)
         sleep(.25)
-        self.assertThat(self.launcher.key_nav_is_active, Equals(True))
+        self.assertThat(self.launcher.key_nav_is_active(), Equals(True))
         self.assertThat(self.shortcut_hint.is_visible(), Equals(True))
 
         launcher.switcher_next()
@@ -285,10 +285,37 @@ class ShortcutHintInteractionsTests(BaseShortcutHintTests):
         self.keyboard.press_and_release("Escape")
         sleep(.25)
 
-        self.assertThat(self.launcher.key_nav_is_active, Equals(False))
+        self.assertThat(self.launcher.key_nav_is_active(), Equals(False))
         self.assertThat(self.shortcut_hint.is_visible(), Equals(True))
         sleep(.25)
 
         self.shortcut_hint.cancel()
         sleep(.25)
         self.assertThat(self.shortcut_hint.is_visible(), Equals(False))
+
+    def test_launcher_icons_hints_show_with_shortcut_hint(self):
+        """When the shortcut hint is shown also the launcer's icons hints should
+        be shown.
+
+        """
+        launcher = self.get_launcher()
+        self.shortcut_hint.show()
+        self.addCleanup(self.shortcut_hint.hide)
+        sleep(self.shortcut_hint.get_show_timeout())
+
+
+        self.assertThat(self.shortcut_hint.is_visible(), Equals(True))
+        self.assertThat(launcher.are_shortcuts_showing(), Equals(True))
+
+    def test_shortcut_hint_shows_with_launcher_icons_hints(self):
+        """When the launcher icons hints are shown also the shortcut hint should
+        be shown.
+
+        """
+        launcher = self.get_launcher()
+        launcher.keyboard_reveal_launcher()
+        self.addCleanup(launcher.keyboard_unreveal_launcher)
+        sleep(1)
+
+        self.assertThat(launcher.are_shortcuts_showing(), Equals(True))
+        self.assertThat(self.shortcut_hint.is_visible(), Equals(True))
