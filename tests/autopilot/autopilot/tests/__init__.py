@@ -92,7 +92,6 @@ class VideoCapturedTestCase(LoggedTestCase):
         return os.path.exists(self._recording_app)
 
     def _start_video_capture(self):
-        """Start capturing video."""
         args = self._get_capture_command_line()
         self._capture_file = self._get_capture_output_file()
         self._ensure_directory_exists_but_not_file(self._capture_file)
@@ -114,7 +113,6 @@ class VideoCapturedTestCase(LoggedTestCase):
             self.addDetail('video capture log', text_content(self._capture_process.stdout.read()))
         self._capture_process = None
 
-
     def _get_capture_command_line(self):
         return [self._recording_app] + self._recording_opts
 
@@ -128,7 +126,6 @@ class VideoCapturedTestCase(LoggedTestCase):
         elif os.path.exists(file_path):
             logger.warning("Video capture file '%s' already exists, deleting.", file_path)
             os.remove(file_path)
-
 
     def _on_test_failed(self, ex_info):
         """Called when a test fails."""
