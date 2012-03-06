@@ -388,3 +388,35 @@ class DashKeyboardFocusTests(AutopilotTestCase):
 
         searchbar = self.dash.get_searchbar()
         self.assertEqual("hello world", searchbar.search_string)
+
+
+class DashCompositionCharactersTests(AutopilotTestCase):
+    """Tests that composition characters works."""
+
+    def setUp(self):
+        super(DashCompositionCharactersTests, self).setUp()
+        self.dash = Dash()
+        self.addCleanup(self.dash.ensure_hidden)
+
+    def tearDown(self):
+        super(DashCompositionCharactersTests, self).tearDown()
+        self.dash.ensure_hidden()
+
+    def test_composition_characters(self):
+        """Expanding or collapsing the filterbar must keave keyboard focus in the
+        search bar.
+        """
+        self.dash.reveal_application_lens()
+        filter_bar = self.dash.get_current_lens().get_filterbar()
+        filter_bar.ensure_collapsed()
+
+        sleep(1)
+        self.keyboard.press('Shift')
+        self.keyboard.press_and_release('Multi_key')
+        self.keyboard.press_and_release('6')
+        self.keyboard.release('Shift')
+        self.keyboard.type('o')
+
+        searchbar = self.dash.get_searchbar()
+        self.assertEqual("ô", searchbar.search_string)        
+
