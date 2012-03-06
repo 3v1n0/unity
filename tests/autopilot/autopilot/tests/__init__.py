@@ -5,8 +5,9 @@ Autopilot tests for Unity.
 
 from compizconfig import Setting, Plugin
 import logging
+import os
 from StringIO import StringIO
-from subprocess import call
+from subprocess import call, Popen, PIPE, STDOUT
 from testscenarios import TestWithScenarios
 from testtools import TestCase
 from testtools.content import text_content
@@ -19,7 +20,7 @@ from autopilot.emulators.unity.switcher import Switcher
 from autopilot.emulators.unity.workspace import WorkspaceManager
 from autopilot.emulators.X11 import Keyboard, Mouse
 from autopilot.glibrunner import GlibRunner
-from autopilot.globals import global_context
+from autopilot.globals import global_context, video_recording_enabled
 from autopilot.keybindings import KeybindingsHelper
 
 
@@ -68,7 +69,63 @@ class LoggedTestCase(TestWithScenarios, TestCase):
         del self._log_buffer
 
 
-class AutopilotTestCase(LoggedTestCase, KeybindingsHelper):
+class VideoCapturedTestCase(LoggedTestCase):
+    """Video capture autopilot tests, saving the results if the test failed."""
+
+    def setUp(self):
+        super(VideoCapturedTestCase, self).setUp()
+        if video_recording_enabled:
+            self._test_passed = True
+            self.addOnException(self._on_test_failed)
+            self.addCleanup(self._stop_video_capture)
+            self._start_video_capture()
+
+    def _start_video_capture(self):
+        """Start capturing video."""
+        args = self._get_capture_command_line()
+        self._capture_file = self._get_capture_output_file()
+        self._ensure_directory_exists_but_not_file(self._capture_file)
+        args.append(self._capture_file)
+        logger.debug("Starting: %r", args)
+        self._capture_process = Popen(args, stdout=PIPE, stderr=STDOUT)
+
+    def _stop_video_capture(self):
+        """Stop the video capture. If the test failed, save the resulting file."""
+        self._capture_process.terminate()
+        self._capture_process.wait()
+
+        if self._test_passed:
+            os.remove(self._capture_file)
+        else:
+            self.addDetail('video capture log', text_content(self._capture_process.stdout.read()))
+        self._capture_process = None
+
+
+    def _get_capture_command_line(self):
+        return ['/usr/bin/recordmydesktop',
+            '--no-sound',
+            '--no-frame',
+            '-o',
+            ]
+
+    def _get_capture_output_file(self):
+        return '/tmp/autopilot/%s.ogv' % (self.shortDescription())
+
+    def _ensure_directory_exists_but_not_file(self, file_path):
+        dirpath = os.path.dirname(file_path)
+        if not os.path.exists(dirpath):
+            os.makedirs(dirpath)
+        elif os.path.exists(file_path):
+            logger.warning("Video capture file '%s' already exists, deleting.", file_path)
+            os.remove(file_path)
+
+
+    def _on_test_failed(self, ex_info):
+        """Called when a test fails."""
+        self._test_passed = False
+
+
+class AutopilotTestCase(VideoCapturedTestCase, KeybindingsHelper):
     """Wrapper around testtools.TestCase that takes care of some cleaning."""
 
     run_test_with = GlibRunner

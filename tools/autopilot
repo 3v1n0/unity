@@ -75,7 +75,11 @@ def parse_arguments():
         help='Write test result report to file. Defaults to stdout')
     parser_run.add_argument('-f', "--format", choices=['text', 'xml'], default='text',
         required=False, help='Specify desired output format. Default is "text".')
+    parser_run.add_argument('-r', '--record', action='store_true', default=False,
+        required=False, help="Record failing tests. Required 'recordmydesktop' app to be installed. Videos \
+        are stored in /tmp.")
     parser_run.add_argument("test", nargs="*", help="Specify tests to run, as listed by the 'list' command")
+
 
     parser_list = subparsers.add_parser('list', help="List autopilot tests")
     args = parser.parse_args()
@@ -105,6 +109,11 @@ def list_tests():
 def run_tests(args):
     """Run tests, using input from `args`."""
     import junitxml
+    import autopilot.globals
+
+    if args.record:
+        autopilot.globals.video_recording_enabled = True
+
     loader = TestLoader()
     if args.test:
         test_suite = loader.loadTestsFromNames(args.test)
