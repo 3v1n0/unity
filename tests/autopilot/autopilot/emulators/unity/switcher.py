@@ -67,6 +67,11 @@ class Switcher(KeybindingsHelper):
         self.keybinding("switcher/cancel")
         self.keybinding_release("switcher/reveal_normal")
 
+    def cancel(self):
+        """Stop switcher without activating the selected icon and releasing the keys."""
+        logger.debug("Cancelling switcher.")
+        self.keybinding("switcher/cancel")
+
     def stop(self):
         """Stop switcher and activate the selected icon."""
         logger.debug("Stopping switcher")
