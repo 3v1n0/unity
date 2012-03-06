@@ -98,6 +98,8 @@ protected:
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
 
+  unsigned int construct_timeout_;
+
 private:
   enum DetailMode
   {
