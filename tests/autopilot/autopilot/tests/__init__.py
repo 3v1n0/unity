@@ -150,6 +150,10 @@ class AutopilotTestCase(VideoCapturedTestCase, KeybindingsHelper):
             'desktop-file': 'mahjongg.desktop',
             'process-name': 'mahjongg',
             },
+        'Remmina' : {
+            'desktop-file': 'remmina.desktop',
+            'process-name': 'remmina',
+            }
         }
 
     def setUp(self):
