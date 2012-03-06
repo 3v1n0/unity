@@ -51,6 +51,11 @@ const int external_margin_horizontal = 7;
 const int LIVE_SEARCH_TIMEOUT = 40;
 const int SPINNER_TIMEOUT = 100;
 
+const int SPINNER_HEIGHT = 48; // To don't break the current layout, let's use a fixed height for the spinner.
+const int SPACE_BETWEEN_SPINNER_AND_TEXT = 4;
+const int LEFT_INTERNAL_PADDING = 9;
+
+
 // Highlight
 const int HIGHLIGHT_HEIGHT = 24;
 const int HIGHLIGHT_WIDTH = 292;
@@ -173,13 +178,14 @@ void SearchBar::Init()
   bg_layer_ = new nux::ColorLayer(nux::Color(0xff595853), true);
 
   layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
-  layout_->SetHorizontalInternalMargin(0);
-  layout_->SetVerticalExternalMargin(external_margin_vertical);
-  layout_->SetHorizontalExternalMargin(external_margin_horizontal);
+  layout_->SetHorizontalInternalMargin(SPACE_BETWEEN_SPINNER_AND_TEXT);
+  layout_->SetTopAndBottomPadding(external_margin_vertical);
+  layout_->SetLeftAndRightPadding(external_margin_horizontal + LEFT_INTERNAL_PADDING, external_margin_horizontal);
   SetLayout(layout_);
 
   spinner_ = new SearchBarSpinner();
-  spinner_->SetMinMaxSize(icon->GetWidth(), icon->GetHeight());
+  spinner_->SetMinimumHeight(SPINNER_HEIGHT);
+  spinner_->SetMaximumHeight(SPINNER_HEIGHT);
   spinner_->mouse_click.connect(sigc::mem_fun(this, &SearchBar::OnClearClicked));
   layout_->AddView(spinner_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 

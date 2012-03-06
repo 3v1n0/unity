@@ -88,12 +88,13 @@ inline double _align(double val, bool odd=true)
 class LazyLoadTexture
 {
 public:
-  LazyLoadTexture(std::string const& filename);
+  LazyLoadTexture(std::string const& filename, int size = -1);
   nux::BaseTexture* texture();
 private:
   void LoadTexture();
 private:
   std::string filename_;
+  int size_;
   BaseTexturePtr texture_;
 };
 
@@ -205,6 +206,7 @@ public:
   LazyLoadTexture dash_shine_;
 
   LazyLoadTexture search_magnify_texture_;
+  LazyLoadTexture search_circle_texture_;
   LazyLoadTexture search_close_texture_;
   LazyLoadTexture search_spin_texture_;
 
@@ -240,8 +242,9 @@ Style::Impl::Impl(Style* owner)
   , dash_top_tile_("/dash_top_tile.png")
   , dash_shine_("/dash_sheen.png")
   , search_magnify_texture_("/search_magnify.png")
-  , search_close_texture_("/search_close.png")
-  , search_spin_texture_("/search_spin.png")
+  , search_circle_texture_("/search_circle.svg", 32)
+  , search_close_texture_("/search_close.svg", 32)
+  , search_spin_texture_("/search_spin.svg", 32)
   , group_unexpand_texture_("/dash_group_unexpand.png")
   , group_expand_texture_("/dash_group_expand.png")
   , star_deselected_texture_("/star_deselected.png")
@@ -2105,6 +2108,11 @@ nux::BaseTexture* Style::GetSearchMagnifyIcon()
   return pimpl->search_magnify_texture_.texture();
 }
 
+nux::BaseTexture* Style::GetSearchCircleIcon()
+{
+  return pimpl->search_circle_texture_.texture();
+}
+
 nux::BaseTexture* Style::GetSearchCloseIcon()
 {
   return pimpl->search_close_texture_.texture();
@@ -2149,8 +2157,9 @@ nux::BaseTexture* Style::GetDashShine()
 namespace
 {
 
-LazyLoadTexture::LazyLoadTexture(std::string const& filename)
+LazyLoadTexture::LazyLoadTexture(std::string const& filename, int size)
   : filename_(filename)
+  , size_(size)
 {
 }
 
@@ -2167,7 +2176,7 @@ void LazyLoadTexture::LoadTexture()
   glib::Object<GdkPixbuf> pixbuf;
   glib::Error error;
 
-  pixbuf = ::gdk_pixbuf_new_from_file(full_path.c_str(), &error);
+  pixbuf = ::gdk_pixbuf_new_from_file_at_size(full_path.c_str(), size_, size_, &error);
   if (error)
   {
     LOG_WARN(logger) << "Unable to texture " << full_path << ": " << error;
