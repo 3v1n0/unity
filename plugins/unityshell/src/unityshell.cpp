@@ -311,7 +311,15 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetAltTabPrevWindowInitiate(boost::bind(&UnityScreen::altTabPrevWindowInitiate, this, _1, _2, _3));
 
      optionSetAltTabLeftInitiate(boost::bind (&UnityScreen::altTabPrevInitiate, this, _1, _2, _3));
-     optionSetAltTabRightInitiate(boost::bind (&UnityScreen::altTabForwardInitiate, this, _1, _2, _3));
+     optionSetAltTabRightInitiate([&](CompAction* action, CompAction::State state, CompOption::Vector& options) -> bool
+     {
+      if (switcher_controller_->Visible())
+      {
+        switcher_controller_->Next();
+        return true;
+      }
+      return false;
+     });
 
      optionSetLauncherSwitcherForwardInitiate(boost::bind(&UnityScreen::launcherSwitcherForwardInitiate, this, _1, _2, _3));
      optionSetLauncherSwitcherPrevInitiate(boost::bind(&UnityScreen::launcherSwitcherPrevInitiate, this, _1, _2, _3));
@@ -1501,7 +1509,7 @@ bool UnityScreen::showLauncherKeyInitiate(CompAction* action,
       shortcut_controller_->Show();
    }
 
-  return false;
+  return true;
 }
 
 bool UnityScreen::showLauncherKeyTerminate(CompAction* action,
@@ -1521,7 +1529,7 @@ bool UnityScreen::showLauncherKeyTerminate(CompAction* action,
   shortcut_controller_->SetEnabled(enable_shortcut_overlay_);
   shortcut_controller_->Hide();
   action->setState (action->state() & (unsigned)~(CompAction::StateTermKey));
-  return false;
+  return true;
 }
 
 bool UnityScreen::showPanelFirstMenuKey(CompAction* action,
@@ -1529,7 +1537,7 @@ bool UnityScreen::showPanelFirstMenuKey(CompAction* action,
                                         CompOption::Vector& options)
 {
   panel_controller_->FirstMenuShow();
-  return false;
+  return true;
 }
 
 void UnityScreen::SendExecuteCommand()
@@ -1543,7 +1551,7 @@ bool UnityScreen::executeCommand(CompAction* action,
                                  CompOption::Vector& options)
 {
   SendExecuteCommand();
-  return false;
+  return true;
 }
 
 void UnityScreen::startLauncherKeyNav()
@@ -1572,7 +1580,7 @@ bool UnityScreen::setKeyboardFocusKeyInitiate(CompAction* action,
                                               CompOption::Vector& options)
 {
   _key_nav_mode_requested = true;
-  return false;
+  return true;
 }
 
 bool UnityScreen::altTabInitiateCommon(switcher::ShowMode show_mode)
@@ -1646,7 +1654,7 @@ bool UnityScreen::altTabForwardInitiate(CompAction* action,
     altTabInitiateCommon(switcher::ShowMode::CURRENT_VIEWPORT);
 
   action->setState(action->state() | CompAction::StateTermKey);
-  return false;
+  return true;
 }
 
 bool UnityScreen::altTabForwardAllInitiate(CompAction* action,
@@ -1659,7 +1667,7 @@ bool UnityScreen::altTabForwardAllInitiate(CompAction* action,
     altTabInitiateCommon(switcher::ShowMode::ALL);
 
   action->setState(action->state() | CompAction::StateTermKey);
-  return false;
+  return true;
 }
 
 bool UnityScreen::altTabPrevAllInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
@@ -1667,7 +1675,7 @@ bool UnityScreen::altTabPrevAllInitiate(CompAction* action, CompAction::State st
   if (switcher_controller_->Visible())
     switcher_controller_->Prev();
 
-  return false;
+  return true;
 }
 
 bool UnityScreen::altTabPrevInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
@@ -1675,7 +1683,7 @@ bool UnityScreen::altTabPrevInitiate(CompAction* action, CompAction::State state
   if (switcher_controller_->Visible())
     switcher_controller_->Prev();
 
-  return false;
+  return true;
 }
 
 bool UnityScreen::altTabDetailStartInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
@@ -1683,7 +1691,7 @@ bool UnityScreen::altTabDetailStartInitiate(CompAction* action, CompAction::Stat
   if (switcher_controller_->Visible())
     switcher_controller_->SetDetail(true);
 
-  return false;
+  return true;
 }
 
 bool UnityScreen::altTabDetailStopInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
@@ -1691,7 +1699,7 @@ bool UnityScreen::altTabDetailStopInitiate(CompAction* action, CompAction::State
   if (switcher_controller_->Visible())
     switcher_controller_->SetDetail(false);
 
-  return false;
+  return true;
 }
 
 bool UnityScreen::altTabNextWindowInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
@@ -1705,7 +1713,7 @@ bool UnityScreen::altTabNextWindowInitiate(CompAction* action, CompAction::State
   switcher_controller_->NextDetail();
 
   action->setState(action->state() | CompAction::StateTermKey);
-  return false;
+  return true;
 }
 
 bool UnityScreen::altTabPrevWindowInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
@@ -1713,7 +1721,7 @@ bool UnityScreen::altTabPrevWindowInitiate(CompAction* action, CompAction::State
   if (switcher_controller_->Visible())
     switcher_controller_->PrevDetail();
 
-  return false;
+  return true;
 }
 
 bool UnityScreen::launcherSwitcherForwardInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
@@ -1729,13 +1737,13 @@ bool UnityScreen::launcherSwitcherForwardInitiate(CompAction* action, CompAction
   }
 
   action->setState(action->state() | CompAction::StateTermKey);
-  return false;
+  return true;
 }
 bool UnityScreen::launcherSwitcherPrevInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
 {
   launcher_controller_->KeyNavPrevious();
 
-  return false;
+  return true;
 }
 bool UnityScreen::launcherSwitcherTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options)
 {
@@ -1744,7 +1752,7 @@ bool UnityScreen::launcherSwitcherTerminate(CompAction* action, CompAction::Stat
 
   EnableCancelAction(false);
   action->setState (action->state() & (unsigned)~(CompAction::StateTermKey));
-  return false;
+  return true;
 }
 
 void UnityScreen::OnLauncherStartKeyNav(GVariant* data)
@@ -1767,6 +1775,15 @@ void UnityScreen::OnLauncherEndKeyNav(GVariant* data)
     PluginAdapter::Default ()->restoreInputFocus ();
 }
 
+namespace
+{
+gboolean forceKeyboardUngrab (gpointer data)
+{
+    XUngrabKeyboard (::screen->dpy (), CurrentTime);
+    return FALSE;
+}
+}
+
 bool UnityScreen::ShowHudInitiate(CompAction* action,
                                   CompAction::State state,
                                   CompOption::Vector& options)
@@ -1776,6 +1793,9 @@ bool UnityScreen::ShowHudInitiate(CompAction* action,
     action->setState(action->state() | CompAction::StateTermKey);
   last_hud_show_time_ = g_get_monotonic_time();
 
+  g_timeout_add(local::ALT_TAP_DURATION, forceKeyboardUngrab, (gpointer) this);
+
+  // pass key through
   return false;
 }
 
@@ -1816,7 +1836,7 @@ bool UnityScreen::ShowHudTerminate(CompAction* action,
     hud_controller_->ShowHud();
   }
 
-  return false;
+  return true;
 }
 
 gboolean UnityScreen::initPluginActions(gpointer data)

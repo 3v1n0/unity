@@ -2,22 +2,25 @@
 Autopilot tests for Unity.
 """
 
-from subprocess import call
+
 from compizconfig import Setting, Plugin
-from autopilot.globals import global_context
-from testtools import TestCase
-from testscenarios import TestWithScenarios
-from testtools.content import text_content
-import time
 import logging
 from StringIO import StringIO
+from subprocess import call
+from testscenarios import TestWithScenarios
+from testtools import TestCase
+from testtools.content import text_content
+from testtools.matchers import Equals
+import time
 
-from autopilot.emulators.X11 import Keyboard, Mouse
 from autopilot.emulators.bamf import Bamf
+from autopilot.emulators.unity.launcher import LauncherController
 from autopilot.emulators.unity.switcher import Switcher
 from autopilot.emulators.unity.workspace import WorkspaceManager
-from autopilot.keybindings import KeybindingsHelper
+from autopilot.emulators.X11 import Keyboard, Mouse
 from autopilot.glibrunner import GlibRunner
+from autopilot.globals import global_context
+from autopilot.keybindings import KeybindingsHelper
 
 
 logger = logging.getLogger(__name__)
@@ -46,11 +49,14 @@ class LoggedTestCase(TestWithScenarios, TestCase):
         log_format = "%(asctime)s %(levelname)s %(pathname)s:%(lineno)d - %(message)s"
         handler.setFormatter(MyFormatter(log_format))
         root_logger.addHandler(handler)
+        #Tear down logging in a cleanUp handler, so it's done after all other
+        # tearDown() calls and cleanup handlers.
+        self.addCleanup(self.tearDownLogging)
         # The reason that the super setup is done here is due to making sure
         # that the logging is properly set up prior to calling it.
         super(LoggedTestCase, self).setUp()
 
-    def tearDown(self):
+    def tearDownLogging(self):
         logger = logging.getLogger()
         for handler in logger.handlers:
             handler.flush()
@@ -60,7 +66,6 @@ class LoggedTestCase(TestWithScenarios, TestCase):
         # Calling del to remove the handler and flush the buffer.  We are
         # abusing the log handlers here a little.
         del self._log_buffer
-        super(LoggedTestCase, self).tearDown()
 
 
 class AutopilotTestCase(LoggedTestCase, KeybindingsHelper):
@@ -90,6 +95,7 @@ class AutopilotTestCase(LoggedTestCase, KeybindingsHelper):
         self.mouse = Mouse()
         self.switcher = Switcher()
         self.workspace = WorkspaceManager()
+        self.launcher = self._get_launcher_controller()
         self.addCleanup(self.workspace.switch_to, self.workspace.current_workspace)
         self.addCleanup(Keyboard.cleanup)
         self.addCleanup(Mouse.cleanup)
@@ -130,3 +136,8 @@ class AutopilotTestCase(LoggedTestCase, KeybindingsHelper):
         setting.Value = option_value
         global_context.Write()
         return old_value
+
+    def _get_launcher_controller(self):
+        controllers = LauncherController.get_all_instances()
+        self.assertThat(len(controllers), Equals(1))
+        return controllers[0]
