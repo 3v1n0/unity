@@ -38,12 +38,14 @@ class Dash(KeybindingsHelper):
         self.keybinding("dash/reveal")
         sleep(1)
 
-    def ensure_visible(self):
+    def ensure_visible(self, clear_search=True):
         """
         Ensures the dash is visible.
         """
         if not self.get_is_visible():
             self.toggle_reveal()
+            if clear_search:
+                self.clear_search()
 
     def ensure_hidden(self):
         """
@@ -68,25 +70,40 @@ class Dash(KeybindingsHelper):
         self.view.refresh_state()
         return self.view.num_rows
 
-    def reveal_application_lens(self):
+    def clear_search(self):
+        """Clear the contents of the search bar.
+
+        Assumes dash is already visible, and search bar has keyboard focus.
+
+        """
+        self._keyboard.press_and_release("Ctrl+a")
+        self._keyboard.press_and_release("Delete")
+
+    def reveal_application_lens(self, clear_search=True):
         """Reveal the application lense."""
         logger.debug("Revealing application lens with Super+a.")
         self._reveal_lens("lens_reveal/apps")
+        if clear_search:
+            self.clear_search()
 
-    def reveal_music_lens(self):
+    def reveal_music_lens(self, clear_search=True):
         """Reveal the music lense."""
         logger.debug("Revealing music lens with Super+m.")
         self._reveal_lens("lens_reveal/music")
 
-    def reveal_file_lens(self):
+    def reveal_file_lens(self, clear_search=True):
         """Reveal the file lense."""
         logger.debug("Revealing file lens with Super+f.")
         self._reveal_lens("lens_reveal/files")
+        if clear_search:
+            self.clear_search()
 
-    def reveal_command_lens(self):
+    def reveal_command_lens(self, clear_search=True):
         """Reveal the 'run command' lens."""
         logger.debug("Revealing command lens with Alt+F2.")
         self._reveal_lens("lens_reveal/command")
+        if clear_search:
+            self.clear_search()
 
     def _reveal_lens(self, binding_name):
         self.keybinding_hold(binding_name)
