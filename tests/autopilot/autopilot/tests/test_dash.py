@@ -389,6 +389,7 @@ class DashKeyboardFocusTests(AutopilotTestCase):
         searchbar = self.dash.get_searchbar()
         self.assertEqual("hello world", searchbar.search_string)
 
+
 class DashCompositionCharactersTests(AutopilotTestCase):
     """Tests that composition characters works."""
 
