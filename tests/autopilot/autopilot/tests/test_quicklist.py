@@ -21,19 +21,26 @@ class QuicklistActionTests(AutopilotTestCase):
     ]
 
     def test_quicklist_actions(self):
+        """Test that all actions present in the destop file are shown in the quicklist."""
         self.start_app(self.app_name)
+
+        # load the desktop file from disk:
         desktop_file = os.path.join('/usr/share/applications',
             self.KNOWN_APPS[self.app_name]['desktop-file']
             )
         de = DesktopEntry(desktop_file)
+        # get the launcher icon from the launcher:
         launcher_icon = self.launcher.model.get_icon_by_tooltip_text(de.getName())
         self.assertThat(launcher_icon, Not(Is(None)))
 
+        # open the icon quicklist, and get all the text labels:
         launcher = self.launcher.get_launcher_for_monitor(0)
         launcher.click_launcher_icon(launcher_icon, button=3)
         ql = launcher_icon.get_quicklist()
         ql_item_texts = [i.text for i in ql.items if type(i) is QuicklistMenuItemLabel]
 
+        # iterate over all the actions from the desktop file, make sure they're
+        # present in the quicklist texts.
         actions = de.getActions()
         for action in actions:
             key = 'Desktop Action ' + action
