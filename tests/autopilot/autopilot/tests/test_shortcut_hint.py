@@ -6,24 +6,25 @@
 # under the terms of the GNU General Public License version 3, as published
 # by the Free Software Foundation.
 
-from testtools.matchers import Equals, LessThan, GreaterThan
+from testtools.matchers import Equals
+from time import sleep
 
 from autopilot.tests import AutopilotTestCase
-from autopilot.emulators.unity.shortcut_hint import ShortcutHint
-from autopilot.emulators.unity.launcher import Launcher
+from autopilot.emulators.unity.shortcut_hint import ShortcutController
 from autopilot.emulators.X11 import ScreenGeometry
-from autopilot.glibrunner import GlibRunner
 
-from time import sleep
 
 class BaseShortcutHintTests(AutopilotTestCase):
     """Base class for the shortcut hint tests"""
-    run_test_with = GlibRunner
 
     def setUp(self):
         super(BaseShortcutHintTests, self).setUp()
-        self.shortcut_hint = ShortcutHint()
+        self.shortcut_hint = self.get_shortcut_controller()
         self.set_unity_option('shortcut_overlay', True)
+        self.skip_if_monitor_too_small()
+        sleep(1)
+
+    def skip_if_monitor_too_small(self):
         self.DEFAULT_WIDTH = 970;
         self.DEFAULT_HEIGHT = 680;
 
@@ -32,20 +33,28 @@ class BaseShortcutHintTests(AutopilotTestCase):
         monitor_geo = screen.get_monitor_geometry(monitor);
         monitor_w = monitor_geo[2];
         monitor_h = monitor_geo[3];
-        launcher_width = Launcher().launcher_geometry(monitor)[2];
+        launcher_width = self.launcher.get_launcher_for_monitor(monitor).geometry[2];
         panel_height = 24 # TODO get it from panel
 
         if ((monitor_w - launcher_width) <= self.DEFAULT_WIDTH or
             (monitor_h - panel_height) <= self.DEFAULT_HEIGHT):
             self.skipTest("This test requires a bigger screen, to show the ShortcutHint")
 
-        sleep(1)
+    def get_shortcut_controller(self):
+        controllers = ShortcutController.get_all_instances()
+        self.assertThat(len(controllers), Equals(1))
+        return controllers[0]
+
+    def get_launcher(self):
+        # We could parameterise this so all tests run on both monitors (if MM is
+        # set up), but I think it's fine to just always use monitor primary monitor:
+        screen = ScreenGeometry();
+        monitor = screen.get_primary_monitor()
+        return self.launcher.get_launcher_for_monitor(monitor)
+
 
 class ShortcutHintTests(BaseShortcutHintTests):
     """Test the shortcuthint."""
-
-    def setUp(self):
-        super(ShortcutHintTests, self).setUp()
 
     def test_shortcut_hint_reveal(self):
         """Test that the shortcut hint is shown."""
@@ -111,10 +120,6 @@ class ShortcutHintTests(BaseShortcutHintTests):
 class ShortcutHintInteractionsTests(BaseShortcutHintTests):
     """Test the shortcuthint interactions with other Unity parts."""
 
-    def setUp(self):
-        super(ShortcutHintInteractionsTests, self).setUp()
-        self.launcher = Launcher()
-
     def test_shortcut_hint_hide_using_unity_shortcuts(self):
         """Test that the shortcut hints is hidden pressing unity shortcuts."""
         sleep(.5)
@@ -123,8 +128,8 @@ class ShortcutHintInteractionsTests(BaseShortcutHintTests):
         sleep(self.shortcut_hint.get_show_timeout())
 
         self.assertThat(self.shortcut_hint.is_visible(), Equals(True))
-        self.keyboard.press_and_release("s")
-        self.addCleanup(self.keyboard.press_and_release, "Escape")
+        self.keybinding_tap("expo/start")
+        self.addCleanup(self.keybinding, "expo/cancel")
         sleep(.25)
         self.assertThat(self.shortcut_hint.is_visible(), Equals(False))
         sleep(.25)
@@ -140,12 +145,12 @@ class ShortcutHintInteractionsTests(BaseShortcutHintTests):
         sleep(switcher_timeout * 0.2)
         self.assertThat(self.shortcut_hint.is_visible(), Equals(False))
 
-        self.launcher.start_switcher()
-        self.addCleanup(self.launcher.end_switcher, True)
+        self.keybinding("launcher/switcher/next")
         sleep(.25)
 
-        self.launcher.switcher_next()
-        sleep(switcher_timeout)
+        self.keybinding("launcher/switcher/next")
+        self.addCleanup(self.keyboard.press_and_release, "Escape")
+        sleep(switcher_timeout * 2)
 
         self.assertThat(self.shortcut_hint.is_visible(), Equals(False))
 
@@ -159,15 +164,15 @@ class ShortcutHintInteractionsTests(BaseShortcutHintTests):
         sleep(switcher_timeout * 0.2)
         self.assertThat(self.shortcut_hint.is_visible(), Equals(False))
 
-        self.launcher.start_switcher()
-        self.addCleanup(self.launcher.end_switcher, True)
+        self.keybinding("launcher/switcher/next")
+        self.addCleanup(self.keyboard.press_and_release, "Escape")
         sleep(.25)
-        self.assertThat(self.launcher.key_nav_is_active(), Equals(True))
+        self.assertThat(self.launcher.key_nav_is_active, Equals(True))
 
-        self.launcher.switcher_next()
+        self.keybinding("launcher/switcher/next")
         sleep(.25)
 
-        self.launcher.switcher_prev()
+        self.keybinding("launcher/switcher/prev")
         sleep(switcher_timeout)
 
         self.assertThat(self.shortcut_hint.is_visible(), Equals(False))
@@ -185,14 +190,15 @@ class ShortcutHintInteractionsTests(BaseShortcutHintTests):
         sleep(show_timeout)
         self.assertThat(self.shortcut_hint.is_visible(), Equals(True))
 
-        self.launcher.start_switcher()
-        self.addCleanup(self.launcher.end_switcher, True)
+        launcher = self.get_launcher()
+        launcher.start_switcher()
+        self.addCleanup(launcher.end_switcher, True)
         sleep(.25)
-        self.assertThat(self.launcher.key_nav_is_active(), Equals(True))
+        self.assertThat(self.launcher.key_nav_is_active, Equals(True))
 
-        self.launcher.switcher_next()
+        launcher.switcher_next()
         sleep(.25)
-        self.launcher.switcher_next()
+        launcher.switcher_next()
         sleep(show_timeout)
 
         self.assertThat(self.shortcut_hint.is_visible(), Equals(True))
@@ -210,14 +216,15 @@ class ShortcutHintInteractionsTests(BaseShortcutHintTests):
         sleep(show_timeout)
         self.assertThat(self.shortcut_hint.is_visible(), Equals(True))
 
-        self.launcher.start_switcher()
-        self.addCleanup(self.launcher.end_switcher, True)
+        launcher = self.get_launcher()
+        launcher.start_switcher()
+        self.addCleanup(launcher.end_switcher, True)
         sleep(.25)
-        self.assertThat(self.launcher.key_nav_is_active(), Equals(True))
+        self.assertThat(self.launcher.key_nav_is_active, Equals(True))
 
-        self.launcher.switcher_prev()
+        launcher.switcher_prev()
         sleep(.25)
-        self.launcher.switcher_prev()
+        launcher.switcher_prev()
         sleep(show_timeout)
 
         self.assertThat(self.shortcut_hint.is_visible(), Equals(True))
@@ -235,18 +242,19 @@ class ShortcutHintInteractionsTests(BaseShortcutHintTests):
         sleep(show_timeout)
         self.assertThat(self.shortcut_hint.is_visible(), Equals(True))
 
-        self.launcher.start_switcher()
-        self.addCleanup(self.launcher.end_switcher, True)
+        launcher = self.get_launcher()
+        launcher.start_switcher()
+        self.addCleanup(launcher.end_switcher, True)
         sleep(.25)
-        self.assertThat(self.launcher.key_nav_is_active(), Equals(True))
+        self.assertThat(self.launcher.key_nav_is_active, Equals(True))
         self.assertThat(self.shortcut_hint.is_visible(), Equals(True))
 
-        self.launcher.switcher_next()
+        launcher.switcher_next()
         sleep(.25)
         self.keyboard.press_and_release("Escape")
         sleep(.25)
 
-        self.assertThat(self.launcher.key_nav_is_active(), Equals(False))
+        self.assertThat(self.launcher.key_nav_is_active, Equals(False))
         self.assertThat(self.shortcut_hint.is_visible(), Equals(True))
         sleep(.5)
 
@@ -265,21 +273,22 @@ class ShortcutHintInteractionsTests(BaseShortcutHintTests):
         sleep(show_timeout)
         self.assertThat(self.shortcut_hint.is_visible(), Equals(True))
 
-        self.launcher.start_switcher()
-        self.addCleanup(self.launcher.end_switcher, True)
+        launcher = self.get_launcher()
+        launcher.start_switcher()
+        self.addCleanup(launcher.end_switcher, True)
         sleep(.25)
-        self.assertThat(self.launcher.key_nav_is_active(), Equals(True))
+        self.assertThat(self.launcher.key_nav_is_active, Equals(True))
         self.assertThat(self.shortcut_hint.is_visible(), Equals(True))
 
-        self.launcher.switcher_next()
+        launcher.switcher_next()
         sleep(.25)
         self.keyboard.press_and_release("Escape")
         sleep(.25)
 
-        self.assertThat(self.launcher.key_nav_is_active(), Equals(False))
+        self.assertThat(self.launcher.key_nav_is_active, Equals(False))
         self.assertThat(self.shortcut_hint.is_visible(), Equals(True))
         sleep(.25)
 
-        self.keyboard.press_and_release("Escape")
+        self.shortcut_hint.cancel()
         sleep(.25)
         self.assertThat(self.shortcut_hint.is_visible(), Equals(False))

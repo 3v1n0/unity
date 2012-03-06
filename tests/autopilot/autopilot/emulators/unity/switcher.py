@@ -21,6 +21,8 @@ from autopilot.emulators.unity.icons import *
 logger = logging.getLogger(__name__)
 
 
+# TODO: THis class needs to be ported to the new-style emulator classes.
+# See launcher.py or dash.py for reference.
 class Switcher(KeybindingsHelper):
     """Interact with the Unity switcher."""
 

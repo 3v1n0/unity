@@ -101,8 +101,9 @@ class Keyboard(object):
         if not isinstance(keys, basestring):
             raise TypeError("'keys' argument must be a string.")
         logger.debug("Pressing keys %r with delay %f", keys, delay)
-        self.__perform_on_keys(self.__translate_keys(keys), X.KeyPress)
-        sleep(delay)
+        for key in self.__translate_keys(keys):
+            self.__perform_on_key(key, X.KeyPress)
+            sleep(delay)
 
     def release(self, keys, delay=0.2):
         """Send key release events only.
@@ -118,8 +119,12 @@ class Keyboard(object):
         if not isinstance(keys, basestring):
             raise TypeError("'keys' argument must be a string.")
         logger.debug("Releasing keys %r with delay %f", keys, delay)
-        self.__perform_on_keys(self.__translate_keys(keys), X.KeyRelease)
-        sleep(delay)
+        # release keys in the reverse order they were pressed in.
+        keys = self.__translate_keys(keys)
+        keys.reverse()
+        for key in keys:
+            self.__perform_on_key(key, X.KeyRelease)
+            sleep(delay)
 
     def press_and_release(self, keys, delay=0.2):
         """Press and release all items in 'keys'.
@@ -166,25 +171,29 @@ class Keyboard(object):
             fake_input(_DISPLAY, X.KeyRelease, keycode)
         _PRESSED_KEYS = []
 
-    def __perform_on_keys(self, keys, event):
+    def __perform_on_key(self, key, event):
+        if not isinstance(key, basestring):
+            raise TypeError("Key parameter must be a string")
+
         keycode = 0
         shift_mask = 0
 
-        for key in keys:
-            keycode, shift_mask = self.__char_to_keycode(key)
+        keycode, shift_mask = self.__char_to_keycode(key)
 
-            if shift_mask != 0:
-                fake_input(_DISPLAY, event, 50)
+        if shift_mask != 0:
+            fake_input(_DISPLAY, event, 50)
 
-            if event == X.KeyPress:
-                _PRESSED_KEYS.append(keycode)
-            elif event == X.KeyRelease:
-                if keycode in _PRESSED_KEYS:
-                    _PRESSED_KEYS.remove(keycode)
-                else:
-                    logger.warning("Generating release event for keycode %d that was not pressed.", keycode)
+        if event == X.KeyPress:
+            logger.debug("Sending press event for key: %s", key)
+            _PRESSED_KEYS.append(keycode)
+        elif event == X.KeyRelease:
+            logger.debug("Sending release event for key: %s", key)
+            if keycode in _PRESSED_KEYS:
+                _PRESSED_KEYS.remove(keycode)
+            else:
+                logger.warning("Generating release event for keycode %d that was not pressed.", keycode)
 
-            fake_input(_DISPLAY, event, keycode)
+        fake_input(_DISPLAY, event, keycode)
         _DISPLAY.sync()
 
     def __get_keysym(self, key) :
@@ -241,7 +250,7 @@ class Mouse(object):
         if button in _PRESSED_MOUSE_BUTTONS:
             _PRESSED_MOUSE_BUTTONS.remove(button)
         else:
-            logger.warning("Generating button release evenf or button %d that was not pressed.", button)
+            logger.warning("Generating button release event or button %d that was not pressed.", button)
         fake_input(_DISPLAY, X.ButtonRelease, button)
         _DISPLAY.sync()
 

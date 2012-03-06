@@ -12,12 +12,10 @@ from time import sleep
 from autopilot.emulators.unity.dash import Dash
 from autopilot.emulators.X11 import Keyboard, Mouse
 from autopilot.tests import AutopilotTestCase
-from autopilot.glibrunner import GlibRunner
 
 
 class DashRevealTests(AutopilotTestCase):
     """Test the unity Dash Reveal."""
-    run_test_with = GlibRunner
 
     def setUp(self):
         super(DashRevealTests, self).setUp()
@@ -77,7 +75,6 @@ class DashRevealTests(AutopilotTestCase):
 
 class DashKeyNavTests(AutopilotTestCase):
     """Test the unity Dash keyboard navigation."""
-    run_test_with = GlibRunner
 
     def setUp(self):
         super(DashKeyNavTests, self).setUp()
@@ -269,8 +266,7 @@ class DashKeyNavTests(AutopilotTestCase):
 
 
 class DashClipboardTests(AutopilotTestCase):
-    """Test the Unity clipboard""" 
-    run_test_with = GlibRunner
+    """Test the Unity clipboard"""
 
     def setUp(self):
         super(DashClipboardTests, self).setUp()
@@ -279,7 +275,7 @@ class DashClipboardTests(AutopilotTestCase):
     def tearDown(self):
         super(DashClipboardTests, self).tearDown()
         self.dash.ensure_hidden()
-         
+
     def test_ctrl_a(self):
         """ This test if ctrl+a selects all text """
         self.dash.ensure_hidden()
@@ -291,7 +287,7 @@ class DashClipboardTests(AutopilotTestCase):
 
         kb.press_and_release("Ctrl+a")
         kb.press_and_release("Delete")
-        
+
         searchbar = self.dash.get_searchbar()
         self.assertEqual(searchbar.search_string, u'')
 
@@ -344,7 +340,7 @@ class DashClipboardTests(AutopilotTestCase):
         kb.press_and_release("Ctrl+c")
         kb.press_and_release("Ctrl+v")
         kb.press_and_release("Ctrl+v")
-        
+
         searchbar = self.dash.get_searchbar()
         self.assertEqual(searchbar.search_string, u'CopyPasteCopyPaste')
 
@@ -361,15 +357,13 @@ class DashClipboardTests(AutopilotTestCase):
         kb.press_and_release("Ctrl+x")
         kb.press_and_release("Ctrl+v")
         kb.press_and_release("Ctrl+v")
-        
+
         searchbar = self.dash.get_searchbar()
         self.assertEqual(searchbar.search_string, u'CutPasteCutPaste')
 
 
 class DashKeyboardFocusTests(AutopilotTestCase):
     """Tests that keyboard focus works."""
-
-    run_test_with = GlibRunner
 
     def setUp(self):
         super(DashKeyboardFocusTests, self).setUp()

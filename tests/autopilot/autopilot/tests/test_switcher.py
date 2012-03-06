@@ -12,13 +12,11 @@ from time import sleep
 
 from autopilot.emulators.bamf import Bamf
 from autopilot.emulators.unity.switcher import Switcher
-from autopilot.glibrunner import GlibRunner
 from autopilot.tests import AutopilotTestCase
 
 
 class SwitcherTests(AutopilotTestCase):
     """Test the switcher."""
-    run_test_with = GlibRunner
 
     def set_timeout_setting(self, value):
         self.set_unity_option("alt_tab_timeout", value)

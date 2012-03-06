@@ -85,6 +85,9 @@ _keys = {
     "workspace/move_down": ("wall", "down_key"),
     # Window management
     "window/minimize": ("core", "minimize_window_key"),
+    # expo plugin:
+    "expo/start": ("expo", "expo_key"),
+    "expo/cancel": "Escape",
 }
 
 
