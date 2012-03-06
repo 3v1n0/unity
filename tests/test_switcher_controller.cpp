@@ -76,6 +76,7 @@ public:
 TEST(TestSwitcherController, Construction)
 {
   Controller controller;
+  EXPECT_FALSE(controller.Visible());
 }
 
 TEST(TestSwitcherController, LazyConstructionTimeoutLength)
