@@ -29,11 +29,20 @@ using namespace unity::switcher;
 namespace
 {
 
+unsigned int DEFAULT_LAZY_CONSTRUCT_TIMEOUT = 20;
+
 class MockSwitcherController : public Controller
 {
 public:
   MockSwitcherController()
     : Controller()
+    , window_constructed_(false)
+    , view_constructed_(false)
+    , view_shown_(false)
+  {};
+
+  MockSwitcherController(unsigned int load_timeout)
+    : Controller(load_timeout)
     , window_constructed_(false)
     , view_constructed_(false)
     , view_shown_(false)
@@ -54,6 +63,11 @@ public:
     view_shown_ = true;
   }
 
+  unsigned int GetConstructTimeout() const
+  {
+    return construct_timeout_;
+  }
+
   bool window_constructed_;
   bool view_constructed_;
   bool view_shown_;
@@ -64,18 +78,27 @@ TEST(TestSwitcherController, TestConstructor)
   Controller controller;
 }
 
-TEST(TestSwitcherController, TestLazyWindowConstruct)
+TEST(TestSwitcherController, TestControllerLazyConstructTimeout)
 {
   MockSwitcherController controller;
+  EXPECT_EQ(controller.GetConstructTimeout(), DEFAULT_LAZY_CONSTRUCT_TIMEOUT);
+}
 
-  g_timeout_add_seconds(10, [] (gpointer data) -> gboolean {
+TEST(TestSwitcherController, TestLazyWindowConstruct)
+{
+  // Setting the timeout to a lower value to speed-up the test
+  MockSwitcherController controller(2);
+
+  EXPECT_EQ(controller.GetConstructTimeout(), 2);
+
+  g_timeout_add_seconds(controller.GetConstructTimeout()/2, [] (gpointer data) -> gboolean {
     auto controller = static_cast<MockSwitcherController*>(data);
     EXPECT_FALSE(controller->window_constructed_);
 
     return FALSE;
   }, &controller);
 
-  Utils::WaitUntil(controller.window_constructed_, 22);
+  Utils::WaitUntil(controller.window_constructed_, controller.GetConstructTimeout() + 1);
   EXPECT_TRUE(controller.window_constructed_);
 }
 
