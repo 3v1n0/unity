@@ -73,18 +73,18 @@ public:
   bool view_shown_;
 };
 
-TEST(TestSwitcherController, TestConstructor)
+TEST(TestSwitcherController, Construction)
 {
   Controller controller;
 }
 
-TEST(TestSwitcherController, TestControllerLazyConstructTimeout)
+TEST(TestSwitcherController, LazyConstructionTimeoutLength)
 {
   MockSwitcherController controller;
   EXPECT_EQ(controller.GetConstructTimeout(), DEFAULT_LAZY_CONSTRUCT_TIMEOUT);
 }
 
-TEST(TestSwitcherController, TestLazyWindowConstruct)
+TEST(TestSwitcherController, LazyWindowConstruction)
 {
   // Setting the timeout to a lower value to speed-up the test
   MockSwitcherController controller(2);
