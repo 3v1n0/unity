@@ -76,6 +76,7 @@ class DashRevealTests(AutopilotTestCase):
         """Dash must close on alt+F4."""
         self.dash.ensure_visible()
         self.dash.close_with_alt_f4()
+        sleep(0.5)
         self.assertFalse(self.dash.get_is_visible())
 
 
