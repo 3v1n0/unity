@@ -78,7 +78,6 @@ class Keyboard(object):
         'Control' : 'Control_L',
         'Ctrl' : 'Control_L',
         'Alt' : 'Alt_L',
-        'AltR' : 'Alt_R',
         'Super' : 'Super_L',
         'Shift' : 'Shift_L',
         'Enter' : 'Return',
