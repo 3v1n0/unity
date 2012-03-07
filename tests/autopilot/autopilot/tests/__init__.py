@@ -193,6 +193,8 @@ class AutopilotTestCase(VideoCapturedTestCase, KeybindingsHelper):
         """Set setting `setting_name` in compiz plugin `plugin_name` to value `setting_value`
         for one test only.
         """
+        logger.info("Setting compiz option '%s' in plugin '%s' to %r",
+            setting_name, plugin_name, setting_value)
         old_value = self._set_compiz_option(plugin_name, setting_name, setting_value)
         self.addCleanup(self._set_compiz_option, plugin_name, setting_name, old_value)
 
