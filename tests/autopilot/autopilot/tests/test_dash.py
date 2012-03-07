@@ -71,6 +71,12 @@ class DashRevealTests(AutopilotTestCase):
         self.dash.reveal_command_lens()
         lensbar = self.dash.view.get_lensbar()
         self.assertEqual(lensbar.active_lens, u'commands.lens')
+    
+    def test_alt_f4_close_dash(self):
+        """Dash must close on alt+F4."""
+        self.dash.ensure_visible()
+        self.dash.close_with_alt_f4()
+        self.assertFalse(self.dash.get_is_visible())
 
 
 class DashKeyNavTests(AutopilotTestCase):
