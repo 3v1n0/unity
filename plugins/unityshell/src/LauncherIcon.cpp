@@ -81,13 +81,12 @@ LauncherIcon::LauncherIcon()
   , _glow_color(nux::color::White)
   , _shortcut(0)
   , _icon_type(TYPE_NONE)
+  , _center(max_num_monitors)
+  , _has_visible_window(max_num_monitors)
+  , _last_stable(max_num_monitors)
+  , _parent_geo(max_num_monitors)
+  , _saved_center(max_num_monitors)
 {
-  _has_visible_window.resize(max_num_monitors);
-  _center.resize(max_num_monitors);
-  _saved_center.resize(max_num_monitors);
-  _last_stable.resize(max_num_monitors);
-  _parent_geo.resize(max_num_monitors);
-
   for (int i = 0; i < QUIRK_LAST; i++)
   {
     _quirks[i] = false;
@@ -100,7 +99,7 @@ LauncherIcon::LauncherIcon()
 
   // FIXME: the abstraction is already broken, should be fixed for O
   // right now, hooking the dynamic quicklist the less ugly possible way
-  
+
 
   mouse_enter.connect(sigc::mem_fun(this, &LauncherIcon::RecvMouseEnter));
   mouse_leave.connect(sigc::mem_fun(this, &LauncherIcon::RecvMouseLeave));
@@ -150,7 +149,7 @@ void LauncherIcon::LoadTooltip()
   _tooltip = new Tooltip();
   AddChild(_tooltip.GetPointer());
 
-  _tooltip->SetText(nux::NString(tooltip_text().c_str()));
+  _tooltip->SetText(tooltip_text());
 }
 
 void LauncherIcon::LoadQuicklist()
@@ -455,7 +454,7 @@ bool LauncherIcon::SetTooltipText(std::string& target, std::string const& value)
   {
     target = escaped;
     if (_tooltip)
-      _tooltip->SetText(nux::NString(target.c_str()));
+      _tooltip->SetText(target);
     result = true;
   }
 
@@ -1137,13 +1136,13 @@ LauncherIcon::OnRemoteProgressVisibleChanged(LauncherEntryRemote* remote)
 
 void LauncherIcon::EmitNeedsRedraw()
 {
-  if (OwnsTheReference())
+  if (OwnsTheReference() && GetReferenceCount() > 0)
     needs_redraw.emit(AbstractLauncherIcon::Ptr(this));
 }
 
 void LauncherIcon::EmitRemove()
 {
-  if (OwnsTheReference())
+  if (OwnsTheReference() && GetReferenceCount() > 0)
     remove.emit(AbstractLauncherIcon::Ptr(this));
 }
 

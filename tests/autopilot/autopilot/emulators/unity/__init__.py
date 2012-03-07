@@ -46,7 +46,6 @@ _introspection_iface = Interface(_debug_proxy_obj, INTROSPECTION_IFACE)
 
 def get_state_by_path(piece='/Unity'):
     """Returns a full dump of unity's state."""
-    logger.debug("Querying unity for state piece: %r", piece)
     return _introspection_iface.GetState(piece)
 
 
@@ -58,7 +57,6 @@ def get_state_by_name_and_id(class_name, unique_id):
     Returns a dictionary of information. Unlike get_state_by_path, this
     method can never return state for more than one object.
     """
-    logger.debug("Getting state for object %s with id %d", class_name, unique_id)
     try:
         query = "//%(class_name)s[id=%(unique_id)d]" % (dict(
                                                     class_name=class_name,
@@ -87,6 +85,7 @@ class UnityIntrospectionObject(object):
     __metaclass__ = IntrospectableObjectMetaclass
 
     def __init__(self, state_dict):
+        self.__state = {}
         self.set_properties(state_dict)
 
     def set_properties(self, state_dict):
@@ -95,8 +94,12 @@ class UnityIntrospectionObject(object):
         Translates '-' to '_', so a key of 'icon-type' for example becomes 'icon_type'.
 
         """
-        for key in state_dict.keys():
-            setattr(self, key.replace('-', '_'), state_dict[key])
+        self.__state = {}
+        for key, value in state_dict.iteritems():
+            # don't store id in state dictionary -make it a proper instance attribute
+            if key == 'id':
+                self.id = value
+            self.__state[key.replace('-', '_')] = value
 
     def _get_child_tuples_by_type(self, desired_type):
         """Get a list of (name,dict) pairs from children of the specified type.
@@ -114,21 +117,38 @@ class UnityIntrospectionObject(object):
         # user wants.
         for child_type, child_state in children:
             try:
-                if _object_registry[child_type] == desired_type:
+                if issubclass(_object_registry[child_type], desired_type):
                     results.append((child_type, child_state))
             except KeyError:
                 pass
         return results
 
-    def get_children_by_type(self, desired_type):
+    def get_children_by_type(self, desired_type, **kwargs):
         """Get a list of children of the specified type.
 
         desired_type must be a subclass of UnityIntrospectionObject.
 
+        Keyword arguments can be used to restrict returned instances. For example:
+
+        >>> get_children_by_type(Launcher, monitor=1)
+
+        ... will return only LauncherInstances that have an attribute 'monitor'
+            that is equal to 1.
+
         """
+        self.refresh_state()
         result = []
         for child in self._get_child_tuples_by_type(desired_type):
-            result.append(make_introspection_object(child))
+            instance = make_introspection_object(child)
+            filters_passed = True
+            for attr, val in kwargs.iteritems():
+                if not hasattr(instance, attr) or getattr(instance, attr) != val:
+                    # Either attribute is not present, or is present but with
+                    # the wrong value - don't add this instance to the results list.
+                    filters_passed = False
+                    break
+            if filters_passed:
+                result.append(instance)
         return result
 
     def refresh_state(self):
@@ -138,8 +158,6 @@ class UnityIntrospectionObject(object):
 
         """
         # need to get name from class object.
-        logger.debug("Refreshing state for %r", self)
-
         new_state = get_state_by_name_and_id(self.__class__.__name__, self.id)
         self.set_properties(new_state)
 
@@ -157,3 +175,15 @@ class UnityIntrospectionObject(object):
         cls_name = cls.__name__
         instances = get_state_by_path("//%s" % (cls_name))
         return [make_introspection_object((cls_name,i)) for i in instances]
+
+    def __getattr__(self, name):
+        # avoid recursion if for some reason we have no state set (should never)
+        # happen.
+        if name == '__state':
+            raise AttributeError()
+
+        if name in self.__state:
+            self.refresh_state()
+            return self.__state[name]
+        # attribute not found.
+        raise AttributeError("Attribute '%s' not found." % (name))

@@ -190,6 +190,13 @@ public:
     if (_type != panel::WindowButtonType::UNMAXIMIZE)
       return;
 
+    panel::WindowButtonType real_type = panel::WindowButtonType::UNMAXIMIZE;
+
+    if (dash::Settings::Instance().GetFormFactor() == dash::FormFactor::DESKTOP)
+    {
+      real_type = panel::WindowButtonType::MAXIMIZE;
+    }
+
     if (_normal_dash_tex)
       _normal_dash_tex->UnReference();
     if (_prelight_dash_tex)
@@ -198,22 +205,11 @@ public:
       _pressed_dash_tex->UnReference();
 
     //!!FIXME!! - don't have disabled instances of the (un)maximize buttons
-    if (dash::Settings::Instance().GetFormFactor() == dash::FormFactor::DESKTOP)
-    {
-      // get maximize buttons
-      _normal_dash_tex = GetDashMaximizeWindowButton(panel::WindowState::NORMAL);
-      _prelight_dash_tex = GetDashMaximizeWindowButton(panel::WindowState::PRELIGHT);
-      _pressed_dash_tex = GetDashMaximizeWindowButton(panel::WindowState::PRESSED);
-      _disabled_dash_tex = GetDashMaximizeWindowButton(panel::WindowState::DISABLED); 
-    }
-    else
-    {
-      // get unmaximize buttons
-      _normal_dash_tex = GetDashWindowButton(_type, panel::WindowState::NORMAL);
-      _prelight_dash_tex = GetDashWindowButton(_type, panel::WindowState::PRELIGHT);
-      _pressed_dash_tex = GetDashWindowButton(_type, panel::WindowState::PRESSED);
-      _disabled_dash_tex = GetDashWindowButton(_type, panel::WindowState::DISABLED);
-    }
+    // get (un)maximize buttons
+    _normal_dash_tex = GetDashWindowButton(real_type, panel::WindowState::NORMAL);
+    _prelight_dash_tex = GetDashWindowButton(real_type, panel::WindowState::PRELIGHT);
+    _pressed_dash_tex = GetDashWindowButton(real_type, panel::WindowState::PRESSED);
+    _disabled_dash_tex = GetDashWindowButton(real_type, panel::WindowState::DISABLED);
 
     // still check if the dash is really opened,
     // someone could change the form factor through dconf
@@ -292,7 +288,8 @@ private:
   nux::BaseTexture* GetDashWindowButton(panel::WindowButtonType type,
                                         panel::WindowState state)
   {
-    const char* names[] = { "close_dash", "minimize_dash", "unmaximize_dash" };
+    nux::BaseTexture* texture = nullptr;
+    const char* names[] = { "close_dash", "minimize_dash", "unmaximize_dash", "maximize_dash" };
     const char* states[] = { "", "_prelight", "_pressed", "_disabled" };
 
     std::ostringstream subpath;
@@ -302,26 +299,15 @@ private:
     glib::String filename(g_build_filename(PKGDATADIR, subpath.str().c_str(), NULL));
 
     glib::Error error;
-    glib::Object<GdkPixbuf> pixbuf(gdk_pixbuf_new_from_file(filename.Value(), &error));
+    glib::Object<GdkPixbuf> pixbuf(gdk_pixbuf_new_from_file(filename, &error));
 
-    // not handling broken texture or missing files
-    return nux::CreateTexture2DFromPixbuf(pixbuf, true);
-  }
+    if (pixbuf && !error)
+      texture = nux::CreateTexture2DFromPixbuf(pixbuf, true);
 
-  nux::BaseTexture* GetDashMaximizeWindowButton(panel::WindowState state)
-  {
-    const char* states[] = { "", "_prelight", "_pressed", "_disabled" };
+    if (!texture)
+      texture = panel::Style::Instance().GetFallbackWindowButton(type, state);
 
-    std::ostringstream subpath;
-    subpath << "maximize_dash" << states[static_cast<int>(state)] << ".png";
-
-    glib::String filename(g_build_filename(PKGDATADIR, subpath.str().c_str(), NULL));
-
-    glib::Error error;
-    glib::Object<GdkPixbuf> pixbuf(gdk_pixbuf_new_from_file(filename.Value(), &error));
-
-    // not handling broken texture or missing files
-    return nux::CreateTexture2DFromPixbuf(pixbuf, true);
+    return texture;
   }
 };
 

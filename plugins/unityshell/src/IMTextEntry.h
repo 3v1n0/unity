@@ -40,41 +40,26 @@ class IMTextEntry : public nux::TextEntry
 public:
   IMTextEntry();
 
-  nux::Property<std::string> preedit_string;
-  nux::Property<bool> im_enabled;
-  nux::Property<bool> im_active;
-
 private:
-  void CheckIMEnabled();
-  void SetupSimpleIM();
-  void SetupMultiIM();
-
   bool InspectKeyEvent(unsigned int eventType, unsigned int keysym, const char* character);
-  bool TryHandleEvent(unsigned int eventType, unsigned int keysym, const char* character);
-  void KeyEventToGdkEventKey(Event& event, GdkEventKey& gdk_event);
-  inline void CheckValidClientWindow(Window window);
   bool TryHandleSpecial(unsigned int eventType, unsigned int keysym, const char* character);
-  void InsertTextAt(unsigned int position, std::string const& text);
+  void InsertText(std::string const& text);
   void Cut();
   void Copy();
   void Paste(bool primary = false);
 
-  void OnCommit(GtkIMContext* context, char* str);
-  void OnPreeditChanged(GtkIMContext* context);
-  void OnPreeditStart(GtkIMContext* context);
-  void OnPreeditEnd(GtkIMContext* context);
-
-  void OnFocusIn();
-  void OnFocusOut();
-
-  void UpdateCursorLocation();
-
   void OnMouseButtonUp(int x, int y, unsigned long bflags, unsigned long kflags);
 
- private:
-  glib::SignalManager sig_manager_;
+  void KeyEventToGdkEventKey(Event& event, GdkEventKey& gdk_event);
+  bool TryHandleEvent(unsigned int eventType,
+                      unsigned int keysym,
+                      const char* character);
+  void SetupSimpleIM();
+  void OnCommit(GtkIMContext* context, char* str);
+
   glib::Object<GtkIMContext> im_context_;
-  glib::Object<GdkWindow> client_window_;
+  GdkWindow* client_window_;
+  glib::SignalManager sig_manager_;
   bool focused_;
 };
 

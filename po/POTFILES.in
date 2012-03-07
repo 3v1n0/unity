@@ -15,6 +15,7 @@ plugins/unityshell/src/FilterMultiRangeWidget.cpp
 plugins/unityshell/src/FilterRatingsWidget.cpp
 plugins/unityshell/src/PreviewMusic.cpp
 plugins/unityshell/src/PreviewMusicTrack.cpp
+plugins/unityshell/src/ShortcutHintPrivate.cpp
 plugins/unityshell/src/unity-launcher-accessible.cpp
 plugins/unityshell/src/unity-search-bar-accessible.cpp
 plugins/unityshell/src/unityshell.cpp

@@ -42,7 +42,7 @@ Controller::Controller()
   ,  show_timer_(0)
   ,  detail_timer_(0)
 {
-  timeout_length = 150;
+  timeout_length = 75;
   detail_on_timeout = true;
   detail_timeout_length = 1500;
   monitor_ = 0;
@@ -265,7 +265,7 @@ void Controller::Next()
     switch (detail_mode_)
     {
       case TAB_NEXT_WINDOW:
-        if (model_->detail_selection_index < model_->Selection()->Windows().size () - 1)
+        if (model_->detail_selection_index < model_->DetailXids().size () - 1)
           model_->NextDetail();
         else
           model_->Next();
@@ -320,10 +320,10 @@ SwitcherView* Controller::GetView()
 
 void Controller::SetDetail(bool value, unsigned int min_windows)
 {
-  if (value && model_->Selection()->Windows().size () >= min_windows)
+  if (value && model_->DetailXids().size () >= min_windows)
   {
     model_->detail_selection = true;
-    detail_mode_ = TAB_NEXT_WINDOW_LOOP;
+    detail_mode_ = TAB_NEXT_WINDOW;
   }
   else
   {

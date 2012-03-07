@@ -31,8 +31,9 @@ namespace
 
 nux::logging::Logger logger("unity.dash.lensbar");
 
-const int FOCUS_OVERLAY_WIDTH = 56;
-const int FOCUS_OVERLAY_HEIGHT = 40;
+const int FOCUS_OVERLAY_WIDTH = 60;
+const int FOCUS_OVERLAY_HEIGHT = 44;
+const int LENSBAR_HEIGHT = 44;
 
 }
 
@@ -52,7 +53,6 @@ void LensBar::InitTheme()
   if (!focus_layer_)
   {
     focus_layer_.reset(Style::Instance().FocusOverlay(FOCUS_OVERLAY_WIDTH, FOCUS_OVERLAY_HEIGHT));
-    over_layer_.reset(Style::Instance().FocusOverlay(FOCUS_OVERLAY_WIDTH, FOCUS_OVERLAY_HEIGHT));
   }
 }
 
@@ -72,8 +72,8 @@ void LensBar::SetupLayout()
   layout_->SetSpaceBetweenChildren(40);
   SetLayout(layout_);
 
-  SetMinimumHeight(46);
-  SetMaximumHeight(46);
+  SetMinimumHeight(LENSBAR_HEIGHT);
+  SetMaximumHeight(LENSBAR_HEIGHT);
 }
 
 void LensBar::SetupHomeLens()
@@ -85,8 +85,6 @@ void LensBar::SetupHomeLens()
   layout_->AddView(icon, 0, nux::eCenter, nux::MINOR_SIZE_FULL);
 
   icon->mouse_click.connect([&, icon] (int x, int y, unsigned long button, unsigned long keyboard) { SetActive(icon); QueueDraw(); });
-  icon->mouse_enter.connect([&] (int x, int y, unsigned long button, unsigned long keyboard) {  QueueDraw(); });
-  icon->mouse_leave.connect([&] (int x, int y, unsigned long button, unsigned long keyboard) {  QueueDraw(); });
   icon->mouse_down.connect([&] (int x, int y, unsigned long button, unsigned long keyboard) {  QueueDraw(); });
   icon->key_nav_focus_change.connect([&](nux::Area*, bool, nux::KeyNavDirection){ QueueDraw(); });
   icon->key_nav_focus_activate.connect([&, icon](nux::Area*){ SetActive(icon); });
@@ -101,8 +99,6 @@ void LensBar::AddLens(Lens::Ptr& lens)
   layout_->AddView(icon, 0, nux::eCenter, nux::eFix);
 
   icon->mouse_click.connect([&, icon] (int x, int y, unsigned long button, unsigned long keyboard) { SetActive(icon); QueueDraw(); });
-  icon->mouse_enter.connect([&] (int x, int y, unsigned long button, unsigned long keyboard) {  QueueDraw(); });
-  icon->mouse_leave.connect([&] (int x, int y, unsigned long button, unsigned long keyboard) {  QueueDraw(); });
   icon->mouse_down.connect([&] (int x, int y, unsigned long button, unsigned long keyboard) {  QueueDraw(); });
   icon->key_nav_focus_change.connect([&](nux::Area*, bool, nux::KeyNavDirection){ QueueDraw(); });
   icon->key_nav_focus_activate.connect([&, icon](nux::Area*){ SetActive(icon); });
@@ -132,8 +128,7 @@ void LensBar::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
 
   for (auto icon : icons_)
   {
-    if ((icon->HasKeyFocus() || icon->IsMouseInside()) && 
-        focus_layer_ && over_layer_)
+    if (icon->HasKeyFocus() && focus_layer_)
     {
       nux::Geometry geo(icon->GetGeometry());
 
@@ -143,7 +138,7 @@ void LensBar::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
       geo.width = FOCUS_OVERLAY_WIDTH;
       geo.height = FOCUS_OVERLAY_HEIGHT;
 
-      nux::AbstractPaintLayer* layer = icon->HasKeyFocus() ? focus_layer_.get() : over_layer_.get();
+      nux::AbstractPaintLayer* layer = focus_layer_.get();
 
       layer->SetGeometry(geo);
       layer->Renderlayer(gfx_context);
@@ -155,17 +150,18 @@ void LensBar::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
 
 void LensBar::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
 {
-  gfx_context.PushClippingRectangle(GetGeometry());
+  nux::Geometry const& base = GetGeometry();
+
+  gfx_context.PushClippingRectangle(base);
 
   if (!IsFullRedraw())
     nux::GetPainter().PushLayer(gfx_context, bg_layer_->GetGeometry(), bg_layer_.get());
 
   for (auto icon: icons_)
   {
-    if ((icon->HasKeyFocus() || icon->IsMouseInside()) && !IsFullRedraw()
-        && focus_layer_ && over_layer_)
+    if (icon->HasKeyFocus() && !IsFullRedraw() && focus_layer_)
     {
-      nux::AbstractPaintLayer* layer = icon->HasKeyFocus() ? focus_layer_.get() : over_layer_.get();
+      nux::AbstractPaintLayer* layer = focus_layer_.get();
       
       nux::GetPainter().PushLayer(gfx_context, focus_layer_->GetGeometry(), layer);
     }
@@ -175,6 +171,28 @@ void LensBar::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
 
   if (!IsFullRedraw())
     nux::GetPainter().PopBackground();
+
+  for (auto icon: icons_)
+  {
+    if (icon->active)
+    {
+      nux::Geometry const& geo = icon->GetGeometry();
+      int middle = geo.x + geo.width/2;
+      int size = 5;
+      // Nux doesn't draw too well the small triangles, so let's draw a
+      // bigger one and clip part of them using the "-1".
+      int y = base.y - 1;
+
+      nux::GetPainter().Draw2DTriangleColor(gfx_context,
+                                            middle - size, y,
+                                            middle, y + size,
+                                            middle + size, y,
+                                            nux::color::White);
+
+      break;
+
+    }
+  }
 
   gfx_context.PopClippingRectangle();
 }

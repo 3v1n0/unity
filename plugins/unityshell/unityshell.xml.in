@@ -36,7 +36,6 @@
                 <plugin>compiztoolbox</plugin>
                 <plugin>scale</plugin>
                 <plugin>expo</plugin>
-                <feature>largedesktop</feature>
             </requirement>
         </deps>
         <options>
@@ -95,7 +94,7 @@
                   <option name="panel_first_menu" type="key">
                         <_short>Key to open the first panel menu</_short>
                         <_long>Open the first menu on the panel, allowing keyboard navigation thereafter.</_long>
-                        <default>F10</default>
+                        <default>&lt;Alt&gt;F10</default>
                   </option> 
                   <option name="launcher_switcher_forward" type="key">
                     <_short>Key to start the launcher application switcher</_short>
@@ -130,20 +129,30 @@
                       <_long>fixme</_long>
                       <default>&lt;Alt&gt;&lt;Shift&gt;Tab</default>
                 </option>
-    <option name="alt_tab_right" type="key">
-        <_short>Go right in the switcher</_short>
-        <_long>fixme</_long>
-        <default>&lt;Alt&gt;Right</default>
-        <passive_grab>false</passive_grab>
-        <internal/>
-    </option>
-    <option name="alt_tab_left" type="key">
-        <_short>Go left in the switcher</_short>
-        <_long>fixme</_long>
-        <default>&lt;Alt&gt;Left</default>
-        <passive_grab>false</passive_grab>
-        <internal/>
-    </option>
+                <option name="alt_tab_forward_all" type="key">
+                     <_short>Key to start the switcher for all viewports</_short>
+                     <_long>fixme</_long>
+                     <default>&lt;Control&gt;&lt;Alt&gt;Tab</default>
+                </option>
+                <option name="alt_tab_prev_all" type="key">
+                      <_short>Key to start the switcher in reverse for all viewports</_short>
+                      <_long>fixme</_long>
+                      <default>&lt;Control&gt;&lt;Alt&gt;&lt;Shift&gt;Tab</default>
+                </option>
+		<option name="alt_tab_right" type="key">
+		    <_short>Go right in the switcher</_short>
+		    <_long>fixme</_long>
+		    <default>&lt;Alt&gt;Right</default>
+		    <passive_grab>false</passive_grab>
+		    <internal/>
+		</option>
+		<option name="alt_tab_left" type="key">
+		    <_short>Go left in the switcher</_short>
+		    <_long>fixme</_long>
+		    <default>&lt;Alt&gt;Left</default>
+		    <passive_grab>false</passive_grab>
+		    <internal/>
+		</option>
                 <option name="alt_tab_detail_start" type="key">
         <_short>Key to expose the windows in the switcher</_short>
         <_long>fixme</_long>
@@ -371,7 +380,7 @@
                     <max>100</max>
                     <default>75</default>
                 </option>
-
+                
                 <option name="devices_option" type="int">
                     <_short>Show Devices</_short>
                     <_long>Show devices in the launcher</_long>
