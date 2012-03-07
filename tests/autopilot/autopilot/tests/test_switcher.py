@@ -150,6 +150,55 @@ class SwitcherTests(AutopilotTestCase):
         self.switcher.terminate()
         self.set_timeout_setting(True)
 
+    def test_lazy_switcher_initiate(self):
+        self.set_timeout_setting(False)
+        sleep(1)
+
+        self.keybinding_hold("switcher/reveal_normal")
+        self.addCleanup(self.keybinding_release, "switcher/reveal_normal")
+        sleep(1)
+        self.assertThat(self.switcher.get_is_visible(), Equals(False))
+
+        sleep(1)
+        self.keybinding_tap("switcher/reveal_normal")
+        self.addCleanup(self.keybinding, "switcher/cancel")
+        sleep(.5)
+        self.assertThat(self.switcher.get_is_visible(), Equals(True))
+
+    def test_switcher_cancel(self):
+        self.set_timeout_setting(False)
+        sleep(1)
+
+        self.switcher.initiate()
+        self.addCleanup(self.switcher.terminate)
+        sleep(.2)
+
+        self.assertThat(self.switcher.get_is_visible(), Equals(True))
+
+        self.switcher.cancel()
+        sleep(.2)
+
+        self.assertThat(self.switcher.get_is_visible(), Equals(False))
+
+    def test_lazy_switcher_cancel(self):
+        self.set_timeout_setting(False)
+        sleep(1)
+
+        self.keybinding_hold("switcher/reveal_normal")
+        self.addCleanup(self.keybinding_release, "switcher/reveal_normal")
+        sleep(1)
+        self.assertThat(self.switcher.get_is_visible(), Equals(False))
+
+        sleep(1)
+        self.keybinding_tap("switcher/reveal_normal")
+        self.addCleanup(self.keybinding, "switcher/cancel")
+        sleep(.5)
+        self.assertThat(self.switcher.get_is_visible(), Equals(True))
+
+        self.switcher.cancel()
+        sleep(.2)
+
+        self.assertThat(self.switcher.get_is_visible(), Equals(False))
 
 class SwitcherDetailsTests(AutopilotTestCase):
     """Test the details mode for the switcher."""
