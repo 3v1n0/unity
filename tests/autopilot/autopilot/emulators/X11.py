@@ -264,7 +264,7 @@ class Mouse(object):
     def move(self, x, y, animate=True, rate=100, time_between_events=0.001):
         '''Moves mouse to location (x, y, pixels_per_event, time_between_event)'''
         logger.debug("Moving mouse to position %d,%d %s animation.", x, y,
-            "with" if animate else "false")
+            "with" if animate else "without")
 
         def perform_move(x, y, sync):
             fake_input(_DISPLAY, X.MotionNotify, sync, X.CurrentTime, X.NONE, x=x, y=y)
