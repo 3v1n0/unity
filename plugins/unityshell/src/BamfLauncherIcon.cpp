@@ -845,7 +845,7 @@ void BamfLauncherIcon::EnsureMenuItemsReady()
     _menu_items["Pin"] = glib::Object<DbusmenuMenuitem>(menu_item);
   }
 
-  const char* label = !IsSticky() ? _("Lock to launcher") : _("Unlock from launcher");
+  const char* label = !IsSticky() ? _("Lock to Launcher") : _("Unlock from Launcher");
 
   dbusmenu_menuitem_property_set(_menu_items["Pin"], DBUSMENU_MENUITEM_PROP_LABEL, label);
 
