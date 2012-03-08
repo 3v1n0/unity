@@ -407,7 +407,8 @@ Launcher::AddProperties(GVariantBuilder* builder)
   .add("quicklist-open", _hide_machine->GetQuirk(LauncherHideMachine::QUICKLIST_OPEN))
   .add("hide-quirks", _hide_machine->DebugHideQuirks().c_str())
   .add("hover-quirks", _hover_machine->DebugHoverQuirks().c_str())
-  .add("icon-size", _icon_size);
+  .add("icon-size", _icon_size)
+  .add("shortcuts_shown", _shortcuts_shown);
 }
 
 void Launcher::SetMousePosition(int x, int y)
@@ -2297,6 +2298,21 @@ void Launcher::OnPointerBarrierEvent(ui::PointerBarrierWrapper* owner, ui::Barri
     {
       if (event->y < abs_geo.y)
         apply_to_reveal = true;
+    }
+  }
+
+  if (apply_to_reveal)
+  {
+    int root_x_return, root_y_return, win_x_return, win_y_return;
+    unsigned int mask_return;
+    Window root_return, child_return;
+    Display *dpy = nux::GetGraphicsDisplay()->GetX11Display();
+
+    if (XQueryPointer (dpy, DefaultRootWindow(dpy), &root_return, &child_return, &root_x_return, 
+                       &root_y_return, &win_x_return, &win_y_return, &mask_return))
+    {
+      if (mask_return & (Button1Mask | Button3Mask))
+        apply_to_reveal = false;
     }
   }
 
