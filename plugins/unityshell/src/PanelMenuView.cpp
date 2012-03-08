@@ -760,7 +760,19 @@ std::string PanelMenuView::GetActiveViewName(bool use_appname)
     if (std::find(our_xids.begin(), our_xids.end(), window_xid) != our_xids.end())
     {
       _is_own_window = true;
-      return "";
+
+      /* If the active window is an unity window, we need to fallback to the
+       * top one, anyway we should always avoid to focus unity internal windows */
+      BamfWindow* top_win = GetBamfWindowForXid(GetTopWindow());
+
+      if (top_win && top_win != window)
+      {
+        window = top_win;
+      }
+      else
+      {
+        return "";
+      }
     }
 
     if (bamf_window_get_window_type(window) == BAMF_WINDOW_DESKTOP)
@@ -806,26 +818,7 @@ std::string PanelMenuView::GetMaximizedViewName(bool use_appname)
   BamfWindow* window = nullptr;
   std::string label;
 
-  if (maximized != 0)
-  {
-    GList* windows = bamf_matcher_get_windows(_matcher);
-
-    for (GList* l = windows; l; l = l->next)
-    {
-      if (!BAMF_IS_WINDOW(l->data))
-        continue;
-
-      auto win = static_cast<BamfWindow*>(l->data);
-
-      if (bamf_window_get_xid(win) == maximized)
-      {
-        window = win;
-        break;
-      }
-    }
-
-    g_list_free(windows);
-  }
+  window = GetBamfWindowForXid(maximized);
 
   if (BAMF_IS_WINDOW(window))
   {
@@ -1456,32 +1449,98 @@ PanelMenuView::OnWindowMoved(guint xid)
   }
 }
 
+bool
+PanelMenuView::IsValidWindow(Window xid)
+{
+  auto wm = WindowManager::Default();
+  std::vector<Window> const& our_xids = nux::XInputWindow::NativeHandleList();
+
+  if (wm->IsWindowOnCurrentDesktop(xid) && !wm->IsWindowObscured(xid) &&
+      wm->IsWindowVisible(xid) &&
+      std::find(our_xids.begin(), our_xids.end(), xid) == our_xids.end())
+  {
+    nux::Geometry const& geo = wm->GetWindowGeometry(xid);
+
+    if (_monitor_geo.IsPointInside(geo.x + (geo.width / 2), geo.y))
+    {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 Window
 PanelMenuView::GetMaximizedWindow()
 {
   Window window_xid = 0;
-  auto wm = WindowManager::Default();
-  std::vector<Window> const& our_xids = nux::XInputWindow::NativeHandleList();
 
   // Find the front-most of the maximized windows we are controlling
   for (auto xid : _maximized_set)
   {
     // We can safely assume only the front-most is visible
-    if (wm->IsWindowOnCurrentDesktop(xid) && !wm->IsWindowObscured(xid) &&
-        wm->IsWindowVisible(xid) &&
-        std::find(our_xids.begin(), our_xids.end(), xid) == our_xids.end())
+    if (IsValidWindow(xid))
     {
-      nux::Geometry const& geo = wm->GetWindowGeometry(xid);
-
-      if (_monitor_geo.IsPointInside(geo.x + (geo.width / 2), geo.y))
-      {
-        window_xid = xid;
-        break;
-      }
+      window_xid = xid;
+      break;
     }
   }
 
   return window_xid;
+}
+
+Window
+PanelMenuView::GetTopWindow()
+{
+  Window window_xid = 0;
+  GList* windows = bamf_matcher_get_window_stack_for_monitor(_matcher, _monitor);
+
+  for (GList* l = windows; l; l = l->next)
+  {
+    if (!BAMF_IS_WINDOW(l->data))
+      continue;
+
+    Window xid = bamf_window_get_xid(static_cast<BamfWindow*>(l->data));
+    bool visible = bamf_view_user_visible(static_cast<BamfView*>(l->data));
+
+    if (visible && IsValidWindow(xid))
+    {
+      window_xid = xid;
+    }
+  }
+
+  g_list_free(windows);
+
+  return window_xid;
+}
+
+BamfWindow*
+PanelMenuView::GetBamfWindowForXid(Window xid)
+{
+  BamfWindow* window = nullptr;
+
+  if (xid != 0)
+  {
+    GList* windows = bamf_matcher_get_windows(_matcher);
+
+    for (GList* l = windows; l; l = l->next)
+    {
+      if (!BAMF_IS_WINDOW(l->data))
+        continue;
+
+      auto win = static_cast<BamfWindow*>(l->data);
+
+      if (bamf_window_get_xid(win) == xid)
+      {
+        window = win;
+        break;
+      }
+    }
+
+    g_list_free(windows);
+  }
+
+  return window;
 }
 
 void PanelMenuView::OnMaximizedActivate(int x, int y)

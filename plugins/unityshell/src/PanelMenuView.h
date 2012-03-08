@@ -51,6 +51,7 @@ public:
   void SetMonitor(int monitor);
   void SetIntegrated(bool integrated);
 
+  Window GetTopWindow();
   Window GetMaximizedWindow();
   bool GetControlsActive();
   bool HasOurWindowFocused();
@@ -107,10 +108,13 @@ private:
 
   void FullRedraw();
   void Refresh(bool force = false);
+  void DrawText(cairo_t *cr_real, nux::Geometry const& geo, std::string const& label);
 
   void OnPanelViewMouseEnter(int x, int y, unsigned long mouse_button_state, unsigned long special_keys_state);
   void OnPanelViewMouseLeave(int x, int y, unsigned long mouse_button_state, unsigned long special_keys_state);
   void OnPanelViewMouseMove(int x, int y, int dx, int dy, unsigned long mouse_button_state, unsigned long special_keys_state);
+
+  BamfWindow* GetBamfWindowForXid(Window xid);
 
   std::string GetActiveViewName(bool use_appname = false);
   std::string GetMaximizedViewName(bool use_appname = false);
@@ -128,7 +132,7 @@ private:
   static gboolean OnNewAppShow(PanelMenuView* self);
   static gboolean OnNewAppHide(PanelMenuView* self);
 
-  void DrawText(cairo_t *cr_real, nux::Geometry const& geo, std::string const& label);
+  bool IsValidWindow(Window xid);
 
   bool DrawMenus();
   bool DrawWindowButtons();
