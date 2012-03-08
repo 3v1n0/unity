@@ -79,15 +79,14 @@ add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_ma
   COMMENT "Generating marshallers")
 
 enable_testing()
-find_package(GTest)
 # :(
 find_library (GMOCK_LIB gmock)
 find_library (GMOCK_MAIN_LIB gmock_main)
+find_path(GTEST_SRC_DIR gtest.cc PATHS /usr/src/gtest/src)
 
-if (GTEST_FOUND AND
+if (GTEST_SRC_DIR AND
     GMOCK_LIB AND
     GMOCK_MAIN_LIB)
-  include_directories(${GTEST_INCLUDE_DIRS})
 
 # The service that provides DBus services to test against
   add_executable(test-gtest-service
@@ -100,7 +99,7 @@ if (GTEST_FOUND AND
                  test_service_main.c
                  test_service_model.c
                  test_service_model.h)
-  add_dependencies (test-gtest-service unity-core-${UNITY_API_VERSION})
+  add_dependencies (test-gtest-service unity-core-${UNITY_API_VERSION} gtest)
 
 
 # The actual test executable (xless) - do not put anything that requires X in here
@@ -167,9 +166,9 @@ if (GTEST_FOUND AND
                  ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle-layout.cpp
                  ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-texture.cpp
                  )
-  target_link_libraries(test-gtest-xless ${GTEST_BOTH_LIBRARIES} ${GMOCK_LIB} ${GMOCK_MAIN_LIB})
+  target_link_libraries(test-gtest-xless gtest ${GMOCK_LIB} ${GMOCK_MAIN_LIB})
   add_test(UnityGTestXless test-gtest-xless)
-  add_dependencies(test-gtest-xless unity-core-${UNITY_API_VERSION})
+  add_dependencies(test-gtest-xless unity-core-${UNITY_API_VERSION} gtest)
 
 # tests that require dbus, must not require X
   add_executable(test-gtest-dbus
@@ -186,9 +185,9 @@ if (GTEST_FOUND AND
                  test_ratings_filter.cpp
                  test_results.cpp
                 )
-  target_link_libraries(test-gtest-dbus ${GTEST_BOTH_LIBRARIES})
+  target_link_libraries(test-gtest-dbus gtest)
   add_test(UnityGTestDBus test-gtest-dbus)
-  add_dependencies(test-gtest-dbus unity-core-${UNITY_API_VERSION} test-gtest-service)
+  add_dependencies(test-gtest-dbus unity-core-${UNITY_API_VERSION} test-gtest-service gtest)
 
 # Tests that require X
   add_executable(test-gtest
@@ -205,11 +204,11 @@ if (GTEST_FOUND AND
                  ${UNITY_SRC}/Timer.cpp
                  ${UNITY_SRC}/Timer.h
                 )
-  target_link_libraries(test-gtest ${GTEST_BOTH_LIBRARIES})
+  target_link_libraries(test-gtest gtest)
   add_test(UnityGTest test-gtest)
-  add_dependencies(test-gtest unity-core-${UNITY_API_VERSION})
+  add_dependencies(test-gtest unity-core-${UNITY_API_VERSION} gtest)
 
-endif (GTEST_FOUND AND
+endif (GTEST_SRC_DIR AND
        GMOCK_LIB AND
        GMOCK_MAIN_LIB)
 
@@ -234,11 +233,14 @@ set (TEST_COMMAND_HEADLESS
   #&& ${GTEST_TEST_COMMAND_DBUS}
   && echo "Warning, DBus test cases are disabled!!")
 
-add_custom_target (check COMMAND  ${TEST_COMMAND} DEPENDS test-unit test-gtest test-gtest-xless test-gtest-dbus)
-add_custom_target (check-headless COMMAND ${TEST_COMMAND_HEADLESS} DEPENDS test-gtest-xless test-gtest-dbus)
-add_custom_target (check-report COMMAND ${TEST_UNIT_COMMAND} && gtester-report ${TEST_RESULT_XML} > ${TEST_RESULT_HTML})
-add_custom_target (gcheck COMMAND  ${DBUS_TEST_COMMAND} DEPENDS test-gtest test-gtest-xless)
-
+if (GTEST_SRC_DIR)
+  add_custom_target (check COMMAND  ${TEST_COMMAND} DEPENDS test-unit test-gtest test-gtest-xless test-gtest-dbus)
+  add_custom_target (check-headless COMMAND ${TEST_COMMAND_HEADLESS} DEPENDS test-gtest-xless test-gtest-dbus)
+  add_custom_target (check-report COMMAND ${TEST_UNIT_COMMAND} && gtester-report ${TEST_RESULT_XML} > ${TEST_RESULT_HTML})
+  add_custom_target (gcheck COMMAND  ${DBUS_TEST_COMMAND} DEPENDS test-gtest test-gtest-xless)
+else (GTEST_SRC_DIR)
+  add_custom_target (check COMMAND  ${TEST_COMMAND} DEPENDS test-unit)
+endif (GTEST_SRC_DIR)
 # make target to allow devs to run "make autopilot" from build dir:
 set (AUTOPILOTDIR "${CMAKE_CURRENT_SOURCE_DIR}/autopilot")
 # Rules to install autopilot files and executable script:
