@@ -1003,9 +1003,9 @@ void Controller::Impl::ReceiveMouseDownOutsideArea(int x, int y, unsigned long b
 void Controller::KeyNavGrab()
 {
   pimpl->ubus.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
+  pimpl->launcher_grabbed = true;
   KeyNavActivate();
   pimpl->keyboard_launcher_->GrabKeyboard();
-  pimpl->launcher_grabbed = true;
 
   pimpl->launcher_key_press_connection_ =
     pimpl->keyboard_launcher_->key_down.connect(sigc::mem_fun(pimpl, &Controller::Impl::ReceiveLauncherKeyPress));
@@ -1026,8 +1026,14 @@ void Controller::KeyNavActivate()
   pimpl->keyboard_launcher_->EnterKeyNavMode();
   pimpl->model_->SetSelection(0);
 
-  pimpl->ubus.SendMessage(UBUS_LAUNCHER_START_KEY_SWTICHER);
-  pimpl->ubus.SendMessage(UBUS_LAUNCHER_START_KEY_NAV);
+  if (pimpl->launcher_grabbed)
+  {
+    pimpl->ubus.SendMessage(UBUS_LAUNCHER_START_KEY_SWTICHER);
+  }
+  else
+  {
+    pimpl->ubus.SendMessage(UBUS_LAUNCHER_START_KEY_NAV);
+  }
 
   AbstractLauncherIcon::Ptr const& selected = pimpl->model_->Selection();
 
@@ -1076,6 +1082,11 @@ void Controller::KeyNavTerminate(bool activate)
     pimpl->launcher_key_press_connection_.disconnect();
     pimpl->launcher_event_outside_connection_.disconnect();
     pimpl->launcher_grabbed = false;
+    pimpl->ubus.SendMessage(UBUS_LAUNCHER_END_KEY_NAV, g_variant_new_boolean(pimpl->keynav_restore_window_));
+  }
+  else
+  {
+    pimpl->ubus.SendMessage(UBUS_LAUNCHER_END_KEY_SWTICHER);
   }
 
   if (activate)
@@ -1084,9 +1095,6 @@ void Controller::KeyNavTerminate(bool activate)
   pimpl->launcher_keynav = false;
   if (!pimpl->launcher_open)
     pimpl->keyboard_launcher_.Release();
-
-  pimpl->ubus.SendMessage(UBUS_LAUNCHER_END_KEY_SWTICHER);
-  pimpl->ubus.SendMessage(UBUS_LAUNCHER_END_KEY_NAV, g_variant_new_boolean(pimpl->keynav_restore_window_));
 }
 
 bool Controller::KeyNavIsActive() const
