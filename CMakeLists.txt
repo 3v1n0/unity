@@ -132,8 +132,13 @@ add_subdirectory(plugins/unity-mt-grab-handles)
 
 # subdirs
 add_subdirectory(doc)
-#FIXME - hardcoded is bad!
-add_subdirectory(/usr/src/gtest gtest)
+
+find_path(GTEST_INCLUDE_DIR gtest/gtest.h)
+if (GTEST_INCLUDE_DIR)
+  #FIXME - hardcoded is bad!
+  add_subdirectory(/usr/src/gtest gtest)
+endif(GTEST_INCLUDE_DIR)
+
 add_subdirectory(services)
 add_subdirectory(tests)
 add_subdirectory(tools)
