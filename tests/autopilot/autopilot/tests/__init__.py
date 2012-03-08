@@ -5,8 +5,9 @@ Autopilot tests for Unity.
 
 from compizconfig import Setting, Plugin
 import logging
+import os
 from StringIO import StringIO
-from subprocess import call
+from subprocess import call, Popen, PIPE, STDOUT
 from testscenarios import TestWithScenarios
 from testtools import TestCase
 from testtools.content import text_content
@@ -19,7 +20,10 @@ from autopilot.emulators.unity.switcher import Switcher
 from autopilot.emulators.unity.workspace import WorkspaceManager
 from autopilot.emulators.X11 import Keyboard, Mouse
 from autopilot.glibrunner import GlibRunner
-from autopilot.globals import global_context
+from autopilot.globals import (global_context,
+    video_recording_enabled,
+    video_record_directory,
+    )
 from autopilot.keybindings import KeybindingsHelper
 
 
@@ -68,7 +72,70 @@ class LoggedTestCase(TestWithScenarios, TestCase):
         del self._log_buffer
 
 
-class AutopilotTestCase(LoggedTestCase, KeybindingsHelper):
+class VideoCapturedTestCase(LoggedTestCase):
+    """Video capture autopilot tests, saving the results if the test failed."""
+
+    _recording_app = '/usr/bin/recordmydesktop'
+    _recording_opts = ['--no-sound', '--no-frame', '-o',]
+
+    def setUp(self):
+        super(VideoCapturedTestCase, self).setUp()
+        global video_recording_enabled
+        if video_recording_enabled and not self._have_recording_app():
+            video_recording_enabled = False
+            logger.warning("Disabling video capture since '%s' is not present", self._recording_app)
+
+        if video_recording_enabled:
+            self._test_passed = True
+            self.addOnException(self._on_test_failed)
+            self.addCleanup(self._stop_video_capture)
+            self._start_video_capture()
+
+    def _have_recording_app(self):
+        return os.path.exists(self._recording_app)
+
+    def _start_video_capture(self):
+        args = self._get_capture_command_line()
+        self._capture_file = self._get_capture_output_file()
+        self._ensure_directory_exists_but_not_file(self._capture_file)
+        args.append(self._capture_file)
+        logger.debug("Starting: %r", args)
+        self._capture_process = Popen(args, stdout=PIPE, stderr=STDOUT)
+
+    def _stop_video_capture(self):
+        """Stop the video capture. If the test failed, save the resulting file."""
+
+        if self._test_passed:
+            # We use kill here because we don't want the recording app to start
+            # encoding the video file (since we're removing it anyway.)
+            self._capture_process.kill()
+            self._capture_process.wait()
+        else:
+            self._capture_process.terminate()
+            self._capture_process.wait()
+            self.addDetail('video capture log', text_content(self._capture_process.stdout.read()))
+        self._capture_process = None
+
+    def _get_capture_command_line(self):
+        return [self._recording_app] + self._recording_opts
+
+    def _get_capture_output_file(self):
+        return os.path.join(video_record_directory, '%s.ogv' % (self.shortDescription()))
+
+    def _ensure_directory_exists_but_not_file(self, file_path):
+        dirpath = os.path.dirname(file_path)
+        if not os.path.exists(dirpath):
+            os.makedirs(dirpath)
+        elif os.path.exists(file_path):
+            logger.warning("Video capture file '%s' already exists, deleting.", file_path)
+            os.remove(file_path)
+
+    def _on_test_failed(self, ex_info):
+        """Called when a test fails."""
+        self._test_passed = False
+
+
+class AutopilotTestCase(VideoCapturedTestCase, KeybindingsHelper):
     """Wrapper around testtools.TestCase that takes care of some cleaning."""
 
     run_test_with = GlibRunner
@@ -126,6 +193,8 @@ class AutopilotTestCase(LoggedTestCase, KeybindingsHelper):
         """Set setting `setting_name` in compiz plugin `plugin_name` to value `setting_value`
         for one test only.
         """
+        logger.info("Setting compiz option '%s' in plugin '%s' to %r",
+            setting_name, plugin_name, setting_value)
         old_value = self._set_compiz_option(plugin_name, setting_name, setting_value)
         self.addCleanup(self._set_compiz_option, plugin_name, setting_name, old_value)
 
