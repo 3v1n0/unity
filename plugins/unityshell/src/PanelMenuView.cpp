@@ -58,6 +58,7 @@ PanelMenuView::PanelMenuView()
     _padding(MAIN_LEFT_PADDING),
     _dash_showing(false),
     _switcher_showing(false),
+    _launcher_keynav(false),
     _show_now_activated(false),
     _we_control_active(false),
     _new_app_menu_shown(false),
@@ -156,6 +157,10 @@ PanelMenuView::PanelMenuView()
 
   _ubus_manager.RegisterInterest(UBUS_SWITCHER_SHOWN, sigc::mem_fun(this, &PanelMenuView::OnSwitcherShown));
   _ubus_manager.RegisterInterest(UBUS_SWITCHER_SELECTION_CHANGED, sigc::mem_fun(this, &PanelMenuView::OnSwitcherSelectionChanged));
+
+  _ubus_manager.RegisterInterest(UBUS_LAUNCHER_START_KEY_NAV, sigc::mem_fun(this, &PanelMenuView::OnLauncherKeyNavStarted));
+  _ubus_manager.RegisterInterest(UBUS_LAUNCHER_END_KEY_NAV, sigc::mem_fun(this, &PanelMenuView::OnLauncherKeyNavEnded));
+  _ubus_manager.RegisterInterest(UBUS_LAUNCHER_SELECTION_CHANGED, sigc::mem_fun(this, &PanelMenuView::OnLauncherSelectionChanged));
 
   _fade_in_animator.animation_updated.connect(sigc::mem_fun(this, &PanelMenuView::OnFadeInChanged));
   _fade_in_animator.animation_ended.connect(sigc::mem_fun(this, &PanelMenuView::FullRedraw));
@@ -418,7 +423,7 @@ bool PanelMenuView::DrawMenus()
   }
 
   if (!_is_own_window && !_dash_showing && _we_control_active &&
-      !_switcher_showing && !screen_grabbed)
+      !_switcher_showing && !_launcher_keynav && !screen_grabbed)
   {
     if (_is_inside || _last_active_view || _show_now_activated || _new_application)
     {
@@ -448,7 +453,7 @@ bool PanelMenuView::DrawWindowButtons()
   }
 
   if (!_is_own_window && _we_control_active && _is_maximized &&
-      !_switcher_showing && !screen_grabbed)
+      !_launcher_keynav && !_switcher_showing && !screen_grabbed)
   {
     if (_is_inside || _show_now_activated || _new_application)
     {
@@ -484,7 +489,7 @@ void PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   nux::ColorLayer layer(nux::Color(0x00000000), true, rop);
   nux::GetPainter().PushDrawLayer(GfxContext, GetGeometry(), &layer);
 
-  if (_title_texture && !_is_own_window)
+  if (_title_texture)
   {
     guint blend_alpha = 0, blend_src = 0, blend_dest = 0;
     bool draw_menus = DrawMenus();
@@ -974,13 +979,13 @@ void PanelMenuView::Refresh(bool force)
       }
     }
   }
-  else if (!_switcher_showing)
+  else if (!_switcher_showing && !_launcher_keynav)
   {
     new_title = GetActiveViewName();
     _window_buttons->SetControlledWindow(_active_xid);
   }
 
-  if (!_switcher_showing || _is_integrated)
+  if ((!_switcher_showing && !_launcher_keynav) || _is_integrated)
   {
     if (_panel_title != new_title)
     {
@@ -993,21 +998,24 @@ void PanelMenuView::Refresh(bool force)
     }
   }
 
+  if (_panel_title.empty())
+  {
+    _title_texture = nullptr;
+    return;
+  }
+
   nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, geo.width, geo.height);
   cairo_t* cr = cairo_graphics.GetContext();
 
   cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
   cairo_paint(cr);
 
-  if (!_panel_title.empty())
-  {
-    glib::String escaped(g_markup_escape_text(_panel_title.c_str(), -1));
+  glib::String escaped(g_markup_escape_text(_panel_title.c_str(), -1));
 
-    std::ostringstream bold_label;
-    bold_label << "<b>" << escaped.Str() << "</b>";
+  std::ostringstream bold_label;
+  bold_label << "<b>" << escaped.Str() << "</b>";
 
-    DrawText(cr, geo, bold_label.str());
-  }
+  DrawText(cr, geo, bold_label.str());
 
   cairo_destroy(cr);
 
@@ -1686,6 +1694,44 @@ void PanelMenuView::OnSwitcherSelectionChanged(GVariant* data)
 
   _show_now_activated = false;
   _switcher_showing = true;
+
+  const gchar *title = g_variant_get_string(data, 0);
+  _panel_title = (title ? title : "");
+
+  Refresh();
+  QueueDraw();
+}
+
+void PanelMenuView::OnLauncherKeyNavStarted(GVariant* data)
+{
+  if (_launcher_keynav)
+    return;
+
+  _launcher_keynav = true;
+}
+
+void PanelMenuView::OnLauncherKeyNavEnded(GVariant* data)
+{
+  if (!_launcher_keynav)
+    return;
+
+  _launcher_keynav = false;
+
+  if (!_is_integrated)
+  {
+    auto mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
+    _is_inside = GetAbsoluteGeometry().IsPointInside(mouse.x, mouse.y);
+    _panel_title = "";
+  }
+
+  Refresh();
+  QueueDraw();
+}
+
+void PanelMenuView::OnLauncherSelectionChanged(GVariant* data)
+{
+  if (!data || !_launcher_keynav)
+    return;
 
   const gchar *title = g_variant_get_string(data, 0);
   _panel_title = (title ? title : "");

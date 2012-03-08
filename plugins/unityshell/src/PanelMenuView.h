@@ -117,6 +117,9 @@ private:
 
   void OnSwitcherShown(GVariant* data);
   void OnSwitcherSelectionChanged(GVariant* data);
+  void OnLauncherKeyNavStarted(GVariant* data);
+  void OnLauncherKeyNavEnded(GVariant* data);
+  void OnLauncherSelectionChanged(GVariant* data);
 
   void UpdateShowNow(bool ignore);
 
@@ -162,6 +165,7 @@ private:
 
   bool _dash_showing;
   bool _switcher_showing;
+  bool _launcher_keynav;
   bool _show_now_activated;
   bool _we_control_active;
   bool _new_app_menu_shown;
