@@ -1026,18 +1026,42 @@ void Controller::KeyNavActivate()
   pimpl->keyboard_launcher_->EnterKeyNavMode();
   pimpl->model_->SetSelection(0);
 
-  pimpl->ubus.SendMessage(UBUS_LAUNCHER_START_KEY_SWTICHER, g_variant_new_boolean(true));
-  pimpl->ubus.SendMessage(UBUS_LAUNCHER_START_KEY_NAV, NULL);
+  pimpl->ubus.SendMessage(UBUS_LAUNCHER_START_KEY_SWTICHER);
+  pimpl->ubus.SendMessage(UBUS_LAUNCHER_START_KEY_NAV);
+
+  AbstractLauncherIcon::Ptr const& selected = pimpl->model_->Selection();
+
+  if (selected)
+  {
+    pimpl->ubus.SendMessage(UBUS_LAUNCHER_SELECTION_CHANGED,
+                            g_variant_new_string(selected->tooltip_text().c_str()));
+  }
 }
 
 void Controller::KeyNavNext()
 {
   pimpl->model_->SelectNext();
+
+  AbstractLauncherIcon::Ptr const& selected = pimpl->model_->Selection();
+
+  if (selected)
+  {
+    pimpl->ubus.SendMessage(UBUS_LAUNCHER_SELECTION_CHANGED,
+                            g_variant_new_string(selected->tooltip_text().c_str()));
+  }
 }
 
 void Controller::KeyNavPrevious()
 {
   pimpl->model_->SelectPrevious();
+
+  AbstractLauncherIcon::Ptr const& selected = pimpl->model_->Selection();
+
+  if (selected)
+  {
+    pimpl->ubus.SendMessage(UBUS_LAUNCHER_SELECTION_CHANGED,
+                            g_variant_new_string(selected->tooltip_text().c_str()));
+  }
 }
 
 void Controller::KeyNavTerminate(bool activate)
@@ -1061,7 +1085,7 @@ void Controller::KeyNavTerminate(bool activate)
   if (!pimpl->launcher_open)
     pimpl->keyboard_launcher_.Release();
 
-  pimpl->ubus.SendMessage(UBUS_LAUNCHER_END_KEY_SWTICHER, g_variant_new_boolean(true));
+  pimpl->ubus.SendMessage(UBUS_LAUNCHER_END_KEY_SWTICHER);
   pimpl->ubus.SendMessage(UBUS_LAUNCHER_END_KEY_NAV, g_variant_new_boolean(pimpl->keynav_restore_window_));
 }
 
