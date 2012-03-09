@@ -16,8 +16,6 @@
  * Authored by: Andrea Azzarone <azzaronea@gmail.com>
  */
 
-#include <list>
-
 #include "LensViewPrivate.h"
 #include "AbstractPlacesGroup.h"
 
