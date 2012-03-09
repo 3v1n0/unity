@@ -445,5 +445,3 @@ class SoftwareCenterIconTests(ScenariodLauncherTests):
         self.assertThat(icon[0].tooltip_text == "Waiting to install", Equals(True))
         sleep(.5)
         
-        self.addCleanup(launcher_instance.unlock_from_launcher(icon[0]))
-
