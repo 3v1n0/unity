@@ -1411,8 +1411,7 @@ void PanelMenuView::OnWindowMaximized(guint xid)
   }
 }
 
-void
-PanelMenuView::OnWindowRestored(guint xid)
+void PanelMenuView::OnWindowRestored(guint xid)
 {
   if (_maximized_set.find(xid) == _maximized_set.end())
     return;
@@ -1432,8 +1431,7 @@ PanelMenuView::OnWindowRestored(guint xid)
   FullRedraw();
 }
 
-gboolean
-PanelMenuView::UpdateActiveWindowPosition(PanelMenuView* self)
+gboolean PanelMenuView::UpdateActiveWindowPosition(PanelMenuView* self)
 {
   auto wm = WindowManager::Default();
   nux::Geometry const& window_geo = wm->GetWindowGeometry(self->_active_xid);
@@ -1448,8 +1446,7 @@ PanelMenuView::UpdateActiveWindowPosition(PanelMenuView* self)
   return FALSE;
 }
 
-void
-PanelMenuView::OnWindowMoved(guint xid)
+void PanelMenuView::OnWindowMoved(guint xid)
 {
   if (_active_xid == xid)
   {
@@ -1463,8 +1460,7 @@ PanelMenuView::OnWindowMoved(guint xid)
   }
 }
 
-bool
-PanelMenuView::IsValidWindow(Window xid)
+bool PanelMenuView::IsValidWindow(Window xid)
 {
   auto wm = WindowManager::Default();
   std::vector<Window> const& our_xids = nux::XInputWindow::NativeHandleList();
@@ -1484,8 +1480,7 @@ PanelMenuView::IsValidWindow(Window xid)
   return false;
 }
 
-Window
-PanelMenuView::GetMaximizedWindow()
+Window PanelMenuView::GetMaximizedWindow()
 {
   Window window_xid = 0;
 
@@ -1503,8 +1498,7 @@ PanelMenuView::GetMaximizedWindow()
   return window_xid;
 }
 
-Window
-PanelMenuView::GetTopWindow()
+Window PanelMenuView::GetTopWindow()
 {
   Window window_xid = 0;
   GList* windows = bamf_matcher_get_window_stack_for_monitor(_matcher, _monitor);
@@ -1528,8 +1522,7 @@ PanelMenuView::GetTopWindow()
   return window_xid;
 }
 
-BamfWindow*
-PanelMenuView::GetBamfWindowForXid(Window xid)
+BamfWindow* PanelMenuView::GetBamfWindowForXid(Window xid)
 {
   BamfWindow* window = nullptr;
 
@@ -1584,8 +1577,7 @@ void PanelMenuView::OnMaximizedActivate(int x, int y)
   }
 }
 
-void
-PanelMenuView::OnMaximizedRestore(int x, int y)
+void PanelMenuView::OnMaximizedRestore(int x, int y)
 {
   if (_dash_showing)
     return;
