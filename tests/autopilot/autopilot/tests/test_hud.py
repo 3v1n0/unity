@@ -154,4 +154,16 @@ class HudTests(AutopilotTestCase):
 
         # again ensure that the application we started is focused
         self.assertEqual(b.application_is_focused(app_desktop_file), True)
+        
+        #test return
+        self.hud.toggle_reveal()
+        sleep(1)
+        
+        #test return
+        self.hud.toggle_reveal()
+        sleep(1)
+        self.keyboard.press_and_release('Return')
+        sleep(1)
+
+        self.assertEqual(b.application_is_focused(app_desktop_file), True)
 
