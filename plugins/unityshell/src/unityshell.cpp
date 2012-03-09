@@ -864,7 +864,8 @@ void UnityScreen::EnableCancelAction(CancelActionTarget target, bool enabled, in
   {
     /* Create a new keybinding for the Escape key and the current modifiers,
      * compiz will take of the ref-counting of the repeated actions */
-    CompAction::KeyBinding binding(9, modifiers);
+    KeyCode escape = XKeysymToKeycode(screen->dpy(), XStringToKeysym("Escape"));
+    CompAction::KeyBinding binding(escape, modifiers);
 
     CompActionPtr &escape_action = _escape_actions[target];
     escape_action = CompActionPtr(new CompAction());
@@ -1335,12 +1336,28 @@ void UnityScreen::handleEvent(XEvent* event)
       KeySym key_sym;
       char key_string[2];
       int result = XLookupString(&(event->xkey), key_string, 2, &key_sym, 0);
+
+      if (launcher_controller_->KeyNavIsActive())
+      {
+        if (key_sym == XK_Up)
+        {
+          launcher_controller_->KeyNavPrevious();
+          break;
+        }
+        else if (key_sym == XK_Down)
+        {
+          launcher_controller_->KeyNavNext();
+          break;
+        }
+      }
+
       if (result > 0)
       {
         // NOTE: does this have the potential to do an invalid write?  Perhaps
         // we should just say "key_string[1] = 0" because that is the only
         // thing that could possibly make sense here.
         key_string[result] = 0;
+
         if (super_keypressed_)
         {
           if (key_sym != XK_Escape || (key_sym == XK_Escape && !launcher_controller_->KeyNavIsActive()))
@@ -1746,8 +1763,22 @@ bool UnityScreen::launcherSwitcherForwardInitiate(CompAction* action, CompAction
 {
   if (!launcher_controller_->KeyNavIsActive())
   {
+    int modifiers = action->key().modifiers();
+
     launcher_controller_->KeyNavActivate();
-    EnableCancelAction(CancelActionTarget::LAUNCHER_SWITCHER, true, action->key().modifiers());
+
+    EnableCancelAction(CancelActionTarget::LAUNCHER_SWITCHER, true, modifiers);
+
+    KeyCode down_key = XKeysymToKeycode(screen->dpy(), XStringToKeysym("Down"));
+    KeyCode up_key = XKeysymToKeycode(screen->dpy(), XStringToKeysym("Up"));
+
+    CompAction down_action;
+    down_action.setKey(CompAction::KeyBinding(down_key, modifiers));
+    screen->addAction(&down_action);
+
+    CompAction up_action;
+    up_action.setKey(CompAction::KeyBinding(up_key, modifiers));
+    screen->addAction(&up_action);
   }
   else
   {
@@ -1769,6 +1800,18 @@ bool UnityScreen::launcherSwitcherTerminate(CompAction* action, CompAction::Stat
   launcher_controller_->KeyNavTerminate(accept_state);
 
   EnableCancelAction(CancelActionTarget::LAUNCHER_SWITCHER, false);
+
+  KeyCode down_key = XKeysymToKeycode(screen->dpy(), XStringToKeysym("Down"));
+  KeyCode up_key = XKeysymToKeycode(screen->dpy(), XStringToKeysym("Up"));
+
+  CompAction down_action;
+  down_action.setKey(CompAction::KeyBinding(down_key, action->key().modifiers()));
+  screen->removeAction(&down_action);
+
+  CompAction up_action;
+  up_action.setKey(CompAction::KeyBinding(up_key, action->key().modifiers()));
+  screen->removeAction(&up_action);
+
   action->setState (action->state() & (unsigned)~(CompAction::StateTermKey));
   return false;
 }
