@@ -133,10 +133,22 @@ add_subdirectory(plugins/unity-mt-grab-handles)
 # subdirs
 add_subdirectory(doc)
 
+# Check for google test and build it locally
+set(
+  GTEST_ROOT_DIR
+  "/usr/src/gtest" # Default value, adjustable by user with e.g., ccmake
+  CACHE
+  PATH
+  "Path to Google test srcs"
+)
+
 find_path(GTEST_INCLUDE_DIR gtest/gtest.h)
 if (GTEST_INCLUDE_DIR)
   #FIXME - hardcoded is bad!
-  add_subdirectory(/usr/src/gtest gtest)
+  add_subdirectory(
+    ${GTEST_ROOT_DIR}
+    gtest
+  )
 endif(GTEST_INCLUDE_DIR)
 
 add_subdirectory(services)
