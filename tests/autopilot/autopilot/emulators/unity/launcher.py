@@ -243,6 +243,14 @@ class LauncherModel(UnityIntrospectionObject):
                 return icon
         return None
 
+    def get_icon_by_desktop_file(self, desktop_file):
+        """Gets a launcher icon with the specified desktop file.
+
+        Returns None if there is no such launcher icon.
+        """
+        icons = self.get_children_by_type(SimpleLauncherIcon, desktop_file=desktop_file)
+        return icons or None
+
     def num_launcher_icons(self):
         """Get the number of icons in the launcher model."""
         return len(self.get_launcher_icons())
