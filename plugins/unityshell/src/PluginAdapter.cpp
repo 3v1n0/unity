@@ -698,9 +698,13 @@ PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids, FocusVisibility 
   }
 
   if (monitor > 0 && top_window_on_monitor)
+  {
     top_window_on_monitor->activate();
+  }
   else if (top_window)
+  {
     top_window->activate();
+  }
 }
 
 bool 
