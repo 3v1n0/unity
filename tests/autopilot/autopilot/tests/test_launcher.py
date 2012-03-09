@@ -7,6 +7,7 @@
 # under the terms of the GNU General Public License version 3, as published
 # by the Free Software Foundation.
 
+import dbus
 import logging
 from testtools.matchers import Equals, LessThan, GreaterThan
 from time import sleep
@@ -403,3 +404,44 @@ class LauncherRevealTests(ScenariodLauncherTests):
         self.assertThat(launcher_instance.is_showing(), Equals(False))
         self.mouse.release(1)
 
+class SoftwareCenterIconTests(ScenariodLauncherTests):
+    """ Test integration with Software Center """
+    def setUp(self):
+        super(SoftwareCenterIconTests, self).setUp()
+        sleep(1)
+
+    def test_software_center_add_icon(self):
+        """ Test the ability to add a SoftwareCenterLauncherIcon """
+        sleep(.5)
+        
+        launcher_instance = self.get_launcher()
+        original_num_launcher_icons = self.launcher.model.num_launcher_icons()
+        bus = dbus.SessionBus()
+        launcher_object = bus.get_object('com.canonical.Unity.Launcher',
+                                      '/com/canonical/Unity/Launcher')
+        launcher_iface = dbus.Interface(launcher_object, 'com.canonical.Unity.Launcher')
+
+        # Using Ibus as an example because it's something which is
+        # not usually pinned to people's launchers, and still
+        # has an icon 
+        launcher_iface.AddLauncherItemFromPosition("Unity Test",
+                                                   "ibus",
+                                                   100,
+                                                   100,
+                                                   32,
+                                                   "/usr/share/applications/ibus.desktop",
+                                                   "")
+        
+        sleep(.5)
+
+        icon = self.launcher.model.LookupByDesktopFile("/usr/share/applications/ibus.desktop")
+
+        # Check for 2 things:
+        #    1) More launcher icons in the end
+        #    2) The new launcher icon has a 'Waiting to install' tooltip
+        self.assertThat(self.launcher.model.num_launcher_icons() > original_num_launcher_icons,
+                        Equals(True))
+        #self.assertThat(icon.tooltip_text == "Waiting to install", Equals(True))
+
+
+        self.addCleanup

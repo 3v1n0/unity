@@ -42,6 +42,8 @@ public:
 
   void Animate(nux::ObjectPtr<Launcher> launcher, int icon_x, int icon_y, int icon_size);
 
+  std::string GetName() const;
+
 protected:
   void ActivateLauncherIcon(ActionArg arg);
 

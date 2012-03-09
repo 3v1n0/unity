@@ -165,5 +165,10 @@ SoftwareCenterLauncherIcon::OnPropertyChanged(GVariant* params)
   g_variant_unref(property_value);
 }
 
+std::string SoftwareCenterLauncherIcon::GetName() const
+{
+    return "SoftwareCenterLauncherIcon";
+}
+
 }
 }

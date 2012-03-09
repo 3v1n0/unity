@@ -48,3 +48,6 @@ class DeviceLauncherIcon(SimpleLauncherIcon):
 
 class DesktopLauncherIcon(SimpleLauncherIcon):
     """Represents an icon that may appear in the switcher."""
+
+class SoftwareCenterLauncherIcon(SimpleLauncherIcon):
+    """Represents a launcher icon of a Software Center app."""
