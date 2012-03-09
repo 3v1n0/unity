@@ -10,6 +10,7 @@ from time import sleep
 
 from testtools.matchers import Equals, LessThan
 
+from autopilot.emulators.bamf import Bamf
 from autopilot.emulators.unity.hud import HudController
 from autopilot.tests import AutopilotTestCase
 
@@ -134,4 +135,23 @@ class HudTests(AutopilotTestCase):
         # see how many apps are marked as being active:
         num_active = self.get_num_active_launcher_icons()
         self.assertLessEqual(num_active, 1, "More than one launcher icon active after test has run!")
+
+    def test_restore_focus(self):
+        """Ensures that once the hud is dismissed, the same application 
+        that was focused before hud invocation is refocused
+        """
+        b = Bamf();
+        app_desktop_file = 'gcalctool.desktop'
+        b.launch_application(app_desktop_file)
+
+        # first ensure that the application has started and is focused
+        self.assertEqual(b.application_is_focused(app_desktop_file), True)
+
+        self.hud.toggle_reveal()
+        sleep(1)
+        self.hud.toggle_reveal()
+        sleep(1)
+
+        # again ensure that the application we started is focused
+        self.assertEqual(b.application_is_focused(app_desktop_file), True)
 
