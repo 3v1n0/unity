@@ -41,12 +41,13 @@ nux::logging::Logger logger("unity.hud.controller");
 Controller::Controller()
   : launcher_width(66)
   , hud_service_("com.canonical.hud", "/com/canonical/hud")
-  , window_(0)
+  , window_(nullptr)
   , visible_(false)
   , need_show_(false)
   , timeline_id_(0)
   , last_opacity_(0.0f)
   , start_time_(0)
+  , view_(nullptr)
 {
   LOG_DEBUG(logger) << "hud startup";
   SetupRelayoutCallbacks();
@@ -111,6 +112,8 @@ void Controller::SetupHudView()
   view_->search_activated.connect(sigc::mem_fun(this, &Controller::OnSearchActivated));
   view_->query_activated.connect(sigc::mem_fun(this, &Controller::OnQueryActivated));
   view_->query_selected.connect(sigc::mem_fun(this, &Controller::OnQuerySelected));
+  // Add to the debug introspection.
+  AddChild(view_);
 }
 
 void Controller::SetupRelayoutCallbacks()
@@ -348,10 +351,13 @@ gboolean Controller::OnViewShowHideFrame(Controller* self)
         //THIS IS BAD - VERY VERY BAD
         LOG_DEBUG(logger) << "Last attempt, forcing window focus";
         Controller* self = static_cast<Controller*>(data);
-        nux::GetWindowCompositor().SetKeyFocusArea(self->view_->default_focus());
+        if (self->visible_)
+        {
+          nux::GetWindowCompositor().SetKeyFocusArea(self->view_->default_focus());
 
-        self->window_->PushToFront();
-        self->window_->SetInputFocus();
+          self->window_->PushToFront();
+          self->window_->SetInputFocus();
+        }
         return FALSE;
       }, self);
     }
