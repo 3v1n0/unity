@@ -1113,7 +1113,7 @@ gboolean PanelMenuView::OnNewAppShow(PanelMenuView* self)
 
 gboolean PanelMenuView::OnNewAppHide(PanelMenuView* self)
 {
-  self->OnViewClosed(self->_matcher, BAMF_VIEW(self->_new_application.RawPtr()));
+  self->OnApplicationClosed(self->_new_application);
   self->_new_app_hide_id = 0;
   self->_new_app_menu_shown = true;
   self->QueueDraw();
@@ -1132,12 +1132,10 @@ void PanelMenuView::OnViewOpened(BamfMatcher *matcher, BamfView *view)
   _new_apps.push_front(glib::Object<BamfApplication>(BAMF_APPLICATION(view), glib::AddRef()));
 }
 
-void PanelMenuView::OnViewClosed(BamfMatcher *matcher, BamfView *view)
+void PanelMenuView::OnApplicationClosed(BamfApplication* app)
 {
-  if (BAMF_IS_APPLICATION(view))
+  if (BAMF_IS_APPLICATION(app))
   {
-    auto app = reinterpret_cast<BamfApplication*>(view);
-
     if (std::find(_new_apps.begin(), _new_apps.end(), app) != _new_apps.end())
     {
       _new_apps.remove(glib::Object<BamfApplication>(app, glib::AddRef()));
@@ -1149,6 +1147,18 @@ void PanelMenuView::OnViewClosed(BamfMatcher *matcher, BamfView *view)
     {
       _new_application = nullptr;
     }
+  }
+  else if (_new_application && app == _new_application)
+  {
+    _new_application = nullptr;
+  }
+}
+
+void PanelMenuView::OnViewClosed(BamfMatcher *matcher, BamfView *view)
+{
+  if (BAMF_IS_APPLICATION(view))
+  {
+    OnApplicationClosed(reinterpret_cast<BamfApplication*>(view));
   }
   else if (reinterpret_cast<BamfApplication*>(view) == _new_application.RawPtr())
   {
@@ -1202,7 +1212,7 @@ void PanelMenuView::OnActiveAppChanged(BamfMatcher *matcher,
       }
 
       if (_new_application)
-        OnViewClosed(matcher, BAMF_VIEW(_new_application.RawPtr()));
+        OnApplicationClosed(_new_application);
     }
   }
 }
@@ -1224,7 +1234,7 @@ void PanelMenuView::OnActiveWindowChanged(BamfMatcher *matcher,
   if (BAMF_IS_WINDOW(new_view))
   {
     WindowManager *wm = WindowManager::Default();
-    BamfWindow* window = BAMF_WINDOW(new_view);
+    BamfWindow* window = reinterpret_cast<BamfWindow*>(new_view);
     guint32 xid = bamf_window_get_xid(window);
     _active_xid = xid;
     _is_maximized = wm->IsWindowMaximized(xid);
