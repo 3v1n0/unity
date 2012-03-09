@@ -205,6 +205,11 @@ void Entry::set_show_now(bool show_now)
   updated.emit();
 }
 
+void Entry::ShowMenu(int x, int y, unsigned int button, unsigned int timestamp)
+{
+  ShowMenu(0, x, y, button, timestamp);
+}
+
 void Entry::ShowMenu(unsigned int xid, int x, int y, unsigned int button, unsigned int timestamp)
 {
   on_show_menu.emit(id_, xid, x, y, button, timestamp);

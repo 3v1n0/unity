@@ -108,8 +108,7 @@ void PanelIndicatorEntryView::OnActiveChanged(bool is_active)
 
 void PanelIndicatorEntryView::ShowMenu(int button)
 {
-  proxy_->ShowMenu(0,
-                   GetAbsoluteX(),
+  proxy_->ShowMenu(GetAbsoluteX(),
                    GetAbsoluteY() + PANEL_HEIGHT,
                    button,
                    time(NULL));
