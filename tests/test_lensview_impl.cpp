@@ -45,7 +45,6 @@ public:
   {
     for (int i=0; i<NUM_GROUPS; ++i)
       delete groups_vector[i];
-    groups_vector.clear();
   }
 
   std::list<dash::AbstractPlacesGroup*> GetList()
@@ -54,10 +53,6 @@ public:
     std::copy(groups_vector.begin(), groups_vector.end(), std::back_inserter(ret));
     return ret;
   }
-
-  void Clear()
-  {
-}
 
   std::vector<dash::AbstractPlacesGroup*> groups_vector;
 };
