@@ -104,8 +104,8 @@ SoftwareCenterLauncherIcon::Animate(nux::ObjectPtr<Launcher> launcher,
   auto launchers = launcher->GetModel()->GetSublist<BamfLauncherIcon>();
   for (auto current_bamf_icon : launchers)
   {
-    if (((int)current_bamf_icon->GetCenter(launcher->monitor).x) != 0 &&
-        ((int)current_bamf_icon->GetCenter(launcher->monitor).y) != 0)
+    if (static_cast<int>(current_bamf_icon->GetCenter(launcher->monitor).x) != 0 &&
+        static_cast<int>(current_bamf_icon->GetCenter(launcher->monitor).y) != 0)
     {
        target_x = static_cast<int>(current_bamf_icon->GetCenter(launcher->monitor).x);
        target_y = static_cast<int>(current_bamf_icon->GetCenter(launcher->monitor).y);
