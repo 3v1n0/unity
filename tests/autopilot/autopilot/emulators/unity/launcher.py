@@ -12,7 +12,7 @@ from time import sleep
 
 from autopilot.keybindings import KeybindingsHelper
 from autopilot.emulators.unity import UnityIntrospectionObject
-from autopilot.emulators.unity.icons import BamfLauncherIcon, SimpleLauncherIcon
+from autopilot.emulators.unity.icons import BamfLauncherIcon, SimpleLauncherIcon, SoftwareCenterLauncherIcon
 from autopilot.emulators.X11 import Mouse, ScreenGeometry
 
 
@@ -196,8 +196,8 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
         `icon` must be an instance of BamfLauncherIcon.
 
         """
-        if not isinstance(icon, BamfLauncherIcon):
-            raise TypeError("Can only unlock instances of BamfLauncherIcon")
+        if not (isinstance(icon, BamfLauncherIcon) or isinstance(icon, SoftwareCenterLauncherIcon)):
+            raise TypeError("Can only unlock instances of BamfLauncherIcon or SoftwareCenterLauncherIcon")
         if not icon.sticky:
             # nothing to do.
             return

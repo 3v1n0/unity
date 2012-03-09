@@ -419,29 +419,29 @@ class SoftwareCenterIconTests(ScenariodLauncherTests):
         launcher_object = bus.get_object('com.canonical.Unity.Launcher',
                                       '/com/canonical/Unity/Launcher')
         launcher_iface = dbus.Interface(launcher_object, 'com.canonical.Unity.Launcher')
-
-        # Using Ibus as an example because it's something which is
-        # not usually pinned to people's launchers, and still
-        # has an icon 
         
+        # Check if SC is pinned to the launcher already
+        icon = self.launcher.model.get_icon_by_desktop_file("/usr/share/applications/ubuntu-software-center.desktop")
+        if icon != None:
+            self.skipTest("Software Center is already pinned to launcher")
+
         original_num_launcher_icons = self.launcher.model.num_launcher_icons()
         launcher_iface.AddLauncherItemFromPosition("Unity Test",
-                                                   "ibus",
+                                                   "softwarecenter",
                                                    100,
                                                    100,
                                                    32,
-                                                   "/usr/share/applications/ibus.desktop",
+                                                   "/usr/share/applications/ubuntu-software-center.desktop",
                                                    "")
         
         sleep(.5)
 
-        icon = self.launcher.model.get_icon_by_desktop_file("/usr/share/applications/ibus.desktop")
+        icon = self.launcher.model.get_icon_by_desktop_file("/usr/share/applications/ubuntu-software-center.desktop")
 
         # Check for 2 things:
         #    1) More launcher icons in the end
         #    2) The new launcher icon has a 'Waiting to install' tooltip
-        self.assertThat(self.launcher.model.num_launcher_icons() > original_num_launcher_icons,
-                        Equals(True))
+        self.assertThat(self.launcher.model.num_launcher_icons(), GreaterThan(original_num_launcher_icons))
         self.assertThat(icon[0].tooltip_text == "Waiting to install", Equals(True))
         sleep(.5)
         
