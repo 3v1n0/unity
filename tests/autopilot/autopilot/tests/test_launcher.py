@@ -415,7 +415,6 @@ class SoftwareCenterIconTests(ScenariodLauncherTests):
         sleep(.5)
         
         launcher_instance = self.get_launcher()
-        original_num_launcher_icons = self.launcher.model.num_launcher_icons()
         bus = dbus.SessionBus()
         launcher_object = bus.get_object('com.canonical.Unity.Launcher',
                                       '/com/canonical/Unity/Launcher')
@@ -424,6 +423,8 @@ class SoftwareCenterIconTests(ScenariodLauncherTests):
         # Using Ibus as an example because it's something which is
         # not usually pinned to people's launchers, and still
         # has an icon 
+        
+        original_num_launcher_icons = self.launcher.model.num_launcher_icons()
         launcher_iface.AddLauncherItemFromPosition("Unity Test",
                                                    "ibus",
                                                    100,
@@ -434,14 +435,15 @@ class SoftwareCenterIconTests(ScenariodLauncherTests):
         
         sleep(.5)
 
-        icon = self.launcher.model.LookupByDesktopFile("/usr/share/applications/ibus.desktop")
+        icon = self.launcher.model.get_icon_by_desktop_file("/usr/share/applications/ibus.desktop")
 
         # Check for 2 things:
         #    1) More launcher icons in the end
         #    2) The new launcher icon has a 'Waiting to install' tooltip
         self.assertThat(self.launcher.model.num_launcher_icons() > original_num_launcher_icons,
                         Equals(True))
-        #self.assertThat(icon.tooltip_text == "Waiting to install", Equals(True))
+        self.assertThat(icon[0].tooltip_text == "Waiting to install", Equals(True))
+        sleep(.5)
+        
+        self.addCleanup(launcher_instance.unlock_from_launcher(icon[0]))
 
-
-        self.addCleanup
