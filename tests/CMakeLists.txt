@@ -123,8 +123,11 @@ if (GTEST_SRC_DIR AND
                  test_main_xless.cpp
                  test_grabhandle.cpp
                  test_unityshell_private.cpp
+                 test_lensview_impl.cpp
                  ${UNITY_SRC}/AbstractLauncherIcon.h
                  ${UNITY_SRC}/AbstractLauncherIcon.cpp
+                 ${UNITY_SRC}/AbstractPlacesGroup.cpp
+                 ${UNITY_SRC}/AbstractPlacesGroup.h
                  ${UNITY_SRC}/AbstractShortcutHint.h
                  ${UNITY_SRC}/Animator.cpp
                  ${UNITY_SRC}/Animator.h
@@ -140,6 +143,8 @@ if (GTEST_SRC_DIR AND
                  ${UNITY_SRC}/IconTextureSource.cpp
                  ${UNITY_SRC}/LauncherModel.cpp
                  ${UNITY_SRC}/LauncherModel.h
+                 ${UNITY_SRC}/LensViewPrivate.cpp
+                 ${UNITY_SRC}/LensViewPrivate.h
                  ${UNITY_SRC}/FavoriteStorePrivate.cpp
                  ${UNITY_SRC}/FavoriteStorePrivate.h
                  ${UNITY_SRC}/MockLauncherIcon.h

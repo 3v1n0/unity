@@ -18,6 +18,7 @@
  */
 
 #include "LensView.h"
+#include "LensViewPrivate.h"
 
 #include <boost/lexical_cast.hpp>
 
@@ -345,18 +346,15 @@ void LensView::QueueFixRenderering()
 gboolean LensView::FixRenderering(LensView* self)
 {
   std::list<Area*> children = self->scroll_layout_->GetChildren();
-  std::list<Area*>::reverse_iterator rit;
-  bool found_one = false;
+  std::list<AbstractPlacesGroup*>  groups;
 
-  for (rit = children.rbegin(); rit != children.rend(); ++rit)
-  {
-    PlacesGroup* group = static_cast<PlacesGroup*>(*rit);
+  std::transform(children.begin(), children.end(), std::back_inserter(groups),
+    [](Area* obj) -> AbstractPlacesGroup*
+    {
+      return static_cast<AbstractPlacesGroup*>(obj);
+    });
 
-    if (group->IsVisible())
-      group->SetDrawSeparator(found_one);
-
-    found_one = group->IsVisible();
-  }
+  dash::impl::UpdateDrawSeparators(groups);
 
   self->fix_renderering_id_ = 0;
   return FALSE;
