@@ -1150,6 +1150,10 @@ void PanelMenuView::OnViewClosed(BamfMatcher *matcher, BamfView *view)
       _new_application = nullptr;
     }
   }
+  else if (reinterpret_cast<BamfApplication*>(view) == _new_application.RawPtr())
+  {
+    _new_application = nullptr;
+  }
   else if (BAMF_IS_WINDOW(view))
   {
     /* FIXME, this can be removed when window_unmapped WindowManager signal
