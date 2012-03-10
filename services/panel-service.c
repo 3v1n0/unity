@@ -326,43 +326,6 @@ get_indicator_entry_by_id (PanelService *self, const gchar *entry_id)
 
   entry = g_hash_table_lookup (self->priv->id2entry_hash, entry_id);
 
-  if (!entry)
-    {
-      /* This is a workaround to avoid false negatives, FIXME
-       * there's an issue in indicator-appmenu that causes entry-removed to
-       * be not properly emitted */
-
-      IndicatorObjectEntry *invalid_entry;
-      if (sscanf (entry_id, "%p", &invalid_entry) == 1)
-        {
-          gboolean entry_found = FALSE;
-          GSList *sl;
-          for (sl = self->priv->indicators; sl; sl = sl->next)
-            {
-              IndicatorObject *object = INDICATOR_OBJECT (sl->data);
-              GList *entries, *l;
-
-              entries = indicator_object_get_entries (object);
-
-              for (l = entries; l; l = l->next)
-                {
-                  if (l->data == invalid_entry)
-                    {
-                      entry = invalid_entry;
-                      entry_found = TRUE;
-                      g_warning ("Entry %p has been wrongly removed!", entry);
-                      break;
-                    }
-                }
-
-              g_list_free (entries);
-
-              if (entry_found)
-                break;
-            }
-        }
-    }
-
   if (entry)
     {
       if (g_slist_find (self->priv->indicators, entry->parent_object))
