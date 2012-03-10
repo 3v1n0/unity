@@ -72,7 +72,7 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
   rop.Blend = true;
   rop.SrcBlend = GL_ZERO;
   rop.DstBlend = GL_SRC_COLOR;
-  _bg_darken_layer_ = new nux::ColorLayer(nux::Color(0.7f, 0.7f, 0.7f, 1.0f), false, rop);
+  _bg_darken_layer_ = new nux::ColorLayer(nux::Color(0.9f, 0.9f, 0.9f, 1.0f), false, rop);
 
   _layout = new nux::HLayout("", NUX_TRACKER_LOCATION);
 
@@ -251,12 +251,31 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
       nux::Geometry bg_clip = geo;
       GfxContext.PushClippingRectangle(bg_clip);
 
-      gPainter.PushDrawTextureLayer(GfxContext, geo,
-                                    bg_blur_texture_,
-                                    texxform_blur_bg,
-                                    nux::color::White,
-                                    true,
-                                    rop);
+#ifndef NUX_OPENGLES_20
+      if (GfxContext.UsingGLSLCodePath())
+        gPainter.PushDrawCompositionLayer(GfxContext, geo,
+                                          bg_blur_texture_,
+                                          texxform_blur_bg,
+                                          nux::color::White,
+                                          _bg_color,
+                                          nux::GraphicsEngine::BLEND_MODE_OVERLAY,
+                                          true, rop);
+      else
+        gPainter.PushDrawTextureLayer(GfxContext, geo,
+                                      bg_blur_texture_,
+                                      texxform_blur_bg,
+                                      nux::color::White,
+                                      true,
+                                      rop);
+#else
+        gPainter.PushDrawCompositionLayer(GfxContext, geo,
+                                          bg_blur_texture_,
+                                          texxform_blur_bg,
+                                          nux::color::White,
+                                          _bg_color,
+                                          nux::GraphicsEngine::BLEND_MODE_OVERLAY,
+                                          true, rop);
+#endif
 
       GfxContext.PopClippingRectangle();
     }
@@ -269,7 +288,8 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
 
 
-  nux::GetPainter().RenderSinglePaintLayer(GfxContext, GetGeometry(), _bg_layer);
+  if (_dash_is_open == false)
+    nux::GetPainter().RenderSinglePaintLayer(GfxContext, GetGeometry(), _bg_layer);
 
   GfxContext.PopClippingRectangle();
 
@@ -305,21 +325,45 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     rop.SrcBlend = GL_ONE;
     rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
-    gPainter.PushTextureLayer(GfxContext, geo,
-                              bg_blur_texture_,
-                              texxform_blur_bg,
-                              nux::color::White,
-                              true,
-                              rop);
+#ifndef NUX_OPENGLES_20
+    if (GfxContext.UsingGLSLCodePath())
+      gPainter.PushCompositionLayer(GfxContext, geo,
+                                    bg_blur_texture_,
+                                    texxform_blur_bg,
+                                    nux::color::White,
+                                    _bg_color,
+                                    nux::GraphicsEngine::BLEND_MODE_OVERLAY,
+                                    true,
+                                    rop);
+    else
+      gPainter.PushTextureLayer(GfxContext, geo,
+                                bg_blur_texture_,
+                                texxform_blur_bg,
+                                nux::color::White,
+                                true,
+                                rop);
+                                
+#else
+      gPainter.PushCompositionLayer(GfxContext, geo,
+                                    bg_blur_texture_,
+                                    texxform_blur_bg,
+                                    nux::color::White,
+                                    _bg_color,
+                                    nux::GraphicsEngine::BLEND_MODE_OVERLAY,
+                                    true,
+                                    rop);
+#endif
     bgs++;
 
     if (_dash_is_open)
     {
       nux::GetPainter().PushLayer(GfxContext, GetGeometry(), _bg_darken_layer_);
+      bgs++;
     }
   }
 
-  gPainter.PushLayer(GfxContext, GetGeometry(), _bg_layer);
+  if (_dash_is_open == FALSE)
+    gPainter.PushLayer(GfxContext, GetGeometry(), _bg_layer);
 
   if (_dash_is_open)
   {
