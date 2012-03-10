@@ -11,6 +11,7 @@ import dbus
 import dbus.glib
 import gio
 import gobject
+import os
 from Xlib import display, X, protocol
 
 from autopilot.emulators.dbus_handler import session_bus
@@ -73,6 +74,15 @@ class Bamf(object):
         """
         return [a for a in self.get_running_applications() if a.name == app_title]
 
+    def get_running_applications_by_desktop_file(self, desktop_file):
+        """Return a list of applications that have the desktop file 'desktop_file'`.
+
+        This method may return an empty list, if no applications
+        are found with the specified desktop file.
+
+        """
+        return [a for a in self.get_running_applications() if a.desktop_file == desktop_file]
+    
     def get_open_windows(self, user_visible_only=True):
         """Get a list of currently open windows.
 
@@ -104,8 +114,33 @@ class Bamf(object):
             return app_name in [a.name for a in self.get_running_applications()]
         except dbus.DBusException:
             return False
+    
+    def application_is_running_desktop_file(self, desktop_file):
+        """Detect if an application with a given .desktop file is currently running.
 
-    def wait_until_application_is_running(self, app_name, timeout):
+        'desktop_file' is the .desktop file of the application you are looking for.
+        """
+        try:
+            return desktop_file in [a.desktop_file for a in self.get_running_applications()]
+        except dbus.DBusException:
+            return False
+    
+    def application_is_focused(self, desktop_file):
+        """Detect if an application with given name is currently focused.
+
+        'desktop_file' is the desktop_file of the application you are looking for.
+        """
+        try:
+            found_focused = False
+            for app in self.get_running_applications_by_desktop_file(desktop_file):
+                if app.is_active:
+                    found_focused = True
+
+            return found_focused
+        except dbus.DBusException:
+            return False
+
+    def wait_until_application_is_running(self, app_name, timeout, is_desktop_file=False):
         """Wait until a given application is running.
 
         'app_name' is the name of the application.
@@ -120,7 +155,13 @@ class Bamf(object):
         found_app = [True]
 
         # maybe the app is running already?
-        if not self.application_is_running(app_name):
+        is_running = False
+        if (is_desktop_file):
+            is_running = self.application_is_running_desktop_file(app_name)
+        else:
+            is_running = self.application_is_running(app_name)
+
+        if not is_running:
             wait_forever = timeout < 0
             gobject_loop = gobject.MainLoop()
 
@@ -128,9 +169,10 @@ class Bamf(object):
             def on_view_added(bamf_path, name):
                 if bamf_path.split('/')[-1].startswith('application'):
                     app = BamfApplication(bamf_path)
-                    if app.name == app_name:
+                    if ((is_desktop_file and app_name == app.desktop_file)
+                        or (not is_desktop_file and app.name == app_name)):
                         gobject_loop.quit()
-
+                        
             # ...and one for when the user-defined timeout has been reached:
             def on_timeout_reached():
                 gobject_loop.quit()
@@ -158,7 +200,7 @@ class Bamf(object):
         proc = gio.unix.DesktopAppInfo(desktop_file)
         proc.launch()
         if wait:
-            self.wait_until_application_is_running(proc.get_name(), -1)
+            self.wait_until_application_is_running(desktop_file, -1, True)
         return proc
 
 
@@ -174,9 +216,15 @@ class BamfApplication(object):
         try:
             self._app_proxy = session_bus.get_object(_BAMF_BUS_NAME, bamf_app_path)
             self._view_iface = dbus.Interface(self._app_proxy, 'org.ayatana.bamf.view')
+            self._app_iface = dbus.Interface(self._app_proxy, 'org.ayatana.bamf.application')
         except dbus.DBusException, e:
             e.message += 'bamf_app_path=%r' % (bamf_app_path)
             raise
+
+    @property
+    def desktop_file(self):
+        """Get the application desktop file"""
+        return os.path.split(self._app_iface.DesktopFile())[1]
 
     @property
     def name(self):

@@ -187,7 +187,7 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
         logger.debug("Locking icon %r to launcher.", icon)
         self.click_launcher_icon(icon, button=3)
         quicklist = icon.get_quicklist()
-        pin_item = quicklist.get_quicklist_item_by_text('Lock to launcher')
+        pin_item = quicklist.get_quicklist_item_by_text('Lock to Launcher')
         quicklist.click_item(pin_item)
 
     def unlock_from_launcher(self, icon):
@@ -205,7 +205,7 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
         logger.debug("Unlocking icon %r from launcher.")
         self.click_launcher_icon(icon, button=3)
         quicklist = icon.get_quicklist()
-        pin_item = quicklist.get_quicklist_item_by_text('Unlock from launcher')
+        pin_item = quicklist.get_quicklist_item_by_text('Unlock from Launcher')
         quicklist.click_item(pin_item)
 
     def is_quicklist_open(self):

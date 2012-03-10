@@ -86,6 +86,7 @@ public:
   bool show_now() const;
   void set_show_now(bool show_now);
 
+  void ShowMenu(int x, int y, unsigned int button, unsigned int timestamp);
   void ShowMenu(unsigned int xid, int x, int y, unsigned int button, unsigned int timestamp);
   void SecondaryActivate(unsigned int timestamp);
   void Scroll(int delta);
