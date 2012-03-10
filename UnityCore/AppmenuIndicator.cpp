@@ -24,55 +24,13 @@ namespace unity
 namespace indicator
 {
 
-namespace 
-{
-const std::string SETTING_NAME("com.canonical.indicator.appmenu");
-const std::string SETTING_KEY("menu-mode");
-}
-
 AppmenuIndicator::AppmenuIndicator(std::string const& name)
   : Indicator(name)
-  , gsettings_(g_settings_new(SETTING_NAME.c_str()))
-  , integrated_(false)
+{}
+
+void AppmenuIndicator::ShowAppmenu(unsigned int xid, int x, int y, unsigned int timestamp) const
 {
-  setting_changed_.Connect(gsettings_, "changed::menu-mode", [&] (GSettings*, gchar*) {
-    CheckSettingValue();
-  });
-
-  CheckSettingValue();
-}
-
-bool AppmenuIndicator::ShowAppmenu(unsigned int xid, int x, int y, unsigned int timestamp) const
-{
-  if (integrated_)
-  {
-    on_show_appmenu.emit(xid, x, y, timestamp);
-    return true;
-  }
-
-  return false;
-}
-
-bool AppmenuIndicator::IsIntegrated() const
-{
-  return integrated_;
-}
-
-void AppmenuIndicator::CheckSettingValue()
-{
-  glib::String menu_mode(g_settings_get_string(gsettings_, SETTING_KEY.c_str()));
-  bool integrated_menus = false;
-
-  if (menu_mode.Str() == "locally-integrated")
-  {
-    integrated_menus = true;
-  }
-
-  if (integrated_menus != integrated_)
-  {
-    integrated_ = integrated_menus;
-    integrated_changed.emit(integrated_);
-  }
+  on_show_appmenu.emit(xid, x, y, timestamp);
 }
 
 } // namespace indicator
