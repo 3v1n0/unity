@@ -1028,11 +1028,11 @@ void Controller::KeyNavActivate()
 
   if (pimpl->launcher_grabbed)
   {
-    pimpl->ubus.SendMessage(UBUS_LAUNCHER_START_KEY_SWTICHER);
+    pimpl->ubus.SendMessage(UBUS_LAUNCHER_START_KEY_NAV);
   }
   else
   {
-    pimpl->ubus.SendMessage(UBUS_LAUNCHER_START_KEY_NAV);
+    pimpl->ubus.SendMessage(UBUS_LAUNCHER_START_KEY_SWTICHER);
   }
 
   AbstractLauncherIcon::Ptr const& selected = pimpl->model_->Selection();
@@ -1082,11 +1082,13 @@ void Controller::KeyNavTerminate(bool activate)
     pimpl->launcher_key_press_connection_.disconnect();
     pimpl->launcher_event_outside_connection_.disconnect();
     pimpl->launcher_grabbed = false;
-    pimpl->ubus.SendMessage(UBUS_LAUNCHER_END_KEY_NAV, g_variant_new_boolean(pimpl->keynav_restore_window_));
+    pimpl->ubus.SendMessage(UBUS_LAUNCHER_END_KEY_NAV,
+                            g_variant_new_boolean(pimpl->keynav_restore_window_));
   }
   else
   {
-    pimpl->ubus.SendMessage(UBUS_LAUNCHER_END_KEY_SWTICHER);
+    pimpl->ubus.SendMessage(UBUS_LAUNCHER_END_KEY_SWTICHER,
+                            g_variant_new_boolean(pimpl->keynav_restore_window_));
   }
 
   if (activate)
