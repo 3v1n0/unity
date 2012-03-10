@@ -48,11 +48,14 @@ _keys = {
     "launcher/keynav/prev": "Up",
     "launcher/keynav/activate": "Enter",
     "launcher/keynav/exit": "Escape",
-    "launcher/switcher": ('unityshell', 'launcher_switcher_forward'),
-    "launcher/switcher/next": "Tab",
-    "launcher/switcher/prev": "Shift+Tab",
     "launcher/keynav/open-quicklist": "Right",
     "launcher/keynav/close-quicklist": "Left",
+    "launcher/switcher": ('unityshell', 'launcher_switcher_forward'),
+    "launcher/switcher/exit": "Escape",
+    "launcher/switcher/next": "Tab",
+    "launcher/switcher/prev": "Shift+Tab",
+    "launcher/switcher/down": "Down",
+    "launcher/switcher/up": "Up",
     # Dash:
     "dash/reveal": "Super",
     # Lenses
