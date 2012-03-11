@@ -113,7 +113,8 @@ class VideoCapturedTestCase(LoggedTestCase):
         else:
             self._capture_process.terminate()
             self._capture_process.wait()
-            self.addDetail('video capture log', text_content(self._capture_process.stdout.read()))
+            if self._capture_process.returncode != 0:
+                self.addDetail('video capture log', text_content(self._capture_process.stdout.read()))
         self._capture_process = None
 
     def _get_capture_command_line(self):
