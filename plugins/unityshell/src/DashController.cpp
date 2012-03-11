@@ -95,6 +95,7 @@ void Controller::SetupDashView()
   layout->SetHorizontalExternalMargin(0);
 
   window_->SetLayout(layout);
+  ubus_manager_.UnregisterInterest(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST);
 }
 
 void Controller::SetupRelayoutCallbacks()
@@ -338,9 +339,7 @@ gboolean Controller::OnViewShowHideFrame(Controller* self)
 void Controller::OnActivateRequest(GVariant* variant)
 {
   EnsureDash();
-  ubus_manager_.UnregisterInterest(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST);
   view_->OnActivateRequest(variant);
-  ShowDash();
 }
 
 gboolean Controller::CheckShortcutActivation(const char* key_string)
@@ -349,7 +348,9 @@ gboolean Controller::CheckShortcutActivation(const char* key_string)
   std::string lens_id = view_->GetIdForShortcutActivation(std::string(key_string));
   if (lens_id != "")
   {
-    OnActivateRequest(g_variant_new("(sus)", lens_id.c_str(), 0, ""));
+    GVariant* args = g_variant_new("(sus)", lens_id.c_str(), 0, "");
+    OnActivateRequest(args);
+    g_variant_unref(args);
     return true;
   }
   return false;
