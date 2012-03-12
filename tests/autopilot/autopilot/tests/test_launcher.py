@@ -375,9 +375,12 @@ class LauncherRevealTests(ScenariodLauncherTests):
         launcher_instance = self.get_launcher()
 
         launcher_instance.move_mouse_over_launcher()
-        launcher_instance.keyboard_reveal_launcher()
-        launcher_instance.keyboard_unreveal_launcher()
+        # we can't use "launcher_instance.keyboard_reveal_launcher()"
+        # since it moves the mouse out of the way, invalidating the test.
+        self.keybinding_hold("launcher/reveal")
         sleep(1)
+        self.keybinding_release("launcher/reveal")
+        sleep(2)
         self.assertThat(launcher_instance.is_showing(), Equals(False))
 
     def test_reveal_does_not_hide_again(self):
