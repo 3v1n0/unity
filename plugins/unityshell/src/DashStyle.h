@@ -106,12 +106,6 @@ public:
 
   virtual bool ButtonFocusOverlay(cairo_t* cr);
 
-  virtual bool StarEmpty(cairo_t* cr, nux::ButtonVisualState state);
-
-  virtual bool StarHalf(cairo_t* cr, nux::ButtonVisualState state);
-
-  virtual bool StarFull(cairo_t* cr, nux::ButtonVisualState state);
-
   virtual bool MultiRangeSegment(cairo_t*    cr,
                                  nux::ButtonVisualState  state,
                                  std::string const& label,
@@ -185,12 +179,14 @@ public:
 
   nux::BaseTexture* GetSearchMagnifyIcon();
   nux::BaseTexture* GetSearchCloseIcon();
-  nux::BaseTexture* GetSearchCloseGlowIcon();
   nux::BaseTexture* GetSearchSpinIcon();
-  nux::BaseTexture* GetSearchSpinGlowIcon();
 
   nux::BaseTexture* GetGroupUnexpandIcon();
   nux::BaseTexture* GetGroupExpandIcon();
+
+  nux::BaseTexture* GetStarDeselectedIcon();
+  nux::BaseTexture* GetStarSelectedIcon();
+  nux::BaseTexture* GetStarHighlightIcon();
 
   sigc::signal<void> changed;
 

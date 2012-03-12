@@ -70,12 +70,11 @@ add_executable (dash
                 ${UNITY_SRC}/FilterGenreButton.cpp
                 ${UNITY_SRC}/FilterGenreWidget.cpp
                 ${UNITY_SRC}/FilterBar.cpp
-                ${UNITY_SRC}/FilterWidget.cpp
-                ${UNITY_SRC}/FilterWidget.h
                 ${UNITY_SRC}/FontSettings.cpp
                 ${UNITY_SRC}/FontSettings.h
                 ${UNITY_SRC}/IMTextEntry.cpp
                 ${UNITY_SRC}/IMTextEntry.h
+		${UNITY_SRC}/IntrospectableWrappers.cpp
                 ${UNITY_SRC}/PlacesGroup.cpp
                 ${UNITY_SRC}/PlacesGroup.h
                 ${UNITY_SRC}/PlacesTile.cpp
@@ -355,7 +354,6 @@ add_executable (filter-bar
                 ${UNITY_SRC}/FilterGenreWidget.cpp
                 ${UNITY_SRC}/FilterRatingsButton.cpp
                 ${UNITY_SRC}/FilterRatingsWidget.cpp
-                ${UNITY_SRC}/FilterWidget.cpp
                 ${UNITY_SRC}/DashStyle.cpp
                 ${UNITY_SRC}/JSONParser.cpp
                 )

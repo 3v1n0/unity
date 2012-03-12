@@ -192,15 +192,15 @@ public:
   bool executeCommand(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool setKeyboardFocusKeyInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
 
-  bool altTabInitiateCommon(CompAction* action,
-                            CompAction::State state,
-                            CompOption::Vector& options);
+  bool altTabInitiateCommon(switcher::ShowMode mode);
   bool altTabTerminateCommon(CompAction* action,
                              CompAction::State state,
                              CompOption::Vector& options);
 
   bool altTabForwardInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool altTabPrevInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool altTabForwardAllInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool altTabPrevAllInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool altTabDetailStartInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool altTabDetailStopInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool altTabNextWindowInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
@@ -290,6 +290,7 @@ private:
   bool                                  _in_paint;
   guint32                               relayoutSourceId;
   guint32                               _redraw_handle;
+  guint32                               alt_tap_timeout_id_;
   typedef std::shared_ptr<CompAction> CompActionPtr;
   typedef std::vector<CompActionPtr> ShortcutActions;
   ShortcutActions _shortcut_actions;

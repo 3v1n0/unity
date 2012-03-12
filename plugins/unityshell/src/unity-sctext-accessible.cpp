@@ -145,7 +145,7 @@ unity_sctext_accessible_get_name(AtkObject* obj)
     text = dynamic_cast<nux::StaticCairoText*>(nux_object_accessible_get_object(NUX_OBJECT_ACCESSIBLE(obj)));
     if (text != NULL)
     {
-      name = text->GetText().GetTCharPtr();
+      name = text->GetText().c_str();
       pango_parse_markup(name, -1, 0, NULL,
                          &self->priv->stripped_name,
                          NULL, NULL);

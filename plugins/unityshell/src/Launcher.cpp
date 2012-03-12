@@ -407,7 +407,8 @@ Launcher::AddProperties(GVariantBuilder* builder)
   .add("quicklist-open", _hide_machine->GetQuirk(LauncherHideMachine::QUICKLIST_OPEN))
   .add("hide-quirks", _hide_machine->DebugHideQuirks().c_str())
   .add("hover-quirks", _hover_machine->DebugHoverQuirks().c_str())
-  .add("icon-size", _icon_size);
+  .add("icon-size", _icon_size)
+  .add("shortcuts_shown", _shortcuts_shown);
 }
 
 void Launcher::SetMousePosition(int x, int y)
@@ -1015,7 +1016,8 @@ void Launcher::FillRenderArg(AbstractLauncherIcon::Ptr icon,
   float center_transit_progress = IconCenterTransitionProgress(icon, current);
   if (center_transit_progress <= 1.0f)
   {
-    centerOffset.y = (icon->GetSavedCenter(monitor).y - (center.y + (half_size * size_modifier))) * (1.0f - center_transit_progress);
+    int saved_center = icon->GetSavedCenter(monitor).y - parent_abs_geo.y;
+    centerOffset.y = (saved_center - (center.y + (half_size * size_modifier))) * (1.0f - center_transit_progress);
   }
 
   center.y += half_size * size_modifier;   // move to center
@@ -2009,7 +2011,12 @@ gboolean Launcher::StartIconDragTimeout(gpointer data)
 
 void Launcher::StartIconDragRequest(int x, int y)
 {
-  AbstractLauncherIcon::Ptr drag_icon = MouseIconIntersection((int)(GetGeometry().x / 2.0f), y);
+  nux::Geometry geo = GetAbsoluteGeometry();
+  AbstractLauncherIcon::Ptr drag_icon = MouseIconIntersection((int)(GetGeometry().width / 2.0f), y);
+  
+  x += geo.x;
+  y += geo.y;
+
 
   // FIXME: nux doesn't give nux::GetEventButton (button_flags) there, relying
   // on an internal Launcher property then
@@ -2020,7 +2027,7 @@ void Launcher::StartIconDragRequest(int x, int y)
     UpdateDragWindowPosition(drag_icon->GetCenter(monitor).x, drag_icon->GetCenter(monitor).y);
     if (_initial_drag_animation)
     {
-      _drag_window->SetAnimationTarget(x, y + _drag_window->GetGeometry().height / 2);
+      _drag_window->SetAnimationTarget(x, y);
       _drag_window->StartAnimation();
     }
     EnsureAnimation();
@@ -2107,9 +2114,9 @@ void Launcher::UpdateDragWindowPosition(int x, int y)
   if (_drag_window)
   {
     nux::Geometry geo = _drag_window->GetGeometry();
-    _drag_window->SetBaseXY(x - geo.width / 2 + _parent->GetGeometry().x, y - geo.height / 2 + _parent->GetGeometry().y);
+    _drag_window->SetBaseXY(x - geo.width / 2, y - geo.height / 2);
 
-    AbstractLauncherIcon::Ptr hovered_icon = MouseIconIntersection((int)(GetGeometry().x / 2.0f), y);
+    AbstractLauncherIcon::Ptr hovered_icon = MouseIconIntersection((int)((GetGeometry().x + GetGeometry().width) / 2.0f), y - GetAbsoluteGeometry().y);
 
     struct timespec current;
     clock_gettime(CLOCK_MONOTONIC, &current);
@@ -2203,7 +2210,8 @@ void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_
   }
   else if (GetActionState() == ACTION_DRAG_ICON)
   {
-    UpdateDragWindowPosition(x, y);
+    nux::Geometry geo = GetAbsoluteGeometry();
+    UpdateDragWindowPosition(geo.x + x, geo.y + y);
   }
 
   EnsureAnimation();
@@ -2285,6 +2293,21 @@ void Launcher::OnPointerBarrierEvent(ui::PointerBarrierWrapper* owner, ui::Barri
     {
       if (event->y < abs_geo.y)
         apply_to_reveal = true;
+    }
+  }
+
+  if (apply_to_reveal)
+  {
+    int root_x_return, root_y_return, win_x_return, win_y_return;
+    unsigned int mask_return;
+    Window root_return, child_return;
+    Display *dpy = nux::GetGraphicsDisplay()->GetX11Display();
+
+    if (XQueryPointer (dpy, DefaultRootWindow(dpy), &root_return, &child_return, &root_x_return, 
+                       &root_y_return, &win_x_return, &win_y_return, &mask_return))
+    {
+      if (mask_return & (Button1Mask | Button3Mask))
+        apply_to_reveal = false;
     }
   }
 

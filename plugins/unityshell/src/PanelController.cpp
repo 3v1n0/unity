@@ -22,6 +22,7 @@
 #include <vector>
 #include <NuxCore/Logger.h>
 #include <Nux/BaseWindow.h>
+#include <UnityCore/Variant.h>
 
 #include "UScreen.h"
 #include "PanelView.h"
@@ -369,7 +370,8 @@ std::string Controller::GetName() const
 
 void Controller::AddProperties(GVariantBuilder* builder)
 {
-  g_variant_builder_add(builder, "{sv}", "opacity", g_variant_new_double(pimpl->opacity()));
+  variant::BuilderWrapper(builder)
+    .add("opacity", pimpl->opacity());
 }
 
 void Controller::OnScreenChanged(int primary_monitor, std::vector<nux::Geometry>& monitors)

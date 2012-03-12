@@ -1,0 +1,18 @@
+Multi-monitor Alt-Tab
+---------------------
+This test only applies for multiple monitor.
+App names here are an example, any apps will do.
+
+#. Start with no apps open (or at least remember what is open where)
+#. Start terminal on workspace 1
+#. Start firefox on workspace 2
+#. Move to workspace 2
+
+Now do the following on both monitors
+
+#. Hold Alt, and press Tab, hold and observe
+#. Release Alt.
+
+Outcomes
+  While alt is held, Firefox should appear in the tab list, and
+  terminal should not
