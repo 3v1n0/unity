@@ -1,6 +1,73 @@
 unity (5.6.0-0ubuntu1) UNRELEASED; urgency=low
 
   * New upstream release.
+    - compiz crashed with SIGSEGV in g_type_check_instance_cast()
+      (LP: #862972)
+    - compiz crashed with SIGABRT in __gnu_cxx::__verbose_terminate_handler()
+      (LP: #926793)
+    - compiz crashed with SIGSEGV in gdk_pixbuf_get_width() (LP: #937421)
+    - Unity causes ibus to not work correctly (spaces incorrectly placed)
+      (LP: #880876)
+    - Dash - update Dash keyboard shortcuts so the 'CTRL + TAB' switches
+      between Lenses and 'TAB' by itself moves the focus between categories
+      (LP: #891648)
+    - HUD - closing a window with <Alt>+<F4> opens the hud (LP: #923410)
+    - unity-applications-daemon crashed with SIGSEGV in
+      dee_sequence_model_free_row() (LP: #916356)
+    - Launcher, Window Management - Launcher reveal should not be triggered
+      when dragging a window (LP: #928805)
+    - lenses are loaded on start, should be lazy loaded (LP: #929506)
+    - Trash icon jumps about when trying to drag an icon onto it (LP: #932365)
+    - HUD loses keypresses for the first second after opening (LP: #932906)
+    - HUD doesn't give the focus back to the active application after dash/hud
+      use (LP: #934061)
+    - Launcher - unpinned apps show with empty pips in the launcher as if they
+      exist on another workspace (LP: #937898)
+    - Unity Dash should support Keywords parameter in .desktop (formerly X
+      -GNOME-Keywords or X-AppInstall-Keywords) (LP: #941231)
+    - Support FD.o Desktop Actions spec (LP: #942042)
+    - Unity hangs when touching my touchpad/trackpad (LP: #942625)
+    - [regression] Pressing alt doesn't show the menu title bar in top panel
+      (LP: #943194)
+    - Alt + F (or other mnemonic) doesn't work in gnome-terminal (LP: #943239)
+    - [unity 5.6] Using Alt+F1 or Alt+F2 sends a ";3P" or ";3Q" to the active
+      windows (LP: #943456)
+    - [unity 5.6] holding alt and pressing a direction opens the alt-tab list
+      in a buggy way (LP: #943902)
+    - [unity-5.6] can't enter accents (^o->) in the dash since recent updates
+      (LP: #944674)
+    - Dash - Keyboard navigation for search filters is broken (LP: #844033)
+    - Dash - If mouse highlights one icon in grid, keyboard navigation
+      highlights another, so there are 2 highlighted icons (LP: #817436)
+    - Alt+Tab default delay of 150ms is too long (LP: #888636)
+    - Keyboard shortcut - F10 shortcut is used to show menu and this is wrong
+      (LP: #878492)
+    - Dash - Currently the app lens doesn't show applications that are
+      available for purchase (LP: #916121)
+    - Chromium is running, but not showing in launcher or alt-tab. 
+      (LP: #918474)
+    - Dash - Different states of rating stars, and dimensions (LP: #924884)
+    - alt-tab confused by a multiple instances of an application on different
+      workspaces (LP: #925484)
+    - Launcher - Icons are not colorized properly (LP: #930949)
+    - Remove glow from Alt-tab edge and Search Field image assets
+      (LP: #933578)
+    - "Left Mouse Drag" and "Middle Mouse Drag" should be translatable
+      (LP: #930510)
+    - Launcher switcher should be terminated if a launcher icon keybinding is
+      pressed (LP: #943377)
+    - dash home lens does not include recent files... (LP: #946980)
+    - Alt-tab switcher can't be terminated by Escape key (LP: #948227)
+    - Overlay should refer to "Menu Bar" not "Top Bar" (LP: #926213)
+    - alt-tab is showing preview even if you have just one instance
+      (LP: #933406)
+    - When "Bias alt-tab (...)" is switched on, alt+tab and ctrl+alt+tab are
+      swapped  (LP: #942677)
+    - Numbers on Launcher icons sticking (LP: #942359)
+    - The launcher icons shortcuts can be shown during the Super Tab Launcher
+      switcher. (LP: #943372)
+    - Use title case capitalization "Lock to Launcher" & "Unlock from
+      Launcher" (LP: #949636)
   * debian/control:
     - bump compiz-dev and libcompizconfig0-dev build-dep for ABI break
     - bump libnux-2.0-dev build-dep for ABI break
