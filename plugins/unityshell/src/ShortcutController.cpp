@@ -226,8 +226,8 @@ void Controller::AddProperties(GVariantBuilder* builder)
   .add(workarea_)
   .add("timeout_duration", SUPER_TAP_DURATION + FADE_DURATION)
   .add("enabled", IsEnabled())
-  .add("about_to_show", (Visible() && !fade_out_animator_.IsRunning() && view_window_->GetOpacity() != 1.0f))
-  .add("about_to_hide", (Visible() && !fade_in_animator_.IsRunning() && view_window_->GetOpacity() != 1.0f))
+  .add("about_to_show", (Visible() && !fade_out_animator_.IsRunning() && view_window_ && view_window_->GetOpacity() != 1.0f))
+  .add("about_to_hide", (Visible() && !fade_in_animator_.IsRunning() && view_window_ && view_window_->GetOpacity() != 1.0f))
   .add("visible", (Visible() && view_window_ && view_window_->GetOpacity() == 1.0f));
 }
 
