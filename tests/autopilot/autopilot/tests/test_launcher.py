@@ -69,6 +69,19 @@ class LauncherTests(ScenariodLauncherTests):
         sleep(.5)
         self.assertThat(self.launcher.key_nav_is_active, Equals(False))
 
+    def test_launcher_switcher_escape_works(self):
+        """Test that ending the launcher switcher actually works."""
+        sleep(.5)
+        launcher_instance = self.get_launcher()
+        launcher_instance.start_switcher()
+        self.addCleanup(launcher_instance.end_switcher, True)
+        sleep(.25)
+        self.assertThat(self.launcher.key_nav_is_active(), Equals(True))
+        sleep(.25)
+        self.keyboard.press_and_release("Escape")
+        sleep(.25)
+        self.assertThat(self.launcher.key_nav_is_active(), Equals(False))
+
     def test_launcher_switcher_next_works(self):
         """Moving to the next launcher item while switcher is activated must work."""
         sleep(.5)
