@@ -456,9 +456,9 @@ void Lens::Impl::Search(std::string const& search_string)
 {
   LOG_DEBUG(logger) << "Searching '" << id_ << "' for '" << search_string << "'";
 
-  if (!proxy_->IsConnected())
+  if (proxy_ == NULL)
   {
-    LOG_DEBUG(logger) << "Skipping search. Proxy not connected. ('" << id_ << "')";
+    LOG_DEBUG(logger) << "Skipping search. Proxy not initialized. ('" << id_ << "')";
     return;
   }
 
