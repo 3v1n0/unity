@@ -191,7 +191,7 @@ class ShortcutHintInteractionsTests(BaseShortcutHintTests):
         sleep(show_timeout)
         self.assertThat(self.shortcut_hint.is_visible(), Equals(True))
 
-        launcher = self.g()
+        launcher = self.get_launcher()
         launcher.start_switcher()
         self.addCleanup(launcher.end_switcher, True)
         sleep(.25)
@@ -278,7 +278,7 @@ class ShortcutHintInteractionsTests(BaseShortcutHintTests):
         launcher.start_switcher()
         self.addCleanup(launcher.end_switcher, True)
         sleep(.25)
-        self.assertThat(self.launcher.key_nav_is_active(), Equals(True))
+        self.assertThat(self.launcher.key_nav_is_active, Equals(True))
         self.assertThat(self.shortcut_hint.is_visible(), Equals(True))
 
         launcher.switcher_next()
@@ -286,7 +286,7 @@ class ShortcutHintInteractionsTests(BaseShortcutHintTests):
         self.keyboard.press_and_release("Escape")
         sleep(.25)
 
-        self.assertThat(self.launcher.key_nav_is_active(), Equals(False))
+        self.assertThat(self.launcher.key_nav_is_active, Equals(False))
         self.assertThat(self.shortcut_hint.is_visible(), Equals(True))
         sleep(.25)
 
