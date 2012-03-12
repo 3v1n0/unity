@@ -70,10 +70,10 @@ class DashSearchInputTests(DashTestCase):
 
     def test_composition_character_input(self):
         """Test that the dash is able to accept compositon characters like ô"""
-        self.skipTest('compositon character input is not yet implemented')
-
         self.dash.ensure_visible()
+        
         self.keyboard.press('Shift')
+        # I don't think this is right!
         self.keyboard.press_and_release('AltR')
         self.keyboard.press_and_release('6')
         self.keyboard.release('Shift')
@@ -85,18 +85,13 @@ class DashSearchInputTests(DashTestCase):
 class DashKeyNavTests(DashTestCase):
     """Test the unity Dash keyboard navigation."""
 
-
-    def focus_lensbar(self):
-        """Moves the keyboard focus to the lensbar"""
-        for i in range(self.dash.get_num_rows()):
-            self.keyboard.press_and_release("Down")
-
     def test_lensbar_gets_keyfocus(self):
         """Test that the lensbar gets key focus after using Down keypresses."""
         self.dash.ensure_visible()
 
         # Make sure that the lens bar can get the focus
-        self.focus_lensbar()
+        for i in range(self.dash.get_num_rows()):
+            self.keyboard.press_and_release("Down")
         lensbar = self.dash.view.get_lensbar()
         self.assertIsNot(lensbar.focused_lens_icon, '')
 
@@ -104,7 +99,8 @@ class DashKeyNavTests(DashTestCase):
         """Lensbar focused icon should change with Left and Right keypresses."""
         self.dash.ensure_visible()
 
-        self.focus_lensbar()
+        for i in range(self.dash.get_num_rows()):
+            self.keyboard.press_and_release("Down")
         lensbar = self.dash.view.get_lensbar()
         current_focused_icon = lensbar.focused_lens_icon
         self.keyboard.press_and_release("Right");
@@ -118,7 +114,8 @@ class DashKeyNavTests(DashTestCase):
         """Must be able to activate LensBar icons that have focus with an Enter keypress."""
         self.dash.ensure_visible()
         
-        self.focus_lensbar()
+        for i in range(self.dash.get_num_rows()):
+            self.keyboard.press_and_release("Down")
         self.keyboard.press_and_release("Right");
         lensbar = self.dash.view.get_lensbar()
         focused_icon = lensbar.focused_lens_icon
@@ -184,7 +181,11 @@ class DashKeyNavTests(DashTestCase):
 
     def test_category_header_keynav(self):
         """ Tests that a category header gets focus when 'down' is pressed after the
-        dash is opened"""
+        dash is opened
+
+        OK important to note that this test only tests that A category is focused, not the first
+        and from doing this it seems that it's common for a header other than the first to get focus.
+        """
         self.dash.ensure_visible()
 
         # Make sure that a category have the focus.
@@ -297,7 +298,7 @@ class DashClipboardTests(DashTestCase):
         searchbar = self.dash.get_searchbar()
         self.assertEqual(searchbar.search_string, u'')
 
-    def test_ctrl_c_copy(self):
+    def test_ctrl_c(self):
         """ This test if ctrl+c copies text into the clipboard """
         self.dash.ensure_visible()
 
@@ -312,7 +313,7 @@ class DashClipboardTests(DashTestCase):
         searchbar = self.dash.get_searchbar()
         self.assertEqual(searchbar.search_string, cb.wait_for_text())
 
-    def test_ctrl_x_cut(self):
+    def test_ctrl_x(self):
         """ This test if ctrl+x deletes all text and copys it """
         self.dash.ensure_visible()
 
@@ -331,8 +332,7 @@ class DashClipboardTests(DashTestCase):
 
     def test_ctrl_c_v(self):
         """ This test if ctrl+c and ctrl+v copies and pastes text"""
-        self.dash.ensure_hidden()
-        self.dash.toggle_reveal()
+        self.dash.ensure_visible()
 
         kb = Keyboard();
         kb.type("CopyPaste")
@@ -348,8 +348,7 @@ class DashClipboardTests(DashTestCase):
 
     def test_ctrl_x_v(self):
         """ This test if ctrl+x and ctrl+v cuts and pastes text"""
-        self.dash.ensure_hidden()
-        self.dash.toggle_reveal()
+        self.dash.ensure_visible()
 
         kb = Keyboard();
         kb.type("CutPaste")
@@ -364,16 +363,8 @@ class DashClipboardTests(DashTestCase):
         self.assertEqual(searchbar.search_string, u'CutPasteCutPaste')
 
 
-class DashKeyboardFocusTests(AutopilotTestCase):
+class DashKeyboardFocusTests(DashTestCase):
     """Tests that keyboard focus works."""
-
-    def setUp(self):
-        super(DashKeyboardFocusTests, self).setUp()
-        self.dash = Dash()
-
-    def tearDown(self):
-        super(DashKeyboardFocusTests, self).tearDown()
-        self.dash.ensure_hidden()
 
     def test_filterbar_expansion_leaves_kb_focus(self):
         """Expanding or collapsing the filterbar must keave keyboard focus in the
@@ -390,16 +381,3 @@ class DashKeyboardFocusTests(AutopilotTestCase):
 
         searchbar = self.dash.get_searchbar()
         self.assertEqual("hello world", searchbar.search_string)
-
-
-class DashCompositionCharactersTests(AutopilotTestCase):
-    """Tests that composition characters works."""
-
-    def setUp(self):
-        super(DashCompositionCharactersTests, self).setUp()
-        self.dash = Dash()
-        self.addCleanup(self.dash.ensure_hidden)
-
-    def tearDown(self):
-        super(DashCompositionCharactersTests, self).tearDown()
-        self.dash.ensure_hidden()
