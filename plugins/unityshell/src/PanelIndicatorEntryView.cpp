@@ -480,7 +480,7 @@ double PanelIndicatorEntryView::GetOpacity()
 
 std::string PanelIndicatorEntryView::GetName() const
 {
-  return proxy_->id().c_str();
+  return proxy_->id();
 }
 
 void PanelIndicatorEntryView::AddProperties(GVariantBuilder* builder)
