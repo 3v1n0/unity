@@ -141,9 +141,15 @@ Indicator::Ptr Indicators::Impl::AddIndicator(std::string const& name)
   Indicator* indptr;
 
   if (name == "libappmenu.so")
-    indptr = new AppmenuIndicator(name);
+  {
+    AppmenuIndicator *appmenu = new AppmenuIndicator(name);
+    appmenu->on_show_appmenu.connect(sigc::mem_fun(owner_, &Indicators::OnShowAppMenu));
+    indptr = appmenu;
+  }
   else
+  {
     indptr = new Indicator(name);
+  }
 
   Indicator::Ptr indicator(indptr);
 
@@ -151,14 +157,6 @@ Indicator::Ptr Indicators::Impl::AddIndicator(std::string const& name)
   indicator->on_show_menu.connect(sigc::mem_fun(owner_, &Indicators::OnEntryShowMenu));
   indicator->on_secondary_activate.connect(sigc::mem_fun(owner_, &Indicators::OnEntrySecondaryActivate));
   indicator->on_scroll.connect(sigc::mem_fun(owner_, &Indicators::OnEntryScroll));
-
-  if (indicator->IsAppmenu())
-  {
-    AppmenuIndicator *appmenu = dynamic_cast<AppmenuIndicator*>(indicator.get());
-
-    if (appmenu)
-      appmenu->on_show_appmenu.connect(sigc::mem_fun(owner_, &Indicators::OnShowAppMenu));
-  }
 
   indicators_[name] = indicator;
   owner_->on_object_added.emit(indicator);
