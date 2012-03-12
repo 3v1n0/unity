@@ -59,7 +59,7 @@ static bool wait_until_test_service_appears()
                    NULL,
                    &have_name,
                    NULL);
-  g_timeout_add_seconds(10, timeout_cb, &timeout_reached);
+  g_timeout_add(10000, timeout_cb, &timeout_reached);
 
   while (!have_name && !timeout_reached)
     g_main_context_iteration(g_main_context_get_thread_default(), TRUE);

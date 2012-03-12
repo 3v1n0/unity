@@ -22,7 +22,7 @@ public:
       return FALSE;
     };
 
-    guint32 timeout_id = g_timeout_add_seconds(10, timeout_cb, &timeout_reached);
+    guint32 timeout_id = g_timeout_add(10000, timeout_cb, &timeout_reached);
 
     while (model.count != n_rows && !timeout_reached)
     {
@@ -48,7 +48,7 @@ public:
 
   static guint32 ScheduleTimeout(bool* timeout_reached, unsigned int timeout_duration = 10)
   {
-    return g_timeout_add_seconds(timeout_duration, TimeoutCallback, timeout_reached);
+    return g_timeout_add(timeout_duration*1000, TimeoutCallback, timeout_reached);
   }
 
   static guint32 ScheduleTimeoutMSec(bool* timeout_reached, unsigned int timeout_duration = 10)
