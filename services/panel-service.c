@@ -1382,6 +1382,12 @@ panel_service_sync_geometry (PanelService *self,
                   g_hash_table_remove (priv->panel2entries_hash, panel_id);
                 }
             }
+
+          /* If the entry has been removed let's make sure that its menu is closed */
+          if (valid_entry && GTK_IS_MENU (priv->last_menu) && priv->last_menu == entry->menu)
+            {
+              gtk_menu_popdown (entry->menu);
+            }
         }
       else
         {
