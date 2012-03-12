@@ -157,7 +157,11 @@ class AutopilotTestCase(VideoCapturedTestCase, KeybindingsHelper):
         'Remmina' : {
             'desktop-file': 'remmina.desktop',
             'process-name': 'remmina',
-            }
+            },
+        'Text Editor' : {
+            'desktop-file': 'gedit.desktop',
+            'process-name': 'gedit',
+            },
         }
 
     def setUp(self):
@@ -184,6 +188,16 @@ class AutopilotTestCase(VideoCapturedTestCase, KeybindingsHelper):
         app = self.KNOWN_APPS[app_name]
         call(["killall", app['process-name']])
         super(LoggedTestCase, self).tearDown()
+
+    def get_app_instances(self, app_name):
+        """Get BamfApplication instances for app_name."""
+        desktop_file = self.KNOWN_APPS[app_name]['desktop-file']
+        return self.bamf.get_running_applications_by_desktop_file(desktop_file)
+
+    def app_is_running(self, app_name):
+        """Returns true if an instance of the application is running."""
+        apps = self.get_app_instances(app_name)
+        return len(apps) > 0
 
     def set_unity_option(self, option_name, option_value):
         """Set an option in the unity compiz plugin options.

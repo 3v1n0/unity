@@ -64,9 +64,8 @@ class CommandLensSearchTests(AutopilotTestCase):
 
     def test_run_before_refresh(self):
         """Hitting enter before view has updated results must run the correct command."""
-        b = Bamf()
-        if b.application_is_running("Text Editor"):
-            call("killall gedit".split())
+        if self.app_is_running("Text Editor"):
+            self.close_all_app("Text Editor")
             sleep(1)
 
         kb = Keyboard()
@@ -75,6 +74,6 @@ class CommandLensSearchTests(AutopilotTestCase):
         sleep(1)
         kb.type("edit", 0.1)
         kb.press_and_release("Enter", 0.1)
-        self.addCleanup(call, "killall gedit".split())
-        app_found = b.wait_until_application_is_running("Text Editor", 5)
+        self.addCleanup(self.close_all_app,  "Text Editor")
+        app_found = self.bamf.wait_until_application_is_running("gedit.desktop", 5)
         self.assertTrue(app_found)
