@@ -16,7 +16,6 @@ from autopilot.tests import AutopilotTestCase
 class DashTestCase(AutopilotTestCase):
     def setUp(self):
         super(DashTestCase, self).setUp()
-        self.dash = Dash()
         self.dash.ensure_hidden()
 
     def tearDown(self):

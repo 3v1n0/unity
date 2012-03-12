@@ -169,6 +169,7 @@ class AutopilotTestCase(VideoCapturedTestCase, KeybindingsHelper):
         self.bamf = Bamf()
         self.keyboard = Keyboard()
         self.mouse = Mouse()
+        self.dash = Dash()
         self.switcher = Switcher()
         self.workspace = WorkspaceManager()
         self.launcher = self._get_launcher_controller()
