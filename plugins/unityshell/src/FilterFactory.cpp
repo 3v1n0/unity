@@ -44,12 +44,12 @@ namespace unity
 namespace dash
 {
 
-nux::View* FilterFactory::WidgetForFilter(Filter::Ptr const& filter)
+FilterExpanderLabel* FilterFactory::WidgetForFilter(Filter::Ptr const& filter)
 {
   std::string filter_type(filter->renderer_name);
   LOG_DEBUG(logger) << "building filter of type, " << filter_type;
 
-  FilterWidget* widget = nullptr;
+  FilterExpanderLabel* widget = nullptr;
   if (filter_type == renderer_type_check_options)
   {
     widget = new FilterGenre(2, NUX_TRACKER_LOCATION);

@@ -11,14 +11,16 @@ import dbus
 import dbus.glib
 import gio
 import gobject
+import os
 from Xlib import display, X, protocol
 
 from autopilot.emulators.dbus_handler import session_bus
 
-__all__ = ["Bamf",
-        "BamfApplication",
-        "BamfWindow",
-        ]
+__all__ = [
+    "Bamf",
+    "BamfApplication",
+    "BamfWindow",
+    ]
 
 _BAMF_BUS_NAME = 'org.ayatana.bamf'
 _X_DISPLAY = display.Display()
@@ -37,7 +39,7 @@ def _filter_user_visible(win):
         return False
 
 
-class Bamf:
+class Bamf(object):
     """High-level class for interacting with Bamf from within a test.
 
     Use this class to inspect the state of running applications and open
@@ -63,14 +65,14 @@ class Bamf:
             return filter(_filter_user_visible, apps)
         return apps
 
-    def get_running_applications_by_title(self, app_title):
-        """Return a list of applications that have the title `app_title`.
+    def get_running_applications_by_desktop_file(self, desktop_file):
+        """Return a list of applications that have the desktop file 'desktop_file'`.
 
         This method may return an empty list, if no applications
-        are found with the specified title.
+        are found with the specified desktop file.
 
         """
-        return [a for a in self.get_running_applications() if a.name == app_title]
+        return [a for a in self.get_running_applications() if a.desktop_file == desktop_file]
 
     def get_open_windows(self, user_visible_only=True):
         """Get a list of currently open windows.
@@ -85,41 +87,23 @@ class Bamf:
             return filter(_filter_user_visible, windows)
         return windows
 
-    def get_open_windows_by_title(self, win_title):
-        """Get a list of all open windows with a specific window title.
-
-        This method may return an empty list if no currently open windows have
-        the specified title.
-
-        """
-        return [w for w in self.get_open_windows() if w.title == win_title]
-
-    def application_is_running(self, app_name):
-        """Detect if an application with a given name is currently running.
-
-        'app_name' is the name of the application you are looking for.
-        """
-        try:
-            return app_name in [a.name for a in self.get_running_applications()]
-        except dbus.DBusException:
-            return False
-
-    def wait_until_application_is_running(self, app_name, timeout):
+    def wait_until_application_is_running(self, desktop_file, timeout):
         """Wait until a given application is running.
 
-        'app_name' is the name of the application.
+        'desktop_file' is the name of the application desktop file.
         'timeout' is the maximum time to wait, in seconds. If set to
         something less than 0, this method will wait forever.
 
         This method returns true once the application is found, or false
         if the application was not found until the timeout was reached.
         """
+        desktop_file = os.path.split(desktop_file)[1]
         # python workaround since you can't assign to variables in the enclosing scope:
         # see on_timeout_reached below...
         found_app = [True]
 
         # maybe the app is running already?
-        if not self.application_is_running(app_name):
+        if len(self.get_running_applications_by_desktop_file(desktop_file)) == 0:
             wait_forever = timeout < 0
             gobject_loop = gobject.MainLoop()
 
@@ -127,7 +111,7 @@ class Bamf:
             def on_view_added(bamf_path, name):
                 if bamf_path.split('/')[-1].startswith('application'):
                     app = BamfApplication(bamf_path)
-                    if app.name == app_name:
+                    if desktop_file == os.path.split(app.desktop_file)[1]:
                         gobject_loop.quit()
 
             # ...and one for when the user-defined timeout has been reached:
@@ -157,11 +141,11 @@ class Bamf:
         proc = gio.unix.DesktopAppInfo(desktop_file)
         proc.launch()
         if wait:
-            self.wait_until_application_is_running(proc.get_name(), -1)
+            self.wait_until_application_is_running(desktop_file, -1)
         return proc
 
 
-class BamfApplication:
+class BamfApplication(object):
     """Represents an application, with information as returned by Bamf.
 
     Don't instantiate this class yourself. instead, use the methods as
@@ -173,13 +157,24 @@ class BamfApplication:
         try:
             self._app_proxy = session_bus.get_object(_BAMF_BUS_NAME, bamf_app_path)
             self._view_iface = dbus.Interface(self._app_proxy, 'org.ayatana.bamf.view')
+            self._app_iface = dbus.Interface(self._app_proxy, 'org.ayatana.bamf.application')
         except dbus.DBusException, e:
             e.message += 'bamf_app_path=%r' % (bamf_app_path)
             raise
 
     @property
+    def desktop_file(self):
+        """Get the application desktop file"""
+        return os.path.split(self._app_iface.DesktopFile())[1]
+
+    @property
     def name(self):
-        """Get the application name."""
+        """Get the application name.
+
+        Note: This may change according to the current locale. If you want a unique
+        string to match applications against, use the desktop_file instead.
+
+        """
         return self._view_iface.Name()
 
     @property
@@ -210,7 +205,7 @@ class BamfApplication:
         return "<BamfApplication '%s'>" % (self.name)
 
 
-class BamfWindow:
+class BamfWindow(object):
     """Represents an application window, as returned by Bamf.
 
     Don't instantiate this class yourself. Instead, use the appropriate methods
@@ -242,6 +237,8 @@ class BamfWindow:
         """Get the window title.
 
         This may be different from the application name.
+
+        Note that this may change depending on the current locale.
 
         """
         return self._getProperty('_NET_WM_NAME')
@@ -302,6 +299,12 @@ class BamfWindow:
         return '_NET_WM_STATE_HIDDEN' in win_state
 
     @property
+    def is_focused(self):
+        """Is this window focused?"""
+        win_state = self._get_window_states()
+        return '_NET_WM_STATE_FOCUSED' in win_state
+
+    @property
     def is_valid(self):
         """Is this window object valid?
 
@@ -347,4 +350,5 @@ class BamfWindow:
     def _get_window_states(self):
         """Return a list of strings representing the current window state."""
 
+        _X_DISPLAY.sync()
         return map(_X_DISPLAY.get_atom_name, self._getProperty('_NET_WM_STATE'))

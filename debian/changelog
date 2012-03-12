@@ -1,3 +1,9 @@
+unity (5.6.0-0ubuntu1) UNRELEASED; urgency=low
+
+  * New upstream release.
+
+ -- Didier Roche <didrocks@ubuntu.com>  Mon, 12 Mar 2012 10:18:19 +0100
+
 unity (5.4.0-0ubuntu2) precise; urgency=low
 
   * 01_hardcode_new_default_in_hardcoded_values.patch:

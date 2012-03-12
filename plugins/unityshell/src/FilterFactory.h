@@ -30,10 +30,12 @@ namespace unity
 namespace dash
 {
 
+class FilterExpanderLabel;
+
 class FilterFactory
 {
 public:
-  nux::View* WidgetForFilter(Filter::Ptr const& filter);
+  FilterExpanderLabel* WidgetForFilter(Filter::Ptr const& filter);
 };
 
 } // namespace dash
