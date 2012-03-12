@@ -323,7 +323,7 @@
                 </option>
                 <option name="stop_velocity" type="int">
                     <_short>Edge Stop Velocity</_short>
-                    <_long>The maximum velocity at which the mouse will still be stoped</_long>
+                    <_long>The maximum velocity at which the mouse will still be stopped</_long>
                     <default>65</default>
                     <min>1</min>
                     <max>1000</max>

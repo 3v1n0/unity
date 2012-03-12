@@ -23,7 +23,7 @@ class Quicklist(UnityIntrospectionObject):
     @property
     def items(self):
         """Individual items in the quicklist."""
-        return [self.__make_quicklist_from_data(ctype, cdata) for ctype, cdata in self._children]
+        return self.get_children_by_type(QuicklistMenuItem)
 
     def get_quicklist_item_by_text(self, text):
         """Returns a QuicklistMenuItemLabel object with the given text, or None."""

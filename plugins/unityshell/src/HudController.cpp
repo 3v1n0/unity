@@ -351,10 +351,13 @@ gboolean Controller::OnViewShowHideFrame(Controller* self)
         //THIS IS BAD - VERY VERY BAD
         LOG_DEBUG(logger) << "Last attempt, forcing window focus";
         Controller* self = static_cast<Controller*>(data);
-        nux::GetWindowCompositor().SetKeyFocusArea(self->view_->default_focus());
+        if (self->visible_)
+        {
+          nux::GetWindowCompositor().SetKeyFocusArea(self->view_->default_focus());
 
-        self->window_->PushToFront();
-        self->window_->SetInputFocus();
+          self->window_->PushToFront();
+          self->window_->SetInputFocus();
+        }
         return FALSE;
       }, self);
     }
@@ -380,7 +383,7 @@ void Controller::OnSearchActivated(std::string search_string)
 {
   unsigned int timestamp = nux::GetWindowThread()->GetGraphicsDisplay().GetCurrentEvent().x11_timestamp;
   hud_service_.ExecuteQueryBySearch(search_string, timestamp);
-  HideHud();
+  ubus.SendMessage(UBUS_HUD_CLOSE_REQUEST);
 }
 
 void Controller::OnQueryActivated(Query::Ptr query)
@@ -388,7 +391,7 @@ void Controller::OnQueryActivated(Query::Ptr query)
   LOG_DEBUG(logger) << "Activating query, " << query->formatted_text;
   unsigned int timestamp = nux::GetWindowThread()->GetGraphicsDisplay().GetCurrentEvent().x11_timestamp;
   hud_service_.ExecuteQuery(query, timestamp);
-  HideHud();
+  ubus.SendMessage(UBUS_HUD_CLOSE_REQUEST);
 }
 
 void Controller::OnQuerySelected(Query::Ptr query)

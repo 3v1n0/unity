@@ -36,12 +36,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(IMTextEntry);
 
 IMTextEntry::IMTextEntry()
 : TextEntry("", NUX_TRACKER_LOCATION)
-, im_context_(0)
-, client_window_(0)
-, focused_(false)
 {
-  SetupSimpleIM();
-
   mouse_up.connect(sigc::mem_fun(this, &IMTextEntry::OnMouseButtonUp));
 }
 
@@ -49,20 +44,12 @@ bool IMTextEntry::InspectKeyEvent(unsigned int event_type,
                                   unsigned int keysym,
                                   const char* character)
 {
-
-  bool propagate_event = !(TryHandleEvent(event_type, keysym, character));
-
-  if (propagate_event)
-  {
-    propagate_event = TryHandleSpecial(event_type, keysym, character);
-  }
-
-  if (propagate_event)
-  {
-    propagate_event = TextEntry::InspectKeyEvent(event_type, keysym, character);
-  }
-
-  return propagate_event;
+  bool need_to_filter_event = TryHandleSpecial(event_type, keysym, character);
+ 
+  if (need_to_filter_event)
+    need_to_filter_event = TextEntry::InspectKeyEvent(event_type, keysym, character);
+  
+  return need_to_filter_event;
 }
 
 bool IMTextEntry::TryHandleSpecial(unsigned int eventType, unsigned int keysym, const char* character)
@@ -164,61 +151,4 @@ void IMTextEntry::OnMouseButtonUp(int x, int y, unsigned long bflags, unsigned l
     Paste(true);
   } 
 }
-
-void IMTextEntry::KeyEventToGdkEventKey(Event& event, GdkEventKey& gdk_event)
-{
-  gdk_event.type = event.type == nux::NUX_KEYDOWN ? GDK_KEY_PRESS : GDK_KEY_RELEASE;
-  gdk_event.window = client_window_;
-  gdk_event.send_event = FALSE;
-  gdk_event.time = event.x11_timestamp;
-  gdk_event.state = event.x11_key_state;
-  gdk_event.keyval = event.x11_keysym;
-
-  gchar* txt = const_cast<gchar*>(event.GetText());
-  gdk_event.length = strlen(txt);
-  gdk_event.string = txt;
-
-  gdk_event.hardware_keycode = event.x11_keycode;
-  gdk_event.group = 0;
-  gdk_event.is_modifier = 0;
-}
-
-bool IMTextEntry::TryHandleEvent(unsigned int eventType,
-                                 unsigned int keysym,
-                                 const char* character)
-{
-  nux::Event event = nux::GetWindowThread()->GetGraphicsDisplay().GetCurrentEvent();
-  
-  GdkEventKey ev;
-  KeyEventToGdkEventKey(event, ev);
-
-  return gtk_im_context_filter_keypress(im_context_, &ev);
-}
-
-void IMTextEntry::OnCommit(GtkIMContext* context, char* str)
-{
-  LOG_DEBUG(logger) << "Commit: " << str;
-  DeleteSelection();
-
-  if (str)
-  {
-    std::string new_text = GetText();
-    new_text.insert(cursor_, str);
-    
-    int cursor = cursor_;
-    SetText(new_text.c_str());
-    SetCursor(cursor + strlen(str));
-    QueueRefresh (true, true);
-    text_changed.emit(this);
-  }
-}
-
-void IMTextEntry::SetupSimpleIM()
-{
-  LOG_DEBUG(logger) << "Using Simple IM.";
-  im_context_ = static_cast<GtkIMContext*>(gtk_im_context_simple_new());
-  
-  sig_manager_.Add(new Signal<void, GtkIMContext*, char*>(im_context_, "commit", sigc::mem_fun(this, &IMTextEntry::OnCommit)));
-}
-
 }

@@ -113,7 +113,8 @@ class VideoCapturedTestCase(LoggedTestCase):
         else:
             self._capture_process.terminate()
             self._capture_process.wait()
-            self.addDetail('video capture log', text_content(self._capture_process.stdout.read()))
+            if self._capture_process.returncode != 0:
+                self.addDetail('video capture log', text_content(self._capture_process.stdout.read()))
         self._capture_process = None
 
     def _get_capture_command_line(self):
@@ -153,6 +154,14 @@ class AutopilotTestCase(VideoCapturedTestCase, KeybindingsHelper):
             'desktop-file': 'mahjongg.desktop',
             'process-name': 'mahjongg',
             },
+        'Remmina' : {
+            'desktop-file': 'remmina.desktop',
+            'process-name': 'remmina',
+            },
+        'Text Editor' : {
+            'desktop-file': 'gedit.desktop',
+            'process-name': 'gedit',
+            },
         }
 
     def setUp(self):
@@ -180,14 +189,23 @@ class AutopilotTestCase(VideoCapturedTestCase, KeybindingsHelper):
         call(["killall", app['process-name']])
         super(LoggedTestCase, self).tearDown()
 
+    def get_app_instances(self, app_name):
+        """Get BamfApplication instances for app_name."""
+        desktop_file = self.KNOWN_APPS[app_name]['desktop-file']
+        return self.bamf.get_running_applications_by_desktop_file(desktop_file)
+
+    def app_is_running(self, app_name):
+        """Returns true if an instance of the application is running."""
+        apps = self.get_app_instances(app_name)
+        return len(apps) > 0
+
     def set_unity_option(self, option_name, option_value):
         """Set an option in the unity compiz plugin options.
 
         The value will be set for the current test only.
 
         """
-        old_value = self._set_compiz_option("unityshell", option_name, option_value)
-        self.addCleanup(self._set_compiz_option, "unityshell", option_name, old_value)
+        self.set_compiz_option("unityshell", option_name, option_value)
 
     def set_compiz_option(self, plugin_name, setting_name, setting_value):
         """Set setting `setting_name` in compiz plugin `plugin_name` to value `setting_value`
@@ -197,6 +215,8 @@ class AutopilotTestCase(VideoCapturedTestCase, KeybindingsHelper):
         self.addCleanup(self._set_compiz_option, plugin_name, setting_name, old_value)
 
     def _set_compiz_option(self, plugin_name, option_name, option_value):
+        logger.info("Setting compiz option '%s' in plugin '%s' to %r",
+            option_name, plugin_name, option_value)
         plugin = Plugin(global_context, plugin_name)
         setting = Setting(plugin, option_name)
         old_value = setting.Value

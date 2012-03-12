@@ -9,12 +9,17 @@
 
 from time import sleep
 
-from autopilot.keybindings import KeybindingsHelper
-from autopilot.emulators.unity import UnityIntrospectionObject
+from autopilot.emulators.unity import (
+    get_state_by_path,
+    make_introspection_object,
+    UnityIntrospectionObject,
+    )
 from autopilot.emulators.X11 import Keyboard, Mouse
-
+from autopilot.keybindings import KeybindingsHelper
 
 import logging
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -44,6 +49,7 @@ class Dash(KeybindingsHelper):
         """
         if not self.get_is_visible():
             self.toggle_reveal()
+            self._wait_for_visibility(expect_visible=True)
             if clear_search:
                 self.clear_search()
 
@@ -53,12 +59,21 @@ class Dash(KeybindingsHelper):
         """
         if self.get_is_visible():
             self.toggle_reveal()
+            self._wait_for_visibility(expect_visible=False)
+
+    def _wait_for_visibility(self, expect_visible):
+        for i in range(11):
+            if self.get_is_visible() != expect_visible:
+                sleep(1)
+            else:
+                return
+        raise RuntimeError("Dash not %s after waiting for 10 seconds." %
+            ("Visible" if expect_visible else "Hidden"))
 
     def get_is_visible(self):
         """
         Is the dash visible?
         """
-        self.controller.refresh_state()
         return self.controller.visible
 
     def get_searchbar(self):
@@ -67,7 +82,6 @@ class Dash(KeybindingsHelper):
 
     def get_num_rows(self):
         """Returns the number of displayed rows in the dash."""
-        self.view.refresh_state()
         return self.view.num_rows
 
     def clear_search(self):
@@ -222,13 +236,13 @@ class FilterBar(UnityIntrospectionObject):
     def is_expanded(self):
         """Return True if the filterbar on this lens is expanded, False otherwise.
         """
-        searchbar = SearchBar.get_all_instances()[0]
+        searchbar = self._get_searchbar()
         return searchbar.showing_filters
 
     def ensure_expanded(self):
         """Expand the filter bar, if it's not already."""
         if not self.is_expanded():
-            searchbar = SearchBar.get_all_instances()[0]
+            searchbar = self._get_searchbar()
             tx = searchbar.filter_label_x + (searchbar.filter_label_width / 2)
             ty = searchbar.filter_label_y + (searchbar.filter_label_height / 2)
             m = Mouse()
@@ -238,12 +252,23 @@ class FilterBar(UnityIntrospectionObject):
     def ensure_collapsed(self):
         """Collapse the filter bar, if it's not already."""
         if self.is_expanded():
-            searchbar = SearchBar.get_all_instances()[0]
+            searchbar = self._get_searchbar()
             tx = searchbar.filter_label_x + (searchbar.filter_label_width / 2)
             ty = searchbar.filter_label_y + (searchbar.filter_label_height / 2)
             m = Mouse()
             m.move(tx, ty)
             m.click()
+
+    def _get_searchbar(self):
+        """Get the searchbar.
+
+        This hack exists because there's now more than one SearchBar in Unity,
+        and for some reason the FilterBar stuff is bundled in the SearchBar.
+
+        """
+        state_info = get_state_by_path("//DashView/SearchBar")
+        assert(len(state_info) == 1)
+        return make_introspection_object(("SearchBar", state_info[0]))
 
 
 class FilterExpanderLabel(UnityIntrospectionObject):

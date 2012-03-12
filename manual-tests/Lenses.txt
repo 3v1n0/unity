@@ -1,0 +1,15 @@
+Restarting of crashed lenses
+----------------------------
+This test makes sure that if a lens crashes, searching in the dash
+automatically restarts it.
+
+#. Open a terminal
+#. Make sure there are some results in the apps lens
+#. Kill the applications lens daemon in the terminal
+   `killall /usr/lib/unity-lens-applications/unity-applications-daemon`
+#. Open the dash and search for something (for example "gedit")
+
+Outcome
+Applications lens should automatically restart and gedit should be visible
+in the results.
+
