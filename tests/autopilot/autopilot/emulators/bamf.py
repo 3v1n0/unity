@@ -65,15 +65,6 @@ class Bamf(object):
             return filter(_filter_user_visible, apps)
         return apps
 
-    def get_running_applications_by_title(self, app_title):
-        """Return a list of applications that have the title `app_title`.
-
-        This method may return an empty list, if no applications
-        are found with the specified title.
-
-        """
-        return [a for a in self.get_running_applications() if a.name == app_title]
-
     def get_running_applications_by_desktop_file(self, desktop_file):
         """Return a list of applications that have the desktop file 'desktop_file'`.
 
@@ -82,7 +73,7 @@ class Bamf(object):
 
         """
         return [a for a in self.get_running_applications() if a.desktop_file == desktop_file]
-    
+
     def get_open_windows(self, user_visible_only=True):
         """Get a list of currently open windows.
 
@@ -96,72 +87,23 @@ class Bamf(object):
             return filter(_filter_user_visible, windows)
         return windows
 
-    def get_open_windows_by_title(self, win_title):
-        """Get a list of all open windows with a specific window title.
-
-        This method may return an empty list if no currently open windows have
-        the specified title.
-
-        """
-        return [w for w in self.get_open_windows() if w.title == win_title]
-
-    def application_is_running(self, app_name):
-        """Detect if an application with a given name is currently running.
-
-        'app_name' is the name of the application you are looking for.
-        """
-        try:
-            return app_name in [a.name for a in self.get_running_applications()]
-        except dbus.DBusException:
-            return False
-    
-    def application_is_running_desktop_file(self, desktop_file):
-        """Detect if an application with a given .desktop file is currently running.
-
-        'desktop_file' is the .desktop file of the application you are looking for.
-        """
-        try:
-            return desktop_file in [a.desktop_file for a in self.get_running_applications()]
-        except dbus.DBusException:
-            return False
-    
-    def application_is_focused(self, desktop_file):
-        """Detect if an application with given name is currently focused.
-
-        'desktop_file' is the desktop_file of the application you are looking for.
-        """
-        try:
-            found_focused = False
-            for app in self.get_running_applications_by_desktop_file(desktop_file):
-                if app.is_active:
-                    found_focused = True
-
-            return found_focused
-        except dbus.DBusException:
-            return False
-
-    def wait_until_application_is_running(self, app_name, timeout, is_desktop_file=False):
+    def wait_until_application_is_running(self, desktop_file, timeout):
         """Wait until a given application is running.
 
-        'app_name' is the name of the application.
+        'desktop_file' is the name of the application desktop file.
         'timeout' is the maximum time to wait, in seconds. If set to
         something less than 0, this method will wait forever.
 
         This method returns true once the application is found, or false
         if the application was not found until the timeout was reached.
         """
+        desktop_file = os.path.split(desktop_file)[1]
         # python workaround since you can't assign to variables in the enclosing scope:
         # see on_timeout_reached below...
         found_app = [True]
 
         # maybe the app is running already?
-        is_running = False
-        if (is_desktop_file):
-            is_running = self.application_is_running_desktop_file(app_name)
-        else:
-            is_running = self.application_is_running(app_name)
-
-        if not is_running:
+        if len(self.get_running_applications_by_desktop_file(desktop_file)) == 0:
             wait_forever = timeout < 0
             gobject_loop = gobject.MainLoop()
 
@@ -169,10 +111,9 @@ class Bamf(object):
             def on_view_added(bamf_path, name):
                 if bamf_path.split('/')[-1].startswith('application'):
                     app = BamfApplication(bamf_path)
-                    if ((is_desktop_file and app_name == app.desktop_file)
-                        or (not is_desktop_file and app.name == app_name)):
+                    if desktop_file == os.path.split(app.desktop_file)[1]:
                         gobject_loop.quit()
-                        
+
             # ...and one for when the user-defined timeout has been reached:
             def on_timeout_reached():
                 gobject_loop.quit()
@@ -200,7 +141,7 @@ class Bamf(object):
         proc = gio.unix.DesktopAppInfo(desktop_file)
         proc.launch()
         if wait:
-            self.wait_until_application_is_running(desktop_file, -1, True)
+            self.wait_until_application_is_running(desktop_file, -1)
         return proc
 
 
@@ -228,7 +169,12 @@ class BamfApplication(object):
 
     @property
     def name(self):
-        """Get the application name."""
+        """Get the application name.
+
+        Note: This may change according to the current locale. If you want a unique
+        string to match applications against, use the desktop_file instead.
+
+        """
         return self._view_iface.Name()
 
     @property
@@ -291,6 +237,8 @@ class BamfWindow(object):
         """Get the window title.
 
         This may be different from the application name.
+
+        Note that this may change depending on the current locale.
 
         """
         return self._getProperty('_NET_WM_NAME')

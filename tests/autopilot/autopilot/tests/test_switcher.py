@@ -288,7 +288,7 @@ class SwitcherWorkspaceTests(AutopilotTestCase):
         sleep(1)
 
         #get calculator windows - there should be only one:
-        mahjongg_apps = self.bamf.get_running_applications_by_title("Mahjongg")
+        mahjongg_apps = self.get_app_instances("Mahjongg")
         self.assertThat(len(mahjongg_apps), Equals(1))
         wins = mahjongg_apps[0].get_windows()
         self.assertThat(len(wins), Equals(2))
