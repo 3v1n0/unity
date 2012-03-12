@@ -88,6 +88,8 @@ PlacesVScrollBar::Draw(nux::GraphicsEngine& gfxContext, bool force_draw)
   gfxContext.GetRenderStates().SetBlend(false);
   gfxContext.PopClippingRectangle();
   gfxContext.GetRenderStates().SetBlend(true);
+
+  nux::GetPainter().Paint2DQuadWireframe (gfxContext, base, nux::color::Red);
 }
 
 void PlacesVScrollBar::UpdateTexture()

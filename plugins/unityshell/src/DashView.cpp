@@ -288,6 +288,10 @@ void DashView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
   }
   
   renderer_.DrawInnerCleanup(gfx_context, content_geo_, GetAbsoluteGeometry(), GetGeometry());
+
+  nux::GetPainter().Paint2DQuadWireframe (gfx_context,
+                                          content_layout_->GetGeometry(),
+                                          nux::color::Orange);
 }
 
 void DashView::OnMouseButtonDown(int x, int y, unsigned long button, unsigned long key)

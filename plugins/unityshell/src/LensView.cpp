@@ -141,7 +141,9 @@ LensView::LensView(Lens::Ptr lens, nux::Area* show_filters)
 
   lens_->connected.changed.connect([&](bool is_connected) { if (is_connected) initial_activation_ = true; });
   search_string.changed.connect([&](std::string const& search) { lens_->Search(search);  });
-  filters_expanded.changed.connect([&](bool expanded) { fscroll_view_->SetVisible(expanded); QueueRelayout(); OnColumnsChanged(); });
+  filters_expanded.changed.connect([&](bool expanded) { fscroll_view_->SetVisible(expanded);
+                                                        QueueRelayout();
+                                                        OnColumnsChanged(); });
   view_type.changed.connect(sigc::mem_fun(this, &LensView::OnViewTypeChanged));
 
   ubus_.RegisterInterest(UBUS_RESULT_VIEW_KEYNAV_CHANGED, [this] (GVariant* data) {
@@ -416,6 +418,13 @@ void LensView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
   gfx_context.PushClippingRectangle(geo);
   nux::GetPainter().PaintBackground(gfx_context, geo);
   gfx_context.PopClippingRectangle();
+
+  nux::GetPainter().Paint2DQuadWireframe (gfx_context,
+                                          scroll_layout_->GetGeometry(),
+                                          nux::color::Blue);
+  nux::GetPainter().Paint2DQuadWireframe (gfx_context,
+                                          fscroll_layout_->GetGeometry(),
+                                          nux::color::Green);
 }
 
 void LensView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
@@ -482,7 +491,7 @@ void LensView::ActivateFirst()
     if (result.uri != "")
     {
       uri_activated(result.uri);
-      lens_->Activate(result.uri);
+        lens_->Activate(result.uri);
     }
   }
 }
