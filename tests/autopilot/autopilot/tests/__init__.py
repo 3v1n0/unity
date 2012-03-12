@@ -191,19 +191,18 @@ class AutopilotTestCase(VideoCapturedTestCase, KeybindingsHelper):
         The value will be set for the current test only.
 
         """
-        old_value = self._set_compiz_option("unityshell", option_name, option_value)
-        self.addCleanup(self._set_compiz_option, "unityshell", option_name, old_value)
+        self.set_compiz_option("unityshell", option_name, option_value)
 
     def set_compiz_option(self, plugin_name, setting_name, setting_value):
         """Set setting `setting_name` in compiz plugin `plugin_name` to value `setting_value`
         for one test only.
         """
-        logger.info("Setting compiz option '%s' in plugin '%s' to %r",
-            setting_name, plugin_name, setting_value)
         old_value = self._set_compiz_option(plugin_name, setting_name, setting_value)
         self.addCleanup(self._set_compiz_option, plugin_name, setting_name, old_value)
 
     def _set_compiz_option(self, plugin_name, option_name, option_value):
+        logger.info("Setting compiz option '%s' in plugin '%s' to %r",
+            option_name, plugin_name, option_value)
         plugin = Plugin(global_context, plugin_name)
         setting = Setting(plugin, option_name)
         old_value = setting.Value

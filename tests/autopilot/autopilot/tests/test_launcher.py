@@ -402,4 +402,3 @@ class LauncherRevealTests(ScenariodLauncherTests):
         launcher_instance.reveal_launcher()
         self.assertThat(launcher_instance.is_showing(), Equals(False))
         self.mouse.release(1)
-
