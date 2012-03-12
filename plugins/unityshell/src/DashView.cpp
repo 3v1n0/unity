@@ -713,6 +713,14 @@ Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
     // Not sure if Enter should be a navigation key
     direction = KEY_NAV_ENTER;
     break;
+  case NUX_VK_F4:
+    // Maybe we should not do it here, but it needs to be checked where 
+    // we are able to know if alt is pressed.
+    if (special_keys_state & NUX_STATE_ALT)
+    {
+      ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
+    }
+    break;
   default:
     direction = KEY_NAV_NONE;
     break;
