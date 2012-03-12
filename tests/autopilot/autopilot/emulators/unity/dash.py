@@ -49,6 +49,7 @@ class Dash(KeybindingsHelper):
         """
         if not self.get_is_visible():
             self.toggle_reveal()
+            self._wait_for_visibility(expect_visible=True)
             if clear_search:
                 self.clear_search()
 
@@ -58,12 +59,21 @@ class Dash(KeybindingsHelper):
         """
         if self.get_is_visible():
             self.toggle_reveal()
+            self._wait_for_visibility(expect_visible=False)
+
+    def _wait_for_visibility(self, expect_visible):
+        for i in range(11):
+            if self.get_is_visible() != expect_visible:
+                sleep(1)
+            else:
+                return
+        raise RuntimeError("Dash not %s after waiting for 10 seconds." %
+            ("Visible" if expect_visible else "Hidden"))
 
     def get_is_visible(self):
         """
         Is the dash visible?
         """
-        self.controller.refresh_state()
         return self.controller.visible
 
     def get_searchbar(self):
@@ -72,7 +82,6 @@ class Dash(KeybindingsHelper):
 
     def get_num_rows(self):
         """Returns the number of displayed rows in the dash."""
-        self.view.refresh_state()
         return self.view.num_rows
 
     def clear_search(self):
