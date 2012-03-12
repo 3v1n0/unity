@@ -75,7 +75,7 @@ class ShowDesktopTests(AutopilotTestCase):
             self.assertTrue(win.is_hidden, "Window '%s' is not hidden after show desktop activated." % (win.title))
 
         # We'll un-minimise the character map - find it's launcherIcon in the launcher:
-        charmap_icon = self.launcher.get_icon_by_tooltip_text('Character Map')
+        charmap_icon = self.launcher.model.get_icon_by_tooltip_text('Character Map')
         if charmap_icon:
             self.launcher.get_launcher_for_monitor(0).click_launcher_icon(charmap_icon)
         else:
