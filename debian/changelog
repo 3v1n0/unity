@@ -1,3 +1,10 @@
+unity (5.6.0-0ubuntu3) UNRELEASED; urgency=low
+
+  * debian/control:
+    - use right build-dep (libxfixes-dev)
+
+ -- Didier Roche <didrocks@ubuntu.com>  Tue, 13 Mar 2012 13:44:20 +0100
+
 unity (5.6.0-0ubuntu2) precise; urgency=low
 
   * debian/patches/01_remove_ungrab_workaround.patch:
