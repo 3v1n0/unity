@@ -19,7 +19,7 @@ from autopilot.emulators.bamf import Bamf
 from autopilot.emulators.unity import (
     set_log_severity,
     start_log_to_file,
-    stop_logging_to_file,
+    reset_logging,
     )
 from autopilot.emulators.unity.launcher import LauncherController
 from autopilot.emulators.unity.switcher import Switcher
@@ -40,13 +40,13 @@ class LoggedTestCase(TestWithScenarios, TestCase):
     """Initialize the logging for the test case."""
 
     def setUp(self):
-        self.setUpTestLogging()
-        self.setUpUnityLogging()
+        self._setUpTestLogging()
+        self._setUpUnityLogging()
         # The reason that the super setup is done here is due to making sure
         # that the logging is properly set up prior to calling it.
         super(LoggedTestCase, self).setUp()
 
-    def setUpTestLogging(self):
+    def _setUpTestLogging(self):
         class MyFormatter(logging.Formatter):
 
             def formatTime(self, record, datefmt=None):
@@ -67,9 +67,9 @@ class LoggedTestCase(TestWithScenarios, TestCase):
         root_logger.addHandler(handler)
         #Tear down logging in a cleanUp handler, so it's done after all other
         # tearDown() calls and cleanup handlers.
-        self.addCleanup(self.tearDownLogging)
+        self.addCleanup(self._tearDownLogging)
 
-    def tearDownLogging(self):
+    def _tearDownLogging(self):
         logger = logging.getLogger()
         for handler in logger.handlers:
             handler.flush()
@@ -80,17 +80,27 @@ class LoggedTestCase(TestWithScenarios, TestCase):
         # abusing the log handlers here a little.
         del self._log_buffer
 
-    def setUpUnityLogging(self):
+    def _setUpUnityLogging(self):
         self._unity_log_file_name = mktemp(prefix=self.shortDescription())
         start_log_to_file(self._unity_log_file_name)
         self.addCleanup(self.tearDownUnityLogging)
 
-    def tearDownUnityLogging(self):
-        stop_logging_to_file()
+    def _tearDownUnityLogging(self):
+        reset_logging()
         with open(self._unity_log_file_name, 'r') as unity_log:
             self.addDetail('unity-log', text_content(unity_log.read()))
         os.remove(self._unity_log_file_name)
         self._unity_log_file_name = ""
+
+    def set_unity_log_level(component, level):
+        """Set the unity log level for 'component' to 'level'.
+
+        Valid levels are: TRACE, DEBUG, INFO, WARNING and ERROR.
+
+        Components are dotted unity component names. The empty string specifies
+        the root logging component.
+        """
+        set_log_severity(component, level)
 
 
 class VideoCapturedTestCase(LoggedTestCase):

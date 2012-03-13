@@ -85,9 +85,9 @@ def start_log_to_file(file_path):
     _introspection_iface.StartLogToFile(file_path)
 
 
-def stop_logging_to_file():
+def reset_logging():
     """Instruct Unity to stop logging to a file."""
-    _introspection_iface.StopLogToFile()
+    _introspection_iface.ResetLogging()
 
 
 def set_log_severity(component, severity):

@@ -50,7 +50,7 @@ namespace local
 
 GVariant* GetState(std::string const& query);
 void StartLogToFile(std::string const& file_path);
-void StopLogToFile();
+void ResetLogging();
 void SetLogSeverity(std::string const& log_component,
   std::string const& severity);
 void LogMessage(std::string const& severity,
@@ -71,7 +71,7 @@ const gchar DebugDBusInterface::introspection_xml[] =
   "       <arg type='s' name='file_path' direction='in' />"
   "     </method>"
   ""
-  "     <method name='StopLogToFile'>"
+  "     <method name='ResetLogging'>"
   "     </method>"
   ""
   "     <method name='SetLogSeverity'>"
@@ -188,9 +188,9 @@ DebugDBusInterface::HandleDBusMethodCall(GDBusConnection* connection,
     StartLogToFile(log_path);
     g_dbus_method_invocation_return_value(invocation, NULL);
   }
-  else if (g_strcmp0(method_name, "StopLogToFile") == 0)
+  else if (g_strcmp0(method_name, "ResetLogging") == 0)
   {
-    StopLogToFile();
+    ResetLogging();
     g_dbus_method_invocation_return_value(invocation, NULL);
   }
   else if (g_strcmp0(method_name, "SetLogSeverity") == 0)
@@ -243,7 +243,7 @@ void StartLogToFile(std::string const& file_path)
   nux::logging::Writer::Instance().SetOutputStream(local::output_file);
 }
 
-void StopLogToFile()
+void ResetLogging()
 {
   if (local::output_file.is_open())
     local::output_file.close();
