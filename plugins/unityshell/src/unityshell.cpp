@@ -93,6 +93,8 @@ namespace local
 {
 // Tap duration in milliseconds.
 const int ALT_TAP_DURATION = 250;
+const unsigned int SCROLL_DOWN_BUTTON = 6;
+const unsigned int SCROLL_UP_BUTTON = 7;
 } // namespace local
 } // anon namespace
 
@@ -124,6 +126,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , dash_is_open_ (false)
   , grab_index_ (0)
   , painting_tray_ (false)
+  , last_scroll_event_(0)
   , last_hud_show_time_(0)
 {
   Timer timer;
@@ -1342,6 +1345,25 @@ void UnityScreen::handleEvent(XEvent* event)
         EnableCancelAction(CancelActionTarget::LAUNCHER_SWITCHER, false);
       }
       break;
+    case ButtonRelease:
+      if (switcher_controller_ && switcher_controller_->Visible())
+      {
+        XButtonEvent *bev = reinterpret_cast<XButtonEvent*>(event);
+        if (bev->time - last_scroll_event_ > 150)
+        {
+          if (bev->button == Button4 || bev->button == local::SCROLL_UP_BUTTON)
+          {
+            switcher_controller_->Prev();
+            last_scroll_event_ = bev->time;
+          }
+          else if (bev->button == Button5 || bev->button == local::SCROLL_DOWN_BUTTON)
+          {
+            switcher_controller_->Next();
+            last_scroll_event_ = bev->time;
+          }
+        }
+      }
+      break;
     case KeyPress:
     {
       KeySym key_sym;
@@ -1613,7 +1635,7 @@ bool UnityScreen::setKeyboardFocusKeyInitiate(CompAction* action,
   return true;
 }
 
-bool UnityScreen::altTabInitiateCommon(switcher::ShowMode show_mode)
+bool UnityScreen::altTabInitiateCommon(CompAction* action, switcher::ShowMode show_mode)
 {
   if (!grab_index_)
     grab_index_ = screen->pushGrab (screen->invisibleCursor(), "unity-switcher");
@@ -1630,6 +1652,14 @@ bool UnityScreen::altTabInitiateCommon(switcher::ShowMode show_mode)
   screen->addAction(&optionGetAltTabDetailStart());
   screen->addAction(&optionGetAltTabDetailStop());
   screen->addAction(&optionGetAltTabLeft());
+
+  /* Create a new keybinding for scroll buttons and current modifiers */
+  CompAction scroll_up;
+  CompAction scroll_down;
+  scroll_up.setButton(CompAction::ButtonBinding(local::SCROLL_UP_BUTTON, action->key().modifiers()));
+  scroll_down.setButton(CompAction::ButtonBinding(local::SCROLL_DOWN_BUTTON, action->key().modifiers()));
+  screen->addAction(&scroll_up);
+  screen->addAction(&scroll_down);
 
   // maybe check launcher position/hide state?
 
@@ -1667,10 +1697,18 @@ bool UnityScreen::altTabTerminateCommon(CompAction* action,
     screen->removeGrab(grab_index_, NULL);
     grab_index_ = 0;
 
-    screen->removeAction (&optionGetAltTabRight ());
-    screen->removeAction (&optionGetAltTabDetailStart ());
-    screen->removeAction (&optionGetAltTabDetailStop ());
-    screen->removeAction (&optionGetAltTabLeft ());
+    screen->removeAction(&optionGetAltTabRight ());
+    screen->removeAction(&optionGetAltTabDetailStart ());
+    screen->removeAction(&optionGetAltTabDetailStop ());
+    screen->removeAction(&optionGetAltTabLeft ());
+
+    /* Removing the scroll actions */
+    CompAction scroll_up;
+    CompAction scroll_down;
+    scroll_up.setButton(CompAction::ButtonBinding(local::SCROLL_UP_BUTTON, action->key().modifiers()));
+    scroll_down.setButton(CompAction::ButtonBinding(local::SCROLL_DOWN_BUTTON, action->key().modifiers()));
+    screen->removeAction(&scroll_up);
+    screen->removeAction(&scroll_down);
 
     bool accept_state = (state & CompAction::StateCancel) == 0;
     switcher_controller_->Hide(accept_state);
@@ -1687,7 +1725,7 @@ bool UnityScreen::altTabForwardInitiate(CompAction* action,
   if (switcher_controller_->Visible())
     switcher_controller_->Next();
   else
-    altTabInitiateCommon(switcher::ShowMode::CURRENT_VIEWPORT);
+    altTabInitiateCommon(action, switcher::ShowMode::CURRENT_VIEWPORT);
 
   action->setState(action->state() | CompAction::StateTermKey);
   return true;
@@ -1700,7 +1738,7 @@ bool UnityScreen::altTabForwardAllInitiate(CompAction* action,
   if (switcher_controller_->Visible())
     switcher_controller_->Next();
   else
-    altTabInitiateCommon(switcher::ShowMode::ALL);
+    altTabInitiateCommon(action, switcher::ShowMode::ALL);
 
   action->setState(action->state() | CompAction::StateTermKey);
   return true;
@@ -1742,7 +1780,7 @@ bool UnityScreen::altTabNextWindowInitiate(CompAction* action, CompAction::State
 {
   if (!switcher_controller_->Visible())
   {
-    altTabInitiateCommon(switcher::ShowMode::CURRENT_VIEWPORT);
+    altTabInitiateCommon(action, switcher::ShowMode::CURRENT_VIEWPORT);
     switcher_controller_->Select(1); // always select the current application
   }
 

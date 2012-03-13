@@ -192,7 +192,7 @@ public:
   bool executeCommand(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool setKeyboardFocusKeyInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
 
-  bool altTabInitiateCommon(switcher::ShowMode mode);
+  bool altTabInitiateCommon(CompAction* action, switcher::ShowMode mode);
   bool altTabTerminateCommon(CompAction* action,
                              CompAction::State state,
                              CompOption::Vector& options);
@@ -337,6 +337,7 @@ private:
   CompWindowList         fullscreen_windows_;
   bool                   painting_tray_;
   unsigned int           tray_paint_mask_;
+  unsigned int           last_scroll_event_;
   gint64                 last_hud_show_time_;
 
   GLMatrix panel_shadow_matrix_;
