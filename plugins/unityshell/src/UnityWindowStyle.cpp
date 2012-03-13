@@ -18,6 +18,7 @@
  */
 
 #include "UnityWindowStyle.h"
+#include "config.h"
 
 namespace unity {
 namespace ui {
