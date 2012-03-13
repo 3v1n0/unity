@@ -185,7 +185,7 @@ LensView::~LensView()
 void LensView::SetupViews(nux::Area* show_filters)
 {
   layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
-  layout_->SetHorizontalInternalMargin(8);
+  layout_->SetHorizontalInternalMargin(10);
   scroll_view_ = new LensScrollView(new PlacesVScrollBar(NUX_TRACKER_LOCATION),
                                     NUX_TRACKER_LOCATION);
   scroll_view_->EnableVerticalScrollBar(true);
@@ -419,12 +419,12 @@ void LensView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
   nux::GetPainter().PaintBackground(gfx_context, geo);
   gfx_context.PopClippingRectangle();
 
-  nux::GetPainter().Paint2DQuadWireframe (gfx_context,
+  /*nux::GetPainter().Paint2DQuadWireframe (gfx_context,
                                           scroll_layout_->GetGeometry(),
                                           nux::color::Blue);
   nux::GetPainter().Paint2DQuadWireframe (gfx_context,
                                           fscroll_layout_->GetGeometry(),
-                                          nux::color::Green);
+                                          nux::color::Green);*/
 }
 
 void LensView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)

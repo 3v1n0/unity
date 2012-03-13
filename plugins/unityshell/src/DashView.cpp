@@ -160,8 +160,6 @@ void DashView::SetupViews()
 {
   layout_ = new nux::VLayout();
   SetLayout(layout_);
-  layout_->SetHorizontalExternalMargin(0);
-  layout_->SetVerticalExternalMargin(0);
 
   content_layout_ = new DashLayout(NUX_TRACKER_LOCATION);
   content_layout_->SetHorizontalExternalMargin(0);
@@ -291,9 +289,9 @@ void DashView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
   
   renderer_.DrawInnerCleanup(gfx_context, content_geo_, GetAbsoluteGeometry(), GetGeometry());
 
-  nux::GetPainter().Paint2DQuadWireframe (gfx_context,
+  /*nux::GetPainter().Paint2DQuadWireframe (gfx_context,
                                           content_layout_->GetGeometry(),
-                                          nux::color::Orange);
+                                          nux::color::Orange);*/
 }
 
 void DashView::OnMouseButtonDown(int x, int y, unsigned long button, unsigned long key)
