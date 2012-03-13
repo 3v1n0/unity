@@ -42,12 +42,12 @@ namespace nux
 StaticCairoText::StaticCairoText(std::string const& text,
                                  NUX_FILE_LINE_DECL) :
   View(NUX_FILE_LINE_PARAM),
+  _baseline(0),
   _fontstring(NULL),
   _cairoGraphics(NULL),
   _texture2D(NULL),
   _lines(-2),
   _actual_lines(0)
-
 {
   _textColor  = Color(1.0f, 1.0f, 1.0f, 1.0f);
   _text       = text;
@@ -276,6 +276,11 @@ StaticCairoText::GetLineCount()
   return _actual_lines;
 }
 
+int StaticCairoText::GetBaseline() const
+{
+  return _baseline;
+}
+
 void StaticCairoText::GetTextExtents(int& width, int& height)
 {
   GtkSettings* settings = gtk_settings_get_default();  // not ref'ed
@@ -371,6 +376,7 @@ void StaticCairoText::GetTextExtents(const TCHAR* font,
   height = logRect.height / PANGO_SCALE;
   _cached_extent_height = height;
   _cached_extent_width = width;
+  _baseline = pango_layout_get_baseline(layout) / PANGO_SCALE;
 
   // clean up
   pango_font_description_free(desc);

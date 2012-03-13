@@ -310,6 +310,15 @@ PlacesGroup::RefreshLabel()
   _expand_label->SetText(final);
   _expand_label->SetVisible(_n_visible_items_in_unexpand_mode < _n_total_items);
 
+  // See bug #748101 ("Dash - "See more..." line should be base-aligned with section header")
+  // We're making two assumptions here:
+  // [a] The font size _name is bigger than the font size of _expand_label
+  // [b] The bottom sides have the same y coordinate
+  int bottom_padding = _name->GetBaseHeight() - _name->GetBaseline() -
+                       (_expand_label->GetBaseHeight() - _expand_label->GetBaseline());
+
+  _expand_layout->SetTopAndBottomPadding(0, bottom_padding);
+
   QueueDraw();
 
   g_free((result_string));
@@ -537,6 +546,11 @@ void PlacesGroup::AddProperties(GVariantBuilder* builder)
   wrapper.add("name", _name->GetText());
   wrapper.add("is-visible", IsVisible());
   wrapper.add("is-expanded", GetExpanded());
+  wrapper.add("expand-label-is-visible", _expand_label->IsVisible());
+  wrapper.add("expand-label-y", _expand_label->GetAbsoluteY());
+  wrapper.add("expand-label-baseline", _expand_label->GetBaseline());
+  wrapper.add("name-label-y", _name->GetAbsoluteY());
+  wrapper.add("name-label-baseline", _name->GetBaseline());
 }
 
 } // namespace unity

@@ -441,3 +441,27 @@ class DashLensResultsTests(AutopilotTestCase):
 
         lens.refresh_state() 
         self.assertTrue(lens.no_results_active)
+
+class DashVisualTests(AutopilotTestCase):
+    """Tests that the dash visual is correct."""
+    def setUp(self):
+        super(DashVisualTests, self).setUp()
+        self.dash = Dash()
+
+    def tearDown(self):
+        super(DashVisualTests, self).tearDown()
+        self.dash.ensure_hidden()
+
+    def test_see_more_result_alignment(self):
+        """The see more results label should be baseline aligned
+        with the category name label.
+        """
+        self.dash.reveal_application_lens()
+
+        lens = self.dash.get_current_lens()
+        groups = lens.get_groups()
+
+        for group in groups:
+            if (group.is_visible):
+                self.assertTrue(not group.expand_label_is_visible or
+                                (group.expand_label_y + group.expand_label_baseline == group.name_label_y + group.name_label_baseline))
