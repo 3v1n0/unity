@@ -79,7 +79,7 @@ const char* const S_IFACE = "com.canonical.Unity.Panel.Service";
 
 struct ShowEntryData
 {
-  GDBusProxy* proxy;
+  glib::Object<GDBusProxy> proxy;
   std::string entry_id;
   guint xid;
   int x;
@@ -107,7 +107,6 @@ class DBusIndicators::Impl
 {
 public:
   Impl(DBusIndicators* owner);
-  ~Impl();
 
   void OnRemoteProxyReady(GDBusProxy* proxy);
   void Reconnect();
@@ -136,7 +135,7 @@ public:
   bool using_local_service() const;
 
   DBusIndicators* owner_;
-  GDBusProxy* proxy_;
+  glib::Object<GDBusProxy> proxy_;
   typedef std::vector<SyncDataPtr> PendingSyncs;
   PendingSyncs pending_syncs_;
 
@@ -148,17 +147,8 @@ public:
 // Public Methods
 DBusIndicators::Impl::Impl(DBusIndicators* owner)
   : owner_(owner)
-  , proxy_(NULL)
 {
   Reconnect();
-}
-
-DBusIndicators::Impl::~Impl()
-{
-  if (G_IS_OBJECT(proxy_))
-  {
-    g_object_unref(proxy_);
-  }
 }
 
 void DBusIndicators::Impl::Reconnect()
@@ -227,7 +217,6 @@ void DBusIndicators::Impl::OnEntryShowMenu(std::string const& entry_id,
   // respond to our request for XUngrabPointer and this will cause the
   // menu not to show
   auto data = new ShowEntryData();
-  g_object_ref(proxy_);
   data->proxy = proxy_;
   data->entry_id = entry_id;
   data->xid = xid;
@@ -248,7 +237,6 @@ void DBusIndicators::Impl::OnShowAppMenu(unsigned int xid, int x, int y,
   // respond to our request for XUngrabPointer and this will cause the
   // menu not to show
   auto data = new ShowEntryData();
-  g_object_ref(proxy_);
   data->proxy = proxy_;
   data->xid = xid;
   data->x = x;
@@ -530,8 +518,7 @@ void DBusIndicators::Impl::OnProxySignalReceived(GDBusProxy* proxy,
 
 DBusIndicators::DBusIndicators()
   : pimpl(new Impl(this))
-{
-}
+{}
 
 DBusIndicators::~DBusIndicators()
 {
@@ -689,7 +676,7 @@ void on_sync_ready_cb(GObject* source, GAsyncResult* res, gpointer data)
 bool send_show_entry(ShowEntryData* data)
 {
   g_return_val_if_fail(data != NULL, FALSE);
-  g_return_val_if_fail(G_IS_DBUS_PROXY(data->proxy), FALSE);
+  g_return_val_if_fail(G_IS_DBUS_PROXY(data->proxy.RawPtr()), FALSE);
 
   g_dbus_proxy_call(data->proxy,
                     "ShowEntry",
@@ -706,8 +693,6 @@ bool send_show_entry(ShowEntryData* data)
                     NULL,
                     NULL);
 
-  g_object_unref(data->proxy);
-
   delete data;
   return FALSE;
 }
@@ -715,7 +700,7 @@ bool send_show_entry(ShowEntryData* data)
 bool send_show_appmenu(ShowEntryData* data)
 {
   g_return_val_if_fail(data != NULL, FALSE);
-  g_return_val_if_fail(G_IS_DBUS_PROXY(data->proxy), FALSE);
+  g_return_val_if_fail(G_IS_DBUS_PROXY(data->proxy.RawPtr()), FALSE);
 
   g_dbus_proxy_call(data->proxy,
                     "ShowAppMenu",
@@ -729,8 +714,6 @@ bool send_show_appmenu(ShowEntryData* data)
                     NULL,
                     NULL,
                     NULL);
-
-  g_object_unref(data->proxy);
 
   delete data;
   return FALSE;
