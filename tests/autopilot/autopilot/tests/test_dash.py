@@ -465,3 +465,69 @@ class DashVisualTests(AutopilotTestCase):
             if (group.is_visible):
                 self.assertTrue(not group.expand_label_is_visible or
                                 (group.expand_label_y + group.expand_label_baseline == group.name_label_y + group.name_label_baseline))
+
+class DashSpecialKeysTests(AutopilotTestCase):
+    """Tests composition, dead keys or anyother special keys"""
+    def setUp(self):
+        super(DashSpecialKeysTests, self).setUp()
+        self.dash = Dash()
+
+    def tearDown(self):
+        super(DashSpecialKeysTests, self).tearDown()
+        self.dash.ensure_hidden()
+
+    def test_multi_key(self):
+        """Tests that when the multi_key is pressed it will exepect a sequences"""
+        self.dash.ensure_hidden()
+        self.dash.reveal_application_lens()
+      
+        self.keyboard.press_and_release('Multi_key')
+
+        kb = Keyboard();
+        kb.type("o")
+        sleep(1)
+
+        searchbar = self.dash.get_searchbar()
+        self.assertEqual("", searchbar.search_string)
+
+    def test_multi_key_o(self):
+        """Tests the multi_key sequences ^ + o"""
+        self.dash.ensure_hidden()
+        self.dash.reveal_application_lens()
+      
+        kb = Keyboard();
+        kb.press_and_release('Multi_key')
+        kb.type("^o")
+        sleep(1)
+
+        searchbar = self.dash.get_searchbar()
+        self.assertEqual("ô", searchbar.search_string)
+
+    def test_multi_key_copyright(self):
+        """Tests the multi_key sequences o + c"""
+        self.dash.ensure_hidden()
+        self.dash.reveal_application_lens()
+      
+        kb = Keyboard();
+        kb.press_and_release('Multi_key')
+        kb.type("oc")
+        sleep(1)
+
+        searchbar = self.dash.get_searchbar()
+        self.assertEqual("©", searchbar.search_string)
+
+    def test_multi_key_delete(self):
+        """Tests the multi_key with delete, to show we cant get stuck"""
+        self.dash.ensure_hidden()
+        self.dash.reveal_application_lens()
+
+        kb = Keyboard();
+        kb.type("dd")
+        sleep(1)
+        kb.press_and_release('Multi_key')
+        kb.press_and_release('BackSpace')
+        kb.press_and_release('BackSpace')
+        sleep(1)
+
+        searchbar = self.dash.get_searchbar()
+        self.assertEqual("d", searchbar.search_string)
