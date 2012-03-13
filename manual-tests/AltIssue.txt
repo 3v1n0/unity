@@ -1,0 +1,14 @@
+Alt + arrows key not passed to application
+----------------------------------------------------
+Setup:
+Having an application using alt + arrow keys features
+(firefox, weechat, irssi…)
+
+Actions:  
+1. Open firefox
+2. Navigate to some pages
+3. Press Alt + left arrow
+
+Expected Result:
+-> you should be directed to the previous web page, like clicking on the "back"
+button.
