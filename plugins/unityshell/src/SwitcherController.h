@@ -27,6 +27,7 @@
 
 #include "SwitcherModel.h"
 #include "SwitcherView.h"
+#include "UBusWrapper.h"
 
 #include <boost/shared_ptr.hpp>
 #include <sigc++/sigc++.h>
@@ -62,11 +63,10 @@ class Controller : public debug::Introspectable, public sigc::trackable
 public:
   typedef std::shared_ptr<Controller> Ptr;
 
-  Controller();
+  Controller(unsigned int load_timeout = 20);
   virtual ~Controller();
 
   nux::Property<int> timeout_length;
-
   nux::Property<bool> detail_on_timeout;
   nux::Property<int>  detail_timeout_length;
 
@@ -98,6 +98,8 @@ protected:
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
 
+  unsigned int construct_timeout_;
+
 private:
   enum DetailMode
   {
@@ -106,15 +108,17 @@ private:
     TAB_NEXT_TILE,
   };
 
+  void ConstructWindow();
   void ConstructView();
+  void ShowView();
 
   void OnModelSelectionChanged(launcher::AbstractLauncherIcon::Ptr icon);
-
-  static void OnBackgroundUpdate(GVariant* data, Controller* self);
+  void OnBackgroundUpdate(GVariant* data);
 
   SwitcherModel::Ptr model_;
   SwitcherView::Ptr view_;
 
+  UBusManager ubus_manager_;
   nux::Geometry workarea_;
 
   nux::BaseWindow* view_window_;
@@ -124,11 +128,11 @@ private:
   bool visible_;
   guint show_timer_;
   guint detail_timer_;
+  guint lazy_timer_;
+  guint view_idle_timer_;
   nux::Color bg_color_;
   DetailMode detail_mode_;
-  guint bg_update_handle_;
 
-  static gboolean OnShowTimer(gpointer data);
   static gboolean OnDetailTimer(gpointer data);
 
   static bool CompareSwitcherItemsPriority(launcher::AbstractLauncherIcon::Ptr first, launcher::AbstractLauncherIcon::Ptr second);
