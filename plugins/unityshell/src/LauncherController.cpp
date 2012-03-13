@@ -799,6 +799,7 @@ Controller::Controller(Display* display)
     UScreen* uscreen = UScreen::GetDefault();
     auto monitors = uscreen->GetMonitors();
     pimpl->EnsureLaunchers(monitors);
+    options()->show_for_all = !value;
   });
 }
 

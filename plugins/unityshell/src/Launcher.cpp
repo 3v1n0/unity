@@ -884,7 +884,6 @@ void Launcher::SetupRenderArg(AbstractLauncherIcon::Ptr icon, struct timespec co
   arg.colorify            = nux::color::White;
   arg.running_arrow       = icon->GetQuirk(AbstractLauncherIcon::QUIRK_RUNNING);
   arg.running_colored     = icon->GetQuirk(AbstractLauncherIcon::QUIRK_URGENT);
-  arg.running_on_viewport = icon->WindowVisibleOnMonitor(monitor);
   arg.draw_edge_only      = IconDrawEdgeOnly(icon);
   arg.active_colored      = false;
   arg.x_rotation          = 0.0f;
@@ -908,6 +907,11 @@ void Launcher::SetupRenderArg(AbstractLauncherIcon::Ptr icon, struct timespec co
   else
     arg.active_arrow = icon->GetQuirk(AbstractLauncherIcon::QUIRK_ACTIVE);
 
+  if (options()->show_for_all)
+    arg.running_on_viewport = icon->WindowVisibleOnViewport();
+  else
+    arg.running_on_viewport = icon->WindowVisibleOnMonitor(monitor);
+
   guint64 shortcut = icon->GetShortcut();
   if (shortcut > 32)
     arg.shortcut_label = (char) shortcut;
@@ -927,7 +931,10 @@ void Launcher::SetupRenderArg(AbstractLauncherIcon::Ptr icon, struct timespec co
   }
   else
   {
-    arg.window_indicators = std::max<int> (icon->WindowsForMonitor(monitor).size(), 1);
+    if (options()->show_for_all)
+      arg.window_indicators = std::max<int> (icon->Windows().size(), 1);
+    else
+      arg.window_indicators = std::max<int> (icon->WindowsForMonitor(monitor).size(), 1);
   }
 
   arg.backlight_intensity = IconBackgroundIntensity(icon, current);

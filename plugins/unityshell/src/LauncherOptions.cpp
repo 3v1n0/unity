@@ -43,6 +43,7 @@ Options::Options()
   tile_size = 54;
   urgent_animation = URGENT_ANIMATION_WIGGLE;
   edge_resist = true;
+  show_for_all = false;
 
   auto_hide_animation.changed.connect   ([&] (AutoHideAnimation value)-> void { option_changed.emit(); });
   background_alpha.changed.connect      ([&] (float value)            -> void { option_changed.emit(); });
