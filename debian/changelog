@@ -5,7 +5,9 @@ unity (5.6.0-0ubuntu2) UNRELEASED; urgency=low
       apps (LP: #953783)
   * debian/control:
     - add libxfixes build-dep (versionned as there is an ABI break). No cmake
-      file was listing it, will fix that upstream as well.
+      file was listing it, will fix that upstream as well. ubuntu4 of libxfixes
+      need an unity rebuild to avoid not being able to trigger launcher reveal
+      (LP: #953778)
 
  -- Didier Roche <didrocks@ubuntu.com>  Tue, 13 Mar 2012 09:44:51 +0100
 
