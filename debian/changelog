@@ -1,4 +1,4 @@
-unity (5.6.0-0ubuntu2) UNRELEASED; urgency=low
+unity (5.6.0-0ubuntu2) precise; urgency=low
 
   * debian/patches/01_remove_ungrab_workaround.patch:
     - remove a workaround which makes alt + keys not passing events to other
@@ -9,7 +9,7 @@ unity (5.6.0-0ubuntu2) UNRELEASED; urgency=low
       need an unity rebuild to avoid not being able to trigger launcher reveal
       (LP: #953778)
 
- -- Didier Roche <didrocks@ubuntu.com>  Tue, 13 Mar 2012 09:44:51 +0100
+ -- Didier Roche <didrocks@ubuntu.com>  Tue, 13 Mar 2012 12:35:47 +0100
 
 unity (5.6.0-0ubuntu1) precise; urgency=low
 
