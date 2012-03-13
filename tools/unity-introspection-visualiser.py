@@ -50,7 +50,7 @@ def traverse_tree(state, parent, graph):
     global NEXT_NODE_ID
     lbl = parent.get_comment() + "|"
     # first, set labels for this node:
-    bits = ["%s=%s" % (k, string_rep(state[k])) for k in state.keys() if k != 'Children']
+    bits = ["%s=%s" % (k, string_rep(state[k])) for k in sorted(state.keys()) if k != 'Children']
     lbl += "\l".join(bits)
     parent.set_label(escape('"{' + lbl + '}"'))
     if state.has_key('Children'):

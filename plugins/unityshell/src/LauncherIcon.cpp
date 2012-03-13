@@ -166,6 +166,15 @@ LauncherIcon::WindowVisibleOnMonitor(int monitor)
   return _has_visible_window[monitor];
 }
 
+const bool LauncherIcon::WindowVisibleOnViewport()
+{
+  for (int i = 0; i < max_num_monitors; ++i)
+    if (_has_visible_window[i])
+      return true;
+
+  return false;
+}
+
 std::string
 LauncherIcon::GetName() const
 {

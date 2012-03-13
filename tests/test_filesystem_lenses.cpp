@@ -18,7 +18,7 @@ void WaitForResult(bool& result)
     return FALSE;
   };
 
-  guint32 timeout_id = g_timeout_add_seconds(10, timeout_cb, &timeout_reached);
+  guint32 timeout_id = g_timeout_add(10000, timeout_cb, &timeout_reached);
 
   while (!result && !timeout_reached)
   {

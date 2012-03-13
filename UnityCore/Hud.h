@@ -24,7 +24,7 @@
 #include <string>
 #include <memory>
 #include <NuxCore/Property.h>
-#include <glib/gvariant.h>
+#include <glib.h>
 
 namespace unity
 {

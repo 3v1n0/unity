@@ -101,8 +101,9 @@ class Keyboard(object):
         if not isinstance(keys, basestring):
             raise TypeError("'keys' argument must be a string.")
         logger.debug("Pressing keys %r with delay %f", keys, delay)
-        self.__perform_on_keys(self.__translate_keys(keys), X.KeyPress)
-        sleep(delay)
+        for key in self.__translate_keys(keys):
+            self.__perform_on_key(key, X.KeyPress)
+            sleep(delay)
 
     def release(self, keys, delay=0.2):
         """Send key release events only.
@@ -118,8 +119,12 @@ class Keyboard(object):
         if not isinstance(keys, basestring):
             raise TypeError("'keys' argument must be a string.")
         logger.debug("Releasing keys %r with delay %f", keys, delay)
-        self.__perform_on_keys(self.__translate_keys(keys), X.KeyRelease)
-        sleep(delay)
+        # release keys in the reverse order they were pressed in.
+        keys = self.__translate_keys(keys)
+        keys.reverse()
+        for key in keys:
+            self.__perform_on_key(key, X.KeyRelease)
+            sleep(delay)
 
     def press_and_release(self, keys, delay=0.2):
         """Press and release all items in 'keys'.
@@ -166,25 +171,29 @@ class Keyboard(object):
             fake_input(_DISPLAY, X.KeyRelease, keycode)
         _PRESSED_KEYS = []
 
-    def __perform_on_keys(self, keys, event):
+    def __perform_on_key(self, key, event):
+        if not isinstance(key, basestring):
+            raise TypeError("Key parameter must be a string")
+
         keycode = 0
         shift_mask = 0
 
-        for key in keys:
-            keycode, shift_mask = self.__char_to_keycode(key)
+        keycode, shift_mask = self.__char_to_keycode(key)
 
-            if shift_mask != 0:
-                fake_input(_DISPLAY, event, 50)
+        if shift_mask != 0:
+            fake_input(_DISPLAY, event, 50)
 
-            if event == X.KeyPress:
-                _PRESSED_KEYS.append(keycode)
-            elif event == X.KeyRelease:
-                if keycode in _PRESSED_KEYS:
-                    _PRESSED_KEYS.remove(keycode)
-                else:
-                    logger.warning("Generating release event for keycode %d that was not pressed.", keycode)
+        if event == X.KeyPress:
+            logger.debug("Sending press event for key: %s", key)
+            _PRESSED_KEYS.append(keycode)
+        elif event == X.KeyRelease:
+            logger.debug("Sending release event for key: %s", key)
+            if keycode in _PRESSED_KEYS:
+                _PRESSED_KEYS.remove(keycode)
+            else:
+                logger.warning("Generating release event for keycode %d that was not pressed.", keycode)
 
-            fake_input(_DISPLAY, event, keycode)
+        fake_input(_DISPLAY, event, keycode)
         _DISPLAY.sync()
 
     def __get_keysym(self, key) :
@@ -254,7 +263,7 @@ class Mouse(object):
     def move(self, x, y, animate=True, rate=100, time_between_events=0.001):
         '''Moves mouse to location (x, y, pixels_per_event, time_between_event)'''
         logger.debug("Moving mouse to position %d,%d %s animation.", x, y,
-            "with" if animate else "false")
+            "with" if animate else "without")
 
         def perform_move(x, y, sync):
             fake_input(_DISPLAY, X.MotionNotify, sync, X.CurrentTime, X.NONE, x=x, y=y)
@@ -313,6 +322,9 @@ class ScreenGeometry:
     def get_num_monitors(self):
         """Get the number of monitors attached to the PC."""
         return self._default_screen.get_n_monitors()
+
+    def get_primary_monitor(self):
+        return self._default_screen.get_primary_monitor()
 
     def get_screen_width(self):
         return self._default_screen.get_width()

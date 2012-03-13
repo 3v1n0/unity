@@ -108,6 +108,7 @@ private:
   nux::Area* KeyNavIteration(nux::KeyNavDirection direction);
 
   static gboolean ResetSearchStateCb(gpointer data);
+  static gboolean HideResultMessageCb(gpointer data);
 
 private:
   UBusManager ubus_manager_;
@@ -135,6 +136,8 @@ private:
   guint searching_timeout_id_;
   bool search_in_progress_;
   bool activate_on_finish_;
+
+  guint hide_message_delay_id_;
 
   bool visible_;
 };

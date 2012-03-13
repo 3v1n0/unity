@@ -770,7 +770,7 @@ void HomeLens::Impl::OnLensAdded (Lens::Ptr& lens)
       if (running_searches_ <= 0)
       {
         owner_->search_finished.emit(Hints());
-        LOG_DEBUG(logger) << "Search finished";
+        LOG_INFO(logger) << "Search finished";
       }
   });
 
@@ -911,7 +911,7 @@ void HomeLens::Search(std::string const& search_string)
   {
     if (lens->search_in_global())
     {
-      LOG_DEBUG(logger) << " - Global search on '" << lens->id() << "' for '"
+      LOG_INFO(logger) << " - Global search on '" << lens->id() << "' for '"
           << search_string << "'";
       lens->view_type = ViewType::HOME_VIEW;
       lens->GlobalSearch(search_string);
