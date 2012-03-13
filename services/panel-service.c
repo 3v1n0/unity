@@ -238,6 +238,7 @@ panel_service_class_init (PanelServiceClass *klass)
                   NULL, NULL,
                   g_cclosure_marshal_VOID__STRING,
                   G_TYPE_NONE, 1, G_TYPE_STRING);
+
  _service_signals[GEOMETRIES_CHANGED] =
     g_signal_new ("geometries-changed",
       G_OBJECT_CLASS_TYPE (obj_class),
@@ -1216,13 +1217,14 @@ indicator_object_to_variant (IndicatorObject *object, const gchar *indicator_id,
           indicator_entry_to_variant (entry, id, indicator_id, b, prio);
           g_free (id);
         }
+
+      g_list_free (entries);
     }
   else
     {
       /* Add a null entry to indicate that there is an indicator here, it's just empty */
       indicator_entry_null_to_variant (indicator_id, b);
     }
-  g_list_free (entries);
 }
 
 static void
@@ -1442,26 +1444,50 @@ panel_service_sync_geometry (PanelService *self,
 }
 
 static gboolean
-should_skip_menu (IndicatorObjectEntry *entry)
+panel_service_entry_is_visible (PanelService *self, IndicatorObjectEntry *entry)
 {
-  gboolean label_ok = FALSE;
-  gboolean image_ok = FALSE;
+  GHashTableIter panel_iter;
+  gpointer key, value;
+  gboolean found_geo;
 
-  g_return_val_if_fail (entry != NULL, TRUE);
+  g_return_val_if_fail (PANEL_IS_SERVICE (self), FALSE);
+  g_return_val_if_fail (entry != NULL, FALSE);
+
+  found_geo = FALSE;
+  g_hash_table_iter_init (&panel_iter, self->priv->panel2entries_hash);
+
+  while (g_hash_table_iter_next (&panel_iter, &key, &value) && !found_geo)
+    {
+      GHashTable *entry2geometry_hash = value;
+
+      if (g_hash_table_lookup (entry2geometry_hash, entry))
+        {
+          found_geo = TRUE;
+        }
+    }
+
+  if (!found_geo)
+    return FALSE;
 
   if (GTK_IS_LABEL (entry->label))
     {
-      label_ok = gtk_widget_get_visible (GTK_WIDGET (entry->label))
-        && gtk_widget_is_sensitive (GTK_WIDGET (entry->label));
+      if (gtk_widget_get_visible (GTK_WIDGET (entry->label)) &&
+          gtk_widget_is_sensitive (GTK_WIDGET (entry->label)))
+        {
+          return TRUE;
+        }
     }
 
   if (GTK_IS_IMAGE (entry->image))
     {
-      image_ok = gtk_widget_get_visible (GTK_WIDGET (entry->image))
-        && gtk_widget_is_sensitive (GTK_WIDGET (entry->image));
+      if (gtk_widget_get_visible (GTK_WIDGET (entry->image)) &&
+          gtk_widget_is_sensitive (GTK_WIDGET (entry->image)))
+        {
+          return TRUE;
+        }
     }
 
-  return !label_ok && !image_ok;
+  return TRUE;
 }
 
 static int
@@ -1499,7 +1525,7 @@ activate_next_prev_menu (PanelService         *self,
               gint prio = -1;
               new_entry = ll->data;
 
-              if (should_skip_menu (new_entry))
+              if (!panel_service_entry_is_visible (self, new_entry))
                 continue;
 
               if (new_entry->name_hint)
