@@ -46,6 +46,8 @@ void StartLogToFile(std::string const& file_path);
 void StopLogToFile();
 void SetLogSeverity(std::string const& log_component,
   std::string const& severity);
+void LogMessage(std::string const& severity,
+  std::string const& message);
 
 const char* DebugDBusInterface::DBUS_DEBUG_OBJECT_PATH = "/com/canonical/Unity/Debug";
 
@@ -68,6 +70,11 @@ const gchar DebugDBusInterface::introspection_xml[] =
   "     <method name='SetLogSeverity'>"
   "       <arg type='s' name='log_component' direction='in' />"
   "       <arg type='s' name='severity' direction='in' />"
+  "     </method>"
+  ""
+  "     <method name='LogMessage'>"
+  "       <arg type='s' name='severity' direction='in' />"
+  "       <arg type='s' name='message' direction='in' />"
   "     </method>"
   ""
   "   </interface>"
@@ -188,6 +195,15 @@ DebugDBusInterface::HandleDBusMethodCall(GDBusConnection* connection,
     SetLogSeverity(component, severity);
     g_dbus_method_invocation_return_value(invocation, NULL);
   }
+  else if (g_strcmp0(method_name, "LogMessage") == 0)
+  {
+    const gchar* severity;
+    const gchar* message;
+    g_variant_get(parameters, "(&s&s)", &severity, &message);
+
+    LogMessage(severity, message);
+    g_dbus_method_invocation_return_value(invocation, NULL);
+  }
   else
   {
     g_dbus_method_invocation_return_dbus_error(invocation,
@@ -226,6 +242,23 @@ void SetLogSeverity(std::string const& log_component,
   std::string const& severity)
 {
   // TODO: Set the log severity of component 'log_component' to 'severity'
+}
+
+void LogMessage(std::string const& severity,
+  std::string const& message)
+{
+  if (severity == "TRACE")
+    LOG_TRACE(logger) << message;
+  else if (severity == "DEBUG")
+    LOG_DEBUG(logger) << message;
+  else if (severity == "INFO")
+    LOG_INFO(logger) << message;
+  else if (severity == "WARN" || severity == "WARNING")
+    LOG_WARNING(logger) << message;
+  else if (severity == "ERROR")
+    LOG_ERROR(logger) << message;
+  else
+    LOG_WARNING(logger) << "Unknown log severity: " << severity;
 }
 
 /*
