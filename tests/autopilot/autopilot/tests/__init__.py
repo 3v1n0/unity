@@ -50,7 +50,7 @@ class LoggedTestCase(TestWithScenarios, TestCase):
         root_logger = logging.getLogger()
         root_logger.setLevel(logging.DEBUG)
         handler = logging.StreamHandler(stream=self._log_buffer)
-        log_format = "%(asctime)s %(levelname)s %(pathname)s:%(lineno)d - %(message)s"
+        log_format = "%(asctime)s %(levelname)s %(module)s:%(lineno)d - %(message)s"
         handler.setFormatter(MyFormatter(log_format))
         root_logger.addHandler(handler)
         #Tear down logging in a cleanUp handler, so it's done after all other
