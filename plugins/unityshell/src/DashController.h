@@ -68,6 +68,7 @@ private:
   void RegisterUBusInterests();
 
   nux::Geometry GetIdealWindowGeometry();
+  int GetIdealMonitor();
   void Relayout(GdkScreen*screen=NULL);
 
   void OnMouseDownOutsideWindow(int x, int y, unsigned long bflags, unsigned long kflags);

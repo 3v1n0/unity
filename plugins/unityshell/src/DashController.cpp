@@ -161,7 +161,7 @@ void Controller::OnWindowConfigure(int window_width, int window_height,
   geo = self->GetIdealWindowGeometry();
 }
 
-nux::Geometry Controller::GetIdealWindowGeometry()
+int Controller::GetIdealMonitor()
 {
   UScreen *uscreen = UScreen::GetDefault();
   int primary_monitor;
@@ -170,7 +170,13 @@ nux::Geometry Controller::GetIdealWindowGeometry()
   else
     primary_monitor = uscreen->GetMonitorWithMouse();
 
-  auto monitor_geo = uscreen->GetMonitorGeometry(primary_monitor);
+  return primary_monitor;
+}
+
+nux::Geometry Controller::GetIdealWindowGeometry()
+{
+  UScreen *uscreen = UScreen::GetDefault();
+  auto monitor_geo = uscreen->GetMonitorGeometry(GetIdealMonitor());
 
   // We want to cover as much of the screen as possible to grab any mouse events outside
   // of our window
@@ -266,14 +272,7 @@ void Controller::ShowDash()
 
   StartShowHideTimeline();
 
-  UScreen *uscreen = UScreen::GetDefault();
-  int primary_monitor;
-  if (use_primary)
-    primary_monitor = uscreen->GetPrimaryMonitor();
-  else
-    primary_monitor = uscreen->GetMonitorWithMouse();
-
-  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "dash", TRUE, primary_monitor);
+  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "dash", TRUE, GetIdealMonitor());
   ubus_manager_.SendMessage(UBUS_OVERLAY_SHOWN, info);
 }
 
@@ -299,14 +298,7 @@ void Controller::HideDash(bool restore)
 
   StartShowHideTimeline();
 
-  UScreen *uscreen = UScreen::GetDefault();
-  int primary_monitor;
-  if (use_primary)
-    primary_monitor = uscreen->GetPrimaryMonitor();
-  else
-    primary_monitor = uscreen->GetMonitorWithMouse();
-
-  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "dash", TRUE, primary_monitor);
+  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "dash", TRUE, GetIdealMonitor());
   ubus_manager_.SendMessage(UBUS_OVERLAY_HIDDEN, info);
 }
 
