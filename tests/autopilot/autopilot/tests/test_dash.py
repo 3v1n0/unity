@@ -12,12 +12,10 @@ from time import sleep
 from autopilot.emulators.unity.dash import Dash
 from autopilot.emulators.X11 import Keyboard, Mouse
 from autopilot.tests import AutopilotTestCase
-from autopilot.glibrunner import GlibRunner
 
 
 class DashRevealTests(AutopilotTestCase):
     """Test the unity Dash Reveal."""
-    run_test_with = GlibRunner
 
     def setUp(self):
         super(DashRevealTests, self).setUp()
@@ -73,11 +71,17 @@ class DashRevealTests(AutopilotTestCase):
         self.dash.reveal_command_lens()
         lensbar = self.dash.view.get_lensbar()
         self.assertEqual(lensbar.active_lens, u'commands.lens')
+    
+    def test_alt_f4_close_dash(self):
+        """Dash must close on alt+F4."""
+        self.dash.ensure_visible()
+        self.dash.close_with_alt_f4()
+        sleep(0.5)
+        self.assertFalse(self.dash.get_is_visible())
 
 
 class DashKeyNavTests(AutopilotTestCase):
     """Test the unity Dash keyboard navigation."""
-    run_test_with = GlibRunner
 
     def setUp(self):
         super(DashKeyNavTests, self).setUp()
@@ -269,8 +273,7 @@ class DashKeyNavTests(AutopilotTestCase):
 
 
 class DashClipboardTests(AutopilotTestCase):
-    """Test the Unity clipboard""" 
-    run_test_with = GlibRunner
+    """Test the Unity clipboard"""
 
     def setUp(self):
         super(DashClipboardTests, self).setUp()
@@ -279,7 +282,7 @@ class DashClipboardTests(AutopilotTestCase):
     def tearDown(self):
         super(DashClipboardTests, self).tearDown()
         self.dash.ensure_hidden()
-         
+
     def test_ctrl_a(self):
         """ This test if ctrl+a selects all text """
         self.dash.ensure_hidden()
@@ -291,7 +294,7 @@ class DashClipboardTests(AutopilotTestCase):
 
         kb.press_and_release("Ctrl+a")
         kb.press_and_release("Delete")
-        
+
         searchbar = self.dash.get_searchbar()
         self.assertEqual(searchbar.search_string, u'')
 
@@ -344,7 +347,7 @@ class DashClipboardTests(AutopilotTestCase):
         kb.press_and_release("Ctrl+c")
         kb.press_and_release("Ctrl+v")
         kb.press_and_release("Ctrl+v")
-        
+
         searchbar = self.dash.get_searchbar()
         self.assertEqual(searchbar.search_string, u'CopyPasteCopyPaste')
 
@@ -361,15 +364,13 @@ class DashClipboardTests(AutopilotTestCase):
         kb.press_and_release("Ctrl+x")
         kb.press_and_release("Ctrl+v")
         kb.press_and_release("Ctrl+v")
-        
+
         searchbar = self.dash.get_searchbar()
         self.assertEqual(searchbar.search_string, u'CutPasteCutPaste')
 
 
 class DashKeyboardFocusTests(AutopilotTestCase):
     """Tests that keyboard focus works."""
-
-    run_test_with = GlibRunner
 
     def setUp(self):
         super(DashKeyboardFocusTests, self).setUp()
@@ -395,11 +396,54 @@ class DashKeyboardFocusTests(AutopilotTestCase):
         searchbar = self.dash.get_searchbar()
         self.assertEqual("hello world", searchbar.search_string)
 
+class DashLensResultsTests(AutopilotTestCase):
+    """ Tests results from the lens view """
+
+    def setUp(self):
+        super(DashLensResultsTests, self).setUp()
+        self.dash = Dash()
+
+    def tearDown(self):
+        super(DashLensResultsTests, self).tearDown()
+        self.dash.ensure_hidden()
+    
+    def test_results_message_empty_search(self): 
+        """ This tests a message is not shown when there is no text""" 
+        self.dash.ensure_hidden()
+        self.dash.reveal_application_lens()
+        lens = self.dash.get_current_lens()
+
+        lens.refresh_state() 
+        self.assertFalse(lens.no_results_active)
+
+    def test_results_message(self): 
+        """ This test no mesage will be shown when results are there""" 
+        self.dash.ensure_hidden()
+        self.dash.reveal_application_lens()
+        lens = self.dash.get_current_lens()
+
+        kb = Keyboard();
+        kb.type("Terminal")
+        sleep(1)
+      
+        lens.refresh_state() 
+        self.assertFalse(lens.no_results_active)
+
+    def test_no_results_message(self): 
+        """ This test shows a message will appear in the lens""" 
+        self.dash.ensure_hidden()
+        self.dash.reveal_application_lens()
+        lens = self.dash.get_current_lens()
+
+        kb = Keyboard();
+        kb.type("qwerlkjzvxc")
+        sleep(1)
+
+        lens.refresh_state() 
+        self.assertTrue(lens.no_results_active)
+
 class DashVisualTests(AutopilotTestCase):
     """Tests that the dash visual is correct."""
-
-    run_test_with = GlibRunner
-
     def setUp(self):
         super(DashVisualTests, self).setUp()
         self.dash = Dash()

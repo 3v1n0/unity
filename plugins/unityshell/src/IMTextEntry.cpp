@@ -35,7 +35,7 @@ nux::logging::Logger logger("unity.imtextentry");
 NUX_IMPLEMENT_OBJECT_TYPE(IMTextEntry);
 
 IMTextEntry::IMTextEntry()
-  : TextEntry("", NUX_TRACKER_LOCATION)
+: TextEntry("", NUX_TRACKER_LOCATION)
 {
   mouse_up.connect(sigc::mem_fun(this, &IMTextEntry::OnMouseButtonUp));
 }
@@ -45,10 +45,10 @@ bool IMTextEntry::InspectKeyEvent(unsigned int event_type,
                                   const char* character)
 {
   bool need_to_filter_event = TryHandleSpecial(event_type, keysym, character);
-
+ 
   if (need_to_filter_event)
     need_to_filter_event = TextEntry::InspectKeyEvent(event_type, keysym, character);
-
+  
   return need_to_filter_event;
 }
 
@@ -138,7 +138,6 @@ void IMTextEntry::InsertText(std::string const& text)
     SetText(new_text.c_str());
     SetCursor(cursor + text.length());
     QueueRefresh (true, true);
-    text_changed.emit(this);
   }
 }
 

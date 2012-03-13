@@ -42,6 +42,7 @@ Outcome
   clicking on its launcher icon should bring to focus the last focused window
   in the last used workspace.
 
+
 Test Alt+F1 KeyNavMode Mouse Works
 -------------------------------
 This test shows that the mouse still works normally while keynav mode is active.
@@ -54,6 +55,7 @@ Outcome
   the user expects. Such as highlighting text, moving a window, clicking out
   of keynav mode, or clicking on a launcher icon. All these actions should 
   also exit the keynav mode.
+
 
 Test Alt+F1 KeyNavMode Shortcuts
 -----------------------------
@@ -73,6 +75,7 @@ Outcome
   a new terminal. This is to show all SUPER, ALT, and CTRL shortcuts work; while
   closing the keynav mode.
 
+
 Test Alt+F1 NavMode Quicklist Click Exit 
 ----------------------------------------
 This Test shows that clicking on a quicklist option quits keynav mode.
@@ -83,6 +86,7 @@ This Test shows that clicking on a quicklist option quits keynav mode.
 
 Outcome
   No matter what option you click will exit keynav mode.
+
 
 Drag Icons to Trash
 -------------------
@@ -100,3 +104,54 @@ Outcome:
   * The trash can icon should remain stationary during the entire operation.
   * The operation should NOT LOOK LIKE THIS: https://bugs.launchpad.net/unity/+bug/932365/+attachment/2739868/+files/out-2.ogv
 
+
+Dragging icons to reorder - initial position
+--------------------------------------------
+This test is all position of the dragged image in relation to the mouse pointer.
+
+#. Move the mouse so it is over a launcher icon for an application
+#. Press and hold the mouse button
+
+Outcome:
+  * The icon should "detach" from the launcher and be centered on the mouse
+  * There sould be a blank "space" in the launcher where the icon was
+  * Any "pips" next to the icon aren't visible during the drag, and there are
+  none showing in the blank space
+
+
+Dragging icons to reorder - over launcher
+-----------------------------------------
+This test is all about the smoothness of the animation around the reordering
+of icons in the launcher.
+
+#. Move the mouse so it is over a launcher icon for an application
+#. Press and hold the mouse button
+#. Drag the icon up and down over the icons in the launcher
+
+Outcome:
+  * As the centre of the dragged icon passes the mid-point of the next item
+  above or below it, the icon being dragged over moves and is replaced by the
+  blank "space".
+  * The animation should be smooth
+  * If the dragged icon is moved rapidly, multiple icons can be moving either
+  upwards or downwards as the space is moved into place under the dragged icon
+  * The BFB and the switcher icons do not move
+
+
+Dragging icons to reorder - away from launcher
+-----------------------------------------
+This test is about reordering the icons without the animation showing.
+
+#. Move the mouse so it is over a launcher icon for an application
+#. Press and hold the mouse button
+#. Drag the icon away from the launcher
+#. Drag the icon up and down where there is no overlap with the launcher.
+#. Release
+
+Outcome:
+  * As the icon is dragged away from the launcher, the "space" is closed up
+  and replaced with a grey line.
+  * As the icon is dragged up and down, the line moves between other launcher
+  icons.
+  * When released, the icon "flies" back into the launcher, a spaces opens for
+  it, and the any pips for running apps show again.
