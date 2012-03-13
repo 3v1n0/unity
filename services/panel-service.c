@@ -28,7 +28,6 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <fcntl.h>
 #include <gtk/gtk.h>
 #include <gdk/gdkx.h>
 #include <gconf/gconf-client.h>
