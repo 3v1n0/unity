@@ -403,7 +403,8 @@ Controller::Impl::OnLauncherAddRequestSpecial(std::string const& path,
   
   launcher_->ForceReveal(true);
 
-  static_cast<SoftwareCenterLauncherIcon*>(result.GetPointer())->Animate(launcher_, icon_x, icon_y, icon_size);
+  if (result)
+    static_cast<SoftwareCenterLauncherIcon*>(result.GetPointer())->Animate(launcher_, icon_x, icon_y, icon_size);
 }
 
 void Controller::Impl::OnSCIconAnimationComplete(AbstractLauncherIcon::Ptr icon)
@@ -719,8 +720,6 @@ Controller::Impl::CreateSCLauncherIcon(std::string const& file_path,
     bamf_view_set_sticky(BAMF_VIEW(app), true);
     return result;
   }
-
-  g_object_set_qdata(G_OBJECT(app), g_quark_from_static_string("unity-seen"), GINT_TO_POINTER(1));
 
   bamf_view_set_sticky(BAMF_VIEW(app), true);
   AbstractLauncherIcon::Ptr icon(new SoftwareCenterLauncherIcon(app, aptdaemon_trans_id, icon_path));
