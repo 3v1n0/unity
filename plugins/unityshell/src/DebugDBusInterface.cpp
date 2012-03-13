@@ -18,6 +18,7 @@
  */
 
 #include <queue>
+#include <fstream>
 #include <sstream>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/split.hpp>
@@ -25,6 +26,7 @@
 #include <boost/bind.hpp>
 #include <core/core.h>
 #include <NuxCore/Logger.h>
+#include <NuxCore/LoggingWriter.h>
 
 #include "DebugDBusInterface.h"
 #include "Introspectable.h"
@@ -38,7 +40,12 @@ namespace debug
 {
 namespace
 {
-  nux::logging::Logger logger("unity.debug.DebugDBusInterface");
+nux::logging::Logger logger("unity.debug.DebugDBusInterface");
+
+namespace local
+{
+  std::ofstream output_file;
+}
 }
 
 GVariant* GetState(std::string const& query);
@@ -230,22 +237,27 @@ GVariant* GetState(std::string const& query)
 
 void StartLogToFile(std::string const& file_path)
 {
-  // TODO: Open file_path with mode 'w', and log all future messages to this file, instead of stdout.
+  if (local::output_file.is_open())
+    local::output_file.close();
+  local::output_file.open(file_path.c_str());
+  nux::logging::Writer::Instance().SetOutputStream(local::output_file);
 }
 
 void StopLogToFile()
 {
-  // TODO: Close the open log file, and resume logging everything to stdout
+  if (local::output_file.is_open())
+    local::output_file.close();
+  nux::logging::Writer::Instance().SetOutputStream(std::cout);
 }
 
 void SetLogSeverity(std::string const& log_component,
-  std::string const& severity)
+                    std::string const& severity)
 {
-  // TODO: Set the log severity of component 'log_component' to 'severity'
+  nux::logging::Logger(log_component).SetLogLevel(nux::logging::get_logging_level(severity));
 }
 
 void LogMessage(std::string const& severity,
-  std::string const& message)
+                std::string const& message)
 {
   if (severity == "TRACE")
     LOG_TRACE(logger) << message;
