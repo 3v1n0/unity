@@ -39,6 +39,10 @@ class ScenariodLauncherTests(AutopilotTestCase):
         """Get the launcher for the current scenario."""
         return self.launcher.get_launcher_for_monitor(self.launcher_num)
 
+    def setUp(self):
+        super(ScenariodLauncherTests, self).setUp()
+        self.set_unity_log_level("unity.launcher", "DEBUG")
+
 
 class LauncherTests(ScenariodLauncherTests):
     """Test the launcher."""
