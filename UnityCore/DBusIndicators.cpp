@@ -227,6 +227,7 @@ void DBusIndicators::Impl::OnEntryShowMenu(std::string const& entry_id,
   // respond to our request for XUngrabPointer and this will cause the
   // menu not to show
   auto data = new ShowEntryData();
+  g_object_ref(proxy_);
   data->proxy = proxy_;
   data->entry_id = entry_id;
   data->xid = xid;
@@ -247,6 +248,7 @@ void DBusIndicators::Impl::OnShowAppMenu(unsigned int xid, int x, int y,
   // respond to our request for XUngrabPointer and this will cause the
   // menu not to show
   auto data = new ShowEntryData();
+  g_object_ref(proxy_);
   data->proxy = proxy_;
   data->xid = xid;
   data->x = x;
@@ -703,6 +705,9 @@ bool send_show_entry(ShowEntryData* data)
                     NULL,
                     NULL,
                     NULL);
+
+  g_object_unref(data->proxy);
+
   delete data;
   return FALSE;
 }
@@ -724,6 +729,9 @@ bool send_show_appmenu(ShowEntryData* data)
                     NULL,
                     NULL,
                     NULL);
+
+  g_object_unref(data->proxy);
+
   delete data;
   return FALSE;
 }
