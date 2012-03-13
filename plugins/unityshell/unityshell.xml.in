@@ -454,8 +454,8 @@
                 </option>
 
                 <option name="num_launchers" type="int">
-                    <_short>Number of Launchers</_short>
-                    <_long>Number of launchers to show on the desktop</_long>
+                    <_short>Launcher Monitors</_short>
+                    <_long>Monitors on which launchers will be displayed</_long>
                     <min>0</min>
                     <max>1</max>
                     <default>0</default>
