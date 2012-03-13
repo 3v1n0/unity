@@ -42,6 +42,7 @@ public:
   typedef std::vector<nux::ObjectPtr<Launcher> > LauncherList;
 
   nux::Property<Options::Ptr> options;
+  nux::Property<bool> multiple_launchers;
 
   Controller(Display* display);
   ~Controller();

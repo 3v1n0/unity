@@ -42,6 +42,7 @@ Options::Options()
   reveal_trigger = RevealTrigger::EDGE;
   tile_size = 54;
   urgent_animation = URGENT_ANIMATION_WIGGLE;
+  edge_resist = true;
 
   auto_hide_animation.changed.connect   ([&] (AutoHideAnimation value)-> void { option_changed.emit(); });
   background_alpha.changed.connect      ([&] (float value)            -> void { option_changed.emit(); });
@@ -57,6 +58,7 @@ Options::Options()
   reveal_trigger.changed.connect        ([&] (RevealTrigger vallue)   -> void { option_changed.emit(); });
   tile_size.changed.connect             ([&] (int value)              -> void { option_changed.emit(); });
   urgent_animation.changed.connect      ([&] (UrgentAnimation value)  -> void { option_changed.emit(); });
+  edge_resist.changed.connect           ([&] (bool value)             -> void { option_changed.emit(); });
 }
 
 

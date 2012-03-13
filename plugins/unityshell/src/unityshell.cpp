@@ -334,6 +334,9 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetDecayRateNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetShowMinimizedWindowsNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
 
+     optionSetNumLaunchersNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+     optionSetLauncherCaptureMouseNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+
      ubus_manager_.RegisterInterest(UBUS_LAUNCHER_START_KEY_NAV,
                    sigc::mem_fun(this, &UnityScreen::OnLauncherStartKeyNav));
 
@@ -2402,6 +2405,13 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
   unity::launcher::Options::Ptr launcher_options = launcher_controller_->options();
   switch (num)
   {
+    case UnityshellOptions::NumLaunchers:
+      launcher_controller_->multiple_launchers = optionGetNumLaunchers() == 0;
+      dash_controller_->use_primary = !launcher_controller_->multiple_launchers();
+      break;
+    case UnityshellOptions::LauncherCaptureMouse:
+      launcher_options->edge_resist = optionGetLauncherCaptureMouse();
+      break;
     case UnityshellOptions::BackgroundColor:
     {
       nux::Color override_color (optionGetBackgroundColorRed() / 65535.0f,

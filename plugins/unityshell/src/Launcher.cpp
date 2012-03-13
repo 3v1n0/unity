@@ -221,6 +221,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
   _autoscroll_handle      = 0;
   _start_dragicon_handle  = 0;
   _dnd_check_handle       = 0;
+  _strut_hack_handle      = 0;
   _last_reveal_progress   = 0;
 
   _shortcuts_shown        = false;
@@ -313,6 +314,8 @@ Launcher::~Launcher()
     g_source_remove(_start_dragicon_handle);
   if (_launcher_animation_timeout > 0)
     g_source_remove(_launcher_animation_timeout);
+  if (_strut_hack_handle)
+    g_source_remove(_strut_hack_handle);
 
   if (_on_data_collected_connection.connected())
       _on_data_collected_connection.disconnect();
@@ -1483,6 +1486,7 @@ gboolean Launcher::StrutHack(gpointer data)
   if (self->options()->hide_mode == LAUNCHER_HIDE_NEVER)
     self->_parent->InputWindowEnableStruts(true);
 
+  self->_strut_hack_handle = 0;
   return false;
 }
 
@@ -1506,24 +1510,37 @@ Launcher::UpdateOptions(Options::Ptr options)
   SetHideMode(options->hide_mode);
   SetIconSize(options->tile_size, options->icon_size);
 
-  // make the effect half as strong as specified as other values shouldn't scale
-  // as quickly as the max velocity multiplier
-  float decay_responsiveness_mult = ((options->edge_responsiveness() - 1) * .3f) + 1;
-  float reveal_responsiveness_mult = ((options->edge_responsiveness() - 1) * .025f) + 1;
-  float overcome_responsiveness_mult = ((options->edge_responsiveness() - 1) * 1.0f) + 1;
-
-  decaymulator_->rate_of_decay = options->edge_decay_rate() * decay_responsiveness_mult;
-  _edge_overcome_pressure = options->edge_overcome_pressure() * overcome_responsiveness_mult;
-
-  _pointer_barrier->threshold = options->edge_stop_velocity();
-  _pointer_barrier->max_velocity_multiplier = options->edge_responsiveness();
-  _pointer_barrier->DestroyBarrier();
-  _pointer_barrier->ConstructBarrier();
-
-  _hide_machine->reveal_pressure = options->edge_reveal_pressure() * reveal_responsiveness_mult;
-  _hide_machine->edge_decay_rate = options->edge_decay_rate() * decay_responsiveness_mult;
-
+  ConfigureBarrier();
   EnsureAnimation();
+}
+
+void Launcher::ConfigureBarrier()
+{
+  nux::Geometry geo = GetAbsoluteGeometry();
+  _pointer_barrier->DestroyBarrier();
+
+  if (options()->edge_resist || geo.x == 0)
+  {
+    unity::panel::Style &panel_style = panel::Style::Instance();
+
+    _pointer_barrier->x1 = geo.x;
+    _pointer_barrier->x2 = geo.x;
+    _pointer_barrier->y1 = geo.y - panel_style.panel_height;
+    _pointer_barrier->y2 = geo.y + geo.height;
+
+    float decay_responsiveness_mult = ((options()->edge_responsiveness() - 1) * .3f) + 1;
+    float reveal_responsiveness_mult = ((options()->edge_responsiveness() - 1) * .025f) + 1;
+    float overcome_responsiveness_mult = ((options()->edge_responsiveness() - 1) * 1.0f) + 1;
+    decaymulator_->rate_of_decay = options()->edge_decay_rate() * decay_responsiveness_mult;
+    _edge_overcome_pressure = options()->edge_overcome_pressure() * overcome_responsiveness_mult;
+    
+    _pointer_barrier->threshold = options()->edge_stop_velocity();
+    _pointer_barrier->max_velocity_multiplier = options()->edge_responsiveness();
+    _pointer_barrier->ConstructBarrier();
+    
+    _hide_machine->reveal_pressure = options()->edge_reveal_pressure() * reveal_responsiveness_mult;
+    _hide_machine->edge_decay_rate = options()->edge_decay_rate() * decay_responsiveness_mult;
+  }
 }
 
 void Launcher::SetHideMode(LauncherHideMode hidemode)
@@ -1535,7 +1552,8 @@ void Launcher::SetHideMode(LauncherHideMode hidemode)
   else
   {
     _parent->EnableInputWindow(true, "launcher", false, false);
-    g_timeout_add(1000, &Launcher::StrutHack, this);
+    if (!_strut_hack_handle)
+      _strut_hack_handle = g_timeout_add(1000, &Launcher::StrutHack, this);
     _parent->InputWindowEnableStruts(true);
   }
 
@@ -1690,18 +1708,9 @@ void Launcher::Resize()
   nux::Geometry new_geometry(geo.x, geo.y + panel_style.panel_height, width, geo.height - panel_style.panel_height);
   SetMaximumHeight(new_geometry.height);
   _parent->SetGeometry(new_geometry);
-  SetGeometry(new_geometry);
+  SetGeometry(nux::Geometry(0, 0, new_geometry.width, new_geometry.height));
 
-  _pointer_barrier->DestroyBarrier();
-
-  _pointer_barrier->x1 = new_geometry.x;
-  _pointer_barrier->x2 = new_geometry.x;
-  _pointer_barrier->y1 = new_geometry.y - panel_style.panel_height;
-  _pointer_barrier->y2 = new_geometry.y + new_geometry.height;
-  _pointer_barrier->threshold = options()->edge_stop_velocity();
-
-  _pointer_barrier->ConstructBarrier();
-
+  ConfigureBarrier();
 }
 
 void Launcher::OnIconAdded(AbstractLauncherIcon::Ptr icon)
