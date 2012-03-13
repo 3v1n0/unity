@@ -258,7 +258,7 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
                                           texxform_blur_bg,
                                           nux::color::White,
                                           _bg_color,
-                                          nux::GraphicsEngine::BLEND_MODE_OVERLAY,
+                                          nux::LAYER_BLEND_MODE_OVERLAY,
                                           true, rop);
       else
         gPainter.PushDrawTextureLayer(GfxContext, geo,
@@ -273,7 +273,7 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
                                           texxform_blur_bg,
                                           nux::color::White,
                                           _bg_color,
-                                          nux::GraphicsEngine::BLEND_MODE_OVERLAY,
+                                          nux::LAYER_BLEND_MODE_OVERLAY,
                                           true, rop);
 #endif
 
@@ -332,7 +332,7 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
                                     texxform_blur_bg,
                                     nux::color::White,
                                     _bg_color,
-                                    nux::GraphicsEngine::BLEND_MODE_OVERLAY,
+                                    nux::LAYER_BLEND_MODE_OVERLAY,
                                     true,
                                     rop);
     else
@@ -349,7 +349,7 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
                                     texxform_blur_bg,
                                     nux::color::White,
                                     _bg_color,
-                                    nux::GraphicsEngine::BLEND_MODE_OVERLAY,
+                                    nux::LAYER_BLEND_MODE_OVERLAY,
                                     true,
                                     rop);
 #endif

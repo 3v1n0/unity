@@ -1876,7 +1876,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
                                             blur_texture,
                                             texxform_blur_bg,
                                             nux::color::White,
-                                            _background_color, nux::GraphicsEngine::BLEND_MODE_OVERLAY,
+                                            _background_color, nux::LAYER_BLEND_MODE_OVERLAY,
                                             true, ROP);
         else
           gPainter.PushDrawTextureLayer(GfxContext, base,
@@ -1890,7 +1890,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
                                             blur_texture,
                                             texxform_blur_bg,
                                             nux::color::White,
-                                            _background_color, nux::GraphicsEngine::BLEND_MODE_OVERLAY,
+                                            _background_color, nux::LAYER_BLEND_MODE_OVERLAY,
                                             true, ROP);
 #endif
         GfxContext.PopClippingRectangle();

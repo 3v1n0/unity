@@ -267,7 +267,7 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
         gfx_context.QRP_GLSL_ColorBlendOverTex (content_geo.x, content_geo.y,
                                              content_geo.width, content_geo.height,
                                              bg_blur_texture_, texxform_absolute_bg, nux::color::White,
-                                             bg_color_, nux::GraphicsEngine::BLEND_MODE_OVERLAY);
+                                             bg_color_, nux::LAYER_BLEND_MODE_OVERLAY);
 
       else
         gfx_context.QRP_1Tex (content_geo.x, content_geo.y,
@@ -277,7 +277,7 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
         gfx_context.QRP_GLSL_ColorBlendOverTex (content_geo.x, content_geo.y,
                                         content_geo.width, content_geo.height,
                                         bg_blur_texture_, texxform_absolute_bg, nux::color::White,
-                                        bg_color_, nux::GraphicsEngine::BLEND_MODE_OVERLAY);
+                                        bg_color_, nux::LAYER_BLEND_MODE_OVERLAY);
 
 #endif
       gPainter.PopBackground();
@@ -403,7 +403,7 @@ void OverlayRendererImpl::DrawContent(nux::GraphicsEngine& gfx_context, nux::Geo
                                     bg_blur_texture_,
                                     texxform_absolute_bg,
                                     nux::color::White,
-                                    bg_color_, nux::GraphicsEngine::BLEND_MODE_OVERLAY,
+                                    bg_color_, nux::LAYER_BLEND_MODE_OVERLAY,
                                     true, rop);
     else
       gPainter.PushTextureLayer(gfx_context, content_geo,
@@ -417,7 +417,7 @@ void OverlayRendererImpl::DrawContent(nux::GraphicsEngine& gfx_context, nux::Geo
                                     bg_blur_texture_,
                                     texxform_absolute_bg,
                                     nux::color::White,
-                                    bg_color_, nux::GraphicsEngine::BLEND_MODE_OVERLAY,
+                                    bg_color_, nux::LAYER_BLEND_MODE_OVERLAY,
                                     true, rop);
 #endif
     bgs++;
