@@ -51,11 +51,29 @@ const int external_margin_horizontal = 7;
 const int LIVE_SEARCH_TIMEOUT = 40;
 const int SPINNER_TIMEOUT = 100;
 
+const int SPINNER_HEIGHT = 48; // To don't break the current layout, let's use a fixed height for the spinner.
+const int SPACE_BETWEEN_SPINNER_AND_TEXT = 4;
+const int LEFT_INTERNAL_PADDING = 9;
+
+
 // Highlight
 const int HIGHLIGHT_HEIGHT = 24;
 const int HIGHLIGHT_WIDTH = 292;
 const int HIGHLIGHT_LEFT_PADDING = 5;
 const int HIGHLIGHT_RIGHT_PADDING = 4;
+
+// Fonts
+const std::string HINT_LABEL_FONT_SIZE = "20px";
+const std::string HINT_LABEL_FONT_STYLE = "Italic";
+const std::string HINT_LABEL_DEFAULT_FONT = "Ubuntu " + HINT_LABEL_FONT_STYLE + " " + HINT_LABEL_FONT_SIZE;
+
+const std::string PANGO_ENTRY_DEFAULT_FONT_FAMILY = "Ubuntu";
+const int PANGO_ENTRY_FONT_SIZE = 22;
+
+const std::string SHOW_FILTERS_LABEL_FONT_SIZE = "13";
+const std::string SHOW_FILTERS_LABEL_FONT_STYLE = "Bold";
+const std::string SHOW_FILTERS_LABEL_DEFAULT_FONT = "Ubuntu " + SHOW_FILTERS_LABEL_FONT_STYLE + " " + SHOW_FILTERS_LABEL_FONT_SIZE;
+
 }
 
 namespace
@@ -160,21 +178,28 @@ void SearchBar::Init()
   bg_layer_ = new nux::ColorLayer(nux::Color(0xff595853), true);
 
   layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
-  layout_->SetHorizontalInternalMargin(0);
-  layout_->SetVerticalExternalMargin(external_margin_vertical);
-  layout_->SetHorizontalExternalMargin(external_margin_horizontal);
+  layout_->SetHorizontalInternalMargin(SPACE_BETWEEN_SPINNER_AND_TEXT);
+  layout_->SetTopAndBottomPadding(external_margin_vertical);
+  layout_->SetLeftAndRightPadding(external_margin_horizontal + LEFT_INTERNAL_PADDING, external_margin_horizontal);
   SetLayout(layout_);
 
   spinner_ = new SearchBarSpinner();
-  spinner_->SetMinMaxSize(icon->GetWidth(), icon->GetHeight());
+  spinner_->SetMinimumHeight(SPINNER_HEIGHT);
+  spinner_->SetMaximumHeight(SPINNER_HEIGHT);
   spinner_->mouse_click.connect(sigc::mem_fun(this, &SearchBar::OnClearClicked));
   layout_->AddView(spinner_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+
+  nux::HLayout* hint_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
   hint_ = new nux::StaticCairoText(" ");
   hint_->SetTextColor(nux::Color(1.0f, 1.0f, 1.0f, 0.5f));
   hint_->SetMaximumWidth(search_bar_width_ - icon->GetWidth());
+  hint_->SetFont(HINT_LABEL_DEFAULT_FONT.c_str());
+  hint_layout->AddView(hint_,  0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
   pango_entry_ = new IMTextEntry();
+  pango_entry_->SetFontFamily(PANGO_ENTRY_DEFAULT_FONT_FAMILY.c_str());
+  pango_entry_->SetFontSize(PANGO_ENTRY_FONT_SIZE);
   pango_entry_->text_changed.connect(sigc::mem_fun(this, &SearchBar::OnSearchChanged));
   pango_entry_->activated.connect([&]() { activated.emit(); });
   pango_entry_->cursor_moved.connect([&](int i) { QueueDraw(); });
@@ -183,7 +208,7 @@ void SearchBar::Init()
   pango_entry_->SetMaximumWidth(search_bar_width_ - 1.5 * icon->GetWidth());
 
   layered_layout_ = new nux::LayeredLayout();
-  layered_layout_->AddLayer(hint_);
+  layered_layout_->AddLayout(hint_layout);
   layered_layout_->AddLayer(pango_entry_);
   layered_layout_->SetPaintAll(true);
   layered_layout_->SetActiveLayerN(1);
@@ -193,11 +218,11 @@ void SearchBar::Init()
 
   if (show_filter_hint_)
   {
-    std::string filter_str(_("<small><b>Filter results</b></small>"));
+    std::string filter_str(_("Filter results"));
     show_filters_ = new nux::StaticCairoText(filter_str.c_str());
     show_filters_->SetVisible(false);
-    show_filters_->SetFont("Ubuntu 10");
-    show_filters_->SetTextColor(nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
+    show_filters_->SetFont(SHOW_FILTERS_LABEL_DEFAULT_FONT.c_str());
+    show_filters_->SetTextColor(nux::color::White);
     show_filters_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_LEFT);
 
     nux::BaseTexture* arrow;
@@ -298,44 +323,35 @@ SearchBar::~SearchBar()
 
 void SearchBar::OnFontChanged(GtkSettings* settings, GParamSpec* pspec)
 {
-  static const int HOW_LARGE = 8;
   gchar* font_name = NULL;
   PangoFontDescription* desc;
-  gint size;
-  gchar* font_desc;
+  std::ostringstream font_desc;
 
   g_object_get(settings, "gtk-font-name", &font_name, NULL);
 
   desc = pango_font_description_from_string(font_name);
   pango_entry_->SetFontFamily(pango_font_description_get_family(desc));
-
-  size = pango_font_description_get_size(desc);
-  size /= pango_font_description_get_size_is_absolute(desc) ? 1 : PANGO_SCALE;
-  pango_entry_->SetFontSize(size + HOW_LARGE);
-
+  pango_entry_->SetFontSize(PANGO_ENTRY_FONT_SIZE);
   pango_entry_->SetFontOptions(gdk_screen_get_font_options(gdk_screen_get_default()));
 
-  font_desc = g_strdup_printf("%s %d", pango_font_description_get_family(desc), size + HOW_LARGE);
-  hint_->SetFont(font_desc);
+  font_desc << pango_font_description_get_family(desc) << " " << HINT_LABEL_FONT_STYLE << " " << HINT_LABEL_FONT_SIZE;
+  hint_->SetFont(font_desc.str().c_str());
 
-  g_free(font_desc);
-  font_desc = g_strdup_printf("%s %d", pango_font_description_get_family(desc), size + HOW_LARGE/2);
-  show_filters_->SetFont(font_desc);
+  font_desc.str("");
+  font_desc.clear();
+  font_desc << pango_font_description_get_family(desc) << " " << SHOW_FILTERS_LABEL_FONT_STYLE << " " << SHOW_FILTERS_LABEL_FONT_SIZE;
+  show_filters_->SetFont(font_desc.str().c_str());
 
   pango_font_description_free(desc);
   g_free(font_name);
-  g_free(font_desc);
 }
 
 void SearchBar::OnSearchHintChanged()
 {
-  std::string hint = search_hint;
-  gchar* tmp = g_markup_escape_text(hint.c_str(), -1);
+  gchar* tmp = g_markup_escape_text(search_hint().c_str(), -1);
 
-  gchar* markup  = g_strdup_printf("<span font_size='small' font_style='italic'> %s </span>", tmp);
-  hint_->SetText(markup);
+  hint_->SetText(tmp);
 
-  g_free(markup);
   g_free(tmp);
 }
 
@@ -583,13 +599,14 @@ void SearchBar::UpdateBackground(bool force)
 
 void SearchBar::OnMouseButtonDown(int x, int y, unsigned long button, unsigned long key)
 {
-  search_hint = "";
+  hint_->SetVisible(false);
 }
 
 void SearchBar::OnEndKeyFocus()
 {
-  search_hint = _("Search");
+  hint_->SetVisible(search_string().empty());
 }
+
 
 nux::TextEntry* SearchBar::text_entry() const
 {

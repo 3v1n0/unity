@@ -39,6 +39,7 @@ SearchBarSpinner::SearchBarSpinner()
   dash::Style& style = dash::Style::Instance();
 
   _magnify = style.GetSearchMagnifyIcon();
+  _circle = style.GetSearchCircleIcon();
   _close = style.GetSearchCloseIcon();
   _spin = style.GetSearchSpinIcon();
 
@@ -112,24 +113,13 @@ SearchBarSpinner::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   }
   else
   {
-    texxform.FlipVCoord(true);
-    GfxContext.QRP_1Tex(geo.x + ((geo.width - _spin->GetWidth()) / 2),
-                        geo.y + ((geo.height - _spin->GetHeight()) / 2),
-                        _spin->GetWidth(),
-                        _spin->GetHeight(),
-                        _spin->GetDeviceTexture(),
+    GfxContext.QRP_1Tex(geo.x + ((geo.width - _circle->GetWidth()) / 2),
+                        geo.y + ((geo.height - _circle->GetHeight()) / 2),
+                        _circle->GetWidth(),
+                        _circle->GetHeight(),
+                        _circle->GetDeviceTexture(),
                         texxform,
                         nux::color::White);
-    texxform.FlipVCoord(false);
-
-    GfxContext.QRP_1Tex(geo.x + ((geo.width - _spin->GetWidth()) / 2),
-                        geo.y + ((geo.height - _spin->GetHeight()) / 2),
-                        _spin->GetWidth(),
-                        _spin->GetHeight(),
-                        _spin->GetDeviceTexture(),
-                        texxform,
-                        nux::color::White);
-
 
     GfxContext.QRP_1Tex(geo.x + ((geo.width - _close->GetWidth()) / 2),
                         geo.y + ((geo.height - _close->GetHeight()) / 2),
