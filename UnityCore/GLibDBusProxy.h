@@ -43,7 +43,8 @@ public:
             std::string const& object_path,
             std::string const& interface_name,
             GBusType bus_type = G_BUS_TYPE_SESSION,
-            GDBusProxyFlags flags = G_DBUS_PROXY_FLAGS_NONE);
+            GDBusProxyFlags flags = G_DBUS_PROXY_FLAGS_NONE,
+            bool auto_reconnect = false);
   ~DBusProxy();
 
   void Call(std::string const& method_name,

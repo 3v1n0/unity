@@ -57,7 +57,8 @@ public:
        string const& object_path,
        string const& interface_name,
        GBusType bus_type,
-       GDBusProxyFlags flags);
+       GDBusProxyFlags flags,
+       bool auto_reconnect);
   ~Impl();
 
   void StartReconnectionTimeout();
@@ -86,6 +87,7 @@ public:
   string interface_name_;
   GBusType bus_type_;
   GDBusProxyFlags flags_;
+  bool auto_reconnect_;
 
   glib::Object<GDBusProxy> proxy_;
   glib::Object<GCancellable> cancellable_;
@@ -103,13 +105,15 @@ DBusProxy::Impl::Impl(DBusProxy* owner,
                       string const& object_path,
                       string const& interface_name,
                       GBusType bus_type,
-                      GDBusProxyFlags flags)
+                      GDBusProxyFlags flags,
+                      bool auto_reconnect)
   : owner_(owner)
   , name_(name)
   , object_path_(object_path)
   , interface_name_(interface_name)
   , bus_type_(bus_type)
   , flags_(flags)
+  , auto_reconnect_(auto_reconnect)
   , cancellable_(g_cancellable_new())
   , watcher_id_(0)
   , reconnect_timeout_id_(0)
@@ -160,6 +164,12 @@ void DBusProxy::Impl::OnNameVanished(GDBusConnection* connection,
 
   self->connected_ = false;
   self->owner_->disconnected.emit();
+
+  if (self->auto_reconnect_)
+  {
+    self->proxy_ = nullptr;
+    self->StartReconnectionTimeout();
+  }
 }
 
 void DBusProxy::Impl::StartReconnectionTimeout()
@@ -204,6 +214,8 @@ void DBusProxy::Impl::OnProxyConnectCallback(GObject* source,
                                              GAsyncResult* res,
                                              gpointer impl)
 {
+  DBusProxy::Impl* self = static_cast<DBusProxy::Impl*>(impl);
+
   glib::Error error;
   glib::Object<GDBusProxy> proxy(g_dbus_proxy_new_for_bus_finish(res, &error));
 
@@ -212,10 +224,16 @@ void DBusProxy::Impl::OnProxyConnectCallback(GObject* source,
   if (!proxy || error)
   {
     LOG_WARNING(logger) << "Unable to connect to proxy: " << error;
+
+    if (self->auto_reconnect_)
+      {
+        self->proxy_ = nullptr;
+        self->StartReconnectionTimeout();
+      }
+
     return;
   }
 
-  DBusProxy::Impl* self = static_cast<DBusProxy::Impl*>(impl);
   LOG_DEBUG(logger) << "Sucessfully created proxy: " << self->object_path_;
 
   self->proxy_ = proxy;
@@ -303,8 +321,9 @@ DBusProxy::DBusProxy(string const& name,
                      string const& object_path,
                      string const& interface_name,
                      GBusType bus_type,
-                     GDBusProxyFlags flags)
-  : pimpl(new Impl(this, name, object_path, interface_name, bus_type, flags))
+                     GDBusProxyFlags flags,
+                     bool auto_reconnect)
+  : pimpl(new Impl(this, name, object_path, interface_name, bus_type, flags, auto_reconnect))
 {}
 
 DBusProxy::~DBusProxy()
