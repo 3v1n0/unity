@@ -15,6 +15,7 @@ from testtools.matchers import Equals
 import time
 
 from autopilot.emulators.bamf import Bamf
+from autopilot.emulators.unity.dash import Dash
 from autopilot.emulators.unity.launcher import LauncherController
 from autopilot.emulators.unity.switcher import Switcher
 from autopilot.emulators.unity.workspace import WorkspaceManager
@@ -169,6 +170,7 @@ class AutopilotTestCase(VideoCapturedTestCase, KeybindingsHelper):
         self.bamf = Bamf()
         self.keyboard = Keyboard()
         self.mouse = Mouse()
+        self.dash = Dash()
         self.switcher = Switcher()
         self.workspace = WorkspaceManager()
         self.launcher = self._get_launcher_controller()

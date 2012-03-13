@@ -9,7 +9,6 @@
 from gtk import Clipboard
 from time import sleep
 
-from autopilot.emulators.unity.dash import Dash
 from autopilot.emulators.X11 import Keyboard, Mouse
 from autopilot.tests import AutopilotTestCase
 
@@ -19,7 +18,7 @@ class DashRevealTests(AutopilotTestCase):
 
     def setUp(self):
         super(DashRevealTests, self).setUp()
-        self.dash = Dash()
+        self.dash.ensure_hidden()
 
     def tearDown(self):
         super(DashRevealTests, self).tearDown()
@@ -27,8 +26,6 @@ class DashRevealTests(AutopilotTestCase):
 
     def test_dash_reveal(self):
         """Ensure we can show and hide the dash."""
-        self.dash.ensure_hidden()
-
         self.assertFalse(self.dash.get_is_visible())
         self.dash.toggle_reveal()
         self.assertTrue(self.dash.get_is_visible())
@@ -46,28 +43,24 @@ class DashRevealTests(AutopilotTestCase):
 
     def test_application_lens_shortcut(self):
         """Application lense must reveal when Super+a is pressed."""
-        self.dash.ensure_hidden()
         self.dash.reveal_application_lens()
         lensbar = self.dash.view.get_lensbar()
         self.assertEqual(lensbar.active_lens, u'applications.lens')
 
     def test_music_lens_shortcut(self):
         """Music lense must reveal when Super+w is pressed."""
-        self.dash.ensure_hidden()
         self.dash.reveal_music_lens()
         lensbar = self.dash.view.get_lensbar()
         self.assertEqual(lensbar.active_lens, u'music.lens')
 
     def test_file_lens_shortcut(self):
         """File lense must reveal when Super+f is pressed."""
-        self.dash.ensure_hidden()
         self.dash.reveal_file_lens()
         lensbar = self.dash.view.get_lensbar()
         self.assertEqual(lensbar.active_lens, u'files.lens')
 
     def test_command_lens_shortcut(self):
         """Run Command lens must reveat on alt+F2."""
-        self.dash.ensure_hidden()
         self.dash.reveal_command_lens()
         lensbar = self.dash.view.get_lensbar()
         self.assertEqual(lensbar.active_lens, u'commands.lens')
@@ -85,7 +78,7 @@ class DashKeyNavTests(AutopilotTestCase):
 
     def setUp(self):
         super(DashKeyNavTests, self).setUp()
-        self.dash = Dash()
+        self.dash.ensure_hidden()
 
     def tearDown(self):
         super(DashKeyNavTests, self).tearDown()
@@ -137,7 +130,6 @@ class DashKeyNavTests(AutopilotTestCase):
         """Test that the dash autoscroll when a category header gets
         the focus.
         """
-        self.dash.ensure_hidden()
         self.dash.reveal_application_lens()
         app_lens = self.dash.get_current_lens()
 
@@ -185,7 +177,6 @@ class DashKeyNavTests(AutopilotTestCase):
         2. A category header stays highlight when it loses the focus
          and mouse is close to it (but not inside).
         """
-        self.dash.ensure_hidden()
         self.dash.reveal_application_lens()
 
         kb = Keyboard()
@@ -218,7 +209,6 @@ class DashKeyNavTests(AutopilotTestCase):
 
     def test_cltr_tab(self):
         """ This test makes sure that Ctlr + Tab works well."""
-        self.dash.ensure_hidden()
         self.dash.toggle_reveal()
 
         kb = Keyboard()
@@ -241,7 +231,6 @@ class DashKeyNavTests(AutopilotTestCase):
 
     def test_tab(self):
         """ This test makes sure that Tab works well."""
-        self.dash.ensure_hidden()
         self.dash.reveal_application_lens()
         app_lens = self.dash.get_current_lens()
 
@@ -277,7 +266,7 @@ class DashClipboardTests(AutopilotTestCase):
 
     def setUp(self):
         super(DashClipboardTests, self).setUp()
-        self.dash = Dash()
+        self.dash.ensure_hidden()
 
     def tearDown(self):
         super(DashClipboardTests, self).tearDown()
@@ -285,7 +274,6 @@ class DashClipboardTests(AutopilotTestCase):
 
     def test_ctrl_a(self):
         """ This test if ctrl+a selects all text """
-        self.dash.ensure_hidden()
         self.dash.toggle_reveal()
 
         kb = Keyboard();
@@ -300,7 +288,6 @@ class DashClipboardTests(AutopilotTestCase):
 
     def test_ctrl_c(self):
         """ This test if ctrl+c copies text into the clipboard """
-        self.dash.ensure_hidden()
         self.dash.toggle_reveal()
 
         kb = Keyboard();
@@ -317,7 +304,6 @@ class DashClipboardTests(AutopilotTestCase):
 
     def test_ctrl_x(self):
         """ This test if ctrl+x deletes all text and copys it """
-        self.dash.ensure_hidden()
         self.dash.toggle_reveal()
 
         kb = Keyboard();
@@ -336,7 +322,6 @@ class DashClipboardTests(AutopilotTestCase):
 
     def test_ctrl_c_v(self):
         """ This test if ctrl+c and ctrl+v copies and pastes text"""
-        self.dash.ensure_hidden()
         self.dash.toggle_reveal()
 
         kb = Keyboard();
@@ -353,7 +338,6 @@ class DashClipboardTests(AutopilotTestCase):
 
     def test_ctrl_x_v(self):
         """ This test if ctrl+x and ctrl+v cuts and pastes text"""
-        self.dash.ensure_hidden()
         self.dash.toggle_reveal()
 
         kb = Keyboard();
@@ -374,7 +358,7 @@ class DashKeyboardFocusTests(AutopilotTestCase):
 
     def setUp(self):
         super(DashKeyboardFocusTests, self).setUp()
-        self.dash = Dash()
+        self.dash.ensure_hidden()
 
     def tearDown(self):
         super(DashKeyboardFocusTests, self).tearDown()
@@ -401,7 +385,7 @@ class DashLensResultsTests(AutopilotTestCase):
 
     def setUp(self):
         super(DashLensResultsTests, self).setUp()
-        self.dash = Dash()
+        self.dash.ensure_hidden()
 
     def tearDown(self):
         super(DashLensResultsTests, self).tearDown()
@@ -409,7 +393,6 @@ class DashLensResultsTests(AutopilotTestCase):
     
     def test_results_message_empty_search(self): 
         """ This tests a message is not shown when there is no text""" 
-        self.dash.ensure_hidden()
         self.dash.reveal_application_lens()
         lens = self.dash.get_current_lens()
 
@@ -418,7 +401,6 @@ class DashLensResultsTests(AutopilotTestCase):
 
     def test_results_message(self): 
         """ This test no mesage will be shown when results are there""" 
-        self.dash.ensure_hidden()
         self.dash.reveal_application_lens()
         lens = self.dash.get_current_lens()
 
@@ -431,7 +413,6 @@ class DashLensResultsTests(AutopilotTestCase):
 
     def test_no_results_message(self): 
         """ This test shows a message will appear in the lens""" 
-        self.dash.ensure_hidden()
         self.dash.reveal_application_lens()
         lens = self.dash.get_current_lens()
 
@@ -446,7 +427,7 @@ class DashVisualTests(AutopilotTestCase):
     """Tests that the dash visual is correct."""
     def setUp(self):
         super(DashVisualTests, self).setUp()
-        self.dash = Dash()
+        self.dash.ensure_hidden()
 
     def tearDown(self):
         super(DashVisualTests, self).tearDown()
@@ -467,23 +448,21 @@ class DashVisualTests(AutopilotTestCase):
                                 (group.expand_label_y + group.expand_label_baseline == group.name_label_y + group.name_label_baseline))
 
 class DashSpecialKeysTests(AutopilotTestCase):
-    """Tests composition, dead keys or anyother special keys"""
+    """Tests composition sequences, dead keys or any other special keys."""
     def setUp(self):
         super(DashSpecialKeysTests, self).setUp()
-        self.dash = Dash()
+        self.dash.ensure_hidden()
 
     def tearDown(self):
         super(DashSpecialKeysTests, self).tearDown()
         self.dash.ensure_hidden()
 
     def test_multi_key(self):
-        """Tests that when the multi_key is pressed it will exepect a sequences"""
-        self.dash.ensure_hidden()
+        """Pressing 'Multi_key' must not add any characters to the search."""
         self.dash.reveal_application_lens()
       
-        self.keyboard.press_and_release('Multi_key')
-
         kb = Keyboard();
+        kb.press_and_release('Multi_key')
         kb.type("o")
         sleep(1)
 
@@ -491,8 +470,7 @@ class DashSpecialKeysTests(AutopilotTestCase):
         self.assertEqual("", searchbar.search_string)
 
     def test_multi_key_o(self):
-        """Tests the multi_key sequences ^ + o"""
-        self.dash.ensure_hidden()
+        """Pressing the sequences 'Multi_key' + '^' + 'o' must produce 'ô'."""
         self.dash.reveal_application_lens()
       
         kb = Keyboard();
@@ -504,8 +482,7 @@ class DashSpecialKeysTests(AutopilotTestCase):
         self.assertEqual("ô", searchbar.search_string)
 
     def test_multi_key_copyright(self):
-        """Tests the multi_key sequences o + c"""
-        self.dash.ensure_hidden()
+        """Pressing the sequences 'Multi_key' + 'c' + 'o' must produce '©'."""
         self.dash.reveal_application_lens()
       
         kb = Keyboard();
@@ -517,8 +494,7 @@ class DashSpecialKeysTests(AutopilotTestCase):
         self.assertEqual("©", searchbar.search_string)
 
     def test_multi_key_delete(self):
-        """Tests the multi_key with delete, to show we cant get stuck"""
-        self.dash.ensure_hidden()
+        """Pressing 'Multi_key' must not get stuck looking for a sequence."""
         self.dash.reveal_application_lens()
 
         kb = Keyboard();
