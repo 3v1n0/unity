@@ -439,7 +439,8 @@ class SoftwareCenterIconTests(ScenariodLauncherTests):
         # Check if SC is pinned to the launcher already
         icon = self.launcher.model.get_icon_by_desktop_file("/usr/share/applications/ubuntu-software-center.desktop")
         if icon != None:
-            self.skipTest("Software Center is already pinned to launcher")
+            launcher_instance.unlock_from_launcher(icon[0])
+            sleep(2.0)
 
         original_num_launcher_icons = self.launcher.model.num_launcher_icons()
         launcher_iface.AddLauncherItemFromPosition("Unity Test",
