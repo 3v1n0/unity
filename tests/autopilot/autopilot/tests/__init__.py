@@ -8,6 +8,7 @@ import logging
 import os
 from StringIO import StringIO
 from subprocess import call, Popen, PIPE, STDOUT
+from tempfile import mktemp
 from testscenarios import TestWithScenarios
 from testtools import TestCase
 from testtools.content import text_content
@@ -15,6 +16,11 @@ from testtools.matchers import Equals
 import time
 
 from autopilot.emulators.bamf import Bamf
+from autopilot.emulators.unity import (
+    set_log_severity,
+    start_log_to_file,
+    stop_logging_to_file,
+    )
 from autopilot.emulators.unity.launcher import LauncherController
 from autopilot.emulators.unity.switcher import Switcher
 from autopilot.emulators.unity.workspace import WorkspaceManager
@@ -34,7 +40,13 @@ class LoggedTestCase(TestWithScenarios, TestCase):
     """Initialize the logging for the test case."""
 
     def setUp(self):
+        self.setUpTestLogging()
+        self.setUpUnityLogging()
+        # The reason that the super setup is done here is due to making sure
+        # that the logging is properly set up prior to calling it.
+        super(LoggedTestCase, self).setUp()
 
+    def setUpTestLogging(self):
         class MyFormatter(logging.Formatter):
 
             def formatTime(self, record, datefmt=None):
@@ -56,9 +68,6 @@ class LoggedTestCase(TestWithScenarios, TestCase):
         #Tear down logging in a cleanUp handler, so it's done after all other
         # tearDown() calls and cleanup handlers.
         self.addCleanup(self.tearDownLogging)
-        # The reason that the super setup is done here is due to making sure
-        # that the logging is properly set up prior to calling it.
-        super(LoggedTestCase, self).setUp()
 
     def tearDownLogging(self):
         logger = logging.getLogger()
@@ -70,6 +79,18 @@ class LoggedTestCase(TestWithScenarios, TestCase):
         # Calling del to remove the handler and flush the buffer.  We are
         # abusing the log handlers here a little.
         del self._log_buffer
+
+    def setUpUnityLogging(self):
+        self._unity_log_file_name = mktemp(prefix=self.shortDescription())
+        start_log_to_file(self._unity_log_file_name)
+        self.addCleanup(self.tearDownUnityLogging)
+
+    def tearDownUnityLogging(self):
+        stop_logging_to_file()
+        with open(self._unity_log_file_name, 'r') as unity_log:
+            self.addDetail('unity-log', text_content(unity_log.read()))
+        os.remove(self._unity_log_file_name)
+        self._unity_log_file_name = ""
 
 
 class VideoCapturedTestCase(LoggedTestCase):
