@@ -106,14 +106,13 @@ protected:
 NUX_IMPLEMENT_OBJECT_TYPE(PlacesGroup);
 
 PlacesGroup::PlacesGroup()
-  : View(NUX_TRACKER_LOCATION),
+  : AbstractPlacesGroup(),
     _child_view(nullptr),
     _focus_layer(nullptr),
     _idle_id(0),
     _is_expanded(true),
     _n_visible_items_in_unexpand_mode(0),
-    _n_total_items(0),
-    _draw_sep(true)
+    _n_total_items(0)
 {
   SetAcceptKeyNavFocusOnMouseDown(false);
   SetAcceptKeyNavFocusOnMouseEnter(false);
@@ -311,6 +310,15 @@ PlacesGroup::RefreshLabel()
   _expand_label->SetText(final);
   _expand_label->SetVisible(_n_visible_items_in_unexpand_mode < _n_total_items);
 
+  // See bug #748101 ("Dash - "See more..." line should be base-aligned with section header")
+  // We're making two assumptions here:
+  // [a] The font size _name is bigger than the font size of _expand_label
+  // [b] The bottom sides have the same y coordinate
+  int bottom_padding = _name->GetBaseHeight() - _name->GetBaseline() -
+                       (_expand_label->GetBaseHeight() - _expand_label->GetBaseline());
+
+  _expand_layout->SetTopAndBottomPadding(0, bottom_padding);
+
   QueueDraw();
 
   g_free((result_string));
@@ -380,7 +388,7 @@ void PlacesGroup::Draw(nux::GraphicsEngine& graphics_engine,
   graphics_engine.GetRenderStates().SetBlend(true);
   graphics_engine.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
 
-  if (_draw_sep)
+  if (draw_separator)
   {
     nux::Color col(0.15f, 0.15f, 0.15f, 0.15f);
 
@@ -488,14 +496,6 @@ PlacesGroup::GetHeaderHeight() const
   return _header_layout->GetGeometry().height;
 }
 
-void
-PlacesGroup::SetDrawSeparator(bool draw_it)
-{
-  _draw_sep = draw_it;
-
-  QueueDraw();
-}
-
 bool PlacesGroup::HeaderHasKeyFocus() const
 {
   return (_header_view && _header_view->HasKeyFocus());
@@ -546,6 +546,11 @@ void PlacesGroup::AddProperties(GVariantBuilder* builder)
   wrapper.add("name", _name->GetText());
   wrapper.add("is-visible", IsVisible());
   wrapper.add("is-expanded", GetExpanded());
+  wrapper.add("expand-label-is-visible", _expand_label->IsVisible());
+  wrapper.add("expand-label-y", _expand_label->GetAbsoluteY());
+  wrapper.add("expand-label-baseline", _expand_label->GetBaseline());
+  wrapper.add("name-label-y", _name->GetAbsoluteY());
+  wrapper.add("name-label-baseline", _name->GetBaseline());
 }
 
 } // namespace unity

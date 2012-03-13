@@ -6,9 +6,8 @@
 # under the terms of the GNU General Public License version 3, as published
 # by the Free Software Foundation.
 
-from time import sleep
-
 from testtools.matchers import Equals, LessThan
+from time import sleep
 
 from autopilot.emulators.unity.hud import HudController
 from autopilot.tests import AutopilotTestCase
@@ -134,4 +133,36 @@ class HudTests(AutopilotTestCase):
         # see how many apps are marked as being active:
         num_active = self.get_num_active_launcher_icons()
         self.assertLessEqual(num_active, 1, "More than one launcher icon active after test has run!")
+
+    def test_restore_focus(self):
+        """Ensures that once the hud is dismissed, the same application
+        that was focused before hud invocation is refocused
+        """
+        self.start_app("Calculator")
+        calc = self.get_app_instances("Calculator")
+        self.assertThat(len(calc), Equals(1))
+        calc = calc[0]
+
+        # first ensure that the application has started and is focused
+        self.assertEqual(calc.is_active, True)
+
+        self.hud.toggle_reveal()
+        sleep(1)
+        self.hud.toggle_reveal()
+        sleep(1)
+
+        # again ensure that the application we started is focused
+        self.assertEqual(calc.is_active, True)
+
+        #test return
+        self.hud.toggle_reveal()
+        sleep(1)
+
+        #test return
+        self.hud.toggle_reveal()
+        sleep(1)
+        self.keyboard.press_and_release('Return')
+        sleep(1)
+
+        self.assertEqual(calc.is_active, True)
 

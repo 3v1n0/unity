@@ -70,6 +70,19 @@ class LauncherTests(ScenariodLauncherTests):
         sleep(.5)
         self.assertThat(self.launcher.key_nav_is_active, Equals(False))
 
+    def test_launcher_switcher_escape_works(self):
+        """Test that ending the launcher switcher actually works."""
+        sleep(.5)
+        launcher_instance = self.get_launcher()
+        launcher_instance.start_switcher()
+        self.addCleanup(launcher_instance.end_switcher, True)
+        sleep(.25)
+        self.assertThat(self.launcher.key_nav_is_active(), Equals(True))
+        sleep(.25)
+        self.keyboard.press_and_release("Escape")
+        sleep(.25)
+        self.assertThat(self.launcher.key_nav_is_active(), Equals(False))
+
     def test_launcher_switcher_next_works(self):
         """Moving to the next launcher item while switcher is activated must work."""
         sleep(.5)
@@ -376,9 +389,12 @@ class LauncherRevealTests(ScenariodLauncherTests):
         launcher_instance = self.get_launcher()
 
         launcher_instance.move_mouse_over_launcher()
-        launcher_instance.keyboard_reveal_launcher()
-        launcher_instance.keyboard_unreveal_launcher()
+        # we can't use "launcher_instance.keyboard_reveal_launcher()"
+        # since it moves the mouse out of the way, invalidating the test.
+        self.keybinding_hold("launcher/reveal")
         sleep(1)
+        self.keybinding_release("launcher/reveal")
+        sleep(2)
         self.assertThat(launcher_instance.is_showing(), Equals(False))
 
     def test_reveal_does_not_hide_again(self):

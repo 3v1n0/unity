@@ -68,6 +68,9 @@ _keys = {
     "switcher/reveal_details": "Alt+`",
     "switcher/reveal_all": ("unityshell", "alt_tab_forward_all"),
     "switcher/cancel": "Escape",
+    # Shortcut Hint:
+    "shortcuthint/reveal": ('unityshell', 'show_launcher'),
+    "shortcuthint/cancel": "Escape",
     # These are in compiz as 'Alt+Right' and 'Alt+Left', but the fact that it
     # lists the Alt key won't work for us, so I'm defining them manually.
     "switcher/next": "Tab",
@@ -85,6 +88,9 @@ _keys = {
     "workspace/move_down": ("wall", "down_key"),
     # Window management
     "window/minimize": ("core", "minimize_window_key"),
+    # expo plugin:
+    "expo/start": ("expo", "expo_key"),
+    "expo/cancel": "Escape",
 }
 
 

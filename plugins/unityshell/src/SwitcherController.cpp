@@ -22,7 +22,6 @@
 #include <Nux/HLayout.h>
 
 #include "UBusMessages.h"
-#include "ubus-server.h"
 #include "WindowManager.h"
 
 #include "SwitcherController.h"
@@ -36,41 +35,53 @@ using ui::LayoutWindowList;
 namespace switcher
 {
 
-Controller::Controller()
-  :  view_window_(0)
+Controller::Controller(unsigned int load_timeout)
+  :  construct_timeout_(load_timeout)
+  ,  view_window_(nullptr)
+  ,  main_layout_(nullptr)
+  ,  monitor_(0)
   ,  visible_(false)
   ,  show_timer_(0)
   ,  detail_timer_(0)
+  ,  lazy_timer_(0)
+  ,  view_idle_timer_(0)
+  ,  bg_color_(0, 0, 0, 0.5)
 {
   timeout_length = 75;
   detail_on_timeout = true;
   detail_timeout_length = 1500;
-  monitor_ = 0;
 
-  bg_color_ = nux::Color(0.0, 0.0, 0.0, 0.5);
+  ubus_manager_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED, sigc::mem_fun(this, &Controller::OnBackgroundUpdate));
 
-  UBusServer *ubus = ubus_server_get_default();
-  bg_update_handle_ =
-  ubus_server_register_interest(ubus, UBUS_BACKGROUND_COLOR_CHANGED,
-                                (UBusCallback)&Controller::OnBackgroundUpdate,
-                                this);
+  /* Construct the view after a prefixed timeout, to improve the startup time */
+  lazy_timer_ = g_timeout_add_seconds_full(G_PRIORITY_LOW, construct_timeout_, [] (gpointer data) -> gboolean {
+    auto self = static_cast<Controller*>(data);
+    self->lazy_timer_ = 0;
+    self->ConstructWindow();
+    return FALSE;
+  }, this, nullptr);
 }
 
 Controller::~Controller()
 {
-  ubus_server_unregister_interest(ubus_server_get_default(), bg_update_handle_);
   if (view_window_)
     view_window_->UnReference();
+
+  if (lazy_timer_)
+    g_source_remove(lazy_timer_);
+
+  if (view_idle_timer_)
+    g_source_remove(view_idle_timer_);
 }
 
-void Controller::OnBackgroundUpdate(GVariant* data, Controller* self)
+void Controller::OnBackgroundUpdate(GVariant* data)
 {
   gdouble red, green, blue, alpha;
   g_variant_get(data, "(dddd)", &red, &green, &blue, &alpha);
-  self->bg_color_ = nux::Color(red, green, blue, alpha);
+  bg_color_ = nux::Color(red, green, blue, alpha);
 
-  if (self->view_)
-    self->view_->background_color = self->bg_color_;
+  if (view_)
+    view_->background_color = bg_color_;
 }
 
 void Controller::Show(ShowMode show, SortMode sort, bool reverse,
@@ -92,13 +103,29 @@ void Controller::Show(ShowMode show, SortMode sort, bool reverse,
 
   if (timeout_length > 0)
   {
+    if (view_idle_timer_)
+      g_source_remove(view_idle_timer_);
+
+    view_idle_timer_ = g_idle_add_full(G_PRIORITY_LOW, [] (gpointer data) -> gboolean {
+      auto self = static_cast<Controller*>(data);
+      self->ConstructView();
+      self->view_idle_timer_ = 0;
+      return FALSE;
+    }, this, NULL);
+
     if (show_timer_)
       g_source_remove (show_timer_);
-    show_timer_ = g_timeout_add(timeout_length, &Controller::OnShowTimer, this);
+
+    show_timer_ = g_timeout_add(timeout_length, [] (gpointer data) -> gboolean {
+      auto self = static_cast<Controller*>(data);
+      self->ShowView();
+      self->show_timer_ = 0;
+      return FALSE;
+    }, this);
   }
   else
   {
-    ConstructView();
+    ShowView();
   }
 
   if (detail_on_timeout)
@@ -108,29 +135,14 @@ void Controller::Show(ShowMode show, SortMode sort, bool reverse,
     detail_timer_ = g_timeout_add(detail_timeout_length, &Controller::OnDetailTimer, this);
   }
 
-  ubus_server_send_message(ubus_server_get_default(),
-                           UBUS_PLACE_VIEW_CLOSE_REQUEST,
-                           NULL);
-
-  ubus_server_send_message(ubus_server_get_default(),
-                           UBUS_SWITCHER_SHOWN, g_variant_new_boolean(true));
+  ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
+  ubus_manager_.SendMessage(UBUS_SWITCHER_SHOWN, g_variant_new_boolean(true));
 }
 
 void Controller::Select(int index)
 {
   if (visible_)
     model_->Select(index);
-}
-
-gboolean Controller::OnShowTimer(gpointer data)
-{
-  Controller* self = static_cast<Controller*>(data);
-
-  if (self->visible_)
-    self->ConstructView();
-
-  self->show_timer_ = 0;
-  return FALSE;
 }
 
 gboolean Controller::OnDetailTimer(gpointer data)
@@ -157,18 +169,28 @@ void Controller::OnModelSelectionChanged(AbstractLauncherIcon::Ptr icon)
     detail_timer_ = g_timeout_add(detail_timeout_length, &Controller::OnDetailTimer, this);
   }
 
-  ubus_server_send_message(ubus_server_get_default(),
-                           UBUS_SWITCHER_SELECTION_CHANGED,
-                           g_variant_new_string(icon->tooltip_text().c_str()));
+  ubus_manager_.SendMessage(UBUS_SWITCHER_SELECTION_CHANGED,
+                            g_variant_new_string(icon->tooltip_text().c_str()));
 }
 
-void Controller::ConstructView()
+void Controller::ShowView()
 {
-  view_ = SwitcherView::Ptr(new SwitcherView());
-  AddChild(view_.GetPointer());
-  view_->SetModel(model_);
-  view_->background_color = bg_color_;
-  view_->monitor = monitor_;
+  if (!visible_)
+    return;
+  
+  ConstructView();
+
+  if (view_window_)
+    view_window_->SetOpacity(1.0f);
+}
+
+void Controller::ConstructWindow()
+{
+  if (lazy_timer_)
+  {
+    g_source_remove(lazy_timer_);
+    lazy_timer_ = 0;
+  }
 
   if (!view_window_)
   {
@@ -180,12 +202,32 @@ void Controller::ConstructView()
     view_window_->SinkReference();
     view_window_->SetLayout(main_layout_);
     view_window_->SetBackgroundColor(nux::Color(0x00000000));
+    view_window_->SetGeometry(workarea_);
+  }
+}
+
+void Controller::ConstructView()
+{
+  if (view_ || !model_)
+    return;
+
+  if (view_idle_timer_)
+  {
+    g_source_remove(view_idle_timer_);
+    view_idle_timer_ = 0;
   }
 
-  main_layout_->AddView(view_.GetPointer(), 1);
-
-  view_window_->SetGeometry(workarea_);
+  view_ = SwitcherView::Ptr(new SwitcherView());
+  AddChild(view_.GetPointer());
+  view_->SetModel(model_);
+  view_->background_color = bg_color_;
+  view_->monitor = monitor_;
   view_->SetupBackground();
+
+  ConstructWindow();
+  main_layout_->AddView(view_.GetPointer(), 1);
+  view_window_->SetGeometry(workarea_);
+  view_window_->SetOpacity(0.0f);
   view_window_->ShowWindow(true);
 }
 
@@ -227,6 +269,12 @@ void Controller::Hide(bool accept_state)
     }
   }
 
+  if (view_idle_timer_)
+  {
+    g_source_remove(view_idle_timer_);
+    view_idle_timer_ = 0;
+  }
+
   model_.reset();
   visible_ = false;
 
@@ -234,7 +282,10 @@ void Controller::Hide(bool accept_state)
     main_layout_->RemoveChildObject(view_.GetPointer());
 
   if (view_window_)
+  {
+    view_window_->SetOpacity(0.0f);
     view_window_->ShowWindow(false);
+  }
 
   if (show_timer_)
     g_source_remove(show_timer_);
@@ -244,8 +295,7 @@ void Controller::Hide(bool accept_state)
     g_source_remove(detail_timer_);
   detail_timer_ = 0;
 
-  ubus_server_send_message(ubus_server_get_default(),
-                           UBUS_SWITCHER_SHOWN, g_variant_new_boolean(false));
+  ubus_manager_.SendMessage(UBUS_SWITCHER_SHOWN, g_variant_new_boolean(false));
 
   view_.Release();
 }

@@ -93,6 +93,8 @@ namespace local
 {
 // Tap duration in milliseconds.
 const int ALT_TAP_DURATION = 250;
+const unsigned int SCROLL_DOWN_BUTTON = 6;
+const unsigned int SCROLL_UP_BUTTON = 7;
 } // namespace local
 } // anon namespace
 
@@ -124,6 +126,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , dash_is_open_ (false)
   , grab_index_ (0)
   , painting_tray_ (false)
+  , last_scroll_event_(0)
   , last_hud_show_time_(0)
 {
   Timer timer;
@@ -333,6 +336,9 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetOvercomePressureNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetDecayRateNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetShowMinimizedWindowsNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+
+     optionSetNumLaunchersNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+     optionSetLauncherCaptureMouseNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
 
      ubus_manager_.RegisterInterest(UBUS_LAUNCHER_START_KEY_NAV,
                    sigc::mem_fun(this, &UnityScreen::OnLauncherStartKeyNav));
@@ -870,22 +876,24 @@ void UnityWindow::paintThumbnail (nux::Geometry const& bounding, float alpha)
               geo.height);
 }
 
-void UnityScreen::EnableCancelAction(bool enabled, int modifiers)
+void UnityScreen::EnableCancelAction(CancelActionTarget target, bool enabled, int modifiers)
 {
   if (enabled)
   {
-    /* Create a new keybinding for the Escape key and the current modifiers */
+    /* Create a new keybinding for the Escape key and the current modifiers,
+     * compiz will take of the ref-counting of the repeated actions */
     CompAction::KeyBinding binding(9, modifiers);
 
-    _escape_action = CompActionPtr(new CompAction());
-    _escape_action->setKey(binding);
+    CompActionPtr &escape_action = _escape_actions[target];
+    escape_action = CompActionPtr(new CompAction());
+    escape_action->setKey(binding);
 
-    screen->addAction(_escape_action.get());
+    screen->addAction(escape_action.get());
   }
-  else if (!enabled && _escape_action.get())
+  else if (!enabled && _escape_actions[target].get())
   {
-    screen->removeAction(_escape_action.get());
-    _escape_action = nullptr;
+    screen->removeAction(_escape_actions[target].get());
+    _escape_actions.erase(target);
   }
 }
 
@@ -1337,7 +1345,26 @@ void UnityScreen::handleEvent(XEvent* event)
       if (super_keypressed_)
       {
         launcher_controller_->KeyNavTerminate(false);
-        EnableCancelAction(false);
+        EnableCancelAction(CancelActionTarget::LAUNCHER_SWITCHER, false);
+      }
+      break;
+    case ButtonRelease:
+      if (switcher_controller_ && switcher_controller_->Visible())
+      {
+        XButtonEvent *bev = reinterpret_cast<XButtonEvent*>(event);
+        if (bev->time - last_scroll_event_ > 150)
+        {
+          if (bev->button == Button4 || bev->button == local::SCROLL_UP_BUTTON)
+          {
+            switcher_controller_->Prev();
+            last_scroll_event_ = bev->time;
+          }
+          else if (bev->button == Button5 || bev->button == local::SCROLL_DOWN_BUTTON)
+          {
+            switcher_controller_->Next();
+            last_scroll_event_ = bev->time;
+          }
+        }
       }
       break;
     case KeyPress:
@@ -1351,17 +1378,23 @@ void UnityScreen::handleEvent(XEvent* event)
         // we should just say "key_string[1] = 0" because that is the only
         // thing that could possibly make sense here.
         key_string[result] = 0;
-        if (super_keypressed_ && key_sym != XK_Escape)
+        if (super_keypressed_)
         {
-          g_idle_add([] (gpointer data) -> gboolean {
-            auto self = static_cast<UnityScreen*>(data);
-            if (!self->launcher_controller_->KeyNavIsActive())
-            {
-              self->shortcut_controller_->SetEnabled(false);
-              self->shortcut_controller_->Hide();
-            }
-            return FALSE;
-          }, this);
+          if (key_sym != XK_Escape || (key_sym == XK_Escape && !launcher_controller_->KeyNavIsActive()))
+          {
+            /* We need an idle to postpone this action, after the current event
+             * has been processed */
+            g_idle_add([] (gpointer data) -> gboolean {
+              auto self = static_cast<UnityScreen*>(data);
+              if (!self->launcher_controller_->KeyNavIsActive())
+              {
+                self->shortcut_controller_->SetEnabled(false);
+                self->shortcut_controller_->Hide();
+                self->EnableCancelAction(CancelActionTarget::SHORTCUT_HINT, false);
+              }
+              return FALSE;
+            }, this);
+          }
 
           skip_other_plugins = launcher_controller_->HandleLauncherKeyEvent(screen->dpy(), key_sym, event->xkey.keycode, event->xkey.state, key_string);
           if (!skip_other_plugins)
@@ -1370,7 +1403,7 @@ void UnityScreen::handleEvent(XEvent* event)
           if (skip_other_plugins && launcher_controller_->KeyNavIsActive())
           {
             launcher_controller_->KeyNavTerminate(false);
-            EnableCancelAction(false);
+            EnableCancelAction(CancelActionTarget::LAUNCHER_SWITCHER, false);
           }
         }
       }
@@ -1511,7 +1544,10 @@ bool UnityScreen::showLauncherKeyInitiate(CompAction* action,
     }
 
     if (last_geo.x > monitor_geo.x and last_geo.y > monitor_geo.y)
+    {
+      EnableCancelAction(CancelActionTarget::SHORTCUT_HINT, true, action->key().modifiers());
       shortcut_controller_->Show();
+    }
    }
 
   return true;
@@ -1525,14 +1561,15 @@ bool UnityScreen::showLauncherKeyTerminate(CompAction* action,
     return false;
 
   bool was_tap = state & CompAction::StateTermTapped;
-
   super_keypressed_ = false;
   launcher_controller_->KeyNavTerminate(true);
   launcher_controller_->HandleLauncherKeyRelease(was_tap);
-  EnableCancelAction(false);
+  EnableCancelAction(CancelActionTarget::LAUNCHER_SWITCHER, false);
 
   shortcut_controller_->SetEnabled(enable_shortcut_overlay_);
   shortcut_controller_->Hide();
+  EnableCancelAction(CancelActionTarget::SHORTCUT_HINT, false);
+
   action->setState (action->state() & (unsigned)~(CompAction::StateTermKey));
   return true;
 }
@@ -1601,7 +1638,7 @@ bool UnityScreen::setKeyboardFocusKeyInitiate(CompAction* action,
   return true;
 }
 
-bool UnityScreen::altTabInitiateCommon(switcher::ShowMode show_mode)
+bool UnityScreen::altTabInitiateCommon(CompAction* action, switcher::ShowMode show_mode)
 {
   if (!grab_index_)
     grab_index_ = screen->pushGrab (screen->invisibleCursor(), "unity-switcher");
@@ -1618,6 +1655,14 @@ bool UnityScreen::altTabInitiateCommon(switcher::ShowMode show_mode)
   screen->addAction(&optionGetAltTabDetailStart());
   screen->addAction(&optionGetAltTabDetailStop());
   screen->addAction(&optionGetAltTabLeft());
+
+  /* Create a new keybinding for scroll buttons and current modifiers */
+  CompAction scroll_up;
+  CompAction scroll_down;
+  scroll_up.setButton(CompAction::ButtonBinding(local::SCROLL_UP_BUTTON, action->key().modifiers()));
+  scroll_down.setButton(CompAction::ButtonBinding(local::SCROLL_DOWN_BUTTON, action->key().modifiers()));
+  screen->addAction(&scroll_up);
+  screen->addAction(&scroll_down);
 
   // maybe check launcher position/hide state?
 
@@ -1655,10 +1700,18 @@ bool UnityScreen::altTabTerminateCommon(CompAction* action,
     screen->removeGrab(grab_index_, NULL);
     grab_index_ = 0;
 
-    screen->removeAction (&optionGetAltTabRight ());
-    screen->removeAction (&optionGetAltTabDetailStart ());
-    screen->removeAction (&optionGetAltTabDetailStop ());
-    screen->removeAction (&optionGetAltTabLeft ());
+    screen->removeAction(&optionGetAltTabRight ());
+    screen->removeAction(&optionGetAltTabDetailStart ());
+    screen->removeAction(&optionGetAltTabDetailStop ());
+    screen->removeAction(&optionGetAltTabLeft ());
+
+    /* Removing the scroll actions */
+    CompAction scroll_up;
+    CompAction scroll_down;
+    scroll_up.setButton(CompAction::ButtonBinding(local::SCROLL_UP_BUTTON, action->key().modifiers()));
+    scroll_down.setButton(CompAction::ButtonBinding(local::SCROLL_DOWN_BUTTON, action->key().modifiers()));
+    screen->removeAction(&scroll_up);
+    screen->removeAction(&scroll_down);
 
     bool accept_state = (state & CompAction::StateCancel) == 0;
     switcher_controller_->Hide(accept_state);
@@ -1675,7 +1728,7 @@ bool UnityScreen::altTabForwardInitiate(CompAction* action,
   if (switcher_controller_->Visible())
     switcher_controller_->Next();
   else
-    altTabInitiateCommon(switcher::ShowMode::CURRENT_VIEWPORT);
+    altTabInitiateCommon(action, switcher::ShowMode::CURRENT_VIEWPORT);
 
   action->setState(action->state() | CompAction::StateTermKey);
   return true;
@@ -1688,7 +1741,7 @@ bool UnityScreen::altTabForwardAllInitiate(CompAction* action,
   if (switcher_controller_->Visible())
     switcher_controller_->Next();
   else
-    altTabInitiateCommon(switcher::ShowMode::ALL);
+    altTabInitiateCommon(action, switcher::ShowMode::ALL);
 
   action->setState(action->state() | CompAction::StateTermKey);
   return true;
@@ -1730,7 +1783,7 @@ bool UnityScreen::altTabNextWindowInitiate(CompAction* action, CompAction::State
 {
   if (!switcher_controller_->Visible())
   {
-    altTabInitiateCommon(switcher::ShowMode::CURRENT_VIEWPORT);
+    altTabInitiateCommon(action, switcher::ShowMode::CURRENT_VIEWPORT);
     switcher_controller_->Select(1); // always select the current application
   }
 
@@ -1753,7 +1806,7 @@ bool UnityScreen::launcherSwitcherForwardInitiate(CompAction* action, CompAction
   if (!launcher_controller_->KeyNavIsActive())
   {
     launcher_controller_->KeyNavActivate();
-    EnableCancelAction(true, action->key().modifiers());
+    EnableCancelAction(CancelActionTarget::LAUNCHER_SWITCHER, true, action->key().modifiers());
   }
   else
   {
@@ -1774,7 +1827,7 @@ bool UnityScreen::launcherSwitcherTerminate(CompAction* action, CompAction::Stat
   bool accept_state = (state & CompAction::StateCancel) == 0;
   launcher_controller_->KeyNavTerminate(accept_state);
 
-  EnableCancelAction(false);
+  EnableCancelAction(CancelActionTarget::LAUNCHER_SWITCHER, false);
   action->setState (action->state() & (unsigned)~(CompAction::StateTermKey));
   return true;
 }
@@ -2402,6 +2455,13 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
   unity::launcher::Options::Ptr launcher_options = launcher_controller_->options();
   switch (num)
   {
+    case UnityshellOptions::NumLaunchers:
+      launcher_controller_->multiple_launchers = optionGetNumLaunchers() == 0;
+      dash_controller_->use_primary = !launcher_controller_->multiple_launchers();
+      break;
+    case UnityshellOptions::LauncherCaptureMouse:
+      launcher_options->edge_resist = optionGetLauncherCaptureMouse();
+      break;
     case UnityshellOptions::BackgroundColor:
     {
       nux::Color override_color (optionGetBackgroundColorRed() / 65535.0f,
@@ -2655,6 +2715,7 @@ void UnityScreen::initLauncher()
   // Setup Shortcut Hint
   InitHints();
   shortcut_controller_.reset(new shortcut::Controller(hints_));
+  AddChild(shortcut_controller_.get());
 
   AddChild(dash_controller_.get());
 
@@ -2666,17 +2727,17 @@ void UnityScreen::InitHints()
   // TODO move category text into a vector...
   
   // Launcher...
-  std::string const launcher = _("Launcher");
+  std::string const launcher(_("Launcher"));
   
   hints_.push_back(new shortcut::Hint(launcher, "", _(" (Press)"), _("Open Launcher, displays shortcuts."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "show_launcher" ));
   hints_.push_back(new shortcut::Hint(launcher, "", "", _("Open Launcher keyboard navigation mode."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "keyboard_focus"));
-  hints_.push_back(new shortcut::Hint(launcher, "", "", _("Switch applications via Launcher."), shortcut::HARDCODED_OPTION, _("Super + Tab")));
+  hints_.push_back(new shortcut::Hint(launcher, "", "", _("Switch applications via Launcher."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "launcher_switcher_forward"));
   hints_.push_back(new shortcut::Hint(launcher, "", _(" + 1 to 9"), _("Same as clicking on a Launcher icon."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "show_launcher"));
   hints_.push_back(new shortcut::Hint(launcher, "", _(" + Shift + 1 to 9"), _("Open new window of the app."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "show_launcher"));
   hints_.push_back(new shortcut::Hint(launcher, "", " + T", _("Open the Trash."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "show_launcher")); 
 
   // Dash...
-  std::string const dash = _("Dash");
+  std::string const dash( _("Dash"));
 
   hints_.push_back(new shortcut::Hint(dash, "", _(" (Tap)"), _("Open the Dash Home."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "show_launcher"));
   hints_.push_back(new shortcut::Hint(dash, "", " + A", _("Open the Dash App Lens."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "show_launcher"));
@@ -2685,30 +2746,31 @@ void UnityScreen::InitHints()
   hints_.push_back(new shortcut::Hint(dash, "", "", _("Switches between Lenses."), shortcut::HARDCODED_OPTION, _("Ctrl + Tab")));
   hints_.push_back(new shortcut::Hint(dash, "", "", _("Moves the focus."), shortcut::HARDCODED_OPTION, _("Cursor Keys")));
   hints_.push_back(new shortcut::Hint(dash, "", "", _("Open currently focused item."), shortcut::HARDCODED_OPTION, _("Enter & Return")));
-  hints_.push_back(new shortcut::Hint(dash, "", "", _("'Run Command' mode."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "execute_command"));
  
   // Menu Bar
-  std::string const menubar = _("Menu Bar");
-  
-  hints_.push_back(new shortcut::Hint(menubar, "", "", _("Reveals application menu."), shortcut::HARDCODED_OPTION, "Alt"));
+  std::string const menubar(_("HUD & Menu Bar"));
+
+  hints_.push_back(new shortcut::Hint(menubar, "", " (Tap)", _("Open the HUD."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "show_hud"));
+  hints_.push_back(new shortcut::Hint(menubar, "", " (Press)", _("Reveals application menu."), shortcut::HARDCODED_OPTION, "Alt"));
   hints_.push_back(new shortcut::Hint(menubar, "", "", _("Opens the indicator menu."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "panel_first_menu"));
   hints_.push_back(new shortcut::Hint(menubar, "", "", _("Moves focus between indicators."), shortcut::HARDCODED_OPTION, _("Cursor Left or Right")));
 
   // Switching
-  std::string const switching = _("Switching");
+  std::string const switching(_("Switching"));
   
   hints_.push_back(new shortcut::Hint(switching, "", "", _("Switch between applications."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "alt_tab_forward"));
   hints_.push_back(new shortcut::Hint(switching, "", "", _("Switch windows of current application."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "alt_tab_next_window"));
   hints_.push_back(new shortcut::Hint(switching, "", "", _("Moves the focus."), shortcut::HARDCODED_OPTION, _("Cursor Left or Right")));
 
   // Workspaces
-  std::string const workspaces = _("Workspaces");
+  std::string const workspaces(_("Workspaces"));
+
   hints_.push_back(new shortcut::Hint(workspaces, "", "", _("Spread workspaces."), shortcut::COMPIZ_KEY_OPTION, "expo", "expo_key"));
-  hints_.push_back(new shortcut::Hint(workspaces, "", "", _("Switch workspaces."), shortcut::HARDCODED_OPTION, _("Control + Alt + Cursor Keys")));
-  hints_.push_back(new shortcut::Hint(workspaces, "", "", _("Move focused window to different workspace."), shortcut::HARDCODED_OPTION, _("Control + Alt + Shift + Cursor Keys")));
+  hints_.push_back(new shortcut::Hint(workspaces, "",  _(" + Cursor Keys"), _("Switch workspaces."), shortcut::COMPIZ_METAKEY_OPTION, "wall", "left_key"));
+  hints_.push_back(new shortcut::Hint(workspaces, "",  _(" + Cursor Keys"), _("Move focused window to different workspace."), shortcut::COMPIZ_METAKEY_OPTION, "wall", "left_window_key"));
 
   // Windows
-  std::string const windows = _("Windows");
+  std::string const windows(_("Windows"));
   hints_.push_back(new shortcut::Hint(windows, "", "", _("Spreads all windows in the current workspace."), shortcut::COMPIZ_KEY_OPTION, "scale", "initiate_all_key"));
   hints_.push_back(new shortcut::Hint(windows, "", "", _("Minimises all windows."), shortcut::COMPIZ_KEY_OPTION, "core", "show_desktop_key"));
   hints_.push_back(new shortcut::Hint(windows, "", "", _("Maximises the current window."), shortcut::COMPIZ_KEY_OPTION, "core", "maximize_window_key"));
