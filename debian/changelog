@@ -3,6 +3,9 @@ unity (5.6.0-0ubuntu2) UNRELEASED; urgency=low
   * debian/patches/01_remove_ungrab_workaround.patch:
     - remove a workaround which makes alt + keys not passing events to other
       apps (LP: #953783)
+  * debian/control:
+    - add libxfixes build-dep (versionned as there is an ABI break). No cmake
+      file was listing it, will fix that upstream as well.
 
  -- Didier Roche <didrocks@ubuntu.com>  Tue, 13 Mar 2012 09:44:51 +0100
 

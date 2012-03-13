@@ -39,6 +39,7 @@ Build-Depends: cmake,
                libgnome-desktop-3-dev,
                libgdu-dev,
                libunity-dev (>= 5.2.0),
+               libxfixes (>= 1:5.0-4ubuntu4),
 Standards-Version: 3.9.2
 Homepage: https://launchpad.net/unity
 Vcs-Bzr: https://code.launchpad.net/~ubuntu-desktop/unity/ubuntu
