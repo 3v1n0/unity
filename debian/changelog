@@ -1,3 +1,10 @@
+unity (5.6.0-0ubuntu5) UNRELEASED; urgency=low
+
+  * debian/patches/series:
+    - remove the distro patches in trunk right now
+
+ -- Didier Roche <didrocks@ubuntu.com>  Wed, 14 Mar 2012 13:09:44 +0100
+
 unity (5.6.0-0ubuntu4) precise; urgency=low
 
   * 02_remove_ungrad_workaround2.patch:
