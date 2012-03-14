@@ -82,6 +82,7 @@ DashView::DashView()
   , searching_timeout_id_(0)
   , search_in_progress_(false)
   , activate_on_finish_(false)
+  , hide_message_delay_id_(0)
   , visible_(false)
 {
   renderer_.SetOwner(this);
@@ -106,6 +107,8 @@ DashView::~DashView()
 {
   if (searching_timeout_id_)
     g_source_remove (searching_timeout_id_);
+  if (hide_message_delay_id_)
+    g_source_remove(hide_message_delay_id_);
 }
 
 void DashView::SetMonitorOffset(int x, int y)
@@ -374,6 +377,16 @@ gboolean DashView::ResetSearchStateCb(gpointer data)
   return FALSE;
 }
 
+gboolean DashView::HideResultMessageCb(gpointer data)
+{
+  DashView *self = static_cast<DashView*>(data);
+
+  self->active_lens_view_->HideResultsMessage();
+  self->hide_message_delay_id_ = 0;
+
+  return FALSE;
+}
+
 void DashView::OnSearchChanged(std::string const& search_string)
 {
   LOG_DEBUG(logger) << "Search changed: " << search_string;
@@ -385,9 +398,21 @@ void DashView::OnSearchChanged(std::string const& search_string)
     if (searching_timeout_id_)
     {
       g_source_remove (searching_timeout_id_);
+      searching_timeout_id_ = 0;
     }
+
     // 250ms for the Search method call, rest for the actual search
     searching_timeout_id_ = g_timeout_add (500, &DashView::ResetSearchStateCb, this);
+    
+    
+    if (hide_message_delay_id_)
+    {
+      g_source_remove(hide_message_delay_id_);
+      hide_message_delay_id_ = 0;
+    }
+
+    // 150ms to hide the no reults message if its take a while to return results
+    hide_message_delay_id_ = g_timeout_add (150, &DashView::HideResultMessageCb, this);
   }
 }
 
@@ -450,19 +475,25 @@ void DashView::OnLensBarActivated(std::string const& id)
 
   search_bar_->can_refine_search = view->can_refine_search();
 
+  if (hide_message_delay_id_)
+  {
+    g_source_remove(hide_message_delay_id_);
+    hide_message_delay_id_ = 0;
+  }
+
   view->QueueDraw();
   QueueDraw();
 }
 
 void DashView::OnSearchFinished(Lens::Hints const& hints)
 {
-  Lens::Hints::const_iterator it;
-  it = hints.find("no-results-hint");
-  
-  if (it != hints.end())
+  if (hide_message_delay_id_)
   {
-    LOG_DEBUG(logger) << "We have no-results-hint: " << g_variant_get_string (it->second, NULL);
+    g_source_remove(hide_message_delay_id_);
+    hide_message_delay_id_ = 0;
   }
+
+  active_lens_view_->CheckNoResults(hints);
 
   std::string search_string = search_bar_->search_string;
   if (active_lens_view_ && active_lens_view_->search_string == search_string)

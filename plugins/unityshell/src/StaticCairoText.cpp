@@ -42,12 +42,12 @@ namespace nux
 StaticCairoText::StaticCairoText(std::string const& text,
                                  NUX_FILE_LINE_DECL) :
   View(NUX_FILE_LINE_PARAM),
+  _baseline(0),
   _fontstring(NULL),
   _cairoGraphics(NULL),
   _texture2D(NULL),
   _lines(-2),
   _actual_lines(0)
-
 {
   _textColor  = Color(1.0f, 1.0f, 1.0f, 1.0f);
   _text       = text;
@@ -276,6 +276,11 @@ StaticCairoText::GetLineCount()
   return _actual_lines;
 }
 
+int StaticCairoText::GetBaseline() const
+{
+  return _baseline;
+}
+
 void StaticCairoText::GetTextExtents(int& width, int& height)
 {
   GtkSettings* settings = gtk_settings_get_default();  // not ref'ed
@@ -303,6 +308,7 @@ void StaticCairoText::GetTextExtents(const TCHAR* font,
   PangoLayout*          layout   = NULL;
   PangoFontDescription* desc     = NULL;
   PangoContext*         pangoCtx = NULL;
+  PangoRectangle        inkRect  = {0, 0, 0, 0};
   PangoRectangle        logRect  = {0, 0, 0, 0};
   int                   dpi      = 0;
   GdkScreen*            screen   = gdk_screen_get_default();    // is not ref'ed
@@ -365,12 +371,18 @@ void StaticCairoText::GetTextExtents(const TCHAR* font,
                                        (float) dpi / (float) PANGO_SCALE);
   }
   pango_layout_context_changed(layout);
-  pango_layout_get_extents(layout, NULL, &logRect);
+  pango_layout_get_extents(layout, &inkRect, &logRect);
 
-  width  = logRect.width / PANGO_SCALE;
+  // logRect has some issues using italic style
+  if (inkRect.x + inkRect.width > logRect.x + logRect.width)
+    width = (inkRect.x + inkRect.width - logRect.x) /PANGO_SCALE;
+  else
+    width  = logRect.width / PANGO_SCALE;
+
   height = logRect.height / PANGO_SCALE;
   _cached_extent_height = height;
   _cached_extent_width = width;
+  _baseline = pango_layout_get_baseline(layout) / PANGO_SCALE;
 
   // clean up
   pango_font_description_free(desc);
