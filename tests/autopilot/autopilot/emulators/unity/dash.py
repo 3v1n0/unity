@@ -30,10 +30,13 @@ class Dash(KeybindingsHelper):
 
     def __init__(self):
         self.controller = DashController.get_all_instances()[0]
-        self.view = self.controller.get_dash_view()
 
         self._keyboard = Keyboard()
         super(Dash, self).__init__()
+
+    @property
+    def view(self):
+        return self.controller.get_dash_view()
 
     def toggle_reveal(self):
         """
