@@ -16,7 +16,7 @@ from time import sleep
 from autopilot.tests import AutopilotTestCase
 from autopilot.emulators.unity import (
     start_log_to_file,
-    stop_logging_to_file,
+    reset_logging,
     set_log_severity,
     log_unity_message,
     )
@@ -35,7 +35,7 @@ class UnityLoggingTests(AutopilotTestCase):
         """
         fpath = self.start_new_log_file()
         self.addCleanup(remove, fpath)
-        self.addCleanup(stop_logging_to_file)
+        self.addCleanup(reset_logging)
         sleep(1)
         self.assertTrue(exists(fpath))
 
@@ -43,7 +43,7 @@ class UnityLoggingTests(AutopilotTestCase):
         fpath = self.start_new_log_file()
         log_unity_message("WARNING", "This is a warning of things to come")
         sleep(1)
-        stop_logging_to_file()
+        reset_logging()
 
         with open(fpath, 'r') as f:
             self.assertThat(f.read(), Contains("This is a warning of things to come"))
@@ -52,7 +52,7 @@ class UnityLoggingTests(AutopilotTestCase):
         fpath = self.start_new_log_file()
         log_unity_message("DEBUG", "This is some INFORMATION")
         sleep(1)
-        stop_logging_to_file()
+        reset_logging()
         with open(fpath, 'r') as f:
             self.assertThat(f.read(), Not(Contains("This is some INFORMATION")))
 
@@ -62,6 +62,6 @@ class UnityLoggingTests(AutopilotTestCase):
         self.addCleanup(set_log_severity, "", "INFO")
         log_unity_message("DEBUG", "This is some more INFORMATION")
         sleep(1)
-        stop_logging_to_file()
+        reset_logging()
         with open(fpath, 'r') as f:
             self.assertThat(f.read(), Contains("This is some more INFORMATION"))
