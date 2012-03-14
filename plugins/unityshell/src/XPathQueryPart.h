@@ -20,7 +20,7 @@
 #include <string>
 
 #ifndef _XPATH_QUERY_PART
-#define _XPATH_QUERY_PART 1
+#define _XPATH_QUERY_PART
 
 namespace unity
 {

@@ -23,22 +23,32 @@
 #ifndef UNITYSHELL_FILTEREXPANDERLABEL_H
 #define UNITYSHELL_FILTEREXPANDERLABEL_H
 
+#include <memory>
+
 #include <Nux/Nux.h>
 #include <Nux/GridHLayout.h>
 #include <Nux/HLayout.h>
+#include <Nux/View.h>
 #include <Nux/VLayout.h>
-#include <Nux/StaticText.h>
+#include <UnityCore/Filter.h>
 
-#include "FilterWidget.h"
+#include "IconTexture.h"
+#include "Introspectable.h"
+#include "StaticCairoText.h"
+
+namespace nux
+{
+class AbstractPaintLayer;
+}
 
 namespace unity
 {
 namespace dash
 {
 
-class FilterExpanderLabel : public FilterWidget
+class FilterExpanderLabel : public nux::View,  public debug::Introspectable
 {
-  NUX_DECLARE_OBJECT_TYPE(FilterExpanderLabel, FilterWidget);
+  NUX_DECLARE_OBJECT_TYPE(FilterExpanderLabel, nux::View);
 public:
   FilterExpanderLabel(std::string const& label, NUX_FILE_LINE_PROTO);
   virtual ~FilterExpanderLabel();
@@ -47,25 +57,40 @@ public:
   void SetLabel(std::string const& label);
   void SetContents(nux::Layout* layout);
 
+  virtual void SetFilter(Filter::Ptr const& filter) = 0;
+  virtual std::string GetFilterType() = 0;
+
   nux::Property<bool> expanded;
 
 protected:
+  virtual bool AcceptKeyNavFocus();
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
+
+  // Introspection
+  virtual std::string GetName() const;
+  virtual void AddProperties(GVariantBuilder* builder);
 
 private:
   void BuildLayout();
   void DoExpandChange(bool change);
+  bool ShouldBeHighlighted();
 
   nux::LinearLayout* layout_;
   nux::LinearLayout* top_bar_layout_;
+  nux::View* expander_view_;
+  nux::LinearLayout* expander_layout_;
   nux::View* right_hand_contents_;
-  nux::View* expander_graphic_;
-  nux::StaticText* cairo_label_;
+  nux::StaticCairoText* cairo_label_;
   std::string raw_label_;
   std::string label_;
+  nux::VLayout* arrow_layout_;
+  nux::SpaceLayout* arrow_top_space_;
+  nux::SpaceLayout* arrow_bottom_space_;
+  IconTexture* expand_icon_;
 
   nux::ObjectPtr<nux::Layout> contents_;
+  std::unique_ptr<nux::AbstractPaintLayer> highlight_layer_;
 };
 
 } // namespace dash

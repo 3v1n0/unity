@@ -36,6 +36,13 @@
 #include "QuicklistView.h"
 #include "TestThreadHelper.h"
 
+using unity::QuicklistView;
+using unity::QuicklistMenuItem;
+using unity::QuicklistMenuItemCheckmark;
+using unity::QuicklistMenuItemLabel;
+using unity::QuicklistMenuItemRadio;
+using unity::QuicklistMenuItemSeparator;
+
 static void TestMenuItemCheckmark(void);
 static void TestMenuItemLabel(void);
 static void TestMenuItemRadio(void);
@@ -232,15 +239,16 @@ TestQuicklistMenuItem()
   quicklist->TestMenuItems(root);
 
   g_assert_cmpint(quicklist->GetNumItems(), == , 4);
-  g_assert_cmpint(quicklist->GetNthType(0), == , MENUITEM_TYPE_LABEL);
-  g_assert_cmpint(quicklist->GetNthType(1), == , MENUITEM_TYPE_SEPARATOR);
-  g_assert_cmpint(quicklist->GetNthType(2), == , MENUITEM_TYPE_LABEL);
-  g_assert_cmpint(quicklist->GetNthType(3), == , MENUITEM_TYPE_CHECK);
+  g_assert_cmpint(quicklist->GetNthType(0), == , unity::MENUITEM_TYPE_LABEL);
+  g_assert_cmpint(quicklist->GetNthType(1), == , unity::MENUITEM_TYPE_SEPARATOR);
+  g_assert_cmpint(quicklist->GetNthType(2), == , unity::MENUITEM_TYPE_LABEL);
+  g_assert_cmpint(quicklist->GetNthType(3), == , unity::MENUITEM_TYPE_CHECK);
 
   g_assert_cmpstr(quicklist->GetNthItems(0)->GetLabel(), == , "label 0");
   g_assert_cmpstr(quicklist->GetNthItems(2)->GetLabel(), == , "label 1");
   g_assert_cmpstr(quicklist->GetNthItems(3)->GetLabel(), == , "check mark 0");
 
+  g_assert_cmpint(quicklist->GetChildren().size(), == , 4);
 
   quicklist->Dispose();
 }

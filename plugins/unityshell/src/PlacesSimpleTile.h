@@ -49,7 +49,6 @@ protected:
   nux::Geometry GetHighlightGeometry();
 
   std::string GetName() const;
-  std::string GetChildsName() const;
   void        AddProperties(GVariantBuilder* builder);
 
   virtual bool                    DndSourceDragBegin();

@@ -59,7 +59,7 @@ public:
     NUX_ALIGN_BOTTOM = NUX_ALIGN_RIGHT
   } AlignState;
 
-  StaticCairoText(const TCHAR* text, NUX_FILE_LINE_PROTO);
+  StaticCairoText(std::string const& text, NUX_FILE_LINE_PROTO);
 
   ~StaticCairoText();
 
@@ -77,17 +77,18 @@ public:
                 bool             forceDraw);
 
   // public API
-  void SetText(NString text);
-  void SetTextColor(Color textColor);
+  void SetText(std::string const& text);
+  void SetTextColor(Color const& textColor);
   void SetTextEllipsize(EllipsizeState state);
   void SetTextAlignment(AlignState state);
   void SetTextVerticalAlignment(AlignState state);
   void SetFont(const char* fontstring);
   void SetLines(int maximum_lines);
 
-  NString GetText();
+  std::string GetText() const;
 
   int  GetLineCount();
+  int GetBaseline() const;
 
   void GetTextExtents(int& width, int& height);
 
@@ -105,8 +106,11 @@ private:
   int            _cached_extent_width;
   int            _cached_extent_height;
   bool           _need_new_extent_cache;
+  int            _cached_base_width;
+  int            _cached_base_height;
+  int            _baseline;
 
-  NString        _text;
+  std::string    _text;
   Color          _textColor;
   EllipsizeState _ellipsize;
   AlignState     _align;

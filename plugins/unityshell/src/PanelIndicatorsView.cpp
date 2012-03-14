@@ -340,11 +340,6 @@ std::string PanelIndicatorsView::GetName() const
   return "IndicatorsView";
 }
 
-std::string PanelIndicatorsView::GetChildsName() const
-{
-  return "entries";
-}
-
 void
 PanelIndicatorsView::AddProperties(GVariantBuilder* builder)
 {

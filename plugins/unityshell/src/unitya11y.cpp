@@ -299,7 +299,7 @@ unity_a11y_create_accessible(nux::Object* object)
   if (object->Type().IsDerivedFromType(unity::dash::ResultViewGrid::StaticObjectType))
     return unity_rvgrid_accessible_new(object);
 
-  if (object->Type().IsDerivedFromType(unity::dash::SearchBar::StaticObjectType))
+  if (object->Type().IsDerivedFromType(unity::SearchBar::StaticObjectType))
     return unity_search_bar_accessible_new(object);
 
   if (object->Type().IsDerivedFromType(unity::switcher::SwitcherView::StaticObjectType))

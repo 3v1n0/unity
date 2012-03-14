@@ -53,7 +53,8 @@ nux::Color ColorFromGdkRGBA(GdkRGBA const& color)
 }
 
 Style::Style()
-  : _theme_name(NULL)
+  : panel_height(24)
+  , _theme_name(NULL)
 {
   if (style_instance)
   {
@@ -206,12 +207,12 @@ nux::BaseTexture* Style::GetWindowButton(WindowButtonType type, WindowState stat
   }
 
   if (!texture)
-    texture = GetWindowButtonForTheme(type, state);
+    texture = GetFallbackWindowButton(type, state);
 
   return texture;
 }
 
-nux::BaseTexture* Style::GetWindowButtonForTheme(WindowButtonType type,
+nux::BaseTexture* Style::GetFallbackWindowButton(WindowButtonType type,
                                                  WindowState state)
 {
   int width = 18, height = 18;
@@ -230,6 +231,8 @@ nux::BaseTexture* Style::GetWindowButtonForTheme(WindowButtonType type,
     main = main * 1.2f;
   else if (state == WindowState::PRESSED)
     main = main * 0.8f;
+  else if (state == WindowState::DISABLED)
+    main = main * 0.5f;
 
   cr  = cairo_graphics.GetContext();
   cairo_translate(cr, 0.5, 0.5);
@@ -257,7 +260,15 @@ nux::BaseTexture* Style::GetWindowButtonForTheme(WindowButtonType type,
     cairo_move_to(cr, w, height / 2.0f);
     cairo_line_to(cr, width - w, height / 2.0f);
   }
-  else
+  else if (type == WindowButtonType::UNMAXIMIZE)
+  {
+    cairo_move_to(cr, w, h + h/5.0f);
+    cairo_line_to(cr, width - w, h + h/5.0f);
+    cairo_line_to(cr, width - w, height - h - h/5.0f);
+    cairo_line_to(cr, w, height - h - h/5.0f);
+    cairo_close_path(cr);
+  }
+  else // if (type == WindowButtonType::MAXIMIZE)
   {
     cairo_move_to(cr, w, h);
     cairo_line_to(cr, width - w, h);

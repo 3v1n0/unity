@@ -72,6 +72,7 @@ public:
             int timeout_msec);
 
   void Connect(string const& signal_name, ReplyCallback callback);
+  bool IsConnected();
 
   static void OnNameAppeared(GDBusConnection* connection, const char* name,
                              const char* name_owner, gpointer impl);
@@ -140,11 +141,13 @@ void DBusProxy::Impl::OnNameAppeared(GDBusConnection* connection,
                                      gpointer impl)
 {
   DBusProxy::Impl* self = static_cast<DBusProxy::Impl*>(impl);
-
   LOG_DEBUG(logger) << self->name_ << " appeared";
 
-  self->connected_ = true;
-  self->owner_->connected.emit();
+  if (self->proxy_)
+  {
+    self->connected_ = true;
+    self->owner_->connected.emit();
+  }
 }
 
 void DBusProxy::Impl::OnNameVanished(GDBusConnection* connection,
@@ -190,6 +193,11 @@ void DBusProxy::Impl::Connect()
                            cancellable_,
                            DBusProxy::Impl::OnProxyConnectCallback,
                            this);
+}
+
+bool DBusProxy::Impl::IsConnected()
+{
+  return connected_;
 }
 
 void DBusProxy::Impl::OnProxyConnectCallback(GObject* source,
@@ -318,6 +326,11 @@ void DBusProxy::Call(string const& method_name,
 void DBusProxy::Connect(std::string const& signal_name, ReplyCallback callback)
 {
   pimpl->Connect(signal_name, callback);
+}
+
+bool DBusProxy::IsConnected()
+{
+  return pimpl->IsConnected();
 }
 
 }

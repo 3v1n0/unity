@@ -35,7 +35,7 @@ class BFBLauncherIcon : public SimpleLauncherIcon
 {
 
 public:
-  BFBLauncherIcon(Launcher* launcher);
+  BFBLauncherIcon();
 
   virtual nux::Color BackgroundColor();
   virtual nux::Color GlowColor();
@@ -44,13 +44,14 @@ public:
 
 protected:
   std::list<DbusmenuMenuitem*> GetMenus();
+  std::string GetName() const;
 
 private:
   static void OnMenuitemActivated(DbusmenuMenuitem* item, int time, gchar* lens);
-                                     
+
   static unity::UBusManager ubus_manager_;
   nux::Color background_color_;
-  dash::FilesystemLenses lenses_;
+  dash::LensDirectoryReader::Ptr reader_;
 };
 
 }

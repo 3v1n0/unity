@@ -26,8 +26,6 @@
 #include <Nux/CairoWrapper.h>
 #include <Nux/ToggleButton.h>
 
-#include "FilterWidget.h"
-
 namespace unity
 {
 namespace dash
@@ -46,14 +44,18 @@ protected:
   virtual long ComputeContentSize();
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
 
+  void Init();
   void InitTheme();
   void RedrawTheme(nux::Geometry const& geom, cairo_t* cr, nux::ButtonVisualState faked_state);
+  void RedrawFocusOverlay(nux::Geometry const& geom, cairo_t* cr);
 
   typedef std::unique_ptr<nux::CairoWrapper> NuxCairoPtr;
 
   NuxCairoPtr prelight_;
   NuxCairoPtr active_;
   NuxCairoPtr normal_;
+  NuxCairoPtr focus_;
+
   nux::Geometry cached_geometry_;
 
 private:

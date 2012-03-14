@@ -18,6 +18,7 @@
  */
 
 #include <queue>
+#include <fstream>
 #include <sstream>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/split.hpp>
@@ -25,6 +26,7 @@
 #include <boost/bind.hpp>
 #include <core/core.h>
 #include <NuxCore/Logger.h>
+#include <NuxCore/LoggingWriter.h>
 
 #include "DebugDBusInterface.h"
 #include "Introspectable.h"
@@ -38,10 +40,21 @@ namespace debug
 {
 namespace
 {
-  nux::logging::Logger logger("unity.debug.DebugDBusInterface");
+nux::logging::Logger logger("unity.debug.DebugDBusInterface");
+
+namespace local
+{
+  std::ofstream output_file;
+}
 }
 
 GVariant* GetState(std::string const& query);
+void StartLogToFile(std::string const& file_path);
+void ResetLogging();
+void SetLogSeverity(std::string const& log_component,
+  std::string const& severity);
+void LogMessage(std::string const& severity,
+  std::string const& message);
 
 const char* DebugDBusInterface::DBUS_DEBUG_OBJECT_PATH = "/com/canonical/Unity/Debug";
 
@@ -52,6 +65,23 @@ const gchar DebugDBusInterface::introspection_xml[] =
   "     <method name='GetState'>"
   "       <arg type='s' name='piece' direction='in' />"
   "       <arg type='aa{sv}' name='state' direction='out' />"
+  "     </method>"
+  ""
+  "     <method name='StartLogToFile'>"
+  "       <arg type='s' name='file_path' direction='in' />"
+  "     </method>"
+  ""
+  "     <method name='ResetLogging'>"
+  "     </method>"
+  ""
+  "     <method name='SetLogSeverity'>"
+  "       <arg type='s' name='log_component' direction='in' />"
+  "       <arg type='s' name='severity' direction='in' />"
+  "     </method>"
+  ""
+  "     <method name='LogMessage'>"
+  "       <arg type='s' name='severity' direction='in' />"
+  "       <arg type='s' name='message' direction='in' />"
   "     </method>"
   ""
   "   </interface>"
@@ -67,7 +97,7 @@ GDBusInterfaceVTable DebugDBusInterface::interface_vtable =
 static CompScreen* _screen;
 static Introspectable* _parent_introspectable;
 
-DebugDBusInterface::DebugDBusInterface(Introspectable* parent, 
+DebugDBusInterface::DebugDBusInterface(Introspectable* parent,
                                        CompScreen* screen)
 {
   _screen = screen;
@@ -100,7 +130,7 @@ DebugDBusInterface::OnBusAcquired(GDBusConnection* connection, const gchar* name
     return;
   }
 
-  while (introspection_data->interfaces[i] != NULL) 
+  while (introspection_data->interfaces[i] != NULL)
   {
     error = NULL;
     g_dbus_connection_register_object(connection,
@@ -117,6 +147,7 @@ DebugDBusInterface::OnBusAcquired(GDBusConnection* connection, const gchar* name
     }
     i++;
   }
+  g_dbus_node_info_unref(introspection_data);
 }
 
 void
@@ -149,9 +180,40 @@ DebugDBusInterface::HandleDBusMethodCall(GDBusConnection* connection,
     g_dbus_method_invocation_return_value(invocation, ret);
     g_variant_unref(ret);
   }
+  else if (g_strcmp0(method_name, "StartLogToFile") == 0)
+  {
+    const gchar* log_path;
+    g_variant_get(parameters, "(&s)", &log_path);
+
+    StartLogToFile(log_path);
+    g_dbus_method_invocation_return_value(invocation, NULL);
+  }
+  else if (g_strcmp0(method_name, "ResetLogging") == 0)
+  {
+    ResetLogging();
+    g_dbus_method_invocation_return_value(invocation, NULL);
+  }
+  else if (g_strcmp0(method_name, "SetLogSeverity") == 0)
+  {
+    const gchar* component;
+    const gchar* severity;
+    g_variant_get(parameters, "(&s&s)", &component, &severity);
+
+    SetLogSeverity(component, severity);
+    g_dbus_method_invocation_return_value(invocation, NULL);
+  }
+  else if (g_strcmp0(method_name, "LogMessage") == 0)
+  {
+    const gchar* severity;
+    const gchar* message;
+    g_variant_get(parameters, "(&s&s)", &severity, &message);
+
+    LogMessage(severity, message);
+    g_dbus_method_invocation_return_value(invocation, NULL);
+  }
   else
   {
-    g_dbus_method_invocation_return_dbus_error(invocation, 
+    g_dbus_method_invocation_return_dbus_error(invocation,
                                                unity::DBUS_BUS_NAME.c_str(),
                                                "Failed to find method");
   }
@@ -164,17 +226,50 @@ GVariant* GetState(std::string const& query)
   std::list<Introspectable*> parts = GetIntrospectableNodesFromQuery(query, _parent_introspectable);
   GVariantBuilder  builder;
   g_variant_builder_init(&builder, G_VARIANT_TYPE("aa{sv}"));
-  
+
   for (Introspectable *node : parts)
   {
     g_variant_builder_add_value(&builder, node->Introspect());
   }
-  
+
   return g_variant_new("(aa{sv})", &builder);
 }
 
+void StartLogToFile(std::string const& file_path)
+{
+  if (local::output_file.is_open())
+    local::output_file.close();
+  local::output_file.open(file_path.c_str());
+  nux::logging::Writer::Instance().SetOutputStream(local::output_file);
+}
+
+void ResetLogging()
+{
+  if (local::output_file.is_open())
+    local::output_file.close();
+  nux::logging::Writer::Instance().SetOutputStream(std::cout);
+  nux::logging::reset_logging();
+}
+
+void SetLogSeverity(std::string const& log_component,
+                    std::string const& severity)
+{
+  nux::logging::Logger(log_component).SetLogLevel(nux::logging::get_logging_level(severity));
+}
+
+void LogMessage(std::string const& severity,
+                std::string const& message)
+{
+  nux::logging::Level level = nux::logging::get_logging_level(severity);
+  if (logger.GetEffectiveLogLevel() <= level)
+  {
+   nux::logging::LogStream(level, logger.module(), __FILE__, __LINE__).stream()
+      << message;
+  }
+}
+
 /*
- * Do a breadth-first search of the introspection tree and find all nodes that match the 
+ * Do a breadth-first search of the introspection tree and find all nodes that match the
  * query.
  */
 std::list<Introspectable*> GetIntrospectableNodesFromQuery(std::string const& query, Introspectable* tree_root)
@@ -196,12 +291,12 @@ std::list<Introspectable*> GetIntrospectableNodesFromQuery(std::string const& qu
   {
     std::list<std::string> query_strings;
     boost::algorithm::split(query_strings, sanitised_query, boost::algorithm::is_any_of("/"));
-    // Boost's split() implementation does not match it's documentation! According to the 
-    // docs, it's not supposed to add empty strings, but it does, which is a PITA. This 
+    // Boost's split() implementation does not match it's documentation! According to the
+    // docs, it's not supposed to add empty strings, but it does, which is a PITA. This
     // next line removes them:
-    query_strings.erase( std::remove_if( query_strings.begin(), 
-                                        query_strings.end(), 
-                                        boost::bind( &std::string::empty, _1 ) ), 
+    query_strings.erase( std::remove_if( query_strings.begin(),
+                                        query_strings.end(),
+                                        boost::bind( &std::string::empty, _1 ) ),
                       query_strings.end());
     foreach(std::string part, query_strings)
     {
@@ -228,7 +323,7 @@ std::list<Introspectable*> GetIntrospectableNodesFromQuery(std::string const& qu
     {
       LOG_WARNING(logger) << "Malformed relative introspection query: '" << query << "'.";
     }
-    
+
     // non-recursive BFS traversal to find starting points:
     std::queue<Introspectable*> queue;
     queue.push(tree_root);
@@ -253,14 +348,14 @@ std::list<Introspectable*> GetIntrospectableNodesFromQuery(std::string const& qu
   // now we have the tree start points, process them:
   query_parts.pop_front();
   typedef std::pair<Introspectable*, std::list<XPathQueryPart>::iterator> node_match_pair;
-  
+
   std::queue<node_match_pair> traverse_queue;
   foreach(Introspectable *node, start_points)
   {
     traverse_queue.push(node_match_pair(node, query_parts.begin()));
   }
   start_points.clear();
-  
+
   while (!traverse_queue.empty())
   {
     node_match_pair p = traverse_queue.front();

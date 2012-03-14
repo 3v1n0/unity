@@ -22,7 +22,8 @@
 #include "CairoTexture.h"
 #include "QuicklistMenuItemSeparator.h"
 
-using unity::texture_from_cairo_graphics;
+namespace unity
+{
 
 QuicklistMenuItemSeparator::QuicklistMenuItemSeparator(DbusmenuMenuitem* item,
                                                        NUX_FILE_LINE_DECL) :
@@ -30,9 +31,9 @@ QuicklistMenuItemSeparator::QuicklistMenuItemSeparator(DbusmenuMenuitem* item,
                     NUX_FILE_LINE_PARAM)
 {
   _name = "QuicklistMenuItemSeparator";
-  SetMinimumHeight(5);
-  SetBaseSize(64, 5);
-  //_normalTexture = NULL;
+  SetMinimumHeight(7);
+  SetBaseSize(64, 7);
+
   _color      = nux::Color(1.0f, 1.0f, 1.0f, 0.5f);
   _premultiplied_color = nux::Color(0.5f, 0.5f, 0.5f, 0.5f);
   _item_type  = MENUITEM_TYPE_SEPARATOR;
@@ -46,8 +47,8 @@ QuicklistMenuItemSeparator::QuicklistMenuItemSeparator(DbusmenuMenuitem* item,
                     NUX_FILE_LINE_PARAM)
 {
   _name = "QuicklistMenuItemSeparator";
-  SetMinimumHeight(5);
-  SetBaseSize(64, 5);
+  SetMinimumHeight(7);
+  SetBaseSize(64, 7);
   //_normalTexture = NULL;
   _color      = nux::Color(1.0f, 1.0f, 1.0f, 0.5f);
   _premultiplied_color = nux::Color(0.5f, 0.5f, 0.5f, 0.5f);
@@ -145,10 +146,9 @@ void
 QuicklistMenuItemSeparator::UpdateTexture()
 {
   int width  = GetBaseWidth();
+  int height  = GetBaseHeight();
 
-  _cairoGraphics = new nux::CairoGraphics(CAIRO_FORMAT_ARGB32,
-                                          GetBaseWidth(),
-                                          GetBaseHeight());
+  _cairoGraphics = new nux::CairoGraphics(CAIRO_FORMAT_ARGB32, width, height);
   cairo_t* cr = _cairoGraphics->GetContext();
 
   cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
@@ -156,8 +156,8 @@ QuicklistMenuItemSeparator::UpdateTexture()
   cairo_paint(cr);
   cairo_set_source_rgba(cr, _color.red, _color.green, _color.blue, _color.alpha);
   cairo_set_line_width(cr, 1.0f);
-  cairo_move_to(cr, 0.5f, 2.5f);
-  cairo_line_to(cr, width - 0.5f, 2.5f);
+  cairo_move_to(cr, 0.0f, 3.5f);
+  cairo_line_to(cr, width, 3.5f);
   cairo_stroke(cr);
 
   if (_normalTexture[0])
@@ -165,6 +165,7 @@ QuicklistMenuItemSeparator::UpdateTexture()
 
   _normalTexture[0] = texture_from_cairo_graphics(*_cairoGraphics);
 
+  cairo_destroy(cr);
   delete _cairoGraphics;
 }
 
@@ -174,4 +175,6 @@ int QuicklistMenuItemSeparator::CairoSurfaceWidth()
     return _normalTexture[0]->GetWidth();
 
   return 0;
+}
+
 }

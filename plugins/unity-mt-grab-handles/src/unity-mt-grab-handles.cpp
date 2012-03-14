@@ -438,13 +438,21 @@ UnityMTGrabHandlesWindow::getOutputExtents(CompWindowExtents& output)
 
 bool
 UnityMTGrabHandlesWindow::glDraw(const GLMatrix&            transform,
+#ifdef USE_GLES
+                                 const GLWindowPaintAttrib& attrib,
+#else
                                  GLFragment::Attrib&      fragment,
+#endif
                                  const CompRegion&          region,
                                  unsigned int              mask)
 {
   /* Draw the window on the bottom, we will be drawing the
    * handles on top */
+#ifdef USE_GLES
+  bool status = gWindow->glDraw(transform, attrib, region, mask);
+#else
   bool status = gWindow->glDraw(transform, fragment, region, mask);
+#endif
 
   if (mHandles && mHandles->visible())
   {
@@ -464,10 +472,17 @@ UnityMTGrabHandlesWindow::glDraw(const GLMatrix&            transform,
         GLTexture::MatrixList matl;
         GLTexture::Matrix     mat = tex->matrix();
         CompRegion        paintRegion(region);
+#ifdef USE_GLES
+        GLWindowPaintAttrib   wAttrib(attrib);
+#endif
 
         /* We can reset the window geometry since it will be
          * re-added later */
+#ifdef USE_GLES
+        gWindow->vertexBuffer()->begin();
+#else
         gWindow->geometry().reset();
+#endif
 
         /* Not sure what this does, but it is necessary
          * (adjusts for scale?) */
@@ -483,23 +498,35 @@ UnityMTGrabHandlesWindow::glDraw(const GLMatrix&            transform,
          * dim (so we get a nice render for things like
          * wobbly etc etc */
         gWindow->glAddGeometry(matl, reg, paintRegion);
-
+#ifdef USE_GLES
+        gWindow->vertexBuffer()->end();
+        wAttrib.opacity = mHandles->opacity();
+#else
         /* Did it succeed? */
         if (gWindow->geometry().vertices)
         {
           fragment.setOpacity(mHandles->opacity());
           /* Texture rendering set-up */
           us->gScreen->setTexEnvMode(GL_MODULATE);
+#endif
           glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
           /* Draw the dim texture with all of it's modified
            * geometry glory */
-          gWindow->glDrawTexture(tex, fragment, mask | PAINT_WINDOW_BLEND_MASK
+          gWindow->glDrawTexture(tex,
+#ifdef USE_GLES
+                                 transform, wAttrib,
+#else
+                                 fragment,
+#endif
+                                 mask | PAINT_WINDOW_BLEND_MASK
                                  | PAINT_WINDOW_TRANSLUCENT_MASK |
                                  PAINT_WINDOW_TRANSFORMED_MASK);
           /* Texture rendering tear-down */
           glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+#ifndef USE_GLES
           us->gScreen->setTexEnvMode(GL_REPLACE);
         }
+#endif
       }
 
       handle++;

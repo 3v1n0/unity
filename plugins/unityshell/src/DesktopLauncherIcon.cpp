@@ -27,31 +27,20 @@ namespace unity
 namespace launcher
 {
 
-DesktopLauncherIcon::DesktopLauncherIcon(Launcher* IconManager)
-  :   SimpleLauncherIcon(IconManager)
+DesktopLauncherIcon::DesktopLauncherIcon()
+  :   SimpleLauncherIcon()
   ,   show_in_switcher_(true)
 {
   tooltip_text = _("Show Desktop");
   icon_name = "desktop";
   SetQuirk(QUIRK_VISIBLE, true);
-  SetQuirk(QUIRK_RUNNING, true);
+  SetQuirk(QUIRK_RUNNING, false);
   SetIconType(TYPE_BEGIN);
+  SetShowInSwitcher(false);
 }
 
 DesktopLauncherIcon::~DesktopLauncherIcon()
 {
-}
-
-nux::Color
-DesktopLauncherIcon::BackgroundColor()
-{
-  return nux::Color(0xFF333333);
-}
-
-nux::Color
-DesktopLauncherIcon::GlowColor()
-{
-  return nux::Color(0xFF333333);
 }
 
 void
@@ -59,6 +48,11 @@ DesktopLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 {
   SimpleLauncherIcon::ActivateLauncherIcon(arg);
   WindowManager::Default()->ShowDesktop();
+}
+
+std::string DesktopLauncherIcon::GetName() const
+{
+  return "DesktopLauncherIcon";
 }
 
 } // namespace launcher

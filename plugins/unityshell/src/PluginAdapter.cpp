@@ -28,6 +28,9 @@ namespace
 
 nux::logging::Logger logger("unity.plugin");
 
+const int THRESHOLD_HEIGHT = 600;
+const int THRESHOLD_WIDTH = 1024;
+
 }
 
 PluginAdapter* PluginAdapter::_default = 0;
@@ -569,12 +572,14 @@ PluginAdapter::Lower(guint32 xid)
 }
 
 void 
-PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids, FocusVisibility focus_visibility)
+PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids, FocusVisibility focus_visibility, int monitor)
 {
   CompPoint target_vp = m_Screen->vp();
-  CompWindow* top_win = NULL;
+  CompWindow* top_window = NULL;
+  CompWindow* top_window_on_monitor = NULL;
   bool any_on_current = false;
   bool any_mapped = false;
+  bool any_mapped_on_current = false;
   bool forced_unminimize = false;
 
   /* sort the list */
@@ -592,6 +597,11 @@ PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids, FocusVisibility 
     if (win->defaultViewport() == m_Screen->vp())
     {
       any_on_current = true;
+
+      if (!win->minimized())
+      {
+        any_mapped_on_current = true;
+      }
     }
 
     if (!win->minimized())
@@ -629,7 +639,9 @@ PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids, FocusVisibility 
              win->mapNum () == 0))
        {
          bool is_mapped = win->mapNum () != 0;
-         top_win = win;
+         top_window = win;
+         if (monitor >= 0 && win->outputDevice() == monitor)
+          top_window_on_monitor = win;
          win->unminimize ();
 
          forced_unminimize = true;
@@ -638,19 +650,23 @@ PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids, FocusVisibility 
          if (!is_mapped)
            win->raise ();
        }
-       else if ((any_mapped && !win->minimized()) || !any_mapped)
+       else if ((any_mapped_on_current && !win->minimized()) || !any_mapped_on_current)
        {
          if (!forced_unminimize || target_vp == m_Screen->vp())
          {
            win->raise();
-           top_win = win;
+           top_window = win;
+           if (monitor >= 0 && win->outputDevice() == monitor)
+            top_window_on_monitor = win;
          }
        }
     }
   }
 
-  if (top_win)
-    top_win->activate();
+  if (monitor > 0 && top_window_on_monitor)
+    top_window_on_monitor->activate();
+  else if (top_window)
+    top_window->activate();
 }
 
 bool 
@@ -923,6 +939,10 @@ bool PluginAdapter::MaximizeIfBigEnough(CompWindow* window)
 
   screen_height = o.workArea().height();
   screen_width = o.workArea().width();
+  
+  // See bug https://bugs.launchpad.net/unity/+bug/797808
+  if (screen_height * screen_width > THRESHOLD_HEIGHT * THRESHOLD_WIDTH)
+    return false;
 
   // use server<parameter> because the window won't show the real parameter as
   // not mapped yet

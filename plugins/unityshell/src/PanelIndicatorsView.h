@@ -83,7 +83,6 @@ protected:
   Entries entries_;
 
   std::string GetName() const;
-  std::string GetChildsName() const;
   void         AddProperties(GVariantBuilder* builder);
 
 private:

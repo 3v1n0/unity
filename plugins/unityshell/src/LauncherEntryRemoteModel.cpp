@@ -327,7 +327,7 @@ LauncherEntryRemoteModel::on_dbus_name_owner_changed_signal_received(GDBusConnec
   if (parameters == NULL || self->_entries_by_uri == NULL)
     return;
 
-  g_variant_get(parameters, "(sss)", &name, &before, &after);
+  g_variant_get(parameters, "(&s&s&s)", &name, &before, &after);
 
   if (!after[0])
   {

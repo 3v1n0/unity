@@ -54,7 +54,7 @@ public:
       _normal_dash_tex(NULL),
       _prelight_dash_tex(NULL),
       _pressed_dash_tex(NULL),
-      _dash_is_open(false),
+      _overlay_is_open(false),
       _mouse_is_down(false),
       _place_shown_interest(0),
       _place_hidden_interest(0),
@@ -66,11 +66,11 @@ public:
     dash::Settings::Instance().changed.connect(sigc::mem_fun(this, &WindowButton::UpdateDashUnmaximize));
 
     UBusServer* ubus = ubus_server_get_default();
-    _place_shown_interest = ubus_server_register_interest(ubus, UBUS_PLACE_VIEW_SHOWN,
-                                                          (UBusCallback)&WindowButton::OnPlaceViewShown,
+    _place_shown_interest = ubus_server_register_interest(ubus, UBUS_OVERLAY_SHOWN,
+                                                          (UBusCallback)&WindowButton::OnOverlayShown,
                                                           this);
-    _place_hidden_interest = ubus_server_register_interest(ubus, UBUS_PLACE_VIEW_HIDDEN,
-                                                           (UBusCallback)&WindowButton::OnPlaceViewHidden,
+    _place_hidden_interest = ubus_server_register_interest(ubus, UBUS_OVERLAY_HIDDEN,
+                                                           (UBusCallback)&WindowButton::OnOverlayHidden,
                                                            this);
 
     /* FIXME HasMouseFocus() doesn't seem to work correctly, so we use this workaround */
@@ -106,15 +106,22 @@ public:
 
     GfxContext.PushClippingRectangle(geo);
 
-    if (_dash_is_open)
+    if (_overlay_is_open)
     {
-      //FIXME should use HasMouseFocus()
-      if (_mouse_is_down && IsMouseInside())
-        tex = _pressed_dash_tex;
-      else if (IsMouseInside())
-        tex = _prelight_dash_tex;
+      if (_type == panel::WindowButtonType::UNMAXIMIZE && !_overlay_can_maximize)
+      {
+        tex = _disabled_dash_tex;
+      }
       else
-        tex = _normal_dash_tex;
+      {
+        //FIXME should use HasMouseFocus()
+        if (_mouse_is_down && IsMouseInside())
+          tex = _pressed_dash_tex;
+        else if (IsMouseInside())
+          tex = _prelight_dash_tex;
+        else
+          tex = _normal_dash_tex;
+      }
     }
     else
     {
@@ -163,7 +170,7 @@ public:
     _prelight_dash_tex = GetDashWindowButton(_type, panel::WindowState::PRELIGHT);
     _pressed_dash_tex = GetDashWindowButton(_type, panel::WindowState::PRESSED);
 
-    if (_dash_is_open)
+    if (_overlay_is_open)
     {
       if (_normal_dash_tex)
         SetMinMaxSize(_normal_dash_tex->GetWidth(), _normal_dash_tex->GetHeight());
@@ -183,6 +190,13 @@ public:
     if (_type != panel::WindowButtonType::UNMAXIMIZE)
       return;
 
+    panel::WindowButtonType real_type = panel::WindowButtonType::UNMAXIMIZE;
+
+    if (dash::Settings::Instance().GetFormFactor() == dash::FormFactor::DESKTOP)
+    {
+      real_type = panel::WindowButtonType::MAXIMIZE;
+    }
+
     if (_normal_dash_tex)
       _normal_dash_tex->UnReference();
     if (_prelight_dash_tex)
@@ -190,25 +204,17 @@ public:
     if (_pressed_dash_tex)
       _pressed_dash_tex->UnReference();
 
-    if (dash::Settings::Instance().GetFormFactor() == dash::FormFactor::DESKTOP)
-    {
-      // get maximize buttons
-      _normal_dash_tex = GetDashMaximizeWindowButton(panel::WindowState::NORMAL);
-      _prelight_dash_tex = GetDashMaximizeWindowButton(panel::WindowState::PRELIGHT);
-      _pressed_dash_tex = GetDashMaximizeWindowButton(panel::WindowState::PRESSED);
-    }
-    else
-    {
-      // get unmaximize buttons
-      _normal_dash_tex = GetDashWindowButton(_type, panel::WindowState::NORMAL);
-      _prelight_dash_tex = GetDashWindowButton(_type, panel::WindowState::PRELIGHT);
-      _pressed_dash_tex = GetDashWindowButton(_type, panel::WindowState::PRESSED);
-    }
+    //!!FIXME!! - don't have disabled instances of the (un)maximize buttons
+    // get (un)maximize buttons
+    _normal_dash_tex = GetDashWindowButton(real_type, panel::WindowState::NORMAL);
+    _prelight_dash_tex = GetDashWindowButton(real_type, panel::WindowState::PRELIGHT);
+    _pressed_dash_tex = GetDashWindowButton(real_type, panel::WindowState::PRESSED);
+    _disabled_dash_tex = GetDashWindowButton(real_type, panel::WindowState::DISABLED);
 
     // still check if the dash is really opened,
     // someone could change the form factor through dconf
     // when the dash is closed
-    if (_dash_is_open)
+    if (_overlay_is_open)
     {
       if (_normal_dash_tex)
         SetMinMaxSize(_normal_dash_tex->GetWidth(), _normal_dash_tex->GetHeight());
@@ -233,34 +239,46 @@ public:
 
 private:
   panel::WindowButtonType _type;
+  // FIXME - replace with objectptr varients
   nux::BaseTexture* _normal_tex;
   nux::BaseTexture* _prelight_tex;
   nux::BaseTexture* _pressed_tex;
   nux::BaseTexture* _normal_dash_tex;
   nux::BaseTexture* _prelight_dash_tex;
   nux::BaseTexture* _pressed_dash_tex;
-  bool _dash_is_open;
+  nux::BaseTexture* _disabled_dash_tex;
+
+  bool _overlay_is_open;
+  bool _overlay_can_maximize;
   bool _mouse_is_down;
   guint32 _place_shown_interest;
   guint32 _place_hidden_interest;
   double _opacity;
 
-  static void OnPlaceViewShown(GVariant* data, void* val)
+  static void OnOverlayShown(GVariant* data, void* val)
   {
+    unity::glib::String overlay_identity;
+    gboolean can_maximise = FALSE;
+    gint32 overlay_monitor = 0;
+    g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING, 
+                  &overlay_identity, &can_maximise, &overlay_monitor);
+
     WindowButton* self = (WindowButton*)val;
 
-    self->_dash_is_open = true;
+    self->_overlay_is_open = true;
     if (self->_normal_dash_tex)
       self->SetMinMaxSize(self->_normal_dash_tex->GetWidth(), self->_normal_dash_tex->GetHeight());
+
+    self->_overlay_can_maximize = (can_maximise) ? true : false;
 
     self->QueueDraw();
   }
 
-  static void OnPlaceViewHidden(GVariant* data, void* val)
+  static void OnOverlayHidden(GVariant* data, void* val)
   {
     WindowButton* self = (WindowButton*)val;
 
-    self->_dash_is_open = false;
+    self->_overlay_is_open = false;
     if (self->_normal_tex)
       self->SetMinMaxSize(self->_normal_tex->GetWidth(), self->_normal_tex->GetHeight());
 
@@ -270,8 +288,9 @@ private:
   nux::BaseTexture* GetDashWindowButton(panel::WindowButtonType type,
                                         panel::WindowState state)
   {
-    const char* names[] = { "close_dash", "minimize_dash", "unmaximize_dash" };
-    const char* states[] = { "", "_prelight", "_pressed" };
+    nux::BaseTexture* texture = nullptr;
+    const char* names[] = { "close_dash", "minimize_dash", "unmaximize_dash", "maximize_dash" };
+    const char* states[] = { "", "_prelight", "_pressed", "_disabled" };
 
     std::ostringstream subpath;
     subpath << names[static_cast<int>(type)]
@@ -280,26 +299,15 @@ private:
     glib::String filename(g_build_filename(PKGDATADIR, subpath.str().c_str(), NULL));
 
     glib::Error error;
-    glib::Object<GdkPixbuf> pixbuf(gdk_pixbuf_new_from_file(filename.Value(), &error));
+    glib::Object<GdkPixbuf> pixbuf(gdk_pixbuf_new_from_file(filename, &error));
 
-    // not handling broken texture or missing files
-    return nux::CreateTexture2DFromPixbuf(pixbuf, true);
-  }
+    if (pixbuf && !error)
+      texture = nux::CreateTexture2DFromPixbuf(pixbuf, true);
 
-  nux::BaseTexture* GetDashMaximizeWindowButton(panel::WindowState state)
-  {
-    const char* states[] = { "", "_prelight", "_pressed" };
+    if (!texture)
+      texture = panel::Style::Instance().GetFallbackWindowButton(type, state);
 
-    std::ostringstream subpath;
-    subpath << "maximize_dash" << states[static_cast<int>(state)] << ".png";
-
-    glib::String filename(g_build_filename(PKGDATADIR, subpath.str().c_str(), NULL));
-
-    glib::Error error;
-    glib::Object<GdkPixbuf> pixbuf(gdk_pixbuf_new_from_file(filename.Value(), &error));
-
-    // not handling broken texture or missing files
-    return nux::CreateTexture2DFromPixbuf(pixbuf, true);
+    return texture;
   }
 };
 

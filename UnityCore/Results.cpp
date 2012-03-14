@@ -31,6 +31,14 @@ Results::Results()
   row_removed.connect(sigc::mem_fun(this, &Results::OnRowRemoved));
 }
 
+Results::Results(ModelType model_type)
+  : Model<Result>::Model(model_type)
+{
+  row_added.connect(sigc::mem_fun(this, &Results::OnRowAdded));
+  row_changed.connect(sigc::mem_fun(this, &Results::OnRowChanged));
+  row_removed.connect(sigc::mem_fun(this, &Results::OnRowRemoved));
+}
+
 void Results::OnRowAdded(Result& result)
 {
   result_added.emit(result);

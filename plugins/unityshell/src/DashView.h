@@ -27,10 +27,10 @@
 #include <Nux/View.h>
 #include <Nux/VLayout.h>
 #include <UnityCore/FilesystemLenses.h>
+#include <UnityCore/HomeLens.h>
 
 #include "BackgroundEffectHelper.h"
-#include "DashSearchBar.h"
-#include "HomeView.h"
+#include "SearchBar.h"
 #include "Introspectable.h"
 #include "LensBar.h"
 #include "LensView.h"
@@ -41,6 +41,8 @@ namespace unity
 {
 namespace dash
 {
+
+class DashLayout;
 
 class DashView : public nux::View, public unity::debug::Introspectable
 {
@@ -56,6 +58,7 @@ public:
   void Relayout();
   void DisableBlur();
   void OnActivateRequest(GVariant* args);
+  void SetMonitorOffset(int x, int y);
 
   std::string const GetIdForShortcutActivation(std::string const& shortcut) const;
   std::vector<char> GetAllShortcuts();
@@ -95,6 +98,7 @@ private:
   std::string AnalyseLensURI(std::string const& uri);
   void UpdateLensFilter(std::string lens, std::string filter, std::string value);
   void UpdateLensFilterValue(Filter::Ptr filter, std::string value);
+  void EnsureLensesInitialized();
 
   bool AcceptKeyNavFocus();
   bool InspectKeyEvent(unsigned int eventType, unsigned int key_sym, const char* character);
@@ -104,21 +108,23 @@ private:
   nux::Area* KeyNavIteration(nux::KeyNavDirection direction);
 
   static gboolean ResetSearchStateCb(gpointer data);
+  static gboolean HideResultMessageCb(gpointer data);
 
 private:
   UBusManager ubus_manager_;
   FilesystemLenses lenses_;
+  HomeLens::Ptr home_lens_;
   LensViews lens_views_;
 
 
   // View related
   nux::VLayout* layout_;
-  nux::VLayout* content_layout_;
+  DashLayout* content_layout_;
   SearchBar* search_bar_;
   nux::VLayout* lenses_layout_;
   LensBar* lens_bar_;
 
-  HomeView* home_view_;
+  LensView* home_view_;
   LensView* active_lens_view_;
 
   // Drawing related
@@ -130,6 +136,8 @@ private:
   guint searching_timeout_id_;
   bool search_in_progress_;
   bool activate_on_finish_;
+
+  guint hide_message_delay_id_;
 
   bool visible_;
 };

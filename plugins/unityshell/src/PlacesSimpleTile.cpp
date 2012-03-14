@@ -238,12 +238,6 @@ PlacesSimpleTile::GetName() const
   return "PlacesTile";
 }
 
-std::string
-PlacesSimpleTile::GetChildsName() const
-{
-  return "PlacesTileContents";
-}
-
 void
 PlacesSimpleTile::AddProperties(GVariantBuilder* builder)
 {

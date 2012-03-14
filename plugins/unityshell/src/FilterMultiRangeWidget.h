@@ -50,9 +50,6 @@ public:
   std::string GetFilterType();
 
 protected:
-  virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
-  virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
-
   void InitTheme();
 
 private:

@@ -28,6 +28,7 @@
 #include <Nux/View.h>
 #include <Nux/VLayout.h>
 
+#include "UnityWindowView.h"
 #include "BackgroundEffectHelper.h"
 #include "ShortcutModel.h"
 
@@ -36,29 +37,24 @@ namespace unity
 namespace shortcut
 {
 
-class View : public nux::View
+class View : public ui::UnityWindowView
 {
-  NUX_DECLARE_OBJECT_TYPE(View, nux::View);
+  NUX_DECLARE_OBJECT_TYPE(View, ui::UnityWindowView);
 public:
   typedef nux::ObjectPtr<View> Ptr;
 
   // Ctor and dtor
-  View(NUX_FILE_LINE_PROTO);
+  View();
   ~View();
   
   // Public methods
   void SetModel(Model::Ptr model);
   Model::Ptr GetModel();
-
-  void SetupBackground(bool enabled);
-
-  // Properties  
-  nux::Property<nux::Color> background_color;
   
 protected:
   // Protected methods
-  void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
-  void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
+  void DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw, nux::Geometry clip);
+  nux::Geometry GetBackgroundGeometry();
 
 private:
   // Private methods
@@ -66,23 +62,14 @@ private:
   nux::LinearLayout* CreateShortKeyEntryLayout(AbstractHint* hint);
   nux::LinearLayout* CreateIntermediateLayout();
 
-  void DrawBackground(nux::GraphicsEngine& GfxContext, nux::Geometry const& geo);
   void RenderColumns();
     
   // Private members
   Model::Ptr model_;
 
-  nux::BaseTexture* background_top_;
-  nux::BaseTexture* background_left_;
-  nux::BaseTexture* background_corner_;
-  nux::BaseTexture* rounding_texture_;
-
   nux::VLayout* layout_;
   nux::HLayout* columns_layout_;
   std::vector<nux::VLayout*> columns_;
-  
-  BackgroundEffectHelper bg_effect_helper_;
-  
 };
 
 } // namespace shortcut

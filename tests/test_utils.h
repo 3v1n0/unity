@@ -22,7 +22,7 @@ public:
       return FALSE;
     };
 
-    guint32 timeout_id = g_timeout_add_seconds(10, timeout_cb, &timeout_reached);
+    guint32 timeout_id = g_timeout_add(10000, timeout_cb, &timeout_reached);
 
     while (model.count != n_rows && !timeout_reached)
     {
@@ -48,8 +48,35 @@ public:
 
   static guint32 ScheduleTimeout(bool* timeout_reached, unsigned int timeout_duration = 10)
   {
-    return g_timeout_add_seconds(timeout_duration, TimeoutCallback, timeout_reached);
+    return g_timeout_add(timeout_duration*1000, TimeoutCallback, timeout_reached);
   }
+
+  static guint32 ScheduleTimeoutMSec(bool* timeout_reached, unsigned int timeout_duration = 10)
+  {
+    return g_timeout_add(timeout_duration, TimeoutCallback, timeout_reached);
+  }
+
+  static void WaitForTimeout(unsigned int timeout_duration = 10)
+  {
+    bool timeout_reached = false;
+    guint32 timeout_id = ScheduleTimeout(&timeout_reached, timeout_duration);
+
+    while (!timeout_reached)
+      g_main_context_iteration(g_main_context_get_thread_default(), TRUE);
+
+    g_source_remove(timeout_id);
+  }
+
+  static void WaitForTimeoutMSec(unsigned int timeout_duration = 10)
+    {
+      bool timeout_reached = false;
+      guint32 timeout_id = ScheduleTimeoutMSec(&timeout_reached, timeout_duration);
+
+      while (!timeout_reached)
+        g_main_context_iteration(g_main_context_get_thread_default(), TRUE);
+
+      g_source_remove(timeout_id);
+    }
 
 private:
   static gboolean TimeoutCallback(gpointer data)

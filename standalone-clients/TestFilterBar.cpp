@@ -53,7 +53,7 @@ TestRunner::~TestRunner ()
 
 void TestRunner::Init ()
 {
-  unity::FilterBar *filterbar = new unity::FilterBar(NUX_TRACKER_LOCATION);
+  auto *filterbar = new unity::dash::FilterBar(NUX_TRACKER_LOCATION);
 
   layout = new nux::VLayout(NUX_TRACKER_LOCATION);
 

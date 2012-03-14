@@ -18,3 +18,4 @@
     Makes the panel run the unity-panel-service directly instead of through
     D-Bus activation. This is used for testing how the panel reacts when it
     starts before the service does.
+

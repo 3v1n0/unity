@@ -54,6 +54,24 @@ UScreen::GetDefault()
 }
 
 int
+UScreen::GetMonitorWithMouse()
+{
+  GdkScreen* screen;
+  GdkDevice* device;
+  GdkDisplay *display;
+  int x;
+  int y;
+
+  screen = gdk_screen_get_default();
+  display = gdk_display_get_default();
+  device = gdk_device_manager_get_client_pointer(gdk_display_get_device_manager(display));
+
+  gdk_device_get_position(device, NULL, &x, &y);
+
+  return gdk_screen_get_monitor_at_point(screen, x, y);
+}
+
+int
 UScreen::GetPrimaryMonitor()
 {
   return primary_;
@@ -101,8 +119,7 @@ UScreen::Refresh()
 
   g_print("\nScreen geometry changed:\n");
 
-  int lowest_x = std::numeric_limits<int>::max();
-  int highest_y = std::numeric_limits<int>::min();
+  primary_ = gdk_screen_get_primary_monitor(screen);
   for (int i = 0; i < gdk_screen_get_n_monitors(screen); i++)
   {
     GdkRectangle rect = { 0 };
@@ -117,13 +134,6 @@ UScreen::Refresh()
     last_geo = geo;
 
     _monitors.push_back(geo);
-
-    if (geo.x < lowest_x || (geo.x == lowest_x && geo.y > highest_y))
-    {
-      lowest_x = geo.x;
-      highest_y = geo.y;
-      primary_ = i;
-    }
 
     g_print("   %dx%dx%dx%d\n", geo.x, geo.y, geo.width, geo.height);
   }

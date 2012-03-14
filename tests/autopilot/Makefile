@@ -1,3 +1,3 @@
 
 check:
-	python -m testtools.run discover autopilot.tests
+	run_autopilot --format text

@@ -49,6 +49,8 @@ namespace
 {
 void draw_menu_bg(cairo_t* cr, int width, int height);
 GdkPixbuf* make_pixbuf(int image_type, std::string const& image_data, bool dash_showing);
+const int PANEL_HEIGHT = 24;
+const int SPACING = 3;
 }
 
 

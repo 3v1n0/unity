@@ -36,6 +36,9 @@ public:
   // We only ever want one OverlayRenderer per view, so if you must take a pointer, take this unique one that will die 
   // when it goes out of scope
   typedef std::unique_ptr<OverlayRenderer> Ptr;
+
+  nux::Property<int> x_offset;
+  nux::Property<int> y_offset;
   
   OverlayRenderer();
   ~OverlayRenderer();
@@ -67,7 +70,7 @@ public:
    * absolute_geo: your views GetAbsoluteGeometry()
    * geo: your views GetGeometry()
    */
-  void DrawFull(nux::GraphicsEngine& gfx_context, nux::Geometry content_geo, nux::Geometry absolute_geo, nux::Geometry geo);
+  void DrawFull(nux::GraphicsEngine& gfx_context, nux::Geometry content_geo, nux::Geometry absolute_geo, nux::Geometry geo, bool force_edges=false);
   
   /*
    * Draws just the stack that is overlay behind the inner_geometry using push/pop layers, call in DrawContent() before drawing your content

@@ -26,7 +26,8 @@
 #include "CairoTexture.h"
 #include "QuicklistMenuItemLabel.h"
 
-using unity::texture_from_cairo_graphics;
+namespace unity
+{
 
 QuicklistMenuItemLabel::QuicklistMenuItemLabel(DbusmenuMenuitem* item,
                                                NUX_FILE_LINE_DECL) :
@@ -134,7 +135,7 @@ QuicklistMenuItemLabel::Draw(nux::GraphicsEngine& gfxContext,
   else
   {
     texture = _normalTexture[0]->GetDeviceTexture();
-    _color = nux::Color(0.8f, 0.8f, 0.8f, 1.0f);
+    _color = nux::color::White * 0.35;
   }
 
   gfxContext.QRP_1Tex(base.x,
@@ -165,7 +166,6 @@ QuicklistMenuItemLabel::PostDraw(nux::GraphicsEngine& gfxContext,
 void
 QuicklistMenuItemLabel::UpdateTexture()
 {
-  nux::Color transparent = nux::Color(0.0f, 0.0f, 0.0f, 0.0f);
   int        width       = GetBaseWidth();
   int        height      = GetBaseHeight();
 
@@ -176,12 +176,7 @@ QuicklistMenuItemLabel::UpdateTexture()
   cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
   cairo_paint(cr);
 
-  cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
-  cairo_scale(cr, 1.0f, 1.0f);
-  cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 1.0f);
-  cairo_set_line_width(cr, 1.0f);
-
-  DrawText(cr, width, height, nux::color::White);
+  DrawText(_cairoGraphics, width, height, nux::color::White);
 
   if (_normalTexture[0])
     _normalTexture[0]->UnReference();
@@ -192,23 +187,8 @@ QuicklistMenuItemLabel::UpdateTexture()
   cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
   cairo_paint(cr);
 
-  cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
-  cairo_scale(cr, 1.0f, 1.0f);
-  cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 1.0f);
-  cairo_set_line_width(cr, 1.0f);
-
-  _cairoGraphics->DrawRoundedRectangle(cr,
-                                       1.0f,
-                                       0.5f,
-                                       0.5f,
-                                       ITEM_CORNER_RADIUS_ABS,
-                                       width - 1.0f,
-                                       height - 1.0f);
-  cairo_fill(cr);
-
-  cairo_set_source_rgba(cr, 0.0f, 0.0f, 0.0f, 0.0f);
-
-  DrawText(cr, width, height, transparent);
+  DrawPrelight(_cairoGraphics, width, height, nux::color::White);
+  DrawText(_cairoGraphics, width, height, nux::color::White * 0.0f);
 
   if (_prelightTexture[0])
     _prelightTexture[0]->UnReference();
@@ -216,6 +196,7 @@ QuicklistMenuItemLabel::UpdateTexture()
   _prelightTexture[0] = texture_from_cairo_graphics(*_cairoGraphics);
 
   // finally clean up
+  cairo_destroy(cr);
   delete _cairoGraphics;
 }
 
@@ -226,3 +207,5 @@ int QuicklistMenuItemLabel::CairoSurfaceWidth()
 
   return 0;
 }
+
+} // NAMESPACE

@@ -42,7 +42,7 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
   hints.push_back(new shortcut::MockHint(_("Launcher"), "", "", _("Switch application via Launcher."), shortcut::HARDCODED_OPTION, "Super + Tab"));
   hints.push_back(new shortcut::MockHint(_("Launcher"), "", _(" + 1 to 9"), _("Same as clicking on a Launcher icon."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "show_launcher"));
   hints.push_back(new shortcut::MockHint(_("Launcher"), "", _(" + Shift + 1 to 9"), _("Open a new window of the app."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "show_launcher"));
-  hints.push_back(new shortcut::MockHint(_("Launcher"), "", " + T", _("Open the Rubbish Bin."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "show_launcher")); 
+  hints.push_back(new shortcut::MockHint(_("Launcher"), "", " + T", _("Open the Trash."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "show_launcher")); 
 
   // Dash...
   hints.push_back(new shortcut::MockHint(_("Dash"), "", _(" (Tap)"), _("Open the Dash Home."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "show_launcher"));
@@ -55,11 +55,11 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
   hints.push_back(new shortcut::MockHint(_("Dash"), "", "", _("Open currently focused item."), shortcut::HARDCODED_OPTION, _("Enter / Return")));
   hints.push_back(new shortcut::MockHint(_("Dash"), "", "", _("'Run Command' mode."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "execute_command"));
  
-  // Top Bar
+  // Menu Bar
   // Is it really hard coded?
-  hints.push_back(new shortcut::MockHint(_("Top Bar"), "", "", _("Reveals application menu."), shortcut::HARDCODED_OPTION, "Alt"));
-  hints.push_back(new shortcut::MockHint(_("Top Bar"), "", "", _("Opens the indicator menu."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "panel_first_menu"));
-  hints.push_back(new shortcut::MockHint(_("Top Bar"), "", "", _("Moves focus between indicators."), shortcut::HARDCODED_OPTION, _("Cursor Left & Right")));
+  hints.push_back(new shortcut::MockHint(_("Menu Bar"), "", "", _("Reveals application menu."), shortcut::HARDCODED_OPTION, "Alt"));
+  hints.push_back(new shortcut::MockHint(_("Menu Bar"), "", "", _("Opens the indicator menu."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "panel_first_menu"));
+  hints.push_back(new shortcut::MockHint(_("Menu Bar"), "", "", _("Moves focus between indicators."), shortcut::HARDCODED_OPTION, _("Cursor Left & Right")));
 
   // Switching
   hints.push_back(new shortcut::MockHint(_("Switching"), "", "", _("Switch between applications."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "alt_tab_forward"));

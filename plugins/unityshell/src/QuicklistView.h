@@ -30,41 +30,22 @@
 #include <pango/pango.h>
 #include <pango/pangocairo.h>
 
+#include "CairoBaseWindow.h"
 #include "QuicklistMenuItem.h"
 
 #include "Introspectable.h"
 
-#define ANCHOR_WIDTH         10.0f
-#define ANCHOR_HEIGHT        18.0f
-#define HIGH_LIGHT_Y         -30.0f
-#define HIGH_LIGHT_MIN_WIDTH 200.0f
-#define RADIUS               5.0f
-#define BLUR_INTENSITY       8
-#define LINE_WIDTH           1.0f
-#define PADDING_SIZE         1
-#define H_MARGIN             30
-#define V_MARGIN             4
-#define FONT_FACE            "Ubuntu 13"
-
-
-class QuicklistMenuItem;
-class QuicklistMenuItemLabel;
-
-class QuicklistView : public nux::BaseWindow, public unity::debug::Introspectable
+namespace unity
 {
-  NUX_DECLARE_OBJECT_TYPE(QuicklistView, nux::BaseWindow);
+
+class QuicklistView : public CairoBaseWindow, public debug::Introspectable
+{
+  NUX_DECLARE_OBJECT_TYPE(QuicklistView, unity::CairoBaseWindow);
 public:
   QuicklistView();
-
   ~QuicklistView();
 
-  void Draw(nux::GraphicsEngine& gfxContext,
-            bool             forceDraw);
-
-  void DrawContent(nux::GraphicsEngine& gfxContext,
-                   bool             forceDraw);
-
-  void SetText(nux::NString text);
+  void SetText(std::string const& text);
 
   void RemoveAllMenuItem();
 
@@ -89,6 +70,7 @@ public:
   // Introspection
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
+  IntrospectableList const& GetIntrospectableChildren();
 
   void EnableQuicklistForTesting(bool enable_testing);
 
@@ -100,6 +82,10 @@ public:
   //Required for a11y
   QuicklistMenuItem* GetSelectedMenuItem();
   sigc::signal<void> selection_change;
+
+protected:
+  void Draw(nux::GraphicsEngine& gfxContext, bool forceDraw);
+  void DrawContent(nux::GraphicsEngine& gfxContext, bool forceDraw);
 
 private:
   void RecvCairoTextChanged(QuicklistMenuItem* item);
@@ -149,7 +135,7 @@ private:
   //nux::CairoGraphics*   _cairo_graphics;
   int                   _anchorX;
   int                   _anchorY;
-  nux::NString          _labelText;
+  std::string           _labelText;
   int                   _top_size; // size of the segment from point 13 to 14. See figure in ql_compute_full_mask_path.
 
   bool                  _mouse_down;
@@ -157,10 +143,6 @@ private:
   //iIf true, suppress the Quicklist behaviour that is expected in Unity.
   // Keep the Quicklist on screen for testing and automation.
   bool                  _enable_quicklist_for_testing;
-
-  nux::BaseTexture*     _texture_bg;
-  nux::BaseTexture*     _texture_mask;
-  nux::BaseTexture*     _texture_outline;
 
   float _anchor_width;
   float _anchor_height;
@@ -184,12 +166,12 @@ private:
   std::list<QuicklistMenuItem*> _item_list;
   std::list<QuicklistMenuItem*> _default_item_list;
 
-  bool _compute_blur_bkg;          //!< If true, compute the blurred background
-  nux::ObjectPtr <nux::IOpenGLBaseTexture> bkg_blur_texture;  // Texture holding a blurred copy of the background behind the QuicklistView
-
   // used by keyboard/a11y-navigation
   int _current_item_index;
+
+  // list of introspectable children, used to return children in the correct order:
+  IntrospectableList _introspectable_children;
 };
 
+} // NAMESPACE
 #endif // QUICKLISTVIEW_H
-

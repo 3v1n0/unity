@@ -16,6 +16,8 @@
  * Authored by: Andrea Azzarone <azzaronea@gmail.com>
  */
 
+#include <glib/gi18n-lib.h>
+
 #include "ShortcutHintPrivate.h"
 
 #include <boost/algorithm/string/replace.hpp>
@@ -26,6 +28,15 @@ namespace shortcut
 {
 namespace impl
 {
+
+std::string GetMetaKey(std::string const& scut)
+{
+  size_t index = scut.find_last_of( ">");
+  if (index >= 0)
+    return std::string(scut.begin(), scut.begin() + index + 1);
+  else
+    return "";
+}
 
 std::string FixShortcutFormat(std::string const& scut)
 {
@@ -44,9 +55,9 @@ std::string FixMouseShortcut(std::string const& scut)
 {
   std::string ret(scut);
   
-  boost::replace_all(ret, "Button1", "Left Mouse");
-  boost::replace_all(ret, "Button2", "Middle Mouse");
-  boost::replace_all(ret, "Button3", "Right Mouse");
+  boost::replace_all(ret, "Button1", _("Left Mouse"));
+  boost::replace_all(ret, "Button2", _("Middle Mouse"));
+  boost::replace_all(ret, "Button3", _("Right Mouse"));
       
   return ret;
 }

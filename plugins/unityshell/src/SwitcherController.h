@@ -27,6 +27,7 @@
 
 #include "SwitcherModel.h"
 #include "SwitcherView.h"
+#include "UBusWrapper.h"
 
 #include <boost/shared_ptr.hpp>
 #include <sigc++/sigc++.h>
@@ -62,15 +63,14 @@ class Controller : public debug::Introspectable, public sigc::trackable
 public:
   typedef std::shared_ptr<Controller> Ptr;
 
-  Controller();
+  Controller(unsigned int load_timeout = 20);
   virtual ~Controller();
 
   nux::Property<int> timeout_length;
-
   nux::Property<bool> detail_on_timeout;
   nux::Property<int>  detail_timeout_length;
 
-  void Show(ShowMode show, SortMode sort, bool reverse, std::vector<launcher::AbstractLauncherIcon*> results);
+  void Show(ShowMode show, SortMode sort, bool reverse, std::vector<launcher::AbstractLauncherIcon::Ptr> results);
   void Hide(bool accept_state=true);
 
   bool Visible();
@@ -87,7 +87,7 @@ public:
 
   void SelectFirstItem();
 
-  void SetWorkspace(nux::Geometry geo);
+  void SetWorkspace(nux::Geometry geo, int monitor);
 
   SwitcherView * GetView ();
 
@@ -98,6 +98,12 @@ protected:
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
 
+  virtual void ConstructWindow();
+  virtual void ConstructView();
+  virtual void ShowView();
+
+  unsigned int construct_timeout_;
+
 private:
   enum DetailMode
   {
@@ -106,31 +112,30 @@ private:
     TAB_NEXT_TILE,
   };
 
-  void ConstructView();
-
-  void OnModelSelectionChanged(launcher::AbstractLauncherIcon *icon);
-
-  static void OnBackgroundUpdate(GVariant* data, Controller* self);
+  void OnModelSelectionChanged(launcher::AbstractLauncherIcon::Ptr icon);
+  void OnBackgroundUpdate(GVariant* data);
 
   SwitcherModel::Ptr model_;
   SwitcherView::Ptr view_;
 
+  UBusManager ubus_manager_;
   nux::Geometry workarea_;
 
   nux::BaseWindow* view_window_;
   nux::HLayout* main_layout_;
 
+  int monitor_;
   bool visible_;
   guint show_timer_;
   guint detail_timer_;
+  guint lazy_timer_;
+  guint view_idle_timer_;
   nux::Color bg_color_;
   DetailMode detail_mode_;
-  guint bg_update_handle_;
 
-  static gboolean OnShowTimer(gpointer data);
   static gboolean OnDetailTimer(gpointer data);
 
-  static bool CompareSwitcherItemsPriority(launcher::AbstractLauncherIcon* first, launcher::AbstractLauncherIcon* second);
+  static bool CompareSwitcherItemsPriority(launcher::AbstractLauncherIcon::Ptr first, launcher::AbstractLauncherIcon::Ptr second);
 };
 
 }

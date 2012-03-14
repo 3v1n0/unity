@@ -17,14 +17,13 @@
 * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
 */
 
-#include "FavoriteStoreGSettings.h"
-
 #include <algorithm>
-#include <iostream>
 
 #include <gio/gdesktopappinfo.h>
-
 #include <NuxCore/Logger.h>
+
+#include "FavoriteStoreGSettings.h"
+#include "FavoriteStorePrivate.h"
 
 #include "config.h"
 
@@ -103,7 +102,12 @@ void FavoriteStoreGSettings::Init()
 
 void FavoriteStoreGSettings::Refresh()
 {
-  favorites_.clear();
+  FillList(favorites_);
+}
+
+void FavoriteStoreGSettings::FillList(FavoriteList& list)
+{
+  list.clear();
 
   gchar** favs = g_settings_get_strv(settings_, "favorites");
 
@@ -114,7 +118,7 @@ void FavoriteStoreGSettings::Refresh()
     {
       if (g_file_test(favs[i], G_FILE_TEST_EXISTS))
       {
-        favorites_.push_back(favs[i]);
+        list.push_back(favs[i]);
       }
       else
       {
@@ -131,12 +135,11 @@ void FavoriteStoreGSettings::Refresh()
 
       if (filename)
       {
-        favorites_.push_back(filename);
+        list.push_back(filename);
       }
       else
       {
-        LOG_WARNING(logger) << "Unable to load GDesktopAppInfo for '"
-                         << favs[i] << "'";
+        LOG_WARNING(logger) << "Unable to load GDesktopAppInfo for '" << favs[i] << "'";
       }
     }
   }
@@ -222,7 +225,7 @@ void FavoriteStoreGSettings::SetFavorites(FavoriteList const& favorites)
   Refresh();
 }
 
-void FavoriteStoreGSettings::SaveFavorites(FavoriteList const& favorites)
+void FavoriteStoreGSettings::SaveFavorites(FavoriteList const& favorites, bool ignore)
 {
   const int size = favorites.size();
   const char* favs[size + 1];
@@ -244,7 +247,7 @@ void FavoriteStoreGSettings::SaveFavorites(FavoriteList const& favorites)
     favs[index] = iter->c_str();
   }
 
-  ignore_signals_ = true;
+  ignore_signals_ = ignore;
   if (!g_settings_set_strv(settings_, "favorites", favs))
   {
     LOG_WARNING(logger) << "Saving favorites failed.";
@@ -254,10 +257,34 @@ void FavoriteStoreGSettings::SaveFavorites(FavoriteList const& favorites)
 
 void FavoriteStoreGSettings::Changed(std::string const& key)
 {
-  if (ignore_signals_)
+  if (ignore_signals_ or key != "favorites")
     return;
+    
+  FavoriteList old(favorites_);
+  FillList(favorites_);
 
-  LOG_DEBUG(logger) << "Changed: " << key;
+  auto newbies = impl::GetNewbies(old, favorites_);
+
+  for (auto it : favorites_)
+  {
+    if (std::find(newbies.begin(), newbies.end(), it) == newbies.end())
+      continue;
+    
+    std::string pos;
+    bool before;
+    
+    impl::GetSignalAddedInfo(favorites_, newbies , it, pos, before);
+    favorite_added.emit(it, pos, before);
+  }
+                     
+  for (auto it : impl::GetRemoved(old, favorites_))
+  {
+    favorite_removed.emit(it); 
+  }
+  
+  if (impl::NeedToBeReordered(old, favorites_))
+    reordered.emit();
+ 
 }
 
 namespace

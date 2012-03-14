@@ -27,11 +27,15 @@
 #include "TextureCache.h"
 #include "PlacesTile.h"
 
-#define PADDING 8
-#define BLUR_SIZE 6
-
 namespace unity
 {
+
+namespace
+{
+  const int PADDING = 8;
+  const int BLUR_SIZE = 6;
+}
+
 NUX_IMPLEMENT_OBJECT_TYPE(PlacesTile);
 
 PlacesTile::PlacesTile(NUX_FILE_LINE_DECL, const void* id) :
@@ -42,14 +46,14 @@ PlacesTile::PlacesTile(NUX_FILE_LINE_DECL, const void* id) :
   _last_height(0)
 {
   SetAcceptKeyNavFocusOnMouseDown(false);
-  
+
   mouse_down.connect(sigc::mem_fun(this, &PlacesTile::RecvMouseDown));
   mouse_up.connect(sigc::mem_fun(this, &PlacesTile::RecvMouseUp));
   mouse_click.connect(sigc::mem_fun(this, &PlacesTile::RecvMouseClick));
   mouse_enter.connect(sigc::mem_fun(this, &PlacesTile::RecvMouseEnter));
   mouse_leave.connect(sigc::mem_fun(this, &PlacesTile::RecvMouseLeave));
-  OnKeyNavFocusChange.connect(sigc::mem_fun(this, &PlacesTile::OnFocusChanged));
-  OnKeyNavFocusActivate.connect(sigc::mem_fun(this, &PlacesTile::OnFocusActivated));
+  key_nav_focus_change.connect(sigc::mem_fun(this, &PlacesTile::OnFocusChanged));
+  key_nav_focus_activate.connect(sigc::mem_fun(this, &PlacesTile::OnFocusActivated));
 }
 
 PlacesTile::~PlacesTile()
@@ -68,7 +72,7 @@ PlacesTile::GetId()
 }
 
 void
-PlacesTile::OnFocusChanged(nux::Area* label)
+PlacesTile::OnFocusChanged(nux::Area* label, bool has_focus, nux::KeyNavDirection direction)
 {
   QueueDraw();
 }

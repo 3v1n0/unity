@@ -29,8 +29,6 @@
 
 #include "Introspectable.h"
 
-#define PANEL_HEIGHT 24
-#define SPACING 3
 
 namespace unity
 {

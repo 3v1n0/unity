@@ -5,18 +5,23 @@ import testtools
 
 DBusGMainLoop(set_as_default=True)
 
+
+# Turning run_in_glib_loop into a decorator is left as an exercise for the
+# reader.
 def run_in_glib_loop(function, *args, **kwargs):
     loop = glib.MainLoop()
     # XXX: I think this has re-entrancy problems.  There is parallel code in
     # testtools somewhere (spinner.py or deferredruntest.py)
     result = []
     errors = []
+
     def callback():
         try:
             result.append(function(*args, **kwargs))
         except:
             errors.append(sys.exc_info())
-            raise # XXX: Not sure if this is needed / desired
+            # XXX: Not sure if this is needed / desired
+            raise
         finally:
             loop.quit()
     glib.idle_add(callback)
@@ -25,8 +30,6 @@ def run_in_glib_loop(function, *args, **kwargs):
         raise errors[0]
     return result[0]
 
-# Turning run_in_glib_loop into a decorator is left as an exercise for the
-# reader.
 
 class GlibRunner(testtools.RunTest):
 
@@ -35,4 +38,3 @@ class GlibRunner(testtools.RunTest):
 
     def _run_core(self):
         run_in_glib_loop(super(GlibRunner, self)._run_core)
-

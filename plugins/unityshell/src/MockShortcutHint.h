@@ -52,6 +52,7 @@ public:
     {
       case COMPIZ_MOUSE_OPTION:
       case COMPIZ_KEY_OPTION:
+      case COMPIZ_METAKEY_OPTION:
         value = arg1() + "-" + arg2();
         shortkey = prefix() + value() + postfix();
         return true;

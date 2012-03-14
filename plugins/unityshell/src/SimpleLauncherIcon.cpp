@@ -17,12 +17,14 @@
  * Authored by: Jason Smith <jason.smith@canonical.com>
  */
 
+#ifndef UNITY_SIMPLELAUNCHERICON_H
+#define UNITY_SIMPLELAUNCHERICON_H
+
 #include <NuxCore/Logger.h>
 #include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
 
 #include "SimpleLauncherIcon.h"
-#include "Launcher.h"
 #include "PluginAdapter.h"
 
 #include "ubus-server.h"
@@ -38,9 +40,10 @@ namespace
   nux::logging::Logger logger("unity.dash.CategoryViewGrid");
 }
 
-SimpleLauncherIcon::SimpleLauncherIcon(Launcher* IconManager)
-  : LauncherIcon(IconManager)
-  , icon_name("", sigc::mem_fun(this, &SimpleLauncherIcon::SetIconName))
+NUX_IMPLEMENT_OBJECT_TYPE(SimpleLauncherIcon);
+
+SimpleLauncherIcon::SimpleLauncherIcon()
+  : icon_name("", sigc::mem_fun(this, &SimpleLauncherIcon::SetIconName))
   , theme_changed_id_(0)
 {
   LauncherIcon::mouse_down.connect(sigc::mem_fun(this, &SimpleLauncherIcon::OnMouseDown));
@@ -65,23 +68,23 @@ SimpleLauncherIcon::~SimpleLauncherIcon()
     g_signal_handler_disconnect(gtk_icon_theme_get_default(), theme_changed_id_);
 }
 
-void SimpleLauncherIcon::OnMouseDown(int button)
+void SimpleLauncherIcon::OnMouseDown(int button, int monitor)
 {
 }
 
-void SimpleLauncherIcon::OnMouseUp(int button)
+void SimpleLauncherIcon::OnMouseUp(int button, int monitor)
 {
 }
 
-void SimpleLauncherIcon::OnMouseClick(int button)
+void SimpleLauncherIcon::OnMouseClick(int button, int monitor)
 {
 }
 
-void SimpleLauncherIcon::OnMouseEnter()
+void SimpleLauncherIcon::OnMouseEnter(int monitor)
 {
 }
 
-void SimpleLauncherIcon::OnMouseLeave()
+void SimpleLauncherIcon::OnMouseLeave(int monitor)
 {
 }
 
@@ -117,7 +120,7 @@ bool SimpleLauncherIcon::SetIconName(std::string& target, std::string const& val
 
   target = value;
   ReloadIcon();
-  
+
   return true;
 }
 
@@ -128,7 +131,7 @@ void SimpleLauncherIcon::ReloadIcon()
       element.second->UnReference();
 
   texture_map.clear ();
-  needs_redraw.emit(this);
+  EmitNeedsRedraw();
 }
 
 void SimpleLauncherIcon::OnIconThemeChanged(GtkIconTheme* icon_theme, gpointer data)
@@ -140,5 +143,12 @@ void SimpleLauncherIcon::OnIconThemeChanged(GtkIconTheme* icon_theme, gpointer d
   self->ReloadIcon();
 }
 
+std::string SimpleLauncherIcon::GetName() const
+{
+  return "SimpleLauncherIcon";
+}
+
 } // namespace launcher
 } // namespace unity
+
+#endif

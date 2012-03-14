@@ -16,9 +16,10 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#ifndef UNITY_LENS_BAR_H_
-#define UNITY_LENS_BAR_H_
+#ifndef UNITYSHELL_LENS_BAR_H
+#define UNITYSHELL_LENS_BAR_H
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -32,6 +33,11 @@
 #include "Introspectable.h"
 #include "LensBarIcon.h"
 
+namespace nux
+{
+class AbstractPaintLayer;
+}
+
 namespace unity
 {
 namespace dash
@@ -44,17 +50,16 @@ class LensBar : public nux::View, public unity::debug::Introspectable
 
 public:
   LensBar();
-  ~LensBar();
 
   void AddLens(Lens::Ptr& lens);
   void Activate(std::string id);
   void ActivateNext();
   void ActivatePrevious();
 
-
   sigc::signal<void, std::string const&> lens_activated;
 
 private:
+  void InitTheme();
   void SetupBackground();
   void SetupLayout();
   void SetupHomeLens();
@@ -69,13 +74,16 @@ private:
   void AddProperties(GVariantBuilder* builder);
 
 private:
+  typedef std::unique_ptr<nux::AbstractPaintLayer> LayerPtr;
+
   LensIcons icons_;
 
-  nux::ColorLayer* bg_layer_;
   nux::HLayout* layout_;
+  LayerPtr bg_layer_;
+  LayerPtr focus_layer_;
 };
 
+} // namespace dash
+} // namespace unity
 
-}
-}
-#endif
+#endif // UNITYSHELL_LENS_BAR_H
