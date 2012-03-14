@@ -23,6 +23,7 @@
 
 #include "GLibWrapper.h"
 #include "GLibDBusProxy.h"
+#include "Variant.h"
 
 namespace unity
 {
@@ -71,11 +72,13 @@ public:
   struct CallData
   {
     Impl* self;
-    GVariant *parameters;
+    glib::Variant parameters;
   };
 
   DBusIndicators* owner_;
   guint reconnect_timeout_id_;
+  guint show_entry_idle_id_;
+  guint show_appmenu_idle_id_;
   glib::DBusProxy gproxy_;
   std::map<std::string, EntryLocationMap> cached_locations_;
 };
@@ -85,6 +88,8 @@ public:
 DBusIndicators::Impl::Impl(DBusIndicators* owner)
   : owner_(owner)
   , reconnect_timeout_id_(0)
+  , show_entry_idle_id_(0)
+  , show_appmenu_idle_id_(0)
   , gproxy_(SERVICE_NAME, SERVICE_PATH, SERVICE_IFACE,
             G_BUS_TYPE_SESSION, G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES)
 {
@@ -102,9 +107,13 @@ DBusIndicators::Impl::Impl(DBusIndicators* owner)
 DBusIndicators::Impl::~Impl()
 {
   if (reconnect_timeout_id_)
-  {
     g_source_remove(reconnect_timeout_id_);
-  }
+
+  if (show_entry_idle_id_)
+    g_source_remove(show_entry_idle_id_);
+
+  if (show_appmenu_idle_id_)
+    g_source_remove(show_appmenu_idle_id_);
 }
 
 void DBusIndicators::Impl::CheckLocalService()
@@ -239,13 +248,15 @@ void DBusIndicators::Impl::OnEntryShowMenu(std::string const& entry_id,
   data->parameters = g_variant_new("(suiiuu)", entry_id.c_str(), xid, x, y,
                                    button, timestamp);
 
-  g_idle_add_full (G_PRIORITY_DEFAULT, [] (gpointer data) -> gboolean {
+  if (show_entry_idle_id_)
+    g_source_remove(show_entry_idle_id_);
+
+  show_entry_idle_id_ = g_idle_add_full (G_PRIORITY_DEFAULT, [] (gpointer data) -> gboolean {
     auto call_data = static_cast<CallData*>(data);
     call_data->self->gproxy_.Call("ShowEntry", call_data->parameters);
-    delete call_data;
 
     return FALSE;
-  }, data, nullptr);
+  }, data, [] (gpointer data) { delete static_cast<CallData*>(data); });
 }
 
 void DBusIndicators::Impl::OnShowAppMenu(unsigned int xid, int x, int y,
@@ -260,13 +271,15 @@ void DBusIndicators::Impl::OnShowAppMenu(unsigned int xid, int x, int y,
   data->self = this;
   data->parameters = g_variant_new("(uiiu)", xid, x, y, timestamp);
 
-  g_idle_add_full (G_PRIORITY_DEFAULT, [] (gpointer data) -> gboolean {
+  if (show_appmenu_idle_id_)
+    g_source_remove(show_appmenu_idle_id_);
+
+  show_appmenu_idle_id_ = g_idle_add_full (G_PRIORITY_DEFAULT, [] (gpointer data) -> gboolean {
     auto call_data = static_cast<CallData*>(data);
     call_data->self->gproxy_.Call("ShowAppMenu", call_data->parameters);
-    delete call_data;
 
     return FALSE;
-  }, data, nullptr);
+  }, data, [] (gpointer data) { delete static_cast<CallData*>(data); });
 }
 
 void DBusIndicators::Impl::OnEntrySecondaryActivate(std::string const& entry_id,
