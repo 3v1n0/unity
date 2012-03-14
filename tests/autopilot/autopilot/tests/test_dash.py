@@ -78,7 +78,7 @@ class DashSearchInputTests(DashTestCase):
         """Pressing 'Multi_key' must not add any characters to the search."""
         self.dash.reveal_application_lens()      
         self.keyboard.press_and_release('Multi_key')
-        self.keyboard..type("o")
+        self.keyboard.type("o")
 
         searchbar = self.dash.get_searchbar()
         self.assertEqual("", searchbar.search_string)
