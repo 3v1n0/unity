@@ -43,12 +43,10 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(BamfApplication* app,
 
   _aptdaemon_trans.Connect("PropertyChanged", sigc::mem_fun(this, &SoftwareCenterLauncherIcon::OnPropertyChanged));
   _aptdaemon_trans.Connect("Finished", [&] (GVariant *) {
-    tooltip_text = BamfName();
-    SetQuirk(QUIRK_PROGRESS, false);
-    SetQuirk(QUIRK_URGENT, true);
-    SetProgress(0.0f);
-    _finished = true;
-    _finished_just_now = true;
+  tooltip_text = BamfName();
+  SetQuirk(QUIRK_PROGRESS, false);
+  SetQuirk(QUIRK_URGENT, true);
+  SetProgress(0.0f);
   });
 
   SetIconType(TYPE_APPLICATION);
@@ -58,7 +56,7 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(BamfApplication* app,
   // For no clear reason, Unity segfaults if we try to generate a pointer of "this" twice.
   // Hence, just generate it once and store it.
   self_abstract = AbstractLauncherIcon::Ptr(this);
-  
+
 }
 
 void SoftwareCenterLauncherIcon::AddSelfToLauncher()
@@ -90,7 +88,7 @@ SoftwareCenterLauncherIcon::Animate(nux::ObjectPtr<Launcher> launcher,
   int target_y = 0;
 
   _launcher = launcher.GetPointer();
-    
+
   _icon_texture = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableDeviceTexture(launcher->GetIconSize(), launcher->GetIconSize(), 1, nux::BITFMT_R8G8B8A8);
   _drag_window = new LauncherDragWindow(_icon_texture);
 
