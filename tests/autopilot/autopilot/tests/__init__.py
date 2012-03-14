@@ -93,7 +93,7 @@ class LoggedTestCase(TestWithScenarios, TestCase):
         os.remove(self._unity_log_file_name)
         self._unity_log_file_name = ""
 
-    def set_unity_log_level(component, level):
+    def set_unity_log_level(self, component, level):
         """Set the unity log level for 'component' to 'level'.
 
         Valid levels are: TRACE, DEBUG, INFO, WARNING and ERROR.
