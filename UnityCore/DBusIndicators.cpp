@@ -37,8 +37,8 @@ const std::string SERVICE_IFACE("com.canonical.Unity.Panel.Service");
 } // anonymous namespace
 
 
-// Connects to the remote panel service (unity-panel-service) and translates
-// that into something that the panel can show
+/* Connects to the remote panel service (unity-panel-service) and translates
+ * that into something that the panel can show */
 class DBusIndicators::Impl
 {
 public:
@@ -250,7 +250,7 @@ void DBusIndicators::Impl::OnEntryScroll(std::string const& entry_id, int delta)
   gproxy_.Call("ScrollEntry", g_variant_new("(si)", entry_id.c_str(), delta));
 }
 
-void DBusIndicators::Impl::Sync(GVariant* args/*, SyncData* data*/)
+void DBusIndicators::Impl::Sync(GVariant* args)
 {
   GVariantIter* iter            = nullptr;
   gchar*        name_hint       = nullptr;
