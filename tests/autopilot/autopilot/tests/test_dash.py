@@ -300,7 +300,7 @@ class DashKeyNavTests(DashTestCase):
             # i'm not sure this really belongs in this test
             self.assertTrue(searchbar.showing_filters)
 
-        filter_bar = app_lens.get_filterbar()
+        filter_bar = lens.get_filterbar()
         for i in range(filter_bar.get_num_filters()):
             self.keyboard.press_and_release('Tab')
             new_focused_filter = filter_bar.get_focused_filter()
@@ -308,7 +308,7 @@ class DashKeyNavTests(DashTestCase):
 
         # Ensure that tab cycles back to a category header
         self.keyboard.press_and_release('Tab')
-        category = app_lens.get_focused_category()
+        category = lens.get_focused_category()
         self.assertIsNot(category, None)
 
 class DashClipboardTests(DashTestCase):
