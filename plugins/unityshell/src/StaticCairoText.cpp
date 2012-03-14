@@ -308,6 +308,7 @@ void StaticCairoText::GetTextExtents(const TCHAR* font,
   PangoLayout*          layout   = NULL;
   PangoFontDescription* desc     = NULL;
   PangoContext*         pangoCtx = NULL;
+  PangoRectangle        inkRect  = {0, 0, 0, 0};
   PangoRectangle        logRect  = {0, 0, 0, 0};
   int                   dpi      = 0;
   GdkScreen*            screen   = gdk_screen_get_default();    // is not ref'ed
@@ -370,9 +371,14 @@ void StaticCairoText::GetTextExtents(const TCHAR* font,
                                        (float) dpi / (float) PANGO_SCALE);
   }
   pango_layout_context_changed(layout);
-  pango_layout_get_extents(layout, NULL, &logRect);
+  pango_layout_get_extents(layout, &inkRect, &logRect);
 
-  width  = logRect.width / PANGO_SCALE;
+  // logRect has some issues using italic style
+  if (inkRect.x + inkRect.width > logRect.x + logRect.width)
+    width = (inkRect.x + inkRect.width - logRect.x) /PANGO_SCALE;
+  else
+    width  = logRect.width / PANGO_SCALE;
+
   height = logRect.height / PANGO_SCALE;
   _cached_extent_height = height;
   _cached_extent_width = width;
