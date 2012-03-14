@@ -157,9 +157,8 @@ SoftwareCenterLauncherIcon::OnPropertyChanged(GVariant* params)
     }
 
     SetProgress(progress/100.0f);
+    g_variant_unref(property_value);
   }
-
-  g_variant_unref(property_value);
 }
 
 std::string SoftwareCenterLauncherIcon::GetName() const
