@@ -248,6 +248,7 @@ void ResetLogging()
   if (local::output_file.is_open())
     local::output_file.close();
   nux::logging::Writer::Instance().SetOutputStream(std::cout);
+  nux::logging::reset_logging();
 }
 
 void SetLogSeverity(std::string const& log_component,
