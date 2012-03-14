@@ -1767,33 +1767,45 @@ bool UnityScreen::altTabForwardAllInitiate(CompAction* action,
 bool UnityScreen::altTabPrevAllInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
 {
   if (switcher_controller_->Visible())
+  {
     switcher_controller_->Prev();
+    return true;
+  }
 
-  return true;
+  return false;
 }
 
 bool UnityScreen::altTabPrevInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
 {
   if (switcher_controller_->Visible())
+  {
     switcher_controller_->Prev();
+    return true;
+  }
 
-  return true;
+  return false;
 }
 
 bool UnityScreen::altTabDetailStartInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
 {
   if (switcher_controller_->Visible())
+  {
     switcher_controller_->SetDetail(true);
+    return true;
+  }
 
-  return true;
+  return false;
 }
 
 bool UnityScreen::altTabDetailStopInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
 {
   if (switcher_controller_->Visible())
+  {
     switcher_controller_->SetDetail(false);
+    return true;
+  }
 
-  return true;
+  return false;
 }
 
 bool UnityScreen::altTabNextWindowInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
@@ -1813,9 +1825,12 @@ bool UnityScreen::altTabNextWindowInitiate(CompAction* action, CompAction::State
 bool UnityScreen::altTabPrevWindowInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
 {
   if (switcher_controller_->Visible())
+  {
     switcher_controller_->PrevDetail();
+    return true;
+  }
 
-  return true;
+  return false;
 }
 
 bool UnityScreen::launcherSwitcherForwardInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
