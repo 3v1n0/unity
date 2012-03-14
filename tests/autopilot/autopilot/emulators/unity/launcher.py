@@ -15,7 +15,7 @@ from autopilot.keybindings import KeybindingsHelper
 from autopilot.emulators.unity import UnityIntrospectionObject
 from autopilot.emulators.unity.icons import BamfLauncherIcon, SimpleLauncherIcon
 from autopilot.emulators.X11 import Mouse, ScreenGeometry
-
+from autopilot.emulators.dbus_handler import session_bus
 
 logger = logging.getLogger(__name__)
 
@@ -38,10 +38,9 @@ class LauncherController(UnityIntrospectionObject):
     def key_nav_monitor(self):
         return self.key_nav_launcher_monitor
 
-    def emulate_software_center_dbus_call(self,name,icon,icon_x,icon_y,icon_size,desktop_file,aptdaemon_task):
+    def add_launcher_item_from_position(self,name,icon,icon_x,icon_y,icon_size,desktop_file,aptdaemon_task):
         """ Emulate a DBus call from Software Center to pin an icon to the launcher """
-        bus = dbus.SessionBus()
-        launcher_object = bus.get_object('com.canonical.Unity.Launcher',
+        launcher_object = session_bus.get_object('com.canonical.Unity.Launcher',
                                       '/com/canonical/Unity/Launcher')
         launcher_iface = dbus.Interface(launcher_object, 'com.canonical.Unity.Launcher')
         launcher_iface.AddLauncherItemFromPosition(name,
