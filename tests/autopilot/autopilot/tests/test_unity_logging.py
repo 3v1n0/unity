@@ -65,9 +65,3 @@ class UnityLoggingTests(AutopilotTestCase):
         stop_logging_to_file()
         with open(fpath, 'r') as f:
             self.assertThat(f.read(), Contains("This is some more INFORMATION"))
-
-
-
-
-
-
