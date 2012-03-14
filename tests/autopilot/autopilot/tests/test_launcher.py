@@ -7,7 +7,6 @@
 # under the terms of the GNU General Public License version 3, as published
 # by the Free Software Foundation.
 
-import dbus
 import logging
 from testtools.matchers import Equals, LessThan, GreaterThan
 from time import sleep
@@ -420,30 +419,19 @@ class LauncherRevealTests(ScenariodLauncherTests):
         self.assertThat(launcher_instance.is_showing(), Equals(False))
         self.mouse.release(1)
 
-class SoftwareCenterIconTests(ScenariodLauncherTests):
-    """ Test integration with Software Center """
-    def setUp(self):
-        super(SoftwareCenterIconTests, self).setUp()
-        sleep(1)
-
     def test_software_center_add_icon(self):
         """ Test the ability to add a SoftwareCenterLauncherIcon """
         sleep(.5)
         
         launcher_instance = self.get_launcher()
-        bus = dbus.SessionBus()
-        launcher_object = bus.get_object('com.canonical.Unity.Launcher',
-                                      '/com/canonical/Unity/Launcher')
-        launcher_iface = dbus.Interface(launcher_object, 'com.canonical.Unity.Launcher')
-        
+                
         # Check if SC is pinned to the launcher already
         icon = self.launcher.model.get_icon_by_desktop_file("/usr/share/applications/ubuntu-software-center.desktop")
         if icon != None:
             launcher_instance.unlock_from_launcher(icon[0])
             sleep(2.0)
 
-        original_num_launcher_icons = self.launcher.model.num_launcher_icons()
-        launcher_iface.AddLauncherItemFromPosition("Unity Test",
+        self.launcher.emulate_software_center_dbus_call("Unity Test",
                                                    "softwarecenter",
                                                    100,
                                                    100,
@@ -455,10 +443,8 @@ class SoftwareCenterIconTests(ScenariodLauncherTests):
 
         icon = self.launcher.model.get_icon_by_desktop_file("/usr/share/applications/ubuntu-software-center.desktop")
 
-        # Check for 2 things:
-        #    1) More launcher icons in the end
-        #    2) The new launcher icon has a 'Waiting to install' tooltip
-        self.assertThat(self.launcher.model.num_launcher_icons(), GreaterThan(original_num_launcher_icons))
+        # Check for whether:
+        # The new launcher icon has a 'Waiting to install' tooltip
         self.assertThat(icon[0].tooltip_text == "Waiting to install", Equals(True))
         sleep(.5)
         

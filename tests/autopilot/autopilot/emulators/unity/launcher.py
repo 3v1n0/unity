@@ -7,6 +7,7 @@
 # by the Free Software Foundation.
 #
 
+import dbus
 import logging
 from time import sleep
 
@@ -37,6 +38,19 @@ class LauncherController(UnityIntrospectionObject):
     def key_nav_monitor(self):
         return self.key_nav_launcher_monitor
 
+    def emulate_software_center_dbus_call(self,name,icon,icon_x,icon_y,icon_size,desktop_file,aptdaemon_task):
+        """ Emulate a DBus call from Software Center to pin an icon to the launcher """
+        bus = dbus.SessionBus()
+        launcher_object = bus.get_object('com.canonical.Unity.Launcher',
+                                      '/com/canonical/Unity/Launcher')
+        launcher_iface = dbus.Interface(launcher_object, 'com.canonical.Unity.Launcher')
+        launcher_iface.AddLauncherItemFromPosition(name,
+                                                   icon,
+                                                   icon_x,
+                                                   icon_y,
+                                                   icon_size,
+                                                   desktop_file,
+                                                   aptdaemon_task)
 
 class Launcher(UnityIntrospectionObject, KeybindingsHelper):
     """An individual launcher for a monitor."""
