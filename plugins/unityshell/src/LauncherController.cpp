@@ -890,7 +890,7 @@ int Controller::Impl::MonitorWithMouse()
 nux::ObjectPtr<Launcher> Controller::Impl::CurrentLauncher()
 {
   nux::ObjectPtr<Launcher> result;
-  int best = std::max<int> (launchers.size() - 1, MonitorWithMouse());
+  int best = std::min<int> (launchers.size() - 1, MonitorWithMouse());
   if (best >= 0)
     result = launchers[best];
   return result;
