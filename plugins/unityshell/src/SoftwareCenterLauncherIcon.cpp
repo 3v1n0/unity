@@ -28,6 +28,8 @@ namespace unity
 namespace launcher
 {
 
+NUX_IMPLEMENT_OBJECT_TYPE(SoftwareCenterLauncherIcon);
+
 SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(BamfApplication* app,
                                                        std::string const& aptdaemon_trans_id,
                                                        std::string const& icon_path)
@@ -52,16 +54,11 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(BamfApplication* app,
   SetIconType(TYPE_APPLICATION);
   icon_name = icon_path.c_str();
   tooltip_text = _("Waiting to install");
-
-  // For no clear reason, Unity segfaults if we try to generate a pointer of "this" twice.
-  // Hence, just generate it once and store it.
-  self_abstract = AbstractLauncherIcon::Ptr(this);
-
 }
 
 void SoftwareCenterLauncherIcon::AddSelfToLauncher()
 {
-    _launcher->icon_animation_complete.emit(self_abstract);
+    _launcher->icon_animation_complete.emit(AbstractLauncherIcon::Ptr(this));
 }
 
 gboolean SoftwareCenterLauncherIcon::OnDragWindowAnimComplete(gpointer data)
@@ -92,7 +89,9 @@ SoftwareCenterLauncherIcon::Animate(nux::ObjectPtr<Launcher> launcher,
   _icon_texture = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableDeviceTexture(launcher->GetIconSize(), launcher->GetIconSize(), 1, nux::BITFMT_R8G8B8A8);
   _drag_window = new LauncherDragWindow(_icon_texture);
 
-  launcher->RenderIconToTexture(nux::GetWindowThread()->GetGraphicsEngine(), self_abstract, _icon_texture);
+  launcher->RenderIconToTexture(nux::GetWindowThread()->GetGraphicsEngine(),
+                                AbstractLauncherIcon::Ptr(this),
+                                _icon_texture);
   nux::Geometry geo = _drag_window->GetGeometry();
   _drag_window->SetBaseXY(icon_x, icon_y);
   _drag_window->ShowWindow(true);

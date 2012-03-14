@@ -33,6 +33,7 @@ namespace launcher
 
 class SoftwareCenterLauncherIcon : public BamfLauncherIcon
 {
+  NUX_DECLARE_OBJECT_TYPE(SoftwareCenterLauncherIcon, BamfLauncherIcon);
 public:
   SoftwareCenterLauncherIcon(BamfApplication* app,
                              std::string const& aptdaemon_trans_id,
@@ -57,7 +58,6 @@ private:
   nux::ObjectPtr<nux::IOpenGLBaseTexture> _icon_texture;
   LauncherDragWindow* _drag_window;
   Launcher* _launcher;
-  AbstractLauncherIcon::Ptr self_abstract;
   bool _finished;
   bool _finished_just_now;
 };
