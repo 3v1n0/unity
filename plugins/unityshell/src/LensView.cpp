@@ -418,13 +418,6 @@ void LensView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
   gfx_context.PushClippingRectangle(geo);
   nux::GetPainter().PaintBackground(gfx_context, geo);
   gfx_context.PopClippingRectangle();
-
-  /*nux::GetPainter().Paint2DQuadWireframe (gfx_context,
-                                          scroll_layout_->GetGeometry(),
-                                          nux::color::Blue);
-  nux::GetPainter().Paint2DQuadWireframe (gfx_context,
-                                          fscroll_layout_->GetGeometry(),
-                                          nux::color::Green);*/
 }
 
 void LensView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
