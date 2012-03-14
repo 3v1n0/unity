@@ -150,6 +150,9 @@ void DBusIndicators::Impl::OnDisconnected()
   CheckLocalService();
   RequestSyncAll();
 
+  if (reconnect_timeout_id_)
+    g_source_remove(reconnect_timeout_id_);
+
   reconnect_timeout_id_ = g_timeout_add_seconds(1, [](gpointer data) -> gboolean {
     auto self = static_cast<DBusIndicators::Impl*>(data);
 
