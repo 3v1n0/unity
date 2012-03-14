@@ -9,7 +9,6 @@
 from gtk import Clipboard
 from time import sleep
 
-from autopilot.emulators.unity.dash import Dash
 from autopilot.emulators.X11 import Keyboard, Mouse
 from autopilot.tests import AutopilotTestCase
 
@@ -27,6 +26,7 @@ class DashRevealTests(DashTestCase):
 
     def test_dash_reveal(self):
         """Ensure we can show and hide the dash."""
+        self.assertFalse(self.dash.get_is_visible())
         self.dash.toggle_reveal()
         self.assertTrue(self.dash.get_is_visible())
         self.dash.toggle_reveal()
@@ -55,6 +55,13 @@ class DashRevealTests(DashTestCase):
         self.dash.reveal_command_lens()
         lensbar = self.dash.view.get_lensbar()
         self.assertEqual(lensbar.active_lens, u'commands.lens')
+    
+    def test_alt_f4_close_dash(self):
+        """Dash must close on alt+F4."""
+        self.dash.ensure_visible()
+        self.dash.close_with_alt_f4()
+        sleep(0.5)
+        self.assertFalse(self.dash.get_is_visible())
 
 class DashSearchInputTests(DashTestCase):
     """Test features involving input to the dash search"""
@@ -67,19 +74,43 @@ class DashSearchInputTests(DashTestCase):
         searchbar = self.dash.get_searchbar()
         self.assertEqual(searchbar.search_string, u'Hello')
 
-    def test_composition_character_input(self):
-        """Test that the dash is able to accept compositon characters like ô"""
-        self.dash.ensure_visible()
-        
-        self.keyboard.press('Shift')
-        # I don't think this is right!
-        self.keyboard.press_and_release('AltR')
-        self.keyboard.press_and_release('6')
-        self.keyboard.release('Shift')
-        self.keyboard.type('o')
+    def test_multi_key(self):
+        """Pressing 'Multi_key' must not add any characters to the search."""
+        self.dash.reveal_application_lens()      
+        self.keyboard.press_and_release('Multi_key')
+        self.keyboard..type("o")
 
         searchbar = self.dash.get_searchbar()
-        self.assertEqual("ô", searchbar.search_string)        
+        self.assertEqual("", searchbar.search_string)
+
+    def test_multi_key_o(self):
+        """Pressing the sequences 'Multi_key' + '^' + 'o' must produce 'ô'."""
+        self.dash.reveal_application_lens()
+        self.keyboard.press_and_release('Multi_key')
+        self.keyboard.type("^o")
+
+        searchbar = self.dash.get_searchbar()
+        self.assertEqual("ô", searchbar.search_string)
+
+    def test_multi_key_copyright(self):
+        """Pressing the sequences 'Multi_key' + 'c' + 'o' must produce '©'."""
+        self.dash.reveal_application_lens()
+        self.keyboard.press_and_release('Multi_key')
+        self.keyboard.type("oc")
+
+        searchbar = self.dash.get_searchbar()
+        self.assertEqual("©", searchbar.search_string)
+
+    def test_multi_key_delete(self):
+        """Pressing 'Multi_key' must not get stuck looking for a sequence."""
+        self.dash.reveal_application_lens()
+        self.keyboard.type("dd")
+        self.keyboard.press_and_release('Multi_key')
+        self.keyboard.press_and_release('BackSpace')
+        self.keyboard.press_and_release('BackSpace')
+
+        searchbar = self.dash.get_searchbar()
+        self.assertEqual("d", searchbar.search_string)
 
 class DashKeyNavTests(DashTestCase):
     """Test the unity Dash keyboard navigation."""
@@ -170,8 +201,8 @@ class DashKeyNavTests(DashTestCase):
         sleep(2)
 
         # Then focus again the first category header
-        kb.press_and_release("Down")
-        kb.press_and_release("Enter")
+        self.keyboard.press_and_release("Down")
+        self.keyboard.press_and_release("Enter")
         category = app_lens.get_focused_category()
         y = category.header_y
 
@@ -185,6 +216,7 @@ class DashKeyNavTests(DashTestCase):
         OK important to note that this test only tests that A category is focused, not the first
         and from doing this it seems that it's common for a header other than the first to get focus.
         """
+
         self.dash.ensure_visible()
 
         # Make sure that a category have the focus.
@@ -210,9 +242,8 @@ class DashKeyNavTests(DashTestCase):
                     y + h / 2,
                     True)
         sleep(1)
-        kb.press_and_release("Down")
+        self.keyboard.press_and_release("Down")
         lens = self.dash.get_current_lens()
-        sleep(1)
         category = lens.get_focused_category()
         self.assertEqual(category, None)
 
@@ -333,14 +364,13 @@ class DashClipboardTests(DashTestCase):
         """ This test if ctrl+c and ctrl+v copies and pastes text"""
         self.dash.ensure_visible()
 
-        kb = Keyboard();
-        kb.type("CopyPaste")
+        self.keyboard.type("CopyPaste")
         sleep(1)
 
-        kb.press_and_release("Ctrl+a")
-        kb.press_and_release("Ctrl+c")
-        kb.press_and_release("Ctrl+v")
-        kb.press_and_release("Ctrl+v")
+        self.keyboard.press_and_release("Ctrl+a")
+        self.keyboard.press_and_release("Ctrl+c")
+        self.keyboard.press_and_release("Ctrl+v")
+        self.keyboard.press_and_release("Ctrl+v")
 
         searchbar = self.dash.get_searchbar()
         self.assertEqual(searchbar.search_string, u'CopyPasteCopyPaste')
@@ -349,18 +379,16 @@ class DashClipboardTests(DashTestCase):
         """ This test if ctrl+x and ctrl+v cuts and pastes text"""
         self.dash.ensure_visible()
 
-        kb = Keyboard();
-        kb.type("CutPaste")
+        self.keyboard.type("CutPaste")
         sleep(1)
 
-        kb.press_and_release("Ctrl+a")
-        kb.press_and_release("Ctrl+x")
-        kb.press_and_release("Ctrl+v")
-        kb.press_and_release("Ctrl+v")
+        self.keyboard.press_and_release("Ctrl+a")
+        self.keyboard.press_and_release("Ctrl+x")
+        self.keyboard.press_and_release("Ctrl+v")
+        self.keyboard.press_and_release("Ctrl+v")
 
         searchbar = self.dash.get_searchbar()
         self.assertEqual(searchbar.search_string, u'CutPasteCutPaste')
-
 
 class DashKeyboardFocusTests(DashTestCase):
     """Tests that keyboard focus works."""
@@ -373,10 +401,59 @@ class DashKeyboardFocusTests(DashTestCase):
         filter_bar = self.dash.get_current_lens().get_filterbar()
         filter_bar.ensure_collapsed()
 
-        kb = Keyboard()
-        kb.type("hello")
+        self.keyboard.type("hello")
         filter_bar.ensure_expanded()
-        kb.type(" world")
+        self.keyboard.type(" world")
 
         searchbar = self.dash.get_searchbar()
         self.assertEqual("hello world", searchbar.search_string)
+
+class DashLensResultsTests(DashTestCase):
+    """ Tests results from the lens view """
+    
+    def test_results_message_empty_search(self): 
+        """ This tests a message is not shown when there is no text""" 
+        self.dash.reveal_application_lens()
+        lens = self.dash.get_current_lens()
+
+        lens.refresh_state() 
+        self.assertFalse(lens.no_results_active)
+
+    def test_results_message(self): 
+        """ This test no mesage will be shown when results are there""" 
+        self.dash.reveal_application_lens()
+        lens = self.dash.get_current_lens()
+
+        self.keyboard.type("Terminal")
+        sleep(1)
+      
+        lens.refresh_state() 
+        self.assertFalse(lens.no_results_active)
+
+    def test_no_results_message(self): 
+        """ This test shows a message will appear in the lens""" 
+        self.dash.reveal_application_lens()
+        lens = self.dash.get_current_lens()
+        
+        self.keyboard.type("qwerlkjzvxc")
+        sleep(1)
+
+        lens.refresh_state() 
+        self.assertTrue(lens.no_results_active)
+
+class DashVisualTests(DashTestCase):
+    """Tests that the dash visual is correct."""
+
+    def test_see_more_result_alignment(self):
+        """The see more results label should be baseline aligned
+        with the category name label.
+        """
+        self.dash.reveal_application_lens()
+
+        lens = self.dash.get_current_lens()
+        groups = lens.get_groups()
+
+        for group in groups:
+            if (group.is_visible):
+                self.assertTrue(not group.expand_label_is_visible or
+                                (group.expand_label_y + group.expand_label_baseline == group.name_label_y + group.name_label_baseline))

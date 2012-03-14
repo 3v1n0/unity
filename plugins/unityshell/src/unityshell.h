@@ -192,7 +192,7 @@ public:
   bool executeCommand(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool setKeyboardFocusKeyInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
 
-  bool altTabInitiateCommon(switcher::ShowMode mode);
+  bool altTabInitiateCommon(CompAction* action, switcher::ShowMode mode);
   bool altTabTerminateCommon(CompAction* action,
                              CompAction::State state,
                              CompOption::Vector& options);
@@ -236,13 +236,19 @@ protected:
   void AddProperties(GVariantBuilder* builder);
 
 private:
+  enum CancelActionTarget
+  {
+    LAUNCHER_SWITCHER,
+    SHORTCUT_HINT
+  };
+
   void initAltTabNextWindow ();
 
   void SendExecuteCommand();
 
   void EnsureSuperKeybindings();
   void CreateSuperNewAction(char shortcut, impl::ActionModifiers flag);
-  void EnableCancelAction(bool enabled, int modifiers = 0);
+  void EnableCancelAction(CancelActionTarget target, bool enabled, int modifiers = 0);
 
   static gboolean initPluginActions(gpointer data);
   void initLauncher();
@@ -290,12 +296,11 @@ private:
   bool                                  _in_paint;
   guint32                               relayoutSourceId;
   guint32                               _redraw_handle;
-  guint32                               alt_tap_timeout_id_;
   typedef std::shared_ptr<CompAction> CompActionPtr;
   typedef std::vector<CompActionPtr> ShortcutActions;
   ShortcutActions _shortcut_actions;
   bool            super_keypressed_;
-  CompActionPtr   _escape_action;
+  std::map<CancelActionTarget, CompActionPtr> _escape_actions;
 
   /* keyboard-nav mode */
   CompWindow* newFocusedWindow;
@@ -331,6 +336,7 @@ private:
   CompWindowList         fullscreen_windows_;
   bool                   painting_tray_;
   unsigned int           tray_paint_mask_;
+  unsigned int           last_scroll_event_;
   gint64                 last_hud_show_time_;
 
   GLMatrix panel_shadow_matrix_;

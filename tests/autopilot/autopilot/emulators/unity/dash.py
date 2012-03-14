@@ -129,6 +129,10 @@ class Dash(KeybindingsHelper):
         active_lens_name = self.view.get_lensbar().active_lens
         return self.view.get_lensview_by_name(active_lens_name)
 
+    def close_with_alt_f4(self):
+        """Send ALT+F4 in order to close the dash."""
+        self._keyboard.press_and_release("Alt+F4")
+
 
 class DashController(UnityIntrospectionObject):
     """The main dash controller object."""
@@ -167,6 +171,11 @@ class LensBar(UnityIntrospectionObject):
 
 class LensView(UnityIntrospectionObject):
     """A Lens View."""
+
+    def get_groups(self):
+        """Get a list of all groups within this lensview. May return an empty list."""
+        groups = self.get_children_by_type(PlacesGroup)
+        return groups
 
     def get_focused_category(self):
         """Return a PlacesGroup instance for the category whose header has keyboard focus.
