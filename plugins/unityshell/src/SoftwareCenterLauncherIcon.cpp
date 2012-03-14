@@ -45,10 +45,10 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(BamfApplication* app,
 
   _aptdaemon_trans.Connect("PropertyChanged", sigc::mem_fun(this, &SoftwareCenterLauncherIcon::OnPropertyChanged));
   _aptdaemon_trans.Connect("Finished", [&] (GVariant *) {
-  tooltip_text = BamfName();
-  SetQuirk(QUIRK_PROGRESS, false);
-  SetQuirk(QUIRK_URGENT, true);
-  SetProgress(0.0f);
+    tooltip_text = BamfName();
+    SetQuirk(QUIRK_PROGRESS, false);
+    SetQuirk(QUIRK_URGENT, true);
+    SetProgress(0.0f);
   });
 
   SetIconType(TYPE_APPLICATION);
