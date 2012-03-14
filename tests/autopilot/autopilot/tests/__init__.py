@@ -83,7 +83,7 @@ class LoggedTestCase(TestWithScenarios, TestCase):
     def _setUpUnityLogging(self):
         self._unity_log_file_name = mktemp(prefix=self.shortDescription())
         start_log_to_file(self._unity_log_file_name)
-        self.addCleanup(self.tearDownUnityLogging)
+        self.addCleanup(self._tearDownUnityLogging)
 
     def _tearDownUnityLogging(self):
         reset_logging()
