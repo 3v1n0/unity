@@ -113,7 +113,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , _in_paint(false)
   , relayoutSourceId(0)
   , _redraw_handle(0)
-  , alt_tap_timeout_id_(0)
   , newFocusedWindow(nullptr)
   , doShellRepaint(false)
   , allowWindowPaint(false)
@@ -377,9 +376,6 @@ UnityScreen::~UnityScreen()
 
   if (relayoutSourceId != 0)
     g_source_remove(relayoutSourceId);
-
-  if (alt_tap_timeout_id_)
-    g_source_remove(alt_tap_timeout_id_);
 
   ::unity::ui::IconRenderer::DestroyTextures();
   QuicklistManager::Destroy();
@@ -1662,12 +1658,6 @@ bool UnityScreen::altTabInitiateCommon(CompAction* action, switcher::ShowMode sh
   if (!grab_index_)
     return false;
 
-  if (alt_tap_timeout_id_)
-  {
-    g_source_remove(alt_tap_timeout_id_);
-    alt_tap_timeout_id_ = 0;
-  }
-
   screen->addAction(&optionGetAltTabRight());
   screen->addAction(&optionGetAltTabDetailStart());
   screen->addAction(&optionGetAltTabDetailStop());
@@ -1919,19 +1909,6 @@ bool UnityScreen::ShowHudInitiate(CompAction* action,
     action->setState(action->state() | CompAction::StateTermKey);
   last_hud_show_time_ = g_get_monotonic_time();
 
-  /* Workaround to fix #943194 */
-  alt_tap_timeout_id_ = g_timeout_add(local::ALT_TAP_DURATION, [] (gpointer data) -> gboolean {
-    auto self = static_cast<UnityScreen*>(data);
-
-    if (!self->switcher_controller_->Visible())
-    {
-      XUngrabKeyboard(self->screen->dpy(), CurrentTime);
-    }
-
-    self->alt_tap_timeout_id_ = 0;
-    return FALSE;
-  }, this);
-
   // pass key through
   return false;
 }
@@ -1950,12 +1927,6 @@ bool UnityScreen::ShowHudTerminate(CompAction* action,
   // And only respond to key taps
   if (!(state & CompAction::StateTermTapped))
     return false;
-
-  if (alt_tap_timeout_id_)
-  {
-    g_source_remove(alt_tap_timeout_id_);
-    alt_tap_timeout_id_ = 0;
-  }
 
   gint64 current_time = g_get_monotonic_time();
   if (current_time - last_hud_show_time_ > (local::ALT_TAP_DURATION * 1000))
