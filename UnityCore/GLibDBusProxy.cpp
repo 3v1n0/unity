@@ -79,7 +79,7 @@ public:
     DBusProxy::Impl* impl;
     std::string method_name;
   };
- 
+
   DBusProxy* owner_;
   string name_;
   string object_path_;
