@@ -43,7 +43,6 @@ class DBusIndicators::Impl
 {
 public:
   Impl(DBusIndicators* owner);
-  ~Impl();
 
   void CheckLocalService();
   void RequestSyncAll();
@@ -75,7 +74,6 @@ public:
   };
 
   DBusIndicators* owner_;
-  guint reconnect_timeout_id_;
   glib::DBusProxy gproxy_;
   std::map<std::string, EntryLocationMap> cached_locations_;
 };
@@ -84,9 +82,8 @@ public:
 // Public Methods
 DBusIndicators::Impl::Impl(DBusIndicators* owner)
   : owner_(owner)
-  , reconnect_timeout_id_(0)
   , gproxy_(SERVICE_NAME, SERVICE_PATH, SERVICE_IFACE,
-            G_BUS_TYPE_SESSION, G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES)
+            G_BUS_TYPE_SESSION, G_DBUS_PROXY_FLAGS_NONE, true)
 {
   gproxy_.Connect("ReSync", sigc::mem_fun(this, &DBusIndicators::Impl::OnReSync));
   gproxy_.Connect("EntryActivated", sigc::mem_fun(this, &DBusIndicators::Impl::OnEntryActivated));
@@ -97,14 +94,6 @@ DBusIndicators::Impl::Impl(DBusIndicators* owner)
   gproxy_.disconnected.connect(sigc::mem_fun(this, &DBusIndicators::Impl::OnDisconnected));
 
   CheckLocalService();
-}
-
-DBusIndicators::Impl::~Impl()
-{
-  if (reconnect_timeout_id_)
-  {
-    g_source_remove(reconnect_timeout_id_);
-  }
 }
 
 void DBusIndicators::Impl::CheckLocalService()
@@ -148,20 +137,6 @@ void DBusIndicators::Impl::OnDisconnected()
   cached_locations_.clear();
 
   CheckLocalService();
-  RequestSyncAll();
-
-  reconnect_timeout_id_ = g_timeout_add_seconds(1, [](gpointer data) -> gboolean {
-    auto self = static_cast<DBusIndicators::Impl*>(data);
-
-    if (!self->gproxy_.IsConnected())
-    {
-      self->RequestSyncAll();
-      return TRUE;
-    }
-
-    self->reconnect_timeout_id_ = 0;
-    return FALSE;
-  }, this);
 }
 
 void DBusIndicators::Impl::OnReSync(GVariant* parameters)

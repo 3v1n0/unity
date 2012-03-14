@@ -43,7 +43,8 @@ public:
             std::string const& object_path,
             std::string const& interface_name,
             GBusType bus_type = G_BUS_TYPE_SESSION,
-            GDBusProxyFlags flags = G_DBUS_PROXY_FLAGS_NONE);
+            GDBusProxyFlags flags = G_DBUS_PROXY_FLAGS_NONE,
+            bool auto_reconnect = false);
   ~DBusProxy();
 
   void Call(std::string const& method_name,
@@ -62,9 +63,9 @@ public:
   static void NoReplyCallback(GVariant* v) {};
 
   // Public due to use in some callbacks
-private:
   class Impl;
-  std::unique_ptr<Impl> pimpl;
+private:
+  Impl* pimpl;
 };
 
 }
