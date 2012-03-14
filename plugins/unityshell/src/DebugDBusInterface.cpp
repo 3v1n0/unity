@@ -260,18 +260,12 @@ void SetLogSeverity(std::string const& log_component,
 void LogMessage(std::string const& severity,
                 std::string const& message)
 {
-  if (severity == "TRACE")
-    LOG_TRACE(logger) << message;
-  else if (severity == "DEBUG")
-    LOG_DEBUG(logger) << message;
-  else if (severity == "INFO")
-    LOG_INFO(logger) << message;
-  else if (severity == "WARN" || severity == "WARNING")
-    LOG_WARNING(logger) << message;
-  else if (severity == "ERROR")
-    LOG_ERROR(logger) << message;
-  else
-    LOG_WARNING(logger) << "Unknown log severity: " << severity;
+  nux::logging::Level level = nux::logging::get_logging_level(severity);
+  if (logger.GetEffectiveLogLevel() <= level)
+  {
+   nux::logging::LogStream(level, logger.module(), __FILE__, __LINE__).stream()
+      << message;
+  }
 }
 
 /*
