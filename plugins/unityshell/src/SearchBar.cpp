@@ -184,8 +184,7 @@ void SearchBar::Init()
   SetLayout(layout_);
 
   spinner_ = new SearchBarSpinner();
-  spinner_->SetMinimumHeight(SPINNER_HEIGHT);
-  spinner_->SetMaximumHeight(SPINNER_HEIGHT);
+  spinner_->SetMinMaxSize(icon->GetWidth(), SPINNER_HEIGHT);
   spinner_->mouse_click.connect(sigc::mem_fun(this, &SearchBar::OnClearClicked));
   layout_->AddView(spinner_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
