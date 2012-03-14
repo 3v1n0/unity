@@ -1,14 +1,11 @@
 Alt + arrows key not passed to application
 ----------------------------------------------------
 Setup:
-Having an application using alt + arrow keys features
-(firefox, weechat, irssi…)
+Having gnome-terminal installed
 
 Actions:  
-1. Open firefox
-2. Navigate to some pages
-3. Press Alt + left arrow
+1. Open gnome-terminal
+2. While holding Alt, tap arrow keys: Up, Down, Right, Left
 
 Expected Result:
--> you should be directed to the previous web page, like clicking on the "back"
-button.
+-> the terminal should shows the keycodes were received as text "ABCD".
