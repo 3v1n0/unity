@@ -184,16 +184,15 @@ void Indicators::Impl::RemoveIndicator(std::string const& name)
 
 Entry::Ptr Indicators::Impl::GetEntry(std::string const& entry_id)
 {
-  // Since we reuse Entry objects but change the value that they are keyed on,
-  // we need to traverse through the Indicators asking them if they have this
-  // entry_id.
-  Entry::Ptr result;
-  for (IndicatorMap::iterator i = indicators_.begin(), end = indicators_.end();
-       i != end && !result; ++i)
+  for (auto it = indicators_.begin(); it != indicators_.end(); ++it)
   {
-    result = i->second->GetEntry(entry_id);
+    Entry::Ptr entry = it->second->GetEntry(entry_id);
+
+    if (entry)
+      return entry;
   }
-  return result;
+
+  return Entry::Ptr();
 }
 
 
