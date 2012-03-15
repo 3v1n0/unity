@@ -135,20 +135,21 @@ Indicators::IndicatorsList Indicators::Impl::GetIndicators() const
 
 Indicator::Ptr Indicators::Impl::AddIndicator(std::string const& name)
 {
-  Indicator* indptr;
+  Indicator::Ptr indicator(GetIndicator(name));
+
+  if (indicator)
+    return indicator;
 
   if (name == "libappmenu.so")
   {
     AppmenuIndicator *appmenu = new AppmenuIndicator(name);
     appmenu->on_show_appmenu.connect(sigc::mem_fun(owner_, &Indicators::OnShowAppMenu));
-    indptr = appmenu;
+    indicator.reset(appmenu);
   }
   else
   {
-    indptr = new Indicator(name);
+    indicator.reset(new Indicator(name));
   }
-
-  Indicator::Ptr indicator(indptr);
 
   // The owner Indicators class is interested in the other events.
   indicator->on_show_menu.connect(sigc::mem_fun(owner_, &Indicators::OnEntryShowMenu));
