@@ -128,6 +128,7 @@ if (GTEST_SRC_DIR AND
                  test_indicator.cpp
                  test_indicator_appmenu.cpp
                  test_indicator_entry.cpp
+                 test_indicators.cpp
                  test_favorite_store_gsettings.cpp
                  test_favorite_store_private.cpp
                  test_home_lens.cpp
@@ -137,43 +138,26 @@ if (GTEST_SRC_DIR AND
                  test_main_xless.cpp
                  test_grabhandle.cpp
                  test_unityshell_private.cpp
-                 ${UNITY_SRC}/AbstractLauncherIcon.h
                  ${UNITY_SRC}/AbstractLauncherIcon.cpp
-                 ${UNITY_SRC}/AbstractShortcutHint.h
                  ${UNITY_SRC}/Animator.cpp
-                 ${UNITY_SRC}/Animator.h
-                 ${UNITY_SRC}/DebugDBusInterface.h
                  ${UNITY_SRC}/DebugDBusInterface.cpp
-                 ${UNITY_SRC}/XPathQueryPart.h
                  ${UNITY_SRC}/XPathQueryPart.cpp
                  ${UNITY_SRC}/FavoriteStore.cpp
-                 ${UNITY_SRC}/FavoriteStore.h
                  ${UNITY_SRC}/FavoriteStoreGSettings.cpp
-                 ${UNITY_SRC}/FavoriteStoreGSettings.h
-                 ${UNITY_SRC}/IconTextureSource.h
                  ${UNITY_SRC}/IconTextureSource.cpp
                  ${UNITY_SRC}/LauncherModel.cpp
-                 ${UNITY_SRC}/LauncherModel.h
                  ${UNITY_SRC}/FavoriteStorePrivate.cpp
-                 ${UNITY_SRC}/FavoriteStorePrivate.h
                  ${UNITY_SRC}/MockLauncherIcon.h
                  ${UNITY_SRC}/MockShortcutHint.h
                  ${UNITY_SRC}/ShortcutModel.cpp
-                 ${UNITY_SRC}/ShortcutModel.h
                  ${UNITY_SRC}/ShortcutHintPrivate.cpp
-                 ${UNITY_SRC}/ShortcutHintPrivate.h
                  ${UNITY_SRC}/SwitcherModel.cpp
-                 ${UNITY_SRC}/SwitcherModel.h
                  ${UNITY_SRC}/Introspectable.cpp
-                 ${UNITY_SRC}/Introspectable.h
                  ${UNITY_SRC}/TextureCache.cpp
-                 ${UNITY_SRC}/TextureCache.h
                  ${UNITY_SRC}/Timer.cpp
                  ${UNITY_SRC}/Timer.h
                  ${UNITY_SRC}/UnityshellPrivate.cpp
-                 ${UNITY_SRC}/UnityshellPrivate.h
                  ${UNITY_SRC}/WindowManager.cpp
-                 ${UNITY_SRC}/WindowManager.h
                  ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle.cpp
                  ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle-group.cpp
                  ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle-impl-factory.cpp
