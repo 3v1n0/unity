@@ -90,11 +90,12 @@ void SoftwareCenterLauncherIcon::Animate(nux::ObjectPtr<Launcher> launcher,
   // TODO: Don't static cast to ints - they're already an integer type!
   for (auto current_bamf_icon : bamf_icons)
   {
-    if (static_cast<int>(current_bamf_icon->GetCenter(launcher->monitor).x) != 0 &&
-        static_cast<int>(current_bamf_icon->GetCenter(launcher->monitor).y) != 0)
+    x = (int) current_bamf_icon->GetCenter(launcher->monitor).x;
+    y = (int) current_bamf_icon->GetCenter(launcher->monitor).y;
+    if (x != 0 && y != 0)
     {
-       target_x = static_cast<int>(current_bamf_icon->GetCenter(launcher->monitor).x);
-       target_y = static_cast<int>(current_bamf_icon->GetCenter(launcher->monitor).y);
+       target_x = x;
+       target_y = y;
     }
   }
 
